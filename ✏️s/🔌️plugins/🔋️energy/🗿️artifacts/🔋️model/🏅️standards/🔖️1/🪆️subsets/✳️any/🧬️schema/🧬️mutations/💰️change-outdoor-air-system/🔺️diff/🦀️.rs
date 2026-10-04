@@ -11,7 +11,7 @@ pub fn diff(payload: &super::ChangeOutdoorAirSystemEconomizerEnabled, base: &Ene
     };
 
     if existing.economizer_enabled == payload.new_economizer_enabled {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Outdoor air system {} already has that economizer setting.", payload.id.0));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Outdoor air system {} already has that economizer setting.", payload.id.0));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.outdoor_air_systems.iter_mut().find(|item| item.id == payload.id) {

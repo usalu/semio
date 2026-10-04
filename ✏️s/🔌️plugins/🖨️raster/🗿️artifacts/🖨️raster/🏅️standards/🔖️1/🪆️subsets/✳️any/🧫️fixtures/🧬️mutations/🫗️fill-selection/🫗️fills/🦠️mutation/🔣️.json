@@ -1,0 +1,12 @@
+{
+  "color": [
+    0.0,
+    0.5,
+    1.0,
+    1.0
+  ],
+  "layerId": "paint",
+  "mutation": "fillSelection",
+  "selection": null,
+  "target": "pixels"
+}

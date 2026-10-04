@@ -59,12 +59,12 @@ function emitRustFamily(prefix: string, familyName: string, rows: ManifestKindRo
     `    let expected: Vec<String> = ${manifestFunction}().${field}.into_iter().map(|row| row.id).collect();\n`+
     `    assert_eq!(${enumName}::ALL.iter().map(|kind| kind.as_str().to_string()).collect::<Vec<_>>(), expected);\n`+
     `    for kind in ${enumName}::ALL {\n`+
-    `        let value = semio_framework_os_kernel::ToValue::to_value(kind);\n`+
-    `        assert_eq!(value, semio_framework_os_kernel::DslValue::String(kind.as_str().into()));\n`+
-    `        assert_eq!(<${enumName} as semio_framework_os_kernel::FromValue>::from_value(value).unwrap(), *kind);\n`+
+    `        let value = semio_framework_value::ToValue::to_value(kind);\n`+
+    `        assert_eq!(value, semio_framework_value::DslValue::String(kind.as_str().into()));\n`+
+    `        assert_eq!(<${enumName} as semio_framework_value::FromValue>::from_value(value).unwrap(), *kind);\n`+
     `    }\n`+
-    `    assert!(<${enumName} as semio_framework_os_kernel::FromValue>::from_value(semio_framework_os_kernel::DslValue::String("__owner_unknown_kind__".into())).is_err());\n`+
-    `    assert!(<${enumName} as semio_framework_os_kernel::FromValue>::from_value(semio_framework_os_kernel::DslValue::Null).is_err());\n`+
+    `    assert!(<${enumName} as semio_framework_value::FromValue>::from_value(semio_framework_value::DslValue::String("__owner_unknown_kind__".into())).is_err());\n`+
+    `    assert!(<${enumName} as semio_framework_value::FromValue>::from_value(semio_framework_value::DslValue::Null).is_err());\n`+
     `}\n`;
   return (
     `${consts}\n` +
@@ -81,12 +81,12 @@ function emitRustFamily(prefix: string, familyName: string, rows: ManifestKindRo
     `            other => Err(format!("unknown ${familyName.toLowerCase()} kind {other:?} for ${prefix}")),` +
     `\n        }\n    }\n` +
     `}\n\n` +
-    `impl semio_framework_os_kernel::ToValue for ${enumName} {\n` +
-    `    fn to_value(&self) -> semio_framework_os_kernel::DslValue { semio_framework_os_kernel::DslValue::String(self.as_str().into()) }\n` +
+    `impl semio_framework_value::ToValue for ${enumName} {\n` +
+    `    fn to_value(&self) -> semio_framework_value::DslValue { semio_framework_value::DslValue::String(self.as_str().into()) }\n` +
     `}\n\n` +
-    `impl semio_framework_os_kernel::FromValue for ${enumName} {\n` +
-    `    fn from_value(value: semio_framework_os_kernel::DslValue) -> Result<Self, semio_framework_os_kernel::ValueError> {\n` +
-    `        match value { semio_framework_os_kernel::DslValue::String(id) => Self::parse(&id).map_err(semio_framework_os_kernel::ValueError::new), other => Err(semio_framework_os_kernel::ValueError::new(format!("expected ${enumName} string, found {other:?}"))) }\n` +
+    `impl semio_framework_value::FromValue for ${enumName} {\n` +
+    `    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {\n` +
+    `        match value { semio_framework_value::DslValue::String(id) => Self::parse(&id).map_err(|message| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message)), other => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected ${enumName} string, found {other:?}"))) }\n` +
     `    }\n}\n\n` +
     `pub const ${prefix.toUpperCase()}_${familyName.toUpperCase()}_IDS: &[&str] = &[${ids.map((id) => rustStr(id)).join(", ")}];\n` + wireLaw
   );
@@ -119,7 +119,7 @@ function emitRustManifest(doc: ManifestDocument): string {
   let out = `// Generated from ${doc.id}.manifest.json\n\nuse semio_framework_graph::manifest::Manifest;\n\n`;
   out += families;
   out += `pub const ${prefix.toUpperCase()}_MANIFEST_JSON: &str = ${rustStr(json)};\n\n`;
-  out += `pub fn ${fnName}() -> Manifest {\n    semio_framework_os_kernel::json::from_json_str(${prefix.toUpperCase()}_MANIFEST_JSON).expect("manifest json")\n}\n`;
+  out += `pub fn ${fnName}() -> Manifest {\n    semio_framework_pack_json::from_json_str(${prefix.toUpperCase()}_MANIFEST_JSON, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("manifest json")\n}\n`;
   return out;
 }
 

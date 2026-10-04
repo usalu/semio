@@ -20,6 +20,7 @@ fn base_snapshot() -> Mp3Snapshot {
 fn variants(base: &Mp3Snapshot) -> Vec<Mp3Mutation> {
     vec![
         Mp3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Mp3Snapshot { frames: vec![frame(), frame()], ..base.clone() } }),
+        Mp3Mutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         Mp3Mutation::SetId3v2(set_id3v2::SetId3v2 { id3v2: Some(Id3v2Tag { major_version: 3, minor_version: 0, flags: 0, frames: vec![Id3Frame { id: "TIT2".into(), flags: 0, data: vec![0] }] }) }),
         Mp3Mutation::SetId3v2(set_id3v2::SetId3v2 { id3v2: None }),
         Mp3Mutation::SetFrames(set_frames::SetFrames { frames: vec![frame(), frame(), frame()] }),
@@ -40,7 +41,7 @@ fn kinds_matches_every_variant_and_the_catalog() {
     let from_variants: std::collections::BTreeSet<&str> = variants(&base_snapshot()).iter().map(Mp3Mutation::kind).collect();
     let from_kinds: std::collections::BTreeSet<&str> = KINDS.iter().copied().collect();
     assert_eq!(from_variants, from_kinds, "KINDS must equal every Mp3Mutation variant's kind()");
-    assert_eq!(KINDS.len(), 4, "KINDS must list exactly the declared 4 kinds");
+    assert_eq!(KINDS.len(), 5, "KINDS must list exactly the declared 5 kinds");
     let manifest = include_str!("../../../../🔮️oracles/🔣️.json");
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "the oracle catalog manifest must declare kind {kind:?}");
@@ -68,7 +69,7 @@ async fn inverse_law_mutation_and_diff_level() {
     for m in variants(&base) {
         let mut round = base.clone();
         apply_mp3_mutation(&mut round, &m);
-        for inv in m.inverse(&base) {
+        for inv in m.inverse(&base).expect("valid retained mutation inverse fixture") {
             apply_mp3_mutation(&mut round, &inv);
         }
         assert_eq!(round, base, "mutation-level inverse failed for {m:?}");

@@ -6,7 +6,8 @@ use crate::mutations::RemodelingMutation;
 use crate::RemodelingSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::AddGcpObservation, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
+pub fn inverse(payload: &super::AddGcpObservation, base: &RemodelingSnapshot) -> Result<Vec<RemodelingMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(gcp) = base.gcps.iter().find(|gcp| gcp.id == payload.id) else {
         return Vec::new();
     };
@@ -15,5 +16,7 @@ pub fn inverse(payload: &super::AddGcpObservation, base: &RemodelingSnapshot) ->
     }
     let at = crate::mutations::ordered_index(&gcp.observations, &(payload.observation.stream_id.clone(), payload.observation.frame_index), |observation| (observation.stream_id.clone(), observation.frame_index));
     vec![crate::mutations::remove_gcp_observation::remove_gcp_observation(payload.id.clone(), at as u32)]
+
+    })())
 }
 //#endregion 🔖️Inverse

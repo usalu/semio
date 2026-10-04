@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 
 //#region 🔖️Outline
 /// 🧾️ `Writer` document outline.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct WriterOutline {

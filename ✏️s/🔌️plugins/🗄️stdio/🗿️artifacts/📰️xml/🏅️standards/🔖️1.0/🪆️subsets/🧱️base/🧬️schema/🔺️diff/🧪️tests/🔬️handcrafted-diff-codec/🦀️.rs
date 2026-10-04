@@ -22,15 +22,15 @@ fn diff_codec_text_binary_roundtrip_law() {
 
 #[test]
 fn explicit_null_removes_declaration_and_doctype_without_erasing_unchanged_fields() {
-    use protocol::ToValue;
+    use semio_framework_value::ToValue;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🏳️optional-clear/🔣️.json")).unwrap();
     let mut before = XmlSnapshot::default();
     before.doc.declaration = Some(XmlDeclaration { version: "1.0".into(), ..Default::default() });
     before.doc.doctype = Some(XmlDoctype { name: "root".into(), ..Default::default() });
     before.doc.root = Some(XmlNode::Element { name: "root".into(), attrs: Vec::new(), children: Vec::new() });
     for case in fixture["cases"].as_array().unwrap() {
-        let diff: XmlDiff = protocol::os_pack::json::from_json_str(&case["diff"].to_string()).unwrap();
-        let oracle: serde_json::Value = serde_json::from_str(&protocol::os_pack::json::to_json_string(&diff.to_value())).unwrap();
+        let diff: XmlDiff = semio_framework_pack_json::from_json_str(&case["diff"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let oracle: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&diff.to_value())).unwrap();
         assert_eq!(oracle, case["diff"]);
         let mut after = before.clone();
         if case["diff"].get("declaration").is_some() {
@@ -77,12 +77,12 @@ fn attribute_reordering_and_composed_structural_edits_preserve_exact_identity_or
     }
     for order in fixture["invalidOrders"].as_array().unwrap() {
         let wire = serde_json::json!({ "root": { "kind": "element", "attributes": { "order": order } } });
-        let diff: XmlDiff = protocol::os_pack::json::from_json_str(&wire.to_string()).unwrap();
+        let diff: XmlDiff = semio_framework_pack_json::from_json_str(&wire.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         assert!(diff.apply(&states[0]).is_err(), "invalid order={order}");
     }
     for case in fixture["invalidChildDiffs"].as_array().unwrap() {
-        let diff: XmlChildrenDiff = protocol::os_pack::json::from_json_str(&case["diff"].to_string()).unwrap();
-        let before: Vec<XmlNode> = protocol::os_pack::json::from_json_str(&case["base"].to_string()).unwrap();
+        let diff: XmlChildrenDiff = semio_framework_pack_json::from_json_str(&case["diff"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let before: Vec<XmlNode> = semio_framework_pack_json::from_json_str(&case["base"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let mut binary = Vec::new();
         diff.encode_binary(&mut binary);
         for replay in [diff.clone(), XmlChildrenDiff::decode_text(&diff.encode_text()).unwrap(), XmlChildrenDiff::decode_binary(&mut store::ByteReader::new(&binary)).unwrap()] {

@@ -20,7 +20,8 @@ pub struct GisTerrainArtifact {
     #[state(artifact)]
     pub exaggeration: f64,
     #[state(artifact)]
-    pub imported_features_json: String,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub imported_map: Option<ImportedMap>,
     /// 🕸️ Exact owned mesh handle preserved across artifact and snapshot conversions.
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
@@ -32,25 +33,25 @@ pub struct GisTerrainArtifact {
 //#region 🔖️Conversions
 impl Default for GisTerrainArtifact {
     fn default() -> Self {
-        Self { exaggeration: 0.0, imported_features_json: String::new(), mesh: Some(gis_terrain_mesh_child_handle(&gis_terrain_mesh_content_key(0.0, ""))) }
+        Self { exaggeration: 0.0, imported_map: None, mesh: Some(gis_terrain_mesh_child_handle(&gis_terrain_mesh_content_key(0.0, None))) }
     }
 }
 
 impl GisTerrainArtifact {
     /// 📸️ Projects the persisted document without replacing any owned child identity.
     pub fn to_snapshot(&self) -> GisTerrainSnapshot {
-        GisTerrainSnapshot { exaggeration: self.exaggeration, imported_features_json: self.imported_features_json.clone(), mesh: self.mesh.clone() }
+        GisTerrainSnapshot { exaggeration: self.exaggeration, imported_map: self.imported_map.clone(), mesh: self.mesh.clone() }
     }
 
     /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: GisTerrainSnapshot) -> Self {
-        Self { exaggeration: snapshot.exaggeration, imported_features_json: snapshot.imported_features_json, mesh: snapshot.mesh }
+        Self { exaggeration: snapshot.exaggeration, imported_map: snapshot.imported_map, mesh: snapshot.mesh }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: GisTerrainSnapshot) {
         self.exaggeration = snapshot.exaggeration;
-        self.imported_features_json = snapshot.imported_features_json;
+        self.imported_map = snapshot.imported_map;
         self.mesh = snapshot.mesh;
     }
 }
@@ -96,7 +97,7 @@ pub mod derived_construction {
     #[derive(Clone, Debug, Default)]
     pub struct GisterrainBuilderConstruction {
         snapshot: GisTerrainSnapshot,
-        diagnostics: Vec<dsl::Diagnostic>,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
     }
 
     impl ArtifactBuilder for GisterrainBuilderConstruction {
@@ -109,7 +110,7 @@ pub mod derived_construction {
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(Self::from_snapshot(<GisTerrainSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
@@ -119,7 +120,7 @@ pub mod derived_construction {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("build.apply", dsl::TextSpan::at(1, 1), error.to_string())),
+                Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
@@ -128,7 +129,7 @@ pub mod derived_construction {
             self.snapshot = snapshot;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -170,14 +171,14 @@ pub mod derived_analysis {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <GisTerrainSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }
@@ -208,9 +209,9 @@ semio_framework_plugin::derive_artifact_facets!(
 /// `GisTerrainSnapshot`, no app-state dependency — an artifact must never depend on an app.
 pub fn empty_gis_terrain_snapshot() -> GisTerrainSnapshot {
     let exaggeration = 1.0;
-    let imported_features_json = String::new();
-    let mesh = Some(gis_terrain_mesh_child_handle(&gis_terrain_mesh_content_key(exaggeration, &imported_features_json)));
-    GisTerrainSnapshot { exaggeration, imported_features_json, mesh }
+    let imported_map = None;
+    let mesh = Some(gis_terrain_mesh_child_handle(&gis_terrain_mesh_content_key(exaggeration, imported_map.as_ref())));
+    GisTerrainSnapshot { exaggeration, imported_map, mesh }
 }
 
 /// 🗺️ The default terrain document, seeded from the bundled reuse example's `gisterrain
@@ -295,7 +296,7 @@ pub fn build_terrain_scene_json(descriptor: &TerrainDescriptorJson) -> String {
         min_zoom: tiles::TERRAIN_TILE_MIN_ZOOM,
         max_zoom: tiles::TERRAIN_TILE_MAX_ZOOM,
     };
-    dsl::os_pack::json::to_json_string(&style)
+    semio_framework_pack_json::to_json_string(&style)
 }
 //#endregion 🔖️TerrainDescriptor
 
@@ -304,3 +305,7 @@ pub fn build_terrain_scene_json(descriptor: &TerrainDescriptorJson) -> String {
 #[path = "🧪️tests/🔬️relocated-engine/🦀️.rs"]
 mod relocated_engine_tests;
 //#endregion 🧪️Tests
+
+#[path="🗺️imported-map/🦀️.rs"]
+pub mod imported_map;
+pub use imported_map::{ImportedMap,ImportedProperty};

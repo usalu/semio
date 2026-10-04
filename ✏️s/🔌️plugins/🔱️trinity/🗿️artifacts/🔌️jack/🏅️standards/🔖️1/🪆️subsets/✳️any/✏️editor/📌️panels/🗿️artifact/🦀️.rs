@@ -1,7 +1,7 @@
 //! 📄️ Trinity Jack app — Document panel (node/edge tree).
 
 use crate::editor::jack::terminology::TrinityJackLabels;
-use crate::JackSnapshot;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase};
 use semio_framework_plugin::{PanelTreeBuilder, TreeWindows};
 use semio_framework_ui_contract as ui;
@@ -30,11 +30,11 @@ fn edge_row(edge: &crate::Edge) -> semio_framework_plugin::UiAssemblyResult<semi
     semio_framework_plugin::tree_item(format!("trinity-document.edge.{}", edge.id), label)
 }
 
-pub(crate) fn render(snapshot: &JackSnapshot, _cfg: &semio_framework_plugin::NoConfig, labels: &TrinityJackLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let scene = crate::jack_working_scene(snapshot);
+pub(crate) fn render(content: &SemioGraphSnapshot, _cfg: &semio_framework_plugin::NoConfig, labels: &TrinityJackLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let (nodes, edges) = crate::working_from_jack_content_snapshot(content).map_err(|cause| semio_framework_plugin::PluginAssemblyError::new("trinity.jack.content-unreadable", cause.into_message()))?;
     PanelTreeBuilder::new("trinity-document")?
-        .window_section(windows, "trinity-document.nodes", Some(crate::editor::jack::ui_label(labels.pieces.as_str())?), true, &scene.nodes, node_row)?
-        .window_section(windows, "trinity-document.edges", Some(crate::editor::jack::ui_label(labels.connections.as_str())?), false, &scene.edges, edge_row)?
+        .window_section(windows, "trinity-document.nodes", Some(crate::editor::jack::ui_label(labels.pieces.as_str())?), true, &nodes, node_row)?
+        .window_section(windows, "trinity-document.edges", Some(crate::editor::jack::ui_label(labels.connections.as_str())?), false, &edges, edge_row)?
         .interaction_domain(crate::editor::jack::TRINITY_JACK_PLAY_CONTROLLER_ID, "ast")?
         .build()
 }

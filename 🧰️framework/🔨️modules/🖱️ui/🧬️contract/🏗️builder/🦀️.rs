@@ -1125,12 +1125,14 @@ pub struct InputBuilder {
     snaps: crate::UiFixedList<f64>,
     display_factor: Option<f64>,
     limits: Option<crate::UiNumberLimits>,
+    draft_target: Option<crate::UiText>,
+    publication_revision: Option<crate::UiPublicationRevision>,
 }
 
 /// ⌨️ An input of `kind`, initially empty.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn input(kind: crate::InputKind) -> InputBuilder {
-    InputBuilder { base: NodeBase::leaf(), kind, value: crate::UiText::default(), placeholder: None, commit: None, min: None, max: None, step: None, accept: None, precision: None, snaps: crate::UiFixedList::default(), display_factor: None, limits: None }
+    InputBuilder { base: NodeBase::leaf(), kind, value: crate::UiText::default(), placeholder: None, commit: None, min: None, max: None, step: None, accept: None, precision: None, snaps: crate::UiFixedList::default(), display_factor: None, limits: None, draft_target: None, publication_revision: None }
 }
 
 impl InputBuilder {
@@ -1214,6 +1216,18 @@ impl InputBuilder {
         self
     }
 
+    /// 🎯️ Sets the opaque semantic identity used to retain an in-progress draft.
+    pub fn draft_target(mut self, draft_target: crate::UiText) -> Self {
+        self.draft_target = Some(draft_target);
+        self
+    }
+
+    /// 🧾️ Pins the input to the exact native document revision that authored it.
+    pub fn publication_revision(mut self, publication_revision: crate::UiPublicationRevision) -> Self {
+        self.publication_revision = Some(publication_revision);
+        self
+    }
+
     /// 📌️ Appends one detent of a number field. Refused when it would break the detent law against the bounds set
     /// so far (not strictly above the previous snap, outside `min..=max`, non-finite) or the list is full.
     pub fn try_snap(mut self, snap: f64) -> Result<Self, Self> {
@@ -1237,7 +1251,7 @@ impl From<InputBuilder> for BuiltNode {
     fn from(builder: InputBuilder) -> Self {
         assemble(
             builder.base,
-            crate::Component::Input(crate::InputProps { kind: builder.kind, value: builder.value, placeholder: builder.placeholder, commit: builder.commit, min: builder.min, max: builder.max, step: builder.step, accept: builder.accept, precision: builder.precision, snaps: builder.snaps, display_factor: builder.display_factor, limits: builder.limits }),
+            crate::Component::Input(crate::InputProps { kind: builder.kind, value: builder.value, placeholder: builder.placeholder, commit: builder.commit, min: builder.min, max: builder.max, step: builder.step, accept: builder.accept, precision: builder.precision, snaps: builder.snaps, display_factor: builder.display_factor, limits: builder.limits, draft_target: builder.draft_target, publication_revision: builder.publication_revision }),
         )
     }
 }
@@ -1765,6 +1779,7 @@ pub struct TreeItemBuilder {
     draggable: Option<bool>,
     drag_data: Option<crate::UiFixedMap<crate::UiText>>,
     dimmed: Option<bool>,
+    selected: Option<bool>,
     window: Option<crate::TreeWindow>,
     granularity: Option<crate::UiText>,
     row_actions: crate::UiFixedList<crate::RowAction>,
@@ -1777,7 +1792,7 @@ pub struct TreeItemBuilder {
 pub fn tree_item(label: crate::Label) -> TreeItemBuilder {
     let mut base = NodeBase::stack(crate::Axis::Vertical);
     base.accessibility.label = Some(label.clone());
-    TreeItemBuilder { base, label, description: None, icon: None, default_open: None, draggable: None, drag_data: None, dimmed: None, window: None, granularity: None, row_actions: crate::UiFixedList::default(), target: None }
+    TreeItemBuilder { base, label, description: None, icon: None, default_open: None, draggable: None, drag_data: None, dimmed: None, selected: None, window: None, granularity: None, row_actions: crate::UiFixedList::default(), target: None }
 }
 
 impl TreeItemBuilder {
@@ -1821,6 +1836,13 @@ impl TreeItemBuilder {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn dimmed(mut self, dimmed: bool) -> Self {
         self.dimmed = Some(dimmed);
+        self
+    }
+
+    /// ☑️ Marks this row as one option of a single-choice list, chosen or not ([`crate::TreeItemProps::selected`]).
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn selected(mut self, selected: bool) -> Self {
+        self.selected = Some(selected);
         self
     }
 
@@ -1880,6 +1902,7 @@ impl From<TreeItemBuilder> for BuiltNode {
                 draggable: builder.draggable,
                 drag_data: builder.drag_data,
                 dimmed: builder.dimmed,
+                selected: builder.selected,
                 window: builder.window,
                 granularity: builder.granularity,
                 inline_toolbar: None,

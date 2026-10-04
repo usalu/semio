@@ -9,12 +9,12 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Shell
 fn remove_question_option(spec: &FormsSnapshot, question_id: &str, option_value: &str) -> Option<Vec<FormMutation>> {
     update_block_operations(spec, question_id, |question| {
-        *question = crate::editor::forms::questions::patch_choice(question, option_value, "remove", &dsl::os_pack::json::Value::Null).expect("removing a choice cannot fail");
+        *question = crate::editor::forms::questions::patch_choice(question, option_value, "remove", &semio_framework_pack_json::Value::Null).expect("removing a choice cannot fail");
     })
 }
 //#endregion 🔖️Shell
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "remove-question-option")]
 pub struct RemoveQuestionOption {
     pub question_id: String,

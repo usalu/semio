@@ -16,8 +16,6 @@ export interface PlaybookDiff {
   /** @state artifact */
   title?: string | null;
   /** @state artifact @child kind=s.stdio.semio */
-  document?: ArtifactChild | null;
-  /** @state artifact @child kind=s.stdio.semio */
   flow?: ArtifactChild | null;
 }
 
@@ -27,6 +25,6 @@ export function parsePlaybookDiff(value: unknown, at = "$"): PlaybookDiff {
   if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error(`${at}: expected a Playbook diff`);
   const row = value as Record<string, unknown>;
   const strings = ["schema", "id", "version", "title"];
-  if (Object.keys(row).some((key) => ![...strings, "artifact", "document", "flow"].includes(key)) || strings.some((key) => row[key] != null && typeof row[key] !== "string")) throw new Error(`${at}: invalid Playbook diff fields`);
-  return { artifact: row.artifact == null ? null : parsePlaybookArtifact(row.artifact), schema: row.schema as string ?? null, id: row.id as string ?? null, version: row.version as string ?? null, title: row.title as string ?? null, document: row.document == null ? null : parseArtifactChild(row.document), flow: row.flow == null ? null : parseArtifactChild(row.flow) };
+  if (Object.keys(row).some((key) => ![...strings, "artifact", "flow"].includes(key)) || strings.some((key) => row[key] != null && typeof row[key] !== "string")) throw new Error(`${at}: invalid Playbook diff fields`);
+  return { artifact: row.artifact == null ? null : parsePlaybookArtifact(row.artifact), schema: row.schema as string ?? null, id: row.id as string ?? null, version: row.version as string ?? null, title: row.title as string ?? null, flow: row.flow == null ? null : parseArtifactChild(row.flow) };
 }

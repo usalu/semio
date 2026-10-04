@@ -7,7 +7,6 @@
 
 use crate::standards::v1_0::subsets::any::schema::snapshot::AviSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::duration::compute_avi_duration;
 //#region 🔖️Inference
@@ -22,8 +21,11 @@ pub struct AviInference {
 }
 
 impl protocol::Inference<AviSnapshot> for AviInference {
-    fn infer(snapshot: &AviSnapshot) -> Self {
+    fn infer(snapshot: &AviSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { duration: compute_avi_duration(snapshot) }
+    
+        })
     }
 }
 
@@ -33,7 +35,9 @@ impl protocol::Inference<AviSnapshot> for AviInference {
 /// against a future `AviMainHeader` default that stops being all-zero).
 impl Default for AviInference {
     fn default() -> Self {
-        <Self as protocol::Inference<AviSnapshot>>::infer(&AviSnapshot::default())
+        let snapshot = &AviSnapshot::default();
+
+        Self { duration: compute_avi_duration(snapshot) }
     }
 }
 
@@ -49,16 +53,6 @@ impl protocol::InferenceSpec<AviSnapshot> for AviInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 💡️ No `InferredField`s here — `duration` is a fixed-field read off `main_header` plus a single
-/// `streams.len()` count, already O(1)/O(streams) with no honest per-entity incremental
-/// decomposition worth a merkle dep-chain — the default `infer_cached` passthrough is exact.
-impl ArtifactInferrer for crate::standards::v1_0::subsets::any::schema::AviBuilder {
-    type Snapshot = AviSnapshot;
-    type Inference = AviInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.avi.inference`'s facet leaves into the OS-wide inference catalog — call

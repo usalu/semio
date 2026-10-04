@@ -52,7 +52,7 @@ async fn layer_opacity_is_independent_of_the_fill_alpha() {
 async fn inverse_restores_the_previous_opacity() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_drawing_mutation(&base, &mutation);
+    let inverse = inverse_drawing_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "set-layer-opacity undoes with exactly one counter-set");
     let mut snapshot = base.clone();
     apply_drawing_mutation(&mut snapshot, &mutation).expect("forward applies");

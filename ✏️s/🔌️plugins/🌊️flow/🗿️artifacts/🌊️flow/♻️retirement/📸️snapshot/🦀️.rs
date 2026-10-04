@@ -31,7 +31,7 @@ struct SnapshotRetirement {
 }
 
 impl store::ErasedSnapshotRetirement for SnapshotRetirement {
-    fn close_step(&mut self, items: usize, bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, items: usize, bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         use store::SnapshotRetirementStep as Step;
         if items == 0 || bytes == 0 {
             return Ok(Step::Blocked);
@@ -48,7 +48,7 @@ impl store::ErasedSnapshotRetirement for SnapshotRetirement {
         };
         let text = match self.phase {
             0 => {
-                let scene = snapshot.content.take_local_owner::<FlowWorkingScene>().map_err(str::to_owned)?;
+                let scene = snapshot.content.take_local_owner::<FlowWorkingScene>().map_err(|message|semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,message))?;
                 if let Some(scene) = scene.and_then(Arc::into_inner) {
                     self.retirement = super::retire_scene(scene);
                 }

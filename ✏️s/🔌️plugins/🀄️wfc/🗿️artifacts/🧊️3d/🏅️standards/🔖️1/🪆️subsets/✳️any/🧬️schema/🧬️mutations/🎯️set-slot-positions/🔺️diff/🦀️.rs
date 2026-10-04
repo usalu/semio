@@ -13,7 +13,7 @@ pub fn diff(payload: &super::SetSlotPositions, base: &Wfc3dSnapshot) -> protocol
         return protocol::MutationOutcome::error("mutation.target-missing", format!("none of the {} positioned slot(s) is a slot of this document", payload.positions.len()), payload.ids());
     }
     let partial: Vec<protocol::MutationMessage> =
-        (!missing.is_empty()).then(|| protocol::MutationMessage::warn("mutation.partial", format!("{} of {} position(s) skipped (not in this document): {}", missing.len(), payload.positions.len(), missing.join(", "))).at(missing)).into_iter().collect();
+        (!missing.is_empty()).then(|| protocol::MutationMessage::warning("mutation.partial", format!("{} of {} position(s) skipped (not in this document): {}", missing.len(), payload.positions.len(), missing.join(", "))).at(missing)).into_iter().collect();
     let slots_upserted: Vec<(usize, Slot3d)> = base
         .slots
         .iter()
@@ -24,7 +24,7 @@ pub fn diff(payload: &super::SetSlotPositions, base: &Wfc3dSnapshot) -> protocol
         })
         .collect();
     if slots_upserted.is_empty() {
-        return protocol::MutationOutcome::new(Wfc3dDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warn("mutation.no-op", "every positioned slot already sits there").at(payload.ids())]));
+        return protocol::MutationOutcome::new(Wfc3dDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "every positioned slot already sits there").at(payload.ids())]));
     }
     protocol::MutationOutcome::new(Wfc3dDiff { slots_upserted, ..Default::default() }).absorb_messages(partial)
 }

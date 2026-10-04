@@ -22,3 +22,12 @@ pub mod trace;
 
 #[path = "../../📝️text/🦀️.rs"]
 pub mod text;
+
+#[path = "../../🛤️path/📏️flatten/🦀️.rs"]
+pub mod flatten;
+
+#[path = "../../🛤️path/🖊️stroke/🦀️.rs"]
+pub mod stroke;
+
+#[path="../../🧹️retire/🦀️.rs"]
+pub mod retirement;

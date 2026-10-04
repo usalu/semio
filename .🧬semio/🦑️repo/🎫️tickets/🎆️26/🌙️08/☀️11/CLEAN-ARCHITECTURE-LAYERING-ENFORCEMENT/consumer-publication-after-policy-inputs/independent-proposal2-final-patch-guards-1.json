@@ -1,0 +1,174 @@
+{
+  "at": "2026-10-03T13:52:13.668Z",
+  "checks": [
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🏛️ownership/🧪️testing/🧩️consumer/🟦️.ts",
+      "hashes": true,
+      "forward": true,
+      "inverse": true,
+      "actualCurrent": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎠️kernel/🏛️ownership/📥️command-ingress/🧬️schema/🔣️.json",
+      "hashes": true,
+      "forward": true,
+      "inverse": true,
+      "actualCurrent": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎠️kernel/🏛️ownership/📥️command-ingress/🧫️fixtures/🔣️.json",
+      "hashes": true,
+      "forward": true,
+      "inverse": true,
+      "actualCurrent": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎠️kernel/🏛️ownership/📥️command-ingress/🧪️tests/🟦️.ts",
+      "hashes": true,
+      "forward": true,
+      "inverse": true,
+      "actualCurrent": true
+    },
+    {
+      "path": "🧰️framework/📦️packages/🦀️rust/📋️project.json",
+      "hashes": true,
+      "forward": true,
+      "inverse": true,
+      "actualCurrent": true
+    },
+    {
+      "path": "🧰️framework/📦️packages/🦀️rust/📜️script.ts",
+      "hashes": true,
+      "forward": true,
+      "inverse": true,
+      "actualCurrent": true
+    },
+    {
+      "path": "🧰️framework/📦️packages/🦀️rust/package.json",
+      "hashes": true,
+      "forward": true,
+      "inverse": true,
+      "actualCurrent": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🏛️ownership/📥️command-ingress/🧬️schema/🔣️.json",
+      "hashes": true,
+      "forward": true,
+      "inverse": true,
+      "actualCurrent": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🏛️ownership/📥️command-ingress/🧫️fixtures/🔣️.json",
+      "hashes": true,
+      "forward": true,
+      "inverse": true,
+      "actualCurrent": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🏛️ownership/📥️command-ingress/🧪️tests/🟦️.ts",
+      "hashes": true,
+      "forward": true,
+      "inverse": true,
+      "actualCurrent": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📋️project.json",
+      "hashes": true,
+      "forward": true,
+      "inverse": true,
+      "actualCurrent": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+      "hashes": true,
+      "forward": true,
+      "inverse": true,
+      "actualCurrent": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/package.json",
+      "hashes": true,
+      "forward": true,
+      "inverse": true,
+      "actualCurrent": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/📥️command-ingress/🧬️schema/🔣️.json",
+      "hashes": true,
+      "forward": true,
+      "inverse": true,
+      "actualCurrent": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/📥️command-ingress/🧫️fixtures/🔣️.json",
+      "hashes": true,
+      "forward": true,
+      "inverse": true,
+      "actualCurrent": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/📥️command-ingress/🧪️tests/🟦️.ts",
+      "hashes": true,
+      "forward": true,
+      "inverse": true,
+      "actualCurrent": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📋️project.json",
+      "hashes": true,
+      "forward": true,
+      "inverse": true,
+      "actualCurrent": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📜️script.ts",
+      "hashes": true,
+      "forward": true,
+      "inverse": true,
+      "actualCurrent": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/package.json",
+      "hashes": true,
+      "forward": true,
+      "inverse": true,
+      "actualCurrent": true
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "hashes": true,
+      "forward": true,
+      "inverse": true,
+      "actualCurrent": true
+    }
+  ],
+  "changedPairChecks": [
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "forward": true,
+      "inverse": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+      "forward": true,
+      "inverse": true
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "forward": true,
+      "inverse": true
+    },
+    {
+      "path": "Cargo.toml",
+      "forward": true,
+      "inverse": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "forward": true,
+      "inverse": true
+    }
+  ],
+  "semanticEquivalence": false,
+  "sourceWrites": 0
+}

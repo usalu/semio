@@ -1,0 +1,787 @@
+{
+  "valid": [
+    {
+      "name": "extrude",
+      "payload": {
+        "operation": "extrude",
+        "amount": 0.1,
+        "cuts": 1,
+        "dx": 0.1,
+        "dy": 0,
+        "dz": 0,
+        "width": 0.1,
+        "segments": 2,
+        "mergeMode": "center",
+        "tolerance": 0.001,
+        "radius": 2,
+        "grid": 0.25,
+        "center": [
+          0,
+          0,
+          0
+        ]
+      },
+      "ids": [
+        "extrude@meshOut#0.face.0"
+      ],
+      "granularity": "face",
+      "inputs": {
+        "faces": "[0]",
+        "distance": 0.1
+      }
+    },
+    {
+      "name": "inset",
+      "payload": {
+        "operation": "inset",
+        "amount": 0.1,
+        "cuts": 1,
+        "dx": 0.1,
+        "dy": 0,
+        "dz": 0,
+        "width": 0.1,
+        "segments": 2,
+        "mergeMode": "center",
+        "tolerance": 0.001,
+        "radius": 2,
+        "grid": 0.25,
+        "center": [
+          0,
+          0,
+          0
+        ]
+      },
+      "ids": [
+        "extrude@meshOut#0.face.0"
+      ],
+      "granularity": "face",
+      "inputs": {
+        "faces": "[0]",
+        "amount": 0.1
+      }
+    },
+    {
+      "name": "subdivide",
+      "payload": {
+        "operation": "subdivide",
+        "amount": 0.1,
+        "cuts": 1,
+        "dx": 0.1,
+        "dy": 0,
+        "dz": 0,
+        "width": 0.1,
+        "segments": 2,
+        "mergeMode": "center",
+        "tolerance": 0.001,
+        "radius": 2,
+        "grid": 0.25,
+        "center": [
+          0,
+          0,
+          0
+        ]
+      },
+      "ids": [
+        "extrude@meshOut#0.face.0"
+      ],
+      "granularity": "face",
+      "inputs": {
+        "faces": "[0]"
+      }
+    },
+    {
+      "name": "flip",
+      "payload": {
+        "operation": "flip",
+        "amount": 0.1,
+        "cuts": 1,
+        "dx": 0.1,
+        "dy": 0,
+        "dz": 0,
+        "width": 0.1,
+        "segments": 2,
+        "mergeMode": "center",
+        "tolerance": 0.001,
+        "radius": 2,
+        "grid": 0.25,
+        "center": [
+          0,
+          0,
+          0
+        ]
+      },
+      "ids": [
+        "extrude@meshOut#0.face.0"
+      ],
+      "granularity": "face",
+      "inputs": {
+        "faces": "[0]"
+      }
+    },
+    {
+      "name": "deleteFaces",
+      "payload": {
+        "operation": "deleteFaces",
+        "amount": 0.1,
+        "cuts": 1,
+        "dx": 0.1,
+        "dy": 0,
+        "dz": 0,
+        "width": 0.1,
+        "segments": 2,
+        "mergeMode": "center",
+        "tolerance": 0.001,
+        "radius": 2,
+        "grid": 0.25,
+        "center": [
+          0,
+          0,
+          0
+        ]
+      },
+      "ids": [
+        "extrude@meshOut#0.face.0"
+      ],
+      "granularity": "face",
+      "inputs": {
+        "faces": "[0]"
+      }
+    },
+    {
+      "name": "moveVertices",
+      "payload": {
+        "operation": "moveVertices",
+        "amount": 0.1,
+        "cuts": 1,
+        "dx": 0.1,
+        "dy": 0,
+        "dz": 0,
+        "width": 0.1,
+        "segments": 2,
+        "mergeMode": "center",
+        "tolerance": 0.001,
+        "radius": 2,
+        "grid": 0.25,
+        "center": [
+          0,
+          0,
+          0
+        ]
+      },
+      "ids": [
+        "extrude@meshOut#0.vertex.0"
+      ],
+      "granularity": "vertex",
+      "inputs": {
+        "vertices": "[0]",
+        "offset": [
+          0.1,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "name": "loopCut",
+      "payload": {
+        "operation": "loopCut",
+        "amount": 0.1,
+        "cuts": 1,
+        "dx": 0.1,
+        "dy": 0,
+        "dz": 0,
+        "width": 0.1,
+        "segments": 2,
+        "mergeMode": "center",
+        "tolerance": 0.001,
+        "radius": 2,
+        "grid": 0.25,
+        "center": [
+          0,
+          0,
+          0
+        ]
+      },
+      "ids": [
+        "extrude@meshOut#0.edge.0"
+      ],
+      "granularity": "edge",
+      "inputs": {
+        "edges": "[0]",
+        "cuts": 1.0
+      }
+    },
+    {
+      "name": "bevel",
+      "payload": {
+        "operation": "bevel",
+        "amount": 0.1,
+        "cuts": 1,
+        "dx": 0.1,
+        "dy": 0,
+        "dz": 0,
+        "width": 0.1,
+        "segments": 2,
+        "mergeMode": "center",
+        "tolerance": 0.001,
+        "radius": 2,
+        "grid": 0.25,
+        "center": [
+          0,
+          0,
+          0
+        ]
+      },
+      "ids": [
+        "extrude@meshOut#0.edge.0"
+      ],
+      "granularity": "edge",
+      "inputs": {
+        "edges": "[0]",
+        "amount": 0.1,
+        "segments": 2.0
+      }
+    },
+    {
+      "name": "dissolveEdges",
+      "payload": {
+        "operation": "dissolveEdges",
+        "amount": 0.1,
+        "cuts": 1,
+        "dx": 0.1,
+        "dy": 0,
+        "dz": 0,
+        "width": 0.1,
+        "segments": 2,
+        "mergeMode": "center",
+        "tolerance": 0.001,
+        "radius": 2,
+        "grid": 0.25,
+        "center": [
+          0,
+          0,
+          0
+        ]
+      },
+      "ids": [
+        "extrude@meshOut#0.edge.0"
+      ],
+      "granularity": "edge",
+      "inputs": {
+        "edges": "[0]"
+      }
+    },
+    {
+      "name": "dissolveVertices",
+      "payload": {
+        "operation": "dissolveVertices",
+        "amount": 0.1,
+        "cuts": 1,
+        "dx": 0.1,
+        "dy": 0,
+        "dz": 0,
+        "width": 0.1,
+        "segments": 2,
+        "mergeMode": "center",
+        "tolerance": 0.001,
+        "radius": 2,
+        "grid": 0.25,
+        "center": [
+          0,
+          0,
+          0
+        ]
+      },
+      "ids": [
+        "extrude@meshOut#0.vertex.4"
+      ],
+      "granularity": "vertex",
+      "inputs": {
+        "selection": "[4]"
+      }
+    },
+    {
+      "name": "mergeVertices",
+      "payload": {
+        "operation": "mergeVertices",
+        "amount": 0.1,
+        "cuts": 1,
+        "dx": 0.1,
+        "dy": 0,
+        "dz": 0,
+        "width": 0.1,
+        "segments": 2,
+        "mergeMode": "center",
+        "tolerance": 0.001,
+        "radius": 2,
+        "grid": 0.25,
+        "center": [
+          0,
+          0,
+          0
+        ]
+      },
+      "ids": [
+        "extrude@meshOut#0.vertex.0",
+        "extrude@meshOut#0.vertex.1"
+      ],
+      "granularity": "vertex",
+      "inputs": {
+        "selection": "[0,1]",
+        "mode": "center",
+        "tolerance": 0.001
+      }
+    },
+    {
+      "name": "moveProportional",
+      "payload": {
+        "operation": "moveProportional",
+        "amount": 0.1,
+        "cuts": 1,
+        "dx": 0.1,
+        "dy": 0,
+        "dz": 0,
+        "width": 0.1,
+        "segments": 2,
+        "mergeMode": "center",
+        "tolerance": 0.001,
+        "radius": 2,
+        "grid": 0.25,
+        "center": [
+          0,
+          0,
+          0
+        ]
+      },
+      "ids": [
+        "extrude@meshOut#0.vertex.0"
+      ],
+      "granularity": "vertex",
+      "inputs": {
+        "selection": "[0]",
+        "offset": [
+          0.1,
+          0.0,
+          0.0
+        ],
+        "center": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "radius": 2.0
+      }
+    },
+    {
+      "name": "snapVertices",
+      "payload": {
+        "operation": "snapVertices",
+        "amount": 0.1,
+        "cuts": 1,
+        "dx": 0.1,
+        "dy": 0,
+        "dz": 0,
+        "width": 0.1,
+        "segments": 2,
+        "mergeMode": "center",
+        "tolerance": 0.001,
+        "radius": 2,
+        "grid": 0.25,
+        "center": [
+          0,
+          0,
+          0
+        ]
+      },
+      "ids": [
+        "extrude@meshOut#0.vertex.0"
+      ],
+      "granularity": "vertex",
+      "inputs": {
+        "selection": "[0]",
+        "grid": 0.25
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "unknown",
+      "payload": {
+        "operation": "unknown",
+        "amount": 0.1,
+        "cuts": 1,
+        "dx": 0.1,
+        "dy": 0,
+        "dz": 0,
+        "width": 0.1,
+        "segments": 2,
+        "mergeMode": "center",
+        "tolerance": 0.001,
+        "radius": 2,
+        "grid": 0.25,
+        "center": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "name": "zero inset",
+      "payload": {
+        "operation": "inset",
+        "amount": 0,
+        "cuts": 1,
+        "dx": 0.1,
+        "dy": 0,
+        "dz": 0,
+        "width": 0.1,
+        "segments": 2,
+        "mergeMode": "center",
+        "tolerance": 0.001,
+        "radius": 2,
+        "grid": 0.25,
+        "center": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "name": "negative width",
+      "payload": {
+        "operation": "extrude",
+        "amount": 0.1,
+        "cuts": 1,
+        "dx": 0.1,
+        "dy": 0,
+        "dz": 0,
+        "width": -1,
+        "segments": 2,
+        "mergeMode": "center",
+        "tolerance": 0.001,
+        "radius": 2,
+        "grid": 0.25,
+        "center": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "name": "segments fractional",
+      "payload": {
+        "operation": "extrude",
+        "amount": 0.1,
+        "cuts": 1,
+        "dx": 0.1,
+        "dy": 0,
+        "dz": 0,
+        "width": 0.1,
+        "segments": 1.5,
+        "mergeMode": "center",
+        "tolerance": 0.001,
+        "radius": 2,
+        "grid": 0.25,
+        "center": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "name": "segments excessive",
+      "payload": {
+        "operation": "extrude",
+        "amount": 0.1,
+        "cuts": 1,
+        "dx": 0.1,
+        "dy": 0,
+        "dz": 0,
+        "width": 0.1,
+        "segments": 65,
+        "mergeMode": "center",
+        "tolerance": 0.001,
+        "radius": 2,
+        "grid": 0.25,
+        "center": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "name": "mode unknown",
+      "payload": {
+        "operation": "extrude",
+        "amount": 0.1,
+        "cuts": 1,
+        "dx": 0.1,
+        "dy": 0,
+        "dz": 0,
+        "width": 0.1,
+        "segments": 2,
+        "mergeMode": "unknown",
+        "tolerance": 0.001,
+        "radius": 2,
+        "grid": 0.25,
+        "center": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "name": "negative tolerance",
+      "payload": {
+        "operation": "extrude",
+        "amount": 0.1,
+        "cuts": 1,
+        "dx": 0.1,
+        "dy": 0,
+        "dz": 0,
+        "width": 0.1,
+        "segments": 2,
+        "mergeMode": "center",
+        "tolerance": -1,
+        "radius": 2,
+        "grid": 0.25,
+        "center": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "name": "zero radius",
+      "payload": {
+        "operation": "extrude",
+        "amount": 0.1,
+        "cuts": 1,
+        "dx": 0.1,
+        "dy": 0,
+        "dz": 0,
+        "width": 0.1,
+        "segments": 2,
+        "mergeMode": "center",
+        "tolerance": 0.001,
+        "radius": 0,
+        "grid": 0.25,
+        "center": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "name": "zero grid",
+      "payload": {
+        "operation": "extrude",
+        "amount": 0.1,
+        "cuts": 1,
+        "dx": 0.1,
+        "dy": 0,
+        "dz": 0,
+        "width": 0.1,
+        "segments": 2,
+        "mergeMode": "center",
+        "tolerance": 0.001,
+        "radius": 2,
+        "grid": 0,
+        "center": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "name": "center short",
+      "payload": {
+        "operation": "extrude",
+        "amount": 0.1,
+        "cuts": 1,
+        "dx": 0.1,
+        "dy": 0,
+        "dz": 0,
+        "width": 0.1,
+        "segments": 2,
+        "mergeMode": "center",
+        "tolerance": 0.001,
+        "radius": 2,
+        "grid": 0.25,
+        "center": [
+          0,
+          0
+        ]
+      }
+    }
+  ],
+  "analytic": [
+    {
+      "name": "filletEdges",
+      "payload": {
+        "operation": "filletEdges",
+        "amount": 0.1,
+        "cuts": 1,
+        "dx": 0.1,
+        "dy": 0,
+        "dz": 0,
+        "width": 0.1,
+        "segments": 2,
+        "mergeMode": "center",
+        "tolerance": 0.001,
+        "radius": 0.25,
+        "grid": 0.25,
+        "center": [
+          0,
+          0,
+          0
+        ]
+      },
+      "ids": [
+        "box@geometry#0.edge.1~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~9007199254740993~bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      ],
+      "granularity": "edge",
+      "inputs": {
+        "edgeLabels": "[\"9007199254740993\"]",
+        "radius": 0.25
+      }
+    },
+    {
+      "name": "chamferEdges",
+      "payload": {
+        "operation": "chamferEdges",
+        "amount": 0.1,
+        "cuts": 1,
+        "dx": 0.1,
+        "dy": 0,
+        "dz": 0,
+        "width": 0.1,
+        "segments": 2,
+        "mergeMode": "center",
+        "tolerance": 0.001,
+        "radius": 0.25,
+        "grid": 0.25,
+        "center": [
+          0,
+          0,
+          0
+        ]
+      },
+      "ids": [
+        "box@geometry#0.edge.1~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~9007199254740993~bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      ],
+      "granularity": "edge",
+      "inputs": {
+        "edgeLabels": "[\"9007199254740993\"]",
+        "distance": 0.1
+      }
+    },
+    {
+      "name": "shell",
+      "payload": {
+        "operation": "shell",
+        "amount": 0.1,
+        "cuts": 1,
+        "dx": 0.1,
+        "dy": 0,
+        "dz": 0,
+        "width": 0.1,
+        "segments": 2,
+        "mergeMode": "center",
+        "tolerance": 0.001,
+        "radius": 0.25,
+        "grid": 0.25,
+        "center": [
+          0,
+          0,
+          0
+        ]
+      },
+      "ids": [
+        "box@geometry#0.face.1~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~9007199254740993~bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      ],
+      "granularity": "face",
+      "inputs": {
+        "faceLabels": "[\"9007199254740993\"]",
+        "thickness": 0.1
+      }
+    }
+  ],
+  "analyticGraph": [
+    {
+      "source": "box",
+      "kind": "brep.prim3d.box",
+      "channel": "solid",
+      "index": 0,
+      "collection": false,
+      "operation": "filletEdges",
+      "granularity": "edge",
+      "selectedChannel": "selectedEdges",
+      "featureInput": "edges"
+    },
+    {
+      "source": "collection",
+      "kind": "list.pack",
+      "channel": "list",
+      "index": 1,
+      "collection": true,
+      "operation": "filletEdges",
+      "granularity": "edge",
+      "selectedChannel": "selectedEdges",
+      "featureInput": "edges"
+    },
+    {
+      "source": "box",
+      "kind": "brep.prim3d.box",
+      "channel": "solid",
+      "index": 0,
+      "collection": false,
+      "operation": "chamferEdges",
+      "granularity": "edge",
+      "selectedChannel": "selectedEdges",
+      "featureInput": "edges"
+    },
+    {
+      "source": "collection",
+      "kind": "list.pack",
+      "channel": "list",
+      "index": 1,
+      "collection": true,
+      "operation": "chamferEdges",
+      "granularity": "edge",
+      "selectedChannel": "selectedEdges",
+      "featureInput": "edges"
+    },
+    {
+      "source": "box",
+      "kind": "brep.prim3d.box",
+      "channel": "solid",
+      "index": 0,
+      "collection": false,
+      "operation": "shell",
+      "granularity": "face",
+      "selectedChannel": "selectedFaces",
+      "featureInput": "openFaces"
+    },
+    {
+      "source": "collection",
+      "kind": "list.pack",
+      "channel": "list",
+      "index": 1,
+      "collection": true,
+      "operation": "shell",
+      "granularity": "face",
+      "selectedChannel": "selectedFaces",
+      "featureInput": "openFaces"
+    }
+  ]
+}

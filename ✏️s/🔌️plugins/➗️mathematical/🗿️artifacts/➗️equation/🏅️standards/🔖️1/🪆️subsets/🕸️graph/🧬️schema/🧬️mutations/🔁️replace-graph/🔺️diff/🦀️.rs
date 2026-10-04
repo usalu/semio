@@ -1,13 +1,12 @@
 //! 🔺️ `replace-graph` — sparse diff construction.
 
-use crate::{equation_children_from_state, equation_geometry, equation_graph, EquationDiff, EquationSnapshot};
+use crate::{EquationDiff, EquationSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ReplaceGraph, base: &EquationSnapshot) -> protocol::MutationOutcome<EquationDiff> {
-    if equation_graph(base) == payload.graph {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Graph is already identical to the requested replacement.");
+    if base.graph == payload.graph {
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Graph is already identical to the requested replacement.");
     }
-    let (notation, results, computed) = equation_children_from_state(&payload.graph, &equation_geometry(base));
-    protocol::MutationOutcome::new(EquationDiff { notation: Some(notation), results: Some(results), computed: Some(computed), ..Default::default() })
+    protocol::MutationOutcome::new(crate::equation_state_diff(payload.graph.clone(), base.geometry.clone()))
 }
 //#endregion 🔖️Diff

@@ -113,7 +113,7 @@ struct FixtureRetirement {
 }
 
 impl ErasedSnapshotRetirement for FixtureRetirement {
-    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if items == 0 || bytes == 0 {
             return Ok(SnapshotRetirementStep::Blocked);
         }
@@ -152,7 +152,7 @@ impl SnapshotRetirementFactory<u64> for FixtureSnapshotRetirement {
     }
 }
 impl ErasedSnapshotRetirement for FixtureRootRetirement {
-    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if items == 0 || bytes == 0 {
             return Ok(SnapshotRetirementStep::Blocked);
         }
@@ -338,7 +338,6 @@ fn canonical_sealer_preserves_large_domains_and_all_wire_metadata_origins() {
             let mut edit = base.clone();
             let FixtureMutation::Replace { text, .. } = &mut edit.forwards[0];
             *text = "x".repeat(length.as_u64().unwrap() as usize);
-            edit.coalesce_key = Some("coalesce-🧵".into());
             edit.finished_at = Some("finished".into());
             edit.mutation_meta[0].origin = crate::os_spr::MutationOrigin::from_value(origin.clone().into()).unwrap();
             edit.mutation_meta[0].payload_hash = Some(crate::os_spr::PayloadHash([23; 32]));

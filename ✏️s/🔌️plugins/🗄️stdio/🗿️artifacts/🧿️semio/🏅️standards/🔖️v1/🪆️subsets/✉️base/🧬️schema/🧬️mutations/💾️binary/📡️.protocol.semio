@@ -51,3 +51,5 @@ record apply-object tag=17
 field payload bytes
 record apply-kit tag=18
 field payload bytes
+record patch-snapshot tag=19
+field payload bytes

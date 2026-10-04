@@ -48,6 +48,19 @@ mod artifact_inference_wire_tests {
         }
     }
 
+    /// 🪆️ LAW (design §20.15, readers compose on read): the guest's wire resource check admits an owned-child dependency key
+    /// (`child:<slot>/<childId>`) beside artifact identities and refuses a malformed one.
+    #[semio_framework_async_macros::async_test]
+    async fn owned_child_dependency_keys_pass_the_wire_resource_check() {
+        let mut admitted = request("s.test.child").await;
+        admitted.budgets.work_units = 3;
+        admitted.dependencies.push((inference_child_dependency("content", "flow-content-1"), vec![4]));
+        assert!(validate_wire_request_resources(&admitted).is_ok());
+        let mut refused = request("s.test.child").await;
+        refused.dependencies = vec![("child:content/".into(), vec![4])];
+        assert_eq!(validate_wire_request_resources(&refused).unwrap_err().code, "artifact-inference.dependencies");
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn request_rejects_unknown_wire_version_before_registry_lookup() {
         let request = WireArtifactInferenceRequest {
@@ -71,7 +84,7 @@ mod artifact_inference_wire_tests {
             canonical_payload: Vec::new(),
             dependencies: Vec::new(),
         };
-        let error = wire_artifact_infer(protocol::json::to_json_string(&request).as_bytes()).await.unwrap_err();
+        let error = wire_artifact_infer(semio_framework_pack_json::to_json_string(&request).as_bytes()).await.unwrap_err();
         assert_eq!(error.code, "artifact-inference.wire-version");
     }
 
@@ -80,8 +93,8 @@ mod artifact_inference_wire_tests {
         let mut registry = ArtifactInferenceServiceRegistry::new();
         registry.register(ArtifactInferenceService::new(metadata("s.test.inference.echo").await, echo)).unwrap();
         let request = request("s.test.inference.echo").await;
-        let bytes = wire_artifact_infer_from(&registry, protocol::json::to_json_string(&request).as_bytes()).unwrap();
-        let result: WireArtifactInferenceResult = protocol::json::from_json_str(std::str::from_utf8(&bytes).unwrap()).unwrap();
+        let bytes = wire_artifact_infer_from(&registry, semio_framework_pack_json::to_json_string(&request).as_bytes()).unwrap();
+        let result: WireArtifactInferenceResult = semio_framework_pack_json::from_json_str(std::str::from_utf8(&bytes).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         assert_eq!(result.policy, request.policy);
         assert_eq!(result.budgets, request.budgets);
         assert_eq!(result.previous_state, request.previous_state);
@@ -95,7 +108,7 @@ mod artifact_inference_wire_tests {
         let mut registry = ArtifactInferenceServiceRegistry::new();
         registry.register(ArtifactInferenceService::new(metadata("s.test.inference.cancel").await, cancel)).unwrap();
         let request = request("s.test.inference.cancel");
-        let error = wire_artifact_infer_from(&registry, protocol::json::to_json_string(&request.await).as_bytes()).unwrap_err();
+        let error = wire_artifact_infer_from(&registry, semio_framework_pack_json::to_json_string(&request.await).as_bytes()).unwrap_err();
         assert_eq!(error.code, "artifact-inference.cancelled");
     }
 }

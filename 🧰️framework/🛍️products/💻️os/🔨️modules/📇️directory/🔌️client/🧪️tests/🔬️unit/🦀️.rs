@@ -184,7 +184,7 @@ async fn directory_event_page_preserves_canonical_bytes_bounds_and_cancels_befor
         receipt_sha256: String::new(),
     };
     page.receipt_sha256 = semio_framework_hash::sha256_hex(page.canonical_unsigned_json().as_bytes());
-    let canonical = crate::os_pack::json::to_json_string(&page);
+    let canonical = semio_framework_pack_json::to_json_string(&page);
     let transport = FakeTransport::default();
     transport.push_response(Ok(HttpResponse { status: 200, body: canonical.as_bytes().to_vec() })).await;
     let client = authenticated_client(transport.clone(), &capability);
@@ -249,9 +249,9 @@ async fn directory_event_page_preserves_canonical_bytes_bounds_and_cancels_befor
     assert!(matches!(authenticated_client(unsafe_transport.clone(), &capability).event_page(&root_ctx(), DOCUMENT_OPEN_MAX_SAFE_INTEGER + 1).await, Err(DirectoryClientError::Decode(_))));
     assert!(unsafe_transport.requests.lock().unwrap().is_empty());
 
-    let wake: DirectoryStreamMessage = crate::os_pack::json::from_json_str(
+    let wake: DirectoryStreamMessage = semio_framework_pack_json::from_json_str(
         &serde_json::json!({ "kind": "event", "event": { "seq": 99, "id": "wake", "hlc": { "physicalMs": 1, "logical": 0 }, "actor": { "kind": "system", "id": "sys" }, "body": { "kind": "space.archived", "spaceId": "sp-1" }, "recordedAtMs": 1 } })
-            .to_string(),
+            .to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject,
     )
     .expect("wakeup event");
     let mut acknowledged = client.stream_acknowledged(3).expect("acknowledged stream");
@@ -405,7 +405,7 @@ fn document_lease_fields(space_id: &str, document_id: &str, schema: &str, surfac
     plan["artifact"]["schema"] = serde_json::json!(schema);
     plan["surface"]["surfaceId"] = serde_json::json!(surface_id);
     plan["checkpoint"]["baselineFrontier"]["documentId"] = serde_json::json!(document_id);
-    let decoded: DocumentOpenPlanV1 = crate::os_pack::json::from_json_str(&serde_json::to_string(&plan).expect("plan json")).expect("neutral plan");
+    let decoded: DocumentOpenPlanV1 = semio_framework_pack_json::from_json_str(&serde_json::to_string(&plan).expect("plan json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral plan");
     lease_fields_from_plan_v1(&decoded, 1_024, 512, None).expect("non-actor fixture projection")
 }
 
@@ -422,7 +422,7 @@ fn execution_target_status_vocabulary_matches_the_corpus() {
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution target lease corpus");
     let status = corpus["expected"]["status"].as_object().expect("corpus status vocabulary");
     for (code, text) in status {
-        let decoded: DocumentExecutionTargetStatusCodeV1 = crate::os_pack::json::from_json_str(&format!("\"{code}\"")).unwrap_or_else(|_| panic!("the Rust twin lacks status {code}"));
+        let decoded: DocumentExecutionTargetStatusCodeV1 = semio_framework_pack_json::from_json_str(&format!("\"{code}\""), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| panic!("the Rust twin lacks status {code}"));
         assert_eq!(decoded.text(DocumentExecutionTargetLocaleV1::En), text["en"].as_str().expect("en"), "{code} en");
         assert_eq!(decoded.text(DocumentExecutionTargetLocaleV1::De), text["de"].as_str().expect("de"), "{code} de");
         assert_eq!(decoded.aria_role(), corpus["expected"]["statusRoles"][code.as_str()].as_str().expect("role"), "{code} role");
@@ -439,7 +439,7 @@ fn execution_target_status_vocabulary_matches_the_corpus() {
 fn execution_target_lease_compares_every_plan_and_verified_byte_field() {
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution target lease corpus");
     let decode_fields =
-        |value: &serde_json::Value| -> Result<DocumentExecutionTargetLeaseFieldsV1, ()> { crate::os_pack::json::from_json_str::<DocumentExecutionTargetLeaseFieldsV1>(&serde_json::to_string(value).expect("fields json")).map_err(|_| ()) };
+        |value: &serde_json::Value| -> Result<DocumentExecutionTargetLeaseFieldsV1, ()> { semio_framework_pack_json::from_json_str::<DocumentExecutionTargetLeaseFieldsV1>(&serde_json::to_string(value).expect("fields json"), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| ()) };
     let manifest = decode_fields(&corpus["manifest"]).expect("corpus manifest");
     manifest.validate().expect("corpus manifest is a valid lease projection");
     let hex_bytes = |text: &str| -> Vec<u8> { (0..text.len() / 2).map(|index| u8::from_str_radix(&text[index * 2..index * 2 + 2], 16).expect("hex")).collect() };
@@ -453,7 +453,7 @@ fn execution_target_lease_compares_every_plan_and_verified_byte_field() {
 
     let mut plan_json = corpus["plan"].clone();
     plan_json["expiresAtUnixMs"] = serde_json::json!(u64::try_from(wall_now_ms()).expect("wall clock") + 20_000);
-    let plan: DocumentOpenPlanV1 = crate::os_pack::json::from_json_str(&serde_json::to_string(&plan_json).expect("plan json")).expect("corpus plan");
+    let plan: DocumentOpenPlanV1 = semio_framework_pack_json::from_json_str(&serde_json::to_string(&plan_json).expect("plan json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("corpus plan");
     plan.validate(u64::try_from(wall_now_ms()).expect("wall clock")).expect("corpus plan validates");
     let projected = lease_fields_from_plan_v1(&plan, manifest.component.byte_length, manifest.descriptor.byte_length, manifest.browser_actor.byte_length()).expect("closed actor projection");
     assert!(same_lease_fields_v1(&projected, &manifest));
@@ -705,7 +705,7 @@ async fn spaces_decodes_and_sends_bearer() {
 async fn space_exposes_the_durable_document_descriptor() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧫️fixtures/📇️directory/🪪️document-descriptor.json")).expect("descriptor fixture");
     let descriptor = fixture.get("valid").expect("valid descriptor").clone();
-    let document: DocumentView = crate::os_pack::json::from_json_str(&serde_json::json!({ "descriptor": descriptor, "headSeq": 7, "commitSeq": 6, "epoch": 2 }).to_string()).expect("document view fixture");
+    let document: DocumentView = semio_framework_pack_json::from_json_str(&serde_json::json!({ "descriptor": descriptor, "headSeq": 7, "commitSeq": 6, "epoch": 2 }).to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("document view fixture");
     let space = MemberSpaceViewV1 {
         id: "space-a".into(),
         name: "Fixture".into(),
@@ -735,7 +735,7 @@ async fn space_exposes_the_durable_document_descriptor() {
     if let DirectorySpaceAdministrationPageV1::Author { receipt_sha256, .. } = &mut page {
         *receipt_sha256 = receipt;
     }
-    let canonical = crate::os_pack::json::to_json_string(&page);
+    let canonical = semio_framework_pack_json::to_json_string(&page);
     assert!(!canonical.contains("selector") && !canonical.contains("secretDigest") && !canonical.contains("passwordHash"));
     let transport = FakeTransport::default();
     transport.push_response(Ok(HttpResponse { status: 200, body: canonical.clone().into_bytes() })).await;
@@ -876,7 +876,7 @@ async fn directory_command_parses_only_a_bounded_canonical_receipt_and_never_ech
     let command = DirectoryCommand::CreateInvite { space_id: "space-a".into(), role: DirectorySpaceRole::Spectator, ttl_secs: 3_600 };
     let request = DirectoryCommandRequestV1::new("1f2e3d4c5b6a7988a1b2c3d4e5f60718", command.clone());
     let receipt = DirectoryCommandReceiptV1::seal(request.request_id.clone(), directory_command_sha256(&command), DirectoryCommandOutcomeV1::Accepted, Vec::new(), DirectoryCommandResultV1::Invite { invite_token: "invite.v1.one-shot".into() });
-    let canonical = crate::os_pack::json::to_json_string(&receipt);
+    let canonical = semio_framework_pack_json::to_json_string(&receipt);
 
     let transport = FakeTransport::default();
     transport.push_response(Ok(HttpResponse { status: 200, body: canonical.as_bytes().to_vec() })).await;
@@ -909,13 +909,13 @@ async fn directory_command_parses_only_a_bounded_canonical_receipt_and_never_ech
     let forged = FakeTransport::default();
     let mut substituted = receipt.clone();
     substituted.command_sha256 = directory_command_sha256(&DirectoryCommand::RenameSpace { space_id: "space-a".into(), name: "Substituted".into() });
-    forged.push_response(Ok(HttpResponse { status: 200, body: crate::os_pack::json::to_json_string(&substituted).into_bytes() })).await;
+    forged.push_response(Ok(HttpResponse { status: 200, body: semio_framework_pack_json::to_json_string(&substituted).into_bytes() })).await;
     assert_eq!(authenticated_client(forged, &capability).command(&root_ctx(), &request).await.expect_err("digest substitution"), DirectoryCommandErrorCodeV1::Invalid);
 
     let redacted = FakeTransport::default();
     let leaking =
         DirectoryCommandReceiptV1::seal(request.request_id.clone(), directory_command_sha256(&command), DirectoryCommandOutcomeV1::SecretUndeliverable, Vec::new(), DirectoryCommandResultV1::Invite { invite_token: "invite.v1.replayed".into() });
-    redacted.push_response(Ok(HttpResponse { status: 200, body: crate::os_pack::json::to_json_string(&leaking).into_bytes() })).await;
+    redacted.push_response(Ok(HttpResponse { status: 200, body: semio_framework_pack_json::to_json_string(&leaking).into_bytes() })).await;
     assert_eq!(authenticated_client(redacted, &capability).command(&root_ctx(), &request).await.expect_err("redaction violation"), DirectoryCommandErrorCodeV1::Invalid);
 
     let cancelled = FakeTransport::default();
@@ -1043,8 +1043,8 @@ async fn execution_target_module_resolution_follows_the_serving_generation() {
     let hex_bytes = |text: &str| -> Vec<u8> { (0..text.len() / 2).map(|index| u8::from_str_radix(&text[index * 2..index * 2 + 2], 16).expect("hex")).collect() };
     let component = hex_bytes(corpus["componentHex"].as_str().expect("component hex"));
     let descriptor = hex_bytes(corpus["descriptorHex"].as_str().expect("descriptor hex"));
-    let intent: DocumentOpenIntentV1 = crate::os_pack::json::from_json_str(&serde_json::to_string(&corpus["intent"]).expect("intent json")).expect("corpus intent");
-    let lease: DocumentExecutionTargetLeaseFieldsV1 = crate::os_pack::json::from_json_str(&serde_json::to_string(&corpus["manifest"]).expect("manifest json")).expect("corpus manifest");
+    let intent: DocumentOpenIntentV1 = semio_framework_pack_json::from_json_str(&serde_json::to_string(&corpus["intent"]).expect("intent json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("corpus intent");
+    let lease: DocumentExecutionTargetLeaseFieldsV1 = semio_framework_pack_json::from_json_str(&serde_json::to_string(&corpus["manifest"]).expect("manifest json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("corpus manifest");
     let body = |bytes: &[u8]| Ok(HttpResponse { status: 200, body: bytes.to_vec() });
     let flipped = |bytes: &[u8]| {
         let mut bytes = bytes.to_vec();
@@ -1216,7 +1216,7 @@ async fn the_canonical_pair_is_fetched_verified_and_admitted_as_the_authorized_c
     };
     for case in fixture["admissions"].as_array().unwrap() {
         let pair = fixture["pairs"].as_array().unwrap().iter().find(|pair| pair["id"] == case["pair"]).unwrap();
-        let expected: DocumentOpenCheckpointV1 = crate::os_pack::json::from_json_str(&case["expected"].to_string()).expect("fixture checkpoint");
+        let expected: DocumentOpenCheckpointV1 = semio_framework_pack_json::from_json_str(&case["expected"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture checkpoint");
         let scope = DocumentScope::new(case["scope"]["spaceId"].as_str().unwrap(), case["scope"]["documentId"].as_str().unwrap());
         let transport = FakeTransport::default();
         transport.push_response(Ok(HttpResponse { status: 503, body: Vec::new() })).await;
@@ -1235,7 +1235,7 @@ async fn the_canonical_pair_is_fetched_verified_and_admitted_as_the_authorized_c
     }
     let genesis = &fixture["pairs"][0];
     let scope = DocumentScope::new(genesis["selection"]["spaceId"].as_str().unwrap(), genesis["selection"]["documentId"].as_str().unwrap());
-    let expected: DocumentOpenCheckpointV1 = crate::os_pack::json::from_json_str(&fixture["admissions"][0]["expected"].to_string()).unwrap();
+    let expected: DocumentOpenCheckpointV1 = semio_framework_pack_json::from_json_str(&fixture["admissions"][0]["expected"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for (status, refusal) in [(401, "unauthorized"), (404, "http 404"), (503, "http 503")] {
         let transport = FakeTransport::default();
         for _ in 0..CANONICAL_CHECKPOINT_PAIR_TRANSIENT_ATTEMPTS {
@@ -1267,7 +1267,7 @@ async fn a_rebootstrap_pair_is_admitted_only_as_the_controls_checkpoint() {
             scope: DocumentScope::new(raw["scope"]["spaceId"].as_str().unwrap(), raw["scope"]["documentId"].as_str().unwrap()),
             checkpoint_id: hash(&raw["checkpointId"]),
             descriptor_digest_v1: hash(&raw["descriptorDigestV1"]),
-            baseline_frontier: crate::os_pack::json::from_json_str(&raw["baselineFrontier"].to_string()).expect("fixture baseline"),
+            baseline_frontier: semio_framework_pack_json::from_json_str(&raw["baselineFrontier"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture baseline"),
         };
         let transport = FakeTransport::default();
         transport.push_response(Ok(HttpResponse { status: 200, body })).await;
@@ -1284,17 +1284,17 @@ async fn a_rebootstrap_pair_is_admitted_only_as_the_controls_checkpoint() {
 /// TypeScript parser + ShellHost filter answer: a malformed row is dropped, never the listing; revoked or expired rows name no agent.
 #[test]
 fn live_agent_principals_answer_the_shared_delegation_list_vectors() {
-    let vectors = crate::os_pack::json::parse(include_str!("../../../🤖️delegations/🧫️fixtures/📋️agent-delegation-list.json")).expect("the delegation vectors parse");
-    let cases = vectors.get("cases").and_then(crate::os_pack::json::Value::as_array).expect("cases");
+    let vectors = semio_framework_pack_json::parse(include_str!("../../../🤖️delegations/🧫️fixtures/📋️agent-delegation-list.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the delegation vectors parse");
+    let cases = vectors.get("cases").and_then(semio_framework_pack_json::Value::as_array).expect("cases");
     assert!(!cases.is_empty());
     for case in cases {
-        let name = case.get("name").and_then(crate::os_pack::json::Value::as_str).expect("name");
+        let name = case.get("name").and_then(semio_framework_pack_json::Value::as_str).expect("name");
         let body = match case.get("body") {
-            Some(body) => crate::os_pack::json::to_string(body),
-            None => case.get("bodyText").and_then(crate::os_pack::json::Value::as_str).expect("bodyText").to_string(),
+            Some(body) => semio_framework_pack_json::to_string(body),
+            None => case.get("bodyText").and_then(semio_framework_pack_json::Value::as_str).expect("bodyText").to_string(),
         };
-        let now_ms = case.get("nowMs").and_then(crate::os_pack::json::Value::as_i64).expect("nowMs");
-        let expected: Vec<String> = case.get("principals").and_then(crate::os_pack::json::Value::as_array).expect("principals").iter().map(|principal| principal.as_str().expect("principal").to_string()).collect();
+        let now_ms = case.get("nowMs").and_then(semio_framework_pack_json::Value::as_i64).expect("nowMs");
+        let expected: Vec<String> = case.get("principals").and_then(semio_framework_pack_json::Value::as_array).expect("principals").iter().map(|principal| principal.as_str().expect("principal").to_string()).collect();
         assert_eq!(agent_delegations::live_agent_principals(&body, now_ms), expected, "{name}");
     }
 }

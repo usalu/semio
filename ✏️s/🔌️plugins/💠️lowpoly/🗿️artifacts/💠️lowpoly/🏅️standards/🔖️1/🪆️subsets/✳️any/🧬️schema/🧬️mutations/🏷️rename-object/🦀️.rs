@@ -21,9 +21,12 @@ impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for RenameObject {
     fn diff(&self, base: &LowpolySnapshot) -> protocol::MutationOutcome<<LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &LowpolySnapshot) -> Result<Vec<LowpolyMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename object to \"{}\"", self.new_name), &format!("Objekt in \"{}\" umbenennen", self.new_name))
     }

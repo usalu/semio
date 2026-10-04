@@ -143,6 +143,8 @@
     ]
   },
   "targets": {
+    "test-general-execution-ownership": {"executor":"nx:run-commands","cache":false,"options":{"cwd":"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript","command":"bun ./📜️script.ts test-general-execution-ownership"}},
+    "test-fixture-ownership": {"executor":"nx:run-commands","cache":false,"options":{"cwd":"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript","command":"bun ./📜️script.ts test-fixture-ownership"}},
     "test-locale-law-ownership": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -987,13 +989,6 @@
         "command": "bun ./📜️script.ts test reference-coordinate-progress"
       }
     },
-    "test-draw-destination-observation": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test draw-destination-observation"
-      }
-    },
     "test-markdown-inline-references": {
       "executor": "nx:run-commands",
       "options": {
@@ -1226,6 +1221,24 @@
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🧪️tests,🧫️fixtures,🧬️schema}/🧱️cargo-dependency-direction/**/*"
       ]
     },
+    "test-compute-constructor-owner": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "sharedGlobals",
+        "{projectRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🧩️compute-constructor/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📖️source-access/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/✅️validator/**/*",
+        "{workspaceRoot}/📜️script.ts"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test compute-constructor-owner"
+      }
+    },
     "test-dependency-direction": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -1371,12 +1384,12 @@
         "command": "bun ./📜️script.ts test owned-script-routes"
       }
     },
-    "lint-framework-module-product-direction": {
+    "lint-framework-neutral-product-direction": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts lint framework-module-product-direction"
+        "command": "bun ./📜️script.ts lint framework-neutral-product-direction"
       },
       "inputs": [
         "sharedGlobals",
@@ -1661,7 +1674,10 @@
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/🔁️graph-revision/**/*",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts"
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🔗️import-edges/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/import-edges/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧬️schema/🔗️import-edges/**/*"
       ],
       "outputs": [],
       "options": {
@@ -1697,6 +1713,19 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test source-services"
+      }
+    },
+    "test-multi-scope-verification": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "default",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/**/*"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test multi-scope-verification"
       }
     },
     "test-rust-source-roots": {

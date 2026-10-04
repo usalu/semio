@@ -23,9 +23,9 @@ impl Deserializer<WriterSnapshot> for TxtIntoWriter {
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
     async fn deserialize(payload: &IoPayload) -> IoResult<WriterSnapshot> {
         let IoPayload::Text(text) = payload else {
-            return Err(IoError { message: "TxtIntoWriter: expected a text payload".to_string(), diagnostics: Vec::new() });
+            return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "TxtIntoWriter: expected a text payload".to_string())));
         };
-        let txt = <TxtSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| IoError { message: format!("TxtIntoWriter: {error}"), diagnostics: Vec::new() })?;
+        let txt = <TxtSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("TxtIntoWriter: {error}"))))?;
         let snapshot = writer_snapshot_with_text(WRITER_DOCUMENT_SCHEMA, "txt-import", "plain", "writer://txt-import", &txt.to_body());
         Ok(IoOutcome { value: snapshot, diagnostics: Vec::new() })
     }

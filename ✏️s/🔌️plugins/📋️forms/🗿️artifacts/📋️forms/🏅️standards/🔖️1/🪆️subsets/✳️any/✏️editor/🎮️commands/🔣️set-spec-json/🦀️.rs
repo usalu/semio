@@ -20,14 +20,14 @@ pub(super) fn replace_design_operations(current: &FormsSnapshot, next: &FormsSna
     operations
 }
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "spec-json")]
 pub struct SetSpecJson {
     pub json: String,
 }
 
 pub fn handle(payload: &SetSpecJson, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
-    let next: FormsSnapshot = dsl::os_pack::json::from_json_str(&payload.json).map_err(|error| Fault::from(format!("forms.import.invalid: {error}")))?;
+    let next: FormsSnapshot = semio_framework_pack_json::from_json_str(&payload.json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| Fault::from(format!("forms.import.invalid: {}",error.into_message())))?;
     Ok(Emit { artifact_mutations: replace_design_operations(doc.snapshot, &next), ..Default::default() })
 }
 

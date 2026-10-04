@@ -11,3 +11,10 @@ type TxtSnapshot {
   trailingNewline: Boolean! @state(class: ARTIFACT)
   lineEnding: LineEnding! @state(class: ARTIFACT)
 }
+
+input TxtSnapshotInput {
+  schema: String!
+  lines: [String!]!
+  trailingNewline: Boolean!
+  lineEnding: LineEnding!
+}

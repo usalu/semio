@@ -38,7 +38,7 @@ fn undoing_the_whole_sequence_returns_the_document_to_the_committed_example() {
     let mut document = base.clone();
     let mut inverses = Vec::new();
     for step in &steps {
-        inverses.push(inverse_grid3d_mutation(&document, step));
+        inverses.push(inverse_grid3d_mutation(&document, step).expect("valid retained mutation inverse fixture"));
         apply_grid3d_mutation(&mut document, step).expect("forward applies");
     }
     for inverse in inverses.iter().rev() {

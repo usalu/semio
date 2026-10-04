@@ -1643,7 +1643,87 @@
         "airPermeability",
         "ventilationRate",
         "acceleration"
-      ]
+      ],
+      "x-semio-ui": {
+        "options": {
+          "dimensionless": {
+            "en": "Dimensionless",
+            "de": "Dimensionslos"
+          },
+          "length": {
+            "en": "Length",
+            "de": "Länge"
+          },
+          "area": {
+            "en": "Area",
+            "de": "Fläche"
+          },
+          "volume": {
+            "en": "Volume",
+            "de": "Volumen"
+          },
+          "mass": {
+            "en": "Mass",
+            "de": "Masse"
+          },
+          "time": {
+            "en": "Time",
+            "de": "Zeit"
+          },
+          "temperature": {
+            "en": "Temperature",
+            "de": "Temperatur"
+          },
+          "force": {
+            "en": "Force",
+            "de": "Kraft"
+          },
+          "pressure": {
+            "en": "Pressure",
+            "de": "Druck"
+          },
+          "stress": {
+            "en": "Stress",
+            "de": "Spannung"
+          },
+          "moment": {
+            "en": "Moment",
+            "de": "Moment"
+          },
+          "energy": {
+            "en": "Energy",
+            "de": "Energie"
+          },
+          "power": {
+            "en": "Power",
+            "de": "Leistung"
+          },
+          "thermalConductivity": {
+            "en": "Thermal conductivity",
+            "de": "Wärmeleitfähigkeit"
+          },
+          "thermalResistance": {
+            "en": "Thermal resistance",
+            "de": "Wärmedurchlasswiderstand"
+          },
+          "heatTransferCoefficient": {
+            "en": "Heat transfer coefficient",
+            "de": "Wärmeübergangskoeffizient"
+          },
+          "airPermeability": {
+            "en": "Air permeability",
+            "de": "Luftdurchlässigkeit"
+          },
+          "ventilationRate": {
+            "en": "Ventilation rate",
+            "de": "Luftwechselrate"
+          },
+          "acceleration": {
+            "en": "Acceleration",
+            "de": "Beschleunigung"
+          }
+        }
+      }
     }
   }
 }

@@ -1,3 +1,0 @@
-# 🧬️ replace-pixel-data/ReplacePixelData
-scalar ReplacePixelDataMutationValue
-input ReplacePixelDataMutation { pixels: ReplacePixelDataMutationValue! }

@@ -11,7 +11,7 @@ pub fn diff(payload: &ReplaceAssetPayload, base: &NoteSnapshot) -> protocol::Mut
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Asset \"{}\" does not exist.", payload.key), [payload.key.clone()]);
     };
     if existing == &payload.new_asset {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Asset \"{}\" payload is unchanged.", payload.key));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Asset \"{}\" payload is unchanged.", payload.key));
     }
     protocol::MutationOutcome::new(note_asset_upsert_diff(&payload.key, &payload.new_asset))
 }

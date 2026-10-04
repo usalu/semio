@@ -106,6 +106,7 @@ Feature: Apply every typed XML 1.0 valid-subset mutation to a real 40 KB DOCTYPE
       | declare-entity | {"index": 0, "parameter": false, "name": "semioVendor", "value": "tech.semio"} |
       | set-internal-subset | {"declarations": [{"kind": "entity", "parameter": false, "name": "semioVendor", "value": "tech.semio"}, {"kind": "entity", "parameter": true, "name": "semioShared", "value": "tech.semio.shared"}]} |
       | set-text | {"path": [1, 3, 0], "text": "reuse-marketplaces-2026"} |
+      | patch-snapshot | {"patch": {"operation": "set", "path": "/doc/root/children/1/children/3/children/0/text", "value": "reuse-marketplaces-patched"}} |
 
   @id-inverse
   @level-exhaustive
@@ -127,6 +128,7 @@ Feature: Apply every typed XML 1.0 valid-subset mutation to a real 40 KB DOCTYPE
       | declare-entity | {"index": 0, "parameter": false, "name": "semioVendor", "value": "tech.semio"} |
       | set-internal-subset | {"declarations": [{"kind": "entity", "parameter": false, "name": "semioVendor", "value": "tech.semio"}, {"kind": "entity", "parameter": true, "name": "semioShared", "value": "tech.semio.shared"}]} |
       | set-text | {"path": [1, 3, 0], "text": "reuse-marketplaces-2026"} |
+      | patch-snapshot | {"patch": {"operation": "set", "path": "/doc/root/children/1/children/3/children/0/text", "value": "reuse-marketplaces-patched"}} |
 
   @id-identity-round-trip
   @level-long

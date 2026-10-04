@@ -1,6 +1,7 @@
 
 use super::*;
 use std::sync::atomic::AtomicU32;
+use semio_framework_value::{ValueError,ValueRefusalKind};
 
 fn retry_runtime() -> (RetryRuntime, Arc<WorkerPool>) {
     let pool = Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, 3)));
@@ -41,7 +42,7 @@ impl RangeTransport for FakeTransport {
         let remaining = self.fail_first_n.load(Ordering::SeqCst);
         if remaining > 0 {
             self.fail_first_n.fetch_sub(1, Ordering::SeqCst);
-            return Err(PackError::Io("simulated transient failure".to_string()));
+            return Err(PackError::Refusal(semio_framework_pack_error::PackRefusal::Io{error:ValueError::new(ValueRefusalKind::WorkLimit,"simulated transient failure"),retry:PackRetryDisposition::Transient}));
         }
 
         let start = request.range.offset as usize;

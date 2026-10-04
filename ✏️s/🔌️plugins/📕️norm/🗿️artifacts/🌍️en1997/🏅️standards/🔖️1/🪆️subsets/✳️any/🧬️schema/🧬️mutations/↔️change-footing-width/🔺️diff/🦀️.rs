@@ -9,7 +9,7 @@ pub fn diff(payload: &ChangeFootingWidth, base: &En1997Snapshot) -> protocol::Mu
         return protocol::MutationOutcome::error("mutation.target-missing", format!("footing {} missing", payload.id), vec![payload.id.clone()]);
     };
     if base.footings[idx].width == payload.new_width {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "width unchanged");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "width unchanged");
     }
     let mut footings = base.footings.clone();
     footings[idx].width = payload.new_width;

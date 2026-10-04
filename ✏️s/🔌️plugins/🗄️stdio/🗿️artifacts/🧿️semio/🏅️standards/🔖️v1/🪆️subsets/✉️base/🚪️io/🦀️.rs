@@ -24,7 +24,7 @@ pub mod derived_composition {
     use crate::standards::v1::subsets::text::io::SemioTextValidator;
     use crate::standards::v1::subsets::value::io::SemioValueValidator;
     use crate::standards::v1::subsets::video::io::SemioVideoValidator;
-    use dsl::Diagnostic;
+    use semio_framework_diagnostic::Diagnostic;
     use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
     use std::sync::OnceLock;
 
@@ -107,12 +107,12 @@ pub mod derived_composition {
             match decoded {
                 Some(snapshot) => dispatch_validate(&snapshot).await,
                 None => vec![Diagnostic {
-                    code: dsl::FaultCode::new("stdio.semio.any.validate-decode-failed"),
-                    severity: dsl::Severity::Warning,
-                    span: dsl::TextSpan::at(1, 1),
+                    code: semio_framework_diagnostic::FaultCode::new("stdio.semio.any.validate-decode-failed"),
+                    severity: semio_framework_diagnostic::Severity::Warning,
+                    span: semio_framework_diagnostic::TextSpan::at(1, 1),
                     message: "SemioValidator: payload did not decode as a SemioSnapshot — skipped".into(),
                     expected: None,
-                    scope: dsl::FaultScope::default(),
+                    scope: semio_framework_diagnostic::FaultScope::default(),
                 }],
             }
         }

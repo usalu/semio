@@ -113,7 +113,7 @@ fn bridges_round_trip_apply_and_invert_every_kind() {
         assert!(messages.is_empty(), "{mutation:?}: {messages:?}");
         assert_ne!(after, base, "{mutation:?} must be observable");
         let mut restored = after;
-        for step in inverse_en1995_mutation(&mutation, &base) {
+        for step in inverse_en1995_mutation(&mutation, &base).expect("valid retained mutation inverse fixture") {
             restored = apply_en1995_mutation(&restored, &step).expect("inverse step applies").0;
         }
         assert_eq!(restored, base, "{mutation:?}: inverse must restore the base");
@@ -145,7 +145,7 @@ fn text_at(dir: &std::path::Path, facet: &str) -> String {
 
 macro_rules! decoded {
     ($ty:ty, $dir:expr, $facet:expr, $kind:expr) => {
-        pack::json::from_json_str::<$ty>(&text_at($dir, $facet)).unwrap_or_else(|e| panic!("{} {}: {e}", $kind, $facet))
+        semio_framework_pack_json::from_json_str::<$ty>(&text_at($dir, $facet), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|e| panic!("{} {}: {e}", $kind, $facet))
     };
 }
 
@@ -162,10 +162,10 @@ fn regen_mutation_vectors() {
         let outcome = <En1995Mutation as protocol::Mutation<En1995Snapshot>>::diff(&mutation, &base);
         let after = protocol::MutationDiff::apply(outcome.diff(), &base).expect("applies");
         let facets = [
-            ("📸️snapshot/⬅️before", pack::json::to_json_string(&base)),
-            ("📸️snapshot/➡️after", pack::json::to_json_string(&after)),
-            ("🦠️mutation", pack::json::to_json_string(&mutation)),
-            ("🔺️diff", pack::json::to_json_string(outcome.diff())),
+            ("📸️snapshot/⬅️before", semio_framework_pack_json::to_json_string(&base)),
+            ("📸️snapshot/➡️after", semio_framework_pack_json::to_json_string(&after)),
+            ("🦠️mutation", semio_framework_pack_json::to_json_string(&mutation)),
+            ("🔺️diff", semio_framework_pack_json::to_json_string(outcome.diff())),
             ("🎯️outcome", format!("{{\"status\":\"{}\"}}", if after == base { "no-op" } else { "applied" })),
         ];
         for (facet, compact) in facets {

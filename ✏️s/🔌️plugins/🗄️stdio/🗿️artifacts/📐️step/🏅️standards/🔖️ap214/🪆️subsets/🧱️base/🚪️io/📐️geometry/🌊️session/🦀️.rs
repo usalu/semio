@@ -1,7 +1,7 @@
 //! 📐️ STEP-owned session operations over the general computational geometry authority.
 use semio_framework_3d::brep::engine::{Brep, GeometryHandle};
 use semio_s_spatial_kernel_semio_session::{BrepModuleError, GeometryOperations, Session};
-use semio_framework_os_flow::os_pack::json::{Value, object};
+use semio_framework_pack_json::{Value, object};
 /// 📐️ Closed STEP operation table for explicitly assembled geometry sessions.
 pub struct StepGeometryOperations;
 impl GeometryOperations for StepGeometryOperations {

@@ -1,6 +1,0 @@
-{
-  "mutation": "remove-unknown-chunk",
-  "payload": {
-    "index": 0
-  }
-}

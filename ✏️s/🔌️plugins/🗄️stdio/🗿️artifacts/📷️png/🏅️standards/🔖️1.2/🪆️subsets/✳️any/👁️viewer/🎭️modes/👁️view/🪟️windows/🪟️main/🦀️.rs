@@ -1,28 +1,28 @@
-//! 👁️ `png` view (any) — Main window: real `ImageWindowKit`
-//! render of the current document (read-only).
+//! 👁️ PNG window with an explicit bounded RGBA8 preview projection.
 
-use crate::standards::v1_2::subsets::any::io::encode_png;
+use crate::standards::v1_2::subsets::any::io::png_preview;
 use crate::standards::v1_2::subsets::any::schema::snapshot::PngSnapshot;
 use semio_framework_plugin::app::{ImageView, ImageWindowKit};
 use semio_framework_plugin::{BuiltNode, WindowKindDefinition, WindowKit};
+use semio_framework_ui_locale::Locale;
 
 pub const WINDOW_KIND_ID: &str = ImageWindowKit::KIND_ID;
 pub const BODY_KEY: &str = ImageWindowKit::KIND_ID;
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn definition() -> WindowKindDefinition {
     ImageWindowKit::window_kind()
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(snapshot: &PngSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    ImageWindowKit::render(&image_view(snapshot))
+pub fn render(snapshot: &PngSnapshot, locale: Locale) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    match image_view(snapshot) {
+        Ok(view) => ImageWindowKit::render(&view),
+        Err(_) => ImageWindowKit::render_unavailable(locale),
+    }
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn image_view(snapshot: &PngSnapshot) -> ImageView {
-    let bytes = encode_png(snapshot).ok().unwrap_or_default();
-    ImageView { width: snapshot.width, height: snapshot.height, mime: "image/png".into(), base64: crate::base64_standard(&bytes) }
+fn image_view(snapshot: &PngSnapshot) -> semio_framework_plugin::UiAssemblyResult<ImageView> {
+    let preview = png_preview(snapshot).map_err(|message| semio_framework_plugin::PluginAssemblyError::new("stdio.png.preview", message))?;
+    Ok(ImageView { width: preview.width, height: preview.height, mime: "image/png".into(), base64: crate::base64_standard(&preview.bytes) })
 }
 
 #[cfg(test)]

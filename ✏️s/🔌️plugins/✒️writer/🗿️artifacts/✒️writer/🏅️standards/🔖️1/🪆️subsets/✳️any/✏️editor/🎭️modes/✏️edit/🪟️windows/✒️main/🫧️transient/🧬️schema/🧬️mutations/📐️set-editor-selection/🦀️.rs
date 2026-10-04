@@ -1,7 +1,7 @@
 use super::{WriterMainWindowTransient, WriterMainWindowTransientMutation};
 use crate::WriterEditorSelection;
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[dsl(keyword = "set-editor-selection")]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetEditorSelection {
@@ -16,9 +16,12 @@ impl protocol::MutationKind<WriterMainWindowTransient, WriterMainWindowTransient
         next.editor_selection.clone_from(&self.selection);
         protocol::MutationOutcome::new(next)
     }
-    fn inverse(&self, base: &WriterMainWindowTransient) -> Vec<WriterMainWindowTransientMutation> {
+    fn inverse(&self, base: &WriterMainWindowTransient) -> Result<Vec<WriterMainWindowTransientMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![Self { selection: base.editor_selection.clone() }.into()]
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set Writer Window Editor Selection", "Editorauswahl des Schreibfensters setzen")
     }

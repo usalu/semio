@@ -17,8 +17,11 @@ pub fn apply_writer_mutation(snapshot: &mut WriterSnapshot, mutation: &WriterMut
     Ok(())
 }
 
-pub fn inverse_writer_mutation(snapshot: &WriterSnapshot, mutation: &WriterMutation) -> Vec<WriterMutation> {
-    mutation.inverse(snapshot)
+pub fn inverse_writer_mutation(snapshot: &WriterSnapshot, mutation: &WriterMutation) -> Result<Vec<WriterMutation>, semio_framework_value::ValueError> {
+    Ok({
+    mutation.inverse(snapshot)?
+
+    })
 }
 
 /// 🧮️ Applies `mutation` to `snapshot` and hands back the whole [`protocol::MutationOutcome`], the
@@ -35,28 +38,31 @@ pub fn apply_writer_mutation_outcome(snapshot: &mut WriterSnapshot, mutation: &W
 /// returns. Reachable from outside this crate, which `protocol::Mutation` itself is not — the
 /// `protocol` extern-crate alias is private to `🦀️.rs`.
 // 🚫️async: E1 pure computation over an in-memory snapshot, consumed from a synchronous external test host — see R9
-pub fn inverse_writer_mutation_steps(mutation: &WriterMutation, base: &WriterSnapshot) -> Vec<WriterMutation> {
-    mutation.inverse(base)
+pub fn inverse_writer_mutation_steps(mutation: &WriterMutation, base: &WriterSnapshot) -> Result<Vec<WriterMutation>, semio_framework_value::ValueError> {
+    Ok({
+    mutation.inverse(base)?
+
+    })
 }
 
 /// 📥️ Decodes the internally-tagged (`{"mutation": "<camelCaseVariant>", …}`) projection the
 /// committed `<slug>/🧪️tests/<fixture>/🦠️mutation/🔣️.json` vectors carry.
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
 pub fn decode_writer_mutation_json(text: &str) -> Result<WriterMutation, String> {
-    dsl::os_pack::json::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 
 /// 📥️ Decodes a committed `📸️snapshot/{⬅️before,➡️after}/🔣️.json` vector.
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
 pub fn decode_writer_snapshot_json(text: &str) -> Result<WriterSnapshot, String> {
-    dsl::os_pack::json::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 
 /// 📤️ The snapshot as the same canonical JSON the committed vectors are written in — the
 /// projection an external test host compares through.
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
 pub fn encode_writer_snapshot_json(snapshot: &WriterSnapshot) -> String {
-    dsl::os_pack::json::to_json_string(snapshot)
+    semio_framework_pack_json::to_json_string(snapshot)
 }
 
 //#endregion ⚙️Operations

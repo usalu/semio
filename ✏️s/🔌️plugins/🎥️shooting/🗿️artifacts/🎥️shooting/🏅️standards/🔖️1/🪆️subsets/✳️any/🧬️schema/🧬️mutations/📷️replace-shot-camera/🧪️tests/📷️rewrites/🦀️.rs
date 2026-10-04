@@ -16,10 +16,10 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📷️replace-shot-camera/📷️rewrites/🎯️outcome/🔣️.json");
 
 fn before() -> ShootingSnapshot {
-    dsl::os_pack::from_json_str(BEFORE).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> ShootingSnapshot {
-    dsl::os_pack::from_json_str(AFTER).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> ShootingMutation {
     serde_json::from_str(MUTATION).expect("mutation decodes")
@@ -45,7 +45,7 @@ async fn writes_through_the_shot_into_its_saved_camera() {
 async fn inverse_restores_the_previous_pose() {
     let base = before();
     let forward = mutation();
-    let inverse = forward.inverse(&base);
+    let inverse = forward.inverse(&base).expect("valid retained mutation inverse fixture");
     let mut snapshot = apply(&base, &forward);
     for step in &inverse {
         snapshot = apply(&snapshot, step);
@@ -57,8 +57,8 @@ async fn inverse_restores_the_previous_pose() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: ShootingSnapshot = dsl::os_pack::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: ShootingSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "replace-shot-camera/rewrites-cam-wide-through-shot-wide: committed {label} JSON is not canonical");
     }
@@ -78,7 +78,7 @@ async fn declared_outcome_holds_and_an_unbound_shot_is_a_no_op() {
 
     let unbound: ShootingMutation = serde_json::from_str(r#"{"mutation":"replaceShotCamera","shotId":"shot-close","newCamera":{"position":[3.0,-3.0,2.0],"target":[0.0,0.0,0.5],"zoom":1.5,"fov":40.0}}"#).expect("probe mutation decodes");
     let skipped = unbound.diff(&before());
-    assert_eq!(skipped.worst_level(), Some(protocol::Severity::Warning), "replace-shot-camera/rewrites-cam-wide-through-shot-wide: an unbound shot is a Warning, not an Error");
+    assert_eq!(skipped.worst_level(), Some(semio_framework_diagnostic::Severity::Warning), "replace-shot-camera/rewrites-cam-wide-through-shot-wide: an unbound shot is a Warning, not an Error");
     assert_eq!(skipped.messages()[0].code.0, "mutation.no-op", "replace-shot-camera/rewrites-cam-wide-through-shot-wide: the dereference guard's frozen code");
     let unchanged = skipped.into_parts().0.apply(&before()).expect("a no-op outcome still applies");
     assert_eq!(unchanged.saved_cameras, before().saved_cameras, "replace-shot-camera/rewrites-cam-wide-through-shot-wide: an unbound shot must not mint a saved camera");
@@ -89,7 +89,7 @@ async fn declared_outcome_holds_and_an_unbound_shot_is_a_no_op() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = mutation().diff(&before());
-    let produced = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "replace-shot-camera/rewrites-cam-wide-through-shot-wide: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert_eq!(committed["savedCameras"]["patched"][0]["id"], "cam-wide", "replace-shot-camera/rewrites-cam-wide-through-shot-wide: the delta is keyed by the dereferenced CAMERA id, not the payload's shot id");
@@ -100,8 +100,8 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to `ShootingDiff` — the committed write-through patch round-trips through `ShootingDiff` unchanged.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: ShootingDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("diff re-encodes");
+    let decoded: ShootingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "replace-shot-camera/rewrites-cam-wide-through-shot-wide: committed diff JSON is not canonical");
 }
@@ -109,7 +109,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 Applying the committed diff straight to `before` yields `after` — the saved-camera patch alone is enough to rebuild the after-snapshot.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: ShootingDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: ShootingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let produced = decoded.apply(&before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "replace-shot-camera/rewrites-cam-wide-through-shot-wide: committed diff did not carry before to after");
 }

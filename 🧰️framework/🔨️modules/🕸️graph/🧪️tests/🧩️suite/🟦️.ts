@@ -1,3 +1,5 @@
+import "../🪆️record-owner/🟦️.ts";
+import "../../🛂️manifest/🧪️tests/🏷️type/🟦️.ts";
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
@@ -15,7 +17,10 @@ function testArtifactRoot(): string {
   return root;
 }
 
-import current from "../../🛂️manifest/📇️outputs.json";
+import currentInput from "../../🛂️manifest/📇️outputs.json";
+const current = parseGraphOutputCatalog(currentInput, currentInput.manifests.map((row: { id: string }) => row.id));
+const emptyCatalog = parseGraphOutputCatalog(fixture.empty, []);
+const fixtureCatalog = parseGraphOutputCatalog(fixture.catalog, fixture.manifestIds);
 import consumption from "../../🛂️manifest/🧫️fixtures/🧩️consumption/🔣️.json";
 import consumptionSchema from "../../🛂️manifest/🧬️schema/🧩️consumption/🔣️.json";
 
@@ -52,8 +57,8 @@ test("explicit output identities preserve independent manifest IDs and reject am
   expect(parseGraphOutputCatalog(fixture.empty,[]).manifests).toEqual([]);
   const parsed = parseGraphOutputCatalog(fixture.catalog, fixture.manifestIds);
   expect([...Object.values(parsed.shared), ...parsed.manifests.flatMap((row) => [row.rust, row.typescript])]).toEqual(fixture.expectedPaths);
-  expect(validate(current)).toBe(true);
-  expect(parseGraphOutputCatalog(current, current.manifests.map((row) => row.id))).toEqual<typeof current>(current);
+  expect(validate(currentInput)).toBe(true);
+  expect<unknown>(parseGraphOutputCatalog(currentInput, current.manifests.map((row) => row.id))).toEqual(currentInput);
   for (const row of fixture.invalid) {
     const invalid = structuredClone(fixture.catalog) as unknown as Record<string | number, unknown>;
     let owner = invalid;
@@ -66,6 +71,57 @@ test("explicit output identities preserve independent manifest IDs and reject am
   expect(() => parseGraphOutputCatalog(fixture.catalog, ["chronology", "absent"])).toThrow();
   expect(() => parseGraphOutputCatalog(fixture.catalog, ["chronology", "chronology"])).toThrow();
 }, 15_000);
+
+test("catalog identity is required and agrees with the independent schema", () => {
+  const validate = new Ajv({ strict: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/Outputs`)!;
+  expect(validate(fixture.catalog)).toBe(true);
+  expect(parseGraphOutputCatalog(fixture.catalog, fixture.manifestIds).contractId).toBe(fixture.catalog.contractId);
+  const missing = structuredClone(fixture.catalog) as Record<string, unknown>;
+  delete missing.contractId;
+  expect(validate(missing)).toBe(false);
+  expect(() => parseGraphOutputCatalog(missing, fixture.manifestIds)).toThrow();
+});
+
+test("independent owner previews execute with every specific owner unavailable", async () => {
+  const { build } = await import("esbuild");
+  const workspace = resolve(import.meta.dir, "../../../../..");
+  const refused = ["🧰️framework/🛍️products", "✏️s", "🌎️hub"].map((area) => resolve(workspace, area).replaceAll("\\", "/") + "/");
+  const validate = new Ajv({ strict: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/Outputs`)!;
+  for (const row of fixture.previewCases) {
+    const catalog = { ...fixture.empty, contractId: row.contractId };
+    expect(validate(catalog)).toBe(true);
+    const sandbox = mkdtempSync(join(testArtifactRoot(), "graph-preview-owner-"));
+    try {
+      const packageRoot = join(sandbox, "owner", "📦️packages", "🦀️rust");
+      const catalogPath = join(sandbox, "owner", "🛂️manifest", "📇️outputs.json");
+      mkdirSync(packageRoot, { recursive: true });
+      mkdirSync(join(sandbox, "owner", "🛂️manifest"), { recursive: true });
+      writeFileSync(catalogPath, JSON.stringify(catalog));
+      const execution = resolve(import.meta.dir, "../../🛂️manifest/🏃️execution/🟦️.ts");
+      const program = `import {PreviewGeneratedScript} from ${JSON.stringify(execution)};await new PreviewGeneratedScript(${JSON.stringify(packageRoot)},${JSON.stringify(sandbox)}).run();`;
+      const result = await build({ stdin: { contents: program, resolveDir: import.meta.dir }, bundle: true, platform: "node", format: "esm", write: false, plugins: [{ name: "removed-specific-owners", setup(builder) { builder.onLoad({ filter: /.*/ }, (input) => refused.some((prefix) => input.path.replaceAll("\\", "/").startsWith(prefix)) ? { errors: [{ text: "General preview loads a removed owner: " + input.path }] } : undefined); } }] });
+      const child = Bun.spawnSync(["node", "--input-type=module"], { stdin: Buffer.from(result.outputFiles![0]!.text), stdout: "pipe", stderr: "pipe" });
+      expect(child.exitCode, Buffer.from(child.stderr).toString()).toBe(0);
+      const preview = JSON.parse(Buffer.from(child.stdout).toString());
+      expect(new Ajv({ strict: true }).compile({ type: "object", additionalProperties: false, required: ["contractId", "nodes", "schemaVersion", "staleRemovals"], properties: { contractId: { const: row.expectedContractId }, nodes: { type: "array", minItems: 1 }, schemaVersion: { const: 1 }, staleRemovals: { type: "array", maxItems: 0 } } })(preview)).toBe(true);
+      expect(preview.contractId).toBe(row.expectedContractId);
+      expect(preview.nodes.filter((node: { nodeKind: string }) => node.nodeKind === "file")).toHaveLength(3);
+      expect(existsSync(join(sandbox, "owner", "🤖️generated"))).toBe(false);
+      console.log(`[DEBUG] graph-preview-owner ${JSON.stringify({ expected: row.expectedContractId, actual: preview.contractId, nodes: preview.nodes.length, published: false })}`);
+    } finally {
+      rmSync(sandbox, { recursive: true, force: true });
+    }
+  }
+}, 15_000);
+
+test("actual graph contract sources pass strict compiler admission", async () => {
+  const { default: ts } = await import("typescript");
+  const sources = ["../../🛂️manifest/📇️catalog/🟦️.ts", "../../🛂️manifest/🏃️execution/🟦️.ts", "./🟦️.ts"].map((path) => resolve(import.meta.dir, path));
+  const program = ts.createProgram(sources, { noEmit: true, strict: true, noUncheckedIndexedAccess: true, target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, allowImportingTsExtensions: true, resolveJsonModule: true, esModuleInterop: true, skipLibCheck: true, types: ["bun", "node"] });
+  const diagnostics = ts.getPreEmitDiagnostics(program);
+  expect(diagnostics.map((row) => ts.flattenDiagnosticMessageText(row.messageText, "\n"))).toEqual([]);
+  console.log(`[DEBUG] graph-contract strictSources=${sources.length} diagnostics=${diagnostics.length}`);
+}, 30_000);
 
 test("the producer writes exactly declared nested paths and refuses symlink traversal", () => {
   const sandbox = mkdtempSync(join(testArtifactRoot(), "graph-output-"));
@@ -160,13 +216,13 @@ test("manifest parse and catalog failures never produce a partial artifact plan"
     mkdirSync(join(sandbox, area), { recursive: true });
     const input = join(sandbox, area, "fixture.manifest.json");
     writeFileSync(input, "{");
-    expect(() => renderGraphArtifacts(sandbox, outDir, {...fixture.empty,inputAreas:[area]}, false)).toThrow();
+    expect(() => renderGraphArtifacts(sandbox, outDir, {...emptyCatalog,inputAreas:[area]}, false)).toThrow();
     expect(existsSync(outDir)).toBe(false);
     writeFileSync(input, JSON.stringify({ schema: "layout.manifest/v1", id: "fixture" }));
-    expect(renderGraphArtifacts(sandbox, outDir, {...fixture.empty,inputAreas:[area]}, false).manifestCount).toBe(0);
+    expect(renderGraphArtifacts(sandbox, outDir, {...emptyCatalog,inputAreas:[area]}, false).manifestCount).toBe(0);
     expect(existsSync(outDir)).toBe(false);
     writeFileSync(input, JSON.stringify({ schema: "manifest", id: "fixture" }));
-    expect(() => renderGraphArtifacts(sandbox, outDir, {...fixture.empty,inputAreas:[area]}, false)).toThrow(/catalog and admitted manifest identities differ/u);
+    expect(() => renderGraphArtifacts(sandbox, outDir, {...emptyCatalog,inputAreas:[area]}, false)).toThrow(/catalog and admitted manifest identities differ/u);
     expect(existsSync(outDir)).toBe(false);
   } finally {
     rmSync(sandbox, { recursive: true, force: true });
@@ -228,15 +284,15 @@ test("owner profiles emit exact independent manifest values and first-party enum
       writeFileSync(join(sandbox,"owners",`${doc.id}.manifest.json`),JSON.stringify(doc));
     }
     writeFileSync(join(sandbox,"foreign","foreign.manifest.json"),JSON.stringify({schema:"manifest",id:"foreign"}));
-    const rendered=renderGraphArtifacts(sandbox,join(sandbox,"output"),fixture.catalog,false);
+    const rendered=renderGraphArtifacts(sandbox,join(sandbox,"output"),fixtureCatalog,false);
     expect(rendered.manifestCount).toBe(2);
-    expect(renderGraphArtifacts(sandbox,join(sandbox,"empty"),fixture.empty,false).manifestCount).toBe(0);
+    expect(renderGraphArtifacts(sandbox,join(sandbox,"empty"),emptyCatalog,false).manifestCount).toBe(0);
     for(const row of fixture.catalog.manifests) {
       const rust=rendered.artifacts.find((artifact)=>artifact.path.endsWith(row.rust))!.content;
       const jsonLiteral=rust.match(/_MANIFEST_JSON: &str = (".*");/u)![1]!;
       expect(JSON.parse(JSON.parse(jsonLiteral))).toEqual(fixture.emission.find((doc)=>doc.id===row.id));
-      expect(rust).toContain("impl semio_framework_os_kernel::ToValue");
-      expect(rust).toContain("impl semio_framework_os_kernel::FromValue");
+      expect(rust).toContain("impl semio_framework_value::ToValue");
+      expect(rust).toContain("impl semio_framework_value::FromValue");
       expect(rust).not.toContain("foreign");
     }
   } finally {rmSync(sandbox,{recursive:true,force:true});}

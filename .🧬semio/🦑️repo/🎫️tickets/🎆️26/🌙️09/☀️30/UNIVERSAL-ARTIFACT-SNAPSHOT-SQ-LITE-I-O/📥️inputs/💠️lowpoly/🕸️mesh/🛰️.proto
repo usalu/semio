@@ -1,0 +1,17 @@
+// 🕸️ Managed topology carries exact binary32 words and canonical intrinsic values.
+syntax = "proto3";
+package semio.s.lowpoly;
+import "🧰️framework/🔨️modules/🌱️value/🧬️schema/🛰️.proto";
+message LowpolyMeshState { repeated LowpolyMeshVertex vertices=1; repeated LowpolyMeshHalfedge halfedges=2; repeated LowpolyMeshFace faces=3; repeated uint32 uv_seams=4; repeated LowpolyMeshAttribute attributes=5; repeated LowpolyMeshMaterial materials=6; repeated LowpolyMeshTexture textures=7; }
+message LowpolyMeshVector3 { fixed32 x=1; fixed32 y=2; fixed32 z=3; }
+message LowpolyMeshVertex { LowpolyMeshVector3 position=1; optional LowpolyMeshVector3 normal=2; optional uint32 halfedge=3; }
+message LowpolyMeshHalfedge { uint32 vertex=1; optional uint32 twin=2; uint32 next=3; optional uint32 face=4; fixed32 u=5; fixed32 v=6; }
+message LowpolyMeshFace { uint32 halfedge=1; bool smooth=2; bool flipped=3; }
+message LowpolyMeshAttribute { string name=1; LowpolyMeshAttributeDomain domain=2; LowpolyMeshAttributeSemantic semantic=3; LowpolyMeshAttributeInterpolation interpolation=4; repeated semio.framework.value.DslValue values=5; optional LowpolyMeshIndices indices=6; }
+message LowpolyMeshIndices { repeated uint32 values=1; }
+message LowpolyMeshMaterial { string name=1; semio.framework.value.DslValue value=2; }
+message LowpolyMeshTexture { string name=1; string mime=2; bytes content=3; }
+
+enum LowpolyMeshAttributeDomain { VERTEX=0; CORNER=1; FACE=2; EDGE=3; }
+enum LowpolyMeshAttributeSemantic { NORMAL=0; UV=1; COLOR=2; MATERIAL=3; CUSTOM=4; }
+enum LowpolyMeshAttributeInterpolation { LINEAR=0; NEAREST=1; CONSTANT=2; }

@@ -4,7 +4,8 @@ use super::mutation::ChangeBlockField;
 use crate::{forms_steps, FormMutation, FormsSnapshot};
 
 //#region 🔖️Inverse
-pub fn inverse_change_block_field(payload: &ChangeBlockField, base: &FormsSnapshot) -> Vec<FormMutation> {
+pub fn inverse_change_block_field(payload: &ChangeBlockField, base: &FormsSnapshot) -> Result<Vec<FormMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     forms_steps(base)
         .iter()
         .flat_map(|step| step.blocks.iter())
@@ -12,5 +13,7 @@ pub fn inverse_change_block_field(payload: &ChangeBlockField, base: &FormsSnapsh
         .map(|original| FormMutation::ChangeBlockField(ChangeBlockField { block_id: payload.block_id.clone(), change: payload.change.read(original) }))
         .into_iter()
         .collect()
+
+    })())
 }
 //#endregion 🔖️Inverse

@@ -12,9 +12,9 @@ mod declared_verb_verdict_tests {
             let args = case["args"].as_array().unwrap().iter().map(|argument| {
                 let mut schema = argument["schema"].clone();
                 if let Some(options) = schema.get_mut("options").and_then(serde_json::Value::as_array_mut) {
-                    for option in options { *option = serde_json::to_value(ActionArgOption::new(option.as_str().unwrap(), crate::LocalizedLabel::native("Choice", "Auswahl"))).unwrap(); }
+                    for option in options { *option = serde_json::to_value(ActionArgOption::new(option.as_str().unwrap(), semio_framework_ui_locale::LocalizedLabel::native("Choice", "Auswahl"))).unwrap(); }
                 }
-                let mut arg = ActionArgDef::text(argument["id"].as_str().unwrap(), crate::LocalizedLabel::native("Argument", "Argument"));
+                let mut arg = ActionArgDef::text(argument["id"].as_str().unwrap(), semio_framework_ui_locale::LocalizedLabel::native("Argument", "Argument"));
                 arg.schema = serde_json::from_value(schema).unwrap();
                 arg.required = argument["required"].as_bool().unwrap();
                 arg.nullable = argument["nullable"].as_bool().unwrap_or(false);
@@ -25,7 +25,7 @@ mod declared_verb_verdict_tests {
             if let Some(argument) = case["errorArgument"].as_str() {
                 assert!(actual.unwrap_err().contains(argument), "{}", case["name"]);
             } else {
-                let actual = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&actual.unwrap())).unwrap();
+                let actual = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&actual.unwrap())).unwrap();
                 assert_eq!(actual, case["expected"], "{}", case["name"]);
                 let validator = semio_framework_schema::OwnedJsonSchemaValidator::compile(&case["valueSchema"].to_string()).unwrap();
                 validator.validate_json(&actual.to_string()).unwrap();
@@ -129,7 +129,7 @@ mod declared_verb_verdict_tests {
     /// 🔀️ Every perturbable argument schema yields two distinct values, and a single-option choice none.
     #[test]
     fn declared_argument_alternatives_are_distinct_valid_values() {
-        use crate::LocalizedLabel;
+        use semio_framework_ui_locale::LocalizedLabel;
         use semio_framework::{ActionArgDef, ActionArgOption};
         let label = || LocalizedLabel::native("Probe", "Probe");
         let two = ActionArgDef::select("kind", label(), vec![ActionArgOption::new("owns", label()), ActionArgOption::new("uses", label())]);

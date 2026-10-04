@@ -24,14 +24,14 @@ async fn inference_determinism_law() {
     use protocol::Inference;
     let text = include_str!("../../🖼️assets/🗣️.dsl.semio");
     let snapshot = <crate::CadSnapshot as store::ArtifactDsl>::parse_dsl(text).expect("demo fixture parses");
-    let inference = crate::standards::v1::subsets::any::schema::inferences::CadInference::infer(&snapshot);
-    assert_eq!(inference, crate::standards::v1::subsets::any::schema::inferences::CadInference::infer(&snapshot));
+    let inference = crate::standards::v1::subsets::any::schema::inferences::CadInference::infer(&snapshot).expect("valid materialized inference fixture");
+    assert_eq!(inference, crate::standards::v1::subsets::any::schema::inferences::CadInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
     use protocol::Inference;
-    assert_eq!(crate::standards::v1::subsets::any::schema::inferences::CadInference::infer(&crate::empty_cad_snapshot()), crate::standards::v1::subsets::any::schema::inferences::CadInference::default(),);
+    assert_eq!(crate::standards::v1::subsets::any::schema::inferences::CadInference::infer(&crate::empty_cad_snapshot()).expect("valid materialized inference fixture"), crate::standards::v1::subsets::any::schema::inferences::CadInference::default(),);
 }
 //#endregion 🧪️InferenceLaws
 
@@ -70,7 +70,7 @@ impl SubsetRoundtripSpec for CadAnyRoundtrip {
         <Self::Snapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|e| e.to_string())
     }
 
-    async fn infer(snapshot: &Self::Snapshot) -> Self::Inference {
+    async fn infer(snapshot: &Self::Snapshot) -> Result<Self::Inference, semio_framework_value::ValueError> {
         use protocol::Inference;
         Self::Inference::infer(snapshot)
     }

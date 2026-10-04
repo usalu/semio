@@ -17,7 +17,7 @@ pub fn diff(payload: &super::UpdateIngestParams, base: &RemodelingSnapshot) -> p
         );
     }
     if payload.params == base.params.ingest {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Ingest params are unchanged.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Ingest params are unchanged.");
     }
     let mut params = base.params.clone();
     params.ingest = payload.params.clone();

@@ -12,6 +12,7 @@
     "test": "bun nx run @semio-tech/framework-replication:test"
   },
   "devDependencies": {
+    "fast-check": "3.23.2",
     "typescript": "^5.9.3",
     "vitest": "^4.0.17"
   },

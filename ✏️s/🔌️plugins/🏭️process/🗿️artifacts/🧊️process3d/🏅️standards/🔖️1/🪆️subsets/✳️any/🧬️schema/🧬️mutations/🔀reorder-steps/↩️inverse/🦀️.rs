@@ -5,10 +5,13 @@ use crate::mutations::Process3dMutation;
 use crate::Process3dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::ReorderSteps, base: &Process3dSnapshot) -> Vec<Process3dMutation> {
+pub fn inverse(payload: &super::ReorderSteps, base: &Process3dSnapshot) -> Result<Vec<Process3dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(from) = base.step_payloads.iter().position(|step| step.id == payload.id) else {
         return Vec::new();
     };
     vec![Process3dMutation::ReorderSteps(super::ReorderSteps { id: payload.id.clone(), to_index: from })]
+
+    })())
 }
 //#endregion 🔖️Inverse

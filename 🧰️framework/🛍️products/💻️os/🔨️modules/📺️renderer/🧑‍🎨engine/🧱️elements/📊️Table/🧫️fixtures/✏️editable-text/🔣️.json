@@ -6,14 +6,21 @@
     "action": {
       "controllerId": "s.stdio.csv@rfc4180/*#editor",
       "action": "set-cell",
-      "args": { "row": 2, "column": 1 }
+      "args": {
+        "row": 2,
+        "column": 1
+      }
     }
   },
   "replacement": "mehrzeilig\nΩ🙂",
   "expectedAction": {
     "controllerId": "s.stdio.csv@rfc4180/*#editor",
     "action": "set-cell",
-    "args": { "row": 2, "column": 1, "value": "mehrzeilig\nΩ🙂" }
+    "args": {
+      "row": 2,
+      "column": 1,
+      "value": "mehrzeilig\nΩ🙂"
+    }
   },
   "keyboard": {
     "append": " 文",
@@ -30,5 +37,17 @@
     "publicationCountBeforeEcho": 1,
     "publicationCountAfterBlur": 1,
     "busyBeforeEcho": true
+  },
+  "acknowledgements": {
+    "initial": "A",
+    "first": "B",
+    "latest": "C",
+    "remote": "D",
+    "unsubmitted": "E",
+    "commandsAfterEnterAndBlur": 1,
+    "commandsAfterNextBlur": 2,
+    "draftAfterFirstEcho": "C",
+    "conflictAfterFirstEcho": false,
+    "dirtyAfterFinalEcho": false
   }
 }

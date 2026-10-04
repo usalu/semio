@@ -3,21 +3,10 @@
   "id": "playbook",
   "version": "1",
   "title": null,
-  "document": {
-    "childId": "playbook-document-change-title-set",
-    "target": {
-      "artifactId": "playbook-document-change-title-set",
-      "dialect": {
-        "artifactKind": "s.stdio.semio",
-        "standard": "v1",
-        "subset": "document"
-      }
-    }
-  },
   "flow": {
-    "childId": "playbook-flow-change-title-set",
+    "childId": "playbook-flow",
     "target": {
-      "artifactId": "playbook-flow-change-title-set",
+      "artifactId": "playbook-flow",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",

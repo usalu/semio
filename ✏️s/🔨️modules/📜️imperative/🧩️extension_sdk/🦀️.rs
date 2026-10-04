@@ -2,7 +2,7 @@
 
 use neural_engine::{inject_channel_defaults, Dictionary, OperatorInfo, Registry};
 use semio_framework::{ProgramContributionEntry, TopicContribution};
-use semio_framework_os_kernel::{DslValue, FromValue, ToValue};
+use semio_framework_value::{DslValue, FromValue, ToValue};
 
 // #region 🔖️Manifest
 /// 📋️ `imperative.extension` manifest document embedded in the `"imperative.module"` topic
@@ -44,7 +44,7 @@ pub fn build_manifest_json(id: &str, name: &str, version: &str, registry: &Regis
         version: version.into(),
         contributes: ImperativeExtensionContributes { operators: registry.operator_catalogue(), catalogue_json: catalogue_json.map(str::to_string) },
     };
-    semio_framework_os_kernel::os_pack::json::to_json_string(&manifest)
+    semio_framework_pack_json::to_json_string(&manifest)
 }
 // #endregion 🔖️Manifest
 
@@ -52,17 +52,17 @@ pub fn build_manifest_json(id: &str, name: &str, version: &str, registry: &Regis
 /// 🧮️ Evaluates an operator and returns JSON dictionary or `{ "error": ... }`.
 // 🚫️async: E1 pure — in-memory registry dispatch only, zero suspension points — see R9.
 pub fn evaluate_json(registry: &Registry, kind_id: &str, input_json: &str) -> String {
-    let input: Dictionary = match semio_framework_os_kernel::os_pack::json::from_json_str(input_json) {
+    let input: Dictionary = match semio_framework_pack_json::from_json_str(input_json, semio_framework_pack_json::JsonMemberPolicy::Reject) {
         Ok(d) => d,
-        Err(err) => return semio_framework_os_kernel::os_pack::json::to_json_string(&DslValue::object([("error".to_string(), err.to_string().to_value())])),
+        Err(err) => return semio_framework_pack_json::to_json_string(&DslValue::object([("error".to_string(), err.to_string().to_value())])),
     };
     let input = match registry.operator_info(kind_id) {
         Some(info) => inject_channel_defaults(input, info),
         None => input,
     };
     match registry.dispatch(kind_id, &input) {
-        Ok(out) => semio_framework_os_kernel::os_pack::json::to_json_string(&out),
-        Err(err) => semio_framework_os_kernel::os_pack::json::to_json_string(&DslValue::object([("error".to_string(), err.to_string().to_value())])),
+        Ok(out) => semio_framework_pack_json::to_json_string(&out),
+        Err(err) => semio_framework_pack_json::to_json_string(&DslValue::object([("error".to_string(), err.to_string().to_value())])),
     }
 }
 

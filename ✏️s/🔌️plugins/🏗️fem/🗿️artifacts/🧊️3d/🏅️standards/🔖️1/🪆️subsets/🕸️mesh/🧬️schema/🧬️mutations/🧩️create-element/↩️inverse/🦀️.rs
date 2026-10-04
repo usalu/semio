@@ -5,7 +5,10 @@ use crate::standards::v1::subsets::any::schema::mutations::{delete_element, Fem3
 use crate::Fem3dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &CreateElement, _base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {
+pub fn inverse(payload: &CreateElement, _base: &Fem3dSnapshot) -> Result<Vec<Fem3dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![Fem3dMutation::DeleteElement(delete_element::DeleteElement { id: element_id(&payload.element).to_string() })]
+
+    })())
 }
 //#endregion 🔖️Inverse

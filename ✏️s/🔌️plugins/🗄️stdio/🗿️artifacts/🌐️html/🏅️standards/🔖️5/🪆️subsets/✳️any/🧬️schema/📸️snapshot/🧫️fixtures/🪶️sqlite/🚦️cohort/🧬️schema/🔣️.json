@@ -1,0 +1,298 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "owned",
+    "variants",
+    "nativeHtml",
+    "nativeNames",
+    "nativeAttributes",
+    "dialect",
+    "coordinate",
+    "factory",
+    "schema",
+    "extension",
+    "renumberSql",
+    "invalidEdits",
+    "wide",
+    "depth",
+    "copyBytes",
+    "cancelAfter",
+    "copyCancelAfter",
+    "invalidNativeHtml",
+    "nativeAudit",
+    "allocationBridge"
+  ],
+  "properties": {
+    "owned": {
+      "const": {
+        "schema": "custom HTML 世界\u0000 full fields",
+        "doctype": "",
+        "root": {
+          "kind": "element",
+          "name": "CuStOm:🌠",
+          "attributes": [
+            {
+              "name": "DUP"
+            },
+            {
+              "name": "DUP",
+              "value": ""
+            },
+            {
+              "name": "",
+              "value": "Grüße 世界\u0000🌠 &<>\""
+            },
+            {
+              "name": "Case",
+              "value": "&amp; literal"
+            }
+          ],
+          "children": [
+            {
+              "kind": "text",
+              "text": ""
+            },
+            {
+              "kind": "comment",
+              "text": "Grüße 世界\u0000🌠 &<>\""
+            },
+            {
+              "kind": "rawText",
+              "parentKind": "script",
+              "text": "if(a<b){v=\"&raw\";}"
+            },
+            {
+              "kind": "rawText",
+              "parentKind": "style",
+              "text": ".x > .y { color:red; }"
+            },
+            {
+              "kind": "element",
+              "name": "empty",
+              "attributes": [],
+              "children": []
+            },
+            {
+              "kind": "text",
+              "text": "Grüße 世界\u0000🌠 &<>\""
+            }
+          ]
+        }
+      }
+    },
+    "variants": {
+      "const": [
+        {
+          "schema": "custom HTML 世界\u0000 full fields",
+          "root": {
+            "kind": "text",
+            "text": "Grüße 世界\u0000🌠 &<>\""
+          }
+        },
+        {
+          "schema": "custom HTML 世界\u0000 full fields",
+          "doctype": "",
+          "root": {
+            "kind": "comment",
+            "text": ""
+          }
+        },
+        {
+          "schema": "custom HTML 世界\u0000 full fields",
+          "doctype": "DOCTYPE 世界\u0000🌠",
+          "root": {
+            "kind": "rawText",
+            "parentKind": "script",
+            "text": "Grüße 世界\u0000🌠 &<>\""
+          }
+        },
+        {
+          "schema": "custom HTML 世界\u0000 full fields",
+          "root": {
+            "kind": "rawText",
+            "parentKind": "style",
+            "text": "Grüße 世界\u0000🌠 &<>\""
+          }
+        }
+      ]
+    },
+    "nativeHtml": {
+      "const": "<!DOCTYPE html><html><head><style>.x > .y { color:red; }</style><script>if(a<b){v=\"&raw\";}</script></head><body><input disabled value=\"\"><p z=\"Grüße &amp; 🌠\" a=\"first\">literal &lt; &#x1F320;<!--kept--></p></body></html>"
+    },
+    "nativeNames": {
+      "const": [
+        "html",
+        "head",
+        "style",
+        "script",
+        "body",
+        "input",
+        "p"
+      ]
+    },
+    "nativeAttributes": {
+      "const": [
+        [
+          "disabled",
+          ""
+        ],
+        [
+          "value",
+          ""
+        ],
+        [
+          "z",
+          "Grüße &amp; 🌠"
+        ],
+        [
+          "a",
+          "first"
+        ]
+      ]
+    },
+    "dialect": {
+      "const": {
+        "artifactKind": "s.stdio.html",
+        "standard": "5",
+        "subset": "*"
+      }
+    },
+    "coordinate": {
+      "const": "s.stdio.html@5/*"
+    },
+    "factory": {
+      "const": "stdio.native.html.v1"
+    },
+    "schema": {
+      "const": "stdio.html"
+    },
+    "extension": {
+      "const": "html"
+    },
+    "renumberSql": {
+      "const": "UPDATE html_node SET id=id+1000; UPDATE html_element SET node_id=node_id+1000; UPDATE html_text SET node_id=node_id+1000; UPDATE html_comment SET node_id=node_id+1000; UPDATE html_raw_text SET node_id=node_id+1000; UPDATE html_attribute SET id=id+2000,element_node_id=element_node_id+1000; UPDATE html_child SET id=id+3000,parent_element_node_id=parent_element_node_id+1000,child_node_id=child_node_id+1000; UPDATE html_document SET root_node_id=root_node_id+1000;"
+    },
+    "invalidEdits": {
+      "const": [
+        "UPDATE html_document SET root_node_id=999999",
+        "DELETE FROM html_element WHERE node_id=1",
+        "UPDATE html_child SET child_node_id=1 WHERE id=1",
+        "UPDATE html_child SET child_node_id=3 WHERE id=1",
+        "UPDATE html_attribute SET ordinal=99 WHERE id=1",
+        "UPDATE html_attribute SET ordinal=0 WHERE id=2",
+        "UPDATE html_attribute SET name=x'00' WHERE id=1",
+        "UPDATE html_raw_text SET parent_kind='textarea'",
+        "INSERT INTO html_node VALUES(999,'text'); INSERT INTO html_text VALUES(999,'island')"
+      ]
+    },
+    "wide": {
+      "const": 1024
+    },
+    "depth": {
+      "const": 2048
+    },
+    "copyBytes": {
+      "const": 100000
+    },
+    "cancelAfter": {
+      "const": 256
+    },
+    "copyCancelAfter": {
+      "const": 65536
+    },
+    "invalidNativeHtml": {
+      "const": [
+        "<html><p></html>",
+        "<html><p/></html>",
+        "<html><script>x</script2></html>",
+        "<html><!--unterminated</html>",
+        "<html></html><div></div>",
+        "<!unsupported><html></html>",
+        "<html attr=\"unterminated></html>"
+      ]
+    },
+    "nativeAudit": {
+      "const": {
+        "duplicateBody": {
+          "source": "<html><body>a</body><body>b</body> </html>",
+          "names": [
+            "html",
+            "body",
+            "body"
+          ],
+          "text": "ab ",
+          "expected": {
+            "schema": "stdio.html",
+            "root": {
+              "kind": "element",
+              "name": "html",
+              "attributes": [],
+              "children": [
+                {
+                  "kind": "element",
+                  "name": "body",
+                  "attributes": [],
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "a "
+                    }
+                  ]
+                },
+                {
+                  "kind": "element",
+                  "name": "body",
+                  "attributes": [],
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "b"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "normalizedRows": {
+          "source": "<html> \n<body>a</body> \t</html> \n",
+          "expected": {
+            "schema": "stdio.html",
+            "root": {
+              "kind": "element",
+              "name": "html",
+              "attributes": [],
+              "children": [
+                {
+                  "kind": "element",
+                  "name": "body",
+                  "attributes": [],
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "a \t \n"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "domainRows": 9
+        }
+      }
+    },
+    "allocationBridge": {
+      "const": {
+        "maximumBytes": 16777216,
+        "refusedBytes": 1,
+        "copyBytes": 100000,
+        "cancelAt": 65536,
+        "passes": 2,
+        "nativeMarkupOverheadBytes": 13,
+        "borrowedValidationAllocationBytes": 0
+      }
+    }
+  }
+}

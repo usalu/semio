@@ -10,7 +10,7 @@ pub fn diff(payload: &super::mutation::SetLayerVisible, base: &DrawingSnapshot) 
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Layer \"{}\" does not exist.", payload.layer_id), [payload.layer_id.clone()]);
     };
     if layer_base(layer).visible == payload.visible {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Layer \"{}\" visible is already {}.", payload.layer_id, payload.visible));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Layer \"{}\" visible is already {}.", payload.layer_id, payload.visible));
     }
     protocol::MutationOutcome::new(diff_set_layer_visible(&payload.layer_id, payload.visible))
 }

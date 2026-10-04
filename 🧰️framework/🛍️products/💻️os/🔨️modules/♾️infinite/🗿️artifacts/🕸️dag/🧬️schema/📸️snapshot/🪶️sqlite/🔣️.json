@@ -1,0 +1,210 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "literal",
+    "documentSchema",
+    "nativeEnvelope",
+    "nodeKinds",
+    "previewVariants",
+    "mediaKinds",
+    "portShapes",
+    "routeStyles",
+    "propertyVariants",
+    "intrinsicVariants",
+    "binary64Bits",
+    "unsignedWords",
+    "signedWords",
+    "octetsHex",
+    "duplicateMemberName",
+    "work",
+    "tableWidths",
+    "ownership",
+    "propertyMembers",
+    "preflight",
+    "portIntrinsicPresence"
+  ],
+  "properties": {
+    "propertyMembers": {
+      "const": {
+        "order": "utf8UnsignedOctets",
+        "duplicates": "lastValue",
+        "cardinalities": [
+          0,
+          1,
+          3
+        ],
+        "emptyOwnedBytes": 0,
+        "backing": "typedContiguousSlots"
+      }
+    },
+    "ownership": {
+      "const": {
+        "authority": "actualPersistedDagSnapshot",
+        "backing": "cumulativeOwnedBacking",
+        "borrowedPreflightBytes": 0,
+        "refusalKinds": {
+          "ceiling": "ownershipLimit",
+          "allocator": "allocationFailed",
+          "work": "workLimit",
+          "cancellation": "canceled"
+        },
+        "retirementRefund": false
+      }
+    },
+    "schema": {
+      "type": "string"
+    },
+    "literal": {
+      "type": "string"
+    },
+    "documentSchema": {
+      "const": "dag.host_snapshot"
+    },
+    "nativeEnvelope": {
+      "const": "dag.dag"
+    },
+    "nodeKinds": {
+      "const": [
+        "computation",
+        "slider",
+        "select",
+        "screen",
+        "note",
+        "image",
+        "preview",
+        "action",
+        "export",
+        "cluster",
+        "appInstance"
+      ]
+    },
+    "previewVariants": {
+      "const": [
+        "empty",
+        "scalar",
+        "image",
+        "tree"
+      ]
+    },
+    "mediaKinds": {
+      "const": [
+        "image",
+        "svg",
+        "pdf",
+        "video"
+      ]
+    },
+    "portShapes": {
+      "const": [
+        "semicircle",
+        "triangle"
+      ]
+    },
+    "routeStyles": {
+      "const": [
+        "bezier",
+        "sharpSz"
+      ]
+    },
+    "propertyVariants": {
+      "const": [
+        "null",
+        "bool",
+        "number",
+        "string",
+        "array",
+        "object"
+      ]
+    },
+    "intrinsicVariants": {
+      "const": [
+        "null",
+        "bool",
+        "uint",
+        "int",
+        "float",
+        "string",
+        "bytes",
+        "array",
+        "object"
+      ]
+    },
+    "binary64Bits": {
+      "type": "array",
+      "minItems": 9,
+      "items": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{16}$"
+      }
+    },
+    "unsignedWords": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[0-9]+$"
+      }
+    },
+    "signedWords": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^-?[0-9]+$"
+      }
+    },
+    "octetsHex": {
+      "type": "string",
+      "pattern": "^([0-9a-f]{2})*$"
+    },
+    "duplicateMemberName": {
+      "type": "string"
+    },
+    "work": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repeat",
+        "interiorBytes",
+        "recursiveDepth"
+      ],
+      "properties": {
+        "repeat": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "interiorBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "recursiveDepth": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "tableWidths": {
+      "type": "object",
+      "minProperties": 40,
+      "maxProperties": 40,
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 2
+      }
+    },
+    "preflight": {
+      "const": {
+        "traversal": "borrowedFields",
+        "ownedBytes": 0,
+        "textEscapeMultiplier": 6,
+        "scalarAllowance": 64,
+        "recordAllowance": 4096,
+        "envelopeAllowance": 65536
+      }
+    },
+    "portIntrinsicPresence": {
+      "const": "preservePresentNull"
+    }
+  }
+}

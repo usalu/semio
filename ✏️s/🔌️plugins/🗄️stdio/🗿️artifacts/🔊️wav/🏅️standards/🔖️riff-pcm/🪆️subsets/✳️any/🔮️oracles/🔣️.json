@@ -264,8 +264,8 @@
           "role": "expected-after",
           "path": "../🧫️fixtures/📎️set-other-chunks/➡️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:f0a1aa1b9a81d62ed351997120a1e61bd2b2198622bf03353f07570ca104e5e9",
-          "bytes": 505
+          "sha256": "sha256:07c27c066c75f28f97c716f9aa744caf860a100e7b6570d3c8201360cd395286",
+          "bytes": 507
         }
       ],
       "provenance": {
@@ -407,7 +407,7 @@
       "comparisonProfile": "ordered-json-v1",
       "reproducible": true,
       "family": "wav-carrier",
-      "notes": "PatchSnapshot{edits:[set /data/value/2 = 300]} is the editor's compact path-addressed patch: one sample changes in place and every other member of the snapshot stays byte-identical."
+      "notes": "PatchSnapshot{set /data/value/2 = 300} is the editor's compact path-addressed patch: one sample changes in place and every other member of the snapshot stays byte-identical."
     }
   ],
   "oracleHostPackages": []

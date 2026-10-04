@@ -19,7 +19,8 @@ pub mod derived_construction {
     use crate::standards::v2x3::subsets::base::schema::mutations::{apply_ifc2x3_mutation, upsert_instance, Ifc2x3Mutation};
     use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
     use crate::standards::v2x3::subsets::cobie::schema::check_cobie_conformance;
-    use dsl::{Diagnostic, Severity};
+    use semio_framework_diagnostic::Diagnostic;
+use semio_framework_diagnostic::Severity;
     use semio_framework_plugin::ArtifactBuilder;
     use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
 
@@ -28,10 +29,10 @@ pub mod derived_construction {
         diagnostics.extend(outcome.messages().iter().filter(|message| message.level >= Severity::Error).map(|message| Diagnostic {
             code: message.code.clone(),
             severity: message.level,
-            span: dsl::TextSpan::at(1, 1),
+            span: semio_framework_diagnostic::TextSpan::at(1, 1),
             message: if message.target.is_empty() { message.message.clone() } else { format!("{} at {}", message.message, message.target.join("/")) },
             expected: None,
-            scope: dsl::FaultScope::default(),
+            scope: semio_framework_diagnostic::FaultScope::default(),
         }));
     }
 
@@ -92,7 +93,7 @@ pub mod derived_construction {
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, next_id: 100, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(Self::from_snapshot(<Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
@@ -128,7 +129,11 @@ pub use derived_construction::*;
 pub mod derived_analysis {
     use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
     use crate::standards::v2x3::subsets::base::schema::{Ifc2x3Analyzer as Ifc2x3AnyAnalyzer, Ifc2x3Parts};
-    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
+    use semio_framework_diagnostic::Diagnostic;
+use semio_framework_diagnostic::FaultCode;
+use semio_framework_diagnostic::FaultScope;
+use semio_framework_diagnostic::Severity;
+use semio_framework_diagnostic::TextSpan;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ifc", standard: StandardId("2x3"), subset: SubsetId("cobie") };
@@ -199,16 +204,17 @@ pub mod derived_analysis {
         out
     }
     /// 🛡️ Checks the actual COBie fields with controlled borrowed relationships.
-    pub fn check_cobie_conformance_controlled(snapshot:&Ifc2x3Snapshot,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,String>{
-        use crate::standards::v2x3::subsets::base::schema::snapshot::sqlite_snapshot::{mvd_header,mvd_instances,mvd_nonempty_name,mvd_entity,mvd_diagnostic};
+    pub fn check_cobie_conformance_controlled(snapshot:&Ifc2x3Snapshot,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,semio_framework_os_kernel::sqlite_snapshot::ValueError>{
+        use semio_framework_os_kernel::sqlite_snapshot::{ValueError,ValueRefusalKind};
+        use crate::standards::v2x3::subsets::base::schema::snapshot::sqlite_snapshot::{mvd_header,mvd_instances,mvd_nonempty_name,mvd_entity,MvdDiagnostics};
         use semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase;
-        let(mut out,mut bytes)=(Vec::new(),0usize);let(schema,view)=mvd_header(snapshot,"FMHandOverView",control)?;
-        for(condition,code,message)in [(!schema,CODE_FILE_SCHEMA,"FILE_SCHEMA does not declare IFC2X3"),(!view,CODE_VIEW_DEFINITION,"FILE_DESCRIPTION's ViewDefinition tuple does not name FMHandOverView")]{if condition{mvd_diagnostic(control,&mut bytes,out.len(),message.len())?;out.push(hard(code,message.into()));}}
-        for space in mvd_instances(snapshot,"IFCSPACE",control)?{let named=match mvd_entity(space,"IFCSPACE",control)?.ok_or("missing IFC space arguments")?.get(2).and_then(|v|v.as_str()){Some(text)=>mvd_nonempty_name(text,control)?,None=>false};if !named{mvd_diagnostic(control,&mut bytes,out.len(),128)?;out.push(soft(CODE_SPACE_NAME,format!("IFCSPACE #{} has no non-empty Name -- COBie's Space sheet is keyed by name",space.id)));}}
-        let building=!mvd_instances(snapshot,"IFCBUILDING",control)?.is_empty();let storey=!mvd_instances(snapshot,"IFCBUILDINGSTOREY",control)?.is_empty();if !building||!storey{mvd_diagnostic(control,&mut bytes,out.len(),128)?;out.push(soft(CODE_BUILDING_STOREY,format!("missing {}{}{} -- COBie's Facility/Floor sheets need both",if !building{"IFCBUILDING"}else{""},if !building&&!storey{" and "}else{""},if !storey{"IFCBUILDINGSTOREY"}else{""})));}
+        let mut out=MvdDiagnostics::default();let(schema,view)=mvd_header(snapshot,"FMHandOverView",control)?;
+        for(condition,code,message)in [(!schema,CODE_FILE_SCHEMA,"FILE_SCHEMA does not declare IFC2X3"),(!view,CODE_VIEW_DEFINITION,"FILE_DESCRIPTION's ViewDefinition tuple does not name FMHandOverView")]{if condition{out.emit(code,Severity::Error,format_args!("{message}"),control)?;}}
+        for space in mvd_instances(snapshot,"IFCSPACE",control)?{let named=match mvd_entity(space,"IFCSPACE",control)?.ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"missing IFC space arguments"))?.get(2).and_then(|v|v.as_str()){Some(text)=>mvd_nonempty_name(text,control)?,None=>false};if !named{out.emit(CODE_SPACE_NAME,Severity::Warning,format_args!("IFCSPACE #{} has no non-empty Name -- COBie's Space sheet is keyed by name",space.id),control)?;}}
+        let building=!mvd_instances(snapshot,"IFCBUILDING",control)?.is_empty();let storey=!mvd_instances(snapshot,"IFCBUILDINGSTOREY",control)?.is_empty();if !building||!storey{out.emit(CODE_BUILDING_STOREY,Severity::Warning,format_args!("missing {}{}{} -- COBie's Facility/Floor sheets need both",if !building{"IFCBUILDING"}else{""},if !building&&!storey{" and "}else{""},if !storey{"IFCBUILDINGSTOREY"}else{""}),control)?;}
         let mut has_type=false;control.check_rows(snapshot.document.instances.len())?;for(index,instance)in snapshot.document.instances.iter().enumerate(){has_type|=instance.primary().is_some_and(|(name,_)|name.ends_with("TYPE"));if index%256==0{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,index,snapshot.document.instances.len())?;}}
-        if !has_type||mvd_instances(snapshot,"IFCRELDEFINESBYTYPE",control)?.is_empty(){let message="no real IFC*TYPE + IFCRELDEFINESBYTYPE pairing found -- COBie's Type sheet needs maintainable products related to a type";mvd_diagnostic(control,&mut bytes,out.len(),message.len())?;out.push(soft(CODE_TYPE_ASSIGNMENT,message.into()));}
-        Ok(out)
+        if !has_type||mvd_instances(snapshot,"IFCRELDEFINESBYTYPE",control)?.is_empty(){let message="no real IFC*TYPE + IFCRELDEFINESBYTYPE pairing found -- COBie's Type sheet needs maintainable products related to a type";out.emit(CODE_TYPE_ASSIGNMENT,Severity::Warning,format_args!("{message}"),control)?;}
+        Ok(out.finish())
     }
     //#endregion 🔖️Conformance
 

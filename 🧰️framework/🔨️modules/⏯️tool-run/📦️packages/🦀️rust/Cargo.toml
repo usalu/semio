@@ -18,6 +18,7 @@ name = "semio_framework_tool_run"
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-dsl-record = { path = "../../../🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
 # 🎒️ `encode_record_body`/`decode_record_body_exact` and the `ToValue`/`FromValue` derives; the derive

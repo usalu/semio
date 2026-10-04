@@ -1,0 +1,25 @@
+# CAD Current Paid SQL and Frontiers Bounded Readback
+
+Read the complete current snapshot/sqlite Rust root and references/frontiers facet after High's coupled mount. No compiler/runtime executed. The rest of the seven-path coupled class/consumer closure remains a separate read scope.
+
+The six-table writer now serves both actual Projection and owner semantic Census. It includes all four optional model slots, drawings, literal reference groups, every reference id/source/media/origin/orientation/scale/width/hidden/locked/opacity, and nodes. IEEE companion indexing matches the ten declared fields; absent orientation requires all four null companions, and present orientation retains four full words. Census counts actual SQL identity/cells/IEEE word+class data rather than applying semantic max_value to native backing. Its NaN query-cell adjustment models SQL NULL, not System request subtraction. Native decode performs borrowed row admission before binding and owner semantic census after guarded binding; encode performs the same owner writer census before original native construction.
+
+Reconstruction validates canonical schema before work, transfers NativeDecodeControl owned_bytes through the original caller allocation_stage, and uses paid borrowed row vectors. Frontiers validate positive SQL aliases, exact shapes/parents, unique row ids, exact dense collection ordinals, owned reference parents and contiguous reference ordinals. Reference sorting uses parent+ordinal, preserving duplicate logical reference ids rather than deduplicating them. String comparison has checked bounded 65536-byte chunks and caller progress. Typed collection partial results use DecodedFieldOwner with actual retirement.
+
+No concrete field omission or ordinal collapse was found in these two complete facets. Physical exact requests/release, custom CadReferenceIndex storage/class/forest pairing and compiler signatures still require separate owning verification. The authentic prior caller0/System677545 reconstruction failure is retained; parser checks and this source read do not prove its repair. Default public preflight remains held.
+
+## Reference Index Class Readback
+
+Read current references root lines1–180. CadReferenceIndex is a Vec of literal key/ordered reference-list pairs, maintained in declared map byte ordering. Controlled SQL/native binding pays exact slot Vec and copied keys/lists, rejects duplicate map keys and bounds comparisons through frontiers. Its ToValue emits Object in the class's declared map order; this does not authorize sorting arbitrary intrinsic Object occurrences. Ordinary mutation insert/remove paths intentionally remain ordinary allocations, distinct from controlled snapshot reconstruction.
+
+The class implements RetireOwned by delegating entries.retirement() and close drains owned_retirement with bounded grants. This is an explicit retirement owner, but it does not establish zero-request cold cleanup or release equality; actual boxed cursor delegation and failure/cancellation cleanup remain part of the authentic numerical law scope. No source-only fixed charge should be inferred. Forest consumer and remaining class tail are still bounded residue.
+
+Read class tail181–207 and the active inference forest constructor800–813. Set/insert/remove retain typed complete reference lists and enforce declared map key presence/uniqueness, rather than returning empty replacement lists. Active forest function constructs CadReferenceIndex directly and inserts every CadPaneId model-definition key with full original id/source/media/origin/optional orientation/scale/width/hidden/locked/opacity reference. It is the mounted inference function, not merely the adjacent consumers draft. This closes the bounded forest constructor join; broader editor/runtime mutation consumers remain outside this particular read.
+
+## Concrete Current Compiler Prerequisite
+
+Crosschecked actual shared validation authority while reading Process3d. CAD restore currently passes three arguments to validate_sqlite_database_schema_controlled. Actual sqlite-snapshot root11 reexports transfer::validate_database_controlled, whose transfer root210 signature is (database, sql, phase, control). Required narrow join is explicit SqliteSnapshotPhase::ReconstructSnapshot before the existing control argument. This is a source-proven current signature prerequisite, not an executed compiler diagnostic or runtime defect. Sent High Physical; no edit by audit.
+
+Fresh read confirms restore193 now passes explicit ReconstructSnapshot as fourth-argument authority requires. Reference scan174 declares one turn. Native owned-validation240 still declares zero before step at this read. Canonical NativeDecodeControl.advance (Value decode51) interprets zero as unknown/unbounded, so this is not an asserted WorkLimit failure; total1 would additionally force the one-unit completion callback. High informed of precise cadence distinction.
+
+Execution prerequisite: actual compiler retirement macro owner `crate::CadArtifact` paired directly to declared `crate::schema::CadArtifact`; no root alias or allocation behavior changes.

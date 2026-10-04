@@ -1,0 +1,462 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/diagnostic/controlled",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases",
+    "stress",
+    "duplicateCases",
+    "refusalKinds"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "owner": {
+            "enum": [
+              "FaultCode",
+              "Severity",
+              "FaultOrigin",
+              "TextSpan",
+              "FaultScope",
+              "ExpectedSet",
+              "FaultCause",
+              "TextError",
+              "Diagnostic",
+              "Fault"
+            ]
+          },
+          "input": {},
+          "expected": {},
+          "accepted": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "owner",
+          "input",
+          "accepted"
+        ]
+      }
+    },
+    "stress": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "listCount": {
+          "type": "integer",
+          "minimum": 256
+        },
+        "textRepetitions": {
+          "type": "integer",
+          "minimum": 65536
+        },
+        "text": {
+          "type": "string"
+        },
+        "maximumBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "cancelAt": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "listCount",
+        "textRepetitions",
+        "text",
+        "maximumBytes",
+        "cancelAt"
+      ]
+    },
+    "duplicateCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "owner",
+          "entries"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "owner": {
+            "enum": [
+              "FaultCause",
+              "FaultScope",
+              "TextSpan"
+            ]
+          },
+          "entries": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "array",
+              "prefixItems": [
+                {
+                  "type": "string"
+                },
+                {}
+              ],
+              "items": false,
+              "minItems": 2,
+              "maxItems": 2
+            }
+          }
+        }
+      }
+    },
+    "refusalKinds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "malformed",
+        "ownership",
+        "cancel"
+      ],
+      "properties": {
+        "malformed": {
+          "const": "invalidValue"
+        },
+        "ownership": {
+          "const": "ownershipLimit"
+        },
+        "cancel": {
+          "const": "canceled"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "FaultCode": {
+      "type": "string"
+    },
+    "Severity": {
+      "enum": [
+        "info",
+        "warning",
+        "error",
+        "fatal"
+      ]
+    },
+    "FaultOrigin": {
+      "enum": [
+        "edge",
+        "renderer",
+        "os",
+        "module",
+        "plugin",
+        "app",
+        "extension",
+        "framework"
+      ]
+    },
+    "TextSpan": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "line": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "column": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "length": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      },
+      "required": [
+        "line",
+        "column",
+        "length"
+      ]
+    },
+    "FaultScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pluginId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "appId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "instanceId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "module": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bodyKey": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": []
+    },
+    "ExpectedSet": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tokens": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "keywords": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "keys": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": []
+    },
+    "FaultCause": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "code": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FaultCode"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "message"
+      ]
+    },
+    "TextError": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "span": {
+          "$ref": "#/$defs/TextSpan"
+        },
+        "expected": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "kind": {
+          "$ref": "https://semio.tech/schema/value/refusal#/$defs/kind"
+        }
+      },
+      "required": [
+        "kind",
+        "message",
+        "span"
+      ]
+    },
+    "Diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/FaultCode"
+        },
+        "severity": {
+          "$ref": "#/$defs/Severity"
+        },
+        "span": {
+          "$ref": "#/$defs/TextSpan"
+        },
+        "message": {
+          "type": "string"
+        },
+        "expected": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExpectedSet"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scope": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FaultScope"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "code",
+        "severity",
+        "span",
+        "message"
+      ]
+    },
+    "Fault": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "origin": {
+          "$ref": "#/$defs/FaultOrigin"
+        },
+        "code": {
+          "$ref": "#/$defs/FaultCode"
+        },
+        "severity": {
+          "$ref": "#/$defs/Severity"
+        },
+        "message": {
+          "type": "string"
+        },
+        "scope": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FaultScope"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "span": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TextSpan"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "causes": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/FaultCause"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "retryable": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "origin",
+        "code",
+        "severity",
+        "message"
+      ]
+    }
+  }
+}

@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeSiteElevation, base: &EnergyModelSnapshot) ->
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("A site elevation of {} m is not admissible.", payload.new_elevation_m), Vec::<String>::new());
     }
     if base.model.site.elevation_m == payload.new_elevation_m {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("The site elevation is already {} m.", payload.new_elevation_m));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("The site elevation is already {} m.", payload.new_elevation_m));
     }
     let mut model = base.model.clone();
     model.site.elevation_m = payload.new_elevation_m;

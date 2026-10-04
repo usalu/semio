@@ -18,13 +18,13 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🕸️create-mesh/🕸️adds/🎯️outcome/🔣️.json");
 
 fn before() -> SemioMeshSnapshot {
-    dsl::json::from_json_str(BEFORE).expect("create-mesh before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("create-mesh before snapshot decodes")
 }
 fn expected_after() -> SemioMeshSnapshot {
-    dsl::json::from_json_str(AFTER).expect("create-mesh after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("create-mesh after snapshot decodes")
 }
 fn mutation() -> SemioMeshMutation {
-    dsl::json::from_json_str(MUTATION).expect("create-mesh mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("create-mesh mutation decodes")
 }
 
 /// ▶️ The new mesh lands at the index the diff named, and it starts with no primitives.
@@ -45,7 +45,7 @@ async fn adds_the_empty_mesh_at_the_recorded_index() {
 async fn the_undo_delete_mesh_removes_the_second_mesh_again() {
     let base = before();
     let mutation = mutation();
-    let undo = mutation.inverse(&base);
+    let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "create-mesh undoes as exactly one delete-mesh");
     let mut current = mutation.diff(&base).diff().apply(&base).expect("forward create-mesh applies");
     for step in &undo {
@@ -58,12 +58,12 @@ async fn the_undo_delete_mesh_removes_the_second_mesh_again() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioMeshSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: SemioMeshSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "create-mesh/adds-an-empty-second-mesh-at-the-end: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("create-mesh mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(mutation()))).expect("create-mesh mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("create-mesh mutation reparses");
     assert_eq!(reencoded, original, "create-mesh/adds-an-empty-second-mesh-at-the-end: committed mutation JSON is not canonical");
 }
@@ -82,7 +82,7 @@ async fn declared_outcome_holds_as_committed() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioMeshMutation as Mutation<SemioMeshSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "create-mesh/adds-an-empty-second-mesh-at-the-end: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -91,13 +91,13 @@ async fn produces_committed_diff() {
 /// allowed to touch appears in it at all.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
-    let decoded: SemioMeshDiff = dsl::json::from_json_str(DIFF).expect("committed create-mesh diff decodes");
+    let decoded: SemioMeshDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed create-mesh diff decodes");
     let meshes = decoded.meshes.as_ref().expect("create-mesh must write the meshes triple");
     assert_eq!(meshes.added.len(), 1, "exactly one mesh is added");
     assert_eq!(meshes.added[0].index, 1, "the add carries its target POSITION, not just the item");
     assert!(meshes.removed.is_empty() && meshes.modified.is_empty(), "a create neither removes nor modifies");
     assert!(decoded.materials.is_none() && decoded.textures.is_none(), "no material or texture slot may appear in the diff");
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "create-mesh/adds-an-empty-second-mesh-at-the-end: committed diff JSON is not canonical");
 }
@@ -105,7 +105,7 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioMeshDiff = dsl::json::from_json_str(DIFF).expect("committed create-mesh diff decodes");
+    let decoded: SemioMeshDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed create-mesh diff decodes");
     let produced = decoded.apply(&before()).expect("committed create-mesh diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-mesh/adds-an-empty-second-mesh-at-the-end: committed diff did not carry before to after");
 }

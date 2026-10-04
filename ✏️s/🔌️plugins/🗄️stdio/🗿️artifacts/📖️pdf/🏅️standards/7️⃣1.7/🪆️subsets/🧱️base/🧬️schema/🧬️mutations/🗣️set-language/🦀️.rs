@@ -23,10 +23,13 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetLanguage {
         MutationOutcome::new(diff::diff_set_language(base, self.language.clone()))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         let _ = base;
         vec![PdfMutation::SetLanguage(SetLanguage { language: base.language.clone() })]
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set language", "Sprache setzen")

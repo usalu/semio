@@ -65,6 +65,40 @@ message XmlDocument {
   repeated XmlNode epilog = 5;
 }
 
+message RetainedXmlAttribute { string name = 1; string value = 2; }
+message RetainedXmlElement { string name = 1; uint64 first_attribute = 2; uint64 attribute_count = 3; optional uint64 first_child = 4; }
+message RetainedXmlNodeValue {
+  oneof node {
+    RetainedXmlElement element = 1;
+    XmlText text = 2;
+    XmlCData c_data = 3;
+    XmlComment comment = 4;
+    XmlProcessingInstruction processing_instruction = 5;
+  }
+}
+message RetainedXmlNode { optional uint64 next_sibling = 1; RetainedXmlNodeValue value = 2; }
+message RetainedXmlDeclaration {
+  string version = 1;
+  optional string encoding = 2;
+  optional bool standalone = 3;
+  XmlDeclaration.Quote quote = 4;
+}
+message RetainedXmlDoctype {
+  uint64 prolog_position = 1;
+  string name = 2;
+  optional XmlExternalId external_id = 3;
+  repeated XmlDtdEntity declarations = 4;
+}
+message RetainedXmlDocument {
+  repeated RetainedXmlNode nodes = 1;
+  repeated RetainedXmlAttribute attributes = 2;
+  repeated uint64 prolog = 3;
+  repeated uint64 epilog = 4;
+  optional uint64 root = 5;
+  optional RetainedXmlDoctype doctype = 6;
+  optional RetainedXmlDeclaration declaration = 7;
+}
+
 message XmlSnapshot {
   string schema = 1;
   XmlDocument doc = 2;

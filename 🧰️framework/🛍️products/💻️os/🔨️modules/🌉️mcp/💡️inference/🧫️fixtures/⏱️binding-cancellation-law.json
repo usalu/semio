@@ -1,15 +1,16 @@
 {
   "$schema": "../🧬️schema/🔣️.json#/$defs/InferenceBindingCancellationLawV1",
-  "law": "Binding an artifact into inference_run is a job: every phase reports progress, and a cancel landing in any phase is answered CANCELLED within the ceiling. A cancelled binding leaves no half-open guest behind, so the next binding of the same artifact answers the same document an uncancelled one does. The compiling-component phase is reached only by a cold compile; its cancellation is the compile law's (🏠️workspace/🧫️fixtures/⏱️compile-cancellation-law.json).",
+  "law": "Binding an artifact into inference_run is a job: every phase reports progress, and a cancel landing in any phase is answered CANCELLED within the ceiling. A cancelled binding leaves no half-open guest behind, so the next binding of the same artifact answers the same document an uncancelled one does. The compiling-component phase is reached only by a cold compile; its cancellation is the compile law's (🏠️workspace/🧫️fixtures/⏱️compile-cancellation-law.json). The loading-document phase is reached only by a session bound to a hub document; its cancellation is the stepped load's (📡️spr/🧵️channel/🧫️fixtures/🧫️document-archive-load-host/🔣️.json and 🏠️workspace's long-history load law).",
   "cancelAnswerCeilingMs": 100,
   "phases": [
     { "phase": "resolving-component", "position": 0.0 },
-    { "phase": "reading-component", "position": 0.14285714285714285 },
-    { "phase": "hashing-component", "position": 0.2857142857142857 },
-    { "phase": "loading-compiled-code", "position": 0.42857142857142855 },
-    { "phase": "compiling-component", "position": 0.5714285714285714 },
-    { "phase": "opening-guest", "position": 0.7142857142857143 },
-    { "phase": "reading-document", "position": 0.8571428571428571 }
+    { "phase": "reading-component", "position": 0.125 },
+    { "phase": "hashing-component", "position": 0.25 },
+    { "phase": "loading-compiled-code", "position": 0.375 },
+    { "phase": "compiling-component", "position": 0.5 },
+    { "phase": "opening-guest", "position": 0.625 },
+    { "phase": "loading-document", "position": 0.75 },
+    { "phase": "reading-document", "position": 0.875 }
   ],
   "cases": [
     { "cancelAt": "resolving-component", "expected": "CANCELLED", "rebindMatchesUncancelled": true },

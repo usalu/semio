@@ -24,9 +24,12 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Chan
         crate::standards::v1::subsets::any::schema::mutations::change_schema::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Generation3dSnapshot) -> Vec<Generation3dMutation> {
-        crate::standards::v1::subsets::any::schema::mutations::change_schema::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
+    Ok({
+        crate::standards::v1::subsets::any::schema::mutations::change_schema::inverse::inverse(self, base)?
+    
+    })
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change schema to \"{}\"", self.new_schema), &format!("Schema auf \"{}\" ändern", self.new_schema))

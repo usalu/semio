@@ -5,7 +5,10 @@ use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
 
 //#region 🔖️Inverse
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(payload: &super::CreateEdge, _base: &SemioGraphSnapshot) -> Vec<SemioGraphMutation> {
+pub fn inverse(payload: &super::CreateEdge, _base: &SemioGraphSnapshot) -> Result<Vec<SemioGraphMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![SemioGraphMutation::DeleteEdge(delete_edge::DeleteEdge { id: payload.id.clone() })]
+
+    })())
 }
 //#endregion 🔖️Inverse

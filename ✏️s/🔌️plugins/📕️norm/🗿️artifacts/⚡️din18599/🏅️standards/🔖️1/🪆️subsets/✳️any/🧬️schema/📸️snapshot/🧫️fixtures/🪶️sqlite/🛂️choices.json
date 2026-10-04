@@ -1,4 +1,18 @@
 {
+  "tableNames": [
+    "din18599_document",
+    "din18599_climate_child",
+    "din18599_zone",
+    "din18599_element",
+    "din18599_heating",
+    "din18599_dhw",
+    "din18599_ventilation",
+    "din18599_cooling",
+    "din18599_cooling_plant",
+    "din18599_lighting",
+    "din18599_renewables",
+    "din18599_climate_month"
+  ],
   "buildingCategory": [
     "Residential",
     "NonResidential"

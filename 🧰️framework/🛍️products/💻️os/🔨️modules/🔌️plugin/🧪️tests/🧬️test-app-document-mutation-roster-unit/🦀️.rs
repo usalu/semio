@@ -13,7 +13,7 @@ fn direct_leaves_preserve_generic_document_codecs_and_laws() {
         assert_eq!(TestMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
         assert_eq!(TestMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
         let after = mutation.diff(&base).diff().apply(&base).unwrap();
-        let inverse = mutation.inverse(&base);
+        let inverse = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
         assert_eq!(inverse.len(), 1);
         assert_eq!(inverse[0].diff(&after).diff().apply(&after).unwrap(), base);
     }

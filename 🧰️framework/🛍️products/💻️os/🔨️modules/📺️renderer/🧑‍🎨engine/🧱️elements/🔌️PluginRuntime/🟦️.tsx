@@ -169,12 +169,12 @@ export type PluginWasmHandle = {
   readonly readHistory: (instanceId: number) => Promise<HistoryPatch>;
   /** 🔗️ The `DocumentApp` document-sync surface (WS-D) — optional since not every program has migrated onto it yet (WS-F).
    * `protocol_channel::AppCommand` carries binary `pack`/`spr` document-container bytes only
-   * (`LoadDocument`/`ReadDocument`, backed by `store::print_document_pack`/`parse_document_pack`'s
+   * (`LoadDocumentArchive`/`ReadDocument`, backed by `store::print_document_pack`/`parse_document_pack`'s
    * deflate+BLAKE3 `.spk` container) — there is no JSON-text document command on the channel. The OLD
    * `readAppDocument`/`loadAppDocument` pair (plain JSON text — `MutationEnvelope[]` / a VCS envelope
    * string) has been retired along with every call site that used to feature-detect it;
-   * {@link readAppDocumentPack} and {@link loadAppDocumentPack} are the channel-native replacement,
-   * both round-tripping the same `.spk` container `documentPack` caches. */
+   * {@link readAppDocumentPack} reads the same `.spk` container `documentPack` caches, and every whole-document load is the
+   * stepped, cancellable {@link loadAppDocumentArchive} (a plain document is an archive with no members). */
   /** ⚖️ `AppCommand::ApplyEnvelopes`'s reply batches `MergeReport`/`Conflicts` frames alongside the
    * ingest itself (contract freeze §C6/§C9 "pushed unsolicited after every ingest") — decoded here,
    * same shape as {@link resolveConflict}'s reply, so a REMOTE peer's quarantined/degraded merge
@@ -183,8 +183,8 @@ export type PluginWasmHandle = {
     instanceId: number,
     mutationsPack: string,
   ) => Promise<{ readonly mergeReport: MergeReport | null; readonly conflicts: readonly Conflict[] | null }>;
-  /** 📖️ Binary pack+spr document read (`AppCommand::ReadDocument`) — the channel-native counterpart
-   * to {@link loadAppDocumentPack}; `null` when the reply carries no `AppFrame::Document` frame. */
+  /** 📖️ Binary pack+spr document read (`AppCommand::ReadDocument`); `null` when the reply carries no `AppFrame::Document`
+   * frame. */
   readonly readAppDocumentPack?: (instanceId: number) => Promise<{ readonly pack: Uint8Array; readonly spr: Uint8Array; readonly ops?: string } | null>;
   /** 📤️ Media OUT port read (`AppCommand::MediaOut`) — the agent-facing export counterpart to
    * {@link readAppDocumentPack}: it returns the guest's own exported bytes over the bridge instead
@@ -192,6 +192,8 @@ export type PluginWasmHandle = {
    * agent (`📓️lb1-live-bridge-action-routing.md` §11.1, `📓️wr3-headless-routes-view-state-export.md`
    * §4.4). `null` when the reply carries no `AppFrame::Media` frame. */
   readonly exportAppMedia?: (instanceId: number, port: string) => Promise<{ readonly port: string; readonly descriptor: Uint8Array; readonly data: Uint8Array } | null>;
+  /** 📂️ Delivers one declared natural media artifact and waits for its mutation commit. */
+  readonly importAppMedia?: (instanceId: number, port: string, descriptor: unknown, data: Uint8Array) => Promise<void>;
   /** 🎬️ Starts one document-revision-owned media export without collecting its output. */
   readonly submitMediaExport: (instanceId: number, port: string, parentDocumentId: string, revision: bigint) => Promise<MediaExportHandle>;
   /** ⏱️ Advances one bounded media export turn and returns exact progress. */
@@ -200,8 +202,6 @@ export type PluginWasmHandle = {
   readonly cancelMediaExport: (instanceId: number, handle: MediaExportHandle) => Promise<void>;
   /** 📥️ Takes one bounded media page and its explicit terminal marker. */
   readonly takeMediaExportChunk: (instanceId: number, handle: MediaExportHandle) => Promise<{ readonly handle: MediaExportHandle; readonly data: Uint8Array; readonly terminal: boolean }>;
-  /** 📂️ Binary pack+spr document load (`AppCommand::LoadDocument`) — the Wave-1 channel-native path. */
-  readonly loadAppDocumentPack?: (instanceId: number, pack: Uint8Array, spr: Uint8Array) => Promise<void>;
   /** 🗃️ Complete root plus recursive owned-member closure for durable document persistence. */
   readonly readAppDocumentArchive?: (instanceId: number) => Promise<DocumentArchivePack>;
   /** 🪪️ The instance's own document identity — the id its store stamps on every envelope it publishes — without exporting
@@ -1143,7 +1143,7 @@ const pendingTurnEffects = new Map<number, WireVariant[]>();
  * `pendingCompletionEffects`, and then dropped unread. `undefined` when the operation published none. */
 export type PluginOperationCompletion = Readonly<{
   instanceId: number;
-  operation: number;
+  operation: bigint;
   revision: bigint;
   uiScope: InvocationResponse["uiScope"];
   historyPatch: HistoryPatch | undefined;
@@ -1576,7 +1576,7 @@ function enqueuePluginTurn(actorId: string, payload: PendingPluginTurn, lane: La
  * `lane` prioritizes across an actor's own pending turns (`"Interactive"` for anything a caller awaits
  * a specific reply from — `runQueuedTurn`/`createApp`/`captureExtensionCompletion` all use it below —
  * `"UserVisible"` for {@link loadPluginModule}'s opportunistic `refreshUi` probe, so a real command
- * always preempts a mere redraw poll). `coalesceKey`, when passed, collapses a burst of same-key calls
+ * always preempts a mere redraw poll). `turnKey`, when passed, collapses a burst of same-key calls
  * for the SAME actor into the single latest one — every caller in the burst (not just the winner) still
  * gets the SAME final result, via {@link PluginTurnPayload.waiters} rather than the mailbox's own
  * envelope-replacement (which has no callback for the superseded call).
@@ -1592,13 +1592,13 @@ function enqueuePluginTurn(actorId: string, payload: PendingPluginTurn, lane: La
  * risked, per this repo's own "must not assume" rule — see `📓️terra-web-plugin-runtime-report.md`
  * `## honest gaps`.
  */
-function submitPluginTurn(actorId: string, events: readonly ShardEventEnvelope[], lane: Lane, coalesceKey?: string, commandPage?: ShardCommandIngressPage, activation?: ShardActorActivationLease): Promise<WireTurnResult> {
+function submitPluginTurn(actorId: string, events: readonly ShardEventEnvelope[], lane: Lane, turnKey?: string, commandPage?: ShardCommandIngressPage, activation?: ShardActorActivationLease): Promise<WireTurnResult> {
   return new Promise<WireTurnResult>((resolve, reject) => {
-    if (activation && (activation.actorId !== actorId || coalesceKey !== undefined)) throw new Error("actor-activation.turn-owner-mismatch");
+    if (activation && (activation.actorId !== actorId || turnKey !== undefined)) throw new Error("actor-activation.turn-owner-mismatch");
     activation?.assertActive();
     const waiter: PluginTurnWaiter = { resolve, reject };
-    if (coalesceKey !== undefined) {
-      const mapKey = `${actorId} ${coalesceKey}`;
+    if (turnKey !== undefined) {
+      const mapKey = `${actorId} ${turnKey}`;
       const pending = pendingCoalescedTurns.get(mapKey);
       if (pending) {
         pending.events = events; // 🎯️ latest-wins: the mailbox still holds THIS SAME payload object.
@@ -1607,7 +1607,7 @@ function submitPluginTurn(actorId: string, events: readonly ShardEventEnvelope[]
       }
       const payload: PluginTurnPayload = { kind: "operation", events, waiters: [waiter], coalesceMapKey: mapKey, commandPage };
       pendingCoalescedTurns.set(mapKey, payload);
-      const backpressure = enqueuePluginTurn(actorId, payload, lane, coalesceKey);
+      const backpressure = enqueuePluginTurn(actorId, payload, lane, turnKey);
       if (backpressure.kind === "rejected") {
         pendingCoalescedTurns.delete(mapKey);
         reject(new Error(`PluginRuntime: actor ${actorId}'s turn queue is full — rejected rather than growing unbounded`));
@@ -2755,14 +2755,14 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     teardownPluginActor(actorId);
     closingInstances.delete(instanceId);
   };
-  /** 🚦 `lane`/`coalesceKey` forward to {@link submitPluginTurn} — see that function's own doc for the
+  /** 🚦 `lane`/`turnKey` forward to {@link submitPluginTurn} — see that function's own doc for the
    * lane-assignment reasoning. `registry.touch(actorId)` refreshes this actor's LRU position on every
    * turn (its own doc: "call on every turn, not just activation"); turns dispatch through this file's
    * own {@link submitPluginTurn} rather than `ActivationRegistry.enqueueTurn` (see that decision's
    * write-up above `serializePerActor`), so nothing else would ever call it. */
-  const submitTurn = (actorId: string, events: readonly ShardEventEnvelope[], options?: { readonly lane?: Lane; readonly coalesceKey?: string; readonly commandPage?: ShardCommandIngressPage; readonly activation?: ShardActorActivationLease }): Promise<WireTurnResult> => {
+  const submitTurn = (actorId: string, events: readonly ShardEventEnvelope[], options?: { readonly lane?: Lane; readonly turnKey?: string; readonly commandPage?: ShardCommandIngressPage; readonly activation?: ShardActorActivationLease }): Promise<WireTurnResult> => {
     registry.touch(actorId);
-    return submitPluginTurn(actorId, events, options?.lane ?? "Interactive", options?.coalesceKey, options?.commandPage, options?.activation);
+    return submitPluginTurn(actorId, events, options?.lane ?? "Interactive", options?.turnKey, options?.commandPage, options?.activation);
   };
 
   /** 📤️📥️ Backs {@link KernelPluginWasmHandle.enqueue}/`.outcomes` (see this file's own header doc).
@@ -3964,12 +3964,13 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
       const mediaFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Media: unknown }> => "Media" in frame);
       return mediaFrame ? { port: mediaFrame.Media.port, descriptor: new Uint8Array(mediaFrame.Media.descriptor), data: new Uint8Array(mediaFrame.Media.data) } : null;
     },
-    ...mediaTransportPort(requireChannel),
-    loadAppDocumentPack: async (instanceId, pack, spr) => {
-      const frames = await requireChannel(instanceId).loadDocument(pack, spr);
+    importAppMedia: async (instanceId, port, descriptor, data) => {
+      const frames = await requireChannel(instanceId).mediaIn(port, descriptor, data);
       const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
-      if (errorFrame) throw new Error(`loadAppDocumentPack failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}`);
+      if (errorFrame) throw new Error(`importAppMedia failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}`);
+      if (!frames.some((frame) => "Done" in frame)) throw new Error("importAppMedia failed: missing completion receipt");
     },
+    ...mediaTransportPort(requireChannel),
     readAppDocumentArchive: (instanceId) => requireChannel(instanceId).readDocumentArchive(),
     readAppDocumentIdentity: (instanceId) => requireChannel(instanceId).readDocumentIdentity(),
     loadAppDocumentArchive: (instanceId, archive, signal, progress) => requireChannel(instanceId).loadDocumentArchive(archive, signal, progress),
@@ -3987,7 +3988,7 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
       const frames =
         request.form === "owner"
           ? await requireChannel(instanceId).transactionPrepareOwner(txnId, request.mutationId, request.payload)
-          : await requireChannel(instanceId).transactionPreparePlanned(txnId, request.preparedOps, request.label, request.origin);
+          : await requireChannel(instanceId).transactionPreparePlanned(txnId, request.preparedOps, request.origin);
       const frame = frames.find((candidate): candidate is Extract<AppFrameValue, { readonly transactionPrepared: unknown }> => "transactionPrepared" in candidate);
       if (!frame) throw new Error(`program ${pluginId}: transactionPrepare(${instanceId}): missing transactionPrepared frame`);
       return {
@@ -4123,10 +4124,10 @@ export type TransactionMember = {
 };
 
 /** 🎫️ `AppCommand::TransactionPrepare`'s two frozen wire forms (contract freeze §2): owner-mutation
- * (`mutationId`+`payload`, single op) or pre-planned (`preparedOps`+`label`+`origin`, an op list). */
+ * (`mutationId`+`payload`, single op) or pre-planned (`preparedOps`+`origin`, an op list). */
 export type TransactionPrepareRequest =
   | { readonly form: "owner"; readonly mutationId: string; readonly payload: Uint8Array }
-  | { readonly form: "planned"; readonly preparedOps: readonly Uint8Array[]; readonly label: string; readonly origin: Uint8Array };
+  | { readonly form: "planned"; readonly preparedOps: readonly Uint8Array[]; readonly origin: Uint8Array };
 
 export type TransactionPrepareOutcome = { readonly foreign: readonly Uint8Array[]; readonly rejection: Uint8Array | null };
 
@@ -4150,7 +4151,6 @@ export type TransactionProposal = {
   readonly initiatorArtifactId: string;
   readonly initiatorArtifactKind: string;
   readonly localOps: readonly Uint8Array[];
-  readonly description: string;
   readonly foreign: readonly Uint8Array[];
 };
 
@@ -4258,7 +4258,6 @@ export class TransactionCoordinator {
     const initiatorOutcome = await initiatorHandle.transactionPrepare(initiator.instanceId, txnId, {
       form: "planned",
       preparedOps: proposal.localOps,
-      label: proposal.description,
       origin: encodeMutationOrigin({ kind: "owner" }),
     });
     if (initiatorOutcome.rejection) return { ok: false, code: rejectionCodeFromBytes(initiatorOutcome.rejection) };
@@ -4337,7 +4336,7 @@ export class TransactionCoordinator {
         const origin = group.contributedFrom
           ? encodeMutationOrigin({ kind: "contributed", pluginId: group.contributedFrom, mutationId: "", payloadHash: fnv1aHex(group.ops[0] ?? new Uint8Array()) })
           : encodeMutationOrigin({ kind: "transaction", initiator: { artifactId: initiator.artifactId, artifactKind: proposal.initiatorArtifactKind } });
-        const outcome = await handle.transactionPrepare(group.member.instanceId, txnId, { form: "planned", preparedOps: group.ops, label: proposal.description, origin });
+        const outcome = await handle.transactionPrepare(group.member.instanceId, txnId, { form: "planned", preparedOps: group.ops, origin });
         if (outcome.rejection) {
           await this.rollback(txnId, discoveryOrder);
           return { ok: false, code: rejectionCodeFromBytes(outcome.rejection) };

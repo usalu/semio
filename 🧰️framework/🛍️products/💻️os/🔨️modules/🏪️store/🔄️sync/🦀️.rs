@@ -13,7 +13,10 @@
 //! - **WASI-P2 plugins never link this crate** — inside the sandbox a store attaches vcs's pure
 //!   `PortBackbone` (an in-memory queue relayed to the host). This actor is a host-side concern only.
 
-use crate::os_dsl::{DslValue, FromValue as FromValueTrait, ToValue as ToValueTrait, ValueError};
+use semio_framework_value::DslValue;
+use semio_framework_value::FromValue as FromValueTrait;
+use semio_framework_value::ToValue as ToValueTrait;
+use semio_framework_value::ValueError;
 use crate::os_spr::{PresencePeer, PresenceToolRun};
 use crate::os_spr::{
     decode_document_backbone_envelopes_exact, decode_envelopes, decode_server_frame, encode_client_frame, encode_envelopes, AckStage, ApplyOutcome, ArtifactBootstrap, ArtifactBootstrapAssembler, ArtifactBootstrapControl, ArtifactBootstrapLimits,
@@ -63,19 +66,19 @@ mod envelope_serde {
     /// 🧵️ `FromValue` twin of `deserialize` above.
     pub fn from_value(value: super::DslValue) -> Result<Vec<MutationEnvelope>, super::ValueError> {
         let super::DslValue::Array(items) = value else {
-            return Err(super::ValueError::new("expected array of bytes"));
+            return Err(super::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected array of bytes"));
         };
         let mut bytes = Vec::with_capacity(items.len());
         for item in items {
             let super::DslValue::Number(n) = item else {
-                return Err(super::ValueError::new("expected byte number"));
+                return Err(super::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected byte number"));
             };
             let Some(n) = n.as_u64() else {
-                return Err(super::ValueError::new("expected byte number"));
+                return Err(super::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected byte number"));
             };
             bytes.push(n as u8);
         }
-        decode_envelopes(&bytes).map_err(|error| super::ValueError::new(error.to_string()))
+        decode_envelopes(&bytes).map_err(|error| super::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()))
     }
 }
 //#endregion 🔖️EnvelopeSerde
@@ -834,7 +837,7 @@ impl CommandAckOutcome {
     /// `MutationMessage` array (`🌎️hub` `encode_messages`; empty for an admission or transport refusal), read into
     /// `hub.refused`, or `hub.unreadable` with no messages when they are not that array.
     pub fn hub_rejected(reason: String, messages: &[u8]) -> Self {
-        let decoded = if messages.is_empty() { Some(Vec::new()) } else { std::str::from_utf8(messages).ok().and_then(|text| crate::os_pack::json::from_json_str::<Vec<MutationMessage>>(text).ok()) };
+        let decoded = if messages.is_empty() { Some(Vec::new()) } else { std::str::from_utf8(messages).ok().and_then(|text| semio_framework_pack_json::from_json_str::<Vec<MutationMessage>>(text, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()) };
         match decoded {
             Some(messages) => Self::Rejected { code: CommandRejectionCode::HubRefused, reason, messages, detail: None },
             None => Self::Rejected { code: CommandRejectionCode::HubUnreadable, reason, messages: Vec::new(), detail: None },
@@ -1040,7 +1043,6 @@ async fn history_edit_from_envelope(envelope: &MutationEnvelope) -> crate::os_sp
         actor: Some(envelope.actor.0.clone()),
         started_at: now_ms().await.to_string(),
         finished_at: None,
-        coalesce_key: None,
         description: None, verb: envelope.verb.clone(), line: envelope.line.clone(),
         ops: vec![crate::os_spr::OpPayload { text: None, binary: Some(envelope.diff.payload.clone()) }],
         inverse: if envelope.inverse.payload.is_empty() { Vec::new() } else { vec![crate::os_spr::OpPayload { text: None, binary: Some(envelope.inverse.payload.clone()) }] },
@@ -1252,7 +1254,7 @@ pub fn document_admission_refuses_access(error: &crate::os_directory::client::Di
 /// 📣️ The message a document actor emits once its link turns terminal: the status code is the fault code a
 /// shell localizes ([`DocumentLinkStatus::text`]), the message the English line for logs.
 pub fn document_link_terminal_message(document_id: &str, status: DocumentLinkStatus) -> MutationMessage {
-    MutationMessage { level: crate::os_dsl::Severity::Error, code: crate::os_dsl::FaultCode::new(status.code()), message: status.text(false).unwrap_or_default().to_string(), target: vec![document_id.to_string()], op_index: None }
+    MutationMessage { level: semio_framework_diagnostic::Severity::Error, code: semio_framework_diagnostic::FaultCode::new(status.code()), message: status.text(false).unwrap_or_default().to_string(), target: vec![document_id.to_string()], op_index: None }
 }
 
 /// 🔌️ A hub document's link, the ONE state machine the native actor, the browser actor and the
@@ -1505,8 +1507,8 @@ pub const HISTORY_TRANSITION_REFUSED_CODE: &str = "history.transition-refused";
 fn transition_refusal(refused: &[MutationEnvelope], reason: &str) -> Option<MutationMessage> {
     let transitions: Vec<String> = refused.iter().filter(|envelope| crate::os_spr::is_history_transition(envelope)).map(|envelope| envelope.mutation_id.0.clone()).collect();
     (!transitions.is_empty()).then(|| MutationMessage {
-        level: crate::os_dsl::Severity::Error,
-        code: crate::os_dsl::FaultCode::new(HISTORY_TRANSITION_REFUSED_CODE),
+        level: semio_framework_diagnostic::Severity::Error,
+        code: semio_framework_diagnostic::FaultCode::new(HISTORY_TRANSITION_REFUSED_CODE),
         message: format!("the hub refused {} history step(s) ({reason}); they are withdrawn", transitions.len()),
         target: transitions,
         op_index: None,
@@ -1576,7 +1578,7 @@ async fn next_timestamp(seed: u64, counter: &mut u64) -> crate::os_spr::HybridLo
 /// channel and event stream, drains status on {@link SyncSession::tick}, and delegates store IO.
 pub struct SyncSession<P, Mutation>
 where
-    P: Clone + crate::os_dsl::ToValue + crate::os_dsl::FromValue + crate::os_store::ArtifactPack + Send + Sync + 'static,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + crate::os_store::ArtifactPack + Send + Sync + 'static,
     Mutation: Clone + crate::os_spr::Mutation<P> + OpBinary + crate::os_spr::OpText + Send + 'static,
 {
     pub store: ArtifactStore<P, Mutation>,
@@ -1587,7 +1589,7 @@ where
 
 impl<P, Mutation> SyncSession<P, Mutation>
 where
-    P: Clone + crate::os_dsl::ToValue + crate::os_dsl::FromValue + crate::os_store::ArtifactPack + Send + Sync + 'static,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + crate::os_store::ArtifactPack + Send + Sync + 'static,
     Mutation: Clone + crate::os_spr::Mutation<P> + OpBinary + crate::os_spr::OpText + Send + 'static,
 {
     pub async fn new(store: ArtifactStore<P, Mutation>) -> Self {
@@ -2445,8 +2447,8 @@ mod native_actor {
                 Ok(seeded) => seeded,
                 Err(error) => {
                     self.emit(ArtifactEvent::Conflict(MutationMessage {
-                        level: crate::os_dsl::Severity::Error,
-                        code: crate::os_dsl::FaultCode::new("hubDocumentSeed"),
+                        level: semio_framework_diagnostic::Severity::Error,
+                        code: semio_framework_diagnostic::FaultCode::new("hubDocumentSeed"),
                         message: format!("the canonical checkpoint pair could not seed the document: {error}"),
                         target: vec![self.document_id.clone()],
                         op_index: None,
@@ -2753,8 +2755,8 @@ mod native_actor {
             if let Some(current) = self.current_pack.as_ref() {
                 if *current != pack {
                     self.emit(ArtifactEvent::Conflict(MutationMessage {
-                        level: crate::os_dsl::Severity::Error,
-                        code: crate::os_dsl::FaultCode::new("genesisMismatch"),
+                        level: semio_framework_diagnostic::Severity::Error,
+                        code: semio_framework_diagnostic::FaultCode::new("genesisMismatch"),
                         message: "the attached store names a different initial snapshot than the persisted document".into(),
                         target: vec![format!("folder://{}", self.document_id)],
                         op_index: None,
@@ -2863,8 +2865,8 @@ mod native_actor {
             } else if !lost.is_empty() {
                 if !self.pending_batches.is_empty() {
                     self.emit(ArtifactEvent::Conflict(MutationMessage {
-                        level: crate::os_dsl::Severity::Error,
-                        code: crate::os_dsl::FaultCode::new("externalDivergence"),
+                        level: semio_framework_diagnostic::Severity::Error,
+                        code: semio_framework_diagnostic::FaultCode::new("externalDivergence"),
                         message: "external history diverged while local operations are pending".into(),
                         target: vec![format!("folder://{}", self.document_id)],
                         op_index: None,
@@ -2920,7 +2922,7 @@ mod native_actor {
         async fn fail_artifact_bootstrap(&mut self, detail: impl Into<String>) {
             self.abort_artifact_bootstrap();
             self.requeue_pending_batches();
-            self.emit(ArtifactEvent::Conflict(MutationMessage { level: crate::os_dsl::Severity::Error, code: crate::os_dsl::FaultCode::new("artifactBootstrap"), message: detail.into(), target: vec![self.document_id.clone()], op_index: None }));
+            self.emit(ArtifactEvent::Conflict(MutationMessage { level: semio_framework_diagnostic::Severity::Error, code: semio_framework_diagnostic::FaultCode::new("artifactBootstrap"), message: detail.into(), target: vec![self.document_id.clone()], op_index: None }));
             self.semio_hub = None;
             self.clear_socket_epoch();
             self.schedule_reconnect().await;
@@ -3220,8 +3222,8 @@ mod native_actor {
             self.required_tail_frontier = Some(pending.required_tail_frontier);
             if !self.outbox.is_empty() && self.replay_local_outbox_after_bootstrap().await.is_err() {
                 self.emit(ArtifactEvent::Conflict(MutationMessage {
-                    level: crate::os_dsl::Severity::Error,
-                    code: crate::os_dsl::FaultCode::new("artifactBootstrapLocalReplay"),
+                    level: semio_framework_diagnostic::Severity::Error,
+                    code: semio_framework_diagnostic::FaultCode::new("artifactBootstrapLocalReplay"),
                     message: "artifact baseline committed; pending local replay will retry after reconnect".into(),
                     target: vec![self.document_id.clone()],
                     op_index: None,
@@ -3488,7 +3490,7 @@ mod native_actor {
                 ServerFrame::CreditGrant { .. } => {
                 }
                 ServerFrame::Error { code, message } => {
-                    self.emit(ArtifactEvent::Conflict(MutationMessage { level: crate::os_dsl::Severity::Error, code: crate::os_dsl::FaultCode::new(code), message, target: vec![self.hub_base_url.clone().unwrap_or_default()], op_index: None }));
+                    self.emit(ArtifactEvent::Conflict(MutationMessage { level: semio_framework_diagnostic::Severity::Error, code: semio_framework_diagnostic::FaultCode::new(code), message, target: vec![self.hub_base_url.clone().unwrap_or_default()], op_index: None }));
                 }
             }
         }
@@ -4804,7 +4806,7 @@ mod wasm_actor {
         /// ⚠️ A bootstrap or protocol fault is reported as the native actor reports it — one `Conflict` —
         /// and the socket reconnects for a fresh catch-up.
         fn fail_artifact_bootstrap(&mut self, detail: impl Into<String>) {
-            let _ = self.events.send(ArtifactEvent::Conflict(MutationMessage { level: crate::os_dsl::Severity::Error, code: crate::os_dsl::FaultCode::new("artifactBootstrap"), message: detail.into(), target: vec![self.document_id.clone()], op_index: None }));
+            let _ = self.events.send(ArtifactEvent::Conflict(MutationMessage { level: semio_framework_diagnostic::Severity::Error, code: semio_framework_diagnostic::FaultCode::new("artifactBootstrap"), message: detail.into(), target: vec![self.document_id.clone()], op_index: None }));
             self.disconnect();
         }
 
@@ -4911,8 +4913,8 @@ mod wasm_actor {
             self.required_tail_frontier = Some(pending.required_tail_frontier);
             if !self.outbox.is_empty() && self.remote.push(BackboneMessage::Mutations { envelopes: encode_envelopes(&self.outbox) }).await.is_err() {
                 let _ = self.events.send(ArtifactEvent::Conflict(MutationMessage {
-                    level: crate::os_dsl::Severity::Error,
-                    code: crate::os_dsl::FaultCode::new("artifactBootstrapLocalReplay"),
+                    level: semio_framework_diagnostic::Severity::Error,
+                    code: semio_framework_diagnostic::FaultCode::new("artifactBootstrapLocalReplay"),
                     message: "artifact baseline committed; pending local replay will retry after reconnect".into(),
                     target: vec![self.document_id.clone()],
                     op_index: None,
@@ -5049,8 +5051,8 @@ mod wasm_actor {
                 ServerFrame::CreditGrant { .. } => {}
                 ServerFrame::Error { code, message } => {
                     let _ = self.events.send(ArtifactEvent::Conflict(MutationMessage {
-                        level: crate::os_dsl::Severity::Error,
-                        code: crate::os_dsl::FaultCode::new(code),
+                        level: semio_framework_diagnostic::Severity::Error,
+                        code: semio_framework_diagnostic::FaultCode::new(code),
                         message,
                         target: vec![self.hub_base_url.clone().unwrap_or_default()],
                         op_index: None,

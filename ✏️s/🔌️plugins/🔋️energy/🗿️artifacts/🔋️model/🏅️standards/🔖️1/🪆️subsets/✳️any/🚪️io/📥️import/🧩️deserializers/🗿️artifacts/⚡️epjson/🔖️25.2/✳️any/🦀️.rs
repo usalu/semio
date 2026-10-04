@@ -31,7 +31,7 @@ use crate::model::{
 };
 use crate::schedule::{ConstantSchedule, DailySchedule, ScheduleInterpolation};
 use crate::EnergyModelSnapshot;
-use pack::json::{Object, Value};
+use semio_framework_pack_json::{Object, Value};
 
 //#region 🔖️Bases
 /// 🔢️ First minted [`EntityId`] of each collection; epJSON has no ids, so the two directions agree
@@ -746,20 +746,20 @@ fn decode_outputs(root: &Object, model: &mut Model) {
 pub fn register() {}
 
 /// 📥️ The io-leaf entry point: an epJSON document tree as this artifact's snapshot.
-pub fn deserialize(document: &Value) -> Result<EnergyModelSnapshot, store::TextError> {
-    let import = decode_model(document).map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))?;
+pub fn deserialize(document: &Value) -> Result<EnergyModelSnapshot, semio_framework_diagnostic::TextError> {
+    let import = decode_model(document).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, semio_framework_diagnostic::TextSpan::at(1, 1)))?;
     Ok(EnergyModelSnapshot { model: import.model, ..Default::default() })
 }
 
 /// 📥️ The io-leaf byte entry point: epJSON text as this artifact's snapshot.
-pub fn deserialize_bytes(bytes: &[u8]) -> Result<EnergyModelSnapshot, store::TextError> {
-    let document = pack::json::parse_bytes(bytes).map_err(|error| store::TextError::new(error.to_string(), dsl::TextSpan::at(1, 1)))?;
+pub fn deserialize_bytes(bytes: &[u8]) -> Result<EnergyModelSnapshot, semio_framework_diagnostic::TextError> {
+    let document = semio_framework_pack_json::parse_bytes(bytes, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error.into_value_error(), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
     deserialize(&document)
 }
 
 /// 📥️ Byte entry point that keeps the import report, for callers that surface diagnostics.
 pub fn import_bytes(bytes: &[u8]) -> Result<EpJsonImport, String> {
-    decode_model(&pack::json::parse_bytes(bytes).map_err(|error| error.to_string())?)
+    decode_model(&semio_framework_pack_json::parse_bytes(bytes, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?)
 }
 //#endregion 🔖️Leaf
 
@@ -768,9 +768,9 @@ pub fn import_bytes(bytes: &[u8]) -> Result<EpJsonImport, String> {
 /// test adapter that cannot name [`Model`]. Returns `(model json, diagnostics json)` so a scenario
 /// can assert both what came back and what could not be represented.
 pub fn model_json_from_epjson(epjson: &str) -> Result<(String, String), String> {
-    let import = decode_model(&pack::json::parse(epjson).map_err(|error| error.to_string())?)?;
+    let import = decode_model(&semio_framework_pack_json::parse(epjson, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?)?;
     let diagnostics = Value::Array(import.diagnostics.iter().map(EpJsonDiagnostic::to_json).collect());
-    Ok((pack::json::to_json_string(&import.model), pack::json::to_string(&diagnostics)))
+    Ok((semio_framework_pack_json::to_json_string(&import.model), semio_framework_pack_json::to_string(&diagnostics)))
 }
 //#endregion 🌉️Bridge
 

@@ -6,9 +6,12 @@ use crate::ProgramMutation;
 use crate::ProgramSnapshot;
 
 /// ↩️ Undo a replace by restoring the pre-state row content. Missing target ⇒ nothing to undo.
-pub fn inverse(payload: &super::ReplaceCommunicationRequirement, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+pub fn inverse(payload: &super::ReplaceCommunicationRequirement, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.communication.iter().find(|row| row.header.id == payload.communication_requirement.header.id) {
         Some(existing) => vec![ProgramMutation::ReplaceCommunicationRequirement(super::ReplaceCommunicationRequirement { communication_requirement: existing.clone() })],
         None => Vec::new(),
     }
+
+    })())
 }

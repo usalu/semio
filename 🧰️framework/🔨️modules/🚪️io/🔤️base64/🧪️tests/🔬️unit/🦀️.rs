@@ -92,3 +92,15 @@ fn matches_third_party_base64url_oracle() {
         assert_eq!(oracle.decode(&ours).expect("oracle decode of our encoding"), bytes);
     }
 }
+/// 🧮️ Allocation-free quartet decoding agrees with the independent standard engine.
+#[test]
+fn quartets_match_third_party_and_refuse_noncanonical_groups(){
+    use base64::Engine as _;
+    let engine=base64::engine::general_purpose::STANDARD;
+    for length in 1..=128{let bytes:Vec<u8>=(0..length).map(|i|((i*73+length*19)&255)as u8).collect();let text=engine.encode(&bytes);let mut output=Vec::new();
+        for (index,quad) in text.as_bytes().as_chunks::<4>().0.iter().enumerate(){let (value,count)=decode_standard_quad(*quad,index*4,(index+1)*4==text.len()).unwrap();output.extend_from_slice(&value[..count]);}
+        assert_eq!(output,bytes);assert_eq!(output,engine.decode(&text).unwrap());
+    }
+    for quad in [*b"=m9v",*b"Zm=v",*b"Zh==",*b"Zm9=",*b"Z g=",*b"Zm_="]{assert!(decode_standard_quad(quad,0,true).is_err());}
+    for quad in [*b"Zg==",*b"Zm8="]{assert!(decode_standard_quad(quad,0,false).is_err());}
+}

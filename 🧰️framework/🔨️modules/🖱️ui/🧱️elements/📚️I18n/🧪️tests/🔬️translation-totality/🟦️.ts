@@ -29,6 +29,11 @@ test("every frozen outcome code has distinct en and de labels", () => {
 test("canonical labels are total for both explicit shell locales", () => {
   const validate = new Ajv({ strict: true }).addKeyword("x-semio-formats").compile(schema);
   expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+  for (const hostile of [
+    { ...fixture, foreign: true },
+    { cases: [{ ...fixture.cases[0], locale: "unknown" }, ...fixture.cases.slice(1)] },
+    { cases: [{ ...fixture.cases[0], key: "ui.windowFault.undeclared" }, ...fixture.cases.slice(1)] },
+  ]) expect(validate(hostile)).toBe(false);
   for (const vector of fixture.cases) {
     if (vector.locale !== "en" && vector.locale !== "de") throw new Error("Unsupported fixture locale");
     const instance = createShellI18nInstance(vector.locale);

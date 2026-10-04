@@ -1,0 +1,117 @@
+{
+  "contractId": "real-count-component-lease-sqlite",
+  "owner": "fixture.neutral-host-fixture.counter@1/*",
+  "counts": [
+    -2147483648,
+    -1,
+    0,
+    1,
+    2147483647
+  ],
+  "encodings": [
+    "binary",
+    "text"
+  ],
+  "authority": {
+    "source": "compiled-component",
+    "lease": "DocumentExecutionTargetLeaseFieldsV1",
+    "workspace": "HeadlessWorkspace",
+    "pluginId": "neutral-host-fixture",
+    "packageId": "semio:neutral-host-fixture",
+    "schema": "fixture.neutral-host-fixture.counter",
+    "scope": {
+      "spaceId": "count-lease-space",
+      "documentId": "count-lease-document"
+    },
+    "verify": [
+      "componentSha256",
+      "componentBlake3",
+      "descriptorByteSha256",
+      "packSchemaHash",
+      "parentDialect",
+      "documentScope"
+    ],
+    "route": "io_run_with_snapshot_control",
+    "snapshotType": "guest-erased"
+  },
+  "cancellation": {
+    "directions": [
+      "export",
+      "import"
+    ],
+    "checkpoint": "guest-interpreter-progress",
+    "kind": "Canceled",
+    "beforePublication": true
+  },
+  "refusals": [
+    {
+      "kind": "InvalidValue",
+      "owner": "fixture.neutral-host-fixture.snapshot-refusal@1/invalid-value",
+      "origin": "declared-compiled-provider"
+    },
+    {
+      "kind": "Canceled",
+      "owner": "fixture.neutral-host-fixture.snapshot-refusal@1/canceled",
+      "origin": "declared-compiled-provider"
+    },
+    {
+      "kind": "OwnershipLimit",
+      "owner": "fixture.neutral-host-fixture.snapshot-refusal@1/ownership-limit",
+      "origin": "declared-compiled-provider"
+    },
+    {
+      "kind": "AllocationFailed",
+      "owner": "fixture.neutral-host-fixture.snapshot-refusal@1/allocation-failed",
+      "origin": "declared-compiled-provider"
+    },
+    {
+      "kind": "WorkLimit",
+      "owner": "fixture.neutral-host-fixture.snapshot-refusal@1/work-limit",
+      "origin": "declared-compiled-provider"
+    },
+    {
+      "kind": "DepthLimit",
+      "owner": "fixture.neutral-host-fixture.snapshot-refusal@1/depth-limit",
+      "origin": "declared-compiled-provider"
+    },
+    {
+      "kind": "UnsupportedOwner",
+      "owner": "fixture.neutral-host-fixture.snapshot-refusal@1/unsupported-owner",
+      "origin": "declared-compiled-provider"
+    },
+    {
+      "kind": "InvariantViolated",
+      "owner": "fixture.neutral-host-fixture.snapshot-refusal@1/invariant-violated",
+      "origin": "declared-compiled-provider"
+    }
+  ],
+  "message": "selected typed cause\u0000引用😀",
+  "diagnostic": {
+    "code": "fixture.snapshot\u0000code",
+    "severity": "error",
+    "span": {
+      "line": 7,
+      "column": 9,
+      "length": 4
+    },
+    "message": "diagnostic\u0000引用😀",
+    "expected": {
+      "tokens": [
+        "typed\u0000token"
+      ],
+      "keywords": [
+        "word\u0000引用"
+      ],
+      "keys": [
+        "count\u0000key"
+      ]
+    },
+    "scope": {
+      "pluginId": "neutral-host-fixture",
+      "appId": "fixture\u0000app",
+      "instanceId": "lease\u0000instance",
+      "module": "sqlite\u0000module",
+      "bodyKey": "count\u0000body"
+    }
+  }
+}

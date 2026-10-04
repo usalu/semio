@@ -1,5 +1,0 @@
-{
-  "mutation": "changeNodeName",
-  "id": "node-a",
-  "newName": "Alpha Renamed"
-}

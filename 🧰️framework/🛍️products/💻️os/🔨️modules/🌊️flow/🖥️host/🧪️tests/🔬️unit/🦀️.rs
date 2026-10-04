@@ -83,7 +83,7 @@ fn test_math_bridge(kind: &str, input: &Dictionary) -> Result<Dictionary, EvalEr
 /// end of a law (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 fn kind_infos_json(kind_infos: Vec<NeuronKindInfo>) -> String {
     let kind_infos = neural::ColdOwner::new(kind_infos);
-    crate::os_pack::json::to_json_string(&*kind_infos)
+    semio_framework_pack_json::to_json_string(&*kind_infos)
 }
 
 /// 🧪️ The two-operator catalogue every host law in this file indexes.
@@ -286,7 +286,7 @@ fn flow_eval_session_retains_baseline_across_ephemeral_hosts() {
 fn flow_eval_session_seeds_its_retained_neural_cache() {
     let session = FlowEvalSession::new();
     let expected = Dictionary::with_schema("number").insert("value", NeuralValue::Atom(Atom::Decimal(42.0)));
-    let output_json = crate::os_pack::json::to_json_string(&expected);
+    let output_json = semio_framework_pack_json::to_json_string(&expected);
     session.seed_node_cache(17, &output_json).unwrap();
     let seeded = session.neural_cache().get(17);
     assert_eq!(seeded, Some(expected.clone()));
@@ -321,11 +321,11 @@ fn evaluate_step_budget_one_converges_over_multiple_calls() {
     // ⏱️ Tick 1: budget for one cache-missed node — computes "add" for free-riding boundary nodes
     // plus that one dispatch, then stops right before the next miss ("pass"). `remaining[0]` is
     // the blocking node; anything after it (here, "preview") is just downstream-and-untouched.
-    let remaining_after_tick1 = host.evaluate_step(EvalStepBudget::dispatches(1));
+    let remaining_after_tick1 = host.evaluate_step(EvalStepBudget::dispatches(1),&|_|true);
     assert_eq!(remaining_after_tick1.first(), Some(&"pass".to_string()), "pass is the next node blocking completion");
     assert_eq!(host.preview_text(), "3", "the chain hasn't reached \"pass\" (and thus \"preview\") yet");
     // ⏱️ Tick 2: "add" is now cached, so this reaches and computes "pass".
-    let remaining_after_tick2 = host.evaluate_step(EvalStepBudget::dispatches(1));
+    let remaining_after_tick2 = host.evaluate_step(EvalStepBudget::dispatches(1),&|_|true);
     assert!(remaining_after_tick2.is_empty(), "the walk reached the end of the topo order");
     assert_eq!(host.preview_text(), "6", "converged to the dragged value after both ticks");
     host.retire_cold();
@@ -435,7 +435,7 @@ fn flow_eval_session_invalidates_only_when_the_flow_extension_registry_generatio
     let generation = session.flow_extension_generation();
     assert_eq!(generation, crate::flow_extension_registry_generation(), "a fresh session is current with the registry it will evaluate against");
     let cached = Dictionary::with_schema("number").insert("value", NeuralValue::Atom(Atom::Decimal(42.0)));
-    let cached_json = crate::os_pack::json::to_json_string(&cached);
+    let cached_json = semio_framework_pack_json::to_json_string(&cached);
     cached.retire_cold();
     session.seed_node_cache(17, &cached_json).expect("a host-mediated extension answer seeds the retained cache");
     assert!(session.sync(&host), "the default demo graph has pending nodes, so a chain is armed");
@@ -840,6 +840,49 @@ fn empty_canvas_world_point(host: &FlowHost) -> (f64, f64) {
         assert!(!covered, "{} covers the point this law needs empty", node.id);
     }
     point
+}
+
+/// 🧭️ Uses a neutral admission fixture and independent JSON reader to verify the canonical journal caller.
+#[test]
+fn snapshot_io_prerequisite_flow_gesture_journal_admits_or_restores_all_moves() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚦️journal-admission.json")).unwrap();
+    assert_eq!(fixture["capacity"].as_u64().unwrap() as usize, dag::DAG_GRAPH_EDIT_CAPACITY);
+    for case in fixture["cases"].as_array().unwrap() {
+        let mut host = host_with_test_bridge();
+        host.begin_gesture();
+        let before = host.host_snapshot.clone();
+        let pending = case["pendingRows"].as_u64().unwrap() as usize;
+        host.dag.journal_moves("existing", (0..pending).map(|index| (format!("pending-{index}"), index as f64 + 10.0, 0.0))).unwrap();
+        for movement in fixture["moves"].as_array().unwrap() {
+            let id = movement["id"].as_str().unwrap();
+            let mut landed = host.host_snapshot.layout.get(id).unwrap().clone();
+            landed.x += movement["dx"].as_f64().unwrap();
+            landed.y += movement["dy"].as_f64().unwrap();
+            host.host_snapshot.layout.insert(id.to_string(), landed);
+        }
+        host.commit_gesture_history();
+        let answer: serde_json::Value = serde_json::from_str(&host.take_graph_edits_json()).unwrap();
+        let admitted = case["admitted"].as_bool().unwrap();
+        assert_eq!(answer["operations"].as_array().unwrap().len(), pending + if admitted { 2 } else { 0 });
+        if admitted {
+            assert!(answer.get("refused").is_none());
+            for movement in fixture["moves"].as_array().unwrap() {
+                let id = movement["id"].as_str().unwrap();
+                assert_eq!(host.host_snapshot.layout.get(id).unwrap().x, before.layout.get(id).unwrap().x + movement["dx"].as_f64().unwrap());
+            }
+        } else {
+            assert_eq!(answer["refused"]["rows"].as_u64(), Some(257));
+            assert_eq!(answer["refused"]["limit"].as_u64(), Some(256));
+            assert_eq!(host.host_snapshot.layout, before.layout);
+            assert!(host.history_store.is_none());
+            for node in &host.dag.host_snapshot.nodes {
+                let layout = before.layout.get(&node.id).unwrap();
+                assert_eq!((node.x, node.y), (layout.x, layout.y));
+            }
+        }
+        before.retire_cold();
+        host.retire_cold();
+    }
 }
 
 fn gesture_answer(host: &mut FlowHost) -> (usize, bool) {
@@ -1337,9 +1380,9 @@ fn synapse_to_a_missing_port_does_not_create_an_engine_edge() {
 #[test]
 fn slider_ghost_descriptor_requires_authored_label() {
     let missing = r#"{"kind":"inputSlider"}"#;
-    assert!(crate::os_pack::json::from_json_str::<WidgetDescriptor>(missing).is_err());
+    assert!(semio_framework_pack_json::from_json_str::<WidgetDescriptor>(missing, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
     assert!(serde_json::from_str::<WidgetDescriptor>(missing).is_err());
-    let descriptor: WidgetDescriptor = crate::os_pack::json::from_json_str(r#"{"kind":"inputSlider","label":""}"#).expect("authored empty label");
+    let descriptor: WidgetDescriptor = semio_framework_pack_json::from_json_str(r#"{"kind":"inputSlider","label":""}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("authored empty label");
     let WidgetDescriptor::InputSlider { label, .. } = descriptor else { panic!("expected a slider"); };
     assert!(label.is_empty());
 }
@@ -1856,12 +1899,12 @@ fn channel_hover_and_selection_round_trip_at_detail_lod() {
     host.dag.set_automatic_lod(false);
     host.dag.set_forced_draw_lod_label("detail");
     host.set_hover_channel(Some("add"), Some("a"));
-    let hovered: dag::DagChannelRef = crate::os_pack::json::from_json_str(&host.hovered_channel_json()).unwrap();
+    let hovered: dag::DagChannelRef = semio_framework_pack_json::from_json_str(&host.hovered_channel_json(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(hovered.widget_id, "add");
     assert_eq!(hovered.port, "a");
     assert_eq!(hovered.direction, "in");
     host.set_selected_channels_json(r#"[{"widgetId":"add","port":"a","direction":"in"}]"#);
-    let selected: Vec<dag::DagChannelRef> = crate::os_pack::json::from_json_str(&host.selected_channels_json()).unwrap();
+    let selected: Vec<dag::DagChannelRef> = semio_framework_pack_json::from_json_str(&host.selected_channels_json(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(selected.len(), 1);
     assert_eq!(selected[0].widget_id, "add");
     assert_eq!(selected[0].port, "a");
@@ -2174,6 +2217,20 @@ fn insert_between_rewires_downstream_and_connects_anchor() {
 }
 
 #[test]
+fn insert_between_allocates_unique_synapses_after_host_reconstruction() {
+    let mut host = host_with_test_bridge();
+    host.host_snapshot.synapses[0].id = "s101".into();
+    host.host_snapshot.synapses[1].id = "s102".into();
+    let mid = host.add_widget(r#"{"kind":"neuron","id":"mid","neuronKind":"math.passThrough"}"#, 120.0, 0.0).unwrap();
+    host.insert_between("slider", "number", &mid, "number", "number").unwrap();
+    let ids: std::collections::BTreeSet<_> = host.host_snapshot.synapses.iter().map(|synapse| &synapse.id).collect();
+    assert_eq!(ids.len(), host.host_snapshot.synapses.len());
+    assert!(host.host_snapshot.synapses.iter().any(|synapse| synapse.id == "s101" && synapse.from == "mid" && synapse.to == "add"));
+    assert!(host.host_snapshot.synapses.iter().any(|synapse| synapse.id == "s103" && synapse.from == "slider" && synapse.to == "mid"));
+    host.retire_cold();
+}
+
+#[test]
 fn insert_between_preserves_existing_mid_inputs() {
     let mut host = host_with_test_bridge();
     let variable_id = host.add_widget(r#"{"kind":"variable","name":"width","schema":"number"}"#, 120.0, 0.0).unwrap();
@@ -2195,6 +2252,34 @@ fn make_space_shifts_widgets_right_of_anchor() {
     assert!((host.host_snapshot.layout.get("slider").expect("slider").x - 0.0).abs() < 1e-6);
     assert!((host.host_snapshot.layout.get("add").expect("add").x - 300.0).abs() < 1e-6);
     assert!((host.host_snapshot.layout.get("preview").expect("preview").x - 500.0).abs() < 1e-6);
+    host.retire_cold();
+}
+
+/// ⚖️ LAW (design §20.9): an inserted operator records every declared input's default literal in its `params` — the record
+/// is self-describing, so a fold decides an input's existence and literal type without any registry — while an input
+/// without a default (a data port) stays absent.
+#[test]
+fn an_inserted_operator_records_every_declared_default_input() {
+    let mut host = host_with_test_bridge();
+    let id = host.add_widget(r#"{"kind":"neuron","neuronKind":"math.add"}"#, 0.0, 0.0).unwrap();
+    let recorded = |key: &str| {
+        host.host_snapshot.widgets.iter().find_map(|widget| match widget {
+            Widget::Neuron { id: candidate, params, .. } if *candidate == id => Some(params.get(key).map(|value| value.as_dictionary().and_then(|literal| literal.get("value")).and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()))),
+            _ => None,
+        })
+    };
+    assert_eq!(recorded("b"), Some(Some(Some(0.0))), "the defaulted input is recorded with its default literal");
+    assert_eq!(recorded("a"), Some(None), "an input without a default stays absent");
+    host.retire_cold();
+}
+
+/// ⚖️ LAW (design §20.9): a wire into an input shadows the literal its operator records for that input — an operator
+/// inserted with its declared defaults and then wired evaluates the wire, never the recorded default.
+#[test]
+fn an_inserted_operator_wired_into_a_defaulted_input_evaluates_its_wire() {
+    let (host, pass_id) = host_with_two_node_chain();
+    assert!(host.host_snapshot.widgets.iter().any(|widget| matches!(widget, Widget::Neuron { id, params, .. } if *id == pass_id && params.get("number").is_some())), "the inserted operator recorded its declared default");
+    assert_eq!(host.preview_text(), "3", "the wire from `add` shadows the recorded default 0");
     host.retire_cold();
 }
 
@@ -2311,11 +2396,11 @@ fn apply_generation_values_to_host_snapshot_patches_slider_value() {
     let fixture = FlowHostSnapshot::default();
     let spec = flow_host_snapshot_to_form_spec(&fixture);
     let slider_id = spec.steps[0].blocks.iter().find(|question| question.kind == "slider").map(|question| question.id.clone()).expect("slider question");
-    let fixture_json = crate::os_pack::json::to_json_string(&fixture);
-    let mut values = crate::os_pack::json::Object::new();
-    values.insert(slider_id.clone(), crate::os_pack::json::Value::Number(8.0.into()));
+    let fixture_json = semio_framework_pack_json::to_json_string(&fixture);
+    let mut values = semio_framework_pack_json::Object::new();
+    values.insert(slider_id.clone(), semio_framework_pack_json::Value::Number(8.0.into()));
     let patched = apply_generation_values_to_host_snapshot(&fixture_json, &values);
-    let reparsed = crate::os_pack::json::parse(&patched).expect("patched json");
+    let reparsed = semio_framework_pack_json::parse(&patched, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("patched json");
     let slider = reparsed.get("widgets").and_then(|widgets| widgets.as_array()).and_then(|widgets| widgets.iter().find(|widget| widget.get("id").and_then(|id| id.as_str()) == Some(slider_id.as_str()))).expect("slider widget");
     assert_eq!(slider.get("value").and_then(|value| value.as_f64()), Some(8.0));
 }
@@ -2385,9 +2470,9 @@ fn host_with_two_extension_siblings() -> FlowHost {
 
 /// 📊️ The census entries of one status object, as `(widget id, status tag)` pairs.
 fn census_entries(status_json: &str) -> Vec<(String, String)> {
-    let value = crate::os_pack::json::parse(status_json).expect("census json");
+    let value = semio_framework_pack_json::parse(status_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("census json");
     let object = value.as_object().expect("census object").clone();
-    let mut entries: Vec<(String, String)> = object.iter().map(|(id, entry)| (id.to_string(), entry.get("status").and_then(crate::os_pack::json::Value::as_str).unwrap_or_default().to_string())).collect();
+    let mut entries: Vec<(String, String)> = object.iter().map(|(id, entry)| (id.to_string(), entry.get("status").and_then(semio_framework_pack_json::Value::as_str).unwrap_or_default().to_string())).collect();
     entries.sort();
     entries
 }
@@ -2414,11 +2499,11 @@ fn the_node_census_advances_as_a_chain_walks_and_never_calls_a_recomputed_node_s
     let armed = build_flow_status_json(&host, &host.pending_eval_widget_ids());
     assert_eq!(census_entries(&armed), [("add".to_string(), "computing".to_string()), ("pass".to_string(), "queued".to_string()), ("preview".to_string(), "ok".to_string()), ("slider".to_string(), "ok".to_string())]);
 
-    let after_first = host.evaluate_step(EvalStepBudget::dispatches(1));
+    let after_first = host.evaluate_step(EvalStepBudget::dispatches(1),&|_|true);
     let hop1 = build_flow_status_json(&host, &after_first);
     assert_eq!(census_entries(&hop1), [("add".to_string(), "ok".to_string()), ("pass".to_string(), "computing".to_string()), ("preview".to_string(), "ok".to_string()), ("slider".to_string(), "ok".to_string())], "the node this hop recomputed has SETTLED, whatever the frozen baseline still calls dirty");
 
-    let after_second = host.evaluate_step(EvalStepBudget::dispatches(1));
+    let after_second = host.evaluate_step(EvalStepBudget::dispatches(1),&|_|true);
     assert!(after_second.is_empty(), "two budget-one hops converge this chain");
     let hop2 = build_flow_status_json(&host, &after_second);
     let census = [census_nodes_done(&armed), census_nodes_done(&hop1), census_nodes_done(&hop2)];
@@ -2431,7 +2516,7 @@ fn the_node_census_advances_as_a_chain_walks_and_never_calls_a_recomputed_node_s
 #[test]
 fn a_coalesced_tick_parks_a_whole_wave_and_paints_every_member_computing() {
     let mut host = host_with_two_extension_siblings();
-    let remaining = host.evaluate_step(flow_eval_tick_budget(None));
+    let remaining = host.evaluate_step(flow_eval_tick_budget(None),&|_|true);
     let parked: Vec<&str> = host.pending_extension_evals.iter().map(|pending| pending.neuron_id.as_str()).collect();
     assert_eq!(parked, ["left", "right"], "both ready contributed nodes park on the SAME hop");
     let census = census_entries(&build_flow_status_json(&host, &remaining));

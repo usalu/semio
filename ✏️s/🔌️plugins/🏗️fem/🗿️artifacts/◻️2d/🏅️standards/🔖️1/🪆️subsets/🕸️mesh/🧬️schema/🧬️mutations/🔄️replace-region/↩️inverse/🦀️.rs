@@ -4,7 +4,10 @@ use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use crate::Fem2dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &ReplaceRegion, base: &Fem2dSnapshot) -> Vec<Fem2dMutation> {
+pub fn inverse(payload: &ReplaceRegion, base: &Fem2dSnapshot) -> Result<Vec<Fem2dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     base.regions.iter().find(|item| item.id == payload.id).map(|item| vec![Fem2dMutation::ReplaceRegion(ReplaceRegion { id: payload.id.clone(), new_region: item.clone() })]).unwrap_or_default()
+
+    })())
 }
 //#endregion 🔖️Inverse

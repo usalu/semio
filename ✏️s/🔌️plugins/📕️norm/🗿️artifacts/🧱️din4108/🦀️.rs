@@ -20,7 +20,7 @@ pub fn package_descriptor() -> Result<semio_s_artifact_norm_contract::NormArtifa
 
 // #region 🔖️Types
 /// 🧩 Parallel fraction of an inhomogeneous ISO 6946 §6.7 layer (area share of one material).
-#[derive(Clone, Debug, Default, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
@@ -35,7 +35,7 @@ pub struct LayerSegment {
 
 /// 🧱 One layer in an envelope build-up (interior → exterior), SI base units.
 /// Empty `segments` = homogeneous; non-empty = ISO 6946 §6.7 upper/lower-bound method.
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -68,7 +68,7 @@ pub struct LayerDocument {
 }
 
 /// 🪟 Transparent opening contribution for DIN 4108-2 §8 summer heat protection.
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -84,7 +84,7 @@ pub struct ZoneWindow {
 }
 
 /// 🚪 Thermal zone / room used for summer heat protection aggregation.
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -99,7 +99,7 @@ pub struct ThermalZone {
 }
 
 /// 🏛️ Opaque or transparent envelope element with ISO 6946 layer stack (incl. ΔU_g/ΔU_f/ΔU_r corrections).
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -120,7 +120,7 @@ pub struct EnvelopeElement {
 }
 
 /// 🌉️ Linear thermal bridge (DIN 4108 Beiblatt 2).
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -194,60 +194,60 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
 /// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring the
 /// `OnceLock`-backed `io_registry::entries()` convention below.
-fn pilot_languages() -> &'static [dsl::LanguageSpec] {
-    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
             vec![
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "din4108.document",
                     extension: Some("din4108"),
-                    role: dsl::LanguageRole::Document,
+                    role: semio_framework_dsl::LanguageRole::Document,
                     grammar: Some(document_dsl::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(document_dsl::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("din4108.document"),
+                    hooks: semio_framework_dsl::passthrough_hooks("din4108.document"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "din4108.op",
                     extension: None,
-                    role: dsl::LanguageRole::Ops,
+                    role: semio_framework_dsl::LanguageRole::Ops,
                     grammar: Some(op::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(op::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("din4108.op"),
+                    hooks: semio_framework_dsl::passthrough_hooks("din4108.op"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "din4108.diff",
                     extension: None,
-                    role: dsl::LanguageRole::Diff,
+                    role: semio_framework_dsl::LanguageRole::Diff,
                     grammar: Some(diff::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
-                    hooks: dsl::passthrough_hooks("din4108.diff"),
+                    hooks: semio_framework_dsl::passthrough_hooks("din4108.diff"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "din4108.pack",
                     extension: None,
-                    role: dsl::LanguageRole::Pack,
+                    role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("din4108.pack"),
+                    hooks: semio_framework_dsl::passthrough_hooks("din4108.pack"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "din4108.spr",
                     extension: None,
-                    role: dsl::LanguageRole::Spr,
+                    role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("din4108.spr"),
+                    hooks: semio_framework_dsl::passthrough_hooks("din4108.spr"),
                 },
             ]
         })
@@ -427,12 +427,12 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod change_layer_lambda {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡change-layer-lambda/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️change-layer-lambda/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡change-layer-lambda/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️change-layer-lambda/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡change-layer-lambda/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️change-layer-lambda/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                         }
                         #[path = "."]
@@ -632,12 +632,12 @@ pub mod standards {
 
                         #[path = "."]
                         pub mod change_thermal_bridge_bb2_type {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷change-thermal-bridge-bb2-type/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-thermal-bridge-bb2-type/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷change-thermal-bridge-bb2-type/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-thermal-bridge-bb2-type/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷change-thermal-bridge-bb2-type/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-thermal-bridge-bb2-type/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                         }
 

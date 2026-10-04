@@ -1,0 +1,10 @@
+{
+ "schema":"raster-private-schema\u0000","id":"","title":"",
+ "transform":{"x":1,"y":-2,"a":3,"b":4,"c":5,"d":6},
+ "mask":{"enabled":false,"linked":true,"invert":true,"width":4294967295,"height":0,"imageKey":"literal!@/mask","transform":{"x":6,"y":5,"a":4,"b":3,"c":2,"d":1}},
+ "child":{"childId":"","target":{"dialect":{"artifactKind":"!@/","standard":"","subset":"?/#"},"artifactId":"\u0000"}},
+ "parameter":{"kind":"object","members":[{"name":"duplicate","value":{"kind":"signed","value":"-9223372036854775808"}},{"name":"duplicate","value":{"kind":"unsigned","value":"18446744073709551615"}},{"name":"","value":{"kind":"array","items":[{"kind":"null"},{"kind":"boolean","value":false},{"kind":"text","value":"intrinsic text\u0000"},{"kind":"bytes","value":[0,127,255]},{"kind":"float","value":"8000000000000000"}]}}]},
+ "float64Words":["0000000000000000","8000000000000000","7ff0000000000000","fff0000000000000","7ff0000000000001","7ff800000000002a","fff800000000002a","0000000000000001"],
+ "float32Words":["00000000","80000000","7f800000","ff800000","7f800001","7fc0002a","ffc0002a","00000001"],
+ "depth":256,"intrinsicBytes":100000,"cancelAfter":65536,"mapCapacity":64
+}

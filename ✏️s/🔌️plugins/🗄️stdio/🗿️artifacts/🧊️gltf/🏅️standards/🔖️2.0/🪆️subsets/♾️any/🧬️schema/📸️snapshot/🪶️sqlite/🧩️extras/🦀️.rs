@@ -2,7 +2,7 @@
 use super::*;
 const NUMBER:&[FloatColumn]=&[FloatColumn::Binary64(3)];
 
-pub(super) fn project(write:&mut Write<'_,'_>,value:Option<&GltfJson>)->Result<Option<i64>,String>{
+pub(super) fn project(write:&mut Write<'_,'_>,value:Option<&GltfJson>)->Result<Option<i64>, ValueError>{
  let Some(value)=value else{return Ok(None)};let root=write.json_id()?;let mut pending=std::collections::VecDeque::from([(root,value)]);
  while let Some((key,value))=pending.pop_front(){
   match value{
@@ -17,28 +17,28 @@ pub(super) fn project(write:&mut Write<'_,'_>,value:Option<&GltfJson>)->Result<O
 }
 
 struct Values(BTreeMap<i64,GltfJson>);
-impl Drop for Values{fn drop(&mut self){while let Some((_,value))=self.0.pop_first(){<GltfJson as dsl::DslField>::retire_decoded(value);}}}
+impl Drop for Values{fn drop(&mut self){while let Some((_,value))=self.0.pop_first(){<GltfJson as semio_framework_dsl_record::DslField>::retire_decoded(value);}}}
 struct Object(Vec<(String,GltfJson)>);
-impl Drop for Object{fn drop(&mut self){for(_,value)in self.0.drain(..){<GltfJson as dsl::DslField>::retire_decoded(value);}}}
+impl Drop for Object{fn drop(&mut self){for(_,value)in self.0.drain(..){<GltfJson as semio_framework_dsl_record::DslField>::retire_decoded(value);}}}
 enum Pending{Value(i64),Array(i64,Vec<i64>),Object(i64,Vec<(String,i64)>)}
-pub(super) fn reconstruct(read:&mut Read<'_,'_,'_>,root:i64)->Result<GltfJson,String>{
+pub(super) fn reconstruct(read:&mut Read<'_,'_,'_>,root:i64)->Result<GltfJson, ValueError>{
  let mut pending=vec![Pending::Value(root)];let mut values=Values(BTreeMap::new());
  while let Some(step)=pending.pop(){match step{
   Pending::Value(key)=>{
-   let row=read.key("gltf_json_value",key)?;if row.values.len()!=7{return Err("GLTF extras value column count differs".into());}let scalar=FloatRow::new(row,NUMBER)?;let kind=row.text(1)?;
-   if (kind!="boolean"&&row.values[2]!=SqliteValue::Null)||(kind!="string"&&row.values[4]!=SqliteValue::Null)||(kind!="number"&&!scalar.is_null(3)?){return Err("GLTF extras contains unused typed scalar fields".into());}
+   let row=read.key("gltf_json_value",key)?;if row.values.len()!=7{return Err(ValueError::new(ValueRefusalKind::InvalidValue, "GLTF extras value column count differs"));}let scalar=FloatRow::new(row,NUMBER)?;let kind=row.text(1)?;
+   if (kind!="boolean"&&row.values[2]!=SqliteValue::Null)||(kind!="string"&&row.values[4]!=SqliteValue::Null)||(kind!="number"&&!scalar.is_null(3)?){return Err(ValueError::new(ValueRefusalKind::InvalidValue, "GLTF extras contains unused typed scalar fields"));}
    let value=match kind{
     "null"=>GltfJson::Null,
     "boolean"=>GltfJson::Bool(read.boolean(row,2)?),
     "number"=>{read.scalar()?;GltfJson::Number(scalar.real(3)?)},
     "string"=>GltfJson::String(read.text(row,4)?),
-    "array"=>{let rows=read.rows("gltf_json_array_element",1,key,2)?;let mut children=Vec::with_capacity(rows.len());for row in rows{let child=row.integer(3)?;if child<1{return Err("GLTF extras child must be a positive identity".into());}children.push(child);}pending.push(Pending::Array(key,children.clone()));for child in children.into_iter().rev(){pending.push(Pending::Value(child));}continue;},
-    "object"=>{let rows=read.rows("gltf_json_object_member",1,key,2)?;let mut children=Vec::with_capacity(rows.len());for row in rows{let child=row.integer(4)?;if child<1{return Err("GLTF extras child must be a positive identity".into());}children.push((read.text(row,3)?,child));}let ids:Vec<_>=children.iter().map(|(_,child)|*child).collect();pending.push(Pending::Object(key,children));for child in ids.into_iter().rev(){pending.push(Pending::Value(child));}continue;},
-    _=>return Err("GLTF extras value kind is unknown".into())
+    "array"=>{let rows=read.rows("gltf_json_array_element",1,key,2)?;let mut children=Vec::with_capacity(rows.len());for row in rows{let child=row.integer(3)?;if child<1{return Err(ValueError::new(ValueRefusalKind::InvalidValue, "GLTF extras child must be a positive identity"));}children.push(child);}pending.push(Pending::Array(key,children.clone()));for child in children.into_iter().rev(){pending.push(Pending::Value(child));}continue;},
+    "object"=>{let rows=read.rows("gltf_json_object_member",1,key,2)?;let mut children=Vec::with_capacity(rows.len());for row in rows{let child=row.integer(4)?;if child<1{return Err(ValueError::new(ValueRefusalKind::InvalidValue, "GLTF extras child must be a positive identity"));}children.push((read.text(row,3)?,child));}let ids:Vec<_>=children.iter().map(|(_,child)|*child).collect();pending.push(Pending::Object(key,children));for child in ids.into_iter().rev(){pending.push(Pending::Value(child));}continue;},
+    _=>return Err(ValueError::new(ValueRefusalKind::InvalidValue, "GLTF extras value kind is unknown"))
    };values.0.insert(key,value);
   },
-  Pending::Array(key,children)=>{let mut array=dsl::__rt::DecodedFieldOwner::new(Vec::with_capacity(children.len()),<Vec<GltfJson> as dsl::DslField>::retire_decoded);for child in children{array.as_mut().push(values.0.remove(&child).ok_or("GLTF extras child is absent or multiply owned")?);}values.0.insert(key,GltfJson::Array(array.take()));},
-  Pending::Object(key,children)=>{let mut object=Object(Vec::with_capacity(children.len()));for(name,child)in children{object.0.push((name,values.0.remove(&child).ok_or("GLTF extras child is absent or multiply owned")?));}values.0.insert(key,GltfJson::Object(std::mem::take(&mut object.0)));}
+  Pending::Array(key,children)=>{let mut array=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(Vec::with_capacity(children.len()),<Vec<GltfJson> as semio_framework_dsl_record::DslField>::retire_decoded);for child in children{array.as_mut().push(values.0.remove(&child).ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue, "GLTF extras child is absent or multiply owned"))?);}values.0.insert(key,GltfJson::Array(array.take()));},
+  Pending::Object(key,children)=>{let mut object=Object(Vec::with_capacity(children.len()));for(name,child)in children{object.0.push((name,values.0.remove(&child).ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue, "GLTF extras child is absent or multiply owned"))?));}values.0.insert(key,GltfJson::Object(std::mem::take(&mut object.0)));}
  }}
- if values.0.len()!=1{return Err("GLTF extras unowned values remain".into());}values.0.remove(&root).ok_or_else(||"GLTF extras root is missing".into())
+ if values.0.len()!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue, "GLTF extras unowned values remain"));}values.0.remove(&root).ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue, "GLTF extras root is missing"))
 }

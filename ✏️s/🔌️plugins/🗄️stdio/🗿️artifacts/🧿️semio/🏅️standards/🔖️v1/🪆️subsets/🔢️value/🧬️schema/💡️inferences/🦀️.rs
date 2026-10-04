@@ -12,7 +12,6 @@
 
 use crate::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::census::compute_semio_value_census;
 //#region 🔖️Inference
@@ -27,8 +26,11 @@ pub struct SemioValueInference {
 }
 
 impl protocol::Inference<SemioValueSnapshot> for SemioValueInference {
-    fn infer(snapshot: &SemioValueSnapshot) -> Self {
+    fn infer(snapshot: &SemioValueSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { census: compute_semio_value_census(snapshot) }
+    
+        })
     }
 }
 
@@ -40,7 +42,9 @@ impl protocol::Inference<SemioValueSnapshot> for SemioValueInference {
 /// snapshot default.
 impl Default for SemioValueInference {
     fn default() -> Self {
-        <Self as protocol::Inference<SemioValueSnapshot>>::infer(&SemioValueSnapshot::default())
+        let snapshot = &SemioValueSnapshot::default();
+
+        Self { census: compute_semio_value_census(snapshot) }
     }
 }
 
@@ -56,16 +60,6 @@ impl protocol::InferenceSpec<SemioValueSnapshot> for SemioValueInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 💡️ No `InferredField`s here (a variant census + depth is a single whole-graph recursive fold,
-/// same shape `flow`'s/`graph`'s own whole-graph topology facets reach for their own graphs) — the
-/// default `infer_cached` passthrough (`ArtifactInferrer::infer_cached`) is exact.
-impl ArtifactInferrer for crate::standards::v1::subsets::value::schema::SemioValueBuilder {
-    type Snapshot = SemioValueSnapshot;
-    type Inference = SemioValueInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.semio.value.inference`'s facet leaves into the OS-wide inference catalog

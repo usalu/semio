@@ -4,7 +4,10 @@ use crate::schema::mutations::NoteMutation;
 use crate::NoteSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &ChangeSnapEnabled, base: &NoteSnapshot) -> Vec<NoteMutation> {
+pub fn inverse(_payload: &ChangeSnapEnabled, base: &NoteSnapshot) -> Result<Vec<NoteMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![NoteMutation::ChangeSnapEnabled(ChangeSnapEnabled { new_enabled: base.snap_enabled })]
+
+    })())
 }
 //#endregion 🔖️Inverse

@@ -1,5 +1,6 @@
 //! 🏷️ Scoped WordprocessingML names shared by read projections and canonical edits.
 
+use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
 
 pub(crate) const WORDPROCESSINGML_TRANSITIONAL: &str = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
@@ -27,7 +28,7 @@ pub(crate) fn scoped_bindings(node: &XmlNode, parent: &[(String, String)]) -> Bi
     bindings
 }
 
-fn namespace<'a>(name: &str, bindings: &'a [(String, String)], attribute: bool) -> Result<&'a str, String> {
+fn namespace<'a>(name: &str, bindings: &'a [(String, String)], attribute: bool) -> Result<&'a str, ValueError> {
     let (prefix, _) = name.split_once(':').unwrap_or(("", name));
     if prefix == "xml" {
         Ok(XML_NAMESPACE)
@@ -37,12 +38,12 @@ fn namespace<'a>(name: &str, bindings: &'a [(String, String)], attribute: bool) 
         match bindings.iter().rev().find(|(key, _)| key == prefix) {
             Some((_, value)) => Ok(value),
             None if prefix.is_empty() => Ok(""),
-            None => Err(format!("unbound XML namespace prefix in {name}")),
+            None => Err(ValueError::new(ValueRefusalKind::InvalidValue,format!("unbound XML namespace prefix in {name}"))),
         }
     }
 }
 
-pub(crate) fn expanded_name(name: &str, bindings: &[(String, String)]) -> Result<String, String> {
+pub(crate) fn expanded_name(name: &str, bindings: &[(String, String)]) -> Result<String, ValueError> {
     let local = name.split_once(':').map_or(name, |(_, local)| local);
     Ok(format!("{{{}}}{local}", namespace(name, bindings, false)?))
 }
@@ -72,8 +73,8 @@ pub(crate) fn word_attr<'a>(node: &'a XmlNode, local: &str, bindings: &[(String,
     })
 }
 
-pub(crate) fn qualified_word_prefix(node: &mut XmlNode, bindings: &mut Bindings) -> Result<String, String> {
-    let word = word_namespace(node, bindings).ok_or_else(|| "property container is not WordprocessingML".to_string())?.to_string();
+pub(crate) fn qualified_word_prefix(node: &mut XmlNode, bindings: &mut Bindings) -> Result<String, ValueError> {
+    let word = word_namespace(node, bindings).ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue,"property container is not WordprocessingML".to_string()))?.to_string();
     let XmlNode::Element { name, attrs, .. } = node else { unreachable!() };
     if let Some((prefix, _)) = name.split_once(':') {
         return Ok(prefix.to_string());
@@ -92,8 +93,8 @@ pub(crate) fn qualified_word_prefix(node: &mut XmlNode, bindings: &mut Bindings)
     Ok(prefix)
 }
 
-pub(crate) fn set_word_attr(node: &mut XmlNode, local: &str, value: &str, bindings: &mut Bindings) -> Result<(), String> {
-    let word = word_namespace(node, bindings).ok_or_else(|| "property is not WordprocessingML".to_string())?.to_string();
+pub(crate) fn set_word_attr(node: &mut XmlNode, local: &str, value: &str, bindings: &mut Bindings) -> Result<(), ValueError> {
+    let word = word_namespace(node, bindings).ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue,"property is not WordprocessingML".to_string()))?.to_string();
     let XmlNode::Element { attrs, .. } = node else { unreachable!() };
     if let Some(attr) = attrs.iter_mut().find(|attr| {
         let attr_local = attr.name.split_once(':').map_or(attr.name.as_str(), |(_, local)| local);

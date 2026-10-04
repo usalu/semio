@@ -4,7 +4,7 @@ use protocol::{Mutation, MutationDiff};
 
 fn tiny_object(id: &str, name: &str) -> LowpolyObject {
     let mesh = default_snapshot().objects[0].mesh.clone();
-    LowpolyObject { id: id.into(), name: name.into(), transform: Default::default(), smooth_shading: false, mesh, paint_layers: Vec::new(), mesh_content: String::new() }
+    LowpolyObject { mesh_state:None, id: id.into(), name: name.into(), transform: Default::default(), smooth_shading: false, mesh, paint_layers: Vec::new(), mesh_content: String::new() }
 }
 
 //#region ⚖️SemanticLaws
@@ -26,7 +26,7 @@ async fn create_object_obeys_the_inverse_and_absorb_laws() {
 async fn delete_object_of_a_missing_id_has_an_empty_inverse() {
     let base = default_snapshot();
     let delete = LowpolyMutation::DeleteObject(super::super::delete_object::DeleteObject { id: "nope".into() });
-    assert!(delete.inverse(&base).is_empty(), "deleting an absent id has nothing to undo");
+    assert!(delete.inverse(&base).expect("valid retained mutation inverse fixture").is_empty(), "deleting an absent id has nothing to undo");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -69,7 +69,7 @@ async fn create_object_duplicate_id_is_fatal_and_never_applies() {
     let existing_id = base.objects[0].id.clone();
     let mutation = LowpolyMutation::CreateObject(super::super::create_object::CreateObject { index: 0, object: tiny_object(&existing_id, "Dup") });
     let outcome = mutation.diff(&base);
-    assert_eq!(outcome.worst_level(), Some(protocol::os_dsl::Severity::Fatal));
+    assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal));
     protocol::os_spr::protocol_laws::assert_fatal_never_applies(&outcome).await;
 }
 
@@ -125,13 +125,13 @@ fn kinds_match_the_enum_and_the_catalog() {
 //#endregion 🧪️KindsCatalog
 
 //#region 🔄FixtureRefresh
-fn fixture_json_encode<T: dsl::ToValue>(value: &T) -> String {
-    serde_json::to_string_pretty(&Into::<serde_json::Value>::into(dsl::ToValue::to_value(value))).expect("fixture json encode") + "\n"
+fn fixture_json_encode<T: semio_framework_value::ToValue>(value: &T) -> String {
+    serde_json::to_string_pretty(&Into::<serde_json::Value>::into(semio_framework_value::ToValue::to_value(value))).expect("fixture json encode") + "\n"
 }
 
-fn fixture_json_decode<T: dsl::FromValue>(text: &str) -> T {
+fn fixture_json_decode<T: semio_framework_value::FromValue>(text: &str) -> T {
     let parsed: serde_json::Value = serde_json::from_str(text).expect("fixture json parses");
-    dsl::FromValue::from_value(dsl::DslValue::from(parsed)).expect("fixture json decodes")
+    semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(parsed)).expect("fixture json decodes")
 }
 
 /// 🔄️ Re-encodes every committed mutation quintet under `🧫️fixtures/🧬️mutations` when

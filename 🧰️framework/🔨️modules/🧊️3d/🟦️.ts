@@ -164,6 +164,13 @@ export interface EdgeGroup {
   readonly entityId: kernelGeometry.EdgeRef;
 }
 
+/** 📍️ Original topology vertex range in the preview point buffer. */
+export interface VertexGroup {
+  readonly start: number;
+  readonly count: number;
+  readonly entityId: kernelGeometry.VertexRef;
+}
+
 /** 🧩️ Face metadata for kernel→renderer picking and tooltips. */
 export interface FaceInfo {
   readonly entityId: kernelGeometry.FaceRef;
@@ -186,6 +193,7 @@ export interface MeshTransfer {
   readonly index: Uint32Array;
   readonly edges: Float32Array;
   readonly points?: Float32Array;
+  readonly vertexGroups?: readonly VertexGroup[];
   readonly faceGroups: readonly FaceGroup[];
   readonly edgeGroups: readonly EdgeGroup[];
   readonly faceInfos: readonly FaceInfo[];
@@ -201,6 +209,7 @@ export function emptyMeshTransfer(): MeshTransfer {
     index: new Uint32Array(0),
     edges: new Float32Array(0),
     points: new Float32Array(0),
+    vertexGroups: [],
     faceGroups: [],
     edgeGroups: [],
     faceInfos: [],
@@ -217,6 +226,10 @@ export interface MeshGeometryData {
   readonly edges: Float32Array;
   readonly points: Float32Array;
   readonly faceGroups: readonly { readonly start: number; readonly count: number }[];
+  readonly faceIds: readonly number[];
+  readonly vertexIds: readonly number[];
+  readonly edgeIds: readonly number[];
+  readonly componentReferences: Readonly<Record<string, readonly string[]>>;
 }
 
 function isFiniteBuffer(buf: Float32Array | Uint32Array | undefined): boolean {
@@ -227,6 +240,17 @@ function isFiniteBuffer(buf: Float32Array | Uint32Array | undefined): boolean {
   return true;
 }
 
+function hasCompleteComponentGroups(groups: readonly { readonly start: number; readonly count: number; readonly entityId: string }[], length: number, stride: number): boolean {
+  if (!groups.length) return true;
+  let next = 0;
+  for (const group of groups) {
+    if (!Number.isSafeInteger(group.start) || !Number.isSafeInteger(group.count) || group.start !== next || group.count <= 0 || group.start % stride || group.count % stride || typeof group.entityId !== "string" || !group.entityId.length) return false;
+    next += group.count;
+    if (!Number.isSafeInteger(next) || next > length) return false;
+  }
+  return next === length;
+}
+
 export function isRenderableMeshTransfer(mesh: MeshTransfer): boolean {
   const hasTris = mesh.position.length > 0 && mesh.index.length > 0;
   const hasEdges = mesh.edges.length > 0;
@@ -234,28 +258,57 @@ export function isRenderableMeshTransfer(mesh: MeshTransfer): boolean {
   if (!hasTris && !hasEdges && !hasPoints) return false;
   if (hasTris) {
     if (mesh.position.length % 3 !== 0) return false;
+    if (mesh.index.length % 3 !== 0) return false;
     if (mesh.normal.length !== mesh.position.length) return false;
     const vertexCount = mesh.position.length / 3;
     for (const value of mesh.index) {
       if (!Number.isFinite(value) || value < 0 || value >= vertexCount) return false;
     }
   }
-  if (hasEdges && mesh.edges.length % 3 !== 0) return false;
+  if (hasEdges && mesh.edges.length % 6 !== 0) return false;
   if (hasPoints && mesh.points!.length % 3 !== 0) return false;
+  if (!hasCompleteComponentGroups(mesh.faceGroups, mesh.index.length, 3) || !hasCompleteComponentGroups(mesh.edgeGroups, mesh.edges.length / 6, 1)) return false;
   return isFiniteBuffer(mesh.position) && isFiniteBuffer(mesh.normal) && isFiniteBuffer(mesh.edges) && isFiniteBuffer(mesh.points);
 }
 
 export function meshTransferToGeometryData(data: MeshTransfer): MeshGeometryData {
   if (!isRenderableMeshTransfer(data)) {
-    return { position: new Float32Array(0), normal: new Float32Array(0), index: new Uint32Array(0), edges: new Float32Array(0), points: new Float32Array(0), faceGroups: [] };
+    return { position: new Float32Array(0), normal: new Float32Array(0), index: new Uint32Array(0), edges: new Float32Array(0), points: new Float32Array(0), faceGroups: [], faceIds: [], vertexIds: [], edgeIds: [], componentReferences: {} };
+  }
+  const faceIds=Array<number>(data.index.length/3).fill(0),edgeIds=Array<number>(data.edges.length/6).fill(0);
+  for (const [id,group] of data.faceGroups.entries()) for(let index=group.start/3;index<(group.start+group.count)/3;index+=1) faceIds[index]=id;
+  for (const [id,group] of data.edgeGroups.entries()) for(let index=group.start;index<group.start+group.count;index+=1) edgeIds[index]=id;
+  const groups = data.vertexGroups ?? [], points = data.points ?? new Float32Array(0);
+  let position = data.position, normal = data.normal;
+  const vertexIds: number[] = [];
+  if (groups.length) {
+    position = new Float32Array(data.position.length + points.length); position.set(data.position); position.set(points, data.position.length);
+    normal = new Float32Array(position.length); normal.set(data.normal);
+    for (let index = 0; index < data.position.length / 3; index += 1) vertexIds.push(0xffffffff);
+    let next = 0;
+    for (const [id, group] of groups.entries()) {
+      const end = group.start + group.count;
+      if (!Number.isSafeInteger(group.start) || !Number.isSafeInteger(group.count) || group.start !== next || group.count <= 0 || end > points.length / 3 || !group.entityId.length) return meshTransferToGeometryData(emptyMeshTransfer());
+      for (let index = group.start; index < end; index += 1) vertexIds.push(id);
+      next = end;
+    }
+    if (next !== points.length / 3) return meshTransferToGeometryData(emptyMeshTransfer());
   }
   return {
-    position: data.position,
-    normal: data.normal,
+    position,
+    normal,
     index: data.index,
     edges: data.edges,
     points: data.points ?? new Float32Array(0),
     faceGroups: data.faceGroups.map((group) => ({ start: group.start, count: group.count })),
+    faceIds: data.faceGroups.length ? faceIds : [],
+    edgeIds: data.edgeGroups.length ? edgeIds : [],
+    vertexIds,
+    componentReferences: {
+      ...(groups.length ? {vertex:groups.map(group=>group.entityId)} : {}),
+      ...(data.faceGroups.length ? {face:data.faceGroups.map(group=>group.entityId)} : {}),
+      ...(data.edgeGroups.length ? {edge:data.edgeGroups.map(group=>group.entityId)} : {}),
+    },
   };
 }
 // #endregion 📐️Contracts
@@ -267,8 +320,12 @@ interface RawMeshTransfer {
   readonly index?: readonly number[];
   readonly edges?: readonly number[];
   readonly points?: readonly number[];
+  readonly vertex_groups?: readonly { readonly start: number; readonly count: number; readonly entity_id: string }[];
+  readonly vertexGroups?: readonly { readonly start: number; readonly count: number; readonly entityId: string }[];
   readonly face_groups?: readonly { readonly start: number; readonly count: number; readonly entity_id: string }[];
   readonly faceGroups?: readonly { readonly start: number; readonly count: number; readonly entityId: string }[];
+  readonly edge_groups?: readonly { readonly start: number; readonly count: number; readonly entity_id: string }[];
+  readonly edgeGroups?: readonly { readonly start: number; readonly count: number; readonly entityId: string }[];
   readonly error?: string;
 }
 
@@ -292,12 +349,17 @@ function rawMeshToTransfer(raw: RawMeshTransfer): MeshTransfer {
     index: new Uint32Array(raw.index ?? []),
     edges: new Float32Array(raw.edges ?? []),
     points: new Float32Array(raw.points ?? []),
+    vertexGroups: (raw.vertexGroups ?? raw.vertex_groups ?? []).map(group => ({ start: group.start, count: group.count, entityId: ("entityId" in group ? group.entityId : group.entity_id) as kernelGeometry.VertexRef })),
     faceGroups: (raw.faceGroups ?? raw.face_groups ?? []).map((group) => ({
       start: group.start,
       count: group.count,
       entityId: ("entityId" in group ? group.entityId : group.entity_id) as kernelGeometry.FaceRef,
     })),
-    edgeGroups: [],
+    edgeGroups: (raw.edgeGroups ?? raw.edge_groups ?? []).map((group) => ({
+      start: group.start,
+      count: group.count,
+      entityId: ("entityId" in group ? group.entityId : group.entity_id) as kernelGeometry.EdgeRef,
+    })),
     faceInfos: [],
     edgeInfos: [],
   };
@@ -433,6 +495,6 @@ export function mergeMeshTransfers(meshes: readonly MeshTransfer[]): MeshTransfe
 // #region 🧪️Tests
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️semio-tech-geometry-brep-js/🟦️.ts");
-  await registerTests1(import.meta.vitest, { isRenderableMeshTransfer }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { isRenderableMeshTransfer, meshTransferToGeometryData, meshTransferFromPreviewPayload }, { directory: import.meta.dir, url: import.meta.url });
 }
 // #endregion 🧪️Tests

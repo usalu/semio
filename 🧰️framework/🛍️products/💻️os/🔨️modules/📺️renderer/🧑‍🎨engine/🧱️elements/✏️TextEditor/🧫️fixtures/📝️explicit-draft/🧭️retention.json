@@ -1,0 +1,44 @@
+{
+  "schema": "semio.framework.text-editor.explicit-draft.retention.v1",
+  "owner": {
+    "pluginId": "stdio.csv",
+    "appId": "csv-editor",
+    "sessionInstanceId": 7,
+    "runtimeKey": "v1:7:3:map",
+    "clientInstanceId": "11111111-1111-4111-8111-111111111111"
+  },
+  "replacementOwner": {
+    "pluginId": "stdio.csv",
+    "appId": "csv-editor",
+    "sessionInstanceId": 7,
+    "runtimeKey": "v1:7:3:map",
+    "clientInstanceId": "22222222-2222-4222-8222-222222222222"
+  },
+  "initialSession": {
+    "pluginId": "stdio.csv",
+    "appId": "csv-editor",
+    "sessionInstanceId": 7
+  },
+  "openedDocument": {
+    "runtimeKey": "v1:7:3:map",
+    "clientInstanceId": "11111111-1111-4111-8111-111111111111"
+  },
+  "windowId": "source",
+  "draftScope": "replaceSnapshotSource:value",
+  "base": "A",
+  "draft": "B",
+  "published": "B normalized",
+  "baseRevision": "18446744073709551610",
+  "ownRevision": "18446744073709551611",
+  "operation": "9007199254740993",
+  "limits": {
+    "owners": 3,
+    "draftsPerOwner": 64
+  },
+  "expected": {
+    "sameOwnerRetains": true,
+    "replacementInherits": false,
+    "retirementClears": true,
+    "pendingSurvivesUnmount": true
+  }
+}

@@ -1,8 +1,10 @@
 //! 🖊️ DWG's explicit domain relational schema and typed ownership modules.
+use semio_framework_value::{ValueError,ValueRefusalKind};
 #[path="📏️encoding/🦀️.rs"]
 mod encoding;
 use semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding;
 use super::*;
+use semio_framework_diagnostic::{TextError, TextSpan};
 #[path="🔢️number/🦀️.rs"]
 mod number;
 #[path="🫳️reader/🦀️.rs"]
@@ -55,17 +57,17 @@ use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteD
 mod native_admission;
 
 impl ArtifactSqliteSnapshot for DwgSnapshot {
-    fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,String>{admit_native_rows(self,semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative,control)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control)}
-    fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,String>{let limits=control.limits();let snapshot=store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record,native|construct_native_record(record,native,limits),control)?;admit_native_rows(&snapshot,semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative,control)?;Ok(snapshot)}
-    fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),String>{encoding::preflight(self,control)}
+    fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,ValueError>{admit_native_rows(self,semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative,control)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control)}
+    fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{let limits=control.limits();let snapshot=store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record,native|construct_native_record(record,native,limits),control)?;admit_native_rows(&snapshot,semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative,control)?;Ok(snapshot)}
+    fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{encoding::preflight(self,control)}
 
- fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_os_kernel::io_schema::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{
+ fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_os_kernel::io_schema::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{(|| -> Result<semio_framework_os_kernel::io_schema::IoOutcome<()>,ValueError>{
   control.checkpoint(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot,0,0)?;
-  if dialect.artifact_kind!="s.stdio.dwg"||!matches!(dialect.standard.as_str(),"ac1018"|"ac1024")||dialect.subset!="*"{return Err(String::from("DWG owned SQLite dialect must be an exact AC1018 or AC1024 full snapshot").into());}
-  let candidate=Self::from_sqlite_database(database,control)?;
-  if candidate.to_sqlite_database(control)?!=self.to_sqlite_database(control)?{return Err(String::from("DWG owned state differs from its semantic projection").into());}
+  if dialect.artifact_kind!="s.stdio.dwg"||!matches!(dialect.standard.as_str(),"ac1018"|"ac1024")||dialect.subset!="*"{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG owned SQLite dialect must be an exact AC1018 or AC1024 full snapshot"));}
+  let candidate=Self::reconstruct_sqlite_database(database,control)?;
+  if candidate.project_sqlite_database(control)?!=self.project_sqlite_database(control)?{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG owned state differs from its semantic projection"));}
   Ok(semio_framework_os_kernel::io_schema::IoOutcome::clean(()))
- }
+ })().map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)}
  const SQLITE_SCHEMA:&'static str=concat!(
  include_str!("📄️document/🗄️.sql"),"\n",include_str!("🔧️header/🗄️.sql"),"\n",
  include_str!("✏️drawing/🗄️.sql"),"\n",include_str!("🗃️tables/🗄️.sql"),"\n",
@@ -75,28 +77,34 @@ impl ArtifactSqliteSnapshot for DwgSnapshot {
  include_str!("🖌️styles/👁️visual/🗄️.sql"),"\n",include_str!("🖌️styles/🧱️material/🗄️.sql"),"\n",
  include_str!("🖌️styles/🗃️table/🗄️.sql"),"\n",include_str!("📃️layout/🗄️.sql"),"\n",
  include_str!("🖌️styles/↗️mleader/🗄️.sql"),"\n",include_str!("📏️constraints/🗄️.sql"));
- fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,String>{
+ fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{self.project_sqlite_database(control)}
+ fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{Self::reconstruct_sqlite_database(database,control)}
+}
+impl DwgSnapshot {
+/// 🗄️ Projects the owned DWG relational fields with typed refusals.
+fn project_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{
   let mut projection=number::Projection::new(Self::SQLITE_SCHEMA,control)?;
   document::project(&mut projection,self)?;header::project(&mut projection,&self.header)?;
   drawing::project(&mut projection,&self.drawing,project_body)?;
   projection.finish()
  }
- fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,String>{
+/// 🫳️ Reconstructs the same owned relational snapshot with typed refusals.
+fn reconstruct_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
   let mut reader=reader::Reader::new(database,Self::SQLITE_SCHEMA,control)?;
   let document=document::reconstruct(&mut reader)?;let header=header::reconstruct(&mut reader)?;
   let drawing=drawing::reconstruct(&mut reader,reconstruct_body)?;reader.finish()?;
   Ok(Self{schema:document.schema,version:document.version,maintenance_version:document.maintenance_version,codepage:document.codepage,drawing,header,classes:document.classes,dependencies:document.dependencies,summary:document.summary,application:document.application,template:document.template,auxiliary_header:document.auxiliary_header,revision_history:document.revision_history,preview:document.preview,application_history:document.application_history})
  }
 }
-pub(super) fn construct_native_record(record:&dsl::RecordValue,native:&mut dsl::NativeDecodeControl<'_>,limits:semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits)->Result<DwgSnapshot,dsl::TextError>{native_admission::root(record,native,limits).map_err(dsl::__rt::field_error)?;DwgSnapshot::__dsl_from_record_controlled(record,native)}
+pub(super) fn construct_native_record(record:&semio_framework_dsl_record::RecordValue,native:&mut semio_framework_value::NativeDecodeControl<'_>,limits:semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits)->Result<DwgSnapshot,ValueError>{native_admission::root(record,native,limits)?;DwgSnapshot::__dsl_from_record_controlled(record,native)}
 #[cfg(test)]
-pub(super) fn forecast_native_rows(record:&dsl::RecordValue,native:&mut dsl::NativeDecodeControl<'_>,limits:semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits)->Result<usize,String>{native_admission::root(record,native,limits)}
-fn admit_native_rows(snapshot:&DwgSnapshot,phase:semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<usize,String>{
+pub(super) fn forecast_native_rows(record:&semio_framework_dsl_record::RecordValue,native:&mut semio_framework_value::NativeDecodeControl<'_>,limits:semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits)->Result<usize,ValueError>{native_admission::root(record,native,limits)}
+fn admit_native_rows(snapshot:&DwgSnapshot,phase:semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<usize,ValueError>{
     let mut projection=number::Projection::admission(DwgSnapshot::SQLITE_SCHEMA,phase,control)?;
     document::project(&mut projection,snapshot)?;header::project(&mut projection,&snapshot.header)?;
     drawing::project(&mut projection,&snapshot.drawing,project_body)?;projection.finish_admission()
 }
-fn project_body(p:&mut number::Projection<'_,'_>,id:i64,value:&DwgLogicalObjectBody)->Result<(),String>{match value{
+fn project_body(p:&mut number::Projection<'_,'_>,id:i64,value:&DwgLogicalObjectBody)->Result<(),ValueError>{match value{
  DwgLogicalObjectBody::Dictionary(v)=>tables::project_dictionary(p,id,v),
  DwgLogicalObjectBody::TableControl(v)=>tables::project_control(p,id,v),
  DwgLogicalObjectBody::TableRecord(v)=>records::project_record(p,id,v),
@@ -141,7 +149,7 @@ fn project_body(p:&mut number::Projection<'_,'_>,id:i64,value:&DwgLogicalObjectB
  DwgLogicalObjectBody::BlockHorizontalConstraintParameter(v)=>blocks::project_constraint_parameter(p,id,v,"horizontal"),
  DwgLogicalObjectBody::Layout(v)=>layout::project(p,id,v)
 }}
-fn reconstruct_body(r:&mut reader::Reader<'_,'_,'_>,id:i64,kind:&str)->Result<DwgLogicalObjectBody,String>{Ok(match kind{
+fn reconstruct_body(r:&mut reader::Reader<'_,'_,'_>,id:i64,kind:&str)->Result<DwgLogicalObjectBody,ValueError>{Ok(match kind{
  "dictionary"=>DwgLogicalObjectBody::Dictionary(tables::reconstruct_dictionary(r,id)?),
  "table_control"=>DwgLogicalObjectBody::TableControl(tables::reconstruct_control(r,id)?),
  "table_record"=>DwgLogicalObjectBody::TableRecord(records::reconstruct_record(r,id)?),
@@ -185,5 +193,5 @@ fn reconstruct_body(r:&mut reader::Reader<'_,'_,'_>,id:i64,kind:&str)->Result<Dw
  "block_vertical_constraint_parameter"=>DwgLogicalObjectBody::BlockVerticalConstraintParameter(blocks::reconstruct_constraint_parameter(r,id,"vertical")?),
  "block_horizontal_constraint_parameter"=>DwgLogicalObjectBody::BlockHorizontalConstraintParameter(blocks::reconstruct_constraint_parameter(r,id,"horizontal")?),
  "layout"=>DwgLogicalObjectBody::Layout(layout::reconstruct(r,id)?),
- _=>return Err("DWG logical object body kind is unknown".into())
+ _=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG logical object body kind is unknown"))
 })}

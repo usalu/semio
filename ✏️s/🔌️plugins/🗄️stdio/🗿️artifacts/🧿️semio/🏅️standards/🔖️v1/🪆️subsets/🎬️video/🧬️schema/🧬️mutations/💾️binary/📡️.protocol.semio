@@ -27,3 +27,5 @@ record set-sample-data tag=6
 field payload bytes
 record set-sample-flags tag=7
 field payload bytes
+record patch-snapshot tag=8
+field payload bytes

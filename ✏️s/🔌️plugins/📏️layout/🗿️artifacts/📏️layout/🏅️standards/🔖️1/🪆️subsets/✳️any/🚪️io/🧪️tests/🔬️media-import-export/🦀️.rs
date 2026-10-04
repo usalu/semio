@@ -95,6 +95,6 @@ async fn svg_dxf_and_png_exports_are_real_files_that_frame_the_pages_again() {
     let dxf = String::from_utf8(dxf_out::serialize_bytes(&document).expect("dxf export")).expect("dxf text");
     assert!(dxf.contains("POLYLINE"), "{dxf}");
     assert!(!dxf_in::deserialize_text(&dxf).expect("dxf import").pages.is_empty());
-    let png = semio_s_artifact_stdio_png::io::decode_png(&png_out::serialize_bytes(&document).expect("png export")).expect("decodes as png");
+    let png = semio_s_artifact_stdio_png::io::project_png(&png_out::serialize_bytes(&document).expect("png export")).expect("decodes as png");
     assert!(png.width >= 210 && png.height >= 297);
 }

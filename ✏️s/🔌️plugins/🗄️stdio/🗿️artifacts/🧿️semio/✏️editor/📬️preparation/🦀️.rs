@@ -15,7 +15,7 @@ pub(crate) trait StructuralMutationCopy<S, M>: Send {
     fn advance(&mut self, base: &S, mutation: &M, maximum_items: usize, maximum_bytes: usize) -> Result<StructuralCopyStep, String>;
     fn take_result(&mut self) -> Option<(S, M)>;
     fn begin_close(&mut self);
-    fn close_step(&mut self, grant: app_store::ArtifactStoreOneItemGrant) -> Result<app_store::SnapshotRetirementStep, String>;
+    fn close_step(&mut self, grant: app_store::ArtifactStoreOneItemGrant) -> Result<app_store::SnapshotRetirementStep, semio_framework_value::ValueError>;
     fn terminal_is_empty(&self) -> bool;
 }
 
@@ -44,7 +44,7 @@ impl<S, M> StructuralPreparationFactory<S, M> {
 impl<S, M> app_store::ArtifactStoreOneItemPreparationFactory<S, M> for StructuralPreparationFactory<S, M>
 where
     S: Send + Sync + 'static,
-    M: app_store::ArtifactCanonicalJson + Send + Sync + 'static,
+    M: app_store::ArtifactCanonicalJson + protocol::Mutation<S> + Send + Sync + 'static,
 {
     fn preflight(&self, mutation: &M, description: Option<&str>, lane: app_store::HistoryLane) -> Result<app_store::ArtifactStoreOneItemFootprint, String> {
         if !(self.recognizes)(mutation) || lane != app_store::HistoryLane::Document || description.is_some_and(|value| value.len() > app_store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
@@ -54,7 +54,7 @@ where
         if retained_bytes > app_store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES {
             return Err(format!("{}-payload", self.prefix));
         }
-        Ok(app_store::ArtifactStoreOneItemFootprint::for_one_item(1, retained_bytes.max(1)))
+        Ok(app_store::ArtifactStoreOneItemFootprint::for_leaf::<S, M>(mutation, retained_bytes.max(1)))
     }
 
     fn begin(&self, request: app_store::ArtifactStoreOneItemPreparationRequest<S, M>) -> Result<Box<dyn app_store::ArtifactStoreOneItemPreparation<S, M>>, app_store::ArtifactStoreOneItemPreparationRequest<S, M>> {
@@ -168,32 +168,7 @@ where
                 let (post, inverse) = self.copy.as_mut().ok_or_else(|| format!("{}-copy-owner", self.prefix))?.take_result().ok_or_else(|| format!("{}-copy-result", self.prefix))?;
                 let mutation = self.mutation.take().ok_or_else(|| format!("{}-mutation-owner", self.prefix))?;
                 let authority = self.authority.as_ref().ok_or_else(|| format!("{}-authority-owner", self.prefix))?;
-                let id = authority.edit_id();
-                let edit = protocol::Edit { line: authority.line_id().map(str::to_owned),
-                    id: id.clone(),
-                    actor: Some(authority.actor().to_string()),
-                    forwards: vec![mutation],
-                    inverse: vec![inverse],
-                    mutation_meta: vec![protocol::MutationMeta {
-                        mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
-                        dependencies: Vec::new(),
-                        base_version: authority.base_applied_edit_count() as u64,
-                        author_id: Some(protocol::ActorId(authority.actor().to_string())),
-                        timestamp: authority.next_clock(),
-                        undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-                        payload_hash: None,
-                        semantic_kind: None,
-                        label: None,
-                        group_id: authority.group_id().map(str::to_owned),
-                        origin: Default::default(),
-                        transaction: None,
-                    }],
-                    description: self.description.take(), verb: None,
-                    coalesce_key: None,
-                    sequence_number: authority.next_sequence_number(),
-                    started_at: String::new(),
-                    finished_at: None,
-                };
+                let edit = authority.next_edit(mutation, vec![inverse]);
                 self.sealer = Some(authority.begin_one_item_seal(edit, Arc::new(post), Arc::clone(&self.mutation_retirement), Arc::clone(&self.snapshot_retirement)));
                 self.seal_base_checkpoint = Some(self.checkpoint);
                 self.phase = 2;
@@ -232,7 +207,7 @@ where
         }
     }
 
-    fn close_step(&mut self, grant: app_store::ArtifactStoreOneItemGrant) -> Result<app_store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: app_store::ArtifactStoreOneItemGrant) -> Result<app_store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || !grant.permits_one() {
             return Ok(app_store::SnapshotRetirementStep::Blocked);
         }
@@ -240,7 +215,7 @@ where
             let step = active.close_step(grant.maximum_items.min(1), grant.maximum_bytes)?;
             if step == app_store::SnapshotRetirementStep::Complete {
                 if !active.terminal_is_empty() {
-                    return Err(format!("{}-retirement-witness", self.prefix));
+                    return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,format!("{}-retirement-witness", self.prefix)));
                 }
                 self.external_retirement = None;
                 return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
@@ -251,7 +226,7 @@ where
             let step = sealer.close_step(grant)?;
             if step == app_store::SnapshotRetirementStep::Complete {
                 if !sealer.terminal_is_empty() {
-                    return Err(format!("{}-sealer-witness", self.prefix));
+                    return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,format!("{}-sealer-witness", self.prefix)));
                 }
                 self.sealer = None;
                 return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
@@ -264,7 +239,7 @@ where
                 return Ok(step);
             }
             if !copy.terminal_is_empty() {
-                return Err(format!("{}-copy-witness", self.prefix));
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,format!("{}-copy-witness", self.prefix)));
             }
             self.copy = None;
             return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
@@ -279,7 +254,7 @@ where
         }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
-                return Err(format!("{}-base-return", self.prefix));
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,format!("{}-base-return", self.prefix)));
             }
             return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }

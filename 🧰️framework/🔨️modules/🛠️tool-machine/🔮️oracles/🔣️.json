@@ -1,0 +1,58 @@
+{
+  "$schema": "../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🔮️ This owner's contribution to the repository test platform: the third-party references its own laws judge against.",
+  "oracles": [
+    {
+      "id": "tool-machine-xstate",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "xstate",
+      "version": "5.32.5",
+      "engine": {
+        "family": "xstate",
+        "implementation": "xstate createMachine()",
+        "version": "5.32.5"
+      },
+      "capabilities": [
+        "tool-machine.transaction",
+        "tool-machine.gesture-drive"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://stately.ai/docs/xstate",
+      "rationale": "Judges the tool machine in `🧪️tests/🧪️conformance` (design §5): every `🧫️transaction-law` chart built as an xstate machine against the TypeScript reducer, id minting and runner; in `🧪️tests/🧪️gesture-drive-law` the window's gesture slot (idle, open, unrestorable) as an xstate machine against `driveGesture` on every fixture row and random sequence."
+    },
+    {
+      "id": "tool-machine-fast-check",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "fast-check",
+      "version": "3.23.2",
+      "engine": {
+        "family": "fast-check",
+        "implementation": "fast-check fc.assert",
+        "version": "3.23.2"
+      },
+      "capabilities": [
+        "tool-machine.transaction",
+        "tool-machine.gesture-drive"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://fast-check.dev",
+      "rationale": "Generates random yield sequences for the transaction law in `🧪️tests/🧪️conformance` and random dispatch sequences (verbs, phases, ticks, moved bases, unrestorable gestures) for the gesture-drive law in `🧪️tests/🧪️gesture-drive-law`; runner and xstate oracle must agree at every step."
+    }
+  ],
+  "noOracleDecisions": []
+}

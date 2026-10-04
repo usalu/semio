@@ -8,6 +8,11 @@ use semio_framework::kernel::HistoryEntry;
 use semio_framework_plugin::artifact_app_laws::{meta, settle_history_verb, settle_registered_typed_operation};
 use semio_framework_plugin::PluginApp;
 use serde_json::json;
+use crate::{DagNodeKind, DagScene};
+
+fn scene(app: &DagApp) -> DagScene {
+    ::semio_framework_async::poll::resolve_ready(context::live_scene(app))
+}
 
 /// 🧪️ `nodeGraphEdit` batches id-keyed sub-edits: a `connect` row adds an edge, and a `delete` row removes exactly the
 /// nodes it names together with every wire they hold — never an ambient selection.
@@ -15,22 +20,21 @@ use serde_json::json;
 async fn node_graph_edit_connects_then_deletes_the_named_node() {
     let mut app = context::new_app().await;
     let (source_id, target_id) = {
-        let projection = app.snapshot().expect("projection");
-        let nodes = projection.nodes();
+        let nodes = scene(&app).nodes;
         (nodes[0].id.clone(), nodes[1].id.clone())
     };
-    let edges_before = app.snapshot().expect("projection").edges().len();
+    let edges_before = scene(&app).edges.len();
     context::dispatch(
         &mut app,
         DagCommand::NodeGraphEdit(NodeGraphEdit { operations: vec![DagNodeGraphEditOp::Connect { source_node_id: source_id.clone(), source_port_id: "out".into(), target_node_id: target_id, target_port_id: "in".into() }] }),
     )
     .await;
-    assert!(app.snapshot().expect("projection").edges().len() >= edges_before, "connect either adds an edge or is a safe no-op (e.g. a cycle)");
-    let nodes_before = app.snapshot().expect("projection").nodes().len();
+    assert!(scene(&app).edges.len() >= edges_before, "connect either adds an edge or is a safe no-op (e.g. a cycle)");
+    let nodes_before = scene(&app).nodes.len();
     context::dispatch(&mut app, DagCommand::NodeGraphEdit(NodeGraphEdit { operations: vec![DagNodeGraphEditOp::Delete { node_ids: vec![source_id.clone()], synapse_ids: Vec::new() }] })).await;
-    let projection = app.snapshot().expect("projection");
-    assert_eq!(projection.nodes().len(), nodes_before - 1);
-    assert!(!projection.edges().iter().any(|edge| edge.source.starts_with(&format!("{source_id}@")) || edge.target.starts_with(&format!("{source_id}@"))), "the deleted node's wires go with it");
+    let projection = scene(&app);
+    assert_eq!(projection.nodes.len(), nodes_before - 1);
+    assert!(!projection.edges.iter().any(|edge| edge.source.starts_with(&format!("{source_id}@")) || edge.target.starts_with(&format!("{source_id}@"))), "the deleted node's wires go with it");
     context::close(&mut app);
 }
 
@@ -39,15 +43,15 @@ async fn node_graph_edit_connects_then_deletes_the_named_node() {
 #[semio_framework_async_macros::async_test]
 async fn disconnect_removes_a_known_edge_and_is_a_no_op_for_an_unknown_one() {
     let mut app = context::new_app().await;
-    let edge_id = app.snapshot().expect("projection").edges().first().map(|edge| edge.id.clone());
+    let edge_id = scene(&app).edges.first().map(|edge| edge.id.clone());
     if let Some(edge_id) = edge_id {
-        let edges_before = app.snapshot().expect("projection").edges().len();
+        let edges_before = scene(&app).edges.len();
         context::dispatch(&mut app, DagCommand::Disconnect(disconnect::Disconnect { edge_id })).await;
-        assert_eq!(app.snapshot().expect("projection").edges().len(), edges_before - 1);
+        assert_eq!(scene(&app).edges.len(), edges_before - 1);
     }
-    let before = app.snapshot().expect("projection");
+    let before = scene(&app);
     context::dispatch(&mut app, DagCommand::Disconnect(disconnect::Disconnect { edge_id: "nonexistent".into() })).await;
-    assert_eq!(app.snapshot().expect("projection"), before, "disconnecting an unknown edge leaves the document untouched");
+    assert_eq!(scene(&app), before, "disconnecting an unknown edge leaves the document untouched");
     context::close(&mut app);
 }
 
@@ -55,13 +59,12 @@ async fn disconnect_removes_a_known_edge_and_is_a_no_op_for_an_unknown_one() {
 async fn connect_media_ports_adds_an_edge_between_two_nodes() {
     let mut app = context::new_app().await;
     let (source_id, target_id) = {
-        let projection = app.snapshot().expect("projection");
-        let nodes = projection.nodes();
+        let nodes = scene(&app).nodes;
         (nodes[0].id.clone(), nodes[1].id.clone())
     };
-    let edges_before = app.snapshot().expect("projection").edges().len();
+    let edges_before = scene(&app).edges.len();
     context::dispatch(&mut app, DagCommand::ConnectMediaPorts(connect_media_ports::ConnectMediaPorts { source_node_id: source_id, source_port_id: "out".into(), target_node_id: target_id, target_port_id: "in".into() })).await;
-    assert!(app.snapshot().expect("projection").edges().len() >= edges_before);
+    assert!(scene(&app).edges.len() >= edges_before);
     context::close(&mut app);
 }
 
@@ -71,46 +74,46 @@ async fn connect_media_ports_adds_an_edge_between_two_nodes() {
 async fn send(app: &mut DagApp, verb: &str, args: serde_json::Value) {
     let action_meta = meta("local");
     let aborting = args.get("abort").is_some();
-    let args: dsl::DslValue = args.into();
+    let args: semio_framework_value::DslValue = args.into();
     app.handle_action(verb, Some(&args), &action_meta).await.unwrap_or_else(|fault| panic!("{verb} admitted: {fault:?}"));
     if !aborting {
         settle_registered_typed_operation(app, action_meta.instance_id).await.expect("the dispatch settles");
     }
 }
 
-/// 🧾️ Every applied history row that carries document operations, oldest first.
+/// 🧾️ Every applied history row whose mutations land in the composed `content` member (design §12), oldest first.
 async fn edit_rows(app: &mut DagApp) -> Vec<HistoryEntry> {
-    let mut rows: Vec<HistoryEntry> = PluginApp::history_snapshot(app).await.expect("history").upserts.into_iter().filter(|entry| entry.applied && !entry.op_lines.is_empty()).collect();
+    let mut rows: Vec<HistoryEntry> = PluginApp::history_snapshot(app).await.expect("history").upserts.into_iter().filter(|entry| entry.applied && entry.mutations.iter().any(|mutation| mutation.store.is_some())).collect();
     rows.sort_by_key(|entry| entry.seq);
     rows
 }
 
 fn position(app: &DagApp, id: &str) -> (f64, f64) {
-    app.snapshot().expect("projection").nodes().into_iter().find(|node| node.id == id).map(|node| (node.x, node.y)).expect("node")
+    scene(app).nodes.into_iter().find(|node| node.id == id).map(|node| (node.x, node.y)).expect("node")
 }
 
 fn slider_value(app: &DagApp, id: &str) -> f64 {
-    match app.snapshot().expect("projection").nodes().into_iter().find(|node| node.id == id).map(|node| node.kind) {
+    match scene(app).nodes.into_iter().find(|node| node.id == id).map(|node| node.kind) {
         Some(DagNodeKind::Slider { value, .. }) => value,
         other => panic!("{id} is no slider: {other:?}"),
     }
 }
 
 fn english(entry: &HistoryEntry) -> String {
-    entry.label.resolve(protocol::Terminology::Native, protocol::Locale::En).to_string()
+    entry.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).to_string()
 }
 
 fn german(entry: &HistoryEntry) -> String {
-    entry.label.resolve(protocol::Terminology::Native, protocol::Locale::De).to_string()
+    entry.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De).to_string()
 }
 
-/// ⚖️ LAW: a released node drag (the node-graph gesture record, as both hosts write it) is ONE edit, one row stamped with
-/// its transaction (tool `<appId>#nodeGraphEdit`), whose op is the RELATIVE `move-nodes` leaf; every dragged node lands at
-/// its base position plus the offset, and one undo puts them back.
+/// ⚖️ LAW: a released node drag (the node-graph gesture record, as both hosts write it) is ONE composed-child edit, one row
+/// stamped with its transaction (tool `<appId>#nodeGraphEdit`), whose op is the RELATIVE graph `drag-nodes` leaf; every
+/// dragged node lands at its base position plus the offset, and one undo puts them back.
 #[semio_framework_async_macros::async_test]
 async fn a_node_drag_record_is_one_transaction_of_one_relative_move() {
     let mut app = context::new_app().await;
-    let ids: Vec<String> = app.snapshot().expect("projection").nodes().iter().take(2).map(|node| node.id.clone()).collect();
+    let ids: Vec<String> = scene(&app).nodes.iter().take(2).map(|node| node.id.clone()).collect();
     let bases: Vec<(f64, f64)> = ids.iter().map(|id| position(&app, id)).collect();
     let before = edit_rows(&mut app).await.len();
     send(&mut app, "nodeGraphEdit", json!({ "operations": [{ "operation": "move", "gestureId": "node-drag:1", "nodeIds": ids, "dx": 40.0, "dy": -12.5 }] })).await;
@@ -123,9 +126,9 @@ async fn a_node_drag_record_is_one_transaction_of_one_relative_move() {
     let transaction = rows[0].transaction.as_ref().expect("the row is keyed by its tool transaction");
     assert!(transaction.id.starts_with("tx-") && transaction.tool == "s.dag.dag@1/*#editor#nodeGraphEdit", "{transaction:?}");
     assert_eq!(rows[0].mutations.len(), 1, "one relative leaf for the whole selection");
-    assert!(rows[0].op_lines.iter().all(|line| line.starts_with("move-nodes")), "{:?}", rows[0].op_lines);
-    assert_eq!(english(&rows[0]), "Move 2 node(s) by (40, -12.5)");
-    assert_eq!(german(&rows[0]), "2 Knoten um (40; -12,5) verschieben");
+    assert!(rows[0].op_lines.iter().all(|line| line.starts_with("dragNodes")), "{:?}", rows[0].op_lines);
+    assert_eq!(english(&rows[0]), "Drag 2 nodes by (40, -12.5)");
+    assert_eq!(german(&rows[0]), "2 Knoten um (40; -12,5) ziehen");
     settle_history_verb(&mut app, "undo", meta("local").instance_id).await;
     for (id, base) in ids.iter().zip(&bases) {
         assert_eq!(position(&app, id), *base, "one undo restores the drag");
@@ -138,7 +141,7 @@ async fn a_node_drag_record_is_one_transaction_of_one_relative_move() {
 #[semio_framework_async_macros::async_test]
 async fn zero_trace_two_transactions_and_the_palette_drop() {
     let mut app = context::new_app().await;
-    let id = app.snapshot().expect("projection").nodes()[0].id.clone();
+    let id = scene(&app).nodes[0].id.clone();
     let (x, y) = position(&app, &id);
     let before = edit_rows(&mut app).await.len();
     send(&mut app, "nodeGraphEdit", json!({ "operations": [{ "operation": "move", "gestureId": "node-drag:0", "nodeIds": [id], "dx": 0.0, "dy": 0.0 }] })).await;
@@ -151,13 +154,14 @@ async fn zero_trace_two_transactions_and_the_palette_drop() {
     assert_eq!(rows.len(), 2, "{rows:?}");
     assert_ne!(rows[0].transaction.as_ref().expect("first").id, rows[1].transaction.as_ref().expect("second").id, "two moves are two transactions");
     assert_eq!(rows[1].transaction.as_ref().expect("drop").tool, "s.dag.dag@1/*#editor#moveMediaNode");
-    assert_eq!(english(&rows[1]), "Move 1 node(s) by (20, 80)", "the drop is the offset from the base position after the first drag");
+    assert_eq!(english(&rows[1]), "Drag 1 node by (20, 80)", "the drop is the offset from the base position after the first drag");
     assert_eq!(position(&app, &id), (x + 30.0, y + 80.0));
     context::close(&mut app);
 }
 
-/// ⚖️ LAW: a slider press on the canvas overlay keeps its ticks provisional and lands as ONE edit with ONE transaction of
-/// the absolute `set-slider` leaf; a second press is a second transaction; a cancelled press leaves zero trace.
+/// ⚖️ LAW: a slider press on the canvas overlay keeps its ticks provisional and lands as ONE composed-child edit with ONE
+/// transaction of the absolute `set-node-property` leaf; a second press is a second transaction; a cancelled press leaves
+/// zero trace.
 #[semio_framework_async_macros::async_test]
 async fn a_slider_press_is_one_transaction_and_a_cancel_is_zero_trace() {
     let mut app = context::new_app().await;
@@ -174,16 +178,17 @@ async fn a_slider_press_is_one_transaction_and_a_cancel_is_zero_trace() {
     let rows = edit_rows(&mut app).await;
     let rows = &rows[before..];
     assert_eq!(rows.len(), 2, "two released presses, two rows: {rows:?}");
-    assert!(rows.iter().all(|entry| entry.op_lines.iter().all(|line| line.starts_with("set-slider"))), "{rows:?}");
+    assert!(rows.iter().all(|entry| entry.op_lines.first().is_some_and(|line| line.starts_with("setNodeProperty"))), "{rows:?}");
     let transactions: std::collections::BTreeSet<&str> = rows.iter().map(|entry| entry.transaction.as_ref().expect("every press is a transaction").id.as_str()).collect();
     assert_eq!(transactions.len(), 2);
-    assert_eq!(english(&rows[0]), "Set slider \"slider\" value to 7.5");
-    assert_eq!(german(&rows[0]), "Wert von Schieberegler \"slider\" auf 7,5 setzen");
+    assert_eq!(english(&rows[0]), "Set \"value\" of node \"slider\" to 7.5");
+    assert_eq!(german(&rows[0]), "\"value\" von Knoten \"slider\" auf 7,5 setzen");
     context::close(&mut app);
 }
 
-/// ⚖️ LAW: the inspector's slider fields and name field are absolute leaves — `set-slider` per addressed slider and
-/// `change-node-name` per renamed node — never a whole-kind replace plus a resize.
+/// ⚖️ LAW: the inspector's slider fields and name field are absolute child leaves — `set-node-property` per addressed
+/// slider field (plus `resize-node` only when the widget refits) and `change-node-label` per renamed node — never a
+/// whole-node replace.
 #[semio_framework_async_macros::async_test]
 async fn the_inspector_patches_are_absolute_leaves() {
     let mut app = context::new_app().await;
@@ -192,14 +197,13 @@ async fn the_inspector_patches_are_absolute_leaves() {
     context::dispatch(&mut app, DagCommand::PatchDagNodes(patch_dag_nodes::PatchDagNodes { node_ids: vec!["slider".into()], field: "name".into(), value: "Volume".into() })).await;
     let rows = edit_rows(&mut app).await;
     let lines: Vec<&String> = rows[before..].iter().flat_map(|entry| entry.op_lines.iter()).collect();
-    assert_eq!(lines.len(), 2, "{lines:?}");
-    assert!(lines[0].starts_with("set-slider") && lines[1].starts_with("change-node-name"), "{lines:?}");
-    assert!(!lines.iter().any(|line| line.starts_with("replace-node-kind") || line.starts_with("resize-node")), "{lines:?}");
+    assert!(lines.first().is_some_and(|line| line.starts_with("setNodeProperty")) && lines.last().is_some_and(|line| line.starts_with("changeNodeLabel")), "{lines:?}");
+    assert!(lines.iter().all(|line| line.starts_with("setNodeProperty") || line.starts_with("resizeNode") || line.starts_with("changeNodeLabel")), "{lines:?}");
     context::close(&mut app);
 }
 
 async fn history_edit(app: &mut DagApp, verb: &str, args: serde_json::Value) {
-    let args: dsl::DslValue = args.into();
+    let args: semio_framework_value::DslValue = args.into();
     let result = app.handle_action(verb, Some(&args), &meta("local")).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
     assert!(result.output.get("rejected").is_none(), "{verb} was refused: {:?}", result.output);
 }
@@ -224,13 +228,14 @@ async fn pump_time_travel(app: &mut DagApp, done: impl Fn(Option<semio_framework
 #[semio_framework_async_macros::async_test]
 async fn editing_a_drag_offset_in_history_replays_downstream() {
     let mut app = context::new_app().await;
-    let id = app.snapshot().expect("projection").nodes()[0].id.clone();
+    let id = scene(&app).nodes[0].id.clone();
     let (x, y) = position(&app, &id);
+    let store = format!("content/{}", app.snapshot().expect("snapshot").content.child_id);
     send(&mut app, "nodeGraphEdit", json!({ "operations": [{ "operation": "move", "gestureId": "node-drag:1", "nodeIds": [id], "dx": 10.0, "dy": 0.0 }] })).await;
     send(&mut app, "nodeGraphEdit", json!({ "operations": [{ "operation": "move", "gestureId": "node-drag:2", "nodeIds": [id], "dx": 0.0, "dy": 7.0 }] })).await;
     let rows = edit_rows(&mut app).await;
     let first = rows[rows.len() - 2].mutations.first().map(|mutation| mutation.mutation_id.clone()).expect("the first drag's mutation");
-    history_edit(&mut app, "historyEditBegin", json!({ "mutationId": first })).await;
+    history_edit(&mut app, "historyEditBegin", json!({ "mutationId": first, "store": store })).await;
     history_edit(&mut app, "historyEditInput", json!({ "path": "/dx", "value": 55.0 })).await;
     history_edit(&mut app, "historyEditAccept", json!({})).await;
     pump_time_travel(&mut app, |stage| stage != Some(semio_framework::kernel::HistoryTimeTravelStage::Replaying)).await;
@@ -243,7 +248,7 @@ async fn editing_a_drag_offset_in_history_replays_downstream() {
     let mut fresh = context::new_app().await;
     send(&mut fresh, "nodeGraphEdit", json!({ "operations": [{ "operation": "move", "gestureId": "node-drag:3", "nodeIds": [id], "dx": 55.0, "dy": 0.0 }] })).await;
     send(&mut fresh, "nodeGraphEdit", json!({ "operations": [{ "operation": "move", "gestureId": "node-drag:4", "nodeIds": [id], "dx": 0.0, "dy": 7.0 }] })).await;
-    assert_eq!(app.snapshot().expect("edited head").nodes(), fresh.snapshot().expect("fresh head").nodes(), "the edited log equals a fresh run of the edited drags");
+    assert_eq!(scene(&app).nodes, scene(&fresh).nodes, "the edited log equals a fresh run of the edited drags");
     context::close(&mut app);
     context::close(&mut fresh);
 }
@@ -251,7 +256,7 @@ async fn editing_a_drag_offset_in_history_replays_downstream() {
 /// ⚖️ LAW: the host wire decodes by name — an unknown operation or a malformed gesture record is refused, never guessed.
 #[test]
 fn the_host_wire_decodes_by_name() {
-    let decode = |value: serde_json::Value| NodeGraphEdit::from_action_args(Some(&dsl::DslValue::from(value)));
+    let decode = |value: serde_json::Value| NodeGraphEdit::from_action_args(Some(&semio_framework_value::DslValue::from(value)));
     let decoded = decode(json!({ "operations": [{ "operation": "move", "gestureId": "g", "nodeIds": ["a"], "dx": 1.0, "dy": 2.0 }, { "operation": "setSlider", "widgetId": "s", "value": 3.0 }], "gesture": "press", "commit": true })).expect("host rows decode");
     assert_eq!(decoded.operations, vec![DagNodeGraphEditOp::Move { gesture_id: "g".into(), node_ids: vec!["a".into()], dx: 1.0, dy: 2.0 }, DagNodeGraphEditOp::SetSlider { widget_id: "s".into(), value: 3.0 }]);
     assert!(decode(json!({ "operations": [{ "operation": "move", "gestureId": "g", "nodeIds": ["a"], "dx": 1.0 }] })).is_err(), "a gesture record misses dy");
@@ -263,14 +268,14 @@ fn the_host_wire_decodes_by_name() {
 #[test]
 fn the_renderer_row_fixture_decodes_exactly() {
     let fixture: serde_json::Value = serde_json::from_str(NODE_GRAPH_EDIT_ROWS).expect("the row fixture parses");
-    let batch = |row: &serde_json::Value| NodeGraphEdit::from_action_args(Some(&dsl::DslValue::from(json!({ "operations": [row] }))));
+    let batch = |row: &serde_json::Value| NodeGraphEdit::from_action_args(Some(&semio_framework_value::DslValue::from(json!({ "operations": [row] }))));
     for case in fixture["accepted"].as_array().expect("accepted rows") {
         assert!(batch(&case["row"]).is_ok(), "accepted row {} refused", case["id"]);
     }
     for case in fixture["refused"].as_array().expect("refused rows") {
         assert!(batch(&case["row"]).is_err(), "refused row {} decoded", case["id"]);
     }
-    let decoded = NodeGraphEdit::from_action_args(Some(&dsl::DslValue::from(json!({ "operations": [
+    let decoded = NodeGraphEdit::from_action_args(Some(&semio_framework_value::DslValue::from(json!({ "operations": [
         { "operation": "insertPort", "nodeId": "add", "side": "output", "index": 0 },
         { "operation": "delete", "nodeIds": ["add"], "synapseIds": ["s1"] }
     ] })))).expect("rows decode");

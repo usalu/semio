@@ -113,7 +113,7 @@ async fn inverse_law_mutation_level_round_trips() {
     for mutation in mutations {
         let mut state = base.clone();
         apply_semio_value_mutation(&mut state, &mutation);
-        for undo in <SemioValueMutation as Mutation<SemioValueSnapshot>>::inverse(&mutation, &base) {
+        for undo in <SemioValueMutation as Mutation<SemioValueSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
             apply_semio_value_mutation(&mut state, &undo);
         }
         assert_eq!(state, base, "mutation {mutation:?} did not round-trip via its inverse");
@@ -157,6 +157,7 @@ async fn op_text_binary_roundtrip_law() {
 /// no arm here, so the crate stops building until both this match and `KINDS` name it.
 fn kind_of(mutation: &SemioValueMutation) -> &'static str {
     match mutation {
+        SemioValueMutation::PatchSnapshot(_) => "patch-snapshot",
         SemioValueMutation::SetSnapshot(set_snapshot::SetSnapshot { .. }) => "set-snapshot",
         SemioValueMutation::SetValue(set_value::SetValue { .. }) => "set-value",
         SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { .. }) => "set-map-entry",
@@ -175,6 +176,7 @@ fn kind_of(mutation: &SemioValueMutation) -> &'static str {
 fn kinds_match_the_enum_and_the_catalog() {
     let one_per_variant = [
         SemioValueMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: SemioValueSnapshot::default() }),
+        SemioValueMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("owned schema".into()) } }),
         SemioValueMutation::SetValue(set_value::SetValue { path: Vec::new(), value: SemioValue::Null }),
         SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path: Vec::new(), key: "status".into(), value: SemioValue::Null }),
         SemioValueMutation::RemoveMapEntry(remove_map_entry::RemoveMapEntry { path: Vec::new(), key: "status".into() }),

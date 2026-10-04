@@ -28,7 +28,7 @@ Feature: Apply every typed layout-document mutation to its committed specificati
 
   What distinguishes this subset from every sibling is that a layout document is FOUR pools at TWO
   nesting depths, joined by reference. Three scalars sit at the document root (`name`, `printTarget`,
-  `dataFieldsJson`); `pages`, `stories` and `links` are id-keyed root collections; and `frames` and
+  `dataFields`); `pages`, `stories` and `links` are id-keyed root collections; and `frames` and
   `layers` live one level down, inside a page, so a frame is addressed by (page, frame) and never by
   id alone. A text frame names its `stories` member by id and an image frame names its `links` member
   by id, which is why `delete-story` and `delete-link` reach ACROSS pools into frames that point at
@@ -38,9 +38,9 @@ Feature: Apply every typed layout-document mutation to its committed specificati
   it has to restore an index and not append; `delete-frame` removes a text frame and its layer
   membership together, so an inverse that put the frame back without re-listing it in the layer's
   `objectIds` fails; and `change-print-target`/`change-data-fields` set an optional root scalar that
-  was previously `null` (`printTarget`) or genuinely ABSENT (`dataFieldsJson`), so their inverse has
+  was previously `null` (`printTarget`) or genuinely ABSENT (`dataFields`), so their inverse has
   to clear it again exactly as it was — the Python reference's first standalone run against these
-  committed vectors caught exactly this distinction as a real bug (an inverse that wrote `dataFieldsJson:
+  committed vectors caught exactly this distinction as a real bug (an inverse that wrote `dataFields:
   null` instead of omitting the key), fixed before registration.
 
   `mutate-<kind>`/`inverse-<kind>` now dispatch BOTH an oracle role (the Python implementation) and a

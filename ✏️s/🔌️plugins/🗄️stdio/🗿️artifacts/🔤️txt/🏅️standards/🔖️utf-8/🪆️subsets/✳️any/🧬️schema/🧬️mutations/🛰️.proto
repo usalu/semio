@@ -5,4 +5,5 @@ import "🔚️set-line-ending/🛰️.proto";
 import "📥️insert-line/🛰️.proto";
 import "🗑️remove-line/🛰️.proto";
 import "✏️set-line/🛰️.proto";
-message TxtMutation { oneof mutation { SetTrailingNewlinePayload set_trailing_newline = 1; SetLineEndingPayload set_line_ending = 2; InsertLinePayload insert_line = 3; RemoveLinePayload remove_line = 4; SetLinePayload set_line = 5; } }
+import "📸️set-snapshot/🛰️.proto";
+message TxtMutation { oneof mutation { SetTrailingNewlinePayload set_trailing_newline = 1; SetLineEndingPayload set_line_ending = 2; InsertLinePayload insert_line = 3; RemoveLinePayload remove_line = 4; SetLinePayload set_line = 5; SetSnapshotPayload set_snapshot = 6; } }

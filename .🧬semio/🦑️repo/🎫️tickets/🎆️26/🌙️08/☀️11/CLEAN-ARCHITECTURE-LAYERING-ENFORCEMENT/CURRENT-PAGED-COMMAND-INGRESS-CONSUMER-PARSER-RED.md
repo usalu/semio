@@ -1,0 +1,11 @@
+# Paged Command Ingress Consumer Parser Refusal
+
+The separate twenty-row consumer proposal is unmounted. `🗑️generated/paged-command-ingress/separated-consumer-owner-inputs-1.json` retains full current before/authored/inverse rows, the actual eighteen-row core, eighty-four current context pairs and original Root publication history. Concurrent private `CursorShape`, plugin accessory methods and foreign launcher entries are preserved without assigning authorship.
+
+The explicit existing Replication Nx ticket review passed strict TypeScript, then refused the complete current plugin source because its existing Rust Tree-sitter grammar reports errors. This terminal is `consumer-review-nx-1.log`; no six-callback GREEN is claimed. The proposed package gates are not mounted or executed, and no native proof is claimed.
+
+The independent before/current census ran through the same normal Nx route and retains complete source bytes, hashes and inverses in `consumer-plugin-parser-before-current-1.json`. Ready5-before, Root-published and observed-current all report the same three error texts: two associated-type bounds with defaults and a labelled match-arm block. Current zero-based error rows are 36824, 37514 and 43689; prior rows are 36806, 37496 and 43671. The eighteen-line displacement follows the preserved foreign accessory additions.
+
+The labelled `'dispatch:` block is inside the actual `plugin_exchange` caller containing both canonical command-ingress bound uses at line 43783. A strict complete named-function ownership scope therefore remains RED with this grammar. These errors are not suppressed, and the source is not repaired or normalized. Root's whole OS native route must establish actual Rust compilation and behavior. Any subsequent bounded source law must retain exact named caller/module association and refuse errors intersecting its explicitly owned scope; it cannot claim whole-plugin parser cleanliness.
+
+No Rust, Cargo, generated launch or workspace source was written by this lane. The separate thirty-nine-row Pack proposals also remain unmounted. The completed one-row SpaceHistory parser repair is independent of this consumer refusal and has its own ten-callback proof and report.

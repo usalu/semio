@@ -17,7 +17,7 @@ fn kinds_match_the_enum_and_the_catalog() {
     let uncovered: Vec<&&str> = KINDS.iter().zip(&covered).filter(|(_, hit)| !**hit).map(|(kind, _)| kind).collect();
     assert!(uncovered.is_empty(), "semio-model: demo_mutation_cases carries no instance of {uncovered:?}, so those kinds are declared but never exercised");
 
-    let manifest: pack::JsonValue = pack::parse_json(include_str!("../../../../🔮️oracles/🔣️.json")).expect("the subset's own oracle manifest decodes");
+    let manifest: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../../../../🔮️oracles/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the subset's own oracle manifest decodes");
     let catalog = manifest["mutationCatalogs"].as_array().expect("the manifest declares mutationCatalogs").iter().find(|entry| entry["id"].as_str() == Some("semio-v1-model")).expect("the manifest declares the semio-v1-model catalog");
     let declared: Vec<&str> = catalog["kinds"].as_array().expect("the catalog declares kinds").iter().map(|kind| kind.as_str().expect("every declared kind is a string")).collect();
     assert!(KINDS.iter().all(|kind| declared.contains(kind)), "semio-model: every KINDS entry must also appear in the committed oracle manifest's catalog");
@@ -35,7 +35,7 @@ fn assert_round_trips(base: &SemioModelSnapshot, mutation: SemioModelMutation) {
     let expected = <SemioModelDiff as protocol::MutationDiff<SemioModelSnapshot>>::apply(diff.diff(), base).expect("apply must succeed for a well-formed fixture");
     assert_eq!(applied, expected, "applying the mutation must equal applying its own diff for {mutation:?}");
 
-    let inv = <SemioModelMutation as Mutation<SemioModelSnapshot>>::inverse(&mutation, base);
+    let inv = <SemioModelMutation as Mutation<SemioModelSnapshot>>::inverse(&mutation, base).expect("valid retained mutation inverse fixture");
     let mut restored = applied.clone();
     for m in &inv {
         let _ = apply_semio_model_mutation(&mut restored, m);

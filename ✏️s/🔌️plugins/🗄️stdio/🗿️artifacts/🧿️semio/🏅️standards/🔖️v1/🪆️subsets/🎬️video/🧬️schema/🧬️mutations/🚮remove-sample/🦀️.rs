@@ -20,9 +20,12 @@ impl protocol::MutationKind<SemioVideoSnapshot, SemioVideoMutation> for RemoveSa
     fn diff(&self, base: &SemioVideoSnapshot) -> protocol::MutationOutcome<<SemioVideoMutation as Mutation<SemioVideoSnapshot>>::Diff> {
         agg_diff(&SemioVideoMutation::RemoveSample(self.clone()), base)
     }
-    fn inverse(&self, base: &SemioVideoSnapshot) -> Vec<SemioVideoMutation> {
-        agg_inverse(&SemioVideoMutation::RemoveSample(self.clone()), base)
-    }
+    fn inverse(&self, base: &SemioVideoSnapshot) -> Result<Vec<SemioVideoMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&SemioVideoMutation::RemoveSample(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove sample", "Sample entfernen")
     }

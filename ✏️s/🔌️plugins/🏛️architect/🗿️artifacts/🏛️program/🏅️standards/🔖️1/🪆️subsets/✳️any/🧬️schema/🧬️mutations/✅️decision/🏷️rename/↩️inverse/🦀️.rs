@@ -6,9 +6,12 @@ use crate::ProgramMutation;
 use crate::ProgramSnapshot;
 
 /// ↩️ Undo a rename by restoring the pre-state name. Missing target ⇒ nothing to undo.
-pub fn inverse(payload: &super::RenameDecision, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+pub fn inverse(payload: &super::RenameDecision, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.decisions.iter().find(|row| row.header.id == payload.id) {
         Some(existing) => vec![ProgramMutation::RenameDecision(super::RenameDecision { id: payload.id.clone(), new_name: existing.header.name.clone() })],
         None => Vec::new(),
     }
+
+    })())
 }

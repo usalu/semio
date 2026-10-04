@@ -16,7 +16,7 @@ fn text_edits_preserve_content_size_and_history_payload() {
         let crate::DrawingLayerNode::Text(text) = &after.layers[0] else { panic!("Text kind changed") };
         assert_eq!(text.content, edit["content"].as_str().unwrap());
         assert_eq!(text.size, edit["size"].as_f64().unwrap());
-        for inverse in mutation.inverse(&before) { crate::mutations::apply_drawing_mutation(&mut after, &inverse).unwrap(); }
+        for inverse in mutation.inverse(&before).expect("valid retained mutation inverse fixture") { crate::mutations::apply_drawing_mutation(&mut after, &inverse).unwrap(); }
         assert_eq!(after, before);
     }
     for size in [0.0, -1.0, f64::NAN, f64::INFINITY] {
@@ -36,5 +36,5 @@ fn canonical_text_scenario_matches_diff_apply_and_inverse() {
     let inverse: Vec<crate::DrawingMutation> = serde_json::from_str(include_str!("../../../../../🧫️fixtures/🧬️mutations/📝️update-text/📝️edit-caption/↩️inverse/🔣️.json")).unwrap();
     assert_eq!(*mutation.diff(&before).diff(), expected);
     assert_eq!(expected.apply(&before).unwrap(), after);
-    assert_eq!(mutation.inverse(&before), inverse);
+    assert_eq!(mutation.inverse(&before).expect("valid retained mutation inverse fixture"), inverse);
 }

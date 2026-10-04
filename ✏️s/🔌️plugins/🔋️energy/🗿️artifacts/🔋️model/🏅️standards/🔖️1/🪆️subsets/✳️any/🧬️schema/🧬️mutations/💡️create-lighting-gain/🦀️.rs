@@ -7,7 +7,7 @@ use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToVa
 
 //#region 🔖️Mutation
 /// 💡️ `create-lighting-gain` payload. Adds one lighting gain to a zone: the installed power density, its schedule and the radiant/visible/return-air split that decides how much of it reaches the zone air directly.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "create-lighting-gain")]
@@ -43,9 +43,12 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Create
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Vec<EnergyModelMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Create Lighting Gain {} at index {}", self.id.0, self.index), &format!("Beleuchtungswärmegewinn {} an Index {} erstellen", self.id.0, self.index))

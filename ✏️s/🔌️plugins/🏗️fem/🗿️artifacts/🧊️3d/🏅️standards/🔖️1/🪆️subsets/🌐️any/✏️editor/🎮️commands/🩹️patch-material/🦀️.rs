@@ -9,7 +9,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 type Fem3dSnapshot = crate::Fem3dSnapshot;
 
 //#region 🔖️PatchMaterial
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "patch-material")]
 pub struct PatchMaterial {
     pub id: String,

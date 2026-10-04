@@ -1,0 +1,10 @@
+{
+  "contract": "neutral-render-owner-routes/v1",
+  "owners": [
+    { "id": "canvas", "project": "@semio-tech/framework-ui-canvas-rs", "package": "semio-framework-ui-canvas", "domain": "🧰️framework/🔨️modules/🖱️ui/🖼️canvas" },
+    { "id": "board", "project": "@semio-tech/framework-ui-board-rs", "package": "semio-framework-ui-board", "domain": "🧰️framework/🔨️modules/🖱️ui/🎲️board" },
+    { "id": "dag-model", "project": "@semio-tech/framework-ui-board-dag-model-rs", "package": "semio-framework-ui-board-dag-model", "domain": "🧰️framework/🔨️modules/🖱️ui/🎲️board/🔌️ports/➡️directed/🕸️dag/🧬️schema" }
+  ],
+  "levels": ["quick", "long", "exhaustive"],
+  "wholeArguments": ["--lib", "--no-fail-fast"]
+}

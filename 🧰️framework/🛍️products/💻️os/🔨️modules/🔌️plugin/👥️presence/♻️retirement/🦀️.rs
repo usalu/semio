@@ -96,7 +96,7 @@ struct BoundedPresenceRootRetirement<P> {
 }
 
 impl<P: Send + Sync + 'static> store::ErasedSnapshotRetirement for BoundedPresenceRootRetirement<P> {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -124,7 +124,7 @@ impl store::SnapshotRetirementFactory<crate::NoPresence> for NoPresenceRetiremen
 struct NoPresenceRetirement(std::mem::ManuallyDrop<Option<Arc<crate::NoPresence>>>);
 
 impl store::ErasedSnapshotRetirement for NoPresenceRetirement {
-    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if self.0.is_none() {
             return Ok(SnapshotRetirementStep::Complete);
         }
@@ -188,7 +188,7 @@ impl<P: Clone + Send + Sync + 'static, M: Mutation<P>> ArtifactOwnedDisposer<Pre
             return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(retirement) = self.retirement.as_mut() {
-            return match retirement.close_step(1, maximum_bytes).map_err(Fault::from)? {
+            return match retirement.close_step(1, maximum_bytes).map_err(|error| Fault::from(error.into_message()))? {
                 SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes <= maximum_bytes => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
                 SnapshotRetirementStep::Pending { .. } => Err(Fault::from("presence retirement exceeded its exact grant")),
                 SnapshotRetirementStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "presence retains a captured local or peer reader" }),

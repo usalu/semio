@@ -2426,6 +2426,7 @@ const MESH_PACK_FIELD = {
   edgeUvs: 10,
   edgeIsSeam: 11,
   paintTextureBase64: 12,
+  metadata: 13,
 } as const;
 
 const MESH_PACK_TAG_ABSENT = 0x00;
@@ -2447,6 +2448,10 @@ export type MeshPack = {
   readonly edgeUvs: Float32Array;
   readonly edgeIsSeam: Uint8Array;
   readonly paintTextureBase64?: string;
+  readonly attributes?: Record<string, { domain: "vertex" | "corner" | "face" | "edge"; semantic: "normal" | "uv" | "color" | "material" | "custom"; interpolation: "linear" | "nearest" | "constant"; values: unknown[]; indices?: number[] }>;
+  readonly materials?: Record<string, Record<string, unknown>>;
+  readonly textures?: Record<string, { mime: string; bytes: number[] }>;
+  readonly componentReferences?: Readonly<Record<string, readonly string[]>>;
 };
 
 function readMeshPackVarint(bytes: Uint8Array, position: { value: number }): number {
@@ -2529,7 +2534,13 @@ export function decodeMeshPackBody(bytes: Uint8Array): MeshPack {
     throw new Error(`decodeMeshPackBody: unexpected tag 0x${tag.toString(16)} for field ${fieldId}`);
   }
   if (position.value !== bytes.length) throw new Error(`decodeMeshPackBody: ${bytes.length - position.value} trailing bytes`);
+  const metadataBytes = blobs.get(MESH_PACK_FIELD.metadata);
+  if (metadataBytes && metadataBytes.length > 16_000_000) throw new Error("decodeMeshPackBody: metadata exceeds 16 MB");
+  const metadata = metadataBytes ? JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(metadataBytes)) as Pick<MeshPack, "attributes" | "materials" | "textures" | "componentReferences"> : {};
+  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata) || Object.keys(metadata).some(key => !["attributes", "materials", "textures", "componentReferences"].includes(key))) throw new Error("decodeMeshPackBody: invalid metadata fields");
+  if (metadata.componentReferences !== undefined && (!metadata.componentReferences || typeof metadata.componentReferences !== "object" || Array.isArray(metadata.componentReferences) || Object.entries(metadata.componentReferences).some(([domain, labels]) => !["face", "edge", "vertex"].includes(domain) || !Array.isArray(labels) || labels.length > 600_000 || labels.some(label => typeof label !== "string" || !label.length || label.length > 256 || Array.from(label).length > 128)))) throw new Error("decodeMeshPackBody: invalid analytic component references");
   const mesh: MeshPack = {
+    ...metadata,
     positions: meshPackFloats(blobs.get(MESH_PACK_FIELD.positions)),
     normals: meshPackFloats(blobs.get(MESH_PACK_FIELD.normals)),
     colors: meshPackFloats(blobs.get(MESH_PACK_FIELD.colors)),
@@ -2542,6 +2553,10 @@ export function decodeMeshPackBody(bytes: Uint8Array): MeshPack {
     edgeUvs: meshPackFloats(blobs.get(MESH_PACK_FIELD.edgeUvs)),
     edgeIsSeam: blobs.get(MESH_PACK_FIELD.edgeIsSeam) ?? new Uint8Array(0),
   };
+  for (const [domain, labels] of Object.entries(mesh.componentReferences ?? {})) {
+    const [ids,count]:readonly[Uint32Array,number]=domain==="face"?[mesh.faceIds,mesh.indices.length/3]:domain==="edge"?[mesh.edgeIds,mesh.edgePositions.length/6]:[mesh.vertexIds,mesh.positions.length/3];
+    if (labels.length>count || ids.length!==count || ids.some(id=>id>=labels.length)) throw new Error("decodeMeshPackBody: analytic component references require complete picking buffers");
+  }
   return paintTextureBase64 === undefined ? mesh : { ...mesh, paintTextureBase64 };
 }
 
@@ -2578,6 +2593,8 @@ if (import.meta.vitest) {
 
 //#region 🔖️Types
 export type ChildPackEntry = { readonly slot: string; readonly child_id: string; readonly dialect: string; readonly envelope_pack: readonly number[] };
+/** 🪆️ One owned child's CURRENT head snapshot pack — twin of the Rust `ChildHeadPackEntry` (`AppFrame::ChildHeads`). */
+export type ChildHeadPackEntry = { readonly slot: string; readonly child_id: string; readonly dialect: string; readonly head_pack: readonly number[] };
 export type WindowConfigPackEntry = { readonly window_id: string; readonly window_kind_id: string; readonly envelope_pack: readonly number[] };
 export type DocumentArchiveArtifactRef = { readonly artifact_id: string; readonly artifact_kind: string; readonly standard: string; readonly subset: string };
 export type DocumentArchiveOwnerRef = { readonly parent: DocumentArchiveArtifactRef; readonly slot: string; readonly child_id: string };
@@ -2605,7 +2622,6 @@ export type AppCommandValue =
   | { readonly ContextMenu: { readonly seq: number; readonly request: readonly number[] } }
   | { readonly ArtifactCommand: { readonly seq: number; readonly command: readonly number[] } }
   | { readonly ApplyEnvelopes: { readonly seq: number; readonly envelopes: readonly MutationEnvelope[] } }
-  | { readonly LoadDocument: { readonly seq: number; readonly pack: readonly number[]; readonly spr: readonly number[] } }
   | { readonly ReadDocument: { readonly seq: number } }
   | { readonly LoadDocumentArchive: { readonly seq: number; readonly archive: DocumentArchivePack } }
   | { readonly ReadDocumentArchive: { readonly seq: number } }
@@ -2619,9 +2635,10 @@ export type AppCommandValue =
   | { readonly MediaIn: { readonly seq: number; readonly port: string; readonly descriptor: readonly number[]; readonly data: readonly number[] } }
   | { readonly MediaOut: { readonly seq: number; readonly port: string; readonly request: readonly number[] } }
   | { readonly MediaFingerprint: { readonly seq: number; readonly port: string } }
-  | { readonly PureCommand: { readonly seq: number; readonly command: readonly number[]; readonly document: readonly number[]; readonly document_spr: readonly number[]; readonly config: readonly number[]; readonly config_spr: readonly number[]; readonly draft: readonly number[]; readonly draft_spr: readonly number[] } }
+  | { readonly PureCommand: { readonly seq: number; readonly command: readonly number[]; readonly head: readonly number[] } }
   | { readonly LoadChildren: { readonly seq: number; readonly entries: readonly ChildPackEntry[] } }
   | { readonly ReadChildren: { readonly seq: number } }
+  | { readonly ReadChildHeads: { readonly seq: number } }
   | { readonly ReadHistory: { readonly seq: number } }
   | {
       readonly transactionPrepare: {
@@ -2630,7 +2647,6 @@ export type AppCommandValue =
         readonly mutation_id: string;
         readonly payload: readonly number[];
         readonly prepared_ops: readonly (readonly number[])[];
-        readonly label: string;
         readonly origin: readonly number[];
         readonly prepared_child_ops: readonly number[];
       };
@@ -2694,6 +2710,7 @@ export type AppFrameValue =
   | { readonly Emit: { readonly in_reply_to: number; readonly document_ops: readonly number[]; readonly config_ops: readonly number[]; readonly draft_ops: readonly number[]; readonly output: readonly number[]; readonly diagnostics: readonly number[]; readonly child_ops: readonly number[] } }
   | { readonly Draft: { readonly in_reply_to: number; readonly pack: readonly number[]; readonly spr: readonly number[]; readonly ops: string } }
   | { readonly Children: { readonly in_reply_to: number; readonly entries: readonly ChildPackEntry[] } }
+  | { readonly ChildHeads: { readonly in_reply_to: number; readonly entries: readonly ChildHeadPackEntry[] } }
   | { readonly Ephemeral: { readonly presence: readonly number[]; readonly presence_generation: number; readonly transient_generation: number; readonly interaction: readonly number[]; readonly tool_run: readonly number[]; readonly history_edit: readonly number[] } }
   | { readonly HistorySnapshot: { readonly in_reply_to: number; readonly history_patch: readonly number[] } }
   | {
@@ -2701,8 +2718,6 @@ export type AppFrameValue =
         readonly in_reply_to: number;
         readonly proposal_id: string;
         readonly local_ops: readonly (readonly number[])[];
-        readonly description: string;
-        readonly coalesce_key: string;
         readonly foreign: readonly (readonly number[])[];
       };
     }
@@ -2722,7 +2737,7 @@ export type AppFrameValue =
    * the command that started it returned its "started" `Invocation` long before the retained job
    * finished. `ui_scope`/`history_patch` are `store::pack_rt::encode_wire_value`-encoded exactly like
    * `Invocation`'s same-named fields. CHANNEL_VERSION 15 wire addition. */
-  | { readonly OperationCompleted: { readonly operation: number; readonly revision: bigint; readonly ui_scope: readonly number[]; readonly history_patch: readonly number[] } };
+  | { readonly OperationCompleted: { readonly operation: bigint; readonly revision: bigint; readonly ui_scope: readonly number[]; readonly history_patch: readonly number[] } };
 
 /** 🏁️ One typed operation's terminal completion, decoded from `AppFrame::OperationCompleted`.
  * `uiScope` is the operation's final `kernel::UiDirtyScope` and `historyPatch` its command-log delta,
@@ -2730,7 +2745,7 @@ export type AppFrameValue =
  * never a `{kind, value}` integer carrier); `undefined` when the host published neither. */
 export type OperationCompletionV1 = Readonly<{
   instanceId: number;
-  operation: number;
+  operation: bigint;
   revision: bigint;
   uiScope: unknown;
   historyPatch: unknown;
@@ -2780,6 +2795,20 @@ function writeVecChildPackEntry(out: number[], entries: readonly ChildPackEntry[
 function readVecChildPackEntry(bytes: Uint8Array, pos: [number]): ChildPackEntry[] {
   const count = readVarintU64(bytes, pos);
   return Array.from({ length: count }, () => readChildPackEntry(bytes, pos));
+}
+function writeVecChildHeadPackEntry(out: number[], entries: readonly ChildHeadPackEntry[]): void {
+  writeVarintU64(out, entries.length);
+  for (const entry of entries) {
+    writeStr(out, entry.slot);
+    writeStr(out, entry.child_id);
+    writeStr(out, entry.dialect);
+    writeBytes(out, entry.head_pack);
+  }
+}
+function readVecChildHeadPackEntry(bytes: Uint8Array, pos: [number]): ChildHeadPackEntry[] {
+  const count = readVarintU64(bytes, pos);
+  if (count > DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS) throw new Error("decodeAppFrame: child head count exceeds the member authority");
+  return Array.from({ length: count }, () => ({ slot: readStr(bytes, pos), child_id: readStr(bytes, pos), dialect: readStr(bytes, pos), head_pack: readBytes(bytes, pos) }));
 }
 export const DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS = 1_024;
 function writeDocumentArchive(out: number[], archive: DocumentArchivePack): void {
@@ -2884,21 +2913,21 @@ function assertAppDocumentIdentity(identity: AppDocumentIdentity): void {
 
 const APP_COMMAND_TAGS = {
   ConfigCommand: 0, Command: 1, CommandText: 2, ContextMenu: 3, ArtifactCommand: 4, ApplyEnvelopes: 5,
-  LoadDocument: 6, ReadDocument: 7, LoadConfig: 8, ReadConfig: 9, MediaIn: 10, MediaOut: 11,
+  ReadDocument: 7, LoadConfig: 8, ReadConfig: 9, MediaIn: 10, MediaOut: 11,
   MediaFingerprint: 12, PureCommand: 13, LoadChildren: 14, ReadChildren: 15, ReadHistory: 16,
   transactionPrepare: 17, transactionCommit: 18, transactionRollback: 19, transactionUndo: 20, transactionRedo: 21,
   openArtifact: 22, setDefaultApp: 23, clearDefaultApp: 24,
   setMergePolicy: 25, resolveConflict: 26, readConflicts: 27,
   presence: 28, LocalInteractionQuery: 29, LoadWindowConfig: 30, ReadWindowConfigs: 31, LoadDocumentArchive: 32, ReadDocumentArchive: 33,
   PollDocumentArchiveLoad: 34, CancelDocumentArchiveLoad: 35, AcknowledgeDocumentArchiveLoad: 36,
-  SubmitMediaExport: 37, PollMediaExport: 38, CancelMediaExport: 39, TakeMediaExportChunk: 40, ReadDocumentIdentity: 41,
+  SubmitMediaExport: 37, PollMediaExport: 38, CancelMediaExport: 39, TakeMediaExportChunk: 40, ReadDocumentIdentity: 41, ReadChildHeads: 42,
 } as const;
 const APP_FRAME_TAGS = {
   Done: 0, Invocation: 1, DocumentChanged: 2, Document: 3,
   Config: 4, ConfigChanged: 5, ContextMenu: 6, Media: 7, MediaFingerprint: 8, Error: 9, Emit: 10, Draft: 11, Children: 12, Ephemeral: 13, HistorySnapshot: 14,
   transactionProposal: 15, transactionPrepared: 16, transactionCommitted: 17, transactionRolledBack: 18,
   MergeReport: 19, Conflicts: 20, UiPatch: 21, UiSnapshotEnd: 22, LocalInteractionQuery: 23, WindowConfigs: 24, OperationCompleted: 25, DocumentArchive: 26, DocumentArchiveLoad: 27,
-  MediaExportSubmitted: 28, MediaExportStatus: 29, MediaExportChunk: 30, DocumentIdentity: 31,
+  MediaExportSubmitted: 28, MediaExportStatus: 29, MediaExportChunk: 30, DocumentIdentity: 31, ChildHeads: 32,
 } as const;
 
 /** 📤️ `tag u8 | fields` — the TS twin of `protocol_channel::encode_app_command` (agreed contract). */
@@ -2947,11 +2976,6 @@ export function encodeAppCommand(cmd: AppCommandValue): Uint8Array {
       out,
       cmd.ApplyEnvelopes.envelopes.map((envelope, index) => mutationEnvelopeToWire(envelope, { actor: 0, physical_ms: 0, logical: index + 1 }, replicationPackCodec)),
     );
-  } else if ("LoadDocument" in cmd) {
-    out.push(APP_COMMAND_TAGS.LoadDocument);
-    writeVarintU64(out, cmd.LoadDocument.seq);
-    writeBytes(out, cmd.LoadDocument.pack);
-    writeBytes(out, cmd.LoadDocument.spr);
   } else if ("ReadDocument" in cmd) {
     out.push(APP_COMMAND_TAGS.ReadDocument);
     writeVarintU64(out, cmd.ReadDocument.seq);
@@ -3008,12 +3032,7 @@ export function encodeAppCommand(cmd: AppCommandValue): Uint8Array {
     out.push(APP_COMMAND_TAGS.PureCommand);
     writeVarintU64(out, cmd.PureCommand.seq);
     writeBytes(out, cmd.PureCommand.command);
-    writeBytes(out, cmd.PureCommand.document);
-    writeBytes(out, cmd.PureCommand.document_spr);
-    writeBytes(out, cmd.PureCommand.config);
-    writeBytes(out, cmd.PureCommand.config_spr);
-    writeBytes(out, cmd.PureCommand.draft);
-    writeBytes(out, cmd.PureCommand.draft_spr);
+    writeBytes(out, cmd.PureCommand.head);
   } else if ("LoadChildren" in cmd) {
     out.push(APP_COMMAND_TAGS.LoadChildren);
     writeVarintU64(out, cmd.LoadChildren.seq);
@@ -3021,6 +3040,9 @@ export function encodeAppCommand(cmd: AppCommandValue): Uint8Array {
   } else if ("ReadChildren" in cmd) {
     out.push(APP_COMMAND_TAGS.ReadChildren);
     writeVarintU64(out, cmd.ReadChildren.seq);
+  } else if ("ReadChildHeads" in cmd) {
+    out.push(APP_COMMAND_TAGS.ReadChildHeads);
+    writeVarintU64(out, cmd.ReadChildHeads.seq);
   } else if ("ReadHistory" in cmd) {
     out.push(APP_COMMAND_TAGS.ReadHistory);
     writeVarintU64(out, cmd.ReadHistory.seq);
@@ -3031,7 +3053,6 @@ export function encodeAppCommand(cmd: AppCommandValue): Uint8Array {
     writeStr(out, cmd.transactionPrepare.mutation_id);
     writeBytes(out, cmd.transactionPrepare.payload);
     writeVecBytes(out, cmd.transactionPrepare.prepared_ops);
-    writeStr(out, cmd.transactionPrepare.label);
     writeBytes(out, cmd.transactionPrepare.origin);
     writeBytes(out, cmd.transactionPrepare.prepared_child_ops);
   } else if ("transactionCommit" in cmd) {
@@ -3137,12 +3158,6 @@ export function decodeAppCommand(bytes: Uint8Array): AppCommandValue {
       const wire = readVecEnvelope(bytes, pos);
       return { ApplyEnvelopes: { seq, envelopes: wire.map((envelope) => mutationEnvelopeFromWire(envelope, replicationPackCodec)) } };
     }
-    case APP_COMMAND_TAGS.LoadDocument: {
-      const seq = readVarintU64(bytes, pos);
-      const pack = readBytes(bytes, pos);
-      const spr = readBytes(bytes, pos);
-      return { LoadDocument: { seq, pack, spr } };
-    }
     case APP_COMMAND_TAGS.ReadDocument:
       return { ReadDocument: { seq: readVarintU64(bytes, pos) } };
     case APP_COMMAND_TAGS.LoadConfig: {
@@ -3183,11 +3198,13 @@ export function decodeAppCommand(bytes: Uint8Array): AppCommandValue {
     case APP_COMMAND_TAGS.MediaFingerprint:
       return { MediaFingerprint: { seq: readVarintU64(bytes, pos), port: readStr(bytes, pos) } };
     case APP_COMMAND_TAGS.PureCommand:
-      return { PureCommand: { seq: readVarintU64(bytes, pos), command: readBytes(bytes, pos), document: readBytes(bytes, pos), document_spr: readBytes(bytes, pos), config: readBytes(bytes, pos), config_spr: readBytes(bytes, pos), draft: readBytes(bytes, pos), draft_spr: readBytes(bytes, pos) } };
+      return { PureCommand: { seq: readVarintU64(bytes, pos), command: readBytes(bytes, pos), head: readBytes(bytes, pos) } };
     case APP_COMMAND_TAGS.LoadChildren:
       return { LoadChildren: { seq: readVarintU64(bytes, pos), entries: readVecChildPackEntry(bytes, pos) } };
     case APP_COMMAND_TAGS.ReadChildren:
       return { ReadChildren: { seq: readVarintU64(bytes, pos) } };
+    case APP_COMMAND_TAGS.ReadChildHeads:
+      return { ReadChildHeads: { seq: readVarintU64(bytes, pos) } };
     case APP_COMMAND_TAGS.ReadHistory:
       return { ReadHistory: { seq: readVarintU64(bytes, pos) } };
     case APP_COMMAND_TAGS.transactionPrepare: {
@@ -3196,10 +3213,9 @@ export function decodeAppCommand(bytes: Uint8Array): AppCommandValue {
       const mutation_id = readStr(bytes, pos);
       const payload = readBytes(bytes, pos);
       const prepared_ops = readVecBytes(bytes, pos);
-      const label = readStr(bytes, pos);
       const origin = readBytes(bytes, pos);
       const prepared_child_ops = readBytes(bytes, pos);
-      return { transactionPrepare: { seq, txn_id, mutation_id, payload, prepared_ops, label, origin, prepared_child_ops } };
+      return { transactionPrepare: { seq, txn_id, mutation_id, payload, prepared_ops, origin, prepared_child_ops } };
     }
     case APP_COMMAND_TAGS.transactionCommit:
       return { transactionCommit: { seq: readVarintU64(bytes, pos), txn_id: readStr(bytes, pos) } };
@@ -3393,6 +3409,10 @@ export function encodeAppFrame(frame: AppFrameValue): Uint8Array {
     out.push(APP_FRAME_TAGS.Children);
     writeVarintU64(out, frame.Children.in_reply_to);
     writeVecChildPackEntry(out, frame.Children.entries);
+  } else if ("ChildHeads" in frame) {
+    out.push(APP_FRAME_TAGS.ChildHeads);
+    writeVarintU64(out, frame.ChildHeads.in_reply_to);
+    writeVecChildHeadPackEntry(out, frame.ChildHeads.entries);
   } else if ("Ephemeral" in frame) {
     out.push(APP_FRAME_TAGS.Ephemeral);
     writeBytes(out, frame.Ephemeral.presence);
@@ -3410,8 +3430,6 @@ export function encodeAppFrame(frame: AppFrameValue): Uint8Array {
     writeVarintU64(out, frame.transactionProposal.in_reply_to);
     writeStr(out, frame.transactionProposal.proposal_id);
     writeVecBytes(out, frame.transactionProposal.local_ops);
-    writeStr(out, frame.transactionProposal.description);
-    writeStr(out, frame.transactionProposal.coalesce_key);
     writeVecBytes(out, frame.transactionProposal.foreign);
   } else if ("transactionPrepared" in frame) {
     out.push(APP_FRAME_TAGS.transactionPrepared);
@@ -3449,7 +3467,7 @@ export function encodeAppFrame(frame: AppFrameValue): Uint8Array {
     writeVarintU64(out, frame.UiSnapshotEnd.revision);
   } else if ("OperationCompleted" in frame) {
     out.push(APP_FRAME_TAGS.OperationCompleted);
-    writeVarintU64(out, frame.OperationCompleted.operation);
+    writeVarintU64Exact(out, frame.OperationCompleted.operation);
     writeVarintU64Exact(out, frame.OperationCompleted.revision);
     writeBytes(out, frame.OperationCompleted.ui_scope);
     writeBytes(out, frame.OperationCompleted.history_patch);
@@ -3570,6 +3588,8 @@ export function decodeAppFrame(bytes: Uint8Array): AppFrameValue {
       return { Draft: { in_reply_to: readVarintU64(bytes, pos), pack: readBytes(bytes, pos), spr: readBytes(bytes, pos), ops: readStr(bytes, pos) } };
     case APP_FRAME_TAGS.Children:
       return { Children: { in_reply_to: readVarintU64(bytes, pos), entries: readVecChildPackEntry(bytes, pos) } };
+    case APP_FRAME_TAGS.ChildHeads:
+      return { ChildHeads: { in_reply_to: readVarintU64(bytes, pos), entries: readVecChildHeadPackEntry(bytes, pos) } };
     case APP_FRAME_TAGS.Ephemeral:
       return {
         Ephemeral: { presence: readBytes(bytes, pos), presence_generation: readVarintU64(bytes, pos), transient_generation: readVarintU64(bytes, pos), interaction: readBytes(bytes, pos), tool_run: readBytes(bytes, pos), history_edit: readBytes(bytes, pos) },
@@ -3580,10 +3600,8 @@ export function decodeAppFrame(bytes: Uint8Array): AppFrameValue {
       const in_reply_to = readVarintU64(bytes, pos);
       const proposal_id = readStr(bytes, pos);
       const local_ops = readVecBytes(bytes, pos);
-      const description = readStr(bytes, pos);
-      const coalesce_key = readStr(bytes, pos);
       const foreign = readVecBytes(bytes, pos);
-      return { transactionProposal: { in_reply_to, proposal_id, local_ops, description, coalesce_key, foreign } };
+      return { transactionProposal: { in_reply_to, proposal_id, local_ops, foreign } };
     }
     case APP_FRAME_TAGS.transactionPrepared: {
       const txn_id = readStr(bytes, pos);
@@ -3611,7 +3629,7 @@ export function decodeAppFrame(bytes: Uint8Array): AppFrameValue {
     case APP_FRAME_TAGS.UiSnapshotEnd:
       return { UiSnapshotEnd: { revision: readVarintU64(bytes, pos) } };
     case APP_FRAME_TAGS.OperationCompleted: {
-      const operation = readVarintU64(bytes, pos);
+      const operation = readVarintU64Exact(bytes, pos);
       const revision = readVarintU64Exact(bytes, pos);
       const ui_scope = readBytes(bytes, pos);
       const history_patch = readBytes(bytes, pos);
@@ -3704,9 +3722,21 @@ export function decodeConflictsFromWire(conflictsBytes: readonly number[], decod
 /** 📡️ TS twin of `protocol_channel::CHANNEL_VERSION`. Both constants are pinned against
  * `🧫️fixtures/📡️channel/🔖️channel-version.json`, which owns the number — this one sat at 8 while Rust
  * had moved to 10, so the pin exists to make a half-done bump fail a test instead of a session.
- * Channel v12 retired the `Hello`/`Welcome` handshake this constant used to be carried on — it now
- * exists purely for the drift-guard test below. */
-export const APP_CHANNEL_VERSION = 20;
+ * Channel v12 retired the `Hello`/`Welcome` handshake this constant used to be carried on; since v21 every host admits a guest
+ * against it through {@link admitGuestChannelVersion} before any frame. */
+export const APP_CHANNEL_VERSION = 21;
+
+/** 🤝️ Fault code of a guest compiled for another app-channel version than its host — TS twin of Rust `CHANNEL_MISMATCH_CODE`. */
+export const CHANNEL_MISMATCH_CODE = "plugin.channel-mismatch";
+
+/** 🤝️ Admits a guest compiled for the host's app-channel version (`reactor.channelVersion()`, read once right after instantiation);
+ * any other version, older or newer, is refused before a single frame with the framework fault `plugin.channel-mismatch`, whose
+ * notice names `{guest}` and `{host}`. `null` admits. TS twin of Rust `admit_guest_channel_version`, corpus
+ * `🧫️fixtures/🧫️channel-handshake`. Self-contained: the materialized jco bridge embeds it verbatim. */
+export function admitGuestChannelVersion(guest: number, host: number): Fault | null {
+  if (guest === host) return null;
+  return { origin: "framework", code: "plugin.channel-mismatch", severity: "error", message: `the guest speaks app channel ${guest}, the host app channel ${host}`, scope: {}, params: { guest: String(guest), host: String(host) }, retryable: false };
+}
 
 /** 📡️ The slice of {@link PluginWasmHandle} {@link AppChannelClient} needs — deliberately narrower
  * than the full handle so a caller can hand in any object shaped like it (a real handle, a test
@@ -3788,6 +3818,123 @@ export class AppChannelRequestSequence {
 }
 //#endregion 🏠️LocalQueryOwnership
 
+//#region 🗃️DocumentArchiveLoadHost
+/** 🏁️ How one host-driven whole-document load ended (`📓️api-stepped-document-load.md` §2.3): twin of the Rust
+ * `DocumentArchiveLoadOutcome`. `cancelled` and `fault` both left the previous document exactly as it was. */
+export type DocumentArchiveLoadOutcome = { readonly kind: "ready" } | { readonly kind: "cancelled" } | { readonly kind: "fault"; readonly fault: readonly number[] };
+
+/** 🧭️ The next command to send, stamped with the sequence the host minted for it, or the outcome once the load is over. */
+export type DocumentArchiveLoadStep = { readonly kind: "send"; readonly seq: number; readonly command: AppCommandValue } | { readonly kind: "finished"; readonly outcome: DocumentArchiveLoadOutcome };
+
+/** 📬️ What one answer moved the load to: the polled status (`null` for every other command), or what it cannot go on from —
+ * the guest's encoded refusal, or a frame that answers another command. */
+export type DocumentArchiveLoadAnswer = { readonly kind: "status"; readonly status: DocumentArchiveLoadStatus | null } | { readonly kind: "refused"; readonly fault: readonly number[] } | { readonly kind: "unanswered" };
+
+type DocumentArchiveLoadSent = "admit" | "poll" | "cancel" | "acknowledge";
+
+/** 🗃️ The host half of the stepped, ACK-owned whole-document load: the TS twin of the Rust `DocumentArchiveLoadHost`
+ * (`🔨️modules/📡️spr/🧵️channel/🦀️.rs`), a transport-free state machine both replay against one corpus
+ * (`🔨️modules/📡️spr/🧵️channel/🧫️fixtures/🧫️document-archive-load-host/🔣️.json`). The admission's own sequence is the operation, a
+ * host's sequence is minted only for a command that is sent, and steps and answers alternate. A cancel before admission sends nothing; after admission it is sent once and polling goes on
+ * until the guest's terminal status says whether the previous document was restored (a refused cancel lost the race). A
+ * cancelled terminal whose acknowledgement is refused still owns retained input, so it is polled again. */
+export class DocumentArchiveLoadHost {
+  private archive: DocumentArchivePack | null;
+  private admitted: number | null = null;
+  private sent: { readonly seq: number; readonly kind: DocumentArchiveLoadSent } | null = null;
+  private cancelRequested = false;
+  private cancelSent = false;
+  private terminal: DocumentArchiveLoadStatus | null = null;
+  private outcome: DocumentArchiveLoadOutcome | null = null;
+
+  constructor(archive: DocumentArchivePack) {
+    this.archive = archive;
+  }
+
+  /** 🎞️ A load the guest admitted itself under `operation`, the host sequence of the command that started it (a `MediaIn` of a
+   * whole document of the app's own schema answers its pending status): driven from its first poll like an admission this host sent. */
+  static admitted(operation: number): DocumentArchiveLoadHost {
+    const host = new DocumentArchiveLoadHost({ parent_pack: [], parent_spr: [], members: [] });
+    host.archive = null;
+    host.admitted = operation;
+    return host;
+  }
+
+  /** 🔢️ The admitted operation, once the admission was sent. */
+  get operation(): number | null {
+    return this.admitted;
+  }
+
+  /** 🛑️ Asks for the load to stop; idempotent, and a no-op once a terminal status is known. */
+  requestCancel(): void {
+    this.cancelRequested = true;
+    if (this.admitted === null && this.outcome === null) {
+      this.archive = null;
+      this.outcome = { kind: "cancelled" };
+    }
+  }
+
+  /** ➡️ The next command, stamped with a sequence from `nextSeq`, or the outcome once the load is over. */
+  step(nextSeq: () => number): DocumentArchiveLoadStep {
+    if (this.outcome) return { kind: "finished", outcome: this.outcome };
+    const seq = nextSeq();
+    const operation = this.admitted;
+    const [kind, command]: readonly [DocumentArchiveLoadSent, AppCommandValue] =
+      operation === null ? ["admit", { LoadDocumentArchive: { seq, archive: this.archive ?? { parent_pack: [], parent_spr: [], members: [] } } }]
+      : this.terminal ? ["acknowledge", { AcknowledgeDocumentArchiveLoad: { seq, operation } }]
+      : this.cancelRequested && !this.cancelSent ? ["cancel", { CancelDocumentArchiveLoad: { seq, operation } }]
+      : ["poll", { PollDocumentArchiveLoad: { seq, operation } }];
+    if (kind === "admit") {
+      this.admitted = seq;
+      this.archive = null;
+    }
+    this.sent = { seq, kind };
+    return { kind: "send", seq, command };
+  }
+
+  /** 📬️ Takes the guest's answer to the command sent under `seq`. */
+  answer(seq: number, frame: AppFrameValue): DocumentArchiveLoadAnswer {
+    const sent = this.sent;
+    const operation = this.admitted;
+    this.sent = null;
+    if (sent === null || sent.seq !== seq || operation === null) return { kind: "unanswered" };
+    if ("Done" in frame && frame.Done.in_reply_to === seq && sent.kind !== "poll") {
+      if (sent.kind === "cancel") this.cancelSent = true;
+      if (sent.kind === "acknowledge") {
+        const terminal = this.terminal;
+        if (!terminal) return { kind: "unanswered" };
+        this.terminal = null;
+        this.outcome = terminal.state === "ready" ? { kind: "ready" } : terminal.state === "cancelled" ? { kind: "cancelled" } : { kind: "fault", fault: terminal.fault };
+      }
+      return { kind: "status", status: null };
+    }
+    if ("DocumentArchiveLoad" in frame && sent.kind === "poll" && frame.DocumentArchiveLoad.in_reply_to === seq && frame.DocumentArchiveLoad.status.operation === operation) {
+      const status = frame.DocumentArchiveLoad.status;
+      if (status.state === "ready" || status.state === "cancelled" || status.state === "fault") this.terminal = status;
+      return { kind: "status", status };
+    }
+    if ("Error" in frame && frame.Error.in_reply_to === seq) {
+      if (sent.kind === "cancel") {
+        this.cancelSent = true;
+        return { kind: "status", status: null };
+      }
+      if (sent.kind === "acknowledge" && this.terminal?.state === "cancelled") {
+        this.terminal = null;
+        return { kind: "status", status: null };
+      }
+      return { kind: "refused", fault: frame.Error.fault };
+    }
+    return { kind: "unanswered" };
+  }
+}
+
+/** 🎯️ The one frame of a command's reply that answers `seq`: its refusal first, else its `Done` or archive-load status. */
+function documentArchiveLoadReplyV1(frames: readonly AppFrameValue[], seq: number): AppFrameValue | undefined {
+  return frames.find((frame) => "Error" in frame && frame.Error.in_reply_to === seq)
+    ?? frames.find((frame) => ("Done" in frame && frame.Done.in_reply_to === seq) || ("DocumentArchiveLoad" in frame && frame.DocumentArchiveLoad.in_reply_to === seq));
+}
+//#endregion 🗃️DocumentArchiveLoadHost
+
 /** ⏳️ Resolves on the next macrotask — where a document-archive load waits between polls, so the page's timers, input
  * and rendering (the Tasks window's Cancel) run while the guest works; a microtask-only re-poll starved them. */
 function nextArchivePollTurnV1(): Promise<void> {
@@ -3804,7 +3951,7 @@ export type AppChannelOperationProgressV1 = { readonly uiScope?: unknown; readon
  * {@link TurnOutcome} carries. This is the ONLY place `AppCommand`/`AppFrame` framing happens on the
  * host side; callers (a React renderer's dispatch/refresh loop, a headless workflow runner) work with
  * decoded frames and plain JS values, never raw bytes or wire tags. `seq` is a handle-owned monotonic
- * counter — the host has no other way to correlate a `Command`/`ConfigCommand`/`LoadDocument`/
+ * counter — the host has no other way to correlate a `Command`/`ConfigCommand`/
  * `ReadDocument`/`LoadConfig`/`ReadConfig` with the `Invocation`/`Document` frame(s) it produced
  * (`AppFrame.*.in_reply_to`). Channel v12 retired the `hello()`/`refreshUi()`/`attachBackbone()`/
  * `detachBackbone()`/`drain()` surface this class used to expose — the handshake, cache-probed UI
@@ -3834,13 +3981,13 @@ export class AppChannelClient {
   private readonly actor: string;
   private readonly sequenceOwner: AppChannelRequestSequence;
   private readonly outcomeIterator: AsyncIterator<TurnOutcome>;
-  private readonly pending: { readonly seq: number; readonly queryReceipt: boolean; readonly transaction: AppChannelTransactionReply | null; readonly document: { readonly pack: Uint8Array; readonly spr: Uint8Array } | null; readonly resolve: (frames: AppFrameValue[]) => void; readonly reject: (error: unknown) => void }[] = [];
+  private readonly pending: { readonly seq: number; readonly queryReceipt: boolean; readonly transaction: AppChannelTransactionReply | null; readonly resolve: (frames: AppFrameValue[]) => void; readonly reject: (error: unknown) => void }[] = [];
   /** 📦️ Per-instance document-pack cache (ticket
    * 26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS, scout-1 §4: "the
    * browser host keeps NO document pack per instance today"). Populated from BOTH directions —
-   * {@link loadDocument}'s accepted arguments and every
-   * `AppFrame::Document` reply any sent command's outcome carries (`ReadDocument`, `LoadDocument`'s
-   * own echo, or any future command that happens to include one) — so a transaction coordinator can
+   * {@link loadDocumentArchive}'s ready root pair and every
+   * `AppFrame::Document` reply any sent command's outcome carries (`ReadDocument`, or any future command that
+   * happens to include one) — so a transaction coordinator can
    * ask "what does this instance's document look like right now" without a dedicated round trip. */
   private cachedPack: Uint8Array | null = null;
   private cachedSpr: Uint8Array | null = null;
@@ -3906,7 +4053,7 @@ export class AppChannelClient {
         if (!correlated.has(waiter.seq)) { index += 1; continue; }
         this.pending.splice(index, 1);
         const reply = ordinary.filter((frame) => appChannelFrameBelongsTo(frame, waiter.seq, waiter.transaction));
-        this.captureDocumentFrames(reply, waiter.document);
+        this.captureDocumentFrames(reply);
         waiter.resolve(reply);
       }
       this.finishDisposal();
@@ -4009,12 +4156,8 @@ export class AppChannelClient {
 
   /** 📦️ Scans every frame one sent command's outcome carried for `AppFrame::Document` and refreshes
    * the pack cache — the "every `AppFrame::Document` reply" half of the cache-population contract. */
-  private captureDocumentFrames(frames: readonly AppFrameValue[], candidate: { readonly pack: Uint8Array; readonly spr: Uint8Array } | null): void {
+  private captureDocumentFrames(frames: readonly AppFrameValue[]): void {
     if (this.disposed || frames.some(frame => "Error" in frame)) return;
-    if (candidate && frames.some(frame => "Done" in frame)) {
-      this.cachedPack = candidate.pack;
-      this.cachedSpr = candidate.spr;
-    }
     for (const frame of frames) {
       if ("Document" in frame) {
         this.cachedPack = new Uint8Array(frame.Document.pack);
@@ -4024,7 +4167,7 @@ export class AppChannelClient {
   }
 
   /** 📦️ The cached `{pack, spr}` for this instance's document, or `null` before any
-   * accepted {@link loadDocument} call or `AppFrame::Document` reply has been observed. Surfaced to the
+   * ready {@link loadDocumentArchive} or `AppFrame::Document` reply has been observed. Surfaced to the
    * transaction coordinator through the `PluginWasmHandle` adapter's own `documentPack` accessor
    * (`PluginRuntime/🟦️.tsx`) — a contributor plan call needs the target's current snapshot
    * pack, and this is the only place that snapshot is retained host-side. */
@@ -4043,8 +4186,7 @@ export class AppChannelClient {
       const wireSequence = Object.values(command)[0]!.seq;
       const seq = Number(wireSequence);
       if (!Number.isSafeInteger(seq) || seq < 0) { reject(new Error("app-channel.invalid-sequence-owner")); return; }
-      const document = "LoadDocument" in command ? { pack: Uint8Array.from(command.LoadDocument.pack), spr: Uint8Array.from(command.LoadDocument.spr) } : null;
-      const waiter = { seq, queryReceipt: false, transaction: appChannelTransactionReply(command), document, resolve, reject };
+      const waiter = { seq, queryReceipt: false, transaction: appChannelTransactionReply(command), resolve, reject };
       this.pending.push(waiter);
       try { this.handle.enqueue(this.instanceId, [encodeAppCommand(command)], dispatch); }
       catch (error) {
@@ -4074,7 +4216,7 @@ export class AppChannelClient {
   }
 
   private sendLocalInteractionQuery(seq: number, command: LocalInteractionQueryCommand): void {
-    this.pending.push({ seq, queryReceipt: true, transaction: null, document: null, resolve: () => {}, reject: (error: unknown) => this.finishLocalInteractionQuery(error) });
+    this.pending.push({ seq, queryReceipt: true, transaction: null, resolve: () => {}, reject: (error: unknown) => this.finishLocalInteractionQuery(error) });
     try { this.handle.enqueue(this.instanceId, [encodeAppCommand({ LocalInteractionQuery: { seq, command } })]); }
     catch (error) {
       const index = this.pending.findIndex((waiter) => waiter.seq === seq);
@@ -4180,8 +4322,16 @@ export class AppChannelClient {
     return identity;
   }
 
-  async loadDocument(pack: Uint8Array, spr: Uint8Array): Promise<AppFrameValue[]> {
-    return this.sendCommand({ LoadDocument: { seq: this.nextSeq(), pack: Array.from(pack), spr: Array.from(spr) } });
+  /** 🪆️ Reads every owned child's CURRENT head snapshot pack (`AppCommand::ReadChildHeads` → `AppFrame::ChildHeads`), for a
+   * reader that composes parent + children on read (design §20.15). A guest fault rejects with the guest's own fault text. */
+  async readChildHeads(): Promise<readonly ChildHeadPackEntry[]> {
+    const seq = this.nextSeq();
+    const frames = await this.sendCommand({ ReadChildHeads: { seq } });
+    const error = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
+    if (error) throw new Error(`AppChannelClient.readChildHeads(${this.appId}): ${faultDisplayMessage(error.Error.fault, decodePackValue)}`);
+    const heads = frames.find((frame): frame is Extract<AppFrameValue, { readonly ChildHeads: unknown }> => "ChildHeads" in frame && frame.ChildHeads.in_reply_to === seq);
+    if (!heads) throw new Error(`AppChannelClient.readChildHeads(${this.appId}): missing ChildHeads frame for seq ${seq}`);
+    return heads.ChildHeads.entries;
   }
 
   /** 📤️ Produces one OUT port's current bytes (`AppCommand::MediaOut` → `AppFrame::Media`) — the
@@ -4190,6 +4340,11 @@ export class AppChannelClient {
    * over the live-shell route and one over the headless route ask the guest the identical question. */
   async mediaOut(port: string): Promise<AppFrameValue[]> {
     return this.sendCommand({ MediaOut: { seq: this.nextSeq(), port, request: [] } });
+  }
+
+  /** 📂️ Delivers one typed media artifact to a fresh or existing app instance. */
+  async mediaIn(port: string, descriptor: unknown, data: Uint8Array): Promise<AppFrameValue[]> {
+    return this.sendCommand({ MediaIn: { seq: this.nextSeq(), port, descriptor: Array.from(encodePackValue(descriptor)), data: Array.from(data) } });
   }
 
   /** 🎬️ Admits media work only against the caller's exact document and revision. */
@@ -4212,56 +4367,36 @@ export class AppChannelClient {
     return this.sendCommand({ TakeMediaExportChunk: { seq: BigInt(this.nextSeq()), handle } });
   }
 
-  /** 🗃️ Restores one root envelope and its complete recursive owned-member closure atomically. */
+  /** 🗃️ Restores one root envelope and its complete recursive owned-member closure atomically, stepped through
+   * {@link DocumentArchiveLoadHost}: `progress` hears every polled status, `signal` cancels. A cancel before admission sends
+   * nothing; after it the guest restores the previous document, and the load rejects with the signal's reason — or an
+   * `AbortError` when the guest cancelled on its own (a person's Cancel in the history body). A cancel that lost the race
+   * resolves, because the document did load. A refusal or a guest fault rejects with the guest's own fault text. */
   async loadDocumentArchive(
     archive: DocumentArchivePack,
     signal?: AbortSignal,
     progress?: (status: DocumentArchiveLoadStatus) => void,
   ): Promise<void> {
-    const operation = this.nextSeq();
-    const admitted = await this.sendCommand({ LoadDocumentArchive: { seq: operation, archive } });
-    const admissionError = admitted.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
-    if (admissionError) throw new Error(`AppChannelClient.loadDocumentArchive(${this.appId}): ${faultDisplayMessage(admissionError.Error.fault, decodePackValue)}`);
-    if (!admitted.some((frame) => "Done" in frame && frame.Done.in_reply_to === operation)) {
-      throw new Error(`AppChannelClient.loadDocumentArchive(${this.appId}): missing admission Done frame for seq ${operation}`);
-    }
-    let cancellationSent = false;
+    const load = new DocumentArchiveLoadHost(archive);
+    const root = { pack: Uint8Array.from(archive.parent_pack), spr: Uint8Array.from(archive.parent_spr) };
     for (;;) {
-      if (signal?.aborted && !cancellationSent) {
-        const cancelSequence = this.nextSeq();
-        const cancelled = await this.sendCommand({ CancelDocumentArchiveLoad: { seq: cancelSequence, operation } });
-        const cancelError = cancelled.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
-        if (cancelError) throw new Error(`AppChannelClient.loadDocumentArchive(${this.appId}): ${faultDisplayMessage(cancelError.Error.fault, decodePackValue)}`);
-        cancellationSent = true;
+      if (signal?.aborted) load.requestCancel();
+      const step = load.step(() => this.nextSeq());
+      if (step.kind === "finished") {
+        if (step.outcome.kind === "cancelled") throw signal?.reason ?? new DOMException(`AppChannelClient.loadDocumentArchive(${this.appId}): cancelled`, "AbortError");
+        if (step.outcome.kind === "fault") throw new Error(`AppChannelClient.loadDocumentArchive(${this.appId}): ${faultDisplayMessage(step.outcome.fault, decodePackValue)}`);
+        this.cachedPack = root.pack;
+        this.cachedSpr = root.spr;
+        return;
       }
-      const pollSequence = this.nextSeq();
-      const polled = await this.sendCommand({ PollDocumentArchiveLoad: { seq: pollSequence, operation } });
-      const pollError = polled.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
-      if (pollError) throw new Error(`AppChannelClient.loadDocumentArchive(${this.appId}): ${faultDisplayMessage(pollError.Error.fault, decodePackValue)}`);
-      const frame = polled.find(
-        (candidate): candidate is Extract<AppFrameValue, { readonly DocumentArchiveLoad: unknown }> =>
-          "DocumentArchiveLoad" in candidate && candidate.DocumentArchiveLoad.in_reply_to === pollSequence && candidate.DocumentArchiveLoad.status.operation === operation,
-      );
-      if (!frame) throw new Error(`AppChannelClient.loadDocumentArchive(${this.appId}): missing operation status for ${operation}`);
-      const status = frame.DocumentArchiveLoad.status;
-      progress?.(status);
-      if (status.state === "pending" || status.state === "running") {
-        await nextArchivePollTurnV1();
-        continue;
-      }
-      const acknowledgeSequence = this.nextSeq();
-      const acknowledged = await this.sendCommand({ AcknowledgeDocumentArchiveLoad: { seq: acknowledgeSequence, operation } });
-      const acknowledgeError = acknowledged.find((candidate): candidate is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in candidate);
-      if (acknowledgeError && status.state === "cancelled") {
-        await nextArchivePollTurnV1();
-        continue;
-      }
-      if (acknowledgeError) throw new Error(`AppChannelClient.loadDocumentArchive(${this.appId}): ${faultDisplayMessage(acknowledgeError.Error.fault, decodePackValue)}`);
-      if (status.state === "cancelled") throw signal?.reason ?? new Error(`AppChannelClient.loadDocumentArchive(${this.appId}): cancelled`);
-      if (status.state === "fault") throw new Error(`AppChannelClient.loadDocumentArchive(${this.appId}): ${faultDisplayMessage(status.fault, decodePackValue)}`);
-      this.cachedPack = Uint8Array.from(archive.parent_pack);
-      this.cachedSpr = Uint8Array.from(archive.parent_spr);
-      return;
+      const seq = step.seq;
+      const replyFrames = await this.sendCommand(step.command);
+      const frame = documentArchiveLoadReplyV1(replyFrames, seq);
+      const answer: DocumentArchiveLoadAnswer = frame ? load.answer(seq, frame) : { kind: "unanswered" };
+      if (answer.kind === "refused") throw new Error(`AppChannelClient.loadDocumentArchive(${this.appId}): ${faultDisplayMessage(answer.fault, decodePackValue)}`);
+      if (answer.kind === "unanswered") throw new Error(`AppChannelClient.loadDocumentArchive(${this.appId}): no answer to seq ${seq} of operation ${load.operation}`);
+      if (answer.status) progress?.(answer.status);
+      if (answer.status ? answer.status.state === "pending" || answer.status.state === "running" : frame !== undefined && "Error" in frame) await nextArchivePollTurnV1();
     }
   }
 
@@ -4416,15 +4551,15 @@ export class AppChannelClient {
    * its OWNING plugin. */
   async transactionPrepareOwner(txnId: string, mutationId: string, payload: Uint8Array): Promise<AppFrameValue[]> {
     return this.sendCommand({
-      transactionPrepare: { seq: this.nextSeq(), txn_id: txnId, mutation_id: mutationId, payload: Array.from(payload), prepared_ops: [], label: "", origin: [], prepared_child_ops: [] },
+      transactionPrepare: { seq: this.nextSeq(), txn_id: txnId, mutation_id: mutationId, payload: Array.from(payload), prepared_ops: [], origin: [], prepared_child_ops: [] },
     });
   }
 
-  /** 🎫️ `TransactionPrepare`, pre-planned wire form: `preparedOps`/`label`/`origin` set, `mutationId`
+  /** 🎫️ `TransactionPrepare`, pre-planned wire form: `preparedOps`/`origin` set, `mutationId`
    * empty. Sent to a CONTRIBUTED-mutation target (after the host has already called the contributor's
    * `contributor.artifact-mutation-plan`) or to any member the coordinator is re-batching several
    * already-known ops onto in one call — see `PluginRuntime/🟦️.tsx`'s `TransactionCoordinator`. */
-  async transactionPreparePlanned(txnId: string, preparedOps: readonly Uint8Array[], label: string, origin: Uint8Array): Promise<AppFrameValue[]> {
+  async transactionPreparePlanned(txnId: string, preparedOps: readonly Uint8Array[], origin: Uint8Array): Promise<AppFrameValue[]> {
     return this.sendCommand({
       transactionPrepare: {
         seq: this.nextSeq(),
@@ -4432,7 +4567,6 @@ export class AppChannelClient {
         mutation_id: "",
         payload: [],
         prepared_ops: preparedOps.map((op) => Array.from(op)),
-        label,
         origin: Array.from(origin),
         prepared_child_ops: [],
       },
@@ -4463,7 +4597,7 @@ export class AppChannelClient {
 //#region 🧪️Tests
 if (import.meta.vitest) {
   const { registerTests2 } = await import("./🧪️tests/🧪️backbone-envelope-io/🟦️.ts");
-  await registerTests2(import.meta.vitest, { APP_CHANNEL_VERSION, AppChannelClient, AppChannelRequestSequence, INVOCATION_RESULT_PACK_MAXIMUM_BYTES, backboneKindFromUri, buildFileBackboneUri, buildFolderBackboneUri, buildFrameworkSyncUtilities, buildRemoteBackboneUri, clonePackValue, createTurnOutcomeBroadcast, decodeAppCommand, decodeAppFrame, decodeBackboneMessage, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeConflictsFromWire, decodeDispatchReportFromWire, decodeDocumentArchiveBytes, decodeDocumentPackBytes, decodeDocumentPackSnapshot, decodeInvocationResultPacks, decodeMergeReportFromWire, decodePackValue, decodePresencePeer, decodeScenePackValue, encodeAppCommand, encodeAppFrame, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentArchiveBytes, encodeDocumentPackBundle, encodeDocumentPackBytes, encodePackValue, encodePresencePeer, faultMessages, isPackByteVector, isPackInteger, packInt, packUInt, packValueToExactJson, parseRemoteBackboneUri, planWorkflow }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests2(import.meta.vitest, { APP_CHANNEL_VERSION, CHANNEL_MISMATCH_CODE, admitGuestChannelVersion, AppChannelClient, AppChannelRequestSequence, INVOCATION_RESULT_PACK_MAXIMUM_BYTES, backboneKindFromUri, buildFileBackboneUri, buildFolderBackboneUri, buildFrameworkSyncUtilities, buildRemoteBackboneUri, clonePackValue, createTurnOutcomeBroadcast, decodeAppCommand, decodeAppFrame, decodeBackboneMessage, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeConflictsFromWire, decodeDispatchReportFromWire, decodeDocumentArchiveBytes, decodeDocumentPackBytes, decodeDocumentPackSnapshot, decodeInvocationResultPacks, decodeMergeReportFromWire, decodePackValue, decodePresencePeer, decodeScenePackValue, encodeAppCommand, encodeAppFrame, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentArchiveBytes, encodeDocumentPackBundle, encodeDocumentPackBytes, encodePackValue, encodePresencePeer, faultMessages, isPackByteVector, isPackInteger, packInt, packUInt, packValueToExactJson, parseRemoteBackboneUri, planWorkflow }, { directory: import.meta.dir, url: import.meta.url });
 }
 //#endregion 🧪️Tests
 

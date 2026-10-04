@@ -9,7 +9,7 @@ pub mod extensions;
 
 use crate::{FormQuestion, FormVectorField};
 use crate::schema::value_to_dsl;
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 
 /// ✏️ Validates one field edit before the command emits a document event.
 pub fn patch_question(question: &FormQuestion, field: &str, value: &Value) -> Result<FormQuestion, String> {
@@ -55,7 +55,7 @@ pub fn patch_question(question: &FormQuestion, field: &str, value: &Value) -> Re
             }
             next.default = (!value.is_null()).then(|| value_to_dsl(value));
         }
-        "condition" => next.condition = if value.is_null() { None } else { Some(dsl::FromValue::from_value(value_to_dsl(value)).map_err(|_| "invalid-condition")?) },
+        "condition" => next.condition = if value.is_null() { None } else { Some(semio_framework_value::FromValue::from_value(value_to_dsl(value)).map_err(|_| "invalid-condition")?) },
         "params" => {
             if !value.is_null() && value.as_object().is_none() { return Err("invalid-value".into()); }
             next.params = (!value.is_null()).then(|| value_to_dsl(value));
@@ -183,20 +183,20 @@ pub fn patch_choice(question: &FormQuestion, option_value: &str, field: &str, va
             if next.kind != "multi" { return Err("invalid-value".into()); }
             let enabled = value.as_bool().ok_or("invalid-value")?;
             let mut selected: std::collections::HashSet<String> = match &next.default {
-                Some(dsl::DslValue::Array(items)) => items.iter().filter_map(|item| match item { dsl::DslValue::String(value) => Some(value.clone()), _ => None }).collect(),
+                Some(semio_framework_value::DslValue::Array(items)) => items.iter().filter_map(|item| match item { semio_framework_value::DslValue::String(value) => Some(value.clone()), _ => None }).collect(),
                 _ => Default::default(),
             };
             if enabled { selected.insert(option_value.to_owned()); } else { selected.remove(option_value); }
-            next.default = Some(dsl::DslValue::Array(options.iter().filter(|option| selected.contains(&option.value)).map(|option| dsl::DslValue::String(option.value.clone())).collect()));
+            next.default = Some(semio_framework_value::DslValue::Array(options.iter().filter(|option| selected.contains(&option.value)).map(|option| semio_framework_value::DslValue::String(option.value.clone())).collect()));
             return Ok(next);
         }
         _ => return Err("unknown-field".into()),
     };
     match (&next.kind[..], &mut next.default) {
-        ("single", Some(dsl::DslValue::String(selected))) if selected == option_value => next.default = replacement.map(|value| dsl::DslValue::String(value.into())),
-        ("multi", Some(dsl::DslValue::Array(selected))) => {
+        ("single", Some(semio_framework_value::DslValue::String(selected))) if selected == option_value => next.default = replacement.map(|value| semio_framework_value::DslValue::String(value.into())),
+        ("multi", Some(semio_framework_value::DslValue::Array(selected))) => {
             *selected = selected.iter().filter_map(|item| match item {
-                dsl::DslValue::String(value) if value == option_value => replacement.map(|value| dsl::DslValue::String(value.into())),
+                semio_framework_value::DslValue::String(value) if value == option_value => replacement.map(|value| semio_framework_value::DslValue::String(value.into())),
                 _ => Some(item.clone()),
             }).collect();
         }

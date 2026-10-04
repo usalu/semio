@@ -14,6 +14,8 @@ impl OrderedSet {
     pub fn len(&self) -> usize { self.values.len() }
     pub fn is_empty(&self) -> bool { self.values.is_empty() }
     pub fn iter(&self) -> SetIter<'_> { SetIter(self.values.iter()) }
+    /// 🔎️ Borrows one original string by ranked tree navigation.
+    pub fn key_at_rank(&self, index: usize) -> Option<&String> { self.values.entry_at_rank(index).map(|(key, ())| key) }
     /// 🧊️ Cold synchronous lookup; retained membership uses begin_lookup.
     pub fn contains(&self, key: &str) -> bool { self.values.contains_key(key) }
     /// 🧊️ Cold synchronous insertion; retained callers use begin_insert.
@@ -51,15 +53,22 @@ impl<const N: usize> From<[String; N]> for OrderedSet { fn from(values: [String;
 
 //#region 🔁️ValueCodec
 /// 🔁️ Mirrors the hand-written `Serialize`/`Deserialize` below: a plain string array.
+#[path = "🚦️native/🦀️.rs"]
+mod native_controlled;
+
 impl ToValue for OrderedSet {
+    fn to_value_controlled(&self, control: &mut crate::NativeEncodeControl<'_>) -> Result<DslValue, ValueError> { native_controlled::encode(self, control) }
     fn to_value(&self) -> DslValue {
         DslValue::Array(self.iter().map(|value| DslValue::String(value.clone())).collect())
     }
 }
 
 impl FromValue for OrderedSet {
+    fn from_value_controlled(value: &DslValue, control: &mut crate::NativeDecodeControl<'_>) -> Result<Self, ValueError> { native_controlled::decode(value, control) }
+    fn default_value_controlled(control: &mut crate::NativeDecodeControl<'_>) -> Result<Self, ValueError> { control.checkpoint()?; Ok(Self::new()) }
+    fn retire_decoded(self) { self.retire_cold() }
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
-        let DslValue::Array(items) = value else { return Err(ValueError::new("expected an array for OrderedSet")) };
+        let DslValue::Array(items) = value else { return Err(ValueError::new(crate::ValueRefusalKind::InvalidValue, "expected an array for OrderedSet")) };
         items.into_iter().map(String::from_value).collect()
     }
 }

@@ -113,7 +113,7 @@ pub fn render(
             }
             if crate::schema::is_extension_question_kind(&question.kind) {
                 let contributions = crate::editor::forms::parse_contributions(config);
-                let extension = crate::editor::forms::render_extension_question(question, &dsl::os_pack::json::Object::new(), &contributions, crate::editor::forms::questions::extensions::ExtensionSurface::Blueprint, true, labels)?;
+                let extension = crate::editor::forms::render_extension_question(question, &semio_framework_pack_json::Object::new(), &contributions, crate::editor::forms::questions::extensions::ExtensionSurface::Blueprint, true, labels)?;
                 panel = panel.section(format!("{ROOT}.extension"), Some(ui_label(labels.parameters.as_str())?), true, ui_node_list([Ok(extension)])?)?;
             }
             panel = panel.section(format!("{ROOT}.question.actions"), None, true, ui_node_list([button(&format!("{ROOT}.question.remove"), labels.remove.as_str(), "removeBlock", arguments(vec![("questionId", ui_value_text(&question.id)?)])?)])?)?;

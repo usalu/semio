@@ -10,10 +10,9 @@
 //! forward vector. Nine (`create-node`, `delete-node`, `delete-nodes`, `change-node-label`,
 //! `move-node`, `connect-nodes`, `disconnect-nodes`) carry REJECTION vectors
 //! (`mutation.target-missing`, `mutation.duplicate-id`) and three (`change-graph-directed`,
-//! `update-graph-algorithm`, `replace-graph`) carry `applied`-but-`mutation.no-op` vectors, because
-//! this subset's own snapshot no longer holds the `graph` collection inline: ticket
-//! UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM moved it into a composed `notation` child no fixture can
-//! resolve. Those vectors are worth asserting — a rejection vector pins the fault code, the
+//! `update-graph-algorithm`, `replace-graph`) carry `applied`-but-`mutation.no-op` vectors. The snapshot holds the graph
+//! INLINE again (model (a), design §20.15), so forward vectors are now authorable and remain open work. Those vectors are
+//! worth asserting — a rejection vector pins the fault code, the
 //! offending address AND that the document was left untouched, which is where the frozen outcome
 //! contract's law 2 lives — but they are not forward evidence, so all ten are listed by name in
 //! `UNOBSERVABLE` below.
@@ -288,7 +287,7 @@ pub fn adapter() -> Adapter {
         built = built.oracle(&format!("mutate-{kind}"), mutate_oracle_for(kind)).oracle(&format!("inverse-{kind}"), inverse_oracle_for(kind));
         #[cfg(feature = "sut")]
         {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind)).subject(&format!("inverse-{kind}"), subject::inverse(kind));
+            built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind)).subject(&format!("inverse-{kind}"), subject::inverse(kind).expect("valid retained mutation inverse fixture"));
         }
     }
     built

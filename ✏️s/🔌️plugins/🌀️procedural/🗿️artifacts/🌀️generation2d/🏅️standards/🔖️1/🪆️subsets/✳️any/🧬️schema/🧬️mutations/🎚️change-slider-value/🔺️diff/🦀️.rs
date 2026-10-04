@@ -19,7 +19,7 @@ pub fn diff(payload: &super::ChangeSliderValue, base: &Generation2dSnapshot) -> 
         return protocol::MutationOutcome::error("mutation.target-mismatch", format!("Widget \"{}\" is not an input slider.", payload.id), [payload.id.clone()]);
     };
     if *value == payload.value {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", format!("Slider \"{}\" already holds {}.", payload.id, payload.value)).at([payload.id.clone()])]);
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", format!("Slider \"{}\" already holds {}.", payload.id, payload.value)).at([payload.id.clone()])]);
     }
     let mut widget = base.host_snapshot.widgets[index].clone();
     if !semio_framework_artifact_flow_flow::set_widget_slider_value(&mut widget, payload.value) {

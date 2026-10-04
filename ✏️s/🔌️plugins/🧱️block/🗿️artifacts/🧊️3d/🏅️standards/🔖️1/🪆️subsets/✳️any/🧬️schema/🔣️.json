@@ -7,15 +7,7 @@
   "required": [
     "schema",
     "objectKind",
-    "representations",
-    "catalog",
-    "vortexKindExtra",
-    "vortices",
-    "compatibility",
-    "attributes",
-    "authors",
-    "camera3d",
-    "meta"
+    "catalog"
   ],
   "properties": {
     "schema": {
@@ -82,60 +74,379 @@
     }
   },
   "$defs": {
+    "Binary64Word": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "bits": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{16}$"
+        }
+      },
+      "required": [
+        "bits"
+      ]
+    },
+    "Binary64Transport": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Binary64Word"
+        },
+        {
+          "type": "number"
+        }
+      ]
+    },
+    "BlockVector3": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "$ref": "#/$defs/Binary64Transport"
+      }
+    },
+    "BlockVector4": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "$ref": "#/$defs/Binary64Transport"
+      }
+    },
     "BlockKindIdentity": {
-      "title": "BlockKindIdentity",
       "type": "object",
-      "additionalProperties": true
-    },
-    "BlockRepresentation": {
-      "title": "BlockRepresentation",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "Block3dVortexKind": {
-      "title": "Block3dVortexKind",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "Block3dVortexKindExtra": {
-      "title": "Block3dVortexKindExtra",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "Block3dVortexTemplate": {
-      "title": "Block3dVortexTemplate",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "BlockCompatibilityRule": {
-      "title": "BlockCompatibilityRule",
-      "type": "object",
-      "additionalProperties": true
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "variant": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "description": {
+          "type": "string"
+        },
+        "icon": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "label"
+      ]
     },
     "BlockAttribute": {
-      "title": "BlockAttribute",
       "type": "object",
-      "additionalProperties": true
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "definition": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "key",
+        "value"
+      ]
     },
     "BlockAuthor": {
-      "title": "BlockAuthor",
       "type": "object",
-      "additionalProperties": true
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "email": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "BlockCompatibilityRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        },
+        "bidirectional": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "source",
+        "target"
+      ]
+    },
+    "BlockRepresentation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "meshUrl": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "lod": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "description": {
+          "type": "string"
+        },
+        "attributes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BlockAttribute"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "BlockCamera2d": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "$ref": "#/$defs/Binary64Transport"
+        },
+        "y": {
+          "$ref": "#/$defs/Binary64Transport"
+        },
+        "zoom": {
+          "$ref": "#/$defs/Binary64Transport"
+        }
+      },
+      "required": []
     },
     "BlockCamera3d": {
-      "title": "BlockCamera3d",
       "type": "object",
-      "additionalProperties": true
+      "additionalProperties": false,
+      "properties": {
+        "position": {
+          "$ref": "#/$defs/BlockVector3"
+        },
+        "target": {
+          "$ref": "#/$defs/BlockVector3"
+        },
+        "zoom": {
+          "$ref": "#/$defs/Binary64Transport"
+        }
+      },
+      "required": []
     },
     "BlockMeta": {
-      "title": "BlockMeta",
       "type": "object",
-      "additionalProperties": true
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string"
+        }
+      },
+      "required": []
+    },
+    "Block3dVortexKind": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "color": {
+          "type": "string"
+        },
+        "defaultCableKind": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "label",
+        "color",
+        "defaultCableKind"
+      ]
+    },
+    "Block3dVortexKindExtra": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "color": {
+          "type": "string"
+        },
+        "defaultCableKind": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "color",
+        "defaultCableKind"
+      ]
+    },
+    "Block3dVortexTemplate": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "vortexKind": {
+          "type": "string"
+        },
+        "position": {
+          "$ref": "#/$defs/BlockVector3"
+        },
+        "direction": {
+          "$ref": "#/$defs/BlockVector3"
+        },
+        "radius": {
+          "$ref": "#/$defs/Binary64Transport"
+        },
+        "label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "vortexKind"
+      ]
     },
     "Block3dWindowView": {
-      "title": "Block3dWindowView",
       "type": "object",
-      "additionalProperties": true
+      "additionalProperties": false,
+      "properties": {
+        "windowId": {
+          "type": "string"
+        },
+        "representationIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "arrangement": {
+          "type": "string"
+        },
+        "spacing": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "windowId"
+      ]
     }
   }
 }

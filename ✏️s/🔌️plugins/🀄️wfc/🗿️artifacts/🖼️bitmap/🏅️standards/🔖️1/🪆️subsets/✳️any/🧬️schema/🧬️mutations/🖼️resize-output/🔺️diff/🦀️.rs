@@ -12,7 +12,7 @@ pub fn diff(payload: &super::ResizeOutput, base: &BitmapSnapshot) -> protocol::M
     }
     let output = BitmapOutputSpec { width: payload.width, height: payload.height, periodic: payload.periodic };
     if base.output == output {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("The output is already {}×{}.", payload.width, payload.height));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("The output is already {}×{}.", payload.width, payload.height));
     }
     let pinned_removed: Vec<String> = base.pinned.iter().filter(|pin| pin.x >= payload.width || pin.y >= payload.height).map(|pin| pin_key(pin.x, pin.y)).collect();
     let cascaded = pinned_removed.len();

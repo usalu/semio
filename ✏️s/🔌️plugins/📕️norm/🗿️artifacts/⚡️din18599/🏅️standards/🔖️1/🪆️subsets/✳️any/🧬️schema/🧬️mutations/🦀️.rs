@@ -162,10 +162,8 @@ impl Din18599Mutation {
         if base.renewables != target.renewables {
             mutations.push(Din18599Mutation::UpdateRenewables(update_renewables::UpdateRenewables { new_renewables: target.renewables.clone() }));
         }
-        let base_climate = crate::din18599_climate(base);
-        let target_climate = crate::din18599_climate(target);
-        if base_climate != target_climate {
-            mutations.push(Din18599Mutation::UpdateClimate(update_climate::UpdateClimate { new_climate: target_climate }));
+        if base.climate != target.climate {
+            mutations.push(Din18599Mutation::UpdateClimate(update_climate::UpdateClimate { new_climate: target.climate.clone() }));
         }
         mutations
     }
@@ -180,7 +178,7 @@ mod tests;
 
 //#region 🌉️ExternalCodecBridge
 pub fn decode_din18599_mutation_json(text: &str) -> Result<Din18599Mutation, String> {
-    pack::json::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 
 pub fn apply_din18599_mutation(base: &Din18599Snapshot, mutation: &Din18599Mutation) -> Result<(Din18599Snapshot, Vec<String>), String> {
@@ -190,8 +188,11 @@ pub fn apply_din18599_mutation(base: &Din18599Snapshot, mutation: &Din18599Mutat
     Ok((applied, messages))
 }
 
-pub fn inverse_din18599_mutation(mutation: &Din18599Mutation, base: &Din18599Snapshot) -> Vec<Din18599Mutation> {
-    <Din18599Mutation as protocol::Mutation<Din18599Snapshot>>::inverse(mutation, base)
+pub fn inverse_din18599_mutation(mutation: &Din18599Mutation, base: &Din18599Snapshot) -> Result<Vec<Din18599Mutation>, semio_framework_value::ValueError> {
+    Ok({
+    <Din18599Mutation as protocol::Mutation<Din18599Snapshot>>::inverse(mutation, base)?
+
+    })
 }
 //#endregion 🌉️ExternalCodecBridge
 

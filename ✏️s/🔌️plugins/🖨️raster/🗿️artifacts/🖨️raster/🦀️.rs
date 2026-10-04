@@ -379,17 +379,17 @@ impl<'a, V> IntoIterator for &'a RasterOwnedMap<V> {
 }
 
 /// 🗂️ The map's real DSL projection, key-ordered exactly as [`RasterOwnedMap::iter`] walks it.
-impl<V: dsl::DslField> dsl::DslField for RasterOwnedMap<V> {
-    fn shape() -> dsl::Shape {
-        dsl::Shape::Map(Box::new(V::shape()))
+impl<V: semio_framework_dsl_record::DslField> semio_framework_dsl_record::DslField for RasterOwnedMap<V> {
+    fn shape() -> semio_framework_dsl_record::Shape {
+        semio_framework_dsl_record::Shape::Map(Box::new(V::shape()))
     }
 
-    fn to_value(&self) -> dsl::FieldValue {
-        dsl::FieldValue::Map(self.iter().map(|(key, value)| (key.clone(), value.to_value())).collect())
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
+        semio_framework_dsl_record::FieldValue::Map(self.iter().map(|(key, value)| (key.clone(), value.to_value())).collect())
     }
 
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
-        let dsl::FieldValue::Map(entries) = value else { return Err(format!("expected Map, found {value:?}")) };
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
+        let semio_framework_dsl_record::FieldValue::Map(entries) = value else { return Err(format!("expected Map, found {value:?}")) };
         let mut out = Self::new();
         for (key, item) in entries {
             let admitted = V::from_value(item).and_then(|item| out.insert(key.clone(), item).map_err(|rejected| rejected.reason.to_string()));
@@ -413,18 +413,18 @@ impl<V: dsl::DslField> dsl::DslField for RasterOwnedMap<V> {
 /// `apply_raster_mutation_json` oracle bridge whose committed before-documents carry both layers and
 /// assets. The map is FIXED-capacity (64 entries over 8 pages of 16 KiB), so a whole-map projection
 /// is bounded by construction and no paging authority is owed.
-impl<V: dsl::ToValue> dsl::ToValue for RasterOwnedMap<V> {
-    fn to_value(&self) -> dsl::DslValue {
-        dsl::DslValue::Object(self.iter().map(|(key, value)| (key.clone(), value.to_value())).collect())
+impl<V: semio_framework_value::ToValue> semio_framework_value::ToValue for RasterOwnedMap<V> {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::Object(self.iter().map(|(key, value)| (key.clone(), value.to_value())).collect())
     }
 }
 
-impl<V: dsl::FromValue> dsl::FromValue for RasterOwnedMap<V> {
-    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
-        let dsl::DslValue::Object(entries) = value else { return Err(dsl::ValueError::new("expected an object for a Raster owned map")) };
+impl<V: semio_framework_value::FromValue> semio_framework_value::FromValue for RasterOwnedMap<V> {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        let semio_framework_value::DslValue::Object(entries) = value else { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected an object for a Raster owned map")) };
         let mut out = Self::new();
         for (key, item) in entries {
-            let admitted = V::from_value(item).and_then(|item| out.insert(key, item).map_err(|rejected| dsl::ValueError::new(rejected.reason)));
+            let admitted = V::from_value(item).and_then(|item| out.insert(key, item).map_err(|rejected| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, rejected.reason)));
             if let Err(error) = admitted {
                 out.retire();
                 return Err(error);
@@ -448,14 +448,14 @@ pub fn default_true() -> bool {
 /// image assets. This is the authoritative projection shared by the wasm compositor bridge and the
 /// `raster-plugin` `ArtifactApp`. Ephemeral tool/brush/selection/camera state lives in the app's
 /// `RasterConfig`, never here.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct RasterViewportSize {
     pub width: f64,
     pub height: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct RasterCamera {
     #[value(default)]
@@ -480,7 +480,7 @@ pub fn default_blend() -> String {
     "normal".into()
 }
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct RasterTransform {
     pub x: f64,
@@ -504,7 +504,7 @@ impl RasterTransform {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct RasterLayerMask {
     #[value(default = "default_true")]
@@ -520,7 +520,7 @@ pub struct RasterLayerMask {
     pub transform: RasterTransform,
 }
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslEnum)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum RasterLayerNode {
     #[value(rename = "pixel", rename_all = "camelCase")]
@@ -586,7 +586,7 @@ pub enum RasterLayerNode {
         #[dsl(key = "kind")]
         adjustment_kind: String,
         #[value(default)]
-        params: RasterOwnedMap<dsl::DslValue>,
+        params: RasterOwnedMap<semio_framework_value::DslValue>,
     },
 }
 
@@ -611,17 +611,17 @@ pub fn retire_raster_layers(layers: Vec<RasterLayerNode>) {
 }
 
 mod asset_data_base64 {
-    pub fn to_value(bytes: &Vec<u8>) -> dsl::DslValue {
-        dsl::DslValue::String(base64_codec::base64_standard_encode(bytes))
+    pub fn to_value(bytes: &Vec<u8>) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::String(base64_codec::base64_standard_encode(bytes))
     }
 
-    pub fn from_value(value: dsl::DslValue) -> Result<Vec<u8>, dsl::ValueError> {
-        let dsl::DslValue::String(encoded) = value else { return Err(dsl::ValueError::new("expected a base64 string")) };
-        base64_codec::base64_standard_decode(encoded.as_bytes()).map_err(|error| dsl::ValueError::new(error.to_string()))
+    pub fn from_value(value: semio_framework_value::DslValue) -> Result<Vec<u8>, semio_framework_value::ValueError> {
+        let semio_framework_value::DslValue::String(encoded) = value else { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected a base64 string")) };
+        base64_codec::base64_standard_decode(encoded.as_bytes()).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()))
     }
 }
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct RasterImageAsset {
     pub mime: String,
@@ -717,7 +717,7 @@ pub fn adopt_raster_asset_owner(source: &RasterAssetChild, target: &mut RasterAs
 
 //#region 🔖️Operations
 /// 🖼️ Nullable pixel attachment and display extent, preserved exactly by undo.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct RasterPixelContent {
     pub image_key: Option<String>,
@@ -726,7 +726,7 @@ pub struct RasterPixelContent {
 }
 
 /// 🎭️ Explicit mask replacement, including removal.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct RasterMaskContent {
     #[dsl(block)]
@@ -735,41 +735,41 @@ pub struct RasterMaskContent {
 
 /// 🔢️ Bounded tone number retaining integer/decimal identity for exact history.
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct RasterAdjustmentNumber(dsl::Number);
+pub struct RasterAdjustmentNumber(semio_framework_value::Number);
 impl RasterAdjustmentNumber {
-    pub fn decimal(value:f64)->Self {Self(dsl::Number::Float(value))}
+    pub fn decimal(value:f64)->Self {Self(semio_framework_value::Number::Float(value))}
     pub fn get(self)->f64 {self.0.as_f64()}
-    pub fn from_parameter(value:&dsl::DslValue)->Option<Self> {if let dsl::DslValue::Number(number)=value {Some(Self(*number))} else {None}}
-    pub fn literal(self)->dsl::DslValue {dsl::DslValue::Number(self.0)}
+    pub fn from_parameter(value:&semio_framework_value::DslValue)->Option<Self> {if let semio_framework_value::DslValue::Number(number)=value {Some(Self(*number))} else {None}}
+    pub fn literal(self)->semio_framework_value::DslValue {semio_framework_value::DslValue::Number(self.0)}
     pub(crate) fn digest(self)->[u8;9] {
         let mut result=[0;9];
-        let (tag,bytes)=match self.0 {dsl::Number::UInt(value)=>(1,value.to_be_bytes()),dsl::Number::Int(value)=>(2,value.to_be_bytes()),dsl::Number::Float(value)=>(3,value.to_bits().to_be_bytes())};
+        let (tag,bytes)=match self.0 {semio_framework_value::Number::UInt(value)=>(1,value.to_be_bytes()),semio_framework_value::Number::Int(value)=>(2,value.to_be_bytes()),semio_framework_value::Number::Float(value)=>(3,value.to_bits().to_be_bytes())};
         result[0]=tag;result[1..].copy_from_slice(&bytes);result
     }
 }
-impl dsl::ToValue for RasterAdjustmentNumber {fn to_value(&self)->dsl::DslValue {self.literal()}}
-impl dsl::FromValue for RasterAdjustmentNumber {
-    fn from_value(value:dsl::DslValue)->Result<Self,dsl::ValueError> {
-        Self::from_parameter(&value).filter(|n|n.get().is_finite()&&(-1.0..=1.0).contains(&n.get())).ok_or_else(||dsl::ValueError::new("adjustment number must be within -1 and 1"))
+impl semio_framework_value::ToValue for RasterAdjustmentNumber {fn to_value(&self)->semio_framework_value::DslValue {self.literal()}}
+impl semio_framework_value::FromValue for RasterAdjustmentNumber {
+    fn from_value(value:semio_framework_value::DslValue)->Result<Self,semio_framework_value::ValueError> {
+        Self::from_parameter(&value).filter(|n|n.get().is_finite()&&(-1.0..=1.0).contains(&n.get())).ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "adjustment number must be within -1 and 1"))
     }
 }
-impl dsl::DslField for RasterAdjustmentNumber {
-    fn shape()->dsl::Shape {dsl::Shape::Value}
-    fn to_value(&self)->dsl::FieldValue {dsl::FieldValue::Value(self.literal())}
-    fn from_value(value:&dsl::FieldValue)->Result<Self,String> {
-        let dsl::FieldValue::Value(value)=value else {return Err("expected adjustment number".into());};
-        <Self as dsl::FromValue>::from_value(value.clone()).map_err(|error|error.to_string())
+impl semio_framework_dsl_record::DslField for RasterAdjustmentNumber {
+    fn shape()->semio_framework_dsl_record::Shape {semio_framework_dsl_record::Shape::Value}
+    fn to_value(&self)->semio_framework_dsl_record::FieldValue {semio_framework_dsl_record::FieldValue::Value(self.literal())}
+    fn from_value(value:&semio_framework_dsl_record::FieldValue)->Result<Self,String> {
+        let semio_framework_dsl_record::FieldValue::Value(value)=value else {return Err("expected adjustment number".into());};
+        <Self as semio_framework_value::FromValue>::from_value(value.clone()).map_err(|error|error.to_string())
     }
 }
 
 /// 🎚️ One parameter replacement; an absent value restores its implicit default.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct RasterAdjustmentParameter {pub parameter:String,pub value:Option<RasterAdjustmentNumber>}
 
 /// 🩹️ Sparse patch applied to a single `RasterLayerNode` — the `PatchLayer` operation's payload, and
 /// (with fields swapped for their prior values) its own mechanical inverse.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct RasterLayerPatch {
     #[dsl(block)]
@@ -915,60 +915,60 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
 /// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring
 /// 🗒️note's own `pilot_languages()` convention.
-fn pilot_languages() -> &'static [dsl::LanguageSpec] {
-    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
             vec![
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "raster.document",
                     extension: Some("raster"),
-                    role: dsl::LanguageRole::Document,
+                    role: semio_framework_dsl::LanguageRole::Document,
                     grammar: Some(standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("raster.document"),
+                    hooks: semio_framework_dsl::passthrough_hooks("raster.document"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "raster.op",
                     extension: None,
-                    role: dsl::LanguageRole::Ops,
+                    role: semio_framework_dsl::LanguageRole::Ops,
                     grammar: Some(op::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(op::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("raster.op"),
+                    hooks: semio_framework_dsl::passthrough_hooks("raster.op"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "raster.document.diff",
                     extension: None,
-                    role: dsl::LanguageRole::Diff,
+                    role: semio_framework_dsl::LanguageRole::Diff,
                     grammar: Some(diff::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
-                    hooks: dsl::passthrough_hooks("raster.document.diff"),
+                    hooks: semio_framework_dsl::passthrough_hooks("raster.document.diff"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "raster.pack",
                     extension: None,
-                    role: dsl::LanguageRole::Pack,
+                    role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("raster.pack"),
+                    hooks: semio_framework_dsl::passthrough_hooks("raster.pack"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "raster.spr",
                     extension: None,
-                    role: dsl::LanguageRole::Spr,
+                    role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("raster.spr"),
+                    hooks: semio_framework_dsl::passthrough_hooks("raster.spr"),
                 },
             ]
         })
@@ -1203,6 +1203,24 @@ pub mod standards {
                         #[path = "."]
                         pub mod fill_region {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪣️fill-region/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod apply_filter {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌈️apply-filter/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod transform_image {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️transform-image/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod fill_selection {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫗️fill-selection/🦀️.rs"]
                             mod component;
                             pub use component::*;
                         }
@@ -1525,6 +1543,8 @@ pub mod editor {
             pub mod set_brush_hardness;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎭️set-mask-value/🦀️.rs"]
             pub mod set_mask_value;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌊️set-fill-tolerance/🦀️.rs"]
+            pub mod set_fill_tolerance;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎭️set-paint-target/🦀️.rs"]
             pub mod set_paint_target;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎯️set-pixel-selection/🦀️.rs"]
@@ -1537,14 +1557,16 @@ pub mod editor {
             pub mod set_camera_zoom;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖥️set-composite-viewport/🦀️.rs"]
             pub mod set_composite_viewport;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️edit-pixels/🦀️.rs"]
-            pub mod edit_pixels;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖌️edit-mask/🦀️.rs"]
-            pub mod edit_mask;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖌️paint-stroke/🦀️.rs"]
             pub mod paint_stroke;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪣️fill-region/🦀️.rs"]
             pub mod fill_region;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌈️apply-filter/🦀️.rs"]
+            pub mod apply_filter;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔄️transform-image/🦀️.rs"]
+            pub mod transform_image;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🫗️fill-selection/🦀️.rs"]
+            pub mod fill_selection;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🥞️flatten-layers/🦀️.rs"]
             pub mod flatten_layers;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-png/🦀️.rs"]
@@ -1581,7 +1603,11 @@ pub mod editor {
                             pub mod brush;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️composite/☑️options/🧽️eraser/🦀️.rs"]
                             pub mod eraser;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️composite/☑️options/🪣️bucket/🦀️.rs"]
+                            pub mod bucket;
                         }
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️composite/🫧️transient/🦀️.rs"]
+                        pub mod transient;
                     }
 
                     #[path = "."]

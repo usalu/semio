@@ -14,7 +14,7 @@ pub const TOOL_ID: &str = "energySimulation";
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by `crate::editor::model::create_energy_model_editor`.
 pub fn definition() -> ToolDefinition {
-    ToolDefinition { run: Some(energy_simulation_run_definition()), ..semio_framework_plugin::resolve_ready(ToolDefinition::new(TOOL_ID, LocalizedLabel::native("Energy simulation", "Energiesimulation"), "activity")) }
+    ToolDefinition { run: Some(energy_simulation_run_definition()), ..::semio_framework_async::poll::resolve_ready(ToolDefinition::new(TOOL_ID, LocalizedLabel::native("Energy simulation", "Energiesimulation"), "activity")) }
 }
 //#endregion 🔖️Definition
 

@@ -160,7 +160,7 @@ mod tests {
             // Mutation-level round trip.
             let mut snap = base.clone();
             apply_jpg_mutation(&mut snap, &m);
-            for inv in m.inverse(&base) {
+            for inv in m.inverse(&base).expect("valid retained mutation inverse fixture") {
                 apply_jpg_mutation(&mut snap, &inv);
             }
             assert_eq!(snap, base, "mutation-level inverse must restore base for {m:?}");

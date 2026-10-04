@@ -28,9 +28,9 @@ use std::sync::{Mutex, OnceLock};
 /// `register_language` precedent this mirrors. Not `pub`: reached only through
 /// [`register_schema_spec`] (write) and [`full_resolver`] (read-a-snapshot), same access shape as
 /// `crate::os_dsl`'s `LANGUAGE_REGISTRY`/`IDIOM_REGISTRY`.
-static SCHEMA_REGISTRY: OnceLock<Mutex<HashMap<&'static str, fn() -> crate::os_dsl::schema::RecordSpec>>> = OnceLock::new();
+static SCHEMA_REGISTRY: OnceLock<Mutex<HashMap<&'static str, fn() -> semio_framework_dsl_record::RecordSpec>>> = OnceLock::new();
 
-async fn schema_registry() -> &'static Mutex<HashMap<&'static str, fn() -> crate::os_dsl::schema::RecordSpec>> {
+async fn schema_registry() -> &'static Mutex<HashMap<&'static str, fn() -> semio_framework_dsl_record::RecordSpec>> {
     SCHEMA_REGISTRY.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
@@ -39,7 +39,7 @@ async fn schema_registry() -> &'static Mutex<HashMap<&'static str, fn() -> crate
 /// own schema id (`"stdio.gif"`) and its diff schema (`"stdio.gif#diff"`, B-R4). Overwrites on
 /// re-registration rather than erroring, matching `register_language`'s hot-reload-safe behavior —
 /// a re-run dev build never deadlocks or panics on re-registering the same id.
-pub async fn register_schema_spec(id: &'static str, spec: fn() -> crate::os_dsl::schema::RecordSpec) {
+pub async fn register_schema_spec(id: &'static str, spec: fn() -> semio_framework_dsl_record::RecordSpec) {
     let mut registry = schema_registry().await.lock().unwrap_or_else(|poison| poison.into_inner());
     registry.insert(id, spec);
 }
@@ -49,19 +49,19 @@ pub async fn register_schema_spec(id: &'static str, spec: fn() -> crate::os_dsl:
 /// registry); [`FullResolver::from_map`] stays available for a caller that wants a narrower/custom
 /// table (e.g. a test double) built by hand, independent of global registration state.
 pub struct FullResolver {
-    schemas: HashMap<&'static str, fn() -> crate::os_dsl::schema::RecordSpec>,
+    schemas: HashMap<&'static str, fn() -> semio_framework_dsl_record::RecordSpec>,
 }
 
 impl FullResolver {
     /// 🧪️ Builds a resolver from an explicit table, bypassing the process-global registry
     /// entirely — for tests/test-doubles that want an isolated, narrower set.
-    pub async fn from_map(schemas: HashMap<&'static str, fn() -> crate::os_dsl::schema::RecordSpec>) -> Self {
+    pub async fn from_map(schemas: HashMap<&'static str, fn() -> semio_framework_dsl_record::RecordSpec>) -> Self {
         Self { schemas }
     }
 }
 
 impl SchemaResolver for FullResolver {
-    async fn resolve(&self, schema: &str) -> Option<crate::os_dsl::schema::RecordSpec> {
+    async fn resolve(&self, schema: &str) -> Option<semio_framework_dsl_record::RecordSpec> {
         self.schemas.get(schema).map(|spec_fn| spec_fn())
     }
 

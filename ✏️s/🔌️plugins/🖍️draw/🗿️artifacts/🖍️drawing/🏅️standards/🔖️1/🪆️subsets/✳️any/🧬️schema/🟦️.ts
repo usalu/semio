@@ -1,3 +1,4 @@
+import {binary64,type Binary64,parseBinary64Transport} from "../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 import {parseFillRule,type FillRule} from "./🎨️fill/🌀️rule/🟦️.ts";
 /** 🧬️ Drawing artifact schema — every field with its state class. */
 
@@ -23,25 +24,37 @@ export function parseBlendMode(value:unknown,at="$"):BlendMode {
   return drawingDrawingArtifactGuardMember(value,at,DRAWING_BLEND_MODES);
 }
 
-export interface DrawingLayerNode {
-  kind: string;
-  blendMode?: BlendMode;
-  attributes?: {fillRule?:FillRule;[key:string]:unknown};
-  isolation?:boolean;
-  [key: string]: unknown;
-}
-
-export interface DrawingImageAsset {
-  mime: string;
-  data: string;
-  width?: number;
-  height?: number;
-}
-
-export interface DrawingArtboard {
-  width: number;
-  height: number;
-}
+export interface DrawingTransform {x:Binary64;y:Binary64;scaleX:Binary64;scaleY:Binary64;shear:Binary64;rotation:Binary64}
+export type DrawingPoint=[Binary64,Binary64];
+export type DrawingColor=[Binary64,Binary64,Binary64,Binary64];
+export interface DrawingGradientStop {offset:Binary64;color:DrawingColor}
+export type DrawingFill =
+ | {kind:"solid";color:DrawingColor}
+ | {kind:"linearGradient";x1:Binary64;y1:Binary64;x2:Binary64;y2:Binary64;stops:DrawingGradientStop[]}
+ | {kind:"radialGradient";cx:Binary64;cy:Binary64;r:Binary64;stops:DrawingGradientStop[]};
+export interface DrawingStroke {color:DrawingColor;width:Binary64;cap:"butt"|"round"|"square";join:"miter"|"round"|"bevel";dash?:Binary64[]}
+export interface DrawingAttributes {fillRule:FillRule;fill?:DrawingFill;stroke?:DrawingStroke}
+export interface DrawingLayerBase {id:string;name:string;visible:boolean;locked:boolean;opacity:Binary64;blendMode:string;transform:DrawingTransform;attributes:DrawingAttributes}
+export interface DrawingRect {x:Binary64;y:Binary64;width:Binary64;height:Binary64}
+export interface DrawingEllipse {cx:Binary64;cy:Binary64;rx:Binary64;ry:Binary64}
+export interface DrawingCircle {cx:Binary64;cy:Binary64;r:Binary64}
+export interface DrawingLine {x1:Binary64;y1:Binary64;x2:Binary64;y2:Binary64}
+export type DrawingPathSegment =
+ | {kind:"move"|"line";to:DrawingPoint}
+ | {kind:"quad";ctrl:DrawingPoint;to:DrawingPoint}
+ | {kind:"cubic";ctrl1:DrawingPoint;ctrl2:DrawingPoint;to:DrawingPoint}
+ | {kind:"arc";rx:Binary64;ry:Binary64;rotation:Binary64;largeArc:boolean;sweep:boolean;to:DrawingPoint}
+ | {kind:"close"};
+export type DrawingLayerNode =
+ | (DrawingLayerBase & {kind:"shape";shapeKind:string;rect?:DrawingRect;ellipse?:DrawingEllipse;circle?:DrawingCircle;line?:DrawingLine;polygon?:{points:DrawingPoint[]}})
+ | (DrawingLayerBase & {kind:"path";segments:DrawingPathSegment[]})
+ | (DrawingLayerBase & {kind:"text";x:Binary64;y:Binary64;content:string;size:Binary64})
+ | (DrawingLayerBase & {kind:"image";imageKey:string;width:Binary64;height:Binary64})
+ | (DrawingLayerBase & {kind:"group";isolation:boolean;children:DrawingLayerNode[]})
+ | (DrawingLayerBase & {kind:"boolean";operation:string;children:string[]})
+ | (DrawingLayerBase & {kind:"trace";sourceKey:string;params:{threshold:Binary64;simplifyEpsilon:Binary64}});
+export interface DrawingImageAsset {mime:string;data:string;width?:number;height?:number}
+export interface DrawingArtboard {width:Binary64;height:Binary64}
 
 //#region 🚪️Parsers
 /** 🚪️ Refusal of one instance position, the shape every `parse<Export>` below rejects with. */
@@ -105,32 +118,29 @@ export function parseDrawingArtifact(value: unknown, at = "$"): DrawingArtifact 
   };
 }
 
-export function parseDrawingLayerNode(value: unknown, at = "$"): DrawingLayerNode {
-  const row = drawingDrawingArtifactGuardObject(value, at);
-  const pending: Array<[Readonly<Record<string,unknown>>,string]> = [[row,at]];
-  while (pending.length) {
-    const [layer,path] = pending.pop()!;
-    drawingDrawingArtifactGuardString(layer.kind,`${path}.kind`);
-    if (layer.blendMode !== undefined) parseBlendMode(layer.blendMode,`${path}.blendMode`);
-    if (layer.attributes !== undefined) {
-      const attributes = drawingDrawingArtifactGuardObject(layer.attributes,`${path}.attributes`);
-      if (attributes.fillRule !== undefined) parseFillRule(attributes.fillRule);
-    }
-    if (layer.kind === "group") {
-      if (layer.isolation !== undefined) drawingDrawingArtifactGuardBoolean(layer.isolation,`${path}.isolation`);
-      if (layer.children !== undefined) {
-        const children = drawingDrawingArtifactGuardArray(layer.children,`${path}.children`);
-        for (let index=children.length-1; index>=0; index--) {
-          const childPath = `${path}.children[${index}]`;
-          pending.push([drawingDrawingArtifactGuardObject(children[index],childPath),childPath]);
-        }
-      }
-    }
-  }
-  return {
-    ...structuredClone(row),
-    kind: drawingDrawingArtifactGuardString(row["kind"], `${at}.kind`),
-  };
+const ownedWord=(value:unknown,at:string):Binary64=>{try{return parseBinary64Transport(value);}catch{return drawingDrawingArtifactGuardReject(at,"expected a Binary64 word or number");}};
+const ownedRecord=drawingDrawingArtifactGuardObject,ownedArray=drawingDrawingArtifactGuardArray,ownedText=drawingDrawingArtifactGuardString,ownedBool=drawingDrawingArtifactGuardBoolean;
+function ownedPoint(value:unknown,at:string):DrawingPoint{const v=ownedArray(value,at,{minItems:2,maxItems:2});return[ownedWord(v[0],at+'[0]'),ownedWord(v[1],at+'[1]')];}
+function ownedColor(value:unknown,at:string):DrawingColor{const v=ownedArray(value,at,{minItems:4,maxItems:4});return[ownedWord(v[0],at+'[0]'),ownedWord(v[1],at+'[1]'),ownedWord(v[2],at+'[2]'),ownedWord(v[3],at+'[3]')];}
+function ownedAttributes(value:unknown,at:string):DrawingAttributes{const v=value===undefined?{}:ownedRecord(value,at),out:DrawingAttributes={fillRule:v.fillRule===undefined?"evenodd":parseFillRule(v.fillRule)};
+ if(v.fill!==undefined){const f=ownedRecord(v.fill,at+'.fill'),kind=drawingDrawingArtifactGuardMember(f.kind,at+'.fill.kind',["solid","linearGradient","radialGradient"] as const);if(kind==='solid')out.fill={kind,color:ownedColor(f.color,at+'.fill.color')};else{const stops=ownedArray(f.stops,at+'.fill.stops').map((item,i)=>{const p=ownedRecord(item,at+'.fill.stops['+i+']');return{offset:ownedWord(p.offset,at+'.fill.offset'),color:ownedColor(p.color,at+'.fill.color')};});out.fill=kind==='linearGradient'?{kind,x1:ownedWord(f.x1,at+'.fill.x1'),y1:ownedWord(f.y1,at+'.fill.y1'),x2:ownedWord(f.x2,at+'.fill.x2'),y2:ownedWord(f.y2,at+'.fill.y2'),stops}:{kind,cx:ownedWord(f.cx,at+'.fill.cx'),cy:ownedWord(f.cy,at+'.fill.cy'),r:ownedWord(f.r,at+'.fill.r'),stops};}}
+ if(v.stroke!==undefined){const p=ownedRecord(v.stroke,at+'.stroke');out.stroke={color:ownedColor(p.color,at+'.stroke.color'),width:ownedWord(p.width,at+'.stroke.width'),cap:drawingDrawingArtifactGuardMember(p.cap,at+'.stroke.cap',["butt","round","square"] as const),join:drawingDrawingArtifactGuardMember(p.join,at+'.stroke.join',["miter","round","bevel"] as const)};if(p.dash!==undefined)out.stroke.dash=ownedArray(p.dash,at+'.stroke.dash').map((v,i)=>ownedWord(v,at+'.stroke.dash['+i+']'));}return out;
+}
+export function parseDrawingPathSegment(value:unknown,at='$'):DrawingPathSegment{const v=ownedRecord(value,at),kind=drawingDrawingArtifactGuardMember(v.kind,at+'.kind',["move","line","quad","cubic","arc","close"] as const);switch(kind){case'move':case'line':return{kind,to:ownedPoint(v.to,at+'.to')};case'quad':return{kind,ctrl:ownedPoint(v.ctrl,at+'.ctrl'),to:ownedPoint(v.to,at+'.to')};case'cubic':return{kind,ctrl1:ownedPoint(v.ctrl1,at+'.ctrl1'),ctrl2:ownedPoint(v.ctrl2,at+'.ctrl2'),to:ownedPoint(v.to,at+'.to')};case'arc':return{kind,rx:ownedWord(v.rx,at+'.rx'),ry:ownedWord(v.ry,at+'.ry'),rotation:ownedWord(v.rotation,at+'.rotation'),largeArc:ownedBool(v.largeArc,at+'.largeArc'),sweep:ownedBool(v.sweep,at+'.sweep'),to:ownedPoint(v.to,at+'.to')};case'close':return{kind};}}
+/** 🖍️ Validate explicit layer fields and reconstruct the forest without recursive cloning. */
+export function parseDrawingLayerNode(value:unknown,at='$'):DrawingLayerNode{
+ const result:DrawingLayerNode[]=[],pending:[unknown,string,DrawingLayerNode[]][]=[[value,at,result]];
+ while(pending.length){const[value,path,out]=pending.pop()!,v=ownedRecord(value,path),kind=drawingDrawingArtifactGuardMember(v.kind,path+'.kind',["shape","path","text","image","group","boolean","trace"] as const),t=ownedRecord(v.transform,path+'.transform');const base:DrawingLayerBase={id:ownedText(v.id,path+'.id'),name:ownedText(v.name,path+'.name'),visible:ownedBool(v.visible,path+'.visible'),locked:ownedBool(v.locked,path+'.locked'),opacity:ownedWord(v.opacity,path+'.opacity'),blendMode:ownedText(v.blendMode,path+'.blendMode'),transform:{x:ownedWord(t.x,path+'.transform.x'),y:ownedWord(t.y,path+'.transform.y'),scaleX:ownedWord(t.scaleX,path+'.transform.scaleX'),scaleY:ownedWord(t.scaleY,path+'.transform.scaleY'),shear:ownedWord(t.shear,path+'.transform.shear'),rotation:ownedWord(t.rotation,path+'.transform.rotation')},attributes:ownedAttributes(v.attributes,path+'.attributes')};
+ switch(kind){
+ case'shape':{const node:Extract<DrawingLayerNode,{kind:'shape'}>={...base,kind,shapeKind:ownedText(v.shapeKind,path+'.shapeKind')};if(v.rect!==undefined){const p=ownedRecord(v.rect,path+'.rect');node.rect={x:ownedWord(p.x,path+'.rect.x'),y:ownedWord(p.y,path+'.rect.y'),width:ownedWord(p.width,path+'.rect.width'),height:ownedWord(p.height,path+'.rect.height')};}if(v.ellipse!==undefined){const p=ownedRecord(v.ellipse,path+'.ellipse');node.ellipse={cx:ownedWord(p.cx,path+'.ellipse.cx'),cy:ownedWord(p.cy,path+'.ellipse.cy'),rx:ownedWord(p.rx,path+'.ellipse.rx'),ry:ownedWord(p.ry,path+'.ellipse.ry')};}if(v.circle!==undefined){const p=ownedRecord(v.circle,path+'.circle');node.circle={cx:ownedWord(p.cx,path+'.circle.cx'),cy:ownedWord(p.cy,path+'.circle.cy'),r:ownedWord(p.r,path+'.circle.r')};}if(v.line!==undefined){const p=ownedRecord(v.line,path+'.line');node.line={x1:ownedWord(p.x1,path+'.line.x1'),y1:ownedWord(p.y1,path+'.line.y1'),x2:ownedWord(p.x2,path+'.line.x2'),y2:ownedWord(p.y2,path+'.line.y2')};}if(v.polygon!==undefined){const p=ownedRecord(v.polygon,path+'.polygon');node.polygon={points:ownedArray(p.points,path+'.polygon.points').map((p,i)=>ownedPoint(p,path+'.polygon.points['+i+']'))};}out.push(node);break;}
+ case'path':out.push({...base,kind,segments:ownedArray(v.segments,path+'.segments').map((s,i)=>parseDrawingPathSegment(s,path+'.segments['+i+']'))});break;
+ case'text':out.push({...base,kind,x:ownedWord(v.x,path+'.x'),y:ownedWord(v.y,path+'.y'),content:ownedText(v.content,path+'.content'),size:ownedWord(v.size,path+'.size')});break;
+ case'image':out.push({...base,kind,imageKey:ownedText(v.imageKey,path+'.imageKey'),width:ownedWord(v.width,path+'.width'),height:ownedWord(v.height,path+'.height')});break;
+ case'group':{const children:DrawingLayerNode[]=[];out.push({...base,kind,isolation:v.isolation===undefined?false:ownedBool(v.isolation,path+'.isolation'),children});const items=ownedArray(v.children,path+'.children');for(let i=items.length-1;i>=0;i--)pending.push([items[i],path+'.children['+i+']',children]);break;}
+ case'boolean':out.push({...base,kind,operation:ownedText(v.operation,path+'.operation'),children:ownedArray(v.children,path+'.children').map((s,i)=>ownedText(s,path+'.children['+i+']'))});break;
+ case'trace':{const p=ownedRecord(v.params,path+'.params');out.push({...base,kind,sourceKey:ownedText(v.sourceKey,path+'.sourceKey'),params:{threshold:ownedWord(p.threshold,path+'.params.threshold'),simplifyEpsilon:ownedWord(p.simplifyEpsilon,path+'.params.simplifyEpsilon')}});break;}
+ }
+ }return result[0]!;
 }
 
 export function parseDrawingImageAsset(value: unknown, at = "$"): DrawingImageAsset {
@@ -138,21 +148,21 @@ export function parseDrawingImageAsset(value: unknown, at = "$"): DrawingImageAs
   return {
     mime: drawingDrawingArtifactGuardString(row["mime"], `${at}.mime`),
     data: drawingDrawingArtifactGuardString(row["data"], `${at}.data`),
-    width: row["width"] === undefined ? undefined : drawingDrawingArtifactGuardInteger(row["width"], `${at}.width`, {"minimum": 0}),
-    height: row["height"] === undefined ? undefined : drawingDrawingArtifactGuardInteger(row["height"], `${at}.height`, {"minimum": 0}),
+    width: row["width"] === undefined ? undefined : drawingDrawingArtifactGuardInteger(row["width"], `${at}.width`, {"minimum": 0,"maximum":4294967295}),
+    height: row["height"] === undefined ? undefined : drawingDrawingArtifactGuardInteger(row["height"], `${at}.height`, {"minimum": 0,"maximum":4294967295}),
   };
 }
 
 export function parseDrawingArtboard(value: unknown, at = "$"): DrawingArtboard {
   const row = drawingDrawingArtifactGuardObject(value, at);
   return {
-    width: drawingDrawingArtifactGuardNumber(row["width"], `${at}.width`),
-    height: drawingDrawingArtifactGuardNumber(row["height"], `${at}.height`),
+    width: ownedWord(row["width"], `${at}.width`),
+    height: ownedWord(row["height"], `${at}.height`),
   };
 }
 
-/** ✏️ Owned path geometry vocabulary shared by editing and persistence. */
-export type PathSegment =
+/** ✏️ Numeric path geometry for arithmetic operations; persisted fields use DrawingPathSegment. */
+export type PathGeometrySegment =
   | { kind: "move"; to: [number,number] }
   | { kind: "line"; to: [number,number] }
   | { kind: "quad"; ctrl: [number,number]; to: [number,number] }
@@ -160,11 +170,23 @@ export type PathSegment =
   | { kind: "arc"; rx: number; ry: number; rotation: number; largeArc: boolean; sweep: boolean; to: [number,number] }
   | { kind: "close" };
 
+/** 📐 Lift calculated geometry into the persisted binary64 domain. */
+export function drawingPathFromGeometry(value:PathGeometrySegment):DrawingPathSegment {
+ const segment=parsePathGeometrySegment(value),point=(p:[number,number]):DrawingPoint=>[binary64(p[0]),binary64(p[1])];
+ switch(segment.kind){
+ case "move":case "line":return {kind:segment.kind,to:point(segment.to)};
+ case "quad":return {kind:segment.kind,ctrl:point(segment.ctrl),to:point(segment.to)};
+ case "cubic":return {kind:segment.kind,ctrl1:point(segment.ctrl1),ctrl2:point(segment.ctrl2),to:point(segment.to)};
+ case "arc":return {kind:segment.kind,rx:binary64(segment.rx),ry:binary64(segment.ry),rotation:binary64(segment.rotation),largeArc:segment.largeArc,sweep:segment.sweep,to:point(segment.to)};
+ case "close":return {kind:segment.kind};
+ }
+}
+
 /** 📍 Validates owned geometry without accepting malformed or unknown segment fields. */
-export function parsePathSegment(value: unknown, at = "$"): PathSegment {
+export function parsePathGeometrySegment(value: unknown, at = "$"): PathGeometrySegment {
   const row = drawingDrawingArtifactGuardObject(value, at);
   const kind = drawingDrawingArtifactGuardMember(row.kind, `${at}.kind`, ["move", "line", "quad", "cubic", "arc", "close"] as const);
-  const fields = { move: ["to"], line: ["to"], quad: ["ctrl", "to"], cubic: ["ctrl1", "ctrl2", "to"], arc: ["rx", "ry", "rotation", "largeArc", "sweep", "to"], close: [] }[kind];
+  const fields:readonly string[] = { move: ["to"], line: ["to"], quad: ["ctrl", "to"], cubic: ["ctrl1", "ctrl2", "to"], arc: ["rx", "ry", "rotation", "largeArc", "sweep", "to"], close: [] }[kind];
   for (const key of Object.keys(row)) if (key !== "kind" && !fields.includes(key)) drawingDrawingArtifactGuardReject(`${at}.${key}`, "unknown segment field");
   const point = (key: string): [number, number] => {
     const values = drawingDrawingArtifactGuardArray(row[key], `${at}.${key}`, { minItems: 2, maxItems: 2 });

@@ -15,7 +15,7 @@ fn board_document() -> Puzzle5dDocument {
         "parts": [{ "id": "teil-ä", "partKind": "Part", "2d": { "x": 1.0, "y": 2.0 }, "3d": { "origin": [0.0, 0.0, 0.0] }, "grips": [{ "id": "g1", "gripKind": "griff-ü", "2d": {}, "3d": {} }] }],
         "fasteners": []
     });
-    <Puzzle5dDocument as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(&dsl::os_pack::json::parse(&projection.to_string()).expect("projection"))).expect("document")
+    <Puzzle5dDocument as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(&projection.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("projection"))).expect("document")
 }
 
 fn board_scene_with(interaction: crate::editor::puzzle5d::Puzzle5dInteractionSnapshot, runtime: Puzzle5dRuntime) -> semio_framework_plugin::Board2dScene {

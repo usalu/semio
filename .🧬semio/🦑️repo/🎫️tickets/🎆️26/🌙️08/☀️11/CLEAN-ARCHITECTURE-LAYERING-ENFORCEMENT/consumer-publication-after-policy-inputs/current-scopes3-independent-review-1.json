@@ -1,0 +1,96 @@
+{
+  "at": "2026-10-03T13:54:49.750Z",
+  "scopeProofHash": "ec5181687bbcaae859e3a5755dcf5df39fac07b868881eb6e559696e538c0410",
+  "authorityHashExact": true,
+  "helperAuthoredHashExact": true,
+  "descriptors": [
+    {
+      "owner": "general",
+      "fixtureExact": true,
+      "fixtureHashExact": true,
+      "resultCasesExact": true
+    },
+    {
+      "owner": "os",
+      "fixtureExact": true,
+      "fixtureHashExact": true,
+      "resultCasesExact": true
+    },
+    {
+      "owner": "plugin",
+      "fixtureExact": true,
+      "fixtureHashExact": true,
+      "resultCasesExact": true
+    }
+  ],
+  "sources": [
+    {
+      "path": "🧰️framework/🔨️modules/🎠️kernel/🦀️.rs",
+      "beforeHashExact": true,
+      "currentHashExact": true,
+      "freshExact": true
+    },
+    {
+      "path": "🧰️framework/📦️packages/🦀️rust/Cargo.toml",
+      "beforeHashExact": true,
+      "currentHashExact": true,
+      "freshExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🦀️.rs",
+      "beforeHashExact": true,
+      "currentHashExact": true,
+      "freshExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🦀️.rs",
+      "beforeHashExact": true,
+      "currentHashExact": true,
+      "freshExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeHashExact": true,
+      "currentHashExact": true,
+      "freshExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+      "beforeHashExact": true,
+      "currentHashExact": true,
+      "freshExact": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+      "beforeHashExact": true,
+      "currentHashExact": true,
+      "freshExact": true
+    }
+  ],
+  "postPredicates": [
+    {
+      "owner": "general",
+      "result": {
+        "owner": "general",
+        "cases": 2
+      }
+    },
+    {
+      "owner": "os",
+      "result": {
+        "owner": "os",
+        "cases": 4
+      }
+    },
+    {
+      "owner": "plugin",
+      "result": {
+        "owner": "plugin",
+        "cases": 2
+      }
+    }
+  ],
+  "sourceWrites": 0,
+  "native": false,
+  "wholeCallerEquivalent": false
+}

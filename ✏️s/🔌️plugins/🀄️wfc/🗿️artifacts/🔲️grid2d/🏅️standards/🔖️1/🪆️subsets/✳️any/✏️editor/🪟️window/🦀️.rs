@@ -11,9 +11,10 @@ use crate::editor::grid2d::modes::edit::windows::{grid, preview};
 /// 🎚️ ONE exact pane's persisted-local options. `WindowConfigOwner::State` requires
 /// `dsl::DslField`, which `#[derive(dsl::DslArtifact)]` emits alongside the `__dsl_*` helpers the
 /// record-backed `ArtifactDsl`/`ArtifactPack` below are written against.
-#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, dsl::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_os_kernel::DslArtifact)]
 #[value(rename_all = "camelCase")]
-#[dsl(id = "s.wfc.grid2d.windowconfig", extension = "wfcgrid2dwindowcfg", layout = "lines")]
+#[dsl(layout = "lines")]
+#[artifact(id = "s.wfc.grid2d.windowconfig", extension = "wfcgrid2dwindowcfg")]
 pub struct Grid2dWindowConfig {
     pub camera_x: f64,
     pub camera_y: f64,
@@ -59,11 +60,6 @@ pub enum Grid2dWindowConfigMutation {
     Snapshot { config: Grid2dWindowConfig },
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
-pub enum Grid2dWindowTransientMutation {
-    Snapshot { transient: Grid2dWindowTransient },
-}
-
 impl protocol::Mutation<Grid2dWindowConfig> for Grid2dWindowConfigMutation {
     type Diff = Grid2dWindowConfig;
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
@@ -90,40 +86,12 @@ impl protocol::Mutation<Grid2dWindowConfig> for Grid2dWindowConfigMutation {
             Self::Snapshot { config } => protocol::MutationOutcome::new(config.clone()),
         }
     }
-    fn inverse(&self, base: &Grid2dWindowConfig) -> Vec<Self> {
+    fn inverse(&self, base: &Grid2dWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![Self::Snapshot { config: base.clone() }]
-    }
+    
+    })())
 }
-
-impl protocol::Mutation<Grid2dWindowTransient> for Grid2dWindowTransientMutation {
-    type Diff = Grid2dWindowTransient;
-    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
-        schema_version: 1,
-        owner: "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window",
-        semantic_kind: "set-window-transient",
-        display_name: "Set 2D Grid Window Transient",
-        emoji: "🫧️",
-        aggregate_variant: "Snapshot",
-        payload_schema: "wfc.grid2dwindowtransient",
-        text_opcode: None,
-        binary_tag: None,
-        invertibility: protocol::MutationInvertibility::ExplicitMutation,
-        diff_participation: protocol::MutationDiffParticipation::Detect,
-        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
-        composition: protocol::MutationComposition::Atomic,
-        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
-    }];
-    fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
-        &Self::DESCRIPTORS[0]
-    }
-    fn diff(&self, _base: &Grid2dWindowTransient) -> protocol::MutationOutcome<Self::Diff> {
-        match self {
-            Self::Snapshot { transient } => protocol::MutationOutcome::new(transient.clone()),
-        }
-    }
-    fn inverse(&self, base: &Grid2dWindowTransient) -> Vec<Self> {
-        vec![Self::Snapshot { transient: base.clone() }]
-    }
 }
 
 /// 📜️ Record-backed text form — the derived `__dsl_spec` grammar inside this window kind's semio
@@ -133,13 +101,13 @@ impl store::ArtifactDsl for Grid2dWindowConfig {
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = store::semio_format::split_text_preamble(text).map_or(text, |(_, body)| body);
-        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid 2D grid window envelope");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -151,55 +119,32 @@ impl store::ArtifactDsl for Grid2dWindowConfig {
 impl store::ArtifactPack for Grid2dWindowConfig {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let body = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::from(error.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &body))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, body) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        let (envelope, body) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::from(error.into_value_error()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _) = store::pack_rt::decode_document(&body, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
 
 store::impl_whole_record_config!(Grid2dWindowConfig);
 
-impl store::ArtifactDsl for Grid2dWindowTransient {
-    const EXTENSION: &'static str = "wfcgrid2dwindowtransient";
-    fn envelope_id() -> &'static str {
-        "s.wfc.grid2d.windowtransient"
-    }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        dsl::json::from_json_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
-    }
-    fn print_dsl(&self) -> String {
-        dsl::json::to_json_string(self)
-    }
-}
-
-impl store::ArtifactPack for Grid2dWindowTransient {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        semio_framework_value::ToValue::to_value(self).encode_pack_with(options)
-    }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let value = dsl::DslValue::decode_pack_with(bytes, options)?;
-        semio_framework_value::FromValue::from_value(value).map_err(|error| store::PackError::Schema(error.to_string()))
-    }
-}
-
 macro_rules! mutation_wire {
     ($mutation:ty) => {
         impl protocol::OpText for $mutation {
             fn print_op(&self) -> String {
-                dsl::json::to_json_string(self)
+                semio_framework_pack_json::to_json_string(self)
             }
-            fn parse_op(line: &str) -> Result<Self, store::TextError> {
-                dsl::json::from_json_str(line).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+            fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+                semio_framework_pack_json::from_json_str(line, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1)))
             }
         }
         impl protocol::OpBinary for $mutation {
@@ -207,46 +152,16 @@ macro_rules! mutation_wire {
                 Ok(protocol::OpText::print_op(self).into_bytes())
             }
             fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-                let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))?;
-                dsl::json::from_json_str(text).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
+                let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(semio_framework_value::ValueError::from(error))))?;
+                semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(error)))
             }
         }
     };
 }
 
 mutation_wire!(Grid2dWindowConfigMutation);
-mutation_wire!(Grid2dWindowTransientMutation);
-
-impl protocol::MutationDiff<Grid2dWindowTransient> for Grid2dWindowTransient {
-    fn apply(&self, _base: &Grid2dWindowTransient) -> protocol::MutationApplyResult<Grid2dWindowTransient> {
-        Ok(self.clone())
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
 
 semio_framework_value::artifact_retire_struct!(Grid2dWindowTransient { hovered_cell });
-
-impl semio_framework_value::retirement::RetireOwned for Grid2dWindowTransientMutation {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        match self {
-            Self::Snapshot { transient } => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::leaf(0u8), semio_framework_value::retirement::RetireOwned::retirement(transient)]),
-        }
-    }
-}
-
-fn grid2d_window_transient_preflight(mutation: &Grid2dWindowTransientMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-    let Grid2dWindowTransientMutation::Snapshot { transient } = mutation;
-    let retained_bytes = size_of::<Grid2dWindowTransient>().checked_add(transient.hovered_cell.capacity()).ok_or_else(|| "2D grid window transient footprint overflowed".to_string())?;
-    Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes })
-}
-
-fn grid2d_window_transient_transfer(mutation: Grid2dWindowTransientMutation) -> Grid2dWindowTransient {
-    match mutation {
-        Grid2dWindowTransientMutation::Snapshot { transient } => transient,
-    }
-}
 
 macro_rules! owners {
     ($config:ident, $transient:ident, $kind:expr) => {
@@ -275,7 +190,7 @@ macro_rules! owners {
             fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
                 let state = std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Self::State>::default());
                 let mutation = std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default());
-                let preparation = std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(grid2d_window_transient_preflight, grid2d_window_transient_transfer, state.clone(), mutation.clone()));
+                let preparation = std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(Grid2dWindowTransientMutation::footprint, Grid2dWindowTransientMutation::into_state, state.clone(), mutation.clone()));
                 semio_framework_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
             }
         }
@@ -323,13 +238,29 @@ pub fn kind_for_view(view: &semio_framework_plugin::ViewModel) -> Option<&str> {
 /// 📮️ Addresses a config write at the EXACT window instance the command was dispatched in — a
 /// config write that names the wrong pane silently lands in the other pane's store.
 pub fn addressed_config(view: &semio_framework_plugin::ViewModel, config: Grid2dWindowConfig) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> {
-    let (id, kind) = window_kind(view).ok_or_else(|| semio_framework_plugin::Fault::from("wfc-grid2d-window-required"))?;
+    let (id, kind) = window_kind(view).ok_or_else(|| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.grid2d.window.required"), "wfc.grid2d.window.required"))?;
     let mutation = Grid2dWindowConfigMutation::Snapshot { config };
     match kind {
         grid::WINDOW_KIND_ID => Ok(semio_framework_plugin::WindowConfigMutation::of::<Grid2dGridWindowConfigOwner>(id, mutation)),
         preview::WINDOW_KIND_ID => Ok(semio_framework_plugin::WindowConfigMutation::of::<Grid2dPreviewWindowConfigOwner>(id, mutation)),
-        _ => Err(semio_framework_plugin::Fault::from("wfc-grid2d-window-kind-required")),
+        _ => Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.grid2d.window.kind-required"), "wfc.grid2d.window.kind-required")),
     }
+}
+
+semio_framework_plugin::transient_root! {
+    state: Grid2dWindowTransient,
+    mutation: Grid2dWindowTransientMutation,
+    owner: "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window",
+    kind: "set-window-transient",
+    display_name: "Set 2D Grid Window Transient",
+    payload_schema: "wfc.grid2dwindowtransient",
+    envelope: "s.wfc.grid2d.windowtransient",
+    extension: "wfcgrid2dwindowtransient",
+}
+
+semio_framework_plugin::window_transient_transfer! {
+    state: Grid2dWindowTransient,
+    mutation: Grid2dWindowTransientMutation,
 }
 
 #[cfg(test)]

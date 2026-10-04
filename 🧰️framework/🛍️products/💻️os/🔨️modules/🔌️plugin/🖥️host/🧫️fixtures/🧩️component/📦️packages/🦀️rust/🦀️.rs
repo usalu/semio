@@ -12,3 +12,13 @@ pub use mutations::Mutation;
 #[path="../../🦀️.rs"]
 mod assembly;
 semio_framework_plugin::plugin_exports!(assembly::plugin,assembly::FixtureApps);
+
+#[cfg(test)]
+#[path="../../🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_snapshot_tests;
+#[cfg(test)]
+#[path="../../../../../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/🦀️.rs"]
+mod test_allocation;
+#[cfg(test)]
+#[global_allocator]
+static TEST_ALLOCATOR: test_allocation::RequestedAllocator = test_allocation::RequestedAllocator;

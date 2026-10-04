@@ -1,4 +1,7 @@
 syntax = "proto3";
 package semio.s.trinity.rewriting.mutation.edit_lhs;
-// edit-lhs / EditLhs
-message EditLhs { string new_lhs_json = 1; }
+import "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
+import "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🛰️.proto";
+import "🧰️framework/🔨️modules/🌱️value/🧬️schema/🛰️.proto";
+import "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🌱️value/🧬️schema/🛰️.proto";
+message EditLhs { semio.s.trinity.rewriting.artifact.Lhs new_lhs = 1; }

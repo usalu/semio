@@ -12,7 +12,12 @@
           },
           "id": "mat2",
           "metallic": 0.2,
-          "roughness": 0.8
+          "roughness": 0.8,
+          "baseColorTexture": null,
+          "metallicRoughnessTexture": null,
+          "normalTexture": null,
+          "occlusionTexture": null,
+          "emissiveTexture": null
         }
       }
     }

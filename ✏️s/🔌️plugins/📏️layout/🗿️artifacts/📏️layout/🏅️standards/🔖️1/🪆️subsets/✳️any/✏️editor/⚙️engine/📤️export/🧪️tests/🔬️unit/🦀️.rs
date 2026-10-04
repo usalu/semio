@@ -233,7 +233,7 @@ async fn export_pdf_publishes_a_segmented_download_the_host_can_drain_into_a_who
             assert_ne!(page.lane, TypedOperationResultLane::Fault, "export faulted: {}", String::from_utf8_lossy(page.bytes()));
             if page.lane == TypedOperationResultLane::Download {
                 let text = String::from_utf8_lossy(page.bytes()).into_owned();
-                let row = dsl::os_pack::json::parse(&text).unwrap_or_else(|_| panic!("download page is JSON: {text}"));
+                let row = semio_framework_pack_json::parse(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| panic!("download page is JSON: {text}"));
                 let row = row.as_array().unwrap_or_else(|| panic!("download page is a 4-row array: {text}"));
                 download = Some((
                     page.token.operation,
@@ -471,7 +471,7 @@ fn collection_and_json_envelopes_accept_max_and_reject_max_plus_one() {
     snapshot.paragraph_styles.resize(MAX_LAYOUT_EXPORT_STYLES, style);
     let character = snapshot.character_styles.first().cloned().unwrap_or(crate::CharacterStyle { id: "character.test".into(), name: None, font_family: None, font_size: None, font_weight: None, italic: None, color: None, tracking: None });
     snapshot.character_styles.resize(MAX_LAYOUT_EXPORT_STYLES, character);
-    snapshot.data_fields_json = Some(format!("{}[]", " ".repeat(MAX_LAYOUT_EXPORT_PACKAGE_FRAGMENT_BYTES - 2)));
+    snapshot.data_fields = Some(dictionary_at_json_bytes(MAX_LAYOUT_EXPORT_PACKAGE_FRAGMENT_BYTES));
     assert!(run_layout_export_headless_batch(operation(), max).is_ok());
 
     let mut plus_one = request(LayoutExportKind::Svg);
@@ -481,7 +481,7 @@ fn collection_and_json_envelopes_accept_max_and_reject_max_plus_one() {
     assert!(run_layout_export_headless_batch(operation(), plus_one).expect_err("page max + 1").contains("document-envelope"));
 
     let mut json_plus_one = request(LayoutExportKind::Svg);
-    Arc::make_mut(&mut json_plus_one.snapshot).data_fields_json = Some(format!("{}[]", " ".repeat(MAX_LAYOUT_EXPORT_PACKAGE_FRAGMENT_BYTES - 1)));
+    Arc::make_mut(&mut json_plus_one.snapshot).data_fields = Some(dictionary_at_json_bytes(MAX_LAYOUT_EXPORT_PACKAGE_FRAGMENT_BYTES + 1));
     assert!(run_layout_export_headless_batch(operation(), json_plus_one).expect_err("json max + 1").contains("json-byte-limit"));
 }
 
@@ -537,7 +537,7 @@ fn nested_collection_string_and_json_caps_accept_max_and_reject_max_plus_one() {
     page.layer_ids.resize(MAX_LAYOUT_EXPORT_LAYERS_PER_PAGE, "layer-1".into());
     snapshot.spreads[0].page_ids.resize(MAX_LAYOUT_EXPORT_SPREAD_PAGE_IDS, "page-1".into());
     snapshot.name = "n".repeat(MAX_LAYOUT_EXPORT_STRING_BYTES);
-    snapshot.data_fields_json = Some(format!("[{}]", std::iter::repeat_n("null", MAX_LAYOUT_EXPORT_JSON_NODES - 1).collect::<Vec<_>>().join(",")));
+    snapshot.data_fields = Some(dictionary_with_nulls(MAX_LAYOUT_EXPORT_JSON_NODES - 1));
     assert!(run_layout_export_headless_batch(operation(), max).is_ok());
 
     let mut frames = request(LayoutExportKind::Svg);
@@ -558,7 +558,7 @@ fn nested_collection_string_and_json_caps_accept_max_and_reject_max_plus_one() {
     assert!(run_layout_export_headless_batch(operation(), string).expect_err("string max + 1").contains("document-envelope"));
 
     let mut json_nodes = request(LayoutExportKind::Svg);
-    Arc::make_mut(&mut json_nodes.snapshot).data_fields_json = Some(format!("[{}]", std::iter::repeat_n("null", MAX_LAYOUT_EXPORT_JSON_NODES).collect::<Vec<_>>().join(",")));
+    Arc::make_mut(&mut json_nodes.snapshot).data_fields = Some(dictionary_with_nulls(MAX_LAYOUT_EXPORT_JSON_NODES));
     assert!(run_layout_export_headless_batch(operation(), json_nodes).expect_err("json node max + 1").contains("json-node-limit"));
 
     let mut preflight_schema = request(LayoutExportKind::Package);
@@ -611,7 +611,7 @@ fn typed_document_json_matches_serde_and_every_write_is_credit_bounded() {
     snapshot.background_drawing =
         Some(crate::LayoutDrawingChild { handle: store::ArtifactChild::new("drawing-child".into(), store::os_io::ArtifactRef::parse_uri("document!s.stdio.semio@v1/drawing").expect("child reference")), content: Default::default() });
     snapshot.referenced_model = Some(store::ArtifactLink { target: store::os_io::ArtifactRef::parse_uri("document!s.stdio.semio@v1/model").expect("model reference"), pin: store::LinkPin::Head, role: "model".into() });
-    let expected: serde_json::Value = serde_json::from_str(&dsl::os_pack::to_json_string(&snapshot)).expect("independent document JSON oracle");
+    let expected: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&snapshot)).expect("independent document JSON oracle");
     let mut cursor = TypedJsonCursor::document();
     let mut actual = Vec::new();
     loop {
@@ -674,7 +674,7 @@ fn terminal_candidate_is_empty_and_owned_chunks_never_exceed_four_kibibytes() {
 fn supplied_preflight_array_is_preserved_byte_for_byte_in_package_entry() {
     let snapshot = crate::standards::v1::subsets::any::schema::default_document();
     let supplied = r#"[{"kind":"custom","severity":"warning"}]"#;
-    let json = dsl::os_pack::to_json_string(&snapshot);
+    let json = semio_framework_pack_json::to_json_string(&snapshot);
     let package = export_package_zip_headless_batch(&json, supplied).expect("package");
     assert!(package.windows(supplied.len()).any(|window| window == supplied.as_bytes()));
 }
@@ -776,12 +776,12 @@ fn the_reserved_close_ladder_leaves_the_publication_stage_in_bounded_slices() {
 #[test]
 fn pdf_export_prints_proxy_png_pixels() {
     let mut snapshot = crate::standards::v1::subsets::any::schema::default_document();
-    let mut image = semio_s_artifact_stdio_png::PngSnapshot::default();
+    let mut image = semio_s_artifact_stdio_png::io::PngProjection {width:1,height:1,bit_depth:8,color_type:semio_s_artifact_stdio_png::schema::snapshot::PngColorType::Rgba,interlace:false,plte:None,trns:None,gama:None,chrm:None,srgb:None,phys:None,time:None,bkgd:None,text_chunks:Vec::new(),pixels:Vec::new(),chunk_order:Vec::new(),unknown_chunks:Vec::new()};
     image.width = 2;
     image.height = 2;
     image.pixels = vec![255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 255, 255, 255, 255];
-    let png = semio_s_artifact_stdio_png::io::encode_png(&image).expect("png");
-    let decoded = semio_s_artifact_stdio_png::io::decode_png(&png).expect("png round trip");
+    let png = semio_s_artifact_stdio_png::io::author_png_projection(&image).expect("png");
+    let decoded = semio_s_artifact_stdio_png::io::project_png(&png).expect("png round trip");
     assert_eq!(decoded.pixels, image.pixels, "the png codec keeps the placed pixels");
     snapshot.links[0].state = Some("ready".into());
     snapshot.links[0].proxy_data_url = Some(format!("data:image/png;base64,{}", base64_encode(&png)));
@@ -812,11 +812,11 @@ fn base64_encode(bytes: &[u8]) -> String {
 #[test]
 fn pdf_export_rotates_a_proxy_with_its_frame() {
     let mut snapshot = crate::standards::v1::subsets::any::schema::default_document();
-    let mut image = semio_s_artifact_stdio_png::PngSnapshot::default();
+    let mut image = semio_s_artifact_stdio_png::io::PngProjection {width:1,height:1,bit_depth:8,color_type:semio_s_artifact_stdio_png::schema::snapshot::PngColorType::Rgba,interlace:false,plte:None,trns:None,gama:None,chrm:None,srgb:None,phys:None,time:None,bkgd:None,text_chunks:Vec::new(),pixels:Vec::new(),chunk_order:Vec::new(),unknown_chunks:Vec::new()};
     image.width = 2;
     image.height = 2;
     image.pixels = vec![255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 255, 255, 255, 255];
-    let png = semio_s_artifact_stdio_png::io::encode_png(&image).expect("png");
+    let png = semio_s_artifact_stdio_png::io::author_png_projection(&image).expect("png");
     snapshot.links[0].state = Some("ready".into());
     snapshot.links[0].proxy_data_url = Some(format!("data:image/png;base64,{}", base64_encode(&png)));
     let frame = snapshot.pages[0].frames.iter_mut().find(|frame| frame.id() == "frame-image-1").expect("image");
@@ -1146,11 +1146,11 @@ fn pdf_export_prints_an_embedded_drawing_png() {
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
     let point = |x: f64, y: f64| SemioPoint2 { x, y };
-    let mut encoded = semio_s_artifact_stdio_png::PngSnapshot::default();
+    let mut encoded = semio_s_artifact_stdio_png::io::PngProjection {width:1,height:1,bit_depth:8,color_type:semio_s_artifact_stdio_png::schema::snapshot::PngColorType::Rgba,interlace:false,plte:None,trns:None,gama:None,chrm:None,srgb:None,phys:None,time:None,bkgd:None,text_chunks:Vec::new(),pixels:Vec::new(),chunk_order:Vec::new(),unknown_chunks:Vec::new()};
     encoded.width = 1;
     encoded.height = 1;
     encoded.pixels = vec![255, 0, 0, 255];
-    let bytes = semio_s_artifact_stdio_png::io::encode_png(&encoded).expect("png");
+    let bytes = semio_s_artifact_stdio_png::io::author_png_projection(&encoded).expect("png");
     let content = SemioDrawingSnapshot {
         schema: "stdio.semio.drawing".into(),
         canvas: Default::default(),
@@ -1188,11 +1188,11 @@ fn pdf_export_prints_a_rotated_drawing_png() {
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
     let point = |x: f64, y: f64| SemioPoint2 { x, y };
-    let mut encoded = semio_s_artifact_stdio_png::PngSnapshot::default();
+    let mut encoded = semio_s_artifact_stdio_png::io::PngProjection {width:1,height:1,bit_depth:8,color_type:semio_s_artifact_stdio_png::schema::snapshot::PngColorType::Rgba,interlace:false,plte:None,trns:None,gama:None,chrm:None,srgb:None,phys:None,time:None,bkgd:None,text_chunks:Vec::new(),pixels:Vec::new(),chunk_order:Vec::new(),unknown_chunks:Vec::new()};
     encoded.width = 1;
     encoded.height = 1;
     encoded.pixels = vec![255, 0, 0, 255];
-    let bytes = semio_s_artifact_stdio_png::io::encode_png(&encoded).expect("png");
+    let bytes = semio_s_artifact_stdio_png::io::author_png_projection(&encoded).expect("png");
     let content = SemioDrawingSnapshot {
         schema: "stdio.semio.drawing".into(),
         canvas: Default::default(),
@@ -1290,4 +1290,12 @@ fn pdf_export_prints_a_front_rect_after_the_image() {
     let image = text.find("0.92 0.88 0.84 rg 136.000 25.000 60.000 40.000 re f Q").expect("image");
     let rect = text.find(" rg 10.000 450.000 40.000 40.000 re f Q").expect("rect");
     assert!(rect > image, "the front rectangle follows the image in the content stream");
+}
+
+fn dictionary_with_nulls(count:usize)->crate::FormDictionary{crate::FormDictionary{entries:vec![crate::FormDictionaryEntry{question_id:String::new(),value:semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::Null;count])}]}}
+fn dictionary_at_json_bytes(count:usize)->crate::FormDictionary{
+ let mut dictionary=crate::FormDictionary{entries:(0..8).map(|index|crate::FormDictionaryEntry{question_id:index.to_string(),value:semio_framework_value::DslValue::String(String::new())}).collect()};
+ let base=semio_framework_pack_json::to_json_string(&dictionary).len();let mut remaining=count.checked_sub(base).expect("dictionary wrapper fits byte witness");
+ for entry in &mut dictionary.entries{let bytes=remaining.min(MAX_LAYOUT_EXPORT_STRING_BYTES);entry.value=semio_framework_value::DslValue::String("a".repeat(bytes));remaining-=bytes;}
+ assert_eq!(remaining,0);assert_eq!(semio_framework_pack_json::to_json_string(&dictionary).len(),count);dictionary
 }

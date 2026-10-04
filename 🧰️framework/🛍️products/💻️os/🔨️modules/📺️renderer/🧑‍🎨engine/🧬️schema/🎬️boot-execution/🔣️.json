@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["carriers", "locales"],
+  "properties": {
+    "carriers": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "fields"],
+        "properties": {
+          "id": { "enum": ["react", "wgpu"] },
+          "fields": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+        }
+      }
+    },
+    "locales": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["requested", "expected"],
+        "properties": {
+          "requested": { "type": "string" },
+          "expected": { "enum": ["en", "de", null] }
+        }
+      }
+    }
+  }
+}

@@ -56,7 +56,7 @@ async fn io_compose_via_chains_two_registered_hops() {
     let target_key = IoKey::from_owner_counterpart(HOP2_INTO, HOP1_INTO, IoDirection::Import);
     let sources = [ErasedComposeSource { dialect: HOP1_FROM, payload: IoPayload::Text("seed".to_string()) }];
 
-    let result = resolve_ready(io_compose_via(&hub_key, &target_key, &sources)).expect("2-hop compose over real registered entries should succeed");
+    let result = ::semio_framework_async::poll::resolve_ready(io_compose_via(&hub_key, &target_key, &sources)).expect("2-hop compose over real registered entries should succeed");
     assert_eq!(result.dialect, HOP2_INTO);
     match result.payload {
         IoPayload::Text(t) => assert_eq!(t, "hop2(hop1(seed))"),
@@ -71,7 +71,7 @@ async fn io_compose_via_surfaces_hub_resolve_failure() {
     let unregistered_hub = IoKey::from_owner_counterpart(Dialect { artifact_kind: "test.io-compose-via.unregistered", standard: StandardId("1"), subset: SubsetId("*") }, HOP1_FROM, IoDirection::Import);
     let target_key = IoKey::from_owner_counterpart(HOP2_INTO, HOP1_INTO, IoDirection::Import);
     let sources = [ErasedComposeSource { dialect: HOP1_FROM, payload: IoPayload::Text("seed".to_string()) }];
-    let err = match resolve_ready(io_compose_via(&unregistered_hub, &target_key, &sources)) {
+    let err = match ::semio_framework_async::poll::resolve_ready(io_compose_via(&unregistered_hub, &target_key, &sources)) {
         Err(err) => err,
         Ok(_) => panic!("unregistered hub key must fail hop 1"),
     };
@@ -269,7 +269,7 @@ async fn wire_rejects_oversized_and_unbounded_dialect_inputs_before_interning() 
         diagnostics: Vec::new(),
         confidence: Confidence::High,
     };
-    let bytes = dsl::os_pack::json::to_json_string(&wire).into_bytes();
+    let bytes = semio_framework_pack_json::to_json_string(&wire).into_bytes();
     assert!(matches!(wire_decode_composed_artifact(&bytes).await, Err(IoWireError::Limit { operation: "composed-artifact", .. })));
 }
 

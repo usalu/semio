@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "path",
+          "fn",
+          "returnType",
+          "preserved"
+        ],
+        "properties": {
+          "name": {
+            "enum": [
+              "GLTF",
+              "GLTF controlled",
+              "IFC",
+              "XML",
+              "SVG",
+              "Drawing SVG"
+            ]
+          },
+          "path": {
+            "enum": [
+              "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🦀️.rs",
+              "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🦀️.rs",
+              "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🦀️.rs",
+              "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+              "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+              "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/🦀️.rs"
+            ]
+          },
+          "fn": {
+            "enum": [
+              "serialize_gltf_document",
+              "serialize_gltf_document_owned_controlled",
+              "encode_ifc2x3",
+              "export_text",
+              "export_text",
+              "write_drawing_svg"
+            ]
+          },
+          "returnType": {
+            "enum": [
+              "String",
+              "Result<String, semio_framework_value::ValueError>",
+              "Result<String, String>",
+              "Result<String, String>",
+              "Result<String, String>",
+              "Result<String, String>"
+            ]
+          },
+          "preserved": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    }
+  }
+}

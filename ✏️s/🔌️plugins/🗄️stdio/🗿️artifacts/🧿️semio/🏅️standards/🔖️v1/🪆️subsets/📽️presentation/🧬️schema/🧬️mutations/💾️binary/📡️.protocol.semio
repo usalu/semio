@@ -39,3 +39,5 @@ record remove-layout tag=12
 field payload bytes
 record set-layout-master tag=13
 field payload bytes
+record patch-snapshot tag=14
+field payload bytes

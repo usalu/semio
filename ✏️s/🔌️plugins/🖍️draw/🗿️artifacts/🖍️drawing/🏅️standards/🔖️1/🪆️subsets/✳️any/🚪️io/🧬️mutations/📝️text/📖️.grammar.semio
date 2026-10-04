@@ -67,7 +67,7 @@ shape-layer = "shape" layer-base "shape-kind=" text
 path-layer = "path" layer-base "segments" "{" path-segment* "}"
 text-layer = "text" layer-base "x=" number SP "y=" number SP "content=" text SP "size=" number
 image-layer = "image" layer-base "image-key=" text SP "width=" number SP "height=" number
-group-layer = "group" layer-base "children" "{" layer* "}"
+group-layer = "group" "isolation" "=" bool layer-base "children" "{" layer* "}"
 boolean-layer = "boolean" layer-base "operation=" text SP "children=" string-list
 trace-layer = "trace" layer-base "source-key=" text trace-params-block
 layer-base = "base" "{" "id=" text SP "name=" text SP "visible=" bool SP "locked=" bool SP "opacity=" number SP "blend-mode=" text transform-block "}"

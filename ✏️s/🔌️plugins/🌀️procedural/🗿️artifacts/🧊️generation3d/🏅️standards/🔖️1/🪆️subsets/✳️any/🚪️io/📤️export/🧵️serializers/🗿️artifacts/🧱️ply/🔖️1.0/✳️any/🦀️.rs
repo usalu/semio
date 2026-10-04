@@ -12,10 +12,10 @@ use semio_s_artifact_stdio_ply::PlySnapshot;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::ply::v1_0::any::SemioMeshToPly;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 
-pub fn serialize_mesh(mesh: &SemioMeshSnapshot) -> Result<PlySnapshot, store::TextError> {
-    semio_framework_plugin::resolve_ready(SemioMeshToPly::serialize(mesh)).map_err(|error| io_error(format!("generation3d→ply: {error}")))
+pub fn serialize_mesh(mesh: &SemioMeshSnapshot) -> Result<PlySnapshot, semio_framework_diagnostic::TextError> {
+    ::semio_framework_async::poll::resolve_ready(SemioMeshToPly::serialize(mesh)).map_err(|error| io_error(format!("generation3d→ply: {error}")))
 }
 
-pub fn serialize_mesh_bytes(mesh: &SemioMeshSnapshot) -> Result<Vec<u8>, store::TextError> {
+pub fn serialize_mesh_bytes(mesh: &SemioMeshSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
     semio_s_artifact_stdio_ply::engine::encode_ply(&serialize_mesh(mesh)?).map_err(|error| io_error(format!("generation3d→ply: {error}")))
 }

@@ -2399,7 +2399,7 @@ fn interactive_stage_for(lane: semio_framework_actor::Lane) -> InteractiveStage 
 /// `pack`, so the guest's `outcome_to_result` decodes it exactly like a normal `Event::Completed`
 /// failure, with no special-casing for jobs.
 fn start_job_fault_bytes(fault: &TurnFault) -> Vec<u8> {
-    store::pack_rt::encode_wire_value(&dsl::ToValue::to_value(&semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("job.host-fault"), fault.to_string())))
+    store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("job.host-fault"), fault.to_string())))
 }
 
 //#region 🚚️ShardTransports

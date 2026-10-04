@@ -44,7 +44,7 @@ from __future__ import annotations
 # region 🔖️Imports
 import json
 
-from semio_repo_test import Adapter, Context, Outcome, digest
+from semio_repo_test import Adapter, Context, Outcome, digest, patched_snapshot
 
 # endregion 🔖️Imports
 
@@ -338,6 +338,7 @@ def pack_bytes(document: dict) -> bytes:
 TAG_TO_KIND = {
     "noMutation": "no-mutation",
     "setSnapshot": "set-snapshot",
+    "patchSnapshot": "patch-snapshot",
     "setDimensions": "set-dimensions",
     "setColorspace": "set-colorspace",
     "setBitDepth": "set-bit-depth",
@@ -355,7 +356,7 @@ def kind_of(mutation: dict) -> str:
     """🏷️ The kebab-case kind a wire payload names, refusing anything outside the vocabulary."""
     tag = mutation.get("mutation")
     if tag not in TAG_TO_KIND:
-        raise AssertionError("%r is not one of this subset's thirteen declared verbs" % (tag,))
+        raise AssertionError("%r is not one of this subset's fourteen declared verbs" % (tag,))
     return TAG_TO_KIND[tag]
 
 
@@ -385,6 +386,8 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
     """
     kind = kind_of(mutation)
     result = json.loads(json.dumps(document))
+    if kind == "patch-snapshot":
+        return patched_snapshot(document, mutation["patch"])
     if kind == "no-mutation":
         return result
     if kind == "set-snapshot":
@@ -455,6 +458,8 @@ def inverse_mutation(document: dict, mutation: dict) -> dict:
     value or removes the key it introduced.
     """
     kind = kind_of(mutation)
+    if kind == "patch-snapshot":
+        return {"mutation": "setSnapshot", "snapshot": json.loads(json.dumps(document))}
     if kind in ("no-mutation", "set-snapshot"):
         return {"mutation": "noMutation"} if kind == "no-mutation" else {"mutation": "setSnapshot", "snapshot": json.loads(json.dumps(document))}
     if kind == "set-dimensions":

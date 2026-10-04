@@ -122,8 +122,8 @@ async fn real_decode_stays_lossless_on_reencode() {
 async fn snapshot_pack_preserves_signed_zero_semantics() {
     let original = decode_dwg(FIXTURE_BYTES).expect("real fixture must decode");
     let restored = DwgSnapshot::decode_pack(&original.encode_pack()).expect("snapshot pack roundtrip");
-    let expected = dsl::json::to_json_string(&original.drawing);
-    let actual = dsl::json::to_json_string(&restored.drawing);
+    let expected = semio_framework_pack_json::to_json_string(&original.drawing);
+    let actual = semio_framework_pack_json::to_json_string(&restored.drawing);
     assert!(expected.contains("\"value\":-0.0"), "fixture must exercise negative zero");
     assert_eq!(actual, expected, "snapshot pack must preserve signed zero");
 }
@@ -148,8 +148,8 @@ async fn exact_fixture_roundtrips_through_snapshot_diff_mutation_and_raw_io() {
         assert!(!pack_text.contains(forbidden), "snapshot pack retained forbidden DWG shadow term {forbidden}");
     }
     let from_pack = DwgSnapshot::decode_pack(&pack).expect("snapshot unpack");
-    let restored_json = dsl::json::to_json_string(&from_pack.drawing);
-    let expected_json = dsl::json::to_json_string(&original.drawing);
+    let restored_json = semio_framework_pack_json::to_json_string(&from_pack.drawing);
+    let expected_json = semio_framework_pack_json::to_json_string(&original.drawing);
     assert_eq!(restored_json, expected_json, "snapshot pack must preserve signed numeric semantics");
     assert_fixture_bytes(&encode_dwg(&from_pack).expect("pack-restored export"), "pack-restored export").await;
 
@@ -258,7 +258,7 @@ async fn semantic_metadata_edits_materialize_from_logical_content() {
     let dirty_roundtrip = decode_dwg(&dirty_bytes).expect("logical section re-import");
     assert_eq!(dirty_roundtrip.version, dirty.version);
 
-    for inverse in mutation.inverse(&original) {
+    for inverse in mutation.inverse(&original).expect("valid retained mutation inverse fixture") {
         apply_dwg_mutation(&mut dirty, &inverse);
     }
     assert_eq!(dirty, original);

@@ -50,14 +50,14 @@ fn the_refusal_is_the_declared_one() {
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "change-node-anchor/rejects-anchoring-a-capsule-the-board-never-held: exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.target-missing", "change-node-anchor/rejects-anchoring-a-capsule-the-board-never-held: the refusal code is fixed by this vector");
-    assert_eq!(messages[0].level, protocol::Severity::Error, "change-node-anchor/rejects-anchoring-a-capsule-the-board-never-held: the refusal level is fixed by this vector");
+    assert_eq!(messages[0].level, semio_framework_diagnostic::Severity::Error, "change-node-anchor/rejects-anchoring-a-capsule-the-board-never-held: the refusal level is fixed by this vector");
     assert_eq!(messages[0].target, vec!["01890804-66f2-4544-98f0-b6f0c0615492".to_string()], "change-node-anchor/rejects-anchoring-a-capsule-the-board-never-held: the diagnostic addresses exactly what the payload named");
 }
 
 /// ↩️ A verb that could not find its target has nothing to undo, so its inverse is empty.
 #[test]
 fn inverse_of_a_refusal() {
-    let inverse = inverse_puzzle2d_mutation(&before(), &mutation());
+    let inverse = inverse_puzzle2d_mutation(&before(), &mutation()).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 0, "change-node-anchor/rejects-anchoring-a-capsule-the-board-never-held: got {inverse:?}");
 }
 

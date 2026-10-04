@@ -13,7 +13,6 @@
     "7ff0000000000001",
     "fff8123456789abc"
   ],
-  "importedFeaturesJson": "not JSON — persisted text\n世界\u0000",
   "child": {
     "childId": "mesh identity ! @ /",
     "target": {
@@ -24,5 +23,13 @@
         "subset": "mesh"
       }
     }
-  }
+  },
+  "invalidUtf16CodeUnits": [
+    [
+      55296
+    ],
+    [
+      57343
+    ]
+  ]
 }

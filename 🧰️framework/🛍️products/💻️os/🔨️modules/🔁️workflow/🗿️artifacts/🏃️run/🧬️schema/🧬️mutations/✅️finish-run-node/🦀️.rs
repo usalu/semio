@@ -2,7 +2,7 @@ use super::super::{RunArtifact, RunDiff, RunMutation, RunNodeRecord};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "finish-run-node")]
@@ -17,11 +17,14 @@ impl protocol::MutationKind<RunArtifact, RunMutation> for FinishRunNode {
     fn diff(&self, _base: &RunArtifact) -> protocol::MutationOutcome<RunDiff> {
         protocol::MutationOutcome::new(RunDiff::NodeFinished { node_record: self.node_record.clone() })
     }
-    fn inverse(&self, base: &RunArtifact) -> Vec<RunMutation> {
+    fn inverse(&self, base: &RunArtifact) -> Result<Vec<RunMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         base.node_records.iter().find(|entry| entry.node_id == self.node_record.node_id).map(|node_record| vec![RunMutation::FinishRunNode(Self { node_record: node_record.clone() })]).unwrap_or_default()
-    }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Finish run node {}", self.node_record.node_id), &format!("Laufknoten {} abschließen", self.node_record.node_id))
+    
+    })())
+}
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Finish run node {}", self.node_record.node_id), &format!("Laufknoten {} abschließen", self.node_record.node_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["nodes".into(), self.node_record.node_id.clone()]

@@ -1,11 +1,11 @@
 /** 🎯️ Snapshot-bound point references for framework-owned node selection. */
 import { Blake3Hasher } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🔏️hash/🟦️.ts";
-import { parsePathSegment, type PathSegment } from "../../../🧬️schema/🟦️.ts";
+import { parsePathGeometrySegment, type PathGeometrySegment } from "../../../🧬️schema/🟦️.ts";
 import type { PathPoint } from "../../../🧬️schema/🧮️geometry/✏️editing/🟦️.ts";
 
 export interface PointSelectionRef { readonly layerId:string; readonly geometry:string; readonly index:number; readonly point:PathPoint; }
 
-export function pointSlots(segment:PathSegment):readonly PathPoint[] {
+export function pointSlots(segment:PathGeometrySegment):readonly PathPoint[] {
   return segment.kind==="close"?[]:segment.kind==="cubic"?["anchor","control1","control2"]:segment.kind==="quad"?["anchor","control1"]:["anchor"];
 }
 
@@ -23,14 +23,14 @@ export function pointId(reference:PointSelectionRef):string|null {
   return parsed && parsed.layerId===reference.layerId && parsed.geometry===reference.geometry && parsed.index===reference.index && parsed.point===reference.point?id:null;
 }
 
-export function geometryId(segments:readonly PathSegment[]):string|null {
+export function geometryId(segments:readonly PathGeometrySegment[]):string|null {
   const hasher=new Blake3Hasher(),bytes=new Uint8Array(8),view=new DataView(bytes.buffer);
   hasher.update(new TextEncoder().encode("draw-points-v1"));
   const number=(value:number):void=>{view.setFloat64(0,value===0?0:value,true);hasher.update(bytes);};
   const point=(value:readonly number[]):void=>{number(value[0]!);number(value[1]!);};
   try {
     for(const source of segments) {
-      const segment=parsePathSegment(source);
+      const segment=parsePathGeometrySegment(source);
       hasher.update(Uint8Array.of({move:0,line:1,quad:2,cubic:3,arc:4,close:5}[segment.kind]));
       if(segment.kind==="quad")point(segment.ctrl);
       if(segment.kind==="cubic"){point(segment.ctrl1);point(segment.ctrl2);}
@@ -51,7 +51,7 @@ export function pickPointSelection(current:readonly string[],hit:string|null,mod
 }
 
 /** ▧️ Marquees address anchors in world coordinates, including rectangle edges. */
-export function anchorInMarquee(segment:PathSegment,matrix:readonly number[],start:readonly number[],end:readonly number[]):boolean {
+export function anchorInMarquee(segment:PathGeometrySegment,matrix:readonly number[],start:readonly number[],end:readonly number[]):boolean {
   if(segment.kind==="close" || ![...matrix,...start,...end].every(Number.isFinite))return false;
   const [x,y]=segment.to;
   const px=matrix[0]!*x+matrix[2]!*y+matrix[4]!,py=matrix[1]!*x+matrix[3]!*y+matrix[5]!;

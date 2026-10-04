@@ -1,0 +1,50 @@
+{
+  "role": "codeAdmittedIntermediateOwner",
+  "snapshot": {
+    "schema": "mesh\u0000世界",
+    "meshes": [
+      {
+        "id": "mesh",
+        "primitives": [
+          {
+            "id": "primitive",
+            "topology": "points",
+            "positions": [],
+            "normals": [],
+            "uvs": [],
+            "colors": [],
+            "indices": [
+              4294967295
+            ],
+            "materialId": "unmatched-material\u0000世界"
+          }
+        ]
+      }
+    ],
+    "materials": [
+      {
+        "id": "material",
+        "baseColor": {
+          "r": 0,
+          "g": 0,
+          "b": 0,
+          "a": 0
+        },
+        "metallic": 0,
+        "roughness": 0,
+        "baseColorTexture": "unmatched-base",
+        "metallicRoughnessTexture": "unmatched-metallic",
+        "normalTexture": "unmatched-normal",
+        "occlusionTexture": "unmatched-occlusion",
+        "emissiveTexture": "unmatched-emissive"
+      }
+    ],
+    "textures": []
+  },
+  "query": "SELECT vertex_index FROM semio_mesh_index ORDER BY ordinal",
+  "expectedRows": [
+    {
+      "vertex_index": 4294967295
+    }
+  ]
+}

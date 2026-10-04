@@ -3,7 +3,7 @@
 //! universal bridge dialect every domain artifact in this repo exports to).
 
 use crate::WriterSnapshot;
-use semio_framework::io::io_mechanism::Serializer;
+use semio_framework::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{Dialect, StandardId, SubsetId};
 use semio_s_artifact_stdio_json::JsonSnapshot;
@@ -16,8 +16,8 @@ impl Serializer<WriterSnapshot> for WriterIntoJson {
     const INTO: Dialect = JSON_DIALECT;
     /// 🪧️ Exact — see the sibling deserializer's doc comment.
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn serialize(from: &WriterSnapshot) -> IoResult<IoPayload> {
-        let json = <JsonSnapshot as store::ArtifactDsl>::parse_dsl(&dsl::os_pack::json::to_json_string(from)).map_err(|error| IoError { message: format!("WriterIntoJson: {error}"), diagnostics: Vec::new() })?;
+    async fn serialize(from: &WriterSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+        let json = <JsonSnapshot as store::ArtifactDsl>::parse_dsl(&semio_framework_pack_json::to_json_string(from)).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("WriterIntoJson: {error}"))))?;
         Ok(IoOutcome { value: IoPayload::Text(store::ArtifactDsl::print_dsl(&json)), diagnostics: Vec::new() })
     }
 }

@@ -2,10 +2,7 @@
 //! Mutation diff/inverse live in the `🧬️mutations/<slug>/` triad leaves; this facet only
 //! handcrafts the op wire forms.
 
-pub use crate::mutations::{
-    add_block_operation, add_step_operation, apply_playbook_mutation, change_title_operation, inverse_playbook_mutation, move_block_operation, move_step_operation, remove_block_operation, remove_step_operation, replace_block_operation,
-    update_step_operation, AddBlock, AddStep, ChangeTitle, MoveBlock, MoveStep, PlaybookMutation, RemoveBlock, RemoveStep, ReplaceBlock, UpdateStep,
-};
+pub use crate::mutations::{apply_playbook_mutation, change_title_operation, inverse_playbook_mutation, ChangeTitle, PlaybookMutation};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -18,22 +15,22 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 /// `PlaybookMutation`'s own `#[derive(dsl::DslEnum)]`-generated `DslVariants` impl — every variant
 /// is a single-field tuple, so each payload's own `#[dsl(keyword = "...")]` IS the wire keyword.
 impl protocol::OpText for PlaybookMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = semio_framework_dsl_record::parse(line, &(spec_fn.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?;
+                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
+        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown mutation line '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
     }
     fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &(spec_fn.ordinary)(), dsl::JoinMode::Inline)
+        semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline)
     }
 }
 

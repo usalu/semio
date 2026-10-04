@@ -892,6 +892,7 @@ mod oracles {
     fn apply_kind(doc: &mut ODoc, kind: &str, params: &Json) -> Result<(), String> {
         match kind {
             "set-snapshot" => *doc = doc_from_json(&params.get("snapshot").cloned().ok_or("set-snapshot: missing `snapshot`")?)?,
+            "patch-snapshot" => *doc = doc_from_json(&semio_repo_test_host::law::patched_snapshot(&doc_to_json(doc), params.get("patch").ok_or("patch-snapshot: missing `patch`")?)?)?,
             "set-version" => doc.version = params.str("version"),
             "insert-topic" => {
                 let topic = topic_from_json(&params.get("topic").cloned().unwrap_or(Json::Null))?;
@@ -1028,7 +1029,7 @@ mod oracles {
         let find_viewpoint = |topic_guid: &str, guid: &str| find_topic(topic_guid).and_then(|topic| topic.viewpoints.iter().find(|viewpoint| viewpoint.guid == guid));
 
         Ok(Some(match kind {
-            "set-snapshot" => spec("set-snapshot", obj(vec![("snapshot", doc_to_json(base))])),
+            "set-snapshot" | "patch-snapshot" => spec("set-snapshot", obj(vec![("snapshot", doc_to_json(base))])),
             "set-version" => spec("set-version", obj(vec![("version", Json::String(base.version.clone()))])),
             "insert-topic" => spec("remove-topic", obj(vec![("guid", Json::String(params.get("topic").map(|topic| topic.str("guid")).unwrap_or_default()))])),
             "remove-topic" => match find_topic(&params.str("guid")) {

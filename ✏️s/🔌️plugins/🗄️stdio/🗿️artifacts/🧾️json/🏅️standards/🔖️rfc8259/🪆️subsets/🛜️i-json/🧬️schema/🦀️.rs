@@ -14,7 +14,8 @@ pub mod derived_construction {
     use crate::standards::v_rfc8259::subsets::base::schema::snapshot::JsonSnapshot;
     use crate::standards::v_rfc8259::subsets::i_json::schema::check_i_json_conformance;
     use crate::standards::v_rfc8259::subsets::i_json::schema::mutations::{apply_json_i_json_mutation, JsonIJsonMutation};
-    use dsl::{Diagnostic, Severity};
+    use semio_framework_diagnostic::Diagnostic;
+use semio_framework_diagnostic::Severity;
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
@@ -42,7 +43,7 @@ pub mod derived_construction {
             Self { snapshot }
         }
 
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(Self { snapshot: <JsonSnapshot as store::ArtifactDsl>::parse_dsl(text)? })
         }
 
@@ -86,7 +87,11 @@ pub mod derived_analysis {
     use crate::standards::v_rfc8259::subsets::base::schema::snapshot::{JsonSnapshot, JsonValue};
     use crate::standards::v_rfc8259::subsets::base::schema::JsonAnalyzer as JsonAnyAnalyzer;
     pub use crate::standards::v_rfc8259::subsets::base::schema::JsonParts;
-    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
+    use semio_framework_diagnostic::Diagnostic;
+use semio_framework_diagnostic::FaultCode;
+use semio_framework_diagnostic::FaultScope;
+use semio_framework_diagnostic::Severity;
+use semio_framework_diagnostic::TextSpan;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     /// 🎯️ This subset's dialect coordinate.
@@ -156,19 +161,19 @@ pub mod derived_analysis {
     /// `SubsetValidator` re-runs it post-hoc against the wire payload for the D5 validate-on-build hook.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     /// 🛡️ Applies the same I-JSON rules with bounded typed traversal and transfer cancellation.
-    pub fn check_i_json_conformance_controlled(snapshot:&JsonSnapshot,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,String>{
-        use semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase;
+    pub fn check_i_json_conformance_controlled(snapshot:&JsonSnapshot,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,semio_framework_os_kernel::sqlite_snapshot::ValueError>{
+        use semio_framework_os_kernel::sqlite_snapshot::{SqliteSnapshotPhase, ValueError, ValueRefusalKind};
         enum Work<'a>{Value(&'a JsonValue),Object(std::slice::Iter<'a,crate::schema::snapshot::JsonMember>,std::collections::HashSet<&'a str>),Array(std::slice::Iter<'a,JsonValue>)}
         let mut out=Vec::new();let mut count=0usize;control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;
         if !matches!(snapshot.value,JsonValue::Object{..}|JsonValue::Array{..}){out.push(soft(CODE_TOP_LEVEL_SCALAR,"top-level value is neither an object nor an array -- RFC 7493 §2.1 recommends against a bare top-level scalar for interop".into()));}
-        for pass in 0..3{let mut rows=0usize;let mut pending=vec![Work::Value(&snapshot.value)];while let Some(work)=pending.pop(){if matches!(&work,Work::Value(_)){rows=rows.checked_add(1).ok_or("I-JSON conformance row count overflow")?;control.check_rows(rows)?;}count=count.checked_add(1).ok_or("I-JSON validation unit count overflow")?;if count%256==0{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,count,0)?;}
+        for pass in 0..3{let mut rows=0usize;let mut pending=vec![Work::Value(&snapshot.value)];while let Some(work)=pending.pop(){if matches!(&work,Work::Value(_)){rows=rows.checked_add(1).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "I-JSON conformance row count overflow"))?;control.check_rows(rows)?;}count=count.checked_add(1).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "I-JSON validation unit count overflow"))?;if count%256==0{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,count,0)?;}
             match work{
                 Work::Value(JsonValue::Object{members})=>pending.push(Work::Object(members.iter(),std::collections::HashSet::new())),
                 Work::Value(JsonValue::Array{items})=>pending.push(Work::Array(items.iter())),
                 Work::Object(mut members,mut seen)=>{if let Some(member)=members.next(){if pass==0&&!seen.insert(member.key.as_str()){if member.key.len()>65536{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,count,0)?;}out.push(hard(CODE_DUPLICATE_MEMBER,format!("object member name '{}' appears more than once -- RFC 7493 §2.3 forbids duplicate member names within one object",member.key)));}pending.push(Work::Object(members,seen));pending.push(Work::Value(&member.value));}},
                 Work::Array(mut items)=>{if let Some(value)=items.next(){pending.push(Work::Array(items));pending.push(Work::Value(value));}},
                 Work::Value(value@JsonValue::Number{lexeme}) if pass==1=>{let meaning=crate::schema::snapshot::number::meaning(lexeme,control,SqliteSnapshotPhase::ProjectSnapshot,count,0)?;if !meaning.valid{out.push(hard(CODE_INVALID_NUMBER_LEXEME,"a number requires an RFC8259 lexeme".into()));}else if meaning.numeric.is_none(){out.push(hard(CODE_NUMBER_NOT_BINARY64,"a number exceeds finite IEEE754 binary64 representation -- RFC7493 §2.2".into()));}else{scan_unsafe_integers(value,&mut out);}},
-                Work::Value(JsonValue::String{value}) if pass==2=>{let mut noncharacter=false;for c in value.chars(){count=count.checked_add(1).ok_or("I-JSON validation unit count overflow")?;noncharacter|=is_unicode_noncharacter(c);if count%256==0{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,count,0)?;}}if noncharacter{out.push(soft(CODE_STRING_NONCHARACTER,format!("string {value:?} contains a Unicode noncharacter (U+FFFE/U+FFFF, U+FDD0-U+FDEF, or a per-plane equivalent) -- RFC 7493 §2.3 advises against these in I-JSON text")));}},
+                Work::Value(JsonValue::String{value}) if pass==2=>{let mut noncharacter=false;for c in value.chars(){count=count.checked_add(1).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "I-JSON validation unit count overflow"))?;noncharacter|=is_unicode_noncharacter(c);if count%256==0{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,count,0)?;}}if noncharacter{out.push(soft(CODE_STRING_NONCHARACTER,format!("string {value:?} contains a Unicode noncharacter (U+FFFE/U+FFFF, U+FDD0-U+FDEF, or a per-plane equivalent) -- RFC 7493 §2.3 advises against these in I-JSON text")));}},
                 _=>{}
             }
         }}control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,count,count)?;Ok(out)

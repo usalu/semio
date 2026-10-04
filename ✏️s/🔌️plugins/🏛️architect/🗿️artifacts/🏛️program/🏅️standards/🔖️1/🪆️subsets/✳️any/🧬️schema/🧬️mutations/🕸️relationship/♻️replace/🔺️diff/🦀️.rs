@@ -13,7 +13,7 @@ pub fn diff(payload: &ReplaceRelationship, base: &ProgramSnapshot) -> protocol::
         return protocol::MutationOutcome::error("mutation.target-missing", "No relationship exists with this id.", [payload.relationship.header.id.0.clone()]);
     };
     if existing == &payload.relationship {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This relationship already matches the requested value.").at([existing.header.id.0.clone()])]);
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This relationship already matches the requested value.").at([existing.header.id.0.clone()])]);
     }
     let patch = existing.diff_patch(&payload.relationship).expect("diff_patch always produces a full patch");
     protocol::MutationOutcome::new(ProgramDiff { relationships: Some(ProgramRelationshipsDelta { patched: vec![ProgramRelationshipsPatchEntry { id: payload.relationship.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })

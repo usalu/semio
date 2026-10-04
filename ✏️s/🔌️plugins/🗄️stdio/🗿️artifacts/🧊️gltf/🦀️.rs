@@ -12,7 +12,7 @@ extern crate semio_framework_value_derive as value_derive;
 pub use semio_s_artifact_stdio_contract::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, MutationRefusal};
 
 use semio_framework_plugin::{
-    ArtifactInference, ArtifactInferenceExecution, ArtifactInferenceExecutionError, ArtifactInferenceExecutionRequest, ArtifactInferenceService, ArtifactInferenceServiceMetadata, ArtifactInferrer, ArtifactKindSpec, MediaClass, MediaForm, MediaType,
+    ArtifactInference, ArtifactInferenceExecution, ArtifactInferenceExecutionError, ArtifactInferenceExecutionRequest, ArtifactInferenceService, ArtifactInferenceServiceMetadata, ArtifactKindSpec, MediaClass, MediaForm, MediaType,
     OsMediaCapability,
 };
 
@@ -211,14 +211,14 @@ fn gltf_inference_leaf_service(inference_schema: &'static str, infer: ArtifactIn
 fn infer_gltf_leaf_cold(id: &'static str, request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
     let descriptor = schema::inferences::gltf_inference_leaf_service_descriptor(id).ok_or_else(|| ArtifactInferenceExecutionError::new("stdio.gltf.inference.unknown-leaf", id))?;
     let snapshot = <GltfSnapshot as store::ArtifactPack>::decode_pack(request.canonical_payload).map_err(|error| ArtifactInferenceExecutionError::new("stdio.gltf.inference.snapshot-decode", error.to_string()))?;
-    let assembly = <schema::GltfBuilder as ArtifactInferrer>::infer(&snapshot);
+    let assembly = <schema::inferences::GltfInference as protocol::Inference<GltfSnapshot>>::infer(&snapshot).map_err(|error|ArtifactInferenceExecutionError::new("stdio.gltf.inference.owner-refused",error.into_message()))?;
     let value = (descriptor.encode)(&assembly.geometry.overall);
     let policy_hash = format!("{:016x}", stable_hash(request.policy));
     let dependency_hashes = request.dependencies.iter().map(|(name, bytes)| format!("{name}:{:016x}", stable_hash(bytes))).collect::<Vec<_>>();
-    let diagnostic_ids = value.get("diagnosticIds").and_then(dsl::DslValue::as_array).map(|ids| ids.iter().filter_map(dsl::DslValue::as_str).map(str::to_owned).collect()).unwrap_or_default();
-    let provenance = value.get("provenance").map(|provenance| pack::json_to_string(&pack::json_from_dsl_value(provenance))).into_iter().collect();
-    let quality = value.get("quality").map_or_else(|| "unknown".into(), |quality| pack::json_to_string(&pack::json_from_dsl_value(quality)));
-    let validity = value.get("validity").and_then(dsl::DslValue::as_str).unwrap_or("indeterminate").to_owned();
+    let diagnostic_ids = value.get("diagnosticIds").and_then(semio_framework_value::DslValue::as_array).map(|ids| ids.iter().filter_map(semio_framework_value::DslValue::as_str).map(str::to_owned).collect()).unwrap_or_default();
+    let provenance = value.get("provenance").map(|provenance| semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(provenance))).into_iter().collect();
+    let quality = value.get("quality").map_or_else(|| "unknown".into(), |quality| semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(quality)));
+    let validity = value.get("validity").and_then(semio_framework_value::DslValue::as_str).unwrap_or("indeterminate").to_owned();
     let envelope = io::inferences::text::GltfInferenceLeafEnvelope {
         id: id.into(),
         algorithm_version: descriptor.algorithm_version,
@@ -580,60 +580,60 @@ fn infer_gltf_leaf_genus(request: &ArtifactInferenceExecutionRequest<'_>) -> Res
 /// verbatim (five `LanguageSpec` rows, one per role) from `crate::standards::
 /// v2_0::engine::register_pilot_languages`'s own `dsl::register_language(...)` call bodies.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn pilot_languages() -> &'static [dsl::LanguageSpec] {
-    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
             vec![
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "stdio.gltf",
                     extension: Some("gltf"),
-                    role: dsl::LanguageRole::Document,
+                    role: semio_framework_dsl::LanguageRole::Document,
                     grammar: Some(schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("stdio.gltf"),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.gltf"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "stdio.gltf.op",
                     extension: None,
-                    role: dsl::LanguageRole::Ops,
+                    role: semio_framework_dsl::LanguageRole::Ops,
                     grammar: Some(io::mutations::text::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(io::mutations::text::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(io::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(io::mutations::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("stdio.gltf.op"),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.gltf.op"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "stdio.gltf.diff",
                     extension: None,
-                    role: dsl::LanguageRole::Diff,
+                    role: semio_framework_dsl::LanguageRole::Diff,
                     grammar: Some(schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(schema::diff::text::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
-                    hooks: dsl::passthrough_hooks("stdio.gltf.diff"),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.gltf.diff"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "stdio.gltf.pack",
                     extension: None,
-                    role: dsl::LanguageRole::Pack,
+                    role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("stdio.gltf.pack"),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.gltf.pack"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "stdio.gltf.spr",
                     extension: None,
-                    role: dsl::LanguageRole::Spr,
+                    role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(io::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(io::mutations::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("stdio.gltf.spr"),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.gltf.spr"),
                 },
             ]
         })
@@ -677,7 +677,7 @@ pub mod io_registry {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
         let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("GltfComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        semio_framework_plugin::resolve_ready((entry.compose)(sources))
+        ::semio_framework_async::poll::resolve_ready((entry.compose)(sources))
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -786,6 +786,8 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
+                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📸️snapshot/🩹️patch/🦀️.rs"]
+                        pub mod patch_snapshot;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📸️snapshot/📸️set/🦀️.rs"]
                         pub mod set_snapshot;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/✅️required/➕️add/🦀️.rs"]

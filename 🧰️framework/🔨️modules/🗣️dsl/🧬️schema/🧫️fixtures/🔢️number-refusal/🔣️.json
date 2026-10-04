@@ -1,0 +1,7 @@
+{
+  "cases": [
+    {"id": "overlong-integer", "fragment": "1", "repeat": 2049, "expected": {"kind": "workLimit", "message": "invalid bounded native number"}},
+    {"id": "quoted-number", "fragment": "\"1\"", "repeat": 1, "expected": {"kind": "invalidValue", "message": "invalid bounded native number"}},
+    {"id": "invalid-numeric-name", "fragment": "oops", "repeat": 1, "expected": {"kind": "invalidValue", "message": "invalid native number"}}
+  ]
+}

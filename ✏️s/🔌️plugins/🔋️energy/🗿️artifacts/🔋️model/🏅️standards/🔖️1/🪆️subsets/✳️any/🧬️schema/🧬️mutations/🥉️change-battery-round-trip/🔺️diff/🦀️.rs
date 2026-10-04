@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeBatteryRoundTripEfficiency, base: &EnergyMode
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Battery {}: round-trip efficiency must be a fraction in (0, 1], got {}.", payload.id.0, payload.new_round_trip_efficiency), [payload.id.0.to_string()]);
     }
     if existing.round_trip_efficiency == payload.new_round_trip_efficiency {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Battery {} already carries this round-trip efficiency: {}.", payload.id.0, payload.new_round_trip_efficiency));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Battery {} already carries this round-trip efficiency: {}.", payload.id.0, payload.new_round_trip_efficiency));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.battery_storage.iter_mut().find(|item| item.id == payload.id) {

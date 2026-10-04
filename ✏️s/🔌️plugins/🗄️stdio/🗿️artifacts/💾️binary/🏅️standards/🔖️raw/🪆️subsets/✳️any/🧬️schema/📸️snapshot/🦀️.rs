@@ -5,6 +5,8 @@ use framework_schema::ArtifactSchema;
 
 #[path = "🪶️sqlite/🦀️.rs"]
 mod sqlite;
+#[path = "🚦️native/🦀️.rs"]
+mod sqlite_native;
 #[cfg(test)]
 #[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
 mod sqlite_tests;
@@ -12,11 +14,11 @@ mod sqlite_tests;
 //#region 🔖️Snapshot
 /// 📸️ Persisted `stdio.binary` snapshot.
 ///
-/// 🧪️ F6-PILOT: `dsl::DslRecord` added alongside the existing hand-rolled `store::ArtifactDsl`/
+/// 🧪️ F6-PILOT: `semio_framework_dsl_record_derive::DslRecord` added alongside the existing hand-rolled `store::ArtifactDsl`/
 /// `store::ArtifactPack` below — NOT a replacement. `DslRecord` only gives this type `DslField`
 /// (so it can be embedded as a variant payload, e.g. `BinaryMutation::SetSnapshot(set_snapshot::SetSnapshot{snapshot})`),
 /// it does not touch the artifact's own honest hex-text/raw-binary envelope format.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.binary")]
 pub struct BinarySnapshot {
@@ -42,19 +44,19 @@ impl store::ArtifactDsl for BinarySnapshot {
         "stdio.binary"
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
         let hex: String = body.chars().filter(|c| !c.is_whitespace()).collect();
         if !hex.len().is_multiple_of(2) {
-            return Err(store::TextError::new("odd hex length", dsl::TextSpan::at(1, 1)));
+            return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "odd hex length", semio_framework_diagnostic::TextSpan::at(1, 1)));
         }
         let mut bytes = Vec::with_capacity(hex.len() / 2);
         let mut i = 0usize;
         while i < hex.len() {
-            let byte = u8::from_str_radix(&hex[i..i + 2], 16).map_err(|e| store::TextError::new(format!("invalid hex: {e}"), dsl::TextSpan::at(1, 1)))?;
+            let byte = u8::from_str_radix(&hex[i..i + 2], 16).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("invalid hex: {e}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
             bytes.push(byte);
             i += 2;
         }

@@ -18,7 +18,7 @@ pub fn diff(payload: &IntroducePropertyDefinition, base: &Iso16757Snapshot) -> p
     }
     let outcome = protocol::MutationOutcome::new(Iso16757Diff { catalogue: Some(catalogue), ..Default::default() });
     if clamped {
-        outcome.warn("mutation.clamped", format!("Insert index was out of range; appended property definition \"{}\" at the end instead.", payload.property_definition.id))
+        outcome.warning("mutation.clamped", format!("Insert index was out of range; appended property definition \"{}\" at the end instead.", payload.property_definition.id))
     } else {
         outcome
     }

@@ -31,25 +31,25 @@ fn chain_snapshot() -> JackSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
     let snapshot = chain_snapshot();
-    assert_eq!(JackInference::infer(&snapshot), JackInference::infer(&snapshot));
+    assert_eq!(JackInference::infer(&snapshot).expect("valid materialized inference fixture"), JackInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
-    assert_eq!(JackInference::infer(&JackSnapshot::default()), JackInference::default());
+    assert_eq!(JackInference::infer(&JackSnapshot::default()).expect("valid materialized inference fixture"), JackInference::default());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn inference_matches_compute_topology_directly() {
     let snapshot = chain_snapshot();
-    let inferred = JackInference::infer(&snapshot);
-    assert_eq!(inferred.topology, compute_topology(&snapshot));
+    let inferred = JackInference::infer(&snapshot).expect("valid materialized inference fixture");
+    assert_eq!(inferred.topology, compute_topology(&snapshot).expect("valid retained child inference fixture"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn inference_matches_compute_flat_position_directly() {
     let snapshot = chain_snapshot();
-    let inferred = JackInference::infer(&snapshot);
-    assert_eq!(inferred.flat_position, compute_flat_position(&snapshot));
+    let inferred = JackInference::infer(&snapshot).expect("valid materialized inference fixture");
+    assert_eq!(inferred.flat_position, compute_flat_position(&snapshot).expect("valid retained child inference fixture"));
 }
 //#endregion 🧪️InferenceLaws

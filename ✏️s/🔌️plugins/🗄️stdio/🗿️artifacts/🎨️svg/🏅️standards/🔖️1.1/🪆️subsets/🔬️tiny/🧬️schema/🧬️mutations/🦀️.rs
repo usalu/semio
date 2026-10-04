@@ -35,6 +35,8 @@ pub mod remove_element;
 /// child-index chain from the root `<svg>` element), exactly as the parent subset's own snapshot
 /// model does — the snapshot type is shared, only the vocabulary is this subset's.
 //#region 🔖️Leaves
+#[path = "🩹️patch-snapshot/🦀️.rs"]
+pub mod patch_snapshot;
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "✍️set-text/🦀️.rs"]
@@ -57,6 +59,7 @@ pub mod strip_non_tiny;
 #[mutations(snapshot = SvgSnapshot, diff = SvgDiff, schema = "SvgTinyMutation")]
 pub enum SvgTinyMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
+    PatchSnapshot(patch_snapshot::PatchSnapshot),
     /// 🏷️ Sets (or, with `None`, clears) the root's `baseProfile`/`version` declaration. Tiny's own
     /// identity statement; Full 1.1 has no equivalent operation because it has no profile to stamp.
     StampBaseProfile(stamp_base_profile::StampBaseProfile),
@@ -84,7 +87,7 @@ pub enum SvgTinyMutation {
 /// `kinds` list `../../🔣️oracle.json`'s `mutationCatalogs` entry declares. The framework
 /// never parses this enum; `kinds_matches_enum_variants_and_manifest` below is what keeps the two
 /// declarations honest against each other.
-pub const KINDS: &[&str] = &["set-snapshot", "stamp-base-profile", "insert-tiny-element", "remove-element", "set-tiny-attribute", "set-text", "set-view-box", "set-transform", "strip-non-tiny"];
+pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "stamp-base-profile", "insert-tiny-element", "remove-element", "set-tiny-attribute", "set-text", "set-view-box", "set-transform", "strip-non-tiny"];
 
 crate::impl_serde_op_codec!(SvgTinyMutation, "svg-tiny-mutation");
 
@@ -93,6 +96,7 @@ crate::impl_serde_op_codec!(SvgTinyMutation, "svg-tiny-mutation");
 pub fn kind_of(mutation: &SvgTinyMutation) -> &'static str {
     match mutation {
         SvgTinyMutation::SetSnapshot(_) => "set-snapshot",
+        SvgTinyMutation::PatchSnapshot(_) => "patch-snapshot",
         SvgTinyMutation::StampBaseProfile(_) => "stamp-base-profile",
         SvgTinyMutation::InsertTinyElement(_) => "insert-tiny-element",
         SvgTinyMutation::RemoveElement(_) => "remove-element",
@@ -225,6 +229,7 @@ pub fn apply_svg_tiny_mutation(snapshot: &mut SvgSnapshot, mutation: &SvgTinyMut
 pub(crate) fn agg_diff(this: &SvgTinyMutation, base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
     match this {
         SvgTinyMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => protocol::MutationOutcome::new(diff_set_snapshot(base, snapshot)),
+        SvgTinyMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<SvgSnapshot, SvgTinyMutation>>::diff(patch, base),
         SvgTinyMutation::StampBaseProfile(stamp_base_profile::StampBaseProfile { base_profile, version }) => protocol::MutationOutcome::new(attributes_diff_at_path(base, &[], &[("baseProfile", base_profile.clone()), ("version", version.clone())])),
         SvgTinyMutation::InsertTinyElement(insert_tiny_element::InsertTinyElement { parent, index, node }) => match subtree_profile_violation(node) {
             Some(message) => protocol::MutationOutcome::error(CODE_REJECTED, message, Vec::<String>::new()),
@@ -253,9 +258,11 @@ pub(crate) fn agg_diff(this: &SvgTinyMutation, base: &SvgSnapshot) -> protocol::
 /// hundreds of excluded attributes across a real drawing has no smaller undo, and pretending
 /// otherwise would be a smaller diff that does not actually restore the document.
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &SvgTinyMutation, base: &SvgSnapshot) -> Vec<SvgTinyMutation> {
+pub(crate) fn agg_inverse(this: &SvgTinyMutation, base: &SvgSnapshot) -> Result<Vec<SvgTinyMutation>, semio_framework_value::ValueError> {
+    Ok({
     match this {
         SvgTinyMutation::SetSnapshot(_) | SvgTinyMutation::StripNonTiny(_) => vec![SvgTinyMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
+        SvgTinyMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<SvgSnapshot, SvgTinyMutation>>::inverse(patch, base)?),
         SvgTinyMutation::StampBaseProfile(_) => vec![SvgTinyMutation::StampBaseProfile(stamp_base_profile::StampBaseProfile { base_profile: prior_attribute(base, &[], "baseProfile"), version: prior_attribute(base, &[], "version") })],
         SvgTinyMutation::InsertTinyElement(insert_tiny_element::InsertTinyElement { parent, index, .. }) => vec![SvgTinyMutation::RemoveElement(remove_element::RemoveElement { parent: parent.clone(), index: *index })],
         SvgTinyMutation::RemoveElement(remove_element::RemoveElement { parent, index }) => match node_at(&base.doc, parent) {
@@ -280,6 +287,8 @@ pub(crate) fn agg_inverse(this: &SvgTinyMutation, base: &SvgSnapshot) -> Vec<Svg
             vec![SvgTinyMutation::SetTransform(set_transform::SetTransform { path: path.clone(), transform: prior_attribute(base, path, "transform").and_then(|v| parse_transform_list(&v).ok()) })]
         }
     }
+
+    })
 }
 //#endregion 🔖️MutationTrait
 

@@ -2,7 +2,7 @@
 export type PixelLayer = { id: string; name: string; visible: boolean; locked:boolean; width: number; height: number; imageKey: string | null; matrix: readonly number[]; target:"pixels"|"mask"; maskRevision?:string };
 /** 🖌️ Captures only the target properties that keep an in-flight gesture valid. */
 export function pixelGestureRevision(layer:PixelLayer|undefined):string|null {
-  return !layer||!layer.visible||layer.locked?null:JSON.stringify([layer.id,layer.target,layer.width,layer.height,layer.imageKey,layer.matrix,layer.maskRevision??null]);
+  return !layer||!layer.visible||layer.locked?null:JSON.stringify([layer.id,layer.target,layer.width,layer.height,layer.matrix]);
 }
 type TransformInput={x:number;y:number;a:number;b:number;c:number;d:number};
 type LayerInput = { kind?: string; id?: string; name?: string; visible?: boolean; locked?:boolean; width?: number; height?: number; imageKey?: string; transform?: TransformInput; mask?:{linked?:boolean;width?:number;height?:number;imageKey?:string;transform?:TransformInput}|null; children?: LayerInput[] };

@@ -163,3 +163,5 @@ fn typed_rows_preserve_null_strings_booleans_and_color_fallback_alpha(){
     assert!(inference.tikz.contains("unknown={semio-print-color-0080FF-A0p35}"));
     assert!(inference.tikz.contains("\\SemioVizPaintAlpha{semio-print-color-0080FF-A0p35}{0.35}"));
 }
+#[path = "../../🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_snapshot_tests;

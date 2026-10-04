@@ -9,7 +9,7 @@
 
 use crate::schema::inferences::Grid3dAssignment;
 use crate::schema::snapshot::{axis_offset, axis_size, cell_key, Grid3dColor, Grid3dSnapshot, Grid3dTile, Grid3dTileMedia};
-use dsl::json;
+use semio_framework_pack_json as json;
 
 //#region 🔖️Ids
 /// 🧊️ The mesh id of the neutral, unpinned grid cell box.

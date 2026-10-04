@@ -4,7 +4,7 @@ use super::{EnergyModelConfig, EnergyModelConfigMutation};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 /// ⏱️ `change-simulation-settings`: replaces the three run settings at once; its inverse restores the base's.
-#[derive(Clone, Debug, PartialEq, Eq, ToValueDerive, FromValueDerive, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, Eq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
@@ -39,9 +39,12 @@ impl protocol::MutationKind<EnergyModelConfig, EnergyModelConfigMutation> for Ch
     fn diff(&self, base: &EnergyModelConfig) -> protocol::MutationOutcome<EnergyModelConfig> {
         protocol::MutationOutcome::new(self.config_over(base))
     }
-    fn inverse(&self, base: &EnergyModelConfig) -> Vec<EnergyModelConfigMutation> {
+    fn inverse(&self, base: &EnergyModelConfig) -> Result<Vec<EnergyModelConfigMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![EnergyModelConfigMutation::ChangeSimulationSettings(Self::of(base))]
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change simulation settings to {} / {} min, {} warmup days", self.zone_timestep_minutes, self.system_timestep_minutes, self.warmup_days), &format!("Simulationseinstellungen auf {} / {} min, {} Einschwingtage ändern", self.zone_timestep_minutes, self.system_timestep_minutes, self.warmup_days))
     }

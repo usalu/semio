@@ -45,8 +45,10 @@ pub struct Din18599Diff {
     #[state(artifact)]
     pub renewables: Option<crate::Renewables>,
     #[state(artifact)]
+    pub climate: Option<crate::MonthlyClimate>,
+    #[state(artifact)]
     #[cfg_attr(test, serde(with = "crate::document::child_identity_oracle::optional"))]
-    pub climate: Option<crate::Din18599ClimateChild>,
+    pub climate_table: Option<crate::Din18599ClimateChild>,
 }
 //#endregion 🔖️Diff
 

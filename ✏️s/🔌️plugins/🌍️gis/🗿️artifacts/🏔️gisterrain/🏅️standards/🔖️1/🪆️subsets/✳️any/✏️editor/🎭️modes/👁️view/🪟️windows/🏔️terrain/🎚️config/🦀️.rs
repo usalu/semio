@@ -9,12 +9,12 @@ use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
 /// 🧮️ Free/live viewport camera for one concrete terrain window.
-#[derive(Clone, Debug, PartialEq, dsl::DslArtifact, ToValue, FromValue)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_os_kernel::DslArtifact, ToValue, FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
-#[dsl(extension = "gisterrainwindowcfg")]
-#[dsl(id = "gis.gisterrainwindowcfg")]
+#[artifact(extension = "gisterrainwindowcfg")]
+#[artifact(id = "gis.gisterrainwindowcfg")]
 #[dsl(layout = "lines")]
 pub struct GisTerrainWindowConfig {
     /// 🎥️ The free/live world camera (`{position,target,up,fov}` JSON).
@@ -28,16 +28,16 @@ impl store::ArtifactDsl for GisTerrainWindowConfig {
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -47,18 +47,18 @@ impl store::ArtifactDsl for GisTerrainWindowConfig {
 impl store::ArtifactPack for GisTerrainWindowConfig {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -125,11 +125,11 @@ pub use mutations::*;
 
 //#region 🔖️OpCodec
 impl protocol::OpText for GisTerrainWindowConfigMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        dsl::variants_text::parse_op(line)
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        semio_framework_dsl_record::variants_text::parse_op(line)
     }
     fn print_op(&self) -> String {
-        dsl::variants_text::print_op(self)
+        semio_framework_dsl_record::variants_text::print_op(self)
     }
 }
 
@@ -176,7 +176,7 @@ pub fn gis_terrain_window_config_mutation_report_json(camera_json: &str, kind: &
         other => return Err(format!("gis_terrain_window_config_mutation_report_json: unknown kind {other:?}")),
     };
     let applied = mutation.diff(&base).diff().apply(&base).map_err(|error| error.to_string())?;
-    let inverse_steps = mutation.inverse(&base);
+    let inverse_steps = mutation.inverse(&base).map_err(semio_framework_value::ValueError::into_message)?;
     let mut undone = applied.clone();
     for step in &inverse_steps {
         undone = step.diff(&undone).diff().apply(&undone).map_err(|error| error.to_string())?;

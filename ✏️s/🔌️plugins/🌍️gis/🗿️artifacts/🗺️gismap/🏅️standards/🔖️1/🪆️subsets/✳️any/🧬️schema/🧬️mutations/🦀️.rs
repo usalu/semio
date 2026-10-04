@@ -7,7 +7,8 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 use crate::diff::GisMapDiff;
 use crate::mutations::{create_position, create_region, create_route, delete_position, delete_region, delete_route, reorder_positions, reorder_regions, reorder_routes, replace_position_data, replace_region_data, replace_route_data};
 use crate::GisMapSnapshot;
-use dsl::{FromValue, ToValue};
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
 use protocol::Mutation;
 use store::{ArtifactEnvelope, ArtifactStore};
 
@@ -18,7 +19,7 @@ use store::{ArtifactEnvelope, ArtifactStore};
 /// `positions`/`routes`/`regions` are id-keyed `MapFeature` collections, each getting the same
 /// four-verb vocabulary (`create`/`delete`/`replace-<noun>-data`/`reorder-<plural>`) per
 /// `derivation-rules.md`'s per-id-keyed-collection recipe.
-#[derive(Clone, Debug, PartialEq, dsl::DslEnum, dsl::Mutations, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[mutations(snapshot = GisMapSnapshot, diff = GisMapDiff, schema = "gis.gismap")]
 pub enum GisMapMutation {
     CreatePosition(create_position::CreatePosition),
@@ -52,8 +53,11 @@ pub fn apply_gis_map_mutation(snapshot: &mut GisMapSnapshot, mutation: &GisMapMu
     Ok(())
 }
 
-pub fn inverse_gis_map_mutation(snapshot: &GisMapSnapshot, mutation: &GisMapMutation) -> Vec<GisMapMutation> {
-    mutation.inverse(snapshot)
+pub fn inverse_gis_map_mutation(snapshot: &GisMapSnapshot, mutation: &GisMapMutation) -> Result<Vec<GisMapMutation>, semio_framework_value::ValueError> {
+    Ok({
+    mutation.inverse(snapshot)?
+
+    })
 }
 
 //#region 🔖️Kinds
@@ -86,30 +90,30 @@ pub const KINDS: &[&str] =
 ///
 /// @see ../../🔣️oracle.json — the catalog and the recorded no-oracle decision.
 pub fn gis_map_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
-    let decode_snapshot = |text: &str| -> Result<GisMapSnapshot, String> { dsl::os_pack::json::from_json_str(text).map_err(|error| error.to_string()) };
+    let decode_snapshot = |text: &str| -> Result<GisMapSnapshot, String> { semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string()) };
     let base = decode_snapshot(base_json)?;
     let expected = decode_snapshot(after_json)?;
-    let mutation: GisMapMutation = dsl::os_pack::json::from_json_str(mutation_json).map_err(|error| error.to_string())?;
+    let mutation: GisMapMutation = semio_framework_pack_json::from_json_str(mutation_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
     let mut applied = base.clone();
     let forward = <GisMapMutation as Mutation<GisMapSnapshot>>::diff(&mutation, &base).apply_to(&mut applied);
-    let inverse = <GisMapMutation as Mutation<GisMapSnapshot>>::inverse(&mutation, &base);
+    let inverse = <GisMapMutation as Mutation<GisMapSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?;
     let mut undone = applied.clone();
     let mut inverse_messages = Vec::new();
     for step in &inverse {
         let outcome = <GisMapMutation as Mutation<GisMapSnapshot>>::diff(step, &undone).apply_to(&mut undone);
         inverse_messages.extend(outcome.messages().iter().cloned());
     }
-    let report = dsl::os_pack::json::object([
-        ("base".to_string(), dsl::os_pack::json::from_dsl_value(&base.to_value())),
-        ("expectedSnapshot".to_string(), dsl::os_pack::json::from_dsl_value(&expected.to_value())),
-        ("snapshot".to_string(), dsl::os_pack::json::from_dsl_value(&applied.to_value())),
-        ("diff".to_string(), dsl::os_pack::json::from_dsl_value(&forward.diff().to_value())),
-        ("messages".to_string(), dsl::os_pack::json::from_dsl_value(&forward.messages().to_vec().to_value())),
-        ("inverseSteps".to_string(), dsl::os_pack::json::from_dsl_value(&inverse.to_value())),
-        ("inverseSnapshot".to_string(), dsl::os_pack::json::from_dsl_value(&undone.to_value())),
-        ("inverseMessages".to_string(), dsl::os_pack::json::from_dsl_value(&inverse_messages.to_value())),
+    let report = semio_framework_pack_json::object([
+        ("base".to_string(), semio_framework_pack_json::from_dsl_value(&base.to_value())),
+        ("expectedSnapshot".to_string(), semio_framework_pack_json::from_dsl_value(&expected.to_value())),
+        ("snapshot".to_string(), semio_framework_pack_json::from_dsl_value(&applied.to_value())),
+        ("diff".to_string(), semio_framework_pack_json::from_dsl_value(&forward.diff().to_value())),
+        ("messages".to_string(), semio_framework_pack_json::from_dsl_value(&forward.messages().to_vec().to_value())),
+        ("inverseSteps".to_string(), semio_framework_pack_json::from_dsl_value(&inverse.to_value())),
+        ("inverseSnapshot".to_string(), semio_framework_pack_json::from_dsl_value(&undone.to_value())),
+        ("inverseMessages".to_string(), semio_framework_pack_json::from_dsl_value(&inverse_messages.to_value())),
     ]);
-    Ok(dsl::os_pack::json::to_string(&report))
+    Ok(semio_framework_pack_json::to_string(&report))
 }
 //#endregion 🌉️TestBridge
 

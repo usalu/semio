@@ -6,7 +6,6 @@
 
 use crate::LayoutSnapshot;
 use schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::topology::compute_layout_topology;
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -33,8 +32,11 @@ impl Default for LayoutInference {
 }
 
 impl protocol::Inference<LayoutSnapshot> for LayoutInference {
-    fn infer(snapshot: &LayoutSnapshot) -> Self {
+    fn infer(snapshot: &LayoutSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { topology: compute_layout_topology(&snapshot.parent_pages, &snapshot.spreads, &snapshot.pages) }
+    
+        })
     }
 }
 
@@ -50,13 +52,6 @@ impl protocol::InferenceSpec<LayoutSnapshot> for LayoutInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::LayoutBuilder {
-    type Snapshot = LayoutSnapshot;
-    type Inference = LayoutInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.layout.layout.inference`'s facet leaves into the OS-wide inference catalog —

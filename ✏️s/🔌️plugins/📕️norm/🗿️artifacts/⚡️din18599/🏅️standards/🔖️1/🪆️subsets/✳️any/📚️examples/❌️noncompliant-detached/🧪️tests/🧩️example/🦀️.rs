@@ -14,7 +14,7 @@ async fn inference_determinism_law() {
     use crate::Din18599Snapshot;
     use protocol::Inference;
     let snapshot = Din18599Snapshot::default();
-    assert_eq!(Din18599Inference::infer(&snapshot), Din18599Inference::infer(&snapshot));
+    assert_eq!(Din18599Inference::infer(&snapshot).expect("valid materialized inference fixture"), Din18599Inference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -22,5 +22,5 @@ async fn inference_default_law() {
     use crate::artifact_schema::inferences::Din18599Inference;
     use crate::Din18599Snapshot;
     use protocol::Inference;
-    assert_eq!(Din18599Inference::infer(&Din18599Snapshot::default()), Din18599Inference::default());
+    assert_eq!(Din18599Inference::infer(&Din18599Snapshot::default()).expect("valid materialized inference fixture"), Din18599Inference::default());
 }

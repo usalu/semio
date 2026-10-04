@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 //#region 🔖️Artifact
 /// 🧬️ Full writer artifact across the artifact, presence and config lanes.
-#[derive(Clone, Debug, PartialEq, ArtifactSchema, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.writer.writer")]
 pub struct WriterArtifact {
@@ -112,62 +112,62 @@ pub struct GrammarToken {
     pub end: usize,
 }
 
-fn byte_span_to_text_span(text: &str, start: usize, end: usize) -> dsl::TextSpan {
+fn byte_span_to_text_span(text: &str, start: usize, end: usize) -> semio_framework_diagnostic::TextSpan {
     let safe_end = end.min(text.len());
     let safe_start = start.min(safe_end);
     let prefix = &text[..safe_start];
     let line = prefix.chars().filter(|&c| c == '\n').count() as u32 + 1;
     let column = prefix.rfind('\n').map(|i| safe_start - i).unwrap_or(safe_start) as u32;
     let length = (safe_end - safe_start) as u32;
-    dsl::TextSpan::with_length(line, column, length.max(1))
+    semio_framework_diagnostic::TextSpan::with_length(line, column, length.max(1))
 }
 
-fn token_class_from_name(name: &str) -> dsl::TokenClass {
+fn token_class_from_name(name: &str) -> semio_framework_dsl::TokenClass {
     match name {
-        "keyword" => dsl::TokenClass::Keyword,
-        "string" => dsl::TokenClass::String,
-        "number" => dsl::TokenClass::Number,
-        "operator" => dsl::TokenClass::Operator,
-        "comment" => dsl::TokenClass::Comment,
-        "error" => dsl::TokenClass::Error,
-        _ => dsl::TokenClass::Ident,
+        "keyword" => semio_framework_dsl::TokenClass::Keyword,
+        "string" => semio_framework_dsl::TokenClass::String,
+        "number" => semio_framework_dsl::TokenClass::Number,
+        "operator" => semio_framework_dsl::TokenClass::Operator,
+        "comment" => semio_framework_dsl::TokenClass::Comment,
+        "error" => semio_framework_dsl::TokenClass::Error,
+        _ => semio_framework_dsl::TokenClass::Ident,
     }
 }
 
 /// 🎼️ The `jack` query-language `dsl::DslIdiom`, used directly by writer's jack completion surface.
 pub(crate) struct JackWriterIdiom;
 
-impl dsl::DslIdiom for JackWriterIdiom {
+impl semio_framework_dsl::DslIdiom for JackWriterIdiom {
     const LANG: &'static str = "jack";
     type Ast = String;
 
-    fn parse(text: &str) -> Result<Self::Ast, dsl::TextError> {
-        semio_s_artifact_trinity_jack::core::format(text).map_err(|e| dsl::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
+    fn parse(text: &str) -> Result<Self::Ast, semio_framework_diagnostic::TextError> {
+        semio_s_artifact_trinity_jack::core::format(text).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e.to_string(), semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 
     fn print(ast: &Self::Ast) -> String {
         ast.clone()
     }
 
-    fn classify(text: &str) -> Vec<(dsl::TokenClass, dsl::TextSpan)> {
+    fn classify(text: &str) -> Vec<(semio_framework_dsl::TokenClass, semio_framework_diagnostic::TextSpan)> {
         semio_s_artifact_trinity_jack::core::semantic_tokens(text).into_iter().map(|t| (token_class_from_name(&t.class), byte_span_to_text_span(text, t.start, t.end))).collect()
     }
 
-    fn complete(text: &str, offset: usize) -> Vec<dsl::CompletionItem> {
+    fn complete(text: &str, offset: usize) -> Vec<semio_framework_dsl::CompletionItem> {
         let graph = semio_s_artifact_trinity_jack::core::example_graph();
-        semio_s_artifact_trinity_jack::core::complete(&graph, text, offset).into_iter().map(|item| dsl::CompletionItem { label: item.label, detail: item.detail }).collect()
+        semio_s_artifact_trinity_jack::core::complete(&graph, text, offset).into_iter().map(|item| semio_framework_dsl::CompletionItem { label: item.label, detail: item.detail }).collect()
     }
 }
 
 /// 🎼️ The `wire` protocol-text `dsl::DslIdiom` — see [`JackWriterIdiom`]'s doc comment for why it lives here.
 pub(crate) struct WireWriterIdiom;
 
-impl dsl::DslIdiom for WireWriterIdiom {
+impl semio_framework_dsl::DslIdiom for WireWriterIdiom {
     const LANG: &'static str = "wire";
     type Ast = String;
 
-    fn parse(text: &str) -> Result<Self::Ast, dsl::TextError> {
-        dsl::parse_wire_text(text.trim())?;
+    fn parse(text: &str) -> Result<Self::Ast, semio_framework_diagnostic::TextError> {
+        semio_framework_dsl_record::parse_wire_text(text.trim())?;
         Ok(text.to_string())
     }
 
@@ -175,21 +175,21 @@ impl dsl::DslIdiom for WireWriterIdiom {
         ast.clone()
     }
 
-    fn classify(text: &str) -> Vec<(dsl::TokenClass, dsl::TextSpan)> {
-        let limits = dsl::Limits::default();
-        let Ok(tokens) = dsl::lex(text, &limits, false) else {
+    fn classify(text: &str) -> Vec<(semio_framework_dsl::TokenClass, semio_framework_diagnostic::TextSpan)> {
+        let limits = semio_framework_diagnostic::Limits::default();
+        let Ok(tokens) = semio_framework_dsl::lex(text, &limits, false) else {
             return Vec::new();
         };
         tokens
             .into_iter()
-            .filter(|t| !t.kind.is_trivia() && t.kind != dsl::TokenKind::Eof)
+            .filter(|t| !t.kind.is_trivia() && t.kind != semio_framework_dsl::TokenKind::Eof)
             .map(|t| {
                 let class = match t.kind {
-                    dsl::TokenKind::Arrow | dsl::TokenKind::DashArrow | dsl::TokenKind::EdgeArrow | dsl::TokenKind::BackArrow => dsl::TokenClass::Operator,
-                    dsl::TokenKind::Float | dsl::TokenKind::Int => dsl::TokenClass::Number,
-                    dsl::TokenKind::Text => dsl::TokenClass::String,
-                    dsl::TokenKind::Ident => dsl::TokenClass::Ident,
-                    _ => dsl::TokenClass::Punctuation,
+                    semio_framework_dsl::TokenKind::Arrow | semio_framework_dsl::TokenKind::DashArrow | semio_framework_dsl::TokenKind::EdgeArrow | semio_framework_dsl::TokenKind::BackArrow => semio_framework_dsl::TokenClass::Operator,
+                    semio_framework_dsl::TokenKind::Float | semio_framework_dsl::TokenKind::Int => semio_framework_dsl::TokenClass::Number,
+                    semio_framework_dsl::TokenKind::Text => semio_framework_dsl::TokenClass::String,
+                    semio_framework_dsl::TokenKind::Ident => semio_framework_dsl::TokenClass::Ident,
+                    _ => semio_framework_dsl::TokenClass::Punctuation,
                 };
                 let start = t.byte_range.0 as usize;
                 let end = t.byte_range.1 as usize;
@@ -205,17 +205,17 @@ pub fn tokenize_language(text: &str, language_id: &str) -> Vec<GrammarToken> {
         return semio_s_artifact_trinity_jack::core::semantic_tokens(text).into_iter().map(|t| GrammarToken { class: t.class, start: t.start, end: t.end }).collect();
     }
     if language_id == "wire" {
-        let limits = dsl::Limits::default();
-        if let Ok(tokens) = dsl::lex(text, &limits, false) {
+        let limits = semio_framework_diagnostic::Limits::default();
+        if let Ok(tokens) = semio_framework_dsl::lex(text, &limits, false) {
             return tokens
                 .into_iter()
-                .filter(|t| !t.kind.is_trivia() && t.kind != dsl::TokenKind::Eof)
+                .filter(|t| !t.kind.is_trivia() && t.kind != semio_framework_dsl::TokenKind::Eof)
                 .map(|t| {
                     let class = match t.kind {
-                        dsl::TokenKind::Arrow | dsl::TokenKind::DashArrow | dsl::TokenKind::EdgeArrow | dsl::TokenKind::BackArrow => "operator",
-                        dsl::TokenKind::Float | dsl::TokenKind::Int => "number",
-                        dsl::TokenKind::Text => "string",
-                        dsl::TokenKind::Ident => "ident",
+                        semio_framework_dsl::TokenKind::Arrow | semio_framework_dsl::TokenKind::DashArrow | semio_framework_dsl::TokenKind::EdgeArrow | semio_framework_dsl::TokenKind::BackArrow => "operator",
+                        semio_framework_dsl::TokenKind::Float | semio_framework_dsl::TokenKind::Int => "number",
+                        semio_framework_dsl::TokenKind::Text => "string",
+                        semio_framework_dsl::TokenKind::Ident => "ident",
                         _ => "punctuation",
                     };
                     GrammarToken { class: class.into(), start: t.byte_range.0 as usize, end: t.byte_range.1 as usize }
@@ -223,7 +223,7 @@ pub fn tokenize_language(text: &str, language_id: &str) -> Vec<GrammarToken> {
                 .collect();
         }
     }
-    if let Some(hooks) = dsl::idiom(language_id) {
+    if let Some(hooks) = semio_framework_dsl::idiom(language_id) {
         return (hooks.classify)(text)
             .into_iter()
             .enumerate()
@@ -234,12 +234,12 @@ pub fn tokenize_language(text: &str, language_id: &str) -> Vec<GrammarToken> {
 }
 
 pub fn language_completions_json(text: &str, language_id: &str, cursor: usize) -> Option<String> {
-    if let Some(spec) = dsl::language(language_id) {
+    if let Some(spec) = semio_framework_dsl::language(language_id) {
         let session = dsl::lsp::LanguageSession::open(spec, text.to_string());
         let items: Vec<Value> = session.completions_at(cursor).into_iter().map(|item| json!({ "label": item.label, "detail": item.detail })).collect();
         return serde_json::to_string(&items).ok();
     }
-    if let Some(hooks) = dsl::idiom(language_id) {
+    if let Some(hooks) = semio_framework_dsl::idiom(language_id) {
         let items: Vec<Value> = (hooks.complete)(text, cursor).into_iter().map(|item| json!({ "label": item.label, "detail": item.detail })).collect();
         return serde_json::to_string(&items).ok();
     }
@@ -247,13 +247,13 @@ pub fn language_completions_json(text: &str, language_id: &str, cursor: usize) -
 }
 
 pub fn jack_completions_json(text: &str, cursor: usize) -> Option<String> {
-    let items: Vec<Value> = <JackWriterIdiom as dsl::DslIdiom>::complete(text, cursor).into_iter().map(|item| json!({ "label": item.label, "detail": item.detail })).collect();
+    let items: Vec<Value> = <JackWriterIdiom as semio_framework_dsl::DslIdiom>::complete(text, cursor).into_iter().map(|item| json!({ "label": item.label, "detail": item.detail })).collect();
     serde_json::to_string(&items).ok()
 }
 
 /// 🎼️ `wire` counterpart of [`jack_completions_json`] — see [`WireWriterIdiom`]'s doc comment.
 pub fn wire_completions_json(text: &str, cursor: usize) -> Option<String> {
-    let items: Vec<Value> = <WireWriterIdiom as dsl::DslIdiom>::complete(text, cursor).into_iter().map(|item| json!({ "label": item.label, "detail": item.detail })).collect();
+    let items: Vec<Value> = <WireWriterIdiom as semio_framework_dsl::DslIdiom>::complete(text, cursor).into_iter().map(|item| json!({ "label": item.label, "detail": item.detail })).collect();
     serde_json::to_string(&items).ok()
 }
 

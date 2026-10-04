@@ -1,0 +1,4 @@
+enum PngNativeProfile { INDEXED GRAYSCALE GRAYSCALE_ALPHA RGB RGBA }
+input PngNativeRegion { x: Int! y: Int! width: Int! height: Int! }
+input PngNativePaint { profile: PngNativeProfile! first: Int! second: Int! third: Int! fourth: Int! }
+input PaintNativeSamplesMutation { revision: String! region: PngNativeRegion! paint: PngNativePaint! result: PngSnapshotInput! }

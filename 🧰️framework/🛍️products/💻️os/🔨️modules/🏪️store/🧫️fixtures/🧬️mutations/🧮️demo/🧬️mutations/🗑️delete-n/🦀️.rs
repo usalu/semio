@@ -2,7 +2,7 @@ use super::{DemoDiff, DemoMutation, DemoSnapshot, RestoreN};
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -14,12 +14,15 @@ impl crate::os_spr::MutationKind<DemoSnapshot, DemoMutation> for DeleteN {
     fn diff(&self, base: &DemoSnapshot) -> crate::os_spr::MutationOutcome<DemoDiff> {
         crate::os_spr::MutationOutcome::new(base.n.map(|_| DemoDiff::value(None)).unwrap_or_default())
     }
-    fn inverse(&self, base: &DemoSnapshot) -> Vec<DemoMutation> {
+    fn inverse(&self, base: &DemoSnapshot) -> Result<Vec<DemoMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         if base.n.is_none() {
             return Vec::new();
         }
         vec![DemoMutation::RestoreN(RestoreN { n: base.n })]
-    }
+    
+    })())
+}
     fn label(&self) -> crate::LocalizedLabel {
         crate::LocalizedLabel::native("Delete N", "N löschen")
     }

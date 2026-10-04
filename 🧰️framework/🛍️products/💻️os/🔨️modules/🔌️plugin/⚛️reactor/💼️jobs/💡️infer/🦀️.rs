@@ -212,7 +212,7 @@ type InferenceRejected = semio_framework_job::WorkerJobSessionAdmissionRejected<
 pub(super) fn job_infer(job: u64, input: &[u8], restored: Option<&[u8]>) -> Result<Box<dyn BoundedJob>, Vec<u8>> {
     let request = match decode_request(input) {
         Ok(request) => request,
-        Err(error) => return Err(dsl::encode_fault_bytes(&error)),
+        Err(error) => return Err(semio_framework_diagnostic::encode_fault_bytes(&error)),
     };
     let key = semio_framework::ToolFactoryKey::new(super::JOB_KIND_INFER, request.inference_schema.clone());
     if semio_framework::ActionBus::production().contains(&key) {
@@ -236,7 +236,7 @@ fn execute_phase(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
 // 🚫️async: E1 pure parse consumed by the sync factory above and by `decode`'s own body.
 fn decode_request(input: &[u8]) -> Result<crate::app::WireArtifactInferenceRequest, semio_framework::Fault> {
     let input_text = std::str::from_utf8(input).map_err(|error| super::fault("job.infer.decode", format!("invalid {} input: {error}", super::JOB_KIND_INFER)))?;
-    dsl::os_pack::json::from_json_str(input_text).map_err(|error| super::fault("job.infer.decode", format!("invalid {} input: {error}", super::JOB_KIND_INFER)))
+    semio_framework_pack_json::from_json_str(input_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| super::fault("job.infer.decode", format!("invalid {} input: {error}", super::JOB_KIND_INFER)))
 }
 
 /// 🚦️ The explicit states of one ActionBus-routed inference. Each is exactly one `step-job`
@@ -294,8 +294,8 @@ impl InteractiveInferenceJob {
     /// 🎟️ Admission: validates the request's declared resources and claims its cancellation slot
     /// before any worker capacity is touched, so a refused inference never reaches the pool.
     fn admit(job: u64, request: crate::app::WireArtifactInferenceRequest, restored: Option<&[u8]>) -> Result<Self, Vec<u8>> {
-        crate::app::validate_wire_request_resources(&request).map_err(|error| dsl::encode_fault_bytes(&super::fault(error.code, error.message)))?;
-        let cancellation = crate::app::begin_artifact_inference(&request.cancellation_id).map_err(|error| dsl::encode_fault_bytes(&super::fault(error.code, error.message)))?;
+        crate::app::validate_wire_request_resources(&request).map_err(|error| semio_framework_diagnostic::encode_fault_bytes(&super::fault(error.code, error.message)))?;
+        let cancellation = crate::app::begin_artifact_inference(&request.cancellation_id).map_err(|error| semio_framework_diagnostic::encode_fault_bytes(&super::fault(error.code, error.message)))?;
         let operation = Operation::new(OperationId(job), RevisionId(request.revision), Generation(request.generation), 0);
         let bridge = InferenceBridge::new(operation);
         Ok(Self {
@@ -368,14 +368,14 @@ impl InteractiveInferenceJob {
     fn fail(&mut self, error: semio_framework::Fault) -> JobStep {
         self.retire();
         self.phase = InteractivePhase::Complete;
-        JobStep::Failed(dsl::encode_fault_bytes(&error))
+        JobStep::Failed(semio_framework_diagnostic::encode_fault_bytes(&error))
     }
 
     /// 🚀️ `Dispatch`: publishes the request's identity preview, resolves the ActionBus factory for
     /// `semio.infer/<schema>`, and mounts one worker session for it.
     /// 🚫️async: E1 state action consumed by the sync `BoundedJob::step` dispatch table.
     fn dispatch(&mut self) -> JobStep {
-        if let Err(error) = self.bridge.publish_preview(dsl::os_pack::json::to_json_string(&(self.request.artifact_kind.clone(), self.request.inference_schema.clone())).into_bytes()) {
+        if let Err(error) = self.bridge.publish_preview(semio_framework_pack_json::to_json_string(&(self.request.artifact_kind.clone(), self.request.inference_schema.clone())).into_bytes()) {
             return self.fail(bridge_fault(&error));
         }
         let progress = self.bridge.take_preview().map(|item| encode_bridge_item(&item));
@@ -579,8 +579,8 @@ impl InteractiveInferenceJob {
                 self.phase = InteractivePhase::Complete;
                 match self.result.take() {
                     Some(Ok(bytes)) => JobStep::Done(bytes),
-                    Some(Err(error)) => JobStep::Failed(dsl::encode_fault_bytes(&error)),
-                    None => JobStep::Failed(dsl::encode_fault_bytes(&super::fault("job.infer.terminal-result", "terminal interactive inference produced no result"))),
+                    Some(Err(error)) => JobStep::Failed(semio_framework_diagnostic::encode_fault_bytes(&error)),
+                    None => JobStep::Failed(semio_framework_diagnostic::encode_fault_bytes(&super::fault("job.infer.terminal-result", "terminal interactive inference produced no result"))),
                 }
             }
             semio_framework_job::WorkerJobCloseStep::Complete => self.fail(super::fault("job.infer.session-false-terminal", "interactive inference session did not reach terminal-empty authority")),
@@ -599,7 +599,7 @@ impl InteractiveInferenceJob {
             semio_framework_job::InteractiveJobCloseStep::Complete if rejected.terminal_is_empty() => {
                 self.rejected = None;
                 self.phase = InteractivePhase::Complete;
-                JobStep::Failed(dsl::encode_fault_bytes(&super::fault("job.infer.admission", "interactive inference worker session capacity is exhausted")))
+                JobStep::Failed(semio_framework_diagnostic::encode_fault_bytes(&super::fault("job.infer.admission", "interactive inference worker session capacity is exhausted")))
             }
             semio_framework_job::InteractiveJobCloseStep::Complete => self.fail(super::fault("job.infer.admission-false-terminal", "interactive inference admission rejection did not reach terminal-empty authority")),
         }
@@ -619,7 +619,7 @@ impl BoundedJob for InteractiveInferenceJob {
     fn step(&mut self, budget: JobBudget) -> JobStep {
         if self.cancelled {
             self.phase = InteractivePhase::Complete;
-            return JobStep::Failed(dsl::encode_fault_bytes(&super::fault("job.infer.cancelled", "interactive inference was cancelled before its next state action")));
+            return JobStep::Failed(semio_framework_diagnostic::encode_fault_bytes(&super::fault("job.infer.cancelled", "interactive inference was cancelled before its next state action")));
         }
         let price = self.price();
         if budget.fuel < price {
@@ -631,7 +631,7 @@ impl BoundedJob for InteractiveInferenceJob {
             InteractivePhase::OutcomeClose => self.close_outcome(),
             InteractivePhase::SessionClose => self.close_session(),
             InteractivePhase::RejectedClose => self.close_rejected(),
-            InteractivePhase::Complete => JobStep::Failed(dsl::encode_fault_bytes(&super::fault("job.infer.terminal", "interactive inference has no state action left to advance"))),
+            InteractivePhase::Complete => JobStep::Failed(semio_framework_diagnostic::encode_fault_bytes(&super::fault("job.infer.terminal", "interactive inference has no state action left to advance"))),
         }
     }
 
@@ -708,7 +708,7 @@ fn encode_result(request: crate::app::WireArtifactInferenceRequest, canonical_pa
         actual_cache_mode: request.requested_cache_mode,
         cancellation_id: request.cancellation_id,
     };
-    Ok(dsl::os_pack::json::to_json_string(&result).into_bytes())
+    Ok(semio_framework_pack_json::to_json_string(&result).into_bytes())
 }
 
 /// 🔎️ Validates `input` decodes as a `WireArtifactInferenceRequest` and reports its
@@ -717,7 +717,7 @@ fn encode_result(request: crate::app::WireArtifactInferenceRequest, canonical_pa
 /// before ever touching the inference-service registry.
 async fn decode(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
     let request = decode_request(input)?;
-    Ok(dsl::os_pack::json::to_json_string(&(request.artifact_kind, request.inference_schema)).into_bytes())
+    Ok(semio_framework_pack_json::to_json_string(&(request.artifact_kind, request.inference_schema)).into_bytes())
 }
 
 #[cfg(test)]

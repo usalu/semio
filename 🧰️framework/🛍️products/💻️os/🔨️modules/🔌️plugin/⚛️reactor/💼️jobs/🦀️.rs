@@ -370,7 +370,7 @@ fn fault(code: &str, message: impl Into<String>) -> semio_framework::Fault {
 
 // 🚫️async: E1 — see `fault`'s own comment above; `dsl::encode_fault_bytes` is sync too.
 fn fault_bytes(code: &str, message: String) -> Vec<u8> {
-    dsl::encode_fault_bytes(&fault(code, message))
+    semio_framework_diagnostic::encode_fault_bytes(&fault(code, message))
 }
 
 /// 🌉️ Settles one framework call inside a bounded step. Every native dispatch a builtin kind
@@ -460,14 +460,14 @@ impl BoundedJob for TwoPhaseBoundedJob {
                 }
                 Err(error) => {
                     self.state = TwoPhaseState::Complete;
-                    JobStep::Failed(dsl::encode_fault_bytes(&error))
+                    JobStep::Failed(semio_framework_diagnostic::encode_fault_bytes(&error))
                 }
             },
             TwoPhaseState::Execute => {
                 self.state = TwoPhaseState::Complete;
                 match (self.execute)(&self.input) {
                     Ok(bytes) => JobStep::Done(bytes),
-                    Err(error) => JobStep::Failed(dsl::encode_fault_bytes(&error)),
+                    Err(error) => JobStep::Failed(semio_framework_diagnostic::encode_fault_bytes(&error)),
                 }
             }
             TwoPhaseState::Complete => JobStep::Failed(fault_bytes(&format!("{}.terminal", self.fault_prefix), format!("{} has no state action left to advance", self.fault_prefix))),
@@ -534,7 +534,7 @@ fn decode_io_sniff(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
 fn decode_io_hop(input: &[u8], code: &str, kind: &str) -> Result<Vec<u8>, semio_framework::Fault> {
     let decode_code = format!("{code}.decode");
     let input_text = std::str::from_utf8(input).map_err(|_| fault(&decode_code, format!("invalid {kind} input")))?;
-    let IoRunInput { source, target, .. } = dsl::os_pack::json::from_json_str::<IoRunInput>(input_text).map_err(|_| fault(&decode_code, format!("invalid {kind} input")))?;
+    let IoRunInput { source, target, .. } = semio_framework_pack_json::from_json_str::<IoRunInput>(input_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| fault(&decode_code, format!("invalid {kind} input")))?;
     let source = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&source).map_err(|message| fault(code, message))?;
     let target = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&target).map_err(|message| fault(code, message))?;
     Ok(format!("{}->{}", source.to_coordinate(), target.to_coordinate()).into_bytes())
@@ -555,7 +555,8 @@ fn execute_io_sniff(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
 /// shares one outcome shape; `step_job` re-encodes an `Err` into fault bytes uniformly.
 async fn run_io_run(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
     let input_text = std::str::from_utf8(input).map_err(|_| fault("job.io-run.decode", format!("invalid {JOB_KIND_IO_RUN} input")))?;
-    let IoRunInput { source, target, payload } = dsl::os_pack::json::from_json_str::<IoRunInput>(input_text).map_err(|_| fault("job.io-run.decode", format!("invalid {JOB_KIND_IO_RUN} input")))?;
+    let IoRunInput { source, target, payload } =
+        semio_framework_pack_json::from_json_str::<IoRunInput>(input_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| fault("job.io-run.decode", format!("invalid {JOB_KIND_IO_RUN} input")))?;
     let source = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&source).map_err(|message| fault("job.io-run", message))?;
     let target = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&target).map_err(|message| fault("job.io-run", message))?;
     let descriptor = match semio_framework::io::io_mechanism::io_entries().into_iter().find(|entry| entry.from == source && entry.into == target) {
@@ -564,15 +565,16 @@ async fn run_io_run(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
     };
     let fidelity = descriptor.fidelity;
     let route = semio_framework::io_schema::IoRoute { hops: vec![descriptor], fidelity };
-    let outcome = semio_framework::io::io_mechanism::io_run(&route, payload).await.map_err(|error| fault("job.io-run", error.message))?;
-    Ok(dsl::os_pack::json::to_json_string(&outcome.value).into_bytes())
+    let outcome = semio_framework::io::io_mechanism::io_run(&route, payload).await.map_err(|error| fault("job.io-run", error.cause.into_message()))?;
+    Ok(semio_framework_pack_json::to_json_string(&outcome.value).into_bytes())
 }
 
 /// 🔍️ Body unchanged from the pre-rewrite `run_io_sniff` — `Ok` carries a single-byte `Vec<u8>` of
 /// `io_schema::Confidence::rank()` (`0..=3`), matching the old export's `u8` return.
 async fn run_io_sniff(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
     let input_text = std::str::from_utf8(input).map_err(|_| fault("job.io-sniff.decode", format!("invalid {JOB_KIND_IO_SNIFF} input")))?;
-    let IoRunInput { source, target, payload } = dsl::os_pack::json::from_json_str::<IoRunInput>(input_text).map_err(|_| fault("job.io-sniff.decode", format!("invalid {JOB_KIND_IO_SNIFF} input")))?;
+    let IoRunInput { source, target, payload } =
+        semio_framework_pack_json::from_json_str::<IoRunInput>(input_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| fault("job.io-sniff.decode", format!("invalid {JOB_KIND_IO_SNIFF} input")))?;
     let source = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&source).map_err(|message| fault("job.io-sniff", message))?;
     let target = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&target).map_err(|message| fault("job.io-sniff", message))?;
     let carrier = semio_framework::io_schema::ArtifactDialect::from(match &payload {

@@ -49,7 +49,7 @@ fn op_text_round_trip_change_schema() {
 
 #[test]
 fn op_text_round_trip_create_generation() {
-    let generation = semio_framework_artifact_playbook_playbook::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: std::collections::HashMap::new() };
+    let generation = semio_framework_artifact_playbook_playbook::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: semio_framework_artifact_playbook_playbook::PlaybookValues::new() };
     test_support::assert_op_line_round_trip(&Generation3dMutation::CreateGeneration(CreateGeneration { generation }));
 }
 

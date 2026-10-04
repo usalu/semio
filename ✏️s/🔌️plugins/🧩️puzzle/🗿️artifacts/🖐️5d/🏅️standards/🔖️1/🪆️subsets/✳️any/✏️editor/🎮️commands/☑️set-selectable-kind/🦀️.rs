@@ -1,7 +1,7 @@
 //! 🎯️ `set-selectable-kind` command — which entity kinds a pick in this pane may even reach.
 
 use crate::editor::puzzle5d::Puzzle5dActionCtx;
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 
 pub fn set_selectable_kind(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
     let kind = args.and_then(|value| value.get("kind")).and_then(Value::as_str).unwrap_or("");

@@ -74,7 +74,7 @@ fn compliant_evaluate_passes() {
 fn every_emitted_path_parses_and_resolves_with_id_selectors() {
     let doc = En1996Snapshot::noncompliant_multi_fail();
     let report = evaluate_building(doc.annex, doc.masonry_class, doc.design_situation, doc.storeys, &doc.walls);
-    let snap_val = dsl::ToValue::to_value(&doc);
+    let snap_val = semio_framework_value::ToValue::to_value(&doc);
     for check in &report.checks {
         if !check.subject.path.is_empty() {
             parse_path(&check.subject.path).unwrap_or_else(|e| panic!("subject path {}: {e}", check.subject.path));
@@ -101,9 +101,9 @@ fn remedy_law_flips_at_least_two_distinct_fails_to_pass() {
     for fail in &fails {
         if flipped.len() >= 2 { break; }
         let Some(remedy) = fail.remedies.iter().find(|r| r.applicable && !r.target.path.is_empty() && r.options.is_empty()) else { continue };
-        let mut tree = dsl::ToValue::to_value(&doc);
-        if set_value_at_path(&mut tree, &remedy.target.path, dsl::DslValue::float(remedy.required.value)).is_err() { continue; }
-        let Ok(trial) = dsl::FromValue::from_value(tree) else { continue };
+        let mut tree = semio_framework_value::ToValue::to_value(&doc);
+        if set_value_at_path(&mut tree, &remedy.target.path, semio_framework_value::DslValue::float(remedy.required.value)).is_err() { continue; }
+        let Ok(trial) = semio_framework_value::FromValue::from_value(tree) else { continue };
         let trial: En1996Snapshot = trial;
         let after = evaluate_building(trial.annex, trial.masonry_class, trial.design_situation, trial.storeys, &trial.walls);
         if let Some(c) = after.checks.iter().find(|c| c.id == fail.id) {
@@ -139,9 +139,9 @@ fn gate_blocking_fails_clear_via_remedy_bounds() {
         assert!(!applicables.is_empty(), "{id} needs applicable scalar remedies");
         let mut cleared = false;
         for (_, remedy) in &applicables {
-            let mut tree = dsl::ToValue::to_value(&doc);
-            set_value_at_path(&mut tree, &remedy.target.path, dsl::DslValue::float(remedy.required.value)).expect("apply");
-            let trial: En1996Snapshot = dsl::FromValue::from_value(tree).expect("decode");
+            let mut tree = semio_framework_value::ToValue::to_value(&doc);
+            set_value_at_path(&mut tree, &remedy.target.path, semio_framework_value::DslValue::float(remedy.required.value)).expect("apply");
+            let trial: En1996Snapshot = semio_framework_value::FromValue::from_value(tree).expect("decode");
             let after = evaluate_building(trial.annex, trial.masonry_class, trial.design_situation, trial.storeys, &trial.walls);
             if let Some(c) = after.checks.iter().find(|c| c.id == id) {
                 if !matches!(c.status, CheckStatus::Fail) {
@@ -154,11 +154,11 @@ fn gate_blocking_fails_clear_via_remedy_bounds() {
             }
         }
         if !cleared && applicables.len() > 1 {
-            let mut tree = dsl::ToValue::to_value(&doc);
+            let mut tree = semio_framework_value::ToValue::to_value(&doc);
             for (_, remedy) in &applicables {
-                set_value_at_path(&mut tree, &remedy.target.path, dsl::DslValue::float(remedy.required.value)).expect("seq apply");
+                set_value_at_path(&mut tree, &remedy.target.path, semio_framework_value::DslValue::float(remedy.required.value)).expect("seq apply");
             }
-            let trial: En1996Snapshot = dsl::FromValue::from_value(tree).expect("seq decode");
+            let trial: En1996Snapshot = semio_framework_value::FromValue::from_value(tree).expect("seq decode");
             let after = evaluate_building(trial.annex, trial.masonry_class, trial.design_situation, trial.storeys, &trial.walls);
             match after.checks.iter().find(|c| c.id == id) {
                 None => cleared = true,

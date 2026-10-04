@@ -1,0 +1,25 @@
+{
+  "owner": "collection",
+  "table": "collection_document",
+  "column": "name",
+  "textUnit": "日本𐀀\u0000",
+  "repeat": 32768,
+  "utf8Bytes": 360448,
+  "cancelAt": 65536,
+  "rows": 10,
+  "schemaBytes": 1079,
+  "scratch": "sameShapeFullAllocatorRequests",
+  "result": "admittedWithoutOutput",
+  "bounds": [
+    "physicalFile",
+    "semanticValue",
+    "rows",
+    "schema",
+    "actualBorrowedScratch"
+  ],
+  "encodings": [
+    "binary",
+    "text"
+  ],
+  "sourceUnchanged": true
+}

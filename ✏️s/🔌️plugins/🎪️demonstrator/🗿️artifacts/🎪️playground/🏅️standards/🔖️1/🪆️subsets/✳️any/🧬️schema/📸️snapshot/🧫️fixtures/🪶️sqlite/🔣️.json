@@ -1,0 +1,125 @@
+{
+  "nativeCases": [
+    {
+      "name": "Default Marker",
+      "schema": "playground.playground"
+    },
+    {
+      "name": "Present Empty Marker",
+      "schema": ""
+    },
+    {
+      "name": "Literal Unicode Marker",
+      "schema": " authored 日本 🧬\u0000\nmarker "
+    },
+    {
+      "name": "Literal JSON Looking Marker",
+      "schema": "{\"schema\":\"uninterpreted\"}"
+    }
+  ],
+  "invalidSnapshots": [
+    null,
+    {},
+    {
+      "schema": false
+    },
+    {
+      "schema": 1
+    },
+    {
+      "schema": "literal",
+      "localOwner": {}
+    }
+  ],
+  "invalidUtf16CodeUnits": [
+    [
+      55296
+    ],
+    [
+      57343
+    ]
+  ],
+  "tableWidths": {
+    "playground_document": 2
+  },
+  "tableRowCounts": {
+    "playground_document": 1
+  },
+  "identityOffset": 1000,
+  "largeTextUnit": "文",
+  "largeTextRepeats": 40000,
+  "controls": {
+    "domainRows": 1,
+    "finalRows": 2,
+    "valueBytes": 64,
+    "cancelAt": 60000
+  },
+  "textCases": [
+    "",
+    "text 日本 🧬\u0000",
+    "{schema: 'literal'}"
+  ],
+  "invalidTexts": [
+    null,
+    {},
+    [],
+    true,
+    1
+  ],
+  "validDiffs": [
+    {},
+    {
+      "artifact": {
+        "schema": " authored 日本 "
+      }
+    },
+    {
+      "schema": "",
+      "artifact": {
+        "schema": ""
+      }
+    }
+  ],
+  "invalidDiffs": [
+    {
+      "artifact": {}
+    },
+    {
+      "artifact": {
+        "schema": 1
+      }
+    },
+    {
+      "artifact": {
+        "schema": "x",
+        "extra": 1
+      }
+    },
+    {
+      "unknown": "x"
+    }
+  ],
+  "validTopology": {
+    "topoOrder": [
+      "日本",
+      ""
+    ],
+    "depth": {
+      "日本": 0,
+      "": 2
+    },
+    "cycleFree": true,
+    "nodeCount": 2
+  },
+  "invalidDepths": [
+    {
+      "node": 1.25
+    },
+    {
+      "node": "1"
+    },
+    {
+      "node": null
+    }
+  ]
+}

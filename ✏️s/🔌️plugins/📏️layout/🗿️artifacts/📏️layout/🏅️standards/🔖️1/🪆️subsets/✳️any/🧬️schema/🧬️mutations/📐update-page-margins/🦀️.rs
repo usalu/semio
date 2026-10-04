@@ -26,9 +26,12 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for UpdatePageMargins {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_update_page_margins(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
-        inverse_update_page_margins(self, base)
-    }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok({
+        inverse_update_page_margins(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Update page \"{}\" margins", self.id), &format!("Ränder von Seite \"{}\" aktualisieren", self.id))
     }
@@ -44,7 +47,7 @@ pub fn diff_update_page_margins(payload: &UpdatePageMargins, base: &LayoutSnapsh
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Page \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if page.margins.top == payload.top && page.margins.right == payload.right && page.margins.bottom == payload.bottom && page.margins.left == payload.left {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Page \"{}\" already has those margins.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Page \"{}\" already has those margins.", payload.id));
     }
     protocol::MutationOutcome::new(LayoutDiff {
         pages: Some(LayoutPagesDelta {
@@ -60,10 +63,13 @@ pub fn diff_update_page_margins(payload: &UpdatePageMargins, base: &LayoutSnapsh
 //#endregion 📐UpdatePageMargins
 
 //#region 📐UpdatePageMargins
-pub fn inverse_update_page_margins(payload: &UpdatePageMargins, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_update_page_margins(payload: &UpdatePageMargins, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.pages.iter().find(|page| page.id == payload.id) {
         Some(page) => vec![LayoutMutation::UpdatePageMargins(UpdatePageMargins { id: payload.id.clone(), top: page.margins.top, right: page.margins.right, bottom: page.margins.bottom, left: page.margins.left })],
         None => Vec::new(),
     }
+
+    })())
 }
 //#endregion 📐UpdatePageMargins

@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/bitmap/1/any/mutation/resize-output/schema.json",
   "title": "ResizeOutput",
+  "x-semio-inverse-rows": { "bounded": 1025 },
   "type": "object",
   "additionalProperties": false,
   "required": [

@@ -23,9 +23,12 @@ impl MutationKind<PdfSnapshot, PdfEMutation> for InsertEncryptionDictionary {
         MutationOutcome::new(support::graph_edit_diff(base, next))
     }
 
-    fn inverse(&self, _base: &PdfSnapshot) -> Vec<PdfEMutation> {
+    fn inverse(&self, _base: &PdfSnapshot) -> Result<Vec<PdfEMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![PdfEMutation::RemoveEncryptionDictionary(RemoveEncryptionDictionary { version: self.version, revision: self.revision })]
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert encryption dictionary V{} R{}", self.version, self.revision), &format!("Verschlüsselungswörterbuch V{} R{} einfügen", self.version, self.revision))

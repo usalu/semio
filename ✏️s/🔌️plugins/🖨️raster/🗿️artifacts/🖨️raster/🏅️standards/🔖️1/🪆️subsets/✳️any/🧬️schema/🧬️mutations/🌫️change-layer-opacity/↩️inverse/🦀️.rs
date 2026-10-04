@@ -6,10 +6,13 @@ use crate::standards::v1::subsets::any::schema::{find_layer, layer_opacity};
 use crate::RasterSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::ChangeLayerOpacity, base: &RasterSnapshot) -> Vec<RasterMutation> {
+pub fn inverse(payload: &super::ChangeLayerOpacity, base: &RasterSnapshot) -> Result<Vec<RasterMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match find_layer(&base.layers, &payload.layer_id) {
         Some(layer) => vec![RasterMutation::ChangeLayerOpacity(super::ChangeLayerOpacity { layer_id: payload.layer_id.clone(), new_opacity: layer_opacity(layer) })],
         None => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

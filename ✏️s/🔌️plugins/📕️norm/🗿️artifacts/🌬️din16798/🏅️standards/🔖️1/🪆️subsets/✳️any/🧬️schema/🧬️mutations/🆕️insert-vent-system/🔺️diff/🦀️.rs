@@ -16,5 +16,5 @@ pub fn diff(payload: &InsertVentSystem, base: &Din16798Snapshot) -> protocol::Mu
     if index == payload.index {
         return outcome;
     }
-    outcome.warn("mutation.clamped", format!("Position {} is past the end of the ventilation system list; inserted at {index}.", payload.index))
+    outcome.warning("mutation.clamped", format!("Position {} is past the end of the ventilation system list; inserted at {index}.", payload.index))
 }

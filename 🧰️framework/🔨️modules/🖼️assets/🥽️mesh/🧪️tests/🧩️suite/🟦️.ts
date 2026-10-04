@@ -27,7 +27,7 @@ describe("explicit mesh delivery authority", () => {
     } }] });
     const node = Bun.spawnSync(["node", "--input-type=module"], { stdin: Buffer.from(bundle.outputFiles![0]!.text), stdout: "pipe", stderr: "pipe" });
     expect(node.exitCode, Buffer.from(node.stderr).toString()).toBe(0);
-    expect(JSON.parse(Buffer.from(node.stdout).toString())).toEqual(fixture.transport.map(row => ({ valid: row.valid, output: row.output })));
+    expect(JSON.parse(Buffer.from(node.stdout).toString())).toEqual(fixture.transport.map((row: { valid: boolean; output: string | null }) => ({ valid: row.valid, output: row.output })));
   });
 
   it("agrees with independent JSON Schema admission and the neutral source/output map", async () => {

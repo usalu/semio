@@ -86,6 +86,7 @@ Feature: Apply every typed semio VIDEO mutation to a real recording, against an 
       | remove-sample    | {"mutation":"removeSample","streamIndex":0,"index":0}                                                                                                                                                                        |
       | set-sample-data  | {"mutation":"setSampleData","streamIndex":0,"index":4,"data":[255,216,255,224,0,16,74,70,73,70]}                                                                                                                             |
       | set-sample-flags | {"mutation":"setSampleFlags","streamIndex":0,"index":0,"pts":500,"key":false}                                                                                                                                                |
+      | patch-snapshot | {"mutation": "patchSnapshot", "patch": {"operation": "set", "path": "/streams/0/codec", "value": "vp9"}} |
 
   @id-no-mutation-baseline-mutate
   @level-exhaustive
@@ -118,6 +119,7 @@ Feature: Apply every typed semio VIDEO mutation to a real recording, against an 
       | remove-sample    | {"mutation":"removeSample","streamIndex":0,"index":0}                                                                                                                                                                        |
       | set-sample-data  | {"mutation":"setSampleData","streamIndex":0,"index":4,"data":[255,216,255,224,0,16,74,70,73,70]}                                                                                                                             |
       | set-sample-flags | {"mutation":"setSampleFlags","streamIndex":0,"index":0,"pts":500,"key":false}                                                                                                                                                |
+      | patch-snapshot | {"mutation": "patchSnapshot", "patch": {"operation": "set", "path": "/streams/0/codec", "value": "vp9"}} |
 
   @id-no-mutation-baseline-inverse
   @level-exhaustive

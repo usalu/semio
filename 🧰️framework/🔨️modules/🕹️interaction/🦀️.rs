@@ -16,7 +16,8 @@
 //! unchanged. Handcrafted TS parity lives in `🟦️.ts` (unmoved — TypeScript has no crate
 //! graph); schema leaves live in `🧬️schema/`.
 
-use dsl::{FromValue, ToValue};
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
 use serde::{Deserialize, Serialize};
 use semio_framework_ui_locale::LocalizedLabel;
 
@@ -26,8 +27,8 @@ use crate::IconName;
 pub mod gesture;
 
 //#region 🔖️Definition
-pub use protocol::{next_hover, next_selection, validate_state, HoverInput, PresenceDomain, PresenceInteraction, SelectionInput};
-pub use protocol::{DomainHover, DomainSelection, DomainTopology, HierarchyProvider, HoverSpec, InteractionOutline, InteractionState, InteractionTarget, InteractionTopology, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode};
+pub use ::replication::{next_hover, next_selection, validate_state, HoverInput, PresenceDomain, PresenceInteraction, SelectionInput};
+pub use ::replication::{DomainHover, DomainSelection, DomainTopology, HierarchyProvider, HoverSpec, InteractionOutline, InteractionState, InteractionTarget, InteractionTopology, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode};
 
 /// 🕹️ One interaction domain an app declares (e.g. "graph", "mesh", "ast", "world"): the target
 /// universe/hierarchy shared by both its hover and selection sub-specs. `AppDefinition.interactions`
@@ -41,7 +42,7 @@ pub use protocol::{DomainHover, DomainSelection, DomainTopology, HierarchyProvid
 // 🌱️ RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS: the `HierarchyProvider`/`HoverSpec`
 // /`SelectionSpec` fields below have completed their move to `ToValue`/`FromValue`, so the additive
 // serde half of this declaration no longer has impls to stand on and comes off with them.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, serde::Serialize, serde::Deserialize)]
 #[value(rename_all = "camelCase")]
 pub struct InteractionDefinition {
     pub id: String,
@@ -68,7 +69,7 @@ impl InteractionDefinition {
 // both now `ToValue`/`FromValue`). Kept additive for the same reason: transitively embedded in
 // `AppDefinition`/`InteractionDefinition.granularities`, still consumed with plain serde outside
 // this pass.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct GranularityDefinition {
@@ -86,7 +87,7 @@ pub struct GranularityDefinition {
 // `ui_wgpu::LocalizedLabel`/`IconName`/`SurfaceKind`/`WindowOptions`, none owned by this pass), so
 // this type still needs the serde half regardless of its own `ToValue`/`FromValue`. Revisit once
 // `WindowKindDefinition` converts.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(transparent)]
 #[value(transparent)]
 pub struct InteractionRef(String);

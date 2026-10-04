@@ -23,9 +23,12 @@ impl MutationKind<PdfSnapshot, PdfEMutation> for InsertMediaAnnotation {
         MutationOutcome::new(support::graph_edit_diff(base, next))
     }
 
-    fn inverse(&self, _base: &PdfSnapshot) -> Vec<PdfEMutation> {
+    fn inverse(&self, _base: &PdfSnapshot) -> Result<Vec<PdfEMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![PdfEMutation::RemoveMediaAnnotation(RemoveMediaAnnotation { subtype: self.subtype.clone(), title: self.title.clone() })]
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert {} media annotation", self.subtype), &format!("{} Medienanmerkung einfügen", self.subtype))

@@ -1,1 +1,4 @@
 type ArtifactChild { childId: String! target: ArtifactRef! }
+
+# import ArtifactRefInput from "🧰️framework/🔨️modules/🚪️io/🧬️schema/🔗️.graphql"
+input ArtifactChildInput { childId: String! target: ArtifactRefInput! }

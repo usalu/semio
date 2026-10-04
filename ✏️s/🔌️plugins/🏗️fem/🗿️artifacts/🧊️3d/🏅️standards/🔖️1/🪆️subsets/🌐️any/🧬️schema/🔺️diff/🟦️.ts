@@ -1,125 +1,11 @@
+import {parseFemNode,parseFemElement,parseFemSolid,parseFemMaterial,parseFemSection,parseFemSupport,parseFemLoadCase,parseFemCombination} from "../📸️snapshot/🟦️.ts";
 /** 🧬️ Fem3d diff schema — sparse field delta. */
 
-//#region 🔖️Entities
-/** 📍️ A structural node: a stable id and a global position, plain SI meters. Mirrors Rust `FemNode`
- * (`🗿️artifacts/🧊️3d/🦀️.rs`). */
-export interface FemNode {
-  id: string;
-  x: number;
-  y: number;
-  z: number;
-}
+import type {FemNode,FemDof,FemAxis,FemElement,FemMaterial,FemSection,FemSupport,FemLoad,FemLoadCase,FemSolid,FemCombination,FemAnalysisSettings} from "../📸️snapshot/🟦️.ts";
+export type {FemNode,FemDof,FemAxis,FemElement,FemMaterial,FemSection,FemSupport,FemLoad,FemLoadCase,FemSolid,FemCombination,FemAnalysisSettings} from "../📸️snapshot/🟦️.ts";
+import type {Fem3dArtifact} from "../🟦️.ts";
+export type {Fem3dArtifact} from "../🟦️.ts";
 
-/** 🔒️ A DOF tag mirroring the FEM 3D degrees of freedom. Mirrors Rust `FemDof`
- * (`🗿️artifacts/🧊️3d/🦀️.rs`, re-exported from `fem2d::FemDof`). */
-export type FemDof = "Tx" | "Ty" | "Tz" | "Rx" | "Ry" | "Rz";
-
-/** 🧭️ The world axis a solid's footprint is extruded along. Mirrors Rust `FemAxis`
- * (`🗿️artifacts/🧊️3d/🦀️.rs`). */
-export type FemAxis = "x" | "y" | "z";
-
-/** 🔩️ A two-node member: an axial `Bar` or a full 6-DOF `Frame` with a local-axis `roll` angle
- * (radians). Mirrors Rust `FemElement` (`🗿️artifacts/🧊️3d/🦀️.rs`), tagged on `kind`. */
-export type FemElement =
-  | { kind: "bar"; id: string; start: string; end: string; materialId: string; sectionId: string }
-  | { kind: "frame"; id: string; start: string; end: string; materialId: string; sectionId: string; roll: number };
-
-/** 🧱️ Linear-elastic isotropic material: Young's modulus `e`, shear modulus `g` (Pa), Poisson's ratio
- * `nu` (dimensionless), density `rho` (kg/m3). Mirrors Rust `FemMaterial`
- * (`🗿️artifacts/🧊️3d/🦀️.rs`). */
-export interface FemMaterial {
-  id: string;
-  name: string;
-  e: number;
-  g: number;
-  nu: number;
-  rho: number;
-}
-
-/** 📐️ Cross-section properties: area (m2), second moments of area about local y/z (m4), torsion
- * constant (m4). Mirrors Rust `FemSection` (`🗿️artifacts/🧊️3d/🦀️.rs`). */
-export interface FemSection {
-  id: string;
-  name: string;
-  area: number;
-  iy: number;
-  iz: number;
-  j: number;
-}
-
-/** 🛡️ A support: the subset of a node's DOFs restrained to zero displacement. Mirrors Rust
- * `FemSupport` (`🗿️artifacts/🧊️3d/🦀️.rs`). */
-export interface FemSupport {
-  id: string;
-  nodeId: string;
-  fixed: FemDof[];
-}
-
-/** 🧱️ A meshed continuum solid — a polygon footprint (with optional holes) extruded upward from
- * `baseZ` by `height` across `layers` equal-height layers. Mirrors Rust `FemSolid`
- * (`🗿️artifacts/🧊️3d/🦀️.rs`). */
-export interface FemSolid {
-  id: string;
-  name: string;
-  outline: [number, number][];
-  holes: [number, number][][];
-  baseZ: number;
-  height: number;
-  layers: number;
-  meshSize: number;
-  materialId: string;
-  axis: FemAxis;
-}
-
-/** 🏋️ A load — a concentrated nodal force/moment, a member UDL on a bar/frame element, or a normal
- * pressure over a meshed solid's top face. Mirrors Rust `FemLoad` (`🗿️artifacts/🧊️3d/🦀️.rs`),
- * tagged on `kind`. */
-export type FemLoad =
-  | { kind: "nodal"; id: string; nodeId: string; dof: FemDof; value: number }
-  | { kind: "memberUdl"; id: string; elementId: string; wx: number; wy: number; wz: number }
-  | { kind: "area"; id: string; solidId: string; pressure: number };
-
-/** 📦️ A named set of loads applied together for one analysis run, optionally including self-weight.
- * Mirrors Rust `FemLoadCase` (`🗿️artifacts/🧊️3d/🦀️.rs`). */
-export interface FemLoadCase {
-  id: string;
-  name: string;
-  loads: FemLoad[];
-  selfWeight: boolean;
-}
-
-/** 📦️ A linear combination of load cases — case id → factor terms superposed from already-solved
- * case results. Mirrors Rust `FemCombination` (`🗿️artifacts/🧊️3d/🦀️.rs`, `BTreeMap<String, f64>`). */
-export interface FemCombination {
-  id: string;
-  name: string;
-  terms: Record<string, number>;
-}
-
-/** ⚙️ Analysis settings: mode/factor counts for modal and buckling analyses, plus a deformation
- * display scale for the UI layer. Mirrors Rust `FemAnalysisSettings`
- * (`🗿️artifacts/🧊️3d/🦀️.rs`, re-exported from `fem2d::FemAnalysisSettings`). */
-export interface FemAnalysisSettings {
-  modalCount: number;
-  bucklingCount: number;
-  deformationScale: number;
-}
-
-
-/** 🧬️ The full `Fem3dArtifact` shape, duplicated here for the sparse diff's `artifact` replacement
- * field. Mirrors `../🟦️.ts`'s `Fem3dArtifact`. */
-export interface Fem3dArtifact {
-  nodes: FemNode[];
-  elements: FemElement[];
-  materials: FemMaterial[];
-  sections: FemSection[];
-  solids: FemSolid[];
-  supports: FemSupport[];
-  loadCases: FemLoadCase[];
-  combinations: FemCombination[];
-  analysis: FemAnalysisSettings;
-}
-//#endregion 🔖️Entities
 
 export interface Fem3dDiff {
   /** @state artifact */
@@ -287,12 +173,15 @@ export const femFem3dDiffGuardConstant = <T extends string | number | boolean>(v
   value === expected ? expected : femFem3dDiffGuardReject(at, `value is not ${String(expected)}`);
 //#endregion 🚪️Parsers
 
+/** 🩹️ Admit the declared patch identity and complete typed replacement. */
+function parseFemPatch<T>(value:unknown,at:string,parse:(value:unknown,at:string)=>T):{id:string;item:T}{const row=femFem3dDiffGuardObject(value,at);for(const key of Object.keys(row))if(key!=="id"&&key!=="item")throw Error(`${at}: unknown patch field`);return{id:femFem3dDiffGuardString(row.id,`${at}.id`),item:parse(row.item,`${at}.item`)}}
+
 export function parseFem3dNodesDelta(value: unknown, at = "$"): Fem3dNodesDelta {
   const row = femFem3dDiffGuardObject(value, at);
   return {
-    added: femFem3dDiffGuardArray(row["added"], `${at}.added`).map((item, index) => femFem3dDiffGuardObject(item, `${at}.added[${index}]`)),
+    added: femFem3dDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseFemNode(item, `${at}.added[${index}]`)),
     removed: femFem3dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => femFem3dDiffGuardString(item, `${at}.removed[${index}]`)),
-    patched: femFem3dDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => femFem3dDiffGuardObject(item, `${at}.patched[${index}]`)),
+    patched: femFem3dDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => parseFemPatch(item, `${at}.patched[${index}]`, parseFemNode)),
     reordered: row["reordered"] === undefined ? undefined : femFem3dDiffGuardArray(row["reordered"], `${at}.reordered`).map((item, index) => femFem3dDiffGuardString(item, `${at}.reordered[${index}]`)),
   };
 }
@@ -300,9 +189,9 @@ export function parseFem3dNodesDelta(value: unknown, at = "$"): Fem3dNodesDelta 
 export function parseFem3dElementsDelta(value: unknown, at = "$"): Fem3dElementsDelta {
   const row = femFem3dDiffGuardObject(value, at);
   return {
-    added: femFem3dDiffGuardArray(row["added"], `${at}.added`).map((item, index) => femFem3dDiffGuardObject(item, `${at}.added[${index}]`)),
+    added: femFem3dDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseFemElement(item, `${at}.added[${index}]`)),
     removed: femFem3dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => femFem3dDiffGuardString(item, `${at}.removed[${index}]`)),
-    patched: femFem3dDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => femFem3dDiffGuardObject(item, `${at}.patched[${index}]`)),
+    patched: femFem3dDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => parseFemPatch(item, `${at}.patched[${index}]`, parseFemElement)),
     reordered: row["reordered"] === undefined ? undefined : femFem3dDiffGuardArray(row["reordered"], `${at}.reordered`).map((item, index) => femFem3dDiffGuardString(item, `${at}.reordered[${index}]`)),
   };
 }
@@ -310,9 +199,9 @@ export function parseFem3dElementsDelta(value: unknown, at = "$"): Fem3dElements
 export function parseFem3dMaterialsDelta(value: unknown, at = "$"): Fem3dMaterialsDelta {
   const row = femFem3dDiffGuardObject(value, at);
   return {
-    added: femFem3dDiffGuardArray(row["added"], `${at}.added`).map((item, index) => femFem3dDiffGuardObject(item, `${at}.added[${index}]`)),
+    added: femFem3dDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseFemMaterial(item, `${at}.added[${index}]`)),
     removed: femFem3dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => femFem3dDiffGuardString(item, `${at}.removed[${index}]`)),
-    patched: femFem3dDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => femFem3dDiffGuardObject(item, `${at}.patched[${index}]`)),
+    patched: femFem3dDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => parseFemPatch(item, `${at}.patched[${index}]`, parseFemMaterial)),
     reordered: row["reordered"] === undefined ? undefined : femFem3dDiffGuardArray(row["reordered"], `${at}.reordered`).map((item, index) => femFem3dDiffGuardString(item, `${at}.reordered[${index}]`)),
   };
 }
@@ -320,9 +209,9 @@ export function parseFem3dMaterialsDelta(value: unknown, at = "$"): Fem3dMateria
 export function parseFem3dSectionsDelta(value: unknown, at = "$"): Fem3dSectionsDelta {
   const row = femFem3dDiffGuardObject(value, at);
   return {
-    added: femFem3dDiffGuardArray(row["added"], `${at}.added`).map((item, index) => femFem3dDiffGuardObject(item, `${at}.added[${index}]`)),
+    added: femFem3dDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseFemSection(item, `${at}.added[${index}]`)),
     removed: femFem3dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => femFem3dDiffGuardString(item, `${at}.removed[${index}]`)),
-    patched: femFem3dDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => femFem3dDiffGuardObject(item, `${at}.patched[${index}]`)),
+    patched: femFem3dDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => parseFemPatch(item, `${at}.patched[${index}]`, parseFemSection)),
     reordered: row["reordered"] === undefined ? undefined : femFem3dDiffGuardArray(row["reordered"], `${at}.reordered`).map((item, index) => femFem3dDiffGuardString(item, `${at}.reordered[${index}]`)),
   };
 }
@@ -330,9 +219,9 @@ export function parseFem3dSectionsDelta(value: unknown, at = "$"): Fem3dSections
 export function parseFem3dSolidsDelta(value: unknown, at = "$"): Fem3dSolidsDelta {
   const row = femFem3dDiffGuardObject(value, at);
   return {
-    added: femFem3dDiffGuardArray(row["added"], `${at}.added`).map((item, index) => femFem3dDiffGuardObject(item, `${at}.added[${index}]`)),
+    added: femFem3dDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseFemSolid(item, `${at}.added[${index}]`)),
     removed: femFem3dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => femFem3dDiffGuardString(item, `${at}.removed[${index}]`)),
-    patched: femFem3dDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => femFem3dDiffGuardObject(item, `${at}.patched[${index}]`)),
+    patched: femFem3dDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => parseFemPatch(item, `${at}.patched[${index}]`, parseFemSolid)),
     reordered: row["reordered"] === undefined ? undefined : femFem3dDiffGuardArray(row["reordered"], `${at}.reordered`).map((item, index) => femFem3dDiffGuardString(item, `${at}.reordered[${index}]`)),
   };
 }
@@ -340,9 +229,9 @@ export function parseFem3dSolidsDelta(value: unknown, at = "$"): Fem3dSolidsDelt
 export function parseFem3dSupportsDelta(value: unknown, at = "$"): Fem3dSupportsDelta {
   const row = femFem3dDiffGuardObject(value, at);
   return {
-    added: femFem3dDiffGuardArray(row["added"], `${at}.added`).map((item, index) => femFem3dDiffGuardObject(item, `${at}.added[${index}]`)),
+    added: femFem3dDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseFemSupport(item, `${at}.added[${index}]`)),
     removed: femFem3dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => femFem3dDiffGuardString(item, `${at}.removed[${index}]`)),
-    patched: femFem3dDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => femFem3dDiffGuardObject(item, `${at}.patched[${index}]`)),
+    patched: femFem3dDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => parseFemPatch(item, `${at}.patched[${index}]`, parseFemSupport)),
     reordered: row["reordered"] === undefined ? undefined : femFem3dDiffGuardArray(row["reordered"], `${at}.reordered`).map((item, index) => femFem3dDiffGuardString(item, `${at}.reordered[${index}]`)),
   };
 }
@@ -350,9 +239,9 @@ export function parseFem3dSupportsDelta(value: unknown, at = "$"): Fem3dSupports
 export function parseFem3dLoadCasesDelta(value: unknown, at = "$"): Fem3dLoadCasesDelta {
   const row = femFem3dDiffGuardObject(value, at);
   return {
-    added: femFem3dDiffGuardArray(row["added"], `${at}.added`).map((item, index) => femFem3dDiffGuardObject(item, `${at}.added[${index}]`)),
+    added: femFem3dDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseFemLoadCase(item, `${at}.added[${index}]`)),
     removed: femFem3dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => femFem3dDiffGuardString(item, `${at}.removed[${index}]`)),
-    patched: femFem3dDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => femFem3dDiffGuardObject(item, `${at}.patched[${index}]`)),
+    patched: femFem3dDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => parseFemPatch(item, `${at}.patched[${index}]`, parseFemLoadCase)),
     reordered: row["reordered"] === undefined ? undefined : femFem3dDiffGuardArray(row["reordered"], `${at}.reordered`).map((item, index) => femFem3dDiffGuardString(item, `${at}.reordered[${index}]`)),
   };
 }
@@ -360,9 +249,9 @@ export function parseFem3dLoadCasesDelta(value: unknown, at = "$"): Fem3dLoadCas
 export function parseFem3dCombinationsDelta(value: unknown, at = "$"): Fem3dCombinationsDelta {
   const row = femFem3dDiffGuardObject(value, at);
   return {
-    added: femFem3dDiffGuardArray(row["added"], `${at}.added`).map((item, index) => femFem3dDiffGuardObject(item, `${at}.added[${index}]`)),
+    added: femFem3dDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseFemCombination(item, `${at}.added[${index}]`)),
     removed: femFem3dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => femFem3dDiffGuardString(item, `${at}.removed[${index}]`)),
-    patched: femFem3dDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => femFem3dDiffGuardObject(item, `${at}.patched[${index}]`)),
+    patched: femFem3dDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => parseFemPatch(item, `${at}.patched[${index}]`, parseFemCombination)),
     reordered: row["reordered"] === undefined ? undefined : femFem3dDiffGuardArray(row["reordered"], `${at}.reordered`).map((item, index) => femFem3dDiffGuardString(item, `${at}.reordered[${index}]`)),
   };
 }

@@ -12,7 +12,7 @@ async fn request_delete_opens_the_confirm_dialog_without_mutating() {
     match &result.requested_effects[0] {
         Effect::OpenDialog { dialog_id, args, .. } => {
             assert_eq!(dialog_id, "deleteArtifact");
-            let args = pack::json_from_dsl_value(&args.clone().unwrap());
+            let args = semio_framework_pack_json::from_dsl_value(&args.clone().unwrap());
             assert_eq!(args.get("id").and_then(|v| v.as_str()), Some(id.as_str()));
         }
         other => panic!("expected OpenDialog, got {other:?}"),

@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "retained-pack.catalog-chunk-allocation",
+      "error": "RetainedPackCatalogFault",
+      "kind": "InvariantViolated",
+      "condition": "No admitted reserved slot; rejected element has no source error metadata"
+    },
+    {
+      "id": "retained-pack.symbol-span-allocation",
+      "error": "RetainedPackCatalogFault",
+      "kind": "InvariantViolated",
+      "condition": "No admitted reserved slot; rejected element has no source error metadata"
+    },
+    {
+      "id": "retained-pack.symbol-scalar-allocation",
+      "error": "RetainedPackCatalogFault",
+      "kind": "InvariantViolated",
+      "condition": "No admitted reserved slot; rejected element has no source error metadata"
+    },
+    {
+      "id": "retained-pack.catalog-observed-allocation",
+      "error": "RetainedPackCatalogFault",
+      "kind": "InvariantViolated",
+      "condition": "No admitted reserved slot; rejected element has no source error metadata"
+    },
+    {
+      "id": "record-value-close",
+      "error": "PackRefusal",
+      "kind": "preserved",
+      "condition": "Propagate actual RetainedValueCursor typed semantic failure"
+    },
+    {
+      "id": "record-symbol-close",
+      "error": "PackRefusal",
+      "kind": "preserved",
+      "condition": "Keep PagedList borrowed kind/reason/current cursor offset"
+    },
+    {
+      "id": "source-canceled",
+      "error": "RetainedPackSourceFault",
+      "kind": "Canceled",
+      "condition": "Caller cancellation state"
+    },
+    {
+      "id": "source-allocation-credit",
+      "error": "RetainedPackSourceFault",
+      "kind": "OwnershipLimit",
+      "condition": "Actual next backing reserve exceeds declared admitted allocation credit"
+    }
+  ]
+}

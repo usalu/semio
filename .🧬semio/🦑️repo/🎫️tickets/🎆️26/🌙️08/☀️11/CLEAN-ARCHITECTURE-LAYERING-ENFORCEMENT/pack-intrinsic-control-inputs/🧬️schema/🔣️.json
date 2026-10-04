@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "scope",
+    "envelope",
+    "kind",
+    "message",
+    "cases"
+  ],
+  "properties": {
+    "scope": {
+      "const": "ControlledMaterialization.copy_utf8 native caller allowance"
+    },
+    "envelope": {
+      "const": "ValueRefusal"
+    },
+    "kind": {
+      "const": "ownershipLimit"
+    },
+    "message": {
+      "const": "native text exceeds caller allowance"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "bytes",
+          "maximum",
+          "owned",
+          "refused"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "bytes": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]*)$"
+          },
+          "maximum": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]*)$"
+          },
+          "owned": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]*)$"
+          },
+          "refused": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

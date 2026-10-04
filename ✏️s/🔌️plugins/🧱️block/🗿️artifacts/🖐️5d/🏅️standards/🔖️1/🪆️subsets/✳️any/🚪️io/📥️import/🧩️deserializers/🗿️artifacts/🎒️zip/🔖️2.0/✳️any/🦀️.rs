@@ -24,15 +24,15 @@ pub const ZIP_MAGIC: &[u8] = b"PK\x03\x04";
 
 /// 🎒️ Rebuilds this subset's snapshot from real zip 2.0 container bytes.
 pub fn from_zip_bytes(bytes: &[u8]) -> Result<Block5dSnapshot, IoError> {
-    let archive = decode_zip(bytes).map_err(|error| IoError { message: format!("zip→block5d: {error}"), diagnostics: Vec::new() })?;
+    let archive = decode_zip(bytes).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("zip→block5d: {error}"))))?;
     for (name, parse) in [(ZIP_DSL_ENTRY, from_dsl_text as fn(&str) -> Result<Block5dSnapshot, IoError>), (ZIP_JSON_ENTRY, from_json_text as fn(&str) -> Result<Block5dSnapshot, IoError>)] {
         let Some(entry) = archive.entries.iter().find(|entry| entry.name == name) else {
             continue;
         };
-        let text = std::str::from_utf8(&entry.data).map_err(|error| IoError { message: format!("zip→block5d: `{name}` is not utf-8: {error}"), diagnostics: Vec::new() })?;
+        let text = std::str::from_utf8(&entry.data).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("zip→block5d: `{name}` is not utf-8: {error}"))))?;
         return parse(text);
     }
-    Err(IoError { message: format!("zip→block5d: archive carries neither `{ZIP_DSL_ENTRY}` nor `{ZIP_JSON_ENTRY}`"), diagnostics: Vec::new() })
+    Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("zip→block5d: archive carries neither `{ZIP_DSL_ENTRY}` nor `{ZIP_JSON_ENTRY}`"))))
 }
 
 /// 🧩️ `s.stdio.zip@2.0/*` → `s.block.block5d@1/*`.
@@ -49,7 +49,7 @@ impl Deserializer<Block5dSnapshot> for ZipIntoBlock5d {
     }
     async fn deserialize(payload: &IoPayload) -> IoResult<Block5dSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
-            return Err(IoError { message: "zip→block5d: expected a binary zip payload".to_string(), diagnostics: Vec::new() });
+            return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "zip→block5d: expected a binary zip payload".to_string())));
         };
         Ok(IoOutcome::clean(from_zip_bytes(bytes)?))
     }

@@ -1,7 +1,7 @@
 use super::super::{DagDelta, DagDiff, DagMutation, DagSnapshot, MovedNode};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "move-node")]
@@ -19,9 +19,12 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for MoveNode {
         }
         protocol::MutationOutcome::new(DagDiff::from(DagDelta { moved_node: Some(MovedNode { id: self.id.clone(), x: self.x, y: self.y }), ..Default::default() }))
     }
-    fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {
+    fn inverse(&self, base: &DagSnapshot) -> Result<Vec<DagMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         base.nodes.iter().find(|node| node.id == self.id).map(|node| vec![DagMutation::MoveNode(Self { id: self.id.clone(), x: node.x, y: node.y })]).unwrap_or_default()
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Move node {}", self.id), &format!("Knoten {} verschieben", self.id))
     }

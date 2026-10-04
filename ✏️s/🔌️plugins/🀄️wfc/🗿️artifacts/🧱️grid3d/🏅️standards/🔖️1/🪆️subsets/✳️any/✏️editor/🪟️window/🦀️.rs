@@ -10,9 +10,10 @@ use crate::editor::grid3d::modes::edit::windows::{grid, preview};
 /// with, and whether masked cells stay drawn. `WindowConfigOwner::State` requires `dsl::DslField`,
 /// which `#[derive(dsl::DslArtifact)]` emits alongside the `__dsl_*` helpers the record-backed
 /// codecs below are written against.
-#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, dsl::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_os_kernel::DslArtifact)]
 #[value(rename_all = "camelCase")]
-#[dsl(id = "s.wfc.grid3d.windowconfig", extension = "wfcgrid3dwindowcfg", layout = "lines")]
+#[dsl(layout = "lines")]
+#[artifact(id = "s.wfc.grid3d.windowconfig", extension = "wfcgrid3dwindowcfg")]
 pub struct Grid3dWindowConfig {
     pub camera_x: f64,
     pub camera_y: f64,
@@ -78,9 +79,12 @@ impl protocol::Mutation<Grid3dWindowConfig> for Grid3dWindowConfigMutation {
             Self::Snapshot { config } => protocol::MutationOutcome::new(config.clone()),
         }
     }
-    fn inverse(&self, base: &Grid3dWindowConfig) -> Vec<Self> {
+    fn inverse(&self, base: &Grid3dWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![Self::Snapshot { config: base.clone() }]
-    }
+    
+    })())
+}
 }
 //#endregion 🎚️Config
 
@@ -92,13 +96,13 @@ impl store::ArtifactDsl for Grid3dWindowConfig {
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = store::semio_format::split_text_preamble(text).map_or(text, |(_, body)| body);
-        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid wfc grid3d window envelope");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -110,18 +114,18 @@ impl store::ArtifactDsl for Grid3dWindowConfig {
 impl store::ArtifactPack for Grid3dWindowConfig {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let body = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::from(error.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &body))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, body) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        let (envelope, body) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::from(error.into_value_error()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _) = store::pack_rt::decode_document(&body, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -130,10 +134,10 @@ store::impl_whole_record_config!(Grid3dWindowConfig);
 
 impl protocol::OpText for Grid3dWindowConfigMutation {
     fn print_op(&self) -> String {
-        dsl::json::to_json_string(self)
+        semio_framework_pack_json::to_json_string(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        dsl::json::from_json_str(line).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        semio_framework_pack_json::from_json_str(line, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 }
 
@@ -142,8 +146,8 @@ impl protocol::OpBinary for Grid3dWindowConfigMutation {
         Ok(protocol::OpText::print_op(self).into_bytes())
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))?;
-        dsl::json::from_json_str(text).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
+        let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(semio_framework_value::ValueError::from(error))))?;
+        semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(error)))
     }
 }
 //#endregion 🔖️HandcraftedCodecs
@@ -199,12 +203,12 @@ pub fn kind_for_view(view: &semio_framework_plugin::ViewModel) -> Option<&str> {
 /// 🎚️ Addresses a config write at the exact window instance it belongs to — a pane may never write
 /// its sibling's pose.
 pub fn addressed_config(view: &semio_framework_plugin::ViewModel, config: Grid3dWindowConfig) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> {
-    let (id, kind) = kind(view).ok_or_else(|| semio_framework_plugin::Fault::from("wfc-grid3d-window-required"))?;
+    let (id, kind) = kind(view).ok_or_else(|| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.grid3d.window.required"), "wfc.grid3d.window.required"))?;
     let mutation = Grid3dWindowConfigMutation::Snapshot { config };
     match kind {
         grid::WINDOW_KIND_ID => Ok(semio_framework_plugin::WindowConfigMutation::of::<Grid3dGridWindowConfigOwner>(id, mutation)),
         preview::WINDOW_KIND_ID => Ok(semio_framework_plugin::WindowConfigMutation::of::<Grid3dPreviewWindowConfigOwner>(id, mutation)),
-        _ => Err(semio_framework_plugin::Fault::from("wfc-grid3d-window-kind-required")),
+        _ => Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.grid3d.window.kind-required"), "wfc.grid3d.window.kind-required")),
     }
 }
 //#endregion 🪟️Owners

@@ -86,6 +86,7 @@ Feature: Apply every typed SVG 1.1 mutation to a real-world document
       | set-text           | {"path": [2], "text": "wave7 mutation marker"}                                                                                                             |
       | set-view-box       | {"path": [], "viewBox": {"minX": 0, "minY": 0, "width": 2030, "height": 2030}}                                                                             |
       | set-transform      | {"path": [4, 0, 0], "transform": [{"op": "translate", "x": 50, "y": 50}, {"op": "rotate", "angle": 45}]}                                                  |
+      | patch-snapshot | {"patch": {"operation": "set", "path": "/doc/root/attrs/1/value", "value": "Layer_patched"}} |
 
   @id-inverse
   @level-exhaustive
@@ -108,6 +109,7 @@ Feature: Apply every typed SVG 1.1 mutation to a real-world document
       | set-text           | {"path": [2], "text": "wave7 mutation marker"}                                                                                                             |
       | set-view-box       | {"path": [], "viewBox": {"minX": 0, "minY": 0, "width": 2030, "height": 2030}}                                                                             |
       | set-transform      | {"path": [4, 0, 0], "transform": [{"op": "translate", "x": 50, "y": 50}, {"op": "rotate", "angle": 45}]}                                                  |
+      | patch-snapshot | {"patch": {"operation": "set", "path": "/doc/root/attrs/1/value", "value": "Layer_patched"}} |
 
   @id-identity-round-trip
   @level-long

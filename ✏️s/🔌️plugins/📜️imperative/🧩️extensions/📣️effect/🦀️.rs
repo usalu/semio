@@ -1,7 +1,7 @@
 //! ⚡️ Imperative core module: side-effecting action operators.
 
 use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, Operator, OperatorImpl, OperatorInfo, Registry, Value};
-use pack::json::{array, object, to_string, Value as JsonValue};
+use semio_framework_pack_json::{array, object, to_string, Value as JsonValue};
 
 // #region 🔖️LogPrint
 /// 📝️ Writes a message to the effect log.

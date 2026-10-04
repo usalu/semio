@@ -23,10 +23,13 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetMetadata {
         MutationOutcome::new(diff::diff_set_metadata(base, self.xmp.clone()))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         let _ = base;
         vec![PdfMutation::SetMetadata(SetMetadata { xmp: base.metadata.clone() })]
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set metadata", "Metadaten setzen")

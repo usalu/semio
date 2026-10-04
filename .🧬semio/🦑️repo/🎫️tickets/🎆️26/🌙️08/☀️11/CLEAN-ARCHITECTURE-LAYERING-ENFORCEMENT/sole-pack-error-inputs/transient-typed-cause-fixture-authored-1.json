@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "owner": "semio-framework-plugin::transient_root",
+  "semanticReturn": "PackRefusal",
+  "messageClassification": false,
+  "cases": [
+    { "id": "op-invalid-byte", "route": "op-utf8", "bytes": [255], "sourceOwner": "Utf8Error", "protocolEnvelope": true },
+    { "id": "op-incomplete-codepoint", "route": "op-utf8", "bytes": [226, 130], "sourceOwner": "Utf8Error", "protocolEnvelope": true },
+    { "id": "op-incomplete-json", "route": "op-json", "bytes": [123], "sourceOwner": "JsonError", "protocolEnvelope": true },
+    { "id": "pack-invalid-byte", "route": "pack-utf8", "bytes": [255], "sourceOwner": "Utf8Error", "protocolEnvelope": false },
+    { "id": "pack-incomplete-codepoint", "route": "pack-utf8", "bytes": [226, 130], "sourceOwner": "Utf8Error", "protocolEnvelope": false },
+    { "id": "pack-incomplete-json", "route": "pack-json", "bytes": [123], "sourceOwner": "JsonError", "protocolEnvelope": false },
+    { "id": "pack-invalid-header", "route": "pack-header", "bytes": [255], "sourceOwner": "SemioError", "protocolEnvelope": false },
+    { "id": "pack-foreign-identity", "route": "pack-identity", "bytes": [123, 125], "sourceOwner": "ValueError", "protocolEnvelope": false },
+    { "id": "op-text-incomplete-json", "route": "op-text-json", "bytes": [123], "sourceOwner": "JsonError", "protocolEnvelope": false },
+    { "id": "dsl-incomplete-json", "route": "dsl-json", "bytes": [123], "sourceOwner": "JsonError", "protocolEnvelope": false }
+  ]
+}

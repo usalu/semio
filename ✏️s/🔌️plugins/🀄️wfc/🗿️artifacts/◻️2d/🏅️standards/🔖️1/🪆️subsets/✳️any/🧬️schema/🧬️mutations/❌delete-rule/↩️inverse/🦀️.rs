@@ -4,9 +4,12 @@
 use crate::mutations::{create_rule, Wfc2dMutation};
 use crate::schema::snapshot::Wfc2dSnapshot;
 
-pub fn inverse(payload: &super::DeleteRule, base: &Wfc2dSnapshot) -> Vec<Wfc2dMutation> {
+pub fn inverse(payload: &super::DeleteRule, base: &Wfc2dSnapshot) -> Result<Vec<Wfc2dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(rule) = base.rules.iter().find(|rule| rule.id == payload.id) else {
         return Vec::new();
     };
     vec![create_rule(rule.clone())]
+
+    })())
 }

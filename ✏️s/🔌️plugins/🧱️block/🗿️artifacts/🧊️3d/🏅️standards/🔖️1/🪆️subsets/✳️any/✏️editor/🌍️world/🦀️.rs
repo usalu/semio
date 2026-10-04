@@ -9,8 +9,8 @@ use crate::editor::block3d::config::Block3dConfig;
 use crate::editor::block3d::modes::edit::windows::world::transient::Block3dBrushPreview;
 use crate::BlockRepresentation;
 use semio_framework_plugin::{world3d_camera_projection_json, world3d_mesh_id_from_url, world3d_selection_json, WorldProjectionConfig};
-use dsl::json;
-use dsl::os_pack::json::{parse, Value};
+
+use semio_framework_pack_json::{parse, Value};
 
 fn vec3(v: [f64; 3]) -> Value {
     Value::from(v.iter().map(|c| Value::from(*c)).collect::<Vec<Value>>())
@@ -135,7 +135,7 @@ pub fn world_camera_json(definition: &Block3dSnapshot, config: &Block3dConfig) -
 /// render time; it still declares the domain/granularity/mode the client uses to interpret picks.
 /// Flagged as a known gap for a follow-up wave, mirroring the SDK's own `dispatch_emit_group` gap note.
 pub fn world_selection_json(_config: &Block3dConfig) -> String {
-    let mut value: Value = parse(&world3d_selection_json("replace", &[], None)).unwrap_or_else(|_| json!({}));
+    let mut value: Value = parse(&world3d_selection_json("replace", &[], None), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| json!({}));
     if let Some(object) = value.as_object_mut() {
         object.insert("granularity", json!("mesh"));
         object.insert("selectionMode", json!("mesh"));

@@ -33,7 +33,7 @@ async fn folds_visibility_and_members_for_this_space_into_config() {
         event(2, DirectoryEventBody::SpaceCreated { space_id: "space-1".into(), name: "Space 1".into(), space_kind: DirectorySpaceKind::Atelier, visibility: DirectorySpaceVisibility::Public, owner_user_id: "u-1".into() }, Some("space-1")),
         event(3, DirectoryEventBody::MemberUpserted { space_id: "space-1".into(), user_id: "u-1".into(), role: DirectorySpaceRole::Author }, Some("space-1")),
     ];
-    let events_json = pack::to_json_string(&events);
+    let events_json = semio_framework_pack_json::to_json_string(&events);
     let result = handle(&FoldDirectoryEvents { events_json }, &doc, &cfg).expect("fold");
     assert_eq!(result.config_mutations.len(), 1);
     let SpaceIndexConfigMutation::Snapshot { config } = &result.config_mutations[0];
@@ -76,7 +76,7 @@ async fn folds_directory_indexed_documents_into_read_only_space_rows() {
         event(2, DirectoryEventBody::DocumentAnnounced { descriptor: descriptor.clone() }, Some("space-1")),
         indexed,
     ];
-    let result = handle(&FoldDirectoryEvents { events_json: pack::to_json_string(&events) }, &doc, &cfg).expect("fold indexed document");
+    let result = handle(&FoldDirectoryEvents { events_json: semio_framework_pack_json::to_json_string(&events) }, &doc, &cfg).expect("fold indexed document");
     let SpaceIndexConfigMutation::Snapshot { config } = &result.config_mutations[0];
     assert_eq!(config.indexed_artifacts.len(), 1);
     assert_eq!(config.indexed_artifacts[0].id, descriptor.document_id);
@@ -95,7 +95,7 @@ async fn folding_events_for_a_different_space_is_a_no_op() {
     let cfg = ConfigView { snapshot: &config_snapshot, window: None };
     let events =
         vec![event(1, DirectoryEventBody::SpaceCreated { space_id: "space-2".into(), name: "Other".into(), space_kind: DirectorySpaceKind::Atelier, visibility: DirectorySpaceVisibility::Public, owner_user_id: "u-1".into() }, Some("space-2"))];
-    let events_json = pack::to_json_string(&events);
+    let events_json = semio_framework_pack_json::to_json_string(&events);
     let result = handle(&FoldDirectoryEvents { events_json }, &doc, &cfg).expect("fold");
     assert!(result.config_mutations.is_empty(), "unrelated-space events never touch this space's config");
     assert!(result.artifact_mutations.is_empty());
@@ -115,7 +115,7 @@ async fn an_index_without_a_space_id_folds_the_one_space_its_history_names() {
         event(2, DirectoryEventBody::SpaceCreated { space_id: "space-1".into(), name: "Space 1".into(), space_kind: DirectorySpaceKind::Atelier, visibility: DirectorySpaceVisibility::Private, owner_user_id: "u-1".into() }, Some("space-1")),
         event(3, DirectoryEventBody::MemberUpserted { space_id: "space-1".into(), user_id: "u-1".into(), role: DirectorySpaceRole::Author }, Some("space-1")),
     ];
-    let result = handle(&FoldDirectoryEvents { events_json: pack::to_json_string(&events) }, &doc, &cfg).expect("fold");
+    let result = handle(&FoldDirectoryEvents { events_json: semio_framework_pack_json::to_json_string(&events) }, &doc, &cfg).expect("fold");
     let [SpaceIndexConfigMutation::Snapshot { config }] = result.config_mutations.as_slice() else { panic!("one config snapshot, got {:?}", result.config_mutations) };
     assert_eq!(config.visibility, "private");
     assert_eq!(config.members.iter().map(|member| member.email.as_str()).collect::<Vec<_>>(), ["a@example.com"]);
@@ -134,6 +134,6 @@ async fn an_index_without_a_space_id_never_guesses_between_two_spaces() {
         event(1, DirectoryEventBody::SpaceCreated { space_id: "space-1".into(), name: "Space 1".into(), space_kind: DirectorySpaceKind::Atelier, visibility: DirectorySpaceVisibility::Public, owner_user_id: "u-1".into() }, Some("space-1")),
         event(2, DirectoryEventBody::SpaceCreated { space_id: "space-2".into(), name: "Space 2".into(), space_kind: DirectorySpaceKind::Atelier, visibility: DirectorySpaceVisibility::Public, owner_user_id: "u-1".into() }, Some("space-2")),
     ];
-    let result = handle(&FoldDirectoryEvents { events_json: pack::to_json_string(&events) }, &doc, &cfg).expect("fold");
+    let result = handle(&FoldDirectoryEvents { events_json: semio_framework_pack_json::to_json_string(&events) }, &doc, &cfg).expect("fold");
     assert!(result.config_mutations.is_empty(), "an ambiguous history never selects a space");
 }

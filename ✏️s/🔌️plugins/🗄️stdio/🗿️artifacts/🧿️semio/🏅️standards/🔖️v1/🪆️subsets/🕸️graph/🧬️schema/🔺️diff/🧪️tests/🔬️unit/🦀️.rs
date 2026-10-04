@@ -39,5 +39,5 @@ async fn empty_diff_prints_empty_string() {
 
 #[semio_framework_async_macros::async_test]
 async fn edge_id_helper_smoke() {
-    assert_eq!(dec_edge_id("").unwrap(), GraphEdgeId::new(""));
+    assert_eq!(crate::standards::v1::subsets::graph::schema::snapshot::dec_edge_id("").unwrap(), GraphEdgeId::new(""));
 }

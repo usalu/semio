@@ -1,0 +1,17 @@
+# STEP and IFC Current Finite Native Route Readiness
+
+Read-only current source audit; no compiler or runtime claims. Shared High confirms no STEP/IFC mount edits underway in its lane.
+
+Registered no-argument targets are `@semio-tech/stdio-step-rs:test-snapshot-sqlite-native` and `@semio-tech/stdio-ifc-rs:test-snapshot-sqlite-native`. Both call their local script `test-snapshot-sqlite native`, delegated to the canonical runner's `--lib sqlite_snapshot_ --no-fail-fast`. STEP's Source configuration selects AP214 base; IFC selects both IFC2x3 base and IFC4 any. Each wrapper has a 120000 ms snapshot test budget.
+
+Current authored matching mounted test candidates are STEP12, IFC4 10, IFC2x3 13; IFC wrapper therefore selects 23 candidates across both owners. Census scanned all artifact Rust files, excluded the three trait `sqlite_snapshot_codec` methods, and read the root test-module mounts. There are no additional matching audit modules in these owners. Runtime counts still require Root's authentic registered execution.
+
+Exact snapshot roots under `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts` are `📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/📸️snapshot`, `🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📸️snapshot`, and `🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📸️snapshot`.
+
+All three have mounted SQL providers and Pack opt-ins. Their active typed SQL implements projection, reconstruction and preflight, but does not override controlled native decode/encode. Adjacent `🚦️native/🦀️.rs` modules explicitly say Unmounted and are absent from snapshot root module mounts. Each contains its own binding/census facets and authored typed frame fields, uses the descriptor producer and shared native record helpers; this source is not actual owner coverage.
+
+Concrete prerequisite candidates: mounted test `restore` helpers still return String directly from typed reconstruction (STEP17, IFC4 15, IFC2x3 27). Unmounted native encode/decode declarations still return String (STEP60/61, IFC4 52/53, IFC2x3 110/114), despite current typed shared native record helpers. These are source facts, not measured compiler error counts. Do not restore compatibility APIs or flatten errors to make an adjacent draft compile.
+
+Authored semantic schemas have STEP12, IFC4 11, IFC2x3 12 tables. They model header arguments, entities/complex types, argument relationships, values and ordered aggregate/typed children; IFC2x3 also retains optional EDM. Full u64 instance/reference words are text literals with relational owner identities separate. STEP/IFC4 real values retain IEEE integer companions; IFC2x3 retains decimal sign, coefficient text, full u32 scale and optional i32 exponent. These are individual semantic fields, not serialized document or native-carrier columns.
+
+Meaningful witnesses include independent Bun SQLite field comparison and edits, DataView IEEE word comparisons, wrong-coordinate/subset diagnostics, corruption/orphan/ordinal refusals, and native literal owned frame/schema/all-variant witnesses. STEP cancellation uses a 120000-byte Unicode scalar during SQL work and an interior native checkpoint at 65536 before total completion. Native input/output old byte-ceiling assertions still use `max_value_bytes:1` (STEP40/49); preserve separate SQL semantic ceilings and evaluate owned-stage role only after genuine mounted execution. No explicit deep-stack/max-depth law was established by this audit; scalar-interior cancellation must not be presented as deep-tree retirement proof.

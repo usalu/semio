@@ -19,3 +19,5 @@ record set-frames tag=2
 field payload bytes
 record set-id3v1 tag=3
 field payload bytes
+record patch-snapshot tag=4
+field payload bytes

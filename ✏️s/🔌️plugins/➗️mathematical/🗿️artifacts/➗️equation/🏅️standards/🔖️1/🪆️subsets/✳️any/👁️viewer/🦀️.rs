@@ -128,9 +128,12 @@ impl ArtifactViewer for EquationViewer {
 
     /// 🌱️ The derivable `notation`/`results`/`computed` members — see
     /// `crate::genesis_equation_child_pack`.
-    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {
+ Ok((||{
         crate::genesis_equation_child_pack(snapshot, slot, child_id)
-    }
+    
+})())
+}
 
     fn initial_snapshot() -> EquationSnapshot {
         EquationSnapshot::default()

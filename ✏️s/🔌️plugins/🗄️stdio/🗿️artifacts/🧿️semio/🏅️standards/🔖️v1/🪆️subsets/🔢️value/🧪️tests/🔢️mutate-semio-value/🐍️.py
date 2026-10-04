@@ -49,7 +49,7 @@ from __future__ import annotations
 # region 🔖️Imports
 import json
 
-from semio_repo_test import Adapter, Context, Outcome, digest
+from semio_repo_test import Adapter, Context, Outcome, digest, patched_snapshot
 
 # endregion 🔖️Imports
 
@@ -292,7 +292,7 @@ def pack_bytes(document: dict) -> bytes:
 
 
 # region 🔖️Mutations
-KINDS = ("no-mutation", "set-snapshot", "set-value", "set-map-entry", "remove-map-entry", "insert-list-item", "remove-list-item", "set-node", "remove-node")
+KINDS = ("no-mutation", "set-snapshot", "patch-snapshot", "set-value", "set-map-entry", "remove-map-entry", "insert-list-item", "remove-list-item", "set-node", "remove-node")
 
 TAG_OF_KIND = {kind: kind.split("-")[0] + "".join(word.capitalize() for word in kind.split("-")[1:]) for kind in KINDS}
 
@@ -375,6 +375,8 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
     tag = tagged(mutation)
     if tag == "noMutation":
         return result
+    if tag == "patchSnapshot":
+        return patched_snapshot(document, mutation["patch"])
     if tag == "setSnapshot":
         return clone(mutation["snapshot"])
     if tag == "setValue":
@@ -442,6 +444,8 @@ def inverse_mutation(document: dict, mutation: dict) -> list:
     tag = tagged(mutation)
     if tag == "noMutation":
         return []
+    if tag == "patchSnapshot":
+        return [{"mutation": "setSnapshot", "snapshot": clone(document)}]
     if tag == "setSnapshot":
         return [{"mutation": "setSnapshot", "snapshot": clone(document)}]
     if tag == "setValue":

@@ -23,9 +23,12 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for UpdatePageColumns {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_update_page_columns(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
-        inverse_update_page_columns(self, base)
-    }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok({
+        inverse_update_page_columns(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Update page \"{}\" columns", self.id), &format!("Spalten von Seite \"{}\" aktualisieren", self.id))
     }
@@ -41,7 +44,7 @@ pub fn diff_update_page_columns(payload: &UpdatePageColumns, base: &LayoutSnapsh
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Page \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if page.columns.count == payload.count && page.columns.gutter == payload.gutter {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Page \"{}\" already has those columns.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Page \"{}\" already has those columns.", payload.id));
     }
     protocol::MutationOutcome::new(LayoutDiff {
         pages: Some(LayoutPagesDelta { patched: vec![LayoutPagePatchEntry { id: payload.id.clone(), patch: PagePatch { columns_count: Some(payload.count), columns_gutter: Some(payload.gutter), ..Default::default() } }], ..Default::default() }),
@@ -51,10 +54,13 @@ pub fn diff_update_page_columns(payload: &UpdatePageColumns, base: &LayoutSnapsh
 //#endregion 🏛️UpdatePageColumns
 
 //#region 🏛️UpdatePageColumns
-pub fn inverse_update_page_columns(payload: &UpdatePageColumns, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_update_page_columns(payload: &UpdatePageColumns, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.pages.iter().find(|page| page.id == payload.id) {
         Some(page) => vec![LayoutMutation::UpdatePageColumns(UpdatePageColumns { id: payload.id.clone(), count: page.columns.count, gutter: page.columns.gutter })],
         None => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🏛️UpdatePageColumns

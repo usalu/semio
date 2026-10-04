@@ -24,14 +24,17 @@ impl MutationKind<PdfSnapshot, PdfAMutation> for RemoveAfRelationship {
         MutationOutcome::new(support::graph_edit_diff(base, next))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfAMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfAMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         support::file_spec_named(base, &self.file_name)
             .and_then(|id| support::object(base, id))
             .and_then(|value| support::dict_name(value, "AFRelationship"))
             .map(|relationship| PdfAMutation::SetAfRelationship(SetAfRelationship { file_name: self.file_name.clone(), relationship: relationship.to_string() }))
             .into_iter()
             .collect()
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove AF relationship from \"{}\"", self.file_name), &format!("AF-Beziehung aus \"{}\" entfernen", self.file_name))

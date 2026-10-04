@@ -8,7 +8,7 @@ use crate::{EquationGeometry, EquationSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "set-artifact")]
 pub struct SetArtifact {
     #[dsl(block)]
@@ -22,10 +22,10 @@ pub fn handle(payload: &SetArtifact, doc: &ArtifactView<'_, EquationSnapshot>, _
         return Ok(Emit::default());
     };
     let mut operations = Vec::new();
-    if graph != crate::equation_graph(doc.snapshot) {
+    if graph != doc.snapshot.graph.clone() {
         operations.push(EquationMutation::ReplaceGraph(ReplaceGraph { graph }));
     }
-    if payload.geometry != crate::equation_geometry(doc.snapshot) {
+    if payload.geometry != doc.snapshot.geometry.clone() {
         operations.push(EquationMutation::ReplacePoints(ReplacePoints { points: payload.geometry.points.clone() }));
     }
     Ok(Emit::mutations(operations))

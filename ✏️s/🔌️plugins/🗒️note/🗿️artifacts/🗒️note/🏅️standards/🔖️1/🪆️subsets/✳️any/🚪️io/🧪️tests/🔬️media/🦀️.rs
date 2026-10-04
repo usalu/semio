@@ -15,7 +15,7 @@ async fn imports_dwg_polyline_and_text_into_note_blocks() {
         extmax: [10.0, 10.0, 0.0],
     };
     let value = note_document_json_from_dwg(&drawing).unwrap();
-    let document: NoteSnapshot = dsl::os_pack::from_json_str(&value.to_string()).unwrap();
+    let document: NoteSnapshot = semio_framework_pack_json::from_json_str(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(document.schema, crate::NOTE_DOCUMENT_SCHEMA);
     assert_eq!(document.blocks.len(), 2);
     let ink_count = document.blocks.iter().filter(|block| matches!(block, NoteBlockNode::Ink { .. })).count();
@@ -40,7 +40,7 @@ async fn imports_dwg_polyline_and_text_into_note_blocks() {
 async fn imports_empty_dwg_drawing_as_valid_empty_note_snapshot() {
     let drawing = DwgDrawing::default();
     let value = note_document_json_from_dwg(&drawing).unwrap();
-    let document: NoteSnapshot = dsl::os_pack::from_json_str(&value.to_string()).unwrap();
+    let document: NoteSnapshot = semio_framework_pack_json::from_json_str(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(document.schema, crate::NOTE_DOCUMENT_SCHEMA);
     assert!(document.blocks.is_empty());
 }
@@ -102,7 +102,7 @@ async fn document_to_svg_dispatches_through_semio_drawing_bridge() {
     assert!(width >= 1024 && height >= 1024);
 
     // Same pipeline through the JSON-wrapped entry point every io leaf/media handler actually calls.
-    let json = serde_json::from_str::<Value>(&dsl::os_pack::to_json_string(&document)).unwrap();
+    let json = serde_json::from_str::<Value>(&semio_framework_pack_json::to_json_string(&document)).unwrap();
     let (svg_via_json, _w, _h) = note_document_json_to_svg(&json).expect("json svg export via io_dispatch");
     assert_eq!(svg, svg_via_json);
 }

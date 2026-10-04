@@ -1,12 +1,12 @@
 use crate::document::CheckStatus;
 use crate::standards::v1::subsets::any::schema::inferences::evaluate;
 use crate::Din4108Snapshot;
-use dsl::ToValue;
+use semio_framework_value::ToValue;
 
 fn apply_numeric(snap: &mut Din4108Snapshot, path: &str, value: f64) {
-    let mut root = ToValue::to_value(&*snap);
-    crate::app_surface::set_value_at_path(&mut root, path, dsl::DslValue::float(value)).expect("set");
-    *snap = dsl::FromValue::from_value(root).expect("decode");
+    let mut root = semio_framework_value::ToValue::to_value(&*snap);
+    crate::app_surface::set_value_at_path(&mut root, path, semio_framework_value::DslValue::float(value)).expect("set");
+    *snap = semio_framework_value::FromValue::from_value(root).expect("decode");
 }
 
 #[semio_framework_async_macros::async_test]

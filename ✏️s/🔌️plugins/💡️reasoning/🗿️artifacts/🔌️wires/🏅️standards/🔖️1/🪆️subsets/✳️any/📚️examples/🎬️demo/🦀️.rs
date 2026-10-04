@@ -9,6 +9,8 @@ pub fn label() -> LocalizedLabel {
 }
 pub const ICON: &str = "file";
 pub const PRIMARY_TEXT: &str = include_str!("../../🖼️assets/🎬️demo/🗣️.dsl.semio");
+/// 🕸️ The demo's board — the composed `s.stdio.semio@v1/graph` child its parent names `crate::WIRES_DEMO_CONTENT_ID`.
+pub const CONTENT_TEXT: &str = include_str!("../../🖼️assets/🎬️demo/🕸️content/🗣️.dsl.semio");
 pub fn source() -> ExampleSource {
     ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON)
 }

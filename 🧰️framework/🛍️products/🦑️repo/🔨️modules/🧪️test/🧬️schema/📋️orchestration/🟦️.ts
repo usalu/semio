@@ -2,11 +2,11 @@ import { type FeatureStep } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\u
 import { type SchemaDiagnostic, type SchemaFixtureReport, discoverSchemaFixtures, readSchemaCatalog, runSchemaFixture, schemaContractDiagnostics } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { parseFeature } from "../../../../../../🔨️modules/🧪️test/🥒️gherkin/🟦️.ts";
 import { Script } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { type InputSchemaAudit, mutationInputAudit, mutationInputInstance } from "../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
+import { type FaultNoticeDefinition, type InputSchemaAudit, inputNumericTransport, inputShape, isFaultNoticeCode, mutationInputAudit, mutationInputInstance, validateFaultNotices } from "../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
 import { parseSchemaInvariants } from "../../../../../../🔨️modules/🛂️manifest/🧬️schema/🟦️.ts";
 import { type Dirent, existsSync, readdirSync, readFileSync } from "node:fs";
 import { Validator } from "jsonschema";
-import { join } from "node:path";
+import { join, posix } from "node:path";
 
 //#region 📚️SchemaDocuments
 /** 📄️ The JSON object at the repository-relative `path`, or `null` when it is absent or not a JSON object. */
@@ -117,6 +117,79 @@ function mutationLeafSchemaDirectories(repoRoot: string, under: string): string[
 }
 
 /**
+ * 🔢️ Every payload pointer of the leaf schema `root` (resolving `$ref`s through `resolve`, across documents) whose schema admits a
+ * number only as the exact binary64 word (`{bits}`, `framework/value/schema.json#/$defs/Binary64`) — never the plain number the
+ * payload and every history-edit draft carry, which the time-travel validator then refuses. Reaches what the input reader never
+ * reads into (hidden, structured and recursive values): properties (`/key`), array items (`/-`), tuple items (`/<index>`), additional
+ * properties (`/*`), `allOf` members and union branches; a union branch that is the word is fine when a sibling branch admits a number, and
+ * a recursive definition is reported once, at its first pointer.
+ */
+export function wordOnlyFloatPointers(root: Record<string, unknown>, resolve: (id: string) => Record<string, unknown> | undefined): string[] {
+  const { word } = inputNumericTransport();
+  const found = new Set<string>();
+  const isObject = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === "object" && !Array.isArray(value);
+  const target = (document: Record<string, unknown>, reference: string): [Record<string, unknown>, unknown] | undefined => {
+    const hash = reference.indexOf("#");
+    const id = hash < 0 ? reference : reference.slice(0, hash);
+    const owner = id === "" ? document : resolve(id);
+    if (owner === undefined) return undefined;
+    let current: unknown = owner;
+    for (const segment of (hash < 0 ? "" : reference.slice(hash + 1)).split("/").slice(1).map((part) => part.replaceAll("~1", "/").replaceAll("~0", "~"))) current = isObject(current) ? current[segment] : Array.isArray(current) && /^\d+$/u.test(segment) ? current[Number(segment)] : undefined;
+    return current === undefined ? undefined : [owner, current];
+  };
+  const settle = (document: Record<string, unknown>, node: unknown, active: readonly unknown[]): [Record<string, unknown>, unknown] => {
+    let [owner, current] = [document, node];
+    for (let hop = 0; hop < 32 && isObject(current) && typeof current.$ref === "string" && !active.includes(current); hop += 1) {
+      const next = target(owner, current.$ref);
+      if (next === undefined) break;
+      [owner, current] = next;
+    }
+    return [owner, current];
+  };
+  const numeric = (node: unknown): boolean => isObject(node) && (["number", "integer"].includes(node.type as string) || (Array.isArray(node.type) && node.type.some((name) => name === "number" || name === "integer")));
+  const visit = (document: Record<string, unknown>, start: unknown, pointer: string, active: readonly unknown[]): void => {
+    const [owner, node] = settle(document, start, active);
+    if (!isObject(node) || active.includes(node) || active.length > 64) return;
+    if (inputShape(node as never) === word) {
+      found.add(pointer);
+      return;
+    }
+    const path = [...active, node];
+    const union = Array.isArray(node.anyOf) ? node.anyOf : Array.isArray(node.oneOf) ? node.oneOf : [];
+    const settled = union.map((branch) => settle(owner, branch, path));
+    const admitsNumber = settled.some(([, branch]) => numeric(branch));
+    settled.forEach(([branchOwner, branch]) => {
+      if (!(admitsNumber && isObject(branch) && inputShape(branch as never) === word)) visit(branchOwner, branch, pointer, path);
+    });
+    for (const member of Array.isArray(node.allOf) ? node.allOf : []) visit(owner, member, pointer, path);
+    for (const [key, child] of Object.entries(isObject(node.properties) ? node.properties : {})) visit(owner, child, `${pointer}/${key.replaceAll("~", "~0").replaceAll("/", "~1")}`, path);
+    if (isObject(node.items)) visit(owner, node.items, `${pointer}/-`, path);
+    if (Array.isArray(node.items)) node.items.forEach((item, index) => visit(owner, item, `${pointer}/${index}`, path));
+    if (isObject(node.additionalProperties)) visit(owner, node.additionalProperties, `${pointer}/*`, path);
+  };
+  visit(root, root, "", []);
+  return [...found].sort();
+}
+
+/** 🚚️ The 1-based lines of an artifact TS twin that read a float carrier through the strict word parsers (`parseBinary64(`/`parseBinary32(`)
+ * instead of the transport readers (`parseBinary64Transport`/`parseBinary32Transport`, word | number): a twin then refuses the plain number
+ * every payload and history-edit draft carries. A call re-validating the twin's own in-memory word for output (`parseBinary64(x).bits`) is
+ * not a read. */
+export function wordOnlyFloatTwinLines(source: string): number[] {
+  const lines: number[] = [];
+  for (const match of source.matchAll(/\bparseBinary(?:64|32)\(/g)) {
+    let depth = 0;
+    let end = match.index! + match[0].length - 1;
+    for (; end < source.length; end += 1) {
+      depth += source[end] === "(" ? 1 : source[end] === ")" ? -1 : 0;
+      if (depth === 0) break;
+    }
+    if (source.slice(end + 1, end + 6) !== ".bits") lines.push(source.slice(0, match.index).split("\n").length);
+  }
+  return lines;
+}
+
+/**
  * 🎛️ Audits every catalogued mutation leaf's payload schema with the framework's collecting reader `mutationInputAudit`
  * (the TypeScript twin of `manifest::mutation_input_audit`), resolving cross-document `$ref`s through the catalog's own
  * documents: every finding at every nested pointer is one `schema-mutation-input-ui` diagnostic naming the reader's error
@@ -159,6 +232,21 @@ export function mutationInputUiReport(repoRoot: string, under = ""): MutationInp
     row.inputs += tops.size;
     row.declared += [...tops].filter((key) => !refusedTops.has(key)).length;
     for (const finding of audit.findings) refuse(finding.code, finding.pointer, finding.message);
+    const readWords = new Set(audit.findings.filter((finding) => finding.code === "wordOnlyFloat").map((finding) => finding.pointer));
+    for (const pointer of wordOnlyFloatPointers(leaf, (id) => documents.get(id))) {
+      if (!readWords.has(pointer)) refuse("wordOnlyFloat", pointer, "a payload value accepts only the exact binary64 word, never the plain number the payload and every history-edit draft carry; reference framework/value/schema.json#/$defs/Binary64Transport");
+    }
+  }
+  const twins = repositorySources(repoRoot, under, "🟦️.ts", (text) => /\bparseBinary(?:64|32)\(/.test(text)).filter(({ path }) => path.includes("🗿️artifacts/") && !path.includes("🪶️sqlite") && !path.includes("🧪️tests"));
+  for (const { path, source } of twins) {
+    const owner = mutationLeafDirectoryOwner(path);
+    const row = census.get(owner) ?? { owner, leaves: 0, inputs: 0, declared: 0, findings: 0, refused: {} };
+    census.set(owner, row);
+    for (const line of wordOnlyFloatTwinLines(source)) {
+      row.findings += 1;
+      row.refused.wordOnlyFloatTwin = (row.refused.wordOnlyFloatTwin ?? 0) + 1;
+      diagnostics.push({ code: "schema-mutation-input-ui", scope: null, export: null, format: "🟦️typescript", path, detail: `wordOnlyFloatTwin at "line ${line}": the artifact twin reads a float carrier through the strict word parser, refusing the plain number every payload and history-edit draft carries; read it with parseBinary64Transport/parseBinary32Transport (framework/value/schema.json#/$defs/Binary64Transport)` });
+    }
   }
   const catalogued = new Set(Object.values(catalog?.scopes ?? {}).map((scope) => scope.path));
   for (const directory of mutationLeafSchemaDirectories(repoRoot, under)) {
@@ -569,6 +657,15 @@ function mutationPayloadOwner(path: string): string {
   return schemaKind(plugin >= 0 ? segments[plugin + 1]! : product >= 0 ? segments[product + 1]! : segments[0]!);
 }
 
+/** 🗿️ The artifact tree a repository path lies in (`…/🗿️artifacts/<artifact>`), else `null` (framework and product trees): a leaf, its
+ * aggregate and its fixtures never pair across two artifacts, so an orphaned fixture stays `unmapped` instead of borrowing a foreign
+ * aggregate that happens to declare the same variant name. */
+export function mutationArtifactScope(path: string): string | null {
+  const segments = path.split("/");
+  const artifacts = segments.indexOf("🗿️artifacts");
+  return artifacts >= 0 && artifacts + 1 < segments.length ? segments.slice(0, artifacts + 2).join("/") : null;
+}
+
 /** 📏️ The number of leading path segments `left` and `right` share. */
 function sharedSegments(left: string, right: string): number {
   const [a, b] = [left.split("/"), right.split("/")];
@@ -795,7 +892,8 @@ export function mutationPayloadParityReport(repoRoot: string, under = ""): Mutat
   const leafBySegments = new Map(tree.leaves.map((leaf) => [`${leaf.root}|${leaf.directory.slice(leaf.root.length + 1)}`, leaf]));
   const leafByDirectory = new Map(tree.leaves.map((leaf) => [leaf.directory, leaf]));
   const nearest = <T,>(items: readonly T[], path: (item: T) => string, target: string): T[] => {
-    const scored = items.map((item) => [sharedSegments(path(item), target), item] as const);
+    const scope = mutationArtifactScope(target);
+    const scored = items.filter((item) => mutationArtifactScope(path(item)) === scope).map((item) => [sharedSegments(path(item), target), item] as const);
     const best = Math.max(0, ...scored.map(([score]) => score));
     return scored.filter(([score]) => score === best && best > 0).map(([, item]) => item);
   };
@@ -1009,6 +1107,11 @@ const RUST_SOURCE_ROOTS = [...MUTATION_TREE_ROOTS, "🌎️hub"];
 /** 🔎️ Every `.rs` source under `under` whose text `keep` admits, repository-relative and sorted, with its text; build output, generated
  * and hidden directories are skipped. */
 function rustSources(repoRoot: string, under: string, keep: (source: string) => boolean): { readonly path: string; readonly source: string }[] {
+  return repositorySources(repoRoot, under, ".rs", keep);
+}
+
+/** 📂️ Every source ending in `extension` under `under` (else every Rust source root) whose text `keep` admits — [`rustSources`]' walk. */
+function repositorySources(repoRoot: string, under: string, extension: string, keep: (source: string) => boolean): { readonly path: string; readonly source: string }[] {
   const found: { path: string; source: string }[] = [];
   const walk = (directory: string): void => {
     let entries: Dirent[];
@@ -1021,13 +1124,13 @@ function rustSources(repoRoot: string, under: string, keep: (source: string) => 
       const path = `${directory}/${entry.name}`;
       if (entry.isDirectory()) {
         if (!MUTATION_TREE_SKIPPED.has(entry.name) && !entry.name.startsWith(".")) walk(path);
-      } else if (entry.isFile() && entry.name.endsWith(".rs") && path.startsWith(under)) {
+      } else if (entry.isFile() && entry.name.endsWith(extension) && path.startsWith(under)) {
         const source = readFileSync(join(repoRoot, path), "utf8");
         if (keep(source)) found.push({ path, source });
       }
     }
   };
-  const directory = under !== "" && existsSync(join(repoRoot, under)) && !under.endsWith(".rs");
+  const directory = under !== "" && existsSync(join(repoRoot, under)) && !under.endsWith(extension);
   for (const root of directory ? [under] : RUST_SOURCE_ROOTS) if (directory || under === "" || root.startsWith(under) || under.startsWith(root)) walk(root);
   return found.sort((left, right) => left.path.localeCompare(right.path));
 }
@@ -1302,6 +1405,451 @@ function runMutationLabels(repoRoot: string, segments: string[]): never {
 }
 //#endregion 🏷️MutationLabels
 
+//#region 📢️FaultNotices
+/** 🚥️ The classes of a `schema-fault-notice` finding (design §20.12): a guest code no table labels (`faultNoticeMissing`), a guest code
+ * that cannot be an app notice code (`faultNoticeSyntax`: fewer than three kebab segments), a guest code in a framework namespace the
+ * framework table does not label (`faultNoticeFramework`), an English-only fault without a code (`faultAnonymous`: `Fault::from` of a
+ * literal, `format!` or `to_string()`), a declared table breaking a rule (`faultNoticeInvalid`), a `fn fault_notices` body the gate
+ * cannot read (`faultNoticeUnresolved`), a declared code no guest source emits (`faultNoticeStale`), and a committed descriptor whose
+ * published codes differ from the sources (`faultNoticeDescriptor`, a `describe` is owed). */
+export type FaultNoticeFindingClass = "faultNoticeMissing" | "faultNoticeSyntax" | "faultNoticeFramework" | "faultAnonymous" | "faultNoticeInvalid" | "faultNoticeUnresolved" | "faultNoticeStale" | "faultNoticeDescriptor";
+
+/** 📍️ One fault code a guest source emits: `FaultCode::new|from("…")`, `Fault::new(origin, "…", …)`, `fault_from_error!(…, "…")`, a
+ * code literal of a `fn code`/`fn fault_code` body (`codeFn`), a call of a refusal helper (`faultHelper`, see {@link rustFaultHelpers}),
+ * or an anonymous `Fault::from(…)` (`code` null, `text` its string literal if it has one); `within` names the innermost `fn` around it
+ * (`null` outside any), `defaulted` tells whether that `fn` is a trait's default method — the capability-absent contract a host never
+ * reaches through an implementor that overrides it. Sites in `#[cfg(test)]`-gated items are not guest sites and are never read. */
+export type FaultCodeSite = Readonly<{ path: string; code: string | null; via: "faultCode" | "faultNew" | "faultMacro" | "codeFn" | "faultHelper" | "faultFrom"; text: string | null; within: string | null; defaulted: boolean }>;
+
+/** 🧰️ A refusal helper: the position of the parameter its fault code comes from, or the one fixed code it always refuses with. */
+export type FaultHelper = number | string;
+
+/** 📋️ One `fn fault_notices` of an `ArtifactApp`/`ArtifactEditor`/`ArtifactViewer` impl: its implementor and the `(code, en, de)` rows
+ * read from `LocalizedLabel::native` tuples (a code is a string literal or a `const NAME: &str` of the plugin) — or, for a body that
+ * composes other tables (`forwards`: one `name()` call, or several chained `…fault_notices()` calls), the union of their rows, resolved
+ * among the plugin's sources — or `null` when the table is not readable as that shape. */
+export type FaultNoticeDeclaration = Readonly<{ path: string; implementor: string; forwards: readonly string[]; notices: readonly Readonly<{ code: string; en: string; de: string }>[] | null }>;
+
+/** 📈️ One plugin's share of the fault-notice census: emitted codes, labelled ones, declared notices and findings per class. */
+export type FaultNoticeCensusRow = { readonly owner: string; codes: number; labelled: number; declared: number; anonymous: number; findings: number; readonly refused: Record<string, number> };
+
+/** 📰️ The `schema-fault-notice` lint, its census, every emitted code and every declared table read. */
+export type FaultNoticeReport = { readonly diagnostics: readonly SchemaDiagnostic[]; readonly census: readonly FaultNoticeCensusRow[]; readonly sites: readonly FaultCodeSite[]; readonly declarations: readonly FaultNoticeDeclaration[] };
+
+const FAULT_NOTICE_APP_TRAITS = new Set(["ArtifactApp", "ArtifactEditor", "ArtifactViewer"]);
+/** 🏛️ Code namespaces the framework owns: a guest refusal in one of them is labelled by the framework's table or by no one. */
+const FAULT_NOTICE_FRAMEWORK_NAMESPACES = new Set(["app", "plugin", "os", "framework", "module", "mutation", "viewer", "surface", "history", "timeTravel", "toolTransaction", "document", "pure"]);
+const FAULT_NOTICE_PLUGINS_ROOT = "✏️s/🔌️plugins";
+/** 🔌️ The plugin SDK every guest links: its refusals reach the person like a plugin's own, under the owner `🔌️plugin`; every code it
+ * raises is a framework code (labelled by the framework's tables or by no one), and it declares no notice table of its own. */
+const FAULT_NOTICE_SDK_ROOT = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin";
+const FAULT_NOTICE_SDK_OWNER = "🔌️plugin";
+/** 🫙️ Catch-all codes that name no refusal: a site raising one is an anonymous fault. */
+const FAULT_NOTICE_CATCH_ALL = new Set(["plugin.internal"]);
+/** 🗄️ The framework's notice tables (history-lane refusals, framework-namespace refusals any app raises): a code they declare is labelled. */
+const FAULT_NOTICE_FRAMEWORK_TABLES = ["🧰️framework/🔨️modules/🎠️kernel/🧫️fixtures/🧫️history-notices/🔣️.json", "🧰️framework/🔨️modules/🎠️kernel/🧫️fixtures/🧫️framework-notices/🔣️.json"] as const;
+
+/** 🔭️ The findings `schema fault-notices` reports: `all`, or `history-editing` — the refusals a person meets while editing history,
+ * loading a document or running a tool (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING scope): every framework-namespace code a plugin
+ * raises, every SDK code and every other code or anonymous fault whose code or text has a tool-flow segment or one of whose live sites
+ * is a tool-flow site ({@link faultSiteInToolFlow}), and every verdict on a declared table or descriptor ({@link faultNoticeInScope}). */
+export type FaultNoticeScope = "all" | "history-editing";
+const FAULT_NOTICE_TOOL_FLOW_CODE = /(?:^|[.-])(?:tool|tools|gesture|gumball|drag|scrub|press|stroke|transaction|history|replay|ink|timeTravel|toolRun|toolTransaction)(?:[.-]|$)/u;
+const FAULT_NOTICE_TOOL_FLOW_PATH = /🛠️|tool|gesture|gumball|scrub|press|transaction|time-travel/iu;
+const FAULT_NOTICE_TOOL_FLOW_FN = /(?:^|_)(?:tool|tools|gesture|gumball|drag|scrub|press|stroke|transaction|history|replay|ink|time_travel)(?:_|$)|(?:^|_)(?:document|archive|envelope|retained)_load(?:_|$)|(?:^|_)load_(?:document|archive|envelope)(?:_|$)/u;
+const FAULT_NOTICE_TOOL_FLOW_SOURCE = /\bChildEmit\b|\bEmit::[a-z_]*drag[a-z_]*\b/u;
+
+/** 🪪️ What {@link faultNoticeInScope} weighs for one finding: the code or anonymous text it names, whether one of its live sites is a
+ * tool-flow site, whether the SDK raises it, and whether any of its sites is live (outside a trait's default method). */
+export type FaultNoticeSubject = Readonly<{ named: string | null; toolFlow: boolean; sdk: boolean; live: boolean }>;
+const FAULT_NOTICE_DECLARED_SUBJECT: FaultNoticeSubject = { named: null, toolFlow: false, sdk: false, live: true };
+
+/** 🧲️ Whether one finding belongs to `scope` — see {@link FaultNoticeScope}: under `history-editing` a code or anonymous fault is kept
+ * when it is live and in the flow (a tool-flow site or a tool-flow code or text), a plugin's framework-namespace code whenever it is
+ * live, and every verdict on a declared table or descriptor always. */
+export function faultNoticeInScope(scope: FaultNoticeScope, verdict: FaultNoticeFindingClass, subject: FaultNoticeSubject = FAULT_NOTICE_DECLARED_SUBJECT): boolean {
+  if (scope === "all") return true;
+  const flow = subject.live && (subject.toolFlow || (subject.named !== null && FAULT_NOTICE_TOOL_FLOW_CODE.test(subject.named)));
+  switch (verdict) {
+    case "faultNoticeFramework":
+      return subject.sdk ? flow : subject.live;
+    case "faultNoticeMissing":
+    case "faultNoticeSyntax":
+    case "faultAnonymous":
+      return flow;
+    default:
+      return true;
+  }
+}
+
+/** 🛤️ Whether a site is a tool-flow site: its path has a tool-flow segment, it sits inside a tool-flow `fn` (`build_tool_job`,
+ * `begin_gesture`, `apply_time_travel_action`, …) or a document-load `fn` (`begin_document_archive_load`, `advance_artifact_envelope_load`,
+ * …), or its plugin source publishes a child emit or a drag emit (`ChildEmit`, `Emit::*drag*`). */
+function faultSiteInToolFlow(site: FaultCodeSite, emitting: ReadonlySet<string>): boolean {
+  return emitting.has(site.path) || (site.within !== null && FAULT_NOTICE_TOOL_FLOW_FN.test(site.within)) || site.path.split("/").some((segment) => FAULT_NOTICE_TOOL_FLOW_PATH.test(segment));
+}
+const DOTTED_CODE = /^[A-Za-z][\w-]*(?:\.[A-Za-z0-9][\w-]*)+$/u;
+
+/** 🔡️ The value of one Rust string literal token: quotes and raw hashes stripped, the common escapes resolved. */
+export function rustStringValue(literal: string): string {
+  const raw = /^b?r(#*)"/u.exec(literal);
+  if (raw !== null) return literal.slice(raw[0].length, literal.length - 1 - raw[1]!.length);
+  return literal
+    .replace(/^b?"|"$/gu, "")
+    .replace(/\\u\{([0-9a-fA-F]+)\}|\\(["'\\nrt0])/gu, (_, hex: string | undefined, escaped: string | undefined) => (hex !== undefined ? String.fromCodePoint(Number.parseInt(hex, 16)) : ({ n: "\n", r: "\r", t: "\t", "0": "\0" } as Record<string, string>)[escaped!] ?? escaped!));
+}
+
+/** 🔖️ Every `const NAME: &str = "…";` (also `&'static str`, any visibility) of one Rust source, by name. */
+export function rustStringConsts(source: string): Map<string, string> {
+  const tokens = rustLex(source);
+  const consts = new Map<string, string>();
+  for (let index = 0; index + 1 < tokens.length; index += 1) {
+    if (tokens[index]!.text !== "const" || tokens[index + 1]?.kind !== "ident" || tokens[index + 2]?.text !== ":") continue;
+    let at = index + 3;
+    while (at < tokens.length && tokens[at]!.text !== "=" && tokens[at]!.text !== ";") at += 1;
+    const type = tokens.slice(index + 3, at).map((token) => token.text).join("");
+    if (!/^&(?:'static)?str$/u.test(type) || tokens[at]?.text !== "=" || tokens[at + 1]?.kind !== "literal" || tokens[at + 2]?.text !== ";" || !/^b?r?#*"/u.test(tokens[at + 1]!.text)) continue;
+    consts.set(tokens[index + 1]!.text, rustStringValue(tokens[at + 1]!.text));
+  }
+  return consts;
+}
+
+/** 🪝️ The refusal helpers of one Rust source, by name — free `fn`s (no `self`), nested ones included: one whose body builds its fault
+ * from a parameter (`FaultCode::new|from(code)` or `Fault::new(origin, code, …)`) is that parameter's position; one returning `Fault`
+ * whose body builds exactly one fault, from a string literal or a named `const` of `consts`, is that fixed code. */
+export function rustFaultHelpers(source: string, consts: ReadonlyMap<string, string> = new Map()): Map<string, FaultHelper> {
+  const tokens = rustLex(source);
+  const helpers = new Map<string, FaultHelper>();
+  for (const fn of rustFnBodies(tokens)) {
+    const params = rustCallArguments(tokens, fn.params).map((param) => (param[0]?.kind === "ident" && param[1]?.text === ":" && param[2]?.text !== ":" ? param[0].text : null));
+    if (rustCallArguments(tokens, fn.params)[0]?.some((token) => token.text === "self")) continue;
+    const codeArgs: (readonly RustToken[])[] = [];
+    for (let index = fn.open; index < fn.close; index += 1) {
+      const codeArg = (rustPathAt(tokens, index, ["FaultCode", "new"]) || rustPathAt(tokens, index, ["FaultCode", "from"])) && tokens[index + 4]?.text === "(" ? rustCallArguments(tokens, index + 4)[0] : rustPathAt(tokens, index, ["Fault", "new"]) && tokens[index + 4]?.text === "(" ? rustCallArguments(tokens, index + 4)[1] : undefined;
+      if (codeArg !== undefined && codeArg.every((token) => token.text !== "FaultCode")) codeArgs.push(codeArg);
+    }
+    const position = codeArgs.map((arg) => (arg.length === 1 && arg[0]!.kind === "ident" ? params.indexOf(arg[0]!.text) : -1)).find((at) => at >= 0);
+    const returnsFault = /^->(?:\w+::)*Fault$/u.test(tokens.slice(rustGroupEnd(tokens, fn.params) + 1, fn.open).map((token) => token.text).join(""));
+    const fixed = codeArgs.length === 1 && codeArgs[0]!.length === 1 ? (codeArgs[0]![0]!.kind === "literal" && /^b?r?#*"/u.test(codeArgs[0]![0]!.text) ? rustStringValue(codeArgs[0]![0]!.text) : (consts.get(codeArgs[0]![0]!.text) ?? null)) : null;
+    if (position !== undefined) helpers.set(fn.name, position);
+    else if (returnsFault && fixed !== null && DOTTED_CODE.test(fixed)) helpers.set(fn.name, fixed);
+  }
+  return helpers;
+}
+
+/** 🗺️ Every `fn` with a body in a token stream — methods and nested ones included — by name with the `(` of its parameters, its `{…}`
+ * span and whether it is a trait's default method (its innermost enclosing block is a `trait` body), in source order. */
+function rustFnBodies(tokens: readonly RustToken[]): { readonly name: string; readonly params: number; readonly open: number; readonly close: number; readonly defaulted: boolean }[] {
+  const traits: (readonly [number, number])[] = [];
+  const bodies: { readonly name: string; readonly params: number; readonly open: number; readonly close: number; defaulted: boolean }[] = [];
+  for (let at = 0; at + 1 < tokens.length; at += 1) {
+    if (tokens[at]!.text === "trait" && tokens[at + 1]!.kind === "ident") {
+      let open = at + 2;
+      while (open < tokens.length && tokens[open]!.text !== "{" && tokens[open]!.text !== ";") open += 1;
+      if (tokens[open]?.text === "{") traits.push([open, rustGroupEnd(tokens, open)]);
+    }
+    if (tokens[at]!.text !== "fn" || tokens[at + 1]!.kind !== "ident") continue;
+    let params = at + 2;
+    while (params < tokens.length && tokens[params]!.text !== "(") params += 1;
+    let open = rustGroupEnd(tokens, params) + 1;
+    while (open < tokens.length && tokens[open]!.text !== "{" && tokens[open]!.text !== ";") open += 1;
+    if (tokens[open]?.text === "{") bodies.push({ name: tokens[at + 1]!.text, params, open, close: rustGroupEnd(tokens, open), defaulted: false });
+  }
+  for (const body of bodies) {
+    const trait = traits.findLast(([open, close]) => open < body.open && body.close <= close);
+    body.defaulted = trait !== undefined && !bodies.some((outer) => outer !== body && trait[0] < outer.open && outer.open < body.open && body.close <= outer.close);
+  }
+  return bodies;
+}
+
+/** 🧪️ The token spans of every `#[cfg(…test…)]`-gated item of a token stream (`cfg(test)`, `cfg(any(test, …))`, not `cfg(not(test))`) —
+ * test code, never a guest source; an inner `#![cfg(test)]` gates the whole source. */
+function rustTestOnlySpans(tokens: readonly RustToken[]): (readonly [number, number])[] {
+  const spans: (readonly [number, number])[] = [];
+  const testOnly = (open: number): boolean => {
+    const attribute = tokens.slice(open + 1, rustGroupEnd(tokens, open)).map((token) => token.text).join("");
+    return /^cfg\(/u.test(attribute) && /\btest\b/u.test(attribute) && !/not\(test\)/u.test(attribute);
+  };
+  for (let at = 0; at + 2 < tokens.length; at += 1) {
+    if (tokens[at]!.text !== "#") continue;
+    if (tokens[at + 1]!.text === "!" && tokens[at + 2]!.text === "[" && testOnly(at + 2)) return [[0, tokens.length]];
+    if (tokens[at + 1]!.text !== "[" || !testOnly(at + 1)) continue;
+    let item = rustGroupEnd(tokens, at + 1) + 1;
+    while (tokens[item]?.text === "#" && tokens[item + 1]?.text === "[") item = rustGroupEnd(tokens, item + 1) + 1;
+    while (item < tokens.length && tokens[item]!.text !== "{" && tokens[item]!.text !== ";") item = (tokens[item]!.text === "(" || tokens[item]!.text === "[" ? rustGroupEnd(tokens, item) : item) + 1;
+    spans.push([at, tokens[item]?.text === "{" ? rustGroupEnd(tokens, item) : item]);
+  }
+  return spans;
+}
+
+/** 🎯️ Every fault code site of one Rust source, in source order — see {@link FaultCodeSite}; a code argument is a string literal or a
+ * (path to a) `const` named in `consts`; a call of a refusal helper in `helpers` carries its code at the helper's position; a
+ * `fn code`/`fn fault_code` is read in any impl, inherent ones included (a named refusal enum's `fn code(&self) -> &'static str`),
+ * literals and named consts alike; a site inside a `#[cfg(test)]`-gated item is not read. */
+export function rustFaultCodeSites(path: string, source: string, consts: ReadonlyMap<string, string> = new Map(), helpers: ReadonlyMap<string, FaultHelper> = new Map()): FaultCodeSite[] {
+  const tokens = rustLex(source);
+  const bodies = rustFnBodies(tokens);
+  const tests = rustTestOnlySpans(tokens);
+  const sites: (Omit<FaultCodeSite, "within" | "defaulted"> & { readonly at: number })[] = [];
+  const literal = (arg: readonly RustToken[] | undefined): string | null => {
+    if (arg === undefined) return null;
+    if (arg.length === 1 && arg[0]!.kind === "literal" && /^b?r?#*"/u.test(arg[0]!.text)) return rustStringValue(arg[0]!.text);
+    const last = arg.at(-1);
+    return last?.kind === "ident" && arg.every((token, at) => (at % 3 === 0 ? token.kind === "ident" : token.text === ":")) ? (consts.get(last.text) ?? null) : null;
+  };
+  for (let index = 0; index < tokens.length; index += 1) {
+    if ((rustPathAt(tokens, index, ["FaultCode", "new"]) || rustPathAt(tokens, index, ["FaultCode", "from"])) && tokens[index + 4]?.text === "(") {
+      const code = literal(rustCallArguments(tokens, index + 4)[0]);
+      if (code !== null) sites.push({ path, code, via: "faultCode", text: null, at: index });
+    } else if (rustPathAt(tokens, index, ["Fault", "new"]) && tokens[index + 4]?.text === "(") {
+      const code = literal(rustCallArguments(tokens, index + 4)[1]);
+      if (code !== null) sites.push({ path, code, via: "faultNew", text: null, at: index });
+    } else if (rustPathAt(tokens, index, ["Fault", "from"]) && tokens[index + 4]?.text === "(") {
+      const arg = rustCallArguments(tokens, index + 4)[0] ?? [];
+      const text = arg.map((token) => token.text).join("");
+      if (literal(arg) !== null || /^format!/u.test(text) || /\.(to_string|to_owned)\(\)$/u.test(text)) sites.push({ path, code: null, via: "faultFrom", text: literal(arg), at: index });
+    } else if (tokens[index]!.text === "fault_from_error" && tokens[index + 1]?.text === "!" && tokens[index + 2]?.text === "(") {
+      const code = literal(rustCallArguments(tokens, index + 2)[2]);
+      if (code !== null) sites.push({ path, code, via: "faultMacro", text: null, at: index });
+    } else if (tokens[index]!.kind === "ident" && helpers.has(tokens[index]!.text) && tokens[index + 1]?.text === "(" && tokens[index - 1]?.text !== "fn" && tokens[index - 1]?.text !== ".") {
+      const helper = helpers.get(tokens[index]!.text)!;
+      const code = typeof helper === "string" ? helper : literal(rustCallArguments(tokens, index + 1)[helper]);
+      if (code !== null) sites.push({ path, code, via: "faultHelper", text: null, at: index });
+    }
+  }
+  for (const body of bodies.filter((candidate) => candidate.name === "code" || candidate.name === "fault_code")) {
+    for (let index = body.open; index < body.close; index += 1) {
+      const token = tokens[index]!;
+      if (rustPathAt(tokens, index - 4, ["FaultCode", "new"]) || rustPathAt(tokens, index - 4, ["FaultCode", "from"])) continue;
+      const code = token.kind === "literal" && /^b?r?#*"/u.test(token.text) ? rustStringValue(token.text) : token.kind === "ident" ? (consts.get(token.text) ?? null) : null;
+      if (code !== null && DOTTED_CODE.test(code)) sites.push({ path, code, via: "codeFn", text: null, at: index });
+    }
+  }
+  const within = (at: number) => bodies.findLast((body) => body.open < at && at < body.close);
+  return sites
+    .filter((site) => !tests.some(([open, close]) => open <= site.at && site.at <= close))
+    .sort((left, right) => left.at - right.at)
+    .map(({ at, ...site }) => ({ ...site, within: within(at)?.name ?? null, defaulted: within(at)?.defaulted ?? false }));
+}
+
+/** 🧮️ The `(code, en, de)` rows of one table body `tokens[open..close]`: each `LocalizedLabel::native(en, de)` call preceded by `"code",`
+ * or by `NAME,` of a const in `consts` is one row; `null` when a call is not that shape or the body names none. */
+function rustFaultNoticeRows(tokens: readonly RustToken[], open: number, close: number, consts: ReadonlyMap<string, string> = new Map()): { code: string; en: string; de: string }[] | null {
+  const notices: { code: string; en: string; de: string }[] = [];
+  for (let index = open; index < close; index += 1) {
+    if (!rustPathAt(tokens, index, ["LocalizedLabel", "native"]) || tokens[index + 4]?.text !== "(") continue;
+    let start = index;
+    while (tokens[start - 1]?.text === ":" && tokens[start - 2]?.text === ":" && tokens[start - 3]?.kind === "ident") start -= 3;
+    const texts = rustCallArguments(tokens, index + 4).map((arg) => (arg.length === 1 && arg[0]!.kind === "literal" ? rustStringValue(arg[0]!.text) : null));
+    const key = tokens[start - 1]?.text === "," ? tokens[start - 2] : undefined;
+    const code = key?.kind === "literal" ? rustStringValue(key.text) : key?.kind === "ident" ? (consts.get(key.text) ?? null) : null;
+    if (code === null || texts.length !== 2 || texts.some((text) => text === null)) return null;
+    notices.push({ code, en: texts[0]!, de: texts[1]! });
+  }
+  return notices.length > 0 ? notices : null;
+}
+
+/** 📜️ Every `fn fault_notices` declaration of one Rust source — see {@link FaultNoticeDeclaration}: an empty `&[]` body declares none, a
+ * body that is one call `path::name()` forwards to `name`, a body without rows of its own that chains `…fault_notices()` calls forwards to
+ * each of them (rows resolved by {@link rustFaultNoticeTable}), any other body is a table; an impl in a `#[cfg(test)]`-gated item is
+ * not read. */
+export function rustFaultNoticeDeclarations(path: string, source: string, consts: ReadonlyMap<string, string> = new Map()): FaultNoticeDeclaration[] {
+  const tokens = rustLex(source);
+  const tests = rustTestOnlySpans(tokens);
+  const declarations: FaultNoticeDeclaration[] = [];
+  for (const block of rustImplBlocks(tokens)) {
+    if (!FAULT_NOTICE_APP_TRAITS.has(block.trait) || tests.some(([open, close]) => open <= block.open && block.open <= close)) continue;
+    for (const fn of rustFunctions(tokens, block.open, block.close)) {
+      if (fn.body === null || fn.name !== "fault_notices") continue;
+      const [open, close] = fn.body;
+      const body = tokens.slice(open + 1, close).map((token) => token.text).join("");
+      const single = /^(?:[\p{L}\p{N}_]+::)*([\p{L}_][\p{L}\p{N}_]*)\(\)$/u.exec(body)?.[1];
+      const rows = single === undefined && body !== "&[]" ? rustFaultNoticeRows(tokens, open, close, consts) : null;
+      const chained = tokens.slice(open + 1, close).flatMap((token, at, all) => (token.kind === "ident" && token.text.endsWith("fault_notices") && all[at + 1]?.text === "(" && all[at + 2]?.text === ")" ? [token.text] : []));
+      const forwards = single !== undefined ? [single] : rows === null && !body.includes("LocalizedLabel::native") ? [...new Set(chained)] : [];
+      declarations.push({ path, implementor: block.implementor, forwards, notices: body === "&[]" ? [] : forwards.length > 0 ? null : rows });
+    }
+  }
+  return declarations;
+}
+
+/** 📑️ The rows of the free function `name` of one Rust source (a forwarded table), or `undefined` when the source defines none. */
+export function rustFaultNoticeTable(source: string, name: string, consts: ReadonlyMap<string, string> = new Map()): { code: string; en: string; de: string }[] | null | undefined {
+  const tokens = rustLex(source);
+  const fn = rustFunctions(tokens, -1, tokens.length).find((candidate) => candidate.name === name && candidate.body !== null);
+  return fn === undefined ? undefined : rustFaultNoticeRows(tokens, fn.body![0], fn.body![1], consts);
+}
+
+/** 🧩️ The plugin directory segment of a repository-relative path under `✏️s/🔌️plugins`, or `null`. */
+function faultNoticePlugin(path: string): string | null {
+  if (path.startsWith(`${FAULT_NOTICE_SDK_ROOT}/`)) return FAULT_NOTICE_SDK_OWNER;
+  const segments = path.split("/");
+  const plugins = segments.indexOf("🔌️plugins");
+  return plugins >= 0 ? (segments[plugins + 1] ?? null) : null;
+}
+
+/** 🏘️ The crate-sized unit consts, refusal helpers and forwarded tables resolve within: the `🗿️artifacts/<artifact>` root of a path, else
+ * its plugin directory. */
+function faultNoticeUnit(path: string): string {
+  if (path.startsWith(`${FAULT_NOTICE_SDK_ROOT}/`)) return FAULT_NOTICE_SDK_ROOT;
+  const segments = path.split("/");
+  const artifacts = segments.indexOf("🗿️artifacts");
+  return artifacts >= 0 && segments[artifacts + 1] !== undefined ? segments.slice(0, artifacts + 2).join("/") : segments.slice(0, segments.indexOf("🔌️plugins") + 2).join("/");
+}
+
+/** 🗣️ A declared `(code, en, de)` row as the definition its descriptor publishes (`LocalizedLabel::native` is terminology-invariant). */
+function faultNoticeDefinition(row: Readonly<{ code: string; en: string; de: string }>): FaultNoticeDefinition {
+  return { code: row.code, label: { native: { en: row.en, de: row.de }, reuse: { en: row.en, de: row.de } } };
+}
+
+/**
+ * 📢️ Reads every guest fault code and every declared notice table of every plugin under `under` (design §20.12): each code a guest
+ * emits is labelled by the framework's tables ({@link FAULT_NOTICE_FRAMEWORK_TABLES}) or by one of its plugin's `fault_notices`
+ * tables in every locale; every declared table is valid (`validateFaultNotices`) and names only emitted codes; every committed
+ * descriptor (`🌎️hub/🧩️compositions/<plugin>/🔣️.json`) publishes exactly the declared codes, each table valid. Every other verdict
+ * in `scope` ({@link faultNoticeInScope}) is one `schema-fault-notice` diagnostic.
+ */
+export function faultNoticeReport(repoRoot: string, under = "", scope: FaultNoticeScope = "all"): FaultNoticeReport {
+  const diagnostics: SchemaDiagnostic[] = [];
+  const census = new Map<string, FaultNoticeCensusRow>();
+  const sites: FaultCodeSite[] = [];
+  const declarations: FaultNoticeDeclaration[] = [];
+  const framework = new Set(FAULT_NOTICE_FRAMEWORK_TABLES.flatMap((table) => ((readJsonObject(repoRoot, table)?.notices ?? []) as { readonly code: string }[]).map((notice) => notice.code)));
+  const relevant = (source: string): boolean => source.includes("Fault") || source.includes("fn code") || source.includes("fault_notices");
+  const sources: { readonly path: string; readonly source: string }[] = [];
+  for (const root of under === "" ? [FAULT_NOTICE_PLUGINS_ROOT, FAULT_NOTICE_SDK_ROOT] : [under]) {
+    for (const { path, source } of rustSources(repoRoot, root, relevant)) if (!path.split("/").includes("🧪️tests") && faultNoticePlugin(path) !== null) sources.push({ path, source });
+  }
+  const unitConsts = new Map<string, Map<string, string | null>>();
+  const unitHelpers = new Map<string, Map<string, FaultHelper | null>>();
+  for (const { path, source } of sources) {
+    const consts = unitConsts.get(faultNoticeUnit(path)) ?? new Map<string, string | null>();
+    unitConsts.set(faultNoticeUnit(path), consts);
+    for (const [name, value] of rustStringConsts(source)) consts.set(name, consts.has(name) && consts.get(name) !== value ? null : value);
+  }
+  const resolved = <T,>(table: Map<string, T | null> | undefined): Map<string, T> => new Map([...(table ?? [])].filter((entry): entry is [string, T] => entry[1] !== null));
+  const constsOf = (path: string): Map<string, string> => resolved(unitConsts.get(faultNoticeUnit(path)));
+  for (const { path, source } of sources) {
+    const helpers = unitHelpers.get(faultNoticeUnit(path)) ?? new Map<string, FaultHelper | null>();
+    unitHelpers.set(faultNoticeUnit(path), helpers);
+    for (const [name, helper] of rustFaultHelpers(source, constsOf(path))) helpers.set(name, helpers.has(name) && helpers.get(name) !== helper ? null : helper);
+  }
+  const helpersOf = (path: string): Map<string, FaultHelper> => resolved(unitHelpers.get(faultNoticeUnit(path)));
+  const emitting = new Set(sources.filter(({ path, source }) => faultNoticePlugin(path) !== FAULT_NOTICE_SDK_OWNER && FAULT_NOTICE_TOOL_FLOW_SOURCE.test(source)).map(({ path }) => path));
+  for (const { path, source } of sources) sites.push(...rustFaultCodeSites(path, source, constsOf(path), helpersOf(path)));
+  for (const { path, source } of sources) {
+    const consts = constsOf(path);
+    for (const declaration of faultNoticePlugin(path) === FAULT_NOTICE_SDK_OWNER ? [] : rustFaultNoticeDeclarations(path, source, consts)) {
+      const holders = (sameUnit: boolean) => sources.filter((candidate) => (sameUnit ? faultNoticeUnit(candidate.path) === faultNoticeUnit(path) : faultNoticePlugin(candidate.path) === faultNoticePlugin(path)) && candidate.source.includes("fn "));
+      const table = (forward: string): { code: string; en: string; de: string }[] | null => [...holders(true), ...holders(false)].filter((candidate) => candidate.source.includes(`fn ${forward}`)).map((candidate) => rustFaultNoticeTable(candidate.source, forward, constsOf(candidate.path))).find((rows) => rows !== undefined) ?? null;
+      const tables = declaration.forwards.map(table);
+      const notices = declaration.forwards.length === 0 ? declaration.notices : tables.some((rows) => rows === null) ? null : tables.flatMap((rows) => rows!);
+      declarations.push({ ...declaration, notices });
+    }
+  }
+  const row = (owner: string): FaultNoticeCensusRow => {
+    const found = census.get(owner) ?? { owner, codes: 0, labelled: 0, declared: 0, anonymous: 0, findings: 0, refused: {} };
+    census.set(owner, found);
+    return found;
+  };
+  const finding = (owner: string, verdict: FaultNoticeFindingClass, path: string, detail: string, subject: FaultNoticeSubject = FAULT_NOTICE_DECLARED_SUBJECT): void => {
+    if (!faultNoticeInScope(scope, verdict, subject)) return;
+    const target = row(owner);
+    target.findings += 1;
+    target.refused[verdict] = (target.refused[verdict] ?? 0) + 1;
+    diagnostics.push({ code: "schema-fault-notice", scope: null, export: null, format: null, path, detail: `${verdict}: ${detail}` });
+  };
+  const declared = new Map<string, Set<string>>();
+  for (const declaration of declarations) {
+    const plugin = faultNoticePlugin(declaration.path)!;
+    const codes = declared.get(plugin) ?? new Set<string>();
+    declared.set(plugin, codes);
+    if (declaration.notices === null) {
+      finding(plugin, "faultNoticeUnresolved", declaration.path, `fn fault_notices of ${declaration.implementor}${declaration.forwards.length === 0 ? "" : ` (forward to ${declaration.forwards.join(", ")})`} is not a table of (code, LocalizedLabel::native(en, de)) rows`);
+      continue;
+    }
+    row(plugin).declared += declaration.notices.length;
+    for (const notice of declaration.notices) codes.add(notice.code);
+    for (const error of validateFaultNotices(declaration.notices.map(faultNoticeDefinition))) finding(plugin, "faultNoticeInvalid", declaration.path, `${error.rule} ${error.code}${"locale" in error ? ` (${error.terminology}/${error.locale})` : ""} in ${declaration.implementor}`);
+  }
+  const emitted = new Map<string, Set<string>>();
+  const told = new Set<string>();
+  const flows = new Map<string, { toolFlow: boolean; live: boolean }>();
+  for (const site of sites) {
+    if (site.code === null) continue;
+    const key = `${faultNoticePlugin(site.path)!}\u0000${site.code}`;
+    const flow = flows.get(key) ?? { toolFlow: false, live: false };
+    flows.set(key, { toolFlow: flow.toolFlow || (!site.defaulted && faultSiteInToolFlow(site, emitting)), live: flow.live || !site.defaulted });
+  }
+  for (const site of sites) {
+    const plugin = faultNoticePlugin(site.path)!;
+    const sdk = plugin === FAULT_NOTICE_SDK_OWNER;
+    if (site.code === null || FAULT_NOTICE_CATCH_ALL.has(site.code)) {
+      if (site.code !== null && typeof helpersOf(site.path).get(site.within ?? "") === "string") continue;
+      row(plugin).anonymous += 1;
+      finding(plugin, "faultAnonymous", site.path, site.code !== null ? `${site.code} (${site.via}) names no refusal — name it and declare its notice` : `Fault::from(${site.text === null ? "text" : JSON.stringify(site.text)}) carries no code — name the refusal and declare its notice`, { named: site.text, toolFlow: faultSiteInToolFlow(site, emitting), sdk, live: !site.defaulted });
+      continue;
+    }
+    const codes = emitted.get(plugin) ?? new Set<string>();
+    emitted.set(plugin, codes);
+    if (codes.has(site.code)) continue;
+    codes.add(site.code);
+    row(plugin).codes += 1;
+    if (framework.has(site.code) || declared.get(plugin)?.has(site.code)) {
+      row(plugin).labelled += 1;
+      continue;
+    }
+    const key = `${plugin}\u0000${site.code}`;
+    if (told.has(key)) continue;
+    told.add(key);
+    const namespace = site.code.split(".")[0]!;
+    finding(plugin, sdk || FAULT_NOTICE_FRAMEWORK_NAMESPACES.has(namespace) ? "faultNoticeFramework" : isFaultNoticeCode(site.code) ? "faultNoticeMissing" : "faultNoticeSyntax", site.path, `${site.code} (${site.via})`, { named: site.code, sdk, ...flows.get(key)! });
+  }
+  for (const [plugin, codes] of declared) for (const code of codes) if (!emitted.get(plugin)?.has(code)) finding(plugin, "faultNoticeStale", declarations.find((declaration) => faultNoticePlugin(declaration.path) === plugin)!.path, `${code} is declared but no guest source of ${plugin} emits it`);
+  for (const plugin of new Set([...census.keys()])) {
+    const path = `🌎️hub/🧩️compositions/${plugin}/🔣️.json`;
+    const descriptor = readJsonObject(repoRoot, path);
+    if (descriptor === null || (under !== "" && !under.startsWith(`${FAULT_NOTICE_PLUGINS_ROOT}/${plugin}`) && under !== FAULT_NOTICE_PLUGINS_ROOT)) continue;
+    const apps = ((descriptor.manifest as { readonly apps?: readonly { readonly id?: string; readonly faultNotices?: readonly FaultNoticeDefinition[] }[] } | undefined)?.apps ?? []);
+    const published = new Set(apps.flatMap((app) => (app.faultNotices ?? []).map((notice) => notice.code)));
+    for (const app of apps) for (const error of validateFaultNotices(app.faultNotices ?? [])) finding(plugin, "faultNoticeInvalid", path, `${error.rule} ${error.code}${"locale" in error ? ` (${error.terminology}/${error.locale})` : ""} in published app ${app.id ?? "?"}`);
+    const sources = declared.get(plugin) ?? new Set<string>();
+    const missing = [...sources].filter((code) => !published.has(code)).sort();
+    const extra = [...published].filter((code) => !sources.has(code)).sort();
+    if (missing.length + extra.length > 0) finding(plugin, "faultNoticeDescriptor", path, `describe owed — unpublished ${JSON.stringify(missing)}, no longer declared ${JSON.stringify(extra)}`);
+  }
+  return { diagnostics, census: [...census.values()].sort((left, right) => right.findings - left.findings || left.owner.localeCompare(right.owner)), sites, declarations };
+}
+
+/**
+ * 🖥️ `test schema fault-notices` — the `schema-fault-notice` gate (design §20.12): every fault code a guest can refuse with reaches the
+ * person as a notice in every shell locale, never as a raw code. `--census` prints the per-plugin table (owner, distinct codes, labelled
+ * ones, declared notices, anonymous faults, findings per class) and always exits 0; without it any finding fails. `--scope
+ * history-editing` keeps the refusals of the history-editing and tool flows ({@link faultNoticeInScope}).
+ *
+ *   bun 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts schema fault-notices [--census] [--under <path>] [--scope all|history-editing] [--json]
+ */
+function runFaultNotices(repoRoot: string, segments: string[]): never {
+  const under = segments.includes("--under") ? (segments[segments.indexOf("--under") + 1] ?? "") : "";
+  const scope = segments.includes("--scope") ? segments[segments.indexOf("--scope") + 1] : "all";
+  if (scope !== "all" && scope !== "history-editing") throw new Error(`[schema fault-notices] --scope expects all or history-editing, got ${JSON.stringify(scope)}`);
+  const report = faultNoticeReport(repoRoot, under, scope);
+  const census = segments.includes("--census");
+  if (segments.includes("--json")) {
+    console.log(JSON.stringify(census ? report.census : { diagnostics: report.diagnostics, census: report.census }, null, 2));
+    process.exit(census || report.diagnostics.length === 0 ? 0 : 1);
+  }
+  const total = report.census.reduce((sum, row) => ({ codes: sum.codes + row.codes, labelled: sum.labelled + row.labelled, declared: sum.declared + row.declared, anonymous: sum.anonymous + row.anonymous }), { codes: 0, labelled: 0, declared: 0, anonymous: 0 });
+  if (census) {
+    const classes = [...new Set(report.census.flatMap((row) => Object.keys(row.refused)))].sort();
+    console.log(["owner", "codes", "labelled", "declared", "anonymous", "findings", ...classes].join("\t"));
+    for (const row of report.census) console.log([row.owner, row.codes, row.labelled, row.declared, row.anonymous, row.findings, ...classes.map((name) => row.refused[name] ?? 0)].join("\t"));
+  } else for (const entry of report.diagnostics.slice(0, 40)) console.log(`[schema fault-notices]   ${entry.path} — ${entry.detail}`);
+  console.log(`[schema fault-notices] ${total.labelled} labelled of ${total.codes} guest fault code(s), ${total.declared} declared notice(s), ${total.anonymous} anonymous fault(s); ${report.diagnostics.length} schema-fault-notice finding(s)${under === "" ? "" : ` under ${under}`}${scope === "all" ? "" : ` in scope ${scope}`}`);
+  process.exit(census || report.diagnostics.length === 0 ? 0 : 1);
+}
+//#endregion 📢️FaultNotices
+
 //#region ✏️MutationEditability
 /** ✏️ The history-edit verdict of one operation shape: `editable` (an input schema and no foreign-step capability), `inert` (no input
  * schema — a non-payload phase of a `#[mutation_leaf(payload = …)]` leaf) or `foreign` (a composite that may emit foreign steps). */
@@ -1350,6 +1898,51 @@ export function mutationSchemaSearchRoot(repoRoot: string, schemaPath: string): 
   return segments.slice(0, -1).join("/");
 }
 
+/** 🏗️ The crate manifest a leaf's types are built by — the TypeScript twin of the derive's `mutation_leaf_crate_manifest`: the nearest
+ * `Cargo.toml` above the payload schema, beside a directory or in its `📦️packages/🦀️rust`. */
+export function mutationLeafCrateManifest(repoRoot: string, schemaPath: string): string | undefined {
+  const segments = schemaPath.split("/");
+  for (let end = segments.length - 1; end > 0; end -= 1) {
+    const directory = segments.slice(0, end).join("/");
+    const manifest = [`${directory}/Cargo.toml`, `${directory}/📦️packages/🦀️rust/Cargo.toml`].find((candidate) => existsSync(join(repoRoot, candidate)));
+    if (manifest !== undefined) return manifest;
+  }
+  return undefined;
+}
+
+/** 🔩️ The `path` of every inline `[dependencies]` entry of the crate manifest `manifest` whose text is `text`, resolved beside it — the
+ * TypeScript twin of the derive's `mutation_manifest_path_dependencies` (oracle: Bun's TOML parser). */
+export function mutationManifestPathDependencies(manifest: string, text: string): string[] {
+  let dependencies = false;
+  const found: string[] = [];
+  for (const raw of text.split("\n")) {
+    const line = raw.trim();
+    if (line.startsWith("[")) {
+      dependencies = line === "[dependencies]";
+      continue;
+    }
+    const table = line.slice(line.indexOf("=") + 1).trim();
+    if (!dependencies || !line.includes("=") || !table.startsWith("{")) continue;
+    const path = table.slice(1).split(",").map((entry) => /^path\s*=\s*"([^"]*)"/u.exec(entry.trim())?.[1]).find((value) => value !== undefined);
+    if (path !== undefined) found.push(posix.normalize(posix.join(posix.dirname(manifest), path)));
+  }
+  return found;
+}
+
+/** 🧶️ The trees a leaf's referenced documents are published from, own first — the TypeScript twin of the derive's
+ * `mutation_schema_search_roots`: its own tree ({@link mutationSchemaSearchRoot}), then the plugin of every path dependency its crate
+ * declares ({@link mutationLeafCrateManifest}), so a leaf references across exactly the plugins its types are built from. */
+export function mutationSchemaSearchRoots(repoRoot: string, schemaPath: string): string[] {
+  const manifest = mutationLeafCrateManifest(repoRoot, schemaPath);
+  const dependencies = manifest === undefined ? [] : mutationManifestPathDependencies(manifest, readFileSync(join(repoRoot, manifest), "utf8"));
+  const plugins = dependencies.flatMap((dependency) => {
+    const segments = dependency.split("/");
+    const plugin = segments.findIndex((_, index) => index > 0 && segments[index - 1] === "🔌️plugins");
+    return plugin < 0 ? [] : [segments.slice(0, plugin + 1).join("/")];
+  });
+  return [...new Set([mutationSchemaSearchRoot(repoRoot, schemaPath), ...plugins])];
+}
+
 /** 🗂️ `$id` → path of every JSON document inside a `🧬️schema` directory of `root` (fixtures, tests and build output skipped) — the twin
  * of the derive's `mutation_schema_document_index`. */
 export function mutationSchemaDocumentIndex(repoRoot: string, root: string): Map<string, string> {
@@ -1389,8 +1982,9 @@ export function mutationSchemaReferences(document: unknown): string[] {
   return found.filter((id) => id.length > 0);
 }
 
-/** 🔗️ The `$id`s a leaf payload schema references (transitively) that neither its own search tree (what `#[derive(MutationLeaf)]`
- * embeds and the runtime publishes) nor a framework scope (`frameworkIndex`) holds — the inputs the history editor cannot resolve. */
+/** 🔗️ The `$id`s a leaf payload schema references (transitively) that neither its search trees ({@link mutationSchemaSearchRoots}: what
+ * `#[derive(MutationLeaf)]` embeds and the runtime publishes) nor a framework scope (`frameworkIndex`) holds — the inputs the history
+ * editor cannot resolve. */
 export function mutationLeafUnpublishedReferences(repoRoot: string, schemaPath: string, rootIndex: ReadonlyMap<string, string>, frameworkIndex: ReadonlyMap<string, string>): string[] {
   const own = readJsonObject(repoRoot, schemaPath);
   const pending = mutationSchemaReferences(own);
@@ -1405,6 +1999,97 @@ export function mutationLeafUnpublishedReferences(repoRoot: string, schemaPath: 
     else pending.push(...mutationSchemaReferences(readJsonObject(repoRoot, path)));
   }
   return unresolved.sort();
+}
+
+/** 🪆️ The accessors that read a composed child's content off its parent handle (`ArtifactChild::local_owner` and its twins); the writers
+ * (`set_local_owner`, `with_local_owner`, …) and the retirement transfer (`take_local_owner`) are not reads. */
+const CHILD_CONTENT_READS = new Set(["local_owner", "require_local_owner", "local_text", "local_text_owner"]);
+
+/** 📞️ Every call in `tokens[start..end]`: an identifier followed by `(` or by a turbofish `::<`. */
+function rustCalls(tokens: readonly RustToken[], start: number, end: number): string[] {
+  const calls: string[] = [];
+  for (let index = start; index < end; index += 1) {
+    const token = tokens[index]!;
+    if (token.kind === "ident" && (tokens[index + 1]?.text === "(" || (tokens[index + 1]?.text === ":" && tokens[index + 2]?.text === ":" && tokens[index + 3]?.text === "<"))) calls.push(token.text);
+  }
+  return calls;
+}
+
+/** 🪆️ Whether `sources` define `struct <snapshot> { … }` with a `#[child(…)]` field — a composed parent. */
+export function composedSnapshot(sources: readonly { readonly path: string; readonly source: string }[], snapshot: string): boolean {
+  return sources.some(({ source }) => {
+    if (!source.includes(snapshot) || !source.includes("child")) return false;
+    const tokens = rustLex(source);
+    return tokens.some((token, index) => {
+      if (token.text !== "struct" || tokens[index + 1]?.text !== snapshot) return false;
+      let open = index + 2;
+      while (open < tokens.length && tokens[open]!.text !== "{" && tokens[open]!.text !== ";") open += 1;
+      if (tokens[open]?.text !== "{") return false;
+      const close = rustGroupEnd(tokens, open);
+      return tokens.slice(open, close).some((part, at) => part.text === "child" && tokens[open + at - 1]?.text === "[" && tokens[open + at - 2]?.text === "#" && tokens[open + at + 1]?.text === "(");
+    });
+  });
+}
+
+/** 🪆️ `<tree>\u0000<Snapshot>` for every composed parent snapshot struct (a `#[child(…)]` field) under `roots`, keyed by its owning tree. */
+function composedParents(repoRoot: string, roots: readonly string[]): Set<string> {
+  const found = new Set<string>();
+  for (const root of roots) {
+    for (const { path, source } of rustSources(repoRoot, root, (text) => text.includes("#[child("))) {
+      if (path.split("/").includes("🧪️tests")) continue;
+      for (const match of source.matchAll(/\bstruct\s+(\w+)/gu)) if (composedSnapshot([{ path, source }], match[1]!)) found.add(`${mutationSchemaSearchRoot(repoRoot, path)}\u0000${match[1]}`);
+    }
+  }
+  return found;
+}
+
+/**
+ * 🪆️ The parent-lane leaves of a composed parent that read its owned child's content (design §20.15: composed content is edited only on
+ * the child lane, parent-lane leaves never read `local_owner`, readers compose on read). `sources` are the owning tree's Rust sources;
+ * a free function or inherent method reads the child when its body calls a {@link CHILD_CONTENT_READS} accessor or, transitively, another
+ * such function (by name; a name any trait impl of the tree also defines is ambiguous across types, so it never propagates); every leaf directory of
+ * `leafDirectories` whose non-test sources make such a call is answered with the first call it makes.
+ */
+export function composedLeafChildReads(sources: readonly { readonly path: string; readonly source: string }[], leafDirectories: readonly string[]): { readonly directory: string; readonly call: string }[] {
+  const production = sources.filter(({ path }) => !path.split("/").includes("🧪️tests"));
+  const lexed = production.map(({ path, source }) => ({ path, tokens: rustLex(source) }));
+  const functions: { name: string; calls: string[] }[] = [];
+  const traitMethods = new Set<string>();
+  for (const { tokens } of lexed) {
+    const traitBodies = rustImplBlocks(tokens).map((block) => [block.open, block.close] as const);
+    for (let index = 0; index + 1 < tokens.length; index += 1) {
+      if (tokens[index]!.text !== "fn" || tokens[index + 1]!.kind !== "ident") continue;
+      if (traitBodies.some(([open, close]) => index > open && index < close)) {
+        traitMethods.add(tokens[index + 1]!.text);
+        continue;
+      }
+      let open = index + 2;
+      let depth = 0;
+      while (open < tokens.length && !(depth === 0 && (tokens[open]!.text === "{" || tokens[open]!.text === ";"))) {
+        if (tokens[open]!.text === "(" || tokens[open]!.text === "<") depth += 1;
+        else if (tokens[open]!.text === ")" || (tokens[open]!.text === ">" && tokens[open - 1]?.text !== "-")) depth -= 1;
+        open += 1;
+      }
+      if (tokens[open]?.text !== "{") continue;
+      functions.push({ name: tokens[index + 1]!.text, calls: rustCalls(tokens, open, rustGroupEnd(tokens, open)) });
+    }
+  }
+  const readers = new Set(CHILD_CONTENT_READS);
+  for (let grown = true; grown; ) {
+    grown = false;
+    for (const { name, calls } of functions) {
+      if (!readers.has(name) && !traitMethods.has(name) && calls.some((call) => readers.has(call))) {
+        readers.add(name);
+        grown = true;
+      }
+    }
+  }
+  const found: { directory: string; call: string }[] = [];
+  for (const directory of leafDirectories) {
+    const call = lexed.filter(({ path }) => path.startsWith(`${directory}/`)).flatMap(({ tokens }) => rustCalls(tokens, 0, tokens.length)).find((name) => readers.has(name));
+    if (call !== undefined) found.push({ directory, call });
+  }
+  return found;
 }
 
 /**
@@ -1432,6 +2117,8 @@ export function mutationEditabilityReport(repoRoot: string, under = "", roots: r
   const leaves: MutationLeafEditability[] = [];
   const rootIndexes = new Map<string, Map<string, string>>();
   let frameworkIndex: Map<string, string> | undefined;
+  let composedSnapshots: Set<string> | undefined;
+  const treeSources = new Map<string, { readonly path: string; readonly source: string }[]>();
   for (const aggregate of tree.aggregates) {
     if (!aggregate.path.startsWith(under)) continue;
     const root = aggregate.path.slice(0, aggregate.path.lastIndexOf("/"));
@@ -1451,16 +2138,27 @@ export function mutationEditabilityReport(repoRoot: string, under = "", roots: r
       const wrapper = tree.wrappers.get(leaf.directory)?.find((candidate) => candidate.name === aggregate.payloadTypes.get(variant));
       const inert = wrapper === undefined ? [] : [...wrapper.variants.keys()].filter((phase) => phase !== wrapper.payloadVariant);
       leaves.push({ owner, aggregate: aggregate.name, path: leaf.directory, kind: leaf.kind, variant, verdict: composite ? "foreign" : "editable", inert });
-      const searchRoot = mutationSchemaSearchRoot(repoRoot, leaf.schemaPath);
-      const rootIndex = rootIndexes.get(searchRoot) ?? mutationSchemaDocumentIndex(repoRoot, searchRoot);
-      rootIndexes.set(searchRoot, rootIndex);
+      const rootIndex = new Map<string, string>();
+      for (const searchRoot of mutationSchemaSearchRoots(repoRoot, leaf.schemaPath)) {
+        const index = rootIndexes.get(searchRoot) ?? mutationSchemaDocumentIndex(repoRoot, searchRoot);
+        rootIndexes.set(searchRoot, index);
+        for (const [id, path] of index) if (!rootIndex.has(id)) rootIndex.set(id, path);
+      }
       frameworkIndex ??= new Map(["🧰️framework", "🌎️hub"].flatMap((root) => [...mutationSchemaDocumentIndex(repoRoot, root)]));
       const unpublished = mutationLeafUnpublishedReferences(repoRoot, leaf.schemaPath, rootIndex, frameworkIndex);
-      if (unpublished.length > 0) refuse(row, "leafReferenceUnpublished", leaf.schemaPath, `${leaf.kind}'s payload schema references ${unpublished.join(", ")}, which neither its own tree (published beside the leaf) nor a framework scope holds, so the history editor cannot resolve it`);
+      if (unpublished.length > 0) refuse(row, "leafReferenceUnpublished", leaf.schemaPath, `${leaf.kind}'s payload schema references ${unpublished.join(", ")}, which neither its own tree nor a plugin its crate depends on (published beside the leaf) nor a framework scope holds, so the history editor cannot resolve it`);
       row.leaves += 1;
       row.inert += inert.length;
       if (composite) row.foreign += 1;
       else row.editable += 1;
+    }
+    const snapshot = new RegExp(`#\\[mutations\\([^\\]]*?snapshot\\s*=\\s*(\\w+)[^\\]]*\\][\\s\\S]{0,800}?enum\\s+${aggregate.name}\\b`, "u").exec(readFileSync(join(repoRoot, aggregate.path), "utf8"))?.[1];
+    const owningTree = mutationSchemaSearchRoot(repoRoot, aggregate.path);
+    if (snapshot !== undefined && (composedSnapshots ??= composedParents(repoRoot, roots)).has(`${owningTree}\u0000${snapshot}`)) {
+      const sources = treeSources.get(owningTree) ?? rustSources(repoRoot, owningTree, () => true);
+      treeSources.set(owningTree, sources);
+      const directories = leaves.filter((candidate) => candidate.aggregate === aggregate.name && candidate.path.startsWith(owningTree)).map((candidate) => candidate.path);
+      for (const { directory, call } of composedLeafChildReads(sources, directories)) refuse(row, "parentLeafReadsChild", directory, `${directory.split("/").at(-1)} is a parent-lane leaf of the composed parent ${snapshot} and reads its owned child's content through ${call} — composed content is edited only on the child lane (design §20.15)`);
     }
   }
   const handwritten: MutationHandwrittenAggregate[] = [];
@@ -1529,7 +2227,8 @@ function runMutationEditability(repoRoot: string, segments: string[]): never {
  * (`schema-mutation-input-ui`), does every mutation leaf and aggregate schema describe the wire its
  * committed fixtures and `#[derive(Mutations)]` enum witness (`schema-mutation-payload-parity`), is
  * every leaf labelled in every locale (`schema-mutation-label`), and is every aggregate editable in
- * history or declares why not (`schema-mutation-editability`). Nothing
+ * history or declares why not (`schema-mutation-editability`), and does every guest fault code reach the person as a notice in
+ * every locale (`schema-fault-notice`). Nothing
  * here searches the tree for a schema; an absent catalog is reported as absent, because a gate that
  * silently found a substitute would be measuring the substitute.
  *
@@ -1543,6 +2242,7 @@ export class SchemaScript extends Script {
     if (segments[0] === "mutation-payloads") runMutationPayloadParity(this.repoRoot, segments.slice(1));
     if (segments[0] === "mutation-labels") runMutationLabels(this.repoRoot, segments.slice(1));
     if (segments[0] === "mutation-editability") runMutationEditability(this.repoRoot, segments.slice(1));
+    if (segments[0] === "fault-notices") runFaultNotices(this.repoRoot, segments.slice(1));
     const under = segments[segments.indexOf("--under") + 1];
     const scope = segments.includes("--under") && under !== undefined ? under : "";
     const diagnostics: SchemaDiagnostic[] = [
@@ -1551,6 +2251,7 @@ export class SchemaScript extends Script {
       ...mutationPayloadParityReport(this.repoRoot, scope).diagnostics,
       ...mutationLabelReport(this.repoRoot, scope).diagnostics,
       ...mutationEditabilityReport(this.repoRoot, scope).diagnostics,
+      ...faultNoticeReport(this.repoRoot, scope).diagnostics,
     ];
     const reports: SchemaFixtureReport[] = [];
     for (const collection of discoverSchemaFixtures(this.repoRoot, scope)) for (const fixture of collection.fixtures) reports.push(runSchemaFixture(this.repoRoot, fixture, collection.caseDir));

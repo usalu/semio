@@ -23,7 +23,7 @@ fn multi_path_deletion_preserves_style_and_is_reversible() {
     let emit=plan(&before,"editNodes",&ids,&selected).unwrap();
     assert_eq!(emit.artifact_mutations.len(),2);assert_eq!(emit.effects.len(),2);
     let mut after=before.clone();let mut inverses=Vec::new();
-    for mutation in &emit.artifact_mutations {inverses.push(mutation.inverse(&after));crate::mutations::apply_drawing_mutation(&mut after,mutation).unwrap();}
+    for mutation in &emit.artifact_mutations {inverses.push(mutation.inverse(&after).expect("valid retained mutation inverse fixture"));crate::mutations::apply_drawing_mutation(&mut after,mutation).unwrap();}
     for (layer,original) in after.layers.iter().zip(&before.layers) {assert_eq!(crate::schema::layer_base(layer),crate::schema::layer_base(original));}
     let DrawingLayerNode::Path(first)=&after.layers[0] else {unreachable!()};
     assert_eq!(first.segments,vec![crate::PathSegment::Move {to:[10.0,10.0]}]);

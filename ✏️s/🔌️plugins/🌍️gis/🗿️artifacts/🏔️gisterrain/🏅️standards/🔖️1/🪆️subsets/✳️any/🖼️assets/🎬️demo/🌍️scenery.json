@@ -1,0 +1,9 @@
+{
+  "projectOrigin": { "lon": 5.5818, "lat": 50.603 },
+  "positions": [
+    { "id": "p_institut_de_botanique_ulg_liege", "lon": 5.5818, "lat": 50.603, "label": "Institut de Botanique" },
+    { "id": "p_lycee_block_3000", "lon": 5.5901, "lat": 50.6102, "label": "Lycée Block 3000" }
+  ],
+  "routes": [],
+  "regions": []
+}

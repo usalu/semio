@@ -26,7 +26,8 @@ pub mod derived_construction {
     use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxSnapshot, XlsxWorkbook};
     use crate::standards::v_ecma_376::subsets::strict::schema::{check_strict_conformance, STRICT_R_NS, STRICT_SML_NS};
     use crate::{XlsxDiff, XlsxMutation};
-    use dsl::{Diagnostic, Severity};
+    use semio_framework_diagnostic::Diagnostic;
+use semio_framework_diagnostic::Severity;
     use semio_framework_plugin::ArtifactBuilder;
     use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
 
@@ -89,7 +90,7 @@ pub mod derived_construction {
             Self { snapshot }
         }
 
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(Self::from_snapshot(<XlsxSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
 
@@ -133,7 +134,11 @@ pub mod derived_analysis {
     use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
     use crate::standards::v_ecma_376::subsets::base::schema::XlsxAnalyzer as XlsxAnyAnalyzer;
     pub use crate::standards::v_ecma_376::subsets::base::schema::XlsxParts;
-    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
+    use semio_framework_diagnostic::Diagnostic;
+use semio_framework_diagnostic::FaultCode;
+use semio_framework_diagnostic::FaultScope;
+use semio_framework_diagnostic::Severity;
+use semio_framework_diagnostic::TextSpan;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
     use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 

@@ -139,13 +139,15 @@ fn malformed_input_is_typed_error_not_fabrication() {
     assert!(parse_part21(bad).is_err());
 }
 
-
 /// 🌱️ The value projection IS the contract shape (`Part21Value`/`Part21Instance`/`Part21Header` in the ifc 2x3 schema and its
 /// TS twin), for every value kind — serde_json is the independent reader.
 #[test]
 fn value_projection_is_the_canonical_contract_shape() {
-    let document = parse_part21("ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('d'),'2;1');\nFILE_NAME('n','t',('a'),('o'),'p','s','z');\nFILE_SCHEMA(('IFC2X3'));\nENDSEC;\nDATA;\n#1=X(#2,'s',.E.,3,1.5,(1,2),Y(3.),$,*);\n#2=(A(1)B(2));\nENDSEC;\nEND-ISO-10303-21;\n").expect("parses");
-    let json: serde_json::Value = serde_json::from_str(&pack::json::to_json_string(&document)).expect("json");
+    let document = parse_part21(
+        "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('d'),'2;1');\nFILE_NAME('n','t',('a'),('o'),'p','s','z');\nFILE_SCHEMA(('IFC2X3'));\nENDSEC;\nDATA;\n#1=X(#2,'s',.E.,3,1.5,(1,2),Y(3.),$,*);\n#2=(A(1)B(2));\nENDSEC;\nEND-ISO-10303-21;\n",
+    )
+    .expect("parses");
+    let json: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&document)).expect("json");
     assert_eq!(json["header"]["fileSchema"], serde_json::json!([{ "kind": "list", "values": [{ "kind": "str", "value": "IFC2X3" }] }]));
     assert_eq!(
         json["instances"][0],
@@ -158,10 +160,10 @@ fn value_projection_is_the_canonical_contract_shape() {
         ] }] })
     );
     assert_eq!(json["instances"][1]["entities"], serde_json::json!([{ "typeName": "A", "arguments": [{ "kind": "int", "value": 1 }] }, { "typeName": "B", "arguments": [{ "kind": "int", "value": 2 }] }]));
-    let reopened: Part21Document = pack::json::from_json_str(&pack::json::to_json_string(&document)).expect("the projection decodes");
+    let reopened: Part21Document = semio_framework_pack_json::from_json_str(&semio_framework_pack_json::to_json_string(&document), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the projection decodes");
     assert_eq!(reopened, document);
-    assert!(pack::json::from_json_str::<Part21Value>(r#"{"kind":"str","value":"s","extra":1}"#).is_err(), "an undeclared member is refused");
-    assert!(pack::json::from_json_str::<Part21Value>(r#"{"kind":"blob"}"#).is_err(), "an unknown kind is refused");
+    assert!(semio_framework_pack_json::from_json_str::<Part21Value>(r#"{"kind":"str","value":"s","extra":1}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "an undeclared member is refused");
+    assert!(semio_framework_pack_json::from_json_str::<Part21Value>(r#"{"kind":"blob"}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "an unknown kind is refused");
 }
 
 /// ✍️ The canonical writer is a fixed point: writing a parsed canonical text reproduces it byte for byte.
@@ -179,3 +181,6 @@ fn path_edits_address_the_projection() {
     document.edit_value_at_path(&path, ValueEdit::Set(DslValue::object([("kind".to_string(), DslValue::String("str".into())), ("value".to_string(), DslValue::String("edited".into()))]))).expect("argument edit");
     assert_eq!(document.instances[0].entities[0].1[0], Part21Value::Str("edited".into()));
 }
+
+#[path = "../🚦️sqlite-cohort/🦀️.rs"]
+mod sqlite_cohort;

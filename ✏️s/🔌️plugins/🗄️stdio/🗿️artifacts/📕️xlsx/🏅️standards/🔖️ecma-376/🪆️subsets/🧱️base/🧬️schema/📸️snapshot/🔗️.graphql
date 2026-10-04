@@ -1,8 +1,44 @@
-type XlsxEntry {
-  name: String!
-  data: [Int!]!
+enum XlsxOpcTargetMode { INTERNAL EXTERNAL }
+type XlsxNameValue { name: String!, value: String! }
+type XlsxOpcContentTypes { defaults: [XlsxNameValue!]!, overrides: [XlsxNameValue!]! }
+type XlsxOpcPart { path: String!, contentType: String!, bytes: [Int!]! }
+type XlsxOpcRelationship { id: String!, relType: String!, target: String!, targetMode: XlsxOpcTargetMode! }
+type XlsxOpcRelationshipOwner { owner: String!, relationships: [XlsxOpcRelationship!]! }
+type XlsxOpcPackage {
+  parts: [XlsxOpcPart!]!
+  contentTypes: XlsxOpcContentTypes!
+  relationships: [XlsxOpcRelationshipOwner!]!
+  comment: String!
 }
+
+type XlsxXmlAttr { name: String!, value: String! }
+enum XlsxXmlNodeKind { ELEMENT TEXT C_DATA COMMENT PROCESSING_INSTRUCTION }
+type XlsxXmlNode {
+  kind: XlsxXmlNodeKind!
+  name: String
+  attrs: [XlsxXmlAttr!]
+  children: [XlsxXmlNode!]
+  text: String
+  target: String
+  data: String
+}
+enum XlsxXmlQuote { DOUBLE SINGLE }
+type XlsxXmlDeclaration { version: String!, encoding: String, standalone: Boolean, quote: XlsxXmlQuote }
+enum XlsxXmlExternalIdKind { SYSTEM PUBLIC }
+type XlsxXmlExternalId { kind: XlsxXmlExternalIdKind!, publicId: String, systemId: String! }
+type XlsxXmlDtdEntity { parameter: Boolean!, name: String!, value: String! }
+type XlsxXmlDoctype { name: String!, externalId: XlsxXmlExternalId, declarations: [XlsxXmlDtdEntity!]!, prologPosition: Int! }
+type XlsxXmlDocument {
+  root: XlsxXmlNode
+  doctype: XlsxXmlDoctype
+  declaration: XlsxXmlDeclaration
+  prolog: [XlsxXmlNode!]!
+  epilog: [XlsxXmlNode!]!
+}
+type XlsxXmlPart { path: String!, contentType: String!, document: XlsxXmlDocument! }
+
 type XlsxSnapshot {
   schema: String! @state(class: ARTIFACT)
-  entries: [XlsxEntry!]! @state(class: ARTIFACT)
+  opc: XlsxOpcPackage! @state(class: ARTIFACT)
+  xmlParts: [XlsxXmlPart!]! @state(class: ARTIFACT)
 }

@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::fem3d::modes::edit::windows::results::config::Fem3dResultsAnimation;
+use crate::app_surface::FemResultsAnimation;
 use crate::editor::fem3d::terminology::Fem3dLabels;
 
 fn labels() -> &'static Fem3dLabels {
@@ -42,7 +42,7 @@ async fn results_panel_tags_every_control_with_its_window() {
 async fn results_panel_play_button_switches_to_pause_while_running() {
     let stopped = panel_json(&Fem3dResultsWindowConfig::default());
     assert!(stopped.contains(labels().play.as_str()), "{stopped}");
-    let running = Fem3dResultsWindowConfig { animation: Fem3dResultsAnimation { playing: true, ..Fem3dResultsAnimation::default() }, ..Fem3dResultsWindowConfig::default() };
+    let running = Fem3dResultsWindowConfig { animation: FemResultsAnimation { playing: true, ..FemResultsAnimation::default() }, ..Fem3dResultsWindowConfig::default() };
     let running = panel_json(&running);
     assert!(running.contains(labels().pause.as_str()), "{running}");
 }

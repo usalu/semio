@@ -29,10 +29,50 @@ use wasm_bindgen::JsCast;
 #[cfg(not(target_arch = "wasm32"))]
 use crate::kernel_runtime::{KernelClient, MountedProductReplayAdmission};
 
+/// 🧯️ A refused program call: the guest's own structured `Fault` when it answered with one (its code, severity and the
+/// `params` a localized notice fills its placeholders from, design §20.12), and the one-line `code: message …` text every
+/// `String` error channel of the shell carries.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ProgramFault {
+    pub fault: Option<semio_framework::Fault>,
+    pub text: String,
+}
+
+impl From<String> for ProgramFault {
+    fn from(text: String) -> Self {
+        Self { fault: None, text }
+    }
+}
+
+impl From<&str> for ProgramFault {
+    fn from(text: &str) -> Self {
+        Self { fault: None, text: text.to_string() }
+    }
+}
+
+impl From<ProgramFault> for String {
+    fn from(fault: ProgramFault) -> Self {
+        fault.text
+    }
+}
+
+impl std::fmt::Display for ProgramFault {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str(&self.text)
+    }
+}
+
+/// ⏹️ The refusal of a whole-document load the guest cancelled (a person's Cancel in the history body): the previous document
+/// stayed.
+#[cfg(not(target_arch = "wasm32"))]
+const DOCUMENT_LOAD_CANCELLED: &str = "document.load-cancelled: the load was cancelled; the previous document is unchanged";
+
 #[cfg(not(target_arch = "wasm32"))]
 mod wasm_program_exchange {
     use super::*;
-    use dsl::{DslValue, FromValue, ToValue};
+    use semio_framework_value::DslValue;
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
     use protocol::{AppCommand, AppFrame};
     use semio_framework::kernel::{AppEvent, Effect, Event, InvocationId, InvocationResult, MessageEndpoint, PluginInstanceId, UndoGroup};
     use std::sync::atomic::{AtomicU64, Ordering};
@@ -77,6 +117,12 @@ mod wasm_program_exchange {
             .map(|message| if message.target.is_empty() { format!("{}: {}", message.code.0, message.message) } else { format!("{}: {} [{}]", message.code.0, message.message, message.target.join("/")) })
             .collect::<Vec<_>>()
             .join("; ")
+    }
+
+    /// 🧯️ An `AppFrame::Error` as a [`ProgramFault`]: the decoded guest fault beside its full message.
+    fn app_frame_program_fault(fault: &[u8], report: &[u8]) -> ProgramFault {
+        let decoded = pack_rt::decode_wire_value(fault).ok().and_then(|value| <semio_framework::Fault as semio_framework_value::FromValue>::from_value(value).ok());
+        ProgramFault { fault: decoded, text: app_frame_error_message(fault, report) }
     }
 
     /// 🧾 An `AppFrame::Error`'s full message: the generic fault summary, plus — whenever `report`
@@ -188,8 +234,8 @@ mod wasm_program_exchange {
     /// everything. An absent/undecodable field is still `Full` — the safe default the type's own
     /// `Default` names — but a scope the guest actually published now reaches the shell
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    fn invocation_from_frames(outcome: &mut crate::kernel_runtime::ExchangeOutcome, seq: u64) -> Result<InvocationResult, String> {
-        let mut output = DslValue::Null;
+    fn invocation_from_frames(outcome: &mut crate::kernel_runtime::ExchangeOutcome, seq: u64) -> Result<InvocationResult, ProgramFault> {
+        let mut output = semio_framework_value::DslValue::Null;
         let mut diagnostics = Vec::new();
         let events: Vec<AppEvent> = Vec::new();
         let mut mutations = Vec::new();
@@ -220,18 +266,18 @@ mod wasm_program_exchange {
                             mutations = decode_wire(mutation_bytes)?;
                             inverse_group = decode_wire(inverse_group_bytes)?;
                         }
-                        _ => return Err("plugin invocation published mutations and inverse group asymmetrically".to_string()),
+                        _ => return Err("plugin invocation published mutations and inverse group asymmetrically".into()),
                     }
                     saw_invocation = saw_invocation || *in_reply_to == seq;
                 }
                 AppFrame::Error { in_reply_to, fault, report } if in_reply_to == &Some(seq) => {
-                    return Err(app_frame_error_message(fault, report));
+                    return Err(app_frame_program_fault(fault, report));
                 }
                 _ => {}
             }
         }
         if !saw_invocation {
-            return Err(format!("plugin sent no Invocation for seq {seq}"));
+            return Err(format!("plugin sent no Invocation for seq {seq}").into());
         }
         Ok(InvocationResult { output, mutations, inverse_group, diagnostics, requested_effects: std::mem::take(&mut outcome.effects), events, ui_scope, history_patch })
     }
@@ -289,8 +335,8 @@ mod wasm_program_exchange {
             .unwrap_or_default())
     }
 
-    pub async fn handle_action(client: &KernelClient, instance_id: u32, action_json: &str, view_state: &ViewModel) -> Result<InvocationResult, String> {
-        let invocation: semio_framework::manifest::ActionInvocation = dsl::json::from_json_str(action_json).map_err(|error| error.to_string())?;
+    pub async fn handle_action(client: &KernelClient, instance_id: u32, action_json: &str, view_state: &ViewModel) -> Result<InvocationResult, ProgramFault> {
+        let invocation: semio_framework::manifest::ActionInvocation = semio_framework_pack_json::from_json_str(action_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
         let seq = next_seq();
         let commands = vec![AppCommand::Command { seq, command: encode_wire(&invocation), view_state: encode_wire(view_state) }];
         let admission = client.reserve_product_replay_admission(instance_id)?;
@@ -302,7 +348,7 @@ mod wasm_program_exchange {
                 let error = refusal.rejection_reason().to_string();
                 client.retire_product_replay_refusal(refusal).await;
                 let _ = invocation_from_frames(&mut outcome, seq);
-                return Err(error);
+                return Err(error.into());
             }
         };
         let result = invocation_from_frames(&mut outcome, seq)?;
@@ -310,15 +356,15 @@ mod wasm_program_exchange {
             if let Err(authority) = client.mount_product_replay(authority).await {
                 let error = authority.rejection_reason();
                 client.retire_product_replay(authority).await;
-                return Err(error);
+                return Err(error.into());
             }
         }
         client.advance_product_replay(instance_id).await?;
         Ok(result)
     }
 
-    pub async fn handle_command(client: &KernelClient, instance_id: u32, command_json: &str, view_state: &ViewModel) -> Result<InvocationResult, String> {
-        let invocation: semio_framework::manifest::CommandInvocation = dsl::json::from_json_str(command_json).map_err(|error| error.to_string())?;
+    pub async fn handle_command(client: &KernelClient, instance_id: u32, command_json: &str, view_state: &ViewModel) -> Result<InvocationResult, ProgramFault> {
+        let invocation: semio_framework::manifest::CommandInvocation = semio_framework_pack_json::from_json_str(command_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
         let seq = next_seq();
         let admission = client.reserve_product_replay_admission(instance_id)?;
         let mut outcome = exchange(client, instance_id, vec![AppCommand::Command { seq, command: encode_wire(&invocation), view_state: encode_wire(view_state) }]).await?;
@@ -329,7 +375,7 @@ mod wasm_program_exchange {
                 let error = refusal.rejection_reason().to_string();
                 client.retire_product_replay_refusal(refusal).await;
                 let _ = invocation_from_frames(&mut outcome, seq);
-                return Err(error);
+                return Err(error.into());
             }
         };
         let result = invocation_from_frames(&mut outcome, seq)?;
@@ -337,17 +383,11 @@ mod wasm_program_exchange {
             if let Err(authority) = client.mount_product_replay(authority).await {
                 let error = authority.rejection_reason();
                 client.retire_product_replay(authority).await;
-                return Err(error);
+                return Err(error.into());
             }
         }
         client.advance_product_replay(instance_id).await?;
         Ok(result)
-    }
-
-    pub async fn load_app_document_pack(client: &KernelClient, instance_id: u32, pack: &[u8], spr: &[u8]) -> Result<(), String> {
-        let seq = next_seq();
-        let outcome = exchange(client, instance_id, vec![AppCommand::LoadDocument { seq, pack: pack.to_vec(), spr: spr.to_vec() }]).await?;
-        expect_done(&outcome.frames, seq)
     }
 
     /// 🪪️ Reads exactly one typed identity reply from the app's own document store.
@@ -374,33 +414,30 @@ mod wasm_program_exchange {
             .ok_or_else(|| format!("plugin sent no DocumentArchive for seq {seq}"))
     }
 
+    /// 🗃️ One whole-document load through the shared stepped host (`protocol::DocumentArchiveLoadHost`,
+    /// `📓️api-stepped-document-load.md` §2): admit, poll to the guest's terminal status, acknowledge — the same machine the MCP
+    /// gateway and the `🏃️run` batch drive. A person cancels a live load from the history body (`historyEditCancelReplay`, the
+    /// guest's own cancel), which the guest's `Cancelled` terminal reports with the previous document unchanged; that outcome
+    /// and a `Fault` are refused by name. Progress reaches the person as the guest's `HistoryPatch.reprojection` (`kind: load`).
     pub async fn load_app_document_archive(client: &KernelClient, instance_id: u32, archive: &protocol::DocumentArchivePack) -> Result<(), String> {
-        let operation = next_seq();
-        let admitted = exchange(client, instance_id, vec![AppCommand::LoadDocumentArchive { seq: operation, archive: archive.clone() }]).await?;
-        expect_done(&admitted.frames, operation)?;
+        let mut host = protocol::DocumentArchiveLoadHost::new(archive.clone());
         loop {
-            let seq = next_seq();
-            let outcome = exchange(client, instance_id, vec![AppCommand::PollDocumentArchiveLoad { seq, operation }]).await?;
-            let status = outcome
-                .frames
-                .iter()
-                .find_map(|frame| match frame {
-                    AppFrame::DocumentArchiveLoad { in_reply_to, status } if *in_reply_to == seq && status.operation == operation => Some(status.clone()),
-                    _ => None,
-                })
-                .ok_or_else(|| format!("document archive operation {operation} returned no correlated status"))?;
-            match status.state {
-                protocol::DocumentArchiveLoadState::Pending | protocol::DocumentArchiveLoadState::Running => {}
-                protocol::DocumentArchiveLoadState::Ready => {
-                    let seq = next_seq();
-                    let acknowledged = exchange(client, instance_id, vec![AppCommand::AcknowledgeDocumentArchiveLoad { seq, operation }]).await?;
-                    return expect_done(&acknowledged.frames, seq);
-                }
-                protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault => {
-                    let seq = next_seq();
-                    let _ = exchange(client, instance_id, vec![AppCommand::AcknowledgeDocumentArchiveLoad { seq, operation }]).await;
-                    return Err(format!("document archive operation {operation} ended in {:?}", status.state));
-                }
+            let (seq, command) = match host.step(next_seq) {
+                protocol::DocumentArchiveLoadStep::Send { seq, command } => (seq, command),
+                protocol::DocumentArchiveLoadStep::Finished(protocol::DocumentArchiveLoadOutcome::Ready) => return Ok(()),
+                protocol::DocumentArchiveLoadStep::Finished(protocol::DocumentArchiveLoadOutcome::Cancelled) => return Err(DOCUMENT_LOAD_CANCELLED.to_string()),
+                protocol::DocumentArchiveLoadStep::Finished(protocol::DocumentArchiveLoadOutcome::Fault(fault)) => return Err(app_frame_error_message(&fault, &[])),
+            };
+            let outcome = exchange(client, instance_id, vec![command]).await?;
+            let answer = outcome.frames.iter().find(|frame| match frame {
+                AppFrame::Done { in_reply_to } | AppFrame::DocumentArchiveLoad { in_reply_to, .. } => *in_reply_to == seq,
+                AppFrame::Error { in_reply_to, .. } => *in_reply_to == Some(seq),
+                _ => false,
+            });
+            match answer.map(|frame| host.answer(seq, frame)) {
+                Some(Ok(_)) => {}
+                Some(Err(protocol::DocumentArchiveLoadRefusal::Refused(fault))) => return Err(app_frame_error_message(&fault, &[])),
+                Some(Err(protocol::DocumentArchiveLoadRefusal::Unanswered)) | None => return Err(format!("document archive load: the plugin sent no answer for seq {seq}")),
             }
         }
     }
@@ -715,7 +752,9 @@ impl ProgramBridgeEntry {
         self.manifest.apps.iter().find(|other| other.dialect == app.dialect && !other.io.artifact_schema.is_empty()).map(|other| other.io.artifact_schema.clone()).unwrap_or_default()
     }
 
-    pub async fn create_app(&self, app_id: &str) -> Result<u32, String> {
+    /// 🐣️ Opens one instance of `app_id`. A refusal keeps the structured fault behind it when the host or the browser bridge
+    /// raised one — the host's guest admission (`plugin.channel-mismatch`) — so the shell tells it as its localized notice.
+    pub async fn create_app(&self, app_id: &str) -> Result<u32, ProgramFault> {
         match &self.backend {
             #[cfg(target_arch = "wasm32")]
             ProgramBridgeBackend::Js(handle) => {
@@ -727,7 +766,7 @@ impl ProgramBridgeEntry {
                 Ok(instance_id)
             }
             #[cfg(not(target_arch = "wasm32"))]
-            ProgramBridgeBackend::Wasm { client, wasm_path } => client.create_app(wasm_path.clone(), self.plugin_id.clone(), app_id.to_string(), self.app_document_schema(app_id)).await,
+            ProgramBridgeBackend::Wasm { client, wasm_path } => client.create_app(wasm_path.clone(), self.plugin_id.clone(), app_id.to_string(), self.app_document_schema(app_id)).await.map_err(ProgramFault::from),
         }
     }
 
@@ -746,10 +785,10 @@ impl ProgramBridgeEntry {
         }
     }
 
-    pub async fn handle_action(&self, instance_id: u32, action_json: &str, view_state: &ViewModel) -> Result<semio_framework::kernel::InvocationResult, String> {
+    pub async fn handle_action(&self, instance_id: u32, action_json: &str, view_state: &ViewModel) -> Result<semio_framework::kernel::InvocationResult, ProgramFault> {
         #[cfg(test)]
         if let Some(action) = self.fixture_action {
-            return action(instance_id, action_json, view_state);
+            return action(instance_id, action_json, view_state).map_err(ProgramFault::from);
         }
         match &self.backend {
             #[cfg(target_arch = "wasm32")]
@@ -777,7 +816,7 @@ impl ProgramBridgeEntry {
         }
     }
 
-    pub async fn handle_command(&self, instance_id: u32, command_json: &str, view_state: &ViewModel) -> Result<semio_framework::kernel::InvocationResult, String> {
+    pub async fn handle_command(&self, instance_id: u32, command_json: &str, view_state: &ViewModel) -> Result<semio_framework::kernel::InvocationResult, ProgramFault> {
         match &self.backend {
             #[cfg(target_arch = "wasm32")]
             ProgramBridgeBackend::Js(handle) => {
@@ -806,13 +845,12 @@ impl ProgramBridgeEntry {
         }
     }
 
+    /// 🗃️ Loads one plain document `(pack, spr)` — an archive without members — through the stepped, ACK-owned archive load
+    /// (admit, poll to a terminal state, acknowledge; `📓️api-stepped-document-load.md` §2 of ticket
+    /// 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING), the one whole-document load: a long history folds across turns and a cancel
+    /// leaves the previous document.
     pub async fn load_app_document_pack(&self, instance_id: u32, pack: &[u8], spr: &[u8]) -> Result<(), String> {
-        match &self.backend {
-            #[cfg(target_arch = "wasm32")]
-            ProgramBridgeBackend::Js(handle) => call_js_bytes(handle, "loadAppArtifactPack", instance_id, &[pack, spr]).await,
-            #[cfg(not(target_arch = "wasm32"))]
-            ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::load_app_document_pack(client, instance_id, pack, spr).await,
-        }
+        self.load_app_document_archive(instance_id, &protocol::DocumentArchivePack { parent_pack: pack.to_vec(), parent_spr: spr.to_vec(), members: Vec::new() }).await
     }
 
     /// 🪪️ Scalar document ownership query shared by native and browser bridges.
@@ -1037,7 +1075,7 @@ impl ProgramBridgeEntry {
                 let args = Array::new();
                 args.push(&JsValue::from_f64(f64::from(instance_id)));
                 let text = call_js(handle, "readHistory", &args).await?.as_string().ok_or_else(|| "readHistory answered no JSON".to_string())?;
-                dsl::os_pack::json::from_json_str::<semio_framework::kernel::HistoryPatch>(&text).map_err(|error| error.to_string())
+                semio_framework_pack_json::from_json_str::<semio_framework::kernel::HistoryPatch>(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
             }
         }
     }
@@ -1090,6 +1128,14 @@ fn describe_js_rejection(error: &JsValue) -> String {
 }
 
 #[cfg(target_arch = "wasm32")]
+/// 🧯️ A rejected bridge call as a [`ProgramFault`]: the `fault` a `SemioFaultError` carries, decoded through its JSON wire, beside
+/// the `what: reason` text every String channel shows.
+fn js_program_fault(what: &str, error: &JsValue) -> ProgramFault {
+    let fault = Reflect::get(error, &JsValue::from_str("fault")).ok().filter(|fault| fault.is_object()).and_then(|fault| js_sys::JSON::stringify(&fault).ok()).and_then(|json| json.as_string()).and_then(|json| semio_framework_pack_json::from_json_str::<semio_framework::Fault>(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).ok());
+    ProgramFault { fault, text: format!("{what}: {}", describe_js_rejection(error)) }
+}
+
+#[cfg(target_arch = "wasm32")]
 /// ⏳️ Calls one bridge function and settles its promise, keeping the rejection's own reason.
 async fn call_js(handle: &Rc<JsValue>, name: &str, args: &Array) -> Result<JsValue, String> {
     let function = get_fn(handle.as_ref(), name)?;
@@ -1117,7 +1163,7 @@ async fn call_js_bytes(handle: &Rc<JsValue>, name: &str, instance_id: u32, paylo
 /// `SendMessage { Backbone }` reaches `route_document_backbone_effects` exactly as it does natively.
 fn document_backbone_effects(name: &str, answer: &JsValue) -> Result<Vec<Effect>, String> {
     let text = answer.as_string().ok_or_else(|| format!("{name} result not string"))?;
-    dsl::os_pack::json::from_json_str::<semio_framework::kernel::InvocationResult>(&text).map(|result| result.requested_effects).map_err(|error| format!("{name} result parse failed: {error}"))
+    semio_framework_pack_json::from_json_str::<semio_framework::kernel::InvocationResult>(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|result| result.requested_effects).map_err(|error| format!("{name} result parse failed: {error}"))
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -1262,15 +1308,14 @@ mod browser_component_codec {
 }
 
 #[cfg(target_arch = "wasm32")]
-async fn create_app_js(handle: &Rc<JsValue>, app_id: &str) -> Result<u32, String> {
+async fn create_app_js(handle: &Rc<JsValue>, app_id: &str) -> Result<u32, ProgramFault> {
     let create_app = get_fn(handle.as_ref(), "createApp")?;
-    let result = create_app.call1(&JsValue::NULL, &JsValue::from_str(app_id)).map_err(|_| "create_app failed")?;
-    if let Some(promise) = result.dyn_ref::<js_sys::Promise>() {
-        let resolved = JsFuture::from(promise.clone()).await.map_err(|error| format!("create_app promise failed: {}", describe_js_rejection(&error)))?;
-        resolved.as_f64().map(|v| v as u32).ok_or("create_app not number".into())
-    } else {
-        result.as_f64().map(|v| v as u32).ok_or("create_app not number".into())
-    }
+    let result = create_app.call1(&JsValue::NULL, &JsValue::from_str(app_id)).map_err(|error| js_program_fault("create_app failed", &error))?;
+    let answer = match result.dyn_ref::<js_sys::Promise>() {
+        Some(promise) => JsFuture::from(promise.clone()).await.map_err(|error| js_program_fault("create_app promise failed", &error))?,
+        None => result,
+    };
+    answer.as_f64().map(|value| value as u32).ok_or_else(|| ProgramFault::from("create_app not number"))
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -1286,11 +1331,11 @@ fn destroy_app_js(handle: &Rc<JsValue>, instance_id: u32) {
 fn take_progress_history_patches_js(handle: &Rc<JsValue>, instance_id: u32) -> Vec<semio_framework::kernel::HistoryPatch> {
     let Some(take) = Reflect::get(handle.as_ref(), &JsValue::from_str("takeProgressHistoryPatches")).ok().and_then(|value| value.dyn_into::<Function>().ok()) else { return Vec::new() };
     let Some(text) = take.call1(&JsValue::NULL, &JsValue::from_f64(f64::from(instance_id))).ok().and_then(|answer| answer.as_string()) else { return Vec::new() };
-    dsl::os_pack::json::from_json_str::<Vec<semio_framework::kernel::HistoryPatch>>(&text).unwrap_or_default()
+    semio_framework_pack_json::from_json_str::<Vec<semio_framework::kernel::HistoryPatch>>(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_default()
 }
 
 #[cfg(target_arch = "wasm32")]
-async fn handle_action_js(handle: &Rc<JsValue>, instance_id: u32, action_json: &str, view_state: &ViewModel) -> Result<semio_framework::kernel::InvocationResult, String> {
+async fn handle_action_js(handle: &Rc<JsValue>, instance_id: u32, action_json: &str, view_state: &ViewModel) -> Result<semio_framework::kernel::InvocationResult, ProgramFault> {
     let action = Reflect::get(handle.as_ref(), &JsValue::from_str("handleAction")).ok().and_then(|v| v.dyn_into::<Function>().ok());
     let Some(action) = action else {
         return Ok(semio_framework::kernel::InvocationResult {
@@ -1310,10 +1355,10 @@ async fn handle_action_js(handle: &Rc<JsValue>, instance_id: u32, action_json: &
     })
     .to_string();
     let invocation_pack = invocation_pack_base64(action_json)?;
-    let result = action.call3(&JsValue::NULL, &JsValue::from_f64(instance_id as f64), &JsValue::from_str(&invocation_pack), &JsValue::from_str(&context_json)).map_err(|error| format!("handle_action failed: {}", describe_js_rejection(&error)))?;
-    let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() { JsFuture::from(promise.clone()).await.map_err(|error| format!("handle_action promise failed: {}", describe_js_rejection(&error)))? } else { result };
+    let result = action.call3(&JsValue::NULL, &JsValue::from_f64(instance_id as f64), &JsValue::from_str(&invocation_pack), &JsValue::from_str(&context_json)).map_err(|error| js_program_fault("handle_action failed", &error))?;
+    let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() { JsFuture::from(promise.clone()).await.map_err(|error| js_program_fault("handle_action promise failed", &error))? } else { result };
     let text = resolved.as_string().ok_or_else(|| "handle_action result not string".to_string())?;
-    dsl::os_pack::json::from_json_str::<semio_framework::kernel::InvocationResult>(&text).map_err(|error| format!("handle_action result parse failed: {error}"))
+    semio_framework_pack_json::from_json_str::<semio_framework::kernel::InvocationResult>(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| ProgramFault::from(format!("handle_action result parse failed: {error}")))
 }
 
 /// 🩺️ A readable window of a JSON payload around the column serde refused, so a
@@ -1338,7 +1383,7 @@ async fn dispatch_invoke_extension_js(handle: &Rc<JsValue>, instance_id: u32, ex
     let result = dispatch.apply(&JsValue::NULL, &args).map_err(|error| format!("dispatchInvokeExtension failed: {}", describe_js_rejection(&error)))?;
     let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() { JsFuture::from(promise.clone()).await.map_err(|error| format!("dispatchInvokeExtension promise failed: {}", describe_js_rejection(&error)))? } else { result };
     let text = resolved.as_string().ok_or_else(|| "dispatchInvokeExtension result not string".to_string())?;
-    dsl::os_pack::json::from_json_str::<semio_framework::kernel::InvocationResult>(&text).map_err(|error| format!("dispatchInvokeExtension result parse failed: {error}"))
+    semio_framework_pack_json::from_json_str::<semio_framework::kernel::InvocationResult>(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("dispatchInvokeExtension result parse failed: {error}"))
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -1351,21 +1396,21 @@ async fn push_scoped_contributions_js(handle: &Rc<JsValue>, instance_id: u32, ap
     let result = push.apply(&JsValue::NULL, &args).map_err(|error| format!("pushScopedContributions failed: {}", describe_js_rejection(&error)))?;
     let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() { JsFuture::from(promise.clone()).await.map_err(|error| format!("pushScopedContributions promise failed: {}", describe_js_rejection(&error)))? } else { result };
     let text = resolved.as_string().ok_or_else(|| "pushScopedContributions result not string".to_string())?;
-    dsl::os_pack::json::from_json_str::<semio_framework::kernel::InvocationResult>(&text).map_err(|error| format!("pushScopedContributions result parse failed: {error}"))
+    semio_framework_pack_json::from_json_str::<semio_framework::kernel::InvocationResult>(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("pushScopedContributions result parse failed: {error}"))
 }
 
 /// 🩺️ The cause, not the verb: a swallowed rejection here reported only `handleCommand promise
 /// failed` for every guest fault, command-address mistake and host-side throw alike
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[cfg(target_arch = "wasm32")]
-async fn handle_command_js(handle: &Rc<JsValue>, instance_id: u32, command_json: &str, view_state: &ViewModel) -> Result<semio_framework::kernel::InvocationResult, String> {
+async fn handle_command_js(handle: &Rc<JsValue>, instance_id: u32, command_json: &str, view_state: &ViewModel) -> Result<semio_framework::kernel::InvocationResult, ProgramFault> {
     let command = Reflect::get(handle.as_ref(), &JsValue::from_str("handleCommand")).map_err(|_| "handleCommand missing")?.dyn_into::<Function>().map_err(|_| "handleCommand is not callable")?;
     let context_json = serde_json::json!({ "viewStatePack": view_state_pack_base64(view_state), "actor": "local" }).to_string();
     let invocation_pack = invocation_pack_base64(command_json)?;
-    let result = command.call3(&JsValue::NULL, &JsValue::from_f64(instance_id as f64), &JsValue::from_str(&invocation_pack), &JsValue::from_str(&context_json)).map_err(|error| format!("handleCommand failed: {}", describe_js_rejection(&error)))?;
-    let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() { JsFuture::from(promise.clone()).await.map_err(|error| format!("handleCommand promise failed: {}", describe_js_rejection(&error)))? } else { result };
+    let result = command.call3(&JsValue::NULL, &JsValue::from_f64(instance_id as f64), &JsValue::from_str(&invocation_pack), &JsValue::from_str(&context_json)).map_err(|error| js_program_fault("handleCommand failed", &error))?;
+    let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() { JsFuture::from(promise.clone()).await.map_err(|error| js_program_fault("handleCommand promise failed", &error))? } else { result };
     let text = resolved.as_string().ok_or_else(|| "handleCommand result not string".to_string())?;
-    dsl::os_pack::json::from_json_str::<semio_framework::kernel::InvocationResult>(&text).map_err(|error| format!("handleCommand result parse failed: {error}"))
+    semio_framework_pack_json::from_json_str::<semio_framework::kernel::InvocationResult>(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| ProgramFault::from(format!("handleCommand result parse failed: {error}")))
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -1552,8 +1597,8 @@ fn browser_document_generation(surface_id: &str, revision: u64) -> u64 {
 /// @see `🏪️store/🦀️.rs` `pack_rt::pack_value_to_base64`, `💻️os/🟦️.ts` `packValueFromBase64`
 #[cfg(target_arch = "wasm32")]
 fn invocation_pack_base64(invocation_json: &str) -> Result<String, String> {
-    let parsed = dsl::os_pack::json::parse(invocation_json).map_err(|error| error.to_string())?;
-    let value = dsl::os_pack::json::to_dsl_value(&parsed);
+    let parsed = semio_framework_pack_json::parse(invocation_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
+    let value = semio_framework_pack_json::to_dsl_value(&parsed);
     Ok(dsl::os_store::pack_rt::pack_value_to_base64(&dsl::os_store::pack_rt::encode_wire_value(&value)))
 }
 
@@ -1689,7 +1734,8 @@ pub async fn load_wasm_plugins(plugin_filter: &str, modules_root: &std::path::Pa
 #[cfg(not(target_arch = "wasm32"))]
 pub async fn load_resolved_program(plugin_id: &str, component: &std::path::Path, descriptor: &std::path::Path, component_sha256: &str) -> Result<ProgramBridgeEntry, String> {
     use crate::native_runtime_modules::NativeJsonPages;
-    use dsl::{FromValue, ToValue};
+    use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
     let mut pages = read_native_json_pages(descriptor, semio_framework_os_kernel::os_directory::DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES).await?;
     let mut bytes = Vec::new();
     let read = std::io::Read::read_to_end(&mut NativeJsonPages::new(pages.iter().flat_map(|page| (0..page.page_count()).filter_map(move |index| page.page(index)))), &mut bytes);

@@ -1,7 +1,7 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
-  "_comment": "🎬️ ✳️any owns no mutation any more: the eight direct semantic vocabulary entries (six step-node kinds, two dependency-edge kinds) moved to 🪜️step and 🔗️dependency (ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION) so each has a real, non-wildcard owner. This contribution keeps the shared io codecs, the whole-document schema/snapshot/diff/editor/viewer surface, and the two carrier oracles below — `csv-rfc4180-reader` for the four row kinds and `serde-json-sequence-carrier-reader` for the four kinds only the JSON export carries — which apply registry-wide by capability, not by subset, so neither moves with the mutations that reference them.",
+  "_comment": "🎬️ The sequence parent owns no mutation (design §20.15): steps and dependency edges live in the composed content child (s.stdio.semio@v1/flow) and are edited only by that child's leaves, whose catalogs live with the stdio semio flow subset. This contribution keeps the carrier oracles of the subset's real csv/json exports and the identity round trip's recorded decision.",
   "oracles": [
     {
       "id": "csv-rfc4180-reader",
@@ -122,34 +122,6 @@
         ],
         "whyNoneQualifies": "s.sequence.sequence is a format this repository defines (isSemioNativeArtifact), so no third party reads or writes its documents; every candidate below models a neighbouring object and cannot apply or adjudicate this vocabulary's mutations. The owner's recorded debt stands: a verified native second implementation, written from the schema and the committed vectors, is what would discharge it."
       }
-    }
-  ],
-  "mutationCatalogs": [
-    {
-      "id": "sequence-1-any-step",
-      "capability": "sequence-1-step-mutate",
-      "standardDirectoryName": "🔖️1",
-      "subsetDirectoryName": "✳️any",
-      "kinds": [
-        "create-step",
-        "delete-step",
-        "move-step",
-        "edit-step-params",
-        "change-step-collapsed",
-        "duplicate-step"
-      ],
-      "vectors": []
-    },
-    {
-      "id": "sequence-1-any-dependency",
-      "capability": "sequence-1-dependency-mutate",
-      "standardDirectoryName": "🔖️1",
-      "subsetDirectoryName": "✳️any",
-      "kinds": [
-        "connect-steps",
-        "disconnect-steps"
-      ],
-      "vectors": []
     }
   ],
   "comparisonProfiles": [

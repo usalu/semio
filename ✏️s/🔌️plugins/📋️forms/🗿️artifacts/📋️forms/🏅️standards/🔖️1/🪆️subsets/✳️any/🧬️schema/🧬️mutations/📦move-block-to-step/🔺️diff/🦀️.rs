@@ -21,7 +21,7 @@ pub fn diff_move_block_to_step(payload: &MoveBlockToStep, base: &FormsSnapshot) 
         let mut blocks: Vec<_> = source_step.blocks.iter().filter(|b| b.id != payload.block_id).cloned().collect();
         let at = payload.index.min(blocks.len());
         if at == current_index {
-            return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Block \"{}\" is already at index {at} in step \"{}\".", payload.block_id, payload.step_id));
+            return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Block \"{}\" is already at index {at} in step \"{}\".", payload.block_id, payload.step_id));
         }
         blocks.insert(at, block);
         let patch = FormsStepPatch { blocks: Some(blocks), ..Default::default() };

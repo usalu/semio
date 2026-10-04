@@ -13,7 +13,7 @@ pub fn diff(payload: &super::BindFenestrationGlazingConstruction, base: &EnergyM
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Construction {} does not exist.", payload.construction_id.0), [payload.id.0.to_string()]);
     }
     if existing.glazing_construction_id == Some(payload.construction_id) {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Fenestration {} is already glazed with construction {}.", payload.id.0, payload.construction_id.0));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Fenestration {} is already glazed with construction {}.", payload.id.0, payload.construction_id.0));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.fenestrations.iter_mut().find(|item| item.id == payload.id) {

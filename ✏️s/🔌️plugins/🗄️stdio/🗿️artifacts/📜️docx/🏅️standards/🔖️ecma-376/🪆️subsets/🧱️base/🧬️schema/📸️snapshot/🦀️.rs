@@ -5,8 +5,9 @@ use crate::{
     STDIO_DOCX_DOCUMENT_SCHEMA,
 };
 use framework_schema::ArtifactSchema;
-use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_to_text, XmlDocument, XmlNode};
-use semio_s_artifact_stdio_zip::opc::{resolve_relationship_target, OpcPackage, OpcTargetMode, REL_TYPE_OFFICE_DOCUMENT};
+use semio_framework_value::list::PagedList;
+use semio_s_artifact_stdio_xml::schema::snapshot::{retained::RetainedXmlDocument, sqlite::{retire_xml_document, retire_xml_document_with_frontier}, xml_document_to_text, XmlDocument, XmlNode};
+use semio_s_artifact_stdio_zip::opc::{resolve_relationship_target, retained::RetainedOpcPackage, OpcPackage, OpcTargetMode, REL_TYPE_OFFICE_DOCUMENT};
 use std::collections::HashSet;
 
 //#region 🔖️DocxModel
@@ -124,12 +125,79 @@ pub struct DocxDocument {
 
 //#region 🔖️XmlParts
 /// 📄️ One authoritative XML-bearing OPC part. `OpcPackage.parts` contains only non-XML payloads.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetainedClone, value_derive::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DocxXmlPart {
     pub path: String,
     pub content_type: String,
-    pub document: XmlDocument,
+    pub document: RetainedXmlDocument,
+}
+
+pub const DOCX_MAX_XML_PARTS: usize = 1_048_576;
+pub type DocxXmlParts = PagedList<DocxXmlPart, DOCX_MAX_XML_PARTS>;
+
+struct RetiringXmlDocument(Option<XmlDocument>);
+impl Drop for RetiringXmlDocument { fn drop(&mut self) { if let Some(document)=self.0.take(){retire_xml_document(document);} } }
+
+impl DocxXmlPart {
+    pub fn try_from_document(path: String, content_type: String, document: XmlDocument) -> Result<Self, semio_framework_value::ValueError> {
+        let mut source=RetiringXmlDocument(Some(document));
+        let retained=RetainedXmlDocument::try_from_document(source.0.as_ref().expect("owned DOCX XML source"))?;
+        retire_xml_document(source.0.take().expect("owned DOCX XML source"));
+        Ok(Self { path, content_type, document: retained })
+    }
+
+    pub fn try_from_document_controlled(
+        path: String,
+        content_type: String,
+        document: XmlDocument,
+        control: &mut semio_framework_value::NativeDecodeControl<'_>,
+    ) -> Result<Self, semio_framework_value::ValueError> {
+        let mut source=RetiringXmlDocument(Some(document));
+        let retained=RetainedXmlDocument::try_from_document_controlled(source.0.as_ref().expect("owned DOCX XML source"),control)?;
+        let frontier=control.allocate_vec::<XmlNode>(retained.nodes.len())?;
+        retire_xml_document_with_frontier(source.0.take().expect("owned DOCX XML source"),frontier);
+        Ok(Self { path, content_type, document: retained })
+    }
+
+    pub fn materialize_document(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<XmlDocument, semio_framework_value::ValueError> {
+        self.document.materialize(control)
+    }
+
+    pub fn materialize_document_exact(&self) -> Result<XmlDocument, semio_framework_value::ValueError> {
+        self.document.materialize_exact()
+    }
+
+    pub fn replace_document(&mut self, document: XmlDocument) -> Result<(), semio_framework_value::ValueError> {
+        let mut source=RetiringXmlDocument(Some(document));
+        self.document=RetainedXmlDocument::try_from_document(source.0.as_ref().expect("owned DOCX XML source"))?;
+        retire_xml_document(source.0.take().expect("owned DOCX XML source"));
+        Ok(())
+    }
+}
+
+pub fn docx_xml_parts_from_iter_controlled(
+    values: impl IntoIterator<Item = DocxXmlPart>,
+    control: &mut semio_framework_value::NativeDecodeControl<'_>,
+) -> Result<DocxXmlParts, semio_framework_value::ValueError> {
+    let mut output = DocxXmlParts::default();
+    for value in values {
+        while !output.has_reserved_slot() {
+            let required = output.next_allocation_bytes()?;
+            control.charge(required)?;
+            let progress = output.reserve_one(required).map_err(|error| semio_framework_value::ValueError::from(error.refusal()))?;
+            if !progress.progressed {
+                return Err(semio_framework_value::ValueError::new(
+                    semio_framework_value::ValueRefusalKind::InvariantViolated,
+                    "DOCX XML part controlled allocation did not progress",
+                ));
+            }
+        }
+        output
+            .push_reserved(value)
+            .map_err(|_| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "DOCX XML part controlled append rejected its admitted slot"))?;
+    }
+    Ok(output)
 }
 
 /// 📄️ Classifies XML-bearing package parts without inferring semantic roles from fixed paths.
@@ -142,7 +210,7 @@ pub fn docx_part_is_xml(path: &str, content_type: &str) -> bool {
 //#endregion 🔖️XmlParts
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.docx")]
 pub struct DocxSnapshot {
@@ -151,11 +219,11 @@ pub struct DocxSnapshot {
     /// 📦️ OPC metadata and non-XML payloads.
     #[state(artifact)]
     #[value(default)]
-    pub opc: OpcPackage,
+    pub opc: RetainedOpcPackage,
     /// 📄️ Complete logical XML parts, each represented exactly once.
     #[state(artifact)]
     #[value(default)]
-    pub xml_parts: Vec<DocxXmlPart>,
+    pub xml_parts: DocxXmlParts,
 }
 
 impl Default for DocxSnapshot {
@@ -167,10 +235,10 @@ impl Default for DocxSnapshot {
 impl DocxSnapshot {
     /// 🏗️ Builds a snapshot from non-XML OPC state plus authoritative logical XML parts.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn from_parts(mut opc: OpcPackage, mut xml_parts: Vec<DocxXmlPart>) -> Self {
+    pub fn from_parts(mut opc: OpcPackage, mut xml_parts: Vec<DocxXmlPart>) -> Result<Self, semio_framework_value::ValueError> {
         opc.parts.sort_by(|left, right| left.path.cmp(&right.path));
         xml_parts.sort_by(|left, right| left.path.cmp(&right.path));
-        Self { schema: STDIO_DOCX_DOCUMENT_SCHEMA.into(), opc, xml_parts }
+        Ok(Self { schema: STDIO_DOCX_DOCUMENT_SCHEMA.into(), opc: RetainedOpcPackage::try_from_package(opc)?, xml_parts: DocxXmlParts::try_from_iter(xml_parts)? })
     }
 
     /// 📄️ Finds one authoritative logical XML part by normalized OPC path.
@@ -196,44 +264,46 @@ impl DocxSnapshot {
             let lower = path.to_ascii_lowercase();
             lower == "[content_types].xml" || lower == "_rels/.rels" || lower.ends_with(".rels")
         }
-        fn role_relationship<'a>(snapshot: &'a DocxSnapshot, owner: &str, kinds: &[&str], role: &str) -> Result<Option<&'a semio_s_artifact_stdio_zip::opc::OpcRelationship>, DocxError> {
-            let matches: Vec<_> = snapshot.opc.relationships_for(owner).iter().filter(|relationship| kinds.contains(&relationship.rel_type.as_str())).collect();
+        fn role_relationship<'a>(snapshot: &'a DocxSnapshot, owner: &str, kinds: &[&str], role: &str) -> Result<Option<&'a semio_s_artifact_stdio_zip::opc::retained::RetainedOpcRelationship>, DocxError> {
+            let matches: Vec<_> = snapshot.opc.relationships_for(owner).into_iter().flat_map(|relationships| relationships.iter()).filter(|relationship| kinds.iter().any(|kind| relationship.rel_type.eq_str(kind))).collect();
             if matches.len() > 1 {
                 return Err(DocxError::Malformed(format!("multiple {role} relationships for {owner}")));
             }
-            if matches.first().is_some_and(|relationship| relationship.target_mode != OpcTargetMode::Internal) {
+            if matches.first().is_some_and(|relationship| relationship.target_mode != semio_s_artifact_stdio_zip::opc::retained::RetainedOpcTargetMode::Internal) {
                 return Err(DocxError::Malformed(format!("{role} relationship for {owner} is external")));
             }
             Ok(matches.into_iter().next())
         }
 
         let mut paths = HashSet::new();
-        for part in &self.xml_parts {
+        for part in self.xml_parts.iter() {
             if !valid_path(&part.path) || metadata_path(&part.path) {
                 return Err(DocxError::Malformed(format!("invalid XML content part path: {}", part.path)));
             }
             if !docx_part_is_xml(&part.path, &part.content_type) {
                 return Err(DocxError::Malformed(format!("XML authority carries a non-XML content type: {}", part.path)));
             }
-            if !paths.insert(part.path.as_str()) {
+            if !paths.insert(part.path.clone()) {
                 return Err(DocxError::Malformed(format!("duplicate XML part authority: {}", part.path)));
             }
-            if self.opc.content_types.resolve(&part.path) != Some(part.content_type.as_str()) {
+            if self.opc.content_types.resolve(&part.path).is_none_or(|content_type| !content_type.eq_str(&part.content_type)) {
                 return Err(DocxError::Malformed(format!("content type metadata disagrees for XML part {}", part.path)));
             }
         }
-        for part in &self.opc.parts {
-            if !valid_path(&part.path) || metadata_path(&part.path) {
-                return Err(DocxError::Malformed(format!("invalid binary content part path: {}", part.path)));
+        for part in self.opc.parts.iter() {
+            let path = part.path.to_string_owner();
+            let content_type = part.content_type.to_string_owner();
+            if !valid_path(&path) || metadata_path(&path) {
+                return Err(DocxError::Malformed(format!("invalid binary content part path: {path}")));
             }
-            if docx_part_is_xml(&part.path, &part.content_type) {
-                return Err(DocxError::Malformed(format!("binary authority carries an XML content part: {}", part.path)));
+            if docx_part_is_xml(&path, &content_type) {
+                return Err(DocxError::Malformed(format!("binary authority carries an XML content part: {path}")));
             }
-            if !paths.insert(part.path.as_str()) {
-                return Err(DocxError::Malformed(format!("duplicate OPC part authority: {}", part.path)));
+            if !paths.insert(path.clone()) {
+                return Err(DocxError::Malformed(format!("duplicate OPC part authority: {path}")));
             }
-            if self.opc.content_types.resolve(&part.path) != Some(part.content_type.as_str()) {
-                return Err(DocxError::Malformed(format!("content type metadata disagrees for binary part {}", part.path)));
+            if self.opc.content_types.resolve(&path).is_none_or(|resolved| !resolved.eq_str(&content_type)) {
+                return Err(DocxError::Malformed(format!("content type metadata disagrees for binary part {path}")));
             }
         }
         for owner in self.opc.relationships.keys().filter(|owner| !owner.is_empty()) {
@@ -242,12 +312,12 @@ impl DocxSnapshot {
             }
         }
         let main = role_relationship(self, "", &[REL_TYPE_OFFICE_DOCUMENT, STRICT_REL_TYPE_OFFICE_DOCUMENT], "officeDocument")?.ok_or(DocxError::MissingMainDocumentRelationship)?;
-        let main_path = resolve_relationship_target("", &main.target);
+        let main_path = resolve_relationship_target("", &main.target.to_string_owner());
         if self.xml_part(&main_path).is_none() {
             return Err(DocxError::MissingPart(main_path));
         }
         if let Some(styles) = role_relationship(self, &main_path, &[REL_TYPE_STYLES, STRICT_REL_TYPE_STYLES], "styles")? {
-            let styles_path = resolve_relationship_target(&main_path, &styles.target);
+            let styles_path = resolve_relationship_target(&main_path, &styles.target.to_string_owner());
             if self.xml_part(&styles_path).is_none() {
                 return Err(DocxError::MissingPart(styles_path));
             }
@@ -262,7 +332,10 @@ impl DocxSnapshot {
 
     pub fn part_text(&self, path: &str) -> Option<String> {
         let key = path.trim_start_matches('/');
-        self.xml_part(key).map(|part| xml_document_to_text(&part.document)).or_else(|| self.opc.part_bytes(key).and_then(|bytes| String::from_utf8(bytes.to_vec()).ok()))
+        self.xml_part(key)
+            .and_then(|part| part.document.materialize_exact().ok())
+            .map(|document| xml_document_to_text(&document))
+            .or_else(|| self.opc.part_bytes(key).and_then(|bytes| String::from_utf8(bytes.to_vec_owner()).ok()))
     }
 }
 //#endregion 🔖️Snapshot
@@ -271,13 +344,13 @@ impl DocxSnapshot {
 impl store::ArtifactDsl for DocxSnapshot {
  const EXTENSION:&'static str="docx";
  fn envelope_id()->&'static str{"stdio.docx"}
- fn parse_dsl(text:&str)->Result<Self,store::TextError>{native::decode_text(text,&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_|true,semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits::default())).map_err(|error|store::TextError::new(error,dsl::TextSpan::at(1,1)))}
+ fn parse_dsl(text:&str)->Result<Self,semio_framework_diagnostic::TextError>{native::decode_text(text,&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_|true,semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits::default())).map_err(|error|semio_framework_diagnostic::TextError::from_value_error(error,semio_framework_diagnostic::TextSpan::at(1,1)))}
  fn print_dsl(&self)->String{match native::encode(self,semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding::Text,&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_|true,semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits::default())).expect("DOCX native ownership admission"){semio_framework_os_kernel::io_schema::IoPayload::Text(text)=>text,semio_framework_os_kernel::io_schema::IoPayload::Binary(_)=>unreachable!()}}
 }
 impl store::ArtifactPack for DocxSnapshot {
  fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}
- fn encode_pack_with(&self,options:&store::PackEncodeOptions)->Result<Vec<u8>,store::PackError>{match native::encode(self,semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding::Binary,&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_|true,native::pack_limits(&options.limits))).map_err(store::PackError::Schema)?{semio_framework_os_kernel::io_schema::IoPayload::Binary(bytes)=>Ok(bytes),semio_framework_os_kernel::io_schema::IoPayload::Text(_)=>unreachable!()}}
- fn decode_pack_with(bytes:&[u8],options:&store::PackDecodeOptions)->Result<Self,store::PackError>{native::decode_binary(bytes,&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_|true,native::pack_limits(&options.limits))).map_err(store::PackError::Schema)}
+ fn encode_pack_with(&self,options:&store::PackEncodeOptions)->Result<Vec<u8>,store::PackError>{match native::encode(self,semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding::Binary,&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_|true,native::pack_limits(&options.limits))).map_err(store::PackError::from)?{semio_framework_os_kernel::io_schema::IoPayload::Binary(bytes)=>Ok(bytes),semio_framework_os_kernel::io_schema::IoPayload::Text(_)=>unreachable!()}}
+ fn decode_pack_with(bytes:&[u8],options:&store::PackDecodeOptions)->Result<Self,store::PackError>{native::decode_binary(bytes,&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_|true,native::pack_limits(&options.limits))).map_err(store::PackError::from)}
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 

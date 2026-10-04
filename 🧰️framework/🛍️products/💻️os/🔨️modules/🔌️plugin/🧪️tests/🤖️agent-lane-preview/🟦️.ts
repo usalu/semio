@@ -2,12 +2,12 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import Ajv from "ajv";
 
-type Entry = "progress" | "checkpoint" | "yield" | "complete" | "cancelled" | Readonly<{ fault: string }>;
+type TypedFault = Readonly<{ origin: string; code: string; severity: string; message: string; scope: Readonly<Record<string, string>>; span?: Readonly<{ line: number; column: number; length: number }>; params?: Readonly<Record<string, string>>; retryable: boolean }>;
+type Entry = "progress" | "checkpoint" | "yield" | "complete" | "cancelled" | Readonly<{ fault: string | TypedFault }>;
 type Refusal = Readonly<{ code: string; message?: string }>;
 type Verdict = Readonly<{ steps: number } | { fault: Refusal }>;
 type Fixture = Readonly<{ why: string; budget: Readonly<{ wallMicros: number; turns: number }>; cases: Readonly<{ name: string; clockMicrosPerRead: number; cancelled?: boolean; script: Entry[]; verdict: Verdict }>[] }>;
 
-const REDUCER_PREFIX = "retained command reducer rejected operation: ";
 const ajv = new Ajv({ strict: true, allErrors: true });
 
 /** 🧪️ One JSON Schema compiled by AJV as a plain predicate — a match decides a branch, it never narrows the value's static type. */
@@ -20,19 +20,17 @@ function schemaKind(schema: Readonly<Record<string, unknown>>): (value: unknown)
 const kinds = {
   complete: schemaKind({ const: "complete" }),
   cancelled: schemaKind({ const: "cancelled" }),
-  fault: schemaKind({ type: "object", required: ["fault"], properties: { fault: { type: "string" } } }),
-  framed: schemaKind({ type: "string", pattern: "^[^\\u001f]+\\u001f" }),
-  reducer: schemaKind({ type: "string", pattern: "^retained command reducer rejected operation: [^ ]+ " }),
+  fault: schemaKind({ type: "object", required: ["fault"], properties: { fault: { anyOf: [{ type: "string" }, { type: "object" }] } } }),
+  typedFault: schemaKind({ type: "object", additionalProperties: false, required: ["origin", "code", "severity", "message", "scope", "retryable"], properties: {
+    origin: { type: "string" }, code: { type: "string", minLength: 1 }, severity: { type: "string" }, message: { type: "string" }, scope: { type: "object" },
+    span: { type: "object", additionalProperties: false, required: ["line", "column", "length"], properties: { line: { type: "integer", minimum: 0 }, column: { type: "integer", minimum: 0 }, length: { type: "integer", minimum: 0 } } },
+    params: { type: "object", additionalProperties: { type: "string" } }, retryable: { type: "boolean" },
+  } }),
 };
 
-/** 🧯️ What the shell's fault page carries for one job fault detail, then the reducer's own code when the reducer wrote it. */
-function refusal(detail: string): Refusal {
-  const at = detail.indexOf("\u001f");
-  const [code, message] = kinds.framed(detail) ? [detail.slice(0, at), detail.slice(at + 1)] : ["interactive-job.app-owned-output", at === 0 ? detail.slice(1) : detail];
-  if (!kinds.reducer(message)) return { code, message };
-  const rest = message.slice(REDUCER_PREFIX.length);
-  const space = rest.indexOf(" ");
-  return { code: rest.slice(0, space), message: rest.slice(space + 1) };
+/** 🧯️ What the shell's canonical typed Fault page carries; foreign bytes remain app-owned output. */
+function refusal(detail: string | TypedFault): Refusal {
+  return kinds.typedFault(detail) ? { code: (detail as TypedFault).code, message: (detail as TypedFault).message } : { code: "interactive-job.app-owned-output", message: String(detail) };
 }
 
 /** 🔍️ The verdict of one script: its first terminal entry, or the budget refusal when it has none. */
@@ -43,7 +41,7 @@ function verdict(script: Entry[], cancelled: boolean): Verdict {
   const entry = script[index]!;
   if (kinds.complete(entry)) return { steps: index + 1 };
   if (kinds.cancelled(entry)) return { fault: { code: "interactive-job.cancelled" } };
-  return { fault: refusal((entry as Readonly<{ fault: string }>).fault) };
+  return { fault: refusal((entry as Readonly<{ fault: string | TypedFault }>).fault) };
 }
 
 /** ⚖️ The AJV twin of the Rust law `app::agent_lane_preview_tests`: every case of the language-agnostic agent-lane preview fixture answered exactly as written. */

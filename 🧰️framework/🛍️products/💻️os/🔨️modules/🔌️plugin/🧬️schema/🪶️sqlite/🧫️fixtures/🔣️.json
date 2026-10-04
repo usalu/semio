@@ -1,6 +1,17 @@
 {
   "dialect": "s.testkit.w1c-fixture@1/strict",
   "encoding": "text",
-  "payload": [48],
-  "limits": {"max_file_bytes": 1048576, "max_value_bytes": 262144, "max_schema_bytes": 65536, "max_rows": 4096, "max_columns": 64, "max_tables": 64, "max_pages": 256}
+  "payload": [
+    48
+  ],
+  "limits": {
+    "max_file_bytes": 1048576,
+    "max_value_bytes": 262144,
+    "max_schema_bytes": 65536,
+    "max_rows": 4096,
+    "max_columns": 64,
+    "max_tables": 64,
+    "max_pages": 256,
+    "max_allocation_bytes": 1048576
+  }
 }

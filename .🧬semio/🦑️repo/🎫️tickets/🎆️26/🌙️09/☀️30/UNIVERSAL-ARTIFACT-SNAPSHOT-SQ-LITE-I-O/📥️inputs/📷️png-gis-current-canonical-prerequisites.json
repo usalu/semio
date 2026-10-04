@@ -1,0 +1,45 @@
+{
+  "basis": "Actual GIS zero-assertion owning compiler prerequisite; canonical first-party owners",
+  "rows": [
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "pairs": [
+        [
+          "dsl::DslRecord",
+          "semio_framework_dsl_record_derive::DslRecord",
+          1
+        ]
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️paint-native-samples/🦀️.rs",
+      "pairs": [
+        [
+          "dsl::DslRecord",
+          "semio_framework_dsl_record_derive::DslRecord",
+          1
+        ]
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+      "pairs": [
+        [
+          "dsl::DslRecord",
+          "semio_framework_dsl_record_derive::DslRecord",
+          2
+        ],
+        [
+          "semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::decompress_zlib",
+          "semio_s_artifact_stdio_deflate::schema::snapshot::decompress_zlib",
+          1
+        ],
+        [
+          "semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::compress_zlib",
+          "semio_s_artifact_stdio_deflate::schema::snapshot::compress_zlib",
+          1
+        ]
+      ]
+    }
+  ]
+}

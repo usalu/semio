@@ -61,11 +61,11 @@ fn uv_canvas_layers_json(doc: &LowpolyDocument, view: LowpolyView<'_>, texture_c
     let object_id = doc.active_object_id().to_string();
     let object_id = if object_id.is_empty() { resolve_active_object_id(view.snapshot, view.config) } else { object_id };
     let scale = LOWPOLY_PAINT_TEXTURE_SIZE as f64;
-    let mut wireframe: Option<dsl::DslValue> = None;
+    let mut wireframe: Option<semio_framework_value::DslValue> = None;
     if let Ok(mesh) = doc.active_mesh() {
         if let Ok(transfer) = LowpolyDocument::tessellate_transfer_json(mesh) {
-            let edge_uvs: Vec<f32> = transfer.get("edgeUvs").and_then(|value| dsl::FromValue::from_value(value.clone()).ok()).unwrap_or_default();
-            let edge_is_seam: Vec<u8> = transfer.get("edgeIsSeam").and_then(|value| dsl::FromValue::from_value(value.clone()).ok()).unwrap_or_default();
+            let edge_uvs: Vec<f32> = transfer.get("edgeUvs").and_then(|value| semio_framework_value::FromValue::from_value(value.clone()).ok()).unwrap_or_default();
+            let edge_is_seam: Vec<u8> = transfer.get("edgeIsSeam").and_then(|value| semio_framework_value::FromValue::from_value(value.clone()).ok()).unwrap_or_default();
             // ✂️ ~48 printed bytes per segment (two rounded points + a seam flag).
             let segments = (LOWPOLY_UV_LAYERS_BUDGET_BYTES / 48).min(edge_uvs.len() / 4);
             let round = |value: f64| (value * 10.0).round() / 10.0;
@@ -75,31 +75,31 @@ fn uv_canvas_layers_json(doc: &LowpolyDocument, view: LowpolyView<'_>, texture_c
                 points.push([round(chunk[2] as f64 * scale - scale * 0.5), round((1.0 - chunk[3]) as f64 * scale - scale * 0.5)]);
             }
             let seams: Vec<u8> = edge_is_seam.into_iter().take(segments).collect();
-            wireframe = Some(dsl::DslValue::object([
-                ("id".to_string(), dsl::DslValue::String("uv-wireframe".to_string())),
-                ("kind".to_string(), dsl::DslValue::String("polyline".to_string())),
-                ("name".to_string(), dsl::DslValue::String("UV Wireframe".to_string())),
-                ("points".to_string(), dsl::ToValue::to_value(&points)),
-                ("seams".to_string(), dsl::ToValue::to_value(&seams)),
+            wireframe = Some(semio_framework_value::DslValue::object([
+                ("id".to_string(), semio_framework_value::DslValue::String("uv-wireframe".to_string())),
+                ("kind".to_string(), semio_framework_value::DslValue::String("polyline".to_string())),
+                ("name".to_string(), semio_framework_value::DslValue::String("UV Wireframe".to_string())),
+                ("points".to_string(), semio_framework_value::ToValue::to_value(&points)),
+                ("seams".to_string(), semio_framework_value::ToValue::to_value(&seams)),
             ]));
         }
     }
-    let wireframe_bytes = wireframe.as_ref().map_or(0, |layer| dsl::json::to_json_string(layer).len());
-    let mut layers: Vec<dsl::DslValue> = Vec::new();
+    let wireframe_bytes = wireframe.as_ref().map_or(0, |layer| semio_framework_pack_json::to_json_string(layer).len());
+    let mut layers: Vec<semio_framework_value::DslValue> = Vec::new();
     if let Some(texture) = texture_cache.get(&object_id).filter(|texture| texture.len() + wireframe_bytes + 256 <= LOWPOLY_UV_LAYERS_BUDGET_BYTES) {
-        layers.push(dsl::DslValue::object([
-            ("id".to_string(), dsl::DslValue::String("uv-paint-texture".to_string())),
-            ("kind".to_string(), dsl::DslValue::String("image".to_string())),
-            ("name".to_string(), dsl::DslValue::String("Paint".to_string())),
-            ("x".to_string(), dsl::DslValue::float(-scale * 0.5)),
-            ("y".to_string(), dsl::DslValue::float(-scale * 0.5)),
-            ("width".to_string(), dsl::DslValue::float(scale)),
-            ("height".to_string(), dsl::DslValue::float(scale)),
-            ("dataUrl".to_string(), dsl::DslValue::String(format!("data:image/png;base64,{texture}"))),
+        layers.push(semio_framework_value::DslValue::object([
+            ("id".to_string(), semio_framework_value::DslValue::String("uv-paint-texture".to_string())),
+            ("kind".to_string(), semio_framework_value::DslValue::String("image".to_string())),
+            ("name".to_string(), semio_framework_value::DslValue::String("Paint".to_string())),
+            ("x".to_string(), semio_framework_value::DslValue::float(-scale * 0.5)),
+            ("y".to_string(), semio_framework_value::DslValue::float(-scale * 0.5)),
+            ("width".to_string(), semio_framework_value::DslValue::float(scale)),
+            ("height".to_string(), semio_framework_value::DslValue::float(scale)),
+            ("dataUrl".to_string(), semio_framework_value::DslValue::String(format!("data:image/png;base64,{texture}"))),
         ]));
     }
     layers.extend(wireframe);
-    dsl::json::to_json_string(&layers)
+    semio_framework_pack_json::to_json_string(&layers)
 }
 
 pub fn render(view: LowpolyView<'_>, loaded: Option<&LowpolyDocument>, texture_cache: &HashMap<String, String>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {

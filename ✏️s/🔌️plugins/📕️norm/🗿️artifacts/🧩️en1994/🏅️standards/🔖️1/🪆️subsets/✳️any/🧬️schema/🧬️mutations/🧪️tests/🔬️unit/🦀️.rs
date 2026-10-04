@@ -6,7 +6,7 @@ use protocol::{Mutation, SemanticMutation};
 fn round_trip(base: &En1994Snapshot, operation: &En1994Mutation) -> En1994Snapshot {
     let (forward, _messages) = protocol::apply_mutation(base, operation).expect("valid mutation");
     let mut restored = forward.clone();
-    for back in operation.inverse(base) {
+    for back in operation.inverse(base).expect("valid retained mutation inverse fixture") {
         let (next, _messages) = protocol::apply_mutation(&restored, &back).expect("valid inverse mutation");
         restored = next;
     }

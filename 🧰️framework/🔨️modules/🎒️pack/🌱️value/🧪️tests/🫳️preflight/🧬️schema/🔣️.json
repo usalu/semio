@@ -1,0 +1,156 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "contract",
+    "csv",
+    "tsv",
+    "longText",
+    "distinctSymbols",
+    "repeatedInlineSymbols",
+    "longSchemaMetadata"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "contract": {
+      "const": {
+        "measurement": "exactCanonicalOrdinaryBytes",
+        "packCodec": 1,
+        "ownership": "borrowedSourceAndStaticSchema",
+        "inlineSymbols": 64,
+        "spill": "sameCallerFullRequestedBacking",
+        "fileLimit": "exactPassMinusOneWorkLimit",
+        "failureOwner": "actualReturnedDiagnosticCapacity",
+        "retainedSource": "unchanged",
+        "cancel": "startInteriorMaterializedSpill"
+      }
+    },
+    "csv": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema",
+          "hasHeader",
+          "records"
+        ],
+        "properties": {
+          "schema": {
+            "type": "string"
+          },
+          "hasHeader": {
+            "type": "boolean"
+          },
+          "records": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "value",
+                  "quoted"
+                ],
+                "properties": {
+                  "value": {
+                    "type": "string"
+                  },
+                  "quoted": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "tsv": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema",
+          "records",
+          "trailingNewline",
+          "lineEnding"
+        ],
+        "properties": {
+          "schema": {
+            "type": "string"
+          },
+          "records": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "trailingNewline": {
+            "type": "boolean"
+          },
+          "lineEnding": {
+            "enum": [
+              "lf",
+              "crlf"
+            ]
+          }
+        }
+      }
+    },
+    "longText": {
+      "const": {
+        "text": "Grüße雪\u0000",
+        "repeat": 20000
+      }
+    },
+    "distinctSymbols": {
+      "const": {
+        "prefix": "symbol.雪.",
+        "count": 257,
+        "repeat": 2
+      }
+    },
+    "repeatedInlineSymbols": {
+      "const": {
+        "text": "cell",
+        "repeat": 1000
+      }
+    },
+    "longSchemaMetadata": {
+      "const": {
+        "prefix": "m",
+        "repeat": 131072,
+        "suffixes": [
+          "z",
+          "a"
+        ],
+        "pageBytes": 65536,
+        "order": [
+          "a",
+          "z"
+        ],
+        "comparisonCases": [
+          "field",
+          "enum",
+          "statement",
+          "reference"
+        ],
+        "schemaHash": "85c1033fc3e56fd10679f16ffac53d38ba7b38e432076d2b4a20087e87f91a6f"
+      }
+    }
+  }
+}

@@ -279,7 +279,7 @@ impl ArtifactSerializer for SemioBrepToStep {
     const INTO: Dialect = STEP_DIALECT;
 
     async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        let doc = build_part21(from).map_err(|m| store::PackError::Schema(format!("semio brep -> step: {m}")))?;
+        let doc = build_part21(from).map_err(|m| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("semio brep -> step: {m}"))))?;
         Ok(StepSnapshot::from_part21_document(&doc))
     }
 }

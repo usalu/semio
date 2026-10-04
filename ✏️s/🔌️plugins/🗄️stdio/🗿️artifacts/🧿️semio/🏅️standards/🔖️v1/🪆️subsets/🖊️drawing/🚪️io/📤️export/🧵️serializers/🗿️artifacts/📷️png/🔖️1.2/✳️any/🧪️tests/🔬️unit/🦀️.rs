@@ -63,7 +63,7 @@ fn premultiplied(rgba8: &[u8]) -> Vec<f32> {
 /// 🔮️ resvg (third-party, test-only) renders the svg leaf's output of the same drawing.
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn resvg_premultiplied(drawing: &SemioDrawingSnapshot, width: u32, height: u32) -> Vec<f32> {
-    let svg = semio_framework_plugin::resolve_ready(SemioDrawingToSvg::serialize(drawing)).expect("svg leaf");
+    let svg = ::semio_framework_async::poll::resolve_ready(SemioDrawingToSvg::serialize(drawing)).expect("svg leaf");
     let text = String::from_utf8(svg.export_utf8().expect("svg bytes")).expect("utf-8 svg");
     let tree = resvg::usvg::Tree::from_str(&text, &resvg::usvg::Options::default()).expect("resvg parses the svg leaf output");
     let mut pixmap = resvg::tiny_skia::Pixmap::new(width, height).expect("pixmap");
@@ -119,10 +119,10 @@ fn the_raster_matches_resvg_rendering_the_svg_export_of_the_same_drawing() {
 #[test]
 fn png_bytes_decode_back_to_the_same_pixels() {
     let scene = scene();
-    let png = semio_framework_plugin::resolve_ready(SemioDrawingToPng::serialize(&scene)).expect("png leaf");
+    let png = ::semio_framework_async::poll::resolve_ready(SemioDrawingToPng::serialize(&scene)).expect("png leaf");
     let bytes = semio_s_artifact_stdio_png::io::encode_png(&png).expect("encode");
     assert_eq!(&bytes[..8], b"\x89PNG\r\n\x1a\n");
-    let decoded = semio_s_artifact_stdio_png::io::decode_png(&bytes).expect("decode");
+    let decoded = semio_s_artifact_stdio_png::io::project_png(&bytes).expect("decode projection");
     assert_eq!((decoded.width, decoded.height, decoded.pixels), (240, 160, rasterize_drawing(&scene).expect("raster").rgba8));
 }
 

@@ -3,267 +3,156 @@
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/snapshot.json",
   "title": "TiffSnapshot",
   "type": "object",
+  "additionalProperties": false,
   "$defs": {
-    "TiffByteOrder": {
-      "type": "string",
-      "enum": [
-        "littleEndian",
-        "bigEndian"
-      ]
+    "Byte": { "type": "integer", "minimum": 0, "maximum": 255 },
+    "UInt16": { "type": "integer", "minimum": 0, "maximum": 65535 },
+    "UInt32": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+    "Int8": { "type": "integer", "minimum": -128, "maximum": 127 },
+    "Int16": { "type": "integer", "minimum": -32768, "maximum": 32767 },
+    "Int32": { "type": "integer", "minimum": -2147483648, "maximum": 2147483647 },
+    "Binary32": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bits"],
+      "properties": { "bits": { "$ref": "#/$defs/UInt32", "x-semio-ui": { "label": { "en": "Bits", "de": "Bits" } } } }
     },
+    "Binary64": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bits"],
+      "properties": { "bits": { "type": "string", "pattern": "^(0|[1-9][0-9]{0,19})$", "x-semio-ui": { "label": { "en": "Bits", "de": "Bits" } } } }
+    },
+    "TiffByteOrder": { "type": "string", "enum": ["littleEndian", "bigEndian"] },
     "TiffFieldType": {
       "type": "string",
-      "enum": [
-        "byte",
-        "ascii",
-        "short",
-        "long",
-        "rational",
-        "sByte",
-        "undefined",
-        "sShort",
-        "sLong",
-        "sRational",
-        "float",
-        "double"
-      ],
-      "description": "TIFF6 §2 Table 2 — the 12 real IFD entry field types."
+      "enum": ["byte", "ascii", "short", "long", "rational", "sByte", "undefined", "sShort", "sLong", "sRational", "float", "double"]
+    },
+    "UnsignedRational": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": { "$ref": "#/$defs/UInt32" }
+    },
+    "SignedRational": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": { "$ref": "#/$defs/Int32" }
     },
     "TiffValues": {
-      "type": "object",
-      "description": "Adjacently-tagged (kind/value) typed union — `value`'s real shape depends on `kind` (number[] for most, string for ascii, [number,number][] for rational/sRational).",
-      "required": [
-        "kind",
-        "value"
-      ],
-      "properties": {
-        "kind": {
-          "$ref": "#/$defs/TiffFieldType",
-          "x-semio-ui": {
-            "options": {
-              "byte": {
-                "en": "BYTE (8-bit unsigned)",
-                "de": "BYTE (8 Bit, vorzeichenlos)"
-              },
-              "ascii": {
-                "en": "ASCII (7-bit text)",
-                "de": "ASCII (7-Bit-Text)"
-              },
-              "short": {
-                "en": "SHORT (16-bit unsigned)",
-                "de": "SHORT (16 Bit, vorzeichenlos)"
-              },
-              "long": {
-                "en": "LONG (32-bit unsigned)",
-                "de": "LONG (32 Bit, vorzeichenlos)"
-              },
-              "rational": {
-                "en": "RATIONAL (unsigned fraction)",
-                "de": "RATIONAL (vorzeichenloser Bruch)"
-              },
-              "sByte": {
-                "en": "SBYTE (8-bit signed)",
-                "de": "SBYTE (8 Bit, vorzeichenbehaftet)"
-              },
-              "undefined": {
-                "en": "UNDEFINED (raw bytes)",
-                "de": "UNDEFINED (Rohbytes)"
-              },
-              "sShort": {
-                "en": "SSHORT (16-bit signed)",
-                "de": "SSHORT (16 Bit, vorzeichenbehaftet)"
-              },
-              "sLong": {
-                "en": "SLONG (32-bit signed)",
-                "de": "SLONG (32 Bit, vorzeichenbehaftet)"
-              },
-              "sRational": {
-                "en": "SRATIONAL (signed fraction)",
-                "de": "SRATIONAL (vorzeichenbehafteter Bruch)"
-              },
-              "float": {
-                "en": "FLOAT (32-bit IEEE)",
-                "de": "FLOAT (32 Bit, IEEE)"
-              },
-              "double": {
-                "en": "DOUBLE (64-bit IEEE)",
-                "de": "DOUBLE (64 Bit, IEEE)"
-              }
-            }
-          }
-        },
-        "value": {}
-      }
+      "oneOf": [
+        { "$ref": "#/$defs/ByteValues" },
+        { "$ref": "#/$defs/AsciiValues" },
+        { "$ref": "#/$defs/ShortValues" },
+        { "$ref": "#/$defs/LongValues" },
+        { "$ref": "#/$defs/RationalValues" },
+        { "$ref": "#/$defs/SByteValues" },
+        { "$ref": "#/$defs/UndefinedValues" },
+        { "$ref": "#/$defs/SShortValues" },
+        { "$ref": "#/$defs/SLongValues" },
+        { "$ref": "#/$defs/SRationalValues" },
+        { "$ref": "#/$defs/FloatValues" },
+        { "$ref": "#/$defs/DoubleValues" }
+      ]
+    },
+    "ByteValues": { "$ref": "#/$defs/ByteSequence" },
+    "AsciiValues": { "$ref": "#/$defs/AsciiSequence" },
+    "UndefinedValues": { "$ref": "#/$defs/UndefinedSequence" },
+    "ByteSequence": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "value"],
+      "properties": { "kind": { "const": "byte", "x-semio-ui": { "label": { "en": "Kind", "de": "Art" } } }, "value": { "type": "array", "items": { "$ref": "#/$defs/Byte" }, "x-semio-ui": { "label": { "en": "Values", "de": "Werte" } } } }
+    },
+    "AsciiSequence": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "value"],
+      "properties": { "kind": { "const": "ascii", "x-semio-ui": { "label": { "en": "Kind", "de": "Art" } } }, "value": { "type": "array", "items": { "$ref": "#/$defs/Byte" }, "x-semio-ui": { "label": { "en": "Bytes", "de": "Bytes" } } } }
+    },
+    "UndefinedSequence": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "value"],
+      "properties": { "kind": { "const": "undefined", "x-semio-ui": { "label": { "en": "Kind", "de": "Art" } } }, "value": { "type": "array", "items": { "$ref": "#/$defs/Byte" }, "x-semio-ui": { "label": { "en": "Bytes", "de": "Bytes" } } } }
+    },
+    "ShortValues": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "value"],
+      "properties": { "kind": { "const": "short", "x-semio-ui": { "label": { "en": "Kind", "de": "Art" } } }, "value": { "type": "array", "items": { "$ref": "#/$defs/UInt16" }, "x-semio-ui": { "label": { "en": "Values", "de": "Werte" } } } }
+    },
+    "LongValues": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "value"],
+      "properties": { "kind": { "const": "long", "x-semio-ui": { "label": { "en": "Kind", "de": "Art" } } }, "value": { "type": "array", "items": { "$ref": "#/$defs/UInt32" }, "x-semio-ui": { "label": { "en": "Values", "de": "Werte" } } } }
+    },
+    "RationalValues": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "value"],
+      "properties": { "kind": { "const": "rational", "x-semio-ui": { "label": { "en": "Kind", "de": "Art" } } }, "value": { "type": "array", "items": { "$ref": "#/$defs/UnsignedRational" }, "x-semio-ui": { "label": { "en": "Values", "de": "Werte" } } } }
+    },
+    "SByteValues": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "value"],
+      "properties": { "kind": { "const": "sByte", "x-semio-ui": { "label": { "en": "Kind", "de": "Art" } } }, "value": { "type": "array", "items": { "$ref": "#/$defs/Int8" }, "x-semio-ui": { "label": { "en": "Values", "de": "Werte" } } } }
+    },
+    "SShortValues": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "value"],
+      "properties": { "kind": { "const": "sShort", "x-semio-ui": { "label": { "en": "Kind", "de": "Art" } } }, "value": { "type": "array", "items": { "$ref": "#/$defs/Int16" }, "x-semio-ui": { "label": { "en": "Values", "de": "Werte" } } } }
+    },
+    "SLongValues": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "value"],
+      "properties": { "kind": { "const": "sLong", "x-semio-ui": { "label": { "en": "Kind", "de": "Art" } } }, "value": { "type": "array", "items": { "$ref": "#/$defs/Int32" }, "x-semio-ui": { "label": { "en": "Values", "de": "Werte" } } } }
+    },
+    "SRationalValues": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "value"],
+      "properties": { "kind": { "const": "sRational", "x-semio-ui": { "label": { "en": "Kind", "de": "Art" } } }, "value": { "type": "array", "items": { "$ref": "#/$defs/SignedRational" }, "x-semio-ui": { "label": { "en": "Values", "de": "Werte" } } } }
+    },
+    "FloatValues": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "value"],
+      "properties": { "kind": { "const": "float", "x-semio-ui": { "label": { "en": "Kind", "de": "Art" } } }, "value": { "type": "array", "items": { "$ref": "#/$defs/Binary32" }, "x-semio-ui": { "label": { "en": "Values", "de": "Werte" } } } }
+    },
+    "DoubleValues": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "value"],
+      "properties": { "kind": { "const": "double", "x-semio-ui": { "label": { "en": "Kind", "de": "Art" } } }, "value": { "type": "array", "items": { "$ref": "#/$defs/Binary64" }, "x-semio-ui": { "label": { "en": "Values", "de": "Werte" } } } }
     },
     "TiffTag": {
       "type": "object",
-      "description": "One IFD entry — a weak value (whole-value replaced in diffs).",
-      "required": [
-        "tag",
-        "kind",
-        "values"
-      ],
+      "additionalProperties": false,
+      "required": ["tag", "values"],
       "properties": {
-        "tag": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 65535
-        },
-        "kind": {
-          "$ref": "#/$defs/TiffFieldType",
-          "x-semio-ui": {
-            "options": {
-              "byte": {
-                "en": "BYTE (8-bit unsigned)",
-                "de": "BYTE (8 Bit, vorzeichenlos)"
-              },
-              "ascii": {
-                "en": "ASCII (7-bit text)",
-                "de": "ASCII (7-Bit-Text)"
-              },
-              "short": {
-                "en": "SHORT (16-bit unsigned)",
-                "de": "SHORT (16 Bit, vorzeichenlos)"
-              },
-              "long": {
-                "en": "LONG (32-bit unsigned)",
-                "de": "LONG (32 Bit, vorzeichenlos)"
-              },
-              "rational": {
-                "en": "RATIONAL (unsigned fraction)",
-                "de": "RATIONAL (vorzeichenloser Bruch)"
-              },
-              "sByte": {
-                "en": "SBYTE (8-bit signed)",
-                "de": "SBYTE (8 Bit, vorzeichenbehaftet)"
-              },
-              "undefined": {
-                "en": "UNDEFINED (raw bytes)",
-                "de": "UNDEFINED (Rohbytes)"
-              },
-              "sShort": {
-                "en": "SSHORT (16-bit signed)",
-                "de": "SSHORT (16 Bit, vorzeichenbehaftet)"
-              },
-              "sLong": {
-                "en": "SLONG (32-bit signed)",
-                "de": "SLONG (32 Bit, vorzeichenbehaftet)"
-              },
-              "sRational": {
-                "en": "SRATIONAL (signed fraction)",
-                "de": "SRATIONAL (vorzeichenbehafteter Bruch)"
-              },
-              "float": {
-                "en": "FLOAT (32-bit IEEE)",
-                "de": "FLOAT (32 Bit, IEEE)"
-              },
-              "double": {
-                "en": "DOUBLE (64-bit IEEE)",
-                "de": "DOUBLE (64 Bit, IEEE)"
-              }
-            }
-          }
-        },
-        "values": {
-          "$ref": "#/$defs/TiffValues"
-        }
+        "tag": { "$ref": "#/$defs/UInt16", "x-semio-ui": { "label": { "en": "Tag", "de": "Tag" } } },
+        "values": { "$ref": "#/$defs/TiffValues", "x-semio-ui": { "label": { "en": "Values", "de": "Werte" } } }
       }
+    },
+    "TiffStorageKind": { "type": "string", "enum": ["none", "strips", "tiles"] },
+    "TiffStorage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "offsetsKind", "byteCountsKind", "chunks"],
+      "properties": {
+        "kind": { "$ref": "#/$defs/TiffStorageKind", "x-semio-ui": { "label": { "en": "Storage kind", "de": "Speicherart" }, "options": { "none": { "en": "None", "de": "Keine" }, "strips": { "en": "Strips", "de": "Streifen" }, "tiles": { "en": "Tiles", "de": "Kacheln" } } } },
+        "offsetsKind": { "type": "string", "enum": ["short", "long"], "x-semio-ui": { "label": { "en": "Offset word type", "de": "Offset-Worttyp" }, "options": { "short": { "en": "SHORT", "de": "SHORT" }, "long": { "en": "LONG", "de": "LONG" } } } },
+        "byteCountsKind": { "type": "string", "enum": ["short", "long"], "x-semio-ui": { "label": { "en": "Byte-count word type", "de": "Byteanzahl-Worttyp" }, "options": { "short": { "en": "SHORT", "de": "SHORT" }, "long": { "en": "LONG", "de": "LONG" } } } },
+        "chunks": {
+          "type": "array",
+          "items": { "type": "array", "items": { "$ref": "#/$defs/Byte" } },
+          "x-semio-ui": { "label": { "en": "Chunks", "de": "Datenblöcke" } }
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "none" } }, "required": ["kind"] },
+          "then": { "properties": { "chunks": { "maxItems": 0 } } },
+          "else": { "properties": { "chunks": { "minItems": 1 } } }
+        }
+      ]
     },
     "TiffIfd": {
       "type": "object",
-      "description": "One Image File Directory — tag-id-keyed entries (TIFF requires ascending-tag-order) plus this directory's own raster as RAW STRIP BYTES. Empty for IFD 0, whose raster is the snapshot's own canonical RGBA `pixels`, and for a metadata-only directory.",
-      "required": [
-        "entries",
-        "pixels"
-      ],
+      "additionalProperties": false,
+      "required": ["entries", "storage"],
       "properties": {
-        "entries": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/TiffTag"
-          },
-          "x-semio-ui": {
-            "label": {
-              "en": "Directory entries",
-              "de": "Verzeichniseinträge"
-            }
-          }
-        },
-        "pixels": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 255
-          }
-        }
+        "entries": { "type": "array", "items": { "$ref": "#/$defs/TiffTag" }, "x-semio-ui": { "label": { "en": "Tags", "de": "Tags" } } },
+        "storage": { "$ref": "#/$defs/TiffStorage", "x-semio-ui": { "label": { "en": "Storage", "de": "Speicher" } } }
       }
     }
   },
-  "required": [
-    "schema",
-    "byteOrder",
-    "ifds",
-    "pixels"
-  ],
+  "required": ["schema", "byteOrder", "ifds"],
   "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "artifact",
-      "x-semio-ui": {
-        "widget": "text",
-        "label": {
-          "en": "Snapshot schema",
-          "de": "Snapshot-Schema"
-        },
-        "description": {
-          "en": "Identifier of the snapshot schema version.",
-          "de": "Kennung der Version des Snapshot-Schemas."
-        }
-      }
-    },
-    "byteOrder": {
-      "$ref": "#/$defs/TiffByteOrder",
-      "x-semio-state": "artifact",
-      "x-semio-ui": {
-        "widget": "segmented",
-        "label": {
-          "en": "Byte order",
-          "de": "Byte-Reihenfolge"
-        },
-        "options": {
-          "littleEndian": {
-            "en": "Little-endian (II)",
-            "de": "Little-Endian (II)"
-          },
-          "bigEndian": {
-            "en": "Big-endian (MM)",
-            "de": "Big-Endian (MM)"
-          }
-        }
-      }
-    },
-    "ifds": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/TiffIfd"
-      },
-      "x-semio-state": "artifact",
-      "x-semio-ui": {
-        "label": {
-          "en": "Image file directories",
-          "de": "Bilddateiverzeichnisse (IFDs)"
-        }
-      }
-    },
-    "pixels": {
-      "type": "array",
-      "items": {
-        "type": "integer",
-        "minimum": 0,
-        "maximum": 255
-      },
-      "x-semio-state": "artifact"
-    }
+    "schema": { "type": "string", "x-semio-state": "artifact", "x-semio-ui": { "label": { "en": "Snapshot schema", "de": "Momentaufnahme-Schema" } } },
+    "byteOrder": { "$ref": "#/$defs/TiffByteOrder", "x-semio-state": "artifact", "x-semio-ui": { "label": { "en": "Byte order", "de": "Byte-Reihenfolge" }, "options": { "littleEndian": { "en": "Little endian", "de": "Little Endian" }, "bigEndian": { "en": "Big endian", "de": "Big Endian" } } } },
+    "ifds": { "type": "array", "items": { "$ref": "#/$defs/TiffIfd" }, "x-semio-state": "artifact", "x-semio-ui": { "label": { "en": "Image directories", "de": "Bildverzeichnisse" } } }
   }
 }

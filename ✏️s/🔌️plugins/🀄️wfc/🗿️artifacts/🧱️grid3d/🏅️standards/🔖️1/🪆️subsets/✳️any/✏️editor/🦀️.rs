@@ -41,7 +41,7 @@ use semio_framework_2d::compute::EngineHandles;
 /// ✏️ The editor's typed command channel — one variant per document verb, plus the three the surface
 /// itself owns: `pickCell` (utility-dependent), `setActiveTile` and `setCamera`, which write the
 /// per-window config rather than the document.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum)]
 pub enum Grid3dEditorCommand {
     #[dsl(key = "changeSeed")]
     ChangeSeed { seed: u64 },
@@ -166,7 +166,7 @@ pub fn example_snapshot(example_id: &str) -> Option<Grid3dSnapshot> {
 /// (`🧊️process3d`'s own boot `setActiveExample` incident).
 pub fn reset_document_effect(document: &Grid3dSnapshot) -> semio_framework::kernel::Effect {
     let pack = <Grid3dSnapshot as store::ArtifactPack>::encode_pack(document);
-    let spr = semio_framework_plugin::resolve_ready(store::empty_document_spr("grid3d", WFC_GRID3D_DOCUMENT_SCHEMA));
+    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr("grid3d", WFC_GRID3D_DOCUMENT_SCHEMA));
     semio_framework::kernel::Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️Helpers
@@ -179,13 +179,13 @@ pub fn reset_document_effect(document: &Grid3dSnapshot) -> semio_framework::kern
 /// and only the crate's own typed tests can drive the editor.
 /// 🖱️ Both pick lanes land on the same verb: `pickCell` carries the cell key directly, while the
 /// host's plugin-private `worldSelect` wraps it in a one-entry `ids` array.
-fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Grid3dEditorCommand, Fault> {
+fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Grid3dEditorCommand, Fault> {
     let field = |key: &str| args.and_then(|value| value.get(key));
-    let text = |key: &str| field(key).and_then(dsl::DslValue::as_str).map(str::to_string);
-    let float = |key: &str| field(key).and_then(dsl::DslValue::as_f64).filter(|number| number.is_finite());
+    let text = |key: &str| field(key).and_then(semio_framework_value::DslValue::as_str).map(str::to_string);
+    let float = |key: &str| field(key).and_then(semio_framework_value::DslValue::as_f64).filter(|number| number.is_finite());
     let count = |key: &str| float(key).filter(|number| *number >= 0.0).map(|number| number as u32);
-    let flag = |key: &str| field(key).and_then(dsl::DslValue::as_bool);
-    let floats = |key: &str| field(key).and_then(dsl::DslValue::as_array).map(|values| values.iter().filter_map(dsl::DslValue::as_f64).collect::<Vec<f64>>());
+    let flag = |key: &str| field(key).and_then(semio_framework_value::DslValue::as_bool);
+    let floats = |key: &str| field(key).and_then(semio_framework_value::DslValue::as_array).map(|values| values.iter().filter_map(semio_framework_value::DslValue::as_f64).collect::<Vec<f64>>());
     let missing = |what: &str| Fault::from(format!("wfc.grid3d.action.missing-argument '{action}.{what}'"));
     let color = |prefix: &str| Grid3dColor {
         r: count(&format!("{prefix}r")).unwrap_or(255),
@@ -237,7 +237,7 @@ fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Gri
         grid::ACTION_SET_HOVER => Ok(Grid3dEditorCommand::SetHover { object_id: text("objectId").or_else(|| text("id")) }),
         grid::ACTION_WORLD_PICK => Ok(Grid3dEditorCommand::WorldPick { object_id: text("objectId") }),
         grid::ACTION_WORLD_SELECT => Ok(Grid3dEditorCommand::WorldSelect {
-            cell_id: field("ids").and_then(dsl::DslValue::as_array).and_then(|ids| ids.first()).and_then(dsl::DslValue::as_str).map(str::to_string).or_else(|| text("id")).unwrap_or_default(),
+            cell_id: field("ids").and_then(semio_framework_value::DslValue::as_array).and_then(|ids| ids.first()).and_then(semio_framework_value::DslValue::as_str).map(str::to_string).or_else(|| text("id")).unwrap_or_default(),
         }),
         grid::ACTION_SET_ACTIVE_EXAMPLE => Ok(Grid3dEditorCommand::SetActiveExample {
             example_id: text("exampleId").or_else(|| text("id")).or_else(|| text("value")).unwrap_or_else(|| crate::examples::blocks::ID.to_string()),
@@ -297,7 +297,7 @@ pub fn grid3d_command_emit(
             match grid3d_active_utility(view_state) {
                 grid::UTILITY_PIN => {
                     if window_config.active_tile_id.is_empty() {
-                        return Err(Fault::from("wfc.grid3d.tile.no-armed-tile"));
+                        return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.grid3d.tile.none-armed"), "wfc.grid3d.tile.none-armed"));
                     }
                     pin_cell(Grid3dPinnedCell { x, y, z, tile_id: window_config.active_tile_id })
                 }
@@ -306,13 +306,13 @@ pub fn grid3d_command_emit(
             }
         }
         Grid3dEditorCommand::SetActiveTile { tile_id } => {
-            let view = view_state.ok_or_else(|| Fault::from("wfc-grid3d-window-required"))?;
+            let view = view_state.ok_or_else(|| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.grid3d.window.required"), "wfc.grid3d.window.required"))?;
             let mut next = window_config;
             next.active_tile_id.clone_from(tile_id);
             return Ok(Emit { window_config_mutations: vec![addressed_config(view, next)?], ..Default::default() });
         }
         Grid3dEditorCommand::SetCamera { x, y, z, target_x, target_y, target_z, zoom } => {
-            let view = view_state.ok_or_else(|| Fault::from("wfc-grid3d-window-required"))?;
+            let view = view_state.ok_or_else(|| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.grid3d.window.required"), "wfc.grid3d.window.required"))?;
             let mut next = window_config;
             next.camera_x = *x;
             next.camera_y = *y;
@@ -450,6 +450,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
     fn step(
         &mut self,
         input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<Grid3dEditor>>,
+    _cx: &mut semio_framework_job::StepContext<'_>,
     ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<Grid3dEditor>>, Fault> {
         if self.completed || <Grid3dEditor as ArtifactEditor>::command_id(input.command) != self.tool_id {
             return Err(Fault::from("wfc.grid3d.retained.route"));
@@ -529,6 +530,19 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Grid3dRetainedComma
 pub struct Grid3dEditor;
 
 impl ArtifactEditor for Grid3dEditor {
+    /// 📢️ The localized notices of this editor's user-reachable refusals (design §20.12).
+    fn fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
+        use semio_framework_ui_locale::LocalizedLabel;
+        static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 3]> = std::sync::LazyLock::new(|| {
+            [
+            ("wfc.grid3d.window.required", LocalizedLabel::native("This action needs an open grid window.", "Diese Aktion braucht ein geöffnetes Rasterfenster.")),
+            ("wfc.grid3d.window.kind-required", LocalizedLabel::native("This action is not available in this window.", "Diese Aktion ist in diesem Fenster nicht verfügbar.")),
+            ("wfc.grid3d.tile.none-armed", LocalizedLabel::native("Arm a tile before pinning a cell.", "Vor dem Fixieren einer Zelle eine Kachel wählen.")),
+            ]
+        });
+        &*NOTICES
+    }
+
     type Snapshot = Grid3dSnapshot;
     type Mutation = Grid3dMutation;
     type Config = NoConfig;
@@ -635,7 +649,7 @@ impl ArtifactEditor for Grid3dEditor {
         }
     }
 
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
         command_from_action(action, args)
     }
 
@@ -662,7 +676,7 @@ impl ArtifactEditor for Grid3dEditor {
         }
         let tool_id = <Self as ArtifactEditor>::command_id(&request.command);
         if tool_id != request.tool_id {
-            return Err(Fault::from("wfc.grid3d.retained.tool-mismatch"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "WFC grid 3D command does not match its exact registered tool"));
         }
         if grid3d_retained_extent(&request.command, &request.snapshot).is_none() {
             return Err(Fault::from("wfc.grid3d.retained.extent"));
@@ -752,7 +766,7 @@ pub fn create_grid3d_editor() -> semio_framework_plugin::AppDefinition {
         .window_kind_def(preview::definition())
         .window_kind_utilities(grid::WINDOW_KIND_ID, vec![grid::UTILITY_SELECT.into(), grid::UTILITY_PIN.into(), grid::UTILITY_MASK.into()])
         .tool(fill_tool::definition())
-        .mode_tools(edit::GRID3D_EDIT_MODE_ID, vec![semio_framework::io::resolve_ready(ToolRef::new(fill_tool::TOOL_ID))])
+        .mode_tools(edit::GRID3D_EDIT_MODE_ID, vec![::semio_framework_async::poll::resolve_ready(ToolRef::new(fill_tool::TOOL_ID))])
         .default_layout(edit::layout())
         .action_destructive("deleteTile")
         .action_destructive("deleteRule")

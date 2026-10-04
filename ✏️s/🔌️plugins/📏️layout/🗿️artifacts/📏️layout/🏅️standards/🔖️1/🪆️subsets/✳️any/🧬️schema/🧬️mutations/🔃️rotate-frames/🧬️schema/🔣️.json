@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/rotate-frames/schema.json",
   "title": "RotateFrames",
+  "x-semio-inverse-rows": { "perTarget": { "targets": 2 } },
   "description": "The `rotate-frames` mutation record — a relative turn of frames of one page about one recorded pivot: every frame centre orbits the pivot and every frame's rotation grows by the angle.",
   "type": "object",
   "additionalProperties": false,

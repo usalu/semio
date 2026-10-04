@@ -16,14 +16,14 @@ fn block_on_cad_window_ownership<F: std::future::Future>(future: F) -> F::Output
 #[test]
 fn cad_document_contract_world_window_config_matches_neutral_fixture_and_codecs() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️schema/🧫️fixtures/🪪️document/🔣️.json")).expect("CAD world-window fixture");
-    let base: CadWorldWindowConfig = dsl::json::from_json_str(&fixture["valid"][0].to_string()).expect("neutral config");
+    let base: CadWorldWindowConfig = semio_framework_pack_json::from_json_str(&fixture["valid"][0].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral config");
     assert_eq!(base, CadWorldWindowConfig::default());
     let mut next = base.clone();
     next.camera.zoom = fixture["patchedZoom"].as_f64().expect("patched zoom");
     let mutation = CadWorldWindowConfigMutation::Snapshot { config: Box::new(next.clone()) };
     let after = mutation.diff(&base).diff().apply(&base).expect("window config diff");
     assert_eq!(after, next);
-    let restored = mutation.inverse(&base).into_iter().fold(after, |state, inverse| inverse.diff(&state).diff().apply(&state).expect("window config inverse"));
+    let restored = mutation.inverse(&base).expect("valid retained mutation inverse fixture").into_iter().fold(after, |state, inverse| inverse.diff(&state).diff().apply(&state).expect("window config inverse"));
     assert_eq!(restored, base);
     assert_eq!(CadWorldWindowConfigMutation::parse_op(&mutation.print_op()).expect("text mutation"), mutation);
     assert_eq!(CadWorldWindowConfigMutation::decode_op(&mutation.encode_op().expect("binary mutation")).expect("decoded mutation"), mutation);
@@ -221,7 +221,7 @@ fn cad_document_contract_world_window_runtime_isolates_commands_and_restores_exa
                     if owners != expected_owners {
                         return Err(format!("CAD exact-window pack ownership changed, expected one pack per declared world window {expected_owners:?}: {owners:?}"));
                     }
-                    app.load_document_pack(&document_before).await.map_err(|error| format!("{error:?}"))?;
+                    semio_framework_plugin::artifact_app_laws::load_document(&mut app, &document_before).await.map_err(|error| format!("{error:?}"))?;
                     assert_exact_state(&mut app, &left, &right, expected).await?;
                     let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await);
                     reopened.bind_instance_id(REOPENED_INSTANCE).await;

@@ -8,7 +8,6 @@
 
 // 🃏️ Renamed `dsl` → `dsl_core` (wave MATHEND) to free the crate-root name `dsl` for
 // `pub mod dsl` (Jack) below — both alias the identical crate. `🛂️manifest` updated to match.
-extern crate semio_framework_os_kernel as dsl_core;
 extern crate semio_framework_value_derive as value_derive;
 
 #[path = "../../⚙️engine/🦀️.rs"]
@@ -36,3 +35,7 @@ pub mod manifest;
 // diagnostic/completion machinery. See that wave's report for the full evidence and reasoning.
 #[path = "../../🗣️dsl/🦀️.rs"]
 pub mod dsl;
+
+#[cfg(test)]
+#[path = "../../🧪️tests/🪆️record-owner/🦀️.rs"]
+mod canonical_record_owner_tests;

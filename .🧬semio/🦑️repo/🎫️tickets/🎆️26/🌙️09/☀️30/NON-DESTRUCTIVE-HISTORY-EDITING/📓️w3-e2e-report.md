@@ -687,3 +687,156 @@ Predictions from reading the current source (to compare against Run 4):
 ### S3.7 Run 4 — results
 
 Pending: no serve was up when Phase A closed.
+
+---
+
+## Session 4 — 2026-10-04
+
+Successor S4-E2E (Opus). Repair-first check (rule 34): the probe `🧑‍💻dev/🧪️tests/🧪️time-travel/🟦️.ts` (3896 lines, mtime
+10-03 11:04) differs from HEAD only by a peer's wording sweep of the temporary-log tag in step 9's docstrings and regex
+(5 lines, compile-atomic, kept). No half-finished edit. Phase A' (no serve up): bring the probe to the current runtime
+(N1 paged windows, N2, N15, `HistoryPatch.reprojection`, notices, `editCount`, L4, §19.1, stepped load), a goal-coverage
+table, strict `tsc`. Phase B on "SERVE UP": Run 4 batches A–H, React then wgpu, en + de.
+
+### S4.1 Status (kept current)
+
+- 02:09 — Phase A' started; reading the runtime (history body, React band, wgpu mirror) for the exact attributes.
+- 02:20 — runtime read (history body `ui_history_panel` PLG ≈12455, TT 🔖️Panel/🔖️MutationPages, React band, React Tree
+  window attributes, wgpu mirror/row actions, kernel notices). Baseline strict `tsc` of the unchanged module: exit 0, 0 errors.
+  Editing the probe now (findings that change verdicts are listed in S4.2).
+- 02:50 — **Phase A' done** (WRITTEN, TYPE-CLEAN, TAXONOMY-CLEAN, IMPORTS; NOT YET RUN — no serve is up). Module 4.2 k lines,
+  178 docstrings, every leading emoji unique. "E2E PROBE READY" sent to `main`.
+
+- 06:55 — Phase A'' (coordinator: S4-UI contract while activation waits for the describe wave after the channel bump 20→21).
+- 07:08 — **Phase A'' done** (WRITTEN, TYPE-CLEAN, TAXONOMY-CLEAN, IMPORTS; NOT YET RUN). Module 4.66 k lines, 181 docstrings,
+  every leading emoji unique. "E2E PROBE READY" sent to `main` again. Section S4.7.
+
+### S4.2 Probe changes for the current runtime (Phase A')
+
+Read from the disk on 10-04 (line numbers drift): history body `ui_history_panel` (`🔌️plugin/🦀️.rs` ≈12455), its mutation row
+`history_panel_mutation_row` (≈12670, `RowAction::disabled_because`), TT `🔖️Panel` (band, `time_travel_reprojection_section`,
+editor sections, `time_travel_input_row`), TT `🔖️MutationPages` (`history_row_mutation_extent`, window path), React
+`TimeTravelBand` (`🛠️ShellHelpers/⏪️time-travel`), React Tree windows (`🖱️ui/🧱️elements/🌳️Tree` `treeWindowDomAttributes`:
+`data-tree-window-key|path|total|offset|length`, rows `data-tree-window-row`, spacers `data-tree-window-spacer=leading|trailing`),
+React row actions (Tree `TreeRowActionButton`: `aria-disabled` + `aria-describedby` → an `sr-only` reason; no tooltip),
+wgpu mirror (`🖱️ui/🎯️targets/🧊️wgpu/♿️accessibility` row actions `<row>::row-action::<i>` named `"<label>: <row>"`,
+description = the disabled reason), kernel notices `🎠️kernel/🧫️fixtures/🧫️history-notices`.
+
+| Area | What changed in the probe | Verdicts (new or changed) |
+|---|---|---|
+| N1 windows (W1E-6) | `treeWindow(key)` reads React's window attributes; `historyCommandsTotal()`; `reachWindowEnd(key)` scrolls a window until `offset + length = total`; `pageHistory` stops when every row the Commands `total` counts was seen (wgpu: no total in the mirror → paging as before). Step 16 drops the stale "+N more" detection (no such row exists; a row is a tree window over ALL its mutations) and derives reachability from the row window's `total`, then opens the LAST mutation for editing. wgpu pages the body keeping, in reading order, the rows between the entry and the next entry (survives the entry scrolling off). | `n1-commands-window-total-grows-by-one-per-edit` (2), `g9-every-mutation-of-the-long-transaction-is-reachable` (16, rewritten), `n1-the-last-mutation-of-the-long-transaction-opens-for-editing` (16), `n1-one-drag-adds-exactly-one-row-to-the-window-total` (19) |
+| N2 editor | Reference row is now a tree window: `….targets.row`, first row `….targets.useSelection` (button + `.row`), chips `….targets.chip.<i>.row` (label = entity label; the button `….chip.<i>` reads "Remove <label>"). Editor reading and `pressUseSelection` rewritten. List inputs: `….node.handles.row` names "Items: n", `….add`, item rows `….handles.<i>.row` with `….remove`. `revealWindowRow` scrolls the inputs window slice by slice; `pressAuthored(…, false)` presses deep rows without scrolling back to the section. Long option rows (> 32 options) do not exist in any puzzle 2d leaf → note. | `editor-shows-the-targets-reference-list` (3, now label-based: the old check for raw ids contradicted `g3-chips-show-labels-not-raw-ids`), `n2-duplicate-adds-a-create-node-row`, `n2-edit-opens-the-create-node-session`, `n2-add-item-drafts-one-more-list-item`, `n2-remove-item-drops-the-drafted-item`, `n2-exit-leaves-zero-trace` (19) |
+| N15 Edit refused | `rowActionState(row, Edit)`: disabled, AT reason (`aria-describedby` / mirror description) and the reason a sighted person sees on hover (React tooltip or `title`; wgpu mirror description). The replay arm records the reason of the Edit it presses. Edit regex accepts wgpu's `"Edit: <row>"`. | `n15-edit-is-refused-while-a-changed-draft-is-open-naming-why` + `n15-the-refusal-reason-is-visible` (4), `n15-edit-is-refused-while-choosing-naming-why` (5, React; wgpu note: modal projects only the prompt), `n15-edit-is-disabled-while-replaying-naming-why` (16) |
+| N17 reprojection | `reprojection()` reads `framework.history.reprojection` (title, status, kind by the localized progress line, Cancel/Replay again); `armReprojection(observe | cancel | undo-then-cancel)` acts the frame the status appears (Undo `framework.history.undo.run`, then — after the refusal notice or 1.5 s — Cancel replay); `reprojectionSettled`. | reload check: `stepped-load-shows-its-progress-in-the-history-body` (or note); 17: `g10-the-second-peer-shows-what-it-replays` (or note); 18: see below |
+| §20.8 stepped load | New step 18 page B attaches a grown folder archive with History open the moment Attach is pressed (`attachFolder(path, afterPress)`). | `n17-the-stepped-load-shows-its-progress-in-the-history-body`, `n17-a-command-during-the-load-is-refused-naming-the-load` (`document.loading`), `n17-cancel-replay-keeps-the-previous-document` / `n17-attaching-the-folder-loads-the-shared-document` |
+| History steps | New step 18 page A: second example load → edit → finalize New alternative → switch to Main line (deferred local step) armed. | `n17-history-grows-by-a-second-example-load`, `n17-a-mutation-of-the-first-example-opens-with-a-draft`, `n17-the-edit-is-kept-as-a-new-alternative`, `n17-a-history-step-shows-its-progress-in-the-history-body`, `n17-a-second-history-step-is-refused-while-one-replays` (`history.replaying`), `n17-cancel-replay-drops-the-history-step-with-zero-trace`, `n17-the-history-step-completes-on-the-main-line` |
+| Notices | The notice trace keeps code AND words (React `[data-notice-code]` text, wgpu `shell.notice` label); `shownNotices()`. | 9: `history-lane-notices-speak-the-locale` (when shown), `history-full-notice-names-the-edit-count` (when shown; else note: the paged ledger never fills in a run, `editCount` is visible only as that `{n}`) |
+| L4 (§20.13) | New step 19: wheel zoom + middle-button pan + zoom; then a drag, a zoom, ⌘Z, ⌘⇧Z. | `l4-camera-moves-are-never-history-rows` (no new row at all, Commands `total` unchanged, camera moved), `l4-undo-takes-back-the-drag-not-the-camera`, `l4-redo-re-applies-the-drag` |
+| §19.1 | Row label = intent leaf, never a support leaf riding with it. | `s19-the-transaction-row-reads-its-intent-leaf` (2), `s19-the-drag-row-reads-its-intent-leaf` (19) |
+| Order | `ORDER = 1…8, 10…13, 19, 14…18, 9`; the reload check still runs before 14 (or 9); `STEP_NUMBERS` drives the report. | — |
+
+Readings made while updating (not probe findings, for routing if they show live):
+- React tree row actions render the disabled reason only as an `sr-only` description (`🌳️Tree` `TreeRowActionButton`); table row
+  actions also put it in `title`. Expect `n15-the-refusal-reason-is-visible` to FAIL on React until W1E-1 lands (owner S4-UI).
+- Neither host publishes a window size to assistive technology (no `aria-setsize`/`aria-posinset`/row count); the wgpu mirror
+  publishes no window total at all, so wgpu counts are paged (noted per run, not a verdict).
+- Observation outside the probe: the history panel's filter select dispatches `withoutMutations`/`onlyMutations` (and the
+  handler at `🔌️plugin/🦀️.rs` ≈30379 accepts only those), while the injected `setHistoryCommandFilter` action declares the options
+  `withoutOperations`/`onlyOperations` (`🛂️manifest/🦀️.rs` ≈2857): a palette/agent dispatch with a declared option is ignored.
+  Owner guess: S4-RUNTIME (manifest + handler vocabulary).
+
+### S4.3 Goal coverage (dev goal, `🧭️plan.md` Session 4) — every sentence → steps → verdicts
+
+Both renderers (`--renderer react|wgpu`), both locales (`--locales en,de`; chords in both), desktop for every step, phone (375 ×
+812, step 14) and tablet (768 × 1024, step 15) for the journey edit → input → accept → finalize. wgpu differences are notes, named in
+the table.
+
+| # | Goal sentence | Steps | Verdicts | Phone / tablet |
+|---|---|---|---|---|
+| 1 | every mutation in history is editable | 3, 8, 10, 12, 13, 16, 19 | `edit-opens-the-band-in-editing`, `editing-the-create-node-previews-the-clone-before-its-drag`, `g6-edit-opens-the-rotate-session`, `g6-edit-opens-the-scale-session`, `g4-edit-opens-the-upstream-unlock`, `g9-every-mutation-of-the-long-transaction-is-reachable`, `n1-the-last-mutation-of-the-long-transaction-opens-for-editing`, `n2-edit-opens-the-create-node-session` | `<device>-edit-opens-the-band` |
+| 2 | starting an edit enters time-travel mode | 3, 14, 15 | `edit-opens-the-band-in-editing`, `band-is-a-polite-status-region`, `band-names-stage-and-target`, `windows-wear-the-time-travel-indicator`, `history-panel-reveals-on-session-start`, `focus-moves-to-the-editor` | `<device>-band-inside-the-viewport` |
+| 3 | the edited mutation is shown with downstream NOT applied | 3, 8, 17 | `preview-is-state-before-target-plus-draft`, `downstream-not-applied-while-editing`, `downstream-row-reads-not-applied`, `g10-the-remote-edit-stays-downstream-and-unapplied-while-editing` | (preview via `<device>-editor-input-reachable-by-keyboard`) |
+| 4 | the user accepts or discards the input change | 4, 11, 16 | `accept-replays-then-reviews-ready` (chord or button by `--chords`), `keep-editing-discard-returns-to-the-review-keeping-the-accepted-draft`, `keep-editing-second-review-is-ready-with-two-accepted-drafts` (the other way), `g9-exit-leaves-zero-trace` | `<device>-accept-by-touch-reviews-ready` |
+| 5 | every input carries UI metadata (slider, stepper, min, max, snaps …) | 3, 4, 8, 10, 12, 19 | `editor-shows-dx-dy-steppers-with-grid-snap-step`, `arrow-keys-step-dx-by-the-snap-step`, `stepper-below-its-hard-minimum-is-refused-naming-the-bound`, `stepper-home-reaches-the-hard-minimum`, `g6-angle-is-a-dial`, `g6-angle-dial-shows-ticks-at-0-90-180-degrees` (React; wgpu note), `g6-angle-reads-degrees`, `g6-page-up-goes-to-the-next-detent`, `g6-factor-slider-has-ticks-at-its-snaps`, `g6-factor-ticks-sit-on-a-log-axis` (React), `g6-out-of-bounds-factor-is-refused-naming-the-bound`, `editor-shows-the-targets-reference-list`, `n2-add-item-drafts-one-more-list-item`, `n2-remove-item-drops-the-drafted-item` | `<device>-editor-input-reachable-by-keyboard` |
+| 6 | accept replays all downstream mutations | 4, 16, 17, 18 | `reviewed-head-at-plus-120-with-downstream-reapplied`, `g9-the-replay-shows-progress-over-the-long-history`, `g9-cancel-stops-the-replay`, `g9-replay-again-is-offered-after-cancel`, `g9-the-replay-completes-the-review`, `g10-accept-replays-the-remote-edit-too`, `n17-*` (history step / load progress + Cancel) | `<device>-accept-by-touch-reviews-ready` |
+| 7 | each downstream mutation succeeds / warns / errors | 4, 8, 12, 13 | `review-line-reads-ready`, `failing-row-reads-error-target-missing`, `g3-the-downstream-drag-reads-error-target-missing`, `g4-the-drag-row-reads-warning-partially-applied`, `g4-the-band-names-the-warning` | — |
+| 8 | new warnings are visible in history | 13, reload | `g4-the-warning-is-marked-new-since-this-edit`, `g4-the-warning-stays-visible-after-finalize`, `warning-row-survives-the-reload` | — |
+| 9 | fatal errors must be edited first, repeated until error-free | 8, 12 | `replay-review-is-blocked`, `finalize-disabled-while-blocked`, `next-problem-control-reachable`, `withdrawing-the-failing-drag-makes-the-review-ready`, `g3-next-problem-opens-the-failing-drag`, `g3-use-selection-replaces-the-targets`, `g3-editing-the-targets-makes-the-review-ready` | — |
+| 10 | then the final result; finalize or keep editing other mutations | 4, 11 | `reviewed-head-at-plus-120-with-downstream-reapplied`, `keep-editing-begins-another-mutation-from-a-ready-review`, `keep-editing-finalize-overwrites-both-in-one-row`, `keep-editing-head-carries-both-edits` | — |
+| 11 | finalize prompts "new alternative" vs "overwrite" | 5, 7, 18 | `finalize-opens-the-dialog`, `dialog-offers-destructive-overwrite`, `dialog-offers-new-alternative-with-a-name-field`, `overwrite-row-appears`, `alternative-row-appears`, `switching-*`, `trunk-listed-after-new-alternative` path, `n17-the-edit-is-kept-as-a-new-alternative` | `<device>-finalize-prompt-inside-the-viewport`, `<device>-finalize-prompt-is-keyboard-reachable`, `<device>-overwrite-by-touch-closes-the-session` |
+| 12 | puzzle 2d: one drag mutation whose selection AND offset stay editable | 2, 3, 4, 7, 12 | `exactly-one-new-history-row`, `row-labelled-from-the-drag-mutation`, `editor-dx-dy-read-the-original-input`, `dx-120-updates-the-preview`, `dy-edit-updates-the-preview`, `g3-use-selection-replaces-the-targets`, `g3-preview-moves-the-new-targets`, `g3-head-equals-the-expectation` | `<device>-tap-selects-and-a-drag-moves-the-node` |
+| 13 | tools are state machines yielding mutations inside a transaction | 2, 10, 19 | `exactly-one-new-history-row`, `s19-the-transaction-row-reads-its-intent-leaf`, `g6-rotate-is-one-row-labelled-from-its-leaf`, `g6-scale-is-one-row-labelled-from-its-leaf`, `n1-*-grows-by-one-*`, `s19-the-drag-row-reads-its-intent-leaf` | — |
+| 14 | tools are not editable, their mutations are | 3, 8, 19 | (edits always target the yielded leaf) `editor-shows-dx-dy-steppers-*`, `exit-leaves-no-new-rows`, `l4-camera-moves-are-never-history-rows`, `l4-undo-takes-back-the-drag-not-the-camera` | — |
+| 15 | clean artifact-agnostic mechanisms | all | the probe drives only framework surfaces (history body ids, band, dialog, notices, windows) — the board is the one app surface; the cross-plugin proof is the G12 harness (S4-AGNOSTIC), not this probe | — |
+| 16 | end to end: React + wgpu, en + de, accessible | all, 9 | every verdict per renderer × locale; `aria-band-editor-and-history-have-no-structural-findings`, `aria-finalize-prompt-has-no-structural-findings`, `<device>-aria-*`, `focus-*`, `n15-*` reasons, `<device>-band-controls-are-touch-sized`, `no-uncaught-page-errors`, `no-hard-guest-faults`, `console-is-debug-free`, `rejection-notices-carry-their-code`, `history-lane-notices-speak-the-locale` | steps 14, 15 |
+
+Gap features the coordinator listed, by step: N1 → 2, 16, 19; N2 → 3, 12, 19; N15 → 4, 5, 16; N17 `reprojection` →
+16 (session replay), 17 (remote/load), 18 (step + load), reload check (load); `history.replaying` / `document.loading` → 18, 9;
+`editCount` → 9 (`history.full`'s `{n}` when shown); L4 → 19; §19.1 → 2, 19; stepped archive load (no `LoadDocument`) → 18, reload.
+Not provable live here (recorded as notes): long option rows (no puzzle 2d leaf has > 32 options), positive presence (needs a
+hub-backed space serve, coordinator decision), wgpu window totals (the mirror publishes none).
+
+### S4.4 Run 4/5 plan (batches; one foreground call ≤ 9 min each, `curl` = 200 before each)
+
+```
+cd 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript && \
+bun ./📜️script.ts verify time-travel --serve <url> --renderer <r> --locales <l> --chords en,de --only <batch> \
+  --out <T>/🗑️generated/s4-e2e/run5 > <T>/🗑️generated/s4-e2e/run5-<r>-<l>-<batch>.txt 2>&1; echo exit=$?
+```
+
+| Batch | `--only` | Covers |
+|---|---|---|
+| A | `1,2,3,4,5,6,7,9` | boot + folder, drag (N1 total, §19.1), Edit/preview/editor/ARIA, stepper + N15 Blocked + Accept, Finalize + N15 Choosing + prompt ARIA, Undo/Redo, alternatives |
+| B | `1,2,3,4,5,reload,9` | the G5 folder reload (+ stepped-load observation) |
+| C | `1,8,10,9` | fatal path + hard minimum, G6 dial/log slider + rotate/scale edits |
+| D | `1,2,11,12,9` | keep editing (Discard, the other way), G3 Use selection |
+| E | `1,13,reload,9` | G4 warning + warning after reload |
+| F | `1,14,15,9` | phone + tablet |
+| G | `1,16,9` | long history: N1 window total + last mutation, progress, Cancel, Replay again, N15 while replaying |
+| H | `1,17,9` | two peers over one folder (+ the peer's reprojection) |
+| I | `1,18,9` | N17 history step (progress, `history.replaying`, Cancel zero trace, completion) + stepped load (progress, `document.loading`, Cancel) |
+| J | `1,19,9` | L4 camera/undo, N1 total, §19.1, N2 list add/remove |
+
+Order: React :6012 A–J `en`, then `de`; wgpu :6112 `--explore --locales en` (calibrate mirror keys), then A–J `en`, `de`.
+
+### S4.5 Phase A' verification (commands and counts)
+
+| Command | Result |
+|---|---|
+| `bunx tsc --noEmit -p T/🗑️generated/s4-e2e/probe-tsconfig.json` (strict; the S3 config) | baseline before edits: exit 0, 0 errors; after edits: run 1 exit 2 (1 redeclared `replayed` in step 17 + 5 follow-ons, mine), fixed → run 2 exit 0, **0 errors**; run 3 exit 0, 0 errors; run 4 (after the last edit, docstring emoji renames) exit 0, **0 errors** |
+| `bun ./📜️script.ts verify taxonomy report --scope 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️time-travel` (repo root) | `clean=true errors=0 warnings=0` |
+| `bun -e 'await import(<module>); await import(<router ✅️verification/🟦️.ts>)'` | both load: `[ "runTimeTravelCli" ] [ "VerifyScript" ]` (5.9 s) |
+| docstring emoji census (python over the module) | 178 docstrings, 0 duplicate leading emojis, 0 without an emoji |
+
+### S4.7 Phase A'' — S4-UI contract (coordinator 06:5x)
+
+Read from the disk at 07:00: React `HistoryReprojectionStatus` + `historyReprojectionControlV1` (`🛠️ShellHelpers/⏪️time-travel/🟦️.tsx`
+≈369–408, mounted by ShellHost ≈13410, outside the History panel), kernel copy `historyReprojectionStatus` / `🧫️history-reprojection`,
+wgpu `HISTORY_REPROJECTION_STATUS_ID = "shell.history.reprojection"` (a polite status, a progressbar while it replays, named by the
+kernel status line — no title prefix, no controls), `DisabledReasonHint` (`🖱️ui/🧱️elements/💡️ChromeControlHint`, delay 400 ms,
+`[data-slot=row-action-reason][data-revealed]` portal under the same id as the button's `aria-describedby`), band fault text
+(`timeTravelBandTextV1`: unknown codes read `ui.timeTravel.refusal.replayFaulted`), channel handshake
+(`📡️spr/🧵️channel` `CHANNEL_MISMATCH_CODE`, channel 21; notice copy in `🎠️kernel/🧫️fixtures/🧫️framework-notices`).
+
+| Item | Probe change | Verdicts |
+|---|---|---|
+| (a) W1E-6 | The transaction row's window: scrolled to its end, the last mutation row must carry `data-tree-window-row = total − 1`; wgpu pages until the create-node rows (by label) reach the node count and the rows seen reach nodes + edges. | `g9-every-mutation-of-the-long-transaction-is-reachable` (tightened) |
+| (b1) reprojection status | `armReprojection` now samples BOTH surfaces each frame: the shell status (React `[data-semio-history-reprojection]` kind, `-phase`, `data-notice-code`, the `role=status` `aria-live=polite` announcement, `-control`; wgpu mirror `shell.history.reprojection` role/live/label) and the body section, plus whether a session band is open; Cancel prefers the shell's `cancelReplay` control. `reprojectionSettled` waits for both to be gone. `reprojectionShellVerdicts(summary, suffix)` judges every shell sample. Step 17 also arms peer A during its session (the base move). Body-only verdict names lost their `-in-the-history-body` suffix. | `reprojection-status-is-announced-outside-the-history-panel<-load|-peer|-during-a-session|-step>` (React: kind + phase + polite status reading "<title>: <text>" in the kernel copy; wgpu: polite/progressbar node named by the kernel line), `reprojection-controls-show-only-while-no-session-is-open<…>` (React; wgpu note: controls live in the body), `a-refused-history-change-names-its-reason-in-words<…>` (when refused), `stepped-load-shows-its-progress`, `n17-a-history-step-shows-its-progress`, `n17-the-stepped-load-shows-its-progress` |
+| (b2) reason visible | `rowActionState` runs the reveal sequence on React: hover (900 ms) → revealed; leave → hidden; keyboard focus → revealed; Escape → hidden; press → revealed; blur → hidden; the revealed element's id ∈ the button's `aria-describedby`. Step 5 (behind the modal) reads without the sequence. `tapRevealsReason` taps a refused Edit on phone/tablet. | `n15-the-refusal-reason-is-visible` (step 4, every phase of the sequence), `<device>-a-tap-on-a-refused-edit-tells-its-reason` (steps 14/15, React; wgpu note) |
+| (b3) long option rows | > 32 options (`UI_FIXED_LIST_ITEMS`; corrected from 24) → `role=treeitem`, `aria-selected`, chosen `data-selected`. No puzzle 2d leaf offers > 32 options. | note `n2-long-option-rows-not-offered-by-puzzle-2d` (states the contract and the laws that prove it) |
+| (b4) band fault words | The band trace keeps, for the page's life, every fault line (React code + words; wgpu any status line carrying a `<scope>.<code>` token), harvested across reloads and fresh pages. | step 9 `band-never-shows-a-raw-fault-code` (known codes in their own words, unknown ones "Replay failed: later mutations could not be checked" / de; the code only in `data-semio-time-travel-fault`) — exercised by step 16's Cancel (`timeTravel.cancelled` → "Replay cancelled") |
+| (b5) channel handshake | Notice code `plugin.channel-mismatch` and the host's console line are watched. | step 9 `no-plugin-is-refused-for-a-channel-mismatch` (negative; PASS on a fresh activation), `channel-mismatch-notice-is-localized` (only when one shows); on a failed boot the same negative verdict FAILs with the console lines (coordinator action: re-describe / re-activate) |
+
+Goal coverage (S4.3) additions: sentence 6 (accept replays downstream) and 16 (accessible, both renderers) gain the
+`reprojection-status-*` verdicts; sentence 16 gains `n15-the-refusal-reason-is-visible`, `<device>-a-tap-on-a-refused-edit-tells-its-reason`,
+`band-never-shows-a-raw-fault-code` and `no-plugin-is-refused-for-a-channel-mismatch`.
+
+Verification (Phase A''): `bunx tsc --noEmit -p T/🗑️generated/s4-e2e/probe-tsconfig.json` → exit 0, **0 errors** (run 5, after the
+last edit); `bun ./📜️script.ts verify taxonomy report --scope …/🧪️time-travel` → `clean=true errors=0 warnings=0`; `bun -e` import of
+the module and the router → `[ "runTimeTravelCli" ] [ "VerifyScript" ]`; docstring census 181, 0 duplicate emojis; the module holds
+no temporary-log tag.
+
+### S4.6 Run 5 — results
+
+Pending: waiting for "SERVE UP: 6012" / "SERVE UP: 6112" from `main` (activation is blocked on a peer refactor; S4-INFRA).
+02:52 — `curl` 6012 → 000, 6112 → 000: Phase B not started. Resume S4-E2E (SendMessage) with "SERVE UP: <port>" to run the batches.

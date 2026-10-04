@@ -302,7 +302,8 @@
               "de": "Malebenen von unten nach oben."
             }
           }
-        }
+        },
+        "meshState": null
       },
       "x-semio-ui": {
         "role": "value",

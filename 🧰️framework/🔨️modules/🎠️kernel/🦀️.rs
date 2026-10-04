@@ -1,8 +1,15 @@
 //! 🧠️ Local-first action kernel contracts: actions, operations, capabilities, window I/O.
 
 use crate::manifest::MediaType;
-use dsl::DslValue;
-pub use dsl::{Diagnostic, Fault, FaultCause, FaultCode, FaultFrom, FaultOrigin, FaultScope, Severity};
+use semio_framework_value::DslValue;
+pub use semio_framework_diagnostic::Diagnostic;
+pub use semio_framework_diagnostic::Fault;
+pub use semio_framework_diagnostic::FaultCause;
+pub use semio_framework_diagnostic::FaultCode;
+pub use semio_framework_diagnostic::FaultFrom;
+pub use semio_framework_diagnostic::FaultOrigin;
+pub use semio_framework_diagnostic::FaultScope;
+pub use semio_framework_diagnostic::Severity;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 use ui_wgpu::wgpu::UiNode;
@@ -15,16 +22,16 @@ pub struct ArtifactHandle(pub u128);
 /// 🌉️ Hand-written, not derived: `u128` has no `ToValue`/`FromValue` scalar impl (no JavaScript
 /// number equivalent), so the mirror carries it as a decimal string — same treatment
 /// `BrokerCapabilityGrant.token` gets in `🎠️kernel/🦀️.rs`'s own doc.
-impl dsl::ToValue for ArtifactHandle {
+impl semio_framework_value::ToValue for ArtifactHandle {
     fn to_value(&self) -> DslValue {
-        DslValue::String(self.0.to_string())
+        semio_framework_value::DslValue::String(self.0.to_string())
     }
 }
-impl dsl::FromValue for ArtifactHandle {
-    fn from_value(value: DslValue) -> Result<Self, dsl::ValueError> {
+impl semio_framework_value::FromValue for ArtifactHandle {
+    fn from_value(value: DslValue) -> Result<Self, semio_framework_value::ValueError> {
         match value {
-            DslValue::String(s) => s.parse().map(ArtifactHandle).map_err(|_| dsl::ValueError::new(format!("expected a u128 decimal string for ArtifactHandle, found {s:?}"))),
-            other => Err(dsl::ValueError::new(format!("expected a string for ArtifactHandle, found {other:?}"))),
+            semio_framework_value::DslValue::String(s) => s.parse().map(ArtifactHandle).map_err(|_| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a u128 decimal string for ArtifactHandle, found {s:?}"))),
+            other => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string for ArtifactHandle, found {other:?}"))),
         }
     }
 }
@@ -35,16 +42,16 @@ pub struct WindowHandle(pub u128);
 
 /// 🌉️ Hand-written, not derived — see [`ArtifactHandle`]'s impl doc directly above (same `u128`
 /// decimal-string mirror).
-impl dsl::ToValue for WindowHandle {
+impl semio_framework_value::ToValue for WindowHandle {
     fn to_value(&self) -> DslValue {
-        DslValue::String(self.0.to_string())
+        semio_framework_value::DslValue::String(self.0.to_string())
     }
 }
-impl dsl::FromValue for WindowHandle {
-    fn from_value(value: DslValue) -> Result<Self, dsl::ValueError> {
+impl semio_framework_value::FromValue for WindowHandle {
+    fn from_value(value: DslValue) -> Result<Self, semio_framework_value::ValueError> {
         match value {
-            DslValue::String(s) => s.parse().map(WindowHandle).map_err(|_| dsl::ValueError::new(format!("expected a u128 decimal string for WindowHandle, found {s:?}"))),
-            other => Err(dsl::ValueError::new(format!("expected a string for WindowHandle, found {other:?}"))),
+            semio_framework_value::DslValue::String(s) => s.parse().map(WindowHandle).map_err(|_| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a u128 decimal string for WindowHandle, found {s:?}"))),
+            other => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string for WindowHandle, found {other:?}"))),
         }
     }
 }
@@ -59,16 +66,16 @@ pub struct CapabilityToken(pub u128);
 
 /// 🌉️ Hand-written, not derived — see [`ArtifactHandle`]'s impl doc above (same `u128`
 /// decimal-string mirror).
-impl dsl::ToValue for CapabilityToken {
+impl semio_framework_value::ToValue for CapabilityToken {
     fn to_value(&self) -> DslValue {
-        DslValue::String(self.0.to_string())
+        semio_framework_value::DslValue::String(self.0.to_string())
     }
 }
-impl dsl::FromValue for CapabilityToken {
-    fn from_value(value: DslValue) -> Result<Self, dsl::ValueError> {
+impl semio_framework_value::FromValue for CapabilityToken {
+    fn from_value(value: DslValue) -> Result<Self, semio_framework_value::ValueError> {
         match value {
-            DslValue::String(s) => s.parse().map(CapabilityToken).map_err(|_| dsl::ValueError::new(format!("expected a u128 decimal string for CapabilityToken, found {s:?}"))),
-            other => Err(dsl::ValueError::new(format!("expected a string for CapabilityToken, found {other:?}"))),
+            semio_framework_value::DslValue::String(s) => s.parse().map(CapabilityToken).map_err(|_| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a u128 decimal string for CapabilityToken, found {s:?}"))),
+            other => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string for CapabilityToken, found {other:?}"))),
         }
     }
 }
@@ -427,6 +434,9 @@ pub enum Effect {
         #[value(default, skip_serializing_if = "Option::is_none")]
         read_as: Option<String>,
         import_action: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
+        args: Option<DslValue>,
         #[serde(default)]
         #[value(default)]
         multiple: bool,
@@ -1367,10 +1377,10 @@ pub fn import_payload_chunks(payload: &str) -> Vec<ImportChunk> {
 /// multi-file pick. Integers are minted as [`Number::UInt`] carriers, never floats: the guest's
 /// [`ImportStaging`] reads `chunk`/`chunkCount` with `DslValue::as_u64`, which a `Float` never answers.
 pub fn import_chunk_arguments(name: &str, chunk: &ImportChunk, fan_out: Option<(usize, usize)>) -> DslValue {
-    let uint = |value: usize| DslValue::Number(dsl::os_dsl::schema::Number::UInt(value as u64));
+    let uint = |value: usize| semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(value as u64));
     let mut entries = vec![
-        (IMPORT_ARGUMENT_PAYLOAD.to_string(), DslValue::String(chunk.payload.clone())),
-        (IMPORT_ARGUMENT_NAME.to_string(), DslValue::String(name.to_string())),
+        (IMPORT_ARGUMENT_PAYLOAD.to_string(), semio_framework_value::DslValue::String(chunk.payload.clone())),
+        (IMPORT_ARGUMENT_NAME.to_string(), semio_framework_value::DslValue::String(name.to_string())),
         (IMPORT_ARGUMENT_CHUNK.to_string(), uint(chunk.chunk)),
         (IMPORT_ARGUMENT_CHUNK_COUNT.to_string(), uint(chunk.chunk_count)),
     ];
@@ -1378,7 +1388,7 @@ pub fn import_chunk_arguments(name: &str, chunk: &ImportChunk, fan_out: Option<(
         entries.push((IMPORT_ARGUMENT_INDEX.to_string(), uint(index)));
         entries.push((IMPORT_ARGUMENT_TOTAL.to_string(), uint(total)));
     }
-    DslValue::Object(entries)
+    semio_framework_value::DslValue::Object(entries)
 }
 
 //#region 📥️ImportStaging
@@ -1458,18 +1468,18 @@ impl ImportStaging {
     /// `(name, fan-out, chunk_count)`: a re-pick restarts its run at chunk 0, a chunk the run already admitted is a
     /// retransmission acknowledged at the cursor, any other out-of-order chunk drops the run as a gap.
     pub fn admit_args(&mut self, args: Option<&DslValue>) -> Result<ImportArguments, ImportStagingRefusal> {
-        let Some(DslValue::Object(entries)) = args else {
+        let Some(semio_framework_value::DslValue::Object(entries)) = args else {
             return Ok(ImportArguments::NotAnImport);
         };
         let field = |key: &str| entries.iter().find(|(name, _)| name == key).map(|(_, value)| value);
         let Some(count) = field(IMPORT_ARGUMENT_CHUNK_COUNT) else {
             return Ok(ImportArguments::NotAnImport);
         };
-        let position = |value: Option<&DslValue>| value.and_then(DslValue::as_u64).and_then(|value| usize::try_from(value).ok());
+        let position = |value: Option<&DslValue>| value.and_then(semio_framework_value::DslValue::as_u64).and_then(|value| usize::try_from(value).ok());
         let chunk_count = position(Some(count)).ok_or(ImportStagingRefusal::Envelope)?;
         let chunk = position(field(IMPORT_ARGUMENT_CHUNK)).ok_or(ImportStagingRefusal::Envelope)?;
-        let payload = field(IMPORT_ARGUMENT_PAYLOAD).and_then(DslValue::as_str).ok_or(ImportStagingRefusal::Envelope)?;
-        let name = field(IMPORT_ARGUMENT_NAME).and_then(DslValue::as_str).ok_or(ImportStagingRefusal::Envelope)?;
+        let payload = field(IMPORT_ARGUMENT_PAYLOAD).and_then(semio_framework_value::DslValue::as_str).ok_or(ImportStagingRefusal::Envelope)?;
+        let name = field(IMPORT_ARGUMENT_NAME).and_then(semio_framework_value::DslValue::as_str).ok_or(ImportStagingRefusal::Envelope)?;
         let fan_out = match (field(IMPORT_ARGUMENT_INDEX), field(IMPORT_ARGUMENT_TOTAL)) {
             (None, None) => None,
             (index, total) => match (position(index), position(total)) {
@@ -1485,14 +1495,14 @@ impl ImportStaging {
         }
         let envelope = [IMPORT_ARGUMENT_PAYLOAD, IMPORT_ARGUMENT_NAME, IMPORT_ARGUMENT_CHUNK, IMPORT_ARGUMENT_CHUNK_COUNT, IMPORT_ARGUMENT_INDEX, IMPORT_ARGUMENT_TOTAL];
         let whole = |text: String| {
-            let uint = |value: usize| DslValue::Number(dsl::os_dsl::schema::Number::UInt(value as u64));
-            let mut arguments = vec![(IMPORT_ARGUMENT_PAYLOAD.to_string(), DslValue::String(text)), (IMPORT_ARGUMENT_NAME.to_string(), DslValue::String(name.to_string()))];
+            let uint = |value: usize| semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(value as u64));
+            let mut arguments = vec![(IMPORT_ARGUMENT_PAYLOAD.to_string(), semio_framework_value::DslValue::String(text)), (IMPORT_ARGUMENT_NAME.to_string(), semio_framework_value::DslValue::String(name.to_string()))];
             if let Some((index, total)) = fan_out {
                 arguments.push((IMPORT_ARGUMENT_INDEX.to_string(), uint(index)));
                 arguments.push((IMPORT_ARGUMENT_TOTAL.to_string(), uint(total)));
             }
             arguments.extend(entries.iter().filter(|(key, _)| !envelope.contains(&key.as_str())).cloned());
-            ImportArguments::Whole(DslValue::Object(arguments))
+            ImportArguments::Whole(semio_framework_value::DslValue::Object(arguments))
         };
         if chunk_count == 1 {
             return Ok(whole(payload.to_string()));
@@ -2046,15 +2056,32 @@ impl HistoryEntry {
     }
 }
 
-/// 📡️ The replay a remote history change (another replica's supersession, or the undo or redo of one) needs before this
-/// replica adopts it, stepped per reactor turn (design §16.6): replayed operations of the total, whether the user paused
-/// it (`historyEditCancelReplay` while no session is open; `historyEditRerun` resumes) and the code of a refused adoption.
+/// 📡️ Which history change replays before this replica adopts it ([`HistoryReprojection`]): another replica's change
+/// (`remote`), this replica's own deferred history step (`step`: an interior undo or redo, a checkout, an alternative
+/// switch) or a whole-document load (`load`).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+pub enum HistoryReprojectionKind {
+    #[default]
+    Remote,
+    Step,
+    Load,
+}
+
+/// 📡️ The replay a history change needs before this replica adopts it, stepped per reactor turn (design §16.6, gap N17),
+/// by `kind`: replayed operations of the total, whether the user paused a remote one (`historyEditCancelReplay` while no
+/// session is open; `historyEditRerun` resumes — cancelling a step or a load drops it with zero trace instead) and the code
+/// of a refused adoption.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
-pub struct HistoryRemoteReplay {
+pub struct HistoryReprojection {
     pub done: u32,
     pub total: u32,
+    #[serde(default)]
+    #[value(default)]
+    pub kind: HistoryReprojectionKind,
     #[serde(default)]
     #[value(default)]
     pub paused: bool,
@@ -2093,19 +2120,29 @@ pub struct HistoryPatch {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub time_travel: Option<HistoryTimeTravel>,
-    /// 📡️ The remote history change waiting for its replay; absent while none waits.
+    /// 📡️ The history change (remote, or this replica's own step) waiting for its replay; absent while none waits.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub remote_replay: Option<HistoryRemoteReplay>,
+    pub reprojection: Option<HistoryReprojection>,
+    /// 🔢️ How many edits the document's history holds — the `{n}` of the `history.full` notice, carried as data so no host
+    /// parses it from a fault message.
+    #[serde(default)]
+    #[value(default)]
+    pub edit_count: u32,
 }
 
-/// 📢️ Framework-owned EN/DE notices of the store refusals a history-lane dispatch answers outside a history-edit session,
-/// by fault code — every shell shows these bytes; `{n}` is the edit count a refusal names. Fixture
+/// 📢️ Framework-owned EN/DE notices of the store and runtime refusals a dispatch answers outside a history-edit session
+/// (an open tool transaction, an exhausted or still replaying history, a whole-document load in flight, a history step whose
+/// replay would leave errors), by fault code — every shell shows these bytes; `{n}` is the edit count a refusal names. Fixture
 /// `🧫️fixtures/🧫️history-notices/🔣️.json`; TS twin `HISTORY_NOTICE_LABELS`.
-pub const HISTORY_NOTICE_LABELS: [(&str, &str, &str); 3] = [
+pub const HISTORY_NOTICE_LABELS: [(&str, &str, &str); 7] = [
     ("toolTransaction.open", "A tool is still recording — finish or cancel it first.", "Ein Werkzeug zeichnet noch auf — zuerst abschließen oder abbrechen."),
     ("toolTransaction.unknown", "The tool's recording has already ended.", "Die Aufzeichnung des Werkzeugs ist bereits beendet."),
     ("history.full", "This document's history is full ({n} edits).", "Der Verlauf dieses Dokuments ist voll ({n} Bearbeitungen)."),
+    ("history.replaying", "History is still replaying — wait for it or cancel it first.", "Der Verlauf wird noch neu angewendet — abwarten oder zuerst abbrechen."),
+    ("document.loading", "The document is still loading — wait for it or cancel it first.", "Das Dokument wird noch geladen — abwarten oder zuerst abbrechen."),
+    ("pure.history-unavailable", "This is a head-only evaluation without history — open the document in a live instance to use its history.", "Dies ist eine Auswertung nur des aktuellen Stands ohne Verlauf — für den Verlauf das Dokument in einer laufenden Instanz öffnen."),
+    ("history.step-blocked", "Later mutations would end with errors — fix or withdraw them first.", "Spätere Mutationen würden mit Fehlern enden — zuerst beheben oder zurückziehen."),
 ];
 
 /// 🔔️ The `(en, de)` notice of a history-lane refusal `code` ([`HISTORY_NOTICE_LABELS`]); `None` for any other code.
@@ -2121,6 +2158,131 @@ mod history_patch_tests;
 #[path = "🧪️tests/🧪️history-notices/🦀️.rs"]
 mod history_notices_tests;
 //#endregion 🔖️HistoryWire
+
+//#region 🔖️FaultNotices
+/// 📣️ The localized notice of a refused dispatch (design §20.12): the code it was told under and its text in one shell
+/// axis pair.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FaultNotice {
+    pub code: String,
+    pub text: String,
+}
+
+/// 🏢️ Framework-owned EN/DE notices of the refusal codes any app raises under a framework namespace (`app.command.*`,
+/// `mutation.*`, design §20.12) and of the host's guest admission (`plugin.channel-mismatch`, `{guest}`/`{host}`) — a shell tells them with the fault's own severity, before the app's own table. Fixture
+/// `🧫️fixtures/🧫️framework-notices/🔣️.json`; TS twin `FRAMEWORK_FAULT_NOTICE_LABELS`.
+pub const FRAMEWORK_FAULT_NOTICE_LABELS: [(&str, &str, &str); 17] = [
+    ("app.command.unsupported", "This action is not available here.", "Diese Aktion ist hier nicht verfügbar."),
+    ("app.command.invalid", "This action is not valid.", "Diese Aktion ist ungültig."),
+    ("app.command.invalid-args", "The action's input is not valid.", "Die Eingabe der Aktion ist ungültig."),
+    ("app.command.invalid-payload", "The action's data is not valid.", "Die Daten der Aktion sind ungültig."),
+    ("app.command.targets-required", "Select at least one item first.", "Zuerst mindestens ein Element auswählen."),
+    ("app.command.kind-unavailable", "This kind of item is not available.", "Diese Art von Element ist nicht verfügbar."),
+    ("app.command.target-in-use", "The item is still in use.", "Das Element wird noch verwendet."),
+    ("app.command.tool-mismatch", "This action does not belong to the active tool.", "Diese Aktion gehört nicht zum aktiven Werkzeug."),
+    ("mutation.target-missing", "The target no longer exists.", "Das Ziel existiert nicht mehr."),
+    ("mutation.target-mismatch", "The change does not fit the target's current state.", "Die Änderung passt nicht zum aktuellen Zustand des Ziels."),
+    ("mutation.too-large", "This change is too large to record at once — split it into smaller steps.", "Diese Änderung ist zu groß, um sie auf einmal aufzuzeichnen — in kleinere Schritte aufteilen."),
+    ("plugin.media.schema-mismatch", "This input is a {found} document, but only {expected} documents can be loaded here.", "Diese Eingabe ist ein {found}-Dokument, hier lassen sich aber nur {expected}-Dokumente laden."),
+    ("plugin.channel-mismatch", "This plugin was built for app channel {guest}, but this app speaks app channel {host} — rebuild the plugin.", "Dieses Plugin wurde für App-Kanal {guest} gebaut, diese App spricht aber App-Kanal {host} — Plugin neu bauen."),
+    ("history-filter.unknown", "This history filter is not known — choose one the history panel offers.", "Dieser Verlaufsfilter ist unbekannt — einen im Verlaufsbereich angebotenen wählen."),
+    ("window-transient.window-required", "This needs an open window — focus a window first.", "Dafür wird ein offenes Fenster benötigt — zuerst ein Fenster fokussieren."),
+    ("window-transient.window-stale", "The window is no longer open.", "Das Fenster ist nicht mehr geöffnet."),
+    ("window-transient.kind-unknown", "This window cannot hold this state — use a window of the matching kind.", "Dieses Fenster kann diesen Zustand nicht halten — ein Fenster der passenden Art verwenden."),
+];
+
+/// 🪧️ The `(en, de)` notice of a framework-namespace refusal `code` ([`FRAMEWORK_FAULT_NOTICE_LABELS`]); `None` for any other code.
+pub fn framework_fault_notice(code: &str) -> Option<(&'static str, &'static str)> {
+    FRAMEWORK_FAULT_NOTICE_LABELS.iter().find(|(known, _, _)| *known == code).map(|(_, en, de)| (*en, *de))
+}
+
+/// 🗯️ The notice a fault earns: its own code, then each cause's, is looked up in the framework's tables
+/// ([`HISTORY_NOTICE_LABELS`], [`FRAMEWORK_FAULT_NOTICE_LABELS`]) first and the refusing app's published table
+/// (`AppDefinition::fault_notices`) second; the first declared code decides, its `{name}` placeholders filled from
+/// `Fault.params` only. `None` when no code is declared or a placeholder has no value — the shell then shows its generic
+/// refusal, never a raw code. Corpus `🛂️manifest/🧫️fixtures/🧫️fault-notices`; TS twin `faultNotice`.
+pub fn fault_notice(fault: &Fault, notices: &[crate::manifest::FaultNoticeDefinition], terminology: semio_framework_ui_locale::Terminology, locale: semio_framework_ui_locale::Locale) -> Option<FaultNotice> {
+    let params = fault.params.as_deref();
+    let framework = |code: &str| history_notice(code).or_else(|| framework_fault_notice(code));
+    let code = std::iter::once(&fault.code).chain(fault.causes.iter().filter_map(|cause| cause.code.as_ref())).map(|code| code.0.as_str()).find(|code| framework(code).is_some() || notices.iter().any(|notice| notice.code == *code))?;
+    let text = match framework(code) {
+        Some((en, de)) => crate::manifest::fill_fault_notice(semio_framework_ui_locale::LocalizedLabel::native(en, de).resolve(terminology, locale), params),
+        None => crate::manifest::fault_notice_text(notices, code, params, terminology, locale),
+    }?;
+    Some(FaultNotice { code: code.to_string(), text })
+}
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️fault-notices/🦀️.rs"]
+mod fault_notices_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️framework-notices/🦀️.rs"]
+mod framework_notices_tests;
+//#endregion 🔖️FaultNotices
+
+//#region 🔖️HistoryReprojectionStatus
+/// 📡️ Framework-owned EN/DE copy of a history change replaying before this replica adopts it ([`HistoryReprojection`]), by
+/// `<kind>.<part>` key: every shell announces it in a polite status region outside the History panel and the history body
+/// titles its reprojection section with it (design §16.6, gap N17, audit W1E-3). `{done}`/`{total}` are replayed
+/// operations, `{reason}` a refusal's notice. Fixture `🧫️fixtures/🧫️history-reprojection/🔣️.json`; TS twin
+/// `HISTORY_REPROJECTION_LABELS`.
+pub const HISTORY_REPROJECTION_LABELS: [(&str, &str, &str); 11] = [
+    ("remote.title", "Remote history change", "Entfernte Verlaufsänderung"),
+    ("remote.progress", "Replaying a remote history change: {done} of {total} mutations", "Entfernte Verlaufsänderung wird angewendet: {done} von {total} Mutationen"),
+    ("remote.paused", "Remote history change paused: this replica still shows the history before it", "Entfernte Verlaufsänderung pausiert: dieses Replikat zeigt noch den Verlauf davor"),
+    ("remote.refused", "Remote history change refused: {reason}", "Entfernte Verlaufsänderung abgelehnt: {reason}"),
+    ("step.title", "History step", "Verlaufsschritt"),
+    ("step.progress", "Replaying history: {done} of {total} mutations", "Verlauf wird neu angewendet: {done} von {total} Mutationen"),
+    ("step.refused", "History step refused: {reason}", "Verlaufsschritt abgelehnt: {reason}"),
+    ("load.title", "Document load", "Dokument laden"),
+    ("load.progress", "Loading document: {done} of {total}", "Dokument wird geladen: {done} von {total}"),
+    ("load.refused", "Document load refused: {reason}", "Laden des Dokuments abgelehnt: {reason}"),
+    ("reason.unnamed", "the change could not be applied", "die Änderung konnte nicht angewendet werden"),
+];
+
+/// 📢️ What a shell announces while a history change replays before adoption ([`history_reprojection_status`]): the kind's
+/// title, one status line, replayed operations of the total, whether the user paused a remote change, and the code of a
+/// refused adoption (a shell's `data-notice-code`, never shown as text).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct HistoryReprojectionStatus {
+    pub title: String,
+    pub text: String,
+    pub done: u32,
+    pub total: u32,
+    pub paused: bool,
+    pub fault: Option<String>,
+}
+
+/// 📢️ The one status copy of a history change replaying before adoption, for both shells and the history body: a refused
+/// adoption (a fault with nothing left to replay) reads `<kind>.refused` with the fault's placeholder-free history notice
+/// ([`HISTORY_NOTICE_LABELS`]) or `reason.unnamed` — never a raw code; a paused remote change reads `remote.paused` (a step or
+/// a load is never paused); anything else its kind's progress. Labels [`HISTORY_REPROJECTION_LABELS`]; TS twin
+/// `historyReprojectionStatus`.
+pub fn history_reprojection_status(reprojection: &HistoryReprojection, terminology: semio_framework_ui_locale::Terminology, locale: semio_framework_ui_locale::Locale) -> HistoryReprojectionStatus {
+    let localized = |en: &str, de: &str| semio_framework_ui_locale::LocalizedLabel::native(en, de).resolve(terminology, locale).to_string();
+    let label = |key: String| HISTORY_REPROJECTION_LABELS.iter().find(|(known, _, _)| *known == key).map_or_else(String::new, |(_, en, de)| localized(en, de));
+    let kind = match reprojection.kind {
+        HistoryReprojectionKind::Remote => "remote",
+        HistoryReprojectionKind::Step => "step",
+        HistoryReprojectionKind::Load => "load",
+    };
+    let paused = reprojection.paused && reprojection.kind == HistoryReprojectionKind::Remote;
+    let text = match reprojection.fault.as_deref() {
+        Some(code) if reprojection.total == 0 => {
+            let reason = history_notice(code).filter(|(en, de)| !en.contains('{') && !de.contains('{')).map_or_else(|| label("reason.unnamed".to_string()), |(en, de)| localized(en, de));
+            label(format!("{kind}.refused")).replace("{reason}", &reason)
+        }
+        _ if paused => label("remote.paused".to_string()),
+        _ => label(format!("{kind}.progress")).replace("{done}", &reprojection.done.to_string()).replace("{total}", &reprojection.total.to_string()),
+    };
+    HistoryReprojectionStatus { title: label(format!("{kind}.title")), text, done: reprojection.done, total: reprojection.total, paused, fault: reprojection.fault.clone() }
+}
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️history-reprojection/🦀️.rs"]
+mod history_reprojection_tests;
+//#endregion 🔖️HistoryReprojectionStatus
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
@@ -2167,7 +2329,7 @@ pub struct CommandContext {
 //#endregion 🔖️Invocation
 
 //#region 🔖️Presence
-pub use semio_framework_os_kernel::{decode_presence_history_edit, decode_presence_peer, encode_presence_history_edit, encode_presence_peer, PresenceHistoryEdit, PresenceHistoryEditStage, PresencePeer, PresenceToolRun, PresenceToolRunState, PresenceUi, PresenceViewKind, PresenceWindowView};
+pub use ::replication::{decode_presence_history_edit, decode_presence_peer, encode_presence_history_edit, encode_presence_peer, PresenceHistoryEdit, PresenceHistoryEditStage, PresencePeer, PresenceToolRun, PresenceToolRunState, PresenceUi, PresenceViewKind, PresenceWindowView};
 //#endregion 🔖️Presence
 
 //#region 🔖️Window
@@ -2273,21 +2435,10 @@ pub enum RequestOutcome {
     Err(Vec<u8>),
 }
 
-//#region 🔖️PagedCommandIngress
-/// 🧵️ Definitions relocated to `semio-framework-os-kernel`'s `os_spr::channel` module (ticket
-/// 26/08/23/END-TO-END-TESTING-REFACTOR): this file cannot depend on
-/// `semio-framework-os-kernel` without a cycle (`semio_framework_os_kernel::{decode_presence_peer,
-/// PresencePeer, ...}` above already depends on it), yet the ONE real functional consumer of this
-/// paged-command-ingress machinery — `📡️spr/🧵️channel/🦀️.rs` — lives entirely inside
-/// that crate and could not reach these types at all. Re-exported here, unchanged, so every
-/// existing `semio_framework::kernel::X` / `manifest::kernel::X` call site (and this file's own
-/// `#[cfg(test)] mod extension_activation_tests` below, via its `use super::*`) keeps resolving —
-/// same pattern this file's own `PresencePeer` re-export above already uses.
-pub use semio_framework_os_kernel::channel::{
-    CommandBatch, CommandBatchDriver, CommandBatchProgress, CommandDriverRegistry, CommandEnvelope, CommandEnvelopeSet, CommandIngressStatus, CommandPageCursor, CommandPageSet, FixedCommandPage, PagedCommand, PagedCommandReader,
-    RejectedCommandBuild, RejectedCommandBuildRegistry, COMMAND_BATCH_MAXIMUM_ITEMS, COMMAND_MAXIMUM_BYTES, COMMAND_MAXIMUM_PAGES, COMMAND_PAGE_MAXIMUM_BYTES,
+pub use ::replication::wire::command_ingress::{
+    FixedCommandPage, CommandPageSet, PagedCommand, PagedCommandReader, CommandEnvelope, CommandBatch, CommandEnvelopeSet, RejectedCommandBuild, RejectedCommandBuildRegistry, CommandBatchProgress, CommandBatchDriver, CommandDriverRegistry, CommandPageCursor, CommandIngressStatus, COMMAND_PAGE_MAXIMUM_BYTES, COMMAND_MAXIMUM_BYTES, COMMAND_MAXIMUM_PAGES, COMMAND_BATCH_MAXIMUM_ITEMS, INVOCATION_RESULT_PACK_MAXIMUM_BYTES
 };
-//#endregion 🔖️PagedCommandIngress
+
 
 /// 📨️ Everything the host delivers into a guest's `reactor::poll` — the full inbound contract
 /// from `📓️design-abi.md` §2. Lifecycle events open/close/activate/suspend an instance and push

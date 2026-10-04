@@ -37,19 +37,19 @@ impl ArtifactSerializer for SemioMeshToObj {
         let mut objects: Vec<ObjObject> = Vec::new();
 
         for mesh in &from.meshes {
-            let face_range_start = u64::try_from(faces.len()).map_err(|_| store::PackError::Schema("SemioMeshToObj: face range exceeds schema word".into()))?;
+            let face_range_start = u64::try_from(faces.len()).map_err(|_| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "SemioMeshToObj: face range exceeds schema word")))?;
             for prim in &mesh.primitives {
                 if prim.topology != SemioTopology::Triangles {
-                    return Err(store::PackError::Schema(format!("SemioMeshToObj: primitive {:?} has topology {:?}; this codec only exports Triangles", prim.id, prim.topology)));
+                    return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, format!("SemioMeshToObj: primitive {:?} has topology {:?}; this codec only exports Triangles", prim.id, prim.topology))));
                 }
                 let corner_indices: Vec<u32> = if !prim.indices.is_empty() {
                     if prim.indices.len() % 3 != 0 {
-                        return Err(store::PackError::Schema(format!("SemioMeshToObj: primitive {:?} indices length {} is not a multiple of 3", prim.id, prim.indices.len())));
+                        return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("SemioMeshToObj: primitive {:?} indices length {} is not a multiple of 3", prim.id, prim.indices.len()))));
                     }
                     prim.indices.clone()
                 } else {
                     if prim.positions.len() % 3 != 0 {
-                        return Err(store::PackError::Schema(format!("SemioMeshToObj: non-indexed primitive {:?} has {} positions, not a multiple of 3", prim.id, prim.positions.len())));
+                        return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("SemioMeshToObj: non-indexed primitive {:?} has {} positions, not a multiple of 3", prim.id, prim.positions.len()))));
                     }
                     (0..prim.positions.len() as u32).collect()
                 };
@@ -57,12 +57,12 @@ impl ArtifactSerializer for SemioMeshToObj {
                 for tri in corner_indices.chunks(3) {
                     let mut face_vertices = Vec::with_capacity(3);
                     for &idx in tri {
-                        let p = prim.positions.get(idx as usize).ok_or_else(|| store::PackError::Schema(format!("SemioMeshToObj: primitive {:?} index {idx} out of bounds", prim.id)))?;
+                        let p = prim.positions.get(idx as usize).ok_or_else(|| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("SemioMeshToObj: primitive {:?} index {idx} out of bounds", prim.id))))?;
                         vertices.push(ObjVertex { x: p.x, y: p.y, z: p.z, w: None });
                         let vertex_ref = (vertices.len() - 1) as u32;
 
                         let normal_ref = if !prim.normals.is_empty() {
-                            let n = prim.normals.get(idx as usize).ok_or_else(|| store::PackError::Schema(format!("SemioMeshToObj: primitive {:?} normal index {idx} out of bounds", prim.id)))?;
+                            let n = prim.normals.get(idx as usize).ok_or_else(|| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("SemioMeshToObj: primitive {:?} normal index {idx} out of bounds", prim.id))))?;
                             normals.push(ObjNormal { x: n.x, y: n.y, z: n.z });
                             Some((normals.len() - 1) as u32)
                         } else {
@@ -70,7 +70,7 @@ impl ArtifactSerializer for SemioMeshToObj {
                         };
 
                         let texcoord_ref = if !prim.uvs.is_empty() {
-                            let uv = prim.uvs.get(idx as usize).ok_or_else(|| store::PackError::Schema(format!("SemioMeshToObj: primitive {:?} uv index {idx} out of bounds", prim.id)))?;
+                            let uv = prim.uvs.get(idx as usize).ok_or_else(|| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("SemioMeshToObj: primitive {:?} uv index {idx} out of bounds", prim.id))))?;
                             texcoords.push(ObjTexCoord { u: uv.u, v: uv.v, w: None });
                             Some((texcoords.len() - 1) as u32)
                         } else {
@@ -82,7 +82,7 @@ impl ArtifactSerializer for SemioMeshToObj {
                     faces.push(ObjFace { vertices: face_vertices });
                 }
             }
-            let face_range_end = u64::try_from(faces.len()).map_err(|_| store::PackError::Schema("SemioMeshToObj: face range exceeds schema word".into()))?;
+            let face_range_end = u64::try_from(faces.len()).map_err(|_| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "SemioMeshToObj: face range exceeds schema word")))?;
             objects.push(ObjObject { name: mesh.id.clone(), faces: (face_range_start..face_range_end).collect() });
         }
 

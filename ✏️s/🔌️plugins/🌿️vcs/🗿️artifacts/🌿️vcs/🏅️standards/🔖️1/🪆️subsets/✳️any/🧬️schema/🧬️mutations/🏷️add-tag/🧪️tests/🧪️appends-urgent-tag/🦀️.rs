@@ -51,7 +51,7 @@ async fn tag_is_appended_after_the_existing_members() {
 async fn inverse_removes_the_tag_it_added() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_vcs_mutation(&base, &mutation);
+    let inverse = inverse_vcs_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "add-tag against a base that lacks the tag undoes with exactly one remove-tag");
     let mut snapshot = base.clone();
     apply_vcs_mutation(&mut snapshot, &mutation).expect("forward applies");

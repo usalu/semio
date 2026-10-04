@@ -39,5 +39,6 @@ pub fn run_definition() -> ToolRunDefinition {
         revalidate_job: None,
         settings: ToolRunSettingsReads { config: ["/contactTolerance", "/objectKindWeights", "/vortexKindWeights"].map(String::from).to_vec(), ..ToolRunSettingsReads::default() },
         windows: Vec::new(),
+        member: None,
     }
 }

@@ -1,0 +1,31 @@
+{
+  "schema": "semio.test.bmp.rgba8-direct-rgb24.v1",
+  "targetProfile": "directRgb24",
+  "width": 1,
+  "height": 1,
+  "rgb": [
+    10,
+    20,
+    30
+  ],
+  "cases": [
+    {
+      "id": "opaque-255",
+      "alpha": 255,
+      "outcome": "accepted",
+      "expected": "rgba8-opaque-direct-rgb24.bmp"
+    },
+    {
+      "id": "transparent-0",
+      "alpha": 0,
+      "outcome": "rejected",
+      "error": "cannot represent nonopaque"
+    },
+    {
+      "id": "partial-128",
+      "alpha": 128,
+      "outcome": "rejected",
+      "error": "cannot represent nonopaque"
+    }
+  ]
+}

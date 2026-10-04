@@ -1,0 +1,137 @@
+{
+  "schema": "semio.pack.intrinsic-boundary",
+  "field": {
+    "id": 1,
+    "key": "value",
+    "shape": "Value",
+    "layout": "Lines"
+  },
+  "cases": [
+    {
+      "id": "null",
+      "value": {
+        "kind": "null"
+      },
+      "bodyHex": "0001011112"
+    },
+    {
+      "id": "false",
+      "value": {
+        "kind": "boolean",
+        "value": false
+      },
+      "bodyHex": "0001011101"
+    },
+    {
+      "id": "true",
+      "value": {
+        "kind": "boolean",
+        "value": true
+      },
+      "bodyHex": "0001011102"
+    },
+    {
+      "id": "unsigned-one",
+      "value": {
+        "kind": "unsigned",
+        "value": "1"
+      },
+      "bodyHex": "000101110401"
+    },
+    {
+      "id": "signed-minus-one",
+      "value": {
+        "kind": "signed",
+        "value": "-1"
+      },
+      "bodyHex": "000101110301"
+    },
+    {
+      "id": "float-one",
+      "value": {
+        "kind": "float",
+        "value": "3ff0000000000000"
+      },
+      "bodyHex": "0001011105000000000000f03f"
+    },
+    {
+      "id": "negative-zero",
+      "value": {
+        "kind": "float",
+        "value": "8000000000000000"
+      },
+      "bodyHex": "00010111050000000000000080"
+    },
+    {
+      "id": "interned-text",
+      "value": {
+        "kind": "text",
+        "value": "a"
+      },
+      "bodyHex": "0101610101110600"
+    },
+    {
+      "id": "octets",
+      "value": {
+        "kind": "bytes",
+        "value": [
+          0,
+          1,
+          127
+        ]
+      },
+      "bodyHex": "00010111080300017f"
+    },
+    {
+      "id": "empty-array",
+      "value": { "kind": "array", "items": [] },
+      "bodyHex": "000101110c00"
+    },
+    {
+      "id": "empty-object",
+      "value": { "kind": "object", "members": [] },
+      "bodyHex": "000101111000"
+    },
+    {
+      "id": "nested-member",
+      "value": { "kind": "object", "members": [{ "name": "x", "value": { "kind": "array", "items": [{ "kind": "unsigned", "value": "1" }] } }] },
+      "bodyHex": "0001011110010701780c010401"
+    }
+  ],
+  "refusals": [
+    {
+      "id": "unknown-field",
+      "bodyHex": "0001021112",
+      "kind": "InvalidValue"
+    },
+    {
+      "id": "missing-field",
+      "bodyHex": "0000",
+      "kind": "InvalidValue"
+    },
+    {
+      "id": "extra-field",
+      "bodyHex": "0002011112011112",
+      "kind": "InvalidValue"
+    },
+    {
+      "id": "suffix",
+      "bodyHex": "000101111200",
+      "kind": "InvalidValue"
+    }
+  ],
+  "controls": [
+    "cancellation-before-ownership",
+    "exact-observed-allowance",
+    "one-byte-short",
+    "cumulative-control",
+    "no-value-payload-clone"
+  ],
+  "document": [
+    "same-synthetic-schema",
+    "exact-single-value-field",
+    "reject-schema-drift",
+    "move-decoded-value"
+  ],
+  "integerCarrier": "🧰️framework/🔨️modules/🛂️manifest/🪟️view-context/🧫️fixtures/🔢️integer-carriers/🔣️.json"
+}

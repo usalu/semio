@@ -26,13 +26,13 @@ const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutat
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-material/🔗️blocks/🎯️outcome/🔣️.json");
 
 fn before() -> Fem2dSnapshot {
-    dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> Fem2dSnapshot {
-    dsl::json::from_json_str(AFTER).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> Fem2dMutation {
-    dsl::json::from_json_str(MUTATION).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 
 /// ▶️ A refused `delete-material` still applies cleanly — the refusal is carried as a diagnostic beside an
@@ -55,7 +55,7 @@ fn the_refusal_is_the_declared_diagnostic() {
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.target-referenced", "delete-material/blocks-in-use-e99619: the refusal is reported as mutation.target-referenced");
-    assert_eq!(messages[0].level, protocol::Severity::Error, "a live referrer is a property of THIS base, so it is an Error rather than a Fatal");
+    assert_eq!(messages[0].level, semio_framework_diagnostic::Severity::Error, "a live referrer is a property of THIS base, so it is an Error rather than a Fatal");
     assert_eq!(
         messages[0].target,
         vec!["steel_s355".to_string(), "c1".to_string(), "c2".to_string(), "c3".to_string(), "c4".to_string(), "b1".to_string(), "b2".to_string(), "br1".to_string()],
@@ -68,7 +68,7 @@ fn the_refusal_is_the_declared_diagnostic() {
 /// ↩️ `delete-material`'s inverse is BASE-derived and the target survives the refusal, so the inverse is the `create-material` that would put the grade back.
 #[test]
 fn inverse_of_the_refused_mutation() {
-    let inverse = inverse_fem2d_mutation(&before(), &mutation());
+    let inverse = inverse_fem2d_mutation(&before(), &mutation()).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "delete-material/blocks-in-use-e99619: delete-material undoes with exactly one step, got {inverse:?}");
     let Fem2dMutation::CreateMaterial(undo) = &inverse[0] else {
         panic!("delete-material's inverse must be a CreateMaterial, got {:?}", inverse[0]);
@@ -79,12 +79,12 @@ fn inverse_of_the_refused_mutation() {
 /// 🎯️ The declared rejection — status, code and path — is exactly what the diff builder emits.
 #[test]
 fn declared_outcome_holds() {
-    let outcome: dsl::DslValue = dsl::json::from_json_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(dsl::DslValue::as_str), Some("rejected"), "delete-material/blocks-in-use-e99619 declares a rejected outcome");
+    let outcome: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(OUTCOME, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
+    assert_eq!(outcome.get("status").and_then(semio_framework_value::DslValue::as_str), Some("rejected"), "delete-material/blocks-in-use-e99619 declares a rejected outcome");
     let produced = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &before());
     let message = produced.messages().first().expect("a rejected outcome carries a diagnostic");
-    assert_eq!(outcome.get("code").and_then(dsl::DslValue::as_str), Some(message.code.0.as_str()), "the declared code must match the emitted one");
-    let declared: Vec<String> = outcome.get("path").and_then(dsl::DslValue::as_array).expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();
+    assert_eq!(outcome.get("code").and_then(semio_framework_value::DslValue::as_str), Some(message.code.0.as_str()), "the declared code must match the emitted one");
+    let declared: Vec<String> = outcome.get("path").and_then(semio_framework_value::DslValue::as_array).expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();
     assert_eq!(declared, message.target, "the declared path must match the emitted target");
 }
 
@@ -92,14 +92,14 @@ fn declared_outcome_holds() {
 #[test]
 fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: Fem2dSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
-        let reencoded = dsl::ToValue::to_value(&decoded);
-        let original: dsl::DslValue = dsl::json::from_json_str(text).expect("snapshot reparses");
+        let decoded: Fem2dSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = semio_framework_value::ToValue::to_value(&decoded);
+        let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot reparses");
         assert_eq!(reencoded, original, "delete-material/blocks-in-use-e99619: committed {label} JSON is not canonical");
     }
     assert_eq!(BEFORE, AFTER, "delete-material/blocks-in-use-e99619 changes nothing: the two committed snapshots must be byte-identical");
     let decoded_mutation = mutation();
-    let reencoded = dsl::ToValue::to_value(&decoded_mutation);
-    let original: dsl::DslValue = dsl::json::from_json_str(MUTATION).expect("mutation reparses");
+    let reencoded = semio_framework_value::ToValue::to_value(&decoded_mutation);
+    let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation reparses");
     assert_eq!(reencoded, original, "delete-material/blocks-in-use-e99619: committed mutation JSON is not canonical");
 }

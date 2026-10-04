@@ -8,7 +8,7 @@
 use crate::editor::txt::modes::edit;
 use crate::editor::txt::modes::edit::windows::main;
 use crate::schema::mutation_support::{native_snapshot_error, txt_usize_to_u32};
-use crate::schema::mutations::{InsertLineMutation, RemoveLineMutation, SetLineEndingMutation, SetLineMutation, SetTrailingNewlineMutation};
+use crate::schema::mutations::{InsertLineMutation, RemoveLineMutation, SetLineEndingMutation, SetLineMutation, SetSnapshotMutation, SetTrailingNewlineMutation};
 use crate::{TxtMutation, TxtSnapshot, STDIO_TXT_DOCUMENT_SCHEMA};
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::AppOperationContext;
@@ -28,7 +28,6 @@ use semio_framework_plugin::EditorApp;
 use semio_framework_plugin::Emit;
 use semio_framework_plugin::Fault;
 use semio_framework_plugin::InteractiveJobClassification;
-use semio_framework_ui_locale::Label;
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
 use semio_framework_plugin::NoDraft;
@@ -44,6 +43,7 @@ use semio_framework_plugin::ToolFactoryKey;
 use semio_framework_plugin::ToolJobFactory;
 use semio_framework_plugin::ToolJobFactoryError;
 use semio_framework_plugin::ToolOperationSpec;
+use semio_framework_ui_locale::Label;
 use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
 
 //#region 🔖️Dialect
@@ -102,23 +102,35 @@ impl protocol::OpText for TxtEditorCommand {
             TxtEditorCommand::SetActiveExample { example_id } => format!("active-example id={}", hex_encode(example_id.as_bytes())),
         }
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         if let Some(hex) = line.strip_prefix("active-example id=") {
-            let bytes = hex_decode(hex).map_err(|error| store::TextError::new(format!("txt editor command: bad hex {error}"), dsl::TextSpan::at(1, 1)))?;
-            let example_id = String::from_utf8(bytes).map_err(|error| store::TextError::new(format!("txt editor command: bad utf8 {error}"), dsl::TextSpan::at(1, 1)))?;
+            let bytes =
+                hex_decode(hex).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("txt editor command: bad hex {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
+            let example_id = String::from_utf8(bytes)
+                .map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("txt editor command: bad utf8 {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
             return Ok(TxtEditorCommand::SetActiveExample { example_id });
         }
         if let Some(hex) = line.strip_prefix("snapshot-edit event=") {
-            let bytes = hex_decode(hex).map_err(|error| store::TextError::new(format!("txt editor command: bad snapshot edit hex {error}"), dsl::TextSpan::at(1, 1)))?;
-            let event = <SnapshotEditEvent as protocol::OpBinary>::decode_op(&bytes).map_err(|error| store::TextError::new(format!("txt editor command: bad snapshot edit {error}"), dsl::TextSpan::at(1, 1)))?;
+            let bytes = hex_decode(hex)
+                .map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("txt editor command: bad snapshot edit hex {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
+            let event = <SnapshotEditEvent as protocol::OpBinary>::decode_op(&bytes)
+                .map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("txt editor command: bad snapshot edit {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
             return Ok(TxtEditorCommand::EditSnapshot { event });
         }
-        let rest = line.strip_prefix("replace-text revision=").ok_or_else(|| store::TextError::new(format!("txt editor command: unknown line {line:?}"), dsl::TextSpan::at(1, 1)))?;
-        let (revision, text) = rest.split_once(" text=").ok_or_else(|| store::TextError::new("txt editor command: missing text", dsl::TextSpan::at(1, 1)))?;
-        let revision = String::from_utf8(hex_decode(revision).map_err(|error| store::TextError::new(format!("txt editor command: bad revision hex {error}"), dsl::TextSpan::at(1, 1)))?)
-            .map_err(|error| store::TextError::new(format!("txt editor command: bad revision utf8 {error}"), dsl::TextSpan::at(1, 1)))?;
-        let text = String::from_utf8(hex_decode(text).map_err(|error| store::TextError::new(format!("txt editor command: bad text hex {error}"), dsl::TextSpan::at(1, 1)))?)
-            .map_err(|error| store::TextError::new(format!("txt editor command: bad text utf8 {error}"), dsl::TextSpan::at(1, 1)))?;
+        let rest = line
+            .strip_prefix("replace-text revision=")
+            .ok_or_else(|| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("txt editor command: unknown line {line:?}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
+        let (revision, text) =
+            rest.split_once(" text=").ok_or_else(|| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "txt editor command: missing text", semio_framework_diagnostic::TextSpan::at(1, 1)))?;
+        let revision = String::from_utf8(
+            hex_decode(revision)
+                .map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("txt editor command: bad revision hex {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?,
+        )
+        .map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("txt editor command: bad revision utf8 {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
+        let text = String::from_utf8(
+            hex_decode(text).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("txt editor command: bad text hex {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?,
+        )
+        .map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("txt editor command: bad text utf8 {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
         Ok(TxtEditorCommand::ReplaceText { revision, text })
     }
 }
@@ -193,7 +205,7 @@ fn txt_example_snapshot(example_id: &str) -> TxtSnapshot {
 /// `ArtifactEditor::command_from_action`'s default refuses EVERY id, which is why the boot example,
 /// every navbar pick and every Actions-pane row died before reaching a command.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn txt_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<TxtEditorCommand, Fault> {
+fn txt_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<TxtEditorCommand, Fault> {
     if let Some(event) = semio_s_artifact_stdio_contract::editing::snapshot_edit_event_from_action(action, args)? {
         return Ok(TxtEditorCommand::EditSnapshot { event });
     }
@@ -226,9 +238,7 @@ fn txt_retained_extent(_command: &TxtEditorCommand, _snapshot: &TxtSnapshot, _in
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn txt_emit(command: &TxtEditorCommand, snapshot: &TxtSnapshot, canonical_revision: Option<[u8; 32]>) -> Result<Emit<TxtMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     let (revision, text) = match command {
-        TxtEditorCommand::SetActiveExample { example_id } => {
-            return Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&txt_example_snapshot(example_id), STDIO_TXT_DOCUMENT_SCHEMA)], description: Some(format!("Load example {example_id}")), ..Default::default() })
-        }
+        TxtEditorCommand::SetActiveExample { example_id } => return Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&txt_example_snapshot(example_id), STDIO_TXT_DOCUMENT_SCHEMA)], ..Default::default() }),
         TxtEditorCommand::ReplaceText { revision, text } => (revision, text),
         TxtEditorCommand::EditSnapshot { .. } => return Err(Fault::from("stdio-txt-snapshot-edit-routed-to-native-reducer")),
     };
@@ -439,6 +449,23 @@ impl ArtifactEditor for TxtEditor {
     const DIALECT: Dialect = TXT_EDITOR_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_TXT_DOCUMENT_SCHEMA;
 
+    fn natural_file_codec() -> Option<semio_framework_plugin::NaturalFileCodec> {
+        Some(semio_framework_plugin::NaturalFileCodec { format_kind: "s.stdio.txt@utf-8", extension: ".txt", media_type: "text/plain", binary: false })
+    }
+
+    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
+        Ok(snapshot.to_body().into_bytes())
+    }
+
+    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
+        let text = std::str::from_utf8(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))?;
+        Ok(TxtSnapshot::from_body(text))
+    }
+
+    fn whole_document_operation(snapshot: Self::Snapshot) -> Option<Self::Mutation> {
+        Some(TxtMutation::SetSnapshot(SetSnapshotMutation { snapshot }))
+    }
+
     semio_s_artifact_stdio_contract::snapshot_editing_bounded_first_step_tool_proofs! {
         owner: EditorApp<TxtEditor>,
         owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/✏️editor/🦀️.rs",
@@ -559,7 +586,7 @@ impl ArtifactEditor for TxtEditor {
         txt_command_id(command)
     }
 
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
         txt_command_from_action(action, args)
     }
 
@@ -587,10 +614,11 @@ impl ArtifactEditor for TxtEditor {
             main::BODY_KEY => {
                 let revision =
                     doc.render_operation().map_or_else(|| semio_s_artifact_stdio_contract::window_kit_snapshot_revision(doc.snapshot), |operation| semio_s_artifact_stdio_contract::window_kit_canonical_revision(operation.canonical_base_revision));
-                main::render(doc.snapshot, view_state.locale, &revision).map(semio_framework_plugin::built_to_component_tree)
+                let publication_revision = semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?;
+                main::render(doc.snapshot, view_state.locale, &revision, publication_revision).map(semio_framework_plugin::built_to_component_tree)
             }
             semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY => semio_s_artifact_stdio_contract::editing::render_snapshot_details(
-                doc.snapshot,
+                doc,
                 view_state.locale,
                 "s.stdio.txt@utf-8/*#editor",
                 &semio_framework_plugin::TreeWindows::for_body(view_state, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY),

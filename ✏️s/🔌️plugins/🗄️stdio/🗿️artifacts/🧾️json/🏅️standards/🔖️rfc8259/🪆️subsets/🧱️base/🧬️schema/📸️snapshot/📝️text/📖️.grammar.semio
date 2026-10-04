@@ -7,9 +7,9 @@ comment none
 document = envelope? snapshot
 envelope = "semio" "stdio.json.dsl" "v1"
 snapshot = "schema" "=" text "nodes" "=" "[" node* "]"
-node = "kind" "=" kind node-field*
+node = "{" "kind" "=" kind node-field* "}"
 kind = "null" | "boolean" | "number" | "string" | "array" | "object"
 node-field = "boolean" "=" boolean | "number-lexeme" "=" text | "string-value" "=" text | "items" "=" "[" INT* "]" | "members" "=" "[" member* "]"
-member = "key" "=" text "value" "=" INT
+member = "{" "key" "=" text "value" "=" INT "}"
 boolean = "true" | "false"
 text = IDENT | TEXT

@@ -3,7 +3,10 @@ use crate::standards::v1::subsets::any::schema::mutations::{edit_before_fixture,
 use crate::RewritingSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &super::EditBeforeFixture, base: &RewritingSnapshot) -> Vec<RewriteRuleMutation> {
-    vec![edit_before_fixture(base.before_fixture_json.clone())]
+pub fn inverse(_payload: &super::EditBeforeFixture, base: &RewritingSnapshot) -> Result<Vec<RewriteRuleMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
+    vec![edit_before_fixture(base.working_graph.clone())]
+
+    })())
 }
 //#endregion 🔖️Inverse

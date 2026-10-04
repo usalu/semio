@@ -1,6 +1,6 @@
 # set-snapshot/SetSnapshot: 📸️set-snapshot/🔗️.graphql
 # 🧬️ SemioGraphMutation schema — real facet mirror of the Rust `🦀️.rs` sibling.
-input CreateNodeInput { id: GraphNodeIdInput! kind: String! label: String! position: SemioPoint2Input! ports: [SemioGraphPortInput!]! properties: [SemioValueEntryInput!]! }
+input CreateNodeInput { id: GraphNodeIdInput! kind: String! label: String! position: SemioPoint2Input! width: Float! height: Float! ports: [SemioGraphPortInput!]! properties: [SemioValueEntryInput!]! at: Int }
 input DeleteNodeInput { id: GraphNodeIdInput! }
 input ChangeNodeKindInput { id: GraphNodeIdInput! newKind: String! }
 input ChangeNodeLabelInput { id: GraphNodeIdInput! newLabel: String! }
@@ -8,9 +8,16 @@ input MoveNodeInput { id: GraphNodeIdInput! newPosition: SemioPoint2Input! }
 input AddNodePortInput { nodeId: GraphNodeIdInput! index: Int! port: SemioGraphPortInput! }
 input RemoveNodePortInput { nodeId: GraphNodeIdInput! index: Int! }
 input AddNodePropertyInput { nodeId: GraphNodeIdInput! index: Int! property: SemioValueEntryInput! }
-input RemoveNodePropertyInput { nodeId: GraphNodeIdInput! index: Int! }
-input CreateEdgeInput { id: GraphEdgeIdInput! source: GraphNodeIdInput! target: GraphNodeIdInput! kind: String! label: String! }
+input RemoveNodePropertyInput { nodeId: GraphNodeIdInput! key: String! }
+input CreateEdgeInput { id: GraphEdgeIdInput! source: GraphNodeIdInput! target: GraphNodeIdInput! kind: String! label: String! sourcePort: String targetPort: String properties: [SemioValueEntryInput!]! at: Int }
 input DeleteEdgeInput { id: GraphEdgeIdInput! }
+input DragNodesInput { targets: [GraphNodeIdInput!]! dx: Float! dy: Float! }
+input SetNodePropertyInput { nodeId: GraphNodeIdInput! key: String! value: String! }
+input ResizeNodeInput { id: GraphNodeIdInput! width: Float! height: Float! }
+input RenameNodeInput { id: GraphNodeIdInput! newId: GraphNodeIdInput! }
+input SetEdgePropertyInput { edgeId: GraphEdgeIdInput! key: String! value: String! }
+input AddEdgePropertyInput { edgeId: GraphEdgeIdInput! index: Int! property: SemioValueEntryInput! }
+input RemoveEdgePropertyInput { edgeId: GraphEdgeIdInput! key: String! }
 
 input GraphNodeIdInput { value: String! }
 input GraphEdgeIdInput { value: String! }

@@ -21,7 +21,7 @@ fn sqlite_snapshot_en1990_owned_native_decoder_controls_both_physical_payloads()
 }
 use store::{ArtifactSqliteSnapshot, sqlite_snapshot::{export_sqlite_database, import_sqlite_database, SnapshotEncoding, SqliteDatabase, SqliteDatabaseLimits, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}};
 
-fn fixture() -> En1990Snapshot { store::json::from_json_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap() }
+fn fixture() -> En1990Snapshot { semio_framework_pack_json::from_json_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap() }
 fn database(snapshot: &En1990Snapshot) -> SqliteDatabase { snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap() }
 fn roundtrip(snapshot: &En1990Snapshot) -> En1990Snapshot {
     let bytes = export_sqlite_database(&database(snapshot), SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
@@ -55,8 +55,8 @@ fn sqlite_snapshot_en1990_neutral_unsigned8_widths_agree_with_serde() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap();
     for field in corpus["fields"].as_array().unwrap() {
         let field = field.as_str().unwrap();
-        for value in corpus["invalidValues"].as_array().unwrap() { let mut invalid = fixture.clone(); invalid[field] = value.clone(); let text = serde_json::to_string(&invalid).unwrap(); assert!(serde_json::from_str::<En1990Snapshot>(&text).is_err()); assert!(store::json::from_json_str::<En1990Snapshot>(&text).is_err()); }
-        for value in corpus["validValues"].as_array().unwrap() { let mut valid = fixture.clone(); valid[field] = value.clone(); let text = serde_json::to_string(&valid).unwrap(); assert_eq!(serde_json::from_str::<En1990Snapshot>(&text).unwrap(), store::json::from_json_str::<En1990Snapshot>(&text).unwrap()); }
+        for value in corpus["invalidValues"].as_array().unwrap() { let mut invalid = fixture.clone(); invalid[field] = value.clone(); let text = serde_json::to_string(&invalid).unwrap(); assert!(serde_json::from_str::<En1990Snapshot>(&text).is_err()); assert!(semio_framework_pack_json::from_json_str::<En1990Snapshot>(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err()); }
+        for value in corpus["validValues"].as_array().unwrap() { let mut valid = fixture.clone(); valid[field] = value.clone(); let text = serde_json::to_string(&valid).unwrap(); assert_eq!(serde_json::from_str::<En1990Snapshot>(&text).unwrap(), semio_framework_pack_json::from_json_str::<En1990Snapshot>(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()); }
     }
 }
 
@@ -100,7 +100,7 @@ fn sqlite_snapshot_en1990_initial_cancellation_and_borrowed_native_admission() {
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
         snapshot.preflight_sqlite_snapshot_encoding(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();
         assert!(snapshot.preflight_sqlite_snapshot_encoding(encoding, &mut SqliteSnapshotControl::new(&mut |_| false, SqliteDatabaseLimits::default())).is_err());
-        assert!(snapshot.preflight_sqlite_snapshot_encoding(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits { max_file_bytes: 1024, ..SqliteDatabaseLimits::default() })).unwrap_err().contains("native encoding exceeds file byte limit"));
+        assert!(snapshot.preflight_sqlite_snapshot_encoding(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits { max_file_bytes: 1024, ..SqliteDatabaseLimits::default() })).unwrap_err().to_string().contains("native encoding exceeds file byte limit"));
     }
     let controls: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🎛️control.json")).unwrap();
     snapshot.members = vec![snapshot.members[0].clone(); controls["entityCount"].as_u64().unwrap() as usize];

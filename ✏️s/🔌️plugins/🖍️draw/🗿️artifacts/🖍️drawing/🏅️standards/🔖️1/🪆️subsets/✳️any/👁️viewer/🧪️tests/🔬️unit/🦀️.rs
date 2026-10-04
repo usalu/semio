@@ -85,11 +85,11 @@ fn drawing_viewer_camera_is_declared_with_only_local_window_publication() {
 
 #[test]
 fn drawing_viewer_camera_payload_validation_matches_the_host_shape() {
-    let valid = dsl::json::from_json_str::<dsl::DslValue>(r#"{"camera":{"x":1,"y":2,"zoom":3}}"#).unwrap();
+    let valid = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(r#"{"camera":{"x":1,"y":2,"zoom":3}}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert!(command_from_action("setCamera",Some(&valid)).is_ok());
     assert!(command_from_action("editPath",Some(&valid)).is_err());
     assert!(command_from_action("setCamera",None).is_err());
-    let invalid = dsl::json::from_json_str::<dsl::DslValue>(r#"{"camera":{"x":1,"y":2,"zoom":0}}"#).unwrap();
+    let invalid = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(r#"{"camera":{"x":1,"y":2,"zoom":0}}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert!(command_from_action("setCamera",Some(&invalid)).is_err());
 }
 

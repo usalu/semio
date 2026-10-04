@@ -1,7 +1,7 @@
 use super::*;
 use semio_framework_os_kernel::{sqlite_snapshot::{export_sqlite_database, import_sqlite_database, SqliteDatabaseLimits, SqliteSnapshotControl, SqliteValue}, ArtifactSqliteSnapshot};
 
-fn fixture() -> GifSnapshot { pack::json::from_json_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap() }
+fn fixture() -> GifSnapshot { semio_framework_pack_json::from_json_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap() }
 
 #[test]
 fn sqlite_snapshot_gif87_independent_dimensions_and_index_sequence(){
@@ -49,7 +49,7 @@ fn sqlite_snapshot_gif87_preserves_indexed_images_optional_palettes_and_full_wid
  let bytes = export_sqlite_database(&database, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
  let database = import_sqlite_database(&bytes, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
  assert_eq!(GifSnapshot::from_sqlite_database(&database, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap(), snapshot);
- let oracle: serde_json::Value = serde_json::from_str(&pack::json::to_json_string(&protocol::ToValue::to_value(&snapshot))).unwrap();
+ let oracle: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&snapshot))).unwrap();
  assert_eq!(oracle, serde_json::from_str::<serde_json::Value>(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap());
  assert!(database.tables.iter().flat_map(|table| &table.rows).flat_map(|row| &row.values).all(|value| !matches!(value, SqliteValue::Blob(_))));
  for value in [GifSnapshot::default(), GifSnapshot {gct: Some(GifColorTable::default()), ..GifSnapshot::default()}] { let database=value.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap(); assert_eq!(GifSnapshot::from_sqlite_database(&database, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap(),value); }
@@ -79,7 +79,7 @@ async fn sqlite_snapshot_gif87_actual_erased_declaration_preserves_owned_state()
 #[test]
 fn sqlite_snapshot_gif87_controlled_owned_record_decoder(){
  use store::{ArtifactSqliteSnapshot,ArtifactDsl};use semio_framework_os_kernel::io_schema::IoPayload;
- let mut snapshot=fixture();snapshot.schema="controlled GIF87 世界\0".into();let record=snapshot.__dsl_to_record();let spec=GifSnapshot::__dsl_spec();let body=dsl::schema::print(&record,&spec,dsl::JoinMode::Document);let envelope=store::semio_format::SemioEnvelope::from_envelope_id(<GifSnapshot as ArtifactDsl>::envelope_id(),store::semio_format::Component::Dsl,1).unwrap();let payload=IoPayload::Text(store::semio_format::wrap_text(&envelope,&body));
+ let mut snapshot=fixture();snapshot.schema="controlled GIF87 世界\0".into();let record=snapshot.__dsl_to_record();let spec=GifSnapshot::__dsl_spec();let body=semio_framework_dsl_record::print(&record,&spec,semio_framework_dsl_record::JoinMode::Document);let envelope=store::semio_format::SemioEnvelope::from_envelope_id(<GifSnapshot as ArtifactDsl>::envelope_id(),store::semio_format::Component::Dsl,1).unwrap();let payload=IoPayload::Text(store::semio_format::wrap_text(&envelope,&body));
  assert_eq!(GifSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap(),snapshot);assert!(GifSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|false,SqliteDatabaseLimits::default())).is_err());
 }
 
@@ -98,6 +98,6 @@ fn sqlite_snapshot_gif87_native_controls_reach_interior_owned_construction(){
 #[test]
 fn sqlite_snapshot_gif87_declared_record_grammar_covers_neutral_full_model(){
  use store::ArtifactDsl;
- let grammar=dsl::parse_grammar(include_str!("../../📝️text/📖️.grammar.semio")).unwrap();let recognizer=dsl::Recognizer::compile(&grammar);let mut snapshot=fixture();snapshot.schema="schema 世界\0".into();
+ let grammar=semio_framework_dsl::parse_grammar(include_str!("../../📝️text/📖️.grammar.semio")).unwrap();let recognizer=semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");let mut snapshot=fixture();snapshot.schema="schema 世界\0".into();
  for snapshot in [snapshot,GifSnapshot{schema:"empty optional palette".into(),gct:Some(GifColorTable::default()),..GifSnapshot::default()}]{let text=snapshot.print_dsl();let(envelope,body)=store::semio_format::split_text_preamble(&text).unwrap();assert!(recognizer.recognize(&format!("{}\n{body}",envelope.envelope_id())).unwrap(),"full neutral model grammar did not recognize its owned record");assert_eq!(GifSnapshot::parse_dsl(&text).unwrap(),snapshot);}
 }

@@ -519,7 +519,7 @@ fn drive_batch_job<T: Topology + Clone + Send>(model: &CompiledModel, topo: &T, 
         let result = match &outcome {
             semio_framework_job::StepOutcome::Complete(candidate) => {
                 let bytes = payload_bytes(&candidate.output);
-                let commit = semio_framework_os_kernel::json::from_json_str::<crate::job::WfcCommit>(std::str::from_utf8(&bytes).expect("completed WFC batch output is UTF-8"));
+                let commit = semio_framework_pack_json::from_json_str::<crate::job::WfcCommit>(std::str::from_utf8(&bytes).expect("completed WFC batch output is UTF-8"),semio_framework_pack_json::JsonMemberPolicy::Reject);
                 retire_outcome(&mut outcome);
                 let assignment = commit.expect("completed WFC batch job has a valid commit").assignment.into_iter().map(PatternId).collect();
                 Some(SolveOutcome::Solved(Solution { assignment, report: run_report(Event::Solved, job.observed()) }))

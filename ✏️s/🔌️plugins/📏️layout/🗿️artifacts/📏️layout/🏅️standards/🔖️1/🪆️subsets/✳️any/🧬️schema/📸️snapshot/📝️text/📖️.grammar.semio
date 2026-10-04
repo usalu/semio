@@ -20,7 +20,7 @@ doc-field = {"schema" "=" TEXT} | {"name" "=" TEXT} | {"grid" "=" grid-field+}
   | {"paragraph-styles" "=" "[" paragraph-style* "]"} | {"character-styles" "=" "[" character-style* "]"}
   | {"stories" "=" "[" story* "]"} | {"links" "=" "[" link* "]"} | {"parent-pages" "=" "[" parent-page* "]"}
   | {"spreads" "=" "[" spread* "]"} | {"pages" "=" "[" page* "]"} | {"print-target" "=" TEXT}
-  | {"data-fields-json" "=" TEXT} | {"background-drawing" "=" background-drawing-field+}
+  | {"data-fields" "=" form-dictionary-field+} | {"background-drawing" "=" background-drawing-field+}
   | {"referenced-model" "=" referenced-model-field+}
 
 grid-field = {"baseline-grid" "=" NUMBER} | {"baseline-offset" "=" NUMBER} | {"snap-to-baseline" "=" BOOL}
@@ -64,3 +64,6 @@ referenced-model-field = {"target" "=" TEXT} | {"pin" "=" pin-field+} | {"role" 
 pin-field = {"kind" "=" {"head" | "checkpoint" | "snapshot"}} | {"checkpoint_id" "=" TEXT} | {"blob_hash" "=" TEXT} | {"blob_size" "=" UINT} | {"blob_media_type" "=" TEXT}
 child-handle = {"child_id" "=" TEXT} {"target" "=" TEXT}
 rgba = NUMBER "," NUMBER "," NUMBER "," NUMBER
+
+form-dictionary-field = "entries" "=" "[" form-dictionary-entry* "]"
+form-dictionary-entry = {"question-id" "=" TEXT} {"value" "=" VALUE}

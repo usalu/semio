@@ -4,6 +4,9 @@
 use crate::mutations::{delete_rule, Wfc2dMutation};
 use crate::schema::snapshot::Wfc2dSnapshot;
 
-pub fn inverse(payload: &super::CreateRule, _base: &Wfc2dSnapshot) -> Vec<Wfc2dMutation> {
+pub fn inverse(payload: &super::CreateRule, _base: &Wfc2dSnapshot) -> Result<Vec<Wfc2dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![delete_rule(payload.rule.id.clone())]
+
+    })())
 }

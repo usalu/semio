@@ -1,13 +1,13 @@
 use super::*;
 
-#[semio_framework_async_macros::async_test]
-async fn derives_from_header_fields() {
-    let snapshot = BmpSnapshot { width: 5, height: 2, bits_per_pixel: 24, ..BmpSnapshot::default() };
-    assert_eq!(compute_bmp_dimensions(&snapshot), BmpDimensions { width: 5, height: 2, bit_depth: 24, has_alpha: false, pixel_count: 10 });
+#[test]
+fn derives_from_checked_canonical_layout() {
+    let snapshot = crate::io::decode_bmp(include_bytes!("../../../../../🧫️fixtures/🧬️canonical-byte-authority/direct-rgb24-padding-gap-trailer.bmp")).unwrap();
+    assert_eq!(compute_bmp_dimensions(&snapshot), BmpDimensions { width: 3, height: 2, bit_depth: 24, has_alpha: false, pixel_count: 6 });
 }
 
-#[semio_framework_async_macros::async_test]
-async fn thirty_two_bpp_is_treated_as_alpha_capable() {
-    let snapshot = BmpSnapshot { width: 1, height: 1, bits_per_pixel: 32, ..BmpSnapshot::default() };
-    assert!(compute_bmp_dimensions(&snapshot).has_alpha);
+#[test]
+fn invalid_snapshot_has_no_inferred_dimensions() {
+    let snapshot = BmpSnapshot { schema: crate::STDIO_BMP_DOCUMENT_SCHEMA.into(), bytes: vec![1, 2, 3] };
+    assert_eq!(compute_bmp_dimensions(&snapshot), BmpDimensions::default());
 }

@@ -7,11 +7,11 @@ comment none
 document = envelope? snapshot
 envelope = "semio" "stdio.md.dsl" "v1"
 snapshot = "schema" "=" text "roots" "=" ids "blocks" "=" "[" block* "]" "inlines" "=" "[" inline* "]"
-block = "kind" "=" block-kind block-field*
+block = "{" "kind" "=" block-kind block-field* "}"
 block-kind = "heading" | "paragraph" | "list" | "code-block" | "block-quote" | "thematic-break" | "html-block"
 block-field = "level" "=" INT | "ordered" "=" boolean | "start" "=" INT | "tight" "=" boolean | "info" "=" text | "literal" "=" text | "raw" "=" text | "inlines" "=" ids | "items" "=" "[" list-item* "]" | "blocks" "=" ids
-list-item = "blocks" "=" ids
-inline = "kind" "=" inline-kind inline-field*
+list-item = "{" "blocks" "=" ids "}"
+inline = "{" "kind" "=" inline-kind inline-field* "}"
 inline-kind = "text" | "emphasis" | "strong" | "code" | "link" | "image" | "soft-break" | "hard-break" | "html-inline"
 inline-field = "text" "=" text | "literal" "=" text | "url" "=" text | "title" "=" text | "alt" "=" text | "raw" "=" text | "inlines" "=" ids
 ids = "[" INT* "]"

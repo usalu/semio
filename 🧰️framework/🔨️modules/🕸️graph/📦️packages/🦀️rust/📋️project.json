@@ -137,6 +137,22 @@
         "cwd": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-manifest-contract"
       }
+    },
+    "test-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [
+        "generate"
+      ],
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-native"
+      }
     }
   }
 }

@@ -1,0 +1,92 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractId",
+    "cases",
+    "overrideRefusal"
+  ],
+  "properties": {
+    "contractId": {
+      "const": "declared-child-projection-default"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "rows"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "empty",
+              "distinct-literal"
+            ]
+          },
+          "rows": {
+            "type": "array",
+            "maxItems": 2,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "slot",
+                "childId",
+                "artifactId",
+                "kind",
+                "standard",
+                "subset"
+              ],
+              "properties": {
+                "slot": {
+                  "type": "string"
+                },
+                "childId": {
+                  "type": "string"
+                },
+                "artifactId": {
+                  "type": "string"
+                },
+                "kind": {
+                  "type": "string"
+                },
+                "standard": {
+                  "type": "string"
+                },
+                "subset": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "overrideRefusal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "revision",
+        "code",
+        "message"
+      ],
+      "properties": {
+        "revision": {
+          "const": -7
+        },
+        "code": {
+          "const": "test.parent-projection"
+        },
+        "message": {
+          "const": "composed parent child projection failed: revision is not restorable"
+        }
+      }
+    }
+  }
+}

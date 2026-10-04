@@ -1,0 +1,52 @@
+{
+  "literalSchema": "LAS 世界\u0000 schema",
+  "literalText": "Grüße\t\n\u0000🌠",
+  "workItems": 1024,
+  "copyBytes": 100000,
+  "cancelAfter": 256,
+  "copyCancelAfter": 65536,
+  "word64": [
+    "0000000000000000",
+    "8000000000000000",
+    "0000000000000001",
+    "3ff4000000000000",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff0000000000001",
+    "7ff8123456789abc",
+    "fff0123456789abc"
+  ],
+  "unsigned32": 4294967295,
+  "unsigned16": 65535,
+  "signed8": -128,
+  "ownership": {
+    "authority": "actualLasSnapshot",
+    "nativeFields": "directDeclaredRecords",
+    "recordSlots": {
+      "snapshot": 4,
+      "header": 25,
+      "point": 14,
+      "rgb": 3
+    },
+    "ieee754": "rawBinary64Words",
+    "admission": "beforeBacking",
+    "retirementRefund": false,
+    "refusalKinds": {
+      "owned": "ownershipLimit",
+      "allocator": "allocationFailed",
+      "work": "workLimit",
+      "cancellation": "canceled"
+    }
+  },
+  "budgetRoles": {
+    "nativeInput": {
+      "caller": "maxAllocationBytes",
+      "ceiling": 1,
+      "refusalKind": "ownershipLimit"
+    },
+    "sqlValue": {
+      "caller": "maxValueBytes",
+      "ceiling": 1
+    }
+  }
+}

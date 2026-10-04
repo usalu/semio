@@ -20,5 +20,6 @@
     "pvEfficiency": 0.18,
     "solarThermalKwhA": 1200.0
   },
-  "climate": null
+  "climate": null,
+  "climateTable": null
 }

@@ -3,7 +3,8 @@
 use crate::mutations::{pin_slot, unpin_slot, Wfc3dMutation};
 use crate::schema::snapshot::Wfc3dSnapshot;
 
-pub fn inverse(payload: &super::PinSlot, base: &Wfc3dSnapshot) -> Vec<Wfc3dMutation> {
+pub fn inverse(payload: &super::PinSlot, base: &Wfc3dSnapshot) -> Result<Vec<Wfc3dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(slot) = base.slots.iter().find(|slot| slot.id == payload.id) else {
         return Vec::new();
     };
@@ -11,4 +12,6 @@ pub fn inverse(payload: &super::PinSlot, base: &Wfc3dSnapshot) -> Vec<Wfc3dMutat
         Some(previous) => vec![pin_slot(slot.id.clone(), previous.clone())],
         None => vec![unpin_slot(slot.id.clone())],
     }
+
+    })())
 }

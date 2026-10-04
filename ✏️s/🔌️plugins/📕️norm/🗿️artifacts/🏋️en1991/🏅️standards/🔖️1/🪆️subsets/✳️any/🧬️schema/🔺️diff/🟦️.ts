@@ -1,197 +1,153 @@
 /** 🔺️ `En1991Diff` wire twin: the sparse field delta a mutation raises, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
  * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { type NormJson, normWireArray, normWireBoolean, normWireInteger, normWireJson, normWireLiteral, normWireMap, normWireNumber, normWireObject, normWireOptional, normWireRange, type NormWireReader, normWireRef, normWireRequired, normWireString } from "../../../../../../../../📇️registry/🧬️contract/🟦️.ts";
+import { normWireArray, normWireBoolean, normWireDefault, normWireInteger, normWireLiteral, normWireNullable, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRequired, normWireString } from "../../../../../../../../📇️registry/🧬️contract/🟦️.ts";
+import { type AccidentalCase, type FloorArea, parseAccidentalCase, parseFloorArea, parseRoofArea, parseSelfWeightElement, parseWindFace, type RoofArea, type SelfWeightElement, type WindFace } from "../📸️snapshot/🟦️.ts";
+import { type En1991Artifact, parseEn1991Artifact } from "../🟦️.ts";
 
 export interface En1991Diff {
   /** @state artifact */
-  artifact?: { [key: string]: NormJson };
+  artifact: En1991Artifact | null;
   /** @state artifact */
-  annex?: string;
+  annex: ("En" | "De") | null;
   /** @state artifact */
-  snowZone?: string;
+  snowZone: string | null;
   /** @state artifact */
-  altitude?: number;
+  altitude: number | null;
   /** @state artifact */
-  enSk?: number;
+  enSk: number | null;
   /** @state artifact */
-  northGermanLowlandSnow?: boolean;
+  northGermanLowlandSnow: boolean | null;
   /** @state artifact */
-  windZone?: number;
+  windZone: number | null;
   /** @state artifact */
-  enVb?: number;
+  enVb: number | null;
   /** @state artifact */
-  terrainCategory?: number;
+  terrainCategory: number | null;
   /** @state artifact */
-  mixedTerrainUpwind?: number;
+  mixedTerrainUpwind: number | null;
   /** @state artifact */
-  mixedTerrainDistance?: number;
+  mixedTerrainDistance: number | null;
   /** @state artifact */
-  orographyFactor?: number;
+  orographyFactor: number | null;
   /** @state artifact */
-  coastOrIsland?: boolean;
+  coastOrIsland: boolean | null;
   /** @state artifact */
-  airDensity?: number;
+  airDensity: number | null;
   /** @state artifact */
-  height?: number;
+  height: number | null;
   /** @state artifact */
-  width?: number;
+  width: number | null;
   /** @state artifact */
-  depth?: number;
+  depth: number | null;
   /** @state artifact */
-  assumedDeltaT?: number;
-  tMax?: number;
-  tMin?: number;
-  t0?: number;
-  thermalElementType?: string;
-  thermalBridgeType?: number;
-  deltaTM?: number;
-  storeyCount?: number;
+  assumedDeltaT: number | null;
   /** @state artifact */
-  fireMode?: "none" | "nominal" | "parametric";
-  fireCurve?: string;
-  fireDuration?: number;
-  assumedGasTemperature?: number;
-  assumedHNet?: number;
-  fireCompartmentArea?: number;
-  fireCompartmentHeight?: number;
-  fireOpeningFactor?: number;
-  fireThermalInertia?: number;
-  fireOccupancy?: string;
-  fireLoadDensityQf?: number;
-  assumedQfD?: number;
+  tMax: number | null;
   /** @state artifact */
-  constructionActivity?: string;
+  tMin: number | null;
   /** @state artifact */
-  assumedConstructionQk?: number;
+  t0: number | null;
   /** @state artifact */
-  structureKind?: "building" | "bridge";
+  thermalElementType: string | null;
   /** @state artifact */
-  bridgeLane?: number;
+  thermalBridgeType: number | null;
   /** @state artifact */
-  bridgeSpan?: number;
+  deltaTM: number | null;
   /** @state artifact */
-  bridgeLaneWidth?: number;
+  storeyCount: number | null;
   /** @state artifact */
-  assumedBridgeTandem?: number;
+  fireMode: ("none" | "nominal" | "parametric") | null;
   /** @state artifact */
-  assumedBridgeUdl?: number;
+  fireCurve: ("standard" | "external" | "hydrocarbon" | "parametric") | null;
   /** @state artifact */
-  assumedBridgeLm2?: number;
+  fireDuration: number | null;
   /** @state artifact */
-  assumedBridgeFootway?: number;
-  assumedBridgeLm3?: number;
-  assumedBridgeLm4?: number;
-  bridgeLoadGroup?: string;
+  assumedGasTemperature: number | null;
   /** @state artifact */
-  craneClaimed?: boolean;
+  assumedHNet: number | null;
   /** @state artifact */
-  craneClass?: string;
+  fireCompartmentArea: number | null;
   /** @state artifact */
-  hoistClass?: string;
+  fireCompartmentHeight: number | null;
   /** @state artifact */
-  hoistingSpeed?: number;
+  fireOpeningFactor: number | null;
   /** @state artifact */
-  assumedCraneWheel?: number;
+  fireThermalInertia: number | null;
   /** @state artifact */
-  assumedCraneHorizontal?: number;
+  fireOccupancy: string | null;
   /** @state artifact */
-  siloClaimed?: boolean;
+  fireLoadDensityQf: number | null;
   /** @state artifact */
-  siloKind?: string;
+  assumedQfD: number | null;
   /** @state artifact */
-  siloBulkDensity?: number;
+  constructionActivity: string | null;
   /** @state artifact */
-  siloHeight?: number;
+  assumedConstructionQk: number | null;
   /** @state artifact */
-  siloHydraulicRadius?: number;
+  structureKind: ("building" | "bridge") | null;
   /** @state artifact */
-  siloMu?: number;
+  bridgeLane: number | null;
   /** @state artifact */
-  siloK?: number;
+  bridgeSpan: number | null;
   /** @state artifact */
-  assumedSiloPressure?: number;
+  bridgeLaneWidth: number | null;
   /** @state artifact */
-  assumedSiloPatch?: number;
+  assumedBridgeTandem: number | null;
   /** @state artifact */
-  assumedSiloWallFriction?: number;
+  assumedBridgeUdl: number | null;
   /** @state artifact */
-  floors?: FloorArea[];
+  assumedBridgeLm2: number | null;
   /** @state artifact */
-  selfWeightElements?: SelfWeightElement[];
+  assumedBridgeFootway: number | null;
   /** @state artifact */
-  roofs?: RoofArea[];
+  assumedBridgeLm3: number | null;
   /** @state artifact */
-  windFaces?: WindFace[];
+  assumedBridgeLm4: number | null;
   /** @state artifact */
-  accidentalCases?: AccidentalCase[];
+  bridgeLoadGroup: string | null;
+  /** @state artifact */
+  craneClaimed: boolean | null;
+  /** @state artifact */
+  craneClass: string | null;
+  /** @state artifact */
+  hoistClass: string | null;
+  /** @state artifact */
+  hoistingSpeed: number | null;
+  /** @state artifact */
+  assumedCraneWheel: number | null;
+  /** @state artifact */
+  assumedCraneHorizontal: number | null;
+  /** @state artifact */
+  siloClaimed: boolean | null;
+  /** @state artifact */
+  siloKind: string | null;
+  /** @state artifact */
+  siloBulkDensity: number | null;
+  /** @state artifact */
+  siloHeight: number | null;
+  /** @state artifact */
+  siloHydraulicRadius: number | null;
+  /** @state artifact */
+  siloMu: number | null;
+  /** @state artifact */
+  siloK: number | null;
+  /** @state artifact */
+  assumedSiloPressure: number | null;
+  /** @state artifact */
+  assumedSiloPatch: number | null;
+  /** @state artifact */
+  assumedSiloWallFriction: number | null;
+  /** @state artifact */
+  floors: { values: FloorArea[]; } | null;
+  /** @state artifact */
+  selfWeightElements: { values: SelfWeightElement[]; } | null;
+  /** @state artifact */
+  roofs: { values: RoofArea[]; } | null;
+  /** @state artifact */
+  windFaces: { values: WindFace[]; } | null;
+  /** @state artifact */
+  accidentalCases: { values: AccidentalCase[]; } | null;
 }
 
-export interface FloorArea {
-  id: string;
-  category: string;
-  area: number;
-  assumedQk: number;
-  assumedQkConcentrated: number;
-  assumedPartitions: number;
-}
-
-export interface SelfWeightElement {
-  id: string;
-  material: string;
-  thickness: number;
-  assumedGk: number;
-}
-
-export interface RoofArea {
-  id: string;
-  roofType: string;
-  pitchDeg: number;
-  cE: number;
-  cT: number;
-  hasParapet: boolean;
-  parapetHeight: number;
-  driftObstructionHeight: number;
-  multiSpan: boolean;
-  assumedSk: number;
-}
-
-export interface WindFace {
-  id: string;
-  zone: string;
-  z: number;
-  cPe10: number;
-  cPe1: number;
-  cPi: number;
-  cS: number;
-  cD: number;
-  loadedArea: number;
-  assumedWp: number;
-}
-
-export interface AccidentalCase {
-  id: string;
-  impact: AccidentalImpact[];
-  explosion: AccidentalExplosion[];
-}
-
-export interface AccidentalImpact {
-  vehicleMass: number;
-  vehicleSpeed: number;
-  assumedForce: number;
-}
-
-export interface AccidentalExplosion {
-  explosionMass: number;
-  standoff: number;
-  assumedPressure: number;
-}
-
-export const parseEn1991Diff: NormWireReader<En1991Diff> = normWireObject<En1991Diff>({ artifact: normWireOptional(normWireMap(normWireJson)), annex: normWireOptional(normWireString), snowZone: normWireOptional(normWireString), altitude: normWireOptional(normWireNumber), enSk: normWireOptional(normWireNumber), northGermanLowlandSnow: normWireOptional(normWireBoolean), windZone: normWireOptional(normWireRange(normWireInteger, {"minimum":0,"maximum":255})), enVb: normWireOptional(normWireNumber), terrainCategory: normWireOptional(normWireRange(normWireInteger, {"minimum":0,"maximum":255})), mixedTerrainUpwind: normWireOptional(normWireRange(normWireInteger, {"minimum":0,"maximum":255})), mixedTerrainDistance: normWireOptional(normWireNumber), orographyFactor: normWireOptional(normWireNumber), coastOrIsland: normWireOptional(normWireBoolean), airDensity: normWireOptional(normWireNumber), height: normWireOptional(normWireNumber), width: normWireOptional(normWireNumber), depth: normWireOptional(normWireNumber), assumedDeltaT: normWireOptional(normWireNumber), tMax: normWireOptional(normWireNumber), tMin: normWireOptional(normWireNumber), t0: normWireOptional(normWireNumber), thermalElementType: normWireOptional(normWireString), thermalBridgeType: normWireOptional(normWireInteger), deltaTM: normWireOptional(normWireNumber), storeyCount: normWireOptional(normWireInteger), fireMode: normWireOptional(normWireLiteral("none", "nominal", "parametric")), fireCurve: normWireOptional(normWireString), fireDuration: normWireOptional(normWireNumber), assumedGasTemperature: normWireOptional(normWireNumber), assumedHNet: normWireOptional(normWireNumber), fireCompartmentArea: normWireOptional(normWireNumber), fireCompartmentHeight: normWireOptional(normWireNumber), fireOpeningFactor: normWireOptional(normWireNumber), fireThermalInertia: normWireOptional(normWireNumber), fireOccupancy: normWireOptional(normWireString), fireLoadDensityQf: normWireOptional(normWireNumber), assumedQfD: normWireOptional(normWireNumber), constructionActivity: normWireOptional(normWireString), assumedConstructionQk: normWireOptional(normWireNumber), structureKind: normWireOptional(normWireLiteral("building", "bridge")), bridgeLane: normWireOptional(normWireRange(normWireInteger, {"minimum":0,"maximum":255})), bridgeSpan: normWireOptional(normWireNumber), bridgeLaneWidth: normWireOptional(normWireNumber), assumedBridgeTandem: normWireOptional(normWireNumber), assumedBridgeUdl: normWireOptional(normWireNumber), assumedBridgeLm2: normWireOptional(normWireNumber), assumedBridgeFootway: normWireOptional(normWireNumber), assumedBridgeLm3: normWireOptional(normWireNumber), assumedBridgeLm4: normWireOptional(normWireNumber), bridgeLoadGroup: normWireOptional(normWireString), craneClaimed: normWireOptional(normWireBoolean), craneClass: normWireOptional(normWireString), hoistClass: normWireOptional(normWireString), hoistingSpeed: normWireOptional(normWireNumber), assumedCraneWheel: normWireOptional(normWireNumber), assumedCraneHorizontal: normWireOptional(normWireNumber), siloClaimed: normWireOptional(normWireBoolean), siloKind: normWireOptional(normWireString), siloBulkDensity: normWireOptional(normWireNumber), siloHeight: normWireOptional(normWireNumber), siloHydraulicRadius: normWireOptional(normWireNumber), siloMu: normWireOptional(normWireNumber), siloK: normWireOptional(normWireNumber), assumedSiloPressure: normWireOptional(normWireNumber), assumedSiloPatch: normWireOptional(normWireNumber), assumedSiloWallFriction: normWireOptional(normWireNumber), floors: normWireOptional(normWireArray(normWireRef(() => parseFloorArea))), selfWeightElements: normWireOptional(normWireArray(normWireRef(() => parseSelfWeightElement))), roofs: normWireOptional(normWireArray(normWireRef(() => parseRoofArea))), windFaces: normWireOptional(normWireArray(normWireRef(() => parseWindFace))), accidentalCases: normWireOptional(normWireArray(normWireRef(() => parseAccidentalCase))) });
-export const parseFloorArea: NormWireReader<FloorArea> = normWireObject<FloorArea>({ id: normWireRequired(normWireString), category: normWireRequired(normWireString), area: normWireRequired(normWireNumber), assumedQk: normWireRequired(normWireNumber), assumedQkConcentrated: normWireRequired(normWireNumber), assumedPartitions: normWireRequired(normWireNumber) });
-export const parseSelfWeightElement: NormWireReader<SelfWeightElement> = normWireObject<SelfWeightElement>({ id: normWireRequired(normWireString), material: normWireRequired(normWireString), thickness: normWireRequired(normWireNumber), assumedGk: normWireRequired(normWireNumber) });
-export const parseRoofArea: NormWireReader<RoofArea> = normWireObject<RoofArea>({ id: normWireRequired(normWireString), roofType: normWireRequired(normWireString), pitchDeg: normWireRequired(normWireNumber), cE: normWireRequired(normWireNumber), cT: normWireRequired(normWireNumber), hasParapet: normWireRequired(normWireBoolean), parapetHeight: normWireRequired(normWireNumber), driftObstructionHeight: normWireRequired(normWireNumber), multiSpan: normWireRequired(normWireBoolean), assumedSk: normWireRequired(normWireNumber) });
-export const parseWindFace: NormWireReader<WindFace> = normWireObject<WindFace>({ id: normWireRequired(normWireString), zone: normWireRequired(normWireString), z: normWireRequired(normWireNumber), cPe10: normWireRequired(normWireNumber), cPe1: normWireRequired(normWireNumber), cPi: normWireRequired(normWireNumber), cS: normWireRequired(normWireNumber), cD: normWireRequired(normWireNumber), loadedArea: normWireRequired(normWireNumber), assumedWp: normWireRequired(normWireNumber) });
-export const parseAccidentalCase: NormWireReader<AccidentalCase> = normWireObject<AccidentalCase>({ id: normWireRequired(normWireString), impact: normWireRequired(normWireArray(normWireRef(() => parseAccidentalImpact))), explosion: normWireRequired(normWireArray(normWireRef(() => parseAccidentalExplosion))) });
-export const parseAccidentalImpact: NormWireReader<AccidentalImpact> = normWireObject<AccidentalImpact>({ vehicleMass: normWireRequired(normWireNumber), vehicleSpeed: normWireRequired(normWireNumber), assumedForce: normWireRequired(normWireNumber) });
-export const parseAccidentalExplosion: NormWireReader<AccidentalExplosion> = normWireObject<AccidentalExplosion>({ explosionMass: normWireRequired(normWireNumber), standoff: normWireRequired(normWireNumber), assumedPressure: normWireRequired(normWireNumber) });
+export const parseEn1991Diff: NormWireReader<En1991Diff> = normWireObject<En1991Diff>({ artifact: normWireDefault(normWireNullable(parseEn1991Artifact), () => null), annex: normWireDefault(normWireNullable(normWireLiteral("En", "De")), () => null), snowZone: normWireDefault(normWireNullable(normWireString), () => null), altitude: normWireDefault(normWireNullable(normWireNumber), () => null), enSk: normWireDefault(normWireNullable(normWireNumber), () => null), northGermanLowlandSnow: normWireDefault(normWireNullable(normWireBoolean), () => null), windZone: normWireDefault(normWireNullable(normWireRange(normWireInteger, {"minimum":0,"maximum":255})), () => null), enVb: normWireDefault(normWireNullable(normWireNumber), () => null), terrainCategory: normWireDefault(normWireNullable(normWireRange(normWireInteger, {"minimum":0,"maximum":255})), () => null), mixedTerrainUpwind: normWireDefault(normWireNullable(normWireRange(normWireInteger, {"minimum":0,"maximum":255})), () => null), mixedTerrainDistance: normWireDefault(normWireNullable(normWireNumber), () => null), orographyFactor: normWireDefault(normWireNullable(normWireNumber), () => null), coastOrIsland: normWireDefault(normWireNullable(normWireBoolean), () => null), airDensity: normWireDefault(normWireNullable(normWireNumber), () => null), height: normWireDefault(normWireNullable(normWireNumber), () => null), width: normWireDefault(normWireNullable(normWireNumber), () => null), depth: normWireDefault(normWireNullable(normWireNumber), () => null), assumedDeltaT: normWireDefault(normWireNullable(normWireNumber), () => null), tMax: normWireDefault(normWireNullable(normWireNumber), () => null), tMin: normWireDefault(normWireNullable(normWireNumber), () => null), t0: normWireDefault(normWireNullable(normWireNumber), () => null), thermalElementType: normWireDefault(normWireNullable(normWireString), () => null), thermalBridgeType: normWireDefault(normWireNullable(normWireRange(normWireInteger, {"minimum":0,"maximum":255})), () => null), deltaTM: normWireDefault(normWireNullable(normWireNumber), () => null), storeyCount: normWireDefault(normWireNullable(normWireRange(normWireInteger, {"minimum":0,"maximum":255})), () => null), fireMode: normWireDefault(normWireNullable(normWireLiteral("none", "nominal", "parametric")), () => null), fireCurve: normWireDefault(normWireNullable(normWireLiteral("standard", "external", "hydrocarbon", "parametric")), () => null), fireDuration: normWireDefault(normWireNullable(normWireNumber), () => null), assumedGasTemperature: normWireDefault(normWireNullable(normWireNumber), () => null), assumedHNet: normWireDefault(normWireNullable(normWireNumber), () => null), fireCompartmentArea: normWireDefault(normWireNullable(normWireNumber), () => null), fireCompartmentHeight: normWireDefault(normWireNullable(normWireNumber), () => null), fireOpeningFactor: normWireDefault(normWireNullable(normWireNumber), () => null), fireThermalInertia: normWireDefault(normWireNullable(normWireNumber), () => null), fireOccupancy: normWireDefault(normWireNullable(normWireString), () => null), fireLoadDensityQf: normWireDefault(normWireNullable(normWireNumber), () => null), assumedQfD: normWireDefault(normWireNullable(normWireNumber), () => null), constructionActivity: normWireDefault(normWireNullable(normWireString), () => null), assumedConstructionQk: normWireDefault(normWireNullable(normWireNumber), () => null), structureKind: normWireDefault(normWireNullable(normWireLiteral("building", "bridge")), () => null), bridgeLane: normWireDefault(normWireNullable(normWireRange(normWireInteger, {"minimum":0,"maximum":255})), () => null), bridgeSpan: normWireDefault(normWireNullable(normWireNumber), () => null), bridgeLaneWidth: normWireDefault(normWireNullable(normWireNumber), () => null), assumedBridgeTandem: normWireDefault(normWireNullable(normWireNumber), () => null), assumedBridgeUdl: normWireDefault(normWireNullable(normWireNumber), () => null), assumedBridgeLm2: normWireDefault(normWireNullable(normWireNumber), () => null), assumedBridgeFootway: normWireDefault(normWireNullable(normWireNumber), () => null), assumedBridgeLm3: normWireDefault(normWireNullable(normWireNumber), () => null), assumedBridgeLm4: normWireDefault(normWireNullable(normWireNumber), () => null), bridgeLoadGroup: normWireDefault(normWireNullable(normWireString), () => null), craneClaimed: normWireDefault(normWireNullable(normWireBoolean), () => null), craneClass: normWireDefault(normWireNullable(normWireString), () => null), hoistClass: normWireDefault(normWireNullable(normWireString), () => null), hoistingSpeed: normWireDefault(normWireNullable(normWireNumber), () => null), assumedCraneWheel: normWireDefault(normWireNullable(normWireNumber), () => null), assumedCraneHorizontal: normWireDefault(normWireNullable(normWireNumber), () => null), siloClaimed: normWireDefault(normWireNullable(normWireBoolean), () => null), siloKind: normWireDefault(normWireNullable(normWireString), () => null), siloBulkDensity: normWireDefault(normWireNullable(normWireNumber), () => null), siloHeight: normWireDefault(normWireNullable(normWireNumber), () => null), siloHydraulicRadius: normWireDefault(normWireNullable(normWireNumber), () => null), siloMu: normWireDefault(normWireNullable(normWireNumber), () => null), siloK: normWireDefault(normWireNullable(normWireNumber), () => null), assumedSiloPressure: normWireDefault(normWireNullable(normWireNumber), () => null), assumedSiloPatch: normWireDefault(normWireNullable(normWireNumber), () => null), assumedSiloWallFriction: normWireDefault(normWireNullable(normWireNumber), () => null), floors: normWireDefault(normWireNullable(normWireObject<{ values: FloorArea[]; }>({ values: normWireRequired(normWireArray(parseFloorArea)) })), () => null), selfWeightElements: normWireDefault(normWireNullable(normWireObject<{ values: SelfWeightElement[]; }>({ values: normWireRequired(normWireArray(parseSelfWeightElement)) })), () => null), roofs: normWireDefault(normWireNullable(normWireObject<{ values: RoofArea[]; }>({ values: normWireRequired(normWireArray(parseRoofArea)) })), () => null), windFaces: normWireDefault(normWireNullable(normWireObject<{ values: WindFace[]; }>({ values: normWireRequired(normWireArray(parseWindFace)) })), () => null), accidentalCases: normWireDefault(normWireNullable(normWireObject<{ values: AccidentalCase[]; }>({ values: normWireRequired(normWireArray(parseAccidentalCase)) })), () => null) });

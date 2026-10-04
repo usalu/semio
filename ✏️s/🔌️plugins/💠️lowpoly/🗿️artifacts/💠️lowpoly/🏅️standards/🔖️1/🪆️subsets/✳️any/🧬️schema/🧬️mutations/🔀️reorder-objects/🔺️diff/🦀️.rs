@@ -19,7 +19,7 @@ pub fn diff(payload: &ReorderObjects, base: &LowpolySnapshot) -> protocol::Mutat
         reordered.insert(at, moved);
     }
     if reordered == original {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Object \"{}\" order is unchanged.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Object \"{}\" order is unchanged.", payload.id));
     }
     protocol::MutationOutcome::new(diff_objects_move(&payload.id, payload.to_index, base))
 }

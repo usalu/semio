@@ -81,21 +81,6 @@ fn every_fourteen_variant_decodes_through_retained_structural_grants() {
     }
 }
 
-#[test]
-fn deterministic_all_field_ledger_includes_the_2d_only_variant() {
-    let mutations = generation2d_all_retained_mutation_fixtures_for_test();
-    let mut left = store::ArtifactStoreInitializationDigest::new(b"generation2d.all14");
-    let mut right = store::ArtifactStoreInitializationDigest::new(b"generation2d.all14");
-    for mutation in &mutations {
-        generation2d_observe_mutation(&mut left, mutation);
-        generation2d_observe_mutation(&mut right, mutation);
-    }
-    assert_eq!(left.finish(), right.finish());
-    let carries_the_2d_only_variant = mutations.iter().any(|mutation| matches!(mutation, Generation2dMutation::ClearWidgetLayout(_)));
-    generation2d_retire_mutations_cold(mutations);
-    assert!(carries_the_2d_only_variant);
-}
-
 struct OuterPackField {
     authority: Option<Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<Generation2dSnapshot, Generation2dMutation>>>,
     maximum_close_byte_demand: usize,

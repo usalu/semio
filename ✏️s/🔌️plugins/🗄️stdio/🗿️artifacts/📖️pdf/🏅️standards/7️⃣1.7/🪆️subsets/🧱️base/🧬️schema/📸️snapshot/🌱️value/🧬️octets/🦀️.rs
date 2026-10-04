@@ -14,7 +14,7 @@ impl ToValue for PdfObject{
     fn to_value_controlled(&self,control:&mut pack::value::NativeEncodeControl<'_>)->Result<V,E>{
         control.scoped_depth(64,|control|control.scoped_stage(|control|{
             let(tag,count)=match self{Self::Null=>("null",1),Self::Real(_)=>("real",4),Self::Ref(_)=>("ref",3),Self::Stream{..}=>("stream",4),Self::Bool(_)=>("bool",2),Self::Int(_)=>("int",2),Self::Str(_)=>("str",2),Self::Name(_)=>("name",2),Self::Array(_)=>("array",2),Self::Dict(_)=>("dict",2)};
-            control.begin_stage(count).map_err(E::new)?;let mut fields=V::object_encoding_controlled(count,control)?;cos_output(fields.get_mut(),"kind",&tag,control)?;
+            control.begin_stage(count)?;let mut fields=V::object_encoding_controlled(count,control)?;cos_output(fields.get_mut(),"kind",&tag,control)?;
             match self{
                 Self::Null=>{},
                 Self::Bool(value)=>cos_output(fields.get_mut(),"value",value,control)?,Self::Int(value)=>cos_output(fields.get_mut(),"value",value,control)?,
@@ -31,36 +31,36 @@ impl ToValue for PdfObject{
 }
 impl FromValue for PdfObject{
     fn from_value(value:V)->Result<Self,E>{
-        let fields=value.into_object()?;let tag=fields.iter().find(|(key,_)|key=="kind").and_then(|(_,value)|value.as_str()).ok_or_else(||E::new("PDF COS object requires a kind"))?;
-        let get=|key:&str|fields.iter().find(|(name,_)|name==key).map(|(_,value)|value.clone()).ok_or_else(||E::new(format!("PDF COS object requires {key}")));
-        if tag=="stream"{if fields.iter().any(|(key,_)|!matches!(key.as_str(),"kind"|"dict"|"data"|"filters")){return Err(E::new("PDF COS stream has an undeclared field"));}return Ok(Self::Stream{dict:Vec::<PdfDictEntry>::from_value(get("dict")?)?,data:pack::value::bytes::from_value(get("data")?)?,filters:Vec::<PdfStreamFilter>::from_value(get("filters")?)?});}
+        let fields=value.into_object()?;let tag=fields.iter().find(|(key,_)|key=="kind").and_then(|(_,value)|value.as_str()).ok_or_else(||E::new(semio_framework_value::ValueRefusalKind::InvalidValue, "PDF COS object requires a kind"))?;
+        let get=|key:&str|fields.iter().find(|(name,_)|name==key).map(|(_,value)|value.clone()).ok_or_else(||E::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("PDF COS object requires {key}")));
+        if tag=="stream"{if fields.iter().any(|(key,_)|!matches!(key.as_str(),"kind"|"dict"|"data"|"filters")){return Err(E::new(semio_framework_value::ValueRefusalKind::InvalidValue, "PDF COS stream has an undeclared field"));}return Ok(Self::Stream{dict:Vec::<PdfDictEntry>::from_value(get("dict")?)?,data:pack::value::bytes::from_value(get("data")?)?,filters:Vec::<PdfStreamFilter>::from_value(get("filters")?)?});}
         let payload=||get("value");
         Ok(match tag{
             "null"=>Self::Null,"bool"=>Self::Bool(bool::from_value(payload()?)?),"int"=>Self::Int(i64::from_value(payload()?)?),"real"=>Self::Real(PdfDecimal::from_value(V::Object(fields.iter().filter(|(key,_)|key!="kind").cloned().collect()))?),
             "str"=>Self::Str(pack::value::bytes::from_value(payload()?)?),"name"=>Self::Name(String::from_value(payload()?)?),"array"=>Self::Array(Vec::<PdfObject>::from_value(payload()?)?),"dict"=>Self::Dict(Vec::<PdfDictEntry>::from_value(payload()?)?),
             "ref"=>Self::Ref(ObjRef::from_value(V::Object(fields.iter().filter(|(key,_)|key!="kind").cloned().collect()))?),
-            _=>return Err(E::new("unknown PDF COS object kind")),
+            _=>return Err(E::new(semio_framework_value::ValueRefusalKind::InvalidValue, "unknown PDF COS object kind")),
         })
     }
     fn from_value_controlled(value:&V,control:&mut pack::value::NativeDecodeControl<'_>)->Result<Self,E>{
         control.scoped_depth(64,|control|control.scoped_stage(|control|{
-            let V::Object(fields)=value else{return Err(E::new("PDF COS object requires a tagged object"))};
-            let tag=fields.iter().find(|(key,_)|key=="kind").and_then(|(_,value)|value.as_str()).ok_or_else(||E::new("PDF COS object requires a kind"))?;
-            let keys:&[&str]=match tag{"null"=>&["kind"],"real"=>&["kind","negative","coefficient","scale"],"ref"=>&["kind","num","gen"],"stream"=>&["kind","dict","data","filters"],"bool"|"int"|"str"|"name"|"array"|"dict"=>&["kind","value"],_=>return Err(E::new("unknown PDF COS object kind"))};
-            if fields.len()!=keys.len()||keys.iter().any(|key|fields.iter().filter(|(name,_)|name==key).count()!=1){return Err(E::new("PDF COS object has missing, duplicate or undeclared fields"))}
-            control.begin_stage(keys.len()).map_err(E::new)?;control.step().map_err(E::new)?;
-            let get=|key:&str|fields.iter().find(|(name,_)|name==key).map(|(_,value)|value).ok_or_else(||E::new(format!("PDF COS object requires {key}")));
+            let V::Object(fields)=value else{return Err(E::new(semio_framework_value::ValueRefusalKind::InvalidValue, "PDF COS object requires a tagged object"))};
+            let tag=fields.iter().find(|(key,_)|key=="kind").and_then(|(_,value)|value.as_str()).ok_or_else(||E::new(semio_framework_value::ValueRefusalKind::InvalidValue, "PDF COS object requires a kind"))?;
+            let keys:&[&str]=match tag{"null"=>&["kind"],"real"=>&["kind","negative","coefficient","scale"],"ref"=>&["kind","num","gen"],"stream"=>&["kind","dict","data","filters"],"bool"|"int"|"str"|"name"|"array"|"dict"=>&["kind","value"],_=>return Err(E::new(semio_framework_value::ValueRefusalKind::InvalidValue, "unknown PDF COS object kind"))};
+            if fields.len()!=keys.len()||keys.iter().any(|key|fields.iter().filter(|(name,_)|name==key).count()!=1){return Err(E::new(semio_framework_value::ValueRefusalKind::InvalidValue, "PDF COS object has missing, duplicate or undeclared fields"))}
+            control.begin_stage(keys.len())?;control.step()?;
+            let get=|key:&str|fields.iter().find(|(name,_)|name==key).map(|(_,value)|value).ok_or_else(||E::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("PDF COS object requires {key}")));
             Ok(match tag{
                 "null"=>Self::Null,
                 "bool"=>Self::Bool(cos_owned::<bool>(get("value")?,control)?.take()),
                 "int"=>Self::Int(cos_owned::<i64>(get("value")?,control)?.take()),
-                "str"=>{let data=cos_bytes(get("value")?,control)?;control.step().map_err(E::new)?;Self::Str(data)},
+                "str"=>{let data=cos_bytes(get("value")?,control)?;control.step()?;Self::Str(data)},
                 "name"=>Self::Name(cos_owned::<String>(get("value")?,control)?.take()),
                 "array"=>Self::Array(cos_owned::<Vec<Self>>(get("value")?,control)?.take()),
                 "dict"=>Self::Dict(cos_owned::<Vec<PdfDictEntry>>(get("value")?,control)?.take()),
                 "real"=>{let negative=cos_owned::<bool>(get("negative")?,control)?;let coefficient=cos_owned::<String>(get("coefficient")?,control)?;let scale=cos_owned::<u32>(get("scale")?,control)?;Self::Real(PdfDecimal{negative:negative.take(),coefficient:coefficient.take(),scale:scale.take()})},
                 "ref"=>{let num=cos_owned::<u32>(get("num")?,control)?;let gen=cos_owned::<u16>(get("gen")?,control)?;Self::Ref(ObjRef{num:num.take(),gen:gen.take()})},
-                "stream"=>{let dict=cos_owned::<Vec<PdfDictEntry>>(get("dict")?,control)?;let data=cos_bytes(get("data")?,control)?;control.step().map_err(E::new)?;let filters=cos_owned::<Vec<PdfStreamFilter>>(get("filters")?,control)?;Self::Stream{dict:dict.take(),data,filters:filters.take()}},
+                "stream"=>{let dict=cos_owned::<Vec<PdfDictEntry>>(get("dict")?,control)?;let data=cos_bytes(get("data")?,control)?;control.step()?;let filters=cos_owned::<Vec<PdfStreamFilter>>(get("filters")?,control)?;Self::Stream{dict:dict.take(),data,filters:filters.take()}},
                 _=>unreachable!(),
             })
         }))
@@ -75,23 +75,23 @@ impl FromValue for PdfObject{
 }
 /// 🪪️ The document ID is exactly two independently owned intrinsic octet strings.
 pub(crate)fn document_id_to_value(value:&Option<[Vec<u8>;2]>)->V{value.as_ref().map_or(V::Null,|value|V::Array(vec![pack::value::bytes::to_value(&value[0]),pack::value::bytes::to_value(&value[1])]))}
-pub(crate)fn document_id_from_value(value:V)->Result<Option<[Vec<u8>;2]>,E>{match value{V::Null=>Ok(None),V::Array(mut values)if values.len()==2=>{let right=pack::value::bytes::from_value(values.pop().unwrap())?;let left=pack::value::bytes::from_value(values.pop().unwrap())?;Ok(Some([left,right]))},_=>Err(E::new("PDF document ID requires exactly two intrinsic octet strings"))}}
+pub(crate)fn document_id_from_value(value:V)->Result<Option<[Vec<u8>;2]>,E>{match value{V::Null=>Ok(None),V::Array(mut values)if values.len()==2=>{let right=pack::value::bytes::from_value(values.pop().unwrap())?;let left=pack::value::bytes::from_value(values.pop().unwrap())?;Ok(Some([left,right]))},_=>Err(E::new(semio_framework_value::ValueRefusalKind::InvalidValue, "PDF document ID requires exactly two intrinsic octet strings"))}}
 
-fn cos_owned<T:FromValue>(value:&V,control:&mut pack::value::NativeDecodeControl<'_>)->Result<pack::value::DecodedValue<T>,E>{let value=T::from_value_controlled(value,control)?;let owner=pack::value::DecodedValue::new(value,T::retire_decoded);control.step().map_err(E::new)?;Ok(owner)}
-fn cos_bytes(value:&V,control:&mut pack::value::NativeDecodeControl<'_>)->Result<Vec<u8>,E>{match value{V::Bytes(bytes)=>control.copy_bytes(bytes).map_err(E::new),V::Array(_)=>Vec::<u8>::from_value_controlled(value,control),_=>Err(E::new("PDF intrinsic octet string requires bytes or canonical octets"))}}
+fn cos_owned<T:FromValue>(value:&V,control:&mut pack::value::NativeDecodeControl<'_>)->Result<pack::value::DecodedValue<T>,E>{let value=T::from_value_controlled(value,control)?;let owner=pack::value::DecodedValue::new(value,T::retire_decoded);control.step()?;Ok(owner)}
+fn cos_bytes(value:&V,control:&mut pack::value::NativeDecodeControl<'_>)->Result<Vec<u8>,E>{match value{V::Bytes(bytes)=>control.copy_bytes(bytes),V::Array(_)=>Vec::<u8>::from_value_controlled(value,control),_=>Err(E::new(semio_framework_value::ValueRefusalKind::InvalidValue, "PDF intrinsic octet string requires bytes or canonical octets"))}}
 /// 🪪️ Borrowed document ID admission copies its two explicit octet fields under one control.
-pub(crate)fn document_id_from_value_controlled(value:&V,control:&mut pack::value::NativeDecodeControl<'_>)->Result<Option<[Vec<u8>;2]>,E>{control.scoped_stage(|control|match value{V::Null=>Ok(None),V::Array(values)if values.len()==2=>{control.begin_stage(2).map_err(E::new)?;let left=cos_bytes(&values[0],control)?;control.step().map_err(E::new)?;let right=cos_bytes(&values[1],control)?;control.step().map_err(E::new)?;Ok(Some([left,right]))},_=>Err(E::new("PDF document ID requires exactly two intrinsic octet strings"))})}
+pub(crate)fn document_id_from_value_controlled(value:&V,control:&mut pack::value::NativeDecodeControl<'_>)->Result<Option<[Vec<u8>;2]>,E>{control.scoped_stage(|control|match value{V::Null=>Ok(None),V::Array(values)if values.len()==2=>{control.begin_stage(2)?;let left=cos_bytes(&values[0],control)?;control.step()?;let right=cos_bytes(&values[1],control)?;control.step()?;Ok(Some([left,right]))},_=>Err(E::new(semio_framework_value::ValueRefusalKind::InvalidValue, "PDF document ID requires exactly two intrinsic octet strings"))})}
 
 fn cos_output<T:ToValue+?Sized>(fields:&mut Vec<(String,V)>,key:&str,value:&T,control:&mut pack::value::NativeEncodeControl<'_>)->Result<(),E>{
-    let key_owned=control.copy_text(key).map_err(E::new)?;let value=value.to_value_controlled(control).map_err(|error|error.under(key))?;fields.push((key_owned,value));control.step().map_err(E::new)
+    let key_owned=control.copy_text(key)?;let value=value.to_value_controlled(control).map_err(|error|error.under(key))?;fields.push((key_owned,value));control.step()
 }
 fn cos_output_bytes(fields:&mut Vec<(String,V)>,key:&str,bytes:&[u8],control:&mut pack::value::NativeEncodeControl<'_>)->Result<(),E>{
-    let key_owned=control.copy_text(key).map_err(E::new)?;let value=pack::value::bytes::to_value_controlled(bytes,control).map_err(|error|error.under(key))?;fields.push((key_owned,value));control.step().map_err(E::new)
+    let key_owned=control.copy_text(key)?;let value=pack::value::bytes::to_value_controlled(bytes,control).map_err(|error|error.under(key))?;fields.push((key_owned,value));control.step()
 }
 /// 🪪️ Projects the two intrinsic document-ID octets through one admitted native output frontier.
 pub(crate)fn document_id_to_value_controlled(value:&Option<[Vec<u8>;2]>,control:&mut pack::value::NativeEncodeControl<'_>)->Result<V,E>{
     control.scoped_depth(64,|control|control.scoped_stage(|control|match value{
-        None=>().to_value_controlled(control),Some(values)=>{control.begin_stage(2).map_err(E::new)?;let mut output=Vec::<V>::guard_decoded(control.allocate_vec(2).map_err(E::new)?);for(index,value)in values.iter().enumerate(){output.get_mut().push(pack::value::bytes::to_value_controlled(value,control).map_err(|error|error.under(index))?);control.step().map_err(E::new)?;}Ok(V::Array(output.take()))}
+        None=>().to_value_controlled(control),Some(values)=>{control.begin_stage(2)?;let mut output=Vec::<V>::guard_decoded(control.allocate_vec(2)?);for(index,value)in values.iter().enumerate(){output.get_mut().push(pack::value::bytes::to_value_controlled(value,control).map_err(|error|error.under(index))?);control.step()?;}Ok(V::Array(output.take()))}
     }))
 }
 

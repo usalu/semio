@@ -36,7 +36,7 @@ impl<A: semio_framework_plugin::PluginApp> Drop for ClosingFixtureApp<A> {
 #[test]
 fn norm_results_window_ownership_mutations_match_neutral_fixture_and_codecs() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../🪟️results/🎚️config/🧫️fixtures/🔬️window-ownership/🔣️.json")).unwrap();
-    let base: NormResultsWindowConfig = dsl::json::from_json_str(&fixture["baseConfig"].to_string()).unwrap();
+    let base: NormResultsWindowConfig = semio_framework_pack_json::from_json_str(&fixture["baseConfig"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut windows = std::collections::BTreeMap::<String, NormResultsWindowConfig>::new();
     for row in fixture["windowInstances"].as_array().unwrap() {
         if row["windowKindId"] == WINDOW_RESULTS {
@@ -46,16 +46,16 @@ fn norm_results_window_ownership_mutations_match_neutral_fixture_and_codecs() {
     for row in fixture["mutations"].as_array().unwrap() {
         let id = row["windowId"].as_str().or_else(|| row["focusedWindowId"].as_str()).unwrap().to_string();
         let before = windows.get(&id).cloned().unwrap();
-        let mutation: NormResultsWindowConfigMutation = dsl::json::from_json_str(&row["mutation"].to_string()).unwrap();
+        let mutation: NormResultsWindowConfigMutation = semio_framework_pack_json::from_json_str(&row["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let after = mutation.diff(&before).diff().apply(&before).unwrap();
-        let restored = mutation.inverse(&before).into_iter().fold(after.clone(), |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
+        let restored = mutation.inverse(&before).expect("valid retained mutation inverse fixture").into_iter().fold(after.clone(), |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
         assert_eq!(restored, before);
         assert_eq!(NormResultsWindowConfigMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
         assert_eq!(NormResultsWindowConfigMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
         windows.insert(id, after);
     }
     for (id, expected) in fixture["expected"].as_object().unwrap() {
-        let expected: NormResultsWindowConfig = dsl::json::from_json_str(&expected.to_string()).unwrap();
+        let expected: NormResultsWindowConfig = semio_framework_pack_json::from_json_str(&expected.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         assert_eq!(windows.get(id), Some(&expected));
         assert_eq!(NormResultsWindowConfig::parse_dsl(&expected.print_dsl()).unwrap(), expected);
         assert_eq!(NormResultsWindowConfig::decode_pack(&expected.encode_pack()).unwrap(), expected);
@@ -63,18 +63,18 @@ fn norm_results_window_ownership_mutations_match_neutral_fixture_and_codecs() {
     for row in fixture["undoMutations"].as_array().unwrap() {
         let id = row["windowId"].as_str().or_else(|| row["focusedWindowId"].as_str()).unwrap().to_string();
         let before = windows.get(&id).cloned().unwrap();
-        let mutation: NormResultsWindowConfigMutation = dsl::json::from_json_str(&row["mutation"].to_string()).unwrap();
+        let mutation: NormResultsWindowConfigMutation = semio_framework_pack_json::from_json_str(&row["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         windows.insert(id, mutation.diff(&before).diff().apply(&before).unwrap());
     }
     assert!(windows.values().all(|config| config == &base));
     for row in fixture["redoMutations"].as_array().unwrap() {
         let id = row["windowId"].as_str().or_else(|| row["focusedWindowId"].as_str()).unwrap().to_string();
         let before = windows.get(&id).cloned().unwrap();
-        let mutation: NormResultsWindowConfigMutation = dsl::json::from_json_str(&row["mutation"].to_string()).unwrap();
+        let mutation: NormResultsWindowConfigMutation = semio_framework_pack_json::from_json_str(&row["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         windows.insert(id, mutation.diff(&before).diff().apply(&before).unwrap());
     }
     for (id, expected) in fixture["expected"].as_object().unwrap() {
-        let expected: NormResultsWindowConfig = dsl::json::from_json_str(&expected.to_string()).unwrap();
+        let expected: NormResultsWindowConfig = semio_framework_pack_json::from_json_str(&expected.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         assert_eq!(windows.get(id), Some(&expected));
     }
 }

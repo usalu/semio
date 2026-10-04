@@ -1,5 +1,5 @@
-//! 🐘 `update-climate` payload — replaces the Din18599 document's `climate` facet
-//! (monthly external temperature + solar irradiance profile). Per `📓️derivation-rules.md` rule 1's
+//! 🐘 `update-climate` payload — replaces the Din18599 document's parent-owned `climate` facet
+//! (monthly external temperature + solar irradiance profile); the derived `climateTable` child follows. Per `📓️derivation-rules.md` rule 1's
 //! `update-<facet>` exception: `MonthlyClimate`'s two twelve-month arrays (`theta_e_c`, `g_h_w_m2`)
 //! are entered together as one climate dataset (e.g. loaded from a reference climate zone via
 //! `MonthlyClimate::german_reference`), never meaningfully edited one month/array at a time from this
@@ -25,9 +25,12 @@ impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for UpdateClimat
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Din18599Snapshot) -> Vec<Din18599Mutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &Din18599Snapshot) -> Result<Vec<Din18599Mutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Update monthly climate profile", "Monatsklimaprofil aktualisieren")

@@ -31,7 +31,14 @@ export const demonstratorPlaygroundSnapshotGuardArray = (value: unknown, at: str
 };
 export const demonstratorPlaygroundSnapshotGuardString = (value: unknown, at: string, bounds: demonstratorPlaygroundSnapshotGuardTextBounds = {}): string => {
   if (typeof value !== "string") return demonstratorPlaygroundSnapshotGuardReject(at, "value is not a string");
-  const length = [...value].length;
+  let length = 0;
+  for (let index = 0; index < value.length; index++, length++) {
+    const unit = value.charCodeAt(index);
+    if (unit >= 0xd800 && unit <= 0xdbff) {
+      const next = value.charCodeAt(++index);
+      if (!(next >= 0xdc00 && next <= 0xdfff)) demonstratorPlaygroundSnapshotGuardReject(at, "string is not Unicode scalar text");
+    } else if (unit >= 0xdc00 && unit <= 0xdfff) demonstratorPlaygroundSnapshotGuardReject(at, "string is not Unicode scalar text");
+  }
   if (bounds.minLength !== undefined && length < bounds.minLength) demonstratorPlaygroundSnapshotGuardReject(at, `string is shorter than ${bounds.minLength}`);
   if (bounds.maxLength !== undefined && length > bounds.maxLength) demonstratorPlaygroundSnapshotGuardReject(at, `string is longer than ${bounds.maxLength}`);
   if (bounds.pattern !== undefined && !new RegExp(bounds.pattern, "u").test(value)) demonstratorPlaygroundSnapshotGuardReject(at, `string does not match ${bounds.pattern}`);
@@ -54,7 +61,10 @@ export const demonstratorPlaygroundSnapshotGuardConstant = <T extends string | n
 
 export function parsePlaygroundSnapshot(value: unknown, at = "$"): PlaygroundSnapshot {
   const row = demonstratorPlaygroundSnapshotGuardObject(value, at);
+  if (Reflect.ownKeys(row).some(key => key !== "schema")) demonstratorPlaygroundSnapshotGuardReject(at, "snapshot has unknown persisted fields");
   return {
     schema: demonstratorPlaygroundSnapshotGuardString(row["schema"], `${at}.schema`),
   };
 }
+
+export { playgroundSnapshotToSqliteDatabase, playgroundSnapshotFromSqliteDatabase, validatePlaygroundSnapshotSqliteDialect, PLAYGROUND_SQLITE_SCHEMA } from "./🪶️sqlite/🟦️.ts";

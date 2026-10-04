@@ -185,8 +185,8 @@ pub const PROBE_SCHEMA: &str = "os.agent.probe/v1";
 pub const PROBE_PACK_SCHEMA_HASH: &str = "0302ac7cf70cd2452759542a24931331935527fb9388bb6967cbc0575ccf728e";
 const PROBE_SURFACE_ID: &str = "os.mcp.probe.editor";
 
-fn probe_record_spec() -> store::os_dsl::RecordSpec {
-    store::os_dsl::RecordSpec::new(Some("probe"), store::os_dsl::RecordLayout::Inline, vec![store::os_dsl::FieldSpec::new(0, "value", store::os_dsl::Shape::Value)])
+fn probe_record_spec() -> semio_framework_dsl_record::RecordSpec {
+    semio_framework_dsl_record::RecordSpec::new(Some("probe"), semio_framework_dsl_record::RecordLayout::Inline, vec![semio_framework_dsl_record::FieldSpec::new(0, "value", semio_framework_dsl_record::Shape::Value)])
 }
 
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
@@ -198,8 +198,8 @@ mod probe_sqlite;
 impl store::ArtifactDsl for ProbeSnapshot {
     const EXTENSION: &'static str = "probe";
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        serde_json::from_str(text).map(ProbeSnapshot).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(0, 0)))
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        serde_json::from_str(text).map(ProbeSnapshot).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), semio_framework_diagnostic::TextSpan::at(0, 0)))
     }
 
     fn print_dsl(&self) -> String {
@@ -210,8 +210,8 @@ impl store::ArtifactDsl for ProbeSnapshot {
 /// 🧩️ `ProbeSnapshot` is one opaque `serde_json::Value` leaf: it declares no child slot and no link
 /// slot, so its composition projection is empty. `ArtifactStore::undo`/`redo` reach it through
 /// `store::SpaceMember`, whose bound this satisfies.
-impl store::os_schema_composition::ArtifactCompositionFields for ProbeSnapshot {
-    fn visit_child_refs<'a, V: store::os_schema_composition::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {
+impl semio_framework_schema_composition::ArtifactCompositionFields for ProbeSnapshot {
+    fn visit_child_refs<'a, V: semio_framework_schema_composition::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {
         Ok(())
     }
 }
@@ -223,14 +223,14 @@ impl store::ArtifactPack for ProbeSnapshot {
     }
 
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        serde_json::to_vec(&self.0).map_err(|error| store::PackError::Schema(error.to_string()))
+        serde_json::to_vec(&self.0).map_err(|error| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string())))
     }
 
     fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        serde_json::from_slice(bytes).map(ProbeSnapshot).map_err(|error| store::PackError::Schema(error.to_string()))
+        serde_json::from_slice(bytes).map(ProbeSnapshot).map_err(|error| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string())))
     }
 
-    fn record_spec() -> Option<store::os_dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(probe_record_spec())
     }
 }
@@ -246,13 +246,13 @@ impl store::ArtifactPack for ProbeSnapshot {
 /// so an impl that calls them is a two-frame infinite recursion that aborts the process with
 /// `fatal runtime error: stack overflow` the first time a probe document is committed. See
 /// `📓️fable-mcp-artifact-quick-recursion.md`.
-impl store::ToValue for ProbeSnapshot {
-    fn to_value(&self) -> store::DslValue {
-        store::DslValue::from(&self.0)
+impl semio_framework_value::ToValue for ProbeSnapshot {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::from(&self.0)
     }
 }
-impl store::FromValue for ProbeSnapshot {
-    fn from_value(value: store::DslValue) -> Result<Self, store::ValueError> {
+impl semio_framework_value::FromValue for ProbeSnapshot {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         Ok(ProbeSnapshot(serde_json::Value::from(value)))
     }
 }
@@ -272,13 +272,13 @@ impl store::MutationDiff<ProbeSnapshot> for ProbeDiff {
 
 /// 🌉️ Hand-written — same foreign-`serde_json::Value` gap, and the same no-`to_dsl_value` recursion
 /// rule, as [`ProbeSnapshot`]'s impl above.
-impl store::ToValue for ProbeDiff {
-    fn to_value(&self) -> store::DslValue {
-        store::DslValue::from(&self.0)
+impl semio_framework_value::ToValue for ProbeDiff {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::from(&self.0)
     }
 }
-impl store::FromValue for ProbeDiff {
-    fn from_value(value: store::DslValue) -> Result<Self, store::ValueError> {
+impl semio_framework_value::FromValue for ProbeDiff {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         Ok(ProbeDiff(serde_json::Value::from(value)))
     }
 }
@@ -326,9 +326,12 @@ impl store::Mutation<ProbeSnapshot> for ProbeMutation {
         store::MutationOutcome::new(ProbeDiff(value.clone()))
     }
 
-    fn inverse(&self, base: &ProbeSnapshot) -> Vec<Self> {
+    fn inverse(&self, base: &ProbeSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![ProbeMutation::SetValue(base.0.clone())]
-    }
+    
+    })())
+}
 }
 
 /// 🌉️ Hand-written — `ProbeMutation::SetValue` wraps a foreign `serde_json::Value` field, same gap
@@ -337,21 +340,21 @@ impl store::Mutation<ProbeSnapshot> for ProbeMutation {
 /// byte-identical to what `#[derive(ToValue)]` and `serde`'s default emit for a tagless
 /// single-unnamed-field variant, which is what `🧫️fixtures/🔣️first-party-codecs.json`'s `probeCodec`
 /// section pins.
-impl store::ToValue for ProbeMutation {
-    fn to_value(&self) -> store::DslValue {
+impl semio_framework_value::ToValue for ProbeMutation {
+    fn to_value(&self) -> semio_framework_value::DslValue {
         let ProbeMutation::SetValue(value) = self;
-        store::DslValue::object([(PROBE_SET_VALUE_DESCRIPTOR.aggregate_variant.to_string(), store::DslValue::from(value))])
+        semio_framework_value::DslValue::object([(PROBE_SET_VALUE_DESCRIPTOR.aggregate_variant.to_string(), semio_framework_value::DslValue::from(value))])
     }
 }
-impl store::FromValue for ProbeMutation {
-    fn from_value(value: store::DslValue) -> Result<Self, store::ValueError> {
-        let store::DslValue::Object(entries) = value else {
-            return Err(store::ValueError::new(format!("expected a one-key `{}` object, found {value:?}", PROBE_SET_VALUE_DESCRIPTOR.aggregate_variant)));
+impl semio_framework_value::FromValue for ProbeMutation {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        let semio_framework_value::DslValue::Object(entries) = value else {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a one-key `{}` object, found {value:?}", PROBE_SET_VALUE_DESCRIPTOR.aggregate_variant)));
         };
-        match <[(String, store::DslValue); 1]>::try_from(entries) {
+        match <[(String, semio_framework_value::DslValue); 1]>::try_from(entries) {
             Ok([(key, payload)]) if key == PROBE_SET_VALUE_DESCRIPTOR.aggregate_variant => Ok(ProbeMutation::SetValue(serde_json::Value::from(payload))),
-            Ok([(key, _)]) => Err(store::ValueError::new(format!("unknown variant `{key}`, expected `{}`", PROBE_SET_VALUE_DESCRIPTOR.aggregate_variant))),
-            Err(entries) => Err(store::ValueError::new(format!("expected exactly one variant key, found {}", entries.len()))),
+            Ok([(key, _)]) => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown variant `{key}`, expected `{}`", PROBE_SET_VALUE_DESCRIPTOR.aggregate_variant))),
+            Err(entries) => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected exactly one variant key, found {}", entries.len()))),
         }
     }
 }
@@ -362,8 +365,8 @@ impl store::OpText for ProbeMutation {
         serde_json::to_string(value).unwrap_or_else(|_| "null".to_string())
     }
 
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        serde_json::from_str(line).map(ProbeMutation::SetValue).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(0, 0)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        serde_json::from_str(line).map(ProbeMutation::SetValue).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), semio_framework_diagnostic::TextSpan::at(0, 0)))
     }
 }
 
@@ -399,7 +402,7 @@ pub fn ensure_probe_codec_registered() {
 struct ProbeOwnedRetirement<T>(Option<T>);
 
 impl<T: Send> store::ErasedSnapshotRetirement for ProbeOwnedRetirement<T> {
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -580,7 +583,7 @@ pub fn activate_plugin_instance(
     let wasm_path = resolve_plugin_wasm_path(repo_root, entry)?;
     let compiled = scoped_compiled_component(runtime, &entry.plugin_id, ComponentBytes::File(&wasm_path), &ActivationScope::detached())?;
 
-    let actor = semio_framework::io::resolve_ready(semio_framework_actor::ActorId::new(plugin_ordinal, 0, 1, 0));
+    let actor = ::semio_framework_async::poll::resolve_ready(semio_framework_actor::ActorId::new(plugin_ordinal, 0, 1, 0));
     let caps: Vec<semio_framework::kernel::BrokerCapabilityGrant> =
         descriptor.capability_requests.iter().map(|request| semio_framework::kernel::BrokerCapabilityGrant { token: semio_framework::CapabilityToken(0), id: request.id.clone(), scope: request.scope.clone(), expires_ms: None }).collect();
     let budget = headless_open_budget();
@@ -717,7 +720,7 @@ enum PendingResponsePage {
     /// `AppFrame::Done{in_reply_to}` on exactly this shape so a caller never waits on an answer a
     /// completed command was never going to publish). A caller that needs a real frame reports the
     /// `Done` as the unexpected variant it is; a caller whose verb genuinely answers `Done`
-    /// (`LoadDocument`, `TransactionUndo`/`Redo`) reads its own success.
+    /// (`LoadDocumentArchive`'s admission and acknowledgement, `TransactionUndo`/`Redo`) reads its own success.
     Stamped,
     Fault(PendingResponseFault),
 }
@@ -751,7 +754,7 @@ impl PendingResponsePage {
         match std::mem::replace(self, Self::Empty) {
             Self::Empty => Err(PluginArtifactChannel::not_wired("execute_turn", format!("no AppFrame answering seq {seq} before terminal acknowledgement"))),
             Self::Frame { duplicate: true, .. } => Err(PluginArtifactChannel::not_wired("AppFrame response", format!("the guest published more than one frame answering seq {seq}"))),
-            Self::Frame { bytes, duplicate: false } => semio_framework::io::resolve_ready(store::decode_app_frame(&bytes)).map_err(|error| PluginArtifactChannel::not_wired("decoding AppFrame", error)),
+            Self::Frame { bytes, duplicate: false } => ::semio_framework_async::poll::resolve_ready(store::decode_app_frame(&bytes)).map_err(|error| PluginArtifactChannel::not_wired("decoding AppFrame", error)),
             Self::Stamped => Ok(store::AppFrame::Done { in_reply_to: seq }),
             Self::Fault(PendingResponseFault::Oversized) => Err(PluginArtifactChannel::not_wired("AppFrame response", format!("the guest's answer exceeds the declared {}-byte host answer ceiling", semio_framework::kernel::COMMAND_MAXIMUM_BYTES))),
             Self::Fault(PendingResponseFault::Duplicate) => Err(PluginArtifactChannel::not_wired("AppFrame response", format!("the guest published more than one frame answering seq {seq}"))),
@@ -923,6 +926,13 @@ fn headless_command_budget() -> semio_framework::kernel::Budget {
 /// not the duration of any single guest call.
 #[cfg(not(target_arch = "wasm32"))]
 const COMMAND_RESUME_WALL_BUDGET: std::time::Duration = std::time::Duration::from_secs(60);
+
+/// ⏱️ How long one whole-document load ([`PluginArtifactChannel::load_document_archive`]) may keep polling
+/// before it cancels itself. A long history folds over many bounded polls, so this is longer than one
+/// command's [`COMMAND_RESUME_WALL_BUDGET`], and it leaves that budget for settling the cancel inside the MCP
+/// client's own 240 s per-call budget.
+#[cfg(not(target_arch = "wasm32"))]
+const DOCUMENT_LOAD_WALL_BUDGET: std::time::Duration = std::time::Duration::from_secs(150);
 
 /// ⏱️ How long a cold open may keep taking turns. Larger than [`headless_open_budget`] because an
 /// open is at least two turns — the `Event::InstanceOpen` itself and the `InstanceLifecycleAck` for
@@ -1451,9 +1461,11 @@ impl PluginArtifactChannel {
         self.session_artifact_id = artifact_id;
     }
 
-    /// 📥️ Makes `artifact_id`'s canonical pair this guest's session document — one
-    /// `AppCommand::LoadDocument`, the SAME verb the shell's own open path and this file's
-    /// `ExportMedia` arm already drive, so nothing about the bytes is interpreted here.
+    /// 📥️ Makes `artifact_id`'s canonical pair this guest's session document — one stepped archive
+    /// load ([`Self::load_document_archive`]), the same whole-document load every host and this file's
+    /// `ExportMedia` arm drive, so nothing about the bytes is interpreted here. `scope` hears its progress
+    /// and may cancel it; a cancelled or faulted load leaves the guest's previous document as it was and
+    /// records nothing.
     ///
     /// 🧭️ Idempotent per guest: a channel that already holds this artifact's pair does nothing, so
     /// the load happens once per (instance, artifact) and never once per command — re-loading on
@@ -1464,23 +1476,69 @@ impl PluginArtifactChannel {
     /// 🔀️ A guest that holds ANOTHER artifact (its app's session document moved to a document the agent opened since,
     /// [`route_session_artifact`]) is thrown away first: a guest is only ever seeded fresh, never while its backbone is
     /// bound to a different document.
-    ///
-    /// 🏁️ `LoadDocument` publishes no frame of its own, so its answer is the stamped
-    /// `AppFrame::Done` `await_response` mints — see [`PendingResponsePage::Stamped`].
-    pub fn load_session_document(&mut self, instance: u32, artifact_id: &str, pack: &[u8], spr: &[u8]) -> Result<(), Fault> {
+    pub fn load_session_document(&mut self, instance: u32, artifact_id: &str, pack: &[u8], spr: &[u8], scope: &ActivationScope) -> Result<(), Fault> {
         match self.session_documents.get(&instance) {
             Some(loaded) if loaded == artifact_id => return Ok(()),
             Some(_) => self.discard_instance(instance),
             None => {}
         }
-        self.ensure_instance(instance)?;
-        match self.exchange_one_real(instance, store::AppCommand::LoadDocument { seq: 0, pack: pack.to_vec(), spr: spr.to_vec() })? {
-            store::AppFrame::Done { .. } => {}
-            store::AppFrame::Error { fault, .. } => return Err(decode_guest_fault(&fault)),
-            other => return Err(Self::not_wired("LoadDocument", format!("unexpected real AppFrame variant {other:?}"))),
-        }
+        self.ensure_instance_scoped(instance, scope)?;
+        self.load_document_archive(instance, pack, spr, scope)?;
         self.session_documents.insert(instance, artifact_id.to_string());
         Ok(())
+    }
+
+    /// 🗃️ Makes `pack`/`spr` `instance`'s whole document through the stepped, ACK-owned archive load
+    /// (`📓️api-stepped-document-load.md` §2, driven by `store::DocumentArchiveLoadHost`): `LoadDocumentArchive`
+    /// with no members, `PollDocumentArchiveLoad` until a terminal status, then `AcknowledgeDocumentArchiveLoad`,
+    /// each one bounded command exchange, so a long history folds across many guest turns instead of inside one.
+    ///
+    /// 📊️ Every polled status reaches `scope` as [`ActivationPhase::LoadingDocument`] at `completed / total`.
+    ///
+    /// 🛑️ A cancel `scope` reports, or [`DOCUMENT_LOAD_WALL_BUDGET`] running out, cancels the load in the guest and
+    /// keeps polling until the guest says it restored the previous document with zero trace; the caller gets
+    /// `job.cancelled` or `budget.exceeded`. A load that won that race is a loaded document. A guest that does not
+    /// settle its cancel within one more [`COMMAND_RESUME_WALL_BUDGET`] is discarded, so the next command starts on
+    /// a fresh instance.
+    ///
+    /// ⚠️ A guest fault, terminal or refused, is the guest's own typed fault with its own code (`document.loading`, …).
+    fn load_document_archive(&mut self, instance: u32, pack: &[u8], spr: &[u8], scope: &ActivationScope) -> Result<(), Fault> {
+        let mut load = store::DocumentArchiveLoadHost::new(store::DocumentArchivePack { parent_pack: pack.to_vec(), parent_spr: spr.to_vec(), members: Vec::new() });
+        let deadline = std::time::Instant::now() + DOCUMENT_LOAD_WALL_BUDGET;
+        let mut stopped: Option<Fault> = None;
+        loop {
+            let now = std::time::Instant::now();
+            if stopped.is_none() {
+                stopped = scope.checkpoint().err().or_else(|| (now >= deadline).then(|| Self::budget_fault("the document load")));
+                if stopped.is_some() {
+                    load.request_cancel();
+                }
+            } else if now >= deadline + COMMAND_RESUME_WALL_BUDGET {
+                self.discard_instance(instance);
+                return Err(Fault { code: "budget.exceeded".to_string(), message: "the document load did not settle its cancel within its wall budget; the instance was discarded and the next command starts on a fresh one".to_string() });
+            }
+            let (seq, command) = match load.step(|| self.take_seq()) {
+                store::DocumentArchiveLoadStep::Send { seq, command } => (seq, command),
+                store::DocumentArchiveLoadStep::Finished(store::DocumentArchiveLoadOutcome::Ready) => return Ok(()),
+                store::DocumentArchiveLoadStep::Finished(store::DocumentArchiveLoadOutcome::Cancelled) => {
+                    return Err(stopped.unwrap_or_else(|| Fault { code: ACTIVATION_CANCELLED_FAULT_CODE.to_string(), message: "the guest cancelled the document load; its previous document is unchanged".to_string() }));
+                }
+                store::DocumentArchiveLoadStep::Finished(store::DocumentArchiveLoadOutcome::Fault(fault)) => return Err(decode_guest_fault(&fault)),
+            };
+            let frame = self.exchange_sequenced(instance, &command, seq)?;
+            match load.answer(seq, &frame) {
+                Ok(Some(status)) => {
+                    let fraction = if status.total == 0 { 0.0 } else { status.completed as f64 / status.total as f64 };
+                    if let (Err(cancelled), true) = (scope.advance(ActivationPhase::LoadingDocument, fraction), stopped.is_none()) {
+                        stopped = Some(cancelled);
+                        load.request_cancel();
+                    }
+                }
+                Ok(None) => {}
+                Err(store::DocumentArchiveLoadRefusal::Refused(fault)) => return Err(decode_guest_fault(&fault)),
+                Err(store::DocumentArchiveLoadRefusal::Unanswered) => return Err(Self::not_wired("document archive load", format!("the guest answered seq {seq} with {}", app_frame_tag(&frame)))),
+            }
+        }
     }
 
     /// 🔁️ Throws this guest's session document away so the next [`Self::load_session_document`] seeds
@@ -1568,7 +1626,7 @@ impl PluginArtifactChannel {
                 return Err(Fault { code: "capability.not-found".to_string(), message: format!("plugin `{}` declares no inference service in its committed descriptor", self.plugin_id) });
             }
             let roster_bytes = serde_json::to_vec(&roster).map_err(|error| Self::not_wired("inference roster", error))?;
-            let actor = semio_framework::io::resolve_ready(semio_framework_actor::ActorId::new(INFERENCE_ACTOR_ORDINAL, 0, 1, 0));
+            let actor = ::semio_framework_async::poll::resolve_ready(semio_framework_actor::ActorId::new(INFERENCE_ACTOR_ORDINAL, 0, 1, 0));
             let caps: Vec<semio_framework::kernel::BrokerCapabilityGrant> =
                 self.descriptor.capability_requests.iter().map(|request| semio_framework::kernel::BrokerCapabilityGrant { token: semio_framework::CapabilityToken(0), id: request.id.clone(), scope: request.scope.clone(), expires_ms: None }).collect();
             let runtimes = Arc::clone(&self.runtime);
@@ -1629,7 +1687,10 @@ impl PluginArtifactChannel {
             previous_state: None,
             requested_cache_mode: crate::schema::ArtifactInferenceCacheModeV1::Cold,
             canonical_payload: bind_inference_document(&declared, command)?,
-            dependencies: Vec::new(),
+            dependencies: match command.artifact_document {
+                Some(_) => self.inference_child_dependencies(&command.artifact_id)?,
+                None => Vec::new(),
+            },
         };
         let request_bytes = serde_json::to_vec(&request).map_err(|error| Self::not_wired("encoding the inference request", error))?;
         let route = self.ensure_inference_route()?;
@@ -1694,7 +1755,7 @@ impl PluginArtifactChannel {
             message: format!("plugin `{plugin_id}` declares no app action named by capability `{capability_id}` — its committed manifest publishes {} app(s)", self.descriptor.manifest.apps.len()),
         })?;
         let arguments = match input {
-            serde_json::Value::Object(map) => map.iter().map(|(key, value)| (key.clone(), store::DslValue::from(value))).collect(),
+            serde_json::Value::Object(map) => map.iter().map(|(key, value)| (key.clone(), semio_framework_value::DslValue::from(value))).collect(),
             serde_json::Value::Null => std::collections::BTreeMap::new(),
             other => return Err(Self::not_wired("PureCommand", format!("an action's input is a named argument object; this call carried {other}"))),
         };
@@ -1760,7 +1821,7 @@ impl PluginArtifactChannel {
             return Ok(());
         }
         scope.enter(ActivationPhase::OpeningGuest)?;
-        let actor = semio_framework::io::resolve_ready(semio_framework_actor::ActorId::new((instance as u16).wrapping_add(1), 0, 1, 0));
+        let actor = ::semio_framework_async::poll::resolve_ready(semio_framework_actor::ActorId::new((instance as u16).wrapping_add(1), 0, 1, 0));
         let caps: Vec<semio_framework::kernel::BrokerCapabilityGrant> = self
             .descriptor
             .capability_requests
@@ -1826,12 +1887,37 @@ impl PluginArtifactChannel {
     /// this file used to pass a literal `seq: 0` while the envelope counted from 1, so even a host
     /// reading the right lane would have correlated nothing.
     fn exchange_one_real(&mut self, instance: u32, mut real_command: store::AppCommand) -> Result<store::AppFrame, Fault> {
+        let seq = self.take_seq();
+        *app_command_seq_mut(&mut real_command) = seq;
+        self.exchange_sequenced(instance, &real_command, seq)
+    }
+
+    /// 🔢️ The next command sequence — the one number the kernel envelope and the command itself share.
+    fn take_seq(&mut self) -> u64 {
         let seq = self.next_seq;
         self.next_seq += 1;
-        *app_command_seq_mut(&mut real_command) = seq;
+        seq
+    }
+
+    /// 🪆️ The inference dependencies a composed artifact's readers compose on read (design §20.15): one
+    /// `child:<slot>/<childId>` → HEAD snapshot pack per owned child of `artifact_id`, read with `ReadChildHeads`
+    /// from the session guest that holds it. An artifact no session guest holds, or one without children, has none.
+    fn inference_child_dependencies(&mut self, artifact_id: &str) -> Result<Vec<(String, Vec<u8>)>, Fault> {
+        let Some(instance) = self.session_documents.iter().find_map(|(instance, loaded)| (loaded == artifact_id).then_some(*instance)) else { return Ok(Vec::new()) };
+        let seq = self.take_seq();
+        match self.exchange_sequenced(instance, &store::AppCommand::ReadChildHeads { seq }, seq)? {
+            store::AppFrame::ChildHeads { entries, .. } => Ok(child_head_dependencies(entries)),
+            store::AppFrame::Error { fault, .. } => Err(decode_guest_fault(&fault)),
+            other => Err(Self::not_wired("ReadChildHeads", format!("the guest answered seq {seq} with {}", app_frame_tag(&other)))),
+        }
+    }
+
+    /// 🔁️ [`Self::exchange_one_real`] for a command already stamped with `seq` — the archive load's
+    /// `store::DocumentArchiveLoadHost` stamps its own, because its operation IS its admission's sequence.
+    fn exchange_sequenced(&mut self, instance: u32, real_command: &store::AppCommand, seq: u64) -> Result<store::AppFrame, Fault> {
         let deadline = std::time::Instant::now() + COMMAND_RESUME_WALL_BUDGET;
         loop {
-            match self.exchange_one_turn(instance, &real_command, seq)? {
+            match self.exchange_one_turn(instance, real_command, seq)? {
                 CommandTurn::Settled(frame) => return Ok(frame),
                 CommandTurn::MoreWork if std::time::Instant::now() < deadline => continue,
                 CommandTurn::MoreWork => {
@@ -1899,7 +1985,7 @@ impl PluginArtifactChannel {
             if !self.pending_exchanges.can_insert(instance) || !self.pending_command_closes.can_insert(u64::from(instance)) || !self.rejected_command_builds.can_insert(u64::from(instance)) {
                 return Err(Fault { code: "budget.exceeded".to_string(), message: "fixed pending command authority is saturated or collided".to_string() });
             }
-            let command = semio_framework::io::resolve_ready(store::encode_app_command(real_command)).map_err(|fault| Self::not_wired("encoding AppCommand", format!("{}: {}", fault.code.0, fault.message)))?;
+            let command = ::semio_framework_async::poll::resolve_ready(store::encode_app_command(real_command)).map_err(|fault| Self::not_wired("encoding AppCommand", format!("{}: {}", fault.code.0, fault.message)))?;
             let envelope = semio_framework::kernel::CommandEnvelope { instance, seq, command };
             let mut owners = semio_framework::kernel::CommandEnvelopeSet::try_new().map_err(|fault| Self::not_wired("reserving command batch", format!("{}: {}", fault.code.0, fault.message)))?;
             if let Err((fault, rejected)) = owners.try_push(envelope) {
@@ -2014,14 +2100,14 @@ impl PluginArtifactChannel {
     /// admitting the second one reported "the guest published more than one frame answering seq
     /// N" for a guest that answered exactly once — measured 2026-09-20 the first time a real
     /// `TransactionPrepare` crossed the headless ingress. A `Done` still IS the answer for the
-    /// verbs that publish nothing else (`LoadDocument`, `TransactionUndo`/`Redo`), which is why
+    /// verbs that publish nothing else (`LoadDocumentArchive`, `TransactionUndo`/`Redo`), which is why
     /// it is dropped only once a real frame is already held. A genuine duplicate — two answering
     /// frames neither of which is a stamp — stays as loud as WR2 made it.
     fn admit_reply_frame(pending: &mut PendingExchange, instance: u32, seq: u64, effect: &semio_framework::kernel::Effect) {
         let Some(payload) = shell_app_frame_payload(instance, effect) else {
             return;
         };
-        let Ok(frame) = semio_framework::io::resolve_ready(store::decode_app_frame(payload)) else {
+        let Ok(frame) = ::semio_framework_async::poll::resolve_ready(store::decode_app_frame(payload)) else {
             return;
         };
         if matches!(frame, store::AppFrame::Done { .. }) && pending.response.holds_frame() {
@@ -2043,7 +2129,7 @@ impl PluginArtifactChannel {
     /// 🏁️ A settled command that published no frame naming itself is **not** a fault: it is a
     /// command whose verb has nothing to say, and the answer is a stamped `AppFrame::Done` — the
     /// same rule the React host applies (`commandIngressNeedsReplyStampV1`). Making it a fault here
-    /// would refuse every `LoadDocument`/`TransactionUndo` the guest completed silently. What stays
+    /// would refuse every archive admission/`TransactionUndo` the guest completed silently. What stays
     /// a fault is a guest that answers ANOTHER request, because that is a routing defect.
     ///
     /// 🛑️ A guest that is `Idle` with no wake pending has nothing left to do, so waiting the
@@ -2070,7 +2156,7 @@ impl PluginArtifactChannel {
                 let Some(payload) = shell_app_frame_payload(instance, effect) else {
                     continue;
                 };
-                let Ok(frame) = semio_framework::io::resolve_ready(store::decode_app_frame(payload)) else {
+                let Ok(frame) = ::semio_framework_async::poll::resolve_ready(store::decode_app_frame(payload)) else {
                     continue;
                 };
                 if app_frame_reply_seq(&frame) == Some(seq) || (app_frame_reply_seq(&frame).is_none() && app_frame_is_transaction_terminal(&frame)) {
@@ -2108,7 +2194,6 @@ fn app_command_seq_mut(command: &mut store::AppCommand) -> &mut u64 {
         | store::AppCommand::LocalInteractionQuery { seq, .. }
         | store::AppCommand::ArtifactCommand { seq, .. }
         | store::AppCommand::ApplyEnvelopes { seq, .. }
-        | store::AppCommand::LoadDocument { seq, .. }
         | store::AppCommand::ReadDocument { seq }
         | store::AppCommand::LoadDocumentArchive { seq, .. }
         | store::AppCommand::ReadDocumentArchive { seq }
@@ -2142,6 +2227,7 @@ fn app_command_seq_mut(command: &mut store::AppCommand) -> &mut u64 {
         | store::AppCommand::PollMediaExport { seq, .. }
         | store::AppCommand::CancelMediaExport { seq, .. }
         | store::AppCommand::ReadDocumentIdentity { seq }
+        | store::AppCommand::ReadChildHeads { seq }
         | store::AppCommand::TakeMediaExportChunk { seq, .. } => seq,
     }
 }
@@ -2175,6 +2261,7 @@ fn app_frame_reply_seq(frame: &store::AppFrame) -> Option<u64> {
         | store::AppFrame::MediaExportSubmitted { in_reply_to, .. }
         | store::AppFrame::MediaExportStatus { in_reply_to, .. }
         | store::AppFrame::DocumentIdentity { in_reply_to, .. }
+        | store::AppFrame::ChildHeads { in_reply_to, .. }
         | store::AppFrame::MediaExportChunk { in_reply_to, .. } => Some(*in_reply_to),
         store::AppFrame::Error { in_reply_to, .. } | store::AppFrame::MergeReport { in_reply_to, .. } | store::AppFrame::Conflicts { in_reply_to, .. } | store::AppFrame::UiPatch { in_reply_to, .. } => *in_reply_to,
         store::AppFrame::DocumentChanged { .. }
@@ -2231,6 +2318,7 @@ fn app_frame_tag(frame: &store::AppFrame) -> &'static str {
         store::AppFrame::OperationCompleted { .. } => "OperationCompleted",
         store::AppFrame::LocalInteractionQuery { .. } => "LocalInteractionQuery",
         store::AppFrame::DocumentIdentity { .. } => "DocumentIdentity",
+        store::AppFrame::ChildHeads { .. } => "ChildHeads",
         store::AppFrame::DocumentArchive { .. } => "DocumentArchive",
         store::AppFrame::DocumentArchiveLoad { .. } => "DocumentArchiveLoad",
         store::AppFrame::MediaExportSubmitted { .. } => "MediaExportSubmitted",
@@ -2296,7 +2384,7 @@ fn shell_lane_fault(instance: u32, effect: &semio_framework::kernel::Effect) -> 
     if addressed.0 != instance.to_string() || payload.starts_with(TYPED_OPERATION_PAGE_MAGIC) || payload.starts_with(TYPED_OPERATION_ACK_MAGIC) {
         return None;
     }
-    match semio_framework::io::resolve_ready(store::decode_app_frame(payload)) {
+    match ::semio_framework_async::poll::resolve_ready(store::decode_app_frame(payload)) {
         Ok(store::AppFrame::Error { fault, .. }) => Some(decode_guest_fault(&fault)),
         _ => None,
     }
@@ -2315,7 +2403,7 @@ fn effect_shape(instance: u32, effect: &semio_framework::kernel::Effect) -> Stri
             } else if payload.starts_with(TYPED_OPERATION_ACK_MAGIC) {
                 "typed-operation-ack".to_string()
             } else {
-                match semio_framework::io::resolve_ready(store::decode_app_frame(payload)) {
+                match ::semio_framework_async::poll::resolve_ready(store::decode_app_frame(payload)) {
                     Ok(frame) => match app_frame_reply_seq(&frame) {
                         Some(reply) => format!("{}(in_reply_to {reply})", app_frame_tag(&frame)),
                         None => format!("{}(unsolicited)", app_frame_tag(&frame)),
@@ -2401,8 +2489,8 @@ fn decode_guest_fault(bytes: &[u8]) -> Fault {
     let decoded = store::pack_rt::decode_wire_value(bytes).ok();
     match decoded {
         Some(value) => {
-            let code = value.get("code").and_then(store::DslValue::as_str).unwrap_or("app.command.rejected").to_string();
-            let message = value.get("message").and_then(store::DslValue::as_str).map(str::to_string).unwrap_or_else(|| store::os_pack::json::to_json_string(&value));
+            let code = value.get("code").and_then(semio_framework_value::DslValue::as_str).unwrap_or("app.command.rejected").to_string();
+            let message = value.get("message").and_then(semio_framework_value::DslValue::as_str).map(str::to_string).unwrap_or_else(|| semio_framework_pack_json::to_json_string(&value));
             Fault { code, message }
         }
         None => Fault { code: "app.command.rejected".to_string(), message: format!("guest rejected the command ({} bytes of fault detail, undecodable as JSON)", bytes.len()) },
@@ -2459,6 +2547,14 @@ fn app_media_out_ports(app: &semio_framework::AppDefinition) -> Vec<String> {
     let mut seen: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
     ports.retain(|port| seen.insert(port.clone()));
     ports
+}
+
+/// 🪆️ One inference dependency per owned child of a composed document (design §20.15): key `child:<slot>/<childId>`
+/// (`semio_framework_plugin::inference_child_dependency`, the key the guest's request validation accepts), value the child's
+/// HEAD snapshot pack, in the guest's slot/id order.
+#[cfg(not(target_arch = "wasm32"))]
+fn child_head_dependencies(entries: Vec<store::ChildHeadPackEntry>) -> Vec<(String, Vec<u8>)> {
+    entries.into_iter().map(|entry| (semio_framework_plugin::inference_child_dependency(&entry.slot, &entry.child_id), entry.head_pack)).collect()
 }
 
 /// 🔗️ Folds the artifact this inference is being run ON into the canonical request body, under the
@@ -2569,10 +2665,11 @@ impl ArtifactChannel for PluginArtifactChannel {
     /// `🏃️run`'s own plugin reactor routes `job_infer`, so the guest's result is the
     /// guest's own — this arm fabricates nothing and short-circuits nothing.
     ///
-    /// 📤️ Real and general: the artifact's own pack bytes go in with `LoadDocument`, then
-    /// the app's own OUT port is read with `MediaOut` — the identical pair `🏃️run`'s
-    /// workflow executor drives per node (`🏃️run/🦀️.rs`'s `compute_node`). Nothing about
-    /// the exported bytes is interpreted here: `descriptor`/`data` are the guest's own.
+    /// 📤️ Real and general: the artifact's own pack bytes go in through the stepped archive
+    /// load ([`Self::load_document_archive`]), then the app's own OUT port is read with
+    /// `MediaOut` — the identical sequence `🏃️run`'s workflow executor drives per node
+    /// (`🏃️run/🦀️.rs`'s `compute_node`). Nothing about the exported bytes is interpreted
+    /// here: `descriptor`/`data` are the guest's own.
     ///
     /// 🆕️ The guest's own genesis document, straight off `ReadDocument` — host-opaque
     /// bytes this crate persists verbatim under the plugin's real schema id, which is how
@@ -2602,10 +2699,10 @@ impl ArtifactChannel for PluginArtifactChannel {
                 },
                 AppCommand::PureCommand { capability_id, input } => {
                     let invocation = self.addressed_action_invocation(&capability_id, &input)?;
-                    let command = store::pack_rt::encode_wire_value(&store::ToValue::to_value(&invocation));
+                    let command = store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&invocation));
                     match self.exchange_one_real(
                         instance,
-                        store::AppCommand::PureCommand { seq: 0, command, document: Vec::new(), document_spr: Vec::new(), config: Vec::new(), config_spr: Vec::new(), draft: Vec::new(), draft_spr: Vec::new() },
+                        store::AppCommand::PureCommand { seq: 0, command, head: Vec::new() },
                     )? {
                         store::AppFrame::Emit { document_ops, config_ops, draft_ops, child_ops, .. } => {
                             let (ops, warnings) = headless_agent_ops(&capability_id, PreparedOps { document: ops_pack_lane(document_ops)?, config: ops_pack_lane(config_ops)?, draft: ops_pack_lane(draft_ops)?, children: child_ops })?;
@@ -2615,13 +2712,13 @@ impl ArtifactChannel for PluginArtifactChannel {
                         other => return Err(Self::not_wired("PureCommand", format!("unexpected real AppFrame variant {other:?}"))),
                     }
                 }
-                AppCommand::TransactionPrepare { txn_id, ops, label, origin: _origin } => {
+                AppCommand::TransactionPrepare { txn_id, ops, origin: _origin } => {
                     if !ops.config.is_empty() || !ops.draft.is_empty() {
                         return Err(Self::not_wired("TransactionPrepare", "a headless agent's transaction carries document operations only; its preview (`headless_agent_ops`) already kept config/draft view state in the shell"));
                     }
                     match self.exchange_one_real(
                         instance,
-                        store::AppCommand::TransactionPrepare { seq: 0, txn_id: txn_id.clone(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: ops.document, label, origin: Vec::new(), prepared_child_ops: ops.children },
+                        store::AppCommand::TransactionPrepare { seq: 0, txn_id: txn_id.clone(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: ops.document, origin: Vec::new(), prepared_child_ops: ops.children },
                     )? {
                         store::AppFrame::TransactionPrepared { txn_id, rejection, .. } if rejection.is_empty() => AppFrame::TransactionPrepared { txn_id },
                         store::AppFrame::TransactionPrepared { rejection, .. } => return Err(decode_guest_fault(&rejection)),
@@ -2654,11 +2751,8 @@ impl ArtifactChannel for PluginArtifactChannel {
                     other => return Err(Self::not_wired("TransactionRedo", format!("unexpected real AppFrame variant {other:?}"))),
                 },
                 AppCommand::ExportMedia { port, document, document_spr } => {
-                    match self.exchange_one_real(instance, store::AppCommand::LoadDocument { seq: 0, pack: document, spr: document_spr })? {
-                        store::AppFrame::Done { .. } => {}
-                        store::AppFrame::Error { fault, .. } => return Err(decode_guest_fault(&fault)),
-                        other => return Err(Self::not_wired("ExportMedia/LoadDocument", format!("unexpected real AppFrame variant {other:?}"))),
-                    }
+                    self.session_documents.remove(&instance);
+                    self.load_document_archive(instance, &document, &document_spr, &ActivationScope::detached())?;
                     match self.exchange_one_real(instance, store::AppCommand::MediaOut { seq: 0, port: port.clone(), request: Vec::new() })? {
                         store::AppFrame::Media { port, descriptor, data, .. } => AppFrame::Exported { port, descriptor, data },
                         store::AppFrame::Error { fault, .. } => return Err(decode_guest_fault(&fault)),
@@ -3048,45 +3142,60 @@ fn guest_edit_text_from_envelope<'a>(_envelope: &'a store::os_spr::MutationEnvel
 }
 
 /// 🪶️ Resolves semantic snapshot conversion by its declared schema and exact dialect.
+/// 🖥️ Classifies the VM's intrinsic outcome separately from a provider rejection.
+#[cfg(not(target_arch = "wasm32"))]
+fn guest_sqlite_turn_error(error: semio_framework_plugin_host::TurnFault) -> semio_framework::io_schema::IoError {
+    use semio_framework_plugin_host::TurnFault;
+    use semio_framework_value::{ValueError, ValueRefusalKind};
+    let kind = match &error {
+        TurnFault::Cancelled => ValueRefusalKind::Canceled,
+        TurnFault::Exhausted | TurnFault::DeadlineExceeded | TurnFault::FuelExhausted => ValueRefusalKind::WorkLimit,
+        TurnFault::Host(_) | TurnFault::Guest(_) | TurnFault::Trapped(_) => ValueRefusalKind::InvariantViolated,
+    };
+    semio_framework::io_schema::IoError::from_value_error(ValueError::new(kind, error.to_string()))
+}
+
 #[cfg(not(target_arch = "wasm32"))]
 fn guest_sqlite_route(schema: &str, dialect: &semio_framework::io_schema::ArtifactDialect) -> Result<Arc<GuestCodecRoute>, semio_framework::io_schema::IoError> {
-    guest_codec_routes().lock().unwrap_or_else(std::sync::PoisonError::into_inner).iter().find(|route| route.artifact_schema == schema && &route.dialect == dialect).cloned().ok_or_else(|| format!("no guest SQLite provider for {schema} at {}", dialect.to_coordinate()).into())
+    guest_codec_routes().lock().unwrap_or_else(std::sync::PoisonError::into_inner).iter().find(|route| route.artifact_schema == schema && &route.dialect == dialect).cloned().ok_or_else(|| semio_framework::io_schema::IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, format!("no guest SQLite provider for {schema} at {}", dialect.to_coordinate()))))
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 fn guest_sqlite_export(schema: &str, dialect: &semio_framework::io_schema::ArtifactDialect, payload: &semio_framework::io_schema::IoPayload, control: &mut semio_framework::sqlite_snapshot::SqliteSnapshotControl<'_>) -> semio_framework::io_schema::IoResult<semio_framework::sqlite_snapshot::SqliteDatabase> {
     use semio_framework::{io::{self}, io_schema::{IoError, IoOutcome, IoPayload}, sqlite_snapshot::{self, SnapshotEncoding, SqliteSnapshotPhase}};
     use semio_framework_plugin_host::{sqlite_wire, GuestCallCancellation};
-    control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 0)?;
+    control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 0).map_err(IoError::from_value_error)?;
     let route = guest_sqlite_route(schema, dialect)?;
     let (encoding, bytes) = match payload { IoPayload::Binary(bytes) => (SnapshotEncoding::Binary, bytes.as_slice()), IoPayload::Text(text) => (SnapshotEncoding::Text, text.as_bytes()) };
     let limits = control.limits();
     let cancel = GuestCallCancellation::default();
-    let _reactor = hub_socket_reactor().map_err(|error| IoError::from(error.to_string()))?.enter();
-    let result = semio_framework_async::block_on(route.runtime.codec_sqlite_export(&route.compiled, &dialect.to_coordinate(), encoding.as_str(), bytes, limits, &headless_codec_budget(), |_, _| { if control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 0).is_err() { cancel.cancel(); } }, &cancel)).map_err(|error| IoError::from(error.to_string()))?;
-    let file = match result { sqlite_wire::SnapshotFileResult::Done(file) => file, sqlite_wire::SnapshotFileResult::Rejected(rejection) => return Err(IoError { message: rejection.message, diagnostics: sqlite_wire::decode_diagnostics(&rejection.diagnostics)? }) };
-    let mut database = sqlite_snapshot::import_sqlite_database(&file.bytes, limits, &mut |progress| control.checkpoint(progress.phase, progress.completed, progress.total).is_ok()).map_err(|error| IoError::from(error.to_string()))?;
-    let (actual, actual_encoding) = io::io_mechanism::take_sqlite_snapshot_metadata(&mut database)?;
-    if actual != *dialect || actual_encoding != encoding { return Err("guest SQLite export metadata disagrees with its exact requested snapshot".to_string().into()); }
-    Ok(IoOutcome { value: database, diagnostics: sqlite_wire::decode_diagnostics(&file.diagnostics)? })
+    let _reactor = hub_socket_reactor().map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, error.to_string())))?.enter();
+    let mut progress_refusal = None;
+    let result = semio_framework_async::block_on(route.runtime.codec_sqlite_export(&route.compiled, &dialect.to_coordinate(), encoding.as_str(), bytes, limits, &headless_codec_budget(), |_, _| { if let Err(cause) = control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 0) { if progress_refusal.is_none() { progress_refusal = Some(cause); } cancel.cancel(); } }, &cancel)).map_err(|error| progress_refusal.take().map(IoError::from_value_error).unwrap_or_else(|| guest_sqlite_turn_error(error)))?;
+    let file = match result { sqlite_wire::SnapshotFileResult::Done(file) => file, sqlite_wire::SnapshotFileResult::Rejected(rejection) => return Err(rejection.into_io_error().map_err(IoError::from_value_error)?) };
+    let mut database = sqlite_snapshot::import_sqlite_database(&file.bytes, limits, &mut |progress| control.checkpoint(progress.phase, progress.completed, progress.total).is_ok()).map_err(IoError::from_value_error)?;
+    let (actual, actual_encoding) = io::io_mechanism::take_sqlite_snapshot_metadata(&mut database).map_err(IoError::from_value_error)?;
+    if actual != *dialect || actual_encoding != encoding { return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "guest SQLite export metadata disagrees with its exact requested snapshot"))); }
+    Ok(IoOutcome { value: database, diagnostics: sqlite_wire::decode_diagnostics(&file.diagnostics).map_err(IoError::from_value_error)? })
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 fn guest_sqlite_import(schema: &str, dialect: &semio_framework::io_schema::ArtifactDialect, mut database: semio_framework::sqlite_snapshot::SqliteDatabase, encoding: semio_framework::sqlite_snapshot::SnapshotEncoding, control: &mut semio_framework::sqlite_snapshot::SqliteSnapshotControl<'_>) -> semio_framework::io_schema::IoResult<semio_framework::io_schema::IoPayload> {
     use semio_framework::{io::{self}, io_schema::{IoError, IoOutcome, IoPayload}, sqlite_snapshot::{self, SqliteSnapshotPhase}};
     use semio_framework_plugin_host::{sqlite_wire, GuestCallCancellation};
-    control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 0, 0)?;
+    control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 0, 0).map_err(IoError::from_value_error)?;
     let route = guest_sqlite_route(schema, dialect)?;
     let limits = control.limits();
-    io::io_mechanism::attach_sqlite_snapshot_metadata(&mut database, dialect, encoding, control)?;
-    let bytes = sqlite_snapshot::export_sqlite_database(&database, limits, &mut |progress| control.checkpoint(progress.phase, progress.completed, progress.total).is_ok()).map_err(|error| IoError::from(error.to_string()))?;
+    io::io_mechanism::attach_sqlite_snapshot_metadata(&mut database, dialect, encoding, control).map_err(IoError::from_value_error)?;
+    let bytes = sqlite_snapshot::export_sqlite_database(&database, limits, &mut |progress| control.checkpoint(progress.phase, progress.completed, progress.total).is_ok()).map_err(IoError::from_value_error)?;
     let cancel = GuestCallCancellation::default();
-    let _reactor = hub_socket_reactor().map_err(|error| IoError::from(error.to_string()))?.enter();
-    let result = semio_framework_async::block_on(route.runtime.codec_sqlite_import(&route.compiled, &dialect.to_coordinate(), &bytes, limits, &headless_codec_budget(), |_, _| { if control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 0, 0).is_err() { cancel.cancel(); } }, &cancel)).map_err(|error| IoError::from(error.to_string()))?;
-    let payload = match result { sqlite_wire::SnapshotPayloadResult::Done(payload) => payload, sqlite_wire::SnapshotPayloadResult::Rejected(rejection) => return Err(IoError { message: rejection.message, diagnostics: sqlite_wire::decode_diagnostics(&rejection.diagnostics)? }) };
-    if payload.encoding != encoding.as_str() { return Err("guest SQLite import returned a different native encoding".to_string().into()); }
-    let value = match encoding { sqlite_snapshot::SnapshotEncoding::Binary => IoPayload::Binary(payload.bytes), sqlite_snapshot::SnapshotEncoding::Text => IoPayload::Text(String::from_utf8(payload.bytes).map_err(|error| IoError::from(error.to_string()))?) };
-    Ok(IoOutcome { value, diagnostics: sqlite_wire::decode_diagnostics(&payload.diagnostics)? })
+    let _reactor = hub_socket_reactor().map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, error.to_string())))?.enter();
+    let mut progress_refusal = None;
+    let result = semio_framework_async::block_on(route.runtime.codec_sqlite_import(&route.compiled, &dialect.to_coordinate(), &bytes, limits, &headless_codec_budget(), |_, _| { if let Err(cause) = control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 0, 0) { if progress_refusal.is_none() { progress_refusal = Some(cause); } cancel.cancel(); } }, &cancel)).map_err(|error| progress_refusal.take().map(IoError::from_value_error).unwrap_or_else(|| guest_sqlite_turn_error(error)))?;
+    let payload = match result { sqlite_wire::SnapshotPayloadResult::Done(payload) => payload, sqlite_wire::SnapshotPayloadResult::Rejected(rejection) => return Err(rejection.into_io_error().map_err(IoError::from_value_error)?) };
+    if payload.encoding != encoding.as_str() { return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "guest SQLite import returned a different native encoding"))); }
+    let value = match encoding { sqlite_snapshot::SnapshotEncoding::Binary => IoPayload::Binary(payload.bytes), sqlite_snapshot::SnapshotEncoding::Text => IoPayload::Text(String::from_utf8(payload.bytes).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string())))?) };
+    Ok(IoOutcome { value, diagnostics: sqlite_wire::decode_diagnostics(&payload.diagnostics).map_err(IoError::from_value_error)? })
 }
 
 /// 🗂️ Registers `artifact_schema`'s document codec from the component's OWN `codec` export, and
@@ -3364,14 +3473,15 @@ impl RoutingArtifactChannel {
     }
 
     /// 📥️ Seeds `channel`'s guest for `instance` with the bound hub document and brings it up to what the
-    /// document's actor delivered: reseeded first from a new baseline when there is one, loaded, backbone
-    /// bound, then every mutation batch after the baseline, oldest first. A batch the guest refuses is the
+    /// document's actor delivered: reseeded first from a new baseline when there is one, loaded (the stepped
+    /// archive load, reporting to and cancellable by `scope`), backbone bound, then every mutation batch after
+    /// the baseline, oldest first. A batch the guest refuses is the
     /// typed fault it is; the batches it did not reach go back to the relay for the next command.
-    fn seed_session_guest(channel: &mut PluginArtifactChannel, instance: u32, artifact_id: &str, document: &SessionDocumentPair, inbound: Option<HubInboundDelivery>) -> Result<(), Fault> {
+    fn seed_session_guest(channel: &mut PluginArtifactChannel, instance: u32, artifact_id: &str, document: &SessionDocumentPair, inbound: Option<HubInboundDelivery>, scope: &ActivationScope) -> Result<(), Fault> {
         if inbound.as_ref().is_some_and(|delivery| delivery.reseeded) {
             channel.reseed_session_document(instance);
         }
-        if let Err(fault) = channel.load_session_document(instance, artifact_id, &document.pack, &document.spr).and_then(|()| channel.ensure_document_backbone(instance)) {
+        if let Err(fault) = channel.load_session_document(instance, artifact_id, &document.pack, &document.spr, scope).and_then(|()| channel.ensure_document_backbone(instance)) {
             if let Some(delivery) = inbound {
                 delivery.restore();
             }
@@ -3506,7 +3616,7 @@ impl ArtifactChannel for RoutingArtifactChannel {
         let channel = channels.get_mut(&route).expect("just inserted above");
         channel.bind_session_artifact(session_artifact_id);
         let seeded = match session_document.filter(|_| !matches!(commands.first(), Some(AppCommand::Infer(_)))) {
-            Some((artifact_id, document)) => Self::seed_session_guest(channel, instance, &artifact_id, &document, inbound),
+            Some((artifact_id, document)) => Self::seed_session_guest(channel, instance, &artifact_id, &document, inbound, &ActivationScope::detached()),
             None => Ok(()),
         };
         let frames = seeded.and_then(|()| channel.exchange(instance, commands));
@@ -3546,7 +3656,7 @@ impl ArtifactChannel for RoutingArtifactChannel {
         let channel = channels.get_mut(&route).expect("just inserted above");
         channel.bind_session_artifact(session_artifact_id);
         let activated = match (channel.activate(instance, scope), session_document) {
-            (Ok(()), Some((artifact_id, document))) => Self::seed_session_guest(channel, instance, &artifact_id, &document, inbound),
+            (Ok(()), Some((artifact_id, document))) => Self::seed_session_guest(channel, instance, &artifact_id, &document, inbound, scope),
             (activated, _) => {
                 if let Some(delivery) = inbound {
                     delivery.restore();
@@ -3721,7 +3831,7 @@ pub struct InstalledArtifactKind {
 /// 📦️ One document's authoritative binary pair — the exact `(pack, spr)` `store::print_document_pack`
 /// writes and the hub's `active-checkpoint/pair` route serves. Held behind an `Arc` on a
 /// [`PluginArtifactBinding`] so the ~80 KB of a real document is read from the hub ONCE per open and
-/// then only ever cloned into the single `AppCommand::LoadDocument` that seeds a guest with it.
+/// then only ever cloned into the single archive load that seeds a guest with it.
 #[derive(Debug, PartialEq, Eq)]
 pub struct SessionDocumentPair {
     pub pack: Vec<u8>,
@@ -3799,7 +3909,7 @@ pub fn plan_hub_inbound(items: Vec<HubInbound>, seeded: &SessionDocumentPair) ->
     for (index, item) in items.into_iter().enumerate() {
         match item {
             HubInbound::Archive(bytes) if Some(index) == newest_archive => {
-                let archive = semio_framework::io::resolve_ready(store::decode_document_archive_bytes(&bytes)).map_err(|error| Fault { code: "channel.not-wired".to_string(), message: format!("the hub document actor delivered an undecodable baseline: {error}") })?;
+                let archive = ::semio_framework_async::poll::resolve_ready(store::decode_document_archive_bytes(&bytes)).map_err(|error| Fault { code: "channel.not-wired".to_string(), message: format!("the hub document actor delivered an undecodable baseline: {error}") })?;
                 if !archive.members.is_empty() {
                     return Err(Fault { code: "channel.not-wired".to_string(), message: format!("the hub document actor delivered a baseline with {} owned member(s); a headless session document holds one root pair", archive.members.len()) });
                 }
@@ -4298,7 +4408,7 @@ impl HeadlessWorkspace {
             WorkspaceOrigin::Folder { path } => {
                 let mut ids: std::collections::BTreeSet<String> = self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).keys().cloned().collect();
                 let storage = store::sync::FolderEventLogStorage::new(path.clone());
-                let persisted = semio_framework::io::resolve_ready(storage.document_ids()).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("listing {}: {error}", path.display())))?;
+                let persisted = ::semio_framework_async::poll::resolve_ready(storage.document_ids()).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("listing {}: {error}", path.display())))?;
                 ids.extend(persisted);
                 Ok(ids.into_iter().collect())
             }
@@ -4333,7 +4443,7 @@ impl HeadlessWorkspace {
     /// at create time — see [`Self::read_live_session_artifact_bytes`].
     pub fn read_artifact_bytes(&self, artifact_id: &str) -> Result<Option<(Vec<u8>, Vec<u8>)>, GatewayError> {
         if let Some(probe_store) = self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(artifact_id) {
-            let files = semio_framework::io::resolve_ready(probe_store.snapshot_pack()).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("snapshotting `{artifact_id}`: {error}")))?;
+            let files = ::semio_framework_async::poll::resolve_ready(probe_store.snapshot_pack()).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("snapshotting `{artifact_id}`: {error}")))?;
             return Ok(Some((files.pack, files.spr)));
         }
         #[cfg(not(target_arch = "wasm32"))]
@@ -4363,7 +4473,7 @@ impl HeadlessWorkspace {
         match &self.origin {
             WorkspaceOrigin::Folder { path } => {
                 let storage = store::sync::FolderEventLogStorage::new(path.clone());
-                semio_framework::io::resolve_ready(storage.read(artifact_id)).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("reading `{artifact_id}`: {error}")))
+                ::semio_framework_async::poll::resolve_ready(storage.read(artifact_id)).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("reading `{artifact_id}`: {error}")))
             }
             WorkspaceOrigin::Hub { .. } => unreachable!("hub reads return before local probe or folder access"),
         }
@@ -4856,7 +4966,7 @@ impl HeadlessWorkspace {
     #[cfg(not(target_arch = "wasm32"))]
     fn open_hub_document_actor(&self, artifact_id: &str, lease: &semio_framework_os_kernel::os_directory::DocumentExecutionTargetLeaseFieldsV1, relay: Arc<HubRelay>) -> (Option<store::sync::ArtifactMailboxSender>, Option<String>) {
         let schema = lease.artifact.schema.clone();
-        match semio_framework::io::resolve_ready(store::document_codec(&schema)) {
+        match ::semio_framework_async::poll::resolve_ready(store::document_codec(&schema)) {
             Ok(Some(_)) => {}
             Ok(None) => {
                 if let Err(error) = self.register_hub_document_codec(&lease) {
@@ -4908,7 +5018,7 @@ impl HeadlessWorkspace {
     fn watch_hub_document(&self, reactor: &'static tokio::runtime::Runtime, document_key: store::sync::ArtifactDocumentKey, relay: Arc<HubRelay>) {
         let host = self.artifact_host.clone();
         let actor = self.actor_label();
-        let mut events = semio_framework::io::resolve_ready(host.subscribe_key(&document_key));
+        let mut events = ::semio_framework_async::poll::resolve_ready(host.subscribe_key(&document_key));
         reactor.spawn(async move {
             loop {
                 match events.recv().await {
@@ -4958,7 +5068,7 @@ impl HeadlessWorkspace {
         };
         scope.checkpoint().map_err(activation_fault)?;
         let storage = store::sync::FolderEventLogStorage::new(path);
-        semio_framework::io::resolve_ready(storage.write(artifact_id, &kind.schema, &pack, &spr)).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("persisting `{artifact_id}`: {error}")))?;
+        ::semio_framework_async::poll::resolve_ready(storage.write(artifact_id, &kind.schema, &pack, &spr)).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("persisting `{artifact_id}`: {error}")))?;
         self.plugin_artifacts
             .lock()
             .unwrap_or_else(std::sync::PoisonError::into_inner)
@@ -4967,7 +5077,7 @@ impl HeadlessWorkspace {
     }
 
     /// 📤️ `artifact_id`'s real exported bytes for one of the owning app's OUT ports, produced by that
-    /// plugin's own guest — `LoadDocument` of the artifact's stored pack, then `MediaOut` on `port`
+    /// plugin's own guest — the stepped archive load of the artifact's stored pair, then `MediaOut` on `port`
     /// (`AppCommand::ExportMedia`). The gateway interprets none of it: the guest's `descriptor`/`data`
     /// come back verbatim.
     #[cfg(not(target_arch = "wasm32"))]
@@ -5432,8 +5542,8 @@ impl HeadlessWorkspace {
     }
 }
 
-fn directory_json_value<T: semio_framework_os_kernel::ToValue>(value: &T) -> Result<serde_json::Value, GatewayError> {
-    let text = semio_framework_os_kernel::os_pack::json::to_json_string(value);
+fn directory_json_value<T: semio_framework_value::ToValue>(value: &T) -> Result<serde_json::Value, GatewayError> {
+    let text = semio_framework_pack_json::to_json_string(value);
     serde_json::from_str(&text).map_err(|_| GatewayError::new(GatewayErrorCode::Internal, "directory value could not be projected to MCP JSON"))
 }
 
@@ -5506,7 +5616,7 @@ impl HeadlessWorkspace {
             if descriptor.manifest.plugin_id!=protocol.owner {continue;}
             for topic in descriptor.manifest.topic_contributions {
                 if topic.topic!=semio_framework_os_kernel::os_directory::client::DOCUMENT_HTTP_PORT_TOPIC {continue;}
-                if let Ok(declaration)=<semio_framework_os_kernel::os_directory::client::DocumentHttpPortDeclarationV1 as store::FromValue>::from_value(topic.payload) {
+                if let Ok(declaration)=<semio_framework_os_kernel::os_directory::client::DocumentHttpPortDeclarationV1 as semio_framework_value::FromValue>::from_value(topic.payload) {
                     if declaration.service_id==protocol.service_id && declaration==expected {count+=1;}
                 }
             }
@@ -5625,7 +5735,7 @@ impl HeadlessWorkspace {
     }
 
     /// ↩️ Resolves one session-private history member through the normal authenticated Hub undo route.
-    pub fn undo_hub_inference_approval(&self, member: &crate::actions::HubInferenceApprovalUndoMemberV1) -> Result<store::DslValue,GatewayError> {
+    pub fn undo_hub_inference_approval(&self, member: &crate::actions::HubInferenceApprovalUndoMemberV1) -> Result<semio_framework_value::DslValue,GatewayError> {
         self.admit_remote_inference_protocol(&member.route)?;
         let scope = self.hub_inference_scope(&member.document_id)?;
         let binding = self.hub_inference_binding()?;
@@ -5633,8 +5743,8 @@ impl HeadlessWorkspace {
             return Err(GatewayError::new(GatewayErrorCode::PermissionDenied, "durable undo authority does not belong to this Hub workspace"));
         }
         let mut request=member.payload.clone();
-        let store::DslValue::Object(fields)=&mut request else {return Err(GatewayError::new(GatewayErrorCode::InputInvalid,"invalid owner history payload"));};
-        fields.retain(|(key,_)|key!="idempotencyKey");fields.push(("idempotencyKey".into(),store::DslValue::String(member.idempotency_key.clone())));
+        let semio_framework_value::DslValue::Object(fields)=&mut request else {return Err(GatewayError::new(GatewayErrorCode::InputInvalid,"invalid owner history payload"));};
+        fields.retain(|(key,_)|key!="idempotencyKey");fields.push(("idempotencyKey".into(),semio_framework_value::DslValue::String(member.idempotency_key.clone())));
         #[cfg(not(target_arch = "wasm32"))]
         {
             let driver = self.hub_inference_driver()?;

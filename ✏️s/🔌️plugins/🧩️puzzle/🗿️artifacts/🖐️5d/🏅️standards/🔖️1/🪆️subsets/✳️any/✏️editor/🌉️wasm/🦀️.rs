@@ -6,6 +6,9 @@
 
 #![cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 
+#[path = "../../../../../../../../🌉️wasm/⚠️diagnostic/🦀️.rs"]
+mod fault_bridge;
+
 use crate::editor::puzzle5d::Puzzle5dPlayApp;
 use semio_framework_plugin::{ArtifactEnvelopeDecodeOperationHandle, ArtifactEnvelopeDecodeOperationPoll, EditorApp, PluginApp, VcsArtifactApp};
 use std::cell::RefCell;
@@ -70,7 +73,7 @@ impl Puzzle5dArtifactVcs {
         if maximum_pages == 0 || maximum_pages > PUZZLE5D_ENVELOPE_MAXIMUM_PAGES || maximum_bytes == 0 || maximum_bytes > PUZZLE5D_ENVELOPE_MAXIMUM_BYTES {
             return Err(js_fault("puzzle5d-envelope.invalid-credits"));
         }
-        let handle = self.app.borrow_mut().begin_artifact_envelope_ingress(maximum_pages, maximum_bytes).map_err(dsl::fault_to_js)?;
+        let handle = self.app.borrow_mut().begin_artifact_envelope_ingress(maximum_pages, maximum_bytes).map_err(fault_bridge::fault_to_js)?;
         Ok(Puzzle5dEnvelopeLoadHandle { operation: handle.operation.0, generation: handle.generation.0 })
     }
 
@@ -81,39 +84,39 @@ impl Puzzle5dArtifactVcs {
             return Err(js_fault("puzzle5d-envelope.page-too-large"));
         }
         let mut app = self.app.borrow_mut();
-        app.preflight_artifact_envelope_ingress_page(handle.runtime_handle(), len).map_err(dsl::fault_to_js)?;
+        app.preflight_artifact_envelope_ingress_page(handle.runtime_handle(), len).map_err(fault_bridge::fault_to_js)?;
         app.construct_and_admit_artifact_envelope_ingress_page(handle.runtime_handle(), len, || {
             let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
             source.copy_to(&mut bytes[..len]);
             store::ArtifactEnvelopeDecodePage::from_preflighted_array(bytes, len)
         })
-        .map_err(dsl::fault_to_js)
+        .map_err(fault_bridge::fault_to_js)
     }
 
     #[wasm_bindgen(js_name = sealEnvelopeLoad)]
     pub fn seal_envelope_load(&self, handle: &Puzzle5dEnvelopeLoadHandle) -> Result<bool, JsValue> {
-        self.app.borrow_mut().seal_artifact_envelope_ingress(handle.runtime_handle()).map_err(dsl::fault_to_js)
+        self.app.borrow_mut().seal_artifact_envelope_ingress(handle.runtime_handle()).map_err(fault_bridge::fault_to_js)
     }
 
     #[wasm_bindgen(js_name = pollEnvelopeLoad)]
     pub fn poll_envelope_load(&self, handle: &Puzzle5dEnvelopeLoadHandle) -> Result<u8, JsValue> {
         let mut app = self.app.borrow_mut();
-        app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(dsl::fault_to_js)?;
-        match app.advance_artifact_envelope_load(handle.runtime_handle()).map_err(dsl::fault_to_js)? {
+        app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(fault_bridge::fault_to_js)?;
+        match app.advance_artifact_envelope_load(handle.runtime_handle()).map_err(fault_bridge::fault_to_js)? {
             ArtifactEnvelopeDecodeOperationPoll::Pending => Ok(0),
             ArtifactEnvelopeDecodeOperationPoll::Progress => Ok(1),
             ArtifactEnvelopeDecodeOperationPoll::Ready => {
-                if !app.acknowledge_artifact_store_replacement(handle.runtime_handle()).map_err(dsl::fault_to_js)? {
+                if !app.acknowledge_artifact_store_replacement(handle.runtime_handle()).map_err(fault_bridge::fault_to_js)? {
                     return Ok(1);
                 }
                 Ok(2)
             }
             ArtifactEnvelopeDecodeOperationPoll::Cancelled => {
-                let _ = app.acknowledge_artifact_store_replacement(handle.runtime_handle()).map_err(dsl::fault_to_js)?;
+                let _ = app.acknowledge_artifact_store_replacement(handle.runtime_handle()).map_err(fault_bridge::fault_to_js)?;
                 Ok(3)
             }
             ArtifactEnvelopeDecodeOperationPoll::Fault => {
-                let _ = app.acknowledge_artifact_store_replacement(handle.runtime_handle()).map_err(dsl::fault_to_js)?;
+                let _ = app.acknowledge_artifact_store_replacement(handle.runtime_handle()).map_err(fault_bridge::fault_to_js)?;
                 Ok(4)
             }
         }
@@ -121,12 +124,12 @@ impl Puzzle5dArtifactVcs {
 
     #[wasm_bindgen(js_name = cancelEnvelopeLoad)]
     pub fn cancel_envelope_load(&self, handle: &Puzzle5dEnvelopeLoadHandle) -> Result<(), JsValue> {
-        self.app.borrow_mut().cancel_artifact_envelope_load(handle.runtime_handle()).map_err(dsl::fault_to_js)
+        self.app.borrow_mut().cancel_artifact_envelope_load(handle.runtime_handle()).map_err(fault_bridge::fault_to_js)
     }
 
     #[wasm_bindgen(js_name = closeStep)]
     pub fn close_step(&self) -> Result<bool, JsValue> {
-        match self.app.borrow_mut().close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(dsl::fault_to_js)? {
+        match self.app.borrow_mut().close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(fault_bridge::fault_to_js)? {
             semio_framework_plugin::PluginCloseStep::Complete => Ok(true),
             semio_framework_plugin::PluginCloseStep::Pending { .. } | semio_framework_plugin::PluginCloseStep::AwaitingInput { .. } | semio_framework_plugin::PluginCloseStep::Blocked { .. } => Ok(false),
         }
@@ -142,6 +145,6 @@ impl Puzzle5dArtifactVcs {
 pub fn puzzle5d_parse_dsl_json(dsl_text: &str) -> Result<String, JsValue> {
     use store::ArtifactDsl;
     let projection = crate::Puzzle5dSnapshot::parse_dsl(dsl_text).map_err(|error| JsValue::from_str(&error.to_string()))?;
-    Ok(dsl::json::to_json_string(&projection))
+    Ok(semio_framework_pack_json::to_json_string(&projection))
 }
 //#endregion 🔖️WasmBridge

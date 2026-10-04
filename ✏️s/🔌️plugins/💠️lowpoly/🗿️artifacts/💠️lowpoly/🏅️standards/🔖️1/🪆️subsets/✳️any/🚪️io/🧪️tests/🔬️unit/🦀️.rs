@@ -9,7 +9,7 @@ fn box_mesh_json() -> String {
 
 fn fixture() -> LowpolySnapshot {
     let mesh_json = box_mesh_json();
-    let obj1 = LowpolyObject {
+    let obj1 = LowpolyObject { mesh_state:None,
         id: "obj-1".into(),
         name: "First Object".into(),
         transform: LowpolyTransform { position: [1.0, 2.0, 3.0], rotation: [0.0, 90.0, 0.0], scale: [1.0, 1.0, 1.0] },
@@ -18,7 +18,7 @@ fn fixture() -> LowpolySnapshot {
         paint_layers: vec![LowpolyPaintLayer { name: "Base".into(), visible: true, opacity: 0.5, blend_mode: "normal".into(), pixels: vec![10, 20, 30, 40, 50, 60, 70, 80] }],
         mesh_content: mesh_json,
     };
-    let obj2 = LowpolyObject { id: "obj-2".into(), name: "Second Object".into(), transform: LowpolyTransform::default(), smooth_shading: true, mesh: None, paint_layers: Vec::new(), mesh_content: String::new() };
+    let obj2 = LowpolyObject { mesh_state:None, id: "obj-2".into(), name: "Second Object".into(), transform: LowpolyTransform::default(), smooth_shading: true, mesh: None, paint_layers: Vec::new(), mesh_content: String::new() };
     LowpolySnapshot { schema: LOWPOLY_DOCUMENT_SCHEMA.into(), objects: vec![obj1, obj2] }
 }
 
@@ -63,7 +63,7 @@ async fn mesh_formats_carry_the_geometry_and_nothing_else() {
 #[semio_framework_async_macros::async_test]
 async fn png_is_a_picture_of_the_model() {
     let bytes = crate::io::export::serializers::artifacts::png::v1_2::any::serialize_bytes(&fixture()).expect("png export");
-    let png = semio_s_artifact_stdio_png::io::decode_png(&bytes).expect("decodes as png");
+    let png = semio_framework_pixels::decode_png(&bytes).expect("decodes as png");
     assert_eq!((png.width, png.height), (512, 512));
     assert!(png.pixels.chunks(4).filter(|px| px[0] < 250).count() > 10_000, "the box is painted");
 }

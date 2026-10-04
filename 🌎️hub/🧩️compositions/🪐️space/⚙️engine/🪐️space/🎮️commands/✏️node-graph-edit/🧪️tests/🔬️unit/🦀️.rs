@@ -62,7 +62,7 @@ async fn a_delete_row_removes_the_named_edges_then_nodes() {
 #[test]
 fn the_renderer_row_fixture_decodes_exactly() {
     let fixture: serde_json::Value = serde_json::from_str(NODE_GRAPH_EDIT_ROWS).expect("the row fixture parses");
-    let row = |value: &serde_json::Value| space_node_graph_row(&pack::parse_json(&value.to_string()).expect("row JSON"));
+    let row = |value: &serde_json::Value| space_node_graph_row(&semio_framework_pack_json::parse(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("row JSON"));
     for case in fixture["accepted"].as_array().expect("accepted rows") {
         let carried = !matches!(case["row"]["operation"].as_str(), Some("setSlider" | "insertPort"));
         assert_eq!(row(&case["row"]).is_ok(), carried, "accepted row {}", case["id"]);

@@ -15,11 +15,11 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
         let mut snapshot = DocxTransitionalBuilderConstruction::empty().add_text_paragraph("clean").build().unwrap();
-        snapshot.xml_parts.push(crate::schema::snapshot::DocxXmlPart {
+        snapshot.xml_parts.try_push(crate::schema::snapshot::DocxXmlPart {
             path: "word/strict-extra.xml".into(),
             content_type: "application/xml".into(),
-            document: semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text("<w:styles xmlns:w=\"http://purl.oclc.org/ooxml/wordprocessingml/main\"/>").unwrap(),
-        });
+            document: semio_s_artifact_stdio_xml::schema::snapshot::retained::RetainedXmlDocument::try_from_document(&semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text("<w:styles xmlns:w=\"http://purl.oclc.org/ooxml/wordprocessingml/main\"/>").unwrap()).unwrap(),
+        }).unwrap();
         snapshot.opc.content_types.set_override("word/strict-extra.xml", "application/xml");
         let (mutated, _diff) = DocxTransitionalBuilderConstruction::from_snapshot(DocxSnapshot::default()).mutate(DocxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }));
         let err = mutated.build().expect_err("mixed-in strict namespace must fail build()");

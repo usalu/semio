@@ -1,0 +1,167 @@
+{
+  "at": "2026-10-03T19:39:05.027Z",
+  "physicalSources": [
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏛️ownership/🧮️compute/📜️script.ts",
+      "hash": "474645188392269c9fee43757c370de3040aedcfcced3fb33de015ea6572183d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️testing/📍️consumer/🏃️execution/🟦️.ts",
+      "hash": "1a7b2d2ffca10d2a06c96af1867e2d6f7158e8614c4ca06fca76b5d6ebf26d2b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+      "hash": "a1e1a4f582712cddbf8cf25896d68dea81dbe22a5192791fc9aaf85693348665"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts",
+      "hash": "4e911792e3bfc923e9e73821897b39cbfecb4d2b9c8d46010760b1d4f02b3eaa"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts",
+      "hash": "3df81b9a89a5c5e56bb37ecf579c0684dca29beacc50035fa6bfcfe75cb9c7ff"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts",
+      "hash": "5f7c306eca4755e6dfeaeab67155b3460f5414119abe16aa72151b7423669834"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts",
+      "hash": "998a2a630c875b2f73c5ca392bbe68e96864feb7e10110faef344ab9923627dd"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏛️ownership/🧮️compute/🧪️tests/🟦️.ts",
+      "hash": "5d945f2a66c70ccfd13ff93625574024f2895cc83374690c909ea6fc2e27e00e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️testing/📍️consumer/🏃️host/🟦️.ts",
+      "hash": "998466ae08e76f2e509d96cabb5d7a8c3d07cc3055da497b9aff3b5b351f9eb5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️testing/📍️consumer/🟦️.ts",
+      "hash": "ef8ad9d81ddb4485ee516b6ba8b32e0d8fdaf6940667efc832ebde5dc536789b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🧮️compute/🧬️schema/📍️consumer/🔣️.json",
+      "hash": "9a3e989eb3a56dd58419072c4cdf9b6ff52f6fb3b216ff2014a45f2e0b577dd7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts",
+      "hash": "2617c03029c26a0cb97b3cf7fab1fa159b03c3f821d163ba55a55902c76170f3"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏛️ownership/🧮️compute/🧫️fixtures/🔣️.json",
+      "hash": "c8bdb6e37d38026ec68b5c8c107c17accbab72ce7af5615c9f03dc87623386d8"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏛️ownership/🧮️compute/🧬️schema/🔣️.json",
+      "hash": "381b7212fe6e5880c4935416a86c7f730daf64962c7e3fb4af9378484f1fcd23"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧮️compute/📜️script.ts",
+      "hash": "f49cd7232541a14f5428641bf2a081ff0562464d45c58e28ee7c0f4af2fae184"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧮️compute/🧪️tests/🟦️.ts",
+      "hash": "e32d10e36d5970f80859aa3738027e8678ddfc7fc3d626cc8fd5206f16da06eb"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧮️compute/🧫️fixtures/🔣️.json",
+      "hash": "6caa773e2ca2714833e1ea700791631ab58f58197757fed9ddcf40378eb3d01b"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧮️compute/🧬️schema/🔣️.json",
+      "hash": "dd9e196b087e0d8c2437925b83d06f3e8dbb5d1d9ad9694e32cfd65497e4e1b3"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/🏛️ownership/🧮️compute/📜️script.ts",
+      "hash": "05d7de496acd7b249d806b309a1cb9924df142111d139b4f5cd382d28f9a70ea"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/🏛️ownership/🧮️compute/🧪️tests/🟦️.ts",
+      "hash": "0089b634bd3bfe494aa79df3645b3e1b3ea1e0cf598880cebfb636396906f679"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/🏛️ownership/🧮️compute/🧫️fixtures/🔣️.json",
+      "hash": "99bae3ceb674022f69f10f615126785fbb88e7483801e0ab071af057e9cd91e4"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/🏛️ownership/🧮️compute/🧬️schema/🔣️.json",
+      "hash": "7475c3494a0b3a26fc27d6a33b203b2ffd5b7a5243cea77c424a3349266d1bdf"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🪐️space/🏛️ownership/🧮️compute/📜️script.ts",
+      "hash": "c12b7967d63f3921da127a35f39b3ad9063ed3473c6e8cb5edd888bc72d30f93"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🪐️space/🏛️ownership/🧮️compute/🧪️tests/🟦️.ts",
+      "hash": "6603c99a83e5971730f400adf5a2549b7d0a3519a146da578f27319fddd56a83"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🪐️space/🏛️ownership/🧮️compute/🧫️fixtures/🔣️.json",
+      "hash": "f06fdd22510fc38454744e48a59bafc93df3be108c28c5f5f8029f33c9484e30"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🪐️space/🏛️ownership/🧮️compute/🧬️schema/🔣️.json",
+      "hash": "df8867fba9373c359b1ac42fea0516cfd4117e157ed3122220a7dc6ff9575e4b"
+    }
+  ],
+  "inputMounts": [
+    {
+      "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🦀️.rs",
+      "manifest": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/Cargo.toml",
+      "authority": "full-pre-current-inverse.json",
+      "physicalNativeFiles": false
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+      "authority": "full-pre-current-inverse.json",
+      "physicalNativeFiles": false
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/🦀️.rs",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/📦️packages/🦀️rust/Cargo.toml",
+      "authority": "full-pre-current-inverse.json",
+      "physicalNativeFiles": false
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/🦀️.rs",
+      "manifest": "🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust/Cargo.toml",
+      "authority": "full-pre-current-inverse.json",
+      "physicalNativeFiles": false
+    }
+  ],
+  "absent": "All parent task routers, product implementations outside owned source witnesses, native packages and Cargo manifests",
+  "oracle": "Ajv and @iarna/toml unchanged; immutable input reads mounted from full-current source authority",
+  "results": [
+    {
+      "name": "@semio-tech/puzzle-3d-rs-compute-ownership",
+      "pass": 3,
+      "fail": 0,
+      "stdoutCallbacks": 1,
+      "stderrCallbacks": 5
+    },
+    {
+      "name": "@semio-tech/framework-plugin-compute-ownership",
+      "pass": 3,
+      "fail": 0,
+      "stdoutCallbacks": 1,
+      "stderrCallbacks": 5
+    },
+    {
+      "name": "@semio-tech/framework-plugin-host-fixture-compute-ownership",
+      "pass": 3,
+      "fail": 0,
+      "stdoutCallbacks": 1,
+      "stderrCallbacks": 5
+    },
+    {
+      "name": "@semio-tech/space-plugin-compute-ownership",
+      "pass": 3,
+      "fail": 0,
+      "stdoutCallbacks": 1,
+      "stderrCallbacks": 5
+    }
+  ]
+}

@@ -5,8 +5,8 @@ use crate::editor::shooting::modes::edit::windows::scene::options;
 use crate::editor::shooting::terminology::ShootingLabels;
 use crate::standards::v1::subsets::any::schema::is_transparent_shooting_background;
 use crate::{shooting_asset_scale, ShootingAsset, ShootingShot, ShootingSnapshot};
-use dsl::json;
-use dsl::os_pack::json::{parse, Value};
+use semio_framework_pack_json::json;
+use semio_framework_pack_json::{parse, Value};
 use semio_framework_plugin::world3d_mesh_id_from_url;
 use semio_framework_plugin::world3d_meshes_json_from_kinds_and_urls;
 use semio_framework_plugin::world3d_scene;
@@ -103,7 +103,7 @@ pub fn engagement(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> Windo
                     id: format!("shooting.camera.{}", saved.id),
                     label: saved.label.clone(),
                     detail: Some(labels.load_camera.into()),
-                    action: Some(crate::editor::shooting::shooting_window_action("loadSavedCamera", Some(dsl::DslValue::object([("id".into(), dsl::DslValue::String(saved.id.clone()))])))),
+                    action: Some(crate::editor::shooting::shooting_window_action("loadSavedCamera", Some(semio_framework_value::DslValue::object([("id".into(), semio_framework_value::DslValue::String(saved.id.clone()))])))),
                 })
                 .collect(),
         ),
@@ -190,7 +190,7 @@ fn world_meshes_json(snapshot: &ShootingSnapshot) -> String {
 /// window kind (client-side hit-testing against the mesh instance ids already in this payload) — it no
 /// longer needs `selectionMethod`/`selectionMode`/`targets` from this payload either.
 fn world_selection_json(snapshot: &ShootingSnapshot, active_utility: &str) -> String {
-    let mut value: Value = parse(&world3d_selection_json("pick", &[], None)).unwrap_or_else(|_| json!({}));
+    let mut value: Value = parse(&world3d_selection_json("pick", &[], None), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| json!({}));
     if let Some(object) = value.as_object_mut() {
         object.insert("transformMode", json!(active_utility));
         object.insert("activeObjectId", json!(snapshot.active_asset_id.as_str()));

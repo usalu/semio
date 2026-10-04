@@ -8,7 +8,7 @@ use crate::editor::puzzle3d::puzzle3d_rederive_all_attractions;
 use crate::editor::puzzle3d::resolve_puzzle3d_attractions;
 use crate::editor::puzzle3d::Puzzle3dActionCtx;
 use crate::editor::puzzle3d::PUZZLE3D_GRANULARITY_OBJECT;
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 
 /// ✅️ Accepts the hovered (or explicitly indexed) free candidate the brush suggestions run found. Always dismisses the one-shot picker
 /// FIRST — a failed preview/place must not leave `suggestionMenu.open` gating every split pane's

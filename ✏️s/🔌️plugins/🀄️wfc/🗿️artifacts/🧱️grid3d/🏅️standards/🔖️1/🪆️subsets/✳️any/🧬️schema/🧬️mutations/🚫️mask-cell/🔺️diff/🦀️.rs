@@ -13,7 +13,7 @@ pub fn diff(payload: &super::MaskCell, base: &Grid3dSnapshot) -> protocol::Mutat
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Cell {key} is pinned; unpin it before masking."), [key]);
     }
     if masked_index(base, payload.cell.x, payload.cell.y, payload.cell.z).is_some() {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Cell {key} is already masked."));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Cell {key} is already masked."));
     }
     let at = crate::mutations::ordered_index(&base.masked, &key, |cell| cell_key(cell.x, cell.y, cell.z));
     protocol::MutationOutcome::new(Grid3dDiff { masked_upserted: vec![(at, payload.cell)], ..Default::default() })

@@ -2,7 +2,7 @@
 
 use crate::editor::flow::commands::flow_eval_tick::eval_tick_effect;
 use crate::editor::flow::modes::edit::windows::main::FLOW_PLAY_WINDOW_MAIN;
-use crate::{op::FlowMutation, FlowSnapshot};
+use crate::{FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
@@ -32,7 +32,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// answer — and NOT generation2d's `extension_id`/`ok`/`fault_*`, which its own non-scalar route can
 /// afford. A faulted answer is still bounded here: it folds as an envelope the session cannot seed,
 /// which abandons the window rather than re-parking the identical request.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct FlowEvalResolve {
     pub window_id: String,
     pub node_hash: u64,

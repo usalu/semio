@@ -125,10 +125,10 @@
       ],
       "properties": {
         "mutation": {
-          "const": "replace-pixels"
+          "const": "paint-region"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/mutation/replace-pixels/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/mutation/paint-region/schema.json"
         }
       }
     }

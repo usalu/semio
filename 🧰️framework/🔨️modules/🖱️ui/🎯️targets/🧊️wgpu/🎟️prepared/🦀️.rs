@@ -2791,8 +2791,8 @@ impl PreparedRenderJob {
                 (PreparedRenderUsage { draw_items: 1, draw_bytes: 1, ..PreparedRenderUsage::default() }, next)
             }
             DrawMeasureCursor::PassMaterialTextureKey { pass, draw: draw_index, byte, translucent } => {
-                let texture_key = draw.scene_passes[pass].material_draws[draw_index].material.texture_key().expect("only textured material draws measure a texture key");
-                let next = if byte + 1 < texture_key.len() {
+                let texture_bytes:usize = draw.scene_passes[pass].material_draws[draw_index].material.texture_keys().map(str::len).sum();
+                let next = if byte + 1 < texture_bytes {
                     DrawMeasureCursor::PassMaterialTextureKey { pass, draw: draw_index, byte: byte + 1, translucent }
                 } else if draw.scene_passes[pass].material_draws[draw_index].instances.is_empty() {
                     Self::next_material_draw(draw, pass, draw_index, translucent)
@@ -2962,7 +2962,7 @@ impl PreparedRenderJob {
     fn next_material_after_keys(draw: &DrawList, pass: usize, draw_index: usize, translucent: bool) -> DrawMeasureCursor {
         let value = &draw.scene_passes[pass].material_draws[draw_index];
         match &value.material {
-            material if material.texture_key().is_some_and(|texture_key| !texture_key.is_empty()) => DrawMeasureCursor::PassMaterialTextureKey { pass, draw: draw_index, byte: 0, translucent },
+            material if material.texture_keys().any(|texture_key| !texture_key.is_empty()) => DrawMeasureCursor::PassMaterialTextureKey { pass, draw: draw_index, byte: 0, translucent },
             _ if value.instances.is_empty() => Self::next_material_draw(draw, pass, draw_index, translucent),
             _ => DrawMeasureCursor::PassMaterialInstance { pass, draw: draw_index, instance: 0, translucent },
         }

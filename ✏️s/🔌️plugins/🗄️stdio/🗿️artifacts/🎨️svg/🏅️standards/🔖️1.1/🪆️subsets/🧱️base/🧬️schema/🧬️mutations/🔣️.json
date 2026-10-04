@@ -29,6 +29,22 @@
       ],
       "properties": {
         "mutation": {
+          "const": "patchSnapshot"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/base/mutation/patch-snapshot/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
           "const": "setDeclaration"
         },
         "payload": {

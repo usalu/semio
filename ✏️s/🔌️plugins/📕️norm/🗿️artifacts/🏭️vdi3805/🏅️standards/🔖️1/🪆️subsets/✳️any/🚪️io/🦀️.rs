@@ -57,19 +57,19 @@ use crate::{ManufacturerCatalog, Vdi3805Snapshot};
 
 /// 📤️ JSON round-trip for manufacturer catalogues.
 pub fn catalog_to_json(catalog: &ManufacturerCatalog) -> Result<String, NormError> {
-    Ok(pack::json::to_string_pretty(&pack::json::from_dsl_value(&dsl::ToValue::to_value(catalog))))
+    Ok(semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(catalog))))
 }
 
 pub fn catalog_from_json(json: &str) -> Result<ManufacturerCatalog, NormError> {
-    pack::json::from_json_str(json).map_err(|e| NormError::InvalidValue { field: "json".into(), reason: e.to_string() })
+    semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| NormError::InvalidValue { field: "json".into(), reason: e.to_string() })
 }
 
 pub fn document_to_json(document: &Vdi3805Snapshot) -> Result<String, NormError> {
-    Ok(pack::json::to_string_pretty(&pack::json::from_dsl_value(&dsl::ToValue::to_value(document))))
+    Ok(semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(document))))
 }
 
 pub fn document_from_json(json: &str) -> Result<Vdi3805Snapshot, NormError> {
-    pack::json::from_json_str(json).map_err(|e| NormError::InvalidValue { field: "json".into(), reason: e.to_string() })
+    semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| NormError::InvalidValue { field: "json".into(), reason: e.to_string() })
 }
 
 //#endregion 🚪️JsonSerializers

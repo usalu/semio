@@ -1,0 +1,22 @@
+{
+  "$schema": "./🧬️schema/🔣️.json",
+  "schema": "semio.stdio.tiff.tiled-8bit-fixture/v1",
+  "width": 17,
+  "height": 17,
+  "tileWidth": 16,
+  "tileLength": 16,
+  "samplesPerPixel": 3,
+  "tiles": [
+    { "row": 0, "column": 0, "rgb": [255, 0, 0], "paddingMarker": 161 },
+    { "row": 0, "column": 1, "rgb": [0, 255, 0], "paddingMarker": 178 },
+    { "row": 1, "column": 0, "rgb": [0, 0, 255], "paddingMarker": 195 },
+    { "row": 1, "column": 1, "rgb": [255, 255, 0], "paddingMarker": 212 }
+  ],
+  "expectedSamples": [
+    { "x": 0, "y": 0, "rgba": [255, 0, 0, 255] },
+    { "x": 16, "y": 0, "rgba": [0, 255, 0, 255] },
+    { "x": 0, "y": 16, "rgba": [0, 0, 255, 255] },
+    { "x": 16, "y": 16, "rgba": [255, 255, 0, 255] }
+  ],
+  "edit": { "x": 15, "y": 15, "width": 2, "height": 2, "rgba": [9, 8, 7, 255] }
+}

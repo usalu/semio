@@ -6,7 +6,7 @@ use semio_framework_artifact_workflow_workflow::MoveNodes;
 use semio_framework_os::workflow::{DisconnectEdge, RemoveNode};
 use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use semio_framework_tool_machine::{node_drag_commit, NodeDragRecord, NodeGraphEditRow};
+use semio_framework_tool_machine::{node_drag_emit, NodeDragRecord, NodeGraphEditRow};
 
 /// 🪪️ The verb a node-graph tool transaction is scoped by: `<appId>#nodeGraphEdit`.
 pub const NODE_GRAPH_EDIT_VERB: &str = "nodeGraphEdit";
@@ -21,8 +21,8 @@ pub struct NodeGraphEdit {
 
 /// 🧾️ Decodes one host row through the ONE shared node-graph row decoder of `🛠️tool-machine`; the `setSlider` and
 /// `insertPort` rows a studio workflow has no widget for are refused by name, so the whole batch is refused.
-pub(crate) fn space_node_graph_row(row: &pack::JsonValue) -> Result<NodeGraphEditRow, Fault> {
-    match NodeGraphEditRow::from_row(&pack::json_to_dsl_value(row)).map_err(|reason| Fault::from(format!("space nodeGraphEdit refusal: {reason}")))? {
+pub(crate) fn space_node_graph_row(row: &semio_framework_pack_json::Value) -> Result<NodeGraphEditRow, Fault> {
+    match NodeGraphEditRow::from_row(&semio_framework_pack_json::to_dsl_value(row)).map_err(|reason| Fault::from(format!("space nodeGraphEdit refusal: {reason}")))? {
         NodeGraphEditRow::SetSlider { .. } | NodeGraphEditRow::InsertPort { .. } => Err(Fault::from("space nodeGraphEdit refusal: a studio workflow has no sliders and no variadic ports")),
         row => Ok(row),
     }
@@ -35,7 +35,7 @@ pub(crate) fn space_node_graph_row(row: &pack::JsonValue) -> Result<NodeGraphEdi
 /// - `delete` — the named edges, then the named app instances (each with the edges it holds).
 pub(crate) async fn edit(payload: &NodeGraphEdit, doc: &ArtifactView<'_, WorkflowSnapshot>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     let projection = doc.snapshot;
-    let rows: Vec<NodeGraphEditRow> = match pack::parse_json(&payload.operations_json).ok().and_then(|value| value.as_array().cloned()) {
+    let rows: Vec<NodeGraphEditRow> = match semio_framework_pack_json::parse(&payload.operations_json, semio_framework_pack_json::JsonMemberPolicy::Reject).ok().and_then(|value| value.as_array().cloned()) {
         Some(rows) => rows.iter().map(space_node_graph_row).collect::<Result<_, _>>()?,
         None => return Err(Fault::from("space nodeGraphEdit operations must be a JSON array")),
     };
@@ -79,13 +79,7 @@ pub(crate) async fn edit(payload: &NodeGraphEdit, doc: &ArtifactView<'_, Workflo
 /// minted from the admission's authoring seed, the host clock and `<appId>#<verb>`, for the press `gesture`. A view
 /// without command authority publishes the leaves plainly; nothing yielded is the empty emit (zero trace).
 pub(crate) fn space_node_drag_emit(doc: &ArtifactView<'_, WorkflowSnapshot>, verb: &str, gesture: &str, leaves: Vec<WorkflowMutation>) -> Emit<WorkflowMutation, SpaceConfigMutation> {
-    let authoring_seed = doc.operation_optional().map(|operation| operation.authoring_seed.clone()).unwrap_or_default();
-    let clock = protocol::HybridLogicalTimestamp { actor: 0, physical_ms: semio_framework_job::default_now_ms().unwrap_or(0), logical: 0 };
-    match node_drag_commit(format!("{S_PLAY_APP_ID}#{verb}"), protocol::ActorId(authoring_seed.clone()), gesture, leaves, clock) {
-        Some((transaction, leaves)) if !authoring_seed.is_empty() => Emit::commit_transaction(transaction, leaves),
-        Some((_, leaves)) => Emit::mutations(leaves),
-        None => Emit::default(),
-    }
+    node_drag_emit(S_PLAY_APP_ID, verb, doc.operation_optional().map_or("", |operation| operation.authoring_seed.as_str()), gesture, leaves).into()
 }
 
 /// 🕹️ The command body, through the engine's future resolver.

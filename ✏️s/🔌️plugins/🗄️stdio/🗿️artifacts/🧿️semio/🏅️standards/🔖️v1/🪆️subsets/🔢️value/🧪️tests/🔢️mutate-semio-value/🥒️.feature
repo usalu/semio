@@ -95,6 +95,7 @@ Feature: Apply every typed semio VALUE mutation to a real 424 KB building model,
       | remove-list-item | {"mutation":"removeListItem","path":[{"kind":"key","key":"models"},{"kind":"index","index":0},{"kind":"key","key":"model"},{"kind":"key","key":"geometry"},{"kind":"key","key":"vertices"}],"index":0} |
       | set-node         | {"mutation":"setNode","id":{"value":"aec.building.energy#objects"},"value":{"kind":"bytes","value":[0,1,2,255]}} |
       | remove-node      | {"mutation":"removeNode","id":{"value":"aec.building.structure.classic#objects"}} |
+      | patch-snapshot | {"mutation": "patchSnapshot", "patch": {"operation": "set", "path": "/nodes/0/value", "value": {"kind": "bytes", "value": [0, 1, 2, 255]}}} |
 
   @id-no-mutation-baseline-mutate
   @level-exhaustive
@@ -127,6 +128,7 @@ Feature: Apply every typed semio VALUE mutation to a real 424 KB building model,
       | remove-list-item | {"mutation":"removeListItem","path":[{"kind":"key","key":"models"},{"kind":"index","index":0},{"kind":"key","key":"model"},{"kind":"key","key":"geometry"},{"kind":"key","key":"vertices"}],"index":0} |
       | set-node         | {"mutation":"setNode","id":{"value":"aec.building.energy#objects"},"value":{"kind":"bytes","value":[0,1,2,255]}} |
       | remove-node      | {"mutation":"removeNode","id":{"value":"aec.building.structure.classic#objects"}} |
+      | patch-snapshot | {"mutation": "patchSnapshot", "patch": {"operation": "set", "path": "/nodes/0/value", "value": {"kind": "bytes", "value": [0, 1, 2, 255]}}} |
 
   @id-no-mutation-baseline-inverse
   @level-exhaustive

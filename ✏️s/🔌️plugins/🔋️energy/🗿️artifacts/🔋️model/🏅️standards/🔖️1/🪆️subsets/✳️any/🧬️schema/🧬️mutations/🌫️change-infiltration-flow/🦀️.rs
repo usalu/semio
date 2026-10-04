@@ -7,7 +7,7 @@ use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToVa
 
 //#region 🔖️Mutation
 /// 🌫️ `change-infiltration-flow-per-exterior-area` payload. Sets flow per exterior area (m³/s·m²) on one infiltration, addressed by id.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "change-infiltration-flow-per-exterior-area")]
@@ -28,9 +28,12 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Vec<EnergyModelMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Infiltration Flow Per Exterior Area of infiltration {}", self.id.0), &format!("Volumenstrom pro Außenfläche von Infiltration {} ändern", self.id.0))

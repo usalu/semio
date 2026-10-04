@@ -66,7 +66,7 @@ async fn generation3d_boot_fits_the_strict_lifecycle_turn_authority() {
     let install_us = now_us() - install_started_us;
 
     let describe_started_us = now_us();
-    let descriptor_bytes = semio_framework_plugin::app::resolve_ready(semio_framework_plugin::describe::describe_plugin(&runtime));
+    let descriptor_bytes = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::describe::describe_plugin(&runtime));
     let describe_us = now_us() - describe_started_us;
 
     let (opened, open_us) = turn(&runtime, vec![boot_open()]).await;

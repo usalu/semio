@@ -13,13 +13,13 @@ use semio_s_artifact_stdio_json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 
 pub fn register() {}
 
-pub fn serialize(snapshot: &ProgramSnapshot) -> Result<JsonSnapshot, store::TextError> {
+pub fn serialize(snapshot: &ProgramSnapshot) -> Result<JsonSnapshot, semio_framework_diagnostic::TextError> {
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-    let projected=crate::standards::v1::subsets::any::io::program_json::convert(dsl::ToValue::to_value(snapshot),false).map_err(|message|store::TextError::new(message,dsl::TextSpan::at(1,1)))?;
-    let value=dsl::json::from_dsl_value(&projected);
+    let projected=crate::standards::v1::subsets::any::io::program_json::convert(semio_framework_value::ToValue::to_value(snapshot),false).map_err(|message|semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message,semio_framework_diagnostic::TextSpan::at(1,1)))?;
+    let value=semio_framework_pack_json::from_dsl_value(&projected);
     Ok(JsonSnapshot::from_value(value))
 }
 
-pub fn serialize_bytes(snapshot: &ProgramSnapshot) -> Result<Vec<u8>, store::TextError> {
+pub fn serialize_bytes(snapshot: &ProgramSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
     Ok(write_json_pretty(&serialize(snapshot)?.value).into_bytes())
 }

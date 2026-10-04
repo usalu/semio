@@ -165,7 +165,7 @@ async fn gis_map_window_ownership_one_item_preparation_transfers_its_candidate_o
     let factory = gis_map_parent_one_item_preparation_factory();
     let mutation = GisMapMutation::CreatePosition(crate::mutations::create_position::CreatePosition {
         index: 0,
-        item: crate::MapFeature { id: "preparation-law".into(), data: dsl::DslValue::Null },
+        item: crate::MapFeature { id: "preparation-law".into(), data: semio_framework_value::DslValue::Null },
     });
     let mut publication = store
         .begin_apply_batch(
@@ -461,10 +461,10 @@ async fn export_media_map_out_produces_a_2d_map_structured_payload() {
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
     let media = Gis2dPlayApp::export_media("map:out", &doc).expect("map:out export");
-    let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
+    let MediaPayload::Intrinsic { schema, value } = media.payload else { panic!("expected intrinsic map payload") };
     assert_eq!(schema, "2d.map");
-    assert!(json.contains("positions"));
-    drop(json);
+    assert!(value.get("positions").is_some());
+    drop(value);
     drop(document);
     close(&mut app);
 }
@@ -511,11 +511,11 @@ async fn gis2d_io_declares_the_features_in_and_map_out_ports() {
 async fn gis2d_map_media_exports_the_document_descriptor() {
     let document = crate::schema::default_document();
     let media = gis2d_map_media(&document);
-    let MediaPayload::Structured { schema, json } = media.payload else {
-        panic!("expected a structured map:out payload");
+    let MediaPayload::Intrinsic { schema, value } = media.payload else {
+        panic!("expected an intrinsic map:out payload");
     };
     assert_eq!(schema, "2d.map");
-    assert!(json.contains("positions"));
+    assert!(value.get("positions").is_some());
 }
 //#endregion 🔖️Media
 
@@ -592,3 +592,5 @@ async fn the_retained_tool_surface_proofs_and_publication_contracts_cover_every_
     assert_eq!(proofs, retained, "every retained tool carries its owner-local bounded reducer proof");
 }
 //#endregion 🎬️StageableActionVocabulary
+
+semio_framework_plugin::history_edit_acceptance_law!("gis", super::Gis2dPlayApp, || semio_framework_plugin::App { definition: super::create_gis2d_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");

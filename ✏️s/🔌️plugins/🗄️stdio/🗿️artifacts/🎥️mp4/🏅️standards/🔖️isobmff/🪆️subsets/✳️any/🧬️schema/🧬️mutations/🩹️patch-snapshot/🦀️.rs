@@ -1,38 +1,17 @@
-//! 🩹️ Compact typed MP4 snapshot patch with an exact inverse captured from the publication base.
+//! 🩹️ Path-scoped MP4 snapshot patch: one pointer operation with its exact inverse, its value typed by the snapshot sub-schema at the pointer.
 
 use super::*;
 use semio_s_artifact_stdio_contract::editing;
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[mutation_leaf(contract = ::protocol, input_schema = Self::input_schema_at_path)]
 #[dsl(keyword = "patch-snapshot")]
 pub struct PatchSnapshot {
     #[dsl(block)]
     pub patch: editing::SnapshotPatch,
 }
 
-impl protocol::MutationKind<Mp4Snapshot, Mp4Mutation> for PatchSnapshot {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "edit", entity: "snapshot", kind: "patch-snapshot", record: "PatchSnapshot" };
-
-    fn diff(&self, base: &Mp4Snapshot) -> protocol::MutationOutcome<<Mp4Mutation as Mutation<Mp4Snapshot>>::Diff> {
-        match editing::apply_snapshot_patch(base, &self.patch) {
-            Ok(next) => protocol::MutationOutcome::new(<Mp4Diff as protocol::command::DiffAlgebra<Mp4Snapshot>>::between(base, &next)),
-            Err(error) => protocol::MutationOutcome::refuse(error.outcome_code(), format!("{}: {}", error.code, error.message), [error.path]),
-        }
-    }
-
-    fn inverse(&self, base: &Mp4Snapshot) -> Vec<Mp4Mutation> {
-        editing::inverse_snapshot_patch(base, &self.patch).map(|patch| vec![Mp4Mutation::PatchSnapshot(Self { patch })]).unwrap_or_default()
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Patch snapshot", "Momentaufnahme bearbeiten")
-    }
-
-    fn target(&self) -> Vec<String> {
-        self.patch.edits.first().map(|edit| edit.path.clone()).unwrap_or_default()
-    }
-}
+semio_s_artifact_stdio_contract::snapshot_patch_leaf! { leaf: PatchSnapshot, snapshot: Mp4Snapshot, mutation: Mp4Mutation, diff: Mp4Diff, snapshot_schema: "https://json.schemas.assets.semio-tech.com/s/stdio/mp4/isobmff/any/snapshot.json" }
 
 #[cfg(test)]
 mod tests {
@@ -46,13 +25,13 @@ mod tests {
         let mut track = Mp4Track::default();
         track.samples.push(Mp4Sample { data: vec![7; 2 * 1_024 * 1_024], duration: 1_000, cts_offset: 0, sync: true });
         base.tracks.push(track);
-        let event = editing::SnapshotEditEvent::SetValue { path: "/movie/title".into(), value: dsl::DslValue::String("Edited title".into()) };
+        let event = editing::SnapshotEditEvent::SetValue { path: "/movie/title".into(), value: semio_framework_value::DslValue::String("Edited title".into()) };
         let patch = editing::prepare_snapshot_patch(&base, &event).expect("prepare title patch");
         let mutation = Mp4Mutation::PatchSnapshot(PatchSnapshot { patch });
         let next = MutationDiff::apply(mutation.diff(&base).diff(), &base).expect("apply title patch");
         assert_eq!(next.movie.title.as_deref(), Some("Edited title"));
         assert_eq!(next.tracks[0].samples[0].data, base.tracks[0].samples[0].data);
-        let inverse = mutation.inverse(&base);
+        let inverse = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
         assert_eq!(inverse.len(), 1);
         assert_eq!(MutationDiff::apply(inverse[0].diff(&next).diff(), &next).expect("apply inverse"), base);
         assert!(mutation.encode_op().expect("encode forward patch").len() < 1_048_576);

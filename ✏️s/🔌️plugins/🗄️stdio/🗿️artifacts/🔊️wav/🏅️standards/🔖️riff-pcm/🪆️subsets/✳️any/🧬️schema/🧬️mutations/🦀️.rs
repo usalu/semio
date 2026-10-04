@@ -71,12 +71,12 @@ pub fn apply_wav_mutation(snapshot: &mut WavSnapshot, mutation: &WavMutation) ->
 /// a SEPARATE wire format from the subset's own `ArtifactDsl`/`ArtifactPack` envelope (which
 /// wraps real RIFF/WAVE bytes, see that file's doc comment) — an op is always plain JSON here.
 impl OpText for WavMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let parsed = pack::parse_json(line).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
-        <Self as dsl::FromValue>::from_value(pack::json_to_dsl_value(&parsed)).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        let parsed = semio_framework_pack_json::parse(line, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| semio_framework_diagnostic::TextError::from_value_error(e.into_value_error(), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
+        <Self as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|e| semio_framework_diagnostic::TextError::from_value_error(e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
     fn print_op(&self) -> String {
-        pack::json_to_string(&pack::json_from_dsl_value(&dsl::ToValue::to_value(self)))
+        semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(self)))
     }
 }
 
@@ -114,15 +114,18 @@ pub(crate) fn agg_diff(this: &WavMutation, base: &WavSnapshot) -> protocol::Muta
 }
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &WavMutation, base: &WavSnapshot) -> Vec<WavMutation> {
+pub(crate) fn agg_inverse(this: &WavMutation, base: &WavSnapshot) -> Result<Vec<WavMutation>, semio_framework_value::ValueError> {
+    Ok({
     vec![match this {
-        WavMutation::PatchSnapshot(payload) => return protocol::MutationKind::inverse(payload, base),
+        WavMutation::PatchSnapshot(payload) => return Ok(protocol::MutationKind::inverse(payload, base)?),
         WavMutation::SetSnapshot(_) => WavMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
         WavMutation::SetFmt(_) => WavMutation::SetFmt(set_fmt::SetFmt { fmt: base.fmt.clone() }),
         WavMutation::SetData(_) => WavMutation::SetData(set_data::SetData { data: base.data.clone() }),
-        WavMutation::PatchData(payload) => return patch_data::inverse(payload, base),
+        WavMutation::PatchData(payload) => return Ok(patch_data::inverse(payload, base)?),
         WavMutation::SetOtherChunks(_) => WavMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
     }]
+
+    })
 }
 //#endregion 🔖️MutationTrait
 

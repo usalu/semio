@@ -1,10 +1,11 @@
 mod tests {
     use super::*;
-    use crate::standards::v6_0::subsets::document::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffTag};
+    use crate::standards::v6_0::subsets::document::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffStorage, TiffStorageKind, TiffTag};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn tag(id: u16, kind: TiffFieldType, values: TiffValues) -> TiffTag {
-        TiffTag { tag: id, kind, values }
+        let _ = kind;
+        TiffTag { tag: id, values }
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -13,7 +14,7 @@ mod tests {
             schema: "stdio.tiff".into(),
             byte_order: TiffByteOrder::LittleEndian,
             ifds: vec![TiffIfd {
-                pixels: Vec::new(),
+                storage: TiffStorage { kind: TiffStorageKind::Strips, chunks: if pixels.is_empty() { Vec::new() } else { vec![pixels] }, ..TiffStorage::default() },
                 entries: vec![
                     tag(256, TiffFieldType::Long, TiffValues::Long(vec![width])),
                     tag(257, TiffFieldType::Long, TiffValues::Long(vec![height])),
@@ -23,7 +24,6 @@ mod tests {
                     tag(258, TiffFieldType::Short, TiffValues::Short(vec![8])), // BitsPerSample
                 ],
             }],
-            pixels,
         }
     }
 
@@ -43,8 +43,8 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn rgba_length_mismatch_is_flagged_soft() {
-        let snapshot = snapshot_with(4, 4, vec![0u8; 4]); // way too short for 4x4 RGBA
+    async fn missing_authored_strip_storage_is_flagged_soft() {
+        let snapshot = snapshot_with(4, 4, Vec::new());
         let diagnostics = check_tiff_baseline_conformance(&snapshot);
         assert!(diagnostics.iter().any(|d| d.code.0 == CODE_DEGENERATE_RASTER), "got {diagnostics:?}");
     }

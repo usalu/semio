@@ -6,7 +6,10 @@
 // 🧭️ `dsl` already re-exports BOTH the `ToValue`/`FromValue` traits and their derive macros
 // (`💻️os/📦️packages/🦀️rust/🦀️.rs:347`), so importing them again from `semio_framework_value_derive`
 // is a same-namespace redefinition (E0252), not a second namespace.
-use dsl::{DslValue, FromValue, ToValue, ValueError};
+use semio_framework_value::DslValue;
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
+use semio_framework_value::ValueError;
 // 🚧️ Still needed unconditionally: most `#[cfg(test)] mod …` blocks in this file oracle-test a type
 // through real `serde_json`, AND a handful of production types (the `MediaVocabulary` family) stay
 // `#[derive(Serialize, Deserialize)]` — see their own `🚧️ BLOCKED` docstrings — because a sibling
@@ -44,7 +47,7 @@ use crate::ArtifactDialect;
 
 //#region 🔖️Manifest
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct Keybinding {
@@ -54,7 +57,7 @@ pub struct Keybinding {
 
 /// ⌨️ Operating system selector for a platform-specific keybinding.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum Platform {
@@ -65,7 +68,7 @@ pub enum Platform {
 
 /// ⌨️ One command chord, optionally restricted to a host platform.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct PlatformKeybinding {
@@ -87,7 +90,7 @@ impl PlatformKeybinding {
 
 /// 🗂️ Classifies a declared action by how it interacts with VCS history.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum ActionKind {
@@ -121,7 +124,7 @@ pub enum ActionKind {
 /// beyond "text". Orthogonal to `ArgPresentation` (which is about the WIDGET, not the value's
 /// semantics): a `Color` format could still render as free text in a minimal shell.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ArgFormat {
@@ -159,7 +162,7 @@ pub enum ArgFormat {
 /// 🌳️ The stored, engine-neutral shape of one action argument's value — see this region's
 /// header comment for the D6 stored/derived split.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ArgSchema {
@@ -167,6 +170,11 @@ pub enum ArgSchema {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         #[value(default, skip_serializing_if = "Vec::is_empty")]
         options: Vec<ActionArgOption>,
+        /// 🗝️ Where a choice's options come from when no `enum` lists them: the keys found in the edited document
+        /// ([`OptionSource`]). A UI fact only — the payload schema stays open, so the fold decides an unknown key.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[value(skip_serializing_if = "Option::is_none")]
+        option_source: Option<OptionSource>,
         #[serde(skip_serializing_if = "Option::is_none")]
         #[value(skip_serializing_if = "Option::is_none")]
         min_len: Option<u32>,
@@ -325,7 +333,7 @@ pub fn interaction_entity_kind(interaction_id: &str, granularity_id: &str) -> St
 /// `ActionArgDef::control()` (e.g. a bounded `Number` still renders `Slider` without this, but a
 /// single-bound one needs it to opt in).
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ArgPresentation {
@@ -343,7 +351,7 @@ pub enum ArgPresentation {
 
 /// 🧲️ Where a number's snap points come from beyond its static `snaps`: every multiple of its `step`, a window
 /// config value named `key` (the grid spacing a tool snaps to), or the document value at JSON `pointer`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum SnapSource {
@@ -352,8 +360,19 @@ pub enum SnapSource {
     Snapshot { pointer: String },
 }
 
+/// 🗝️ Where a string choice's options come from (`x-semio-ui.optionSource`): the KEYS of the object `pointer` leads to in
+/// the document the editor previews — an RFC 6901 template whose `{field}` segments take the edited payload's top-level
+/// member: an object's key, or, on an array, the record whose own `field` equals it (`/hostSnapshot/widgets/{id}/params`).
+/// TypeScript twin: `OptionSource`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+pub enum OptionSource {
+    Snapshot { pointer: String },
+}
+
 /// 📈️ How a slider or dial maps its travel onto the value range.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum NumberScale {
@@ -363,7 +382,7 @@ pub enum NumberScale {
 
 /// 🔢️ The JSON type of a reference's ids: text ids (the default, left off the wire) or integer ids. A selection id is
 /// always text, so an integer reference stages the integer its selected text spells ([`ReferenceIdType::id_value`]).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum ReferenceIdType {
@@ -385,14 +404,14 @@ impl ReferenceIdType {
             return None;
         }
         match self {
-            Self::String => Some(DslValue::String(id.to_string())),
+            Self::String => Some(semio_framework_value::DslValue::String(id.to_string())),
             Self::Integer => {
                 let digits = id.strip_prefix('-').unwrap_or(id);
                 if digits.is_empty() || !digits.bytes().all(|byte| byte.is_ascii_digit()) {
                     return None;
                 }
                 let value = id.parse::<i64>().ok().filter(|value| value.unsigned_abs() <= REFERENCE_ID_INTEGER_MAX)?;
-                Some(if value < 0 { DslValue::int(value) } else { DslValue::uint(value as u64) })
+                Some(if value < 0 { semio_framework_value::DslValue::int(value) } else { semio_framework_value::DslValue::uint(value as u64) })
             }
         }
     }
@@ -405,8 +424,8 @@ pub const REFERENCE_ID_INTEGER_MAX: u64 = (1 << 53) - 1;
 /// selection carries); `None` for anything else. TS twin: `referenceIdText`.
 pub fn reference_id_text(value: &DslValue) -> Option<String> {
     match value {
-        DslValue::String(id) if !id.is_empty() => Some(id.clone()),
-        DslValue::Number(number) => match (number.as_i64(), number.as_u64()) {
+        semio_framework_value::DslValue::String(id) if !id.is_empty() => Some(id.clone()),
+        semio_framework_value::DslValue::Number(number) => match (number.as_i64(), number.as_u64()) {
             (Some(value), _) if value.unsigned_abs() <= REFERENCE_ID_INTEGER_MAX => Some(value.to_string()),
             (None, Some(value)) if value <= REFERENCE_ID_INTEGER_MAX => Some(value.to_string()),
             _ => None,
@@ -420,7 +439,7 @@ pub fn reference_id_text(value: &DslValue) -> Option<String> {
 /// 🔘️ One selectable option of a `Select` argument control — the persisted `value` and its
 /// human `label`.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct ActionArgOption {
@@ -441,7 +460,7 @@ impl ActionArgOption {
 /// wiring). Renderers map each variant onto a staged form field. Tagged with `kind` to mirror the
 /// sibling `UtilityNode`/`UiControlNode` declarative-tree convention.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ActionArgControl {
@@ -651,7 +670,7 @@ pub enum ActionArgControl {
 /// `ActionDefinition.args` (the common case) means a no-argument action. Mutation inputs come from
 /// [`mutation_input_defs`].
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct ActionArgDef {
@@ -697,7 +716,7 @@ impl ActionArgDef {
     }
 
     fn plain_string(format: Option<ArgFormat>) -> ArgSchema {
-        ArgSchema::String { options: Vec::new(), min_len: None, max_len: None, pattern: None, format }
+        ArgSchema::String { options: Vec::new(), option_source: None, min_len: None, max_len: None, pattern: None, format }
     }
 
     /// 🔤️ A free-text argument.
@@ -729,7 +748,7 @@ impl ActionArgDef {
 
     /// 🔽️ A single-choice select argument.
     pub fn select(id: impl Into<String>, label: impl Into<LocalizedLabel>, options: Vec<ActionArgOption>) -> Self {
-        Self::with_schema(id, label, ArgSchema::String { options, min_len: None, max_len: None, pattern: None, format: None })
+        Self::with_schema(id, label, ArgSchema::String { options, option_source: None, min_len: None, max_len: None, pattern: None, format: None })
     }
 
     /// 🧭️ A `dims`-component numeric vector argument (a 3d point is `dims == 3`).
@@ -841,8 +860,8 @@ impl ActionArgDef {
     /// fully-bounded number slides, else it is a plain number field. TypeScript twin: `argControl`.
     pub fn control(&self) -> ActionArgControl {
         match &self.schema {
-            ArgSchema::String { options, format, .. } => {
-                if !options.is_empty() {
+            ArgSchema::String { options, option_source, format, .. } => {
+                if !options.is_empty() || option_source.is_some() {
                     return match self.presentation {
                         Some(ArgPresentation::Segmented) => ActionArgControl::Segmented { options: options.clone() },
                         _ => ActionArgControl::Select { options: options.clone() },
@@ -895,17 +914,17 @@ impl ActionArgDef {
     /// `default` and the `description` resolved to one locale × terminology.
     pub fn json_schema(&self, terminology: Terminology, locale: Locale) -> DslValue {
         let value = arg_schema_json_schema(&self.schema, terminology, locale);
-        let value = if self.nullable { DslValue::object([("anyOf".to_string(), DslValue::Array(vec![value, DslValue::object([("type".to_string(), DslValue::String("null".to_string()))])]))]) } else { value };
-        let DslValue::Object(mut entries) = value else {
+        let value = if self.nullable { semio_framework_value::DslValue::object([("anyOf".to_string(), semio_framework_value::DslValue::Array(vec![value, DslValue::object([("type".to_string(), DslValue::String("null".to_string()))])]))]) } else { value };
+        let semio_framework_value::DslValue::Object(mut entries) = value else {
             unreachable!("arg_schema_json_schema always returns an object");
         };
         if let Some(description) = &self.description {
-            entries.push(("description".to_string(), DslValue::String(description.resolve(terminology, locale).to_string())));
+            entries.push(("description".to_string(), semio_framework_value::DslValue::String(description.resolve(terminology, locale).to_string())));
         }
         if let Some(default) = &self.default {
             entries.push(("default".to_string(), default.clone()));
         }
-        DslValue::Object(entries)
+        semio_framework_value::DslValue::Object(entries)
     }
 }
 
@@ -918,13 +937,13 @@ fn apply_arg_format(entries: &mut Vec<(String, DslValue)>, format: &ArgFormat) {
         ArgFormat::ArtifactRef => "artifactRef",
         ArgFormat::WindowId => "windowId",
         ArgFormat::EntityId { entity_kind } => {
-            entries.push(("x-semio-entity-kind".to_string(), DslValue::String(entity_kind.clone())));
+            entries.push(("x-semio-entity-kind".to_string(), semio_framework_value::DslValue::String(entity_kind.clone())));
             "entityId"
         }
         ArgFormat::IconId => "iconId",
         ArgFormat::Color => "color",
         ArgFormat::Uri => {
-            entries.push(("format".to_string(), DslValue::String("uri".to_string())));
+            entries.push(("format".to_string(), semio_framework_value::DslValue::String("uri".to_string())));
             "uri"
         }
         ArgFormat::Json => "json",
@@ -933,28 +952,29 @@ fn apply_arg_format(entries: &mut Vec<(String, DslValue)>, format: &ArgFormat) {
         ArgFormat::DocumentRevision => "documentRevision",
         ArgFormat::TargetRevision => "targetRevision",
         ArgFormat::ArtifactKind { roles } => {
-            entries.push(("x-semio-roles".to_string(), DslValue::Array(roles.iter().map(ToValue::to_value).collect())));
+            entries.push(("x-semio-roles".to_string(), semio_framework_value::DslValue::Array(roles.iter().map(semio_framework_value::ToValue::to_value).collect())));
             "artifactKind"
         }
         ArgFormat::SurfaceApp { roles, dialect_arg } => {
-            entries.push(("x-semio-roles".to_string(), DslValue::Array(roles.iter().map(ToValue::to_value).collect())));
-            entries.push(("x-semio-dialect-arg".to_string(), DslValue::String(dialect_arg.clone())));
+            entries.push(("x-semio-roles".to_string(), semio_framework_value::DslValue::Array(roles.iter().map(semio_framework_value::ToValue::to_value).collect())));
+            entries.push(("x-semio-dialect-arg".to_string(), semio_framework_value::DslValue::String(dialect_arg.clone())));
             "surfaceApp"
         }
     };
-    entries.push(("x-semio-format".to_string(), DslValue::String(tag.to_string())));
+    entries.push(("x-semio-format".to_string(), semio_framework_value::DslValue::String(tag.to_string())));
 }
 
 /// 📐️ JSON Schema 2020-12 for one `ArgSchema` node (recursive over `Array`/`Object`) — carries
 /// `Number.unit`/`Vector.unit` as `x-semio-unit`, `String.format` via `apply_arg_format`, a
 /// `Reference` as `x-semio-format: reference` with its `x-semio-ref`. A number's `step` is a UI fact, never
-/// `multipleOf`. No `additionalProperties`/`$schema`/`$id` at this altitude; the catalog compiler owns the envelope.
+/// `multipleOf`, and so are the options an `optionSource` resolved from the document — never an `enum`, the fold decides an
+/// unknown key. No `additionalProperties`/`$schema`/`$id` at this altitude; the catalog compiler owns the envelope.
 fn arg_schema_json_schema(schema: &ArgSchema, terminology: Terminology, locale: Locale) -> DslValue {
     match schema {
-        ArgSchema::String { options, min_len, max_len, pattern, format } => {
+        ArgSchema::String { options, option_source, min_len, max_len, pattern, format } => {
             let mut entries = vec![("type".to_string(), DslValue::String("string".to_string()))];
-            if !options.is_empty() {
-                entries.push(("enum".to_string(), DslValue::Array(options.iter().map(|option| DslValue::String(option.value.clone())).collect())));
+            if !options.is_empty() && option_source.is_none() {
+                entries.push(("enum".to_string(), semio_framework_value::DslValue::Array(options.iter().map(|option| semio_framework_value::DslValue::String(option.value.clone())).collect())));
             }
             if let Some(min_len) = min_len {
                 entries.push(("minLength".to_string(), min_len.to_value()));
@@ -963,12 +983,12 @@ fn arg_schema_json_schema(schema: &ArgSchema, terminology: Terminology, locale: 
                 entries.push(("maxLength".to_string(), max_len.to_value()));
             }
             if let Some(pattern) = pattern {
-                entries.push(("pattern".to_string(), DslValue::String(pattern.clone())));
+                entries.push(("pattern".to_string(), semio_framework_value::DslValue::String(pattern.clone())));
             }
             if let Some(format) = format {
                 apply_arg_format(&mut entries, format);
             }
-            DslValue::Object(entries)
+            semio_framework_value::DslValue::Object(entries)
         }
         ArgSchema::Number { min, min_exclusive, max, max_exclusive, integer, unit, .. } => {
             let mut entries = vec![("type".to_string(), DslValue::String(if *integer { "integer" } else { "number" }.to_string()))];
@@ -979,15 +999,15 @@ fn arg_schema_json_schema(schema: &ArgSchema, terminology: Terminology, locale: 
                 entries.push((if *max_exclusive { "exclusiveMaximum" } else { "maximum" }.to_string(), max.to_value()));
             }
             if let Some(unit) = unit {
-                entries.push(("x-semio-unit".to_string(), DslValue::String(unit.clone())));
+                entries.push(("x-semio-unit".to_string(), semio_framework_value::DslValue::String(unit.clone())));
             }
-            DslValue::Object(entries)
+            semio_framework_value::DslValue::Object(entries)
         }
-        ArgSchema::Boolean => DslValue::object([("type".to_string(), DslValue::String("boolean".to_string()))]),
+        ArgSchema::Boolean => semio_framework_value::DslValue::object([("type".to_string(), semio_framework_value::DslValue::String("boolean".to_string()))]),
         ArgSchema::Vector { dims, min, max, unit, .. } => {
             let mut component = vec![("type".to_string(), DslValue::String("number".to_string()))];
-            component.extend(min.iter().map(|min| ("minimum".to_string(), DslValue::json_number(*min))));
-            component.extend(max.iter().map(|max| ("maximum".to_string(), DslValue::json_number(*max))));
+            component.extend(min.iter().map(|min| ("minimum".to_string(), semio_framework_value::DslValue::json_number(*min))));
+            component.extend(max.iter().map(|max| ("maximum".to_string(), semio_framework_value::DslValue::json_number(*max))));
             let mut entries = vec![
                 ("type".to_string(), DslValue::String("array".to_string())),
                 ("items".to_string(), DslValue::Object(component)),
@@ -995,18 +1015,18 @@ fn arg_schema_json_schema(schema: &ArgSchema, terminology: Terminology, locale: 
                 ("maxItems".to_string(), DslValue::uint(u64::from(*dims))),
             ];
             if let Some(unit) = unit {
-                entries.push(("x-semio-unit".to_string(), DslValue::String(unit.clone())));
+                entries.push(("x-semio-unit".to_string(), semio_framework_value::DslValue::String(unit.clone())));
             }
-            DslValue::Object(entries)
+            semio_framework_value::DslValue::Object(entries)
         }
         ArgSchema::Reference { kinds, domain, granularity, many, min_items, max_items, id_type } => {
             let mut reference = vec![("kind".to_string(), DslValue::Array(kinds.iter().map(|kind| DslValue::String(kind.clone())).collect()))];
-            reference.extend(domain.iter().map(|domain| ("domain".to_string(), DslValue::String(domain.clone()))));
-            reference.extend(granularity.iter().map(|granularity| ("granularity".to_string(), DslValue::String(granularity.clone()))));
-            let id = DslValue::object([
-                ("type".to_string(), DslValue::String(if id_type.is_string() { "string" } else { "integer" }.to_string())),
-                ("x-semio-format".to_string(), DslValue::String("reference".to_string())),
-                ("x-semio-ref".to_string(), DslValue::Object(reference)),
+            reference.extend(domain.iter().map(|domain| ("domain".to_string(), semio_framework_value::DslValue::String(domain.clone()))));
+            reference.extend(granularity.iter().map(|granularity| ("granularity".to_string(), semio_framework_value::DslValue::String(granularity.clone()))));
+            let id = semio_framework_value::DslValue::object([
+                ("type".to_string(), semio_framework_value::DslValue::String(if id_type.is_string() { "string" } else { "integer" }.to_string())),
+                ("x-semio-format".to_string(), semio_framework_value::DslValue::String("reference".to_string())),
+                ("x-semio-ref".to_string(), semio_framework_value::DslValue::Object(reference)),
             ]);
             if !*many {
                 return id;
@@ -1014,7 +1034,7 @@ fn arg_schema_json_schema(schema: &ArgSchema, terminology: Terminology, locale: 
             let mut entries = vec![("type".to_string(), DslValue::String("array".to_string())), ("items".to_string(), id)];
             entries.extend(min_items.iter().map(|min_items| ("minItems".to_string(), min_items.to_value())));
             entries.extend(max_items.iter().map(|max_items| ("maxItems".to_string(), max_items.to_value())));
-            DslValue::Object(entries)
+            semio_framework_value::DslValue::Object(entries)
         }
         ArgSchema::Array { items, min_items, max_items } => {
             let mut entries = vec![("type".to_string(), DslValue::String("array".to_string())), ("items".to_string(), arg_schema_json_schema(items, terminology, locale))];
@@ -1024,7 +1044,7 @@ fn arg_schema_json_schema(schema: &ArgSchema, terminology: Terminology, locale: 
             if let Some(max_items) = max_items {
                 entries.push(("maxItems".to_string(), max_items.to_value()));
             }
-            DslValue::Object(entries)
+            semio_framework_value::DslValue::Object(entries)
         }
         ArgSchema::Object { fields } => {
             let mut properties = Vec::new();
@@ -1032,7 +1052,7 @@ fn arg_schema_json_schema(schema: &ArgSchema, terminology: Terminology, locale: 
             for field in fields {
                 properties.push((field.key(), field.json_schema(terminology, locale)));
                 if field.required {
-                    required.push(DslValue::String(field.key()));
+                    required.push(semio_framework_value::DslValue::String(field.key()));
                 }
             }
             let mut entries = vec![
@@ -1041,11 +1061,11 @@ fn arg_schema_json_schema(schema: &ArgSchema, terminology: Terminology, locale: 
                 ("additionalProperties".to_string(), DslValue::Bool(false)),
             ];
             if !required.is_empty() {
-                entries.push(("required".to_string(), DslValue::Array(required)));
+                entries.push(("required".to_string(), semio_framework_value::DslValue::Array(required)));
             }
-            DslValue::Object(entries)
+            semio_framework_value::DslValue::Object(entries)
         }
-        ArgSchema::Any => DslValue::Object(vec![]),
+        ArgSchema::Any => semio_framework_value::DslValue::Object(vec![]),
     }
 }
 //#endregion 🔖️ActionArgs
@@ -1173,7 +1193,7 @@ impl<F: Fn(&str) -> Option<DslValue>> InputSchemaResolver for F {
 }
 
 /// 🚫️ The class of a [`InputSchemaError`], shared verbatim with the TypeScript twin and the lint `schema-mutation-input-ui`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub enum InputSchemaErrorCode {
     Malformed,
@@ -1183,11 +1203,12 @@ pub enum InputSchemaErrorCode {
     LabelMissing,
     OptionLabelMissing,
     LocaleMissing,
+    WordOnlyFloat,
 }
 
 /// 🚫️ Why a mutation payload schema yields no input descriptors: the `code`, the RFC 6901 `pointer` of the input
 /// in the payload (`""` for the payload itself, `-` for "every array item") and a human `detail`.
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct InputSchemaError {
     pub code: InputSchemaErrorCode,
@@ -1211,8 +1232,8 @@ const INPUT_LABEL_GLOSSARY_JSON: &str = include_str!("🔣️input-labels.json")
 pub fn input_label_glossary() -> &'static BTreeMap<String, LocalizedLabel> {
     static GLOSSARY: std::sync::OnceLock<BTreeMap<String, LocalizedLabel>> = std::sync::OnceLock::new();
     GLOSSARY.get_or_init(|| {
-        let document = dsl::os_pack::json::to_dsl_value(&dsl::os_pack::json::parse(INPUT_LABEL_GLOSSARY_JSON).expect("the input label glossary is JSON"));
-        let labels = document.get("labels").and_then(DslValue::as_object).expect("the input label glossary carries labels");
+        let document = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(INPUT_LABEL_GLOSSARY_JSON, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the input label glossary is JSON"));
+        let labels = document.get("labels").and_then(semio_framework_value::DslValue::as_object).expect("the input label glossary carries labels");
         labels.iter().map(|(name, label)| (name.clone(), input_localized_text(label).expect("every glossary label names every locale"))).collect()
     })
 }
@@ -1275,8 +1296,8 @@ pub fn registered_input_schema_document(id: &str) -> Option<DslValue> {
     });
     texts.extend(semio_framework_schema_registry::registered_referenced_schema_documents().into_iter().filter(|text| text.contains(id)));
     texts.into_iter().find_map(|text| {
-        let document = dsl::os_pack::json::to_dsl_value(&dsl::os_pack::json::parse(text).ok()?);
-        (document.get("$id").and_then(DslValue::as_str) == Some(id)).then_some(document)
+        let document = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()?);
+        (document.get("$id").and_then(semio_framework_value::DslValue::as_str) == Some(id)).then_some(document)
     })
 }
 
@@ -1290,13 +1311,13 @@ pub fn mutation_input_instance(schema_json: &str, resolver: &dyn InputSchemaReso
     let mut entries = payload.as_object().map(<[(String, DslValue)]>::to_vec).ok_or_else(|| input_error(InputSchemaErrorCode::Malformed, "", "a mutation payload is an object"))?;
     if root.node.get("properties").is_none() && root.node.get("allOf").is_none() && input_union(&root.node).is_some() {
         let (key, variants) = reader.variants(&root, "")?;
-        let chosen = payload.get(&key).and_then(DslValue::as_str).ok_or_else(|| input_error(InputSchemaErrorCode::Malformed, "", format!("a union payload names its variant in {key}")))?;
+        let chosen = payload.get(&key).and_then(semio_framework_value::DslValue::as_str).ok_or_else(|| input_error(InputSchemaErrorCode::Malformed, "", format!("a union payload names its variant in {key}")))?;
         root = variants.into_iter().find(|variant| variant.value == chosen).map(|variant| variant.member).ok_or_else(|| input_error(InputSchemaErrorCode::Malformed, "", format!("{chosen} is no variant of this payload union")))?;
     }
     let mut members = Vec::new();
     reader.members(&root, "", 0, &mut members)?;
     for (document, node) in &members {
-        for (key, property) in node.get("properties").and_then(DslValue::as_object).unwrap_or_default() {
+        for (key, property) in node.get("properties").and_then(semio_framework_value::DslValue::as_object).unwrap_or_default() {
             if entries.iter().any(|(name, _)| name == key) {
                 continue;
             }
@@ -1305,12 +1326,55 @@ pub fn mutation_input_instance(schema_json: &str, resolver: &dyn InputSchemaReso
             }
         }
     }
-    Ok(DslValue::Object(entries))
+    Ok(semio_framework_value::DslValue::Object(entries))
 }
 
 /// 🔀️ The `oneOf`/`anyOf` branches of a schema node, if it is a union.
 fn input_union(node: &DslValue) -> Option<&[DslValue]> {
-    node.get("oneOf").or_else(|| node.get("anyOf")).and_then(DslValue::as_array)
+    node.get("oneOf").or_else(|| node.get("anyOf")).and_then(semio_framework_value::DslValue::as_array)
+}
+
+/// 🔢️ The framework value schema, whose `$defs/Binary64` (the exact binary64 word) and `$defs/Binary64Transport` (that word or a
+/// plain number) define the numeric transport the reader edits as a number wherever a carrier references or restates it.
+const INPUT_NUMERIC_TRANSPORT_SCHEMA_JSON: &str = include_str!("../🌱️value/🧬️schema/🔣️.json");
+
+/// 🏷️ Schema keys that annotate without constraining; a shape comparison ignores them (and every `x-` key).
+const INPUT_SHAPE_ANNOTATIONS: [&str; 6] = ["title", "description", "$comment", "examples", "default", "format"];
+
+/// 🧬️ The constraint shape of a schema node: annotations dropped, object keys sorted, `required` sorted — equal shapes
+/// validate the same instances.
+fn input_shape(node: &DslValue) -> DslValue {
+    match node {
+        semio_framework_value::DslValue::Object(entries) => {
+            let mut kept: Vec<(String, DslValue)> = entries
+                .iter()
+                .filter(|(key, _)| !key.starts_with("x-") && !INPUT_SHAPE_ANNOTATIONS.contains(&key.as_str()))
+                .map(|(key, value)| match (key.as_str(), value) {
+                    ("required", semio_framework_value::DslValue::Array(names)) => {
+                        let mut names = names.clone();
+                        names.sort_by(|left, right| left.as_str().cmp(&right.as_str()));
+                        (key.clone(), semio_framework_value::DslValue::Array(names))
+                    }
+                    _ => (key.clone(), input_shape(value)),
+                })
+                .collect();
+            kept.sort_by(|left, right| left.0.cmp(&right.0));
+            semio_framework_value::DslValue::Object(kept)
+        }
+        semio_framework_value::DslValue::Array(items) => semio_framework_value::DslValue::Array(items.iter().map(input_shape).collect()),
+        other => other.clone(),
+    }
+}
+
+/// 🔢️ The shapes of the framework's numeric transport: the binary64 word and the plain-number branch of the transport.
+fn input_numeric_transport() -> &'static (DslValue, DslValue) {
+    static SHAPES: std::sync::OnceLock<(DslValue, DslValue)> = std::sync::OnceLock::new();
+    SHAPES.get_or_init(|| {
+        let schema = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(INPUT_NUMERIC_TRANSPORT_SCHEMA_JSON, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the framework value schema is JSON"));
+        let definition = |name: &str| schema.get("$defs").and_then(|definitions| definitions.get(name)).cloned().unwrap_or_else(|| panic!("the framework value schema defines {name}"));
+        let number = input_union(&definition("Binary64Transport")).and_then(|branches| branches.iter().find(|branch| branch.get("$ref").is_none())).map(input_shape).expect("the framework numeric transport has a plain-number branch");
+        (input_shape(&definition("Binary64")), number)
+    })
 }
 
 /// 🔀️ One variant of a discriminated payload union: the `const` its discriminator pins, the resolved member, and that
@@ -1321,7 +1385,7 @@ struct InputVariant {
     discriminator: ResolvedInput,
 }
 
-const INPUT_UI_KEYS: [&str; 18] = ["widget", "role", "label", "description", "step", "precision", "softMin", "softMax", "snaps", "snapSource", "unit", "displayUnit", "displayFactor", "scale", "group", "order", "options", "ref"];
+const INPUT_UI_KEYS: [&str; 19] = ["widget", "role", "label", "description", "step", "precision", "softMin", "softMax", "snaps", "snapSource", "optionSource", "unit", "displayUnit", "displayFactor", "scale", "group", "order", "options", "ref"];
 const INPUT_UI_NUMBER_KEYS: [&str; 9] = ["step", "precision", "softMin", "softMax", "snaps", "snapSource", "displayUnit", "displayFactor", "scale"];
 
 /// 🧭️ The number facets a vector shares across its components (every [`INPUT_UI_NUMBER_KEYS`] but the slider travel keys).
@@ -1339,7 +1403,7 @@ fn input_pointer(parent: &str, key: &str) -> String {
 /// 🌐️ A `{<locale>: text}` map naming every locale, or a `{<terminology>: {<locale>: text}}` matrix naming every cell.
 fn input_localized_text(value: &DslValue) -> Result<LocalizedLabel, InputSchemaErrorCode> {
     let entries = value.as_object().ok_or(InputSchemaErrorCode::UiInvalid)?;
-    let cell = |map: &DslValue, locale: Locale| map.get(locale.as_str()).and_then(DslValue::as_str).filter(|text| !text.is_empty()).map(str::to_string);
+    let cell = |map: &DslValue, locale: Locale| map.get(locale.as_str()).and_then(semio_framework_value::DslValue::as_str).filter(|text| !text.is_empty()).map(str::to_string);
     if entries.iter().all(|(key, _)| Locale::parse(key).is_some()) {
         if Locale::ALL.iter().any(|locale| cell(value, *locale).is_none()) {
             return Err(InputSchemaErrorCode::LocaleMissing);
@@ -1361,11 +1425,11 @@ fn input_localized_text(value: &DslValue) -> Result<LocalizedLabel, InputSchemaE
 fn input_type(node: &DslValue) -> Option<&'static str> {
     const TYPES: [&str; 6] = ["string", "integer", "number", "boolean", "object", "array"];
     let named: Vec<&str> = match node.get("type") {
-        Some(DslValue::String(name)) => vec![name.as_str()],
-        Some(DslValue::Array(names)) => names.iter().filter_map(DslValue::as_str).filter(|name| *name != "null").collect(),
+        Some(semio_framework_value::DslValue::String(name)) => vec![name.as_str()],
+        Some(semio_framework_value::DslValue::Array(names)) => names.iter().filter_map(semio_framework_value::DslValue::as_str).filter(|name| *name != "null").collect(),
         _ if node.get("properties").is_some() => vec!["object"],
         _ if node.get("items").is_some() => vec!["array"],
-        _ if node.get("enum").and_then(DslValue::as_array).is_some_and(|values| !values.is_empty() && values.iter().all(|value| value.as_str().is_some())) => vec!["string"],
+        _ if node.get("enum").and_then(semio_framework_value::DslValue::as_array).is_some_and(|values| !values.is_empty() && values.iter().all(|value| value.as_str().is_some())) => vec!["string"],
         _ => Vec::new(),
     };
     match named.as_slice() {
@@ -1407,7 +1471,7 @@ impl ResolvedInput {
     }
 
     fn ui_str(&self, key: &str) -> Option<&str> {
-        self.ui(key).and_then(DslValue::as_str)
+        self.ui(key).and_then(semio_framework_value::DslValue::as_str)
     }
 }
 
@@ -1421,9 +1485,9 @@ struct InputSchemaReader<'r> {
 
 impl<'r> InputSchemaReader<'r> {
     fn parse(schema_json: &str, resolver: &'r dyn InputSchemaResolver, collect: bool) -> Result<Self, InputSchemaError> {
-        let root = dsl::os_pack::json::parse(schema_json).map_err(|error| input_error(InputSchemaErrorCode::Malformed, "", error.to_string()))?;
+        let root = semio_framework_pack_json::parse(schema_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| input_error(InputSchemaErrorCode::Malformed, "", error.to_string()))?;
         Ok(Self {
-            root: dsl::os_pack::json::to_dsl_value(&root),
+            root: semio_framework_pack_json::to_dsl_value(&root),
             resolver,
             documents: std::cell::RefCell::new(BTreeMap::new()),
             active: std::cell::RefCell::new(vec!["#".to_string()]),
@@ -1479,8 +1543,8 @@ impl<'r> InputSchemaReader<'r> {
             let mut current = start;
             for segment in &fragment_path {
                 current = match current {
-                    DslValue::Object(_) => current.get(segment)?,
-                    DslValue::Array(items) => items.get(segment.parse::<usize>().ok()?)?,
+                    semio_framework_value::DslValue::Object(_) => current.get(segment)?,
+                    semio_framework_value::DslValue::Array(items) => items.get(segment.parse::<usize>().ok()?)?,
                     _ => return None,
                 };
             }
@@ -1514,16 +1578,16 @@ impl<'r> InputSchemaReader<'r> {
                     }
                 }
             }
-            if let Some(reference) = resolved.node.get("$ref").and_then(DslValue::as_str).map(str::to_string) {
+            if let Some(reference) = resolved.node.get("$ref").and_then(semio_framework_value::DslValue::as_str).map(str::to_string) {
                 let (document, node) = self.target(&resolved.document, &reference, pointer)?;
                 resolved.refs.push(format!("{}#{}", document.as_deref().unwrap_or_default(), reference.split_once('#').map_or("", |(_, fragment)| fragment)));
                 resolved.document = document;
                 resolved.node = node;
                 continue;
             }
-            let union = resolved.node.get("oneOf").or_else(|| resolved.node.get("anyOf")).and_then(DslValue::as_array).map(<[DslValue]>::to_vec);
+            let union = resolved.node.get("oneOf").or_else(|| resolved.node.get("anyOf")).and_then(semio_framework_value::DslValue::as_array).map(<[DslValue]>::to_vec);
             if let Some(branches) = union {
-                let null = |branch: &DslValue| branch.get("type").and_then(DslValue::as_str) == Some("null") && branch.as_object().is_some_and(|entries| entries.len() == 1);
+                let null = |branch: &DslValue| branch.get("type").and_then(semio_framework_value::DslValue::as_str) == Some("null") && branch.as_object().is_some_and(|entries| entries.len() == 1);
                 let concrete: Vec<&DslValue> = branches.iter().filter(|branch| !null(branch)).collect();
                 if concrete.len() == 1 && concrete.len() < branches.len() {
                     resolved.node = concrete[0].clone();
@@ -1531,10 +1595,44 @@ impl<'r> InputSchemaReader<'r> {
                     continue;
                 }
             }
-            resolved.nullable |= resolved.node.get("type").and_then(DslValue::as_array).is_some_and(|types| types.iter().any(|name| name.as_str() == Some("null")));
+            resolved.nullable |= resolved.node.get("type").and_then(semio_framework_value::DslValue::as_array).is_some_and(|types| types.iter().any(|name| name.as_str() == Some("null")));
+            if self.numeric_transport(&resolved.document, &resolved.node, pointer) {
+                if input_shape(&resolved.node) == input_numeric_transport().0 {
+                    self.recover(Err(input_error(InputSchemaErrorCode::WordOnlyFloat, pointer, "a number input accepts only the exact binary64 word, never the plain number its payload and every draft carry; reference framework/value/schema.json#/$defs/Binary64Transport")), || ())?;
+                }
+                resolved.node = semio_framework_value::DslValue::Object(vec![("type".to_string(), DslValue::String("number".to_string()))]);
+            }
             return Ok(resolved);
         }
         Err(input_error(InputSchemaErrorCode::Malformed, pointer, "a $ref chain exceeds 32 hops"))
+    }
+
+    /// 🔢️ Whether `node` (in `document`) is the framework's numeric transport ([`input_numeric_transport`]): the binary64 word
+    /// itself (read as a number but refused as `WordOnlyFloat`: the payload and every draft carry the plain number), or a
+    /// two-branch union of that word and a plain number (each branch restated or referenced) with nothing but annotations
+    /// beside it — an input edited as a number, its facets from the property's `x-semio-ui`.
+    fn numeric_transport(&self, document: &Option<String>, node: &DslValue, pointer: &str) -> bool {
+        let (word, number) = input_numeric_transport();
+        if input_shape(node) == *word {
+            return true;
+        }
+        let Some(branches) = input_union(node).filter(|branches| branches.len() == 2) else { return false };
+        if node.as_object().is_some_and(|entries| entries.iter().any(|(key, _)| !matches!(key.as_str(), "anyOf" | "oneOf") && !key.starts_with("x-") && !INPUT_SHAPE_ANNOTATIONS.contains(&key.as_str()))) {
+            return false;
+        }
+        let shapes: Vec<DslValue> = branches
+            .iter()
+            .map(|branch| {
+                let (mut owner, mut current) = (document.clone(), branch.clone());
+                for _ in 0..INPUT_REF_DEPTH {
+                    let Some(reference) = current.get("$ref").and_then(semio_framework_value::DslValue::as_str).map(str::to_string) else { break };
+                    let Ok(target) = self.target(&owner, &reference, pointer) else { return semio_framework_value::DslValue::Null };
+                    (owner, current) = target;
+                }
+                input_shape(&current)
+            })
+            .collect();
+        shapes.contains(word) && shapes.contains(number)
     }
 
     /// 🧩️ The object itself and, depth first, every `allOf` member it composes (each resolved in its own document).
@@ -1543,7 +1641,7 @@ impl<'r> InputSchemaReader<'r> {
             return Err(input_error(InputSchemaErrorCode::Malformed, pointer, "an allOf composition exceeds 32 levels"));
         }
         members.push((object.document.clone(), object.node.clone()));
-        for member in object.node.get("allOf").and_then(DslValue::as_array).unwrap_or_default() {
+        for member in object.node.get("allOf").and_then(semio_framework_value::DslValue::as_array).unwrap_or_default() {
             let resolved = self.resolve(object.document.clone(), member.clone(), pointer)?;
             self.members(&resolved, pointer, depth + 1, members)?;
         }
@@ -1560,12 +1658,12 @@ impl<'r> InputSchemaReader<'r> {
             self.members(&member, pointer, 0, &mut composed)?;
             let mut pins: Vec<(String, Option<String>, ResolvedInput)> = Vec::new();
             for (document, node) in &composed {
-                for (key, property) in node.get("properties").and_then(DslValue::as_object).unwrap_or_default() {
+                for (key, property) in node.get("properties").and_then(semio_framework_value::DslValue::as_object).unwrap_or_default() {
                     if pins.iter().any(|(name, _, _)| name == key) {
                         continue;
                     }
                     let resolved = self.resolve(document.clone(), property.clone(), &input_pointer(pointer, key))?;
-                    let value = resolved.node.get("const").and_then(DslValue::as_str).map(str::to_string);
+                    let value = resolved.node.get("const").and_then(semio_framework_value::DslValue::as_str).map(str::to_string);
                     pins.push((key.clone(), value, resolved));
                 }
             }
@@ -1608,7 +1706,7 @@ impl<'r> InputSchemaReader<'r> {
             })
             .collect::<Result<Vec<_>, InputSchemaError>>()?;
         let presentation = (options.len() <= 4).then_some(ArgPresentation::Segmented);
-        let mut inputs = vec![ActionArgDef { id: input_pointer("", &key), label, schema: ArgSchema::String { options, min_len: None, max_len: None, pattern: None, format: None }, presentation, required: true, nullable: false, default: None, description, group: None, order: None }];
+        let mut inputs = vec![ActionArgDef { id: input_pointer("", &key), label, schema: ArgSchema::String { options, option_source: None, min_len: None, max_len: None, pattern: None, format: None }, presentation, required: true, nullable: false, default: None, description, group: None, order: None }];
         for variant in &variants {
             for mut field in self.fields(&variant.member, pointer)? {
                 field.group = Some(variant.value.clone());
@@ -1621,11 +1719,11 @@ impl<'r> InputSchemaReader<'r> {
     fn fields(&self, object: &ResolvedInput, pointer: &str) -> Result<Vec<ActionArgDef>, InputSchemaError> {
         let mut members = Vec::new();
         self.members(object, pointer, 0, &mut members)?;
-        let required: Vec<&str> = members.iter().flat_map(|(_, node)| node.get("required").and_then(DslValue::as_array).unwrap_or_default().iter().filter_map(DslValue::as_str)).collect();
+        let required: Vec<&str> = members.iter().flat_map(|(_, node)| node.get("required").and_then(semio_framework_value::DslValue::as_array).unwrap_or_default().iter().filter_map(semio_framework_value::DslValue::as_str)).collect();
         let mut fields = Vec::new();
         let mut seen = Vec::new();
         for (document, node) in &members {
-            for (key, property) in node.get("properties").and_then(DslValue::as_object).unwrap_or_default() {
+            for (key, property) in node.get("properties").and_then(semio_framework_value::DslValue::as_object).unwrap_or_default() {
                 if seen.contains(&key.as_str()) {
                     continue;
                 }
@@ -1643,7 +1741,7 @@ impl<'r> InputSchemaReader<'r> {
     fn input(&self, key: &str, input: &ResolvedInput, required: bool, pointer: &str) -> Result<Option<ActionArgDef>, InputSchemaError> {
         let role = match input.ui("role") {
             None => None,
-            Some(DslValue::String(role)) if ["value", "target", "discriminator"].contains(&role.as_str()) => Some(role.as_str()),
+            Some(semio_framework_value::DslValue::String(role)) if ["value", "target", "discriminator"].contains(&role.as_str()) => Some(role.as_str()),
             Some(_) => self.recover(Err(input_error(InputSchemaErrorCode::UiInvalid, pointer, "role is value, target or discriminator")), || None)?,
         };
         if role == Some("discriminator") || input.node.get("const").is_some() {
@@ -1651,7 +1749,7 @@ impl<'r> InputSchemaReader<'r> {
         }
         let widget = match input.ui("widget") {
             None => None,
-            Some(DslValue::String(widget)) if ["slider", "stepper", "dial", "toggle", "select", "segmented", "text", "multiline", "vector", "color", "reference", "hidden"].contains(&widget.as_str()) => Some(widget.as_str()),
+            Some(semio_framework_value::DslValue::String(widget)) if ["slider", "stepper", "dial", "toggle", "select", "segmented", "text", "multiline", "vector", "color", "reference", "hidden"].contains(&widget.as_str()) => Some(widget.as_str()),
             Some(_) => self.recover(Err(input_error(InputSchemaErrorCode::UiInvalid, pointer, "widget is not a declared widget")), || None)?,
         };
         let label = match input.ui("label") {
@@ -1663,7 +1761,7 @@ impl<'r> InputSchemaReader<'r> {
         let description = self.recover(description, || None)?;
         let group = match input.ui("group") {
             None => None,
-            Some(DslValue::String(group)) if !group.is_empty() => Some(group.clone()),
+            Some(semio_framework_value::DslValue::String(group)) if !group.is_empty() => Some(group.clone()),
             Some(_) => self.recover(Err(input_error(InputSchemaErrorCode::UiInvalid, pointer, "group is a non-empty string")), || None)?,
         };
         let order = match input.ui("order") {
@@ -1676,8 +1774,8 @@ impl<'r> InputSchemaReader<'r> {
         let compatible = match (widget, &schema) {
             (Some("slider" | "stepper" | "dial"), ArgSchema::Number { .. }) | (Some("toggle"), ArgSchema::Boolean) | (Some("vector"), ArgSchema::Vector { .. }) | (Some("reference"), ArgSchema::Reference { .. }) | (Some("hidden") | None, _) => true,
             (Some("color"), ArgSchema::Vector { dims, min, max, .. }) => matches!(dims, 3 | 4) && *min == Some(0.0) && *max == Some(1.0),
-            (Some("select" | "segmented"), ArgSchema::String { options, .. }) => !options.is_empty(),
-            (Some("text" | "multiline"), ArgSchema::String { options, .. }) => options.is_empty(),
+            (Some("select" | "segmented"), ArgSchema::String { options, option_source, .. }) => !options.is_empty() || option_source.is_some(),
+            (Some("text" | "multiline"), ArgSchema::String { options, option_source, .. }) => options.is_empty() && option_source.is_none(),
             _ => false,
         };
         if !compatible {
@@ -1706,6 +1804,9 @@ impl<'r> InputSchemaReader<'r> {
         }
         if input.ui("unit").is_some() && !matches!(kind, Some("integer" | "number" | "array")) {
             self.recover(Err(input_error(InputSchemaErrorCode::UiInvalid, pointer, "unit only applies to a number or a vector")), || ())?;
+        }
+        if input.ui("optionSource").is_some() && (kind != Some("string") || input.node.get("enum").is_some()) {
+            self.recover(Err(input_error(InputSchemaErrorCode::UiInvalid, pointer, "optionSource only sources the options of a string without an enum")), || ())?;
         }
         if widget == Some("hidden") && matches!(kind, Some("object" | "array")) {
             return Ok(ArgSchema::Any);
@@ -1736,16 +1837,17 @@ impl<'r> InputSchemaReader<'r> {
         match kind {
             Some("string") => Ok(ArgSchema::String {
                 options: input_options(input, pointer)?,
-                min_len: input.node.get("minLength").and_then(DslValue::as_u64).map(|length| length as u32),
-                max_len: input.node.get("maxLength").and_then(DslValue::as_u64).map(|length| length as u32),
-                pattern: input.node.get("pattern").and_then(DslValue::as_str).map(str::to_string),
-                format: (input.node.get("format").and_then(DslValue::as_str) == Some("uri")).then_some(ArgFormat::Uri),
+                option_source: input_option_source(input, pointer)?,
+                min_len: input.node.get("minLength").and_then(semio_framework_value::DslValue::as_u64).map(|length| length as u32),
+                max_len: input.node.get("maxLength").and_then(semio_framework_value::DslValue::as_u64).map(|length| length as u32),
+                pattern: input.node.get("pattern").and_then(semio_framework_value::DslValue::as_str).map(str::to_string),
+                format: (input.node.get("format").and_then(semio_framework_value::DslValue::as_str) == Some("uri")).then_some(ArgFormat::Uri),
             }),
             Some(number @ ("integer" | "number")) => input_number(input, number == "integer", pointer),
             Some("boolean") => Ok(ArgSchema::Boolean),
             Some("object") if input.node.get("properties").is_some() || input.node.get("allOf").is_some() => Ok(ArgSchema::Object { fields: self.fields(input, pointer)? }),
             Some("array") => {
-                let bound = |name: &str| input.node.get(name).and_then(DslValue::as_u64).map(|count| count as u32);
+                let bound = |name: &str| input.node.get(name).and_then(semio_framework_value::DslValue::as_u64).map(|count| count as u32);
                 let (min_items, max_items) = (bound("minItems"), bound("maxItems"));
                 let numeric = matches!(item_kind, Some("integer" | "number"));
                 let fixed = min_items.filter(|count| Some(*count) == max_items && (2..=4).contains(count));
@@ -1797,7 +1899,7 @@ impl<'r> InputSchemaReader<'r> {
             return Ok(ArgSchema::Any);
         }
         match input_type(&items.node) {
-            Some("string") => Ok(ArgSchema::String { options: input_options(items, pointer)?, min_len: None, max_len: None, pattern: None, format: None }),
+            Some("string") => Ok(ArgSchema::String { options: input_options(items, pointer)?, option_source: input_option_source(items, pointer)?, min_len: None, max_len: None, pattern: None, format: None }),
             Some(number @ ("integer" | "number")) => input_number(items, number == "integer", pointer),
             Some("boolean") => Ok(ArgSchema::Boolean),
             Some("object") if items.node.get("properties").is_some() || items.node.get("allOf").is_some() => Ok(ArgSchema::Object { fields: self.fields(items, pointer)? }),
@@ -1806,7 +1908,7 @@ impl<'r> InputSchemaReader<'r> {
                     Some(inner) => self.item_schema(&self.resolve(items.document.clone(), inner.clone(), &format!("{pointer}/-"))?, &format!("{pointer}/-"))?,
                     None => ArgSchema::Any,
                 };
-                let bound = |name: &str| items.node.get(name).and_then(DslValue::as_u64).map(|count| count as u32);
+                let bound = |name: &str| items.node.get(name).and_then(semio_framework_value::DslValue::as_u64).map(|count| count as u32);
                 Ok(ArgSchema::Array { items: Box::new(inner), min_items: bound("minItems"), max_items: bound("maxItems") })
             }
             _ => Ok(ArgSchema::Any),
@@ -1820,19 +1922,19 @@ impl<'r> InputSchemaReader<'r> {
             return Err(invalid("ref is {kind, domain?, granularity?}"));
         }
         let kinds = match reference.and_then(|reference| reference.get("kind")) {
-            Some(DslValue::String(kind)) if !kind.is_empty() => vec![kind.clone()],
-            Some(DslValue::Array(kinds)) if !kinds.is_empty() && kinds.iter().all(|kind| kind.as_str().is_some_and(|kind| !kind.is_empty())) => kinds.iter().filter_map(DslValue::as_str).map(str::to_string).collect(),
+            Some(semio_framework_value::DslValue::String(kind)) if !kind.is_empty() => vec![kind.clone()],
+            Some(semio_framework_value::DslValue::Array(kinds)) if !kinds.is_empty() && kinds.iter().all(|kind| kind.as_str().is_some_and(|kind| !kind.is_empty())) => kinds.iter().filter_map(semio_framework_value::DslValue::as_str).map(str::to_string).collect(),
             Some(_) => return Err(invalid("ref.kind is a non-empty string or a non-empty array of them")),
             None => vec![inferred_kind.or_else(|| input_inferred_reference_kind(key, many)).ok_or_else(|| invalid("a target names its ref.kind"))?],
         };
         let text = |name: &str| -> Result<Option<String>, InputSchemaError> {
             match reference.and_then(|reference| reference.get(name)) {
                 None => Ok(None),
-                Some(DslValue::String(value)) if !value.is_empty() => Ok(Some(value.clone())),
+                Some(semio_framework_value::DslValue::String(value)) if !value.is_empty() => Ok(Some(value.clone())),
                 Some(_) => Err(invalid("ref.domain and ref.granularity are non-empty strings")),
             }
         };
-        let bound = |name: &str| input.node.get(name).and_then(DslValue::as_u64).map(|count| count as u32);
+        let bound = |name: &str| input.node.get(name).and_then(semio_framework_value::DslValue::as_u64).map(|count| count as u32);
         Ok(ArgSchema::Reference { kinds, domain: text("domain")?, granularity: text("granularity")?, many, min_items: many.then(|| bound("minItems")).flatten(), max_items: many.then(|| bound("maxItems")).flatten(), id_type })
     }
 }
@@ -1840,7 +1942,7 @@ impl<'r> InputSchemaReader<'r> {
 fn input_string(input: &ResolvedInput, key: &str, pointer: &str) -> Result<Option<String>, InputSchemaError> {
     match input.ui(key) {
         None => Ok(None),
-        Some(DslValue::String(value)) if !value.is_empty() => Ok(Some(value.clone())),
+        Some(semio_framework_value::DslValue::String(value)) if !value.is_empty() => Ok(Some(value.clone())),
         Some(_) => Err(input_error(InputSchemaErrorCode::UiInvalid, pointer, format!("{key} is a non-empty string"))),
     }
 }
@@ -1860,7 +1962,7 @@ fn input_positive(input: &ResolvedInput, key: &str, pointer: &str) -> Result<Opt
 }
 
 fn input_options(input: &ResolvedInput, pointer: &str) -> Result<Vec<ActionArgOption>, InputSchemaError> {
-    let Some(values) = input.node.get("enum").and_then(DslValue::as_array) else { return Ok(Vec::new()) };
+    let Some(values) = input.node.get("enum").and_then(semio_framework_value::DslValue::as_array) else { return Ok(Vec::new()) };
     let labels = input.ui("options");
     if labels.is_some_and(|labels| labels.as_object().is_none_or(|entries| entries.iter().any(|(value, _)| !values.iter().any(|candidate| candidate.as_str() == Some(value.as_str()))))) {
         return Err(input_error(InputSchemaErrorCode::UiInvalid, pointer, "options labels only declared enum values"));
@@ -1878,9 +1980,19 @@ fn input_options(input: &ResolvedInput, pointer: &str) -> Result<Vec<ActionArgOp
         .collect()
 }
 
+/// 🗝️ A string input's `x-semio-ui.optionSource`: `{snapshot: "<pointer template>"}`, an RFC 6901 template (`/…`) whose
+/// `{field}` segments name members of the edited payload.
+fn input_option_source(input: &ResolvedInput, pointer: &str) -> Result<Option<OptionSource>, InputSchemaError> {
+    match input.ui("optionSource").map(semio_framework_value::DslValue::as_object) {
+        None => Ok(None),
+        Some(Some([(name, semio_framework_value::DslValue::String(template))])) if name == "snapshot" && template.starts_with('/') => Ok(Some(OptionSource::Snapshot { pointer: template.clone() })),
+        Some(_) => Err(input_error(InputSchemaErrorCode::UiInvalid, pointer, "optionSource is {snapshot: pointer template}")),
+    }
+}
+
 fn input_number(input: &ResolvedInput, integer: bool, pointer: &str) -> Result<ArgSchema, InputSchemaError> {
     let invalid = |detail: String| input_error(InputSchemaErrorCode::UiInvalid, pointer, detail);
-    let keyword = |name: &str| input.node.get(name).and_then(DslValue::as_f64);
+    let keyword = |name: &str| input.node.get(name).and_then(semio_framework_value::DslValue::as_f64);
     let bound = |inclusive: Option<f64>, exclusive: Option<f64>, lower: bool| -> (Option<f64>, bool) {
         match (inclusive, exclusive) {
             (inclusive, None) => (inclusive, false),
@@ -1894,7 +2006,7 @@ fn input_number(input: &ResolvedInput, integer: bool, pointer: &str) -> Result<A
     let inside = |value: f64| min.is_none_or(|min| if min_exclusive { value > min } else { value >= min }) && max.is_none_or(|max| if max_exclusive { value < max } else { value <= max });
     let snaps = match input.ui("snaps") {
         None => Vec::new(),
-        Some(DslValue::Array(values)) => values.iter().map(|value| value.as_f64().filter(|value| value.is_finite())).collect::<Option<Vec<f64>>>().ok_or_else(|| invalid("snaps are finite numbers".to_string()))?,
+        Some(semio_framework_value::DslValue::Array(values)) => values.iter().map(|value| value.as_f64().filter(|value| value.is_finite())).collect::<Option<Vec<f64>>>().ok_or_else(|| invalid("snaps are finite numbers".to_string()))?,
         Some(_) => return Err(invalid("snaps is an array of numbers".to_string())),
     };
     if let Some(snap) = snaps.iter().find(|snap| !inside(**snap)) {
@@ -1903,9 +2015,9 @@ fn input_number(input: &ResolvedInput, integer: bool, pointer: &str) -> Result<A
     let snap_source = match input.ui("snapSource") {
         None => None,
         Some(source) => Some(match source.as_object() {
-            Some([(name, DslValue::Bool(true))]) if name == "step" => SnapSource::Step,
-            Some([(name, DslValue::String(key))]) if name == "config" && !key.is_empty() => SnapSource::Config { key: key.clone() },
-            Some([(name, DslValue::String(target))]) if name == "snapshot" && (target.is_empty() || target.starts_with('/')) => SnapSource::Snapshot { pointer: target.clone() },
+            Some([(name, semio_framework_value::DslValue::Bool(true))]) if name == "step" => SnapSource::Step,
+            Some([(name, semio_framework_value::DslValue::String(key))]) if name == "config" && !key.is_empty() => SnapSource::Config { key: key.clone() },
+            Some([(name, semio_framework_value::DslValue::String(target))]) if name == "snapshot" && (target.is_empty() || target.starts_with('/')) => SnapSource::Snapshot { pointer: target.clone() },
             _ => return Err(invalid("snapSource is {step: true}, {config: key} or {snapshot: pointer}".to_string())),
         }),
     };
@@ -2010,7 +2122,7 @@ impl ResourceSelector {
 /// 🧮️ What one capability touches — read/write resource selectors plus the three coarse flags
 /// the gateway's policy/preview machinery gates on.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct CapabilityEffects {
@@ -2034,7 +2146,7 @@ pub struct CapabilityEffects {
 /// 🚦️ When the gateway must pause for human approval before committing an invocation of this
 /// capability.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum ApprovalMode {
@@ -2049,7 +2161,7 @@ pub enum ApprovalMode {
 /// parallel string vocabulary: `ExtensionPointDeclaration.capability_allowance` already establishes
 /// that `kernel::CapabilityId` is reachable from this crate with no dependency cycle.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct CapabilityPolicy {
@@ -2063,7 +2175,7 @@ pub struct CapabilityPolicy {
 
 /// 👁️ Whether/how the gateway can show the effect of an invocation before committing it.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum PreviewMode {
@@ -2075,7 +2187,7 @@ pub enum PreviewMode {
 
 /// ↩️ How a committed invocation of this capability can be undone.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum UndoMode {
@@ -2091,7 +2203,7 @@ pub enum UndoMode {
 
 /// 🔁️ Whether replaying the same invocation twice is safe, and how the gateway makes it so.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum IdempotencyMode {
@@ -2104,7 +2216,7 @@ pub enum IdempotencyMode {
 /// ⏱️ How long-running/interactive an invocation of this capability is — the gateway's job
 /// vs. interactive-call dispatch hint.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum ExecutionClass {
@@ -2127,7 +2239,7 @@ pub enum ExecutionClass {
 /// declaration overrides the derivation and is the only way to mark a `Mutation`-kind gesture route
 /// (a pointer handler that really does commit an operation) as [`CapabilityAudience::Input`].
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum CapabilityAudience {
@@ -2187,7 +2299,7 @@ pub fn framework_fixed_audience_violation(action: &ActionDefinition) -> Option<C
 /// visible to audit tooling but are rejected by [`validate_interactive_job_classification`] before a
 /// release catalog can be activated.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum InteractiveJobClassification {
@@ -2201,7 +2313,7 @@ pub enum InteractiveJobClassification {
 
 /// ⚙️ Preview/undo/idempotency/cancellation shape of one capability invocation.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct CapabilityExecution {
@@ -2236,7 +2348,7 @@ pub struct CapabilityExecution {
 /// `ActionSemantics::default()`, the type-level default below — NOT re-derived from `kind`, since
 /// serde field defaults cannot see sibling fields).
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct ActionSemantics {
@@ -2335,7 +2447,7 @@ pub fn validate_interactive_job_classification<'a>(actions: impl IntoIterator<It
 
 /// 📇️ Declares one action an app can receive via `ActionDescriptor.action`.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct ActionDefinition {
@@ -2731,9 +2843,15 @@ pub fn history_edit_finalize_dialog() -> DialogDefinition {
 mod history_edit_actions_tests;
 //#endregion 🔖️HistoryEdit
 
-/// 🎚️ The framework-owned action id apps dispatch to change the history panel's operations
+/// 🎚️ The framework-owned action id apps dispatch to change the history panel's mutations
 /// filter — auto-injected unconditionally (mirrors `RECORD_TUTORIAL_ACTION_ID`).
 pub const SET_HISTORY_COMMAND_FILTER_ACTION_ID: &str = "setHistoryCommandFilter";
+/// 🎚️ The `setHistoryCommandFilter` option (and `HistoryPatch.commandFilter` value) that shows every row.
+pub const HISTORY_COMMAND_FILTER_ALL: &str = "all";
+/// 🎚️ The option that hides the rows of document mutations.
+pub const HISTORY_COMMAND_FILTER_WITHOUT_MUTATIONS: &str = "withoutMutations";
+/// 🎚️ The option that shows only the rows of document mutations.
+pub const HISTORY_COMMAND_FILTER_ONLY_MUTATIONS: &str = "onlyMutations";
 
 /// 🎚️ The framework-injected `setHistoryCommandFilter` View action (never in the palette):
 /// switches the history panel's tri-state operations filter. Ephemeral UI state, never an
@@ -2742,18 +2860,18 @@ pub const SET_HISTORY_COMMAND_FILTER_ACTION_ID: &str = "setHistoryCommandFilter"
 /// `Select` interpreters hardcode that key; see `with_item_value_arg` in ui_wgpu).
 pub fn set_history_command_filter_action_definition() -> ActionDefinition {
     let options = vec![
-        ActionArgOption::new("all", LocalizedLabel::native("All", "Alle")),
-        ActionArgOption::new("withoutOperations", LocalizedLabel::native("Without Operations", "Ohne Operationen")),
-        ActionArgOption::new("onlyOperations", LocalizedLabel::native("Only Operations", "Nur Operationen")),
+        ActionArgOption::new(HISTORY_COMMAND_FILTER_ALL, LocalizedLabel::native("All", "Alle")),
+        ActionArgOption::new(HISTORY_COMMAND_FILTER_WITHOUT_MUTATIONS, LocalizedLabel::native("Without Mutations", "Ohne Mutationen")),
+        ActionArgOption::new(HISTORY_COMMAND_FILTER_ONLY_MUTATIONS, LocalizedLabel::native("Only Mutations", "Nur Mutationen")),
     ];
     ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework(SET_HISTORY_COMMAND_FILTER_ACTION_ID, LocalizedLabel::native("Set History Filter", "Verlaufsfilter festlegen"), ActionKind::View, "list") }
-    .describe(LocalizedLabel::native("Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.", "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."))
+    .describe(LocalizedLabel::native("Filters the history panel to all entries, only document mutations, or everything except document mutations; the document is not changed.", "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentmutationen oder alles außer Dokumentmutationen; das Dokument wird nicht verändert."))
     .with_args([ActionArgDef::select(
         "value",
         LocalizedLabel::native("Filter", "Filter"),
         options,
     )
-    .default_value(&"all")])
+    .default_value(&HISTORY_COMMAND_FILTER_ALL)])
 }
 
 /// 🗒️ The framework-owned action id apps dispatch to note a shell effect (navigate, export,
@@ -3191,6 +3309,15 @@ pub const EXPORT_ARTIFACT_DOCUMENT_ACTION_ID: &str = "exportArtifactDocument";
 /// progress-reporting load of its op log), never overwriting the focused one.
 pub const IMPORT_ARTIFACT_DOCUMENT_ACTION_ID: &str = "importArtifactDocument";
 
+/// 💾️ The shell-intercepted action that writes the focused editor's declared natural file bytes.
+pub const SAVE_ARTIFACT_FILE_ACTION_ID: &str = "saveArtifactFile";
+
+/// 📂️ The shell-intercepted action that opens one declared natural file as a new document owner.
+pub const OPEN_ARTIFACT_FILE_ACTION_ID: &str = "openArtifactFile";
+
+/// 📄️ The ABI media port reserved for an editor's declared natural-file representation.
+pub const NATURAL_FILE_PORT_ID: &str = "artifact:native";
+
 /// 🗃️ The framework-injected Export/Import Document pair: `Shell` verbs in the palette and the `transfer` ribbon
 /// category, shell chrome ([`CapabilityAudience::Chrome`]) — agents export through the MCP's own artifact export.
 pub fn document_transfer_action_definitions() -> [ActionDefinition; 2] {
@@ -3203,7 +3330,7 @@ pub fn document_transfer_action_definitions() -> [ActionDefinition; 2] {
 /// 📇️ A relative action id used by declarations nested beneath an owning window kind.
 /// Distinct from `ActionAddress`, which qualifies a dispatched invocation down to a window instance.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(transparent)]
 #[value(transparent)]
 pub struct ActionRef(String);
@@ -3235,7 +3362,7 @@ impl From<String> for ActionRef {
 }
 
 /// 📍️ Fully qualified address of an action owned by one concrete window instance.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct ActionAddress {
     pub plugin_id: String,
@@ -3250,7 +3377,7 @@ pub struct ActionAddress {
 /// `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`: `arguments` used to be
 /// keyed to `serde_json::Value` (not a `ToValue`/`FromValue` target by design); `DslValue` carries
 /// the exact same schema-less-JSON shape without the serde dependency.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct ActionInvocation {
     pub address: ActionAddress,
@@ -3261,7 +3388,7 @@ pub struct ActionInvocation {
 /// 🧰️ Declares one interactive utility (a live-preview pointer mode) an app exposes. Distinct from
 /// an `ActionDefinition`: exactly one utility is active per window kind at a time, and activation is
 /// host-owned session view state (`ViewModel.active_utility_id`), never a document field or VCS operation.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct UtilityDefinition {
@@ -3306,7 +3433,7 @@ impl UtilityDefinition {
 /// 🧰️ A validated reference into an app's `AppDefinition.utilities` registry — the utility mirror of
 /// `ActionRef`, scoping utilities to window kinds/modes with a typed, resolvable id.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(transparent)]
 #[value(transparent)]
 pub struct UtilityRef(String);
@@ -3340,7 +3467,7 @@ impl From<String> for UtilityRef {
 /// Handling a command may emit VCS-tracked operations exactly like an operation-kind action — see
 /// `ArtifactApp::handle_command`/`ActionEmit`.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct CommandDefinition {
@@ -3434,7 +3561,7 @@ impl CommandDefinition {
 }
 
 /// 📍️ Hierarchical owner of a command definition.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum CommandOwnerAddress {
     Os,
@@ -3444,7 +3571,7 @@ pub enum CommandOwnerAddress {
 }
 
 /// 📍️ Fully qualified address of one command.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct CommandAddress {
     pub owner: CommandOwnerAddress,
@@ -3454,7 +3581,7 @@ pub struct CommandAddress {
 /// 📨️ One addressed command invocation with named DSL-value arguments — see
 /// `ActionInvocation`'s docstring for why `arguments` is keyed to `DslValue`, not
 /// `serde_json::Value`.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct CommandInvocation {
     pub address: CommandAddress,
@@ -3463,7 +3590,7 @@ pub struct CommandInvocation {
 
 /// 💻️ Operating-system command catalog shared by every renderer.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct OsDefinition {
@@ -3481,7 +3608,7 @@ pub struct OsDefinition {
 /// field or VCS operation. A tool's live options are supplied dynamically via `ArtifactApp::tool_measures`,
 /// keyed by tool id — not part of this static declaration.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct ToolDefinition {
@@ -3509,7 +3636,7 @@ impl ToolDefinition {
 /// 🛠️ A validated reference into an app's `AppDefinition.tools` registry — the tool mirror of
 /// `UtilityRef`, scoping tools to modes with a typed, resolvable id.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(transparent)]
 #[value(transparent)]
 pub struct ToolRef(String);
@@ -3631,7 +3758,7 @@ pub fn panel_tab_first_draggable_element_id(tab_id: &str) -> String {
 /// glass veil; the shell owns playback (start/advance/skip) as ephemeral chrome state, never the
 /// document.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct IntroductionDefinition {
@@ -3643,7 +3770,7 @@ pub struct IntroductionDefinition {
 /// 🪜️ One step of an `IntroductionDefinition`: an info box pointing at `introduce`, with `show`
 /// raising extra elements above the glass veil and `interactions` completing the step.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct IntroductionStepDefinition {
@@ -3742,7 +3869,7 @@ impl IntroductionStepDefinition {
 /// 🏛️ One institution/partner logo shown in an `IntroductionStepDefinition`'s info box — a plain
 /// URL pair (no DOM/CSS types), optionally linking out when clicked.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct IntroductionLogo {
@@ -3758,7 +3885,7 @@ pub struct IntroductionLogo {
 
 /// 📍️ Where the info box is placed relative to its anchor.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum IntroductionPlacement {
@@ -3777,7 +3904,7 @@ pub enum IntroductionPlacement {
 /// 3D window named by the payload (a window-kind id) — classified from camera-state deltas by the shell
 /// that renders the window, so only shells that render a 3D world (the React shell) can complete them.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase", tag = "kind", content = "id")]
 #[value(rename_all = "camelCase", tag = "kind", content = "id")]
 pub enum IntroductionInteractionKind {
@@ -3802,7 +3929,7 @@ pub enum IntroductionInteractionKind {
 /// ✅️ One thing the user must do to complete an interaction-gated `IntroductionStepDefinition` —
 /// rendered as a checklist row in the info box and celebrated individually on completion.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct IntroductionInteraction {
@@ -3872,7 +3999,7 @@ impl IntroductionInteraction {
 /// element-relative, absolute/normalized screen space, absolute/normalized window(pane)-local space, and
 /// a 3D scene world position projected through that window's live camera.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 // 🐢️ `rename_all_fields` is required alongside `rename_all` — the latter only renames the *variant* tag
 // values; without the former, a future multi-word field inside a variant would silently serialize
 // snake_case and desync from the generated TS type (see `UiDirtyScope`'s comment for the full story).
@@ -3950,7 +4077,7 @@ impl IntroductionPoint {
 
 /// 🖱️ Which mouse button a drag-like demonstration presses.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum IntroductionPointerButton {
@@ -3962,7 +4089,7 @@ pub enum IntroductionPointerButton {
 
 /// ⌨️ Keyboard modifier held during a drag-like demonstration.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum IntroductionKeyModifier {
@@ -3990,7 +4117,7 @@ fn introduction_orbit_default_modifiers() -> Vec<IntroductionKeyModifier> {
 /// 👆️ A gesture a demonstration plays: the ghost cursor travels to (or between) `IntroductionPoint`s
 /// and performs the visual press/release affordance for the gesture kind.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 // 🐢️ `rename_all_fields` required alongside `rename_all` so `Scroll`'s `delta_y` field actually
 // serializes/types as `deltaY` — see `IntroductionPoint`'s comment / `UiDirtyScope`'s for the full story.
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
@@ -4035,7 +4162,7 @@ pub enum IntroductionGesture {
 
 /// 🖱️ Ghost-cursor glyph, mirroring `🎨️ui.css`'s `--cursor-*` custom cursors.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum IntroductionCursor {
@@ -4054,7 +4181,7 @@ pub enum IntroductionCursor {
 /// active replays it from the beginning. `cursor` overrides the glyph shown over the target; omitted, it
 /// derives from `gesture` (clicks → pointer, drag → grab/grabbing).
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct IntroductionDemonstration {
@@ -4102,7 +4229,7 @@ impl IntroductionDemonstration {
 /// Distinct from the docs-tooltip `tutorial` link field in `ui/js/react`'s `UiLabelLeaf` (a URL into the
 /// manual) — this is the interactive playback mechanism.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct TutorialDefinition {
@@ -4139,7 +4266,7 @@ impl TutorialDefinition {
 
 /// 📖️ One scrub-bar marker in a `TutorialDefinition`'s timeline.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct TutorialChapter {
@@ -4156,7 +4283,7 @@ pub struct TutorialChapter {
 /// state. The player snapshots the user's live document, loads this in its place, and restores the
 /// snapshot on exit — a tutorial can never touch real work.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct TutorialBase {
@@ -4179,7 +4306,7 @@ pub struct TutorialBase {
 /// millisecond offset from tutorial start, and each `Vec` is sorted ascending by `at`
 /// (`validate_tutorial` enforces this).
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct TutorialTracks {
@@ -4214,7 +4341,7 @@ pub struct TutorialTracks {
 /// `semio-vcs`, so the shape is mirrored rather than reused; conversion between the two is
 /// field-for-field.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 #[value(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 pub enum TutorialAssetSrc {
@@ -4241,7 +4368,7 @@ fn tutorial_rate_is_default(rate: &f64) -> bool {
 /// utterance is cancelled at the next cue's `at`; audio assets are seeked and rate-matched to the
 /// playhead instead of played independently.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct TutorialNarrationCue {
@@ -4272,7 +4399,7 @@ pub struct TutorialNarrationCue {
 
 /// 💬️ One timed caption sub-segment of a `TutorialNarrationCue`.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct TutorialCaption {
@@ -4284,7 +4411,7 @@ pub struct TutorialCaption {
 
 /// 🖼️ Normalized 0–1 viewport rect for a `TutorialVideoCue` overlay.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct TutorialOverlayRect {
@@ -4303,7 +4430,7 @@ impl Default for TutorialOverlayRect {
 
 /// 📹️ A timed video overlay — e.g. a presenter webcam picture-in-picture, or an authored clip.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct TutorialVideoCue {
@@ -4325,7 +4452,7 @@ pub struct TutorialVideoCue {
 
 /// 🏷️ One recorded action/command/keypress, annotational only — see `TutorialTracks::events`.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct TutorialEvent {
@@ -4335,7 +4462,7 @@ pub struct TutorialEvent {
 
 /// 🏷️ What one `TutorialEvent` annotates.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 #[value(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 pub enum TutorialEventKind {
@@ -4360,7 +4487,7 @@ pub enum TutorialEventKind {
 /// 🧮️ One UI-state track entry: either a full restore-point snapshot (a valid seek anchor) or a
 /// sparse list of changes since the previous sample.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct TutorialUiKeyframe {
@@ -4370,7 +4497,7 @@ pub struct TutorialUiKeyframe {
 
 /// 🧮️ See `TutorialUiKeyframe`.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 #[value(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 pub enum TutorialUiSample {
@@ -4383,7 +4510,7 @@ pub enum TutorialUiSample {
 /// shell's internal store: each shell implements its own `captureUiSnapshot`/`applyUiSnapshot` against
 /// this shape. Locale/terminology are excluded on purpose — a tutorial plays in the viewer's own locale.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct TutorialUiSnapshot {
@@ -4431,7 +4558,7 @@ pub struct TutorialUiSnapshot {
 /// `TutorialUiSnapshot` to reconstruct state at any timeline offset without shipping a full snapshot at
 /// every sample.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 #[value(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 pub enum TutorialUiChange {
@@ -4501,7 +4628,7 @@ pub enum TutorialUiChange {
 /// annotational only, never re-dispatched, because re-dispatching a plugin action is non-deterministic
 /// (fresh ids/timestamps) and would double-apply against this track.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct TutorialDocumentEvent {
@@ -4512,7 +4639,7 @@ pub struct TutorialDocumentEvent {
 /// 🖋️ See `TutorialDocumentEvent`. `Edit` carries both `forwards` and `backwards` operations
 /// verbatim from the vcs edit that produced it — the source of exact bidirectional scrubbing.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 #[value(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 pub enum TutorialDocumentEventKind {
@@ -4522,9 +4649,6 @@ pub enum TutorialDocumentEventKind {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[value(default, skip_serializing_if = "Option::is_none")]
         description: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[value(default, skip_serializing_if = "Option::is_none")]
-        coalesce_key: Option<String>,
     },
     Undo,
     Redo,
@@ -4554,7 +4678,7 @@ fn tutorial_camera_up_z() -> [f64; 3] {
 
 /// 🎥️ One camera track keyframe for a specific window instance.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct TutorialCameraKeyframe {
@@ -4571,7 +4695,7 @@ pub struct TutorialCameraKeyframe {
 /// 🎥️ A camera pose — `Orbit` mirrors `World3dScene.camera_json`/`OrbitController`, `Canvas`
 /// mirrors `Canvas2dScene`'s `cameraX`/`cameraY`/`zoom`.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 #[value(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 pub enum TutorialCameraState {
@@ -4594,7 +4718,7 @@ pub enum TutorialCameraState {
 
 /// 🪄️ Interpolation curve into a `TutorialCameraKeyframe` from its predecessor on the same window.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum TutorialEasing {
@@ -4608,7 +4732,7 @@ pub enum TutorialEasing {
 /// 👻️ One ghost-cursor gesture cue, reusing the introduction demonstration vocabulary verbatim —
 /// both shells already resolve/render `IntroductionGesture`/`IntroductionPoint`/`IntroductionCursor`.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct TutorialGestureCue {
@@ -4906,7 +5030,7 @@ pub fn tutorial_slice(def: &TutorialDefinition, from_ms: f64, to_ms: f64) -> Tut
 /// args; empty `args` degenerates to a message/confirm dialog. Opened only via
 /// `Effect::OpenDialog`; the shell owns open/close as ephemeral chrome state, never the document.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct DialogDefinition {
@@ -4945,7 +5069,7 @@ pub const DIALOG_CHOICE_ARG: &str = "choice";
 /// dispatches, the staged args it `requires` (enabled once they resolve, and the only form args it
 /// sends), its visual `tone`, and whether it is `destructive` (danger styling, and an agent lane must
 /// ask before taking it).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct DialogChoice {
@@ -4993,8 +5117,8 @@ impl DialogChoice {
     pub fn dispatch_args(&self, defs: &[ActionArgDef], effective: &DslValue) -> DslValue {
         let mut entries = effective.as_object().map(<[_]>::to_vec).unwrap_or_default();
         entries.retain(|(key, _)| key != DIALOG_CHOICE_ARG && (self.requires.contains(key) || !defs.iter().any(|def| def.id == *key)));
-        entries.push((DIALOG_CHOICE_ARG.to_string(), DslValue::String(self.id.clone())));
-        DslValue::Object(entries)
+        entries.push((DIALOG_CHOICE_ARG.to_string(), semio_framework_value::DslValue::String(self.id.clone())));
+        semio_framework_value::DslValue::Object(entries)
     }
 
     /// 📝️ The consequence a reader hears with the button and a sighted user reads beside it.
@@ -5098,7 +5222,7 @@ mod dialog_choices_tests;
 //#endregion 🔖️Dialog
 
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct ModeDefinition {
@@ -5213,16 +5337,16 @@ impl<T: Clone> From<NonEmptyVec<T>> for Vec<T> {
 /// array exactly like `Vec<T>` (see `ToValue`/`FromValue for Vec<T>` in `🌱️value/🔁️codec/🦀️.rs`).
 impl<T: ToValue> ToValue for NonEmptyVec<T> {
     fn to_value(&self) -> DslValue {
-        DslValue::Array(self.iter().map(ToValue::to_value).collect())
+        semio_framework_value::DslValue::Array(self.iter().map(semio_framework_value::ToValue::to_value).collect())
     }
 }
 impl<T: FromValue> FromValue for NonEmptyVec<T> {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
-        let DslValue::Array(items) = value else {
-            return Err(ValueError::new(format!("expected an array, found {value:?}")));
+        let semio_framework_value::DslValue::Array(items) = value else {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an array, found {value:?}")));
         };
         let values = items.into_iter().enumerate().map(|(index, item)| T::from_value(item).map_err(|error| error.under(index))).collect::<Result<Vec<T>, ValueError>>()?;
-        NonEmptyVec::try_from(values).map_err(ValueError::new)
+        NonEmptyVec::try_from(values).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error))
     }
 }
 
@@ -5254,7 +5378,7 @@ pub type Modes = NonEmptyVec<ModeDefinition>;
 /// `AppBuilder::build_definition`.
 pub type WindowKinds = NonEmptyVec<WindowKindDefinition>;
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct WindowKindDefinition {
@@ -5299,7 +5423,7 @@ pub struct WindowKindDefinition {
 }
 
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum PanelGroup {
@@ -5337,7 +5461,7 @@ impl PanelGroup {
 /// exhaustive) or an app-declared custom tab (open id, still required to be unique/non-empty,
 /// validated at construction by `AppBuilder`).
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase", tag = "kind", content = "id")]
 #[value(rename_all = "camelCase", tag = "kind", content = "id")]
 pub enum PanelTabKind {
@@ -5377,7 +5501,7 @@ impl PanelTabKind {
 
 /// 🌳️ A leaf carries `body_key` (its rendered panel); a branch carries `children` (the tab row shown below it). Exactly one of the two is set; `group` is only meaningful on root (non-nested) entries.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct PanelTabDefinition {
@@ -5435,14 +5559,14 @@ impl std::str::FromStr for AppRole {
 /// so the wire spelling never drifts from the serde/TS/JSON-schema one.
 impl ToValue for AppRole {
     fn to_value(&self) -> DslValue {
-        DslValue::String(self.as_str().to_string())
+        semio_framework_value::DslValue::String(self.as_str().to_string())
     }
 }
 impl FromValue for AppRole {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         match value {
-            DslValue::String(s) => s.parse::<AppRole>().map_err(ValueError::new),
-            other => Err(ValueError::new(format!("expected a string, found {other:?}"))),
+            semio_framework_value::DslValue::String(s) => s.parse::<AppRole>().map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error)),
+            other => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string, found {other:?}"))),
         }
     }
 }
@@ -5463,7 +5587,7 @@ impl<'de> Deserialize<'de> for AppRole {
 }
 
 /// 🎯️ A surface addressed across plugin boundaries.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct AppRef {
     pub plugin_id: String,
@@ -5484,7 +5608,145 @@ pub fn parse_surface_app_id(id: &str) -> Result<(ArtifactDialect, AppRole), Stri
 }
 //#endregion 🔖️Surface
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+//#region 🔖️FaultNotices
+/// 📢️ One app-declared fault notice (design §20.12): the `code` a guest refusal carries (`<app>.<area>.<name>`) and its
+/// text in every shell locale × terminology, whose `{name}` placeholders are filled from the fault's `params` — never from
+/// its English `message`. Published in [`AppDefinition::fault_notices`]; schema `🛂️manifest/🧬️schema` `$defs.FaultNoticeDefinition`,
+/// TS twin `FaultNoticeDefinition` (`🤖️generated/🪪️manifest`), corpus `🧫️fixtures/🧫️fault-notices`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct FaultNoticeDefinition {
+    pub code: String,
+    pub label: LocalizedLabel,
+}
+
+/// 🚫️ Why a fault notice table is refused: a code outside the grammar, a code declared twice, an empty text cell, or a cell
+/// whose `{name}` placeholders are malformed or differ from the notice's first cell (every locale names the same data).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum FaultNoticeError {
+    Syntax { code: String },
+    Duplicate { code: String },
+    EmptyText { code: String, terminology: Terminology, locale: Locale },
+    Placeholder { code: String, terminology: Terminology, locale: Locale },
+}
+
+impl FaultNoticeError {
+    /// 🏷️ The corpus/gate name of this rule (`syntax`, `duplicate`, `emptyText`, `placeholder`).
+    pub fn rule(&self) -> &'static str {
+        match self {
+            Self::Syntax { .. } => "syntax",
+            Self::Duplicate { .. } => "duplicate",
+            Self::EmptyText { .. } => "emptyText",
+            Self::Placeholder { .. } => "placeholder",
+        }
+    }
+
+    /// 🔎️ The notice code the refusal names.
+    pub fn code(&self) -> &str {
+        match self {
+            Self::Syntax { code } | Self::Duplicate { code } | Self::EmptyText { code, .. } | Self::Placeholder { code, .. } => code,
+        }
+    }
+}
+
+impl std::fmt::Display for FaultNoticeError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::EmptyText { code, terminology, locale } | Self::Placeholder { code, terminology, locale } => write!(formatter, "fault notice {code}: {} in {terminology}/{locale}", self.rule()),
+            Self::Syntax { code } | Self::Duplicate { code } => write!(formatter, "fault notice {code}: {}", self.rule()),
+        }
+    }
+}
+
+/// 🔤️ Whether `code` is an app notice code: three or more dot-separated kebab segments (`generation3d.gumball.mesh-missing`)
+/// — the app, the area, the refusal. Framework codes have their own tables and are resolved first.
+pub fn is_fault_notice_code(code: &str) -> bool {
+    let segment = |segment: &str| segment.split('-').enumerate().all(|(index, part)| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit()) && (index > 0 || part.as_bytes()[0].is_ascii_lowercase()));
+    code.split('.').count() >= 3 && code.split('.').all(segment)
+}
+
+/// 🧩️ The sorted, unique `{name}` placeholders of one notice text; `None` when a brace is unbalanced or names no valid
+/// placeholder (`semio_framework_diagnostic::is_fault_param_name`). Texts have no brace escape.
+pub fn fault_notice_placeholders(text: &str) -> Option<std::collections::BTreeSet<&str>> {
+    let mut names = std::collections::BTreeSet::new();
+    let mut rest = text;
+    while let Some(open) = rest.find(['{', '}']) {
+        if rest.as_bytes()[open] == b'}' {
+            return None;
+        }
+        let close = rest[open + 1..].find(['{', '}'])? + open + 1;
+        let name = &rest[open + 1..close];
+        if rest.as_bytes()[close] != b'}' || !semio_framework_diagnostic::is_fault_param_name(name) {
+            return None;
+        }
+        names.insert(name);
+        rest = &rest[close + 1..];
+    }
+    Some(names)
+}
+
+/// ✅️ Every rule a published fault notice table must satisfy, in table order: code grammar, unique codes, a non-empty text
+/// in every terminology × locale cell, and one placeholder set across a notice's cells. Empty = valid. TS twin
+/// `validateFaultNotices`.
+pub fn validate_fault_notices(notices: &[FaultNoticeDefinition]) -> Vec<FaultNoticeError> {
+    let mut errors = Vec::new();
+    for (index, notice) in notices.iter().enumerate() {
+        let code = || notice.code.clone();
+        if !is_fault_notice_code(&notice.code) {
+            errors.push(FaultNoticeError::Syntax { code: code() });
+        }
+        if notices[..index].iter().any(|earlier| earlier.code == notice.code) {
+            errors.push(FaultNoticeError::Duplicate { code: code() });
+        }
+        let first = fault_notice_placeholders(notice.label.resolve(Terminology::ALL[0], Locale::ALL[0]));
+        for terminology in Terminology::ALL {
+            for locale in Locale::ALL {
+                let text = notice.label.resolve(terminology, locale);
+                if text.trim().is_empty() {
+                    errors.push(FaultNoticeError::EmptyText { code: code(), terminology, locale });
+                } else if first.is_none() || fault_notice_placeholders(text) != first {
+                    errors.push(FaultNoticeError::Placeholder { code: code(), terminology, locale });
+                }
+            }
+        }
+    }
+    errors
+}
+
+/// 🗣️ The notice text `code` names in `notices` for one shell axis pair, its `{name}` placeholders filled from `params`;
+/// `None` when no notice declares `code` or a placeholder has no value (a notice is never shown half-filled). TS twin
+/// `faultNoticeText`.
+pub fn fault_notice_text(notices: &[FaultNoticeDefinition], code: &str, params: Option<&semio_framework_diagnostic::FaultParams>, terminology: Terminology, locale: Locale) -> Option<String> {
+    let text = notices.iter().find(|notice| notice.code == code)?.label.resolve(terminology, locale);
+    fill_fault_notice(text, params)
+}
+
+/// 🧵️ `text` with each `{name}` replaced by the value `params` names; `None` when one is missing or the text is malformed.
+pub fn fill_fault_notice(text: &str, params: Option<&semio_framework_diagnostic::FaultParams>) -> Option<String> {
+    let mut filled = String::with_capacity(text.len());
+    let mut rest = text;
+    while let Some(open) = rest.find('{') {
+        let close = rest[open..].find('}')? + open;
+        filled.push_str(&rest[..open]);
+        filled.push_str(params?.get(&rest[open + 1..close])?);
+        rest = &rest[close + 1..];
+    }
+    filled.push_str(rest);
+    Some(filled)
+}
+
+/// 📋️ An app's declared table (`ArtifactApp::fault_notices`) as the definitions its descriptor publishes.
+pub fn fault_notice_definitions(table: &[(&str, LocalizedLabel)]) -> Vec<FaultNoticeDefinition> {
+    table.iter().map(|(code, label)| FaultNoticeDefinition { code: (*code).to_string(), label: label.clone() }).collect()
+}
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️fault-notices/🦀️.rs"]
+mod fault_notices_tests;
+//#endregion 🔖️FaultNotices
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct AppDefinition {
@@ -5598,6 +5860,11 @@ pub struct AppDefinition {
     #[serde(default)]
     #[value(default)]
     pub io: AppIo,
+    /// 📢️ The localized notices of the fault codes this app's guest refuses with (`ArtifactApp::fault_notices`, design
+    /// §20.12), stamped at registration — what both shells show for a refused dispatch after the framework's own table.
+    #[serde(default)]
+    #[value(default)]
+    pub fault_notices: Vec<FaultNoticeDefinition>,
 }
 
 /// 🧭️ Resolves the dock layout a mode should present.
@@ -5624,7 +5891,7 @@ pub fn resolve_layout_for_mode(app: &AppDefinition, mode_id: &str) -> Option<Win
 /// declared `defs` (a plain confirm/cancel, e.g. `deleteSpace`) passes `seed`+`staged` through
 /// wholesale — TS twin: {@link effectiveActionArgs} (`🧩️action-argument-resolution/🟦️.ts`).
 pub fn effective_action_args(defs: &[ActionArgDef], staged: &DslValue, seed: Option<&DslValue>) -> DslValue {
-    let seed_pairs: Vec<(String, DslValue)> = seed.and_then(DslValue::as_object).map(<[_]>::to_vec).unwrap_or_default();
+    let seed_pairs: Vec<(String, DslValue)> = seed.and_then(semio_framework_value::DslValue::as_object).map(<[_]>::to_vec).unwrap_or_default();
     if defs.is_empty() {
         let mut effective = seed_pairs;
         if let Some(staged_pairs) = staged.as_object() {
@@ -5636,7 +5903,7 @@ pub fn effective_action_args(defs: &[ActionArgDef], staged: &DslValue, seed: Opt
                 }
             }
         }
-        return DslValue::Object(effective);
+        return semio_framework_value::DslValue::Object(effective);
     }
     let mut effective = seed_pairs;
     for def in defs {
@@ -5652,7 +5919,7 @@ pub fn effective_action_args(defs: &[ActionArgDef], staged: &DslValue, seed: Opt
             effective.push((def.id.clone(), default.clone()));
         }
     }
-    DslValue::Object(effective)
+    semio_framework_value::DslValue::Object(effective)
 }
 
 /// ❗️ Returns the ids of required args that are still unset in `effective`. "Unset" means absent,
@@ -5666,8 +5933,8 @@ pub fn missing_required_args(defs: &[ActionArgDef], effective: &DslValue) -> Vec
         .filter(|def| def.required)
         .filter(|def| match effective.get(&def.id) {
             None => true,
-            Some(DslValue::Null) => !matches!(def.schema, ArgSchema::Any),
-            Some(DslValue::String(text)) => text.is_empty() && !matches!(def.schema, ArgSchema::Any | ArgSchema::String { min_len: Some(0), .. }),
+            Some(semio_framework_value::DslValue::Null) => !matches!(def.schema, ArgSchema::Any),
+            Some(semio_framework_value::DslValue::String(text)) => text.is_empty() && !matches!(def.schema, ArgSchema::Any | ArgSchema::String { min_len: Some(0), .. }),
             Some(_) => false,
         })
         .map(|def| def.id.clone())
@@ -5773,7 +6040,7 @@ pub fn app_window_label(app: &AppDefinition, terminology: &str, locale: Locale, 
 }
 
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct ExampleDefinition {
@@ -5835,7 +6102,7 @@ pub fn examples_for_app<'a>(examples: &'a [ExampleDefinition], app: &AppDefiniti
 
 /// 🧩️ One host-aggregated plugin contribution entry — the element shape of the paged
 /// `setContributions` command payload, never a view-state field.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct ProgramContributionEntry {
     pub plugin_id: String,
@@ -5846,7 +6113,7 @@ pub struct ProgramContributionEntry {
 /// 📕️ Parses one assembled `setContributions` payload into typed entries — the ONE route
 /// contributions reach a guest by.
 pub fn parse_contributions(json: &str) -> Vec<ProgramContributionEntry> {
-    dsl::os_pack::json::from_json_str(json).unwrap_or_default()
+    semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_default()
 }
 
 //#region 🔖️TopicContribution
@@ -5878,13 +6145,13 @@ impl TopicContribution {
 /// `topic`/`payload` mirror the `#[serde(rename_all = "camelCase")]` wire shape exactly.
 impl ToValue for TopicContribution {
     fn to_value(&self) -> DslValue {
-        DslValue::object([("topic".to_string(), ToValue::to_value(&self.topic)), ("payload".to_string(), self.payload.clone())])
+        semio_framework_value::DslValue::object([("topic".to_string(), semio_framework_value::ToValue::to_value(&self.topic)), ("payload".to_string(), self.payload.clone())])
     }
 }
 impl FromValue for TopicContribution {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
-        let DslValue::Object(fields) = value else {
-            return Err(ValueError::new(format!("expected an object for TopicContribution, found {value:?}")));
+        let semio_framework_value::DslValue::Object(fields) = value else {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for TopicContribution, found {value:?}")));
         };
         let mut topic = None;
         let mut payload = None;
@@ -5896,8 +6163,8 @@ impl FromValue for TopicContribution {
             }
         }
         Ok(TopicContribution {
-            topic: topic.ok_or_else(|| ValueError::new("TopicContribution missing topic"))?,
-            payload: payload.ok_or_else(|| ValueError::new("TopicContribution missing payload"))?,
+            topic: topic.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "TopicContribution missing topic"))?,
+            payload: payload.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "TopicContribution missing payload"))?,
         })
     }
 }
@@ -5944,14 +6211,14 @@ pub struct Version {
 /// `Display`/`FromStr` impls below.
 impl ToValue for Version {
     fn to_value(&self) -> DslValue {
-        DslValue::String(self.to_string())
+        semio_framework_value::DslValue::String(self.to_string())
     }
 }
 impl FromValue for Version {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         match value {
-            DslValue::String(s) => Version::parse(&s).map_err(|e| ValueError::new(e.to_string())),
-            other => Err(ValueError::new(format!("expected a string, found {other:?}"))),
+            semio_framework_value::DslValue::String(s) => Version::parse(&s).map_err(|e| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e.to_string())),
+            other => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string, found {other:?}"))),
         }
     }
 }
@@ -6121,14 +6388,14 @@ impl From<VersionParseError> for VersionPinParseError {
 
 impl ToValue for VersionPin {
     fn to_value(&self) -> DslValue {
-        DslValue::String(self.to_string())
+        semio_framework_value::DslValue::String(self.to_string())
     }
 }
 impl FromValue for VersionPin {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         match value {
-            DslValue::String(s) => VersionPin::parse(&s).map_err(|e| ValueError::new(e.to_string())),
-            other => Err(ValueError::new(format!("expected a string, found {other:?}"))),
+            semio_framework_value::DslValue::String(s) => VersionPin::parse(&s).map_err(|e| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e.to_string())),
+            other => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string, found {other:?}"))),
         }
     }
 }
@@ -6161,7 +6428,7 @@ macro_rules! tree_pin {
 /// 🔗️ One direct plugin dependency: the depended-on plugin id plus the exact version it pins — see
 /// `resolve_load_order`/`validate_dependency_graph`.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct PluginDependency {
@@ -6181,7 +6448,7 @@ impl PluginDependency {
 /// owned strings on the wire (the native `SemanticDescriptor` this mirrors lives in the os-kernel
 /// protocol crate, which `semio-framework` must not require plugin manifests to link against).
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct ContributedMutationSemantics {
@@ -6194,7 +6461,7 @@ pub struct ContributedMutationSemantics {
 /// 🗂️ One mutation a plugin contributes onto an artifact kind it depends on — the manifest-declared
 /// counterpart of a `contributor.list-artifact-mutations` roster entry (contract freeze §3/§6).
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct ContributedMutationMetadata {
@@ -6210,7 +6477,7 @@ pub struct ContributedMutationMetadata {
 /// travels over the wire in a manifest), plus `contributor`/`depends_on` for the contribution's own
 /// identity and ordering (contract freeze §4: `owner == contributor`, `artifact_kind == target`).
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct ContributedInferenceMetadata {
@@ -6243,7 +6510,7 @@ pub struct ContributedInferenceMetadata {
 /// instead of a host-side guess. `progress_unit` names what the bounded job counts, so a client can
 /// label a progress bar without knowing the algorithm.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct InferencePayloadContract {
@@ -6265,7 +6532,7 @@ pub struct InferencePayloadContract {
 /// action receives the result's fields it declares as arguments, and runs through the ordinary edit
 /// path — its own policy, undo and ledger — so a committed result is an edit like any other.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct InferenceCommitBinding {
@@ -6278,7 +6545,7 @@ pub struct InferenceCommitBinding {
 /// from the artifact the caller named. Declared, never invented: the host writes exactly the field
 /// this row names, in exactly the encoding it names, and refuses anything else by name.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct InferenceArtifactBinding {
@@ -6297,7 +6564,7 @@ pub const INFERENCE_ARTIFACT_PACK_BASE64: &str = "artifact-pack-base64";
 /// gates in contract freeze §4 (accepted only when `artifact_kind`'s owner is a direct
 /// `PluginManifest.dependencies` entry).
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct ArtifactContributionDescriptor {
@@ -6311,7 +6578,7 @@ pub struct ArtifactContributionDescriptor {
 }
 //#endregion 🔖️ArtifactContribution
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PluginManifest {
@@ -6388,13 +6655,13 @@ pub struct SurfaceAppChoice {
 /// alone if it ever needs to, but the frozen shape itself is native-only, matching `IconSelect`'s own
 /// `classifier_kind`-not-label precedent for host-resolved controls).
 pub async fn encode_artifact_kind_choice(choice: &ArtifactKindChoice) -> String {
-    dsl::os_pack::json::to_string(&dsl::os_pack::json::object([
+    semio_framework_pack_json::to_string(&semio_framework_pack_json::object([
         ("kindId".to_string(), choice.kind_id.as_str().into()),
         ("schema".to_string(), choice.schema.as_str().into()),
-        ("dialect".to_string(), dsl::os_pack::json::from_dsl_value(&choice.dialect.to_value())),
+        ("dialect".to_string(), semio_framework_pack_json::from_dsl_value(&choice.dialect.to_value())),
         (
             "label".to_string(),
-            dsl::os_pack::json::object([
+            semio_framework_pack_json::object([
                 ("en".to_string(), choice.label.resolve(Terminology::Native, Locale::En).to_string().into()),
                 ("de".to_string(), choice.label.resolve(Terminology::Native, Locale::De).to_string().into()),
             ]),
@@ -6404,22 +6671,22 @@ pub async fn encode_artifact_kind_choice(choice: &ArtifactKindChoice) -> String 
 
 /// 🧵️ Inverse of `encode_artifact_kind_choice`.
 pub async fn decode_artifact_kind_choice(value: &str) -> Result<ArtifactKindChoice, String> {
-    let json = dsl::os_pack::json::parse(value).map_err(|error| format!("malformed artifact kind choice JSON: {error}"))?;
-    let kind_id = json.get("kindId").and_then(dsl::os_pack::json::Value::as_str).ok_or_else(|| "artifact kind choice missing string field kindId".to_string())?.to_string();
-    let schema = json.get("schema").and_then(dsl::os_pack::json::Value::as_str).ok_or_else(|| "artifact kind choice missing string field schema".to_string())?.to_string();
+    let json = semio_framework_pack_json::parse(value, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("malformed artifact kind choice JSON: {error}"))?;
+    let kind_id = json.get("kindId").and_then(semio_framework_pack_json::Value::as_str).ok_or_else(|| "artifact kind choice missing string field kindId".to_string())?.to_string();
+    let schema = json.get("schema").and_then(semio_framework_pack_json::Value::as_str).ok_or_else(|| "artifact kind choice missing string field schema".to_string())?.to_string();
     let dialect: ArtifactDialect = json
         .get("dialect")
         .cloned()
         .ok_or_else(|| "artifact kind choice missing field dialect".to_string())
-        .and_then(|value| ArtifactDialect::from_value(dsl::os_pack::json::to_dsl_value(&value)).map_err(|error| format!("artifact kind choice has a malformed dialect: {error}")))?;
-    let en = json.pointer("/label/en").and_then(dsl::os_pack::json::Value::as_str).ok_or_else(|| "artifact kind choice missing string field label.en".to_string())?;
-    let de = json.pointer("/label/de").and_then(dsl::os_pack::json::Value::as_str).ok_or_else(|| "artifact kind choice missing string field label.de".to_string())?;
+        .and_then(|value| ArtifactDialect::from_value(semio_framework_pack_json::to_dsl_value(&value)).map_err(|error| format!("artifact kind choice has a malformed dialect: {error}")))?;
+    let en = json.pointer("/label/en").and_then(semio_framework_pack_json::Value::as_str).ok_or_else(|| "artifact kind choice missing string field label.en".to_string())?;
+    let de = json.pointer("/label/de").and_then(semio_framework_pack_json::Value::as_str).ok_or_else(|| "artifact kind choice missing string field label.de".to_string())?;
     Ok(ArtifactKindChoice { kind_id, schema, dialect, label: LocalizedLabel::native(en, de) })
 }
 
 /// 🧵️ Encodes a `SurfaceAppChoice` into its frozen `ActionArgOption.value` JSON shape.
 pub async fn encode_surface_app_choice(choice: &SurfaceAppChoice) -> String {
-    dsl::os_pack::json::to_string(&dsl::os_pack::json::object([
+    semio_framework_pack_json::to_string(&semio_framework_pack_json::object([
         ("pluginId".to_string(), choice.app.plugin_id.as_str().into()),
         ("appId".to_string(), choice.app.app_id.as_str().into()),
         ("role".to_string(), choice.role.as_str().into()),
@@ -6428,10 +6695,10 @@ pub async fn encode_surface_app_choice(choice: &SurfaceAppChoice) -> String {
 
 /// 🧵️ Inverse of `encode_surface_app_choice`.
 pub async fn decode_surface_app_choice(value: &str) -> Result<SurfaceAppChoice, String> {
-    let json = dsl::os_pack::json::parse(value).map_err(|error| format!("malformed surface app choice JSON: {error}"))?;
-    let plugin_id = json.get("pluginId").and_then(dsl::os_pack::json::Value::as_str).ok_or_else(|| "surface app choice missing string field pluginId".to_string())?.to_string();
-    let app_id = json.get("appId").and_then(dsl::os_pack::json::Value::as_str).ok_or_else(|| "surface app choice missing string field appId".to_string())?.to_string();
-    let role_str = json.get("role").and_then(dsl::os_pack::json::Value::as_str).ok_or_else(|| "surface app choice missing string field role".to_string())?;
+    let json = semio_framework_pack_json::parse(value, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("malformed surface app choice JSON: {error}"))?;
+    let plugin_id = json.get("pluginId").and_then(semio_framework_pack_json::Value::as_str).ok_or_else(|| "surface app choice missing string field pluginId".to_string())?.to_string();
+    let app_id = json.get("appId").and_then(semio_framework_pack_json::Value::as_str).ok_or_else(|| "surface app choice missing string field appId".to_string())?.to_string();
+    let role_str = json.get("role").and_then(semio_framework_pack_json::Value::as_str).ok_or_else(|| "surface app choice missing string field role".to_string())?;
     let role: AppRole = role_str.parse()?;
     Ok(SurfaceAppChoice { app: AppRef { plugin_id, app_id }, role })
 }
@@ -6600,7 +6867,7 @@ mod plugin_dependency_tests;
 // mount instead). Kept additive: `ViewModel` is consumed outside this pass by 🛍️products/💻️os
 // (plugin/renderer modules) and ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue
 // added alongside, not replacing, Serialize/Deserialize.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct ViewModel {
@@ -6701,7 +6968,7 @@ pub struct ViewModel {
 /// 🪟️ One tree container's host-known state: whether the user opened or closed it (`None` = the
 /// author's own default still stands) and the row window on screen, overscan included. `body_key`
 /// names the panel body the container lives in, `node_key` the container's **window path** within it.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct TreeWindowRequest {
@@ -6731,7 +6998,7 @@ pub struct TreeWindowRequest {
 /// for a base, unsplit window), `window_kind_id` is the `AppDefinition.windowKinds` entry it renders.
 // 🚧️ UNBLOCKED: was gated on `ViewModel` above, itself gated on `ui_wgpu::wgpu::{Locale,
 // Terminology}` gaining `ToValue`/`FromValue` — both now converted (see `ViewModel`'s own comment).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct ViewWindowInstance {
@@ -6740,7 +7007,7 @@ pub struct ViewWindowInstance {
 }
 
 /// 🪪️ The authenticated OS session identity projected into every guest call while available.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ViewSessionIdentity {
@@ -7039,7 +7306,7 @@ pub mod kernel;
 //#region 🔖️PackageDescriptor
 /// 🎭️ Which actor-world role a package fills — `📓️design-abi.md` §3.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum PackageRole {
@@ -7053,7 +7320,7 @@ pub enum PackageRole {
 /// the `semio-framework-os-flow` ↔ extension-crate cycle); `Exclusive` gets a dedicated actor
 /// (e.g. flow/brep tessellation); `Cold` runs as a bounded job, not a resident actor.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum ExecutionMode {
@@ -7069,7 +7336,7 @@ pub enum ExecutionMode {
 /// (`📓️design-abi.md` §5). `allowed_modes` gates `Linked` (same publisher required);
 /// `capability_allowance`/`quota_ceiling` bound what any extension attaching here can ever hold,
 /// regardless of what it requests — "a host can never delegate more than it holds".
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ExtensionPointDeclaration {
@@ -7089,7 +7356,7 @@ pub struct ExtensionPointDeclaration {
 /// 📦️ One asset bundled with a package and preloaded into `kernel::Event::InstanceOpen.assets` —
 /// `📓️design-abi.md` §2's `read-asset` replacement.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct AssetDeclaration {
@@ -7102,7 +7369,7 @@ pub struct AssetDeclaration {
 /// #️⃣ Content hashes the registry's `check` gate verifies against the built wasm —
 /// `📓️design-abi.md` §3.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct PackageHashes {
@@ -7120,7 +7387,7 @@ pub struct PackageHashes {
 /// declared theme/palette contribution anywhere under `🖱️ui/🎨️styling`). Additive: nothing
 /// constructs one yet, and a future typed model can replace either category without a wire break.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct DescriptorEntry {
@@ -7136,7 +7403,7 @@ pub struct DescriptorEntry {
 /// own `artifact_media_type`, flattened to one row per format kind across every app the package
 /// declares.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct FileTypeContribution {
@@ -7151,7 +7418,7 @@ pub struct FileTypeContribution {
 /// framework module" idiom `ContributedMutationMetadata`/`ContributedInferenceMetadata` already
 /// use for the os-kernel protocol crate.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum IoEntryDirection {
@@ -7166,7 +7433,7 @@ pub enum IoEntryDirection {
 /// `IoKey` itself isn't `owned schema exporter`-derived and this crate must not add that derive to a module it
 /// doesn't own.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct IoEntryDescriptor {
@@ -7180,7 +7447,7 @@ pub struct IoEntryDescriptor {
 /// identity (its third field, the `compose` fn pointer, is runtime-only and has no wire form —
 /// a descriptor is build-time, non-executable data).
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct ComposerEntryDescriptor {
@@ -7202,7 +7469,7 @@ pub struct ComposerEntryDescriptor {
 /// `io::ComposerEntry` — see each type's own doc. `menus`/`themes` stay `DescriptorEntry` — see
 /// its doc for why.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct ContributionSet {
@@ -7251,7 +7518,7 @@ pub struct ContributionSet {
 pub const ASSEMBLY_FAILED_PLUGIN_ID: &str = "assembly-failed";
 
 /// 📡️ Exact guest-described application-channel ABI required by the compiled component.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ExecutionProtocol {
@@ -7262,7 +7529,7 @@ pub struct ExecutionProtocol {
 /// `📓️design-abi.md` §3's `describe()` output (`🛂️.descriptor.semio`/`🔣️.json`).
 /// Nothing constructs or reads one yet in this packet: additive contract only (packet
 /// A2-abi-sdk's builder wiring and E1-describe's emitter/registry `check` gate consume it next).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PackageDescriptor {
@@ -7333,7 +7600,7 @@ mod package_descriptor_value_codec_tests;
 /// `capabilities.search`/`capabilities.describe`. Both empty by default — an absent
 /// `AgentContributions` (the `Option` on `PackageDescriptor` stays `None`) means "not yet
 /// agent-enabled", never "agent-enabled with zero capabilities" (an empty-but-`Some` value).
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct AgentContributions {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -7369,7 +7636,7 @@ mod agent_contributions_tests;
 /// what used to be duplicated verbatim in `framework/plugin/rs` and `framework/product/os/core/rs`; both
 /// now re-export this definition instead of declaring their own.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum OsMediaCapability {
@@ -7386,7 +7653,7 @@ pub enum OsMediaCapability {
 /// — see `crate::media_types_compatible`. `OsArtifactDescriptor` (`framework/product/os/core`) threads
 /// `media_type` through so registry lookups return it alongside the rest of the descriptor.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct ArtifactKindSpec {
@@ -7412,7 +7679,7 @@ pub struct ArtifactKindSpec {
 /// 🏠️ One artifact kind a package hosts — the kind id, one document schema of its owner's codecs, and the OWNER: the plugin
 /// that owns the kind (declares it and its codec), a declared dependency of the host (see `PluginManifest::hosted_artifact_kinds`).
 /// The owner is explicit, never read off the kind id — an embedded surface's kind (`3d.cad`) names no plugin.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct HostedArtifactKind {
@@ -7429,7 +7696,7 @@ pub struct HostedArtifactKind {
 // embed `MediaType`/`MediaClass`/`MediaForm` by value inside plain `#[derive(Serialize,
 // Deserialize)]` types — dropping serde here breaks `cargo check -p semio-framework` today. Both
 // derive families stay load-bearing simultaneously until those crates migrate; revisit once they do.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum MediaClass {
@@ -7445,7 +7712,7 @@ pub enum MediaClass {
 
 /// 🧬️ The shape/representation a `MediaClass` payload takes, orthogonal to `class` — e.g. `ThreeD` × `Brep` vs `ThreeD` × `Mesh`. `Any` only ever appears on the accepting side of a port (see `media_types_compatible`).
 // 🚧️ BLOCKED: see `MediaClass` above — same cross-crate serde dependency.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum MediaForm {
@@ -7469,7 +7736,7 @@ pub enum MediaForm {
 
 /// 🧬️ A port or wire's declared media type — the pair a producer offers or a consumer accepts.
 // 🚧️ BLOCKED: see `MediaClass` above — same cross-crate serde dependency.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct MediaType {
@@ -7484,17 +7751,18 @@ pub struct MediaType {
 // 🚧️ BLOCKED: see `MediaClass` above — `🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️.rs`'s
 // `WorkflowMediaPort`/`MediaContract` (owned by another agent this pass) still embed this by value
 // inside plain `#[derive(Serialize, Deserialize)]` types.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase", tag = "kind")]
 #[value(rename_all = "camelCase", tag = "kind")]
 pub enum MediaWireFormat {
     Binary { format_kind: String },
     Document { schema: String },
+    Intrinsic { schema: String },
 }
 
 /// 🔀️ Which side of a wire a `MediaPortSpec` sits on.
 // 🚧️ BLOCKED: see `MediaWireFormat` above — same cross-crate serde dependency (`WorkflowMediaPort`).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum MediaPortDirection {
@@ -7504,7 +7772,7 @@ pub enum MediaPortDirection {
 
 /// 🔢️ Whether a `MediaPortSpec` accepts/produces exactly one media value or a stream/collection of them — e.g. a mesh-array input that fans in from several upstream producers.
 // 🚧️ BLOCKED: see `MediaWireFormat` above — same cross-crate serde dependency (`WorkflowMediaPort`).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum PortMultiplicity {
@@ -7515,7 +7783,7 @@ pub enum PortMultiplicity {
 /// 🔌️ A single port an app exposes on the workflow — `kind_id` optionally pins it to one `ArtifactKindSpec.id` when the port is more specific than its `media_type` alone conveys.
 // 🚧️ BLOCKED: see `MediaWireFormat` above — `WorkflowMediaPort.spec` embeds this by value inside a
 // plain `#[derive(Serialize, Deserialize)]` type.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct MediaPortSpec {
@@ -7564,7 +7832,7 @@ pub async fn media_types_compatible(produced: &MediaType, accepted: &MediaType) 
 /// `import_formats` lists without duplicating `ArtifactKindSpec`'s full shape (which stays alive
 /// unchanged for now; later waves retire it onto `AppIo`).
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct ArtifactPresentation {
@@ -7580,7 +7848,7 @@ pub struct ArtifactPresentation {
 /// surface (`AppDefinition.io`); apps don't populate this yet — later waves migrate `media_inputs`/
 /// `media_outputs`/`artifact_kinds` onto it.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct AppIo {
@@ -7642,7 +7910,7 @@ impl Default for AppIo {
 /// `AppDefinition.config` carries: one [`ActionArgDef`] per field (its `id` is the config key), so a config field,
 /// an action argument and a mutation input share one input vocabulary and one renderer.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, Default)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, Default)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct ConfigSpec {
@@ -7662,7 +7930,7 @@ impl ConfigSpec {
 /// 🎛️ One keyword-dispatched command variant (e.g. `move x=1 y=2`) and its field grammar — one
 /// [`ActionArgDef`] per field, `required` where the grammar demands the field.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct CommandVariantSpec {
@@ -7673,7 +7941,7 @@ pub struct CommandVariantSpec {
 /// 🎛️ An app's full typed binary command grammar — the manifest-level declaration
 /// `AppDefinition.command_grammar` carries. Empty until per-app waves populate it.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, Default)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, Default)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct CommandGrammar {
@@ -7691,20 +7959,22 @@ impl CommandGrammar {
 
 //#region Media
 /// 🎞️ The value that actually flows over a workflow wire, produced by `ArtifactApp::export_media` and consumed by `ArtifactApp::import_media`. Kept separate from the `MediaType` lattice above (which only negotiates *compatibility*, never carries a value) so headless runners and the UI share one payload shape.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct Media {
     pub media_type: MediaType,
     pub payload: MediaPayload,
 }
 
-/// 📦️ Structured payloads stay inline as canonical JSON (small, diffable); binary payloads are content-addressed through `store::BlobStore` so a `Media` value never carries megabytes across a WIT boundary.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+/// 📦️ Intrinsic payloads own complete typed values; explicit JSON and addressed binary payloads retain their declared media forms.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase", tag = "kind")]
 pub enum MediaPayload {
     Structured { schema: String, json: String },
     Binary { format_kind: String, blob_hash: String },
+    Intrinsic { schema: String, value: DslValue },
 }
+#[path="🎞️media/🦀️.rs"]mod intrinsic_media;
 
 /// 🔑️ A cheap identity for one port's current output, independent of serializing the full payload — the unit the `SpaceRunner` compares to decide whether a downstream node actually needs to see a new value.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -7729,6 +7999,7 @@ impl MediaFingerprint {
         match &media.payload {
             MediaPayload::Structured { schema, json } => MediaFingerprint(semio_framework_hash::hash_parts(&[schema.as_str(), json.as_str()])),
             MediaPayload::Binary { blob_hash, .. } => MediaFingerprint(blob_hash.clone()),
+            MediaPayload::Intrinsic { schema, value } => MediaFingerprint(intrinsic_media::fingerprint(schema,value)),
         }
     }
 }

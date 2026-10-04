@@ -1,0 +1,19 @@
+{
+  "at": "2026-10-03T21:21:59.178Z",
+  "rows": [
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📋️context/🧬️schema/🔣️.json",
+      "before": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"required\": [\n    \"version\",\n    \"cwd\",\n    \"cacheRoot\",\n    \"leaseDirectory\"\n  ],\n  \"properties\": {\n    \"version\": {\n      \"const\": 1\n    },\n    \"cwd\": {\n      \"type\": \"string\",\n      \"minLength\": 1\n    },\n    \"cacheRoot\": {\n      \"type\": \"string\",\n      \"minLength\": 1\n    },\n    \"leaseDirectory\": {\n      \"type\": \"string\",\n      \"minLength\": 1\n    }\n  }\n}\n",
+      "after": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"required\": [\n    \"version\",\n    \"cwd\",\n    \"cacheRoot\",\n    \"leaseDirectory\"\n  ],\n  \"properties\": {\n    \"version\": {\n      \"const\": 1\n    },\n    \"cwd\": {\n      \"type\": \"string\",\n      \"minLength\": 1,\n      \"pattern\": \"^[^\\\\u0000]*$\"\n    },\n    \"cacheRoot\": {\n      \"type\": \"string\",\n      \"minLength\": 1,\n      \"pattern\": \"^[^\\\\u0000]*$\"\n    },\n    \"leaseDirectory\": {\n      \"type\": \"string\",\n      \"minLength\": 1,\n      \"pattern\": \"^[^\\\\u0000]*$\"\n    }\n  }\n}\n",
+      "inverse": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"required\": [\n    \"version\",\n    \"cwd\",\n    \"cacheRoot\",\n    \"leaseDirectory\"\n  ],\n  \"properties\": {\n    \"version\": {\n      \"const\": 1\n    },\n    \"cwd\": {\n      \"type\": \"string\",\n      \"minLength\": 1\n    },\n    \"cacheRoot\": {\n      \"type\": \"string\",\n      \"minLength\": 1\n    },\n    \"leaseDirectory\": {\n      \"type\": \"string\",\n      \"minLength\": 1\n    }\n  }\n}\n",
+      "shaBefore": "9f67d7c1f260fd15c65e4c9bbb264f6091845a5316b2fac3210848f3791e063b",
+      "shaAfter": "e86f36ed0f45528699d995d69b3d693441f42e50399a32f229f9ef8558db52eb",
+      "current": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"required\": [\n    \"version\",\n    \"cwd\",\n    \"cacheRoot\",\n    \"leaseDirectory\"\n  ],\n  \"properties\": {\n    \"version\": {\n      \"const\": 1\n    },\n    \"cwd\": {\n      \"type\": \"string\",\n      \"minLength\": 1,\n      \"pattern\": \"^[^\\\\u0000]*$\"\n    },\n    \"cacheRoot\": {\n      \"type\": \"string\",\n      \"minLength\": 1,\n      \"pattern\": \"^[^\\\\u0000]*$\"\n    },\n    \"leaseDirectory\": {\n      \"type\": \"string\",\n      \"minLength\": 1,\n      \"pattern\": \"^[^\\\\u0000]*$\"\n    }\n  }\n}\n",
+      "shaCurrent": "e86f36ed0f45528699d995d69b3d693441f42e50399a32f229f9ef8558db52eb"
+    }
+  ],
+  "sourceWrites": 1,
+  "onlyThreePathPatterns": true,
+  "ownedGaps": 0,
+  "nativeExecuted": false
+}

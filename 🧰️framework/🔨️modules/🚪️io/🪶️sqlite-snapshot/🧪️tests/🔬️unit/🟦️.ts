@@ -1,25 +1,94 @@
+import "../⏭️continuation/🟦️.ts";
+import "../💰️frontiers/🟦️.ts";
 import Ajv from "ajv/dist/2020";
+import "../💰️operation/🟦️.ts";
 import { readFileSync } from "node:fs";
 import ownership from "../../🧫️fixtures/🫳️import-ownership/🔣️.json";
 import ownershipSchema from "../../🧬️schema/🫳️import-ownership/🔣️.json";
 /** 🧫️ Semantic relational SQLite interoperability against Bun's independent engine. */
 import { Database } from "bun:sqlite";
 import { describe, expect, test } from "bun:test";
-import { exportSqliteDatabase, importSqliteDatabase, parseSqliteDatabaseSchema, validateSqliteDatabaseSchema, type SqliteDatabase, type SqliteValue } from "../../🟦️.ts";
+import { SqliteOperation, exportSqliteDatabase, importSqliteDatabase, parseSqliteDatabaseSchema, validateSqliteDatabaseSchema, type SqliteDatabase, type SqliteValue } from "../../🟦️.ts";
 import corpus from "../../🧫️fixtures/🏛️relational/🔣️.json";
 import projectionFixture from "../../🧫️fixtures/🏗️projection/🔣️.json";
 import projectionSchema from "../../🧬️schema/🏗️projection/🔣️.json";
 import { ArtifactSqliteProjection, artifactSqliteTables } from "../../🧩️artifact/🟦️.ts";
+import frontierFixture from "../../🧫️fixtures/💰️frontiers/🔣️.json";
 import controlFixture from "../../🧫️fixtures/🧮️database-control/🔣️.json";
+import backingFixture from "../../🧫️fixtures/💰️production/🔣️.json";
+import backingSchema from "../../🧬️schema/💰️production/🔣️.json";
+import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️validator/🟦️.ts";
 
-test("neutral database validation progress advances and cancels at the shared frontier",async()=>{const schema=parseSqliteDatabaseSchema(controlFixture.sql),database:SqliteDatabase={tables:[{...schema.tables[0]!,rows:Array.from({length:controlFixture.rows},(_,i)=>({rowid:BigInt(i+1),values:[BigInt(i+1),null]}))}]};const independent=Database.deserialize(await exportSqliteDatabase(database));try{expect(independent.query("SELECT count(*) AS n FROM entity").get()).toEqual({n:controlFixture.rows});}finally{independent.close();}const observed:number[][]=[];await artifactSqliteTables(database,controlFixture.sql,{onProgress:p=>{expect(p.phase).toBe("reconstructSnapshot");observed.push([p.completed,p.total]);}});expect(observed).toEqual(controlFixture.checkpoints);const signal=new AbortController(),cancelled:number[]=[];await expect(artifactSqliteTables(database,controlFixture.sql,{signal:signal.signal,onProgress:p=>{cancelled.push(p.completed);if(p.completed===controlFixture.cancelAt)signal.abort();}})).rejects.toHaveProperty("name","AbortError");expect(cancelled).toEqual([0,controlFixture.cancelAt]);});
+async function authoredBackingDatabase():Promise<SqliteDatabase>{
+  const projection=await ArtifactSqliteProjection.create(backingFixture.sql);
+  await projection.insert(backingFixture.table,[backingFixture.label,Uint8Array.from(backingFixture.payload)],1n);
+  return projection.finish();
+}
+test("actual Source backing corpus has closed schema and independent SQLite scalar authority",async()=>{
+  const admit=new Ajv({strict:true}).compile(backingSchema);
+  expect(validateJsonSchemaSubset(backingSchema,backingFixture)).toEqual([]);expect(admit(backingFixture)).toBe(true);
+  for(const hostile of [{...backingFixture,guessedStorageBytes:8},{...backingFixture,refusedBackingBytes:1},{...backingFixture,payload:[0,256,65,0]}]){expect(admit(hostile)).toBe(false);expect(validateJsonSchemaSubset(backingSchema,hostile).length).toBeGreaterThan(0);}
+  const bytes=await exportSqliteDatabase(await authoredBackingDatabase());
+  expect(new TextDecoder().decode(bytes.subarray(0,16))).toBe(backingFixture.format);
+  const independent=Database.deserialize(bytes);
+  try{
+    expect(independent.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(independent.query("PRAGMA foreign_key_check").all()).toEqual([]);
+    expect(independent.query("SELECT hex(CAST(label AS BLOB)) AS label,hex(payload) AS payload,8+length(CAST(label AS BLOB))+length(payload) AS semanticBytes FROM authored_scalar").get()).toEqual({label:Buffer.from(backingFixture.label).toString("hex").toUpperCase(),payload:"00FF4100",semanticBytes:backingFixture.expectedSemanticBytes});
+  }finally{independent.close();}
+  expect((await importSqliteDatabase(bytes)).tables[0]!.rows[0]!.values).toEqual([1n,backingFixture.label,Uint8Array.from(backingFixture.payload)]);
+});
+for(const route of backingFixture.routes)test(`actual Source ${route} refuses zero concrete backing independently of semantic bytes`,async()=>{
+  const options={maxAllocationBytes:backingFixture.refusedBackingBytes,maxValueBytes:backingFixture.semanticBytes};
+  const value=await authoredBackingDatabase();const bytes=await exportSqliteDatabase(value);
+  const operation=route==="artifactProjection"?(async()=>{const projection=await ArtifactSqliteProjection.create(backingFixture.sql,options);await projection.insert(backingFixture.table,[backingFixture.label,Uint8Array.from(backingFixture.payload)],1n);return projection.finish();})():route==="physicalExport"?exportSqliteDatabase(value,options):importSqliteDatabase(bytes,options);
+  await expect(operation).rejects.toHaveProperty("kind",backingFixture.expectedRefusal);
+});
+test("actual Source clones retain cumulative admission across rows and physical stages",async()=>{
+  const independent=new Database(":memory:");
+  try{independent.exec("CREATE TABLE backing_request(id INTEGER PRIMARY KEY,bytes INTEGER NOT NULL)");for(const[index,bytes]of backingFixture.replacementRequests.entries())independent.run("INSERT INTO backing_request VALUES(?,?)",[index,bytes]);expect(independent.query("SELECT sum(bytes) AS bytes,sum(bytes)>? AS refused FROM backing_request").get(backingFixture.refusedCumulativeBytes)).toEqual({bytes:backingFixture.exactCumulativeBytes,refused:1});}finally{independent.close();}
+  expect(new Uint32Array(2).byteLength).toBe(backingFixture.tableSlotBytes);expect(backingFixture.tableSlotBytes+backingFixture.cloneBytes).toBe(backingFixture.firstCloneOperationBytes);expect(backingFixture.tableSlotBytes+backingFixture.exactCumulativeBytes).toBe(backingFixture.exactOperationBytes);expect(backingFixture.refusedOperationBytes+1).toBe(backingFixture.exactOperationBytes);
+  const allocation=new SqliteOperation({maxAllocationBytes:backingFixture.refusedOperationBytes});
+  const projection=await ArtifactSqliteProjection.create(backingFixture.sql,allocation);
+  const input=Uint8Array.from(backingFixture.payload);
+  await projection.insert(backingFixture.table,[backingFixture.label,input],1n);input.fill(42);
+  expect(allocation.ownedBytes).toBe(backingFixture.firstCloneOperationBytes);
+  await expect(projection.insert(backingFixture.table,[backingFixture.label,input],2n)).rejects.toHaveProperty("kind",backingFixture.expectedRefusal);
+  expect(allocation.ownedBytes).toBe(backingFixture.firstCloneOperationBytes);
+  const value=await projection.finish();expect([...value.tables[0]!.rows[0]!.values[2] as Uint8Array]).toEqual(backingFixture.payload);
+  const beforePhysical=allocation.ownedBytes;await expect(exportSqliteDatabase(value,allocation)).rejects.toHaveProperty("kind",backingFixture.expectedRefusal);expect(allocation.ownedBytes).toBeGreaterThanOrEqual(beforePhysical);expect(allocation.ownedBytes).toBeLessThanOrEqual(backingFixture.refusedOperationBytes);expect(allocation.remainingBytes()+allocation.ownedBytes).toBe(backingFixture.refusedOperationBytes);
+  const exact=new SqliteOperation({maxAllocationBytes:backingFixture.exactOperationBytes}),positive=await ArtifactSqliteProjection.create(backingFixture.sql,exact);
+  for(let id=1;id<=backingFixture.replacementRequests.length;id++)await positive.insert(backingFixture.table,[backingFixture.label,Uint8Array.from(backingFixture.payload)],BigInt(id));
+  expect(exact.ownedBytes).toBe(backingFixture.exactOperationBytes);expect(exact.remainingBytes()).toBe(0);
+  const oracle=Database.deserialize(await exportSqliteDatabase(await positive.finish()));try{expect(oracle.query("SELECT count(*) AS rows,sum(length(payload)) AS bytes FROM authored_scalar").get()).toEqual({rows:2,bytes:backingFixture.exactCumulativeBytes});}finally{oracle.close();}
+});
+test("actual Source physical buffers replay exact cumulative grants and refuse one fewer byte",async()=>{
+  const value=await authoredBackingDatabase(),encoding=new SqliteOperation();
+  const bytes=await exportSqliteDatabase(value,encoding);expect(encoding.ownedBytes).toBeGreaterThan(bytes.byteLength);
+  expect(await exportSqliteDatabase(value,{maxAllocationBytes:encoding.ownedBytes})).toEqual(bytes);
+  await expect(exportSqliteDatabase(value,{maxAllocationBytes:encoding.ownedBytes-1})).rejects.toHaveProperty("kind",backingFixture.expectedRefusal);
+  const decoding=new SqliteOperation();expect(await importSqliteDatabase(bytes,decoding)).toEqual(value);expect(decoding.ownedBytes).toBeGreaterThan(backingFixture.cloneBytes);
+  expect(await importSqliteDatabase(bytes,{maxAllocationBytes:decoding.ownedBytes})).toEqual(value);
+  await expect(importSqliteDatabase(bytes,{maxAllocationBytes:decoding.ownedBytes-1})).rejects.toHaveProperty("kind",backingFixture.expectedRefusal);
+});
+test("actual Source UTF-8 backing copy yields inside its owned buffer and retains canceled admission",async()=>{
+  const plan=backingFixture.interior,label=plan.labelUnit.repeat(plan.repeats);expect(label.length).toBe(plan.codeUnits);expect(Buffer.byteLength(label)).toBe(plan.scalarBytes);
+  const projection=await ArtifactSqliteProjection.create(backingFixture.sql);await projection.insert(backingFixture.table,[label,Uint8Array.from(backingFixture.payload)],1n);const value=await projection.finish();
+  const independent=Database.deserialize(await exportSqliteDatabase(value));try{expect(independent.query("SELECT length(CAST(label AS BLOB)) AS bytes FROM authored_scalar").get()).toEqual({bytes:plan.scalarBytes});}finally{independent.close();}
+  const signal=new AbortController(),allocation=new SqliteOperation({signal:signal.signal});
+  const encodeInto=TextEncoder.prototype.encodeInto;let timer:ReturnType<typeof setTimeout>|undefined,interior=false;
+  TextEncoder.prototype.encodeInto=function(source:string,destination:Uint8Array){const result=encodeInto.call(this,source,destination);if(!interior&&source.length>=plan.chunkCodeUnits-1&&source.length<label.length){interior=true;timer=setTimeout(()=>signal.abort(),0);}return result;};
+  try{await expect(exportSqliteDatabase(value,allocation)).rejects.toHaveProperty("kind","canceled");expect(interior).toBe(true);expect(allocation.ownedBytes).toBeGreaterThanOrEqual(plan.scalarBytes);expect(allocation.remainingBytes()+allocation.ownedBytes).toBe(new SqliteAllocationControl().remainingBytes());}
+  finally{TextEncoder.prototype.encodeInto=encodeInto;if(timer!==undefined)clearTimeout(timer);}
+});
+
+test("neutral database validation progress advances and cancels at the shared frontier",async()=>{const schema=parseSqliteDatabaseSchema(controlFixture.sql),database:SqliteDatabase={tables:[{...schema.tables[0]!,rows:Array.from({length:controlFixture.rows},(_,i)=>({rowid:BigInt(i+1),values:[BigInt(i+1),null]}))}]};const independent=Database.deserialize(await exportSqliteDatabase(database));try{expect(independent.query("SELECT count(*) AS n FROM entity").get()).toEqual({n:controlFixture.rows});}finally{independent.close();}const observed:number[][]=[],allObserved:(string|number)[][]=[];await artifactSqliteTables(database,controlFixture.sql,{onProgress:p=>{expect(p.phase).toBe(frontierFixture.sharedProgressRoster[allObserved.length]![0]);allObserved.push([p.phase,p.completed,p.total]);if(p.phase==="reconstructSnapshot")observed.push([p.completed,p.total]);}});expect(observed).toEqual(controlFixture.checkpoints);expect(allObserved).toEqual(frontierFixture.sharedProgressRoster);const signal=new AbortController(),cancelled:number[]=[];await expect(artifactSqliteTables(database,controlFixture.sql,{signal:signal.signal,onProgress:p=>{cancelled.push(p.completed);if(p.completed===controlFixture.cancelAt)signal.abort();}})).rejects.toHaveProperty("kind","canceled");expect(cancelled).toEqual([0,controlFixture.cancelAt]);});
 
 test("borrowed semantic traversal can cancel before allocating its first entity", async () => {
   const controller = new AbortController();
   let armed = false;
   const projection = await ArtifactSqliteProjection.create(projectionFixture.schemaSql, { signal: controller.signal, onProgress: progress => { if (armed) { expect(progress).toEqual({ phase: "projectSnapshot", completed: 0, total: 0 }); controller.abort(); } } });
   armed = true;
-  await expect(projection.checkpoint()).rejects.toHaveProperty("name", "AbortError");
+  await expect(projection.checkpoint()).rejects.toHaveProperty("kind", "canceled");
 });
 
 test("explicit owned row projection bounds copies and yields to cancellation", async () => {
@@ -41,17 +110,38 @@ test("explicit owned row projection bounds copies and yields to cancellation", a
   try { expect(Array.from((octetsDb.query("SELECT bytes FROM owned_octets").get() as { bytes: Uint8Array }).bytes)).toEqual(projectionFixture.octets); } finally { octetsDb.close(); }
   const controller = new AbortController();
   const cancelled = await ArtifactSqliteProjection.create(projectionFixture.schemaSql, { signal: controller.signal, onProgress: progress => { if (progress.completed >= projectionFixture.cancelAfterRows) controller.abort(); } });
-  await expect((async () => { for (let index = 0; index < projectionFixture.inputRows; index++) await cancelled.insert(projectionFixture.table, [projectionFixture.label]); })()).rejects.toHaveProperty("name", "AbortError");
+  await expect((async () => { for (let index = 0; index < projectionFixture.inputRows; index++) await cancelled.insert(projectionFixture.table, [projectionFixture.label]); })()).rejects.toHaveProperty("kind", "canceled");
   const beforeCopy = new AbortController();
-  const large = await ArtifactSqliteProjection.create(projectionFixture.octetsSql, { signal: beforeCopy.signal, onProgress: progress => { if (progress.completed > 0) beforeCopy.abort(); } });
+  const large = await ArtifactSqliteProjection.create(projectionFixture.octetsSql, { signal: beforeCopy.signal, onProgress: progress => { if (progress.phase === "projectSnapshot" && progress.completed > 0) beforeCopy.abort(); } });
   const largeOctets = new Uint8Array(100_000);
   let copied = false;
   largeOctets.slice = () => { copied = true; throw new Error("large payload copied before cancellation"); };
-  await expect(large.insert("owned_octets", [largeOctets])).rejects.toHaveProperty("name", "AbortError");
+  await expect(large.insert("owned_octets", [largeOctets])).rejects.toHaveProperty("kind", "canceled");
   expect(copied).toBe(false);
 });
 
 const sql = "CREATE TABLE scalar (id INTEGER PRIMARY KEY, text TEXT, integer_value INTEGER, real_value REAL, bytes BLOB, absent TEXT)";
+test("semantic ownership blob copies publish interior cancellation and independent owned bytes",async()=>{
+  expect(new Ajv({strict:true}).validate(projectionSchema,projectionFixture)).toBe(true);
+  const plan=projectionFixture.ownershipCopy,input=Uint8Array.from({length:plan.octetBytes},(_,i)=>projectionFixture.octets[i%projectionFixture.octets.length]!);
+  const positive=await ArtifactSqliteProjection.create(projectionFixture.octetsSql,{maxValueBytes:8+input.length});
+  await positive.insert("owned_octets",[input]);input.fill(42);
+  const db=Database.deserialize(await exportSqliteDatabase(await positive.finish()));
+  try{expect(db.query("SELECT length(bytes) AS n,hex(substr(bytes,1,3)) AS prefix FROM owned_octets").get()).toEqual({n:plan.octetBytes,prefix:"00FF11"});}finally{db.close();}
+  const abort=new AbortController();let observed=false;
+  const cancelled=await ArtifactSqliteProjection.create(projectionFixture.octetsSql,{signal:abort.signal,onProgress:p=>{if(p.total===plan.octetBytes&&p.completed>=plan.cancelAfterBytes&&p.completed<p.total){observed=true;abort.abort();}}});
+  await expect(cancelled.insert("owned_octets",[input])).rejects.toHaveProperty("kind","canceled");expect(observed).toBe(true);
+});
+test("semantic ownership mixed UTF16 measurement yields to a timer during its actual traversal",async()=>{
+  const plan=projectionFixture.ownershipCopy,text=plan.textToken.repeat(plan.textRepeats);
+  expect(text.length).toBe(plan.textCodeUnits);expect(new TextEncoder().encode(text).length).toBe(plan.textUtf8Bytes);
+  const positive=await ArtifactSqliteProjection.create(projectionFixture.schemaSql,{maxValueBytes:8+plan.textUtf8Bytes});await positive.insert(projectionFixture.table,[text]);
+  const db=Database.deserialize(await exportSqliteDatabase(await positive.finish()));
+  try{expect(db.query("SELECT length(CAST(label AS BLOB)) AS n FROM explicit_entity").get()).toEqual({n:plan.textUtf8Bytes});}finally{db.close();}
+  const abort=new AbortController();let timer:ReturnType<typeof setTimeout>|undefined,armed=false;
+  const cancelled=await ArtifactSqliteProjection.create(projectionFixture.schemaSql,{signal:abort.signal,onProgress:p=>{if(!armed&&p.total===plan.textCodeUnits&&p.completed>0&&p.completed<p.total){armed=true;timer=setTimeout(()=>abort.abort(),0);}}});
+  try{await expect(cancelled.insert(projectionFixture.table,[text])).rejects.toHaveProperty("kind","canceled");expect(armed).toBe(true);}finally{if(timer!==undefined)clearTimeout(timer);}
+});
 const sample: SqliteDatabase = { tables: [{ name: "scalar", sql, rows: [{ rowid: 1n, values: [1n, "Grüße 🌠\0end", -9223372036854775808n, 1.25, Uint8Array.of(0, 127, 255), null] }] }] };
 
 function oracle(value: SqliteDatabase, pageSize = 4096): Uint8Array {
@@ -293,12 +383,12 @@ describe("relational SQLite physical engine", () => {
     expect(await importSqliteDatabase(padded.subarray(5, bytes.length + 5))).toEqual(value);
     for (const corrupted of [mutate(bytes, 68, 0), mutate(bytes, 60, 2), mutate(bytes, 16, 513, 2), mutate(bytes, 4103, 1, 1), bytes.subarray(0, bytes.length - 1), mutate(bytes, 8192, 3), mutate(bytes, 8192, 0), mutate(bytes, 8192, 1), mutate(bytes, 8192, 999999)]) await expect(importSqliteDatabase(corrupted)).rejects.toThrow();
     const controller = new AbortController();
-    await expect(importSqliteDatabase(bytes, { signal: controller.signal, onProgress: () => controller.abort() })).rejects.toMatchObject({ name: "AbortError" });
+    await expect(importSqliteDatabase(bytes, { signal: controller.signal, onProgress: () => controller.abort() })).rejects.toMatchObject({ kind: "canceled" });
     const exporting = new AbortController();
-    await expect(exportSqliteDatabase(value, { signal: exporting.signal, onProgress: () => exporting.abort() })).rejects.toMatchObject({ name: "AbortError" });
+    await expect(exportSqliteDatabase(value, { signal: exporting.signal, onProgress: () => exporting.abort() })).rejects.toMatchObject({ kind: "canceled" });
     const timerController = new AbortController();
     const timer = setTimeout(() => timerController.abort(), 0);
-    await expect(exportSqliteDatabase(value, { signal: timerController.signal })).rejects.toMatchObject({ name: "AbortError" });
+    await expect(exportSqliteDatabase(value, { signal: timerController.signal })).rejects.toMatchObject({ kind: "canceled" });
     clearTimeout(timer);
   });
 });
@@ -340,6 +430,38 @@ test("exact guest snapshot transport matches its language-neutral schema", () =>
 });
 
 
-test("explicit keyed projection completes in independent SQLite rowid order and cancels inside sorting",async()=>{expect(new Ajv({strict:true}).compile(projectionSchema)(projectionFixture)).toBe(true);const f=projectionFixture.keyedOrder,p=await ArtifactSqliteProjection.create(projectionFixture.schemaSql);for(const key of f.input)await p.insert(projectionFixture.table,[key],BigInt(key));const database=await p.finish();expect(database.tables[0]!.rows.map(row=>row.rowid.toString())).toEqual(f.expected);const db=Database.deserialize(await exportSqliteDatabase(database));try{expect(db.query("SELECT label FROM explicit_entity ORDER BY id").all()).toEqual(f.expected.map(label=>({label})));}finally{db.close();}let armed=false,inside=false;const abort=new AbortController(),c=await ArtifactSqliteProjection.create(projectionFixture.schemaSql,{signal:abort.signal,onProgress:p=>{if(armed&&p.completed===f.cancelAt){inside=true;abort.abort();}}});for(let key=f.rows;key>0;key--)await c.insert(projectionFixture.table,[""],BigInt(key));armed=true;await expect(c.finish()).rejects.toHaveProperty("name","AbortError");expect(inside).toBe(true);});
+test("explicit keyed projection completes in independent SQLite rowid order and cancels inside sorting",async()=>{expect(new Ajv({strict:true}).compile(projectionSchema)(projectionFixture)).toBe(true);const f=projectionFixture.keyedOrder,p=await ArtifactSqliteProjection.create(projectionFixture.schemaSql);for(const key of f.input)await p.insert(projectionFixture.table,[key],BigInt(key));const database=await p.finish();expect(database.tables[0]!.rows.map(row=>row.rowid.toString())).toEqual(f.expected);const db=Database.deserialize(await exportSqliteDatabase(database));try{expect(db.query("SELECT label FROM explicit_entity ORDER BY id").all()).toEqual(f.expected.map(label=>({label})));}finally{db.close();}let armed=false,inside=false;const abort=new AbortController(),c=await ArtifactSqliteProjection.create(projectionFixture.schemaSql,{signal:abort.signal,onProgress:p=>{if(armed&&p.completed===f.cancelAt){inside=true;abort.abort();}}});for(let key=f.rows;key>0;key--)await c.insert(projectionFixture.table,[""],BigInt(key));armed=true;await expect(c.finish()).rejects.toHaveProperty("kind","canceled");expect(inside).toBe(true);});
 
-test("keyed projection cancels during heap ordering and rejects duplicate physical identities",async()=>{const f=projectionFixture.keyedOrder;let armed=false,inside=false;const abort=new AbortController(),p=await ArtifactSqliteProjection.create(projectionFixture.schemaSql,{signal:abort.signal,onProgress:progress=>{if(armed&&progress.completed===f.rows+f.cancelAt){inside=true;abort.abort();}}});for(let key=f.rows;key>0;key--)await p.insert(projectionFixture.table,[""],BigInt(key));armed=true;await expect(p.finish()).rejects.toHaveProperty("name","AbortError");expect(inside).toBe(true);const complete=await ArtifactSqliteProjection.create(projectionFixture.schemaSql);for(let key=f.rows;key>0;key--)await complete.insert(projectionFixture.table,[key.toString()],BigInt(key));const db=Database.deserialize(await exportSqliteDatabase(await complete.finish()));try{expect(db.query("SELECT count(*) AS n FROM explicit_entity").get()).toEqual({n:f.rows});expect(db.query("SELECT id FROM explicit_entity ORDER BY id").all()).toEqual(Array.from({length:f.rows},(_,i)=>({id:i+1})));}finally{db.close();}const duplicate=await ArtifactSqliteProjection.create(projectionFixture.schemaSql);await duplicate.insert(projectionFixture.table,["a"],1n);await duplicate.insert(projectionFixture.table,["b"],1n);await expect(duplicate.finish()).rejects.toThrow("identities must be unique");});
+test("keyed projection cancels during heap ordering and rejects duplicate physical identities",async()=>{const f=projectionFixture.keyedOrder;let armed=false,inside=false;const abort=new AbortController(),p=await ArtifactSqliteProjection.create(projectionFixture.schemaSql,{signal:abort.signal,onProgress:progress=>{if(armed&&progress.completed===f.rows+f.cancelAt){inside=true;abort.abort();}}});for(let key=f.rows;key>0;key--)await p.insert(projectionFixture.table,[""],BigInt(key));armed=true;await expect(p.finish()).rejects.toHaveProperty("kind","canceled");expect(inside).toBe(true);const complete=await ArtifactSqliteProjection.create(projectionFixture.schemaSql);for(let key=f.rows;key>0;key--)await complete.insert(projectionFixture.table,[key.toString()],BigInt(key));const db=Database.deserialize(await exportSqliteDatabase(await complete.finish()));try{expect(db.query("SELECT count(*) AS n FROM explicit_entity").get()).toEqual({n:f.rows});expect(db.query("SELECT id FROM explicit_entity ORDER BY id").all()).toEqual(Array.from({length:f.rows},(_,i)=>({id:i+1})));}finally{db.close();}const duplicate=await ArtifactSqliteProjection.create(projectionFixture.schemaSql);await duplicate.insert(projectionFixture.table,["a"],1n);await duplicate.insert(projectionFixture.table,["b"],1n);await expect(duplicate.finish()).rejects.toThrow("identities must be unique");});
+
+
+import allocationFixture from "../../🧫️fixtures/🧮️allocation/🔣️.json";
+import allocationSchema from "../../🧬️schema/🧮️allocation/🔣️.json";
+import {SqliteAllocationControl} from "../../🟦️.ts";
+
+test("SQLite allocation ledger has independent cumulative cross-stage admission and before-allocation refusal",()=>{
+  expect(new Ajv({strict:true}).compile(allocationSchema)(allocationFixture)).toBe(true);
+  expect(new SqliteAllocationControl().remainingBytes()).toBe(allocationFixture.defaultAllocationBytes);
+  const authority=new SqliteAllocationControl({maxAllocationBytes:allocationFixture.maximumBytes}),independent=new Database(":memory:");let constructed=0;
+  try{independent.exec("CREATE TABLE admission(ordinal INTEGER PRIMARY KEY,stage TEXT NOT NULL,bytes INTEGER NOT NULL)");for(const[index,bytes]of allocationFixture.admissions.entries()){authority.admit(bytes);new Uint8Array(bytes);constructed++;independent.query("INSERT INTO admission VALUES(?,?,?)").run(index,allocationFixture.stageNames[index]!,bytes);}expect(independent.query("SELECT sum(bytes) AS bytes FROM admission").get()).toEqual({bytes:allocationFixture.maximumBytes});expect(authority.remainingBytes()).toBe(0);expect(()=>{authority.admit(allocationFixture.refusedBytes);new Uint8Array(allocationFixture.refusedBytes);constructed++;}).toThrow();expect(constructed).toBe(allocationFixture.admissions.length);expect(authority.remainingBytes()).toBe(0);}finally{independent.close();}
+});
+
+test("SQLite allocation ledger retains failed ownership and rejects canceled admission without consuming budget",()=>{
+  const authority=new SqliteAllocationControl({maxAllocationBytes:allocationFixture.maximumBytes});const failed=()=>{authority.admit(allocationFixture.failedStageBytes);new Uint8Array(allocationFixture.failedStageBytes);throw new Error("owned domain construction refused");};expect(failed).toThrow("owned domain construction refused");expect(authority.remainingBytes()).toBe(allocationFixture.afterFailedStageRemaining);
+  const signal=new AbortController(),canceled=new SqliteAllocationControl({maxAllocationBytes:allocationFixture.maximumBytes,signal:signal.signal});signal.abort();expect(()=>canceled.admit(1)).toThrow();expect(canceled.remainingBytes()).toBe(allocationFixture.maximumBytes);
+});
+
+
+import {NativeDecodeControl} from "../../../../🌱️value/🛬️decode/🟦️.ts";
+test("SQLite native allocation bridge settles real interior cancellation before a later typed copy",async()=>{
+  const f=allocationFixture.nativeBridge,authority=new SqliteAllocationControl({maxAllocationBytes:f.maximumBytes}),source=new Uint8Array(f.cancelBytes).fill(7);
+  const success=await authority.stage(maximum=>new NativeDecodeControl(maximum,()=>true),c=>c.copyBytes(source.subarray(0,f.successBytes)));expect(success.byteLength).toBe(f.successBytes);
+  let interior=false;await expect(authority.stage(maximum=>new NativeDecodeControl(maximum,p=>{const stop=p.completed>=f.cancelAt&&p.completed<p.total;interior||=stop;return !stop;}),c=>c.copyBytes(source))).rejects.toThrow();expect(interior).toBe(true);expect(authority.remainingBytes()).toBe(f.remainingAfterCancellation);
+  let next:NativeDecodeControl|undefined;await expect(authority.stage(maximum=>(next=new NativeDecodeControl(maximum,()=>true)),c=>c.copyBytes(source.subarray(0,f.refusedBytes)))).rejects.toThrow();expect(next!.ownedBytes).toBe(0);expect(authority.remainingBytes()).toBe(f.remainingAfterCancellation);
+});
+
+import transfer from "../../🧫️fixtures/🔁️transfer/🔣️.json";
+import transferSchema from "../../🧬️schema/🔁️transfer/🔣️.json";
+test("complete snapshot transfer budgets distinguish native copies from actual relational file ownership",async()=>{
+  expect(new Ajv({strict:true}).compile(transferSchema)(transfer)).toBe(true);const database=parseSqliteDatabaseSchema(transfer.schemaSql);database.tables[0]!.rows.push({rowid:1n,values:[1n,transfer.literal]});const file=await exportSqliteDatabase(database),independent=Database.deserialize(file);try{expect(independent.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(independent.query("SELECT id,literal FROM transfer_literal").all()).toEqual([{id:1,literal:transfer.literal}]);const native=Buffer.byteLength(transfer.literal);expect(independent.query("SELECT length(CAST(literal AS BLOB)) AS bytes FROM transfer_literal").get()).toEqual({bytes:native});expect(file.byteLength).toBeGreaterThan(native*(transfer.exportCopies+transfer.importCopies));expect((await importSqliteDatabase(independent.serialize())).tables[0]!.rows[0]!.values).toEqual([1n,transfer.literal]);}finally{independent.close();}
+});

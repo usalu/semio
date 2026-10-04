@@ -5,7 +5,7 @@ use semio_s_artifact_stdio_json::JsonSnapshot;
 pub fn register() {}
 
 pub fn serialize(from: &FlowSnapshot) -> Result<JsonSnapshot, store::PackError> {
-    let value: serde_json::Value = dsl::ToValue::to_value(from).into();
+    let value: serde_json::Value = semio_framework_value::ToValue::to_value(from).into();
     Ok(JsonSnapshot::from_value(value))
 }
 

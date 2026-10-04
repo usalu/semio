@@ -31,29 +31,30 @@ fn close(mut session: FlowEvalSession, maximum_bytes: usize) -> usize {
 
 #[test]
 fn session_semantic_bytes_larger_than_production_grant_retire_exactly_across_workers() {
-    let fixture = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🧹️session-retirement/🔣️.json")).unwrap();
+    let fixture = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🧹️session-retirement/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for maximum_bytes in [1, 64, 4096] {
-        let text = fixture.get("text").and_then(|v| v.get("text")).and_then(crate::os_pack::json::Value::as_str).unwrap().repeat(fixture.get("text").and_then(|v| v.get("repeat")).and_then(crate::os_pack::json::Value::as_u64).unwrap() as usize);
+        let text = fixture.get("text").and_then(|v| v.get("text")).and_then(semio_framework_pack_json::Value::as_str).unwrap().repeat(fixture.get("text").and_then(|v| v.get("repeat")).and_then(semio_framework_pack_json::Value::as_u64).unwrap() as usize);
         let preview =
-            fixture.get("preview").and_then(|v| v.get("text")).and_then(crate::os_pack::json::Value::as_str).unwrap().repeat(fixture.get("preview").and_then(|v| v.get("repeat")).and_then(crate::os_pack::json::Value::as_u64).unwrap() as usize);
+            fixture.get("preview").and_then(|v| v.get("text")).and_then(semio_framework_pack_json::Value::as_str).unwrap().repeat(fixture.get("preview").and_then(|v| v.get("repeat")).and_then(semio_framework_pack_json::Value::as_u64).unwrap() as usize);
         let mut session = FlowEvalSession::new();
-        session.eval_json = String::with_capacity(fixture.get("text").and_then(|v| v.get("reservedCapacity")).and_then(crate::os_pack::json::Value::as_u64).unwrap() as usize);
-        session.eval_json.push_str(&text);
-        assert!(session.eval_json.capacity() > session.eval_json.len());
+        let eval_json = Arc::get_mut(session.eval_json.as_mut().unwrap()).unwrap();
+        eval_json.reserve_exact(fixture.get("text").and_then(|v| v.get("reservedCapacity")).and_then(semio_framework_pack_json::Value::as_u64).unwrap() as usize);
+        eval_json.push_str(&text);
+        assert!(eval_json.capacity() > eval_json.len());
         session.preview_mesh_pack_by_handle.insert("mesh".into(), preview.clone());
         session.pending_tessellate_by_hash.insert(1, "pending".into());
         session.live_geometry_handles.insert("geometry".into());
         session.previous_channels = Some(EvalChannels { outputs: BTreeMap::from([("output".into(), Dictionary::new().insert("label", NeuralValue::Atom(Atom::String(preview))))]), inputs: BTreeMap::new() });
         session.neural_cache().seed(1, Dictionary::new().insert("label", NeuralValue::Atom(Atom::String(text))));
         let released = std::thread::spawn(move || close(session, maximum_bytes)).join().unwrap();
-        assert_eq!(released, fixture.get("expected").and_then(|v| v.get("releasedBytes")).and_then(crate::os_pack::json::Value::as_u64).unwrap() as usize);
+        assert_eq!(released, fixture.get("expected").and_then(|v| v.get("releasedBytes")).and_then(semio_framework_pack_json::Value::as_u64).unwrap() as usize);
     }
 }
 
 #[test]
 fn empty_reserved_text_does_not_require_capacity_sized_credit() {
     let mut session = FlowEvalSession::new();
-    session.eval_json = String::with_capacity(65536);
+    Arc::get_mut(session.eval_json.as_mut().unwrap()).unwrap().reserve_exact(65536);
     assert_eq!(close(session, 1), 2);
 }
 
@@ -80,14 +81,14 @@ fn host_retirement_reports_no_credit_and_retained_fault_without_false_pending() 
 }
 
 fn dag_retirement_fixture() -> (DagHostRetirement, usize) {
-    let fixture = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🧹️session-retirement/🔣️.json")).unwrap();
+    let fixture = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🧹️session-retirement/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let dag_fixture = fixture.get("dag").unwrap();
-    let repeat = dag_fixture.get("repeat").and_then(crate::os_pack::json::Value::as_u64).unwrap() as usize;
-    let text = dag_fixture.get("text").and_then(crate::os_pack::json::Value::as_str).unwrap().repeat(repeat);
-    let minimum_bytes = dag_fixture.get("minimumUtf8Bytes").and_then(crate::os_pack::json::Value::as_u64).unwrap() as usize;
+    let repeat = dag_fixture.get("repeat").and_then(semio_framework_pack_json::Value::as_u64).unwrap() as usize;
+    let text = dag_fixture.get("text").and_then(semio_framework_pack_json::Value::as_str).unwrap().repeat(repeat);
+    let minimum_bytes = dag_fixture.get("minimumUtf8Bytes").and_then(semio_framework_pack_json::Value::as_u64).unwrap() as usize;
     let node = DagNodeSpec {
-        id: dag_fixture.get("nodeId").and_then(crate::os_pack::json::Value::as_str).unwrap().into(),
-        name: dag_fixture.get("nodeName").and_then(crate::os_pack::json::Value::as_str).unwrap().into(),
+        id: dag_fixture.get("nodeId").and_then(semio_framework_pack_json::Value::as_str).unwrap().into(),
+        name: dag_fixture.get("nodeName").and_then(semio_framework_pack_json::Value::as_str).unwrap().into(),
         abbreviation: "RN".into(),
         icon: "note".into(),
         x: 0.0,
@@ -99,7 +100,7 @@ fn dag_retirement_fixture() -> (DagHostRetirement, usize) {
         kind: DagNodeKind::Note { text, output: IoPortSpec::simple("out", "note") },
     };
     let host =
-        DagHost::from_host_snapshot_without_layout(DagHostSnapshot { schema: dag_fixture.get("schemaText").and_then(crate::os_pack::json::Value::as_str).unwrap().into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![node], edges: Vec::new() });
+        DagHost::from_host_snapshot_without_layout(DagHostSnapshot { schema: dag_fixture.get("schemaText").and_then(semio_framework_pack_json::Value::as_str).unwrap().into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![node], edges: Vec::new() });
     (DagHostRetirement::new(host), minimum_bytes)
 }
 
@@ -160,11 +161,11 @@ fn session_close_dag_host_nonterminal_drop_refuses_recursive_release() {
 fn session_close_vector_scene_retirement_retains_and_reuses_exact_slot() {
     use crate::infinite::canvas::{advance_opaque_scene_retirement, append_svg_document, publish_opaque_scene_retirement, reserve_opaque_scene_retirement, Affine, BezPath, Color, FillRule, OpaqueSceneRetirementStep, Scene, SvgDocument};
 
-    let fixture = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🧹️session-retirement/🔣️.json")).unwrap();
-    let capacity = fixture.get("scene").and_then(|value| value.get("retirementCapacity")).and_then(crate::os_pack::json::Value::as_u64).unwrap() as usize;
-    let retained_commands = fixture.get("scene").and_then(|value| value.get("retainedCommands")).and_then(crate::os_pack::json::Value::as_u64).unwrap() as usize;
-    let retained_path_elements = fixture.get("scene").and_then(|value| value.get("retainedPathElements")).and_then(crate::os_pack::json::Value::as_u64).unwrap() as usize;
-    let retained_vello_rects = fixture.get("scene").and_then(|value| value.get("retainedVelloRects")).and_then(crate::os_pack::json::Value::as_u64).unwrap() as usize;
+    let fixture = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🧹️session-retirement/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let capacity = fixture.get("scene").and_then(|value| value.get("retirementCapacity")).and_then(semio_framework_pack_json::Value::as_u64).unwrap() as usize;
+    let retained_commands = fixture.get("scene").and_then(|value| value.get("retainedCommands")).and_then(semio_framework_pack_json::Value::as_u64).unwrap() as usize;
+    let retained_path_elements = fixture.get("scene").and_then(|value| value.get("retainedPathElements")).and_then(semio_framework_pack_json::Value::as_u64).unwrap() as usize;
+    let retained_vello_rects = fixture.get("scene").and_then(|value| value.get("retainedVelloRects")).and_then(semio_framework_pack_json::Value::as_u64).unwrap() as usize;
     for index in 0..=capacity {
         let token = reserve_opaque_scene_retirement().expect("terminal vector scene retirement slot is reusable");
         let mut scene = Scene::new();

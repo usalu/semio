@@ -2,5 +2,5 @@
 
 export interface ChangeRepresentationLod {
   id: string;
-  newLod?: string;
+  newLod: string|null;
 }

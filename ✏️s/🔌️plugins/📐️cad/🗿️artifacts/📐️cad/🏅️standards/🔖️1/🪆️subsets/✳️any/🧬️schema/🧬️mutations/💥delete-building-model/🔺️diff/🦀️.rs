@@ -8,7 +8,7 @@ use crate::CadSnapshot;
 //#region 🔖️Diff
 pub fn diff(_payload: &DeleteBuildingModel, base: &CadSnapshot) -> protocol::MutationOutcome<CadDiff> {
     if base.building_model.is_none() {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Building-model child is already empty.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Building-model child is already empty.");
     }
     protocol::MutationOutcome::new(CadDiff { building_model: Some(None), ..Default::default() })
 }

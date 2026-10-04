@@ -10,7 +10,6 @@
 
 use crate::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::bounds::compute_semio_model_bounds;
 //#region 🔖️Inference
@@ -25,8 +24,11 @@ pub struct SemioModelInference {
 }
 
 impl protocol::Inference<SemioModelSnapshot> for SemioModelInference {
-    fn infer(snapshot: &SemioModelSnapshot) -> Self {
+    fn infer(snapshot: &SemioModelSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { bounds: compute_semio_model_bounds(snapshot) }
+    
+        })
     }
 }
 
@@ -36,7 +38,9 @@ impl protocol::Inference<SemioModelSnapshot> for SemioModelInference {
 /// all-empty (the same defensive pattern raster's `RasterInference` documents).
 impl Default for SemioModelInference {
     fn default() -> Self {
-        <Self as protocol::Inference<SemioModelSnapshot>>::infer(&SemioModelSnapshot::default())
+        let snapshot = &SemioModelSnapshot::default();
+
+        Self { bounds: compute_semio_model_bounds(snapshot) }
     }
 }
 
@@ -52,16 +56,6 @@ impl protocol::InferenceSpec<SemioModelSnapshot> for SemioModelInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 💡️ No `InferredField`s here (a position-envelope fold is a single whole-snapshot pass over
-/// already-flat `spatial`/`elements` collections, no per-entity incremental decomposition applies)
-/// — the default `infer_cached` passthrough (`ArtifactInferrer::infer_cached`) is exact.
-impl ArtifactInferrer for crate::standards::v1::subsets::model::schema::SemioModelBuilder {
-    type Snapshot = SemioModelSnapshot;
-    type Inference = SemioModelInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.semio.model.inference`'s facet leaves into the OS-wide inference catalog

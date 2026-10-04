@@ -9,14 +9,14 @@ pub mod run_validation {
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
     use semio_framework_value_derive::{FromValue, ToValue};
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "run-validation")]
     pub struct RunValidation {}
 
     pub fn handle(_payload: &RunValidation, doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let diagnostics = validate_plugin(doc.snapshot);
         let mut next = cfg.snapshot.clone();
-        next.last_result_json = dsl::json::to_string_pretty(&dsl::json::from_dsl_value(&dsl::ToValue::to_value(&diagnostics)));
+        next.last_result_json = semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&diagnostics)));
         Ok(Emit::config(snapshot(next)))
     }
 }
@@ -31,7 +31,7 @@ pub mod run_analysis {
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
     use semio_framework_value_derive::{FromValue, ToValue};
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "run-analysis")]
     pub struct RunAnalysis {
         pub analysis_kind: String,
@@ -43,7 +43,7 @@ pub mod run_analysis {
         let result = run_analysis(program, kind);
         let record = analysis_record_from(program, kind, &result);
         let mut next = cfg.snapshot.clone();
-        let result_json = dsl::json::to_string_pretty(&dsl::json::from_dsl_value(&dsl::ToValue::to_value(&result)));
+        let result_json = semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&result)));
         next.last_analysis_json = result_json.clone();
         next.last_result_json = result_json;
         Ok(Emit { artifact_mutations: vec![ProgramMutation::CreateAnalysisRecord(leaves::create_analysis_record::CreateAnalysisRecord { analysis_record: record })], config_mutations: snapshot(next), ..Default::default() })
@@ -61,7 +61,7 @@ pub mod run_report {
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, ViewModel};
     use semio_framework_value_derive::{FromValue, ToValue};
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "run-report")]
     pub struct RunReport {
         pub report_kind: String,

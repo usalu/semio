@@ -11,7 +11,6 @@
 
 use crate::Puzzle2dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::flat_position::compute_flat_position;
 //#region 🔖️Inference
@@ -26,8 +25,11 @@ pub struct Puzzle2dInference {
 }
 
 impl protocol::Inference<Puzzle2dSnapshot> for Puzzle2dInference {
-    fn infer(snapshot: &Puzzle2dSnapshot) -> Self {
+    fn infer(snapshot: &Puzzle2dSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { flat_position: compute_flat_position(snapshot) }
+    
+        })
     }
 }
 
@@ -43,16 +45,6 @@ impl protocol::InferenceSpec<Puzzle2dSnapshot> for Puzzle2dInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 🧠️ Uncached: the underlying `fastened_layout_snapshot` BFS re-runs in one pass over the whole
-/// graph — the default `infer_cached` passthrough (just calls `infer`) is exactly right here, no
-/// `InferredField` chain needed (mirrors jack's own `🎛flat-position`/`🧭topology` rationale).
-impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::Puzzle2dBuilder {
-    type Snapshot = Puzzle2dSnapshot;
-    type Inference = Puzzle2dInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.puzzle.puzzle2d.inference`'s facet leaves into the OS-wide inference catalog —

@@ -1,0 +1,4 @@
+syntax = "proto3";
+package semio.fixture.snapshot_refusal;
+// 🚫️ Full signed i32 refusal witness.
+message Snapshot { sint32 value = 1; }

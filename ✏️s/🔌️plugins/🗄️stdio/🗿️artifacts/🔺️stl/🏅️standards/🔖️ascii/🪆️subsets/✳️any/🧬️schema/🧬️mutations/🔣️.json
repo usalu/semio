@@ -8,6 +8,9 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/stl/ascii/any/mutation/set-snapshot/schema.json"
     },
     {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/stl/ascii/any/mutation/patch-snapshot/schema.json"
+    },
+    {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/stl/ascii/any/mutation/set-solid-name/schema.json"
     },
     {

@@ -12,7 +12,7 @@ pub fn diff(payload: &super::ChangeTileWeight, base: &Wfc3dSnapshot) -> protocol
     }
     let tile = &base.tiles[index];
     if tile.weight == payload.weight {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Tile \"{}\" already weighs {}.", payload.id, payload.weight));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Tile \"{}\" already weighs {}.", payload.id, payload.weight));
     }
     let mut reweighted = tile.clone();
     reweighted.weight = payload.weight;

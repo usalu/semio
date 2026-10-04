@@ -8,7 +8,10 @@ pub mod derived_composition {
     use crate::standards::v6_0::subsets::baseline::schema::check_tiff_baseline_conformance;
     use crate::standards::v6_0::subsets::document::schema::snapshot::TiffSnapshot;
     use crate::standards::v6_0::subsets::document::schema::TiffComposer as TiffAnyComposer;
-    use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
+    use semio_framework_diagnostic::Diagnostic;
+use semio_framework_diagnostic::FaultCode;
+use semio_framework_diagnostic::Severity;
+use semio_framework_diagnostic::TextSpan;
     use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
     use std::sync::OnceLock;
 
@@ -55,7 +58,7 @@ pub mod derived_composition {
                     span: TextSpan::at(1, 1),
                     message: "Baseline TIFF (6.0) SubsetValidator: payload did not decode as a TiffSnapshot -- skipped".into(),
                     expected: None,
-                    scope: dsl::FaultScope::default(),
+                    scope: semio_framework_diagnostic::FaultScope::default(),
                 }],
             }
         }

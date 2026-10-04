@@ -120,19 +120,19 @@ fn parse_args(rest: &str) -> Result<std::collections::BTreeMap<String, String>, 
 /// `ToValue`/`FromValue`) rather than a second handcrafted step/block grammar; `enc_str`/
 /// `dec_str`'s backslash/quote escaping round-trips it byte-for-byte.
 fn enc_step(step: &FormStep) -> String {
-    enc_str(&dsl::os_pack::json::to_json_string(step))
+    enc_str(&semio_framework_pack_json::to_json_string(step))
 }
 fn dec_step(s: &str) -> Result<FormStep, String> {
-    dsl::os_pack::json::from_json_str(&dec_str(s)?).map_err(|e| e.to_string())
+    semio_framework_pack_json::from_json_str(&dec_str(s)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| e.into_message())
 }
 fn enc_block(block: &FormQuestion) -> String {
-    enc_str(&dsl::os_pack::json::to_json_string(block))
+    enc_str(&semio_framework_pack_json::to_json_string(block))
 }
 fn dec_block(s: &str) -> Result<FormQuestion, String> {
-    dsl::os_pack::json::from_json_str(&dec_str(s)?).map_err(|e| e.to_string())
+    semio_framework_pack_json::from_json_str(&dec_str(s)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| e.into_message())
 }
 fn dec_change(s: &str) -> Result<BlockField, String> {
-    dsl::json::from_json_str(&dec_str(s)?).map_err(|e| e.to_string())
+    semio_framework_pack_json::from_json_str(&dec_str(s)?,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| e.into_message())
 }
 //#endregion 🔖️StructCodec
 
@@ -148,8 +148,8 @@ fn print_forms_mutation(mutation: &FormMutation) -> String {
         FormMutation::DeleteBlock(p) => format!("delete-block step-id={} id={}", enc_str(&p.step_id), enc_str(&p.id)),
         FormMutation::MoveBlockToStep(p) => format!("move-block-to-step step-id={} block-id={} to-step-id={} index={}", enc_str(&p.step_id), enc_str(&p.block_id), enc_str(&p.to_step_id), enc_usize(p.index)),
         FormMutation::ReplaceBlock(p) => format!("replace-block step-id={} block={}", enc_str(&p.step_id), enc_block(&p.block)),
-        FormMutation::ChangeBlockField(p) => format!("change-block-field block-id={} change={}", enc_str(&p.block_id), enc_str(&dsl::json::to_json_string(&p.change))),
-        FormMutation::CommitResponse(p) => format!("commit-response response={} index={}", enc_str(&dsl::json::to_json_string(&p.response)), enc_opt_usize(&p.index)),
+        FormMutation::ChangeBlockField(p) => format!("change-block-field block-id={} change={}", enc_str(&p.block_id), enc_str(&semio_framework_pack_json::to_json_string(&p.change))),
+        FormMutation::CommitResponse(p) => format!("commit-response response={} index={}", enc_str(&semio_framework_pack_json::to_json_string(&p.response)), enc_opt_usize(&p.index)),
         FormMutation::DiscardResponse(p) => format!("discard-response id={}", enc_str(&p.id)),
         FormMutation::ChangeFormTitle(p) => format!("change-form-title new-title={}", enc_opt_str(&p.new_title)),
     }
@@ -171,7 +171,7 @@ fn parse_forms_mutation(line: &str) -> Result<FormMutation, String> {
         "replace-block" => Ok(FormMutation::ReplaceBlock(ReplaceBlock { step_id: dec_str(&arg("step-id")?)?, block: dec_block(&arg("block")?)? })),
         "change-block-field" => Ok(FormMutation::ChangeBlockField(ChangeBlockField { block_id: dec_str(&arg("block-id")?)?, change: dec_change(&arg("change")?)? })),
         "change-form-title" => Ok(FormMutation::ChangeFormTitle(ChangeFormTitle { new_title: dec_opt_str(&arg("new-title")?)? })),
-        "commit-response" => Ok(FormMutation::CommitResponse(CommitResponse { response: dsl::json::from_json_str(&dec_str(&arg("response")?)?).map_err(|error| error.to_string())?, index: dec_opt_usize(&arg("index")?)? })),
+        "commit-response" => Ok(FormMutation::CommitResponse(CommitResponse { response: semio_framework_pack_json::from_json_str(&dec_str(&arg("response")?)?,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.into_message())?, index: dec_opt_usize(&arg("index")?)? })),
         "discard-response" => Ok(FormMutation::DiscardResponse(DiscardResponse { id: dec_str(&arg("id")?)? })),
         other => Err(format!("forms mutation: unknown keyword {other:?}")),
     }
@@ -181,8 +181,8 @@ impl protocol::OpText for FormMutation {
     fn print_op(&self) -> String {
         print_forms_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_forms_mutation(line).map_err(|e| store::TextError::new(e, store::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_forms_mutation(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 }
 //#endregion 🔖️OpText
@@ -286,14 +286,14 @@ impl protocol::OpBinary for FormMutation {
                 write_str_bin(&mut out, &enc_block(&p.block));
             }
             FormMutation::CommitResponse(p) => {
-                write_str_bin(&mut out, &dsl::json::to_json_string(&p.response));
+                write_str_bin(&mut out, &semio_framework_pack_json::to_json_string(&p.response));
                 write_opt_usize_bin(&mut out, &p.index);
             }
             FormMutation::DiscardResponse(p) => write_str_bin(&mut out, &p.id),
             FormMutation::ChangeFormTitle(p) => write_opt_str_bin(&mut out, &p.new_title),
             FormMutation::ChangeBlockField(p) => {
                 write_str_bin(&mut out, &p.block_id);
-                write_str_bin(&mut out, &dsl::json::to_json_string(&p.change));
+                write_str_bin(&mut out, &semio_framework_pack_json::to_json_string(&p.change));
             }
         }
         Ok(out)
@@ -355,7 +355,7 @@ impl protocol::OpBinary for FormMutation {
             9 => Ok(FormMutation::ChangeFormTitle(ChangeFormTitle { new_title: read_opt_str_bin(&mut reader).map_err(|e| malformed("new_title", reader.position(), e))? })),
             10 => {
                 let text = read_str_bin(&mut reader).map_err(|e| malformed("response", reader.position(), e))?;
-                let response = dsl::json::from_json_str(&text).map_err(|e| malformed("response", reader.position(), e.to_string()))?;
+                let response = semio_framework_pack_json::from_json_str(&text,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| malformed("response", reader.position(), e.into_message()))?;
                 let index = read_opt_usize_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))?;
                 Ok(FormMutation::CommitResponse(CommitResponse { response, index }))
             }
@@ -363,7 +363,7 @@ impl protocol::OpBinary for FormMutation {
             12 => {
                 let block_id = read_str_bin(&mut reader).map_err(|e| malformed("block_id", reader.position(), e))?;
                 let text = read_str_bin(&mut reader).map_err(|e| malformed("change", reader.position(), e))?;
-                let change = dsl::json::from_json_str(&text).map_err(|e| malformed("change", reader.position(), e.to_string()))?;
+                let change = semio_framework_pack_json::from_json_str(&text,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| malformed("change", reader.position(), e.into_message()))?;
                 Ok(FormMutation::ChangeBlockField(ChangeBlockField { block_id, change }))
             }
             other => Err(malformed("op tag", 1, format!("unknown tag {other}"))),

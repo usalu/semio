@@ -4,9 +4,9 @@
 //! are never written (a flat grid has no edge/point-cloud/expression-tree concept), so this hop is
 //! `IoFidelity::Lossy`.
 
-use crate::{require_equation_scene, EquationSnapshot};
-use semio_framework::io::io_mechanism::Serializer;
-use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
+use crate::EquationSnapshot;
+use semio_framework::io::io_mechanism::{ArchiveChildren, Serializer};
+use semio_framework::io_schema::{Dialect, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
 use semio_s_artifact_stdio_csv::schema::snapshot::{CsvField, CsvRecord};
 use semio_s_artifact_stdio_csv::{CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
@@ -18,10 +18,9 @@ pub struct EquationIntoCsv;
 impl Serializer<EquationSnapshot> for EquationIntoCsv {
     const INTO: Dialect = CSV_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &EquationSnapshot) -> IoResult<IoPayload> {
-        let scene = require_equation_scene(from).map_err(|error| IoError { message: format!("EquationIntoCsv: {error}"), diagnostics: Vec::new() })?;
-        let graph = &scene.graph;
-        let records = graph
+    async fn serialize(from: &EquationSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+        let records = from
+            .graph
             .nodes
             .iter()
             .map(|node| CsvRecord {

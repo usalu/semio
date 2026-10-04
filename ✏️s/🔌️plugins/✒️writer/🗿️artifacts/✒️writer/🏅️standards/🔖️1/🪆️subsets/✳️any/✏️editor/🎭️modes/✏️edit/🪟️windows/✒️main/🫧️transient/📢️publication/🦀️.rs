@@ -29,7 +29,7 @@ impl RetireOwned for WriterMainWindowTransientMutation {
 fn footprint(mutation: &WriterMainWindowTransientMutation) -> Result<ArtifactStoreOneItemFootprint, String> {
     let capacity = match mutation { WriterMainWindowTransientMutation::SetEngagementInput(value) => value.value.capacity(), _ => 0 };
     if capacity > store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES { return Err("Writer engagement input exceeds retained capacity".into()); }
-    Ok(ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES })
+    Ok(ArtifactStoreOneItemFootprint::for_ephemeral_item(store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
 }
 
 pub(super) fn owners() -> semio_framework_plugin::WindowTransientOwnerBundle<WriterMainWindowTransient, WriterMainWindowTransientMutation> {
@@ -84,7 +84,7 @@ impl ArtifactEphemeralPreparationTask<WriterMainWindowTransient, WriterMainWindo
 
     fn begin_close(&mut self) {}
 
-    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if grant.maximum_items == 0 { return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
         if !self.bytes.is_empty() {
             let released = grant.maximum_bytes.min(self.bytes.len());

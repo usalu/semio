@@ -1,0 +1,10 @@
+{
+ "retainedAdmission":{
+  "physicalHistory":{"expectedRawBytes":1,"semanticSegmentBytes":65536,"maximumAllocationBytes":32767,"historyTargetBytes":32768,"origin":"ownedPhysicalCeiling","expectedKind":"ownershipLimit"},
+  "semanticLength":{"expectedRawBytes":65537,"semanticSegmentBytes":65536,"maximumAllocationBytes":32768,"origin":"semanticSegmentLength","expectedKind":"workLimit"}
+ },
+ "cases":[
+  {"id":"reserved-block","stored":[7],"raw":[],"expectedKind":"invalidValue"},
+  {"id":"empty-fixed","stored":[3,0],"raw":[],"expectedKind":null}
+ ]
+}

@@ -1,10 +1,11 @@
 /** 🖼️ Raster editor — Composite window: typed twin of `🦀️.rs`'s view-model. Mirrors the
  * pane's `render(document: &RasterDocument, config: &RasterConfig)` boundary — the paint-2d scene
- * payload plus the brush/eraser chrome measures a mutation-capable surface carries (absent from the
+ * payload plus the brush/eraser/bucket chrome measures a mutation-capable surface carries (absent from the
  * viewer's read-only twin, see `👁️viewer/…/🟦️.ts`). */
 
 export * as brushOptions from "./☑️options/🖌️brush/🟦️";
 export * as eraserOptions from "./☑️options/🧽️eraser/🟦️";
+export * as bucketOptions from "./☑️options/🪣️bucket/🟦️";
 
 /** ✏️ The Composite window's typed view-model — mirrors the Rust `render()` boundary's inputs plus
  * its config-derived `window_measures()` chrome. */
@@ -20,6 +21,7 @@ export interface RasterCompositeViewModel {
   brushHardness: number;
   readonly paintTarget:"pixels"|"mask";
   readonly maskValue:number;
+  readonly fillTolerance:number;
 }
 
 export const RASTER_PLAY_WINDOW_COMPOSITE = "raster-composite" as const;

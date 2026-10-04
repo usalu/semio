@@ -1,0 +1,17 @@
+# Current Published Owning Closure and Runtime Queue Refresh
+
+Read-only bounded refresh; no compiler/tests. Reused the completed selection closure in current-published-primary-source-membership-reproof.md and its primary-source machine roster, not Snapshot file counts. All60 retained nonstdio actual selection call strings remain present at their actual composition files on fresh readback. Generated stdio selected_contributions1–6 remains36 full-catalog packages,8 home-io packages,none without either feature. No concrete selected owner addition/removal was established in this refresh. This does not promote a broad102 lexical artifact-call count (including other contexts) into an owner denominator or new closure proof. Retained scope remains117 plugin owners plus7 separate framework persisted authorities, with profile distinctions intact.
+
+## Concrete current capability gaps and queue implications
+
+Published Rewriting any Snapshot root `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs:115` mounts owning SQLite tests but still no ArtifactSqliteSnapshot implementation/module or ArtifactPack SQLite opt-in in the current root. Its rich30-table provider remains held; whole-child Python/Source and Rust46 lease adapters are distinct authorities and cannot prove this capability. This is the concrete remaining selected provider mount, not an absent-preflight locator verdict.
+
+Actual published host Count fixture Snapshot likewise has no provider/opt-in in its current production snapshot root; its five owning laws are cfg(test). Count is a real additional fixture publication scope, not a silent118th production owner in the full-catalog117 roster. Component-dev/real WorkspaceLease SQLite are still separate pending gates. Schema allocation/diagnostic law is shared infrastructure, not a new owner.
+
+Framework Dag persisted authority remains `DagSnapshot`: actual VCS34 owns persisted fields/edges; DagHostSnapshot includes separately supplied runtime camera and is a projection (conversion54/60). Current SQL15 explicitly implements DagSnapshot; VCS516 opts into its codec. SQL20/21 now provides controlled encode plus explicit preflight. This is the seven-roster identity correction, not an added eighth framework owner. Any runtime queue label DagHostSnapshot should resolve to this actual persisted owner.
+
+Framework Space/Collection/History remain mounted providers. Fresh narrow provider read finds no explicit preflight override at these three exact roots, consistent with their separate held public-preflight law stages. That does not establish erased import/export failure: public erased hook invocation must be tested independently. Their existing typed native/output ownership and History cleanup receipts remain separate from new preflight and shared Schema gates.
+
+## Runtime qualification
+
+No per-owner runtime ledger was rebuilt here; Root receipts govern current queue. Source/descriptor presence cannot mark GIS/Layout/CAD/Forms/Rewriting/Count complete. Meaningful next unresolved work is actual Count missing-capability RED then own provider and compiled/lease gates; Rewriting own held semantic provider/child handoff plus Rust46 real selected host; explicit framework public-preflight owning gates; already queued domain whole assertions and Schema diagnostic replay. These are distinct owner/interface gates, not generic universal completion. No provider failure was inferred solely from name matches, missing preflight path or stale test prose.

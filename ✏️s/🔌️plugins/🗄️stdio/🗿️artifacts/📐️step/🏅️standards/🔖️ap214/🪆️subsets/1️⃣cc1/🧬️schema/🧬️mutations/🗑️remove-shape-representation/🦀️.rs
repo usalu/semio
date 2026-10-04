@@ -19,9 +19,12 @@ impl protocol::MutationKind<StepSnapshot, StepCc1Mutation> for RemoveShapeRepres
     fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<<StepCc1Mutation as protocol::Mutation<StepSnapshot>>::Diff> {
         class_diff(base, &ClassEdit::Representation { id: self.id, row: None })
     }
-    fn inverse(&self, base: &StepSnapshot) -> Vec<StepCc1Mutation> {
-        class_inverse(base, &ClassEdit::Representation { id: self.id, row: None })
-    }
+    fn inverse(&self, base: &StepSnapshot) -> Result<Vec<StepCc1Mutation>, semio_framework_value::ValueError> {
+    Ok({
+        class_inverse(base, &ClassEdit::Representation { id: self.id, row: None })?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove shape representation #{}", self.id), &format!("Formrepräsentation #{} entfernen", self.id))
     }

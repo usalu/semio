@@ -1,0 +1,48 @@
+{
+  "state": "MountedAfterActualFiveLawCapabilityAssertionREDPendingNativeActivationAndNumericalReplay",
+  "providerInput": "📥️inputs/🧫️host-count/🪶️sqlite/🦀️.rs",
+  "destination": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+  "destinationSqlInclude": "include_str!(\"🗄️.sql\")",
+  "snapshotJoin": "#[path=\"🪶️sqlite/🦀️.rs\"]\nmod sqlite;",
+  "artifactPackOptIn": "fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}",
+  "binaryGrammar": "raw Pack Record document, matching actual encode_pack_with; no Semio envelope",
+  "textGrammar": "authored JSON object count i32, including empty Unicode-whitespace text -> Count default",
+  "nativeRegister": "@semio-tech/framework-plugin-host-fixture:test-snapshot-sqlite-native",
+  "candidateCount": 5,
+  "nativeObserved": {
+    "capabilityBaseline": true,
+    "providerActivation": false,
+    "numericalRequests": false
+  },
+  "productionMounted": true,
+  "binaryBound": {
+    "headerBytes": 32,
+    "footerBytes": 84,
+    "symbolPayloadMaximum": 1,
+    "documentPayloadMaximum": 10,
+    "manifestPayloadMaximum": 173,
+    "fixedHuffmanBits": "9 * raw bytes + 3 block bits + 7 EOB bits",
+    "compressedFrameMaximum": "2 kind/flags + 20 length varints + ceil((9*raw+10)/8) + 4 CRC",
+    "endFrameMaximum": 16,
+    "physicalUpperBound": 422
+  },
+  "limitsQualification": "output forecast is unpaid; only actual Native construction and paid shared schema/row storage debit caller cumulative physical ledger",
+  "sharedNumericalQualification": "shared indexed Schema storage successful full matrix remains subject to its distinct owning replay after explicit failure diagnostic contract pair",
+  "capabilityBaseline": {
+    "nextest": "ad0ccd88-7d23-4f8a-a68d-3521c31f26fa",
+    "selected": 5,
+    "passed": 0,
+    "failed": 5,
+    "outside": 3
+  },
+  "mountedFiles": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sha256": "b35cf5f04232a98af652eb503ff9a0a7ac4fe45b985394dfc20e8b3bdf558442"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/🧬️schema/📸️snapshot/🦀️.rs",
+      "sha256": "1c61fd5d9f9c6bb672067bcf298280a2b7e23384554204ec298607328103a7da"
+    }
+  ]
+}

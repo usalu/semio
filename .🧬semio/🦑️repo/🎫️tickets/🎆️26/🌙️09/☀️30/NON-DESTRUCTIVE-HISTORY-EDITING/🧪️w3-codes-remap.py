@@ -23,7 +23,7 @@ LANES = {
         (r'MutationOutcome::(?:error|fatal)\(\s*"wfc3d\.(?:tile|slot|edge|rule)\.' + MISSING + '"', 'MutationOutcome::error("mutation.target-missing"'),
         (r'MutationOutcome::fatal\(\s*"wfc3d\.(?:tile|slot|edge|rule)\.duplicate-id"', 'MutationOutcome::fatal("mutation.duplicate-id"'),
         (r'MutationOutcome::fatal\(\s*"wfc3d\.(?:tile\.non-positive-weight|slot\.degenerate-box|edge\.self-loop)"', 'MutationOutcome::fatal("mutation.invariant"'),
-        (r'\.warn\(\s*"wfc3d\.[a-z.-]+"', '.warn("mutation.no-op"'),
+        (r'\.warn\(\s*"wfc3d\.[a-z.-]+"', '.warning("mutation.no-op"'),
         (r'\.info\(\s*"wfc3d\.[a-z.-]+-cascaded"', '.info("mutation.cascade"'),
         (r'\("(?:error|fatal)", "wfc3d\.(?:tile|slot|edge|rule)\.' + MISSING + '"\)', '("error", "mutation.target-missing")'),
         (r'\("fatal", "wfc3d\.(?:tile|slot|edge|rule)\.duplicate-id"\)', '("fatal", "mutation.duplicate-id")'),

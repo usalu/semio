@@ -6,7 +6,8 @@ use crate::mutations::create_block;
 use crate::{forms_steps, FormMutation, FormsSnapshot};
 
 //#region 🔖️Inverse
-pub fn inverse_delete_block(payload: &DeleteBlock, base: &FormsSnapshot) -> Vec<FormMutation> {
+pub fn inverse_delete_block(payload: &DeleteBlock, base: &FormsSnapshot) -> Result<Vec<FormMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let steps = forms_steps(base);
     let Some(step) = steps.iter().find(|step| step.id == payload.step_id) else {
         return Vec::new();
@@ -15,5 +16,7 @@ pub fn inverse_delete_block(payload: &DeleteBlock, base: &FormsSnapshot) -> Vec<
         Some(index) => vec![FormMutation::CreateBlock(create_block::mutation::CreateBlock { step_id: payload.step_id.clone(), block: step.blocks[index].clone(), index: Some(index) })],
         None => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

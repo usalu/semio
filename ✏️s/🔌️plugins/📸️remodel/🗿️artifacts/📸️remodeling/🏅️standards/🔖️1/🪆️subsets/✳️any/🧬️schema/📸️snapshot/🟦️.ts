@@ -1,4 +1,4 @@
-import { binary32, binary64, parseBinary32, parseBinary64, type Binary32, type Binary64 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {binary32,binary64,parseBinary32,parseBinary64,type Binary32,type Binary64,parseBinary64Transport,parseBinary32Transport} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 /** 🧬️ Remodeling snapshot schema — TypeScript twin of `📸️snapshot/🦀️.rs`.
  *
  *  Field names are declared once in Rust `snake_case`; the JSON key is serde's `camelCase`
@@ -770,7 +770,7 @@ function exactFloat(value:unknown,width:32|64,path:string,transport:boolean):Bin
  if(transport&&typeof value==="number")return width===32?binary32(finiteNumber(value,path)):binary64(finiteNumber(value,path));
  if(!isPlainObject(value)||Object.keys(value).length!==1||!Object.hasOwn(value,"bits"))return fail(path,"expected one exact IEEE word");
  if(transport){if(typeof value.bits!=="string"||!(width===32?/^[0-9a-f]{8}$/:/^[0-9a-f]{16}$/).test(value.bits))return fail(path,"expected lowercase IEEE word");return width===32?{bits:Number.parseInt(value.bits,16)}:{bits:BigInt("0x"+value.bits)}}
- try{return width===32?parseBinary32(value):parseBinary64(value)}catch{return fail(path,"expected canonical IEEE word")}
+ try{return width===32?parseBinary32Transport(value):parseBinary64Transport(value)}catch{return fail(path,"expected a canonical IEEE word or number")}
 }
 function exactInteger(value:unknown,signed:boolean,path:string,transport:boolean):bigint {
  let word:bigint;

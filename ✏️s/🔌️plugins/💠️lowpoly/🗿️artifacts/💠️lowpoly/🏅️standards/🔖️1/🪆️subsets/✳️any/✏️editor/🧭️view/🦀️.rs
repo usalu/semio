@@ -233,11 +233,11 @@ pub fn utility_param_f64(params: &serde_json::Value, key: &str, default: f64) ->
 /// consumer of this fn's output outside this ticket's 7-file slice (`🎮️commands/🔷️mesh-edit`,
 /// `🖌️session`, `🛠️options/🧲️snap`/`🖌️paint-params-brush`/`🧽️paint-params-eraser`) still expects
 /// that exact type, so only the parse itself routes off `serde_json::from_str` — through
-/// `dsl::json::from_json_str` (the first-party JSON-text parser, ticket
+/// `semio_framework_pack_json::from_json_str` (the first-party JSON-text parser, ticket
 /// `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`) into a `DslValue`, bridged
 /// to `serde_json::Value` at this one boundary.
 pub fn utility_params_value(config: &LowpolyConfig) -> serde_json::Value {
-    dsl::json::from_json_str::<dsl::DslValue>(&config.utility_params_json).map(|value| (&value).into()).unwrap_or_default()
+    semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(&config.utility_params_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|value| (&value).into()).unwrap_or_default()
 }
 
 pub fn euler_degrees_to_quaternion(rotation: [f32; 3]) -> [f64; 4] {

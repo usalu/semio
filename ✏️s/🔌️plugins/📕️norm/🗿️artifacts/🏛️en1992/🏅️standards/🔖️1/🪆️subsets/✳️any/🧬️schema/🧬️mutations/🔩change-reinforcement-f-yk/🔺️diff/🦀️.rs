@@ -8,7 +8,7 @@ pub fn diff(payload: &ChangeReinforcementFYk, base: &En1992Snapshot) -> protocol
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Grade {} not found.", payload.grade_id), Vec::<String>::new());
     };
     if (g.f_yk - payload.new_f_yk).abs() < f64::EPSILON {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Value unchanged.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Value unchanged.");
     }
     g.f_yk = payload.new_f_yk;
     protocol::MutationOutcome::new(En1992Diff { reinforcement_grades: Some(En1992ReinforcementGradeList { values: grades }), ..Default::default() })

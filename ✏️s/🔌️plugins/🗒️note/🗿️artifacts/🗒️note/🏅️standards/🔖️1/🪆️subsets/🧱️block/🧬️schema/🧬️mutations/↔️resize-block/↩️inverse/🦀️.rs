@@ -4,7 +4,8 @@ use crate::schema::mutations::NoteMutation;
 use crate::NoteSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &ResizeBlock, base: &NoteSnapshot) -> Vec<NoteMutation> {
+pub fn inverse(payload: &ResizeBlock, base: &NoteSnapshot) -> Result<Vec<NoteMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match crate::schema::find_block(&base.blocks, &payload.id) {
         Some(block) => {
             let (.., width, height) = crate::schema::block_bounds(block);
@@ -12,5 +13,7 @@ pub fn inverse(payload: &ResizeBlock, base: &NoteSnapshot) -> Vec<NoteMutation> 
         }
         None => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

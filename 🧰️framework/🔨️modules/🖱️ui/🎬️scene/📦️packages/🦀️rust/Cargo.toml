@@ -4,7 +4,7 @@ name = "semio-framework-ui-scene"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
-description = "Product scene payloads (World3dScene/TableScene/...) and their pack-encoded SurfaceDoc bridge, plus generic 3D scene math — wasm-safe, depends on ui-contract and serde only"
+description = "Product scene payloads (World3dScene/TableScene/...) and their pack-encoded SurfaceDoc bridge, plus generic 3D scene math — wasm-safe, uses ui-contract, serde and first-party value/JSON codecs"
 
 [package.metadata.semio]
 role = "framework"
@@ -32,6 +32,9 @@ semio-framework-ui-viewport = { path = "../../../🪟️viewport/📦️packages
 [dependencies.semio-framework-geometry]
 path = "../../../../📐️geometry/📦️packages/🦀️rust"
 package = "semio-framework-geometry"
+
+[dependencies.semio-framework-pack-json]
+path = "../../../../🎒️pack/🔤️json/📦️packages/🦀️rust"
 
 [dev-dependencies]
 serde_json = { version = "1.0.140" }

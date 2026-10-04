@@ -7,6 +7,19 @@ use super::*;
 /// ⏯️ The tool id of the read-only preview evaluation run.
 pub const PREVIEW_EVAL_TOOL_ID: &str = "previewEval";
 
+/// 🚪️ The refusal code of a preview-evaluation hop that reaches a session already closing.
+pub const PREVIEW_EVAL_SESSION_CLOSING: &str = "generation2d.preview.session-closing";
+
+/// 📣️ The localized notices of the preview evaluation's refusals (design §20.12), declared by the editor.
+pub fn preview_eval_fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
+    static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 1]> = std::sync::LazyLock::new(|| [(PREVIEW_EVAL_SESSION_CLOSING, LocalizedLabel::native("The preview is closing; try again.", "Die Vorschau wird geschlossen; bitte erneut versuchen."))]);
+    &*NOTICES
+}
+
+fn preview_eval_session_closing() -> Fault {
+    Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(PREVIEW_EVAL_SESSION_CLOSING), "the preview evaluation session is closing")
+}
+
 /// 📜️ Source of record of the run's declaration (`🔣️.json` beside this file).
 pub const PREVIEW_EVAL_RUN_RECORD_JSON: &str = include_str!("../🔣️.json");
 
@@ -132,7 +145,7 @@ pub fn preview_eval_tool_definition() -> ToolDefinition {
     let record = preview_eval_run_record();
     let label: LocalizedLabel = serde_json::from_value(record["label"].clone()).expect("the preview evaluation tool label is a localized label");
     let icon = record["iconId"].as_str().unwrap_or_default().to_string();
-    ToolDefinition { run: Some(preview_eval_run_definition()), ..semio_framework_plugin::resolve_ready(ToolDefinition::new(PREVIEW_EVAL_TOOL_ID, label, icon.as_str())) }
+    ToolDefinition { run: Some(preview_eval_run_definition()), ..::semio_framework_async::poll::resolve_ready(ToolDefinition::new(PREVIEW_EVAL_TOOL_ID, label, icon.as_str())) }
 }
 
 /// 🪪️ The trace entity of one flow node: FNV-1a 64 of its id's UTF-8 bytes, so a node graph in any
@@ -166,10 +179,10 @@ impl PreviewEvalObservation {
 
     /// 🔎️ Folds one target's published per-widget status in — pure, so the verdict law is a fixture table.
     pub fn observe(&mut self, status_json: &str) {
-        let Ok(status) = dsl::json::parse(status_json) else { return };
+        let Ok(status) = semio_framework_pack_json::parse(status_json, semio_framework_pack_json::JsonMemberPolicy::Reject) else { return };
         let Some(widgets) = status.as_object() else { return };
         for (widget_id, entry) in widgets.iter() {
-            let reason = match entry.get("status").and_then(dsl::json::Value::as_str) {
+            let reason = match entry.get("status").and_then(semio_framework_pack_json::Value::as_str) {
                 Some("ok") => PreviewEvalRunReason::Evaluated,
                 Some("computing") => PreviewEvalRunReason::Computing,
                 Some("error") => PreviewEvalRunReason::Failed,
@@ -309,7 +322,7 @@ pub trait PreviewEvalRunOwner: std::any::Any + Send {
     fn preview_eval_parts(&mut self) -> Option<(PreviewEvalSessions<'_>, &mut PreviewEvalRunLink)>;
 }
 
-pub(crate) fn run_action_effect(action: &str, args: dsl::DslValue) -> Effect {
+pub(crate) fn run_action_effect(action: &str, args: semio_framework_value::DslValue) -> Effect {
     Effect::DispatchAction { req: semio_framework_plugin::RequestId(PREVIEW_EVAL_HOP_REQUEST), action: action.into(), args: Some(args), delay_ms: 0 }
 }
 
@@ -351,11 +364,11 @@ pub fn preview_eval_run_effects(mut sessions: PreviewEvalSessions<'_>, link: &mu
         Some(ToolRunState::Complete) => {
             let run = run.expect("a complete run is present");
             link.restart_owed = owed;
-            (Some((PreviewEvalRunRequest::Finalize, identity)), vec![run_action_effect(TOOL_RUN_FINALIZE_ACTION_ID, dsl::DslValue::object([(TOOL_RUN_ARG_RUN_ID.to_string(), dsl::DslValue::String(run.identity.id.run.to_string())), (TOOL_RUN_ARG_GENERATION.to_string(), dsl::DslValue::uint(u64::from(run.identity.generation)))]))])
+            (Some((PreviewEvalRunRequest::Finalize, identity)), vec![run_action_effect(TOOL_RUN_FINALIZE_ACTION_ID, semio_framework_value::DslValue::object([(TOOL_RUN_ARG_RUN_ID.to_string(), semio_framework_value::DslValue::String(run.identity.id.run.to_string())), (TOOL_RUN_ARG_GENERATION.to_string(), semio_framework_value::DslValue::uint(u64::from(run.identity.generation)))]))])
         }
         None | Some(ToolRunState::Finalized | ToolRunState::Aborted | ToolRunState::Faulted) if owed || link.restart_owed => {
             link.restart_owed = false;
-            (Some((PreviewEvalRunRequest::Start, identity)), vec![run_action_effect(TOOL_RUN_START_ACTION_ID, dsl::DslValue::object([(TOOL_RUN_ARG_TOOL_ID.to_string(), dsl::DslValue::String(PREVIEW_EVAL_TOOL_ID.into()))]))])
+            (Some((PreviewEvalRunRequest::Start, identity)), vec![run_action_effect(TOOL_RUN_START_ACTION_ID, semio_framework_value::DslValue::object([(TOOL_RUN_ARG_TOOL_ID.to_string(), semio_framework_value::DslValue::String(PREVIEW_EVAL_TOOL_ID.into()))]))])
         }
         _ => (None, Vec::new()),
     };
@@ -394,7 +407,7 @@ impl<O: PreviewEvalRunOwner> PreviewEvalRunJob<O> {
     /// fresh or restarted run always evaluates the document it was started on.
     pub fn new(owner: ArtifactInstanceOperationOwnerHandle, port: ToolRunJobPort, identity: ToolRunIdentity) -> Result<Self, Fault> {
         owner.with_mut::<O, _>(|held| {
-            let (mut sessions, link) = held.preview_eval_parts().ok_or_else(|| Fault::from("generation2d-preview-eval-session-closing"))?;
+            let (mut sessions, link) = held.preview_eval_parts().ok_or_else(preview_eval_session_closing)?;
             for (window_id, _, target) in &link.windows {
                 sessions.get_mut(*target).note_window_tick_outcome(window_id, true);
             }
@@ -479,7 +492,7 @@ impl<O: PreviewEvalRunOwner> InteractiveJob for PreviewEvalRunJob<O> {
         }
         let (port, identity) = (self.port.clone(), self.identity);
         let turn = self.owner.with_mut::<O, _>(|held| {
-            let (mut sessions, link) = held.preview_eval_parts().ok_or_else(|| Fault::from("generation2d-preview-eval-session-closing"))?;
+            let (mut sessions, link) = held.preview_eval_parts().ok_or_else(preview_eval_session_closing)?;
             let hop = next_preview_eval_hop(&sessions, &link.windows);
             match hop {
                 PreviewEvalHop::Dispatch(index) => {

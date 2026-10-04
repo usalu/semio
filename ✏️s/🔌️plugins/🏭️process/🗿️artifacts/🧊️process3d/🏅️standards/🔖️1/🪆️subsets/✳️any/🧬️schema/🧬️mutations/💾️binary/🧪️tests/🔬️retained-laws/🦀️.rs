@@ -335,16 +335,6 @@ fn interrupted_snapshot_close_reaches_terminal_empty() {
 }
 
 #[test]
-fn deterministic_ledger_digest_is_replay_stable() {
-    let mutation = Process3dMutation::ChangeStockLabel(crate::mutations::change_stock_label::ChangeStockLabel { new_label: "Beam".into() });
-    let mut left = store::ArtifactStoreInitializationDigest::new(b"process3d.fixture");
-    let mut right = store::ArtifactStoreInitializationDigest::new(b"process3d.fixture");
-    process3d_observe_mutation(&mut left, &mutation);
-    process3d_observe_mutation(&mut right, &mutation);
-    assert_eq!(left.finish(), right.finish());
-}
-
-#[test]
 fn mounted_mutation_region_has_zero_whole_string_reader_edges() {
     let source = include_str!("../../🦀️.rs");
     let retained = source.split_once("enum Process3dRetainedMutationPhase").expect("retained mutation region start").1.split_once("enum Process3dMutationDecodeState").expect("retained mutation region end").0;

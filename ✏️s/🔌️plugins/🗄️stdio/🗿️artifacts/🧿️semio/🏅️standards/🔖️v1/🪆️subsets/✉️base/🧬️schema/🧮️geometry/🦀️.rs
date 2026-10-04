@@ -18,7 +18,7 @@ use serde::{Deserialize, Serialize};
 /// `identity_transform_round_trips_through_json` test uses `serde_json` as a differential
 /// round-trip oracle over `SemioTransform` (and transitively this struct); no production call
 /// site needs it, `ToValue`/`FromValue` is the real production codec.
-#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -28,7 +28,7 @@ pub struct SemioPoint3 {
     pub z: f64,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -37,7 +37,7 @@ pub struct SemioPoint2 {
     pub y: f64,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -48,7 +48,7 @@ pub struct SemioUv {
 //#endregion 🔖️Point
 
 //#region 🔖️Color
-#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -63,7 +63,7 @@ pub struct SemioRgba {
 //#region 🔖️Transform
 /// 🧭️ Rotation as a NAMED quaternion struct — never a bare `[f64;4]`/tuple (see module doc
 /// comment). Defaults to the identity rotation `(0,0,0,1)`.
-#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -80,7 +80,7 @@ impl Default for SemioQuaternion {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -113,3 +113,8 @@ mod tests;
 
 #[path="🔢️native/🦀️.rs"]
 pub(crate) mod native;
+
+/// 🔢️ The actual Semio binary64 text role retains exceptional IEEE words.
+pub fn binary64_lexeme(value:f64)->String { native::NativeF64(value).to_string() }
+/// 🔎️ Intrinsic Semio numeric spelling errors are assigned at their canonical scalar producer.
+pub fn read_binary64_lexeme(value:&str)->Result<f64,semio_framework_value::ValueError> { native::parse(value).map_err(|message|semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message)) }

@@ -2,7 +2,7 @@
 
 use super::*;
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "set-run-output")]
 #[mutation_leaf(contract = ::protocol)]
@@ -14,15 +14,18 @@ impl protocol::MutationKind<ImperativeConfig, ImperativeConfigMutation> for SetR
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "run_output_json", kind: "set-run-output", record: "SetRunOutput" };
     fn diff(&self, base: &ImperativeConfig) -> protocol::MutationOutcome<ImperativeConfig> {
         if base.run_output_json == self.json {
-            return protocol::MutationOutcome::new(base.clone()).warn("mutation.no-op", "The requested configuration value is already current.");
+            return protocol::MutationOutcome::new(base.clone()).warning("mutation.no-op", "The requested configuration value is already current.");
         }
         let mut next = base.clone();
         next.run_output_json = self.json.clone();
         protocol::MutationOutcome::new(next)
     }
-    fn inverse(&self, base: &ImperativeConfig) -> Vec<ImperativeConfigMutation> {
+    fn inverse(&self, base: &ImperativeConfig) -> Result<Vec<ImperativeConfigMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![ImperativeConfigMutation::SetRunOutput(Self { json: base.run_output_json.clone() })]
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set Run Output", "Laufausgabe setzen")
     }

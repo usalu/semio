@@ -20,13 +20,13 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧱create-brep/🧱️attaches/🎯️outcome/🔣️.json");
 
 fn before() -> SemioObjectSnapshot {
-    dsl::json::from_json_str(BEFORE).expect("🧱create-brep before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("🧱create-brep before snapshot decodes")
 }
 fn expected_after() -> SemioObjectSnapshot {
-    dsl::json::from_json_str(AFTER).expect("🧱create-brep after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("🧱create-brep after snapshot decodes")
 }
 fn mutation() -> SemioObjectMutation {
-    dsl::json::from_json_str(MUTATION).expect("🧱create-brep mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("🧱create-brep mutation decodes")
 }
 
 /// ▶️ The brep slot goes from empty to a handle; the transform and the other two slots stay empty.
@@ -48,7 +48,7 @@ async fn attaches_the_brep_handle_to_an_object_that_had_none() {
 async fn the_undo_delete_brep_detaches_the_handle_again() {
     let base = before();
     let mutation = mutation();
-    let undo = mutation.inverse(&base);
+    let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![SemioObjectMutation::DeleteBrep(crate::standards::v1::subsets::object::schema::mutations::delete_brep::DeleteBrep {})], "creating a child into an EMPTY slot must undo as the matching delete, not as another create");
     let mut current = mutation.diff(&base).diff().apply(&base).expect("forward 🧱create-brep applies");
     for step in &undo {
@@ -63,12 +63,12 @@ async fn the_undo_delete_brep_detaches_the_handle_again() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioObjectSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: SemioObjectSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "🧱create-brep/attaches-a-brep-child-to-an-object-that-has-none: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("🧱create-brep mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(mutation()))).expect("🧱create-brep mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("🧱create-brep mutation reparses");
     assert_eq!(reencoded, original, "🧱create-brep/attaches-a-brep-child-to-an-object-that-has-none: committed mutation JSON is not canonical");
 }
@@ -88,7 +88,7 @@ async fn declared_outcome_holds_without_a_duplicate_id_rejection() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioObjectMutation as Mutation<SemioObjectSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "🧱create-brep/attaches-a-brep-child-to-an-object-that-has-none: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -97,10 +97,10 @@ async fn produces_committed_diff() {
 /// `Option<Option<..>>` slot survives decode→encode unchanged.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: SemioObjectDiff = dsl::json::from_json_str(DIFF).expect("committed 🧱create-brep diff decodes");
+    let decoded: SemioObjectDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed 🧱create-brep diff decodes");
     assert!(matches!(decoded.brep, Some(Some(_))), "the brep slot must decode as Some(Some(handle)) — set, not cleared");
     assert!(decoded.transform.is_none(), "🧱create-brep must leave the transform slot untouched");
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "🧱create-brep/attaches-a-brep-child-to-an-object-that-has-none: committed diff JSON is not canonical");
 }
@@ -108,7 +108,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioObjectDiff = dsl::json::from_json_str(DIFF).expect("committed 🧱create-brep diff decodes");
+    let decoded: SemioObjectDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed 🧱create-brep diff decodes");
     let produced = decoded.apply(&before()).expect("committed 🧱create-brep diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "🧱create-brep/attaches-a-brep-child-to-an-object-that-has-none: committed diff did not carry before to after");
 }

@@ -23,22 +23,7 @@ use crate::editor::flow::modes::{edit, generate};
 use crate::editor::flow::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::editor::flow::presence::{FlowPresence, FlowPresenceMutation};
 use crate::editor::flow::terminology::{flow_play_labels, FlowPlayLabels};
-use crate::op::FlowMutation;
-#[cfg(test)]
-use crate::schema::mutations::connect_widgets::ConnectWidgets;
-#[cfg(test)]
-use crate::schema::mutations::create_widget::CreateWidget;
-use crate::schema::mutations::delete_widget::DeleteWidget;
-use crate::schema::mutations::disconnect_widgets::DisconnectWidgets;
-use crate::schema::mutations::move_widgets::MoveWidgets;
-#[cfg(test)]
-use crate::schema::mutations::reorder_synapses::ReorderSynapses;
-#[cfg(test)]
-use crate::schema::mutations::reorder_widgets::ReorderWidgets;
-use crate::schema::mutations::replace_widget::ReplaceWidget;
-#[cfg(test)]
-use crate::schema::mutations::update_synapse_endpoints::UpdateSynapseEndpoints;
-use crate::{FlowSnapshot, FlowWorkingScene, FLOW_DOCUMENT_SCHEMA};
+use crate::{FlowMutation, FlowSnapshot, FlowWorkingScene, FLOW_DOCUMENT_SCHEMA};
 use flow::{flow_host_with_session, FlowEvalSession, FlowHost, FLOW_LOD_MODE_AUTOMATIC};
 use semio_framework_artifact_flow_flow::{CameraJson, SynapseSpec, Widget, WidgetLayout};
 use semio_framework_artifact_infinite_dag::DagDrawLod;
@@ -79,6 +64,7 @@ use semio_framework_plugin::SelectionMode;
 use semio_framework_plugin::SelectionSpec;
 use semio_framework_plugin::TopologyNode;
 use semio_framework_plugin::WindowMeasure;
+#[cfg(test)]
 use serde_json::json;
 use semio_framework::kernel::UiDirtyScope;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::{insert_edge, insert_node, remove_edge, remove_node, remove_node_param, set_edge_endpoints, set_edge_kind, set_node_kind, set_node_label, set_node_param, set_node_position, set_snapshot, SemioFlowMutation};
@@ -86,8 +72,6 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot
 #[cfg(test)]
 use serde_json::Value;
 use std::collections::HashMap;
-#[cfg(test)]
-use std::io::Write;
 use std::sync::Arc;
 use semio_framework_2d::compute::EngineHandles;
 
@@ -270,8 +254,8 @@ semio_framework_plugin::app_commands! {
 
 //#region 🔖️ContextMenu
 /// 🖱️ On-demand flow node-graph context menu from surface hit-test and selection snapshot.
-fn flow_context_menu_items(registry: &AppActionRegistry, snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, labels: &FlowPlayLabels, is_de: bool, surface: Option<&semio_framework_plugin::ContextMenuSurfaceTarget>) -> Vec<ContextMenuItemSpec> {
-    use semio_framework_plugin::{selection_count_phrase, Menu};
+fn flow_context_menu_items(registry: &AppActionRegistry, snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, labels: &FlowPlayLabels, view_state: &semio_framework_plugin::ViewModel, surface: Option<&semio_framework_plugin::ContextMenuSurfaceTarget>) -> Vec<ContextMenuItemSpec> {
+    use semio_framework_plugin::{node_graph_delete_selection_spec, Menu, NodeGraphDeleteDispatch};
 
     let hits = surface.map_or(&[][..], |target| target.hits.as_slice());
     let groups = surface.map_or(&[][..], |target| target.selection.as_slice());
@@ -296,11 +280,12 @@ fn flow_context_menu_items(registry: &AppActionRegistry, snapshot: &FlowSnapshot
 
     // 🗂️ Grouped disclosure: `add-node`/`selectAll`/`focusSelection`/`clearSelection` stay top-level
     // (the 3-5 most frequent verbs); `reorganize`/`replaceImage`/`toggle-preview` fold into taxonomy
-    // groups; `delete-selection` stays a direct destructive item last — `organize_context_menu`
+    // groups; `delete-selection` stays a direct destructive item last (disabled with its reason while nothing is
+    // selected) — `organize_context_menu`
     // (applied automatically at the `VcsArtifactApp::context_menu` funnel) sorts the groups into
     // `RIBBON_PARENT_CATEGORIES` order and inserts the pre-destructive separator itself.
     {
-        let mut menu = Menu::of(registry);
+        let mut menu = Menu::of(registry, view_state);
         if hits.is_empty() {
             menu = menu
                 .item(ContextMenuItemSpec { id: "add-node".into(), label: Some(labels.add_node.into()), icon: Some("plus".into()), action: Some("openSpotlight".into()), ..Default::default() })
@@ -343,392 +328,17 @@ fn flow_context_menu_items(registry: &AppActionRegistry, snapshot: &FlowSnapshot
                     ..Default::default()
                 })
             });
-            let phrase = selection_count_phrase(is_de, &[(nodes.len(), if is_de { "Knoten" } else { "node" }, if is_de { "Knoten" } else { "nodes" }), (edges.len(), if is_de { "Kante" } else { "edge" }, if is_de { "Kanten" } else { "edges" })]);
-            if !phrase.is_empty() {
-                menu = menu.item(ContextMenuItemSpec {
-                    id: "delete-selection".into(),
-                    label: Some(format!("{} ({phrase})", labels.delete_selection.as_str())),
-                    icon: Some("trash".into()),
-                    destructive: Some(true),
-                    action: Some("deleteSelection".into()),
-                    ..Default::default()
-                });
-            }
         }
-        menu.build()
+        menu.item(node_graph_delete_selection_spec(labels.delete_selection.as_str(), view_state, &nodes, &edges, NodeGraphDeleteDispatch::Direct)).build()
     }
 }
 //#endregion 🔖️ContextMenu
 
-//#region 📬️StorePreparation
+//#region 📏️StoreCapacity
 const FLOW_STORE_MAX_SCENE_ITEMS: usize = 256;
 const FLOW_STORE_MAX_TEXT_BYTES: usize = 16_384;
 pub(crate) const FLOW_STORE_MAX_MUTATION_ITEMS: usize = 256;
-
-type FlowStorePrepare<P, M> = fn(&P, M) -> Result<(P, Vec<M>, M), String>;
-type FlowStoreAdmit<M> = fn(&M) -> Result<store::ArtifactStoreOneItemFootprint, String>;
-
-struct FlowStoreOneItemPreparationFactory<P, M> {
-    lane: store::HistoryLane,
-    admit: FlowStoreAdmit<M>,
-    prepare: FlowStorePrepare<P, M>,
-}
-
-impl<P, M> FlowStoreOneItemPreparationFactory<P, M> {
-    fn new(lane: store::HistoryLane, admit: FlowStoreAdmit<M>, prepare: FlowStorePrepare<P, M>) -> Self {
-        Self { lane, admit, prepare }
-    }
-}
-
-struct FlowStoreOneItemPreparation<P, M> {
-    base: Option<store::SnapshotRead<P>>,
-    mutation: Option<M>,
-    description: Option<String>,
-    authority: Option<Arc<store::ArtifactStoreOneItemLiveAuthority>>,
-    prepare: FlowStorePrepare<P, M>,
-    prepared: Option<store::ArtifactStoreOneItemPrepared<P, M>>,
-    checkpoint: store::ArtifactStoreOneItemCheckpoint,
-    cancelled: bool,
-    closing: bool,
-}
-
-fn flow_store_edit<M>(forward: M, inverse: Vec<M>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<M> {
-    let id = format!("flow-retained-{}", authority.next_sequence_number());
-    protocol::Edit { line: authority.line_id().map(str::to_owned),
-        id: id.clone(),
-        actor: Some(authority.actor().to_string()),
-        forwards: vec![forward],
-        inverse,
-        mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
-            dependencies: Vec::new(),
-            base_version: authority.base_applied_edit_count() as u64,
-            author_id: Some(protocol::ActorId(authority.actor().to_string())),
-            timestamp: authority.next_clock(),
-            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-            payload_hash: None,
-            semantic_kind: None,
-            label: None,
-            group_id: None,
-            origin: Default::default(),
-            transaction: None,
-        }],
-        description, verb: None,
-        coalesce_key: None,
-        sequence_number: authority.next_sequence_number(),
-        started_at: String::new(),
-        finished_at: None,
-    }
-}
-
-#[cfg(test)]
-struct FlowBoundedByteCounter {
-    written: usize,
-    maximum_bytes: usize,
-}
-
-#[cfg(test)]
-impl Write for FlowBoundedByteCounter {
-    fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
-        let next = self.written.checked_add(bytes.len()).ok_or_else(|| std::io::Error::new(std::io::ErrorKind::InvalidData, "Flow retained byte count overflow"))?;
-        if next > self.maximum_bytes {
-            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "Flow retained value exceeds its byte cap"));
-        }
-        self.written = next;
-        Ok(bytes.len())
-    }
-
-    fn flush(&mut self) -> std::io::Result<()> {
-        Ok(())
-    }
-}
-
-#[cfg(test)]
-fn flow_bounded_serialized_bytes<T: dsl::ToValue>(value: &T, maximum_bytes: usize) -> Result<usize, String> {
-    let mut counter = FlowBoundedByteCounter { written: 0, maximum_bytes };
-    let json: Value = dsl::ToValue::to_value(value).into();
-    serde_json::to_writer(&mut counter, &json).map_err(|error| error.to_string())?;
-    Ok(counter.written)
-}
-
-#[cfg(test)]
-fn flow_artifact_mutation_items(mutation: &FlowMutation) -> usize {
-    match mutation {
-        FlowMutation::MoveWidgets(payload) => payload.entries.len(),
-        FlowMutation::DuplicateWidget(_) => 2,
-        _ => 1,
-    }
-}
-
-#[cfg(test)]
-fn admit_flow_artifact_mutation(mutation: &FlowMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-    let work_items = flow_artifact_mutation_items(mutation);
-    if work_items == 0 || work_items > FLOW_STORE_MAX_MUTATION_ITEMS {
-        return Err("Flow artifact mutation exceeds its fixed semantic-item cap".into());
-    }
-    let retained_bytes = flow_bounded_serialized_bytes(mutation, FLOW_STORE_MAX_TEXT_BYTES)?;
-    Ok(store::ArtifactStoreOneItemFootprint { work_items, retained_bytes })
-}
-
-fn flow_widget_id(widget: &Widget) -> &str {
-    match widget {
-        Widget::Neuron { id, .. }
-        | Widget::InputSlider { id, .. }
-        | Widget::InputNote { id, .. }
-        | Widget::InputImage { id, .. }
-        | Widget::Variable { id, .. }
-        | Widget::OutputPreview { id, .. }
-        | Widget::OutputAction { id, .. }
-        | Widget::OutputExport { id, .. }
-        | Widget::Cluster { id, .. } => id,
-    }
-}
-
-#[cfg(test)]
-fn prepare_flow_artifact(base: &FlowSnapshot, mutation: FlowMutation) -> Result<(FlowSnapshot, Vec<FlowMutation>, FlowMutation), String> {
-    admit_flow_artifact_mutation(&mutation)?;
-    let owner = base.content.local_owner::<FlowWorkingScene>().ok_or_else(|| "Flow artifact base has no exact app-instance scene owner".to_string())?;
-    if owner.widgets.len() > FLOW_STORE_MAX_SCENE_ITEMS || owner.synapses.len() > FLOW_STORE_MAX_SCENE_ITEMS || owner.layout.len() > FLOW_STORE_MAX_SCENE_ITEMS {
-        return Err("Flow artifact base exceeds its fixed scene-item cap".into());
-    }
-    flow_bounded_serialized_bytes(&*owner, FLOW_STORE_MAX_TEXT_BYTES)?;
-    let mut scene = (*owner).clone();
-    let inverse = match &mutation {
-        FlowMutation::CreateWidget(payload) => {
-            let id = flow_widget_id(&payload.widget);
-            if scene.widgets.iter().any(|widget| flow_widget_id(widget) == id) || scene.widgets.len() == FLOW_STORE_MAX_SCENE_ITEMS {
-                return Err(format!("Flow create-widget rejected duplicate or capped id {id:?}"));
-            }
-            scene.widgets.insert(payload.index.min(scene.widgets.len()), payload.widget.clone());
-            vec![FlowMutation::DeleteWidget(DeleteWidget { id: id.to_string() })]
-        }
-        FlowMutation::DeleteWidget(payload) => {
-            let index = scene.widgets.iter().position(|widget| flow_widget_id(widget) == payload.id).ok_or_else(|| format!("Flow delete-widget target {:?} is missing", payload.id))?;
-            let widget = scene.widgets[index].clone();
-            let mut inverses = vec![FlowMutation::CreateWidget(CreateWidget { index, widget })];
-            if let Some(layout) = scene.layout.get(&payload.id) {
-                inverses.push(FlowMutation::MoveWidgets(MoveWidgets { entries: vec![semio_framework_artifact_flow_flow::FlowLayoutEntry { id: payload.id.clone(), layout: Some(layout.clone()) }] }));
-            }
-            for (synapse_index, synapse) in scene.synapses.iter().enumerate().filter(|(_, synapse)| synapse.from == payload.id || synapse.to == payload.id) {
-                inverses.push(FlowMutation::ConnectWidgets(ConnectWidgets { index: synapse_index, id: synapse.id.clone(), from: synapse.from.clone(), from_port: synapse.from_port.clone(), to: synapse.to.clone(), to_port: synapse.to_port.clone() }));
-            }
-            scene.widgets.remove(index);
-            scene.synapses.retain(|synapse| synapse.from != payload.id && synapse.to != payload.id);
-            scene.layout.remove(&payload.id);
-            inverses
-        }
-        FlowMutation::ReorderWidgets(payload) => {
-            let from = scene.widgets.iter().position(|widget| flow_widget_id(widget) == payload.id).ok_or_else(|| format!("Flow reorder-widget target {:?} is missing", payload.id))?;
-            let to = payload.to_index.min(scene.widgets.len().saturating_sub(1));
-            if from == to {
-                return Err("Flow reorder-widget is a no-op".into());
-            }
-            let widget = scene.widgets.remove(from);
-            scene.widgets.insert(to, widget);
-            vec![FlowMutation::ReorderWidgets(ReorderWidgets { id: payload.id.clone(), to_index: from })]
-        }
-        FlowMutation::ReplaceWidget(payload) => {
-            let current = scene.widgets.iter_mut().find(|widget| flow_widget_id(widget) == payload.id).ok_or_else(|| format!("Flow replace-widget target {:?} is missing", payload.id))?;
-            if current == &payload.widget {
-                return Err("Flow replace-widget is a no-op".into());
-            }
-            let previous = std::mem::replace(current, payload.widget.clone());
-            vec![FlowMutation::ReplaceWidget(ReplaceWidget { id: payload.id.clone(), widget: previous })]
-        }
-        FlowMutation::ConnectWidgets(payload) => {
-            if scene.synapses.len() == FLOW_STORE_MAX_SCENE_ITEMS || scene.synapses.iter().any(|synapse| synapse.id == payload.id) {
-                return Err("Flow connect-widgets rejected duplicate or capped synapse".into());
-            }
-            if !scene.widgets.iter().any(|widget| flow_widget_id(widget) == payload.from) || !scene.widgets.iter().any(|widget| flow_widget_id(widget) == payload.to) {
-                return Err("Flow connect-widgets endpoint is missing".into());
-            }
-            if scene.synapses.iter().any(|synapse| synapse.from == payload.from && synapse.from_port == payload.from_port && synapse.to == payload.to && synapse.to_port == payload.to_port) {
-                return Err("Flow connect-widgets parallel edge is a no-op".into());
-            }
-            scene.synapses.insert(
-                payload.index.min(scene.synapses.len()),
-                semio_framework_artifact_flow_flow::SynapseSpec { id: payload.id.clone(), from: payload.from.clone(), from_port: payload.from_port.clone(), to: payload.to.clone(), to_port: payload.to_port.clone() },
-            );
-            vec![FlowMutation::DisconnectWidgets(DisconnectWidgets { id: payload.id.clone() })]
-        }
-        FlowMutation::DisconnectWidgets(payload) => {
-            let index = scene.synapses.iter().position(|synapse| synapse.id == payload.id).ok_or_else(|| format!("Flow disconnect-widgets target {:?} is missing", payload.id))?;
-            let synapse = scene.synapses.remove(index);
-            vec![FlowMutation::ConnectWidgets(ConnectWidgets { index, id: synapse.id, from: synapse.from, from_port: synapse.from_port, to: synapse.to, to_port: synapse.to_port })]
-        }
-        FlowMutation::ReorderSynapses(payload) => {
-            let from = scene.synapses.iter().position(|synapse| synapse.id == payload.id).ok_or_else(|| format!("Flow reorder-synapse target {:?} is missing", payload.id))?;
-            let to = payload.to_index.min(scene.synapses.len().saturating_sub(1));
-            if from == to {
-                return Err("Flow reorder-synapse is a no-op".into());
-            }
-            let synapse = scene.synapses.remove(from);
-            scene.synapses.insert(to, synapse);
-            vec![FlowMutation::ReorderSynapses(ReorderSynapses { id: payload.id.clone(), to_index: from })]
-        }
-        FlowMutation::UpdateSynapseEndpoints(payload) => {
-            if !scene.widgets.iter().any(|widget| flow_widget_id(widget) == payload.from) || !scene.widgets.iter().any(|widget| flow_widget_id(widget) == payload.to) {
-                return Err("Flow update-synapse endpoint is missing".into());
-            }
-            let synapse = scene.synapses.iter_mut().find(|synapse| synapse.id == payload.id).ok_or_else(|| format!("Flow update-synapse target {:?} is missing", payload.id))?;
-            if synapse.from == payload.from && synapse.from_port == payload.from_port && synapse.to == payload.to && synapse.to_port == payload.to_port {
-                return Err("Flow update-synapse is a no-op".into());
-            }
-            let inverse = FlowMutation::UpdateSynapseEndpoints(UpdateSynapseEndpoints { id: payload.id.clone(), from: synapse.from.clone(), from_port: synapse.from_port.clone(), to: synapse.to.clone(), to_port: synapse.to_port.clone() });
-            synapse.from = payload.from.clone();
-            synapse.from_port = payload.from_port.clone();
-            synapse.to = payload.to.clone();
-            synapse.to_port = payload.to_port.clone();
-            vec![inverse]
-        }
-        FlowMutation::MoveWidgets(payload) => {
-            if payload.entries.is_empty() {
-                return Err("Flow move-widgets has no semantic items".into());
-            }
-            let mut inverse_entries = Vec::with_capacity(payload.entries.len());
-            for entry in &payload.entries {
-                if !scene.widgets.iter().any(|widget| flow_widget_id(widget) == entry.id) {
-                    return Err(format!("Flow move-widget target {:?} is missing", entry.id));
-                }
-                if entry.layout.as_ref().is_some_and(|layout| !layout.x.is_finite() || !layout.y.is_finite()) {
-                    return Err(format!("Flow move-widget target {:?} has a non-finite position", entry.id));
-                }
-                inverse_entries.push(semio_framework_artifact_flow_flow::FlowLayoutEntry { id: entry.id.clone(), layout: scene.layout.get(&entry.id).cloned() });
-            }
-            for entry in &payload.entries {
-                if let Some(layout) = &entry.layout {
-                    scene.layout.insert(entry.id.clone(), layout.clone());
-                } else {
-                    scene.layout.remove(&entry.id);
-                }
-            }
-            vec![FlowMutation::MoveWidgets(MoveWidgets { entries: inverse_entries })]
-        }
-        FlowMutation::DuplicateWidget(payload) => {
-            if payload.source_id == payload.new_id || scene.widgets.iter().any(|widget| flow_widget_id(widget) == payload.new_id) || scene.synapses.iter().any(|synapse| synapse.id == payload.synapse_id) {
-                return Err("Flow duplicate-widget target ids are invalid or occupied".into());
-            }
-            if scene.widgets.len() == FLOW_STORE_MAX_SCENE_ITEMS || scene.synapses.len() == FLOW_STORE_MAX_SCENE_ITEMS {
-                return Err("Flow duplicate-widget exceeds its fixed scene-item cap".into());
-            }
-            let source = scene.widgets.iter().find(|widget| flow_widget_id(widget) == payload.source_id).ok_or_else(|| format!("Flow duplicate-widget source {:?} is missing", payload.source_id))?;
-            let copy = crate::schema::widget_with_id(source, payload.new_id.clone());
-            scene.widgets.push(copy);
-            scene.synapses.push(semio_framework_artifact_flow_flow::SynapseSpec { id: payload.synapse_id.clone(), from: payload.source_id.clone(), from_port: payload.from_port.clone(), to: payload.new_id.clone(), to_port: payload.to_port.clone() });
-            vec![FlowMutation::DisconnectWidgets(DisconnectWidgets { id: payload.synapse_id.clone() }), FlowMutation::DeleteWidget(DeleteWidget { id: payload.new_id.clone() })]
-        }
-    };
-    let content = flow_content_child_handle_bounded(&scene.widgets, &scene.synapses, &scene.layout, FLOW_STORE_MAX_TEXT_BYTES)?;
-    let post = FlowSnapshot { schema: base.schema.clone(), content };
-    Ok((post, inverse, mutation))
-}
-
-impl<P, M> store::ArtifactStoreOneItemPreparationFactory<P, M> for FlowStoreOneItemPreparationFactory<P, M>
-where
-    P: Clone + Send + Sync + 'static,
-    M: Clone + dsl::ToValue + Send + Sync + 'static,
-{
-    fn preflight(&self, mutation: &M, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != self.lane || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
-            return Err("Flow one-item preparation rejected its lane or description envelope".into());
-        }
-        (self.admit)(mutation)
-    }
-
-    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<P, M>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, store::ArtifactStoreOneItemPreparationRequest<P, M>> {
-        if request.lane != self.lane
-            || request.operation != request.authority.operation()
-            || request.generation != request.authority.generation()
-            || request.base_revision != request.authority.base_revision()
-            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
-        {
-            return Err(request);
-        }
-        Ok(Box::new(FlowStoreOneItemPreparation {
-            base: Some(request.base),
-            mutation: Some(request.mutation),
-            description: request.description,
-            authority: Some(request.authority),
-            prepare: self.prepare,
-            prepared: None,
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
-            cancelled: false,
-            closing: false,
-        }))
-    }
-}
-
-impl<P, M> store::ArtifactStoreOneItemPreparation<P, M> for FlowStoreOneItemPreparation<P, M>
-where
-    P: Clone + Send + Sync + 'static,
-    M: Clone + dsl::ToValue + Send + Sync + 'static,
-{
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        if !grant.permits_one() || self.cancelled {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
-        }
-        if self.prepared.is_some() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
-        }
-        let base = self.base.as_ref().ok_or_else(|| "Flow preparation lost its exact base root".to_string())?;
-        let mutation = self.mutation.take().ok_or_else(|| "Flow preparation lost its mutation owner".to_string())?;
-        let (post, inverse, forward) = (self.prepare)(base.get(), mutation)?;
-        let authority = self.authority.as_ref().ok_or_else(|| "Flow preparation lost its Store authority".to_string())?;
-        let edit = flow_store_edit(forward, inverse, self.description.take(), authority);
-        let prepared = authority.prepare_one_item(edit, Arc::new(post))?;
-        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
-        self.prepared = Some(prepared);
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
-    }
-
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
-        self.checkpoint
-    }
-
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<P, M>> {
-        self.prepared.as_ref()
-    }
-
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<P, M>> {
-        self.prepared.take()
-    }
-
-    fn cancel(&mut self) {
-        self.cancelled = true;
-    }
-
-    fn begin_close(&mut self) {
-        self.closing = true;
-    }
-
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
-        if !self.closing || grant.maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(base) = self.base.take() {
-            if !base.return_to_registry() {
-                return Err("Flow preparation could not return its exact base root".into());
-            }
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(authority) = self.authority.as_ref() {
-            if grant.maximum_bytes < authority.actor().len() {
-                return Ok(store::SnapshotRetirementStep::Blocked);
-            }
-            self.authority = None;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        Ok(store::SnapshotRetirementStep::Complete)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
-    }
-}
-//#endregion 📬️StorePreparation
+//#endregion 📏️StoreCapacity
 
 /// 🧮️ The composed content child this document names, read in place for a bounded scan — `None` unless it is
 /// composed as `s.stdio.semio@v1/flow`. Every retained scan reads it, never the parent's working-scene owner
@@ -809,8 +419,8 @@ fn duplicate_edge_id(source: &str, target: &str) -> String {
 
 fn evaluate_generation_preview(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, values: &crate::playbook::PlaybookValues) -> String {
     let live = snapshot.to_host_snapshot();
-    let fixture_json = dsl::json::to_json_string(&live);
-    let values: dsl::json::Object = values.iter().map(|(key, value)| (key.clone(), dsl::json::from_dsl_value(value))).collect();
+    let fixture_json = semio_framework_pack_json::to_json_string(&live);
+    let values: semio_framework_pack_json::Object = values.iter().map(|(key, value)| (key.clone(), semio_framework_pack_json::from_dsl_value(value))).collect();
     let patched = flow::forms_bridge::apply_generation_values_to_host_snapshot(&fixture_json, &values);
     let patched_fixture = match FlowHost::parse_host_snapshot_json(&patched) {
         Ok(parsed) => {
@@ -835,17 +445,17 @@ fn generation_window_transient(
 ) -> Result<Option<semio_framework_plugin::WindowTransientMutation>, Fault> {
     let (action, args) = match command {
         FlowCommand::AddGeneration(_) => ("addGeneration", None),
-        FlowCommand::RemoveGeneration(payload) => ("removeGeneration", Some(dsl::DslValue::object([("id".to_string(), dsl::DslValue::String(payload.id.clone()))]))),
-        FlowCommand::SelectGeneration(payload) => ("selectGeneration", Some(dsl::DslValue::object([("id".to_string(), dsl::DslValue::String(payload.id.clone()))]))),
+        FlowCommand::RemoveGeneration(payload) => ("removeGeneration", Some(semio_framework_value::DslValue::object([("id".to_string(), semio_framework_value::DslValue::String(payload.id.clone()))]))),
+        FlowCommand::SelectGeneration(payload) => ("selectGeneration", Some(semio_framework_value::DslValue::object([("id".to_string(), semio_framework_value::DslValue::String(payload.id.clone()))]))),
         FlowCommand::RenameGeneration(payload) => (
             "renameGeneration",
-            Some(dsl::DslValue::object([("id".to_string(), dsl::DslValue::String(payload.id.clone())), ("name".to_string(), dsl::DslValue::String(payload.name.clone()))])),
+            Some(semio_framework_value::DslValue::object([("id".to_string(), semio_framework_value::DslValue::String(payload.id.clone())), ("name".to_string(), semio_framework_value::DslValue::String(payload.name.clone()))])),
         ),
         FlowCommand::UpdateGenerationValues(payload) => (
             "updateGenerationValues",
-            Some(dsl::DslValue::object([
-                ("generationId".to_string(), payload.generation_id.clone().map(dsl::DslValue::String).unwrap_or(dsl::DslValue::Null)),
-                ("questionId".to_string(), dsl::DslValue::String(payload.question_id.clone())),
+            Some(semio_framework_value::DslValue::object([
+                ("generationId".to_string(), payload.generation_id.clone().map(semio_framework_value::DslValue::String).unwrap_or(semio_framework_value::DslValue::Null)),
+                ("questionId".to_string(), semio_framework_value::DslValue::String(payload.question_id.clone())),
                 ("value".to_string(), payload.value.clone()),
             ])),
         ),
@@ -854,8 +464,9 @@ fn generation_window_transient(
     let live = snapshot.to_host_snapshot();
     let spec = flow::forms_bridge::flow_host_snapshot_to_form_spec(&live);
     live.retire_cold();
-    let mut generation = current.generation();
-    if !crate::playbook::handle_generation_action(action, args.as_ref(), &mut generation, &spec, FLOW_PLAY_APP_ID) {
+    let mut generation_owner = current.generation().map_err(|error| Fault::from(error.into_message()))?;
+    let generation = generation_owner.as_mut();
+    if !crate::playbook::handle_generation_action(action, args.as_ref(), generation, &spec, FLOW_PLAY_APP_ID) {
         return Ok(None);
     }
     if matches!(command, FlowCommand::AddGeneration(_) | FlowCommand::SelectGeneration(_) | FlowCommand::UpdateGenerationValues(_)) {
@@ -865,7 +476,7 @@ fn generation_window_transient(
         }
     }
     let mut transient = current.clone();
-    transient.generation_json = serde_json::to_string(&generation).map_err(|_| Fault::from("flow-generation-transient-encode"))?;
+    transient.generation_json = semio_framework_pack_json::to_json_string(generation);
     main::transient::addressed(view, transient).map(Some)
 }
 
@@ -878,9 +489,8 @@ struct FlowDirectStoreWork {
     preview_off: Option<Vec<String>>,
     preview_next: Option<Vec<String>>,
     preview_found: bool,
-    edge_mutations: Option<Vec<FlowMutation>>,
-    node_mutations: Option<Vec<FlowMutation>>,
-    artifact_mutations: Option<Vec<FlowMutation>>,
+    edge_ids: Option<Vec<String>>,
+    node_ids: Option<Vec<String>>,
     duplicate_phase: u8,
     duplicate_source: Option<usize>,
     duplicate_suffix: u64,
@@ -900,9 +510,8 @@ impl FlowDirectStoreWork {
             preview_off: None,
             preview_next: None,
             preview_found: false,
-            edge_mutations: None,
-            node_mutations: None,
-            artifact_mutations: None,
+            edge_ids: None,
+            node_ids: None,
             duplicate_phase: 0,
             duplicate_source: None,
             duplicate_suffix: 1,
@@ -976,7 +585,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
         }
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<FlowPlayApp>>) -> Result<ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<FlowPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<FlowPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<FlowPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, history: _history, interaction, hover: _hover, context, operation: _operation } = *input;
         let context = context.ok_or_else(|| Fault::from("flow-window-context-required"))?;
         let view = context.view_state.as_ref().ok_or_else(|| Fault::from("flow-window-view-required"))?;
@@ -1097,22 +706,14 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
             if child.nodes.len() > FLOW_STORE_MAX_SCENE_ITEMS || child.edges.len() > FLOW_STORE_MAX_SCENE_ITEMS {
                 return Err(Fault::from("flow-retained-scene-capacity"));
             }
-            self.artifact_mutations.get_or_insert_with(Vec::new);
-            let (length, matched) = match command {
-                FlowCommand::RemoveWidget(payload) => (child.nodes.len(), child.nodes.get(self.cursor).is_some_and(|node| node.id == payload.widget_id)),
-                FlowCommand::Disconnect(payload) => (child.edges.len(), child.edges.get(self.cursor).is_some_and(|edge| edge.id == payload.synapse_id)),
-                _ => unreachable!(),
+            let (length, matched, target, found) = match command {
+                FlowCommand::RemoveWidget(payload) => (child.nodes.len(), child.nodes.get(self.cursor).is_some_and(|node| node.id == payload.widget_id), &payload.widget_id, self.node_ids.get_or_insert_with(Vec::new)),
+                FlowCommand::Disconnect(payload) => (child.edges.len(), child.edges.get(self.cursor).is_some_and(|edge| edge.id == payload.synapse_id), &payload.synapse_id, self.edge_ids.get_or_insert_with(Vec::new)),
+                _ => return Err(Fault::from("flow-retained-direct-route-mismatch")),
             };
             if self.cursor < length {
                 if matched {
-                    let mutation = match command {
-                        FlowCommand::RemoveWidget(payload) => Some(FlowMutation::DeleteWidget(DeleteWidget { id: payload.widget_id.clone() })),
-                        FlowCommand::Disconnect(payload) => Some(FlowMutation::DisconnectWidgets(DisconnectWidgets { id: payload.synapse_id.clone() })),
-                        _ => unreachable!(),
-                    };
-                    if let Some(mutation) = mutation {
-                        self.artifact_mutations.as_mut().ok_or_else(|| Fault::from("flow-retained-direct-artifact-owner"))?.push(mutation);
-                    }
+                    found.push(target.clone());
                     self.cursor = length;
                 } else {
                     self.cursor += 1;
@@ -1123,17 +724,16 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
                     ArtifactCommandWorkStep::Progress { stage: "flow-direct-artifact-scan", preview: br#"{"en":"Scanning one artifact item","de":"Ein Artefaktelement wird geprueft"}"# }
                 });
             }
-            let mutations = self.artifact_mutations.take().ok_or_else(|| Fault::from("flow-retained-direct-artifact-owner"))?;
+            let (node_ids, edge_ids) = (self.node_ids.take().unwrap_or_default(), self.edge_ids.take().unwrap_or_default());
             self.completed = true;
-            if mutations.is_empty() {
+            if node_ids.is_empty() && edge_ids.is_empty() {
                 return Err(match command {
                     FlowCommand::RemoveWidget(payload) => semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("mutation.target-missing"), format!("removeWidget found no widget \"{}\"", payload.widget_id)),
                     FlowCommand::Disconnect(payload) => semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("mutation.target-missing"), format!("disconnect found no synapse \"{}\"", payload.synapse_id)),
                     _ => Fault::from("flow-retained-direct-route-mismatch"),
                 });
             }
-            let composed = crate::flow_composed_snapshot(snapshot, &context.children)?;
-            return flow_content_edit(&composed, &mutations).map(ArtifactCommandWorkStep::Complete);
+            return Ok(ArtifactCommandWorkStep::Complete(flow_content_leaves_emit(&snapshot.content.child_id, &flow_removal_leaves(&child, &node_ids, &edge_ids))));
         }
         if matches!(command, FlowCommand::DeleteSelection(_)) {
             let selected = interaction.selection.get(FLOW_INTERACTION_GRAPH).map_or(&[][..], |selection| selection.ids.as_slice());
@@ -1144,15 +744,15 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
             if child.nodes.len() > FLOW_STORE_MAX_SCENE_ITEMS || child.edges.len() > FLOW_STORE_MAX_SCENE_ITEMS {
                 return Err(Fault::from("flow-retained-scene-capacity"));
             }
-            self.edge_mutations.get_or_insert_with(Vec::new);
-            self.node_mutations.get_or_insert_with(Vec::new);
+            self.edge_ids.get_or_insert_with(Vec::new);
+            self.node_ids.get_or_insert_with(Vec::new);
             if let Some(target) = selected.get(self.cursor) {
                 if let Some(id) = target.strip_prefix(FLOW_GRAPH_EDGE_TARGET_PREFIX) {
                     if let Some(edge) = child.edges.get(self.scan_cursor) {
                         self.scan_cursor += 1;
                         let matched = edge.id == id;
                         if matched {
-                            self.edge_mutations.as_mut().ok_or_else(|| Fault::from("flow-retained-delete-selection-owner"))?.push(FlowMutation::DisconnectWidgets(DisconnectWidgets { id: id.to_string() }));
+                            self.edge_ids.as_mut().ok_or_else(|| Fault::from("flow-retained-delete-selection-owner"))?.push(id.to_string());
                         }
                         if matched || self.scan_cursor == child.edges.len() {
                             self.cursor += 1;
@@ -1167,7 +767,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
                         self.scan_cursor += 1;
                         let matched = node.id == id;
                         if matched {
-                            self.node_mutations.as_mut().ok_or_else(|| Fault::from("flow-retained-delete-selection-owner"))?.push(FlowMutation::DeleteWidget(DeleteWidget { id: id.to_string() }));
+                            self.node_ids.as_mut().ok_or_else(|| Fault::from("flow-retained-delete-selection-owner"))?.push(id.to_string());
                         }
                         if matched || self.scan_cursor == child.nodes.len() {
                             self.cursor += 1;
@@ -1187,14 +787,13 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
                     ArtifactCommandWorkStep::Progress { stage: "flow-delete-selection", preview: br#"{"en":"Preparing selected deletion","de":"Auswahlloeschung wird vorbereitet"}"# }
                 });
             }
-            let mut artifact_mutations = self.edge_mutations.take().ok_or_else(|| Fault::from("flow-retained-delete-selection-owner"))?;
-            artifact_mutations.extend(self.node_mutations.take().ok_or_else(|| Fault::from("flow-retained-delete-selection-owner"))?);
+            let edge_ids = self.edge_ids.take().ok_or_else(|| Fault::from("flow-retained-delete-selection-owner"))?;
+            let node_ids = self.node_ids.take().ok_or_else(|| Fault::from("flow-retained-delete-selection-owner"))?;
             self.completed = true;
-            if artifact_mutations.is_empty() {
+            if node_ids.is_empty() && edge_ids.is_empty() {
                 return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.delete-selection-empty"), "deleteSelection needs at least one selected widget or synapse"));
             }
-            let composed = crate::flow_composed_snapshot(snapshot, &context.children)?;
-            return flow_content_edit(&composed, &artifact_mutations).map(ArtifactCommandWorkStep::Complete);
+            return Ok(ArtifactCommandWorkStep::Complete(flow_content_leaves_emit(&snapshot.content.child_id, &flow_removal_leaves(&child, &node_ids, &edge_ids))));
         }
         if let FlowCommand::SetPreviewOff(payload) = command {
             if self.preview_off.is_none() {
@@ -1252,27 +851,10 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
             if child.nodes.len() > FLOW_STORE_MAX_SCENE_ITEMS {
                 return Err(Fault::from("flow-retained-scene-capacity"));
             }
-            self.artifact_mutations.get_or_insert_with(Vec::new);
             if let Some(node) = child.nodes.get(self.cursor) {
                 if let Some(id) = payload.widget_ids.get(self.scan_cursor) {
                     self.scan_cursor += 1;
                     let matched = *id == node.id;
-                    if matched {
-                        let widget = crate::widget_from_node(node);
-                        let mut replacement = widget.clone();
-                        match (payload.field.as_str(), &mut replacement) {
-                            ("value", Widget::InputSlider { value, .. }) => {
-                                if let Ok(parsed) = payload.value.parse::<f64>() {
-                                    *value = parsed;
-                                }
-                            }
-                            ("text", Widget::InputNote { text, .. }) => *text = payload.value.clone(),
-                            _ => {}
-                        }
-                        if replacement != widget {
-                            self.artifact_mutations.as_mut().ok_or_else(|| Fault::from("flow-retained-patch-widgets-owner"))?.push(FlowMutation::ReplaceWidget(ReplaceWidget { id: node.id.clone(), widget: replacement }));
-                        }
-                    }
                     if matched || self.scan_cursor == payload.widget_ids.len() {
                         self.cursor += 1;
                         self.scan_cursor = 0;
@@ -1287,11 +869,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
                     ArtifactCommandWorkStep::Progress { stage: "flow-patch-widgets", preview: br#"{"en":"Preparing widget patches","de":"Widget-Aktualisierungen werden vorbereitet"}"# }
                 });
             }
-            let mutations = self.artifact_mutations.take().ok_or_else(|| Fault::from("flow-retained-patch-widgets-owner"))?;
             self.completed = true;
-            if !mutations.is_empty() {
-                self.retirement.push(retained::Owner::Mutations(mutations));
-            }
             let leaves = patch_flow_widgets::patch_flow_widgets_leaves(&child, payload);
             return Ok(ArtifactCommandWorkStep::Complete(patch_flow_widgets::widget_leaves_emit(&snapshot.content.child_id, &leaves)));
         }
@@ -1316,7 +894,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
         if checkpoint.len() != 34 || checkpoint[0] > 1 || checkpoint[17] > 2 {
             return Err(Fault::from("flow-retained-direct-checkpoint-invalid"));
         }
-        if self.closing || !self.retirement.is_empty() || self.preview_off.is_some() || self.preview_next.is_some() || self.edge_mutations.is_some() || self.node_mutations.is_some() || self.artifact_mutations.is_some() {
+        if self.closing || !self.retirement.is_empty() || self.preview_off.is_some() || self.preview_next.is_some() || self.edge_ids.is_some() || self.node_ids.is_some() {
             return Err(Fault::from("flow-retained-direct-restore-requires-empty-owner"));
         }
         self.completed = checkpoint[0] == 1;
@@ -1331,9 +909,8 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
         self.preview_off = None;
         self.preview_next = None;
         self.preview_found = false;
-        self.edge_mutations = None;
-        self.node_mutations = None;
-        self.artifact_mutations = None;
+        self.edge_ids = None;
+        self.node_ids = None;
         Ok(())
     }
 
@@ -1351,19 +928,15 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
         if maximum_bytes == 0 {
             return semio_framework_job::InteractiveJobCloseStep::Blocked;
         }
-        if let Some(values) = self.preview_off.take().or_else(|| self.preview_next.take()) {
+        if let Some(values) = self.preview_off.take().or_else(|| self.preview_next.take()).or_else(|| self.edge_ids.take()).or_else(|| self.node_ids.take()) {
             self.retirement.push(retained::Owner::Strings(values));
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        if let Some(values) = self.edge_mutations.take().or_else(|| self.node_mutations.take()).or_else(|| self.artifact_mutations.take()) {
-            self.retirement.push(retained::Owner::Mutations(values));
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
         }
         semio_framework_job::InteractiveJobCloseStep::Complete
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.retirement.is_empty() && self.preview_off.is_none() && self.preview_next.is_none() && self.edge_mutations.is_none() && self.node_mutations.is_none() && self.artifact_mutations.is_none()
+        self.closing && self.retirement.is_empty() && self.preview_off.is_none() && self.preview_next.is_none() && self.edge_ids.is_none() && self.node_ids.is_none()
     }
 }
 
@@ -1515,7 +1088,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
         (child.nodes.len() <= FLOW_STORE_MAX_MUTATION_ITEMS && child.edges.len() <= FLOW_STORE_MAX_MUTATION_ITEMS).then_some(1)
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<FlowPlayApp>>) -> Result<ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<FlowPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<FlowPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<FlowPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, history, interaction: _interaction, hover: _hover, context, operation } = *input;
         if self.closing || self.completed {
             return Err(Fault::from("flow-retained-child-group-terminal"));
@@ -1544,7 +1117,6 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
             || !emit.artifact_mutations.is_empty()
             || !emit.config_mutations.is_empty()
             || !emit.draft_mutations.is_empty()
-            || emit.description.is_some()
             || !emit.effects.is_empty()
             || !emit.events.is_empty()
         {
@@ -1955,7 +1527,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
         FLOW_GRAPH_OPERATION_CAPACITY.rows_for_items(child.nodes.len().saturating_add(1))
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<FlowPlayApp>>) -> Result<ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<FlowPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<FlowPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<FlowPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, history: _history, interaction, hover: _hover, context, operation: _operation } = *input;
         if self.completed || self.closing {
             return Err(Fault::from("flow-retained-graph-work-terminal"));
@@ -2229,7 +1801,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
         (!self.closing && !self.completed && matches!(command, FlowCommand::SetContributions(payload) if payload.json.len() <= FLOW_CONTRIBUTIONS_RAW_BYTES)).then_some(1)
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<FlowPlayApp>>) -> Result<ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<FlowPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<FlowPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<FlowPlayApp>>, Fault> {
         if self.closing || self.completed {
             return Err(Fault::from("flow-contributions-work-terminal"));
         }
@@ -2422,10 +1994,6 @@ impl ArtifactEditor for FlowPlayApp {
         store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.child-projection"), error.to_string()))
     }
 
-    fn build_artifact_store_one_item_preparation_factory() -> Option<Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(Arc::new(retained::artifact::preparation::PreparationFactory))
-    }
-
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
         Some(crate::retirement::store_owners())
     }
@@ -2474,6 +2042,15 @@ impl ArtifactEditor for FlowPlayApp {
         main::transient::register(registry)
     }
 
+    /// 🧭️ The leaf that names a node-drag release (design §19.1): a release that also drew a wire lands its `insert-edge`
+    /// before the relative `drag-nodes`, and the history row is still labelled by the drag.
+    fn tool_intent_kinds(tool: &str) -> &'static [&'static str] {
+        match tool.strip_prefix(crate::editor::flow::modes::edit::tools::drag::FLOW_EDITOR_APP_ID).and_then(|verb| verb.strip_prefix('#')) {
+            Some(crate::editor::flow::commands::node_graph_edit::NODE_GRAPH_EDIT_VERB | "moveMediaNode") => &["drag-nodes"],
+            _ => &[],
+        }
+    }
+
     fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
         let mut proofs = FlowDirectStoreJobFactoryProofs::bounded_first_step_tool_proofs();
         proofs.extend(FlowHostEffectJobFactoryProofs::bounded_first_step_tool_proofs());
@@ -2502,7 +2079,7 @@ impl ArtifactEditor for FlowPlayApp {
             return Ok(None);
         }
         if request.command.command_id() != request.tool_id {
-            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.retained.tool-mismatch"), "Flow command does not match its exact retained tool registration"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "Flow command does not match its exact retained tool registration"));
         }
         if FLOW_CHILD_GROUP_TOOL_IDS.contains(&request.tool_id.as_str())
             || FLOW_GRAPH_OPERATION_TOOL_IDS.contains(&request.tool_id.as_str())
@@ -2583,9 +2160,12 @@ impl ArtifactEditor for FlowPlayApp {
     /// 🌱️ Derives the `content` child at boot and on every archive load, so a live shell composes the
     /// child that every verb edits and every window reads — see [`crate::flow_genesis_content_pack`] and
     /// [`crate::flow_composed_snapshot`].
-    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {
+ Ok((||{
         crate::flow_genesis_content_pack(snapshot, slot, child_id)
-    }
+    
+})())
+}
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// manifest declaration (host-pushed/internally-chained, not user-facing actions).
@@ -2600,15 +2180,15 @@ impl ArtifactEditor for FlowPlayApp {
     /// `action 'flowEvalTick' is not a framework-reserved action` and the node graph never evaluated
     /// (16 refusal lines per boot, measured on :6016, ticket 26/09/18 slice B3c). Mirrors
     /// `Generation2dPlayApp::command_from_action`, which is why that sibling's identical eval chain runs.
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
-        let args = args.cloned().unwrap_or(dsl::DslValue::Null);
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
+        let args = args.cloned().unwrap_or(semio_framework_value::DslValue::Null);
         let str_arg = |keys: &[&str]| -> Option<String> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_str()).map(str::to_string)) };
         let f64_arg = |keys: &[&str]| -> Option<f64> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_f64())) };
         let u64_arg = |keys: &[&str]| -> Option<u64> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_u64().or_else(|| value.as_f64().map(|number| number as u64)))) };
-        let bool_arg = |keys: &[&str]| -> Option<bool> { keys.iter().find_map(|key| args.get(key).and_then(dsl::DslValue::as_bool)) };
+        let bool_arg = |keys: &[&str]| -> Option<bool> { keys.iter().find_map(|key| args.get(key).and_then(semio_framework_value::DslValue::as_bool)) };
         let string_list = |keys: &[&str]| -> Vec<String> {
             keys.iter()
-                .find_map(|key| args.get(key).and_then(dsl::DslValue::as_array))
+                .find_map(|key| args.get(key).and_then(semio_framework_value::DslValue::as_array))
                 .map_or_else(Vec::new, |items| items.iter().filter_map(|item| item.as_str().map(str::to_string)).collect())
         };
         match action {
@@ -2660,7 +2240,7 @@ impl ArtifactEditor for FlowPlayApp {
             "setPreviewOff" => Ok(FlowCommand::SetPreviewOff(set_preview_off::SetPreviewOff { ids: string_list(&["ids", "widgetIds", "widget_ids"]), value: bool_arg(&["value", "off"]).unwrap_or(false) })),
             "openSpotlight" => Ok(FlowCommand::OpenSpotlight(open_spotlight::OpenSpotlight {})),
             "replaceImage" => Ok(FlowCommand::ReplaceImage(replace_image::ReplaceImage { id: str_arg(&["id", "widgetId", "widget_id"]).unwrap_or_default() })),
-            "setCatalogueSections" => Ok(FlowCommand::SetCatalogueSections(set_catalogue_sections::SetCatalogueSections { sections_json: str_arg(&["sectionsJson", "sections_json"]).or_else(|| args.get("sections").map(dsl::json::to_json_string)).unwrap_or_else(|| "[]".into()) })),
+            "setCatalogueSections" => Ok(FlowCommand::SetCatalogueSections(set_catalogue_sections::SetCatalogueSections { sections_json: str_arg(&["sectionsJson", "sections_json"]).or_else(|| args.get("sections").map(semio_framework_pack_json::to_json_string)).unwrap_or_else(|| "[]".into()) })),
             "toggleExtension" => Ok(FlowCommand::ToggleExtension(toggle_extension::ToggleExtension { id: str_arg(&["id", "extensionId", "extension_id"]).unwrap_or_default(), enabled: bool_arg(&["enabled", "value"]).unwrap_or(false) })),
             "addGeneration" => Ok(FlowCommand::AddGeneration(add_generation::AddGeneration {})),
             "removeGeneration" => Ok(FlowCommand::RemoveGeneration(remove_generation::RemoveGeneration { id: str_arg(&["id"]).unwrap_or_default() })),
@@ -2669,7 +2249,7 @@ impl ArtifactEditor for FlowPlayApp {
             "updateGenerationValues" => Ok(FlowCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues {
                 generation_id: str_arg(&["generationId", "generation_id"]),
                 question_id: str_arg(&["questionId", "question_id"]).unwrap_or_default(),
-                value: args.get("value").cloned().unwrap_or(dsl::DslValue::Null),
+                value: args.get("value").cloned().unwrap_or(semio_framework_value::DslValue::Null),
             })),
             // 🪟️ Both hops are ADDRESSED: `windowId` rides on the tick's own args and is echoed back
             // onto the answer by `reactor::extension_response_args`, so a hop discharges the latch of
@@ -2735,7 +2315,8 @@ impl ArtifactEditor for FlowPlayApp {
     /// `validate_state` drops stale ids of a domain it has membership info for, and `Flat` domains are
     /// skipped entirely (see the design doc's `HierarchyProvider::Flat` note). "handle" targets have no
     /// persisted document data to register — see `flow_graph_selection_domains`'s doc comment.
-    fn interaction_topology(doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> InteractionTopology {
+    fn interaction_topology(doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<InteractionTopology, semio_framework_value::ValueError> {
+ Ok((||{
         let mut domains = std::collections::BTreeMap::new();
         let Ok(composed) = crate::flow_composed_snapshot(doc.snapshot, &doc.children) else {
             domains.insert(FLOW_INTERACTION_GRAPH.to_string(), DomainTopology { ordered: Vec::new() });
@@ -2747,7 +2328,9 @@ impl ArtifactEditor for FlowPlayApp {
         live.retire_cold();
         domains.insert(FLOW_INTERACTION_GRAPH.to_string(), DomainTopology { ordered });
         InteractionTopology { domains }
-    }
+    
+})())
+}
 
     /// 🧵️ Arms a `flowEvalTick` chain for every ATTACHED main window whose evaluation the snapshot
     /// still owes — covers every mutation path (edits, undo/redo, example load, remote operations) in
@@ -2850,9 +2433,8 @@ impl ArtifactEditor for FlowPlayApp {
 
     fn context_menu(request: &ContextMenuRequest, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         let config = main::config::current(cfg);
-        let is_de = view_state.locale == semio_framework_ui_locale::Locale::De;
         let Ok(composed) = crate::flow_composed_snapshot(doc.snapshot, &doc.children) else { return Vec::new() };
-        flow_context_menu_items(registry, &composed, &config, flow_play_labels(view_state), is_de, request.surface.as_ref())
+        flow_context_menu_items(registry, &composed, &config, flow_play_labels(view_state), view_state, request.surface.as_ref())
     }
 }
 //#endregion 🔖️FlowPlayApp
@@ -2988,14 +2570,12 @@ pub fn flow_scene_replacement(composed: &FlowSnapshot, widgets: &[Widget], synap
     flow_content_leaves_emit(&composed.content.child_id, &[SemioFlowMutation::SetSnapshot(set_snapshot::SetSnapshot::new(next))])
 }
 
-/// ✏️ Folds this subset's semantic edits over the composed scene and publishes the result on its content child.
-pub fn flow_content_edit(composed: &FlowSnapshot, operations: &[FlowMutation]) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
-    let mut next = composed.clone();
-    for operation in operations {
-        crate::schema::mutations::apply_flow_mutation(&mut next, operation).map_err(|error| Fault::from(format!("flow edit refused: {error:?}")))?;
-    }
-    let scene = next.content.local_owner::<FlowWorkingScene>().ok_or_else(|| Fault::from("flow-edit-scene-owner-missing"))?;
-    flow_scene_publication(composed, &scene.widgets, &scene.synapses, &scene.layout)
+/// 🗑️ The child leaves that delete `node_ids` and `edge_ids` from `child`: every named edge and every edge touching a named
+/// node first (child order, so no edge ever dangles), then every named node — the same order [`flow_content_leaves`] keeps.
+pub fn flow_removal_leaves(child: &SemioFlowSnapshot, node_ids: &[String], edge_ids: &[String]) -> Vec<SemioFlowMutation> {
+    let severed = child.edges.iter().filter(|edge| edge_ids.contains(&edge.id) || node_ids.contains(&edge.from.node) || node_ids.contains(&edge.to.node));
+    let removed = child.nodes.iter().filter(|node| node_ids.contains(&node.id));
+    severed.map(|edge| SemioFlowMutation::RemoveEdge(remove_edge::RemoveEdge { id: edge.id.clone() })).chain(removed.map(|node| SemioFlowMutation::RemoveNode(remove_node::RemoveNode { id: node.id.clone() }))).collect()
 }
 
 /// ✏️ Runs one atomic `FlowHost` edit over the composed scene and publishes its result on the content child — an
@@ -3263,9 +2843,6 @@ mod interactive_job_tests;
 #[path = "🧪️tests/⚖️declared-verbs/🦀️.rs"]
 mod declared_verb_laws;
 //#endregion 🧪️Tests
-
-#[cfg(test)]
-use crate::flow_content_child_handle_bounded;
 
 //#region 🪢️TaxonomyMounts
 #[path = "📚️examples/🎬️demo-session/🦀️.rs"]

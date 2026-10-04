@@ -1,6 +1,17 @@
 {
   "exaggeration": 1.0,
-  "importedFeaturesJson": "{\"positions\":[{\"id\":\"pos-harbor\",\"lat\":53.5,\"lon\":10.0}],\"routes\":[],\"regions\":[]}",
+  "importedMap": {
+    "positions": [
+      {
+        "id": "pos-harbor",
+        "lat": 53.5,
+        "lon": 10.0
+      }
+    ],
+    "routes": [],
+    "regions": [],
+    "properties": []
+  },
   "mesh": {
     "childId": "gisterrain-mesh-derived",
     "target": {

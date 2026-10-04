@@ -134,7 +134,7 @@ fn the_evaluate_budget_envelope_obeys_its_fixture_end_to_end() {
         if let Some(expected) = &row.seeded_output_json {
             let cached = cache.get(BUDGET_NODE_HASH).unwrap_or_else(|| panic!("{}: a seeding row must be readable", row.id));
             let expected_value: serde_json::Value = serde_json::from_str(expected).expect("expected output json");
-            let observed: serde_json::Value = serde_json::from_str(&dsl::json::to_json_string(&cached)).expect("cached output json");
+            let observed: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&cached)).expect("cached output json");
             assert_eq!(observed, expected_value, "{}: the seeded output is exactly the envelope's own body", row.id);
             semio_framework_os_flow::neural::ColdRetire::retire_cold(cached);
         }

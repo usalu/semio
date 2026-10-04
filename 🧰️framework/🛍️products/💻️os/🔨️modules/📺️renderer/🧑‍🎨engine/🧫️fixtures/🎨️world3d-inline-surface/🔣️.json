@@ -1,0 +1,1804 @@
+{
+  "schema": "framework.world3d.inline-surface/v1",
+  "mesh": {
+    "positions": [
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0
+    ],
+    "normals": [],
+    "indices": [
+      0,
+      1,
+      2,
+      0,
+      2,
+      3
+    ],
+    "attributes": {
+      "normal": {
+        "domain": "corner",
+        "semantic": "normal",
+        "interpolation": "linear",
+        "values": [
+          [
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ],
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          1
+        ]
+      },
+      "uv0": {
+        "domain": "corner",
+        "semantic": "uv",
+        "interpolation": "linear",
+        "values": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0.25,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "indices": [
+          0,
+          1,
+          2,
+          3,
+          2,
+          4
+        ]
+      },
+      "uv1": {
+        "domain": "vertex",
+        "semantic": "uv",
+        "interpolation": "linear",
+        "values": [
+          [
+            0.1,
+            0.1
+          ],
+          [
+            0.9,
+            0.1
+          ],
+          [
+            0.9,
+            0.9
+          ],
+          [
+            0.1,
+            0.9
+          ]
+        ]
+      },
+      "color": {
+        "domain": "face",
+        "semantic": "color",
+        "interpolation": "linear",
+        "values": [
+          [
+            1,
+            0.5,
+            0.25,
+            0.2
+          ],
+          [
+            0.2,
+            0.4,
+            1,
+            0.8
+          ]
+        ]
+      },
+      "material": {
+        "domain": "face",
+        "semantic": "material",
+        "interpolation": "nearest",
+        "values": [
+          "opaque",
+          "blend"
+        ],
+        "indices": [
+          0,
+          1
+        ]
+      },
+      "tangent": {
+        "domain": "corner",
+        "semantic": "custom",
+        "interpolation": "nearest",
+        "values": [
+          [
+            0,
+            1,
+            0,
+            -1
+          ]
+        ],
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "uv63": {
+        "domain": "vertex",
+        "semantic": "uv",
+        "interpolation": "linear",
+        "values": [
+          [
+            0.2,
+            0.3
+          ],
+          [
+            0.8,
+            0.3
+          ],
+          [
+            0.8,
+            0.7
+          ],
+          [
+            0.2,
+            0.7
+          ]
+        ]
+      }
+    },
+    "materials": {
+      "opaque": {
+        "baseColor": [
+          0.8,
+          0.1,
+          0.1,
+          0.4
+        ],
+        "metallic": 0.7,
+        "roughness": 0.3,
+        "emissive": [
+          0.1,
+          0.2,
+          0.3
+        ],
+        "alphaMode": "OPAQUE",
+        "doubleSided": false,
+        "baseColorTexture": "pixel",
+        "metallicRoughnessTexture": "pixel",
+        "normalTexture": "pixel",
+        "occlusionTexture": "pixel",
+        "emissiveTexture": "pixel",
+        "normalScale": 0.5,
+        "occlusionStrength": 0.25,
+        "textureCoordinates": {
+          "normalTexture": 63,
+          "occlusionTexture": 1
+        },
+        "textureSamplers": {
+          "baseColorTexture": {
+            "wrapS": 33071,
+            "wrapT": 33648,
+            "magFilter": 9728,
+            "minFilter": 9729
+          },
+          "metallicRoughnessTexture": {
+            "wrapS": 33071,
+            "wrapT": 33648,
+            "magFilter": 9728,
+            "minFilter": 9987
+          },
+          "normalTexture": {
+            "wrapS": 33071,
+            "wrapT": 33648,
+            "magFilter": 9728,
+            "minFilter": 9729
+          },
+          "occlusionTexture": {
+            "wrapS": 33071,
+            "wrapT": 33648,
+            "magFilter": 9728,
+            "minFilter": 9729
+          },
+          "emissiveTexture": {
+            "wrapS": 33071,
+            "wrapT": 33648,
+            "magFilter": 9728,
+            "minFilter": 9729
+          }
+        }
+      },
+      "blend": {
+        "baseColor": [
+          0.2,
+          0.3,
+          0.9,
+          0.6
+        ],
+        "metallic": 0.1,
+        "roughness": 0.8,
+        "emissive": [
+          0,
+          0,
+          0.2
+        ],
+        "alphaMode": "BLEND",
+        "doubleSided": true
+      }
+    },
+    "textures": {
+      "pixel": {
+        "mime": "image/png",
+        "bytes": [
+          137,
+          80,
+          78,
+          71,
+          13,
+          10,
+          26,
+          10,
+          0,
+          0,
+          0,
+          13,
+          73,
+          72,
+          68,
+          82,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1,
+          8,
+          6,
+          0,
+          0,
+          0,
+          31,
+          21,
+          196,
+          137,
+          0,
+          0,
+          0,
+          13,
+          73,
+          68,
+          65,
+          84,
+          120,
+          156,
+          99,
+          248,
+          223,
+          224,
+          240,
+          31,
+          0,
+          7,
+          0,
+          2,
+          191,
+          43,
+          215,
+          199,
+          226,
+          0,
+          0,
+          0,
+          0,
+          73,
+          69,
+          78,
+          68,
+          174,
+          66,
+          96,
+          130
+        ]
+      }
+    }
+  },
+  "expected": {
+    "drawVertexCount": 6,
+    "groups": [
+      {
+        "start": 0,
+        "count": 3,
+        "materialIndex": 0
+      },
+      {
+        "start": 3,
+        "count": 3,
+        "materialIndex": 1
+      }
+    ],
+    "normal": [
+      0,
+      0,
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+      1,
+      0
+    ],
+    "uv": [
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      0.25,
+      0,
+      1,
+      1,
+      0,
+      1
+    ],
+    "color": [
+      1,
+      0.5,
+      0.25,
+      0.2,
+      1,
+      0.5,
+      0.25,
+      0.2,
+      1,
+      0.5,
+      0.25,
+      0.2,
+      0.2,
+      0.4,
+      1,
+      0.8,
+      0.2,
+      0.4,
+      1,
+      0.8,
+      0.2,
+      0.4,
+      1,
+      0.8
+    ],
+    "materialOrder": [
+      "opaque",
+      "blend"
+    ],
+    "textureRoles": [
+      "map",
+      "metalnessMap",
+      "roughnessMap",
+      "normalMap",
+      "aoMap",
+      "emissiveMap"
+    ]
+  },
+  "contract": {
+    "ownership": "existingMeshVisuals",
+    "selection": "restoreAuthoredOnNeutral",
+    "cancellation": "retireOwnedAssetsWithoutStalePublication",
+    "pick": "sameTriangleOrder",
+    "uvOrientation": "gltf"
+  },
+  "pixelCases": [
+    {
+      "baseColor": [
+        0.8,
+        0.6,
+        0.4,
+        0.7
+      ],
+      "vertexColor": [
+        0.75,
+        0.9,
+        0.8,
+        0.8
+      ],
+      "metallic": 0.65,
+      "roughness": 0.7,
+      "emissive": [
+        0.2,
+        0.1,
+        0.05
+      ],
+      "alphaMode": "OPAQUE",
+      "alphaCutoff": 0.5,
+      "doubleSided": false,
+      "reverse": false,
+      "maps": {},
+      "id": "authored-unmapped"
+    },
+    {
+      "baseColor": [
+        0.8,
+        0.6,
+        0.4,
+        0.7
+      ],
+      "vertexColor": [
+        0.75,
+        0.9,
+        0.8,
+        0.8
+      ],
+      "metallic": 0.65,
+      "roughness": 0.7,
+      "emissive": [
+        0.2,
+        0.1,
+        0.05
+      ],
+      "alphaMode": "OPAQUE",
+      "alphaCutoff": 0.5,
+      "doubleSided": false,
+      "reverse": false,
+      "maps": {
+        "baseColor": [
+          180,
+          100,
+          220,
+          128
+        ],
+        "metallicRoughness": [
+          255,
+          140,
+          190,
+          255
+        ],
+        "normal": [
+          180,
+          110,
+          240,
+          255
+        ],
+        "occlusion": [
+          100,
+          255,
+          255,
+          255
+        ],
+        "emissive": [
+          200,
+          80,
+          120,
+          255
+        ]
+      },
+      "id": "authored-five-maps"
+    },
+    {
+      "baseColor": [
+        0.8,
+        0.6,
+        0.4,
+        0.7
+      ],
+      "vertexColor": [
+        0.75,
+        0.9,
+        0.8,
+        0.8
+      ],
+      "metallic": 0.65,
+      "roughness": 0.7,
+      "emissive": [
+        0.2,
+        0.1,
+        0.05
+      ],
+      "alphaMode": "OPAQUE",
+      "alphaCutoff": 0.5,
+      "doubleSided": false,
+      "reverse": false,
+      "maps": {
+        "normal": [
+          220,
+          100,
+          200,
+          255
+        ]
+      },
+      "id": "authored-normal"
+    },
+    {
+      "baseColor": [
+        0.8,
+        0.6,
+        0.4,
+        0.7
+      ],
+      "vertexColor": [
+        0.75,
+        0.9,
+        0.8,
+        0.8
+      ],
+      "metallic": 0.65,
+      "roughness": 0.7,
+      "emissive": [
+        0.2,
+        0.1,
+        0.05
+      ],
+      "alphaMode": "OPAQUE",
+      "alphaCutoff": 0.5,
+      "doubleSided": false,
+      "reverse": false,
+      "maps": {
+        "occlusion": [
+          50,
+          255,
+          255,
+          255
+        ]
+      },
+      "id": "authored-occlusion"
+    },
+    {
+      "baseColor": [
+        0.8,
+        0.6,
+        0.4,
+        0.7
+      ],
+      "vertexColor": [
+        0.75,
+        0.9,
+        0.8,
+        0.8
+      ],
+      "metallic": 0.65,
+      "roughness": 0.7,
+      "emissive": [
+        0.2,
+        0.1,
+        0.05
+      ],
+      "alphaMode": "MASK",
+      "alphaCutoff": 0.5,
+      "doubleSided": false,
+      "reverse": false,
+      "maps": {
+        "baseColor": [
+          180,
+          100,
+          220,
+          64
+        ]
+      },
+      "id": "authored-mask-discard"
+    },
+    {
+      "baseColor": [
+        0.8,
+        0.6,
+        0.4,
+        0.7
+      ],
+      "vertexColor": [
+        0.75,
+        0.9,
+        0.8,
+        0.8
+      ],
+      "metallic": 0.65,
+      "roughness": 0.7,
+      "emissive": [
+        0.2,
+        0.1,
+        0.05
+      ],
+      "alphaMode": "BLEND",
+      "alphaCutoff": 0.5,
+      "doubleSided": false,
+      "reverse": false,
+      "maps": {
+        "baseColor": [
+          180,
+          100,
+          220,
+          180
+        ]
+      },
+      "id": "authored-blend"
+    },
+    {
+      "baseColor": [
+        0.8,
+        0.6,
+        0.4,
+        0.7
+      ],
+      "vertexColor": [
+        0.75,
+        0.9,
+        0.8,
+        0.8
+      ],
+      "metallic": 0.65,
+      "roughness": 0.7,
+      "emissive": [
+        0.2,
+        0.1,
+        0.05
+      ],
+      "alphaMode": "OPAQUE",
+      "alphaCutoff": 0.5,
+      "doubleSided": false,
+      "reverse": true,
+      "maps": {},
+      "id": "authored-back-culled"
+    },
+    {
+      "baseColor": [
+        0.8,
+        0.6,
+        0.4,
+        0.7
+      ],
+      "vertexColor": [
+        0.75,
+        0.9,
+        0.8,
+        0.8
+      ],
+      "metallic": 0.65,
+      "roughness": 0.7,
+      "emissive": [
+        0.2,
+        0.1,
+        0.05
+      ],
+      "alphaMode": "OPAQUE",
+      "alphaCutoff": 0.5,
+      "doubleSided": true,
+      "reverse": true,
+      "maps": {},
+      "id": "authored-double-back"
+    },
+    {
+      "baseColor": [
+        0.8,
+        0.6,
+        0.4,
+        0.7
+      ],
+      "vertexColor": [
+        0.75,
+        0.9,
+        0.8,
+        0.8
+      ],
+      "metallic": 0.65,
+      "roughness": 0.7,
+      "emissive": [
+        0.2,
+        0.1,
+        0.05
+      ],
+      "alphaMode": "OPAQUE",
+      "alphaCutoff": 0.5,
+      "doubleSided": false,
+      "reverse": false,
+      "maps": {
+        "normal": [
+          220,
+          100,
+          200,
+          255
+        ]
+      },
+      "id": "authored-scaled-normal",
+      "normalScale": 0.35
+    },
+    {
+      "baseColor": [
+        0.8,
+        0.6,
+        0.4,
+        0.7
+      ],
+      "vertexColor": [
+        0.75,
+        0.9,
+        0.8,
+        0.8
+      ],
+      "metallic": 0.65,
+      "roughness": 0.7,
+      "emissive": [
+        0.2,
+        0.1,
+        0.05
+      ],
+      "alphaMode": "OPAQUE",
+      "alphaCutoff": 0.5,
+      "doubleSided": false,
+      "reverse": false,
+      "maps": {
+        "occlusion": [
+          50,
+          255,
+          255,
+          255
+        ]
+      },
+      "id": "authored-occlusion-strength",
+      "occlusionStrength": 0.3
+    },
+    {
+      "baseColor": [
+        0.8,
+        0.6,
+        0.4,
+        0.7
+      ],
+      "vertexColor": [
+        0.75,
+        0.9,
+        0.8,
+        0.8
+      ],
+      "metallic": 0.65,
+      "roughness": 0.7,
+      "emissive": [
+        0.2,
+        0.1,
+        0.05
+      ],
+      "alphaMode": "OPAQUE",
+      "alphaCutoff": 0.5,
+      "doubleSided": false,
+      "reverse": false,
+      "maps": {
+        "normal": [
+          220,
+          100,
+          200,
+          255
+        ]
+      },
+      "id": "authored-normal-uv1",
+      "textureCoordinates": {
+        "normalTexture": 1
+      },
+      "uvSets": {
+        "1": [
+          1,
+          0,
+          0,
+          0,
+          0.5,
+          1
+        ]
+      }
+    },
+    {
+      "baseColor": [
+        0.8,
+        0.6,
+        0.4,
+        0.7
+      ],
+      "vertexColor": [
+        0.75,
+        0.9,
+        0.8,
+        0.8
+      ],
+      "metallic": 0.65,
+      "roughness": 0.7,
+      "emissive": [
+        0.2,
+        0.1,
+        0.05
+      ],
+      "alphaMode": "OPAQUE",
+      "alphaCutoff": 0.5,
+      "doubleSided": false,
+      "reverse": false,
+      "maps": {
+        "normal": [
+          220,
+          100,
+          200,
+          255
+        ]
+      },
+      "id": "authoredTangent",
+      "tangents": [
+        0,
+        1,
+        0,
+        -1,
+        0,
+        1,
+        0,
+        -1,
+        0,
+        1,
+        0,
+        -1
+      ],
+      "normalScale": [
+        0.5,
+        -0.35
+      ]
+    },
+    {
+      "baseColor": [
+        0.8,
+        0.6,
+        0.4,
+        0.7
+      ],
+      "vertexColor": [
+        0.75,
+        0.9,
+        0.8,
+        0.8
+      ],
+      "metallic": 0.65,
+      "roughness": 0.7,
+      "emissive": [
+        0.2,
+        0.1,
+        0.05
+      ],
+      "alphaMode": "OPAQUE",
+      "alphaCutoff": 0.5,
+      "doubleSided": true,
+      "reverse": true,
+      "maps": {
+        "normal": [
+          220,
+          100,
+          200,
+          255
+        ]
+      },
+      "id": "authoredTangentDoubleBack",
+      "tangents": [
+        0,
+        1,
+        0,
+        -1,
+        0,
+        1,
+        0,
+        -1,
+        0,
+        1,
+        0,
+        -1
+      ],
+      "normalScale": [
+        0.5,
+        -0.35
+      ]
+    },
+    {
+      "baseColor": [
+        0.8,
+        0.6,
+        0.4,
+        0.7
+      ],
+      "vertexColor": [
+        0.75,
+        0.9,
+        0.8,
+        0.8
+      ],
+      "metallic": 0.65,
+      "roughness": 0.7,
+      "emissive": [
+        0.2,
+        0.1,
+        0.05
+      ],
+      "alphaMode": "OPAQUE",
+      "alphaCutoff": 0.5,
+      "doubleSided": false,
+      "reverse": false,
+      "maps": {
+        "baseColor": [
+          255,
+          0,
+          0,
+          255,
+          255,
+          255,
+          255,
+          255,
+          0,
+          0,
+          255,
+          255,
+          0,
+          255,
+          0,
+          255,
+          255,
+          0,
+          0,
+          255,
+          255,
+          255,
+          255,
+          255,
+          0,
+          0,
+          255,
+          255,
+          0,
+          255,
+          0,
+          255,
+          255,
+          0,
+          0,
+          255,
+          255,
+          255,
+          255,
+          255,
+          0,
+          0,
+          255,
+          255,
+          0,
+          255,
+          0,
+          255,
+          255,
+          0,
+          0,
+          255,
+          255,
+          255,
+          255,
+          255,
+          0,
+          0,
+          255,
+          255,
+          0,
+          255,
+          0,
+          255
+        ]
+      },
+      "id": "authoredMipLinear",
+      "mapSizes": {
+        "baseColor": [
+          4,
+          4
+        ]
+      },
+      "uvSets": {
+        "0": [
+          0,
+          0,
+          64,
+          0,
+          32,
+          64
+        ]
+      },
+      "textureSamplers": {
+        "baseColorTexture": {
+          "wrapS": 10497,
+          "wrapT": 10497,
+          "minFilter": 9987,
+          "magFilter": 9729
+        }
+      }
+    },
+    {
+      "baseColor": [
+        0.8,
+        0.6,
+        0.4,
+        0.7
+      ],
+      "vertexColor": [
+        0.75,
+        0.9,
+        0.8,
+        0.8
+      ],
+      "metallic": 0.65,
+      "roughness": 0.7,
+      "emissive": [
+        0.2,
+        0.1,
+        0.05
+      ],
+      "alphaMode": "OPAQUE",
+      "alphaCutoff": 0.5,
+      "doubleSided": false,
+      "reverse": false,
+      "maps": {
+        "normal": [
+          220,
+          100,
+          200,
+          255
+        ]
+      },
+      "id": "authored-normal-uv63",
+      "textureCoordinates": {
+        "normalTexture": 63
+      },
+      "uvSets": {
+        "63": [
+          1,
+          0,
+          0,
+          0,
+          0.5,
+          1
+        ]
+      }
+    },
+    {
+      "baseColor": [
+        0.8,
+        0.6,
+        0.4,
+        0.7
+      ],
+      "vertexColor": [
+        0.75,
+        0.9,
+        0.8,
+        0.8
+      ],
+      "metallic": 0.65,
+      "roughness": 0.7,
+      "emissive": [
+        0.2,
+        0.1,
+        0.05
+      ],
+      "alphaMode": "MASK",
+      "alphaCutoff": 1.5,
+      "doubleSided": false,
+      "reverse": false,
+      "maps": {},
+      "id": "authored-mask-cutoff-above-one"
+    }
+  ],
+  "statusCases": [
+    {
+      "locale": "en",
+      "loading": "Loading surface textures",
+      "cancel": "Cancel",
+      "cancelled": "Surface texture loading cancelled",
+      "failed": "Surface could not be displayed"
+    },
+    {
+      "locale": "de",
+      "loading": "Oberflächentexturen werden geladen",
+      "cancel": "Abbrechen",
+      "cancelled": "Laden der Oberflächentexturen abgebrochen",
+      "failed": "Oberfläche konnte nicht dargestellt werden"
+    }
+  ],
+  "jpegPublication": {
+    "mime": "image/jpeg",
+    "bytes": [
+      255,
+      216,
+      255,
+      224,
+      0,
+      16,
+      74,
+      70,
+      73,
+      70,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      0,
+      0,
+      255,
+      219,
+      0,
+      67,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      255,
+      219,
+      0,
+      67,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      255,
+      192,
+      0,
+      17,
+      8,
+      0,
+      1,
+      0,
+      2,
+      3,
+      1,
+      17,
+      0,
+      2,
+      17,
+      1,
+      3,
+      17,
+      1,
+      255,
+      196,
+      0,
+      31,
+      0,
+      0,
+      1,
+      5,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      255,
+      196,
+      0,
+      181,
+      16,
+      0,
+      2,
+      1,
+      3,
+      3,
+      2,
+      4,
+      3,
+      5,
+      5,
+      4,
+      4,
+      0,
+      0,
+      1,
+      125,
+      1,
+      2,
+      3,
+      0,
+      4,
+      17,
+      5,
+      18,
+      33,
+      49,
+      65,
+      6,
+      19,
+      81,
+      97,
+      7,
+      34,
+      113,
+      20,
+      50,
+      129,
+      145,
+      161,
+      8,
+      35,
+      66,
+      177,
+      193,
+      21,
+      82,
+      209,
+      240,
+      36,
+      51,
+      98,
+      114,
+      130,
+      9,
+      10,
+      22,
+      23,
+      24,
+      25,
+      26,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      67,
+      68,
+      69,
+      70,
+      71,
+      72,
+      73,
+      74,
+      83,
+      84,
+      85,
+      86,
+      87,
+      88,
+      89,
+      90,
+      99,
+      100,
+      101,
+      102,
+      103,
+      104,
+      105,
+      106,
+      115,
+      116,
+      117,
+      118,
+      119,
+      120,
+      121,
+      122,
+      131,
+      132,
+      133,
+      134,
+      135,
+      136,
+      137,
+      138,
+      146,
+      147,
+      148,
+      149,
+      150,
+      151,
+      152,
+      153,
+      154,
+      162,
+      163,
+      164,
+      165,
+      166,
+      167,
+      168,
+      169,
+      170,
+      178,
+      179,
+      180,
+      181,
+      182,
+      183,
+      184,
+      185,
+      186,
+      194,
+      195,
+      196,
+      197,
+      198,
+      199,
+      200,
+      201,
+      202,
+      210,
+      211,
+      212,
+      213,
+      214,
+      215,
+      216,
+      217,
+      218,
+      225,
+      226,
+      227,
+      228,
+      229,
+      230,
+      231,
+      232,
+      233,
+      234,
+      241,
+      242,
+      243,
+      244,
+      245,
+      246,
+      247,
+      248,
+      249,
+      250,
+      255,
+      196,
+      0,
+      31,
+      1,
+      0,
+      3,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      255,
+      196,
+      0,
+      181,
+      17,
+      0,
+      2,
+      1,
+      2,
+      4,
+      4,
+      3,
+      4,
+      7,
+      5,
+      4,
+      4,
+      0,
+      1,
+      2,
+      119,
+      0,
+      1,
+      2,
+      3,
+      17,
+      4,
+      5,
+      33,
+      49,
+      6,
+      18,
+      65,
+      81,
+      7,
+      97,
+      113,
+      19,
+      34,
+      50,
+      129,
+      8,
+      20,
+      66,
+      145,
+      161,
+      177,
+      193,
+      9,
+      35,
+      51,
+      82,
+      240,
+      21,
+      98,
+      114,
+      209,
+      10,
+      22,
+      36,
+      52,
+      225,
+      37,
+      241,
+      23,
+      24,
+      25,
+      26,
+      38,
+      39,
+      40,
+      41,
+      42,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      67,
+      68,
+      69,
+      70,
+      71,
+      72,
+      73,
+      74,
+      83,
+      84,
+      85,
+      86,
+      87,
+      88,
+      89,
+      90,
+      99,
+      100,
+      101,
+      102,
+      103,
+      104,
+      105,
+      106,
+      115,
+      116,
+      117,
+      118,
+      119,
+      120,
+      121,
+      122,
+      130,
+      131,
+      132,
+      133,
+      134,
+      135,
+      136,
+      137,
+      138,
+      146,
+      147,
+      148,
+      149,
+      150,
+      151,
+      152,
+      153,
+      154,
+      162,
+      163,
+      164,
+      165,
+      166,
+      167,
+      168,
+      169,
+      170,
+      178,
+      179,
+      180,
+      181,
+      182,
+      183,
+      184,
+      185,
+      186,
+      194,
+      195,
+      196,
+      197,
+      198,
+      199,
+      200,
+      201,
+      202,
+      210,
+      211,
+      212,
+      213,
+      214,
+      215,
+      216,
+      217,
+      218,
+      226,
+      227,
+      228,
+      229,
+      230,
+      231,
+      232,
+      233,
+      234,
+      242,
+      243,
+      244,
+      245,
+      246,
+      247,
+      248,
+      249,
+      250,
+      255,
+      218,
+      0,
+      12,
+      3,
+      1,
+      0,
+      2,
+      17,
+      3,
+      17,
+      0,
+      63,
+      0,
+      251,
+      226,
+      191,
+      197,
+      115,
+      254,
+      138,
+      15,
+      255,
+      217
+    ],
+    "width": 2,
+    "height": 1,
+    "sourceRgb": [
+      255,
+      128,
+      64
+    ],
+    "decodedRgba": [
+      255,
+      128,
+      65,
+      255,
+      255,
+      128,
+      65,
+      255
+    ]
+  },
+  "alphaCutoffCase": {
+    "value": 1.5,
+    "visibility": "discard"
+  }
+}

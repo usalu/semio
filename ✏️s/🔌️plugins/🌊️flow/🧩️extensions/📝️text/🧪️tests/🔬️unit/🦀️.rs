@@ -22,11 +22,11 @@ async fn manifest_lists_text_operators() {
 
 #[semio_framework_async_macros::async_test]
 async fn evaluate_json_uppercases_text() {
-    let text_value = pack::json::object([("$schema".to_string(), pack::json::Value::from("text")), ("value".to_string(), pack::json::Value::from("hi"))]);
-    let input_json = pack::json::to_string(&pack::json::object([("text".to_string(), text_value)]));
+    let text_value = semio_framework_pack_json::object([("$schema".to_string(), semio_framework_pack_json::Value::from("text")), ("value".to_string(), semio_framework_pack_json::Value::from("hi"))]);
+    let input_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("text".to_string(), text_value)]));
     let out_json = evaluate_json(&neural_engine::ColdOwner::new(module_registry()), "text.upper", &input_json);
-    let out = pack::json::parse(&out_json).unwrap();
+    let out = semio_framework_pack_json::parse(&out_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let text = out.get("textOut").expect("text channel");
-    assert_eq!(text.get("$schema").and_then(pack::json::Value::as_str), Some("text"));
-    assert_eq!(text.get("value").and_then(pack::json::Value::as_str), Some("HI"));
+    assert_eq!(text.get("$schema").and_then(semio_framework_pack_json::Value::as_str), Some("text"));
+    assert_eq!(text.get("value").and_then(semio_framework_pack_json::Value::as_str), Some("HI"));
 }

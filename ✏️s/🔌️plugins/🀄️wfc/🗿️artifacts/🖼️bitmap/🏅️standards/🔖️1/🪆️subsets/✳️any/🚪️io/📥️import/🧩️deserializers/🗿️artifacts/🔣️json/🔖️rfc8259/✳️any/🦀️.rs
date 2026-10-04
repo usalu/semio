@@ -8,8 +8,8 @@ use semio_framework_plugin::{StandardId, SubsetId};
 pub const JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId::ANY };
 
 /// 📖️ Typed decode of canonical JSON text into `BitmapSnapshot`.
-pub fn deserialize(text: &str) -> Result<BitmapSnapshot, String> {
-    dsl::json::from_json_str::<BitmapSnapshot>(text).map_err(|error| error.to_string())
+pub fn deserialize(text: &str) -> Result<BitmapSnapshot, semio_framework_value::ValueError> {
+    semio_framework_pack_json::from_json_str::<BitmapSnapshot>(text, semio_framework_pack_json::JsonMemberPolicy::Reject)
 }
 
 pub struct JsonIntoBitmap;
@@ -20,9 +20,9 @@ impl Deserializer<BitmapSnapshot> for JsonIntoBitmap {
     async fn deserialize(payload: &IoPayload) -> IoResult<BitmapSnapshot> {
         let text = match payload {
             IoPayload::Text(text) => text.clone(),
-            IoPayload::Binary(bytes) => String::from_utf8(bytes.clone()).map_err(|error| IoError { message: format!("bitmap←json: not valid utf-8: {error}"), diagnostics: Vec::new() })?,
+            IoPayload::Binary(bytes) => String::from_utf8(bytes.clone()).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("bitmap←json: not valid utf-8: {error}"))))?,
         };
-        deserialize(&text).map(IoOutcome::clean).map_err(|error| IoError { message: error, diagnostics: Vec::new() })
+        deserialize(&text).map(IoOutcome::clean).map_err(IoError::from_value_error)
     }
 }
 

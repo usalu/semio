@@ -28,13 +28,13 @@ async fn descriptor_inverse_and_outcome_are_complete() {
     let after = operation.diff(&base).diff().apply(&base).expect("valid mutation diff");
     assert_eq!(after.schema, "playground.changed");
     let mut restored = after;
-    for back in operation.inverse(&base) {
+    for back in operation.inverse(&base).expect("valid retained mutation inverse fixture") {
         restored = back.diff(&restored).diff().apply(&restored).expect("valid inverse diff");
     }
     assert_eq!(restored, base);
     protocol::os_spr::protocol_laws::assert_outcome_deterministic(&base, &operation).await;
     let no_op = mutation("playground.base").diff(&base);
-    assert_eq!(no_op.worst_level(), Some(protocol::os_dsl::Severity::Warning));
+    assert_eq!(no_op.worst_level(), Some(semio_framework_diagnostic::Severity::Warning));
     assert!(no_op.messages().iter().any(|message| message.code.0 == "mutation.no-op"));
 }
 

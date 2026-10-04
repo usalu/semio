@@ -14,7 +14,7 @@ pub fn diff(payload: &ReplaceElement, base: &Fem3dSnapshot) -> protocol::Mutatio
         return target_mismatch("Element", &payload.id, replacement);
     }
     if existing == payload.new_element.as_ref() {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Element \"{}\" already has that value.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Element \"{}\" already has that value.", payload.id));
     }
     if let Some(refusal) = resolve_element(base, &payload.new_element) {
         return refusal;

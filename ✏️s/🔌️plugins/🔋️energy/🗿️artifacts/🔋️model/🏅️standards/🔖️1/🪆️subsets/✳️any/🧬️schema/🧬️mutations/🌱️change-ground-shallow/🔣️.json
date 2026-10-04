@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️change-ground-shallow",
+  "semanticKind": "change-ground-shallow",
+  "displayName": "Change Ground Shallow",
+  "emoji": "🌱️",
+  "aggregateVariant": "ChangeGroundShallow",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "change-ground-shallow",
+  "binaryTag": 293,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

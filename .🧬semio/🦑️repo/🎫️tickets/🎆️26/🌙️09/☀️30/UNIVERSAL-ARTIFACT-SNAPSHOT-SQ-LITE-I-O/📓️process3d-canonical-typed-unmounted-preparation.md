@@ -1,0 +1,11 @@
+# Process3D Canonical Typed Draft Preparation
+
+The actual parent owner remains ordinary ArtifactDsl/ArtifactPack. Its mounted schema root imports only the existing test cohort and has no SQLite provider module declaration. The ArtifactPack implementation has no sqlite_snapshot_codec opt-in. The capability and paid index/native-field replacements remain adjacent unmounted Rust facets. No public law, module wiring, or controlled tagged macro invocation was changed in this preparation.
+
+The adjacent SQL producer now returns canonical ValueError through its forecast, projection, reconstruction, scalar, child, variant and relationship helpers. Shared typed errors propagate unchanged. Authored literal invalid relationships/variants remain InvalidValue; schema ceilings identify OwnershipLimit; row/work/ordinal overflow identifies WorkLimit. The unmounted capability has all five current typed hook signatures and delegates the typed shared controlled record helpers. The paid rows candidate's relationship ordinal overflow also identifies WorkLimit.
+
+Fresh targeted independent physical readback created Binary and Text witness files with the existing complete typed Source factory, then used third-party BunSQLite. Each has 32 domain tables, 173 domain rows and one reserved metadata row, integrity_check “ok”, and zero foreign_key_check rows. The closed public fixture passes Ajv. The unchanged selector readback found exactly eight original Native names and two public names. Parser verification through Bun/rustfmt passes all five adjacent SQL facets. Receipt: 🗑️generated/process3d-canonical-unmounted-preparation-readback.json.
+
+The existing full Source19/293 receipt remains authoritative; its unchanged suite was not rerun. This targeted readback is no Native compiler or runtime proof. Root owns the authentic ten-law runtime baseline. The previously authored paid Rows and collection owners are still not connected to the SQL reconstruction candidate: its original BTree indexes/unpaid vectors remain explicit pending feature implementation after authentic assertion RED.
+
+Changed unmounted paths, relative to the Process3D snapshot's 🪶️sqlite directory: 🦀️.rs, 🛂️capability/🦀️.rs, 🔍️rows/🦀️.rs. Existing 🏗️ownership and 🪆️native-fields facets were parsed/read only. No new script, target, runtime dependency, Git operation or mounted behavior was added.

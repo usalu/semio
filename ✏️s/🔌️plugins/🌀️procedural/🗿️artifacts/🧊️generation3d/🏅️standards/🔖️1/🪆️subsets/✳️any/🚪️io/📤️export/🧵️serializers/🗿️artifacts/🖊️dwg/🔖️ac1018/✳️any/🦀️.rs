@@ -17,8 +17,8 @@ use semio_s_artifact_stdio_dwg::DwgSnapshot;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::dwg::v_ac1024::any::SemioMeshToDwg;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 
-pub fn serialize_mesh(mesh: &SemioMeshSnapshot) -> Result<DwgSnapshot, store::TextError> {
-    semio_framework_plugin::resolve_ready(SemioMeshToDwg::serialize(mesh)).map_err(|error| io_error(format!("generation3d→dwg: {error}")))
+pub fn serialize_mesh(mesh: &SemioMeshSnapshot) -> Result<DwgSnapshot, semio_framework_diagnostic::TextError> {
+    ::semio_framework_async::poll::resolve_ready(SemioMeshToDwg::serialize(mesh)).map_err(|error| io_error(format!("generation3d→dwg: {error}")))
 }
 
 /// 🖊️ Native container bytes, through dwg's own `AC1015` writer — the exact one `encode_dwg`
@@ -34,7 +34,7 @@ pub fn serialize_mesh(mesh: &SemioMeshSnapshot) -> Result<DwgSnapshot, store::Te
 /// calling the writer directly keeps one source of truth for them, and `decode_dwg` reads the
 /// triple back out of the bytes anyway (it never consults the snapshot), so the round trip is
 /// unaffected.
-pub fn serialize_mesh_bytes(mesh: &SemioMeshSnapshot) -> Result<Vec<u8>, store::TextError> {
+pub fn serialize_mesh_bytes(mesh: &SemioMeshSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
     let drawing = serialize_mesh(mesh)?.drawing.to_native().map_err(|error| io_error(format!("generation3d→dwg: {error}")))?;
     semio_s_artifact_stdio_dwg::engine::dwg_to_bytes(&drawing).map_err(|error| io_error(format!("generation3d→dwg: {error}")))
 }

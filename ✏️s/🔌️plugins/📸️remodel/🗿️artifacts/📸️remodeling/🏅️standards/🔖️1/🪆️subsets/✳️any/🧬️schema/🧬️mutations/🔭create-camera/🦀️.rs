@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 //#region 🔖️Mutation
 /// 🔭 `create-camera-calibration` payload — full initial `CameraCalibration` record (the properties
 /// form always submits every field together — same `update` reasoning applies to creation here).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
@@ -31,9 +31,12 @@ impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for CreateCa
     fn diff(&self, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<RemodelingMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Create camera calibration \"{}\"", self.camera.id), &format!("Kamerakalibrierung \"{}\" erstellen", self.camera.id))
     }

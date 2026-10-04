@@ -12,7 +12,7 @@ use crate::FlowSnapshot;
 pub const FLOW_EXAMPLE_TEXT: &str = include_str!("../🧫️fixtures/📝️text/🗣️.dsl.semio");
 
 /// 📖️ Parses `.flow` DSL text into a `FlowSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<FlowSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<FlowSnapshot, semio_framework_diagnostic::TextError> {
     <FlowSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 

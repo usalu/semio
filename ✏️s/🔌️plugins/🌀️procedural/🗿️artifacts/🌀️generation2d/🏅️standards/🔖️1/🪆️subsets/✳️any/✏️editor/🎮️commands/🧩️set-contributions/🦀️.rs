@@ -12,7 +12,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// pushes the scoped pack whole as page 0 of 1 over the pack-encoded command ingress (bounded by
 /// `COMMAND_MAXIMUM_BYTES`, see `GENERATION2D_CONTRIBUTIONS_RAW_BYTES`); `page`/`page_count` keep
 /// the registry's page-run addressing so a multi-page run assembles the same closure.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "set-contributions")]
 pub struct SetContributions {
     pub json: String,

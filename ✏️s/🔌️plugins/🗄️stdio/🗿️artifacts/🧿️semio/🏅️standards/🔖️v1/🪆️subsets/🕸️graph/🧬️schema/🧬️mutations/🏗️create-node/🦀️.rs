@@ -18,10 +18,14 @@ pub struct CreateNode {
     pub label: String,
     #[value(default)]
     pub position: SemioPoint2,
+    pub width: f64,
+    pub height: f64,
     #[value(default)]
     pub ports: Vec<SemioGraphPort>,
     #[value(default)]
     pub properties: Vec<SemioValueEntry>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub at: Option<usize>,
 }
 
 impl protocol::MutationKind<SemioGraphSnapshot, SemioGraphMutation> for CreateNode {
@@ -30,9 +34,12 @@ impl protocol::MutationKind<SemioGraphSnapshot, SemioGraphMutation> for CreateNo
     fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<SemioGraphMutation as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioGraphSnapshot) -> Vec<SemioGraphMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<SemioGraphMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Create node \"{}\"", self.id.value), &format!("Knoten \"{}\" erstellen", self.id.value))
     }

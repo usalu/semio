@@ -12,7 +12,6 @@
 
 use crate::standards::v1::subsets::base::schema::snapshot::SemioSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::kind::compute_semio_kind;
 //#region 🔖️Inference
@@ -27,8 +26,11 @@ pub struct SemioInference {
 }
 
 impl protocol::Inference<SemioSnapshot> for SemioInference {
-    fn infer(snapshot: &SemioSnapshot) -> Self {
+    fn infer(snapshot: &SemioSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { kind: compute_semio_kind(snapshot) }
+    
+        })
     }
 }
 
@@ -37,7 +39,9 @@ impl protocol::Inference<SemioSnapshot> for SemioInference {
 /// naive derive could reconstruct), so `Default` MUST be tied to `infer`, never derived.
 impl Default for SemioInference {
     fn default() -> Self {
-        <Self as protocol::Inference<SemioSnapshot>>::infer(&SemioSnapshot::default())
+        let snapshot = &SemioSnapshot::default();
+
+        Self { kind: compute_semio_kind(snapshot) }
     }
 }
 
@@ -53,16 +57,6 @@ impl protocol::InferenceSpec<SemioSnapshot> for SemioInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 💡️ No `InferredField`s here — `kind` is a single O(1) tag/ordinal read off the already-decoded
-/// `subset` enum discriminant, nothing to incrementally cache — the default `infer_cached`
-/// passthrough is exact.
-impl ArtifactInferrer for crate::standards::v1::subsets::base::schema::SemioBuilder {
-    type Snapshot = SemioSnapshot;
-    type Inference = SemioInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.semio.inference`'s facet leaves into the OS-wide inference catalog —

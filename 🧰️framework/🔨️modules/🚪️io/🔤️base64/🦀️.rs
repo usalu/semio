@@ -112,42 +112,23 @@ fn sextet(byte: u8, index: usize, url: bool) -> Result<u8, Base64Error> {
     }
 }
 
+/// 🧮️ Validates one standard-alphabet quartet and returns at most three stack-owned bytes.
+pub fn decode_standard_quad(quad:[u8;4],index:usize,last:bool)->Result<([u8;3],usize),Base64Error>{
+    if quad[0]==b'='||quad[1]==b'='{return Err(Base64Error::InvalidPadding);}
+    let a=sextet(quad[0],index,false)?;let b=sextet(quad[1],index+1,false)?;let pad2=quad[2]==b'=';let pad1=quad[3]==b'=';
+    if (pad1||pad2)&&!last||pad2&&!pad1{return Err(Base64Error::InvalidPadding);}
+    let c=if pad2{0}else{sextet(quad[2],index+2,false)?};let d=if pad1{0}else{sextet(quad[3],index+3,false)?};
+    if pad2&&b&15!=0||pad1&&!pad2&&c&3!=0{return Err(Base64Error::NonCanonicalTrailingBits);}
+    Ok(([(a<<2)|(b>>4),(b<<4)|(c>>2),(c<<6)|d],if pad2{1}else if pad1{2}else{3}))
+}
+
 fn decode_bytes(encoded: &[u8]) -> Result<Vec<u8>, Base64Error> {
-    if !encoded.len().is_multiple_of(4) {
-        return Err(Base64Error::InvalidLength);
-    }
+    if !encoded.len().is_multiple_of(4) {return Err(Base64Error::InvalidLength);}
     let mut decoded = Vec::with_capacity(encoded.len() / 4 * 3);
-    for (group_index, chunk) in encoded.as_chunks::<4>().0.iter().enumerate() {
-        let offset = group_index * 4;
-        let last = offset + 4 == encoded.len();
-        if chunk[0] == b'=' || chunk[1] == b'=' {
-            return Err(Base64Error::InvalidPadding);
-        }
-        let first = sextet(chunk[0], offset, false)?;
-        let second = sextet(chunk[1], offset + 1, false)?;
-        decoded.push((first << 2) | (second >> 4));
-        if chunk[2] == b'=' {
-            if !last || chunk[3] != b'=' {
-                return Err(Base64Error::InvalidPadding);
-            }
-            if second & 0x0f != 0 {
-                return Err(Base64Error::NonCanonicalTrailingBits);
-            }
-            continue;
-        }
-        let third = sextet(chunk[2], offset + 2, false)?;
-        decoded.push((second << 4) | (third >> 2));
-        if chunk[3] == b'=' {
-            if !last {
-                return Err(Base64Error::InvalidPadding);
-            }
-            if third & 0x03 != 0 {
-                return Err(Base64Error::NonCanonicalTrailingBits);
-            }
-            continue;
-        }
-        let fourth = sextet(chunk[3], offset + 3, false)?;
-        decoded.push((third << 6) | fourth);
+    for (group_index, quad) in encoded.as_chunks::<4>().0.iter().enumerate() {
+        let offset=group_index*4;
+        let (bytes,count)=decode_standard_quad(*quad,offset,offset+4==encoded.len())?;
+        decoded.extend_from_slice(&bytes[..count]);
     }
     Ok(decoded)
 }

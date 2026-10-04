@@ -1,0 +1,22 @@
+{
+  "name": "@semio-tech/framework-os-compute-ownership",
+  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "sharedGlobals",
+        "{projectRoot}/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️testing/📍️consumer/**/*"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🏛️ownership/🧮️compute",
+        "command": "bun ./📜️script.ts test"
+      }
+    }
+  }
+}

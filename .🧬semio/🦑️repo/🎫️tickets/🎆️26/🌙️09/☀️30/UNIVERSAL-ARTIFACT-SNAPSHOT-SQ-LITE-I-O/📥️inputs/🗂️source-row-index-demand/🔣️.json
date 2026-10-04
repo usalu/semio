@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "tables": [
+    {
+      "name": "entity",
+      "sql": "CREATE TABLE entity (id INTEGER PRIMARY KEY,parent INTEGER,ordinal INTEGER,payload TEXT)",
+      "rows": [
+        {
+          "rowid": "1",
+          "parent": "9007199254740993",
+          "ordinal": "2",
+          "payload": "third\u0000🧬"
+        },
+        {
+          "rowid": "2",
+          "parent": "9007199254741001",
+          "ordinal": "0",
+          "payload": "other"
+        },
+        {
+          "rowid": "3",
+          "parent": "9007199254740993",
+          "ordinal": "0",
+          "payload": "first"
+        },
+        {
+          "rowid": "4",
+          "parent": "9007199254740993",
+          "ordinal": "1",
+          "payload": "second"
+        }
+      ]
+    },
+    {
+      "name": "empty",
+      "sql": "CREATE TABLE empty (id INTEGER PRIMARY KEY,parent INTEGER,ordinal INTEGER,payload TEXT)",
+      "rows": []
+    }
+  ],
+  "groups": [
+    {
+      "table": "entity",
+      "parent": "9007199254740993",
+      "ordinal": 2,
+      "positions": [
+        2,
+        3,
+        0
+      ]
+    },
+    {
+      "table": "entity",
+      "parent": "9007199254741001",
+      "ordinal": 2,
+      "positions": [
+        1
+      ]
+    },
+    {
+      "table": "empty",
+      "parent": "9007199254740993",
+      "ordinal": 2,
+      "positions": []
+    }
+  ],
+  "allPositions": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "repeat": 513,
+  "interior": 256,
+  "refusals": [
+    "same-object-across-tables",
+    "same-object-same-table",
+    "double-take",
+    "unconsumed",
+    "duplicate-ordinal",
+    "negative-ordinal",
+    "ordinal-gap",
+    "foreign-table",
+    "invalid-parent",
+    "out-of-range-row"
+  ],
+  "budgetRoles": [
+    "zero",
+    "observed-exact",
+    "observed-minus-one",
+    "two-call-cumulative"
+  ],
+  "cancelRoles": [
+    "before-allocation",
+    "after-materialized-index-interior"
+  ]
+}

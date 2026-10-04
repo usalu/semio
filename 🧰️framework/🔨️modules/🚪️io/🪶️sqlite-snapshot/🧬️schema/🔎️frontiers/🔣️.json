@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Reference Classification And Canonical Table Index Frontiers",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "referenceEntries",
+    "referenceFrontier",
+    "referenceTypes",
+    "referenceParities",
+    "nameUnit",
+    "nameLength",
+    "nameFrontier",
+    "nameSuffixes",
+    "tableCount",
+    "tableFrontier",
+    "indexPhase",
+    "refusal"
+  ],
+  "properties": {
+    "referenceEntries": {
+      "const": 768
+    },
+    "referenceFrontier": {
+      "const": 256
+    },
+    "referenceTypes": {
+      "const": [
+        "integer",
+        "double precision"
+      ]
+    },
+    "referenceParities": {
+      "const": [
+        1,
+        0
+      ]
+    },
+    "nameUnit": {
+      "const": "A"
+    },
+    "nameLength": {
+      "const": 70000
+    },
+    "nameFrontier": {
+      "const": 16384
+    },
+    "nameSuffixes": {
+      "const": [
+        "ΣZ",
+        "σZ"
+      ]
+    },
+    "tableCount": {
+      "const": 257
+    },
+    "tableFrontier": {
+      "const": 256
+    },
+    "indexPhase": {
+      "const": "indexTables"
+    },
+    "refusal": {
+      "const": "canceled"
+    }
+  }
+}

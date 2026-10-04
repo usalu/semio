@@ -1,7 +1,7 @@
 //! 🧱️ `set-chunk-size` command.
 
 use crate::editor::puzzle5d::{puzzle5d_absolute_or_delta, Puzzle5dActionCtx, PUZZLE5D_CHUNK_SIZE_MAX, PUZZLE5D_CHUNK_SIZE_MIN};
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 
 /// 🧱️ The broad-phase chunk edge (m) the placement search buckets parts into — an absolute `value` or
 /// a `delta` nudge, clamped into the band the ⚙️settings stepper declares. A zero chunk would bucket

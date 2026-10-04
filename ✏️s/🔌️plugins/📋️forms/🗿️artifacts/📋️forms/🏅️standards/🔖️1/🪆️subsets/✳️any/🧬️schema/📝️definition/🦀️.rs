@@ -1,7 +1,7 @@
 //! 📝️ The authoritative, durable form definition shared by authoring and answering.
 use crate::FormStep;
 
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct FormsDefinition {
     pub steps: Vec<FormStep>,
 }
@@ -20,7 +20,7 @@ impl FormsDefinition {
                 if question.options.iter().flatten().any(|option| option.value.is_empty() || !options.insert(&option.value)) { return Err("invalid or duplicate option value".into()); }
                 let mut fields = std::collections::HashSet::new();
                 if question.fields.iter().flatten().any(|field| field.key.is_empty() || !fields.insert(&field.key) || field.value.is_some_and(|value| !value.is_finite())) { return Err("invalid or duplicate vector field".into()); }
-                if question.params.as_ref().is_some_and(|value| !matches!(value, dsl::DslValue::Object(_))) { return Err("invalid extension parameters".into()); }
+                if question.params.as_ref().is_some_and(|value| !matches!(value, semio_framework_value::DslValue::Object(_))) { return Err("invalid extension parameters".into()); }
             }
         }
         Ok(())

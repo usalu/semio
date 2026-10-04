@@ -1,0 +1,9 @@
+# Home Feed Real Registered Context Pair
+
+The held four-region pair removes the Home feed fixture’s arbitrary `ArtifactOwnedToolJobContext::new` and empty-child root. Each editor/viewer page step captures the registered app’s authentic Store context through the held test-feature issuer and borrows its actual parent through `parent_snapshot()`. Existing pure step assertions still compare the complete transient mutations, exactly one bounded item, receipt events and third-party JSON projection. No owned parent clone is introduced.
+
+Both apps persist between pages. After the independent page step, the same accepted input runs through its actual registered host action and typed continuation/ACK settlement. The next authentic context’s complete transient is compared with the expected full transient computed by the original mutation law. Refused frontier cases retain their original codes and run against the real apps’ preceding publication. These low-level algorithm steps allocate their own test operation and do not claim host publication admission; accepted host publications are a separate explicit execution.
+
+Capsule: `📥️inputs/global-child-home-feed-real-registered-context-held-pair.json`. Emit-only parser: `🗑️generated/global-child-home-feed-real-registered-context-held-parser.json`, one file, four exact regions, exit zero. Production is unchanged. This pair depends on the held registered-context issuer and complete immutable parent/read-root integration. Actual generic Rust binding and owning Native execution remain unproved.
+
+The renderer is now paired through the already mounted genuine `with_document_view` helper. It asserts the real registered parent equals the original default Snapshot before rendering and retires the same complete tree. No standalone `ArtifactView::new` remains in this held file. The Lowpoly and ZIP fabricated context helpers remain separate unpaired callers. No complete global readiness is claimed.

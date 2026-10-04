@@ -1,4 +1,4 @@
-//! Diff for `change-accidental-assumed-force`.
+//! 🔺️ Diff for `change-accidental-assumed-force`.
 use super::ChangeAccidentalAssumedForce;
 use crate::artifact_schema::diff::En1991AccidentalCasesList;
 use crate::{En1991Diff, En1991Snapshot};
@@ -7,7 +7,7 @@ pub fn diff(payload: &ChangeAccidentalAssumedForce, base: &En1991Snapshot) -> pr
         return protocol::MutationOutcome::error("mutation.target-missing", "Index out of range.", [payload.index.to_string()]);
     }
     if base.accidental_cases[payload.index].impact.first().map(|i| i.assumed_force) == Some(payload.new_assumed_force) {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Value unchanged.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Value unchanged.");
     }
     let mut values = base.accidental_cases.clone();
     if let Some(imp) = values[payload.index].impact.first_mut() { imp.assumed_force = payload.new_assumed_force; } else { return protocol::MutationOutcome::error("mutation.target-missing", "Impact variant missing.", [payload.index.to_string()]); }

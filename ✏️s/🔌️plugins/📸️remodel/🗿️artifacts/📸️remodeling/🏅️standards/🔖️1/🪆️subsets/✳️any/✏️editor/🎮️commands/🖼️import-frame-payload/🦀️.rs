@@ -6,7 +6,7 @@
 //! dropped. A still is one frame; a video file contributes its in-process sampled frames to the same stream.
 
 use crate::editor::remodeling::commands::import_video_bytes_payload;
-use crate::editor::remodeling::commands::import_video_frame_payload::import_transaction;
+use crate::editor::remodeling::commands::import_video_frame_payload::{import_transaction, import_window_required, refuse_while_streaming};
 use crate::editor::remodeling::transient::{RemodelingImport, RemodelingWindowTransient};
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
 #[cfg(test)]
@@ -18,27 +18,6 @@ use crate::schema::mint_remodeling_id;
 use crate::{FrameRef, ImageAsset, MediaKind, MediaStream, RemodelingSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
-
-//#region 🔖️ImportFramePayload
-//#endregion 🔖️ImportFramePayload
-
-//#region 🔖️ImportVideoFramePayload
-//#endregion 🔖️ImportVideoFramePayload
-
-//#region 🔖️ImportVideoDone
-//#endregion 🔖️ImportVideoDone
-
-//#region 🔖️ImportVideoBytesPayload
-//#endregion 🔖️ImportVideoBytesPayload
-
-//#region 🔖️AddStream
-//#endregion 🔖️AddStream
-
-//#region 🔖️RemoveStream
-//#endregion 🔖️RemoveStream
-
-//#region 🔖️SetStreamSync
-//#endregion 🔖️SetStreamSync
 
 //#region 🧪️UnitTests
 /// 📥️ Imports `n` checker frames as one new image-sequence stream via `ImportFramePayload`, mirroring
@@ -78,7 +57,7 @@ fn checker_image(w: u32, h: u32, cell: u32) -> remodeling_image::ImageRgba8 {
 }
 //#endregion 🧪️UnitTests
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "import-frame-payload")]
 pub struct ImportFramePayload {
     pub payload: String,
@@ -131,8 +110,11 @@ pub fn handle_in_window(payload: &ImportFramePayload, doc: &ArtifactView<'_, Rem
         return Ok((emit, window.clone()));
     }
     let started = match (payload.index, total) {
-        (_, 1) => Some(RemodelingImport { stream_id: None, done: 0, total }),
-        (0, _) => Some(RemodelingImport { stream_id: None, done: 0, total }),
+        (_, 1) => Some(RemodelingImport { total, ..RemodelingImport::default() }),
+        (0, _) => {
+            refuse_while_streaming(scene, window)?;
+            Some(RemodelingImport { total, ..RemodelingImport::default() })
+        }
         _ => window.import.clone(),
     };
     let Some(mut import) = started else { return Ok((Emit::default(), window.clone())) };
@@ -170,6 +152,6 @@ pub fn handle(payload: &ImportFramePayload, doc: &ArtifactView<'_, RemodelingSna
     let (emit, next) = handle_in_window(payload, doc, cfg, &resting)?;
     match next == resting {
         true => Ok(emit),
-        false => Err(Fault::from("remodeling-import-window-required")),
+        false => Err(import_window_required()),
     }
 }

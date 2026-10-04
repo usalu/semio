@@ -8,8 +8,8 @@ use crate::{RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterTransform,
 async fn mask_asset_and_transform_round_trip_through_text_and_pack() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧫️fixtures/🎭️mask/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
-        let mask:RasterLayerMask=dsl::json::from_json_str(&case["mask"].to_string()).unwrap();
-        let actual:serde_json::Value=serde_json::from_str(&dsl::json::to_json_string(&mask)).unwrap();
+        let mask:RasterLayerMask=semio_framework_pack_json::from_json_str(&case["mask"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let actual:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&mask)).unwrap();
         assert_eq!(actual["imageKey"],case["mask"]["imageKey"]);
         for field in ["x","y","a","b","c","d"] {assert_eq!(actual["transform"][field].as_f64(),case["mask"]["transform"][field].as_f64());}
         let mut document=crate::standards::v1::subsets::any::schema::empty_raster_document();
@@ -37,21 +37,21 @@ async fn pack_round_trips_representative_document() {
     let mut assets = RasterOwnedMap::new();
     assets.insert("asset-1".into(), crate::image_asset_child_handle("asset-1", &RasterImageAsset { mime: "image/png".into(), data: b"abc".to_vec() }).with_local_owner(std::sync::Arc::new(semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot::default()))).expect("bounded fixture operation succeeds");
     let mut params = RasterOwnedMap::new();
-    params.insert("brightness".into(), dsl::DslValue::float(0.06)).expect("bounded fixture operation succeeds");
-    params.insert("label".into(), dsl::DslValue::String("Warm \"Curve\"".to_string())).expect("bounded fixture operation succeeds");
-    params.insert("enabled".into(), dsl::DslValue::Bool(true)).expect("bounded fixture operation succeeds");
-    params.insert("fallback".into(), dsl::DslValue::Null).expect("bounded fixture operation succeeds");
+    params.insert("brightness".into(), semio_framework_value::DslValue::float(0.06)).expect("bounded fixture operation succeeds");
+    params.insert("label".into(), semio_framework_value::DslValue::String("Warm \"Curve\"".to_string())).expect("bounded fixture operation succeeds");
+    params.insert("enabled".into(), semio_framework_value::DslValue::Bool(true)).expect("bounded fixture operation succeeds");
+    params.insert("fallback".into(), semio_framework_value::DslValue::Null).expect("bounded fixture operation succeeds");
     params
         .insert(
             "curves".into(),
-            dsl::DslValue::Array(vec![
-                dsl::DslValue::Array(vec![dsl::DslValue::float(0.0), dsl::DslValue::float(0.0)]),
-                dsl::DslValue::Array(vec![dsl::DslValue::float(0.25), dsl::DslValue::float(0.2)]),
-                dsl::DslValue::Array(vec![dsl::DslValue::float(1.0), dsl::DslValue::float(1.0)]),
+            semio_framework_value::DslValue::Array(vec![
+                semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::float(0.0), semio_framework_value::DslValue::float(0.0)]),
+                semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::float(0.25), semio_framework_value::DslValue::float(0.2)]),
+                semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::float(1.0), semio_framework_value::DslValue::float(1.0)]),
             ]),
         )
         .expect("bounded fixture operation succeeds");
-    params.insert("nested".into(), dsl::DslValue::Object(vec![("inner".to_string(), dsl::DslValue::float(1.5))])).expect("bounded fixture operation succeeds");
+    params.insert("nested".into(), semio_framework_value::DslValue::Object(vec![("inner".to_string(), semio_framework_value::DslValue::float(1.5))])).expect("bounded fixture operation succeeds");
     let document = RasterSnapshot {
         schema: RASTER_DOCUMENT_SCHEMA.into(),
         id: "doc-1".into(),

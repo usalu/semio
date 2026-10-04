@@ -6,7 +6,8 @@ use crate::standards::v1::subsets::any::schema::{find_layer, layer_transform};
 use crate::RasterSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::MoveLayer, base: &RasterSnapshot) -> Vec<RasterMutation> {
+pub fn inverse(payload: &super::MoveLayer, base: &RasterSnapshot) -> Result<Vec<RasterMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match find_layer(&base.layers, &payload.layer_id) {
         Some(layer) => {
             let transform = layer_transform(layer);
@@ -14,5 +15,7 @@ pub fn inverse(payload: &super::MoveLayer, base: &RasterSnapshot) -> Vec<RasterM
         }
         None => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

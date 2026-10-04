@@ -1,7 +1,8 @@
 import { dirname, join, posix, relative, resolve } from "node:path";
 import type { BreachRecord } from "../../../🟦️.ts";
 import { canonicalPrimaryFilenameForKind, loadTaxonomy } from "../../../🔍️discovery/🟦️.ts";
-import { inspectRustCompileReferences, inspectRustModuleGraph, inspectRustModuleGraphFacts, rustModuleScopeProof, inspectRustStructure, type RustModuleGraph, type RustModuleContext, type RustModuleParticipation, type RustModuleParticipationReason } from "../../../🔍️discovery/🟦️.ts";
+import { inspectRustModuleGraph, inspectRustModuleGraphFacts, rustModuleScopeProof, inspectRustStructure, type RustModuleGraph, type RustModuleContext, type RustModuleParticipation, type RustModuleParticipationReason } from "../../../🔍️discovery/🟦️.ts";
+import { inspectRustCompileReferences } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 import { POLICY_RS_COMPONENT_LEAF_NAME, policyArtifactRootOfMutationsDir, policyStripEmoji } from "../🪪️identity/🟦️.ts";
 import { mutationTaxonomyCancelled, mutationTaxonomyCompare, mutationTaxonomyStructuralView, type MutationTaxonomyAssignmentRow, type MutationTaxonomyInventoryOptions, type MutationTaxonomySourceRecord } from "../📸️captured-source/🟦️.ts";
 import { mutationTaxonomySourceIndex, mutationTaxonomySourceSnapshot, type MutationTaxonomySourceIndex } from "../📇️index/🟦️.ts";

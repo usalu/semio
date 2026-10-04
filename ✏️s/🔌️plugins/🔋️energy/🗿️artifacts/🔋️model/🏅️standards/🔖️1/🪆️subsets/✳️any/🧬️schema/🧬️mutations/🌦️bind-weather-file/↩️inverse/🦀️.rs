@@ -6,7 +6,8 @@ use crate::EnergyModelSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ A refused or no-op forward step has nothing to undo, so it answers with no steps at all.
-pub fn inverse(payload: &super::BindWeatherFile, base: &EnergyModelSnapshot) -> Vec<EnergyModelMutation> {
+pub fn inverse(payload: &super::BindWeatherFile, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Ok(target) = store::os_io::ArtifactRef::parse_uri(&payload.target_uri) else {
         return Vec::new();
     };
@@ -16,5 +17,7 @@ pub fn inverse(payload: &super::BindWeatherFile, base: &EnergyModelSnapshot) -> 
         Some(existing) => vec![vocabulary::bind_weather_file(existing.target.to_uri())],
         None => vec![vocabulary::unbind_weather_file()],
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

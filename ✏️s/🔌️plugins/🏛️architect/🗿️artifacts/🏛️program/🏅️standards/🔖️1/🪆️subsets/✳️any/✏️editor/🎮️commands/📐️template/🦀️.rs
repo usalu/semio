@@ -5,10 +5,11 @@ pub mod apply {
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::op::ProgramMutation;
     use crate::{EntityId, ProgramSnapshot};
-    use dsl::{FromValue, ToValue};
+    use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "apply-template")]
     pub struct ApplyTemplate {
         pub template_id: String,

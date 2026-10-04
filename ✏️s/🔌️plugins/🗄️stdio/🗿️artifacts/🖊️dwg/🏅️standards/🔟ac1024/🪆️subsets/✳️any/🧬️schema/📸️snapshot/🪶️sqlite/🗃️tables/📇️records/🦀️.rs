@@ -1,11 +1,12 @@
 //! 📇️ Typed DWG symbol-table records with explicit owned common fields.
+use semio_framework_value::{ValueError,ValueRefusalKind};
 use super::super::*;
 use super::{color,drawing::optional_words,reader::{boolean,byte,full_unsigned,high,low,optional_text,optional_unsigned,ordinal,real,word,Reader}};
 use semio_framework_os_kernel::sqlite_snapshot::artifact::Cell;
 use super::number::Projection;
 use Cell::{Integer as I,Real as R,Text as T,Null as N};
 
-pub(super) fn project_record(projection:&mut Projection<'_,'_>,id:i64,value:&DwgTableRecordBody)->Result<(),String>{
+pub(super) fn project_record(projection:&mut Projection<'_,'_>,id:i64,value:&DwgTableRecordBody)->Result<(),ValueError>{
     let(kind,common)=match value{DwgTableRecordBody::RegisteredApplication(v)=>("registered_application",&v.common),DwgTableRecordBody::TextStyle(v)=>("text_style",&v.common),DwgTableRecordBody::Layer(v)=>("layer",&v.common),DwgTableRecordBody::Linetype(v)=>("linetype",&v.common),DwgTableRecordBody::BlockHeader(v)=>("block_header",&v.common),DwgTableRecordBody::Viewport(v)=>("viewport",&v.common),DwgTableRecordBody::DimensionStyle(v)=>("dimension_style",&v.common)};
     let xref=optional_words(common.xref_handle);
     projection.insert_key("dwg_table_record",id,&[T(kind),T(&common.name),I(i64::from(common.xref_resolution)),xref[0],xref[1]])?;
@@ -32,7 +33,7 @@ pub(super) fn project_record(projection:&mut Projection<'_,'_>,id:i64,value:&Dwg
         DwgTableRecordBody::DimensionStyle(v)=>project_dimension_style(projection,id,v)
     }
 }
-pub(super) fn reconstruct_record(reader:&mut Reader<'_,'_,'_>,id:i64)->Result<DwgTableRecordBody,String>{
+pub(super) fn reconstruct_record(reader:&mut Reader<'_,'_,'_>,id:i64)->Result<DwgTableRecordBody,ValueError>{
     let row=reader.component("dwg_table_record",id)?;
     let common=DwgTableRecordCommon{name:row.text(2)?.into(),xref_resolution:word(row,3)?,xref_handle:optional_unsigned(row,4,5)?};
     match row.text(1)?{
@@ -41,7 +42,7 @@ pub(super) fn reconstruct_record(reader:&mut Reader<'_,'_,'_>,id:i64)->Result<Dw
         "layer"=>{let r=reader.component("dwg_layer_record",id)?;Ok(DwgTableRecordBody::Layer(DwgLayerTableRecord{common,frozen:boolean(r,1)?,off:boolean(r,2)?,frozen_in_new_viewports:boolean(r,3)?,locked:boolean(r,4)?,plottable:boolean(r,5)?,lineweight:byte(r,6)?,color:color::reconstruct(reader,"dwg_layer_record_color",id)?,plot_style_handle:optional_unsigned(r,7,8)?,material_handle:optional_unsigned(r,9,10)?,linetype_handle:optional_unsigned(r,11,12)?}))},
         "linetype"=>{
             let r=reader.component("dwg_linetype_record",id)?;
-            let dashes=reader.list("dwg_linetype_dash",1,id,2)?.into_iter().map(|row|Ok(DwgLinetypeDash{length:real(row,3)?,complex_shape_code:word(row,4)?,style_handle:optional_unsigned(row,5,6)?,x_offset:real(row,7)?,y_offset:real(row,8)?,scale:real(row,9)?,rotation:real(row,10)?,shape_flags:word(row,11)?,text:optional_text(row,12)?})).collect::<Result<_,String>>()?;
+            let dashes=reader.list("dwg_linetype_dash",1,id,2)?.into_iter().map(|row|Ok(DwgLinetypeDash{length:real(row,3)?,complex_shape_code:word(row,4)?,style_handle:optional_unsigned(row,5,6)?,x_offset:real(row,7)?,y_offset:real(row,8)?,scale:real(row,9)?,rotation:real(row,10)?,shape_flags:word(row,11)?,text:optional_text(row,12)?})).collect::<Result<_,ValueError>>()?;
             Ok(DwgTableRecordBody::Linetype(DwgLinetypeTableRecord{common,description:r.text(1)?.into(),pattern_length:real(r,2)?,alignment:byte(r,3)?,dashes}))
         },
         "block_header"=>{
@@ -52,19 +53,19 @@ pub(super) fn reconstruct_record(reader:&mut Reader<'_,'_,'_>,id:i64)->Result<Dw
         },
         "viewport"=>reconstruct_viewport(reader,id,common).map(DwgTableRecordBody::Viewport),
         "dimension_style"=>reconstruct_dimension_style(reader,id,common).map(DwgTableRecordBody::DimensionStyle),
-        _=>Err("DWG symbol-table record kind is unknown".into())
+        _=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG symbol-table record kind is unknown"))
     }
 }
-fn project_viewport(projection:&mut Projection<'_,'_>,id:i64,v:&DwgViewportTableRecord)->Result<(),String>{
+fn project_viewport(projection:&mut Projection<'_,'_>,id:i64,v:&DwgViewportTableRecord)->Result<(),ValueError>{
     let background=optional_words(v.background_handle);let visual=optional_words(v.visual_style_handle);let sun=optional_words(v.sun_handle);let named=optional_words(v.named_ucs_handle);let base=optional_words(v.base_ucs_handle);
     projection.insert_key("dwg_viewport_record",id,&[R(v.view_height),R(v.view_width),R(v.center[0]),R(v.center[1]),R(v.target[0]),R(v.target[1]),R(v.target[2]),R(v.direction[0]),R(v.direction[1]),R(v.direction[2]),R(v.twist),R(v.lens_length),R(v.front_clipping),R(v.back_clipping),I(i64::from(v.view_mode[0])),I(i64::from(v.view_mode[1])),I(i64::from(v.view_mode[2])),I(i64::from(v.view_mode[3])),I(i64::from(v.render_mode)),I(i64::from(v.use_default_lights)),I(i64::from(v.default_lighting_type)),R(v.brightness),R(v.contrast),R(v.lower_left[0]),R(v.lower_left[1]),R(v.upper_right[0]),R(v.upper_right[1]),I(i64::from(v.ucs_follow)),I(i64::from(v.circle_zoom)),I(i64::from(v.fast_zoom)),I(i64::from(v.ucs_icon)),I(i64::from(v.grid_mode)),R(v.grid_unit[0]),R(v.grid_unit[1]),I(i64::from(v.snap_mode)),I(i64::from(v.snap_style)),I(i64::from(v.snap_isopair)),R(v.snap_angle),R(v.snap_base[0]),R(v.snap_base[1]),R(v.snap_unit[0]),R(v.snap_unit[1]),I(i64::from(v.ucs_at_origin)),I(i64::from(v.ucs_viewport)),R(v.ucs_origin[0]),R(v.ucs_origin[1]),R(v.ucs_origin[2]),R(v.ucs_x_axis[0]),R(v.ucs_x_axis[1]),R(v.ucs_x_axis[2]),R(v.ucs_y_axis[0]),R(v.ucs_y_axis[1]),R(v.ucs_y_axis[2]),R(v.ucs_elevation),I(i64::from(v.ucs_orthographic_view)),I(i64::from(v.grid_flags)),I(i64::from(v.grid_major)),background[0],background[1],visual[0],visual[1],sun[0],sun[1],named[0],named[1],base[0],base[1]])?;
     color::project(projection,"dwg_viewport_record_ambient_color",id,&v.ambient_color)
 }
-fn reconstruct_viewport(reader:&mut Reader<'_,'_,'_>,id:i64,common:DwgTableRecordCommon)->Result<DwgViewportTableRecord,String>{
+fn reconstruct_viewport(reader:&mut Reader<'_,'_,'_>,id:i64,common:DwgTableRecordCommon)->Result<DwgViewportTableRecord,ValueError>{
     let r=reader.component("dwg_viewport_record",id)?;
     Ok(DwgViewportTableRecord{common,view_height:real(r,1)?,view_width:real(r,2)?,center:[real(r,3)?,real(r,4)?],target:[real(r,5)?,real(r,6)?,real(r,7)?],direction:[real(r,8)?,real(r,9)?,real(r,10)?],twist:real(r,11)?,lens_length:real(r,12)?,front_clipping:real(r,13)?,back_clipping:real(r,14)?,view_mode:[boolean(r,15)?,boolean(r,16)?,boolean(r,17)?,boolean(r,18)?],render_mode:byte(r,19)?,use_default_lights:boolean(r,20)?,default_lighting_type:byte(r,21)?,brightness:real(r,22)?,contrast:real(r,23)?,ambient_color:color::reconstruct(reader,"dwg_viewport_record_ambient_color",id)?,lower_left:[real(r,24)?,real(r,25)?],upper_right:[real(r,26)?,real(r,27)?],ucs_follow:boolean(r,28)?,circle_zoom:word(r,29)?,fast_zoom:boolean(r,30)?,ucs_icon:byte(r,31)?,grid_mode:boolean(r,32)?,grid_unit:[real(r,33)?,real(r,34)?],snap_mode:boolean(r,35)?,snap_style:boolean(r,36)?,snap_isopair:word(r,37)?,snap_angle:real(r,38)?,snap_base:[real(r,39)?,real(r,40)?],snap_unit:[real(r,41)?,real(r,42)?],ucs_at_origin:boolean(r,43)?,ucs_viewport:boolean(r,44)?,ucs_origin:[real(r,45)?,real(r,46)?,real(r,47)?],ucs_x_axis:[real(r,48)?,real(r,49)?,real(r,50)?],ucs_y_axis:[real(r,51)?,real(r,52)?,real(r,53)?],ucs_elevation:real(r,54)?,ucs_orthographic_view:word(r,55)?,grid_flags:word(r,56)?,grid_major:word(r,57)?,background_handle:optional_unsigned(r,58,59)?,visual_style_handle:optional_unsigned(r,60,61)?,sun_handle:optional_unsigned(r,62,63)?,named_ucs_handle:optional_unsigned(r,64,65)?,base_ucs_handle:optional_unsigned(r,66,67)?})
 }
-fn project_dimension_style(projection:&mut Projection<'_,'_>,id:i64,v:&DwgDimensionStyleTableRecord)->Result<(),String>{
+fn project_dimension_style(projection:&mut Projection<'_,'_>,id:i64,v:&DwgDimensionStyleTableRecord)->Result<(),ValueError>{
     let text_style=optional_words(v.text_style_handle);let leader=optional_words(v.leader_arrow_handle);let arrow=optional_words(v.arrow_handle);let arrow1=optional_words(v.arrow_1_handle);let arrow2=optional_words(v.arrow_2_handle);let linetype=optional_words(v.dimension_linetype_handle);let extension1=optional_words(v.extension_1_linetype_handle);let extension2=optional_words(v.extension_2_linetype_handle);
     projection.insert_key("dwg_dimension_style_record",id,&[T(&v.dimension_postfix),T(&v.alternate_postfix),I(i64::from(v.fill_mode)),text_style[0],text_style[1],leader[0],leader[1],arrow[0],arrow[1],arrow1[0],arrow1[1],arrow2[0],arrow2[1],linetype[0],linetype[1],extension1[0],extension1[1],extension2[0],extension2[1]])?;
     let g=&v.geometry;
@@ -82,7 +83,7 @@ fn project_dimension_style(projection:&mut Projection<'_,'_>,id:i64,v:&DwgDimens
     color::project(projection,"dwg_dimension_style_extension_line_color",id,&t.extension_line_color)?;
     color::project(projection,"dwg_dimension_style_text_color",id,&t.text_color)
 }
-fn reconstruct_dimension_style(reader:&mut Reader<'_,'_,'_>,id:i64,common:DwgTableRecordCommon)->Result<DwgDimensionStyleTableRecord,String>{
+fn reconstruct_dimension_style(reader:&mut Reader<'_,'_,'_>,id:i64,common:DwgTableRecordCommon)->Result<DwgDimensionStyleTableRecord,ValueError>{
     let row=reader.component("dwg_dimension_style_record",id)?;
     let r=reader.component("dwg_dimension_style_geometry",id)?;
     let geometry=DwgDimensionGeometry{scale:real(r,1)?,arrow_size:real(r,2)?,extension_origin_offset:real(r,3)?,dimension_line_increment:real(r,4)?,extension_line_extension:real(r,5)?,rounding:real(r,6)?,dimension_line_extension:real(r,7)?,plus_tolerance:real(r,8)?,minus_tolerance:real(r,9)?,fixed_extension_length:real(r,10)?,jog_angle:real(r,11)?};

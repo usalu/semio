@@ -1,0 +1,51 @@
+{
+  "at": "2026-10-03T10:47:06.234Z",
+  "release": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-worker/sqlite-native-ledger-production-native-fence-released-1.json",
+  "rows": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧫️fixtures/basic-remote-ops/edits.ops",
+      "before": "edit basic-1 started=\"0\" actor=peer\n  set-n n=5\n",
+      "current": "edit basic-1 started=\"0\" actor=peer\n  set-n n=5\n",
+      "proposed": "edit basic-1 started=\"0\" actor=peer line=[]\n  set-n n=5\n",
+      "inverse": "edit basic-1 started=\"0\" actor=peer\n  set-n n=5\n",
+      "sha256": "9e298c60b48d10ac1e0bc3d0a83d971c2931930eb9ba4846d1ce962b4b31becb",
+      "changed": true,
+      "beforeSha256": "9e298c60b48d10ac1e0bc3d0a83d971c2931930eb9ba4846d1ce962b4b31becb",
+      "afterSha256": "90fb8a4d5b4809ebb7bf0a3654d9d8243bb85c5f99f33d36d82fb20cc0e92ff5"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧫️fixtures/basic-remote-ops/🔣️fixture.dsl",
+      "before": "name=basic-remote-ops\nschema=demo/v1\ndocumentId=fixture-basic\nexpectedEvent=remoteMutations\ninbound.0.kind=externalEdits\ninbound.0.opsFile=edits.ops\nexpectedEditId=basic-1#0\n",
+      "current": "name=basic-remote-ops\nschema=demo/v1\ndocumentId=fixture-basic\nexpectedEvent=remoteMutations\ninbound.0.kind=externalEdits\ninbound.0.opsFile=edits.ops\nexpectedEditId=basic-1#0\n",
+      "proposed": "name=basic-remote-ops\nschema=demo/v1\ndocumentId=fixture-basic\nexpectedEvent=remoteMutations\ninbound.0.kind=externalEdits\ninbound.0.opsFile=edits.ops\nexpectedEditId=basic-1#0\n",
+      "inverse": "name=basic-remote-ops\nschema=demo/v1\ndocumentId=fixture-basic\nexpectedEvent=remoteMutations\ninbound.0.kind=externalEdits\ninbound.0.opsFile=edits.ops\nexpectedEditId=basic-1#0\n",
+      "sha256": "f128d390f5472bb98abd2076f9e16a8ac4003bdeec64de118f971c34d24c0675",
+      "changed": false,
+      "beforeSha256": "f128d390f5472bb98abd2076f9e16a8ac4003bdeec64de118f971c34d24c0675",
+      "afterSha256": "f128d390f5472bb98abd2076f9e16a8ac4003bdeec64de118f971c34d24c0675"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧫️fixtures/remote-ops-backlog/edits.ops",
+      "before": "edit backlog-1 started=\"0\" actor=peer\n  set-n n=2\nedit backlog-2 started=\"0\" actor=peer\n  set-n n=3\n",
+      "current": "edit backlog-1 started=\"0\" actor=peer\n  set-n n=2\nedit backlog-2 started=\"0\" actor=peer\n  set-n n=3\n",
+      "proposed": "edit backlog-1 started=\"0\" actor=peer line=[]\n  set-n n=2\nedit backlog-2 started=\"0\" actor=peer line=[]\n  set-n n=3\n",
+      "inverse": "edit backlog-1 started=\"0\" actor=peer\n  set-n n=2\nedit backlog-2 started=\"0\" actor=peer\n  set-n n=3\n",
+      "sha256": "d7ba3835e7388e4aa84716bfd6d85287cb98b0eba689206a1c7076b53f2aa34a",
+      "changed": true,
+      "beforeSha256": "d7ba3835e7388e4aa84716bfd6d85287cb98b0eba689206a1c7076b53f2aa34a",
+      "afterSha256": "7739f8a1c706fb4ef6d54fb887b0638696289fa23012ca04a290a4053e08cd8d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧫️fixtures/remote-ops-backlog/🔣️fixture.dsl",
+      "before": "name=remote-ops-backlog\nschema=demo/v1\ndocumentId=fixture-backlog\nexpectedEvent=remoteMutations\ninbound.0.kind=externalEdits\ninbound.0.opsFile=edits.ops\nexpectedEditId=backlog-1#0\nexpectedEditId=backlog-2#0\n",
+      "current": "name=remote-ops-backlog\nschema=demo/v1\ndocumentId=fixture-backlog\nexpectedEvent=remoteMutations\ninbound.0.kind=externalEdits\ninbound.0.opsFile=edits.ops\nexpectedEditId=backlog-1#0\nexpectedEditId=backlog-2#0\n",
+      "proposed": "name=remote-ops-backlog\nschema=demo/v1\ndocumentId=fixture-backlog\nexpectedEvent=remoteMutations\ninbound.0.kind=externalEdits\ninbound.0.opsFile=edits.ops\nexpectedEditId=backlog-1#0\nexpectedEditId=backlog-2#0\n",
+      "inverse": "name=remote-ops-backlog\nschema=demo/v1\ndocumentId=fixture-backlog\nexpectedEvent=remoteMutations\ninbound.0.kind=externalEdits\ninbound.0.opsFile=edits.ops\nexpectedEditId=backlog-1#0\nexpectedEditId=backlog-2#0\n",
+      "sha256": "772dc1c20285877a199d8c74c7d6e398aea80d1092dbbf8f9af636bdea5e3973",
+      "changed": false,
+      "beforeSha256": "772dc1c20285877a199d8c74c7d6e398aea80d1092dbbf8f9af636bdea5e3973",
+      "afterSha256": "772dc1c20285877a199d8c74c7d6e398aea80d1092dbbf8f9af636bdea5e3973"
+    }
+  ],
+  "sourceWrites": false
+}

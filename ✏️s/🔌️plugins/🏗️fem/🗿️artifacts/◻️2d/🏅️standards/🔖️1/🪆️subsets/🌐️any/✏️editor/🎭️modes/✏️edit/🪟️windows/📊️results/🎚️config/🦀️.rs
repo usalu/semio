@@ -4,52 +4,6 @@
 mod schema;
 pub use schema::*;
 
-//#region 🔖️Playback
-/// ⏱️ The playback frame delta, in milliseconds. A wasm guest has no monotonic clock it may read
-/// inside a command, so the tick advances the phase by a FIXED delta and the host's
-/// `Effect::DispatchAction { delay_ms }` is what keeps that delta honest (~30 fps).
-pub const ANIMATION_TICK_MS: u64 = 33;
-
-/// ⏱️ [`ANIMATION_TICK_MS`] in seconds — `speed` is stated in cycles per second.
-pub const ANIMATION_TICK_SECONDS: f64 = ANIMATION_TICK_MS as f64 / 1_000.0;
-
-/// 🐢️ Slowest and fastest playback the transport admits, in cycles per second.
-pub const ANIMATION_SPEED_MINIMUM: f64 = 0.05;
-pub const ANIMATION_SPEED_MAXIMUM: f64 = 4.0;
-
-/// ⏭️ One transport step — a twenty-fourth of a cycle, the classic film frame.
-pub const ANIMATION_PHASE_STEP: f64 = 1.0 / 24.0;
-
-impl Default for Fem2dResultsAnimation {
-    /// 🎞️ A still results window sits at phase 1 — the FULL deformed shape, exactly what the window
-    /// drew before playback existed. Phase 0 would open every results window on an undeformed
-    /// structure, so the resting pose is the end of the ramp, not its start.
-    fn default() -> Self {
-        Self { phase: 1.0, playing: false, speed: 0.5, loop_mode: Fem2dLoopMode::Loop, waveform: Fem2dWaveform::Ramp, reverse: false }
-    }
-}
-
-impl Fem2dResultsAnimation {
-    /// 〰️ The signed factor the solved displacement field is scaled by this frame. `Sine` returns
-    /// negative values on purpose: the structure swings through both signs instead of only growing.
-    pub fn amplitude(&self) -> f64 {
-        match self.waveform {
-            Fem2dWaveform::Ramp => self.phase,
-            Fem2dWaveform::Sine => (std::f64::consts::TAU * self.phase).sin(),
-        }
-    }
-
-    /// ▶️ Arms playback: a `Once` run that already sits at its end rewinds, so the play button is
-    /// never a control that visibly does nothing.
-    pub fn start(&mut self) {
-        if self.loop_mode == Fem2dLoopMode::Once && self.phase >= 1.0 {
-            self.phase = 0.0;
-        }
-        self.playing = true;
-    }
-}
-//#endregion 🔖️Playback
-
 impl Default for Fem2dResultsWindowConfig {
     fn default() -> Self {
         Self {
@@ -57,7 +11,7 @@ impl Default for Fem2dResultsWindowConfig {
             result_source_id: None,
             result_mode: crate::app_surface::ResultMode::Static,
             result_mode_index: 0,
-            animation: Fem2dResultsAnimation::default(),
+            animation: crate::app_surface::FemResultsAnimation::default(),
         }
     }
 }
@@ -67,13 +21,13 @@ impl store::ArtifactDsl for Fem2dResultsWindowConfig {
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = store::semio_format::split_text_preamble(text).map_or(text, |(_, body)| body);
-        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid FEM window-config envelope");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -82,25 +36,25 @@ impl store::ArtifactDsl for Fem2dResultsWindowConfig {
 impl store::ArtifactPack for Fem2dResultsWindowConfig {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let body = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::from(error.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &body))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, body) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        let (envelope, body) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::from(error.into_value_error()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema("FEM window-config pack envelope mismatch".into()));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "FEM window-config pack envelope mismatch")));
         }
         let (record, _) = store::pack_rt::decode_document(&body, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
 
 store::impl_whole_record_config!(Fem2dResultsWindowConfig);
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 pub enum Fem2dResultsWindowConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {
@@ -110,11 +64,11 @@ pub enum Fem2dResultsWindowConfigMutation {
 }
 
 impl protocol::OpText for Fem2dResultsWindowConfigMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        dsl::variants_text::parse_op(line)
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        semio_framework_dsl_record::variants_text::parse_op(line)
     }
     fn print_op(&self) -> String {
-        dsl::variants_text::print_op(self)
+        semio_framework_dsl_record::variants_text::print_op(self)
     }
 }
 
@@ -150,13 +104,16 @@ impl protocol::Mutation<Fem2dResultsWindowConfig> for Fem2dResultsWindowConfigMu
     }
     fn diff(&self, base: &Fem2dResultsWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
         match self {
-            Self::Snapshot { config } if config.as_ref() == base => protocol::MutationOutcome::new(base.clone()).warn("mutation.no-op", "FEM window configuration is already current."),
+            Self::Snapshot { config } if config.as_ref() == base => protocol::MutationOutcome::new(base.clone()).warning("mutation.no-op", "FEM window configuration is already current."),
             Self::Snapshot { config } => protocol::MutationOutcome::new(config.as_ref().clone()),
         }
     }
-    fn inverse(&self, base: &Fem2dResultsWindowConfig) -> Vec<Self> {
+    fn inverse(&self, base: &Fem2dResultsWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![Self::Snapshot { config: Box::new(base.clone()) }]
-    }
+    
+    })())
+}
 }
 
 pub struct Fem2dResultsWindowConfigOwner;
@@ -184,7 +141,7 @@ pub fn current<C>(view: &semio_framework_plugin::ConfigView<'_, C>) -> Fem2dResu
 
 /// 🎞️ The configuration the results window DRAWS: the persisted transport with the running clock's
 /// phase and direction folded in while the window plays, the resting phase otherwise.
-pub fn effective(config: &Fem2dResultsWindowConfig, clock: Option<&super::transient::Fem2dPlaybackClock>) -> Fem2dResultsWindowConfig {
+pub fn effective(config: &Fem2dResultsWindowConfig, clock: Option<&super::transient::FemPlaybackClock>) -> Fem2dResultsWindowConfig {
     match clock {
         Some(clock) => Fem2dResultsWindowConfig { animation: clock.parked_into(&config.animation), ..config.clone() },
         None => config.clone(),

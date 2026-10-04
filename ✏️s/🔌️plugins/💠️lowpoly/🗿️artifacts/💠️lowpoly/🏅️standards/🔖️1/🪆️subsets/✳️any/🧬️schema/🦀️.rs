@@ -86,14 +86,17 @@ const CONCRETE_FOREST_LEFT_MESH_JSON: &str = include_str!("../📚️examples/�
 /// `ArtifactChild` handle while the app session owns its matching mesh payload.
 pub struct LowpolyOwnedDefaultDocument {
     pub snapshot: crate::LowpolySnapshot,
-    pub mesh_workspace: std::collections::HashMap<String, String>,
+    pub mesh_workspace: std::collections::HashMap<String, crate::LowpolyMeshState>,
 }
 
 /// 🌲️ Hexagonal Cut Concrete Forest Left — the same CAD-derived mesh fixture puzzle 3d and cad shape use.
 pub fn concrete_forest_left_owned_document() -> LowpolyOwnedDefaultDocument {
-    let mesh_json = CONCRETE_FOREST_LEFT_MESH_JSON.to_string();
-    let snapshot = crate::snapshot_from_mesh_json(&mesh_json, "obj-1", LOWPOLY_DEFAULT_EXAMPLE_LABEL);
-    let mesh_workspace = std::collections::HashMap::from([("obj-1".to_string(), mesh_json)]);
+    let mesh=HalfedgeMesh::from_json(CONCRETE_FOREST_LEFT_MESH_JSON).expect("authored default mesh source is valid");
+    let state=crate::LowpolyMeshState::from_mesh(mesh);
+    let mut snapshot=crate::snapshot_from_mesh_json(CONCRETE_FOREST_LEFT_MESH_JSON,"obj-1",LOWPOLY_DEFAULT_EXAMPLE_LABEL);
+    snapshot.objects[0].mesh=Some(crate::managed_mesh_child_handle("obj-1",&state));
+    snapshot.objects[0].mesh_state=Some(state.clone());
+    let mesh_workspace=std::collections::HashMap::from([("obj-1".to_string(),state)]);
     LowpolyOwnedDefaultDocument { snapshot, mesh_workspace }
 }
 
@@ -109,7 +112,7 @@ pub fn default_snapshot() -> crate::LowpolySnapshot {
 }
 
 /// 🕸️ Fresh app-owned companion payload for `default_snapshot()`'s exact child handle.
-pub fn default_mesh_workspace() -> std::collections::HashMap<String, String> {
+pub fn default_mesh_workspace() -> std::collections::HashMap<String, crate::LowpolyMeshState> {
     default_owned_document().mesh_workspace
 }
 
@@ -138,11 +141,11 @@ pub fn artifact_schema_registered() -> bool {
 /// texture when one is supplied. Shared by the app's live 3D scene builder and media export. Relocated
 /// from `⚙️engine/🧵️media` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): a pure
 /// `Value` → `MeshData` conversion, not engine behaviour. Every field read routes through
-/// `dsl::FromValue` directly — no `serde_json` bridge anywhere in this call chain.
-pub fn mesh_data_from_transfer(transfer: &dsl::DslValue, paint_texture: Option<String>) -> MeshData {
-    let read_f32 = |key: &str| -> Vec<f32> { transfer.get(key).and_then(|value| dsl::FromValue::from_value(value.clone()).ok()).unwrap_or_default() };
-    let read_u32 = |key: &str| -> Vec<u32> { transfer.get(key).and_then(|value| dsl::FromValue::from_value(value.clone()).ok()).unwrap_or_default() };
-    let read_u8 = |key: &str| -> Vec<u8> { transfer.get(key).and_then(|value| dsl::FromValue::from_value(value.clone()).ok()).unwrap_or_default() };
+/// `semio_framework_value::FromValue` directly — no `serde_json` bridge anywhere in this call chain.
+pub fn mesh_data_from_transfer(transfer: &semio_framework_value::DslValue, paint_texture: Option<String>) -> MeshData {
+    let read_f32 = |key: &str| -> Vec<f32> { transfer.get(key).and_then(|value| semio_framework_value::FromValue::from_value(value.clone()).ok()).unwrap_or_default() };
+    let read_u32 = |key: &str| -> Vec<u32> { transfer.get(key).and_then(|value| semio_framework_value::FromValue::from_value(value.clone()).ok()).unwrap_or_default() };
+    let read_u8 = |key: &str| -> Vec<u8> { transfer.get(key).and_then(|value| semio_framework_value::FromValue::from_value(value.clone()).ok()).unwrap_or_default() };
     MeshData {
         positions: read_f32("positions"),
         normals: read_f32("normals"),
@@ -160,33 +163,33 @@ pub fn mesh_data_from_transfer(transfer: &dsl::DslValue, paint_texture: Option<S
 }
 
 /// 🔺️ Rebuilds a fresh single-object lowpoly projection from a DWG-imported mesh. Relocated from
-/// `⚙️engine/🧵️media`. Routes through `dsl::ToValue` (not `serde_json::to_value` on `LowpolySnapshot`
+/// `⚙️engine/🧵️media`. Routes through `semio_framework_value::ToValue` (not `serde_json::to_value` on `LowpolySnapshot`
 /// directly) since the snapshot transitively carries `LowpolyObject.mesh:
 /// Option<store::ArtifactChild<SemioMeshSnapshot>>`, whose `Serialize` is `#[cfg(test)]`-only
-/// (ticket `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`) — `dsl::ToValue`
+/// (ticket `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`) — `semio_framework_value::ToValue`
 /// stays available unconditionally, and the `DslValue`→`serde_json::Value` bridge (`🌱️value/🦀️.rs`)
 /// yields the identical JSON shape.
 pub fn lowpoly_document_from_mesh(mesh: &MeshData) -> Result<serde_json::Value, String> {
     let halfedge = HalfedgeMesh::from_indexed_triangles(&mesh.positions, &mesh.indices).map_err(|err| format!("{err:?}"))?;
     let mesh_json = halfedge.to_json().map_err(|err| format!("{err:?}"))?;
     let snapshot = crate::snapshot_from_mesh_json(&mesh_json, "obj-1", "Imported Mesh");
-    Ok(dsl::ToValue::to_value(&snapshot).into())
+    Ok(semio_framework_value::ToValue::to_value(&snapshot).into())
 }
 
 /// 🧊️ Minimal document wrapper for `3d.mesh` resources — no dedicated schema exists yet. Relocated
-/// from `⚙️engine/🧵️media`. `MeshData` implements `dsl::ToValue` first-party (hand-written in
+/// from `⚙️engine/🧵️media`. `MeshData` implements `semio_framework_value::ToValue` first-party (hand-written in
 /// `🏗️mesh-engine/🦀️.rs`, since `serde`'s `Serialize` on it is `#[cfg(test)]`-only per the same
 /// ticket), so this bridges through that instead of `serde_json::to_value(mesh)`.
 pub fn mesh_document_from_mesh(mesh: &MeshData) -> Result<serde_json::Value, String> {
-    let document = dsl::DslValue::object([("schema".to_string(), dsl::DslValue::String("mesh.document".to_string())), ("mesh".to_string(), dsl::ToValue::to_value(mesh))]);
+    let document = semio_framework_value::DslValue::object([("schema".to_string(), semio_framework_value::DslValue::String("mesh.document".to_string())), ("mesh".to_string(), semio_framework_value::ToValue::to_value(mesh))]);
     Ok(document.into())
 }
 
-/// 🔺️ Relocated from `⚙️engine/🧵️media`. Mirrors `mesh_document_from_mesh`'s `dsl::ToValue` bridge in
-/// reverse (`dsl::FromValue`), since `MeshData: Deserialize` is likewise `#[cfg(test)]`-only.
+/// 🔺️ Relocated from `⚙️engine/🧵️media`. Mirrors `mesh_document_from_mesh`'s `semio_framework_value::ToValue` bridge in
+/// reverse (`semio_framework_value::FromValue`), since `MeshData: Deserialize` is likewise `#[cfg(test)]`-only.
 pub fn mesh_from_mesh_document(doc: &serde_json::Value) -> Result<MeshData, String> {
     doc.get("mesh")
-        .and_then(|value| dsl::FromValue::from_value(dsl::DslValue::from(value.clone())).ok())
+        .and_then(|value| semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(value.clone())).ok())
         .filter(|mesh: &MeshData| !mesh.positions.is_empty() && !mesh.indices.is_empty())
         .map_or_else(|| Ok(semio_framework_plugin::mesh_from_kind("box")), Ok)
 }
@@ -358,7 +361,7 @@ pub mod derived_construction {
     #[derive(Clone, Debug, Default)]
     pub struct LowpolyBuilderConstruction {
         snapshot: LowpolySnapshot,
-        diagnostics: Vec<dsl::Diagnostic>,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
     }
 
     impl ArtifactBuilder for LowpolyBuilderConstruction {
@@ -371,7 +374,7 @@ pub mod derived_construction {
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(Self::from_snapshot(<LowpolySnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
@@ -381,7 +384,7 @@ pub mod derived_construction {
             let outcome = <LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::diff(&mutation, &self.snapshot);
             match protocol::MutationDiff::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("build.apply", dsl::TextSpan::at(1, 1), error.to_string())),
+                Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
@@ -390,7 +393,7 @@ pub mod derived_construction {
             self.snapshot = snapshot;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -432,14 +435,14 @@ pub mod derived_analysis {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <LowpolySnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }

@@ -13,7 +13,7 @@ async fn create_artifact_relays_only_the_catalog_choice_and_name_without_local_p
     match &result.requested_effects[0] {
         Effect::ReplayShellCommand { action_id, args } => {
             assert_eq!(action_id, "os.create-space-artifact");
-            let args = pack::json_from_dsl_value(&args.clone().expect("args"));
+            let args = semio_framework_pack_json::from_dsl_value(&args.clone().expect("args"));
             assert_eq!(args.get("kindChoice").and_then(|v| v.as_str()), Some(kind_choice));
             assert_eq!(args.get("name").and_then(|v| v.as_str()), Some("First"));
             assert_eq!(args.as_object().map(|value| value.len()), Some(2));

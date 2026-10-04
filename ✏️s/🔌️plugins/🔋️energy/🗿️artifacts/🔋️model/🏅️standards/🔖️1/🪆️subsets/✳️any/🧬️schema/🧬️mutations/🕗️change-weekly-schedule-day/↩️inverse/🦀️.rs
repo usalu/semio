@@ -6,7 +6,8 @@ use crate::EnergyModelSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ A refused or no-op forward step has nothing to undo, so it answers with no steps at all.
-pub fn inverse(payload: &super::ChangeWeeklyScheduleDay, base: &EnergyModelSnapshot) -> Vec<EnergyModelMutation> {
+pub fn inverse(payload: &super::ChangeWeeklyScheduleDay, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     if payload.day_index > 6 || !base.model.schedules.daily.iter().any(|row| row.id == payload.new_daily_schedule_id) {
         return Vec::new();
     }
@@ -14,5 +15,7 @@ pub fn inverse(payload: &super::ChangeWeeklyScheduleDay, base: &EnergyModelSnaps
         Some(item) if item.daily_schedule_ids[payload.day_index as usize] != payload.new_daily_schedule_id => vec![vocabulary::change_weekly_schedule_day(payload.id, payload.day_index, item.daily_schedule_ids[payload.day_index as usize])],
         _ => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

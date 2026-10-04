@@ -1,0 +1,13 @@
+# Current Source92 Running Failure Independent Audit
+
+Bounded current log read, not test execution by this lane. Log `🗑️generated/root-current-ninety-two-plugin-source-after-shared-index-replay.log` has no whole-matrix Nx success/failure footer at inspection. It must remain running/pending.
+
+The only completed assertion failure presently recorded is TIFF operation leaf15, expected intrinsic payload debit8, actual supplied-operation debit136. Root independently identified and mounted the strict fixture/schema/test join retaining two actual4-byte payload copies and the real16-table half-load32 Uint32 slots128 bytes. The arithmetic8+128=136 follows actual used backing; it is not JavaScript ABI estimation. Independent SQLite semantic payload identity remains distinct from operation storage debit, and the paired TypedArray byte assertion is the appropriate separate backing oracle. No producer rollback, observer exclusion or refund is justified by this old expectation. Focused TIFF15 runtime result remains pending at this read.
+
+A subsequent immediate fresh read revealed DWG public built-package timeout, detailed below. The earlier read had not yet recorded that completed block. This is not a whole92 passing claim and not evidence that later queued targets cannot fail. No new held fixture pair is authored for an absent failure. Root still owns Source/Native dispatch; subsequent real completed blocks need fresh actual owner/neutral contract inspection.
+
+## New Completed DWG Public Route Timeout
+
+Current log1097–1105 and1188–1195 records `DWG built package exposes the complete typed relational provider` timeout60000ms,33pass/1fail240 expectations. Leaf actual path stdio/🖊️dwg/ac1024/any/snapshot/tests/sqlite/📦️public/🟦️.ts6–13 imports @semio-tech/stdio-dwg built package, projects the full authored fixture, asserts277tables, reconstructs full exact snapshot, then validates both ac1018 and ac1024. The registered public export resolves package.json22–23 to dist/🟦️.js. This is a real bounded public-route execution failure, not an old intrinsic-only allocation expectation.
+
+No callback marks isolate which of the four await operations exceeded the budget. It is therefore not justified to split independent malformed cases (there are none here), merely raise60000, drop one version/full equality, or replace public built import with direct source. Need actual per-operation trace/current built authority qualification and execution schedule evidence. The log interleaves other owned commands, so scheduling interference is possible but not proven. No production defect or obsolete-dist root cause is inferred solely from timeout. No held fixture/schema debit correction is appropriate for this failure. Whole92 footer still absent.

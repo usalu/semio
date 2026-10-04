@@ -1,0 +1,10 @@
+{
+  "name": "@semio-tech/framework-deflate-rs",
+  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "🧰️framework/🔨️modules/🗜️deflate",
+  "namedInputs": {"default": ["{workspaceRoot}/🧰️framework/🔨️modules/🗜️deflate/**/*", "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/**/*", "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/**/*"]},
+  "targets": {
+    "test-ownership": {"executor": "nx:run-commands", "cache": false, "inputs": ["default"], "options": {"cwd": "🧰️framework/🔨️modules/🗜️deflate/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test-ownership"}},
+    "test-native": {"executor": "nx:run-commands", "cache": false, "inputs": ["default"], "options": {"cwd": "🧰️framework/🔨️modules/🗜️deflate/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test-native"}}
+  }
+}

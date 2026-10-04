@@ -1,0 +1,267 @@
+{
+  "schema": "generation3d.gltf-authored-attribute-import.v1",
+  "source": "gltfExport/prepared",
+  "materialIds": {
+    "paint": "mat-0"
+  },
+  "cases": [
+    {
+      "id": "complete-surface",
+      "vertices": [
+        0,
+        1,
+        2,
+        0,
+        2,
+        3
+      ],
+      "corners": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "faces": [
+        0,
+        1
+      ],
+      "indices": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          3,
+          4,
+          5
+        ]
+      ],
+      "expected": {
+        "normal": [
+          0,
+          1,
+          2,
+          0,
+          2,
+          3
+        ],
+        "uv0": [
+          0,
+          1,
+          2,
+          0,
+          2,
+          3
+        ],
+        "uv63": [
+          0,
+          1,
+          2,
+          0,
+          2,
+          3
+        ],
+        "color0": [
+          0,
+          1,
+          2,
+          0,
+          2,
+          3
+        ],
+        "color1": [
+          0,
+          1
+        ],
+        "tangent": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          1
+        ],
+        "temperature": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          1
+        ],
+        "label": [
+          0,
+          1
+        ],
+        "material": [
+          0,
+          1
+        ],
+        "selected": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "id": "material-split-triangle",
+      "vertices": [
+        0,
+        2,
+        3
+      ],
+      "corners": [
+        3,
+        4,
+        5
+      ],
+      "faces": [
+        1
+      ],
+      "indices": [
+        [
+          0,
+          1,
+          2
+        ]
+      ],
+      "expected": {
+        "normal": [
+          0,
+          2,
+          3
+        ],
+        "uv0": [
+          0,
+          2,
+          3
+        ],
+        "uv63": [
+          0,
+          2,
+          3
+        ],
+        "color0": [
+          0,
+          2,
+          3
+        ],
+        "color1": [
+          1
+        ],
+        "tangent": [
+          1,
+          1,
+          1
+        ],
+        "temperature": [
+          1,
+          1,
+          1
+        ],
+        "label": [
+          1
+        ],
+        "material": [
+          1
+        ],
+        "selected": [
+          1,
+          1,
+          1
+        ]
+      }
+    }
+  ],
+  "refusals": [
+    {
+      "id": "short-source-vertices",
+      "field": "semioSourceVertices",
+      "value": [
+        0,
+        2
+      ]
+    },
+    {
+      "id": "negative-source-vertex",
+      "field": "semioSourceVertices",
+      "value": [
+        -1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "fractional-source-vertex",
+      "field": "semioSourceVertices",
+      "value": [
+        0.5,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "source-vertex-outside-palette",
+      "field": "semioSourceVertices",
+      "value": [
+        99,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "missing-source-faces",
+      "field": "semioSourceFaces",
+      "remove": true
+    },
+    {
+      "id": "short-source-corners",
+      "field": "semioSourceCorners",
+      "value": [
+        3,
+        4
+      ]
+    },
+    {
+      "id": "source-corners-disagree-with-face",
+      "field": "semioSourceCorners",
+      "value": [
+        0,
+        1,
+        2
+      ]
+    }
+  ],
+  "streams": {
+    "normal": "NORMAL",
+    "uv0": "TEXCOORD_0",
+    "uv63": "TEXCOORD_63",
+    "color0": "COLOR_0",
+    "color1": "COLOR_1",
+    "tangent": "TANGENT",
+    "temperature": "_temperature"
+  },
+  "fallback": {
+    "authored": [
+      "label",
+      "selected"
+    ],
+    "normal": [
+      0,
+      0,
+      1
+    ],
+    "expected": [
+      "label",
+      "normal",
+      "selected"
+    ]
+  }
+}

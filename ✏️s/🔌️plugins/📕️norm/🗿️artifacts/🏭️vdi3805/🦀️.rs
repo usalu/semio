@@ -46,7 +46,7 @@ pub fn text_in(variants: &[LocalizedText], locale: &str) -> String {
 /// engine's `DslField` binding can only be derived for a type/trait pair with a local half (orphan
 /// rule), and `crate::document::QuantityKind` doesn't derive `dsl::DslScalar` itself. Converted at the
 /// `VdiUnit` boundary via `From`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -130,7 +130,7 @@ impl From<QuantityKind> for VdiQuantityKind {
 }
 
 /// 📐️ VDI 3805 unit with absolute vs delta semantics.
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -172,16 +172,16 @@ pub enum VdiValue {
 /// values bind through `DslField`, not `DslVariants`) — `#[derive(dsl::DslEnum)]` only produces
 /// `DslVariants`, so it can't satisfy that site. Binds through `Shape::Value` (the engine's existing
 /// serde_json escape hatch), reusing the `Serialize`/`Deserialize` this type already has.
-impl dsl::DslField for VdiValue {
-    fn shape() -> dsl::Shape {
-        dsl::Shape::Value
+impl semio_framework_dsl_record::DslField for VdiValue {
+    fn shape() -> semio_framework_dsl_record::Shape {
+        semio_framework_dsl_record::Shape::Value
     }
-    fn to_value(&self) -> dsl::FieldValue {
-        dsl::FieldValue::Value(semio_framework_value::ToValue::to_value(self))
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
+        semio_framework_dsl_record::FieldValue::Value(semio_framework_value::ToValue::to_value(self))
     }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
         match value {
-            dsl::FieldValue::Value(dsl_value) => {
+            semio_framework_dsl_record::FieldValue::Value(dsl_value) => {
                 let normalized = store::pack_rt::renormalize_whole_number_floats(dsl_value.clone());
                 semio_framework_value::FromValue::from_value(normalized).map_err(|error|error.to_string())
             }
@@ -191,7 +191,7 @@ impl dsl::DslField for VdiValue {
 }
 
 /// 🧩️ Typed extension bag (`string → string`) matching JSON Schema `ExtensionFields.fields`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -200,7 +200,7 @@ pub struct ExtensionBag {
 }
 
 /// 🆔️ Product identity within a manufacturer catalogue.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -211,7 +211,7 @@ pub struct ProductIdentity {
 }
 
 /// 🏭️ Manufacturer file header and payload references.
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -226,7 +226,7 @@ pub struct ManufacturerFile {
 }
 
 /// 🔗️ Accessory relationship between products.
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -237,7 +237,7 @@ pub struct AccessoryLink {
 }
 
 /// 🧱️ Composition relationship (`hasPart`).
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -247,7 +247,7 @@ pub struct CompositionLink {
 }
 
 /// 🔒️ Security limits for untrusted manufacturer files.
-#[derive(Clone, Copy, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -333,29 +333,29 @@ impl SheetId {
 /// 🔗️ Hand `DslField` bridge for `SheetId`: a tuple ("newtype") struct has no named fields for
 /// `#[derive(dsl::DslRecord)]` to enumerate, so it binds directly as `Shape::UInt` instead of
 /// changing its public tuple shape (used pervasively as `.0` across this crate).
-impl dsl::DslField for SheetId {
-    fn shape_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::Shape,String>{<u16 as dsl::DslField>::shape_controlled(control)}
-    fn to_value_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::FieldValue,String>{<u16 as dsl::DslField>::to_value_controlled(&self.0,control)}
+impl semio_framework_dsl_record::DslField for SheetId {
+    fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{<u16 as semio_framework_dsl_record::DslField>::shape_controlled(control)}
+    fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,semio_framework_value::ValueError>{<u16 as semio_framework_dsl_record::DslField>::to_value_controlled(&self.0,control)}
 
-    fn from_value_controlled(value: &dsl::FieldValue, control: &mut dsl::NativeDecodeControl<'_>) -> Result<Self, String> {
-        <u16 as dsl::DslField>::from_value_controlled(value, control).map(Self)
+    fn from_value_controlled(value: &semio_framework_dsl_record::FieldValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self,semio_framework_value::ValueError> {
+        <u16 as semio_framework_dsl_record::DslField>::from_value_controlled(value, control).map(Self)
     }
-    fn shape() -> dsl::Shape {
-        dsl::Shape::UInt
+    fn shape() -> semio_framework_dsl_record::Shape {
+        semio_framework_dsl_record::Shape::UInt
     }
-    fn to_value(&self) -> dsl::FieldValue {
-        dsl::FieldValue::UInt(self.0 as u64)
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
+        semio_framework_dsl_record::FieldValue::UInt(self.0 as u64)
     }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
         match value {
-            dsl::FieldValue::UInt(v) => u16::try_from(*v).map(Self).map_err(|_| format!("sheet id {v} out of range for u16")),
+            semio_framework_dsl_record::FieldValue::UInt(v) => u16::try_from(*v).map(Self).map_err(|_| format!("sheet id {v} out of range for u16")),
             other => Err(format!("expected UInt, found {other:?}")),
         }
     }
 }
 
 /// 📅️ Edition identifier (year + month).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -660,7 +660,7 @@ impl SchemaCatalog {
 
 // #region Part1
 /// 🏗️ Parsed building-system number (Anlagenkennzeichen).
-#[derive(Clone, Debug, PartialEq, Eq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -695,22 +695,22 @@ pub struct RecordFamilyId(pub String);
 /// 🔗️ Hand `DslField` bridge for `RecordFamilyId`: a tuple ("newtype") struct has no named fields
 /// for `#[derive(dsl::DslRecord)]` to enumerate, so it binds directly as `Shape::Text` instead of
 /// changing its public tuple shape (used pervasively as `.0` across this crate).
-impl dsl::DslField for RecordFamilyId {
-    fn shape_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::Shape,String>{<String as dsl::DslField>::shape_controlled(control)}
-    fn to_value_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::FieldValue,String>{<String as dsl::DslField>::to_value_controlled(&self.0,control)}
+impl semio_framework_dsl_record::DslField for RecordFamilyId {
+    fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{<String as semio_framework_dsl_record::DslField>::shape_controlled(control)}
+    fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,semio_framework_value::ValueError>{<String as semio_framework_dsl_record::DslField>::to_value_controlled(&self.0,control)}
 
-    fn from_value_controlled(value: &dsl::FieldValue, control: &mut dsl::NativeDecodeControl<'_>) -> Result<Self, String> {
-        <String as dsl::DslField>::from_value_controlled(value, control).map(Self)
+    fn from_value_controlled(value: &semio_framework_dsl_record::FieldValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self,semio_framework_value::ValueError> {
+        <String as semio_framework_dsl_record::DslField>::from_value_controlled(value, control).map(Self)
     }
-    fn shape() -> dsl::Shape {
-        dsl::Shape::Text
+    fn shape() -> semio_framework_dsl_record::Shape {
+        semio_framework_dsl_record::Shape::Text
     }
-    fn to_value(&self) -> dsl::FieldValue {
-        dsl::FieldValue::Text(self.0.clone())
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
+        semio_framework_dsl_record::FieldValue::Text(self.0.clone())
     }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
         match value {
-            dsl::FieldValue::Text(s) => Ok(RecordFamilyId(s.clone())),
+            semio_framework_dsl_record::FieldValue::Text(s) => Ok(RecordFamilyId(s.clone())),
             other => Err(format!("expected Text, found {other:?}")),
         }
     }
@@ -919,7 +919,7 @@ impl RecordFamilyId {
 }
 
 /// 📄️ One semicolon-delimited native record.
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -930,7 +930,7 @@ pub struct NativeRecord {
 }
 
 /// 🎛 Sheet-2 heating control valve attributes (VDI 3805 Blatt 2).
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -954,7 +954,7 @@ impl ValveHeatingAttributes {
 }
 
 /// ♨️ Sheet-3 radiator / heating-surface attributes (VDI 3805 Blatt 3; Φ at 75/65/20 °C).
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -968,7 +968,7 @@ pub struct RadiatorAttributes {
 }
 
 /// 💧 Sheet-5 heating pump attributes (VDI 3805 Blatt 5).
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -983,7 +983,7 @@ pub struct PumpHeatingAttributes {
 }
 
 /// 🔥 Sheet-6 heat-generator attributes (VDI 3805 Blatt 6).
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -995,7 +995,7 @@ pub struct HeatGeneratorAttributes {
 }
 
 /// 🧩 Single generic Blatt attribute (mirrors a native 210 key/value[/unit] pair).
-#[derive(Clone, Debug, PartialEq, Default, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, Default, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -1008,7 +1008,7 @@ pub struct GenericAttribute {
 }
 
 /// 📋 Generic sheet attributes as an ordered key/value/unit catalogue mirroring native records.
-#[derive(Clone, Debug, PartialEq, Default, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, Default, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -1073,25 +1073,25 @@ impl SheetAttributes {
     }
 }
 
-impl dsl::DslField for SheetAttributes {
-    fn shape_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::Shape,String>{control.checkpoint()?;Ok(dsl::Shape::Value)}
-    fn to_value_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::FieldValue,String>{<Self as semio_framework_value::ToValue>::to_value_controlled(self,control).map(dsl::FieldValue::Value).map_err(|error|error.to_string())}
+impl semio_framework_dsl_record::DslField for SheetAttributes {
+    fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{control.checkpoint()?;Ok(semio_framework_dsl_record::Shape::Value)}
+    fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,semio_framework_value::ValueError>{<Self as semio_framework_value::ToValue>::to_value_controlled(self,control).map(semio_framework_dsl_record::FieldValue::Value)}
 
-    fn from_value_controlled(value: &dsl::FieldValue, control: &mut dsl::NativeDecodeControl<'_>) -> Result<Self, String> {
+    fn from_value_controlled(value: &semio_framework_dsl_record::FieldValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self,semio_framework_value::ValueError> {
         match value {
-            dsl::FieldValue::Value(value) => sheet_attributes_controlled(value, control),
-            _ => Err("expected VDI3805 sheet attribute value".into()),
+            semio_framework_dsl_record::FieldValue::Value(value) => sheet_attributes_controlled(value, control),
+            _ => Err(vdi3805_invalid("expected VDI3805 sheet attribute value")),
         }
     }
-    fn shape() -> dsl::Shape {
-        dsl::Shape::Value
+    fn shape() -> semio_framework_dsl_record::Shape {
+        semio_framework_dsl_record::Shape::Value
     }
-    fn to_value(&self) -> dsl::FieldValue {
-        dsl::FieldValue::Value(semio_framework_value::ToValue::to_value(self))
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
+        semio_framework_dsl_record::FieldValue::Value(semio_framework_value::ToValue::to_value(self))
     }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
         match value {
-            dsl::FieldValue::Value(dsl_value) => {
+            semio_framework_dsl_record::FieldValue::Value(dsl_value) => {
                 semio_framework_value::FromValue::from_value(dsl_value.clone()).map_err(|error|error.to_string())
             }
             other => Err(format!("expected Value, found {other:?}")),
@@ -1099,40 +1099,45 @@ impl dsl::DslField for SheetAttributes {
     }
 }
 
-fn sheet_attribute_object<'a>(value: &'a semio_framework_value::DslValue, allowed: &[&str], control: &mut dsl::NativeDecodeControl<'_>) -> Result<&'a [(String, semio_framework_value::DslValue)], String> {
-    let semio_framework_value::DslValue::Object(fields) = value else { return Err("expected VDI3805 attribute object".into()); };
-    if fields.len() > allowed.len() { return Err("VDI3805 attribute object has excess fields".into()); }
+/// 🚫️ An invalid VDI 3805 attribute value.
+fn vdi3805_invalid(message: impl Into<String>) -> semio_framework_value::ValueError {
+    semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message)
+}
+
+fn sheet_attribute_object<'a>(value: &'a semio_framework_value::DslValue, allowed: &[&str], control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<&'a [(String, semio_framework_value::DslValue)],semio_framework_value::ValueError> {
+    let semio_framework_value::DslValue::Object(fields) = value else { return Err(vdi3805_invalid("expected VDI3805 attribute object")); };
+    if fields.len() > allowed.len() { return Err(vdi3805_invalid("VDI3805 attribute object has excess fields")); }
     for (position, (key, _)) in fields.iter().enumerate() {
         control.step()?;
-        if !allowed.contains(&key.as_str()) || fields[..position].iter().any(|(prior, _)| prior == key) { return Err("VDI3805 attribute object has unknown or duplicate fields".into()); }
+        if !allowed.contains(&key.as_str()) || fields[..position].iter().any(|(prior, _)| prior == key) { return Err(vdi3805_invalid("VDI3805 attribute object has unknown or duplicate fields")); }
     }
     Ok(fields)
 }
-fn sheet_attribute_field<'a>(fields: &'a [(String, semio_framework_value::DslValue)], key: &str) -> Result<&'a semio_framework_value::DslValue, String> {
-    fields.iter().find(|(name, _)| name == key).map(|(_, value)| value).ok_or_else(|| format!("VDI3805 attribute requires {key}"))
+fn sheet_attribute_field<'a>(fields: &'a [(String, semio_framework_value::DslValue)], key: &str) -> Result<&'a semio_framework_value::DslValue,semio_framework_value::ValueError> {
+    fields.iter().find(|(name, _)| name == key).map(|(_, value)| value).ok_or_else(||vdi3805_invalid(format!("VDI3805 attribute requires {key}")))
 }
-fn sheet_attribute_text(fields: &[(String, semio_framework_value::DslValue)], key: &str, control: &mut dsl::NativeDecodeControl<'_>) -> Result<String, String> {
-    control.copy_text(sheet_attribute_field(fields, key)?.as_str().ok_or("expected VDI3805 attribute text")?)
+fn sheet_attribute_text(fields: &[(String, semio_framework_value::DslValue)], key: &str, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<String,semio_framework_value::ValueError> {
+    control.copy_text(sheet_attribute_field(fields, key)?.as_str().ok_or_else(||vdi3805_invalid("expected VDI3805 attribute text"))?)
 }
-fn sheet_attribute_optional_text(fields: &[(String, semio_framework_value::DslValue)], key: &str, control: &mut dsl::NativeDecodeControl<'_>) -> Result<Option<String>, String> {
+fn sheet_attribute_optional_text(fields: &[(String, semio_framework_value::DslValue)], key: &str, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Option<String>,semio_framework_value::ValueError> {
     match fields.iter().find(|(name, _)| name == key).map(|(_, value)| value) {
         None | Some(semio_framework_value::DslValue::Null) => Ok(None),
         Some(semio_framework_value::DslValue::String(text)) => control.copy_text(text).map(Some),
-        _ => Err("expected optional VDI3805 attribute text".into()),
+        _ => Err(vdi3805_invalid("expected optional VDI3805 attribute text")),
     }
 }
-fn sheet_attribute_real(fields: &[(String, semio_framework_value::DslValue)], key: &str) -> Result<f64, String> {
-    sheet_attribute_field(fields, key)?.as_f64().ok_or_else(|| format!("VDI3805 attribute {key} requires a number"))
+fn sheet_attribute_real(fields: &[(String, semio_framework_value::DslValue)], key: &str) -> Result<f64,semio_framework_value::ValueError> {
+    sheet_attribute_field(fields, key)?.as_f64().ok_or_else(||vdi3805_invalid(format!("VDI3805 attribute {key} requires a number")))
 }
-fn sheet_attribute_u16(fields: &[(String, semio_framework_value::DslValue)], key: &str) -> Result<u16, String> {
-    let word = sheet_attribute_field(fields, key)?.as_u64().ok_or("expected unsigned VDI3805 attribute")?;
-    u16::try_from(word).map_err(|_| "VDI3805 attribute exceeds u16".into())
+fn sheet_attribute_u16(fields: &[(String, semio_framework_value::DslValue)], key: &str) -> Result<u16,semio_framework_value::ValueError> {
+    let word = sheet_attribute_field(fields, key)?.as_u64().ok_or_else(||vdi3805_invalid("expected unsigned VDI3805 attribute"))?;
+    u16::try_from(word).map_err(|_|vdi3805_invalid("VDI3805 attribute exceeds u16"))
 }
-fn sheet_attributes_controlled(value: &semio_framework_value::DslValue, control: &mut dsl::NativeDecodeControl<'_>) -> Result<SheetAttributes, String> {
+fn sheet_attributes_controlled(value: &semio_framework_value::DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<SheetAttributes,semio_framework_value::ValueError> {
     control.step()?;
-    let semio_framework_value::DslValue::Object(fields) = value else { return Err("expected VDI3805 sheet attribute object".into()); };
-    if fields.len() > 8 { return Err("VDI3805 sheet attribute object has excess fields".into()); }
-    let kind = sheet_attribute_field(fields, "kind")?.as_str().ok_or("expected VDI3805 attribute kind")?;
+    let semio_framework_value::DslValue::Object(fields) = value else { return Err(vdi3805_invalid("expected VDI3805 sheet attribute object")); };
+    if fields.len() > 8 { return Err(vdi3805_invalid("VDI3805 sheet attribute object has excess fields")); }
+    let kind = sheet_attribute_field(fields, "kind")?.as_str().ok_or_else(||vdi3805_invalid("expected VDI3805 attribute kind"))?;
     match kind {
         "valveHeating" => {
             let fields = sheet_attribute_object(value, &["kind", "dn", "kvsM3S", "pressureClass", "connectionType", "authorityMin", "authorityMax"], control)?;
@@ -1170,7 +1175,7 @@ fn sheet_attributes_controlled(value: &semio_framework_value::DslValue, control:
             let fields = sheet_attribute_object(value, &["kind", "entries"], control)?;
             let values = match fields.iter().find(|(key, _)| key == "entries").map(|(_, value)| value) {
                 None => &[][..], Some(semio_framework_value::DslValue::Array(values)) => values.as_slice(),
-                _ => return Err("expected VDI3805 generic attribute list".into()),
+                _ => return Err(vdi3805_invalid("expected VDI3805 generic attribute list")),
             };
             let mut entries = control.allocate_vec::<GenericAttribute>(values.len())?;
             for value in values {
@@ -1179,12 +1184,12 @@ fn sheet_attributes_controlled(value: &semio_framework_value::DslValue, control:
             }
             Ok(SheetAttributes::Generic(GenericAttributes { entries }))
         }
-        _ => Err("unknown VDI3805 sheet attribute kind".into()),
+        _ => Err(vdi3805_invalid("unknown VDI3805 sheet attribute kind")),
     }
 }
 
 /// ⚙️ Product configuration block.
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -1196,7 +1201,7 @@ pub struct Configuration {
 }
 
 /// 📦️ Catalogue product in Part 1 hierarchy.
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -1217,7 +1222,7 @@ pub struct CatalogueProduct {
 }
 
 /// 📚️ Manufacturer catalogue document (Part 1).
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -1237,7 +1242,7 @@ impl ManufacturerCatalog {
 
 // #region Geometry
 /// 📦️ Axis-aligned bounding box [m].
-#[derive(Clone, Copy, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -1265,7 +1270,7 @@ impl BoundingBox {
 }
 
 /// 🔌️ Connection point on product geometry.
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -1279,7 +1284,7 @@ pub struct ConnectionPoint {
 }
 
 /// 🧊️ Parametric geometry definition.
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -1305,7 +1310,7 @@ impl ParametricGeometry {
 
 // #region Functions
 /// 📈️ Characteristic curve point.
-#[derive(Clone, Copy, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -1315,7 +1320,7 @@ pub struct CurvePoint {
 }
 
 /// 📉️ Characteristic curve with linear interpolation.
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -1352,7 +1357,7 @@ impl CharacteristicCurve {
 
 // #region Catalog
 /// 🔍️ Product index entry.
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -1364,7 +1369,7 @@ pub struct CatalogIndexEntry {
 }
 
 /// 📚️ Searchable catalogue index.
-#[derive(Clone, Debug, Default, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -1445,7 +1450,7 @@ impl Diagnostic {
 /// 📸️ Persisted snapshot — defined in `📸️snapshot/🧬️schema`, re-exported here.
 // #region Session
 /// 📅️ Edition profile selection for multi-profile sheets.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -2009,8 +2014,8 @@ pub const VDI3805_DIALECT: semio_framework_plugin::app::Dialect = semio_framewor
 pub const VDI3805_DOCUMENT_SCHEMA: &str = "semio.norm.vdi3805/v1";
 
 #[cfg(test)]
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/⚖️compliance-vdi3805-1/🦀️.rs"]
-mod compliance_vdi3805_1;
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔬️oracle/🦀️.rs"]
+mod compliance_oracle;
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
@@ -2061,60 +2066,60 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
 /// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring the
 /// `OnceLock`-backed `io_registry::entries()` convention below.
-fn pilot_languages() -> &'static [dsl::LanguageSpec] {
-    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
             vec![
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "vdi3805.document",
                     extension: Some("vdi3805"),
-                    role: dsl::LanguageRole::Document,
+                    role: semio_framework_dsl::LanguageRole::Document,
                     grammar: Some(document_dsl::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(document_dsl::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("vdi3805.document"),
+                    hooks: semio_framework_dsl::passthrough_hooks("vdi3805.document"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "vdi3805.op",
                     extension: None,
-                    role: dsl::LanguageRole::Ops,
+                    role: semio_framework_dsl::LanguageRole::Ops,
                     grammar: Some(op::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(op::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("vdi3805.op"),
+                    hooks: semio_framework_dsl::passthrough_hooks("vdi3805.op"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "vdi3805.diff",
                     extension: None,
-                    role: dsl::LanguageRole::Diff,
+                    role: semio_framework_dsl::LanguageRole::Diff,
                     grammar: Some(diff::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
-                    hooks: dsl::passthrough_hooks("vdi3805.diff"),
+                    hooks: semio_framework_dsl::passthrough_hooks("vdi3805.diff"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "vdi3805.pack",
                     extension: None,
-                    role: dsl::LanguageRole::Pack,
+                    role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("vdi3805.pack"),
+                    hooks: semio_framework_dsl::passthrough_hooks("vdi3805.pack"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "vdi3805.spr",
                     extension: None,
-                    role: dsl::LanguageRole::Spr,
+                    role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("vdi3805.spr"),
+                    hooks: semio_framework_dsl::passthrough_hooks("vdi3805.spr"),
                 },
             ]
         })

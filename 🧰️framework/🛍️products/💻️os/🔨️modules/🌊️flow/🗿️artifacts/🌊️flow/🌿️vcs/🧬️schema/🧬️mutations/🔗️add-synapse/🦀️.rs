@@ -4,7 +4,7 @@ use crate::os_spr::{MutationKind, MutationOutcome, SemanticDescriptor, Identifie
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🧬️Payload
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, crate::os_dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, crate::os_dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "add-synapse")]
@@ -18,9 +18,12 @@ impl MutationKind<FlowHostSnapshot, FlowMutation> for AddSynapse {
     fn diff(&self, _base: &FlowHostSnapshot) -> MutationOutcome<FlowDiff> {
         MutationOutcome::new(FlowDiff::from(FlowDelta::Synapses(FlowCollectionDelta { removed: vec![], inserted: vec![(self.index, self.synapse.clone())], replaced: vec![] })))
     }
-    fn inverse(&self, _base: &FlowHostSnapshot) -> Vec<FlowMutation> {
+    fn inverse(&self, _base: &FlowHostSnapshot) -> Result<Vec<FlowMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![FlowMutation::RemoveSynapse(super::RemoveSynapse { id: self.synapse.id().clone() })]
-    }
+    
+    })())
+}
     fn label(&self) -> crate::LocalizedLabel {
         crate::LocalizedLabel::native(&format!("Add synapse {}", self.synapse.id()), &format!("Synapse {} hinzufügen", self.synapse.id()))
     }

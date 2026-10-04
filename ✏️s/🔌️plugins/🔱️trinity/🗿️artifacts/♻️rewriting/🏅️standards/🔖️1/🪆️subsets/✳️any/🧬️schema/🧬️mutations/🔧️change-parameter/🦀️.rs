@@ -6,7 +6,7 @@ use semio_framework_graph::manifest::PropertyValue;
 
 //#region 🔖️Mutation
 /// 🔧️ `change-parameter-binding` payload.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "change-parameter-binding")]
@@ -26,9 +26,12 @@ impl protocol::MutationKind<RewritingSnapshot, RewriteRuleMutation> for ChangePa
     fn diff(&self, base: &RewritingSnapshot) -> protocol::MutationOutcome<RewritingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RewritingSnapshot) -> Vec<RewriteRuleMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &RewritingSnapshot) -> Result<Vec<RewriteRuleMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change parameter binding \"{}\"", self.key), &format!("Parameterbindung \"{}\" ändern", self.key))
     }

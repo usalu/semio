@@ -44,7 +44,7 @@ fn execute_phase(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
 async fn decode(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
     let value = store::pack_rt::decode_wire_value(input).map_err(|error| super::fault("job.mutation-plan.decode", format!("invalid {} input: {error}", super::JOB_KIND_MUTATION_PLAN)))?;
     let request: crate::app::WireArtifactMutationPlanRequest = semio_framework_value::FromValue::from_value(value).map_err(|error| super::fault("job.mutation-plan.decode", error.to_string()))?;
-    Ok(dsl::os_pack::json::to_json_string(&(request.artifact_kind, request.mutation_id)).into_bytes())
+    Ok(semio_framework_pack_json::to_json_string(&(request.artifact_kind, request.mutation_id)).into_bytes())
 }
 
 //#region 🧬️JobTestMutationFixtureMount

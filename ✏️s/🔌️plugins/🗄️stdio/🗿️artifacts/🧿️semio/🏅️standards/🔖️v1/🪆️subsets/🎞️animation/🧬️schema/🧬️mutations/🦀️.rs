@@ -43,6 +43,8 @@ pub mod set_keyframe_time;
 #[path = "🔢set-keyframe-value/🦀️.rs"]
 pub mod set_keyframe_value;
 //#region 🔖️Leaves
+#[path = "🩹️patch-snapshot/🦀️.rs"]
+pub mod patch_snapshot;
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "🏷️set-timeline-name/🦀️.rs"]
@@ -57,6 +59,7 @@ pub mod set_timeline_name;
 pub enum SemioAnimationMutation {
     /// 📦️ Full-snapshot replace, still sparse under the hood (`diff_set_snapshot` = `between`).
     SetSnapshot(set_snapshot::SetSnapshot),
+    PatchSnapshot(patch_snapshot::PatchSnapshot),
     InsertTimeline(insert_timeline::InsertTimeline),
     RemoveTimeline(remove_timeline::RemoveTimeline),
     /// 🏷️ `name: None` clears the timeline's display name.
@@ -78,7 +81,7 @@ pub enum SemioAnimationMutation {
 /// tables are related only by position; `kinds_match_the_enum_and_the_catalog` below asserts that
 /// positional agreement rather than string equality.
 pub const KINDS: &[&str] =
-    &["set-snapshot", "insert-timeline", "remove-timeline", "set-timeline-name", "insert-channel", "remove-channel", "set-channel-target", "set-channel-interpolation", "insert-keyframe", "remove-keyframe", "set-keyframe-time", "set-keyframe-value"];
+    &["set-snapshot", "insert-timeline", "remove-timeline", "set-timeline-name", "insert-channel", "remove-channel", "set-channel-target", "set-channel-interpolation", "insert-keyframe", "remove-keyframe", "set-keyframe-time", "set-keyframe-value", "patch-snapshot"];
 //#endregion 🔖️Mutation
 
 //#region 🔖️DiffBuilders
@@ -135,8 +138,11 @@ pub fn apply_semio_animation_mutation(snapshot: &mut SemioAnimationSnapshot, mut
 /// generated test host being the concrete case. Paired with [`apply_semio_animation_mutation`] it makes the
 /// undo law reachable without importing a trait the caller cannot name.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse_semio_animation_mutation(mutation: &SemioAnimationMutation, base: &SemioAnimationSnapshot) -> Vec<SemioAnimationMutation> {
-    <SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::inverse(mutation, base)
+pub fn inverse_semio_animation_mutation(mutation: &SemioAnimationMutation, base: &SemioAnimationSnapshot) -> Result<Vec<SemioAnimationMutation>, semio_framework_value::ValueError> {
+    Ok({
+    <SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::inverse(mutation, base)?
+
+    })
 }
 
 /// 📥️ Decodes this subset's internally tagged (`{"mutation": "<camelCaseVariant>", ...}`) wire value — the shape
@@ -145,7 +151,7 @@ pub fn inverse_semio_animation_mutation(mutation: &SemioAnimationMutation, base:
 /// re-declaring it field by field beside it.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_animation_mutation_json(text: &str) -> Result<SemioAnimationMutation, String> {
-    pack::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(semio_framework_value::ValueError::into_message)
 }
 
 //#region 🔖️MutationTrait
@@ -153,6 +159,7 @@ pub fn decode_semio_animation_mutation_json(text: &str) -> Result<SemioAnimation
 pub(crate) fn agg_diff(this: &SemioAnimationMutation, base: &SemioAnimationSnapshot) -> protocol::MutationOutcome<SemioAnimationDiff> {
     use SemioAnimationMutation::*;
     protocol::MutationOutcome::new(match this {
+        PatchSnapshot(payload) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<SemioAnimationSnapshot, SemioAnimationMutation>>::diff(payload, base),
         SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff_set_snapshot(base, snapshot),
         InsertTimeline(insert_timeline::InsertTimeline { index, timeline }) => SemioAnimationDiff { timelines: Some(IndexedTripleDiff { added: vec![IndexAdded { index: *index, item: timeline.clone() }], ..Default::default() }) },
         RemoveTimeline(remove_timeline::RemoveTimeline { index }) => SemioAnimationDiff { timelines: Some(IndexedTripleDiff { removed: vec![*index], ..Default::default() }) },
@@ -173,9 +180,11 @@ pub(crate) fn agg_diff(this: &SemioAnimationMutation, base: &SemioAnimationSnaps
 }
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &SemioAnimationMutation, base: &SemioAnimationSnapshot) -> Vec<SemioAnimationMutation> {
+pub(crate) fn agg_inverse(this: &SemioAnimationMutation, base: &SemioAnimationSnapshot) -> Result<Vec<SemioAnimationMutation>, semio_framework_value::ValueError> {
+    Ok({
     use SemioAnimationMutation::*;
     match this {
+        PatchSnapshot(payload) => <patch_snapshot::PatchSnapshot as protocol::MutationKind<SemioAnimationSnapshot, SemioAnimationMutation>>::inverse(payload, base)?,
         SetSnapshot(_) => vec![SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
         InsertTimeline(insert_timeline::InsertTimeline { index, .. }) => vec![RemoveTimeline(remove_timeline::RemoveTimeline { index: *index })],
         RemoveTimeline(remove_timeline::RemoveTimeline { index }) => match timeline_at(base, *index) {
@@ -212,6 +221,8 @@ pub(crate) fn agg_inverse(this: &SemioAnimationMutation, base: &SemioAnimationSn
             None => Vec::new(),
         },
     }
+
+    })
 }
 //#endregion 🔖️MutationTrait
 
@@ -248,6 +259,7 @@ impl OpText for SemioAnimationMutation {
         use crate::standards::v1::subsets::animation::schema::diff::{enc_channel, enc_interpolation, enc_keyframe, enc_str, enc_target, enc_timeline, enc_value};
         use SemioAnimationMutation::*;
         match self {
+            PatchSnapshot(payload) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(&payload.patch),
             SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("S:{}", enc_animation_snapshot(snapshot)),
             InsertTimeline(insert_timeline::InsertTimeline { index, timeline }) => format!("IT:{index},{}", enc_timeline(timeline)),
             RemoveTimeline(remove_timeline::RemoveTimeline { index }) => format!("RT:{index}"),
@@ -269,11 +281,14 @@ impl OpText for SemioAnimationMutation {
         }
     }
 
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         use crate::standards::v1::subsets::animation::schema::diff::{dec_channel, dec_interpolation, dec_keyframe, dec_str, dec_target, dec_timeline, dec_value};
         use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
         use SemioAnimationMutation::*;
-        let fail = |e: String| store::TextError::new(e, dsl::TextSpan::at(1, 1));
+        let fail = |e: String| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1));
+        if line.starts_with("patch-snapshot patch=") {
+            return semio_s_artifact_stdio_contract::editing::snapshot_patch_from_text(line).map(|patch| Self::PatchSnapshot(patch_snapshot::PatchSnapshot { patch })).map_err(fail);
+        }
         let parse_usize = |s: &str| s.parse::<usize>().map_err(|e: std::num::ParseIntError| e.to_string());
         let parse_f64 = |s: &str| s.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string());
 
@@ -347,6 +362,7 @@ impl OpText for SemioAnimationMutation {
 /// 🏷️ Op tags of `SemioAnimationMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
 const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
 const TAG_INSERT_TIMELINE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-timeline");
 const TAG_REMOVE_TIMELINE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-timeline");
 const TAG_SET_TIMELINE_NAME: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-timeline-name");
@@ -380,6 +396,7 @@ fn wire_tag(m: &SemioAnimationMutation) -> u8 {
     use SemioAnimationMutation::*;
     match m {
         SetSnapshot(_) => TAG_SET_SNAPSHOT,
+        PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
         InsertTimeline(_) => TAG_INSERT_TIMELINE,
         RemoveTimeline(_) => TAG_REMOVE_TIMELINE,
         SetTimelineName(_) => TAG_SET_TIMELINE_NAME,
@@ -404,6 +421,11 @@ const OP_BINARY_FORMAT: u8 = 1;
 /// `OpBinary` upgrade uses.
 impl OpBinary for SemioAnimationMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        if let Self::PatchSnapshot(payload) = self {
+            let mut out = vec![1, TAG_PATCH_SNAPSHOT];
+            out.extend(protocol::OpBinary::encode_op(&payload.patch)?);
+            return Ok(out);
+        }
         let printed = <Self as OpText>::print_op(self);
         let args = match printed.split_once(':') {
             Some((_, rest)) => rest,
@@ -418,6 +440,9 @@ impl OpBinary for SemioAnimationMutation {
         let [format, tag, rest @ ..] = bytes else { return Err(malformed("op header", format!("expected at least 2 bytes, got {}", bytes.len()))) };
         if *format != OP_BINARY_FORMAT {
             return Err(malformed("op format", format!("unsupported op format {format}")));
+        }
+        if *tag == TAG_PATCH_SNAPSHOT {
+            return Ok(Self::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: protocol::OpBinary::decode_op(rest)? }));
         }
         let kind = dsl::protocol_record::kind(WIRE_PROTOCOL, u64::from(*tag)).ok_or_else(|| malformed("op tag", format!("tag {tag} names no record of 📡️.protocol.semio")))?;
         let keyword = TEXT_KEYWORDS.iter().find(|(record, _)| *record == kind).map(|(_, keyword)| *keyword).ok_or_else(|| malformed("op tag", format!("record {kind} has no text keyword")))?;
@@ -454,6 +479,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioAnimationMutation> {
     use SemioAnimationMutation::*;
     vec![
         SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
+        PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         InsertTimeline(insert_timeline::InsertTimeline { index: 1, timeline: AnimTimeline { name: Some("wave".into()), channels: vec![] } }),
         RemoveTimeline(remove_timeline::RemoveTimeline { index: 0 }),
         SetTimelineName(set_timeline_name::SetTimelineName { index: 0, name: None }),

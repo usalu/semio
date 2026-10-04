@@ -1,0 +1,87 @@
+{
+  "at": "2026-10-03T20:21:58.221Z",
+  "observations": [
+    {
+      "id": "CurrentFullWorkspace",
+      "mandatoryMembers": 116,
+      "missingMembers": 0,
+      "specificDependencies": 8,
+      "membershipAdmitted": true,
+      "generalClosureAdmitted": false,
+      "actual": {
+        "membershipAdmitted": true,
+        "generalClosureAdmitted": false
+      },
+      "oracle": {
+        "membershipAdmitted": true,
+        "generalClosureAdmitted": false
+      },
+      "exact": true
+    },
+    {
+      "id": "PhysicalSpecificDeletionWithOldMembership",
+      "mandatoryMembers": 116,
+      "missingMembers": 53,
+      "specificDependencies": 8,
+      "membershipAdmitted": false,
+      "generalClosureAdmitted": false,
+      "actual": {
+        "membershipAdmitted": false,
+        "generalClosureAdmitted": false
+      },
+      "oracle": {
+        "membershipAdmitted": false,
+        "generalClosureAdmitted": false
+      },
+      "exact": true
+    },
+    {
+      "id": "GeneralMembershipOnly",
+      "mandatoryMembers": 63,
+      "missingMembers": 0,
+      "specificDependencies": 8,
+      "membershipAdmitted": true,
+      "generalClosureAdmitted": false,
+      "actual": {
+        "membershipAdmitted": true,
+        "generalClosureAdmitted": false
+      },
+      "oracle": {
+        "membershipAdmitted": true,
+        "generalClosureAdmitted": false
+      },
+      "exact": true
+    },
+    {
+      "id": "GeneralMembershipAndCanonicalDependencyCut",
+      "mandatoryMembers": 63,
+      "missingMembers": 0,
+      "specificDependencies": 0,
+      "membershipAdmitted": true,
+      "generalClosureAdmitted": true,
+      "actual": {
+        "membershipAdmitted": true,
+        "generalClosureAdmitted": true
+      },
+      "oracle": {
+        "membershipAdmitted": true,
+        "generalClosureAdmitted": true
+      },
+      "exact": true
+    }
+  ],
+  "hostiles": [
+    {
+      "refused": true
+    },
+    {
+      "refused": true
+    },
+    {
+      "refused": true
+    }
+  ],
+  "scope": "Static source membership and first-party edge model, not Cargo metadata/compiler execution",
+  "sourceWrites": 0,
+  "nativeExecuted": 0
+}

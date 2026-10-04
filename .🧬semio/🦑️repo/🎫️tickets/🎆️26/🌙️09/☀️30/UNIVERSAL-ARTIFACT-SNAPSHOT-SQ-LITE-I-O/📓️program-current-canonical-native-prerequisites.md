@@ -1,0 +1,7 @@
+# Program Current Canonical Native Prerequisites
+
+The actual finite owning Native baseline executed zero assertions, retaining2205 unique compiler locations:2180 retired DSL JSON callers,10 retired Store JSON callers,3 canonical controlled EntityId signature mismatches and typed source/test Result callers. Root handcrafted direct calls to the existing explicitly declared internal Pack JSON owner, with1365 explicit Reject policies, three canonical EntityId controlled hooks returning ValueError unchanged, a schema-owned InvalidValue for the current CSV domain enum and export-table String failures, preserved authored ZipError.into_value_error cause, and an unchanged independent malformed SQLite test that now composes canonical ValueError results without stringifying. No facade, compatibility layer, migration file or new runtime dependency was added.
+
+294 exact whole-file guarded pairs were parsed before mount, all294 parser-only checks exited0, then every before body was rechecked before publication. All fixture assets, full mutation test bodies and complete handwritten relational snapshot provider remain. Root owning Native and any relevant current Source replays remain required. Complete inputs/diagnostics/parser receipts are retained separately in the ticket.
+
+At08:56UTC actual owning Source replay completed46/46 tests,887 expectations,Bun14.49s,Nx39.9s,exit0. Source roster and nested117 source joins refreshed; current Native remains unexecuted after canonical prerequisites.

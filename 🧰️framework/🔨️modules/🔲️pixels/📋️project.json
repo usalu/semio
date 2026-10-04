@@ -11,19 +11,12 @@
       "inputs": [
         "default",
         "^default",
-        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/**/*"
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗜️deflate/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🔤️base64/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🔢️binary/📥️source/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🪉️supplement/⚖️medium/🔤️outline.ttf",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/🌍️world/🔤️fonts/⌨️LibertinusMono-Regular.otf"
       ]
-    },
-    "test-rust": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework/🔨️modules/🔲️pixels",
-        "command": "bun ./📜️script.ts test rust",
-        "forwardAllArgs": true
-      }
     }
-  },
-  "metadata": {
-    "nativeRoot": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust"
   }
 }

@@ -49,5 +49,5 @@ export const gisGismapSnapshotTextGuardConstant = <T extends string | number | b
 //#endregion 🚪️Parsers
 
 export function parseGisMapSnapshotText(value: unknown, at = "$"): GisMapSnapshotText {
-  return gisGismapSnapshotTextGuardObject(value, `${at}`);
+  return gisGismapSnapshotTextGuardString(value, `${at}`);
 }

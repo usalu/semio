@@ -25,7 +25,7 @@ pub type Block5dStore = store::ArtifactStore<Block5dSnapshot, Block5dMutation>;
 /// replace and no-op sentinel variants are gone — whole-document loads now decompose into this
 /// vocabulary (see `🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎬️set-active-example/🦀️.rs`'s
 /// `replace_document_operations`).
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslEnum, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
@@ -175,8 +175,11 @@ pub fn apply_block5d_mutation(projection: &mut Block5dSnapshot, mutation: &Block
     Ok(())
 }
 
-pub fn inverse_block5d_mutation(projection: &Block5dSnapshot, mutation: &Block5dMutation) -> Vec<Block5dMutation> {
-    mutation.inverse(projection)
+pub fn inverse_block5d_mutation(projection: &Block5dSnapshot, mutation: &Block5dMutation) -> Result<Vec<Block5dMutation>, semio_framework_value::ValueError> {
+    Ok({
+    mutation.inverse(projection)?
+
+    })
 }
 
 //#region 🧪️Tests

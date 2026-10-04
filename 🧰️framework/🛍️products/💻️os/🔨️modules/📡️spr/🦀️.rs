@@ -33,18 +33,17 @@ pub use crate::os_spr::causal::transition::{
     TransitionAuthor, TransitionCheckpoint, TransitionPin, EffectiveSupersession, InputReplacement, SupersededInput, TransitionSupersede, HISTORY_TRANSITION_SCHEMA, SUPERSEDE_PAYLOAD_MAX_BYTES, SUPERSEDE_SCOPE_MAX_BYTES,
 };
 pub use crate::os_spr::channel::{
-    decode_app_frame, decode_document_archive_bytes, encode_app_command, encode_app_frame, encode_document_archive_bytes, encode_local_interaction_query_frame_into, AppCommand, AppFrame, ChildPackEntry, DecodedAppCommandOwner, DocumentArchiveArtifactRef,
-    AppDocumentIdentity, DocumentArchiveLoadState, DocumentArchiveLoadStatus, DocumentArchiveOwnerRef, DocumentArchivePack, MediaExportHandleWire, MediaExportStateWire, OwnedDocumentMemberPackEntry, PagedAppCommandDecodeCursor, PresenceCommandCursor, WindowConfigPackEntry, CHANNEL_VERSION, DOCUMENT_ARCHIVE_MAXIMUM_BYTES, DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS,
-    INVOCATION_RESULT_PACK_MAXIMUM_BYTES,
+    admit_guest_channel_version, CHANNEL_MISMATCH_CODE, decode_app_frame, decode_document_archive_bytes, encode_app_command, encode_app_frame, encode_document_archive_bytes, encode_local_interaction_query_frame_into, AppCommand, AppFrame, ChildHeadPackEntry, ChildPackEntry, DecodedAppCommandOwner, DocumentArchiveArtifactRef,
+    AppDocumentIdentity, DocumentArchiveLoadHost, DocumentArchiveLoadOutcome, DocumentArchiveLoadRefusal, DocumentArchiveLoadState, DocumentArchiveLoadStatus, DocumentArchiveLoadStep, DocumentArchiveOwnerRef, DocumentArchivePack, MediaExportHandleWire, MediaExportStateWire, OwnedDocumentMemberPackEntry, PagedAppCommandDecodeCursor, PresenceCommandCursor, WindowConfigPackEntry, CHANNEL_VERSION, DOCUMENT_ARCHIVE_MAXIMUM_BYTES, DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS,
 };
 pub use crate::os_spr::command::{
-    apply_collection_mutation, collection_diff_from_mutation, fold_plan_diff, fold_plan_inverse, indexed_apply, inverse_collection_mutation, is_approved_verb, mutation_descriptor, mutation_fixture_ops, mutation_input_schema_failures, mutation_label_failures, mutation_payload_round_trip_failures,
+    apply_collection_mutation, collection_diff_from_mutation, fold_plan_diff, fold_plan_inverse, indexed_apply, inverse_collection_mutation, is_approved_verb, mutation_descriptor, mutation_fixture_ops, mutation_input_schema_failures, mutation_inverse_rows_declaration_failures, mutation_inverse_rows_failures, mutation_label_failures, mutation_payload_round_trip_failures,
     named_apply, outcome_code_level, plan_foreign_steps, plan_of,
     register_mutation_descriptor, register_mutation_descriptors, str_eq, validate_mutation_leaf_descriptor, validate_mutation_leaf_descriptor_roster, validate_mutation_leaf_descriptor_roster_uniqueness, validate_mutation_leaf_source, worst_level,
     CollectionDiff, CollectionMutation, CommandOutcome, CompositeMutationKind, DiffAlgebra, DiffCodec, DiffRegions, Edit, ForeignStep, ForeignTarget, Identified, IndexedTripleDiff, Inference, InferenceFieldSpec, InferenceSpec, ItemPatch, Mutation,
     MutationApplyError, MutationApplyResult, MutationComposition, MutationDescriptor, MutationDescriptorError, MutationDescriptorRegistry, MutationDiff, MutationDiffParticipation, MutationDomainOperation, MutationEvent, MutationInvertibility,
     MutationKind, MutationLanguageSurface, MutationLeaf, MutationLeafDescriptor, MutationLeafDescriptorRosterValidationError, MutationLeafDescriptorValidationError, MutationLeafSourceScope, MutationLeafSourceValidationError, MutationMessage,
-    MutationMeta, MutationOrigin, MutationOutcome, MutationOutcomeClass, MutationOwnerLayout, MutationSourceProvenance, MutationUpcaster, NamedTripleDiff, OpBinary, OpText, Patchable, PlanError, PlanStep, Planner, SemanticDescriptor,
+    MutationMeta, MutationOrigin, MutationOutcome, MutationOutcomeClass, MutationOwnerLayout, MutationSourceProvenance, MutationUpcaster, NamedTripleDiff, OpBinary, OpText, OutcomeCode, Patchable, PlanError, PlanStep, Planner, SemanticDescriptor,
     SemanticMutation, TouchedPaths, TransactionRef, ValidatedMutationLeafSourceScope, APPLY_OUTCOME_CODE_PREFIX, APPROVED_VERBS, MAX_PLAN_DEPTH, OUTCOME_CODES,
 };
 pub use crate::os_spr::conflict::{Conflict, ConflictId, ConflictKind, ConflictResolution, ConflictStatus, DispatchReport, EditMessages, MergeReport, MutationReplayOutcome, ReplayReport};

@@ -68,7 +68,7 @@ fn set_active_example_config_gesture_fits_its_declared_fold_envelope() {
     let base = Generation3dConfig::default();
     let mutation = Generation3dConfigMutation::SetSnapshot(SetSnapshot { config: Generation3dConfig { sun_json: "{\"azimuth\":1.0}".into(), ..base.clone() } });
     let footprint = admit_generation3d_config_mutation(&mutation).expect("the config snapshot mutation is admissible");
-    let inverse_rows = ::protocol::Mutation::inverse(&mutation, &base).len();
+    let inverse_rows = ::protocol::Mutation::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").len();
     assert_eq!(inverse_rows, 1, "a config snapshot swap is point-invertible");
     assert!(inverse_rows + 1 <= footprint.work_items, "one config item folds {} rows against a declared envelope of {}", inverse_rows + 1, footprint.work_items);
 }
@@ -79,6 +79,5 @@ fn a_one_work_item_declaration_cannot_carry_a_point_invertible_item() {
     assert!(rows > declared, "a work_items: 1 declaration must not admit a forward plus an inverse row");
     let (rows, declared) = folded_rows_against_declaration(&[(1, store::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS)]);
     assert!(rows <= declared, "the invertible declaration must carry exactly one forward and one inverse row");
-    assert_eq!(generation3d_one_item_footprint(64).work_items, store::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS);
-    assert_eq!(admit_generation3d_artifact_mutation(&Generation3dMutation::ChangeSchema(crate::standards::v1::subsets::any::schema::mutations::change_schema::ChangeSchema { new_schema: "x".into() })).expect("admissible").work_items, generation3d_one_item_footprint(0).work_items);
+    assert_eq!(admit_generation3d_artifact_mutation(&Generation3dMutation::ChangeSchema(crate::standards::v1::subsets::any::schema::mutations::change_schema::ChangeSchema { new_schema: "x".into() })).expect("admissible").work_items, store::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS);
 }

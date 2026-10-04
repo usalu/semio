@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeSurfaceZone, base: &EnergyModelSnapshot) -> p
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Zone {} does not exist.", payload.new_zone_id.0), [payload.id.0.to_string()]);
     }
     if existing.zone_id == payload.new_zone_id {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Surface {} already has this owning zone.", payload.id.0));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Surface {} already has this owning zone.", payload.id.0));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.surfaces.iter_mut().find(|item| item.id == payload.id) {

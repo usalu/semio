@@ -7,7 +7,7 @@ use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfi
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
 use crate::editor::flow::{apply_canvas_options, flow_content_leaves, flow_content_leaves_emit, seed_host_catalogue, sync_host_selection_domains, FLOW_GRAPH_OPERATION_RAW_BYTES};
-use crate::{op::FlowMutation, FlowSnapshot};
+use crate::{FlowMutation, FlowSnapshot};
 use flow::{neural::ColdRetire, FlowEvalSession};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation;
@@ -17,7 +17,7 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot
 /// 🎯️ One batched edit inside a `FlowCommand::NodeGraphEdit`/`SpotlightCommit`, closed over the exact
 /// operation rows published by the shared NodeGraph renderer (design §13.3): every row names its entities by id, and no
 /// row carries a whole fixture.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslEnum)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 pub enum FlowNodeGraphEditOp {
     #[dsl(key = "delete")]
     Delete { node_ids: Vec<String>, synapse_ids: Vec<String> },
@@ -49,8 +49,8 @@ impl From<NodeGraphEditRow> for FlowNodeGraphEditOp {
 /// 🧾 Decodes the renderer's rows through the ONE node-graph edit decoder every guest shares
 /// (`semio_framework_tool_machine::node_graph_edit_rows`, design §13.3), within the retained route's wire authority. Every
 /// row must decode or the entire batch is refused before a retained operation is admitted.
-pub fn operations_from_action(args: &dsl::DslValue) -> Result<Vec<FlowNodeGraphEditOp>, Fault> {
-    if dsl::json::to_json_string(args).len() > FLOW_GRAPH_OPERATION_RAW_BYTES {
+pub fn operations_from_action(args: &semio_framework_value::DslValue) -> Result<Vec<FlowNodeGraphEditOp>, Fault> {
+    if semio_framework_pack_json::to_json_string(args).len() > FLOW_GRAPH_OPERATION_RAW_BYTES {
         return Err(Fault::from(format!("nodeGraphEdit arguments exceed the {FLOW_GRAPH_OPERATION_RAW_BYTES}-byte wire authority")));
     }
     let rows = node_graph_edit_rows(args).map_err(|reason| Fault::from(format!("nodeGraphEdit refusal: {reason}")))?;
@@ -116,7 +116,8 @@ pub fn node_graph_edit_result(doc: &ArtifactView<'_, FlowSnapshot>, config: &Flo
                     let index = *index as usize;
                     match side.as_str() {
                         "input" => host.add_input_port(node_id, index),
-                        _ => host.add_output_port(node_id, index),
+                        "output" => host.add_output_port(node_id, index),
+                        other => return Err(Fault::from(format!("nodeGraphEdit insertPort.side is input or output, not {other:?}"))),
                     }
                     .map_err(|error| Fault::from(format!("nodeGraphEdit insertPort refusal: {error}")))?;
                 }
@@ -150,7 +151,7 @@ pub fn node_graph_edit_result(doc: &ArtifactView<'_, FlowSnapshot>, config: &Flo
 }
 //#endregion 🔖️SharedDispatch
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct NodeGraphEdit {
     #[dsl(statements)]
     pub operations: Vec<FlowNodeGraphEditOp>,

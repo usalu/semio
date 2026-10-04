@@ -1,0 +1,3 @@
+# Pack Current Expression Diagnostic Compiler Prerequisite
+
+Ten authentic completed current22 owner sections fail E0433 at Pack value line2011 before any assertions. The controlled production expression materializer now explicitly uses semio_framework_diagnostic::Limits. Actual Pack Cargo.toml declared that internal framework crate only under dev-dependencies. Moved the existing single dependency into regular dependencies; no new external runtime crate, alias, compatibility path or feature behavior. Previous eleven executed owner sections and Wires runtime failures remain distinct from zero-assertion compiler sections. Native replay is required.

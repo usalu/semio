@@ -9,7 +9,7 @@ pub(crate) enum TestConfigMutation {
     ChangeTestConfigSelection(ChangeTestConfigSelection),
 }
 impl protocol::OpText for TestConfigMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         Ok(ChangeTestConfigSelection::parse_op(line)?.into())
     }
     fn print_op(&self) -> String {

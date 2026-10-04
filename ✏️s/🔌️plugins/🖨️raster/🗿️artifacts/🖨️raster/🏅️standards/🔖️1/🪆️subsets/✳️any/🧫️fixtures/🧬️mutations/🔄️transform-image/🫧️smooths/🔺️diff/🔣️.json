@@ -1,0 +1,50 @@
+{
+  "artifact": null,
+  "assets": {
+    "entries": {
+      "pixels-paint-01ea8a91d34c90b8": null,
+      "pixels-paint-529109edeea8775b": {
+        "data": "iVNFTQ0KGgobAAAAcy5zdGRpby5zZW1pby5pbWFnZS5wYWNrIHYxARNzLnN0ZGlvLnNlbWlvLmltYWdlAwAAAAIAAAABCAABAAAAABgAAAAA/wAAgAAAAAAAAAAA/wAAgAAAAAAA",
+        "mime": "application/x-semio-image"
+      }
+    }
+  },
+  "id": null,
+  "layers": {
+    "added": [],
+    "moved": [],
+    "patched": [
+      {
+        "id": "paint",
+        "patch": {
+          "adjustmentKind": null,
+          "blendMode": null,
+          "height": null,
+          "locked": null,
+          "name": null,
+          "opacity": null,
+          "pixelContent": {
+            "height": 2,
+            "imageKey": "pixels-paint-529109edeea8775b",
+            "width": 3
+          },
+          "transform": {
+            "a": 1.0,
+            "b": 0.0,
+            "c": 0.0,
+            "d": 1.0,
+            "x": 0.0,
+            "y": 0.0
+          },
+          "transformX": null,
+          "transformY": null,
+          "visible": null,
+          "width": null
+        }
+      }
+    ],
+    "removed": []
+  },
+  "schema": null,
+  "title": null
+}

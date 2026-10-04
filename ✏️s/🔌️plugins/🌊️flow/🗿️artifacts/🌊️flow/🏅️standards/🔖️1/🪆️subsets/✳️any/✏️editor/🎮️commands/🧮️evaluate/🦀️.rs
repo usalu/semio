@@ -4,7 +4,7 @@ use crate::editor::flow::commands::flow_eval_tick::{eval_tick_effect, may_rearm}
 use crate::editor::flow::host_from_snapshot;
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
 use crate::editor::flow::modes::edit::windows::main::FLOW_PLAY_WINDOW_MAIN;
-use crate::{op::FlowMutation, FlowSnapshot};
+use crate::{FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
@@ -45,7 +45,7 @@ pub fn evaluate_result(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, s
 //#region 🔖️FlowEvalResolve
 //#endregion 🔖️FlowEvalResolve
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct Evaluate {}
 
 pub fn handle(_payload: &Evaluate, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {

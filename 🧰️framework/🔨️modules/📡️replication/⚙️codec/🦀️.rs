@@ -1,51 +1,10 @@
 //! 🧾 Pack varint, byte I/O, CRC, and compression codec primitives.
 
 use crate::codec::ids::{ByteRange, ChunkId, CodecId, ContentHash};
-use crate::diagnostic::FaultOrigin;
+use semio_framework_pack_error::PackRefusal;
+use semio_framework_value::{ValueError, ValueRefusalKind};
 
 //#region 🔖️Errors
-/// 🚨️ The one error type every `pack_*` public fn returns; never leaks `std::io::Error`.
-#[derive(Debug, Clone, PartialEq)]
-pub enum PackError {
-    BadMagic,
-    UnsupportedVersion { major: u16, minor: u16 },
-    UnknownRequiredFlags(u32),
-    Truncated(u64),
-    ChecksumMismatch { segment: &'static str, offset: u64 },
-    ContentHashMismatch,
-    LimitExceeded(&'static str),
-    RetainedMalformed { what: &'static str, offset: u64, detail: &'static str },
-    Malformed { what: &'static str, offset: u64, detail: String },
-    NonCanonical(&'static str),
-    UnsupportedCodec(u8),
-    Schema(String),
-    Io(String),
-}
-
-impl std::fmt::Display for PackError {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::BadMagic => formatter.write_str("bad magic"),
-            Self::UnsupportedVersion { major, minor } => write!(formatter, "unsupported version {major}.{minor}"),
-            Self::UnknownRequiredFlags(flags) => write!(formatter, "unknown required feature bits {flags:#x}"),
-            Self::Truncated(offset) => write!(formatter, "truncated at offset {offset}"),
-            Self::ChecksumMismatch { segment, offset } => write!(formatter, "checksum mismatch in {segment} at offset {offset}"),
-            Self::ContentHashMismatch => formatter.write_str("content hash mismatch"),
-            Self::LimitExceeded(limit) => write!(formatter, "limit exceeded: {limit}"),
-            Self::RetainedMalformed { what, offset, detail } => write!(formatter, "malformed {what} at offset {offset}: {detail}"),
-            Self::Malformed { what, offset, detail } => write!(formatter, "malformed {what} at offset {offset}: {detail}"),
-            Self::NonCanonical(detail) => write!(formatter, "non-canonical encoding: {detail}"),
-            Self::UnsupportedCodec(codec) => write!(formatter, "unsupported codec {codec}"),
-            Self::Schema(message) => write!(formatter, "schema error: {message}"),
-            Self::Io(message) => write!(formatter, "io error: {message}"),
-        }
-    }
-}
-
-impl std::error::Error for PackError {}
-
-crate::fault_from_error!(PackError, FaultOrigin::Module, "module.pack");
-
 //#endregion 🔖️Errors
 
 //#region 🔤️Base64
@@ -105,27 +64,27 @@ pub fn write_varint_u64(out: &mut Vec<u8>, value: u64) {
 
 /// 📖️ Reads an unsigned LEB128 varint starting at `*pos`, advancing `*pos` past it.
 /// Errors `Malformed` on a >10-byte (overlong) encoding, `Truncated` on running out of bytes.
-pub fn read_varint_u64(bytes: &[u8], pos: &mut usize) -> Result<u64, PackError> {
+pub fn read_varint_u64(bytes: &[u8], pos: &mut usize) -> Result<u64, PackRefusal> {
     let start = *pos;
     let mut result: u64 = 0;
     for i in 0..10usize {
         let idx = *pos;
         if idx >= bytes.len() {
-            return Err(PackError::Truncated(idx as u64));
+            return Err(PackRefusal::Truncated(idx as u64));
         }
         let byte = bytes[idx];
         *pos += 1;
         let more = byte & 0x80 != 0;
         let payload = (byte & 0x7F) as u64;
         if i == 9 && (more || payload > 1) {
-            return Err(PackError::Malformed { what: "varint", offset: start as u64, detail: "overlong varint (exceeds 10 bytes / 64 bits)".to_string() });
+            return Err(PackRefusal::Malformed { kind:ValueRefusalKind::InvalidValue,what: "varint", offset: start as u64, detail: "overlong varint (exceeds 10 bytes / 64 bits)".to_string() });
         }
         result |= payload << (i as u32 * 7);
         if !more {
             return Ok(result);
         }
     }
-    Err(PackError::Malformed { what: "varint", offset: start as u64, detail: "overlong varint (exceeds 10 bytes)".to_string() })
+    Err(PackRefusal::Malformed { kind:ValueRefusalKind::InvalidValue,what: "varint", offset: start as u64, detail: "overlong varint (exceeds 10 bytes)".to_string() })
 }
 
 /// ✏️ Writes `value` as a zigzag-encoded signed varint.
@@ -134,7 +93,7 @@ pub fn write_varint_i64(out: &mut Vec<u8>, value: i64) {
 }
 
 /// 📖️ Reads a zigzag-encoded signed varint starting at `*pos`.
-pub fn read_varint_i64(bytes: &[u8], pos: &mut usize) -> Result<i64, PackError> {
+pub fn read_varint_i64(bytes: &[u8], pos: &mut usize) -> Result<i64, PackRefusal> {
     let raw = read_varint_u64(bytes, pos)?;
     Ok(zigzag_decode(raw))
 }
@@ -180,52 +139,52 @@ impl<'a> ByteReader<'a> {
         self.pos
     }
 
-    pub fn read_u8(&mut self) -> Result<u8, PackError> {
+    pub fn read_u8(&mut self) -> Result<u8, PackRefusal> {
         Ok(self.read_bytes(1)?[0])
     }
 
-    pub fn read_u16_le(&mut self) -> Result<u16, PackError> {
+    pub fn read_u16_le(&mut self) -> Result<u16, PackRefusal> {
         let bytes = self.read_bytes(2)?;
         Ok(u16::from_le_bytes([bytes[0], bytes[1]]))
     }
 
-    pub fn read_u32_le(&mut self) -> Result<u32, PackError> {
+    pub fn read_u32_le(&mut self) -> Result<u32, PackRefusal> {
         let bytes = self.read_bytes(4)?;
         Ok(u32::from_le_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]))
     }
 
-    pub fn read_u64_le(&mut self) -> Result<u64, PackError> {
+    pub fn read_u64_le(&mut self) -> Result<u64, PackRefusal> {
         let bytes = self.read_bytes(8)?;
         let mut array = [0u8; 8];
         array.copy_from_slice(bytes);
         Ok(u64::from_le_bytes(array))
     }
 
-    pub fn read_f64_le(&mut self) -> Result<f64, PackError> {
+    pub fn read_f64_le(&mut self) -> Result<f64, PackRefusal> {
         let bytes = self.read_bytes(8)?;
         let mut array = [0u8; 8];
         array.copy_from_slice(bytes);
         Ok(f64::from_le_bytes(array))
     }
 
-    pub fn read_varint_u64(&mut self) -> Result<u64, PackError> {
+    pub fn read_varint_u64(&mut self) -> Result<u64, PackRefusal> {
         read_varint_u64(self.bytes, &mut self.pos)
     }
 
-    pub fn read_varint_i64(&mut self) -> Result<i64, PackError> {
+    pub fn read_varint_i64(&mut self) -> Result<i64, PackRefusal> {
         read_varint_i64(self.bytes, &mut self.pos)
     }
 
-    pub fn read_bytes(&mut self, len: usize) -> Result<&'a [u8], PackError> {
+    pub fn read_bytes(&mut self, len: usize) -> Result<&'a [u8], PackRefusal> {
         if len > self.remaining() {
-            return Err(PackError::Truncated(self.pos as u64));
+            return Err(PackRefusal::Truncated(self.pos as u64));
         }
         let slice = &self.bytes[self.pos..self.pos + len];
         self.pos += len;
         Ok(slice)
     }
 
-    pub fn read_array32(&mut self) -> Result<[u8; 32], PackError> {
+    pub fn read_array32(&mut self) -> Result<[u8; 32], PackRefusal> {
         let slice = self.read_bytes(32)?;
         let mut array = [0u8; 32];
         array.copy_from_slice(slice);
@@ -352,9 +311,9 @@ impl Default for Crc32cCursor {
 pub trait CompressionCodec {
     fn id(&self) -> CodecId;
 
-    fn compress(&self, raw: &[u8]) -> Result<Vec<u8>, PackError>;
+    fn compress(&self, raw: &[u8]) -> Result<Vec<u8>, PackRefusal>;
 
-    fn decompress(&self, stored: &[u8], raw_len: u64, limit: u64) -> Result<Vec<u8>, PackError>;
+    fn decompress(&self, stored: &[u8], raw_len: u64, limit: u64) -> Result<Vec<u8>, PackRefusal>;
 }
 
 /// 🚫️ The identity codec (`CodecId(0)`) — no compression, used as the default and as
@@ -366,16 +325,16 @@ impl CompressionCodec for NoCompression {
         CodecId(0)
     }
 
-    fn compress(&self, raw: &[u8]) -> Result<Vec<u8>, PackError> {
+    fn compress(&self, raw: &[u8]) -> Result<Vec<u8>, PackRefusal> {
         Ok(raw.to_vec())
     }
 
-    fn decompress(&self, stored: &[u8], raw_len: u64, limit: u64) -> Result<Vec<u8>, PackError> {
+    fn decompress(&self, stored: &[u8], raw_len: u64, limit: u64) -> Result<Vec<u8>, PackRefusal> {
         if raw_len > limit {
-            return Err(PackError::LimitExceeded("NoCompression::decompress raw_len exceeds limit"));
+            return Err(PackRefusal::LimitExceeded{kind:ValueRefusalKind::WorkLimit,limit:"NoCompression::decompress raw_len exceeds limit"});
         }
         if stored.len() as u64 != raw_len {
-            return Err(PackError::Malformed { what: "codec", offset: 0, detail: "identity codec stored length does not match raw_len".to_string() });
+            return Err(PackRefusal::Malformed { kind:ValueRefusalKind::InvalidValue,what: "codec", offset: 0, detail: "identity codec stored length does not match raw_len".to_string() });
         }
         Ok(stored.to_vec())
     }
@@ -389,7 +348,11 @@ impl CompressionCodec for NoCompression {
 pub struct DeflateCodec;
 
 #[allow(clippy::unnecessary_wraps)] // the `not(feature = "deflate")` arm below also returns `Result`
-pub fn deflate_compress(raw: &[u8]) -> Result<Vec<u8>, PackError> {
+/// 📏️ Exact inline streaming measurement of the first-party fixed-Huffman producer.
+#[cfg(feature="deflate")]
+pub use semio_framework_deflate::DeflateMeasure;
+
+pub fn deflate_compress(raw: &[u8]) -> Result<Vec<u8>, PackRefusal> {
     #[cfg(feature = "deflate")]
     {
         Ok(semio_framework_deflate::deflate(raw))
@@ -397,41 +360,49 @@ pub fn deflate_compress(raw: &[u8]) -> Result<Vec<u8>, PackError> {
     #[cfg(not(feature = "deflate"))]
     {
         let _ = raw;
-        Err(PackError::UnsupportedCodec(1))
+        Err(PackRefusal::UnsupportedCodec(1))
     }
 }
 
 /// 🗜️ Compresses under the same cumulative caller admission as native field emission.
-pub fn deflate_compress_controlled(raw:&[u8],control:&mut crate::value::native_encoding::NativeEncodeControl<'_>)->Result<Vec<u8>,PackError>{
+pub fn deflate_compress_controlled(raw:&[u8],control:&mut crate::value::native_encoding::NativeEncodeControl<'_>)->Result<Vec<u8>,PackRefusal>{
     #[cfg(feature="deflate")]
     {
         struct Admission<'a,'b>{control:&'a mut crate::value::native_encoding::NativeEncodeControl<'b>,phase:Option<semio_framework_deflate::DeflateEncodePhase>,completed:usize,total:usize}
         impl semio_framework_deflate::DeflateEncodeControl for Admission<'_,'_>{
-            fn admit(&mut self,bytes:usize)->Result<(),String>{self.control.charge(bytes)}
-            fn checkpoint(&mut self,event:semio_framework_deflate::DeflateEncodeProgress)->Result<(),String>{if self.phase!=Some(event.phase)||self.total!=event.total||event.completed<self.completed{self.control.begin_stage(event.total)?;self.phase=Some(event.phase);self.total=event.total;self.completed=0;}let advance=event.completed.checked_sub(self.completed).ok_or("Deflate output progress regressed")?;self.control.advance(advance)?;self.completed=event.completed;self.control.checkpoint()}
+            fn admit(&mut self,bytes:usize)->Result<(),crate::value::ValueError>{self.control.charge(bytes)}
+            fn checkpoint(&mut self,event:semio_framework_deflate::DeflateEncodeProgress)->Result<(),crate::value::ValueError>{if self.phase!=Some(event.phase)||self.total!=event.total||event.completed<self.completed{self.control.begin_stage(event.total)?;self.phase=Some(event.phase);self.total=event.total;self.completed=0;}let advance=event.completed.checked_sub(self.completed).ok_or_else(||crate::value::ValueError::new(crate::value::ValueRefusalKind::InvariantViolated,"Deflate output progress regressed"))?;self.control.advance(advance)?;self.completed=event.completed;self.control.checkpoint()}
         }
-        control.scoped_stage(|control|{semio_framework_deflate::deflate_controlled(raw,&mut Admission{control,phase:None,completed:0,total:0})}).map_err(PackError::Schema)
+        control.scoped_stage(|control|{semio_framework_deflate::deflate_controlled(raw,&mut Admission{control,phase:None,completed:0,total:0})}).map_err(PackRefusal::ValueRefusal)
     }
     #[cfg(not(feature="deflate"))]
-    {let _=(raw,control);Err(PackError::UnsupportedCodec(1))}
+    {let _=(raw,control);Err(PackRefusal::UnsupportedCodec(1))}
 }
 
-pub fn deflate_decompress(stored: &[u8], raw_len: u64, limit: u64) -> Result<Vec<u8>, PackError> {
+#[cfg(feature="deflate")]
+fn deflate_grammar_kind(error:semio_framework_deflate::DeflateError)->ValueRefusalKind{
+ match error{
+  semio_framework_deflate::DeflateError::BadBlockType|semio_framework_deflate::DeflateError::BadStoredLength|semio_framework_deflate::DeflateError::BadHuffmanCode|semio_framework_deflate::DeflateError::BadDistance|semio_framework_deflate::DeflateError::UnexpectedEnd|semio_framework_deflate::DeflateError::OutputLimitExceeded=>ValueRefusalKind::InvalidValue,
+ }
+}
+
+pub fn deflate_decompress(stored: &[u8], raw_len: u64, limit: u64) -> Result<Vec<u8>, PackRefusal> {
     if raw_len > limit {
-        return Err(PackError::LimitExceeded("DeflateCodec::decompress raw_len exceeds limit"));
+        return Err(PackRefusal::LimitExceeded{kind:ValueRefusalKind::WorkLimit,limit:"DeflateCodec::decompress raw_len exceeds limit"});
     }
     #[cfg(feature = "deflate")]
     {
-        let out = semio_framework_deflate::inflate(stored, raw_len as usize).map_err(|_| PackError::Malformed { what: "deflate", offset: 0, detail: "decompression failed".to_string() })?;
+        let expected=usize::try_from(raw_len).map_err(|_|PackRefusal::LimitExceeded{kind:ValueRefusalKind::OwnershipLimit,limit:"DeflateCodec::decompress raw_len exceeds address space"})?;
+        let out = semio_framework_deflate::inflate(stored, expected).map_err(|error| PackRefusal::Malformed { kind:deflate_grammar_kind(error),what: "deflate", offset: 0, detail: "decompression failed".to_string() })?;
         if out.len() as u64 != raw_len {
-            return Err(PackError::Malformed { what: "deflate", offset: 0, detail: "decompressed length mismatch".to_string() });
+            return Err(PackRefusal::Malformed { kind:ValueRefusalKind::InvalidValue,what: "deflate", offset: 0, detail: "decompressed length mismatch".to_string() });
         }
         Ok(out)
     }
     #[cfg(not(feature = "deflate"))]
     {
         let _ = stored;
-        Err(PackError::UnsupportedCodec(1))
+        Err(PackRefusal::UnsupportedCodec(1))
     }
 }
 
@@ -458,32 +429,36 @@ pub struct DeflateRetainedCursor {
     pending: Option<u8>,
     expected: u64,
     produced: u64,
-    fault: Option<PackError>,
+    fault: Option<PackRefusal>,
     complete: bool,
     closed: bool,
 }
 
 #[cfg(feature = "deflate")]
 impl DeflateRetainedCursor {
-    pub fn try_new(expected: u64, limit: u64, maximum_allocation_bytes: usize) -> Result<Self, PackError> {
+    pub fn try_new(expected: u64, limit: u64, maximum_allocation_bytes: usize) -> Result<Self, PackRefusal> {
         if expected > limit {
-            return Err(PackError::LimitExceeded("retained deflate raw length exceeds limit"));
+            return Err(PackRefusal::LimitExceeded{kind:ValueRefusalKind::WorkLimit,limit:"retained deflate raw length exceeds limit"});
         }
-        let maximum_history_bytes = usize::try_from(limit).map_err(|_| PackError::LimitExceeded("retained deflate history exceeds address space"))?;
+        let maximum_history_bytes = usize::try_from(limit).map_err(|_| PackRefusal::LimitExceeded{kind:ValueRefusalKind::OwnershipLimit,limit:"retained deflate history exceeds address space"})?;
         let inflater = semio_framework_deflate::Inflater::try_new_retained(maximum_history_bytes, maximum_allocation_bytes)
-            .map_err(|_| PackError::LimitExceeded("retained deflate physical ceiling"))?;
+            .map_err(|error|match error{
+                semio_framework_deflate::DeflateError::OutputLimitExceeded=>PackRefusal::ValueRefusal(ValueError::new(ValueRefusalKind::OwnershipLimit,"retained deflate physical ceiling")),
+                semio_framework_deflate::DeflateError::BadBlockType|semio_framework_deflate::DeflateError::BadStoredLength|semio_framework_deflate::DeflateError::BadHuffmanCode|semio_framework_deflate::DeflateError::BadDistance|semio_framework_deflate::DeflateError::UnexpectedEnd=>PackRefusal::RetainedMalformed{kind:ValueRefusalKind::InvariantViolated,what:"deflate",offset:0,detail:"retained deflate constructor reported a grammar cause"},
+            })?;
         Ok(Self { inflater: Some(inflater), pending: None, expected, produced: 0, fault: None, complete: false, closed: false })
     }
 
-    pub fn reset(&mut self, expected: u64, limit: u64) -> Result<(), PackError> {
-        if !self.complete || self.closed || self.pending.is_some() || self.fault.is_some() || expected > limit {
-            return Err(PackError::RetainedMalformed { what: "deflate", offset: self.produced, detail: "retained decoder cannot reset" });
+    pub fn reset(&mut self, expected: u64, limit: u64) -> Result<(), PackRefusal> {
+        if !self.complete || self.closed || self.pending.is_some() || self.fault.is_some() {
+            return Err(PackRefusal::RetainedMalformed { kind:ValueRefusalKind::InvariantViolated,what: "deflate", offset: self.produced, detail: "retained decoder cannot reset" });
         }
+        if expected > limit{return Err(PackRefusal::LimitExceeded{kind:ValueRefusalKind::WorkLimit,limit:"retained deflate raw length exceeds limit"});}
         self.inflater
             .as_mut()
-            .ok_or(PackError::RetainedMalformed { what: "deflate", offset: self.produced, detail: "decoder is closed" })?
+            .ok_or(PackRefusal::RetainedMalformed { kind:ValueRefusalKind::InvariantViolated,what: "deflate", offset: self.produced, detail: "decoder is closed" })?
             .reset_retained()
-            .map_err(|_| PackError::RetainedMalformed { what: "deflate", offset: self.produced, detail: "retained decoder reset failed" })?;
+            .map_err(|_| PackRefusal::RetainedMalformed { kind:ValueRefusalKind::InvariantViolated,what: "deflate", offset: self.produced, detail: "retained decoder reset failed" })?;
         self.expected = expected;
         self.produced = 0;
         self.complete = false;
@@ -505,7 +480,7 @@ impl DeflateRetainedCursor {
             .reserve_retained_history(maximum_bytes);
         if let Err(error) = result {
             if self.fault.is_none() {
-                self.fault = Some(PackError::RetainedMalformed { what: "deflate", offset: self.produced, detail: error.reason });
+                self.fault = Some(PackRefusal::RetainedAllocation { kind:error.kind,allocated_bytes:error.allocated_bytes,what: "deflate", offset: self.produced, detail: error.reason });
             }
         }
         result
@@ -527,7 +502,7 @@ impl DeflateRetainedCursor {
         Ok(())
     }
 
-    pub fn grant(&mut self, input_complete: bool) -> Result<DeflateRetainedStep, PackError> {
+    pub fn grant(&mut self, input_complete: bool) -> Result<DeflateRetainedStep, PackRefusal> {
         if let Some(fault) = &self.fault {
             return Err(fault.clone());
         }
@@ -541,31 +516,31 @@ impl DeflateRetainedCursor {
         }
     }
 
-    fn grant_inner(&mut self, input_complete: bool) -> Result<DeflateRetainedStep, PackError> {
+    fn grant_inner(&mut self, input_complete: bool) -> Result<DeflateRetainedStep, PackRefusal> {
         if self.complete {
             return Ok(DeflateRetainedStep::Complete);
         }
         if self.next_allocation_bytes().is_some() {
             return Ok(DeflateRetainedStep::NeedInput);
         }
-        let inflater = self.inflater.as_mut().ok_or(PackError::RetainedMalformed { what: "deflate", offset: self.produced, detail: "decoder is closed" })?;
+        let inflater = self.inflater.as_mut().ok_or(PackRefusal::RetainedMalformed { kind:ValueRefusalKind::InvariantViolated,what: "deflate", offset: self.produced, detail: "decoder is closed" })?;
         match inflater.advance(&mut self.pending, input_complete) {
             Ok(semio_framework_deflate::InflateOutcome::Wrote(byte)) => {
-                self.produced = self.produced.checked_add(1).ok_or(PackError::LimitExceeded("retained deflate output overflow"))?;
+                self.produced = self.produced.checked_add(1).ok_or(PackRefusal::LimitExceeded{kind:ValueRefusalKind::OwnershipLimit,limit:"retained deflate output overflow"})?;
                 if self.produced > self.expected {
-                    return Err(PackError::RetainedMalformed { what: "deflate", offset: self.produced, detail: "decompressed length exceeds declared raw length" });
+                    return Err(PackRefusal::RetainedMalformed { kind:ValueRefusalKind::InvalidValue,what: "deflate", offset: self.produced, detail: "decompressed length exceeds declared raw length" });
                 }
                 Ok(DeflateRetainedStep::Byte(byte))
             }
             Ok(semio_framework_deflate::InflateOutcome::Done) => {
                 if self.pending.is_some() || self.produced != self.expected {
-                    return Err(PackError::RetainedMalformed { what: "deflate", offset: self.produced, detail: "decompressed length mismatch or trailing input" });
+                    return Err(PackRefusal::RetainedMalformed { kind:ValueRefusalKind::InvalidValue,what: "deflate", offset: self.produced, detail: "decompressed length mismatch or trailing input" });
                 }
                 self.complete = true;
                 Ok(DeflateRetainedStep::Complete)
             }
             Ok(semio_framework_deflate::InflateOutcome::NeedInput) => Ok(DeflateRetainedStep::NeedInput),
-            Err(_) => Err(PackError::RetainedMalformed { what: "deflate", offset: self.produced, detail: "incremental decompression failed" }),
+            Err(error) => Err(PackRefusal::RetainedMalformed { kind:deflate_grammar_kind(error),what: "deflate", offset: self.produced, detail: "incremental decompression failed" }),
         }
     }
 
@@ -625,11 +600,11 @@ impl CompressionCodec for DeflateCodec {
         CodecId(1)
     }
 
-    fn compress(&self, raw: &[u8]) -> Result<Vec<u8>, PackError> {
+    fn compress(&self, raw: &[u8]) -> Result<Vec<u8>, PackRefusal> {
         deflate_compress(raw)
     }
 
-    fn decompress(&self, stored: &[u8], raw_len: u64, limit: u64) -> Result<Vec<u8>, PackError> {
+    fn decompress(&self, stored: &[u8], raw_len: u64, limit: u64) -> Result<Vec<u8>, PackRefusal> {
         deflate_decompress(stored, raw_len, limit)
     }
 }

@@ -22,7 +22,7 @@ impl semio_framework_value::retirement::RetireOwned for Mutation {
 }
 
 fn footprint(_: &Mutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-    Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: std::mem::size_of::<Mutation>() })
+    Ok(store::ArtifactStoreOneItemFootprint::for_ephemeral_item(std::mem::size_of::<Mutation>()))
 }
 
 fn transfer(mutation: Mutation) -> State {

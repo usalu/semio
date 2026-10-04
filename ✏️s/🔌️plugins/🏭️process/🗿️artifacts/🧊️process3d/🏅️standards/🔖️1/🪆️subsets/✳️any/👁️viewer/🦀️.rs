@@ -67,9 +67,12 @@ impl ArtifactViewer for Process3dViewer {
         crate::process3d_child_restore_projection(snapshot)
     }
 
-    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {
+ Ok((||{
         crate::genesis_process3d_child_pack(snapshot, slot, child_id)
-    }
+    
+})())
+}
 
     /// 🔐️ The artifact's own document-store owner catalogue, identical to the sibling editor's: a viewer holds the same
     /// snapshot and must retire its owned values the same way, never through the framework's generic bounded owners.

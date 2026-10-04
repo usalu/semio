@@ -518,15 +518,26 @@
       "textOpcode": "patch-snapshot",
       "binaryTag": 9,
       "before": {
-        "byteOrder": "little",
-        "pixels": "x"
+        "schema": "stdio.tiff",
+        "byteOrder": "littleEndian",
+        "ifds": [
+          {
+            "entries": [],
+            "storage": {
+              "kind": "strips",
+              "offsetsKind": "long",
+              "byteCountsKind": "long",
+              "chunks": ["x"]
+            }
+          }
+        ]
       },
-      "largeValuePath": "/pixels",
+      "largeValuePath": "/ifds/0/storage/chunks/0",
       "largeValueBytes": 2097152,
       "event": {
         "operation": "setValue",
         "path": "/byteOrder",
-        "value": "big"
+        "value": "bigEndian"
       },
       "maximumPatchBytes": 1048576
     },
@@ -613,17 +624,1667 @@
     }
   ],
   "intrinsicObjectOrder": [
-    { "before": { "2": "two", "10": "ten", "z": "last" }, "key": "1", "index": 1, "expectedKeys": ["1", "2", "10", "z"] },
-    { "before": { "a": "first", "b": "second" }, "key": "z", "index": 0, "expectedKeys": ["z", "a", "b"] }
+    {
+      "before": {
+        "2": "two",
+        "10": "ten",
+        "z": "last"
+      },
+      "key": "1",
+      "index": 1,
+      "expectedKeys": [
+        "1",
+        "2",
+        "10",
+        "z"
+      ]
+    },
+    {
+      "before": {
+        "a": "first",
+        "b": "second"
+      },
+      "key": "z",
+      "index": 0,
+      "expectedKeys": [
+        "z",
+        "a",
+        "b"
+      ]
+    }
   ],
   "intrinsicRenames": [
-    { "before": { "2": "two", "10": "ten", "z": "last" }, "from": "z", "key": "1" },
-    { "before": { "a": "first", "b": "second" }, "from": "a", "key": "z" }
+    {
+      "before": {
+        "2": "two",
+        "10": "ten",
+        "z": "last"
+      },
+      "from": "z",
+      "key": "1"
+    },
+    {
+      "before": {
+        "a": "first",
+        "b": "second"
+      },
+      "from": "a",
+      "key": "z"
+    }
   ],
   "invalidPositions": [
     -1,
     3,
     0.5,
     9007199254740992
-  ]
+  ],
+  "patches": {
+    "field": {
+      "patch": {
+        "operation": "set",
+        "path": "/title",
+        "value": "After"
+      },
+      "inverse": {
+        "operation": "set",
+        "path": "/title",
+        "value": "Before"
+      }
+    },
+    "append": {
+      "patch": {
+        "operation": "insert",
+        "path": "/list/3",
+        "value": "last"
+      },
+      "inverse": {
+        "operation": "remove",
+        "path": "/list/3"
+      }
+    },
+    "remove": {
+      "patch": {
+        "operation": "remove",
+        "path": "/list/1"
+      },
+      "inverse": {
+        "operation": "insert",
+        "path": "/list/1",
+        "value": "second"
+      }
+    },
+    "move": {
+      "patch": {
+        "operation": "move",
+        "from": "/list/0",
+        "path": "/list/2"
+      },
+      "inverse": {
+        "operation": "move",
+        "from": "/list/2",
+        "path": "/list/0"
+      }
+    },
+    "move-to-end": {
+      "patch": {
+        "operation": "move",
+        "from": "/list/0",
+        "path": "/list/2"
+      },
+      "inverse": {
+        "operation": "move",
+        "from": "/list/2",
+        "path": "/list/0"
+      }
+    },
+    "rename-escaped-key": {
+      "patch": {
+        "operation": "rename",
+        "path": "/metadata/a~1b~0c",
+        "key": ""
+      },
+      "inverse": {
+        "operation": "rename",
+        "path": "/metadata/",
+        "key": "a/b~c"
+      }
+    },
+    "cross-parent-move": {
+      "patch": {
+        "operation": "move",
+        "from": "/list/0",
+        "path": "/metadata/first"
+      },
+      "inverse": {
+        "operation": "move",
+        "from": "/metadata/first",
+        "path": "/list/0"
+      }
+    },
+    "same-path": {
+      "patch": {
+        "operation": "move",
+        "from": "/list/1",
+        "path": "/list/1"
+      },
+      "inverse": {
+        "operation": "move",
+        "from": "/list/1",
+        "path": "/list/1"
+      }
+    },
+    "remove-first-object-key": {
+      "patch": {
+        "operation": "remove",
+        "path": "/metadata/a~1b~0c"
+      },
+      "inverse": {
+        "operation": "insert",
+        "path": "/metadata/a~1b~0c",
+        "value": "Grüße 🌍",
+        "index": 0
+      }
+    },
+    "move-object-key-to-array": {
+      "patch": {
+        "operation": "move",
+        "from": "/metadata/a~1b~0c",
+        "path": "/list/1"
+      },
+      "inverse": {
+        "operation": "move",
+        "from": "/list/1",
+        "path": "/metadata/a~1b~0c",
+        "index": 0
+      }
+    }
+  },
+  "locations": {
+    "snapshot": "https://json.schemas.assets.semio-tech.com/s/stdio/registry/fixture/snapshot.json",
+    "documents": [
+      {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/registry/fixture/snapshot.json",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "title",
+          "list",
+          "metadata",
+          "nodes"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "x-semio-ui": {
+              "label": {
+                "en": "Title",
+                "de": "Titel"
+              }
+            }
+          },
+          "list": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "x-semio-ui": {
+              "label": {
+                "en": "List",
+                "de": "Liste"
+              }
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "x-semio-ui": {
+              "label": {
+                "en": "Metadata",
+                "de": "Metadaten"
+              }
+            }
+          },
+          "nodes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/Node"
+            },
+            "x-semio-ui": {
+              "label": {
+                "en": "Nodes",
+                "de": "Knoten"
+              }
+            }
+          },
+          "size": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/registry/fixture/units.json#/$defs/Length"
+          },
+          "optional": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Point"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "x-semio-ui": {
+              "label": {
+                "en": "Optional point",
+                "de": "Optionaler Punkt"
+              }
+            }
+          }
+        },
+        "$defs": {
+          "Node": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "children"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "group"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "tag": {
+                    "type": "string"
+                  },
+                  "children": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/Node"
+                    },
+                    "x-semio-ui": {
+                      "label": {
+                        "en": "Children",
+                        "de": "Kinder"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "x"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "point"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "tag": {
+                    "type": "number"
+                  },
+                  "x": {
+                    "type": "number"
+                  }
+                }
+              }
+            ]
+          },
+          "Point": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      },
+      {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/registry/fixture/units.json",
+        "$defs": {
+          "Length": {
+            "type": "number",
+            "minimum": 0,
+            "x-semio-ui": {
+              "label": {
+                "en": "Size",
+                "de": "Größe"
+              },
+              "unit": "m"
+            }
+          }
+        }
+      }
+    ],
+    "instance": {
+      "title": "Before",
+      "list": [
+        "a",
+        "b"
+      ],
+      "metadata": {
+        "k": "v"
+      },
+      "nodes": [
+        {
+          "kind": "group",
+          "name": "g",
+          "children": [
+            {
+              "kind": "point",
+              "name": "p",
+              "x": 1
+            }
+          ]
+        }
+      ],
+      "size": 1.5,
+      "optional": {
+        "x": 2
+      }
+    },
+    "cases": [
+      {
+        "id": "property",
+        "path": "/title",
+        "expected": "https://json.schemas.assets.semio-tech.com/s/stdio/registry/fixture/snapshot.json#/properties/title",
+        "valid": "New",
+        "invalid": ""
+      },
+      {
+        "id": "array-item",
+        "path": "/list/1",
+        "expected": "https://json.schemas.assets.semio-tech.com/s/stdio/registry/fixture/snapshot.json#/properties/list/items",
+        "valid": "x",
+        "invalid": 1
+      },
+      {
+        "id": "array-append",
+        "path": "/list/2",
+        "insert": true,
+        "expected": "https://json.schemas.assets.semio-tech.com/s/stdio/registry/fixture/snapshot.json#/properties/list/items",
+        "valid": "c",
+        "invalid": true
+      },
+      {
+        "id": "map-member",
+        "path": "/metadata/k",
+        "expected": "https://json.schemas.assets.semio-tech.com/s/stdio/registry/fixture/snapshot.json#/properties/metadata/additionalProperties",
+        "valid": "w",
+        "invalid": false
+      },
+      {
+        "id": "union-shared-field",
+        "path": "/nodes/0/name",
+        "expected": "https://json.schemas.assets.semio-tech.com/s/stdio/registry/fixture/snapshot.json#/$defs/Node/oneOf/0/properties/name",
+        "valid": "n",
+        "invalid": 3
+      },
+      {
+        "id": "union-branch-field",
+        "path": "/nodes/0/children/0/x",
+        "expected": "https://json.schemas.assets.semio-tech.com/s/stdio/registry/fixture/snapshot.json#/$defs/Node/oneOf/1/properties/x",
+        "valid": 4,
+        "invalid": "four"
+      },
+      {
+        "id": "cross-document",
+        "path": "/size",
+        "expected": "https://json.schemas.assets.semio-tech.com/s/stdio/registry/fixture/snapshot.json#/properties/size",
+        "valid": 2.5,
+        "invalid": -1
+      },
+      {
+        "id": "nullable-object",
+        "path": "/optional/x",
+        "expected": "https://json.schemas.assets.semio-tech.com/s/stdio/registry/fixture/snapshot.json#/$defs/Point/properties/x",
+        "valid": 3,
+        "invalid": -3
+      },
+      {
+        "id": "root",
+        "path": "",
+        "expected": "https://json.schemas.assets.semio-tech.com/s/stdio/registry/fixture/snapshot.json",
+        "valid": {
+          "title": "T",
+          "list": [],
+          "metadata": {},
+          "nodes": []
+        },
+        "invalid": {
+          "title": "T"
+        }
+      },
+      {
+        "id": "undeclared",
+        "path": "/absent",
+        "expected": null
+      },
+      {
+        "id": "union-conflict",
+        "path": "/nodes/0/tag",
+        "expected": null
+      }
+    ]
+  },
+  "chunkedInverses": {
+    "budget": 160,
+    "cases": [
+      {
+        "id": "array-of-text",
+        "base": {
+          "title": "Doc",
+          "rows": [
+            "row-000-abc",
+            "row-001-abcd",
+            "row-002-abcde",
+            "row-003-abcdef",
+            "row-004-abcdefg",
+            "row-005-abcdefgh",
+            "row-006-abcdefghi",
+            "row-007-abc",
+            "row-008-abcd",
+            "row-009-abcde",
+            "row-010-abcdef",
+            "row-011-abcdefg",
+            "Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline",
+            "tail-000-abc",
+            "tail-001-abcd",
+            "tail-002-abcde"
+          ]
+        },
+        "patch": {
+          "operation": "remove",
+          "path": "/rows"
+        },
+        "parts": [
+          {
+            "operation": "splice",
+            "path": "",
+            "offset": 1,
+            "remove": 0,
+            "value": {
+              "rows": []
+            },
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/rows",
+            "offset": 0,
+            "remove": 0,
+            "value": [
+              "row-000-abc",
+              "row-001-abcd",
+              "row-002-abcde",
+              "row-003-abcdef"
+            ],
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/rows",
+            "offset": 4,
+            "remove": 0,
+            "value": [
+              "row-004-abcdefg",
+              "row-005-abcdefgh",
+              "row-006-abcdefghi",
+              "row-007-abc"
+            ],
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/rows",
+            "offset": 8,
+            "remove": 0,
+            "value": [
+              "row-008-abcd",
+              "row-009-abcde",
+              "row-010-abcdef",
+              "row-011-abcdefg",
+              ""
+            ],
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/rows/12",
+            "offset": 0,
+            "remove": 0,
+            "value": "Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend ",
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/rows/12",
+            "offset": 62,
+            "remove": 0,
+            "value": "Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend",
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/rows/12",
+            "offset": 123,
+            "remove": 0,
+            "value": " Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\te",
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/rows/12",
+            "offset": 183,
+            "remove": 0,
+            "value": "nd Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline",
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/rows/12",
+            "offset": 243,
+            "remove": 0,
+            "value": "\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nli",
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/rows/12",
+            "offset": 303,
+            "remove": 0,
+            "value": "ne\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\n",
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/rows/12",
+            "offset": 363,
+            "remove": 0,
+            "value": "line\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"",
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/rows/12",
+            "offset": 424,
+            "remove": 0,
+            "value": "\nline\tend Grüße 🌍 \"quoted\"\nline",
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/rows",
+            "offset": 13,
+            "remove": 0,
+            "value": [
+              "tail-000-abc",
+              "tail-001-abcd",
+              "tail-002-abcde"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "long-text",
+        "base": {
+          "title": "Doc",
+          "body": "Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße "
+        },
+        "patch": {
+          "operation": "set",
+          "path": "/body",
+          "value": "short"
+        },
+        "parts": [
+          {
+            "operation": "splice",
+            "path": "",
+            "offset": 1,
+            "remove": 1,
+            "value": {
+              "body": ""
+            },
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/body",
+            "offset": 0,
+            "remove": 0,
+            "value": "Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Gr",
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/body",
+            "offset": 64,
+            "remove": 0,
+            "value": "üße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grü",
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/body",
+            "offset": 128,
+            "remove": 0,
+            "value": "ße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grü",
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/body",
+            "offset": 190,
+            "remove": 0,
+            "value": "ße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grü",
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/body",
+            "offset": 252,
+            "remove": 0,
+            "value": "ße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grü",
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/body",
+            "offset": 314,
+            "remove": 0,
+            "value": "ße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grü",
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/body",
+            "offset": 376,
+            "remove": 0,
+            "value": "ße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grü",
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/body",
+            "offset": 438,
+            "remove": 0,
+            "value": "ße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grü",
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/body",
+            "offset": 500,
+            "remove": 0,
+            "value": "ße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grü",
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/body",
+            "offset": 562,
+            "remove": 0,
+            "value": "ße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grü",
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/body",
+            "offset": 624,
+            "remove": 0,
+            "value": "ße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grü",
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/body",
+            "offset": 686,
+            "remove": 0,
+            "value": "ße "
+          }
+        ]
+      },
+      {
+        "id": "struct-like-object",
+        "base": {
+          "meta": {
+            "name": "n",
+            "notes": "Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grü",
+            "tags": [
+              "tag-000-abc",
+              "tag-001-abcd",
+              "tag-002-abcde",
+              "tag-003-abcdef",
+              "tag-004-abcdefg",
+              "tag-005-abcdefgh",
+              "tag-006-abcdefghi",
+              "tag-007-abc",
+              "tag-008-abcd",
+              "tag-009-abcde",
+              "tag-010-abcdef",
+              "tag-011-abcdefg",
+              "tag-012-abcdefgh",
+              "tag-013-abcdefghi",
+              "tag-014-abc",
+              "tag-015-abcd",
+              "tag-016-abcde",
+              "tag-017-abcdef",
+              "tag-018-abcdefg",
+              "tag-019-abcdefgh"
+            ],
+            "flag": true
+          },
+          "x": 1
+        },
+        "patch": {
+          "operation": "remove",
+          "path": "/meta"
+        },
+        "parts": [
+          {
+            "operation": "splice",
+            "path": "",
+            "offset": 0,
+            "remove": 0,
+            "value": {
+              "meta": {
+                "name": "n",
+                "notes": "",
+                "tags": [],
+                "flag": true
+              }
+            },
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/meta/notes",
+            "offset": 0,
+            "remove": 0,
+            "value": "Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\te",
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/meta/notes",
+            "offset": 59,
+            "remove": 0,
+            "value": "nd Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nlin",
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/meta/notes",
+            "offset": 118,
+            "remove": 0,
+            "value": "e\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"",
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/meta/notes",
+            "offset": 176,
+            "remove": 0,
+            "value": "\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quo",
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/meta/notes",
+            "offset": 234,
+            "remove": 0,
+            "value": "ted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 ",
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/meta/notes",
+            "offset": 292,
+            "remove": 0,
+            "value": "\"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grü",
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/meta/tags",
+            "offset": 0,
+            "remove": 0,
+            "value": [
+              "tag-000-abc",
+              "tag-001-abcd",
+              "tag-002-abcde",
+              "tag-003-abcdef"
+            ],
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/meta/tags",
+            "offset": 4,
+            "remove": 0,
+            "value": [
+              "tag-004-abcdefg",
+              "tag-005-abcdefgh",
+              "tag-006-abcdefghi"
+            ],
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/meta/tags",
+            "offset": 7,
+            "remove": 0,
+            "value": [
+              "tag-007-abc",
+              "tag-008-abcd",
+              "tag-009-abcde",
+              "tag-010-abcdef"
+            ],
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/meta/tags",
+            "offset": 11,
+            "remove": 0,
+            "value": [
+              "tag-011-abcdefg",
+              "tag-012-abcdefgh",
+              "tag-013-abcdefghi"
+            ],
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/meta/tags",
+            "offset": 14,
+            "remove": 0,
+            "value": [
+              "tag-014-abc",
+              "tag-015-abcd",
+              "tag-016-abcde",
+              "tag-017-abcdef"
+            ],
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/meta/tags",
+            "offset": 18,
+            "remove": 0,
+            "value": [
+              "tag-018-abcdefg",
+              "tag-019-abcdefgh"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "map-like-object",
+        "base": {
+          "map": {
+            "k-000-abc": "v0",
+            "k-001-abcd": "v1",
+            "k-002-abcde": "v2",
+            "k-003-abcdef": "v3",
+            "k-004-abcdefg": "v4",
+            "k-005-abcdefgh": "v5",
+            "k-006-abcdefghi": "v6",
+            "k-007-abc": "v7",
+            "k-008-abcd": "v8",
+            "k-009-abcde": "v9",
+            "k-010-abcdef": "v10",
+            "k-011-abcdefg": "v11",
+            "k-012-abcdefgh": "v12",
+            "k-013-abcdefghi": "v13",
+            "k-014-abc": "v14",
+            "k-015-abcd": "v15",
+            "k-016-abcde": "v16",
+            "k-017-abcdef": "v17",
+            "k-018-abcdefg": "v18",
+            "k-019-abcdefgh": "v19",
+            "k-020-abcdefghi": "v20",
+            "k-021-abc": "v21",
+            "k-022-abcd": "v22",
+            "k-023-abcde": "v23",
+            "k-024-abcdef": "v24",
+            "k-025-abcdefg": "v25",
+            "k-026-abcdefgh": "v26",
+            "k-027-abcdefghi": "v27",
+            "k-028-abc": "v28",
+            "k-029-abcd": "v29"
+          }
+        },
+        "patch": {
+          "operation": "set",
+          "path": "/map",
+          "value": {}
+        },
+        "parts": [
+          {
+            "operation": "splice",
+            "path": "",
+            "offset": 0,
+            "remove": 1,
+            "value": {
+              "map": {}
+            },
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/map",
+            "offset": 0,
+            "remove": 0,
+            "value": {
+              "k-000-abc": "v0",
+              "k-001-abcd": "v1",
+              "k-002-abcde": "v2",
+              "k-003-abcdef": "v3"
+            },
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/map",
+            "offset": 4,
+            "remove": 0,
+            "value": {
+              "k-004-abcdefg": "v4",
+              "k-005-abcdefgh": "v5",
+              "k-006-abcdefghi": "v6"
+            },
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/map",
+            "offset": 7,
+            "remove": 0,
+            "value": {
+              "k-007-abc": "v7",
+              "k-008-abcd": "v8",
+              "k-009-abcde": "v9",
+              "k-010-abcdef": "v10"
+            },
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/map",
+            "offset": 11,
+            "remove": 0,
+            "value": {
+              "k-011-abcdefg": "v11",
+              "k-012-abcdefgh": "v12",
+              "k-013-abcdefghi": "v13"
+            },
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/map",
+            "offset": 14,
+            "remove": 0,
+            "value": {
+              "k-014-abc": "v14",
+              "k-015-abcd": "v15",
+              "k-016-abcde": "v16"
+            },
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/map",
+            "offset": 17,
+            "remove": 0,
+            "value": {
+              "k-017-abcdef": "v17",
+              "k-018-abcdefg": "v18",
+              "k-019-abcdefgh": "v19"
+            },
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/map",
+            "offset": 20,
+            "remove": 0,
+            "value": {
+              "k-020-abcdefghi": "v20",
+              "k-021-abc": "v21",
+              "k-022-abcd": "v22"
+            },
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/map",
+            "offset": 23,
+            "remove": 0,
+            "value": {
+              "k-023-abcde": "v23",
+              "k-024-abcdef": "v24",
+              "k-025-abcdefg": "v25"
+            },
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/map",
+            "offset": 26,
+            "remove": 0,
+            "value": {
+              "k-026-abcdefgh": "v26",
+              "k-027-abcdefghi": "v27",
+              "k-028-abc": "v28"
+            },
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/map",
+            "offset": 29,
+            "remove": 0,
+            "value": {
+              "k-029-abcd": "v29"
+            }
+          }
+        ]
+      },
+      {
+        "id": "array-item-object",
+        "base": {
+          "items": [
+            {
+              "id": "a",
+              "points": [
+                0,
+                7,
+                14,
+                21,
+                28,
+                35,
+                42,
+                49,
+                56,
+                63,
+                70,
+                77,
+                84,
+                91,
+                98,
+                105,
+                112,
+                119,
+                126,
+                133,
+                140,
+                147,
+                154,
+                161,
+                168,
+                175,
+                182,
+                189,
+                196,
+                203,
+                210,
+                217,
+                224,
+                231,
+                238,
+                245,
+                252,
+                259,
+                266,
+                273,
+                280,
+                287,
+                294,
+                301,
+                308,
+                315,
+                322,
+                329,
+                336,
+                343,
+                350,
+                357,
+                364,
+                371,
+                378,
+                385,
+                392,
+                399,
+                406,
+                413
+              ]
+            },
+            {
+              "id": "b",
+              "points": [
+                1,
+                2
+              ]
+            }
+          ]
+        },
+        "patch": {
+          "operation": "remove",
+          "path": "/items/0"
+        },
+        "parts": [
+          {
+            "operation": "splice",
+            "path": "/items",
+            "offset": 0,
+            "remove": 0,
+            "value": [
+              {
+                "id": "a",
+                "points": []
+              }
+            ],
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/items/0/points",
+            "offset": 0,
+            "remove": 0,
+            "value": [
+              0,
+              7,
+              14,
+              21,
+              28,
+              35,
+              42,
+              49,
+              56,
+              63,
+              70,
+              77,
+              84,
+              91,
+              98,
+              105,
+              112,
+              119,
+              126,
+              133
+            ],
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/items/0/points",
+            "offset": 20,
+            "remove": 0,
+            "value": [
+              140,
+              147,
+              154,
+              161,
+              168,
+              175,
+              182,
+              189,
+              196,
+              203,
+              210,
+              217,
+              224,
+              231,
+              238
+            ],
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/items/0/points",
+            "offset": 35,
+            "remove": 0,
+            "value": [
+              245,
+              252,
+              259,
+              266,
+              273,
+              280,
+              287,
+              294,
+              301,
+              308,
+              315,
+              322,
+              329,
+              336,
+              343
+            ],
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/items/0/points",
+            "offset": 50,
+            "remove": 0,
+            "value": [
+              350,
+              357,
+              364,
+              371,
+              378,
+              385,
+              392,
+              399,
+              406,
+              413
+            ]
+          }
+        ]
+      },
+      {
+        "id": "splice-inverse",
+        "base": {
+          "list": [
+            "entry-000-abc",
+            "entry-001-abcd",
+            "entry-002-abcde",
+            "entry-003-abcdef",
+            "entry-004-abcdefg",
+            "entry-005-abcdefgh",
+            "entry-006-abcdefghi",
+            "entry-007-abc",
+            "entry-008-abcd",
+            "entry-009-abcde",
+            "entry-010-abcdef",
+            "entry-011-abcdefg",
+            "entry-012-abcdefgh",
+            "entry-013-abcdefghi",
+            "entry-014-abc",
+            "entry-015-abcd",
+            "entry-016-abcde",
+            "entry-017-abcdef",
+            "entry-018-abcdefg",
+            "entry-019-abcdefgh",
+            "entry-020-abcdefghi",
+            "entry-021-abc",
+            "entry-022-abcd",
+            "entry-023-abcde",
+            "entry-024-abcdef",
+            "entry-025-abcdefg",
+            "entry-026-abcdefgh",
+            "entry-027-abcdefghi",
+            "entry-028-abc",
+            "entry-029-abcd"
+          ]
+        },
+        "patch": {
+          "operation": "splice",
+          "path": "/list",
+          "offset": 2,
+          "remove": 25,
+          "value": [
+            "x"
+          ]
+        },
+        "parts": [
+          {
+            "operation": "splice",
+            "path": "/list",
+            "offset": 2,
+            "remove": 1,
+            "value": [
+              "entry-002-abcde",
+              "entry-003-abcdef",
+              "entry-004-abcdefg"
+            ],
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/list",
+            "offset": 5,
+            "remove": 0,
+            "value": [
+              "entry-005-abcdefgh",
+              "entry-006-abcdefghi",
+              "entry-007-abc"
+            ],
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/list",
+            "offset": 8,
+            "remove": 0,
+            "value": [
+              "entry-008-abcd",
+              "entry-009-abcde",
+              "entry-010-abcdef",
+              "entry-011-abcdefg"
+            ],
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/list",
+            "offset": 12,
+            "remove": 0,
+            "value": [
+              "entry-012-abcdefgh",
+              "entry-013-abcdefghi",
+              "entry-014-abc"
+            ],
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/list",
+            "offset": 15,
+            "remove": 0,
+            "value": [
+              "entry-015-abcd",
+              "entry-016-abcde",
+              "entry-017-abcdef"
+            ],
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/list",
+            "offset": 18,
+            "remove": 0,
+            "value": [
+              "entry-018-abcdefg",
+              "entry-019-abcdefgh",
+              "entry-020-abcdefghi"
+            ],
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/list",
+            "offset": 21,
+            "remove": 0,
+            "value": [
+              "entry-021-abc",
+              "entry-022-abcd",
+              "entry-023-abcde",
+              "entry-024-abcdef"
+            ],
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/list",
+            "offset": 25,
+            "remove": 0,
+            "value": [
+              "entry-025-abcdefg",
+              "entry-026-abcdefgh"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "root-replace",
+        "base": {
+          "a": "Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grü",
+          "b": [
+            "b-000-abc",
+            "b-001-abcd",
+            "b-002-abcde",
+            "b-003-abcdef",
+            "b-004-abcdefg",
+            "b-005-abcdefgh",
+            "b-006-abcdefghi",
+            "b-007-abc",
+            "b-008-abcd",
+            "b-009-abcde"
+          ]
+        },
+        "patch": {
+          "operation": "set",
+          "path": "",
+          "value": {
+            "z": 1
+          }
+        },
+        "parts": [
+          {
+            "operation": "splice",
+            "path": "",
+            "offset": 0,
+            "remove": 1,
+            "value": {
+              "a": "",
+              "b": []
+            },
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/a",
+            "offset": 0,
+            "remove": 0,
+            "value": "Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüß",
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/a",
+            "offset": 68,
+            "remove": 0,
+            "value": "e 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße ",
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/a",
+            "offset": 132,
+            "remove": 0,
+            "value": "🌍 \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍",
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/a",
+            "offset": 198,
+            "remove": 0,
+            "value": " \"quoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"q",
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/a",
+            "offset": 263,
+            "remove": 0,
+            "value": "uoted\"\nline\tend Grüße 🌍 \"quoted\"\nline\tend Grüße 🌍 \"quote",
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/a",
+            "offset": 329,
+            "remove": 0,
+            "value": "d\"\nline\tend Grü",
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/b",
+            "offset": 0,
+            "remove": 0,
+            "value": [
+              "b-000-abc",
+              "b-001-abcd",
+              "b-002-abcde",
+              "b-003-abcdef",
+              "b-004-abcdefg"
+            ],
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "/b",
+            "offset": 5,
+            "remove": 0,
+            "value": [
+              "b-005-abcdefgh",
+              "b-006-abcdefghi",
+              "b-007-abc",
+              "b-008-abcd",
+              "b-009-abcde"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "root-kind-change",
+        "base": [
+          "root-000-abc",
+          "root-001-abcd",
+          "root-002-abcde",
+          "root-003-abcdef",
+          "root-004-abcdefg",
+          "root-005-abcdefgh",
+          "root-006-abcdefghi",
+          "root-007-abc",
+          "root-008-abcd",
+          "root-009-abcde",
+          "root-010-abcdef",
+          "root-011-abcdefg",
+          "root-012-abcdefgh",
+          "root-013-abcdefghi",
+          "root-014-abc",
+          "root-015-abcd",
+          "root-016-abcde",
+          "root-017-abcdef",
+          "root-018-abcdefg",
+          "root-019-abcdefgh",
+          "root-020-abcdefghi",
+          "root-021-abc",
+          "root-022-abcd",
+          "root-023-abcde",
+          "root-024-abcdef"
+        ],
+        "patch": {
+          "operation": "set",
+          "path": "",
+          "value": {
+            "z": 1
+          }
+        },
+        "parts": [
+          {
+            "operation": "set",
+            "path": "",
+            "value": []
+          },
+          {
+            "operation": "splice",
+            "path": "",
+            "offset": 0,
+            "remove": 0,
+            "value": [
+              "root-000-abc",
+              "root-001-abcd",
+              "root-002-abcde",
+              "root-003-abcdef"
+            ],
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "",
+            "offset": 4,
+            "remove": 0,
+            "value": [
+              "root-004-abcdefg",
+              "root-005-abcdefgh",
+              "root-006-abcdefghi",
+              "root-007-abc"
+            ],
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "",
+            "offset": 8,
+            "remove": 0,
+            "value": [
+              "root-008-abcd",
+              "root-009-abcde",
+              "root-010-abcdef",
+              "root-011-abcdefg"
+            ],
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "",
+            "offset": 12,
+            "remove": 0,
+            "value": [
+              "root-012-abcdefgh",
+              "root-013-abcdefghi",
+              "root-014-abc",
+              "root-015-abcd"
+            ],
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "",
+            "offset": 16,
+            "remove": 0,
+            "value": [
+              "root-016-abcde",
+              "root-017-abcdef",
+              "root-018-abcdefg",
+              "root-019-abcdefgh"
+            ],
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "",
+            "offset": 20,
+            "remove": 0,
+            "value": [
+              "root-020-abcdefghi",
+              "root-021-abc",
+              "root-022-abcd",
+              "root-023-abcde"
+            ],
+            "continued": true
+          },
+          {
+            "operation": "splice",
+            "path": "",
+            "offset": 24,
+            "remove": 0,
+            "value": [
+              "root-024-abcdef"
+            ]
+          }
+        ]
+      }
+    ]
+  }
 }

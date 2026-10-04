@@ -10,7 +10,7 @@ pub fn diff(payload: &ChangeBeamSpanM, base: &En1994Snapshot) -> protocol::Mutat
         return protocol::MutationOutcome::error("mutation.target-missing", "beam missing", [payload.index.to_string()]);
     };
     if beam.span_m == payload.new_span_m {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "unchanged");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "unchanged");
     }
     let mut beams = base.beams.clone();
     beams[payload.index].span_m = payload.new_span_m;

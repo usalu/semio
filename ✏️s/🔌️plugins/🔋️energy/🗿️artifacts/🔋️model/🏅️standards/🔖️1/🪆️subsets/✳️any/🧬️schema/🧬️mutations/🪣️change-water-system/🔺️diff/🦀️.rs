@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeWaterSystemFixtureCount, base: &EnergyModelSn
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Water system {} needs at least one fixture.", payload.id.0), [payload.id.0.to_string()]);
     }
     if existing.fixture_count == payload.new_fixture_count {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Water system {} already carries this fixture_count: {}.", payload.id.0, payload.new_fixture_count));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Water system {} already carries this fixture_count: {}.", payload.id.0, payload.new_fixture_count));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.water_systems.iter_mut().find(|item| item.id == payload.id) {

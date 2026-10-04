@@ -1153,8 +1153,8 @@ impl protocol::DiffCodec for JsonDiff {
     fn print_diff(&self) -> String {
         print_json_diff(self)
     }
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_json_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_diff(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_json_diff(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
     /// 🧪️ P2-P1: REAL binary frame (`format u8 | has_value u8 | value-diff payload`), matching
     /// `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —

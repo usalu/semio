@@ -37,7 +37,7 @@ async fn drawing_viewer_camera_ownership_and_restore() {
         for pack in packs { reopened.load_window_config_pack(pack).await.map_err(|error| format!("{error:?}"))?; }
         for (id,value) in fixture["expected"].as_object().ok_or("camera fixture expectations missing")? {
             let context = view.for_window_instance(id).ok_or("expected camera window unknown")?;
-            let expected: DrawingViewerCanvasWindowConfig = dsl::json::from_json_str(&value.to_string()).map_err(|error| format!("{error:?}"))?;
+            let expected: DrawingViewerCanvasWindowConfig = semio_framework_pack_json::from_json_str(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("{error:?}"))?;
             for target in [&mut app,&mut reopened] {
                 let scene = scene(target,&context).await?;
                 if scene.framing.is_some() { return Err(format!("stored viewer camera requested another fit: {id}")); }

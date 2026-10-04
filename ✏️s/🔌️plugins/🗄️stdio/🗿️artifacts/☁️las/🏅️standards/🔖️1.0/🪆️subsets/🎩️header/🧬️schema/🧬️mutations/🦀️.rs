@@ -39,6 +39,8 @@ pub mod set_points_by_return;
 pub mod set_scale_and_offset;
 /// 📐️ Typed content mutation for `stdio.las`.
 //#region 🔖️Leaves
+#[path = "🩹️patch-snapshot/🦀️.rs"]
+pub mod patch_snapshot;
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "🛠️set-software-info/🦀️.rs"]
@@ -56,6 +58,7 @@ pub mod set_vlr_data;
 #[mutations(snapshot = LasSnapshot, diff = LasDiff, schema = "s.stdio.las")]
 pub enum LasMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
+    PatchSnapshot(patch_snapshot::PatchSnapshot),
     SetVersion(set_version::SetVersion),
     SetSystemIdentifier(set_system_identifier::SetSystemIdentifier),
     SetSoftwareInfo(set_software_info::SetSoftwareInfo),
@@ -77,7 +80,7 @@ pub enum LasMutation {
 /// `../../🔣️oracle.json`'s `las-1-0-any` catalog is measured against. Kept honest by
 /// `kinds_match_enum_and_catalog` below (the framework never parses Rust to learn this list).
 pub const KINDS: &[&str] = &[
-    "set-snapshot",
+    "set-snapshot", "patch-snapshot",
     "set-version",
     "set-system-identifier",
     "set-software-info",
@@ -123,6 +126,7 @@ pub fn apply_las_mutation(snapshot: &mut LasSnapshot, mutation: &LasMutation) ->
 pub(crate) fn agg_diff(this: &LasMutation, base: &LasSnapshot) -> protocol::MutationOutcome<LasDiff> {
     protocol::MutationOutcome::new(match this {
         LasMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff::diff_set_snapshot(base, snapshot),
+        LasMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<LasSnapshot, LasMutation>>::diff(patch, base),
         LasMutation::SetVersion(set_version::SetVersion { major, minor }) => diff::diff_set_version(*major, *minor),
         LasMutation::SetSystemIdentifier(set_system_identifier::SetSystemIdentifier { system_identifier }) => diff::diff_set_system_identifier(system_identifier),
         LasMutation::SetSoftwareInfo(set_software_info::SetSoftwareInfo { generating_software }) => diff::diff_set_software_info(generating_software),
@@ -146,9 +150,11 @@ pub(crate) fn agg_diff(this: &LasMutation, base: &LasSnapshot) -> protocol::Muta
 /// nothing" variant exists (same convention `stdio.csv`'s `agg_inverse` uses for its own
 /// out-of-range cases).
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &LasMutation, base: &LasSnapshot) -> Vec<LasMutation> {
+pub(crate) fn agg_inverse(this: &LasMutation, base: &LasSnapshot) -> Result<Vec<LasMutation>, semio_framework_value::ValueError> {
+    Ok({
     match this {
         LasMutation::SetSnapshot(_) => vec![LasMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
+        LasMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<LasSnapshot, LasMutation>>::inverse(patch, base)?),
         LasMutation::SetVersion(_) => vec![LasMutation::SetVersion(set_version::SetVersion { major: base.header.version_major, minor: base.header.version_minor })],
         LasMutation::SetSystemIdentifier(_) => vec![LasMutation::SetSystemIdentifier(set_system_identifier::SetSystemIdentifier { system_identifier: base.header.system_identifier.clone() })],
         LasMutation::SetSoftwareInfo(_) => vec![LasMutation::SetSoftwareInfo(set_software_info::SetSoftwareInfo { generating_software: base.header.generating_software.clone() })],
@@ -177,12 +183,14 @@ pub(crate) fn agg_inverse(this: &LasMutation, base: &LasSnapshot) -> Vec<LasMuta
             None => Vec::new(),
         },
     }
+
+    })
 }
 //#endregion 🔖️MutationTrait
 
 //#region OpCodecs
 /// 🧪️ F6 (las, recon-gap-fill): **hand-rolled** `OpText`/`OpBinary` for `LasMutation` — the
-/// derive path (`#[derive(dsl::DslOps)]`) is NOT usable here. STEP 1 classification done for real
+/// derive path (`#[derive(semio_framework_dsl_record_derive::DslEnum)]`) is NOT usable here. STEP 1 classification done for real
 /// (attribute added, `cargo check -p semio-s-plugin-stdio --lib` run, real errors read, then
 /// reverted): `LasMutation::SetScaleAndOffset`/`SetBounds` carry bare tuple fields
 /// (`scale`/`offset`/`max`/`min`: `(f64, f64, f64)`) — real compiler output:
@@ -305,6 +313,7 @@ fn dec_f64x3(s: &str) -> Result<(f64, f64, f64), String> {
 fn print_las_mutation(m: &LasMutation) -> String {
     match m {
         LasMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", enc_snapshot(snapshot)),
+        LasMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(patch),
         LasMutation::SetVersion(set_version::SetVersion { major, minor }) => format!("set-version major={major} minor={minor}"),
         LasMutation::SetSystemIdentifier(set_system_identifier::SetSystemIdentifier { system_identifier }) => format!("set-system-identifier system-identifier={}", diff::hex_encode(system_identifier.as_bytes())),
         LasMutation::SetSoftwareInfo(set_software_info::SetSoftwareInfo { generating_software }) => format!("set-software-info generating-software={}", diff::hex_encode(generating_software.as_bytes())),
@@ -326,6 +335,7 @@ fn parse_las_mutation(line: &str) -> Result<LasMutation, String> {
     let rest: Vec<&str> = tokens.collect();
     let arg = |key: &str| -> Result<&str, String> { rest.iter().find_map(|t| t.strip_prefix(key)).ok_or_else(|| format!("{keyword}: missing arg {key:?}")) };
     match keyword {
+        "patch-snapshot" => semio_s_artifact_stdio_contract::editing::snapshot_patch_from_text(line).map(|patch| LasMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch })),
         "set-snapshot" => Ok(LasMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_snapshot(arg("snapshot=")?)? })),
         "set-version" => Ok(LasMutation::SetVersion(set_version::SetVersion { major: diff::parse_u8(arg("major=")?)?, minor: diff::parse_u8(arg("minor=")?)? })),
         "set-system-identifier" => Ok(LasMutation::SetSystemIdentifier(set_system_identifier::SetSystemIdentifier { system_identifier: String::from_utf8(diff::hex_decode(arg("system-identifier=")?)?).map_err(|e| e.to_string())? })),
@@ -349,8 +359,8 @@ impl protocol::OpText for LasMutation {
     fn print_op(&self) -> String {
         print_las_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_las_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_las_mutation(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 }
 
@@ -401,6 +411,7 @@ fn dec_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<LasSnapshot, S
 /// 🏷️ Op tags of `LasMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
 const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
 const TAG_SET_VERSION: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-version");
 const TAG_SET_SYSTEM_IDENTIFIER: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-system-identifier");
 const TAG_SET_SOFTWARE_INFO: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-software-info");
@@ -426,6 +437,10 @@ impl protocol::OpBinary for LasMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT];
         match self {
+            LasMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => {
+                out.push(TAG_PATCH_SNAPSHOT);
+                out.extend(protocol::OpBinary::encode_op(patch)?);
+            }
             LasMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => {
                 out.push(TAG_SET_SNAPSHOT);
                 enc_snapshot_bin(snapshot, &mut out);
@@ -504,6 +519,7 @@ impl protocol::OpBinary for LasMutation {
             }
             let tag = reader.read_u8().map_err(|e| e.to_string())?;
             Ok(match tag {
+                TAG_PATCH_SNAPSHOT => LasMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::snapshot_patch_from_bytes(reader.read_bytes(reader.remaining()).map_err(|e| e.to_string())?)? }),
                 TAG_SET_SNAPSHOT => LasMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_snapshot_bin(&mut reader)? }),
                 TAG_SET_VERSION => LasMutation::SetVersion(set_version::SetVersion { major: reader.read_u8().map_err(|e| e.to_string())?, minor: reader.read_u8().map_err(|e| e.to_string())? }),
                 TAG_SET_SYSTEM_IDENTIFIER => LasMutation::SetSystemIdentifier(set_system_identifier::SetSystemIdentifier { system_identifier: diff::read_str_lp(&mut reader)? }),
@@ -586,6 +602,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<LasMutation> {
     rich_point.gps_time = Some(1234.5);
     rich_point.rgb = Some((11, 22, 33));
     vec![
+        LasMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         LasMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: LasSnapshot { header: LasHeader { creation_year: 2031, ..base.header.clone() }, ..base.clone() } }),
         LasMutation::SetVersion(set_version::SetVersion { major: 1, minor: 4 }),
         LasMutation::SetSystemIdentifier(set_system_identifier::SetSystemIdentifier { system_identifier: "semio".into() }),

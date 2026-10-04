@@ -1,6 +1,8 @@
-//! 📥️ 📥️ Remodeling play app commands command — `import-video-bytes-payload`.
+//! 📥️ Remodeling play app commands — `import-video-bytes-payload`: the in-process video decode (Tier-3 fallback, or a
+//! single picked video), sampled and blur-gated by the import's one gate, committed as ONE import transaction.
 
 use crate::editor::remodeling::commands::import_video_frame_payload::import_transaction;
+use crate::editor::remodeling::engine::reconstruction::{blur_gate_admits, sharpness_score, BLUR_GATE_ROLLING_WINDOW};
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::editor::remodeling::engine::{describe_video_probe, images as remodeling_image, video as remodeling_video, video_codec_to_artifact};
 use crate::editor::remodeling::payload_from_data_url;
@@ -10,77 +12,6 @@ use crate::schema::mint_remodeling_id;
 use crate::{FrameRef, ImageAsset, MediaKind, MediaStream, RemodelingSnapshot, VideoSource};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
-use std::collections::VecDeque;
-
-//#region 🔖️VideoImportScratch
-/// 📥️ Rolling blur-gate scratch for one in-progress `importVideoFramePayload`/`importVideoBytesPayload`
-/// batch — mirrors the reconstruction engine's own relative-sharpness gate (not reusable directly: that
-/// gate lives inside a whole `FrameSource`, this one only needs the rolling-median scratch itself).
-#[derive(Clone, Debug, Default, PartialEq)]
-struct VideoImportScratch {
-    rolling_scores: VecDeque<f32>,
-}
-
-const BLUR_GATE_ROLLING_WINDOW: usize = 15;
-const BLUR_GATE_MIN_SAMPLES: usize = 3;
-
-/// 🧭️ Gradient-energy sharpness proxy — a local mirror of the reconstruction engine's private
-/// `sharpness_score` (not exported by that topic file), reused here so import-time frame gating uses
-/// the identical signal.
-fn local_sharpness_score(image: &remodeling_image::ImageRgba8) -> f32 {
-    let gray = remodeling_image::ImageGray::from_rgba8_luma(image);
-    let grad = remodeling_image::scharr_gradients(&gray);
-    if grad.gx.is_empty() {
-        return 0.0;
-    }
-    let sum_sq: f32 = grad.gx.iter().zip(grad.gy.iter()).map(|(&gx, &gy)| gx * gx + gy * gy).sum();
-    sum_sq / grad.gx.len() as f32
-}
-
-fn local_rolling_median(scores: &VecDeque<f32>) -> f32 {
-    let mut v: Vec<f32> = scores.iter().copied().collect();
-    v.sort_by(f32::total_cmp);
-    v[v.len() / 2]
-}
-
-/// 🚦️ Whether the sample should be rejected by the relative blur gate, given `scratch`'s rolling window
-/// and `min_sharpness` (a fraction of the rolling median); also records the sample if accepted.
-fn blur_gate_reject(scratch: &mut VideoImportScratch, score: f32, min_sharpness: f32) -> bool {
-    if scratch.rolling_scores.len() >= BLUR_GATE_MIN_SAMPLES {
-        let median = local_rolling_median(&scratch.rolling_scores);
-        if score < min_sharpness * median {
-            return true;
-        }
-    }
-    if scratch.rolling_scores.len() >= BLUR_GATE_ROLLING_WINDOW {
-        scratch.rolling_scores.pop_front();
-    }
-    scratch.rolling_scores.push_back(score);
-    false
-}
-
-//#endregion 🔖️VideoImportScratch
-
-//#region 🔖️ImportFramePayload
-//#endregion 🔖️ImportFramePayload
-
-//#region 🔖️ImportVideoFramePayload
-//#endregion 🔖️ImportVideoFramePayload
-
-//#region 🔖️ImportVideoDone
-//#endregion 🔖️ImportVideoDone
-
-//#region 🔖️ImportVideoBytesPayload
-//#endregion 🔖️ImportVideoBytesPayload
-
-//#region 🔖️AddStream
-//#endregion 🔖️AddStream
-
-//#region 🔖️RemoveStream
-//#endregion 🔖️RemoveStream
-
-//#region 🔖️SetStreamSync
-//#endregion 🔖️SetStreamSync
 
 /// 🎞️ One in-process sampled video frame, JPEG-encoded, with its sample index and timestamp.
 pub struct SampledFrame {
@@ -97,11 +28,11 @@ pub fn sample_video(bytes: &[u8], scene: &RemodelingSnapshot) -> Result<(Vec<Sam
     let ingest = &scene.params.ingest;
     let opts = remodeling_video::VideoIngestOptions { stride: ingest.frame_sample_stride.max(1), max_frames: ingest.max_frames, max_long_edge_px: ingest.downscale_long_edge_px };
     let iter = remodeling_video::extract_frames(bytes, &opts).map_err(|error| format!("Unsupported video codec ({codec:?}): {error} - probed {container} {width}x{height}"))?;
-    let mut scratch = VideoImportScratch::default();
+    let mut rolling = Vec::with_capacity(BLUR_GATE_ROLLING_WINDOW);
     let mut frames = Vec::new();
     for extracted in iter {
         let Ok(extracted) = extracted else { continue };
-        if blur_gate_reject(&mut scratch, local_sharpness_score(&extracted.image), ingest.min_sharpness) {
+        if !blur_gate_admits(&mut rolling, BLUR_GATE_ROLLING_WINDOW, sharpness_score(&extracted.image), ingest.min_sharpness) {
             continue;
         }
         let jpeg = remodeling_image::encode_jpeg(&extracted.image, 90);
@@ -110,7 +41,7 @@ pub fn sample_video(bytes: &[u8], scene: &RemodelingSnapshot) -> Result<(Vec<Sam
     Ok((frames, VideoSource { name: String::new(), container: container.into(), codec: video_codec_to_artifact(codec), duration_ms, frame_count: 0, width, height }))
 }
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "import-video-bytes-payload")]
 pub struct ImportVideoBytesPayload {
     pub payload: String,

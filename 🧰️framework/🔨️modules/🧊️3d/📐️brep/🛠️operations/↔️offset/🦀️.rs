@@ -15,11 +15,12 @@ use crate::brep::operations::blend::fillet_edges;
 use crate::brep::operations::euler::{add_shell, add_solid, make_loop, make_vertex, retire_solid_scaffold};
 use crate::brep::operations::intersect::{intersect_surface_surface, IntCurve};
 use crate::brep::operations::primitives::{attach_face, finish_solid, line_edge};
+use crate::brep::operations::transform::copy_faces;
 use crate::brep::representation::arena::{CoedgeId, EdgeId, FaceId, LoopId, SolidId, VertexId};
 use crate::brep::representation::curve::bspline::KnotVector;
-use crate::brep::representation::curve::curve_ops::closest_parameter;
+use crate::brep::representation::curve::curve_ops::{closest_parameter, reverse_nurbs, split_nurbs};
 use crate::brep::representation::curve::Curve2;
-use crate::brep::representation::curve::Curve3;
+use crate::brep::representation::curve::{Curve3, NurbsCurve3};
 use crate::brep::representation::error::KernelError;
 use crate::brep::representation::surface::{IsoDirection, Surface};
 use crate::brep::representation::tolerance::Tol;
@@ -1061,16 +1062,14 @@ pub fn offset_solid(body: &mut Body, solid: SolidId, distance: f64, rec: &mut Op
 
 /// ↔️ [`ruled_surface_from_curves`], `pub(crate)` so [`crate::brep::operations::blend`]'s chamfer can reuse the same
 /// straight-ruling construction between its two tangent-line boundaries.
-/// ↔️ Builds a ruled surface between two boundary curves sharing the same analytic curve kind and
-/// parameter range (the case every caller in this file produces, since an offset/rim edge is
-/// always derived from its counterpart with the same `range`): fits both to NURBS over their own
-/// range and lofts a degree-1 `v`-direction between the two matching control nets. Errors — rather
-/// than silently approximating — when the two `to_nurbs` fits are not control-point compatible.
+/// ↔️ Builds a ruled surface between exact directed curve trims on a common unit parameter domain.
+/// Fits both to NURBS, preserving reversed endpoints, and lofts a degree-1 `v`-direction between
+/// compatible control nets. Different degrees, knot spacing or control counts refuse construction.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn ruled_surface_from_curves(c0: &Curve3, r0: (f64, f64), c1: &Curve3, r1: (f64, f64)) -> Result<Surface, KernelError> {
-    let n0 = c0.to_nurbs(r0);
-    let n1 = c1.to_nurbs(r1);
-    if n0.controls.len() != n1.controls.len() || n0.knots.knots.len() != n1.knots.knots.len() {
+    let n0 = ruling_nurbs(c0, r0)?;
+    let n1 = ruling_nurbs(c1, r1)?;
+    if n0.controls.len() != n1.controls.len() || n0.knots.degree != n1.knots.degree || n0.knots.knots.len() != n1.knots.knots.len() || n0.knots.knots.iter().zip(&n1.knots.knots).any(|(a, b)| (a - b).abs() > 1e-12) {
         return Err(KernelError::Operation("thicken/shell: ruling curves are not control-point compatible".into()));
     }
     let v_knots = KnotVector { knots: vec![0.0, 0.0, 1.0, 1.0], degree: 1 };
@@ -1081,6 +1080,25 @@ pub(crate) fn ruled_surface_from_curves(c0: &Curve3, r0: (f64, f64), c1: &Curve3
         weights.push(vec![n0.weights[i], n1.weights[i]]);
     }
     Ok(Surface::Nurbs { u_knots: n0.knots, v_knots, controls, weights })
+}
+
+/// 🪡️ Preserves directed trim endpoints while aligning exact ruling curves to one unit domain.
+fn ruling_nurbs(curve: &Curve3, range: (f64, f64)) -> Result<NurbsCurve3, KernelError> {
+    if !range.0.is_finite() || !range.1.is_finite() || range.0 == range.1 { return Err(KernelError::InvalidInput("Ruling curve requires a finite nonempty parameter range".into())); }
+    let bounds = (range.0.min(range.1), range.0.max(range.1));
+    let mut nurbs = curve.to_nurbs(bounds);
+    if matches!(curve, Curve3::Nurbs { .. }) {
+        let domain = nurbs.knots.domain();
+        if bounds.0 < domain.0 || bounds.1 > domain.1 { return Err(KernelError::InvalidInput("Ruling trim exceeds its curve domain".into())); }
+        if bounds.0 > domain.0 { nurbs = split_nurbs(&nurbs, bounds.0).1; }
+        if bounds.1 < domain.1 { nurbs = split_nurbs(&nurbs, bounds.1).0; }
+    }
+    if range.0 > range.1 { nurbs = reverse_nurbs(&nurbs); }
+    let domain = nurbs.knots.domain();
+    let width = domain.1 - domain.0;
+    if !width.is_finite() || width <= 0.0 { return Err(KernelError::InvalidInput("Ruling curve has an invalid knot domain".into())); }
+    for knot in &mut nurbs.knots.knots { *knot = (*knot - domain.0) / width; }
+    Ok(nurbs)
 }
 
 /// ↔️ Builds one ruled side face per boundary coedge of `cap0`'s outer loop, connecting it to the
@@ -1190,7 +1208,7 @@ pub fn shell_solid(body: &mut Body, solid: SolidId, thickness: f64, rec: &mut Op
 }
 
 /// ↔️ Shells `solid` and leaves `open_faces` open: every non-open face gets its exact `-thickness`
-/// offset counterpart (kept faces materialize both the original and the inner face; `open_faces`
+/// offset counterpart (kept faces materialize detached outer and inner copies; `open_faces`
 /// materialize neither, but their offset surface still trims the neighbouring inner faces exactly
 /// like a full shell would); a ruled rim face closes the gap between each open face's original
 /// boundary edge and its neighbour's inner offset edge. One connected shell, no boolean cut, no
@@ -1245,15 +1263,17 @@ pub fn shell_solid_with_open_faces(body: &mut Body, solid: SolidId, thickness: f
     let flip_new = |_f: FaceId| true;
     let rebuilt = rebuild_topology(body, solid, &new_surface_map, &materialize, (flip_new, vertex_target, edge_target), tol, rec)?;
 
-    let mut shell_faces: Vec<FaceId> = Vec::new();
+    let kept_faces: Vec<_> = faces_vec.iter().copied().filter(|face| !open_set.contains(face)).collect();
+    let copied = copy_faces(body, &kept_faces, rec)?;
+    let mut shell_faces = copied.faces;
     for &f in &faces_vec {
         if open_set.contains(&f) {
             continue;
         }
-        shell_faces.push(f);
         shell_faces.push(*rebuilt.face_new.get(&f).ok_or_else(|| KernelError::Operation("shell: inner face was not built".into()))?);
     }
 
+    let mut rim_connectors = HashMap::new();
     for &open_f in &open_set {
         let face_data = body.faces.get(open_f).unwrap().clone();
         let mut loops = Vec::new();
@@ -1275,7 +1295,11 @@ pub fn shell_solid_with_open_faces(body: &mut Body, solid: SolidId, thickness: f
                 let (new_edge, new_curve, new_range) = rebuilt.edge_new.get(&e).cloned().ok_or_else(|| KernelError::Operation("shell: rim edge was not built".into()))?;
                 let orig_edge = body.edges.get(e).unwrap().clone();
                 let orig_curve = body.curves3.get(orig_edge.curve).unwrap().clone();
-                let rim_surf = ruled_surface_from_curves(&orig_curve, orig_edge.range, &new_curve, new_range)?;
+                let outer_edge = *copied.edges.get(&e).ok_or_else(|| KernelError::Operation("shell: outer rim edge was not copied".into()))?;
+                let outer_v0 = *copied.vertices.get(&orig_edge.v0).ok_or_else(|| KernelError::Operation("shell: outer rim vertex was not copied".into()))?;
+                let outer_v1 = *copied.vertices.get(&orig_edge.v1).ok_or_else(|| KernelError::Operation("shell: outer rim vertex was not copied".into()))?;
+                let directed = |range: (f64, f64)| if c.forward { range } else { (range.1, range.0) };
+                let rim_surf = ruled_surface_from_curves(&orig_curve, directed(orig_edge.range), &new_curve, directed(new_range))?;
                 let rim_id = body.surfaces.insert(rim_surf.clone());
                 let nv0 = rebuilt.vertex_new.get(&orig_edge.v0).copied().unwrap_or(orig_edge.v0);
                 let nv1 = rebuilt.vertex_new.get(&orig_edge.v1).copied().unwrap_or(orig_edge.v1);
@@ -1283,12 +1307,12 @@ pub fn shell_solid_with_open_faces(body: &mut Body, solid: SolidId, thickness: f
                 let p01 = body.vertices.get(orig_edge.v1).unwrap().position;
                 let p10 = body.vertices.get(nv0).unwrap().position;
                 let p11 = body.vertices.get(nv1).unwrap().position;
-                let vert_a = line_edge(body, p00, p10, orig_edge.v0, nv0, Tol::DEFAULT, rec);
-                let vert_b = line_edge(body, p01, p11, orig_edge.v1, nv1, Tol::DEFAULT, rec);
-                let members = if c.forward { [(e, true), (vert_b, true), (new_edge, false), (vert_a, false)] } else { [(e, false), (vert_a, true), (new_edge, true), (vert_b, false)] };
-                let rim_face = attach_face(body, rim_id, &members, false, Tol::DEFAULT, rec);
+                let vert_a = *rim_connectors.entry(orig_edge.v0).or_insert_with(|| line_edge(body, p00, p10, outer_v0, nv0, Tol::DEFAULT, rec));
+                let vert_b = *rim_connectors.entry(orig_edge.v1).or_insert_with(|| line_edge(body, p01, p11, outer_v1, nv1, Tol::DEFAULT, rec));
+                let members = if c.forward { [(outer_edge, true), (vert_b, true), (new_edge, false), (vert_a, false)] } else { [(outer_edge, false), (vert_a, true), (new_edge, true), (vert_b, false)] };
+                let rim_face = attach_face(body, rim_id, &members, face_data.flipped, Tol::DEFAULT, rec);
                 let mut edge_geom: HashMap<EdgeId, (Curve3, (f64, f64))> = HashMap::new();
-                edge_geom.insert(e, (orig_curve, orig_edge.range));
+                edge_geom.insert(outer_edge, (orig_curve, orig_edge.range));
                 edge_geom.insert(new_edge, (new_curve, new_range));
                 edge_geom.insert(vert_a, (Curve3::Line { origin: p00, dir: p10 - p00 }, (0.0, 1.0)));
                 edge_geom.insert(vert_b, (Curve3::Line { origin: p01, dir: p11 - p01 }, (0.0, 1.0)));

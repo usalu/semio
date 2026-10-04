@@ -20,7 +20,7 @@ fn add_vector_field(spec: &FormsSnapshot, question_id: &str, key: &str) -> Optio
 }
 //#endregion 🔖️Shell
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "add-vector-field")]
 pub struct AddVectorField {
     pub question_id: String,

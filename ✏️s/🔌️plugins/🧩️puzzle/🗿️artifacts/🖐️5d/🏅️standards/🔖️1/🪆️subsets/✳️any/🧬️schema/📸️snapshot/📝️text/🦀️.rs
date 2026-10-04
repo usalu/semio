@@ -16,7 +16,7 @@ pub const PUZZLE5D_NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../../../📚️ex
 pub const PUZZLE5D_CAPSULE_DREAM_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🌙️capsule-dream/🖼️assets/🌙️dream/🗣️.dsl.semio");
 
 /// 📖️ Parses `.puzzle5d` DSL text into a `Puzzle5dSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<Puzzle5dSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<Puzzle5dSnapshot, semio_framework_diagnostic::TextError> {
     <Puzzle5dSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 

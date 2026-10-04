@@ -55,17 +55,11 @@ fn wire_bytes(v: &Json) -> Result<Vec<u8>, String> {
 /// 🏷️ TIFF6 §2 Table 2's twelve field types in code order (1-12), spelled as the vocabulary's `TiffFieldType` wire.
 const FIELD_TYPE_NAMES: [&str; 12] = ["byte", "ascii", "short", "long", "rational", "sByte", "undefined", "sShort", "sLong", "sRational", "float", "double"];
 
-/// 🏷️ One tag's `TiffFieldType` name plus its `TiffValues` wire value (`{kind, value}`) as an [`OracleValue`]; the two
-/// must name the same type.
-fn wire_value(field_kind: &str, values: &Json) -> Result<OracleValue, String> {
+/// 🏷️ One tag's `TiffValues` wire value (`{kind, value}`, the field type named by `kind`) as an [`OracleValue`].
+fn wire_value(values: &Json) -> Result<OracleValue, String> {
+    let field_kind = values.str("kind");
     let code = FIELD_TYPE_NAMES.iter().position(|name| *name == field_kind).ok_or_else(|| format!("tiff oracle: {field_kind:?} is no TIFF 6.0 field type"))? as u16 + 1;
-    if values.str("kind") != field_kind {
-        return Err(format!("tiff oracle: a {field_kind} tag carries {:?} values", values.str("kind")));
-    }
-    match values.get("value").ok_or("tiff oracle: tag values carry no `value`")? {
-        Json::String(text) => OracleValue::from_json(code, &Json::Array(vec![Json::String(text.clone())])),
-        other => OracleValue::from_json(code, other),
-    }
+    OracleValue::from_json(code, values.get("value").ok_or("tiff oracle: tag values carry no `value`")?)
 }
 //#endregion 🔖️JsonHelpers
 
@@ -220,7 +214,7 @@ impl OracleValue {
         let nums = || -> Result<Vec<f64>, String> { items.iter().map(|v| j_num(v).ok_or_else(|| "tiff oracle: expected a number in tag values".to_string())).collect() };
         Ok(match type_code {
             1 => OracleValue::Byte(nums()?.into_iter().map(|n| n as u8).collect()),
-            2 => OracleValue::Ascii(items.first().and_then(j_str).ok_or("tiff oracle: ascii tag values must be [\"text\"]")?.to_string()),
+            2 => OracleValue::Ascii(String::from_utf8_lossy(&wire_bytes(values)?).trim_end_matches('\u{0}').to_string()),
             3 => OracleValue::Short(nums()?.into_iter().map(|n| n as u16).collect()),
             4 => OracleValue::Long(nums()?.into_iter().map(|n| n as u32).collect()),
             5 => OracleValue::Rational(
@@ -388,10 +382,7 @@ fn dir_size(n: usize) -> usize {
 /// subject's own encoder now also writes a real multi-IFD chain; this independent writer stays a
 /// genuinely separate implementation of the same real vocabulary, never importing the subject's
 /// own `🚪️io::encode_tiff`). Any IFD carrying a `strip` gets fresh `StripOffsets`/`StripByteCounts`
-/// computed from the actual final layout — unlike the subject, this oracle CAN back a non-primary
-/// IFD's raster with real bytes when a caller's `pixels` param supplies them (`OracleIfd.strip`),
-/// since it isn't constrained by `TiffSnapshot`'s single `pixels` field (see subject's own
-/// `MultiIfdEncodeScopeNote`, `../🚪️io/🦀️.rs`).
+/// computed from the actual final layout, as ONE combined strip whatever strip partition its source used.
 fn write_tiff(doc: &OracleDoc) -> Vec<u8> {
     let little = doc.little_endian;
     let mut out = Vec::new();
@@ -604,23 +595,30 @@ pub fn project_tiff(input: &[u8]) -> Result<Json, String> {
 //#endregion 🔖️RasterProjection
 
 //#region 🔖️MutationParams
-/// 🧩️ Parses one `TiffIfd` wire value (`{"entries": [TiffTag…], "pixels": [byte…]}`) into an [`OracleIfd`] — the
-/// shape `insert-ifd`'s `ifd` carries. `StripOffsets`/`StripByteCounts` are never accepted from a caller (they are
-/// always layout-computed at [`write_tiff`] time); a raster IFD's `pixels` are its raw strip bytes, already in the
-/// sample layout its own `SamplesPerPixel` tag declares, and an IFD without them carries no strip.
+/// 🧩️ Parses one `TiffIfd` wire value (`{"entries": [{tag, values}…], "storage": {kind, chunks…}}`) into an
+/// [`OracleIfd`] — the shape `insert-ifd`'s `ifd` and every `set-snapshot` IFD carry. Strip and tile offsets and byte
+/// counts are never accepted from a caller (they are layout-computed at [`write_tiff`] time); strip storage becomes this
+/// model's one combined strip, an IFD without storage carries none, and tiled storage is refused, because this
+/// strip-only IFD-chain model does not write tiles.
 fn parse_ifd_json(v: &Json) -> Result<OracleIfd, String> {
     let entries = j_get(v, "entries").and_then(j_arr).ok_or("tiff oracle: ifd needs an `entries` array")?;
     let mut entries = entries
         .iter()
         .filter(|e| !matches!(j_get(e, "tag").and_then(j_num).map(|tag| tag as u16), Some(TAG_STRIP_OFFSETS | TAG_STRIP_BYTE_COUNTS)))
-        .map(|e| Ok(OracleTag { tag: j_get(e, "tag").and_then(j_num).ok_or("tiff oracle: entry needs `tag`")? as u16, value: wire_value(&e.str("kind"), j_get(e, "values").ok_or("tiff oracle: entry needs `values`")?)? }))
+        .map(|e| Ok(OracleTag { tag: j_get(e, "tag").and_then(j_num).ok_or("tiff oracle: entry needs `tag`")? as u16, value: wire_value(j_get(e, "values").ok_or("tiff oracle: entry needs `values`")?)? }))
         .collect::<Result<Vec<_>, String>>()?;
     entries.sort_by_key(|t| t.tag);
-    let strip = j_get(v, "pixels").map(wire_bytes).transpose()?.filter(|bytes| !bytes.is_empty());
+    let storage = j_get(v, "storage");
+    let strip = match storage.map(|storage| storage.str("kind")).as_deref() {
+        None | Some("none") => None,
+        Some("strips") => {
+            let chunks = storage.and_then(|storage| j_get(storage, "chunks")).and_then(j_arr).ok_or("tiff oracle: strip storage needs `chunks`")?;
+            Some(chunks.iter().map(wire_bytes).collect::<Result<Vec<_>, String>>()?.concat()).filter(|bytes| !bytes.is_empty())
+        }
+        Some(other) => return Err(format!("tiff oracle: {other:?} storage is not written by this strip-only model")),
+    };
     Ok(OracleIfd { entries, strip })
 }
-
-
 //#endregion 🔖️MutationParams
 
 //#region 🔖️Dispatch
@@ -660,10 +658,9 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
         "replace-tag" => {
             let ifd_index = p_num("ifdIndex").ok_or("tiff oracle: replace-tag needs `ifdIndex`")? as usize;
             let tag = p_num("tag").ok_or("tiff oracle: replace-tag needs `tag`")? as u16;
-            let field_kind = p_str("kind").ok_or("tiff oracle: replace-tag needs `kind`")?;
             let values = params.and_then(|p| j_get(p, "values")).ok_or("tiff oracle: replace-tag needs `values`")?;
             if let Some(ifd) = doc.ifds.get_mut(ifd_index) {
-                ifd.set(tag, wire_value(field_kind, values)?);
+                ifd.set(tag, wire_value(values)?);
             }
         }
         "remove-tag" => {
@@ -673,11 +670,9 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
                 ifd.entries.retain(|t| t.tag != tag);
             }
         }
-        "replace-pixels" => install_raster(&mut doc, wire_bytes(params.and_then(|p| j_get(p, "pixels")).ok_or("tiff oracle: replace-pixels needs `pixels` (RGBA8 bytes)")?)?)?,
         "set-snapshot" => {
             let snapshot = params.and_then(|p| j_get(p, "snapshot")).ok_or("tiff oracle: set-snapshot needs `snapshot`")?;
             doc = OracleDoc { little_endian: byte_order(snapshot.get("byteOrder"))?, ifds: snapshot.array("ifds").iter().map(parse_ifd_json).collect::<Result<_, _>>()? };
-            install_raster(&mut doc, wire_bytes(j_get(snapshot, "pixels").ok_or("tiff oracle: set-snapshot needs IFD 0's `pixels`")?)?)?;
         }
         "patch-snapshot" => {
             for (member, value) in patch_members(params)? {
@@ -692,26 +687,6 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     Ok(write_tiff(&doc))
 }
 
-/// 🖼️ Installs an RGBA8 raster as IFD 0's one chunky 8-bit RGB strip, re-stating the five layout tags that describe
-/// it (TIFF6 §Baseline Fields: BitsPerSample carries one entry per sample, RowsPerStrip = ImageLength for one strip).
-#[cfg(feature = "oracles")]
-fn install_raster(doc: &mut OracleDoc, rgba: Vec<u8>) -> Result<(), String> {
-    let ifd0 = doc.ifds.first_mut().ok_or("tiff oracle: a raster needs an existing IFD 0")?;
-    let width = ifd0.get(TAG_IMAGE_WIDTH).and_then(|t| t.value.first_u32()).ok_or("tiff oracle: IFD 0 has no ImageWidth")?;
-    let height = ifd0.get(TAG_IMAGE_LENGTH).and_then(|t| t.value.first_u32()).ok_or("tiff oracle: IFD 0 has no ImageLength")?;
-    let expected = width as usize * height as usize * 4;
-    if rgba.len() != expected {
-        return Err(format!("tiff oracle: the raster is {} byte(s), expected {} ({width}x{height} RGBA8)", rgba.len(), expected));
-    }
-    ifd0.set(TAG_BITS_PER_SAMPLE, OracleValue::Short(vec![8, 8, 8]));
-    ifd0.set(TAG_COMPRESSION, OracleValue::Short(vec![1]));
-    ifd0.set(TAG_PHOTOMETRIC, OracleValue::Short(vec![2]));
-    ifd0.set(TAG_SAMPLES_PER_PIXEL, OracleValue::Short(vec![3]));
-    ifd0.set(TAG_ROWS_PER_STRIP, OracleValue::Long(vec![height]));
-    ifd0.strip = Some(rgba.chunks_exact(4).flat_map(|px| [px[0], px[1], px[2]]).collect());
-    Ok(())
-}
-
 /// 🔀️ A `TiffByteOrder` wire value — `littleEndian` or `bigEndian` — as this model's flag.
 #[cfg(feature = "oracles")]
 fn byte_order(value: Option<&Json>) -> Result<bool, String> {
@@ -722,16 +697,15 @@ fn byte_order(value: Option<&Json>) -> Result<bool, String> {
     }
 }
 
-/// 🩹️ The `(member, value)` pairs of a `SnapshotPatch` whose every edit sets (or inserts, when absent) one top-level member — the only edits this
+/// 🩹️ The `(member, value)` pairs of a `SnapshotPatch` whose operation sets (or inserts, when absent) one top-level member — the only edits this
 /// model has a slot for; any other path or operation is refused, never skipped.
 #[cfg(feature = "oracles")]
 fn patch_members(params: Option<&Json>) -> Result<Vec<(String, Json)>, String> {
-    params.and_then(|p| p.get("patch")).map(|patch| patch.array("edits")).unwrap_or_default().into_iter().map(|edit| {
-        let path = edit.array("path");
-        let operation = edit.get("edit").cloned().unwrap_or(Json::Null);
-        match (path.as_slice(), operation.str("operation").as_str()) {
-            ([Json::String(member)], "set" | "insert") => Ok((member.clone(), operation.get("value").cloned().unwrap_or(Json::Null))),
-            (other, operation) => Err(format!("tiff oracle: patch-snapshot {operation} at {} has no oracle implementation", Json::Array(other.to_vec()).to_string())),
+    params.and_then(|p| p.get("patch")).into_iter().map(|patch| {
+        let path = patch.str("path").split('/').skip(1).map(|segment| segment.replace("~1", "/").replace("~0", "~")).collect::<Vec<_>>();
+        match (path.as_slice(), patch.str("operation").as_str()) {
+            ([member], "set" | "insert") => Ok((member.clone(), patch.get("value").cloned().unwrap_or(Json::Null))),
+            (other, operation) => Err(format!("tiff oracle: patch-snapshot {operation} at {other:?} has no oracle implementation")),
         }
     }).collect()
 }
@@ -741,9 +715,7 @@ fn patch_members(params: Option<&Json>) -> Result<Vec<(String, Json)>, String> {
 /// the PRE-mutation document (`original_input`) exactly the way `TiffMutation::inverse`
 /// (`../🧬️schema/🧬️mutations/🦀️.rs`) reasons over `TiffSnapshot` — "restore `base`'s own
 /// value for the facet this kind touched" — reimplemented here over [`OracleDoc`] rather than
-/// called through that trait. `replace-pixels` restores IFD 0 wholesale because this oracle's own
-/// forward `replace-pixels` rewrites IFD 0's strip AND the five layout tags that describe it, so
-/// restoring only the raster would not be its inverse.
+/// called through that trait.
 #[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation_inverse(original_input: &[u8], spec: &Json, mutated: &[u8]) -> Result<Vec<u8>, String> {
     let kind = spec.str("kind");
@@ -780,11 +752,6 @@ pub fn oracle_apply_mutation_inverse(original_input: &[u8], spec: &Json, mutated
                     None => ifd.entries.retain(|entry| entry.tag != tag),
                 }
             }
-        }
-        "replace-pixels" => {
-            let source = original.ifds.first().ok_or("tiff oracle: replace-pixels inverse needs an original IFD 0")?.clone();
-            let target = doc.ifds.first_mut().ok_or("tiff oracle: replace-pixels inverse needs a mutated IFD 0")?;
-            *target = source;
         }
         "set-snapshot" => doc = original,
         "patch-snapshot" => {

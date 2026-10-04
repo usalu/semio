@@ -9,7 +9,7 @@ pub fn diff(payload: &super::mutation::RenameLayer, base: &DrawingSnapshot) -> p
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Layer \"{}\" does not exist.", payload.layer_id), [payload.layer_id.clone()]);
     };
     if layer_base(layer).name == payload.new_name {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Layer \"{}\" is already named \"{}\".", payload.layer_id, payload.new_name));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Layer \"{}\" is already named \"{}\".", payload.layer_id, payload.new_name));
     }
     protocol::MutationOutcome::new(diff_set_layer_name(&payload.layer_id, &payload.new_name))
 }

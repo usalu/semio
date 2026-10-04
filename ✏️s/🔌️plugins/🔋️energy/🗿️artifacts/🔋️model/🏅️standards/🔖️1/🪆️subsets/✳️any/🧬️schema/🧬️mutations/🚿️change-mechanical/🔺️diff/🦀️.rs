@@ -17,7 +17,7 @@ pub fn diff(payload: &super::ChangeMechanicalVentilationDesignFlow, base: &Energ
         );
     }
     if existing.design_flow_m3_s == payload.new_design_flow_m3_s {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Mechanical Ventilation {} already carries this design supply flow (m³/s): {}.", payload.id.0, payload.new_design_flow_m3_s));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Mechanical Ventilation {} already carries this design supply flow (m³/s): {}.", payload.id.0, payload.new_design_flow_m3_s));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.mechanical_ventilations.iter_mut().find(|item| item.id == payload.id) {

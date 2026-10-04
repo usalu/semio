@@ -1,0 +1,11 @@
+# Artifact Reference Command
+
+The canonical framework command `test-artifact-reference` now executes the existing literal reference contract against independent SQLite and Ajv admission. The command belongs to the framework TypeScript script, is exposed through an Nx target and package script, and appears in the authored and generated launcher under `9_gates` at order 900.05851. It introduces no runtime dependency or specific source owner.
+
+The closed, language-neutral command corpus was extended before registration. The real router law first failed with three passing tests and one missing-registration failure. After implementing the command, the actual artifact-reference route passed its one test and 13 assertions. The complete router boundary passed all four tests and 14 assertions. Its real esbuild traversal selected 11 general source owners and refused every specific source owner; zero specific owners were required. Original router assertions remain enabled.
+
+The full framework TypeScript compiler then passed through the owned Nx route in 29.5 seconds with the caller's 120,000 ms command budget. No TypeScript diagnostic was emitted. The 18 compiler carrier sources had zero post-run hash gaps. All six authored command source snapshots also had zero post-run hash gaps, and each explicit full-text inverse reproduces its complete pre-feature source. No compiler inclusion or strictness rule was relaxed.
+
+Normal registry generation and checking both passed in epoch 10. The generator admitted the concurrent launcher seed edit, retained its exact before/after delta, and published this command exactly once with every seed property preserved. The generated Rust files remained unchanged. The normal registry check took 35.6 seconds.
+
+Authored inputs and exact repair spans are retained in `artifact-reference-inputs/before.json` and `artifact-reference-inputs/repairs.json`. Runtime and compiler receipts are in `🗑️generated/goal-root/framework-script/artifact-reference-command-receipt.json`; normal generation evidence is in `🗑️generated/record-floor-prep/registry-generate-10-check-terminal.json`. These generated receipts are temporary ticket output. This report does not claim closure of the independent Rust schema facade or whole repository deletion boundaries.

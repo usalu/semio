@@ -9,6 +9,12 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 use crate::op::RasterMutation;
 use crate::{RasterAssetChild, RasterImageAsset, RasterLayerNode, RasterOwnedMap, RasterOwnedMapInsert, RasterOwnedMapPageBacking, RasterSnapshot};
 use protocol::{Mutation, OpBinary};
+use semio_framework_value::{ValueError, ValueRefusalKind};
+
+/// 🧯️ A retirement or clone cursor found its own bookkeeping inconsistent.
+fn invariant(message: &str) -> ValueError {
+    ValueError::new(ValueRefusalKind::InvariantViolated, message)
+}
 
 /// 📦️ Encodes a `RasterMutation` to its binary command form.
 pub async fn encode_op(operation: &RasterMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
@@ -39,6 +45,9 @@ const RASTER_RETIREMENT_ADMITTED_FRAME_CAPACITY: usize = RASTER_RETIREMENT_LAYER
 const RASTER_RETIREMENT_REJECTED_OWNER_MARGIN: usize = 3;
 const RASTER_RETIREMENT_STACK_CAPACITY: usize = RASTER_RETIREMENT_ADMITTED_FRAME_CAPACITY + RASTER_RETIREMENT_REJECTED_OWNER_MARGIN;
 const RASTER_RETIREMENT_STACK_PAGE_CAPACITY: usize = 8;
+/// 🪜️ Frontier pushes one delegated value step may take before it must report a release (keeps a deep chain's zero-release
+/// pushes inside every caller's stall bound).
+const RASTER_DELEGATED_FRONTIER_TURNS: usize = 4_096;
 const RASTER_RETIREMENT_STACK_PAGE_COUNT: usize = (RASTER_RETIREMENT_STACK_CAPACITY - 1).div_ceil(RASTER_RETIREMENT_STACK_PAGE_CAPACITY);
 const RASTER_MAXIMUM_NESTED_ITEMS: usize = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
 const RASTER_MAXIMUM_NESTED_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
@@ -162,10 +171,11 @@ enum RasterRetirementOwner {
     AssetEntry { key: String, child: Option<RasterAssetChild> },
     Asset(RasterImageAsset),
     AssetMapPage(RasterOwnedMapPageBacking<RasterAssetChild>),
-    Value(dsl::DslValue),
-    ValueEntry { key: String, value: Option<dsl::DslValue> },
-    ValueMapPage(RasterOwnedMapPageBacking<dsl::DslValue>),
+    Value(semio_framework_value::DslValue),
+    ValueEntry { key: String, value: Option<semio_framework_value::DslValue> },
+    ValueMapPage(RasterOwnedMapPageBacking<semio_framework_value::DslValue>),
     BoxedLayer(Option<Box<RasterLayerNode>>),
+    Delegated(Box<dyn store::ErasedSnapshotRetirement>),
     String(String),
     Bytes(Vec<u8>),
 }
@@ -173,7 +183,7 @@ enum RasterRetirementOwner {
 struct RasterLayerFields {
     strings: [Option<String>; 5],
     children: Option<Vec<RasterLayerNode>>,
-    values: Option<RasterOwnedMap<dsl::DslValue>>,
+    values: Option<RasterOwnedMap<semio_framework_value::DslValue>>,
     string_cursor: usize,
 }
 
@@ -249,7 +259,7 @@ impl RasterOwnedRetirement {
         }
     }
 
-    fn claim_control_if_available(&mut self) -> Result<bool, String> {
+    fn claim_control_if_available(&mut self) -> Result<bool, ValueError> {
         if self.control.is_some() {
             return Ok(true);
         }
@@ -259,16 +269,16 @@ impl RasterOwnedRetirement {
                 Ok(true)
             }
             Err("raster-store.standalone-control-capacity") => Ok(false),
-            Err(code) => Err(code.into()),
+            Err(code) => Err(invariant(code)),
         }
     }
 
-    fn reserve_page_credit(&mut self, page_index: usize) -> Result<bool, String> {
+    fn reserve_page_credit(&mut self, page_index: usize) -> Result<bool, ValueError> {
         if page_index >= RASTER_RETIREMENT_STACK_PAGE_COUNT || self.page_credits[page_index] {
-            return Err("Raster retirement page credit state was not empty".into());
+            return Err(invariant("Raster retirement page credit state was not empty"));
         }
         let current = RASTER_RETIREMENT_PROCESS_PAGES.load(std::sync::atomic::Ordering::Acquire);
-        let Some(next) = current.checked_add(1) else { return Err("Raster retirement process page credit overflow".into()) };
+        let Some(next) = current.checked_add(1) else { return Err(invariant("Raster retirement process page credit overflow")) };
         if next > RASTER_RETIREMENT_PROCESS_PAGE_CAPACITY {
             return Ok(false);
         }
@@ -280,14 +290,14 @@ impl RasterOwnedRetirement {
         Ok(true)
     }
 
-    fn return_page_credit(&mut self, page_index: usize) -> Result<(), String> {
+    fn return_page_credit(&mut self, page_index: usize) -> Result<(), ValueError> {
         if page_index >= RASTER_RETIREMENT_STACK_PAGE_COUNT || !self.page_credits[page_index] || self.pending_page_credit == Some(page_index) {
-            return Err("Raster retirement page credit was not allocated".into());
+            return Err(invariant("Raster retirement page credit was not allocated"));
         }
         self.page_credits[page_index] = false;
         let previous = RASTER_RETIREMENT_PROCESS_PAGES.fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
         if previous == 0 {
-            return Err("Raster retirement process page credit underflow".into());
+            return Err(invariant("Raster retirement process page credit underflow"));
         }
         Ok(())
     }
@@ -322,6 +332,32 @@ impl RasterOwnedRetirement {
         drop(value);
         *phase = next;
         RasterRetirementAction::Pending { released_items: 1, released_bytes }
+    }
+
+    /// 📏️ The smallest grant the frame's next step can spend: the capacity of the string it releases whole (a heap allocation is
+    /// freed whole or not at all), a delegated value's own demand, else one byte.
+    fn frame_byte_demand(frame: &RasterRetirementFrame) -> usize {
+        let demand = match (frame.owner.as_ref(), frame.phase) {
+            (Some(RasterRetirementOwner::String(value)), 0) | (Some(RasterRetirementOwner::Value(semio_framework_value::DslValue::String(value))), 0) => value.capacity(),
+            (Some(RasterRetirementOwner::ValueEntry { key, .. } | RasterRetirementOwner::AssetEntry { key, .. }), 0) => key.capacity(),
+            (Some(RasterRetirementOwner::Snapshot(value)), 2) => value.schema.capacity(),
+            (Some(RasterRetirementOwner::Snapshot(value)), 3) => value.id.capacity(),
+            (Some(RasterRetirementOwner::Asset(value)), 0) => value.mime.capacity(),
+            (Some(RasterRetirementOwner::MutationFields(RasterMutationFields::String(value) | RasterMutationFields::Strings { first: value, .. } | RasterMutationFields::Asset { id: value, .. })), 0) => value.capacity(),
+            (Some(RasterRetirementOwner::Delegated(retirement)), _) => retirement.next_close_byte_demand(),
+            _ => 1,
+        };
+        demand.max(1)
+    }
+
+    /// 🪜️ Hands the frame's remaining value to the framework's paged owned retirement: its cursor stack is unbounded, so a
+    /// value nested deeper than this cursor's admitted frames still retires step by step instead of refusing in `Drop`.
+    fn delegate_value(frame: &mut RasterRetirementFrame) -> RasterRetirementAction {
+        if let Some(RasterRetirementOwner::Value(value)) = frame.owner.take() {
+            *frame.owner = Some(RasterRetirementOwner::Delegated(semio_framework_value::retirement::owned_retirement(value)));
+        }
+        frame.phase = 0;
+        RasterRetirementAction::Pending { released_items: 0, released_bytes: 0 }
     }
 
     fn child_step<S>(child: &mut store::ArtifactChild<S>, phase: &mut u8, maximum_items: usize, maximum_bytes: usize) -> Option<RasterRetirementAction> {
@@ -367,10 +403,13 @@ impl RasterOwnedRetirement {
             ChangeLayerPixels(payload) => RasterMutationFields::Strings { first: payload.layer_id, second: payload.expected_image_key, third: payload.content.image_key },
             PaintStroke(payload) => RasterMutationFields::Strings { first: payload.layer_id, second: Some(payload.target), third: Some(payload.tool) },
             FillRegion(payload) => RasterMutationFields::Strings { first: payload.layer_id, second: Some(payload.target), third: None },
+            ApplyFilter(payload) => RasterMutationFields::Strings { first: payload.layer_id, second: Some(payload.filter), third: None },
+            TransformImage(payload) => RasterMutationFields::Strings { first: payload.layer_id, second: Some(payload.operation), third: None },
+            FillSelection(payload) => RasterMutationFields::Strings { first: payload.layer_id, second: Some(payload.target), third: None },
         }
     }
 
-    fn frame_action(frame: &mut RasterRetirementFrame, maximum_items: usize, maximum_bytes: usize) -> Result<RasterRetirementAction, String> {
+    fn frame_action(frame: &mut RasterRetirementFrame, room: bool, maximum_items: usize, maximum_bytes: usize) -> Result<RasterRetirementAction, ValueError> {
         if maximum_items == 0 {
             return Ok(RasterRetirementAction::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -524,16 +563,16 @@ impl RasterOwnedRetirement {
             RasterRetirementOwner::AssetEntry { key, child } => match frame.phase {
                 0 => Ok(Self::release_string(key, &mut frame.phase, 1, maximum_items, maximum_bytes)),
                 1 => {
-                    let child = child.as_mut().ok_or_else(|| "Raster child owner missing".to_string())?;
+                    let child = child.as_mut().ok_or_else(|| invariant("Raster child owner missing"))?;
                     let mut child_phase = frame.phase - 1;
-                    let step = Self::child_step(child, &mut child_phase, maximum_items, maximum_bytes).ok_or_else(|| "Raster child phase overflow".to_string())?;
+                    let step = Self::child_step(child, &mut child_phase, maximum_items, maximum_bytes).ok_or_else(|| invariant("Raster child phase overflow"))?;
                     frame.phase = child_phase + 1;
                     Ok(step)
                 }
                 2..=5 => {
-                    let child = child.as_mut().ok_or_else(|| "Raster child owner missing".to_string())?;
+                    let child = child.as_mut().ok_or_else(|| invariant("Raster child owner missing"))?;
                     let mut child_phase = frame.phase - 1;
-                    let step = Self::child_step(child, &mut child_phase, maximum_items, maximum_bytes).ok_or_else(|| "Raster child phase overflow".to_string())?;
+                    let step = Self::child_step(child, &mut child_phase, maximum_items, maximum_bytes).ok_or_else(|| invariant("Raster child phase overflow"))?;
                     frame.phase = child_phase + 1;
                     Ok(step)
                 }
@@ -567,18 +606,32 @@ impl RasterOwnedRetirement {
                 Ok(RasterRetirementAction::Pending { released_items: 1, released_bytes: bytes })
             }
             RasterRetirementOwner::Value(value) => match value {
-                dsl::DslValue::String(value) => {
+                semio_framework_value::DslValue::String(value) => {
                     if frame.phase == 0 {
                         return Ok(Self::release_string(value, &mut frame.phase, 1, maximum_items, maximum_bytes));
                     }
                     drop(frame.owner.take());
                     Ok(RasterRetirementAction::Pop)
                 }
-                dsl::DslValue::Array(values) => {
+                semio_framework_value::DslValue::Array(values) => {
                     if let Some(value) = values.pop() {
+                        if values.is_empty() && matches!(value, semio_framework_value::DslValue::Array(_) | semio_framework_value::DslValue::Object(_)) {
+                            let bytes = values.capacity().saturating_mul(size_of::<semio_framework_value::DslValue>());
+                            if bytes > maximum_bytes {
+                                values.push(value);
+                                return Ok(RasterRetirementAction::Pending { released_items: 0, released_bytes: 0 });
+                            }
+                            *frame.owner = Some(RasterRetirementOwner::Value(value));
+                            frame.phase = 0;
+                            return Ok(RasterRetirementAction::Pending { released_items: 1, released_bytes: bytes });
+                        }
+                        if !room {
+                            values.push(value);
+                            return Ok(Self::delegate_value(frame));
+                        }
                         Ok(RasterRetirementAction::Push(RasterRetirementOwner::Value(value)))
                     } else {
-                        let bytes = values.capacity().saturating_mul(size_of::<dsl::DslValue>());
+                        let bytes = values.capacity().saturating_mul(size_of::<semio_framework_value::DslValue>());
                         if bytes > maximum_bytes {
                             return Ok(RasterRetirementAction::Pending { released_items: 0, released_bytes: 0 });
                         }
@@ -586,11 +639,25 @@ impl RasterOwnedRetirement {
                         Ok(RasterRetirementAction::Pending { released_items: 1, released_bytes: bytes })
                     }
                 }
-                dsl::DslValue::Object(values) => {
+                semio_framework_value::DslValue::Object(values) => {
                     if let Some((key, value)) = values.pop() {
+                        if values.is_empty() {
+                            let bytes = values.capacity().saturating_mul(size_of::<(String, semio_framework_value::DslValue)>());
+                            if bytes > maximum_bytes {
+                                values.push((key, value));
+                                return Ok(RasterRetirementAction::Pending { released_items: 0, released_bytes: 0 });
+                            }
+                            *frame.owner = Some(RasterRetirementOwner::ValueEntry { key, value: Some(value) });
+                            frame.phase = 0;
+                            return Ok(RasterRetirementAction::Pending { released_items: 1, released_bytes: bytes });
+                        }
+                        if !room {
+                            values.push((key, value));
+                            return Ok(Self::delegate_value(frame));
+                        }
                         Ok(RasterRetirementAction::Push(RasterRetirementOwner::ValueEntry { key, value: Some(value) }))
                     } else {
-                        let bytes = values.capacity().saturating_mul(size_of::<(String, dsl::DslValue)>());
+                        let bytes = values.capacity().saturating_mul(size_of::<(String, semio_framework_value::DslValue)>());
                         if bytes > maximum_bytes {
                             return Ok(RasterRetirementAction::Pending { released_items: 0, released_bytes: 0 });
                         }
@@ -598,26 +665,42 @@ impl RasterOwnedRetirement {
                         Ok(RasterRetirementAction::Pending { released_items: 1, released_bytes: bytes })
                     }
                 }
-                dsl::DslValue::Bytes(bytes) if frame.phase == 0 => {
+                semio_framework_value::DslValue::Bytes(bytes) if frame.phase == 0 => {
                     frame.phase = 1;
                     Ok(RasterRetirementAction::Push(RasterRetirementOwner::Bytes(std::mem::take(bytes))))
                 }
-                dsl::DslValue::Null | dsl::DslValue::Bool(_) | dsl::DslValue::Number(_) | dsl::DslValue::Bytes(_) => {
+                semio_framework_value::DslValue::Null | semio_framework_value::DslValue::Bool(_) | semio_framework_value::DslValue::Number(_) | semio_framework_value::DslValue::Bytes(_) => {
                     drop(frame.owner.take());
                     Ok(RasterRetirementAction::Pop)
                 }
             },
             RasterRetirementOwner::ValueEntry { key, value } => match frame.phase {
                 0 => Ok(Self::release_string(key, &mut frame.phase, 1, maximum_items, maximum_bytes)),
-                1 => {
-                    frame.phase = 2;
-                    Ok(RasterRetirementAction::Push(RasterRetirementOwner::Value(value.take().ok_or_else(|| "Raster value entry owner missing".to_string())?)))
-                }
                 _ => {
-                    drop(frame.owner.take());
-                    Ok(RasterRetirementAction::Pop)
+                    let value = value.take().ok_or_else(|| invariant("Raster value entry owner missing"))?;
+                    *frame.owner = Some(RasterRetirementOwner::Value(value));
+                    frame.phase = 0;
+                    Ok(RasterRetirementAction::Pending { released_items: 0, released_bytes: 0 })
                 }
             },
+            RasterRetirementOwner::Delegated(retirement) => {
+                if maximum_bytes == 0 {
+                    return Ok(RasterRetirementAction::Pending { released_items: 0, released_bytes: 0 });
+                }
+                for _ in 0..RASTER_DELEGATED_FRONTIER_TURNS {
+                    match retirement.close_step(1, maximum_bytes)? {
+                        store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 } => {}
+                        store::SnapshotRetirementStep::Pending { released_items, released_bytes } => return Ok(RasterRetirementAction::Pending { released_items: released_items.min(1), released_bytes }),
+                        store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
+                            drop(frame.owner.take());
+                            return Ok(RasterRetirementAction::Pop);
+                        }
+                        store::SnapshotRetirementStep::Complete => return Err(invariant("Raster delegated value retirement reported a false terminal")),
+                        store::SnapshotRetirementStep::Blocked => return Ok(RasterRetirementAction::Pending { released_items: 0, released_bytes: 0 }),
+                    }
+                }
+                Ok(RasterRetirementAction::Pending { released_items: 0, released_bytes: 0 })
+            }
             RasterRetirementOwner::ValueMapPage(page) => {
                 let bytes = page.conservative_credit_bytes();
                 if bytes > maximum_bytes {
@@ -634,7 +717,7 @@ impl RasterOwnedRetirement {
                 if RASTER_CONTROL_BACKING_BYTES > maximum_bytes {
                     return Ok(RasterRetirementAction::Pending { released_items: 0, released_bytes: 0 });
                 }
-                let layer = layer.take().ok_or_else(|| "Raster boxed layer owner missing".to_string())?;
+                let layer = layer.take().ok_or_else(|| invariant("Raster boxed layer owner missing"))?;
                 let layer = *layer;
                 *frame.owner = Some(RasterRetirementOwner::Layer(layer));
                 Ok(RasterRetirementAction::Pending { released_items: 1, released_bytes: RASTER_CONTROL_BACKING_BYTES })
@@ -663,7 +746,7 @@ impl RasterOwnedRetirement {
         }
     }
 
-    fn advance(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn advance(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, ValueError> {
         if maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -675,7 +758,7 @@ impl RasterOwnedRetirement {
             if maximum_bytes < RASTER_CONTROL_BACKING_BYTES {
                 return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
             }
-            let page = self.pages.get_mut(page_index).and_then(Option::take).ok_or_else(|| "Raster empty retirement page owner missing".to_string())?;
+            let page = self.pages.get_mut(page_index).and_then(Option::take).ok_or_else(|| invariant("Raster empty retirement page owner missing"))?;
             drop(page);
             self.return_page_credit(page_index)?;
             self.pending_empty_page = None;
@@ -683,12 +766,12 @@ impl RasterOwnedRetirement {
         }
         if self.pending_push.is_some() {
             if self.depth >= RASTER_RETIREMENT_STACK_CAPACITY {
-                return Err("Raster retirement exceeded its admitted fixed depth".into());
+                return Err(invariant("Raster retirement exceeded its admitted fixed depth"));
             }
             let (page_index, slot) = Self::page_and_slot(self.depth);
             if self.pages[page_index].is_none() {
                 if size_of::<RasterRetirementFramePage>() > RASTER_CONTROL_BACKING_BYTES {
-                    return Err("Raster retirement frame page exceeded its conservative control credit".into());
+                    return Err(invariant("Raster retirement frame page exceeded its conservative control credit"));
                 }
                 if self.pending_page_credit.is_none() {
                     if !self.reserve_page_credit(page_index)? {
@@ -697,7 +780,7 @@ impl RasterOwnedRetirement {
                     return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
                 }
                 if self.pending_page_credit != Some(page_index) || !self.page_credits[page_index] {
-                    return Err("Raster retirement frame page allocation lost its exact admitted credit".into());
+                    return Err(invariant("Raster retirement frame page allocation lost its exact admitted credit"));
                 }
                 if maximum_bytes < RASTER_CONTROL_BACKING_BYTES {
                     return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
@@ -706,12 +789,12 @@ impl RasterOwnedRetirement {
                 self.pending_page_credit = None;
                 return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
             }
-            let occupied = self.pages[page_index].as_ref().and_then(|page| page.frames.get(slot)).ok_or_else(|| "Raster retirement frame page slot missing".to_string())?.is_some();
+            let occupied = self.pages[page_index].as_ref().and_then(|page| page.frames.get(slot)).ok_or_else(|| invariant("Raster retirement frame page slot missing"))?.is_some();
             if occupied {
-                return Err("Raster retirement frame page slot remained occupied".into());
+                return Err(invariant("Raster retirement frame page slot remained occupied"));
             }
-            let owner = self.pending_push.take().ok_or_else(|| "Raster pending retirement owner missing".to_string())?;
-            let target = self.pages[page_index].as_mut().and_then(|page| page.frames.get_mut(slot)).ok_or_else(|| "Raster retirement frame page slot missing".to_string())?;
+            let owner = self.pending_push.take().ok_or_else(|| invariant("Raster pending retirement owner missing"))?;
+            let target = self.pages[page_index].as_mut().and_then(|page| page.frames.get_mut(slot)).ok_or_else(|| invariant("Raster retirement frame page slot missing"))?;
             *target = Some(RasterRetirementFrame::new(owner));
             self.depth += 1;
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
@@ -721,7 +804,7 @@ impl RasterOwnedRetirement {
                 if maximum_bytes < RASTER_CONTROL_BACKING_BYTES {
                     return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
                 }
-                if !control.release()? {
+                if !control.release().map_err(invariant)? {
                     return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
                 }
                 drop(self.control.take());
@@ -731,15 +814,15 @@ impl RasterOwnedRetirement {
         }
         let action = {
             let index = self.depth - 1;
-            let frame = self.frame_mut(index).ok_or_else(|| "Raster retirement top frame missing".to_string())?;
-            Self::frame_action(frame, maximum_items, maximum_bytes)?
+            let frame = self.frame_mut(index).ok_or_else(|| invariant("Raster retirement top frame missing"))?;
+            Self::frame_action(frame, index + 1 < RASTER_RETIREMENT_STACK_CAPACITY, maximum_items, maximum_bytes)?
         };
         match action {
             RasterRetirementAction::Pending { released_items, released_bytes } => Ok(store::SnapshotRetirementStep::Pending { released_items, released_bytes }),
             RasterRetirementAction::Push(owner) => {
                 if self.depth >= RASTER_RETIREMENT_STACK_CAPACITY {
                     *self.pending_push = Some(owner);
-                    return Err("Raster retirement exceeded its admitted fixed depth".into());
+                    return Err(invariant("Raster retirement exceeded its admitted fixed depth"));
                 }
                 *self.pending_push = Some(owner);
                 Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
@@ -748,7 +831,7 @@ impl RasterOwnedRetirement {
                 let index = self.depth - 1;
                 let frame = self.take_frame(index).expect("Raster retirement completed frame remains retained");
                 if frame.owner.is_some() {
-                    return Err("Raster retirement attempted to release a nonempty frame".into());
+                    return Err(invariant("Raster retirement attempted to release a nonempty frame"));
                 }
                 self.depth -= 1;
                 if index > 0 {
@@ -764,8 +847,18 @@ impl RasterOwnedRetirement {
 }
 
 impl store::ErasedSnapshotRetirement for RasterOwnedRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, ValueError> {
         self.advance(maximum_items.min(1), maximum_bytes)
+    }
+
+    fn next_close_byte_demand(&self) -> usize {
+        if self.pending_empty_page.is_some() || self.pending_push.is_some() || (self.depth == 0 && self.control.is_some()) {
+            return RASTER_CONTROL_BACKING_BYTES;
+        }
+        match self.depth.checked_sub(1).and_then(|index| if index == 0 { self.root.as_ref() } else { let (page, slot) = Self::page_and_slot(index); self.pages.get(page)?.as_ref()?.frames.get(slot)?.as_ref() }) {
+            Some(frame) => Self::frame_byte_demand(frame),
+            None => 1,
+        }
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -817,7 +910,7 @@ impl RasterSnapshotRootRetirement {
 }
 
 impl store::ErasedSnapshotRetirement for RasterSnapshotRootRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, ValueError> {
         if maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -828,7 +921,7 @@ impl store::ErasedSnapshotRetirement for RasterSnapshotRootRetirement {
                     return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
                 }
                 Err("raster-store.standalone-control-capacity") => return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }),
-                Err(code) => return Err(code.into()),
+                Err(code) => return Err(invariant(code)),
             }
         }
         if let Some(retirement) = self.retirement.as_mut() {
@@ -840,7 +933,7 @@ impl store::ErasedSnapshotRetirement for RasterSnapshotRootRetirement {
                     drop(self.retirement.take());
                     Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: RASTER_CONTROL_BACKING_BYTES })
                 }
-                store::SnapshotRetirementStep::Complete => Err("Raster snapshot root retirement reported false terminal".into()),
+                store::SnapshotRetirementStep::Complete => Err(invariant("Raster snapshot root retirement reported false terminal")),
                 step => Ok(step),
             };
         }
@@ -859,7 +952,7 @@ impl store::ErasedSnapshotRetirement for RasterSnapshotRootRetirement {
                 if maximum_bytes < RASTER_CONTROL_BACKING_BYTES {
                     return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
                 }
-                if !control.release()? {
+                if !control.release().map_err(invariant)? {
                     return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
                 }
                 drop(self.control.take());
@@ -1345,19 +1438,19 @@ impl RasterDslValueBoundsAuthority {
         Self { layer_depth, depth: 0, path: [0; RASTER_MAXIMUM_NESTED_DEPTH], frames: [RasterTraversalFrame::EMPTY; RASTER_MAXIMUM_NESTED_DEPTH], terminal: false }
     }
 
-    fn value_at<'a>(root: &'a dsl::DslValue, path: &[usize]) -> Option<&'a dsl::DslValue> {
+    fn value_at<'a>(root: &'a semio_framework_value::DslValue, path: &[usize]) -> Option<&'a semio_framework_value::DslValue> {
         let mut value = root;
         for index in path {
             value = match value {
-                dsl::DslValue::Array(values) => values.get(*index)?,
-                dsl::DslValue::Object(values) => &values.get(*index)?.1,
+                semio_framework_value::DslValue::Array(values) => values.get(*index)?,
+                semio_framework_value::DslValue::Object(values) => &values.get(*index)?.1,
                 _ => return None,
             };
         }
         Some(value)
     }
 
-    fn step(&mut self, root: &dsl::DslValue, totals: &mut RasterOwnerTotals, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
+    fn step(&mut self, root: &semio_framework_value::DslValue, totals: &mut RasterOwnerTotals, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
         if self.terminal {
             return Ok(true);
         }
@@ -1368,12 +1461,12 @@ impl RasterDslValueBoundsAuthority {
             if !raster_reserve_unit(cx) {
                 return Ok(false);
             }
-            totals.add(1, size_of::<dsl::DslValue>(), 1, size_of::<dsl::DslValue>())?;
+            totals.add(1, size_of::<semio_framework_value::DslValue>(), 1, size_of::<semio_framework_value::DslValue>())?;
             match value {
-                dsl::DslValue::String(value) => totals.string(value)?,
-                dsl::DslValue::Bytes(value) => totals.vector(value)?,
-                dsl::DslValue::Array(values) => totals.vector(values)?,
-                dsl::DslValue::Object(values) => totals.vector(values)?,
+                semio_framework_value::DslValue::String(value) => totals.string(value)?,
+                semio_framework_value::DslValue::Bytes(value) => totals.vector(value)?,
+                semio_framework_value::DslValue::Array(values) => totals.vector(values)?,
+                semio_framework_value::DslValue::Object(values) => totals.vector(values)?,
                 _ => {}
             }
             self.frames[self.depth].phase = 1;
@@ -1381,7 +1474,7 @@ impl RasterDslValueBoundsAuthority {
         }
         let child = frame.child;
         match value {
-            dsl::DslValue::Object(values) if frame.phase == 1 && child < values.len() => {
+            semio_framework_value::DslValue::Object(values) if frame.phase == 1 && child < values.len() => {
                 if !raster_reserve_unit(cx) {
                     return Ok(false);
                 }
@@ -1390,8 +1483,8 @@ impl RasterDslValueBoundsAuthority {
                 return Ok(false);
             }
             _ if match value {
-                dsl::DslValue::Array(values) => child < values.len(),
-                dsl::DslValue::Object(values) => frame.phase == 2 && child < values.len(),
+                semio_framework_value::DslValue::Array(values) => child < values.len(),
+                semio_framework_value::DslValue::Object(values) => frame.phase == 2 && child < values.len(),
                 _ => false,
             } =>
             {
@@ -1601,7 +1694,7 @@ fn raster_clone_owned_string(source: &String) -> Result<String, &'static str> {
 }
 
 struct RasterDslValueCloneAuthority {
-    value: std::mem::ManuallyDrop<Option<dsl::DslValue>>,
+    value: std::mem::ManuallyDrop<Option<semio_framework_value::DslValue>>,
     retirement: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
     depth: usize,
     path: [usize; RASTER_MAXIMUM_NESTED_DEPTH],
@@ -1612,19 +1705,19 @@ struct RasterDslValueCloneAuthority {
 }
 
 impl RasterDslValueCloneAuthority {
-    fn skeleton(source: &dsl::DslValue) -> dsl::DslValue {
+    fn skeleton(source: &semio_framework_value::DslValue) -> semio_framework_value::DslValue {
         match source {
-            dsl::DslValue::Null => dsl::DslValue::Null,
-            dsl::DslValue::Bool(value) => dsl::DslValue::Bool(*value),
-            dsl::DslValue::Number(value) => dsl::DslValue::Number(*value),
-            dsl::DslValue::String(_) => dsl::DslValue::String(String::new()),
-            dsl::DslValue::Bytes(_) => dsl::DslValue::Bytes(Vec::new()),
-            dsl::DslValue::Array(values) => dsl::DslValue::Array(Vec::with_capacity(values.capacity())),
-            dsl::DslValue::Object(values) => dsl::DslValue::Object(Vec::with_capacity(values.capacity())),
+            semio_framework_value::DslValue::Null => semio_framework_value::DslValue::Null,
+            semio_framework_value::DslValue::Bool(value) => semio_framework_value::DslValue::Bool(*value),
+            semio_framework_value::DslValue::Number(value) => semio_framework_value::DslValue::Number(*value),
+            semio_framework_value::DslValue::String(_) => semio_framework_value::DslValue::String(String::new()),
+            semio_framework_value::DslValue::Bytes(_) => semio_framework_value::DslValue::Bytes(Vec::new()),
+            semio_framework_value::DslValue::Array(values) => semio_framework_value::DslValue::Array(Vec::with_capacity(values.capacity())),
+            semio_framework_value::DslValue::Object(values) => semio_framework_value::DslValue::Object(Vec::with_capacity(values.capacity())),
         }
     }
 
-    fn new(source: &dsl::DslValue) -> Self {
+    fn new(source: &semio_framework_value::DslValue) -> Self {
         Self {
             value: std::mem::ManuallyDrop::new(Some(Self::skeleton(source))),
             retirement: std::mem::ManuallyDrop::new(None),
@@ -1637,24 +1730,24 @@ impl RasterDslValueCloneAuthority {
         }
     }
 
-    fn target_at_mut<'a>(root: &'a mut dsl::DslValue, path: &[usize]) -> Option<&'a mut dsl::DslValue> {
+    fn target_at_mut<'a>(root: &'a mut semio_framework_value::DslValue, path: &[usize]) -> Option<&'a mut semio_framework_value::DslValue> {
         let Some((head, tail)) = path.split_first() else { return Some(root) };
         match root {
-            dsl::DslValue::Array(values) => Self::target_at_mut(values.get_mut(*head)?, tail),
-            dsl::DslValue::Object(values) => Self::target_at_mut(&mut values.get_mut(*head)?.1, tail),
+            semio_framework_value::DslValue::Array(values) => Self::target_at_mut(values.get_mut(*head)?, tail),
+            semio_framework_value::DslValue::Object(values) => Self::target_at_mut(&mut values.get_mut(*head)?.1, tail),
             _ => None,
         }
     }
 
-    fn observe_container_capacity(source: &dsl::DslValue, target: &dsl::DslValue, totals: &mut RasterOwnerTotals) -> Result<(), &'static str> {
+    fn observe_container_capacity(source: &semio_framework_value::DslValue, target: &semio_framework_value::DslValue, totals: &mut RasterOwnerTotals) -> Result<(), &'static str> {
         match (source, target) {
-            (dsl::DslValue::Array(source), dsl::DslValue::Array(target)) => totals.observe_candidate_capacity(source.capacity(), target.capacity(), size_of::<dsl::DslValue>()),
-            (dsl::DslValue::Object(source), dsl::DslValue::Object(target)) => totals.observe_candidate_capacity(source.capacity(), target.capacity(), size_of::<(String, dsl::DslValue)>()),
+            (semio_framework_value::DslValue::Array(source), semio_framework_value::DslValue::Array(target)) => totals.observe_candidate_capacity(source.capacity(), target.capacity(), size_of::<semio_framework_value::DslValue>()),
+            (semio_framework_value::DslValue::Object(source), semio_framework_value::DslValue::Object(target)) => totals.observe_candidate_capacity(source.capacity(), target.capacity(), size_of::<(String, semio_framework_value::DslValue)>()),
             _ => Ok(()),
         }
     }
 
-    fn step(&mut self, source_root: &dsl::DslValue, totals: &mut RasterOwnerTotals, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
+    fn step(&mut self, source_root: &semio_framework_value::DslValue, totals: &mut RasterOwnerTotals, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
         if self.terminal {
             return Ok(true);
         }
@@ -1671,13 +1764,13 @@ impl RasterDslValueCloneAuthority {
         let frame = self.frames[self.depth];
         if frame.phase == 0 {
             match (source, target) {
-                (dsl::DslValue::String(source), dsl::DslValue::String(target)) => {
+                (semio_framework_value::DslValue::String(source), semio_framework_value::DslValue::String(target)) => {
                     if !raster_reserve_unit(cx) {
                         return Ok(false);
                     }
                     *target = raster_clone_owned_string(source)?;
                 }
-                (dsl::DslValue::Bytes(source), dsl::DslValue::Bytes(target)) => {
+                (semio_framework_value::DslValue::Bytes(source), semio_framework_value::DslValue::Bytes(target)) => {
                     if source.len() > RASTER_MAXIMUM_NESTED_BYTES {
                         return Err("raster-store.clone-value-bytes-capacity");
                     }
@@ -1693,7 +1786,7 @@ impl RasterDslValueCloneAuthority {
             return Ok(false);
         }
         match (source, target) {
-            (dsl::DslValue::Array(source), dsl::DslValue::Array(target)) if frame.child < source.len() => {
+            (semio_framework_value::DslValue::Array(source), semio_framework_value::DslValue::Array(target)) if frame.child < source.len() => {
                 if self.depth + 1 >= RASTER_MAXIMUM_NESTED_DEPTH {
                     return Err("raster-store.clone-value-depth");
                 }
@@ -1708,7 +1801,7 @@ impl RasterDslValueCloneAuthority {
                 self.frames[self.depth] = RasterTraversalFrame::EMPTY;
                 return Ok(false);
             }
-            (dsl::DslValue::Object(source), dsl::DslValue::Object(target)) if frame.child < source.len() => {
+            (semio_framework_value::DslValue::Object(source), semio_framework_value::DslValue::Object(target)) if frame.child < source.len() => {
                 if frame.phase == 1 {
                     if !raster_reserve_unit(cx) {
                         return Ok(false);
@@ -1745,11 +1838,11 @@ impl RasterDslValueCloneAuthority {
         Ok(self.terminal)
     }
 
-    fn take(&mut self) -> Option<dsl::DslValue> {
+    fn take(&mut self) -> Option<semio_framework_value::DslValue> {
         self.terminal.then(|| self.value.take()).flatten()
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, ValueError> {
         if maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -1774,7 +1867,7 @@ impl RasterDslValueCloneAuthority {
                 drop(self.retirement.take());
                 Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: RASTER_CONTROL_BACKING_BYTES })
             }
-            store::SnapshotRetirementStep::Complete => Err("Raster value clone retirement false terminal".into()),
+            store::SnapshotRetirementStep::Complete => Err(invariant("Raster value clone retirement false terminal")),
             step => Ok(step),
         }
     }
@@ -1886,7 +1979,7 @@ impl RasterLayerCloneAuthority {
         }
     }
 
-    fn step(&mut self, source_root: &RasterLayerNode, digest: &mut store::ArtifactStoreInitializationDigest, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
+    fn step(&mut self, source_root: &RasterLayerNode, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
         if self.terminal {
             return Ok(true);
         }
@@ -1918,14 +2011,11 @@ impl RasterLayerCloneAuthority {
         let frame = self.frames[self.depth];
         match frame.phase {
             0..=2 => {
-                let locked=crate::standards::v1::subsets::any::schema::layer_locked(source);
                 let (source, target) = &mut Self::strings(source, target)[frame.phase as usize];
                 if !raster_reserve_unit(cx) {
                     return Ok(false);
                 }
                 **target = raster_clone_owned_string(source)?;
-                if frame.phase==0 {digest.observe(&[u8::from(locked)]);}
-                digest.observe(source.as_bytes());
                 self.frames[self.depth].phase += 1;
             }
             3 => {
@@ -1936,7 +2026,6 @@ impl RasterLayerCloneAuthority {
                                 return Ok(false);
                             }
                             *target = Some(raster_clone_owned_string(source)?);
-                            digest.observe(source.as_bytes());
                         } else if !raster_reserve_unit(cx) {
                             return Ok(false);
                         }
@@ -1946,7 +2035,6 @@ impl RasterLayerCloneAuthority {
                             return Ok(false);
                         }
                         *target = raster_clone_owned_string(source)?;
-                        digest.observe(source.as_bytes());
                     }
                     _ if !raster_reserve_unit(cx) => return Ok(false),
                     _ => {}
@@ -2042,7 +2130,7 @@ impl RasterLayerCloneAuthority {
                     _=>None,
                 };
                 if let Some((source,target))=pair {
-                    if let Some(key)=&source.image_key {target.image_key=Some(raster_clone_owned_string(key)?);digest.observe(key.as_bytes());}
+                    if let Some(key)=&source.image_key {target.image_key=Some(raster_clone_owned_string(key)?);}
                 }
                 self.frames[self.depth].phase=7;
             }
@@ -2064,7 +2152,7 @@ impl RasterLayerCloneAuthority {
         self.terminal.then(|| self.value.take()).flatten()
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, ValueError> {
         if maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -2077,7 +2165,7 @@ impl RasterLayerCloneAuthority {
                     drop(self.parameter_value.take());
                     Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: RASTER_CONTROL_BACKING_BYTES })
                 }
-                store::SnapshotRetirementStep::Complete => Err("Raster parameter clone false terminal".into()),
+                store::SnapshotRetirementStep::Complete => Err(invariant("Raster parameter clone false terminal")),
                 step => Ok(step),
             };
         }
@@ -2102,7 +2190,7 @@ impl RasterLayerCloneAuthority {
                 drop(self.retirement.take());
                 Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: RASTER_CONTROL_BACKING_BYTES })
             }
-            store::SnapshotRetirementStep::Complete => Err("Raster layer clone retirement false terminal".into()),
+            store::SnapshotRetirementStep::Complete => Err(invariant("Raster layer clone retirement false terminal")),
             step => Ok(step),
         }
     }
@@ -2256,7 +2344,7 @@ impl RasterSnapshotCloneAuthority {
         }
     }
 
-    fn step(&mut self, source: &RasterSnapshot, digest: &mut store::ArtifactStoreInitializationDigest, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
+    fn step(&mut self, source: &RasterSnapshot, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
         if self.phase == 0 {
             if self.bounds.step(source, cx)? {
                 self.phase = 1;
@@ -2264,20 +2352,18 @@ impl RasterSnapshotCloneAuthority {
             return Ok(false);
         }
         let target = self.value.as_mut().ok_or("raster-store.initializer-clone-target")?;
-        let observed: &[u8] = match self.phase {
+        match self.phase {
             1 => {
                 if !raster_reserve_unit(cx) {
                     return Ok(false);
                 }
                 target.schema = raster_clone_owned_string(&source.schema)?;
-                source.schema.as_bytes()
             }
             2 => {
                 if !raster_reserve_unit(cx) {
                     return Ok(false);
                 }
                 target.id = raster_clone_owned_string(&source.id)?;
-                source.id.as_bytes()
             }
             3 => {
                 if let Some(title) = source.title.as_ref() {
@@ -2285,12 +2371,10 @@ impl RasterSnapshotCloneAuthority {
                         return Ok(false);
                     }
                     target.title = Some(raster_clone_owned_string(title)?);
-                    title.as_bytes()
                 } else {
                     if !raster_reserve_unit(cx) {
                         return Ok(false);
                     }
-                    &[]
                 }
             }
             4 => {
@@ -2303,7 +2387,7 @@ impl RasterSnapshotCloneAuthority {
                     return Ok(false);
                 }
                 if let Some(layer) = self.layer.as_mut() {
-                    if layer.step(source.layers.get(self.index).ok_or("raster-store.initializer-layer-source")?, digest, cx)? {
+                    if layer.step(source.layers.get(self.index).ok_or("raster-store.initializer-layer-source")?, cx)? {
                         if !raster_reserve_unit(cx) {
                             return Ok(false);
                         }
@@ -2324,7 +2408,6 @@ impl RasterSnapshotCloneAuthority {
                     return Ok(false);
                 }
                 self.index = 0;
-                &[]
             }
             5 => {
                 if self.pending_asset.is_none() {
@@ -2399,7 +2482,6 @@ impl RasterSnapshotCloneAuthority {
                     _ => unreachable!("Raster asset field cursor is exact"),
                 };
                 *target_value = raster_clone_owned_string(source_value)?;
-                digest.observe(source_value.as_bytes());
                 self.asset_field += 1;
                 return Ok(false);
             }
@@ -2407,8 +2489,7 @@ impl RasterSnapshotCloneAuthority {
                 self.terminal = true;
                 return Ok(true);
             }
-        };
-        digest.observe(observed);
+        }
         self.phase += 1;
         Ok(false)
     }
@@ -2420,7 +2501,7 @@ impl RasterSnapshotCloneAuthority {
         self.value.take()
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, ValueError> {
         if maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -2433,7 +2514,7 @@ impl RasterSnapshotCloneAuthority {
                     drop(self.layer.take());
                     Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: RASTER_CONTROL_BACKING_BYTES })
                 }
-                store::SnapshotRetirementStep::Complete => Err("Raster active layer clone reported false terminal".into()),
+                store::SnapshotRetirementStep::Complete => Err(invariant("Raster active layer clone reported false terminal")),
                 step => Ok(step),
             };
         }
@@ -2458,7 +2539,7 @@ impl RasterSnapshotCloneAuthority {
                 drop(self.retirement.take());
                 Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: RASTER_CONTROL_BACKING_BYTES })
             }
-            store::SnapshotRetirementStep::Complete => Err("Raster clone retirement reported false terminal".into()),
+            store::SnapshotRetirementStep::Complete => Err(invariant("Raster clone retirement reported false terminal")),
             step => Ok(step),
         }
     }
@@ -2471,420 +2552,6 @@ impl RasterSnapshotCloneAuthority {
 impl Drop for RasterSnapshotCloneAuthority {
     fn drop(&mut self) {
         assert!((self.terminal_is_empty()) || std::thread::panicking(), "Raster snapshot clone reached Drop before exact handoff or cursor retirement");
-    }
-}
-
-struct RasterMutationDigestAuthority {
-    layer: std::mem::ManuallyDrop<Option<Box<RasterLayerCloneAuthority>>>,
-    retirement: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
-    retirement_terminal: bool,
-    phase: u8,
-    offset: usize,
-    terminal: bool,
-}
-
-impl RasterMutationDigestAuthority {
-    fn new() -> Self {
-        Self { layer: std::mem::ManuallyDrop::new(None), retirement: std::mem::ManuallyDrop::new(None), retirement_terminal: false, phase: 0, offset: 0, terminal: false }
-    }
-
-    fn variant(operation: &RasterMutation) -> u8 {
-        match operation {
-            RasterMutation::CreateLayer(_) => 1,
-            RasterMutation::DeleteLayer(_) => 2,
-            RasterMutation::ReorderLayers(_) => 3,
-            RasterMutation::RenameLayer(_) => 4,
-            RasterMutation::ChangeLayerVisible(_) => 5,
-            RasterMutation::ChangeLayerLocked(_) => 16,
-            RasterMutation::ChangeLayerOpacity(_) => 6,
-            RasterMutation::ChangeLayerBlendMode(_) => 7,
-            RasterMutation::MoveLayer(_) => 8,
-            RasterMutation::ResizeLayer(_) => 9,
-            RasterMutation::ChangeLayerAdjustmentKind(_) => 10,
-            RasterMutation::AddLayerAsset(_) => 11,
-            RasterMutation::RemoveLayerAsset(_) => 12,
-            RasterMutation::ChangeLayerPixels(_) => 13,
-            RasterMutation::ChangeLayerMask(_) => 14,
-            RasterMutation::ChangeLayerTransform(_)=>17,
-            RasterMutation::ChangeLayerAdjustmentParameter(_) => 15,
-            RasterMutation::PaintStroke(_) => 18,
-            RasterMutation::FillRegion(_) => 19,
-        }
-    }
-
-    fn observe_string(digest: &mut store::ArtifactStoreInitializationDigest, value: &String, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
-        if value.capacity() > RASTER_OWNED_FIELD_BYTES {
-            return Err("raster-store.digest-string-capacity");
-        }
-        if !raster_reserve_unit(cx) {
-            return Ok(false);
-        }
-        digest.observe(&(value.len() as u64).to_be_bytes());
-        digest.observe(value.as_bytes());
-        Ok(true)
-    }
-
-    fn observe_scalar(digest: &mut store::ArtifactStoreInitializationDigest, bytes: &[u8], cx: &mut semio_framework_job::StepContext<'_>) -> bool {
-        if !raster_reserve_unit(cx) {
-            return false;
-        }
-        digest.observe(bytes);
-        true
-    }
-
-    fn finish(&mut self, digest: &mut store::ArtifactStoreInitializationDigest, cx: &mut semio_framework_job::StepContext<'_>) -> bool {
-        if !Self::observe_scalar(digest, &[0xff], cx) {
-            return false;
-        }
-        self.terminal = true;
-        true
-    }
-
-    fn step(&mut self, operation: &RasterMutation, digest: &mut store::ArtifactStoreInitializationDigest, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
-        if self.terminal {
-            return Ok(true);
-        }
-        if self.retirement_terminal {
-            if !raster_reserve_unit(cx) {
-                return Ok(false);
-            }
-            drop(self.retirement.take());
-            self.retirement_terminal = false;
-            return Ok(false);
-        }
-        if let Some(retirement) = self.retirement.as_mut() {
-            return match retirement.close_step(1, RASTER_OWNED_FIELD_BYTES).map_err(|_| "raster-store.digest-layer-retirement")? {
-                store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
-                    self.retirement_terminal = true;
-                    Ok(false)
-                }
-                store::SnapshotRetirementStep::Complete => Err("raster-store.digest-layer-false-terminal"),
-                _ => Ok(false),
-            };
-        }
-        if self.phase == 0 {
-            if !Self::observe_scalar(digest, &[Self::variant(operation)], cx) {
-                return Ok(false);
-            }
-            self.phase = 1;
-            return Ok(false);
-        }
-        macro_rules! string_phase {
-            ($value:expr, $next:expr) => {{
-                if !Self::observe_string(digest, $value, cx)? {
-                    return Ok(false);
-                }
-                self.phase = $next;
-                return Ok(false);
-            }};
-        }
-        macro_rules! scalar_phase {
-            ($value:expr, $next:expr) => {{
-                if !Self::observe_scalar(digest, $value, cx) {
-                    return Ok(false);
-                }
-                self.phase = $next;
-                return Ok(false);
-            }};
-        }
-        match operation {
-            RasterMutation::CreateLayer(value) => match self.phase {
-                1 => {
-                    scalar_phase!(&[u8::from(value.parent_id.is_some())], if value.parent_id.is_some() { 2 } else { 3 });
-                }
-                2 => string_phase!(value.parent_id.as_ref().ok_or("raster-store.digest-create-parent")?, 3),
-                3 => scalar_phase!(&(value.index as u64).to_be_bytes(), 4),
-                4 => {
-                    if self.layer.is_none() {
-                        if size_of::<RasterLayerCloneAuthority>() > RASTER_CONTROL_BACKING_BYTES {
-                            return Err("raster-store.digest-layer-control-capacity");
-                        }
-                        if !raster_reserve_unit(cx) {
-                            return Ok(false);
-                        }
-                        *self.layer = Some(Box::new(RasterLayerCloneAuthority::new(&value.layer)));
-                        return Ok(false);
-                    }
-                    let layer = self.layer.as_mut().expect("Raster mutation digest layer remains retained");
-                    if !layer.step(&value.layer, digest, cx)? {
-                        return Ok(false);
-                    }
-                    if !raster_reserve_unit(cx) {
-                        return Ok(false);
-                    }
-                    let layer = layer.take().ok_or("raster-store.digest-layer-handoff")?;
-                    drop(self.layer.take());
-                    *self.retirement = Some(Box::new(RasterOwnedRetirement::new(RasterRetirementOwner::Layer(layer))));
-                    Ok(false)
-                }
-                _ => Ok(self.finish(digest, cx)),
-            },
-            RasterMutation::DeleteLayer(value) => match self.phase {
-                1 => string_phase!(&value.layer_id, 2),
-                _ => Ok(self.finish(digest, cx)),
-            },
-            RasterMutation::ReorderLayers(value) => match self.phase {
-                1 => string_phase!(&value.layer_id, 2),
-                2 => {
-                    scalar_phase!(&[u8::from(value.parent_id.is_some())], if value.parent_id.is_some() { 3 } else { 4 });
-                }
-                3 => string_phase!(value.parent_id.as_ref().ok_or("raster-store.digest-reorder-parent")?, 4),
-                4 => scalar_phase!(&(value.index as u64).to_be_bytes(), 5),
-                _ => Ok(self.finish(digest, cx)),
-            },
-            RasterMutation::RenameLayer(value) => match self.phase {
-                1 => string_phase!(&value.layer_id, 2),
-                2 => string_phase!(&value.new_name, 3),
-                _ => Ok(self.finish(digest, cx)),
-            },
-            RasterMutation::ChangeLayerLocked(value) => match self.phase {
-                1=>string_phase!(&value.layer_id,2),
-                2=>scalar_phase!(&[u8::from(value.expected),u8::from(value.locked)],3),
-                _=>Ok(self.finish(digest,cx)),
-            },
-            RasterMutation::ChangeLayerVisible(value) => match self.phase {
-                1 => string_phase!(&value.layer_id, 2),
-                2 => scalar_phase!(&[u8::from(value.new_visible)], 3),
-                _ => Ok(self.finish(digest, cx)),
-            },
-            RasterMutation::ChangeLayerOpacity(value) => match self.phase {
-                1 => string_phase!(&value.layer_id, 2),
-                2 => scalar_phase!(&value.new_opacity.to_bits().to_be_bytes(), 3),
-                _ => Ok(self.finish(digest, cx)),
-            },
-            RasterMutation::ChangeLayerBlendMode(value) => match self.phase {
-                1 => string_phase!(&value.layer_id, 2),
-                2 => string_phase!(&value.new_blend_mode, 3),
-                _ => Ok(self.finish(digest, cx)),
-            },
-            RasterMutation::MoveLayer(value) => match self.phase {
-                1 => string_phase!(&value.layer_id, 2),
-                2 => scalar_phase!(&value.new_x.to_bits().to_be_bytes(), 3),
-                3 => scalar_phase!(&value.new_y.to_bits().to_be_bytes(), 4),
-                _ => Ok(self.finish(digest, cx)),
-            },
-            RasterMutation::ResizeLayer(value) => match self.phase {
-                1 => string_phase!(&value.layer_id, 2),
-                2 => scalar_phase!(&value.new_width.to_be_bytes(), 3),
-                3 => scalar_phase!(&value.new_height.to_be_bytes(), 4),
-                _ => Ok(self.finish(digest, cx)),
-            },
-            RasterMutation::ChangeLayerAdjustmentKind(value) => match self.phase {
-                1 => string_phase!(&value.layer_id, 2),
-                2 => string_phase!(&value.new_adjustment_kind, 3),
-                _ => Ok(self.finish(digest, cx)),
-            },
-            RasterMutation::AddLayerAsset(value) => match self.phase {
-                1 => string_phase!(&value.asset_id, 2),
-                2 => string_phase!(&value.asset.mime, 3),
-                3 => {
-                    if value.asset.data.len() > RASTER_MAXIMUM_NESTED_BYTES {
-                        return Err("raster-store.digest-asset-byte-capacity");
-                    }
-                    let end = self.offset.saturating_add(256).min(value.asset.data.len());
-                    if self.offset < end {
-                        if !Self::observe_scalar(digest, &value.asset.data[self.offset..end], cx) {
-                            return Ok(false);
-                        }
-                        self.offset = end;
-                        return Ok(false);
-                    }
-                    self.phase = 4;
-                    Ok(false)
-                }
-                _ => Ok(self.finish(digest, cx)),
-            },
-            RasterMutation::ChangeLayerAdjustmentParameter(value) => match self.phase {
-                1 => string_phase!(&value.layer_id, 2),
-                2 => string_phase!(&value.parameter, 3),
-                3 | 4 => {
-                    let value=if self.phase==3 {value.expected} else {value.value};
-                    let fields=value.map_or([0;9],crate::RasterAdjustmentNumber::digest);
-                    scalar_phase!(&fields,self.phase+1)
-                }
-                _ => Ok(self.finish(digest,cx)),
-            },
-            RasterMutation::ChangeLayerTransform(value)=>match self.phase {
-                1=>string_phase!(&value.layer_id,2),
-                2|3=>{
-                    let transform=if self.phase==2 {&value.expected}else{&value.transform};let mut fields=[0_u8;48];
-                    for (index,number) in transform.as_affine().iter().enumerate(){fields[index*8..index*8+8].copy_from_slice(&number.to_bits().to_be_bytes());}
-                    scalar_phase!(&fields,self.phase+1)
-                }
-                _=>Ok(self.finish(digest,cx)),
-            },
-            RasterMutation::ChangeLayerMask(value) => match self.phase {
-                1 => string_phase!(&value.layer_id, 2),
-                2 | 4 => {
-                    let mask = if self.phase == 2 { &value.expected } else { &value.mask };
-                    let mut fields = [0_u8; 63];
-                    if let Some(mask) = mask {
-                        fields[0] = 1;
-                        fields[1] = u8::from(mask.enabled);
-                        fields[2] = u8::from(mask.linked);
-                        fields[3] = u8::from(mask.invert);
-                        fields[4] = u8::from(mask.width.is_some());
-                        fields[5] = u8::from(mask.height.is_some());
-                        fields[6] = u8::from(mask.image_key.is_some());
-                        fields[7..11].copy_from_slice(&mask.width.unwrap_or(0).to_be_bytes());
-                        fields[11..15].copy_from_slice(&mask.height.unwrap_or(0).to_be_bytes());
-                        let t = &mask.transform;
-                        for (index, number) in [t.x, t.y, t.a, t.b, t.c, t.d].iter().enumerate() {
-                            fields[15 + index * 8..23 + index * 8].copy_from_slice(&number.to_bits().to_be_bytes());
-                        }
-                    }
-                    scalar_phase!(&fields, self.phase + 1)
-                }
-                3 | 5 => {
-                    let mask = if self.phase == 3 { &value.expected } else { &value.mask };
-                    if let Some(key) = mask.as_ref().and_then(|mask| mask.image_key.as_ref()) {
-                        string_phase!(key, self.phase + 1)
-                    } else {
-                        scalar_phase!(&[], self.phase + 1)
-                    }
-                }
-                _ => Ok(self.finish(digest, cx)),
-            },
-            RasterMutation::ChangeLayerPixels(value) => match self.phase {
-                1 => string_phase!(&value.layer_id, 2),
-                2 => scalar_phase!(&[u8::from(value.expected_image_key.is_some())], if value.expected_image_key.is_some() { 3 } else { 4 }),
-                3 => string_phase!(value.expected_image_key.as_ref().ok_or("raster-store.digest-image-expected")?, 4),
-                4 => scalar_phase!(&[u8::from(value.content.image_key.is_some())], if value.content.image_key.is_some() { 5 } else { 6 }),
-                5 => string_phase!(value.content.image_key.as_ref().ok_or("raster-store.digest-image-key")?, 6),
-                6 => {
-                    let mut fields = [0_u8; 57];
-                    fields[..4].copy_from_slice(&value.content.width.unwrap_or(0).to_be_bytes());
-                    fields[4..8].copy_from_slice(&value.content.height.unwrap_or(0).to_be_bytes());
-                    if let Some(transform) = &value.transform {
-                        fields[8] = 1;
-                        for (index, number) in [transform.x, transform.y, transform.a, transform.b, transform.c, transform.d].iter().enumerate() {
-                            fields[9 + index * 8..17 + index * 8].copy_from_slice(&number.to_bits().to_be_bytes());
-                        }
-                    }
-                    scalar_phase!(&fields, 7)
-                }
-                _ => Ok(self.finish(digest, cx)),
-            },
-            RasterMutation::RemoveLayerAsset(value) => match self.phase {
-                1 => string_phase!(&value.asset_id, 2),
-                _ => Ok(self.finish(digest, cx)),
-            },
-            RasterMutation::PaintStroke(value) => match self.phase {
-                1 => string_phase!(&value.layer_id, 2),
-                2 => string_phase!(&value.target, 3),
-                3 => string_phase!(&value.tool, 4),
-                4 => {
-                    let brush = &value.brush;
-                    let mut fields = Vec::with_capacity(32 + brush.color.len() * 8);
-                    for number in [brush.size, brush.hardness, brush.opacity, brush.color.len() as f64].into_iter().chain(brush.color.iter().copied()) {
-                        fields.extend_from_slice(&number.to_bits().to_be_bytes());
-                    }
-                    scalar_phase!(&fields, 5)
-                }
-                5 => {
-                    let end = self.offset.saturating_add(16).min(value.points.len());
-                    if self.offset < end {
-                        let mut fields = Vec::with_capacity((end - self.offset) * 16);
-                        for point in &value.points[self.offset..end] {
-                            fields.extend_from_slice(&point.x.to_bits().to_be_bytes());
-                            fields.extend_from_slice(&point.y.to_bits().to_be_bytes());
-                        }
-                        if !Self::observe_scalar(digest, &fields, cx) {
-                            return Ok(false);
-                        }
-                        self.offset = end;
-                        return Ok(false);
-                    }
-                    scalar_phase!(&(value.points.len() as u64).to_be_bytes(), 6)
-                }
-                6 => {
-                    let mut fields = vec![u8::from(value.selection.is_some())];
-                    for span in value.selection.iter().flatten() {
-                        for number in [span.start, span.length, span.coverage] {
-                            fields.extend_from_slice(&number.to_be_bytes());
-                        }
-                    }
-                    scalar_phase!(&fields, 7)
-                }
-                _ => Ok(self.finish(digest, cx)),
-            },
-            RasterMutation::FillRegion(value) => match self.phase {
-                1 => string_phase!(&value.layer_id, 2),
-                2 => string_phase!(&value.target, 3),
-                3 => {
-                    let mut fields = Vec::with_capacity(16 + value.color.len() * 8);
-                    for number in [value.seed.x, value.seed.y, value.tolerance, value.color.len() as u32] {
-                        fields.extend_from_slice(&number.to_be_bytes());
-                    }
-                    for channel in &value.color {
-                        fields.extend_from_slice(&channel.to_bits().to_be_bytes());
-                    }
-                    scalar_phase!(&fields, 4)
-                }
-                4 => {
-                    let mut fields = vec![u8::from(value.selection.is_some())];
-                    for span in value.selection.iter().flatten() {
-                        for number in [span.start, span.length, span.coverage] {
-                            fields.extend_from_slice(&number.to_be_bytes());
-                        }
-                    }
-                    scalar_phase!(&fields, 5)
-                }
-                _ => Ok(self.finish(digest, cx)),
-            },
-        }
-    }
-
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
-        if maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if self.retirement_terminal {
-            if maximum_bytes < RASTER_CONTROL_BACKING_BYTES {
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-            }
-            drop(self.retirement.take());
-            self.retirement_terminal = false;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: RASTER_CONTROL_BACKING_BYTES });
-        }
-        if let Some(layer) = self.layer.as_mut() {
-            return match layer.close_step(1, maximum_bytes)? {
-                store::SnapshotRetirementStep::Complete if layer.terminal_is_empty() => {
-                    if maximum_bytes < RASTER_CONTROL_BACKING_BYTES {
-                        return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-                    }
-                    drop(self.layer.take());
-                    Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: RASTER_CONTROL_BACKING_BYTES })
-                }
-                store::SnapshotRetirementStep::Complete => Err("Raster digest layer false terminal".into()),
-                step => Ok(step),
-            };
-        }
-        if let Some(retirement) = self.retirement.as_mut() {
-            return match retirement.close_step(1, maximum_bytes)? {
-                store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
-                    if maximum_bytes < RASTER_CONTROL_BACKING_BYTES {
-                        return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-                    }
-                    drop(self.retirement.take());
-                    Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: RASTER_CONTROL_BACKING_BYTES })
-                }
-                store::SnapshotRetirementStep::Complete => Err("Raster digest retirement false terminal".into()),
-                step => Ok(step),
-            };
-        }
-        self.terminal = true;
-        Ok(store::SnapshotRetirementStep::Complete)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.layer.is_none() && self.retirement.is_none() && !self.retirement_terminal
-    }
-}
-
-impl Drop for RasterMutationDigestAuthority {
-    fn drop(&mut self) {
-        assert!((self.terminal_is_empty()) || std::thread::panicking(), "Raster mutation digest reached Drop with a retained derived owner");
     }
 }
 
@@ -3087,6 +2754,9 @@ impl RasterMutationCandidateAuthority {
             RasterMutation::ChangeLayerAdjustmentKind(value) => Some(&value.layer_id),
             RasterMutation::PaintStroke(value) => Some(&value.layer_id),
             RasterMutation::FillRegion(value) => Some(&value.layer_id),
+            RasterMutation::ApplyFilter(value) => Some(&value.layer_id),
+            RasterMutation::TransformImage(value) => Some(&value.layer_id),
+            RasterMutation::FillSelection(value) => Some(&value.layer_id),
             RasterMutation::AddLayerAsset(_) | RasterMutation::RemoveLayerAsset(_) => None,
         }
     }
@@ -3173,8 +2843,7 @@ impl RasterMutationCandidateAuthority {
                     return Ok(false);
                 }
                 let clone = self.clone.as_mut().ok_or("raster-store.mutation-clone")?;
-                let mut digest = store::ArtifactStoreInitializationDigest::new(b"raster.mutation-candidate");
-                if !clone.step(current, &mut digest, cx)? {
+                if !clone.step(current, cx)? {
                     return Ok(false);
                 }
                 if !raster_reserve_unit(cx) {
@@ -3251,8 +2920,7 @@ impl RasterMutationCandidateAuthority {
                     return Ok(false);
                 }
                 let clone = self.layer_clone.as_mut().expect("Raster create layer clone remains retained");
-                let mut digest = store::ArtifactStoreInitializationDigest::new(b"raster.create-layer");
-                if !clone.step(&value.layer, &mut digest, cx)? {
+                if !clone.step(&value.layer, cx)? {
                     return Ok(false);
                 }
                 if !raster_reserve_unit(cx) {
@@ -3284,7 +2952,7 @@ impl RasterMutationCandidateAuthority {
                     }
                     RasterMutation::ChangeLayerLocked(value)=>{
                         if !raster_reserve_unit(cx){return Ok(false);}
-                        crate::mutations::change_layer_locked::validate(value,snapshot)?;
+                        crate::mutations::change_layer_locked::validate(value,snapshot).map_err(|code| code.as_str())?;
                         let (RasterLayerNode::Pixel {locked,..}|RasterLayerNode::Group {locked,..}|RasterLayerNode::Adjustment {locked,..})=RasterLayerLocator::node_at_mut(snapshot,self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")?;
                         *locked=value.locked;
                     }
@@ -3341,7 +3009,7 @@ impl RasterMutationCandidateAuthority {
                         *height = Some(value.new_height);
                     }
                     RasterMutation::ChangeLayerAdjustmentParameter(value) => {
-                        crate::mutations::change_layer_adjustment_parameter::validate(value,snapshot)?;
+                        crate::mutations::change_layer_adjustment_parameter::validate(value,snapshot).map_err(|code| code.as_str())?;
                         let RasterLayerNode::Adjustment {params,..}=RasterLayerLocator::node_at_mut(snapshot,self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")? else {return Err("raster-store.mutation-adjustment-target");};
                         if value.value.is_some() && params.page_required_for_insert(&value.parameter) {
                             if !raster_reserve_unit(cx) {return Ok(false);}
@@ -3357,13 +3025,13 @@ impl RasterMutationCandidateAuthority {
                     }
                     RasterMutation::ChangeLayerTransform(value)=>{
                         if !raster_reserve_unit(cx){return Ok(false);}
-                        crate::mutations::change_layer_transform::validate(value,snapshot)?;
+                        crate::mutations::change_layer_transform::validate(value,snapshot).map_err(|code| code.as_str())?;
                         let (RasterLayerNode::Pixel {transform,..}|RasterLayerNode::Group {transform,..})=RasterLayerLocator::node_at_mut(snapshot,self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")? else {return Err("raster-store.mutation-transform-target");};
                         *transform=value.transform.clone();
                     }
                     RasterMutation::ChangeLayerMask(value) => {
                         if !raster_reserve_unit(cx) { return Ok(false); }
-                        crate::mutations::change_layer_mask::validate(value, snapshot)?;
+                        crate::mutations::change_layer_mask::validate(value, snapshot).map_err(|code| code.as_str())?;
                         let replacement = value.mask.as_ref().map(|mask| {
                             Ok::<_, &'static str>(crate::RasterLayerMask {
                                 enabled: mask.enabled, linked: mask.linked, invert: mask.invert,
@@ -3378,7 +3046,7 @@ impl RasterMutationCandidateAuthority {
                     }
                     RasterMutation::ChangeLayerPixels(value) => {
                         if !raster_reserve_unit(cx) { return Ok(false); }
-                        crate::mutations::change_layer_pixels::validate(value, snapshot)?;
+                        crate::mutations::change_layer_pixels::validate(value, snapshot).map_err(|code| code.as_str())?;
                         let replacement = value.content.image_key.as_ref().map(raster_clone_owned_string).transpose()?;
                         let RasterLayerNode::Pixel { image_key, width, height, transform, .. } = RasterLayerLocator::node_at_mut(snapshot, self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")? else { return Err("raster-store.mutation-pixels-target"); };
                         if let Some(previous) = std::mem::replace(image_key, replacement) {
@@ -3413,12 +3081,12 @@ impl RasterMutationCandidateAuthority {
                         let (key, child) = removed.take();
                         *self.retirement = Some(Box::new(RasterOwnedRetirement::new(RasterRetirementOwner::AssetEntry { key, child: Some(child) })));
                     }
-                    RasterMutation::PaintStroke(_) | RasterMutation::FillRegion(_) => {
+                    RasterMutation::PaintStroke(_) | RasterMutation::FillRegion(_) | RasterMutation::ApplyFilter(_) | RasterMutation::TransformImage(_) | RasterMutation::FillSelection(_) => {
                         if !raster_reserve_unit(cx) {
                             return Ok(false);
                         }
                         let outcome = protocol::Mutation::diff(operation, &*snapshot);
-                        let refused = outcome.messages().iter().any(|message| matches!(message.level, protocol::Severity::Error | protocol::Severity::Fatal));
+                        let refused = outcome.messages().iter().any(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal));
                         let (diff, _) = outcome.into_parts();
                         let painted = if refused { Err("raster-store.mutation-paint-refused") } else { protocol::MutationDiff::apply(&diff, snapshot).map_err(|_| "raster-store.mutation-paint-apply") };
                         protocol::MutationDiff::retire_cold(diff);
@@ -3599,7 +3267,7 @@ impl RasterMutationCandidateAuthority {
         self.terminal.then(|| self.value.take()).flatten()
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, ValueError> {
         if maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -3614,7 +3282,7 @@ impl RasterMutationCandidateAuthority {
                     self.retirement_terminal = false;
                     Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: RASTER_CONTROL_BACKING_BYTES })
                 }
-                store::SnapshotRetirementStep::Complete => Err("Raster candidate retirement false terminal".into()),
+                store::SnapshotRetirementStep::Complete => Err(invariant("Raster candidate retirement false terminal")),
                 step => Ok(step),
             };
         }
@@ -3627,7 +3295,7 @@ impl RasterMutationCandidateAuthority {
                     drop(self.layer_clone.take());
                     Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: RASTER_CONTROL_BACKING_BYTES })
                 }
-                store::SnapshotRetirementStep::Complete => Err("Raster candidate layer clone false terminal".into()),
+                store::SnapshotRetirementStep::Complete => Err(invariant("Raster candidate layer clone false terminal")),
                 step => Ok(step),
             };
         }
@@ -3640,7 +3308,7 @@ impl RasterMutationCandidateAuthority {
                     drop(self.clone.take());
                     Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: RASTER_CONTROL_BACKING_BYTES })
                 }
-                store::SnapshotRetirementStep::Complete => Err("Raster candidate snapshot clone false terminal".into()),
+                store::SnapshotRetirementStep::Complete => Err(invariant("Raster candidate snapshot clone false terminal")),
                 step => Ok(step),
             };
         }
@@ -3701,8 +3369,8 @@ impl RasterOneItemApply {
 
     /// ▶️ Spends up to `fuel` units; `Ok(Some(post))` once the candidate has produced the post
     /// snapshot, `Ok(None)` while more grants are needed.
-    pub fn advance(&mut self, base: &RasterSnapshot, operation: &RasterMutation, operation_id: semio_framework_job::OperationId, generation: semio_framework_job::Generation, fuel: u64) -> Result<Option<RasterSnapshot>, String> {
-        let candidate = self.candidate.as_mut().ok_or_else(|| "raster-store.one-item-apply-candidate-absent".to_string())?;
+    pub fn advance(&mut self, base: &RasterSnapshot, operation: &RasterMutation, operation_id: semio_framework_job::OperationId, generation: semio_framework_job::Generation, fuel: u64) -> Result<Option<RasterSnapshot>, ValueError> {
+        let candidate = self.candidate.as_mut().ok_or_else(|| invariant("raster-store.one-item-apply-candidate-absent"))?;
         let budget = semio_framework_job::StepBudget::new(fuel.max(1), u64::MAX);
         let mut cx = semio_framework_job::StepContext::new(operation_id, generation, budget, semio_framework_job::CancelToken::root_now(), raster_frozen_now_us, &mut self.preview_sequence);
         // 🔁️ Every `Ok(false)` that did not spend fuel is a scheduler-style yield (a blocked pump,
@@ -3718,12 +3386,12 @@ impl RasterOneItemApply {
                 }
                 Ok(false) if cx.should_yield() || spins == 0 => return Ok(None),
                 Ok(false) => spins -= 1,
-                Err(code) => return Err(code.to_string()),
+                Err(code) => return Err(invariant(code)),
             }
         }
     }
 
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, ValueError> {
         let Some(candidate) = self.candidate.as_mut() else { return Ok(store::SnapshotRetirementStep::Complete) };
         let step = candidate.close_step(maximum_items, maximum_bytes)?;
         if candidate.terminal_is_empty() {
@@ -3757,16 +3425,14 @@ pub fn raster_document_store_owners() -> store::DocumentStoreOwners<RasterSnapsh
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum RasterStoreInitializationPhase {
     ValidateEnvelope,
-    ValidateEditPair { left: usize, right: usize },
+    ValidateEdit { index: usize },
     CloneInitial,
     SeedHistory { edit: usize, lane: u8, index: usize },
-    FindApplied { position: usize, scan: usize },
+    FoldSupersessions { transition: usize },
+    FindApplied { position: usize },
     ApplyForward { position: usize, edit: usize, mutation: usize },
-    HashInverse { position: usize, edit: usize, mutation: usize },
     CommitApplied { position: usize, edit: usize },
-    FindRedo { position: usize, scan: usize },
-    HashRedoForward { position: usize, edit: usize, mutation: usize },
-    HashRedoInverse { position: usize, edit: usize, mutation: usize },
+    FindRedo { position: usize },
     CommitRedo { position: usize, edit: usize },
     BuildCandidate,
     ReleaseControlSuccess,
@@ -3788,11 +3454,9 @@ struct RasterStoreInitializationAuthority {
     envelope_retirement: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
     envelope_retirement_terminal: bool,
     clone: std::mem::ManuallyDrop<Option<RasterSnapshotCloneAuthority>>,
-    mutation_digest: std::mem::ManuallyDrop<Option<RasterMutationDigestAuthority>>,
     mutation_candidate: std::mem::ManuallyDrop<Option<RasterMutationCandidateAuthority>>,
     candidate_disposer: std::mem::ManuallyDrop<Option<semio_framework_plugin::ArtifactDocumentStoreDisposer<RasterSnapshot, RasterMutation>>>,
-    initial_digest: std::mem::ManuallyDrop<Option<store::ArtifactStoreInitializationDigest>>,
-    edit_digest: std::mem::ManuallyDrop<Option<store::ArtifactStoreInitializationDigest>>,
+    edit_index: store::ArtifactStoreInitializationEditIndex,
     control_reservation: std::mem::ManuallyDrop<Option<RasterInitializationControlReservation>>,
     phase: RasterStoreInitializationPhase,
     cancel_requested: bool,
@@ -3813,11 +3477,9 @@ impl RasterStoreInitializationAuthority {
             envelope_retirement: std::mem::ManuallyDrop::new(None),
             envelope_retirement_terminal: false,
             clone: std::mem::ManuallyDrop::new(Some(RasterSnapshotCloneAuthority::new())),
-            mutation_digest: std::mem::ManuallyDrop::new(None),
             mutation_candidate: std::mem::ManuallyDrop::new(None),
             candidate_disposer: std::mem::ManuallyDrop::new(None),
-            initial_digest: std::mem::ManuallyDrop::new(Some(store::ArtifactStoreInitializationDigest::new(b"raster.initial"))),
-            edit_digest: std::mem::ManuallyDrop::new(None),
+            edit_index: store::ArtifactStoreInitializationEditIndex::default(),
             control_reservation: std::mem::ManuallyDrop::new(None),
             phase: RasterStoreInitializationPhase::ValidateEnvelope,
             cancel_requested: false,
@@ -3843,7 +3505,7 @@ impl RasterStoreInitializationAuthority {
         self.phase = RasterStoreInitializationPhase::RetireFault;
     }
 
-    fn pump_active(&mut self, mut cx: Option<&mut semio_framework_job::StepContext<'_>>) -> Result<bool, String> {
+    fn pump_active(&mut self, mut cx: Option<&mut semio_framework_job::StepContext<'_>>) -> Result<bool, ValueError> {
         if self.active_terminal {
             if !raster_reserve_granted_unit(cx.as_deref_mut()) {
                 return Ok(true);
@@ -3858,17 +3520,17 @@ impl RasterStoreInitializationAuthority {
         }
         match active.close_step(1, RASTER_OWNED_FIELD_BYTES)? {
             store::SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes <= RASTER_OWNED_FIELD_BYTES => Ok(true),
-            store::SnapshotRetirementStep::Pending { .. } => Err("Raster store initializer retirement exceeded its exact grant".into()),
+            store::SnapshotRetirementStep::Pending { .. } => Err(invariant("Raster store initializer retirement exceeded its exact grant")),
             store::SnapshotRetirementStep::Blocked => Ok(true),
             store::SnapshotRetirementStep::Complete if active.terminal_is_empty() => {
                 self.active_terminal = true;
                 Ok(true)
             }
-            store::SnapshotRetirementStep::Complete => Err("Raster store initializer retirement reported a false terminal".into()),
+            store::SnapshotRetirementStep::Complete => Err(invariant("Raster store initializer retirement reported a false terminal")),
         }
     }
 
-    fn pump_terminal_retirement(&mut self, mut cx: Option<&mut semio_framework_job::StepContext<'_>>) -> Result<bool, String> {
+    fn pump_terminal_retirement(&mut self, mut cx: Option<&mut semio_framework_job::StepContext<'_>>) -> Result<bool, ValueError> {
         if self.pump_active(cx.as_deref_mut())? {
             return Ok(false);
         }
@@ -3879,13 +3541,13 @@ impl RasterStoreInitializationAuthority {
                 return Ok(false);
             }
             let disposer = self.candidate_disposer.as_mut().expect("Raster candidate disposer remains retained");
-            return match disposer.close_step(candidate, 1, RASTER_OWNED_FIELD_BYTES).map_err(|fault| format!("{}: {}", fault.code.0, fault.message))? {
+            return match disposer.close_step(candidate, 1, RASTER_OWNED_FIELD_BYTES).map_err(|fault| ValueError::new(ValueRefusalKind::InvariantViolated, format!("{}: {}", fault.code.0, fault.message)))? {
                 semio_framework_plugin::PluginCloseStep::Complete if disposer.terminal_is_empty(candidate) => {
                     *self.candidate_disposer = None;
                     drop(self.candidate.take());
                     Ok(false)
                 }
-                semio_framework_plugin::PluginCloseStep::Complete => Err("Raster completed candidate disposer reported false terminal".into()),
+                semio_framework_plugin::PluginCloseStep::Complete => Err(invariant("Raster completed candidate disposer reported false terminal")),
                 _ => Ok(false),
             };
         }
@@ -3895,17 +3557,7 @@ impl RasterStoreInitializationAuthority {
                     drop(self.mutation_candidate.take());
                     Ok(false)
                 }
-                store::SnapshotRetirementStep::Complete => Err("Raster mutation candidate reported false terminal".into()),
-                _ => Ok(false),
-            };
-        }
-        if let Some(digest) = self.mutation_digest.as_mut() {
-            return match digest.close_step(1, RASTER_OWNED_FIELD_BYTES)? {
-                store::SnapshotRetirementStep::Complete if digest.terminal_is_empty() => {
-                    drop(self.mutation_digest.take());
-                    Ok(false)
-                }
-                store::SnapshotRetirementStep::Complete => Err("Raster mutation digest reported false terminal".into()),
+                store::SnapshotRetirementStep::Complete => Err(invariant("Raster mutation candidate reported false terminal")),
                 _ => Ok(false),
             };
         }
@@ -3915,7 +3567,7 @@ impl RasterStoreInitializationAuthority {
                     drop(self.runtime.take());
                     return Ok(false);
                 }
-                store::SnapshotRetirementStep::Complete => return Err("Raster initialization runtime reported a false terminal".into()),
+                store::SnapshotRetirementStep::Complete => return Err(invariant("Raster initialization runtime reported a false terminal")),
                 _ => return Ok(false),
             }
         }
@@ -3925,7 +3577,7 @@ impl RasterStoreInitializationAuthority {
                     drop(self.clone.take());
                     return Ok(false);
                 }
-                store::SnapshotRetirementStep::Complete => return Err("Raster snapshot clone reported a false terminal".into()),
+                store::SnapshotRetirementStep::Complete => return Err(invariant("Raster snapshot clone reported a false terminal")),
                 _ => return Ok(false),
             }
         }
@@ -3952,7 +3604,7 @@ impl RasterStoreInitializationAuthority {
                     self.envelope_retirement_terminal = true;
                     Ok(false)
                 }
-                store::SnapshotRetirementStep::Complete => Err("Raster initialization envelope retirement reported a false terminal".into()),
+                store::SnapshotRetirementStep::Complete => Err(invariant("Raster initialization envelope retirement reported a false terminal")),
                 _ => Ok(false),
             };
         }
@@ -3960,7 +3612,7 @@ impl RasterStoreInitializationAuthority {
             if !raster_reserve_granted_unit(cx) {
                 return Ok(false);
             }
-            if control.return_one()? {
+            if control.return_one().map_err(invariant)? {
                 drop(self.control_reservation.take());
             }
             return Ok(false);
@@ -3978,11 +3630,8 @@ impl RasterStoreInitializationAuthority {
             && self.envelope_retirement.is_none()
             && !self.envelope_retirement_terminal
             && self.clone.is_none()
-            && self.mutation_digest.is_none()
             && self.mutation_candidate.is_none()
             && self.candidate_disposer.is_none()
-            && self.initial_digest.is_none()
-            && self.edit_digest.is_none()
             && self.control_reservation.is_none()
     }
 }
@@ -4002,7 +3651,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
             Ok(true) => return semio_framework_job::StepOutcome::Yield,
             Ok(false) => {}
             Err(error) => {
-                self.fault = Some(error.into_bytes());
+                self.fault = Some(error.into_message().into_bytes());
                 self.phase = RasterStoreInitializationPhase::RetireFault;
             }
         }
@@ -4015,23 +3664,18 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
                 if envelope.schema != crate::RASTER_DOCUMENT_SCHEMA || envelope.id.is_empty() || envelope.id.len() > RASTER_OWNED_FIELD_BYTES {
                     self.fail(b"raster-store.initializer-envelope-invalid");
                 } else {
-                    self.phase = RasterStoreInitializationPhase::ValidateEditPair { left: 0, right: 1 };
+                    self.phase = RasterStoreInitializationPhase::ValidateEdit { index: 0 };
                 }
                 cx.consume_fuel(1);
                 semio_framework_job::StepOutcome::Yield
             }
-            RasterStoreInitializationPhase::ValidateEditPair { left, right } => {
+            RasterStoreInitializationPhase::ValidateEdit { index } => {
                 let envelope = self.envelope.as_ref().expect("validated Raster envelope remains retained");
-                if left >= envelope.vcs.edits.len() {
-                    self.phase = RasterStoreInitializationPhase::CloneInitial;
-                } else if envelope.vcs.edits[left].id.len() > RASTER_OWNED_FIELD_BYTES {
-                    self.fail(b"raster-store.initializer-hostile-edit-id");
-                } else if right >= envelope.vcs.edits.len() {
-                    self.phase = RasterStoreInitializationPhase::ValidateEditPair { left: left + 1, right: left + 2 };
-                } else if envelope.vcs.edits[left].id == envelope.vcs.edits[right].id {
-                    self.fail(b"raster-store.initializer-duplicate-edit");
-                } else {
-                    self.phase = RasterStoreInitializationPhase::ValidateEditPair { left, right: right + 1 };
+                match self.edit_index.admit(&envelope.vcs.edits, index, RASTER_OWNED_FIELD_BYTES) {
+                    store::ArtifactStoreInitializationEditAdmission::Complete => self.phase = RasterStoreInitializationPhase::CloneInitial,
+                    store::ArtifactStoreInitializationEditAdmission::Admitted => self.phase = RasterStoreInitializationPhase::ValidateEdit { index: index + 1 },
+                    store::ArtifactStoreInitializationEditAdmission::Oversized => self.fail(b"raster-store.initializer-hostile-edit-id"),
+                    store::ArtifactStoreInitializationEditAdmission::Duplicate => self.fail(b"raster-store.initializer-duplicate-edit"),
                 }
                 cx.consume_fuel(1);
                 semio_framework_job::StepOutcome::Yield
@@ -4053,7 +3697,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
                     }
                     return semio_framework_job::StepOutcome::Yield;
                 }
-                let complete = match clone.step(source, self.initial_digest.as_mut().expect("Raster initial digest remains retained"), cx) {
+                let complete = match clone.step(source, cx) {
                     Ok(complete) => complete,
                     Err(code) => {
                         self.fail(code.as_bytes());
@@ -4063,7 +3707,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
                 if complete {
                     let initial = clone.take_value().expect("Raster initial snapshot was built one semantic item at a time");
                     drop(self.clone.take());
-                    let initial_digest = self.initial_digest.take().expect("Raster initial digest remains retained").finish();
+                    let initial_digest = store::artifact_initial_digest(&initial);
                     let envelope = self.envelope.as_ref().expect("Raster envelope remains retained during runtime construction");
                     *self.runtime = Some(store::ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, initial, initial_digest));
                     self.phase = RasterStoreInitializationPhase::SeedHistory { edit: 0, lane: 0, index: 0 };
@@ -4073,7 +3717,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
             RasterStoreInitializationPhase::SeedHistory { edit, lane, index } => {
                 let envelope = self.envelope.as_ref().expect("Raster envelope remains retained while causal history is seeded");
                 let Some(entry) = envelope.vcs.edits.get(edit) else {
-                    self.phase = RasterStoreInitializationPhase::FindApplied { position: 0, scan: 0 };
+                    self.phase = RasterStoreInitializationPhase::FoldSupersessions { transition: 0 };
                     return semio_framework_job::StepOutcome::Yield;
                 };
                 let runtime = self.runtime.as_mut().expect("Raster runtime remains retained while history is seeded");
@@ -4106,55 +3750,54 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
                 cx.consume_fuel(1);
                 semio_framework_job::StepOutcome::Yield
             }
-            RasterStoreInitializationPhase::FindApplied { position, scan } => {
+            RasterStoreInitializationPhase::FoldSupersessions { transition } => {
+                let envelope = self.envelope.as_ref().expect("Raster envelope remains retained while its supersessions fold");
+                match self.runtime.as_mut().expect("Raster runtime remains retained while its supersessions fold").fold_supersession_step(envelope, transition) {
+                    Ok(true) => self.phase = RasterStoreInitializationPhase::FoldSupersessions { transition: transition + 1 },
+                    Ok(false) => self.phase = RasterStoreInitializationPhase::FindApplied { position: 0 },
+                    Err(error) => {
+                        self.fault = Some(error.into_bytes());
+                        self.phase = RasterStoreInitializationPhase::RetireFault;
+                    }
+                }
+                cx.consume_fuel(1);
+                semio_framework_job::StepOutcome::Yield
+            }
+            RasterStoreInitializationPhase::FindApplied { position } => {
                 let Some(id) = self.applied_id(position) else {
                     let checkpoint = self.envelope.as_ref().and_then(|envelope| envelope.cursor.as_ref().and_then(|cursor| cursor.checkpoint_id.clone()).or_else(|| envelope.vcs.checkpoints.last().map(|checkpoint| checkpoint.id.clone())));
                     self.runtime.as_mut().expect("Raster runtime remains retained").set_current_checkpoint_id(checkpoint);
-                    self.phase = RasterStoreInitializationPhase::FindRedo { position: 0, scan: 0 };
+                    self.phase = RasterStoreInitializationPhase::FindRedo { position: 0 };
                     return semio_framework_job::StepOutcome::Yield;
                 };
+                let scan = self.edit_index.position(&id).unwrap_or(usize::MAX);
                 let envelope = self.envelope.as_ref().expect("Raster envelope remains retained");
                 let Some(edit) = envelope.vcs.edits.get(scan) else {
                     self.fail(b"raster-store.initializer-applied-edit-missing");
                     return semio_framework_job::StepOutcome::Yield;
                 };
                 if edit.id == id {
-                    let mut digest = store::ArtifactStoreInitializationDigest::new(b"raster.edit");
-                    digest.observe(edit.id.as_bytes());
-                    digest.observe(&edit.sequence_number.to_be_bytes());
-                    digest.observe(edit.started_at.as_bytes());
-                    *self.edit_digest = Some(digest);
                     self.phase = RasterStoreInitializationPhase::ApplyForward { position, edit: scan, mutation: 0 };
                 } else {
-                    self.phase = RasterStoreInitializationPhase::FindApplied { position, scan: scan + 1 };
+                    self.fail(b"raster-store.initializer-applied-edit-missing");
                 }
                 cx.consume_fuel(1);
                 semio_framework_job::StepOutcome::Yield
             }
             RasterStoreInitializationPhase::ApplyForward { position, edit, mutation } => {
-                let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("Raster applied edit remains retained");
-                let Some(operation) = entry.forwards.get(mutation) else {
-                    self.phase = RasterStoreInitializationPhase::HashInverse { position, edit, mutation: 0 };
-                    return semio_framework_job::StepOutcome::Yield;
-                };
-                if self.mutation_digest.is_none() {
-                    if !raster_reserve_unit(cx) {
-                        return semio_framework_job::StepOutcome::Yield;
-                    }
-                    *self.mutation_digest = Some(RasterMutationDigestAuthority::new());
+                if self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).is_none_or(|entry| mutation >= entry.forwards.len()) {
+                    self.phase = RasterStoreInitializationPhase::CommitApplied { position, edit };
                     return semio_framework_job::StepOutcome::Yield;
                 }
-                let digest_complete = match self.mutation_digest.as_mut().expect("Raster forward digest remains retained").step(operation, self.edit_digest.as_mut().expect("Raster edit digest remains retained"), cx) {
-                    Ok(value) => value,
-                    Err(code) => {
-                        self.fail(code.as_bytes());
-                        return semio_framework_job::StepOutcome::Yield;
-                    }
+                let withdrawn = {
+                    let envelope = self.envelope.as_ref().expect("Raster envelope remains retained while its forwards fold");
+                    envelope.vcs.edits.get(edit).and_then(|entry| self.runtime.as_ref().and_then(|runtime| runtime.effective_forward(entry, mutation, &envelope.schema))).is_none_or(|effective| effective.operation().is_none())
                 };
-                if !digest_complete {
+                if withdrawn {
+                    self.phase = RasterStoreInitializationPhase::ApplyForward { position, edit, mutation: mutation + 1 };
+                    cx.consume_fuel(1);
                     return semio_framework_job::StepOutcome::Yield;
                 }
-                drop(self.mutation_digest.take());
                 if self.mutation_candidate.is_none() {
                     if !raster_reserve_unit(cx) {
                         return semio_framework_job::StepOutcome::Yield;
@@ -4162,8 +3805,12 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
                     *self.mutation_candidate = Some(RasterMutationCandidateAuthority::new());
                     return semio_framework_job::StepOutcome::Yield;
                 }
+                let envelope = self.envelope.as_ref().expect("Raster envelope remains retained while its forwards fold");
+                let effective = envelope.vcs.edits.get(edit).and_then(|entry| self.runtime.as_ref().and_then(|runtime| runtime.effective_forward(entry, mutation, &envelope.schema))).expect("Raster applied forward remains retained");
                 let current = self.runtime.as_mut().and_then(store::ArtifactStoreInitializationRuntime::current_mut).expect("Raster runtime current snapshot remains retained");
-                let candidate_complete = match self.mutation_candidate.as_mut().expect("Raster mutation candidate remains retained").step(current, operation, cx) {
+                let stepped = self.mutation_candidate.as_mut().expect("Raster mutation candidate remains retained").step(current, effective.operation().expect("Raster effective forward was checked"), cx);
+                drop(effective);
+                let candidate_complete = match stepped {
                     Ok(value) => value,
                     Err(code) => {
                         self.fail(code.as_bytes());
@@ -4180,119 +3827,47 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
                 }
                 semio_framework_job::StepOutcome::Yield
             }
-            RasterStoreInitializationPhase::HashInverse { position, edit, mutation } => {
-                let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("Raster applied edit remains retained");
-                let Some(operation) = entry.inverse.get(mutation) else {
-                    self.phase = RasterStoreInitializationPhase::CommitApplied { position, edit };
-                    return semio_framework_job::StepOutcome::Yield;
-                };
-                if self.mutation_digest.is_none() {
-                    if raster_reserve_unit(cx) {
-                        *self.mutation_digest = Some(RasterMutationDigestAuthority::new());
-                    }
-                    return semio_framework_job::StepOutcome::Yield;
-                }
-                match self.mutation_digest.as_mut().expect("Raster inverse digest remains retained").step(operation, self.edit_digest.as_mut().expect("Raster edit digest remains retained"), cx) {
-                    Ok(true) => {
-                        drop(self.mutation_digest.take());
-                        self.phase = RasterStoreInitializationPhase::HashInverse { position, edit, mutation: mutation + 1 };
-                    }
-                    Ok(false) => {}
-                    Err(code) => self.fail(code.as_bytes()),
-                }
-                semio_framework_job::StepOutcome::Yield
-            }
             RasterStoreInitializationPhase::CommitApplied { position, edit } => {
                 let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("Raster applied edit remains retained");
-                let id = entry.id.clone();
                 let actor = entry.actor.clone();
-                let digest = self.edit_digest.take().expect("Raster applied edit digest remains retained").finish();
                 let runtime = self.runtime.as_mut().expect("Raster runtime remains retained");
-                if let Err(error) = runtime.push_applied(id, digest) {
+                if let Err(error) = runtime.push_applied_edit(entry) {
                     self.fault = Some(error.into_bytes());
                     self.phase = RasterStoreInitializationPhase::RetireFault;
                 } else {
                     runtime.set_local_actor_id(actor);
-                    self.phase = RasterStoreInitializationPhase::FindApplied { position: position + 1, scan: 0 };
+                    self.phase = RasterStoreInitializationPhase::FindApplied { position: position + 1 };
                 }
                 cx.consume_fuel(1);
                 semio_framework_job::StepOutcome::Yield
             }
-            RasterStoreInitializationPhase::FindRedo { position, scan } => {
+            RasterStoreInitializationPhase::FindRedo { position } => {
                 let Some(id) = self.redo_id(position) else {
+                    self.edit_index.clear();
                     self.phase = RasterStoreInitializationPhase::BuildCandidate;
                     return semio_framework_job::StepOutcome::Yield;
                 };
+                let scan = self.edit_index.position(&id).unwrap_or(usize::MAX);
                 let envelope = self.envelope.as_ref().expect("Raster envelope remains retained");
                 let Some(edit) = envelope.vcs.edits.get(scan) else {
                     self.fail(b"raster-store.initializer-redo-edit-missing");
                     return semio_framework_job::StepOutcome::Yield;
                 };
                 if edit.id == id {
-                    let mut digest = store::ArtifactStoreInitializationDigest::new(b"raster.edit");
-                    digest.observe(edit.id.as_bytes());
-                    digest.observe(&edit.sequence_number.to_be_bytes());
-                    digest.observe(edit.started_at.as_bytes());
-                    *self.edit_digest = Some(digest);
-                    self.phase = RasterStoreInitializationPhase::HashRedoForward { position, edit: scan, mutation: 0 };
+                    self.phase = RasterStoreInitializationPhase::CommitRedo { position, edit: scan };
                 } else {
-                    self.phase = RasterStoreInitializationPhase::FindRedo { position, scan: scan + 1 };
+                    self.fail(b"raster-store.initializer-redo-edit-missing");
                 }
                 cx.consume_fuel(1);
                 semio_framework_job::StepOutcome::Yield
             }
-            RasterStoreInitializationPhase::HashRedoForward { position, edit, mutation } => {
-                let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("Raster redo edit remains retained");
-                let Some(operation) = entry.forwards.get(mutation) else {
-                    self.phase = RasterStoreInitializationPhase::HashRedoInverse { position, edit, mutation: 0 };
-                    return semio_framework_job::StepOutcome::Yield;
-                };
-                if self.mutation_digest.is_none() {
-                    if raster_reserve_unit(cx) {
-                        *self.mutation_digest = Some(RasterMutationDigestAuthority::new());
-                    }
-                    return semio_framework_job::StepOutcome::Yield;
-                }
-                match self.mutation_digest.as_mut().expect("Raster redo forward digest remains retained").step(operation, self.edit_digest.as_mut().expect("Raster redo digest remains retained"), cx) {
-                    Ok(true) => {
-                        drop(self.mutation_digest.take());
-                        self.phase = RasterStoreInitializationPhase::HashRedoForward { position, edit, mutation: mutation + 1 };
-                    }
-                    Ok(false) => {}
-                    Err(code) => self.fail(code.as_bytes()),
-                }
-                semio_framework_job::StepOutcome::Yield
-            }
-            RasterStoreInitializationPhase::HashRedoInverse { position, edit, mutation } => {
-                let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("Raster redo edit remains retained");
-                let Some(operation) = entry.inverse.get(mutation) else {
-                    self.phase = RasterStoreInitializationPhase::CommitRedo { position, edit };
-                    return semio_framework_job::StepOutcome::Yield;
-                };
-                if self.mutation_digest.is_none() {
-                    if raster_reserve_unit(cx) {
-                        *self.mutation_digest = Some(RasterMutationDigestAuthority::new());
-                    }
-                    return semio_framework_job::StepOutcome::Yield;
-                }
-                match self.mutation_digest.as_mut().expect("Raster redo inverse digest remains retained").step(operation, self.edit_digest.as_mut().expect("Raster redo digest remains retained"), cx) {
-                    Ok(true) => {
-                        drop(self.mutation_digest.take());
-                        self.phase = RasterStoreInitializationPhase::HashRedoInverse { position, edit, mutation: mutation + 1 };
-                    }
-                    Ok(false) => {}
-                    Err(code) => self.fail(code.as_bytes()),
-                }
-                semio_framework_job::StepOutcome::Yield
-            }
             RasterStoreInitializationPhase::CommitRedo { position, edit } => {
-                let id = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("Raster redo edit remains retained").id.clone();
-                let digest = self.edit_digest.take().expect("Raster redo digest remains retained").finish();
-                if let Err(error) = self.runtime.as_mut().expect("Raster runtime remains retained").push_redo(id, digest) {
+                let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("Raster redo edit remains retained");
+                if let Err(error) = self.runtime.as_mut().expect("Raster runtime remains retained").push_redo_edit(entry) {
                     self.fault = Some(error.into_bytes());
                     self.phase = RasterStoreInitializationPhase::RetireFault;
                 } else {
-                    self.phase = RasterStoreInitializationPhase::FindRedo { position: position + 1, scan: 0 };
+                    self.phase = RasterStoreInitializationPhase::FindRedo { position: position + 1 };
                 }
                 cx.consume_fuel(1);
                 semio_framework_job::StepOutcome::Yield
@@ -4336,8 +3911,6 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
             RasterStoreInitializationPhase::RetireCancelled | RasterStoreInitializationPhase::RetireFault => match self.pump_terminal_retirement(Some(cx)) {
                 Ok(false) => semio_framework_job::StepOutcome::Yield,
                 Ok(true) => {
-                    *self.initial_digest = None;
-                    *self.edit_digest = None;
                     self.terminal_handoff = true;
                     if self.phase == RasterStoreInitializationPhase::RetireCancelled {
                         self.phase = RasterStoreInitializationPhase::Cancelled;
@@ -4350,7 +3923,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
                     }
                 }
                 Err(error) => {
-                    self.fault = Some(error.into_bytes());
+                    self.fault = Some(error.into_message().into_bytes());
                     semio_framework_job::StepOutcome::Yield
                 }
             },
@@ -4386,8 +3959,6 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
         match self.pump_terminal_retirement(None) {
             Ok(false) => Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }),
             Ok(true) => {
-                *self.initial_digest = None;
-                *self.edit_digest = None;
                 self.terminal_handoff = true;
                 Ok(semio_framework_plugin::PluginCloseStep::Complete)
             }
@@ -4400,8 +3971,6 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
             return None;
         }
         let candidate = self.candidate.take()?;
-        *self.initial_digest = None;
-        *self.edit_digest = None;
         self.terminal_handoff = true;
         Some(candidate)
     }

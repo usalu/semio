@@ -215,7 +215,10 @@ test("selection row grants match the shared contract and SVG oracle",async()=>{
 });
 
 test("stroke bounds match the shared contract", () => {
-  for (const row of fixtures.strokeBounds) expect(strokeBounds(row.points as PixelPoint[], row.size, row.width, row.height)).toEqual(row.expected);
+  for (const row of fixtures.strokeBounds) {
+    const points=row.points.map((point):PixelPoint=>{const [x,y]=point;if(point.length!==2||typeof x!=="number"||typeof y!=="number")throw Error("Invalid pixel fixture point");return [x,y];});
+    expect(strokeBounds(points, row.size, row.width, row.height)).toEqual(row.expected);
+  }
 });
 
 test("flood selections match the shared contract (the Python BFS oracle that wrote it, and the Rust twin)", async () => {

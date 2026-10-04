@@ -2,6 +2,9 @@
 
 use semio_framework_value::{ValueKind, ValueType};
 
+#[path = "🛬️type/🦀️.rs"]
+mod type_binding;
+
 pub use crate::manifest::Manifest as GraphManifest;
 
 //#region ⚠️ Errors
@@ -18,12 +21,12 @@ pub use crate::manifest::Manifest as GraphManifest;
 // hook: `ValueType::to_value`'s native shape is self-consistent for `Manifest::to_value()`'s own
 // round trip (nothing needs it to reproduce the fixture text byte-for-byte) — the old
 // `serialize_value_type` hook was itself just a thin wrapper over the same native `to_value` call.
-fn value_type_from_value(value: dsl_core::DslValue) -> Result<ValueType, dsl_core::ValueError> {
-    if let Ok(value_type) = <ValueType as dsl_core::FromValue>::from_value(value.clone()) {
+fn value_type_from_value(value: semio_framework_value::DslValue) -> Result<ValueType, semio_framework_value::ValueError> {
+    if let Ok(value_type) = <ValueType as semio_framework_value::FromValue>::from_value(value.clone()) {
         return Ok(value_type);
     }
     match value {
-        dsl_core::DslValue::String(s) => Ok(match s.as_str() {
+        semio_framework_value::DslValue::String(s) => Ok(match s.as_str() {
             "boolean" | "bool" => ValueType::Boolean,
             "integer" | "int" => ValueType::Integer,
             "number" | "decimal" | "float" => ValueType::Decimal,
@@ -31,11 +34,11 @@ fn value_type_from_value(value: dsl_core::DslValue) -> Result<ValueType, dsl_cor
             "object" | "any" => ValueType::Any,
             _ => ValueType::Schema(s),
         }),
-        dsl_core::DslValue::Object(entries) if entries.len() == 1 => match entries.first() {
-            Some((key, dsl_core::DslValue::String(schema))) if key == "schema" => Ok(ValueType::Schema(schema.clone())),
-            _ => Err(dsl_core::ValueError::new(format!("unsupported valueType object {:?}", dsl_core::DslValue::Object(entries)))),
+        semio_framework_value::DslValue::Object(entries) if entries.len() == 1 => match entries.first() {
+            Some((key, semio_framework_value::DslValue::String(schema))) if key == "schema" => Ok(ValueType::Schema(schema.clone())),
+            _ => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unsupported valueType object {:?}", semio_framework_value::DslValue::Object(entries)))),
         },
-        other => Err(dsl_core::ValueError::new(format!("unsupported valueType {other:?}"))),
+        other => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unsupported valueType {other:?}"))),
     }
 }
 //#endregion ⚠️ Errors
@@ -50,11 +53,16 @@ pub enum PropertyValue {
     Number(f64),
     String(String),
     Array(Vec<PropertyValue>),
-    Object(std::collections::BTreeMap<String, PropertyValue>),
+    Object(PropertyBag),
 }
 
 #[path = "♻️retirement/🦀️.rs"]
 mod retirement;
+#[path="🗂️properties/🦀️.rs"]
+mod property_members;
+pub use property_members::PropertyBag;
+#[path="🚦️properties/🦀️.rs"]
+mod property_control;
 
 impl PropertyValue {
     // 🚫️async: E1 pure accessor passed by name into `Option::and_then` (a sync fn-pointer slot) at
@@ -74,7 +82,7 @@ impl PropertyValue {
         }
     }
 
-    pub fn as_object(&self) -> Option<&std::collections::BTreeMap<String, PropertyValue>> {
+    pub fn as_object(&self) -> Option<&PropertyBag> {
         match self {
             Self::Object(m) => Some(m),
             _ => None,
@@ -92,38 +100,38 @@ impl PropertyValue {
 // directly through `DslValue` (mirroring the engine's own `serde_json::Value` bridge) is both
 // correct and the natural fit for an untyped recursive value type, and it needs no attributes on
 // the Array/Object variants: recursion is carried by `DslValue` itself, not by field-level nesting.
-fn property_value_to_dsl_value(value: &PropertyValue) -> dsl_core::DslValue {
+fn property_value_to_dsl_value(value: &PropertyValue) -> semio_framework_value::DslValue {
     match value {
-        PropertyValue::Null => dsl_core::DslValue::Null,
-        PropertyValue::Bool(b) => dsl_core::DslValue::Bool(*b),
-        PropertyValue::Number(n) => dsl_core::DslValue::float(*n),
-        PropertyValue::String(s) => dsl_core::DslValue::String(s.clone()),
+        PropertyValue::Null => semio_framework_value::DslValue::Null,
+        PropertyValue::Bool(b) => semio_framework_value::DslValue::Bool(*b),
+        PropertyValue::Number(n) => semio_framework_value::DslValue::float(*n),
+        PropertyValue::String(s) => semio_framework_value::DslValue::String(s.clone()),
         PropertyValue::Array(items) => {
             // 🔀️ Plain sync recursion — no suspension point, so no `Box::pin` is needed.
             let mut out = Vec::with_capacity(items.len());
             for item in items {
                 out.push(property_value_to_dsl_value(item));
             }
-            dsl_core::DslValue::Array(out)
+            semio_framework_value::DslValue::Array(out)
         }
         PropertyValue::Object(map) => {
             let mut out = Vec::with_capacity(map.len());
             for (k, v) in map {
                 out.push((k.clone(), property_value_to_dsl_value(v)));
             }
-            dsl_core::DslValue::Object(out)
+            semio_framework_value::DslValue::Object(out)
         }
     }
 }
 
-fn dsl_value_to_property_value(value: &dsl_core::DslValue) -> PropertyValue {
+fn dsl_value_to_property_value(value: &semio_framework_value::DslValue) -> PropertyValue {
     match value {
-        dsl_core::DslValue::Null => PropertyValue::Null,
-        dsl_core::DslValue::Bool(b) => PropertyValue::Bool(*b),
-        dsl_core::DslValue::Number(n) => PropertyValue::Number(n.as_f64()),
-        dsl_core::DslValue::String(s) => PropertyValue::String(s.clone()),
-        dsl_core::DslValue::Bytes(bytes) => PropertyValue::Array(bytes.iter().map(|byte| PropertyValue::Number(f64::from(*byte))).collect()),
-        dsl_core::DslValue::Array(items) => {
+        semio_framework_value::DslValue::Null => PropertyValue::Null,
+        semio_framework_value::DslValue::Bool(b) => PropertyValue::Bool(*b),
+        semio_framework_value::DslValue::Number(n) => PropertyValue::Number(n.as_f64()),
+        semio_framework_value::DslValue::String(s) => PropertyValue::String(s.clone()),
+        semio_framework_value::DslValue::Bytes(bytes) => PropertyValue::Array(bytes.iter().map(|byte| PropertyValue::Number(f64::from(*byte))).collect()),
+        semio_framework_value::DslValue::Array(items) => {
             // 🔀️ Same rewrite as `property_value_to_dsl_value` above, mirrored.
             let mut out = Vec::with_capacity(items.len());
             for item in items {
@@ -131,8 +139,8 @@ fn dsl_value_to_property_value(value: &dsl_core::DslValue) -> PropertyValue {
             }
             PropertyValue::Array(out)
         }
-        dsl_core::DslValue::Object(entries) => {
-            let mut out = std::collections::BTreeMap::new();
+        semio_framework_value::DslValue::Object(entries) => {
+            let mut out = PropertyBag::new();
             for (k, v) in entries {
                 out.insert(k.clone(), dsl_value_to_property_value(v));
             }
@@ -141,21 +149,25 @@ fn dsl_value_to_property_value(value: &dsl_core::DslValue) -> PropertyValue {
     }
 }
 
-impl dsl_core::DslField for PropertyValue {
+impl semio_framework_dsl_record::DslField for PropertyValue {
+    fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{control.checkpoint()?;Ok(semio_framework_dsl_record::Shape::Value)}
+    fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,semio_framework_value::ValueError>{property_control::encode(self,control).map(semio_framework_dsl_record::FieldValue::Value)}
+    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{match value{semio_framework_dsl_record::FieldValue::Value(value)=>property_control::decode(value,control),_=>Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"graph property requires intrinsic field value"))}}
+    fn retire_decoded(self){property_control::retire(self)}
     // 🚫️async: E1 impl of externally-declared trait `dsl_core::DslField` — every method is
     // E4-tagged sync in the trait itself (fn-pointer transitivity through `Shape::Record`/`Table`),
     // see `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🦀️.rs`.
-    fn shape() -> dsl_core::Shape {
-        dsl_core::Shape::Value
+    fn shape() -> semio_framework_dsl_record::Shape {
+        semio_framework_dsl_record::Shape::Value
     }
 
-    fn to_value(&self) -> dsl_core::FieldValue {
-        dsl_core::FieldValue::Value(property_value_to_dsl_value(self))
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
+        semio_framework_dsl_record::FieldValue::Value(property_value_to_dsl_value(self))
     }
 
-    fn from_value(value: &dsl_core::FieldValue) -> Result<Self, String> {
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
         match value {
-            dsl_core::FieldValue::Value(dsl_value) => Ok(dsl_value_to_property_value(dsl_value)),
+            semio_framework_dsl_record::FieldValue::Value(dsl_value) => Ok(dsl_value_to_property_value(dsl_value)),
             other => Err(format!("expected Value, found {other:?}")),
         }
     }
@@ -171,14 +183,18 @@ impl dsl_core::DslField for PropertyValue {
 /// RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS 26/09/02) has no `#[derive(ToValue,
 /// FromValue)]` equivalent — it needs exactly this kind of hand-written structural match, per the
 /// fan-out playbook's "Not supported by the derive" list.
-impl dsl_core::ToValue for PropertyValue {
-    fn to_value(&self) -> dsl_core::DslValue {
+impl semio_framework_value::ToValue for PropertyValue {
+    fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_value::DslValue,semio_framework_value::ValueError>{property_control::encode(self,control)}
+    fn to_value(&self) -> semio_framework_value::DslValue {
         property_value_to_dsl_value(self)
     }
 }
 
-impl dsl_core::FromValue for PropertyValue {
-    fn from_value(value: dsl_core::DslValue) -> Result<Self, dsl_core::ValueError> {
+impl semio_framework_value::FromValue for PropertyValue {
+    fn from_value_controlled(value:&semio_framework_value::DslValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{property_control::decode(value,control)}
+    fn default_value_controlled(control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{control.checkpoint()?;Ok(Self::Null)}
+    fn retire_decoded(self){property_control::retire(self)}
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         Ok(dsl_value_to_property_value(&value))
     }
 }
@@ -201,7 +217,7 @@ pub struct PropertyDef {
     // 🌉️ `deserialize_with` mirrors the old serde hook — see `value_type_from_value`'s own
     // docstring above (this crate's `⚠️ Errors` region) for why it is still needed. The plain
     // per-field `ToValue::to_value` stays for the encode direction (no `serialize_with`).
-    #[value(default, deserialize_with = "value_type_from_value")]
+    #[value(default, deserialize_with = "value_type_from_value", deserialize_controlled_with = "type_binding::decode", retire_with = "type_binding::retire")]
     pub value_type: ValueType,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub expr: Option<String>,
@@ -246,7 +262,6 @@ impl PropertyDef {
     }
 }
 
-pub type PropertyBag = std::collections::BTreeMap<String, PropertyValue>;
 
 // #endregion 🔖️Property
 
@@ -297,31 +312,31 @@ pub struct KindDef {
     pub properties: Vec<PropertyDef>,
     pub ports: Vec<String>,
     pub direction: Option<PortDirection>,
-    pub presentation: Option<dsl_core::DslValue>,
+    pub presentation: Option<semio_framework_value::DslValue>,
 }
 
-impl dsl_core::ToValue for KindDef {
-    fn to_value(&self) -> dsl_core::DslValue {
-        let mut entries: Vec<(String, dsl_core::DslValue)> = vec![
-            ("id".to_string(), dsl_core::ToValue::to_value(&self.id)),
-            ("name".to_string(), dsl_core::ToValue::to_value(&self.name)),
-            ("properties".to_string(), dsl_core::ToValue::to_value(&self.properties)),
-            ("ports".to_string(), dsl_core::ToValue::to_value(&self.ports)),
+impl semio_framework_value::ToValue for KindDef {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        let mut entries: Vec<(String, semio_framework_value::DslValue)> = vec![
+            ("id".to_string(), semio_framework_value::ToValue::to_value(&self.id)),
+            ("name".to_string(), semio_framework_value::ToValue::to_value(&self.name)),
+            ("properties".to_string(), semio_framework_value::ToValue::to_value(&self.properties)),
+            ("ports".to_string(), semio_framework_value::ToValue::to_value(&self.ports)),
         ];
         if self.direction.is_some() {
-            entries.push(("direction".to_string(), dsl_core::ToValue::to_value(&self.direction)));
+            entries.push(("direction".to_string(), semio_framework_value::ToValue::to_value(&self.direction)));
         }
         if let Some(presentation) = &self.presentation {
             entries.push(("presentation".to_string(), presentation.clone()));
         }
-        dsl_core::DslValue::object(entries)
+        semio_framework_value::DslValue::object(entries)
     }
 }
 
-impl dsl_core::FromValue for KindDef {
-    fn from_value(value: dsl_core::DslValue) -> Result<Self, dsl_core::ValueError> {
-        let dsl_core::DslValue::Object(fields) = value else {
-            return Err(dsl_core::ValueError::new(format!("expected an object for KindDef, found {value:?}")));
+impl semio_framework_value::FromValue for KindDef {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        let semio_framework_value::DslValue::Object(fields) = value else {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for KindDef, found {value:?}")));
         };
         let mut id = None;
         let mut name = String::new();
@@ -331,17 +346,17 @@ impl dsl_core::FromValue for KindDef {
         let mut presentation = None;
         for (key, entry) in fields {
             match key.as_str() {
-                "id" => id = Some(<String as dsl_core::FromValue>::from_value(entry).map_err(|e| e.under("id"))?),
-                "name" => name = <String as dsl_core::FromValue>::from_value(entry).map_err(|e| e.under("name"))?,
-                "properties" => properties = <Vec<PropertyDef> as dsl_core::FromValue>::from_value(entry).map_err(|e| e.under("properties"))?,
-                "ports" => ports = <Vec<String> as dsl_core::FromValue>::from_value(entry).map_err(|e| e.under("ports"))?,
-                "direction" => direction = Some(<PortDirection as dsl_core::FromValue>::from_value(entry).map_err(|e| e.under("direction"))?),
+                "id" => id = Some(<String as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("id"))?),
+                "name" => name = <String as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("name"))?,
+                "properties" => properties = <Vec<PropertyDef> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("properties"))?,
+                "ports" => ports = <Vec<String> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("ports"))?,
+                "direction" => direction = Some(<PortDirection as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("direction"))?),
                 "presentation" => presentation = Some(entry),
                 _ => {}
             }
         }
         Ok(KindDef {
-            id: id.ok_or_else(|| dsl_core::ValueError::new("KindDef missing id"))?,
+            id: id.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "KindDef missing id"))?,
             name,
             properties,
             ports,
@@ -382,37 +397,37 @@ pub struct Manifest {
     pub window_kinds: Vec<KindDef>,
     pub file_node_kinds: Vec<KindDef>,
     pub descriptor_kinds: Vec<KindDef>,
-    pub edge_tips: Vec<dsl_core::DslValue>,
-    pub kind_compatibility: Vec<dsl_core::DslValue>,
+    pub edge_tips: Vec<semio_framework_value::DslValue>,
+    pub kind_compatibility: Vec<semio_framework_value::DslValue>,
 }
 
-impl dsl_core::ToValue for Manifest {
-    fn to_value(&self) -> dsl_core::DslValue {
-        dsl_core::DslValue::object([
-            ("schema".to_string(), dsl_core::ToValue::to_value(&self.schema)),
-            ("id".to_string(), dsl_core::ToValue::to_value(&self.id)),
-            ("name".to_string(), dsl_core::ToValue::to_value(&self.name)),
-            ("axes".to_string(), dsl_core::ToValue::to_value(&self.axes)),
-            ("nodeKinds".to_string(), dsl_core::ToValue::to_value(&self.node_kinds)),
-            ("edgeKinds".to_string(), dsl_core::ToValue::to_value(&self.edge_kinds)),
-            ("portKinds".to_string(), dsl_core::ToValue::to_value(&self.port_kinds)),
-            ("wireKinds".to_string(), dsl_core::ToValue::to_value(&self.wire_kinds)),
-            ("layerKinds".to_string(), dsl_core::ToValue::to_value(&self.layer_kinds)),
-            ("languageKinds".to_string(), dsl_core::ToValue::to_value(&self.language_kinds)),
-            ("surfaceKinds".to_string(), dsl_core::ToValue::to_value(&self.surface_kinds)),
-            ("windowKinds".to_string(), dsl_core::ToValue::to_value(&self.window_kinds)),
-            ("fileNodeKinds".to_string(), dsl_core::ToValue::to_value(&self.file_node_kinds)),
-            ("descriptorKinds".to_string(), dsl_core::ToValue::to_value(&self.descriptor_kinds)),
-            ("edgeTips".to_string(), dsl_core::DslValue::Array(self.edge_tips.clone())),
-            ("kindCompatibility".to_string(), dsl_core::DslValue::Array(self.kind_compatibility.clone())),
+impl semio_framework_value::ToValue for Manifest {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::object([
+            ("schema".to_string(), semio_framework_value::ToValue::to_value(&self.schema)),
+            ("id".to_string(), semio_framework_value::ToValue::to_value(&self.id)),
+            ("name".to_string(), semio_framework_value::ToValue::to_value(&self.name)),
+            ("axes".to_string(), semio_framework_value::ToValue::to_value(&self.axes)),
+            ("nodeKinds".to_string(), semio_framework_value::ToValue::to_value(&self.node_kinds)),
+            ("edgeKinds".to_string(), semio_framework_value::ToValue::to_value(&self.edge_kinds)),
+            ("portKinds".to_string(), semio_framework_value::ToValue::to_value(&self.port_kinds)),
+            ("wireKinds".to_string(), semio_framework_value::ToValue::to_value(&self.wire_kinds)),
+            ("layerKinds".to_string(), semio_framework_value::ToValue::to_value(&self.layer_kinds)),
+            ("languageKinds".to_string(), semio_framework_value::ToValue::to_value(&self.language_kinds)),
+            ("surfaceKinds".to_string(), semio_framework_value::ToValue::to_value(&self.surface_kinds)),
+            ("windowKinds".to_string(), semio_framework_value::ToValue::to_value(&self.window_kinds)),
+            ("fileNodeKinds".to_string(), semio_framework_value::ToValue::to_value(&self.file_node_kinds)),
+            ("descriptorKinds".to_string(), semio_framework_value::ToValue::to_value(&self.descriptor_kinds)),
+            ("edgeTips".to_string(), semio_framework_value::DslValue::Array(self.edge_tips.clone())),
+            ("kindCompatibility".to_string(), semio_framework_value::DslValue::Array(self.kind_compatibility.clone())),
         ])
     }
 }
 
-impl dsl_core::FromValue for Manifest {
-    fn from_value(value: dsl_core::DslValue) -> Result<Self, dsl_core::ValueError> {
-        let dsl_core::DslValue::Object(fields) = value else {
-            return Err(dsl_core::ValueError::new(format!("expected an object for Manifest, found {value:?}")));
+impl semio_framework_value::FromValue for Manifest {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        let semio_framework_value::DslValue::Object(fields) = value else {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for Manifest, found {value:?}")));
         };
         let mut schema = None;
         let mut id = None;
@@ -432,29 +447,29 @@ impl dsl_core::FromValue for Manifest {
         let mut kind_compatibility = Vec::new();
         for (key, entry) in fields {
             match key.as_str() {
-                "schema" => schema = Some(<String as dsl_core::FromValue>::from_value(entry).map_err(|e| e.under("schema"))?),
-                "id" => id = Some(<String as dsl_core::FromValue>::from_value(entry).map_err(|e| e.under("id"))?),
-                "name" => name = <String as dsl_core::FromValue>::from_value(entry).map_err(|e| e.under("name"))?,
-                "axes" => axes = <ManifestAxes as dsl_core::FromValue>::from_value(entry).map_err(|e| e.under("axes"))?,
-                "nodeKinds" => node_kinds = <Vec<KindDef> as dsl_core::FromValue>::from_value(entry).map_err(|e| e.under("nodeKinds"))?,
-                "edgeKinds" => edge_kinds = <Vec<KindDef> as dsl_core::FromValue>::from_value(entry).map_err(|e| e.under("edgeKinds"))?,
-                "portKinds" => port_kinds = <Vec<KindDef> as dsl_core::FromValue>::from_value(entry).map_err(|e| e.under("portKinds"))?,
-                "wireKinds" => wire_kinds = <Vec<KindDef> as dsl_core::FromValue>::from_value(entry).map_err(|e| e.under("wireKinds"))?,
-                "layerKinds" => layer_kinds = <Vec<KindDef> as dsl_core::FromValue>::from_value(entry).map_err(|e| e.under("layerKinds"))?,
-                "languageKinds" => language_kinds = <Vec<KindDef> as dsl_core::FromValue>::from_value(entry).map_err(|e| e.under("languageKinds"))?,
-                "surfaceKinds" => surface_kinds = <Vec<KindDef> as dsl_core::FromValue>::from_value(entry).map_err(|e| e.under("surfaceKinds"))?,
-                "windowKinds" => window_kinds = <Vec<KindDef> as dsl_core::FromValue>::from_value(entry).map_err(|e| e.under("windowKinds"))?,
-                "fileNodeKinds" => file_node_kinds = <Vec<KindDef> as dsl_core::FromValue>::from_value(entry).map_err(|e| e.under("fileNodeKinds"))?,
-                "descriptorKinds" => descriptor_kinds = <Vec<KindDef> as dsl_core::FromValue>::from_value(entry).map_err(|e| e.under("descriptorKinds"))?,
+                "schema" => schema = Some(<String as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("schema"))?),
+                "id" => id = Some(<String as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("id"))?),
+                "name" => name = <String as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("name"))?,
+                "axes" => axes = <ManifestAxes as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("axes"))?,
+                "nodeKinds" => node_kinds = <Vec<KindDef> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("nodeKinds"))?,
+                "edgeKinds" => edge_kinds = <Vec<KindDef> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("edgeKinds"))?,
+                "portKinds" => port_kinds = <Vec<KindDef> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("portKinds"))?,
+                "wireKinds" => wire_kinds = <Vec<KindDef> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("wireKinds"))?,
+                "layerKinds" => layer_kinds = <Vec<KindDef> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("layerKinds"))?,
+                "languageKinds" => language_kinds = <Vec<KindDef> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("languageKinds"))?,
+                "surfaceKinds" => surface_kinds = <Vec<KindDef> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("surfaceKinds"))?,
+                "windowKinds" => window_kinds = <Vec<KindDef> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("windowKinds"))?,
+                "fileNodeKinds" => file_node_kinds = <Vec<KindDef> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("fileNodeKinds"))?,
+                "descriptorKinds" => descriptor_kinds = <Vec<KindDef> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("descriptorKinds"))?,
                 "edgeTips" => {
-                    let dsl_core::DslValue::Array(items) = entry else {
-                        return Err(dsl_core::ValueError::new("expected an array for edgeTips").under("edgeTips"));
+                    let semio_framework_value::DslValue::Array(items) = entry else {
+                        return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected an array for edgeTips").under("edgeTips"));
                     };
                     edge_tips = items;
                 }
                 "kindCompatibility" => {
-                    let dsl_core::DslValue::Array(items) = entry else {
-                        return Err(dsl_core::ValueError::new("expected an array for kindCompatibility").under("kindCompatibility"));
+                    let semio_framework_value::DslValue::Array(items) = entry else {
+                        return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected an array for kindCompatibility").under("kindCompatibility"));
                     };
                     kind_compatibility = items;
                 }
@@ -462,8 +477,8 @@ impl dsl_core::FromValue for Manifest {
             }
         }
         Ok(Manifest {
-            schema: schema.ok_or_else(|| dsl_core::ValueError::new("Manifest missing schema"))?,
-            id: id.ok_or_else(|| dsl_core::ValueError::new("Manifest missing id"))?,
+            schema: schema.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "Manifest missing schema"))?,
+            id: id.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "Manifest missing id"))?,
             name,
             axes,
             node_kinds,
@@ -693,3 +708,9 @@ mod tests;
 #[cfg(test)]
 #[path = "🧪️tests/🏷️type/🦀️.rs"]
 mod type_tests;
+
+#[path = "🪆️binding/🦀️.rs"]
+mod property_declaration_binding;
+
+#[path="📡️delta/🦀️.rs"]
+mod map_delta;

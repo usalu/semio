@@ -18,9 +18,9 @@ impl Deserializer<NoteSnapshot> for JsonIntoNote {
     const FIDELITY: IoFidelity = IoFidelity::Exact;
     async fn deserialize(payload: &IoPayload) -> IoResult<NoteSnapshot> {
         let IoPayload::Text(text) = payload else {
-            return Err(IoError { message: "JsonIntoNote: expected a text json payload".to_string(), diagnostics: Vec::new() });
+            return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "JsonIntoNote: expected a text json payload".to_string())));
         };
-        let mut snap: NoteSnapshot = dsl::os_pack::from_json_str(text).map_err(|error| IoError { message: format!("JsonIntoNote: {error}"), diagnostics: Vec::new() })?;
+        let mut snap: NoteSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("JsonIntoNote: {error}"))))?;
         if snap.schema.is_empty() {
             snap.schema = NOTE_DOCUMENT_SCHEMA.into();
         }

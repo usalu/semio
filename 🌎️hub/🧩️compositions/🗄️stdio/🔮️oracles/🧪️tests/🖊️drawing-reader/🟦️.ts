@@ -5,7 +5,7 @@ import { resolve, relative } from "node:path";
 import Ajv from "ajv";
 import * as toml from "@iarna/toml";
 import { validateJsonSchemaSubset } from "../../../../../../🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts";
-import { inspectRustCompileReferences, rustTokens, rustTokenPairs } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
+import { inspectRustCompileReferences, rustTokens, rustTokenPairs } from "../../../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 import contract from "../../🧫️fixtures/🖊️drawing-reader/🔣️.json";
 import { extractedDxfMutationSource } from "./🧩️preservation/🟦️.ts";
 import schema from "../../🧬️schema/🖊️drawing-reader/🔣️.json";
@@ -95,4 +95,26 @@ test("the actual private shared helpers and public byte boundary carry no foreig
   const mounts = contract.originals.filter(({ path }) => path === contract.functions[0]!.source).flatMap(({ path }) => inspectRustCompileReferences(read(path)).filter((row) => row.path.includes("🧰️support")).map((row) => resolve(root, path, "..", row.path)));
   expect(mounts).toEqual([resolve(root, contract.owner, "🧰️support/🦀️.rs")]);
   expect(inspectRustCompileReferences(source).filter(({ path }) => path.includes("🧰️support")).map(({ path }) => resolve(root, contract.owner, path))).toEqual(mounts);
+});
+
+
+test("additive complete lower native cohort preserves the original full oracle route", () => {
+  const script = read("🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/📜️script.ts");
+  expect(digest(script.match(/class NativeOracleTestScript[\s\S]*?\n\}/u)![0])).toBe("b1c48a55654bc46efdb49cce14da41fb2048868bfb9eb573d44a1f5c0fb9f226");
+  const project = JSON.parse(read("🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/📋️project.json"));
+  expect(project.targets["test-native-drawing-reader"]?.options.command).toBe("bun 📜️script.ts test-native-drawing-reader");
+  const command = script.match(/class NativeDrawingReaderTestScript[\s\S]*?\n\}/u)?.[0];
+  expect(command).toContain("contract.families.find(({ module }) => module === \"drawing\")");
+  expect(command).toContain("if (rest.length) throw new Error");
+  expect(command).toContain("\"--features\", \"oracles\"");
+  expect(command).toContain("budgetMs: 900_000");
+});
+
+
+test("the actual native semantic law resolves the declared closed fixture input", () => {
+  const source = `${contract.owner}/🧪️tests/🔬️semantic/🦀️.rs`;
+  const fixtures = inspectRustCompileReferences(read(source)).filter(({ path }) => path.endsWith("🔣️.json")).map(({ path }) => resolve(root, source, "..", path));
+  expect(fixtures).toEqual([resolve(root, contract.owner, "🧫️fixtures/🖊️semantic/🔣️.json")]);
+  expect(fixtures.every(path => existsSync(path))).toBe(true);
+  expect(JSON.parse(readFileSync(fixtures[0]!, "utf8"))).toEqual(contract.cases);
 });

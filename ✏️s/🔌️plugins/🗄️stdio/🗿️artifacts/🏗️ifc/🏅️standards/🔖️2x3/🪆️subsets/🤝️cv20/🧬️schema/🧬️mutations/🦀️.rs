@@ -175,7 +175,8 @@ pub(crate) fn agg_diff(this: &Ifc2x3Cv20Mutation, base: &Ifc2x3Snapshot) -> prot
 }
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &Ifc2x3Cv20Mutation, base: &Ifc2x3Snapshot) -> Vec<Ifc2x3Cv20Mutation> {
+pub(crate) fn agg_inverse(this: &Ifc2x3Cv20Mutation, base: &Ifc2x3Snapshot) -> Result<Vec<Ifc2x3Cv20Mutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match this {
         Ifc2x3Cv20Mutation::SetSnapshot(_) => vec![Ifc2x3Cv20Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(base.clone()) })],
         Ifc2x3Cv20Mutation::SetViewDefinition(_) => vec![Ifc2x3Cv20Mutation::SetViewDefinition(set_view_definition::SetViewDefinition { view: mvd::view_definition_name(base).unwrap_or_default() })],
@@ -194,6 +195,8 @@ pub(crate) fn agg_inverse(this: &Ifc2x3Cv20Mutation, base: &Ifc2x3Snapshot) -> V
             vec![Ifc2x3Cv20Mutation::SetProductPlacement(set_product_placement::SetProductPlacement { product: *product, placement: mvd::reference_argument(base, *product, PRODUCT_PLACEMENT_INDEX) })]
         }
     }
+
+    })())
 }
 //#endregion 🔖️MutationTrait
 

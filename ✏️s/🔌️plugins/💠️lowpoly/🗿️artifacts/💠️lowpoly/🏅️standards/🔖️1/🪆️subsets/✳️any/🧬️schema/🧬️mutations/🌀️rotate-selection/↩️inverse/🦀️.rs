@@ -6,7 +6,10 @@ use super::RotateSelection;
 use crate::{LowpolyMutation, LowpolySnapshot};
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &RotateSelection, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {
-    crate::mutations::lowpoly_selection_motion_inverse(base, &payload.object_id, &super::diff::diff(payload, base))
+pub fn inverse(payload: &RotateSelection, base: &LowpolySnapshot) -> Result<Vec<LowpolyMutation>, semio_framework_value::ValueError> {
+    Ok({
+    crate::mutations::lowpoly_selection_motion_inverse(base, &payload.object_id, &super::diff::diff(payload, base))?
+
+    })
 }
 //#endregion 🔖️Inverse

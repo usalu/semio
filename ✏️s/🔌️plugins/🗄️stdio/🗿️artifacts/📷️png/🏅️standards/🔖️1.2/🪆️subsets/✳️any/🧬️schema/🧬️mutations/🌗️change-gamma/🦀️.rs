@@ -1,54 +1,48 @@
-//! 🧬️ Authoritative change-gamma mutation.
-use crate::schema::diff::*;
-use crate::schema::mutations::PngMutation;
-use crate::schema::snapshot::*;
+//! 🌗️ Revision-guarded exact gAMA chunk edit.
 
-//#region Payload
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+use crate::schema::diff::PngDiff;
+use crate::schema::mutations::{PngMutation, SetSnapshot};
+use crate::PngSnapshot;
+use protocol::DiffAlgebra;
+
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ChangeGammaMutation {
+    pub revision: String,
     pub gama: Option<u32>,
 }
-//#endregion Payload
 
-//#region Facets
 #[path = "💾️binary/🦀️.rs"]
 pub mod binary;
 #[path = "📝️text/🦀️.rs"]
 pub mod text;
-//#endregion Facets
 
-//#region Semantics
 impl protocol::MutationKind<PngSnapshot, PngMutation> for ChangeGammaMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "gamma", kind: "change-gamma", record: "ChangeGamma" };
+
     fn diff(&self, base: &PngSnapshot) -> protocol::MutationOutcome<PngDiff> {
-        let Self { gama } = self;
-        protocol::MutationOutcome::new(contribute(base, *gama))
-    }
-    fn inverse(&self, base: &PngSnapshot) -> Vec<PngMutation> {
-        let outcome = <Self as protocol::MutationKind<PngSnapshot, PngMutation>>::diff(self, base);
-        if <PngDiff as protocol::DiffAlgebra<PngSnapshot>>::is_empty(outcome.diff()) {
-            return Vec::new();
+        match crate::io::set_gamma_chunk_controlled(base, &self.revision, self.gama, &mut |_, _| true) {
+            Ok(next) => protocol::MutationOutcome::new(PngDiff::between(base, &next)),
+            Err(message) => protocol::MutationOutcome::refuse(protocol::OutcomeCode::TargetMismatch, message, ["gAMA"]),
         }
-        vec![PngMutation::ChangeGamma(ChangeGammaMutation { gama: base.gama })]
     }
+
+    fn inverse(&self, base: &PngSnapshot) -> Result<Vec<PngMutation>, semio_framework_value::ValueError> {
+        Ok(vec![PngMutation::SetSnapshot(SetSnapshot { snapshot: base.clone() })])
+    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Change gamma", "Gamma ändern")
     }
+
     fn target(&self) -> Vec<String> {
-        vec!["change-gamma".into()]
+        vec!["chunk:gAMA".into()]
     }
 }
-pub fn contribute(base: &PngSnapshot, gama: Option<u32>) -> PngDiff {
-    PngDiff { gama: (base.gama != gama).then_some(gama), chunk_order: chunk_order_presence_diff(&base.chunk_order, |m| matches!(m, PngChunkMarker::Gama), PngChunkMarker::Gama, base.gama.is_some(), gama.is_some()), ..Default::default() }
-}
-//#endregion Semantics
 
 #[cfg(test)]
 pub(crate) fn test_case() -> PngMutation {
-    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🌗️change-gamma/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed change-gamma payload")
+    let base = PngSnapshot::default();
+    PngMutation::ChangeGamma(ChangeGammaMutation { revision: crate::io::png_revision(&base), gama: Some(45_455) })
 }
-#[cfg(test)]
-#[path = "🧪️tests/🎯️direct-behavior/🦀️.rs"]
-mod tests_direct_behavior;

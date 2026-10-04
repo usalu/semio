@@ -1,1 +1,11 @@
-export {};
+/** 📥️ Rewriting's declared closed-word JSON constructs the actual canonical parent. */
+import {parseRewritingArtifact,parseRhs,type RewritingArtifact} from "../../../../../../../🧬️schema/🟦️.ts";
+import {parseRewritingDiff,type RewritingDiff} from "../../../../../../../🧬️schema/🔺️diff/🟦️.ts";
+import {parseMapDelta} from "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧬️schema/🟦️.ts";
+import {binary64FromJson,parsePropertyValueJson} from "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🌱️value/🟦️.ts";
+import {parseJackJsonValue} from "./../../../../../../../../../../../../🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🟦️.ts";
+function record(value:unknown):Record<string,unknown>{if(!value||typeof value!=="object"||Array.isArray(value))throw Error("Rewriting JSON object required");return value as Record<string,unknown>;}
+/** 🔺️ The declared JSON map envelope delegates each set payload to its exact word owner. */
+export function parseRewritingDiffJsonValue(value:unknown):RewritingDiff{const row=record(value);return parseRewritingDiff({...row,workingGraph:row.workingGraph==null?null:parseJackJsonValue(row.workingGraph),rhs:row.rhs==null?null:parseRhs(row.rhs,parsePropertyValueJson),parameterBindings:row.parameterBindings==null?null:parseMapDelta(row.parameterBindings,parsePropertyValueJson),ruleLayout:row.ruleLayout==null?null:parseMapDelta(row.ruleLayout,value=>{const point=record(value);if(Object.keys(point).length!==2||!Object.hasOwn(point,"x")||!Object.hasOwn(point,"y"))throw Error("Rewriting JSON layout fields differ");return{x:binary64FromJson(point.x),y:binary64FromJson(point.y)};})});}
+/** 📖️ Decode typed rules, composed parent identity and exact scalar words. */
+export function parseRewritingJsonValue(value:unknown):RewritingArtifact{const row=record(value);return parseRewritingArtifact({...row,workingGraph:parseJackJsonValue(row.workingGraph),rhs:parseRhs(row.rhs,parsePropertyValueJson),parameterBindings:Object.fromEntries(Object.entries(record(row.parameterBindings)).map(([key,value])=>[key,parsePropertyValueJson(value)])),ruleLayout:Object.fromEntries(Object.entries(record(row.ruleLayout)).map(([key,value])=>{const point=record(value);if(Object.keys(point).length!==2||!Object.hasOwn(point,"x")||!Object.hasOwn(point,"y"))throw Error("Rewriting JSON layout fields differ");return[key,{x:binary64FromJson(point.x),y:binary64FromJson(point.y)}];}))});}

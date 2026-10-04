@@ -26,10 +26,8 @@ document = "schema=" text SP "id=" text opt-title NL layers-block opt-assets opt
 opt-title = (SP "title=" text)?
 opt-assets = ("assets" "=" "{" NL asset-entry* "}" NL)?
 opt-artboard = ("artboard" "{" NL "width=" number SP "height=" number NL "}" NL)?
-# `assets: BTreeMap<String, DrawingImageAsset>` — each entry is `key=` glued directly onto the
-# child record's OWN inline field list, no additional wrapping braces (fixture:
-# `emblem-trace-source=mime=image/png data="<base64>"`).
-asset-entry = IDENT "=" "mime=" text SP "data=" text opt-asset-width opt-asset-height
+# Record-valued map entries delimit each image asset with braces.
+asset-entry = IDENT "=" "{" "mime=" text SP "data=" text opt-asset-width opt-asset-height "}"
 opt-asset-width = (SP "width=" number)?
 opt-asset-height = (SP "height=" number)?
 
@@ -42,7 +40,7 @@ shape-layer = "shape" layer-base "shape-kind=" text opt-rect opt-ellipse opt-cir
 path-layer = "path" layer-base "segments" "{" path-segment* "}"
 text-layer = "text" layer-base "x=" number SP "y=" number SP "content=" text SP "size=" number
 image-layer = "image" layer-base "image-key=" text SP "width=" number SP "height=" number
-group-layer = "group" layer-base "children" "{" layer* "}"
+group-layer = "group" "isolation" "=" bool layer-base "children" "{" layer* "}"
 boolean-layer = "boolean" layer-base "operation=" text SP "children=" string-list
 trace-layer = "trace" layer-base "source-key=" text trace-params-block
 trace-params-block = "params" "{" "threshold=" number SP "simplify-epsilon=" number "}"

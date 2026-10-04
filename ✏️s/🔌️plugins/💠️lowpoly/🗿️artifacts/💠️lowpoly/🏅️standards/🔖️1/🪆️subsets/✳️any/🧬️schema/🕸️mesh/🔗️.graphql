@@ -1,0 +1,30 @@
+# 🕸️ Complete managed halfedge values retain exact words and literal topology indexes.
+# import DslValue,DslValueInput,Octet from "🧰️framework/🔨️modules/🌱️value/🧬️schema/🔗️.graphql"
+scalar UInt32
+enum LowpolyMeshAttributeDomain { VERTEX CORNER FACE EDGE }
+enum LowpolyMeshAttributeSemantic { NORMAL UV COLOR MATERIAL CUSTOM }
+enum LowpolyMeshInterpolation { LINEAR NEAREST CONSTANT }
+type LowpolyBinary32 { bits: UInt32! }
+type LowpolyMeshState { vertices:[LowpolyMeshVertex!]! halfedges:[LowpolyMeshHalfedge!]! faces:[LowpolyMeshFace!]! uvSeams:[UInt32!]! attributes:[LowpolyMeshAttribute!]! materials:[LowpolyMeshMaterial!]! textures:[LowpolyMeshTexture!]! }
+type LowpolyMeshVertex { position:[LowpolyBinary32!]! normal:[LowpolyBinary32!] halfedge:UInt32 }
+type LowpolyMeshHalfedge { vertex:UInt32! twin:UInt32 next:UInt32! face:UInt32 uv:[LowpolyBinary32!]! }
+type LowpolyMeshFace { halfedge:UInt32! smooth:Boolean! flipped:Boolean! }
+type LowpolyMeshAttribute { name:String! domain:LowpolyMeshAttributeDomain! semantic:LowpolyMeshAttributeSemantic! interpolation:LowpolyMeshInterpolation! values:[DslValue!]! indices:[UInt32!] }
+type LowpolyMeshMaterial { name:String! value:DslValue! }
+type LowpolyMeshTexture { name:String! mime:String! bytes:[Octet!]! }
+
+input LowpolyBinary32Input { bits: UInt32! }
+
+input LowpolyMeshStateInput { vertices:[LowpolyMeshVertexInput!]! halfedges:[LowpolyMeshHalfedgeInput!]! faces:[LowpolyMeshFaceInput!]! uvSeams:[UInt32!]! attributes:[LowpolyMeshAttributeInput!]! materials:[LowpolyMeshMaterialInput!]! textures:[LowpolyMeshTextureInput!]! }
+
+input LowpolyMeshVertexInput { position:[LowpolyBinary32Input!]! normal:[LowpolyBinary32Input!] halfedge:UInt32 }
+
+input LowpolyMeshHalfedgeInput { vertex:UInt32! twin:UInt32 next:UInt32! face:UInt32 uv:[LowpolyBinary32Input!]! }
+
+input LowpolyMeshFaceInput { halfedge:UInt32! smooth:Boolean! flipped:Boolean! }
+
+input LowpolyMeshAttributeInput { name:String! domain:LowpolyMeshAttributeDomain! semantic:LowpolyMeshAttributeSemantic! interpolation:LowpolyMeshInterpolation! values:[DslValueInput!]! indices:[UInt32!] }
+
+input LowpolyMeshMaterialInput { name:String! value:DslValueInput! }
+
+input LowpolyMeshTextureInput { name:String! mime:String! bytes:[Octet!]! }

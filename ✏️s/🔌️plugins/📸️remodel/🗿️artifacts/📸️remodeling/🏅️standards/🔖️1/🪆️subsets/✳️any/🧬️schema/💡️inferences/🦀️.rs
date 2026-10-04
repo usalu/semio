@@ -14,7 +14,6 @@
 
 use crate::RemodelingSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -43,8 +42,8 @@ pub struct RemodelingInference {
 }
 
 impl protocol::Inference<RemodelingSnapshot> for RemodelingInference {
-    fn infer(snapshot: &RemodelingSnapshot) -> Self {
-        Self { bounds: compute_remodeling_bounds(snapshot), relative_camera_poses: store::infer_field::<RemodelingSnapshot, RemodelingRelativeCameraPose>(snapshot, None) }
+    fn infer(snapshot: &RemodelingSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok(Self { bounds: compute_remodeling_bounds(snapshot), relative_camera_poses: store::infer_field::<RemodelingSnapshot, RemodelingRelativeCameraPose>(snapshot, None) })
     }
 }
 
@@ -53,7 +52,9 @@ impl protocol::Inference<RemodelingSnapshot> for RemodelingInference {
 /// default, don't derive structurally" trick `AddInference` uses in `📡️spr/🎮️command/🦀️.rs`.
 impl Default for RemodelingInference {
     fn default() -> Self {
-        <Self as protocol::Inference<RemodelingSnapshot>>::infer(&RemodelingSnapshot::default())
+        let snapshot = &RemodelingSnapshot::default();
+
+        Self { bounds: compute_remodeling_bounds(snapshot), relative_camera_poses: store::infer_field::<RemodelingSnapshot, RemodelingRelativeCameraPose>(snapshot, None) }
     }
 }
 
@@ -69,13 +70,6 @@ impl protocol::InferenceSpec<RemodelingSnapshot> for RemodelingInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::RemodelingBuilder {
-    type Snapshot = RemodelingSnapshot;
-    type Inference = RemodelingInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.remodel.remodeling.inference`'s facet leaves into the OS-wide inference catalog —

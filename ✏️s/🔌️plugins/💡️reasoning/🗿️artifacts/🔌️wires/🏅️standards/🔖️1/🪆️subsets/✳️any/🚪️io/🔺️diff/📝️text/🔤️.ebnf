@@ -1,3 +1,0 @@
-(* ebnf reasoning.wires.diff *)
-document = header, body ;
-header = 'schema', space, 'reasoning.wires.diff', newline ;

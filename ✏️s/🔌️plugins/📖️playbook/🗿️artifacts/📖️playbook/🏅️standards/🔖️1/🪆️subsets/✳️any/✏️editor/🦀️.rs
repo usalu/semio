@@ -19,10 +19,10 @@ use crate::editor::playbook::modes::builder::windows::changes as changes_window;
 use crate::editor::playbook::modes::builder::windows::files as files_window;
 use crate::editor::playbook::modes::builder::windows::source as source_window;
 use crate::editor::playbook::modes::builder::windows::steps as steps_window;
-use crate::flatten_playbook_blocks;
-use crate::op::{AddStep, PlaybookMutation};
+use crate::op::PlaybookMutation;
 use crate::schema::default_block;
-use crate::{artifact_kind, PlaybookSnapshot, PlaybookStep, PLAYBOOK_DIALECT, PLAYBOOK_DOCUMENT_SCHEMA};
+use crate::{artifact_kind, playbook_add_block_leaves, playbook_add_step_leaves, playbook_composed_spec, playbook_flow_content, playbook_flow_emit, steps_from_flow_content, PlaybookSnapshot, PlaybookSpec, PlaybookStep, PLAYBOOK_DIALECT, PLAYBOOK_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
@@ -104,7 +104,7 @@ semio_framework_plugin::app_commands! {
 
 //#region 🔖️Interaction
 /// 🕹️ "blocks" — the single FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14) interaction domain
-/// this app declares: `HierarchyProvider::Topology` over the document's own step/block nesting (steps
+/// this app declares: `HierarchyProvider::Topology` over the composed playbook's step/block nesting (steps
 /// are the "step" granularity, blocks are the "block" granularity, default) — replaces the deleted
 /// `PlaybookConfig::selected_ids`/`set-selection` command/`PlaybookPresence::selected_ids`. Pick-only
 /// (the block-list builder is a flat clickable list, no canvas marquee surface); not transitive —
@@ -119,17 +119,34 @@ pub const PLAYBOOK_INTERACTION_GRANULARITY_STEP: &str = "step";
 /// prune matched on either), so `validate_state` prunes a deleted step's OR block's id automatically
 /// after every document dispatch (`revalidate_interaction_state_after_document_change`), replacing the
 /// deleted hand-rolled prune in `remove_block::handle`.
-fn playbook_blocks_topology(spec: &PlaybookSnapshot) -> DomainTopology {
+fn playbook_blocks_topology(spec: &PlaybookSpec) -> DomainTopology {
     let mut ordered = Vec::new();
-    for step in spec.steps() {
+    for step in &spec.steps {
         ordered.push(TopologyNode { id: step.id.clone(), granularity: PLAYBOOK_INTERACTION_GRANULARITY_STEP.into(), parent: None });
-        for block in step.blocks {
+        for block in &step.blocks {
             ordered.push(TopologyNode { id: block.id.clone(), granularity: PLAYBOOK_INTERACTION_GRANULARITY_BLOCK.into(), parent: Some(step.id.clone()) });
         }
     }
     DomainTopology { ordered }
 }
 //#endregion 🔖️Interaction
+
+//#region 🔖️ChildLaneEmit
+/// 🌊️ Publishes child intent `leaves` as ONE edit of the playbook's `flow` child (design §20.15); no leaf is the empty emit.
+pub fn playbook_child_leaves_emit<D>(snapshot: &PlaybookSnapshot, leaves: Vec<SemioFlowMutation>) -> Emit<PlaybookMutation, PlaybookConfigMutation, D> {
+    if leaves.is_empty() {
+        return Emit::default();
+    }
+    Emit { child_emits: vec![playbook_flow_emit(snapshot, &leaves)], ui_scope: semio_framework::kernel::UiDirtyScope::Full, ..Default::default() }
+}
+
+/// 🆔️ An id `doc`'s admitted operation mints under `prefix`: content-addressed over the admission's authoring seed and operation
+/// id, so two writers — or two sessions of one — never mint the same id at one base.
+pub fn playbook_minted_id(doc: &ArtifactView<'_, PlaybookSnapshot>, prefix: &str) -> Result<String, Fault> {
+    let operation = doc.operation()?;
+    Ok(store::content_id(prefix, format!("{}\u{1f}{}", operation.authoring_seed, operation.operation_id).as_bytes()))
+}
+//#endregion 🔖️ChildLaneEmit
 
 //#region 🔖️PlaybookPlayApp
 /// 🧪️ B1: unit struct — the former app-struct `RefCell<Vec<String>>` selection now lives in
@@ -144,7 +161,7 @@ pub struct PlaybookPlayApp;
 /// (`store::stamp_document_spr_identity`), so no app ever states its own mount.
 pub fn reset_playbook_document_effect(document: &PlaybookSnapshot) -> semio_framework_plugin::Effect {
     let pack = <PlaybookSnapshot as store::ArtifactPack>::encode_pack(document);
-    let spr = semio_framework_plugin::resolve_ready(store::empty_document_spr("playbook", PLAYBOOK_DOCUMENT_SCHEMA));
+    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr("playbook", PLAYBOOK_DOCUMENT_SCHEMA));
     semio_framework_plugin::Effect::LoadDocument { pack, spr }
 }
 
@@ -163,17 +180,17 @@ const PLAYBOOK_RETAINED_PAYLOAD_SCHEMA: &str = "playbook.program.tool-command.v1
 const PLAYBOOK_RETAINED_RAW_BYTES: usize = 8_192;
 const PLAYBOOK_RETAINED_WORK_ITEMS: usize = 64;
 
-/// 🚦️ Per-tool publication lanes, read straight off the command bodies: `setContributions` writes
-/// the config store, the six structural verbs and the title edit emit `artifact_mutations` only.
+/// 🚦️ Per-tool publication lanes, read straight off the command bodies: `setContributions` writes the config store, the six
+/// structural verbs edit the `flow` child's lane only (design §20.15), the title edit emits the parent's `change-title`.
 const PLAYBOOK_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "setContributions", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::HostOnly] },
-    ArtifactToolPublicationContract { tool_id: "addStep", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "removeStep", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "moveStep", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "addBlock", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "removeBlock", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "moveBlock", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "addStep", lanes: &[ArtifactToolPublicationLane::Child] },
+    ArtifactToolPublicationContract { tool_id: "removeStep", lanes: &[ArtifactToolPublicationLane::Child] },
+    ArtifactToolPublicationContract { tool_id: "moveStep", lanes: &[ArtifactToolPublicationLane::Child] },
+    ArtifactToolPublicationContract { tool_id: "addBlock", lanes: &[ArtifactToolPublicationLane::Child] },
+    ArtifactToolPublicationContract { tool_id: "removeBlock", lanes: &[ArtifactToolPublicationLane::Child] },
+    ArtifactToolPublicationContract { tool_id: "moveBlock", lanes: &[ArtifactToolPublicationLane::Child] },
     ArtifactToolPublicationContract { tool_id: "updatePlaybook", lanes: &[ArtifactToolPublicationLane::Artifact] },
 ];
 
@@ -195,24 +212,24 @@ fn playbook_retained_extent(command: &PlaybookCommand, _snapshot: &PlaybookSnaps
 /// dispatch path already speaks. `ArtifactEditor::command_from_action`'s default refuses EVERY id
 /// (`app.command.unsupported`), so without this bridge no Builder-window palette row could ever
 /// reach `PlaybookCommand::dispatch`.
-fn playbook_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<PlaybookCommand, Fault> {
-    let entries: &[(String, dsl::DslValue)] = match args {
-        Some(dsl::DslValue::Object(object)) => object.as_slice(),
+fn playbook_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<PlaybookCommand, Fault> {
+    let entries: &[(String, semio_framework_value::DslValue)] = match args {
+        Some(semio_framework_value::DslValue::Object(object)) => object.as_slice(),
         _ => &[],
     };
     let lookup = |keys: &[&str]| keys.iter().find_map(|key| entries.iter().find(|(name, _)| name == key).map(|(_, value)| value));
     let text = |keys: &[&str], fallback: &str| match lookup(keys) {
-        Some(dsl::DslValue::String(raw)) if !raw.is_empty() => raw.clone(),
-        Some(dsl::DslValue::String(_)) | None => fallback.to_string(),
-        Some(other) => dsl::json::to_json_string(other),
+        Some(semio_framework_value::DslValue::String(raw)) if !raw.is_empty() => raw.clone(),
+        Some(semio_framework_value::DslValue::String(_)) | None => fallback.to_string(),
+        Some(other) => semio_framework_pack_json::to_json_string(other),
     };
     let index = |keys: &[&str]| match lookup(keys) {
-        Some(dsl::DslValue::Number(value)) => value.as_f64().max(0.0) as usize,
-        Some(dsl::DslValue::String(raw)) => raw.trim().parse::<usize>().unwrap_or_default(),
+        Some(semio_framework_value::DslValue::Number(value)) => value.as_f64().max(0.0) as usize,
+        Some(semio_framework_value::DslValue::String(raw)) => raw.trim().parse::<usize>().unwrap_or_default(),
         _ => 0,
     };
     let optional_text = |keys: &[&str]| match lookup(keys) {
-        Some(dsl::DslValue::String(raw)) if !raw.is_empty() => Some(raw.clone()),
+        Some(semio_framework_value::DslValue::String(raw)) if !raw.is_empty() => Some(raw.clone()),
         _ => None,
     };
     match action {
@@ -230,11 +247,7 @@ fn playbook_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> R
         "updatePlaybook" => Ok(PlaybookCommand::UpdatePlaybook(update_playbook::UpdatePlaybook { value: text(&["value", "title"], "") })),
         "setContributions" => Ok(PlaybookCommand::SetContributions(set_contributions::SetContributions { json: text(&["json", "value"], "{}") })),
         "setActiveExample" => Ok(PlaybookCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: text(&["exampleId", "example_id", "id", "value"], crate::examples::demo::ID) })),
-        other => Err(Fault::new(
-            semio_framework_plugin::FaultOrigin::App,
-            semio_framework_plugin::FaultCode::new("playbook.unhandled-action"),
-            format!("action '{other}' is not one of this app's declared verbs"),
-        )),
+        other => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.unsupported"), format!("action '{other}' is not one of this app's declared verbs"))),
     }
 }
 
@@ -246,10 +259,11 @@ fn playbook_retained_reduce(
     history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<PlaybookPlayApp>>>,
+    context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<PlaybookPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation, NoDraftMutation>, Fault> {
-    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config, window: None })
+    let children = context.map(|context| semio_framework_plugin::ChildContentView::clone(&context.children)).unwrap_or_default();
+    command.dispatch(&ArtifactView::with_children(snapshot, history, children).bound_to_operation(operation.clone()), &ConfigView { snapshot: config, window: None })
 }
 
 struct PlaybookRetainedCommandJobFactory {
@@ -332,54 +346,25 @@ struct PlaybookOneItemPreparation<P, M> {
 // analog of `serde_json::to_writer` — it materializes the full JSON text before the length is
 // known. `PLAYBOOK_STORE_MAXIMUM_BYTES` is small (32KiB) so this is an accepted trade-off, not a
 // bounded/incremental check anymore.
-fn playbook_bounded_serialized_bytes<T: protocol::ToValue>(value: &T) -> Result<usize, String> {
-    let bytes = protocol::json::to_json_string(value).len();
+fn playbook_bounded_serialized_bytes<T: semio_framework_value::ToValue>(value: &T) -> Result<usize, String> {
+    let bytes = semio_framework_pack_json::to_json_string(value).len();
     if bytes > PLAYBOOK_STORE_MAXIMUM_BYTES {
         return Err("Playbook retained Store value exceeds its fixed envelope".to_string());
     }
     Ok(bytes)
 }
 
-fn playbook_one_item_edit<M>(forward: M, inverse: Vec<M>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<M> {
-    let id = format!("playbook-retained-{}", authority.next_sequence_number());
-    protocol::Edit { line: authority.line_id().map(str::to_owned),
-        id: id.clone(),
-        actor: Some(authority.actor().to_string()),
-        forwards: vec![forward],
-        inverse,
-        mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
-            dependencies: Vec::new(),
-            base_version: authority.base_applied_edit_count() as u64,
-            author_id: Some(protocol::ActorId(authority.actor().to_string())),
-            timestamp: authority.next_clock(),
-            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-            payload_hash: None,
-            semantic_kind: None,
-            label: None,
-            group_id: None,
-            origin: Default::default(),
-            transaction: None,
-        }],
-        description, verb: None,
-        coalesce_key: None,
-        sequence_number: authority.next_sequence_number(),
-        started_at: String::new(),
-        finished_at: None,
-    }
-}
-
 impl<P, M> store::ArtifactStoreOneItemPreparationFactory<P, M> for PlaybookOneItemPreparationFactory<P, M>
 where
-    P: Clone + protocol::ToValue + Send + Sync + 'static,
-    M: protocol::Mutation<P> + protocol::ToValue + Send + Sync + 'static,
+    P: Clone + semio_framework_value::ToValue + Send + Sync + 'static,
+    M: protocol::Mutation<P> + semio_framework_value::ToValue + Send + Sync + 'static,
     M::Diff: protocol::MutationDiff<P>,
 {
     fn preflight(&self, mutation: &M, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
             return Err("Playbook retained preparation rejected its lane or description envelope".into());
         }
-        Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: playbook_bounded_serialized_bytes(mutation)? })
+        Ok(store::ArtifactStoreOneItemFootprint::for_leaf::<P, M>(mutation, playbook_bounded_serialized_bytes(mutation)?))
     }
 
     fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<P, M>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, store::ArtifactStoreOneItemPreparationRequest<P, M>> {
@@ -408,8 +393,8 @@ where
 
 impl<P, M> store::ArtifactStoreOneItemPreparation<P, M> for PlaybookOneItemPreparation<P, M>
 where
-    P: Clone + protocol::ToValue + Send + Sync + 'static,
-    M: protocol::Mutation<P> + protocol::ToValue + Send + 'static,
+    P: Clone + semio_framework_value::ToValue + Send + Sync + 'static,
+    M: protocol::Mutation<P> + semio_framework_value::ToValue + Send + 'static,
     M::Diff: protocol::MutationDiff<P>,
 {
     fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
@@ -424,7 +409,7 @@ where
                 let base = self.base.as_ref().ok_or_else(|| "Playbook retained preparation lost its exact base root".to_string())?;
                 let mutation = self.mutation.take().ok_or_else(|| "Playbook retained preparation lost its mutation owner".to_string())?;
                 let retained_bytes = playbook_bounded_serialized_bytes(base.get())?;
-                let inverse = mutation.inverse(base.get());
+                let inverse = mutation.inverse(base.get()).map_err(semio_framework_value::ValueError::into_message)?;
                 let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
                 self.candidate = Some((post, inverse, mutation, retained_bytes));
                 self.phase = 1;
@@ -434,7 +419,7 @@ where
             1 => {
                 let (post, inverse, mutation, retained_bytes) = self.candidate.take().ok_or_else(|| "Playbook retained preparation lost its semantic candidate".to_string())?;
                 let authority = self.authority.as_ref().ok_or_else(|| "Playbook retained preparation lost its Store authority".to_string())?;
-                let prepared = authority.prepare_one_item(playbook_one_item_edit(mutation, inverse, self.description.take(), authority), std::sync::Arc::new(post))?;
+                let prepared = authority.prepare_one_item(authority.next_edit(mutation, inverse), std::sync::Arc::new(post))?;
                 self.phase = 2;
                 self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: retained_bytes as u64, digest: prepared.edit_digest() };
                 self.prepared = Some(prepared);
@@ -460,7 +445,7 @@ where
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -469,7 +454,7 @@ where
         }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
-                return Err("Playbook retained preparation could not return its exact base root".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "Playbook retained preparation could not return its exact base root"));
             }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -490,9 +475,8 @@ where
 //#endregion 📬️OneItemPreparation
 
 impl ArtifactEditor for PlaybookPlayApp {
-    /// 🧩️ The roster both composed `s.stdio.semio` children (`document`, `flow`) open through. A
-    /// `NoMembers` editor cannot materialise the children `genesis_child_pack` derives, so every
-    /// whole-document load fails its archive closure leg before any of them is opened.
+    /// 🧩️ The roster the composed `s.stdio.semio@v1/flow` child opens through. A `NoMembers` editor cannot materialise the child
+    /// `genesis_child_pack` derives, so every whole-document load would fail its archive closure leg before it is opened.
     type Members = semio_s_artifact_stdio_semio::SemioMembers;
     type Snapshot = PlaybookSnapshot;
     type Mutation = PlaybookMutation;
@@ -514,9 +498,8 @@ impl ArtifactEditor for PlaybookPlayApp {
         Some(std::sync::Arc::new(PlaybookOneItemPreparationFactory::<Self::Config, Self::ConfigMutation>::default()))
     }
 
-    /// 📬️ The ARTIFACT lane's publication authority. Without it the six structural verbs reach the
-    /// typed operation and die there: the app owns a config-lane preparation only, and a retained
-    /// tool whose contract states `Artifact` has nowhere to stage its edit.
+    /// 📬️ The ARTIFACT lane's publication authority for the parent's own `change-title` (`updatePlaybook`): a retained tool whose
+    /// contract states `Artifact` has nowhere to stage its edit without it.
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("playbook-artifact-retained", PLAYBOOK_STORE_MAXIMUM_BYTES))
     }
@@ -595,7 +578,7 @@ impl ArtifactEditor for PlaybookPlayApp {
             return Ok(None);
         }
         if request.command.command_id() != request.tool_id || playbook_retained_extent(&request.command, &request.snapshot, &request.interaction_state) != Some(1) {
-            return Err(Fault::from("playbook-retained-command-tool-mismatch-or-capacity"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "Playbook command does not match its exact registered tool or exceeds its declared extent"));
         }
         let tool_id = request.command.command_id();
         let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = Box::new(BoundedArtifactCommandWork::new(tool_id, playbook_retained_reduce, playbook_retained_extent));
@@ -631,8 +614,19 @@ impl ArtifactEditor for PlaybookPlayApp {
         Some(crate::editor::playbook::config::schema::app_schema_descriptor())
     }
 
-    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
-        crate::genesis_playbook_child_pack(snapshot, slot, child_id)
+    /// 🪆️ The one `flow` member a loaded parent restores — see `crate::playbook_child_restore_projection`.
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+        crate::playbook_child_restore_projection(snapshot)
+    }
+
+    /// 🌱️ The `flow` member's genesis, answered from this plugin's own catalogue — see `crate::genesis_playbook_child_pack`.
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>, semio_framework_value::ValueError> {
+        Ok(crate::genesis_playbook_child_pack(snapshot, slot, child_id))
+    }
+
+    /// 📣️ The localized notices of this artifact's refusals (design §20.12).
+    fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
+        crate::playbook_fault_notices()
     }
 
     fn initial_snapshot() -> PlaybookSnapshot {
@@ -649,7 +643,7 @@ impl ArtifactEditor for PlaybookPlayApp {
         command.command_id()
     }
 
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<PlaybookCommand, Fault> {
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<PlaybookCommand, Fault> {
         playbook_command_from_action(action, args)
     }
 
@@ -665,18 +659,19 @@ impl ArtifactEditor for PlaybookPlayApp {
         command.dispatch(doc, cfg)
     }
 
-    /// 🕹️ `blocks` domain: `HierarchyProvider::Topology` from the document's own step/block nesting —
-    /// see `playbook_blocks_topology`'s doc comment.
-    fn interaction_topology(doc: &ArtifactView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> InteractionTopology {
+    /// 🕹️ `blocks` domain: `HierarchyProvider::Topology` from the composed playbook's step/block nesting — see
+    /// `playbook_blocks_topology`'s doc comment.
+    fn interaction_topology(doc: &ArtifactView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<InteractionTopology, semio_framework_value::ValueError> {
+        let spec = playbook_composed_spec(doc.snapshot, &doc.children).map_err(|fault| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("{}: {}", fault.code.0, fault.message)))?;
         let mut domains = std::collections::BTreeMap::new();
-        domains.insert(PLAYBOOK_INTERACTION_BLOCKS.to_string(), playbook_blocks_topology(doc.snapshot));
-        InteractionTopology { domains }
+        domains.insert(PLAYBOOK_INTERACTION_BLOCKS.to_string(), playbook_blocks_topology(&spec));
+        Ok(InteractionTopology { domains })
     }
 
     /// 🎞️ `"chapters:in"` (Text×Document, `Many`) — decodes a `writer`-shaped chapter payload (see
-    /// `writer_engine::WriterChapterPayload`/`PlaybookChapterPayload`) and inserts it as a `"note"` block
-    /// (free-form `text` field, non-interactive) into a dedicated `"imported"` step, created on first
-    /// import and reused on every later one (idempotent step creation).
+    /// `writer_engine::WriterChapterPayload`/`PlaybookChapterPayload`) and inserts it as a `"note"` block (free-form `text` field,
+    /// non-interactive) into a dedicated `"imported"` step, created on first import and reused on every later one (idempotent step
+    /// creation) — ONE edit of the `flow` child either way.
     fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, PlaybookSnapshot>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation, Self::DraftMutation>, MediaError> {
         if port != "chapters:in" {
             return Err(MediaError::NotImplemented);
@@ -684,28 +679,31 @@ impl ArtifactEditor for PlaybookPlayApp {
         let MediaPayload::Structured { json, .. } = &media.payload else {
             return Err(MediaError::Payload(port.to_string(), "chapters:in importer only accepts a Structured payload".into()));
         };
-        let chapter: PlaybookChapterPayload = protocol::json::from_json_str(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-        let spec = doc.snapshot;
-        let mut operations = Vec::new();
-        if !spec.steps().iter().any(|step| step.id == PLAYBOOK_IMPORTED_STEP_ID) {
-            operations.push(PlaybookMutation::AddStep(AddStep { step: PlaybookStep { id: PLAYBOOK_IMPORTED_STEP_ID.into(), title: "Imported".into(), description: None, blocks: Vec::new() }, index: None }));
-        }
-        let block_id = format!("chapter-{}", flatten_playbook_blocks(spec).len() + 1);
-        let mut block = default_block(block_id, "note");
+        let chapter: PlaybookChapterPayload = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+        let refused = |fault: Fault| MediaError::Payload(port.to_string(), format!("{}: {}", fault.code.0, fault.message));
+        let content = playbook_flow_content(doc.snapshot, &doc.children).map_err(refused)?;
+        let steps = steps_from_flow_content(&content).map_err(|message| MediaError::Payload(port.to_string(), message))?;
+        let mut block = default_block(format!("chapter-{}", steps.iter().map(|step| step.blocks.len()).sum::<usize>() + 1), "note");
         block.label = chapter.title;
         block.text = Some(chapter.text);
-        operations.push(crate::op::add_block_operation(PLAYBOOK_IMPORTED_STEP_ID, block, None));
-        Ok(Emit::mutations(operations))
+        let leaves = if steps.iter().any(|step| step.id == PLAYBOOK_IMPORTED_STEP_ID) {
+            playbook_add_block_leaves(&content, PLAYBOOK_IMPORTED_STEP_ID, block, None)
+        } else {
+            playbook_add_step_leaves(&content, &PlaybookStep { id: PLAYBOOK_IMPORTED_STEP_ID.into(), title: "Imported".into(), description: None, blocks: vec![block] })
+        }
+        .map_err(refused)?;
+        Ok(playbook_child_leaves_emit(doc.snapshot, leaves))
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, PlaybookSnapshot>, cfg: &ConfigView<'_, PlaybookConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        let spec = || playbook_composed_spec(doc.snapshot, &doc.children).map_err(|fault| semio_framework_plugin::PluginAssemblyError::new(fault.code.0, fault.message));
         match body_key {
-            PLAYBOOK_PLAY_BODY_BUILDER => Ok(semio_framework_plugin::built_to_component_tree(builder_window::render(doc.snapshot, cfg.snapshot)?)),
-            PLAYBOOK_PLAY_BODY_CHANGES => Ok(semio_framework_plugin::built_to_component_tree(changes_window::render(doc.snapshot)?)),
-            PLAYBOOK_PLAY_BODY_STEPS => Ok(semio_framework_plugin::built_to_component_tree(steps_window::render(doc.snapshot)?)),
-            PLAYBOOK_PLAY_BODY_ACTIVITY => Ok(semio_framework_plugin::built_to_component_tree(activity_window::render(doc.snapshot)?)),
-            PLAYBOOK_PLAY_BODY_SOURCE => Ok(semio_framework_plugin::built_to_component_tree(source_window::render(doc.snapshot)?)),
-            PLAYBOOK_PLAY_BODY_FILES => Ok(semio_framework_plugin::built_to_component_tree(files_window::render(doc.snapshot, crate::editor::playbook::terminology::playbook_play_labels(view_state))?)),
+            PLAYBOOK_PLAY_BODY_BUILDER => Ok(semio_framework_plugin::built_to_component_tree(builder_window::render(&spec()?, cfg.snapshot)?)),
+            PLAYBOOK_PLAY_BODY_CHANGES => Ok(semio_framework_plugin::built_to_component_tree(changes_window::render(&spec()?)?)),
+            PLAYBOOK_PLAY_BODY_STEPS => Ok(semio_framework_plugin::built_to_component_tree(steps_window::render(&spec()?)?)),
+            PLAYBOOK_PLAY_BODY_ACTIVITY => Ok(semio_framework_plugin::built_to_component_tree(activity_window::render(&spec()?)?)),
+            PLAYBOOK_PLAY_BODY_SOURCE => Ok(semio_framework_plugin::built_to_component_tree(source_window::render(&spec()?)?)),
+            PLAYBOOK_PLAY_BODY_FILES => Ok(semio_framework_plugin::built_to_component_tree(files_window::render(&spec()?, crate::editor::playbook::terminology::playbook_play_labels(view_state))?)),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }

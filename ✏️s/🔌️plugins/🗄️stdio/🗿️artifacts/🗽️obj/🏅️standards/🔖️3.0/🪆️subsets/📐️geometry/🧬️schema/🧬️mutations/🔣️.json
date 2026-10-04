@@ -8,6 +8,9 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/obj/3.0/geometry/mutation/set-snapshot/schema.json"
     },
     {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/obj/3.0/geometry/mutation/patch-snapshot/schema.json"
+    },
+    {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/obj/3.0/geometry/mutation/insert-vertex/schema.json"
     },
     {

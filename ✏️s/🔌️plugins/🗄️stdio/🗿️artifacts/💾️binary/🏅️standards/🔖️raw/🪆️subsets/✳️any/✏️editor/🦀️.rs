@@ -10,8 +10,7 @@ use crate::editor::binary::modes::edit;
 use crate::editor::binary::modes::edit::windows::main;
 use crate::schema::mutations::{replace_byte_range, set_snapshot};
 use crate::{BinaryMutation, BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
-#[cfg(test)]
-use semio_framework_plugin::Component;
+use semio_framework_2d::compute::EngineHandles;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::AppOperationContext;
 use semio_framework_plugin::ArtifactEditor;
@@ -20,6 +19,8 @@ use semio_framework_plugin::ArtifactOwnedToolJobRequest;
 use semio_framework_plugin::ArtifactToolPublicationContract;
 use semio_framework_plugin::ArtifactToolPublicationLane;
 use semio_framework_plugin::ArtifactView;
+#[cfg(test)]
+use semio_framework_plugin::Component;
 use semio_framework_plugin::ConfigView;
 use semio_framework_plugin::Dialect;
 use semio_framework_plugin::DraftView;
@@ -28,7 +29,6 @@ use semio_framework_plugin::EditorApp;
 use semio_framework_plugin::Emit;
 use semio_framework_plugin::Fault;
 use semio_framework_plugin::InteractiveJobClassification;
-use semio_framework_ui_locale::Label;
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
 use semio_framework_plugin::NoDraft;
@@ -44,7 +44,7 @@ use semio_framework_plugin::ToolFactoryKey;
 use semio_framework_plugin::ToolJobFactory;
 use semio_framework_plugin::ToolJobFactoryError;
 use semio_framework_plugin::ToolOperationSpec;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_ui_locale::Label;
 
 //#region 🔖️Dialect
 /// 🎯️ This surface's dialect coordinate — `s.stdio.binary@raw/*`, verified against this artifact's
@@ -57,40 +57,40 @@ pub const BINARY_EDITOR_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.bin
 //#region 🔖️Command
 /// ✏️ The editor's typed command channel — exactly the one edit the `🪟️main` window's
 /// `editable_window_kind()` action (`replace-text`, contract §2.6) can trigger.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 pub enum BinaryEditorCommand {
     #[dsl(key = "replace-binary-text")]
     ReplaceText { text: String },
 }
 
 //#region 🔖️OpCodec
-/// 🎯️ Handcrafted (P6: `#[derive(dsl::DslOps)]` emits `DslVariants` only — `OpText`/`OpBinary` are
+/// 🎯️ Handcrafted (P6: `#[derive(semio_framework_dsl_record_derive::DslEnum)]` emits `DslVariants` only — `OpText`/`OpBinary` are
 /// handcrafted per artifact). Same shape as `energy`'s `EnergyModelEditorCommand`.
 impl protocol::OpText for BinaryEditorCommand {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = semio_framework_dsl_record::parse(line, &(spec_fn.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?;
+                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown operation line '{line}'"), semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
     fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &(spec_fn.ordinary)(), dsl::JoinMode::Inline)
+        semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline)
     }
 }
 
 impl protocol::OpBinary for BinaryEditorCommand {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
         let spec = (variants[ordinal].1.ordinary)();
         let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
@@ -108,12 +108,12 @@ impl protocol::OpBinary for BinaryEditorCommand {
             return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
         }
         let ordinal = reader.read_varint_u64()?;
-        let variants = <Self as dsl::DslVariants>::variants();
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
         let spec = (spec_fn.ordinary)();
         let body = &bytes[reader.position()..];
         let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
+        <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
     }
 }
 semio_s_artifact_stdio_contract::snapshot_editing_command_roster!(BinaryEditorCommand, ["textEdit"]);
@@ -147,8 +147,7 @@ const BINARY_TEXT_ACTION_ID: &str = "textEdit";
 const BINARY_TEXT_TOOL_IDS: &[&str] = &[BINARY_TEXT_ACTION_ID];
 const BINARY_TEXT_PAYLOAD_SCHEMA: &str = "stdio.binary.text-edit.v1";
 const BINARY_TEXT_MAXIMUM_RAW_BYTES: usize = 4 * semio_framework_plugin::plugin_app_close_prelude::store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES;
-const BINARY_TEXT_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] =
-    &[ArtifactToolPublicationContract { tool_id: BINARY_TEXT_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] }];
+const BINARY_TEXT_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: BINARY_TEXT_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] }];
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn binary_text_contract() -> ToolExecutionContract {
@@ -161,20 +160,12 @@ fn binary_command_id(command: &semio_s_artifact_stdio_contract::editing::Snapsho
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn binary_text_emit(
-    command: &semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand<BinaryEditorCommand>,
-    snapshot: &BinarySnapshot,
-) -> Result<Emit<BinaryMutation>, Fault> {
+fn binary_text_emit(command: &semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand<BinaryEditorCommand>, snapshot: &BinarySnapshot) -> Result<Emit<BinaryMutation>, Fault> {
     let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(BinaryEditorCommand::ReplaceText { text }) = command else {
         return Err(Fault::from("stdio-binary-snapshot-edit-routed-to-native-reducer"));
     };
-    let parsed = parse_hex_dump(text).ok_or_else(|| {
-        Fault::new(
-            semio_framework_plugin::FaultOrigin::App,
-            semio_framework_plugin::FaultCode::new("stdio.binary.invalid-hex"),
-            "The byte editor contains an odd digit count or a non-hexadecimal character.",
-        )
-    })?;
+    let parsed =
+        parse_hex_dump(text).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.binary.invalid-hex"), "The byte editor contains an odd digit count or a non-hexadecimal character."))?;
     Ok(Emit::mutations(binary_net_replacement(&snapshot.bytes, &parsed).into_iter().collect()))
 }
 
@@ -212,11 +203,7 @@ fn binary_text_reduce(
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn binary_text_extent(
-    command: &semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand<BinaryEditorCommand>,
-    _snapshot: &BinarySnapshot,
-    _interaction: &protocol::InteractionState,
-) -> Option<usize> {
+fn binary_text_extent(command: &semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand<BinaryEditorCommand>, _snapshot: &BinarySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     match command {
         semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(BinaryEditorCommand::ReplaceText { text }) => parse_hex_dump(text).map(|bytes| bytes.len().max(1)),
         _ => None,
@@ -349,11 +336,9 @@ impl ArtifactEditor for BinaryEditor {
         binary_command_id(command)
     }
 
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
         semio_s_artifact_stdio_contract::editing::snapshot_editing_command_from_action(action, args, |action, args| match action {
-            "textEdit" => Ok(BinaryEditorCommand::ReplaceText {
-                text: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "text")?,
-            }),
+            "textEdit" => Ok(BinaryEditorCommand::ReplaceText { text: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "text")? }),
             other => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.binary.unhandled-action"), format!("unknown binary editor action '{other}'"))),
         })
     }
@@ -383,9 +368,12 @@ impl ArtifactEditor for BinaryEditor {
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot, view_state.locale).map(semio_framework_plugin::built_to_component_tree),
+            main::BODY_KEY => {
+                let publication_revision = semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?;
+                main::render(doc.snapshot, view_state.locale, publication_revision).map(semio_framework_plugin::built_to_component_tree)
+            }
             semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY => semio_s_artifact_stdio_contract::editing::render_snapshot_details(
-                doc.snapshot,
+                doc,
                 view_state.locale,
                 "s.stdio.binary@raw/*#editor",
                 &semio_framework_plugin::TreeWindows::for_body(view_state, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY),
@@ -403,7 +391,6 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for BinaryE
             _ => None,
         }
     }
-
 
     fn snapshot_edit_mutations(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         semio_s_artifact_stdio_contract::editing::snapshot_edit_net(event, snapshot, binary_net_mutations)

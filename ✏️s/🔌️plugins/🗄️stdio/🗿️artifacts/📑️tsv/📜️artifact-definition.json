@@ -49,7 +49,7 @@
     }
   ],
   "codecs": [
-    { "id": "s.stdio.tsv.standard.iana.codec.native-document.v1", "status": "implemented", "from": "s.stdio.tsv.standard.iana.dialect.source", "to": "s.stdio.tsv.standard.iana.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.tsv.v1", "artifact_kind": "s.stdio.tsv", "artifact_schema": "stdio.tsv", "extension": "tsv", "pack_schema_hash": "8c65ab63508c1db68d9b9d67dd8482a604a71b5f8966fb4046967e5ec3a4f989", "runtime_capability_id": "s.stdio.tsv.standard.iana.codec.codec-stdio-tsv-extension-tsv.v1" } }
+    { "id": "s.stdio.tsv.standard.iana.codec.native-document.v1", "status": "implemented", "from": "s.stdio.tsv.standard.iana.dialect.source", "to": "s.stdio.tsv.standard.iana.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.tsv.v1", "artifact_kind": "s.stdio.tsv", "artifact_schema": "stdio.tsv", "extension": "tsv", "pack_schema_hash": "3fedd28ec78d3577df922b3bddf0d4c11fc82e796e4e8d08fd2206377beaaa65", "runtime_capability_id": "s.stdio.tsv.standard.iana.codec.codec-stdio-tsv-extension-tsv.v1" } }
   ],
   "mutations": [],
   "inferences": [],

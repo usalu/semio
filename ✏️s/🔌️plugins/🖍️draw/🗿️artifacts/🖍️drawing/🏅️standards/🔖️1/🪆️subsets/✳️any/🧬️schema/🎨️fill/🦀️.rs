@@ -3,7 +3,7 @@ use crate::{FillStyle, GradientStop};
 #[path="🎨️sampling/🦀️.rs"]
 pub mod sampling;
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslEnum)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "kind", rename_all = "camelCase")]
 #[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase"))]
@@ -17,13 +17,13 @@ pub enum FillEdit {
     RemoveStop { index: usize },
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub enum FillType { None, Solid, LinearGradient, RadialGradient }
 
-#[derive(Clone, Copy, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -99,10 +99,7 @@ pub fn edit_fill(source: Option<&FillStyle>, edit: &FillEdit) -> Result<Option<F
             if stops.len() >= 64 || stops.is_empty() { return Err("Cannot add another gradient stop"); }
             stops.sort_by(|a,b| a.offset.total_cmp(&b.offset));
             let right = stops.partition_point(|stop| stop.offset <= *offset);
-            let left = &stops[right.saturating_sub(1)];
-            let next = &stops[right.min(stops.len()-1)];
-            let t = if next.offset > left.offset { ((*offset-left.offset)/(next.offset-left.offset)).clamp(0.0,1.0) } else { 0.0 };
-            let color = std::array::from_fn(|index| left.color[index]+(next.color[index]-left.color[index])*t);
+            let color = sampling::GradientRamp::new(stops)?.sample(*offset)?;
             stops.insert(right,GradientStop { offset:*offset,color });
         }
         FillEdit::RemoveStop { index } => {

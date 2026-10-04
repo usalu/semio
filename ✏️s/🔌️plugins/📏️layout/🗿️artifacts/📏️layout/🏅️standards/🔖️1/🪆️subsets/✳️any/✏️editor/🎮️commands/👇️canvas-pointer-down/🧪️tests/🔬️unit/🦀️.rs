@@ -164,7 +164,7 @@ async fn a_batched_pointer_move_hovers_its_last_sample_only() {
 /// gesture, so it is inert exactly like a release); the wire defaults keep a legacy sender valid.
 #[semio_framework_async_macros::async_test]
 async fn a_cancelled_release_is_inert_and_the_wire_defaults_hold() {
-    use dsl::FromValue;
+    use semio_framework_value::FromValue;
     let document = crate::standards::v1::subsets::any::schema::default_document();
     let history = semio_framework_plugin::HistoryView::empty();
     let view = ArtifactView::new(&document, &history);
@@ -173,12 +173,12 @@ async fn a_cancelled_release_is_inert_and_the_wire_defaults_hold() {
     let emit = crate::editor::layout::commands::canvas_pointer_up::handle(&crate::editor::layout::commands::canvas_pointer_up::CanvasPointerUp { cancelled: true }, &view, &cfg).expect("cancel");
     assert!(emit.artifact_mutations.is_empty() && emit.effects.is_empty(), "a cancel never selects or commits");
 
-    let f = dsl::DslValue::float;
-    let legacy = dsl::DslValue::Object(vec![("x".into(), f(5.0)), ("y".into(), f(6.0)), ("width".into(), f(800.0)), ("height".into(), f(600.0))]);
+    let f = semio_framework_value::DslValue::float;
+    let legacy = semio_framework_value::DslValue::Object(vec![("x".into(), f(5.0)), ("y".into(), f(6.0)), ("width".into(), f(800.0)), ("height".into(), f(600.0))]);
     let moved = canvas_pointer_move::CanvasPointerMove::from_value(legacy).expect("legacy move decodes");
     assert_eq!(moved.samples_or_last(), vec![[5.0, 6.0]], "an absent `samples` is the single (x, y)");
     assert_eq!(moved.last_sample(), [5.0, 6.0]);
-    let released = crate::editor::layout::commands::canvas_pointer_up::CanvasPointerUp::from_value(dsl::DslValue::Object(Vec::new())).expect("legacy release decodes");
+    let released = crate::editor::layout::commands::canvas_pointer_up::CanvasPointerUp::from_value(semio_framework_value::DslValue::Object(Vec::new())).expect("legacy release decodes");
     assert!(!released.cancelled, "an absent `cancelled` is a real release");
 }
 

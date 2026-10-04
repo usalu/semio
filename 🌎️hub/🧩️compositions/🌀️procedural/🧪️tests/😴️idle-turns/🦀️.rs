@@ -12,7 +12,7 @@
 //! turns and 4 437 B/turn of guest linear memory. See `📓️idle-turns-2026-09-10.md`.
 use semio_framework_os_kernel as store;
 use semio_framework_plugin::kernel::{ActorInstanceLifecycleAck, ActorInstanceLifecycleReceipt, ActorInstanceOpenRequest, AppInstanceId, Budget, Event, TurnStatus};
-use semio_framework_plugin::plugin_runtime::{install_plugin_bundle_result, plugin_document_text, plugin_load_document_text, plugin_render, PluginRuntime};
+use semio_framework_plugin::plugin_runtime::{install_plugin_bundle_result, plugin_document_text, plugin_render, PluginRuntime};
 
 /// 🧮️ Weighs every allocation the idle turns make, so the growth law reads bytes rather than pages.
 #[global_allocator]
@@ -84,7 +84,7 @@ fn preview_view_state() -> String {
 /// session, the window-transient partitions and the tessellation request table.
 async fn arm_example(runtime: &ProceduralRuntime, dsl: &str) {
     let booted = plugin_document_text(runtime, IDLE_INSTANCE).await.expect("booted document text");
-    plugin_load_document_text(runtime, IDLE_INSTANCE, &store::ArtifactTextFiles { dsl: dsl.into(), ops: booted.ops }).await.expect("the bundled example loads into the booted instance");
+    semio_framework_plugin::artifact_app_laws::plugin_load_document_text::<_, semio_s_artifact_procedural_generation3d::Generation3dSnapshot, semio_s_artifact_procedural_generation3d::Generation3dMutation>(runtime, IDLE_INSTANCE, &store::ArtifactTextFiles { dsl: dsl.into(), ops: booted.ops }).await.expect("the bundled example loads into the booted instance");
     let view_state = preview_view_state();
     for _ in 0..4 {
         let _ = plugin_render(runtime, IDLE_INSTANCE, GENERATION3D_PREVIEW_BODY, &view_state).await;

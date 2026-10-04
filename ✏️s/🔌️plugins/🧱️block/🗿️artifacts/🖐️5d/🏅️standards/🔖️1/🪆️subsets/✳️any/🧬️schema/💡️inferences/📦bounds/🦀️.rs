@@ -9,7 +9,7 @@ use crate::Block5dSnapshot;
 
 //#region 🔖️Bounds
 /// 📦️ Axis-aligned bounding box in the part kind's local 3d space.
-#[derive(Clone, Copy, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -20,7 +20,7 @@ pub struct BoundingBox3d {
 
 /// 📦️ Aggregate geometric stats over `Block5dSnapshot::grips`' 3d placements — `None` bounding box
 /// for an empty catalog (matches `Block5dSnapshot::default()`, satisfying the inference default law).
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]

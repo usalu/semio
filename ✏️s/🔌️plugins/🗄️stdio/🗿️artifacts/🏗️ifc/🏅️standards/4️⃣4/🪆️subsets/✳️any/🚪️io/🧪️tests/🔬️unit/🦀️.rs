@@ -36,11 +36,11 @@ mod conformance_laws {
     #[semio_framework_async_macros::async_test]
     async fn committed_facet_files_parse() {
         for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
-            let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
-            assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
+            let grammar = semio_framework_dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
+            assert_eq!(grammar.dialect, semio_framework_dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
         }
         for (label, text) in [("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO)] {
-            dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
+            semio_framework_dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
         }
     }
 
@@ -49,8 +49,8 @@ mod conformance_laws {
     /// `m5_handcrafted_grammar_conformance` itself does.
     #[semio_framework_async_macros::async_test]
     async fn grammar_conformance_law() {
-        let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
-        let recognizer = dsl::Recognizer::compile(&grammar);
+        let grammar = semio_framework_dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
+        let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
         let text = store::ArtifactDsl::print_dsl(&demo_ifc_snapshot());
         let (envelope, body) = store::semio_format::split_text_preamble(&text).expect("split preamble");
         let reconstructed = format!("{}\n{body}", envelope.envelope_id());
@@ -64,12 +64,29 @@ mod conformance_laws {
         assert!(recognizer.recognize(&empty_reconstructed).expect("recognize"), "grammar did not recognize empty dsl body:\n{empty_reconstructed}");
     }
 
+    #[test]
+    fn grammar_and_native_codecs_retain_all_neutral_binary64_words() {
+        let input: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json")).expect("neutral IFC4 scalar words");
+        let words: Vec<u64> = input["binary64Words"].as_array().expect("binary64 words").iter().map(|word| u64::from_str_radix(word.as_str().expect("word"), 16).expect("hex word")).collect();
+        let mut value = demo_ifc_snapshot();
+        value.entities[0].args = words.iter().map(|word| snapshot::IfcValue::Real(f64::from_bits(*word))).collect();
+        let grammar = semio_framework_dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("IFC4 native grammar");
+        let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("IFC4 grammar fragments");
+        let text = store::ArtifactDsl::print_dsl(&value);
+        let (envelope, body) = store::semio_format::split_text_preamble(&text).expect("native envelope");
+        assert!(recognizer.recognize(&format!("{}\n{body}", envelope.envelope_id())).expect("native word grammar"));
+        let decoded = [<IfcSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("native scalar text"), <IfcSnapshot as store::ArtifactPack>::decode_pack(&store::ArtifactPack::encode_pack(&value)).expect("native scalar Pack")];
+        for restored in decoded {
+            assert_eq!(restored.entities[0].args.iter().map(|value| match value { snapshot::IfcValue::Real(value) => value.to_bits(), _ => panic!("IFC4 real became another variant") }).collect::<Vec<_>>(), words);
+        }
+    }
+
     /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
     /// output for every `IfcMutation` demo case.
     #[semio_framework_async_macros::async_test]
     async fn ops_grammar_conformance_law() {
-        let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
-        let recognizer = dsl::Recognizer::compile(&grammar);
+        let grammar = semio_framework_dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
+        let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
         for mutation in mutations::demo_mutation_cases() {
             let printed = mutation.print_op();
             assert!(recognizer.recognize(&printed).unwrap_or(false), "mutations grammar did not recognize {printed:?} (from {mutation:?})");
@@ -80,8 +97,8 @@ mod conformance_laws {
     /// for every representative `IfcDiff` demo case.
     #[semio_framework_async_macros::async_test]
     async fn diff_grammar_conformance_law() {
-        let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
-        let recognizer = dsl::Recognizer::compile(&grammar);
+        let grammar = semio_framework_dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
+        let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
         for d in diff::demo_diff_cases() {
             let printed = d.print_diff();
             assert!(recognizer.recognize(&printed).unwrap_or(false), "diff grammar did not recognize {printed:?} (from {d:?})");
@@ -93,23 +110,23 @@ mod conformance_laws {
     /// diff's `encode_diff` — asserting `consumed == bytes.len()`.
     #[semio_framework_async_macros::async_test]
     async fn protocol_walk_law() {
-        let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
+        let pack_spec = semio_framework_dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
         let packed = store::ArtifactPack::encode_pack(&demo_ifc_snapshot());
         let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
-        let trace = dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
+        let trace = semio_framework_dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
         assert_eq!(trace.consumed, inner.len(), "pack walk did not consume every byte");
 
-        let op_spec = dsl::parse_protocol(mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
+        let op_spec = semio_framework_dsl::parse_protocol(mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
         for mutation in mutations::demo_mutation_cases() {
             let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
-            let trace = dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
+            let trace = semio_framework_dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
             assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");
         }
 
-        let diff_spec = dsl::parse_protocol(diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
+        let diff_spec = semio_framework_dsl::parse_protocol(diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
         for d in diff::demo_diff_cases() {
             let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
-            let trace = dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
+            let trace = semio_framework_dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
             assert_eq!(trace.consumed, bytes.len(), "diff walk did not consume every byte for {d:?}");
         }
     }
@@ -118,8 +135,8 @@ mod conformance_laws {
     /// `print_dsl`/`encode_pack` output of `demo_ifc_snapshot()`.
     #[semio_framework_async_macros::async_test]
     async fn fixture_honesty_law() {
-        const FIXTURE_DSL: &str = include_str!("../../../../../../🔖️2x3/🪆️subsets/🧱️base/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
-        const FIXTURE_PACK: &[u8] = include_bytes!("../../../../../../🔖️2x3/🪆️subsets/🧱️base/📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio");
+        const FIXTURE_DSL: &str = include_str!("../../../🧫️fixtures/🎬️demo/🗣️.dsl.semio");
+        const FIXTURE_PACK: &[u8] = include_bytes!("../../../🧫️fixtures/🎬️demo/🎒️.pack.semio");
 
         let demo = demo_ifc_snapshot();
 
@@ -130,20 +147,6 @@ mod conformance_laws {
         let decoded = <IfcSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
         assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_ifc_snapshot()");
         assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_ifc_snapshot()) drifted from the shipped .pack.semio fixture");
-    }
-
-    /// 🖊️ The ONLY way the two shipped IFC4 demo assets are ever refreshed: real
-    /// `print_dsl`/`encode_pack` output of `demo_ifc_snapshot()`, never a hand edit
-    /// (`fixture_honesty_law` above is what that honesty means). Run it deliberately after a codec
-    /// change — `cargo test -p semio-s-artifact-stdio-ifc --lib -- --ignored zzz_write` — then
-    /// re-run the law. Same committed shape `🖊️dwg`/`📜️docx` already ship.
-    #[semio_framework_async_macros::async_test]
-    #[ignore]
-    async fn zzz_write_demo_fixtures() {
-        let demo = demo_ifc_snapshot();
-        let assets = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️2x3/🪆️subsets/🧱️base/📚️examples/🎬️demo/🖼️assets");
-        std::fs::write(assets.join("🗣️.dsl.semio"), store::ArtifactDsl::print_dsl(&demo)).expect("write 🗣️.dsl.semio");
-        std::fs::write(assets.join("🎒️.pack.semio"), store::ArtifactPack::encode_pack(&demo)).expect("write 🎒️.pack.semio");
     }
 }
 //#endregion 🔖️ConformanceLaws

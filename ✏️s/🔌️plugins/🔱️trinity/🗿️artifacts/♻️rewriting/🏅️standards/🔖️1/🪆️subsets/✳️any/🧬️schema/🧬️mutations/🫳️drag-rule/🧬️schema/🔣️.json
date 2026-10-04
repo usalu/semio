@@ -44,7 +44,7 @@
       }
     },
     "dx": {
-      "type": "number",
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport",
       "x-semio-ui": {
         "widget": "stepper",
         "role": "value",
@@ -64,7 +64,7 @@
       }
     },
     "dy": {
-      "type": "number",
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport",
       "x-semio-ui": {
         "widget": "stepper",
         "role": "value",

@@ -16,3 +16,5 @@ async fn editor_dialect_matches_the_artifact_coordinate() {
 async fn editor_and_viewer_share_one_dialect() {
     semio_framework_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<StlAnyEditor, crate::viewer::stl::StlAnyViewer>().await;
 }
+
+semio_framework_plugin::history_edit_acceptance_law!("stdio", super::StlAnyEditor, || semio_framework_plugin::App { definition: super::create_stl_any_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️ascii/🪆️subsets/✳️any");

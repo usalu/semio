@@ -57,7 +57,7 @@ fn replaces_the_whole_active_session() {
 #[test]
 fn restoring_the_prior_session_restores_before() {
     let base = before();
-    let inverse = <IdentityConfigMutation as protocol::Mutation<IdentitySetting>>::inverse(&mutation(), &base);
+    let inverse = <IdentityConfigMutation as protocol::Mutation<IdentitySetting>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "sign-in/replaces-the-active-session-with-a-second-account: exactly one undo step");
     let IdentityConfigMutation::SignIn(undo) = &inverse[0] else {
         panic!("sign-in/replaces-the-active-session-with-a-second-account: undoing a replacement must be a sign-in, never a sign-out");

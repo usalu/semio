@@ -1,7 +1,9 @@
 use super::m5_auto_discovery::{self, ConformanceFacet, ProtocolFacetKind};
 use super::m5_soft_skip::{soft_skip_empty_bytes, soft_skip_missing};
 use super::pilot_resolve;
-use crate::os_dsl::{parse_protocol, verify_protocol_source, walk_protocol};
+use semio_framework_dsl::parse_protocol;
+use semio_framework_dsl::verify_protocol_source;
+use semio_framework_dsl::walk_protocol;
 use crate::os_store::semio_format::unwrap_binary;
 
 async fn inner_payload_from_semio_example(bytes: &[u8], label: &str) -> Option<Vec<u8>> {

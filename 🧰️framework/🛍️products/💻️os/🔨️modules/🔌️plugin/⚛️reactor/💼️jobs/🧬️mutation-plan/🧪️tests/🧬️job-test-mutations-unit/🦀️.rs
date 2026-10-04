@@ -29,7 +29,7 @@ fn direct_plan_and_inverse_preserve_job_semantics() {
     let plan = protocol::plan_of::<JobTestSnapshot, JobTestOp, AddValue>(&leaf, &base).expect("plan");
     assert_eq!(plan.len(), 1);
     assert_eq!(direct, JobTestSnapshot { value: 15 });
-    let inverse = JobTestOp::AddValue(leaf).inverse(&base);
+    let inverse = JobTestOp::AddValue(leaf).inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![JobTestOp::AddValue(AddValue { delta: -5 })]);
     assert_eq!(inverse[0].diff(&direct).diff().apply(&direct).expect("undo"), base);
 }

@@ -27,9 +27,12 @@ impl MutationKind<BitmapSnapshot, BitmapMutation> for ChangePaletteColor {
     fn diff(&self, base: &BitmapSnapshot) -> protocol::MutationOutcome<BitmapDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &BitmapSnapshot) -> Vec<BitmapMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &BitmapSnapshot) -> Result<Vec<BitmapMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change palette colour {}", self.index), &format!("Palettenfarbe {} ändern", self.index))
     }

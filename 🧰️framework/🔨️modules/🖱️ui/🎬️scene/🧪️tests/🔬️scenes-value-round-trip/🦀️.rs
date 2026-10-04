@@ -38,7 +38,7 @@ fn world3d_scene_round_trips_dense_and_bare_and_keeps_integers_as_integers() {
 #[test]
 fn missing_required_field_reports_the_field_name() {
     let empty = DslValue::object([]);
-    assert_eq!(TableScene::from_value(empty), Err(ValueError::new("missing field `columnsJson`")));
+    assert_eq!(TableScene::from_value(empty), Err(ValueError::new(protocol::value::ValueRefusalKind::InvalidValue, "missing field `columnsJson`")));
 }
 
 /// 🕸️ `NodeGraphScene` is the deepest nesting in this crate — it embeds `NodeGraphNodeRecord`
@@ -68,7 +68,7 @@ fn node_graph_scene_round_trips_through_every_nested_record_type() {
 fn node_graph_operator_catalogue_records_round_trip() {
     let variadic = NodeGraphOperatorVariadicRecord { slot_key: "vs".into(), min: 1, max: Some(4) };
     let channel =
-        NodeGraphOperatorChannelRecord { code: "c".into(), abbreviation: "C".into(), name: "Chan".into(), full_name: "Channel".into(), operators: vec!["op".into()], value_types: vec!["geometry".into()], default_json: Some("null".into()), label: None, cardinality: "one".into() };
+        NodeGraphOperatorChannelRecord { code: "c".into(), abbreviation: "C".into(), name: "Chan".into(), full_name: "Channel".into(), operators: vec!["op".into()], value_types: vec!["geometry".into()], item_types: Vec::new(), default_json: Some("null".into()), label: None, cardinality: "one".into() };
     let operator = NodeGraphOperatorRecord {
         id: "op1".into(),
         extension: "core".into(),

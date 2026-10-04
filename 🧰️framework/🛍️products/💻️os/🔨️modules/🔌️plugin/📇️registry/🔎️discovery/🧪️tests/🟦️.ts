@@ -6,7 +6,8 @@ import { buildSync } from "esbuild";
 import { spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { parseComponentSourceOwnerV1, parseCompiledComponentOwnerV1 } from "../🟦️.ts";
+import { generatePluginRegistry, generatePluginRegistryReport, parseComponentSourceOwnerV1, parseCompiledComponentOwnerV1, parseRegistryChannelDiagnosticsV1 } from "../🟦️.ts";
+import { REGISTRY_HOST_APP_CHANNEL_VERSION } from "../../🧬️schema/🟦️.ts";
 import contract from "../🧬️schema/🔣️.json";
 import corpus from "../🧫️fixtures/🔣️.json";
 import identity from "../../../../../../../🔨️modules/🪪️identity/📁️installation/🧬️schema/🔣️.json";
@@ -62,6 +63,34 @@ test("real source and descriptor admission preserves compiled-only ownership", (
     expect(() => parseCompiledComponentOwnerV1(cargo, root)).toThrow(/identity/);
     writeFileSync(descriptor, JSON.stringify({ ...corpus.source.descriptor, executionProtocol: { appChannelVersion: 19 } }));
     expect(() => parseCompiledComponentOwnerV1(cargo, root)).toThrow(/registry descriptor/);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("dev generation withholds stale-channel plugins and their dependents while the refusing gate names them", () => {
+  const output = process.env.SEMIO_TEST_ARTIFACT_DIR;
+  if (!output) throw Error("Stale-channel registry law requires ticket artifacts");
+  mkdirSync(output, { recursive: true });
+  const root = mkdtempSync(join(output, "stale-channel-"));
+  try {
+    const owner = (id: string, channel: number, dependsOn: readonly string[] = []) => {
+      const manifestPath = `${id}/📦️packages/🦀️rust/Cargo.toml`;
+      mkdirSync(join(root, dirname(manifestPath)), { recursive: true });
+      const cargo = corpus.source.cargo.replace('name = "portable-component"', `name = "${id}-component"`).replace('package = "semio:portable"', `package = "semio:${id}"`);
+      writeFileSync(join(root, manifestPath), `${cargo}${dependsOn.length ? `depends-on = ${JSON.stringify(dependsOn)}\n` : ""}deployment-directory=${JSON.stringify(`🧪️${id}`)}\n`);
+      writeFileSync(join(root, id, "🔣️.json"), JSON.stringify({ ...corpus.source.descriptor, packageId: `semio:${id}`, manifest: { ...corpus.source.descriptor.manifest, pluginId: id }, executionProtocol: { appChannelVersion: channel } }));
+      return { lang: "🦀️rust", manifestPath };
+    };
+    const packages = [owner("fresh", REGISTRY_HOST_APP_CHANNEL_VERSION), owner("stale", REGISTRY_HOST_APP_CHANNEL_VERSION - 1), owner("dependent", REGISTRY_HOST_APP_CHANNEL_VERSION, ["stale"])] as never;
+    const report = generatePluginRegistryReport(root, { packages, staleChannel: "exclude" });
+    expect(report.entries.map((entry) => entry.pluginId)).toEqual(["fresh"]);
+    expect(report.diagnostics).toEqual([
+      { code: "stale-channel-dependency", pluginId: "dependent", cratePath: "dependent/📦️packages/🦀️rust", dependency: "stale" },
+      { code: "stale-channel", pluginId: "stale", cratePath: "stale/📦️packages/🦀️rust", descriptorChannel: REGISTRY_HOST_APP_CHANNEL_VERSION - 1, hostChannel: REGISTRY_HOST_APP_CHANNEL_VERSION },
+    ]);
+    expect(parseRegistryChannelDiagnosticsV1(`${JSON.stringify(report.diagnostics, null, 2)}\n`)).toEqual(report.diagnostics);
+    expect(() => generatePluginRegistry(root, { packages })).toThrow(/stale-channel descriptors refused .*stale \(stale\/📦️packages\/🦀️rust\)/);
+    expect(() => generatePluginRegistryReport(root, { packages, staleChannel: "refuse" })).toThrow(/stale-channel descriptors refused/);
+    expect(() => parseRegistryChannelDiagnosticsV1(JSON.stringify([{ ...report.diagnostics[1], extra: true }]))).toThrow(/undeclared shape/);
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
 

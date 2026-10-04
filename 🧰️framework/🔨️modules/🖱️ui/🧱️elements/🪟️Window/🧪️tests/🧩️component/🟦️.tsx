@@ -1,7 +1,7 @@
 // #region 🔌️Adapters
 import { fireEvent, render, within } from "@testing-library/react";
 import * as React from "react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { Window } from "../../🟦️.tsx";
 import { uiDataLabel } from "../../../🎗️UiLabel/🟦️.tsx";
 import chromeStacking from "../../🧫️fixtures/🪜️chrome-stacking.json";
@@ -13,7 +13,70 @@ import { Mode } from "../../../🎨️Canvas/🟦️.tsx";
 import { createShellI18nInstance, disposeShellI18nInstance } from "../../../../🎯️targets/⚛️react/🟦️.tsx";
 import dockNames from "../../../../🧫️fixtures/🪟️dock-accessible-names/🔣️.json";
 import dockNamesSchema from "../../../../🧬️schema/🪟️dock-accessible-names/🔣️.json";
+import Ajv2020 from "ajv/dist/2020.js";
+import searchRouting from "../../🧫️fixtures/🔎️search-fold-routing/🔣️.json";
+import searchRoutingSchema from "../../🧬️schema/🔎️search-fold-routing/🔣️.json";
+import paneFolds from "../../🧫️fixtures/🔀️pane-fold-independence/🔣️.json";
+import paneFoldsSchema from "../../🧬️schema/🔀️pane-fold-independence/🔣️.json";
+import { createMemoryStoragePort } from "@semio-tech/framework";
+import { ShellScopeProvider, createShellScope } from "../../../🐚️ShellScope/🟦️.tsx";
 // #endregion 🔌️Adapters
+
+it("keeps Actions and Search pane folds independent in both explicit locales", () => {
+  const validate = new Ajv2020({ strict: true }).compile(paneFoldsSchema);
+  expect(validate(paneFolds)).toBe(true);
+  expect(validate({ ...paneFolds, sharedToggle: true })).toBe(false);
+  for (const locale of searchRouting.locales) for (const entry of paneFolds.cases) {
+    const root = document.createElement("div"), app = document.createElement("div"), portal = document.createElement("div");
+    root.append(app, portal);
+    document.body.append(root);
+    const scope = createShellScope({ shellId: "pane-fold-" + locale.locale + "-" + entry.id, storage: createMemoryStoragePort(), initialLocale: locale.locale as "en" | "de" });
+    scope.rootRef.current = root;
+    scope.portalLayerRef.current = portal;
+    const view = render(<ShellScopeProvider scope={scope}><Window id="fold-window" active actionPane={<div data-testid="fold-actions">Actions</div>} search={{ input: { placeholder: uiDataLabel(locale.placeholder) } }}>Body</Window></ShellScopeProvider>, { container: app });
+    try {
+      for (const kind of entry.clicks) fireEvent.click(app.querySelector('[id="framework.window.foldWindow.' + kind + '.toggle"]')!);
+      expect(view.queryByTestId("fold-actions") !== null, locale.locale + ":" + entry.id).toBe(entry.actions);
+      expect(view.queryByPlaceholderText(locale.placeholder) !== null, locale.locale + ":" + entry.id).toBe(entry.search);
+    } finally {
+      view.unmount();
+      root.remove();
+    }
+  }
+  console.info("[DEBUG] Window independent pane folds: twelve bilingual native DOM toggle sequences");
+});
+
+it("unfolds only Search for admitted printable keys in either explicit locale", () => {
+  const validate = new Ajv2020({ strict: true }).compile(searchRoutingSchema);
+  expect(validate(searchRouting)).toBe(true);
+  expect(validate({ ...searchRouting, ambientLocale: "en" })).toBe(false);
+  expect(validate({ ...searchRouting, cases: searchRouting.cases.slice(1) })).toBe(false);
+  for (const locale of searchRouting.locales) for (const entry of searchRouting.cases) {
+    const root = document.createElement("div"), app = document.createElement("div"), portal = document.createElement("div");
+    root.append(app, portal);
+    document.body.append(root);
+    const scope = createShellScope({ shellId: "search-routing-" + locale.locale + "-" + entry.id, storage: createMemoryStoragePort(), initialLocale: locale.locale as "en" | "de" });
+    scope.rootRef.current = root;
+    scope.portalLayerRef.current = portal;
+    const view = render(
+      <ShellScopeProvider scope={scope}>
+        <Window id="routing-window" active actionPane={<div data-testid="action-content">Actions</div>} search={{ input: { placeholder: uiDataLabel(locale.placeholder) } }}>Body</Window>
+      </ShellScopeProvider>,
+      { container: app },
+    );
+    try {
+      expect(view.queryByPlaceholderText(locale.placeholder)).toBeNull();
+      expect(view.queryByTestId("action-content")).toBeNull();
+      fireEvent.keyDown(app, entry);
+      expect(view.queryByPlaceholderText(locale.placeholder) !== null, locale.locale + ":" + entry.id).toBe(entry.searchVisible);
+      expect(view.queryByTestId("action-content") !== null, locale.locale + ":" + entry.id).toBe(entry.actionsVisible);
+    } finally {
+      view.unmount();
+      root.remove();
+    }
+  }
+  console.info("[DEBUG] Search fold routing: sixteen explicit-locale native keyboard event cases");
+});
 
 // #region 🪜️ChromeStacking
 /** 🪜️ The chrome-stacking law, replayed from `🧫️fixtures/🪜️chrome-stacking.json`. jsdom computes no stacking, so this
@@ -96,5 +159,36 @@ describe("Dock accessible names", () => {
         disposeShellI18nInstance(i18n);
       }
     });
+  }
+});
+
+import contentClearance from "../../🧫️fixtures/🚧️content-clearance/🔣️.json";
+import contentClearanceSchema from "../../🧬️schema/🚧️content-clearance/🔣️.json";
+import { ChromeAwareWindowScrollSurface, Scrollable } from "../../../../🎯️targets/⚛️react/🟦️.tsx";
+
+it("keeps the first chrome-aware content control reachable without changing scroll position", () => {
+  expect(new Ajv2020({ strict: true }).validate(contentClearanceSchema, contentClearance)).toBe(true);
+  for (const row of contentClearance.cases) {
+    const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+      const slot = this.getAttribute("data-slot");
+      const top = slot === "window-dead-line-scroll" ? row.surfaceTop : slot === "scroll-area" ? row.chromeBottom : row.bodyTop;
+      const bottom = slot === "window-engagement-overlay" ? Number(this.getAttribute("data-test-bottom") ?? row.chromeBottom) : top + 400;
+      return { x: 0, y: top, top, bottom, left: 0, right: 600, width: 600, height: bottom - top, toJSON: () => ({}) };
+    });
+    const view = render(<div data-slot="window-body">
+      {row.overlay ? <div data-slot="window-engagement-overlay">Actions</div> : null}
+      <ChromeAwareWindowScrollSurface ref={(el) => { if (el) el.scrollTop = row.scrollTop; }}>
+        <div data-window-content-layout={row.edgeless ? "edgeless" : "chrome-aware"}><button>Add row</button>{"nestedEdgeless" in row && row.nestedEdgeless ? <div data-window-content-layout="edgeless">Canvas</div> : null}{"nestedChromeBottom" in row ? <div data-slot="window-body"><div data-slot="window-engagement-overlay" data-test-bottom={row.nestedChromeBottom}>Nested actions</div></div> : null}</div>
+        {"nestedScroller" in row && row.nestedScroller ? <Scrollable><div style={{ height: 1200 }}>Long details</div></Scrollable> : null}
+      </ChromeAwareWindowScrollSurface>
+    </div>);
+    try {
+      const surface = view.container.querySelector<HTMLElement>('[data-slot="window-dead-line-scroll"]')!;
+      expect(Number.parseFloat(surface.style.paddingBlockStart) || 0, row.id).toBe(row.inset);
+      expect(surface.scrollTop, row.id).toBe(row.scrollTop);
+      const nestedScroller = surface.querySelector<HTMLElement>('[data-slot="scroll-area"]');
+      if (nestedScroller) { expect(nestedScroller.scrollTop, row.id).toBe(0); expect(Number.parseFloat(nestedScroller.style.paddingBlockStart) || 0, row.id).toBe(0); }
+      expect(within(surface).getByRole("button", { name: "Add row" })).toBeTruthy();
+    } finally { view.unmount(); bounds.mockRestore(); }
   }
 });

@@ -165,3 +165,29 @@ describe("🖱️ closed context menu render budget", () => {
   });
 });
 // #endregion 🔁️ClosedRenderBudget
+
+// #region 💬️DisabledWithReason
+describe("🖱️ disabled context-menu rows (the RowAction disabled-with-reason contract)", () => {
+  it("keeps a disabled row focusable with aria-disabled, names its reason, and never runs it", () => {
+    const onDelete = vi.fn();
+    const onCopy = vi.fn();
+    const rows: ContextMenuItem[] = [
+      { id: "copy", label: uiDataLabel("Copy"), action: "copy", onSelect: onCopy },
+      { id: "delete", label: uiDataLabel("Delete Selection"), action: "deleteSelection", disabled: true, reason: uiDataLabel("Nothing selected"), onSelect: onDelete },
+    ];
+    render(<ContextMenuController open position={{ x: 40, y: 40 }} items={rows} onOpenChange={() => undefined} title={uiDataLabel("Actions")} />);
+    const row = document.getElementById("delete")!;
+    expect([row.getAttribute("aria-disabled"), row.hasAttribute("disabled")]).toEqual(["true", false]);
+    expect((row.getAttribute("aria-describedby") ?? "").split(" ").map((id) => document.getElementById(id)?.textContent).join(" ")).toBe("Nothing selected");
+    fireEvent.keyDown(window, { key: "ArrowDown" });
+    fireEvent.keyDown(window, { key: "ArrowDown" });
+    expect(document.activeElement?.id).toBe("delete");
+    fireEvent.keyDown(window, { key: "Enter" });
+    fireEvent.click(row);
+    expect(onDelete).not.toHaveBeenCalled();
+    expect(document.getElementById("delete")).not.toBeNull();
+    fireEvent.click(document.getElementById("copy")!);
+    expect(onCopy).toHaveBeenCalledTimes(1);
+  });
+});
+// #endregion 💬️DisabledWithReason

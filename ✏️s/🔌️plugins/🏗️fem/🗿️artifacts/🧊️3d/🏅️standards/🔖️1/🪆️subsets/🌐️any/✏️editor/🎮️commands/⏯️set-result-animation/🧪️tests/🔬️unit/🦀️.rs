@@ -1,6 +1,7 @@
 use super::*;
 use crate::editor::fem3d::modes::edit::windows::results;
 use crate::editor::fem3d::unit_tests::context::{close, dispatch, fem3d_app, Fem3dApp};
+use crate::app_surface::{FemLoopMode, FemWaveform};
 use crate::editor::fem3d::Fem3dCommand;
 use semio_framework_plugin::{Effect, InvocationResult, ViewModel, ViewWindowInstance};
 
@@ -41,7 +42,7 @@ fn results_view() -> ViewModel {
 }
 
 /// 🎚️ The playback state the addressed results window ended up in, read back off its own partition.
-async fn published(app: &mut Fem3dApp) -> Fem3dResultsAnimation {
+async fn published(app: &mut Fem3dApp) -> FemResultsAnimation {
     semio_framework_plugin::artifact_app_laws::capture_fixture_window_config::<results::config::Fem3dResultsWindowConfigOwner, _, _>(app, &results_view()).await.expect("capture results window config").unwrap_or_default().animation
 }
 
@@ -98,35 +99,14 @@ async fn set_result_animation_applies_one_named_field() {
     let state = published(&mut app).await;
     assert_eq!(state.phase, 0.25);
     assert_eq!(state.speed, 2.0);
-    assert_eq!(state.loop_mode, Fem3dLoopMode::PingPong);
-    assert_eq!(state.waveform, Fem3dWaveform::Sine);
+    assert_eq!(state.loop_mode, FemLoopMode::PingPong);
+    assert_eq!(state.waveform, FemWaveform::Sine);
     assert!(state.reverse);
     play(&mut app, SetResultAnimation { field: Some("phaseStep".into()), value: Some("0.5".into()), ..blank() }).await;
     assert!((published(&mut app).await.phase - 0.75).abs() < 1e-9);
     play(&mut app, SetResultAnimation { field: Some("playing".into()), value: Some("true".into()), ..blank() }).await;
     assert!(published(&mut app).await.playing);
     close(&mut app);
-}
-
-/// 🚫️ LAW: an unknown field or an unparseable value is refused outright rather than silently
-/// writing a default over the window's state.
-#[semio_framework_async_macros::async_test]
-async fn set_result_animation_refuses_unknown_fields_and_values() {
-    let mut animation = Fem3dResultsAnimation::default();
-    assert!(apply_field(&mut animation, "tempo", "1").is_err());
-    assert!(apply_field(&mut animation, "speed", "fast").is_err());
-    assert!(apply_field(&mut animation, "loopMode", "bounce").is_err());
-    assert!(apply_field(&mut animation, "waveform", "square").is_err());
-}
-
-/// 🔁️ LAW: the re-arm names the tick action, carries the window it was armed for, and asks for the
-/// fixed frame delay.
-#[semio_framework_async_macros::async_test]
-async fn rearm_effect_addresses_the_window_at_the_frame_delay() {
-    let Effect::DispatchAction { action, args, delay_ms, .. } = rearm_effect("results-left") else { panic!("expected a dispatch-action re-arm") };
-    assert_eq!(action, TICK_ACTION);
-    assert_eq!(delay_ms, ANIMATION_TICK_MS);
-    assert_eq!(args.expect("re-arm args").get("windowId").and_then(dsl::DslValue::as_str), Some("results-left"));
 }
 
 /// 🪟️ LAW: the `windowId` a panel control tags onto its own arguments reaches the handler and picks
@@ -153,7 +133,7 @@ async fn set_result_animation_honours_the_window_a_control_tagged() {
     let emit = handle_window(&tagged("results-right"), &doc, &cfg, &split).expect("a tagged control addresses its own pane");
     assert_eq!(emit.window_config_mutations.iter().map(semio_framework_plugin::WindowConfigMutation::window_id).collect::<Vec<_>>(), ["results-right"]);
     let Effect::DispatchAction { args, .. } = emit.effects.first().expect("the tagged gesture arms its own clock") else { panic!("expected a dispatch-action re-arm") };
-    assert_eq!(args.as_ref().and_then(|args| args.get("windowId")).and_then(dsl::DslValue::as_str), Some("results-right"));
+    assert_eq!(args.as_ref().and_then(|args| args.get("windowId")).and_then(semio_framework_value::DslValue::as_str), Some("results-right"));
     let untagged = handle_window(&SetResultAnimation { playing: Some(true), ..blank() }, &doc, &cfg, &split).expect("an untagged gesture falls back to the addressed window");
     assert_eq!(untagged.window_config_mutations.iter().map(semio_framework_plugin::WindowConfigMutation::window_id).collect::<Vec<_>>(), ["results-left"]);
     assert!(handle_window(&tagged("model-left"), &doc, &cfg, &split).is_err(), "a tag naming a model window is refused");

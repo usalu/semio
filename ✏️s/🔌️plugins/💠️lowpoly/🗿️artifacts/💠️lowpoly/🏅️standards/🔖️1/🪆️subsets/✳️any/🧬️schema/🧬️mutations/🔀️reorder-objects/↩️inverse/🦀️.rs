@@ -4,10 +4,13 @@ use super::ReorderObjects;
 use crate::{LowpolyMutation, LowpolySnapshot};
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &ReorderObjects, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {
+pub fn inverse(payload: &ReorderObjects, base: &LowpolySnapshot) -> Result<Vec<LowpolyMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(original_index) = base.objects.iter().position(|object| object.id == payload.id) else {
         return Vec::new();
     };
     vec![LowpolyMutation::ReorderObjects(ReorderObjects { id: payload.id.clone(), to_index: original_index })]
+
+    })())
 }
 //#endregion 🔖️Inverse

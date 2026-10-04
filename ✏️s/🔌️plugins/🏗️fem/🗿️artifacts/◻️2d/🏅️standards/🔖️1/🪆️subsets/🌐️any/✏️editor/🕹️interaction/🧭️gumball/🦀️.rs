@@ -9,12 +9,12 @@
 use crate::editor::fem2d::interaction::{fem2d_entity_kind, FEM2D_GRANULARITY_ELEMENT, FEM2D_GRANULARITY_LOAD, FEM2D_GRANULARITY_NODE, FEM2D_GRANULARITY_REGION, FEM2D_GRANULARITY_SUPPORT};
 use crate::editor::fem2d::interaction::canvas_gesture::FEM2D_UTILITY_TRANSFORM;
 use crate::editor::fem2d::modes::edit::windows::model::{fem2d_element_endpoints, find_node_2d, screen_2d, ORIGIN_2D, SCALE_2D};
-use crate::editor::fem2d::transient::{FemGumballGesture, FemGumballPhase, FemGumballTool};
+use crate::editor::fem2d::transient::FemGumballGesture;
 use crate::standards::v1::subsets::any::schema::mutations::move_selection::MoveSelection;
 use crate::standards::v1::subsets::any::schema::mutations::text::Fem2dMutation;
 use crate::{element_id, Fem2dSnapshot, FemLoad};
 use machine::Command;
-use semio_framework_tool_machine::{ToolAbortReason, ToolMachineRunner, ToolRefusal, ToolStep, ToolTransaction, ToolYield};
+use semio_framework_tool_machine::{GesturePhase, GestureTool, ToolAbortReason, ToolMachineRunner, ToolRefusal, ToolStep, ToolTransaction, ToolYield};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 
@@ -299,8 +299,9 @@ pub struct Fem2dGumballTool {
     base_revision: String,
 }
 
-impl FemGumballTool for Fem2dGumballTool {
-    type Leaf = MoveSelection;
+impl GestureTool for Fem2dGumballTool {
+    type Gesture = FemGumballGesture;
+    type Tick = MoveSelection;
     type Mutation = Fem2dMutation;
 
     fn start(verb: &str, authoring_seed: &str, base_revision: &str) -> Result<Self, ToolRefusal> {
@@ -327,23 +328,20 @@ impl FemGumballTool for Fem2dGumballTool {
         &self.base_revision
     }
 
-    fn at_rest(&self) -> bool {
-        self.runner.at_rest()
-    }
 
     fn abort(&mut self, reason: ToolAbortReason) {
         self.runner.abort(reason);
     }
 
-    fn send(&mut self, phase: FemGumballPhase, tick: Option<MoveSelection>) -> Result<ToolStep<Fem2dMutation>, ToolRefusal> {
+    fn send(&mut self, phase: GesturePhase, tick: Option<MoveSelection>) -> Result<ToolStep<Fem2dMutation>, ToolRefusal> {
         let request = Fem2dGumballRequest { tick };
         let event = match phase {
-            FemGumballPhase::Stream => gumball_tool::Event::Stream(request),
-            FemGumballPhase::Commit if !self.runner.at_rest() => gumball_tool::Event::Finish(request),
-            FemGumballPhase::Abort(_) => gumball_tool::Event::Cancel,
-            FemGumballPhase::Once | FemGumballPhase::Commit => gumball_tool::Event::Records(request),
+            GesturePhase::Stream => gumball_tool::Event::Stream(request),
+            GesturePhase::Commit if !self.runner.at_rest() => gumball_tool::Event::Finish(request),
+            GesturePhase::Abort(_) => gumball_tool::Event::Cancel,
+            GesturePhase::Once | GesturePhase::Commit => gumball_tool::Event::Records(request),
         };
-        self.runner.send(event, protocol::HybridLogicalTimestamp { actor: 0, physical_ms: semio_framework_job::default_now_ms().unwrap_or(0), logical: 0 })
+        self.runner.send(event, semio_framework_tool_machine::authoring_clock(0))
     }
 
     fn persist(self) -> Option<FemGumballGesture> {
@@ -361,7 +359,7 @@ pub fn fem2d_gumball_active(active_utility: &str, selection_ids: &[String]) -> b
 /// 🧭️ The `meta:gumball` layer of the Transform utility (`📐️Canvas2dHost/🧬️schema/🔣️gumball-meta`): handles at the
 /// selection pivot in layer units, the model→layer map of `screen_2d`, and `liveDispatch` — the hosts stream the gesture
 /// so every window previews the open transaction (the results window re-solves while the drag goes on).
-pub fn fem2d_gumball_meta_layer(doc: &Fem2dSnapshot, selection_ids: &[String], active_utility: &str, window_id: Option<&str>) -> Option<dsl::json::Value> {
+pub fn fem2d_gumball_meta_layer(doc: &Fem2dSnapshot, selection_ids: &[String], active_utility: &str, window_id: Option<&str>) -> Option<semio_framework_pack_json::Value> {
     if !fem2d_gumball_active(active_utility, selection_ids) {
         return None;
     }
@@ -369,7 +367,7 @@ pub fn fem2d_gumball_meta_layer(doc: &Fem2dSnapshot, selection_ids: &[String], a
     let pivot = fem2d_transform_pivot(doc, &targets)?;
     let (layer_x, layer_y) = screen_2d(pivot.0, pivot.1);
     let config = window_id.map(gumball_config_for_window).unwrap_or_default();
-    Some(dsl::json!({
+    Some(semio_framework_pack_json::json!({
         "id": "meta:gumball",
         "role": "meta",
         "gumball": {

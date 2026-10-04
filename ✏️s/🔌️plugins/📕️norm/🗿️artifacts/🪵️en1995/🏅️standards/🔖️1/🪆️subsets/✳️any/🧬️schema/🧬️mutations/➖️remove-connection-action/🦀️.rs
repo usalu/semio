@@ -9,7 +9,10 @@ pub struct RemoveConnectionAction { pub connection_id: String, pub index: usize 
 impl protocol::MutationKind<En1995Snapshot, En1995Mutation> for RemoveConnectionAction {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "connection-action", kind: "remove-connection-action", record: "RemovedConnectionAction" };
     fn diff(&self, base: &En1995Snapshot) -> protocol::MutationOutcome<<En1995Mutation as protocol::Mutation<En1995Snapshot>>::Diff> { super::diff::diff(self, base) }
-    fn inverse(&self, base: &En1995Snapshot) -> Vec<En1995Mutation> { super::inverse::inverse(self, base) }
+    fn inverse(&self, base: &En1995Snapshot) -> Result<Vec<En1995Mutation>, semio_framework_value::ValueError> {
+    Ok({ super::inverse::inverse(self, base)? 
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove action #{} from connection {}", self.index, self.connection_id), &format!("Einwirkung #{} aus Verbindung {} entfernen", self.index, self.connection_id)) }
     fn target(&self) -> Vec<String> { vec![self.connection_id.clone(), self.index.to_string()] }
 }

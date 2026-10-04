@@ -23,7 +23,7 @@ pub fn diff(payload: &ReplaceRegion, base: &Fem2dSnapshot) -> protocol::Mutation
         return rejection;
     }
     if *existing == payload.new_region {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Region \"{}\" is already equal to the replacement value.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Region \"{}\" is already equal to the replacement value.", payload.id));
     }
     protocol::MutationOutcome::new(Fem2dDiff { regions: Some(Fem2dRegionsDelta { patched: vec![Fem2dRegionsPatchEntry { id: payload.id.clone(), item: payload.new_region.clone() }], ..Default::default() }), ..Default::default() })
 }

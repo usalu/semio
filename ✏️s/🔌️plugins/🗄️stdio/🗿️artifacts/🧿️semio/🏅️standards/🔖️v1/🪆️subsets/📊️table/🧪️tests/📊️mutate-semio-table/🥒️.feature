@@ -81,6 +81,7 @@ Feature: Apply every typed semio TABLE mutation to a real 50-row survey table, a
       | remove-row      | {"RemoveRow":{"index":37}} |
       | reorder-rows    | {"ReorderRows":{"from":49,"to":0}} |
       | edit-cell       | {"EditCell":{"row_index":17,"column_name":"Zugang","new_value":{"kind":"bytes","value":[0,1,2,255]}}} |
+      | patch-snapshot | {"PatchSnapshot": {"patch": {"operation": "set", "path": "/columns/0/name", "value": "Bewertung"}}} |
 
   @id-inverse
   @level-exhaustive
@@ -102,6 +103,7 @@ Feature: Apply every typed semio TABLE mutation to a real 50-row survey table, a
       | remove-row      | {"RemoveRow":{"index":37}} |
       | reorder-rows    | {"ReorderRows":{"from":49,"to":0}} |
       | edit-cell       | {"EditCell":{"row_index":17,"column_name":"Zugang","new_value":{"kind":"bytes","value":[0,1,2,255]}}} |
+      | patch-snapshot | {"PatchSnapshot": {"patch": {"operation": "set", "path": "/columns/0/name", "value": "Bewertung"}}} |
 
   @id-spec-vector
   @level-exhaustive

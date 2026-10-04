@@ -1,16 +1,17 @@
 //! 🩹️ Trinity Jack app command — `patch-nodes`.
 
-use crate::standards::v1::subsets::any::schema::mutations::rename_node;
 use crate::standards::v1::subsets::any::schema::mutations::text::TrinityGraphMutation;
 use crate::JackSnapshot;
 use semio_framework_plugin::{Emit, Fault, FaultCode, FaultOrigin, NoConfigMutation};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::{change_node_label::ChangeNodeLabel, SemioGraphMutation};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::GraphNodeId;
 
-/// 🩹️ Renames the named nodes — or, when `node_ids` is empty, the nodes selected in the `ast`
-/// domain, which is what a rail press means. Every request that cannot move the document is refused
-/// by name instead of answering an empty emit (the silent empty emit read as an accepted edit that moved
-/// nothing, S15 session 11): `app.command.targets-required` when neither `nodeIds` nor a selection names a
-/// node — an agent has no selection and names them — `mutation.target-missing`, `app.command.invalid-args`.
-pub(crate) fn patch_nodes(snapshot: &JackSnapshot, node_ids: &[String], selection: &[String], field: &str, value: &str) -> Result<Emit<TrinityGraphMutation, NoConfigMutation>, Fault> {
+/// 🩹️ Renames the named nodes — or, when `node_ids` is empty, the nodes selected in the `ast` domain, which is what a
+/// rail press means — as ONE edit of the composed `content` child: one `change-node-label` leaf per node (design
+/// §20.15). Every request that cannot move the document is refused by name instead of answering an empty emit:
+/// `app.command.targets-required` when neither `nodeIds` nor a selection names a node, `mutation.target-missing`,
+/// `app.command.invalid-args`.
+pub(crate) fn patch_nodes(snapshot: &JackSnapshot, children: &semio_framework_plugin::app::ChildContentView, node_ids: &[String], selection: &[String], field: &str, value: &str) -> Result<Emit<TrinityGraphMutation, NoConfigMutation>, Fault> {
     let invalid = |detail: String| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-args"), detail);
     if field != "name" {
         return Err(invalid(format!("jack nodes have no patchable field '{field}' (only 'name')")));
@@ -23,10 +24,11 @@ pub(crate) fn patch_nodes(snapshot: &JackSnapshot, node_ids: &[String], selectio
     if targets.is_empty() {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.targets-required"), "patchNodes needs the nodes it renames: name them in nodeIds, or select them in the graph"));
     }
-    let scene_nodes = snapshot.nodes();
-    let missing: Vec<&str> = targets.iter().filter(|id| !scene_nodes.iter().any(|node| &node.id == *id)).map(String::as_str).collect();
+    let content = crate::jack_content_from_children(snapshot, children)?;
+    let missing: Vec<&str> = targets.iter().filter(|id| !content.nodes.iter().any(|node| &node.id.value == *id)).map(String::as_str).collect();
     if !missing.is_empty() {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("mutation.target-missing"), format!("the jack graph has no node {}", missing.join(", "))));
     }
-    Ok(Emit::mutations(targets.iter().map(|id| rename_node(id.clone(), value.into())).collect()))
+    let leaves: Vec<SemioGraphMutation> = targets.iter().map(|id| SemioGraphMutation::ChangeNodeLabel(ChangeNodeLabel { id: GraphNodeId::new(id.clone()), new_label: value.into() })).collect();
+    Ok(crate::jack_child_emit(snapshot, &leaves))
 }

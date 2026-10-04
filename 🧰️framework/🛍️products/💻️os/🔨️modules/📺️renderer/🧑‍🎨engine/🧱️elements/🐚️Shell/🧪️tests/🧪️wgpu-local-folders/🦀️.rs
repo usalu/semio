@@ -342,4 +342,18 @@ fn a_browser_folder_keeps_its_archive_through_the_host_route_and_comes_back_afte
     assert_eq!(restarted.history_current_checkpoint_id.as_deref(), Some("cp-2"), "the head is the archive's");
     assert_eq!(restarted.folder_reconnect_band_offer(), None, "reconnected, the band is gone");
 }
+
+/// ⚖️ LAW (`📓️api-stepped-document-load.md` §4): a whole-document load of a `(pack, spr)` pair — a hub checkpoint seed, a
+/// `LoadDocument` effect, a rebootstrap reseed — reaches the program as the stepped archive load of an archive without
+/// members, the one load path; nothing loads a pack in one shot.
+#[test]
+fn a_plain_document_load_is_the_stepped_archive_load_without_members() {
+    LOADED.with(|loaded| loaded.borrow_mut().clear());
+    let mut shell = booted_shell(Some("doc-3"));
+    let program = shell.session.as_ref().expect("session").plugin_id.clone();
+    let entry = shell.plugins.iter_mut().find(|entry| entry.plugin_id == program).expect("the session's program");
+    entry.install_fixture_document(restored_program());
+    semio_framework_async::block_on(entry.load_app_document_pack(1, &[1, 2], &[3])).expect("the load");
+    assert_eq!(LOADED.with(|loaded| loaded.borrow().clone()), vec![protocol::DocumentArchivePack { parent_pack: vec![1, 2], parent_spr: vec![3], members: Vec::new() }]);
+}
 //#endregion 🗃️HostRouteFolder

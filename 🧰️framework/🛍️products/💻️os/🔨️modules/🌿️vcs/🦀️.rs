@@ -9,7 +9,10 @@
 // import keeps that ergonomics without re-exposing `crate::os_spr::Mutation` on `vcs`'s own public API
 // (dependents import `crate::os_spr::Mutation` directly). `MutationDiff` is imported for its `apply`
 // method, called on `Mutation::Diff` inside `apply_mutation`.
-use crate::os_dsl::{DslValue, FromValue, ToValue, ValueError};
+use semio_framework_value::DslValue;
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
+use semio_framework_value::ValueError;
 use crate::os_spr::{Edit, Mutation, MutationApplyError, MutationDiff};
 
 //#region 🆔️Ids
@@ -94,7 +97,7 @@ pub async fn create_document_vcs_id(prefix: &str) -> String {
 // former `#[derive(Serialize, Deserialize)]` (needed transitively for `authors: Vec<Author>`) goes
 // with it; no production or test consumer anywhere in the repo ever called `serde_json` on
 // `Author` directly, so its derive drops outright rather than going `cfg_attr(test, …)`.
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct Author {
     pub id: String,
@@ -122,7 +125,7 @@ pub struct Author {
 // `Author`/`CompositionPin`/`Checkpoint`/`Alternative` now join them (see `Author`'s own docstring
 // above). `store::ArtifactEnvelopeRead`'s hand-off reason was already stale before any of this
 // (converted off `Serialize` onto `ToValue` outright, see `📓️store-serde-final.md`).
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -151,7 +154,7 @@ pub struct Change {
 // 🎞️ `Serialize`/`Deserialize` dropped outright — same reason as `Author` above:
 // `Checkpoint.composition_pins: Vec<CompositionPin>` no longer needs it, and no test anywhere
 // serializes `CompositionPin` directly either.
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct CompositionPin {
     pub child_ref: crate::os_io::ArtifactRef,
@@ -164,7 +167,7 @@ pub struct CompositionPin {
 // `DeserializeOwned` to `FromValue`, which `Checkpoint` already derives. See
 // `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/
 // 🔍️research/📓️history-decoder-serde.md`.
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct Checkpoint {
     pub id: String,
@@ -184,7 +187,7 @@ pub struct Checkpoint {
 
 // 🎞️ `Serialize`/`Deserialize` dropped outright — same `ArtifactRepositoryHistoryEntryAuthority<T>`
 // reason as `Checkpoint` above (see its docstring).
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct Alternative {
     pub id: String,
@@ -404,7 +407,12 @@ impl<T> HistoryPageStack<T> {
     where
         T: Clone,
     {
-        self.iter().skip(from).cloned().collect()
+        self.iter_from(from).cloned().collect()
+    }
+
+    /// ⏩️ The entries from `from` on, seeking there in O(1).
+    pub fn iter_from(&self, from: usize) -> HistoryPageIter<'_, T> {
+        HistoryPageIter { stack: self, index: from.min(self.len), end: self.len }
     }
 }
 
@@ -529,6 +537,11 @@ impl<'a, T> Iterator for HistoryPageIter<'a, T> {
         let remaining = self.end.saturating_sub(self.index);
         (remaining, Some(remaining))
     }
+
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        self.index = self.index.saturating_add(n).min(self.end);
+        self.next()
+    }
 }
 
 impl<T> DoubleEndedIterator for HistoryPageIter<'_, T> {
@@ -547,16 +560,16 @@ impl<T> ExactSizeIterator for HistoryPageIter<'_, T> {}
 
 impl<T: ToValue> ToValue for HistoryPageStack<T> {
     fn to_value(&self) -> DslValue {
-        DslValue::Array(self.iter().map(ToValue::to_value).collect())
+        semio_framework_value::DslValue::Array(self.iter().map(semio_framework_value::ToValue::to_value).collect())
     }
 }
 
 impl<T: FromValue> FromValue for HistoryPageStack<T> {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let values = Vec::<T>::from_value(value)?;
-        let mut stack = Self::try_new().map_err(ValueError::new)?;
+        let mut stack = Self::try_new().map_err(|reason|semio_framework_value::ValueError::new(protocol::value::ValueRefusalKind::AllocationFailed,reason))?;
         for value in values {
-            stack.try_push(value).map_err(|_| ValueError::new("history catalog address space exhausted"))?;
+            stack.try_push(value).map_err(|_| semio_framework_value::ValueError::new(protocol::value::ValueRefusalKind::OwnershipLimit,"history catalog address space exhausted"))?;
         }
         Ok(stack)
     }
@@ -720,7 +733,9 @@ fn artifact_history_chunk<'a, T>(chunk: &'a ArtifactHistoryPageChunk<T>, remaini
 
 /// 📚️ Paged generation-keyed history authority. Live entries form one stable linked order;
 /// removed slots are tombstoned and reused only after their generation advances. A full page
-/// opens another fixed page instead of refusing the entry.
+/// opens another fixed page instead of refusing the entry. `seek` remembers the `(position, slot)` of the last entry a
+/// positional read or a search reached, so reads that walk the order forward (applied order, replay order, a retained
+/// initializer's cursor) cost O(1) amortized instead of O(position); every structural change forgets it.
 pub struct ArtifactHistoryLedger<T> {
     pages: std::mem::ManuallyDrop<Option<Box<ArtifactHistoryPageChunk<T>>>>,
     page_count: u32,
@@ -731,7 +746,11 @@ pub struct ArtifactHistoryLedger<T> {
     reservation: Option<ArtifactHistoryReservation>,
     group: Option<ArtifactHistoryGroupSuffix>,
     len: usize,
+    seek: std::sync::atomic::AtomicU64,
 }
+
+/// 🧭️ No remembered seek position.
+const ARTIFACT_HISTORY_NO_SEEK: u64 = u64::MAX;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ArtifactHistoryReservationFault {
@@ -749,7 +768,7 @@ impl<T> Default for ArtifactHistoryLedger<T> {
 
 impl<T> ArtifactHistoryLedger<T> {
     pub fn new() -> Self {
-        let mut ledger = Self { pages: std::mem::ManuallyDrop::new(None), page_count: 0, initialized: 0, head: None, tail: None, free_head: None, reservation: None, group: None, len: 0 };
+        let mut ledger = Self { pages: std::mem::ManuallyDrop::new(None), page_count: 0, initialized: 0, head: None, tail: None, free_head: None, reservation: None, group: None, len: 0, seek: std::sync::atomic::AtomicU64::new(ARTIFACT_HISTORY_NO_SEEK) };
         ledger.open_page().expect("history ledger first page");
         ledger
     }
@@ -854,6 +873,7 @@ impl<T> ArtifactHistoryLedger<T> {
         let index = reservation.index;
         let generation = reservation.generation;
         self.reservation = None;
+        self.forget_seek();
         if Some(index) == self.free_head {
             let free_next = self.slot(index).free_next;
             self.free_head = free_next;
@@ -907,6 +927,7 @@ impl<T> ArtifactHistoryLedger<T> {
             return Err(());
         }
         let group = self.group.take().expect("validated group suffix remains owned");
+        self.forget_seek();
         self.head = self.head.or(group.head);
         self.tail = group.tail.or(self.tail);
         self.len += group.len;
@@ -922,6 +943,7 @@ impl<T> ArtifactHistoryLedger<T> {
             self.group = None;
             return Ok(None);
         };
+        self.forget_seek();
         let previous = self.slot(index).previous;
         if let Some(previous) = previous {
             self.slot_mut(previous).next = None;
@@ -1000,6 +1022,7 @@ impl<T> ArtifactHistoryLedger<T> {
         if slot.generation != key.generation || slot.value.is_none() {
             return Err(key);
         }
+        self.forget_seek();
         let previous = slot.previous;
         let next = slot.next;
         if let Some(previous) = previous {
@@ -1068,12 +1091,84 @@ impl<T> ArtifactHistoryLedger<T> {
         self.slot_mut(index).value.as_mut()
     }
 
+    /// 🎯️ The entry at `position` of the visible order — O(1) amortized when reads walk forward (see `seek`).
     pub fn get(&self, position: usize) -> Option<&T> {
-        self.iter().nth(position)
+        let index = self.seek_slot(position)?;
+        self.slot(index).value.as_ref()
     }
 
     pub fn get_mut(&mut self, position: usize) -> Option<&mut T> {
-        self.iter_mut().nth(position)
+        assert!(self.group.is_none(), "mutable history access requires its staged group to be adopted or aborted");
+        let index = self.seek_slot(position)?;
+        self.slot_mut(index).value.as_mut()
+    }
+
+    /// 🔎️ The first visible entry `found` accepts, searched from the last entry a read reached onward and then from the
+    /// front — O(1) amortized for lookups that follow the order (an id per applied edit, a replay's next edit).
+    pub fn find_near(&self, found: impl FnMut(&T) -> bool) -> Option<&T> {
+        self.find_near_position(found).map(|(_, value)| value)
+    }
+
+    /// 🔎️ [`Self::find_near`] answering the entry's position in the visible order too.
+    pub fn find_near_position(&self, mut found: impl FnMut(&T) -> bool) -> Option<(usize, &T)> {
+        let (front, _, remaining) = self.visible_bounds();
+        let (start_position, start) = match self.remembered_seek() {
+            Some((position, index)) if position < remaining => (position, Some(index)),
+            _ => (0, front),
+        };
+        let mut cursor = (start_position, start);
+        for _ in 0..remaining {
+            let (position, Some(index)) = cursor else { break };
+            let slot = self.slot(index);
+            if slot.value.as_ref().is_some_and(&mut found) {
+                self.remember_seek(position, index);
+                return slot.value.as_ref().map(|value| (position, value));
+            }
+            cursor = match slot.next {
+                Some(next) if position + 1 < remaining => (position + 1, Some(next)),
+                _ => (0, front),
+            };
+        }
+        None
+    }
+
+    /// 🧭️ The slot at `position` of the visible order, walking forward from the remembered seek when it lies at or
+    /// before `position`, else from the front; remembers where it landed.
+    fn seek_slot(&self, position: usize) -> Option<u32> {
+        let (front, _, remaining) = self.visible_bounds();
+        if position >= remaining {
+            return None;
+        }
+        let (mut at, mut index) = match self.remembered_seek() {
+            Some((known, index)) if known <= position => (known, index),
+            _ => (0, front?),
+        };
+        while at < position {
+            index = self.slot(index).next?;
+            at += 1;
+        }
+        self.remember_seek(position, index);
+        Some(index)
+    }
+
+    /// 🧭️ The remembered `(position, slot)`, only while it still names a live entry and no staged group shifts the order.
+    fn remembered_seek(&self) -> Option<(usize, u32)> {
+        let packed = self.seek.load(std::sync::atomic::Ordering::Relaxed);
+        if packed == ARTIFACT_HISTORY_NO_SEEK || self.group.is_some() {
+            return None;
+        }
+        let (position, index) = ((packed >> 32) as usize, packed as u32);
+        (index < self.initialized && self.slot(index).value.is_some()).then_some((position, index))
+    }
+
+    fn remember_seek(&self, position: usize, index: u32) {
+        if let Ok(position) = u32::try_from(position) {
+            self.seek.store((u64::from(position) << 32) | u64::from(index), std::sync::atomic::Ordering::Relaxed);
+        }
+    }
+
+    fn forget_seek(&self) {
+        self.seek.store(ARTIFACT_HISTORY_NO_SEEK, std::sync::atomic::Ordering::Relaxed);
     }
 
     pub fn len(&self) -> usize {
@@ -1145,14 +1240,14 @@ impl<T: Clone> Clone for ArtifactHistoryLedger<T> {
 /// codec. Same admission path (`try_from_preflighted`) every other ledger construction uses.
 impl<T: ToValue> ToValue for ArtifactHistoryLedger<T> {
     fn to_value(&self) -> DslValue {
-        DslValue::Array(self.iter().map(ToValue::to_value).collect())
+        semio_framework_value::DslValue::Array(self.iter().map(semio_framework_value::ToValue::to_value).collect())
     }
 }
 
 impl<T: FromValue> FromValue for ArtifactHistoryLedger<T> {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let values = Vec::<T>::from_value(value)?;
-        Self::try_from_preflighted(values).map_err(|rejected| ValueError::new(format!("a history ledger within its page address space ({} entries rejected)", rejected.len())))
+        Self::try_from_preflighted(values).map_err(|rejected| semio_framework_value::ValueError::new(protocol::value::ValueRefusalKind::OwnershipLimit,format!("a history ledger within its page address space ({} entries rejected)", rejected.len())))
     }
 }
 
@@ -1174,7 +1269,7 @@ impl<T> Clone for ArtifactHistoryIter<'_, T> {
 /// needs for each of its four group-visibility-consistent fields.
 impl<T: ToValue> ToValue for ArtifactHistoryIter<'_, T> {
     fn to_value(&self) -> DslValue {
-        DslValue::Array(self.clone().map(ToValue::to_value).collect())
+        semio_framework_value::DslValue::Array(self.clone().map(semio_framework_value::ToValue::to_value).collect())
     }
 }
 
@@ -1303,7 +1398,7 @@ impl<T: PartialEq> PartialEq for ArtifactHistoryLedger<T> {
 impl<T: Eq> Eq for ArtifactHistoryLedger<T> {}
 
 // 🎞️ `Serialize`/`Deserialize` dropped — see the docstring above `Change`.
-#[derive(Clone, Debug, PartialEq, FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct ArtifactVcs<P, Mutation> {
     pub initial_snapshot: P,
@@ -1328,7 +1423,7 @@ pub(crate) struct ArtifactVcsRead<'a, P, Mutation> {
 /// ToValue`. Calling `P::to_value` directly on the dereferenced field sidesteps that.
 impl<P: ToValue, Mutation: ToValue> ToValue for ArtifactVcsRead<'_, P, Mutation> {
     fn to_value(&self) -> DslValue {
-        DslValue::Object(vec![
+        semio_framework_value::DslValue::Object(vec![
             ("initialSnapshot".to_string(), self.initial_snapshot.to_value()),
             ("edits".to_string(), self.edits.to_value()),
             ("changes".to_string(), self.changes.to_value()),
@@ -1386,6 +1481,7 @@ pub enum VcsError {
     NoCheckpoint,
     EmptyApply,
     MutationApply(MutationApplyError),
+    InverseRefused(semio_framework_value::ValueError),
     NothingToUndo,
     ForeignEdit(String),
     NothingToRedo,
@@ -1459,6 +1555,9 @@ pub enum VcsError {
     /// 🐢️ A local history step (undo, redo, checkout, alternative switch, checkpoint or supersession) still replays across
     /// turns on this store: no other history step may be authored before it is adopted or discarded.
     HistoryReplaying,
+    /// 🐘️ A gesture's edit needs `rows` staged rows (forwards plus inverses) where at most `capacity` are admitted — the one-item
+    /// ceiling, or the rows its leaves declare (`x-semio-inverse-rows`, design §20.5). Refused before anything was recorded.
+    TooLarge { rows: usize, capacity: usize },
 }
 
 impl std::fmt::Display for VcsError {
@@ -1470,6 +1569,7 @@ impl std::fmt::Display for VcsError {
             Self::NoCheckpoint => formatter.write_str("no checkpoint for alternative"),
             Self::EmptyApply => formatter.write_str("empty apply command"),
             Self::MutationApply(error) => write!(formatter, "mutation diff rejected: {error}"),
+            Self::InverseRefused(error) => write!(formatter, "mutation inverse refused: {error}"),
             Self::NothingToUndo => formatter.write_str("nothing to undo"),
             Self::ForeignEdit(id) => write!(formatter, "cannot undo edit authored by another actor: {id}"),
             Self::NothingToRedo => formatter.write_str("nothing to redo"),
@@ -1491,6 +1591,7 @@ impl std::fmt::Display for VcsError {
             Self::UnknownTransaction(transaction_id) => write!(formatter, "tool transaction {transaction_id} is not open on this store"),
             Self::HistoryFull { capacity } => write!(formatter, "the edit history holds at most {capacity} edits and is full"),
             Self::HistoryReplaying => formatter.write_str("a history step still replays on this store"),
+            Self::TooLarge { rows, capacity } => write!(formatter, "the edit needs {rows} staged rows where at most {capacity} are admitted"),
         }
     }
 }
@@ -1499,6 +1600,7 @@ impl std::error::Error for VcsError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Self::MutationApply(error) => Some(error),
+            Self::InverseRefused(error) => Some(error),
             _ => None,
         }
     }
@@ -1511,28 +1613,37 @@ impl From<MutationApplyError> for VcsError {
 }
 
 /// 🚨️ Every `VcsError` is a module fault; the refusals a runtime surfaces as their own notices carry their own codes:
-/// `toolTransaction.open`, `toolTransaction.unknown`, `history.full` and `history.replaying`.
-impl crate::os_dsl::FaultFrom for VcsError {
-    fn fault_origin(&self) -> crate::os_dsl::FaultOrigin {
-        crate::os_dsl::FaultOrigin::Module
+/// `toolTransaction.open`, `toolTransaction.unknown`, `history.full` (its capacity the notice's `{n}` param),
+/// `history.replaying` and `mutation.too-large`.
+impl semio_framework_diagnostic::FaultFrom for VcsError {
+    fn fault_origin(&self) -> semio_framework_diagnostic::FaultOrigin {
+        semio_framework_diagnostic::FaultOrigin::Module
     }
 
-    fn fault_code(&self) -> crate::os_dsl::FaultCode {
-        crate::os_dsl::FaultCode::new(match self {
+    fn fault_code(&self) -> semio_framework_diagnostic::FaultCode {
+        semio_framework_diagnostic::FaultCode::new(match self {
             Self::TransactionOpen { .. } => "toolTransaction.open",
             Self::UnknownTransaction(_) => "toolTransaction.unknown",
             Self::HistoryFull { .. } => "history.full",
             Self::HistoryReplaying => "history.replaying",
+            Self::TooLarge { .. } => "mutation.too-large",
             _ => "module.vcs",
         })
     }
 
-    fn fault_severity(&self) -> crate::os_dsl::Severity {
-        crate::os_dsl::Severity::Error
+    fn fault_severity(&self) -> semio_framework_diagnostic::Severity {
+        semio_framework_diagnostic::Severity::Error
     }
 
     fn fault_message(&self) -> String {
         self.to_string()
+    }
+
+    fn fault_params(&self) -> semio_framework_diagnostic::FaultParams {
+        match self {
+            Self::HistoryFull { capacity } => semio_framework_diagnostic::FaultParams(vec![("n".to_string(), capacity.to_string())]),
+            _ => semio_framework_diagnostic::FaultParams::default(),
+        }
     }
 }
 
@@ -1541,7 +1652,7 @@ impl crate::os_dsl::FaultFrom for VcsError {
 /// 🧩️ Sparse collection patch entry (mirrors semio_compose_rs `XModified`).
 ///
 /// 🎞️ Canonical collection patch entry for sparse collection diffs (re-exported by `crate::os_spr`).
-#[derive(Clone, Debug, Default, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct ItemPatch<TId, TPatch> {
     pub id: TId,
@@ -1549,7 +1660,7 @@ pub struct ItemPatch<TId, TPatch> {
 }
 
 /// 🧩️ Sparse collection diff (mirrors semio_compose_rs `XCollectionDiff`).
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct CollectionDiff<TId, TPatch, TAdded> {
     pub removed: Vec<TId>,
@@ -1593,7 +1704,7 @@ pub trait Patchable<TPatch>: Sized {
 /// `CollectionMutation<..>` directly (that erases the verb — `Add`/`Remove`/`Move`/`Patch` say
 /// nothing about *why*). `policySemanticVocabularyBreaches` in `📜️script.ts` enforces this on
 /// `✏️s/**/🧬️mutations/**` dispatch enums once the fan-out wave lands.
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum CollectionMutation<TId, TItem, TPatch> {
     Add { index: usize, item: TItem },
@@ -1751,12 +1862,12 @@ struct PendingChangeRef<'a> {
 /// 🔍️research/📓️float-format-parity.md`), so this — like `Change`'s own `ToValue` path below — no
 /// longer needs `serde_json` to stay a frozen content-hash input.
 fn pending_change_ref_json(pending: &PendingChangeRef<'_>) -> String {
-    let mut object = crate::os_pack::json::Object::new();
-    object.insert("id", crate::os_pack::json::Value::String(pending.id.to_string()));
-    object.insert("editIds", crate::os_pack::json::Value::Array(pending.edit_ids.iter().map(|id| crate::os_pack::json::Value::String(id.clone())).collect()));
-    object.insert("description", pending.description.map_or(crate::os_pack::json::Value::Null, |text| crate::os_pack::json::Value::String(text.to_string())));
-    object.insert("savedAt", crate::os_pack::json::Value::String(pending.saved_at.to_string()));
-    crate::os_pack::json::to_string(&crate::os_pack::json::Value::Object(object))
+    let mut object = semio_framework_pack_json::Object::new();
+    object.insert("id", semio_framework_pack_json::Value::String(pending.id.to_string()));
+    object.insert("editIds", semio_framework_pack_json::Value::Array(pending.edit_ids.iter().map(|id| semio_framework_pack_json::Value::String(id.clone())).collect()));
+    object.insert("description", pending.description.map_or(semio_framework_pack_json::Value::Null, |text| semio_framework_pack_json::Value::String(text.to_string())));
+    object.insert("savedAt", semio_framework_pack_json::Value::String(pending.saved_at.to_string()));
+    semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Object(object))
 }
 
 fn content_addressed_checkpoint_id_core(
@@ -1774,7 +1885,7 @@ fn content_addressed_checkpoint_id_core(
     input.push(0);
     for change_id in change_ids {
         let change_hash = if let Some(change) = changes.iter().find(|change| change.id == *change_id) {
-            *semio_framework_hash::hash(crate::os_pack::json::to_json_string(change).as_bytes()).as_bytes()
+            *semio_framework_hash::hash(semio_framework_pack_json::to_json_string(change).as_bytes()).as_bytes()
         } else if let Some(change) = pending.as_ref().filter(|change| change.id == change_id.as_str()) {
             *semio_framework_hash::hash(pending_change_ref_json(change).as_bytes()).as_bytes()
         } else {
@@ -1837,4 +1948,8 @@ pub fn content_addressed_checkpoint_id_with_pending_change(
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️fault-params/🦀️.rs"]
+mod fault_params_tests;
 //#endregion 🧪️Tests

@@ -33,153 +33,232 @@ pub const DAG_DOCUMENT_SCHEMA: &str = "dag.dag";
 pub const DAG_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.dag.dag", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
 
 pub use crate::snapshot::schema::{default_snapshot, empty_snapshot};
-pub use semio_framework_artifact_infinite_dag::{DagEdgePatch, DagHostSnapshotEdge, DagNodeKind, DagNodePatch, DagNodeSpec, DagPreviewContent, IoPortSpec};
+pub use semio_framework_artifact_infinite_dag::{DagEdgePatch, DagExpandedPaths, DagHostSnapshotEdge, DagNodeKind, DagNodePatch, DagNodeSpec, DagPreviewContent, IoPortSpec};
 
 //#region 🔖️ContentBridge
-/// 🕸️ Owned CHILD handle type for the composed `s.stdio.semio.graph` document — the dag plugin's
-/// nodes/edges now live in this composed child's `nodes`/`edges` rather than inline on `DagSnapshot`.
+/// 🕸️ Owned CHILD handle type for the composed `s.stdio.semio@v1/graph` document — the dag's nodes and edges live in this
+/// child's store; the parent document owns no content and no leaf that could read it (design §20.15).
 pub type DagContentChild = store::ArtifactChild<SemioGraphSnapshot>;
 
+use semio_framework_value::{DslValue, Number};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+pub use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::{
     GraphEdgeId as SemioGraphEdgeId, GraphNodeId as SemioGraphNodeId, SemioGraphEdge, SemioGraphNode, SemioGraphPort, SemioGraphPortKind, SemioGraphSnapshot, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA,
 };
 use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry};
 
-/// 🏷️ `dag.node` is the honest string boundary carrying the FULL `DagNodeSpec` (every field this
-/// plugin's rich node-kind enum can hold — computation/slider/select/screen/note/image/preview/
-/// action/export/cluster/appInstance, all with their own field sets) as JSON. `id`/`label`/
-/// `position` are ALSO projected onto the composed `SemioGraphNode`'s own native fields (and `ports`
-/// is a best-effort projection of `node.inputs()`/`node.outputs()`) for genuine graph-shape tooling
-/// that only understands the neutral subset — but the JSON blob is the round-trip SOURCE OF TRUTH on
-/// decode, since `SemioGraphNode.properties` is the only slot this subset offers wide enough to carry
-/// a whole rich node kind losslessly (matches `flow`'s own "honest string boundary" precedent).
-const DAG_NODE_JSON_PROPERTY: &str = "dag.node";
+/// 🔗️ The graph edge kind every DAG connection carries.
+const DAG_EDGE_KIND: &str = "dag-edge";
+/// 🧾️ `DagNodeSpec` record fields carried by the graph node's NATIVE slots (id, label, position, size, kind tag) — every
+/// other field is one typed node property keyed by its record field name, so a field edit is one `set-node-property`.
+const DAG_NODE_NATIVE_FIELDS: [&str; 7] = ["id", "name", "x", "y", "width", "height", "kind"];
+/// 🧾️ `DagHostSnapshotEdge` record fields carried by the graph edge's native slots.
+const DAG_EDGE_NATIVE_FIELDS: [&str; 3] = ["id", "source", "target"];
 
-fn semio_node_from_dag_node(node: &DagNodeSpec) -> SemioGraphNode {
-    let ports = node.inputs().iter().map(|port| SemioGraphPort { name: port.id.clone(), kind: SemioGraphPortKind::In }).chain(node.outputs().iter().map(|port| SemioGraphPort { name: port.id.clone(), kind: SemioGraphPortKind::Out })).collect();
+/// 🔢️ The typed graph property value of one record field value (numbers keep their integer/float class).
+pub fn semio_value_of(value: &DslValue) -> SemioValue {
+    match value {
+        DslValue::Null => SemioValue::Null,
+        DslValue::Bool(value) => SemioValue::Bool { value: *value },
+        DslValue::Number(Number::UInt(value)) => SemioValue::Int { lexeme: value.to_string() },
+        DslValue::Number(Number::Int(value)) => SemioValue::Int { lexeme: value.to_string() },
+        DslValue::Number(Number::Float(value)) => SemioValue::Float { lexeme: format!("{value:?}") },
+        DslValue::String(value) => SemioValue::Str { value: value.clone() },
+        DslValue::Bytes(value) => SemioValue::Bytes { value: value.clone() },
+        DslValue::Array(items) => SemioValue::List { items: items.iter().map(semio_value_of).collect() },
+        DslValue::Object(entries) => SemioValue::Map { entries: entries.iter().map(|(key, value)| SemioValueEntry { key: key.clone(), value: semio_value_of(value) }).collect() },
+    }
+}
+
+/// 🔢️ The record field value of one typed graph property value — the exact inverse of [`semio_value_of`].
+pub fn dsl_value_of(value: &SemioValue) -> DslValue {
+    match value {
+        SemioValue::Null => DslValue::Null,
+        SemioValue::Bool { value } => DslValue::Bool(*value),
+        SemioValue::Int { lexeme } => lexeme.parse::<u64>().map(DslValue::uint).or_else(|_| lexeme.parse::<i64>().map(DslValue::int)).unwrap_or_else(|_| DslValue::String(lexeme.clone())),
+        SemioValue::Float { lexeme } => lexeme.parse::<f64>().map(DslValue::float).unwrap_or_else(|_| DslValue::String(lexeme.clone())),
+        SemioValue::Str { value } => DslValue::String(value.clone()),
+        SemioValue::Bytes { value } => DslValue::Bytes(value.clone()),
+        SemioValue::List { items } => DslValue::Array(items.iter().map(dsl_value_of).collect()),
+        SemioValue::Map { entries } => DslValue::Object(entries.iter().map(|entry| (entry.key.clone(), dsl_value_of(&entry.value))).collect()),
+        SemioValue::Ref { id } => DslValue::String(id.value.clone()),
+    }
+}
+
+/// 🧩️ The typed graph properties of a record value: every top-level field except `native`, in record order.
+fn dag_record_properties(record: DslValue, native: &[&str]) -> Vec<SemioValueEntry> {
+    match record {
+        DslValue::Object(entries) => entries.into_iter().filter(|(key, _)| !native.contains(&key.as_str())).map(|(key, value)| SemioValueEntry { value: semio_value_of(&value), key }).collect(),
+        _ => Vec::new(),
+    }
+}
+
+/// 🌉 One `DagNodeSpec` as a graph node: id, name, position, size and kind tag on the native slots, the ports projected from
+/// the kind for neutral graph tooling, every other record field one typed property.
+pub fn dag_graph_node(node: &DagNodeSpec) -> SemioGraphNode {
+    let port = |port: &IoPortSpec, kind| SemioGraphPort { name: port.id.clone(), kind, category: String::new(), properties: Vec::new() };
     SemioGraphNode {
         id: SemioGraphNodeId::new(node.id.clone()),
         kind: semio_framework_artifact_infinite_dag::dag_node_kind_tag(&node.kind).to_string(),
         label: node.name.clone(),
         position: SemioPoint2 { x: node.x, y: node.y },
-        ports,
-        properties: vec![SemioValueEntry { key: DAG_NODE_JSON_PROPERTY.into(), value: SemioValue::Str { value: dsl::json::to_json_string(node) } }],
+        width: node.width,
+        height: node.height,
+        ports: node.inputs().iter().map(|input| port(input, SemioGraphPortKind::In)).chain(node.outputs().iter().map(|output| port(output, SemioGraphPortKind::Out))).collect(),
+        properties: dag_record_properties(semio_framework_value::ToValue::to_value(node), &DAG_NODE_NATIVE_FIELDS),
     }
 }
 
-/// 🌉 Inverse of [`semio_node_from_dag_node`] — reconstructs the exact `DagNodeSpec` from its
-/// `dag.node` JSON property. Falls back to a minimal computation node built from the graph-native
-/// `id`/`label`/`position` fields only if the property is missing (content authored outside this
-/// plugin, e.g. by a hand-written `graph` doc) — never panics.
-fn dag_node_from_semio_node(node: &SemioGraphNode) -> DagNodeSpec {
-    for property in &node.properties {
-        if property.key == DAG_NODE_JSON_PROPERTY {
-            if let SemioValue::Str { value } = &property.value {
-                if let Ok(parsed) = dsl::json::from_json_str::<DagNodeSpec>(value) {
-                    return parsed;
-                }
-            }
-        }
+/// 🌉 The inverse of [`dag_graph_node`]: the native slots are authoritative, the properties carry the rest. A node authored
+/// outside this plugin (no decodable record) reads as a minimal computation node built from the native slots alone.
+pub fn dag_node_of_graph(node: &SemioGraphNode) -> DagNodeSpec {
+    let native = [
+        ("id".to_string(), DslValue::String(node.id.value.clone())),
+        ("name".to_string(), DslValue::String(node.label.clone())),
+        ("x".to_string(), DslValue::float(node.position.x)),
+        ("y".to_string(), DslValue::float(node.position.y)),
+        ("width".to_string(), DslValue::float(node.width)),
+        ("height".to_string(), DslValue::float(node.height)),
+        ("kind".to_string(), DslValue::String(node.kind.clone())),
+    ];
+    let record = DslValue::Object(native.into_iter().chain(node.properties.iter().map(|entry| (entry.key.clone(), dsl_value_of(&entry.value)))).collect());
+    <DagNodeSpec as semio_framework_value::FromValue>::from_value(record).unwrap_or_else(|_| DagNodeSpec { id: node.id.value.clone(), name: node.label.clone(), x: node.position.x, y: node.position.y, width: node.width, height: node.height, ..Default::default() })
+}
+
+/// 🌉 One `DagHostSnapshotEdge` as a graph edge: endpoint node ids and ports on the native slots (a bare endpoint keeps no
+/// port), every other record field one typed property.
+pub fn dag_graph_edge(edge: &DagHostSnapshotEdge) -> SemioGraphEdge {
+    let endpoint = |value: &str| value.split_once('@').map_or_else(|| (value.to_string(), None), |(node, port)| (node.to_string(), Some(port.to_string())));
+    let ((source, source_port), (target, target_port)) = (endpoint(&edge.source), endpoint(&edge.target));
+    SemioGraphEdge {
+        id: SemioGraphEdgeId::new(edge.id.clone()),
+        source: SemioGraphNodeId::new(source),
+        target: SemioGraphNodeId::new(target),
+        kind: DAG_EDGE_KIND.into(),
+        label: String::new(),
+        source_port,
+        target_port,
+        properties: dag_record_properties(semio_framework_value::ToValue::to_value(edge), &DAG_EDGE_NATIVE_FIELDS),
     }
-    DagNodeSpec { id: node.id.value.clone(), name: node.label.clone(), x: node.position.x, y: node.position.y, ..Default::default() }
 }
 
-/// 🏷️ `SemioGraphEdge` has no `properties` slot (unlike `SemioGraphNode`) — its `label` field (which
-/// this plugin's own `DagHostSnapshotEdge` never populates on its own behalf) is repurposed to carry the
-/// FULL `DagHostSnapshotEdge` (port-qualified `source`/`target` endpoint strings, `route_style`,
-/// `properties`) as JSON, the round-trip source of truth on decode. `source`/`target`/`kind` are also
-/// projected onto their native fields (node-id-only, port suffix stripped) for genuine graph-shape
-/// tooling.
-fn semio_edge_from_dag_edge(edge: &DagHostSnapshotEdge) -> SemioGraphEdge {
-    let (source_node, _) = split_endpoint(&edge.source);
-    let (target_node, _) = split_endpoint(&edge.target);
-    SemioGraphEdge { id: SemioGraphEdgeId::new(edge.id.clone()), source: SemioGraphNodeId::new(source_node), target: SemioGraphNodeId::new(target_node), kind: "dag-edge".into(), label: dsl::json::to_json_string(edge) }
+/// 🌉 The inverse of [`dag_graph_edge`]; an edge authored outside this plugin reads as a bare node-to-node edge.
+pub fn dag_edge_of_graph(edge: &SemioGraphEdge) -> DagHostSnapshotEdge {
+    let endpoint = |node: &SemioGraphNodeId, port: &Option<String>| port.as_ref().map_or_else(|| node.value.clone(), |port| format!("{}@{port}", node.value));
+    let native = [("id".to_string(), DslValue::String(edge.id.value.clone())), ("source".to_string(), DslValue::String(endpoint(&edge.source, &edge.source_port))), ("target".to_string(), DslValue::String(endpoint(&edge.target, &edge.target_port)))];
+    let record = DslValue::Object(native.into_iter().chain(edge.properties.iter().map(|entry| (entry.key.clone(), dsl_value_of(&entry.value)))).collect());
+    <DagHostSnapshotEdge as semio_framework_value::FromValue>::from_value(record).unwrap_or_else(|_| DagHostSnapshotEdge { id: edge.id.value.clone(), source: endpoint(&edge.source, &edge.source_port), target: endpoint(&edge.target, &edge.target_port), ..Default::default() })
 }
 
-/// 🌉 Inverse of [`semio_edge_from_dag_edge`] — falls back to a bare node-id edge (no route
-/// style/properties) if `label` isn't valid `DagHostSnapshotEdge` JSON (content authored outside this
-/// plugin) — never panics.
-fn dag_edge_from_semio_edge(edge: &SemioGraphEdge) -> DagHostSnapshotEdge {
-    dsl::json::from_json_str::<DagHostSnapshotEdge>(&edge.label).unwrap_or_else(|_| DagHostSnapshotEdge { id: edge.id.value.clone(), source: edge.source.value.clone(), target: edge.target.value.clone(), ..Default::default() })
+/// 🌉 The composed graph content of a DAG scene.
+pub fn dag_content_snapshot(scene: &DagScene) -> SemioGraphSnapshot {
+    SemioGraphSnapshot { schema: STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA.into(), nodes: scene.nodes.iter().map(dag_graph_node).collect(), edges: scene.edges.iter().map(dag_graph_edge).collect() }
 }
 
-fn split_endpoint(endpoint: &str) -> (String, String) {
-    schema::split_endpoint(endpoint)
+/// 🌉 The DAG scene a composed graph content reads as.
+pub fn dag_scene_of_content(content: &SemioGraphSnapshot) -> DagScene {
+    DagScene { nodes: content.nodes.iter().map(dag_node_of_graph).collect(), edges: content.edges.iter().map(dag_edge_of_graph).collect() }
 }
 
-/// 🌉 REAL bidirectional converter between the app's live `DagNodeSpec`/`DagHostSnapshotEdge` editing
-/// state and the composed child's own `SemioGraphSnapshot` node/edge graph (the
-/// "ModelBridge"/"DocumentBridge" pattern from `📓️wave3-reports/cad-report.md` and
-/// `📓️wave4-reports/flow-report.md`).
-pub fn dag_content_snapshot_from_working(nodes: &[DagNodeSpec], edges: &[DagHostSnapshotEdge]) -> SemioGraphSnapshot {
-    SemioGraphSnapshot { schema: STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA.into(), nodes: nodes.iter().map(semio_node_from_dag_node).collect(), edges: edges.iter().map(semio_edge_from_dag_edge).collect() }
-}
-
-/// 🌉 Inverse of [`dag_content_snapshot_from_working`].
-pub fn working_from_dag_content_snapshot(content: &SemioGraphSnapshot) -> (Vec<DagNodeSpec>, Vec<DagHostSnapshotEdge>) {
-    (content.nodes.iter().map(dag_node_from_semio_node).collect(), content.edges.iter().map(dag_edge_from_semio_edge).collect())
-}
-
-/// 🕸️ Deterministic content-addressed CHILD handle for the dag content — same `(child_id, target)`
-/// for identical `(nodes, edges)`, a different pair once the content actually changes; mirrors
-/// flow's `flow_content_child_handle`/writer's `document_child_handle`.
-pub fn dag_content_child_handle(nodes: &[DagNodeSpec], edges: &[DagHostSnapshotEdge]) -> DagContentChild {
-    let snapshot = dag_content_snapshot_from_working(nodes, edges);
-    let content_json = dsl::json::to_json_string(&snapshot);
-    let child_id = store::content_id("dag-content", content_json.as_bytes());
+/// 🕸️ The deterministic content-addressed CHILD handle of a scene — same `(child_id, target)` for identical content.
+pub fn dag_content_child_handle(scene: &DagScene) -> DagContentChild {
+    use store::ArtifactPack;
+    let child_id = store::content_id("dag-content", &<SemioGraphSnapshot as ArtifactPack>::encode_pack(&dag_content_snapshot(scene)));
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "graph".into() };
     let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
     store::ArtifactChild::new(child_id, target)
 }
 //#endregion 🔖️ContentBridge
 
-//#region 🔖️WorkingScene
-/// 🌱 Ephemeral representation of one composed child's live nodes and edges. The value is attached
-/// to the exact `ArtifactChild`; it is never persisted, never global, and is retired with that owner.
-#[derive(Clone, Debug, Default)]
-pub struct DagWorkingScene {
+//#region 🔖️Scene
+/// 🌱 The DAG's nodes and edges as the editor reads them: composed on read from the `content` child's store, never held by
+/// the parent document.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct DagScene {
     pub nodes: Vec<DagNodeSpec>,
     pub edges: Vec<DagHostSnapshotEdge>,
 }
 
-/// 🔎 Retains this exact child's typed working owner. A wire-only handle fails soft until the host
-/// materializes its child document.
-pub fn dag_working_scene_for_handle(handle: &DagContentChild) -> DagWorkingScene {
-    handle.local_owner::<DagWorkingScene>().map(|scene| scene.as_ref().clone()).unwrap_or_default()
+/// 🧸️ Composes the scene from the document's exact published `content` child (`doc.children`, design §20.15).
+pub fn dag_scene_from_children(snapshot: &DagSnapshot, children: &semio_framework_plugin::app::ChildContentView) -> Result<DagScene, semio_framework_plugin::Fault> {
+    let child_id = &snapshot.content.child_id;
+    let dialect = children.dialect("content", child_id).ok_or_else(|| semio_framework_plugin::Fault::from("dag-content-child-dialect-required"))?;
+    if dialect.artifact_kind != "s.stdio.semio" || dialect.standard != "v1" || dialect.subset != "graph" {
+        return Err(semio_framework_plugin::Fault::from("dag-content-child-dialect-mismatch"));
+    }
+    let content = children.typed_read::<SemioGraphSnapshot>("content", child_id)?;
+    Ok(dag_scene_of_content(&content))
 }
 
-/// 🔎 Reads the current document's live nodes/edges off its `content` child handle — the single read
-/// call site every mutation diff/inverse/app command in this plugin uses instead of the old
-/// `snapshot.nodes`/`.edges` field access.
-pub fn dag_working_scene(snapshot: &DagSnapshot) -> DagWorkingScene {
-    dag_working_scene_for_handle(&snapshot.content)
+/// 🧸️ [`dag_scene_from_children`] over a document view.
+pub fn dag_scene(doc: &semio_framework_plugin::ArtifactView<'_, DagSnapshot>) -> Result<DagScene, semio_framework_plugin::Fault> {
+    dag_scene_from_children(doc.snapshot, &doc.children)
 }
 
-/// 🏗️ Mints one content-addressed child and transfers its immutable working scene into that exact
-/// local owner. No matching identity in another snapshot can observe the payload.
-pub fn dag_content_child_with_owner(nodes: Vec<DagNodeSpec>, edges: Vec<DagHostSnapshotEdge>) -> DagContentChild {
-    let handle = dag_content_child_handle(&nodes, &edges);
-    handle.with_local_owner(std::sync::Arc::new(DagWorkingScene { nodes, edges }))
+/// 🧬️ Publishes child `leaves` as ONE edit of the exact composed `content` child; no leaf is the empty emit.
+pub fn dag_child_emit<C, D>(snapshot: &DagSnapshot, leaves: &[SemioGraphMutation]) -> semio_framework_plugin::Emit<DagMutation, C, D> {
+    if leaves.is_empty() {
+        return semio_framework_plugin::Emit::default();
+    }
+    semio_framework_plugin::Emit { child_emits: vec![semio_framework_plugin::app::ChildEmit::of::<SemioGraphSnapshot, _>("content", &snapshot.content.child_id, leaves)], ..Default::default() }
 }
-/// 🌱️ Mints the composed `content` child's own pack for the archive-load genesis roster. The react
-/// shell's `loadDocumentPair` sends `members: []`, so a whole-document load (`setActiveExample` →
-/// `Effect::LoadDocument`) derives every `#[child]` slot through this hook; without it the archive
-/// closure completes `Incomplete` and the host answers `document archive replacement failed closure,
-/// authority, or retained publication validation`.
+
+/// 🌱️ The content a document's `content` child derives without a member store: the bundled demo graph or the empty graph;
+/// any other child id is not derivable (its content lives only in its member store). Readers without a child view —
+/// inference and the foreign serializers — read this until the framework hands them child head packs (design D2).
+pub fn dag_derivable_scene(snapshot: &DagSnapshot) -> Option<DagScene> {
+    let child_id = snapshot.content.child_id.as_str();
+    if child_id == crate::examples::demo::CONTENT_CHILD_ID {
+        return Some(crate::examples::demo::scene());
+    }
+    (child_id == dag_content_child_handle(&DagScene::default()).child_id).then(DagScene::default)
+}
+
+/// 🌱️ Packs the derivable `content` member (the react shell's `loadDocumentPair` sends `members: []`).
 pub fn genesis_dag_child_pack(snapshot: &DagSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
     use store::ArtifactPack;
-    (slot == "content" && child_id == snapshot.content.child_id).then(|| {
-        let scene = dag_working_scene(snapshot);
-        <SemioGraphSnapshot as ArtifactPack>::encode_pack(&dag_content_snapshot_from_working(&scene.nodes, &scene.edges))
-    })
+    (slot == "content" && child_id == snapshot.content.child_id).then(|| dag_derivable_scene(snapshot)).flatten().map(|scene| <SemioGraphSnapshot as ArtifactPack>::encode_pack(&dag_content_snapshot(&scene)))
+}
+//#endregion 🔖️Scene
+
+//#region 🔖️ChildLeaves
+/// 🌱 The graph child leaf that creates one DAG node (appended).
+pub fn create_node_leaf(node: &DagNodeSpec) -> SemioGraphMutation {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::create_node::CreateNode;
+    let SemioGraphNode { id, kind, label, position, width, height, ports, properties } = dag_graph_node(node);
+    SemioGraphMutation::CreateNode(CreateNode { id, kind, label, position, width, height, ports, properties, at: None })
 }
 
-//#endregion 🔖️WorkingScene
+/// 🤝️ The graph child leaf that creates one DAG edge (appended).
+pub fn create_edge_leaf(edge: &DagHostSnapshotEdge) -> SemioGraphMutation {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::create_edge::CreateEdge;
+    let SemioGraphEdge { id, source, target, kind, label, source_port, target_port, properties } = dag_graph_edge(edge);
+    SemioGraphMutation::CreateEdge(CreateEdge { id, source, target, kind, label, source_port, target_port, properties, at: None })
+}
+
+/// ✂️ The graph child leaf that deletes one DAG edge.
+pub fn delete_edge_leaf(edge_id: &str) -> SemioGraphMutation {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::delete_edge::DeleteEdge;
+    SemioGraphMutation::DeleteEdge(DeleteEdge { id: SemioGraphEdgeId::new(edge_id) })
+}
+
+/// ✋️ The relative graph child leaf that drags DAG nodes by one offset.
+pub fn drag_nodes_leaf(node_ids: Vec<String>, dx: f64, dy: f64) -> SemioGraphMutation {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::drag_nodes::DragNodes;
+    SemioGraphMutation::DragNodes(DragNodes { targets: node_ids.into_iter().map(SemioGraphNodeId::new).collect(), dx, dy })
+}
+
+/// 🏷️ The graph child leaf that changes a DAG node's identity key (its edges follow).
+pub fn rename_node_leaf(id: &str, new_id: &str) -> SemioGraphMutation {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::rename_node::RenameNode;
+    SemioGraphMutation::RenameNode(RenameNode { id: SemioGraphNodeId::new(id), new_id: SemioGraphNodeId::new(new_id) })
+}
+//#endregion 🔖️ChildLeaves
 
 //#region 🔖️Domain
 /// 🎥️ Viewport camera for the DAG canvas (plugin-owned; distinct from framework `dag` kernel helpers).
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -352,210 +431,6 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "."]
-                        pub mod create_node {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🦠️mutation/🦀️.rs"]
-                            pub mod mutation;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🧪️tests/🧪️rejects-a-duplicate-node-id/🦀️.rs"]
-                            mod tests_rejects_a_duplicate_node_id;
-                        }
-                        #[path = "."]
-                        pub mod delete_node {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🦠️mutation/🦀️.rs"]
-                            pub mod mutation;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/🧪️rejects/🦀️.rs"]
-                            mod tests_rejects_deleting_a_missing_node;
-                        }
-                        #[path = "."]
-                        pub mod rename_node {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-node/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-node/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-node/🦠️mutation/🦀️.rs"]
-                            pub mod mutation;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-node/🧪️tests/🧪️rejects/🦀️.rs"]
-                            mod tests_rejects_renaming_a_missing_node;
-                        }
-                        #[path = "."]
-                        pub mod change_node_name {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-node-name/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-node-name/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-node-name/🦠️mutation/🦀️.rs"]
-                            pub mod mutation;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-node-name/🧪️tests/🧪️rejects/🦀️.rs"]
-                            mod tests_rejects_renaming_the_label_of_a_missing_node;
-                        }
-                        #[path = "."]
-                        pub mod move_node {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️move-node/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️move-node/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️move-node/🦠️mutation/🦀️.rs"]
-                            pub mod mutation;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️move-node/🧪️tests/🧪️rejects-moving-a-missing-node/🦀️.rs"]
-                            mod tests_rejects_moving_a_missing_node;
-                        }
-                        #[path = "."]
-                        pub mod resize_node {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-node/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-node/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-node/🦠️mutation/🦀️.rs"]
-                            pub mod mutation;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-node/🧪️tests/🧪️rejects/🦀️.rs"]
-                            mod tests_rejects_resizing_a_missing_node;
-                        }
-                        #[path = "."]
-                        pub mod change_node_icon {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-node-icon/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-node-icon/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-node-icon/🦠️mutation/🦀️.rs"]
-                            pub mod mutation;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-node-icon/🧪️tests/🧪️rejects/🦀️.rs"]
-                            mod tests_rejects_reiconing_a_missing_node;
-                        }
-                        #[path = "."]
-                        pub mod change_node_abbreviation {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔡change-node-abbreviation/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔡change-node-abbreviation/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔡change-node-abbreviation/🦠️mutation/🦀️.rs"]
-                            pub mod mutation;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔡change-node-abbreviation/🧪️tests/🧪️rejects/🦀️.rs"]
-                            mod tests_rejects_reabbreviating_a_missing_node;
-                        }
-                        #[path = "."]
-                        pub mod change_node_operator_kind {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮change-node-operator-kind/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮change-node-operator-kind/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮change-node-operator-kind/🦠️mutation/🦀️.rs"]
-                            pub mod mutation;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮change-node-operator-kind/🧪️tests/🧪️rejects/🦀️.rs"]
-                            mod tests_rejects_rebinding_the_operator_of_a_missing_node;
-                        }
-                        #[path = "."]
-                        pub mod replace_node_kind {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-node-kind/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-node-kind/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-node-kind/🦠️mutation/🦀️.rs"]
-                            pub mod mutation;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-node-kind/🧪️tests/🧪️rejects/🦀️.rs"]
-                            mod tests_rejects_rekinding_a_missing_node;
-                        }
-                        #[path = "."]
-                        pub mod replace_node_properties {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗃️replace-node-properties/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗃️replace-node-properties/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗃️replace-node-properties/🦠️mutation/🦀️.rs"]
-                            pub mod mutation;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗃️replace-node-properties/🧪️tests/🧪️rejects/🦀️.rs"]
-                            mod tests_rejects_repropertying_a_missing_node;
-                        }
-                        #[path = "."]
-                        pub mod reorder_nodes {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-nodes/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-nodes/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-nodes/🦠️mutation/🦀️.rs"]
-                            pub mod mutation;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-nodes/🧪️tests/🧪️rejects/🦀️.rs"]
-                            mod tests_rejects_a_duplicate_id_in_the_order;
-                        }
-                        #[path = "."]
-                        pub mod connect_nodes {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝️connect-nodes/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝️connect-nodes/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝️connect-nodes/🦠️mutation/🦀️.rs"]
-                            pub mod mutation;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝️connect-nodes/🧪️tests/🧪️rejects/🦀️.rs"]
-                            mod tests_rejects_a_missing_source_node;
-                        }
-                        #[path = "."]
-                        pub mod disconnect_nodes {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-nodes/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-nodes/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-nodes/🦠️mutation/🦀️.rs"]
-                            pub mod mutation;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-nodes/🧪️tests/🧪️rejects/🦀️.rs"]
-                            mod tests_rejects_disconnecting_a_missing_edge;
-                        }
-                        #[path = "."]
-                        pub mod move_nodes {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-nodes/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-nodes/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-nodes/🦠️mutation/🦀️.rs"]
-                            pub mod mutation;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-nodes/🧪️tests/🧪️rejects/🦀️.rs"]
-                            mod tests_rejects_dragging_missing_nodes;
-                        }
-                        #[path = "."]
-                        pub mod set_node_positions {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️set-node-positions/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️set-node-positions/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️set-node-positions/🦠️mutation/🦀️.rs"]
-                            pub mod mutation;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️set-node-positions/🧪️tests/🧪️rejects/🦀️.rs"]
-                            mod tests_rejects_placing_a_missing_node;
-                        }
-                        #[path = "."]
-                        pub mod set_slider {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️set-slider/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️set-slider/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️set-slider/🦠️mutation/🦀️.rs"]
-                            pub mod mutation;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️set-slider/🧪️tests/🧪️rejects/🦀️.rs"]
-                            mod tests_rejects_scrubbing_a_missing_slider;
-                        }
                     }
                 }
                 #[path = "."]
@@ -575,13 +450,6 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔺️diff/💾️binary/🦀️.rs"]
                         pub mod binary;
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔺️diff/📝️text/🦀️.rs"]
-                        pub mod text;
-                    }
-                    #[path = "."]
-                    pub mod mutations {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/📝️text/🦀️.rs"]
                         pub mod text;
                     }
                     #[path = "."]
@@ -670,15 +538,8 @@ pub mod schema {
 pub mod io {
     pub use super::standards::v1::subsets::any::io::*;
 }
-pub mod op {
-    pub use crate::standards::v1::subsets::any::io::mutations::text::*;
-    pub use crate::standards::v1::subsets::any::schema::mutations::DagMutation;
-}
 pub mod document_dsl {
     pub use crate::standards::v1::subsets::any::io::snapshot::text::*;
-}
-pub mod spr {
-    pub use crate::standards::v1::subsets::any::io::mutations::binary::*;
 }
 pub mod pack {
     pub use crate::standards::v1::subsets::any::io::snapshot::binary::*;

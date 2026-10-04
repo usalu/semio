@@ -70,6 +70,7 @@ Feature: Apply every typed LAS 1.0 mutation to a real-world point cloud
       | set-scale-and-offset   | {"scale": [0.0005, 0.0005, 0.0005], "offset": [583000.0, 5804000.0, 0.0]} |
       | set-bounds             | {"max": [583020.0, 5804020.0, 20.0], "min": [582980.0, 5803980.0, -20.0]} |
       | set-points-by-return   | {"counts": [8000, 300, 100, 40, 8]} |
+      | patch-snapshot | {"patch": {"operation": "set", "path": "/header/systemIdentifier", "value": "PATCHED-SYSTEM"}} |
 
   @id-inverse
   @level-exhaustive
@@ -92,6 +93,7 @@ Feature: Apply every typed LAS 1.0 mutation to a real-world point cloud
       | set-scale-and-offset   | {"scale": [0.0005, 0.0005, 0.0005], "offset": [583000.0, 5804000.0, 0.0]} |
       | set-bounds             | {"max": [583020.0, 5804020.0, 20.0], "min": [582980.0, 5803980.0, -20.0]} |
       | set-points-by-return   | {"counts": [8000, 300, 100, 40, 8]} |
+      | patch-snapshot | {"patch": {"operation": "set", "path": "/header/systemIdentifier", "value": "PATCHED-SYSTEM"}} |
 
   @id-identity-round-trip
   @level-long

@@ -413,7 +413,7 @@ fn an_enabled_shadow_pass_measures_every_caster_before_its_receivers() {
     let _guard = prepared_process_guard();
     use crate::wgpu::kernel_3d_scene::{Instance3d, LineDraw3d, LineVertex3d, SceneCurvilinear3d, SceneDraw3d, SceneMaterialDraw3d, SceneMaterialKind3d, ScenePass3d, SceneShadowRole3d, TexturedDraw3d, TexturedInstance3d};
     let mut draw = DrawList::default();
-    let instance = Instance3d { id: String::new(), model: Instance3d::model_from_trs([0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0], [1.0, 1.0, 1.0]), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() };
+    let instance = Instance3d { component_source: None, id: String::new(), model: Instance3d::model_from_trs([0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0], [1.0, 1.0, 1.0]), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() };
     draw.push_scene_pass(ScenePass3d {
         viewport: [0.0, 0.0, 100.0, 40.0],
         shadow: crate::wgpu::kernel_3d_scene::SceneShadow3d { enabled: true, ..Default::default() },
@@ -482,7 +482,7 @@ fn an_enabled_shadow_pass_measures_every_caster_before_its_receivers() {
 fn a_procedural_grid_is_one_prepared_scalar_between_textures_and_opaque_geometry() {
     let _guard = prepared_process_guard();
     use crate::wgpu::kernel_3d_scene::{Instance3d, LineDraw3d, LineVertex3d, ProceduralGrid3d, SceneDraw3d, ScenePass3d, TexturedDraw3d, TexturedInstance3d};
-    let instance = Instance3d { id: String::new(), model: Instance3d::model_from_trs([0.0; 3], [0.0, 0.0, 0.0, 1.0], [1.0; 3]), color: [1.0; 4], selected: false, hovered: false, material: Default::default() };
+    let instance = Instance3d { component_source: None, id: String::new(), model: Instance3d::model_from_trs([0.0; 3], [0.0, 0.0, 0.0, 1.0], [1.0; 3]), color: [1.0; 4], selected: false, hovered: false, material: Default::default() };
     let grid = ProceduralGrid3d { plane_z: 0.001, camera_plane_projection: [2.0, -3.0, 0.001], cell_size: 1.0, fade_distance: 8.0, cell_color: [0.2, 0.3, 0.4] };
     let mut draw = DrawList::default();
     draw.push_scene_pass(ScenePass3d {
@@ -548,7 +548,7 @@ fn ellipse_scene_pass_snapshots_backdrop_clears_inside_then_composites_last() {
 fn a_disabled_shadow_never_publishes_a_gpu_shadow_scalar() {
     let _guard = prepared_process_guard();
     use crate::wgpu::kernel_3d_scene::{Instance3d, SceneDraw3d, ScenePass3d};
-    let instance = Instance3d { id: String::new(), model: Instance3d::model_from_trs([0.0; 3], [0.0, 0.0, 0.0, 1.0], [1.0; 3]), color: [1.0; 4], selected: false, hovered: false, material: Default::default() };
+    let instance = Instance3d { component_source: None, id: String::new(), model: Instance3d::model_from_trs([0.0; 3], [0.0, 0.0, 0.0, 1.0], [1.0; 3]), color: [1.0; 4], selected: false, hovered: false, material: Default::default() };
     let mut draw = DrawList::default();
     draw.push_scene_pass(ScenePass3d { draws: vec![SceneDraw3d { mesh_key: String::new(), mesh_version: 0, instances: vec![instance], shadow_role: Default::default() }], ..Default::default() });
     let mut cursor = DrawMeasureCursor::PassHeader(0);

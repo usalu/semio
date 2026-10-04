@@ -22,7 +22,7 @@ it("the mounted React Navigator publishes the authored content camera on wheel",
   await uiI18n.changeLanguage("en");
   for (const sample of fixture.cases) {
     const actions: any[] = [];
-    const scene = { documentSyncJson: '{"schema":"raster.document","layers":[]}', assetsJson: "{}", cameraJson: JSON.stringify(sample.camera), selectionJson: "[]", activeUtility: "brush", brushSize: 12, brushOpacity: 1, brushColor: "#000000", brushHardness: 1,paintTarget:"pixels" as const,maskValue:255, viewMode: "navigator" as const, ...(sample.viewport ? { compositeViewportJson: JSON.stringify(sample.viewport) } : {}) };
+    const scene = { documentSyncJson: '{"schema":"raster.document","layers":[]}', assetsJson: "{}", cameraJson: JSON.stringify(sample.camera), selectionJson: "[]", activeUtility: "brush", brushSize: 12, brushOpacity: 1, brushColor: "#000000", brushHardness: 1,paintTarget:"pixels" as const,maskValue:255,fillTolerance:24, viewMode: "navigator" as const, ...(sample.viewport ? { compositeViewportJson: JSON.stringify(sample.viewport) } : {}) };
     const view = render(<Paint2dHost node={{ type: "componentScene", surfaceId: "navigator-camera", controllerId: "raster", componentKind: "paint2d", paint2d: scene }} onAction={action => { actions.push(action); }} />);
     const host = view.container.querySelector<HTMLElement>('[data-surface-id="navigator-camera"]')!;
     const [x, y, width, height] = sample.surface;

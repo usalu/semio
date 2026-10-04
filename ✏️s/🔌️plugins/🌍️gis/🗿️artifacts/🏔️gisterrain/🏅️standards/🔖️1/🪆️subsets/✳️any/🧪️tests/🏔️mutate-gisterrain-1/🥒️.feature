@@ -7,7 +7,7 @@ Feature: Apply both typed gis.gisterrain mutations twice — once in Rust, once 
   This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️component.py` in this directory: a
   second implementation of the `s.gis.gisterrain` document and both typed mutations, written in
   Python from `🧬️schema/📸️snapshot/🔣️.json` (the document is an `f64` `exaggeration` and a
-  raw `importedFeaturesJson` string, `additionalProperties: false`),
+  optional complete `importedMap` owner, `additionalProperties: false`),
   `🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio` (the two verbs) and the two committed
   specification vectors (the externally tagged wire form of each, and the demonstration that the two
   setters move their fields independently). It imports nothing from this repository's Rust.
@@ -20,7 +20,7 @@ Feature: Apply both typed gis.gisterrain mutations twice — once in Rust, once 
 
   The real artifact, and the honest limit on it. The artifact's committed demo example is a real
   Liège survey fragment — exaggeration 1.5, an origin at 5.5818/50.603 and two named positions — but
-  its `importedFeaturesJson` is EMPTY, so `change-imported-features` would replace nothing with
+  its `importedMap` is absent, so `change-imported-features` would replace nothing with
   something and its inverse would restore emptiness. The mutation scenarios therefore read
   shared://🏔️mutate-gisterrain-1/🔣️.snapshot.json, derived ONCE by
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️23/END-TO-END-TESTING-REFACTOR/w16-cross-language/🐍️derive-gisterrain-imports.py`
@@ -33,7 +33,7 @@ Feature: Apply both typed gis.gisterrain mutations twice — once in Rust, once 
   Why the Python reference does not read the carrier. Its `gismap` sibling's `.dsl.semio` members
   are plainly hex-encoded JSON, a layout that can be derived from the committed bytes and then
   pinned by byte-exact re-encoding. This document's only committed example carries an EMPTY
-  `importedFeaturesJson`, so the encoding of a non-empty string value cannot be read off it, and no
+  `importedMap`, so the encoding of a non-empty string value cannot be read off it, and no
   prose document specifies it. Guessing and calling the guess a specification is exactly what this
   exercise forbids, so the carrier's own laws stay where they can honestly be asserted: in role, on
   the Rust side, in `identity-round-trip`, against the committed example — the ArtifactDsl fixpoint
@@ -56,7 +56,7 @@ Feature: Apply both typed gis.gisterrain mutations twice — once in Rust, once 
     Examples:
       | id                       | mutation                                                                                                                                                                       |
       | change-exaggeration      | {"ChangeExaggeration":{"newExaggeration":2.75}}                                                                                                                                |
-      | change-imported-features | {"ChangeImportedFeatures":{"newImportedFeaturesJson":"{\"positions\":[{\"id\":\"p_val_benoit_campus\",\"lat\":50.6231,\"lon\":5.5674}],\"routes\":[],\"regions\":[]}"}}         |
+      | change-imported-features | {"ChangeImportedFeatures":{"newImportedMap":{"positions":[{"id":"p_val_benoit_campus","lat":50.6231,"lon":5.5674}],"routes":[],"regions":[],"properties":[]}}} |
 
   @id-inverse
   @level-exhaustive
@@ -71,7 +71,7 @@ Feature: Apply both typed gis.gisterrain mutations twice — once in Rust, once 
     Examples:
       | id                       | mutation                                                                                                                                                                       |
       | change-exaggeration      | {"ChangeExaggeration":{"newExaggeration":2.75}}                                                                                                                                |
-      | change-imported-features | {"ChangeImportedFeatures":{"newImportedFeaturesJson":"{\"positions\":[{\"id\":\"p_val_benoit_campus\",\"lat\":50.6231,\"lon\":5.5674}],\"routes\":[],\"regions\":[]}"}}         |
+      | change-imported-features | {"ChangeImportedFeatures":{"newImportedMap":{"positions":[{"id":"p_val_benoit_campus","lat":50.6231,"lon":5.5674}],"routes":[],"regions":[],"properties":[]}}} |
 
   @id-spec-vector
   @level-exhaustive

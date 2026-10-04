@@ -505,7 +505,7 @@ impl BitmapInferenceJob {
                     return Some((String::new(), EncodePhase::Close, 0));
                 }
                 let separator = if self.encode_cursor == 0 { "" } else { "," };
-                Some((format!("{separator}{}", protocol::json::to_json_string(&self.entropy[self.encode_cursor])), EncodePhase::Entropy, self.encode_cursor + 1))
+                Some((format!("{separator}{}", semio_framework_pack_json::to_json_string(&self.entropy[self.encode_cursor])), EncodePhase::Entropy, self.encode_cursor + 1))
             }
             EncodePhase::Close => None,
         }
@@ -785,7 +785,7 @@ impl semio_framework::ToolJobFactory for BitmapInferenceJobFactory {
 
     fn create_job_from_wire(&mut self, operation: semio_framework_job::Operation, payload: &[u8], checkpoint: Option<Vec<u8>>) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
         let payload_text = std::str::from_utf8(payload).map_err(|error| semio_framework::ToolJobFactoryError::new(format!("bitmap-inference-wire-decode:{error}")))?;
-        let mut request: BitmapInferenceRequest = protocol::json::from_json_str(payload_text).map_err(|error| semio_framework::ToolJobFactoryError::new(format!("bitmap-inference-wire-decode:{error}")))?;
+        let mut request: BitmapInferenceRequest = semio_framework_pack_json::from_json_str(payload_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework::ToolJobFactoryError::new(format!("bitmap-inference-wire-decode:{error}")))?;
         if checkpoint.is_some() {
             request.checkpoint = checkpoint;
         }
@@ -887,7 +887,7 @@ pub fn solve_with_clock(snapshot: &BitmapSnapshot, now_us: fn() -> Option<u64>) 
             semio_framework_job::StepOutcome::Complete(candidate) => Some(
                 std::str::from_utf8(&payload_bytes(&candidate.output))
                     .map_err(|error| format!("bitmap-invalid-commit:{error}"))
-                    .and_then(|text| protocol::json::from_json_str::<BitmapInferenceCommit>(text).map_err(|error| format!("bitmap-invalid-commit:{error}"))),
+                    .and_then(|text| semio_framework_pack_json::from_json_str::<BitmapInferenceCommit>(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("bitmap-invalid-commit:{error}"))),
             ),
             semio_framework_job::StepOutcome::Cancelled => Some(Err("bitmap-inference-cancelled".into())),
             semio_framework_job::StepOutcome::Fault(fault) => Some(Err(String::from_utf8_lossy(&payload_bytes(&fault.detail)).into_owned())),
@@ -938,7 +938,7 @@ impl store::InferredField<BitmapSnapshot> for BitmapSolve {
         vec![store::InferenceStep { key: "bitmap".to_string(), parents: Vec::new() }]
     }
     fn dep_input(snapshot: &BitmapSnapshot, _key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
-        protocol::json::to_json_string(snapshot).into_bytes()
+        semio_framework_pack_json::to_json_string(snapshot).into_bytes()
     }
     fn compute(snapshot: &BitmapSnapshot, _key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
         match solve_with_job(snapshot) {
@@ -968,7 +968,7 @@ impl store::InferredField<BitmapSnapshot> for BitmapContradiction {
         vec![store::InferenceStep { key: "bitmap".to_string(), parents: Vec::new() }]
     }
     fn dep_input(snapshot: &BitmapSnapshot, _key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
-        protocol::json::to_json_string(snapshot).into_bytes()
+        semio_framework_pack_json::to_json_string(snapshot).into_bytes()
     }
     fn compute(snapshot: &BitmapSnapshot, _key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
         match solve_with_job(snapshot) {

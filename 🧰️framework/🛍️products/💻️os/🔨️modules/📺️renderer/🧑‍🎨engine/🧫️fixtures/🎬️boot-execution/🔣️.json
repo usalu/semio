@@ -1,0 +1,12 @@
+{
+  "carriers": [
+    { "id": "react", "fields": ["backboneWorkerFactory", "documentServices"] },
+    { "id": "wgpu", "fields": ["rendererWasmUrl", "frameWorkerUrl", "suppressAutoIntroduction", "signal", "onProgress"] }
+  ],
+  "locales": [
+    { "requested": "en-US", "expected": "en" },
+    { "requested": "de-CH", "expected": "de" },
+    { "requested": "fr-FR", "expected": null },
+    { "requested": "", "expected": null }
+  ]
+}

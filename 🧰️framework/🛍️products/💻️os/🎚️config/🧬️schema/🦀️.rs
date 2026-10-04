@@ -15,12 +15,12 @@ use std::collections::HashMap;
 pub type JsonValue = serde_json::Value;
 
 mod json_value_bridge {
-    pub fn to_value(value: &super::JsonValue) -> dsl::DslValue {
-        dsl::DslValue::from(value.clone())
+    pub fn to_value(value: &super::JsonValue) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::from(value.clone())
     }
 
     #[expect(clippy::unnecessary_wraps, reason = "The value derive custom codec interface requires a fallible decoder signature.")]
-    pub fn from_value(value: dsl::DslValue) -> Result<super::JsonValue, dsl::ValueError> {
+    pub fn from_value(value: semio_framework_value::DslValue) -> Result<super::JsonValue, semio_framework_value::ValueError> {
         Ok(super::JsonValue::from(value))
     }
 }
@@ -165,24 +165,27 @@ pub fn apply_opening_config_mutation(snapshot: &mut OpeningPreferences, mutation
 }
 
 /// ↩️ Computes the mutation's inverse steps from the pre-mutation preferences.
-pub fn inverse_opening_config_mutation(snapshot: &OpeningPreferences, mutation: &super::mutations::OpeningConfigMutation) -> Vec<super::mutations::OpeningConfigMutation> {
+pub fn inverse_opening_config_mutation(snapshot: &OpeningPreferences, mutation: &super::mutations::OpeningConfigMutation) -> Result<Vec<super::mutations::OpeningConfigMutation>, semio_framework_value::ValueError> {
+    Ok({
     use protocol::Mutation as _;
-    mutation.inverse(snapshot)
+    mutation.inverse(snapshot)?
+
+    })
 }
 
 /// 📥️ Decodes the internally tagged opening-config JSON projection.
 pub fn decode_opening_config_mutation_json(text: &str) -> Result<super::mutations::OpeningConfigMutation, String> {
-    dsl::os_pack::json::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 
 /// 📤️ Encodes opening preferences to their canonical camel-case JSON projection.
 pub fn encode_opening_preferences_json(snapshot: &OpeningPreferences) -> String {
-    dsl::os_pack::json::to_json_string(snapshot)
+    semio_framework_pack_json::to_json_string(snapshot)
 }
 
 /// 📥️ Decodes the canonical opening-preferences JSON projection.
 pub fn decode_opening_preferences_json(text: &str) -> Result<OpeningPreferences, String> {
-    dsl::os_pack::json::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 
 /// ▶️ Applies a mutation and returns its diagnostic `(code, severity)` pairs.
@@ -193,9 +196,12 @@ pub fn apply_opening_config_mutation_reporting(snapshot: &mut OpeningPreferences
 }
 
 /// ↩️ Returns the mutation's own inverse steps for an external fixture adapter.
-pub fn inverse_opening_config_mutation_steps(mutation: &super::mutations::OpeningConfigMutation, base: &OpeningPreferences) -> Vec<super::mutations::OpeningConfigMutation> {
+pub fn inverse_opening_config_mutation_steps(mutation: &super::mutations::OpeningConfigMutation, base: &OpeningPreferences) -> Result<Vec<super::mutations::OpeningConfigMutation>, semio_framework_value::ValueError> {
+    Ok({
     use protocol::Mutation as _;
-    mutation.inverse(base)
+    mutation.inverse(base)?
+
+    })
 }
 
 /// 🧬️ Applies one OS UI-preferences mutation through its whole-record diff.
@@ -206,24 +212,27 @@ pub fn apply_ui_preferences_config_mutation(snapshot: &mut UiPreferences, mutati
 }
 
 /// ↩️ Computes the mutation's inverse steps from the pre-mutation preferences.
-pub fn inverse_ui_preferences_config_mutation(snapshot: &UiPreferences, mutation: &super::mutations::UiPreferencesConfigMutation) -> Vec<super::mutations::UiPreferencesConfigMutation> {
+pub fn inverse_ui_preferences_config_mutation(snapshot: &UiPreferences, mutation: &super::mutations::UiPreferencesConfigMutation) -> Result<Vec<super::mutations::UiPreferencesConfigMutation>, semio_framework_value::ValueError> {
+    Ok({
     use protocol::Mutation as _;
-    mutation.inverse(snapshot)
+    mutation.inverse(snapshot)?
+
+    })
 }
 
 /// 📥️ Decodes the internally tagged UI-preferences mutation JSON projection.
 pub fn decode_ui_preferences_config_mutation_json(text: &str) -> Result<super::mutations::UiPreferencesConfigMutation, String> {
-    dsl::os_pack::json::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 
 /// 📤️ Encodes OS UI preferences to their canonical camel-case JSON projection.
 pub fn encode_ui_preferences_json(snapshot: &UiPreferences) -> String {
-    dsl::os_pack::json::to_json_string(snapshot)
+    semio_framework_pack_json::to_json_string(snapshot)
 }
 
 /// 📥️ Decodes the canonical OS UI-preferences JSON projection.
 pub fn decode_ui_preferences_json(text: &str) -> Result<UiPreferences, String> {
-    dsl::os_pack::json::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 
 /// ▶️ Applies a mutation and returns its diagnostic `(code, severity)` pairs.
@@ -234,9 +243,12 @@ pub fn apply_ui_preferences_config_mutation_reporting(snapshot: &mut UiPreferenc
 }
 
 /// ↩️ Returns the mutation's own inverse steps for an external fixture adapter.
-pub fn inverse_ui_preferences_config_mutation_steps(mutation: &super::mutations::UiPreferencesConfigMutation, base: &UiPreferences) -> Vec<super::mutations::UiPreferencesConfigMutation> {
+pub fn inverse_ui_preferences_config_mutation_steps(mutation: &super::mutations::UiPreferencesConfigMutation, base: &UiPreferences) -> Result<Vec<super::mutations::UiPreferencesConfigMutation>, semio_framework_value::ValueError> {
+    Ok({
     use protocol::Mutation as _;
-    mutation.inverse(base)
+    mutation.inverse(base)?
+
+    })
 }
 //#endregion 🌉️MutationCodecBridge
 

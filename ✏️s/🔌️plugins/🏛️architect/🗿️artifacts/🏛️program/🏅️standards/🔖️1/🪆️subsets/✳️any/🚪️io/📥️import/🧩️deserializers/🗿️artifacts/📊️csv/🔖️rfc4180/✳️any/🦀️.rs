@@ -8,8 +8,8 @@ use crate::schema::snapshot::ProgramSnapshot;
 
 pub fn register() {}
 
-pub fn deserialize_bytes(bytes: &[u8]) -> Result<ProgramSnapshot, store::TextError> {
-    let error = |message: String| store::TextError::new(format!("program←csv: {message}"), dsl::TextSpan::at(1, 1));
+pub fn deserialize_bytes(bytes: &[u8]) -> Result<ProgramSnapshot, semio_framework_diagnostic::TextError> {
+    let error = |message: String| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("program←csv: {message}"), semio_framework_diagnostic::TextSpan::at(1, 1));
     let text = std::str::from_utf8(bytes).map_err(|e| error(e.to_string()))?;
     let mut program = ProgramSnapshot::default();
     import_registers_csv(&mut program, text, MergeStrategy::Replace).map_err(|e| error(e.to_string()))?;

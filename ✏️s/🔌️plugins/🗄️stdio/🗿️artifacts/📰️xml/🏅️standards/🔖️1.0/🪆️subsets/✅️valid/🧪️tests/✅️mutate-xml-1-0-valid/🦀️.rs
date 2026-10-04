@@ -168,7 +168,7 @@ mod subject {
         let base = base_snapshot(ctx)?;
         let spec = ctx.doc_json()?;
         let mutation = mutation_from_spec(&spec)?;
-        let undo = mutation_inverse(&mutation, &base);
+        let undo = mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
         let mut snapshot = base.clone();
         apply_xml_valid_mutation(&mut snapshot, &mutation);
         for step in &undo {

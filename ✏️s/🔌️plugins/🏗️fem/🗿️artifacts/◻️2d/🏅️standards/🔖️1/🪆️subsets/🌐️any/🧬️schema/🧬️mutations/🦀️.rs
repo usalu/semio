@@ -24,7 +24,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 /// including the banned `SetSnapshot` whole-document-replace variant — is gone; whole-document
 /// replace is not an in-history mutation at all (routed through `Effect::LoadDocument`, see
 /// `Fem2dPlayApp::whole_document_operation` returning `None` now and `editor::fem2d::reset_document_effect`).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslEnum, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = Fem2dSnapshot, diff = Fem2dDiff, schema = "fem.fem2d")]
 pub enum Fem2dMutation {
@@ -111,8 +111,11 @@ pub fn apply_fem2d_mutation(snapshot: &mut Fem2dSnapshot, mutation: &Fem2dMutati
     Ok(())
 }
 
-pub fn inverse_fem2d_mutation(snapshot: &Fem2dSnapshot, mutation: &Fem2dMutation) -> Vec<Fem2dMutation> {
-    mutation.inverse(snapshot)
+pub fn inverse_fem2d_mutation(snapshot: &Fem2dSnapshot, mutation: &Fem2dMutation) -> Result<Vec<Fem2dMutation>, semio_framework_value::ValueError> {
+    Ok({
+    mutation.inverse(snapshot)?
+
+    })
 }
 //#endregion 🔖️GenericDelegates
 
@@ -489,32 +492,32 @@ pub const KINDS: &[&str] = &[
 /// @see ../../🔣️oracle.json — the catalog and the recorded no-oracle decision.
 pub fn fem2d_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
     let decode_snapshot = |text: &str| -> Result<Fem2dSnapshot, String> {
-        let decoded: Fem2dSnapshot = dsl::json::from_json_str(text).map_err(|error| error.to_string())?;
+        let decoded: Fem2dSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
         Ok(decoded)
     };
     let base = decode_snapshot(base_json)?;
     let expected = decode_snapshot(after_json)?;
-    let mutation: Fem2dMutation = dsl::json::from_json_str(mutation_json).map_err(|error| error.to_string())?;
+    let mutation: Fem2dMutation = semio_framework_pack_json::from_json_str(mutation_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
     let mut applied = base.clone();
     let forward = <Fem2dMutation as Mutation<Fem2dSnapshot>>::diff(&mutation, &base).apply_to(&mut applied);
-    let inverse = <Fem2dMutation as Mutation<Fem2dSnapshot>>::inverse(&mutation, &base);
+    let inverse = <Fem2dMutation as Mutation<Fem2dSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?;
     let mut undone = applied.clone();
     let mut inverse_messages = Vec::new();
     for step in &inverse {
         let outcome = <Fem2dMutation as Mutation<Fem2dSnapshot>>::diff(step, &undone).apply_to(&mut undone);
         inverse_messages.extend(outcome.messages().iter().cloned());
     }
-    let report = dsl::DslValue::object([
-        ("base".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&base))),
-        ("expectedSnapshot".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&expected))),
-        ("snapshot".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&applied))),
-        ("diff".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(forward.diff()))),
-        ("messages".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(forward.messages()))),
-        ("inverseSteps".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&inverse))),
-        ("inverseSnapshot".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&undone))),
-        ("inverseMessages".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&inverse_messages))),
+    let report = semio_framework_value::DslValue::object([
+        ("base".to_string(), semio_framework_value::ToValue::to_value(&semio_framework_value::ToValue::to_value(&base))),
+        ("expectedSnapshot".to_string(), semio_framework_value::ToValue::to_value(&semio_framework_value::ToValue::to_value(&expected))),
+        ("snapshot".to_string(), semio_framework_value::ToValue::to_value(&semio_framework_value::ToValue::to_value(&applied))),
+        ("diff".to_string(), semio_framework_value::ToValue::to_value(&semio_framework_value::ToValue::to_value(forward.diff()))),
+        ("messages".to_string(), semio_framework_value::ToValue::to_value(&semio_framework_value::ToValue::to_value(forward.messages()))),
+        ("inverseSteps".to_string(), semio_framework_value::ToValue::to_value(&semio_framework_value::ToValue::to_value(&inverse))),
+        ("inverseSnapshot".to_string(), semio_framework_value::ToValue::to_value(&semio_framework_value::ToValue::to_value(&undone))),
+        ("inverseMessages".to_string(), semio_framework_value::ToValue::to_value(&semio_framework_value::ToValue::to_value(&inverse_messages))),
     ]);
-    Ok(dsl::json::to_json_string(&report))
+    Ok(semio_framework_pack_json::to_json_string(&report))
 }
 
 /// 🔢️ The three planar degrees of freedom this artifact's 2D elements can carry, as the wire spells
@@ -573,20 +576,20 @@ fn fem2d_dof_name(dof: crate::FemDof) -> &'static str {
 }
 
 /// 📤️ One solved case, projected onto the three axes.
-fn fem2d_case_value(result: &crate::model::StaticResult, nodes: &[String], pairs: &[(String, String)], members: &[String]) -> dsl::DslValue {
+fn fem2d_case_value(result: &crate::model::StaticResult, nodes: &[String], pairs: &[(String, String)], members: &[String]) -> semio_framework_value::DslValue {
     let displacements = nodes
         .iter()
         .map(|node| {
             let found = result.displacements.iter().find(|entry| &entry.node_id == node);
             let values = found.map_or([0.0; 6], |entry| entry.values);
-            dsl::DslValue::Array(vec![dsl::DslValue::float(values[0]), dsl::DslValue::float(values[1]), dsl::DslValue::float(values[5])])
+            semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::float(values[0]), semio_framework_value::DslValue::float(values[1]), semio_framework_value::DslValue::float(values[5])])
         })
         .collect();
     let reactions = pairs
         .iter()
         .map(|(node, dof)| {
             let value = result.reactions.iter().find(|entry| &entry.node_id == node && fem2d_dof_name_of(entry.dof) == dof.as_str()).map_or(0.0, |entry| entry.value);
-            dsl::DslValue::float(value)
+            semio_framework_value::DslValue::float(value)
         })
         .collect();
     let elements = members
@@ -600,10 +603,10 @@ fn fem2d_case_value(result: &crate::model::StaticResult, nodes: &[String], pairs
                 },
                 _ => [0.0; 6],
             };
-            dsl::DslValue::Array(six.iter().map(|value| dsl::DslValue::float(*value)).collect())
+            semio_framework_value::DslValue::Array(six.iter().map(|value| semio_framework_value::DslValue::float(*value)).collect())
         })
         .collect();
-    dsl::DslValue::Object(vec![("displacements".to_string(), dsl::DslValue::Array(displacements)), ("reactions".to_string(), dsl::DslValue::Array(reactions)), ("elements".to_string(), dsl::DslValue::Array(elements))])
+    semio_framework_value::DslValue::Object(vec![("displacements".to_string(), semio_framework_value::DslValue::Array(displacements)), ("reactions".to_string(), semio_framework_value::DslValue::Array(reactions)), ("elements".to_string(), semio_framework_value::DslValue::Array(elements))])
 }
 
 /// 🔤️ A solver degree of freedom as the wire spells it.
@@ -629,31 +632,31 @@ fn fem2d_dof_name_of(dof: crate::model::Dof) -> &'static str {
 ///
 /// @see ../../../📈️analysis/🧪️tests/🧮️solves-fem2d-1-benchmarks/🥒️.feature
 pub fn fem2d_analysis_report_json(snapshot_json: &str) -> Result<String, String> {
-    let doc: Fem2dSnapshot = dsl::json::from_json_str(snapshot_json).map_err(|error| error.to_string())?;
+    let doc: Fem2dSnapshot = semio_framework_pack_json::from_json_str(snapshot_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
     let (nodes, pairs, members) = fem2d_frame_axes(&doc);
-    let axes = |value: dsl::DslValue| {
-        dsl::DslValue::Object(vec![
-            ("nodes".to_string(), dsl::DslValue::Array(nodes.iter().map(|node| dsl::DslValue::String(node.clone())).collect())),
-            ("reactions".to_string(), dsl::DslValue::Array(pairs.iter().map(|(node, dof)| dsl::DslValue::String(format!("{node}.{dof}"))).collect())),
-            ("members".to_string(), dsl::DslValue::Array(members.iter().map(|member| dsl::DslValue::String(member.clone())).collect())),
+    let axes = |value: semio_framework_value::DslValue| {
+        semio_framework_value::DslValue::Object(vec![
+            ("nodes".to_string(), semio_framework_value::DslValue::Array(nodes.iter().map(|node| semio_framework_value::DslValue::String(node.clone())).collect())),
+            ("reactions".to_string(), semio_framework_value::DslValue::Array(pairs.iter().map(|(node, dof)| semio_framework_value::DslValue::String(format!("{node}.{dof}"))).collect())),
+            ("members".to_string(), semio_framework_value::DslValue::Array(members.iter().map(|member| semio_framework_value::DslValue::String(member.clone())).collect())),
             ("cases".to_string(), value),
         ])
     };
     match crate::fem2d_engine::fem2d_solve_all(&doc) {
-        Err(error) => Ok(dsl::json::to_json_string(&dsl::DslValue::Object(vec![("error".to_string(), dsl::DslValue::String(error.to_string()))]))),
+        Err(error) => Ok(semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Object(vec![("error".to_string(), semio_framework_value::DslValue::String(error.to_string()))]))),
         Ok(results) => {
             let mut cases = Vec::new();
             for id in doc.load_cases.iter().map(|case| case.id.clone()).chain(doc.combinations.iter().map(|combination| combination.id.clone())) {
                 let Some(result) = results.get(&id) else {
                     return Err(format!("fem2d_solve_all returned no result for {id:?}"));
                 };
-                let mut entry = vec![("id".to_string(), dsl::DslValue::String(id.clone()))];
-                if let dsl::DslValue::Object(fields) = fem2d_case_value(result, &nodes, &pairs, &members) {
+                let mut entry = vec![("id".to_string(), semio_framework_value::DslValue::String(id.clone()))];
+                if let semio_framework_value::DslValue::Object(fields) = fem2d_case_value(result, &nodes, &pairs, &members) {
                     entry.extend(fields);
                 }
-                cases.push(dsl::DslValue::Object(entry));
+                cases.push(semio_framework_value::DslValue::Object(entry));
             }
-            Ok(dsl::json::to_json_string(&axes(dsl::DslValue::Array(cases))))
+            Ok(semio_framework_pack_json::to_json_string(&axes(semio_framework_value::DslValue::Array(cases))))
         }
     }
 }
@@ -662,25 +665,25 @@ pub fn fem2d_analysis_report_json(snapshot_json: &str) -> Result<String, String>
 /// `fem2d_mutation_report_json` uses, then reports the analysis of what it left behind — the
 /// mutate-then-solve half of `🧮️solves-fem2d-1-benchmarks`.
 pub fn fem2d_mutated_analysis_report_json(base_json: &str, mutation_json: &str) -> Result<String, String> {
-    let base: Fem2dSnapshot = dsl::json::from_json_str(base_json).map_err(|error| error.to_string())?;
-    let mutation: Fem2dMutation = dsl::json::from_json_str(mutation_json).map_err(|error| error.to_string())?;
+    let base: Fem2dSnapshot = semio_framework_pack_json::from_json_str(base_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
+    let mutation: Fem2dMutation = semio_framework_pack_json::from_json_str(mutation_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
     let mut applied = base.clone();
     let outcome = <Fem2dMutation as Mutation<Fem2dSnapshot>>::diff(&mutation, &base).apply_to(&mut applied);
-    let faults: Vec<String> = outcome.messages().iter().filter(|message| matches!(message.level, dsl::Severity::Error | dsl::Severity::Fatal)).map(|message| format!("{:?}", message.code)).collect();
+    let faults: Vec<String> = outcome.messages().iter().filter(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)).map(|message| format!("{:?}", message.code)).collect();
     if !faults.is_empty() {
         return Err(format!("the mutation was rejected with {faults:?}"));
     }
-    fem2d_analysis_report_json(&dsl::json::to_json_string(&applied))
+    fem2d_analysis_report_json(&semio_framework_pack_json::to_json_string(&applied))
 }
 
 /// 🎵️ One JSON report of the modal analysis of `snapshot_json` — the natural frequencies in hertz,
 /// as many as the document's own `analysis.modalCount` asks for.
 pub fn fem2d_modal_report_json(snapshot_json: &str) -> Result<String, String> {
-    let doc: Fem2dSnapshot = dsl::json::from_json_str(snapshot_json).map_err(|error| error.to_string())?;
+    let doc: Fem2dSnapshot = semio_framework_pack_json::from_json_str(snapshot_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
     match crate::fem2d_engine::modal_buckling::fem2d_modal(&doc) {
-        Err(error) => Ok(dsl::json::to_json_string(&dsl::DslValue::Object(vec![("error".to_string(), dsl::DslValue::String(error.to_string()))]))),
+        Err(error) => Ok(semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Object(vec![("error".to_string(), semio_framework_value::DslValue::String(error.to_string()))]))),
         Ok(result) => {
-            Ok(dsl::json::to_json_string(&dsl::DslValue::Object(vec![("frequenciesHz".to_string(), dsl::DslValue::Array(result.frequencies_hz.iter().take(doc.analysis.modal_count as usize).map(|value| dsl::DslValue::float(*value)).collect()))])))
+            Ok(semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Object(vec![("frequenciesHz".to_string(), semio_framework_value::DslValue::Array(result.frequencies_hz.iter().take(doc.analysis.modal_count as usize).map(|value| semio_framework_value::DslValue::float(*value)).collect()))])))
         }
     }
 }
@@ -688,18 +691,18 @@ pub fn fem2d_modal_report_json(snapshot_json: &str) -> Result<String, String> {
 /// 🏛️ One JSON report of the linear-buckling analysis of `snapshot_json` — the lowest load factor of
 /// every load case the document declares, keyed by case id.
 pub fn fem2d_buckling_report_json(snapshot_json: &str) -> Result<String, String> {
-    let doc: Fem2dSnapshot = dsl::json::from_json_str(snapshot_json).map_err(|error| error.to_string())?;
+    let doc: Fem2dSnapshot = semio_framework_pack_json::from_json_str(snapshot_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
     let mut factors = Vec::new();
     for case in &doc.load_cases {
         match crate::fem2d_engine::modal_buckling::fem2d_buckling(&doc, &case.id) {
-            Err(error) => return Ok(dsl::json::to_json_string(&dsl::DslValue::Object(vec![("error".to_string(), dsl::DslValue::String(error.to_string()))]))),
+            Err(error) => return Ok(semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Object(vec![("error".to_string(), semio_framework_value::DslValue::String(error.to_string()))]))),
             Ok(result) => match result.factors.first() {
-                Some(value) => factors.push((case.id.clone(), dsl::DslValue::float(*value))),
-                None => return Ok(dsl::json::to_json_string(&dsl::DslValue::Object(vec![("error".to_string(), dsl::DslValue::String(format!("no buckling factor for {}", case.id)))]))),
+                Some(value) => factors.push((case.id.clone(), semio_framework_value::DslValue::float(*value))),
+                None => return Ok(semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Object(vec![("error".to_string(), semio_framework_value::DslValue::String(format!("no buckling factor for {}", case.id)))]))),
             },
         }
     }
-    Ok(dsl::json::to_json_string(&dsl::DslValue::Object(vec![("factors".to_string(), dsl::DslValue::Object(factors))])))
+    Ok(semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Object(vec![("factors".to_string(), semio_framework_value::DslValue::Object(factors))])))
 }
 //#endregion 🌉️TestBridge
 

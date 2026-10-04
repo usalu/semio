@@ -54,7 +54,7 @@ fn check_input(input: &Option<VerifiedMemberHistoryInput>, cx: &StepContext<'_>)
     input.request.as_ref().ok_or(MemberOpenDiagnostic::Stale)?.check_step_authority(cx)
 }
 
-fn close_owner<O: ErasedSnapshotRetirement>(input: &mut Option<O>, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, String> {
+fn close_owner<O: ErasedSnapshotRetirement>(input: &mut Option<O>, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
     let Some(owner) = input.as_mut() else {
         return Ok(SnapshotRetirementStep::Complete);
     };
@@ -63,8 +63,10 @@ fn close_owner<O: ErasedSnapshotRetirement>(input: &mut Option<O>, items: usize,
             input.take();
             Ok(SnapshotRetirementStep::Complete)
         }
-        SnapshotRetirementStep::Complete => Err("selected factory input returned false terminal".into()),
-        SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > items || released_bytes > bytes => Err("selected factory input exceeded retirement grant".into()),
+        SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "selected factory input returned false terminal")),
+        SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > items || released_bytes > bytes => {
+            Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "selected factory input exceeded retirement grant"))
+        }
         step => Ok(step),
     }
 }
@@ -177,7 +179,7 @@ impl<M: MemberFactory> MemberFactorySelection<M> {
 }
 
 impl<M: MemberFactory> ErasedSnapshotRetirement for MemberFactorySelection<M> {
-    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         self.closing = true;
         self.selected = None;
         close_owner(&mut self.input, items, bytes)
@@ -235,7 +237,7 @@ impl<M: MemberFactory> SelectedMemberHistoryInput<M> {
 }
 
 impl<M: MemberFactory> ErasedSnapshotRetirement for SelectedMemberHistoryInput<M> {
-    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         self.closing = true;
         close_owner(&mut self.input, items, bytes)
     }
@@ -270,7 +272,7 @@ impl<M: MemberFactory> SelectedMemberHistoryDictionary<M> {
 }
 
 impl<M: MemberFactory> ErasedSnapshotRetirement for SelectedMemberHistoryDictionary<M> {
-    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         close_owner(&mut self.owner, items, bytes)
     }
     fn terminal_is_empty(&self) -> bool {
@@ -316,7 +318,7 @@ impl<M: MemberFactory> SelectedVerifiedMemberHistory<M> {
 }
 
 impl<M: MemberFactory> ErasedSnapshotRetirement for SelectedVerifiedMemberHistory<M> {
-    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         close_owner(&mut self.input, items, bytes)
     }
     fn terminal_is_empty(&self) -> bool {

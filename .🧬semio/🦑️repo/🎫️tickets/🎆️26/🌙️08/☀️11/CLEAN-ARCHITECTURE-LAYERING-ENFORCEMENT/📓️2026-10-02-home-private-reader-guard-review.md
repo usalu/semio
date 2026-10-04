@@ -1,0 +1,13 @@
+# Home Private Reader Guard Review
+
+Bounded read-only guard/integration inspection; no asset re-audit, source edits or test executions.
+
+Preservation owner `🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/🧪️tests/🧫️private-reader/🧩️preservation/🟦️.ts:18–26` resolves both workspace and target, refuses lexical parent escape and absolute relative result, requires regular file and walks target through workspace inclusive rejecting symlinks. Adjacent test lines82–98 uses an actual directory symlink on Unix or junction on Windows and checks linked ancestor, directory, missing file and parent escape. This exercises the implementation rather than only a mocked refusal port.
+
+Restoration lines34–52 admits only an exact declared caller; checks unique current region/import anchor and absent original import, physically admits helper and every authored input, matches helper SHA, ordered canonical include-str reference count/path bindings and input SHA. Final restoration must equal the entire closed `originalSource` byte string. Changes outside the replaced region therefore refuse too. The final equality prevents partial restoration from weakening the frozen caller law. Fixture JSON imports are trusted authored contract inputs; injected test ports intentionally exercise counterexamples.
+
+Physical-bound checks extend through the selected workspace root, not its parents. Read occurs separately after lstat admission, so this is a stable owned-workspace proof rather than race-proof descriptor acquisition. These are limits of the current API, not an observed linked-input admission failure. Caller source itself is supplied by the integration read port; helper/input physical identities are guarded explicitly.
+
+Integration observation: current composition law `🧪️tests/🧩️composition/🟦️.ts:244–249` calls only `originalDrawingSource` before applying declared rewrites and comparing the original frozen hash. This file has no import or call to `originalPrivateReaderSource` in the inspected snapshot; drawing restoration does not call it either. The new adjacent private-reader law proves frozen original hash against the composition row, but cannot change what the existing composition law reads. Chain the exact private-reader restoration into that existing canonical composition law before its unchanged frozen hash comparison. Preserve the composition row SHA and declared rewrites. This is a concrete integration gap, not a reason to replace the original hash.
+
+Registered GREEN remains pending according to coordinator. This review claims only current source properties and the integration witness above.

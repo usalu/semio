@@ -30,7 +30,7 @@ pub const SPR_BYTES: &[u8] = include_bytes!("🖼️assets/📡️tower.spr.semi
 
 fn document_json() -> String {
     let projection = crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(DSL_TEXT).unwrap_or_else(|error| panic!("{ID} example dsl parses: {error}"));
-    dsl::json::to_json_string(&dsl::ToValue::to_value(&projection))
+    semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&projection))
 }
 
 /// 📚️ Canonical example source for `App::example_source` — DEFERRED: parsing [`DSL_TEXT`] eagerly

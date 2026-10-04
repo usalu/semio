@@ -13,7 +13,6 @@
 
 use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::composition::compute_semio_object_composition;
 //#region 🔖️Inference
@@ -28,8 +27,11 @@ pub struct SemioObjectInference {
 }
 
 impl protocol::Inference<SemioObjectSnapshot> for SemioObjectInference {
-    fn infer(snapshot: &SemioObjectSnapshot) -> Self {
+    fn infer(snapshot: &SemioObjectSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { composition: compute_semio_object_composition(snapshot) }
+    
+        })
     }
 }
 
@@ -39,7 +41,9 @@ impl protocol::Inference<SemioObjectSnapshot> for SemioObjectInference {
 /// pattern raster's `RasterInference` documents).
 impl Default for SemioObjectInference {
     fn default() -> Self {
-        <Self as protocol::Inference<SemioObjectSnapshot>>::infer(&SemioObjectSnapshot::default())
+        let snapshot = &SemioObjectSnapshot::default();
+
+        Self { composition: compute_semio_object_composition(snapshot) }
     }
 }
 
@@ -55,15 +59,6 @@ impl protocol::InferenceSpec<SemioObjectSnapshot> for SemioObjectInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 💡️ No `InferredField`s here (a 3-flag child-presence census + one transform-field read is O(1))
-/// — the default `infer_cached` passthrough (`ArtifactInferrer::infer_cached`) is exact.
-impl ArtifactInferrer for crate::standards::v1::subsets::object::schema::SemioObjectBuilder {
-    type Snapshot = SemioObjectSnapshot;
-    type Inference = SemioObjectInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.semio.object.inference`'s facet leaves into the OS-wide inference catalog

@@ -255,13 +255,13 @@ impl Wfc3dFillTickPayload {
 
 /// 📦️ Encodes one fill tick payload as UTF-8 JSON.
 pub fn encode_fill_payload(payload: &Wfc3dFillTickPayload) -> Vec<u8> {
-    protocol::json::to_json_string(payload).into_bytes()
+    semio_framework_pack_json::to_json_string(payload).into_bytes()
 }
 
 /// 🔓️ Decodes a fill tick payload. `None` when the bytes are not a well-formed record.
 pub fn decode_fill_payload(bytes: &[u8]) -> Option<Wfc3dFillTickPayload> {
     let text = std::str::from_utf8(bytes).ok()?;
-    protocol::json::from_json_str(text).ok()
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()
 }
 
 /// 🧮 Slot id → tile id (or absent) from the live child job. Reads `observed()` and singleton domains
@@ -318,7 +318,7 @@ pub fn payload_from_commit(snapshot: &Wfc3dSnapshot, commit: &crate::inferences:
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by `crate::editor::wfc3d::create_wfc3d_editor`.
 pub fn definition() -> ToolDefinition {
-    ToolDefinition { run: Some(run_definition()), ..semio_framework_plugin::resolve_ready(ToolDefinition::new(TOOL_ID, LocalizedLabel::native("Fill", "Füllen"), "paint-bucket")) }
+    ToolDefinition { run: Some(run_definition()), ..::semio_framework_async::poll::resolve_ready(ToolDefinition::new(TOOL_ID, LocalizedLabel::native("Fill", "Füllen"), "paint-bucket")) }
 }
 
 /// ⏯️ Read-only collapse: restart on any base or settings change, no revalidate job, no trace subjects.
@@ -339,6 +339,7 @@ pub fn run_definition() -> ToolRunDefinition {
         revalidate_job: None,
         settings: ToolRunSettingsReads::default(),
         windows: vec![WFC_3D_PREVIEW_WINDOW.into()],
+        member: None,
     }
 }
 
@@ -349,14 +350,14 @@ pub fn start_fill_effects() -> Vec<Effect> {
         Effect::DispatchAction {
             req: RequestId(FILL_HOP_REQUEST),
             action: TOOL_RUN_START_ACTION_ID.into(),
-            args: Some(dsl::DslValue::object([(TOOL_RUN_ARG_TOOL_ID.to_string(), dsl::DslValue::String(TOOL_ID.into()))])),
+            args: Some(semio_framework_value::DslValue::object([(TOOL_RUN_ARG_TOOL_ID.to_string(), semio_framework_value::DslValue::String(TOOL_ID.into()))])),
             delay_ms: 0,
         },
     ]
 }
 
 fn commit_fill_effect(payload: &Wfc3dFillTickPayload) -> Effect {
-    let args = semio_framework::dsl_value!({ "payloadJson": protocol::json::to_json_string(payload) });
+    let args = semio_framework::dsl_value!({ "payloadJson": semio_framework_pack_json::to_json_string(payload) });
     Effect::DispatchAction {
         req: RequestId(FILL_HOP_REQUEST ^ 1),
         action: COMMIT_FILL_ACTION_ID.into(),

@@ -96,13 +96,13 @@ pub struct PackagePluginDependency {
 }
 
 impl PackagePluginDependency {
-    fn to_json(&self) -> crate::os_pack::json::Value {
-        use crate::os_pack::json::{object, Value};
+    fn to_json(&self) -> semio_framework_pack_json::Value {
+        use semio_framework_pack_json::{object, Value};
         object([("pluginId".to_string(), Value::from(self.plugin_id.clone())), ("version".to_string(), Value::from(self.version.clone()))])
     }
 
-    fn from_json(value: &crate::os_pack::json::Value) -> Result<Self, String> {
-        use crate::os_pack::json::Value;
+    fn from_json(value: &semio_framework_pack_json::Value) -> Result<Self, String> {
+        use semio_framework_pack_json::Value;
         Ok(Self {
             plugin_id: value.get("pluginId").and_then(Value::as_str).map(str::to_owned).ok_or_else(|| "missing field pluginId".to_string())?,
             version: value.get("version").and_then(Value::as_str).filter(|version| is_exact_pin(version)).map(str::to_owned).ok_or_else(|| "field version must be an exact pin `=X.Y.Z`".to_string())?,
@@ -131,14 +131,14 @@ pub struct ExtensionPackageManifest {
     /// 🗂️ Open plugin contributions (mirrors the guest `ExtensionManifest.topic_contributions`) —
     /// renamed from the former bare `contributions` field to free that name for the typed
     /// artifact-kind contribution roster below (contract freeze §3/§4).
-    pub topic_contributions: crate::os_pack::json::Value,
+    pub topic_contributions: semio_framework_pack_json::Value,
     /// 🔗️ Direct plugin dependencies this extension requires — see `PackagePluginDependency`.
     pub dependencies: Vec<PackagePluginDependency>,
     /// 🗂️ Artifact-kind contributions (mutations/inferences) this extension contributes onto
     /// artifact kinds it depends on — a raw JSON array of
     /// `semio_framework::ArtifactContributionDescriptor`, kept untyped here for the same
     /// dependency-edge-law reason as `PackagePluginDependency` above.
-    pub contributions: crate::os_pack::json::Value,
+    pub contributions: semio_framework_pack_json::Value,
     pub package_format: u16,
 }
 
@@ -153,8 +153,8 @@ impl ExtensionPackageManifest {
         }
     }
 
-    fn to_json(&self) -> crate::os_pack::json::Value {
-        use crate::os_pack::json::{object, Value};
+    fn to_json(&self) -> semio_framework_pack_json::Value {
+        use semio_framework_pack_json::{object, Value};
         object([
             ("extensionId".to_string(), Value::from(self.extension_id.clone())),
             ("directoryName".to_string(), Value::from(self.directory_name.clone())),
@@ -169,8 +169,8 @@ impl ExtensionPackageManifest {
         ])
     }
 
-    fn from_json(value: &crate::os_pack::json::Value) -> Result<Self, String> {
-        use crate::os_pack::json::Value;
+    fn from_json(value: &semio_framework_pack_json::Value) -> Result<Self, String> {
+        use semio_framework_pack_json::Value;
         let field_str = |key: &str| value.get(key).and_then(Value::as_str).map(str::to_owned).ok_or_else(|| format!("missing field {key}"));
         let capabilities = match value.get("capabilities").and_then(Value::as_array) {
             Some(entries) => entries.iter().map(|entry| entry.as_str().map(str::to_owned).ok_or_else(|| "capabilities entries must be strings".to_string())).collect::<Result<Vec<_>, _>>()?,
@@ -224,7 +224,7 @@ async fn build_zip_payload(manifest: &ExtensionPackageManifest, component_wasm: 
         return Err(ExtensionPackageError::InvalidPackageFormat(manifest.package_format));
     }
     let mut writer = ZipWriter::new();
-    writer.add(MANIFEST_ENTRY, crate::os_pack::json::to_string(&manifest.to_json()).as_bytes())?;
+    writer.add(MANIFEST_ENTRY, semio_framework_pack_json::to_string(&manifest.to_json()).as_bytes())?;
     writer.add(COMPONENT_ENTRY, component_wasm)?;
     let mut sorted_assets: Vec<&(String, Vec<u8>)> = assets.iter().collect();
     sorted_assets.sort_by(|a, b| a.0.cmp(&b.0));
@@ -238,7 +238,7 @@ async fn build_zip_payload(manifest: &ExtensionPackageManifest, component_wasm: 
 async fn parse_zip_payload(payload: &[u8]) -> Result<ExtensionPackage, ExtensionPackageError> {
     let archive = ZipArchive::parse(payload)?;
     let manifest_bytes = archive.read(MANIFEST_ENTRY, MAX_PACKAGE_ENTRY_BYTES)?;
-    let manifest_json = crate::os_pack::json::parse_bytes(&manifest_bytes).map_err(|error| ExtensionPackageError::ManifestJson(error.to_string()))?;
+    let manifest_json = semio_framework_pack_json::parse_bytes(&manifest_bytes, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| ExtensionPackageError::ManifestJson(error.to_string()))?;
     let manifest = ExtensionPackageManifest::from_json(&manifest_json).map_err(ExtensionPackageError::ManifestJson)?;
     if manifest.package_format != EXTENSION_PACKAGE_FORMAT {
         return Err(ExtensionPackageError::InvalidPackageFormat(manifest.package_format));

@@ -11,7 +11,7 @@ use std::sync::Arc;
 /// 🪟️ Declares the transient schema and bounded owners of one concrete window kind.
 pub trait WindowTransientOwner: Send + Sync + 'static {
     const WINDOW_KIND_ID: &'static str;
-    type State: Clone + Default + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + store::ArtifactPack + 'static;
+    type State: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + store::ArtifactDsl + store::ArtifactPack + 'static;
     type Mutation: protocol::Mutation<Self::State> + PartialEq + Send + protocol::OpText + protocol::OpBinary + 'static;
 
     fn build_owners() -> WindowTransientOwnerBundle<Self::State, Self::Mutation>;
@@ -116,7 +116,7 @@ pub(crate) trait ErasedWindowTransientPublication: Send {
     fn fault(&self) -> Option<&str>;
     fn acknowledge(&mut self) -> bool;
     fn begin_close(&mut self);
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String>;
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError>;
     fn terminal_is_empty(&self) -> bool;
 }
 
@@ -155,7 +155,7 @@ impl<O: WindowTransientOwner> ErasedWindowTransientPublication for TypedWindowTr
         self.publication.begin_close();
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         self.publication.close_step(grant)
     }
 
@@ -260,7 +260,7 @@ impl<O: WindowTransientOwner> ErasedWindowTransientStoreOwner for TypedWindowTra
         let Some(window_id) = next.or_else(|| self.partitions.keys().next()).cloned() else { return Ok(PluginCloseStep::Complete) };
         self.maintenance_cursor = Some(window_id.clone());
         let partition = self.partitions.get_mut(&window_id).expect("selected window transient partition remains owned");
-        match partition.store.maintenance_returned_reads_step(&self.owners.state_retirement, maximum_items.min(1), maximum_bytes).map_err(Fault::from)? {
+        match partition.store.maintenance_returned_reads_step(&self.owners.state_retirement, maximum_items.min(1), maximum_bytes).map_err(|error| Fault::from(error.into_message()))? {
             store::SnapshotRetirementStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
             store::SnapshotRetirementStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "window transient returned read remains held" }),
             store::SnapshotRetirementStep::Complete => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
@@ -423,3 +423,237 @@ impl WindowTransientOwnerRegistry {
 #[cfg(test)]
 #[path = "🧪️tests/🪟️retained-window-input/🦀️.rs"]
 mod retained_window_input_tests;
+
+//#region 🔖️TransientRoot
+/// 🫧️ Declares a whole-root transient state's one mutation and codecs (audit K3: the ~150 lines flow, fem, remodel, cad,
+/// lowpoly, layout, forms, draw, raster, wfc each re-wrote): `$mutation::Snapshot { transient }` (wire
+/// `{"kind":"snapshot","transient":…}`) replacing the whole root, its leaf descriptor (`$owner`, `$kind`, `$display`,
+/// `$schema`), diff and inverse (the root before), JSON op text and binary, and the state's DSL and pack in the semio envelope
+/// `$envelope` (`$extension`). The state stays the plugin's own type: `Clone + Default + PartialEq + ToValue + FromValue`. An
+/// artifact-level transient stops here; a window transient adds [`window_transient_owners!`].
+#[macro_export]
+macro_rules! transient_root {
+    (
+        state: $state:ident,
+        mutation: $mutation:ident,
+        owner: $owner:literal,
+        kind: $kind:literal,
+        display_name: $display:literal,
+        payload_schema: $schema:literal,
+        envelope: $envelope:literal,
+        extension: $extension:literal $(,)?
+    ) => {
+        #[doc = concat!("🫧️ The one mutation of [`", stringify!($state), "`]: replace the whole root.")]
+        #[derive(Clone, Debug, PartialEq, $crate::ToValue, $crate::FromValue)]
+        #[value(tag = "kind", rename_all = "kebab-case")]
+        pub enum $mutation {
+            Snapshot { transient: $state },
+        }
+
+        impl $crate::__kernel::MutationDiff<$state> for $state {
+            fn apply(&self, _base: &$state) -> $crate::__kernel::MutationApplyResult<$state> {
+                Ok(self.clone())
+            }
+
+            fn absorb(&mut self, other: Self) {
+                *self = other;
+            }
+        }
+
+        impl $crate::__kernel::Mutation<$state> for $mutation {
+            type Diff = $state;
+
+            const DESCRIPTORS: &'static [$crate::__kernel::MutationLeafDescriptor] = &[$crate::__kernel::MutationLeafDescriptor {
+                schema_version: 1,
+                owner: $owner,
+                semantic_kind: $kind,
+                display_name: $display,
+                emoji: "🫧️",
+                aggregate_variant: "Snapshot",
+                payload_schema: $schema,
+                text_opcode: None,
+                binary_tag: None,
+                invertibility: $crate::__kernel::MutationInvertibility::ExplicitMutation,
+                diff_participation: $crate::__kernel::MutationDiffParticipation::Detect,
+                outcome_classes: &[$crate::__kernel::MutationOutcomeClass::Applied],
+                composition: $crate::__kernel::MutationComposition::Atomic,
+                required_language_surfaces: &[$crate::__kernel::MutationLanguageSurface::Rust, $crate::__kernel::MutationLanguageSurface::JsonSchema],
+            }];
+
+            fn descriptor(&self) -> &'static $crate::__kernel::MutationLeafDescriptor {
+                &Self::DESCRIPTORS[0]
+            }
+
+            fn diff(&self, _base: &$state) -> $crate::__kernel::MutationOutcome<$state> {
+                let Self::Snapshot { transient } = self;
+                $crate::__kernel::MutationOutcome::new(transient.clone())
+            }
+
+            fn inverse(&self, base: &$state) -> Result<Vec<Self>, $crate::__value::ValueError> {
+                Ok(vec![Self::Snapshot { transient: base.clone() }])
+            }
+        }
+
+        impl $crate::__kernel::OpText for $mutation {
+            fn parse_op(line: &str) -> Result<Self, $crate::__diagnostic::TextError> {
+                $crate::__pack_json::from_json_str(line, $crate::__pack_json::JsonMemberPolicy::Reject).map_err(|error| $crate::__diagnostic::TextError::from_value_error(error, $crate::__diagnostic::TextSpan::at(1, 1)))
+            }
+
+            fn print_op(&self) -> String {
+                $crate::__pack_json::to_json_string(self)
+            }
+        }
+
+        impl $crate::__kernel::OpBinary for $mutation {
+            fn encode_op(&self) -> Result<Vec<u8>, $crate::__kernel::ProtocolError> {
+                Ok($crate::__pack_json::to_json_string(self).into_bytes())
+            }
+
+            fn decode_op(bytes: &[u8]) -> Result<Self, $crate::__kernel::ProtocolError> {
+                let text = std::str::from_utf8(bytes).map_err(|error| $crate::__kernel::ProtocolError::from($crate::__kernel::PackError::from($crate::__value::ValueError::from(error))))?;
+                $crate::__pack_json::from_json_str(text, $crate::__pack_json::JsonMemberPolicy::Reject).map_err(|error| $crate::__kernel::ProtocolError::from($crate::__kernel::PackError::from(error)))
+            }
+        }
+
+        impl $crate::__kernel::ArtifactDsl for $state {
+            const EXTENSION: &'static str = $extension;
+
+            fn envelope_id() -> &'static str {
+                $envelope
+            }
+
+            fn parse_dsl(text: &str) -> Result<Self, $crate::__diagnostic::TextError> {
+                let body = $crate::__kernel::semio_format::split_text_preamble(text).map_or(text, |(_, body)| body);
+                if body.trim().is_empty() {
+                    return Ok(Self::default());
+                }
+                $crate::__pack_json::from_json_str(body, $crate::__pack_json::JsonMemberPolicy::Reject).map_err(|error| $crate::__diagnostic::TextError::from_value_error(error, $crate::__diagnostic::TextSpan::at(1, 1)))
+            }
+
+            fn print_dsl(&self) -> String {
+                let envelope = $crate::__kernel::semio_format::SemioEnvelope::from_envelope_id($envelope, $crate::__kernel::semio_format::Component::Dsl, 1).expect(concat!("valid ", $envelope, " envelope"));
+                $crate::__kernel::semio_format::wrap_text(&envelope, &$crate::__pack_json::to_json_string(self))
+            }
+        }
+
+        impl $crate::__kernel::ArtifactPack for $state {
+            fn encode_pack_with(&self, _options: &$crate::__kernel::PackEncodeOptions) -> Result<Vec<u8>, $crate::__kernel::PackError> {
+                let envelope = $crate::__kernel::semio_format::SemioEnvelope::from_envelope_id($envelope, $crate::__kernel::semio_format::Component::Pack, 1).map_err(|error| $crate::__kernel::PackError::from(error.into_value_error()))?;
+                Ok($crate::__kernel::semio_format::wrap_binary(&envelope, $crate::__pack_json::to_json_string(self).as_bytes()))
+            }
+
+            fn decode_pack_with(bytes: &[u8], _options: &$crate::__kernel::PackDecodeOptions) -> Result<Self, $crate::__kernel::PackError> {
+                if bytes.is_empty() {
+                    return Ok(Self::default());
+                }
+                let (envelope, inner) = $crate::__kernel::semio_format::unwrap_binary(bytes).map_err(|error| $crate::__kernel::PackError::from(error.into_value_error()))?;
+                if !envelope.matches_identity($envelope, $crate::__kernel::semio_format::Component::Pack, 1) {
+                    return Err($crate::__kernel::PackError::from($crate::__value::ValueError::new($crate::__value::ValueRefusalKind::InvalidValue, concat!($envelope, " pack envelope mismatch"))));
+                }
+                let text = std::str::from_utf8(&inner).map_err(|error| $crate::__kernel::PackError::from($crate::__value::ValueError::from(error)))?;
+                $crate::__pack_json::from_json_str(text, $crate::__pack_json::JsonMemberPolicy::Reject).map_err($crate::__kernel::PackError::from)
+            }
+        }
+    };
+}
+
+/// 📦️ Declares the ephemeral transfer of a whole-root window transient ([`transient_root!`]): the mutation's owned retirement
+/// (the state is `RetireOwned`), `$mutation::footprint` (one admitted item of the encoded root's bytes, refused above the store's
+/// one-item bound) and `$mutation::into_state`, under a compile-time assertion that state and mutation stay within the
+/// transfer's inline bound (audit F8). [`window_transient_owners!`] declares it; a module that writes its own owners (one
+/// owner pair per window kind with a window config) declares it alone.
+#[macro_export]
+macro_rules! window_transient_transfer {
+    (state: $state:ident, mutation: $mutation:ident $(,)?) => {
+        const _: () = assert!(
+            std::mem::size_of::<$state>() <= $crate::__kernel::ARTIFACT_EPHEMERAL_TRANSFER_MAXIMUM_INLINE_BYTES && std::mem::size_of::<$mutation>() <= $crate::__kernel::ARTIFACT_EPHEMERAL_TRANSFER_MAXIMUM_INLINE_BYTES,
+            concat!(stringify!($state), " exceeds the ephemeral transfer's inline bound: box its large fields")
+        );
+
+        impl $mutation {
+            #[doc = "📏️ The one admitted item this mutation publishes: the encoded root's bytes."]
+            pub fn footprint(&self) -> Result<$crate::__kernel::ArtifactStoreOneItemFootprint, String> {
+                let Self::Snapshot { transient } = self;
+                let footprint = $crate::__kernel::ArtifactStoreOneItemFootprint::for_ephemeral_item($crate::__pack_json::to_json_string(transient).len());
+                footprint.is_admissible().then_some(footprint).ok_or_else(|| concat!(stringify!($state), " exceeds its retained publication envelope").to_string())
+            }
+
+            #[doc = "📦️ The root this mutation installs, moved out without a copy."]
+            pub fn into_state(self) -> $state {
+                let Self::Snapshot { transient } = self;
+                transient
+            }
+        }
+
+        impl $crate::__value::retirement::RetireOwned for $mutation {
+            fn retirement(self) -> Box<dyn $crate::__value::retirement::RetirementCursor> {
+                let Self::Snapshot { transient } = self;
+                $crate::__value::retirement::sequence(vec![$crate::__value::retirement::leaf(0u8), $crate::__value::retirement::RetireOwned::retirement(transient)])
+            }
+        }
+    };
+}
+
+/// 🪟️ Declares the window-transient owners of one whole-root state ([`transient_root!`]) — its ephemeral transfer
+/// ([`window_transient_transfer!`]), one [`WindowTransientOwner`] per window kind — and, in the invoking module, `register`
+/// (every owner), `from_snapshot` / `current` (the window's root, else the default) and `addressed` (the mutation installing a
+/// root in the view's own window, refused `window-transient.window-required` / `.window-stale` / `.kind-unknown`), audit K3.
+#[macro_export]
+macro_rules! window_transient_owners {
+    (state: $state:ident, mutation: $mutation:ident, windows: { $($owner:ident => $window:expr),+ $(,)? } $(,)?) => {
+        $crate::window_transient_transfer! { state: $state, mutation: $mutation }
+
+        $(
+            #[doc = concat!("🪟️ The [`", stringify!($state), "`] owner of window kind `", stringify!($window), "`.")]
+            pub struct $owner;
+
+            impl $crate::WindowTransientOwner for $owner {
+                const WINDOW_KIND_ID: &'static str = $window;
+                type State = $state;
+                type Mutation = $mutation;
+
+                fn build_owners() -> $crate::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
+                    let state = std::sync::Arc::new($crate::__value::retirement::OwnedValueRetirementFactory::<Self::State>::default());
+                    let mutation = std::sync::Arc::new($crate::__value::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default());
+                    let preparation = std::sync::Arc::new($crate::__kernel::ArtifactEphemeralTransferPreparationFactory::new($mutation::footprint, $mutation::into_state, state.clone(), mutation.clone()));
+                    $crate::WindowTransientOwnerBundle::new(preparation, state, mutation)
+                }
+            }
+        )+
+
+        #[doc = "🗂️ Registers every window-transient owner of this state."]
+        pub fn register(registry: &mut $crate::WindowTransientOwnerRegistry) -> Result<(), $crate::Fault> {
+            $(registry.register::<$owner>()?;)+
+            Ok(())
+        }
+
+        #[doc = "📖️ The root a window-transient snapshot holds for this state, else the default root."]
+        pub fn from_snapshot(snapshot: Option<&$crate::WindowTransientSnapshot>) -> $state {
+            snapshot.and_then(|snapshot| None $(.or_else(|| snapshot.get::<$owner>()))+).cloned().unwrap_or_default()
+        }
+
+        #[doc = "📖️ The root of the window a transient view reads, else the default root."]
+        pub fn current<T>(view: &$crate::TransientView<'_, T>) -> $state {
+            from_snapshot(view.window)
+        }
+
+        #[doc = "📬️ The mutation installing `transient` as the root of the view's own window."]
+        pub fn addressed(view: &$crate::ViewModel, transient: $state) -> Result<$crate::WindowTransientMutation, $crate::Fault> {
+            let refuse = |code: &str, message: &str| $crate::Fault::new($crate::FaultOrigin::Framework, $crate::FaultCode::new(code), message);
+            let id = view.window_id.as_deref().ok_or_else(|| refuse("window-transient.window-required", "a window transient needs the view's own window"))?;
+            let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| refuse("window-transient.window-stale", "the view's window is absent from its window roster"))?;
+            let mutation = $mutation::Snapshot { transient };
+            $(
+                if kind == <$owner as $crate::WindowTransientOwner>::WINDOW_KIND_ID {
+                    return Ok($crate::WindowTransientMutation::of::<$owner>(id, mutation));
+                }
+            )+
+            Err(refuse("window-transient.kind-unknown", "the view's window kind holds no transient of this state"))
+        }
+    };
+}
+//#endregion 🔖️TransientRoot
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️transient-root/🦀️.rs"]
+mod transient_root_tests;

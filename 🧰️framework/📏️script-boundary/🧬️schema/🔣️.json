@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/script-boundary/schema.json",
+  "title": "Framework Command Owner Boundary",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "entry", "commands", "refusedOwners"],
+  "properties": {
+    "version": { "const": 1 },
+    "entry": { "const": "📦️packages/🟦️typescript/📜️script.ts" },
+    "commands": { "type": "array", "minItems": 5, "maxItems": 5, "uniqueItems": true, "items": { "enum": ["installation-identity-check", "test", "test-artifact-reference", "test-script-boundary", "typecheck"] } },
+    "refusedOwners": { "type": "array", "minItems": 3, "maxItems": 3, "uniqueItems": true, "items": { "enum": ["🧰️framework/🛍️products", "✏️s", "🌎️hub"] } }
+  }
+}

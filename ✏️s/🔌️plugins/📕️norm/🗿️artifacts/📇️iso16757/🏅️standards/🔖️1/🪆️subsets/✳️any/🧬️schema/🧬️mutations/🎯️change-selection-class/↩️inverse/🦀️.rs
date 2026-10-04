@@ -4,7 +4,10 @@ use super::mutation::ChangeSelectionClass;
 use crate::{Iso16757Mutation, Iso16757Snapshot};
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &ChangeSelectionClass, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
+pub fn inverse(_payload: &ChangeSelectionClass, base: &Iso16757Snapshot) -> Result<Vec<Iso16757Mutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![Iso16757Mutation::ChangeSelectionClass(ChangeSelectionClass { new_class_id: base.selection.class_id.clone() })]
+
+    })())
 }
 //#endregion 🔖️Inverse

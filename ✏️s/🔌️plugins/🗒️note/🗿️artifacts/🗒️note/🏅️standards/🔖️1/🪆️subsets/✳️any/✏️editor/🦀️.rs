@@ -103,7 +103,7 @@ fn note_app_schema_descriptor() -> semio_framework_schema_registry::AppSchemaDes
 /// boot `setActiveExample` (ticket 26/09/17/NOTE-PLUGIN-END-TO-END).
 pub fn reset_document_effect(document: &NoteSnapshot) -> semio_framework::kernel::Effect {
     let pack = <NoteSnapshot as store::ArtifactPack>::encode_pack(document);
-    let spr = semio_framework_plugin::resolve_ready(store::empty_document_spr("note", NOTE_DOCUMENT_SCHEMA));
+    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr("note", NOTE_DOCUMENT_SCHEMA));
     semio_framework::kernel::Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️ResetDocument
@@ -260,8 +260,8 @@ mod args_bridge {
 
     fn integral(value: DslValue) -> DslValue {
         match value {
-            DslValue::Number(dsl::Number::Float(float)) if float.is_finite() && float.fract() == 0.0 && float.abs() < 9.007_199_254_740_992e15 => {
-                if float >= 0.0 { DslValue::Number(dsl::Number::UInt(float as u64)) } else { DslValue::Number(dsl::Number::Int(float as i64)) }
+            DslValue::Number(semio_framework_value::Number::Float(float)) if float.is_finite() && float.fract() == 0.0 && float.abs() < 9.007_199_254_740_992e15 => {
+                if float >= 0.0 { DslValue::Number(semio_framework_value::Number::UInt(float as u64)) } else { DslValue::Number(semio_framework_value::Number::Int(float as i64)) }
             }
             DslValue::Array(items) => DslValue::Array(items.into_iter().map(integral).collect()),
             DslValue::Object(entries) => DslValue::Object(entries.into_iter().map(|(key, value)| (key, integral(value))).collect()),
@@ -310,14 +310,14 @@ mod args_bridge {
         match value {
             DslValue::String(_) => value,
             DslValue::Null => DslValue::String(String::new()),
-            other => DslValue::String(dsl::json::to_json_string(&other)),
+            other => DslValue::String(semio_framework_pack_json::to_json_string(&other)),
         }
     }
 
     /// 🔢️ Slider/number controls may deliver their value as text.
     fn number(value: DslValue) -> DslValue {
         match &value {
-            DslValue::String(raw) => raw.trim().parse::<f64>().map(|parsed| DslValue::Number(dsl::Number::Float(parsed))).unwrap_or(value),
+            DslValue::String(raw) => raw.trim().parse::<f64>().map(|parsed| DslValue::Number(semio_framework_value::Number::Float(parsed))).unwrap_or(value),
             _ => value,
         }
     }
@@ -337,14 +337,14 @@ mod args_bridge {
         }
     }
 
-    fn decode<T: dsl::FromValue>(action: &str, value: DslValue) -> Result<T, Fault> {
+    fn decode<T: semio_framework_value::FromValue>(action: &str, value: DslValue) -> Result<T, Fault> {
         T::from_value(value).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-args"), format!("note action '{action}' arguments do not decode: {error}")))
     }
 
     pub fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<NoteCommand, Fault> {
         const BLOCK: &[(&str, &str)] = &[("id", "block_id"), ("value", "block_id")];
         let string = |value: &str| DslValue::String(value.into());
-        let zero = || DslValue::Number(dsl::Number::Float(0.0));
+        let zero = || DslValue::Number(semio_framework_value::Number::Float(0.0));
         let empty = || DslValue::Object(Vec::new());
         let value_number = || {
             let mut entries = fold(args, &[], &[]);
@@ -446,6 +446,11 @@ mod args_bridge {
 pub struct NotePlayApp;
 
 impl ArtifactEditor for NotePlayApp {
+    /// 📢️ The localized notices of the ink tool and retained route refusals (design §20.12).
+    fn fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
+        note_fault_notices()
+    }
+
     type Snapshot = NoteSnapshot;
     type Mutation = NoteMutation;
     type Config = NoConfig;
@@ -621,11 +626,14 @@ impl ArtifactEditor for NotePlayApp {
 
     /// 🕹️ `blocks` domain: `HierarchyProvider::Topology` from the document's own Group nesting — see
     /// `note_blocks_topology`'s doc comment.
-    fn interaction_topology(doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> InteractionTopology {
+    fn interaction_topology(doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<InteractionTopology, semio_framework_value::ValueError> {
+ Ok((||{
         let mut domains = std::collections::BTreeMap::new();
         domains.insert(NOTE_INTERACTION_BLOCKS.to_string(), note_blocks_topology(doc.snapshot));
         InteractionTopology { domains }
-    }
+    
+})())
+}
 
     fn render(body_key: &str, doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let document = doc.snapshot;
@@ -991,8 +999,8 @@ pub(crate) mod unit_tests;
 
 
 /// 🏷️ Admits Note display text into a bounded semantic label.
-pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_locale::Label> {
-    value.as_ref().try_into().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "note label admission failed"))
+pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
+    semio_framework_ui_contract::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "note label admission failed"))
 }
 
 //#region 🪢️TaxonomyMounts
@@ -1002,3 +1010,17 @@ pub mod demo_session;
 #[path = "📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
 mod example;
 //#endregion 🪢️TaxonomyMounts
+
+/// 📣️ The en/de notices of every `note.ink-*` / `note.retained.transaction` refusal code (design §20.12).
+pub fn note_fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
+    static NOTICES: std::sync::LazyLock<[(&str, semio_framework_ui_locale::LocalizedLabel); 5]> = std::sync::LazyLock::new(|| {
+        [
+            ("note.ink-tool.provisional", semio_framework_ui_locale::LocalizedLabel::native("The ink stroke could not be previewed.", "Der Tintenstrich konnte nicht in der Vorschau angezeigt werden.")),
+            ("note.ink-gesture.invalid", semio_framework_ui_locale::LocalizedLabel::native("The ink gesture is not valid.", "Die Tintengeste ist ungültig.")),
+            ("note.ink-events.invalid", semio_framework_ui_locale::LocalizedLabel::native("The ink input could not be read.", "Die Tinteneingabe konnte nicht gelesen werden.")),
+            ("note.ink-phase.invalid", semio_framework_ui_locale::LocalizedLabel::native("The ink gesture step is not known.", "Der Schritt der Tintengeste ist unbekannt.")),
+            ("note.retained.transaction", semio_framework_ui_locale::LocalizedLabel::native("This change must be made as one step.", "Diese Änderung muss in einem Schritt erfolgen.")),
+        ]
+    });
+    &*NOTICES
+}

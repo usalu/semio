@@ -16,7 +16,7 @@ fn manifest_with_example(body: String) -> PluginManifest {
         apps: Vec::new(),
         examples: vec![semio_framework::ExampleDefinition {
             id: "capsule-dream".to_string(),
-            label: crate::LocalizedLabel::data("Capsule Dream"),
+            label: semio_framework_ui_locale::LocalizedLabel::data("Capsule Dream"),
             icon_id: semio_framework::IconName::from("file"),
             artifact_json: body,
             dialect: semio_framework::ArtifactDialect { artifact_kind: "s.puzzle.5d".to_string(), standard: "1".to_string(), subset: "*".to_string() },

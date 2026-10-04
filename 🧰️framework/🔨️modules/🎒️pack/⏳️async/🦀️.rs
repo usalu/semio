@@ -14,7 +14,9 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::task::{Context, Poll, Waker};
 
-use crate::{ByteRange, PackError};
+use crate::ByteRange;
+use semio_framework_pack_error::PackError;
+use semio_framework_value::{ValueError, ValueRefusalKind};
 
 /// 📥️ A random-access read source reachable only through `async`, e.g. a network range-fetcher
 /// (see `pack_http`) or a browser `fetch`/worker bridge. Deliberately runtime-neutral: nothing
@@ -113,7 +115,7 @@ impl Future for CancelWatch<'_> {
     // another thread calls `Waker::wake` directly, so this never spins or sleeps.
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         if self.token.poll_cancelled(cx.waker()) {
-            Poll::Ready(Err(PackError::Io("read cancelled".to_string())))
+            Poll::Ready(Err(PackError::Refusal(semio_framework_pack_error::PackRefusal::ValueRefusal(ValueError::new(ValueRefusalKind::Canceled, "read cancelled")))))
         } else {
             Poll::Pending
         }
@@ -247,7 +249,7 @@ impl<S: AsyncPackSource> ReadScheduler<S> {
     /// `cancel`. Returns exactly `request.range.len` bytes on success.
     pub async fn read(&self, request: ReadRequest, cancel: &CancellationToken) -> Result<Vec<u8>, PackError> {
         if cancel.is_cancelled() {
-            return Err(PackError::Io("read cancelled".to_string()));
+            return Err(PackError::Refusal(semio_framework_pack_error::PackRefusal::ValueRefusal(ValueError::new(ValueRefusalKind::Canceled, "read cancelled"))));
         }
         let (group, is_leader) = self.join_or_create_group(request.range);
         if is_leader {
@@ -321,10 +323,10 @@ impl<S: AsyncPackSource> ReadScheduler<S> {
 // 🚫️async: no suspension point — pure byte-range arithmetic and a `Vec` copy, no I/O.
 fn slice_group_result(data: &Arc<Vec<u8>>, group: &Arc<Mutex<Group>>, caller_range: ByteRange) -> Result<Vec<u8>, PackError> {
     let group_range = group.lock().unwrap().range;
-    let start = caller_range.offset.checked_sub(group_range.offset).ok_or_else(|| PackError::Malformed { what: "async_read_slice", offset: caller_range.offset, detail: "requested range precedes the coalesced group range".to_string() })? as usize;
-    let end = start.checked_add(caller_range.len as usize).ok_or(PackError::LimitExceeded("async_read_slice length overflow"))?;
+    let start = caller_range.offset.checked_sub(group_range.offset).ok_or_else(|| PackError::Refusal(semio_framework_pack_error::PackRefusal::Malformed { kind: ValueRefusalKind::InvariantViolated, what: "async_read_slice", offset: caller_range.offset, detail: "requested range precedes the coalesced group range".to_string() }))? as usize;
+    let end = start.checked_add(caller_range.len as usize).ok_or(PackError::Refusal(semio_framework_pack_error::PackRefusal::LimitExceeded { kind: ValueRefusalKind::OwnershipLimit, limit: "async_read_slice length overflow" }))?;
     if end > data.len() {
-        return Err(PackError::Truncated(caller_range.offset + caller_range.len));
+        return Err(PackError::Refusal(semio_framework_pack_error::PackRefusal::Truncated(caller_range.offset + caller_range.len)));
     }
     Ok(data[start..end].to_vec())
 }
@@ -476,3 +478,7 @@ impl<'a> Future for AcquireFuture<'a> {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+#[path = "🧪️tests/🧭️producer-authority/🦀️.rs"]
+mod producer_authority_tests;

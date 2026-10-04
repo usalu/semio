@@ -87,7 +87,7 @@ fn format_value(value: &Value) -> String {
             }
             Atom::String(v) => format!("\"{}\"", v.replace('"', "\\\"")),
         },
-        Value::Dictionary(dict) => semio_framework_os_kernel::os_pack::json::to_json_string(dict),
+        Value::Dictionary(dict) => semio_framework_pack_json::to_json_string(dict),
     }
 }
 // #endregion 🔖️Compile

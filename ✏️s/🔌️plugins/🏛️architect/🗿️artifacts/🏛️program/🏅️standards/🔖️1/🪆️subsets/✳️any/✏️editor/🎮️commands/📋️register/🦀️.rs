@@ -5,10 +5,11 @@ pub mod select_register {
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::op::ProgramMutation;
     use crate::ProgramSnapshot;
-    use dsl::{FromValue, ToValue};
+    use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "select-register")]
     pub struct SelectRegister {
         pub register_id: String,
@@ -25,10 +26,11 @@ pub mod add_register_item {
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::op::ProgramMutation;
     use crate::{EntityId, ProgramSnapshot};
-    use dsl::{FromValue, ToValue};
+    use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "add-register-item")]
     pub struct AddRegisterItem {
         pub register_id: String,
@@ -61,10 +63,11 @@ pub mod remove_register_item {
     use crate::editor::architect::catalog::find_register_for_entity;
     use crate::schema::mutations as leaves;
     use crate::{EntityId, ProgramSnapshot};
-    use dsl::{FromValue, ToValue};
+    use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "remove-register-item")]
     pub struct RemoveRegisterItem {
         pub register_id: String,
@@ -97,11 +100,12 @@ pub mod patch_register_item {
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::op::ProgramMutation;
     use crate::{EntityId, ProgramSnapshot};
-    use dsl::DslValue as Value;
-    use dsl::{FromValue, ToValue};
+    use semio_framework_value::DslValue as Value;
+    use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "patch-register-item")]
     pub struct PatchRegisterItem {
         pub register_id: String,
@@ -112,7 +116,7 @@ pub mod patch_register_item {
     /// 🩹️ Merges a JSON object patch into one row of a patchable register; an unparsable patch, an
     /// unknown row or a register without patch support is refused by name.
     pub fn handle(payload: &PatchRegisterItem, doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
-        let patch = dsl::json::from_json_str::<Value>(&payload.patch_json).ok().filter(|value| matches!(value, Value::Object(_))).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("architect.patch-invalid"), format!("patchRegisterItem needs a JSON object patch, got {}", payload.patch_json)))?;
+        let patch = semio_framework_pack_json::from_json_str::<Value>(&payload.patch_json, semio_framework_pack_json::JsonMemberPolicy::Reject).ok().filter(|value| matches!(value, Value::Object(_))).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("architect.patch-invalid"), format!("patchRegisterItem needs a JSON object patch, got {}", payload.patch_json)))?;
         let operation = patch_register_item_operation(doc.snapshot, &payload.register_id, &EntityId(payload.entity_id.clone()), &patch)
             .ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("mutation.target-missing"), format!("patchRegisterItem cannot apply {} to row \"{}\" of register \"{}\"", payload.patch_json, payload.entity_id, payload.register_id)))?;
         Ok(Emit::mutations(vec![operation]))

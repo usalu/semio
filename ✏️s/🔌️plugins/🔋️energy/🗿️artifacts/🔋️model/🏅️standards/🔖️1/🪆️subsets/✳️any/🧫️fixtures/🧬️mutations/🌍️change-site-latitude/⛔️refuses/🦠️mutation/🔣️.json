@@ -1,1 +1,4 @@
-{}
+{
+  "mutation": "changeSiteLatitude",
+  "newLatitudeDeg": 123.0
+}

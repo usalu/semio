@@ -231,39 +231,30 @@ fn project(path: &str) -> Result<String, String> {
 /// 🧪 One recipe: BEFORE always, AFTER only when this library can actually produce it. Every
 /// AFTER state below is a hand-picked literal value, never the result of executing this
 /// repository's own `TiffMutation::diff`/`apply`.
+/// The pairs: a second, smaller IFD appended; the second of two IFDs dropped; IFD 0's ImageDescription value
+/// replaced or omitted with every other tag untouched; and a same-geometry, wholly different raster.
 fn recipe(id: &str) -> Option<(Vec<IfdSpec>, Vec<IfdSpec>)> {
     match id {
-        // 🧬 InsertIfd{index: 1} — a second, smaller IFD is appended after the first.
         "insert-ifd-applied" => Some((
             vec![IfdSpec { width: 4, height: 3, pixels: fill(4, 3, 0), description: None }],
             vec![IfdSpec { width: 4, height: 3, pixels: fill(4, 3, 0), description: None }, IfdSpec { width: 2, height: 2, pixels: fill(2, 2, 100), description: None }],
         )),
-
-        // 🧬 RemoveIfd{index: 1} — the second IFD of a two-IFD document is dropped.
         "remove-ifd-applied" => Some((
             vec![IfdSpec { width: 4, height: 3, pixels: fill(4, 3, 0), description: None }, IfdSpec { width: 2, height: 2, pixels: fill(2, 2, 100), description: None }],
             vec![IfdSpec { width: 4, height: 3, pixels: fill(4, 3, 0), description: None }],
         )),
-
-        // 🧬 ReplaceTag{ifdIndex: 0, tag: ImageDescription, ..} — the tag's VALUE changes; every
-        // other tag (including the raster) is untouched.
         "replace-tag-applied" => Some((
             vec![IfdSpec { width: 3, height: 2, pixels: fill(3, 2, 0), description: Some("original scan") }],
             vec![IfdSpec { width: 3, height: 2, pixels: fill(3, 2, 0), description: Some("rescanned copy") }],
         )),
-
-        // 🧬 RemoveTag{ifdIndex: 0, tag: ImageDescription} — the tag is omitted entirely on encode.
         "remove-tag-applied" => Some((
             vec![IfdSpec { width: 3, height: 2, pixels: fill(3, 2, 0), description: Some("scan notes") }],
             vec![IfdSpec { width: 3, height: 2, pixels: fill(3, 2, 0), description: None }],
         )),
-
-        // 🧬 ReplacePixels{ifdIndex: 0, ..} — same IFD 0 dimensions/tags, wholly different raster.
         "replace-pixels-applied" => Some((
             vec![IfdSpec { width: 4, height: 4, pixels: fill(4, 4, 0), description: None }],
             vec![IfdSpec { width: 4, height: 4, pixels: fill(4, 4, 200), description: None }],
         )),
-
         _ => None,
     }
 }

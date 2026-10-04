@@ -9,7 +9,7 @@ use protocol::{MutationKind, SemanticDescriptor};
 //#region 🔹Payload
 /// 🔀️ Moves the `tiles` entry addressed by `id` to `to_index`. Diff/inverse delegate to the
 /// sibling `🔺️diff`/`↩️inverse` leaves.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "reorder-tiles")]
@@ -25,9 +25,12 @@ impl MutationKind<PresentationSnapshot, PresentationMutation> for ReorderTiles {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &PresentationSnapshot) -> Vec<PresentationMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &PresentationSnapshot) -> Result<Vec<PresentationMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Reorder tile \"{}\" to position {}", self.id, self.to_index), &format!("Kachel \"{}\" an Position {} verschieben", self.id, self.to_index))

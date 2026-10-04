@@ -8,41 +8,41 @@ use store::ArtifactDsl as _;
 fn collection_native_schema_factories_admit_both_directions_before_copies(){
     let oracle:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🏭️native-schema/🔣️.json")).unwrap();
     let mut accept=|_|true;
-    let mut decoding=dsl::NativeDecodeControl::new(oracle["maximumBytes"].as_u64().unwrap() as usize,&mut accept);
-    let variants=<ArtifactBody as dsl::DslVariants>::variants_controlled(&mut decoding).unwrap();
+    let mut decoding=semio_framework_value::NativeDecodeControl::new(oracle["maximumBytes"].as_u64().unwrap() as usize,&mut accept);
+    let variants=<ArtifactBody as semio_framework_dsl_record::DslVariants>::variants_controlled(&mut decoding).unwrap();
     let mut output=Vec::new();
     for (keyword,producer) in &variants{
         let decoded=producer.decode(&mut decoding).unwrap();
         let mut accept=|_|true;
-        let mut encoding=dsl::NativeEncodeControl::new(oracle["maximumBytes"].as_u64().unwrap() as usize,&mut accept);
+        let mut encoding=semio_framework_value::NativeEncodeControl::new(oracle["maximumBytes"].as_u64().unwrap() as usize,&mut accept);
         let encoded=producer.encode(&mut encoding).unwrap();
-        let summarize=|spec:&dsl::RecordSpec|serde_json::json!({"keyword":spec.keyword,"fields":spec.fields.iter().map(|field|serde_json::json!({"id":field.id,"key":field.key,"shape":match field.shape{dsl::Shape::Text=>"text",dsl::Shape::UInt=>"uint",_=>panic!("unexpected collection field shape")}})).collect::<Vec<_>>()});
+        let summarize=|spec:&semio_framework_dsl_record::RecordSpec|serde_json::json!({"keyword":spec.keyword,"fields":spec.fields.iter().map(|field|serde_json::json!({"id":field.id,"key":field.key,"shape":match field.shape{semio_framework_dsl_record::Shape::Text=>"text",semio_framework_dsl_record::Shape::UInt=>"uint",_=>panic!("unexpected collection field shape")}})).collect::<Vec<_>>()});
         assert_eq!(decoded.keyword.as_deref(),Some(keyword.as_str()));
         assert!(decoded.fields.iter().all(|field|!field.optional&&!field.flatten&&field.position.is_none()&&field.defines.is_none()&&!field.is_call_name));
         assert_eq!(summarize(&decoded),summarize(&encoded));
         output.push(summarize(&decoded));
         let mut refuse=|_|false;
-        assert!(producer.decode(&mut dsl::NativeDecodeControl::new(65536,&mut refuse)).is_err());
+        assert!(producer.decode(&mut semio_framework_value::NativeDecodeControl::new(65536,&mut refuse)).is_err());
         let mut refuse=|_|false;
-        assert!(producer.encode(&mut dsl::NativeEncodeControl::new(65536,&mut refuse)).is_err());
+        assert!(producer.encode(&mut semio_framework_value::NativeEncodeControl::new(65536,&mut refuse)).is_err());
         let mut accept=|_|true;
-        assert!(producer.decode(&mut dsl::NativeDecodeControl::new(1,&mut accept)).is_err());
+        assert!(producer.decode(&mut semio_framework_value::NativeDecodeControl::new(1,&mut accept)).is_err());
         let mut accept=|_|true;
-        assert!(producer.encode(&mut dsl::NativeEncodeControl::new(1,&mut accept)).is_err());
+        assert!(producer.encode(&mut semio_framework_value::NativeEncodeControl::new(1,&mut accept)).is_err());
     }
     assert_eq!(serde_json::Value::Array(output),oracle["variants"]);
     let mut refuse=|_|false;
-    let mut decoding=dsl::NativeDecodeControl::new(65536,&mut refuse);
-    assert!(<ArtifactBody as dsl::DslVariants>::variants_controlled(&mut decoding).is_err());
+    let mut decoding=semio_framework_value::NativeDecodeControl::new(65536,&mut refuse);
+    assert!(<ArtifactBody as semio_framework_dsl_record::DslVariants>::variants_controlled(&mut decoding).is_err());
     let mut refuse=|_|false;
-    let mut encoding=dsl::NativeEncodeControl::new(65536,&mut refuse);
-    assert!(<ArtifactBody as dsl::DslVariants>::variants_controlled(&mut encoding).is_err());
+    let mut encoding=semio_framework_value::NativeEncodeControl::new(65536,&mut refuse);
+    assert!(<ArtifactBody as semio_framework_dsl_record::DslVariants>::variants_controlled(&mut encoding).is_err());
     let mut accept=|_|true;
-    let mut decoding=dsl::NativeDecodeControl::new(oracle["refusedBytes"].as_u64().unwrap() as usize,&mut accept);
-    assert!(<ArtifactBody as dsl::DslVariants>::variants_controlled(&mut decoding).is_err());
+    let mut decoding=semio_framework_value::NativeDecodeControl::new(oracle["refusedBytes"].as_u64().unwrap() as usize,&mut accept);
+    assert!(<ArtifactBody as semio_framework_dsl_record::DslVariants>::variants_controlled(&mut decoding).is_err());
     let mut accept=|_|true;
-    let mut encoding=dsl::NativeEncodeControl::new(oracle["refusedBytes"].as_u64().unwrap() as usize,&mut accept);
-    assert!(<ArtifactBody as dsl::DslVariants>::variants_controlled(&mut encoding).is_err());
+    let mut encoding=semio_framework_value::NativeEncodeControl::new(oracle["refusedBytes"].as_u64().unwrap() as usize,&mut accept);
+    assert!(<ArtifactBody as semio_framework_dsl_record::DslVariants>::variants_controlled(&mut encoding).is_err());
 }
 
 fn demo_collection() -> CollectionSnapshot {

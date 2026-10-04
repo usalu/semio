@@ -6,16 +6,16 @@ use super::*;
 use crate::editor::puzzle5d::unit_tests::context::*;
 use semio_framework_plugin::PluginApp;
 
-fn volumes(app: &Puzzle5dTestApp) -> Vec<dsl::os_pack::json::Value> {
-    projection_of(app).get("targetVolumes").and_then(dsl::os_pack::json::Value::as_array).cloned().unwrap_or_default()
+fn volumes(app: &Puzzle5dTestApp) -> Vec<semio_framework_pack_json::Value> {
+    projection_of(app).get("targetVolumes").and_then(semio_framework_pack_json::Value::as_array).cloned().unwrap_or_default()
 }
 
 fn first_volume_id(app: &Puzzle5dTestApp) -> String {
-    volumes(app).first().and_then(|volume| volume.get("id")).and_then(dsl::os_pack::json::Value::as_str).expect("a painted target volume").to_string()
+    volumes(app).first().and_then(|volume| volume.get("id")).and_then(semio_framework_pack_json::Value::as_str).expect("a painted target volume").to_string()
 }
 
-fn axes(volume: &dsl::os_pack::json::Value, field: &str) -> Vec<f64> {
-    volume.get(field).and_then(dsl::os_pack::json::Value::as_array).map(|values| values.iter().map(|value| value.as_f64().unwrap_or(f64::NAN)).collect()).unwrap_or_default()
+fn axes(volume: &semio_framework_pack_json::Value, field: &str) -> Vec<f64> {
+    volume.get(field).and_then(semio_framework_pack_json::Value::as_array).map(|values| values.iter().map(|value| value.as_f64().unwrap_or(f64::NAN)).collect()).unwrap_or_default()
 }
 
 /// 🧊️ Alt+click paints exactly ONE grid-snapped box, sized by the world pane's own voxel dims, and
@@ -24,7 +24,7 @@ fn axes(volume: &dsl::os_pack::json::Value, field: &str) -> Vec<f64> {
 async fn add_target_volume_paints_one_grid_snapped_box_and_undo_removes_it() {
     let mut app = app();
     assert!(volumes(&app).is_empty(), "a fresh document constrains nothing");
-    dispatch(&mut app, "addTargetVolume", Some(&dsl::json!({ "origin": [3.4, -2.1, 0.0] })), None).expect("addTargetVolume");
+    dispatch(&mut app, "addTargetVolume", Some(&semio_framework_pack_json::json!({ "origin": [3.4, -2.1, 0.0] })), None).expect("addTargetVolume");
     let painted = volumes(&app);
     assert_eq!(painted.len(), 1, "one Alt+click paints exactly one volume");
     let spacing = crate::editor::puzzle5d::config::Puzzle5dRuntime::default().grid_spacing;
@@ -52,9 +52,9 @@ async fn add_target_volume_without_an_origin_answers_a_notice() {
 async fn set_voxel_dims_clamps_each_axis_and_sizes_the_next_paint() {
     let mut app = app();
     for (axis, value) in [("w", 4096.0), ("d", -7.0), ("h", 9.0)] {
-        dispatch(&mut app, "setVoxelDims", Some(&dsl::json!({ "axis": axis, "value": value })), Some(world3d::WINDOW_KIND_ID)).expect("setVoxelDims");
+        dispatch(&mut app, "setVoxelDims", Some(&semio_framework_pack_json::json!({ "axis": axis, "value": value })), Some(world3d::WINDOW_KIND_ID)).expect("setVoxelDims");
     }
-    dispatch(&mut app, "addTargetVolume", Some(&dsl::json!({ "origin": [0.0, 0.0, 0.0] })), Some(world3d::WINDOW_KIND_ID)).expect("addTargetVolume");
+    dispatch(&mut app, "addTargetVolume", Some(&semio_framework_pack_json::json!({ "origin": [0.0, 0.0, 0.0] })), Some(world3d::WINDOW_KIND_ID)).expect("addTargetVolume");
     let spacing = crate::editor::puzzle5d::config::Puzzle5dRuntime::default().grid_spacing;
     let painted = volumes(&app);
     assert_eq!(painted.len(), 1);
@@ -66,15 +66,15 @@ async fn set_voxel_dims_clamps_each_axis_and_sizes_the_next_paint() {
 #[semio_framework_async_macros::async_test]
 async fn set_target_volume_flag_writes_one_flag_at_a_time() {
     let mut app = app();
-    dispatch(&mut app, "addTargetVolume", Some(&dsl::json!({ "origin": [0.0, 0.0, 0.0] })), None).expect("addTargetVolume");
+    dispatch(&mut app, "addTargetVolume", Some(&semio_framework_pack_json::json!({ "origin": [0.0, 0.0, 0.0] })), None).expect("addTargetVolume");
     let id = first_volume_id(&app);
-    dispatch(&mut app, "setTargetVolumeHidden", Some(&dsl::json!({ "id": id.as_str(), "hidden": true })), None).expect("hide");
-    assert_eq!(volumes(&app)[0].get("hidden").and_then(dsl::os_pack::json::Value::as_bool), Some(true));
-    assert_ne!(volumes(&app)[0].get("locked").and_then(dsl::os_pack::json::Value::as_bool), Some(true), "hiding must not also lock");
-    dispatch(&mut app, "setTargetVolumeLocked", Some(&dsl::json!({ "id": id.as_str(), "locked": true })), None).expect("lock");
-    assert_eq!(volumes(&app)[0].get("locked").and_then(dsl::os_pack::json::Value::as_bool), Some(true));
-    dispatch(&mut app, "setTargetVolumeFlag", Some(&dsl::json!({ "id": id.as_str(), "flag": "elsewhere", "value": false })), None).expect("unknown flag");
-    assert_eq!(volumes(&app)[0].get("hidden").and_then(dsl::os_pack::json::Value::as_bool), Some(true), "an unknown flag name writes nothing");
+    dispatch(&mut app, "setTargetVolumeHidden", Some(&semio_framework_pack_json::json!({ "id": id.as_str(), "hidden": true })), None).expect("hide");
+    assert_eq!(volumes(&app)[0].get("hidden").and_then(semio_framework_pack_json::Value::as_bool), Some(true));
+    assert_ne!(volumes(&app)[0].get("locked").and_then(semio_framework_pack_json::Value::as_bool), Some(true), "hiding must not also lock");
+    dispatch(&mut app, "setTargetVolumeLocked", Some(&semio_framework_pack_json::json!({ "id": id.as_str(), "locked": true })), None).expect("lock");
+    assert_eq!(volumes(&app)[0].get("locked").and_then(semio_framework_pack_json::Value::as_bool), Some(true));
+    dispatch(&mut app, "setTargetVolumeFlag", Some(&semio_framework_pack_json::json!({ "id": id.as_str(), "flag": "elsewhere", "value": false })), None).expect("unknown flag");
+    assert_eq!(volumes(&app)[0].get("hidden").and_then(semio_framework_pack_json::Value::as_bool), Some(true), "an unknown flag name writes nothing");
 }
 
 /// 🙈️ LAW: an outliner row's set-verbs are idempotent by value — replaying `{verb}{identity, flag: true}` (a stale view's
@@ -86,16 +86,16 @@ async fn outliner_set_verbs_are_idempotent_by_value_and_refuse_a_missing_value()
         result.history_patch.as_ref().map_or(0, |patch| patch.upserts.iter().filter(|entry| entry.applied && !entry.op_lines.is_empty()).map(|entry| entry.seq).collect::<std::collections::BTreeSet<_>>().len())
     }
     let mut app = app();
-    dispatch(&mut app, "addTargetVolume", Some(&dsl::json!({ "origin": [0.0, 0.0, 0.0] })), None).expect("addTargetVolume");
+    dispatch(&mut app, "addTargetVolume", Some(&semio_framework_pack_json::json!({ "origin": [0.0, 0.0, 0.0] })), None).expect("addTargetVolume");
     let volume = first_volume_id(&app);
     let part = first_part_id(&app);
     for (verb, flag, bare, args) in [
-        ("setSelectionHidden", "hidden", dsl::json!({ "entity": PUZZLE5D_GRANULARITY_PART, "ids": [part.as_str()] }), dsl::json!({ "entity": PUZZLE5D_GRANULARITY_PART, "hidden": true, "ids": [part.as_str()] })),
-        ("setSelectionLocked", "locked", dsl::json!({ "entity": PUZZLE5D_GRANULARITY_PART, "ids": [part.as_str()] }), dsl::json!({ "entity": PUZZLE5D_GRANULARITY_PART, "ids": [part.as_str()], "locked": true })),
-        ("setTargetVolumeHidden", "hidden", dsl::json!({ "id": volume.as_str() }), dsl::json!({ "hidden": true, "id": volume.as_str() })),
-        ("setTargetVolumeLocked", "locked", dsl::json!({ "id": volume.as_str() }), dsl::json!({ "id": volume.as_str(), "locked": true })),
+        ("setSelectionHidden", "hidden", semio_framework_pack_json::json!({ "entity": PUZZLE5D_GRANULARITY_PART, "ids": [part.as_str()] }), semio_framework_pack_json::json!({ "entity": PUZZLE5D_GRANULARITY_PART, "hidden": true, "ids": [part.as_str()] })),
+        ("setSelectionLocked", "locked", semio_framework_pack_json::json!({ "entity": PUZZLE5D_GRANULARITY_PART, "ids": [part.as_str()] }), semio_framework_pack_json::json!({ "entity": PUZZLE5D_GRANULARITY_PART, "ids": [part.as_str()], "locked": true })),
+        ("setTargetVolumeHidden", "hidden", semio_framework_pack_json::json!({ "id": volume.as_str() }), semio_framework_pack_json::json!({ "hidden": true, "id": volume.as_str() })),
+        ("setTargetVolumeLocked", "locked", semio_framework_pack_json::json!({ "id": volume.as_str() }), semio_framework_pack_json::json!({ "id": volume.as_str(), "locked": true })),
     ] {
-        assert!(<Puzzle5dPlayApp as ArtifactEditor>::command_from_action(verb, Some(&dsl::os_pack::json::to_dsl_value(&bare))).is_err(), "{verb} without its {flag} value must be refused");
+        assert!(<Puzzle5dPlayApp as ArtifactEditor>::command_from_action(verb, Some(&semio_framework_pack_json::to_dsl_value(&bare))).is_err(), "{verb} without its {flag} value must be refused");
         let first = dispatch(&mut app, verb, Some(&args), None).unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
         assert_eq!(edits(&first), 1, "{verb} commits exactly one document edit");
         let set = projection_of(&app);
@@ -109,16 +109,16 @@ async fn outliner_set_verbs_are_idempotent_by_value_and_refuse_a_missing_value()
 #[semio_framework_async_macros::async_test]
 async fn relocate_target_volume_writes_the_whole_pose_and_a_locked_volume_refuses() {
     let mut app = app();
-    dispatch(&mut app, "addTargetVolume", Some(&dsl::json!({ "origin": [0.0, 0.0, 0.0] })), None).expect("addTargetVolume");
+    dispatch(&mut app, "addTargetVolume", Some(&semio_framework_pack_json::json!({ "origin": [0.0, 0.0, 0.0] })), None).expect("addTargetVolume");
     let id = first_volume_id(&app);
-    let after = dsl::json!({ "volumeId": id.as_str(), "after": { "position": [4.0, 5.0, 6.0], "quaternion": [0.0, 0.0, 1.0, 0.0], "scale": [2.0, 3.0, 4.0] } });
+    let after = semio_framework_pack_json::json!({ "volumeId": id.as_str(), "after": { "position": [4.0, 5.0, 6.0], "quaternion": [0.0, 0.0, 1.0, 0.0], "scale": [2.0, 3.0, 4.0] } });
     dispatch(&mut app, "relocateTargetVolume", Some(&after), None).expect("relocate");
     let moved = volumes(&app);
     assert_eq!(axes(&moved[0], "origin"), vec![4.0, 5.0, 6.0]);
     assert_eq!(axes(&moved[0], "orientation"), vec![0.0, 0.0, 1.0, 0.0]);
     assert_eq!(axes(&moved[0], "scale"), vec![2.0, 3.0, 4.0]);
-    dispatch(&mut app, "setTargetVolumeFlag", Some(&dsl::json!({ "id": id.as_str(), "flag": "locked", "value": true })), None).expect("lock");
-    let refused = dsl::json!({ "volumeId": id.as_str(), "after": { "position": [9.0, 9.0, 9.0] } });
+    dispatch(&mut app, "setTargetVolumeFlag", Some(&semio_framework_pack_json::json!({ "id": id.as_str(), "flag": "locked", "value": true })), None).expect("lock");
+    let refused = semio_framework_pack_json::json!({ "volumeId": id.as_str(), "after": { "position": [9.0, 9.0, 9.0] } });
     dispatch(&mut app, "relocateTargetVolume", Some(&refused), None).expect("a locked volume is a refusal, not a fault");
     assert_eq!(axes(&volumes(&app)[0], "origin"), vec![4.0, 5.0, 6.0], "a locked volume does not move");
 }
@@ -127,14 +127,14 @@ async fn relocate_target_volume_writes_the_whole_pose_and_a_locked_volume_refuse
 #[semio_framework_async_macros::async_test]
 async fn delete_target_volume_removes_only_the_addressed_one() {
     let mut app = app();
-    dispatch(&mut app, "addTargetVolume", Some(&dsl::json!({ "origin": [0.0, 0.0, 0.0] })), None).expect("first");
-    dispatch(&mut app, "addTargetVolume", Some(&dsl::json!({ "origin": [8.0, 0.0, 0.0] })), None).expect("second");
+    dispatch(&mut app, "addTargetVolume", Some(&semio_framework_pack_json::json!({ "origin": [0.0, 0.0, 0.0] })), None).expect("first");
+    dispatch(&mut app, "addTargetVolume", Some(&semio_framework_pack_json::json!({ "origin": [8.0, 0.0, 0.0] })), None).expect("second");
     assert_eq!(volumes(&app).len(), 2);
     let id = first_volume_id(&app);
-    dispatch(&mut app, "deleteTargetVolume", Some(&dsl::json!({ "id": id.as_str() })), None).expect("delete");
+    dispatch(&mut app, "deleteTargetVolume", Some(&semio_framework_pack_json::json!({ "id": id.as_str() })), None).expect("delete");
     let left = volumes(&app);
     assert_eq!(left.len(), 1);
-    assert_ne!(left[0].get("id").and_then(dsl::os_pack::json::Value::as_str), Some(id.as_str()));
+    assert_ne!(left[0].get("id").and_then(semio_framework_pack_json::Value::as_str), Some(id.as_str()));
 }
 
 /// 🖼️ The world pane publishes its volumes on the framework's own `targetVolumesJson` lane, and the
@@ -142,7 +142,7 @@ async fn delete_target_volume_removes_only_the_addressed_one() {
 #[semio_framework_async_macros::async_test]
 async fn both_panes_paint_the_same_volume() {
     let mut app = app();
-    dispatch(&mut app, "addTargetVolume", Some(&dsl::json!({ "origin": [4.0, 2.0, 0.0] })), None).expect("addTargetVolume");
+    dispatch(&mut app, "addTargetVolume", Some(&semio_framework_pack_json::json!({ "origin": [4.0, 2.0, 0.0] })), None).expect("addTargetVolume");
     let id = first_volume_id(&app);
     let envelope = scene_from_projection(&projection_of(&app), crate::editor::puzzle5d::config::Puzzle5dRuntime::default(), PUZZLE5D_DEFAULT_UTILITY);
     let world = world3d::world_target_volumes_json(&envelope.document);
@@ -190,7 +190,7 @@ fn the_volume_brush_is_bound_to_the_world_window_with_its_three_voxel_sliders() 
     let bound = |kind: &str| definition.window_kinds.iter().find(|window| window.id == kind).expect("a declared window").utilities.iter().any(|utility| utility.as_str() == world3d::utilities::volume_brush::UTILITY_ID);
     assert!(bound(world3d::WINDOW_KIND_ID), "the world window must bind the volume brush");
     assert!(!bound(board2d::WINDOW_KIND_ID), "the board pane paints projections, it does not paint volumes");
-    let labels = puzzle5d_labels(&semio_framework_plugin::ViewModel::new(protocol::Locale::En, protocol::Terminology::Native)).expect("labels");
+    let labels = puzzle5d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("labels");
     let measures = world3d::utilities::volume_brush::voxel_dim_measures(&crate::editor::puzzle5d::config::Puzzle5dRuntime::default(), labels);
     assert_eq!(measures.len(), 3, "width, depth and height");
 }

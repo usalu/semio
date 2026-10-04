@@ -192,7 +192,7 @@ pub fn stamp_conformance_class(mut snapshot: XlsxSnapshot, strict: bool) -> Xlsx
         retarget_namespace(root, &MAIN_NAMESPACES, MAIN_NAMESPACES[index]);
         retarget_namespace(root, &RELATIONSHIP_NAMESPACES, RELATIONSHIP_NAMESPACES[index]);
     }
-    for relationships in snapshot.opc.relationships.values_mut() {
+    for relationships in snapshot.opc.relationships.groups_mut().map(|(_, relationships)| relationships) {
         for relationship in relationships.iter_mut() {
             let Some(prefix) = RELATIONSHIP_NAMESPACES.into_iter().find(|prefix| relationship.rel_type.starts_with(prefix)) else { continue };
             relationship.rel_type = format!("{}{}", RELATIONSHIP_NAMESPACES[index], &relationship.rel_type[prefix.len()..]);
@@ -301,7 +301,8 @@ pub(crate) fn agg_diff(this: &XlsxStrictMutation, base: &XlsxSnapshot) -> protoc
 }
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &XlsxStrictMutation, base: &XlsxSnapshot) -> Vec<XlsxStrictMutation> {
+pub(crate) fn agg_inverse(this: &XlsxStrictMutation, base: &XlsxSnapshot) -> Result<Vec<XlsxStrictMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![match this {
         XlsxStrictMutation::SetSnapshot(_) => XlsxStrictMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
         XlsxStrictMutation::SetMainNamespace(_) => match declared_pair_member(base, MAIN_NAMESPACES) {
@@ -330,6 +331,8 @@ pub(crate) fn agg_inverse(this: &XlsxStrictMutation, base: &XlsxSnapshot) -> Vec
             None => return Vec::new(),
         },
     }]
+
+    })())
 }
 //#endregion 🔖️MutationTrait
 

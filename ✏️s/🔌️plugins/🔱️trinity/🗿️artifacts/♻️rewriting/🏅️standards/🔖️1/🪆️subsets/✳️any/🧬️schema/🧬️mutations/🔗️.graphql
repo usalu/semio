@@ -1,36 +1,26 @@
-# 🧬️ Rewriting direct mutation aggregate.
-scalar JSON
-
-input EditBeforeFixtureInput { newBeforeFixtureJson: String! }
-input EditLhsInput { newLhsJson: String! }
-input EditRhsInput { newRhsJson: String! }
-input ChangeParameterBindingInput { key: String!, newValue: JSON! }
+# 🧬️ Rewriting direct mutations retain typed rules, child handles and numeric words.
+# import LhsInput, RhsInput, LayoutPointInput from "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔗️.graphql"
+# import JackSnapshotInput from "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔗️.graphql"
+# import PropertyValueInput from "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🌱️value/🧬️schema/🔗️.graphql"
+# import Binary64WordInput from "🧰️framework/🔨️modules/🌱️value/🧬️schema/🔗️.graphql"
+input EditBeforeFixtureInput { newWorkingGraph: JackSnapshotInput! }
+input EditLhsInput { newLhs: LhsInput! }
+input EditRhsInput { newRhs: RhsInput! }
+input ChangeParameterBindingInput { key: String! newValue: PropertyValueInput! }
 input RemoveParameterBindingInput { key: String! }
-input RewriteRuleLayoutPointInput { x: Float!, y: Float! }
-input ChangeRuleLayoutPointInput { key: String!, newPoint: RewriteRuleLayoutPointInput! }
+input ChangeRuleLayoutPointInput { key: String! newPoint: LayoutPointInput! }
 input RemoveRuleLayoutPointInput { key: String! }
-input DragWorkingNodesInput { targets: [String!]!, dx: Float!, dy: Float! }
-input PatchWorkingNodesInput { targets: [String!]!, field: String!, value: String! }
-input DragRuleNodesInput { targets: [String!]!, dx: Float!, dy: Float! }
-input RuleLayoutPlacementInput { key: String!, x: Float!, y: Float! }
-input SetRuleLayoutPointsInput { points: [RuleLayoutPlacementInput!]!, cleared: [String!]! }
-input DeleteWorkingNodesInput { targets: [String!]! }
-input ConnectWorkingPortsInput { source: String!, target: String!, kind: String! }
-input DisconnectWorkingEdgesInput { targets: [String!]! }
-
-input RewriteRuleMutationInput {
-  editBeforeFixture: EditBeforeFixtureInput
-  editLhs: EditLhsInput
-  editRhs: EditRhsInput
-  changeParameterBinding: ChangeParameterBindingInput
-  removeParameterBinding: RemoveParameterBindingInput
-  changeRuleLayoutPoint: ChangeRuleLayoutPointInput
-  removeRuleLayoutPoint: RemoveRuleLayoutPointInput
-  dragWorkingNodes: DragWorkingNodesInput
-  patchWorkingNodes: PatchWorkingNodesInput
-  dragRuleNodes: DragRuleNodesInput
-  setRuleLayoutPoints: SetRuleLayoutPointsInput
-  deleteWorkingNodes: DeleteWorkingNodesInput
-  connectWorkingPorts: ConnectWorkingPortsInput
-  disconnectWorkingEdges: DisconnectWorkingEdgesInput
+input DragRuleNodesInput { targets: [String!]! dx: Binary64WordInput! dy: Binary64WordInput! }
+input SetRuleLayoutPointsInput { points: [RuleLayoutPlacementInput!]! cleared: [String!]! }
+input RuleLayoutPlacementInput { key: String! x: Binary64WordInput! y: Binary64WordInput! }
+input RewriteRuleMutationInput @oneOf {
+ editBeforeFixture: EditBeforeFixtureInput
+ editLhs: EditLhsInput
+ editRhs: EditRhsInput
+ changeParameterBinding: ChangeParameterBindingInput
+ removeParameterBinding: RemoveParameterBindingInput
+ changeRuleLayoutPoint: ChangeRuleLayoutPointInput
+ removeRuleLayoutPoint: RemoveRuleLayoutPointInput
+ dragRuleNodes: DragRuleNodesInput
+ setRuleLayoutPoints: SetRuleLayoutPointsInput
 }

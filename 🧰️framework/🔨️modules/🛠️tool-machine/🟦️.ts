@@ -243,6 +243,72 @@ export class ToolMachineRunner<S extends ToolMachineSpec> {
 }
 //#endregion 🔖️Machine
 
+//#region 🌊️Gesture
+/** 🌊️ Where one dispatch of a streamed window gesture (a gumball drag, a paint stroke) sits: a one-shot, a stream tick into the window's open transaction, the commit that ends it, or a host abort with its reason. */
+export type GesturePhase = { readonly kind: "once" } | { readonly kind: "stream" } | { readonly kind: "commit" } | { readonly kind: "abort"; readonly reason: ToolAbortReason };
+
+/** 🔡️ Reads a gesture verb's `phase` (`stream` | `commit` | `abort`, absent = one-shot) and an abort's `reason` (absent = `tool`); `undefined` for an unknown word. */
+export function parseGesturePhase(phase: unknown, reason: unknown): GesturePhase | undefined {
+  if (phase === undefined) return { kind: "once" };
+  if (phase === "stream" || phase === "commit") return { kind: phase };
+  if (phase !== "abort") return undefined;
+  const why = reason === undefined ? "tool" : reason;
+  return (TOOL_ABORT_REASONS as readonly unknown[]).includes(why) ? { kind: "abort", reason: why as ToolAbortReason } : undefined;
+}
+
+/** 🖐️ One window's streamed tool for ONE dispatch: a tool machine started at rest, or resumed from the gesture its window persisted between dispatches (window or artifact transient, never history). */
+export interface GestureTool<G, Tick, M> {
+  readonly verb: string;
+  readonly baseRevision: string;
+  abort(reason: ToolAbortReason): void;
+  send(phase: GesturePhase, tick: Tick | undefined): ToolStepResult<M>;
+  persist(): G | undefined;
+}
+
+export type GestureToolResult<G, Tick, M> = { readonly ok: true; readonly tool: GestureTool<G, Tick, M> } | { readonly ok: false; readonly refusal: ToolRefusal };
+
+/** 🪪️ How a streamed tool starts at rest, resumes its window's persisted gesture and tells two persisted gestures apart. */
+export interface GestureToolKind<G, Tick, M> {
+  start(verb: string, authoringSeed: string, baseRevision: string): GestureToolResult<G, Tick, M>;
+  resume(gesture: G): GestureToolResult<G, Tick, M>;
+  same(left: G, right: G): boolean;
+}
+
+/** 📬️ The window's persisted gesture after a dispatch: unchanged, cleared, or the one to persist. */
+export type GestureNext<G> = { readonly kind: "unchanged" } | { readonly kind: "cleared" } | { readonly kind: "persist"; readonly gesture: G };
+
+/** 📮️ What one gesture dispatch did: the transaction it committed (publish it as ONE edit) and the window's next persisted gesture. */
+export type GestureDrive<G, M> = { readonly committed: { readonly transaction: TransactionRef; readonly mutations: M[] } | undefined; readonly next: GestureNext<G> };
+
+export type GestureDriveResult<G, M> = { readonly ok: true; readonly drive: GestureDrive<G, M> } | { readonly ok: false; readonly refusal: ToolRefusal };
+
+/** 🚂️ Drives one window's streamed tool through ONE dispatch (`drive_gesture` in `🦀️.rs`, law `🧫️fixtures/🧫️gesture-drive-law`). `once` commits `tick` as one transaction; `stream` upserts it into the window's open transaction (opening it on the first tick), `commit` folds it in and commits the whole gesture, `abort` drops the open gesture with zero trace. A gesture whose base moved under it is aborted `baseMoved` (a stream tick or commit that found it is dropped with it, a one-shot commits fresh); otherwise another verb or a one-shot interrupts it (`captureLost`). A gesture its tool cannot restore is dropped with zero trace and the dispatch runs from rest; a refused start or tick faults the dispatch with no effect at all. */
+export function driveGesture<G, Tick, M>(kind: GestureToolKind<G, Tick, M>, persisted: G | undefined, verb: string, phase: GesturePhase, tick: Tick | undefined, authoringSeed: string, baseRevision: string): GestureDriveResult<G, M> {
+  const rest: GestureNext<G> = { kind: persisted === undefined ? "unchanged" : "cleared" };
+  const dropped: GestureDriveResult<G, M> = { ok: true, drive: { committed: undefined, next: rest } };
+  const restored = persisted === undefined ? undefined : kind.resume(persisted);
+  const resumed = restored?.ok ? restored.tool : undefined;
+  if (phase.kind === "abort") {
+    resumed?.abort(phase.reason);
+    return dropped;
+  }
+  const moved = resumed !== undefined && resumed.baseRevision !== baseRevision;
+  if (moved && phase.kind !== "once") {
+    resumed.abort("baseMoved");
+    return dropped;
+  }
+  const interrupted: ToolAbortReason | undefined = resumed === undefined ? undefined : moved ? "baseMoved" : resumed.verb !== verb || phase.kind === "once" ? "captureLost" : undefined;
+  const opened: GestureToolResult<G, Tick, M> = resumed !== undefined && interrupted === undefined ? { ok: true, tool: resumed } : kind.start(verb, authoringSeed, baseRevision);
+  if (!opened.ok) return { ok: false, refusal: opened.refusal };
+  const sent = opened.tool.send(phase, tick);
+  if (!sent.ok) return { ok: false, refusal: sent.refusal };
+  if (interrupted !== undefined) resumed?.abort(interrupted);
+  const gesture = opened.tool.persist();
+  const next: GestureNext<G> = gesture === undefined ? rest : persisted !== undefined && kind.same(gesture, persisted) ? { kind: "unchanged" } : { kind: "persist", gesture };
+  return { ok: true, drive: { committed: sent.step.kind === "committed" ? { transaction: sent.step.transaction, mutations: sent.step.mutations } : undefined, next } };
+}
+//#endregion 🌊️Gesture
+
 //#region 🔖️Scrub
 /** 🎚️ The scrub protocol every continuous control speaks: `gesture` names the press (`"<control>:<ms>"`), `commit: true` marks the release, `abort: "<reason>"` a host cancel (no value). A dispatch without `gesture` is a plain one-shot edit. */
 export const SCRUB_GESTURE_ARG = "gesture";
@@ -416,15 +482,16 @@ export class ScrubLedger<M> {
     return this.windows().flatMap((window) => this.#windows.get(window)!.entries.map(([, leaf]) => leaf));
   }
 
-  /** 📨️ Runs one input of `window`'s press: a late tick of the closed press is silent; another tool or document revision reopens on the current one. */
+  /** 📨️ Runs one input of `window`'s press: a late tick of the closed press is silent; another tool or document revision reopens on the current one; a refused input leaves the ledger exactly as it was (the press stays open until a retry or a host abort decides). */
   send(window: string, tool: string, actor: ToolActor, baseRevision: string, input: ScrubInput<M>, clock: ToolClock): ToolStepResult<M> {
     if (input.kind === "abort") return { ok: true, step: this.abort(window, undefined, input.reason) };
     if (this.#closed.get(window) === input.gesture) return { ok: true, step: { kind: "idle" } };
     const state = this.#windows.get(window);
-    this.#windows.delete(window);
     const resumed = state && state.tool === tool && state.baseRevision === baseRevision ? Scrub.resume(state) : undefined;
     const scrub = resumed?.ok ? resumed.scrub : Scrub.start<M>(tool, actor, baseRevision);
     const step = scrub.send(input, clock);
+    if (!step.ok) return step;
+    this.#windows.delete(window);
     if (input.kind === "commit") this.#closed.set(window, input.gesture);
     const persisted = scrub.persist();
     if (persisted) this.#windows.set(window, persisted);

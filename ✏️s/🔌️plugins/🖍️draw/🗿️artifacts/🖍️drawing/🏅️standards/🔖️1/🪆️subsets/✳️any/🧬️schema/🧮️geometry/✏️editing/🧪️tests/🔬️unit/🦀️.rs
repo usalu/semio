@@ -104,8 +104,8 @@ fn multi_point_translation_matches_shared_cases_atomically() {
         let mut reversed=row["operation"].clone();
         for value in reversed["delta"].as_array_mut().unwrap() {*value=(-value.as_f64().unwrap()).into();}
         assert_eq!(edit_path(&actual,&serde_json::from_value(reversed).unwrap()).unwrap(),source);
-        let value=dsl::ToValue::to_value(&operation);
-        assert_eq!(<PathEdit as dsl::FromValue>::from_value(value).unwrap(),operation);
+        let value=semio_framework_value::ToValue::to_value(&operation);
+        assert_eq!(<PathEdit as semio_framework_value::FromValue>::from_value(value).unwrap(),operation);
     }
 }
 

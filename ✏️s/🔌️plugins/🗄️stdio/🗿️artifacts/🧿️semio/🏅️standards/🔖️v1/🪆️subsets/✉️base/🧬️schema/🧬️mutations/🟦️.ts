@@ -21,9 +21,11 @@ import type { SemioTableMutation } from "../../../📊️table/🧬️schema/�
 import type { SemioGraphMutation } from "../../../🕸️graph/🧬️schema/🧬️mutations/🟦️.ts";
 import type { SemioObjectMutation } from "../../../📦️object/🧬️schema/🧬️mutations/🟦️.ts";
 import type { SemioKitMutation } from "../../../🧰️kit/🧬️schema/🧬️mutations/🟦️.ts";
+import type { SnapshotPatch } from '../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts';
 
 export type SemioMutation =
   | { mutation: "setSnapshot"; payload: { snapshot: SemioSnapshot } }
+  | { readonly mutation: 'patchSnapshot'; readonly payload: { readonly patch: SnapshotPatch } }
   | { mutation: "applyBrep"; payload: { mutation: SemioBrepMutation } }
   | { mutation: "applyMesh"; payload: { mutation: SemioMeshMutation } }
   | { mutation: "applyModel"; payload: { mutation: SemioModelMutation } }

@@ -12,7 +12,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub mod export_model {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "export-model")]
     pub struct ExportModel {
         pub format: String,
@@ -34,7 +34,7 @@ pub mod export_model {
                 mime_type: export.mime_type,
                 data: match export.data {
                     DslValue::String(text) => text,
-                    other => semio_framework_os_kernel::json::to_json_string(&other),
+                    other => semio_framework_pack_json::to_json_string(&other),
                 },
                 encoding: export.encoding,
             })),
@@ -48,7 +48,7 @@ pub mod export_model {
 pub mod load_model_request {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "load-model-request")]
     pub struct LoadModelRequest {}
 
@@ -58,7 +58,7 @@ pub mod load_model_request {
         _cfg: &ConfigView<'_, Process3dConfig>,
         _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
-        Ok(Emit::effect(Effect::RequestFileOpen { req: semio_framework_plugin::RequestId(111), accept: ".stp,.step,.obj,.stl,.glb".into(), read_as: Some("dataUrl".into()), import_action: "importModelFile".into(), multiple: false }))
+        Ok(Emit::effect(Effect::RequestFileOpen { req: semio_framework_plugin::RequestId(111), accept: ".stp,.step,.obj,.stl,.glb".into(), read_as: Some("dataUrl".into()), import_action: "importModelFile".into(), multiple: false, args: None }))
     }
 }
 //#endregion 🔖️LoadModelRequest
@@ -67,7 +67,7 @@ pub mod load_model_request {
 pub mod import_model_file {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "import-model-file")]
     pub struct ImportModelFile {
         pub name: String,

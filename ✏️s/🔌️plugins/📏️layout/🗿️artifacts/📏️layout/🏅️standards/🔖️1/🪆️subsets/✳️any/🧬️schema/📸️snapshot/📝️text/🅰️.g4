@@ -4,7 +4,7 @@ grammar Layout_layout_snapshot;
 
 artifactMark: 'semio layout.layout.dsl v1' ;
 document: artifactMark docField* ;
-docField: ('schema' '=' TEXT) | ('name' '=' TEXT) | ('grid' '=' gridField+) | ('paragraph-styles' '=' '[' paragraphStyle* ']') | ('character-styles' '=' '[' characterStyle* ']') | ('stories' '=' '[' story* ']') | ('links' '=' '[' link* ']') | ('parent-pages' '=' '[' parentPage* ']') | ('spreads' '=' '[' spread* ']') | ('pages' '=' '[' page* ']') | ('print-target' '=' TEXT) | ('data-fields-json' '=' TEXT) | ('background-drawing' '=' backgroundDrawingField+) | ('referenced-model' '=' referencedModelField+) ;
+docField: ('schema' '=' TEXT) | ('name' '=' TEXT) | ('grid' '=' gridField+) | ('paragraph-styles' '=' '[' paragraphStyle* ']') | ('character-styles' '=' '[' characterStyle* ']') | ('stories' '=' '[' story* ']') | ('links' '=' '[' link* ']') | ('parent-pages' '=' '[' parentPage* ']') | ('spreads' '=' '[' spread* ']') | ('pages' '=' '[' page* ']') | ('print-target' '=' TEXT) | ('data-fields' '=' formDictionaryField+) | ('background-drawing' '=' backgroundDrawingField+) | ('referenced-model' '=' referencedModelField+) ;
 gridField: ('baseline-grid' '=' NUMBER) | ('baseline-offset' '=' NUMBER) | ('snap-to-baseline' '=' BOOL) ;
 paragraphStyle: paragraphStyleField+ ;
 paragraphStyleField: ('id' '=' TEXT) | ('name' '=' TEXT) | ('font-family' '=' TEXT) | ('font-size' '=' NUMBER) | ('font-weight' '=' UINT) | ('leading' '=' NUMBER) | ('tracking' '=' NUMBER) | ('alignment' '=' TEXT) ;
@@ -45,6 +45,9 @@ referencedModelField: ('target' '=' TEXT) | ('pin' '=' pinField+) | ('role' '=' 
 pinField: ('kind' '=' ('head' | 'checkpoint' | 'snapshot')) | ('checkpoint_id' '=' TEXT) | ('blob_hash' '=' TEXT) | ('blob_size' '=' UINT) | ('blob_media_type' '=' TEXT) ;
 childHandle: ('child_id' '=' TEXT) ('target' '=' TEXT) ;
 rgba: NUMBER ',' NUMBER ',' NUMBER ',' NUMBER ;
+
+formDictionaryField: 'entries' '=' '[' formDictionaryEntry* ']' ;
+formDictionaryEntry: 'question-id' '=' TEXT 'value' '=' VALUE ;
 
 // 📐 Framework dialect-primitive terminals.
 BOOL: 'true' | 'false' ;

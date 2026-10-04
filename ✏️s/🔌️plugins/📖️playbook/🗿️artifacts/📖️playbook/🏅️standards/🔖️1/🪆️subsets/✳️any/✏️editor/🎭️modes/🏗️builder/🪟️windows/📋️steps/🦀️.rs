@@ -1,7 +1,7 @@
 //! 📋️ Playbook steps window — a real Table surface over the authored step sequence.
 
-use crate::PlaybookSnapshot;
-use dsl::ToValue;
+use crate::PlaybookSpec;
+use semio_framework_value::ToValue;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::SurfaceKind;
 use semio_framework_plugin::WindowKindDefinition;
@@ -31,23 +31,23 @@ pub fn definition() -> WindowKindDefinition {
     }
 }
 
-pub fn scene(spec: &PlaybookSnapshot) -> TableScene {
-    let columns = dsl::DslValue::Array(
+pub fn scene(spec: &PlaybookSpec) -> TableScene {
+    let columns = semio_framework_value::DslValue::Array(
         [("id", "Id"), ("title", "Title"), ("blocks", "Blocks")]
             .into_iter()
-            .map(|(id, label)| dsl::DslValue::Object(vec![("id".into(), id.to_value()), ("label".into(), label.to_value()), ("sortable".into(), true.to_value())]))
+            .map(|(id, label)| semio_framework_value::DslValue::Object(vec![("id".into(), id.to_value()), ("label".into(), label.to_value()), ("sortable".into(), true.to_value())]))
             .collect(),
     );
-    let rows = dsl::DslValue::Array(
-        spec.steps()
+    let rows = semio_framework_value::DslValue::Array(
+        spec.steps
             .iter()
-            .map(|step| dsl::DslValue::Object(vec![("id".into(), step.id.to_value()), ("title".into(), step.title.to_value()), ("blocks".into(), (step.blocks.len() as u64).to_value())]))
+            .map(|step| semio_framework_value::DslValue::Object(vec![("id".into(), step.id.to_value()), ("title".into(), step.title.to_value()), ("blocks".into(), (step.blocks.len() as u64).to_value())]))
             .collect(),
     );
-    TableScene::base(protocol::json::to_json_string(&columns), protocol::json::to_json_string(&rows))
+    TableScene::base(semio_framework_pack_json::to_json_string(&columns), semio_framework_pack_json::to_json_string(&rows))
 }
 
-pub fn render(spec: &PlaybookSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(spec: &PlaybookSpec) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     semio_framework_plugin::scene_surface(PLAYBOOK_PLAY_SURFACE_STEPS, semio_framework_ui_contract::SurfaceKind::Table, &scene(spec))
 }
 

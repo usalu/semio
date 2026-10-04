@@ -44,7 +44,7 @@ const target = (instances: WindowInstance[], id: string, expectedKind: string): 
 
 export function testFlowWindowOwnershipOracle(): void {
   const ajv = new Ajv({ strict: true, allErrors: true });
-  for (const keyword of ["x-semio-state", "x-semio-child-kind", "x-semio-child-standard", "x-semio-child-subset", "x-semio-formats"]) ajv.addKeyword(keyword);
+  for (const keyword of ["x-semio-state", "x-semio-child-kind", "x-semio-child-standard", "x-semio-child-subset", "x-semio-formats", "x-semio-ui"]) ajv.addKeyword(keyword);
   ajv.addFormat("double", true);
   ajv.addSchema(ioSchema);
   ajv.addSchema(childSchema);
@@ -92,4 +92,3 @@ export function testFlowWindowOwnershipOracle(): void {
   assert(!Object.hasOwn(fixture.baseConfig, "contributionsJson") && !Object.hasOwn(fixture.baseTransient, "contributionsJson"));
   assert.equal(fixture.hostContext.programContributions.length, 1);
 }
-

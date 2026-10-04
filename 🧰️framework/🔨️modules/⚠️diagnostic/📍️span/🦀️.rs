@@ -13,31 +13,33 @@ pub struct TextSpan {
     pub length: u32,
 }
 
-/// 🌉️ Hand-written, not derived: this file is path-mounted into `📡️replication`, which owns
-/// `ToValue`/`FromValue` and cannot depend on the derive macro's target crate. Keys mirror the
-/// type's `rename_all = "camelCase"` (all three field names are already single words).
-impl crate::value::ToValue for TextSpan {
-    fn to_value(&self) -> crate::value::DslValue {
-        crate::value::DslValue::Object(vec![
-            ("line".to_string(), crate::value::DslValue::Number(crate::value::Number::UInt(u64::from(self.line)))),
-            ("column".to_string(), crate::value::DslValue::Number(crate::value::Number::UInt(u64::from(self.column)))),
-            ("length".to_string(), crate::value::DslValue::Number(crate::value::Number::UInt(u64::from(self.length)))),
+/// 🌉️ Owned Value conversion preserves the span's literal camelCase wire keys.
+/// All three scalar field names retain their declared diagnostic identity.
+impl semio_framework_value::ToValue for TextSpan {
+    fn to_value_controlled(&self, c: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_value::DslValue, semio_framework_value::ValueError> { crate::component::controlled::encode_span(self, c) }
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::Object(vec![
+            ("line".to_string(), semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(u64::from(self.line)))),
+            ("column".to_string(), semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(u64::from(self.column)))),
+            ("length".to_string(), semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(u64::from(self.length)))),
         ])
     }
 }
 
 /// 🌉️ Mirror of the `ToValue` bridge above.
-impl crate::value::FromValue for TextSpan {
-    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+impl semio_framework_value::FromValue for TextSpan {
+    fn from_value_controlled(value: &semio_framework_value::DslValue, c: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> { crate::component::controlled::decode_span(value, c) }
+    fn default_value_controlled(c: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> { c.checkpoint()?; Ok(Self::default()) }
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         let entries = match value {
-            crate::value::DslValue::Object(entries) => entries,
-            other => return Err(crate::value::ValueError::new(format!("expected an object for TextSpan, found {other:?}"))),
+            semio_framework_value::DslValue::Object(entries) => entries,
+            other => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for TextSpan, found {other:?}"))),
         };
-        let field = |key: &str| -> Result<u32, crate::value::ValueError> {
+        let field = |key: &str| -> Result<u32, semio_framework_value::ValueError> {
             match entries.iter().find(|(name, _)| name == key).map(|(_, slot)| slot) {
-                Some(crate::value::DslValue::Number(number)) => Ok(number.as_u64().unwrap_or(0) as u32),
+                Some(semio_framework_value::DslValue::Number(number)) => Ok(number.as_u64().unwrap_or(0) as u32),
                 None => Ok(0),
-                Some(other) => Err(crate::value::ValueError::new(format!("expected a number for TextSpan.{key}, found {other:?}"))),
+                Some(other) => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a number for TextSpan.{key}, found {other:?}"))),
             }
         };
         Ok(TextSpan { line: field("line")?, column: field("column")?, length: field("length")? })

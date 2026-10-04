@@ -1,1 +1,5 @@
-export {};
+/** 📥️ The declared Jack JSON word boundary constructs its actual canonical parent. */
+import {parseJackArtifact,type JackArtifact} from "../../../../../../../🧬️schema/🟦️.ts";
+function scalar(value:unknown):{bits:bigint}{if(!value||typeof value!=="object"||Array.isArray(value)||Object.keys(value).length!==1||!("bits"in value)||typeof value.bits!=="string"||!/^[0-9a-f]{16}$/.test(value.bits))throw Error("Jack JSON camera requires a closed binary64 hex word");return{bits:BigInt("0x"+value.bits)};}
+/** 📖️ Read the literal full manifest and independent identity without numeric conversion. */
+export function parseJackJsonValue(value:unknown):JackArtifact{if(!value||typeof value!=="object"||Array.isArray(value))throw Error("Jack JSON document required");const input=value as Record<string,unknown>,camera=input.camera;if(!camera||typeof camera!=="object"||Array.isArray(camera)||Object.keys(camera).some(key=>key!=="x"&&key!=="y"&&key!=="zoom"))throw Error("Jack JSON camera fields differ");const fields=camera as Record<string,unknown>;return parseJackArtifact({...input,camera:{x:scalar(fields.x),y:scalar(fields.y),zoom:scalar(fields.zoom)}});}

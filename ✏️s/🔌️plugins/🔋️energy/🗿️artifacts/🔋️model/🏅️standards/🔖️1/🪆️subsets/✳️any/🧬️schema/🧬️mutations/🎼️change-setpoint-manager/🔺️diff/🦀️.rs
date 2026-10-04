@@ -23,7 +23,7 @@ pub fn diff(payload: &super::ChangeSetpointManagerSchedule, base: &EnergyModelSn
     }
     let value = payload.new_schedule_present.then_some(payload.new_schedule_id);
     if existing.schedule_id == value {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Setpoint manager {} already reads that schedule.", payload.id.0));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Setpoint manager {} already reads that schedule.", payload.id.0));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.setpoint_managers.iter_mut().find(|item| item.id == payload.id) {

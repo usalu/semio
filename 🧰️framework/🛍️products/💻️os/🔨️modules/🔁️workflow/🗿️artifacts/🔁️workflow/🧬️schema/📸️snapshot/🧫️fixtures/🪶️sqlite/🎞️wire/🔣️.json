@@ -1,0 +1,25 @@
+{
+  "contractId": "workflow-intrinsic-wire",
+  "schemas": [
+    "",
+    "\u0000😀",
+    "null",
+    "literal!@/",
+    "引用",
+    "form.dictionary"
+  ],
+  "invalid": [
+    {
+      "kind": "intrinsic",
+      "format_kind": "binary"
+    },
+    {
+      "kind": "intrinsic",
+      "schema": "x",
+      "format_kind": "y"
+    },
+    {
+      "kind": "intrinsic"
+    }
+  ]
+}

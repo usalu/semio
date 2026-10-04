@@ -9,7 +9,7 @@
 //!
 //! 🩹️ Ticket `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`: no longer
 //! routes through `serde_json::to_value` — `Puzzle5dSnapshot` only derives `Serialize` under
-//! `#[cfg(test)]` now. `dsl::ToValue::to_value` (first-party) -> `dsl::json::from_dsl_value`
+//! `#[cfg(test)]` now. `dsl::ToValue::to_value` (first-party) -> `semio_framework_pack_json::from_dsl_value`
 //! (`DslValue` -> stdio's own `JsonValue`) instead, same shape the sibling `block5d` leaf already
 //! uses.
 use crate::Puzzle5dSnapshot;
@@ -18,12 +18,12 @@ use semio_s_artifact_stdio_json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 
 pub fn register() {}
 
-pub fn serialize(snapshot: &Puzzle5dSnapshot) -> Result<JsonSnapshot, store::TextError> {
+pub fn serialize(snapshot: &Puzzle5dSnapshot) -> Result<JsonSnapshot, semio_framework_diagnostic::TextError> {
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-    let raw=crate::standards::v1::subsets::any::io::puzzle5d_json::convert(dsl::ToValue::to_value(snapshot),false).map_err(|message|store::TextError::new(message,dsl::TextSpan::at(1,1)))?;
-    Ok(JsonSnapshot::from_value(dsl::json::from_dsl_value(&raw)))
+    let raw=crate::standards::v1::subsets::any::io::puzzle5d_json::convert(semio_framework_value::ToValue::to_value(snapshot),false).map_err(|message|semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message,semio_framework_diagnostic::TextSpan::at(1,1)))?;
+    Ok(JsonSnapshot::from_value(semio_framework_pack_json::from_dsl_value(&raw)))
 }
 
-pub fn serialize_bytes(snapshot: &Puzzle5dSnapshot) -> Result<Vec<u8>, store::TextError> {
+pub fn serialize_bytes(snapshot: &Puzzle5dSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
     Ok(write_json_pretty(&serialize(snapshot)?.value).into_bytes())
 }

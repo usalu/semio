@@ -8,6 +8,9 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/las/1.0/header/mutation/set-snapshot/schema.json"
     },
     {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/las/1.0/header/mutation/patch-snapshot/schema.json"
+    },
+    {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/las/1.0/header/mutation/set-version/schema.json"
     },
     {

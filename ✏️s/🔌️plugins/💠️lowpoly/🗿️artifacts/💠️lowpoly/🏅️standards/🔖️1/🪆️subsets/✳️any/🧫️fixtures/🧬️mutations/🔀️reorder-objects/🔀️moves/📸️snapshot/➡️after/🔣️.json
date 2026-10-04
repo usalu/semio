@@ -23,7 +23,8 @@
           1.0,
           1.0
         ]
-      }
+      },
+      "meshState": null
     },
     {
       "id": "obj-hull",
@@ -66,7 +67,8 @@
           1.0,
           1.0
         ]
-      }
+      },
+      "meshState": null
     }
   ],
   "schema": "lowpoly.document"

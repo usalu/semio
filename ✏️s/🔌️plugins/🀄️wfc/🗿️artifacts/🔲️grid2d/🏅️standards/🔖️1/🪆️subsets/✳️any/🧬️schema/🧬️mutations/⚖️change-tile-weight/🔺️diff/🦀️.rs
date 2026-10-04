@@ -12,7 +12,7 @@ pub fn diff(payload: &super::ChangeTileWeight, base: &Grid2dSnapshot) -> protoco
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Tile \"{}\" must carry a finite positive weight, got {}.", payload.id, payload.weight), [payload.id.clone()]);
     }
     if base.tiles[index].weight == payload.weight {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Tile \"{}\" already weighs {}.", payload.id, payload.weight));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Tile \"{}\" already weighs {}.", payload.id, payload.weight));
     }
     let mut tile = base.tiles[index].clone();
     tile.weight = payload.weight;

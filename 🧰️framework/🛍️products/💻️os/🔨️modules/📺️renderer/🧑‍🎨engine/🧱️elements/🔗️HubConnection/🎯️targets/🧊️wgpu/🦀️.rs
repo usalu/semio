@@ -27,7 +27,7 @@ use semio_framework_async::OperationContext;
 use semio_framework_os_kernel::os_directory::client::{DirectoryTransport, HttpMethod, HttpResponse, TransportError};
 use semio_framework_os_kernel::os_directory::schema::space_artifact_creation::{SpaceArtifactCreateV1, SpaceArtifactCreationCatalogV1, SpaceArtifactCreationPhaseV1, SpaceArtifactCreationReadyV1};
 use semio_framework_os_kernel::os_directory::DirectorySpaceRole;
-use semio_framework_os_kernel::DslValue;
+use semio_framework_value::DslValue;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use ui_wgpu::wgpu::component::ui::UiState;
@@ -542,7 +542,7 @@ fn descriptor(action: &str, args: Option<DslValue>) -> ActionDescriptor {
 }
 
 fn one_arg(key: &str, value: &str) -> Option<DslValue> {
-    Some(DslValue::Object(vec![(key.to_string(), DslValue::String(value.into()))]))
+    Some(semio_framework_value::DslValue::Object(vec![(key.to_string(), DslValue::String(value.into()))]))
 }
 
 fn text_row(value: &str) -> UiNode {

@@ -551,7 +551,7 @@ fn tool_run_args(entries: &[(&str, DslValue)]) -> DslValue {
 }
 
 fn tool_run_action(app: &mut Puzzle2dApp, action: &str, entries: &[(&str, DslValue)]) -> DslValue {
-    semio_framework::io::resolve_ready(app.handle_action(action, Some(&tool_run_args(entries)), &meta("local"))).unwrap_or_else(|fault| panic!("{action}: {fault:?}")).output
+    ::semio_framework_async::poll::resolve_ready(app.handle_action(action, Some(&tool_run_args(entries)), &meta("local"))).unwrap_or_else(|fault| panic!("{action}: {fault:?}")).output
 }
 
 fn run_state(app: &Puzzle2dApp) -> Option<&'static str> {
@@ -566,25 +566,25 @@ fn pump_until(app: &mut Puzzle2dApp, what: &str, done: impl Fn(&Puzzle2dApp) -> 
             return;
         }
         PluginApp::maintenance_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).unwrap_or_else(|fault| panic!("{what}: maintenance faulted: {fault:?}"));
-        semio_framework::io::resolve_ready(app.advance_typed_operation_publication()).unwrap_or_else(|fault| panic!("{what}: driver turn faulted: {fault:?}"));
+        ::semio_framework_async::poll::resolve_ready(app.advance_typed_operation_publication()).unwrap_or_else(|fault| panic!("{what}: driver turn faulted: {fault:?}"));
         if let Some(page) = app.take_typed_operation_result_page(1) {
             assert_ne!(page.lane, semio_framework_plugin::app::TypedOperationResultLane::Fault, "{what}: typed operation faulted: {}", String::from_utf8_lossy(page.bytes()));
             app.acknowledge_typed_operation_result(page.token).expect("acknowledge result page");
         }
         let _ = app.take_typed_operation_effect();
         let _ = app.take_typed_operation_event();
-        let _ = semio_framework::io::resolve_ready(app.take_typed_operation_completion()).expect("completion");
+        let _ = ::semio_framework_async::poll::resolve_ready(app.take_typed_operation_completion()).expect("completion");
         let _ = app.take_typed_operation_ui_scope();
     }
     panic!("{what} never settled; state {:?}", run_state(app));
 }
 
 fn history_len(app: &mut Puzzle2dApp) -> usize {
-    semio_framework::io::resolve_ready(app.history_snapshot()).expect("history").upserts.len()
+    ::semio_framework_async::poll::resolve_ready(app.history_snapshot()).expect("history").upserts.len()
 }
 
 fn document_pack(app: &Puzzle2dApp) -> store::ArtifactPackFiles {
-    semio_framework::io::resolve_ready(app.document_pack()).expect("document pack")
+    ::semio_framework_async::poll::resolve_ready(app.document_pack()).expect("document pack")
 }
 
 /// 🧰️ An app holding the fixture `document` spec's example reduced to its first `keepNodes` nodes — the removed
@@ -594,7 +594,7 @@ fn fill_app(spec: &Value, requested: u64) -> Puzzle2dApp {
     load_example(&mut app, text(&spec["example"]));
     let keep = number(&spec["keepNodes"]) as usize;
     let deletes: Vec<String> = fixture_nodes(&fixture_of(&app)).iter().skip(keep).filter_map(|node| node["id"].as_str()).map(|id| protocol::OpText::print_op(&crate::standards::v1::subsets::any::schema::mutations::delete_node(id.to_string()))).collect();
-    semio_framework::io::resolve_ready(app.ingest_operations_text(&deletes.join("\n"))).expect("delete the nodes past keepNodes");
+    ::semio_framework_async::poll::resolve_ready(app.ingest_operations_text(&deletes.join("\n"))).expect("delete the nodes past keepNodes");
     assert_eq!(fixture_of(&app), example(spec).value().clone(), "the app commits exactly the fixture document");
     dispatch(&mut app, "setFillCount", Some(&json!({ "count": requested })), None).expect("set fill count");
     app

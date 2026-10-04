@@ -7,12 +7,13 @@ use semio_s_artifact_stdio_json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 /// own key-order/lexeme-preserving model, not `pack::JsonValue` -- see json's snapshot module).
 pub fn register() {}
 
-pub fn serialize(snapshot: &RewritingSnapshot) -> Result<JsonSnapshot, store::TextError> {
+pub fn serialize(snapshot: &RewritingSnapshot) -> Result<JsonSnapshot, semio_framework_diagnostic::TextError> {
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-    let value = pack::json_from_dsl_value(&dsl::ToValue::to_value(snapshot));
+    let value = crate::standards::v1::subsets::any::schema::snapshot::json::convert(semio_framework_value::ToValue::to_value(snapshot), false).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1)))?;
+    let value = semio_framework_pack_json::from_dsl_value(&value);
     Ok(JsonSnapshot::from_value(value))
 }
 
-pub fn serialize_bytes(snapshot: &RewritingSnapshot) -> Result<Vec<u8>, store::TextError> {
+pub fn serialize_bytes(snapshot: &RewritingSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
     Ok(write_json_pretty(&serialize(snapshot)?.value).into_bytes())
 }

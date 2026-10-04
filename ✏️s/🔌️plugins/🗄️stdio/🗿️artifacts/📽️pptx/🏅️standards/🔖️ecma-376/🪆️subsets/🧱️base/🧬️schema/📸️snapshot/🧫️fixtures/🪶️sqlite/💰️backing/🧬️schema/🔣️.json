@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "fieldOrder",
+    "tableCount",
+    "admission",
+    "retirementRefund",
+    "roles",
+    "refusalKinds",
+    "literal",
+    "literalUtf8Hex"
+  ],
+  "properties": {
+    "fieldOrder": {
+      "const": [
+        "schema",
+        "opc",
+        "xmlParts"
+      ]
+    },
+    "tableCount": {
+      "const": 21
+    },
+    "admission": {
+      "const": "beforeConcreteBacking"
+    },
+    "retirementRefund": {
+      "const": false
+    },
+    "roles": {
+      "const": {
+        "maxValueBytes": "semanticLiteralBytes",
+        "maxAllocationBytes": "cumulativeOwnedBacking",
+        "encodedBound": "prospectiveWithoutPayload",
+        "borrowedPreflight": "paidTraversalFrontiers"
+      }
+    },
+    "refusalKinds": {
+      "const": {
+        "owned": "ownershipLimit",
+        "allocator": "allocationFailed",
+        "work": "workLimit",
+        "cancellation": "canceled"
+      }
+    },
+    "literal": {
+      "const": "Grüße\t\n\u0000🌠"
+    },
+    "literalUtf8Hex": {
+      "const": "4772c3bcc39f65090a00f09f8ca0"
+    }
+  }
+}

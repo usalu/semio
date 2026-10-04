@@ -5,10 +5,13 @@ use crate::standards::v1::subsets::any::schema::mutations::{replace_widget, widg
 use crate::{widget_id, Generation2dSnapshot};
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &ReplaceWidget, base: &Generation2dSnapshot) -> Vec<Generation2dMutation> {
+pub fn inverse(payload: &ReplaceWidget, base: &Generation2dSnapshot) -> Result<Vec<Generation2dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match widget_index(&base.host_snapshot, widget_id(&payload.widget)) {
         Some(index) => vec![replace_widget(base.host_snapshot.widgets[index].clone())],
         None => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

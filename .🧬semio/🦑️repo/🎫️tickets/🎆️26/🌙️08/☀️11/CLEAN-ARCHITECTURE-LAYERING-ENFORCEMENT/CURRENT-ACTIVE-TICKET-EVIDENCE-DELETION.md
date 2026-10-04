@@ -1,0 +1,11 @@
+# Active Ticket Evidence Deletion
+
+An external Cursor shell launched recursive deletion of this active ticket's `🗑️generated` directory and another ticket's generated directory. Root directly observed process 4533, parent 4515, with the exact `rm -rf` arguments. The process was running during the observation. Root reversibly paused process 4533 with SIGSTOP and confirmed state `T`, preventing further removal of active evidence. No other source writer or compiler was stopped.
+
+Independent inventory confirms that the fourteen required actual intrinsic publication/workspace/runtime/post/proof/release files survive. All nine independent binding hashes still match. The actual 117-test runtime result and completed source release therefore remain backed by exact retained evidence. A later foreign root test mount is separately qualified; that later body has no runtime-equivalence claim from the completed run.
+
+The unmounted OS composite2 and Root standalone source1 authorities were removed. The current-four OS continuation failed while opening its removed predecessor and produced no successor. These files cannot be replaced by their historical counts or reconstructed receipts. Persistent handwritten proposal inputs, schemas, fixtures and scripts survive, allowing fresh authoring against current physical sources.
+
+Root is capturing new standalone source2 and consumer2 authorities through their registered Bun/Nx commands. High has captured a new lexical current OS source observation and is reauthoring its owner/caller/provider corrections. Native is preparing the faithful unchanged whole current OS library request with the actual root markers. These are new observations and compiler checkpoints; the deleted 786-error result remains historical rather than reused as current authority.
+
+Evidence and remaining scope are recorded in [the independent intrinsic admission](CURRENT-INTRINSIC-ACTUAL-WORKSPACE-ADMISSION.md), [the native retention inventory](CURRENT-NATIVE-EXTERNAL-DELETION-EVIDENCE-INVENTORY.md) and [the OS recovery report](CURRENT-OS-EXECUTION-RECOVERY.md). The goal and ticket remain active. Generated evidence cleanup is required when the ticket is done; this ticket is not done.

@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases",
+    "controlledRefusals"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "owner",
+          "payload",
+          "oracle"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "owner": {
+            "enum": [
+              "neuron",
+              "tree"
+            ]
+          },
+          "payload": {
+            "type": "object"
+          },
+          "oracle": {
+            "enum": [
+              "shape",
+              "integer"
+            ]
+          },
+          "integerPath": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "controlledRefusals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "canceled",
+        "allocation",
+        "malformed"
+      ],
+      "properties": {
+        "canceled": {
+          "const": "canceled"
+        },
+        "allocation": {
+          "const": "ownershipLimit"
+        },
+        "malformed": {
+          "const": "invalidValue"
+        }
+      }
+    }
+  }
+}

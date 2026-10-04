@@ -18,18 +18,18 @@ fn snapshot_with_vortices(vortices: Vec<Block3dVortexTemplate>) -> Block3dSnapsh
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
     let snapshot = snapshot_with_vortices(vec![vortex("v0", [1.0, 2.0, 3.0], 0.5), vortex("v1", [-1.0, 0.0, 4.0], 0.25)]);
-    assert_eq!(Block3dInference::infer(&snapshot), Block3dInference::infer(&snapshot));
+    assert_eq!(Block3dInference::infer(&snapshot).expect("valid materialized inference fixture"), Block3dInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
-    assert_eq!(Block3dInference::infer(&Block3dSnapshot::default()), Block3dInference::default());
+    assert_eq!(Block3dInference::infer(&Block3dSnapshot::default()).expect("valid materialized inference fixture"), Block3dInference::default());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn bounds_match_vortex_positions_inflated_by_radius() {
     let snapshot = snapshot_with_vortices(vec![vortex("v0", [1.0, 2.0, 3.0], 0.5), vortex("v1", [-1.0, 0.0, 4.0], 0.25)]);
-    let inferred = Block3dInference::infer(&snapshot);
+    let inferred = Block3dInference::infer(&snapshot).expect("valid materialized inference fixture");
     let bounds = inferred.bounds.bounding_box.expect("non-empty vortices produce a bounding box");
     assert_eq!(bounds.min, [-1.25, -0.25, 2.5]);
     assert_eq!(bounds.max, [1.5, 2.5, 4.25]);

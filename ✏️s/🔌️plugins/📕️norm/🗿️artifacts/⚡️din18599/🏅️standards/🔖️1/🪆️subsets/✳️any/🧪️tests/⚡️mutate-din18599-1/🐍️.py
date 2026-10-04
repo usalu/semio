@@ -78,6 +78,9 @@ VECTORS = {
 #: 📐️ Each kind's committed leaf payload schema, read where the subset keeps it; its stated bounds are the payload's.
 SCHEMAS = {kind: json.loads((Path(__file__).resolve().parents[2] / "🧬️schema" / "🧬️mutations" / VECTORS[kind][0] / "🧬️schema" / "🔣️.json").read_text(encoding="utf-8")) for kind in KINDS}
 
+#: 🧬️ The committed snapshot schema the leaf payload schemas reference (`MonthlyClimate` bounds of `update-climate`).
+DOCUMENTS = [json.loads((Path(__file__).resolve().parents[2] / "🧬️schema" / "📸️snapshot" / "🔣️.json").read_text(encoding="utf-8"))]
+
 #: 🗣️ The real committed DIN V 18599 document, read where the domain already keeps it.
 DSL_ASSET = "asset://🎬️demo/🗣️.dsl.semio"
 
@@ -91,5 +94,5 @@ def adapter():
     """🧭️ Registration is by FULL expanded scenario id, so this mirrors the feature's `Examples` tables
     exactly. Oracle role only: registering these handlers as subjects as well would make the reference
     its own subject and manufacture a guaranteed-green self-comparison."""
-    return build_adapter(Subset("DIN V 18599", KINDS, VECTORS, DSL_ASSET, ENVELOPE, schemas=SCHEMAS))
+    return build_adapter(Subset("DIN V 18599", KINDS, VECTORS, DSL_ASSET, ENVELOPE, schemas=SCHEMAS, documents=DOCUMENTS))
 # endregion 🔖️Registration

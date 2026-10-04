@@ -75,6 +75,7 @@ Feature: Apply every typed GIF 89a mutation to a real-world animation
       | move-frame | {"from":5,"to":20} |
       | set-frame-geometry | {"index":1,"left":0,"top":0,"width":352,"height":401} |
       | set-frame-interlace | {"index":1,"interlace":true} |
+      | patch-snapshot | {"patch": {"operation": "set", "path": "/backgroundColorIndex", "value": 3}} |
 
   @id-mutate
   @level-exhaustive
@@ -112,6 +113,7 @@ Feature: Apply every typed GIF 89a mutation to a real-world animation
       | move-frame | {"from":5,"to":20} |
       | set-frame-geometry | {"index":1,"left":0,"top":0,"width":352,"height":401} |
       | set-frame-interlace | {"index":1,"interlace":true} |
+      | patch-snapshot | {"patch": {"operation": "set", "path": "/backgroundColorIndex", "value": 3}} |
 
   @id-inverse
   @level-exhaustive

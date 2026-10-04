@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangePlantLoopSupplyTemperature, base: &EnergyMode
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("A supply temperature must lie between -100.0 and 300.0, got {}.", payload.new_supply_temperature_c), [payload.id.0.to_string()]);
     }
     if existing.supply_temperature_c == payload.new_supply_temperature_c {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Plant loop {} already has that supply temperature.", payload.id.0));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Plant loop {} already has that supply temperature.", payload.id.0));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.plant_loops.iter_mut().find(|item| item.id == payload.id) {

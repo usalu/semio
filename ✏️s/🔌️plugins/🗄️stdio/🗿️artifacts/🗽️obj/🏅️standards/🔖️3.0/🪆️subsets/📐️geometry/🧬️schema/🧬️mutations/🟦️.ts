@@ -1,3 +1,4 @@
+import type { SnapshotPatch } from '../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts';
 /** 🧬️ ObjMutation union — mirrors 🦀️.rs's `#[serde(tag = "mutation")]` enum. */
 type S = import('../📸️snapshot/🟦️.ts').ObjSnapshot;
 type Vertex = import('../📸️snapshot/🟦️.ts').ObjVertex;
@@ -10,6 +11,7 @@ type UnknownStatement = import('../📸️snapshot/🟦️.ts').ObjUnknownStatem
 
 export type ObjMutation =
   | { mutation: 'setSnapshot'; snapshot: S }
+  | { readonly mutation: 'patchSnapshot'; readonly patch: SnapshotPatch }
   | { mutation: 'insertVertex'; index: number; vertex: Vertex }
   | { mutation: 'removeVertex'; index: number }
   | { mutation: 'setVertex'; index: number; vertex: Vertex }

@@ -3,7 +3,7 @@ use semio_framework_job::InteractiveJobCloseStep as Step;
 
 #[test]
 fn retained_wire_short_close_conserves_logical_bytes_and_physical_backing() {
-    let fixture = dsl::os_pack::json::parse(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let law = &fixture["shortClose"];
     let mut input = RetainedToolWireInput::try_new(8, 8).unwrap();
     input.admit_page(ToolWirePage::try_copy_from(&42u64.to_le_bytes()).unwrap()).unwrap();
@@ -33,7 +33,7 @@ fn retained_wire_short_close_conserves_logical_bytes_and_physical_backing() {
 
 #[test]
 fn retained_wire_input_small_grants_retire_initialized_bytes_and_backing_allocation() {
-    let fixture = dsl::os_pack::json::parse(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         for grant in fixture["grants"].as_array().unwrap() {
             let declared = row["declared"].as_u64().unwrap() as usize;

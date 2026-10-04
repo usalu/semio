@@ -42,6 +42,8 @@ export type ContextMenuItemSpec = {
   readonly color?: string;
   readonly shortcut?: string;
   readonly disabled?: boolean;
+  /** 💬️ Why a disabled row cannot run: the row stays focusable (`aria-disabled`) and announces it (`aria-describedby`). */
+  readonly reason?: string;
   readonly separator?: boolean;
   readonly checked?: boolean;
   readonly destructive?: boolean;
@@ -512,6 +514,7 @@ export type SceneLaneRef = {
 /** 🚚️ One scene payload lane: which scene field it carries and which reserved node key its retained
  * text carrier is rooted at. */
 export type SceneLane<S> = {
+  readonly encoding?: "json";
   readonly lane: string;
   readonly field: keyof S;
   readonly bodyKey: string;
@@ -580,7 +583,9 @@ export function sceneFromLanes<S extends object>(spine: S, laneTexts: ReadonlyMa
     if (text === undefined) continue;
     const prior = assembled[lane.field as string];
     if (lane.optional && text.length === 0 && typeof prior === "string" && prior.length > 0) continue;
-    assembled[lane.field as string] = text;
+    if (lane.encoding === "json") {
+      try { assembled[lane.field as string] = JSON.parse(text); } catch { continue; }
+    } else assembled[lane.field as string] = text;
   }
   return assembled as S;
 }
@@ -756,6 +761,7 @@ export type NodeGraphOperatorChannelRecord = {
   readonly fullName: string;
   readonly operators?: readonly string[];
   readonly valueTypes?: readonly string[];
+  readonly itemTypes?: readonly string[];
   readonly default?: unknown;
   readonly label?: string;
   readonly cardinality: string;
@@ -822,6 +828,7 @@ export type NodeGraphInteractionDomain = {
 
 /** 🕸️ A node-graph surface scene payload — mirrors the wasm `componentScene` node's `nodeGraph` field. */
 export type NodeGraphScene = {
+  readonly lanes?: readonly SceneLaneRef[];
   readonly nodes: readonly NodeGraphNodeRecord[];
   readonly edges: readonly NodeGraphEdgeRecord[];
   readonly viewport?: Viewport2d;
@@ -900,6 +907,31 @@ export const nodeGraphActions = {
   viewport: "nodeGraphViewport",
   spotlightCommit: "spotlightCommit",
 } as const;
+
+/** 🚚️ Node graph carriers declared by the language-neutral scene lane schema. */
+export const NODE_GRAPH_SCENE_LANES: readonly SceneLane<NodeGraphScene>[] = [
+  {"lane": "nodes", "field": "nodes", "bodyKey": "framework.scene.nodeGraph.nodes", "optional": false, "encoding": "json"},
+  {"lane": "edges", "field": "edges", "bodyKey": "framework.scene.nodeGraph.edges", "optional": false, "encoding": "json"},
+  {"lane": "operators", "field": "operators", "bodyKey": "framework.scene.nodeGraph.operators", "optional": false, "encoding": "json"},
+  {"lane": "findItems", "field": "findItems", "bodyKey": "framework.scene.nodeGraph.findItems", "optional": false, "encoding": "json"},
+  {"lane": "selection", "field": "selection", "bodyKey": "framework.scene.nodeGraph.selection", "optional": false, "encoding": "json"},
+  {"lane": "highlighted", "field": "highlighted", "bodyKey": "framework.scene.nodeGraph.highlighted", "optional": false, "encoding": "json"},
+  {"lane": "previewOff", "field": "previewOffJson", "bodyKey": "framework.scene.nodeGraph.previewOff", "optional": true},
+  {"lane": "lod", "field": "lodJson", "bodyKey": "framework.scene.nodeGraph.lod", "optional": true},
+  {"lane": "controls", "field": "controlsJson", "bodyKey": "framework.scene.nodeGraph.controls", "optional": true},
+  {"lane": "clusters", "field": "clustersJson", "bodyKey": "framework.scene.nodeGraph.clusters", "optional": true},
+  {"lane": "computing", "field": "computingJson", "bodyKey": "framework.scene.nodeGraph.computing", "optional": true},
+  {"lane": "status", "field": "statusJson", "bodyKey": "framework.scene.nodeGraph.status", "optional": true},
+  {"lane": "capabilities", "field": "capabilitiesJson", "bodyKey": "framework.scene.nodeGraph.capabilities", "optional": true},
+  {"lane": "hostSnapshot", "field": "hostSnapshotJson", "bodyKey": "framework.scene.nodeGraph.hostSnapshot", "optional": true},
+  {"lane": "presencePeers", "field": "presencePeersJson", "bodyKey": "framework.scene.nodeGraph.presencePeers", "optional": true},
+  {"lane": "eval", "field": "evalJson", "bodyKey": "framework.scene.nodeGraph.eval", "optional": true},
+];
+
+/** 🕸️ Restores typed node graph records and opaque JSON fields from complete carriers. */
+export function nodeGraphSceneFromLanes(spine: NodeGraphScene, laneTexts: ReadonlyMap<string, string>): NodeGraphScene {
+  return sceneFromLanes(spine, laneTexts, NODE_GRAPH_SCENE_LANES);
+}
 
 //#region 🎚️ContinuousGestureLane
 /** 🎚️ What a continuous gesture (a dragged slider, a held spinner) needs from its host: ONE way to
@@ -1096,6 +1128,8 @@ export type Paint2dScene = {
   readonly brushHardness: number;
   readonly paintTarget:"pixels"|"mask";
   readonly maskValue:number;
+  /** 🪣️ The session colour tolerance (0..255) every host's bucket and wand floods with. */
+  readonly fillTolerance:number;
   readonly viewMode: string;
   readonly compositeViewportJson?: string;
   /** 🚚️ The spine's lane manifest — see {@link PAINT2D_SCENE_LANES}. */
@@ -1321,9 +1355,21 @@ export type ComponentSceneHostProps = {
    * overflowed (measured 2026-09-09: 252 polling ticks in 35 s, 38 rejected with `queue is full`).
    * A host with nothing to await may still return `void`. The React shell resolves it with the input
    * ledger's typed outcome (`applied | refused | superseded`), which is why the value is `unknown`. */
-  readonly onAction: (action: ActionDescriptor) => void | Promise<unknown>;
+  readonly onAction: (action: ActionDescriptor, lifecycle?: ActionDispatchLifecycleV1) => void | Promise<unknown>;
   readonly requestContextMenu?: (request: PluginContextMenuRequest) => Promise<readonly ContextMenuItemSpec[]>;
 };
+
+/** ⏳️ One exact admitted typed operation exposed to the initiating control without widening its authority. */
+export type ActionOperationControlV1 = Readonly<{
+  operationId: string;
+  generation: string;
+  cancel: () => void | Promise<unknown>;
+}>;
+
+/** 📨️ Optional action admission observer; terminal settlement remains the `onAction` return value. */
+export type ActionDispatchLifecycleV1 = Readonly<{
+  started: (operation: ActionOperationControlV1) => void;
+}>;
 //#endregion ComponentSceneProtocol
 // #endregion 🎬️Scene
 

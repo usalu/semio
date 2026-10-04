@@ -111,7 +111,7 @@ fn oracle_reading(example_id: &str, slider_id: &str, value: f64, lod_mode: &str)
 /// each preview handle, read straight off the tessellator. Without this the oracle would call a value
 /// "empty" where the product is entitled to call it faulted, and the law could not tell the two apart.
 fn tessellation_refusals(eval_json: &str, host: &semio_framework_os_flow::FlowHost, tolerance: f64) -> BTreeMap<String, String> {
-    let Ok(eval) = dsl::json::parse(eval_json) else { return BTreeMap::new() };
+    let Ok(eval) = semio_framework_pack_json::parse(eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject) else { return BTreeMap::new() };
     let mut refusals = BTreeMap::new();
     for widget_id in semio_s_artifact_procedural_generation3d::preview_eval::preview_widget_ids(&host.host_snapshot) {
         for item in semio_s_artifact_procedural_generation3d::preview_eval::preview_channel_items_for_widget(&eval, &widget_id) {

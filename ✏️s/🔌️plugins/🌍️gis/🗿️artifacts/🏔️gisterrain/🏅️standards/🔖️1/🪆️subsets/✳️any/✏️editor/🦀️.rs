@@ -66,7 +66,7 @@ pub const GIS3D_PLAY_APP_ID: &str = "gis3d-play";
 /// (`AppDefinition.io`), plus the two app-specific workflow ports
 /// (WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-SCHEMA-FLOW-CONFIG-ON-NODE Wave 2 port recipe): `map:in`
 /// (a `2d.map` producer — gis2d's `map:out` — feeds an overlay pin layer, see
-/// `GisTerrainSnapshot::imported_features_json`) and `scene:out` (this terrain as `3d.mesh`).
+/// `GisTerrainSnapshot::imported_map`) and `scene:out` (this terrain as `3d.mesh`).
 /// `document_media_type` is Data×Value (the document is a scalar "exaggeration + imported overlay"
 /// record, not itself mesh geometry — `scene:out` is the actual renderable mesh/terrain surface).
 pub fn gis3d_io() -> AppIo {
@@ -81,7 +81,7 @@ pub fn gis3d_io() -> AppIo {
 }
 
 /// 🔌️ `map:in` — a `2d.map` producer (gis2d's `map:out`) feeding an overlay pin layer into this
-/// terrain (see `GisTerrainSnapshot::imported_features_json`). `One`/optional: exactly one map may
+/// terrain (see `GisTerrainSnapshot::imported_map`). `One`/optional: exactly one map may
 /// be draped onto a terrain at a time, and a terrain with no upstream edge is valid.
 pub fn gis3d_map_in_port() -> semio_framework_plugin::MediaPortSpec {
     semio_framework_plugin::MediaPortSpec {
@@ -122,7 +122,7 @@ pub fn gis3d_scene_media(document: &GisTerrainSnapshot) -> Media {
             schema: "3d.mesh".into(),
             json: serde_json::json!({
                 "exaggeration": document.exaggeration,
-                "importedFeatures": serde_json::from_str::<Value>(&document.imported_features_json).unwrap_or(serde_json::json!(null)),
+                "importedFeatures": document.imported_map.as_ref().and_then(|map|map.to_json().ok()).and_then(|text|serde_json::from_str::<Value>(&text).ok()).unwrap_or(serde_json::json!(null)),
             })
             .to_string(),
         },
@@ -284,37 +284,8 @@ struct Gis3dOneItemPreparation<P, M> {
     closing: bool,
 }
 
-fn gis3d_store_edit<M>(prefix: &str, forward: M, inverse: Vec<M>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<M> {
-    let id = format!("{prefix}-{}", authority.next_sequence_number());
-    protocol::Edit { line: authority.line_id().map(str::to_owned),
-        id: id.clone(),
-        actor: Some(authority.actor().to_string()),
-        forwards: vec![forward],
-        inverse,
-        mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
-            dependencies: Vec::new(),
-            base_version: authority.base_applied_edit_count() as u64,
-            author_id: Some(protocol::ActorId(authority.actor().to_string())),
-            timestamp: authority.next_clock(),
-            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-            payload_hash: None,
-            semantic_kind: None,
-            label: None,
-            group_id: None,
-            origin: Default::default(),
-            transaction: None,
-        }],
-        description, verb: None,
-        coalesce_key: None,
-        sequence_number: authority.next_sequence_number(),
-        started_at: String::new(),
-        finished_at: None,
-    }
-}
-
-fn gis3d_bounded_serialized_bytes<T: dsl::ToValue>(value: &T) -> Result<usize, String> {
-    let bytes = dsl::os_pack::json::to_json_string(value).len();
+fn gis3d_bounded_serialized_bytes<T: semio_framework_value::ToValue>(value: &T) -> Result<usize, String> {
+    let bytes = semio_framework_pack_json::to_json_string(value).len();
     if bytes > GIS3D_STORE_MAXIMUM_BYTES {
         return Err("GIS terrain Store root exceeds its fixed envelope".to_string());
     }
@@ -327,7 +298,7 @@ fn prepare_gis3d_artifact(base: &GisTerrainSnapshot, mutation: GisTerrainMutatio
         return Err("GIS terrain Artifact preparation only admits ChangeExaggeration".into());
     }
     let retained_bytes = gis3d_bounded_serialized_bytes(base)?;
-    let inverse = mutation.inverse(base);
+    let inverse = mutation.inverse(base).map_err(semio_framework_value::ValueError::into_message)?;
     let post = mutation.diff(base).into_parts().0.apply(base).map_err(|_| "GIS terrain Artifact mutation could not produce its post root".to_string())?;
     Ok((post, inverse, mutation, retained_bytes))
 }
@@ -335,7 +306,7 @@ fn prepare_gis3d_artifact(base: &GisTerrainSnapshot, mutation: GisTerrainMutatio
 impl<P, M> store::ArtifactStoreOneItemPreparation<P, M> for Gis3dOneItemPreparation<P, M>
 where
     P: Send + Sync + 'static,
-    M: dsl::ToValue + Send + 'static,
+    M: semio_framework_value::ToValue + Send + 'static,
 {
     fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
         if !grant.permits_one() || self.cancelled {
@@ -357,7 +328,7 @@ where
             1 => {
                 let (post, inverse, forward, completed_bytes) = self.candidate.take().ok_or_else(|| "GIS terrain preparation lost its semantic candidate".to_string())?;
                 let authority = self.authority.as_ref().ok_or_else(|| "GIS terrain preparation lost its Store authority".to_string())?;
-                let prepared = authority.prepare_one_item(gis3d_store_edit("gis-terrain-retained", forward, inverse, self.description.take(), authority), std::sync::Arc::new(post))?;
+                let prepared = authority.prepare_one_item(authority.next_edit(forward, inverse), std::sync::Arc::new(post))?;
                 self.phase = 2;
                 self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: completed_bytes as u64, digest: prepared.edit_digest() };
                 self.prepared = Some(prepared);
@@ -382,7 +353,7 @@ where
     fn begin_close(&mut self) {
         self.closing = true;
     }
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -391,7 +362,7 @@ where
         }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
-                return Err("GIS terrain preparation could not return its exact base root".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "GIS terrain preparation could not return its exact base root"));
             }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -414,7 +385,7 @@ struct Gis3dArtifactStorePreparationFactory;
 fn begin_gis3d_preparation<P, M>(request: store::ArtifactStoreOneItemPreparationRequest<P, M>, prepare: Gis3dPrepareOne<P, M>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, store::ArtifactStoreOneItemPreparationRequest<P, M>>
 where
     P: Send + Sync + 'static,
-    M: dsl::ToValue + Send + 'static,
+    M: semio_framework_value::ToValue + Send + 'static,
 {
     if request.lane != store::HistoryLane::Document
         || request.operation != request.authority.operation()
@@ -445,7 +416,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<GisTerrainSnapshot, GisTerrai
         {
             return Err("GIS terrain Artifact preparation rejected its lane, description, or mutation".into());
         }
-        Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: 8 })
+        Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, 8))
     }
     fn begin(
         &self,
@@ -554,7 +525,7 @@ impl ArtifactEditor for Gis3dPlayApp {
             return Ok(None);
         }
         if request.command.command_id() != request.tool_id {
-            return Err(Fault::from("gis3d-command-tool-mismatch"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "the gis terrain command does not match its exact registered tool"));
         }
         if gis3d_retained_extent(&request.command, &request.snapshot, &request.interaction_state).is_none() {
             return Err(Fault::from("gis3d-command-payload-too-large"));
@@ -614,8 +585,8 @@ impl ArtifactEditor for Gis3dPlayApp {
         }
     }
 
-    /// 🎞️ `map:in` writes the incoming `2d.map` descriptor JSON verbatim into
-    /// `GisTerrainSnapshot::imported_features_json` (rendered as an extra pin layer, see the
+    /// 🎞️ `map:in` validates and owns the incoming first-party `2d.map` values in
+    /// `GisTerrainSnapshot::imported_map` (rendered as an extra pin layer, see the
     /// 🏔️terrain window) via `change-imported-features`. `document:in` (whole-document replace) is
     /// deliberately unimplemented — per the semantic-mutations taxonomy, whole-document replace has
     /// no in-history mutation; it goes through `ArtifactStore::reset` (file-open/import/load-example),
@@ -623,11 +594,13 @@ impl ArtifactEditor for Gis3dPlayApp {
     fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, GisTerrainSnapshot>) -> Result<Emit<GisTerrainMutation, NoConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "map:in" => {
-                let MediaPayload::Structured { json, .. } = &media.payload else {
-                    return Err(MediaError::Payload(port.to_string(), "map:in only accepts a Structured JSON payload".into()));
+                let MediaPayload::Intrinsic { schema, value } = &media.payload else {
+                    return Err(MediaError::Payload(port.to_string(), "map:in requires intrinsic map values".into()));
                 };
+                if schema!="2d.map" || media.media_type!=(MediaType { class:MediaClass::TwoD, form:MediaForm::Vector }) { return Err(MediaError::Payload(port.to_string(),"map media identity differs".into())); }
+                let imported_map=crate::schema::ImportedMap::from_media_value(value).map_err(|error|MediaError::Payload(port.to_string(),error))?;
                 use crate::mutations::change_imported_features::ChangeImportedFeatures;
-                Ok(Emit::mutations(vec![GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures { new_imported_features_json: json.clone() })]))
+                Ok(Emit::mutations(vec![GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures { new_imported_map: Some(imported_map) })]))
             }
             _ => Err(MediaError::NotImplemented),
         }
@@ -641,7 +614,7 @@ impl ArtifactEditor for Gis3dPlayApp {
     /// `{action,args}` wire; this is the typed-command bridge until those call sites send `OpBinary`
     /// bytes directly. Mirrors `crate::editor::gis2d`'s arg-key tolerance (camelCase + snake_case + the
     /// nested `camera` object form).
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
         let args = args.map_or(Value::Null, Value::from);
         let str_arg = |keys: &[&str]| -> Option<String> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_str()).map(str::to_string)) };
         match action {
@@ -777,4 +750,3 @@ pub fn create_gis3d_app() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 pub(crate) mod unit_tests;
 //#endregion 🧪️UnitTests
-

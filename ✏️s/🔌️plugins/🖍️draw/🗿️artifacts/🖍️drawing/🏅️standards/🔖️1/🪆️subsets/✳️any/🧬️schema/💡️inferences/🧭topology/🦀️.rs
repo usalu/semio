@@ -38,7 +38,7 @@ fn walk(layers: &[DrawingLayerNode], level: u32, topo_order: &mut Vec<String>, d
 }
 
 /// 🧭️ Drawing's layer-tree topology — see module doc for the structural-nesting derivation.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct DrawingTopology {
     pub topo_order: Vec<String>,

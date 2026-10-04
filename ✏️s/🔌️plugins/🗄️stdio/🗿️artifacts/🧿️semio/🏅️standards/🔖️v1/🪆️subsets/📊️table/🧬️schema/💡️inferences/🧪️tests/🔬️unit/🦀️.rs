@@ -4,10 +4,10 @@ use protocol::Inference;
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
     let snapshot = SemioTableSnapshot::default();
-    assert_eq!(SemioTableInference::infer(&snapshot), SemioTableInference::infer(&snapshot));
+    assert_eq!(SemioTableInference::infer(&snapshot).expect("valid materialized inference fixture"), SemioTableInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
-    assert_eq!(SemioTableInference::infer(&SemioTableSnapshot::default()), SemioTableInference::default());
+    assert_eq!(SemioTableInference::infer(&SemioTableSnapshot::default()).expect("valid materialized inference fixture"), SemioTableInference::default());
 }

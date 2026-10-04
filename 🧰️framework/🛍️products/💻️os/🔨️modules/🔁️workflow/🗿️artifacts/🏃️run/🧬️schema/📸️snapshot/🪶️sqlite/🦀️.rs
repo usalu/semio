@@ -1,43 +1,37 @@
 //! 🏃️ Exact persisted Run ownership through seven handcrafted relational tables.
 use super::{RunArtifact,RunTrigger,RunStatus,RunNodeStatus,RunParameterValue,RunNodeRecord,RunOutputArtifact,PortFingerprint,RunLogLine};
-use std::collections::BTreeMap;
-use store::{ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,validate_sqlite_database_schema,artifact::{Projection,Cell,FloatColumn,insert_ieee754,read_binary64}}};
+use semio_framework_value::{ValueError,ValueRefusalKind};
+use semio_framework_diagnostic::{TextError,TextSpan};
+
+use store::{ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,artifact::{Projection,Cell,FloatColumn,insert_ieee754,read_binary64}}};
+#[path="💰️backing/🦀️.rs"]mod backing;
+#[path="📏️value/🦀️.rs"]mod value_bytes;
 const DURATION:&[FloatColumn]=&[FloatColumn::Binary64(7)];
-fn add(total:usize,count:usize)->Result<usize,String>{total.checked_add(count).ok_or_else(||"Run semantic row count overflow".into())}
-fn workload(value:&RunArtifact,control:&mut SqliteSnapshotControl<'_>,phase:SqliteSnapshotPhase)->Result<usize,String>{
+fn add(total:usize,count:usize)->Result<usize,ValueError>{total.checked_add(count).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Run semantic row count overflow"))}
+fn workload(value:&RunArtifact,control:&mut SqliteSnapshotControl<'_>,phase:SqliteSnapshotPhase)->Result<usize,ValueError>{
  control.checkpoint(phase,0,value.node_records.len())?;let mut count=add(add(add(2,value.parameter_values.len())?,value.node_records.len())?,value.logs.len())?;
  for(index,node)in value.node_records.iter().enumerate(){count=add(add(add(count,node.input_fingerprints.len())?,node.output_fingerprints.len())?,node.outputs.len())?;control.check_rows(count)?;if(index+1)%256==0{control.checkpoint(phase,index+1,value.node_records.len())?}}
  control.check_rows(count)?;Ok(count)
 }
-fn ordinal(value:usize)->Result<i64,String>{i64::try_from(value).map_err(|_|"Run ordinal exceeds INTEGER width".into())}
-fn entity(row:&SqliteRow,columns:usize)->Result<(),String>{if row.rowid<=0||row.values.len()!=columns||row.integer(0)?!=row.rowid{return Err("Run entities require complete columns and positive aliased identities".into())}Ok(())}
-fn ordered<'a>(rows:&[&'a SqliteRow],columns:usize,ordinal_column:usize,native:&mut dsl::NativeDecodeControl<'_>)->Result<Vec<&'a SqliteRow>,String>{
- native.scoped_stage(|native|->Result<_,String>{native.begin_stage(rows.len())?;let mut result=native.allocate_vec::<Option<&SqliteRow>>(rows.len())?;result.resize(rows.len(),None);let mut ids=BTreeMap::new();
- for row in rows{entity(row,columns)?;let index=usize::try_from(row.integer(ordinal_column)?).map_err(|_|"Run ordinal must be nonnegative")?;if index>=result.len()||result[index].replace(*row).is_some()||ids.insert(row.rowid,()).is_some(){return Err("Run collection identities must be unique and ordinals dense".into())}native.step()?}
- let mut complete=native.allocate_vec::<&SqliteRow>(result.len())?;for row in result{complete.push(row.ok_or("Run ordinal is missing")?)}Ok(complete)})
-}
-fn document_rows<'a>(rows:&'a[SqliteRow],columns:usize,native:&mut dsl::NativeDecodeControl<'_>)->Result<Vec<&'a SqliteRow>,String>{
- native.scoped_stage(|native|->Result<_,String>{native.begin_stage(rows.len())?;let mut references=native.allocate_vec::<&SqliteRow>(rows.len())?;for row in rows{if row.integer(1)?!=1{return Err("Run child has an unknown document".into())}references.push(row);native.step()?}ordered(&references,columns,2,native)})
-}
-fn nullable(row:&SqliteRow,index:usize,native:&mut dsl::NativeDecodeControl<'_>)->Result<Option<String>,String>{match row.values.get(index){Some(SqliteValue::Null)=>Ok(None),_=>native.copy_text(row.text(index)?).map(Some)}}
-fn run_status(value:i64)->Result<RunStatus,String>{match value{0=>Ok(RunStatus::Pending),1=>Ok(RunStatus::Running),2=>Ok(RunStatus::Succeeded),3=>Ok(RunStatus::Failed),4=>Ok(RunStatus::Canceled),_=>Err("Run status is undeclared".into())}}
-fn node_status(value:i64)->Result<RunNodeStatus,String>{match value{0=>Ok(RunNodeStatus::Computed),1=>Ok(RunNodeStatus::CacheHit),2=>Ok(RunNodeStatus::Failed),_=>Err("Run node status is undeclared".into())}}
-fn list(value:Option<&dsl::FieldValue>)->Result<&[dsl::FieldValue],String>{match value{Some(dsl::FieldValue::List(values))=>Ok(values),None|Some(dsl::FieldValue::Absent)=>Ok(&[]),_=>Err("Run native collection requires a literal list".into())}}
-fn native_rows(record:&dsl::RecordValue,maximum:usize,native:&mut dsl::NativeDecodeControl<'_>)->Result<(),store::TextError>{
- let check=|count|if count>maximum{Err(dsl::__rt::field_error("Run native snapshot exceeds semantic row limit"))}else{Ok(())};
- let mut count=2usize;for index in[5,9,10]{count=add(count,list(record.get(index)).map_err(dsl::__rt::field_error)?.len()).map_err(dsl::__rt::field_error)?}check(count)?;
- let nodes=list(record.get(9)).map_err(dsl::__rt::field_error)?;native.scoped_stage(|native|->Result<_,String>{native.begin_stage(nodes.len())?;for node in nodes{let record=match node{dsl::FieldValue::Record(record)=>record,_=>return Err("Run node requires a literal record".into())};for index in[4,5,6]{count=add(count,list(record.get(index))?.len())?}if count>maximum{return Err("Run native snapshot exceeds semantic row limit".into())}native.step()?}Ok(())}).map_err(dsl::__rt::field_error)
+fn ordinal(value:usize)->Result<i64,ValueError>{i64::try_from(value).map_err(|_|ValueError::new(ValueRefusalKind::WorkLimit,"Run ordinal exceeds INTEGER width"))}
+fn run_status(value:i64)->Result<RunStatus,ValueError>{match value{0=>Ok(RunStatus::Pending),1=>Ok(RunStatus::Running),2=>Ok(RunStatus::Succeeded),3=>Ok(RunStatus::Failed),4=>Ok(RunStatus::Canceled),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"Run status is undeclared"))}}
+fn node_status(value:i64)->Result<RunNodeStatus,ValueError>{match value{0=>Ok(RunNodeStatus::Computed),1=>Ok(RunNodeStatus::CacheHit),2=>Ok(RunNodeStatus::Failed),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"Run node status is undeclared"))}}
+fn list(value:Option<&semio_framework_dsl_record::FieldValue>)->Result<&[semio_framework_dsl_record::FieldValue],ValueError>{match value{Some(semio_framework_dsl_record::FieldValue::List(values))=>Ok(values),None|Some(semio_framework_dsl_record::FieldValue::Absent)=>Ok(&[]),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"Run native collection requires a literal list"))}}
+fn native_rows(record:&semio_framework_dsl_record::RecordValue,maximum:usize,native:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<(),ValueError>{
+ let check=|count|if count>maximum{Err(ValueError::new(ValueRefusalKind::WorkLimit,"Run native snapshot exceeds semantic row limit"))}else{Ok(())};
+ let mut count=2usize;for index in[5,9,10]{count=add(count,list(record.get(index))?.len())?}check(count)?;
+ let nodes=list(record.get(9))?;native.scoped_stage(|native|->Result<_,ValueError>{native.begin_stage(nodes.len())?;for node in nodes{let record=match node{semio_framework_dsl_record::FieldValue::Record(record)=>record,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Run node requires a literal record"))};for index in[4,5,6]{count=add(count,list(record.get(index))?.len())?}check(count)?;native.step()?}Ok(())})
 }
 impl ArtifactSqliteSnapshot for RunArtifact{
  const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
- fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,String>{
-  control.check_rows(2)?;let maximum=control.limits().max_rows;store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record,native|{native_rows(record,maximum,native)?;Self::__dsl_from_record_controlled(record,native)},control)
+ fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
+  control.check_rows(2)?;let maximum=control.limits().max_rows;let maximum_value_bytes=control.limits().max_value_bytes;store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record,native|{native_rows(record,maximum,native)?;value_bytes::record(record,maximum_value_bytes,native)?;Self::__dsl_from_record_controlled(record,native)},control)
  }
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,String>{
-  workload(self,control,SqliteSnapshotPhase::EncodeNative)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control)
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,ValueError>{
+  let rows=workload(self,control,SqliteSnapshotPhase::EncodeNative)?;value_bytes::owner(self,rows,control)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control)
  }
- fn preflight_sqlite_snapshot_encoding(&self,_:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),String>{workload(self,control,SqliteSnapshotPhase::EncodeNative).map(|_|())}
- fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,String>{
+ fn preflight_sqlite_snapshot_encoding(&self,_:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{workload(self,control,SqliteSnapshotPhase::EncodeNative).map(|_|())}
+ fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{
   let count=workload(self,control,SqliteSnapshotPhase::ProjectSnapshot)?;let mut out=Projection::new(Self::SQLITE_SCHEMA,control)?;
   out.insert_key("run_document",1,&[Cell::Text(&self.schema),Cell::Text(&self.workflow_ref),Cell::Text(&self.workflow_checkpoint_id),Cell::Text(&self.input_collection_ref),Cell::Text(&self.input_snapshot_id),Cell::Text(&self.output_collection_ref),Cell::Integer(i64::from(super::run_status_ordinal(self.status))),Cell::Text(&self.started_at),self.finished_at.as_deref().map_or(Cell::Null,Cell::Text),Cell::Integer(i64::from(self.sealed))])?;
   match &self.trigger{RunTrigger::Manual{actor}=>{out.insert("run_trigger",&[Cell::Integer(1),Cell::Text("manual"),Cell::Text(actor),Cell::Null,Cell::Null])?},RunTrigger::Automation{automation_ref,event_fingerprint}=>{out.insert("run_trigger",&[Cell::Integer(1),Cell::Text("automation"),Cell::Null,Cell::Text(automation_ref),Cell::Text(event_fingerprint)])?}};
@@ -50,22 +44,5 @@ impl ArtifactSqliteSnapshot for RunArtifact{
   }
   for(index,value)in self.logs.iter().enumerate(){out.insert("run_log",&[Cell::Integer(1),Cell::Integer(ordinal(index)?),Cell::Text(&value.node_id),Cell::Text(&value.level),Cell::Text(&value.message),Cell::Text(&value.at)])?;if(index+1)%256==0{out.checkpoint_total(count)?}}out.checkpoint_total(count)?;out.finish()
  }
- fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,String>{
-  validate_sqlite_database_schema(database,Self::SQLITE_SCHEMA,control.limits()).map_err(|e|e.to_string())?;control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;
-  let documents=&database.table("run_document")?.rows;let triggers=&database.table("run_trigger")?.rows;let parameters=&database.table("run_parameter_value")?.rows;let nodes=&database.table("run_node")?.rows;let fingerprints=&database.table("run_port_fingerprint")?.rows;let outputs=&database.table("run_output_artifact")?.rows;let logs=&database.table("run_log")?.rows;
-  if documents.len()!=1||documents[0].rowid!=1||documents[0].values.len()!=11||documents[0].integer(0)?!=1||triggers.len()!=1{return Err("Run requires one complete document and one trigger".into())}
-  let count=database.tables.iter().try_fold(0usize,|n,table|add(n,table.rows.len()))?;let workspace=count.checked_mul(512).ok_or("Run reconstruction workspace overflow")?;control.check_value_bytes(workspace)?;let maximum=control.limits().max_value_bytes;let mut progress=|event:semio_framework_value::native_decoding::NativeDecodeProgress|control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,event.completed,event.total).is_ok();let mut native=dsl::NativeDecodeControl::new(maximum,&mut progress);native.charge(workspace)?;native.begin_stage(count)?;
-  let ordered_nodes=document_rows(nodes,10,&mut native)?;let ordered_parameters=document_rows(parameters,5,&mut native)?;let ordered_logs=document_rows(logs,7,&mut native)?;
-  let mut groups:BTreeMap<i64,(Vec<&SqliteRow>,Vec<&SqliteRow>,Vec<&SqliteRow>)>=BTreeMap::new();for row in &ordered_nodes{groups.insert(row.rowid,(Vec::new(),Vec::new(),Vec::new()));}
-  native.scoped_stage(|native|->Result<_,String>{native.begin_stage(fingerprints.len())?;for row in fingerprints{entity(row,6)?;let group=groups.get_mut(&row.integer(1)?).ok_or("Run fingerprint has an unknown node")?;match row.text(2)?{"input"=>group.0.push(row),"output"=>group.1.push(row),_=>return Err("Run fingerprint direction is undeclared".into())}native.step()?}Ok(())})?;
-  native.scoped_stage(|native|->Result<_,String>{native.begin_stage(outputs.len())?;for row in outputs{entity(row,6)?;groups.get_mut(&row.integer(1)?).ok_or("Run output has an unknown node")?.2.push(row);native.step()?}Ok(())})?;
-  let document=&documents[0];let schema=native.copy_text(document.text(1)?)?;let workflow_ref=native.copy_text(document.text(2)?)?;let workflow_checkpoint_id=native.copy_text(document.text(3)?)?;let input_collection_ref=native.copy_text(document.text(4)?)?;let input_snapshot_id=native.copy_text(document.text(5)?)?;let output_collection_ref=native.copy_text(document.text(6)?)?;let status=run_status(document.integer(7)?)?;let started_at=native.copy_text(document.text(8)?)?;let finished_at=nullable(document,9,&mut native)?;let sealed=match document.integer(10)?{0=>false,1=>true,_=>return Err("Run sealed flag must be zero or one".into())};
-  let row=&triggers[0];entity(row,6)?;if row.integer(1)?!=1{return Err("Run trigger has an unknown document".into())}
-  let trigger=match row.text(2)?{"manual" if row.values[4]==SqliteValue::Null&&row.values[5]==SqliteValue::Null=>RunTrigger::Manual{actor:native.copy_text(row.text(3)?)?},"automation" if row.values[3]==SqliteValue::Null=>RunTrigger::Automation{automation_ref:native.copy_text(row.text(4)?)?,event_fingerprint:native.copy_text(row.text(5)?)?},_=>return Err("Run trigger fields violate their declared branch".into())};
-  let mut parameter_values=native.allocate_vec::<RunParameterValue>(ordered_parameters.len())?;native.scoped_stage(|native|->Result<_,String>{native.begin_stage(ordered_parameters.len())?;for row in ordered_parameters{parameter_values.push(RunParameterValue{parameter_id:native.copy_text(row.text(3)?)?,value:native.copy_text(row.text(4)?)?});native.step()?}Ok(())})?;
-  let mut node_records=native.allocate_vec::<RunNodeRecord>(ordered_nodes.len())?;native.scoped_stage(|native|->Result<_,String>{native.begin_stage(ordered_nodes.len())?;for row in ordered_nodes{let(input,output,artifacts)=groups.remove(&row.rowid).ok_or("Run node relationship group is missing")?;let fingerprints=|rows:&[&SqliteRow],native:&mut dsl::NativeDecodeControl<'_>|->Result<Vec<PortFingerprint>,String>{let rows=ordered(rows,6,3,native)?;let mut result=native.allocate_vec::<PortFingerprint>(rows.len())?;native.scoped_stage(|native|->Result<_,String>{native.begin_stage(rows.len())?;for row in rows{result.push(PortFingerprint{port_id:native.copy_text(row.text(4)?)?,fingerprint:native.copy_text(row.text(5)?)?});native.step()?}Ok(result)})};
-   let input_fingerprints=fingerprints(&input,native)?;let output_fingerprints=fingerprints(&output,native)?;let artifacts=ordered(&artifacts,6,2,native)?;let mut outputs=native.allocate_vec::<RunOutputArtifact>(artifacts.len())?;native.scoped_stage(|native|->Result<_,String>{native.begin_stage(artifacts.len())?;for row in artifacts{outputs.push(RunOutputArtifact{port_id:native.copy_text(row.text(3)?)?,artifact_id:native.copy_text(row.text(4)?)?,path:native.copy_text(row.text(5)?)?});native.step()?}Ok(())})?;
-   node_records.push(RunNodeRecord{node_id:native.copy_text(row.text(3)?)?,status:node_status(row.integer(4)?)?,document_fingerprint:native.copy_text(row.text(5)?)?,config_fingerprint:native.copy_text(row.text(6)?)?,input_fingerprints,output_fingerprints,outputs,duration_ms:read_binary64(row,7,DURATION)?});native.step()?}Ok(())})?;
-  let mut logs=native.allocate_vec::<RunLogLine>(ordered_logs.len())?;native.scoped_stage(|native|->Result<_,String>{native.begin_stage(ordered_logs.len())?;for row in ordered_logs{logs.push(RunLogLine{node_id:native.copy_text(row.text(3)?)?,level:native.copy_text(row.text(4)?)?,message:native.copy_text(row.text(5)?)?,at:native.copy_text(row.text(6)?)?});native.step()?}Ok(())})?;native.checkpoint()?;Ok(Self{schema,workflow_ref,workflow_checkpoint_id,input_collection_ref,input_snapshot_id,parameter_values,output_collection_ref,status,trigger,node_records,logs,started_at,finished_at,sealed})
- }
+ fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{backing::reconstruct(database,control)}
 }

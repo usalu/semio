@@ -7,9 +7,12 @@ use crate::ProgramSnapshot;
 
 /// ↩️ If the id already existed, undo restores its prior full value; otherwise undo disconnects
 /// the newly-added edge.
-pub fn inverse(payload: &super::ConnectTrace, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+pub fn inverse(payload: &super::ConnectTrace, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.traces.iter().find(|row| row.id == payload.trace.id) {
         Some(existing) => vec![ProgramMutation::ConnectTrace(super::ConnectTrace { trace: existing.clone() })],
         None => vec![ProgramMutation::DisconnectTrace(super::super::disconnect_trace::DisconnectTrace { id: payload.trace.id.clone() })],
     }
+
+    })())
 }

@@ -25,9 +25,9 @@ CREATE TABLE workflow_edge (
 CREATE TABLE workflow_contract (
  id INTEGER PRIMARY KEY CHECK(id > 0), edge_id INTEGER NOT NULL REFERENCES workflow_edge(id), kind_id TEXT NOT NULL,
  media_class INTEGER NOT NULL CHECK(media_class >= 0 AND media_class <= 7), media_form INTEGER NOT NULL CHECK(media_form >= 0 AND media_form <= 15),
- wire_kind TEXT NOT NULL CHECK(wire_kind IN ('binary','document')), format_kind TEXT, document_schema TEXT,
+ wire_kind TEXT NOT NULL CHECK(wire_kind IN ('binary','document','intrinsic')), format_kind TEXT, wire_schema TEXT,
  conversion_from INTEGER CHECK(conversion_from >= 0 AND conversion_from <= 15), conversion_to INTEGER CHECK(conversion_to >= 0 AND conversion_to <= 15),
- CHECK((wire_kind = 'binary' AND format_kind IS NOT NULL AND document_schema IS NULL) OR (wire_kind = 'document' AND format_kind IS NULL AND document_schema IS NOT NULL)),
+ CHECK((wire_kind = 'binary' AND format_kind IS NOT NULL AND wire_schema IS NULL) OR (wire_kind IN ('document','intrinsic') AND format_kind IS NULL AND wire_schema IS NOT NULL)),
  CHECK((conversion_from IS NULL AND conversion_to IS NULL) OR (conversion_from IS NOT NULL AND conversion_to IS NOT NULL))
 );
 CREATE TABLE workflow_parameter (

@@ -6,9 +6,12 @@ use crate::ProgramMutation;
 use crate::ProgramSnapshot;
 
 /// ↩️ Undo a replace by restoring the pre-state row content. Missing target ⇒ nothing to undo.
-pub fn inverse(payload: &super::ReplaceValidationRecord, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+pub fn inverse(payload: &super::ReplaceValidationRecord, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.validations.iter().find(|row| row.header.id == payload.validation_record.header.id) {
         Some(existing) => vec![ProgramMutation::ReplaceValidationRecord(super::ReplaceValidationRecord { validation_record: existing.clone() })],
         None => Vec::new(),
     }
+
+    })())
 }

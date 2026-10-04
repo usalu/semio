@@ -7,7 +7,7 @@ use super::*;
 /// parses Rust, so this is what makes the declaration honest.
 #[test]
 fn kinds_match_the_enum_and_the_catalog() {
-    assert_eq!(KINDS.len(), 15, "KINDS must name exactly one entry per declared SemioCadMutation variant");
+    assert_eq!(KINDS.len(), 16, "KINDS must name exactly one entry per declared SemioCadMutation variant");
     let mut seen = vec![false; KINDS.len()];
     for m in demo_mutation_cases() {
         let keyword = print_cad_mutation(&m).split(' ').next().expect("printed op is never empty").to_string();
@@ -49,7 +49,7 @@ async fn inverse_law() {
     for m in demo_mutation_cases() {
         let mut snap = base.clone();
         apply_semio_cad_mutation(&mut snap, &m);
-        for inv in m.inverse(&base) {
+        for inv in m.inverse(&base).expect("valid retained mutation inverse fixture") {
             let mut undone = snap.clone();
             apply_semio_cad_mutation(&mut undone, &inv);
             assert_eq!(undone, base, "mutation-level inverse mismatch for {m:?}");

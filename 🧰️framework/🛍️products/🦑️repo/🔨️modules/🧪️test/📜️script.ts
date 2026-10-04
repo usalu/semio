@@ -37,16 +37,21 @@ class DslScript extends Script {
   }
 }
 
-/** 🧪️ Selects the suite, schema gate, portable command-composition source contract, or the payload-parity or history-gate lint corpus. */
+/** 🧪️ Selects the suite, schema gate, portable command-composition source contract, or the payload-parity, history-gate or fault-notice gate lint corpus. */
 class TestScript extends Script {
   async run(segments: string[]): Promise<void> {
     if (segments[0] === "schema") return new SchemaScript(this.root, this.repoRoot).run(segments.slice(1));
+    if (segments[0] === "artifact-root-source") {
+      if (segments.length !== 1) throw new Error("Expected test artifact-root-source");
+      runCmd(process.execPath, ["test", join(import.meta.dir, "🧪️tests", "🧾️artifact-root-source", "🟦️.ts")], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+      return;
+    }
     if (segments[0] === "command-composition-source") {
       if (segments.length !== 1) throw new Error("Expected test command-composition-source");
       runCmd(process.execPath, ["test", join(import.meta.dir, "🧪️tests", "🧱️command-composition-source", "🟦️.ts")], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
       return;
     }
-    if (segments[0] === "mutation-payload-parity" || segments[0] === "mutation-history-gates") {
+    if (segments[0] === "mutation-payload-parity" || segments[0] === "mutation-history-gates" || segments[0] === "fault-notices-gate") {
       if (segments.length !== 1) throw new Error(`Expected test ${segments[0]}`);
       runCmd(process.execPath, ["test", `./${join(import.meta.dir, "🧪️tests", `🧪️${segments[0]}`, "🟦️.ts").slice(this.repoRoot.length + 1)}`], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
       return;

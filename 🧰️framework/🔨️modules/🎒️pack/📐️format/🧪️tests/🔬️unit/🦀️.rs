@@ -1,4 +1,5 @@
 
+use semio_framework_pack_error::PackRefusal;
 use super::*;
 
 //#region 🔖️Header
@@ -26,7 +27,7 @@ async fn header_hand_built_bytes_parse_round_trip() {
 #[semio_framework_async_macros::async_test]
 async fn header_parse_rejects_bad_magic() {
     let bytes = [0u8; HEADER_SIZE];
-    assert_eq!(Header::parse(&bytes).await, Err(PackError::BadMagic));
+    assert_eq!(Header::parse(&bytes).await, Err(PackRefusal::BadMagic));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -34,21 +35,21 @@ async fn header_parse_rejects_bad_crc() {
     let header = Header { version_major: 1, version_minor: 0, required_flags: 0, optional_flags: 0 };
     let mut bytes = header.write_bytes().await;
     bytes[20] ^= 0xFF;
-    assert!(matches!(Header::parse(&bytes).await, Err(PackError::ChecksumMismatch { segment: "header", .. })));
+    assert!(matches!(Header::parse(&bytes).await, Err(PackRefusal::ChecksumMismatch { segment: "header", .. })));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn header_parse_rejects_unknown_required_flags() {
     let header = Header { version_major: 1, version_minor: 0, required_flags: 1 << 4, optional_flags: 0 };
     let bytes = header.write_bytes().await;
-    assert_eq!(Header::parse(&bytes).await, Err(PackError::UnknownRequiredFlags(1 << 4)));
+    assert_eq!(Header::parse(&bytes).await, Err(PackRefusal::UnknownRequiredFlags(1 << 4)));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn header_parse_rejects_unsupported_version() {
     let header = Header { version_major: 2, version_minor: 0, required_flags: 0, optional_flags: 0 };
     let bytes = header.write_bytes().await;
-    assert_eq!(Header::parse(&bytes).await, Err(PackError::UnsupportedVersion { major: 2, minor: 0 }));
+    assert_eq!(Header::parse(&bytes).await, Err(PackRefusal::UnsupportedVersion { major: 2, minor: 0 }));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -96,7 +97,7 @@ async fn footer_hand_built_bytes_parse_round_trip() {
 #[semio_framework_async_macros::async_test]
 async fn footer_parse_rejects_bad_magic() {
     let bytes = [0u8; FOOTER_SIZE];
-    assert_eq!(Footer::parse(&bytes).await, Err(PackError::BadMagic));
+    assert_eq!(Footer::parse(&bytes).await, Err(PackRefusal::BadMagic));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -105,7 +106,7 @@ async fn footer_parse_rejects_bad_crc() {
     let mut bytes = footer.write_bytes().await;
     let last = bytes.len() - 1;
     bytes[last] ^= 0xFF;
-    assert!(matches!(Footer::parse(&bytes).await, Err(PackError::ChecksumMismatch { segment: "footer", .. })));
+    assert!(matches!(Footer::parse(&bytes).await, Err(PackRefusal::ChecksumMismatch { segment: "footer", .. })));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -181,7 +182,7 @@ async fn segment_crc_mismatch_is_detected() {
     file[last] ^= 0xFF;
     let limits = PackLimits::default();
     let result = decode_segment_at(&file, HEADER_SIZE as u64, &limits, true).await;
-    assert!(matches!(result, Err(PackError::ChecksumMismatch { segment: "segment", .. })));
+    assert!(matches!(result, Err(PackRefusal::ChecksumMismatch { segment: "segment", .. })));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -262,11 +263,11 @@ async fn retained_identity_chunk_fragment_parity_exact_boundary_and_interrupted_
     let mut interrupted = PackWriter::begin(Vec::new(), &options).await.unwrap();
     let mut chunk = interrupted.begin_identity_chunk(2).await.unwrap();
     chunk.write_fragment(&payload[..1]).await.unwrap();
-    assert!(matches!(chunk.finish().await, Err(PackError::LimitExceeded(_))));
+    assert!(matches!(chunk.finish().await, Err(PackRefusal::LimitExceeded{kind:ValueRefusalKind::InvariantViolated,..})));
 
     let mut maximum = PackWriter::begin(Vec::new(), &options).await.unwrap();
     let mut chunk = maximum.begin_identity_chunk(1).await.unwrap();
-    assert!(matches!(chunk.write_fragment(&payload[..2]).await, Err(PackError::LimitExceeded(_))));
+    assert!(matches!(chunk.write_fragment(&payload[..2]).await, Err(PackRefusal::LimitExceeded{kind:ValueRefusalKind::InvariantViolated,..})));
     chunk.close();
     assert_eq!(payload[0], 0xA5);
 
@@ -388,14 +389,14 @@ async fn finish_errors_when_schema_name_not_in_symbols() {
         symbol_count: 0,
     };
     let result = writer.finish(&manifest).await;
-    assert!(matches!(result, Err(PackError::Schema(_))));
+    assert!(matches!(result, Err(PackRefusal::Malformed{kind:ValueRefusalKind::InvalidValue,what:"manifest",..})));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn begin_rejects_unknown_required_flags() {
     let options = WriteOptions { required_flags: 1 << 5, optional_flags: 0, codec: CodecId(0) };
     let result = PackWriter::begin(Vec::<u8>::new(), &options).await;
-    assert_eq!(result.err(), Some(PackError::UnknownRequiredFlags(1 << 5)));
+    assert_eq!(result.err(), Some(PackRefusal::UnknownRequiredFlags(1 << 5)));
 }
 //#endregion 🔖️Writer
 
@@ -410,7 +411,7 @@ async fn open_manifest_rejects_flipped_chunk_payload_crc_at_standard_level() {
     corrupted[range.offset as usize] ^= 0xFF;
     let corrupted_file = PackFile::open_manifest(corrupted.as_slice(), &limits, VerificationLevel::Standard).await.unwrap();
     let result = corrupted_file.read_chunk(chunk_id, VerificationLevel::Standard).await;
-    assert!(matches!(result, Err(PackError::ChecksumMismatch { segment: "chunk", .. })));
+    assert!(matches!(result, Err(PackRefusal::ChecksumMismatch { segment: "chunk", .. })));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -424,6 +425,6 @@ async fn open_manifest_rejects_wrong_kind_at_manifest_offset() {
     let mut corrupted = bytes[..bytes.len() - FOOTER_SIZE].to_vec();
     corrupted.extend_from_slice(&footer_bytes);
     let result = PackFile::open_manifest(corrupted.as_slice(), &limits, VerificationLevel::Standard).await;
-    assert!(matches!(result, Err(PackError::Malformed { what: "manifest", .. })));
+    assert!(matches!(result, Err(PackRefusal::Malformed { what: "manifest", .. })));
 }
 //#endregion 🔖️Corruption

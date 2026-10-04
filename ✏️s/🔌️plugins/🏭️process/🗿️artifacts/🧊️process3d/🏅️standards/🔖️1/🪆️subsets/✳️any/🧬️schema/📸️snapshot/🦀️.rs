@@ -7,17 +7,21 @@
 
 use crate::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, ProcessStep, Stock, WorkingSolid, Workshop, WorkshopMachine};
 use framework_schema::ArtifactSchema;
-use semio_framework_os_kernel::{FromValue, ToValue};
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
 use store::mounted_pack_rt as mounted;
+
+#[path="🪶️sqlite/🦀️.rs"]
+mod sqlite;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted process3d document snapshot (persistent fields of the artifact). `stock_solid`/
 /// `steps`/`tool_solids` are composed CHILD slots — `#[child(...)]` drives
 /// `#[derive(ArtifactSchema)]`'s slot-table emission; never hand-written. Children must sit directly
 /// on this struct (not nested inside a helper record) for the derive to see them.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 #[dsl(extension = "process3d")]
 #[artifact_schema(id = "s.process.process3d")]
@@ -81,15 +85,15 @@ enum Process3dMountedList {
 /// root lists) and fill domain values directly; leaf frames build one bounded record, sequence or
 /// statement value that its typed owner converts through the derived `DslField` on completion.
 enum Process3dMountedFrame {
-    Root { spec: dsl::RecordSpec, field: Option<u16> },
-    Workshop { spec: dsl::RecordSpec, field: Option<u16> },
-    Machine { spec: dsl::RecordSpec, value: WorkshopMachine, field: Option<u16> },
-    Capability { spec: dsl::RecordSpec, value: Capability, field: Option<u16> },
-    List { list: Process3dMountedList, item: dsl::Shape },
-    Rules { variants: Vec<(String, dsl::RecordSpecProducer)>, keyword: Option<String> },
-    Record { spec: dsl::RecordSpec, record: dsl::RecordValue, field: Option<u16> },
-    Sequence { item: dsl::Shape, tuple: bool, items: Vec<dsl::FieldValue> },
-    Statements { variants: Vec<(String, dsl::RecordSpecProducer)>, items: Vec<(String, dsl::RecordValue)>, keyword: Option<String> },
+    Root { spec: semio_framework_dsl_record::RecordSpec, field: Option<u16> },
+    Workshop { spec: semio_framework_dsl_record::RecordSpec, field: Option<u16> },
+    Machine { spec: semio_framework_dsl_record::RecordSpec, value: WorkshopMachine, field: Option<u16> },
+    Capability { spec: semio_framework_dsl_record::RecordSpec, value: Capability, field: Option<u16> },
+    List { list: Process3dMountedList, item: semio_framework_dsl_record::Shape },
+    Rules { variants: Vec<(String, semio_framework_dsl_record::RecordSpecProducer)>, keyword: Option<String> },
+    Record { spec: semio_framework_dsl_record::RecordSpec, record: semio_framework_dsl_record::RecordValue, field: Option<u16> },
+    Sequence { item: semio_framework_dsl_record::Shape, tuple: bool, items: Vec<semio_framework_dsl_record::FieldValue> },
+    Statements { variants: Vec<(String, semio_framework_dsl_record::RecordSpecProducer)>, items: Vec<(String, semio_framework_dsl_record::RecordValue)>, keyword: Option<String> },
 }
 
 struct Process3dMountedString {
@@ -110,23 +114,23 @@ pub struct Process3dMountedSnapshotOwner {
     handed_back: bool,
 }
 
-fn process3d_field_shape(spec: &dsl::RecordSpec, id: u16) -> Result<(&str, dsl::Shape), &'static str> {
+fn process3d_field_shape(spec: &semio_framework_dsl_record::RecordSpec, id: u16) -> Result<(&str, semio_framework_dsl_record::Shape), &'static str> {
     let field = spec.fields.iter().find(|field| field.id == id).ok_or("process3d-mounted.unknown-field")?;
     let shape = match &field.shape {
-        dsl::Shape::Block(inner) => (**inner).clone(),
+        semio_framework_dsl_record::Shape::Block(inner) => (**inner).clone(),
         shape => shape.clone(),
     };
     Ok((field.key.as_str(), shape))
 }
 
-fn process3d_variant_shape(variants: &[(String, dsl::RecordSpecProducer)], keyword: &Option<String>) -> Result<dsl::Shape, &'static str> {
+fn process3d_variant_shape(variants: &[(String, semio_framework_dsl_record::RecordSpecProducer)], keyword: &Option<String>) -> Result<semio_framework_dsl_record::Shape, &'static str> {
     let keyword = keyword.as_deref().ok_or("process3d-mounted.statement-keyword")?;
-    variants.iter().find(|(name, _)| name == keyword).map(|(_, spec)| dsl::Shape::Record(*spec)).ok_or("process3d-mounted.statement-variant")
+    variants.iter().find(|(name, _)| name == keyword).map(|(_, spec)| semio_framework_dsl_record::Shape::Record(*spec)).ok_or("process3d-mounted.statement-variant")
 }
 
-fn process3d_list_item(shape: &dsl::Shape) -> Result<dsl::Shape, &'static str> {
+fn process3d_list_item(shape: &semio_framework_dsl_record::Shape) -> Result<semio_framework_dsl_record::Shape, &'static str> {
     match shape {
-        dsl::Shape::List(item) => Ok((**item).clone()),
+        semio_framework_dsl_record::Shape::List(item) => Ok((**item).clone()),
         _ => Err("process3d-mounted.list-shape"),
     }
 }
@@ -135,14 +139,14 @@ fn process3d_empty_child<S>() -> store::ArtifactChild<S> {
     store::ArtifactChild::new(String::new(), store::os_io::ArtifactRef { artifact_id: String::new(), dialect: store::os_io::ArtifactDialect { artifact_kind: String::new(), standard: String::new(), subset: String::new() } })
 }
 
-fn process3d_text(value: dsl::FieldValue) -> Result<String, &'static str> {
+fn process3d_text(value: semio_framework_dsl_record::FieldValue) -> Result<String, &'static str> {
     match value {
-        dsl::FieldValue::Text(text) => Ok(text),
+        semio_framework_dsl_record::FieldValue::Text(text) => Ok(text),
         _ => Err("process3d-mounted.text-shape"),
     }
 }
 
-fn process3d_field<T: dsl::DslField>(value: &dsl::FieldValue) -> Result<T, &'static str> {
+fn process3d_field<T: semio_framework_dsl_record::DslField>(value: &semio_framework_dsl_record::FieldValue) -> Result<T, &'static str> {
     T::from_value(value).map_err(|_| "process3d-mounted.field-shape")
 }
 
@@ -184,7 +188,7 @@ impl Process3dMountedSnapshotOwner {
         }
     }
 
-    fn expected_shape(&self) -> Result<dsl::Shape, &'static str> {
+    fn expected_shape(&self) -> Result<semio_framework_dsl_record::Shape, &'static str> {
         match self.stack.last().ok_or("process3d-mounted.shape-owner")? {
             Process3dMountedFrame::Root { spec, field: Some(id) }
             | Process3dMountedFrame::Workshop { spec, field: Some(id) }
@@ -206,7 +210,7 @@ impl Process3dMountedSnapshotOwner {
         }
     }
 
-    fn typed_list(&mut self, list: Process3dMountedList, item: dsl::Shape, count: usize) -> Result<Process3dMountedFrame, &'static str> {
+    fn typed_list(&mut self, list: Process3dMountedList, item: semio_framework_dsl_record::Shape, count: usize) -> Result<Process3dMountedFrame, &'static str> {
         let reserved = match list {
             Process3dMountedList::Machines => self.candidate()?.workshop.machines.try_reserve_exact(count),
             Process3dMountedList::Steps => self.candidate()?.step_payloads.try_reserve_exact(count),
@@ -247,7 +251,7 @@ impl Process3dMountedSnapshotOwner {
             (Some("capabilities"), _, Container::List) => self.typed_list(Process3dMountedList::Capabilities, process3d_list_item(&shape)?, count)?,
             (Some("parameters"), _, Container::List) => self.typed_list(Process3dMountedList::Parameters, process3d_list_item(&shape)?, count)?,
             (Some("rules"), _, Container::Statements) => match shape {
-                dsl::Shape::Statements(variants) => {
+                semio_framework_dsl_record::Shape::Statements(variants) => {
                     self.capability_rules_reserve(count)?;
                     Process3dMountedFrame::Rules { variants, keyword: None }
                 }
@@ -262,14 +266,14 @@ impl Process3dMountedSnapshotOwner {
                 Process3dMountedFrame::Capability { spec: Capability::__dsl_spec(), value, field: None }
             }
             (_, _, Container::Record) => match shape {
-                dsl::Shape::Record(spec) => Process3dMountedFrame::Record { spec: (spec.ordinary)(), record: dsl::RecordValue::default(), field: None },
+                semio_framework_dsl_record::Shape::Record(spec) => Process3dMountedFrame::Record { spec: (spec.ordinary)(), record: semio_framework_dsl_record::RecordValue::default(), field: None },
                 _ => return Err("process3d-mounted.record-shape"),
             },
             (_, _, Container::Tuple | Container::List | Container::PackedF64 | Container::PackedVarint) => {
                 let (item, tuple) = match shape {
-                    dsl::Shape::Tuple(item, _) => (*item, true),
-                    dsl::Shape::List(item) => (*item, false),
-                    dsl::Shape::Coord(_) | dsl::Shape::Dir | dsl::Shape::Dim(_) | dsl::Shape::Range => (dsl::Shape::Float, true),
+                    semio_framework_dsl_record::Shape::Tuple(item, _) => (*item, true),
+                    semio_framework_dsl_record::Shape::List(item) => (*item, false),
+                    semio_framework_dsl_record::Shape::Coord(_) | semio_framework_dsl_record::Shape::Dir | semio_framework_dsl_record::Shape::Dim(_) | semio_framework_dsl_record::Shape::Range => (semio_framework_dsl_record::Shape::Float, true),
                     _ => return Err("process3d-mounted.sequence-shape"),
                 };
                 let mut items = Vec::new();
@@ -277,7 +281,7 @@ impl Process3dMountedSnapshotOwner {
                 Process3dMountedFrame::Sequence { item, tuple, items }
             }
             (_, _, Container::Statements) => match shape {
-                dsl::Shape::Statements(variants) => {
+                semio_framework_dsl_record::Shape::Statements(variants) => {
                     let mut items = Vec::new();
                     items.try_reserve_exact(count).map_err(|_| "process3d-mounted.statements-preflight")?;
                     Process3dMountedFrame::Statements { variants, items, keyword: None }
@@ -302,8 +306,8 @@ impl Process3dMountedSnapshotOwner {
         }
     }
 
-    fn deliver(&mut self, value: dsl::FieldValue) -> Result<(), &'static str> {
-        let absent = matches!(value, dsl::FieldValue::Absent);
+    fn deliver(&mut self, value: semio_framework_dsl_record::FieldValue) -> Result<(), &'static str> {
+        let absent = matches!(value, semio_framework_dsl_record::FieldValue::Absent);
         let key = self.typed_key().map(str::to_owned);
         match self.stack.last_mut().ok_or("process3d-mounted.value-owner")? {
             Process3dMountedFrame::Root { .. } => {
@@ -361,9 +365,9 @@ impl Process3dMountedSnapshotOwner {
                 self.candidate()?.tool_solids.push(tool);
             }
             Process3dMountedFrame::Rules { keyword, .. } => match (keyword.take(), value) {
-                (None, dsl::FieldValue::Text(name)) => *keyword = Some(name),
-                (Some(name), dsl::FieldValue::Record(record)) => {
-                    let rule = <CapabilityRule as dsl::DslVariants>::from_named_record(&name, &record).map_err(|_| "process3d-mounted.rule-shape")?;
+                (None, semio_framework_dsl_record::FieldValue::Text(name)) => *keyword = Some(name),
+                (Some(name), semio_framework_dsl_record::FieldValue::Record(record)) => {
+                    let rule = <CapabilityRule as semio_framework_dsl_record::DslVariants>::from_named_record(&name, &record).map_err(|_| "process3d-mounted.rule-shape")?;
                     self.capability_below()?.rules.push(rule);
                 }
                 _ => return Err("process3d-mounted.rule-owner"),
@@ -375,13 +379,13 @@ impl Process3dMountedSnapshotOwner {
                 }
             }
             Process3dMountedFrame::Sequence { item, items, .. } => items.push(match (item, value) {
-                (dsl::Shape::UInt | dsl::Shape::Count, dsl::FieldValue::Int(signed)) => dsl::FieldValue::UInt(u64::try_from(signed).map_err(|_| "process3d-mounted.unsigned-item")?),
-                (dsl::Shape::Enum(_), dsl::FieldValue::Int(signed)) => dsl::FieldValue::Enum(u32::try_from(signed).map_err(|_| "process3d-mounted.enum-item")?),
+                (semio_framework_dsl_record::Shape::UInt | semio_framework_dsl_record::Shape::Count, semio_framework_dsl_record::FieldValue::Int(signed)) => semio_framework_dsl_record::FieldValue::UInt(u64::try_from(signed).map_err(|_| "process3d-mounted.unsigned-item")?),
+                (semio_framework_dsl_record::Shape::Enum(_), semio_framework_dsl_record::FieldValue::Int(signed)) => semio_framework_dsl_record::FieldValue::Enum(u32::try_from(signed).map_err(|_| "process3d-mounted.enum-item")?),
                 (_, value) => value,
             }),
             Process3dMountedFrame::Statements { keyword, items, .. } => match (keyword.take(), value) {
-                (None, dsl::FieldValue::Text(name)) => *keyword = Some(name),
-                (Some(name), dsl::FieldValue::Record(record)) => items.push((name, record)),
+                (None, semio_framework_dsl_record::FieldValue::Text(name)) => *keyword = Some(name),
+                (Some(name), semio_framework_dsl_record::FieldValue::Record(record)) => items.push((name, record)),
                 _ => return Err("process3d-mounted.statement-owner"),
             },
             _ => return Err("process3d-mounted.value-owner"),
@@ -394,14 +398,14 @@ impl Process3dMountedSnapshotOwner {
         match (self.stack.pop().ok_or("process3d-mounted.end-owner")?, kind) {
             (Process3dMountedFrame::Record { spec, mut record, field: None }, Container::Record) => {
                 for field in &spec.fields {
-                    record.fields.entry(field.id).or_insert(dsl::FieldValue::Absent);
+                    if !record.fields.contains_key(&field.id){record.fields.insert(field.id,semio_framework_dsl_record::FieldValue::Absent);}
                 }
-                self.deliver(dsl::FieldValue::Record(record))
+                self.deliver(semio_framework_dsl_record::FieldValue::Record(record))
             }
             (Process3dMountedFrame::Sequence { tuple, items, .. }, Container::Tuple | Container::List | Container::PackedF64 | Container::PackedVarint) => {
-                self.deliver(if tuple { dsl::FieldValue::Tuple(items) } else { dsl::FieldValue::List(items) })
+                self.deliver(if tuple { semio_framework_dsl_record::FieldValue::Tuple(items) } else { semio_framework_dsl_record::FieldValue::List(items) })
             }
-            (Process3dMountedFrame::Statements { items, keyword: None, .. }, Container::Statements) => self.deliver(dsl::FieldValue::Statements(items)),
+            (Process3dMountedFrame::Statements { items, keyword: None, .. }, Container::Statements) => self.deliver(semio_framework_dsl_record::FieldValue::Statements(items)),
             (Process3dMountedFrame::Machine { value, field: None, .. }, Container::Record) => {
                 self.candidate()?.workshop.machines.push(value);
                 Ok(())
@@ -449,7 +453,7 @@ impl Process3dMountedSnapshotOwner {
 
     fn finish_string(&mut self) -> Result<(), &'static str> {
         let owner = self.string.take().ok_or("process3d-mounted.string-handoff")?;
-        self.deliver(dsl::FieldValue::Text(owner.value))
+        self.deliver(semio_framework_dsl_record::FieldValue::Text(owner.value))
     }
 }
 
@@ -495,13 +499,13 @@ impl mounted::RetainedTypedPackOwner for Process3dMountedSnapshotOwner {
                 }
                 Ok(())
             }
-            Token::Tag { value: 0x00, .. } => self.deliver(dsl::FieldValue::Absent),
-            Token::Tag { value: 0x01, .. } => self.deliver(dsl::FieldValue::Bool(false)),
-            Token::Tag { value: 0x02, .. } => self.deliver(dsl::FieldValue::Bool(true)),
-            Token::Signed(value) => self.deliver(dsl::FieldValue::Int(value)),
-            Token::Unsigned { role: Role::Unsigned, value } => self.deliver(dsl::FieldValue::UInt(value)),
-            Token::Unsigned { role: Role::Enum, value } => self.deliver(dsl::FieldValue::Enum(u32::try_from(value).map_err(|_| "process3d-mounted.enum")?)),
-            Token::F64(value) => self.deliver(dsl::FieldValue::Float(f64::from_bits(value))),
+            Token::Tag { value: 0x00, .. } => self.deliver(semio_framework_dsl_record::FieldValue::Absent),
+            Token::Tag { value: 0x01, .. } => self.deliver(semio_framework_dsl_record::FieldValue::Bool(false)),
+            Token::Tag { value: 0x02, .. } => self.deliver(semio_framework_dsl_record::FieldValue::Bool(true)),
+            Token::Signed(value) => self.deliver(semio_framework_dsl_record::FieldValue::Int(value)),
+            Token::Unsigned { role: Role::Unsigned, value } => self.deliver(semio_framework_dsl_record::FieldValue::UInt(value)),
+            Token::Unsigned { role: Role::Enum, value } => self.deliver(semio_framework_dsl_record::FieldValue::Enum(u32::try_from(value).map_err(|_| "process3d-mounted.enum")?)),
+            Token::F64(value) => self.deliver(semio_framework_dsl_record::FieldValue::Float(f64::from_bits(value))),
             Token::Complete { .. } => {
                 if !self.stack.is_empty() || self.string.is_some() {
                     return Err("process3d-mounted.typed-terminal-populated");
@@ -591,36 +595,37 @@ impl store::ArtifactDsl for Process3dSnapshot {
     fn envelope_id() -> &'static str {
         "process.process3d"
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
 impl store::ArtifactPack for Process3dSnapshot {
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> { Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec()) }
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -644,13 +649,17 @@ pub fn process3d_identity_report_json(dsl_text: &str) -> Result<String, String> 
     let canonical_again = <Process3dSnapshot as store::ArtifactDsl>::print_dsl(&reparsed);
     let packed = <Process3dSnapshot as store::ArtifactPack>::encode_pack(&reparsed);
     let unpacked = <Process3dSnapshot as store::ArtifactPack>::decode_pack(&packed).map_err(|error| error.to_string())?;
-    let report = semio_framework_os_kernel::json::object([
-        ("parsed".to_string(), semio_framework_os_kernel::json::from_dsl_value(&ToValue::to_value(&parsed))),
-        ("reparsed".to_string(), semio_framework_os_kernel::json::from_dsl_value(&ToValue::to_value(&reparsed))),
-        ("packDecoded".to_string(), semio_framework_os_kernel::json::from_dsl_value(&ToValue::to_value(&unpacked))),
-        ("canonicalText".to_string(), semio_framework_os_kernel::json::Value::String(canonical)),
-        ("canonicalTextAgain".to_string(), semio_framework_os_kernel::json::Value::String(canonical_again)),
+    let report = semio_framework_pack_json::object([
+        ("parsed".to_string(), semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&parsed))),
+        ("reparsed".to_string(), semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&reparsed))),
+        ("packDecoded".to_string(), semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&unpacked))),
+        ("canonicalText".to_string(), semio_framework_pack_json::Value::String(canonical)),
+        ("canonicalTextAgain".to_string(), semio_framework_pack_json::Value::String(canonical_again)),
     ]);
-    Ok(semio_framework_os_kernel::json::to_string(&report))
+    Ok(semio_framework_pack_json::to_string(&report))
 }
 //#endregion 🌉️IdentityBridge
+
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_snapshot_tests;

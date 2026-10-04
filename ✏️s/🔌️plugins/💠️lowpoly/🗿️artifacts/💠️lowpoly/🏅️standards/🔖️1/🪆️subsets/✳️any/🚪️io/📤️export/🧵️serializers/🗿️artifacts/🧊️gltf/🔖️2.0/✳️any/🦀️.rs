@@ -15,7 +15,7 @@ use semio_s_artifact_stdio_gltf::STDIO_GLTF_DOCUMENT_SCHEMA;
 
 pub fn register() {}
 
-pub fn serialize(snapshot: &LowpolySnapshot) -> Result<GltfSnapshot, store::TextError> {
+pub fn serialize(snapshot: &LowpolySnapshot) -> Result<GltfSnapshot, semio_framework_diagnostic::TextError> {
     let parts = world_parts("gltf", snapshot)?;
     let mut bin = Vec::new();
     let mut accessors = Vec::new();
@@ -176,6 +176,6 @@ pub fn serialize(snapshot: &LowpolySnapshot) -> Result<GltfSnapshot, store::Text
     Ok(GltfSnapshot { schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(), document, buffers: vec![bin], source_form: GltfSourceForm::Glb })
 }
 
-pub fn serialize_bytes(snapshot: &LowpolySnapshot) -> Result<Vec<u8>, store::TextError> {
-    encode_glb(&serialize(snapshot)?).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+pub fn serialize_bytes(snapshot: &LowpolySnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
+    encode_glb(&serialize(snapshot)?).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
 }

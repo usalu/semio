@@ -51,6 +51,7 @@ Feature: Apply registered typed glTF 2.0 mutations to a real-world document
       | create-scene                 | 🎬️create-scene                 | {"position":0}                                  |
       | unbind-node-child            | ✂️unbind-node-child            | {"parent":0,"child":1}                          |
       | unbind-scene-root-node       | 🍂️unbind-scene-root-node       | {"scene":0,"node":5}                            |
+      | patch-snapshot | 🪞️change-material-double-sided | {"patch": {"operation": "set", "path": "/document/materials/0/doubleSided", "value": true}} |
 
   @id-inverse
   @level-exhaustive
@@ -72,6 +73,7 @@ Feature: Apply registered typed glTF 2.0 mutations to a real-world document
       | create-scene                 | {"position":0}                                  |
       | unbind-node-child            | {"parent":0,"child":1}                          |
       | unbind-scene-root-node       | {"scene":0,"node":5}                            |
+      | patch-snapshot | {"patch": {"operation": "set", "path": "/document/materials/0/doubleSided", "value": true}} |
 
   @id-identity-round-trip
   @level-long

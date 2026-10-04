@@ -9,8 +9,8 @@ fn channel_payload(out: &Dictionary, channel: &str) -> neural_engine::ColdOwner<
 
 /// 🌱️ Wire-shape twin of [`super::number_dictionary`], built with the first-party
 /// `pack::json::Value` instead of `Dictionary`'s own `serde` codec — for JSON-text tests only.
-fn json_number(value: f64) -> pack::json::Value {
-    pack::json::object([("$schema".to_string(), pack::json::Value::from("number")), ("value".to_string(), pack::json::Value::from(value))])
+fn json_number(value: f64) -> semio_framework_pack_json::Value {
+    semio_framework_pack_json::object([("$schema".to_string(), semio_framework_pack_json::Value::from("number")), ("value".to_string(), semio_framework_pack_json::Value::from(value))])
 }
 
 #[semio_framework_async_macros::async_test]
@@ -124,10 +124,10 @@ async fn manifest_lists_bim_operators() {
 #[semio_framework_async_macros::async_test]
 async fn evaluate_json_wall() {
     let reg = neural_engine::ColdOwner::new(module_registry());
-    let input_json = pack::json::to_string(&pack::json::object([("length".to_string(), json_number(4.0)), ("height".to_string(), json_number(2.8)), ("thickness".to_string(), json_number(0.2))]));
+    let input_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("length".to_string(), json_number(4.0)), ("height".to_string(), json_number(2.8)), ("thickness".to_string(), json_number(0.2))]));
     let out_json = evaluate_json(&reg, "bim.element.wall", &input_json);
-    let out = pack::json::parse(&out_json).unwrap();
-    assert_eq!(out.get("wall").and_then(|value| value.get("$schema")).and_then(pack::json::Value::as_str), Some("wall"));
+    let out = semio_framework_pack_json::parse(&out_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    assert_eq!(out.get("wall").and_then(|value| value.get("$schema")).and_then(semio_framework_pack_json::Value::as_str), Some("wall"));
     semio_framework_plugin::plugin_runtime::extension_dispose_cold().unwrap();
 }
 
@@ -154,7 +154,7 @@ async fn extension_bundle_extends_flow_and_evaluates() {
         .extends("flow")
         .contributes_topic(flow_topic.topic, flow_topic.payload)
         .contributes_topic(procedural3d_topic.topic, procedural3d_topic.payload)
-        .handler("evaluate", |req| Ok(evaluate_invoke_json(&neural_engine::ColdOwner::new(module_registry()), req).unwrap()));
+        .resource_owner(flow_extension_sdk::ExtensionEvaluationResources::new(module_registry())).owned_handler("evaluate");
     assert!(install_extension_bundle(&mut Some(bundle)).await.unwrap());
     extension_activate().await.unwrap();
     let installed = extension_manifest().await;
@@ -162,14 +162,14 @@ async fn extension_bundle_extends_flow_and_evaluates() {
     assert_eq!(installed.extends, "flow");
     assert_eq!(installed.topic_contributions.len(), 2);
     assert_eq!(installed.topic_contributions[0].topic, "flow.extension");
-    let input_json = pack::json::to_string(&pack::json::object([("length".to_string(), json_number(4.0)), ("height".to_string(), json_number(2.8)), ("thickness".to_string(), json_number(0.2))]));
+    let input_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("length".to_string(), json_number(4.0)), ("height".to_string(), json_number(2.8)), ("thickness".to_string(), json_number(0.2))]));
     let req =
-        pack::json::to_string(&pack::json::object([("operatorId".to_string(), pack::json::Value::from("bim.element.wall")), ("inputJson".to_string(), pack::json::Value::from(input_json)), ("nodeHash".to_string(), pack::json::Value::from(1_i64))]));
+        semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("operatorId".to_string(), semio_framework_pack_json::Value::from("bim.element.wall")), ("inputJson".to_string(), semio_framework_pack_json::Value::from(input_json)), ("nodeHash".to_string(), semio_framework_pack_json::Value::from(1_i64))]));
     // ⏱️ `evaluate` answers the BUDGET envelope; a wall element offers no resumable job, so it
     // finishes inside its first round trip (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     let out_bytes = extension_invoke("evaluate", req.as_bytes()).await.unwrap();
-    let envelope = pack::json::parse_bytes(&out_bytes).unwrap();
-    assert_eq!(envelope.get("done").and_then(pack::json::Value::as_bool), Some(true));
-    let out = pack::json::parse(envelope.get("outputJson").and_then(pack::json::Value::as_str).unwrap()).unwrap();
-    assert_eq!(out.get("wall").and_then(|value| value.get("$schema")).and_then(pack::json::Value::as_str), Some("wall"));
+    let envelope = semio_framework_pack_json::parse_bytes(&out_bytes, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    assert_eq!(envelope.get("done").and_then(semio_framework_pack_json::Value::as_bool), Some(true));
+    let out = semio_framework_pack_json::parse(envelope.get("outputJson").and_then(semio_framework_pack_json::Value::as_str).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    assert_eq!(out.get("wall").and_then(|value| value.get("$schema")).and_then(semio_framework_pack_json::Value::as_str), Some("wall"));
 }

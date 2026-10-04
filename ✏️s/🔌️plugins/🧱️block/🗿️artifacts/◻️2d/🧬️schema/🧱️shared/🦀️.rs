@@ -3,7 +3,7 @@
 //#region 🔖️Identity
 /// 🪪️ The single kind definition a block document edits — name/label/variant/description/icon/unit
 /// apply uniformly whether the document is a `NodeKind` (2d), `ObjectKind` (3d) or `PartKind` (5d).
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(any(test, feature = "test-serde"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(any(test, feature = "test-serde"), serde(rename_all = "camelCase"))]
@@ -29,7 +29,7 @@ pub struct BlockKindIdentity {
 //#region 🔖️Metadata
 /// 🏷️ One free-form key/value attribute on a kind (optionally naming the attribute definition it
 /// instantiates).
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(any(test, feature = "test-serde"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(any(test, feature = "test-serde"), serde(rename_all = "camelCase"))]
@@ -42,7 +42,7 @@ pub struct BlockAttribute {
 }
 
 /// 👤️ One author credited on a kind.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(any(test, feature = "test-serde"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(any(test, feature = "test-serde"), serde(rename_all = "camelCase"))]
@@ -56,7 +56,7 @@ pub struct BlockAuthor {
 
 /// 🔗️ One allowed (or, unidirectional, one-way-allowed) compatibility pair between two handle/vortex/
 /// grip kind ids — the `id` lets ops remove a specific row without re-keying on `(source, target)`.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(any(test, feature = "test-serde"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(any(test, feature = "test-serde"), serde(rename_all = "camelCase"))]
@@ -70,7 +70,7 @@ pub struct BlockCompatibilityRule {
 }
 
 /// 🧱️ One representation (mesh at a LOD/tag combination) a kind ships with — semio_compose_rs's "Representation".
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(any(test, feature = "test-serde"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(any(test, feature = "test-serde"), serde(rename_all = "camelCase"))]
@@ -97,7 +97,7 @@ pub struct BlockRepresentation {
 //#endregion 🔖️Metadata
 
 //#region 🔖️Cameras
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(any(test, feature = "test-serde"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(any(test, feature = "test-serde"), serde(rename_all = "camelCase"))]
@@ -119,7 +119,7 @@ impl Default for BlockCamera2d {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(any(test, feature = "test-serde"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(any(test, feature = "test-serde"), serde(rename_all = "camelCase"))]
@@ -151,7 +151,7 @@ fn block_one_f64() -> f64 {
 //#region 🔖️Meta
 /// 📝️ Free-text description carried alongside a block document (distinct from the kind's own
 /// `BlockKindIdentity::description`, which describes the kind; this describes the editing session).
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(any(test, feature = "test-serde"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(any(test, feature = "test-serde"), serde(rename_all = "camelCase"))]

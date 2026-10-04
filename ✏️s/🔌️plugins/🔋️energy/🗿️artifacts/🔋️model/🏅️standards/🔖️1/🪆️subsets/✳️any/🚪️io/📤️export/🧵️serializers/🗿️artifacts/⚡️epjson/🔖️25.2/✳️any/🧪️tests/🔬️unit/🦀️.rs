@@ -189,7 +189,7 @@ fn epjson_fixture_path(case: &str) -> std::path::PathBuf {
 }
 
 fn exported(name: &str) -> String {
-    format!("{}\n", pack::json::to_string_pretty(&encode_model(&case(name))))
+    format!("{}\n", semio_framework_pack_json::to_string_pretty(&encode_model(&case(name))))
 }
 
 /// 🧫️ THE generator, inert unless `SEMIO_ENERGY_EPJSON_REGENERATE` is set, so a normal

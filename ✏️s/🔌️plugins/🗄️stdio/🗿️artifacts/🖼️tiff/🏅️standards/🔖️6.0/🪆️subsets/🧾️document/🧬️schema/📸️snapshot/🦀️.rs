@@ -5,11 +5,9 @@
 //! kind, values}` entries. `TiffFieldType`/`TiffValues` cover all 12 TIFF 6.0 field types —
 //! "unknown tags" are simply tags the codec doesn't specially interpret, but whose typed
 //! VALUE is still stored losslessly via this same triple (the tag/type/value model IS the
-//! raw-retention mechanism; no separate raw-bytes fallback needed, unlike PNG's
-//! `unknown_chunks`). Decoded pixels stay a flat `pixels: Vec<u8>` (documented normalization:
-//! canonical 8-bit RGBA, row-major, decoded from IFD 0 only — see `../../🚪️io/🦀️.rs`'s
-//! `MultiIfdEncodeScopeNote`/decode doc for the full completeness accounting, including the honest
-//! gap that this single `pixels` field cannot back a real raster for any IFD beyond the first).
+//! raw-retention mechanism; no separate unknown-tag fallback is needed). Every IFD owns its exact
+//! strip or tile chunks in `storage`; decoded RGBA pixels are bounded, ephemeral projections and
+//! never become a second authored authority.
 
 use crate::STDIO_TIFF_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
@@ -115,7 +113,7 @@ impl TiffFieldType {
 #[value(tag = "kind", content = "value", rename_all = "camelCase")]
 pub enum TiffValues {
     Byte(Vec<u8>),
-    Ascii(String),
+    Ascii(Vec<u8>),
     Short(Vec<u16>),
     Long(Vec<u32>),
     Rational(Vec<(u32, u32)>),
@@ -124,8 +122,20 @@ pub enum TiffValues {
     SShort(Vec<i16>),
     SLong(Vec<i32>),
     SRational(Vec<(i32, i32)>),
-    Float(Vec<f32>),
-    Double(Vec<f64>),
+    Float(Vec<TiffBinary32>),
+    Double(Vec<TiffBinary64>),
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct TiffBinary32 {
+    pub bits: u32,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct TiffBinary64 {
+    pub bits: u64,
 }
 
 impl TiffValues {
@@ -152,7 +162,7 @@ impl TiffValues {
     pub fn count(&self) -> u32 {
         match self {
             Self::Byte(v) => v.len() as u32,
-            Self::Ascii(s) => s.len() as u32 + 1,
+            Self::Ascii(s) => s.len() as u32,
             Self::Short(v) => v.len() as u32,
             Self::Long(v) => v.len() as u32,
             Self::Rational(v) => v.len() as u32,
@@ -190,39 +200,54 @@ impl TiffValues {
 #[value(rename_all = "camelCase")]
 pub struct TiffTag {
     pub tag: u16,
-    pub kind: TiffFieldType,
     pub values: TiffValues,
 }
 //#endregion Tag
 
 //#region Ifd
-/// 🗂️ One Image File Directory — tag-id-keyed `entries` (TIFF requires ascending-tag-order
-/// within an IFD; codecs/mutations both maintain that invariant, see `⚙️engine`/`🔺️diff`) plus
-/// `pixels`, this directory's OWN raster payload.
-///
-/// 🖼️ `pixels` is RAW STRIP BYTES — the exact sample layout this directory's own
-/// `BitsPerSample`/`SamplesPerPixel`/`PhotometricInterpretation`/`Compression` entries declare —
-/// NOT the canonical 8-bit RGBA [`TiffSnapshot::pixels`] carries. Raw is the honest shape here:
-/// strip bytes are lossless and layout-agnostic, so a secondary directory whose photometric
-/// layout this codec does not decode (palette, CMYK, tiled) still round-trips byte-for-byte,
-/// where a decode-to-RGBA field would have to fail or fabricate.
-///
-/// 🥇 IFD 0 is the exception, and it is a definitional one rather than an omission: the primary
-/// directory's raster IS the document's image, is decoded to canonical RGBA into
-/// [`TiffSnapshot::pixels`], and is the field `SetPixels` addresses. `ifds[0].pixels` is therefore
-/// always empty — decode leaves it so, the encoder ignores it, and there is exactly one authority
-/// for the primary raster at all times. Every directory beyond the first carries its strip bytes
-/// here, which is what lets the encoder emit that directory's REQUIRED
-/// `StripOffsets`/`RowsPerStrip`/`StripByteCounts` (TIFF6 §Baseline) backed by real payload rather
-/// than omit them (the pre-2026-08-25 behaviour, which silently discarded a multi-page file's
-/// later pages on every round trip).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
+pub enum TiffStorageKind {
+    #[default]
+    None,
+    Strips,
+    Tiles,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct TiffStorage {
+    pub kind: TiffStorageKind,
+    pub offsets_kind: TiffFieldType,
+    pub byte_counts_kind: TiffFieldType,
+    #[value(default)]
+    pub chunks: Vec<Vec<u8>>,
+}
+
+impl Default for TiffStorage {
+    fn default() -> Self {
+        Self { kind: TiffStorageKind::None, offsets_kind: TiffFieldType::Long, byte_counts_kind: TiffFieldType::Long, chunks: Vec::new() }
+    }
+}
+
+impl TiffStorage {
+    pub fn is_empty(&self) -> bool {
+        self.chunks.is_empty()
+    }
+}
+
+/// 🗂️ One Image File Directory with tag-id-keyed `entries` and its own canonical authored
+/// strip or tile chunks. TIFF requires ascending tag order within an IFD; codecs and mutations
+/// maintain that invariant. Storage bytes keep their declared compression, precision, sample
+/// layout, and chunk boundaries so every page can round-trip even when the preview projector does
+/// not support that representation.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
 #[value(rename_all = "camelCase")]
 pub struct TiffIfd {
     #[value(default)]
     pub entries: Vec<TiffTag>,
     #[value(default)]
-    pub pixels: Vec<u8>,
+    pub storage: TiffStorage,
 }
 //#endregion Ifd
 
@@ -245,8 +270,8 @@ pub const TAG_TILE_BYTE_COUNTS: u16 = 325;
 
 //#region Snapshot
 /// 🧬️ Complete `stdio.tiff` 6.0 semantic snapshot. `schema` is an identity field, never
-/// diffed. `pixels` is a legitimate `Vec<u8>` exception (decoded raster payload, canonical
-/// 8-bit RGBA — see `⚙️engine` doc); everything else the format defines lives in `ifds`.
+/// diffed. Every IFD owns its authored strip or tile chunks; RGBA display pixels are ephemeral
+/// projections and never compete with those canonical bytes.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.tiff")]
@@ -258,14 +283,11 @@ pub struct TiffSnapshot {
     #[state(artifact)]
     #[value(default)]
     pub ifds: Vec<TiffIfd>,
-    #[state(artifact)]
-    #[value(default)]
-    pub pixels: Vec<u8>,
 }
 
 impl Default for TiffSnapshot {
     fn default() -> Self {
-        Self { schema: STDIO_TIFF_DOCUMENT_SCHEMA.into(), byte_order: TiffByteOrder::LittleEndian, ifds: Vec::new(), pixels: Vec::new() }
+        Self { schema: STDIO_TIFF_DOCUMENT_SCHEMA.into(), byte_order: TiffByteOrder::LittleEndian, ifds: Vec::new() }
     }
 }
 
@@ -291,54 +313,29 @@ impl TiffSnapshot {
 
 //#region HandcraftedArtifactCodecs
 impl store::ArtifactDsl for TiffSnapshot {
-    const EXTENSION: &'static str = "tiff";
-    fn envelope_id() -> &'static str {
-        "stdio.tiff"
-    }
-
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        let hex: String = body.chars().filter(|c| !c.is_whitespace()).collect();
-        if !hex.len().is_multiple_of(2) {
-            return Err(store::TextError::new("odd hex length", dsl::TextSpan::at(1, 1)));
-        }
-        let mut bytes = Vec::with_capacity(hex.len() / 2);
-        let mut i = 0usize;
-        while i < hex.len() {
-            let byte = u8::from_str_radix(&hex[i..i + 2], 16).map_err(|e| store::TextError::new(format!("invalid hex: {e}"), dsl::TextSpan::at(1, 1)))?;
-            bytes.push(byte);
-            i += 2;
-        }
-        crate::engine::decode_tiff(&bytes).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
-    }
-
-    fn print_dsl(&self) -> String {
-        let bytes = crate::engine::encode_tiff(self).unwrap_or_default();
-        let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
+ const EXTENSION:&'static str="tiff";
+ fn envelope_id()->&'static str{"stdio.tiff"}
+ fn parse_dsl(text:&str)->Result<Self,semio_framework_diagnostic::TextError>{
+  let(envelope,body)=store::semio_format::split_text_preamble(text).map_err(|error|semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error.to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))?;
+  if !envelope.matches_identity(Self::envelope_id(),store::semio_format::Component::Dsl,1){return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"TIFF owned Text envelope mismatch",semio_framework_diagnostic::TextSpan::at(1,1)))}
+  super::text::from_record(semio_framework_dsl_record::parse_exact(body,&super::text::spec(),&semio_framework_dsl_record::ParseOptions::default())?)
+ }
+ fn print_dsl(&self)->String{
+  let body=semio_framework_dsl_record::print(&super::text::to_record(self),&super::text::spec(),semio_framework_dsl_record::JoinMode::Document);
+  let envelope=store::semio_format::SemioEnvelope::from_envelope_id(Self::envelope_id(),store::semio_format::Component::Dsl,1).expect("declared TIFF envelope");store::semio_format::wrap_text(&envelope,&body)
+ }
 }
-
 impl store::ArtifactPack for TiffSnapshot {
-    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> { Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec()) }
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let _ = options;
-        let raw = crate::engine::encode_tiff(self).map_err(store::PackError::Schema)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &raw))
-    }
-
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
-        }
-        let _ = options;
-        crate::engine::decode_tiff(&inner).map_err(store::PackError::Schema)
-    }
+ fn record_spec()->Option<semio_framework_dsl_record::RecordSpec>{Some(super::text::spec())}
+ fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}
+ fn encode_pack_with(&self,options:&store::PackEncodeOptions)->Result<Vec<u8>,store::PackError>{
+  let body=store::pack_rt::encode_document(&super::text::spec(),&super::text::to_record(self),options)?;
+  let envelope=store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1).map_err(|error|store::PackError::from(error.into_value_error()))?;Ok(store::semio_format::wrap_binary(&envelope,&body))
+ }
+ fn decode_pack_with(bytes:&[u8],options:&store::PackDecodeOptions)->Result<Self,store::PackError>{
+  let(envelope,body)=store::semio_format::unwrap_binary(bytes).map_err(|error|store::PackError::from(error.into_value_error()))?;
+  if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1){return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "TIFF owned Pack envelope mismatch")))}
+  super::text::from_record(store::pack_rt::decode_document(&body,&super::text::spec(),options)?.0).map_err(|error|store::PackError::from(error))
+ }
 }
 //#endregion HandcraftedArtifactCodecs

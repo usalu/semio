@@ -12,7 +12,7 @@ import { createContributionsPublisher } from "../../🧱️elements/🛠️Shell
 import pluginLifetimeSchema from "../../../../🔌️plugin/🚪️lifetime/🧬️schema/🔣️.json";
 import faultVectors from "../../../../🔌️plugin/🩺️runtime-fault-vectors.json";
 import shellSource from "../../🧱️elements/🏛️ShellHost/🟦️.tsx?raw";
-import uiBundleSource from "../../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx?raw";
+import uiBundleSource from "../../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/🟦️.ts?raw";
 
 type FaultVector = { readonly variant: string; readonly code: string; readonly class: string; readonly detail: string };
 type ClassificationCase = { readonly id: string; readonly code?: string; readonly supervisor?: string; readonly class: string };

@@ -6,9 +6,12 @@ use crate::ProgramMutation;
 use crate::ProgramSnapshot;
 
 /// ↩️ Undo a delete by recreating the captured row. Missing target ⇒ nothing to undo.
-pub fn inverse(payload: &super::DeleteWayfindingRequirement, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+pub fn inverse(payload: &super::DeleteWayfindingRequirement, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.wayfinding.iter().find(|row| row.header.id == payload.id) {
         Some(existing) => vec![ProgramMutation::CreateWayfindingRequirement(super::super::create_wayfinding_requirement::CreateWayfindingRequirement { wayfinding_requirement: existing.clone() })],
         None => Vec::new(),
     }
+
+    })())
 }

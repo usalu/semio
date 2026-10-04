@@ -18,5 +18,6 @@
     "controlFactor": 0.88
   },
   "renewables": null,
-  "climate": null
+  "climate": null,
+  "climateTable": null
 }

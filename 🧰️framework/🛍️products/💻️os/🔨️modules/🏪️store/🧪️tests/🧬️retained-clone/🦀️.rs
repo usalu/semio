@@ -1,8 +1,8 @@
 use super::*;
-use semio_framework_value::retained_clone::*;
-use semio_framework_value::retirement::{OwnedValueRetirementFactory, RetireOwned};
 use semio_framework_value::retained_clone::ordered_map::{BoundedOrdGrant, RetainedOrderedMap, RetainedOrderedMapInsertCursor, RetainedOrderedMapInsertGrant, RetainedOrderedMapInsertStep};
+use semio_framework_value::retained_clone::*;
 use semio_framework_value::retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneSource, RetainedCloneStep};
+use semio_framework_value::retirement::{OwnedValueRetirementFactory, RetireOwned};
 use semio_framework_value_derive::{RetainedClone, RetireOwned};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -127,7 +127,12 @@ fn source(fixture: &Fixture) -> NeutralSnapshot {
 
 fn fixture_labels(fixture: &Fixture) -> RetainedOrderedMap<String, String> {
     let turn = &fixture.grant;
-    let grant = RetainedOrderedMapInsertGrant { comparison: BoundedOrdGrant { maximum_items: turn.maximum_items, maximum_bytes: turn.maximum_copy_bytes }, maximum_moved_items: turn.maximum_items, maximum_moved_bytes: turn.maximum_copy_bytes, maximum_capacity_bytes: turn.maximum_capacity_bytes };
+    let grant = RetainedOrderedMapInsertGrant {
+        comparison: BoundedOrdGrant { maximum_items: turn.maximum_items, maximum_bytes: turn.maximum_copy_bytes },
+        maximum_moved_items: turn.maximum_items,
+        maximum_moved_bytes: turn.maximum_copy_bytes,
+        maximum_capacity_bytes: turn.maximum_capacity_bytes,
+    };
     let mut labels = RetainedOrderedMap::default();
     for (key, value) in &fixture.source.labels {
         let mut cursor = RetainedOrderedMapInsertCursor::new(labels, key.clone(), value.clone());
@@ -135,13 +140,18 @@ fn fixture_labels(fixture: &Fixture) -> RetainedOrderedMap<String, String> {
             let step = cursor.advance(grant).expect("controlled fixture labels insertion");
             match step {
                 RetainedOrderedMapInsertStep::Progress(progress) => assert!(progress.fits(grant)),
-                RetainedOrderedMapInsertStep::Complete { progress, .. } => { assert!(progress.fits(grant)); break; }
+                RetainedOrderedMapInsertStep::Complete { progress, .. } => {
+                    assert!(progress.fits(grant));
+                    break;
+                }
             }
         }
         labels = cursor.take().expect("controlled fixture labels completed");
         assert!(cursor.begin_close());
         for _ in 0..10000 {
-            if cursor.close_step(turn.maximum_items, turn.maximum_copy_bytes).expect("fixture labels cursor closes") == SnapshotRetirementStep::Complete { break; }
+            if cursor.close_step(turn.maximum_items, turn.maximum_copy_bytes).expect("fixture labels cursor closes") == SnapshotRetirementStep::Complete {
+                break;
+            }
         }
         assert!(cursor.terminal_is_empty());
     }
@@ -302,7 +312,9 @@ fn utf8_copy_is_boundary_paged_and_source_lease_captures_one_value() {
     let siblings = retained_source(("same".to_string(), "same".to_string()));
     let mut sibling_cursor = String::retained_clone_cursor();
     sibling_cursor.advance(siblings.borrow().project(1, |value| &value.0), reserve).expect("first sibling projection");
-    assert!(sibling_cursor.advance(siblings.borrow().project(2, |value| &value.1), reserve).expect_err("crossed sibling projection must fail").contains("projected path changed"));
+    let error = sibling_cursor.advance(siblings.borrow().project(2, |value| &value.1), reserve).expect_err("crossed sibling projection must fail");
+    assert_eq!(error.kind, semio_framework_value::ValueRefusalKind::InvariantViolated);
+    assert!(error.message.contains("projected path changed"));
     close_cursor::<String>(&mut sibling_cursor);
 }
 
@@ -446,7 +458,8 @@ fn recursive_depth_envelope_accepts_boundary_and_rejects_the_next_box() {
         }
         assert!(turns < 100_000);
     };
-    assert!(error.contains("depth limit"));
+    assert_eq!(error.kind, semio_framework_value::ValueRefusalKind::DepthLimit);
+    assert!(error.message.contains("depth limit"));
     close_cursor::<RecursiveRecord>(&mut cursor);
 }
 
@@ -531,4 +544,6 @@ fn zero_grants_never_construct_or_complete_an_owner() {
     close_cursor::<UnitRecord>(&mut derived);
 }
 
-fn retained_source<T: Send + Sync + 'static>(owner: T) -> RetainedCloneSource<T> { RetainedCloneSource::from_authority(Arc::new(owner), ()) }
+fn retained_source<T: Send + Sync + 'static>(owner: T) -> RetainedCloneSource<T> {
+    RetainedCloneSource::from_authority(Arc::new(owner), ())
+}

@@ -1,0 +1,11 @@
+{
+  "name": "@semio-tech/space-plugin",
+  "private": true,
+  "type": "module",
+  "nx": {
+    "includedScripts": []
+  },
+  "scripts": {
+    
+  }
+}

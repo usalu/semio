@@ -1,0 +1,277 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/raster/raster/mutation/transform-image/schema.json",
+  "title": "TransformImage",
+  "x-semio-inverse-rows": { "bounded": 3 },
+  "description": "One change of a layer image's pixel grid, stated as its intent: a quarter turn either way, a resize to width × height (nearest or bilinear sampling) or a crop to the width × height window at (x, y). Every application runs the operation on the layer image through the shared pixel engine, files the result as a new content-addressed asset and moves the layer so the image keeps its place and scale; a missing layer or image is `mutation.target-missing`, a locked layer, a layer without pixels or a crop window past the image is `mutation.target-mismatch`.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "layerId",
+    "operation",
+    "x",
+    "y",
+    "width",
+    "height",
+    "bilinear"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "enum": [
+              "rotateClockwise",
+              "rotateCounterclockwise"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "x": {
+            "const": 0
+          },
+          "y": {
+            "const": 0
+          },
+          "width": {
+            "const": 0
+          },
+          "height": {
+            "const": 0
+          },
+          "bilinear": {
+            "const": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "resize"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "x": {
+            "const": 0
+          },
+          "y": {
+            "const": 0
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "crop"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "width": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "bilinear": {
+            "const": false
+          }
+        }
+      }
+    }
+  ],
+  "properties": {
+    "mutation": {
+      "const": "transformImage"
+    },
+    "layerId": {
+      "type": "string",
+      "minLength": 1,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Layer",
+          "de": "Ebene"
+        },
+        "description": {
+          "en": "The layer whose image is turned, resized or cropped.",
+          "de": "Die Ebene, deren Bild gedreht, skaliert oder zugeschnitten wird."
+        },
+        "ref": {
+          "kind": "layer",
+          "domain": "layers",
+          "granularity": "layer"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "operation": {
+      "type": "string",
+      "enum": [
+        "rotateClockwise",
+        "rotateCounterclockwise",
+        "resize",
+        "crop"
+      ],
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Operation",
+          "de": "Vorgang"
+        },
+        "description": {
+          "en": "How the image's pixel grid changes.",
+          "de": "Wie sich das Pixelraster des Bilds ändert."
+        },
+        "options": {
+          "rotateClockwise": {
+            "en": "Rotate right",
+            "de": "Nach rechts drehen"
+          },
+          "rotateCounterclockwise": {
+            "en": "Rotate left",
+            "de": "Nach links drehen"
+          },
+          "resize": {
+            "en": "Resize",
+            "de": "Skalieren"
+          },
+          "crop": {
+            "en": "Crop",
+            "de": "Zuschneiden"
+          }
+        },
+        "group": "grid",
+        "order": 10
+      }
+    },
+    "x": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 16383,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Left",
+          "de": "Links"
+        },
+        "description": {
+          "en": "The crop window's left edge in the image's pixels; 0 for every other operation.",
+          "de": "Linker Rand des Zuschnittfensters in Pixeln des Bilds; 0 für jeden anderen Vorgang."
+        },
+        "unit": "px",
+        "step": 1,
+        "precision": 0,
+        "group": "grid",
+        "order": 20
+      }
+    },
+    "y": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 16383,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Top",
+          "de": "Oben"
+        },
+        "description": {
+          "en": "The crop window's top edge in the image's pixels; 0 for every other operation.",
+          "de": "Oberer Rand des Zuschnittfensters in Pixeln des Bilds; 0 für jeden anderen Vorgang."
+        },
+        "unit": "px",
+        "step": 1,
+        "precision": 0,
+        "group": "grid",
+        "order": 30
+      }
+    },
+    "width": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 16384,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Width",
+          "de": "Breite"
+        },
+        "description": {
+          "en": "The resized or cropped image's width in pixels; 0 for a quarter turn.",
+          "de": "Breite des skalierten oder zugeschnittenen Bilds in Pixeln; 0 für eine Vierteldrehung."
+        },
+        "unit": "px",
+        "step": 1,
+        "precision": 0,
+        "group": "grid",
+        "order": 40
+      }
+    },
+    "height": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 16384,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Height",
+          "de": "Höhe"
+        },
+        "description": {
+          "en": "The resized or cropped image's height in pixels; 0 for a quarter turn.",
+          "de": "Höhe des skalierten oder zugeschnittenen Bilds in Pixeln; 0 für eine Vierteldrehung."
+        },
+        "unit": "px",
+        "step": 1,
+        "precision": 0,
+        "group": "grid",
+        "order": 50
+      }
+    },
+    "bilinear": {
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Smooth sampling",
+          "de": "Weiche Abtastung"
+        },
+        "description": {
+          "en": "Whether a resize samples bilinearly instead of taking the nearest pixel; off for every other operation.",
+          "de": "Ob eine Skalierung bilinear statt mit dem nächsten Pixel abtastet; aus für jeden anderen Vorgang."
+        },
+        "group": "grid",
+        "order": 60
+      }
+    }
+  }
+}

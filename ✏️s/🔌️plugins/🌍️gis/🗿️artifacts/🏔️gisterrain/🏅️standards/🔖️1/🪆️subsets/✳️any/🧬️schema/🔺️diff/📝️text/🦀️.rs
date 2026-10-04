@@ -27,8 +27,8 @@ impl MutationDiff<GisTerrainSnapshot> for GisTerrainDiff {
             if let Some(value) = self.exaggeration {
                 next.exaggeration = value;
             }
-            if let Some(value) = &self.imported_features_json {
-                next.imported_features_json = value.clone();
+            if let Some(value) = &self.imported_map {
+                next.imported_map = value.value.clone();
             }
             next
         })
@@ -46,7 +46,7 @@ impl MutationDiff<GisTerrainSnapshot> for GisTerrainDiff {
             };
         }
         take!(exaggeration);
-        take!(imported_features_json);
+        take!(imported_map);
     }
 }
 //#endregion 🔹Apply
@@ -57,8 +57,8 @@ pub fn diff_exaggeration(exaggeration: f64) -> GisTerrainDiff {
     GisTerrainDiff { exaggeration: Some(exaggeration), ..Default::default() }
 }
 
-pub fn diff_imported_features_json(features_json: String) -> GisTerrainDiff {
-    GisTerrainDiff { imported_features_json: Some(features_json), ..Default::default() }
+pub fn diff_imported_map(value: Option<crate::schema::ImportedMap>) -> GisTerrainDiff {
+    GisTerrainDiff { imported_map: Some(ImportedMapChange{value}), ..Default::default() }
 }
 
 pub fn diff_set_snapshot(snapshot: &GisTerrainSnapshot) -> GisTerrainDiff {

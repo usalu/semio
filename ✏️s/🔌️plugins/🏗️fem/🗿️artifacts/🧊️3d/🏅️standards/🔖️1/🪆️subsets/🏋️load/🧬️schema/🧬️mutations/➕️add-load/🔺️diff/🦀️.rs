@@ -11,7 +11,7 @@ pub fn diff(payload: &AddLoad, base: &Fem3dSnapshot) -> protocol::MutationOutcom
     };
     let new_load_id = load_id(&payload.load);
     if existing.loads.iter().any(|load| load_id(load) == new_load_id) {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Load \"{}\" already exists in case \"{}\".", new_load_id, payload.case_id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Load \"{}\" already exists in case \"{}\".", new_load_id, payload.case_id));
     }
     if let Some(refusal) = resolve_load(base, &payload.load) {
         return refusal;

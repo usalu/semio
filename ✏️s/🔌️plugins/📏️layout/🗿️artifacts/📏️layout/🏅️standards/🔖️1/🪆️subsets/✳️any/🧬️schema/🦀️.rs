@@ -33,7 +33,7 @@ pub struct LayoutArtifact {
     pub print_target: Option<String>,
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub data_fields_json: Option<String>,
+    pub data_fields: Option<crate::FormDictionary>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -60,7 +60,7 @@ impl Default for LayoutArtifact {
             spreads: Vec::new(),
             pages: Vec::new(),
             print_target: None,
-            data_fields_json: None,
+            data_fields: None,
             background_drawing: None,
             referenced_model: None,
         }
@@ -82,7 +82,7 @@ impl LayoutArtifact {
             spreads: self.spreads.clone(),
             pages: self.pages.clone(),
             print_target: self.print_target.clone(),
-            data_fields_json: self.data_fields_json.clone(),
+            data_fields: self.data_fields.clone(),
             background_drawing: self.background_drawing.clone(),
             referenced_model: self.referenced_model.clone(),
         }
@@ -102,7 +102,7 @@ impl LayoutArtifact {
             spreads: snapshot.spreads,
             pages: snapshot.pages,
             print_target: snapshot.print_target,
-            data_fields_json: snapshot.data_fields_json,
+            data_fields: snapshot.data_fields,
             background_drawing: snapshot.background_drawing,
             referenced_model: snapshot.referenced_model,
 
@@ -122,7 +122,7 @@ impl LayoutArtifact {
         self.spreads = snapshot.spreads;
         self.pages = snapshot.pages;
         self.print_target = snapshot.print_target;
-        self.data_fields_json = snapshot.data_fields_json;
+        self.data_fields = snapshot.data_fields;
         self.background_drawing = snapshot.background_drawing;
         self.referenced_model = snapshot.referenced_model;
     }
@@ -163,7 +163,7 @@ pub mod derived_construction {
     #[derive(Clone, Debug)]
     pub struct LayoutBuilderConstruction {
         snapshot: LayoutSnapshot,
-        diagnostics: Vec<dsl::Diagnostic>,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
     }
 
     impl ArtifactBuilder for LayoutBuilderConstruction {
@@ -176,7 +176,7 @@ pub mod derived_construction {
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(Self::from_snapshot(<LayoutSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
@@ -186,7 +186,7 @@ pub mod derived_construction {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("build.apply", dsl::TextSpan::at(1, 1), error.to_string())),
+                Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
@@ -195,7 +195,7 @@ pub mod derived_construction {
             self.snapshot = snapshot;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -237,14 +237,14 @@ pub mod derived_analysis {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <LayoutSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }
@@ -260,7 +260,7 @@ pub use derived_analysis::*;
 /// 📄️ Relocated from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES)
 /// — pure over `LayoutSnapshot`/`Page`, no engine state, no app type.
 pub fn parse_layout_document(json: &str) -> Result<crate::LayoutSnapshot, crate::io::LayoutError> {
-    let doc: crate::LayoutSnapshot = dsl::os_pack::json::from_json_str(json)?;
+    let doc: crate::LayoutSnapshot = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject)?;
     if doc.schema != LAYOUT_DOCUMENT_SCHEMA {
         return Err(crate::io::LayoutError::UnexpectedSchema(doc.schema));
     }
@@ -410,7 +410,7 @@ fn build_demo_layout_snapshot() -> crate::LayoutSnapshot {
             },
         ],
         print_target: None,
-        data_fields_json: None,
+        data_fields: None,
         background_drawing: None,
         referenced_model: None,
     }
@@ -420,7 +420,7 @@ fn build_demo_layout_snapshot() -> crate::LayoutSnapshot {
 /// on its `document_json` parameter (shared framework machinery, out of scope for this DSL migration) —
 /// derives the JSON from the DSL fixture rather than keeping a second, redundant JSON copy of it on disk.
 pub fn layout_sample_document_json() -> String {
-    dsl::os_pack::json::to_json_string(&default_document())
+    semio_framework_pack_json::to_json_string(&default_document())
 }
 
 /// 🎨️ Formats an optional RGBA color as a comma-separated text field value; two consumers

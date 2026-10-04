@@ -53,8 +53,8 @@ fn json(text: &str) -> Value {
     serde_json::from_str(text).expect("committed JSON parses")
 }
 
-fn wire<T: dsl::ToValue>(value: &T) -> Value {
-    json(&dsl::json::to_json_string(value))
+fn wire<T: semio_framework_value::ToValue>(value: &T) -> Value {
+    json(&semio_framework_pack_json::to_json_string(value))
 }
 
 /// ⚖️ JSON equality where a number is its value, not its spelling (`2` and `2.0` are one JSON number).
@@ -106,7 +106,7 @@ pub(crate) fn assert_case(name: &str) {
     let case = corpus().join(name);
     assert!(case.join("🦠️mutation/🔣️.json").is_file(), "{name}: no committed case");
     let text = read(&case.join("🦠️mutation/🔣️.json"));
-    let mutation: GltfMutation = dsl::json::from_json_str(&text).unwrap_or_else(|error| panic!("{name}: the committed mutation decodes: {error}"));
+    let mutation: GltfMutation = semio_framework_pack_json::from_json_str(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|error| panic!("{name}: the committed mutation decodes: {error}"));
     assert_committed_wire(name, &text, &mutation);
     if let Some(before) = assert_committed_outcome(name, &case, &mutation) {
         assert_inverse_restores(name, &mutation, &before);
@@ -122,7 +122,7 @@ fn assert_committed_wire(name: &str, text: &str, mutation: &GltfMutation) {
     let content = &json(text)["payload"];
     let editable = if content.get("phase").is_some() { &content["value"] } else { content };
     assert!(same(&wire(&payload), editable), "{name}: payload_value is the editable content of the aggregate member");
-    assert_valid(schema, &dsl::json::to_json_string(&payload), name);
+    assert_valid(schema, &semio_framework_pack_json::to_json_string(&payload), name);
     assert_eq!(&<GltfMutation as protocol::Mutation<GltfSnapshot>>::with_payload_value(mutation, payload).expect("the payload rebuilds its own kind"), mutation, "{name}");
 }
 
@@ -133,7 +133,7 @@ fn assert_committed_outcome(name: &str, case: &Path, mutation: &GltfMutation) ->
     for side in ["⬅️before", "➡️after"] {
         let text = read(&case.join("📸️snapshot").join(side).join("🔣️.json"));
         assert_valid(SNAPSHOT_SCHEMA, &text, &format!("{name} {side}"));
-        let snapshot: GltfSnapshot = dsl::json::from_json_str(&text).unwrap_or_else(|error| panic!("{name} {side}: {error}"));
+        let snapshot: GltfSnapshot = semio_framework_pack_json::from_json_str(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|error| panic!("{name} {side}: {error}"));
         assert!(same(&wire(&snapshot), &json(&text)), "{name} {side}: decode→encode is not a fixed point");
         snapshots.push(snapshot);
     }
@@ -145,15 +145,15 @@ fn assert_committed_outcome(name: &str, case: &Path, mutation: &GltfMutation) ->
             assert!(outcome.messages().is_empty(), "{name}: {:?}", outcome.messages());
             let committed = read(&case.join("🔺️diff/🔣️.json"));
             assert_valid(DIFF_SCHEMA, &committed, &format!("{name} diff"));
-            assert!(same(&wire(outcome.diff()), &json(&committed)), "{name}: the produced diff differs from the committed one:\n{}", dsl::json::to_json_string(outcome.diff()));
-            let decoded: GltfDiff = dsl::json::from_json_str(&committed).expect("committed diff decodes");
+            assert!(same(&wire(outcome.diff()), &json(&committed)), "{name}: the produced diff differs from the committed one:\n{}", semio_framework_pack_json::to_json_string(outcome.diff()));
+            let decoded: GltfDiff = semio_framework_pack_json::from_json_str(&committed, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
             assert_eq!(decoded.apply(&before).expect("committed diff applies"), after, "{name}: the committed diff does not carry before to after");
             Some(before)
         }
         Some("rejected") => {
             let code = declared["code"].as_str().expect("a rejection names its outcome code");
             let rejection = declared["rejection"].as_str().expect("a rejection names its glTF refusal");
-            assert_eq!(crate::schema::modules::mutation_support::top_level::rejection_outcome_code(rejection), code, "{name}: the declared outcome code is the one the glTF refusal maps to");
+            assert_eq!(crate::schema::modules::mutation_support::top_level::rejection_outcome_code(rejection).as_str(), code, "{name}: the declared outcome code is the one the glTF refusal maps to");
             assert!(outcome.diff().is_empty_diff(), "{name}: a rejection changes nothing");
             assert_eq!(outcome.messages().iter().map(|message| message.code.0.as_str()).collect::<Vec<_>>(), [code], "{name}");
             assert!(outcome.messages().iter().all(|message| !matches!(message.code.0.as_str(), "mutation.target-mismatch" | "mutation.invariant") || message.message.starts_with(rejection)), "{name}: {:?}", outcome.messages());
@@ -168,14 +168,14 @@ fn assert_committed_outcome(name: &str, case: &Path, mutation: &GltfMutation) ->
 /// ↩️ The computed inverse restores `before`; a `restore` is inert (not editable) and the aggregate admits its wire.
 fn assert_inverse_restores(name: &str, mutation: &GltfMutation, before: &GltfSnapshot) {
     let mut restored = <GltfMutation as protocol::Mutation<GltfSnapshot>>::diff(mutation, before).diff().apply(before).expect("forward applies");
-    let inverse = <GltfMutation as protocol::Mutation<GltfSnapshot>>::inverse(mutation, before);
+    let inverse = <GltfMutation as protocol::Mutation<GltfSnapshot>>::inverse(mutation, before).expect("valid retained mutation inverse fixture");
     assert!(!inverse.is_empty(), "{name}: an applied change has an inverse");
     for step in inverse {
-        let text = dsl::json::to_json_string(&step);
+        let text = semio_framework_pack_json::to_json_string(&step);
         assert_aggregate_admits(&text, &format!("{name} inverse"));
         let restore = json(&text)["payload"].get("phase").is_some();
         assert_eq!(<GltfMutation as protocol::Mutation<GltfSnapshot>>::input_schema(&step).is_none(), restore, "{name}: only a wrapped leaf's restore is inert");
-        let decoded: GltfMutation = dsl::json::from_json_str(&text).expect("inverse wire decodes");
+        let decoded: GltfMutation = semio_framework_pack_json::from_json_str(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("inverse wire decodes");
         let outcome = <GltfMutation as protocol::Mutation<GltfSnapshot>>::diff(&decoded, &restored);
         assert!(outcome.messages().is_empty(), "{name}: {:?}", outcome.messages());
         restored = outcome.diff().apply(&restored).expect("restore applies");
@@ -224,8 +224,8 @@ fn every_committed_case_is_mounted_by_its_leaf_implementation_case() {
 /// 🎛️ The framework reader declares every leaf's inputs, resolving the shared documents by `$id`.
 #[test]
 fn every_leaf_schema_declares_its_inputs_to_the_framework_reader() {
-    let documents = [SNAPSHOT_SCHEMA, DIFF_SCHEMA].map(|text| dsl::os_pack::json::to_dsl_value(&dsl::os_pack::json::parse(text).expect("shared document parses")));
-    let resolve = |id: &str| documents.iter().find(|document| document.get("$id").and_then(dsl::DslValue::as_str) == Some(id)).cloned();
+    let documents = [SNAPSHOT_SCHEMA, DIFF_SCHEMA].map(|text| semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("shared document parses")));
+    let resolve = |id: &str| documents.iter().find(|document| document.get("$id").and_then(semio_framework_value::DslValue::as_str) == Some(id)).cloned();
     assert_eq!(<GltfMutation as protocol::Mutation<GltfSnapshot>>::INPUT_SCHEMAS.len(), 121);
     for schema in <GltfMutation as protocol::Mutation<GltfSnapshot>>::INPUT_SCHEMAS {
         let title = json(schema)["title"].as_str().unwrap_or_default().to_string();

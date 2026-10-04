@@ -1,7 +1,0 @@
-{
-  "mutation": "duplicateStep",
-  "sourceId": "step-log",
-  "newId": "step-copy",
-  "x": 560.0,
-  "y": 0.0
-}

@@ -1,0 +1,22 @@
+{
+ "$schema":"http://json-schema.org/draft-07/schema#",
+ "$id":"https://json.schemas.assets.semio-tech.com/s/forms/forms/dictionary.json",
+ "title":"FormDictionary",
+ "type":"object",
+ "additionalProperties":false,
+ "required":["entries"],
+ "properties":{"entries":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["questionId","value"],"properties":{"questionId":{"type":"string"},"value":{"$ref":"#/$defs/IntrinsicLiteral"}}}}},
+ "$defs":{
+  "Word":{"type":"integer","minimum":0,"maximum":4294967295},
+  "IntrinsicMember":{"type":"object","additionalProperties":false,"required":["name","value"],"properties":{"name":{"type":"string"},"value":{"$ref":"#/$defs/IntrinsicLiteral"}}},
+  "IntrinsicLiteral":{"oneOf":[
+   {"type":"object","additionalProperties":false,"required":["kind"],"properties":{"kind":{"const":"null"}}},
+   {"type":"object","additionalProperties":false,"required":["kind","value"],"properties":{"kind":{"const":"boolean"},"value":{"type":"boolean"}}},
+   {"type":"object","additionalProperties":false,"required":["kind","high","low"],"properties":{"kind":{"enum":["unsigned","signed","float"]},"high":{"$ref":"#/$defs/Word"},"low":{"$ref":"#/$defs/Word"}}},
+   {"type":"object","additionalProperties":false,"required":["kind","value"],"properties":{"kind":{"const":"text"},"value":{"type":"string"}}},
+   {"type":"object","additionalProperties":false,"required":["kind","value"],"properties":{"kind":{"const":"bytes"},"value":{"type":"array","items":{"type":"integer","minimum":0,"maximum":255}}}},
+   {"type":"object","additionalProperties":false,"required":["kind","items"],"properties":{"kind":{"const":"array"},"items":{"type":"array","items":{"$ref":"#/$defs/IntrinsicLiteral"}}}},
+   {"type":"object","additionalProperties":false,"required":["kind","members"],"properties":{"kind":{"const":"object"},"members":{"type":"array","items":{"$ref":"#/$defs/IntrinsicMember"}}}}
+  ]}
+ }
+}

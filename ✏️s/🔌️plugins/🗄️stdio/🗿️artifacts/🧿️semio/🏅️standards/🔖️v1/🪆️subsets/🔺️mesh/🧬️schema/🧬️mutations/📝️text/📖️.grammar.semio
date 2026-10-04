@@ -43,7 +43,7 @@ mesh = "[" hex "," "[" primitive-list? "]" "]"
 primitive-list = primitive {"," primitive}*
 primitive = "[" hex "," topology "," "[" point3-list? "]" "," "[" point3-list? "]" "," "[" uv-list? "]" "," "[" rgba-list? "]" "," "[" index-list? "]" "," option-hex "]"
 material-list = material {"," material}*
-material = "[" hex "," rgba "," number "," number "]"
+material = "[" hex "," rgba "," number "," number  "," option-hex "," option-hex "," option-hex "," option-hex "," option-hex "]"
 texture-list = texture {"," texture}*
 texture = "[" hex "," hex "," hex "]"
 

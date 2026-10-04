@@ -1,3 +1,4 @@
+# import LowpolyMeshState,LowpolyMeshStateInput from "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🕸️mesh/🔗️.graphql"
 # 🧬️ Lowpoly artifact schema — every field with its state class.
 # import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
 
@@ -42,6 +43,7 @@ type LowpolyObject {
   "null when the object owns no mesh yet — confirmed against the create-object mutation fixture."
   mesh: ArtifactChild
   paintLayers: [LowpolyPaintLayer!]!
-  "Half-edge-mesh JSON the mesh handle hashes; empty in legacy handle-only documents."
-  meshContent: String
+  "Independent literal source text, including legal malformed intermediate states."
+  meshContent: String!
+  meshState: LowpolyMeshState
 }

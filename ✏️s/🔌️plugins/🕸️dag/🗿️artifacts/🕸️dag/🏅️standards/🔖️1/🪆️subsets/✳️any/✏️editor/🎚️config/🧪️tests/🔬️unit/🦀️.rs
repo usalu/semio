@@ -27,7 +27,7 @@ async fn dag_config_operation_backwards_restores_the_pre_operation_snapshot() {
     let operation = DagConfigMutation::ChangeCamera(ChangeCamera { x: 9.0, y: 8.0, zoom: 7.0 });
     let forward = operation.diff(&base).diff().clone();
     assert_eq!((forward.camera_x, forward.camera_y, forward.camera_zoom), (9.0, 8.0, 7.0));
-    let backwards = operation.inverse(&base);
+    let backwards = operation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(backwards, vec![DagConfigMutation::ChangeCamera(ChangeCamera { x: base.camera_x, y: base.camera_y, zoom: base.camera_zoom })]);
     let restored = backwards[0].diff(&forward).diff().clone();
     assert_eq!(restored, base);

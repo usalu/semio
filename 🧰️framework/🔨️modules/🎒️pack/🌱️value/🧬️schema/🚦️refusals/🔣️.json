@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases",
+    "symbols",
+    "orderedSymbols"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "interior-cancel",
+              "frontier-admission",
+              "symbol-depth"
+            ]
+          },
+          "kind": {
+            "enum": [
+              "canceled",
+              "ownershipLimit",
+              "depthLimit"
+            ]
+          }
+        }
+      }
+    },
+    "symbols": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "orderedSymbols": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

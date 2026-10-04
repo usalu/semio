@@ -264,6 +264,7 @@ mod live {
     fn apply_kind(doc: &mut OracleDoc, kind: &str, params: &Json) -> Result<(), String> {
         match kind {
             "set-snapshot" => *doc = doc_from_json(params.get("snapshot").ok_or("set-snapshot: missing snapshot")?)?,
+            "patch-snapshot" => *doc = doc_from_json(&semio_repo_test_host::law::patched_snapshot(&doc_to_json(doc), params.get("patch").ok_or("patch-snapshot: missing patch")?)?)?,
             "set-screen-size" => {
                 doc.width = num(params, "width").ok_or("set-screen-size: missing width")? as u16;
                 doc.height = num(params, "height").ok_or("set-screen-size: missing height")? as u16;
@@ -350,7 +351,7 @@ mod live {
         };
         let targeted = || num(params, "index").map(|index| index as usize).filter(|index| *index < doc.images.len());
         match kind {
-            "set-snapshot" => (0..doc.images.len()).find_map(|index| fits(index).or_else(|| covers(index)).or_else(|| colored(index))),
+            "set-snapshot" | "patch-snapshot" => (0..doc.images.len()).find_map(|index| fits(index).or_else(|| covers(index)).or_else(|| colored(index))),
             "set-screen-size" => (0..doc.images.len()).find_map(fits),
             "set-global-color-table" => (0..doc.images.len()).filter(|index| doc.images[*index].palette.is_none()).find_map(colored),
             "insert-image" => {
@@ -386,7 +387,7 @@ mod live {
     fn inverse_spec(original_bytes: &[u8], kind: &str, params: &Json) -> Result<Option<(&'static str, Json)>, String> {
         let original = oracle_decode(original_bytes)?;
         Ok(Some(match kind {
-            "set-snapshot" => ("set-snapshot", Json::Object(vec![("snapshot".to_string(), doc_to_json(&original))])),
+            "set-snapshot" | "patch-snapshot" => ("set-snapshot", Json::Object(vec![("snapshot".to_string(), doc_to_json(&original))])),
             "set-screen-size" => ("set-screen-size", Json::Object(vec![("width".to_string(), Json::Number(original.width as f64)), ("height".to_string(), Json::Number(original.height as f64))])),
             "set-global-color-table" => ("set-global-color-table", Json::Object(vec![("gct".to_string(), if original.gct.is_empty() { Json::Null } else { palette_to_json(&original.gct) })])),
             "set-background-color-index" => ("set-background-color-index", Json::Object(vec![("index".to_string(), Json::Number(original.background_color_index as f64))])),

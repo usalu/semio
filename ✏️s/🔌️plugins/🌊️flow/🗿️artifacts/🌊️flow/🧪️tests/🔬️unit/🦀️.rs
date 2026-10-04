@@ -38,11 +38,11 @@ fn flow_scene_owner_holds_identity_isolation_aba_wire_omission_and_close() {
     assert_eq!(owner_text(&stale_a), "A", "stale A must not resolve reused B");
     assert_eq!(owner_text(&reused_b), "B");
 
-    let wire = serde_json::Value::from(dsl::ToValue::to_value(&stale_a));
+    let wire = serde_json::Value::from(semio_framework_value::ToValue::to_value(&stale_a));
     assert_eq!(wire.as_object().map(serde_json::Map::len), Some(2));
     assert!(wire.get("localOwner").is_none());
     let encoded = serde_json::to_vec(&wire).expect("independent JSON encoding");
-    let decoded: FlowContentChild = flow::os_pack::json::from_json_str(std::str::from_utf8(&encoded).unwrap()).expect("child wire decode");
+    let decoded: FlowContentChild = semio_framework_pack_json::from_json_str(std::str::from_utf8(&encoded).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("child wire decode");
     assert!(decoded.local_owner::<FlowWorkingScene>().is_none());
 
     drop(left_owner);
@@ -91,7 +91,7 @@ async fn widget_content_round_trips_through_the_composed_child_snapshot() {
 fn authored_slider_labels_survive_child_content_round_trip() {
     let cases: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/📸️snapshot/🧫️fixtures/🏷️slider-labels.json")).unwrap();
     for row in cases["cases"].as_array().unwrap() {
-        let widget: Widget = dsl::FromValue::from_value(dsl::DslValue::from(row["widget"].clone())).unwrap();
+        let widget: Widget = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(row["widget"].clone())).unwrap();
         let content = flow_content_snapshot_from_working(&[widget.clone()], &[], &flow::OrderedMap::new());
         assert_eq!(content.nodes[0].label, row["expectedDagName"].as_str().unwrap());
         let (widgets, synapses, layout) = working_from_flow_content_snapshot(&content);

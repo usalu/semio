@@ -518,10 +518,10 @@ async fn context_menu_uses_live_interaction_when_surface_selection_empty() {
 fn command_from_action_round_trips_every_command_id() {
     for command in every_command() {
         let id = command.command_id();
-        let args = dsl::ToValue::to_value(&command);
+        let args = semio_framework_value::ToValue::to_value(&command);
         // 🔁️ The `DslOps` wire shape is `{keyword: payload}`; the shell sends the bare payload object.
         let payload = match &args {
-            dsl::DslValue::Object(entries) if entries.len() == 1 => entries[0].1.clone(),
+            semio_framework_value::DslValue::Object(entries) if entries.len() == 1 => entries[0].1.clone(),
             other => other.clone(),
         };
         let mut camel = camel_case_keys(&payload);
@@ -530,7 +530,7 @@ fn command_from_action_round_trips_every_command_id() {
             let index = entries.iter().position(|(key, _)| key == "kind").expect("typed catalogue kind");
             let (_, kind) = entries.remove(index);
             if id == "canvasDrop" {
-                entries.push(("dragData".into(), DslValue::String(dsl::json::to_json_string(&DslValue::Object(vec![("kind".into(), kind)])))));
+                entries.push(("dragData".into(), DslValue::String(semio_framework_pack_json::to_json_string(&DslValue::Object(vec![("kind".into(), kind)])))));
             } else {
                 let DslValue::String(kind) = kind else { panic!("typed catalogue kind text") };
                 entries.push(("types".into(), DslValue::Array(vec![DslValue::String("application/x-semio-catalogue-item".into()), DslValue::String(format!("application/x-semio-catalogue-kind.{kind}"))])));
@@ -544,9 +544,9 @@ fn command_from_action_round_trips_every_command_id() {
 }
 
 /// 🐫️ The shell's spelling of the payload keys.
-fn camel_case_keys(value: &dsl::DslValue) -> dsl::DslValue {
+fn camel_case_keys(value: &semio_framework_value::DslValue) -> semio_framework_value::DslValue {
     match value {
-        dsl::DslValue::Object(entries) => dsl::DslValue::Object(
+        semio_framework_value::DslValue::Object(entries) => semio_framework_value::DslValue::Object(
             entries
                 .iter()
                 .map(|(key, value)| {
@@ -568,7 +568,7 @@ fn camel_case_keys(value: &dsl::DslValue) -> dsl::DslValue {
 #[test]
 fn command_from_action_bridges_host_control_contracts() {
     use crate::LayoutCamera;
-    let args = |json: serde_json::Value| dsl::os_pack::json_to_dsl_value(&dsl::os_pack::json::parse(&json.to_string()).expect("fixture JSON"));
+    let args = |json: serde_json::Value| semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(&json.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture JSON"));
     assert_eq!(
         LayoutPlayApp::command_from_action("addFrame", Some(&args(serde_json::json!({ "kind": "text", "x": 12, "y": 24.5 })))).expect("addFrame bridge"),
         LayoutCommand::AddFrame(add_frame::AddFrame { kind: "text".into(), x: Some(12.0), y: Some(24.5) })
@@ -718,12 +718,12 @@ async fn export_media_document_out_round_trips_through_pack() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn import_media_fields_in_sets_data_fields_json() {
+async fn import_media_fields_in_sets_typed_dictionary() {
     let mut app = layout_app().await;
-    let media = Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: "form.dictionary".into(), json: r#"{"name":"Ada"}"#.into() } };
+    let media = Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Intrinsic { schema: "form.dictionary".into(), value: semio_framework_value::DslValue::Object(vec![("name".into(),semio_framework_value::DslValue::String("Ada".into()))]) } };
     app.import_media("fields:in", media, &artifact_app_laws::meta("local")).await.expect("import fields:in");
     let document = app.snapshot().expect("projection");
-    assert_eq!(document.data_fields_json.as_deref(), Some(r#"{"name":"Ada"}"#));
+    assert_eq!(document.data_fields,Some(crate::FormDictionary{entries:vec![crate::FormDictionaryEntry{question_id:"name".into(),value:semio_framework_value::DslValue::String("Ada".into())}]}));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -756,7 +756,7 @@ async fn layout_io_declares_fields_in_and_layout_out_ports() {
 fn canvas_catalogue_actions_consume_the_neutral_renderer_envelope() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🧫️fixtures/🛍️canvas-catalogue/🔣️.json" )).expect("neutral catalogue actions");
     for case in fixture["cases"].as_array().unwrap() {
-        let args: dsl::DslValue = case["args"].clone().into();
+        let args: semio_framework_value::DslValue = case["args"].clone().into();
         let result = LayoutPlayApp::command_from_action(case["action"].as_str().unwrap(), Some(&args));
         let Some(kind) = case["kind"].as_str() else {
             assert!(result.is_err(), "{} must refuse malformed or ambiguous catalogue input", case["id"]);

@@ -16,7 +16,7 @@ fn remove_vector_field(spec: &FormsSnapshot, question_id: &str, field_key: &str)
 }
 //#endregion 🔖️Shell
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "remove-vector-field")]
 pub struct RemoveVectorField {
     pub question_id: String,

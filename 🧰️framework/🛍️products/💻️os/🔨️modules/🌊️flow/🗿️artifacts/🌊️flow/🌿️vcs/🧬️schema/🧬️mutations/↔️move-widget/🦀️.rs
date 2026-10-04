@@ -4,7 +4,7 @@ use crate::os_spr::{MutationKind, MutationOutcome, SemanticDescriptor, Identifie
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🧬️Payload
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, crate::os_dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, crate::os_dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "move-widget")]
@@ -18,9 +18,12 @@ impl MutationKind<FlowHostSnapshot, FlowMutation> for MoveWidget {
     fn diff(&self, base: &FlowHostSnapshot) -> MutationOutcome<FlowDiff> {
         MutationOutcome::new(FlowDiff::from(FlowDelta::Widgets(FlowCollectionDelta { removed: vec![self.id.clone()], inserted: base.widgets.iter().find(|item| item.id() == &self.id).map(|item| (self.to_index, item.clone())).into_iter().collect(), replaced: vec![] })))
     }
-    fn inverse(&self, base: &FlowHostSnapshot) -> Vec<FlowMutation> {
+    fn inverse(&self, base: &FlowHostSnapshot) -> Result<Vec<FlowMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         base.widgets.iter().position(|item| item.id() == &self.id).and_then(|index| flow_wire_index(index).ok().map(|to_index| FlowMutation::MoveWidget(Self { id: self.id.clone(), to_index }))).into_iter().collect()
-    }
+    
+    })())
+}
     fn label(&self) -> crate::LocalizedLabel {
         crate::LocalizedLabel::native(&format!("Move widget {}", self.id), &format!("Widget {} verschieben", self.id))
     }

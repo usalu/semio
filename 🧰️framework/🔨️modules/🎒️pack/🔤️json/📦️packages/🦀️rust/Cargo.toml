@@ -1,0 +1,24 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-pack-json"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Owned JSON syntax, ordered values, explicit member authority and controlled native serialization."
+
+[package.metadata.semio]
+role = "framework"
+id = "pack-json"
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_pack_json"
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde_json = { version = "1.0.140", features = ["float_roundtrip"] }

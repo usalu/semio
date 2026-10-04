@@ -1,0 +1,193 @@
+{
+  "at": "2026-10-03T20:58:39.847Z",
+  "rows": [
+    {
+      "kind": "accepted",
+      "value": {
+        "schemaVersion": 1,
+        "members": [
+          "framework/**/📦️packages/🦀️rust"
+        ],
+        "exclude": [
+          "**/👽️guest/**"
+        ]
+      },
+      "oracle": true,
+      "runtime": true
+    },
+    {
+      "kind": "accepted",
+      "value": {
+        "schemaVersion": 1,
+        "members": [
+          "packages/*"
+        ],
+        "exclude": []
+      },
+      "oracle": true,
+      "runtime": true
+    },
+    {
+      "kind": "refused",
+      "id": "empty",
+      "value": {
+        "schemaVersion": 1,
+        "members": [],
+        "exclude": []
+      },
+      "oracle": false,
+      "runtime": false
+    },
+    {
+      "kind": "refused",
+      "id": "parent",
+      "value": {
+        "schemaVersion": 1,
+        "members": [
+          "../outside"
+        ],
+        "exclude": []
+      },
+      "oracle": false,
+      "runtime": false
+    },
+    {
+      "kind": "refused",
+      "id": "absolute",
+      "value": {
+        "schemaVersion": 1,
+        "members": [
+          "/outside"
+        ],
+        "exclude": []
+      },
+      "oracle": false,
+      "runtime": false
+    },
+    {
+      "kind": "refused",
+      "id": "duplicate",
+      "value": {
+        "schemaVersion": 1,
+        "members": [
+          "packages/*",
+          "packages/*"
+        ],
+        "exclude": []
+      },
+      "oracle": false,
+      "runtime": false
+    },
+    {
+      "kind": "refused",
+      "id": "future",
+      "value": {
+        "schemaVersion": 2,
+        "members": [
+          "packages/*"
+        ],
+        "exclude": []
+      },
+      "oracle": false,
+      "runtime": false
+    },
+    {
+      "kind": "refused",
+      "id": "unknown",
+      "value": {
+        "schemaVersion": 1,
+        "members": [
+          "packages/*"
+        ],
+        "exclude": [],
+        "skipAbsent": true
+      },
+      "oracle": false,
+      "runtime": false
+    }
+  ],
+  "invocationCases": [
+    {
+      "command": "build",
+      "requiresOwnerPreparation": true
+    },
+    {
+      "command": "check",
+      "requiresOwnerPreparation": true
+    },
+    {
+      "command": "test",
+      "requiresOwnerPreparation": true
+    },
+    {
+      "command": "metadata",
+      "requiresOwnerPreparation": true
+    },
+    {
+      "command": "fetch",
+      "requiresOwnerPreparation": true
+    },
+    {
+      "command": "update",
+      "requiresOwnerPreparation": true
+    },
+    {
+      "command": "tree",
+      "requiresOwnerPreparation": true
+    },
+    {
+      "command": "clippy",
+      "requiresOwnerPreparation": true
+    },
+    {
+      "command": "rustc",
+      "requiresOwnerPreparation": true
+    },
+    {
+      "command": "nextest",
+      "requiresOwnerPreparation": true
+    },
+    {
+      "command": "llvm-cov",
+      "requiresOwnerPreparation": true
+    },
+    {
+      "command": "generate-lockfile",
+      "requiresOwnerPreparation": true
+    },
+    {
+      "command": "run",
+      "requiresOwnerPreparation": true
+    },
+    {
+      "command": "bench",
+      "requiresOwnerPreparation": true
+    },
+    {
+      "command": "doc",
+      "requiresOwnerPreparation": true
+    },
+    {
+      "command": "rustdoc",
+      "requiresOwnerPreparation": true
+    },
+    {
+      "command": "clean",
+      "requiresOwnerPreparation": false
+    },
+    {
+      "command": "--version",
+      "requiresOwnerPreparation": false
+    },
+    {
+      "command": "help",
+      "requiresOwnerPreparation": false
+    },
+    {
+      "command": "fmt",
+      "requiresOwnerPreparation": false
+    }
+  ],
+  "sourceWrites": 0,
+  "nativeExecuted": 0
+}

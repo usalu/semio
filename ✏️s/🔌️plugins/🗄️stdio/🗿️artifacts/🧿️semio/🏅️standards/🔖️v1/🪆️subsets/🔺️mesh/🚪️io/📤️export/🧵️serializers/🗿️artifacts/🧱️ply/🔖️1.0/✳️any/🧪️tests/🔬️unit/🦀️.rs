@@ -29,12 +29,12 @@ fn sample_semio_mesh() -> SemioMeshSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn serialize_then_deserialize_round_trips_at_the_semio_level() {
     let original = sample_semio_mesh();
-    let ply = semio_framework_plugin::resolve_ready(SemioMeshToPly::serialize(&original)).expect("serialize");
+    let ply = ::semio_framework_async::poll::resolve_ready(SemioMeshToPly::serialize(&original)).expect("serialize");
     assert_eq!(ply.elements[0].name, "vertex");
     assert_eq!(ply.elements[0].rows.len(), 4);
     assert_eq!(ply.elements[1].name, "face");
     assert_eq!(ply.elements[1].rows.len(), 2);
-    let round_tripped = semio_framework_plugin::resolve_ready(SemioMeshFromPly::deserialize(&ply)).expect("deserialize");
+    let round_tripped = ::semio_framework_async::poll::resolve_ready(SemioMeshFromPly::deserialize(&ply)).expect("deserialize");
     assert_eq!(original.meshes[0].primitives[0].positions, round_tripped.meshes[0].primitives[0].positions);
     assert_eq!(original.meshes[0].primitives[0].colors, round_tripped.meshes[0].primitives[0].colors);
     assert_eq!(original.meshes[0].primitives[0].indices, round_tripped.meshes[0].primitives[0].indices);
@@ -53,7 +53,7 @@ async fn non_uniform_color_presence_is_a_hard_error() {
         indices: Vec::new(),
         material_id: None,
     });
-    let err = semio_framework_plugin::resolve_ready(SemioMeshToPly::serialize(&semio)).expect_err("mixed color presence must error");
+    let err = ::semio_framework_async::poll::resolve_ready(SemioMeshToPly::serialize(&semio)).expect_err("mixed color presence must error");
     assert!(format!("{err:?}").contains("colors"), "got {err:?}");
 }
 
@@ -61,6 +61,6 @@ async fn non_uniform_color_presence_is_a_hard_error() {
 async fn non_triangle_non_points_topology_is_a_hard_error() {
     let mut semio = sample_semio_mesh();
     semio.meshes[0].primitives[0].topology = SemioTopology::LineStrip;
-    let err = semio_framework_plugin::resolve_ready(SemioMeshToPly::serialize(&semio)).expect_err("LineStrip must error");
+    let err = ::semio_framework_async::poll::resolve_ready(SemioMeshToPly::serialize(&semio)).expect_err("LineStrip must error");
     assert!(format!("{err:?}").contains("Triangles/Points"), "got {err:?}");
 }

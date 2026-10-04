@@ -3,7 +3,6 @@
   "source": "🧰️framework/🔨️modules/◻️2d/🧮️compute/🦀️.rs",
   "unit": "🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️tests/🔬️unit/🦀️.rs",
   "retainedUnitSha256": "96ea271d3e9e0e809d325e1f7a33d6d21d1f767129d654009c069b7b358962dc",
-  "removed": "🧰️framework/🛍️products/💻️os/🔨️modules/⚙️engine/🦀️.rs",
   "family": [
     "EngineKey",
     "EngineHandle",
@@ -26,117 +25,5 @@
     "registerReplacement": "keep-existing-entries",
     "readHandle": "key-only",
     "readRecency": "unchanged"
-  },
-  "consumers": [
-    {
-      "id": "flow-drawing",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖍️drawing/🦀️.rs",
-      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/Cargo.toml",
-      "bindings": [
-        "Engine",
-        "EngineCache",
-        "EngineFault",
-        "EngineHandle",
-        "EngineKey"
-      ]
-    },
-    {
-      "id": "puzzle-brush-cache",
-      "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🦀️.rs",
-      "manifest": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/Cargo.toml",
-      "bindings": [
-        "Engine",
-        "EngineCache",
-        "EngineFault",
-        "EngineHandle"
-      ]
-    },
-    {
-      "id": "plugin-sdk",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
-      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
-      "bindings": [
-        "EngineHandles"
-      ]
-    },
-    {
-      "id": "host-component-fixture",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/🦀️.rs",
-      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/📦️packages/🦀️rust/Cargo.toml",
-      "bindings": [
-        "EngineHandles"
-      ]
-    },
-    {
-      "id": "hub-space",
-      "source": "🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/🦀️.rs",
-      "manifest": "🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust/Cargo.toml",
-      "bindings": [
-        "EngineHandles"
-      ]
-    }
-  ],
-  "constructorPolicy": {
-    "owners": [
-      "🧰️framework/🔨️modules/◻️2d/🧮️compute",
-      "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin"
-    ],
-    "cases": [
-      {
-        "id": "canonical-owner",
-        "path": "🧰️framework/🔨️modules/◻️2d/🧮️compute/🦀️.rs",
-        "allowed": true
-      },
-      {
-        "id": "canonical-original-laws",
-        "path": "🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️tests/🔬️unit/🦀️.rs",
-        "allowed": true
-      },
-      {
-        "id": "retained-plugin-owner",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
-        "allowed": true
-      },
-      {
-        "id": "retained-plugin-child",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️.rs",
-        "allowed": true
-      },
-      {
-        "id": "removed-os-owner",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/⚙️engine/🦀️.rs",
-        "allowed": false
-      },
-      {
-        "id": "canonical-sibling-prefix",
-        "path": "🧰️framework/🔨️modules/◻️2d/🧮️compute-foreign/🦀️.rs",
-        "allowed": false
-      },
-      {
-        "id": "plugin-sibling-prefix",
-        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin-shadow/🦀️.rs",
-        "allowed": false
-      },
-      {
-        "id": "foreign-owner",
-        "path": "✏️s/🔌️plugins/🧩️puzzle/🦀️.rs",
-        "allowed": false
-      },
-      {
-        "id": "native-windows-owner",
-        "path": "🧰️framework\\🔨️modules\\◻️2d\\🧮️compute\\🦀️.rs",
-        "allowed": true
-      },
-      {
-        "id": "raw-parent-traversal",
-        "path": "🧰️framework/🔨️modules/◻️2d/🧮️compute/../foreign/🦀️.rs",
-        "allowed": false
-      },
-      {
-        "id": "legacy-rep-debt-path",
-        "path": "🧰️framework/🔨️modules/◻️2d/🗄️store/🦀️.rs",
-        "allowed": false
-      }
-    ]
   }
 }

@@ -9,7 +9,7 @@ use protocol::{Mutation, SemanticMutation};
 fn round_trip(base: &Iso16757Snapshot, operation: &Iso16757Mutation) -> Iso16757Snapshot {
     let (forward, _messages) = protocol::apply_mutation(base, operation).expect("valid mutation");
     let mut restored = forward.clone();
-    for back in operation.inverse(base) {
+    for back in operation.inverse(base).expect("valid retained mutation inverse fixture") {
         let (next, _messages) = protocol::apply_mutation(&restored, &back).expect("valid inverse mutation");
         restored = next;
     }
@@ -49,7 +49,7 @@ async fn change_and_remove_part_number_input_round_trip() {
 async fn change_part_number_input_undo_of_a_fresh_key_is_remove() {
     let base = Iso16757Snapshot::reference_fixture();
     let change = Iso16757Mutation::ChangePartNumberInput(change_part_number_input::mutation::ChangePartNumberInput { key: "fresh".into(), new_value: crate::CatalogueValue::Boolean { value: true } });
-    let undo = change.inverse(&base);
+    let undo = change.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![Iso16757Mutation::RemovePartNumberInput(remove_part_number_input::mutation::RemovePartNumberInput { key: "fresh".into() })]);
 }
 
@@ -90,7 +90,7 @@ async fn create_then_retire_product_group_round_trips() {
     let after_create = round_trip(&base, &create);
     assert!(after_create.catalogue.product_groups.iter().any(|group| group.id == "group-new"));
 
-    let undo = create.inverse(&base);
+    let undo = create.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![Iso16757Mutation::RetireProductGroup(retire_product_group::mutation::RetireProductGroup { id: "group-new".into() })]);
 
     let rename = Iso16757Mutation::RenameProductGroup(rename_product_group::mutation::RenameProductGroup { id: "group-new".into(), new_name: "Renamed".into() });
@@ -106,7 +106,7 @@ async fn create_then_retire_product_group_round_trips() {
 async fn retire_product_group_of_a_missing_id_has_an_empty_inverse() {
     let base = Iso16757Snapshot::reference_fixture();
     let delete = Iso16757Mutation::RetireProductGroup(retire_product_group::mutation::RetireProductGroup { id: "nope".into() });
-    assert!(delete.inverse(&base).is_empty(), "deleting an absent id has nothing to undo");
+    assert!(delete.inverse(&base).expect("valid retained mutation inverse fixture").is_empty(), "deleting an absent id has nothing to undo");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -131,7 +131,7 @@ async fn create_rename_retire_product_round_trips() {
     let delete = Iso16757Mutation::RetireProduct(retire_product::mutation::RetireProduct { id: "product-cv".into() });
     let after_delete = round_trip(&base, &delete);
     assert!(!after_delete.catalogue.products.iter().any(|p| p.id == "product-cv"));
-    let undo = delete.inverse(&base);
+    let undo = delete.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1);
 }
 
@@ -175,7 +175,7 @@ async fn create_then_retire_subject_round_trips() {
     assert!(!after_delete.dictionary.subjects.iter().any(|s| s.id == "subject-new"));
 
     let delete_missing = Iso16757Mutation::RetireSubject(retire_subject::mutation::RetireSubject { id: "nope".into() });
-    assert!(delete_missing.inverse(&base).is_empty());
+    assert!(delete_missing.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
 }
 
 #[semio_framework_async_macros::async_test]

@@ -26,7 +26,8 @@ impl protocol::MutationKind<TiffSnapshot, TiffMutation> for RemoveIfdMutation {
         let Self { index } = self;
         protocol::MutationOutcome::new(contribute(base, *index))
     }
-    fn inverse(&self, base: &TiffSnapshot) -> Vec<TiffMutation> {
+    fn inverse(&self, base: &TiffSnapshot) -> Result<Vec<TiffMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         let Self { index } = self;
         let outcome = <Self as protocol::MutationKind<TiffSnapshot, TiffMutation>>::diff(self, base);
         if <TiffDiff as protocol::DiffAlgebra<TiffSnapshot>>::is_empty(outcome.diff()) {
@@ -36,7 +37,9 @@ impl protocol::MutationKind<TiffSnapshot, TiffMutation> for RemoveIfdMutation {
             Some(ifd) => vec![TiffMutation::InsertIfd(crate::schema::mutations::InsertIfdMutation { index: *index, ifd: ifd.clone() })],
             None => Vec::new(),
         }
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove IFD", "IFD entfernen")
     }
@@ -54,7 +57,7 @@ pub fn contribute(base: &TiffSnapshot, index: usize) -> TiffDiff {
 
 #[cfg(test)]
 pub(crate) fn test_case() -> TiffMutation {
-    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/📤️remove-ifd/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed remove-ifd payload")
+    semio_framework_pack_json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/📤️remove-ifd/🎯️direct-behavior/🦠️mutation/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed remove-ifd payload")
 }
 #[cfg(test)]
 #[path = "🧪️tests/🎯️direct-behavior/🦀️.rs"]

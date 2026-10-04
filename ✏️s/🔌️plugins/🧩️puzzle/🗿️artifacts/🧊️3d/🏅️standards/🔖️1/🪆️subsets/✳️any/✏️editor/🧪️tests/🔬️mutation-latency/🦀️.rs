@@ -51,7 +51,7 @@ fn a_pose_edit_reserializes_and_names_exactly_the_objects_that_moved() {
         "the delta must be O(changed): {} bytes for one moved record against a {full_bytes}-byte full set",
         delta.len()
     );
-    let parsed = parse(&delta).expect("the delta lane is json");
+    let parsed = parse(&delta, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the delta lane is json");
     let changed = parsed.get("changed").and_then(Value::as_array).expect("the delta declares a changed list");
     assert_eq!(changed.len(), 1, "one changed record rides the delta");
     assert_eq!(changed[0].get("id").and_then(Value::as_str), Some(victim.as_str()), "and it is the moved one");

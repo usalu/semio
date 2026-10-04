@@ -70,7 +70,7 @@ async fn inverse_inverts_every_variant_against_a_populated_scene() {
     for op in every_mutation() {
         let forward = protocol::MutationDiff::apply(op.diff(&base).diff(), &base).expect("valid mutation diff");
         let mut restored = forward.clone();
-        for inverse in op.inverse(&base) {
+        for inverse in op.inverse(&base).expect("valid retained mutation inverse fixture") {
             restored = protocol::MutationDiff::apply(inverse.diff(&restored).diff(), &restored).expect("valid inverse mutation diff");
         }
         assert_eq!(restored, base, "inverse must restore the base scene for {op:?}");

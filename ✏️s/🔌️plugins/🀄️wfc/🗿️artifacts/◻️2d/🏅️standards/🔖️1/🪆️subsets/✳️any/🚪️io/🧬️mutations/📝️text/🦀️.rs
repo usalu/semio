@@ -36,7 +36,7 @@ use crate::standards::v1::subsets::any::io::snapshot::text::{
 };
 
 //#region 🔖️OpTextMirror
-#[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
 pub enum Wfc2dOperationDsl {
     ChangeSeed {
         seed: u64,
@@ -85,7 +85,7 @@ pub enum Wfc2dOperationDsl {
     },
     ChangeTileMedia {
         tile_id: String,
-        media: dsl::DslValue,
+        media: semio_framework_value::DslValue,
     },
     CreateRule {
         #[dsl(block)]
@@ -132,7 +132,7 @@ pub fn operation_to_dsl(operation: &Wfc2dMutation) -> Wfc2dOperationDsl {
     }
 }
 
-pub fn operation_from_dsl(operation: Wfc2dOperationDsl) -> Result<Wfc2dMutation, store::TextError> {
+pub fn operation_from_dsl(operation: Wfc2dOperationDsl) -> Result<Wfc2dMutation, semio_framework_diagnostic::TextError> {
     Ok(match operation {
         Wfc2dOperationDsl::ChangeSeed { seed } => Wfc2dMutation::ChangeSeed(ChangeSeed { seed }),
         Wfc2dOperationDsl::CreateSlot { slot } => Wfc2dMutation::CreateSlot(CreateSlot { slot: slot_from_dsl(slot) }),
@@ -148,8 +148,8 @@ pub fn operation_from_dsl(operation: Wfc2dOperationDsl) -> Result<Wfc2dMutation,
         Wfc2dOperationDsl::ChangeTileWeight { tile_id, weight } => Wfc2dMutation::ChangeTileWeight(ChangeTileWeight { tile_id, weight }),
         Wfc2dOperationDsl::ChangeTileMedia { tile_id, media } => {
             let media: Wfc2dTileMedia = match media {
-                dsl::DslValue::Null => Wfc2dTileMedia::default(),
-                other => semio_framework_value::FromValue::from_value(other).map_err(|error| store::TextError::new(format!("invalid tile media: {error}"), store::TextSpan::at(1, 1)))?,
+                semio_framework_value::DslValue::Null => Wfc2dTileMedia::default(),
+                other => semio_framework_value::FromValue::from_value(other).map_err(|error| semio_framework_diagnostic::TextError::new(error.kind, format!("invalid tile media: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?,
             };
             Wfc2dMutation::ChangeTileMedia(ChangeTileMedia { tile_id, media })
         }
@@ -158,7 +158,7 @@ pub fn operation_from_dsl(operation: Wfc2dOperationDsl) -> Result<Wfc2dMutation,
         Wfc2dOperationDsl::DragSlots { targets, dx, dy } => Wfc2dMutation::DragSlots(DragSlots { targets, dx, dy }),
         Wfc2dOperationDsl::SetSlotPositions { ids, xs, ys } => {
             if xs.len() != ids.len() || ys.len() != ids.len() {
-                return Err(store::TextError::new("set-slot-positions carries one x and one y per id", store::TextSpan::at(1, 1)));
+                return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "set-slot-positions carries one x and one y per id", semio_framework_diagnostic::TextSpan::at(1, 1)));
             }
             let positions = ids.into_iter().zip(xs).zip(ys).map(|((id, x), y)| Wfc2dSlotPosition { id, x, y }).collect();
             Wfc2dMutation::SetSlotPositions(SetSlotPositions { positions })
@@ -170,28 +170,28 @@ pub fn operation_from_dsl(operation: Wfc2dOperationDsl) -> Result<Wfc2dMutation,
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ Handcrafted `OpText` — `dsl::DslOps`/`dsl::DslEnum` emit `DslVariants` only.
 impl protocol::OpText for Wfc2dOperationDsl {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{keyword} ");
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = semio_framework_dsl_record::parse(line, &(spec_fn.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?;
+                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown wfc2d mutation line '{line}'")))
+        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown wfc2d mutation line '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
     }
     fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(key, _)| key == &keyword).map(|(_, spec)| *spec).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &(spec_fn.ordinary)(), dsl::JoinMode::Inline)
+        semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline)
     }
 }
 
 /// ⚡️ `Wfc2dMutation`'s compact single-line op encoding, bridged through the twin above.
 impl protocol::OpText for Wfc2dMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         operation_from_dsl(<Wfc2dOperationDsl as protocol::OpText>::parse_op(line)?)
     }
 
@@ -202,7 +202,7 @@ impl protocol::OpText for Wfc2dMutation {
 //#endregion 🔖️HandcraftedOpCodecs
 
 /// 📖️ Parses one `.wfc2d` mutation line.
-pub fn parse_op(line: &str) -> Result<Wfc2dMutation, store::TextError> {
+pub fn parse_op(line: &str) -> Result<Wfc2dMutation, semio_framework_diagnostic::TextError> {
     <Wfc2dMutation as protocol::OpText>::parse_op(line)
 }
 

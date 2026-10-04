@@ -5,7 +5,7 @@
 //! is fixed here, in passing, matching the class of bug `📓️w4-sequence-report.md`'s CSV fix found).
 
 use crate::{writer_text, WriterSnapshot};
-use semio_framework::io::io_mechanism::Serializer;
+use semio_framework::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{Dialect, StandardId, SubsetId};
 
@@ -18,7 +18,7 @@ impl Serializer<WriterSnapshot> for WriterIntoTxt {
     /// 🪧️ Lossy: only the document's content text survives — `schema`/`id`/`uri`/`language_id` have
     /// no home in a plain-text file.
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &WriterSnapshot) -> IoResult<IoPayload> {
+    async fn serialize(from: &WriterSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
         Ok(IoOutcome { value: IoPayload::Text(writer_text(from)), diagnostics: Vec::new() })
     }
 }

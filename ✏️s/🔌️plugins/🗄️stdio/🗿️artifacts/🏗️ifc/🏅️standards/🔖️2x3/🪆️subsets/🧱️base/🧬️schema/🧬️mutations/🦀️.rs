@@ -20,6 +20,8 @@ pub mod remove_instance;
 pub mod set_header;
 /// 📐️ Typed content mutation for `stdio.ifc.2x3`.
 //#region 🔖️Leaves
+#[path = "🩹️patch-snapshot/🦀️.rs"]
+pub mod patch_snapshot;
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "🧱upsert-instance/🦀️.rs"]
@@ -33,6 +35,7 @@ pub mod upsert_instance;
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum Ifc2x3Mutation {
     SetSnapshot(set_snapshot::SetSnapshot),
+    PatchSnapshot(patch_snapshot::PatchSnapshot),
     UpsertInstance(upsert_instance::UpsertInstance),
     RemoveInstance(remove_instance::RemoveInstance),
     SetHeader(set_header::SetHeader),
@@ -42,7 +45,7 @@ pub enum Ifc2x3Mutation {
 /// exhaustive mutation catalog `../../🔣️oracle.json`'s `kinds` array is required to
 /// match verbatim (`kinds_const_matches_enum_variants_in_declaration_order` below is what keeps
 /// that honest; the framework never parses Rust to check it itself).
-pub const KINDS: &[&str] = &["set-snapshot", "upsert-instance", "remove-instance", "set-header"];
+pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "upsert-instance", "remove-instance", "set-header"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -65,6 +68,7 @@ pub fn apply_ifc2x3_mutation(snapshot: &mut Ifc2x3Snapshot, mutation: &Ifc2x3Mut
 pub(crate) fn agg_diff(this: &Ifc2x3Mutation, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<Ifc2x3Diff> {
     let mut next = base.clone();
     match this {
+        Ifc2x3Mutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3Mutation>>::diff(patch, base),
         Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => {
             // 🪓 The RAW model-edit path: it carries the logical model verbatim and never validates.
             // Schema conformance is owned by the two gates that can report it — `encode_ifc2x3`
@@ -86,9 +90,14 @@ pub(crate) fn agg_diff(this: &Ifc2x3Mutation, base: &Ifc2x3Snapshot) -> protocol
 }
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &Ifc2x3Mutation, base: &Ifc2x3Snapshot) -> Vec<Ifc2x3Mutation> {
-    let _ = this;
-    vec![Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(base.clone()) })]
+pub(crate) fn agg_inverse(this: &Ifc2x3Mutation, base: &Ifc2x3Snapshot) -> Result<Vec<Ifc2x3Mutation>, semio_framework_value::ValueError> {
+    Ok({
+    match this {
+        Ifc2x3Mutation::PatchSnapshot(patch) => <patch_snapshot::PatchSnapshot as protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3Mutation>>::inverse(patch, base)?,
+        _ => vec![Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(base.clone()) })],
+    }
+
+    })
 }
 //#endregion 🔖️MutationTrait
 
@@ -126,6 +135,7 @@ fn dec_ifc2x3_snapshot(s: &str) -> Result<Ifc2x3Snapshot, String> {
 
 fn print_ifc2x3_mutation(m: &Ifc2x3Mutation) -> String {
     match m {
+        Ifc2x3Mutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(patch),
         Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => {
             let mut out = String::with_capacity(snapshot.document.instances.len().saturating_mul(64).saturating_add(22));
             out.push_str("set-snapshot snapshot=");
@@ -141,6 +151,7 @@ fn parse_ifc2x3_mutation(line: &str) -> Result<Ifc2x3Mutation, String> {
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
     let (arg_key, arg_val) = rest.split_once('=').ok_or_else(|| format!("ifc2x3 mutation: missing arg for {keyword:?}"))?;
     match (keyword, arg_key) {
+        ("patch-snapshot", "patch") => semio_s_artifact_stdio_contract::editing::snapshot_patch_from_text(line).map(|patch| Ifc2x3Mutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch })),
         ("set-snapshot", "snapshot") => Ok(Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(dec_ifc2x3_snapshot(arg_val)?) })),
         ("upsert-instance", "instance") => Ok(Ifc2x3Mutation::UpsertInstance(upsert_instance::UpsertInstance { instance: dec_part21_instance(arg_val)? })),
         ("remove-instance", "id") => Ok(Ifc2x3Mutation::RemoveInstance(remove_instance::RemoveInstance { id: arg_val.parse().map_err(|e: std::num::ParseIntError| e.to_string())? })),
@@ -153,8 +164,8 @@ impl protocol::OpText for Ifc2x3Mutation {
     fn print_op(&self) -> String {
         print_ifc2x3_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_ifc2x3_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_ifc2x3_mutation(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 }
 
@@ -200,6 +211,7 @@ fn dec_ifc2x3_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<Ifc2x3S
 /// 🏷️ Op tags of `Ifc2x3Mutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
 const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
 const TAG_UPSERT_INSTANCE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "upsert-instance");
 const TAG_REMOVE_INSTANCE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-instance");
 const TAG_SET_HEADER: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-header");
@@ -216,6 +228,7 @@ impl protocol::OpBinary for Ifc2x3Mutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             Ifc2x3Mutation::SetSnapshot(..) => TAG_SET_SNAPSHOT,
+            Ifc2x3Mutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
             Ifc2x3Mutation::UpsertInstance(..) => TAG_UPSERT_INSTANCE,
             Ifc2x3Mutation::RemoveInstance(..) => TAG_REMOVE_INSTANCE,
             Ifc2x3Mutation::SetHeader(..) => TAG_SET_HEADER,
@@ -223,6 +236,7 @@ impl protocol::OpBinary for Ifc2x3Mutation {
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
             Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => enc_ifc2x3_snapshot_bin(snapshot, &mut out),
+            Ifc2x3Mutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => out.extend(protocol::OpBinary::encode_op(patch)?),
             Ifc2x3Mutation::UpsertInstance(upsert_instance::UpsertInstance { instance }) => enc_part21_instance_bin(instance, &mut out),
             Ifc2x3Mutation::RemoveInstance(remove_instance::RemoveInstance { id }) => store::pack_rt::write_varint_u64(&mut out, *id),
             Ifc2x3Mutation::SetHeader(set_header::SetHeader { header }) => enc_part21_header_bin(header, &mut out),
@@ -239,6 +253,7 @@ impl protocol::OpBinary for Ifc2x3Mutation {
         }
         let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         let mutation = match tag {
+            TAG_PATCH_SNAPSHOT => Ifc2x3Mutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: <semio_s_artifact_stdio_contract::editing::SnapshotPatch as protocol::OpBinary>::decode_op(reader.read_bytes(reader.remaining()).map_err(|e| protocol::ProtocolError::Malformed { what: "patch-snapshot payload", offset: reader.position() as u64, detail: e.to_string() })?)? }),
             TAG_SET_SNAPSHOT => {
                 let snapshot = dec_ifc2x3_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
                 Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(snapshot) })
@@ -274,6 +289,7 @@ impl protocol::OpBinary for Ifc2x3Mutation {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<Ifc2x3Mutation> {
     vec![
+        Ifc2x3Mutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(crate::standards::v2x3::engine::demo_ifc2x3_snapshot()) }),
         Ifc2x3Mutation::UpsertInstance(upsert_instance::UpsertInstance {
             instance: Part21Instance {

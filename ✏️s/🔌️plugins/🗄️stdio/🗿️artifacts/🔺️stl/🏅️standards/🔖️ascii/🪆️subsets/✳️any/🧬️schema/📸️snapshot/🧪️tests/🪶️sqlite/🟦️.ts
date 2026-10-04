@@ -1,3 +1,5 @@
+import refusalCorpus from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧫️fixtures/🔣️.json";
+const canceledKind=refusalCorpus.cases.find(c=>c.id==="canceled-projection")!.expectedKind;
 import { binary64,binary32,binary64Value,binary32Value,type Binary64 } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 /** 🧫️ Shared STL triangle fixture and independent scalar SQL interoperability. */
 import { Database } from "bun:sqlite";
@@ -51,10 +53,10 @@ test("STL empty solids, owned scalar words and aggregate resource budgets", asyn
 test("STL projection and reconstruction cancel at bounded semantic intervals", async () => {
   const controller = new AbortController();
   let events = 0;
-  await expect(stlSnapshotToSqliteDatabase({ ...input, triangles: Array.from({ length: 512 }, () => input.triangles[0]!) }, { signal: controller.signal, onProgress: () => { if (++events === 2) controller.abort(); } })).rejects.toMatchObject({ name: "AbortError" });
+  await expect(stlSnapshotToSqliteDatabase({ ...input, triangles: Array.from({ length: 512 }, () => input.triangles[0]!) }, { signal: controller.signal, onProgress: () => { if (++events === 2) controller.abort(); } })).rejects.toMatchObject({ kind: canceledKind });
   const database = await stlSnapshotToSqliteDatabase(input);
   const reconstruct = new AbortController();
-  await expect(stlSnapshotFromSqliteDatabase(database, { signal: reconstruct.signal, onProgress: () => reconstruct.abort() })).rejects.toMatchObject({ name: "AbortError" });
+  await expect(stlSnapshotFromSqliteDatabase(database, { signal: reconstruct.signal, onProgress: () => reconstruct.abort() })).rejects.toMatchObject({ kind: canceledKind });
 });
 test("STL exact scalar words survive independent SQLite affinity, edits and malformed companions", async () => {
   for(const [index,hex] of ieee.binary64Bits.entries()){
@@ -83,7 +85,7 @@ test("STL exact owned dialect, document identity and cancellation laws", async()
   for(const dialect of ieee.invalidSqliteDialects)await expect(stlSnapshotValidateSqliteSubset(input,dialect,database)).rejects.toThrow("dialect");
   await expect(stlSnapshotValidateSqliteSubset({...input,schema:"different"},ieee.sqliteDialect,database)).rejects.toThrow("identity");
   const controller=new AbortController();controller.abort();
-  await expect(stlSnapshotValidateSqliteSubset(input,ieee.sqliteDialect,database,{signal:controller.signal})).rejects.toMatchObject({name:"AbortError"});
+  await expect(stlSnapshotValidateSqliteSubset(input,ieee.sqliteDialect,database,{signal:controller.signal})).rejects.toMatchObject({kind:canceledKind});
 });
 test("STL artifact, snapshot and sparse diff callers share exact owned coordinate words",()=>{
   const triangle=input.triangles[0]!;

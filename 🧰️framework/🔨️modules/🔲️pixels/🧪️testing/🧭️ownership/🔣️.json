@@ -1,0 +1,35 @@
+{
+  "schema": "pixels.task-ownership.v1",
+  "strictRoots": [
+    "🧰️framework/🔨️modules/🔲️pixels/🖼️image/📥️decode/🟦️.ts",
+    "🧰️framework/🔨️modules/🔲️pixels/📷️png/📥️decode/🟦️.ts",
+    "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🟦️.ts",
+    "🧰️framework/🔨️modules/🔲️pixels/🖊️coverage/🟦️.ts",
+    "🧰️framework/🔨️modules/🔲️pixels/✍️editing/🟦️.ts",
+    "🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🟦️.ts",
+    "🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/📐️frames/🟦️.ts",
+    "🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🗂️layers/🟦️.ts"
+  ],
+  "testRoots": [
+    "🧰️framework/🔨️modules/🚪️io/🔢️binary/📥️source/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/🚪️io/🔤️base64/🧪️tests/🔬️unit/🟦️.ts",
+    "🧰️framework/🔨️modules/🔲️pixels/🖼️image/📥️decode/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/🔲️pixels/📷️png/📥️decode/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/🔲️pixels/🖊️coverage/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/📐️frames/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/🔲️pixels/✍️editing/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🗂️layers/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/🔲️pixels/🧪️testing/🧭️ownership/🧪️tests/🟦️.ts"
+  ],
+  "inputs": [
+    "default",
+    "^default",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🗜️deflate/**/*",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🔤️base64/**/*",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🔢️binary/📥️source/**/*",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🪉️supplement/⚖️medium/🔤️outline.ttf",
+    "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/🌍️world/🔤️fonts/⌨️LibertinusMono-Regular.otf"
+  ]
+}

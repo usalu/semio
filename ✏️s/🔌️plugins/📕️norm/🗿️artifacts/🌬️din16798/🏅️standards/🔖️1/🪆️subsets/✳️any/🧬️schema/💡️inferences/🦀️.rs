@@ -3,7 +3,6 @@
 use crate::Din16798Snapshot;
 use crate::document::CheckReport;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 pub use super::outline::Din16798Outline;
 
@@ -19,8 +18,11 @@ pub struct Din16798Inference {
 }
 
 impl protocol::Inference<Din16798Snapshot> for Din16798Inference {
-    fn infer(snapshot: &Din16798Snapshot) -> Self {
+    fn infer(snapshot: &Din16798Snapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { outline: Din16798Outline::compute(snapshot) }
+    
+        })
     }
 }
 
@@ -36,11 +38,6 @@ impl protocol::InferenceSpec<Din16798Snapshot> for Din16798Inference {
             ],
         }]
     }
-}
-
-impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::Din16798Builder {
-    type Snapshot = Din16798Snapshot;
-    type Inference = Din16798Inference;
 }
 //#endregion 🔖️Inference
 

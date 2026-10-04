@@ -19,15 +19,15 @@ async fn editor_and_viewer_share_one_dialect() {
 
 #[test]
 fn set_cell_requires_its_full_address_and_accepts_an_empty_value() {
-    let args = dsl::DslValue::object([
-        ("row".into(), dsl::DslValue::Number(dsl::Number::UInt(1))),
-        ("column".into(), dsl::DslValue::Number(dsl::Number::UInt(2))),
-        ("revision".into(), dsl::DslValue::String("rev".into())),
-        ("value".into(), dsl::DslValue::String(String::new())),
+    let args = semio_framework_value::DslValue::object([
+        ("row".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(1))),
+        ("column".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(2))),
+        ("revision".into(), semio_framework_value::DslValue::String("rev".into())),
+        ("value".into(), semio_framework_value::DslValue::String(String::new())),
     ]);
     assert_eq!(bcf_command_from_action("set-cell", Some(&args)).expect("complete cell address"), BcfAnyEditCommand::SetCell { row: 1, column: 2, revision: "rev".into(), value: String::new() });
     assert!(bcf_command_from_action("set-cell", None).is_err());
-    let missing_value = dsl::DslValue::object([("row".into(), dsl::DslValue::Number(dsl::Number::UInt(1))), ("column".into(), dsl::DslValue::Number(dsl::Number::UInt(2)))]);
+    let missing_value = semio_framework_value::DslValue::object([("row".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(1))), ("column".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(2)))]);
     assert!(bcf_command_from_action("set-cell", Some(&missing_value)).is_err());
 }
 
@@ -38,13 +38,13 @@ async fn set_cell_reaches_the_document_through_its_exact_retained_factory() {
     assert!(!source.topics.is_empty(), "the BCF example must contain an editable topic");
     let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<BcfAnyEditor>, _>(async { semio_framework_plugin::App { definition: create_bcf_any_editor(), examples: Vec::new() } }).await;
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&source, BCF_ANY_DOCUMENT_SCHEMA) else { panic!("the fixture load is a complete document effect") };
-    app.load_document_pack(&store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.expect("load BCF fixture");
+    semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.expect("load BCF fixture");
     let revision = semio_s_artifact_stdio_contract::window_kit_canonical_revision(app.test_document_revision());
-    let args = dsl::DslValue::object([
-        ("row".into(), dsl::DslValue::Number(dsl::Number::UInt(0))),
-        ("column".into(), dsl::DslValue::Number(dsl::Number::UInt(1))),
-        ("revision".into(), dsl::DslValue::String(revision)),
-        ("value".into(), dsl::DslValue::String("Retained title".into())),
+    let args = semio_framework_value::DslValue::object([
+        ("row".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(0))),
+        ("column".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(1))),
+        ("revision".into(), semio_framework_value::DslValue::String(revision)),
+        ("value".into(), semio_framework_value::DslValue::String("Retained title".into())),
     ]);
     let meta = semio_framework_plugin::artifact_app_laws::meta("local");
     app.handle_action("set-cell", Some(&args), &meta).await.expect("dispatch set-cell");

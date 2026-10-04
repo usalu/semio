@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeHumidistatZone, base: &EnergyModelSnapshot) -
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Zone {} does not exist.", payload.new_zone_id.0), [payload.new_zone_id.0.to_string()]);
     }
     if existing.zone_id == payload.new_zone_id {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Humidistat {} already has that zone.", payload.id.0));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Humidistat {} already has that zone.", payload.id.0));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.humidistats.iter_mut().find(|item| item.id == payload.id) {

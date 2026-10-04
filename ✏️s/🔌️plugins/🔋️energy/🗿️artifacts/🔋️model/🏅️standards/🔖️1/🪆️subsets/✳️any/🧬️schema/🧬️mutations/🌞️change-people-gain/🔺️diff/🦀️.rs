@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangePeopleGainSensibleFraction, base: &EnergyMode
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("People Gain {}: sensible fraction must be a fraction in [0, 1], got {}.", payload.id.0, payload.new_sensible_fraction), [payload.id.0.to_string()]);
     }
     if existing.sensible_fraction == payload.new_sensible_fraction {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("People Gain {} already carries this sensible fraction: {}.", payload.id.0, payload.new_sensible_fraction));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("People Gain {} already carries this sensible fraction: {}.", payload.id.0, payload.new_sensible_fraction));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.people.iter_mut().find(|item| item.id == payload.id) {

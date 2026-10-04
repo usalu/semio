@@ -322,12 +322,12 @@ fn durable_decision_event_match(bytes: &[u8], target: &InferenceWalTargetV1, doc
         eprintln!("[WARN] inference wal: committed decision does not bind its approval target — {gate}");
         return Ok((verified.decision_sha256().to_string(), verified.anchor_sha256().to_string(), false));
     }
-    let proposal = directory::os_pack::json::to_json_string(&parent.forwards[0]).into_bytes();
+    let proposal = semio_framework_pack_json::to_json_string(&parent.forwards[0]).into_bytes();
     if super::sha256(&proposal) != target.proposal_hash {
         eprintln!("[WARN] inference wal: committed decision does not bind its approval target — proposal-hash");
         return Ok((verified.decision_sha256().to_string(), verified.anchor_sha256().to_string(), false));
     }
-    let inverse = directory::os_pack::json::to_json_string(&parent.inverse).into_bytes();
+    let inverse = semio_framework_pack_json::to_json_string(&parent.inverse).into_bytes();
     let command = super::command::encode_server_stamped_command_v1(&super::command::CanonicalInferenceCommandPartsV1 {
         mutation_id: &target.mutation_id,
         document_id: &document.0,

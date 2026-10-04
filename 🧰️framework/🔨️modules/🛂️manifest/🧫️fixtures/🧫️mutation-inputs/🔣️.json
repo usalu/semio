@@ -641,6 +641,29 @@
       "expectedError": { "code": "widgetIncompatible", "pointer": "/fill" }
     },
     {
+      "name": "option-source-from-the-previewed-document",
+      "leafSchema": { "$schema": "http://json-schema.org/draft-07/schema#", "type": "object", "additionalProperties": false, "required": ["mutation", "id", "channel"], "properties": { "mutation": { "const": "changeWidgetInput", "x-semio-ui": { "role": "discriminator", "widget": "hidden" } }, "id": { "type": "string", "minLength": 1, "x-semio-ui": { "label": { "en": "Widget", "de": "Widget" } } }, "channel": { "type": "string", "minLength": 1, "x-semio-ui": { "widget": "select", "label": { "en": "Channel", "de": "Kanal" }, "optionSource": { "snapshot": "/hostSnapshot/widgets/{id}/params" } } } } },
+      "expectedInputs": [
+        { "id": "/id", "label": { "native": { "en": "Widget", "de": "Widget" }, "reuse": { "en": "Widget", "de": "Widget" } }, "schema": { "kind": "string", "minLen": 1 }, "required": true },
+        { "id": "/channel", "label": { "native": { "en": "Channel", "de": "Kanal" }, "reuse": { "en": "Channel", "de": "Kanal" } }, "schema": { "kind": "string", "optionSource": { "kind": "snapshot", "pointer": "/hostSnapshot/widgets/{id}/params" }, "minLen": 1 }, "required": true }
+      ]
+    },
+    {
+      "name": "refuses-an-option-source-on-a-number",
+      "leafSchema": { "type": "object", "properties": { "count": { "type": "number", "x-semio-ui": { "label": { "en": "Count", "de": "Anzahl" }, "optionSource": { "snapshot": "/counts" } } } } },
+      "expectedError": { "code": "uiInvalid", "pointer": "/count" }
+    },
+    {
+      "name": "refuses-an-option-source-beside-an-enum",
+      "leafSchema": { "type": "object", "properties": { "flavor": { "type": "string", "enum": ["sweet", "sour"], "x-semio-ui": { "label": { "en": "Flavor", "de": "Geschmack" }, "options": { "sweet": { "en": "Sweet", "de": "Süß" }, "sour": { "en": "Sour", "de": "Sauer" } }, "optionSource": { "snapshot": "/flavors" } } } } },
+      "expectedError": { "code": "uiInvalid", "pointer": "/flavor" }
+    },
+    {
+      "name": "refuses-a-relative-option-source",
+      "leafSchema": { "type": "object", "properties": { "channel": { "type": "string", "x-semio-ui": { "widget": "select", "label": { "en": "Channel", "de": "Kanal" }, "optionSource": { "snapshot": "widgets/params" } } } } },
+      "expectedError": { "code": "uiInvalid", "pointer": "/channel" }
+    },
+    {
       "name": "refuses-a-grid-snap-on-a-plain-array",
       "leafSchema": { "type": "object", "properties": { "tags": { "type": "array", "items": { "type": "string" }, "x-semio-ui": { "label": { "en": "Tags", "de": "Schlagwörter" }, "snapSource": { "config": "gridFactor" } } } } },
       "expectedError": { "code": "uiInvalid", "pointer": "/tags" }
@@ -679,6 +702,52 @@
       "name": "refuses-a-non-object-payload",
       "leafSchema": { "type": "string" },
       "expectedError": { "code": "malformed", "pointer": "" }
+    },
+    {
+      "name": "numeric-transport-reads-as-a-number",
+      "leafSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "SetCameraAndOffset",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["dx", "x", "tilt"],
+        "properties": {
+          "dx": { "$ref": "#/$defs/Binary64Transport", "x-semio-ui": { "widget": "stepper", "label": { "en": "Offset X", "de": "Versatz X" }, "step": 1, "precision": 2, "unit": "px" } },
+          "x": { "$ref": "#/$defs/Binary64Transport", "x-semio-ui": { "widget": "stepper", "label": { "en": "Pan X", "de": "Verschiebung X" }, "step": 1, "precision": 1 } },
+          "tilt": { "oneOf": [{ "type": "number" }, { "$ref": "#/$defs/Binary64Word" }], "x-semio-ui": { "widget": "stepper", "label": { "en": "Tilt", "de": "Neigung" }, "step": 0.5, "precision": 1 } },
+          "zoom": { "anyOf": [{ "$ref": "#/$defs/Binary64Transport" }, { "type": "null" }], "x-semio-ui": { "widget": "slider", "label": { "en": "Zoom", "de": "Zoom" }, "step": 0.01, "precision": 2, "softMin": 0.1, "softMax": 10, "scale": "log" } }
+        },
+        "$defs": {
+          "Binary64Word": { "title": "Binary64Word", "type": "object", "additionalProperties": false, "required": ["bits"], "properties": { "bits": { "type": "string", "pattern": "^[0-9a-f]{16}$" } } },
+          "Binary64Transport": { "anyOf": [{ "$ref": "#/$defs/Binary64Word" }, { "type": "number" }] }
+        }
+      },
+      "expectedInputs": [
+        { "id": "/dx", "label": { "native": { "en": "Offset X", "de": "Versatz X" }, "reuse": { "en": "Offset X", "de": "Versatz X" } }, "schema": { "kind": "number", "step": 1, "integer": false, "unit": "px", "precision": 2 }, "presentation": { "kind": "stepper" }, "required": true },
+        { "id": "/x", "label": { "native": { "en": "Pan X", "de": "Verschiebung X" }, "reuse": { "en": "Pan X", "de": "Verschiebung X" } }, "schema": { "kind": "number", "step": 1, "integer": false, "precision": 1 }, "presentation": { "kind": "stepper" }, "required": true },
+        { "id": "/tilt", "label": { "native": { "en": "Tilt", "de": "Neigung" }, "reuse": { "en": "Tilt", "de": "Neigung" } }, "schema": { "kind": "number", "step": 0.5, "integer": false, "precision": 1 }, "presentation": { "kind": "stepper" }, "required": true },
+        { "id": "/zoom", "label": { "native": { "en": "Zoom", "de": "Zoom" }, "reuse": { "en": "Zoom", "de": "Zoom" } }, "schema": { "kind": "number", "step": 0.01, "integer": false, "softMin": 0.1, "softMax": 10, "precision": 2, "scale": "log" }, "presentation": { "kind": "slider" }, "required": false, "nullable": true }
+      ]
+    },
+    {
+      "name": "refuses-a-word-only-float",
+      "leafSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "DragRuleNodes",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["dx", "dy"],
+        "properties": {
+          "dx": { "$ref": "#/$defs/Binary64", "x-semio-ui": { "widget": "stepper", "label": { "en": "Offset X", "de": "Versatz X" }, "step": 1, "precision": 2, "unit": "px" } },
+          "dy": { "type": "number", "x-semio-ui": { "widget": "stepper", "label": { "en": "Offset Y", "de": "Versatz Y" }, "step": 1, "precision": 2, "unit": "px" } },
+          "points": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["x"], "properties": { "x": { "type": "object", "additionalProperties": false, "required": ["bits"], "properties": { "bits": { "type": "string", "pattern": "^[0-9a-f]{16}$" } }, "x-semio-ui": { "label": { "en": "X", "de": "X" } } } } }, "x-semio-ui": { "label": { "en": "Points", "de": "Punkte" } } }
+        },
+        "$defs": {
+          "Binary64": { "type": "object", "additionalProperties": false, "required": ["bits"], "properties": { "bits": { "type": "string", "pattern": "^[0-9a-f]{16}$" } } }
+        }
+      },
+      "expectedError": { "code": "wordOnlyFloat", "pointer": "/dx" },
+      "expectedFindings": [{ "code": "wordOnlyFloat", "pointer": "/dx" }, { "code": "wordOnlyFloat", "pointer": "/points/-/x" }]
     }
   ],
   "referenceIds": [

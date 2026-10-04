@@ -36,7 +36,7 @@ pub const GOLDEN_POSES_JSON: &str = include_str!("🖼️assets/🔣️.json");
 /// document runs it.
 fn document_json() -> String {
     let projection = crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(DSL_TEXT).unwrap_or_else(|error| panic!("{ID} example dsl parses: {error}"));
-    dsl::json::to_json_string(&projection)
+    semio_framework_pack_json::to_json_string(&projection)
 }
 
 /// 📚️ Canonical example source for `App::example_source` — DEFERRED, because eagerly parsing

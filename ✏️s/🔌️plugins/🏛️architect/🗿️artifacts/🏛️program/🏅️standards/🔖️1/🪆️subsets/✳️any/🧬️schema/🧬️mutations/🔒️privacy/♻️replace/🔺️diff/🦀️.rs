@@ -13,7 +13,7 @@ pub fn diff(payload: &ReplacePrivacyRequirement, base: &ProgramSnapshot) -> prot
         return protocol::MutationOutcome::error("mutation.target-missing", "No privacy requirement exists with this id.", [payload.privacy_requirement.header.id.0.clone()]);
     };
     if existing == &payload.privacy_requirement {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This privacy requirement already matches the requested value.").at([existing.header.id.0.clone()])]);
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This privacy requirement already matches the requested value.").at([existing.header.id.0.clone()])]);
     }
     let patch = existing.diff_patch(&payload.privacy_requirement).expect("diff_patch always produces a full patch");
     protocol::MutationOutcome::new(ProgramDiff { privacy: Some(ProgramPrivacyDelta { patched: vec![ProgramPrivacyPatchEntry { id: payload.privacy_requirement.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })

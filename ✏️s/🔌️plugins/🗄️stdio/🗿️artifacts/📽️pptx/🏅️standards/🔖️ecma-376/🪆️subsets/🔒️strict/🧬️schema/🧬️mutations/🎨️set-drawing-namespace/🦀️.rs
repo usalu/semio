@@ -17,9 +17,12 @@ impl protocol::MutationKind<PptxSnapshot, PptxStrictMutation> for SetDrawingName
     fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<<PptxStrictMutation as Mutation<PptxSnapshot>>::Diff> {
         agg_diff(&PptxStrictMutation::SetDrawingNamespace(self.clone()), base)
     }
-    fn inverse(&self, base: &PptxSnapshot) -> Vec<PptxStrictMutation> {
-        agg_inverse(&PptxStrictMutation::SetDrawingNamespace(self.clone()), base)
-    }
+    fn inverse(&self, base: &PptxSnapshot) -> Result<Vec<PptxStrictMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&PptxStrictMutation::SetDrawingNamespace(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set drawing namespace", "Zeichnungsnamensraum setzen")
     }

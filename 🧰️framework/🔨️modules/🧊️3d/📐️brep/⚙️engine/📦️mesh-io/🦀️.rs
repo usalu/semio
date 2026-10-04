@@ -2,8 +2,8 @@
 //!
 //! Triangle soups interchange through `semio_framework_mesh_engine` codecs where available; solids
 //! tessellate via [`crate::brep::queries::tessellation`] and import as
-//! one planar face per triangle (shell assembly until [`crate::brep::operations::sew`] can weld
-//! shared edges). `export_mesh`/`import_mesh`/`export_solid_mesh`/`import_mesh_to_body` take their mesh
+//! one planar face per triangle with shared vertices and edges, returning an open shell or a
+//! closed solid. `export_mesh`/`import_mesh`/`export_solid_mesh`/`import_mesh_to_body` take their mesh
 //! codec as a `MeshExporter`/`MeshImporter` parameter (ticket
 //! `26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME` wave 1): `semio_s_artifact_stdio_dwg` is a SEPARATE
 //! artifact, and this kernel-layer file must not import another artifact directly — the caller
@@ -25,14 +25,13 @@
 //! wave 1 (W1-A): the parent's own `engine::contract` module now owns it same-crate.
 
 use crate::brep::operations::euler::{add_shell, add_solid};
-use crate::brep::operations::primitives::make_planar_face_from_points;
 use crate::brep::engine::MeshTransfer;
 use crate::brep::queries::tessellation::tessellate_solid;
 use crate::brep::representation::arena::SolidId;
 use crate::brep::representation::error::KernelError;
 use crate::brep::representation::tolerance::Tol;
 use crate::brep::representation::topology::history::OpRecorder;
-use crate::brep::representation::topology::Body;
+use crate::brep::representation::topology::{Body,EntityRef};
 use crate::brep::representation::vector::{Pnt3, Vec3};
 use semio_framework_mesh_engine::{mesh_from_obj, mesh_from_stl, mesh_to_obj, mesh_to_stl, GlbExporter, GlbImporter, MeshData, MeshExporter, MeshImporter};
 
@@ -44,6 +43,144 @@ pub struct TriangleMesh {
     pub positions: Vec<Pnt3>,
     pub normals: Vec<Vec3>,
     pub indices: Vec<u32>,
+}
+/// 📦 Bounded private triangle import and exact owned-entity retirement in the mesh-I/O owner.
+pub struct MeshImportCursor {
+    pub(super) active: bool,
+    positions: Vec<f32>,
+    positions64: Vec<Pnt3>,
+    normals64: Vec<Vec3>,
+    normals: Vec<f32>,
+    indices: Vec<u32>,
+    phase: u8,
+    cursor: usize,
+    volume: f64,
+    faces: Vec<crate::brep::representation::arena::FaceId>,
+    shell: Option<crate::brep::representation::arena::ShellId>,
+    solid: Option<SolidId>,
+    recorder: OpRecorder,
+    cancelled: bool,
+    fault: Option<KernelError>,
+    units: usize,
+    retired: bool,
+    retirement: crate::brep::engine::retirement::PayloadRetirement,
+    released_buffers: bool,
+    triangles: usize,
+    provenance_credit: Option<usize>,
+    vertex_map: std::collections::BTreeMap<[u64;3],crate::brep::representation::arena::VertexId>,
+    edge_map: std::collections::BTreeMap<([u64;3],[u64;3]),(crate::brep::representation::arena::EdgeId,usize,bool)>,
+    boundary_edges: usize,
+}
+struct ImportIndexRetirement {
+    vertices: std::collections::BTreeMap<[u64;3],crate::brep::representation::arena::VertexId>,
+    edges: std::collections::BTreeMap<([u64;3],[u64;3]),(crate::brep::representation::arena::EdgeId,usize,bool)>,
+}
+impl crate::brep::engine::retirement::RetirementFrontier for ImportIndexRetirement {
+    fn advance(&mut self,_:&mut crate::brep::engine::retirement::PayloadRetirement)->bool {if self.vertices.pop_first().is_none() {self.edges.pop_first();}self.vertices.is_empty() && self.edges.is_empty()}
+}
+/// 📦 The current result of advancing the existing mesh import mutation.
+pub enum MeshImportStep { Working, Cancelled, Done(crate::brep::representation::topology::EntityRef) }
+impl MeshImportCursor {
+    /// 🚦️ Checks constant-sized admission facts before a retained owner transfers its buffers.
+    pub fn validate_admission_counts(position_scalars:usize,index_count:usize,tolerance:f64)->Result<(),KernelError> {
+        if !tolerance.is_finite() || tolerance<=0.0 || position_scalars%3!=0 || index_count%3!=0 || index_count<3 || position_scalars>1_800_000 || index_count>300_000 {return Err(KernelError::InvalidInput("invalid or oversized triangle import".into()));}
+        Ok(())
+    }
+    /// 📦 Admits owned typed buffers before creating any body entities.
+    pub fn new(positions: Vec<f32>, normals: Vec<f32>, indices: Vec<u32>, tolerance: f64) -> Result<Self,KernelError> {
+        Self::validate_admission_counts(positions.len(),indices.len(),tolerance)?;
+        let triangles=indices.len()/3;
+        Ok(Self { active:false,positions,positions64:Vec::new(),normals64:Vec::new(),normals,indices,phase:0,cursor:0,volume:0.0,faces:Vec::new(),shell:None,solid:None,recorder:OpRecorder::new(),cancelled:false,fault:None,units:0,retired:false,retirement:Default::default(),released_buffers:false,triangles,provenance_credit:None,vertex_map:Default::default(),edge_map:Default::default(),boundary_edges:0 })
+    }
+    /// 📦 Admits the existing owned f64 triangle representation without narrowing coordinates.
+    pub fn from_triangle_mesh(mesh:TriangleMesh,tolerance:f64)->Result<Self,KernelError> {
+        if mesh.positions.len()>600_000 {return Err(KernelError::InvalidInput("oversized triangle import".into()));}
+        let TriangleMesh {positions,normals,indices}=mesh;let mut cursor=Self::new(Vec::new(),Vec::new(),indices,tolerance)?;cursor.positions64=positions;cursor.normals64=normals;Ok(cursor)
+    }
+    /// 📈 Returns the exact retained mutation phase and completed bounded units.
+    pub fn progress(&self)->(usize,usize,&'static str) {
+        let phase=if self.cancelled || self.fault.is_some() { "mesh-to-brep-retire" } else {match self.phase {0=>"mesh-to-brep-admit",1=>"mesh-to-brep-triangles",2=>"mesh-to-brep-shell",3=>"mesh-to-brep-solid",_=>"mesh-to-brep-ready"}};
+        (self.units,self.units.max(self.triangles*2+4),phase)
+    }
+    /// 🛑 Requests rollback without dropping or publishing this private mutation.
+    pub fn cancel(&mut self) { self.cancelled=true; }
+    /// 🧹️ Reports cancellation only after every owned body entity has been retired.
+    pub fn retirement_complete(&self)->bool {self.retired}
+    fn points(&self)->Result<[Pnt3;3],KernelError> {
+        let mut points=[Pnt3::new(0.0,0.0,0.0);3];
+        for (point,index) in points.iter_mut().zip(&self.indices[self.cursor..self.cursor+3]) {
+            if self.positions64.is_empty() {
+                let start=*index as usize*3;let value=self.positions.get(start..start+3).ok_or_else(||KernelError::InvalidInput("triangle index out of range".into()))?;
+                *point=Pnt3::new(value[0]as f64,value[1]as f64,value[2]as f64);
+            } else {*point=*self.positions64.get(*index as usize).ok_or_else(||KernelError::InvalidInput("triangle index out of range".into()))?;}
+            if !point.x.is_finite() || !point.y.is_finite() || !point.z.is_finite() {return Err(KernelError::InvalidInput("nonfinite triangle vertex".into()));}
+        }
+        Ok(points)
+    }
+    /// ⏱️ Advances at most the admitted budget, including cancellation and fault rollback.
+    pub fn step(&mut self,body:&mut Body,budget:usize)->Result<MeshImportStep,KernelError> {self.close_step(body,budget,4096)}
+    /// 🎟️ Advances the same import cursor with explicit payload-byte credit.
+    pub fn close_step(&mut self,body:&mut Body,budget:usize,bytes:usize)->Result<MeshImportStep,KernelError> {
+        if bytes==0 {return Ok(MeshImportStep::Working);}
+        for _ in 0..budget {
+            if self.cancelled || self.fault.is_some() {
+                self.release_buffers();let empty=self.recorder.retire_step(body,1,&mut self.retirement);
+                if empty {self.retirement.close_step(1,bytes);}
+                self.units=self.units.saturating_add(1);
+                if empty && self.retirement.terminal_is_empty() { self.retired=true;if let Some(error)=self.fault.take() {return Err(error);} return Ok(MeshImportStep::Cancelled); }
+                continue;
+            }
+            let result=self.advance(body,bytes);
+            self.units=self.units.saturating_add(1);
+            match result {
+                Ok(Some(solid))=>return Ok(MeshImportStep::Done(solid)),
+                Ok(None)=>{},
+                Err(error)=>self.fault=Some(error),
+            }
+        }
+        Ok(MeshImportStep::Working)
+    }
+    fn release_buffers(&mut self) {
+        if self.released_buffers {return;}self.released_buffers=true;
+        self.retirement.pod(std::mem::take(&mut self.positions));self.retirement.pod(std::mem::take(&mut self.positions64));self.retirement.pod(std::mem::take(&mut self.normals64));self.retirement.pod(std::mem::take(&mut self.normals));self.retirement.pod(std::mem::take(&mut self.indices));self.retirement.pod(std::mem::take(&mut self.faces));self.retirement.frontier(ImportIndexRetirement {vertices:std::mem::take(&mut self.vertex_map),edges:std::mem::take(&mut self.edge_map)});
+    }
+    fn advance(&mut self,body:&mut Body,bytes:usize)->Result<Option<crate::brep::representation::topology::EntityRef>,KernelError> {
+        use crate::brep::representation::topology::EntityRef;
+        match self.phase {
+            0=>{
+                if self.cursor==self.indices.len() {self.cursor=0;self.phase=1;return Ok(None);}
+                let [p0,p1,p2]=self.points()?;
+                self.volume+=p0.to_vec().dot(p1.to_vec().cross(p2.to_vec()));
+                self.cursor+=3;
+            }
+            1=>{
+                if self.cursor==self.indices.len() {if self.faces.is_empty() {return Err(KernelError::Operation("no valid triangles in mesh".into()));}self.phase=2;return Ok(None);}
+                let [p0,mut p1,mut p2]=self.points()?;
+                let normal=(p1-p0).cross(p2-p0);
+                if p0!=p1 && p1!=p2 && p0!=p2 {
+                    let has_normals=if self.positions64.is_empty() {self.normals.len()>=self.positions.len()}else {self.normals64.len()>=self.positions64.len()};
+                    let reverse=if has_normals {let index=self.indices[self.cursor]as usize;let n=if self.positions64.is_empty() {let n=&self.normals[index*3..index*3+3];Vec3::new(n[0]as f64,n[1]as f64,n[2]as f64)}else {self.normals64[index]};if !n.x.is_finite() || !n.y.is_finite() || !n.z.is_finite() {return Err(KernelError::InvalidInput("nonfinite triangle normal".into()));}normal.dot(n)<0.0}else {self.volume<0.0};
+                    if reverse {std::mem::swap(&mut p1,&mut p2);}
+                    let points=[p0,p1,p2];let normal=(p1-p0).cross(p2-p0).normalized().ok_or_else(||KernelError::InvalidInput("points are collinear".into()))?;
+                    let keys=points.map(|point|[point.x,point.y,point.z].map(|value|if value==0.0 {0}else {value.to_bits()}));
+                    for i in 0..3 {let a=keys[i];let b=keys[(i+1)%3];let key=(a.min(b),a.max(b));if let Some((_,uses,direction))=self.edge_map.get(&key) {let forward=a==key.0;if *uses>=2 || (*uses==1 && *direction==forward) {return Err(KernelError::InvalidInput("triangle import requires manifold coherent winding".into()));}}}
+                    let mut local=OpRecorder::new();let mut vertices=Vec::with_capacity(3);let mut members=Vec::with_capacity(3);
+                    for i in 0..3 {let id=if let Some(id)=self.vertex_map.get(&keys[i]) {*id}else {let id=crate::brep::operations::euler::make_vertex(body,points[i],Tol::DEFAULT,&mut local);self.vertex_map.insert(keys[i],id);id};vertices.push(id);}
+                    for i in 0..3 {let j=(i+1)%3;let key=(keys[i].min(keys[j]),keys[i].max(keys[j]));let forward=keys[i]==key.0;let edge=if let Some((edge,uses,_))=self.edge_map.get_mut(&key) {*uses+=1;self.boundary_edges-=1;*edge}else {let (a,b)=if forward {(i,j)}else {(j,i)};let edge=crate::brep::operations::primitives::line_edge(body,points[a],points[b],vertices[a],vertices[b],Tol::DEFAULT,&mut local);self.edge_map.insert(key,(edge,1,forward));self.boundary_edges+=1;edge};members.push((edge,forward));}
+                    let wire=crate::brep::operations::primitives::Wire {members,vertices,closed:true};let face=crate::brep::operations::primitives::make_planar_face_from_wire(body,&wire,p0,normal,&mut local)?;
+                    local.own_triangle(body,face);self.recorder.append_disjoint(local);self.faces.push(face);
+                }
+                self.cursor+=3;
+            }
+            2=>{let mut local=OpRecorder::new();let shell=add_shell(body,std::mem::take(&mut self.faces),&mut local);local.own_entity(EntityRef::Shell(shell));self.recorder.append_disjoint(local);self.shell=Some(shell);self.phase=if self.boundary_edges==0 {3}else {4};}
+            3=>{let mut local=OpRecorder::new();let solid=add_solid(body,self.shell.expect("retained shell"),Vec::new(),&mut local);local.own_entity(EntityRef::Solid(solid));self.recorder.append_disjoint(local);self.solid=Some(solid);self.phase=4;}
+            4=>{self.release_buffers();self.retirement.close_step(1,bytes);if self.retirement.terminal_is_empty() {self.phase=5;self.provenance_credit=Some(self.recorder.retirement_bytes());}}
+            5=>{let credit=self.provenance_credit.as_mut().expect("retained provenance credit");*credit=credit.saturating_sub(bytes);if *credit==0 {self.phase=6;}}
+            6=>{self.phase=7;return Ok(Some(if let Some(solid)=self.solid.take() {EntityRef::Solid(solid)}else {EntityRef::Shell(self.shell.take().expect("retained shell"))}));}
+            _=>return Err(KernelError::InvalidInput("triangle import already published".into())),
+        }
+        Ok(None)
+    }
 }
 
 // #endregion 🔖️Types
@@ -108,7 +245,7 @@ pub fn export_solid_stl(body: &Body, solid: SolidId, deflection: f64) -> Result<
 
 /// 📦 Decodes STL bytes into `body` as a single solid.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn import_stl_to_body(body: &mut Body, data: &[u8], tolerance: f64) -> Result<SolidId, KernelError> {
+pub fn import_stl_to_body(body: &mut Body, data: &[u8], tolerance: f64) -> Result<EntityRef, KernelError> {
     import_triangle_mesh_to_body(body, &import_stl(data)?, tolerance)
 }
 
@@ -121,7 +258,7 @@ pub fn export_solid_obj(body: &Body, solid: SolidId, deflection: f64) -> Result<
 
 /// 📦 Decodes OBJ text into `body` as a single solid.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn import_obj_to_body(body: &mut Body, text: &str, tolerance: f64) -> Result<SolidId, KernelError> {
+pub fn import_obj_to_body(body: &mut Body, text: &str, tolerance: f64) -> Result<EntityRef, KernelError> {
     import_triangle_mesh_to_body(body, &import_obj(text)?, tolerance)
 }
 
@@ -134,7 +271,7 @@ pub fn export_solid_glb(body: &Body, solid: SolidId, deflection: f64) -> Result<
 
 /// 📦 Decodes GLB bytes into `body` as a single solid.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn import_glb_to_body(body: &mut Body, data: &[u8], tolerance: f64) -> Result<SolidId, KernelError> {
+pub fn import_glb_to_body(body: &mut Body, data: &[u8], tolerance: f64) -> Result<EntityRef, KernelError> {
     import_triangle_mesh_to_body(body, &import_glb(data)?, tolerance)
 }
 
@@ -151,7 +288,7 @@ pub fn export_solid_mesh(body: &Body, solid: SolidId, deflection: f64, exporter:
 
 /// 📦 Decodes mesh mesh bytes into `body` as a single solid via `importer` — see [`export_solid_mesh`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn import_mesh_to_body(body: &mut Body, data: &[u8], tolerance: f64, importer: &(impl MeshImporter + ?Sized)) -> Result<SolidId, KernelError> {
+pub fn import_mesh_to_body(body: &mut Body, data: &[u8], tolerance: f64, importer: &(impl MeshImporter + ?Sized)) -> Result<EntityRef, KernelError> {
     import_triangle_mesh_to_body(body, &import_mesh(data, importer)?, tolerance)
 }
 
@@ -215,44 +352,9 @@ pub fn import_mesh(data: &[u8], importer: &(impl MeshImporter + ?Sized)) -> Resu
 
 /// 📦 Imports a triangle soup as a single solid shell (one planar face per triangle).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn import_triangle_mesh_to_body(body: &mut Body, mesh: &TriangleMesh, tolerance: f64) -> Result<SolidId, KernelError> {
-    if mesh.indices.len() < 3 {
-        return Err(KernelError::InvalidInput("mesh has no triangles".into()));
-    }
-    let _tol = tolerance.max(Tol::DEFAULT.value());
-    let flip_all = should_flip_winding(mesh);
-    let has_normals = mesh.normals.len() >= mesh.positions.len();
-    let mut face_ids = Vec::new();
-    let mut rec = OpRecorder::new();
-    for tri in mesh.indices.as_chunks::<3>().0 {
-        let i0 = tri[0] as usize;
-        let i1 = tri[1] as usize;
-        let i2 = tri[2] as usize;
-        if i0 >= mesh.positions.len() || i1 >= mesh.positions.len() || i2 >= mesh.positions.len() {
-            return Err(KernelError::InvalidInput("triangle index out of range".into()));
-        }
-        let p0 = mesh.positions[i0];
-        let mut p1 = mesh.positions[i1];
-        let mut p2 = mesh.positions[i2];
-        if p0 == p1 || p1 == p2 || p0 == p2 {
-            continue;
-        }
-        if has_normals {
-            let geo = (p1 - p0).cross(p2 - p0);
-            if geo.dot(mesh.normals[i0]) < 0.0 {
-                std::mem::swap(&mut p1, &mut p2);
-            }
-        } else if flip_all {
-            std::mem::swap(&mut p1, &mut p2);
-        }
-        let face = make_planar_face_from_points(body, &[p0, p1, p2], &mut rec)?;
-        face_ids.push(face);
-    }
-    if face_ids.is_empty() {
-        return Err(KernelError::Operation("no valid triangles in mesh".into()));
-    }
-    let shell = add_shell(body, face_ids, &mut rec);
-    Ok(add_solid(body, shell, vec![], &mut rec))
+pub fn import_triangle_mesh_to_body(body: &mut Body, mesh: &TriangleMesh, tolerance: f64) -> Result<EntityRef, KernelError> {
+    let mut cursor=MeshImportCursor::from_triangle_mesh(mesh.clone(),tolerance)?;
+    loop {match cursor.step(body,4096)? {MeshImportStep::Done(entity)=>return Ok(entity),MeshImportStep::Working=>{},MeshImportStep::Cancelled=>return Err(KernelError::Operation("triangle import cancelled".into()))}}
 }
 
 // #endregion 🔖️Api
@@ -319,28 +421,6 @@ fn parse_f64_token(s: &str) -> Result<f64, KernelError> {
 }
 
 // #endregion 🔖️StlAscii
-
-// #region 🔖️MeshToBody
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn should_flip_winding(mesh: &TriangleMesh) -> bool {
-    if mesh.normals.len() >= mesh.positions.len() {
-        return false;
-    }
-    let mut total = 0.0;
-    for tri in mesh.indices.as_chunks::<3>().0 {
-        let p0 = mesh.positions[tri[0] as usize];
-        let p1 = mesh.positions[tri[1] as usize];
-        let p2 = mesh.positions[tri[2] as usize];
-        let a = Vec3::new(p0.x, p0.y, p0.z);
-        let b = Vec3::new(p1.x, p1.y, p1.z);
-        let c = Vec3::new(p2.x, p2.y, p2.z);
-        total += a.dot(b.cross(c));
-    }
-    total < 0.0
-}
-
-// #endregion 🔖️MeshToBody
 
 // #region 🔖️Tests
 

@@ -19,7 +19,10 @@ pub struct UpdateSpread {
 impl MutationKind<LayoutSnapshot, LayoutMutation> for UpdateSpread {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "update", entity: "spread", kind: "update-spread", record: "UpdatedSpread" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> { diff_update_spread(self, base) }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> { inverse_update_spread(self, base) }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok({ inverse_update_spread(self, base)? 
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Update spread \"{}\"", self.name), &format!("Druckbogen \"{}\" aktualisieren", self.name)) }
     fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }
@@ -32,14 +35,17 @@ pub fn diff_update_spread(payload: &UpdateSpread, base: &LayoutSnapshot) -> prot
         return protocol::MutationOutcome::fatal("mutation.invariant", "A spread needs a name.", std::iter::empty::<String>());
     }
     if spread.name == payload.name {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Spread is already named that.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Spread is already named that.");
     }
     protocol::MutationOutcome::new(LayoutDiff { spreads: Some(LayoutSpreadsDelta { patched: vec![LayoutSpreadPatchEntry { id: payload.id.clone(), patch: SpreadPatch { name: Some(payload.name.clone()) } }], ..Default::default() }), ..Default::default() })
 }
 
-pub fn inverse_update_spread(payload: &UpdateSpread, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_update_spread(payload: &UpdateSpread, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(spread) = base.spreads.iter().find(|spread| spread.id == payload.id) else { return Vec::new() };
     vec![LayoutMutation::UpdateSpread(UpdateSpread { id: spread.id.clone(), name: spread.name.clone() })]
+
+    })())
 }
 
 #[cfg(test)]

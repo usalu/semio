@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { resolve, relative } from "node:path";
-import { rustTokens, rustTokenPairs } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
+import { rustTokens, rustTokenPairs } from "../../../../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 import contract from "../../../🧫️fixtures/🖊️drawing-reader/🔣️.json";
 
 const root = resolve(import.meta.dir, "../../../../../../..");

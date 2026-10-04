@@ -11,7 +11,7 @@ pub fn register() {}
 /// Encode via the real IFC2X3 SPF writer into a BinarySnapshot.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn serialize(from: &Ifc2x3Snapshot) -> Result<BinarySnapshot, store::PackError> {
-    let bytes = crate::standards::v2x3::engine::encode_ifc2x3(from).map_err(store::PackError::Schema)?;
+    let bytes = crate::standards::v2x3::engine::encode_ifc2x3(from).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))?;
     Ok(BinarySnapshot { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes })
 }
 

@@ -10,8 +10,8 @@
 
 use crate::editor::puzzle3d::terminology::Puzzle3dLabels;
 use crate::editor::puzzle3d::{ui_label, Puzzle3dScene, PUZZLE3D_INTERACTION_DOMAIN, PUZZLE3D_PLAY_CONTROLLER_ID};
-use dsl::json;
-use dsl::os_pack::json::Value;
+
+use semio_framework_pack_json::{json, Value};
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, BuiltNode, HasBase};
 use semio_framework_plugin::tree_window_item;
 use semio_framework_plugin::ActionFactory;
@@ -60,21 +60,21 @@ fn ui_map_value(values: impl IntoIterator<Item = (&'static str, semio_framework_
 /// 🏷️ One catalog entry's display name — `label`, else `name`, else its `id`. Shared with the
 /// manifest's `addObjectKind`/"Add Object" dialog option set (`✏️editor/🦀️.rs`), which must read
 /// exactly the same catalog rows this panel renders.
-pub(crate) fn catalog_entry_label(entry: &dsl::DslValue) -> String {
+pub(crate) fn catalog_entry_label(entry: &semio_framework_value::DslValue) -> String {
     entry.get("label").and_then(|value| value.as_str()).or_else(|| entry.get("name").and_then(|value| value.as_str())).or_else(|| entry.get("id").and_then(|value| value.as_str())).unwrap_or("kind").into()
 }
 
 /// 🌀️ One object kind's rim-vortex templates, paired with their ordinal so sibling templates that
 /// declare the same `vortexKind` still key apart — a repeated key is a `DuplicateSiblingKey` refusal,
 /// not a duplicate row.
-fn vortex_templates(entry: &dsl::DslValue) -> Vec<(usize, &dsl::DslValue)> {
-    entry.get("vortices").and_then(dsl::DslValue::as_array).unwrap_or(&[]).iter().enumerate().collect()
+fn vortex_templates(entry: &semio_framework_value::DslValue) -> Vec<(usize, &semio_framework_value::DslValue)> {
+    entry.get("vortices").and_then(semio_framework_value::DslValue::as_array).unwrap_or(&[]).iter().enumerate().collect()
 }
 
-fn vortex_template_row(index: usize, template: &dsl::DslValue) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let vortex_kind = template.get("vortexKind").and_then(dsl::DslValue::as_str).unwrap_or("vortex");
-    let position_value = template.get("point").or_else(|| template.get("position")).cloned().unwrap_or_else(|| dsl::ToValue::to_value(&[0.0, 0.0, 0.0]));
-    let position = json::from_dsl_value(&position_value).to_string();
+fn vortex_template_row(index: usize, template: &semio_framework_value::DslValue) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let vortex_kind = template.get("vortexKind").and_then(semio_framework_value::DslValue::as_str).unwrap_or("vortex");
+    let position_value = template.get("point").or_else(|| template.get("position")).cloned().unwrap_or_else(|| semio_framework_value::ToValue::to_value(&[0.0, 0.0, 0.0]));
+    let position = semio_framework_pack_json::from_dsl_value(&position_value).to_string();
     ui::tree_item(ui_label(vortex_kind)?)
         .try_id(format!("puzzle3d-kind-vortex.{index}.{vortex_kind}"))
         .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.vortex", "vortex id admission failed"))?
@@ -84,14 +84,14 @@ fn vortex_template_row(index: usize, template: &dsl::DslValue) -> semio_framewor
         .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.vortex", "vortex row admission failed"))
 }
 
-fn object_kind_item(entry: &dsl::DslValue, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+fn object_kind_item(entry: &semio_framework_value::DslValue, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let kind_id = entry.get("id").and_then(|value| value.as_str()).unwrap_or("kind").to_string();
     let mesh_url = entry
         .get("meshUrl")
         .and_then(|value| value.as_str())
         .filter(|url| !url.is_empty())
         .map(str::to_string)
-        .or_else(|| entry.get("representations").and_then(dsl::DslValue::as_array).into_iter().flatten().filter_map(|rep| rep.get("url").and_then(dsl::DslValue::as_str)).find(|url| !url.is_empty()).map(str::to_string));
+        .or_else(|| entry.get("representations").and_then(semio_framework_value::DslValue::as_array).into_iter().flatten().filter_map(|rep| rep.get("url").and_then(semio_framework_value::DslValue::as_str)).find(|url| !url.is_empty()).map(str::to_string));
     let draggable = mesh_url.is_some();
     let action_args = ui_map_value([("objectKind", ui_text_value(&kind_id)?)])?;
     let add = ActionFactory::new(PUZZLE3D_PLAY_CONTROLLER_ID).action("addObjectKind", Some(action_args))?;
@@ -121,7 +121,7 @@ fn object_kind_item(entry: &dsl::DslValue, windows: &TreeWindows<'_>) -> semio_f
     tree_window_item(windows, builder, &kind_id, false, &templates, |template| vortex_template_row(template.0, template.1))
 }
 
-fn catalog_kind_item(entry: &dsl::DslValue, icon_id: &str) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+fn catalog_kind_item(entry: &semio_framework_value::DslValue, icon_id: &str) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let kind_id = entry.get("id").and_then(|value| value.as_str()).unwrap_or("kind").to_string();
     ui::tree_item(ui_label(catalog_entry_label(entry))?)
         .try_id(format!("puzzle3d-kind-entry:{kind_id}"))

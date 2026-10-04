@@ -83,7 +83,7 @@ async fn create_artifact_duplicate_id_is_fatal() {
     let base = seeded_snapshot();
     let outcome = create_artifact(sample_row("artifact-1")).diff(&base);
     assert_fatal_never_applies(&outcome).await;
-    assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+    assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -102,7 +102,7 @@ async fn rename_artifact_missing_target_is_error() {
 async fn rename_artifact_same_name_is_no_op() {
     let base = seeded_snapshot();
     let outcome = rename_artifact("artifact-1".into(), "Artifact artifact-1".into()).diff(&base);
-    assert_eq!(outcome.worst_level(), Some(protocol::Severity::Warning));
+    assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Warning));
     assert_eq!(outcome.diff(), &SSpaceDiff::default());
 }
 
@@ -113,7 +113,7 @@ async fn rename_artifact_name_collision_is_fatal() {
     base.artifacts[1].name = "Taken".into();
     let outcome = rename_artifact("artifact-1".into(), "Taken".into()).diff(&base);
     assert_fatal_never_applies(&outcome).await;
-    assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+    assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal));
 }
 
 #[semio_framework_async_macros::async_test]

@@ -9,7 +9,7 @@ pub fn diff(payload: &ChangeNetFloorAreaM2, base: &Din18599Snapshot) -> protocol
         return protocol::MutationOutcome::fatal("mutation.invariant", "net-floor-area must be a positive finite number.", Vec::<String>::new());
     }
     if base.net_floor_area_m2 == payload.new_net_floor_area_m2 {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "net-floor-area already has this value.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "net-floor-area already has this value.");
     }
     protocol::MutationOutcome::new(Din18599Diff { net_floor_area_m2: Some(payload.new_net_floor_area_m2), ..Default::default() })
 }

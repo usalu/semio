@@ -15,7 +15,7 @@ pub fn diff(payload: &CreateObject, base: &CadSnapshot) -> protocol::MutationOut
     let scene = match crate::cad_pane_local_scene(base, payload.pane) {
         Some(scene) => scene,
         None if crate::cad_pane_model(base, payload.pane).is_none() => std::sync::Arc::new(CadWorkingScene::default()),
-        None => return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Pane {:?} holds an unresolved model child; creating into it would discard its content.", payload.pane)),
+        None => return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Pane {:?} holds an unresolved model child; creating into it would discard its content.", payload.pane)),
     };
     let mut objects = crate::cad_scene_pane_objects(&scene, payload.pane).to_vec();
     if objects.iter().any(|object| object.id == payload.object.id) {

@@ -99,6 +99,36 @@
     "solarThermalKwhA": 2500.5
   },
   "climate": {
+    "thetaEC": [
+      -0.4,
+      0.6,
+      4.1,
+      8.4,
+      13.4,
+      16.6,
+      18.4,
+      17.9,
+      14.0,
+      9.2,
+      4.4,
+      1.0
+    ],
+    "gHWM2": [
+      25.0,
+      50.0,
+      95.0,
+      145.0,
+      185.0,
+      200.0,
+      195.0,
+      170.0,
+      120.0,
+      70.0,
+      35.0,
+      20.0
+    ]
+  },
+  "climateTable": {
     "childId": "climate-child 世界\u0000",
     "target": {
       "artifactId": "climate-document",

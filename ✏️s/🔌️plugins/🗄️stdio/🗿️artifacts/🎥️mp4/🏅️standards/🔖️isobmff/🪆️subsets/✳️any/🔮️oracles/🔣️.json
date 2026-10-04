@@ -667,7 +667,7 @@
       "comparisonProfile": "ordered-json-v1",
       "reproducible": true,
       "family": "mp4-carrier",
-      "notes": "Handcrafted Mp4Snapshot before/after pair on the same committed single-track AVC/H.264 base as set-sample-sync. PatchSnapshot{edits:[set /tracks/0/width = 32]} is the editor's compact path-addressed patch: the tkhd width changes in place and every sample, the codec and the movie header stay untouched."
+      "notes": "Handcrafted Mp4Snapshot before/after pair on the same committed single-track AVC/H.264 base as set-sample-sync. PatchSnapshot{set /tracks/0/width = 32} is the editor's compact path-addressed patch: the tkhd width changes in place and every sample, the codec and the movie header stay untouched."
     }
   ],
   "oracleHostPackages": []

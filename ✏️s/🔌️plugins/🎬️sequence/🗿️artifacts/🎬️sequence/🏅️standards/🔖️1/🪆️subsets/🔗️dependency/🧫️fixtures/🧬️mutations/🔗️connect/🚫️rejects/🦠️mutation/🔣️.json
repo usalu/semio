@@ -1,6 +1,0 @@
-{
-  "mutation": "connectSteps",
-  "id": "edge-self",
-  "from": "step-log",
-  "to": "step-log"
-}

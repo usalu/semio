@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/framework/graph/record-ownership/fixture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract", "bindings", "containers", "directEdges"],
+  "properties": {
+    "contract": { "const": "canonical-record-ownership-v1" },
+    "bindings": { "type": "array", "minItems": 8, "items": { "$ref": "#/$defs/Binding" } },
+    "containers": { "type": "array", "minItems": 4, "maxItems": 4, "items": { "$ref": "#/$defs/Container" } },
+    "directEdges": { "type": "array", "minItems": 6, "maxItems": 6, "items": { "$ref": "#/$defs/Edge" } }
+  },
+  "$defs": {
+    "Owner": { "enum": ["record", "value", "diagnostic", "replication", "record-derive", "graph", "jack", "io", "viewport", "os", "std"] },
+    "Binding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "traitOwner", "typeOwner", "implementationOwner", "canonical", "legal"],
+      "properties": { "id": { "type": "string", "minLength": 1 }, "traitOwner": { "$ref": "#/$defs/Owner" }, "typeOwner": { "$ref": "#/$defs/Owner" }, "implementationOwner": { "$ref": "#/$defs/Owner" }, "canonical": { "type": "boolean" }, "legal": { "type": "boolean" } }
+    },
+    "Container": {
+      "type": "object", "additionalProperties": false,
+      "required": ["name", "field", "type", "owner"],
+      "properties": { "name": { "enum": ["Edge", "NodeKindDef", "EdgeKindDef", "PortKindDef"] }, "field": { "enum": ["properties", "direction"] }, "type": { "enum": ["PropertyBag", "Vec<PropertyDef>", "PortDirection"] }, "owner": { "const": "graph" } }
+    },
+    "Edge": {
+      "type": "object", "additionalProperties": false,
+      "required": ["consumer", "provider"],
+      "properties": { "consumer": { "enum": ["graph", "jack"] }, "provider": { "$ref": "#/$defs/Owner" } }
+    }
+  }
+}

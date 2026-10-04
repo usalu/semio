@@ -25,7 +25,7 @@
     1,
     1
   ],
-  "query": "SELECT start.native_id AS start,end.native_id AS end,kind FROM semio_brep_edge JOIN semio_brep_vertex AS start ON start_vertex_id=start.id JOIN semio_brep_vertex AS end ON end_vertex_id=end.id JOIN semio_brep_curve3 ON curve_id=semio_brep_curve3.id ORDER BY semio_brep_edge.ordinal",
+  "query": "SELECT start.native_id AS start,end.native_id AS end,kind FROM semio_brep_edge JOIN semio_brep_vertex AS start ON start_vertex_native_id=start.native_id JOIN semio_brep_vertex AS end ON end_vertex_native_id=end.native_id JOIN semio_brep_curve3 ON curve_id=semio_brep_curve3.id ORDER BY semio_brep_edge.ordinal",
   "float64Bits": [
     "0000000000000000",
     "8000000000000000",

@@ -1,12 +1,12 @@
 //! 🖱️ 🖱️ Wires play app commands command — `canvas-pointer-down`.
 
-use crate::op::WiresMutation;
+use crate::WiresMutation;
 use crate::WiresSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "pointer-down")]
 pub struct CanvasPointerDown {
     pub id: Option<String>,

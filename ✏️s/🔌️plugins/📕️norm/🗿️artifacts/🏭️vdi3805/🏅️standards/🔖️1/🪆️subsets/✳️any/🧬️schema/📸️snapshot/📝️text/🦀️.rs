@@ -12,7 +12,7 @@ use crate::Vdi3805Snapshot;
 pub const REFERENCE_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
 /// 📖️ Parses VDI 3805 DSL text into a `Document`.
-pub fn parse_dsl(text: &str) -> Result<Vdi3805Snapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<Vdi3805Snapshot, semio_framework_diagnostic::TextError> {
     <Vdi3805Snapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 

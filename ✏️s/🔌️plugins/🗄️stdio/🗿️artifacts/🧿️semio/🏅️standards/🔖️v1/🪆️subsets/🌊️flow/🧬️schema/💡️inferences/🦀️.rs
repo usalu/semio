@@ -8,7 +8,6 @@
 
 use crate::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::topology::compute_semio_flow_topology;
 //#region 🔖️Inference
@@ -26,8 +25,11 @@ pub struct SemioFlowInference {
 }
 
 impl protocol::Inference<SemioFlowSnapshot> for SemioFlowInference {
-    fn infer(snapshot: &SemioFlowSnapshot) -> Self {
+    fn infer(snapshot: &SemioFlowSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { topology: compute_semio_flow_topology(snapshot) }
+    
+        })
     }
 }
 
@@ -43,17 +45,6 @@ impl protocol::InferenceSpec<SemioFlowSnapshot> for SemioFlowInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 🧠️ Uncached: Kahn's algorithm re-runs in one BFS pass over the whole graph — the default
-/// `infer_cached` passthrough (just calls `infer`) is exactly right here, no `InferredField`
-/// chain needed (there is no honest per-node incremental decomposition of a global topological
-/// sort) — same ruling trinity's `jack` inference facet documents for its own node/edge graph.
-impl ArtifactInferrer for crate::standards::v1::subsets::flow::schema::SemioFlowBuilder {
-    type Snapshot = SemioFlowSnapshot;
-    type Inference = SemioFlowInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.semio.flow.inference`'s facet leaves into the OS-wide inference catalog

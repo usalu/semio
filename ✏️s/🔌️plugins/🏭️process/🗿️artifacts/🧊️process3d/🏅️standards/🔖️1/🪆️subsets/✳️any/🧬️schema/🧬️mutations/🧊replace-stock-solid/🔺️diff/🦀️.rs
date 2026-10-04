@@ -8,7 +8,7 @@ use crate::Process3dSnapshot;
 //#region 🔖️Diff
 pub fn diff(payload: &super::ReplaceStockSolid, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
     if base.stock_solid == payload.new_solid {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Stock solid handle is unchanged.".to_string());
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Stock solid handle is unchanged.".to_string());
     }
     protocol::MutationOutcome::new(Process3dDiff { stock_solid: Some(payload.new_solid.clone()), ..Default::default() })
 }

@@ -6,6 +6,9 @@ use crate::ProgramMutation;
 use crate::ProgramSnapshot;
 
 /// ↩️ Undo a create by deleting the row it added.
-pub fn inverse(payload: &super::CreateProgramElement, _base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+pub fn inverse(payload: &super::CreateProgramElement, _base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![ProgramMutation::DeleteProgramElement(super::super::delete_program_element::DeleteProgramElement { id: payload.program_element.header.id.clone() })]
+
+    })())
 }

@@ -14,7 +14,7 @@ pub fn diff(payload: &EditBlockInkStroke, base: &NoteSnapshot) -> protocol::Muta
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Block \"{}\" is not an ink block.", payload.id), [payload.id.clone()]);
     };
     if points == &payload.new_points && *x == payload.new_x && *y == payload.new_y && *width == payload.new_width && *height == payload.new_height {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Block \"{}\" ink stroke is unchanged.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Block \"{}\" ink stroke is unchanged.", payload.id));
     }
     let mut updated = block.clone();
     if let crate::NoteBlockNode::Ink { points, x, y, width, height, .. } = &mut updated {

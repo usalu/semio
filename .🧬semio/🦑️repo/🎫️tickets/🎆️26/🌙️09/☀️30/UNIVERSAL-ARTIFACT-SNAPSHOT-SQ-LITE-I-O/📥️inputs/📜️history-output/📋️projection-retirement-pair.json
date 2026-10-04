@@ -1,0 +1,34 @@
+{
+  "state": "mountedAfterAuthenticNative14ResourceRed",
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🧬️schema/📸️snapshot/🪶️sqlite/🚦️native/🦀️.rs",
+  "before": "fn retire_projection(value: DslValue) { <DslValue as FromValue>::retire_decoded(value); }",
+  "after": "struct ProjectionRetirement { current: Option<DslValue>, parent: DslValue }\nimpl ProjectionRetirement {\n    fn new(value: DslValue) -> Self { Self { current: Some(value), parent: DslValue::Null } }\n    fn close_step(&mut self, maximum_items: usize) -> usize {\n        let mut completed = 0;\n        while completed < maximum_items {\n            let Some(current) = self.current.take() else { break };\n            completed += 1;\n            match current {\n                DslValue::Array(mut items) => {\n                    if let Some(child) = items.pop() {\n                        items.push(std::mem::replace(&mut self.parent, DslValue::Null));\n                        self.parent = DslValue::Array(items);\n                        self.current = Some(child);\n                        continue;\n                    }\n                }\n                DslValue::Object(mut items) => {\n                    if let Some((_, child)) = items.pop() {\n                        items.push((String::new(), std::mem::replace(&mut self.parent, DslValue::Null)));\n                        self.parent = DslValue::Object(items);\n                        self.current = Some(child);\n                        continue;\n                    }\n                }\n                DslValue::Null | DslValue::Bool(_) | DslValue::Number(_) | DslValue::String(_) | DslValue::Bytes(_) => {},\n            }\n            match std::mem::replace(&mut self.parent, DslValue::Null) {\n                DslValue::Array(mut items) => {\n                    self.parent = items.pop().expect(\"retirement array retains its parent link\");\n                    self.current = Some(DslValue::Array(items));\n                }\n                DslValue::Object(mut items) => {\n                    self.parent = items.pop().expect(\"retirement object retains its parent link\").1;\n                    self.current = Some(DslValue::Object(items));\n                }\n                DslValue::Null => {},\n                DslValue::Bool(_) | DslValue::Number(_) | DslValue::String(_) | DslValue::Bytes(_) => unreachable!(\"retirement parent is an owned container or terminal marker\"),\n            }\n        }\n        completed\n    }\n}\nimpl Drop for ProjectionRetirement {\n    fn drop(&mut self) { while self.current.is_some() { self.close_step(256); } }\n}\nfn retire_projection(value: DslValue) {\n    let mut retirement = ProjectionRetirement::new(value);\n    while retirement.current.is_some() { retirement.close_step(256); }\n}\nfn retire_record(record: semio_framework_dsl_record::RecordValue) {\n    for value in record.fields.into_values() {\n        match value {\n            FieldValue::Value(value) => retire_projection(value),\n            _ => unreachable!(\"History producer emits only the declared intrinsic field\"),\n        }\n    }\n}\n",
+  "scope": "private actual History projection temporary owner only; shared generic retirement unchanged",
+  "invariant": "a popped child frees a capacity slot reused for its old parent; complete backtracking removes that link before visiting remaining children; no owned child reaches recursive ordinary drop",
+  "safety": "all nine kinds, constant live stack independent of depth, exact release census and zero requests in distinct Native14 witness",
+  "control": "zero item grant changes nothing; one transition per granted item; mandatory Drop finishes in 256-unit batches after provider cancellation",
+  "guardPairs": [
+    {
+      "purpose": "complete projection success/error/cancellation guard",
+      "before": "let value = project(value, &mut c)?.guard_decoded();",
+      "after": "let value = semio_framework_value::DecodedValue::new(project(value, &mut c)?, retire_projection);"
+    },
+    {
+      "purpose": "complete actual record ownership transferred before physical writer",
+      "before": "record.insert(1, FieldValue::Value(value.take()))?;",
+      "after": "record.insert(1, FieldValue::Value(value.take()))?;\n                    let record = semio_framework_value::DecodedValue::new(record.take(), retire_record);"
+    },
+    {
+      "purpose": "borrow retained concrete record without another projection",
+      "before": "encode_document_controlled(&spec, record.as_record(), &options, &mut c)",
+      "after": "encode_document_controlled(&spec, record.get(), &options, &mut c)"
+    }
+  ],
+  "nativeRed": {
+    "id": "79fa66f1-01c8-4f36-b313-74a6a0ac6f94",
+    "selected": 14,
+    "passed": 12,
+    "failed": 2,
+    "tailRequestedBytes": 9024
+  }
+}

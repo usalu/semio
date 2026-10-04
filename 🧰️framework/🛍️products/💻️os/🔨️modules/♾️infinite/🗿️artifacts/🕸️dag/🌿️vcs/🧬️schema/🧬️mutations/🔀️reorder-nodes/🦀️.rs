@@ -1,7 +1,7 @@
 use super::super::{DagDelta, DagDiff, DagMutation, DagSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "reorder-nodes")]
@@ -14,9 +14,12 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for ReorderNodes {
     fn diff(&self, _base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
         protocol::MutationOutcome::new(DagDiff::from(DagDelta { reordered_nodes: Some(self.order.clone()), ..Default::default() }))
     }
-    fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {
+    fn inverse(&self, base: &DagSnapshot) -> Result<Vec<DagMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![DagMutation::ReorderNodes(Self { order: base.nodes.iter().map(|node| node.id.clone()).collect() })]
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Reorder nodes", "Knoten umordnen")
     }

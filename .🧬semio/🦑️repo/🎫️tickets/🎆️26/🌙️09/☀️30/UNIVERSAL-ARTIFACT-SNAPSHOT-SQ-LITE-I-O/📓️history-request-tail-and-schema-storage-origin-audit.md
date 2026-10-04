@@ -1,0 +1,27 @@
+# History Request Tail And Schema Storage Origin Audit
+
+Read-only2026-10-04. No compiler/tests/production edits. Actual request-origin log `🗑️generated/root-space-history-thirteen-request-origin-native-replay.log:15071–15086` is execution evidence: after Pack finish2764147 requests/2752230 admitted; full output request count2773171. The9024 tail is measured after the last mark, not automatically an identified byte constant.
+
+## Real Post-Finish Ownership Origin
+
+History actual `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🧬️schema/📸️snapshot/🪶️sqlite/🚦️native/🦀️.rs:209–241` now uses caller allocation_stage. Projected Value moves into EncodedRecord at232. At235, controlled Pack returns bytes; the record then leaves the match arm **before** c.owned_bytes settlement240. Its cleanup is inside the measured operation.
+
+Canonical record owner `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🛫️encode/🦀️.rs:132` implements EncodedRecord Drop by calling retire_field for its field values. retire_field103–115 allocates `vec![value]`; FieldValue::Value110 calls DslValue::retire_decoded. Value codec984 forwards to controlled retirement; `🧰️framework/🔨️modules/🌱️value/🔁️codec/🛬️controlled/🦀️.rs:118–121` constructs owned_retirement and synchronously loops close_step. Actual retirement `🌱️value/♻️retirement/🦀️.rs` constructs boxed cursor owners: leaf48, String105, Vec143 and other collection shapes. These requests do not pass output c/control admission. Record cleanup is therefore a concrete unadmitted request origin after Pack finish. This source chain explains a real tail; exact attribution of all9024 still requires a mark immediately after explicit record retirement, not arithmetic subtraction from unrelated stages.
+
+Pack document `.../🎒️pack/🌱️value/🛫️encode/🦀️.rs:174–176` marks after writer.finish then returns Result. Its local paid symbol/payload buffers drop without ordinary new allocation; the History EncodedRecord is the genuine next allocating owner, not IoPayload Binary wrapping (enum move of the already-owned Vec).
+
+Principled pairing: retain complete request equality and source/retained-output assertions. Make intermediate record retirement explicit under the same cumulative owner before settlement, with actual cursor/frontier storage admitted before requests and known progress/cancellation/terminal handling. Alternatively reuse already-admitted storage for a zero-request bounded retirement traversal if the actual ownership representation permits it. Preserve depth-safe cleanup on failure/cancellation; do not replace it with unbounded recursive Drop, exclude cleanup from measurement, discard the guarded candidate or hardcode9024. Existing retirement API has no output-control parameter; its owner construction/close path needs a genuine controlled pairing rather than an invented estimate.
+
+## Exact Stack Overcharges And HashMap Guess
+
+Real Hasher `🧰️framework/🔨️modules/🔏️hash/🦀️.rs:512–527` contains Blake3ChunkState, fixed inline cv_stack array and length. Hasher::new constructs inline fields; update uses fixed stack. It does not allocate a heap backing object.
+
+Both controlled schema facets nevertheless charge size_of<Hasher> for stack Writer construction: actual OS `🎒️pack/🌱️value/🏭️schema/🦀️.rs:41`, framework38. Shared ControlledPackWriter `🧰️framework/🔨️modules/🎒️pack/📐️format/🛫️encoding/🦀️.rs:23` charges size_of<Hasher> at writer begin and39 does so for chunk-local hashing. These are stack-byte charges against concrete allocation-request equality. The log's writer-begin mark requests increase32 while admitted increases2200, consistent with inline overcharge plus real header backing; no ABI number should become a repair constant. Remove heap admission only for proven inline stack objects, preserving work progress/hash semantics.
+
+Schema reserve_map actual OS74/framework71 charges size_of<(K,V)>+160 for every requested entry and then std HashMap::try_reserve(1). That charge neither follows actual bucket growth nor concrete storage requests; repeated calls can charge without allocation, while growth may request a larger bucket buffer. std HashMap's public API does not expose exact backing bytes. Canonical schema seen-address map, digest buckets and refinement signatures at77–84 therefore need an owned storage representation with explicit admitted Vec slots (linear/sorted key records or another first-party controlled map), retaining exact cyclic schema equivalence, digest collision comparison, producer discovery and canonical ordinals. Do not substitute guessed overhead, tune160 to this specimen, or subtract Hasher overcharges from HashMap debt.
+
+The schema stage log requests+677 but admitted+7141 shows overcharging in that stage; it does not cancel the independently measured output/cleanup debt. Native request equality must remain cumulative with full realloc requests, not net live capacity. Shared append repair is owned by High; this audit does not modify its region.
+
+## Verification Scope
+
+Pair both physical format writer and both schema facets where authority is shared, then rerun unchanged actual History13 including full-request law449. Keep authentic diagnostic marks only until origin pairing is established. Current source readiness is not whole-module/retirement runtime proof; actual gate has12 preceding successes and one concrete output ownership failure according to parent/log. No new success is claimed.

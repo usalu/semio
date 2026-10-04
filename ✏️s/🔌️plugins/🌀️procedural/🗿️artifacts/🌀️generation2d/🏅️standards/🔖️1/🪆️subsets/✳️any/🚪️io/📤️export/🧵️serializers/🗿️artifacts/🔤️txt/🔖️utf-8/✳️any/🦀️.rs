@@ -4,6 +4,6 @@ use crate::Generation2dSnapshot;
 
 pub fn register() {}
 
-pub fn serialize_bytes(from: &Generation2dSnapshot) -> Result<Vec<u8>, store::TextError> {
+pub fn serialize_bytes(from: &Generation2dSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
     Ok(<Generation2dSnapshot as store::ArtifactDsl>::print_dsl(from).into_bytes())
 }

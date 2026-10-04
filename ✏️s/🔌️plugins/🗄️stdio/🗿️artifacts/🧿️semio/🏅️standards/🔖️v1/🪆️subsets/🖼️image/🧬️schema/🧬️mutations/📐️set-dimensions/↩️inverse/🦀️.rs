@@ -5,6 +5,9 @@ use crate::standards::v1::subsets::image::schema::mutations::set_dimensions;
 
 /// ↩️ Inverse of set-dimensions.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(base: &SemioImageSnapshot, width: u32, height: u32) -> Vec<SemioImageMutation> {
-    <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&SemioImageMutation::SetDimensions(set_dimensions::SetDimensions { width, height }), base)
+pub fn inverse(base: &SemioImageSnapshot, width: u32, height: u32) -> Result<Vec<SemioImageMutation>, semio_framework_value::ValueError> {
+    Ok({
+    <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&SemioImageMutation::SetDimensions(set_dimensions::SetDimensions { width, height }), base)?
+
+    })
 }

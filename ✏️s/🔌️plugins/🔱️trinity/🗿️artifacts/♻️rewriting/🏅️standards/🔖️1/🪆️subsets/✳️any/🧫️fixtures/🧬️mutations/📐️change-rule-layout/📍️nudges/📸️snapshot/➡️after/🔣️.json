@@ -1,19 +1,208 @@
 {
-  "beforeFixtureJson": "{\"schema\":\"trinity.graph\",\"name\":\"capsule-stack\"}",
-  "lhsJson": "{\"pattern\":{\"var\":\"c\",\"kind\":\"Piece\"}}",
-  "rhsJson": "{\"set\":[{\"var\":\"c\",\"prop\":\"label\",\"value\":\"$caption\"}]}",
+  "workingGraph": {
+    "schema": "trinity.graph",
+    "name": "capsule-stack",
+    "manifest": {
+      "nodeKinds": [
+        {
+          "name": "Piece",
+          "properties": [
+            {
+              "name": "enabled",
+              "kind": "data",
+              "valueType": {
+                "kind": "boolean"
+              }
+            },
+            {
+              "name": "count",
+              "kind": "data",
+              "valueType": {
+                "kind": "integer"
+              }
+            },
+            {
+              "name": "value",
+              "kind": "data",
+              "valueType": {
+                "kind": "decimal"
+              }
+            },
+            {
+              "name": "caption",
+              "kind": "data",
+              "valueType": {
+                "kind": "text"
+              }
+            },
+            {
+              "name": "labels",
+              "kind": "data",
+              "valueType": {
+                "kind": "list",
+                "of": {
+                  "kind": "text"
+                }
+              }
+            },
+            {
+              "name": "nested",
+              "kind": "data",
+              "valueType": {
+                "kind": "any"
+              }
+            },
+            {
+              "name": "derived",
+              "kind": "derived",
+              "valueType": {
+                "kind": "schema",
+                "of": "引用\u0000🧩"
+              },
+              "expr": "caption + \"引用\u0000🧩\""
+            }
+          ],
+          "portKinds": [
+            "Signal",
+            "Input"
+          ]
+        }
+      ],
+      "edgeKinds": [
+        {
+          "name": "Connection",
+          "properties": [
+            {
+              "name": "caption",
+              "kind": "data",
+              "valueType": {
+                "kind": "text"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Signal",
+          "properties": [
+            {
+              "name": "caption",
+              "kind": "data",
+              "valueType": {
+                "kind": "text"
+              }
+            },
+            {
+              "name": "nil",
+              "kind": "data",
+              "valueType": {
+                "kind": "any"
+              }
+            }
+          ]
+        }
+      ],
+      "portKinds": [
+        {
+          "name": "Signal",
+          "direction": "out",
+          "properties": [
+            {
+              "name": "caption",
+              "kind": "data",
+              "valueType": {
+                "kind": "text"
+              }
+            },
+            {
+              "name": "count",
+              "kind": "data",
+              "valueType": {
+                "kind": "integer"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Input",
+          "direction": "in",
+          "properties": []
+        }
+      ]
+    },
+    "camera": {
+      "x": {
+        "bits": "0000000000000000"
+      },
+      "y": {
+        "bits": "0000000000000000"
+      },
+      "zoom": {
+        "bits": "3ff0000000000000"
+      }
+    },
+    "content": {
+      "childId": "rewriting-capsule-empty",
+      "target": {
+        "artifactId": "rewriting-capsule-empty",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "graph"
+        }
+      }
+    },
+    "query": ""
+  },
+  "lhs": {
+    "pattern": {
+      "leftVar": "c",
+      "leftKind": "Piece"
+    }
+  },
+  "rhs": {
+    "create": [],
+    "delete": [],
+    "set": [
+      {
+        "var": "c",
+        "prop": "label",
+        "value": {
+          "kind": "string",
+          "value": "$caption"
+        }
+      }
+    ],
+    "merge": [],
+    "parameters": []
+  },
   "parameterBindings": {
-    "caption": "Capsule",
-    "repeat": 4.0
+    "caption": {
+      "kind": "string",
+      "value": "Capsule"
+    },
+    "repeat": {
+      "kind": "number",
+      "value": {
+        "bits": "4010000000000000"
+      }
+    }
   },
   "ruleLayout": {
     "c": {
-      "x": 24.0,
-      "y": 16.5
+      "x": {
+        "bits": "4038000000000000"
+      },
+      "y": {
+        "bits": "4030800000000000"
+      }
     },
     "shaft": {
-      "x": 0.0,
-      "y": 0.0
+      "x": {
+        "bits": "0000000000000000"
+      },
+      "y": {
+        "bits": "0000000000000000"
+      }
     }
   }
 }

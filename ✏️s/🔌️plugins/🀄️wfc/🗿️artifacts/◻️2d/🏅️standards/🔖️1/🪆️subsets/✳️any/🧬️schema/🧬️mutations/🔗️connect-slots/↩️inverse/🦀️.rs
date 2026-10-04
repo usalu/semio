@@ -4,6 +4,9 @@
 use crate::mutations::{disconnect_slots, Wfc2dMutation};
 use crate::schema::snapshot::Wfc2dSnapshot;
 
-pub fn inverse(payload: &super::ConnectSlots, _base: &Wfc2dSnapshot) -> Vec<Wfc2dMutation> {
+pub fn inverse(payload: &super::ConnectSlots, _base: &Wfc2dSnapshot) -> Result<Vec<Wfc2dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![disconnect_slots(payload.edge.id.clone())]
+
+    })())
 }

@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "cases": [
+    {"id": "text", "shape": "Text", "value": "literal", "accepted": true},
+    {"id": "bool", "shape": "Bool", "value": false, "accepted": true},
+    {"id": "null", "shape": "Nullable", "value": null, "accepted": true},
+    {"id": "record", "shape": "Record", "value": {"active": true, "nested": {"empty": null}}, "accepted": true},
+    {"id": "list", "shape": "List", "value": [false, null, {"value": 1}], "accepted": true},
+    {"id": "empty-shape", "shape": "", "value": true, "accepted": false},
+    {"id": "unknown-field-property", "shape": "Bool", "value": true, "extraField": true, "accepted": false},
+    {"id": "extra-tuple-item", "shape": "Bool", "value": true, "extraTuple": true, "accepted": false},
+    {"id": "negative-field-id", "shape": "Bool", "value": true, "fieldId": -1, "accepted": false}
+  ]
+}

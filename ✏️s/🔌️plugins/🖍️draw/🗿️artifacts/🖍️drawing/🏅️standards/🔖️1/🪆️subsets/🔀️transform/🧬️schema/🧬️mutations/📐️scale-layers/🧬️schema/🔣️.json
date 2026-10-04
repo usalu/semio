@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/transform/mutation/scale-layers/schema.json",
   "title": "ScaleLayers",
+  "x-semio-inverse-rows": { "perTarget": { "targets": 1 } },
   "description": "The `scale-layers` mutation record — a relative, parametric scaling of a set of layers by two axis factors about one world-space pivot, applied through each layer's parent transform. Internally tagged `\"mutation\": \"scaleLayers\"`.",
   "type": "object",
   "additionalProperties": false,

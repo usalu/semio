@@ -1,7 +1,7 @@
 use super::*;
 
 fn sliders() -> FlowHostSnapshot {
-    dsl::json::from_json_str(r#"{"schema":"flow.hostSnapshot","camera":{"x":0.0,"y":0.0,"zoom":1.0},"widgets":[{"kind":"inputSlider","id":"height","label":"Height","value":6.0,"min":0.0,"max":10.0,"step":0.5},{"kind":"inputSlider","id":"radius","label":"Radius","value":2.0,"min":0.0,"max":10.0,"step":0.5},{"kind":"inputNote","id":"note","text":"Note"}],"synapses":[],"layout":{}}"#).expect("slider fixture decodes")
+    semio_framework_pack_json::from_json_str(r#"{"schema":"flow.hostSnapshot","camera":{"x":0.0,"y":0.0,"zoom":1.0},"widgets":[{"kind":"inputSlider","id":"height","label":"Height","value":6.0,"min":0.0,"max":10.0,"step":0.5},{"kind":"inputSlider","id":"radius","label":"Radius","value":2.0,"min":0.0,"max":10.0,"step":0.5},{"kind":"inputNote","id":"note","text":"Note"}],"synapses":[],"layout":{}}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("slider fixture decodes")
 }
 
 /// 🎚️ A value patch is one ABSOLUTE `change-slider-value` per addressed slider that moves — never a whole-widget scratch

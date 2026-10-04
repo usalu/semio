@@ -1619,7 +1619,7 @@ pub struct PdfDate {
 
 impl PdfDate {
     fn one_controlled(control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<u32, semio_framework_value::ValueError> {
-        control.checkpoint().map_err(semio_framework_value::ValueError::new)?;
+        control.checkpoint()?;
         Ok(1)
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -2185,8 +2185,8 @@ impl pack::value::ToValue for PdfSnapshot {
     fn to_value_controlled(&self,control:&mut pack::value::NativeEncodeControl<'_>)->Result<pack::value::DslValue,pack::value::ValueError>{
         use pack::value::{DslValue as V,ValueError as E};
         control.scoped_depth(64,|control|control.scoped_stage(|control|{
-            control.begin_stage(31).map_err(E::new)?;let mut fields=V::object_encoding_controlled(31,control)?;
-            macro_rules! field{($key:literal,$value:expr)=>{{let key=control.copy_text($key).map_err(E::new)?;let value=$value.map_err(|error:E|error.under($key))?;fields.get_mut().push((key,value));control.step().map_err(E::new)?;}};}
+            control.begin_stage(31)?;let mut fields=V::object_encoding_controlled(31,control)?;
+            macro_rules! field{($key:literal,$value:expr)=>{{let key=control.copy_text($key)?;let value=$value.map_err(|error:E|error.under($key))?;fields.get_mut().push((key,value));control.step()?;}};}
             field!("schema",self.schema.to_value_controlled(control));
             field!("declaredVersion",self.declared_version.to_value_controlled(control));
             field!("pages",self.pages.to_value_controlled(control));
@@ -2245,7 +2245,7 @@ impl pack::value::FromValue for PdfSnapshot {
                 Some(value) => T::from_value(value).map_err(|error| error.under(key)),
             }
         }
-        let schema = field("schema").ok_or_else(|| pack::value::ValueError::new("missing field `schema`"))?;
+        let schema = field("schema").ok_or_else(|| pack::value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"missing field `schema`"))?;
         Ok(Self {
             schema: String::from_value(schema).map_err(|error| error.under("schema"))?,
             declared_version: decode_or_default(field("declaredVersion"), "declaredVersion")?,
@@ -2291,19 +2291,19 @@ impl store::ArtifactDsl for PdfSnapshot {
     fn envelope_id() -> &'static str {
         STDIO_PDF17_DOCUMENT_SCHEMA
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((envelope, rest)) => {
-                if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1) { return Err(store::TextError::new("PDF snapshot text envelope mismatch", dsl::TextSpan::at(1, 1))); }
+                if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1) { return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "PDF snapshot text envelope mismatch", semio_framework_diagnostic::TextSpan::at(1, 1))); }
                 rest
             }
             Err(_) => text,
         };
-        let record=dsl::parse(body,&snapshot_text::spec(),&dsl::ParseOptions{limits:dsl::Limits{max_bytes:272*1024*1024,max_tokens:4_000_000,max_nodes:2_000_000,..dsl::Limits::default()},mode:dsl::SourceMode::Document})?;
+        let record=semio_framework_dsl_record::parse(body,&snapshot_text::spec(),&semio_framework_dsl_record::ParseOptions{limits:semio_framework_diagnostic::Limits{max_bytes:272*1024*1024,max_tokens:4_000_000,max_nodes:2_000_000,..semio_framework_diagnostic::Limits::default()},mode:semio_framework_dsl_record::SourceMode::Document})?;
         snapshot_text::from_record(&record)
     }
     fn print_dsl(&self) -> String {
-        let body=dsl::print(&snapshot_text::to_record(self),&snapshot_text::spec(),dsl::JoinMode::Document);
+        let body=semio_framework_dsl_record::print(&snapshot_text::to_record(self),&snapshot_text::spec(),semio_framework_dsl_record::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -2317,19 +2317,19 @@ impl store::ArtifactPack for PdfSnapshot {
 
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let raw=store::pack_rt::encode_document(&snapshot_text::spec(),&snapshot_text::to_record(self),options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema("pack envelope mismatch".into()));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "pack envelope mismatch")));
         }
         let(record,report)=store::pack_rt::decode_document(&inner,&snapshot_text::spec(),options)?;
-        if report.schema_drift||!report.unknown_field_ids.is_empty(){return Err(store::PackError::Schema("PDF snapshot record schema mismatch".into()));}
+        if report.schema_drift||!report.unknown_field_ids.is_empty(){return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "PDF snapshot record schema mismatch")));}
         snapshot_text::from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec()->Option<dsl::RecordSpec>{Some(snapshot_text::spec())}
+    fn record_spec()->Option<semio_framework_dsl_record::RecordSpec>{Some(snapshot_text::spec())}
 }
 //#endregion 🔖️Snapshot
 

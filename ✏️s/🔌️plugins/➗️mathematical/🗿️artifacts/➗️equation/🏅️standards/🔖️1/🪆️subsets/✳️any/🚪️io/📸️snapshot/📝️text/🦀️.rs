@@ -20,7 +20,10 @@ use crate::EquationGeometry;
 use crate::{EquationEdge, EquationGraph, EquationNode, EquationSnapshot};
 // 🌱️ Additive `ToValue`/`FromValue` — see `🦀️.rs`'s own docstring note on this crate's
 // interim (not-yet-serde-free) state.
-use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
+use semio_framework_value::DslValue;
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
+use semio_framework_value::ValueError;
 use store::ArtifactDsl;
 
 //#region 🔖️Dsl
@@ -32,27 +35,27 @@ use store::ArtifactDsl;
 ///
 /// `dsl::Wire` (the framework DSL kernel's wire-literal field type) has no value codec. The enclosing
 /// `EquationGraphDsl` bridges through `EquationGraph` instead.
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 pub struct EquationEdgeDsl {
     id: String,
-    wire: dsl::Wire,
+    wire: semio_framework_dsl_record::Wire,
 }
 
 pub fn math_edge_to_dsl(edge: &EquationEdge, directed: bool) -> EquationEdgeDsl {
-    let from = dsl::WireNode { id: edge.source.clone(), kind: None, port: None };
-    let to = dsl::WireNode { id: edge.target.clone(), kind: None, port: None };
-    EquationEdgeDsl { id: edge.id.clone(), wire: dsl::Wire(dsl::WireValue { from, edge: Some((directed, to)), edge_label: dsl::WireEdgeLabel::default(), properties: DslValue::Object(Vec::new()) }) }
+    let from = semio_framework_dsl_record::WireNode { id: edge.source.clone(), kind: None, port: None };
+    let to = semio_framework_dsl_record::WireNode { id: edge.target.clone(), kind: None, port: None };
+    EquationEdgeDsl { id: edge.id.clone(), wire: semio_framework_dsl_record::Wire(semio_framework_dsl_record::WireValue { from, edge: Some((directed, to)), edge_label: semio_framework_dsl_record::WireEdgeLabel::default(), properties: semio_framework_value::DslValue::Object(Vec::new()) }) }
 }
 
 pub fn math_edge_from_dsl(edge: EquationEdgeDsl) -> Result<EquationEdge, String> {
-    let dsl::WireValue { from, edge: link, .. } = edge.wire.0;
+    let semio_framework_dsl_record::WireValue { from, edge: link, .. } = edge.wire.0;
     let (_directed, to) = link.ok_or_else(|| "graph edge wire literal must have a target".to_string())?;
     Ok(EquationEdge { id: edge.id, source: from.id, target: to.id })
 }
 
 /// 🕸️ DSL-only mirror of `EquationGraph` — `nodes`/`edges` print as SoA tables, `edges` wire-typed via
 /// `EquationEdgeDsl`.
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 pub struct EquationGraphDsl {
     directed: bool,
     #[dsl(table)]
@@ -87,7 +90,7 @@ impl EquationGraphDsl {
     /// 🧮 Materializes one edge row for a retained microstep.
     pub fn retained_edge(&self, index: usize) -> Result<EquationEdge, String> {
         let edge = self.edges.get(index).ok_or_else(|| "graph edge cursor is out of range".to_string())?;
-        let dsl::WireValue { from, edge: link, .. } = &edge.wire.0;
+        let semio_framework_dsl_record::WireValue { from, edge: link, .. } = &edge.wire.0;
         let (_, to) = link.as_ref().ok_or_else(|| "graph edge wire literal must have a target".to_string())?;
         Ok(EquationEdge { id: edge.id.clone(), source: from.id.clone(), target: to.id.clone() })
     }
@@ -111,7 +114,7 @@ impl ToValue for EquationGraphDsl {
     fn to_value(&self) -> DslValue {
         match math_graph_from_dsl(self.clone()) {
             Ok(graph) => graph.to_value(),
-            Err(_) => DslValue::Null,
+            Err(_) => semio_framework_value::DslValue::Null,
         }
     }
 }
@@ -129,9 +132,9 @@ impl ArtifactDsl for EquationSnapshot {
     fn envelope_id() -> &'static str {
         "mathematical.equation"
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
-            Ok((envelope, rest)) => {if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl,1){return Err(dsl::__rt::field_error("Equation logical text identity differs"));}rest},
+            Ok((envelope, rest)) => {if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl,1){return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("Equation logical text identity differs").to_string(),semio_framework_diagnostic::TextSpan::at(1,1)));}rest},
             Err(_) => text,
         };
         super::binary::parse_pack_record_text(body)
@@ -146,7 +149,7 @@ impl ArtifactDsl for EquationSnapshot {
 
 //#region 🔖️DslText
 /// 📖️ Parses `.equation` DSL text into a `EquationSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<EquationSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<EquationSnapshot, semio_framework_diagnostic::TextError> {
     <EquationSnapshot as ArtifactDsl>::parse_dsl(text)
 }
 
@@ -160,5 +163,4 @@ pub fn print_dsl(projection: &EquationSnapshot) -> String {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
-//#endregion 🧪️Tests
 //#endregion 🧪️Tests

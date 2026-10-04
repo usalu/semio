@@ -28,6 +28,7 @@ path = "../../🧪️tests/🧩️module-compile/🦀️.rs"
 default = []
 
 [dependencies]
+semio-framework-pack-json = { path = "../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-schema-composition = { workspace = true }
 semio-framework-schema-state = { workspace = true }
 semio-framework-schema-validator = { path = "../../✅️validator/📦️packages/🦀️rust" }

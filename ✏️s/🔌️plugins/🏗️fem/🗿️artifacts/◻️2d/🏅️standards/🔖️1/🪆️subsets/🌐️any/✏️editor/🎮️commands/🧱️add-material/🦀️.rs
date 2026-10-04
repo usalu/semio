@@ -29,7 +29,7 @@ type Fem2dSnapshot = crate::Fem2dSnapshot;
 //#region 🔖️AddRegion
 //#endregion 🔖️AddRegion
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "add-material")]
 pub struct AddMaterial {
     pub name: String,

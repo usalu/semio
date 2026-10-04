@@ -16,7 +16,8 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { continuationCaseFaults, createContinuationScheduler, runContinuationCase, runContinuationCaseLive, type ContinuationSuite } from "../../🟦️.ts";
+import { createContinuationScheduler } from "../../🟦️.ts";
+import { continuationCaseFaults, runContinuationCase, runContinuationCaseLive, type ContinuationSuite } from "../⚖️oracle/🟦️.ts";
 
 /** 📏️ Slack allowed between a fixture's declared millisecond and the real loop's wall clock — a
  * timer never fires early, and a loaded machine can be late. */

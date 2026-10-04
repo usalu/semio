@@ -13,7 +13,6 @@
 
 use crate::EnergyModelSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 use super::entries::compute_energy_model_entries;
@@ -32,8 +31,11 @@ pub struct EnergyModelInference {
 }
 
 impl protocol::Inference<EnergyModelSnapshot> for EnergyModelInference {
-    fn infer(snapshot: &EnergyModelSnapshot) -> Self {
+    fn infer(snapshot: &EnergyModelSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { entries: compute_energy_model_entries(snapshot) }
+    
+        })
     }
 }
 
@@ -43,7 +45,9 @@ impl protocol::Inference<EnergyModelSnapshot> for EnergyModelInference {
 /// `📡️spr/🎮️command/🦀️.rs`.
 impl Default for EnergyModelInference {
     fn default() -> Self {
-        <Self as protocol::Inference<EnergyModelSnapshot>>::infer(&EnergyModelSnapshot::default())
+        let snapshot = &EnergyModelSnapshot::default();
+
+        Self { entries: compute_energy_model_entries(snapshot) }
     }
 }
 
@@ -59,13 +63,6 @@ impl protocol::InferenceSpec<EnergyModelSnapshot> for EnergyModelInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::ModelBuilder {
-    type Snapshot = EnergyModelSnapshot;
-    type Inference = EnergyModelInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.energy.model.inference`'s facet leaves into the OS-wide inference catalog —

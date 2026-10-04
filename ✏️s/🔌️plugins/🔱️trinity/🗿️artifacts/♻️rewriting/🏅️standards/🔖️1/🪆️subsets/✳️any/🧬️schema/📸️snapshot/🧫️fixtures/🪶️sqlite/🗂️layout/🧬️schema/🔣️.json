@@ -1,0 +1,96 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:semio:rewriting:rule-layout-owned-slots",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractId",
+    "authority",
+    "budget",
+    "cases"
+  ],
+  "properties": {
+    "contractId": {
+      "const": "rewriting-rule-layout-owned-slots"
+    },
+    "authority": {
+      "const": "literalSortedContiguousSlots"
+    },
+    "budget": {
+      "const": "cumulativeCallerAllocation"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "members",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "enum": [
+              "empty",
+              "single",
+              "literalWords"
+            ]
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "key",
+                "xBits",
+                "yBits"
+              ],
+              "properties": {
+                "key": {
+                  "type": "string"
+                },
+                "xBits": {
+                  "$ref": "#/$defs/word"
+                },
+                "yBits": {
+                  "$ref": "#/$defs/word"
+                }
+              }
+            }
+          },
+          "expected": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "#/$defs/word"
+                },
+                {
+                  "$ref": "#/$defs/word"
+                }
+              ],
+              "additionalItems": false
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "word": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{16}$"
+    }
+  }
+}

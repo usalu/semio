@@ -19,9 +19,12 @@ impl protocol::MutationKind<SvgSnapshot, SvgBasicMutation> for RemoveElement {
     fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<<SvgBasicMutation as Mutation<SvgSnapshot>>::Diff> {
         agg_diff(&SvgBasicMutation::RemoveElement(self.clone()), base)
     }
-    fn inverse(&self, base: &SvgSnapshot) -> Vec<SvgBasicMutation> {
-        agg_inverse(&SvgBasicMutation::RemoveElement(self.clone()), base)
-    }
+    fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<SvgBasicMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&SvgBasicMutation::RemoveElement(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove element", "Element entfernen")
     }

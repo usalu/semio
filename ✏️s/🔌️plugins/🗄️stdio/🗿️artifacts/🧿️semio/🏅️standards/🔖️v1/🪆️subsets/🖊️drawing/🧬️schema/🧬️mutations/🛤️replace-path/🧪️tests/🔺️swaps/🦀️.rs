@@ -18,13 +18,13 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🛤️replace-path/🔺️swaps/🎯️outcome/🔣️.json");
 
 fn before() -> SemioDrawingSnapshot {
-    dsl::json::from_json_str(BEFORE).expect("replace-path before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("replace-path before snapshot decodes")
 }
 fn expected_after() -> SemioDrawingSnapshot {
-    dsl::json::from_json_str(AFTER).expect("replace-path after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("replace-path after snapshot decodes")
 }
 fn mutation() -> SemioDrawingMutation {
-    dsl::json::from_json_str(MUTATION).expect("replace-path mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("replace-path mutation decodes")
 }
 
 /// ▶️ The path's segment list is replaced wholesale; its style reference survives.
@@ -45,7 +45,7 @@ async fn replaces_the_segments_and_keeps_the_style_reference() {
 async fn the_undo_replace_path_restores_the_captured_segments() {
     let base = before();
     let mutation = mutation();
-    let undo = mutation.inverse(&base);
+    let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "replace-path of a real path undoes as exactly one replace-path");
     let SemioDrawingMutation::ReplacePath(restore) = &undo[0] else { panic!("replace-path must undo as replace-path") };
     assert_eq!(restore.new_segments.len(), 3, "the undo must recapture BASE's own three segments");
@@ -60,12 +60,12 @@ async fn the_undo_replace_path_restores_the_captured_segments() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioDrawingSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: SemioDrawingSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "replace-path/swaps-the-open-path-for-a-closed-triangle: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("replace-path mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(mutation()))).expect("replace-path mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("replace-path mutation reparses");
     assert_eq!(reencoded, original, "replace-path/swaps-the-open-path-for-a-closed-triangle: committed mutation JSON is not canonical");
 }
@@ -84,7 +84,7 @@ async fn declared_outcome_holds_as_committed() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "replace-path/swaps-the-open-path-for-a-closed-triangle: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -93,7 +93,7 @@ async fn produces_committed_diff() {
 /// this subset ever writes — stays absent from it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
-    let decoded: SemioDrawingDiff = dsl::json::from_json_str(DIFF).expect("committed replace-path diff decodes");
+    let decoded: SemioDrawingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed replace-path diff decodes");
     assert!(decoded.canvas.is_none(), "no drawing mutation writes the canvas slot");
     let layers = decoded.layers.as_ref().expect("the layers triple must be present");
     assert!(layers.removed.is_empty() && layers.added.is_empty(), "a node-level edit modifies its layer, never removes or re-adds it");
@@ -107,7 +107,7 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
     assert_eq!(path_diff.segments.as_ref().map(Vec::len), Some(4), "the whole new segment list travels in the diff");
     assert!(path_diff.style.is_none(), "the style reference must stay unwritten");
     assert!(decoded.styles.is_none(), "the style table must stay untouched");
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "replace-path/swaps-the-open-path-for-a-closed-triangle: committed diff JSON is not canonical");
 }
@@ -115,7 +115,7 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioDrawingDiff = dsl::json::from_json_str(DIFF).expect("committed replace-path diff decodes");
+    let decoded: SemioDrawingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed replace-path diff decodes");
     let produced = decoded.apply(&before()).expect("committed replace-path diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "replace-path/swaps-the-open-path-for-a-closed-triangle: committed diff did not carry before to after");
 }

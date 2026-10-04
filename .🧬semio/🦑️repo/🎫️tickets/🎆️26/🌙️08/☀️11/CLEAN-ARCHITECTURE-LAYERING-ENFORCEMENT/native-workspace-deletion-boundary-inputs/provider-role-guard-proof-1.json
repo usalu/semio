@@ -1,0 +1,288 @@
+{
+  "at": "2026-10-03T20:37:33.360Z",
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "path",
+      "role",
+      "normal",
+      "dev",
+      "required",
+      "accepted"
+    ],
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "path": {
+        "type": "string"
+      },
+      "role": {
+        "enum": [
+          "normal",
+          "dev",
+          null
+        ]
+      },
+      "normal": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "dev": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "required": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "accepted": {
+        "type": "boolean"
+      }
+    }
+  },
+  "fixtures": [
+    {
+      "name": "runtime-normal",
+      "path": "root.rs",
+      "role": "normal",
+      "normal": [
+        "record"
+      ],
+      "dev": [],
+      "required": [
+        "record"
+      ],
+      "accepted": true
+    },
+    {
+      "name": "runtime-dev-only",
+      "path": "root.rs",
+      "role": "normal",
+      "normal": [],
+      "dev": [
+        "record"
+      ],
+      "required": [
+        "record"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "physical-test-dev",
+      "path": "tests/test.rs",
+      "role": "dev",
+      "normal": [],
+      "dev": [
+        "record"
+      ],
+      "required": [
+        "record"
+      ],
+      "accepted": true
+    },
+    {
+      "name": "physical-test-normal",
+      "path": "tests/test.rs",
+      "role": "dev",
+      "normal": [
+        "record"
+      ],
+      "dev": [],
+      "required": [
+        "record"
+      ],
+      "accepted": true
+    },
+    {
+      "name": "root-cfg-test-conservative",
+      "path": "root.rs",
+      "role": "normal",
+      "normal": [],
+      "dev": [
+        "record"
+      ],
+      "required": [
+        "record"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "root-cfg-attr-test-conservative",
+      "path": "root.rs",
+      "role": "normal",
+      "normal": [],
+      "dev": [
+        "record"
+      ],
+      "required": [
+        "record"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "unknown-role",
+      "path": "new.rs",
+      "role": null,
+      "normal": [
+        "record"
+      ],
+      "dev": [],
+      "required": [
+        "record"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "missing-provider",
+      "path": "tests/test.rs",
+      "role": "dev",
+      "normal": [],
+      "dev": [],
+      "required": [
+        "record"
+      ],
+      "accepted": false
+    }
+  ],
+  "guard": "const role=provider.sourceRoles.find(value=>value.path===candidate.path);assert.ok(role,\"Source provider role needs independent admission\");const admitted=new Set(role.table===\"dev\"?[...provider.normal,...provider.dev]:provider.normal);for(const name of candidate.requiredProviders)assert.ok(admitted.has(name),\"New provider requires independent normal/dev closure admission: \"+name);",
+  "observations": [
+    {
+      "name": "runtime-normal",
+      "path": "root.rs",
+      "role": "normal",
+      "normal": [
+        "record"
+      ],
+      "dev": [],
+      "required": [
+        "record"
+      ],
+      "accepted": true,
+      "observed": true,
+      "error": null,
+      "hostileUnknownFieldRefused": true
+    },
+    {
+      "name": "runtime-dev-only",
+      "path": "root.rs",
+      "role": "normal",
+      "normal": [],
+      "dev": [
+        "record"
+      ],
+      "required": [
+        "record"
+      ],
+      "accepted": false,
+      "observed": false,
+      "error": "AssertionError [ERR_ASSERTION]: New provider requires independent normal/dev closure admission: record",
+      "hostileUnknownFieldRefused": true
+    },
+    {
+      "name": "physical-test-dev",
+      "path": "tests/test.rs",
+      "role": "dev",
+      "normal": [],
+      "dev": [
+        "record"
+      ],
+      "required": [
+        "record"
+      ],
+      "accepted": true,
+      "observed": true,
+      "error": null,
+      "hostileUnknownFieldRefused": true
+    },
+    {
+      "name": "physical-test-normal",
+      "path": "tests/test.rs",
+      "role": "dev",
+      "normal": [
+        "record"
+      ],
+      "dev": [],
+      "required": [
+        "record"
+      ],
+      "accepted": true,
+      "observed": true,
+      "error": null,
+      "hostileUnknownFieldRefused": true
+    },
+    {
+      "name": "root-cfg-test-conservative",
+      "path": "root.rs",
+      "role": "normal",
+      "normal": [],
+      "dev": [
+        "record"
+      ],
+      "required": [
+        "record"
+      ],
+      "accepted": false,
+      "observed": false,
+      "error": "AssertionError [ERR_ASSERTION]: New provider requires independent normal/dev closure admission: record",
+      "hostileUnknownFieldRefused": true
+    },
+    {
+      "name": "root-cfg-attr-test-conservative",
+      "path": "root.rs",
+      "role": "normal",
+      "normal": [],
+      "dev": [
+        "record"
+      ],
+      "required": [
+        "record"
+      ],
+      "accepted": false,
+      "observed": false,
+      "error": "AssertionError [ERR_ASSERTION]: New provider requires independent normal/dev closure admission: record",
+      "hostileUnknownFieldRefused": true
+    },
+    {
+      "name": "unknown-role",
+      "path": "new.rs",
+      "role": null,
+      "normal": [
+        "record"
+      ],
+      "dev": [],
+      "required": [
+        "record"
+      ],
+      "accepted": false,
+      "observed": false,
+      "error": "AssertionError [ERR_ASSERTION]: Source provider role needs independent admission",
+      "hostileUnknownFieldRefused": true
+    },
+    {
+      "name": "missing-provider",
+      "path": "tests/test.rs",
+      "role": "dev",
+      "normal": [],
+      "dev": [],
+      "required": [
+        "record"
+      ],
+      "accepted": false,
+      "observed": false,
+      "error": "AssertionError [ERR_ASSERTION]: New provider requires independent normal/dev closure admission: record",
+      "hostileUnknownFieldRefused": true
+    }
+  ],
+  "sourceWrites": 0,
+  "nativeExecuted": 0,
+  "scope": "Exact publisher guard evaluated independently; schema validated by Ajv; conservative root cfg roles do not imply full Rust cfg resolution"
+}

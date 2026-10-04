@@ -17,6 +17,10 @@ workspace = true
 name = "pack"
 path = "🦀️.rs"
 
+[[test]]
+name = "pack_schema_hash"
+path = "../../🌱️value/🧪️tests/🔬️schema-hash/🦀️.rs"
+
 [features]
 default = ["deflate"]
 deflate = ["semio-framework-replication/deflate"]
@@ -24,7 +28,12 @@ ureq = ["dep:ureq"]
 corruption-testing = []
 
 [dependencies]
+semio-framework-diagnostic = { path = "../../../⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-pack-error = { path = "../../⚠️error/📦️packages/🦀️rust" }
+semio-framework-dsl-record = { path = "../../../🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../🔤️json/📦️packages/🦀️rust" }
 semio-framework-replication = { workspace = true }
+semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
 # 🔌️ Phase 1 (`26/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR`): `UreqRangeTransport`'s blocking HTTP
 # call dispatches onto the process-wide `WorkerPool` (`Lane::Io`) instead of a per-request
 # `std::thread::spawn`. Workspace-internal, not a new third-party dependency.
@@ -33,5 +42,10 @@ semio-framework-hash = { path = "../../../🔏️hash/📦️packages/🦀️rus
 ureq = { version = "2", optional = true }
 
 [dev-dependencies]
+blake3 = "1.8.2"
+semio-framework-dsl-record-derive = { path = "../../../🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
+serde = { version = "1.0.228", features = ["derive"] }
+semio-framework-trace = { path = "../../../⏱️trace/📦️packages/🦀️rust" }
+semio-framework-dsl = { path = "../../../🗣️dsl/📦️packages/🦀️rust" }
 semio-framework-async-macros = { path = "../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
 serde_json = { version = "1.0.140", features = ["float_roundtrip"] }

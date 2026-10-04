@@ -1,0 +1,13 @@
+{
+  "variant": "TextRefusal",
+  "cases": [
+    { "kind": "InvalidValue", "message": "invalid source", "span": { "line": 7, "column": 19, "length": 4 }, "expected": "literal", "display": "schema error: invalid source at 7:19" },
+    { "kind": "Canceled", "message": "canceled source", "span": { "line": 11, "column": 3, "length": 0 }, "expected": null, "display": "schema error: canceled source at 11:3" },
+    { "kind": "OwnershipLimit", "message": "owned source", "span": { "line": 2, "column": 5, "length": 8 }, "expected": "field", "display": "schema error: owned source at 2:5" },
+    { "kind": "AllocationFailed", "message": "allocation source", "span": { "line": 31, "column": 8, "length": 1 }, "expected": null, "display": "schema error: allocation source at 31:8" },
+    { "kind": "WorkLimit", "message": "work source", "span": { "line": 4, "column": 27, "length": 6 }, "expected": "record", "display": "schema error: work source at 4:27" },
+    { "kind": "DepthLimit", "message": "depth source", "span": { "line": 5, "column": 6, "length": 2 }, "expected": null, "display": "schema error: depth source at 5:6" },
+    { "kind": "UnsupportedOwner", "message": "owner source", "span": { "line": 9, "column": 13, "length": 3 }, "expected": "variant", "display": "schema error: owner source at 9:13" },
+    { "kind": "InvariantViolated", "message": "invariant source", "span": { "line": 17, "column": 2, "length": 7 }, "expected": null, "display": "schema error: invariant source at 17:2" }
+  ]
+}

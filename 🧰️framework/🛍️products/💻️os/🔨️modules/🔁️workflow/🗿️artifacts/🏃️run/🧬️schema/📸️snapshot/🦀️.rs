@@ -1,5 +1,6 @@
 //! 📸️ Persisted workflow run snapshot and codecs.
 use crate::S_RUN_SCHEMA;
+use semio_framework_value::{ValueError,ValueRefusalKind};
 
 #[path="🪶️sqlite/🦀️.rs"]
 mod sqlite;
@@ -29,14 +30,14 @@ fn run_status_ordinal(status: RunStatus) -> u32 {
     }
 }
 
-fn run_status_from_ordinal(ordinal: u32) -> Result<RunStatus, String> {
+fn run_status_from_ordinal(ordinal: u32) -> Result<RunStatus, ValueError> {
     Ok(match ordinal {
         0 => RunStatus::Pending,
         1 => RunStatus::Running,
         2 => RunStatus::Succeeded,
         3 => RunStatus::Failed,
         4 => RunStatus::Canceled,
-        other => return Err(format!("unknown run status ordinal {other}")),
+        other => return Err(ValueError::new(ValueRefusalKind::InvalidValue,format!("unknown run status ordinal {other}"))),
     })
 }
 
@@ -44,23 +45,23 @@ fn run_status_variants() -> Vec<(String, u32)> {
     vec![("pending".to_string(), 0), ("running".to_string(), 1), ("succeeded".to_string(), 2), ("failed".to_string(), 3), ("canceled".to_string(), 4)]
 }
 
-fn run_enum_shape_controlled<C:dsl::NativeSchemaControl>(labels:&[(&str,u32)],control:&mut C)->Result<dsl::Shape,String>{
-    control.scoped_stage(|control|{control.begin_stage(labels.len())?;let mut values=control.allocate_vec::<(String,u32)>(labels.len())?;for(label,ordinal)in labels{values.push((control.copy_text(label)?,*ordinal));control.step()?;}Ok(dsl::Shape::Enum(values))})
+fn run_enum_shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(labels:&[(&str,u32)],control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{
+    control.scoped_stage(|control|{control.begin_stage(labels.len())?;let mut values=control.allocate_vec::<(String,u32)>(labels.len())?;for(label,ordinal)in labels{values.push((control.copy_text(label)?,*ordinal));control.step()?;}Ok(semio_framework_dsl_record::Shape::Enum(values))})
 }
 
-impl dsl::DslField for RunStatus {
-    fn to_value_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::FieldValue,String>{control.step()?;Ok(dsl::FieldValue::Enum(run_status_ordinal(*self)))}
-    fn from_value_controlled(value:&dsl::FieldValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{control.step()?;match value{dsl::FieldValue::Enum(ordinal)=>run_status_from_ordinal(*ordinal),_=>Err("expected declared run status enum".into())}}
-    fn shape_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::Shape,String>{run_enum_shape_controlled(&[("pending",0),("running",1),("succeeded",2),("failed",3),("canceled",4)],control)}
-    fn shape() -> dsl::Shape {
-        dsl::Shape::Enum(run_status_variants())
+impl semio_framework_dsl_record::DslField for RunStatus {
+    fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,ValueError>{control.step()?;Ok(semio_framework_dsl_record::FieldValue::Enum(run_status_ordinal(*self)))}
+    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{control.step()?;match value{semio_framework_dsl_record::FieldValue::Enum(ordinal)=>run_status_from_ordinal(*ordinal),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"expected declared run status enum"))}}
+    fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{run_enum_shape_controlled(&[("pending",0),("running",1),("succeeded",2),("failed",3),("canceled",4)],control)}
+    fn shape() -> semio_framework_dsl_record::Shape {
+        semio_framework_dsl_record::Shape::Enum(run_status_variants())
     }
-    fn to_value(&self) -> dsl::FieldValue {
-        dsl::FieldValue::Enum(run_status_ordinal(*self))
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
+        semio_framework_dsl_record::FieldValue::Enum(run_status_ordinal(*self))
     }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
         match value {
-            dsl::FieldValue::Enum(ordinal) => run_status_from_ordinal(*ordinal),
+            semio_framework_dsl_record::FieldValue::Enum(ordinal) => run_status_from_ordinal(*ordinal).map_err(ValueError::into_message),
             other => Err(format!("expected Enum, found {other:?}")),
         }
     }
@@ -84,12 +85,12 @@ fn run_node_status_ordinal(status: RunNodeStatus) -> u32 {
     }
 }
 
-fn run_node_status_from_ordinal(ordinal: u32) -> Result<RunNodeStatus, String> {
+fn run_node_status_from_ordinal(ordinal: u32) -> Result<RunNodeStatus, ValueError> {
     Ok(match ordinal {
         0 => RunNodeStatus::Computed,
         1 => RunNodeStatus::CacheHit,
         2 => RunNodeStatus::Failed,
-        other => return Err(format!("unknown run node status ordinal {other}")),
+        other => return Err(ValueError::new(ValueRefusalKind::InvalidValue,format!("unknown run node status ordinal {other}"))),
     })
 }
 
@@ -97,19 +98,19 @@ fn run_node_status_variants() -> Vec<(String, u32)> {
     vec![("computed".to_string(), 0), ("cacheHit".to_string(), 1), ("failed".to_string(), 2)]
 }
 
-impl dsl::DslField for RunNodeStatus {
-    fn to_value_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::FieldValue,String>{control.step()?;Ok(dsl::FieldValue::Enum(run_node_status_ordinal(*self)))}
-    fn from_value_controlled(value:&dsl::FieldValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{control.step()?;match value{dsl::FieldValue::Enum(ordinal)=>run_node_status_from_ordinal(*ordinal),_=>Err("expected declared run status enum".into())}}
-    fn shape_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::Shape,String>{run_enum_shape_controlled(&[("computed",0),("cacheHit",1),("failed",2)],control)}
-    fn shape() -> dsl::Shape {
-        dsl::Shape::Enum(run_node_status_variants())
+impl semio_framework_dsl_record::DslField for RunNodeStatus {
+    fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,ValueError>{control.step()?;Ok(semio_framework_dsl_record::FieldValue::Enum(run_node_status_ordinal(*self)))}
+    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{control.step()?;match value{semio_framework_dsl_record::FieldValue::Enum(ordinal)=>run_node_status_from_ordinal(*ordinal),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"expected declared run status enum"))}}
+    fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{run_enum_shape_controlled(&[("computed",0),("cacheHit",1),("failed",2)],control)}
+    fn shape() -> semio_framework_dsl_record::Shape {
+        semio_framework_dsl_record::Shape::Enum(run_node_status_variants())
     }
-    fn to_value(&self) -> dsl::FieldValue {
-        dsl::FieldValue::Enum(run_node_status_ordinal(*self))
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
+        semio_framework_dsl_record::FieldValue::Enum(run_node_status_ordinal(*self))
     }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
         match value {
-            dsl::FieldValue::Enum(ordinal) => run_node_status_from_ordinal(*ordinal),
+            semio_framework_dsl_record::FieldValue::Enum(ordinal) => run_node_status_from_ordinal(*ordinal).map_err(ValueError::into_message),
             other => Err(format!("expected Enum, found {other:?}")),
         }
     }
@@ -128,105 +129,105 @@ pub enum RunTrigger {
     Automation { automation_ref: String, event_fingerprint: String },
 }
 
-fn run_trigger_to_record_controlled(value:&RunTrigger,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::RecordValue,String>{
- control.scoped_stage(|control|{control.begin_stage(4)?;let mut record=dsl::native_encoding::EncodedRecord::new(4,control)?;match value{
- RunTrigger::Manual{actor}=>{record.insert(0,dsl::FieldValue::Text(control.copy_text("manual")?));control.step()?;record.insert(1,dsl::FieldValue::Text(control.copy_text(actor)?));control.step()?;record.insert(2,dsl::FieldValue::Absent);control.step()?;record.insert(3,dsl::FieldValue::Absent);control.step()?;},
- RunTrigger::Automation{automation_ref,event_fingerprint}=>{record.insert(0,dsl::FieldValue::Text(control.copy_text("automation")?));control.step()?;record.insert(1,dsl::FieldValue::Absent);control.step()?;record.insert(2,dsl::FieldValue::Text(control.copy_text(automation_ref)?));control.step()?;record.insert(3,dsl::FieldValue::Text(control.copy_text(event_fingerprint)?));control.step()?;}
+fn run_trigger_to_record_controlled(value:&RunTrigger,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::RecordValue,ValueError>{
+ control.scoped_stage(|control|{control.begin_stage(4)?;let mut record=semio_framework_dsl_record::native_encoding::EncodedRecord::new(4,control)?;match value{
+ RunTrigger::Manual{actor}=>{record.insert(0,semio_framework_dsl_record::FieldValue::Text(control.copy_text("manual")?))?;control.step()?;record.insert(1,semio_framework_dsl_record::FieldValue::Text(control.copy_text(actor)?))?;control.step()?;record.insert(2,semio_framework_dsl_record::FieldValue::Absent)?;control.step()?;record.insert(3,semio_framework_dsl_record::FieldValue::Absent)?;control.step()?;},
+ RunTrigger::Automation{automation_ref,event_fingerprint}=>{record.insert(0,semio_framework_dsl_record::FieldValue::Text(control.copy_text("automation")?))?;control.step()?;record.insert(1,semio_framework_dsl_record::FieldValue::Absent)?;control.step()?;record.insert(2,semio_framework_dsl_record::FieldValue::Text(control.copy_text(automation_ref)?))?;control.step()?;record.insert(3,semio_framework_dsl_record::FieldValue::Text(control.copy_text(event_fingerprint)?))?;control.step()?;}
  }Ok(record.take())})
 }
-fn run_trigger_from_record_controlled(record:&dsl::RecordValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<RunTrigger,String>{
- control.scoped_stage(|control|{control.begin_stage(4)?;control.step()?;let kind=match record.get(0){Some(dsl::FieldValue::Text(value))=>value.as_str(),_=>return Err("expected run trigger kind".into())};
- let mut text=|id|->Result<Option<String>,String>{let value=match record.get(id){None|Some(dsl::FieldValue::Absent)=>None,Some(value)=>Some(control.scoped_stage(|control|{control.begin_stage(0)?;<String as dsl::DslField>::from_value_controlled(value,control)})?)};control.step()?;Ok(value)};
- let actor=text(1)?;let automation_ref=text(2)?;let event_fingerprint=text(3)?;match(kind,actor,automation_ref,event_fingerprint){("manual",Some(actor),None,None)=>Ok(RunTrigger::Manual{actor}),("automation",None,Some(automation_ref),Some(event_fingerprint))=>Ok(RunTrigger::Automation{automation_ref,event_fingerprint}),_=>Err("invalid run trigger fields".into())}})
+fn run_trigger_from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<RunTrigger,ValueError>{
+ control.scoped_stage(|control|{control.begin_stage(4)?;control.step()?;let kind=match record.get(0){Some(semio_framework_dsl_record::FieldValue::Text(value))=>value.as_str(),_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"expected run trigger kind"))};
+ let mut text=|id|->Result<Option<String>,ValueError>{let value=match record.get(id){None|Some(semio_framework_dsl_record::FieldValue::Absent)=>None,Some(value)=>Some(control.scoped_stage(|control|{control.begin_stage(0)?;<String as semio_framework_dsl_record::DslField>::from_value_controlled(value,control)})?)};control.step()?;Ok(value)};
+ let actor=text(1)?;let automation_ref=text(2)?;let event_fingerprint=text(3)?;match(kind,actor,automation_ref,event_fingerprint){("manual",Some(actor),None,None)=>Ok(RunTrigger::Manual{actor}),("automation",None,Some(automation_ref),Some(event_fingerprint))=>Ok(RunTrigger::Automation{automation_ref,event_fingerprint}),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid run trigger fields"))}})
 }
 
-fn run_trigger_spec_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::RecordSpec,String>{
+fn run_trigger_spec_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::RecordSpec,semio_framework_value::ValueError>{
     control.scoped_stage(|control|{
-        control.begin_stage(4)?;let mut fields=control.allocate_vec::<dsl::FieldSpec>(4)?;
-        fields.push(dsl::schema::producer::field(0,"kind",dsl::Shape::Text,control)?);control.step()?;
-        fields.push(dsl::schema::producer::field(1,"actor",dsl::Shape::Text,control)?.optional());control.step()?;
-        fields.push(dsl::schema::producer::field(2,"automation_ref",dsl::Shape::Text,control)?.optional());control.step()?;
-        fields.push(dsl::schema::producer::field(3,"event_fingerprint",dsl::Shape::Text,control)?.optional());control.step()?;
-        dsl::schema::producer::record(None,dsl::RecordLayout::Inline,fields,control)
+        control.begin_stage(4)?;let mut fields=control.allocate_vec::<semio_framework_dsl_record::FieldSpec>(4)?;
+        fields.push(semio_framework_dsl_record::producer::field(0,"kind",semio_framework_dsl_record::Shape::Text,control)?);control.step()?;
+        fields.push(semio_framework_dsl_record::producer::field(1,"actor",semio_framework_dsl_record::Shape::Text,control)?.optional());control.step()?;
+        fields.push(semio_framework_dsl_record::producer::field(2,"automation_ref",semio_framework_dsl_record::Shape::Text,control)?.optional());control.step()?;
+        fields.push(semio_framework_dsl_record::producer::field(3,"event_fingerprint",semio_framework_dsl_record::Shape::Text,control)?.optional());control.step()?;
+        semio_framework_dsl_record::producer::record(None,semio_framework_dsl_record::RecordLayout::Inline,fields,control)
     })
 }
-fn run_trigger_spec_producer()->dsl::RecordSpecProducer{dsl::RecordSpecProducer{ordinary:run_trigger_spec,decoding:|control|run_trigger_spec_controlled(control),encoding:|control|run_trigger_spec_controlled(control)}}
+fn run_trigger_spec_producer()->semio_framework_dsl_record::RecordSpecProducer{semio_framework_dsl_record::RecordSpecProducer{ordinary:run_trigger_spec,decoding:|control|run_trigger_spec_controlled(control),encoding:|control|run_trigger_spec_controlled(control)}}
 
-fn run_trigger_spec() -> dsl::RecordSpec {
-    dsl::RecordSpec::new(
+fn run_trigger_spec() -> semio_framework_dsl_record::RecordSpec {
+    semio_framework_dsl_record::RecordSpec::new(
         None,
-        dsl::RecordLayout::Inline,
+        semio_framework_dsl_record::RecordLayout::Inline,
         vec![
-            dsl::FieldSpec::new(0, "kind", dsl::Shape::Text),
-            dsl::FieldSpec::new(1, "actor", dsl::Shape::Text).optional(),
-            dsl::FieldSpec::new(2, "automation_ref", dsl::Shape::Text).optional(),
-            dsl::FieldSpec::new(3, "event_fingerprint", dsl::Shape::Text).optional(),
+            semio_framework_dsl_record::FieldSpec::new(0, "kind", semio_framework_dsl_record::Shape::Text),
+            semio_framework_dsl_record::FieldSpec::new(1, "actor", semio_framework_dsl_record::Shape::Text).optional(),
+            semio_framework_dsl_record::FieldSpec::new(2, "automation_ref", semio_framework_dsl_record::Shape::Text).optional(),
+            semio_framework_dsl_record::FieldSpec::new(3, "event_fingerprint", semio_framework_dsl_record::Shape::Text).optional(),
         ],
     )
 }
 
-fn run_trigger_to_record(trigger: &RunTrigger) -> dsl::RecordValue {
-    let mut record = dsl::RecordValue::default();
+fn run_trigger_to_record(trigger: &RunTrigger) -> semio_framework_dsl_record::RecordValue {
+    let mut record = semio_framework_dsl_record::RecordValue::default();
     match trigger {
         RunTrigger::Manual { actor } => {
-            record.fields.insert(0, dsl::FieldValue::Text("manual".to_string()));
-            record.fields.insert(1, dsl::FieldValue::Text(actor.clone()));
-            record.fields.insert(2, dsl::FieldValue::Absent);
-            record.fields.insert(3, dsl::FieldValue::Absent);
+            record.fields.insert(0, semio_framework_dsl_record::FieldValue::Text("manual".to_string()));
+            record.fields.insert(1, semio_framework_dsl_record::FieldValue::Text(actor.clone()));
+            record.fields.insert(2, semio_framework_dsl_record::FieldValue::Absent);
+            record.fields.insert(3, semio_framework_dsl_record::FieldValue::Absent);
         }
         RunTrigger::Automation { automation_ref, event_fingerprint } => {
-            record.fields.insert(0, dsl::FieldValue::Text("automation".to_string()));
-            record.fields.insert(1, dsl::FieldValue::Absent);
-            record.fields.insert(2, dsl::FieldValue::Text(automation_ref.clone()));
-            record.fields.insert(3, dsl::FieldValue::Text(event_fingerprint.clone()));
+            record.fields.insert(0, semio_framework_dsl_record::FieldValue::Text("automation".to_string()));
+            record.fields.insert(1, semio_framework_dsl_record::FieldValue::Absent);
+            record.fields.insert(2, semio_framework_dsl_record::FieldValue::Text(automation_ref.clone()));
+            record.fields.insert(3, semio_framework_dsl_record::FieldValue::Text(event_fingerprint.clone()));
         }
     }
     record
 }
 
-fn run_trigger_from_record(record: &dsl::RecordValue) -> Result<RunTrigger, store::TextError> {
+fn run_trigger_from_record(record: &semio_framework_dsl_record::RecordValue) -> Result<RunTrigger, semio_framework_diagnostic::TextError> {
     let kind = match record.get(0) {
-        Some(dsl::FieldValue::Text(s)) => s.clone(),
-        other => return Err(dsl::__rt::field_error(format!("expected kind, found {other:?}"))),
+        Some(semio_framework_dsl_record::FieldValue::Text(s)) => s.clone(),
+        other => return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("expected kind, found {other:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1))),
     };
     match kind.as_str() {
         "manual" => {
             let actor = match record.get(1) {
-                Some(dsl::FieldValue::Text(s)) => s.clone(),
-                other => return Err(dsl::__rt::field_error(format!("expected actor, found {other:?}"))),
+                Some(semio_framework_dsl_record::FieldValue::Text(s)) => s.clone(),
+                other => return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("expected actor, found {other:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1))),
             };
             Ok(RunTrigger::Manual { actor })
         }
         "automation" => {
             let automation_ref = match record.get(2) {
-                Some(dsl::FieldValue::Text(s)) => s.clone(),
-                other => return Err(dsl::__rt::field_error(format!("expected automation_ref, found {other:?}"))),
+                Some(semio_framework_dsl_record::FieldValue::Text(s)) => s.clone(),
+                other => return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("expected automation_ref, found {other:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1))),
             };
             let event_fingerprint = match record.get(3) {
-                Some(dsl::FieldValue::Text(s)) => s.clone(),
-                other => return Err(dsl::__rt::field_error(format!("expected event_fingerprint, found {other:?}"))),
+                Some(semio_framework_dsl_record::FieldValue::Text(s)) => s.clone(),
+                other => return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("expected event_fingerprint, found {other:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1))),
             };
             Ok(RunTrigger::Automation { automation_ref, event_fingerprint })
         }
-        other => Err(dsl::__rt::field_error(format!("unknown run trigger kind '{other}'"))),
+        other => Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown run trigger kind '{other}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1))),
     }
 }
 
-impl dsl::DslField for RunTrigger {
-    fn to_value_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::FieldValue,String>{run_trigger_to_record_controlled(self,control).map(dsl::FieldValue::Record)}
-    fn to_record_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::RecordValue,String>{run_trigger_to_record_controlled(self,control)}
-    fn from_value_controlled(value:&dsl::FieldValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{control.checkpoint()?;match value{dsl::FieldValue::Record(record)=>run_trigger_from_record_controlled(record,control),_=>Err("expected declared record".into())}}
-    fn from_record_controlled(record:&dsl::RecordValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{run_trigger_from_record_controlled(record,control)}
-    fn shape() -> dsl::Shape {
-        dsl::Shape::Record(run_trigger_spec_producer())
+impl semio_framework_dsl_record::DslField for RunTrigger {
+    fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,ValueError>{run_trigger_to_record_controlled(self,control).map(semio_framework_dsl_record::FieldValue::Record)}
+    fn to_record_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::RecordValue,ValueError>{run_trigger_to_record_controlled(self,control)}
+    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{control.checkpoint()?;match value{semio_framework_dsl_record::FieldValue::Record(record)=>run_trigger_from_record_controlled(record,control),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"expected declared record"))}}
+    fn from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{run_trigger_from_record_controlled(record,control)}
+    fn shape() -> semio_framework_dsl_record::Shape {
+        semio_framework_dsl_record::Shape::Record(run_trigger_spec_producer())
     }
-    fn shape_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::Shape,String>{control.checkpoint()?;Ok(dsl::Shape::Record(run_trigger_spec_producer()))}
-    fn to_value(&self) -> dsl::FieldValue {
-        dsl::FieldValue::Record(run_trigger_to_record(self))
+    fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{control.checkpoint()?;Ok(semio_framework_dsl_record::Shape::Record(run_trigger_spec_producer()))}
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
+        semio_framework_dsl_record::FieldValue::Record(run_trigger_to_record(self))
     }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
         match value {
-            dsl::FieldValue::Record(record) => run_trigger_from_record(record).map_err(|e| e.message),
+            semio_framework_dsl_record::FieldValue::Record(record) => run_trigger_from_record(record).map_err(|e| e.message),
             other => Err(format!("expected Record, found {other:?}")),
         }
     }
@@ -239,7 +240,7 @@ impl dsl::DslField for RunTrigger {
 /// plain JSON text sidesteps that risk entirely while staying a lossless round trip. `run::SpaceRunner`
 /// parses it back to `serde_json::Value` when applying the overlay onto a node's config (see
 /// `WorkflowParameterBinding.field_path`).
-#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct RunParameterValue {
     pub parameter_id: String,
@@ -248,7 +249,7 @@ pub struct RunParameterValue {
 
 /// 🔑️ One port's fingerprint — reused for both a `RunNodeRecord`'s `input_fingerprints` and
 /// `output_fingerprints` (same shape, different table column on the owning row).
-#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct PortFingerprint {
     pub port_id: String,
@@ -257,7 +258,7 @@ pub struct PortFingerprint {
 
 /// 📤️ Where one node's out-port materialized in the run's own write-only output area — `path` is
 /// relative to the run's own sink (see `run::RunContext`'s doc), never a source-bundle path.
-#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct RunOutputArtifact {
     pub port_id: String,
@@ -270,7 +271,7 @@ pub struct RunOutputArtifact {
 /// against the PRIOR sealed run's `node_records`, not a side-channel state file. `duration_ms` is
 /// `f64` (not `u64`): the `dsl` engine's scalar `DslField` impls cover `bool`/`f32`/`f64`/`String`
 /// only, no integer width — see `dsl/rs/lib.rs`'s `impl DslField for f64` and neighbors.
-#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct RunNodeRecord {
     pub node_id: String,
@@ -287,7 +288,7 @@ pub struct RunNodeRecord {
 }
 
 /// 📜️ One run-level or per-node log line — `node_id` empty for a run-level line (see `RunMutation::AppendRunLog`).
-#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct RunLogLine {
     pub node_id: String,
@@ -303,9 +304,9 @@ pub struct RunLogLine {
 /// rejects every further operation, see `🔖️RunMutation` below). Sealing is meant to promote a run
 /// draft→asset later (`space::DraftCatalog`, W5 Lane B's territory) — this wave only carries the flag
 /// and the apply-rejection law, not the promotion wiring itself.
-#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_os_kernel::DslArtifact)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
-#[dsl(id = "os.run")]
+#[artifact(id = "os.run")]
 pub struct RunArtifact {
     pub schema: String,
     pub workflow_ref: String,
@@ -352,16 +353,16 @@ impl store::ArtifactDsl for RunArtifact {
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -372,13 +373,13 @@ impl store::ArtifactPack for RunArtifact {
     fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         match Self::__dsl_from_record(&record) {
@@ -386,7 +387,7 @@ impl store::ArtifactPack for RunArtifact {
             Err(error) => Err(store::text_error_to_pack_error(error)),
         }
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }

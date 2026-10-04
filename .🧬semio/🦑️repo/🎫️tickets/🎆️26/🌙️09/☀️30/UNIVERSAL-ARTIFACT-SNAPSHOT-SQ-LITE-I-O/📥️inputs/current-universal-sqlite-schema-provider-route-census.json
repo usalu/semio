@@ -1,0 +1,4438 @@
+{
+  "sourceOnly": true,
+  "qualification": "Lexical source inventory; proposal/probe markings and cfg reachability require bounded owner readback; snapshot directory models are not necessarily persisted artifact owners.",
+  "schemas": [
+    {
+      "path": "🧰️framework/🛍️products/📓️print/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "ChartSnapshot"
+      ],
+      "sqliteMount": false,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "VcsSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "SpaceArtifactDialect",
+        "SpaceArtifactRow",
+        "SSpaceSnapshot",
+        "SpaceIndexTableLabels"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "SHomeSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "LowpolySnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "Generation2dSnapshot",
+        "Generation2dSnapshotRead"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "PlaybookSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "PresentationSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "Puzzle2dSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "RunStatus",
+        "RunNodeStatus",
+        "RunTrigger",
+        "RunParameterValue",
+        "PortFingerprint",
+        "RunOutputArtifact",
+        "RunNodeRecord",
+        "RunLogLine",
+        "RunArtifact"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "WriterSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "SequenceSnapshot",
+        "SequenceHostSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "DrawingSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "WiresSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "Generation3dSnapshot",
+        "Generation3dSnapshotRead"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "PortShape",
+        "EdgeRouteStyle",
+        "IoPortSpec",
+        "DagMedia",
+        "DagMediaKind",
+        "DagPreviewContent",
+        "DagNodeKind",
+        "DagNodeSpec",
+        "DagNodeLabel",
+        "DagDrawLod",
+        "DagHostSnapshot",
+        "DagCamera",
+        "DagHostSnapshotEdge"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "ObjVertex",
+        "ObjTexCoord",
+        "ObjNormal",
+        "ObjFaceVertex",
+        "ObjFace",
+        "ObjGroup",
+        "ObjObject",
+        "ObjUsemtlRange",
+        "ObjSmoothingRange",
+        "ObjUnknownStatement",
+        "ObjSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📸️snapshot/🦀️.rs",
+      "types": [
+        "SnapshotDescriptor",
+        "GenerationHandle",
+        "SnapshotOrigin",
+        "SnapshotBody",
+        "SnapshotRetainedPublication",
+        "SnapshotRetainedPublicationRejected",
+        "SnapshotPolicy",
+        "SnapshotManager",
+        "SnapshotCursorControl",
+        "SnapshotChainCursor",
+        "SnapshotLease"
+      ],
+      "sqliteMount": false,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "LineEnding",
+        "TsvSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "Fem2dSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "CsvField",
+        "CsvRecord",
+        "CsvSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/🗿️artifacts/🚫️snapshot-refusal/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "Snapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "Snapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "EnergyModelSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "Puzzle5dSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "ValueId",
+        "SemioValueEntry",
+        "SemioValue",
+        "SemioValueNode",
+        "SemioValueSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "WidgetLayout",
+        "FlowArtifact",
+        "FlowUi",
+        "FlowNodeGui",
+        "NodeChrome",
+        "FlowPreviewGui",
+        "FlowChannelRef",
+        "CameraJson",
+        "SynapseSpec",
+        "Widget",
+        "FlowHostSnapshot",
+        "WidgetDescriptor",
+        "FlowGraphStep"
+      ],
+      "sqliteMount": false,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "JfifDensityUnits",
+        "JfifThumbnail",
+        "JpgFrameComponent",
+        "JpgFrameHeader",
+        "JpgScanComponent",
+        "JpgQuantTable",
+        "JpgHuffmanClass",
+        "JpgHuffmanTable",
+        "JpgSegment",
+        "JpgSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "Puzzle3dSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "BmpRowOrder",
+        "BmpPaletteEntry",
+        "BmpSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "SpatialKind",
+        "SpatialNode",
+        "ElementClass",
+        "GeometryRef",
+        "PsetValue",
+        "Property",
+        "PropertySet",
+        "SemioModelElement",
+        "RelationKind",
+        "ModelRelation",
+        "SemioModelSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "WavFmt",
+        "WavData",
+        "RiffChunk",
+        "WavChunkRef",
+        "WavSerializationIssue",
+        "WavSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "StlTriangle",
+        "StlSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "RunStyle",
+        "DocRun",
+        "DocStyle",
+        "DocImage",
+        "DocListItem",
+        "DocTableCell",
+        "DocTableRow",
+        "DocBlock",
+        "SemioDocumentSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/♻️retirement/📸️snapshot/🦀️.rs",
+      "types": [
+        "SnapshotRetirementFactory"
+      ],
+      "sqliteMount": false,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "SemioAudioFormat",
+        "SemioAudioChannel",
+        "SemioAudioTag",
+        "SemioAudioSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "EpwLocation",
+        "EpwDataPeriod",
+        "EpwDataPeriods",
+        "EpwRecord",
+        "EpwSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "SvgSnapshot",
+        "ViewBox",
+        "Matrix2D",
+        "TransformOp",
+        "PathCommand",
+        "PresentationAttrs",
+        "CommonAttrs",
+        "SvgElement"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "Id3Frame",
+        "Id3v2Tag",
+        "Id3v1Tag",
+        "Mp3FrameHeader",
+        "Mp3Frame",
+        "Mp3Snapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "Mp4Ftyp",
+        "Mp4AvcExtension",
+        "Mp4CodecFormat",
+        "Mp4HevcNalArray",
+        "Mp4HevcConfig",
+        "Mp4Codec",
+        "Mp4Sample",
+        "Mp4Movie",
+        "Mp4Edit",
+        "Mp4VisualSampleEntry",
+        "Mp4Color",
+        "Mp4PixelAspectRatio",
+        "Mp4Bitrate",
+        "Mp4TrackMetadata",
+        "Mp4Track",
+        "Mp4Snapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "FlowSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "Fem3dSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "DagSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "LayoutSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "BcfPoint3",
+        "BcfCamera",
+        "BcfVisibility",
+        "BcfColoring",
+        "BcfComponents",
+        "BcfComment",
+        "BcfViewpoint",
+        "BcfTopic",
+        "BcfRawPart",
+        "BcfSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "SemioSubsetSnapshot",
+        "SemioSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "Ifc2x3EdmPreamble",
+        "Ifc2x3Snapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "SemioTableCellKind",
+        "SemioTableColumn",
+        "SemioTableRow",
+        "SemioTableSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "CadEntity",
+        "CadLayer",
+        "CadEntityRecord",
+        "CadBlock",
+        "SemioCadSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "BrepCurve",
+        "BrepCurve2",
+        "BrepSurface",
+        "BrepVertex",
+        "BrepEdge",
+        "BrepLoopEdge",
+        "BrepLoop",
+        "BrepCoedge",
+        "BrepFace",
+        "BrepShellFace",
+        "BrepShell",
+        "BrepSolidShell",
+        "BrepSolid",
+        "SemioBrepSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "SemioTextMarkKind",
+        "SemioTextMark",
+        "SemioTextRun",
+        "SemioTextSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "SemioColorspace",
+        "SemioImageFrame",
+        "SemioImageMetadataEntry",
+        "SemioImageSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "EquationSnapshot",
+        "EquationFixture",
+        "EquationNodeLabel",
+        "EquationNode",
+        "EquationNodeKind",
+        "EquationExprSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "SemioKitType",
+        "SemioKitPiece",
+        "SemioKitConnection",
+        "SemioKitDesign",
+        "SemioKitSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "PortRef",
+        "FlowParam",
+        "FlowNode",
+        "FlowEdge",
+        "SemioFlowSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "IfcValue",
+        "IfcComplexType",
+        "IfcEntity",
+        "IfcHeader",
+        "IfcSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "GifRgb",
+        "GifColorTable",
+        "GifImage",
+        "GifSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "Block2dSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "AnimTargetProperty",
+        "AnimTarget",
+        "AnimInterpolation",
+        "AnimValue",
+        "AnimKeyframe",
+        "AnimChannel",
+        "AnimTimeline",
+        "SemioAnimationSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "RasterSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "GltfSourceForm",
+        "GltfJson",
+        "GltfAsset",
+        "GltfScene",
+        "GltfNode",
+        "GltfMorphTarget",
+        "GltfPrimitive",
+        "GltfMesh",
+        "GltfSparseIndices",
+        "GltfSparseValues",
+        "GltfSparseAccessor",
+        "GltfAccessor",
+        "GltfBufferView",
+        "GltfBuffer",
+        "GltfTextureInfo",
+        "GltfNormalTextureInfo",
+        "GltfOcclusionTextureInfo",
+        "GltfPbrMetallicRoughness",
+        "GltfAlphaMode",
+        "GltfMaterial",
+        "GltfTexture",
+        "GltfImage",
+        "GltfSampler",
+        "GltfSkin",
+        "GltfAnimationPath",
+        "GltfAnimationChannelTarget",
+        "GltfAnimationChannel",
+        "GltfInterpolation",
+        "GltfAnimationSampler",
+        "GltfAnimation",
+        "GltfOrthographic",
+        "GltfPerspective",
+        "GltfCameraProjection",
+        "GltfCamera",
+        "GltfDocument",
+        "GltfSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "GraphNodeId",
+        "GraphEdgeId",
+        "SemioGraphPortKind",
+        "SemioGraphPort",
+        "SemioGraphNode",
+        "SemioGraphEdge",
+        "SemioGraphSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "PathSegment",
+        "DrawNode",
+        "DrawStyle",
+        "DrawLayer",
+        "DrawCanvas",
+        "SemioDrawingSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "SemioVideoStreamKind",
+        "SemioRational",
+        "SemioVideoSample",
+        "SemioVideoStream",
+        "SemioVideoSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "DxfTag",
+        "DxfValue",
+        "DxfHeaderVar",
+        "DxfLayer",
+        "DxfStyle",
+        "DxfLinetype",
+        "DxfTables",
+        "DxfOtherTable",
+        "DxfVertex",
+        "DxfEntity",
+        "DxfBlock",
+        "DxfSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "ShootingSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "GifRgb",
+        "GifColorTable",
+        "GifDisposal",
+        "GifPlainText",
+        "GifAppExtension",
+        "GifFrame",
+        "GifSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "Block5dSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "AviMainHeader",
+        "AviStreamHeader",
+        "AviStreamFormat",
+        "AviChunk",
+        "AviStream",
+        "RiffChunk",
+        "AviSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "SlideFrame",
+        "SlidePictureImage",
+        "PlaceholderKind",
+        "SlideTableCell",
+        "SlideTableRow",
+        "SlideShape",
+        "SlideMaster",
+        "SlideLayout",
+        "Slide",
+        "SemioPresentationSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "LasHeader",
+        "LasVlr",
+        "LasPoint",
+        "LasSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "JsonMember",
+        "JsonValue",
+        "JsonSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "XlsxCellValue",
+        "XlsxCell",
+        "XlsxSheet",
+        "XlsxWorkbook",
+        "XlsxXmlPart",
+        "XlsxSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [],
+      "sqliteMount": false,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "SemioObjectSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "DwgLogicalGeometryKind",
+        "DwgLogicalGeometry",
+        "DwgLogicalLayer",
+        "DwgLogicalEntity",
+        "DwgObjectCategory",
+        "DwgNamedReference",
+        "DwgXRecordValue",
+        "DwgDictionaryBody",
+        "DwgTableControlEntry",
+        "DwgTableControlEntries",
+        "DwgBlockTableControl",
+        "DwgLinetypeTableControl",
+        "DwgDimensionStyleTableControl",
+        "DwgTableControlBody",
+        "DwgTableRecordCommon",
+        "DwgRegisteredApplicationTableRecord",
+        "DwgTextStyleTableRecord",
+        "DwgComplexColorValue",
+        "DwgComplexColor",
+        "DwgLayerTableRecord",
+        "DwgLinetypeDash",
+        "DwgLinetypeTableRecord",
+        "DwgBlockHeaderTableRecord",
+        "DwgViewportTableRecord",
+        "DwgDimensionGeometry",
+        "DwgDimensionBehavior",
+        "DwgDimensionText",
+        "DwgDimensionUnits",
+        "DwgDimensionR2010",
+        "DwgDimensionStyleTableRecord",
+        "DwgTableRecordBody",
+        "DwgXRecordBody",
+        "DwgExtendedEntityData",
+        "DwgEntityMode",
+        "DwgEntityReferenceMode",
+        "DwgEntityColorKind",
+        "DwgEntityColor",
+        "DwgEntityCommon",
+        "DwgLineEntity",
+        "DwgArcEntity",
+        "DwgLwPolylineVertex",
+        "DwgLwPolylineEntity",
+        "DwgBlockBeginEntity",
+        "DwgBlockEndEntity",
+        "DwgInsertEntity",
+        "DwgDimensionTextAttachment",
+        "DwgDimensionLineSpacingStyle",
+        "DwgDimensionStatus",
+        "DwgDimensionEntityCommon",
+        "DwgLinearDimensionEntity",
+        "DwgViewportStatusFlag",
+        "DwgViewportRenderMode",
+        "DwgOrthographicView",
+        "DwgShadePlotMode",
+        "DwgDefaultLightingType",
+        "DwgViewportEntity",
+        "DwgPointEntity",
+        "DwgCircleEntity",
+        "DwgEllipseEntity",
+        "DwgTextEntity",
+        "DwgSplineEntity",
+        "DwgFace3dEntity",
+        "DwgPolyline3dEntity",
+        "DwgPolyfaceMeshEntity",
+        "DwgVertexEntity",
+        "DwgPolyfaceFaceEntity",
+        "DwgSequenceEndEntity",
+        "DwgEntityBody",
+        "DwgAssociativeDependencyStatus",
+        "DwgAssociativeDependency",
+        "DwgEvaluationVariant",
+        "DwgAssociativeValueDependency",
+        "DwgAssociativeGeometryDependency",
+        "DwgEvaluationExpressionValue",
+        "DwgEvaluationExpression",
+        "DwgBlockGripLocationComponent",
+        "DwgDynamicBlockProxyNode",
+        "DwgAssociativeActionStatus",
+        "DwgAssociativeActionDependency",
+        "DwgAssociativeAction",
+        "DwgAssociativeVariable",
+        "DwgAssociativeDimensionDependencyBody",
+        "DwgVisualStylePropertyOperation",
+        "DwgVisualStyleProperty",
+        "DwgVisualStyleProperties",
+        "DwgVisualStyle",
+        "DwgBlockParameterDependencyBody",
+        "DwgBlockRepresentationData",
+        "DwgDynamicBlockPurgePreventer",
+        "DwgEvaluationGraphNode",
+        "DwgEvaluationGraphEdge",
+        "DwgEvaluationGraph",
+        "DwgBlockParameterConnection",
+        "DwgBlockParameterProperty",
+        "DwgBlockParameterBaseLocation",
+        "DwgBlockFlipValueSet",
+        "DwgNamedEvaluationNodeReference",
+        "DwgBlockFlipParameter",
+        "DwgVisibilityEvaluationHistory",
+        "DwgVisibilityState",
+        "DwgBlockVisibilityParameter",
+        "DwgBlockElement",
+        "DwgBlockGrip",
+        "DwgPropertyExpressionReference",
+        "DwgBlockTwoPointParameter",
+        "DwgBlockLinearParameter",
+        "DwgBlockLinearGrip",
+        "DwgBlockFlipGrip",
+        "DwgBlockVisibilityGrip",
+        "DwgPlaceholder",
+        "DwgDictionaryVariable",
+        "DwgAnnotationScale",
+        "DwgDrawOrderEntry",
+        "DwgSortEntitiesTable",
+        "DwgCellContentFormat",
+        "DwgCellMargins",
+        "DwgCellBorder",
+        "DwgCellBorders",
+        "DwgCellStyle",
+        "DwgTableStyle",
+        "DwgMlineLinetype",
+        "DwgMlineCaps",
+        "DwgMlineStyleElement",
+        "DwgMlineStyle",
+        "DwgMLeaderContentType",
+        "DwgMLeaderDrawOrder",
+        "DwgMLeaderLeaderOrder",
+        "DwgMLeaderKind",
+        "DwgMLeaderTextAttachment",
+        "DwgMLeaderTextAngle",
+        "DwgMLeaderTextAlignment",
+        "DwgMLeaderAttachmentDirection",
+        "DwgMLeaderBlockConnection",
+        "DwgMLeaderLeaderStyle",
+        "DwgMLeaderLanding",
+        "DwgMLeaderDogleg",
+        "DwgMLeaderArrow",
+        "DwgMLeaderTextStyle",
+        "DwgMLeaderBlockStyle",
+        "DwgMLeaderStyle",
+        "DwgMaterialProjection",
+        "DwgMaterialTiling",
+        "DwgMaterialMapSource",
+        "DwgMaterialColor",
+        "DwgMaterialMap",
+        "DwgMaterialChannels",
+        "DwgMaterial",
+        "DwgBlockActionConnection",
+        "DwgBlockActionDependency",
+        "DwgBlockAction",
+        "DwgBlockMoveCoordinateMode",
+        "DwgBlockMoveAction",
+        "DwgBlockAlignmentParameter",
+        "DwgBlockAlignmentGrip",
+        "DwgStretchSelection",
+        "DwgStretchSelector",
+        "DwgBlockActionCoordinateMode",
+        "DwgBlockStretchAction",
+        "DwgBlockActionWithBasePoint",
+        "DwgBlockScaleMode",
+        "DwgBlockScaleAction",
+        "DwgBlockFlipAction",
+        "DwgBlockOnePointParameter",
+        "DwgBlockBasePointParameter",
+        "DwgBlockParameterAllowedValues",
+        "DwgBlockLinearConstraintParameter",
+        "DwgPlotOptions",
+        "DwgPlotPaperUnit",
+        "DwgPlotRotation",
+        "DwgPlotArea",
+        "DwgStandardScale",
+        "DwgShadePlot",
+        "DwgShadePlotResolution",
+        "DwgLayoutOptions",
+        "DwgLayout",
+        "DwgAssocNetworkMemberKind",
+        "DwgAssocNetworkMember",
+        "DwgAssocNetwork",
+        "DwgConstraintNodeCore",
+        "DwgGeometricConstraint",
+        "DwgConstraintGeometry",
+        "DwgExplicitConstraint",
+        "DwgConstrainedImplicitPoint",
+        "DwgConstrainedBoundedLine",
+        "DwgDistanceConstraint",
+        "DwgAxisConstraint",
+        "DwgConstrainedDatumLine",
+        "DwgConstraintNode",
+        "DwgAssoc2dConstraintGroup",
+        "DwgLogicalObjectBody",
+        "DwgLogicalObject",
+        "DwgLogicalDrawing",
+        "DwgHeaderUnits",
+        "DwgHeaderModes",
+        "DwgHeaderIntegerSettings",
+        "DwgHeaderScalars",
+        "DwgHeaderTimeState",
+        "DwgHeaderSpaceGeometry",
+        "DwgDimensionSettings",
+        "DwgDrawingPolicy",
+        "DwgHeaderStrings",
+        "DwgHeaderRelations",
+        "DwgHeaderVariables",
+        "DwgClass",
+        "DwgDependency",
+        "DwgJulianDate",
+        "DwgVersionStamp",
+        "DwgCompatibilityProfile",
+        "DwgAuxiliaryHeader",
+        "DwgRevisionHistory",
+        "DwgPreviewOrigin",
+        "DwgRgba",
+        "DwgIndexedPreview",
+        "DwgApplicationPropertyKind",
+        "DwgApplicationProperty",
+        "DwgProductInformation",
+        "DwgApplicationHistory",
+        "DwgCustomProperty",
+        "DwgSummaryInfo",
+        "DwgApplicationInfo",
+        "DwgMeasurement",
+        "DwgTemplate",
+        "DwgSnapshot",
+        "DwgExportError"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "PageDoc",
+        "PdfSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "Block3dSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "PngColorType",
+        "PngRgb",
+        "PngTransparency",
+        "PngChromaticities",
+        "PngSrgbIntent",
+        "PngPhysicalDims",
+        "PngTimestamp",
+        "PngBackground",
+        "PngTextKind",
+        "PngTextChunk",
+        "PngChunk",
+        "PngChunkMarker",
+        "PngSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "PlaygroundSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "RemodelingSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "En1997Snapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "LineEnding",
+        "TxtSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "SemioTopology",
+        "SemioPrimitive",
+        "SemioMesh",
+        "SemioMaterial",
+        "SemioTexture",
+        "SemioMeshSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "BinarySnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "TiffByteOrder",
+        "TiffFieldType",
+        "TiffValues",
+        "TiffBinary32",
+        "TiffBinary64",
+        "TiffTag",
+        "TiffStorageKind",
+        "TiffStorage",
+        "TiffIfd",
+        "TiffSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "MdInline",
+        "MdBlock",
+        "MdSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "Vdi3805Snapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "JackSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "ProgramSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "RewritingSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "ObjRef",
+        "PdfDictEntry",
+        "PdfPredictor",
+        "PdfCcittParameters",
+        "PdfStreamFilter",
+        "PdfDecimal",
+        "PdfObject",
+        "PdfIndirectObject",
+        "PdfTextString",
+        "PdfTextArrayItem",
+        "PdfPropertyList",
+        "PdfInlineImage",
+        "PdfLineCap",
+        "PdfLineJoin",
+        "PdfOp",
+        "PdfColorSpace",
+        "PdfFunction",
+        "PdfShadingKind",
+        "PdfShading",
+        "PdfPatternKind",
+        "PdfPattern",
+        "PdfSoftMask",
+        "PdfExtGState",
+        "PdfNamedColorSpace",
+        "PdfNamedProperties",
+        "PdfBaseEncoding",
+        "PdfEncodingDifference",
+        "PdfSimpleEncoding",
+        "PdfFontDescriptor",
+        "PdfFontProgram",
+        "PdfToUnicodeMapping",
+        "PdfToUnicode",
+        "PdfCodespaceRange",
+        "PdfCidMapping",
+        "PdfEmbeddedCMap",
+        "PdfCMap",
+        "PdfCidSystemInfo",
+        "PdfCidWidthRun",
+        "PdfCidVerticalRun",
+        "PdfCidToGid",
+        "PdfCidFont",
+        "PdfCharProc",
+        "PdfFontKind",
+        "PdfFont",
+        "PdfImageCodec",
+        "PdfImageMask",
+        "PdfImage",
+        "PdfTransparencyGroup",
+        "PdfFormXObject",
+        "PdfDestinationFit",
+        "PdfDestination",
+        "PdfFileSpecification",
+        "PdfActionKind",
+        "PdfAction",
+        "PdfOutlineItem",
+        "PdfNamedDestination",
+        "PdfPageLabelStyle",
+        "PdfPageLabelRange",
+        "PdfAppearanceState",
+        "PdfAppearanceEntry",
+        "PdfAppearance",
+        "PdfBorderStyle",
+        "PdfMarkupAnnotation",
+        "PdfAnnotationKind",
+        "PdfAnnotation",
+        "PdfFormFieldKind",
+        "PdfFormField",
+        "PdfAcroForm",
+        "PdfOptionalContentGroup",
+        "PdfOptionalContent",
+        "PdfDate",
+        "PdfInfo",
+        "PdfEmbeddedFile",
+        "PdfOutputIntent",
+        "PdfPageLayout",
+        "PdfPageMode",
+        "PdfViewerPreferences",
+        "PdfOpenAction",
+        "PdfEncryptionAlgorithm",
+        "PdfEncryption",
+        "PdfMarkInfo",
+        "PdfPage",
+        "PdfSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "XmlAttr",
+        "XmlNode",
+        "XmlDocument",
+        "XmlDoctype",
+        "XmlExternalId",
+        "XmlDtdDeclaration",
+        "XmlQuote",
+        "XmlDeclaration",
+        "XmlSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "FormsSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "En1993Snapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "CadSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "Iso16757Snapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "NoteSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "PptxRun",
+        "PptxParagraph",
+        "PptxTransform",
+        "PptxShape",
+        "PptxSlide",
+        "PptxPresentation",
+        "PptxXmlPart",
+        "PptxSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "PlyFormat",
+        "PlyScalarType",
+        "PlyProperty",
+        "PlyValue",
+        "PlyRow",
+        "PlyElement",
+        "PlySnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "DocxRun",
+        "DocxParagraph",
+        "DocxTableCell",
+        "DocxTableRow",
+        "DocxTable",
+        "DocxBlock",
+        "DocxStyle",
+        "DocxDocument",
+        "DocxXmlPart",
+        "DocxSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "StepValue",
+        "StepFileDescription",
+        "StepFileName",
+        "StepFileSchema",
+        "StepHeader",
+        "StepComplexType",
+        "StepEntity",
+        "StepSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "CurationSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "Din18599Snapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "Din16798Snapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "ZipExtraField",
+        "ZipLocalHeaderMetadata",
+        "ZipCentralHeaderMetadata",
+        "ZipEntryMetadata",
+        "ZipEntry",
+        "ZipSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "DeflateLevelHint",
+        "DeflateSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "ProcedureSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "En1992Snapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "HtmlAttr",
+        "RawTextKind",
+        "HtmlNode",
+        "HtmlSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "En1990Snapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "En1996Snapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "Wfc2dColor",
+        "Wfc2dPathSegment",
+        "Wfc2dVectorPath",
+        "Wfc2dTileMedia",
+        "Wfc2dTile",
+        "Wfc2dSlot",
+        "Wfc2dSlotEdge",
+        "Wfc2dRule",
+        "Wfc2dSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "WfcColor",
+        "WfcPoint2",
+        "WfcPathSegment",
+        "WfcVectorPath",
+        "WfcTileMedia2d",
+        "WfcTile2d",
+        "WfcDirection2d",
+        "WfcAdjacencyRule2d",
+        "WfcPinnedCell2d",
+        "WfcCell2d",
+        "Grid2dSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "En1991Snapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "Color",
+        "TileMedia3d",
+        "Tile",
+        "Slot3d",
+        "SlotEdge",
+        "GraphRule",
+        "Wfc3dSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "GisTerrainSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "Grid3dColor",
+        "Grid3dMesh",
+        "Grid3dTileMedia",
+        "Grid3dTile",
+        "Grid3dDirection",
+        "Grid3dAxis",
+        "Grid3dRule",
+        "Grid3dPinnedCell",
+        "Grid3dCell",
+        "Grid3dSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "BitmapColor",
+        "BitmapInput",
+        "BitmapOutputSpec",
+        "BitmapOverlappingModel",
+        "BitmapPinnedPixel",
+        "BitmapSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "En1998Snapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "En1994Snapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "Process3dSnapshot",
+        "Process3dMountedSnapshotOwner"
+      ],
+      "sqliteMount": true,
+      "packOptin": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "GisMapSnapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "AluminiumMaterial",
+        "PlateElement",
+        "AluminiumSection",
+        "MemberAction",
+        "SupportCondition",
+        "AluminiumMember",
+        "BoltGroup",
+        "WeldGroup",
+        "AluminiumConnection",
+        "FireScenario",
+        "FatigueDetail",
+        "ColdFormedSheet",
+        "AluminiumShell",
+        "En1999Snapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "Din4108Snapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "types": [
+        "En1995Snapshot"
+      ],
+      "sqliteMount": true,
+      "packOptin": false
+    }
+  ],
+  "implementations": [
+    {
+      "path": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "VcsSnapshot",
+      "line": 10,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "SSpaceSnapshot",
+      "line": 10,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "SHomeSnapshot",
+      "line": 7,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "LowpolySnapshot",
+      "line": 30,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "Generation2dSnapshot",
+      "line": 6,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "PlaybookSnapshot",
+      "line": 7,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "PresentationSnapshot",
+      "line": 16,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "WorkflowSnapshot",
+      "line": 43,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "Puzzle2dSnapshot",
+      "line": 183,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "crate::Puzzle2dPlaySnapshot",
+      "line": 200,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "RunArtifact",
+      "line": 25,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "WriterSnapshot",
+      "line": 10,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "SequenceSnapshot",
+      "line": 7,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "CollectionSnapshot",
+      "line": 16,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "SpaceSnapshot",
+      "line": 15,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "DrawingSnapshot",
+      "line": 77,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "WiresSnapshot",
+      "line": 33,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs",
+      "type": "NativeSocketProbeSnapshot",
+      "line": 18982,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": false,
+      "nativeEncode": false,
+      "proposalOrProbe": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "Generation3dSnapshot",
+      "line": 6,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "DagSnapshot",
+      "line": 15,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "ObjSnapshot",
+      "line": 147,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "TsvSnapshot",
+      "line": 6,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🚦️sqlite/🪶️copy/🦀️.rs",
+      "type": "TsvSnapshot",
+      "line": 8,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": false,
+      "nativeEncode": false,
+      "proposalOrProbe": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "Fem2dSnapshot",
+      "line": 33,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "CsvSnapshot",
+      "line": 6,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🚦️sqlite/🪶️copy/🦀️.rs",
+      "type": "CsvSnapshot",
+      "line": 8,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": false,
+      "nativeEncode": false,
+      "proposalOrProbe": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🪶️sqlite/🦀️.rs",
+      "type": "super::ProbeSnapshot",
+      "line": 5,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": false,
+      "nativeEncode": false,
+      "proposalOrProbe": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/🗿️artifacts/🚫️snapshot-refusal/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "Snapshot",
+      "line": 41,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "Snapshot",
+      "line": 33,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "EnergyModelSnapshot",
+      "line": 12,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "Puzzle5dSnapshot",
+      "line": 48,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "crate::Puzzle5dPlaySnapshot",
+      "line": 151,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "SemioValueSnapshot",
+      "line": 80,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "SpaceHistorySnapshot",
+      "line": 57,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "JpgSnapshot",
+      "line": 44,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "Puzzle3dSnapshot",
+      "line": 409,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "crate::Puzzle3dPlaySnapshot",
+      "line": 883,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "BmpSnapshot",
+      "line": 5,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🚦️sqlite/🪶️copy/🦀️.rs",
+      "type": "BmpSnapshot",
+      "line": 13,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": false,
+      "nativeEncode": false,
+      "proposalOrProbe": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🌿️vcs/📸️snapshot/🪶️native/🛂️capability/🦀️.rs",
+      "type": "FlowHostSnapshot",
+      "line": 5,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "SemioModelSnapshot",
+      "line": 18,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "WavSnapshot",
+      "line": 155,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "StlSnapshot",
+      "line": 69,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "SemioDocumentSnapshot",
+      "line": 57,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "SemioAudioSnapshot",
+      "line": 10,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "EpwSnapshot",
+      "line": 13,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "SvgSnapshot",
+      "line": 15,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "Mp3Snapshot",
+      "line": 23,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "Mp4Snapshot",
+      "line": 40,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "FlowSnapshot",
+      "line": 6,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "Fem3dSnapshot",
+      "line": 35,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "DagSnapshot",
+      "line": 30,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "LayoutSnapshot",
+      "line": 86,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "BcfSnapshot",
+      "line": 67,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "SemioSnapshot",
+      "line": 11,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "Ifc2x3Snapshot",
+      "line": 60,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "SemioTableSnapshot",
+      "line": 13,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "SemioCadSnapshot",
+      "line": 28,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "SemioBrepSnapshot",
+      "line": 32,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "SemioTextSnapshot",
+      "line": 17,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "SemioImageSnapshot",
+      "line": 10,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "EquationSnapshot",
+      "line": 24,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "SemioKitSnapshot",
+      "line": 15,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "SemioFlowSnapshot",
+      "line": 10,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "IfcSnapshot",
+      "line": 33,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "GifSnapshot",
+      "line": 26,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "Block2dSnapshot",
+      "line": 314,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "SemioAnimationSnapshot",
+      "line": 13,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "RasterSnapshot",
+      "line": 138,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "GltfSnapshot",
+      "line": 57,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "SemioGraphSnapshot",
+      "line": 13,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "SemioDrawingSnapshot",
+      "line": 28,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "SemioVideoSnapshot",
+      "line": 10,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "DxfSnapshot",
+      "line": 114,
+      "handcraftedSchemaReference": true,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "GifSnapshot",
+      "line": 32,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "Block5dSnapshot",
+      "line": 379,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "ShootingSnapshot",
+      "line": 32,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "AviSnapshot",
+      "line": 37,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "SemioPresentationSnapshot",
+      "line": 23,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "LasSnapshot",
+      "line": 20,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "JsonSnapshot",
+      "line": 34,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "XlsxSnapshot",
+      "line": 62,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "SemioObjectSnapshot",
+      "line": 12,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "DwgSnapshot",
+      "line": 59,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "PdfSnapshot",
+      "line": 8,
+      "handcraftedSchemaReference": true,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "Block3dSnapshot",
+      "line": 335,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "PngSnapshot",
+      "line": 7,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "PlaygroundSnapshot",
+      "line": 22,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "super::RemodelingSnapshot",
+      "line": 246,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "En1997Snapshot",
+      "line": 29,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "TxtSnapshot",
+      "line": 33,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "SemioMeshSnapshot",
+      "line": 27,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "BinarySnapshot",
+      "line": 5,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🚦️sqlite/🪶️copy/🦀️.rs",
+      "type": "BinarySnapshot",
+      "line": 7,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": false,
+      "nativeEncode": false,
+      "proposalOrProbe": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "TiffSnapshot",
+      "line": 24,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "MdSnapshot",
+      "line": 117,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "Vdi3805Snapshot",
+      "line": 90,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "JackSnapshot",
+      "line": 419,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "super::ProgramSnapshot",
+      "line": 159,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "RewritingSnapshot",
+      "line": 11,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/📄️document/🦀️.rs",
+      "type": "PdfSnapshot",
+      "line": 16,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "XmlSnapshot",
+      "line": 152,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "FormsSnapshot",
+      "line": 56,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "En1993Snapshot",
+      "line": 65,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🚦️owner/🦀️.rs",
+      "type": "CadSnapshot",
+      "line": 224,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "CadSnapshot",
+      "line": 228,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "Iso16757Snapshot",
+      "line": 138,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "NoteSnapshot",
+      "line": 112,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "PptxSnapshot",
+      "line": 62,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "PlySnapshot",
+      "line": 106,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "DocxSnapshot",
+      "line": 54,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "StepSnapshot",
+      "line": 51,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "CurationSnapshot",
+      "line": 42,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "Din18599Snapshot",
+      "line": 52,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "ZipSnapshot",
+      "line": 56,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "DeflateSnapshot",
+      "line": 5,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🚦️sqlite/🪶️copy/🦀️.rs",
+      "type": "DeflateSnapshot",
+      "line": 7,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": false,
+      "nativeEncode": false,
+      "proposalOrProbe": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "Din16798Snapshot",
+      "line": 34,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "ProcedureSnapshot",
+      "line": 7,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "En1992Snapshot",
+      "line": 49,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "HtmlSnapshot",
+      "line": 49,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "En1990Snapshot",
+      "line": 103,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "En1996Snapshot",
+      "line": 66,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "Wfc2dSnapshot",
+      "line": 19,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "Grid2dSnapshot",
+      "line": 34,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "En1991Snapshot",
+      "line": 79,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "Wfc3dSnapshot",
+      "line": 28,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "GisTerrainSnapshot",
+      "line": 12,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "Grid3dSnapshot",
+      "line": 16,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "BitmapSnapshot",
+      "line": 25,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "En1998Snapshot",
+      "line": 56,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "En1994Snapshot",
+      "line": 48,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🛂️capability/🦀️.rs",
+      "type": "Process3dSnapshot",
+      "line": 6,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "En1999Snapshot",
+      "line": 51,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "Din4108Snapshot",
+      "line": 40,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "GisMapSnapshot",
+      "line": 30,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "type": "En1995Snapshot",
+      "line": 47,
+      "handcraftedSchemaReference": false,
+      "nativeDecode": true,
+      "nativeEncode": true,
+      "proposalOrProbe": false
+    }
+  ],
+  "optins": [
+    {
+      "path": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/💾️binary/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/💾️binary/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/💾️binary/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/💾️binary/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/💾️binary/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/💾️binary/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/📸️snapshot/📦️pack/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🌿️vcs/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/🗿️artifacts/🚫️snapshot-refusal/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🌿️vcs/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️pack/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/💾️binary/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/💾️binary/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📸️snapshot/📦️pack/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🧬️schema/📸️snapshot/📦️pack/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📦️pack/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️pack/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️pack/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/💾️binary/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️pack/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/💾️binary/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/📝️text/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️pack/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/⚖️compliance/🦀️.rs",
+      "explicitSome": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "explicitSome": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️pack/🦀️.rs",
+      "explicitSome": true
+    }
+  ],
+  "factories": [
+    {
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🦀️.rs",
+      "locators": [
+        650
+      ]
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🔋️energy/🦀️.rs",
+      "locators": [
+        25
+      ]
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🌍️gis/📇️native-codecs/🦀️.rs",
+      "locators": [
+        62,
+        63
+      ]
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🌿️vcs/📇️native-codecs/🦀️.rs",
+      "locators": [
+        53
+      ]
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🪐️space/🦀️.rs",
+      "locators": [
+        245
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+      "locators": [
+        52
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🦀️.rs",
+      "locators": [
+        86
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🦀️.rs",
+      "locators": [
+        66,
+        106
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🦀️.rs",
+      "locators": [
+        424
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🦀️.rs",
+      "locators": [
+        1144
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🦀️.rs",
+      "locators": [
+        156
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "locators": [
+        5725
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs",
+      "locators": [
+        21,
+        58
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+      "locators": [
+        49
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs",
+      "locators": [
+        20,
+        57
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🦀️.rs",
+      "locators": [
+        636
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+      "locators": [
+        18
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+      "locators": [
+        50
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "locators": [
+        12,
+        12
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/🦀️.rs",
+      "locators": [
+        236
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "locators": [
+        12,
+        12
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/🦀️.rs",
+      "locators": [
+        739
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+      "locators": [
+        33
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+      "locators": [
+        186
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs",
+      "locators": [
+        19210
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🦀️.rs",
+      "locators": [
+        41,
+        60
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+      "locators": [
+        50,
+        50
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🦀️.rs",
+      "locators": [
+        41
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "locators": [
+        9897
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+      "locators": [
+        3422,
+        3424,
+        3427,
+        3428,
+        3525,
+        3550,
+        3563,
+        3581,
+        43388
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🦀️.rs",
+      "locators": [
+        152
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🚪️io/🦀️.rs",
+      "locators": [
+        113
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🦀️.rs",
+      "locators": [
+        41
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs",
+      "locators": [
+        393
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🦀️.rs",
+      "locators": [
+        818
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/🦀️.rs",
+      "locators": [
+        55,
+        118
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "locators": [
+        12
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs",
+      "locators": [
+        20
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🦀️.rs",
+      "locators": [
+        1168
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "locators": [
+        11167,
+        11946,
+        17822
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/🦀️.rs",
+      "locators": [
+        120,
+        120
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🦀️.rs",
+      "locators": [
+        297
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "locators": [
+        21,
+        21
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🦀️.rs",
+      "locators": [
+        43
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs",
+      "locators": [
+        19,
+        56
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+      "locators": [
+        500,
+        502
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/🦀️.rs",
+      "locators": [
+        122
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+      "locators": [
+        50
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🦀️.rs",
+      "locators": [
+        41,
+        60
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/🦀️.rs",
+      "locators": [
+        187
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+      "locators": [
+        53
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🦀️.rs",
+      "locators": [
+        143,
+        143
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🦀️.rs",
+      "locators": [
+        45
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🦀️.rs",
+      "locators": [
+        391
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+      "locators": [
+        49
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🦀️.rs",
+      "locators": [
+        41,
+        92,
+        93
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+      "locators": [
+        49
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🦀️.rs",
+      "locators": [
+        41,
+        91,
+        92
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🦀️.rs",
+      "locators": [
+        404
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🚪️io/🦀️.rs",
+      "locators": [
+        113
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+      "locators": [
+        48
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🦀️.rs",
+      "locators": [
+        355
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🦀️.rs",
+      "locators": [
+        41,
+        60
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🦀️.rs",
+      "locators": [
+        135
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🦀️.rs",
+      "locators": [
+        661
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/🦀️.rs",
+      "locators": [
+        307
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/🦀️.rs",
+      "locators": [
+        91,
+        91
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/🦀️.rs",
+      "locators": [
+        147
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/🦀️.rs",
+      "locators": [
+        142
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🦀️.rs",
+      "locators": [
+        90,
+        90
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/🦀️.rs",
+      "locators": [
+        128,
+        128
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+      "locators": [
+        71
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🦀️.rs",
+      "locators": [
+        71,
+        90
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/🦀️.rs",
+      "locators": [
+        113,
+        113
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/🦀️.rs",
+      "locators": [
+        122,
+        122
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+      "locators": [
+        273
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+      "locators": [
+        682
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+      "locators": [
+        108
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🦀️.rs",
+      "locators": [
+        184
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🚪️io/🦀️.rs",
+      "locators": [
+        128,
+        128
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🦀️.rs",
+      "locators": [
+        174
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/🦀️.rs",
+      "locators": [
+        157
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🦀️.rs",
+      "locators": [
+        370
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🦀️.rs",
+      "locators": [
+        911
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/🦀️.rs",
+      "locators": [
+        136,
+        136
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🦀️.rs",
+      "locators": [
+        89,
+        89
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+      "locators": [
+        108
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🚪️io/🦀️.rs",
+      "locators": [
+        416
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🦀️.rs",
+      "locators": [
+        185
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🦀️.rs",
+      "locators": [
+        41,
+        76
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🚪️io/🦀️.rs",
+      "locators": [
+        50
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🦀️.rs",
+      "locators": [
+        41,
+        91,
+        92
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/🦀️.rs",
+      "locators": [
+        128
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🦀️.rs",
+      "locators": [
+        1905
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🦀️.rs",
+      "locators": [
+        41,
+        58
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🦀️.rs",
+      "locators": [
+        41
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🦀️.rs",
+      "locators": [
+        43,
+        61
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🦀️.rs",
+      "locators": [
+        113,
+        113
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "locators": [
+        121,
+        121,
+        121
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🦀️.rs",
+      "locators": [
+        51
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+      "locators": [
+        108
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🦀️.rs",
+      "locators": [
+        321
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🦀️.rs",
+      "locators": [
+        46,
+        203,
+        203
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🦀️.rs",
+      "locators": [
+        255
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+      "locators": [
+        63,
+        63,
+        190
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🦀️.rs",
+      "locators": [
+        59
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+      "locators": [
+        543
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/🦀️.rs",
+      "locators": [
+        150
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+      "locators": [
+        77,
+        77,
+        201
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🦀️.rs",
+      "locators": [
+        43
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🦀️.rs",
+      "locators": [
+        41
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🦀️.rs",
+      "locators": [
+        2062
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs",
+      "locators": [
+        13,
+        55
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🦀️.rs",
+      "locators": [
+        614
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs",
+      "locators": [
+        13,
+        48
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🦀️.rs",
+      "locators": [
+        1237
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🦀️.rs",
+      "locators": [
+        648
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs",
+      "locators": [
+        144,
+        150
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+      "locators": [
+        49
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🦀️.rs",
+      "locators": [
+        43
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🦀️.rs",
+      "locators": [
+        404
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🦀️.rs",
+      "locators": [
+        577
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🦀️.rs",
+      "locators": [
+        43,
+        61
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🦀️.rs",
+      "locators": [
+        41,
+        59
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+      "locators": [
+        427
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🦀️.rs",
+      "locators": [
+        533
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🦀️.rs",
+      "locators": [
+        41,
+        60
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🦀️.rs",
+      "locators": [
+        329
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🦀️.rs",
+      "locators": [
+        43,
+        63
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+      "locators": [
+        57
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🦀️.rs",
+      "locators": [
+        42,
+        56
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🦀️.rs",
+      "locators": [
+        190
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🦀️.rs",
+      "locators": [
+        374
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🦀️.rs",
+      "locators": [
+        43,
+        63
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🦀️.rs",
+      "locators": [
+        225
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🦀️.rs",
+      "locators": [
+        451
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+      "locators": [
+        50,
+        50
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🦀️.rs",
+      "locators": [
+        41
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🦀️.rs",
+      "locators": [
+        200
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🦀️.rs",
+      "locators": [
+        487
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+      "locators": [
+        95
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+      "locators": [
+        95
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+      "locators": [
+        6
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+      "locators": [
+        86
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🦀️.rs",
+      "locators": [
+        71
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+      "locators": [
+        46
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🦀️.rs",
+      "locators": [
+        190
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🦀️.rs",
+      "locators": [
+        1089
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🦀️.rs",
+      "locators": [
+        75
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🦀️.rs",
+      "locators": [
+        258
+      ]
+    }
+  ],
+  "confirmedMissing": [
+    {
+      "owner": "ChartSnapshot",
+      "kind": "s.print.chart",
+      "schema": "🧰️framework/🛍️products/📓️print/🧬️schema/📸️snapshot/🦀️.rs",
+      "declaration": "🧰️framework/🛍️products/📓️print/🦀️.rs:43",
+      "handwrittenSql": false,
+      "packOptin": false,
+      "documentFactory": false,
+      "report": "📓️print-chart-current-missing-semantic-sqlite-owner.md"
+    }
+  ],
+  "authorityCorrections": {
+    "norm": "Explicit sqlite= macro leaf forwards Some; literal methods absent per owner",
+    "bareDeclarations": [
+      "GisTerrainSnapshot root192",
+      "GisMapSnapshot root338",
+      "PlaygroundSnapshot root85"
+    ],
+    "parentForeign": "Hub Space root245 binds actual Workflow app",
+    "unresolvedNormalRegistryJoins": [
+      "RunArtifact",
+      "DagSnapshot",
+      "FlowHostSnapshot",
+      "SpaceSnapshot",
+      "CollectionSnapshot",
+      "SpaceHistorySnapshot"
+    ]
+  }
+}

@@ -38,13 +38,6 @@ pub use crate::format::{
 };
 //#endregion 🔖️Format
 
-//#region 🔖️Json
-pub use crate::json::{
-    array as json_array, from_dsl_value as json_from_dsl_value, from_json_str, object as json_object, parse as parse_json, parse_bytes as parse_json_bytes, to_dsl_value as json_to_dsl_value, to_json_string, to_string as json_to_string,
-    to_string_pretty as json_to_string_pretty, JsonError, Lexer as JsonLexer, Number as JsonNumber, Object as JsonObject, Token as JsonToken, Value as JsonValue, MAX_DEPTH as JSON_MAX_DEPTH,
-};
-//#endregion 🔖️Json
-
 //#region 🔖️Io
 /// 🗄️ Native-only file I/O — absent from `wasm32` builds, mirroring `pack_io` itself.
 #[cfg(not(target_arch = "wasm32"))]

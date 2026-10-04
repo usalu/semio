@@ -3,7 +3,7 @@
 
 /// 🧭️ The retained map camera, in the SAME three keys the react `TiledMapHost` sends under `camera`
 /// (`MapCamera {x, y, zoom}`), so the wire camera needs no renaming on the way in or out.
-#[derive(Clone, Copy, Debug, PartialEq, dsl::DslRecord, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -29,18 +29,19 @@ impl GisMapViewerCamera {
 
     /// 🎬️ The exact `TiledMapScene::camera_json` string this camera stands for.
     pub fn scene_camera_json(&self) -> String {
-        dsl::json::to_json_string(&dsl::ToValue::to_value(self))
+        semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(self))
     }
 }
 
 /// 🎚️ Persisted local state for ONE concrete `gis2d-view-map` viewer window: its camera, and nothing
 /// else. Per WINDOW — two open map panes pan independently, and a read-only surface may not write the
 /// artifact lane at all.
-#[derive(Clone, Copy, Debug, Default, PartialEq, dsl::DslArtifact, dsl::ToValue, dsl::FromValue)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Copy, Debug, Default, PartialEq, semio_framework_os_kernel::DslArtifact, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
-#[dsl(id = "gis.mapviewerwindowcfg", layout = "lines")]
+#[dsl(layout = "lines")]
+#[artifact(id = "gis.mapviewerwindowcfg")]
 pub struct GisMapViewerWindowConfig {
     #[dsl(block)]
     pub camera: GisMapViewerCamera,

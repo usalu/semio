@@ -56,7 +56,7 @@ from __future__ import annotations
 import json
 import struct
 
-from semio_repo_test import Adapter, Context, Outcome, digest
+from semio_repo_test import Adapter, Context, Outcome, digest, patched_snapshot
 
 # endregion 🔖️Imports
 
@@ -669,6 +669,7 @@ def pack_bytes(document: dict) -> bytes:
 KINDS = (
     "no-mutation",
     "set-snapshot",
+    "patch-snapshot",
     "insert-spatial-node",
     "remove-spatial-node",
     "set-spatial-node",
@@ -719,6 +720,8 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
     tag = tagged(mutation)
     if tag == "noMutation":
         return result
+    if tag == "patchSnapshot":
+        return patched_snapshot(document, mutation["patch"])
     if tag == "setSnapshot":
         return clone(mutation["snapshot"])
     if tag == "insertSpatialNode":
@@ -782,6 +785,8 @@ def inverse_mutation(document: dict, mutation: dict) -> list:
     tag = tagged(mutation)
     if tag == "noMutation":
         return []
+    if tag == "patchSnapshot":
+        return [{"mutation": "setSnapshot", "snapshot": clone(document)}]
     if tag == "setSnapshot":
         return [{"mutation": "setSnapshot", "snapshot": clone(document)}]
     if tag == "insertSpatialNode":

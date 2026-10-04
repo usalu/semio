@@ -7,7 +7,7 @@ use crate::Generation3dSnapshot;
 use semio_framework_plugin::{apply_world3d_sun_action, ArtifactView, ConfigView, Fault, ViewEmit};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "sun-intensity")]
 #[value(rename_all = "camelCase")]
 pub struct SetSunIntensity {
@@ -17,6 +17,6 @@ pub struct SetSunIntensity {
 /// 🔆️ Brightens or dims the read-only preview's sun.
 pub fn handle(payload: &SetSunIntensity, _doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dViewConfig>) -> Result<ViewEmit<Generation3dViewConfigMutation>, Fault> {
     let mut sun = cfg.snapshot.sun();
-    apply_world3d_sun_action(&mut sun, "setSunIntensity", Some(&dsl::json!({ "value": payload.value })));
-    Ok(ViewEmit::config(vec![Generation3dViewConfigMutation::SetSun(config::SetSun { json: dsl::json::to_json_string(&sun) })]))
+    apply_world3d_sun_action(&mut sun, "setSunIntensity", Some(&semio_framework_pack_json::json!({ "value": payload.value })));
+    Ok(ViewEmit::config(vec![Generation3dViewConfigMutation::SetSun(config::SetSun { json: semio_framework_pack_json::to_json_string(&sun) })]))
 }

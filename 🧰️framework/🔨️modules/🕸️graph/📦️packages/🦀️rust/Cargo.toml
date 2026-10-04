@@ -19,14 +19,21 @@ name = "semio_framework_graph"
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-replication = { path = "../../../📡️replication/📦️packages/🦀️rust" }
+semio-framework-dsl-record = { path = "../../../🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-diagnostic = { path = "../../../⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-dsl = { path = "../../../🗣️dsl/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-ui-contract = { path = "../../../🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 geometry = { path = "../../../📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
-semio-framework-os-kernel = { path = "../../../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-value-derive = { path = "../../../🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 # ⚠️ `serde`/`serde_json` are fully removed — every type in this crate carries `ToValue`/
 # `FromValue` instead of `Serialize`/`Deserialize`. `⚙️engine/🦀️.rs`'s `property_bag_from_value`/
 # `property_bag_to_value` now take/return `dsl_core::DslValue`; `♾️infinite`'s board ports
 # (the former external caller) bridge their own `serde_json::Value`-typed `user_data` field at
 # the call site via the existing `DslValue::from` bridge. RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/02.
+
+[dev-dependencies]
+serde_json="1"

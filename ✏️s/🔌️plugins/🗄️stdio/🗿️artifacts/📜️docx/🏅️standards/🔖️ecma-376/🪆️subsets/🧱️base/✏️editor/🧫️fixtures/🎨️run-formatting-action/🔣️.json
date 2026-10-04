@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "action": "set-run-formatting",
+  "label": {
+    "en": "Set run formatting",
+    "de": "Textlaufformatierung setzen"
+  },
+  "fields": [
+    {
+      "id": "address",
+      "type": "canonical-xml-address"
+    },
+    {
+      "id": "bold",
+      "type": "boolean",
+      "label": {
+        "en": "Bold",
+        "de": "Fett"
+      }
+    },
+    {
+      "id": "italic",
+      "type": "boolean",
+      "label": {
+        "en": "Italic",
+        "de": "Kursiv"
+      }
+    },
+    {
+      "id": "underline",
+      "type": "boolean",
+      "label": {
+        "en": "Underline",
+        "de": "Unterstrichen"
+      }
+    }
+  ],
+  "transition": {
+    "before": {
+      "bold": false,
+      "italic": true,
+      "underline": false
+    },
+    "activate": "bold",
+    "after": {
+      "bold": true,
+      "italic": true,
+      "underline": false
+    }
+  }
+}
+

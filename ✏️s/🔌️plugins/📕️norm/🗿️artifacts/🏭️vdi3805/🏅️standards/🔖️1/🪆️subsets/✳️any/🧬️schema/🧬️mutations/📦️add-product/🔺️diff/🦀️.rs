@@ -23,7 +23,7 @@ pub fn diff(payload: &AddProduct, base: &Vdi3805Snapshot) -> protocol::MutationO
     index.entries.sort_by(|a, b| a.product_id.cmp(&b.product_id));
     let outcome = protocol::MutationOutcome::new(Vdi3805Diff { catalog: Some(catalog), index: Some(index), ..Default::default() });
     if clamped {
-        outcome.warn("mutation.clamped", format!("Insert index was out of range; appended product \"{}\" at the end instead.", payload.product.identity.article_number))
+        outcome.warning("mutation.clamped", format!("Insert index was out of range; appended product \"{}\" at the end instead.", payload.product.identity.article_number))
     } else {
         outcome
     }

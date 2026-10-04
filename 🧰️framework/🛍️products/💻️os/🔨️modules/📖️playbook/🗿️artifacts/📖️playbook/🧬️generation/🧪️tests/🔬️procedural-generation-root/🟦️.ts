@@ -15,7 +15,15 @@ export function proceduralGenerationRootSelfTests(): number {
   for (const value of hostiles) if (validate(value)) throw new Error("generation root schema accepted hostile input");
   const wire = JSON.stringify(fixture.generation);
   if (Buffer.byteLength(wire) <= 16384 || JSON.stringify(JSON.parse(wire)) !== wire) throw new Error("generation root independent JSON oracle lost large nested content");
+  const ranked = fixture.rankedValues;
+  const oracle = new Map<string, unknown>(ranked.entries);
+  const keys = [...oracle.keys()].sort();
+  if (JSON.stringify(keys) !== JSON.stringify(ranked.expectedKeys)) throw new Error("ranked generation keys disagree with independent Map oracle");
+  const values = Object.fromEntries(keys.map((key) => [key, oracle.get(key)]));
+  if (JSON.stringify(JSON.parse(JSON.stringify(values))) !== JSON.stringify(values)) throw new Error("ranked generation values lost JSON semantics");
   const source = readFileSync(join(base, "🧬️generation/🦀️.rs"), "utf8");
+  const model = readFileSync(join(base, "🦀️.rs"), "utf8");
+  if (!model.includes("pub type PlaybookValues = semio_framework_value::ordered::OrderedMap<DslValue>;") || !source.includes("generation.values.retire()")) throw new Error("ranked generation original owner and bounded release are missing");
   const modelPath = "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs";
   const snapshot = readFileSync(join(WORKSPACE_ROOT, modelPath), "utf8");
   const second = readFileSync(join(WORKSPACE_ROOT, modelPath.replace("🧊️generation3d", "🌀️generation2d")), "utf8");
@@ -23,7 +31,8 @@ export function proceduralGenerationRootSelfTests(): number {
     && root.includes("Arc::get_mut(self.0.as_mut()") && root.includes("Arc::into_inner(root)")
     && root.includes("owned: ManuallyDrop<GenerationRetirementState>") && root.includes("!std::thread::panicking()")
     && root.includes('panic!("nonempty generation root must be explicitly retired before drop")')
-    && root.includes("JsonOwner::Object(value.into_iter())") && root.includes("values.next()")
+    && root.includes("generation.values.retire()") && root.includes("RetirementStep::OwnedValue(value)")
+    && root.includes("semio_framework_value::retirement::owned_retirement(value)")
     && root.includes("bytes.min(value.len())") && !/Arc::make_mut|DerefMut|\.collect\(/.test(root)
     && model.includes("semio_framework_artifact_playbook_playbook::GenerationPlayRoot") && model.includes("pub generation: GenerationPlayRoot");
   if (!exact(source, snapshot) || !exact(source, second)) throw new Error("shared generation root immutable ownership linkage missing");
@@ -37,5 +46,5 @@ export function proceduralGenerationRootSelfTests(): number {
     [source.replaceAll("!std::thread::panicking()", "true"), snapshot],
   ];
   for (const [root, model] of sources) if (exact(root, model)) throw new Error("generation root accepted hostile source mutation");
-  return 2 + hostiles.length + sources.length;
+  return 4 + hostiles.length + sources.length;
 }

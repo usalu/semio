@@ -31,3 +31,5 @@ record remove-relation tag=8
 field payload bytes
 record set-relation tag=9
 field payload bytes
+record patch-snapshot tag=10
+field payload bytes

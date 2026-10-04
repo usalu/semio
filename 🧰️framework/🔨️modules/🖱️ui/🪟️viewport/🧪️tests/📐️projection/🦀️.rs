@@ -1,5 +1,5 @@
 use super::*;
-use protocol::value::{DslValue, FromValue, Number, ToValue};
+use semio_framework_value::{DslValue, FromValue, Number, ToValue};
 
 fn patched(base: &serde_json::Value, patch: &serde_json::Value) -> serde_json::Value {
     let mut value = base.clone();

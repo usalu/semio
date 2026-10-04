@@ -5,7 +5,7 @@ use protocol::{Mutation, MutationKind, MutationLeaf, OpBinary, OpText};
 #[test]
 fn canonical_leaf_metadata_matches_descriptor_and_provenance() {
     let expected: serde_json::Value = serde_json::from_str(include_str!("../../🔣️.json")).unwrap();
-    assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(<SetTrailingNewlineMutation as MutationLeaf>::DESCRIPTOR))).unwrap(), expected);
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(<SetTrailingNewlineMutation as MutationLeaf>::DESCRIPTOR))).unwrap(), expected);
     let provenance = <SetTrailingNewlineMutation as MutationLeaf>::PROVENANCE;
     assert_eq!(provenance.mutation_root, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
     assert_eq!(provenance.owner, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↩️set-trailing-newline");
@@ -23,7 +23,7 @@ fn semantic_identity_matches_descriptor() {
 fn inverse_and_root_codecs_restore_a_visible_terminator() {
     let base = TxtSnapshot { lines: vec!["a".into()], trailing_newline: false, line_ending: LineEnding::Lf, ..Default::default() };
     let mutation = TxtMutation::SetTrailingNewline(SetTrailingNewlineMutation { value: true });
-    let inverse = <TxtMutation as Mutation<TxtSnapshot>>::inverse(&mutation, &base);
+    let inverse = <TxtMutation as Mutation<TxtSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![TxtMutation::SetTrailingNewline(SetTrailingNewlineMutation { value: false })]);
     let mut after = base.clone();
     assert!(apply_txt_mutation(&mut after, &mutation).messages().is_empty());
@@ -42,5 +42,5 @@ fn rejects_losing_the_only_visible_crlf_terminator_and_unknown_fields() {
     let base = TxtSnapshot { lines: vec!["a".into()], trailing_newline: true, line_ending: LineEnding::CrLf, ..Default::default() };
     let mutation = SetTrailingNewlineMutation { value: false };
     assert!(!<SetTrailingNewlineMutation as MutationKind<TxtSnapshot, TxtMutation>>::diff(&mutation, &base).messages().is_empty());
-    assert!(dsl::json::from_json_str::<SetTrailingNewlineMutation>(r#"{"value":true,"unknown":true}"#).is_err());
+    assert!(semio_framework_pack_json::from_json_str::<SetTrailingNewlineMutation>(r#"{"value":true,"unknown":true}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
 }

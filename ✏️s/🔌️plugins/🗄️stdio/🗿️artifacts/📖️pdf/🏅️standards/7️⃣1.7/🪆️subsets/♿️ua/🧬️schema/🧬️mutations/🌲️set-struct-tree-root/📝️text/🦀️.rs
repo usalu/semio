@@ -10,12 +10,12 @@ pub const TEXT_OPCODE: &str = OPCODE;
 //#region 🔖️Codec
 /// 🖨️ Prints the owned payload as schema JSON.
 pub fn print(payload: &SetStructTreeRoot) -> Result<String, String> {
-    Ok(pack::to_json_string(payload))
+    Ok(semio_framework_pack_json::to_json_string(payload))
 }
 
 /// 📥️ Parses the owned payload from schema JSON.
 pub fn parse(text: &str) -> Result<SetStructTreeRoot, String> {
-    pack::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Codec
 

@@ -9,14 +9,14 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use crate::editor::procedure::config::ImperativeConfig;
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "run")]
 pub struct Run {}
 
 pub fn handle(_payload: &Run, doc: &ArtifactView<'_, ProcedureSnapshot>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ProcedureMutation, ImperativeConfigMutation>, Fault> {
-    let host = ImperativeHost::from_snapshot(doc.snapshot.clone());
+    let host = ImperativeHost::from_scene(&crate::procedure_scene(doc)?);
     let result = host.run();
-    let json = dsl::os_pack::json::to_json_string(&result.scope);
+    let json = semio_framework_pack_json::to_json_string(&result.scope);
     // 🧊️ The run result owns the accumulated scope and every effect row's input/output
     // dictionaries; a bare drop here aborts the guest with `final Dictionary ownership must be
     // explicitly retired or owned by a cold boundary` (bucket XCUT-DICT).

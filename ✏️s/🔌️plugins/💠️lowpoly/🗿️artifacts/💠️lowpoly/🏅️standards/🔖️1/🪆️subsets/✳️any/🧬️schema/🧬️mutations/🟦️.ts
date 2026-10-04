@@ -1,3 +1,4 @@
+import type{LowpolyMeshState}from"../🕸️mesh/🟦️.ts";
 /** 🧬️ LowpolyMutation dispatch — real facet mirror of the Rust `🦀️.rs` sibling's
  * `LowpolyMutation` enum (`dsl::Mutations`-derived, twenty-one variants: nine object-lane verbs, a
  * create/delete pair for the `mesh` CHILD slot, six paint-layer verbs, one pixel edit, one paint stroke and three selection motions).
@@ -23,7 +24,7 @@ export type LowpolyMutation =
   | { MoveObject: { id: string; newPosition: [number, number, number] } }
   | { RotateObject: { id: string; newRotation: [number, number, number] } }
   | { ScaleObject: { id: string; newScale: [number, number, number] } }
-  | { CreateMesh: { id: string; childId: string; target: ArtifactRef; meshWorkspace: string } }
+  | { CreateMesh: { id: string; childId: string; target: ArtifactRef; meshWorkspace: string; meshState:LowpolyMeshState|null } }
   | { DeleteMesh: { id: string } }
   | { InsertPaintLayer: { objectId: string; index: number; layer: LowpolyPaintLayer } }
   | { RemovePaintLayer: { objectId: string; index: number } }

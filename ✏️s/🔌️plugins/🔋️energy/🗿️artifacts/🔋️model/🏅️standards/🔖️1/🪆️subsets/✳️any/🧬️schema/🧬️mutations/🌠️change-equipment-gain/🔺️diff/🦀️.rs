@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeEquipmentGainRadiantFraction, base: &EnergyMo
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Equipment Gain {}: radiant fraction must be a fraction in [0, 1], got {}.", payload.id.0, payload.new_radiant_fraction), [payload.id.0.to_string()]);
     }
     if existing.radiant_fraction == payload.new_radiant_fraction {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Equipment Gain {} already carries this radiant fraction: {}.", payload.id.0, payload.new_radiant_fraction));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Equipment Gain {} already carries this radiant fraction: {}.", payload.id.0, payload.new_radiant_fraction));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.equipment.iter_mut().find(|item| item.id == payload.id) {

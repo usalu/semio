@@ -32,7 +32,7 @@ fn saw_machine(id: &str) -> WorkshopMachine {
 fn round_trip(base: &Process3dSnapshot, mutation: &Process3dMutation) -> Process3dSnapshot {
     let (forward, _messages) = protocol::apply_mutation(base, mutation).expect("valid mutation");
     let mut restored = forward.clone();
-    for back in mutation.inverse(base) {
+    for back in mutation.inverse(base).expect("valid retained mutation inverse fixture") {
         let (next, _messages) = protocol::apply_mutation(&restored, &back).expect("valid inverse mutation");
         restored = next;
     }
@@ -97,7 +97,7 @@ async fn delete_step_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn inverse_delete_step_when_missing_returns_empty() {
     let base = empty_process3d_snapshot();
-    assert!(Process3dMutation::DeleteStep(DeleteStep { id: "ghost".into() }).inverse(&base).is_empty());
+    assert!(Process3dMutation::DeleteStep(DeleteStep { id: "ghost".into() }).inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -157,7 +157,7 @@ async fn delete_machine_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn inverse_delete_machine_when_missing_returns_empty() {
     let base = empty_process3d_snapshot();
-    assert!(Process3dMutation::DeleteMachine(DeleteMachine { id: "ghost".into() }).inverse(&base).is_empty());
+    assert!(Process3dMutation::DeleteMachine(DeleteMachine { id: "ghost".into() }).inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -271,7 +271,7 @@ async fn create_machine_duplicate_id_is_fatal_and_never_applies() {
     base.workshop.machines.push(saw_machine("machine-1"));
     let mutation = Process3dMutation::CreateMachine(CreateMachine { index: 0, machine: saw_machine("machine-1") });
     let outcome = mutation.diff(&base);
-    assert_eq!(outcome.worst_level(), Some(protocol::os_dsl::Severity::Fatal));
+    assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal));
     protocol::os_spr::protocol_laws::assert_fatal_never_applies(&outcome).await;
 }
 
@@ -317,7 +317,7 @@ async fn create_step_duplicate_id_is_fatal_and_never_applies() {
     let base = base_with_steps(vec![cut_step("step-1")]);
     let mutation = Process3dMutation::CreateStep(CreateStep { index: 0, step: cut_step("step-1") });
     let outcome = mutation.diff(&base);
-    assert_eq!(outcome.worst_level(), Some(protocol::os_dsl::Severity::Fatal));
+    assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal));
     protocol::os_spr::protocol_laws::assert_fatal_never_applies(&outcome).await;
 }
 
@@ -354,26 +354,26 @@ fn write_vector(dir: &std::path::Path, kind: &str, before: &Process3dSnapshot, m
     let outcome = <Process3dMutation as Mutation<Process3dSnapshot>>::diff(mutation, before);
     let mut after = before.clone();
     let forward = outcome.apply_to(&mut after);
-    let inverse = <Process3dMutation as Mutation<Process3dSnapshot>>::inverse(mutation, before);
+    let inverse = <Process3dMutation as Mutation<Process3dSnapshot>>::inverse(mutation, before).expect("valid retained mutation inverse fixture");
     let mut undone = after.clone();
     for step in &inverse {
         <Process3dMutation as Mutation<Process3dSnapshot>>::diff(step, &undone).apply_to(&mut undone);
     }
     assert_eq!(&undone, before, "regenerate-{kind}: inverse must restore before");
-    let messages: Vec<semio_framework_os_kernel::json::Value> = forward
+    let messages: Vec<semio_framework_pack_json::Value> = forward
         .messages()
         .iter()
         .map(|message| {
-            let level = semio_framework_os_kernel::ToValue::to_value(&message.level).as_str().expect("severity is a string").to_string();
-            semio_framework_os_kernel::json::object([("level".to_string(), semio_framework_os_kernel::json::Value::String(level)), ("code".to_string(), semio_framework_os_kernel::json::Value::String(message.code.0.clone()))])
+            let level = semio_framework_value::ToValue::to_value(&message.level).as_str().expect("severity is a string").to_string();
+            semio_framework_pack_json::object([("level".to_string(), semio_framework_pack_json::Value::String(level)), ("code".to_string(), semio_framework_pack_json::Value::String(message.code.0.clone()))])
         })
         .collect();
-    let outcome_json = semio_framework_os_kernel::json::object([("status".to_string(), semio_framework_os_kernel::json::Value::String("applied".to_string())), ("messages".to_string(), semio_framework_os_kernel::json::array(messages))]);
-    std::fs::write(dir.join(format!("{kind}.before.json")), semio_framework_os_kernel::json::to_json_string(before)).expect("write before");
-    std::fs::write(dir.join(format!("{kind}.mutation.json")), semio_framework_os_kernel::json::to_json_string(mutation)).expect("write mutation");
-    std::fs::write(dir.join(format!("{kind}.after.json")), semio_framework_os_kernel::json::to_json_string(&after)).expect("write after");
-    std::fs::write(dir.join(format!("{kind}.diff.json")), semio_framework_os_kernel::json::to_json_string(forward.diff())).expect("write diff");
-    std::fs::write(dir.join(format!("{kind}.outcome.json")), semio_framework_os_kernel::json::to_string(&outcome_json)).expect("write outcome");
+    let outcome_json = semio_framework_pack_json::object([("status".to_string(), semio_framework_pack_json::Value::String("applied".to_string())), ("messages".to_string(), semio_framework_pack_json::array(messages))]);
+    std::fs::write(dir.join(format!("{kind}.before.json")), semio_framework_pack_json::to_json_string(before)).expect("write before");
+    std::fs::write(dir.join(format!("{kind}.mutation.json")), semio_framework_pack_json::to_json_string(mutation)).expect("write mutation");
+    std::fs::write(dir.join(format!("{kind}.after.json")), semio_framework_pack_json::to_json_string(&after)).expect("write after");
+    std::fs::write(dir.join(format!("{kind}.diff.json")), semio_framework_pack_json::to_json_string(forward.diff())).expect("write diff");
+    std::fs::write(dir.join(format!("{kind}.outcome.json")), semio_framework_pack_json::to_string(&outcome_json)).expect("write outcome");
 }
 
 #[semio_framework_async_macros::async_test]

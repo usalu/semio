@@ -12,7 +12,7 @@ pub fn diff(payload: &ChangeProductConfiguration, base: &Vdi3805Snapshot) -> pro
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Product \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if product.configuration == payload.new_configuration {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Product \"{}\" already has this configuration.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Product \"{}\" already has this configuration.", payload.id));
     }
     let mut catalog = base.catalog.clone();
     if let Some(product) = catalog.products.iter_mut().find(|p| p.identity.article_number == payload.id) {

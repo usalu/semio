@@ -65,8 +65,8 @@ impl BitmapFillPayload {
     pub fn encode_json(&self) -> String {
         format!(
             "{{\"pixels\":{},\"decided\":{},\"width\":{},\"height\":{},\"contradiction\":{},\"done\":{},\"trace\":{}}}",
-            protocol::json::to_json_string(&self.pixels),
-            protocol::json::to_json_string(&self.decided),
+            semio_framework_pack_json::to_json_string(&self.pixels),
+            semio_framework_pack_json::to_json_string(&self.decided),
             self.width,
             self.height,
             if self.contradiction { "true" } else { "false" },
@@ -77,7 +77,7 @@ impl BitmapFillPayload {
 
     /// 📥 Decode the normative JSON object.
     pub fn decode_json(text: &str) -> Option<Self> {
-        let value: protocol::json::Value = protocol::json::from_json_str(text).ok()?;
+        let value: semio_framework_pack_json::Value = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()?;
         let object = value.as_object()?;
         Some(Self {
             pixels: object.get("pixels")?.as_str()?.to_owned(),
@@ -149,7 +149,7 @@ fn trace_json(trace: &[BitmapFillTraceEvent]) -> String {
     out
 }
 
-fn decode_trace(value: Option<&protocol::json::Value>) -> Vec<BitmapFillTraceEvent> {
+fn decode_trace(value: Option<&semio_framework_pack_json::Value>) -> Vec<BitmapFillTraceEvent> {
     let Some(items) = value.and_then(|value| value.as_array()) else { return Vec::new() };
     items.iter().filter_map(|item| {
         let item = item.as_object()?;
@@ -312,7 +312,7 @@ impl FillReason {
 
 /// 🛠️ Stitched into the editor manifest by `crate::editor::bitmap::create_bitmap_editor`.
 pub fn definition() -> ToolDefinition {
-    ToolDefinition { run: Some(run_definition()), ..semio_framework::io::resolve_ready(ToolDefinition::new(TOOL_ID, LocalizedLabel::native("Fill", "Füllen"), "paint-bucket")) }
+    ToolDefinition { run: Some(run_definition()), ..::semio_framework_async::poll::resolve_ready(ToolDefinition::new(TOOL_ID, LocalizedLabel::native("Fill", "Füllen"), "paint-bucket")) }
 }
 
 /// ⏯️ Read-only collapse: restart on base or settings change, no provisional document ops.
@@ -330,6 +330,7 @@ pub fn run_definition() -> ToolRunDefinition {
         revalidate_job: None,
         settings: Default::default(),
         windows: vec![output::WFC_BITMAP_WINDOW_OUTPUT.into()],
+        member: None,
     }
 }
 
@@ -338,7 +339,7 @@ pub fn start_fill_effect() -> Effect {
     Effect::DispatchAction {
         req: RequestId(COMMIT_SOLVE_REQUEST ^ 1),
         action: semio_framework_tool_run::TOOL_RUN_START_ACTION_ID.into(),
-        args: Some(dsl::os_pack::json::to_dsl_value(&dsl::os_pack::json::object([(semio_framework_tool_run::TOOL_RUN_ARG_TOOL_ID.to_string(), TOOL_ID.into())]))),
+        args: Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::object([(semio_framework_tool_run::TOOL_RUN_ARG_TOOL_ID.to_string(), TOOL_ID.into())]))),
         delay_ms: 0,
     }
 }
@@ -490,7 +491,7 @@ impl BitmapFillRunJob {
     fn commit_solve(&mut self, payload: &BitmapFillPayload) {
         let solve = payload.to_set_solve();
         self.committed_solve = Some(solve.clone());
-        let args = dsl::os_pack::json::to_dsl_value(&dsl::os_pack::json::object([
+        let args = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::object([
             ("pixels".to_string(), solve.output_pixels.clone().unwrap_or_default().into()),
             ("contradiction".to_string(), solve.contradiction.into()),
             ("width".to_string(), f64::from(solve.output_width).into()),

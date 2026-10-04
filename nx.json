@@ -67,6 +67,12 @@
       "analyzePackageJson": false,
       "analyzeSourceFiles": false,
       "analyzeLockfile": false
+    },
+    "@repo/emoji-project-json": {
+      "dependencyResolutionAuthority": {
+        "module": "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+        "export": "dependencyResolutionAuthority"
+      }
     }
   },
   "plugins": [

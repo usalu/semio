@@ -1,0 +1,10 @@
+# CAD Current Intrinsic Media Exhaustive Prerequisite
+
+Root actual CAD owning selection reached no assertions at one current E0004, editor2162 match missing newlydeclared Manifest MediaPayload::Intrinsic {schema,value}. This is a compiler prerequisite, not the fourteen-law numerical snapshot RED. The real CAD file importer409 already accepts borrowed canonical DslValue and delegates file parsing by extension. Fresh complete helper readback shows cad_file_bytes_from_payload starts with payload.as_str(), so actual intrinsic Bytes currently refuse; the earlier helper-name assumption did not prove byte support. Root preserves the actual intrinsic value by borrowing it directly into that existing importer; structured authored text keeps its own declared String value and addressed binary remains explicitly refused. No JSON reserialization, Any bridge, wildcard arm or whole-document importer change was added. The actual geometry child-dispatch limitation remains outside this compile join, with no UI working claim.
+
+A guarded one-file full before/after pair is mounted, preserving all concurrent editor bodies and Source/domain tests. The new branch avoids cloning an intrinsic owner. Existing Source50 and subsequent actual owning/whole runtime gates remain distinct; the current CAD14/Layout9/Rewriting12 run continues otherowners, and CADcurrent14 retry is queued with this canonical consumer. Full fixture/third-party new intrinsic file payload validation is needed through existing owned law if that behavior is separately extended; no passing feature inference is made from the import join.
+
+
+## Actual Bytes Domain Followup
+
+HighPhysical will stage the actual owned neutral text/bytes regression, preserving valid/bad text and addressedBinary outcomes, before changing the byteproducer. Root will execute its existing registered Cargo law after the currentlane completes; only a genuine runtime refusal authorizes the narrow actual DslValue::Bytes producer join. CurrentborrowedIntrinsic match exhaustiveness is a compiler prerequisite and permits canonicaltext; no complete byte behavior is claimed.

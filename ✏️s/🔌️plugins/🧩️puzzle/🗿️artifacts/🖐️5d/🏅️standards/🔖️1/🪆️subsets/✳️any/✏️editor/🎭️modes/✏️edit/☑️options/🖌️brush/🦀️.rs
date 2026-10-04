@@ -6,13 +6,14 @@
 //! world window bind the `brush` utility and expose the identical group, so this measure is declared
 //! once here and each window's `window_measures()` collects from it.
 
+use semio_framework_pack_json::json;
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
 use crate::editor::puzzle5d::{
     puzzle5d_action, puzzle5d_kind_ids, puzzle5d_kind_weight_sum, Puzzle5dScene, PUZZLE5D_PLAY_CONTROLLER_ID, PUZZLE5D_SUGGESTION_OFFSET_MAX, PUZZLE5D_SUGGESTION_OFFSET_MIN,
     PUZZLE5D_SUGGESTION_OFFSET_STEP,
 };
 use semio_framework_plugin::WindowMeasure;
-use dsl::json;
+
 use std::collections::HashMap;
 
 //#region 🔖️Distribution
@@ -31,7 +32,7 @@ fn kind_weight_measures(prefix: &str, action: &str, ids: &[String], weights: &Ha
                 loading: None,
                 waiting: None,
                 disabled: None,
-                on_change: puzzle5d_action(action, Some(json!({ "kindId": kind_id.as_str() }))),
+                on_change: puzzle5d_action(action, Some(semio_framework_pack_json::json!({ "kindId": kind_id.as_str() }))),
             }
         })
         .collect()

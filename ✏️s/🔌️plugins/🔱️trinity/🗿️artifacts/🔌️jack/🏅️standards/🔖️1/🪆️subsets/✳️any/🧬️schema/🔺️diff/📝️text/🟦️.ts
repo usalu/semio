@@ -49,5 +49,5 @@ export const trinityJackDiffTextGuardConstant = <T extends string | number | boo
 //#endregion 🚪️Parsers
 
 export function parseJackDiffText(value: unknown, at = "$"): JackDiffText {
-  return trinityJackDiffTextGuardObject(value, `${at}`);
+  return trinityJackDiffTextGuardString(value, `${at}`);
 }

@@ -11,7 +11,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// way). Moving a node an element, a support or a nodal load still names is deliberately allowed:
 /// every referrer addresses it by `id`, and a replacement may not change that id, so the geometry
 /// travels while the topology stays exactly where it was.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "replace-node")]
@@ -26,9 +26,12 @@ impl MutationKind<Fem3dSnapshot, Fem3dMutation> for ReplaceNode {
     fn diff(&self, base: &Fem3dSnapshot) -> protocol::MutationOutcome<crate::standards::v1::subsets::any::schema::diff::Fem3dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &Fem3dSnapshot) -> Result<Vec<Fem3dMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace node \"{}\"", self.id), &format!("Knoten \"{}\" ersetzen", self.id))
     }

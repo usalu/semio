@@ -591,7 +591,7 @@ mod tests;
 #[cfg(feature = "component-guest")]
 mod extension_guest {
     use super::module_registry;
-    use flow_extension_sdk::{build_manifest_json, evaluate_invoke_json, flow_extension_topic_contribution};
+    use flow_extension_sdk::{build_manifest_json, flow_extension_topic_contribution};
     use semio_framework::{Fault, FaultCode, FaultOrigin};
     use semio_framework_plugin::{ExecutionMode, ExtensionBundle};
 
@@ -613,7 +613,7 @@ mod extension_guest {
         let bundle = bundle.mode(ExecutionMode::Linked);
         let bundle = bundle.contributes_topic(flow_topic.topic, flow_topic.payload);
         let bundle = bundle.contributes_topic(procedural3d_topic.topic, procedural3d_topic.payload);
-        bundle.handler("evaluate", |req| evaluate_invoke_json(&neural_engine::ColdOwner::new(module_registry()), req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err)))
+        bundle.resource_owner(flow_extension_sdk::ExtensionEvaluationResources::new(module_registry())).owned_handler("evaluate")
     }
 
     #[cfg(test)]

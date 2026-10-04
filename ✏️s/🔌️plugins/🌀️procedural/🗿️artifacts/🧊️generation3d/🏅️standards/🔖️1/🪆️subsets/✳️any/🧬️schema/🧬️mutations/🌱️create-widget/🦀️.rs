@@ -24,12 +24,23 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Crea
         crate::standards::v1::subsets::any::schema::mutations::create_widget::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Generation3dSnapshot) -> Vec<Generation3dMutation> {
-        crate::standards::v1::subsets::any::schema::mutations::create_widget::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
+    Ok({
+        crate::standards::v1::subsets::any::schema::mutations::create_widget::inverse::inverse(self, base)?
+    
+    })
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create widget \"{}\"", crate::widget_id(&self.widget)), &format!("Widget \"{}\" erstellen", crate::widget_id(&self.widget)))
+        use crate::terminology::{generation3d_catalogue_name, Generation3dLabels};
+        let id = crate::widget_id(&self.widget);
+        match &self.widget {
+            Widget::Neuron { neuron_kind, .. } => {
+                let name = |labels: &'static Generation3dLabels| generation3d_catalogue_name(labels, neuron_kind, neuron_kind).to_string();
+                semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert \"{}\" ({id})", name(&Generation3dLabels::NATIVE_EN)), &format!("\"{}\" ({id}) einfügen", name(&Generation3dLabels::NATIVE_DE)))
+            }
+            _ => semio_framework_ui_locale::LocalizedLabel::native(&format!("Create widget \"{id}\""), &format!("Widget \"{id}\" erstellen")),
+        }
     }
 
     fn target(&self) -> Vec<String> {

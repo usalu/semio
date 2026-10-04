@@ -1,13 +1,7 @@
 //! ⚙️ Jack artifact mutation validation, application, inversion and store behavior.
 
 use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
-#[cfg(test)]
-use crate::standards::v1::subsets::any::schema::mutations::{
-    change_data_property, create_edge, create_node, delete_edge, delete_node, move_node, register_trinity_graph_mutation_descriptors, remove_data_property, rename_node, CreateEdge, DeleteNode, RenameNode,
-};
-#[cfg(test)]
-use crate::{Edge, Node, Port};
-use crate::{EntityRef, JackSnapshot, PropertyBag, PropertyValue, TRINITY_GRAPH_SCHEMA};
+use crate::{EntityRef, Graph, GraphEffect, JackSnapshot, PropertyBag, PropertyValue, TRINITY_GRAPH_SCHEMA};
 use protocol::Mutation;
 use store::{create_document_envelope, ArtifactCommand, ArtifactEnvelope, ArtifactStore};
 
@@ -69,105 +63,115 @@ impl Drop for OwnedTrinityGraphStore {
 //#endregion 🔖️Store
 
 //#region 🔖️Validation
-/// 🛡️ Pre-flight manifest/reference validation for one operation against `snapshot` — distinct from
-/// `diff`/`inverse` (which assume a validated operation); kept centralized because it cross-checks
-/// against the compile-time `Manifest`, not a single sparse-diff concern.
-pub fn validate_trinity_graph_operation(operation: &TrinityGraphMutation, snapshot: &JackSnapshot) -> Result<(), crate::TrinityRamError> {
+/// 🛡️ Pre-flight validation of one parent-lane operation against `snapshot` — the query must fit its document bound.
+pub fn validate_trinity_graph_operation(operation: &TrinityGraphMutation, _snapshot: &JackSnapshot) -> Result<(), crate::TrinityRamError> {
+    let TrinityGraphMutation::SetQuery(payload) = operation;
+    if payload.value.len() > crate::JACK_QUERY_MAXIMUM_BYTES {
+        return Err(crate::TrinityRamError::QueryTooLarge { bytes: payload.value.len(), maximum: crate::JACK_QUERY_MAXIMUM_BYTES });
+    }
+    Ok(())
+}
+
+/// 🛡️ Manifest/reference validation of one query effect against the working `graph` — cross-checks the compile-time
+/// `Manifest`, so a query never publishes a content leaf of an undeclared kind or a dangling endpoint.
+pub fn validate_graph_effect(effect: &GraphEffect, graph: &Graph) -> Result<(), crate::TrinityRamError> {
     use crate::TrinityRamError;
-    let scene = crate::jack_working_scene(snapshot);
-    match operation {
-        TrinityGraphMutation::CreateNode(payload) => {
-            let node = &payload.node;
-            if scene.nodes.iter().any(|existing| existing.id == node.id) {
+    match effect {
+        GraphEffect::CreateNode(node) => {
+            if graph.nodes.contains_key(&node.id) {
                 return Err(TrinityRamError::NodeAlreadyExists(node.id.clone()));
             }
-            validate_node_kind_trinity(&snapshot.manifest, &node.kind)?;
-            if let Some(node_def) = snapshot.manifest.node_kind(&node.kind) {
+            validate_node_kind_trinity(&graph.manifest, &node.kind)?;
+            if let Some(node_def) = graph.manifest.node_kind(&node.kind) {
                 for port in &node.ports {
-                    validate_port_kind_trinity(&snapshot.manifest, &port.kind)?;
+                    validate_port_kind_trinity(&graph.manifest, &port.kind)?;
                     if !node_def.port_kinds.is_empty() && !node_def.port_kinds.iter().any(|p| p == &port.kind) {
                         return Err(TrinityRamError::PortKindNotDeclaredOnMutation { node_id: node.id.clone(), port_id: port.id.clone(), port_kind: port.kind.clone(), node_kind: node.kind.clone() });
                     }
                 }
             }
         }
-        TrinityGraphMutation::DeleteNode(payload) => {
-            if !scene.nodes.iter().any(|node| node.id == payload.id) {
-                return Err(TrinityRamError::NodeNotFound(payload.id.clone()));
+        GraphEffect::DeleteNode(id) | GraphEffect::RenameNode { id, .. } | GraphEffect::MoveNode { id, .. } => {
+            if !graph.nodes.contains_key(id) {
+                return Err(TrinityRamError::NodeNotFound(id.clone()));
             }
         }
-        TrinityGraphMutation::CreateEdge(payload) => {
-            let edge = &payload.edge;
-            if scene.edges.iter().any(|existing| existing.id == edge.id) {
+        GraphEffect::CreateEdge(edge) => {
+            if graph.edges.contains_key(&edge.id) {
                 return Err(TrinityRamError::EdgeAlreadyExists(edge.id.clone()));
             }
-            validate_edge_kind_trinity(&snapshot.manifest, &edge.kind)?;
-            validate_edge_properties_trinity(&snapshot.manifest, &edge.kind, &edge.properties)?;
+            validate_edge_kind_trinity(&graph.manifest, &edge.kind)?;
+            validate_edge_properties_trinity(&graph.manifest, &edge.kind, &edge.properties)?;
             let source_node = crate::port_node_id(&edge.source).ok_or_else(|| TrinityRamError::InvalidSourcePortKey(edge.source.clone()))?;
             let target_node = crate::port_node_id(&edge.target).ok_or_else(|| TrinityRamError::InvalidTargetPortKey(edge.target.clone()))?;
-            if !scene.nodes.iter().any(|node| node.id == source_node) {
+            if !graph.nodes.contains_key(source_node) {
                 return Err(TrinityRamError::SourceNodeNotFound(source_node.to_string()));
             }
-            if !scene.nodes.iter().any(|node| node.id == target_node) {
+            if !graph.nodes.contains_key(target_node) {
                 return Err(TrinityRamError::TargetNodeNotFound(target_node.to_string()));
             }
         }
-        TrinityGraphMutation::DeleteEdge(payload) => {
-            if !scene.edges.iter().any(|edge| edge.id == payload.id) {
-                return Err(TrinityRamError::EdgeNotFound(payload.id.clone()));
+        GraphEffect::DeleteEdge(id) => {
+            if !graph.edges.contains_key(id) {
+                return Err(TrinityRamError::EdgeNotFound(id.clone()));
             }
         }
-        TrinityGraphMutation::RenameNode(payload) => {
-            if !scene.nodes.iter().any(|node| node.id == payload.id) {
-                return Err(TrinityRamError::NodeNotFound(payload.id.clone()));
+        GraphEffect::SetProperty { entity, key, value } => validate_set_data_property(graph, entity, key, value)?,
+        GraphEffect::RemoveProperty { entity, .. } => validate_entity(graph, entity)?,
+    }
+    Ok(())
+}
+
+/// ▶️ Validates then applies query effects to `graph`, failing atomically on the first invalid one.
+pub fn apply_graph_effects(graph: &mut Graph, effects: &[GraphEffect]) -> Result<(), crate::TrinityRamError> {
+    for effect in effects {
+        validate_graph_effect(effect, graph)?;
+        match effect {
+            GraphEffect::CreateNode(node) => graph.add_node(node.clone()),
+            GraphEffect::DeleteNode(id) => {
+                graph.remove_node(id);
             }
-        }
-        TrinityGraphMutation::MoveNode(payload) => {
-            if !scene.nodes.iter().any(|node| node.id == payload.id) {
-                return Err(TrinityRamError::NodeNotFound(payload.id.clone()));
+            GraphEffect::CreateEdge(edge) => graph.add_edge(edge.clone()),
+            GraphEffect::DeleteEdge(id) => {
+                graph.remove_edge(id);
             }
-        }
-        TrinityGraphMutation::ChangeDataProperty(payload) => {
-            validate_set_data_property(snapshot, &payload.entity, &payload.key, &payload.new_value)?;
-        }
-        TrinityGraphMutation::RemoveDataProperty(payload) => {
-            validate_clear_data_property(snapshot, &payload.entity, &payload.key)?;
-        }
-        TrinityGraphMutation::SetQuery(payload) => {
-            if payload.value.len() > crate::JACK_QUERY_MAXIMUM_BYTES {
-                return Err(TrinityRamError::QueryTooLarge { bytes: payload.value.len(), maximum: crate::JACK_QUERY_MAXIMUM_BYTES });
+            GraphEffect::RenameNode { id, name } => graph.node_mut(id).expect("validated node").name = name.clone(),
+            GraphEffect::MoveNode { id, x, y } => {
+                let node = graph.node_mut(id).expect("validated node");
+                node.x = *x;
+                node.y = *y;
+            }
+            GraphEffect::SetProperty { entity, key, value } => graph.set_property(entity.clone(), key, value.clone())?,
+            GraphEffect::RemoveProperty { entity, key } => {
+                let bag = match entity {
+                    EntityRef::Node(id) => graph.nodes.get_mut(id).map(|node| &mut node.properties),
+                    EntityRef::Edge(id) => graph.edges.get_mut(id).map(|edge| &mut edge.properties),
+                };
+                bag.expect("validated entity").remove(key);
             }
         }
     }
     Ok(())
 }
 
-fn validate_clear_data_property(snapshot: &JackSnapshot, entity: &EntityRef, key: &str) -> Result<(), crate::TrinityRamError> {
-    use crate::TrinityRamError;
-    let scene = crate::jack_working_scene(snapshot);
+fn validate_entity(graph: &Graph, entity: &EntityRef) -> Result<(), crate::TrinityRamError> {
     match entity {
-        EntityRef::Node(id) => {
-            scene.nodes.iter().find(|node| node.id == *id).ok_or_else(|| TrinityRamError::NodeNotFound(id.clone()))?;
-        }
-        EntityRef::Edge(id) => {
-            scene.edges.iter().find(|edge| edge.id == *id).ok_or_else(|| TrinityRamError::EdgeNotFound(id.clone()))?;
-        }
+        EntityRef::Node(id) if !graph.nodes.contains_key(id) => Err(crate::TrinityRamError::NodeNotFound(id.clone())),
+        EntityRef::Edge(id) if !graph.edges.contains_key(id) => Err(crate::TrinityRamError::EdgeNotFound(id.clone())),
+        _ => Ok(()),
     }
-    let _ = key;
-    Ok(())
 }
 
-fn validate_set_data_property(snapshot: &JackSnapshot, entity: &EntityRef, key: &str, value: &PropertyValue) -> Result<(), crate::TrinityRamError> {
+fn validate_set_data_property(graph: &Graph, entity: &EntityRef, key: &str, value: &PropertyValue) -> Result<(), crate::TrinityRamError> {
     use crate::TrinityRamError;
-    let scene = crate::jack_working_scene(snapshot);
     let (defs, path_prefix) = match entity {
         EntityRef::Node(id) => {
-            let node = scene.nodes.iter().find(|node| node.id == *id).ok_or_else(|| TrinityRamError::NodeNotFound(id.clone()))?;
-            (snapshot.manifest.node_kind(&node.kind).map(|def| &def.properties[..]), format!("nodes/{id}/properties/{key}"))
+            let node = graph.nodes.get(id).ok_or_else(|| TrinityRamError::NodeNotFound(id.clone()))?;
+            (graph.manifest.node_kind(&node.kind).map(|def| &def.properties[..]), format!("nodes/{id}/properties/{key}"))
         }
         EntityRef::Edge(id) => {
-            let edge = scene.edges.iter().find(|edge| edge.id == *id).ok_or_else(|| TrinityRamError::EdgeNotFound(id.clone()))?;
-            (snapshot.manifest.edge_kind(&edge.kind).map(|def| &def.properties[..]), format!("edges/{id}/properties/{key}"))
+            let edge = graph.edges.get(id).ok_or_else(|| TrinityRamError::EdgeNotFound(id.clone()))?;
+            (graph.manifest.edge_kind(&edge.kind).map(|def| &def.properties[..]), format!("edges/{id}/properties/{key}"))
         }
     };
     let Some(defs) = defs else {
@@ -264,8 +268,11 @@ pub fn apply_trinity_graph_mutation(snapshot: &mut JackSnapshot, mutation: &Trin
     Ok(())
 }
 
-pub fn inverse_trinity_graph_mutation(projection: &JackSnapshot, mutation: &TrinityGraphMutation) -> Vec<TrinityGraphMutation> {
-    mutation.inverse(projection)
+pub fn inverse_trinity_graph_mutation(projection: &JackSnapshot, mutation: &TrinityGraphMutation) -> Result<Vec<TrinityGraphMutation>, semio_framework_value::ValueError> {
+    Ok({
+    mutation.inverse(projection)?
+
+    })
 }
 
 /// ▶️ Validates then applies a batch of operations, failing atomically on the first invalid one.

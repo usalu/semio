@@ -52,8 +52,8 @@ fn every_run_effects_row_starts_finalizes_or_leaves_the_run() {
         for effect in &effects {
             let Effect::DispatchAction { action, args: Some(args), .. } = effect else { continue };
             match action.as_str() {
-                TOOL_RUN_START_ACTION_ID => assert_eq!(args.get(TOOL_RUN_ARG_TOOL_ID).and_then(dsl::DslValue::as_str), Some(PREVIEW_EVAL_TOOL_ID), "{id}: start names the tool"),
-                _ => assert_eq!(args.get(TOOL_RUN_ARG_RUN_ID).and_then(dsl::DslValue::as_str), run.as_ref().map(|run| run.identity.id.run.to_string()).as_deref(), "{id}: finalize names the run"),
+                TOOL_RUN_START_ACTION_ID => assert_eq!(args.get(TOOL_RUN_ARG_TOOL_ID).and_then(semio_framework_value::DslValue::as_str), Some(PREVIEW_EVAL_TOOL_ID), "{id}: start names the tool"),
+                _ => assert_eq!(args.get(TOOL_RUN_ARG_RUN_ID).and_then(semio_framework_value::DslValue::as_str), run.as_ref().map(|run| run.identity.id.run.to_string()).as_deref(), "{id}: finalize names the run"),
             }
         }
         session.retire_cold();
@@ -215,7 +215,6 @@ fn a_history_verb_owes_the_previews_the_evaluation_a_gesture_would_have() {
         kind: ActionKind::Mutation,
         timestamp: String::new(),
         edit_id: edit.map(str::to_string),
-        config_edit_id: None,
         child_edit_ids: Vec::new(),
         transition_id: None,
         author: None,
@@ -300,3 +299,32 @@ fn every_job_supersession_row_lets_only_the_owning_job_quiesce_the_session() {
         assert_eq!(clears_port, expected["clearsPort"].as_bool().unwrap(), "{id}: clears the link's port");
         assert_eq!(link.port.is_none(), clears_port, "{id}: a superseded job may never take the live run's port away");
     }}
+
+
+#[test]
+fn geometry_inference_dependencies_include_sources_and_wiring_without_presentation() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/📐️geometry-dependencies.json")).unwrap();
+    let mut snapshot = semio_framework_artifact_flow_flow::FlowHostSnapshot::default();
+    let original = geometry_dependency_json(&snapshot, fixture["neuronId"].as_str().unwrap());
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&original).unwrap(), fixture["expected"]);
+    snapshot.camera.x = 17.0;
+    snapshot.widgets.reverse();
+    snapshot.synapses.reverse();
+    assert_eq!(original, geometry_dependency_json(&snapshot, "add"));
+    if let semio_framework_artifact_flow_flow::Widget::InputSlider { value, .. } = snapshot.widgets.iter_mut().find(|widget| crate::widget_id(widget) == "slider").unwrap() { *value = 7.0; }
+    assert_ne!(original, geometry_dependency_json(&snapshot, "add"));
+    snapshot.retire_cold();
+}
+
+#[test]
+fn bounded_cancel_replies_poll_the_same_capability_without_rearming_evaluation() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🛑️preview-cancel.json")).unwrap();
+    let mut session = FlowEvalSession::new();
+    for row in fixture["boundedCancelReplies"].as_array().unwrap() {
+        let payload = FlowTessellateCancelResolve { window_id: "preview".into(), window_kind_id: "world3d".into(), output_json: row["reply"].to_string(), ok: row["ok"].as_bool().unwrap() };
+        let invocations = resolve_tessellate_cancel_for(&payload, &mut session, Ok("geometry".into()));
+        assert_eq!(!invocations.is_empty(), row["poll"].as_bool().unwrap());
+        for invocation in invocations { assert_eq!(invocation.capability, "evaluateCancel"); assert_eq!(invocation.response_action, "flowTessellateCancelResolve"); let request: serde_json::Value = serde_json::from_str(&invocation.request_json).unwrap(); assert_eq!(request["windowId"], "preview"); }
+    }
+    session.retire_cold();
+}

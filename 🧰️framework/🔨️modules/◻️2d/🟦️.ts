@@ -5,6 +5,11 @@
 // #endregion 🧲️Header
 import { drawingTextLines, DRAWING_TEXT_LINE_HEIGHT } from "./📝️text/🟦️.ts";
 export { drawingTextLines, drawingTextFallbackExtent, DRAWING_TEXT_LINE_HEIGHT } from "./📝️text/🟦️.ts";
+export { PathFlattenJob, preparePath, type PathFlattenInput, type FlatContour, type PathFlattenProgress, type PathFlattenOptions, type PathFlattenRetirement, type PathFlattenRetirementProgress } from "./🛤️path/📏️flatten/🟦️.ts";
+export { StrokeOutlineJob, prepareStroke, type StrokeGeometryStyle, type StrokeOutlineInput, type StrokeOutlineProgress, type StrokeOutlineOptions } from "./🛤️path/🖊️stroke/🟦️.ts";
+export { BitmapTraceJob, traceBitmap, type BitmapTraceInput, type BitmapTraceProgress, type BitmapTraceOptions, type BitmapTraceRetirement, type BitmapTraceRetirementProgress } from "./🔍️trace/🟦️.ts";
+export { BooleanJob, booleanRegions, type BooleanOperand, type BooleanInput, type BooleanProgress, type BooleanOptions, type BooleanRetirement, type BooleanRetirementProgress } from "./🔀️booleans/🟦️.ts";
+export { PathBooleanJob, booleanPaths, type PathBooleanOperand, type PathBooleanInput, type PathBooleanProgress, type PathBooleanOptions, type PathBooleanRetirement, type PathBooleanRetirementProgress } from "./🔀️booleans/🛤️paths/🟦️.ts";
 
 
 // #region 📐️Contracts
@@ -166,9 +171,24 @@ function nodePath(node: DrawingNode): PathSegment[] {
   return [];
 }
 
+/** 🪣️ Resolves constant gradient paint while preserving the last authored stop at tied offsets. */
+export function constantGradientColor<T extends { readonly offset?: number; readonly color?: readonly number[] }>(stops: readonly T[], degenerate: boolean): T["color"] | readonly [0, 0, 0, 0] | undefined {
+  if (stops.length === 0) return [0, 0, 0, 0];
+  if (stops.length === 1) return stops[0]!.color;
+  if (!degenerate) return undefined;
+  let last = stops[0]!;
+  for (const stop of stops) if ((stop.offset ?? 0) >= (last.offset ?? 0)) last = stop;
+  return last.color;
+}
+
 function paintFill(ctx: CanvasRenderingContext2D, fill: FillStyle): void {
   if (fill.kind === "solid") {
     ctx.fillStyle = rgbaCss(fill.color);
+    return;
+  }
+  const constant = constantGradientColor(fill.stops, fill.kind === "linearGradient" ? fill.x1 === fill.x2 && fill.y1 === fill.y2 : fill.r === 0);
+  if (constant) {
+    ctx.fillStyle = rgbaCss(constant);
     return;
   }
   if (fill.kind === "linearGradient") {

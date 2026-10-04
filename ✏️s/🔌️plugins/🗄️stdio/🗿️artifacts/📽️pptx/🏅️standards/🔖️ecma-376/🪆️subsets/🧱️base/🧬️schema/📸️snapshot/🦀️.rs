@@ -1,12 +1,12 @@
-//! 🧬️ PptxSnapshot — typed OPC metadata, logical XML and binary parts, plus a presentation model
-//! of the slide list and each slide's shape tree (`p:spTree`'s direct children, one `PptxShape`
+//! 🧬️ PptxSnapshot — typed OPC metadata plus authoritative logical XML and binary parts. A
+//! presentation model of the slide list and each slide's shape tree (`p:spTree`'s direct children, one `PptxShape`
 //! per shape -- `📄docx`'s "shape -> text body -> paragraphs/runs" shape was too flat: a real
 //! PresentationML slide's shapes carry a POSITION (`a:xfrm`) and a KIND (text box / picture /
 //! placeholder) the old model discarded entirely, per this ticket's W0 finding). Shape kinds this
 //! layer doesn't specially type (`p:graphicFrame` charts/tables/SmartArt, `p:grpSp` groups,
 //! `p:cxnSp` connectors, anything unrecognized) fall back to `PptxShape::Other{node}` as a
 //! logical XML node, so nothing real in the document is silently dropped; the typed
-//! variants are the presentation authority. Unmodeled XML parts use `XmlDocument`; binary media
+//! variants are derived projections. Unmodeled XML parts use `XmlDocument`; binary media
 //! retain their genuine content bytes in `opc`.
 
 use crate::STDIO_PPTX_DOCUMENT_SCHEMA;
@@ -47,19 +47,43 @@ impl PptxParagraph {
 
 /// 📐️ A shape's `a:xfrm` position/size, in EMUs (`a:off@x/y`, `a:ext@cx/cy`) -- a weak (value)
 /// entity per the recipe: whole-value replaced in diffs, never sub-diffed.
-#[path="🧭️transform/🦀️.rs"]
+#[path = "🧭️transform/🦀️.rs"]
 mod transform;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PptxTransform {
-    #[value(serialize_with="transform::to_value",deserialize_with="transform::from_value",serialize_controlled_with="transform::to_value_controlled",deserialize_controlled_with="transform::from_value_controlled",retire_with="std::mem::drop")]
+    #[value(
+        serialize_with = "transform::to_value",
+        deserialize_with = "transform::from_value",
+        serialize_controlled_with = "transform::to_value_controlled",
+        deserialize_controlled_with = "transform::from_value_controlled",
+        retire_with = "std::mem::drop"
+    )]
     pub x: i64,
-    #[value(serialize_with="transform::to_value",deserialize_with="transform::from_value",serialize_controlled_with="transform::to_value_controlled",deserialize_controlled_with="transform::from_value_controlled",retire_with="std::mem::drop")]
+    #[value(
+        serialize_with = "transform::to_value",
+        deserialize_with = "transform::from_value",
+        serialize_controlled_with = "transform::to_value_controlled",
+        deserialize_controlled_with = "transform::from_value_controlled",
+        retire_with = "std::mem::drop"
+    )]
     pub y: i64,
-    #[value(serialize_with="transform::to_value",deserialize_with="transform::from_value",serialize_controlled_with="transform::to_value_controlled",deserialize_controlled_with="transform::from_value_controlled",retire_with="std::mem::drop")]
+    #[value(
+        serialize_with = "transform::to_value",
+        deserialize_with = "transform::from_value",
+        serialize_controlled_with = "transform::to_value_controlled",
+        deserialize_controlled_with = "transform::from_value_controlled",
+        retire_with = "std::mem::drop"
+    )]
     pub cx: i64,
-    #[value(serialize_with="transform::to_value",deserialize_with="transform::from_value",serialize_controlled_with="transform::to_value_controlled",deserialize_controlled_with="transform::from_value_controlled",retire_with="std::mem::drop")]
+    #[value(
+        serialize_with = "transform::to_value",
+        deserialize_with = "transform::from_value",
+        serialize_controlled_with = "transform::to_value_controlled",
+        deserialize_controlled_with = "transform::from_value_controlled",
+        retire_with = "std::mem::drop"
+    )]
     pub cy: i64,
 }
 
@@ -137,42 +161,6 @@ pub fn pptx_part_is_xml(path: &str, content_type: &str) -> bool {
     lower_path.ends_with(".xml") || lower_path.ends_with(".vml") || lower_type.ends_with("+xml") || lower_type.ends_with("/xml") || lower_type.contains("vmldrawing")
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn numbered_path(path: &str, prefix: &str) -> Option<u32> {
-    path.strip_prefix(prefix)?.strip_suffix(".xml")?.parse().ok()
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn content_type_override_key(path: &str) -> (u8, u32, &str) {
-    if path == "/ppt/presentation.xml" {
-        (0, 0, path)
-    } else if let Some(number) = numbered_path(path, "/ppt/slideMasters/slideMaster") {
-        (1, number, path)
-    } else if let Some(number) = numbered_path(path, "/ppt/slides/slide") {
-        (2, number, path)
-    } else if let Some(number) = numbered_path(path, "/ppt/notesMasters/notesMaster") {
-        (3, number, path)
-    } else if path == "/ppt/presProps.xml" {
-        (4, 0, path)
-    } else if path == "/ppt/viewProps.xml" {
-        (5, 0, path)
-    } else if path == "/ppt/theme/theme1.xml" {
-        (6, 1, path)
-    } else if path == "/ppt/tableStyles.xml" {
-        (7, 0, path)
-    } else if let Some(number) = numbered_path(path, "/ppt/slideLayouts/slideLayout") {
-        (8, number, path)
-    } else if let Some(number) = numbered_path(path, "/ppt/theme/theme") {
-        (9, number, path)
-    } else if path == "/docProps/core.xml" {
-        (10, 0, path)
-    } else if path == "/docProps/app.xml" {
-        (11, 0, path)
-    } else {
-        (12, 0, path)
-    }
-}
-
 //#endregion 🔖️XmlParts
 
 //#region 🔖️Snapshot
@@ -188,31 +176,23 @@ pub struct PptxSnapshot {
     #[state(artifact)]
     #[value(default)]
     pub xml_parts: Vec<PptxXmlPart>,
-    #[state(artifact)]
-    #[value(default)]
-    pub presentation: PptxPresentation,
 }
 
 impl Default for PptxSnapshot {
     fn default() -> Self {
-        Self { schema: STDIO_PPTX_DOCUMENT_SCHEMA.into(), opc: OpcPackage::default(), xml_parts: Vec::new(), presentation: PptxPresentation::default() }
+        Self { schema: STDIO_PPTX_DOCUMENT_SCHEMA.into(), opc: OpcPackage::default(), xml_parts: Vec::new() }
     }
 }
 
 impl PptxSnapshot {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn from_parts(opc: OpcPackage, xml_parts: Vec<PptxXmlPart>, presentation: PptxPresentation) -> Self {
-        let mut snapshot = Self { schema: STDIO_PPTX_DOCUMENT_SCHEMA.into(), opc, xml_parts, presentation };
-        snapshot.normalize_logical_keys();
-        snapshot
+    pub fn from_parts(opc: OpcPackage, xml_parts: Vec<PptxXmlPart>) -> Self {
+        Self { schema: STDIO_PPTX_DOCUMENT_SCHEMA.into(), opc, xml_parts }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub(crate) fn normalize_logical_keys(&mut self) {
-        self.opc.parts.sort_by(|left, right| left.path.cmp(&right.path));
-        self.opc.content_types.defaults.sort_by(|left, right| left.0.cmp(&right.0));
-        self.opc.content_types.overrides.sort_by(|left, right| content_type_override_key(&left.0).cmp(&content_type_override_key(&right.0)));
-        self.xml_parts.sort_by(|left, right| left.path.cmp(&right.path));
+    /// 🎞️ Projects the typed presentation view without creating a second persisted authority.
+    pub fn presentation(&self) -> Result<PptxPresentation, String> {
+        crate::standards::v_ecma_376::subsets::base::io::import::deserializers::project_presentation(&self.opc, &self.xml_parts).map_err(|error| error.to_string())
     }
 
     /// 🧾️ One part's content as the encoder writes it, wherever that part lives: a logical XML
@@ -241,7 +221,7 @@ impl PptxSnapshot {
 //#endregion 🔖️Snapshot
 
 //#region 🔖️HandcraftedArtifactCodecs
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 struct PptxBinaryPartRecord {
     path: String,
     content_type: String,
@@ -249,22 +229,21 @@ struct PptxBinaryPartRecord {
     bytes: Vec<u8>,
 }
 
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 struct PptxRelationshipGroupRecord {
     owner: String,
-    relationships: dsl::DslValue,
+    relationships: semio_framework_value::DslValue,
 }
 
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 pub(crate) struct PptxSnapshotRecord {
     schema: String,
-    opc: dsl::DslValue,
+    opc: semio_framework_value::DslValue,
     #[dsl(table)]
     binary_parts: Vec<PptxBinaryPartRecord>,
     #[dsl(table)]
     relationship_groups: Vec<PptxRelationshipGroupRecord>,
-    xml_parts: dsl::DslValue,
-    presentation: dsl::DslValue,
+    xml_parts: semio_framework_value::DslValue,
 }
 
 impl PptxSnapshotRecord {
@@ -273,9 +252,9 @@ impl PptxSnapshotRecord {
         let mut opc = snapshot.opc.clone();
         let binary_parts = std::mem::take(&mut opc.parts).into_iter().map(|part| PptxBinaryPartRecord { path: part.path, content_type: part.content_type, bytes: part.bytes }).collect();
         let relationships = std::mem::take(&mut opc.relationships);
-        let mut relationship_groups = relationships.into_iter().map(|(owner, relationships)| Ok(PptxRelationshipGroupRecord { owner, relationships: semio_framework_value::ToValue::to_value(&relationships) })).collect::<Result<Vec<_>, String>>()?;
+        let mut relationship_groups = relationships.into_groups().map(|(owner, relationships)| Ok(PptxRelationshipGroupRecord { owner, relationships: semio_framework_value::ToValue::to_value(&relationships) })).collect::<Result<Vec<_>, String>>()?;
         relationship_groups.sort_by(|left, right| left.owner.cmp(&right.owner));
-        Ok(Self { schema: snapshot.schema.clone(), opc: semio_framework_value::ToValue::to_value(&opc), binary_parts, relationship_groups, xml_parts: dsl::ToValue::to_value(&snapshot.xml_parts), presentation: dsl::ToValue::to_value(&snapshot.presentation) })
+        Ok(Self { schema: snapshot.schema.clone(), opc: semio_framework_value::ToValue::to_value(&opc), binary_parts, relationship_groups, xml_parts: semio_framework_value::ToValue::to_value(&snapshot.xml_parts) })
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -285,32 +264,59 @@ impl PptxSnapshotRecord {
         if !opc.parts.is_empty() {
             return Err("PPTX DSL OPC metadata must not contain binary parts".into());
         }
-        if !opc.relationships.is_empty() {
+        if opc.relationships.owner_count() != 0 {
             return Err("PPTX DSL OPC metadata must not contain relationship groups".into());
         }
         opc.parts = self.binary_parts.into_iter().map(|part| semio_s_artifact_stdio_zip::opc::OpcPart { path: part.path, content_type: part.content_type, bytes: part.bytes }).collect();
         for group in self.relationship_groups {
-            if opc.relationships.contains_key(&group.owner) {
+            if opc.relationships.relationships(&group.owner).is_some() {
                 return Err(format!("PPTX DSL repeats relationship owner {}", group.owner));
             }
-            opc.relationships.insert(group.owner, semio_framework_value::FromValue::from_value(group.relationships).map_err(|error| error.to_string())?);
+            opc.relationships.replace_owner(group.owner, semio_framework_value::FromValue::from_value(group.relationships).map_err(|error| error.to_string())?);
         }
-        let mut snapshot = PptxSnapshot::from_parts(opc, dsl::FromValue::from_value(self.xml_parts).map_err(|error| error.to_string())?, dsl::FromValue::from_value(self.presentation).map_err(|error| error.to_string())?);
+        let mut snapshot = PptxSnapshot::from_parts(opc, semio_framework_value::FromValue::from_value(self.xml_parts).map_err(|error| error.to_string())?);
         snapshot.schema = schema;
         Ok(snapshot)
     }
 }
 
 impl store::ArtifactDsl for PptxSnapshot {
- const EXTENSION:&'static str="pptx";
- fn envelope_id()->&'static str{"stdio.pptx"}
- fn parse_dsl(text:&str)->Result<Self,store::TextError>{native::decode_text(text,&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_|true,semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits::default())).map_err(|error|store::TextError::new(error,dsl::TextSpan::at(1,1)))}
- fn print_dsl(&self)->String{match native::encode(self,semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding::Text,&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_|true,semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits::default())).expect("PPTX native ownership admission"){semio_framework_os_kernel::io_schema::IoPayload::Text(text)=>text,semio_framework_os_kernel::io_schema::IoPayload::Binary(_)=>unreachable!()}}
+    const EXTENSION: &'static str = "pptx";
+    fn envelope_id() -> &'static str {
+        "stdio.pptx"
+    }
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        native::decode_text(text, &mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_| true, semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits::default()))
+            .map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1)))
+    }
+    fn print_dsl(&self) -> String {
+        match native::encode(
+            self,
+            semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding::Text,
+            &mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_| true, semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits::default()),
+        )
+        .expect("PPTX native ownership admission")
+        {
+            semio_framework_os_kernel::io_schema::IoPayload::Text(text) => text,
+            semio_framework_os_kernel::io_schema::IoPayload::Binary(_) => unreachable!(),
+        }
+    }
 }
 impl store::ArtifactPack for PptxSnapshot {
- fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}
- fn encode_pack_with(&self,options:&store::PackEncodeOptions)->Result<Vec<u8>,store::PackError>{match native::encode(self,semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding::Binary,&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_|true,native::pack_limits(&options.limits))).map_err(store::PackError::Schema)?{semio_framework_os_kernel::io_schema::IoPayload::Binary(bytes)=>Ok(bytes),semio_framework_os_kernel::io_schema::IoPayload::Text(_)=>unreachable!()}}
- fn decode_pack_with(bytes:&[u8],options:&store::PackDecodeOptions)->Result<Self,store::PackError>{native::decode_binary(bytes,&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_|true,native::pack_limits(&options.limits))).map_err(store::PackError::Schema)}
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
+    }
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        match native::encode(self, semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding::Binary, &mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_| true, native::pack_limits(&options.limits)))
+            .map_err(store::PackError::from)?
+        {
+            semio_framework_os_kernel::io_schema::IoPayload::Binary(bytes) => Ok(bytes),
+            semio_framework_os_kernel::io_schema::IoPayload::Text(_) => unreachable!(),
+        }
+    }
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        native::decode_binary(bytes, &mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_| true, native::pack_limits(&options.limits))).map_err(store::PackError::from)
+    }
 }
 
 #[cfg(test)]
@@ -318,14 +324,14 @@ impl store::ArtifactPack for PptxSnapshot {
 mod shadow_tests;
 //#endregion 🔖️HandcraftedArtifactCodecs
 
-#[path="🪶️sqlite/🦀️.rs"]
+#[path = "🪶️sqlite/🦀️.rs"]
 pub mod sqlite;
 #[cfg(test)]
-#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
 mod sqlite_tests;
 
-#[path="🧩️native/🦀️.rs"]
+#[path = "🧩️native/🦀️.rs"]
 mod native;
 
-#[path="🛡️subset/🦀️.rs"]
+#[path = "🛡️subset/🦀️.rs"]
 mod subset;

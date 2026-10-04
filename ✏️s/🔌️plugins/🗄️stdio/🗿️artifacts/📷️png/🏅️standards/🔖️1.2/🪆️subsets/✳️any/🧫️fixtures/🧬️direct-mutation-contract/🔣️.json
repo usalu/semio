@@ -3,60 +3,6 @@
   "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations",
   "mutations": [
     {
-      "kind": "change-header",
-      "variant": "ChangeHeader",
-      "directory": "📐️change-header",
-      "textOpcode": "change-header",
-      "binaryTag": 2,
-      "requiredFiles": [
-        "🦀️.rs",
-        "🔣️.json",
-        "🧬️schema/🔣️.json",
-        "🟦️.ts",
-        "🔗️.graphql",
-        "🛰️.proto",
-        "📝️text/🦀️.rs",
-        "💾️binary/🦀️.rs",
-        "🧪️test/🔣️s.json"
-      ]
-    },
-    {
-      "kind": "replace-palette",
-      "variant": "ReplacePalette",
-      "directory": "🎨️replace-palette",
-      "textOpcode": "replace-palette",
-      "binaryTag": 3,
-      "requiredFiles": [
-        "🦀️.rs",
-        "🔣️.json",
-        "🧬️schema/🔣️.json",
-        "🟦️.ts",
-        "🔗️.graphql",
-        "🛰️.proto",
-        "📝️text/🦀️.rs",
-        "💾️binary/🦀️.rs",
-        "🧪️test/🔣️s.json"
-      ]
-    },
-    {
-      "kind": "change-transparency",
-      "variant": "ChangeTransparency",
-      "directory": "👁️change-transparency",
-      "textOpcode": "change-transparency",
-      "binaryTag": 4,
-      "requiredFiles": [
-        "🦀️.rs",
-        "🔣️.json",
-        "🧬️schema/🔣️.json",
-        "🟦️.ts",
-        "🔗️.graphql",
-        "🛰️.proto",
-        "📝️text/🦀️.rs",
-        "💾️binary/🦀️.rs",
-        "🧪️test/🔣️s.json"
-      ]
-    },
-    {
       "kind": "change-gamma",
       "variant": "ChangeGamma",
       "directory": "🌗️change-gamma",
@@ -70,16 +16,15 @@
         "🔗️.graphql",
         "🛰️.proto",
         "📝️text/🦀️.rs",
-        "💾️binary/🦀️.rs",
-        "🧪️test/🔣️s.json"
+        "💾️binary/🦀️.rs"
       ]
     },
     {
-      "kind": "change-chromaticities",
-      "variant": "ChangeChromaticities",
-      "directory": "🌈️change-chromaticities",
-      "textOpcode": "change-chromaticities",
-      "binaryTag": 6,
+      "kind": "set-snapshot",
+      "variant": "SetSnapshot",
+      "directory": "📸️set-snapshot",
+      "textOpcode": "set-snapshot",
+      "binaryTag": 17,
       "requiredFiles": [
         "🦀️.rs",
         "🔣️.json",
@@ -88,16 +33,15 @@
         "🔗️.graphql",
         "🛰️.proto",
         "📝️text/🦀️.rs",
-        "💾️binary/🦀️.rs",
-        "🧪️test/🔣️s.json"
+        "💾️binary/🦀️.rs"
       ]
     },
     {
-      "kind": "change-srgb-intent",
-      "variant": "ChangeSrgbIntent",
-      "directory": "🖌️change-srgb-intent",
-      "textOpcode": "change-srgb-intent",
-      "binaryTag": 7,
+      "kind": "patch-pixels",
+      "variant": "PatchPixels",
+      "directory": "🩹️patch-pixels",
+      "textOpcode": "patch-pixels",
+      "binaryTag": 18,
       "requiredFiles": [
         "🦀️.rs",
         "🔣️.json",
@@ -106,16 +50,29 @@
         "🔗️.graphql",
         "🛰️.proto",
         "📝️text/🦀️.rs",
-        "💾️binary/🦀️.rs",
-        "🧪️test/🔣️s.json"
+        "💾️binary/🦀️.rs"
       ]
     },
     {
-      "kind": "change-physical-dims",
-      "variant": "ChangePhysicalDims",
-      "directory": "📏️change-physical-dims",
-      "textOpcode": "change-physical-dims",
-      "binaryTag": 8,
+      "kind": "patch-snapshot",
+      "variant": "PatchSnapshot",
+      "directory": "🩹️patch-snapshot",
+      "textOpcode": "patch-snapshot",
+      "binaryTag": 19,
+      "requiredFiles": [
+        "🦀️.rs",
+        "🔣️.json",
+        "🧬️schema/🔣️.json",
+        "📝️text/🦀️.rs",
+        "💾️binary/🦀️.rs"
+      ]
+    },
+    {
+      "kind": "paint-native-samples",
+      "variant": "PaintNativeSamples",
+      "directory": "🎨️paint-native-samples",
+      "textOpcode": "paint-native-samples",
+      "binaryTag": 20,
       "requiredFiles": [
         "🦀️.rs",
         "🔣️.json",
@@ -124,152 +81,7 @@
         "🔗️.graphql",
         "🛰️.proto",
         "📝️text/🦀️.rs",
-        "💾️binary/🦀️.rs",
-        "🧪️test/🔣️s.json"
-      ]
-    },
-    {
-      "kind": "change-timestamp",
-      "variant": "ChangeTimestamp",
-      "directory": "🕰️change-timestamp",
-      "textOpcode": "change-timestamp",
-      "binaryTag": 9,
-      "requiredFiles": [
-        "🦀️.rs",
-        "🔣️.json",
-        "🧬️schema/🔣️.json",
-        "🟦️.ts",
-        "🔗️.graphql",
-        "🛰️.proto",
-        "📝️text/🦀️.rs",
-        "💾️binary/🦀️.rs",
-        "🧪️test/🔣️s.json"
-      ]
-    },
-    {
-      "kind": "change-background",
-      "variant": "ChangeBackground",
-      "directory": "🖼️change-background",
-      "textOpcode": "change-background",
-      "binaryTag": 10,
-      "requiredFiles": [
-        "🦀️.rs",
-        "🔣️.json",
-        "🧬️schema/🔣️.json",
-        "🟦️.ts",
-        "🔗️.graphql",
-        "🛰️.proto",
-        "📝️text/🦀️.rs",
-        "💾️binary/🦀️.rs",
-        "🧪️test/🔣️s.json"
-      ]
-    },
-    {
-      "kind": "insert-text-chunk",
-      "variant": "InsertTextChunk",
-      "directory": "📥️insert-text-chunk",
-      "textOpcode": "insert-text-chunk",
-      "binaryTag": 11,
-      "requiredFiles": [
-        "🦀️.rs",
-        "🔣️.json",
-        "🧬️schema/🔣️.json",
-        "🟦️.ts",
-        "🔗️.graphql",
-        "🛰️.proto",
-        "📝️text/🦀️.rs",
-        "💾️binary/🦀️.rs",
-        "🧪️test/🔣️s.json"
-      ]
-    },
-    {
-      "kind": "remove-text-chunk",
-      "variant": "RemoveTextChunk",
-      "directory": "🗑️remove-text-chunk",
-      "textOpcode": "remove-text-chunk",
-      "binaryTag": 12,
-      "requiredFiles": [
-        "🦀️.rs",
-        "🔣️.json",
-        "🧬️schema/🔣️.json",
-        "🟦️.ts",
-        "🔗️.graphql",
-        "🛰️.proto",
-        "📝️text/🦀️.rs",
-        "💾️binary/🦀️.rs",
-        "🧪️test/🔣️s.json"
-      ]
-    },
-    {
-      "kind": "replace-text-chunk",
-      "variant": "ReplaceTextChunk",
-      "directory": "✏️replace-text-chunk",
-      "textOpcode": "replace-text-chunk",
-      "binaryTag": 13,
-      "requiredFiles": [
-        "🦀️.rs",
-        "🔣️.json",
-        "🧬️schema/🔣️.json",
-        "🟦️.ts",
-        "🔗️.graphql",
-        "🛰️.proto",
-        "📝️text/🦀️.rs",
-        "💾️binary/🦀️.rs",
-        "🧪️test/🔣️s.json"
-      ]
-    },
-    {
-      "kind": "replace-pixels",
-      "variant": "ReplacePixels",
-      "directory": "🔲️replace-pixels",
-      "textOpcode": "replace-pixels",
-      "binaryTag": 14,
-      "requiredFiles": [
-        "🦀️.rs",
-        "🔣️.json",
-        "🧬️schema/🔣️.json",
-        "🟦️.ts",
-        "🔗️.graphql",
-        "🛰️.proto",
-        "📝️text/🦀️.rs",
-        "💾️binary/🦀️.rs",
-        "🧪️test/🔣️s.json"
-      ]
-    },
-    {
-      "kind": "insert-unknown-chunk",
-      "variant": "InsertUnknownChunk",
-      "directory": "📦️insert-unknown-chunk",
-      "textOpcode": "insert-unknown-chunk",
-      "binaryTag": 15,
-      "requiredFiles": [
-        "🦀️.rs",
-        "🔣️.json",
-        "🧬️schema/🔣️.json",
-        "🟦️.ts",
-        "🔗️.graphql",
-        "🛰️.proto",
-        "📝️text/🦀️.rs",
-        "💾️binary/🦀️.rs",
-        "🧪️test/🔣️s.json"
-      ]
-    },
-    {
-      "kind": "remove-unknown-chunk",
-      "variant": "RemoveUnknownChunk",
-      "directory": "📤️remove-unknown-chunk",
-      "textOpcode": "remove-unknown-chunk",
-      "binaryTag": 16,
-      "requiredFiles": [
-        "🦀️.rs",
-        "🔣️.json",
-        "🧬️schema/🔣️.json",
-        "🟦️.ts",
-        "🔗️.graphql",
-        "🛰️.proto",
-        "📝️text/🦀️.rs",
-        "💾️binary/🦀️.rs",
-        "🧪️test/🔣️s.json"
+        "💾️binary/🦀️.rs"
       ]
     }
   ]

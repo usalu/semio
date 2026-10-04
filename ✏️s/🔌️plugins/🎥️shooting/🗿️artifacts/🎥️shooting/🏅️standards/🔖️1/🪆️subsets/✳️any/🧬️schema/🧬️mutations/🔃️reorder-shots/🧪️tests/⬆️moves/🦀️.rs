@@ -16,10 +16,10 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔃️reorder-shots/⬆️moves/🎯️outcome/🔣️.json");
 
 fn before() -> ShootingSnapshot {
-    dsl::os_pack::from_json_str(BEFORE).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> ShootingSnapshot {
-    dsl::os_pack::from_json_str(AFTER).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> ShootingMutation {
     serde_json::from_str(MUTATION).expect("mutation decodes")
@@ -46,7 +46,7 @@ async fn promotes_the_addressed_shot_to_the_head() {
 async fn inverse_restores_the_original_index() {
     let base = before();
     let forward = mutation();
-    let inverse = forward.inverse(&base);
+    let inverse = forward.inverse(&base).expect("valid retained mutation inverse fixture");
     let mut snapshot = apply(&base, &forward);
     for step in &inverse {
         snapshot = apply(&snapshot, step);
@@ -58,8 +58,8 @@ async fn inverse_restores_the_original_index() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: ShootingSnapshot = dsl::os_pack::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: ShootingSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "reorder-shots/moves-shot-close-to-front: committed {label} JSON is not canonical");
     }
@@ -77,7 +77,7 @@ async fn declared_outcome_holds_and_an_unchanged_order_is_a_no_op() {
     assert!(mutation().diff(&before()).messages().is_empty(), "reorder-shots/moves-shot-close-to-front: a real reorder must raise no diagnostic");
 
     let again = mutation().diff(&expected_after());
-    assert_eq!(again.worst_level(), Some(protocol::Severity::Warning), "reorder-shots/moves-shot-close-to-front: an order-preserving move is a Warning, never a rejection");
+    assert_eq!(again.worst_level(), Some(semio_framework_diagnostic::Severity::Warning), "reorder-shots/moves-shot-close-to-front: an order-preserving move is a Warning, never a rejection");
     assert_eq!(again.messages()[0].code.0, "mutation.no-op", "reorder-shots/moves-shot-close-to-front: the order guard's frozen code");
     let unchanged = again.into_parts().0.apply(&expected_after()).expect("a no-op outcome still applies");
     assert_eq!(unchanged, expected_after(), "reorder-shots/moves-shot-close-to-front: a no-op reorder applies an empty diff");
@@ -88,7 +88,7 @@ async fn declared_outcome_holds_and_an_unchanged_order_is_a_no_op() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = mutation().diff(&before());
-    let produced = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "reorder-shots/moves-shot-close-to-front: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert_eq!(committed["shots"]["reordered"][0], "shot-close", "reorder-shots/moves-shot-close-to-front: the promoted shot heads the sequence");
@@ -99,8 +99,8 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to `ShootingDiff` — the committed reorder-shots sequence round-trips through `ShootingDiff` unchanged.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: ShootingDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("diff re-encodes");
+    let decoded: ShootingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "reorder-shots/moves-shot-close-to-front: committed diff JSON is not canonical");
 }
@@ -108,7 +108,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 Applying the committed diff straight to `before` yields `after` — the id sequence alone is enough to rebuild the after-snapshot.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: ShootingDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: ShootingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let produced = decoded.apply(&before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "reorder-shots/moves-shot-close-to-front: committed diff did not carry before to after");
 }

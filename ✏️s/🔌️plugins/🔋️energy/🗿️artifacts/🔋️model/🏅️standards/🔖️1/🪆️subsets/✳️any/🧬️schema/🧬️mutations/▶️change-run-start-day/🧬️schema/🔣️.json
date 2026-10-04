@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-run-start-day/schema.json",
+  "title": "ChangeRunStartDay",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "newStartDay"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeRunStartDay"
+    },
+    "newStartDay": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 31,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Start day",
+          "de": "Starttag"
+        },
+        "step": 1,
+        "precision": 0,
+        "softMin": 1,
+        "softMax": 31,
+        "group": "calendar",
+        "order": 20
+      }
+    }
+  }
+}

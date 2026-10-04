@@ -51,6 +51,8 @@ pub mod set_format;
 pub mod set_row_property;
 /// 📐️ Typed content mutation for `stdio.ply`.
 //#region 🔖️Leaves
+#[path = "🩹️patch-snapshot/🦀️.rs"]
+pub mod patch_snapshot;
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 //#endregion 🔖️Leaves
@@ -62,6 +64,7 @@ pub mod set_snapshot;
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum PlyMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
+    PatchSnapshot(patch_snapshot::PatchSnapshot),
     SetFormat(set_format::SetFormat),
     InsertComment(insert_comment::InsertComment),
     RemoveComment(remove_comment::RemoveComment),
@@ -76,7 +79,7 @@ pub enum PlyMutation {
 /// `ply-1-0-any` mutation catalog (`../../🔣️oracle.json`) declares and the exhaustive
 /// mutate/inverse test case measures itself against. `kinds_cover_every_variant` below is what keeps
 /// this list honest against the enum it names, since the framework never parses Rust.
-pub const KINDS: &[&str] = &["set-snapshot", "set-format", "insert-comment", "remove-comment", "add-element", "remove-element", "insert-row", "remove-row", "set-row-property"];
+pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "set-format", "insert-comment", "remove-comment", "add-element", "remove-element", "insert-row", "remove-row", "set-row-property"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -104,6 +107,7 @@ pub fn apply_ply_mutation(snapshot: &mut PlySnapshot, mutation: &PlyMutation) ->
 pub(crate) fn agg_diff(this: &PlyMutation, base: &PlySnapshot) -> protocol::MutationOutcome<PlyDiff> {
     protocol::MutationOutcome::new(match this {
         PlyMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff_set_snapshot(base, snapshot),
+        PlyMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<PlySnapshot, PlyMutation>>::diff(patch, base),
         PlyMutation::SetFormat(set_format::SetFormat { format }) => diff_set_format(*format),
         PlyMutation::InsertComment(insert_comment::InsertComment { index, comment }) => {
             let mut comments = base.comments.clone();
@@ -133,9 +137,11 @@ pub(crate) fn agg_diff(this: &PlyMutation, base: &PlySnapshot) -> protocol::Muta
 /// replacement for the dropped sentinel: "there is no no-op mutation, only an inverse with nothing
 /// to undo."
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn agg_inverse(this: &PlyMutation, base: &PlySnapshot) -> Vec<PlyMutation> {
+pub(crate) fn agg_inverse(this: &PlyMutation, base: &PlySnapshot) -> Result<Vec<PlyMutation>, semio_framework_value::ValueError> {
+    Ok({
     match this {
         PlyMutation::SetSnapshot(_) => vec![PlyMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
+        PlyMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<PlySnapshot, PlyMutation>>::inverse(patch, base)?),
         PlyMutation::SetFormat(_) => vec![PlyMutation::SetFormat(set_format::SetFormat { format: base.format })],
         PlyMutation::InsertComment(insert_comment::InsertComment { index, .. }) => {
             let at = (*index).min(base.comments.len());
@@ -169,6 +175,8 @@ pub(crate) fn agg_inverse(this: &PlyMutation, base: &PlySnapshot) -> Vec<PlyMuta
             }
         }
     }
+
+    })
 }
 //#endregion 🔖️MutationTrait
 
@@ -201,6 +209,7 @@ fn dec_snapshot(s: &str) -> Result<PlySnapshot, String> {
 fn print_ply_mutation(m: &PlyMutation) -> String {
     match m {
         PlyMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", enc_snapshot(snapshot)),
+        PlyMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(patch),
         PlyMutation::SetFormat(set_format::SetFormat { format }) => format!("set-format format={}", enc_format(*format)),
         PlyMutation::InsertComment(insert_comment::InsertComment { index, comment }) => format!("insert-comment index={index} comment={}", enc_str(comment)),
         PlyMutation::RemoveComment(remove_comment::RemoveComment { index }) => format!("remove-comment index={index}"),
@@ -220,6 +229,7 @@ fn parse_ply_mutation(line: &str) -> Result<PlyMutation, String> {
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("ply mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
+        "patch-snapshot" => semio_s_artifact_stdio_contract::editing::snapshot_patch_from_text(line).map(|patch| PlyMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch })),
         "set-snapshot" => Ok(PlyMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_snapshot(arg("snapshot")?)? })),
         "set-format" => Ok(PlyMutation::SetFormat(set_format::SetFormat { format: dec_format(arg("format")?)? })),
         "insert-comment" => Ok(PlyMutation::InsertComment(insert_comment::InsertComment { index: usize_arg("index")?, comment: dec_str(arg("comment")?)? })),
@@ -239,8 +249,8 @@ impl OpText for PlyMutation {
     fn print_op(&self) -> String {
         print_ply_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_ply_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_ply_mutation(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 }
 
@@ -257,6 +267,7 @@ impl OpText for PlyMutation {
 fn op_tag(m: &PlyMutation) -> u8 {
     match m {
         PlyMutation::SetSnapshot(..) => TAG_SET_SNAPSHOT,
+        PlyMutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
         PlyMutation::SetFormat(..) => TAG_SET_FORMAT,
         PlyMutation::InsertComment(..) => TAG_INSERT_COMMENT,
         PlyMutation::RemoveComment(..) => TAG_REMOVE_COMMENT,
@@ -268,7 +279,7 @@ fn op_tag(m: &PlyMutation) -> u8 {
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn op_pack_err(e: &dsl::PackError) -> protocol::ProtocolError {
+fn op_pack_err(e: &dsl::PackRefusal) -> protocol::ProtocolError {
     protocol::ProtocolError::Malformed { what: "ply op binary", offset: 0, detail: e.to_string() }
 }
 
@@ -276,6 +287,7 @@ fn op_pack_err(e: &dsl::PackError) -> protocol::ProtocolError {
 /// 🏷️ Op tags of `PlyMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
 const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
 const TAG_SET_FORMAT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-format");
 const TAG_INSERT_COMMENT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-comment");
 const TAG_REMOVE_COMMENT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-comment");
@@ -293,6 +305,7 @@ impl OpBinary for PlyMutation {
         w.write_u8(op_tag(self));
         match self {
             PlyMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => write_bin_snapshot(&mut w, snapshot),
+            PlyMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => w.write_bytes(&protocol::OpBinary::encode_op(patch)?),
             PlyMutation::SetFormat(set_format::SetFormat { format }) => {
                 crate::schema::diff::write_bin_format(&mut w, *format);
             }
@@ -330,6 +343,7 @@ impl OpBinary for PlyMutation {
         let _format = r.read_u8().map_err(|error| op_pack_err(&error))?;
         let tag = r.read_u8().map_err(|error| op_pack_err(&error))?;
         match tag {
+            TAG_PATCH_SNAPSHOT => Ok(PlyMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: <semio_s_artifact_stdio_contract::editing::SnapshotPatch as protocol::OpBinary>::decode_op(r.read_bytes(r.remaining()).map_err(|error| op_pack_err(&error))?)? })),
             TAG_SET_SNAPSHOT => Ok(PlyMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: read_bin_snapshot(&mut r).map_err(|error| op_pack_err(&error))? })),
             TAG_SET_FORMAT => Ok(PlyMutation::SetFormat(set_format::SetFormat { format: crate::schema::diff::read_bin_format(&mut r).map_err(|error| op_pack_err(&error))? })),
             TAG_INSERT_COMMENT => {
@@ -394,6 +408,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<PlyMutation> {
     use crate::schema::snapshot::{PlyProperty, PlyScalarType};
     let snapshot = demo_base_snapshot();
     vec![
+        PlyMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         PlyMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: snapshot.clone() }),
         PlyMutation::SetFormat(set_format::SetFormat { format: PlyFormat::BinaryBigEndian }),
         PlyMutation::InsertComment(insert_comment::InsertComment { index: 0, comment: "new comment".into() }),

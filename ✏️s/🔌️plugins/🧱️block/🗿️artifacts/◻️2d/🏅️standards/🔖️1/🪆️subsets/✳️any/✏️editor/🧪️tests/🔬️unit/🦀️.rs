@@ -202,7 +202,7 @@ async fn interaction_topology_nests_handles_under_their_handle_kind() {
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg_snapshot = Block2dConfig::default();
     let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
-    let topology = Block2dPlayApp::interaction_topology(&doc, &cfg);
+    let topology = Block2dPlayApp::interaction_topology(&doc, &cfg).expect("valid retained interaction fixture");
     let domain = topology.domains.get(BLOCK2D_INTERACTION_HANDLE).expect("handle domain topology present");
     let handle_node = domain.ordered.iter().find(|node| node.id == format!("handle:{handle_id}")).expect("handle node present");
     assert_eq!(handle_node.parent.as_deref(), Some(format!("handleKind:{kind_id}").as_str()));
@@ -295,7 +295,7 @@ async fn undo_redo_round_trips_through_the_wrapper() {
 async fn export_media_catalog_out_wraps_the_puzzle2d_fragment() {
     let mut app = new_app().await;
     context::dispatch(&mut app, Block2dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK2D_EXAMPLE_LEFT.into() })).await;
-    let media = semio_framework_plugin::resolve_ready(app.export_media("catalog:out")).expect("export catalog");
+    let media = ::semio_framework_async::poll::resolve_ready(app.export_media("catalog:out")).expect("export catalog");
     assert_eq!(media.media_type, MediaType { class: MediaClass::Kit, form: MediaForm::Type });
     match media.payload {
         MediaPayload::Structured { schema, json } => {
@@ -310,7 +310,7 @@ async fn export_media_catalog_out_wraps_the_puzzle2d_fragment() {
 #[semio_framework_async_macros::async_test]
 async fn command_from_action_bridges_set_active_example() {
     let _app = Block2dPlayApp;
-    assert!(matches!(Block2dPlayApp::command_from_action("setActiveExample", Some(&dsl::json::to_dsl_value(&dsl::json!({ "exampleId": "left" })))), Ok(Block2dCommand::SetActiveExample(set_active_example::SetActiveExample { id })) if id == "left"));
+    assert!(matches!(Block2dPlayApp::command_from_action("setActiveExample", Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "exampleId": "left" })))), Ok(Block2dCommand::SetActiveExample(set_active_example::SetActiveExample { id })) if id == "left"));
 }
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the old `setSelection` view

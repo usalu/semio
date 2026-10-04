@@ -5,8 +5,8 @@ const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutation
 const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➖️remove-section/✅apply/🦠️mutation/🔣️.json");
 const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➖️remove-section/✅apply/🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➖️remove-section/✅apply/🎯️outcome/🔣️.json");
-fn before() -> En1993Snapshot { pack::json::from_json_str(BEFORE).expect("before") }
-fn mutation() -> En1993Mutation { pack::json::from_json_str(MUTATION).expect("mutation") }
+fn before() -> En1993Snapshot { semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before") }
+fn mutation() -> En1993Mutation { semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation") }
 fn apply(mutation: &En1993Mutation, base: &En1993Snapshot) -> En1993Snapshot {
     let raised = <En1993Mutation as protocol::Mutation<En1993Snapshot>>::diff(mutation, base);
     assert!(raised.messages().is_empty(), "remove-section raised {:?}", raised.messages());
@@ -20,15 +20,15 @@ fn mutation_is_the_canonical_wire() {
 fn applies_to_committed_after_and_diff() {
     let base = before();
     let raised = <En1993Mutation as protocol::Mutation<En1993Snapshot>>::diff(&mutation(), &base);
-    assert_eq!(*raised.diff(), pack::json::from_json_str::<En1993Diff>(DIFF).expect("diff"));
+    assert_eq!(*raised.diff(), semio_framework_pack_json::from_json_str::<En1993Diff>(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("diff"));
     let after = apply(&mutation(), &base);
     assert_ne!(after, base, "remove-section must move the document");
-    assert_eq!(after, pack::json::from_json_str::<En1993Snapshot>(AFTER).expect("after"));
+    assert_eq!(after, semio_framework_pack_json::from_json_str::<En1993Snapshot>(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after"));
 }
 #[test]
 fn inverse_restores_before() {
     let base = before();
-    let inverse = <En1993Mutation as protocol::Mutation<En1993Snapshot>>::inverse(&mutation(), &base);
+    let inverse = <En1993Mutation as protocol::Mutation<En1993Snapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
     assert!(!inverse.is_empty(), "remove-section changes the document, so its inverse must not be empty");
     let restored = inverse.iter().fold(apply(&mutation(), &base), |snapshot, step| apply(step, &snapshot));
     assert_eq!(restored, base);

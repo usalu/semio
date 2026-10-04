@@ -23,7 +23,7 @@ async fn config_operation_set_camera_round_trips() {
     let operation = EquationGraphWindowConfigMutation::SetCamera(SetCamera { camera: camera.clone() });
     let next = Mutation::diff(&operation, &base).diff().clone();
     assert_eq!(next.camera, camera);
-    let backwards = Mutation::inverse(&operation, &base);
+    let backwards = Mutation::inverse(&operation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(backwards, vec![EquationGraphWindowConfigMutation::SetCamera(SetCamera { camera: base.camera.clone() })]);
     assert_eq!(Mutation::diff(&backwards[0], &next).diff().clone(), base);
     store::os_store::test_support::assert_op_line_round_trip(&operation);

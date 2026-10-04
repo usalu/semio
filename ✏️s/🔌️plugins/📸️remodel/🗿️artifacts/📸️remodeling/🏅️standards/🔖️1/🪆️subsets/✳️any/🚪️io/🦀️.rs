@@ -23,7 +23,7 @@ use crate::{
     default_remodeling_scene, image_asset_child_handle, remodeling_asset, remodeling_mesh_content_handle, resolve_bounded_remodeling_mesh, FrameRef, ImageAsset, MediaKind, MediaStream, MeshSource, Float32Buffer, ByteBuffer, RemodelingDurableArtifact,
     RemodelingMesh, RemodelingSnapshot, SparseCloud,
 };
-use semio_framework::{io_dispatch, resolve_ready, Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
+use semio_framework::{io_dispatch,  Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
 use semio_framework_plugin::{ArtifactSerializer, MeshData};
 use semio_s_artifact_stdio_las::standards::v1_0::engine as las_engine;
 use semio_s_artifact_stdio_ply::standards::v1_0::engine as ply_engine;
@@ -101,13 +101,13 @@ pub fn mesh_to_las_bytes(mesh: &MeshData) -> Result<Vec<u8>, String> {
 /// 🌐️ `SemioMeshSnapshot` → PLY bytes, the shared tail of both `mesh_to_ply_bytes` and the `🧱️ply`
 /// export leaf (which feeds a point-cloud snapshot rather than a mesh one).
 pub fn semio_mesh_to_ply_bytes(semio: &SemioMeshSnapshot) -> Result<Vec<u8>, String> {
-    let ply = resolve_ready(SemioMeshToPly::serialize(semio)).map_err(|error| error.to_string())?;
+    let ply = ::semio_framework_async::poll::resolve_ready(SemioMeshToPly::serialize(semio)).map_err(|error| error.to_string())?;
     ply_engine::encode_ply(&ply)
 }
 
 /// 🛰️ `SemioMeshSnapshot` → LAS bytes, the shared tail of `mesh_to_las_bytes` and the `☁️las` leaf.
 pub fn semio_mesh_to_las_bytes(semio: &SemioMeshSnapshot) -> Result<Vec<u8>, String> {
-    let las = resolve_ready(SemioMeshToLas::serialize(semio)).map_err(|error| error.to_string())?;
+    let las = ::semio_framework_async::poll::resolve_ready(SemioMeshToLas::serialize(semio)).map_err(|error| error.to_string())?;
     las_engine::encode_las(&las)
 }
 
@@ -287,7 +287,7 @@ pub fn scene_from_semio_cloud(semio: &SemioMeshSnapshot) -> Result<RemodelingSna
 /// 🖼️ One PNG file as a whole scene: a single-frame `MediaKind::ImageSequence` stream whose frame
 /// points at a real durable image asset, the same shape `📥️import-frames` builds for a photo set.
 pub fn scene_from_png_bytes(bytes: &[u8]) -> Result<RemodelingSnapshot, String> {
-    let png = semio_s_artifact_stdio_png::io::decode_png(bytes)?;
+    let png = semio_s_artifact_stdio_png::io::png_layout_bytes(bytes)?;
     let asset = ImageAsset { mime: "image/png".into(), data: base64_codec::base64_standard_encode(bytes), width: png.width, height: png.height };
     let asset_id = "png-import-0".to_string();
     let mut scene = default_remodeling_scene();
@@ -345,7 +345,7 @@ pub(crate) fn semio_image_from_png_bytes(raw_png_bytes: &[u8]) -> Result<SemioIm
     let png_snapshot = semio_s_artifact_stdio_png::io::decode_png(raw_png_bytes)?;
     let payload = IoPayload::Binary(<PngSnapshot as store::ArtifactPack>::encode_pack(&png_snapshot));
     let key = semio_io_key(&SEMIO_IMAGE_DIALECT, IoDirection::Import, &PNG_DIALECT);
-    let composed = resolve_ready(io_dispatch(&key, &[ErasedComposeSource { dialect: PNG_DIALECT, payload }])).map_err(|error| error.message)?;
+    let composed = ::semio_framework_async::poll::resolve_ready(io_dispatch(&key, &[ErasedComposeSource { dialect: PNG_DIALECT, payload }])).map_err(|error| error.message)?;
     let IoPayload::Binary(bytes) = composed.payload else { return Err("s.stdio.semio image composer returned a non-binary payload".into()) };
     <SemioImageSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|error| format!("{error:?}"))
 }
@@ -354,7 +354,7 @@ pub(crate) fn png_bytes_from_semio_image(image: &SemioImageSnapshot) -> Result<V
     ensure_stdio_semio_and_png_registered();
     let payload = IoPayload::Binary(<SemioImageSnapshot as store::ArtifactPack>::encode_pack(image));
     let key = semio_io_key(&SEMIO_IMAGE_DIALECT, IoDirection::Export, &PNG_DIALECT);
-    let composed = resolve_ready(io_dispatch(&key, &[ErasedComposeSource { dialect: SEMIO_IMAGE_DIALECT, payload }])).map_err(|error| error.message)?;
+    let composed = ::semio_framework_async::poll::resolve_ready(io_dispatch(&key, &[ErasedComposeSource { dialect: SEMIO_IMAGE_DIALECT, payload }])).map_err(|error| error.message)?;
     let IoPayload::Binary(bytes) = composed.payload else { return Err("s.stdio.png composer returned a non-binary payload".into()) };
     let png_snapshot = <PngSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|error| format!("{error:?}"))?;
     semio_s_artifact_stdio_png::io::encode_png(&png_snapshot)
@@ -449,59 +449,59 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
 
     /// 🗣️ The five hand-authored `dsl::LanguageSpec`s this subset carries — `OnceLock` because
     /// `dsl::passthrough_hooks` is not `const fn`. Indices: 0=document 1=op 2=diff 3=pack 4=spr.
-    fn languages() -> &'static [dsl::LanguageSpec; 5] {
-        static LANGUAGES: OnceLock<[dsl::LanguageSpec; 5]> = OnceLock::new();
+    fn languages() -> &'static [semio_framework_dsl::LanguageSpec; 5] {
+        static LANGUAGES: OnceLock<[semio_framework_dsl::LanguageSpec; 5]> = OnceLock::new();
         LANGUAGES.get_or_init(|| {
             [
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "remodeling.document",
                     extension: Some("remodeling"),
-                    role: dsl::LanguageRole::Document,
+                    role: semio_framework_dsl::LanguageRole::Document,
                     grammar: Some(crate::document_dsl::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(crate::document_dsl::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("remodeling.document"),
+                    hooks: semio_framework_dsl::passthrough_hooks("remodeling.document"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "remodeling.op",
                     extension: None,
-                    role: dsl::LanguageRole::Ops,
+                    role: semio_framework_dsl::LanguageRole::Ops,
                     grammar: Some(crate::op::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(crate::op::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(crate::spr::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(crate::spr::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("remodeling.op"),
+                    hooks: semio_framework_dsl::passthrough_hooks("remodeling.op"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "remodeling.diff",
                     extension: None,
-                    role: dsl::LanguageRole::Diff,
+                    role: semio_framework_dsl::LanguageRole::Diff,
                     grammar: Some(crate::diff::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(crate::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
-                    hooks: dsl::passthrough_hooks("remodeling.diff"),
+                    hooks: semio_framework_dsl::passthrough_hooks("remodeling.diff"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "remodeling.pack",
                     extension: None,
-                    role: dsl::LanguageRole::Pack,
+                    role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("remodeling.pack"),
+                    hooks: semio_framework_dsl::passthrough_hooks("remodeling.pack"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "remodeling.spr",
                     extension: None,
-                    role: dsl::LanguageRole::Spr,
+                    role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(crate::spr::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(crate::spr::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("remodeling.spr"),
+                    hooks: semio_framework_dsl::passthrough_hooks("remodeling.spr"),
                 },
             ]
         })

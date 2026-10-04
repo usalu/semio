@@ -1,11 +1,12 @@
 import { posix } from "node:path";
-import { inspectRustCompileReferences, type RustCompileReference, type RustModuleContext } from "../../../🔍️discovery/🟦️.ts";
+import { type RustModuleContext } from "../../../🔍️discovery/🟦️.ts";
+import { type RustCompileReference } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 import type { DependencyDirectionRule } from "../🟦️.ts";
 
-export type RustSourceReference = RustCompileReference;
-export type RustSourceDirectionEdge = Readonly<{ rule: string; from: string; to: string; kind: RustSourceReference["kind"]; line: number; expansion?: RustSourceReference["expansion"] }>;
+
+export type RustSourceDirectionEdge = Readonly<{ rule: string; from: string; to: string; kind: RustCompileReference["kind"]; line: number; expansion?: RustCompileReference["expansion"] }>;
 export type RustSourceOwnership = Readonly<{ contexts?: readonly RustModuleContext[]; manifestPaths?: readonly string[] }>;
-export type RustSourceTarget = Readonly<{ to: string; reference: RustSourceReference; directories: readonly string[] }>;
+export type RustSourceTarget = Readonly<{ to: string; reference: RustCompileReference; directories: readonly string[] }>;
 export type RustSourceInputNode = Readonly<{ path: string; kind: "file" | "directory" | "symlink" }>;
 export type RustSourceInputInventory = ReadonlyMap<string, RustSourceInputNode["kind"]>;
 export type RustSourceInputProblem = "linked-input" | "missing-input" | "non-directory-ancestor" | "unexpected-input-kind" | "uncensused-source";
@@ -23,13 +24,10 @@ export function rustSourceTargetProblem(target: string, directory: boolean, inve
   return !directory && target.endsWith(".rs") && !sources.has(target) ? "uncensused-source" : null;
 }
 
-/** 📎️ Uses the shared Rust source scanner as the compile-time dependency contract. */
-export function rustSourceReferences(source: string): readonly RustSourceReference[] {
-  return inspectRustCompileReferences(source);
-}
+
 
 /** 🧭️ Resolves each authored input using Rust module and Cargo manifest provenance. */
-export function rustSourceTargets(from: string, references: readonly RustSourceReference[], ownership: RustSourceOwnership = {}): readonly RustSourceTarget[] {
+export function rustSourceTargets(from: string, references: readonly RustCompileReference[], ownership: RustSourceOwnership = {}): readonly RustSourceTarget[] {
   const targets: RustSourceTarget[] = [];
   for (const reference of references) {
     if (reference.inlineBase !== undefined) {
@@ -69,7 +67,7 @@ export function rustSourceTargets(from: string, references: readonly RustSourceR
 }
 
 /** 🏛️ Enforces the authored boundary policy on compile-time file inputs, including fixture and test edges. */
-export function rustSourceDirectionEdges(from: string, references: readonly RustSourceReference[], rules: readonly DependencyDirectionRule[], ownership: RustSourceOwnership = {}): readonly RustSourceDirectionEdge[] {
+export function rustSourceDirectionEdges(from: string, references: readonly RustCompileReference[], rules: readonly DependencyDirectionRule[], ownership: RustSourceOwnership = {}): readonly RustSourceDirectionEdge[] {
   const matches = (patterns: readonly string[], path: string): boolean => patterns.some((pattern) => new RegExp(pattern, "u").test(path));
   return distinctRustRows(rustSourceTargets(from, references, ownership).flatMap(({ to, reference }) => {
     const targetMatches = (patterns: readonly string[]): boolean => matches(patterns, to) || reference.directory === true && matches(patterns, `${to}/`);

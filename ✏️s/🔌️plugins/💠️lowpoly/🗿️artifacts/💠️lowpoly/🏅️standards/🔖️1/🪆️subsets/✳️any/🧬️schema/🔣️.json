@@ -32,7 +32,9 @@
         "transform",
         "smoothShading",
         "mesh",
-        "paintLayers"
+        "paintLayers",
+        "meshContent",
+        "meshState"
       ],
       "properties": {
         "id": {
@@ -66,7 +68,17 @@
         },
         "meshContent": {
           "type": "string",
-          "description": "Half-edge-mesh JSON the mesh handle hashes; empty in legacy handle-only documents."
+          "description": "📄️ Independent literal source text, preserved separately from the managed mesh owner."
+        },
+        "meshState": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mesh/schema.json"
+            }
+          ]
         }
       }
     },

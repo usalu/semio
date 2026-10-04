@@ -13,7 +13,7 @@ pub fn diff(payload: &ChangeBeamActionQAreaPa, base: &En1994Snapshot) -> protoco
         return protocol::MutationOutcome::error("mutation.target-missing", "action missing", [payload.action_index.to_string()]);
     };
     if (action.q_area_pa - payload.new_q_area_pa).abs() < f64::EPSILON {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "unchanged");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "unchanged");
     }
     let mut beams = base.beams.clone();
     beams[payload.index].actions[payload.action_index].q_area_pa = payload.new_q_area_pa;

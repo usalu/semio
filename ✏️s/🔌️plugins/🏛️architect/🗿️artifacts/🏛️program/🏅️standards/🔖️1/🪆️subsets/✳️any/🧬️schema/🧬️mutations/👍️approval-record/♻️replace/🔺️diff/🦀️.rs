@@ -13,7 +13,7 @@ pub fn diff(payload: &ReplaceApprovalRecord, base: &ProgramSnapshot) -> protocol
         return protocol::MutationOutcome::error("mutation.target-missing", "No approval record exists with this id.", [payload.approval_record.header.id.0.clone()]);
     };
     if existing == &payload.approval_record {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This approval record already matches the requested value.").at([existing.header.id.0.clone()])]);
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This approval record already matches the requested value.").at([existing.header.id.0.clone()])]);
     }
     let patch = existing.diff_patch(&payload.approval_record).expect("diff_patch always produces a full patch");
     protocol::MutationOutcome::new(ProgramDiff { approvals: Some(ProgramApprovalsDelta { patched: vec![ProgramApprovalsPatchEntry { id: payload.approval_record.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })

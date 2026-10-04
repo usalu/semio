@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeRefrigerationSystemCaseCount, base: &EnergyMo
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Refrigeration system {} needs at least one display case.", payload.id.0), [payload.id.0.to_string()]);
     }
     if existing.case_count == payload.new_case_count {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Refrigeration system {} already carries this case_count: {}.", payload.id.0, payload.new_case_count));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Refrigeration system {} already carries this case_count: {}.", payload.id.0, payload.new_case_count));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.refrigeration_systems.iter_mut().find(|item| item.id == payload.id) {

@@ -1,0 +1,14 @@
+{
+  "name": "⚖️test-text-error-portable⚠️diagnostic🦀️",
+  "type": "node-terminal",
+  "request": "launch",
+  "command": "bun nx run @semio-tech/framework-diagnostic-rs:test-text-error-portable --skip-nx-cache",
+  "cwd": "${workspaceFolder}",
+  "env": {
+    "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/value-refusal/portable"
+  },
+  "presentation": {
+    "group": "4_gate",
+    "order": 900.01781
+  }
+}

@@ -1,4 +1,0 @@
-syntax = "proto3";
-package semio.s.trinity.rewriting.mutation.disconnect_working_edges;
-// disconnect-working-edges / DisconnectWorkingEdges
-message DisconnectWorkingEdges { repeated string targets = 1; }

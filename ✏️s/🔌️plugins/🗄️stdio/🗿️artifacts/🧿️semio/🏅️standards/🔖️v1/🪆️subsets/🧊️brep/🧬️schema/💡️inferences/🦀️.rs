@@ -22,7 +22,6 @@ use semio_framework_3d::brep::queries::tessellation::tessellate_solid;
 use semio_framework_3d::brep::representation::topology::Body;
 use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::validation_report::{BrepValidationDiagnostic, BrepValidationReport};
 
@@ -113,13 +112,16 @@ pub struct SemioBrepInference {
 }
 
 impl protocol::Inference<SemioBrepSnapshot> for SemioBrepInference {
-    fn infer(snapshot: &SemioBrepSnapshot) -> Self {
+    fn infer(snapshot: &SemioBrepSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         let validation_report = store::infer_field::<SemioBrepSnapshot, BrepValidationReport>(snapshot, None).remove("document").unwrap_or_default();
         let (tessellation, mass_properties) = match crate::standards::v1::subsets::brep::schema::snapshot::body::body_from_snapshot(snapshot) {
             Ok(body) => (tessellate_document(&body, BREP_INFERENCE_DEFAULT_DEFLECTION), document_mass_properties(&body, BREP_INFERENCE_DEFAULT_DEFLECTION)),
             Err(_) => (MeshTransfer::default(), BrepMassProperties::default()),
         };
         Self { validation_report, tessellation, mass_properties }
+    
+        })
     }
 }
 
@@ -139,25 +141,6 @@ impl protocol::InferenceSpec<SemioBrepSnapshot> for SemioBrepInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::standards::v1::subsets::brep::schema::SemioBrepBuilder {
-    type Snapshot = SemioBrepSnapshot;
-    type Inference = SemioBrepInference;
-
-    async fn infer_cached(snapshot: &Self::Snapshot, cache: &mut store::InferenceCache, session: &mut store::InferenceSession) -> Self::Inference {
-        let _ = session;
-        let _ = cache;
-        // 🔓 `tessellation`/`massProperties` are computed straight (not yet threaded through the
-        // `InferredField`/`DepHash` cache — that needs a real per-entity chain analogous to
-        // `BrepValidationReport`'s, deferred: unlike a flat referential-integrity walk, tessellation
-        // itself doesn't naturally decompose into a small per-key DAG without duplicating
-        // `tessellate_solid`'s own face/edge iteration here). `protocol::Inference::infer` (the pure
-        // path) computes the exact same values, so this is honest-but-uncached, never a fake.
-        <SemioBrepInference as protocol::Inference<SemioBrepSnapshot>>::infer(snapshot)
-    }
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.semio.brep.inference`'s facet leaves into the OS-wide inference catalog.

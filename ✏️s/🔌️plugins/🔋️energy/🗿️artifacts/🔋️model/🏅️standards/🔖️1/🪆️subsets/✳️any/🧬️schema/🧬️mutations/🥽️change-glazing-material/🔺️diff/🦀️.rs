@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeGlazingMaterialVisibleTransmittance, base: &E
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Glazing material {}: visible transmittance must be a finite value in 0..=1, got {}.", payload.id.0, payload.new_visible_transmittance), [payload.id.0.to_string()]);
     }
     if existing.visible_transmittance == payload.new_visible_transmittance {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Glazing material {} already carries this visible transmittance: {}.", payload.id.0, payload.new_visible_transmittance));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Glazing material {} already carries this visible transmittance: {}.", payload.id.0, payload.new_visible_transmittance));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.glazing_materials.iter_mut().find(|item| item.id == payload.id) {

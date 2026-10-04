@@ -18,7 +18,7 @@
 //! seeded from that plugin's own freshly-opened document (`AppCommand::ReadArtifact`) and persisted
 //! under its real schema id — which is also what finally gives `artifact_export` an artifact → plugin
 //! mapping. `artifact_export` then drives the owning app's own media OUT port
-//! (`AppCommand::ExportMedia` → the guest's `LoadDocument` + `MediaOut`, the identical pair `🏃️run`'s
+//! (`AppCommand::ExportMedia` → the guest's stepped archive load + `MediaOut`, the identical sequence `🏃️run`'s
 //! workflow executor uses) and returns the guest's own bytes, never a synthesized export.
 //!
 //! 🚧️ **Known, honest gap** (not fabricated, not hidden): `artifact_validate` still forwards the real
@@ -286,7 +286,7 @@ fn artifact_open_handler(workspace: &Option<Arc<HeadlessWorkspace>>, arguments: 
     }
     match workspace.authenticated_probe_document_is_known(&artifact_id) {
         Ok(true) => {
-            if let Err(error) = semio_framework::io::resolve_ready(workspace.ensure_probe_artifact(&artifact_id, serde_json::Value::Null)) {
+            if let Err(error) = ::semio_framework_async::poll::resolve_ready(workspace.ensure_probe_artifact(&artifact_id, serde_json::Value::Null)) {
                 return CallToolResult::tool_error(&error);
             }
         }
@@ -382,7 +382,7 @@ fn artifact_create_handler(workspace: &Option<Arc<HeadlessWorkspace>>, arguments
     let initial = arguments.get("initial").cloned().unwrap_or_else(|| serde_json::json!({}));
     let jobs = crate::ui::job_registry();
     let job_id = jobs.begin("artifact.create");
-    match semio_framework::io::resolve_ready(workspace.ensure_probe_artifact(&artifact_id, initial)) {
+    match ::semio_framework_async::poll::resolve_ready(workspace.ensure_probe_artifact(&artifact_id, initial)) {
         Ok(revision) => {
             let structured = serde_json::json!({ "jobId": job_id, "status": "SUCCEEDED", "artifactId": artifact_id, "kind": kind, "revision": revision });
             jobs.succeed(&job_id, structured.clone());

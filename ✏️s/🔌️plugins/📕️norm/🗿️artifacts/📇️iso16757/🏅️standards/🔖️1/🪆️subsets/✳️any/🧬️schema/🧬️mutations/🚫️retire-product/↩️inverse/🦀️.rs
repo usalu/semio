@@ -7,10 +7,13 @@ use crate::{Iso16757Mutation, Iso16757Snapshot};
 use super::mutation::RetireProduct;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &RetireProduct, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
+pub fn inverse(payload: &RetireProduct, base: &Iso16757Snapshot) -> Result<Vec<Iso16757Mutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(position) = base.catalogue.products.iter().position(|product| product.id == payload.id) else {
         return Vec::new();
     };
     vec![Iso16757Mutation::IntroduceProduct(introduce_product::mutation::IntroduceProduct { product: base.catalogue.products[position].clone(), index: Some(position) })]
+
+    })())
 }
 //#endregion 🔖️Inverse

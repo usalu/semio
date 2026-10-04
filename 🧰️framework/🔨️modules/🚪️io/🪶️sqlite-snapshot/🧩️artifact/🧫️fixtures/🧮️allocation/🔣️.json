@@ -1,0 +1,30 @@
+{
+  "schemaSql": "CREATE TABLE provider_owner (id INTEGER PRIMARY KEY, label TEXT NOT NULL, payload BLOB NOT NULL, scalar REAL, scalar_ieee754_bits INTEGER, scalar_numeric_class TEXT); CREATE TABLE provider_relation (id INTEGER PRIMARY KEY, owner_id INTEGER NOT NULL REFERENCES provider_owner(id), ordinal INTEGER NOT NULL, score INTEGER NOT NULL)",
+  "ownerTable": "provider_owner",
+  "relationTable": "provider_relation",
+  "owners": [
+    {"id": 1, "label": "", "blob": [], "binary64Bits": "8000000000000000", "numericClass": "finite"},
+    {"id": 2, "label": "世界🧬", "blob": [0, 255, 128, 1], "binary64Bits": "7ff8000000000011", "numericClass": "nan"}
+  ],
+  "ordinalInput": [2, 0, 1],
+  "ordinalExpectedIds": [2, 3, 1],
+  "duplicateOrdinals": [0, 0, 2],
+  "textUnit": "é",
+  "textRepeats": 50000,
+  "textBytes": 100000,
+  "blobUnit": [0, 255, 128, 1],
+  "blobRepeats": 25000,
+  "blobBytes": 100000,
+  "copyFrontier": 65536,
+  "tinyAllocationBytes": [0, 1],
+  "repeatedText": "same",
+  "repeatedAllocationBytes": 8,
+  "orderedCancellationRows": 300,
+  "orderedCancelAt": 256,
+  "semanticBytes": 4000000,
+  "fileBytes": 8000000,
+  "schemaBytes": 4000000,
+  "allocationBytes": 8000000,
+  "expectedOwnershipKind": "ownershipLimit",
+  "expectedCancellationKind": "canceled"
+}

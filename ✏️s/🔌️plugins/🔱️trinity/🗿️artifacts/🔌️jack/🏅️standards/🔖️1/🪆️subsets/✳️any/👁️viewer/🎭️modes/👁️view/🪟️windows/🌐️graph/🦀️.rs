@@ -5,7 +5,8 @@
 //! outright). No selection, no LOD toggle, no engagement: a viewer has no utilities that mutate
 //! and emits no mutations by construction (`ViewEmit`).
 
-use crate::{JackSnapshot, Node, PortDirection};
+use crate::JackSnapshot;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::{SemioGraphNode,SemioGraphPortKind,SemioGraphSnapshot};
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::NodeGraphEdgeRecord;
 use semio_framework_plugin::NodeGraphNodeRecord;
@@ -48,44 +49,30 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// 🩹 Read-only twin of the editor's `split_endpoint` — duplicated on purpose rather than imported
-/// through the sibling `✏️editor` module, which `policyViewerPurityBreaches` forbids outright.
-fn split_endpoint(endpoint: &str) -> (String, String) {
-    crate::parse_port_key(endpoint).map_or_else(|| (endpoint.to_string(), "in".into()), |(n, p)| (n.to_string(), p.to_string()))
-}
-
-fn node_to_record(node: &Node) -> NodeGraphNodeRecord {
+fn node_to_record(node: &SemioGraphNode) -> NodeGraphNodeRecord {
     let width = if node.width > 0.0 { node.width } else { 96.0 };
     let height = if node.height > 0.0 { node.height } else { 48.0 };
     NodeGraphNodeRecord {
-        id: node.id.clone(),
-        label: Some(if node.name.is_empty() { node.id.clone() } else { node.name.clone() }),
-        x: node.x,
-        y: node.y,
+        id: node.id.value.clone(),
+        label: Some(if node.label.is_empty() { node.id.value.clone() } else { node.label.clone() }),
+        x: node.position.x,
+        y: node.position.y,
         width,
         height,
-        inputs: node.ports.iter().filter(|port| port.direction == PortDirection::In).map(|port| NodeGraphPortRecord { id: crate::port_key(&node.id, &port.id), label: Some(port.id.clone()), ..Default::default() }).collect(),
-        outputs: node.ports.iter().filter(|port| port.direction == PortDirection::Out).map(|port| NodeGraphPortRecord { id: crate::port_key(&node.id, &port.id), label: Some(port.id.clone()), ..Default::default() }).collect(),
+        inputs: node.ports.iter().filter(|port| matches!(port.kind,SemioGraphPortKind::In|SemioGraphPortKind::InOut)).map(|port| NodeGraphPortRecord { id: port.name.clone(), label: Some(port.name.clone()), ..Default::default() }).collect(),
+        outputs: node.ports.iter().filter(|port| matches!(port.kind,SemioGraphPortKind::Out|SemioGraphPortKind::InOut)).map(|port| NodeGraphPortRecord { id: port.name.clone(), label: Some(port.name.clone()), ..Default::default() }).collect(),
         ..Default::default()
     }
 }
 
-/// 👁️ Pure `JackSnapshot -> BuiltNode` read: no selection, no LOD, no query text — the viewer renders
-/// the live fixture graph exactly as it stands.
-pub fn render(document: &JackSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let nodes: Vec<NodeGraphNodeRecord> = document.nodes().iter().map(node_to_record).collect();
-    let edges: Vec<NodeGraphEdgeRecord> = document
-        .edges()
-        .iter()
-        .map(|edge| {
-            let (source_node_id, source_port_id) = split_endpoint(&edge.source);
-            let (target_node_id, target_port_id) = split_endpoint(&edge.target);
-            NodeGraphEdgeRecord { id: edge.id.clone(), source_node_id, source_port_id, target_node_id, target_port_id, label: None }
-        })
-        .collect();
+/// 👁️ Pure read of the parent and its published `content` child: no selection, no LOD, no query text — the viewer
+/// renders the live graph exactly as it stands.
+pub fn render(document: &JackSnapshot, child: &SemioGraphSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let nodes=child.nodes.iter().map(node_to_record).collect();
+    let edges=child.edges.iter().map(|edge|NodeGraphEdgeRecord{id:edge.id.value.clone(),source_node_id:edge.source.value.clone(),source_port_id:edge.source_port.clone().unwrap_or_else(||"in".into()),target_node_id:edge.target.value.clone(),target_port_id:edge.target_port.clone().unwrap_or_else(||"in".into()),label:Some(edge.label.clone())}).collect();
     let viewport = Viewport2d { x: document.camera.x, y: document.camera.y, zoom: document.camera.zoom };
     let mut scene = NodeGraphScene { editable: Some(false), ..NodeGraphScene::base(nodes, edges, viewport) };
-    scene.controls_json = Some(pack::json!({ "controllerId": TRINITY_JACK_VIEW_CONTROLLER_ID }).to_string());
+    scene.controls_json = Some(semio_framework_pack_json::json!({ "controllerId": TRINITY_JACK_VIEW_CONTROLLER_ID }).to_string());
     semio_framework_plugin::scene_surface(SURFACE_ID, SurfaceKind::NodeGraph, &scene)
 }
 //#endregion 🔖️Render

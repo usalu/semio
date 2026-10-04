@@ -62,7 +62,7 @@ CREATE TABLE ifc2x3_value (
   CHECK ((kind = 'str') = (string_value IS NOT NULL)),
   CHECK ((kind = 'enum') = (enum_value IS NOT NULL)),
   CHECK ((kind = 'ref') = (reference_instance_id IS NOT NULL)),
-  CHECK ((kind = 'ref') = (reference_instance_row_id IS NOT NULL)),
+  CHECK (kind = 'ref' OR reference_instance_row_id IS NULL),
   CHECK ((kind = 'typed') = (typed_name IS NOT NULL))
 );
 CREATE TABLE ifc2x3_list_element (

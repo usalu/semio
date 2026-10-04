@@ -22,13 +22,13 @@ const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutat
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗂️remove-layer-asset/🖼️rejects/🎯️outcome/🔣️.json");
 
 fn before() -> RasterSnapshot {
-    dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> RasterSnapshot {
-    dsl::json::from_json_str(AFTER).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> RasterMutation {
-    dsl::json::from_json_str(MUTATION).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 /// 🧹️ This leaf's committed documents carry a populated `assets` pool, so every snapshot a test
 /// materializes reaches the artifact's own retirement seam instead of `RasterOwnedMap`'s
@@ -63,7 +63,7 @@ async fn a_missing_asset_is_reported_by_its_asset_id() {
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "remove-layer-asset/rejects-removing-an-asset-the-document-never-attached: exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.target-missing", "remove-layer-asset/rejects-removing-an-asset-the-document-never-attached: an unattached asset is reported as target-missing");
-    assert_eq!(messages[0].level, protocol::Severity::Error, "remove-layer-asset/rejects-removing-an-asset-the-document-never-attached: this verb has no Fatal branch at all");
+    assert_eq!(messages[0].level, semio_framework_diagnostic::Severity::Error, "remove-layer-asset/rejects-removing-an-asset-the-document-never-attached: this verb has no Fatal branch at all");
     assert_eq!(messages[0].target, vec!["logo".to_string()], "remove-layer-asset/rejects-removing-an-asset-the-document-never-attached: the diagnostic names the ASSET id, not the layer that would reference it");
     let semantics = <RasterMutation as protocol::SemanticMutation<RasterSnapshot>>::semantics(&mutation());
     assert_eq!(
@@ -80,7 +80,7 @@ async fn a_missing_asset_is_reported_by_its_asset_id() {
 #[semio_framework_async_macros::async_test]
 async fn inverse_has_no_asset_to_reattach() {
     let base = before();
-    let inverse = inverse_raster_mutation(&base, &mutation());
+    let inverse = inverse_raster_mutation(&base, &mutation()).expect("valid retained mutation inverse fixture");
     retire(base);
     assert!(inverse.is_empty(), "remove-layer-asset/rejects-removing-an-asset-the-document-never-attached: a rejected removal must have no inverse steps, got {inverse:?}");
 }
@@ -90,27 +90,27 @@ async fn inverse_has_no_asset_to_reattach() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: RasterSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
-        let reencoded = dsl::json::from_dsl_value(&dsl::ToValue::to_value(&decoded));
-        let original = dsl::json::parse(text).expect("snapshot reparses");
+        let decoded: RasterSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&decoded));
+        let original = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot reparses");
         retire(decoded);
-        assert!(dsl::json::value_eq_ignoring_object_order(&reencoded, &original), "remove-layer-asset/rejects-removing-an-asset-the-document-never-attached: committed {side} JSON is not canonical");
+        assert!(semio_framework_pack_json::value_eq_ignoring_object_order(&reencoded, &original), "remove-layer-asset/rejects-removing-an-asset-the-document-never-attached: committed {side} JSON is not canonical");
     }
-    let reencoded = dsl::json::from_dsl_value(&dsl::ToValue::to_value(&mutation()));
-    let original = dsl::json::parse(MUTATION).expect("mutation reparses");
-    assert!(dsl::json::value_eq_ignoring_object_order(&reencoded, &original), "remove-layer-asset/rejects-removing-an-asset-the-document-never-attached: committed mutation JSON is not canonical");
+    let reencoded = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&mutation()));
+    let original = semio_framework_pack_json::parse(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation reparses");
+    assert!(semio_framework_pack_json::value_eq_ignoring_object_order(&reencoded, &original), "remove-layer-asset/rejects-removing-an-asset-the-document-never-attached: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ The declared rejection — status, code and path — is exactly what the diff builder emits.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
-    let outcome = dsl::json::parse(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(dsl::json::Value::as_str), Some("rejected"), "remove-layer-asset/rejects-removing-an-asset-the-document-never-attached declares a rejected outcome");
+    let outcome = semio_framework_pack_json::parse(OUTCOME, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
+    assert_eq!(outcome.get("status").and_then(semio_framework_pack_json::Value::as_str), Some("rejected"), "remove-layer-asset/rejects-removing-an-asset-the-document-never-attached declares a rejected outcome");
     let base = before();
     let produced = <RasterMutation as protocol::Mutation<RasterSnapshot>>::diff(&mutation(), &base);
     retire(base);
     let message = produced.messages().first().expect("a rejected outcome carries a diagnostic");
-    assert_eq!(outcome.get("code").and_then(dsl::json::Value::as_str), Some(message.code.0.as_str()), "remove-layer-asset/rejects-removing-an-asset-the-document-never-attached: the declared code must match the emitted one");
-    let declared_path: Vec<String> = outcome.get("path").and_then(dsl::json::Value::as_array).expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();
+    assert_eq!(outcome.get("code").and_then(semio_framework_pack_json::Value::as_str), Some(message.code.0.as_str()), "remove-layer-asset/rejects-removing-an-asset-the-document-never-attached: the declared code must match the emitted one");
+    let declared_path: Vec<String> = outcome.get("path").and_then(semio_framework_pack_json::Value::as_array).expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();
     assert_eq!(declared_path, message.target, "remove-layer-asset/rejects-removing-an-asset-the-document-never-attached: the declared path must match the emitted target");
 }

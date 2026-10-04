@@ -6,7 +6,7 @@ pub fn diff(payload: &ChangeFatigueDetail, base: &En1994Snapshot) -> protocol::M
         return protocol::MutationOutcome::fatal("mutation.invariant", "invalid value", Vec::<String>::new());
     }
     if base.fatigue_detail == payload.new_fatigue_detail {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "unchanged");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "unchanged");
     }
     protocol::MutationOutcome::new(En1994Diff { fatigue_detail: Some(payload.new_fatigue_detail.clone()), ..Default::default() })
 }

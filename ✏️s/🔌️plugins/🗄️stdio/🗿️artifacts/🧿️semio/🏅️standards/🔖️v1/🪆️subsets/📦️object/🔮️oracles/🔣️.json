@@ -158,6 +158,7 @@
       ],
       "kinds": [
         "set-snapshot",
+        "patch-snapshot",
         "move-object",
         "rotate-object",
         "scale-object",
@@ -375,6 +376,26 @@
             "operation": "set-snapshot",
             "bridgeVersion": 1,
             "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-object-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "patch-snapshot",
+          "capability": "semio-v1-object-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "patch-snapshot",
+            "bridgeVersion": 1,
+            "variant": "PatchSnapshot"
           },
           "oracleRequirements": [
             {

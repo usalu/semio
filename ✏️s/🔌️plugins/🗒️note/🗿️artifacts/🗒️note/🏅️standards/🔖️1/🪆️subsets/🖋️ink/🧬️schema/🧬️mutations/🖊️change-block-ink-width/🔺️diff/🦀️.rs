@@ -14,7 +14,7 @@ pub fn diff(payload: &ChangeBlockInkWidth, base: &NoteSnapshot) -> protocol::Mut
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Block \"{}\" is not an ink block.", payload.id), [payload.id.clone()]);
     };
     if *stroke_width == payload.new_stroke_width {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Block \"{}\" ink width is already {}.", payload.id, payload.new_stroke_width));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Block \"{}\" ink width is already {}.", payload.id, payload.new_stroke_width));
     }
     let mut updated = block.clone();
     if let crate::NoteBlockNode::Ink { stroke_width, .. } = &mut updated {

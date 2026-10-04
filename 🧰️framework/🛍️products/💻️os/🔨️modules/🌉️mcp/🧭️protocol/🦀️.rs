@@ -13,7 +13,7 @@
 use crate::workspace::GatewayBackends;
 use schemars::JsonSchema;
 use semio_framework_dispatch_macros::dyn_enum;
-use semio_framework_os_kernel::{DslValue, FromValue, Number, ToValue, ValueError};
+use semio_framework_value::{DslValue, FromValue, Number, ToValue, ValueError};
 use serde::{Deserialize, Deserializer, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::{Arc, Mutex};
@@ -117,10 +117,10 @@ impl FromValue for JsonRpcId {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         match value {
             DslValue::Number(Number::Int(n)) => Ok(JsonRpcId::Number(n)),
-            DslValue::Number(Number::UInt(n)) => i64::try_from(n).map(JsonRpcId::Number).map_err(|_| ValueError::new(format!("id {n} out of i64 range"))),
+            DslValue::Number(Number::UInt(n)) => i64::try_from(n).map(JsonRpcId::Number).map_err(|_| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("id {n} out of i64 range"))),
             DslValue::String(s) => Ok(JsonRpcId::String(s)),
             DslValue::Null => Ok(JsonRpcId::Null),
-            other => Err(ValueError::new(format!("expected a JSON-RPC id (number, string, or null), found {other:?}"))),
+            other => Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a JSON-RPC id (number, string, or null), found {other:?}"))),
         }
     }
 }
@@ -236,7 +236,7 @@ impl FromValue for JsonRpcOutcome {
         if let Some((_, error)) = entries.iter().find(|(key, _)| key == "error") {
             return Ok(JsonRpcOutcome::Error { error: JsonRpcErrorObject::from_value(error.clone())? });
         }
-        Err(ValueError::new("expected an object with a `result` or `error` key"))
+        Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected an object with a `result` or `error` key"))
     }
 }
 
@@ -416,13 +416,13 @@ impl ToValue for ContentBlock {
 impl FromValue for ContentBlock {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let entries = DslValue::into_object(value)?;
-        let tag = entries.iter().find(|(k, _)| k == "type").map(|(_, v)| v.clone()).ok_or_else(|| ValueError::new("missing field `type`"))?;
+        let tag = entries.iter().find(|(k, _)| k == "type").map(|(_, v)| v.clone()).ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "missing field `type`"))?;
         let tag = match tag {
             DslValue::String(s) => s,
-            other => return Err(ValueError::new(format!("expected a string tag, found {other:?}"))),
+            other => return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string tag, found {other:?}"))),
         };
         let field = |name: &str| entries.iter().find(|(k, _)| k == name).map(|(_, v)| v.clone());
-        let required = |name: &str| field(name).ok_or_else(|| ValueError::new(format!("missing field `{name}`")));
+        let required = |name: &str| field(name).ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("missing field `{name}`")));
         Ok(match tag.as_str() {
             "text" => ContentBlock::Text { text: String::from_value(required("text")?).map_err(|error| error.under("text"))? },
             "image" => ContentBlock::Image {
@@ -459,7 +459,7 @@ impl FromValue for ContentBlock {
                     None => None,
                 },
             },
-            other => return Err(ValueError::new(format!("unknown `type` variant `{other}`"))),
+            other => return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown `type` variant `{other}`"))),
         })
     }
 }

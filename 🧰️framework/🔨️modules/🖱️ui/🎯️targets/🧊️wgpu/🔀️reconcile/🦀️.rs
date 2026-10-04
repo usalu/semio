@@ -554,7 +554,14 @@ fn surface_scene_node(document: &UiDocumentTree, record: &UiNodeRecord, props: &
                 node.world_3d = Some(scene);
             }
         }
-        ui_contract::SurfaceKind::NodeGraph => node.node_graph = ui_scene::decode::<ui_scene::NodeGraphScene>(props).ok(),
+        ui_contract::SurfaceKind::NodeGraph => {
+            if let Ok(mut scene) = ui_scene::decode::<ui_scene::NodeGraphScene>(props) {
+                let declared = std::mem::take(&mut scene.lanes);
+                merge_scene_lanes(document, record, &mut scene, &declared, |key| ui_scene::NodeGraphSceneLane::from_body_key(key).map(ui_scene::NodeGraphSceneLane::name));
+                scene.lanes = declared;
+                node.node_graph = Some(scene);
+            }
+        }
         ui_contract::SurfaceKind::Canvas2d => {
             if let Ok(mut scene) = ui_scene::decode::<ui_scene::Canvas2dScene>(props) {
                 let declared = std::mem::take(&mut scene.lanes);
@@ -633,6 +640,7 @@ fn row_action(action: &ui_contract::RowAction, target: &ui_contract::RowTarget) 
             ui_contract::RowActionPlacement::Menu => UiTreeActionPlacement::Menu,
         }),
         disabled: action.disabled,
+        reason: optional_contract_label(action.reason.as_ref()),
     }
 }
 
@@ -728,7 +736,7 @@ fn tree_item(document: &UiDocumentTree, record: &UiNodeRecord, surface: &str, co
         label: contract_label(&props.label),
         description: props.description.as_ref().map(|value| value.as_str().to_string()),
         icon_id: props.icon.as_ref().map(icon_name),
-        presence: record_presence(record),
+        presence: UiPresence { selected: props.selected == Some(true), ..record_presence(record) },
         default_open: props.default_open,
         action: row_activation(record),
         actions: row_actions(&props.row_actions, props.target.as_ref()),

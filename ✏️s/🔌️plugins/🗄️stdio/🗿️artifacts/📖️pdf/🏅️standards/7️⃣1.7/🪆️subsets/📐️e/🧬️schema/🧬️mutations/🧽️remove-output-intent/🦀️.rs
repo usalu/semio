@@ -19,9 +19,12 @@ impl MutationKind<PdfSnapshot, PdfEMutation> for RemoveOutputIntent {
         MutationOutcome::new(support::graph_edit_diff(base, next))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfEMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfEMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         support::output_intent_identifier(base).map(|identifier| PdfEMutation::SetOutputIntent(SetOutputIntent { identifier })).into_iter().collect()
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove PDF/E output intent", "PDF/E-Ausgabebedingung entfernen")

@@ -7,7 +7,7 @@ use framework_schema::ArtifactSchema;
 //#region 🔖️Snapshot
 
 /// 📸️ Persisted EN 1990 basis-of-design subject. Forces in N, lengths in m, frequencies in Hz.
-#[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -126,12 +126,12 @@ impl Default for En1990Snapshot {
 //#region 🌉️ExternalCodecBridge
 /// 📤️ Canonical JSON projection of [`En1990Snapshot`].
 pub fn encode_en1990_snapshot_json(snapshot: &En1990Snapshot) -> String {
-    pack::json::to_json_string(snapshot)
+    semio_framework_pack_json::to_json_string(snapshot)
 }
 
 /// 📥️ Inverse of [`encode_en1990_snapshot_json`].
 pub fn decode_en1990_snapshot_json(text: &str) -> Result<En1990Snapshot, String> {
-    pack::json::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 
 /// 📖️ Parses committed `.dsl.semio` into [`En1990Snapshot`].

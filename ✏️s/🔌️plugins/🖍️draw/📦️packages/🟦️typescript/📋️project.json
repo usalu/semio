@@ -8,7 +8,8 @@
         "cwd": "✏️s/🔌️plugins/🖍️draw/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
-      }
+      },
+      "cache": false
     },
     "publication-authority-audit": {
       "executor": "nx:run-commands",

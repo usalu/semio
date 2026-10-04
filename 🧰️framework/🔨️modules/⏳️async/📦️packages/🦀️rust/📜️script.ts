@@ -2,6 +2,7 @@
 import { runExactCargoLaws } from "../../../🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
 import { resolve } from "node:path";
 import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
+import { runOwnedCommand } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
 import { resolveTestLevel } from "../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../🏃️process/⏱️budget/🟦️.ts";
 /** 🦀️ `@semio-tech/framework-async` task router: `bun ./📜️script.ts <test|typegen>`. */
@@ -239,6 +240,19 @@ class CheckScript extends BundleScript {
 }
 //#endregion 🦀️Checks
 
+/** 📚️ Compiles every external-owner law under the caller's explicit native policy. */
+class PublicationDocsTestScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("test-publication-docs accepts no arguments");
+    const policy = readCargoTestPolicyV1(process.env), manifest = resolve(this.root, "Cargo.toml");
+    if (policy.manifestPath !== manifest) throw new Error("publication doctests require the actual Async manifest policy");
+    mkdirSync(policy.artifactDirectory, { recursive: true });
+    await runOwnedCommand("cargo", ["test", "--locked", "--doc", "--manifest-path", manifest, "-p", "semio-framework-async"], this.root, "async:publication-docs", policy.buildBudgetMs, {
+      env: { ...process.env, CARGO_TARGET_DIR: policy.targetDirectory, RUST_MIN_STACK: policy.rustMinStack, TMPDIR: policy.artifactDirectory, TMP: policy.artifactDirectory, TEMP: policy.artifactDirectory },
+    });
+  }
+}
+
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
@@ -295,6 +309,6 @@ class PreviewGeneratedScript extends BundleScript {
 }
 //#endregion 🔖️Typegen
 
-const router = new ScriptRouter(import.meta.dir).register("check", CheckScript).register("test", TestScript).register("typegen", TypegenScript).register("preview-generated", PreviewGeneratedScript).register("worker-maintenance-check", WorkerMaintenanceCheckScript).register("worker-deferred-wake-check", WorkerDeferredWakeCheckScript).register("worker-parking-check", WorkerParkingCheckScript).register("worker-pool-use-check", WorkerPoolUseCheckScript);
+const router = new ScriptRouter(import.meta.dir).register("check", CheckScript).register("test", TestScript).register("test-publication-docs", PublicationDocsTestScript).register("typegen", TypegenScript).register("preview-generated", PreviewGeneratedScript).register("worker-maintenance-check", WorkerMaintenanceCheckScript).register("worker-deferred-wake-check", WorkerDeferredWakeCheckScript).register("worker-parking-check", WorkerParkingCheckScript).register("worker-pool-use-check", WorkerPoolUseCheckScript);
 
 await runScriptMain(router, { defaultCommand: "test" });

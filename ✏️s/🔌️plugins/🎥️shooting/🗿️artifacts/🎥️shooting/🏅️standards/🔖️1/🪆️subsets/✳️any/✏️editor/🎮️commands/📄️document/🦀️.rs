@@ -12,16 +12,16 @@ pub mod import_snapshot_json {
     use super::*;
 
     /// 🛠️ Dev-only whole-document import — kept out of the command palette.
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "import-snapshot-json")]
     pub struct ImportSnapshotJson {
         pub json: String,
     }
 
     pub fn handle(payload: &ImportSnapshotJson, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        let parsed: Result<ShootingSnapshot, ()> = dsl::os_pack::json::parse(&payload.json).map_err(|_| ()).and_then(|json_value| {
-            let dsl_value = dsl::os_pack::json::to_dsl_value(&json_value);
-            dsl::FromValue::from_value(dsl_value).map_err(|_: dsl::ValueError| ())
+        let parsed: Result<ShootingSnapshot, ()> = semio_framework_pack_json::parse(&payload.json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| ()).and_then(|json_value| {
+            let dsl_value = semio_framework_pack_json::to_dsl_value(&json_value);
+            semio_framework_value::FromValue::from_value(dsl_value).map_err(|_: semio_framework_value::ValueError| ())
         });
         match parsed {
             Ok(snapshot) => Ok(Emit { effects: vec![crate::editor::shooting::reset_document_effect(&snapshot)], ..Default::default() }),
@@ -39,7 +39,7 @@ pub mod set_active_example {
 
     pub const SHOOTING_EXAMPLE_HEXAGONAL_CUT_CONCRETE_FOREST_LEFT: &str = "hexagonal-cut-concrete-forest-left";
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "active-example")]
     pub struct SetActiveExample {
         pub example_id: String,
@@ -68,7 +68,7 @@ pub mod set_active_example {
 pub mod reset_snapshot {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "reset-snapshot")]
     pub struct ResetSnapshot {}
 
@@ -82,13 +82,13 @@ pub mod reset_snapshot {
 pub mod save_download {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "save-download")]
     pub struct SaveDownload {}
 
     pub fn handle(_payload: &SaveDownload, doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        let value = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(doc.snapshot));
-        let document_text = dsl::os_pack::json::to_string_pretty(&value);
+        let value = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(doc.snapshot));
+        let document_text = semio_framework_pack_json::to_string_pretty(&value);
         Ok(Emit::effect(Effect::DownloadMediaExport { filename: "shooting.shooting.ops".into(), mime_type: "text/plain".into(), data: document_text, encoding: None }))
     }
 }

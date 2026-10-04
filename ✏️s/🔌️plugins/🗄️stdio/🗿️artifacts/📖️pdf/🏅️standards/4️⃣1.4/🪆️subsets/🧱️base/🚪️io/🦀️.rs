@@ -613,7 +613,7 @@ pub fn encode_pdf(snapshot: &PdfSnapshot) -> Result<Vec<u8>, String> {
 #[cfg(not(target_arch = "wasm32"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_schema_specs() {
-    semio_framework_plugin::resolve_ready(dsl::registry::register_schema_spec("stdio.pdf", PdfSnapshot::__dsl_spec));
+    ::semio_framework_async::poll::resolve_ready(dsl::registry::register_schema_spec("stdio.pdf", PdfSnapshot::__dsl_spec));
 }
 
 #[cfg(target_arch = "wasm32")]

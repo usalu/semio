@@ -277,13 +277,13 @@ async fn clip_apply_operator_creates_drawing() {
 async fn export_svg_json_returns_svg_for_known_handle() {
     let _guard = kernel_read_guard();
     let handle = make_rect(0.0, 0.0, 5.0, 5.0);
-    let json = pack::json::parse(&export_svg_json(&handle)).unwrap();
+    let json = semio_framework_pack_json::parse(&export_svg_json(&handle), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert!(json.get("svg").and_then(|v| v.as_str()).is_some_and(|svg| svg.contains("svg")));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn export_svg_json_returns_error_for_unknown_handle() {
-    let json = pack::json::parse(&export_svg_json("drawing-missing-999")).unwrap();
+    let json = semio_framework_pack_json::parse(&export_svg_json("drawing-missing-999"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert!(json.get("error").is_some());
 }
 
@@ -291,19 +291,19 @@ async fn export_svg_json_returns_error_for_unknown_handle() {
 async fn export_pdf_json_returns_pdf_for_known_handle() {
     let _guard = kernel_read_guard();
     let handle = make_rect(0.0, 0.0, 5.0, 5.0);
-    let json = pack::json::parse(&export_pdf_json(&handle)).unwrap();
+    let json = semio_framework_pack_json::parse(&export_pdf_json(&handle), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert!(json.get("pdf").and_then(|v| v.as_str()).is_some_and(|pdf| !pdf.is_empty()));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn export_pdf_json_returns_error_for_unknown_handle() {
-    let json = pack::json::parse(&export_pdf_json("drawing-missing-999")).unwrap();
+    let json = semio_framework_pack_json::parse(&export_pdf_json("drawing-missing-999"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert!(json.get("error").is_some());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn render_scene_json_returns_error_for_unknown_handle() {
-    let json = pack::json::parse(&render_scene_json("drawing-missing-999")).unwrap();
+    let json = semio_framework_pack_json::parse(&render_scene_json("drawing-missing-999"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert!(json.get("error").is_some());
 }
 
@@ -312,7 +312,7 @@ async fn dispose_drawing_removes_the_handle() {
     let _guard = kernel_write_guard();
     let handle = make_rect(0.0, 0.0, 5.0, 5.0);
     dispose_drawing(&handle);
-    let json = pack::json::parse(&render_scene_json(&handle)).unwrap();
+    let json = semio_framework_pack_json::parse(&render_scene_json(&handle), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert!(json.get("error").is_some());
 }
 
@@ -322,8 +322,8 @@ async fn retain_drawing_handles_disposes_unreferenced_drawings() {
     let kept = make_rect(0.0, 0.0, 5.0, 5.0);
     let dropped = make_rect(1.0, 1.0, 5.0, 5.0);
     retain_drawing_handles(&[kept.clone()]);
-    let kept_json = pack::json::parse(&render_scene_json(&kept)).unwrap();
-    let dropped_json = pack::json::parse(&render_scene_json(&dropped)).unwrap();
+    let kept_json = semio_framework_pack_json::parse(&render_scene_json(&kept), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let dropped_json = semio_framework_pack_json::parse(&render_scene_json(&dropped), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert!(kept_json.get("nodes").is_some());
     assert!(dropped_json.get("error").is_some());
 }
@@ -331,7 +331,7 @@ async fn retain_drawing_handles_disposes_unreferenced_drawings() {
 #[semio_framework_async_macros::async_test]
 async fn trace_bitmap_json_returns_segments_for_a_filled_mask() {
     let mask = vec![255u8; 16];
-    let json = pack::json::parse(&trace_bitmap_json(4, 4, &mask, 0.5, 0.0)).unwrap();
+    let json = semio_framework_pack_json::parse(&trace_bitmap_json(4, 4, &mask, 0.5, 0.0), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert!(json.get("segments").is_some());
 }
 
@@ -339,26 +339,26 @@ async fn trace_bitmap_json_returns_segments_for_a_filled_mask() {
 async fn boolean_segments_json_unions_two_traced_masks() {
     let mask = vec![255u8; 16];
     let segments_json = trace_bitmap_json(4, 4, &mask, 0.5, 0.0);
-    let result = pack::json::parse(&boolean_segments_json(&segments_json, &segments_json, "union")).unwrap();
+    let result = semio_framework_pack_json::parse(&boolean_segments_json(&segments_json, &segments_json, "union"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert!(result.get("segments").is_some());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn boolean_segments_json_reports_malformed_json_input() {
-    let result = pack::json::parse(&boolean_segments_json("not json", "{}", "union")).unwrap();
+    let result = semio_framework_pack_json::parse(&boolean_segments_json("not json", "{}", "union"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert!(result.get("error").is_some());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn boolean_segments_json_propagates_upstream_error() {
-    let upstream_error = pack::json::to_string(&pack::json::object([("error".to_string(), pack::json::Value::from("upstream boom"))]));
-    let result = pack::json::parse(&boolean_segments_json(&upstream_error, "{\"segments\":[]}", "union")).unwrap();
+    let upstream_error = semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("error".to_string(), semio_framework_pack_json::Value::from("upstream boom"))]));
+    let result = semio_framework_pack_json::parse(&boolean_segments_json(&upstream_error, "{\"segments\":[]}", "union"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(result.get("error").and_then(|v| v.as_str()), Some("upstream boom"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn boolean_segments_json_reports_missing_segments_field() {
-    let result = pack::json::parse(&boolean_segments_json("{}", "{\"segments\":[]}", "union")).unwrap();
+    let result = semio_framework_pack_json::parse(&boolean_segments_json("{}", "{\"segments\":[]}", "union"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(result.get("error").and_then(|v| v.as_str()), Some("missing segments"));
 }
 
@@ -399,7 +399,7 @@ async fn bundle_contributes_draw_for_flow_and_procedural3d_play() {
         .extends("flow")
         .contributes_topic(flow_topic.topic, flow_topic.payload)
         .contributes_topic(procedural3d_topic.topic, procedural3d_topic.payload)
-        .handler("evaluate", |req| Ok(flow_extension_sdk::evaluate_invoke_json(&neural_engine::ColdOwner::new(module_registry()), req).unwrap()));
+        .resource_owner(flow_extension_sdk::ExtensionEvaluationResources::new(module_registry())).owned_handler("evaluate");
     assert!(install_extension_bundle(&mut Some(bundle)).await.unwrap());
     let installed = extension_manifest().await;
     assert_eq!(installed.topic_contributions.len(), 2);

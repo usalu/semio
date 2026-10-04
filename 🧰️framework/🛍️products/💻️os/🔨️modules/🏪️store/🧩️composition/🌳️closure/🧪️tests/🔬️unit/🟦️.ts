@@ -1,7 +1,7 @@
 /** 🧪️ Graphlib topology and Ajv shape independently verify recursive document closure. */
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
-import Ajv from "ajv";
+import { semioSchemaAjvV1 } from "../../../../../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import vectors from "../../🧫️fixtures/🔣️.json" with { type: "json" };
 import schema from "../../🧬️schema/🔣️.json" with { type: "json" };
 import ioSchema from "../../../../../../../../🔨️modules/🚪️io/🧬️schema/🔣️.json" with { type: "json" };
@@ -19,7 +19,7 @@ function oracle(input: OwnedDocumentClosureInput): boolean {
     graph.setNode(node.reference.artifactId);
   }
   for (const member of input.members) {
-    if (!graph.hasNode(member.owner.parent.artifactId) || member.owner.childId !== member.reference.artifactId) return false;
+    if (!graph.hasNode(member.owner.parent.artifactId)) return false;
     graph.setEdge(member.owner.parent.artifactId, member.reference.artifactId);
   }
   if (!graphlib.alg.isAcyclic(graph) || graphlib.alg.preorder(graph, input.root.reference.artifactId).length !== nodes.length) return false;
@@ -27,7 +27,7 @@ function oracle(input: OwnedDocumentClosureInput): boolean {
     const declared = node.children.map((child) => JSON.stringify([child.slot, child.childId, child.target]));
     const owned = input.members.filter((member) => member.owner.parent.artifactId === node.reference.artifactId);
     if (owned.some((member) => JSON.stringify(member.owner.parent) !== JSON.stringify(node.reference))) return false;
-    const actual = owned.map((member) => JSON.stringify([member.owner.slot, member.reference.artifactId, member.reference]));
+    const actual = owned.map((member) => JSON.stringify([member.owner.slot, member.owner.childId, member.reference]));
     if (JSON.stringify(declared.sort()) !== JSON.stringify(actual.sort())) return false;
   }
   return true;
@@ -57,7 +57,7 @@ function validate(input: OwnedDocumentClosureInput, fuel: number): boolean {
 
 /** 🌳️ A chain may exceed the per-parent child bound while respecting the global registry bound. */
 export function testOwnedDocumentClosureOracle(): void {
-  const ajv = new Ajv({ strict: true }).addSchema(ioSchema).addSchema(ownerSchema);
+  const ajv = semioSchemaAjvV1({ strict: true }).addSchema(ioSchema).addSchema(ownerSchema);
   const shape = ajv.compile(schema);
   const ownerShape = ajv.getSchema(ownerSchema.$id)!;
   for (const row of vectors.continuationCases) {

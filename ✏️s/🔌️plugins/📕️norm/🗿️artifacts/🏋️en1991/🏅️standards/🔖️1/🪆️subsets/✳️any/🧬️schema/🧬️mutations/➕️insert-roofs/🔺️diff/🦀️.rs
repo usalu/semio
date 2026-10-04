@@ -1,4 +1,4 @@
-//! Diff for `insert-roofs`.
+//! 🔺️ Diff for `insert-roofs`.
 use super::InsertRoofs;
 use crate::artifact_schema::diff::En1991RoofsList;
 use crate::{En1991Diff, En1991Snapshot};

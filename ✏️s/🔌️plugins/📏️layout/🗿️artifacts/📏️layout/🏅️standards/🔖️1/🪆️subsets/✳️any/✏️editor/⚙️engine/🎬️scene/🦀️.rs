@@ -966,8 +966,8 @@ fn style_spans(story: &TextStory, paragraph: &ParagraphStyle, doc: &LayoutSnapsh
     let len = story.content.len();
     let mut owners: Vec<Option<usize>> = vec![None; len];
     for (index, run) in story.style_runs.iter().enumerate() {
-        let start = run.start.min(len);
-        let end = run.end.min(len);
+        let start = usize::try_from(run.start).unwrap_or(len).min(len);
+        let end = usize::try_from(run.end).unwrap_or(len).min(len);
         if start > end || !story.content.is_char_boundary(start) || !story.content.is_char_boundary(end) {
             continue;
         }

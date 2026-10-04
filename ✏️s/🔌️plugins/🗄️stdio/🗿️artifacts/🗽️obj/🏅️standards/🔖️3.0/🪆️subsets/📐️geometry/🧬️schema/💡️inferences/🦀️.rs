@@ -7,7 +7,6 @@
 
 use crate::schema::snapshot::ObjSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::bounds::compute_obj_bounds;
 //#region 🔖️Inference
@@ -22,8 +21,11 @@ pub struct ObjInference {
 }
 
 impl protocol::Inference<ObjSnapshot> for ObjInference {
-    fn infer(snapshot: &ObjSnapshot) -> Self {
+    fn infer(snapshot: &ObjSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { bounds: compute_obj_bounds(snapshot) }
+    
+        })
     }
 }
 
@@ -31,7 +33,9 @@ impl protocol::Inference<ObjSnapshot> for ObjInference {
 /// `ObjSnapshot::default()`'s `vertices`/`faces`/`groups` ever stop being empty.
 impl Default for ObjInference {
     fn default() -> Self {
-        <Self as protocol::Inference<ObjSnapshot>>::infer(&ObjSnapshot::default())
+        let snapshot = &ObjSnapshot::default();
+
+        Self { bounds: compute_obj_bounds(snapshot) }
     }
 }
 
@@ -47,17 +51,6 @@ impl protocol::InferenceSpec<ObjSnapshot> for ObjInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 💡️ No `InferredField`s here — `bounds` is a single min/max fold over `vertices` plus direct
-/// `faces`/`groups` tallies, already O(n) in total vertex count with no honest per-entity
-/// incremental decomposition (a merkle dep-chain over this flat vertex list costs more than the
-/// fold it would cache) — the default `infer_cached` passthrough is exact.
-impl ArtifactInferrer for crate::standards::v3_0::subsets::any::schema::ObjBuilder {
-    type Snapshot = ObjSnapshot;
-    type Inference = ObjInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.obj.inference`'s facet leaves into the OS-wide inference catalog — call

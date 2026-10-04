@@ -2,7 +2,7 @@
 import type { CreateWidget, Widget } from "../🦠️mutation/🟦️.ts";
 
 export interface CreateWidgetDiff {
-  widgets: { removed: string[]; set: Array<[number, Widget]> };
+  widgets: { removed: string[]; set: Array<[bigint, Widget]> };
 }
 
 export function diff(payload: CreateWidget): CreateWidgetDiff {

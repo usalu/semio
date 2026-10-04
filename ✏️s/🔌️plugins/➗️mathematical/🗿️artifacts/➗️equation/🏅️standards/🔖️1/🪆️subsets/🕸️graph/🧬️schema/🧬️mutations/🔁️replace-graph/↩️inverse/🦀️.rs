@@ -3,7 +3,10 @@
 use crate::{EquationMutation, EquationSnapshot};
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &super::ReplaceGraph, base: &EquationSnapshot) -> Vec<EquationMutation> {
-    vec![EquationMutation::ReplaceGraph(super::ReplaceGraph { graph: crate::equation_graph(base) })]
+pub fn inverse(_payload: &super::ReplaceGraph, base: &EquationSnapshot) -> Result<Vec<EquationMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
+    vec![EquationMutation::ReplaceGraph(super::ReplaceGraph { graph: base.graph.clone() })]
+
+    })())
 }
 //#endregion 🔖️Inverse

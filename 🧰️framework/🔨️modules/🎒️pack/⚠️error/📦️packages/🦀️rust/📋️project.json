@@ -1,0 +1,18 @@
+{
+  "name": "@semio-tech/framework-pack-error-rs",
+  "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "🧰️framework/🔨️modules/🎒️pack/⚠️error",
+  "namedInputs": {
+    "default": ["{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/⚠️error/**/*", "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/**/*"]
+  },
+  "targets": {
+    "test-ownership": {
+      "executor": "nx:run-commands", "cache": false, "inputs": ["default"],
+      "options": {"cwd": "🧰️framework/🔨️modules/🎒️pack/⚠️error/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test-ownership"}
+    },
+    "test-native": {
+      "executor": "nx:run-commands", "cache": false, "inputs": ["default"],
+      "options": {"cwd": "🧰️framework/🔨️modules/🎒️pack/⚠️error/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test-native"}
+    }
+  }
+}

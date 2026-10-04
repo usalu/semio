@@ -17,15 +17,17 @@ export interface DocxStyle { id: string; name: string; basedOn: string | null }
 /** 📰 The typed semantic document view. */
 export interface DocxDocument { body: DocxBlock[]; styles: DocxStyle[] }
 /** 📄️ One authoritative XML-bearing OPC part. */
-export interface DocxXmlPart { path: string; contentType: string; document: XmlDocument }
+export interface DocxXmlPart { path: string; contentType: string; document: RetainedXmlDocument }
 /** 🧬️ Complete lossless DOCX snapshot. */
 export interface DocxSnapshot {
   /** @state artifact */ schema: string;
-  /** @state artifact */ opc: OpcPackage;
+  /** @state artifact */ opc: RetainedOpcPackage;
   /** @state artifact */ xmlParts: DocxXmlPart[];
 }
-import type { XmlDocument,XmlNode,XmlAttr } from '../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts';
+import type { RetainedXmlDocument,XmlNode,XmlAttr } from '../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts';
 
 import type{OpcPackage,OpcPart,OpcRelationship}from"../../../../../../../🎒️zip/📦️opc/🟦️.ts";
+import type {RetainedOpcPackage} from "../../../../../../../🎒️zip/📦️opc/🧬️retained/🟦️.ts";
+export type {RetainedOpcPackage} from "../../../../../../../🎒️zip/📦️opc/🧬️retained/🟦️.ts";
 export type{OpcPackage,OpcPart,OpcRelationship}from"../../../../../../../🎒️zip/📦️opc/🟦️.ts";
-export type{XmlDocument,XmlNode,XmlAttr}from"../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts";
+export type{RetainedXmlDocument,XmlDocument,XmlNode,XmlAttr}from"../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts";

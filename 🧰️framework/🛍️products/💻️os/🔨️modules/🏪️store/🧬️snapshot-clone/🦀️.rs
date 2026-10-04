@@ -1,13 +1,17 @@
 //! 🧩 Bounded retained-clone publication preparation.
 
-use semio_framework_value::retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneSource, RetainedCloneStep, admit_retained_clone_progress, admit_retained_clone_retirement};
 use crate::os_spr::{ActorId, Edit, MutationId, MutationMeta, UndoPolicy};
 use crate::os_store::{
     ARTIFACT_STORE_ONE_ITEM_ID_BYTES, ArtifactCanonicalJson, ArtifactOwnedValueRetirementFactory, ArtifactStoreOneItemCheckpoint, ArtifactStoreOneItemFootprint, ArtifactStoreOneItemGrant, ArtifactStoreOneItemLiveAuthority,
     ArtifactStoreOneItemPreparation, ArtifactStoreOneItemPreparationFactory, ArtifactStoreOneItemPreparationRequest, ArtifactStoreOneItemPreparationStep, ArtifactStoreOneItemPrepared, ArtifactStoreOneItemSealer, ErasedSnapshotRetirement,
     HistoryLane, SnapshotRetirementFactory, SnapshotRetirementStep,
 };
+use semio_framework_value::retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneSource, RetainedCloneStep, admit_retained_clone_progress, admit_retained_clone_retirement};
 use std::{marker::PhantomData, mem::size_of, sync::Arc};
+
+#[path = "🚚️handoff/🦀️.rs"]
+mod handoff;
+use handoff::RetainedCloneCursorHandoff;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) enum RetainedCloneEditStep {
@@ -29,7 +33,7 @@ pub(crate) trait RetainedCloneEditCursor<P: RetainedClone, M>: Send {
     fn take_inverse(&mut self) -> Option<Vec<M>>;
     fn cancel(&mut self);
     fn begin_close(&mut self) -> bool;
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String>;
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError>;
     fn terminal_is_empty(&self) -> bool;
 }
 
@@ -75,7 +79,8 @@ where
         let ArtifactStoreOneItemPreparationRequest { operation: _, generation: _, base_revision: _, lane: _, authority, description, base, mutation } = request;
         Ok(Box::new(RetainedClonePreparation::<P, M, E> {
             source: Some(RetainedCloneSource::from_authority(Arc::clone(base.owner.as_ref().expect("live snapshot read owner is present")), base)),
-            clone_cursor: P::retained_clone_cursor(),
+            clone_cursor: Some(P::retained_clone_cursor()),
+            clone_handoff: None,
             copied: None,
             edit_cursor: self.edit.begin(),
             inverse: None,
@@ -111,7 +116,8 @@ enum RetainedClonePreparationPhase {
 
 struct RetainedClonePreparation<P: RetainedClone, M, E: RetainedCloneEdit<P, M>> {
     source: Option<RetainedCloneSource<P>>,
-    clone_cursor: P::Cursor,
+    clone_cursor: Option<P::Cursor>,
+    clone_handoff: Option<RetainedCloneCursorHandoff<P>>,
     copied: Option<P>,
     edit_cursor: E::Cursor,
     inverse: Option<Vec<M>>,
@@ -133,6 +139,15 @@ struct RetainedClonePreparation<P: RetainedClone, M, E: RetainedCloneEdit<P, M>>
 }
 
 impl<P: RetainedClone, M, E: RetainedCloneEdit<P, M>> RetainedClonePreparation<P, M, E> {
+    fn handoff_clone_cursor(&mut self) -> Result<(), semio_framework_value::ValueError> {
+        if self.clone_handoff.is_some() {
+            return Ok(());
+        }
+        let cursor = self.clone_cursor.take().ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "retained clone preparation lost its cursor before close handoff"))?;
+        self.clone_handoff = Some(RetainedCloneCursorHandoff::new(cursor));
+        Ok(())
+    }
+
     fn clone_grant(&self, grant: ArtifactStoreOneItemGrant) -> RetainedCloneGrant {
         RetainedCloneGrant { maximum_items: grant.maximum_items, maximum_copy_bytes: grant.maximum_bytes, maximum_capacity_bytes: grant.maximum_bytes, maximum_depth: self.maximum_depth }
     }
@@ -151,7 +166,7 @@ impl<P: RetainedClone, M, E: RetainedCloneEdit<P, M>> RetainedClonePreparation<P
     }
 
     fn record_retirement(&mut self, step: SnapshotRetirementStep, maximum_items: usize, maximum_bytes: usize, scope: &str) -> Result<(), String> {
-        let step = admit_retained_clone_retirement(step, maximum_items, maximum_bytes, scope)?;
+        let step = admit_retained_clone_retirement(step, maximum_items, maximum_bytes, scope).map_err(semio_framework_value::ValueError::into_message)?;
         if let SnapshotRetirementStep::Pending { released_items, released_bytes } = step {
             self.record_progress(RetainedCloneProgress { copied_items: released_items, copied_bytes: released_bytes, retained_capacity_bytes: 0 })?;
         }
@@ -190,7 +205,8 @@ impl<P: RetainedClone, M, E: RetainedCloneEdit<P, M>> RetainedClonePreparation<P
         let authority = self.authority.take().ok_or("retained clone preparation lost its Store authority")?;
         let id = authority.edit_id();
         let mutation_id = authority.stamped_edit_id().map_or_else(|| MutationId(format!("{id}#0")), |identity| MutationId(identity.to_string()));
-        let edit = Edit { line: authority.line_id().map(str::to_owned),
+        let edit = Edit {
+            line: authority.line_id().map(str::to_owned),
             id,
             actor: Some(authority.actor().to_string()),
             forwards: vec![self.mutation.take().ok_or("retained clone preparation lost its forward mutation")?],
@@ -209,8 +225,8 @@ impl<P: RetainedClone, M, E: RetainedCloneEdit<P, M>> RetainedClonePreparation<P
                 origin: Default::default(),
                 transaction: None,
             }],
-            description: self.description.take(), verb: None,
-            coalesce_key: None,
+            description: self.description.take(),
+            verb: None,
             sequence_number: authority.next_sequence_number(),
             started_at: String::new(),
             finished_at: None,
@@ -228,13 +244,13 @@ impl<P: RetainedClone, M, E: RetainedCloneEdit<P, M>> RetainedClonePreparation<P
         Ok(true)
     }
 
-    fn close_active_retirement(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<Option<SnapshotRetirementStep>, String> {
+    fn close_active_retirement(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<Option<SnapshotRetirementStep>, semio_framework_value::ValueError> {
         let Some(active) = self.active_retirement.as_mut() else { return Ok(None) };
         let maximum_items = grant.maximum_items.min(1);
         let step = admit_retained_clone_retirement(active.close_step(maximum_items, grant.maximum_bytes)?, maximum_items, grant.maximum_bytes, "retained clone preparation active retirement")?;
         if step == SnapshotRetirementStep::Complete {
             if !active.terminal_is_empty() {
-                return Err("retained clone preparation retirement completed with a live owner".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "retained clone preparation retirement completed with a live owner"));
             }
             self.active_retirement = None;
             return Ok(Some(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }));
@@ -256,27 +272,37 @@ where
         let clone_grant = self.clone_grant(grant);
         match self.phase {
             RetainedClonePreparationPhase::Clone => {
-                let step = self.clone_cursor.advance(self.source.as_ref().ok_or("retained clone preparation lost its source")?.borrow(), clone_grant)?;
-                let progress = admit_retained_clone_progress(clone_grant, step.progress(), "retained clone preparation snapshot clone")?;
+                let step = self
+                    .clone_cursor
+                    .as_mut()
+                    .ok_or("retained clone preparation lost its active clone cursor")?
+                    .advance(self.source.as_ref().ok_or("retained clone preparation lost its source")?.borrow(), clone_grant)
+                    .map_err(semio_framework_value::ValueError::into_message)?;
+                let progress = admit_retained_clone_progress(clone_grant, step.progress(), "retained clone preparation snapshot clone").map_err(semio_framework_value::ValueError::into_message)?;
                 self.record_progress(progress)?;
                 if matches!(step, RetainedCloneStep::Progress(value) if value == RetainedCloneProgress::default()) {
                     return Err(format!("retained-clone.step-grant-too-small: snapshot clone requires more than the admitted {}-byte per-turn allocation or copy grant", grant.maximum_bytes));
                 }
                 if matches!(step, RetainedCloneStep::Complete(_)) {
-                    self.copied = Some(self.clone_cursor.take().ok_or("retained clone cursor completed without its owner")?);
-                    let _ = self.clone_cursor.begin_close();
+                    self.copied = Some(self.clone_cursor.as_mut().and_then(RetainedCloneCursor::take).ok_or("retained clone cursor completed without its owner")?);
+                    self.handoff_clone_cursor().map_err(semio_framework_value::ValueError::into_message)?;
                     self.phase = RetainedClonePreparationPhase::CloseClone;
                 }
                 Ok(if progress == RetainedCloneProgress::default() { ArtifactStoreOneItemPreparationStep::Blocked } else { ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint) })
             }
             RetainedClonePreparationPhase::CloseClone => {
                 let maximum_items = grant.maximum_items.min(1);
-                let step = admit_retained_clone_retirement(self.clone_cursor.close_step(maximum_items, grant.maximum_bytes)?, maximum_items, grant.maximum_bytes, "retained clone preparation clone close")?;
+                let handoff = self.clone_handoff.as_mut().ok_or("retained clone preparation lost its Store-owned clone cursor handoff")?;
+                let step =
+                    admit_retained_clone_retirement(handoff.close_step(maximum_items, grant.maximum_bytes).map_err(semio_framework_value::ValueError::into_message)?, maximum_items, grant.maximum_bytes, "retained clone preparation clone close")
+                        .map_err(semio_framework_value::ValueError::into_message)?;
+                let terminal = handoff.terminal_is_empty();
                 self.record_retirement(step, maximum_items, grant.maximum_bytes, "retained clone preparation clone close")?;
                 if step == SnapshotRetirementStep::Complete {
-                    if !self.clone_cursor.terminal_is_empty() {
+                    if !terminal {
                         return Err("retained clone cursor completed close with a live owner".into());
                     }
+                    self.clone_handoff = None;
                     self.phase = RetainedClonePreparationPhase::Edit;
                 }
                 Ok(if step == SnapshotRetirementStep::Blocked { ArtifactStoreOneItemPreparationStep::Blocked } else { ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint) })
@@ -288,7 +314,7 @@ where
                     self.mutation.as_ref().ok_or("retained clone preparation lost its forward mutation")?,
                     clone_grant,
                 )?;
-                let progress = admit_retained_clone_progress(clone_grant, step.progress(), "retained clone preparation typed edit")?;
+                let progress = admit_retained_clone_progress(clone_grant, step.progress(), "retained clone preparation typed edit").map_err(semio_framework_value::ValueError::into_message)?;
                 self.record_progress(progress)?;
                 if matches!(step, RetainedCloneEditStep::Progress(value) if value == RetainedCloneProgress::default()) {
                     return Err(format!("retained-clone.step-grant-too-small: typed edit requires more than the admitted {}-byte per-turn allocation or copy grant", grant.maximum_bytes));
@@ -302,7 +328,13 @@ where
             }
             RetainedClonePreparationPhase::CloseEdit => {
                 let maximum_items = grant.maximum_items.min(1);
-                let step = admit_retained_clone_retirement(self.edit_cursor.close_step(maximum_items, grant.maximum_bytes)?, maximum_items, grant.maximum_bytes, "retained clone preparation edit close")?;
+                let step = admit_retained_clone_retirement(
+                    self.edit_cursor.close_step(maximum_items, grant.maximum_bytes).map_err(semio_framework_value::ValueError::into_message)?,
+                    maximum_items,
+                    grant.maximum_bytes,
+                    "retained clone preparation edit close",
+                )
+                .map_err(semio_framework_value::ValueError::into_message)?;
                 self.record_retirement(step, maximum_items, grant.maximum_bytes, "retained clone preparation edit close")?;
                 if step == SnapshotRetirementStep::Complete {
                     if !self.edit_cursor.terminal_is_empty() {
@@ -361,24 +393,29 @@ where
             return;
         }
         self.closing = true;
-        let _ = self.clone_cursor.begin_close();
+        if self.clone_handoff.is_none() {
+            if let Some(cursor) = self.clone_cursor.take() {
+                self.clone_handoff = Some(RetainedCloneCursorHandoff::new(cursor));
+            }
+        }
         let _ = self.edit_cursor.begin_close();
         if let Some(sealer) = self.sealer.as_mut() {
             sealer.begin_close();
         }
     }
 
-    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || !grant.permits_one() {
             return Ok(SnapshotRetirementStep::Blocked);
         }
-        if !self.clone_cursor.terminal_is_empty() {
+        if let Some(handoff) = self.clone_handoff.as_mut() {
             let maximum_items = grant.maximum_items.min(1);
-            let step = admit_retained_clone_retirement(self.clone_cursor.close_step(maximum_items, grant.maximum_bytes)?, maximum_items, grant.maximum_bytes, "retained clone preparation cursor close")?;
+            let step = admit_retained_clone_retirement(handoff.close_step(maximum_items, grant.maximum_bytes)?, maximum_items, grant.maximum_bytes, "retained clone preparation cursor close")?;
             if step == SnapshotRetirementStep::Complete {
-                if !self.clone_cursor.terminal_is_empty() {
-                    return Err("retained clone preparation cursor completed close with a live owner".into());
+                if !handoff.terminal_is_empty() {
+                    return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "retained clone preparation cursor completed close with a live owner"));
                 }
+                self.clone_handoff = None;
                 return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
             }
             return Ok(step);
@@ -388,7 +425,7 @@ where
             let step = admit_retained_clone_retirement(self.edit_cursor.close_step(maximum_items, grant.maximum_bytes)?, maximum_items, grant.maximum_bytes, "retained clone preparation edit close")?;
             if step == SnapshotRetirementStep::Complete {
                 if !self.edit_cursor.terminal_is_empty() {
-                    return Err("retained clone preparation edit completed close with a live owner".into());
+                    return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "retained clone preparation edit completed close with a live owner"));
                 }
                 return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
             }
@@ -400,7 +437,7 @@ where
                 return Ok(step);
             }
             if !sealer.terminal_is_empty() {
-                return Err("retained clone canonical sealer completed with a live owner".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "retained clone canonical sealer completed with a live owner"));
             }
             self.sealer = None;
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
@@ -410,7 +447,12 @@ where
         }
         if let Some(inverse) = self.inverse.as_mut() {
             if let Some(mutation) = inverse.pop() {
-                self.active_retirement = Some(self.mutation_retirement.as_ref().ok_or("retained clone preparation lost inverse retirement authority")?.retire_owned(mutation));
+                self.active_retirement = Some(
+                    self.mutation_retirement
+                        .as_ref()
+                        .ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "retained clone preparation lost inverse retirement authority"))?
+                        .retire_owned(mutation),
+                );
                 return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
             }
             self.inverse = None;
@@ -421,7 +463,12 @@ where
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(mutation) = self.mutation.take() {
-            self.active_retirement = Some(self.mutation_retirement.as_ref().ok_or("retained clone preparation lost mutation retirement authority")?.retire_owned(mutation));
+            self.active_retirement = Some(
+                self.mutation_retirement
+                    .as_ref()
+                    .ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "retained clone preparation lost mutation retirement authority"))?
+                    .retire_owned(mutation),
+            );
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(description) = self.description.take() {
@@ -443,7 +490,8 @@ where
 
     fn terminal_is_empty(&self) -> bool {
         self.closing
-            && self.clone_cursor.terminal_is_empty()
+            && self.clone_cursor.is_none()
+            && self.clone_handoff.is_none()
             && self.edit_cursor.terminal_is_empty()
             && self.source.is_none()
             && self.copied.is_none()

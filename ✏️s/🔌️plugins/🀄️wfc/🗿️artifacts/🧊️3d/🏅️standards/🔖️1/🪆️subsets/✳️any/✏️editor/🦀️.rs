@@ -64,7 +64,7 @@ use semio_framework_2d::compute::EngineHandles;
 //#region 🔖️Command
 /// ✏️ The editor's typed command channel — one variant per real `Wfc3dMutation` kind a UI can
 /// trigger, plus the two non-document verbs (camera, armed tile).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum)]
 pub enum Wfc3dEditorCommand {
     #[dsl(key = "change-seed")]
     ChangeSeed { seed: u64 },
@@ -310,6 +310,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
     fn step(
         &mut self,
         input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<Wfc3dEditor>>,
+    _cx: &mut semio_framework_job::StepContext<'_>,
     ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<Wfc3dEditor>>, Fault> {
         if self.completed || wfc3d_command_id(input.command) != self.tool_id {
             return Err(Fault::new(
@@ -426,6 +427,20 @@ impl graph::SlotGraphView for Wfc3dGraphView<'_> {
 pub struct Wfc3dEditor;
 
 impl ArtifactEditor for Wfc3dEditor {
+    /// 📢️ The localized notices of this editor's user-reachable refusals (design §20.12).
+    fn fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
+        use semio_framework_ui_locale::LocalizedLabel;
+        static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 4]> = std::sync::LazyLock::new(|| {
+            [
+            ("wfc3d.tile.unknown-pin", LocalizedLabel::native("This pin does not exist.", "Diese Fixierung existiert nicht.")),
+            ("wfc3d.example.unknown", LocalizedLabel::native("This example does not exist.", "Dieses Beispiel existiert nicht.")),
+            ("wfc3d.action.unknown", LocalizedLabel::native("This action is not known.", "Diese Aktion ist unbekannt.")),
+            ("wfc3d.retained.extent", LocalizedLabel::native("The document is too large for this action.", "Das Dokument ist für diese Aktion zu groß.")),
+            ]
+        });
+        &*NOTICES
+    }
+
     type Snapshot = Wfc3dSnapshot;
     type Mutation = Wfc3dMutation;
     type Config = Wfc3dConfig;
@@ -521,10 +536,13 @@ impl ArtifactEditor for Wfc3dEditor {
     /// 🕹️ The `slot` domain's addressable ids — the framework validates every selection write against
     /// this, so a node the canvas picks is only ever selectable while the document still declares it.
     /// Flat: adjacency is a peer relation, never a parent one.
-    fn interaction_topology(doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> protocol::InteractionTopology {
+    fn interaction_topology(doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> Result<protocol::InteractionTopology, semio_framework_value::ValueError> {
+ Ok((||{
         let ordered = doc.snapshot.slots.iter().map(|slot| protocol::TopologyNode { id: slot.id.clone(), granularity: "slot".into(), parent: None }).collect();
         protocol::InteractionTopology { domains: [(WFC_3D_INTERACTION_GRAPH.to_string(), protocol::DomainTopology { ordered })].into_iter().collect() }
-    }
+    
+})())
+}
 
     fn register_tool_job_factories(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, semio_framework_plugin::EditorApp<Self>>) -> Result<(), Fault> {
         let controller = registry.controller_id().to_string();
@@ -537,7 +555,7 @@ impl ArtifactEditor for Wfc3dEditor {
         }
         let tool_id = wfc3d_command_id(&request.command);
         if tool_id != request.tool_id {
-            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc3d.retained.tool-mismatch"), "WFC 3D command does not match its exact registered tool"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "WFC 3D command does not match its exact registered tool"));
         }
         if wfc3d_retained_extent(&request.command, &request.snapshot).is_none() {
             return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc3d.retained.extent"), "WFC 3D bounded route exceeded its declared work extent"));
@@ -591,11 +609,11 @@ impl ArtifactEditor for Wfc3dEditor {
     /// why — before this bridge existed — every Actions-pane row, the navbar example picker and every
     /// canvas gesture answered `dispatch-failed` in the live playground. Each key below is the
     /// `ActionArgDef.id` that action declares.
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
-        let text = |key: &str| args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_str).map(str::to_string);
-        let number = |key: &str| args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_f64);
-        let flag = |key: &str| args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_bool);
-        let viewport = |key: &str| args.and_then(|value| value.get("viewport")).and_then(|value| value.get(key)).and_then(dsl::DslValue::as_f64);
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
+        let text = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_str).map(str::to_string);
+        let number = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_f64);
+        let flag = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_bool);
+        let viewport = |key: &str| args.and_then(|value| value.get("viewport")).and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_f64);
         match action {
             "setActiveExample" => Ok(Wfc3dEditorCommand::SetActiveExample { example_id: text("exampleId").or_else(|| text("id")).unwrap_or_default() }),
             "nodeGraphEdit" => Ok(Wfc3dEditorCommand::NodeGraphEdit { operations_json: graph_operations_json(args) }),
@@ -716,7 +734,7 @@ pub fn command_emit(command: &Wfc3dEditorCommand, document: &Wfc3dSnapshot, conf
             }
             Wfc3dEditorCommand::NodeGraphEdit { operations_json } => {
                 let gesture = graph_edit_gesture(document, operations_json)?;
-                return Ok(drag::wfc3d_drag_tool_emit(WFC_3D_NODE_GRAPH_EDIT, authoring_seed, document, gesture.prepared, &gesture.records, WFC_3D_GRAPH_UNIT));
+                return Ok(drag::wfc3d_drag_tool(WFC_3D_NODE_GRAPH_EDIT, authoring_seed, document, gesture.prepared, &gesture.records, WFC_3D_GRAPH_UNIT).into());
             }
             Wfc3dEditorCommand::ChangeSeed { seed } => change_seed(*seed),
             Wfc3dEditorCommand::CreateSlot { id, x, y, z, width, height, depth } => create_slot(
@@ -807,7 +825,7 @@ pub fn example_snapshot(example_id: &str) -> Result<Wfc3dSnapshot, Fault> {
 /// boot edit" the sibling artifacts hit when they replayed a whole example as mutations).
 pub fn load_document_effect(document: &Wfc3dSnapshot) -> semio_framework::kernel::Effect {
     let pack = <Wfc3dSnapshot as store::ArtifactPack>::encode_pack(document);
-    let spr = semio_framework_plugin::resolve_ready(store::empty_document_spr("wfc", WFC3D_DOCUMENT_SCHEMA));
+    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr("wfc", WFC3D_DOCUMENT_SCHEMA));
     semio_framework::kernel::Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️Examples
@@ -817,7 +835,7 @@ pub fn load_document_effect(document: &Wfc3dSnapshot) -> semio_framework::kernel
 /// the wasm dag surface and React Flow — speak this one vocabulary (`move`/`connect`/`disconnect`),
 /// so the command carries it verbatim and the document-aware mapping happens in
 /// [`graph_edit_mutations`], where `z` and the edge roster are actually readable.
-pub fn graph_operations_json(args: Option<&dsl::DslValue>) -> String {
+pub fn graph_operations_json(args: Option<&semio_framework_value::DslValue>) -> String {
     args.and_then(|value| value.get("operations")).map_or_else(|| "[]".into(), |operations| serde_json::Value::from(operations).to_string())
 }
 
@@ -843,7 +861,7 @@ pub struct Wfc3dGraphGesture {
 ///   no inline sliders and no variadic ports.
 pub fn graph_edit_gesture(document: &Wfc3dSnapshot, operations_json: &str) -> Result<Wfc3dGraphGesture, Fault> {
     let refuse = |reason: String| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc3d.node-graph.row"), format!("nodeGraphEdit refusal: {reason}"));
-    let args: dsl::DslValue = dsl::json::from_json_str(&format!("{{\"operations\":{operations_json}}}")).map_err(|error| refuse(format!("the operations are not JSON: {error}")))?;
+    let args: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(&format!("{{\"operations\":{operations_json}}}"), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| refuse(format!("the operations are not JSON: {error}")))?;
     let rows = node_graph_edit_rows(&args).map_err(refuse)?;
     let mut edge_ids: Vec<String> = document.edges.iter().map(|edge| edge.id.clone()).collect();
     let mut gesture = Wfc3dGraphGesture::default();
@@ -954,7 +972,7 @@ pub fn create_wfc3d_editor() -> semio_framework_plugin::AppDefinition {
         .mode_def(edit::definition())
         .default_mode_id(edit::WFC_3D_EDIT_MODE_ID)
         .tool(fill::definition())
-        .mode_tools(edit::WFC_3D_EDIT_MODE_ID, vec![semio_framework_plugin::resolve_ready(ToolRef::new(fill::TOOL_ID))])
+        .mode_tools(edit::WFC_3D_EDIT_MODE_ID, vec![::semio_framework_async::poll::resolve_ready(ToolRef::new(fill::TOOL_ID))])
         .window_kind_def(graph::definition())
         .window_kind_def(preview::definition())
         .default_layout(edit::layout())

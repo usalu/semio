@@ -1,4 +1,8 @@
 use super::*;
+#[cfg(all(feature = "integration-fixtures", feature = "native-artifact-execution"))]
+#[path = "🪶️count-lease/🦀️.rs"]
+mod count_lease_tests;
+
 use directory::os_directory::{same_lease_fields_v1, EditedArtifactFrontierV1, DirectoryCommandOutcomeV1, DirectoryCommandResultV1};
 use protocol::{ArtifactId as WireArtifactId, Bootstrap};
 use semio_framework_hash::Sha256;
@@ -1539,7 +1543,7 @@ async fn check_in_fixture_gis_ledger_edit(schema: &str) -> Vec<MutationEnvelope>
 #[test]
 fn mutation_message_payload_matches_language_neutral_fixture() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚧️hub-boundaries/🔣️.json")).expect("valid hub boundary fixture");
-    let messages = vec![protocol::MutationMessage::warn("mutation.clamped", "height clamped").at(["node", "height"]).at_op(2), protocol::MutationMessage::info("mutation.cascade", "dependent value updated")];
+    let messages = vec![protocol::MutationMessage::warning("mutation.clamped", "height clamped").at(["node", "height"]).at_op(2), protocol::MutationMessage::info("mutation.cascade", "dependent value updated")];
     let encoded = encode_messages(&messages);
     let parsed: serde_json::Value = serde_json::from_slice(&encoded).expect("first-party message bytes are valid JSON");
     assert_eq!(parsed, fixture["mutationMessages"]);
@@ -2951,7 +2955,7 @@ where
     let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(5);
     loop {
         match tokio::time::timeout_at(deadline, ws.next()).await {
-            Ok(Some(Ok(WsMessage::Text(text)))) => return directory::os_pack::json::from_json_str(&text).expect("directory message"),
+            Ok(Some(Ok(WsMessage::Text(text)))) => return semio_framework_pack_json::from_json_str(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("directory message"),
             Ok(Some(Ok(WsMessage::Close(frame)))) => panic!("the server closed before its next directory message: {frame:?}"),
             Ok(Some(Ok(_))) => continue,
             Ok(Some(other)) => panic!("expected directory message, got {other:?}"),
@@ -3079,7 +3083,7 @@ struct DocumentOpenPlanLedgerFixture {
 /// key; the same plan without a browser actor, or with a genesis checkpoint, answers `None` (the tail from the start).
 #[test]
 fn a_frontierless_hello_resumes_at_the_checkpoint_its_client_seeds_from() {
-    let fixture: DocumentOpenPlanLedgerFixture = directory::os_pack::json::from_json_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json")).expect("document open plan fixture");
+    let fixture: DocumentOpenPlanLedgerFixture = semio_framework_pack_json::from_json_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("document open plan fixture");
     let mut plan = document_open_plan_test_authority(&fixture);
     let db_id = db_artifact_id(&plan.scope);
     assert_eq!(plan_seeded_hello_frontier(Some(&plan), &db_id), None, "a plan without a browser actor keeps the whole tail");
@@ -3263,12 +3267,12 @@ async fn issue_and_exchange_document_open_plan_for_test(state: &HubState, token:
     let mut headers = bearer_headers(token);
     headers.insert(axum::http::header::CONTENT_TYPE, "application/json".parse().expect("content type"));
     let intent = DocumentOpenIntentV1 { schema: "semio.hub.document-open-intent/v1".into(), version: 1, scope: scope.clone(), requested_surface_id: Some("surface.test.editor".into()), client_instance_id: client_instance_id.into() };
-    let DirectoryJson(plan) = match issue_document_open_plan_inner(scope.space_id.clone(), scope.document_id.clone(), headers.clone(), state.clone(), Bytes::from(directory::os_pack::json::to_json_string(&intent))).await {
+    let DirectoryJson(plan) = match issue_document_open_plan_inner(scope.space_id.clone(), scope.document_id.clone(), headers.clone(), state.clone(), Bytes::from(semio_framework_pack_json::to_json_string(&intent))).await {
         Ok(plan) => plan,
         Err((status, DirectoryJson(error))) => panic!("issue document open plan: {status} {:?}", error.code),
     };
     let exchange = DocumentPlanSocketGrantIntentV1 { schema: "semio.hub.document-plan-socket-grant-intent/v1".into(), version: 1, plan_receipt: plan.receipt.clone() };
-    let Json(grant) = match issue_document_plan_socket_grant_inner(scope.space_id.clone(), scope.document_id.clone(), headers, state.clone(), Bytes::from(directory::os_pack::json::to_json_string(&exchange))).await {
+    let Json(grant) = match issue_document_plan_socket_grant_inner(scope.space_id.clone(), scope.document_id.clone(), headers, state.clone(), Bytes::from(semio_framework_pack_json::to_json_string(&exchange))).await {
         Ok(grant) => grant,
         Err((status, DirectoryJson(error))) => panic!("exchange document open plan: {status} {:?}", error.code),
     };
@@ -3277,7 +3281,7 @@ async fn issue_and_exchange_document_open_plan_for_test(state: &HubState, token:
 
 #[test]
 fn document_open_plan_ledger_is_digest_only_bounded_single_use_revalidated_and_restart_scoped() {
-    let fixture: DocumentOpenPlanLedgerFixture = directory::os_pack::json::from_json_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json")).expect("document open plan fixture");
+    let fixture: DocumentOpenPlanLedgerFixture = semio_framework_pack_json::from_json_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("document open plan fixture");
     let authority = document_open_plan_test_authority(&fixture);
     for (field, value) in [("artifactKind", String::new()), ("artifactKind", " s.foreign.document".to_owned()), ("standard", String::new()), ("subset", String::new()), ("standard", "\u{85}".to_owned()), ("subset", " * ".to_owned()), ("standard", "🌊".repeat(65))] {
         let mut hostile = authority.clone();
@@ -3400,7 +3404,7 @@ fn document_open_plan_ledger_is_digest_only_bounded_single_use_revalidated_and_r
 
 #[test]
 fn document_open_plan_receipt_exchange_admits_one_exact_bounded_secret_free_socket_grant() {
-    let fixture: DocumentOpenPlanLedgerFixture = directory::os_pack::json::from_json_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json")).expect("document open plan fixture");
+    let fixture: DocumentOpenPlanLedgerFixture = semio_framework_pack_json::from_json_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("document open plan fixture");
     let authority = document_open_plan_test_authority(&fixture);
     let plans = Arc::new(DocumentOpenPlanLedgerV1::default());
     let sockets = Arc::new(SocketGrantLedgerV1::default());
@@ -3504,7 +3508,7 @@ async fn execution_target_asset_routes_revalidate_scope_role_descriptor_and_cata
     let headers = [("Authorization", authorization.as_str()), ("Content-Type", "application/json")];
     let root = format!("/spaces/{STUDIO}/documents/{document_id}/execution-target");
     let intent_body = |surface: &str| {
-        directory::os_pack::json::to_json_string(&DocumentOpenIntentV1 {
+        semio_framework_pack_json::to_json_string(&DocumentOpenIntentV1 {
             schema: "semio.hub.document-open-intent/v1".into(),
             version: 1,
             scope: scope.clone(),
@@ -3518,7 +3522,7 @@ async fn execution_target_asset_routes_revalidate_scope_role_descriptor_and_cata
     assert_eq!(manifest.status, 200, "{}", String::from_utf8_lossy(&manifest.body));
     let manifest_text = String::from_utf8(manifest.body).expect("manifest UTF-8");
     assert!(!manifest_text.contains(&token) && !manifest_text.contains("client:execution-target") && !manifest_text.contains("sessionId") && !manifest_text.contains("receipt"));
-    let fields: DocumentExecutionTargetLeaseFieldsV1 = directory::os_pack::json::from_json_str(&manifest_text).expect("manifest JSON");
+    let fields: DocumentExecutionTargetLeaseFieldsV1 = semio_framework_pack_json::from_json_str(&manifest_text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("manifest JSON");
     fields.validate().expect("route manifest is a valid lease projection");
     assert_eq!(fields.scope, scope);
     assert_eq!(fields.catalog.generation_id, state.openable_catalog.as_ref().expect("catalog").generation_id());
@@ -3560,7 +3564,7 @@ async fn execution_target_asset_routes_revalidate_scope_role_descriptor_and_cata
     actor_json["sha256"] = serde_json::json!(os_directory::hex_lower(&Sha256::digest(b"abc")));
     actor_json["sourceComponentSha256"] = serde_json::json!(closed_selection.package.component_sha256);
     actor_json["sourceDescriptorByteSha256"] = serde_json::json!(closed_selection.package.descriptor_byte_sha256);
-    closed_selection.browser_actor = directory::os_pack::json::from_json_str(&actor_json.to_string()).expect("closed actor fixture");
+    closed_selection.browser_actor = semio_framework_pack_json::from_json_str(&actor_json.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("closed actor fixture");
     let expected_actor = closed_selection
         .browser_actor
         .to_lease(os_directory::DocumentBrowserActorSourceV1 { component_sha256: &closed_selection.package.component_sha256, descriptor_byte_sha256: &closed_selection.package.descriptor_byte_sha256 }, "wasm", Some(3))
@@ -3577,7 +3581,7 @@ async fn execution_target_asset_routes_revalidate_scope_role_descriptor_and_cata
     let closed_manifest = raw_http_request(closed_addr, "POST", &format!("{root}/manifest"), &headers, intent_body("surface.test.editor").as_bytes()).await;
     assert_eq!(closed_manifest.status, 200);
     let closed_text = String::from_utf8(closed_manifest.body).expect("closed manifest UTF-8");
-    let closed_fields: DocumentExecutionTargetLeaseFieldsV1 = directory::os_pack::json::from_json_str(&closed_text).expect("closed manifest");
+    let closed_fields: DocumentExecutionTargetLeaseFieldsV1 = semio_framework_pack_json::from_json_str(&closed_text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("closed manifest");
     closed_fields.validate().expect("closed manifest bound");
     assert_eq!(closed_fields.browser_actor, expected_actor);
     for private in ["path", "moduleUrl", "actorBytes", "receipt", "sessionId", "client:execution-target"] {
@@ -3586,7 +3590,7 @@ async fn execution_target_asset_routes_revalidate_scope_role_descriptor_and_cata
     assert!(!closed_text.contains(&token));
     let closed_plan = raw_http_request(closed_addr, "POST", &format!("/spaces/{STUDIO}/documents/{document_id}/open-plan"), &headers, intent_body("surface.test.editor").as_bytes()).await;
     assert_eq!(closed_plan.status, 200);
-    let closed_plan: DocumentOpenPlanV1 = directory::os_pack::json::from_json_str(std::str::from_utf8(&closed_plan.body).unwrap()).expect("closed plan");
+    let closed_plan: DocumentOpenPlanV1 = semio_framework_pack_json::from_json_str(std::str::from_utf8(&closed_plan.body).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("closed plan");
     assert_eq!(closed_plan.browser_actor, closed_selection.browser_actor);
     let actor_body = raw_http_request(closed_addr, "POST", &format!("{root}/browser-actor"), &headers, intent_body("surface.test.editor").as_bytes()).await;
     assert_eq!(actor_body.status, 200);
@@ -3631,7 +3635,7 @@ async fn execution_target_asset_routes_revalidate_scope_role_descriptor_and_cata
     let rotated_addr = spawn_server(rotated.clone()).await;
     let rotated_manifest = raw_http_request(rotated_addr, "POST", &format!("{root}/manifest"), &headers, intent_body("surface.test.editor").as_bytes()).await;
     assert_eq!(rotated_manifest.status, 200);
-    let rotated_fields: DocumentExecutionTargetLeaseFieldsV1 = directory::os_pack::json::from_json_str(&String::from_utf8(rotated_manifest.body).expect("rotated UTF-8")).expect("rotated manifest");
+    let rotated_fields: DocumentExecutionTargetLeaseFieldsV1 = semio_framework_pack_json::from_json_str(&String::from_utf8(rotated_manifest.body).expect("rotated UTF-8"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rotated manifest");
     assert_ne!(rotated_fields.catalog.generation_id, fields.catalog.generation_id);
     assert!(!same_lease_fields_v1(&rotated_fields, &fields));
 
@@ -3658,7 +3662,7 @@ async fn execution_target_selection_final_fence_matches_neutral_races() {
         headers.insert(axum::http::header::CONTENT_TYPE, "application/json".parse().expect("content type"));
         let gate = Arc::new(TestDocumentOpenPlanIssueGate::default());
         state.document_open_plan_issue_gate = Some(gate.clone());
-        let body = Bytes::from(directory::os_pack::json::to_json_string(&DocumentOpenIntentV1 {
+        let body = Bytes::from(semio_framework_pack_json::to_json_string(&DocumentOpenIntentV1 {
             schema: "semio.hub.document-open-intent/v1".into(),
             version: 1,
             scope: scope.clone(),
@@ -3727,7 +3731,7 @@ async fn document_open_and_execution_target_refuse_descriptor_or_index_without_g
         install_document_open_catalog_for_test(&mut state, &descriptor);
         let mut headers = bearer_headers(&token);
         headers.insert(axum::http::header::CONTENT_TYPE, "application/json".parse().expect("content type"));
-        let body = Bytes::from(directory::os_pack::json::to_json_string(&DocumentOpenIntentV1 {
+        let body = Bytes::from(semio_framework_pack_json::to_json_string(&DocumentOpenIntentV1 {
             schema: "semio.hub.document-open-intent/v1".into(),
             version: 1,
             scope: scope.clone(),
@@ -3779,9 +3783,9 @@ async fn document_open_plan_issue_route_is_catalog_bound_authenticated_bounded_c
     let plan_route = format!("/spaces/{STUDIO}/documents/{document_id}/open-plan");
     let grant_route = format!("/spaces/{STUDIO}/documents/{document_id}/socket-grants");
     let intent_body = |surface: &str, client: &str| {
-        directory::os_pack::json::to_json_string(&DocumentOpenIntentV1 { schema: "semio.hub.document-open-intent/v1".into(), version: 1, scope: scope.clone(), requested_surface_id: Some(surface.into()), client_instance_id: client.into() })
+        semio_framework_pack_json::to_json_string(&DocumentOpenIntentV1 { schema: "semio.hub.document-open-intent/v1".into(), version: 1, scope: scope.clone(), requested_surface_id: Some(surface.into()), client_instance_id: client.into() })
     };
-    let grant_body = |receipt: &str| directory::os_pack::json::to_json_string(&DocumentPlanSocketGrantIntentV1 { schema: "semio.hub.document-plan-socket-grant-intent/v1".into(), version: 1, plan_receipt: receipt.into() });
+    let grant_body = |receipt: &str| semio_framework_pack_json::to_json_string(&DocumentPlanSocketGrantIntentV1 { schema: "semio.hub.document-plan-socket-grant-intent/v1".into(), version: 1, plan_receipt: receipt.into() });
     let addr = spawn_server(state.clone()).await;
     let readiness = raw_http_get(addr, "/readyz", &[]).await;
     let readiness_json: serde_json::Value = serde_json::from_slice(&readiness.body).expect("readiness JSON");
@@ -3795,7 +3799,7 @@ async fn document_open_plan_issue_route_is_catalog_bound_authenticated_bounded_c
     assert!(!success_text.contains("client:private"));
     assert!(!success_text.contains("sessionId"));
     assert!(!success_text.contains("descriptor\""));
-    let plan: DocumentOpenPlanV1 = directory::os_pack::json::from_json_str(&success_text).expect("plan JSON");
+    let plan: DocumentOpenPlanV1 = semio_framework_pack_json::from_json_str(&success_text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("plan JSON");
     assert_eq!(plan.scope, scope);
     assert_eq!(plan.catalog.generation_id, state.openable_catalog.as_ref().expect("catalog").generation_id());
     assert_eq!(plan.parent_dialect, DocumentOpenParentDialectV1 { artifact_kind: TEST_ARTIFACT_PARENT_DIALECT_KIND.into(), standard: "1".into(), subset: "*".into() });
@@ -3815,7 +3819,7 @@ async fn document_open_plan_issue_route_is_catalog_bound_authenticated_bounded_c
     let hostile = format!(r#"{{"schema":"semio.hub.document-open-intent/v1","version":1,"scope":{{"spaceId":"{STUDIO}","documentId":"{document_id}"}},"clientInstanceId":"client","actor":"caller"}}"#);
     assert_eq!(raw_http_request(addr, "POST", &plan_route, &headers, hostile.as_bytes()).await.status, 400);
     assert_eq!(raw_http_request(addr, "POST", &format!("{plan_route}?surface=surface.test.editor"), &headers, intent_body("surface.test.editor", "client:query").as_bytes()).await.status, 400);
-    let wrong_scope = directory::os_pack::json::to_json_string(&DocumentOpenIntentV1 {
+    let wrong_scope = semio_framework_pack_json::to_json_string(&DocumentOpenIntentV1 {
         schema: "semio.hub.document-open-intent/v1".into(),
         version: 1,
         scope: DocumentScope::new(STUDIO, "other"),
@@ -3836,7 +3840,7 @@ async fn document_open_plan_issue_route_is_catalog_bound_authenticated_bounded_c
     let share_headers = [("Authorization", share_authorization.as_str()), ("Content-Type", "application/json")];
     let share_response = raw_http_request(addr, "POST", &plan_route, &share_headers, intent_body("surface.test.viewer", "client:share").as_bytes()).await;
     assert_eq!(share_response.status, 200);
-    let share_plan: DocumentOpenPlanV1 = directory::os_pack::json::from_json_str(&String::from_utf8(share_response.body).expect("share plan UTF-8")).expect("share plan");
+    let share_plan: DocumentOpenPlanV1 = semio_framework_pack_json::from_json_str(&String::from_utf8(share_response.body).expect("share plan UTF-8"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("share plan");
     assert_eq!(share_plan.parent_dialect, plan.parent_dialect);
     assert!(!share_plan.grant.write);
     assert_eq!(share_plan.surface.role, os_directory::DocumentOpenSurfaceRoleV1::Viewer);
@@ -3858,7 +3862,7 @@ async fn document_open_plan_issue_route_is_catalog_bound_authenticated_bounded_c
     assert_eq!(serde_json::from_str::<serde_json::Value>(&unavailable_text).expect("unavailable JSON")["code"], "catalog-unavailable");
     assert!(!unavailable_text.contains("fixture"));
 
-    let fixture: DocumentOpenPlanLedgerFixture = directory::os_pack::json::from_json_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json")).expect("document open fixture");
+    let fixture: DocumentOpenPlanLedgerFixture = semio_framework_pack_json::from_json_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("document open fixture");
     let mut capacity_authority = document_open_plan_authority_for_session(&state, &fixture, &token, scope.clone()).await;
     capacity_authority.catalog.generation_id = state.openable_catalog.as_ref().expect("catalog").generation_id().into();
     capacity_authority.package = state.openable_catalog.as_ref().expect("catalog").resolve_document_open(&descriptor, Some("surface.test.editor"), true).expect("selection").package;
@@ -3890,7 +3894,7 @@ async fn document_open_plan_issue_route_is_catalog_bound_authenticated_bounded_c
     cancelled_headers.insert(axum::http::header::CONTENT_TYPE, "application/json".parse().expect("content type"));
     let gate = Arc::new(TestDocumentOpenPlanIssueGate::default());
     cancelled.document_open_plan_issue_gate = Some(gate.clone());
-    let cancelled_body = Bytes::from(directory::os_pack::json::to_json_string(&DocumentOpenIntentV1 {
+    let cancelled_body = Bytes::from(semio_framework_pack_json::to_json_string(&DocumentOpenIntentV1 {
         schema: "semio.hub.document-open-intent/v1".into(),
         version: 1,
         scope: cancelled_scope.clone(),
@@ -3971,7 +3975,7 @@ async fn document_open_plan_socket_consume_revalidates_surface_descriptor_catalo
 async fn document_open_plan_exchange_route_is_authenticated_exact_hostile_and_single_use() {
     let _watchdog = LawHangWatchdogV1::arm("document_open_plan_exchange_route_is_authenticated_exact_hostile_and_single_use");
     let mut state = test_state().await;
-    let fixture: DocumentOpenPlanLedgerFixture = directory::os_pack::json::from_json_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json")).expect("document open plan fixture");
+    let fixture: DocumentOpenPlanLedgerFixture = semio_framework_pack_json::from_json_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("document open plan fixture");
     let token = seed_author_token(&state).await;
     let document_id = artifact_document_id_for_test("open-plan-route");
     let document_id = document_id.as_str();
@@ -3988,7 +3992,7 @@ async fn document_open_plan_exchange_route_is_authenticated_exact_hostile_and_si
     let route = format!("/spaces/{STUDIO}/documents/{document_id}/socket-grants");
     let authorization = format!("Bearer {token}");
     let request_headers = [("Authorization", authorization.as_str()), ("Content-Type", "application/json")];
-    let request_body = |receipt: &str| directory::os_pack::json::to_json_string(&DocumentPlanSocketGrantIntentV1 { schema: "semio.hub.document-plan-socket-grant-intent/v1".into(), version: 1, plan_receipt: receipt.into() });
+    let request_body = |receipt: &str| semio_framework_pack_json::to_json_string(&DocumentPlanSocketGrantIntentV1 { schema: "semio.hub.document-plan-socket-grant-intent/v1".into(), version: 1, plan_receipt: receipt.into() });
     let readiness = raw_http_get(addr, "/readyz", &[]).await;
     let readiness_json: serde_json::Value = serde_json::from_slice(&readiness.body).expect("readiness JSON");
     assert_eq!(readiness_json["features"]["openPlan"], true, "verified catalog-backed plan issuance is advertised with exchange");
@@ -4110,7 +4114,7 @@ async fn document_open_plan_admin_revocation_invalidates_session_and_share_bindi
     let watchdog = LawHangWatchdogV1::arm("document_open_plan_admin_revocation_invalidates_session_and_share_bindings");
     watchdog.at("hub state open");
     let mut state = test_state().await;
-    let fixture: DocumentOpenPlanLedgerFixture = directory::os_pack::json::from_json_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json")).expect("document open plan fixture");
+    let fixture: DocumentOpenPlanLedgerFixture = semio_framework_pack_json::from_json_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("document open plan fixture");
     let admin_headers = authorize_test_admin(&mut state, "open-plan-admin@example.com").await;
     let mut principal = authenticate_admin_principal(&state, &admin_headers, Some(loopback_peer().0)).await.expect("verified open-plan administrator principal");
     principal.correlation_id = "open-plan-admin-revocation".into();
@@ -4993,7 +4997,7 @@ fn scoped_directory_socket_admin_removal_uses_the_same_membership_fence() {
         tokio::time::sleep(std::time::Duration::from_millis(50)).await;
 
         let intent = AdminIntentV1::RemoveSpaceMember { request_id: "request:scoped-admin-removal".into(), space_id: STUDIO.into(), user_id: member.user_id };
-        let body = Bytes::from(directory::os_pack::json::to_json_string(&intent));
+        let body = Bytes::from(semio_framework_pack_json::to_json_string(&intent));
         let (status, receipt) = admin_intents(admin_headers, loopback_peer(), State(state), body).await.expect("admin removal response");
         assert_eq!(status, StatusCode::OK);
         assert_eq!(receipt.0.state, AdminIntentStateV1::Succeeded);
@@ -5023,7 +5027,7 @@ async fn stop_recovery_server(state: HubState, shutdown: tokio::sync::oneshot::S
 fn assert_recovery_denied(response: RawHttpResponse, expected: &serde_json::Value) {
     assert_eq!(u64::from(response.status), expected["removedStatus"].as_u64().unwrap());
     assert!(response.headers.lines().any(|line| line.eq_ignore_ascii_case("content-type: application/json")));
-    let error: DocumentOpenPlanErrorV1 = directory::os_pack::json::from_json_str(std::str::from_utf8(&response.body).unwrap()).expect("strict bounded error, not selected asset bytes");
+    let error: DocumentOpenPlanErrorV1 = semio_framework_pack_json::from_json_str(std::str::from_utf8(&response.body).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("strict bounded error, not selected asset bytes");
     assert_eq!(error.schema, "semio.hub.document-open-plan-error/v1");
     assert_eq!(error.code, DocumentOpenPlanErrorCodeV1::Denied);
     assert_eq!(expected["removedCode"], "denied");
@@ -5089,7 +5093,7 @@ fn admin_removal_revokes_visible_plan_presence_and_target_after_sqlite_reopen() 
         assert_eq!(peer.color, Some(color_b));
         assert_eq!(peer.surface.as_deref(), Some(plan_b.surface.surface_id.as_str()));
         assert!(matches!(next_server_frame_at(&mut b, "member echo of its own normalized presence").await, ServerFrame::Presence { .. }));
-        let intent = directory::os_pack::json::to_json_string(&DocumentOpenIntentV1 {
+        let intent = semio_framework_pack_json::to_json_string(&DocumentOpenIntentV1 {
             schema: "semio.hub.document-open-intent/v1".into(),
             version: 1,
             scope: scope.clone(),
@@ -5102,17 +5106,17 @@ fn admin_removal_revokes_visible_plan_presence_and_target_after_sqlite_reopen() 
         let headers_c = [("Authorization", authorization_c.as_str()), ("Content-Type", "application/json")];
         assert_eq!(raw_http_request(addr, "POST", &format!("{root}/execution-target/manifest"), &headers_b, intent.as_bytes()).await.status, 200);
         let (_, pending_b) = issue_and_exchange_document_open_plan_for_test(&state, &removed.token, &scope, "client:pending-removed").await;
-        let remove = directory::os_pack::json::to_json_string(&AdminIntentV1::RemoveSpaceMember { request_id: "request:admin-presence-recovery".into(), space_id: scope.space_id.clone(), user_id: removed.user_id.clone() });
+        let remove = semio_framework_pack_json::to_json_string(&AdminIntentV1::RemoveSpaceMember { request_id: "request:admin-presence-recovery".into(), space_id: scope.space_id.clone(), user_id: removed.user_id.clone() });
         let admin_authorization = admin_headers.get(axum::http::header::AUTHORIZATION).unwrap().to_str().unwrap();
         let receipt = raw_http_request(addr, "POST", "/admin/api/intents", &[("Authorization", admin_authorization), ("Content-Type", "application/json")], remove.as_bytes()).await;
         assert_eq!(receipt.status, 200);
-        let receipt: AdminIntentReceiptV1 = directory::os_pack::json::from_json_str(std::str::from_utf8(&receipt.body).unwrap()).unwrap();
+        let receipt: AdminIntentReceiptV1 = semio_framework_pack_json::from_json_str(std::str::from_utf8(&receipt.body).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         assert_eq!(receipt.state, AdminIntentStateV1::Succeeded);
         assert_eq!(u64::from(next_close_without_authority(&mut b).await), expected["removedCloseCode"].as_u64().unwrap());
         let ServerFrame::Presence { peers } = next_server_frame_at(&mut c, "observer withdrawal presence after the admin removal").await else { panic!("removed member withdrawal") };
         assert_eq!(peers.len() as u64, expected["visibleAfterRemoval"].as_u64().unwrap());
         assert!(state.presence_snapshot(&document_scope_key_v1(&scope)).peers.is_empty());
-        let exchange = directory::os_pack::json::to_json_string(&DocumentPlanSocketGrantIntentV1 { schema: "semio.hub.document-plan-socket-grant-intent/v1".into(), version: 1, plan_receipt: plan_b.receipt.clone() });
+        let exchange = semio_framework_pack_json::to_json_string(&DocumentPlanSocketGrantIntentV1 { schema: "semio.hub.document-plan-socket-grant-intent/v1".into(), version: 1, plan_receipt: plan_b.receipt.clone() });
         let denied = raw_http_request(addr, "POST", &format!("{root}/socket-grants"), &headers_b, exchange.as_bytes()).await;
         assert_recovery_denied(denied, expected);
         assert!(connect_async(document_socket_request(&url, &removed.token)).await.is_err(), "removed member cannot reuse its consumed grant");
@@ -5157,12 +5161,12 @@ fn admin_removal_revokes_visible_plan_presence_and_target_after_sqlite_reopen() 
                 "execution-target/component" => assert_eq!(admitted.body, TEST_EXECUTION_TARGET_COMPONENT_BYTES),
                 "execution-target/descriptor" => assert_eq!(admitted.body, TEST_EXECUTION_TARGET_DESCRIPTOR_BYTES),
                 "execution-target/manifest" => {
-                    let manifest: DocumentExecutionTargetLeaseFieldsV1 = directory::os_pack::json::from_json_str(std::str::from_utf8(&admitted.body).unwrap()).unwrap();
+                    let manifest: DocumentExecutionTargetLeaseFieldsV1 = semio_framework_pack_json::from_json_str(std::str::from_utf8(&admitted.body).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
                     manifest.validate().unwrap();
                     assert_eq!(manifest.scope, scope);
                 }
                 "open-plan" => {
-                    let plan: DocumentOpenPlanV1 = directory::os_pack::json::from_json_str(std::str::from_utf8(&admitted.body).unwrap()).unwrap();
+                    let plan: DocumentOpenPlanV1 = semio_framework_pack_json::from_json_str(std::str::from_utf8(&admitted.body).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
                     plan.validate(now_ms() as u64).unwrap();
                     assert_eq!(plan.scope, scope);
                 }
@@ -5189,7 +5193,7 @@ fn admin_intent_binding_wire_matrix_is_exact_sorted_and_self_deduplicated() {
         device_instance_id: "admin-device".into(),
     };
     for row in fixture["bindings"].as_array().unwrap() {
-        let intent: AdminIntentV1 = directory::os_pack::json::from_json_str(row["intentJson"].as_str().unwrap()).expect("actual closed administrator intent wire");
+        let intent: AdminIntentV1 = semio_framework_pack_json::from_json_str(row["intentJson"].as_str().unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("actual closed administrator intent wire");
         let keys = admin_intent_bindings(&principal, &intent).map(|bindings| {
             bindings
                 .into_iter()
@@ -5248,7 +5252,7 @@ fn admin_short_effects_retain_principal_until_their_actual_side_effect() {
             *gate.directory_command_pause_user.lock().unwrap() = Some((admin.user_id.clone(), action_first));
             let command = tokio::spawn({
                 let authorization = format!("Bearer {}", admin.token);
-                let body = directory::os_pack::json::to_json_string(&intent);
+                let body = semio_framework_pack_json::to_json_string(&intent);
                 async move { raw_http_request(addr, "POST", "/admin/api/intents", &[("Authorization", &authorization), ("Content-Type", "application/json")], body.as_bytes()).await }
             });
             tokio::time::timeout(std::time::Duration::from_secs(5), gate.directory_command_admitted.acquire()).await.expect("short action pause deadline").expect("short action pause").forget();
@@ -5270,7 +5274,7 @@ fn admin_short_effects_retain_principal_until_their_actual_side_effect() {
             gate.directory_command_release.add_permits(1);
             let response = tokio::time::timeout(std::time::Duration::from_secs(5), command).await.expect("short action completion deadline").expect("short action task");
             assert_eq!(response.status, 200);
-            let receipt: AdminIntentReceiptV1 = directory::os_pack::json::from_json_str(std::str::from_utf8(&response.body).unwrap()).expect("short action receipt");
+            let receipt: AdminIntentReceiptV1 = semio_framework_pack_json::from_json_str(std::str::from_utf8(&response.body).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("short action receipt");
             assert_eq!(receipt.state, if row["effect"] == true { AdminIntentStateV1::Succeeded } else { AdminIntentStateV1::Cancelled }, "principal authority decides {}", row["name"]);
             if action_first {
                 assert_eq!(tokio::time::timeout(std::time::Duration::from_secs(2), revoke).await.expect("trailing short action revoke deadline").expect("trailing short action revoke"), StatusCode::NO_CONTENT);
@@ -5329,7 +5333,7 @@ fn admin_directory_commands_hold_exact_principal_without_confusing_space_role() 
             *gate.directory_command_pause_user.lock().unwrap() = Some((admin.user_id.clone(), command_first));
             let mut command = tokio::spawn({
                 let authorization = format!("Bearer {}", admin.token);
-                let body = directory::os_pack::json::to_json_string(&intent);
+                let body = semio_framework_pack_json::to_json_string(&intent);
                 async move { raw_http_request(addr, "POST", "/admin/api/intents", &[("Authorization", &authorization), ("Content-Type", "application/json")], body.as_bytes()).await }
             });
             tokio::time::timeout(std::time::Duration::from_secs(5), gate.directory_command_admitted.acquire()).await.expect("admin pause deadline").expect("admin pause").forget();
@@ -5356,7 +5360,7 @@ fn admin_directory_commands_hold_exact_principal_without_confusing_space_role() 
             gate.directory_command_release.add_permits(1);
             let response = tokio::time::timeout(std::time::Duration::from_secs(5), &mut command).await.expect("admin intent completion deadline").expect("admin intent task");
             assert_eq!(response.status, 200);
-            let receipt: AdminIntentReceiptV1 = directory::os_pack::json::from_json_str(std::str::from_utf8(&response.body).unwrap()).expect("admin authority receipt");
+            let receipt: AdminIntentReceiptV1 = semio_framework_pack_json::from_json_str(std::str::from_utf8(&response.body).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("admin authority receipt");
             let expected = if row["mutated"] == true { AdminIntentStateV1::Succeeded } else { AdminIntentStateV1::Cancelled };
             assert_eq!(receipt.state, expected, "exact principal, not ordinary role, decides {}", row["name"]);
             if let Some(revoke) = trailing_revoke {
@@ -5386,12 +5390,12 @@ fn admin_directory_commands_hold_exact_principal_without_confusing_space_role() 
 
         let self_session = issue_test_session(&state, email).await;
         let authorization = format!("Bearer {}", self_session.token);
-        let body = directory::os_pack::json::to_json_string(&AdminIntentV1::RevokeUserSessions { request_id: "request:admin-directory-self-revoke".into(), user_id: self_session.user_id.clone(), reason_code: "test-self-revoke".into() });
+        let body = semio_framework_pack_json::to_json_string(&AdminIntentV1::RevokeUserSessions { request_id: "request:admin-directory-self-revoke".into(), user_id: self_session.user_id.clone(), reason_code: "test-self-revoke".into() });
         let response = tokio::time::timeout(std::time::Duration::from_secs(5), raw_http_request(addr, "POST", "/admin/api/intents", &[("Authorization", &authorization), ("Content-Type", "application/json")], body.as_bytes()))
             .await
             .expect("self-revocation cannot nest an administrator User fence");
         assert_eq!(response.status, 200);
-        let receipt: AdminIntentReceiptV1 = directory::os_pack::json::from_json_str(std::str::from_utf8(&response.body).unwrap()).expect("self-revocation receipt");
+        let receipt: AdminIntentReceiptV1 = semio_framework_pack_json::from_json_str(std::str::from_utf8(&response.body).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("self-revocation receipt");
         assert_eq!(receipt.state, AdminIntentStateV1::Succeeded);
         let capability = SessionCapability::parse(&self_session.token).unwrap();
         assert!(state.directory.authenticate_session(&capability).await.unwrap().is_none());
@@ -5412,7 +5416,7 @@ fn directory_global_message_bindings_decode_wire_without_indexing_unrelated_memb
     let (live_id, _) = ledger.register_live(&record).expect("global lease");
     let principal_bindings = vec![SocketBindingKeyV1::User("recipient".into()), SocketBindingKeyV1::Session("session".into())];
     for row in fixture["messages"].as_array().unwrap() {
-        let message: DirectoryStreamMessage = directory::os_pack::json::from_json_str(row["messageJson"].as_str().unwrap()).unwrap_or_else(|error| panic!("wire message {}: {error:?}", row["name"]));
+        let message: DirectoryStreamMessage = semio_framework_pack_json::from_json_str(row["messageJson"].as_str().unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|error| panic!("wire message {}: {error:?}", row["name"]));
         assert_eq!(directory_stream_message_space(&message), row["spaceId"].as_str(), "wire-derived space");
         let bindings = directory_message_bindings(&record, &message);
         assert_eq!(bindings.len() as u64, row["keys"].as_u64().unwrap(), "complete transient union");
@@ -5442,14 +5446,14 @@ fn a_membership_event_naming_the_reader_owes_it_exactly_the_fixture_access_chang
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🔑️access-changed-v1/🔣️.json")).expect("access-changed fixture");
     let reader = fixture["readerUserId"].as_str().expect("fixture reader");
     for row in fixture["cases"].as_array().expect("fixture cases") {
-        let message: DirectoryStreamMessage = directory::os_pack::json::from_json_str(&row["message"].to_string()).unwrap_or_else(|error| panic!("fixture message {}: {error:?}", row["id"]));
+        let message: DirectoryStreamMessage = semio_framework_pack_json::from_json_str(&row["message"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|error| panic!("fixture message {}: {error:?}", row["id"]));
         let created = row["createdOnSocket"].as_array().expect("created spaces").iter().map(|space| space.as_str().expect("space id").to_owned()).collect::<std::collections::BTreeSet<_>>();
-        let expected = (!row["frame"].is_null()).then(|| directory::os_pack::json::from_json_str::<DirectoryStreamMessage>(&row["frame"].to_string()).expect("fixture frame"));
+        let expected = (!row["frame"].is_null()).then(|| semio_framework_pack_json::from_json_str::<DirectoryStreamMessage>(&row["frame"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture frame"));
         let owed = directory_access_change_for_reader(reader, &created, &message);
         assert_eq!(owed, expected, "{}", row["id"]);
         if let Some(frame) = owed {
             assert_eq!(directory_stream_message_space(&frame), None, "an access change borrows no space authority: {}", row["id"]);
-            assert_eq!(serde_json::from_str::<serde_json::Value>(&directory::os_pack::json::to_json_string(&frame)).expect("frame JSON"), row["frame"], "wire shape: {}", row["id"]);
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&frame)).expect("frame JSON"), row["frame"], "wire shape: {}", row["id"]);
         }
     }
 }
@@ -5962,13 +5966,13 @@ fn space_public_boundary_real_socket_denies_public_raw_events_and_member_telemet
 #[test]
 fn admin_intent_wire_taxonomy_rejects_generic_and_unknown_commands() {
     let valid = r#"{"kind":"create-space","requestId":"request:one","name":"Studio","spaceKind":"studio","visibility":"private"}"#;
-    assert!(directory::os_pack::json::from_json_str::<AdminIntentV1>(valid).is_ok());
+    assert!(semio_framework_pack_json::from_json_str::<AdminIntentV1>(valid, semio_framework_pack_json::JsonMemberPolicy::Reject).is_ok());
     let generic = r#"{"kind":"directory","requestId":"request:one","command":{"kind":"create-space","name":"Studio","spaceKind":"studio","visibility":"private"}}"#;
     let forbidden = r#"{"kind":"announce-document","requestId":"request:one","descriptor":{}}"#;
     let unknown = r#"{"kind":"create-space","requestId":"request:one","name":"Studio","spaceKind":"studio","visibility":"private","actor":"admin"}"#;
-    assert!(directory::os_pack::json::from_json_str::<AdminIntentV1>(generic).is_err());
-    assert!(directory::os_pack::json::from_json_str::<AdminIntentV1>(forbidden).is_err());
-    assert!(directory::os_pack::json::from_json_str::<AdminIntentV1>(unknown).is_err());
+    assert!(semio_framework_pack_json::from_json_str::<AdminIntentV1>(generic, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
+    assert!(semio_framework_pack_json::from_json_str::<AdminIntentV1>(forbidden, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
+    assert!(semio_framework_pack_json::from_json_str::<AdminIntentV1>(unknown, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
 }
 
 #[test]
@@ -7145,7 +7149,7 @@ async fn directory_command_authority_demotion_invalidates_only_affected_scope_on
     let space = create_space_for_test(&state, &owner.user_id, "Authority Bindings", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
     let other = create_space_for_test(&state, &author.user_id, "Other Bindings", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
     upsert_member_for_test(&state, &space, "authority-author@example.com", DirectorySpaceRole::Author).await;
-    let plan_fixture: DocumentOpenPlanLedgerFixture = directory::os_pack::json::from_json_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json")).expect("document open plan fixture");
+    let plan_fixture: DocumentOpenPlanLedgerFixture = semio_framework_pack_json::from_json_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("document open plan fixture");
     let plan = Arc::new(document_open_plan_test_authority(&plan_fixture));
     let issue_pending = |audience: &SocketAudienceV1, actor_id: String, subject: SocketSubjectV1| -> String {
         if matches!(audience, SocketAudienceV1::Document(_)) {
@@ -7520,10 +7524,10 @@ async fn directory_event_page_v1_append_admission_is_transactional_for_sqlite_po
         body: os_directory::DirectoryEventBody::SpaceRenamed { space_id: STUDIO.into(), name: String::new() },
         recorded_at_ms: 1,
     };
-    let base = directory::os_pack::json::to_json_string(&exact).len();
+    let base = semio_framework_pack_json::to_json_string(&exact).len();
     let os_directory::DirectoryEventBody::SpaceRenamed { name, .. } = &mut exact.body else { unreachable!() };
     *name = "x".repeat(os_directory::DIRECTORY_EVENT_PAGE_MAX_EVENT_BYTES - base);
-    assert_eq!(directory::os_pack::json::to_json_string(&exact).len(), os_directory::DIRECTORY_EVENT_PAGE_MAX_EVENT_BYTES);
+    assert_eq!(semio_framework_pack_json::to_json_string(&exact).len(), os_directory::DIRECTORY_EVENT_PAGE_MAX_EVENT_BYTES);
     assert_eq!(validate_directory_event_page_event(&exact), Ok(()));
     if let os_directory::DirectoryEventBody::SpaceRenamed { name, .. } = &mut exact.body {
         name.push('x');
@@ -8827,7 +8831,7 @@ mod quick {
         let (addr, shutdown, server) = spawn_restartable_server(state.clone()).await;
         let request_id = "request:retained-short-drop";
         let intent = AdminIntentV1::IssueDocumentShare { request_id: request_id.into(), scope: scope.clone(), ttl_secs: 600 };
-        let body = directory::os_pack::json::to_json_string(&intent);
+        let body = semio_framework_pack_json::to_json_string(&intent);
         *gate.directory_command_pause_user.lock().unwrap() = Some((admin.user_id.clone(), true));
         let dropped = tokio::spawn({
             let authorization = format!("Bearer {}", admin.token);
@@ -8854,7 +8858,7 @@ mod quick {
         let authorization = format!("Bearer {}", admin.token);
         let retry = raw_http_request(addr, "POST", "/admin/api/intents", &[("Authorization", &authorization), ("Content-Type", "application/json")], body.as_bytes()).await;
         assert_eq!(retry.status, 200);
-        let retry_receipt: AdminIntentReceiptV1 = directory::os_pack::json::from_json_str(std::str::from_utf8(&retry.body).unwrap()).expect("retry receipt");
+        let retry_receipt: AdminIntentReceiptV1 = semio_framework_pack_json::from_json_str(std::str::from_utf8(&retry.body).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("retry receipt");
         assert_eq!(retry_receipt.state, AdminIntentStateV1::Succeeded);
         assert!(retry_receipt.result.is_none(), "a lost one-shot share token is never stored or replayed");
         assert_eq!(
@@ -8862,13 +8866,13 @@ mod quick {
             1,
             "retry cannot execute the side effect twice"
         );
-        let collision = directory::os_pack::json::to_json_string(&AdminIntentV1::IssueDocumentShare { request_id: request_id.into(), scope: scope.clone(), ttl_secs: 601 });
+        let collision = semio_framework_pack_json::to_json_string(&AdminIntentV1::IssueDocumentShare { request_id: request_id.into(), scope: scope.clone(), ttl_secs: 601 });
         assert_eq!(raw_http_request(addr, "POST", "/admin/api/intents", &[("Authorization", &authorization), ("Content-Type", "application/json")], collision.as_bytes()).await.status, 409);
 
         let cancelled_scope = DocumentScope::new(&space, "retained-short-cancelled");
         announce_document_for_test(&state, &cancelled_scope.space_id, &cancelled_scope.document_id).await;
         let cancelled_request = "request:retained-short-cancelled";
-        let cancelled_body = directory::os_pack::json::to_json_string(&AdminIntentV1::IssueDocumentShare { request_id: cancelled_request.into(), scope: cancelled_scope.clone(), ttl_secs: 600 });
+        let cancelled_body = semio_framework_pack_json::to_json_string(&AdminIntentV1::IssueDocumentShare { request_id: cancelled_request.into(), scope: cancelled_scope.clone(), ttl_secs: 600 });
         *gate.directory_command_pause_user.lock().unwrap() = Some((admin.user_id.clone(), false));
         let cancelled = tokio::spawn({
             let authorization = authorization.clone();
@@ -8881,14 +8885,14 @@ mod quick {
         *gate.directory_command_pause_user.lock().unwrap() = None;
         gate.directory_command_release.add_permits(1);
         let cancelled = cancelled.await.expect("cancelled request task");
-        let cancelled_receipt: AdminIntentReceiptV1 = directory::os_pack::json::from_json_str(std::str::from_utf8(&cancelled.body).unwrap()).expect("cancelled receipt");
+        let cancelled_receipt: AdminIntentReceiptV1 = semio_framework_pack_json::from_json_str(std::str::from_utf8(&cancelled.body).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("cancelled receipt");
         assert_eq!(cancelled_receipt.state, AdminIntentStateV1::Cancelled);
         assert_eq!(physical.query_row::<i64, _, _>("SELECT count(*) FROM hub_share_grant WHERE space_id = ?1 AND document_id = ?2", rusqlite::params![cancelled_scope.space_id, cancelled_scope.document_id], |row| row.get(0)).unwrap(), 0);
 
         let admitted_scope = DocumentScope::new(&space, "retained-short-admitted");
         announce_document_for_test(&state, &admitted_scope.space_id, &admitted_scope.document_id).await;
         let admitted_request = "request:retained-short-admitted";
-        let admitted_body = directory::os_pack::json::to_json_string(&AdminIntentV1::IssueDocumentShare { request_id: admitted_request.into(), scope: admitted_scope.clone(), ttl_secs: 600 });
+        let admitted_body = semio_framework_pack_json::to_json_string(&AdminIntentV1::IssueDocumentShare { request_id: admitted_request.into(), scope: admitted_scope.clone(), ttl_secs: 600 });
         gate.admin_effect_pause_enabled.store(true, std::sync::atomic::Ordering::Release);
         let admitted = tokio::spawn({
             let authorization = authorization.clone();
@@ -8901,7 +8905,7 @@ mod quick {
         gate.admin_effect_pause_enabled.store(false, std::sync::atomic::Ordering::Release);
         gate.admin_effect_release.add_permits(1);
         let admitted = admitted.await.expect("admitted request task");
-        let admitted_receipt: AdminIntentReceiptV1 = directory::os_pack::json::from_json_str(std::str::from_utf8(&admitted.body).unwrap()).expect("admitted receipt");
+        let admitted_receipt: AdminIntentReceiptV1 = semio_framework_pack_json::from_json_str(std::str::from_utf8(&admitted.body).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("admitted receipt");
         assert_eq!(admitted_receipt.state, AdminIntentStateV1::Succeeded, "cancellation after effect admission cannot invent rollback");
         assert!(admitted_receipt.result.as_ref().and_then(|result| result.share_token.as_ref()).is_some());
         assert_eq!(physical.query_row::<i64, _, _>("SELECT count(*) FROM hub_share_grant WHERE space_id = ?1 AND document_id = ?2", rusqlite::params![admitted_scope.space_id, admitted_scope.document_id], |row| row.get(0)).unwrap(), 1);
@@ -8910,8 +8914,8 @@ mod quick {
         announce_document_for_test(&state, &queued_scope.space_id, &queued_scope.document_id).await;
         let first_request = "request:retained-short-admitted-queued-first";
         let second_request = "request:retained-short-admitted-queued-second";
-        let first_body = directory::os_pack::json::to_json_string(&AdminIntentV1::IssueDocumentShare { request_id: first_request.into(), scope: queued_scope.clone(), ttl_secs: 600 });
-        let second_body = directory::os_pack::json::to_json_string(&AdminIntentV1::IssueDocumentShare { request_id: second_request.into(), scope: queued_scope.clone(), ttl_secs: 600 });
+        let first_body = semio_framework_pack_json::to_json_string(&AdminIntentV1::IssueDocumentShare { request_id: first_request.into(), scope: queued_scope.clone(), ttl_secs: 600 });
+        let second_body = semio_framework_pack_json::to_json_string(&AdminIntentV1::IssueDocumentShare { request_id: second_request.into(), scope: queued_scope.clone(), ttl_secs: 600 });
         gate.admin_effect_pause_enabled.store(true, std::sync::atomic::Ordering::Release);
         let mut first = tokio::spawn({
             let authorization = authorization.clone();
@@ -8968,7 +8972,7 @@ mod quick {
         let fenced_scope = DocumentScope::new(&space, "retained-short-admitted-deadline");
         announce_document_for_test(&state, &fenced_scope.space_id, &fenced_scope.document_id).await;
         let fenced_request = "request:retained-short-admitted-deadline";
-        let fenced_body = directory::os_pack::json::to_json_string(&AdminIntentV1::IssueDocumentShare { request_id: fenced_request.into(), scope: fenced_scope.clone(), ttl_secs: 600 });
+        let fenced_body = semio_framework_pack_json::to_json_string(&AdminIntentV1::IssueDocumentShare { request_id: fenced_request.into(), scope: fenced_scope.clone(), ttl_secs: 600 });
         gate.admin_effect_pause_enabled.store(true, std::sync::atomic::Ordering::Release);
         let mut fenced = tokio::spawn({
             let authorization = authorization.clone();
@@ -9338,7 +9342,7 @@ mod quick {
             let user_id = target.user_id.clone();
             async move {
                 let intent = AdminIntentV1::RevokeUserSessions { request_id: "request:socket-admin-revoke".into(), user_id, reason_code: "test-revoke".into() };
-                let body = Bytes::from(directory::os_pack::json::to_json_string(&intent));
+                let body = Bytes::from(semio_framework_pack_json::to_json_string(&intent));
                 admin_intents(admin_headers, loopback_peer(), State(state), body).await
             }
         });
@@ -9512,15 +9516,15 @@ mod long {
             kind_id: "s.gis.gismap".into(),
             name: "Shared Map".into(),
         };
-        let body = directory::os_pack::json::to_json_string(&request);
+        let body = semio_framework_pack_json::to_json_string(&request);
         let malformed = body.replacen("{", "{\"documentId\":\"caller-owned\",", 1);
         assert_eq!(raw_http_request(addr, "POST", &route, &[("Authorization", author_bearer.as_str()), ("Content-Type", "application/json")], malformed.as_bytes()).await.status, 400);
         let unknown = SpaceArtifactCreateV1 { request_id: "2234567890abcdef1234567890abcdef".into(), kind_id: "s.gis.unknown".into(), ..request.clone() };
-        assert_eq!(raw_http_request(addr, "POST", &route, &[("Authorization", author_bearer.as_str()), ("Content-Type", "application/json")], directory::os_pack::json::to_json_string(&unknown).as_bytes()).await.status, 409);
+        assert_eq!(raw_http_request(addr, "POST", &route, &[("Authorization", author_bearer.as_str()), ("Content-Type", "application/json")], semio_framework_pack_json::to_json_string(&unknown).as_bytes()).await.status, 409);
         let stale_generation = SpaceArtifactCreateV1 { request_id: "3234567890abcdef1234567890abcdef".into(), expected_catalog_generation_id: "9".repeat(64), ..request.clone() };
         assert_ne!(stale_generation.expected_catalog_generation_id, catalog.catalog_generation_id);
         let directory_head = state.directory.head_seq().await.expect("directory head before stale catalog creation");
-        assert_eq!(raw_http_request(addr, "POST", &route, &[("Authorization", author_bearer.as_str()), ("Content-Type", "application/json")], directory::os_pack::json::to_json_string(&stale_generation).as_bytes()).await.status, 409);
+        assert_eq!(raw_http_request(addr, "POST", &route, &[("Authorization", author_bearer.as_str()), ("Content-Type", "application/json")], semio_framework_pack_json::to_json_string(&stale_generation).as_bytes()).await.status, 409);
         assert!(state.directory.read_artifact_creation(&author.user_id, &stale_generation.request_id).await.expect("stale catalog creation facts").is_empty());
         assert_eq!(state.directory.head_seq().await.expect("directory head after stale catalog creation"), directory_head, "a stale catalog generation cannot claim an operation or append directory events");
         let creation_headers = [("Authorization", author_bearer.as_str()), ("Content-Type", "application/json")];
@@ -9587,7 +9591,7 @@ mod long {
         let page = admin_fit_page(rows, false, 7, |rows| admin_cursor_encode(&cursor_key, &principal, 2, rows.len())).expect("byte-bounded user page");
         assert!(page.rows.len() < ADMIN_PAGE_MAX);
         assert!(page.next_cursor.is_some());
-        assert!(directory::os_pack::json::to_json_string(&page).len() <= ADMIN_RESPONSE_MAX_BYTES);
+        assert!(semio_framework_pack_json::to_json_string(&page).len() <= ADMIN_RESPONSE_MAX_BYTES);
 
         let connections = (0..ADMIN_PAGE_MAX)
             .map(|index| AdminRecordedConnectionV1 {
@@ -9603,7 +9607,7 @@ mod long {
         let snapshot = admin_fit_connection_snapshot(connections, false, 7, 9, &cursor_key, &principal, 0).expect("byte-bounded connection snapshot");
         assert!(snapshot.rows.len() < ADMIN_PAGE_MAX);
         assert!(snapshot.next_cursor.is_some());
-        assert!(directory::os_pack::json::to_json_string(&snapshot).len() <= ADMIN_RESPONSE_MAX_BYTES);
+        assert!(semio_framework_pack_json::to_json_string(&snapshot).len() <= ADMIN_RESPONSE_MAX_BYTES);
 
         let view = SpaceView {
             id: "space:one".into(),
@@ -9622,7 +9626,7 @@ mod long {
         let detail = admin_fit_space_detail(view, members, false, 7, &cursor_key, &principal, "space:one", 0).expect("byte-bounded member detail");
         assert!(detail.members.rows.len() < ADMIN_PAGE_MAX);
         assert!(detail.members.next_cursor.is_some());
-        assert!(directory::os_pack::json::to_json_string(&detail).len() <= ADMIN_RESPONSE_MAX_BYTES);
+        assert!(semio_framework_pack_json::to_json_string(&detail).len() <= ADMIN_RESPONSE_MAX_BYTES);
 
         let oversized = vec![os_directory::UserView { id: "i".repeat(ADMIN_RESPONSE_MAX_BYTES), email: "e@example.com".into(), display_name: "name".into(), created_at_ms: 0 }];
         assert_eq!(admin_fit_page(oversized, false, 7, |_| Ok("a".repeat(84))), Err(StatusCode::PAYLOAD_TOO_LARGE));
@@ -9701,7 +9705,7 @@ mod long {
 
     #[tokio::test]
     async fn document_socket_grants_are_credential_bound_secret_free_oldest_first_and_single_consume() {
-        let fixture: DocumentOpenPlanLedgerFixture = directory::os_pack::json::from_json_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json")).expect("document open plan fixture");
+        let fixture: DocumentOpenPlanLedgerFixture = semio_framework_pack_json::from_json_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("document open plan fixture");
         let plan = Arc::new(document_open_plan_test_authority(&fixture));
         let ledger = SocketGrantLedgerV1::default();
         let audience = SocketAudienceV1::Document(DocumentScope::new("space-a", "document-a"));

@@ -20,7 +20,9 @@
               "value": "red"
             }
           }
-        ]
+        ],
+        "width": 0.0,
+        "height": 0.0
       },
       {
         "id": {
@@ -33,7 +35,9 @@
           "y": 0.0
         },
         "ports": [],
-        "properties": []
+        "properties": [],
+        "width": 0.0,
+        "height": 0.0
       }
     ]
   }

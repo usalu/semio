@@ -1,6 +1,6 @@
 //! 🪟️ Renderer-neutral navigation values shared by exact-window configuration and scene protocols.
 
-use protocol::value::{DslValue, FromValue, ValueError};
+use semio_framework_value::{DslValue, FromValue, ValueError};
 
 #[path = "◻️2d/🧬️schema/🦀️.rs"]
 mod planar;
@@ -11,30 +11,30 @@ pub use orbit::*;
 
 fn fields(value: DslValue, allowed: &[&str]) -> Result<Vec<(String, DslValue)>, ValueError> {
     let entries = value.into_object()?;
-    if entries.len() > allowed.len() { return Err(ValueError::new("too many viewport fields")); }
+    if entries.len() > allowed.len() { return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "too many viewport fields")); }
     for (index, (name, _)) in entries.iter().enumerate() {
         if !allowed.contains(&name.as_str()) || entries[..index].iter().any(|(prior, _)| prior == name) {
-            return Err(ValueError::new("unknown or duplicate viewport field").under(name));
+            return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "unknown or duplicate viewport field").under(name));
         }
     }
     Ok(entries)
 }
 
 fn take<T: FromValue>(entries: &mut Vec<(String, DslValue)>, name: &str) -> Result<T, ValueError> {
-    let index = entries.iter().position(|(key, _)| key == name).ok_or_else(|| ValueError::new("missing viewport field").under(name))?;
+    let index = entries.iter().position(|(key, _)| key == name).ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "missing viewport field").under(name))?;
     T::from_value(entries.swap_remove(index).1).map_err(|error| error.under(name))
 }
 
 fn finish(entries: Vec<(String, DslValue)>) -> Result<(), ValueError> {
-    if let Some((name, _)) = entries.into_iter().next() { Err(ValueError::new("field does not belong to selected viewport variant").under(name)) } else { Ok(()) }
+    if let Some((name, _)) = entries.into_iter().next() { Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "field does not belong to selected viewport variant").under(name)) } else { Ok(()) }
 }
 
 fn finite(value: f64, name: &str) -> Result<(), ValueError> {
-    if value.is_finite() { Ok(()) } else { Err(ValueError::new("expected finite coordinate").under(name)) }
+    if value.is_finite() { Ok(()) } else { Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected finite coordinate").under(name)) }
 }
 
 fn zoom(value: f64) -> Result<(), ValueError> {
-    if value.is_finite() && value > 0.0 { Ok(()) } else { Err(ValueError::new("expected positive finite zoom").under("zoom")) }
+    if value.is_finite() && value > 0.0 { Ok(()) } else { Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected positive finite zoom").under("zoom")) }
 }
 
 #[cfg(test)]
@@ -44,3 +44,10 @@ mod tests;
 #[cfg(test)]
 #[path = "🧪️tests/📐️projection/🦀️.rs"]
 mod projection_tests;
+
+#[cfg(test)]
+#[path="🧪️tests/🪆️binding/🦀️.rs"]
+mod binding_owner_tests;
+
+#[path="🪆️binding/🦀️.rs"]
+mod record_binding;

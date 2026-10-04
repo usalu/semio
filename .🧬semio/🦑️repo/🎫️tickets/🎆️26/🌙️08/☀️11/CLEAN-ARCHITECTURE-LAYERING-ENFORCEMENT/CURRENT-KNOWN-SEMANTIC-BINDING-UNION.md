@@ -1,0 +1,9 @@
+# Known Semantic Binding Union
+
+The 299-row, 992-cut staged union passes exact owned-span replay, hashes, inverses, Rust ERROR/missing shape parity and dual TOML parsing. Fresh current admission is not Ready for three advances: WFC grid2d editor window plus grid2d and 2d Cargo manifests. Complete fresh bodies and inverses are retained for scoped reconciliation; source restoration and a stationary forest are unnecessary.
+
+Full proof: `🗑️generated/sole-pack-error/independent-known-semantic-two-hundred-ninety-nine-union-admission-1.json`. Unqualified String causes, helper types, protocol signatures and OS provider closure remain outside this union.
+
+The three WFC JSON-only advances are independently qualified by complete reverse substitutions/table conservation in `🗑️generated/sole-pack-error/independent-known-semantic-three-current-json-advance-admission-2.json`. Union2 then reached a later Store predecessor advance. Its actual sole ArtifactPack trait and all seven method/default bodies remain byte-exact, including the three owned return leaves; fresh full foreign delta/inverse is retained in `🗑️generated/sole-pack-error/independent-known-union-store-current-three-trait-continuation-3.json`. The scoped successor must preserve that fresh body and select only those three leaves.
+
+Fresh union3 is independently Ready at finite source level: all 299 full current pairs, 992 exact edits, full inverses and descending original-expression replay pass with zero current gaps. Rust ERROR/missing shape parity and dual TOML parsing pass. The 81 new Error plus one JSON declaration resolve actual direct normal provider identities; stripping only these additions restores complete current tables. Full proof: `🗑️generated/sole-pack-error/independent-known-semantic-two-hundred-ninety-nine-union-admission-3.json`. Broader API/native/publication closure remains pending.

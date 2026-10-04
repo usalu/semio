@@ -236,6 +236,18 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
         "command": "bun ./📜️script.ts test-playground-default-contract"
       }
+    },
+    "test-launch-placement-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+        "command": "bun ./📜️script.ts test-launch-placement-contract"
+      },
+      "inputs": [
+        "default"
+      ],
+      "dependsOn": []
     }
   },
   "tags": [

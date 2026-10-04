@@ -8,8 +8,6 @@ use semio_framework_plugin::Buildable;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_plugin::HasBase;
 use semio_framework_plugin::HasChildren;
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::PluginAssemblyError;
 use semio_framework_plugin::RowActionPlacement;
 use semio_framework_plugin::TreeWindows;
@@ -17,6 +15,8 @@ use semio_framework_plugin::Trigger;
 use semio_framework_plugin::UiValue;
 use semio_framework_plugin::WindowKindDefinition;
 use semio_framework_ui_contract::{self as ui, Label as UiLabel};
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::LocalizedLabel;
 
 pub const WINDOW_KIND_ID: &str = TableWindowKit::KIND_ID;
 pub const BODY_KEY: &str = TableWindowKit::KIND_ID;
@@ -114,7 +114,7 @@ fn toolbar(revision: &str, locale: Locale) -> semio_framework_plugin::UiAssembly
         .map_err(|_| PluginAssemblyError::new("stdio.wav.toolbar", "toolbar build admission"))
 }
 
-fn format_table(document: &WavSnapshot, revision: &str, locale: Locale, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+fn format_table(document: &WavSnapshot, revision: &str, publication_revision: semio_framework_plugin::UiPublicationRevision, locale: Locale, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let column = match locale {
         Locale::De => "Abtastrate (Hz)",
         Locale::En => "Sample rate (Hz)",
@@ -134,7 +134,8 @@ fn format_table(document: &WavSnapshot, revision: &str, locale: Locale, windows:
                 "sample-rate",
                 CONTROLLER_ID,
                 locale,
-                [WindowedEditableTableCell::new(document.fmt.sample_rate.to_string(), column, edit_audio::SET_SAMPLE_RATE_ACTION_ID, semio_s_artifact_stdio_contract::window_kit_revision_arguments(revision)?)],
+                [WindowedEditableTableCell::new(document.fmt.sample_rate.to_string(), column, edit_audio::SET_SAMPLE_RATE_ACTION_ID, semio_s_artifact_stdio_contract::window_kit_revision_arguments(revision)?)
+                    .publication_revision(publication_revision)],
                 Vec::new(),
                 None,
             )
@@ -231,7 +232,15 @@ fn frame_table(frames: usize, revision: &str, locale: Locale, windows: &TreeWind
     )
 }
 
-fn matrix_table(document: &WavSnapshot, channels: usize, frames: usize, revision: &str, locale: Locale, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+fn matrix_table(
+    document: &WavSnapshot,
+    channels: usize,
+    frames: usize,
+    revision: &str,
+    publication_revision: semio_framework_plugin::UiPublicationRevision,
+    locale: Locale,
+    windows: &TreeWindows<'_>,
+) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let columns = (0..channels)
         .map(|channel| match locale {
             Locale::De => format!("Kanal {}", channel + 1),
@@ -258,7 +267,7 @@ fn matrix_table(document: &WavSnapshot, channels: usize, frames: usize, revision
                 .map(|channel| {
                     let value = sample_text(&document.data, frame * channels + channel).unwrap_or_default();
                     let arguments = semio_s_artifact_stdio_contract::window_kit_revisioned_cell_arguments(frame, channel, revision)?;
-                    Ok(WindowedEditableTableCell::new(value, columns[channel].clone(), edit_audio::SET_SAMPLE_ACTION_ID, arguments))
+                    Ok(WindowedEditableTableCell::new(value, columns[channel].clone(), edit_audio::SET_SAMPLE_ACTION_ID, arguments).publication_revision(publication_revision))
                 })
                 .collect::<semio_framework_plugin::UiAssemblyResult<Vec<_>>>()?;
             let insert = row_action(
@@ -285,7 +294,7 @@ fn matrix_table(document: &WavSnapshot, channels: usize, frames: usize, revision
     )
 }
 
-fn coordinate_table(document: &WavSnapshot, channels: usize, revision: &str, locale: Locale, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+fn coordinate_table(document: &WavSnapshot, channels: usize, revision: &str, publication_revision: semio_framework_plugin::UiPublicationRevision, locale: Locale, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let columns = match locale {
         Locale::De => ["Frame", "Kanal", "Wert"],
         Locale::En => ["Frame", "Channel", "Value"],
@@ -316,7 +325,8 @@ fn coordinate_table(document: &WavSnapshot, channels: usize, revision: &str, loc
                         columns[2],
                         edit_audio::SET_SAMPLE_ACTION_ID,
                         semio_s_artifact_stdio_contract::window_kit_revisioned_cell_arguments(frame, channel, revision)?,
-                    ),
+                    )
+                    .publication_revision(publication_revision),
                 ],
                 Vec::new(),
                 None,
@@ -344,12 +354,12 @@ fn raw_table(values: &[u8], locale: Locale, windows: &TreeWindows<'_>) -> semio_
     )
 }
 
-pub fn render(document: &WavSnapshot, locale: Locale) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &WavSnapshot, locale: Locale, publication_revision: semio_framework_plugin::UiPublicationRevision) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let revision = semio_s_artifact_stdio_contract::window_kit_snapshot_revision(document);
-    render_revisioned(document, &revision, locale, &TreeWindows::unhosted())
+    render_revisioned(document, &revision, publication_revision, locale, &TreeWindows::unhosted())
 }
 
-pub fn render_revisioned(document: &WavSnapshot, revision: &str, locale: Locale, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render_revisioned(document: &WavSnapshot, revision: &str, publication_revision: semio_framework_plugin::UiPublicationRevision, locale: Locale, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let mut children = Vec::new();
     match &document.data {
         WavData::Raw(values) => children.push(raw_table(values, locale, windows)?),
@@ -358,13 +368,13 @@ pub fn render_revisioned(document: &WavSnapshot, revision: &str, locale: Locale,
             Ok((channels, frames, _)) => {
                 children.push(toolbar(revision, locale)?);
                 if channels <= MATRIX_CHANNEL_LIMIT {
-                    children.push(matrix_table(document, channels, frames, revision, locale, windows)?);
+                    children.push(matrix_table(document, channels, frames, revision, publication_revision, locale, windows)?);
                 } else {
-                    children.push(coordinate_table(document, channels, revision, locale, windows)?);
+                    children.push(coordinate_table(document, channels, revision, publication_revision, locale, windows)?);
                     children.push(frame_table(frames, revision, locale, windows)?);
                 }
                 children.push(channel_table(channels, revision, locale, windows)?);
-                children.push(format_table(document, revision, locale, windows)?);
+                children.push(format_table(document, revision, publication_revision, locale, windows)?);
             }
         },
     }

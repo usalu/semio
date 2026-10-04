@@ -8,6 +8,9 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/flow/mutation/set-snapshot/schema.json"
     },
     {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/flow/mutation/patch-snapshot/schema.json"
+    },
+    {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/flow/mutation/insert-node/schema.json"
     },
     {

@@ -1,0 +1,128 @@
+[
+  {
+    "name": "prefix-invalid-identity",
+    "operation": "prefix",
+    "id": "core",
+    "component": "pack",
+    "version": 12,
+    "body": "A",
+    "maximumBytes": 128,
+    "accept": true,
+    "expected": {
+      "kind": "invalidValue",
+      "message": "invalid declared envelope identity"
+    }
+  },
+  {
+    "name": "binary-invalid-component",
+    "operation": "binary",
+    "id": "core.test",
+    "component": "dsl",
+    "version": 12,
+    "body": "A",
+    "maximumBytes": 128,
+    "accept": true,
+    "expected": {
+      "kind": "invalidValue",
+      "message": "invalid declared binary envelope identity"
+    }
+  },
+  {
+    "name": "text-invalid-component",
+    "operation": "text",
+    "id": "core.test",
+    "component": "pack",
+    "version": 12,
+    "body": "A",
+    "maximumBytes": 128,
+    "accept": true,
+    "expected": {
+      "kind": "invalidValue",
+      "message": "invalid declared text envelope identity"
+    }
+  },
+  {
+    "name": "binary-canceled",
+    "operation": "binary",
+    "id": "core.test",
+    "component": "pack",
+    "version": 12,
+    "body": "A",
+    "maximumBytes": 128,
+    "accept": false,
+    "expected": {
+      "kind": "canceled",
+      "message": "native encoding canceled"
+    }
+  },
+  {
+    "name": "text-canceled",
+    "operation": "text",
+    "id": "core.test",
+    "component": "dsl",
+    "version": 12,
+    "body": "A",
+    "maximumBytes": 128,
+    "accept": false,
+    "expected": {
+      "kind": "canceled",
+      "message": "native encoding canceled"
+    }
+  },
+  {
+    "name": "binary-ownership",
+    "operation": "binary",
+    "id": "core.test",
+    "component": "pack",
+    "version": 12,
+    "body": "A",
+    "maximumBytes": 0,
+    "accept": true,
+    "expected": {
+      "kind": "ownershipLimit",
+      "message": "native encoding ownership exceeds caller limit"
+    }
+  },
+  {
+    "name": "text-ownership",
+    "operation": "text",
+    "id": "core.test",
+    "component": "dsl",
+    "version": 12,
+    "body": "A",
+    "maximumBytes": 0,
+    "accept": true,
+    "expected": {
+      "kind": "ownershipLimit",
+      "message": "native encoding ownership exceeds caller limit"
+    }
+  },
+  {
+    "name": "binary-exact",
+    "operation": "binary",
+    "id": "core.test",
+    "component": "pack",
+    "version": 12,
+    "body": "A",
+    "maximumBytes": 128,
+    "accept": true,
+    "expected": {
+      "hex": "8953454d0d0a1a0a12000000636f72652e746573742e7061636b2076313241",
+      "prefixBytes": 30
+    }
+  },
+  {
+    "name": "text-unicode-exact",
+    "operation": "text",
+    "id": "core.test",
+    "component": "dsl",
+    "version": 12,
+    "body": "Grüße",
+    "maximumBytes": 128,
+    "accept": true,
+    "expected": {
+      "hex": "73656d696f20636f72652e746573742e64736c207631320a4772c3bcc39f65",
+      "prefixBytes": 24
+    }
+  }
+]

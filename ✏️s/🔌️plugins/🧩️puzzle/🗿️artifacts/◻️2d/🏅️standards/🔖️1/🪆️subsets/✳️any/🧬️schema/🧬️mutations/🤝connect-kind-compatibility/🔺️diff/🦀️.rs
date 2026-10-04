@@ -5,7 +5,7 @@ use crate::{Puzzle2dKindCompatibility, Puzzle2dSnapshot};
 //#region 🔖️Diff
 pub fn diff(payload: &super::ConnectKindCompatibility, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
     if base.meta.kind_compatibility.iter().any(|row| row.source == payload.source && row.target == payload.target) {
-        return protocol::MutationOutcome::new(Puzzle2dDiff::default()).absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "already connected").at(vec![payload.source.clone(), payload.target.clone()])]);
+        return protocol::MutationOutcome::new(Puzzle2dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "already connected").at(vec![payload.source.clone(), payload.target.clone()])]);
     }
     let mut meta = base.meta.clone();
     meta.kind_compatibility.push(Puzzle2dKindCompatibility { source: payload.source.clone(), target: payload.target.clone(), bidirectional: payload.bidirectional, important: payload.important, specificity: payload.specificity });

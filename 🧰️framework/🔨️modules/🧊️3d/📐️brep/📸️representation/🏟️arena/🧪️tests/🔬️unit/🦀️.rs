@@ -75,8 +75,8 @@ async fn display_uses_readable_tag_index_generation_format() {
 async fn serde_round_trips_an_id() {
     let mut store: Store<i32, TestId> = Store::new();
     let id = store.insert(1);
-    let json = pack::to_json_string(&id);
-    let back: TestId = pack::from_json_str(&json).unwrap();
+    let json = semio_framework_pack_json::to_json_string(&id);
+    let back: TestId = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(back, id);
 }
 

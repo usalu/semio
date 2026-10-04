@@ -11,7 +11,7 @@ pub fn diff(payload: &super::MaskCell, base: &Grid2dSnapshot) -> protocol::Mutat
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Cell ({}, {}) is outside the {}×{} grid.", payload.x, payload.y, base.width, base.height), [target]);
     }
     if base.masked.iter().any(|cell| cell.x == payload.x && cell.y == payload.y) {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Cell ({}, {}) is already masked.", payload.x, payload.y));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Cell ({}, {}) is already masked.", payload.x, payload.y));
     }
     let at = ordered_cell_index(&base.masked, payload.x, payload.y, |cell| (cell.y, cell.x));
     let pinned_removed: Vec<String> = base.pinned.iter().filter(|cell| cell.x == payload.x && cell.y == payload.y).map(|cell| cell_id(cell.x, cell.y)).collect();

@@ -1,30 +1,23 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import Ajv from "ajv";
+import { semioSchemaAjvV1,addSemioMutationLeafSchemasV1 } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 
-/** ♻️ Independent JSON-tree accounting for exact retained document release receipts. */
+/** ♻️ Independent typed-owner accounting retains every declared parent and mutation role. */
 export function testRewritingDocumentRetirementOracle(): void {
-  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
-  const validate = new Ajv({ strict: true }).compile({ type: "object", required: ["schema", "budgets", "snapshots", "mutations"], properties: { schema: { const: "semio.rewriting.document-retirement/v1" }, budgets: { type: "array", minItems: 2 }, snapshots: { type: "array", minItems: 2 }, mutations: { type: "array", minItems: 14, maxItems: 14 } }, additionalProperties: false });
-  assert(validate(fixture), JSON.stringify(validate.errors));
-  const text = (value: string): number => Buffer.byteLength(value, "utf8");
-  const property = (value: unknown): number => value === null ? 0 : typeof value === "string" ? text(value) : typeof value === "number" ? 8 : typeof value === "boolean" ? 1 : Array.isArray(value) ? value.reduce((sum, item) => sum + property(item), 0) : Object.entries(value as Record<string, unknown>).reduce((sum, [key, item]) => sum + text(key) + property(item), 0);
-  for (const row of fixture.snapshots) {
-    const state = row.value;
-    const bytes = text(state.beforeFixtureJson) + text(state.lhsJson) + text(state.rhsJson) + property(state.parameterBindings) + Object.keys(state.ruleLayout).reduce((sum, key) => sum + text(key) + 16, 0);
-    assert.equal(bytes, row.bytes);
-  }
-  for (const row of fixture.mutations) {
-    const value = row.value;
-    const placements = (points: readonly { key: string }[]) => points.reduce((sum, point) => sum + text(point.key) + 16, 0);
-    const bytes =
-      value.newBeforeFixtureJson !== undefined ? text(value.newBeforeFixtureJson)
-      : value.newLhsJson !== undefined ? text(value.newLhsJson)
-      : value.newRhsJson !== undefined ? text(value.newRhsJson)
-      : value.points !== undefined ? placements(value.points) + property(value.cleared)
-      : value.source !== undefined ? text(value.source) + text(value.target) + text(value.kind)
-      : value.targets !== undefined ? property(value.targets) + (value.field !== undefined ? text(value.field) + text(value.value) : value.dx !== undefined ? 16 : 0)
-      : text(value.key) + (value.newValue !== undefined ? property(value.newValue) : value.newPoint !== undefined ? 16 : 0);
-    assert.equal(bytes, row.bytes);
-  }
+ const fixture=JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json",import.meta.url),"utf8")),specification=JSON.parse(readFileSync(new URL("../../../📸️snapshot/🧫️fixtures/🪶️sqlite/🌳️typed/🔣️.json",import.meta.url),"utf8")),schemaOwner=new URL("../../../📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts",import.meta.url),ajv=semioSchemaAjvV1({allErrors:true});
+ for(const path of specification.schemaDocuments)ajv.addSchema(JSON.parse(readFileSync(new URL(path,schemaOwner),"utf8")));
+ ajv.addSchema(JSON.parse(readFileSync(new URL("../../../🔣️.json",import.meta.url),"utf8")));
+ addSemioMutationLeafSchemasV1(ajv,new URL("../../../🧬️mutations",import.meta.url));
+ const snapshot=JSON.parse(readFileSync(new URL("../../../📸️snapshot/🔣️.json",import.meta.url),"utf8")),mutation=JSON.parse(readFileSync(new URL("../../../🧬️mutations/🔣️.json",import.meta.url),"utf8"));
+ if(!ajv.getSchema(snapshot.$id))ajv.addSchema(snapshot);if(!ajv.getSchema(mutation.$id))ajv.addSchema(mutation);
+ const validate=ajv.compile(JSON.parse(readFileSync(new URL("../../🧫️fixtures/🧬️schema/🔣️.json",import.meta.url),"utf8")));assert(validate(fixture),JSON.stringify(validate.errors));assert.equal(validate({...fixture,carrier:"{}"}),false);assert.equal(validate({...fixture,snapshots:[{...fixture.snapshots[0],value:{beforeFixtureJson:"{}"}},fixture.snapshots[1]]}),false);assert(validate(fixture),JSON.stringify(validate.errors));
+ const text=(value:string|undefined):number=>value===undefined?0:Buffer.byteLength(value,"utf8");
+ assert.deepEqual(fixture.snapshots.map((row:any)=>row.id),["empty","nested-properties-and-layout"]);assert.deepEqual(fixture.budgets,[{items:1,bytes:1},{items:3,bytes:5}]);assert.deepEqual(fixture.mutations.map((row:any)=>row.value.mutation),["editBeforeFixture","editLhs","editRhs","changeParameterBinding","removeParameterBinding","changeRuleLayoutPoint","removeRuleLayoutPoint","dragRuleNodes","setRuleLayoutPoints"]);
+ const property=(value:any):number=>{switch(value.kind){case"null":return 0;case"bool":return 1;case"number":return 8;case"string":return text(value.value);case"array":return value.values.reduce((sum:number,value:any)=>sum+property(value),0);case"object":return Object.entries(value.values).reduce((sum,[key,value])=>sum+text(key)+property(value),0);default:throw Error("retirement property family");}};
+ const pattern=(value:any):number=>["leftVar","leftKind","edgeVar","edgeKind","rightVar","rightKind"].reduce((sum,key)=>sum+text(value[key]),0);
+ const lhs=(value:any):number=>pattern(value.pattern)+text(value.whereClause);
+ const rhs=(value:any):number=>{assert.equal(value.parameters.length,0,"neutral byte vectors keep parameter enum layout outside this scalar receipt");return value.create.reduce((sum:number,value:any)=>sum+pattern(value),0)+value.delete.reduce((sum:number,value:string)=>sum+text(value),0)+value.set.reduce((sum:number,value:any)=>sum+text(value.var)+text(value.prop)+property(value.value),0)+value.merge.reduce((sum:number,value:any)=>sum+pattern(value),0);};
+ const graph=(value:any):number=>{assert.deepEqual(value.manifest,{nodeKinds:[],edgeKinds:[],portKinds:[]});return text(value.schema)+text(value.name)+text(value.manifestId)+24+text(value.content.childId)+text(value.content.target.artifactId)+text(value.content.target.dialect.artifactKind)+text(value.content.target.dialect.standard)+text(value.content.target.dialect.subset)+text(value.rootNodeId)+text(value.query);};
+ for(const row of fixture.snapshots){const value=row.value;assert.equal(graph(value.workingGraph)+lhs(value.lhs)+rhs(value.rhs)+Object.entries(value.parameterBindings).reduce((sum,[key,value])=>sum+text(key)+property(value),0)+Object.keys(value.ruleLayout).reduce((sum,key)=>sum+text(key)+16,0),row.bytes);}
+ for(const row of fixture.mutations){const value=row.value,placements=(points:readonly{key:string}[])=>points.reduce((sum,point)=>sum+text(point.key)+16,0),texts=(values:readonly string[])=>values.reduce((sum,value)=>sum+text(value),0);const bytes=value.newWorkingGraph!==undefined?graph(value.newWorkingGraph):value.newLhs!==undefined?lhs(value.newLhs):value.newRhs!==undefined?rhs(value.newRhs):value.points!==undefined?placements(value.points)+texts(value.cleared):value.source!==undefined?text(value.source)+text(value.target)+text(value.kind):value.id!==undefined?text(value.id)+text(value.kind)+text(value.name)+16:value.targets!==undefined?texts(value.targets)+(value.field!==undefined?text(value.field)+text(value.value):value.dx!==undefined?16:0):text(value.key)+(value.newValue!==undefined?property(value.newValue):value.newPoint!==undefined?16:0);assert.equal(bytes,row.bytes);}
 }

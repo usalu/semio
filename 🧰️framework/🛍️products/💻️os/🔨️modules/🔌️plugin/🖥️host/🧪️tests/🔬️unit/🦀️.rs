@@ -160,12 +160,12 @@ async fn plugin_instance_handle_drives_io_run_job_on_worker_through_a_running_st
     let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("mock instantiate");
     mock.script_job_step(actor, JobStep::Running { progress: None }).await;
     let io_payload = semio_framework::io_schema::IoPayload::Text("87a-bytes".to_string());
-    mock.script_job_step(actor, JobStep::Done { output: dsl::os_pack::json::to_json_string(&io_payload).into_bytes() }).await;
+    mock.script_job_step(actor, JobStep::Done { output: semio_framework_pack_json::to_json_string(&io_payload).into_bytes() }).await;
     let handle = PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), instance).await;
 
-    let payload_bytes = dsl::os_pack::json::to_json_string(&semio_framework::io_schema::IoPayload::Text("raw-bytes".to_string())).into_bytes();
+    let payload_bytes = semio_framework_pack_json::to_json_string(&semio_framework::io_schema::IoPayload::Text("raw-bytes".to_string())).into_bytes();
     let result = handle.io_run("s.stdio.gif@87a/*", "s.stdio.gif@89a/*", payload_bytes).await.expect("job-backed io_run must drive start-job + step-job to Done");
-    let decoded: semio_framework::io_schema::IoPayload = dsl::os_pack::json::from_json_str(std::str::from_utf8(&result).expect("decode io_run result utf8")).expect("decode io_run result");
+    let decoded: semio_framework::io_schema::IoPayload = semio_framework_pack_json::from_json_str(std::str::from_utf8(&result).expect("decode io_run result utf8"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("decode io_run result");
     assert_eq!(decoded, io_payload);
 }
 
@@ -180,7 +180,7 @@ async fn plugin_instance_handle_io_sniff_decodes_the_confidence_byte() {
     mock.script_job_step(actor, JobStep::Done { output: vec![3u8] }).await;
     let handle = PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), instance).await;
 
-    let payload_bytes = dsl::os_pack::json::to_json_string(&semio_framework::io_schema::IoPayload::Binary(vec![0xFF])).into_bytes();
+    let payload_bytes = semio_framework_pack_json::to_json_string(&semio_framework::io_schema::IoPayload::Binary(vec![0xFF])).into_bytes();
     let rank = handle.io_sniff("s.stdio.binary@raw/*", "s.stdio.gif@87a/*", &payload_bytes).await.expect("job-backed io_sniff must decode a Done result");
     assert_eq!(rank, 3);
 }
@@ -239,7 +239,7 @@ async fn io_router_run_io_crosses_two_real_plugin_instance_handles() {
     let stdio_compiled = stdio_mock.compile(&PackageRef { package: PackageId("stdio".to_string()), hash: PackageHash([3u8; 32]) }, &[]).await.expect("stdio mock compile");
     let stdio_instance = stdio_mock.instantiate(&stdio_compiled, stdio_actor, &[], &budget).await.expect("stdio mock instantiate");
     let midpoint = semio_framework::io_schema::IoPayload::Text("midpoint".to_string());
-    stdio_mock.script_job_step(stdio_actor, JobStep::Done { output: dsl::os_pack::json::to_json_string(&midpoint).into_bytes() }).await;
+    stdio_mock.script_job_step(stdio_actor, JobStep::Done { output: semio_framework_pack_json::to_json_string(&midpoint).into_bytes() }).await;
     let stdio_handle = Arc::new(PluginInstanceHandle::new(stdio_actor, Arc::new(GuestRuntimes::Mock(stdio_mock)), stdio_instance).await);
 
     let gif_mock = Arc::new(MockGuestRuntime::new().await);
@@ -247,7 +247,7 @@ async fn io_router_run_io_crosses_two_real_plugin_instance_handles() {
     let gif_compiled = gif_mock.compile(&PackageRef { package: PackageId("gif".to_string()), hash: PackageHash([4u8; 32]) }, &[]).await.expect("gif mock compile");
     let gif_instance = gif_mock.instantiate(&gif_compiled, gif_actor, &[], &budget).await.expect("gif mock instantiate");
     let final_payload = semio_framework::io_schema::IoPayload::Text("final".to_string());
-    gif_mock.script_job_step(gif_actor, JobStep::Done { output: dsl::os_pack::json::to_json_string(&final_payload).into_bytes() }).await;
+    gif_mock.script_job_step(gif_actor, JobStep::Done { output: semio_framework_pack_json::to_json_string(&final_payload).into_bytes() }).await;
     let gif_handle = Arc::new(PluginInstanceHandle::new(gif_actor, Arc::new(GuestRuntimes::Mock(gif_mock)), gif_instance).await);
 
     let binary_raw = io_dialect("s.stdio.binary", "raw", "*").await;
@@ -262,9 +262,9 @@ async fn io_router_run_io_crosses_two_real_plugin_instance_handles() {
     let (plugins, _keys) = router.stats().await.expect("router stats");
     assert_eq!(plugins, 2, "both plugin instance handles must be registered with the shared router");
 
-    let start_payload = dsl::os_pack::json::to_json_string(&semio_framework::io_schema::IoPayload::Text("start".to_string())).into_bytes();
+    let start_payload = semio_framework_pack_json::to_json_string(&semio_framework::io_schema::IoPayload::Text("start".to_string())).into_bytes();
     let result_bytes = router.run_io("norm", &binary_raw.to_coordinate(), &gif_89a.to_coordinate(), start_payload).await.expect("2-hop run_io crossing stdio then gif must succeed");
-    let decoded: semio_framework::io_schema::IoPayload = dsl::os_pack::json::from_json_str(std::str::from_utf8(&result_bytes).expect("decode final run_io result utf8")).expect("decode final run_io result");
+    let decoded: semio_framework::io_schema::IoPayload = semio_framework_pack_json::from_json_str(std::str::from_utf8(&result_bytes).expect("decode final run_io result utf8"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("decode final run_io result");
     assert_eq!(decoded, final_payload, "the SECOND hop's (gif's) scripted result must be what comes out — proves the chain really crossed both instance handles in order");
 }
 
@@ -308,7 +308,7 @@ async fn io_router_compose_resolves_ownership_and_drives_the_semio_compose_job_t
         format_standard: "1".to_string(),
         format_subset: "*".to_string(),
     };
-    let key_bytes = dsl::os_pack::json::to_json_string(&key).into_bytes();
+    let key_bytes = semio_framework_pack_json::to_json_string(&key).into_bytes();
     let result = router.compose("stdio", &key_bytes, b"sources").await.expect("compose must resolve ownership AND drive the job to completion, not hard-error");
     assert_eq!(result, b"composed", "the SCRIPTED job outcome must be what comes out, proving real start-job/step-job dispatch reached the resolved owner's handle");
 }
@@ -340,7 +340,7 @@ async fn io_router_compose_still_refuses_to_route_back_into_the_calling_plugin()
         format_standard: "1".to_string(),
         format_subset: "*".to_string(),
     };
-    let key_bytes = dsl::os_pack::json::to_json_string(&key).into_bytes();
+    let key_bytes = semio_framework_pack_json::to_json_string(&key).into_bytes();
     let error = router.compose("cad", &key_bytes, b"sources").await.expect_err("a plugin routing to its own key must be refused, not dispatched");
     assert!(error.to_string().contains("routing to itself"), "unexpected message: {error}");
 }

@@ -107,7 +107,7 @@ pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framew
 /// `selectInstance`/`nodeGraphSelect`/`setMediaNodeSelection`/`setAppInstanceSelection` action builders
 /// every measure/document row used to construct by hand.
 pub(crate) async fn space_interaction_select(granularity: &str, id: &str) -> ActionDescriptor {
-    let targets = pack::to_json_string(&vec![InteractionTarget { granularity: granularity.into(), id: id.into() }]);
+    let targets = semio_framework_pack_json::to_json_string(&vec![InteractionTarget { granularity: granularity.into(), id: id.into() }]);
     ActionDescriptor {
         controller_id: S_PLAY_CONTROLLER_ID.into(),
         action: INTERACTION_SELECT_ACTION_ID.into(),
@@ -601,42 +601,13 @@ fn prepare_space_config(base: &SpaceConfig, mutation: SpaceConfigMutation) -> Re
     Ok((post, inverse, mutation))
 }
 
-fn space_config_edit(forward: SpaceConfigMutation, inverse: SpaceConfigMutation, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<SpaceConfigMutation> {
-    let id = format!("space-config-retained-{}", authority.next_sequence_number());
-    protocol::Edit { line: authority.line_id().map(str::to_owned),
-        id: id.clone(),
-        actor: Some(authority.actor().to_string()),
-        forwards: vec![forward],
-        inverse: vec![inverse],
-        mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
-            dependencies: Vec::new(),
-            base_version: authority.base_applied_edit_count() as u64,
-            author_id: Some(protocol::ActorId(authority.actor().to_string())),
-            timestamp: authority.next_clock(),
-            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-            payload_hash: None,
-            semantic_kind: None,
-            label: None,
-            group_id: None,
-            origin: Default::default(),
-            transaction: None,
-        }],
-        description, verb: None,
-        coalesce_key: None,
-        sequence_number: authority.next_sequence_number(),
-        started_at: String::new(),
-        finished_at: None,
-    }
-}
-
 impl store::ArtifactStoreOneItemPreparationFactory<SpaceConfig, SpaceConfigMutation> for SpaceConfigPreparationFactory {
     fn preflight(&self, mutation: &SpaceConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > SPACE_CONFIG_METADATA_BYTES) {
             return Err("Space Config preparation rejects its lane or description envelope".into());
         }
         space_config_mutation_bytes(mutation)?;
-        Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: SPACE_CONFIG_MAXIMUM_BYTES * 4 + 1_024 })
+        Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, SPACE_CONFIG_MAXIMUM_BYTES * 4 + 1_024))
     }
 
     fn begin(
@@ -691,7 +662,7 @@ impl store::ArtifactStoreOneItemPreparation<SpaceConfig, SpaceConfigMutation> fo
         }
         let (post, inverse, forward) = self.candidate.take().ok_or_else(|| "Space Config preparation lost its candidate".to_string())?;
         let authority = self.authority.as_ref().ok_or_else(|| "Space Config preparation lost its Store authority".to_string())?;
-        let prepared = authority.prepare_one_item(space_config_edit(forward, inverse, self.description.take(), authority), std::sync::Arc::new(post))?;
+        let prepared = authority.prepare_one_item(authority.next_edit(forward, vec![inverse]), std::sync::Arc::new(post))?;
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
         self.prepared = Some(prepared);
         Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
@@ -909,7 +880,7 @@ impl ArtifactApp for SpaceApp {
         let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(DslValue::as_str).map(str::to_string);
         let f64_field = |key: &str| args.and_then(|value| value.get(key)).and_then(DslValue::as_f64);
         let string_vec = |key: &str| args.and_then(|value| value.get(key)).and_then(DslValue::as_array).map(|items| items.iter().filter_map(DslValue::as_str).map(str::to_string).collect::<Vec<_>>()).unwrap_or_default();
-        let json_field = |key: &str| args.and_then(|value| value.get(key)).map(|raw| raw.as_str().map_or_else(|| pack::json::to_string(&pack::json::from_dsl_value(raw)), str::to_string));
+        let json_field = |key: &str| args.and_then(|value| value.get(key)).map(|raw| raw.as_str().map_or_else(|| semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(raw)), str::to_string));
         let node_id = || str_field("nodeId").or_else(|| str_field("node_id")).or_else(|| str_field("instanceId")).or_else(|| str_field("instance_id"));
         match action {
             "patchParameter" => Ok(SpaceCommand::PatchParameter(patch_parameter::PatchParameter {
@@ -1320,7 +1291,7 @@ pub async fn create_space_app() -> App {
         // payload"), which already derives `ToValue` — read it straight off `.vcs.initial_snapshot`.
         let snapshot = parse_demo_space_document().await.vcs.initial_snapshot;
         let document_value = semio_framework_value::ToValue::to_value(&snapshot);
-        let json = pack::json_to_string_pretty(&pack::json_from_dsl_value(&document_value));
+        let json = semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&document_value));
         // 📊️ `label` is sourced from `S_STUDIO_EXAMPLES` — no per-locale split is available at the
         // source, so it is genuine runtime data here, not compile-checked native copy.
         app = app.example(*id, LocalizedLabel::data(*label), json, "file-text").await;

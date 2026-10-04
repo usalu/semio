@@ -114,3 +114,56 @@ fn a_draft_reference_highlight_reaches_the_wgpu_board_engine() {
     assert!(sync_board_engine(&mut host, &mut cache, &board, 800, 600), "a closed draft syncs");
     assert_eq!(host.highlighted_ids_json().expect("highlighted ids"), "[]", "a closed draft highlights nothing");
 }
+
+/// 🎛️ Law: the rotate ring runs on wgpu as it runs on React — the press opens the engine's direct lane, every move turns the
+/// selection without dispatching anything (its transient previews never leave the host), and the release publishes ONE
+/// `applyBoardEvents` holding the single `rotate` record; the lane is closed and nothing is left for the frame pump.
+#[test]
+fn the_wgpu_rotate_ring_publishes_one_rotate_record() {
+    let board_id = "board-rotate-ring";
+    let inner = Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 };
+    ensure_engine_surface(board_id, board_id, 800, 600);
+    let node = |id: &str, x: f64| json!({ "id": id, "x": x, "y": 0.0, "shape": "circle", "radius": 10.0, "handles": [] });
+    let fixture = json!({ "schema": "puzzle.2d.fixture", "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 }, "nodes": [node("node-a", -40.0), node("node-b", 40.0)], "edges": [] }).to_string();
+    let mut host = infinite_canvas::BoardHost::default();
+    host.set_size(800, 600, 1.0);
+    host.set_camera_silent(0.0, 0.0, 1.0);
+    assert!(host.parse_fixture_json(&fixture), "the ring fixture parses");
+    host.set_selection_ids_silent(&["node-a".to_string(), "node-b".to_string()]);
+    ENGINE_SURFACES.with(|cell| cell.borrow_mut().get_mut(board_id).expect("surface").board_host = Some(ManuallyDrop::new(host)));
+    while board_drain_into_buffer(board_id) {}
+    board_retire_pending_events(board_id);
+    let ring = |degrees: f64| {
+        with_board_host(board_id, |host| {
+            let (pivot, radius) = host.transform_gumball_geometry().expect("the rotate ring is armed");
+            let point = host.world_to_screen(canvas::Point::new(pivot.x + radius * degrees.to_radians().cos(), pivot.y + radius * degrees.to_radians().sin()));
+            (point.x as f32, point.y as f32)
+        })
+        .expect("board host")
+    };
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let (gx, gy) = ring(0.0);
+    puzzle_board_pointer_down(board_id, inner, gx, gy, 0, false, false);
+    assert_eq!(with_board_host(board_id, infinite_canvas::BoardHost::pointer_lane_is_direct), Some(true), "the press on the ring opens the direct lane");
+    for degrees in [30.0, 60.0, 90.0] {
+        let (x, y) = ring(degrees);
+        assert_eq!(puzzle_board_pointer_move_into(board_id, "controller", inner, x, y, false, false, false, &mut input), Ok(false), "a ring frame at {degrees}° dispatches nothing");
+        assert!(matches!(input.take_action_step(), Ok(None)), "a ring frame at {degrees}° leaves no action");
+    }
+    assert_ne!(with_board_host(board_id, |host| host.nodes.get("node-a").map(|node| (node.x, node.y))).flatten(), Some((-40.0, 0.0)), "the frames turned the selection");
+    let (x, y) = ring(90.0);
+    assert_eq!(puzzle_board_pointer_up_into(board_id, "controller", inner, x, y, false, false, false, &mut input), Ok(true), "the release dispatches");
+    let action = input.take_action_step().expect("the release publishes").expect("one action").into_descriptor().expect("an action descriptor");
+    assert_eq!((action.controller_id.as_str(), action.action.as_str()), ("controller", "applyBoardEvents"));
+    let rows: Value = serde_json::from_str(Value::from(action.args.as_ref().expect("args"))["eventsJson"].as_str().expect("eventsJson")).expect("rows parse");
+    assert_eq!(rows.as_array().map(|rows| rows.iter().map(|row| row["name"].as_str().unwrap_or_default()).collect::<Vec<_>>()), Some(vec!["gesture"]), "one record: {rows}");
+    let record = &rows[0]["payload"];
+    assert_eq!((record["kind"].as_str(), &record["targets"]), (Some("rotate"), &json!(["node-a", "node-b"])));
+    assert!(record["angle"].as_f64().is_some_and(|angle| (angle - std::f64::consts::FRAC_PI_2).abs() < 1e-6), "a quarter turn: {record}");
+    assert!(matches!(input.take_action_step(), Ok(None)), "ONE dispatch");
+    assert_eq!(with_board_host(board_id, infinite_canvas::BoardHost::pointer_lane_is_direct), Some(false), "the release closes the lane");
+    assert_eq!(publish_board_event_step(board_id, "controller", &mut input), Ok(false), "nothing is left for the frame pump");
+    ENGINE_SURFACES.with(|cell| {
+        cell.borrow_mut().remove(board_id);
+    });
+}

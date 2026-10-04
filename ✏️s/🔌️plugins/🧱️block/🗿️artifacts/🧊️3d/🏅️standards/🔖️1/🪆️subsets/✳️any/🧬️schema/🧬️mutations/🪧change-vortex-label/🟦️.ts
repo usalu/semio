@@ -2,5 +2,5 @@
 
 export interface ChangeVortexLabel {
   id: string;
-  newLabel?: string;
+  newLabel: string|null;
 }

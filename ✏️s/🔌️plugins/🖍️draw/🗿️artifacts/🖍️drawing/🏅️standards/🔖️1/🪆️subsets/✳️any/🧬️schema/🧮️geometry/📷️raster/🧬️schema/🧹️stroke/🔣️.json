@@ -1,0 +1,10 @@
+{
+ "$schema":"http://json-schema.org/draft-07/schema#",
+ "type":"array","minItems":6,"maxItems":6,
+ "items":{"type":"object","additionalProperties":false,"required":["source","work"],
+  "properties":{
+   "source":{"type":"string","minLength":1},
+   "work":{"type":"object","additionalProperties":false,"required":["native","typescript"],"properties":{"native":{"type":"integer","minimum":0,"maximum":200000},"typescript":{"type":"integer","minimum":0,"maximum":200000}}}
+  }
+ }
+}

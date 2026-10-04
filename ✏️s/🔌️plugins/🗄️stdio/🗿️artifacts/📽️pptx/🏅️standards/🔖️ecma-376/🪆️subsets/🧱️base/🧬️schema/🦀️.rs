@@ -5,6 +5,9 @@ use crate::PptxSnapshot;
 use framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_zip::opc::OpcPackage;
 
+#[path = "🏗️construction/🦀️.rs"]
+mod construction;
+
 //#region Artifact
 /// 🧬️ Full `stdio.pptx` artifact state.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
@@ -19,9 +22,6 @@ pub struct PptxArtifact {
     #[state(artifact)]
     #[value(default)]
     pub xml_parts: Vec<PptxXmlPart>,
-    #[state(artifact)]
-    #[value(default)]
-    pub presentation: PptxPresentation,
 }
 //#endregion Artifact
 
@@ -35,12 +35,12 @@ impl Default for PptxArtifact {
 impl PptxArtifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> PptxSnapshot {
-        PptxSnapshot { schema: self.schema.clone(), opc: self.opc.clone(), xml_parts: self.xml_parts.clone(), presentation: self.presentation.clone() }
+        PptxSnapshot { schema: self.schema.clone(), opc: self.opc.clone(), xml_parts: self.xml_parts.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
     pub fn from_snapshot(snapshot: PptxSnapshot) -> Self {
-        Self { schema: snapshot.schema, opc: snapshot.opc, xml_parts: snapshot.xml_parts, presentation: snapshot.presentation }
+        Self { schema: snapshot.schema, opc: snapshot.opc, xml_parts: snapshot.xml_parts }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -48,7 +48,6 @@ impl PptxArtifact {
         self.schema = snapshot.schema;
         self.opc = snapshot.opc;
         self.xml_parts = snapshot.xml_parts;
-        self.presentation = snapshot.presentation;
     }
 }
 //#endregion Conversions
@@ -58,7 +57,9 @@ impl PptxArtifact {
 pub fn pptx_artifact_schema_descriptor() -> semio_framework_schema_registry::ArtifactSchemaDescriptor {
     semio_framework_schema_registry::ArtifactSchemaDescriptor {
         id: "s.stdio.pptx",
-        artifact: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
+        artifact: semio_framework_schema_registry::FacetLeaves {
+            rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto")
+        },
         snapshot: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
@@ -85,7 +86,7 @@ pub fn pptx_artifact_schema_descriptor() -> semio_framework_schema_registry::Art
 //#endregion Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::schema::snapshot::{PptxParagraph, PptxRun, PptxShape, PptxSlide, PptxTransform};
+    use crate::schema::snapshot::{PptxParagraph, PptxRun};
     use crate::{PptxDiff, PptxMutation, PptxSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
@@ -94,7 +95,7 @@ pub mod derived_construction {
     #[derive(Clone, Debug, Default)]
     pub struct PptxBuilderConstruction {
         snapshot: PptxSnapshot,
-        diagnostics: Vec<dsl::Diagnostic>,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
     }
 
     impl ArtifactBuilder for PptxBuilderConstruction {
@@ -105,9 +106,12 @@ pub mod derived_construction {
             Self { snapshot: PptxSnapshot::default(), diagnostics: Vec::new() }
         }
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self { snapshot, diagnostics: Vec::new() }
+            match snapshot.presentation() {
+                Ok(_) => Self { snapshot, diagnostics: Vec::new() },
+                Err(error) => Self { snapshot, diagnostics: vec![semio_framework_diagnostic::Diagnostic::error("stdio.pptx.builder.presentation", semio_framework_diagnostic::TextSpan::at(1, 1), error)] },
+            }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(Self::from_snapshot(<PptxSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
@@ -115,13 +119,13 @@ pub mod derived_construction {
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::schema::mutations::apply_pptx_mutation(&mut self.snapshot, &mutation);
-            (self, diff)
+            (Self::from_snapshot(self.snapshot), diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <PptxDiff as protocol::MutationDiff<PptxSnapshot>>::apply(&diff, &self.snapshot)?;
-            Ok(self)
+            Ok(Self::from_snapshot(self.snapshot))
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -137,21 +141,24 @@ pub mod derived_construction {
     impl PptxBuilderConstruction {
         /// ➕️ Appends a new (initially empty) slide and makes it the active slide for `add_paragraph`.
         pub async fn add_slide(mut self) -> Self {
-            self.snapshot.presentation.slides.push(PptxSlide::default());
-            self.rebuild().await
+            if self.diagnostics.is_empty() {
+                if let Err(error) = super::construction::append_slide(&mut self.snapshot) {
+                    self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.pptx.builder.add-slide", semio_framework_diagnostic::TextSpan::at(1, 1), error));
+                }
+            }
+            self
         }
 
         /// ➕️ Appends a paragraph to the active slide's active `TextBox` shape (the most recently
         /// added one), creating a fresh `TextBox` shape first if the slide has none yet or its last
         /// shape isn't one.
         pub async fn add_paragraph(mut self, paragraph: PptxParagraph) -> Self {
-            if let Some(slide) = self.snapshot.presentation.slides.last_mut() {
-                match slide.shapes.last_mut() {
-                    Some(PptxShape::TextBox { text_frame, .. }) => text_frame.push(paragraph),
-                    _ => slide.shapes.push(PptxShape::TextBox { text_frame: vec![paragraph], position: PptxTransform::default() }),
+            if self.diagnostics.is_empty() {
+                if let Err(error) = super::construction::append_paragraph(&mut self.snapshot, paragraph) {
+                    self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.pptx.builder.add-paragraph", semio_framework_diagnostic::TextSpan::at(1, 1), error));
                 }
             }
-            self.rebuild().await
+            self
         }
 
         /// ➕️ Appends a single-run plain-text paragraph to the active slide.
@@ -162,11 +169,6 @@ pub mod derived_construction {
         /// ➕️ Appends a paragraph made of the given runs (basic bold/italic formatting).
         pub async fn add_runs(self, runs: Vec<PptxRun>) -> Self {
             self.add_paragraph(PptxParagraph { runs }).await
-        }
-
-        async fn rebuild(mut self) -> Self {
-            self.snapshot = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_pptx(self.snapshot.presentation);
-            self
         }
     }
     //#endregion 🔖️TypedConstructors
@@ -214,7 +216,7 @@ pub mod derived_analysis {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => {
@@ -227,7 +229,7 @@ pub mod derived_analysis {
                             Ok(snapshot) => parts.snapshot = Some(snapshot),
                             Err(err) => {
                                 confidence = IoConfidence::Low;
-                                diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err));
+                                diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err));
                             }
                         }
                     }

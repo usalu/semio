@@ -8,7 +8,7 @@ use crate::{NoteBlockNode, NoteImageAsset, NoteSnapshot};
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
-use semio_s_artifact_stdio_png::io::decode_png;
+use semio_framework_pixels::decode_png;
 use std::collections::BTreeMap;
 
 pub const PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId::ANY };
@@ -39,9 +39,9 @@ impl Deserializer<NoteSnapshot> for PngIntoNote {
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
     async fn deserialize(payload: &IoPayload) -> IoResult<NoteSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
-            return Err(IoError { message: "PngIntoNote: expected a binary png payload".to_string(), diagnostics: Vec::new() });
+            return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "PngIntoNote: expected a binary png payload".to_string())));
         };
-        let png = decode_png(bytes).map_err(|error| IoError { message: format!("PngIntoNote: decode failed: {error}"), diagnostics: Vec::new() })?;
+        let png = decode_png(bytes).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("PngIntoNote: decode failed: {error}"))))?;
         let mut ids = NoteIdOwner::new(format!("png-import:{}", bytes.len()), 0);
         let key = "png-import".to_string();
         let mut snap = empty_note_snapshot();

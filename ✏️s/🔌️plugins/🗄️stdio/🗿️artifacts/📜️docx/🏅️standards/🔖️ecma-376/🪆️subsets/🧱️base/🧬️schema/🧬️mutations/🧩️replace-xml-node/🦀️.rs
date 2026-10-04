@@ -17,9 +17,12 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for ReplaceXmlNode {
         agg_diff(&DocxMutation::ReplaceXmlNode(self.clone()), base)
     }
 
-    fn inverse(&self, base: &DocxSnapshot) -> Vec<DocxMutation> {
-        agg_inverse(&DocxMutation::ReplaceXmlNode(self.clone()), base)
-    }
+    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&DocxMutation::ReplaceXmlNode(self.clone()), base)?
+    
+    })
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Replace XML node", "XML-Knoten ersetzen")

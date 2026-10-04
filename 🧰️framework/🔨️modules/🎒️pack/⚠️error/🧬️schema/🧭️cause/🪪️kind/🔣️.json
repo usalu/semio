@@ -1,0 +1,8 @@
+{
+ "$schema":"https://json-schema.org/draft/2020-12/schema",
+ "$id":"https://semio.dev/framework/pack/error/cause/kind",
+ "oneOf":[
+  {"type":"object","additionalProperties":false,"required":["kind","refusalKind"],"properties":{"kind":{"const":"refusal"},"refusalKind":{"enum":["invalidValue","canceled","ownershipLimit","allocationFailed","workLimit","depthLimit","unsupportedOwner","invariantViolated"]}}},
+  {"type":"object","additionalProperties":false,"required":["kind","category"],"properties":{"kind":{"const":"transport"},"category":{"enum":["nativeIo","httpRequest","httpBody"]}}}
+ ]
+}

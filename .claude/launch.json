@@ -2,6 +2,36 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "⚖️gate🎒️pack🫳️borrowed-preflight🦀️native",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": [
+        "nx",
+        "run",
+        "@semio-tech/framework-pack-rs:test-borrowed-preflight-native",
+        "--skip-nx-cache"
+      ],
+      "env": {
+        "SEMIO_TEST_LEVEL": "quick",
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false"
+      }
+    },
+    {
+      "name": "⚖️gate🎒️pack🫳️borrowed-preflight🟦️source",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": [
+        "nx",
+        "run",
+        "@semio-tech/framework-pack-rs:test-borrowed-preflight-source",
+        "--skip-nx-cache"
+      ],
+      "env": {
+        "SEMIO_TEST_LEVEL": "quick",
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false"
+      }
+    },
+    {
       "name": "cad-react",
       "runtimeExecutable": "bun",
       "runtimeArgs": [
@@ -552,6 +582,34 @@
       }
     },
     {
+      "name": "architecture-quiz",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": [
+        "nx",
+        "run",
+        "@teaching/architecture-quiz:dev"
+      ],
+      "port": 6061,
+      "env": {
+        "TEACHING_ARCHITECTURE_QUIZ_PORT": "6061",
+        "PROCTOR_PORT": "8791"
+      }
+    },
+    {
+      "name": "host-count-component-sqlite",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": [
+        "nx",
+        "run",
+        "@semio-tech/framework-plugin-host:count-component-check"
+      ],
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/🗑️generated/host-count-component-check",
+        "NX_CACHE_PROJECT_GRAPH": "false",
+        "NX_DAEMON": "false"
+      }
+    },
+    {
       "name": "architecture-quiz-site",
       "runtimeExecutable": "bun",
       "runtimeArgs": [
@@ -611,27 +669,73 @@
     {
       "name": "framework-snapshot-sqlite",
       "runtimeExecutable": "bun",
-      "runtimeArgs": ["nx", "run", "@semio-tech/framework-rs:test-snapshot-sqlite"]
+      "runtimeArgs": [
+        "nx",
+        "run",
+        "@semio-tech/framework-rs:test-snapshot-sqlite"
+      ]
     },
     {
-      "name":"framework-deflate-encoding",
-      "runtimeExecutable":"bun",
-      "runtimeArgs":["nx","run","@semio-tech/framework-rs:test-deflate-encoding"]
+      "name": "framework-deflate-encoding",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": [
+        "nx",
+        "run",
+        "@semio-tech/framework-rs:test-deflate-encoding"
+      ]
     },
     {
       "name": "framework-snapshot-sqlite-native",
       "runtimeExecutable": "bun",
-      "runtimeArgs": ["nx", "run", "@semio-tech/framework-rs:test-snapshot-sqlite-native"]
+      "runtimeArgs": [
+        "nx",
+        "run",
+        "@semio-tech/framework-rs:test-snapshot-sqlite-native"
+      ]
     },
     {
       "name": "framework-snapshot-sqlite-source",
       "runtimeExecutable": "bun",
-      "runtimeArgs": ["nx", "run", "@semio-tech/framework-rs:test-snapshot-sqlite-source"]
+      "runtimeArgs": [
+        "nx",
+        "run",
+        "@semio-tech/framework-rs:test-snapshot-sqlite-source"
+      ]
     },
     {
       "name": "framework-snapshot-sqlite-io",
       "runtimeExecutable": "bun",
-      "runtimeArgs": ["nx", "run", "@semio-tech/framework-rs:test-snapshot-sqlite-io"]
+      "runtimeArgs": [
+        "nx",
+        "run",
+        "@semio-tech/framework-rs:test-snapshot-sqlite-io"
+      ]
+    },
+    {
+      "name": "value-borrowed-key-index-native",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": [
+        "nx",
+        "run",
+        "@semio-tech/framework-os-kernel:test-borrowed-key-index-native",
+        "--skip-nx-cache"
+      ],
+      "env": {
+        "SEMIO_TEST_LEVEL": "quick"
+      }
+    },
+    {
+      "name": "value-intrinsic-retirement-native",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": [
+        "nx",
+        "run",
+        "@semio-tech/framework-os-kernel:test-intrinsic-retirement-native",
+        "--skip-nx-cache"
+      ],
+      "env": {
+        "SEMIO_TEST_LEVEL": "quick"
+      }
     },
     {
       "name": "value-controlled-construction",
@@ -652,16 +756,40 @@
       ]
     },
     {
+      "name": "pptx-outline-ownership-source",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": [
+        "nx",
+        "run",
+        "@semio-tech/stdio-pptx-rs:test-outline-ownership",
+        "--skip-nx-cache"
+      ],
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/pptx-outline-source"
+      }
+    },
+    {
       "name": "pets-stories",
       "runtimeExecutable": "bun",
-      "runtimeArgs": ["nx", "run", "@semio-tech/pets-react:dev"],
+      "runtimeArgs": [
+        "nx",
+        "run",
+        "@semio-tech/pets-react:dev"
+      ],
       "port": 6069,
-      "env": {"PETS_STORIES_PORT": "6069", "NX_PLUGIN_NO_TIMEOUTS": "true"}
+      "env": {
+        "PETS_STORIES_PORT": "6069",
+        "NX_PLUGIN_NO_TIMEOUTS": "true"
+      }
     },
     {
       "name": "architecture-pets-stories",
       "runtimeExecutable": "bun",
-      "runtimeArgs": ["nx", "run", "@semio-tech/pets-react:dev"],
+      "runtimeArgs": [
+        "nx",
+        "run",
+        "@semio-tech/pets-react:dev"
+      ],
       "port": 6074,
       "env": {
         "PETS_STORIES_PORT": "6074",

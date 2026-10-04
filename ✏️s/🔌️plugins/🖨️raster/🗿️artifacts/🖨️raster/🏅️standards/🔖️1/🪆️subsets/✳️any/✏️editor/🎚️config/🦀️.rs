@@ -13,10 +13,10 @@ pub use crate::editor::raster::selection::RasterPixelSelection;
 use protocol::Mutation;
 
 //#region 🔖️Config
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact)]
 #[value(rename_all = "camelCase", default)]
-#[dsl(id = "raster.config")]
-#[dsl(extension = "rastercfg")]
+#[artifact(id = "raster.config")]
+#[artifact(extension = "rastercfg")]
 #[dsl(layout = "lines")]
 pub struct RasterConfig {
     /// 🖌️ Brush diameter (px) — was `RasterPlayRuntime::brush_size`.
@@ -29,6 +29,8 @@ pub struct RasterConfig {
     pub brush_hardness: f64,
     pub paint_target: String,
     pub mask_value: u32,
+    /// 🪣️ The bucket's colour tolerance (0..255): how far a pixel may differ from the clicked pixel and still flood.
+    pub fill_tolerance: u32,
     #[dsl(block)]
     pub pixel_selection:Option<RasterPixelSelection>,
     /// 🔭️ Navigator's last-known composite-window viewport size — was
@@ -48,16 +50,16 @@ impl store::ArtifactDsl for RasterConfig {
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -67,18 +69,18 @@ impl store::ArtifactDsl for RasterConfig {
 impl store::ArtifactPack for RasterConfig {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -89,7 +91,7 @@ pub type RasterConfigViewportSize = crate::RasterViewportSize;
 
 impl Default for RasterConfig {
     fn default() -> Self {
-        Self { brush_size: 24.0, brush_opacity: 1.0, brush_color: "#2878dc".into(), brush_hardness: 1.0, paint_target:"pixels".into(),mask_value:255,pixel_selection:None,composite_viewport: None, camera: RasterCamera::default() }
+        Self { brush_size: 24.0, brush_opacity: 1.0, brush_color: "#2878dc".into(), brush_hardness: 1.0, paint_target:"pixels".into(),mask_value:255,fill_tolerance:24,pixel_selection:None,composite_viewport: None, camera: RasterCamera::default() }
     }
 }
 
@@ -112,7 +114,7 @@ store::impl_whole_record_config!(RasterConfig);
 /// 🧮️ B1: `RasterConfig`'s operation enum — one variant per settled interaction (mirrors the
 /// pre-B1 `RasterPlayRuntime` field writes), plus a generic `Snapshot` every variant's `backwards()`
 /// returns — mirrors `shooting_op::ShootingConfigMutation`'s identical shape.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 pub enum RasterConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {
@@ -143,26 +145,28 @@ pub enum RasterConfigMutation {
         #[dsl(block)]
         camera: RasterCamera,
     },
+    #[dsl(key = "fill-tolerance")]
+    SetFillTolerance { value: u32 },
 }
 
 //#region 🔖️OpCodec
 impl protocol::OpText for RasterConfigMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = semio_framework_dsl_record::parse(line, &(spec_fn.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?;
+                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
+        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown mutation line '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
     }
     fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &(spec_fn.ordinary)(), dsl::JoinMode::Inline)
+        semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline)
     }
 }
 
@@ -170,8 +174,8 @@ impl protocol::OpText for RasterConfigMutation {
 impl protocol::OpBinary for RasterConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
         let spec = (variants[ordinal].1.ordinary)();
         let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
@@ -189,12 +193,12 @@ impl protocol::OpBinary for RasterConfigMutation {
             return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
         }
         let ordinal = reader.read_varint_u64()?;
-        let variants = <Self as dsl::DslVariants>::variants();
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
         let spec = (spec_fn.ordinary)();
         let body = &bytes[reader.position()..];
         let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
+        <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
     }
 }
 
@@ -365,6 +369,22 @@ impl Mutation<RasterConfig> for RasterConfigMutation {
             composition:protocol::MutationComposition::Atomic,
             required_language_surfaces:&[protocol::MutationLanguageSurface::Rust,protocol::MutationLanguageSurface::JsonSchema],
         },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🌊️fill-tolerance",
+            semantic_kind: "set-fill-tolerance",
+            display_name: "Set Fill Tolerance",
+            emoji: "🌊️",
+            aggregate_variant: "SetFillTolerance",
+            payload_schema: "🧬️schema/🔣️.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
     ];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
@@ -379,6 +399,7 @@ impl Mutation<RasterConfig> for RasterConfigMutation {
             Self::SetPaintTarget {..}=>&Self::DESCRIPTORS[7],
             Self::SetMaskValue {..}=>&Self::DESCRIPTORS[8],
             Self::SetPixelSelection {..}=>&Self::DESCRIPTORS[9],
+            Self::SetFillTolerance { .. } => &Self::DESCRIPTORS[10],
         }
     }
 
@@ -401,15 +422,21 @@ impl Mutation<RasterConfig> for RasterConfigMutation {
             RasterConfigMutation::SetPaintTarget {value}=>{if matches!(value.as_str(),"pixels"|"mask"){if next.paint_target!=*value{next.pixel_selection=None;}next.paint_target=value.clone();}},
             RasterConfigMutation::SetPixelSelection {selection}=>{if selection.as_ref().is_none_or(|value|value.target==base.paint_target&&value.validate().is_ok()){next.pixel_selection=selection.clone();}},
             RasterConfigMutation::SetMaskValue {value}=>{if *value<=255{next.mask_value=*value;}},
+            RasterConfigMutation::SetFillTolerance { value } => {
+                if *value <= 255 { next.fill_tolerance = *value; }
+            },
             RasterConfigMutation::SetCompositeViewport { viewport } => next.composite_viewport = viewport.clone(),
             RasterConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
         }
         protocol::MutationOutcome::new(next)
     }
 
-    fn inverse(&self, base: &RasterConfig) -> Vec<Self> {
+    fn inverse(&self, base: &RasterConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![RasterConfigMutation::Snapshot { config: base.clone() }]
-    }
+    
+    })())
+}
 }
 //#endregion 🔖️ConfigMutations
 

@@ -9,7 +9,8 @@
   ],
   "properties": {
     "snapshot": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/snapshot.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/snapshot.json",
+      "x-semio-ui": { "label": { "en": "Snapshot", "de": "Momentaufnahme" } }
     }
   }
 }

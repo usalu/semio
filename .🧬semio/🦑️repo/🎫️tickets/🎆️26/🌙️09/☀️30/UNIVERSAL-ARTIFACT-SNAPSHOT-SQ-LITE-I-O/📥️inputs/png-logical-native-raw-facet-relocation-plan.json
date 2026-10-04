@@ -1,0 +1,29 @@
+{
+  "scope": "held-only; no mounted production schema/provider",
+  "logicalSnapshotRoot": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+  "nativeIoFacetRoot": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io",
+  "relocations": [
+    {
+      "remove": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🔠️.abnf",
+      "newInput": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/📷️png/🚪️io/💾️binary/🔠️.abnf",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/💾️binary/🔠️.abnf"
+    },
+    {
+      "remove": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🌶️.spicy",
+      "newInput": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/📷️png/🚪️io/💾️binary/🌶️.spicy",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/💾️binary/🌶️.spicy"
+    },
+    {
+      "remove": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🥋️.ksy",
+      "newInput": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/📷️png/🚪️io/💾️binary/🥋️.ksy",
+      "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/💾️binary/🥋️.ksy"
+    }
+  ],
+  "naturalProtocol": {
+    "input": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/📷️png/🚪️io/💾️binary/📡️.protocol.semio",
+    "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/💾️binary/📡️.protocol.semio"
+  },
+  "fixtureDependencies": [
+    "existing core fixture_honesty_law retains exact print/encode expectations; shipped demo DSL/Pack assets require actual first-party emitter verification in Root lane"
+  ]
+}

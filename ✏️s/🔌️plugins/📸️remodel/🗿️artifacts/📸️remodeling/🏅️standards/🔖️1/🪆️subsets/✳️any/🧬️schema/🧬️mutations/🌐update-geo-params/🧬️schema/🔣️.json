@@ -25,5 +25,14 @@
         "order": 10
       }
     }
-  }
+  },
+  "x-semio-invariant": [
+    {
+      "id": "positive-geo-extents",
+      "description": {
+        "en": "Geo distances are finite and positive, the orthophoto resolution is positive, and the origin lies within ±90° latitude and ±180° longitude.",
+        "de": "Geo-Abstände sind endlich und positiv, die Orthofoto-Auflösung ist positiv und der Ursprung liegt innerhalb von ±90° Breite und ±180° Länge."
+      }
+    }
+  ]
 }

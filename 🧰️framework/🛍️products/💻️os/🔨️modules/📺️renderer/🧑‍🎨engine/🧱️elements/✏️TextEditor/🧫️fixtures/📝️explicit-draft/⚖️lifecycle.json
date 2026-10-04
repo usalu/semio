@@ -1,0 +1,60 @@
+{
+  "schema": "semio.framework.text-editor.explicit-draft.lifecycle.v1",
+  "source": "source",
+  "otherSource": "other",
+  "base": "A",
+  "draft": "B",
+  "normalized": "B normalized",
+  "newerDraft": "C",
+  "baseRevision": "18446744073709551610",
+  "ownRevision": "18446744073709551611",
+  "foreignRevision": "18446744073709551612",
+  "operation": "9007199254740993",
+  "operationGeneration": "18446744073709551613",
+  "cancellation": {
+    "action": "cancelTypedOperation",
+    "operationHex": "0020000000000001",
+    "generationHex": "fffffffffffffffd",
+    "preservesDraft": true,
+    "foreignOperationIgnored": true
+  },
+  "orders": [
+    "publication-first",
+    "completion-first"
+  ],
+  "failures": [
+    "refused",
+    "superseded",
+    "throw",
+    "missing-receipt"
+  ],
+  "expected": {
+    "foreignDirty": true,
+    "foreignConflict": true,
+    "ownDirty": false,
+    "failureDirty": true,
+    "failureFailed": true
+  },
+  "selectAllChords": [
+    {
+      "key": "a",
+      "metaKey": true,
+      "ctrlKey": false
+    },
+    {
+      "key": "a",
+      "metaKey": false,
+      "ctrlKey": true
+    },
+    {
+      "key": "A",
+      "metaKey": true,
+      "ctrlKey": false
+    },
+    {
+      "key": "A",
+      "metaKey": false,
+      "ctrlKey": true
+    }
+  ]
+}

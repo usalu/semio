@@ -27,6 +27,7 @@ import {
   createVersionedRegisterV1,
   expectedGenerationFromArgsV1,
   inputAppliedV1,
+  inputDiagnosticV1,
   inputRefusalNoticeTextV1,
   inputRefusalNotifiesV1,
   inputRefusalTextV1,
@@ -347,6 +348,12 @@ describe("refusal surfacing", () => {
     for (const reason of REFUSAL_REASONS) {
       expect(inputRefusedV1(7, reason)).toEqual({ kind: "refused", inputSeq: 7, reason, retryable: INPUT_REFUSAL_RETRYABLE_V1[reason] });
     }
+  });
+
+  it("carries an exact typed native diagnostic without parsing its message", () => {
+    const diagnostic = inputDiagnosticV1({ code: "snapshot-edit.invalid-source", message: "foreign prose", span: { line: 3, column: 3, length: 1 }, params: { path: "/rows/2/name", ignored: 4 } });
+    expect(diagnostic).toEqual({ code: "snapshot-edit.invalid-source", message: "foreign prose", span: { line: 3, column: 3, length: 1 }, params: { path: "/rows/2/name" } });
+    expect(inputRefusedV1(7, "dispatch-failed", "snapshot-edit.invalid-source", diagnostic)).toEqual({ kind: "refused", inputSeq: 7, reason: "dispatch-failed", retryable: true, detail: "snapshot-edit.invalid-source", diagnostic });
   });
 
   it("carries an optional detail without disturbing retryable", () => {

@@ -1,23 +1,23 @@
 use super::*;
 use crate::Din4108Snapshot;
-use dsl::ToValue;
+use semio_framework_value::ToValue;
 
-fn collect_leaf_paths(value: &dsl::DslValue, prefix: &str, out: &mut Vec<String>) {
+fn collect_leaf_paths(value: &semio_framework_value::DslValue, prefix: &str, out: &mut Vec<String>) {
     match value {
-        dsl::DslValue::Object(map) => {
+        semio_framework_value::DslValue::Object(map) => {
             for (k, v) in map {
                 let p = if prefix.is_empty() { k.clone() } else { format!("{prefix}.{k}") };
                 match v {
-                    dsl::DslValue::Object(_) | dsl::DslValue::Array(_) => collect_leaf_paths(v, &p, out),
+                    semio_framework_value::DslValue::Object(_) | semio_framework_value::DslValue::Array(_) => collect_leaf_paths(v, &p, out),
                     _ => out.push(p),
                 }
             }
         }
-        dsl::DslValue::Array(items) => {
+        semio_framework_value::DslValue::Array(items) => {
             for (i, item) in items.iter().enumerate() {
                 let p = format!("{prefix}[{i}]");
                 match item {
-                    dsl::DslValue::Object(_) | dsl::DslValue::Array(_) => collect_leaf_paths(item, &p, out),
+                    semio_framework_value::DslValue::Object(_) | semio_framework_value::DslValue::Array(_) => collect_leaf_paths(item, &p, out),
                     _ => out.push(p),
                 }
             }

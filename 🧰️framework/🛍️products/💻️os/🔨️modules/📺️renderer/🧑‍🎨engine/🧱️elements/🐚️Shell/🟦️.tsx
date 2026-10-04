@@ -202,9 +202,13 @@ export type SpaceProgramEntry = {
 
 export type { SpacePanelState, SpawnedAppEntry } from "../🛠️ShellHelpers/📌️panel/🟦️.ts";
 
-export type FrameworkOsBootOptions = {
+/** 🎬️ Owns host service and worker construction capabilities for one React mount. */
+export type FrameworkOsBootExecution = {
   readonly backboneWorkerFactory?: () => Worker;
   readonly documentServices?: readonly import("../🏛️ShellHost/🪪️host-bootstrap/🟦️.tsx").InstalledServicePresentationV1[];
+};
+
+export type FrameworkOsBootOptions = {
   readonly surfaceSessionFactories?: readonly import("../🪪️WasmSessionLoader/🟦️.tsx").AppSurfaceSessionFactory[];
   readonly rootId?: string;
   readonly plugin?: string;
@@ -1103,13 +1107,11 @@ function syncReducer(state: SyncState, action: ShellAction): SyncState {
   }
 }
 
-/** 💡️ Reducer for the host-owned ephemeral inference-port slice — see {@link InferenceState}. It
- * never invents a phase: `OPEN_INFERENCE_PORT` seeds exactly `idle`, every later phase arrives as an
- * exact worker answer, and a cleared document leaves no residue. */
+/** 💡️ Retains pending operation identity while only actual owner replies populate service status. */
 function inferenceReducer(state: InferenceState, action: ShellAction): InferenceState {
   switch (action.type) {
     case "OPEN_INFERENCE_PORT":
-      return { portByRuntimeKey: { [action.runtimeKey]: idleInstalledServiceStatusV1() }, operationEpoch: action.operationEpoch, operationRuntimeKey: action.runtimeKey };
+      return { portByRuntimeKey: {}, operationEpoch: action.operationEpoch, operationRuntimeKey: action.runtimeKey };
     case "SET_INFERENCE_PORT_FOR_DOCUMENT":
       return state.operationRuntimeKey === action.runtimeKey ? { ...state, portByRuntimeKey: { [action.runtimeKey]: action.status } } : state;
     case "CLEAR_INFERENCE_PORT_FOR_DOCUMENT": {
@@ -1322,7 +1324,7 @@ export function initialShellState(_props: {
 //#endregion 🧮️ShellStore
 
 //#region Boot
-export async function bootFrameworkOs(options: FrameworkOsBootOptions = {}): Promise<void> {
+export async function bootFrameworkOs(options: FrameworkOsBootOptions = {}, execution: FrameworkOsBootExecution = {}): Promise<void> {
   const root = document.getElementById(options.rootId ?? "root");
   if (!root) throw new Error("missing #root");
   const locks = resolveShellLocks(mergeShellLockSources(options.brand?.locks, options.locks));
@@ -1337,7 +1339,7 @@ export async function bootFrameworkOs(options: FrameworkOsBootOptions = {}): Pro
   // 🐢️ No hardcoded fallback app — an omitted `plugins` list boots the shell with an explicit
   // "no plugins available" state rather than silently picking one app.
   const appRole = resolveBootAppRole(options.appRole);
-  createRoot(root).render(<FrameworkOsShell backboneWorkerFactory={options.backboneWorkerFactory} documentServices={options.documentServices} pluginFilter={options.plugin} plugins={options.plugins ?? []} surfaceSessionFactories={options.surfaceSessionFactories} appId={options.appId} appRole={appRole} locks={locks} defaults={defaults} brand={options.brand} ownsPage />);
+  createRoot(root).render(<FrameworkOsShell backboneWorkerFactory={execution.backboneWorkerFactory} documentServices={execution.documentServices} pluginFilter={options.plugin} plugins={options.plugins ?? []} surfaceSessionFactories={options.surfaceSessionFactories} appId={options.appId} appRole={appRole} locks={locks} defaults={defaults} brand={options.brand} ownsPage />);
 }
 //#endregion Boot
 

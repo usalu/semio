@@ -36,18 +36,18 @@ fn chain_snapshot() -> Puzzle3dSnapshot {
 #[test]
 fn inference_determinism_law() {
     let snapshot = chain_snapshot();
-    assert_eq!(Puzzle3dInference::infer(&snapshot), Puzzle3dInference::infer(&snapshot));
+    assert_eq!(Puzzle3dInference::infer(&snapshot).expect("valid materialized inference fixture"), Puzzle3dInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
 #[test]
 fn inference_default_law() {
-    assert_eq!(Puzzle3dInference::infer(&Puzzle3dSnapshot::default()), Puzzle3dInference::default());
+    assert_eq!(Puzzle3dInference::infer(&Puzzle3dSnapshot::default()).expect("valid materialized inference fixture"), Puzzle3dInference::default());
 }
 
 #[test]
 fn inference_matches_flatten_snapshot_directly() {
     let snapshot = chain_snapshot();
-    let inferred = Puzzle3dInference::infer(&snapshot);
+    let inferred = Puzzle3dInference::infer(&snapshot).expect("valid materialized inference fixture");
     let direct = flatten_snapshot(&snapshot);
     for (id, pose) in &direct {
         assert_eq!(inferred.flat_positions.get(id), Some(pose), "inference must match flatten_snapshot exactly for {id}");

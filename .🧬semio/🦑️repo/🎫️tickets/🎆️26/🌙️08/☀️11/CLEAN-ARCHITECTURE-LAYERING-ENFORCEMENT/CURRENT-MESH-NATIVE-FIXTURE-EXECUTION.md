@@ -1,0 +1,13 @@
+# Mesh Whole Fixture Execution
+
+The unchanged registered Core four-package workload10632 passed118/118: Hash13, Pixels58, Intrinsic9 and Mesh38. Ordinary six-manifest preparation and whole-workspace locked metadata57115 passed. The reviewed canonical corpus remained byte-identical (029be6a5…), and polygon schema b293bd78… includes Root's independently admitted five redundant array-type declarations required by strict Ajv.
+
+The unchanged whole 3D40566 compiled and selected604 laws. Default fail-fast completed42 (41 pass,1 fail,0 skips), with9 running when cancellation began and562 not completed. The selected-solid physical-volume law failed on Option::unwrap at curve.rs185:106 in the Line KnotVector constructor. The actual offending domain and cause are unestablished; no geometry, schema, assertion or finite budget was repaired. The seven relocated Mesh laws cannot be reported as completed from this canceled whole run.
+
+The unchanged whole BRep35664 failed during owner-command preparation on unrelated Specific layout Cargo inheritance alias semio-s-artifact-forms-forms. Four registered generator prerequisites passed. BRep callbacks, compiler units and runtime roster were absent; this is a preparation RED. The original complete registered TypeScript mesh oracle31729 subsequently passed108/108 with23,360 expectations in344ms (Nx15.2s), using independent Three.js/Ajv references. Its actual route succeeded, so no replacement or bypass is required.
+
+Compiler-origin receipts retain Core2 fresh units/16 inputs with0 pre/current gaps; 3D3 fresh units/156 inputs with1 original-pre mismatch and0 current gaps. The latter unit law advanced from56,022 to56,167 bytes by an unknown other writer: complete pre/current/inverse frames remain explicit, with no original-pre equality claim. BRep and oracle emitted0 native compiler units; zero source-origin inputs there does not claim native execution. All bounded owned source/resource/literal/GUI checks close, while unrelated complete bodies are retained as observed foreign frames without semantic equivalence claims.
+
+The bounded Mesh source fence is released. Pack's independently reviewed22 test-only rows may enter a separate test-first epoch. No native replay, narrowed test selection or source repair is implied.
+
+Full terminal, roster, cancellation, DEBUG and source pairs: `🗑️generated/neutral-field-binding/actual-execution-1/mesh-whole-final-results-1.json`. Full route logs and local compiler proofs: `🗑️generated/current-native-worker/mesh-canonical-fixture-native-1-*`. Original rejected captures and initial asset observations remain retained.

@@ -13,7 +13,7 @@ pub fn diff(payload: &super::MoveStock, base: &Process3dSnapshot) -> protocol::M
         return protocol::MutationOutcome::fatal("mutation.invariant", "Stock pose must be finite.".to_string(), Vec::<String>::new());
     }
     if base.stock_pose == payload.new_pose {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Stock is already at that pose.".to_string());
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Stock is already at that pose.".to_string());
     }
     protocol::MutationOutcome::new(Process3dDiff { stock_pose: Some(payload.new_pose.clone()), ..Default::default() })
 }

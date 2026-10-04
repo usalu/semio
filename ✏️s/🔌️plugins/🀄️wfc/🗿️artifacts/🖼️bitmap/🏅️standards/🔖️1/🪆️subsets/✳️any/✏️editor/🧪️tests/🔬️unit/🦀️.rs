@@ -115,19 +115,19 @@ fn the_brush_verb_and_utility_are_declared_and_answered() {
     for retired in ["stroke-begin", "stroke-extend", "stroke-commit"] {
         assert!(!BITMAP_TOOL_IDS.contains(&retired), "'{retired}' was replaced by the brush tool");
     }
-    let config = dsl::json::to_json_string(&input::config::BitmapInputWindowConfig::default());
+    let config = semio_framework_pack_json::to_json_string(&input::config::BitmapInputWindowConfig::default());
     assert!(!config.contains("stroke"), "the window config carries no stroke scratch: {config}");
 }
 
 /// 🌉️ The bridge reads a stroke's points as `{x, y}` objects or `[x, y]` pairs and refuses anything else.
 #[test]
 fn the_bridge_reads_stroke_points_in_both_spellings_and_refuses_garbage() {
-    let objects = dsl::DslValue::from(&serde_json::json!({ "points": [{ "x": 1, "y": 2 }, { "x": 3, "y": 4 }], "color": 1 }));
+    let objects = semio_framework_value::DslValue::from(&serde_json::json!({ "points": [{ "x": 1, "y": 2 }, { "x": 3, "y": 4 }], "color": 1 }));
     assert_eq!(<BitmapEditor as ArtifactEditor>::command_from_action("paint-stroke", Some(&objects)).expect("objects bridge"), stroke(&[(1, 2), (3, 4)], Some(1), None));
-    let pairs = dsl::DslValue::from(&serde_json::json!({ "points": [[1, 2], [3, 4]], "phase": "stream" }));
+    let pairs = semio_framework_value::DslValue::from(&serde_json::json!({ "points": [[1, 2], [3, 4]], "phase": "stream" }));
     assert_eq!(<BitmapEditor as ArtifactEditor>::command_from_action("paint-stroke", Some(&pairs)).expect("pairs bridge"), stroke(&[(1, 2), (3, 4)], None, Some("stream")));
     for garbage in [serde_json::json!({ "points": [[1.5, 2]] }), serde_json::json!({ "points": [[-1, 2]] }), serde_json::json!({ "points": [[1]] }), serde_json::json!({ "points": "1,2" })] {
-        assert!(<BitmapEditor as ArtifactEditor>::command_from_action("paint-stroke", Some(&dsl::DslValue::from(&garbage))).is_err(), "{garbage} must be refused");
+        assert!(<BitmapEditor as ArtifactEditor>::command_from_action("paint-stroke", Some(&semio_framework_value::DslValue::from(&garbage))).is_err(), "{garbage} must be refused");
     }
 }
 //#endregion 🖌️Gesture
@@ -214,7 +214,7 @@ fn the_example_picker_verb_is_declared_with_both_examples() {
         let arg = action.args.first().unwrap_or_else(|| panic!("window '{}' offers setActiveExample no example argument", window.id));
         assert_eq!(arg.id, "exampleId");
         assert!(arg.required);
-        assert_eq!(arg.default.as_ref().and_then(dsl::DslValue::as_str), Some(set_active_example::BITMAP_EXAMPLE_BOOT_ID));
+        assert_eq!(arg.default.as_ref().and_then(semio_framework_value::DslValue::as_str), Some(set_active_example::BITMAP_EXAMPLE_BOOT_ID));
     }
 }
 //#endregion 🚚️LiveDispatch
@@ -305,3 +305,5 @@ fn the_python_oracle_vector_matches_the_rust_payload_shape() {
 fn the_editor_declares_the_artifact_kind_it_edits() {
     assert_eq!(create_bitmap_editor().artifact_kinds, vec![crate::artifact_kind()]);
 }
+
+semio_framework_plugin::history_edit_acceptance_law!("wfc", super::BitmapEditor, || semio_framework_plugin::App { definition: super::create_bitmap_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");

@@ -2,7 +2,7 @@ use super::super::{UnbindParameterField, WorkflowDiff, WorkflowMutation, Workflo
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "bind-parameter-field")]
@@ -17,9 +17,12 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for BindParamete
     fn diff(&self, _base: &WorkflowSnapshot) -> protocol::MutationOutcome<WorkflowDiff> {
         protocol::MutationOutcome::new(WorkflowDiff::BindParameterField { binding: self.binding.clone() })
     }
-    fn inverse(&self, _base: &WorkflowSnapshot) -> Vec<WorkflowMutation> {
+    fn inverse(&self, _base: &WorkflowSnapshot) -> Result<Vec<WorkflowMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![WorkflowMutation::UnbindParameterField(UnbindParameterField { node_id: self.binding.node_id.clone(), field_path: self.binding.field_path.clone() })]
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Bind workflow parameter {}", self.binding.parameter_id), &format!("Arbeitsablaufparameter {} binden", self.binding.parameter_id))
     }

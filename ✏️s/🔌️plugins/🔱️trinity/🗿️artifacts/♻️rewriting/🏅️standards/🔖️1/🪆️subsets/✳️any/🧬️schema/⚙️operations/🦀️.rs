@@ -66,8 +66,11 @@ pub fn apply_rewrite_rule_mutation(snapshot: &mut RewritingSnapshot, mutation: &
     Ok(())
 }
 
-pub fn inverse_rewrite_rule_mutation(snapshot: &RewritingSnapshot, mutation: &RewriteRuleMutation) -> Vec<RewriteRuleMutation> {
-    protocol::Mutation::inverse(mutation, snapshot)
+pub fn inverse_rewrite_rule_mutation(snapshot: &RewritingSnapshot, mutation: &RewriteRuleMutation) -> Result<Vec<RewriteRuleMutation>, semio_framework_value::ValueError> {
+    Ok({
+    protocol::Mutation::inverse(mutation, snapshot)?
+
+    })
 }
 
 /// ▶️ Dispatches a batch of granular mutations as one VCS edit.

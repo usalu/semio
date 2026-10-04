@@ -16,7 +16,7 @@ fn submit(app: &mut Puzzle2dApp, line: &str) -> semio_framework_plugin::Invocati
 }
 
 fn rendered_fill_count(app: &mut Puzzle2dApp) -> f64 {
-    let measures = semio_framework::io::resolve_ready(app.tool_measures(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)));
+    let measures = ::semio_framework_async::poll::resolve_ready(app.tool_measures(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)));
     let Some([WindowMeasure::Group { children, .. }]) = measures.get(fill::TOOL_ID).map(Vec::as_slice) else { panic!("fill tool measure group") };
     let Some(WindowMeasure::Number { value, .. }) = children.first() else { panic!("fill count number") };
     *value

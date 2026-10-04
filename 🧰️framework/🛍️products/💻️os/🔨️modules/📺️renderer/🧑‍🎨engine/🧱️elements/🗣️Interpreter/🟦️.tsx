@@ -13,17 +13,25 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { createContext, memo, Profiler, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ComponentType, type CSSProperties, type ReactElement, type ReactNode, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent, type RefObject } from "react";
+import { createContext, memo, Profiler, useCallback, useContext, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore, type ComponentType, type CSSProperties, type ReactElement, type ReactNode, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent, type RefObject } from "react";
 import { packedTextLeaf } from "../🔌️PluginRuntime/🧳️packed-text/🟦️.ts";
+import { LocalDocumentOwnerContext, LocalDocumentWindowContext, type LocalDocumentOwnerV1 } from "./🧭️local-document-owner/🟦️.ts";
+import { INPUT_COMMIT_CAPACITY_V1, inputCommitLaneV1 } from "./🎯️commit-lane/🟦️.ts";
+import { rowActionAdmissionKeyV1, rowActionAdmissionRegistryV1, type RowActionAdmissionOwnerV1 } from "./🎬️row-action-admission/🟦️.ts";
+import { inputActionWithWindowV1, inputCommitReceiptMatchesPublicationV1, type InputOutcomeV1, type ShellInputActionV1 } from "../🏛️ShellHost/🎯️input-ledger/🟦️.ts";
 import { MEDIA_TRANSPORT_EXTENSION_ID, MediaTransportHost } from "../🎬️MediaTransportHost/🟦️.tsx";
 import { leftoverTreeItemSelectedV1, leftoverWorldSelectionOverlayV1, subscribeLeftoverWorldSelectionV1 } from "../🌐️World3dHost/🟦️.tsx";
 import {
   Button,
   ContextMenuController,
+  DisabledReasonHint,
   Field,
   Icon,
   IconSelector,
   Input,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
   Ring,
   Section,
   Select,
@@ -80,6 +88,7 @@ import {
 import { domSizePx, uiSpacingLen } from "@semio-tech/ui-styling";
 import {
   type ActionBinding,
+  type ActionDispatchLifecycleV1,
   type ActionDescriptor,
   type AppCatalogue,
   type ComponentKind,
@@ -96,6 +105,8 @@ import {
   PAINT2D_SCENE_LANES,
   TILEDMAP_SCENE_LANES,
   WORLD3D_SCENE_LANES,
+  NODE_GRAPH_SCENE_LANES,
+  nodeGraphSceneFromLanes,
   TEXT_EDITOR_SCENE_LANES,
   TABLE_SCENE_LANES,
   WORLD3D_SCENE_LANE_KEY_PREFIX,
@@ -463,6 +474,7 @@ const SURFACE_KIND_SCENE_FIELD: Record<string, string> = {
 const SURFACE_KIND_SCENE_LANES: Record<string, readonly SceneLane<Record<string, unknown>>[]> = {
   "text-editor": TEXT_EDITOR_SCENE_LANES as readonly SceneLane<Record<string, unknown>>[],
   table: TABLE_SCENE_LANES as readonly SceneLane<Record<string, unknown>>[],
+  "node-graph": NODE_GRAPH_SCENE_LANES as readonly SceneLane<Record<string, unknown>>[],
   "world-3d": WORLD3D_SCENE_LANES as readonly SceneLane<Record<string, unknown>>[],
   "canvas-2d": CANVAS2D_SCENE_LANES as readonly SceneLane<Record<string, unknown>>[],
   "board-2d": BOARD2D_SCENE_LANES as readonly SceneLane<Record<string, unknown>>[],
@@ -567,14 +579,14 @@ type SurfaceSceneAssembler = (spine: Record<string, unknown>) => Record<string, 
  * streams, whose refusals must be logged, never toasted. Memoised per underlying callback so a host's own
  * `useCallback([onAction])` chains (Canvas2dHost rebuilds its canvas session on `dispatch` identity) stay
  * stable across renders. A stamp the host already set (a tutorial replay through a host) wins. */
-const gestureOnActionByFunnel = new WeakMap<(action: ActionDescriptor) => void | Promise<unknown>, (action: ActionDescriptor) => void | Promise<unknown>>();
-function gestureOnActionFor(onAction: (action: ActionDescriptor) => void | Promise<unknown>): (action: ActionDescriptor) => void | Promise<unknown> {
+const gestureOnActionByFunnel = new WeakMap<ComponentSceneHostProps["onAction"], ComponentSceneHostProps["onAction"]>();
+function gestureOnActionFor(onAction: ComponentSceneHostProps["onAction"]): ComponentSceneHostProps["onAction"] {
   let wrapped = gestureOnActionByFunnel.get(onAction);
   if (wrapped === undefined) {
-    wrapped = (action) => {
+    wrapped = (action, lifecycle) => {
       const given = (action as { readonly provenance?: Record<string, unknown> }).provenance;
       const stamped = { ...action, provenance: { windowId: null, causedBy: null, ...given, origin: given?.origin ?? "gesture" } };
-      return onAction(stamped as ActionDescriptor);
+      return onAction(stamped as ActionDescriptor, lifecycle);
     };
     gestureOnActionByFunnel.set(onAction, wrapped);
   }
@@ -584,7 +596,7 @@ function gestureOnActionFor(onAction: (action: ActionDescriptor) => void | Promi
 function renderComponentSceneHost(
   record: UiNodeRecord,
   props: SurfaceProps,
-  funnel: (action: ActionDescriptor) => void | Promise<unknown>,
+  funnel: ComponentSceneHostProps["onAction"],
   surface: SurfaceId,
   requestContextMenu?: UiInterpreterContext["requestContextMenu"],
   assemble?: SurfaceSceneAssembler,
@@ -718,15 +730,16 @@ function surfaceLaneTexts<S extends object>(record: UiNodeRecord, state: UiDocum
 //#region UiInterpreterContext
 export type UiInterpreterContext = {
   readonly store: UiDocumentStore;
+  readonly localDocumentOwner?: LocalDocumentOwnerV1 | null;
   /** 🌉️ Legacy ActionDescriptor channel — the seam this Interpreter still speaks to the 14 unowned
    * scene-host elements through (see `🌉️SurfaceBridge`). Semantic components (button/input/select/…)
    * never use this; they go through `emitIntent`/`UiIntent` instead. */
-  readonly onAction: (action: ActionDescriptor) => void;
+  readonly onAction: (action: ShellInputActionV1, lifecycle?: ActionDispatchLifecycleV1) => void | Promise<unknown>;
   /** 🎬️ Semantic dispatch — fires a `UiIntent` built from the node's own `ActionBinding`s. */
   /** 🔁️ Answers with the promise the shell's own dispatch settles on, so a CONTINUOUS control (a
    * dragged slider, a held spinner) can tell whether its last value has landed. `void` is still
    * accepted for a sink that has nothing to settle. */
-  readonly onIntent: (intent: UiIntent) => void | Promise<void>;
+  readonly onIntent: (intent: UiIntent, windowId?: string) => void | Promise<void | InputOutcomeV1>;
   readonly requestContextMenu?: (request: PluginContextMenuRequest) => Promise<readonly ContextMenuItemSpec[]>;
   /** 🪪️ The DOM id of the row this subtree renders inside — a tree row or a table row. A node key is unique only among its
    * siblings, so a row's inline controls and cells are addressed under their row ({@link uiNodeDomId}). */
@@ -1068,7 +1081,7 @@ function resolveControlIconNode(iconId: string, size: number | "tiny" | "small" 
   return <Icon icon={iconId as IconName} size={size} />;
 }
 
-function dispatchTrigger(context: UiInterpreterContext, record: UiNodeRecord, trigger: UiTrigger, input?: UiValue): void | Promise<void> {
+function dispatchTrigger(context: UiInterpreterContext, record: UiNodeRecord, trigger: UiTrigger, input?: UiValue): ReturnType<UiInterpreterContext["onIntent"]> {
   const intent = emitIntent(context.store, record, trigger, input);
   return intent ? context.onIntent(intent) : undefined;
 }
@@ -1103,7 +1116,7 @@ function useContinuousTriggerLane(context: UiInterpreterContext, record: UiNodeR
         if (gestureRef.current === null) gestureRef.current = continuousPressIdentity(bindingRef.current.record.key);
         const gesture = gestureRef.current;
         if (phase === "commit") gestureRef.current = null;
-        return dispatchTrigger(bindingRef.current.context, bindingRef.current.record, "change", { value, gesture, commit: phase === "commit" } as UiValue);
+        return dispatchTrigger(bindingRef.current.context, bindingRef.current.record, "change", { value, gesture, commit: phase === "commit" } as UiValue)?.then(() => undefined);
       },
       // 🧯️ The scrub protocol's host cancel (design §13.1 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): the
       // guest drops the open press with zero trace and never sees a value.
@@ -1111,7 +1124,7 @@ function useContinuousTriggerLane(context: UiInterpreterContext, record: UiNodeR
         const gesture = gestureRef.current;
         gestureRef.current = null;
         if (gesture === null) return undefined;
-        return dispatchTrigger(bindingRef.current.context, bindingRef.current.record, "change", { gesture, abort: reason } as UiValue);
+        return dispatchTrigger(bindingRef.current.context, bindingRef.current.record, "change", { gesture, abort: reason } as UiValue)?.then(() => undefined);
       },
       onFault: (error) => undefined,
     });
@@ -1330,6 +1343,21 @@ function ButtonView({ record, context }: { readonly record: UiNodeRecord; readon
   const component = record.component as Extract<Component, { type: "button" }>;
   const id = nodeDomId(context.store, record, context.domScope);
   const { props: aria, describedBy } = accessibilityAriaProps(record.accessibility, id);
+  const [, render] = useState(0);
+  const mounted = useRef(true);
+  const pending = useRef({ store: context.store, owner: context.localDocumentOwner, key: record.key, busy: false });
+  if (pending.current.store !== context.store || pending.current.owner !== context.localDocumentOwner || pending.current.key !== record.key) pending.current = { store: context.store, owner: context.localDocumentOwner, key: record.key, busy: false };
+  const state = pending.current;
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  const activate = () => {
+    const current = context.store.getNodeSnapshot(record.id);
+    if (state.busy || !current || current.key !== record.key || current.component.type !== "button" || current.disabled) return;
+    state.busy = true;
+    render((value) => value + 1);
+    const finish = () => { if (pending.current !== state || !mounted.current) return; state.busy = false; render((value) => value + 1); };
+    try { const completion = dispatchTrigger(context, current, "activate"); if (completion instanceof Promise) void completion.then(finish, finish); else finish(); }
+    catch (error) { finish(); throw error; }
+  };
   return (
     <>
       <Button
@@ -1338,47 +1366,83 @@ function ButtonView({ record, context }: { readonly record: UiNodeRecord; readon
         data-tone={record.style.tone ?? undefined}
         text={component.label}
         icon={resolveControlIconNode(component.icon)}
-        disabled={record.disabled}
+        disabled={record.disabled || state.busy}
         aria-label={record.accessibility.label ?? undefined}
         aria-describedby={aria["aria-describedby"] as string | undefined}
         className={activityBorderClass(record)}
-        aria-busy={record.activity === "loading" || record.activity === "waiting" || undefined}
-        onClick={() => dispatchTrigger(context, record, "activate")}
+        aria-busy={state.busy || record.activity === "loading" || record.activity === "waiting" || undefined}
+        onClick={activate}
       />
       {describedBy}
     </>
   );
 }
 
-/** 🖊️ A commit-on-blur input's LOCAL draft: what the user has typed but not yet committed.
- *
- * 🐛️ `InputProps.commit === "blur"` used to render a CONTROLLED input (`value={component.value}`) with
- * no `onChange` at all, which is React's read-only spelling: every keystroke was reverted on the next
- * render, so the field could not be edited, and the `blur` handler then committed the value the field
- * already had. Measured on 6018: typing "Balcony Study" into a generation's inline rename editor
- * dispatched `renameGeneration` and settled it, with the history label reading
- * `rename-generation id=generation-2 new-name="Generation 2"` — the OLD name
- * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `🗑️generated/generate-interactions/probe-2`). Every
- * commit-on-blur input in the fleet was uneditable for the same reason.
- *
- * The draft follows the published value whenever the GUEST changes it (the render-phase adjustment
- * React documents for derived state), so an outside edit still wins, while local typing is kept.
- * Changing the command binding discards the previous target’s draft; unchanged and already submitted
- * values do not emit another command. */
-function useCommitDraft(published: string, scope: string): [string, (next: string) => void, (value: string) => boolean] {
-  const [draft, setDraft] = useState(published);
-  const publishedRef = useRef({ value: published, scope });
-  const committedRef = useRef(published);
-  if (publishedRef.current.value !== published || publishedRef.current.scope !== scope) {
-    publishedRef.current = { value: published, scope };
-    committedRef.current = published;
-    if (draft !== published) setDraft(published);
+/** 🖊️ Queues commits for one authored target and preserves newer drafts across acknowledgements.
+ * External changes retain a conflicting draft until discarded; a target change starts a fresh draft. */
+function useCommitDraft(published: string, scope: string, guard: string, revision: string | null, send: (value: string, active: () => boolean, subscribeActive: (listener: () => void) => () => void) => ReturnType<UiInterpreterContext["onIntent"]>, publication: (value: string) => string, lifetime?: object | null): [string, (next: string) => void, (value: string) => void, () => void, boolean] {
+  type Pending = { value: string; baseRevision: string | null; cancelled: boolean; settled: boolean; outcome: InputOutcomeV1 | undefined };
+  const [, render] = useState(0);
+  const create = () => ({ scope, lifetime, listeners: new Set<() => void>(), guard, revision, published, draft: published, committed: published, queue: [] as { value: string; publication: string }[], awaiting: null as Pending | null, busy: false, conflicted: false });
+  const owner = useRef(create());
+  const mounted = useRef(true);
+  const sender = useRef(send);
+  sender.current = send;
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; owner.current.queue = []; for (const listener of owner.current.listeners) listener(); }; }, []);
+  if (owner.current.scope !== scope || owner.current.lifetime !== lifetime) { const previous = owner.current; owner.current = create(); for (const listener of previous.listeners) listener(); }
+  const state = owner.current;
+  const acknowledge = (): boolean => {
+    const pending = state.awaiting;
+    if (!pending || !pending.settled) return false;
+    const matches = pending.baseRevision === null ? pending.value === state.published : pending.outcome !== undefined && inputCommitReceiptMatchesPublicationV1(pending.outcome, state.revision) && pending.value === state.published;
+    if (matches) { state.awaiting = null; return true; }
+    if (pending.baseRevision !== null && (!pending.outcome || pending.outcome.kind !== "applied" || !pending.outcome.commit || state.revision !== pending.baseRevision)) state.conflicted = true;
+    return false;
+  };
+  if (state.published !== published || state.guard !== guard || state.revision !== revision) {
+    const previous = state.published;
+    state.published = published;
+    state.guard = guard;
+    state.revision = revision;
+    const accepted = acknowledge();
+    if (state.draft === previous && state.queue.length === 0) { state.draft = published; state.committed = published; }
+    else if (!accepted && !state.awaiting) state.conflicted = state.draft !== published;
   }
-  return [draft, setDraft, (value) => {
-    if (value === committedRef.current) return false;
-    committedRef.current = value;
-    return true;
-  }];
+  const update = () => { if (mounted.current && owner.current === state) render((value) => value + 1); };
+  const drain = async () => {
+    if (state.busy || state.awaiting !== null || state.queue.length === 0 || state.conflicted) return;
+    state.busy = true;
+    try {
+      while (mounted.current && owner.current === state && state.queue.length > 0 && !state.conflicted && state.awaiting === null) {
+        const next = state.queue.shift()!;
+        const pending: Pending = { value: next.publication, baseRevision: state.revision, cancelled: false, settled: false, outcome: undefined };
+        state.awaiting = pending;
+        const outcome = await sender.current(next.value, () => mounted.current && owner.current === state && !pending.cancelled, (listener) => { state.listeners.add(listener); return () => { state.listeners.delete(listener); }; });
+        if (outcome && outcome.kind !== "applied") throw new Error(outcome.kind);
+        pending.outcome = outcome || undefined;
+        pending.settled = true;
+        acknowledge();
+      }
+    } catch {
+      const cancelled = state.awaiting?.cancelled === true;
+      state.awaiting = null;
+      if (!cancelled) { state.queue = []; state.committed = state.published; state.conflicted = true; }
+    } finally { state.busy = false; update(); }
+  };
+  useEffect(() => { void drain(); });
+  return [state.draft, (next) => { state.draft = next; update(); }, (value) => {
+    if (state.conflicted || value === state.committed) return;
+    if (state.queue.length + Number(state.awaiting !== null) >= INPUT_COMMIT_CAPACITY_V1) { state.queue = []; state.committed = state.published; state.conflicted = true; update(); return; }
+    state.committed = value;
+    state.queue.push({ value, publication: publication(value) });
+    void drain();
+  }, () => { state.queue = []; if (state.awaiting?.settled && state.conflicted) state.awaiting = null; else if (state.awaiting) state.awaiting.cancelled = true; state.draft = state.published; state.committed = state.published; state.conflicted = false; for (const listener of state.listeners) listener(); update(); }, state.conflicted];
+}
+
+/** 🪪️ Authored semantic identity separates a control target from changing command guards. */
+function inputDraftScope(record: UiNodeRecord): string {
+  const input = record.component as Extract<Component, { type: "input" }>;
+  return input.draftTarget ?? JSON.stringify(record.bindings);
 }
 
 /** 🎨️ The release of a colour field's press: the native `change` a colour picker fires when it commits (React's `onChange`
@@ -1401,14 +1465,15 @@ function usePickerRelease(enabled: boolean, lane: ContinuousGestureLane<UiValue>
 function InputView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
   const component = record.component as Extract<Component, { type: "input" }>;
   const commitOnBlur = component.commit === "blur";
-  const draftScope = useMemo(() => JSON.stringify(record.bindings), [record.bindings]);
+  const draftScope = inputDraftScope(record);
+  const draftConflictLabel = useLabel("ui.host.inputDraftConflict");
+  const draftDiscardLabel = useLabel("ui.host.inputDraftDiscard");
   // 🔁️ A number field with a display factor carries its stored number and shows `stored × factor` at its precision; every
   // typed number reads back through the shared law, so retyping the shown value keeps the exact stored one.
   const factor = component.kind === "number" ? (component.displayFactor ?? null) : null;
   const storedNumber = Number(component.value);
   const shownText = (stored: number): string => (factor == null ? (component.precision == null ? formatUiNumber(stored) : formatUiNumberFixed(stored, component.precision)) : uiNumberDisplayText(stored, factor, component.precision));
   const published = factor != null && component.value.trim() !== "" && Number.isFinite(storedNumber) ? shownText(storedNumber) : component.value;
-  const [draft, setDraft, takeDraftCommit] = useCommitDraft(published, draftScope);
   const [refusal, setRefusal] = useState<{ readonly message: string | null } | null>(null);
   const lane = useContinuousTriggerLane(context, record);
   /** 🚧️ The stored number a typed text means, or the refusal it earns: unreadable text, or a value crossing a hard bound (the
@@ -1420,6 +1485,27 @@ function InputView({ record, context }: { readonly record: UiNodeRecord; readonl
     const crossed = uiNumberCrossedBound(stored, component.min, component.max, component.limits);
     return crossed ? { refused: crossed.refusal ?? null } : stored;
   };
+  const draftPublication = (raw: string): string => {
+    const number = component.kind === "number" ? typedNumber(raw) : null;
+    return typeof number === "number" ? factor == null ? String(number) : shownText(number) : raw;
+  };
+  const [draft, setDraft, commitDraft, discardDraft, draftConflict] = useCommitDraft(published, JSON.stringify([context.localDocumentOwner?.id, draftScope]), JSON.stringify(record.bindings), component.publicationRevision ?? null, (raw, active, subscribeActive) => {
+    const read = () => {
+      const current = context.store.getNodeSnapshot(record.id);
+      if (!current || current.disabled || current.component.type !== "input" || inputDraftScope(current) !== draftScope) return null;
+      const input = current.component;
+      return { target: JSON.stringify([draftScope, input.kind, input.displayFactor, input.precision]), value: factor != null && input.value.trim() !== "" && Number.isFinite(Number(input.value)) ? shownText(Number(input.value)) : input.value, revision: input.publicationRevision ?? "" };
+    };
+    const send = () => {
+      const current = context.store.getNodeSnapshot(record.id);
+      if (!active() || !read() || !current) throw new Error("Input command target changed");
+      const number = component.kind === "number" ? typedNumber(raw) : null;
+      return dispatchTrigger(context, current, "commit", toUiValue(typeof number === "number" ? number : raw));
+    };
+    return context.localDocumentOwner && component.publicationRevision != null
+      ? inputCommitLaneV1(context.localDocumentOwner).submit({ read, send, active, expected: draftPublication(raw), subscribe: (listener) => { const publication = context.store.subscribeRevision(listener); const lifecycle = subscribeActive(listener); return () => { publication(); lifecycle(); }; } })
+      : send();
+  }, draftPublication, context.localDocumentOwner);
   // 🎚️ A number or colour field with no `commit` mode IS a continuous control: a held spinner, an arrow key
   // on repeat, a colour picker dragged across its swatch and a scripted value stream all emit a value per frame,
   // and each one costs a whole document round trip. It rides the same coalescing lane as a slider; blur and a
@@ -1435,7 +1521,7 @@ function InputView({ record, context }: { readonly record: UiNodeRecord; readonl
       return;
     }
     setRefusal(null);
-    if (commitOnBlur && !takeDraftCommit(raw)) return;
+    if (commitOnBlur) { commitDraft(raw); return; }
     const value: UiValue = typeof number === "number" ? toUiValue(number) : toUiValue(raw);
     if (continuous) {
       lane.offer(value);
@@ -1446,6 +1532,7 @@ function InputView({ record, context }: { readonly record: UiNodeRecord; readonl
   /** ⌨️ Enter commits without waiting for focus to leave — the gesture a user expects from an inline
    * editor, and the one a keyboard-only user has. */
   const commitOnEnter = (event: ReactKeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); discardDraft(); setRefusal(null); return; }
     if (event.key !== "Enter" || event.shiftKey) return;
     event.preventDefault();
     commitValue((event.target as HTMLInputElement | HTMLTextAreaElement).value);
@@ -1466,12 +1553,25 @@ function InputView({ record, context }: { readonly record: UiNodeRecord; readonl
     else commitValue(text);
     return true;
   };
+  const draftConflictId = `${nodeDomId(context.store, record, context.domScope)}-draft-conflict`;
+  const recovery = draftConflict ? <>
+    <span id={draftConflictId} role="alert" className="sr-only">{draftConflictLabel}</span>
+    <Popover>
+      <PopoverTrigger asChild><Button id={`${draftConflictId}-explain`} icon={resolveControlIconNode("triangle-alert")} aria-label={draftConflictLabel} title={draftConflictLabel} className="shrink-0 text-destructive" /></PopoverTrigger>
+      <PopoverContent aria-label={draftConflictLabel} className="max-w-sm whitespace-normal">
+        <p className="text-sm">{draftConflictLabel}</p>
+        <Button id={`${draftConflictId}-discard`} icon={resolveControlIconNode("undo-2")} text={draftDiscardLabel} onClick={() => { discardDraft(); setRefusal(null); }} />
+      </PopoverContent>
+    </Popover>
+  </> : null;
   if (component.kind === "longText") {
-    return (
+    return (<>
       <Textarea
         id={nodeDomId(context.store, record, context.domScope)}
         data-ui-node-id={record.id} data-ui-node-key={record.key}
         aria-label={record.accessibility.label ?? undefined}
+        aria-invalid={draftConflict || undefined}
+        aria-describedby={draftConflict ? draftConflictId : undefined}
         disabled={record.disabled}
         className="min-h-[4.5rem] w-full min-w-0"
         value={commitOnBlur ? draft : component.value}
@@ -1480,7 +1580,8 @@ function InputView({ record, context }: { readonly record: UiNodeRecord; readonl
         onKeyDown={commitOnBlur ? commitOnEnter : undefined}
         onBlur={commitOnBlur ? (event) => commitValue(event.target.value) : undefined}
       />
-    );
+      {recovery}
+    </>);
   }
   const inputType = component.kind === "number" ? "number" : component.kind === "date" ? "date" : component.kind === "color" ? "color" : component.kind === "file" ? "file" : "text";
   const shown = (value: number | null | undefined): number | undefined => (value == null ? undefined : factor == null ? value : value * factor);
@@ -1490,8 +1591,8 @@ function InputView({ record, context }: { readonly record: UiNodeRecord; readonl
       id={nodeDomId(context.store, record, context.domScope)}
       data-ui-node-id={record.id} data-ui-node-key={record.key}
       aria-label={record.accessibility.label ?? undefined}
-      aria-invalid={refusal ? true : undefined}
-      aria-describedby={refusal?.message ? refusalId : undefined}
+      aria-invalid={refusal || draftConflict ? true : undefined}
+      aria-describedby={[refusal?.message ? refusalId : null, draftConflict ? draftConflictId : null].filter(Boolean).join(" ") || undefined}
       disabled={record.disabled}
       type={inputType}
       className="h-[var(--tree-inline-control-height,var(--size-medium))] w-full min-w-0"
@@ -1509,6 +1610,7 @@ function InputView({ record, context }: { readonly record: UiNodeRecord; readonl
   const field = (
     <>
       {input}
+      {recovery}
       {refusal?.message ? (
         <span id={refusalId} role="alert" data-slot="input-refusal" className="text-destructive block w-full text-xs leading-tight">
           {refusal.message}
@@ -1775,6 +1877,38 @@ export type TreeWindowContextValue = {
 };
 
 export const TreeWindowContext = createContext<TreeWindowContextValue | null>(null);
+
+/** 🪟️ Merges mounted observers before publishing the body's complete viewport ledger. */
+export function createTreeWindowReporterV1(report: TreeWindowContextValue["reportWindows"]) {
+  const sources = new Map<object, { requests: readonly TreeWindowReportV1[]; viewportRows: number }>();
+  const publish = () => {
+    const rows = new Map<string, TreeWindowReportV1>();
+    let viewport = 1;
+    for (const source of sources.values()) {
+      viewport = Math.max(viewport, source.viewportRows);
+      for (const request of source.requests) {
+        const previous = rows.get(request.nodeKey);
+        const offset = Math.min(previous?.offset ?? request.offset, request.offset);
+        const end = Math.max(previous ? previous.offset + previous.rows : 0, request.offset + request.rows);
+        rows.set(request.nodeKey, { nodeKey: request.nodeKey, offset, rows: end - offset });
+      }
+    }
+    report([...rows.values()], viewport);
+  };
+  return {
+    publish(source: object, requests: readonly TreeWindowReportV1[], viewportRows: number) { sources.set(source, { requests, viewportRows }); publish(); },
+    remove(source: object) { if (sources.delete(source)) publish(); },
+  };
+}
+
+const treeWindowReporters = new WeakMap<TreeWindowContextValue["reportWindows"], ReturnType<typeof createTreeWindowReporterV1>>();
+
+/** 🌳️ Each body channel owns one reporter shared by all of its mounted trees and tables. */
+function treeWindowReporter(channel: TreeWindowContextValue) {
+  let reporter = treeWindowReporters.get(channel.reportWindows);
+  if (!reporter) { reporter = createTreeWindowReporterV1(channel.reportWindows); treeWindowReporters.set(channel.reportWindows, reporter); }
+  return reporter;
+}
 
 /** 🪟️ The nearest {@link TreeWindowContext}, or `null` outside a host-provided panel body. */
 export function useTreeWindowContext(): TreeWindowContextValue | null {
@@ -2112,6 +2246,12 @@ function useTreeWindowObserver(rootRef: RefObject<HTMLDivElement | null>, window
   const onServedRef = useRef(onServed);
   onServedRef.current = onServed;
   const lastReportRef = useRef<string>("");
+  const sourceRef = useRef<object>({});
+  const reporter = windows ? treeWindowReporter(windows) : null;
+  useEffect(() => {
+    lastReportRef.current = "";
+    return () => reporter?.remove(sourceRef.current);
+  }, [reporter]);
   const duplicateKeysRef = useRef<Set<string>>(new Set());
   const servedRef = useRef<ReadonlyMap<string, TreeWindowServedMemoryV1>>(new Map());
   const frameRef = useRef<number | null>(null);
@@ -2141,7 +2281,7 @@ function useTreeWindowObserver(rootRef: RefObject<HTMLDivElement | null>, window
       const signature = treeWindowReportSignatureV1(requests, viewportRows);
       if (signature === lastReportRef.current) return;
       lastReportRef.current = signature;
-      channel.reportWindows(requests, viewportRows);
+      reporter?.publish(sourceRef.current, requests, viewportRows);
     };
     const schedule = () => {
       if (frameRef.current !== null) return;
@@ -2168,7 +2308,7 @@ function useTreeWindowObserver(rootRef: RefObject<HTMLDivElement | null>, window
       else view.clearTimeout(frameRef.current);
       frameRef.current = null;
     };
-  }, [rootRef, revision, store, bodyKey]);
+  }, [rootRef, revision, store, bodyKey, reporter]);
 }
 
 /** 🕹️ What one conversion pass of a guest tree collects and carries down the recursion — every field is
@@ -2268,7 +2408,15 @@ export const TREE_ROW_TONE_CLASSES: Readonly<Partial<Record<NonNullable<StyleSpe
   danger: "text-destructive",
 };
 
-export function treeItemToTreeData(store: UiDocumentStore, state: UiDocumentState, node: TreeWalkNode, context: UiInterpreterContext, overlay: UiPresenceOverlayValue, leftoverIds?: readonly string[], walk?: TreeWalkContextV1, parentWindowPath?: string): TreeDataItem {
+/** 🪞️ Whether a row may stand in for its one activatable control: only when it says what the control does — the control's
+ * own text or accessible name is the row's label (a button row: "Accept" holding "Accept"). A row reading "Points" never
+ * silently adds an item: such a control stays a named button inside the row. */
+function treeRowStandsForControl(control: UiNodeRecord, rowLabel: string | null | undefined): boolean {
+  const text = control.component.type === "button" ? control.component.label : undefined;
+  return rowLabel != null && rowLabel !== "" && (text === rowLabel || control.accessibility.label === rowLabel);
+}
+
+export function treeItemToTreeData(store: UiDocumentStore, state: UiDocumentState, node: TreeWalkNode, context: UiInterpreterContext, overlay: UiPresenceOverlayValue, leftoverIds?: readonly string[], walk?: TreeWalkContextV1, parentWindowPath?: string, rowAdmission?: RowActionAdmissionControllerV1): TreeDataItem {
   const { record, props } = node;
   // 🪟️ A WINDOW is identified by its path; an unwindowed row has no window identity and keeps its authored
   // key, which is the only thing the host ever holds for it (a fold).
@@ -2285,7 +2433,7 @@ export function treeItemToTreeData(store: UiDocumentStore, state: UiDocumentStat
   const hoverBinding = (record.bindings ?? []).find((b) => b.trigger === "hoverPreview");
   const childItems = collectTreeItems(state, record.children ?? []);
   const controlRecords = collectTreeItemControls(state, record.children ?? []);
-  const activatableControl = activateBinding ? undefined : controlRecords.find((child) => !child.disabled && (child.bindings ?? []).some((b) => b.trigger === "activate"));
+  const activatableControl = activateBinding ? undefined : controlRecords.find((child) => !child.disabled && (child.bindings ?? []).some((b) => b.trigger === "activate") && treeRowStandsForControl(child, props.label));
   const granularity = typeof props.granularity === "string" && props.granularity.length > 0 ? props.granularity : undefined;
   if (granularity && walk?.pick) walk.pickTargets?.set(domId, { key: record.key, granularity });
   const pickClick = !activateBinding && granularity && walk?.pick ? (event: ReactMouseEvent, activation: TreeDataActivationContext) => dispatchTreePick(context, walk, record.key, granularity, event, activation) : undefined;
@@ -2299,7 +2447,7 @@ export function treeItemToTreeData(store: UiDocumentStore, state: UiDocumentStat
     description: [props.description, ...(presence.notes ?? [])].filter((line): line is string => typeof line === "string" && line !== "").join(" · ") || undefined,
     icon: props.icon ? resolveControlIconNode(props.icon, 12) : undefined,
     defaultOpen: props.defaultOpen ?? undefined,
-    isSelected: Boolean(presence.selected) || leftoverTreeItemSelectedV1(record.key, leftoverIds),
+    isSelected: props.selected === true || Boolean(presence.selected) || leftoverTreeItemSelectedV1(record.key, leftoverIds),
     isHighlighted: presence.hovered === true || presence.previewed === true ? true : undefined,
     loading: record.activity === "loading",
     waiting: record.activity === "waiting",
@@ -2307,29 +2455,117 @@ export function treeItemToTreeData(store: UiDocumentStore, state: UiDocumentStat
     draggable: props.draggable ?? undefined,
     dragData: props.dragData ? (Object.fromEntries(Object.entries(props.dragData).filter((entry): entry is [string, string] => entry[1] !== undefined)) as Record<string, string>) : undefined,
     control: controlRecords.length > 0 && controlRecords.length !== (activatableControl ? 1 : 0) ? <>{renderTreeItemControls(store, controlRecords.filter((child) => child !== activatableControl), { ...context, domScope: domId })}</> : undefined,
-    items: childItems.length > 0 ? childItems.map((child) => treeItemToTreeData(store, state, child, context, overlay, leftoverIds, walk, windowPath ?? parentWindowPath)) : undefined,
+    items: childItems.length > 0 ? childItems.map((child) => treeItemToTreeData(store, state, child, context, overlay, leftoverIds, walk, windowPath ?? parentWindowPath, rowAdmission)) : undefined,
     onClick: activateBinding ? () => dispatchTrigger(context, record, "activate") : (pickClick ?? (activatableControl ? () => dispatchTrigger(context, activatableControl, "activate") : undefined)),
     onPointerEnter: hoverBinding ? () => dispatchTrigger(context, record, "hoverPreview") : undefined,
-    actions: rowTreeActions(record, props, context),
+    actions: rowTreeActions(record, props, context, rowAdmission),
   };
 }
 
 /** 🎬️ A tree row's actions as `TreeDataItem` buttons — each its verb on the row's ONE target, dispatched exactly as a table
  * row with the same target dispatches it; a disabled action renders disabled and its dispatch is refused. */
-function rowTreeActions(record: UiNodeRecord, props: Extract<Component, { type: "treeItem" }>, context: UiInterpreterContext) {
+function rowTreeActions(record: UiNodeRecord, props: Extract<Component, { type: "treeItem" }>, context: UiInterpreterContext, admission?: RowActionAdmissionControllerV1) {
   const target = props.target;
   if (!target || (props.rowActions ?? []).length === 0) return undefined;
-  return (props.rowActions ?? []).map((action) => ({ kind: "button" as const, icon: resolveControlIconNode(action.icon, 12), title: action.label ? wireLabel(action.label) : undefined, placement: action.placement ?? "row", disabled: action.disabled === true, onClick: () => dispatchRowAction(record, target, action, context) }));
+  return (props.rowActions ?? []).map((action, actionIndex) => {
+    const busy = admission?.isPending(target, action) ?? false;
+    const unavailable = admission ? !admission.active : false;
+    return { kind: "button" as const, icon: resolveControlIconNode(action.icon, 12), title: action.label ? wireLabel(action.label) : undefined, placement: action.placement ?? "row", busy, disabled: action.disabled === true || busy || unavailable, reason: action.disabled && action.reason ? wireLabel(action.reason) : undefined, onClick: () => admission ? admission.dispatch(record.id, record.key, actionIndex, rowActionAdmissionKeyV1(target, action)) : dispatchCurrentRowAction(record.id, record.key, actionIndex, context, rowActionAdmissionKeyV1(target, action)) };
+  });
 }
 
-/** 🎬️ Fires one row action on its target through the store, or nothing when the contract twin refuses it (disabled). */
-function dispatchRowAction(record: UiNodeRecord, target: RowTarget, action: RowAction, context: UiInterpreterContext): void {
+/** 🎬️ One table row action, named `"<label>: <row name>"`. A disabled one stays focusable — `aria-disabled`, never run —
+ * names its reason through `aria-describedby` and shows it as visible text while hovered, focused or pressed
+ * (`DisabledReasonHint`), exactly as a tree row's action (`🌳️Tree`) and the wgpu renderer do (`💬️row-semantics`). */
+function TableRowActionButton({ action, name, busy, unavailable, onRun }: { readonly action: RowAction; readonly name: string; readonly busy: boolean; readonly unavailable: boolean; readonly onRun: () => void }): ReactElement {
+  const reasonId = `${useId()}-reason`;
+  const label = action.label ? `${wireLabel(action.label)}: ${name}` : name;
+  const reason = action.disabled === true && action.reason ? wireLabel(action.reason) : undefined;
+  const disabled = action.disabled === true || busy || unavailable;
+  const button = (
+    <Button
+      type="button"
+      variant="ghost"
+      data-table-row-action=""
+      tabIndex={0}
+      icon={resolveControlIconNode(action.icon)}
+      aria-label={label}
+      title={reason ? undefined : label}
+      disabled={busy || unavailable}
+      aria-disabled={disabled ? true : undefined}
+      aria-busy={busy || undefined}
+      aria-describedby={reason ? reasonId : undefined}
+      className={disabled ? "cursor-not-allowed opacity-50" : undefined}
+      onClick={() => {
+        if (!disabled) onRun();
+      }}
+    />
+  );
+  return reason ? (
+    <DisabledReasonHint id={reasonId} reason={reason}>
+      {button}
+    </DisabledReasonHint>
+  ) : (
+    button
+  );
+}
+
+type RowActionAdmissionControllerV1 = Readonly<{
+  active: boolean;
+  isPending(target: RowTarget, action: RowAction): boolean;
+  dispatch(recordId: UiNodeRecord["id"], recordKey: string, actionIndex: number, authoredKey: string): void;
+}>;
+
+function currentRowAction(recordId: UiNodeRecord["id"], recordKey: string, actionIndex: number, context: UiInterpreterContext, authoredKey?: string): { readonly record: UiNodeRecord; readonly target: RowTarget; readonly action: RowAction; readonly binding: ActionBinding } | null {
+  const current = context.store.getNodeSnapshot(recordId);
+  if (!current || current.disabled || current.key !== recordKey || (current.component.type !== "treeItem" && current.component.type !== "tableRow")) return null;
+  const target = current.component.target;
+  const action = current.component.rowActions?.[actionIndex];
+  if (!target || !action || (authoredKey !== undefined && rowActionAdmissionKeyV1(target, action) !== authoredKey)) return null;
   const resolved = rowActionBinding(target, action);
-  if (resolved.ok) context.onIntent(context.store.buildIntent(record, resolved.binding));
+  return resolved.ok ? { record: current, target, action, binding: resolved.binding } : null;
+}
+
+/** 🎬️ Dispatches from the Store's current record, never the callback's rendered target/action snapshot. */
+function dispatchCurrentRowAction(recordId: UiNodeRecord["id"], recordKey: string, actionIndex: number, context: UiInterpreterContext, authoredKey?: string): ReturnType<UiInterpreterContext["onIntent"]> | undefined {
+  const current = currentRowAction(recordId, recordKey, actionIndex, context, authoredKey);
+  return current ? context.onIntent(context.store.buildIntent(current.record, current.binding)) : undefined;
+}
+
+function useRowActionAdmissionV1(context: UiInterpreterContext): RowActionAdmissionControllerV1 {
+  const fallback = useRef<(RowActionAdmissionOwnerV1 & { retire(): void }) | null>(null);
+  if (!fallback.current) {
+    const listeners = new Set<() => void>();
+    let active = true;
+    fallback.current = { get active() { return active; }, subscribeRetirement: (listener) => { if (!active) { listener(); return () => {}; } listeners.add(listener); return () => listeners.delete(listener); }, retire: () => { if (!active) return; active = false; for (const listener of [...listeners]) listener(); listeners.clear(); } };
+  }
+  useEffect(() => () => fallback.current?.retire(), []);
+  const owner = context.localDocumentOwner ?? fallback.current;
+  const registry = useMemo(() => rowActionAdmissionRegistryV1(owner, context.store), [owner, context.store]);
+  const epoch = useSyncExternalStore(registry.subscribe, registry.snapshot, registry.snapshot);
+  return useMemo(() => ({
+    active: registry.active,
+    isPending: (target: RowTarget, action: RowAction) => registry.isPending(rowActionAdmissionKeyV1(target, action)),
+    dispatch: (recordId, recordKey, actionIndex, authoredKey) => {
+      const current = currentRowAction(recordId, recordKey, actionIndex, context, authoredKey);
+      if (!current || !registry.active) return;
+      const token = registry.begin(rowActionAdmissionKeyV1(current.target, current.action));
+      if (!token) return;
+      try {
+        const completion = context.onIntent(context.store.buildIntent(current.record, current.binding));
+        if (completion && typeof (completion as PromiseLike<unknown>).then === "function") void Promise.resolve(completion).then(token.finish, token.finish);
+        else token.finish();
+      } catch (error) {
+        token.finish();
+        throw error;
+      }
+    },
+  }), [context, epoch, registry]);
 }
 
 function TreeView({ store, record, context }: { readonly store: UiDocumentStore; readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
   const revision = useUiDocumentRevision(store);
+  const rowAdmission = useRowActionAdmissionV1(context);
   const overlay = useUiPresenceOverlay();
   const leftover = useSyncExternalStore(subscribeLeftoverWorldSelectionV1, leftoverWorldSelectionOverlayV1, leftoverWorldSelectionOverlayV1);
   const leftoverIds = leftover?.ids;
@@ -2363,11 +2599,11 @@ function TreeView({ store, record, context }: { readonly store: UiDocumentStore;
         defaultOpen: sectionProps.defaultOpen ?? undefined,
         loading: sectionRecord.activity === "loading",
         waiting: sectionRecord.activity === "waiting",
-        items: items.map((item) => treeItemToTreeData(store, state, item, context, overlay, leftoverIds, walk, windowPath)),
+        items: items.map((item) => treeItemToTreeData(store, state, item, context, overlay, leftoverIds, walk, windowPath, rowAdmission)),
       };
     });
     return { sections, walk };
-  }, [store, record, revision, context, overlay, leftoverIds, windows]);
+  }, [store, record, revision, context, overlay, leftoverIds, windows, rowAdmission]);
   const sections = walked.sections;
   // 🔑️ `TreeSection`/`TreeItem` each route a fold through the provider TWICE — once from the data view
   // that owns the controlled `open` prop and once from the row component's own `useTreeOpenState`, both
@@ -2382,7 +2618,7 @@ function TreeView({ store, record, context }: { readonly store: UiDocumentStore;
     if (!dropBinding && !catalogue) return undefined;
     return {
       ...(catalogue ?? {}),
-      ...(dropBinding ? { handleDrop: () => dispatchTrigger(context, record, "drop") } : {}),
+      ...(dropBinding ? { handleDrop: () => dispatchTrigger(context, record, "drop")?.then(() => undefined) } : {}),
     };
   }, [record, context, sections]);
   // 🪟️ `display: contents` — the wrapper exists ONLY to give the window observer a DOM handle on the
@@ -2397,7 +2633,7 @@ function TreeView({ store, record, context }: { readonly store: UiDocumentStore;
         selectionMode="single"
         showLines
         dragAndDropController={dragController}
-        sortableSections={sections.length > 1}
+        sortableSections={false}
         {...(windows ? { openStates: walked.walk.domOpenStates, onOpenStateChange: handleOpenStateChange } : {})}
       />
     </div>
@@ -2695,6 +2931,7 @@ export function tableWindowScrollLeftForColumnV1(index: number, columnPx: number
  * Enter/Space fire the row's own activation; Right/Left walk the row's actions; Escape returns to the row. */
 function TableView({ store, record, context }: { readonly store: UiDocumentStore; readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
   const revision = useUiDocumentRevision(store);
+  const rowAdmission = useRowActionAdmissionV1(context);
   const windows = useTreeWindowContext();
   const rootRef = useRef<HTMLDivElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -2900,23 +3137,9 @@ function TableView({ store, record, context }: { readonly store: UiDocumentStore
                   })}
                   {hasActions ? (
                     <div role="gridcell" aria-colindex={columnTotal + 1} className="flex min-w-0 items-center gap-single px-single">
-                      {(props.rowActions ?? []).map((action, actionIndex) => {
-                        const label = action.label ? `${wireLabel(action.label)}: ${name}` : name;
-                        return (
-                          <Button
-                            key={actionIndex}
-                            type="button"
-                            variant="ghost"
-                            data-table-row-action=""
-                            tabIndex={0}
-                            icon={resolveControlIconNode(action.icon)}
-                            aria-label={label}
-                            title={label}
-                            disabled={action.disabled === true}
-                            onClick={() => props.target && dispatchRowAction(row, props.target, action, context)}
-                          />
-                        );
-                      })}
+                      {(props.rowActions ?? []).map((action, actionIndex) => (
+                        <TableRowActionButton key={actionIndex} action={action} name={name} busy={props.target ? rowAdmission.isPending(props.target, action) : false} unavailable={!rowAdmission.active} onRun={() => rowAdmission.dispatch(row.id, row.key, actionIndex, rowActionAdmissionKeyV1(props.target!, action))} />
+                      ))}
                     </div>
                   ) : null}
                   {columnTrailing > 0 ? <div aria-hidden="true" data-table-column-spacer="trailing" /> : null}
@@ -3008,7 +3231,7 @@ export function interpretUiNode(store: UiDocumentStore, context: UiInterpreterCo
  * handled entirely by `UiNodeView`'s own per-id subscription several levels down, never by
  * re-rendering from here.
  */
-export const InterpretedUiNode = memo(function InterpretedUiNode({ store, onAction, onIntent, requestContextMenu }: { readonly store: UiDocumentStore } & Pick<UiInterpreterContext, "onAction" | "onIntent" | "requestContextMenu">): ReactNode {
+export const InterpretedUiNode = memo(function InterpretedUiNode({ store, windowId, localDocumentOwner = null, onAction, onIntent, requestContextMenu }: { readonly store: UiDocumentStore; readonly windowId?: string; readonly localDocumentOwner?: LocalDocumentOwnerV1 | null } & Pick<UiInterpreterContext, "onAction" | "onIntent" | "requestContextMenu">): ReactNode {
   // 🖱️ The shell publishes the plugin's on-demand menu resolver through `PluginSurfaceActionsContext`
   // (ShellHost's `requestContextMenu`), and NO `<InterpretedUiNode>` call site has ever passed it as a
   // prop — so every `ComponentSceneHost`'s `requestContextMenu` was `undefined` and its whole
@@ -3017,8 +3240,10 @@ export const InterpretedUiNode = memo(function InterpretedUiNode({ store, onActi
   // menu. Reading the context here wires every surface host at once, which is what that context is for.
   const surfaceActions = usePluginSurfaceActions();
   const root = useUiDocumentRoot(store);
+  const ownedAction = useCallback((action: ShellInputActionV1, lifecycle?: ActionDispatchLifecycleV1) => onAction(windowId === undefined ? action : inputActionWithWindowV1(action, windowId), lifecycle), [onAction, windowId]);
+  const ownedIntent = useCallback((intent: UiIntent) => onIntent(intent, windowId), [onIntent, windowId]);
   if (root === null) return null;
-  return <UiNodeView store={store} id={root} context={{ store, onAction, onIntent, requestContextMenu: requestContextMenu ?? surfaceActions }} />;
+  return <LocalDocumentOwnerContext.Provider value={localDocumentOwner}><LocalDocumentWindowContext.Provider value={windowId ?? null}><UiNodeView store={store} id={root} context={{ store, localDocumentOwner, onAction: ownedAction, onIntent: ownedIntent, requestContextMenu: requestContextMenu ?? surfaceActions }} /></LocalDocumentWindowContext.Provider></LocalDocumentOwnerContext.Provider>;
 });
 //#endregion 🔖️UiInterpreter
 
@@ -3053,6 +3278,8 @@ if (import.meta.vitest) {
       surfaceSceneLaneText,
       surfaceSceneLaneCache,
       utf8ByteLength,
+      nodeGraphSurfaceLaneTexts: (record: UiNodeRecord, state: UiDocumentState, declared: readonly SceneLaneRef[]) => surfaceLaneTexts(record, state, declared, NODE_GRAPH_SCENE_LANES),
+      nodeGraphSceneFromLanes,
       world3dSurfaceLaneTexts: (record: UiNodeRecord, state: UiDocumentState, declared: readonly SceneLaneRef[]) => surfaceLaneTexts(record, state, declared, WORLD3D_SCENE_LANES),
       canvas2dSurfaceLaneTexts: (record: UiNodeRecord, state: UiDocumentState, declared: readonly SceneLaneRef[]) => surfaceLaneTexts(record, state, declared, CANVAS2D_SCENE_LANES),
       board2dSurfaceLaneTexts: (record: UiNodeRecord, state: UiDocumentState, declared: readonly SceneLaneRef[]) => surfaceLaneTexts(record, state, declared, BOARD2D_SCENE_LANES),
@@ -3062,6 +3289,7 @@ if (import.meta.vitest) {
       board2dSceneFromLanes,
       paint2dSceneFromLanes,
       surfaceKindSceneLanes,
+      NODE_GRAPH_SCENE_LANES,
       WORLD3D_SCENE_LANES,
       CANVAS2D_SCENE_LANES,
       BOARD2D_SCENE_LANES,

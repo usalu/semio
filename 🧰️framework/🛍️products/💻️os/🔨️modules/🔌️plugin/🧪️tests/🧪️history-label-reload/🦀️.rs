@@ -4,7 +4,7 @@
 //! one publish seam (`dispatch_emit`, where every typed command's emit lands and the authoring verb is stamped), under a
 //! verb the app declares or one it does not (a peer's or another version's). Every row reads the same English and German
 //! label live, after a text reload and after a pack reload, because the projection only reads persisted facts (the edit's
-//! locale-neutral `verb`, its description and its operations).
+//! locale-neutral `verb` and its operations; an edit's description is never a label, design §20.6).
 
 use super::*;
 use crate::test_app_mutation_fixture::{SetCount, SetLabel, TestConfig, TestConfigMutation, TestMutation, TestSnapshot};
@@ -21,10 +21,9 @@ fn text(value: &Value) -> &str {
 }
 
 //#region 🧸️LabelReloadApp
-/// 🎮️ The fixture app's commands: an app-described rename under an undeclared verb, a retitle whose declared verb
-/// outranks its description, an undescribed two-operation reset under a declared verb, an undescribed single count and
-/// an undescribed two-operation pair under an undeclared verb.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, dsl::DslOps)]
+/// 🎮️ The fixture app's commands: a single-leaf rename under an undeclared verb, a single-leaf retitle under a declared
+/// verb, a two-operation reset under a declared verb, a single count and a two-operation pair under an undeclared verb.
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 enum LabelReloadCommand {
     Rename { value: String },
     Retitle { value: String },
@@ -56,14 +55,13 @@ fn command(case: &Value) -> LabelReloadCommand {
     }
 }
 
-/// ✍️ The operations and description a fixture command authors.
-fn authored(command: &LabelReloadCommand) -> (Vec<TestMutation>, Option<String>) {
+/// ✍️ The operations a fixture command authors.
+fn authored(command: &LabelReloadCommand) -> Vec<TestMutation> {
     match command {
-        LabelReloadCommand::Rename { value } => (vec![set_label(value)], Some(format!("Renamed to {value}"))),
-        LabelReloadCommand::Retitle { value } => (vec![set_label(value)], Some(format!("Retitled to {value}"))),
-        LabelReloadCommand::Reset { value } => (vec![set_count(*value), set_label("reset")], None),
-        LabelReloadCommand::Count { value } => (vec![set_count(*value)], None),
-        LabelReloadCommand::Pair { value } => (vec![set_count(*value), set_label("pair")], None),
+        LabelReloadCommand::Rename { value } | LabelReloadCommand::Retitle { value } => vec![set_label(value)],
+        LabelReloadCommand::Reset { value } => vec![set_count(*value), set_label("reset")],
+        LabelReloadCommand::Count { value } => vec![set_count(*value)],
+        LabelReloadCommand::Pair { value } => vec![set_count(*value), set_label("pair")],
     }
 }
 
@@ -96,7 +94,7 @@ impl ArtifactApp for LabelReloadApp {
 
     async fn command_id(command: &LabelReloadCommand) -> &'static str {
         match command {
-            LabelReloadCommand::Rename { .. } => "renameDescribed",
+            LabelReloadCommand::Rename { .. } => "renameUndeclared",
             LabelReloadCommand::Retitle { .. } => "retitle",
             LabelReloadCommand::Reset { .. } => "reset",
             LabelReloadCommand::Count { .. } => "count",
@@ -117,8 +115,7 @@ impl ArtifactApp for LabelReloadApp {
         _draft: &DraftView<'_, NoDraft>,
         _engines: &semio_framework_2d::compute::EngineHandles,
     ) -> ArtifactMutationOutcome<TestMutation, TestConfigMutation, NoDraftMutation> {
-        let (artifact_mutations, description) = authored(command);
-        Ok(Emit { artifact_mutations, description, ..Default::default() })
+        Ok(Emit::mutations(authored(command)))
     }
 
     async fn render(_body_key: &str, doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, _view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
@@ -210,8 +207,8 @@ async fn open(fixture: &Value, actor: &str) -> LabelReloadInstance {
 //#endregion 🧰️Harness
 
 /// ⚖️ LAW: every fixture command is one history row whose action id is its verb and whose English and German label are
-/// the fixture's, live, after a text reload and after a pack reload — an app-described, a verb-described and a
-/// leaf-described row alike — and the reloaded edits keep their verbs, declared by this app or not.
+/// the fixture's, live, after a text reload and after a pack reload — a verb-labelled and a leaf-labelled row alike —
+/// and the reloaded edits keep their verbs, declared by this app or not.
 #[semio_framework_async_macros::async_test]
 async fn history_labels_survive_a_text_and_a_pack_reload_in_every_locale() {
     let fixture = fixture();
@@ -219,16 +216,16 @@ async fn history_labels_survive_a_text_and_a_pack_reload_in_every_locale() {
     let mut live = open(&fixture, "author").await;
     for case in cases {
         let (id, verb) = (text(&case["id"]), text(&case["verb"]));
-        let (artifact_mutations, description) = authored(&command(case));
+        let artifact_mutations = authored(&command(case));
         let meta = ActionMeta { view_state: Some(ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), ..artifact_app_laws::meta("author") };
-        live.dispatch_emit(verb, Emit::<TestMutation, TestConfigMutation, NoDraftMutation> { artifact_mutations, description, ..Default::default() }, &meta).await.unwrap_or_else(|fault| panic!("{id}: {fault:?}"));
+        live.dispatch_emit(verb, Emit::<TestMutation, TestConfigMutation, NoDraftMutation>::mutations(artifact_mutations), &meta).await.unwrap_or_else(|fault| panic!("{id}: {fault:?}"));
     }
     let expected: Vec<(String, String, String)> = cases.iter().map(|case| (text(&case["verb"]).to_string(), text(&case["expected"]["en"]).to_string(), text(&case["expected"]["de"]).to_string())).collect();
     let verbs: Vec<Option<String>> = cases.iter().map(|case| Some(text(&case["verb"]).to_string())).collect();
     let mut reloaded = open(&fixture, "author").await;
-    reloaded.load_document_text(&live.document_text().await.expect("document text")).await.expect("text reload");
+    artifact_app_laws::load_document_text(&mut reloaded, &live.document_text().await.expect("document text")).await.expect("text reload");
     let mut repacked = open(&fixture, "reader").await;
-    repacked.load_document_pack(&live.document_pack().await.expect("document pack")).await.expect("pack reload");
+    artifact_app_laws::load_document(&mut repacked, &live.document_pack().await.expect("document pack")).await.expect("pack reload");
     for (who, app) in [("live", &mut live), ("text reload", &mut reloaded), ("pack reload", &mut repacked)] {
         assert_eq!(edit_rows(app).await, expected, "{who}: every row keeps its verb and its English and German label");
         assert_eq!(app.store.envelope().vcs.edits.iter().map(|edit| edit.verb.clone()).collect::<Vec<_>>(), verbs, "{who}: every edit carries the verb that authored it");

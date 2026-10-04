@@ -24,14 +24,14 @@ const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutati
 
 /// 🗺️ Decodes the committed snapshot with its stable child identities.
 fn before() -> GisMapSnapshot {
-    dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 /// 🎯️ Decodes the expected snapshot without normalizing its child identities.
 fn expected_after() -> GisMapSnapshot {
-    dsl::json::from_json_str(AFTER).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> GisMapMutation {
-    dsl::json::from_json_str(MUTATION).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 
 /// ▶️ Applies the mutation while preserving child identities and matching the committed snapshot.
@@ -51,7 +51,7 @@ async fn applies_to_committed_after() {
 async fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_gis_map_mutation(&base, &mutation);
+    let inverse = inverse_gis_map_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
     let mut snapshot = base.clone();
     apply_gis_map_mutation(&mut snapshot, &mutation).expect("forward applies");
     for step in &inverse {
@@ -65,12 +65,12 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: GisMapSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: GisMapSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "reorder-positions/moves-harbor-position-to-end: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&mutation())).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "reorder-positions/moves-harbor-position-to-end: committed mutation JSON is not canonical");
 }
@@ -94,7 +94,7 @@ async fn declared_outcome_holds() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = <GisMapMutation as protocol::Mutation<GisMapSnapshot>>::diff(&mutation(), &before());
-    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "reorder-positions/moves-harbor-position-to-end: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -102,8 +102,8 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: GisMapDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
+    let decoded: GisMapDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "reorder-positions/moves-harbor-position-to-end: committed diff JSON is not canonical");
 }
@@ -113,7 +113,7 @@ async fn committed_diff_is_canonical() {
 /// composed children itself, exactly as `apply_gis_map_mutation` does.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: GisMapDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: GisMapDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let produced = <GisMapDiff as protocol::MutationDiff<GisMapSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "reorder-positions/moves-harbor-position-to-end: committed diff did not carry before to after");
 }
@@ -131,7 +131,7 @@ async fn permutes_the_whole_position_order_without_touching_any_payload() {
     assert_eq!(delta.reordered.as_deref(), Some(["pos-lighthouse".to_string(), "pos-quay".to_string(), "pos-harbor".to_string()].as_slice()), "reorder-positions/moves-harbor-position-to-end: the delta is the full recomputed id order");
     assert!(delta.added.is_empty() && delta.removed.is_empty() && delta.patched.is_empty(), "reorder-positions/moves-harbor-position-to-end: a reorder must not add, remove or patch anything, got {delta:?}");
     assert!(produced.diff().routes.is_none() && produced.diff().regions.is_none(), "reorder-positions/moves-harbor-position-to-end: reorder-positions must never touch the routes or regions collections");
-    let inverse = inverse_gis_map_mutation(&base, &mutation());
+    let inverse = inverse_gis_map_mutation(&base, &mutation()).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "reorder-positions/moves-harbor-position-to-end: a reorder undoes with exactly one step, got {inverse:?}");
     let GisMapMutation::ReorderPositions(undo) = &inverse[0] else {
         panic!("reorder-positions/moves-harbor-position-to-end: the inverse must be another reorder-positions, got {:?}", inverse[0]);

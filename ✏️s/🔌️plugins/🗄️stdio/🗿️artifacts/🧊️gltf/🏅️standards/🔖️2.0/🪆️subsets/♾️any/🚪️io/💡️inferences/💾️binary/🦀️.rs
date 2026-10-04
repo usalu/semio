@@ -125,7 +125,7 @@ pub fn decode_gltf_inference_leaf_binary(input: &[u8]) -> Result<GltfInferenceLe
         return Err(GltfInferenceBinaryError::PayloadChecksum { declared: declared_payload_crc, actual: actual_payload_crc });
     }
     let encoded = std::str::from_utf8(payload).map_err(|error| GltfInferenceBinaryError::Payload(text::GltfInferenceTextError::Json(error.to_string())))?;
-    let leaf_id: GltfInferenceLeafEnvelope = pack::from_json_str(encoded).map_err(|error| GltfInferenceBinaryError::Payload(text::GltfInferenceTextError::Json(error.to_string())))?;
+    let leaf_id: GltfInferenceLeafEnvelope = semio_framework_pack_json::from_json_str(encoded, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| GltfInferenceBinaryError::Payload(text::GltfInferenceTextError::Json(error.to_string())))?;
     text::decode_gltf_inference_leaf_text(&format!("schema {}\nversion 1\nlength {}\nchecksum {:08x}\n{encoded}", leaf_id.id, payload.len(), text::crc32_iso_hdlc(payload))).map_err(Into::into)
 }
 

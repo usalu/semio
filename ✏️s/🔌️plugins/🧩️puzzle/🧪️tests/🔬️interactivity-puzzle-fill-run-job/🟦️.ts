@@ -119,7 +119,7 @@ pub(crate) fn parse_count(args: Option<&Value>) -> u32 {
 }
 `,
   runFixture: JSON.stringify({
-    laws: { opsPerPlacement: 2, parryOracle: { document: "concrete-forest", seed: 7, requested: 400 }, delivery: { document: "concrete-forest", seed: 7, requested: 1000000, candidates: 5000, deltaBudgetBytes: 65536 }, interactive: { document: "nakagin", seed: 1, requested: 100, turns: 771, budgetUs: 2000, coldRuns: 5 } },
+    laws: { opsPerPlacement: 2, parryOracle: { document: "concrete-forest", seed: 7, requested: 400 }, delivery: { document: "concrete-forest", seed: 7, requested: 1000000, candidates: 5000, deltaBudgetBytes: 65536 }, interactive: { document: "nakagin", seed: 1, requested: 100, turns: 771, budgetWork: 1000, stepWorkCeiling: 4000, appendOpsCeiling: 64 } },
     cases: [{ document: "nakagin", seed: 1, requested: 12, expected: { verdictPrefix: ["testing:candidate", "danger:collision", "success:fits"] } }],
   }),
   previewFixture: "",
@@ -191,7 +191,8 @@ const CASES: readonly (readonly [name: string, expect: "report" | "silent", edit
   ["tick-command-survives", "report", [["fillBuildTick", "", "pub fn fill_build_tick() {}"]]],
   ["lock-is-commit-fixture-survives", "report", [["editorTests", "    #[test]\n    fn fill_run_finalize", "    #[test]\n    fn fill_build_tick_locks_planned_placements_into_the_document_in_bounded_chunks() {}\n    #[test]\n    fn fill_run_finalize"]]],
   ["missing-successor-fixture", "report", [["editorTests", "fill_run_finalize_publishes_one_edit_with_every_provisional_placement", "fill_finalize_smoke"]]],
-  ["loosened-budget", "report", [["runFixture", '"budgetUs":2000', '"budgetUs":5090']]],
+  ["loosened-budget", "report", [["runFixture", '"budgetWork":1000', '"budgetWork":5090']]],
+  ["loosened-step-ceiling", "report", [["runFixture", '"stepWorkCeiling":4000', '"stepWorkCeiling":400000']]],
   ["partial-delivery-law", "report", [["runFixture", '"candidates":5000', '"candidates":4999']]],
   ["missing-oracle-law", "report", [["runFixture", '"parryOracle":{"document":"concrete-forest","seed":7,"requested":400},', ""]]],
   ["unqualified-verdict", "report", [["runFixture", '"danger:collision"', '"collision"']]],

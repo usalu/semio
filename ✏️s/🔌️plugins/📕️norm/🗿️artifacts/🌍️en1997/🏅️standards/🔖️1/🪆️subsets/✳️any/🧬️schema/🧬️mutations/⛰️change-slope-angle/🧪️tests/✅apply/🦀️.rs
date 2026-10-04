@@ -5,8 +5,8 @@ const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutation
 const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/⛰️change-slope-angle/✅apply/🦠️mutation/🔣️.json");
 const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/⛰️change-slope-angle/✅apply/🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/⛰️change-slope-angle/✅apply/🎯️outcome/🔣️.json");
-fn before() -> En1997Snapshot { pack::json::from_json_str(BEFORE).expect("before") }
-fn mutation() -> En1997Mutation { pack::json::from_json_str(MUTATION).expect("mutation") }
+fn before() -> En1997Snapshot { semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before") }
+fn mutation() -> En1997Mutation { semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation") }
 fn apply(mutation: &En1997Mutation, base: &En1997Snapshot) -> En1997Snapshot {
     let raised = <En1997Mutation as protocol::Mutation<En1997Snapshot>>::diff(mutation, base);
     assert!(raised.messages().is_empty(), "change-slope-angle raised {:?}", raised.messages());
@@ -20,15 +20,15 @@ fn mutation_is_the_canonical_wire() {
 fn applies_to_committed_after_and_diff() {
     let base = before();
     let raised = <En1997Mutation as protocol::Mutation<En1997Snapshot>>::diff(&mutation(), &base);
-    assert_eq!(*raised.diff(), pack::json::from_json_str::<En1997Diff>(DIFF).expect("diff"));
+    assert_eq!(*raised.diff(), semio_framework_pack_json::from_json_str::<En1997Diff>(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("diff"));
     let after = apply(&mutation(), &base);
     assert_ne!(after, base, "change-slope-angle must move the document");
-    assert_eq!(after, pack::json::from_json_str::<En1997Snapshot>(AFTER).expect("after"));
+    assert_eq!(after, semio_framework_pack_json::from_json_str::<En1997Snapshot>(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after"));
 }
 #[test]
 fn inverse_restores_before() {
     let base = before();
-    let inverse = <En1997Mutation as protocol::Mutation<En1997Snapshot>>::inverse(&mutation(), &base);
+    let inverse = <En1997Mutation as protocol::Mutation<En1997Snapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
     assert!(!inverse.is_empty(), "change-slope-angle changes the document, so its inverse must not be empty");
     let restored = inverse.iter().fold(apply(&mutation(), &base), |snapshot, step| apply(step, &snapshot));
     assert_eq!(restored, base);

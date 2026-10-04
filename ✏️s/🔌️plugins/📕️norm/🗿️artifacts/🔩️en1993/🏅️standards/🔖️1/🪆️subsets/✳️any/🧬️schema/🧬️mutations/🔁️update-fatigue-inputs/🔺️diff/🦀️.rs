@@ -9,7 +9,7 @@ pub fn diff(payload: &UpdateFatigueInputs, base: &En1993Snapshot) -> protocol::M
     let mut values = base.fatigue_details.clone();
     if let Some(idx) = values.iter().position(|x| x.id == payload.fatigue_detail.id) {
         if values[idx] == payload.fatigue_detail {
-            return protocol::MutationOutcome::empty().warn("mutation.no-op", "Entity already has this value.");
+            return protocol::MutationOutcome::empty().warning("mutation.no-op", "Entity already has this value.");
         }
         values[idx] = payload.fatigue_detail.clone();
     } else {

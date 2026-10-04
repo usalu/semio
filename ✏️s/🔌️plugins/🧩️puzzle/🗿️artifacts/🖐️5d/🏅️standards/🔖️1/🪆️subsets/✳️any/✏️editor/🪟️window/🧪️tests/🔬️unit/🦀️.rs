@@ -14,7 +14,7 @@ use super::*;
     #[test]
     fn app_pack_and_spr_exclude_window_and_transient_fields() {
         let shared = crate::editor::puzzle5d::config::Puzzle5dConfig::default();
-        let spr = dsl::json::to_json_string(&shared);
+        let spr = semio_framework_pack_json::to_json_string(&shared);
         let oracle: serde_json::Value = serde_json::from_str(&spr).expect("serde_json oracle accepts the neutral config");
         assert_eq!(oracle.as_object().map(serde_json::Map::len), Some(6));
         assert_eq!(oracle["fillCount"], serde_json::json!(crate::editor::puzzle5d::PUZZLE5D_DEFAULT_FILL_COUNT), "the fill count is document-instance configuration the fill run reads");

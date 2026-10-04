@@ -155,14 +155,14 @@ fn every_chunk_dispatches_its_declared_arguments() {
     for case in &fixture.argument_cases {
         let chunk = ImportChunk { payload: case.chunk.payload.clone(), chunk: case.chunk.chunk, chunk_count: case.chunk.chunk_count };
         let arguments = import_chunk_arguments(&case.name, &chunk, case.fan_out.as_ref().map(|fan_out| (fan_out.index, fan_out.total)));
-        let DslValue::Object(entries) = &arguments else { panic!("{} must build an object", case.id) };
+        let semio_framework_value::DslValue::Object(entries) = &arguments else { panic!("{} must build an object", case.id) };
         assert_eq!(entries.len(), case.arguments.len(), "{} argument count", case.id);
         for (key, expected) in &case.arguments {
             let actual = entries.iter().find(|(name, _)| name == key).map(|(_, value)| value).unwrap_or_else(|| panic!("{} is missing {key}", case.id));
             match expected {
-                serde_json::Value::String(text) => assert_eq!(actual, &DslValue::String(text.clone()), "{} {key}", case.id),
+                serde_json::Value::String(text) => assert_eq!(actual, &semio_framework_value::DslValue::String(text.clone()), "{} {key}", case.id),
                 serde_json::Value::Number(number) => {
-                    let DslValue::Number(actual_number) = actual else { panic!("{} {key} must be a number", case.id) };
+                    let semio_framework_value::DslValue::Number(actual_number) = actual else { panic!("{} {key} must be a number", case.id) };
                     assert!(actual_number.is_integer(), "{} {key} widened onto a float, which the guest's `u32` decode refuses", case.id);
                     assert_eq!(actual_number.as_u64(), number.as_u64(), "{} {key}", case.id);
                 }
@@ -178,12 +178,12 @@ fn every_chunk_dispatches_its_declared_arguments() {
 #[test]
 fn the_chunk_envelope_never_widens_its_integers_onto_floats() {
     let chunk = ImportChunk { payload: "x".into(), chunk: 2, chunk_count: 5 };
-    let DslValue::Object(entries) = import_chunk_arguments("a.stl", &chunk, Some((1, 3))) else { panic!("object") };
+    let semio_framework_value::DslValue::Object(entries) = import_chunk_arguments("a.stl", &chunk, Some((1, 3))) else { panic!("object") };
     for key in [IMPORT_ARGUMENT_CHUNK, IMPORT_ARGUMENT_CHUNK_COUNT, IMPORT_ARGUMENT_INDEX, IMPORT_ARGUMENT_TOTAL] {
         let (_, value) = entries.iter().find(|(name, _)| name == key).unwrap_or_else(|| panic!("missing {key}"));
-        let DslValue::Number(number) = value else { panic!("{key} must be a number") };
+        let semio_framework_value::DslValue::Number(number) = value else { panic!("{key} must be a number") };
         assert!(number.is_integer(), "{key} must stay an exact integer");
-        assert_eq!(<u32 as dsl::FromValue>::from_value(value.clone()).unwrap_or_else(|error| panic!("{key} must decode as the guest's own u32: {error}")), match key {
+        assert_eq!(<u32 as semio_framework_value::FromValue>::from_value(value.clone()).unwrap_or_else(|error| panic!("{key} must decode as the guest's own u32: {error}")), match key {
             IMPORT_ARGUMENT_CHUNK => 2,
             IMPORT_ARGUMENT_CHUNK_COUNT => 5,
             IMPORT_ARGUMENT_INDEX => 1,
@@ -196,8 +196,8 @@ fn the_chunk_envelope_never_widens_its_integers_onto_floats() {
 /// not, and `import_action` is the verb a shell re-dispatches once per chunk.
 #[test]
 fn the_effect_envelope_names_the_verb_a_shell_redispatches() {
-    let effect = Effect::RequestFileOpen { req: RequestId(131), accept: ".stl".into(), read_as: Some("dataUrl".into()), import_action: "importDocument".into(), multiple: false };
-    let Effect::RequestFileOpen { req, accept, read_as, import_action, multiple } = &effect else { panic!("variant") };
+    let effect = Effect::RequestFileOpen { req: RequestId(131), accept: ".stl".into(), read_as: Some("dataUrl".into()), import_action: "importDocument".into(), multiple: false, args: None };
+    let Effect::RequestFileOpen { req, accept, read_as, import_action, multiple, .. } = &effect else { panic!("variant") };
     assert_eq!(req.0, 131);
     assert_eq!(accept, ".stl");
     assert_eq!(read_as.as_deref(), Some("dataUrl"));
@@ -227,6 +227,7 @@ fn every_fixture_friendly_effect_parses_back_into_the_kernel_effect() {
         let expected = case.friendly.get("requestFileOpen").expect("friendly shape");
         assert_eq!(accept, expected.get("accept").and_then(serde_json::Value::as_str).unwrap_or_default(), "{}", case.id);
         assert_eq!(import_action, expected.get("importAction").and_then(serde_json::Value::as_str).unwrap_or_default(), "{}", case.id);
+        assert_eq!(serde_json::to_value(&effect).unwrap()["requestFileOpen"]["args"], expected["args"], "{}: retained invocation arguments", case.id);
     }
 }
 
@@ -301,11 +302,11 @@ fn every_staging_case_reassembles_or_refuses_exactly_as_the_fixture_states() {
                 chunk: send.chunk,
                 chunk_count: send.chunk_count.unwrap_or(derived.chunk_count),
             };
-            let DslValue::Object(mut entries) = import_chunk_arguments(&run.name, &chunk, run.fan_out.as_ref().map(|fan_out| (fan_out.index, fan_out.total))) else { panic!("{} must build an object", case.id) };
+            let semio_framework_value::DslValue::Object(mut entries) = import_chunk_arguments(&run.name, &chunk, run.fan_out.as_ref().map(|fan_out| (fan_out.index, fan_out.total))) else { panic!("{} must build an object", case.id) };
             for (key, value) in &case.extra {
-                entries.push((key.clone(), DslValue::String(value.as_str().unwrap_or_else(|| panic!("{} extra {key} must be text", case.id)).to_string())));
+                entries.push((key.clone(), semio_framework_value::DslValue::String(value.as_str().unwrap_or_else(|| panic!("{} extra {key} must be text", case.id)).to_string())));
             }
-            let outcome = staging.admit_args(Some(&DslValue::Object(entries)));
+            let outcome = staging.admit_args(Some(&semio_framework_value::DslValue::Object(entries)));
             let actual = match &outcome {
                 Ok(ImportArguments::NotAnImport) => "not-an-import".to_string(),
                 Ok(ImportArguments::Staged { next_chunk, chunk_count }) => format!("staged:{next_chunk}/{chunk_count}"),
@@ -313,14 +314,14 @@ fn every_staging_case_reassembles_or_refuses_exactly_as_the_fixture_states() {
                 Err(refusal) => format!("refused:{}", refusal.code()),
             };
             assert_eq!(&actual, expected, "{} send run {} chunk {}", case.id, send.run, send.chunk);
-            if let Ok(ImportArguments::Whole(DslValue::Object(arguments))) = outcome {
+            if let Ok(ImportArguments::Whole(semio_framework_value::DslValue::Object(arguments))) = outcome {
                 let get = |key: &str| arguments.iter().find(|(name, _)| name == key).map(|(_, value)| value.clone());
-                assert_eq!(get(IMPORT_ARGUMENT_PAYLOAD), Some(DslValue::String(payloads[send.run].clone())), "{} reassembles run {} byte for byte", case.id, send.run);
-                assert_eq!(get(IMPORT_ARGUMENT_NAME), Some(DslValue::String(run.name.clone())), "{} names the file", case.id);
+                assert_eq!(get(IMPORT_ARGUMENT_PAYLOAD), Some(semio_framework_value::DslValue::String(payloads[send.run].clone())), "{} reassembles run {} byte for byte", case.id, send.run);
+                assert_eq!(get(IMPORT_ARGUMENT_NAME), Some(semio_framework_value::DslValue::String(run.name.clone())), "{} names the file", case.id);
                 assert!(get(IMPORT_ARGUMENT_CHUNK).is_none() && get(IMPORT_ARGUMENT_CHUNK_COUNT).is_none(), "{} the chunk envelope never reaches the app", case.id);
                 assert_eq!(get(IMPORT_ARGUMENT_INDEX).and_then(|value| value.as_u64()), run.fan_out.as_ref().map(|fan_out| fan_out.index as u64), "{} keeps the multi-file position", case.id);
                 for (key, value) in &case.extra {
-                    assert_eq!(get(key), value.as_str().map(|text| DslValue::String(text.to_string())), "{} keeps {key}", case.id);
+                    assert_eq!(get(key), value.as_str().map(|text| semio_framework_value::DslValue::String(text.to_string())), "{} keeps {key}", case.id);
                 }
             }
         }
@@ -334,8 +335,8 @@ fn every_staging_case_reassembles_or_refuses_exactly_as_the_fixture_states() {
 fn arguments_without_a_chunk_envelope_are_not_an_import() {
     let mut staging = ImportStaging::default();
     assert_eq!(staging.admit_args(None), Ok(ImportArguments::NotAnImport));
-    assert_eq!(staging.admit_args(Some(&DslValue::object([("value".to_string(), DslValue::String("x".into()))]))), Ok(ImportArguments::NotAnImport));
-    assert_eq!(staging.admit_args(Some(&DslValue::String("x".into()))), Ok(ImportArguments::NotAnImport));
+    assert_eq!(staging.admit_args(Some(&semio_framework_value::DslValue::object([("value".to_string(), semio_framework_value::DslValue::String("x".into()))]))), Ok(ImportArguments::NotAnImport));
+    assert_eq!(staging.admit_args(Some(&semio_framework_value::DslValue::String("x".into()))), Ok(ImportArguments::NotAnImport));
 }
 
 /// ⚖️ LAW: a cancel drops every open run, and the staged bytes of a run never exceed its byte authority.

@@ -42,6 +42,22 @@
       "componentizable": false
     }
   ],
+  "releaseComponents": [
+    {
+      "name": "preserved-export-with-unused-function",
+      "wat": "(component (core module $m (func (export \"answer\") (result i32) i32.const 40 i32.const 2 i32.add) (func $unused (result i32) i32.const 99)) (core instance $i (instantiate $m)) (func (export \"answer\") (result u32) (canon lift (core func $i \"answer\"))))",
+      "export": "answer",
+      "result": 42,
+      "definedFunctions": 1
+    },
+    {
+      "name": "rust-saturating-float-to-integer",
+      "wat": "(component (core module $m (func (export \"answer\") (result i32) f64.const 42.75 i32.trunc_sat_f64_s)) (core instance $i (instantiate $m)) (func (export \"answer\") (result u32) (canon lift (core func $i \"answer\"))))",
+      "export": "answer",
+      "result": 42,
+      "definedFunctions": 1
+    }
+  ],
   "compilerCaches": [
     {
       "id": "config-build-root",

@@ -13,7 +13,7 @@ pub fn diff(payload: &ReplaceResilienceRequirement, base: &ProgramSnapshot) -> p
         return protocol::MutationOutcome::error("mutation.target-missing", "No resilience requirement exists with this id.", [payload.resilience_requirement.header.id.0.clone()]);
     };
     if existing == &payload.resilience_requirement {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This resilience requirement already matches the requested value.").at([existing.header.id.0.clone()])]);
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This resilience requirement already matches the requested value.").at([existing.header.id.0.clone()])]);
     }
     let patch = existing.diff_patch(&payload.resilience_requirement).expect("diff_patch always produces a full patch");
     protocol::MutationOutcome::new(ProgramDiff { resilience: Some(ProgramResilienceDelta { patched: vec![ProgramResiliencePatchEntry { id: payload.resilience_requirement.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })

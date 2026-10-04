@@ -54,7 +54,7 @@ fn fault(code: &'static str, message: impl Into<String>) -> Fault {
     Fault::new(FaultOrigin::App, FaultCode::new(code), message)
 }
 
-pub fn from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<EditAudio, Fault> {
+pub fn from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<EditAudio, Fault> {
     let revision = || semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "revision");
     match action {
         SET_SAMPLE_ACTION_ID => {
@@ -461,7 +461,7 @@ impl ArtifactCommandWork<EditorApp<WavEditor>> for EditAudioWork {
         CAPACITY.rows_for_items(plan.items)
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<WavEditor>>) -> Result<ArtifactCommandWorkStep<EditorApp<WavEditor>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<WavEditor>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<WavEditor>>, Fault> {
         if self.closing || self.complete {
             return Err(fault("stdio.wav.audio-work-closed", "WAV audio edit work is already closed"));
         }
@@ -567,7 +567,7 @@ mod tests {
     #[test]
     fn channel_rewrite_is_chunked_reversible_and_format_coherent() {
         let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🎚️natural-edit/🔣️.json")).expect("neutral audio-edit fixture parses");
-        let base: WavSnapshot = dsl::json::from_json_str(&serde_json::to_string(&fixture["before"]).expect("fixture before prints")).expect("fixture before decodes");
+        let base: WavSnapshot = semio_framework_pack_json::from_json_str(&serde_json::to_string(&fixture["before"]).expect("fixture before prints"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture before decodes");
         let command = EditAudio::InsertChannel { channel: fixture["insertChannel"]["channel"].as_u64().expect("channel") as u32, revision: "rev".into() };
         let plan = AudioPlan::new(&command, &base).expect("channel insertion plans");
         let mut format_ext = Some(base.fmt.ext.clone());
@@ -575,7 +575,7 @@ mod tests {
         let mut edited = base.clone();
         let mut inverses = Vec::new();
         for mutation in &mutations {
-            inverses.push(<WavMutation as Mutation<WavSnapshot>>::inverse(mutation, &edited));
+            inverses.push(<WavMutation as Mutation<WavSnapshot>>::inverse(mutation, &edited).expect("valid retained mutation inverse fixture"));
             edited = apply_all(&edited, std::slice::from_ref(mutation));
         }
         let expected_data = fixture["insertChannel"]["expectedData"].as_array().expect("expected data").iter().map(|value| value.as_i64().expect("sample") as i16).collect::<Vec<_>>();
@@ -624,14 +624,30 @@ mod tests {
         let history = semio_framework_plugin::HistoryView::empty();
         let interaction = protocol::InteractionState::default();
         let hover = semio_framework_plugin::app::InteractionHoverState::default();
-        let operation = semio_framework_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "wav-audio-retained".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "authoring-seed-test".into() };
+        let operation =
+            semio_framework_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "wav-audio-retained".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "authoring-seed-test".into() };
         let revision = semio_s_artifact_stdio_contract::window_kit_canonical_revision(operation.canonical_base_revision);
         let command = WavEditCommand::EditAudio(EditAudio::InsertChannel { channel: 1, revision });
         let input = ArtifactCommandInputs { command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation };
         let mut work = EditAudioWork::new(INSERT_CHANNEL_ACTION_ID);
         assert!(work.extent(&command, &snapshot, &interaction, None).is_some_and(|extent| extent > 2));
         for expected_stage in ["wav-audio-prepare", "wav-audio-format", "wav-audio-edit"] {
-            let ArtifactCommandWorkStep::Progress { stage, preview } = work.step(&input).expect("retained audio step") else { panic!("audio edit must report progress") };
+            let ArtifactCommandWorkStep::Progress { stage, preview } = work
+                .step(
+                    &input,
+                    &mut semio_framework_job::StepContext::new(
+                        semio_framework_job::allocate_operation_id(),
+                        semio_framework_job::Generation(1),
+                        semio_framework_job::StepBudget::new(256, u64::MAX),
+                        semio_framework_job::root_cancel_token(),
+                        || Some(0),
+                        &mut 0,
+                    ),
+                )
+                .expect("retained audio step")
+            else {
+                panic!("audio edit must report progress")
+            };
             assert_eq!(stage, expected_stage);
             let preview = std::str::from_utf8(preview).expect("localized progress");
             assert!(preview.contains("en") && preview.contains("de"));
@@ -646,29 +662,35 @@ mod tests {
 
         let stale = WavEditCommand::EditAudio(EditAudio::InsertChannel { channel: 1, revision: "stale".into() });
         let stale_input = ArtifactCommandInputs { command: &stale, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation };
-        assert!(EditAudioWork::new(INSERT_CHANNEL_ACTION_ID).step(&stale_input).is_err());
+        assert!(EditAudioWork::new(INSERT_CHANNEL_ACTION_ID)
+            .step(
+                &stale_input,
+                &mut semio_framework_job::StepContext::new(
+                    semio_framework_job::allocate_operation_id(),
+                    semio_framework_job::Generation(1),
+                    semio_framework_job::StepBudget::new(256, u64::MAX),
+                    semio_framework_job::root_cancel_token(),
+                    || Some(0),
+                    &mut 0,
+                ),
+            )
+            .is_err());
     }
 
     #[test]
     fn addressed_actions_require_exact_frame_channel_and_revision_arguments() {
         let revision = "0123456789abcdef";
-        let insert_frame = dsl::DslValue::Object(vec![("row".into(), dsl::DslValue::uint(7)), ("revision".into(), dsl::DslValue::String(revision.into()))]);
+        let insert_frame = semio_framework_value::DslValue::Object(vec![("row".into(), semio_framework_value::DslValue::uint(7)), ("revision".into(), semio_framework_value::DslValue::String(revision.into()))]);
         assert_eq!(from_action(INSERT_FRAME_ACTION_ID, Some(&insert_frame)).expect("addressed frame action"), EditAudio::InsertFrame { frame: 7, revision: revision.into() });
-        let remove_channel = dsl::DslValue::Object(vec![("column".into(), dsl::DslValue::uint(3)), ("revision".into(), dsl::DslValue::String(revision.into()))]);
-        assert_eq!(
-            from_action(semio_s_artifact_stdio_contract::REMOVE_TABLE_COLUMN_ACTION_ID, Some(&remove_channel)).expect("addressed channel action"),
-            EditAudio::RemoveChannel { channel: 3, revision: revision.into() }
-        );
-        let sample = dsl::DslValue::Object(vec![
-            ("row".into(), dsl::DslValue::uint(11)),
-            ("column".into(), dsl::DslValue::uint(5)),
-            ("revision".into(), dsl::DslValue::String(revision.into())),
-            ("value".into(), dsl::DslValue::String("-8".into())),
+        let remove_channel = semio_framework_value::DslValue::Object(vec![("column".into(), semio_framework_value::DslValue::uint(3)), ("revision".into(), semio_framework_value::DslValue::String(revision.into()))]);
+        assert_eq!(from_action(semio_s_artifact_stdio_contract::REMOVE_TABLE_COLUMN_ACTION_ID, Some(&remove_channel)).expect("addressed channel action"), EditAudio::RemoveChannel { channel: 3, revision: revision.into() });
+        let sample = semio_framework_value::DslValue::Object(vec![
+            ("row".into(), semio_framework_value::DslValue::uint(11)),
+            ("column".into(), semio_framework_value::DslValue::uint(5)),
+            ("revision".into(), semio_framework_value::DslValue::String(revision.into())),
+            ("value".into(), semio_framework_value::DslValue::String("-8".into())),
         ]);
-        assert_eq!(
-            from_action(SET_SAMPLE_ACTION_ID, Some(&sample)).expect("addressed sample action"),
-            EditAudio::SetSample { frame: 11, channel: 5, revision: revision.into(), value: "-8".into() }
-        );
+        assert_eq!(from_action(SET_SAMPLE_ACTION_ID, Some(&sample)).expect("addressed sample action"), EditAudio::SetSample { frame: 11, channel: 5, revision: revision.into(), value: "-8".into() });
         assert!(extra_actions().iter().all(|action| !action.in_palette));
     }
 
@@ -677,11 +699,7 @@ mod tests {
         let channels = PATCH_PAYLOAD_BYTES / std::mem::size_of::<i16>();
         assert!(channels < usize::from(u16::MAX));
         let block_align = u16::try_from(channels * std::mem::size_of::<i16>()).expect("bounded block alignment");
-        let snapshot = WavSnapshot {
-            fmt: WavFmt { channels: channels as u16, sample_rate: 1, byte_rate: u32::from(block_align), block_align, ..WavFmt::default() },
-            data: WavData::Pcm16(vec![1; channels]),
-            ..WavSnapshot::default()
-        };
+        let snapshot = WavSnapshot { fmt: WavFmt { channels: channels as u16, sample_rate: 1, byte_rate: u32::from(block_align), block_align, ..WavFmt::default() }, data: WavData::Pcm16(vec![1; channels]), ..WavSnapshot::default() };
         let error = AudioPlan::new(&EditAudio::AppendChannel { revision: "r".into() }, &snapshot).expect_err("the inserted channel makes one frame wider than a retained patch");
         assert_eq!(error.code.0, "stdio.wav.frame-too-wide");
     }
@@ -692,11 +710,7 @@ mod tests {
         let block_align = u16::try_from(channels * std::mem::size_of::<i16>()).expect("bounded block alignment");
         let mut values = vec![1; channels];
         values.extend(vec![2; channels]);
-        let base = WavSnapshot {
-            fmt: WavFmt { channels: channels as u16, sample_rate: 1, byte_rate: u32::from(block_align), block_align, ..WavFmt::default() },
-            data: WavData::Pcm16(values),
-            ..WavSnapshot::default()
-        };
+        let base = WavSnapshot { fmt: WavFmt { channels: channels as u16, sample_rate: 1, byte_rate: u32::from(block_align), block_align, ..WavFmt::default() }, data: WavData::Pcm16(values), ..WavSnapshot::default() };
         let plan = AudioPlan::new(&EditAudio::RemoveFrame { frame: 0, revision: "r".into() }, &base).expect("wide frame removal plans");
         assert_eq!(plan.items, 2);
         let mut format_ext = None;
@@ -705,7 +719,7 @@ mod tests {
         let mut edited = base.clone();
         let mut inverses = Vec::new();
         for mutation in &mutations {
-            inverses.push(<WavMutation as Mutation<WavSnapshot>>::inverse(mutation, &edited));
+            inverses.push(<WavMutation as Mutation<WavSnapshot>>::inverse(mutation, &edited).expect("valid retained mutation inverse fixture"));
             edited = apply_all(&edited, std::slice::from_ref(mutation));
         }
         assert_eq!(edited.data, WavData::Pcm16(vec![2; channels]));
@@ -736,11 +750,24 @@ mod tests {
         let mut completed = EditAudioWork::new(SET_SAMPLE_RATE_ACTION_ID);
         let mut format_steps = 0;
         let emitted = loop {
-            match completed.step(&input).expect("format edit advances") {
+            match completed
+                .step(
+                    &input,
+                    &mut semio_framework_job::StepContext::new(
+                        semio_framework_job::allocate_operation_id(),
+                        semio_framework_job::Generation(1),
+                        semio_framework_job::StepBudget::new(256, u64::MAX),
+                        semio_framework_job::root_cancel_token(),
+                        || Some(0),
+                        &mut 0,
+                    ),
+                )
+                .expect("format edit advances")
+            {
                 ArtifactCommandWorkStep::Progress { stage: "wav-audio-format", .. } => format_steps += 1,
                 ArtifactCommandWorkStep::Progress { .. } => {}
                 ArtifactCommandWorkStep::Complete(emit) => break emit,
-                ArtifactCommandWorkStep::Replay { .. } | ArtifactCommandWorkStep::CompleteWithEphemeral { .. } => panic!("unexpected format edit step"),
+                ArtifactCommandWorkStep::Replay { .. } | ArtifactCommandWorkStep::CompleteWithEphemeral { .. } | ArtifactCommandWorkStep::CompleteDownload { .. } => panic!("unexpected format edit step"),
             }
         };
         assert!(format_steps >= 3, "reserve plus two byte pages are observable progress");
@@ -750,7 +777,22 @@ mod tests {
 
         let mut cancelled = EditAudioWork::new(SET_SAMPLE_RATE_ACTION_ID);
         for _ in 0..3 {
-            assert!(matches!(cancelled.step(&input).expect("partial format copy advances"), ArtifactCommandWorkStep::Progress { .. }));
+            assert!(matches!(
+                cancelled
+                    .step(
+                        &input,
+                        &mut semio_framework_job::StepContext::new(
+                            semio_framework_job::allocate_operation_id(),
+                            semio_framework_job::Generation(1),
+                            semio_framework_job::StepBudget::new(256, u64::MAX),
+                            semio_framework_job::root_cancel_token(),
+                            || Some(0),
+                            &mut 0
+                        )
+                    )
+                    .expect("partial format copy advances"),
+                ArtifactCommandWorkStep::Progress { .. }
+            ));
         }
         cancelled.begin_close();
         assert_eq!(cancelled.close_step(1, 0), InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 });

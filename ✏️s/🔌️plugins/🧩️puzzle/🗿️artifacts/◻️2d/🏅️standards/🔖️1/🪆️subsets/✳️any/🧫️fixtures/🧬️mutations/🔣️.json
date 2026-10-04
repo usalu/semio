@@ -123,7 +123,7 @@
     },
     {
       "path": "✋️drag-selection/⏸️keeps-a-zero-offset/🎯️outcome/🔣️.json",
-      "sha256": "979753df252685e305b631a30d91a1696a6d7e007c5f951c8d87d6f2810e2745"
+      "sha256": "12bcaaf2caf6f595255644ae15559bc2e53ba46e8b3731d7a5306482512a01cf"
     },
     {
       "path": "✋️drag-selection/⏸️keeps-a-zero-offset/📸️snapshot/➡️after/🔣️.json",
@@ -143,7 +143,7 @@
     },
     {
       "path": "✋️drag-selection/⚠️skips-locked-ghost/🎯️outcome/🔣️.json",
-      "sha256": "22796c614a2909c1533c898997be5635381f109b6acf19ce0659c54ef26b44fc"
+      "sha256": "c167f347dc9f4f55d0fd5ef906297281852cb21266246474b7b448eb50bfde58"
     },
     {
       "path": "✋️drag-selection/⚠️skips-locked-ghost/📸️snapshot/➡️after/🔣️.json",
@@ -602,26 +602,6 @@
       "sha256": "c45dd12bb82fc6935f8b220b287cbcd2e53ad1660fbb9448493ec5b03c7bb274"
     },
     {
-      "path": "🌱create-node/🌱️appends/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "🌱create-node/🌱️appends/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "d44321bd568ddcb56e23a232c6bb45ac66bedffa669ad703d59ab317b2c21bca"
-    },
-    {
-      "path": "🌱create-node/🌱️appends/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
-    },
-    {
-      "path": "🌱create-node/🌱️appends/🔺️diff/🔣️.json",
-      "sha256": "22c54da3bd23ad06233c5eebb24b090df233f9de3944fd842a1e9d72e19169d2"
-    },
-    {
-      "path": "🌱create-node/🌱️appends/🦠️mutation/🔣️.json",
-      "sha256": "96525f8d57aa00acce263e72f68ceecf010586c87e2cf601e4a0fa2b0cb8bee1"
-    },
-    {
       "path": "🌱create-node/🌱️appends-node-c/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
@@ -640,6 +620,26 @@
     {
       "path": "🌱create-node/🌱️appends-node-c/🦠️mutation/🔣️.json",
       "sha256": "a42f919247a287e8adc3bcd0358b9c50f6aa26b4b61491d834fe09bd9a8c09ea"
+    },
+    {
+      "path": "🌱create-node/🌱️appends/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🌱create-node/🌱️appends/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "d44321bd568ddcb56e23a232c6bb45ac66bedffa669ad703d59ab317b2c21bca"
+    },
+    {
+      "path": "🌱create-node/🌱️appends/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
+    },
+    {
+      "path": "🌱create-node/🌱️appends/🔺️diff/🔣️.json",
+      "sha256": "22c54da3bd23ad06233c5eebb24b090df233f9de3944fd842a1e9d72e19169d2"
+    },
+    {
+      "path": "🌱create-node/🌱️appends/🦠️mutation/🔣️.json",
+      "sha256": "96525f8d57aa00acce263e72f68ceecf010586c87e2cf601e4a0fa2b0cb8bee1"
     },
     {
       "path": "🌱create-node/🚫️rejects/🎯️outcome/🔣️.json",
@@ -862,26 +862,6 @@
       "sha256": "fd9a1de39343a338f4a62a8bf52a3fa2f2880ff3874929d7a25528e97b9d484b"
     },
     {
-      "path": "👀change-edge-visible/🙈️hides/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "👀change-edge-visible/🙈️hides/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "59ce07213ddcd3f3c29ce64bb64f9264fd8a4f738f37854a20313632760bdd87"
-    },
-    {
-      "path": "👀change-edge-visible/🙈️hides/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
-    },
-    {
-      "path": "👀change-edge-visible/🙈️hides/🔺️diff/🔣️.json",
-      "sha256": "8e74d58803ed3af7565355de97126b408a051c0856c995378919b046dbc96a4e"
-    },
-    {
-      "path": "👀change-edge-visible/🙈️hides/🦠️mutation/🔣️.json",
-      "sha256": "91aec51ff869df288525dcc10eb7e6b1a7e086803d7a5d13db5a7048cab075ce"
-    },
-    {
       "path": "👀change-edge-visible/🙈️hides-edge-1/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
@@ -900,6 +880,26 @@
     {
       "path": "👀change-edge-visible/🙈️hides-edge-1/🦠️mutation/🔣️.json",
       "sha256": "5ffd87a3c4f1950631deee5a8c72146b30e226528a7f4fe23e09e14867900ef0"
+    },
+    {
+      "path": "👀change-edge-visible/🙈️hides/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "👀change-edge-visible/🙈️hides/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "59ce07213ddcd3f3c29ce64bb64f9264fd8a4f738f37854a20313632760bdd87"
+    },
+    {
+      "path": "👀change-edge-visible/🙈️hides/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
+    },
+    {
+      "path": "👀change-edge-visible/🙈️hides/🔺️diff/🔣️.json",
+      "sha256": "8e74d58803ed3af7565355de97126b408a051c0856c995378919b046dbc96a4e"
+    },
+    {
+      "path": "👀change-edge-visible/🙈️hides/🦠️mutation/🔣️.json",
+      "sha256": "91aec51ff869df288525dcc10eb7e6b1a7e086803d7a5d13db5a7048cab075ce"
     },
     {
       "path": "👀change-edge-visible/🚫️rejects/🎯️outcome/🔣️.json",
@@ -1042,26 +1042,6 @@
       "sha256": "779efce4226b9341d7b4d760d86f9d6ebfd13ec7736ca424ecb4daccb6921bc0"
     },
     {
-      "path": "📍move-node/📍️moves/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "📍move-node/📍️moves/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "d99510ffc0713132a7d10391fd71503481ab5db5ba0548539dd4b3c3f891ffd5"
-    },
-    {
-      "path": "📍move-node/📍️moves/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
-    },
-    {
-      "path": "📍move-node/📍️moves/🔺️diff/🔣️.json",
-      "sha256": "cda1b2c157c8f7b2ed1c482ac77556d2d95372eea2d2b7f4917a557d7a993828"
-    },
-    {
-      "path": "📍move-node/📍️moves/🦠️mutation/🔣️.json",
-      "sha256": "42787aafd8a48e050022dfe2da49ca59a64db59f6ffb3b0b052ec17e5f59f837"
-    },
-    {
       "path": "📍move-node/📍️moves-node-a/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
@@ -1080,6 +1060,26 @@
     {
       "path": "📍move-node/📍️moves-node-a/🦠️mutation/🔣️.json",
       "sha256": "91272b6484557b84f651fe0d845bb5ed253f9df572b5ef1f66b1dd705b3aa85d"
+    },
+    {
+      "path": "📍move-node/📍️moves/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "📍move-node/📍️moves/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "d99510ffc0713132a7d10391fd71503481ab5db5ba0548539dd4b3c3f891ffd5"
+    },
+    {
+      "path": "📍move-node/📍️moves/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
+    },
+    {
+      "path": "📍move-node/📍️moves/🔺️diff/🔣️.json",
+      "sha256": "cda1b2c157c8f7b2ed1c482ac77556d2d95372eea2d2b7f4917a557d7a993828"
+    },
+    {
+      "path": "📍move-node/📍️moves/🦠️mutation/🔣️.json",
+      "sha256": "42787aafd8a48e050022dfe2da49ca59a64db59f6ffb3b0b052ec17e5f59f837"
     },
     {
       "path": "📍move-node/🚫️rejects/🎯️outcome/🔣️.json",
@@ -1303,7 +1303,7 @@
     },
     {
       "path": "🔄️rotate-selection/⏸️keeps-a-zero-angle/🎯️outcome/🔣️.json",
-      "sha256": "979753df252685e305b631a30d91a1696a6d7e007c5f951c8d87d6f2810e2745"
+      "sha256": "12bcaaf2caf6f595255644ae15559bc2e53ba46e8b3731d7a5306482512a01cf"
     },
     {
       "path": "🔄️rotate-selection/⏸️keeps-a-zero-angle/📸️snapshot/➡️after/🔣️.json",
@@ -1323,7 +1323,7 @@
     },
     {
       "path": "🔄️rotate-selection/⚠️skips-locked-ghost/🎯️outcome/🔣️.json",
-      "sha256": "9b437aa34ece36e6b0db7022a977c0a5420f8a0d975d2de2ab60537bba71ea2c"
+      "sha256": "5ed168acf142b4767608c4afd1ba301feaea0a4c06e4540f84f47f14d4d1e472"
     },
     {
       "path": "🔄️rotate-selection/⚠️skips-locked-ghost/📸️snapshot/➡️after/🔣️.json",
@@ -1343,7 +1343,7 @@
     },
     {
       "path": "🔄️rotate-selection/🎯️skips-the-region/🎯️outcome/🔣️.json",
-      "sha256": "c954421c1cfbd378341823c7120317b11d4909555819382ef6b90a35056de5a9"
+      "sha256": "178f9ec8e20b40a2c727b4f77c9bb842696e6159669860896fab613259e2ba0d"
     },
     {
       "path": "🔄️rotate-selection/🎯️skips-the-region/📸️snapshot/➡️after/🔣️.json",
@@ -1483,7 +1483,7 @@
     },
     {
       "path": "🔍️scale-selection/⏸️keeps-a-unit-factor/🎯️outcome/🔣️.json",
-      "sha256": "979753df252685e305b631a30d91a1696a6d7e007c5f951c8d87d6f2810e2745"
+      "sha256": "12bcaaf2caf6f595255644ae15559bc2e53ba46e8b3731d7a5306482512a01cf"
     },
     {
       "path": "🔍️scale-selection/⏸️keeps-a-unit-factor/📸️snapshot/➡️after/🔣️.json",
@@ -1503,7 +1503,7 @@
     },
     {
       "path": "🔍️scale-selection/⚠️skips-locked-ghost/🎯️outcome/🔣️.json",
-      "sha256": "22796c614a2909c1533c898997be5635381f109b6acf19ce0659c54ef26b44fc"
+      "sha256": "c167f347dc9f4f55d0fd5ef906297281852cb21266246474b7b448eb50bfde58"
     },
     {
       "path": "🔍️scale-selection/⚠️skips-locked-ghost/📸️snapshot/➡️after/🔣️.json",
@@ -2203,7 +2203,7 @@
     },
     {
       "path": "🪢️connect-handles/⏸️keeps/🎯️outcome/🔣️.json",
-      "sha256": "7754ba960a0b0e987bb44d1361b65cb32a6ff6215d540b7bbe442d2f1d7782c0"
+      "sha256": "d2a81b51136af5be8326cbd98957610a34e7017ac480f0a877898fbdc0b356a6"
     },
     {
       "path": "🪢️connect-handles/⏸️keeps/📸️snapshot/➡️after/🔣️.json",

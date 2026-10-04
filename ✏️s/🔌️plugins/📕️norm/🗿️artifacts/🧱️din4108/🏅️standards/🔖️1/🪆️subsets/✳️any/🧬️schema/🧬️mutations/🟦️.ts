@@ -13,14 +13,14 @@ import { parseRemoveLayer, type RemoveLayer } from "./➖️remove-layer/🧬️
 import { parseRemoveZone, type RemoveZone } from "./➖️remove-zone/🧬️schema/🟦️.ts";
 import { type InsertThermalBridge, parseInsertThermalBridge } from "./🌉️insert-thermal-bridge/🧬️schema/🟦️.ts";
 import { type ChangeZoneNightVentilation, parseChangeZoneNightVentilation } from "./🌙change-zone-night-ventilation/🧬️schema/🟦️.ts";
-import { type ChangeLayerLambda, parseChangeLayerLambda } from "./🌡change-layer-lambda/🧬️schema/🟦️.ts";
+import { type ChangeLayerLambda, parseChangeLayerLambda } from "./🌡️change-layer-lambda/🧬️schema/🟦️.ts";
 import { type ChangeTIntC, parseChangeTIntC } from "./🌡️change-t-int-c/🧬️schema/🟦️.ts";
 import { type ChangeClimateZone, parseChangeClimateZone } from "./🌦️change-climate-zone/🧬️schema/🟦️.ts";
 import { type InsertElement, parseInsertElement } from "./🏠️insert-element/🧬️schema/🟦️.ts";
 import { type ChangeElementKind, parseChangeElementKind } from "./🏷️change-element-kind/🧬️schema/🟦️.ts";
 import { type ChangeLayerApplicationType, parseChangeLayerApplicationType } from "./🏷️change-layer-application-type/🧬️schema/🟦️.ts";
 import { type ChangeLayerCompressiveClass, parseChangeLayerCompressiveClass } from "./🏷️change-layer-compressive-class/🧬️schema/🟦️.ts";
-import { type ChangeThermalBridgeBb2Type, parseChangeThermalBridgeBb2Type } from "./🏷change-thermal-bridge-bb2-type/🧬️schema/🟦️.ts";
+import { type ChangeThermalBridgeBb2Type, parseChangeThermalBridgeBb2Type } from "./🏷️change-thermal-bridge-bb2-type/🧬️schema/🟦️.ts";
 import { type ChangeLayerMu, parseChangeLayerMu } from "./💧change-layer-mu/🧬️schema/🟦️.ts";
 import { type ChangeRhInt, parseChangeRhInt } from "./💧️change-rh-int/🧬️schema/🟦️.ts";
 import { type ChangeAirtightnessN50, parseChangeAirtightnessN50 } from "./💨️change-airtightness-n50/🧬️schema/🟦️.ts";

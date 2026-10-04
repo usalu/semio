@@ -69,7 +69,7 @@ fn inverse_spec(original: &[u8], forward: &Json) -> Result<Json, String> {
     };
     match forward.str("kind").as_str() {
         "set-has-header" => Ok(kind_spec("set-has-header", json_object(vec![("hasHeader", Json::Bool(BASELINE_HAS_HEADER))]))),
-        "set-snapshot" => {
+        "set-snapshot" | "patch-snapshot" => {
             let records = Json::Array(read_grid(original)?.iter().map(|record| record_wire(record)).collect());
             Ok(kind_spec("set-snapshot", json_object(vec![("snapshot", json_object(vec![("schema", Json::String("stdio.csv".to_string())), ("hasHeader", Json::Bool(BASELINE_HAS_HEADER)), ("records", records)]))])))
         }
@@ -173,7 +173,7 @@ mod subject {
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let mut snapshot = decode(&mutable_input(ctx)?)?;
         let mutation = mutation_from_spec(&ctx.doc_json()?)?;
-        let undo = mutation_inverse(&mutation, &snapshot);
+        let undo = mutation_inverse(&mutation, &snapshot).expect("valid retained mutation inverse fixture");
         apply_csv_mutation(&mut snapshot, &mutation);
         for step in &undo {
             apply_csv_mutation(&mut snapshot, step);

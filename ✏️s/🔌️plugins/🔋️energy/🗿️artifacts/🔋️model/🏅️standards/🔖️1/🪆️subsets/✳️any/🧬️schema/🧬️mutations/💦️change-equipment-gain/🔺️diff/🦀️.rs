@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeEquipmentGainLatentFraction, base: &EnergyMod
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Equipment Gain {}: latent fraction must be a fraction in [0, 1], got {}.", payload.id.0, payload.new_latent_fraction), [payload.id.0.to_string()]);
     }
     if existing.latent_fraction == payload.new_latent_fraction {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Equipment Gain {} already carries this latent fraction: {}.", payload.id.0, payload.new_latent_fraction));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Equipment Gain {} already carries this latent fraction: {}.", payload.id.0, payload.new_latent_fraction));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.equipment.iter_mut().find(|item| item.id == payload.id) {

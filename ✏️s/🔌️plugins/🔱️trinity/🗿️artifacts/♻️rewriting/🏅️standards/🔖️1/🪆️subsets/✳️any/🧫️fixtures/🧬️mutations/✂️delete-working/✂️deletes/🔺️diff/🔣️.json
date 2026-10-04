@@ -1,7 +1,0 @@
-{
-  "beforeFixtureJson": "{\"edges\":[{\"id\":\"e-bc\",\"kind\":\"Connection\",\"source\":\"b@out\",\"target\":\"c@in\"}],\"manifestId\":\"nakagin\",\"name\":\"chain\",\"nodes\":[{\"id\":\"b\",\"kind\":\"Piece\",\"name\":\"b\",\"x\":100.0,\"y\":40.0},{\"id\":\"c\",\"kind\":\"Piece\",\"name\":\"c\",\"x\":200.0,\"y\":80.0}],\"rootNodeId\":null,\"schema\":\"trinity.graph\"}",
-  "lhsJson": null,
-  "rhsJson": null,
-  "parameterBindings": null,
-  "ruleLayout": null
-}

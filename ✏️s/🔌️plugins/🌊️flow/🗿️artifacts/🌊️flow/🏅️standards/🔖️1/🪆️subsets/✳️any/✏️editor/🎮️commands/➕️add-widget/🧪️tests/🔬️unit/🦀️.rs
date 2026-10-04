@@ -24,7 +24,7 @@ fn child_add_widget_uses_the_smallest_available_identity_and_the_descriptor_defa
     let inserted = content.nodes.last().expect("appended node");
     assert_eq!(inserted.position, SemioPoint2 { x: 40.0, y: 51.0 });
     assert_eq!(
-        serde_json::from_str::<serde_json::Value>(&flow::os_pack::json::to_json_string(&dsl::ToValue::to_value(inserted))).expect("the owned encoder must emit oracle-parsable JSON"),
+        serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&dsl::ToValue::to_value(inserted))).expect("the owned encoder must emit oracle-parsable JSON"),
         serde_json::json!({
             "id": "note_3",
             "kind": "inputNote",
@@ -81,14 +81,14 @@ fn child_add_widget_preserves_every_descriptor_payload_and_neuron_port_default()
     for case in cases {
         let serde_descriptor: serde_json::Value = serde_json::from_str(case.descriptor).expect("serde descriptor reference");
         assert_eq!(serde_descriptor["kind"], case.kind);
-        let descriptor: semio_framework_artifact_flow_flow::WidgetDescriptor = flow::os_pack::json::from_json_str(case.descriptor).expect("typed descriptor");
+        let descriptor: semio_framework_artifact_flow_flow::WidgetDescriptor = semio_framework_pack_json::from_json_str(case.descriptor, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("typed descriptor");
         let mut content = SemioFlowSnapshot::default();
         let mutation = child_add_widget_mutation_from_descriptor(&content, &descriptor, case.info, 12.0, 34.0).expect("typed child mutation");
         apply_semio_flow_mutation(&mut content, &mutation);
         let inserted = content.nodes.last().expect("appended node");
         let params = case.params.iter().map(|(key, value)| serde_json::json!({ "key": key, "value": value })).collect::<Vec<_>>();
         assert_eq!(
-            serde_json::from_str::<serde_json::Value>(&flow::os_pack::json::to_json_string(&dsl::ToValue::to_value(inserted))).expect("the owned encoder must emit oracle-parsable JSON"),
+            serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&dsl::ToValue::to_value(inserted))).expect("the owned encoder must emit oracle-parsable JSON"),
             serde_json::json!({
                 "id": case.id,
                 "kind": case.kind,
@@ -107,7 +107,7 @@ fn child_add_widget_rejects_an_explicit_identity_collision() {
     use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::FlowNode;
 
     let content = SemioFlowSnapshot { nodes: vec![FlowNode { id: "taken".into(), kind: "inputNote".into(), label: "inputNote".into(), params: vec![], position: Default::default() }], ..Default::default() };
-    let descriptor = flow::os_pack::json::from_json_str(r#"{"kind":"inputNote","id":"taken"}"#).expect("typed descriptor");
+    let descriptor = semio_framework_pack_json::from_json_str(r#"{"kind":"inputNote","id":"taken"}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("typed descriptor");
     let error = child_add_widget_mutation_from_descriptor(&content, &descriptor, None, 0.0, 0.0).expect_err("duplicate identity must fail");
     assert!(error.message.contains("widget id already exists: taken"), "{error:?}");
 }

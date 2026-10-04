@@ -1,0 +1,13 @@
+# Borrowed RowWriter Current Semantic Census Audit
+
+Read-only complete shared rows Rust facet review; no tests or compiler. Current authority: 🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🧮️rows/🦀️.rs. Owner-specific WFC/Shooting/SpaceSpace joins remain next scope.
+
+Borrowed writer uses the supplied SQLite operation and explicit phase, cumulatively counts every row identity plus each actual Cell payload and IEEE raw-word/class companions, checks row/value totals, and checkpoints each row. Completion reports the complete count; borrowed output cannot be mistaken for a database. Null IEEE fields skip companion byte payload; NaN query cells remove their REAL eight-byte semantic contribution because SQL stores NULL. That is semantic storage-class accounting, not subtracting actual allocation requests. Full physical backing remains a separate authority.
+
+Concrete boundary gap candidate: admit checks max_columns only inside !columns.is_empty(). Plain insert/insert_key have no column-ceiling check although cells plus identity may exceed max_columns. An all-nonIEEE row therefore bypasses the shared borrowed column guard. Preserve existing same-cell laws and establish the intended native/schema ceiling contract before repair; demand an explicit plain-row exact/one-short column case. Reported to High Physical. No runtime mismatch is claimed.
+
+## Shooting exact owner join
+
+Current Shooting provider 35 invokes borrowed same-cell admission before shared native construction; 43 invokes it after controlled native binding. SQL output 53 and native admission 79 both execute the identical write_sqlite_rows at70–78. This walk preserves the full document, scene, ordered assets/cameras/shots, absent/present IEEE optional arrays, all Strings and optional full emblem logical/target/dialect handle. Scene/asset/camera use original FloatColumn declarations. Shots/emblem are plain rows and therefore exercise the noted missing plain-column guard. Existing row pre-admission inside native decode returns InvalidValue for row ceiling; this older category issue is unchanged by the mounted cell census. The returned decoded owner is dropped normally if census refuses; a complete controlled failure retirement/System release proof remains an owning law obligation, not established by this readback.
+
+Fresh current readback supersedes the plain-column gap: admit now checks cells + two per IEEE companion + identity for every row, with checked arithmetic and WorkLimit. High reports Source47/47/304 Nx36.4 (Shooting37/Space4/WFC2d6); this is supplied Source evidence, not independent Native execution. Original owning10/13/4 remain pending Root.

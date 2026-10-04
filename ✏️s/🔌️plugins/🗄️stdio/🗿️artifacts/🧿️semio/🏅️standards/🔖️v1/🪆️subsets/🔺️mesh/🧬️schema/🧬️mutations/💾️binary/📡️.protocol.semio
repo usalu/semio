@@ -47,3 +47,5 @@ record move-vertex tag=16
 field payload bytes
 record set-snapshot tag=17
 field payload bytes
+record patch-snapshot tag=18
+field payload bytes

@@ -6,7 +6,7 @@ fn flatten_preserves_the_composite_and_restores_every_original_layer() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for capacity in fixture["assetCapacities"].as_array().unwrap() {
     let mut document=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();
-    document.layers=dsl::json::from_json_str(&fixture["layers"].to_string()).unwrap();
+    document.layers=semio_framework_pack_json::from_json_str(&fixture["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for (key,value) in fixture["images"].as_object().unwrap() {
         let image=semio_framework_pixels::RasterImage {width:value["width"].as_u64().unwrap() as u32,height:value["height"].as_u64().unwrap() as u32,pixels:value["pixels"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap() as u8).collect()};
         let asset=RasterImageAsset {mime:"image/png".into(),data:semio_framework_pixels::encode_png(&image).unwrap()};
@@ -25,7 +25,7 @@ fn flatten_preserves_the_composite_and_restores_every_original_layer() {
     let emit=publish(encoder.into_result().unwrap(),origin,"Flattened Image",&document).unwrap();
     let mut inverses=Vec::new();
     for mutation in &emit.artifact_mutations {
-        inverses.push(mutation.inverse(&document));
+        inverses.push(mutation.inverse(&document).expect("valid retained mutation inverse fixture"));
         let (next,messages)=semio_framework_os_kernel::apply_mutation(&document,mutation).unwrap();assert!(messages.is_empty());
         retire(std::mem::replace(&mut document,next));
     }
@@ -58,8 +58,8 @@ fn retire(document:RasterSnapshot) {crate::standards::v1::subsets::any::schema::
 #[test]
 fn flatten_refuses_a_protected_descendant_without_changing_the_document() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
-    let mut document=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();document.layers=dsl::json::from_json_str(&fixture["layers"].to_string()).unwrap();
-    let before=dsl::json::to_json_string(&document);
-    assert!(prepare(&FlattenLayers {name:"Flattened".into()},&document).is_err());assert_eq!(dsl::json::to_json_string(&document),before);
+    let mut document=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();document.layers=semio_framework_pack_json::from_json_str(&fixture["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let before=semio_framework_pack_json::to_json_string(&document);
+    assert!(prepare(&FlattenLayers {name:"Flattened".into()},&document).is_err());assert_eq!(semio_framework_pack_json::to_json_string(&document),before);
     crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);
 }

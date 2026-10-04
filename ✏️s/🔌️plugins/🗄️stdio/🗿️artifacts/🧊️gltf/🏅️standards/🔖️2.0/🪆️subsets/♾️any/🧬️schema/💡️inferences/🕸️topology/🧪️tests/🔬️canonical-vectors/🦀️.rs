@@ -22,7 +22,7 @@ struct Contract {
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn assert_unsigned(source: &str, infer_leaf: for<'a> fn(&GltfGeometryContext<'a>) -> GltfMeasure<u64>, unavailable_leaf: fn(&[String]) -> GltfMeasure<u64>) {
-    let contract: Contract = dsl::json::from_json_str(source).unwrap();
+    let contract: Contract = semio_framework_pack_json::from_json_str(source, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for vector in contract.vectors {
         let result = if vector.context.valid {
             let policy = super::super::geometry_core::policy();
@@ -38,7 +38,7 @@ fn assert_unsigned(source: &str, infer_leaf: for<'a> fn(&GltfGeometryContext<'a>
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn assert_signed(source: &str, infer_leaf: for<'a> fn(&GltfGeometryContext<'a>) -> GltfMeasure<i64>, unavailable_leaf: fn(&[String]) -> GltfMeasure<i64>) {
-    let contract: Contract = dsl::json::from_json_str(source).unwrap();
+    let contract: Contract = semio_framework_pack_json::from_json_str(source, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for vector in contract.vectors {
         let result = if vector.context.valid {
             let policy = super::super::geometry_core::policy();

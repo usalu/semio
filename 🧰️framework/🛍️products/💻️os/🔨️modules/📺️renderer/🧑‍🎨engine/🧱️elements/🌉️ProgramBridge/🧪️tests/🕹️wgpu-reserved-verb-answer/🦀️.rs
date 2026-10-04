@@ -16,7 +16,7 @@ mod reserved_verb_answer_tests {
     fn invocation_frame(half: &serde_json::Value) -> AppFrame {
         let output = match &half["output"] {
             serde_json::Value::Null => Vec::new(),
-            value => encode_wire(&dsl::json::from_json_str::<DslValue>(&value.to_string()).expect("fixture output is a dsl value")),
+            value => encode_wire(&semio_framework_pack_json::from_json_str::<DslValue>(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture output is a dsl value")),
         };
         let scope = half["uiScope"].clone();
         let ui_scope = match scope["kind"].as_str().expect("fixture scope kind") {
@@ -99,6 +99,6 @@ mod reserved_verb_answer_tests {
         let sequence = fixture["commandSequence"].as_u64().expect("command sequence");
         let mut settled_only = outcome(vec![invocation_frame(&fixture["settled"])]);
         let error = invocation_from_frames(&mut settled_only, sequence).expect_err("a frame that answers no caller cannot resolve a call");
-        assert_eq!(error, format!("plugin sent no Invocation for seq {sequence}"));
+        assert_eq!(error.text, format!("plugin sent no Invocation for seq {sequence}"));
     }
 }

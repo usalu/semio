@@ -1,0 +1,94 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "cases"
+  ],
+  "properties": {
+    "contract": {
+      "const": "json-controlled-syntax-decoding"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 29,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "source",
+          "policy",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "enum": [
+              "null",
+              "true",
+              "false",
+              "large-integer",
+              "large-exponent",
+              "signed-zero",
+              "decimal",
+              "unicode",
+              "escaped-string",
+              "lone-escaped-surrogate",
+              "prototype-name",
+              "nested",
+              "replace-position",
+              "duplicate",
+              "escaped-duplicate",
+              "slash-duplicate",
+              "emoji-duplicate",
+              "trailing-comma",
+              "leading-zero",
+              "incomplete-exponent",
+              "incomplete-fraction",
+              "bad-escape",
+              "control-character",
+              "wrong-whitespace",
+              "comment",
+              "object-delimiter",
+              "trailing-token",
+              "empty",
+              "raw-lone-surrogate"
+            ]
+          },
+          "source": {
+            "type": "string"
+          },
+          "policy": {
+            "enum": [
+              "Reject",
+              "Replace"
+            ]
+          },
+          "expected": {
+            "oneOf": [
+              {
+                "$ref": "https://schemas.semio.dev/framework/pack/json/decode"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "error"
+                ],
+                "properties": {
+                  "error": {
+                    "$ref": "https://schemas.semio.dev/framework/pack/json/decode#/$defs/errorCode"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "maxItems": 29
+    }
+  }
+}

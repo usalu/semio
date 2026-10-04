@@ -14,7 +14,7 @@ struct ZeroPayloadRetirement<T> {
 }
 
 impl<T: Send + 'static> store::ErasedSnapshotRetirement for ZeroPayloadRetirement<T> {
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Blocked);
         }
@@ -53,8 +53,8 @@ impl<T: Send + Sync + 'static> store::SnapshotRetirementFactory<T> for ZeroPaylo
 /// 🫙️ Exact owner catalogue for a store whose snapshot and mutation types are statically empty.
 pub(super) fn zero_payload_store_owners<P, M>() -> store::DocumentStoreOwners<P, M>
 where
-    P: Clone + store::ToValue + store::FromValue + store::ArtifactPack + Send + Sync + 'static,
-    M: Clone + store::ToValue + store::FromValue + store::Mutation<P> + store::OpBinary + store::OpText + Send + 'static,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::ArtifactPack + Send + Sync + 'static,
+    M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P> + store::OpBinary + store::OpText + Send + 'static,
 {
     store::DocumentStoreOwners::new(
         Arc::new(ZeroPayloadRetirementFactory(std::marker::PhantomData)),

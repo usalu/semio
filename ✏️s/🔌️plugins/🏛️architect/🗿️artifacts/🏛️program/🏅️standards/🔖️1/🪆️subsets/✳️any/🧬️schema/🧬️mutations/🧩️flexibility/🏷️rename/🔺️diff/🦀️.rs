@@ -13,7 +13,7 @@ pub fn diff(payload: &RenameFlexibilityRequirement, base: &ProgramSnapshot) -> p
         return protocol::MutationOutcome::error("mutation.target-missing", "No flexibility requirement exists with this id.", [payload.id.0.clone()]);
     };
     if existing.header.name == payload.new_name {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This flexibility requirement already has this name.").at([payload.id.0.clone()])]);
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This flexibility requirement already has this name.").at([payload.id.0.clone()])]);
     }
     let patch = FlexibilityRequirementPatch { name: Some(payload.new_name.clone()), ..Default::default() };
     protocol::MutationOutcome::new(ProgramDiff { flexibility: Some(ProgramFlexibilityDelta { patched: vec![ProgramFlexibilityPatchEntry { id: payload.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })

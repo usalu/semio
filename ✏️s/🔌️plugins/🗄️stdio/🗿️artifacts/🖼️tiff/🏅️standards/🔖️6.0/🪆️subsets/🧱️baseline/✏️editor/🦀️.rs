@@ -5,9 +5,9 @@
 
 use crate::editor::tiff_baseline::modes::edit;
 use crate::editor::tiff_baseline::modes::edit::windows::main;
-use crate::standards::v6_0::subsets::baseline::schema::mutations::{insert_tile_tags, set_bits_per_sample, set_compression, set_photometric_interpretation, set_snapshot as snapshot_edit_set_snapshot, set_strip_offsets, TiffBaselineMutation};
+use crate::standards::v6_0::subsets::baseline::schema::mutations::{patch_snapshot, set_bits_per_sample, set_compression, set_photometric_interpretation, set_snapshot, set_strip_offsets, TiffBaselineMutation};
 use crate::standards::v6_0::subsets::baseline::schema::snapshot::TiffSnapshot;
-use crate::standards::v6_0::subsets::document::schema::snapshot::{TiffValues, TAG_BITS_PER_SAMPLE, TAG_COMPRESSION, TAG_PHOTOMETRIC, TAG_STRIP_OFFSETS, TAG_TILE_LENGTH, TAG_TILE_WIDTH};
+use crate::standards::v6_0::subsets::document::schema::snapshot::{TiffValues, TAG_BITS_PER_SAMPLE, TAG_COMPRESSION, TAG_PHOTOMETRIC, TAG_STRIP_OFFSETS};
 use crate::{STDIO_TIFF_DOCUMENT_SCHEMA, TIFF_BASELINE_DIALECT};
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::AppOperationContext;
@@ -47,7 +47,6 @@ use semio_s_artifact_stdio_contract::editing;
 //#region 🔖️Command
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum TiffBaselineEditCommand {
-    SetPixelRegion { pixels: Vec<u8> },
     /// 🎬️ Navbar example picker payload.
     SetActiveExample { example_id: String },
     EditSnapshot { event: editing::SnapshotEditEvent },
@@ -57,11 +56,11 @@ impl protocol::OpBinary for TiffBaselineEditCommand {
     const TOOL_JOB_IDS: &'static [&'static str] = STDIO_TIFF_DOCUMENT_SCHEMA_COMMAND_TOOL_IDS;
 
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(pack::to_json_string(self).into_bytes())
+        Ok(semio_framework_pack_json::to_json_string(self).into_bytes())
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let parsed = pack::parse_json_bytes(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "tiff_baseline-edit-command", offset: 0, detail: error.to_string() })?;
-        <Self as dsl::FromValue>::from_value(pack::json_to_dsl_value(&parsed)).map_err(|error| protocol::ProtocolError::Malformed { what: "tiff_baseline-edit-command", offset: 0, detail: error.to_string() })
+        let parsed = semio_framework_pack_json::parse_bytes(bytes, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Malformed { what: "tiff_baseline-edit-command", offset: 0, detail: error.to_string() })?;
+        <Self as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|error| protocol::ProtocolError::Malformed { what: "tiff_baseline-edit-command", offset: 0, detail: error.to_string() })
     }
 }
 //#endregion 🔖️Command
@@ -87,7 +86,7 @@ fn tiffBaselineEditor_command_id(command: &TiffBaselineEditCommand) -> &'static 
     if let TiffBaselineEditCommand::EditSnapshot { event } = command { return event.action_id(); }
     match command { TiffBaselineEditCommand::SetActiveExample { .. } => semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, _ => "other" }
 }
-fn tiffBaselineEditor_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<TiffBaselineEditCommand, Fault> {
+fn tiffBaselineEditor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<TiffBaselineEditCommand, Fault> {
     if editing::is_snapshot_edit_action(action) { return editing::snapshot_edit_event_from_action(action, args).and_then(|event| event.map(|event| TiffBaselineEditCommand::EditSnapshot { event }).ok_or_else(|| Fault::from(format!("action '{action}' is not a snapshot edit")))); }
     match action {
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(TiffBaselineEditCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
@@ -118,22 +117,22 @@ fn tiffBaselineEditor_entry_index(path: &str, snapshot: &TiffSnapshot) -> Option
 fn tiffBaselineEditor_first_u16(values: &TiffValues) -> Option<u16> {
     match values { TiffValues::Short(values) => values.first().copied(), TiffValues::Long(values) => values.first().and_then(|value| u16::try_from(*value).ok()), _ => None }
 }
-fn tiffBaselineEditor_first_u32(snapshot: &TiffSnapshot, tag: u16) -> Option<u32> {
-    let values = &snapshot.ifds.first()?.entries.iter().find(|entry| entry.tag == tag)?.values;
-    match values { TiffValues::Short(values) => values.first().map(|value| u32::from(*value)), TiffValues::Long(values) => values.first().copied(), _ => None }
-}
-fn tiffBaselineEditor_compact_mutation(event: &editing::SnapshotEditEvent, next: TiffSnapshot) -> TiffBaselineMutation {
-    let path = match event { editing::SnapshotEditEvent::SetValue { path, .. } => path.as_str(), _ => return TiffBaselineMutation::SetSnapshot(snapshot_edit_set_snapshot::SetSnapshot { snapshot: next }) };
-    let Some(index) = tiffBaselineEditor_entry_index(path, &next) else { return TiffBaselineMutation::SetSnapshot(snapshot_edit_set_snapshot::SetSnapshot { snapshot: next }) };
+/// 🎯️ The domain leaf exactly as granular as the edit — the single value of the Compression or PhotometricInterpretation
+/// entry, the whole BitsPerSample or StripOffsets value list — else `None`, and the edit publishes as a path-scoped patch
+/// (design §19.3: a leaf wider than the edited field masks history edits of its siblings).
+fn tiffBaselineEditor_compact_mutation(event: &editing::SnapshotEditEvent, next: &TiffSnapshot) -> Option<TiffBaselineMutation> {
+    let editing::SnapshotEditEvent::SetValue { path, .. } = event else { return None };
+    let index = tiffBaselineEditor_entry_index(path, next)?;
+    let (_, rest) = path.strip_prefix("/ifds/0/entries/")?.split_once('/')?;
     let tag = &next.ifds[0].entries[index];
-    match tag.tag {
-        TAG_COMPRESSION => tiffBaselineEditor_first_u16(&tag.values).map(|compression| TiffBaselineMutation::SetCompression(set_compression::SetCompression { compression })),
-        TAG_PHOTOMETRIC => tiffBaselineEditor_first_u16(&tag.values).map(|photometric| TiffBaselineMutation::SetPhotometricInterpretation(set_photometric_interpretation::SetPhotometricInterpretation { photometric })),
-        TAG_BITS_PER_SAMPLE => match &tag.values { TiffValues::Short(bits) => Some(TiffBaselineMutation::SetBitsPerSample(set_bits_per_sample::SetBitsPerSample { bits: bits.clone() })), _ => None },
-        TAG_STRIP_OFFSETS => match &tag.values { TiffValues::Long(offsets) => Some(TiffBaselineMutation::SetStripOffsets(set_strip_offsets::SetStripOffsets { offsets: offsets.clone() })), _ => None },
-        TAG_TILE_WIDTH | TAG_TILE_LENGTH => tiffBaselineEditor_first_u32(&next, TAG_TILE_WIDTH).zip(tiffBaselineEditor_first_u32(&next, TAG_TILE_LENGTH)).map(|(tile_width, tile_length)| TiffBaselineMutation::InsertTileTags(insert_tile_tags::InsertTileTags { tile_width, tile_length })),
+    let single = matches!(rest, "values" | "values/0") && (matches!(&tag.values, TiffValues::Short(values) if values.len() == 1) || matches!(&tag.values, TiffValues::Long(values) if values.len() == 1));
+    match (tag.tag, rest, &tag.values) {
+        (TAG_COMPRESSION, _, values) if single => tiffBaselineEditor_first_u16(values).map(|compression| TiffBaselineMutation::SetCompression(set_compression::SetCompression { compression })),
+        (TAG_PHOTOMETRIC, _, values) if single => tiffBaselineEditor_first_u16(values).map(|photometric| TiffBaselineMutation::SetPhotometricInterpretation(set_photometric_interpretation::SetPhotometricInterpretation { photometric })),
+        (TAG_BITS_PER_SAMPLE, "values", TiffValues::Short(bits)) => Some(TiffBaselineMutation::SetBitsPerSample(set_bits_per_sample::SetBitsPerSample { bits: bits.clone() })),
+        (TAG_STRIP_OFFSETS, "values", TiffValues::Long(offsets)) => Some(TiffBaselineMutation::SetStripOffsets(set_strip_offsets::SetStripOffsets { offsets: offsets.clone() })),
         _ => None,
-    }.unwrap_or_else(|| TiffBaselineMutation::SetSnapshot(snapshot_edit_set_snapshot::SetSnapshot { snapshot: next }))
+    }
 }
 struct TiffBaselineEditorExampleFactory { keys: Vec<ToolFactoryKey> }
 impl TiffBaselineEditorExampleFactory { fn new(controller_id: &str) -> Self { Self { keys: STDIO_TIFF_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() } } }
@@ -209,7 +208,7 @@ impl ArtifactEditor for TiffBaselineEditor {
         Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, STDIO_TIFF_DOCUMENT_SCHEMA, operation, generation))
     }
     fn command_id(command: &Self::Command) -> &'static str { tiffBaselineEditor_command_id(command) }
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> { tiffBaselineEditor_command_from_action(action, args) }
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> { tiffBaselineEditor_command_from_action(action, args) }
 
     fn initial_snapshot() -> Self::Snapshot {
         crate::standards::v6_0::subsets::document::schema::blank_tiff_snapshot()
@@ -230,18 +229,13 @@ impl ArtifactEditor for TiffBaselineEditor {
                 effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&tiffBaselineEditor_example_snapshot(example_id), STDIO_TIFF_DOCUMENT_SCHEMA)],
                 ..Default::default()
             }),
-            TiffBaselineEditCommand::SetPixelRegion { pixels } => {
-                let mut snapshot = doc.snapshot.clone();
-                snapshot.pixels = pixels.clone();
-                Ok(Emit::mutations(vec![TiffBaselineMutation::SetSnapshot(crate::standards::v6_0::subsets::baseline::schema::mutations::set_snapshot::SetSnapshot { snapshot })]))
-            }
         }
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
-            editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details(doc.snapshot, view_state.locale, "s.stdio.tiff@6.0/baseline#editor", &semio_framework_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
+            main::BODY_KEY => main::render(doc.snapshot, view_state.locale).map(semio_framework_plugin::built_to_component_tree),
+            editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details(doc, view_state.locale, "s.stdio.tiff@6.0/baseline#editor", &semio_framework_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -255,7 +249,10 @@ impl editing::SnapshotEditingEditor for TiffBaselineEditor {
     }
     fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         let next = tiffBaselineEditor_bounded_edit(event, snapshot)?;
-        Ok(Emit { artifact_mutations: vec![tiffBaselineEditor_compact_mutation(event, next)], description: Some("Edit baseline TIFF details".into()), ..Default::default() })
+        if let Some(mutation) = tiffBaselineEditor_compact_mutation(event, &next) {
+            return Ok(Emit { artifact_mutations: vec![mutation], ..Default::default() });
+        }
+        editing::snapshot_edit_patch(event, snapshot, |patch| TiffBaselineMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| TiffBaselineMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot })))
     }
 }
 

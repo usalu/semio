@@ -1,0 +1,27 @@
+{
+  "cases": [
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "ownedLaunchObjects": 1,
+      "ownedCanonicalReplacements": 4,
+      "foreignCurrentBytesPreserved": true
+    },
+    {
+      "path": ".vscode/launch.json",
+      "ownedLaunchObjects": 1,
+      "ownedCanonicalReplacements": 4,
+      "foreignCurrentBytesPreserved": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/📋️project.json",
+      "ownedPropertyRemovedOnly": true,
+      "foreignCurrentBodiesPreserved": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
+      "ownedPropertyRemovedOnly": true,
+      "foreignCurrentBodiesPreserved": true
+    }
+  ],
+  "oracle": "system exact raw-byte splices on retained full current/inverse authorities"
+}

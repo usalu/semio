@@ -2,7 +2,6 @@
 
 use crate::En1996Snapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from an EN 1996 snapshot.
@@ -17,8 +16,11 @@ pub struct En1996Inference {
 }
 
 impl protocol::Inference<En1996Snapshot> for En1996Inference {
-    fn infer(snapshot: &En1996Snapshot) -> Self {
+    fn infer(snapshot: &En1996Snapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { outline: En1996Outline::compute(snapshot) }
+    
+        })
     }
 }
 
@@ -37,13 +39,6 @@ impl protocol::InferenceSpec<En1996Snapshot> for En1996Inference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::En1996Builder {
-    type Snapshot = En1996Snapshot;
-    type Inference = En1996Inference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 pub fn en1996_artifact_inference_descriptor() -> semio_framework_schema_registry::ArtifactInferenceDescriptor {

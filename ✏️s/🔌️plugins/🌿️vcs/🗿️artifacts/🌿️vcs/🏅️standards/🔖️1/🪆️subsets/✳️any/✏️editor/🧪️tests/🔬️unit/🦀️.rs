@@ -90,13 +90,13 @@ pub(crate) mod context {
     
     /// 🧾️ Builds one flat, string-valued action argument object — the `DslValue` shape
     /// `handle_action`/`command_from_action` take now that the action wire is the DSL value, not JSON.
-    pub fn action_args(entries: impl IntoIterator<Item = (&'static str, String)>) -> dsl::DslValue {
-        dsl::DslValue::object(entries.into_iter().map(|(key, value)| (key.to_string(), dsl::DslValue::String(value))))
+    pub fn action_args(entries: impl IntoIterator<Item = (&'static str, String)>) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::object(entries.into_iter().map(|(key, value)| (key.to_string(), semio_framework_value::DslValue::String(value))))
     }
     
     /// 🕳️ The empty action argument object.
-    pub fn no_args() -> dsl::DslValue {
-        dsl::DslValue::Object(Vec::new())
+    pub fn no_args() -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::Object(Vec::new())
     }
     
     /// 🧾️ A settled dispatch: the immediate answer plus the store lanes the retained publication
@@ -150,7 +150,7 @@ pub(crate) mod context {
     struct SeededValueRetirement<T>(Option<T>);
 
     impl<T: Send + 'static> store::ErasedSnapshotRetirement for SeededValueRetirement<T> {
-        fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+        fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
             if maximum_items == 0 || maximum_bytes < store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES {
                 return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
             }
@@ -220,7 +220,7 @@ pub(crate) mod context {
 
     /// 🎬️ One seeding action, admitted AND settled — every one of these verbs publishes through the
     /// retained operation lane on a mounted app, so dropping the receipt left the demo history empty.
-    async fn seed_action(app: &mut VcsApp, local: &ActionMeta, action_id: &str, args: dsl::DslValue) {
+    async fn seed_action(app: &mut VcsApp, local: &ActionMeta, action_id: &str, args: semio_framework_value::DslValue) {
         let admitted = app.handle_action(action_id, Some(&args), local).await.unwrap_or_else(|fault| panic!("seeded action {action_id} is admitted: {fault:?}"));
         settle_action(app, admitted).await;
     }
@@ -508,8 +508,8 @@ fn action_bridge_covers_all_vcs_owned_commands_and_rejects_unknown_actions() {
         ("edit", action_args([("text", "{}".to_string())])),
         ("noMutation", no_args()),
         ("canvasPointerDown", no_args()),
-        ("canvasPointerMove", no_args()),
-        ("canvasPointerUp", no_args()),
+        ("canvasPointerMove", semio_framework_value::DslValue::Object(vec![("samples".into(), semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::float(1.0), semio_framework_value::DslValue::float(2.0)])]))])),
+        ("canvasPointerUp", semio_framework_value::DslValue::Object(vec![("cancelled".into(), semio_framework_value::DslValue::Bool(false))])),
         ("canvasWheel", no_args()),
         ("setActiveExample", action_args([("exampleId", crate::examples::demo::ID.to_string())])),
     ];
@@ -525,30 +525,34 @@ fn action_bridge_covers_all_vcs_owned_commands_and_rejects_unknown_actions() {
     assert!(VcsPlayApp::command_from_action("unknown", None).is_err());
 }
 
-/// 🧵️ LAW (design L4 / §2 D): a legacy `{x, y}` move wire folds into one sample; a batched wire
-/// keeps every `[x, y]` pair in order; `cancelled` defaults to `false`; the bounded extent prices
-/// every sample so a batch is never silently dropped.
+/// 🧵️ LAW (design L4 / §2 D): the pointer wire carries its batch and its release flag explicitly — a move keeps every
+/// `[x, y]` sample in order and the bounded extent prices each one; a move without `samples`, a malformed sample or a
+/// release without `cancelled` is refused as `app.command.invalid-args`, never folded or defaulted.
 #[test]
-fn canvas_pointer_wire_defaults_samples_and_cancelled() {
-    let f = dsl::DslValue::float;
-    let legacy = dsl::DslValue::Object(vec![("x".into(), f(5.0)), ("y".into(), f(6.0))]);
-    let VcsCommand::CanvasPointerMove(moved) = VcsPlayApp::command_from_action("canvasPointerMove", Some(&legacy)).expect("legacy move") else { panic!("move") };
-    assert_eq!(moved.samples, vec![[5.0, 6.0]], "an absent `samples` is the single (x, y)");
-    assert_eq!(moved.last_sample(), Some([5.0, 6.0]));
-    let VcsCommand::CanvasPointerMove(bare) = VcsPlayApp::command_from_action("canvasPointerMove", None).expect("bare move") else { panic!("move") };
-    assert!(bare.samples.is_empty(), "no coordinates at all is an empty batch");
-    let pair = |x: f64, y: f64| dsl::DslValue::Array(vec![f(x), f(y)]);
-    let batched = dsl::DslValue::Object(vec![("x".into(), f(3.0)), ("y".into(), f(4.0)), ("samples".into(), dsl::DslValue::Array(vec![pair(1.0, 1.5), pair(3.0, 4.0)]))]);
+fn canvas_pointer_wire_requires_samples_and_cancelled() {
+    let f = semio_framework_value::DslValue::float;
+    let pair = |x: f64, y: f64| semio_framework_value::DslValue::Array(vec![f(x), f(y)]);
+    let batched = semio_framework_value::DslValue::Object(vec![("x".into(), f(3.0)), ("y".into(), f(4.0)), ("samples".into(), semio_framework_value::DslValue::Array(vec![pair(1.0, 1.5), pair(3.0, 4.0)]))]);
     let VcsCommand::CanvasPointerMove(moved) = VcsPlayApp::command_from_action("canvasPointerMove", Some(&batched)).expect("batched move") else { panic!("move") };
     assert_eq!(moved.samples, vec![[1.0, 1.5], [3.0, 4.0]]);
+    assert_eq!(moved.last_sample(), Some([3.0, 4.0]));
     let snapshot = VcsPlayApp::initial_snapshot();
     let interaction = protocol::InteractionState::default();
     assert_eq!(vcs_bounded_extent(&VcsCommand::CanvasPointerMove(moved), &snapshot, &interaction), Some(VCS_BOUNDED_WORK_ITEMS), "two samples are priced within the bounded raw budget");
-    let VcsCommand::CanvasPointerUp(released) = VcsPlayApp::command_from_action("canvasPointerUp", Some(&legacy)).expect("release") else { panic!("up") };
-    assert!(!released.cancelled, "an absent `cancelled` is a real release");
-    let cancelled = dsl::DslValue::Object(vec![("cancelled".into(), dsl::DslValue::Bool(true))]);
-    let VcsCommand::CanvasPointerUp(released) = VcsPlayApp::command_from_action("canvasPointerUp", Some(&cancelled)).expect("cancel") else { panic!("up") };
+    let refused = |action: &str, args: Option<&semio_framework_value::DslValue>| VcsPlayApp::command_from_action(action, args).err().map(|fault| fault.code);
+    let invalid = Some(semio_framework_plugin::FaultCode::new("app.command.invalid-args"));
+    let unbatched = semio_framework_value::DslValue::Object(vec![("x".into(), f(5.0)), ("y".into(), f(6.0))]);
+    assert_eq!(refused("canvasPointerMove", Some(&unbatched)), invalid, "a move without `samples` is refused");
+    assert_eq!(refused("canvasPointerMove", None), invalid, "a bare move is refused");
+    let malformed = semio_framework_value::DslValue::Object(vec![("samples".into(), semio_framework_value::DslValue::Array(vec![pair(1.0, 2.0), semio_framework_value::DslValue::Array(vec![f(3.0)])]))]);
+    assert_eq!(refused("canvasPointerMove", Some(&malformed)), invalid, "a malformed sample refuses the batch");
+    assert_eq!(refused("canvasPointerUp", Some(&unbatched)), invalid, "a release without `cancelled` is refused");
+    let flag = |cancelled: bool| semio_framework_value::DslValue::Object(vec![("cancelled".into(), semio_framework_value::DslValue::Bool(cancelled))]);
+    let VcsCommand::CanvasPointerUp(released) = VcsPlayApp::command_from_action("canvasPointerUp", Some(&flag(false))).expect("release") else { panic!("up") };
+    assert!(!released.cancelled);
+    let VcsCommand::CanvasPointerUp(released) = VcsPlayApp::command_from_action("canvasPointerUp", Some(&flag(true))).expect("cancel") else { panic!("up") };
     assert!(released.cancelled);
+    assert_eq!(refused("unknown", None), Some(semio_framework_plugin::FaultCode::new("app.command.unsupported")));
 }
 
 #[test]
@@ -647,7 +651,7 @@ async fn a_typing_run_longer_than_the_edit_ledger_saves_and_undoes_as_one_step()
     assert_eq!(start.notes, run.initial);
     let window = semio_framework_plugin::ViewModel { window_id: Some("vcs-editor-main".into()), window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "vcs-editor-main".into(), window_kind_id: editor::VCS_PLAY_WINDOW_EDITOR.into() }], ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let typing_meta = semio_framework_plugin::ActionMeta { view_state: Some(window), ..meta("local") };
-    let buffer = (semio_framework_plugin::TYPING_BUFFER_ARG.to_string(), dsl::DslValue::String("vcs.editor".into()));
+    let buffer = (semio_framework_plugin::TYPING_BUFFER_ARG.to_string(), semio_framework_value::DslValue::String("vcs.editor".into()));
     let edits = instance.edit_transactions().len();
     let mut now = 50_000;
     for (index, notes) in run.texts.iter().enumerate() {
@@ -655,7 +659,7 @@ async fn a_typing_run_longer_than_the_edit_ledger_saves_and_undoes_as_one_step()
         next.notes = notes.clone();
         now += 40;
         instance.set_tool_clock_ms(Some(now));
-        let args = dsl::DslValue::Object(vec![("text".into(), dsl::DslValue::String(serde_json::to_string(&next).expect("snapshot json"))), buffer.clone()]);
+        let args = semio_framework_value::DslValue::Object(vec![("text".into(), semio_framework_value::DslValue::String(serde_json::to_string(&next).expect("snapshot json"))), buffer.clone()]);
         let admitted = instance.handle_action("textEdit", Some(&args), &typing_meta).await.unwrap_or_else(|fault| panic!("keystroke {index} was refused: {fault:?}"));
         settle_action(&mut instance, admitted).await;
         semio_framework_plugin::artifact_app_laws::drain_maintenance_pressure(&mut *instance);
@@ -663,7 +667,7 @@ async fn a_typing_run_longer_than_the_edit_ledger_saves_and_undoes_as_one_step()
     assert_eq!(instance.rendered_snapshot().notes, run.expected, "every render reads the open run");
     assert_eq!((instance.snapshot().expect("snapshot").notes, instance.edit_transactions().len()), (run.initial.clone(), edits), "no key lands while the run is open");
     instance.set_tool_clock_ms(Some(now + 750));
-    let commit = dsl::DslValue::Object(vec![buffer.clone(), (semio_framework_plugin::TYPING_COMMIT_ARG.into(), dsl::DslValue::String("idle".into()))]);
+    let commit = semio_framework_value::DslValue::Object(vec![buffer.clone(), (semio_framework_plugin::TYPING_COMMIT_ARG.into(), semio_framework_value::DslValue::String("idle".into()))]);
     let admitted = instance.handle_action("textEdit", Some(&commit), &typing_meta).await.expect("the idle commit");
     settle_action(&mut instance, admitted).await;
     assert_eq!(instance.snapshot().expect("snapshot").notes, run.expected);

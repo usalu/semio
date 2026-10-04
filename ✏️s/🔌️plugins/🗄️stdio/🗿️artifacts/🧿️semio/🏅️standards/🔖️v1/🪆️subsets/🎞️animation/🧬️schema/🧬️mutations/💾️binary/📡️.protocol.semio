@@ -35,3 +35,5 @@ record set-keyframe-time tag=10
 field payload bytes
 record set-keyframe-value tag=11
 field payload bytes
+record patch-snapshot tag=12
+field payload bytes

@@ -3,11 +3,14 @@
 use crate::{EquationMutation, EquationSnapshot};
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::ChangeNodeLabel, base: &EquationSnapshot) -> Vec<EquationMutation> {
-    let graph = crate::equation_graph(base);
+pub fn inverse(payload: &super::ChangeNodeLabel, base: &EquationSnapshot) -> Result<Vec<EquationMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
+    let graph = base.graph.clone();
     match graph.nodes.iter().find(|node| node.id == payload.id) {
         Some(node) => vec![EquationMutation::ChangeNodeLabel(super::ChangeNodeLabel { id: payload.id.clone(), new_label: node.label.clone() })],
         None => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

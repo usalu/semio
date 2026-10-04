@@ -9,7 +9,6 @@
 
 use crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::entries::compute_semio_kit_entries;
 //#region 🔖️Inference
@@ -24,8 +23,11 @@ pub struct SemioKitInference {
 }
 
 impl protocol::Inference<SemioKitSnapshot> for SemioKitInference {
-    fn infer(snapshot: &SemioKitSnapshot) -> Self {
+    fn infer(snapshot: &SemioKitSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { entries: compute_semio_kit_entries(snapshot) }
+    
+        })
     }
 }
 
@@ -35,7 +37,9 @@ impl protocol::Inference<SemioKitSnapshot> for SemioKitInference {
 /// being all-empty (the same defensive pattern raster's `RasterInference` documents).
 impl Default for SemioKitInference {
     fn default() -> Self {
-        <Self as protocol::Inference<SemioKitSnapshot>>::infer(&SemioKitSnapshot::default())
+        let snapshot = &SemioKitSnapshot::default();
+
+        Self { entries: compute_semio_kit_entries(snapshot) }
     }
 }
 
@@ -51,16 +55,6 @@ impl protocol::InferenceSpec<SemioKitSnapshot> for SemioKitInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 💡️ No `InferredField`s here (a catalog census is a single whole-snapshot fold over already-flat
-/// collections, no per-entity incremental decomposition applies) — the default `infer_cached`
-/// passthrough (`ArtifactInferrer::infer_cached`) is exact.
-impl ArtifactInferrer for crate::standards::v1::subsets::kit::schema::SemioKitBuilder {
-    type Snapshot = SemioKitSnapshot;
-    type Inference = SemioKitInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.semio.kit.inference`'s facet leaves into the OS-wide inference catalog —

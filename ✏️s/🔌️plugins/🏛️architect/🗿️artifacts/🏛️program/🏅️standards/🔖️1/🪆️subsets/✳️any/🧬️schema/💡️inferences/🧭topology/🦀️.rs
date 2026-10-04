@@ -12,7 +12,7 @@ use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
 
 //#region 🔖️ProgramTopology
 /// 🧭️ Hierarchy shape of `elements`, derived from `parentId` links.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]

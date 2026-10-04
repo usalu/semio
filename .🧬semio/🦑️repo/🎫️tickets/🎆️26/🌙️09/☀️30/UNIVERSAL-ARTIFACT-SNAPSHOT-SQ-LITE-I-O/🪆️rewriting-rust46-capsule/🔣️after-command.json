@@ -1,0 +1,24 @@
+{
+  "cwd": "/Users/ueli/Documents/semio",
+  "command": "SEMIO_TEST_LEVEL='exhaustive' SEMIO_TEST_OUTPUT_SCOPE='root/rewriting46-owned-after' SEMIO_TEST_ARTIFACT_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-rewriting46-owned-after-artifacts' CARGO_TARGET_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned' CARGO_BUILD_BUILD_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned' NX_DAEMON='false' NX_ISOLATE_PLUGINS='false' NX_CACHE_PROJECT_GRAPH='false' NX_WORKSPACE_DATA_DIRECTORY='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/nx-root-rewriting46-baseline-workspace' NX_CACHE_DIRECTORY='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/nx-root-rewriting46-baseline-cache' bun nx run @semio-tech/repo-test-domain:test-subject --skip-nx-cache -- --owner '✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any' --case '♻️mutate-rewrite-1' --implementation rust > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-rewriting-forty-six-current-typed-owned-adapter-provider-replay.log' 2>&1",
+  "env": {
+    "SEMIO_TEST_LEVEL": "exhaustive",
+    "SEMIO_TEST_OUTPUT_SCOPE": "root/rewriting46-owned-after",
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-rewriting46-owned-after-artifacts",
+    "CARGO_TARGET_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned",
+    "CARGO_BUILD_BUILD_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned",
+    "NX_DAEMON": "false",
+    "NX_ISOLATE_PLUGINS": "false",
+    "NX_CACHE_PROJECT_GRAPH": "false",
+    "NX_WORKSPACE_DATA_DIRECTORY": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/nx-root-rewriting46-baseline-workspace",
+    "NX_CACHE_DIRECTORY": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/nx-root-rewriting46-baseline-cache"
+  },
+  "runBy": "Root sole Cargo lane",
+  "prospectiveScenarios": 46,
+  "registryFeatures": [],
+  "snapshotProviderMounted": true,
+  "globalTypedChildMounted": false,
+  "artifactAuthority": "SEMIO_TEST_ARTIFACT_DIR with marked output containment",
+  "warmCompilerReused": true,
+  "beforeCommandRetained": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🪆️rewriting-rust46-capsule/🔣️baseline-command.json"
+}

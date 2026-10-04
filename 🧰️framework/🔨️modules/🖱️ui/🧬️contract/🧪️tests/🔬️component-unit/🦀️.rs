@@ -17,6 +17,32 @@ fn typed_wire_neutral_component_defaults_match_serde() {
     assert_eq!(accessibility, crate::AccessibilitySpec::default());
 }
 
+#[test]
+fn draft_target_typed_wire_matches_the_neutral_serde_oracle() {
+    use protocol::value::{FromValue, ToValue};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧵️retained/📦️wire/🧫️fixtures/🧾️typed/🔣️.json")).expect("typed fixture");
+    let row = &fixture["components"][5];
+    let component: Component = serde_json::from_value(row["wire"].clone()).expect("draft-target component");
+    let Component::Input(props) = &component else { panic!("input fixture") };
+    assert_eq!(props.draft_target.as_ref().map(crate::UiText::as_str), Some("fixture.number/value"));
+    assert_eq!(InputProps::from_value(props.to_value()).expect("typed value round trip"), *props);
+    assert_eq!(serde_json::to_value(&component).expect("serde oracle")["draftTarget"], "fixture.number/value");
+}
+
+#[test]
+fn publication_revision_typed_wire_matches_the_neutral_serde_oracle() {
+    use crate::Buildable;
+    let node = crate::input(InputKind::Text)
+        .value(ui_text("B"))
+        .draft_target(ui_text("fixture.row-0/column-0"))
+        .publication_revision(crate::UiPublicationRevision(18_364_758_544_493_064_720))
+        .try_build().expect("publication revision input");
+    let Component::Input(props) = &node.component else { panic!("input component") };
+    assert_eq!(props.publication_revision, Some(crate::UiPublicationRevision(18_364_758_544_493_064_720)));
+    assert_eq!(serde_json::to_value(&node.component).expect("serde oracle")["publicationRevision"], "18364758544493064720");
+    component_round_trips(node.component);
+}
+
 fn ui_text(value: &str) -> crate::UiText {
     crate::UiText::try_from_str(value).expect("bounded fixture text")
 }
@@ -48,7 +74,7 @@ fn every_component_variant_round_trips() {
     component_round_trips(Component::Text(TextProps { value: label("hi"), emphasize: Some(true), data_attributes: None }));
     component_round_trips(Component::Button(ButtonProps { icon: ui_text("plus"), label: label("Add") }));
     component_round_trips(Component::Separator(SeparatorProps {}));
-    component_round_trips(Component::Input(InputProps { kind: InputKind::Number, value: ui_text("3"), placeholder: None, commit: Some(ui_text("blur")), min: Some(0.0), max: Some(10.0), step: Some(1.0), accept: None, precision: Some(2), snaps: Default::default(), display_factor: None, limits: None }));
+    component_round_trips(Component::Input(InputProps { kind: InputKind::Number, value: ui_text("3"), placeholder: None, commit: Some(ui_text("blur")), min: Some(0.0), max: Some(10.0), step: Some(1.0), accept: None, precision: Some(2), snaps: Default::default(), display_factor: None, limits: None, draft_target: Some(ui_text("fixture.number/value")), publication_revision: Some(crate::UiPublicationRevision(5)) }));
     component_round_trips(Component::Select(SelectProps { value: ui_text("a"), items: crate::UiFixedList::default(), placeholder: None }));
     component_round_trips(Component::Toggle(ToggleProps { appearance: ToggleAppearance::Button, on: true, icon: ui_text("toggle-left"), text: Some(label("Enabled")) }));
     component_round_trips(Component::Toggle(ToggleProps { appearance: ToggleAppearance::Checkbox, on: true, icon: ui_text("check"), text: Some(label("Enabled")) }));
@@ -83,6 +109,7 @@ fn every_component_variant_round_trips() {
         draggable: Some(true),
         drag_data: None,
         dimmed: Some(false),
+        selected: Some(true),
         window: Some(TreeWindow { row_extent: Default::default(), total: 4096, offset: 0 }),
         granularity: Some(ui_text("piece")),
         inline_toolbar: Some(crate::UiNodeId(42)),

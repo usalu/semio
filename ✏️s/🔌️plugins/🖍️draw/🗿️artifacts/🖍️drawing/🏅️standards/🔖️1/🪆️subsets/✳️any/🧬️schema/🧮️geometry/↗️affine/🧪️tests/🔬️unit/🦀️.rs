@@ -20,7 +20,7 @@ async fn affine_edit_preserves_scene_matrix_and_has_an_exact_inverse() {
     let before=document.clone();
     let wanted=[-2.0,1.0,3.0,0.5,7.0,8.0];
     let mutation=crate::mutations::update_layer_transform(layer,drawing_matrix_to_transform(wanted));
-    let inverse=crate::mutations::inverse_drawing_mutation(&document,&mutation);
+    let inverse=crate::mutations::inverse_drawing_mutation(&document,&mutation).unwrap();
     crate::mutations::apply_drawing_mutation(&mut document,&mutation).unwrap();
     let scene=crate::schema::flatten_drawing_document_to_scene_nodes(&document);
     for index in 0..6 { assert!((scene[0].transform[index]-wanted[index]).abs()<1e-12); }

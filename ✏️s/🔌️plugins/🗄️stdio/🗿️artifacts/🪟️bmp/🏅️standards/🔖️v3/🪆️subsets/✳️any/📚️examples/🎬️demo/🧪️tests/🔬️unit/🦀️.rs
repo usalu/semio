@@ -14,7 +14,7 @@ async fn inference_determinism_law() {
     use crate::BmpSnapshot;
     use protocol::Inference;
     let snapshot = <BmpSnapshot as store::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).expect("demo fixture must parse");
-    assert_eq!(BmpInference::infer(&snapshot), BmpInference::infer(&snapshot));
+    assert_eq!(BmpInference::infer(&snapshot).expect("valid materialized inference fixture"), BmpInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -22,5 +22,5 @@ async fn inference_default_law() {
     use crate::standards::v_v3::subsets::any::schema::inferences::BmpInference;
     use crate::BmpSnapshot;
     use protocol::Inference;
-    assert_eq!(BmpInference::infer(&BmpSnapshot::default()), BmpInference::default());
+    assert_eq!(BmpInference::infer(&BmpSnapshot::default()).expect("valid materialized inference fixture"), BmpInference::default());
 }

@@ -1,6 +1,6 @@
 use super::{WriterMainWindowTransient, WriterMainWindowTransientMutation};
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[dsl(keyword = "set-lint-generation")]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetLintGeneration {
@@ -14,9 +14,12 @@ impl protocol::MutationKind<WriterMainWindowTransient, WriterMainWindowTransient
         next.lint_generation = self.value;
         protocol::MutationOutcome::new(next)
     }
-    fn inverse(&self, base: &WriterMainWindowTransient) -> Vec<WriterMainWindowTransientMutation> {
+    fn inverse(&self, base: &WriterMainWindowTransient) -> Result<Vec<WriterMainWindowTransientMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![Self { value: base.lint_generation }.into()]
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set Writer Window Lint Generation", "Prüfstand des Schreibfensters setzen")
     }

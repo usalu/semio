@@ -149,7 +149,7 @@ async fn lag_rebootstrap_neutral_wire_contract() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🛟️lag-rebootstrap/🔣️.json")).expect("fixture JSON");
     let message = directory::os_directory::DirectoryStreamMessage::from_value(DslValue::from(fixture["control"].clone())).expect("directory control");
     let directory::os_directory::DirectoryStreamMessage::RebootstrapRequired { control } = message else { panic!("typed rebootstrap") };
-    let public = directory::os_pack::json::to_json_string(&directory::os_directory::DirectoryStreamMessage::RebootstrapRequired { control: control.clone() });
+    let public = semio_framework_pack_json::to_json_string(&directory::os_directory::DirectoryStreamMessage::RebootstrapRequired { control: control.clone() });
     assert!(!public.contains("storageKey"));
     let frame = protocol::ServerFrame::RebootstrapRequired {
         control: protocol::RebootstrapRequired {

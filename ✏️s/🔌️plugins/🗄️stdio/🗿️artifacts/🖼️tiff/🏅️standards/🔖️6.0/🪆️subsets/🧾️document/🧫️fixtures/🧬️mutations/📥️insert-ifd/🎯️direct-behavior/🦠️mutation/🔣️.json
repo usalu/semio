@@ -4,15 +4,32 @@
     "ifd": {
       "entries": [
         {
-          "kind": "ascii",
           "tag": 305,
           "values": {
             "kind": "ascii",
-            "value": "Direct Owner"
+            "value": [
+              68,
+              105,
+              114,
+              101,
+              99,
+              116,
+              32,
+              79,
+              119,
+              110,
+              101,
+              114
+            ]
           }
         }
       ],
-      "pixels": []
+      "storage": {
+        "kind": "none",
+        "offsetsKind": "long",
+        "byteCountsKind": "long",
+        "chunks": []
+      }
     },
     "index": 1
   }

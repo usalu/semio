@@ -1,0 +1,15 @@
+# Wave 21: Semio Table Current Bounded Review
+
+Read-only; no execution. Declared model fields/variants, all seven SQL tables and complete Rust provider were read; full Source/native/neutral and constructor domain remain residue.
+
+Owner schema; ordered columns(name, six scalar kind declarations); ordered rows of full SemioValue cells (all nine variants, not narrowed by column declaration). SQL document/ordered columns/ordered rows/cell row+column/value relationships and explicit value/list/map occurrence entities preserve every mapped field. Projection intentionally does not compare cell variant against declared scalar kind, so nested List/Map/Ref values remain owned rather than silently cast. Shared value forest preserves lexemes, duplicate map names and ordered occurrences with iterative paid backing, as Wave17 describes. Ref node IDs are literal leaf IDs here (`None` graph index), no invented graph hydration or missing external owner inference.
+
+SQL wrapper requires unique column names and exact cells.len==columns.len. Typed Vec declarations alone do not prove all public constructors/native accept only those states. Full native/parser domain must be checked before a loss verdict. Do not tighten value variant to column kind based on enum names.
+
+Reconstruction full coordinates map columns/rows/cells, rejects duplicate cell position/identity/foreign parent/incomplete rectangle, preserves row and column ordinals. Rich partial values/rows/cells use actual Owned retirement guards. Concrete uncharged wrapper backing remains BTreeSet/BTreeMap identities/coordinates, ordinary ordered_rows, roots collect Vec, columns Vec, rows/cells Vec growth. Projection uniqueness BTreeSet is likewise outside paid Projection. The shared paid value forest does not pay these outer owners. Streamlining callback/control cannot claim zero/known request equality without owning System law. Column/row indexing/output loops have no bounded callback before final completion; per-cell validation every256 is separate.
+
+No hidden full Snapshot JSON carrier found in examined source. Exact full field Native/Source oracle/cumulative/cancel/release coverage is unreviewed, so owner is not closed by this report.
+
+## Native constructor boundary proof
+
+Ordinary text parser161–180 constructs columns and rows directly, with no uniqueness/rectangle/variant check. Controlled native binary11–13 and text16–19 likewise return independently counted columns/rows/full SemioValue cells, with no uniqueness/rectangle check. SQL alone rejects duplicate names and ragged rows. These are actual current code-admitted intermediate states despite module scalar/alignment comments. A schema-first neutral owning witness must decide complete preservation rather than infer allowed state from comments or silently cast List/Map/Ref. Controlled native also precharges cell count into `entities` then checks count against remaining rows before parsing values; exact entity semantics requires a separate authored row-budget law, not assuming double counting from one expression. No runtime ran.

@@ -1,8 +1,18 @@
-type DocxEntry {
-  name: String!
-  data: [Int!]!
+enum DocxOpcTargetMode { INTERNAL EXTERNAL }
+type DocxOpcMetadataEntry { name: String! contentType: String! }
+type DocxOpcContentTypes { defaults: [DocxOpcMetadataEntry!]! overrides: [DocxOpcMetadataEntry!]! }
+type DocxOpcPart { path: String! contentType: String! bytes: [Int!]! }
+type DocxOpcRelationship { id: String! relType: String! target: String! targetMode: DocxOpcTargetMode! }
+type DocxOpcRelationshipOwner { owner: String! relationships: [DocxOpcRelationship!]! }
+type DocxOpcPackage {
+  parts: [DocxOpcPart!]!
+  contentTypes: DocxOpcContentTypes!
+  relationships: [DocxOpcRelationshipOwner!]!
+  comment: String!
 }
+type DocxXmlPart { path: String! contentType: String! document: RetainedXmlDocument! }
 type DocxSnapshot {
   schema: String! @state(class: ARTIFACT)
-  entries: [DocxEntry!]! @state(class: ARTIFACT)
+  opc: DocxOpcPackage! @state(class: ARTIFACT)
+  xmlParts: [DocxXmlPart!]! @state(class: ARTIFACT)
 }

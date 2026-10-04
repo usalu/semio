@@ -18,16 +18,11 @@
         "type": "object"
       },
       "x-semio-state": "artifact"
-    },
-    "presentation": {
-      "type": "object",
-      "x-semio-state": "artifact"
     }
   },
   "required": [
     "schema",
     "opc",
-    "xmlParts",
-    "presentation"
+    "xmlParts"
   ]
 }

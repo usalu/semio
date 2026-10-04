@@ -10,7 +10,7 @@ fn tiny_mesh_json() -> String {
 fn tiny_object(id: &str, name: &str) -> crate::LowpolyObject {
     let mesh_workspace = tiny_mesh_json();
     let mesh = crate::mesh_child_handle(id, &mesh_workspace);
-    crate::LowpolyObject { id: id.into(), name: name.into(), transform: Default::default(), smooth_shading: false, mesh: Some(mesh), paint_layers: vec![crate::LowpolyPaintLayer::new("Base")], mesh_content: String::new() }
+    crate::LowpolyObject { mesh_state:None, id: id.into(), name: name.into(), transform: Default::default(), smooth_shading: false, mesh: Some(mesh), paint_layers: vec![crate::LowpolyPaintLayer::new("Base")], mesh_content: String::new() }
 }
 
 /// 🧪️ One representative value per variant — reused by the round-trip law test below.
@@ -26,7 +26,7 @@ fn demo_mutation_cases() -> Vec<LowpolyMutation> {
         LowpolyMutation::MoveObject(crate::mutations::move_object::MoveObject { id: object_id.clone(), new_position: [1.0, 2.0, 3.0] }),
         LowpolyMutation::RotateObject(crate::mutations::rotate_object::RotateObject { id: object_id.clone(), new_rotation: [0.1, 0.2, 0.3] }),
         LowpolyMutation::ScaleObject(crate::mutations::scale_object::ScaleObject { id: object_id.clone(), new_scale: [2.0, 2.0, 2.0] }),
-        LowpolyMutation::CreateMesh(create_mesh::CreateMesh {
+        LowpolyMutation::CreateMesh(create_mesh::CreateMesh { mesh_state:None,
             id: object_id.clone(),
             child_id: "mesh-fixture-01".into(),
             target: store::os_io::ArtifactRef { artifact_id: format!("{object_id}-mesh"), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "mesh".into() } },

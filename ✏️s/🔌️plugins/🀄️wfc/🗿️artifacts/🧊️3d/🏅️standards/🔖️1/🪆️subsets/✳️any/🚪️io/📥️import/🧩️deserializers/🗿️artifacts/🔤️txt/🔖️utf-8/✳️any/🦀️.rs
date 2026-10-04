@@ -4,11 +4,11 @@ use semio_s_artifact_stdio_txt::TxtSnapshot;
 
 pub fn register() {}
 
-pub fn deserialize(from: &TxtSnapshot) -> Result<Wfc3dSnapshot, store::TextError> {
+pub fn deserialize(from: &TxtSnapshot) -> Result<Wfc3dSnapshot, semio_framework_diagnostic::TextError> {
     <Wfc3dSnapshot as store::ArtifactDsl>::parse_dsl(&from.to_body())
 }
 
-pub fn deserialize_bytes(bytes: &[u8]) -> Result<Wfc3dSnapshot, store::TextError> {
-    let text = std::str::from_utf8(bytes).map_err(|error| store::TextError::new(format!("wfc3d←txt: not valid utf-8: {error}"), dsl::TextSpan::at(1, 1)))?;
+pub fn deserialize_bytes(bytes: &[u8]) -> Result<Wfc3dSnapshot, semio_framework_diagnostic::TextError> {
+    let text = std::str::from_utf8(bytes).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("wfc3d←txt: not valid utf-8: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
     deserialize(&TxtSnapshot::from_body(text))
 }

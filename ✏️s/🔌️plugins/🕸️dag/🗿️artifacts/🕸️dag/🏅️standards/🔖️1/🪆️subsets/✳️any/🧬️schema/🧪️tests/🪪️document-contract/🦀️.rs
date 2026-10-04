@@ -10,23 +10,23 @@ fn vectors() -> serde_json::Value {
 #[test]
 fn dag_document_contract_exact_json_and_sparse_edits() {
     let cases = vectors();
-    let snapshot: DagSnapshot = dsl::json::from_json_str(&cases["document"].to_string()).expect("exact document");
-    let artifact: crate::schema::DagArtifact = dsl::json::from_json_str(&cases["document"].to_string()).expect("exact artifact");
+    let snapshot: DagSnapshot = semio_framework_pack_json::from_json_str(&cases["document"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("exact document");
+    let artifact: crate::schema::DagArtifact = semio_framework_pack_json::from_json_str(&cases["document"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("exact artifact");
     assert_eq!(artifact.to_snapshot(), snapshot);
-    assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&snapshot)).unwrap(), cases["document"]);
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&snapshot)).unwrap(), cases["document"]);
     for value in cases["invalidIdentityDocuments"].as_array().unwrap() {
-        assert!(dsl::json::from_json_str::<DagSnapshot>(&value.to_string()).is_err(), "{value}");
-        assert!(dsl::json::from_json_str::<crate::schema::DagArtifact>(&value.to_string()).is_err(), "{value}");
+        assert!(semio_framework_pack_json::from_json_str::<DagSnapshot>(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "{value}");
+        assert!(semio_framework_pack_json::from_json_str::<crate::schema::DagArtifact>(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "{value}");
     }
     for value in cases["invalidDiffs"].as_array().unwrap() {
-        assert!(dsl::json::from_json_str::<DagDiff>(&value.to_string()).is_err(), "{value}");
+        assert!(semio_framework_pack_json::from_json_str::<DagDiff>(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "{value}");
     }
     for case in cases["patchCases"].as_array().unwrap() {
-        let before: DagSnapshot = dsl::json::from_json_str(&case["before"].to_string()).unwrap();
-        let diff: DagDiff = dsl::json::from_json_str(&case["diff"].to_string()).unwrap();
-        assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&diff)).unwrap(), case["diff"]);
+        let before: DagSnapshot = semio_framework_pack_json::from_json_str(&case["before"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let diff: DagDiff = semio_framework_pack_json::from_json_str(&case["diff"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&diff)).unwrap(), case["diff"]);
         let after = diff.apply(&before).expect("valid sparse change");
-        assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&after)).unwrap(), case["after"], "{}", case["name"]);
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&after)).unwrap(), case["after"], "{}", case["name"]);
     }
 }
 

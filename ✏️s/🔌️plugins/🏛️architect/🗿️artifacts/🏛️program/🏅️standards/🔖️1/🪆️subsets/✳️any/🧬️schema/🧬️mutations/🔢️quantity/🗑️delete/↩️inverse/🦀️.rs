@@ -6,9 +6,12 @@ use crate::ProgramMutation;
 use crate::ProgramSnapshot;
 
 /// ↩️ Undo a delete by recreating the captured row. Missing target ⇒ nothing to undo.
-pub fn inverse(payload: &super::DeleteQuantityRequirement, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+pub fn inverse(payload: &super::DeleteQuantityRequirement, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.quantities.iter().find(|row| row.header.id == payload.id) {
         Some(existing) => vec![ProgramMutation::CreateQuantityRequirement(super::super::create_quantity_requirement::CreateQuantityRequirement { quantity_requirement: existing.clone() })],
         None => Vec::new(),
     }
+
+    })())
 }

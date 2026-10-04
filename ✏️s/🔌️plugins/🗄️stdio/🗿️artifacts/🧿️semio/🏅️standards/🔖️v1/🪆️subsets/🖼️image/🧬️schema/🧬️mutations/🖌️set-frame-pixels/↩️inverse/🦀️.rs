@@ -5,6 +5,9 @@ use crate::standards::v1::subsets::image::schema::mutations::set_frame_pixels;
 
 /// ↩️ Inverse of set-frame-pixels.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(base: &SemioImageSnapshot, index: usize, rgba8: Vec<u8>) -> Vec<SemioImageMutation> {
-    <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&SemioImageMutation::SetFramePixels(set_frame_pixels::SetFramePixels { index, rgba8 }), base)
+pub fn inverse(base: &SemioImageSnapshot, index: usize, rgba8: Vec<u8>) -> Result<Vec<SemioImageMutation>, semio_framework_value::ValueError> {
+    Ok({
+    <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&SemioImageMutation::SetFramePixels(set_frame_pixels::SetFramePixels { index, rgba8 }), base)?
+
+    })
 }

@@ -4,10 +4,13 @@ use super::ScaleObject;
 use crate::{LowpolyMutation, LowpolySnapshot};
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &ScaleObject, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {
+pub fn inverse(payload: &ScaleObject, base: &LowpolySnapshot) -> Result<Vec<LowpolyMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(object) = base.objects.iter().find(|object| object.id == payload.id) else {
         return Vec::new();
     };
     vec![LowpolyMutation::ScaleObject(ScaleObject { id: payload.id.clone(), new_scale: object.transform.scale })]
+
+    })())
 }
 //#endregion 🔖️Inverse

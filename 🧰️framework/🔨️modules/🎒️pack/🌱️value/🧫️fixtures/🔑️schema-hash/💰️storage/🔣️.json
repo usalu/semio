@@ -1,0 +1,43 @@
+{
+  "schema": "pack.schema.controlled-storage/v1",
+  "nativeLaw": "schema_hash_controlled_full_allocator_requests_and_same_caller_are_admitted",
+  "directions": [
+    "encode",
+    "decode"
+  ],
+  "cases": [
+    "flat",
+    "nested",
+    "nested-inner-field-changed",
+    "recursive",
+    "every-shape",
+    "empty",
+    "mutualRecursive",
+    "broadRepeatedEdges"
+  ],
+  "semantic": "independentCanonicalBlake3",
+  "requests": "fullSystemAllocatorRequests",
+  "allowance": "observedExactAndOneByteShort",
+  "zero": "ownershipLimitBeforeScratchRequest",
+  "cumulative": "sameCallerNoRefund",
+  "cancellation": "canceledBeforePublication",
+  "released": "completeTemporaryBacking",
+  "abiEstimate": false,
+  "inlineHasherHeapCharge": false,
+  "failureChannel": {
+    "scratch": "callerDataAllowanceMonotonic",
+    "diagnostic": "actualReturnedMessageCapacity",
+    "requests": "completeSystemRequestsIncludingDiagnostic",
+    "release": "dropReturnedDiagnosticInsideObservation",
+    "admission": "mayPrecedeCanceledMaterialization",
+    "vectors": [
+      {"scope":"zero","message":"native encoding ownership exceeds caller limit","requested":46,"admitted":0,"diagnostic":46,"released":46},
+      {"scope":"short","message":"native encoding ownership exceeds caller limit","requested":174,"admitted":160,"diagnostic":46,"released":174},
+      {"scope":"cumulative","message":"native encoding ownership exceeds caller limit","requested":366,"admitted":320,"diagnostic":46,"released":366},
+      {"scope":"start","message":"native encoding canceled","requested":24,"admitted":0,"diagnostic":24,"released":24},
+      {"scope":"admittedInterior","message":"native encoding canceled","requested":24,"admitted":64,"diagnostic":24,"released":24},
+      {"scope":"materializedInterior","message":"native encoding canceled","requested":88,"admitted":64,"diagnostic":24,"released":88},
+      {"scope":"unicodeDiagnostic","message":"任意\u0000🙂","requested":11,"admitted":0,"diagnostic":11,"released":11}
+    ]
+  }
+}

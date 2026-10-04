@@ -81,11 +81,11 @@ impl ArtifactDeserializer for SemioMeshFromPly {
     const INTO: Dialect = INTO_DIALECT;
 
     async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        let vertex_el = from.elements.iter().find(|e| e.name == "vertex").ok_or_else(|| store::PackError::Schema("SemioMeshFromPly: file has no 'vertex' element".to_string()))?;
+        let vertex_el = from.elements.iter().find(|e| e.name == "vertex").ok_or_else(|| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "SemioMeshFromPly: file has no 'vertex' element")))?;
 
-        let x_idx = property_index(&vertex_el.properties, "x").ok_or_else(|| store::PackError::Schema("SemioMeshFromPly: 'vertex' element has no 'x' property".to_string()))?;
-        let y_idx = property_index(&vertex_el.properties, "y").ok_or_else(|| store::PackError::Schema("SemioMeshFromPly: 'vertex' element has no 'y' property".to_string()))?;
-        let z_idx = property_index(&vertex_el.properties, "z").ok_or_else(|| store::PackError::Schema("SemioMeshFromPly: 'vertex' element has no 'z' property".to_string()))?;
+        let x_idx = property_index(&vertex_el.properties, "x").ok_or_else(|| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "SemioMeshFromPly: 'vertex' element has no 'x' property")))?;
+        let y_idx = property_index(&vertex_el.properties, "y").ok_or_else(|| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "SemioMeshFromPly: 'vertex' element has no 'y' property")))?;
+        let z_idx = property_index(&vertex_el.properties, "z").ok_or_else(|| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "SemioMeshFromPly: 'vertex' element has no 'z' property")))?;
 
         let normal_idx = ["nx", "ny", "nz"].iter().map(|n| property_index(&vertex_el.properties, n)).collect::<Option<Vec<_>>>();
         let color_idx: Option<Vec<usize>> = ["red", "green", "blue"].iter().map(|n| property_index(&vertex_el.properties, n)).collect();
@@ -93,7 +93,7 @@ impl ArtifactDeserializer for SemioMeshFromPly {
         let uv_idx = ["u", "v"].iter().map(|n| property_index(&vertex_el.properties, n)).collect::<Option<Vec<_>>>().or_else(|| ["s", "t"].iter().map(|n| property_index(&vertex_el.properties, n)).collect::<Option<Vec<_>>>());
 
         let read =
-            |row_idx: usize, prop_idx: usize| -> Result<f64, store::PackError> { value_as_f64(&vertex_el.rows[row_idx].values[prop_idx]).map_err(|e| store::PackError::Schema(format!("SemioMeshFromPly: row {row_idx} property {prop_idx}: {e}"))) };
+            |row_idx: usize, prop_idx: usize| -> Result<f64, store::PackError> { value_as_f64(&vertex_el.rows[row_idx].values[prop_idx]).map_err(|e| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("SemioMeshFromPly: row {row_idx} property {prop_idx}: {e}")))) };
 
         let mut positions = Vec::with_capacity(vertex_el.rows.len());
         let mut normals = Vec::new();
@@ -123,17 +123,17 @@ impl ArtifactDeserializer for SemioMeshFromPly {
             Some(face_el) => {
                 let list_idx = property_index(&face_el.properties, "vertex_indices")
                     .or_else(|| property_index(&face_el.properties, "vertex_index"))
-                    .ok_or_else(|| store::PackError::Schema("SemioMeshFromPly: 'face' element has no 'vertex_indices'/'vertex_index' list property".to_string()))?;
+                    .ok_or_else(|| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "SemioMeshFromPly: 'face' element has no 'vertex_indices'/'vertex_index' list property")))?;
                 let mut indices = Vec::new();
                 for (ri, row) in face_el.rows.iter().enumerate() {
                     let list = match &row.values[list_idx] {
                         PlyValue::List(items) => items,
-                        _ => return Err(store::PackError::Schema(format!("SemioMeshFromPly: face row {ri} 'vertex_indices' is not a List"))),
+                        _ => return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("SemioMeshFromPly: face row {ri} 'vertex_indices' is not a List")))),
                     };
                     if list.len() < 3 {
-                        return Err(store::PackError::Schema(format!("SemioMeshFromPly: face row {ri} has {} indices, need at least 3", list.len())));
+                        return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("SemioMeshFromPly: face row {ri} has {} indices, need at least 3", list.len()))));
                     }
-                    let face_indices: Vec<u32> = list.iter().map(|v| value_as_f64(v).map(|f| f as u32)).collect::<Result<_, _>>().map_err(|e| store::PackError::Schema(format!("SemioMeshFromPly: face row {ri}: {e}")))?;
+                    let face_indices: Vec<u32> = list.iter().map(|v| value_as_f64(v).map(|f| f as u32)).collect::<Result<_, _>>().map_err(|e| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("SemioMeshFromPly: face row {ri}: {e}"))))?;
                     for i in 1..face_indices.len() - 1 {
                         indices.push(face_indices[0]);
                         indices.push(face_indices[i]);

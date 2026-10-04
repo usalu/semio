@@ -7,10 +7,13 @@ use crate::{Iso16757Mutation, Iso16757Snapshot};
 use super::mutation::IntroduceSubject;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &IntroduceSubject, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
+pub fn inverse(payload: &IntroduceSubject, base: &Iso16757Snapshot) -> Result<Vec<Iso16757Mutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     if base.dictionary.subjects.iter().any(|subject| subject.id == payload.subject.id) {
         return Vec::new();
     }
     vec![Iso16757Mutation::RetireSubject(retire_subject::mutation::RetireSubject { id: payload.subject.id.clone() })]
+
+    })())
 }
 //#endregion 🔖️Inverse

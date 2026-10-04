@@ -3,7 +3,7 @@ use super::*;
 #[semio_framework_async_macros::async_test]
 async fn interaction_spec_parses_box_asset() {
     let raw = include_str!("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/📦️box.json");
-    let spec: InteractionSpec = protocol::json::from_json_str(raw).expect("📦️box.json parses as InteractionSpec");
+    let spec: InteractionSpec = semio_framework_pack_json::from_json_str(raw, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("📦️box.json parses as InteractionSpec");
     assert_eq!(spec.id, "primitive.box");
     assert_eq!(spec.machine.initial, "idle");
     assert!(spec.state("first_corner").is_some());
@@ -18,7 +18,7 @@ async fn interaction_spec_parses_box_asset() {
 #[semio_framework_async_macros::async_test]
 async fn interaction_spec_parses_sphere_asset_with_command_finish() {
     let raw = include_str!("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🌐️sphere.json");
-    let spec: InteractionSpec = protocol::json::from_json_str(raw).expect("🌐️sphere.json parses as InteractionSpec");
+    let spec: InteractionSpec = semio_framework_pack_json::from_json_str(raw, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("🌐️sphere.json parses as InteractionSpec");
     assert_eq!(spec.id, "solid.sphere");
     assert_eq!(spec.commit.operation.action, "command.finish");
     assert!(spec.display.states.iter().any(|s| s.state == "radius"));
@@ -38,7 +38,7 @@ async fn interaction_spec_parses_all_energy_and_structure_classic_assets() {
         include_str!("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🕹️interactions/🚧️constructReinforc-e8fc67.json"),
     ];
     for raw in sources {
-        let spec: InteractionSpec = protocol::json::from_json_str(raw).expect("asset parses as InteractionSpec");
+        let spec: InteractionSpec = semio_framework_pack_json::from_json_str(raw, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("asset parses as InteractionSpec");
         assert!(spec.commit.operation.action.ends_with("From2PointsAndHeight") || spec.commit.operation.action.ends_with("FromSurface"));
         assert!(spec.commit.operation.params.contains_key("pointA"));
         assert!(spec.commit.operation.params.contains_key("pointB"));
@@ -69,7 +69,7 @@ async fn every_interaction_asset_on_disk_parses_as_interaction_spec() {
     let mut failures = Vec::new();
     for file in &files {
         let raw = std::fs::read_to_string(file).expect("read asset");
-        if let Err(err) = protocol::json::from_json_str::<InteractionSpec>(&raw) {
+        if let Err(err) = semio_framework_pack_json::from_json_str::<InteractionSpec>(&raw, semio_framework_pack_json::JsonMemberPolicy::Reject) {
             failures.push(format!("{}: {}", file.display(), err));
         }
     }
@@ -109,7 +109,7 @@ async fn evaluate_expr_supports_path_const_var_and_boolean_combinators() {
 #[semio_framework_async_macros::async_test]
 async fn interaction_spec_guard_evaluates_against_context() {
     let raw = include_str!("../../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🚧️constructExternalWall.json");
-    let spec: InteractionSpec = protocol::json::from_json_str(raw).expect("parses");
+    let spec: InteractionSpec = semio_framework_pack_json::from_json_str(raw, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("parses");
     let mut context = std::collections::HashMap::new();
     let env_without = ExprEnv { context: &context, event: None };
     assert!(!spec.guard("hasConstructMode", &env_without));

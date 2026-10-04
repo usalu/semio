@@ -597,7 +597,7 @@ impl protocol::DiffCodec for PdfDiff {
         }
     }
 
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let parse = |line: &str| -> Result<Self, String> {
             let mut diff = PdfDiff::default();
             if line.is_empty() {
@@ -611,7 +611,7 @@ impl protocol::DiffCodec for PdfDiff {
             }
             Ok(diff)
         };
-        parse(line).map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))
+        parse(line).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 
     /// 🧪️ Real binary frame (`format u8 | flags u8 | [pages]`), matching

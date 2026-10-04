@@ -1,0 +1,53 @@
+{
+  "accepted": [
+    {
+      "version": 1,
+      "leaseDirectory": "/owner/leases"
+    },
+    {
+      "version": 1,
+      "leaseDirectory": "C:\\owner\\leases"
+    },
+    {
+      "version": 1,
+      "leaseDirectory": "\\\\host\\share\\leases"
+    }
+  ],
+  "refused": [
+    {
+      "id": "missing",
+      "value": {
+        "version": 1
+      }
+    },
+    {
+      "id": "relative",
+      "value": {
+        "version": 1,
+        "leaseDirectory": "leases"
+      }
+    },
+    {
+      "id": "unknown",
+      "value": {
+        "version": 1,
+        "leaseDirectory": "/owner/leases",
+        "repoRoot": "/repo"
+      }
+    },
+    {
+      "id": "wrong-version",
+      "value": {
+        "version": 2,
+        "leaseDirectory": "/owner/leases"
+      }
+    },
+    {
+      "id": "nul",
+      "value": {
+        "version": 1,
+        "leaseDirectory": "/owner/\u0000leases"
+      }
+    }
+  ]
+}

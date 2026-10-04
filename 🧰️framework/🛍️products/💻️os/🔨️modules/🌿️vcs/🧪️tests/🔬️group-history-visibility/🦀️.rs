@@ -1,7 +1,7 @@
 use super::*;
 
 fn observed(ledger: &ArtifactHistoryLedger<i32>) -> serde_json::Value {
-    serde_json::from_str(&crate::os_pack::json::to_json_string(ledger)).expect("independent parser sees the selected exact history")
+    serde_json::from_str(&semio_framework_pack_json::to_json_string(ledger)).expect("independent parser sees the selected exact history")
 }
 
 #[test]

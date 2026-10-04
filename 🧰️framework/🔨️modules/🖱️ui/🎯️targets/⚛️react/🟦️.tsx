@@ -1888,8 +1888,8 @@ export {
   type PendingWindowSilhouetteMetrics,
   type WindowSilhouetteGeometry,
 };
-import { ChromeControlHint } from "../../🧱️elements/💡️ChromeControlHint/🟦️.tsx";
-export { ChromeControlHint };
+import { CHROME_CONTROL_TOOLTIP_DELAY_MS, ChromeControlHint, DisabledReasonHint } from "../../🧱️elements/💡️ChromeControlHint/🟦️.tsx";
+export { CHROME_CONTROL_TOOLTIP_DELAY_MS, ChromeControlHint, DisabledReasonHint };
 // #endregion 🎛️UiChromeCompact
 
 // #endregion 🌈️SurfaceChrome
@@ -5359,7 +5359,7 @@ import {
   isWindowContentDeadLineHost,
   readWindowContentDeadLinePx,
   readScrollerContentOverflows,
-  useWindowContentDeadLineScroll,
+  useWindowContentDeadLineInset,
 } from "../../🧱️elements/🚧️WindowContentDeadLine/🟦️.tsx";
 export {
   windowChromeScrollClearanceVar,
@@ -5370,7 +5370,7 @@ export {
   isWindowContentDeadLineHost,
   readWindowContentDeadLinePx,
   readScrollerContentOverflows,
-  useWindowContentDeadLineScroll,
+  useWindowContentDeadLineInset,
 };
 
 /** @emoji 🚧️ Block offset that clears a window's floating chrome control row — the single rule for
@@ -5380,7 +5380,7 @@ export {
  * and falls back to the chrome row's own token height, so content can never paint over a pane toggle. */
 export const windowChromeClearedTopOffset = `calc(var(${windowChromeScrollClearanceVar}, calc(var(--size-medium) + var(--spacing-single))) + var(--spacing-single))`;
 
-/** @emoji 🏝️ Full-bleed scroll surface for chrome-aware window bodies (writer hosts, forms, tables). */
+/** 🚧️ Scroll surface that keeps window content below floating chrome and preserves explicit edgeless layouts. */
 export const ChromeAwareWindowScrollSurface = reactHostPort.forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<"div">>(({ className, children, ...props }, ref) => {
   const scrollerRef = reactHostPort.useRef<HTMLDivElement | null>(null);
   const setScrollerRef = reactHostPort.useCallback(
@@ -5391,7 +5391,7 @@ export const ChromeAwareWindowScrollSurface = reactHostPort.forwardRef<HTMLDivEl
     },
     [ref],
   );
-  useWindowContentDeadLineScroll(scrollerRef);
+  useWindowContentDeadLineInset(scrollerRef);
   return (
     <div ref={setScrollerRef} data-slot="window-dead-line-scroll" className={cn("min-h-0 min-w-0 overflow-auto", windowContentDeadLineScrollClass, className)} {...props}>
       {children}
@@ -8657,6 +8657,14 @@ export {
   BufferGeometry,
   CanvasTexture,
   ClampToEdgeWrapping,
+  RepeatWrapping,
+  MirroredRepeatWrapping,
+  NearestFilter,
+  LinearFilter,
+  NearestMipmapNearestFilter,
+  LinearMipmapNearestFilter,
+  NearestMipmapLinearFilter,
+  LinearMipmapLinearFilter,
   Color,
   ConeGeometry,
   CylinderGeometry,
@@ -8679,7 +8687,11 @@ export {
   Quaternion,
   ShaderMaterial,
   SphereGeometry,
+  Texture,
   TextureLoader,
+  FrontSide,
+  SRGBColorSpace,
+  NoColorSpace,
   TorusGeometry,
   Vector3,
 } from "three";

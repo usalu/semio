@@ -24,6 +24,11 @@ export interface SemioMaterialDiff {
   baseColor?: SemioRgba;
   metallic?: SemioMaterial["metallic"];
   roughness?: SemioMaterial["roughness"];
+  baseColorTexture?: string | null;
+  metallicRoughnessTexture?: string | null;
+  normalTexture?: string | null;
+  occlusionTexture?: string | null;
+  emissiveTexture?: string | null;
 }
 
 export interface SemioTextureDiff {

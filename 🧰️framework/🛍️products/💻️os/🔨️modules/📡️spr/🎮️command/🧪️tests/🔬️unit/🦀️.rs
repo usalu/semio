@@ -2,17 +2,17 @@ use super::mutation_laws_fixture::{foreign_step_fixture, AddCounter, AddCounterF
 use super::*;
 
 fn json_oracle<T: protocol::value::ToValue>(value: &T) -> serde_json::Value {
-    serde_json::from_str(&crate::os_pack::json::to_json_string(value)).expect("independent JSON parser accepts first-party value encoding")
+    serde_json::from_str(&semio_framework_pack_json::to_json_string(value)).expect("independent JSON parser accepts first-party value encoding")
 }
 
 //#region 🧪️ApplyErrorContract
 #[test]
 fn mutation_apply_error_json_round_trip_matches_typescript_parity_vector() {
     let error = MutationApplyError::new("mutation.apply.invalid-index", "index 4 exceeds length 2").at(["slides", "4"]);
-    let json = crate::os_pack::json::to_json_string(&error);
+    let json = semio_framework_pack_json::to_json_string(&error);
     assert_eq!(json, r#"{"code":"mutation.apply.invalid-index","message":"index 4 exceeds length 2","target":["slides","4"]}"#);
     assert_eq!(json_oracle(&error), serde_json::json!({"code":"mutation.apply.invalid-index","message":"index 4 exceeds length 2","target":["slides","4"]}));
-    assert_eq!(crate::os_pack::json::from_json_str::<MutationApplyError>(&json).expect("decode apply error value"), error);
+    assert_eq!(semio_framework_pack_json::from_json_str::<MutationApplyError>(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("decode apply error value"), error);
 }
 
 #[test]
@@ -56,7 +56,7 @@ fn operation_diff_apply_matches_backwards_inverse() {
     let op = CounterMutation::AddCounter(AddCounter { delta: 5 });
     let forward = op.diff(&base).diff().apply(&base).expect("valid forward diff");
     assert_eq!(forward, 15);
-    let [undo] = <[CounterMutation; 1]>::try_from(op.inverse(&base)).unwrap();
+    let [undo] = <[CounterMutation; 1]>::try_from(op.inverse(&base).expect("valid retained mutation inverse fixture")).unwrap();
     let restored = undo.diff(&forward).diff().apply(&forward).expect("valid inverse diff");
     assert_eq!(restored, base);
 }
@@ -117,16 +117,16 @@ fn operation_meta_value_round_trip_matches_serde_oracle() {
         origin: MutationOrigin::Owner,
         transaction: None,
     };
-    let json = crate::os_pack::json::to_json_string(&meta);
+    let json = semio_framework_pack_json::to_json_string(&meta);
     assert!(json.contains("\"group_id\":\"invocation-1\""), "group_id must serialize under its own field name (MutationMeta has no rename_all), got {json}");
     assert_eq!(json_oracle(&meta)["group_id"], serde_json::json!("invocation-1"));
-    let round_tripped: MutationMeta = crate::os_pack::json::from_json_str(&json).expect("decode mutation metadata value");
+    let round_tripped: MutationMeta = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("decode mutation metadata value");
     assert_eq!(round_tripped, meta, "group_id must round-trip through the value contract exactly like semantic_kind/label");
 
     let solitary = MutationMeta { group_id: None, ..meta };
-    let solitary_json = crate::os_pack::json::to_json_string(&solitary);
+    let solitary_json = semio_framework_pack_json::to_json_string(&solitary);
     assert!(!solitary_json.contains("group_id"), "a solitary edit's None group_id must be omitted, matching skip_serializing_if on the sibling optional fields");
-    let solitary_round_tripped: MutationMeta = crate::os_pack::json::from_json_str(&solitary_json).expect("decode solitary mutation metadata value");
+    let solitary_round_tripped: MutationMeta = semio_framework_pack_json::from_json_str(&solitary_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("decode solitary mutation metadata value");
     assert_eq!(solitary_round_tripped, solitary);
 }
 
@@ -153,14 +153,13 @@ fn edit_value_round_trip_matches_serde_oracle() {
             transaction: None,
         }],
         description: Some("two adds".into()), verb: None,
-        coalesce_key: None,
         sequence_number: 1,
         started_at: "2026-07-27T00:00:00Z".into(),
         finished_at: None,
     };
-    let json = crate::os_pack::json::to_json_string(&edit);
+    let json = semio_framework_pack_json::to_json_string(&edit);
     assert_eq!(json_oracle(&edit)["id"], serde_json::json!("edit-1"));
-    let round_tripped: Edit<CounterMutation> = crate::os_pack::json::from_json_str(&json).expect("decode edit value");
+    let round_tripped: Edit<CounterMutation> = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("decode edit value");
     assert_eq!(round_tripped, edit);
 }
 //#endregion 🧪️MetaSerde
@@ -360,12 +359,12 @@ fn derive_mutations_wires_complete_leaf_and_atomic_registration() {
     use super::registry_fixture::*;
     let base = MiniDoc { name: "a".into() };
     let witness: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📔️registry/🧬️mutations/📛️rename-mini/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json")).unwrap();
-    let mutation: MiniMutation = crate::os_pack::json::from_json_str(&witness.to_string()).expect("committed rename-mini wire witness");
+    let mutation: MiniMutation = semio_framework_pack_json::from_json_str(&witness.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed rename-mini wire witness");
     assert_eq!(mutation, RenameMini { new_name: "b".into() }.into());
     assert_eq!(json_oracle(&mutation), witness);
     let after = mutation.diff(&base).diff().apply(&base).expect("valid forward diff");
     assert_eq!(after.name, "b");
-    let inverse = mutation.inverse(&base);
+    let inverse = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1);
     assert_eq!(inverse[0].diff(&after).diff().apply(&after), Ok(base));
     assert_eq!(MiniMutation::DESCRIPTORS, &[RenameMini::DESCRIPTOR]);
@@ -747,8 +746,8 @@ impl Default for AddInference {
     }
 }
 impl Inference<i64> for AddInference {
-    fn infer(snapshot: &i64) -> Self {
-        AddInference { is_even: snapshot % 2 == 0, abs_value: snapshot.abs() }
+    fn infer(snapshot: &i64) -> Result<Self, semio_framework_value::ValueError> {
+        Ok(AddInference { is_even: snapshot % 2 == 0, abs_value: snapshot.abs() })
     }
 }
 impl InferenceSpec<i64> for AddInference {
@@ -766,16 +765,16 @@ impl InferenceSpec<i64> for AddInference {
 #[test]
 fn inference_determinism_law() {
     let base: i64 = 42;
-    assert_eq!(AddInference::infer(&base), AddInference::infer(&base));
-    let json_a = serde_json::to_string(&AddInference::infer(&base)).unwrap();
-    let json_b = serde_json::to_string(&AddInference::infer(&42)).unwrap();
+    assert_eq!(AddInference::infer(&base).expect("valid materialized inference fixture"), AddInference::infer(&base).expect("valid materialized inference fixture"));
+    let json_a = serde_json::to_string(&AddInference::infer(&base).expect("valid materialized inference fixture")).unwrap();
+    let json_b = serde_json::to_string(&AddInference::infer(&42).expect("valid materialized inference fixture")).unwrap();
     assert_eq!(json_a, json_b, "equal snapshots must infer byte-equal canonical serializations");
-    assert_eq!(json_oracle(&AddInference::infer(&base)), serde_json::from_str::<serde_json::Value>(&json_a).unwrap());
+    assert_eq!(json_oracle(&AddInference::infer(&base).expect("valid materialized inference fixture")), serde_json::from_str::<serde_json::Value>(&json_a).unwrap());
 }
 
 #[test]
 fn inference_default_law() {
-    assert_eq!(AddInference::infer(&i64::default()), AddInference::default());
+    assert_eq!(AddInference::infer(&i64::default()).expect("valid materialized inference fixture"), AddInference::default());
 }
 
 #[test]
@@ -783,11 +782,11 @@ fn inference_diff_consistency_law() {
     let base: i64 = 10;
     let noop = CounterDiff { deltas: vec![0] };
     assert!(!noop.touches().intersects_any(AddInference::fields()[0].reads));
-    assert_eq!(AddInference::infer(&noop.apply(&base).expect("valid no-op diff")), AddInference::infer(&base));
+    assert_eq!(AddInference::infer(&noop.apply(&base).expect("valid no-op diff")).expect("valid materialized inference fixture"), AddInference::infer(&base).expect("valid materialized inference fixture"));
 
     let real = CounterDiff { deltas: vec![1] };
     assert!(real.touches().intersects_any(AddInference::fields()[0].reads));
-    assert_ne!(AddInference::infer(&real.apply(&base).expect("valid real diff")), AddInference::infer(&base));
+    assert_ne!(AddInference::infer(&real.apply(&base).expect("valid real diff")).expect("valid materialized inference fixture"), AddInference::infer(&base).expect("valid materialized inference fixture"));
 }
 
 #[test]
@@ -842,8 +841,8 @@ fn operation_event_serde_round_trip() {
         state_class: semio_framework_schema_state::StateClass::Transient,
         payload: protocol::value::DslValue::object([("kind".to_string(), protocol::value::DslValue::String("toast".to_string())), ("text".to_string(), protocol::value::DslValue::String("saved".to_string()))]),
     };
-    let json = crate::os_pack::json::to_json_string(&event);
-    let round_tripped: MutationEvent = crate::os_pack::json::from_json_str(&json).expect("deserialize");
+    let json = semio_framework_pack_json::to_json_string(&event);
+    let round_tripped: MutationEvent = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("deserialize");
     assert_eq!(round_tripped, event);
 }
 //#endregion 🧪️OutcomeLaws
@@ -872,7 +871,7 @@ fn fold_plan_inverse_restores_base() {
     let kind = AddCounterTwice { delta: 3 };
     let forward = fold_plan_diff(&kind, &base).diff().apply(&base).expect("valid folded diff");
     assert_ne!(forward, base);
-    let inverses = fold_plan_inverse(&kind, &base);
+    let inverses = fold_plan_inverse(&kind, &base).expect("valid retained mutation inverse fixture");
     let mut restored = forward;
     for op in inverses.iter().rev() {
         restored = op.diff(&restored).diff().apply(&restored).expect("valid inverse diff");
@@ -897,7 +896,7 @@ fn composite_of_composite_nests_and_folds_identically_to_flattened_plan() {
         .collect();
     assert_eq!(local_deltas, vec![2, 2, 2, 2], "nesting must flatten to four local steps, identical to the un-nested plan");
 
-    let inverses = fold_plan_inverse(&quad, &base);
+    let inverses = fold_plan_inverse(&quad, &base).expect("valid retained mutation inverse fixture");
     let mut restored = diff.diff().apply(&base).expect("valid folded diff");
     for op in inverses.iter().rev() {
         restored = op.diff(&restored).diff().apply(&restored).expect("valid inverse diff");
@@ -911,6 +910,8 @@ fn plan_depth_beyond_max_is_typed_error_never_panics() {
     let kind = AddCounterThenNotifyForeign { delta: 1, foreign_count: MAX_PLAN_DEPTH + 1 };
     let error = plan_of(&kind, &base).expect_err("a plan with more foreign hops than MAX_PLAN_DEPTH must be rejected, not panic");
     assert_eq!(error, PlanError::DepthExceeded(MAX_PLAN_DEPTH));
+    let inverse_error = fold_plan_inverse(&kind, &base).expect_err("refused planning must refuse public inverse production");
+    assert_eq!(inverse_error.kind, semio_framework_value::ValueRefusalKind::WorkLimit);
 }
 
 #[test]
@@ -941,7 +942,7 @@ fn derive_composite_mutation_wires_delegating_mutation_kind() {
     let kind = AddCounterTwice { delta: 5 };
     let diff = MutationKind::<i64, CounterMutation>::diff(&kind, &base);
     assert_eq!(diff.diff().apply(&base), Ok(11));
-    let inverse = MutationKind::<i64, CounterMutation>::inverse(&kind, &base);
+    let inverse = MutationKind::<i64, CounterMutation>::inverse(&kind, &base).expect("valid retained mutation inverse fixture");
     let mut restored = diff.diff().apply(&base).expect("valid folded diff");
     for op in inverse.iter().rev() {
         restored = op.diff(&restored).diff().apply(&restored).expect("valid inverse diff");

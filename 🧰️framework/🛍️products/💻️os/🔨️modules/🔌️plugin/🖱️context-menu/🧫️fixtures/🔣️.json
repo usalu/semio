@@ -1,0 +1,43 @@
+{
+  "schema": "semio.plugin.context-menu-selection/v1",
+  "kinds": {
+    "node": { "en": { "one": "node", "other": "nodes" }, "de": { "one": "Knoten", "other": "Knoten" } },
+    "edge": { "en": { "one": "edge", "other": "edges" }, "de": { "one": "Kante", "other": "Kanten" } },
+    "frame": { "en": { "one": "frame", "other": "frames" }, "de": { "one": "Rahmen", "other": "Rahmen" } },
+    "item": { "en": { "one": "item", "other": "items" }, "de": { "one": "Element", "other": "Elemente" } },
+    "part": { "en": { "one": "part", "other": "parts" }, "de": { "one": "Teil", "other": "Teile" } }
+  },
+  "labels": {
+    "deleteSelection": { "en": "Delete selection", "de": "Auswahl löschen" },
+    "nothingSelected": { "en": "Nothing selected", "de": "Nichts ausgewählt" }
+  },
+  "cases": [
+    { "name": "one node", "locale": "en", "counts": [{ "count": 1, "kind": "node" }], "expected": "1 node" },
+    { "name": "ein Knoten", "locale": "de", "counts": [{ "count": 1, "kind": "node" }], "expected": "1 Knoten" },
+    { "name": "one edge", "locale": "en", "counts": [{ "count": 1, "kind": "edge" }], "expected": "1 edge" },
+    { "name": "eine Kante", "locale": "de", "counts": [{ "count": 1, "kind": "edge" }], "expected": "1 Kante" },
+    { "name": "nodes and edges", "locale": "en", "counts": [{ "count": 8, "kind": "node" }, { "count": 13, "kind": "edge" }], "expected": "8 nodes and 13 edges" },
+    { "name": "Knoten und Kanten", "locale": "de", "counts": [{ "count": 8, "kind": "node" }, { "count": 13, "kind": "edge" }], "expected": "8 Knoten und 13 Kanten" },
+    { "name": "three kinds", "locale": "en", "counts": [{ "count": 2, "kind": "frame" }, { "count": 1, "kind": "item" }, { "count": 3, "kind": "part" }], "expected": "2 frames, 1 item, and 3 parts" },
+    { "name": "drei Arten", "locale": "de", "counts": [{ "count": 2, "kind": "frame" }, { "count": 1, "kind": "item" }, { "count": 3, "kind": "part" }], "expected": "2 Rahmen, 1 Element und 3 Teile" },
+    { "name": "four kinds", "locale": "en", "counts": [{ "count": 1, "kind": "node" }, { "count": 2, "kind": "edge" }, { "count": 3, "kind": "frame" }, { "count": 4, "kind": "item" }], "expected": "1 node, 2 edges, 3 frames, and 4 items" },
+    { "name": "vier Arten", "locale": "de", "counts": [{ "count": 1, "kind": "node" }, { "count": 2, "kind": "edge" }, { "count": 3, "kind": "frame" }, { "count": 4, "kind": "item" }], "expected": "1 Knoten, 2 Kanten, 3 Rahmen und 4 Elemente" },
+    { "name": "a zero count is not named", "locale": "en", "counts": [{ "count": 0, "kind": "node" }, { "count": 1, "kind": "edge" }], "expected": "1 edge" },
+    { "name": "eine Null wird nicht genannt", "locale": "de", "counts": [{ "count": 0, "kind": "node" }, { "count": 5, "kind": "edge" }], "expected": "5 Kanten" },
+    { "name": "one part of a puzzle", "locale": "en", "counts": [{ "count": 1, "kind": "part" }], "expected": "1 part" },
+    { "name": "Teile eines Puzzles", "locale": "de", "counts": [{ "count": 7, "kind": "part" }], "expected": "7 Teile" },
+    { "name": "items", "locale": "en", "counts": [{ "count": 2, "kind": "item" }], "expected": "2 items" },
+    { "name": "Rahmen", "locale": "de", "counts": [{ "count": 1, "kind": "frame" }], "expected": "1 Rahmen" },
+    { "name": "large counts are not grouped", "locale": "en", "counts": [{ "count": 1000, "kind": "item" }], "expected": "1000 items" },
+    { "name": "große Zahlen ohne Gruppierung", "locale": "de", "counts": [{ "count": 12345, "kind": "node" }], "expected": "12345 Knoten" },
+    { "name": "nothing counted", "locale": "en", "counts": [], "expected": null },
+    { "name": "nur Nullen", "locale": "de", "counts": [{ "count": 0, "kind": "part" }, { "count": 0, "kind": "edge" }], "expected": null }
+  ],
+  "deleteRows": [
+    { "name": "a selection names what it deletes", "locale": "en", "nodes": 2, "edges": 1, "label": "Delete selection (2 nodes and 1 edge)", "reason": null },
+    { "name": "eine Auswahl nennt, was sie löscht", "locale": "de", "nodes": 2, "edges": 1, "label": "Auswahl löschen (2 Knoten und 1 Kante)", "reason": null },
+    { "name": "edges alone", "locale": "en", "nodes": 0, "edges": 3, "label": "Delete selection (3 edges)", "reason": null },
+    { "name": "an empty selection is disabled with its reason", "locale": "en", "nodes": 0, "edges": 0, "label": "Delete selection", "reason": "Nothing selected" },
+    { "name": "eine leere Auswahl ist mit Grund deaktiviert", "locale": "de", "nodes": 0, "edges": 0, "label": "Auswahl löschen", "reason": "Nichts ausgewählt" }
+  ]
+}

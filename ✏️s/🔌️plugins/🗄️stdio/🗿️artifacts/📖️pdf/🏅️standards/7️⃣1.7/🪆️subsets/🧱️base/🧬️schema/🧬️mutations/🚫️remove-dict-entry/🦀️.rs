@@ -25,9 +25,12 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveDictEntry {
         MutationOutcome::new(diff::diff_graph_edit(base, diff::diff_remove_dict_entry(base, self.id, &self.path, &self.key)))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         original_dict_value(base, self.id, &self.path, &self.key).map(|value| PdfMutation::SetDictEntry(SetDictEntry { id: self.id, path: self.path.clone(), key: self.key.clone(), value })).into_iter().collect()
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove dictionary entry {}", self.key), &format!("Wörterbucheintrag {} entfernen", self.key))

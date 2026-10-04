@@ -18,11 +18,11 @@ impl Deserializer<FormsSnapshot> for JsonIntoForms {
     const FIDELITY: IoFidelity = IoFidelity::Exact;
     async fn deserialize(payload: &IoPayload) -> IoResult<FormsSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
-            return Err(IoError { message: "JsonIntoForms: expected a binary json payload".to_string(), diagnostics: Vec::new() });
+            return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"JsonIntoForms: expected a binary json payload")));
         };
         let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-        let text = std::str::from_utf8(bytes).map_err(|error| IoError { message: format!("JsonIntoForms: not valid utf-8: {error}"), diagnostics: Vec::new() })?;
-        let snapshot = dsl::json::from_json_str::<FormsSnapshot>(text).map_err(|error| IoError { message: format!("JsonIntoForms: {error}"), diagnostics: Vec::new() })?;
+        let text = std::str::from_utf8(bytes).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("JsonIntoForms: not valid utf-8: {error}"))))?;
+        let snapshot = semio_framework_pack_json::from_json_str::<FormsSnapshot>(text,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(IoError::from_value_error)?;
         Ok(IoOutcome::clean(snapshot))
     }
 }

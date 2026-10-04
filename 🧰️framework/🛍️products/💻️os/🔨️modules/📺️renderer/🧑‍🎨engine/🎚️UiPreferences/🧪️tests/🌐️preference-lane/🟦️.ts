@@ -1,4 +1,4 @@
-import Ajv from "ajv";
+import { semioSchemaAjvV1 } from "../../../../../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import { createMemoryStoragePort, createScopedStoragePort, type StoragePort } from "@semio-tech/framework";
 import { UI_PREFERENCE_MUTATION_KEYS, uiPreferenceMutationDataClassV1, type UiPreferencesConfigMutation } from "../../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
 import { parseUserNamedLayout, UI_PREFERENCE_DATA_CLASSES, type UiPreferences, type UserNamedLayout } from "../../../../../../🎚️config/🧬️schema/🟦️.ts";
@@ -24,7 +24,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
   describe("per-user preference lane", () => {
     it("declares a data class for every key and a key for every mutation, in the schemas, equal to the fixture", () => {
-      const validate = new Ajv({ strict: true }).compile(mutationSchema);
+      const validate = semioSchemaAjvV1({ strict: true }).compile(mutationSchema);
       expect(Object.keys(UI_PREFERENCE_MUTATION_KEYS).sort()).toEqual(dataClassFixture.mutations.map((row) => row.mutation.mutation).sort());
       for (const row of dataClassFixture.mutations) {
         const mutation = row.mutation as UiPreferencesConfigMutation;
@@ -36,10 +36,10 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("plays every scenario to the fixture's projections and to the hub-order oracle, with schema-valid recorded events", () => {
-      const ajv = new Ajv({ strict: false });
+      const ajv = semioSchemaAjvV1({ strict: false });
       ajv.addSchema(directorySchema, "directory");
       const validBody = ajv.compile({ $ref: "directory#/$defs/DirectoryEventBody" });
-      const validMutation = new Ajv({ strict: true }).compile(mutationSchema);
+      const validMutation = semioSchemaAjvV1({ strict: true }).compile(mutationSchema);
       const lane = uiPreferenceLaneKeyV1("http://127.0.0.1:7800/", "u1");
       expect(lane).toBe("http://127.0.0.1:7800#u1");
       for (const scenario of fixture.scenarios as unknown as readonly LaneScenario[]) {
@@ -89,8 +89,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("admits exactly the saved layouts the schema admits — Ajv over both schemas and the parser agree", () => {
-      const inPreferences = new Ajv({ strict: true }).addSchema(uiPreferencesSchema).getSchema(`${uiPreferencesSchema.$id}#/$defs/UserNamedLayout`)!;
-      const inMutation = new Ajv({ strict: true }).compile(mutationSchema);
+      const inPreferences = semioSchemaAjvV1({ strict: true }).addSchema(uiPreferencesSchema).getSchema(`${uiPreferencesSchema.$id}#/$defs/UserNamedLayout`)!;
+      const inMutation = semioSchemaAjvV1({ strict: true }).compile(mutationSchema);
       const parses = (layout: unknown): boolean => {
         try {
           parseUserNamedLayout(layout);
@@ -137,7 +137,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(parseUiPreferenceEnvelopeV1(UI_PREFERENCES_LANE_SCHEMA_V1, uiPreferenceEnvelopeTextV1({ id: "a".repeat(32), mutation: { mutation: "setLayout", layout: "tablet" } }))).toBeNull();
       expect(parseUiPreferenceEnvelopeV1(UI_PREFERENCES_LANE_SCHEMA_V1, uiPreferenceEnvelopeTextV1({ id: "not-hex", mutation: { mutation: "setLocale", locale: "de" } }))).toBeNull();
       expect(parseUiPreferenceEnvelopeV1(UI_PREFERENCES_LANE_SCHEMA_V1, JSON.stringify({ id: "a".repeat(32), mutation: { mutation: "setLocale", locale: "fr" } }))).toBeNull();
-      const ajv = new Ajv({ strict: false });
+      const ajv = semioSchemaAjvV1({ strict: false });
       ajv.addSchema(directorySchema, "directory");
       const validCommand = ajv.compile({ $ref: "directory#/$defs/DirectoryCommand" });
       expect(recordFixture.rows.length).toBeGreaterThanOrEqual(15);

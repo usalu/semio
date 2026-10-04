@@ -66,7 +66,10 @@ fn every_fixture_case_classifies_its_supersede_transitions() {
         let mut effective: BTreeMap<MutationId, protocol::EffectiveSupersession> = BTreeMap::new();
         for record in ledger.records.iter().filter(|record| record.scope.is_none() || record.scope.as_deref() == alternative) {
             for input in &record.inputs {
-                effective.insert(input.target.clone(), protocol::EffectiveSupersession { transition_id: record.transition_id.clone(), actor: record.actor.clone(), timestamp: record.timestamp, scope: record.scope.clone(), replacement: input.replacement.clone() });
+                effective.insert(
+                    input.target.clone(),
+                    protocol::EffectiveSupersession { transition_id: record.transition_id.clone(), actor: record.actor.clone(), timestamp: record.timestamp, scope: record.scope.clone(), replacement: input.replacement.clone() },
+                );
             }
         }
         let applied = ledger.applied_entries(effective.iter());

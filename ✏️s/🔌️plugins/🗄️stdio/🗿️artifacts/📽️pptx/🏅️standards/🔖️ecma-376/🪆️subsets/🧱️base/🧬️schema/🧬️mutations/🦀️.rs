@@ -1,11 +1,12 @@
 //! 🧬️ PptxMutation — document mutation dispatch. Every variant's `diff()` is handcrafted (never
 //! apply-and-capture) and every variant's `inverse()` is handcrafted, index-aware.
 
-use crate::schema::diff::{diff_insert_shape, diff_insert_slide, diff_move_slide, diff_remove_shape, diff_remove_slide, diff_set_shape_position, diff_set_shape_text, diff_set_snapshot, PptxDiff};
+use crate::schema::diff::{diff_set_snapshot, PptxDiff};
 use crate::schema::snapshot::{PptxParagraph, PptxShape, PptxSlide, PptxSnapshotRecord, PptxTransform};
 use crate::PptxSnapshot;
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
+use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 
 //#region 🔖️Mutations
 #[path = "🔷insert-shape/🦀️.rs"]
@@ -22,6 +23,9 @@ pub mod remove_slide;
 pub mod set_shape_position;
 #[path = "✍️set-shape-text/🦀️.rs"]
 pub mod set_shape_text;
+#[path = "🧭️xml-address/🦀️.rs"]
+pub mod xml_address;
+pub use xml_address::{PptxShapeAddress, PptxSlideAddress, PptxXmlAddress, PptxXmlVacancyAddress};
 /// 📐️ Typed content mutation for `stdio.pptx`. Addresses `presentation.slides` by index
 /// (slide order matters -- see `MoveSlide`) and, within a slide, `shapes` by
 /// `(slide_index, shape_index)` -- a flat two-level address is sufficient since PresentationML
@@ -37,6 +41,8 @@ pub mod set_shape_text;
 /// `SvgMutation::InsertElement`'s `node: XmlNode` blocker). `OpText`/`OpBinary` hand-rolled below,
 /// reusing `PptxDiff`'s `pub(crate)` grammar primitives.
 //#region 🔖️Leaves
+#[path = "🩹️patch-snapshot/🦀️.rs"]
+pub mod patch_snapshot;
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 //#endregion 🔖️Leaves
@@ -48,6 +54,7 @@ pub mod set_snapshot;
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum PptxMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
+    PatchSnapshot(patch_snapshot::PatchSnapshot),
     /// ➕️ Inserts `🎞️slide` at `index` (FINAL state).
     InsertSlide(insert_slide::InsertSlide),
     /// ➖️ Removes the slide at `index` (BASE-state index).
@@ -70,7 +77,7 @@ pub enum PptxMutation {
 /// declares them — this repository's mutation oracle registrations never parse this enum;
 /// `kinds_matches_enum_variants_and_manifest` below is what keeps the two declarations honest
 /// against each other.
-pub const KINDS: &[&str] = &["set-snapshot", "insert-slide", "remove-slide", "move-slide", "insert-shape", "remove-shape", "set-shape-text", "set-shape-position"];
+pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "insert-slide", "remove-slide", "move-slide", "insert-shape", "remove-shape", "set-shape-text", "set-shape-position"];
 
 /// 🏷️ The `KINDS` spelling of one mutation's own variant. An exhaustive match (no wildcard arm),
 /// so a new variant that forgets its kebab spelling here fails to compile rather than failing
@@ -79,6 +86,7 @@ pub const KINDS: &[&str] = &["set-snapshot", "insert-slide", "remove-slide", "mo
 pub fn kind_of(mutation: &PptxMutation) -> &'static str {
     match mutation {
         PptxMutation::SetSnapshot(_) => "set-snapshot",
+        PptxMutation::PatchSnapshot(_) => "patch-snapshot",
         PptxMutation::InsertSlide(_) => "insert-slide",
         PptxMutation::RemoveSlide(_) => "remove-slide",
         PptxMutation::MoveSlide(_) => "move-slide",
@@ -107,80 +115,50 @@ pub fn apply_pptx_mutation(snapshot: &mut PptxSnapshot, mutation: &PptxMutation)
 }
 //#endregion 🔖️Apply
 
-//#region 🔖️Helpers
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn slide_at(base: &PptxSnapshot, index: usize) -> Option<&PptxSlide> {
-    base.presentation.slides.get(index)
+//#region 🔖️CanonicalPreparation
+fn canonical_next(this: &PptxMutation, base: &PptxSnapshot) -> Result<PptxSnapshot, String> {
+    let mut next = base.clone();
+    match this {
+        PptxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => return Ok(snapshot.clone()),
+        PptxMutation::PatchSnapshot(_) => return Err("patch snapshot uses its schema-owned mutation path".into()),
+        PptxMutation::InsertSlide(insert_slide::InsertSlide { vacancy, entry }) => xml_address::insert_slide(&mut next, vacancy, entry.clone())?,
+        PptxMutation::RemoveSlide(remove_slide::RemoveSlide { address }) => xml_address::remove_slide(&mut next, address)?,
+        PptxMutation::MoveSlide(move_slide::MoveSlide { address, destination_index }) => xml_address::move_slide(&mut next, address, *destination_index)?,
+        PptxMutation::InsertShape(insert_shape::InsertShape { vacancy, shape }) => xml_address::insert_shape(&mut next, vacancy, shape.clone())?,
+        PptxMutation::RemoveShape(remove_shape::RemoveShape { address }) => xml_address::remove_shape(&mut next, address)?,
+        PptxMutation::SetShapeText(set_shape_text::SetShapeText { address, text }) => xml_address::set_shape_text(&mut next, address, text)?,
+        PptxMutation::SetShapePosition(set_shape_position::SetShapePosition { address, position }) => xml_address::set_shape_position(&mut next, address, *position)?,
+    }
+    Ok(next)
 }
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn shape_at(base: &PptxSnapshot, slide_index: usize, shape_index: usize) -> Option<&PptxShape> {
-    base.presentation.slides.get(slide_index)?.shapes.get(shape_index)
-}
-//#endregion 🔖️Helpers
+//#endregion 🔖️CanonicalPreparation
 
 //#region 🔖️MutationTrait
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_diff(this: &PptxMutation, base: &PptxSnapshot) -> protocol::MutationOutcome<PptxDiff> {
-    protocol::MutationOutcome::new(match this {
-        PptxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff_set_snapshot(base, snapshot),
-        PptxMutation::InsertSlide(insert_slide::InsertSlide { index, slide }) => diff_insert_slide(*index, slide.clone()),
-        PptxMutation::RemoveSlide(remove_slide::RemoveSlide { index }) => diff_remove_slide(*index),
-        PptxMutation::MoveSlide(move_slide::MoveSlide { from, to }) => diff_move_slide(&base.presentation, *from, *to),
-        PptxMutation::InsertShape(insert_shape::InsertShape { slide_index, shape_index, shape }) => diff_insert_shape(*slide_index, *shape_index, shape.clone()),
-        PptxMutation::RemoveShape(remove_shape::RemoveShape { slide_index, shape_index }) => diff_remove_shape(*slide_index, *shape_index),
-        PptxMutation::SetShapeText(set_shape_text::SetShapeText { slide_index, shape_index, text_frame }) => diff_set_shape_text(&base.presentation, *slide_index, *shape_index, text_frame),
-        PptxMutation::SetShapePosition(set_shape_position::SetShapePosition { slide_index, shape_index, position }) => diff_set_shape_position(&base.presentation, *slide_index, *shape_index, *position),
-    })
+    if let PptxMutation::PatchSnapshot(patch) = this {
+        return <patch_snapshot::PatchSnapshot as protocol::MutationKind<PptxSnapshot, PptxMutation>>::diff(patch, base);
+    }
+    match canonical_next(this, base) {
+        Ok(next) => protocol::MutationOutcome::new(diff_set_snapshot(base, &next)),
+        Err(message) => protocol::MutationOutcome::refuse(protocol::OutcomeCode::TargetMismatch, message, Vec::<String>::new()),
+    }
 }
 
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-// 🧭️ `NoMutation` was dropped; the four "restore the pre-state" branches that fell back to it (no
-// slide/shape/text/position to restore) now return the EMPTY inverse (`Vec::new()`) instead of a
-// synthetic no-op mutation, the same replacement tiff's own migration made for its structural axes.
-pub(crate) fn agg_inverse(this: &PptxMutation, base: &PptxSnapshot) -> Vec<PptxMutation> {
+pub(crate) fn agg_inverse(this: &PptxMutation, base: &PptxSnapshot) -> Result<Vec<PptxMutation>, semio_framework_value::ValueError> {
+    Ok({
     match this {
-        PptxMutation::SetSnapshot(_) => vec![PptxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
-        PptxMutation::InsertSlide(insert_slide::InsertSlide { index, .. }) => vec![PptxMutation::RemoveSlide(remove_slide::RemoveSlide { index: *index })],
-        PptxMutation::RemoveSlide(remove_slide::RemoveSlide { index }) => match slide_at(base, *index) {
-            Some(slide) => vec![PptxMutation::InsertSlide(insert_slide::InsertSlide { index: *index, slide: slide.clone() })],
-            None => Vec::new(),
-        },
-        PptxMutation::MoveSlide(move_slide::MoveSlide { from, to }) => {
-            // 🧭️ After moving `from -> to`, the slide ends up at `min(to, len-1)` (per
-            // `apply_indexed`'s own remove-then-insert semantics: one item shorter after the
-            // removal, then inserted at `min(to, that_shorter_len)`) -- moving it back to
-            // `from` restores the original order exactly.
-            let len = base.presentation.slides.len();
-            let final_pos = (*to).min(len.saturating_sub(1));
-            vec![PptxMutation::MoveSlide(move_slide::MoveSlide { from: final_pos, to: *from })]
-        }
-        PptxMutation::InsertShape(insert_shape::InsertShape { slide_index, shape_index, .. }) => vec![PptxMutation::RemoveShape(remove_shape::RemoveShape { slide_index: *slide_index, shape_index: *shape_index })],
-        PptxMutation::RemoveShape(remove_shape::RemoveShape { slide_index, shape_index }) => match shape_at(base, *slide_index, *shape_index) {
-            Some(shape) => vec![PptxMutation::InsertShape(insert_shape::InsertShape { slide_index: *slide_index, shape_index: *shape_index, shape: shape.clone() })],
-            None => Vec::new(),
-        },
-        PptxMutation::SetShapeText(set_shape_text::SetShapeText { slide_index, shape_index, .. }) => {
-            let old = shape_at(base, *slide_index, *shape_index).and_then(|s| match s {
-                PptxShape::TextBox { text_frame, .. } | PptxShape::Placeholder { text_frame, .. } => Some(text_frame.clone()),
-                _ => None,
-            });
-            match old {
-                Some(text_frame) => vec![PptxMutation::SetShapeText(set_shape_text::SetShapeText { slide_index: *slide_index, shape_index: *shape_index, text_frame })],
-                None => Vec::new(),
-            }
-        }
-        PptxMutation::SetShapePosition(set_shape_position::SetShapePosition { slide_index, shape_index, .. }) => {
-            let old = shape_at(base, *slide_index, *shape_index).and_then(|s| match s {
-                PptxShape::TextBox { position, .. } | PptxShape::Picture { position, .. } | PptxShape::Placeholder { position, .. } => Some(*position),
-                PptxShape::Other { .. } => None,
-            });
-            match old {
-                Some(position) => vec![PptxMutation::SetShapePosition(set_shape_position::SetShapePosition { slide_index: *slide_index, shape_index: *shape_index, position })],
-                None => Vec::new(),
-            }
-        }
+        PptxMutation::PatchSnapshot(patch) => <patch_snapshot::PatchSnapshot as protocol::MutationKind<PptxSnapshot, PptxMutation>>::inverse(patch, base)?,
+        PptxMutation::SetSnapshot(_)
+        | PptxMutation::InsertSlide(_)
+        | PptxMutation::RemoveSlide(_)
+        | PptxMutation::MoveSlide(_)
+        | PptxMutation::InsertShape(_)
+        | PptxMutation::RemoveShape(_)
+        | PptxMutation::SetShapeText(_)
+        | PptxMutation::SetShapePosition(_) => vec![PptxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
     }
+
+    })
 }
 //#endregion 🔖️MutationTrait
 
@@ -200,10 +178,10 @@ pub(crate) fn agg_inverse(this: &PptxMutation, base: &PptxSnapshot) -> Vec<PptxM
 /// field (`slides: Vec<PptxSlide>`), same convention `enc_slide`/`enc_paragraph` use.
 //#endregion 🔖️SnapshotCodec
 
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 struct PptxMutationRecord {
     kind: String,
-    value: dsl::DslValue,
+    value: semio_framework_value::DslValue,
     snapshot: Option<PptxSnapshotRecord>,
 }
 
@@ -211,19 +189,23 @@ impl OpText for PptxMutation {
     fn print_op(&self) -> String {
         let record = match self {
             PptxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => {
-                PptxMutationRecord { kind: "setSnapshot".into(), value: dsl::DslValue::Null, snapshot: Some(PptxSnapshotRecord::from_snapshot(snapshot).expect("serializable logical pptx snapshot")) }
+                PptxMutationRecord { kind: "setSnapshot".into(), value: semio_framework_value::DslValue::Null, snapshot: Some(PptxSnapshotRecord::from_snapshot(snapshot).expect("serializable logical pptx snapshot")) }
             }
-            mutation => PptxMutationRecord { kind: "mutation".into(), value: dsl::ToValue::to_value(mutation), snapshot: None },
+            mutation => PptxMutationRecord { kind: "mutation".into(), value: semio_framework_value::ToValue::to_value(mutation), snapshot: None },
         };
-        dsl::print(&record.__dsl_to_record(), &PptxMutationRecord::__dsl_spec(), dsl::JoinMode::Inline)
+        semio_framework_dsl_record::print(&record.__dsl_to_record(), &PptxMutationRecord::__dsl_spec(), semio_framework_dsl_record::JoinMode::Inline)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let record = dsl::parse(line, &PptxMutationRecord::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 64 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Inline })?;
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        let record =
+            semio_framework_dsl_record::parse(line, &PptxMutationRecord::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits { max_bytes: 64 * 1024 * 1024, ..semio_framework_diagnostic::Limits::default() }, mode: semio_framework_dsl_record::SourceMode::Inline })?;
         let model = PptxMutationRecord::__dsl_from_record(&record)?;
         match (model.kind.as_str(), model.snapshot) {
-            ("setSnapshot", Some(snapshot)) => snapshot.into_snapshot().map(|snapshot| PptxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot })).map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1))),
-            ("mutation", None) => dsl::FromValue::from_value(model.value).map_err(|error| store::TextError::new(error.to_string(), dsl::TextSpan::at(1, 1))),
-            _ => Err(store::TextError::new("PPTX mutation record kind/payload mismatch", dsl::TextSpan::at(1, 1))),
+            ("setSnapshot", Some(snapshot)) => snapshot
+                .into_snapshot()
+                .map(|snapshot| PptxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
+                .map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, semio_framework_diagnostic::TextSpan::at(1, 1))),
+            ("mutation", None) => semio_framework_value::FromValue::from_value(model.value).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1))),
+            _ => Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "PPTX mutation record kind/payload mismatch", semio_framework_diagnostic::TextSpan::at(1, 1))),
         }
     }
 }
@@ -283,15 +265,22 @@ pub(crate) fn demo_fixture() -> PptxSnapshot {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<PptxMutation> {
+    let fixture = demo_fixture();
+    let slides = xml_address::pptx_slides(&fixture).expect("canonical demo slides");
+    let first_shape = slides[0].shapes[0].address.clone();
+    let second_slide = slides[1].address.clone();
+    let slide_entry = xml_address::resolve_pptx_xml_address(&fixture, &slides[0].address.entry).expect("canonical slide entry").clone();
+    let shape_node = xml_address::resolve_pptx_xml_address(&fixture, &first_shape.node).expect("canonical shape node").clone();
     vec![
+        PptxMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         PptxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: demo_fixture() }),
-        PptxMutation::InsertSlide(insert_slide::InsertSlide { index: 1, slide: PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("x")], position: PptxTransform::default() }] } }),
-        PptxMutation::RemoveSlide(remove_slide::RemoveSlide { index: 0 }),
-        PptxMutation::MoveSlide(move_slide::MoveSlide { from: 0, to: 1 }),
-        PptxMutation::InsertShape(insert_shape::InsertShape { slide_index: 0, shape_index: 1, shape: PptxShape::Picture { blip_rel_id: "rId7".into(), position: PptxTransform { x: 1, y: 2, cx: 3, cy: 4 } } }),
-        PptxMutation::RemoveShape(remove_shape::RemoveShape { slide_index: 0, shape_index: 0 }),
-        PptxMutation::SetShapeText(set_shape_text::SetShapeText { slide_index: 0, shape_index: 0, text_frame: vec![PptxParagraph::text("z")] }),
-        PptxMutation::SetShapePosition(set_shape_position::SetShapePosition { slide_index: 0, shape_index: 0, position: PptxTransform { x: 5, y: 6, cx: 7, cy: 8 } }),
+        PptxMutation::InsertSlide(insert_slide::InsertSlide { vacancy: xml_address::pptx_slide_vacancy(&fixture, 1).expect("slide vacancy"), entry: slide_entry }),
+        PptxMutation::RemoveSlide(remove_slide::RemoveSlide { address: slides[0].address.clone() }),
+        PptxMutation::MoveSlide(move_slide::MoveSlide { address: second_slide, destination_index: 0 }),
+        PptxMutation::InsertShape(insert_shape::InsertShape { vacancy: xml_address::pptx_shape_vacancy(&fixture, &slides[0].address, 1).expect("shape vacancy"), shape: shape_node }),
+        PptxMutation::RemoveShape(remove_shape::RemoveShape { address: first_shape.clone() }),
+        PptxMutation::SetShapeText(set_shape_text::SetShapeText { address: first_shape.clone(), text: "z".into() }),
+        PptxMutation::SetShapePosition(set_shape_position::SetShapePosition { address: first_shape, position: PptxTransform { x: 5, y: 6, cx: 7, cy: 8 } }),
     ]
 }
 //#endregion 🔖️DemoCases

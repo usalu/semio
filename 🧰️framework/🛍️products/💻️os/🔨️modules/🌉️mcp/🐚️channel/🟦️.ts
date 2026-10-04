@@ -88,7 +88,7 @@ export type ShellAppCommandV1 =
   | { readonly kind: "readHistory" }
   | { readonly kind: "readArtifact" }
   | { readonly kind: "pureCommand"; readonly capabilityId: string; readonly input: unknown }
-  | { readonly kind: "transactionPrepare"; readonly txnId: string; readonly ops: ShellPreparedOpsV1; readonly label: string; readonly origin: ShellMutationOriginV1 }
+  | { readonly kind: "transactionPrepare"; readonly txnId: string; readonly ops: ShellPreparedOpsV1; readonly origin: ShellMutationOriginV1 }
   | { readonly kind: "transactionCommit"; readonly txnId: string }
   | { readonly kind: "transactionRollback"; readonly txnId: string }
   | { readonly kind: "transactionUndo"; readonly groupId: string }
@@ -170,7 +170,6 @@ export function decodeShellAppCommand(bytes: Uint8Array): ShellAppCommandV1 {
         kind: "transactionPrepare",
         txnId: requireString(record, "txnId"),
         ops: { document: lanes(ops.document), config: lanes(ops.config), draft: lanes(ops.draft) },
-        label: requireString(record, "label"),
         origin: { kind: "agent", principal: requireString(origin, "principal"), invocationId: requireString(origin, "invocationId") },
       };
     }

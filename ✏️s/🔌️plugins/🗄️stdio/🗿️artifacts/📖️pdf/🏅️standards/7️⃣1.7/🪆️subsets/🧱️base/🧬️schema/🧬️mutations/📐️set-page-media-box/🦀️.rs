@@ -23,9 +23,12 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetPageMediaBox {
         MutationOutcome::new(diff::diff_set_page_media_box(self.index, self.media_box))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         base.pages.get(self.index).map(|page| PdfMutation::SetPageMediaBox(SetPageMediaBox { index: self.index, media_box: page.media_box })).into_iter().collect()
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set page {} media box", self.index), &format!("MediaBox von Seite {} setzen", self.index))

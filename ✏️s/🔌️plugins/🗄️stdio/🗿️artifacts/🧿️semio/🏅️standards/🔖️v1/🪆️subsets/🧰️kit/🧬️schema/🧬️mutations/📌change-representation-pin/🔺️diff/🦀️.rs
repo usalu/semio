@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeRepresentationPin, base: &SemioKitSnapshot) -
         return protocol::MutationOutcome::error("mutation.target-missing", format!("No representation link exists at index #{}.", payload.index), [payload.index.to_string()]);
     };
     if existing.pin == payload.pin {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Representation link #{} is already pinned to that value.", payload.index));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Representation link #{} is already pinned to that value.", payload.index));
     }
     let mut representations = base.representations.clone();
     if let Some(link) = representations.get_mut(payload.index) {

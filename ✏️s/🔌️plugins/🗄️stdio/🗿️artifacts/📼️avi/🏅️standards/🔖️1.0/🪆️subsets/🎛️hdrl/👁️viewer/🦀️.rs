@@ -60,8 +60,27 @@ impl ArtifactViewer for AviViewer {
     const DIALECT: Dialect = AVI_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_AVI_DOCUMENT_SCHEMA;
 
+    fn register_tool_job_factories(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, semio_framework_plugin::ViewerApp<Self>>) -> Result<(), Fault> {
+        registry.register(crate::standards::v1_0::subsets::any::io::playback::AviMediaExportJobFactory::<semio_framework_plugin::ViewerApp<Self>>::new(registry.controller_id()))
+    }
+
     fn initial_snapshot() -> Self::Snapshot {
         AviSnapshot::default()
+    }
+
+    fn io() -> Option<semio_framework_plugin::AppIo> {
+        Some(semio_s_artifact_stdio_contract::media_export::playback_app_io::<crate::standards::v1_0::subsets::any::io::playback::AviPlaybackExport>())
+    }
+
+    fn build_media_export_job(request: semio_framework_plugin::ArtifactMediaExportJobRequest<semio_framework_plugin::ViewerApp<Self>>) -> Result<Option<semio_framework_plugin::ArtifactReservedToolJob>, Fault> {
+        if request.port != semio_s_artifact_stdio_contract::media_export::PLAYBACK_PORT_ID || request.tool_id != semio_s_artifact_stdio_contract::media_export::PLAYBACK_TOOL_ID {
+            return Ok(None);
+        }
+        Ok(Some(semio_framework_plugin::ArtifactReservedToolJob::new(crate::standards::v1_0::subsets::any::io::playback::AviPlaybackExportJob::new(request)?)))
+    }
+
+    fn build_snapshot_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactSnapshotDisposer<Self::Snapshot>>> {
+        Some(Box::new(semio_s_artifact_stdio_contract::media_export::RetireOwnedSnapshotDisposer::<AviSnapshot>::default()))
     }
 
     fn handle(

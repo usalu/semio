@@ -33,8 +33,8 @@ use protocol::Mutation;
 /// and only an absent key (the field's `default`) is `None` ("untouched") — the blanket `Option<T>` impl would collapse both
 /// to `None`. Paired with `skip_serializing_if = "Option::is_none"`, `payload_value()` and `with_payload_value()` round-trip.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn deserialize_double_option<T: dsl::FromValue>(value: dsl::DslValue) -> Result<Option<Option<T>>, dsl::ValueError> {
-    <Option<T> as dsl::FromValue>::from_value(value).map(Some)
+fn deserialize_double_option<T: semio_framework_value::FromValue>(value: semio_framework_value::DslValue) -> Result<Option<Option<T>>, semio_framework_value::ValueError> {
+    <Option<T> as semio_framework_value::FromValue>::from_value(value).map(Some)
 }
 //#endregion 🔖️DoubleOption
 
@@ -67,6 +67,8 @@ pub mod set_comment;
 /// check (§3b). `OpText`/`OpBinary` hand-rolled below, reusing the diff module's `pub(crate)`
 /// grammar primitives.
 //#region 🔖️Leaves
+#[path = "🩹️patch-snapshot/🦀️.rs"]
+pub mod patch_snapshot;
 #[path = "🗃️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "🖊️set-topic-markup/🦀️.rs"]
@@ -88,6 +90,7 @@ pub mod set_viewpoint_snapshot;
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum BcfMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
+    PatchSnapshot(patch_snapshot::PatchSnapshot),
     SetVersion(set_version::SetVersion),
     InsertTopic(insert_topic::InsertTopic),
     RemoveTopic(remove_topic::RemoveTopic),
@@ -108,7 +111,7 @@ pub enum BcfMutation {
 /// framework never parses Rust to check it itself). Mirrors `print_bcf_mutation`'s own keyword match
 /// entry-for-entry, so `KINDS[i]` is exactly what `print_op()` emits for the enum's `i`-th variant.
 pub const KINDS: &[&str] = &[
-    "set-snapshot",
+    "set-snapshot", "patch-snapshot",
     "set-version",
     "insert-topic",
     "remove-topic",
@@ -146,6 +149,7 @@ pub fn apply_bcf_mutation(snapshot: &mut BcfSnapshot, mutation: &BcfMutation) ->
 pub(crate) fn agg_diff(this: &BcfMutation, base: &BcfSnapshot) -> protocol::MutationOutcome<BcfDiff> {
     protocol::MutationOutcome::new(match this {
         BcfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff_set_snapshot(base, snapshot),
+        BcfMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<BcfSnapshot, BcfMutation>>::diff(patch, base),
         BcfMutation::SetVersion(set_version::SetVersion { version }) => BcfDiff { version: Some(version.clone()), topics: None, parts: None },
         BcfMutation::InsertTopic(insert_topic::InsertTopic { topic }) => BcfDiff { version: None, topics: Some(BcfTopicsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![topic.clone()] }), parts: None },
         BcfMutation::RemoveTopic(remove_topic::RemoveTopic { guid }) => BcfDiff { version: None, topics: Some(BcfTopicsDiff { removed: vec![guid.clone()], modified: Vec::new(), added: Vec::new() }), parts: None },
@@ -187,9 +191,11 @@ pub(crate) fn agg_diff(this: &BcfMutation, base: &BcfSnapshot) -> protocol::Muta
 }
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &BcfMutation, base: &BcfSnapshot) -> Vec<BcfMutation> {
+pub(crate) fn agg_inverse(this: &BcfMutation, base: &BcfSnapshot) -> Result<Vec<BcfMutation>, semio_framework_value::ValueError> {
+    Ok({
     match this {
         BcfMutation::SetSnapshot(_) => vec![BcfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
+        BcfMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<BcfSnapshot, BcfMutation>>::inverse(patch, base)?),
         BcfMutation::SetVersion(_) => vec![BcfMutation::SetVersion(set_version::SetVersion { version: base.version.clone() })],
         BcfMutation::InsertTopic(insert_topic::InsertTopic { topic }) => vec![BcfMutation::RemoveTopic(remove_topic::RemoveTopic { guid: topic.guid.clone() })],
         BcfMutation::RemoveTopic(remove_topic::RemoveTopic { guid }) => match find_topic(base, guid) {
@@ -247,6 +253,8 @@ pub(crate) fn agg_inverse(this: &BcfMutation, base: &BcfSnapshot) -> Vec<BcfMuta
             None => Vec::new(),
         },
     }
+
+    })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -286,6 +294,7 @@ fn dec_bcf_snapshot(s: &str) -> Result<BcfSnapshot, String> {
 fn print_bcf_mutation(m: &BcfMutation) -> String {
     match m {
         BcfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", enc_bcf_snapshot(snapshot)),
+        BcfMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(patch),
         BcfMutation::SetVersion(set_version::SetVersion { version }) => format!("set-version version={}", enc_str(version)),
         BcfMutation::InsertTopic(insert_topic::InsertTopic { topic }) => format!("insert-topic topic={}", enc_topic(topic)),
         BcfMutation::RemoveTopic(remove_topic::RemoveTopic { guid }) => format!("remove-topic guid={}", enc_str(guid)),
@@ -328,6 +337,7 @@ fn parse_bcf_mutation(line: &str) -> Result<BcfMutation, String> {
     let args: std::collections::BTreeMap<&str, &str> = rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("bcf mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("bcf mutation: missing arg '{k}' for '{keyword}'"));
     match keyword {
+        "patch-snapshot" => semio_s_artifact_stdio_contract::editing::snapshot_patch_from_text(line).map(|patch| BcfMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch })),
         "set-snapshot" => Ok(BcfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_bcf_snapshot(arg("snapshot")?)? })),
         "set-version" => Ok(BcfMutation::SetVersion(set_version::SetVersion { version: dec_str(arg("version")?)? })),
         "insert-topic" => Ok(BcfMutation::InsertTopic(insert_topic::InsertTopic { topic: dec_topic(arg("topic")?)? })),
@@ -367,8 +377,8 @@ impl protocol::OpText for BcfMutation {
     fn print_op(&self) -> String {
         print_bcf_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_bcf_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_bcf_mutation(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 }
 
@@ -412,6 +422,7 @@ fn read_str_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<String>, 
 /// 🏷️ Op tags of `BcfMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
 const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
 const TAG_SET_VERSION: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-version");
 const TAG_INSERT_TOPIC: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-topic");
 const TAG_REMOVE_TOPIC: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-topic");
@@ -435,6 +446,7 @@ impl protocol::OpBinary for BcfMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             BcfMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
+            BcfMutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
             BcfMutation::SetVersion(_) => TAG_SET_VERSION,
             BcfMutation::InsertTopic(_) => TAG_INSERT_TOPIC,
             BcfMutation::RemoveTopic(_) => TAG_REMOVE_TOPIC,
@@ -451,6 +463,7 @@ impl protocol::OpBinary for BcfMutation {
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
             BcfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => enc_bcf_snapshot_bin(snapshot, &mut out),
+            BcfMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => out.extend(protocol::OpBinary::encode_op(patch)?),
             BcfMutation::SetVersion(set_version::SetVersion { version }) => write_str_lp(&mut out, version),
             BcfMutation::InsertTopic(insert_topic::InsertTopic { topic }) => enc_topic_bin(topic, &mut out),
             BcfMutation::RemoveTopic(remove_topic::RemoveTopic { guid }) => write_str_lp(&mut out, guid),
@@ -528,6 +541,7 @@ impl protocol::OpBinary for BcfMutation {
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
         let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
+            TAG_PATCH_SNAPSHOT => Ok(BcfMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: <semio_s_artifact_stdio_contract::editing::SnapshotPatch as protocol::OpBinary>::decode_op(reader.read_bytes(reader.remaining()).map_err(|e| protocol::ProtocolError::Malformed { what: "patch-snapshot payload", offset: reader.position() as u64, detail: e.to_string() })?)? })),
             TAG_SET_SNAPSHOT => Ok(BcfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_bcf_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))? })),
             TAG_SET_VERSION => Ok(BcfMutation::SetVersion(set_version::SetVersion { version: read_str_lp(&mut reader).map_err(|e| malformed("op version", reader.position(), e))? })),
             TAG_INSERT_TOPIC => Ok(BcfMutation::InsertTopic(insert_topic::InsertTopic { topic: dec_topic_bin(&mut reader).map_err(|e| malformed("op topic", reader.position(), e))? })),
@@ -613,6 +627,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<BcfMutation> {
     let base = demo_snapshot_a();
     let snapshot = demo_snapshot_b();
     vec![
+        BcfMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         BcfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }),
         BcfMutation::SetVersion(set_version::SetVersion { version: "2.2".into() }),
         BcfMutation::InsertTopic(insert_topic::InsertTopic { topic: base.topics[0].clone() }),

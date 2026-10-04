@@ -9,7 +9,7 @@
 //! string.
 
 use crate::EnergyModelSnapshot;
-use semio_framework_os_kernel::{DslValue, ToValue};
+use semio_framework_value::{DslValue, ToValue};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
@@ -31,7 +31,7 @@ pub struct EnergyModelEntries {
 /// hash crate needed for a single scalar byte-string digest.
 pub fn compute_energy_model_entries(snapshot: &EnergyModelSnapshot) -> EnergyModelEntries {
     let model = crate::energy_model(snapshot);
-    let json = pack::json::to_json_string(&model);
+    let json = semio_framework_pack_json::to_json_string(&model);
     let bytes = json.as_bytes();
     let entry_count = match model.to_value() {
         DslValue::Object(entries) => entries.len() as u32,

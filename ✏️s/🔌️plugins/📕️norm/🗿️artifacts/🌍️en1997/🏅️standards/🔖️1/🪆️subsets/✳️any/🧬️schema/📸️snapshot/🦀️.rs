@@ -6,7 +6,7 @@ use framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted EN 1997 geotechnical design package.
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -226,10 +226,10 @@ pub fn noncompliant_demo() -> En1997Snapshot {
 
 //#region 🌉️ExternalCodecBridge
 pub fn encode_en1997_snapshot_json(snapshot: &En1997Snapshot) -> String {
-    pack::json::to_json_string(snapshot)
+    semio_framework_pack_json::to_json_string(snapshot)
 }
 pub fn decode_en1997_snapshot_json(text: &str) -> Result<En1997Snapshot, String> {
-    pack::json::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 pub fn decode_en1997_dsl(text: &str) -> Result<En1997Snapshot, String> {
     <En1997Snapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))

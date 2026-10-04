@@ -46,7 +46,7 @@ fn screen_to_world_for_surface(config: &LayoutWindowConfig, sx: f64, sy: f64, wi
 //#region 🔖️CanvasDrop
 //#endregion 🔖️CanvasDrop
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "canvas-drag-over")]
 pub struct CanvasDragOver {
     pub surface_id: Option<String>,

@@ -168,7 +168,7 @@ pub mod derived_construction {
     #[derive(Clone, Debug, Default)]
     pub struct DwgBuilderConstruction {
         snapshot: DwgSnapshot,
-        diagnostics: Vec<dsl::Diagnostic>,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
     }
 
     impl ArtifactBuilder for DwgBuilderConstruction {
@@ -181,7 +181,7 @@ pub mod derived_construction {
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(Self::from_snapshot(<DwgSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
@@ -195,7 +195,7 @@ pub mod derived_construction {
             self.snapshot = <DwgDiff as protocol::MutationDiff<DwgSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -243,14 +243,14 @@ pub mod derived_analysis {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <DwgSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }
@@ -295,7 +295,7 @@ pub fn demo_dwg_snapshot() -> DwgSnapshot {
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️RegisterSchemaSpecs
-/// 📇️ `DwgSnapshot`/`DwgDiff` (ac1024) both derive real `dsl::DslRecord`/`dsl::DslDiff` —
+/// 📇️ `DwgSnapshot`/`DwgDiff` (ac1024) both derive real `semio_framework_dsl_record_derive::DslRecord`/`dsl::DslDiff` —
 /// genuinely callable, same 2-call shape as `stdio.binary`/`stdio.txt`'s own
 /// `register_schema_specs`. Per-mutation-variant specs are NOT registered here — no single
 /// canonical id exists for a `Mutation` enum's N independently-shaped variants (same documented
@@ -307,8 +307,8 @@ pub fn demo_dwg_snapshot() -> DwgSnapshot {
 #[cfg(not(target_arch = "wasm32"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_schema_specs() {
-    semio_framework_plugin::resolve_ready(dsl::registry::register_schema_spec("stdio.dwg", DwgSnapshot::__dsl_spec));
-    semio_framework_plugin::resolve_ready(dsl::registry::register_schema_spec("stdio.dwg#diff", crate::schema::diff::DwgDiff::__dsl_diff_spec));
+    ::semio_framework_async::poll::resolve_ready(dsl::registry::register_schema_spec("stdio.dwg", DwgSnapshot::__dsl_spec));
+    ::semio_framework_async::poll::resolve_ready(dsl::registry::register_schema_spec("stdio.dwg#diff", crate::schema::diff::DwgDiff::__dsl_spec));
 }
 
 #[cfg(target_arch = "wasm32")]

@@ -34,14 +34,18 @@ fn ephemeral_transfer_preparation_preserves_handed_off_and_aliased_owners() {
     let factory = ArtifactEphemeralTransferPreparationFactory::new(footprint, std::convert::identity, retirement.clone(), retirement.clone());
     for hand_off in [false, true] {
         let request = ArtifactEphemeralOneItemPreparationRequest {
-            operation: semio_framework_job::OperationId(1), generation: semio_framework_job::Generation(1),
-            base: ArtifactEphemeralBaseRead(super::super::ArtifactEphemeralBaseOwner::Transient(Arc::new(payload.clone()))), mutation: payload.clone(),
+            operation: semio_framework_job::OperationId(1),
+            generation: semio_framework_job::Generation(1),
+            base: ArtifactEphemeralBaseRead(super::super::ArtifactEphemeralBaseOwner::Transient(Arc::new(payload.clone()))),
+            mutation: payload.clone(),
         };
         let mut preparation = factory.begin(request).unwrap_or_else(|_| panic!("admitted string transfer"));
         let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 0 };
         assert!(matches!(preparation.advance(grant).unwrap(), ArtifactStoreOneItemPreparationStep::Prepared(_)));
         let retained = if hand_off { preparation.take_prepared().unwrap().next_root } else { preparation.prepared().unwrap().next_root.clone() };
-        if hand_off { assert!(matches!(preparation.advance(grant).unwrap(), ArtifactStoreOneItemPreparationStep::Blocked)); }
+        if hand_off {
+            assert!(matches!(preparation.advance(grant).unwrap(), ArtifactStoreOneItemPreparationStep::Blocked));
+        }
         close(preparation.as_mut());
         assert_eq!(serde_json::to_value(retained.as_ref()).unwrap(), serde_json::to_value(&payload).unwrap());
         assert_eq!(Arc::strong_count(&retained), 1);
@@ -65,10 +69,15 @@ fn ephemeral_transfer_preparation_returns_rejected_mutation_ownership_intact() {
     mutation.push_str("retained rejection");
     let pointer = mutation.as_ptr();
     let request = ArtifactEphemeralOneItemPreparationRequest {
-        operation: semio_framework_job::OperationId(1), generation: semio_framework_job::Generation(1),
-        base: ArtifactEphemeralBaseRead(super::super::ArtifactEphemeralBaseOwner::Transient(Arc::new(String::new()))), mutation,
+        operation: semio_framework_job::OperationId(1),
+        generation: semio_framework_job::Generation(1),
+        base: ArtifactEphemeralBaseRead(super::super::ArtifactEphemeralBaseOwner::Transient(Arc::new(String::new()))),
+        mutation,
     };
-    let returned = match factory.begin(request) { Err(request) => request, Ok(_) => panic!("oversized retained capacity must reject") };
+    let returned = match factory.begin(request) {
+        Err(request) => request,
+        Ok(_) => panic!("oversized retained capacity must reject"),
+    };
     assert_eq!(returned.mutation.as_ptr(), pointer);
     assert_eq!(returned.mutation, "retained rejection");
 }
@@ -84,12 +93,16 @@ fn ephemeral_transfer_preparation_obeys_neutral_grants_and_bounded_retirement() 
         assert_eq!(mutation.len(), fixture["payload"]["utf8Bytes"].as_u64().unwrap() as usize);
         let pointer = mutation.as_ptr();
         let request = ArtifactEphemeralOneItemPreparationRequest {
-            operation: semio_framework_job::OperationId(1), generation: semio_framework_job::Generation(1),
-            base: ArtifactEphemeralBaseRead(super::super::ArtifactEphemeralBaseOwner::Transient(Arc::new(String::new()))), mutation,
+            operation: semio_framework_job::OperationId(1),
+            generation: semio_framework_job::Generation(1),
+            base: ArtifactEphemeralBaseRead(super::super::ArtifactEphemeralBaseOwner::Transient(Arc::new(String::new()))),
+            mutation,
         };
         TRANSFERS.store(0, Ordering::Relaxed);
         let mut preparation = factory.begin(request).unwrap_or_else(|_| panic!("admitted transfer fixture"));
-        if row["cancelBefore"].as_bool().unwrap() { preparation.cancel(); }
+        if row["cancelBefore"].as_bool().unwrap() {
+            preparation.cancel();
+        }
         let grant = ArtifactStoreOneItemGrant { maximum_items: row["items"].as_u64().unwrap() as usize, maximum_bytes: row["bytes"].as_u64().unwrap() as usize };
         let step = preparation.advance(grant).unwrap();
         assert_eq!(matches!(step, ArtifactStoreOneItemPreparationStep::Prepared(_)), row["prepared"].as_bool().unwrap(), "{}", row["id"]);

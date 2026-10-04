@@ -41,3 +41,5 @@ record set-block-entity-layer tag=13
 field payload bytes
 record set-block-entity-geometry tag=14
 field payload bytes
+record patch-snapshot tag=15
+field payload bytes

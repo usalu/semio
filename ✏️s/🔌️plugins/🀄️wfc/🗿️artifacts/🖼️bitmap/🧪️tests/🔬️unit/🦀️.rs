@@ -234,15 +234,15 @@ fn emit_committed_fixtures() {
         let mut after = before.clone();
         apply_bitmap_mutation(&mut after, &mutation).unwrap_or_else(|error| panic!("{kind}/{case} applies: {error}"));
         let directory = root.join("🧫️fixtures/🧬️mutations").join(kind).join(case);
-        write_fixture(&directory, "📸️snapshot/⬅️before/🔣️.json", &reindent_json(&dsl::json::to_json_string(&before)));
-        write_fixture(&directory, "📸️snapshot/➡️after/🔣️.json", &reindent_json(&dsl::json::to_json_string(&after)));
-        write_fixture(&directory, "🦠️mutation/🔣️.json", &reindent_json(&dsl::json::to_json_string(&mutation)));
-        write_fixture(&directory, "🔺️diff/🔣️.json", &reindent_json(&dsl::json::to_json_string(outcome.diff())));
+        write_fixture(&directory, "📸️snapshot/⬅️before/🔣️.json", &reindent_json(&semio_framework_pack_json::to_json_string(&before)));
+        write_fixture(&directory, "📸️snapshot/➡️after/🔣️.json", &reindent_json(&semio_framework_pack_json::to_json_string(&after)));
+        write_fixture(&directory, "🦠️mutation/🔣️.json", &reindent_json(&semio_framework_pack_json::to_json_string(&mutation)));
+        write_fixture(&directory, "🔺️diff/🔣️.json", &reindent_json(&semio_framework_pack_json::to_json_string(outcome.diff())));
         let messages: Vec<String> = outcome
             .messages()
             .iter()
             .map(|message| {
-                let level = dsl::json::to_json_string(&message.level);
+                let level = semio_framework_pack_json::to_json_string(&message.level);
                 format!("{{\"level\":{level},\"code\":\"{}\"}}", message.code.0)
             })
             .collect();

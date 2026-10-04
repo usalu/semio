@@ -9,7 +9,7 @@ pub(super) fn advance_returned_local<P: Send + Sync + 'static>(
     factory: Option<&Arc<dyn SnapshotRetirementFactory<P>>>,
     maximum_items: usize,
     maximum_bytes: usize,
-) -> Result<SnapshotRetirementStep, String> {
+) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
     if maximum_items == 0 {
         return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
     }
@@ -19,23 +19,25 @@ pub(super) fn advance_returned_local<P: Send + Sync + 'static>(
                 drop(active.take());
                 Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
             }
-            SnapshotRetirementStep::Complete => Err("presence returned local owner completed without its exact empty witness".into()),
-            SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > 1 || released_bytes > maximum_bytes => Err("presence returned local owner exceeded its exact grant".into()),
+            SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "presence returned local owner completed without its exact empty witness")),
+            SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > 1 || released_bytes > maximum_bytes => {
+                Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "presence returned local owner exceeded its exact grant"))
+            }
             step => Ok(step),
         };
     }
     if !registry.has_returned() {
         return Ok(SnapshotRetirementStep::Complete);
     }
-    let factory = factory.ok_or_else(|| "presence returned local read has no exact retirement factory".to_string())?;
+    let factory = factory.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "presence returned local read has no exact retirement factory"))?;
     match registry.try_take_one_returned::<P>() {
         Ok(Some(root)) => {
             *active = Some(factory.retire(root));
             Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
         }
         Ok(None) => Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }),
-        Err(reason) if reason == "snapshot read lease registry is busy" => Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }),
-        Err(reason) => Err(reason),
+        Err(SnapshotReadLeaseRefusal::Busy) => Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }),
+        Err(reason) => Err(reason.into_value_error()),
     }
 }
 
@@ -73,7 +75,7 @@ impl<P: Send + Sync + 'static> PresenceStoreRetirement<P> {
         }
     }
 
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -90,12 +92,14 @@ impl<P: Send + Sync + 'static> PresenceStoreRetirement<P> {
             return match step {
                 SnapshotRetirementStep::Complete => {
                     if !active.terminal_is_empty() {
-                        return Err("presence local close reported Complete without its terminal-empty witness".into());
+                        return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "presence local close reported Complete without its terminal-empty witness"));
                     }
                     drop(self.active_local.take());
                     Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
-                SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > 1 || released_bytes > maximum_bytes => Err("presence local close exceeded its exact grant".into()),
+                SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > 1 || released_bytes > maximum_bytes => {
+                    Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "presence local close exceeded its exact grant"))
+                }
                 step => Ok(step),
             };
         }
@@ -105,7 +109,7 @@ impl<P: Send + Sync + 'static> PresenceStoreRetirement<P> {
                 return Ok(step);
             }
             if !active.terminal_is_empty() {
-                return Err("presence peer close reported Complete without its terminal-empty witness".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "presence peer close reported Complete without its terminal-empty witness"));
             }
             drop(self.active_peers.take());
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
@@ -166,7 +170,7 @@ impl<P> Drop for PresenceStoreRetirement<P> {
 }
 
 impl<P: Send + Sync + 'static> ErasedSnapshotRetirement for PresenceStoreRetirement<P> {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         PresenceStoreRetirement::close_step(self, maximum_items, maximum_bytes)
     }
 

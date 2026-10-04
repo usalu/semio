@@ -19,18 +19,18 @@ fn snapshot_with_handles(handles: Vec<Block2dHandleTemplate>) -> Block2dSnapshot
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
     let snapshot = snapshot_with_handles(vec![handle("h0", 0.0, 1.0), handle("h1", FRAC_PI_2, 2.0)]);
-    assert_eq!(Block2dInference::infer(&snapshot), Block2dInference::infer(&snapshot));
+    assert_eq!(Block2dInference::infer(&snapshot).expect("valid materialized inference fixture"), Block2dInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
-    assert_eq!(Block2dInference::infer(&Block2dSnapshot::default()), Block2dInference::default());
+    assert_eq!(Block2dInference::infer(&Block2dSnapshot::default()).expect("valid materialized inference fixture"), Block2dInference::default());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn bounds_convert_polar_handles_to_cartesian() {
     let snapshot = snapshot_with_handles(vec![handle("h0", 0.0, 1.0), handle("h1", FRAC_PI_2, 2.0)]);
-    let inferred = Block2dInference::infer(&snapshot);
+    let inferred = Block2dInference::infer(&snapshot).expect("valid materialized inference fixture");
     let bounds = inferred.bounds.bounding_box.expect("non-empty handles produce a bounding box");
     assert!((bounds.min[0] - 0.0).abs() < 1e-9, "min x should be 0.0 (h0 at angle 0)");
     assert!((bounds.max[0] - 1.0).abs() < 1e-9, "max x should be 1.0 (h0 at angle 0, radius 1)");

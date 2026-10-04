@@ -7,6 +7,7 @@ import { WorldProjectionKindSwitch, worldProjectionDefaults, worldProjectionTemp
 import { afterEach, describe, expect, it, vi } from "vitest";
 import schema from "../../../../🧬️schema/🔀️projection-pane/🔣️.json" with { type: "json" };
 import fixture from "../../🧫️fixtures/🔀️projection-pane/🔣️.json" with { type: "json" };
+import readingFlow from "../../../../../../../../../🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧫️fixtures/🔤️text-flow/🔣️.json";
 
 afterEach(cleanup);
 
@@ -21,7 +22,8 @@ describe("World projection retained Tree contract", () => {
     const view = render(<FlowProvider inline="rtl" block="up"><WorldProjectionKindSwitch id={fixture.paneId} spec={worldProjectionDefaults("threePoint")} onSpecChange={onSpecChange} /></FlowProvider>);
     expect(view.getByRole(fixture.body.role)).toBeTruthy();
     expect(document.querySelectorAll("[role='treeitem']")).toHaveLength(fixture.rows.length);
-    expect(view.getByRole("tree").getAttribute("dir")).toBe(fixture.body.inline);
+    expect(fixture.body.inline).toBe("rtl");
+    expect(view.getByRole("tree").getAttribute("dir")).toBe(readingFlow.root.direction);
     expect([...document.querySelectorAll("[role='treeitem']")].map((row) => row.id)).toEqual(fixture.rows.map((row) => row.id));
     for (const row of fixture.rows) {
       const item = document.getElementById(row.id);

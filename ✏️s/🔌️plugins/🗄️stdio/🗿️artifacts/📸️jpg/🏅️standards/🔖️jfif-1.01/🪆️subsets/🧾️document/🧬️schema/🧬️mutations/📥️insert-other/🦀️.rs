@@ -27,7 +27,8 @@ impl protocol::MutationKind<JpgSnapshot, JpgMutation> for InsertOtherSegmentMuta
         let Self { index, segment } = self;
         protocol::MutationOutcome::new(contribute(base, *index, segment.clone()))
     }
-    fn inverse(&self, base: &JpgSnapshot) -> Vec<JpgMutation> {
+    fn inverse(&self, base: &JpgSnapshot) -> Result<Vec<JpgMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         let Self { index, .. } = self;
         let outcome = <Self as protocol::MutationKind<JpgSnapshot, JpgMutation>>::diff(self, base);
         if <JpgDiff as protocol::DiffAlgebra<JpgSnapshot>>::is_empty(outcome.diff()) {
@@ -36,7 +37,9 @@ impl protocol::MutationKind<JpgSnapshot, JpgMutation> for InsertOtherSegmentMuta
         {
             vec![JpgMutation::RemoveOtherSegment(crate::schema::mutations::RemoveOtherSegmentMutation { index: (*index).min(base.other_segments.len()) })]
         }
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert other segment", "Sonstiges Segment einfügen")
     }
@@ -52,7 +55,7 @@ pub fn contribute(base: &JpgSnapshot, index: usize, segment: JpgSegment) -> JpgD
 
 #[cfg(test)]
 pub(crate) fn test_case() -> JpgMutation {
-    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/📥️insert-other/🎯️direct/🦠️mutation/🔣️.json")).expect("committed insert-other-segment payload")
+    semio_framework_pack_json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/📥️insert-other/🎯️direct/🦠️mutation/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed insert-other-segment payload")
 }
 #[cfg(test)]
 #[path = "🧪️tests/🎯️direct/🦀️.rs"]

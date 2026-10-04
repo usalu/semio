@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ConnectHandles, base: &Puzzle2dSnapshot) -> protoco
         return protocol::MutationOutcome::fatal("mutation.invariant", reason, vec![payload.id.clone()]);
     }
     if base.edges.iter().any(|entry| entry.id == payload.id) {
-        return protocol::MutationOutcome::new(Puzzle2dDiff::default()).absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "already connected").at(vec![payload.id.clone()])]);
+        return protocol::MutationOutcome::new(Puzzle2dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "already connected").at(vec![payload.id.clone()])]);
     }
     let edge = Puzzle2dEdge {
         id: payload.id.clone(),

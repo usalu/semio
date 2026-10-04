@@ -10,5 +10,5 @@ async fn inference_determinism_law() {
     use crate::En1990Snapshot;
     use protocol::Inference;
     let snapshot = En1990Snapshot::default();
-    assert_eq!(En1990Inference::infer(&snapshot), En1990Inference::infer(&snapshot));
+    assert_eq!(En1990Inference::infer(&snapshot).expect("valid materialized inference fixture"), En1990Inference::infer(&snapshot).expect("valid materialized inference fixture"));
 }

@@ -168,7 +168,7 @@ mod subject {
         let stamp = stamp_conformance_class_mutation(&base, true);
         let mut snapshot = base.clone();
         apply_docx_strict_mutation(&mut snapshot, &stamp);
-        for undo in mutation_inverse(&stamp, &base) {
+        for undo in mutation_inverse(&stamp, &base).expect("valid retained mutation inverse fixture") {
             apply_docx_strict_mutation(&mut snapshot, &undo);
         }
         let output = encode(&snapshot)?;

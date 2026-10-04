@@ -20,7 +20,7 @@ pub fn diff(payload: &ReplaceSection, base: &Fem2dSnapshot) -> protocol::Mutatio
         return rejection;
     }
     if *existing == payload.new_section {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Section \"{}\" is already equal to the replacement value.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Section \"{}\" is already equal to the replacement value.", payload.id));
     }
     protocol::MutationOutcome::new(Fem2dDiff { sections: Some(Fem2dSectionsDelta { patched: vec![Fem2dSectionsPatchEntry { id: payload.id.clone(), item: payload.new_section.clone() }], ..Default::default() }), ..Default::default() })
 }

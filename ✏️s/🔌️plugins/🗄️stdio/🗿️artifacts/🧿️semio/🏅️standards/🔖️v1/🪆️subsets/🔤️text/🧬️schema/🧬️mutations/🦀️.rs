@@ -41,6 +41,7 @@ use super::set_snapshot::SetSnapshot;
 #[mutations(snapshot = SemioTextSnapshot, diff = SemioTextDiff, schema = "s.stdio.semio.text")]
 pub enum SemioTextMutation {
     SetSnapshot(SetSnapshot),
+    PatchSnapshot(super::patch_snapshot::PatchSnapshot),
     InsertRun(insert_run::InsertRun),
     RemoveRun(remove_run::RemoveRun),
     EditRun(edit_run::EditRun),
@@ -55,7 +56,7 @@ pub enum SemioTextMutation {
 /// `🔤️mutate-semio-text`'s exhaustive test case measures itself against. `kinds_match_the_enum_and_
 /// the_catalog` below is what keeps this list honest against the enum, since the framework never
 /// parses Rust.
-pub const KINDS: &[&str] = &["set-snapshot", "insert-run", "remove-run", "edit-run", "change-run-language", "reorder-runs", "add-mark", "remove-mark"];
+pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "insert-run", "remove-run", "edit-run", "change-run-language", "reorder-runs", "add-mark", "remove-mark"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -74,9 +75,12 @@ pub fn apply_semio_text_mutation(snapshot: &mut SemioTextSnapshot, mutation: &Se
 /// scenarios need a mutation's own computed inverse) can still reach the inverse law that
 /// [`apply_semio_text_mutation`] alone cannot. Same shape as `🧰️kit`'s `inverse_semio_kit_mutation`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse_semio_text_mutation(mutation: &SemioTextMutation, base: &SemioTextSnapshot) -> Vec<SemioTextMutation> {
+pub fn inverse_semio_text_mutation(mutation: &SemioTextMutation, base: &SemioTextSnapshot) -> Result<Vec<SemioTextMutation>, semio_framework_value::ValueError> {
+    Ok({
     use protocol::Mutation;
-    <SemioTextMutation as Mutation<SemioTextSnapshot>>::inverse(mutation, base)
+    <SemioTextMutation as Mutation<SemioTextSnapshot>>::inverse(mutation, base)?
+
+    })
 }
 
 /// 📥️ Decodes this facet's own externally-tagged (`{"<VariantName>": {<snake_case payload>}}`) JSON
@@ -86,7 +90,7 @@ pub fn inverse_semio_text_mutation(mutation: &SemioTextMutation, base: &SemioTex
 /// `../📸️snapshot/🦀️.rs`'s `decode_semio_text_snapshot_json`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_text_mutation_json(text: &str) -> Result<SemioTextMutation, String> {
-    pack::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Apply
 

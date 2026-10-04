@@ -10,13 +10,13 @@ pub fn register() {}
 
 /// 📥 Parse dxf text into a DxfSnapshot.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn deserialize(from: &TxtSnapshot) -> Result<DxfSnapshot, store::TextError> {
-    crate::schema::snapshot::parse_dxf_document(&from.to_body()).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+pub fn deserialize(from: &TxtSnapshot) -> Result<DxfSnapshot, semio_framework_diagnostic::TextError> {
+    crate::schema::snapshot::parse_dxf_document(&from.to_body()).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
 }
 
 /// 📥 Parse DSL/text bytes via txt then dxf.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn deserialize_text(text: &str) -> Result<DxfSnapshot, store::TextError> {
+pub fn deserialize_text(text: &str) -> Result<DxfSnapshot, semio_framework_diagnostic::TextError> {
     deserialize(&<TxtSnapshot as store::ArtifactDsl>::parse_dsl(text)?)
 }
 //#endregion 🔖️Codec

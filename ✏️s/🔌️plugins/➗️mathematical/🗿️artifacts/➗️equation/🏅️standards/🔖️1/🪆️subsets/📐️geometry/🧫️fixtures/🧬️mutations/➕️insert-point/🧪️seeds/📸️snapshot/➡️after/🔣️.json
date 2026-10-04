@@ -1,8 +1,23 @@
 {
+  "graph": {
+    "directed": true,
+    "nodes": [],
+    "edges": [],
+    "algorithm": "",
+    "algorithmSeed": null
+  },
+  "geometry": {
+    "points": [
+      {
+        "x": 5.0,
+        "y": 6.0
+      }
+    ]
+  },
   "notation": {
-    "childId": "equation-scene-insert-point-inserted-placeholder",
+    "childId": "equation-notation-a23a8a6ecb8faa68",
     "target": {
-      "artifactId": "equation-text",
+      "artifactId": "equation-notation-a23a8a6ecb8faa68",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",
@@ -11,9 +26,9 @@
     }
   },
   "results": {
-    "childId": "equation-scene-insert-point-inserted-placeholder",
+    "childId": "equation-results-7d3a7d8749e181a9",
     "target": {
-      "artifactId": "equation-table",
+      "artifactId": "equation-results-7d3a7d8749e181a9",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",
@@ -22,9 +37,9 @@
     }
   },
   "computed": {
-    "childId": "equation-scene-insert-point-inserted-placeholder",
+    "childId": "equation-computed-1fb139c862ca5699",
     "target": {
-      "artifactId": "equation-value",
+      "artifactId": "equation-computed-1fb139c862ca5699",
       "dialect": {
         "artifactKind": "s.stdio.semio",
         "standard": "v1",

@@ -11,6 +11,6 @@ fn update_grid_replaces_the_baseline_and_inverse_restores_it() {
     assert_eq!(next.grid.baseline_offset, 4.0);
     assert!(!next.grid.snap_to_baseline);
     assert_eq!(next.pages, base.pages);
-    let restored = mutation.inverse(&base)[0].diff(&next).diff().apply(&next).expect("inverse applies");
+    let restored = mutation.inverse(&base).expect("valid retained mutation inverse fixture")[0].diff(&next).diff().apply(&next).expect("inverse applies");
     assert_eq!(restored.grid, base.grid);
 }

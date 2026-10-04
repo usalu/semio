@@ -1,0 +1,24 @@
+# Rewriting Source Ownership
+
+The actual Native parent has exactly three unconstrained authored String bodies, parameter bindings containing the graph manifest's six PropertyValue variants, and a keyed layout with binary64 coordinates. These are independent persisted fields. The body strings are retained literally even when they are invalid JSON, contain NUL, or use noncanonical whitespace. They are not parsed into snapshots. Native BTreeMap ownership has unique string keys; it differs from IntrinsicValue's ordered duplicate-member domain and nine variants.
+
+The canonical Source graph property owner is now `framework/modules/graph/manifest/value`: Null, Bool, Number(Binary64), String, Array, Object. Rewriting uses this actual authority and Binary64 layout coordinates. The schema-first declared JSON contract uses closed tagged variants and closed hexadecimal IEEE words, without a finite numeric compatibility representation. Source snapshot delegates its actual parent. Its nine semantic tables are copied literally from the shared Native-authored schema, with no schema or object reflection.
+
+## Measured Results
+
+- First Source invocation stopped before assertions on two test expectation typing errors. These were repaired without touching production semantics.
+- Authentic registered Source runtime baseline: four laws, one passed and three failed, 13 assertions, 93 ms; uncached Nx 4.2 seconds. This demonstrated the finite JSON parent rejection, JSON scalar schema gap and absent semantic facade. Log: `🗑️generated/rewriting-source-runtime-baseline.log`.
+- First mounted public package pipeline: all four snapshot laws passed. Its separate full consumer compilation reported four existing Text facets returning Object results despite string aliases. They remain an owning repair obligation. Log: `🗑️generated/rewriting-source-first-mounted.log`.
+- The Rust executor independently ran the shared nine-table SQLite contract: 10/10 laws, 204 assertions. This is separate from Source provider and Native erased dispatch proof.
+
+## Current Full Source Receipt
+
+The typed map-delta expansion genuinely failed before its custom field parser could receive Binary64. The neutral map parser now validates the literal operation structure before delegating the payload to its explicit owning parser; its default payload parser still requires the existing JSON domain. After this measured repair, all five initial laws and actual consumer checks passed. No alias, compatibility union, reflection, native or JSON carrier was added.
+
+The expanded registered pipeline genuinely passed 35/35 laws, 156 assertions and strict compilation of all 77 actual published consumers. Uncached Nx test/check/verify-snapshot-sqlite-source completed in 6.9 seconds with exit zero (`🗑️generated/rewriting-final-owned-snapshot.log`). Independent Bun SQLite reserialized actual files with integrity and FK validation, including nine exact IEEE words, all nine tables/28 fixture rows, fifteen malformed semantic edits, and consistent key/FK renumbering by 1000. Exact row/schema boundaries, a 1024-level retained property, interior cancellation in projection/reconstruction, typed delta word ownership, the declared closed JSON leaf and all 28 committed snapshots were asserted. No five-second test budget was increased.
+
+This followed authentic expanded failures for an absent actual JSON leaf and stale committed scalar assets, then an erroneous literal `.0` suffix and nested string tag introduced during manual fixture alignment. Those exact asset mistakes were corrected; the final law validates the actual snapshot schema rather than a private test DTO. Artifact/snapshot schemas now both reference the explicit graph PropertyValue owner; all three arbitrary authored String bodies remain unconstrained text.
+
+The four existing Text facets, actual mutation/diff parsers, public exports, JSON leaves and manually authored fixtures now use the one canonical parent. Source package cache inputs explicitly include graph PropertyValue, the neutral map structure owner and the physical SQLite core. The Native package Source route retains its independent ten-law SQL contract and now also registers the actual 35-law facade suite. Public/build/strict launch entries remain 408.740–742 in both catalogs with literal workspace cwd.
+
+The separate existing document-contract route is genuinely GREEN with exit zero, uncached 1.9 seconds (`🗑️generated/rewriting-final-document-contract.log`). It independently validates the declared canonical Artifact/Snapshot/Diff schema and actual transport parser against Ajv and committed assets. Native nine-law baseline remains unexecuted in this lane; its production provider and Native JSON word repairs remain unmounted until Root obtains authentic Native runtime RED. No Cargo process was started.

@@ -13,7 +13,7 @@ pub fn diff(payload: &ReplaceSiteContext, base: &ProgramSnapshot) -> protocol::M
         return protocol::MutationOutcome::error("mutation.target-missing", "No site context exists with this id.", [payload.site_context.header.id.0.clone()]);
     };
     if existing == &payload.site_context {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This site context already matches the requested value.").at([existing.header.id.0.clone()])]);
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This site context already matches the requested value.").at([existing.header.id.0.clone()])]);
     }
     let patch = existing.diff_patch(&payload.site_context).expect("diff_patch always produces a full patch");
     protocol::MutationOutcome::new(ProgramDiff { site_context: Some(ProgramSiteContextDelta { patched: vec![ProgramSiteContextPatchEntry { id: payload.site_context.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })

@@ -40,7 +40,7 @@ fn remembers_the_folder_beside_its_sibling() {
 #[test]
 fn undoing_the_attachment_restores_before() {
     let base = before();
-    let inverse = <LocalFoldersConfigMutation as protocol::Mutation<LocalFolderBindings>>::inverse(&mutation(), &base);
+    let inverse = <LocalFoldersConfigMutation as protocol::Mutation<LocalFolderBindings>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
     assert!(matches!(inverse.as_slice(), [LocalFoldersConfigMutation::DetachLocalFolder(undo)] if undo.document_id == "cad.drawing.fixture"), "attach-local-folder: the undo of a new attachment is exactly one detachment of its document");
     let forward = <LocalFoldersConfigMutation as protocol::Mutation<LocalFolderBindings>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("forward attach applies");

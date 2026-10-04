@@ -156,7 +156,7 @@ mod subject {
         let base = parse_html_document(&text).map_err(|error| format!("parse_html_document failed: {error}"))?;
         let spec = ctx.doc_json()?;
         let mutation = mutation_from_spec(&spec)?;
-        let undo = mutation_inverse(&mutation, &base);
+        let undo = mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
         let original = project_html_5(&write_html_document(&base).into_bytes())?;
         let mut snapshot = base;
         let forward = apply_html_mutation(&mut snapshot, &mutation);

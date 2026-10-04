@@ -16,11 +16,11 @@ fn sample_snapshot() -> SequenceSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
     let snapshot = neural_engine::ColdOwner::new(sample_snapshot());
-    assert_eq!(SequenceInference::infer(&snapshot), SequenceInference::infer(&snapshot));
+    assert_eq!(SequenceInference::infer(&snapshot).expect("valid materialized inference fixture"), SequenceInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
-    assert_eq!(SequenceInference::infer(&neural_engine::ColdOwner::new(SequenceSnapshot::default())), SequenceInference::default());
+    assert_eq!(SequenceInference::infer(&neural_engine::ColdOwner::new(SequenceSnapshot::default())).expect("valid materialized inference fixture"), SequenceInference::default());
 }
 //#endregion 🧪️InferenceLaws

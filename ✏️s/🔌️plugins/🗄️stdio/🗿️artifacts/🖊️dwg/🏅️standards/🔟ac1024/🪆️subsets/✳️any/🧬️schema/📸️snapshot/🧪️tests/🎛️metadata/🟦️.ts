@@ -28,7 +28,7 @@ test("actual authored metadata has a controlled branch and every handwritten sha
     expect(source).toContain(`${row.factory}_producer`);
     const at = source.indexOf(`dsl::DslField for ${row.owner}`);
     expect(at).toBeGreaterThan(0);
-    expect(source.slice(at, source.indexOf("fn to_value", at))).toContain("fn shape_controlled");
+    expect(source.slice(at, source.indexOf("fn to_value(&self)", at))).toContain("fn shape_controlled");
   }
   expect(source).toContain("control.allocate_vec::<dsl::FieldSpec>(COUNT)?");
   expect(source).toContain("<$child as dsl::DslField>::shape_controlled($control)");

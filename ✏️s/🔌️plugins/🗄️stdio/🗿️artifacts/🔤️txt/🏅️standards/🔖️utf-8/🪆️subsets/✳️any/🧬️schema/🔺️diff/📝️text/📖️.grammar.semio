@@ -30,11 +30,7 @@ removed-field = "removed" "=" "[" INT* "]"
 modified-field = "modified" "=" "[" line-modified-entry* "]"
 added-field = "added" "=" "[" line-added-entry* "]"
 
-# `TxtLineModified`/`TxtLineAdded` are likewise keyword-less `#[derive(dsl::DslRecord)]` structs
-# -- each list ITEM prints as its own flat `index=<N> text=<value>` run, back to back with no
-# item separator (list-of-record boundary recovery is structural: the next item's own `index=`
-# key marks where the previous item ended -- the SAME "next real field's own leading key IS the
-# boundary" pattern the sibling mutations grammar's `snapshot-fields` sequence already relies on).
-line-modified-entry = "index" "=" INT "text" "=" text-value
-line-added-entry = "index" "=" INT "text" "=" text-value
+# The record-list printer encloses each keyword-less entry in braces.
+line-modified-entry = "{" "index" "=" INT "text" "=" text-value "}"
+line-added-entry = "{" "index" "=" INT "text" "=" text-value "}"
 text-value = IDENT | TEXT

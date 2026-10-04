@@ -7,7 +7,7 @@ use crate::schema::diff::{BinaryDiff, diff_set_snapshot};
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff(base: &BinarySnapshot, snapshot: &BinarySnapshot) -> protocol::MutationOutcome<BinaryDiff> {
     if base == snapshot {
-        return protocol::MutationOutcome::new(BinaryDiff::default()).warn("mutation.no-op", "set-snapshot: new snapshot is identical to the current one");
+        return protocol::MutationOutcome::new(BinaryDiff::default()).warning("mutation.no-op", "set-snapshot: new snapshot is identical to the current one");
     }
     protocol::MutationOutcome::new(diff_set_snapshot(base, snapshot))
 }

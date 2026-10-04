@@ -28,22 +28,22 @@ fn native_socket_probe_codec_encodes_the_fixture_shape_and_agrees_with_the_third
     let diff = NativeSocketProbeDiff(value.clone());
     let mutation = NativeSocketProbeMutation::Set(value);
 
-    assert_eq!(serde_json::Value::from(store::ToValue::to_value(&snapshot)), probe["snapshotEncoding"]);
-    assert_eq!(serde_json::Value::from(store::ToValue::to_value(&diff)), probe["diffEncoding"]);
-    assert_eq!(serde_json::Value::from(store::ToValue::to_value(&mutation)), probe["mutationEncoding"]);
+    assert_eq!(serde_json::Value::from(semio_framework_value::ToValue::to_value(&snapshot)), probe["snapshotEncoding"]);
+    assert_eq!(serde_json::Value::from(semio_framework_value::ToValue::to_value(&diff)), probe["diffEncoding"]);
+    assert_eq!(serde_json::Value::from(semio_framework_value::ToValue::to_value(&mutation)), probe["mutationEncoding"]);
     assert_eq!(serde_json::to_value(&snapshot).expect("serde oracle"), probe["snapshotEncoding"]);
     assert_eq!(serde_json::to_value(&diff).expect("serde oracle"), probe["diffEncoding"]);
     assert_eq!(serde_json::to_value(&mutation).expect("serde oracle"), probe["mutationEncoding"]);
 
-    assert_eq!(<NativeSocketProbeSnapshot as store::FromValue>::from_value(store::ToValue::to_value(&snapshot)).expect("snapshot round trip"), snapshot);
-    assert_eq!(<NativeSocketProbeDiff as store::FromValue>::from_value(store::ToValue::to_value(&diff)).expect("diff round trip"), diff);
-    assert_eq!(<NativeSocketProbeMutation as store::FromValue>::from_value(store::ToValue::to_value(&mutation)).expect("mutation round trip"), mutation);
+    assert_eq!(<NativeSocketProbeSnapshot as semio_framework_value::FromValue>::from_value(semio_framework_value::ToValue::to_value(&snapshot)).expect("snapshot round trip"), snapshot);
+    assert_eq!(<NativeSocketProbeDiff as semio_framework_value::FromValue>::from_value(semio_framework_value::ToValue::to_value(&diff)).expect("diff round trip"), diff);
+    assert_eq!(<NativeSocketProbeMutation as semio_framework_value::FromValue>::from_value(semio_framework_value::ToValue::to_value(&mutation)).expect("mutation round trip"), mutation);
 
     for rejected in probe["rejectedSnapshotEncodings"].as_array().expect("fixture snapshot rejections") {
-        assert!(<NativeSocketProbeSnapshot as store::FromValue>::from_value(store::DslValue::from(rejected)).is_err(), "snapshot must reject {rejected}");
+        assert!(<NativeSocketProbeSnapshot as semio_framework_value::FromValue>::from_value(semio_framework_value::DslValue::from(rejected)).is_err(), "snapshot must reject {rejected}");
     }
     for rejected in probe["rejectedMutationEncodings"].as_array().expect("fixture mutation rejections") {
-        assert!(<NativeSocketProbeMutation as store::FromValue>::from_value(store::DslValue::from(rejected)).is_err(), "mutation must reject {rejected}");
+        assert!(<NativeSocketProbeMutation as semio_framework_value::FromValue>::from_value(semio_framework_value::DslValue::from(rejected)).is_err(), "mutation must reject {rejected}");
     }
 }
 

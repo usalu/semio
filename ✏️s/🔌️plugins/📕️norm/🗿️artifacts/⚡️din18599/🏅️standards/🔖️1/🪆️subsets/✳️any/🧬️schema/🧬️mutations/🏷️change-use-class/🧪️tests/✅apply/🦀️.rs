@@ -31,7 +31,7 @@ async fn inverse_restores_before() {
     let mutation = mutation();
     let raised = <Din18599Mutation as protocol::Mutation<Din18599Snapshot>>::diff(&mutation, &base);
     let mut snapshot = <Din18599Diff as protocol::MutationDiff<Din18599Snapshot>>::apply(raised.diff(), &base).unwrap();
-    for step in &<Din18599Mutation as protocol::Mutation<Din18599Snapshot>>::inverse(&mutation, &base) {
+    for step in &<Din18599Mutation as protocol::Mutation<Din18599Snapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
         let raised = <Din18599Mutation as protocol::Mutation<Din18599Snapshot>>::diff(step, &snapshot);
         snapshot = <Din18599Diff as protocol::MutationDiff<Din18599Snapshot>>::apply(raised.diff(), &snapshot).unwrap();
     }

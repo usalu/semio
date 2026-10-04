@@ -14,7 +14,7 @@ pub fn diff(payload: &UpdateSynapse, base: &Generation3dSnapshot) -> protocol::M
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Synapse \"{id}\" does not exist."), [id.clone()]);
     };
     if base.host_snapshot.synapses[index] == payload.synapse {
-        return protocol::MutationOutcome::new(Generation3dDiff::default()).warn("mutation.no-op", format!("Synapse \"{id}\" is already in the requested state."));
+        return protocol::MutationOutcome::new(Generation3dDiff::default()).warning("mutation.no-op", format!("Synapse \"{id}\" is already in the requested state."));
     }
     protocol::MutationOutcome::new(diff_fixture_from_helpers(base, &WidgetsDiff::default(), &SynapsesDiff { removed: vec![], set: vec![(0, payload.synapse.clone())] }, &LayoutDiff::default(), None, None))
 }

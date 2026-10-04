@@ -1,0 +1,91 @@
+{
+  "name": "@semio-tech/trinity-rewriting",
+  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "tags": [
+    "language:typescript",
+    "role:artifact",
+    "family:trinity"
+  ],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🏷️type/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🌱️value/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧬️schema/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "outputs": [
+        "{projectRoot}/dist"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts build",
+        "forwardAllArgs": true
+      }
+    },
+    "check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🟦️typescript/../../**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🏷️type/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🌱️value/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧬️schema/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts check",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🟦️typescript/../../**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🏷️type/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🌱️value/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧬️schema/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-snapshot-sqlite-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🟦️typescript/../../**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🏷️type/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🌱️value/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧬️schema/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify snapshot-sqlite-source",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

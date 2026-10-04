@@ -9,5 +9,5 @@ fn changes_the_owned_conformance_axis_and_plans_its_inverse() {
     let outcome = <RemoveTrimBox as MutationKind<PdfSnapshot, PdfVtMutation>>::diff(&mutation, &base);
     let next = outcome.diff().apply(&base).unwrap();
     assert!(support::page_box(&next, page, "TrimBox").is_none());
-    assert_eq!(<RemoveTrimBox as MutationKind<PdfSnapshot, PdfVtMutation>>::inverse(&mutation, &base), vec![PdfVtMutation::SetTrimBox(SetTrimBox { page_index: 0, trim_box: [1.0, 2.0, 300.0, 400.0] })]);
+    assert_eq!(<RemoveTrimBox as MutationKind<PdfSnapshot, PdfVtMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture"), vec![PdfVtMutation::SetTrimBox(SetTrimBox { page_index: 0, trim_box: [1.0, 2.0, 300.0, 400.0] })]);
 }

@@ -23,8 +23,8 @@ async fn renders_the_select_a_node_placeholder_when_nothing_is_selected() {
 /// end-to-end through a (now selection-blind) app dispatch.
 #[semio_framework_async_macros::async_test]
 async fn renders_id_name_and_kind_fields_for_a_single_selected_node() {
-    let document = crate::default_snapshot();
-    let node_id = document.nodes().first().map(|node| node.id.clone()).expect("node");
+    let document = crate::examples::demo::scene();
+    let node_id = document.nodes.first().map(|node| node.id.clone()).expect("node");
     let labels = crate::editor::dag::terminology::dag_play_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let node = render(&document, &[node_id.clone()], labels).expect("inspector component tree");
     // 🖼️ A `BuiltNode`'s children live on the retained page transport — `serde_json` of the node
@@ -44,7 +44,7 @@ async fn txt_dsl_carrier_round_trips_exactly() {
     use semio_framework::io::io_mechanism::{Deserializer, Serializer};
     use semio_framework::io_schema::IoPayload;
     let snapshot = crate::empty_snapshot();
-    let exported = export::txt::v_utf_8::any::DagIntoTxt::serialize(&snapshot).await.expect("dsl txt export");
+    let exported = export::txt::v_utf_8::any::DagIntoTxt::serialize(&snapshot,&semio_framework::io::io_mechanism::ArchiveChildren::empty()).await.expect("dsl txt export");
     let IoPayload::Text(text) = exported.value else { panic!("txt is a text payload") };
     let back = import::txt::v_utf_8::any::TxtIntoDag::deserialize(&IoPayload::Text(text)).await.expect("dsl txt import");
     assert_eq!(back.value, snapshot);

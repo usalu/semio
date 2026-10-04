@@ -8,98 +8,18 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 //#endregion 📡️SemioProtocol
 
 use crate::standards::v1::subsets::any::schema::mutations::text::TrinityGraphMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{change_data_property, create_edge, create_node, delete_edge, delete_node, move_node, remove_data_property, rename_node, set_query};
-use crate::standards::v1::subsets::any::schema::snapshot::text::{port_dsl_to_port, port_to_port_dsl, PortDsl};
+use crate::standards::v1::subsets::any::schema::mutations::set_query;
+use crate::executor::GraphEffect;
 use crate::{Edge, EntityRef, JackSnapshot, Node, Port, PropertyBag, PropertyDef, PropertyValue};
 use protocol::{Mutation, MutationDiff, OpBinary, OpText};
-use store::TextError;
+use semio_framework_diagnostic::TextError;
+use semio_framework_value::{ValueError,ValueRefusalKind};
 
 //#region 🔖️DslMirrors
-/// 🏷️ The `entity` half of `EntityRefDsl` — a plain 2-variant scalar tag (`dsl::DslScalar`, not
-/// `DslEnum`): `EntityRefDsl` needs `dsl::DslField` (to bind as an ordinary record field on
-/// `TrinityGraphOperationDsl`'s variants), and a `DslRecord` of `{ kind, id }` gets that directly,
-/// unlike a tagged-variant `DslEnum`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar)]
-enum EntityKindDsl {
-    Node,
-    Edge,
-}
-
-/// 🎯️ Local twin of `EntityRef` purely for the DSL engine's tuple-variant limitation — a flat
-/// `{ kind, id }` twin, converted at the op-text boundary via `From`.
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
-struct EntityRefDsl {
-    kind: EntityKindDsl,
-    id: String,
-}
-
-impl From<&EntityRef> for EntityRefDsl {
-    fn from(value: &EntityRef) -> Self {
-        match value {
-            EntityRef::Node(id) => EntityRefDsl { kind: EntityKindDsl::Node, id: id.clone() },
-            EntityRef::Edge(id) => EntityRefDsl { kind: EntityKindDsl::Edge, id: id.clone() },
-        }
-    }
-}
-
-impl From<EntityRefDsl> for EntityRef {
-    fn from(value: EntityRefDsl) -> Self {
-        match value.kind {
-            EntityKindDsl::Node => EntityRef::Node(value.id),
-            EntityKindDsl::Edge => EntityRef::Edge(value.id),
-        }
-    }
-}
-
-/// ⚡️ Local mirror of `TrinityGraphMutation` for `protocol::OpText`/`OpBinary` — `entity: EntityRef`
-/// and `ports` fields transitively carry foreign/tuple-variant shapes, so the real enum (whose
-/// variants each wrap a handcrafted `🦠️mutation` payload struct) can't derive `dsl::DslOps`
-/// directly; this mirror's own variant names ARE the wire keywords (kept in lockstep with the real
-/// enum's semantic slugs: `RenameNode` -> `rename-node`, etc.).
-#[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
+/// ⚡️ Local mirror of `TrinityGraphMutation` for `protocol::OpText`/`OpBinary`: each variant name IS its wire keyword
+/// (`SetQuery` -> `set-query`), and the real enum's variants wrap handcrafted payload structs that cannot derive the codec.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
 enum TrinityGraphOperationDsl {
-    CreateNode {
-        id: String,
-        kind: String,
-        name: String,
-        x: f64,
-        y: f64,
-        width: f64,
-        height: f64,
-        #[dsl(table)]
-        ports: Vec<PortDsl>,
-    },
-    DeleteNode {
-        id: String,
-    },
-    CreateEdge {
-        id: String,
-        kind: String,
-        source: String,
-        target: String,
-        properties: PropertyBag,
-    },
-    DeleteEdge {
-        id: String,
-    },
-    RenameNode {
-        id: String,
-        name: String,
-    },
-    MoveNode {
-        id: String,
-        x: f64,
-        y: f64,
-    },
-    ChangeDataProperty {
-        entity: EntityRefDsl,
-        key: String,
-        value: PropertyValue,
-    },
-    RemoveDataProperty {
-        entity: EntityRefDsl,
-        key: String,
-    },
     SetQuery {
         value: String,
     },
@@ -108,21 +28,21 @@ enum TrinityGraphOperationDsl {
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
 impl OpText for TrinityGraphOperationDsl {
     fn parse_op(line: &str) -> Result<Self, TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = semio_framework_dsl_record::parse(line, &(spec_fn.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?;
+                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
+        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown mutation line '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
     }
     fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &(spec_fn.ordinary)(), dsl::JoinMode::Inline)
+        semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline)
     }
 }
 
@@ -137,37 +57,13 @@ impl OpBinary for TrinityGraphOperationDsl {
 //#endregion 🔖️HandcraftedOpCodecs
 
 fn trinity_graph_operation_to_dsl(operation: &TrinityGraphMutation) -> TrinityGraphOperationDsl {
-    match operation {
-        TrinityGraphMutation::CreateNode(payload) => {
-            let node = &payload.node;
-            TrinityGraphOperationDsl::CreateNode { id: node.id.clone(), kind: node.kind.clone(), name: node.name.clone(), x: node.x, y: node.y, width: node.width, height: node.height, ports: node.ports.iter().map(port_to_port_dsl).collect() }
-        }
-        TrinityGraphMutation::DeleteNode(payload) => TrinityGraphOperationDsl::DeleteNode { id: payload.id.clone() },
-        TrinityGraphMutation::CreateEdge(payload) => {
-            let edge = &payload.edge;
-            TrinityGraphOperationDsl::CreateEdge { id: edge.id.clone(), kind: edge.kind.clone(), source: edge.source.clone(), target: edge.target.clone(), properties: edge.properties.clone() }
-        }
-        TrinityGraphMutation::DeleteEdge(payload) => TrinityGraphOperationDsl::DeleteEdge { id: payload.id.clone() },
-        TrinityGraphMutation::RenameNode(payload) => TrinityGraphOperationDsl::RenameNode { id: payload.id.clone(), name: payload.new_name.clone() },
-        TrinityGraphMutation::MoveNode(payload) => TrinityGraphOperationDsl::MoveNode { id: payload.id.clone(), x: payload.x, y: payload.y },
-        TrinityGraphMutation::ChangeDataProperty(payload) => TrinityGraphOperationDsl::ChangeDataProperty { entity: (&payload.entity).into(), key: payload.key.clone(), value: payload.new_value.clone() },
-        TrinityGraphMutation::RemoveDataProperty(payload) => TrinityGraphOperationDsl::RemoveDataProperty { entity: (&payload.entity).into(), key: payload.key.clone() },
-        TrinityGraphMutation::SetQuery(payload) => TrinityGraphOperationDsl::SetQuery { value: payload.value.clone() },
-    }
+    let TrinityGraphMutation::SetQuery(payload) = operation;
+    TrinityGraphOperationDsl::SetQuery { value: payload.value.clone() }
 }
 
 fn trinity_graph_operation_from_dsl(operation: TrinityGraphOperationDsl) -> TrinityGraphMutation {
-    match operation {
-        TrinityGraphOperationDsl::CreateNode { id, kind, name, x, y, width, height, ports } => create_node(Node { id, kind, name, x, y, width, height, properties: PropertyBag::new(), ports: ports.into_iter().map(port_dsl_to_port).collect() }),
-        TrinityGraphOperationDsl::DeleteNode { id } => delete_node(id),
-        TrinityGraphOperationDsl::CreateEdge { id, kind, source, target, properties } => create_edge(Edge { id, kind, source, target, properties }),
-        TrinityGraphOperationDsl::DeleteEdge { id } => delete_edge(id),
-        TrinityGraphOperationDsl::RenameNode { id, name } => rename_node(id, name),
-        TrinityGraphOperationDsl::MoveNode { id, x, y } => move_node(id, x, y),
-        TrinityGraphOperationDsl::ChangeDataProperty { entity, key, value } => change_data_property(entity.into(), key, value),
-        TrinityGraphOperationDsl::RemoveDataProperty { entity, key } => remove_data_property(entity.into(), key),
-        TrinityGraphOperationDsl::SetQuery { value } => set_query(value),
-    }
+    let TrinityGraphOperationDsl::SetQuery { value } = operation;
+    set_query(value)
 }
 //#endregion 🔖️DslMirrors
 
@@ -224,9 +120,10 @@ enum JackMutationFields {
 
 enum JackRetirementOwner {
     Snapshot(JackSnapshot),
-    SceneRoot(std::sync::Arc<crate::JackWorkingScene>),
-    Scene(crate::JackWorkingScene),
+    ContentRoot(std::sync::Arc<crate::JackContentOwner>),
+    Content(Box<dyn store::ErasedSnapshotRetirement>),
     Mutation(TrinityGraphMutation),
+    Effect(GraphEffect),
     MutationFields(JackMutationFields),
     Property(PropertyValue),
     Bag(PropertyBag),
@@ -302,23 +199,23 @@ impl JackOwnedRetirement {
 
     /// 📏️ Bounded owned-byte size of one manifest entry — `Err` as soon as it exceeds the grant, so the
     /// estimate itself never walks more than one grant's worth of fields.
-    fn properties_owned_bytes(properties: &[PropertyDef], maximum_bytes: usize) -> Result<usize, &'static str> {
+    fn properties_owned_bytes(properties: &[PropertyDef], maximum_bytes: usize) -> Result<usize, ValueError> {
         properties.iter().try_fold(0usize, |bytes, property| {
-            let remaining = maximum_bytes.checked_sub(bytes).ok_or("jack-retirement.entry-too-large")?;
-            bytes.checked_add(JackSnapshotCloneAuthority::property_owned_bytes(property, remaining)?.max(1)).filter(|bytes| *bytes <= maximum_bytes).ok_or("jack-retirement.entry-too-large")
+            let remaining = maximum_bytes.checked_sub(bytes).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"jack-retirement.entry-too-large"))?;
+            bytes.checked_add(JackSnapshotCloneAuthority::property_owned_bytes(property, remaining)?.max(1)).filter(|bytes| *bytes <= maximum_bytes).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"jack-retirement.entry-too-large"))
         })
     }
 
-    fn kind_owned_bytes(owner: &JackRetirementOwner, maximum_bytes: usize) -> Result<usize, &'static str> {
+    fn kind_owned_bytes(owner: &JackRetirementOwner, maximum_bytes: usize) -> Result<usize, ValueError> {
         let (name, properties, port_kinds): (&str, &[PropertyDef], &[String]) = match owner {
             JackRetirementOwner::NodeKind(kind) => (&kind.name, &kind.properties, &kind.port_kinds),
             JackRetirementOwner::EdgeKind(kind) => (&kind.name, &kind.properties, &[]),
             JackRetirementOwner::PortKind(kind) => (&kind.name, &kind.properties, &[]),
             JackRetirementOwner::PropertyDef(property) => return JackSnapshotCloneAuthority::property_owned_bytes(property, maximum_bytes).map(|bytes| bytes.max(1)),
-            _ => return Err("jack-retirement.entry-not-shallow"),
+            _ => return Err(ValueError::new(ValueRefusalKind::InvalidValue,"jack-retirement.entry-not-shallow")),
         };
-        let ports = port_kinds.iter().try_fold(name.len().max(1), |bytes, port| bytes.checked_add(port.len().max(1)).filter(|bytes| *bytes <= maximum_bytes)).ok_or("jack-retirement.entry-too-large")?;
-        ports.checked_add(Self::properties_owned_bytes(properties, maximum_bytes.checked_sub(ports).ok_or("jack-retirement.entry-too-large")?)?).filter(|bytes| *bytes <= maximum_bytes).ok_or("jack-retirement.entry-too-large")
+        let ports = port_kinds.iter().try_fold(name.len().max(1), |bytes, port| bytes.checked_add(port.len().max(1)).filter(|bytes| *bytes <= maximum_bytes)).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"jack-retirement.entry-too-large"))?;
+        ports.checked_add(Self::properties_owned_bytes(properties, maximum_bytes.checked_sub(ports).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"jack-retirement.entry-too-large"))?)?).filter(|bytes| *bytes <= maximum_bytes).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"jack-retirement.entry-too-large"))
     }
 
     /// 🧺️ A manifest entry whose whole owned size fits the grant is one released item: its nested
@@ -361,12 +258,12 @@ impl JackOwnedRetirement {
         match owner {
             JackRetirementOwner::Snapshot(value) => match self.phase {
                 0 => {
-                    let scene = match value.content.take_local_owner::<crate::JackWorkingScene>() {
-                        Ok(scene) => scene,
+                    let content = match value.content.take_local_owner::<crate::JackContentOwner>() {
+                        Ok(content) => content,
                         Err(_) => return store::SnapshotRetirementStep::Blocked,
                     };
                     self.phase = 1;
-                    scene.map_or(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }, |scene| Self::spawn(&mut self.active, JackRetirementOwner::SceneRoot(scene)))
+                    content.map_or(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }, |content| Self::spawn(&mut self.active, JackRetirementOwner::ContentRoot(content)))
                 }
                 1 => Self::phased_string_step(&mut value.schema, &mut self.phase, 2, maximum_items, maximum_bytes),
                 2 => Self::phased_string_step(&mut value.name, &mut self.phase, 3, maximum_items, maximum_bytes),
@@ -416,50 +313,61 @@ impl JackOwnedRetirement {
                     store::SnapshotRetirementStep::Complete
                 }
             },
-            JackRetirementOwner::SceneRoot(_) => {
+            JackRetirementOwner::ContentRoot(_) => {
                 if maximum_items == 0 {
                     return store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 };
                 }
-                let scene = match self.owner.take() {
-                    Some(JackRetirementOwner::SceneRoot(scene)) => scene,
-                    _ => unreachable!("Jack scene root owner remains exact"),
+                let content = match self.owner.take() {
+                    Some(JackRetirementOwner::ContentRoot(content)) => content,
+                    _ => unreachable!("Jack content root owner remains exact"),
                 };
-                match std::sync::Arc::try_unwrap(scene) {
-                    Ok(scene) => {
-                        *self.owner = Some(JackRetirementOwner::Scene(scene));
+                match std::sync::Arc::try_unwrap(content).map(|mut content| content.take_snapshot()) {
+                    Ok(Some(snapshot)) => {
+                        *self.owner = Some(JackRetirementOwner::Content(semio_framework_value::retirement::owned_retirement(snapshot)));
                         store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }
                     }
-                    Err(scene) => {
-                        drop(scene);
+                    Ok(None) => store::SnapshotRetirementStep::Complete,
+                    Err(content) => {
+                        drop(content);
                         store::SnapshotRetirementStep::Complete
                     }
                 }
             }
-            JackRetirementOwner::Scene(scene) => {
-                if let Some(node) = scene.nodes.pop() {
-                    return Self::spawn(&mut self.active, JackRetirementOwner::Node(node));
+            JackRetirementOwner::Content(cursor) => {
+                let step = cursor.close_step(maximum_items, maximum_bytes);
+                let terminal = cursor.terminal_is_empty();
+                match step {
+                    Ok(store::SnapshotRetirementStep::Complete) if terminal => {
+                        drop(self.owner.take());
+                        store::SnapshotRetirementStep::Complete
+                    }
+                    Ok(store::SnapshotRetirementStep::Complete) | Err(_) => store::SnapshotRetirementStep::Blocked,
+                    Ok(step) => step,
                 }
-                if let Some(edge) = scene.edges.pop() {
-                    return Self::spawn(&mut self.active, JackRetirementOwner::Edge(edge));
-                }
-                drop(self.owner.take());
-                store::SnapshotRetirementStep::Complete
             }
             JackRetirementOwner::Mutation(_) => {
                 let mutation = match self.owner.take() {
                     Some(JackRetirementOwner::Mutation(value)) => value,
                     _ => unreachable!("Jack mutation owner variant remains exact"),
                 };
-                let fields = match mutation {
-                    TrinityGraphMutation::CreateNode(value) => JackMutationFields::CreateNode(Some(value.node)),
-                    TrinityGraphMutation::DeleteNode(value) => JackMutationFields::DeleteNode(value.id),
-                    TrinityGraphMutation::CreateEdge(value) => JackMutationFields::CreateEdge(Some(value.edge)),
-                    TrinityGraphMutation::DeleteEdge(value) => JackMutationFields::DeleteEdge(value.id),
-                    TrinityGraphMutation::RenameNode(value) => JackMutationFields::RenameNode { id: value.id, name: value.new_name },
-                    TrinityGraphMutation::MoveNode(value) => JackMutationFields::MoveNode(value.id),
-                    TrinityGraphMutation::ChangeDataProperty(value) => JackMutationFields::ChangeDataProperty { entity: Some(value.entity), key: value.key, value: Some(value.new_value) },
-                    TrinityGraphMutation::RemoveDataProperty(value) => JackMutationFields::RemoveDataProperty { entity: Some(value.entity), key: value.key },
-                    TrinityGraphMutation::SetQuery(value) => JackMutationFields::SetQuery(value.value),
+                let TrinityGraphMutation::SetQuery(value) = mutation;
+                *self.owner = Some(JackRetirementOwner::MutationFields(JackMutationFields::SetQuery(value.value)));
+                store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }
+            }
+            JackRetirementOwner::Effect(_) => {
+                let effect = match self.owner.take() {
+                    Some(JackRetirementOwner::Effect(value)) => value,
+                    _ => unreachable!("Jack effect owner variant remains exact"),
+                };
+                let fields = match effect {
+                    GraphEffect::CreateNode(node) => JackMutationFields::CreateNode(Some(node)),
+                    GraphEffect::DeleteNode(id) => JackMutationFields::DeleteNode(id),
+                    GraphEffect::CreateEdge(edge) => JackMutationFields::CreateEdge(Some(edge)),
+                    GraphEffect::DeleteEdge(id) => JackMutationFields::DeleteEdge(id),
+                    GraphEffect::RenameNode { id, name } => JackMutationFields::RenameNode { id, name },
+                    GraphEffect::MoveNode { id, .. } => JackMutationFields::MoveNode(id),
+                    GraphEffect::SetProperty { entity, key, value } => JackMutationFields::ChangeDataProperty { entity: Some(entity), key, value: Some(value) },
+                    GraphEffect::RemoveProperty { entity, key } => JackMutationFields::RemoveDataProperty { entity: Some(entity), key },
                 };
                 *self.owner = Some(JackRetirementOwner::MutationFields(fields));
                 store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }
@@ -542,7 +450,7 @@ impl JackOwnedRetirement {
                     store::SnapshotRetirementStep::Complete
                 }
                 PropertyValue::Object(values) => {
-                    if let Some((key, value)) = values.pop_first() {
+                    if let Some((key, value)) = values.pop_last() {
                         if key.len() > maximum_bytes || maximum_items == 0 {
                             values.insert(key, value);
                             return store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 };
@@ -561,7 +469,7 @@ impl JackOwnedRetirement {
                 }
             },
             JackRetirementOwner::Bag(values) => {
-                if let Some((key, value)) = values.pop_first() {
+                if let Some((key, value)) = values.pop_last() {
                     if key.len() > maximum_bytes || maximum_items == 0 {
                         values.insert(key, value);
                         return store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 };
@@ -725,14 +633,14 @@ impl JackOwnedRetirement {
 }
 
 impl store::ErasedSnapshotRetirement for JackOwnedRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, ValueError> {
         if let Some(active) = self.active.as_mut() {
             return match active.close_step(maximum_items.min(1), maximum_bytes)? {
                 store::SnapshotRetirementStep::Complete if active.terminal_is_empty() => {
                     drop(self.active.take());
                     Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
-                store::SnapshotRetirementStep::Complete => Err("Jack nested retirement reported false terminal".into()),
+                store::SnapshotRetirementStep::Complete => Err(ValueError::new(ValueRefusalKind::InvariantViolated,"Jack nested retirement reported false terminal")),
                 step => Ok(step),
             };
         }
@@ -765,7 +673,7 @@ struct JackSnapshotRootRetirement {
 }
 
 impl store::ErasedSnapshotRetirement for JackSnapshotRootRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, ValueError> {
         if maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -775,7 +683,7 @@ impl store::ErasedSnapshotRetirement for JackSnapshotRootRetirement {
                     drop(self.retirement.take());
                     Ok(store::SnapshotRetirementStep::Complete)
                 }
-                store::SnapshotRetirementStep::Complete => Err("Jack root retirement reported false terminal".into()),
+                store::SnapshotRetirementStep::Complete => Err(ValueError::new(ValueRefusalKind::InvariantViolated,"Jack root retirement reported false terminal")),
                 step => Ok(step),
             };
         }
@@ -814,6 +722,15 @@ pub struct JackMutationRetirementFactory;
 impl store::ArtifactOwnedValueRetirementFactory<TrinityGraphMutation> for JackMutationRetirementFactory {
     fn retire_owned(&self, value: TrinityGraphMutation) -> Box<dyn store::ErasedSnapshotRetirement> {
         Box::new(JackOwnedRetirement::new(JackRetirementOwner::Mutation(value)))
+    }
+}
+
+/// 🧮️ Retires a query effect's owned strings, nodes, edges and property values through the bounded Jack cursor.
+pub struct JackEffectRetirementFactory;
+
+impl store::ArtifactOwnedValueRetirementFactory<GraphEffect> for JackEffectRetirementFactory {
+    fn retire_owned(&self, value: GraphEffect) -> Box<dyn store::ErasedSnapshotRetirement> {
+        Box::new(JackOwnedRetirement::new(JackRetirementOwner::Effect(value)))
     }
 }
 
@@ -1182,53 +1099,53 @@ impl JackSnapshotCloneAuthority {
         }
     }
 
-    fn clone_string(source: &str, maximum_bytes: usize) -> Result<String, &'static str> {
+    fn clone_string(source: &str, maximum_bytes: usize) -> Result<String, ValueError> {
         if source.len() > maximum_bytes {
-            return Err("jack-store.initializer-field-too-large");
+            return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"jack-store.initializer-field-too-large"));
         }
         let mut value = String::new();
-        value.try_reserve_exact(source.len()).map_err(|_| "jack-store.initializer-string-admission")?;
+        value.try_reserve_exact(source.len()).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"jack-store.initializer-string-admission"))?;
         value.push_str(source);
         Ok(value)
     }
 
-    fn value_type_owned_bytes(source: &semio_framework_value::ValueType, maximum_bytes: usize) -> Result<usize, &'static str> {
+    fn value_type_owned_bytes(source: &semio_framework_value::ValueType, maximum_bytes: usize) -> Result<usize, ValueError> {
         let mut bytes = 0usize;
         let mut value = source;
         loop {
             match value {
                 semio_framework_value::ValueType::List(inner) => {
-                    bytes = bytes.checked_add(size_of::<Box<semio_framework_value::ValueType>>()).ok_or("jack-store.initializer-property-size")?;
+                    bytes = bytes.checked_add(size_of::<Box<semio_framework_value::ValueType>>()).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"jack-store.initializer-property-size"))?;
                     if bytes > maximum_bytes {
-                        return Err("jack-store.initializer-property-too-large");
+                        return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"jack-store.initializer-property-too-large"));
                     }
                     value = inner;
                 }
                 semio_framework_value::ValueType::Schema(schema) => {
-                    bytes = bytes.checked_add(schema.len()).ok_or("jack-store.initializer-property-size")?;
-                    return (bytes <= maximum_bytes).then_some(bytes).ok_or("jack-store.initializer-property-too-large");
+                    bytes = bytes.checked_add(schema.len()).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"jack-store.initializer-property-size"))?;
+                    return (bytes <= maximum_bytes).then_some(bytes).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"jack-store.initializer-property-too-large"));
                 }
                 _ => return Ok(bytes),
             }
         }
     }
 
-    fn property_owned_bytes(source: &PropertyDef, maximum_bytes: usize) -> Result<usize, &'static str> {
+    fn property_owned_bytes(source: &PropertyDef, maximum_bytes: usize) -> Result<usize, ValueError> {
         let value_type = Self::value_type_owned_bytes(&source.value_type, maximum_bytes)?;
-        source.name.len().checked_add(source.expr.as_ref().map_or(0, String::len)).and_then(|bytes| bytes.checked_add(value_type)).filter(|bytes| *bytes <= maximum_bytes).ok_or("jack-store.initializer-property-too-large")
+        source.name.len().checked_add(source.expr.as_ref().map_or(0, String::len)).and_then(|bytes| bytes.checked_add(value_type)).filter(|bytes| *bytes <= maximum_bytes).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"jack-store.initializer-property-too-large"))
     }
 
-    fn clone_property(source: &PropertyDef, maximum_bytes: usize) -> Result<PropertyDef, &'static str> {
+    fn clone_property(source: &PropertyDef, maximum_bytes: usize) -> Result<PropertyDef, ValueError> {
         Self::property_owned_bytes(source, maximum_bytes)?;
         Ok(source.clone())
     }
 
-    fn begin_kind(&mut self, source: &JackSnapshot, maximum_bytes: usize) -> Result<bool, &'static str> {
-        let target = self.value.as_mut().ok_or("jack-store.initializer-clone-target")?;
+    fn begin_kind(&mut self, source: &JackSnapshot, maximum_bytes: usize) -> Result<bool, ValueError> {
+        let target = self.value.as_mut().ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"jack-store.initializer-clone-target"))?;
         match self.phase {
             4 => {
                 if self.index == 0 && target.manifest.node_kinds.capacity() == 0 {
-                    target.manifest.node_kinds.try_reserve_exact(source.manifest.node_kinds.len()).map_err(|_| "jack-store.initializer-node-kind-admission")?;
+                    target.manifest.node_kinds.try_reserve_exact(source.manifest.node_kinds.len()).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"jack-store.initializer-node-kind-admission"))?;
                 }
                 let Some(kind) = source.manifest.node_kinds.get(self.index) else {
                     self.phase = 5;
@@ -1236,16 +1153,16 @@ impl JackSnapshotCloneAuthority {
                     return Ok(true);
                 };
                 let mut properties = Vec::new();
-                properties.try_reserve_exact(kind.properties.len()).map_err(|_| "jack-store.initializer-node-property-admission")?;
+                properties.try_reserve_exact(kind.properties.len()).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"jack-store.initializer-node-property-admission"))?;
                 let mut port_kinds = Vec::new();
-                port_kinds.try_reserve_exact(kind.port_kinds.len()).map_err(|_| "jack-store.initializer-node-port-admission")?;
+                port_kinds.try_reserve_exact(kind.port_kinds.len()).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"jack-store.initializer-node-port-admission"))?;
                 *self.active =
                     Some(JackSnapshotCloneKind::Node { source: self.index, property: 0, port: 0, value: crate::NodeKindDef { name: Self::clone_string(&kind.name, maximum_bytes)?, properties, port_kinds } });
                 Ok(true)
             }
             5 => {
                 if self.index == 0 && target.manifest.edge_kinds.capacity() == 0 {
-                    target.manifest.edge_kinds.try_reserve_exact(source.manifest.edge_kinds.len()).map_err(|_| "jack-store.initializer-edge-kind-admission")?;
+                    target.manifest.edge_kinds.try_reserve_exact(source.manifest.edge_kinds.len()).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"jack-store.initializer-edge-kind-admission"))?;
                 }
                 let Some(kind) = source.manifest.edge_kinds.get(self.index) else {
                     self.phase = 6;
@@ -1253,13 +1170,13 @@ impl JackSnapshotCloneAuthority {
                     return Ok(true);
                 };
                 let mut properties = Vec::new();
-                properties.try_reserve_exact(kind.properties.len()).map_err(|_| "jack-store.initializer-edge-property-admission")?;
+                properties.try_reserve_exact(kind.properties.len()).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"jack-store.initializer-edge-property-admission"))?;
                 *self.active = Some(JackSnapshotCloneKind::Edge { source: self.index, property: 0, value: crate::EdgeKindDef { name: Self::clone_string(&kind.name, maximum_bytes)?, properties } });
                 Ok(true)
             }
             6 => {
                 if self.index == 0 && target.manifest.port_kinds.capacity() == 0 {
-                    target.manifest.port_kinds.try_reserve_exact(source.manifest.port_kinds.len()).map_err(|_| "jack-store.initializer-port-kind-admission")?;
+                    target.manifest.port_kinds.try_reserve_exact(source.manifest.port_kinds.len()).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"jack-store.initializer-port-kind-admission"))?;
                 }
                 let Some(kind) = source.manifest.port_kinds.get(self.index) else {
                     self.phase = 7;
@@ -1267,7 +1184,7 @@ impl JackSnapshotCloneAuthority {
                     return Ok(true);
                 };
                 let mut properties = Vec::new();
-                properties.try_reserve_exact(kind.properties.len()).map_err(|_| "jack-store.initializer-port-property-admission")?;
+                properties.try_reserve_exact(kind.properties.len()).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"jack-store.initializer-port-property-admission"))?;
                 *self.active =
                     Some(JackSnapshotCloneKind::Port { source: self.index, property: 0, value: crate::PortKindDef { name: Self::clone_string(&kind.name, maximum_bytes)?, direction: kind.direction, properties } });
                 Ok(true)
@@ -1276,14 +1193,14 @@ impl JackSnapshotCloneAuthority {
         }
     }
 
-    pub fn advance(&mut self, source: &JackSnapshot, maximum_bytes: usize) -> Result<JackSnapshotCloneStep, &'static str> {
+    pub fn advance(&mut self, source: &JackSnapshot, maximum_bytes: usize) -> Result<JackSnapshotCloneStep, ValueError> {
         if maximum_bytes == 0 {
             return Ok(JackSnapshotCloneStep::Pending { copied_bytes: 0 });
         }
         if let Some(active) = self.active.as_mut() {
             let (completed, copied_bytes) = match active {
                 JackSnapshotCloneKind::Node { source: source_index, property, port, value } => {
-                    let source = source.manifest.node_kinds.get(*source_index).ok_or("jack-store.initializer-node-kind-stale")?;
+                    let source = source.manifest.node_kinds.get(*source_index).ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"jack-store.initializer-node-kind-stale"))?;
                     if let Some(definition) = source.properties.get(*property) {
                         value.properties.push(Self::clone_property(definition, maximum_bytes)?);
                         *property += 1;
@@ -1297,7 +1214,7 @@ impl JackSnapshotCloneAuthority {
                     }
                 }
                 JackSnapshotCloneKind::Edge { source: source_index, property, value } => {
-                    let source = source.manifest.edge_kinds.get(*source_index).ok_or("jack-store.initializer-edge-kind-stale")?;
+                    let source = source.manifest.edge_kinds.get(*source_index).ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"jack-store.initializer-edge-kind-stale"))?;
                     if let Some(definition) = source.properties.get(*property) {
                         value.properties.push(Self::clone_property(definition, maximum_bytes)?);
                         *property += 1;
@@ -1307,7 +1224,7 @@ impl JackSnapshotCloneAuthority {
                     }
                 }
                 JackSnapshotCloneKind::Port { source: source_index, property, value } => {
-                    let source = source.manifest.port_kinds.get(*source_index).ok_or("jack-store.initializer-port-kind-stale")?;
+                    let source = source.manifest.port_kinds.get(*source_index).ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"jack-store.initializer-port-kind-stale"))?;
                     if let Some(definition) = source.properties.get(*property) {
                         value.properties.push(Self::clone_property(definition, maximum_bytes)?);
                         *property += 1;
@@ -1319,7 +1236,7 @@ impl JackSnapshotCloneAuthority {
             };
             if completed {
                 let active = self.active.take().expect("completed Jack kind clone remains exact");
-                let target = self.value.as_mut().ok_or("jack-store.initializer-clone-target")?;
+                let target = self.value.as_mut().ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"jack-store.initializer-clone-target"))?;
                 match active {
                     JackSnapshotCloneKind::Node { value, .. } => target.manifest.node_kinds.push(value),
                     JackSnapshotCloneKind::Edge { value, .. } => target.manifest.edge_kinds.push(value),
@@ -1332,7 +1249,7 @@ impl JackSnapshotCloneAuthority {
         if self.begin_kind(source, maximum_bytes)? {
             return Ok(JackSnapshotCloneStep::Pending { copied_bytes: 0 });
         }
-        let target = self.value.as_mut().ok_or("jack-store.initializer-clone-target")?;
+        let target = self.value.as_mut().ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"jack-store.initializer-clone-target"))?;
         let copied_bytes = match self.phase {
             0 => {
                 target.schema = Self::clone_string(&source.schema, maximum_bytes)?;
@@ -1353,7 +1270,7 @@ impl JackSnapshotCloneAuthority {
             7 => {
                 target.content.child_id = Self::clone_string(&source.content.child_id, maximum_bytes)?;
                 if self.retain_local_owner {
-                    if let Some(owner) = source.content.local_owner::<crate::JackWorkingScene>() {
+                    if let Some(owner) = source.content.local_owner::<crate::JackContentOwner>() {
                         target.content.set_local_owner(owner);
                     }
                 }
@@ -1392,25 +1309,8 @@ impl JackSnapshotCloneAuthority {
         Ok(JackSnapshotCloneStep::Pending { copied_bytes })
     }
 
-    fn step(&mut self, source: &JackSnapshot, digest: &mut store::ArtifactStoreInitializationDigest, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
-        let phase = self.phase;
-        let active = self.active.is_some();
+    fn step(&mut self, source: &JackSnapshot, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, ValueError> {
         let step = self.advance(source, JACK_OWNED_FIELD_BYTES)?;
-        if !active {
-            match phase {
-                0 => digest.observe(source.schema.as_bytes()),
-                1 => digest.observe(source.name.as_bytes()),
-                2 => digest.observe(source.manifest_id.as_deref().unwrap_or_default().as_bytes()),
-                7 => digest.observe(source.content.child_id.as_bytes()),
-                8 => digest.observe(source.content.target.artifact_id.as_bytes()),
-                9 => digest.observe(source.content.target.dialect.artifact_kind.as_bytes()),
-                10 => digest.observe(source.content.target.dialect.standard.as_bytes()),
-                11 => digest.observe(source.content.target.dialect.subset.as_bytes()),
-                12 => digest.observe(source.root_node_id.as_deref().unwrap_or_default().as_bytes()),
-                13 => digest.observe(source.query.as_bytes()),
-                _ => {}
-            }
-        }
         match step {
             JackSnapshotCloneStep::Pending { copied_bytes } => {
                 cx.consume_fuel(copied_bytes.max(1) as u64);
@@ -1427,7 +1327,7 @@ impl JackSnapshotCloneAuthority {
         self.value.take()
     }
 
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, ValueError> {
         if maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -1454,7 +1354,7 @@ impl JackSnapshotCloneAuthority {
                 drop(self.retirement.take());
                 Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
             }
-            store::SnapshotRetirementStep::Complete => Err("Jack clone retirement reported false terminal".into()),
+            store::SnapshotRetirementStep::Complete => Err(ValueError::new(ValueRefusalKind::InvariantViolated,"Jack clone retirement reported false terminal")),
             step => Ok(step),
         }
     }
@@ -1482,16 +1382,14 @@ pub fn jack_document_store_owners() -> store::DocumentStoreOwners<JackSnapshot, 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum JackStoreInitializationPhase {
     ValidateEnvelope,
-    ValidateEditPair { left: usize, right: usize },
+    ValidateEdit { index: usize },
     CloneInitial,
     SeedHistory { edit: usize, lane: u8, index: usize },
-    FindApplied { position: usize, scan: usize },
+    FoldSupersessions { transition: usize },
+    FindApplied { position: usize },
     ApplyForward { position: usize, edit: usize, mutation: usize },
-    HashInverse { position: usize, edit: usize, mutation: usize },
     CommitApplied { position: usize, edit: usize },
-    FindRedo { position: usize, scan: usize },
-    HashRedoForward { position: usize, edit: usize, mutation: usize },
-    HashRedoInverse { position: usize, edit: usize, mutation: usize },
+    FindRedo { position: usize },
     CommitRedo { position: usize, edit: usize },
     BuildCandidate,
     RetireCancelled,
@@ -1510,8 +1408,7 @@ struct JackStoreInitializationAuthority {
     active: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
     envelope_retirement: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
     clone: std::mem::ManuallyDrop<Option<JackSnapshotCloneAuthority>>,
-    initial_digest: std::mem::ManuallyDrop<Option<store::ArtifactStoreInitializationDigest>>,
-    edit_digest: std::mem::ManuallyDrop<Option<store::ArtifactStoreInitializationDigest>>,
+    edit_index: store::ArtifactStoreInitializationEditIndex,
     phase: JackStoreInitializationPhase,
     cancel_requested: bool,
     fault: Option<Vec<u8>>,
@@ -1529,8 +1426,7 @@ impl JackStoreInitializationAuthority {
             active: std::mem::ManuallyDrop::new(None),
             envelope_retirement: std::mem::ManuallyDrop::new(None),
             clone: std::mem::ManuallyDrop::new(Some(JackSnapshotCloneAuthority::new())),
-            initial_digest: std::mem::ManuallyDrop::new(Some(store::ArtifactStoreInitializationDigest::new(b"jack.initial"))),
-            edit_digest: std::mem::ManuallyDrop::new(None),
+            edit_index: store::ArtifactStoreInitializationEditIndex::default(),
             phase: JackStoreInitializationPhase::ValidateEnvelope,
             cancel_requested: false,
             fault: None,
@@ -1550,26 +1446,26 @@ impl JackStoreInitializationAuthority {
         self.envelope.as_ref()?.cursor.as_ref()?.redo_edit_ids.get(position).map(String::as_str)
     }
 
-    fn fail(&mut self, code: &'static [u8]) {
+    fn fail(&mut self, code: &[u8]) {
         self.fault = Some(code.to_vec());
         self.phase = JackStoreInitializationPhase::RetireFault;
     }
 
-    fn pump_active(&mut self) -> Result<bool, String> {
+    fn pump_active(&mut self) -> Result<bool, ValueError> {
         let Some(active) = self.active.as_mut() else { return Ok(false) };
         match active.close_step(1, JACK_OWNED_FIELD_BYTES)? {
             store::SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes <= JACK_OWNED_FIELD_BYTES => Ok(true),
-            store::SnapshotRetirementStep::Pending { .. } => Err("Jack store initializer retirement exceeded its exact grant".into()),
+            store::SnapshotRetirementStep::Pending { .. } => Err(ValueError::new(ValueRefusalKind::InvariantViolated,"Jack store initializer retirement exceeded its exact grant")),
             store::SnapshotRetirementStep::Blocked => Ok(true),
             store::SnapshotRetirementStep::Complete if active.terminal_is_empty() => {
                 drop(self.active.take());
                 Ok(true)
             }
-            store::SnapshotRetirementStep::Complete => Err("Jack store initializer retirement reported a false terminal".into()),
+            store::SnapshotRetirementStep::Complete => Err(ValueError::new(ValueRefusalKind::InvariantViolated,"Jack store initializer retirement reported a false terminal")),
         }
     }
 
-    fn pump_terminal_retirement(&mut self) -> Result<bool, String> {
+    fn pump_terminal_retirement(&mut self) -> Result<bool, ValueError> {
         if self.pump_active()? {
             return Ok(false);
         }
@@ -1579,7 +1475,7 @@ impl JackStoreInitializationAuthority {
                     drop(self.runtime.take());
                     return Ok(false);
                 }
-                store::SnapshotRetirementStep::Complete => return Err("Jack initialization runtime reported a false terminal".into()),
+                store::SnapshotRetirementStep::Complete => return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"Jack initialization runtime reported a false terminal")),
                 _ => return Ok(false),
             }
         }
@@ -1589,7 +1485,7 @@ impl JackStoreInitializationAuthority {
                     drop(self.clone.take());
                     return Ok(false);
                 }
-                store::SnapshotRetirementStep::Complete => return Err("Jack snapshot clone reported a false terminal".into()),
+                store::SnapshotRetirementStep::Complete => return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"Jack snapshot clone reported a false terminal")),
                 _ => return Ok(false),
             }
         }
@@ -1605,7 +1501,7 @@ impl JackStoreInitializationAuthority {
                     drop(self.envelope_retirement.take());
                     Ok(true)
                 }
-                store::SnapshotRetirementStep::Complete => Err("Jack initialization envelope retirement reported a false terminal".into()),
+                store::SnapshotRetirementStep::Complete => Err(ValueError::new(ValueRefusalKind::InvariantViolated,"Jack initialization envelope retirement reported a false terminal")),
                 _ => Ok(false),
             };
         }
@@ -1620,8 +1516,6 @@ impl JackStoreInitializationAuthority {
             && self.active.is_none()
             && self.envelope_retirement.is_none()
             && self.clone.is_none()
-            && self.initial_digest.is_none()
-            && self.edit_digest.is_none()
     }
 }
 
@@ -1634,7 +1528,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, 
             self.phase = JackStoreInitializationPhase::RetireCancelled;
         }
         if let Err(error) = self.pump_active() {
-            self.fault = Some(error.into_bytes());
+            self.fault = Some(error.into_message().into_bytes());
             self.phase = JackStoreInitializationPhase::RetireFault;
         } else if self.active.is_some() {
             return semio_framework_job::StepOutcome::Yield;
@@ -1648,21 +1542,17 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, 
                 if envelope.schema != crate::TRINITY_GRAPH_SCHEMA || envelope.id.is_empty() || envelope.id.len() > JACK_OWNED_FIELD_BYTES {
                     self.fail(b"jack-store.initializer-envelope-invalid");
                 } else {
-                    self.phase = JackStoreInitializationPhase::ValidateEditPair { left: 0, right: 1 };
+                    self.phase = JackStoreInitializationPhase::ValidateEdit { index: 0 };
                 }
                 cx.consume_fuel(1);
                 semio_framework_job::StepOutcome::Yield
             }
-            JackStoreInitializationPhase::ValidateEditPair { left, right } => {
+            JackStoreInitializationPhase::ValidateEdit { index } => {
                 let envelope = self.envelope.as_ref().expect("validated Jack envelope remains retained");
-                if left >= envelope.vcs.edits.len() {
-                    self.phase = JackStoreInitializationPhase::CloneInitial;
-                } else if right >= envelope.vcs.edits.len() {
-                    self.phase = JackStoreInitializationPhase::ValidateEditPair { left: left + 1, right: left + 2 };
-                } else if envelope.vcs.edits[left].id == envelope.vcs.edits[right].id || envelope.vcs.edits[left].id.len() > JACK_OWNED_FIELD_BYTES {
-                    self.fail(b"jack-store.initializer-duplicate-or-hostile-edit");
-                } else {
-                    self.phase = JackStoreInitializationPhase::ValidateEditPair { left, right: right + 1 };
+                match self.edit_index.admit(&envelope.vcs.edits, index, JACK_OWNED_FIELD_BYTES) {
+                    store::ArtifactStoreInitializationEditAdmission::Complete => self.phase = JackStoreInitializationPhase::CloneInitial,
+                    store::ArtifactStoreInitializationEditAdmission::Admitted => self.phase = JackStoreInitializationPhase::ValidateEdit { index: index + 1 },
+                    store::ArtifactStoreInitializationEditAdmission::Oversized | store::ArtifactStoreInitializationEditAdmission::Duplicate => self.fail(b"jack-store.initializer-duplicate-or-hostile-edit"),
                 }
                 cx.consume_fuel(1);
                 semio_framework_job::StepOutcome::Yield
@@ -1670,17 +1560,17 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, 
             JackStoreInitializationPhase::CloneInitial => {
                 let source = &self.envelope.as_ref().expect("Jack envelope remains retained during initial clone").vcs.initial_snapshot;
                 let clone = self.clone.as_mut().expect("Jack initial clone authority remains retained");
-                let complete = match clone.step(source, self.initial_digest.as_mut().expect("Jack initial digest remains retained"), cx) {
+                let complete = match clone.step(source, cx) {
                     Ok(complete) => complete,
                     Err(code) => {
-                        self.fail(code.as_bytes());
+                        self.fail(code.message.as_bytes());
                         return semio_framework_job::StepOutcome::Yield;
                     }
                 };
                 if complete {
                     let initial = clone.take_value().expect("Jack initial snapshot was built one semantic field at a time");
                     drop(self.clone.take());
-                    let initial_digest = self.initial_digest.take().expect("Jack initial digest remains retained").finish();
+                    let initial_digest = store::artifact_initial_digest(&initial);
                     let envelope = self.envelope.as_ref().expect("Jack envelope remains retained during runtime construction");
                     *self.runtime = Some(store::ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, initial, initial_digest));
                     self.phase = JackStoreInitializationPhase::SeedHistory { edit: 0, lane: 0, index: 0 };
@@ -1690,7 +1580,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, 
             JackStoreInitializationPhase::SeedHistory { edit, lane, index } => {
                 let envelope = self.envelope.as_ref().expect("Jack envelope remains retained while causal history is seeded");
                 let Some(entry) = envelope.vcs.edits.get(edit) else {
-                    self.phase = JackStoreInitializationPhase::FindApplied { position: 0, scan: 0 };
+                    self.phase = JackStoreInitializationPhase::FoldSupersessions { transition: 0 };
                     return semio_framework_job::StepOutcome::Yield;
                 };
                 let runtime = self.runtime.as_mut().expect("Writer runtime remains retained while history is seeded");
@@ -1723,166 +1613,97 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, 
                 cx.consume_fuel(1);
                 semio_framework_job::StepOutcome::Yield
             }
-            JackStoreInitializationPhase::FindApplied { position, scan } => {
+            JackStoreInitializationPhase::FoldSupersessions { transition } => {
+                let envelope = self.envelope.as_ref().expect("Jack envelope remains retained while its supersessions fold");
+                match self.runtime.as_mut().expect("Jack runtime remains retained while its supersessions fold").fold_supersession_step(envelope, transition) {
+                    Ok(true) => self.phase = JackStoreInitializationPhase::FoldSupersessions { transition: transition + 1 },
+                    Ok(false) => self.phase = JackStoreInitializationPhase::FindApplied { position: 0 },
+                    Err(error) => {
+                        self.fault = Some(error.into_bytes());
+                        self.phase = JackStoreInitializationPhase::RetireFault;
+                    }
+                }
+                cx.consume_fuel(1);
+                semio_framework_job::StepOutcome::Yield
+            }
+            JackStoreInitializationPhase::FindApplied { position } => {
                 let Some(id) = self.applied_id(position) else {
                     let checkpoint = self.envelope.as_ref().and_then(|envelope| envelope.cursor.as_ref().and_then(|cursor| cursor.checkpoint_id.clone()).or_else(|| envelope.vcs.checkpoints.last().map(|checkpoint| checkpoint.id.clone())));
                     self.runtime.as_mut().expect("Writer runtime remains retained").set_current_checkpoint_id(checkpoint);
-                    self.phase = JackStoreInitializationPhase::FindRedo { position: 0, scan: 0 };
+                    self.phase = JackStoreInitializationPhase::FindRedo { position: 0 };
                     return semio_framework_job::StepOutcome::Yield;
                 };
+                let scan = self.edit_index.position(&id).unwrap_or(usize::MAX);
                 let envelope = self.envelope.as_ref().expect("Jack envelope remains retained");
                 let Some(edit) = envelope.vcs.edits.get(scan) else {
                     self.fail(b"jack-store.initializer-applied-edit-missing");
                     return semio_framework_job::StepOutcome::Yield;
                 };
                 if edit.id == id {
-                    let id = edit.id.clone();
-                    let sequence_number = edit.sequence_number;
-                    let started_at = edit.started_at.clone();
-                    let mut digest = store::ArtifactStoreInitializationDigest::new(b"jack.edit");
-                    digest.observe(id.as_bytes());
-                    digest.observe(&sequence_number.to_be_bytes());
-                    digest.observe(started_at.as_bytes());
-                    *self.edit_digest = Some(digest);
                     self.phase = JackStoreInitializationPhase::ApplyForward { position, edit: scan, mutation: 0 };
                 } else {
-                    self.phase = JackStoreInitializationPhase::FindApplied { position, scan: scan + 1 };
+                    self.fail(b"jack-store.initializer-applied-edit-missing");
                 }
                 cx.consume_fuel(1);
                 semio_framework_job::StepOutcome::Yield
             }
             JackStoreInitializationPhase::ApplyForward { position, edit, mutation } => {
-                let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("Jack applied edit remains retained");
-                let Some(operation) = entry.forwards.get(mutation) else {
-                    self.phase = JackStoreInitializationPhase::HashInverse { position, edit, mutation: 0 };
-                    return semio_framework_job::StepOutcome::Yield;
-                };
-                let encoded = match operation.encode_op() {
-                    Ok(encoded) if encoded.len() <= JACK_OWNED_FIELD_BYTES => encoded,
-                    _ => {
-                        self.fail(b"jack-store.initializer-forward-encoding");
-                        return semio_framework_job::StepOutcome::Yield;
-                    }
-                };
-                self.edit_digest.as_mut().expect("Writer edit digest remains retained").observe(&encoded);
-                let current = self.runtime.as_mut().and_then(store::ArtifactStoreInitializationRuntime::current_mut).expect("Writer runtime current snapshot remains retained");
-                let (diff, messages) = operation.diff(current).into_parts();
-                if messages.iter().any(|message| message.level == protocol::Severity::Fatal) {
-                    self.fail(b"jack-store.initializer-fatal-mutation");
-                    return semio_framework_job::StepOutcome::Yield;
-                }
-                match diff.apply(current) {
-                    Ok(next) => {
-                        let previous = std::mem::replace(current, next);
-                        *self.active = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackSnapshotRetirementFactory, previous));
+                let envelope = self.envelope.as_ref().expect("Jack envelope remains retained while its forwards fold");
+                let entry = envelope.vcs.edits.get(edit).expect("Jack applied edit remains retained");
+                match self.runtime.as_mut().expect("Jack runtime remains retained while its forwards fold").fold_forward(entry, mutation, &envelope.schema, JACK_OWNED_FIELD_BYTES) {
+                    Ok(store::ArtifactStoreInitializationForward::Folded { displaced, fuel }) => {
+                        if let Some(previous) = displaced {
+                            *self.active = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackSnapshotRetirementFactory, previous));
+                        }
                         self.phase = JackStoreInitializationPhase::ApplyForward { position, edit, mutation: mutation + 1 };
-                        cx.consume_fuel(encoded.len().max(1) as u64);
+                        cx.consume_fuel(fuel as u64);
                     }
-                    Err(error) => {
-                        self.fault = Some(error.to_string().into_bytes());
-                        self.phase = JackStoreInitializationPhase::RetireFault;
-                    }
-                }
-                semio_framework_job::StepOutcome::Yield
-            }
-            JackStoreInitializationPhase::HashInverse { position, edit, mutation } => {
-                let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("Jack applied edit remains retained");
-                let Some(operation) = entry.inverse.get(mutation) else {
-                    self.phase = JackStoreInitializationPhase::CommitApplied { position, edit };
-                    return semio_framework_job::StepOutcome::Yield;
-                };
-                match operation.encode_op() {
-                    Ok(encoded) if encoded.len() <= JACK_OWNED_FIELD_BYTES => {
-                        self.edit_digest.as_mut().expect("Writer edit digest remains retained").observe(&encoded);
-                        self.phase = JackStoreInitializationPhase::HashInverse { position, edit, mutation: mutation + 1 };
-                        cx.consume_fuel(encoded.len().max(1) as u64);
-                    }
-                    _ => self.fail(b"jack-store.initializer-inverse-encoding"),
+                    Ok(store::ArtifactStoreInitializationForward::Exhausted) => self.phase = JackStoreInitializationPhase::CommitApplied { position, edit },
+                    Err(_) => self.fail(b"jack-store.initializer-forward-encoding"),
                 }
                 semio_framework_job::StepOutcome::Yield
             }
             JackStoreInitializationPhase::CommitApplied { position, edit } => {
                 let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("Jack applied edit remains retained");
-                let id = entry.id.clone();
                 let actor = entry.actor.clone();
-                let digest = self.edit_digest.take().expect("Jack applied edit digest remains retained").finish();
                 let runtime = self.runtime.as_mut().expect("Writer runtime remains retained");
-                if let Err(error) = runtime.push_applied(id, digest) {
+                if let Err(error) = runtime.push_applied_edit(entry) {
                     self.fault = Some(error.into_bytes());
                     self.phase = JackStoreInitializationPhase::RetireFault;
                 } else {
                     runtime.set_local_actor_id(actor);
-                    self.phase = JackStoreInitializationPhase::FindApplied { position: position + 1, scan: 0 };
+                    self.phase = JackStoreInitializationPhase::FindApplied { position: position + 1 };
                 }
                 cx.consume_fuel(1);
                 semio_framework_job::StepOutcome::Yield
             }
-            JackStoreInitializationPhase::FindRedo { position, scan } => {
+            JackStoreInitializationPhase::FindRedo { position } => {
                 let Some(id) = self.redo_id(position) else {
+                    self.edit_index.clear();
                     self.phase = JackStoreInitializationPhase::BuildCandidate;
                     return semio_framework_job::StepOutcome::Yield;
                 };
+                let scan = self.edit_index.position(&id).unwrap_or(usize::MAX);
                 let envelope = self.envelope.as_ref().expect("Jack envelope remains retained");
                 let Some(edit) = envelope.vcs.edits.get(scan) else {
                     self.fail(b"jack-store.initializer-redo-edit-missing");
                     return semio_framework_job::StepOutcome::Yield;
                 };
                 if edit.id == id {
-                    let id = edit.id.clone();
-                    let sequence_number = edit.sequence_number;
-                    let started_at = edit.started_at.clone();
-                    let mut digest = store::ArtifactStoreInitializationDigest::new(b"jack.edit");
-                    digest.observe(id.as_bytes());
-                    digest.observe(&sequence_number.to_be_bytes());
-                    digest.observe(started_at.as_bytes());
-                    *self.edit_digest = Some(digest);
-                    self.phase = JackStoreInitializationPhase::HashRedoForward { position, edit: scan, mutation: 0 };
+                    self.phase = JackStoreInitializationPhase::CommitRedo { position, edit: scan };
                 } else {
-                    self.phase = JackStoreInitializationPhase::FindRedo { position, scan: scan + 1 };
+                    self.fail(b"jack-store.initializer-redo-edit-missing");
                 }
                 cx.consume_fuel(1);
                 semio_framework_job::StepOutcome::Yield
             }
-            JackStoreInitializationPhase::HashRedoForward { position, edit, mutation } => {
-                let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("Jack redo edit remains retained");
-                let Some(operation) = entry.forwards.get(mutation) else {
-                    self.phase = JackStoreInitializationPhase::HashRedoInverse { position, edit, mutation: 0 };
-                    return semio_framework_job::StepOutcome::Yield;
-                };
-                match operation.encode_op() {
-                    Ok(encoded) if encoded.len() <= JACK_OWNED_FIELD_BYTES => {
-                        self.edit_digest.as_mut().expect("Jack redo digest remains retained").observe(&encoded);
-                        self.phase = JackStoreInitializationPhase::HashRedoForward { position, edit, mutation: mutation + 1 };
-                        cx.consume_fuel(encoded.len().max(1) as u64);
-                    }
-                    _ => self.fail(b"jack-store.initializer-redo-forward-encoding"),
-                }
-                semio_framework_job::StepOutcome::Yield
-            }
-            JackStoreInitializationPhase::HashRedoInverse { position, edit, mutation } => {
-                let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("Jack redo edit remains retained");
-                let Some(operation) = entry.inverse.get(mutation) else {
-                    self.phase = JackStoreInitializationPhase::CommitRedo { position, edit };
-                    return semio_framework_job::StepOutcome::Yield;
-                };
-                match operation.encode_op() {
-                    Ok(encoded) if encoded.len() <= JACK_OWNED_FIELD_BYTES => {
-                        self.edit_digest.as_mut().expect("Jack redo digest remains retained").observe(&encoded);
-                        self.phase = JackStoreInitializationPhase::HashRedoInverse { position, edit, mutation: mutation + 1 };
-                        cx.consume_fuel(encoded.len().max(1) as u64);
-                    }
-                    _ => self.fail(b"jack-store.initializer-redo-inverse-encoding"),
-                }
-                semio_framework_job::StepOutcome::Yield
-            }
             JackStoreInitializationPhase::CommitRedo { position, edit } => {
-                let id = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("Jack redo edit remains retained").id.clone();
-                let digest = self.edit_digest.take().expect("Jack redo digest remains retained").finish();
-                if let Err(error) = self.runtime.as_mut().expect("Writer runtime remains retained").push_redo(id, digest) {
+                let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("Jack redo edit remains retained");
+                if let Err(error) = self.runtime.as_mut().expect("Writer runtime remains retained").push_redo_edit(entry) {
                     self.fault = Some(error.into_bytes());
                     self.phase = JackStoreInitializationPhase::RetireFault;
                 } else {
-                    self.phase = JackStoreInitializationPhase::FindRedo { position: position + 1, scan: 0 };
+                    self.phase = JackStoreInitializationPhase::FindRedo { position: position + 1 };
                 }
                 cx.consume_fuel(1);
                 semio_framework_job::StepOutcome::Yield
@@ -1905,8 +1726,6 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, 
             JackStoreInitializationPhase::RetireCancelled | JackStoreInitializationPhase::RetireFault => match self.pump_terminal_retirement() {
                 Ok(false) => semio_framework_job::StepOutcome::Yield,
                 Ok(true) => {
-                    *self.initial_digest = None;
-                    *self.edit_digest = None;
                     self.terminal_handoff = true;
                     if self.phase == JackStoreInitializationPhase::RetireCancelled {
                         self.phase = JackStoreInitializationPhase::Cancelled;
@@ -1919,7 +1738,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, 
                     }
                 }
                 Err(error) => {
-                    self.fault = Some(error.into_bytes());
+                    self.fault = Some(error.into_message().into_bytes());
                     semio_framework_job::StepOutcome::Yield
                 }
             },
@@ -1955,12 +1774,10 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, 
         match self.pump_terminal_retirement() {
             Ok(false) => Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }),
             Ok(true) => {
-                *self.initial_digest = None;
-                *self.edit_digest = None;
                 self.terminal_handoff = true;
                 Ok(semio_framework_plugin::PluginCloseStep::Complete)
             }
-            Err(error) => Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::Plugin, semio_framework_plugin::FaultCode::new("artifact-store.initializer-close"), format!("Jack initializer close failed: {error}"))),
+            Err(error) => Err(semio_framework_diagnostic::Fault::new(semio_framework_diagnostic::FaultOrigin::Framework, error.kind.as_str(), error.into_message())),
         }
     }
 
@@ -1969,8 +1786,6 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, 
             return None;
         }
         let candidate = self.candidate.take()?;
-        *self.initial_digest = None;
-        *self.edit_digest = None;
         self.terminal_handoff = true;
         Some(candidate)
     }

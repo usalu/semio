@@ -1,0 +1,71 @@
+{
+  "snapshot": {
+    "schema": "test.collection-tree-shape",
+    "records": [
+      { "value": "Alpha" },
+      { "value": "Beta" }
+    ]
+  },
+  "schema": {
+    "type": "object",
+    "required": ["schema", "records"],
+    "additionalProperties": false,
+    "properties": {
+      "schema": { "const": "test.collection-tree-shape" },
+      "records": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["value"],
+          "additionalProperties": false,
+          "properties": {
+            "value": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    }
+  },
+  "collectionKey": "records",
+  "expectedValues": ["Alpha", "Beta"],
+  "windowSuffix": "-children",
+  "rendererHierarchy": {
+    "key": "sd-b8b69f216b371f28",
+    "label": "Records [records]",
+    "defaultOpen": true,
+    "window": { "total": 2, "offset": 0 },
+    "entries": [
+      {
+        "key": "sd-160eaeda4a6511ef",
+        "label": "Item 1",
+        "defaultOpen": true,
+        "value": {
+          "key": "sd-203bd48bf23b7b31",
+          "label": "Value [value]",
+          "input": {
+            "key": "sd-203bd48bf23b7b31-text",
+            "label": "Value",
+            "value": "Alpha",
+            "action": "setSnapshotValue",
+            "draftTargetContains": "setSnapshotValue"
+          }
+        }
+      },
+      {
+        "key": "sd-160eadda4a65103c",
+        "label": "Item 2",
+        "defaultOpen": true,
+        "value": {
+          "key": "sd-07edf0517784f676",
+          "label": "Value [value]",
+          "input": {
+            "key": "sd-07edf0517784f676-text",
+            "label": "Value",
+            "value": "Beta",
+            "action": "setSnapshotValue",
+            "draftTargetContains": "setSnapshotValue"
+          }
+        }
+      }
+    ]
+  }
+}

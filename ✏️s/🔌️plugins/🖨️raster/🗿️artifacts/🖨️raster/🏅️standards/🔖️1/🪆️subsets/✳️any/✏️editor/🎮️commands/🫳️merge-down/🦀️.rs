@@ -7,7 +7,7 @@ use semio_framework_pixels::png_encoding::EncodedPngImage;
 use semio_framework_plugin::{ArtifactView,ConfigView,Emit,Fault};
 use semio_framework_value_derive::{FromValue,ToValue};
 use super::flatten_layers::{baked_layer,asset_keys_except};
-#[derive(Clone,Debug,PartialEq,ToValue,FromValue,dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword="merge-down")]
 #[value(rename_all="camelCase")]
 pub struct MergeDown {pub layer_id:String}

@@ -7,7 +7,7 @@ mod set_camera;
 pub use set_camera::SetCamera;
 //#endregion 🧬️Leaves
 //#region 🧬️Aggregate
-#[derive(Clone, Debug, PartialEq, dsl::Mutations, dsl::DslOps, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, dsl::Mutations, semio_framework_dsl_record_derive::DslEnum, ToValue, FromValue)]
 #[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[mutations(snapshot = GisTerrainWindowConfig, diff = GisTerrainWindowConfigDiff, schema = "gis.gisterrainwindowcfg")]
 pub enum GisTerrainWindowConfigMutation {

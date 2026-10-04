@@ -26,7 +26,7 @@ fn translate_selection_yields_one_drag_frames_leaf() {
     let cfg = ConfigView { snapshot: &config, window: None };
     let emit = handle(&translate(&["frame-1", "frame-1"], 5.0, -2.0), &doc, &cfg).expect("translate");
     assert_eq!(emit.artifact_mutations, vec![LayoutMutation::DragFrames(DragFrames { page_id: "page-1".into(), targets: vec!["frame-1".into()], dx: 5.0, dy: -2.0 })], "one leaf, its targets deduplicated");
-    assert_eq!((emit.coalesce_key, emit.transaction), (None, None));
+    assert_eq!(emit.transaction, None);
 }
 
 /// 🔃️ A turn and a scaling record the centroid of the frame centres as their pivot, so the leaf replays on any base.

@@ -28,7 +28,7 @@
       ],
       "properties": {
         "version": {
-          "const": 1
+          "const": 2
         },
         "slots": {
           "const": 64
@@ -37,10 +37,10 @@
           "const": 8388608
         },
         "documentBytes": {
-          "const": 843776
+          "const": 907264
         },
         "aggregateBytes": {
-          "const": 54001664
+          "const": 58064896
         },
         "surfaceItems": {
           "const": 4097

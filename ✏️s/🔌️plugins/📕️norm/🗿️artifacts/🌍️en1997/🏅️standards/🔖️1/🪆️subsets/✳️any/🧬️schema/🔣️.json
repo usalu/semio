@@ -39,8 +39,8 @@
     "annex": {
       "type": "string",
       "enum": [
-        "de",
-        "en"
+        "En",
+        "De"
       ],
       "x-semio-state": "artifact"
     },

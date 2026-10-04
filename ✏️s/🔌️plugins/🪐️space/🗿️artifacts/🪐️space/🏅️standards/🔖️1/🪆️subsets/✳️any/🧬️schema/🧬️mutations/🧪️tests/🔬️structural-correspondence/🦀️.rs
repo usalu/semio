@@ -1,8 +1,8 @@
 
 use super::*;
 
-fn outcome_classes(outcomes: &[&str]) -> pack::JsonValue {
-    pack::JsonValue::Array(outcomes.iter().map(|outcome| pack::JsonValue::from(*outcome)).collect())
+fn outcome_classes(outcomes: &[&str]) -> semio_framework_pack_json::Value {
+    semio_framework_pack_json::Value::Array(outcomes.iter().map(|outcome| semio_framework_pack_json::Value::from(*outcome)).collect())
 }
 
 #[test]
@@ -10,7 +10,7 @@ fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
     let mutation_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
     let descriptor_kinds: Vec<_> = <SSpaceMutation as protocol::SemanticMutation<SSpaceSnapshot>>::kinds().iter().map(|descriptor| descriptor.kind).collect();
     let catalog_source = std::fs::read_to_string(mutation_root.join("../../🔮️oracles/🔣️.json")).expect("language-neutral oracle catalog");
-    let catalog: pack::JsonValue = pack::parse_json(&catalog_source).expect("valid language-neutral oracle catalog");
+    let catalog: semio_framework_pack_json::Value = semio_framework_pack_json::parse(&catalog_source, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("valid language-neutral oracle catalog");
     let mutation_catalog = &catalog["mutationCatalogs"][0];
     let catalog_kinds: Vec<_> = mutation_catalog["kinds"].as_array().expect("catalog kinds").iter().map(|kind| kind.as_str().expect("string kind")).collect();
     assert_eq!(descriptor_kinds, catalog_kinds);
@@ -23,7 +23,7 @@ fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
         let outcomes = &["applied", "rejected"][..];
         let owner = mutation_root.join("🌱create-artifact");
         let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
-        let descriptor: pack::JsonValue = pack::parse_json(&std::fs::read_to_string(owner.join("🔣️.json")).expect("direct descriptor")).expect("valid direct descriptor");
+        let descriptor: semio_framework_pack_json::Value = semio_framework_pack_json::parse(&std::fs::read_to_string(owner.join("🔣️.json")).expect("direct descriptor"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("valid direct descriptor");
         assert!(source.contains("MutationKind") && source.contains("SEMANTICS"));
         assert!(!source.contains(concat!("::", "mutation::")));
         assert_eq!(descriptor["semanticKind"], kind);
@@ -32,8 +32,8 @@ fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
         assert_eq!(descriptor["textOpcode"], kind);
         assert_eq!(descriptor["binaryTag"], tag);
         assert_eq!(descriptor["outcomeClasses"], outcome_classes(outcomes));
-        assert_eq!(descriptor["requiredLanguageSurfaces"], pack::json!(["rust", "typescript", "json-schema", "text", "binary"]));
-        let payload: pack::JsonValue = pack::parse_json(&std::fs::read_to_string(owner.join("🧬️schema/🔣️.json")).expect("direct payload schema")).expect("valid direct payload schema");
+        assert_eq!(descriptor["requiredLanguageSurfaces"], semio_framework_pack_json::json!(["rust", "typescript", "json-schema", "text", "binary"]));
+        let payload: semio_framework_pack_json::Value = semio_framework_pack_json::parse(&std::fs::read_to_string(owner.join("🧬️schema/🔣️.json")).expect("direct payload schema"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("valid direct payload schema");
         assert_eq!(payload["title"], variant);
         {
             let surface_source = std::fs::read_to_string(owner.join("🟦️.ts")).expect("direct language surface");
@@ -57,7 +57,7 @@ fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
         let outcomes = &["applied", "rejected"][..];
         let owner = mutation_root.join("🗑️delete-artifact");
         let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
-        let descriptor: pack::JsonValue = pack::parse_json(&std::fs::read_to_string(owner.join("🔣️.json")).expect("direct descriptor")).expect("valid direct descriptor");
+        let descriptor: semio_framework_pack_json::Value = semio_framework_pack_json::parse(&std::fs::read_to_string(owner.join("🔣️.json")).expect("direct descriptor"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("valid direct descriptor");
         assert!(source.contains("MutationKind") && source.contains("SEMANTICS"));
         assert!(!source.contains(concat!("::", "mutation::")));
         assert_eq!(descriptor["semanticKind"], kind);
@@ -66,8 +66,8 @@ fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
         assert_eq!(descriptor["textOpcode"], kind);
         assert_eq!(descriptor["binaryTag"], tag);
         assert_eq!(descriptor["outcomeClasses"], outcome_classes(outcomes));
-        assert_eq!(descriptor["requiredLanguageSurfaces"], pack::json!(["rust", "typescript", "json-schema", "text", "binary"]));
-        let payload: pack::JsonValue = pack::parse_json(&std::fs::read_to_string(owner.join("🧬️schema/🔣️.json")).expect("direct payload schema")).expect("valid direct payload schema");
+        assert_eq!(descriptor["requiredLanguageSurfaces"], semio_framework_pack_json::json!(["rust", "typescript", "json-schema", "text", "binary"]));
+        let payload: semio_framework_pack_json::Value = semio_framework_pack_json::parse(&std::fs::read_to_string(owner.join("🧬️schema/🔣️.json")).expect("direct payload schema"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("valid direct payload schema");
         assert_eq!(payload["title"], variant);
         {
             let surface_source = std::fs::read_to_string(owner.join("🟦️.ts")).expect("direct language surface");
@@ -91,7 +91,7 @@ fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
         let outcomes = &["applied", "no-op", "rejected"][..];
         let owner = mutation_root.join("🏷️rename-artifact");
         let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
-        let descriptor: pack::JsonValue = pack::parse_json(&std::fs::read_to_string(owner.join("🔣️.json")).expect("direct descriptor")).expect("valid direct descriptor");
+        let descriptor: semio_framework_pack_json::Value = semio_framework_pack_json::parse(&std::fs::read_to_string(owner.join("🔣️.json")).expect("direct descriptor"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("valid direct descriptor");
         assert!(source.contains("MutationKind") && source.contains("SEMANTICS"));
         assert!(!source.contains(concat!("::", "mutation::")));
         assert_eq!(descriptor["semanticKind"], kind);
@@ -100,8 +100,8 @@ fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
         assert_eq!(descriptor["textOpcode"], kind);
         assert_eq!(descriptor["binaryTag"], tag);
         assert_eq!(descriptor["outcomeClasses"], outcome_classes(outcomes));
-        assert_eq!(descriptor["requiredLanguageSurfaces"], pack::json!(["rust", "typescript", "json-schema", "text", "binary"]));
-        let payload: pack::JsonValue = pack::parse_json(&std::fs::read_to_string(owner.join("🧬️schema/🔣️.json")).expect("direct payload schema")).expect("valid direct payload schema");
+        assert_eq!(descriptor["requiredLanguageSurfaces"], semio_framework_pack_json::json!(["rust", "typescript", "json-schema", "text", "binary"]));
+        let payload: semio_framework_pack_json::Value = semio_framework_pack_json::parse(&std::fs::read_to_string(owner.join("🧬️schema/🔣️.json")).expect("direct payload schema"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("valid direct payload schema");
         assert_eq!(payload["title"], variant);
         {
             let surface_source = std::fs::read_to_string(owner.join("🟦️.ts")).expect("direct language surface");
@@ -125,7 +125,7 @@ fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
         let outcomes = &["applied", "rejected"][..];
         let owner = mutation_root.join("🕒touch-artifact");
         let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
-        let descriptor: pack::JsonValue = pack::parse_json(&std::fs::read_to_string(owner.join("🔣️.json")).expect("direct descriptor")).expect("valid direct descriptor");
+        let descriptor: semio_framework_pack_json::Value = semio_framework_pack_json::parse(&std::fs::read_to_string(owner.join("🔣️.json")).expect("direct descriptor"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("valid direct descriptor");
         assert!(source.contains("MutationKind") && source.contains("SEMANTICS"));
         assert!(!source.contains(concat!("::", "mutation::")));
         assert_eq!(descriptor["semanticKind"], kind);
@@ -134,8 +134,8 @@ fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
         assert_eq!(descriptor["textOpcode"], kind);
         assert_eq!(descriptor["binaryTag"], tag);
         assert_eq!(descriptor["outcomeClasses"], outcome_classes(outcomes));
-        assert_eq!(descriptor["requiredLanguageSurfaces"], pack::json!(["rust", "typescript", "json-schema", "text", "binary"]));
-        let payload: pack::JsonValue = pack::parse_json(&std::fs::read_to_string(owner.join("🧬️schema/🔣️.json")).expect("direct payload schema")).expect("valid direct payload schema");
+        assert_eq!(descriptor["requiredLanguageSurfaces"], semio_framework_pack_json::json!(["rust", "typescript", "json-schema", "text", "binary"]));
+        let payload: semio_framework_pack_json::Value = semio_framework_pack_json::parse(&std::fs::read_to_string(owner.join("🧬️schema/🔣️.json")).expect("direct payload schema"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("valid direct payload schema");
         assert_eq!(payload["title"], variant);
         {
             let surface_source = std::fs::read_to_string(owner.join("🟦️.ts")).expect("direct language surface");

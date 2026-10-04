@@ -115,12 +115,11 @@ async fn writer_edit_history_decoder_uses_begin_mutation_and_faults_malformed_in
         inverse: Vec::new(),
         mutation_meta: Vec::new(),
         description: None, verb: None,
-        coalesce_key: None,
         sequence_number: 1,
         started_at: "1".into(),
         finished_at: None,
     };
-    let bytes = dsl::os_pack::json::to_json_string(&dsl::json!({ "value": edit })).into_bytes();
+    let bytes = semio_framework_pack_json::to_json_string(&semio_framework_pack_json::json!({ "value": edit })).into_bytes();
     let decoded = drive_writer_edit(&bytes, semio_framework_job::root_cancel_token()).expect("Writer owns its retained edit and mutation decoders");
     assert_eq!(decoded, edit);
     assert!(drive_writer_edit(br#"{"value":{"id":"broken","forwards":[{"mutation":"unknown","newId":"x"}],"inverse":[],"sequenceNumber":1,"startedAt":"1"}}"#, semio_framework_job::root_cancel_token()).is_err());
@@ -321,7 +320,7 @@ fn hub_tail_envelope(value: &serde_json::Value) -> protocol::MutationEnvelope {
         diff: protocol::ArtifactDiff { schema: protocol::SchemaId(text(&value["diff"]["schema"])), payload: bytes(&value["diff"]) },
         inverse: protocol::InverseMutation { schema: protocol::SchemaId(text(&value["inverse"]["schema"])), payload: bytes(&value["inverse"]) },
         timestamp: protocol::HybridLogicalTimestamp { actor: number(&value["timestamp"]["actor"]), physical_ms: number(&value["timestamp"]["physical_ms"]), logical: number(&value["timestamp"]["logical"]) },
-        transaction: None, verb: None,
+        transaction: None, verb: None, line: value["line"].as_str().map(str::to_owned),
     }
 }
 

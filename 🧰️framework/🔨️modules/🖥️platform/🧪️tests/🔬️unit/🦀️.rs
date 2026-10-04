@@ -53,6 +53,7 @@ async fn adds_first_app_as_active() {
             config: crate::ConfigSpec::empty().await,
             command_grammar: crate::CommandGrammar::empty().await,
             io: crate::AppIo::default(),
+            fault_notices: Vec::new(),
         })
         .await;
     assert_eq!(platform.active_app_id, "draw-play");
@@ -105,6 +106,7 @@ async fn minimal_app(id: &str) -> AppDefinition {
         config: crate::ConfigSpec::empty().await,
         command_grammar: crate::CommandGrammar::empty().await,
         io: crate::AppIo::default(),
+        fault_notices: Vec::new(),
     }
 }
 

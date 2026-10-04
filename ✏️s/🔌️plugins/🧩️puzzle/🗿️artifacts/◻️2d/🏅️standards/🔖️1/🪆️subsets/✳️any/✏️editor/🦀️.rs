@@ -349,7 +349,7 @@ fn manifest_catalog_rows(kinds: &[semio_framework_graph::manifest::KindDef]) -> 
                 let mut row = serde_json::Map::new();
                 row.insert("id".to_string(), json!(kind.id));
                 row.insert("name".to_string(), json!(kind.name));
-                if let Some(dsl::DslValue::Object(presentation)) = kind.presentation.as_ref() {
+                if let Some(semio_framework_value::DslValue::Object(presentation)) = kind.presentation.as_ref() {
                     for (key, value) in presentation {
                         row.insert(key.clone(), Value::from(value));
                     }
@@ -1817,10 +1817,10 @@ puzzle2d_command_variants! {
 impl protocol::OpBinary for Puzzle2dCommand {
     const TOOL_JOB_IDS: &'static [&'static str] = &PUZZLE2D_TOOL_JOB_IDS;
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        serde_json::to_vec(self).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
+        serde_json::to_vec(self).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()))))
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        serde_json::from_slice(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
+        serde_json::from_slice(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()))))
     }
 }
 //#endregion 🔖️Puzzle2dCommand
@@ -1985,8 +1985,9 @@ pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyRes
 /// destructive tail. `organize_context_menu` (applied automatically at the
 /// `VcsArtifactApp::context_menu` funnel) sorts groups into `RIBBON_PARENT_CATEGORIES` order and
 /// inserts the pre-destructive separator itself, so no manual `.separator()` calls are needed here.
-async fn puzzle2d_context_menu_items(registry: &semio_framework_plugin::AppActionRegistry, fixture: &Value, selected: &[String], is_de: bool) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-    use semio_framework_plugin::{selection_count_phrase, ContextMenuItemSpec, Menu};
+async fn puzzle2d_context_menu_items(registry: &semio_framework_plugin::AppActionRegistry, fixture: &Value, selected: &[String], view_state: &semio_framework_plugin::ViewModel) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+    use semio_framework_plugin::{selection_count_phrase, ContextMenuItemSpec, Menu, SelectionKind};
+    let is_de = view_state.locale == semio_framework_ui_locale::Locale::De;
     // 🧩️ Bespoke-row helper (dynamic label/icon/args/disabled per selection state — not a plain
     // declared-action lookup) — appended via `Menu::item(...)`, the documented escape hatch.
     let item = |id: &str, label: &str, icon: &str, action: &str, args: Option<semio_framework::DslValue>, destructive: bool, disabled: bool| ContextMenuItemSpec {
@@ -2002,7 +2003,7 @@ async fn puzzle2d_context_menu_items(registry: &semio_framework_plugin::AppActio
     if selected.is_empty() {
         // 🗨️ The empty-board branch is the second declared entry point of the Add Node dialog (the
         // shell palette is the first) — the same pair puzzle3d binds `openAddObjectDialog` to.
-        return Menu::of(registry)
+        return Menu::of(registry, view_state)
             .item(item("openAddNodeDialog", if is_de { "Knoten hinzufügen…" } else { "Add Node…" }, "plus", "openAddNodeDialog", None, false, false))
             .item(item("selectAll", if is_de { "Alles auswählen" } else { "Select All" }, "select-all", "selectAll", None, false, false))
             .item(item("paste", if is_de { "Einfügen" } else { "Paste" }, "clipboard", "paste", None, false, false))
@@ -2037,7 +2038,7 @@ async fn puzzle2d_context_menu_items(registry: &semio_framework_plugin::AppActio
     }
     let any_visible = entities.iter().any(|entity| !puzzle2d_entity_hidden(entity));
     let any_unlocked = entities.iter().any(|entity| entity.get("locked").and_then(|v| v.as_bool()) != Some(true));
-    let phrase = selection_count_phrase(is_de, &[(selected.len(), if is_de { "Element" } else { "item" }, if is_de { "Elemente" } else { "items" })]);
+    let phrase = selection_count_phrase(view_state.locale, &[(selected.len(), SelectionKind::Item)]).unwrap_or_default();
     let hide_label = match (any_visible, is_de) {
         (true, true) => "Ausblenden",
         (true, false) => "Hide",
@@ -2052,7 +2053,7 @@ async fn puzzle2d_context_menu_items(registry: &semio_framework_plugin::AppActio
     };
     // 💡️ One selected handle is the one-shot placement picker's entry point — the row the brush
     // utility never had: it opens the suggestions popup on that handle WITHOUT arming the brush.
-    let mut menu = Menu::of(registry);
+    let mut menu = Menu::of(registry, view_state);
     if let [only] = selected_handle_ids.as_slice() {
         menu = menu.item(item("suggestNodes", if is_de { "Knoten vorschlagen" } else { "Suggest nodes" }, "sparkles", "openHandleSuggestions", Some(semio_framework::dsl_value!({ "handleId": only })), false, false));
     }
@@ -2119,7 +2120,7 @@ impl Puzzle2dPlayApp {
         let runtime = window::runtime(cfg.snapshot, &window_config, window_transient, Some(window_kind));
         let active_utility = puzzle2d_active_utility(Some(view_state));
         let fixture = match runtime.select_tool.as_ref().filter(|_| active_utility == select_utility::UTILITY_ID) {
-            Some(gesture) => Value::from(dsl::ToValue::to_value(&select_utility::puzzle2d_select_tool_preview(doc.snapshot.typed(), gesture))),
+            Some(gesture) => Value::from(semio_framework_value::ToValue::to_value(&select_utility::puzzle2d_select_tool_preview(doc.snapshot.typed(), gesture))),
             None => doc.snapshot.value().clone(),
         };
         let document_json = fixture.to_string();
@@ -2453,10 +2454,10 @@ struct Puzzle2dConfigStorePreparation {
 struct Puzzle2dConfigStorePreparationFactory;
 
 /// 🌉️ Measures the fully encoded config root against the fixed store envelope. `Puzzle2dConfig` is
-/// encoded through the same in-house `dsl::json` writer its `OpBinary` codec uses, so the measured
+/// encoded through the same in-house `semio_framework_pack_json` writer its `OpBinary` codec uses, so the measured
 /// length is the length the store actually retains.
 fn puzzle2d_config_store_bounded_bytes(value: &Puzzle2dConfig) -> Result<usize, String> {
-    let encoded = dsl::json::to_json_string(value);
+    let encoded = semio_framework_pack_json::to_json_string(value);
     if encoded.len() > PUZZLE2D_CONFIG_STORE_MAXIMUM_BYTES {
         return Err("Puzzle2d Config Store root exceeds its fixed envelope".to_string());
     }
@@ -2466,35 +2467,6 @@ fn puzzle2d_config_store_bounded_bytes(value: &Puzzle2dConfig) -> Result<usize, 
 fn puzzle2d_config_store_mutation_bytes(mutation: &Puzzle2dConfigMutation) -> Option<usize> {
     match mutation {
         Puzzle2dConfigMutation::Snapshot { config } => puzzle2d_config_store_bounded_bytes(config).ok(),
-    }
-}
-
-fn puzzle2d_config_store_edit(forward: Puzzle2dConfigMutation, inverse: Vec<Puzzle2dConfigMutation>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<Puzzle2dConfigMutation> {
-    let id = format!("puzzle2d-config-retained-{}", authority.next_sequence_number());
-    protocol::Edit { line: authority.line_id().map(str::to_owned),
-        id: id.clone(),
-        actor: Some(authority.actor().to_string()),
-        forwards: vec![forward],
-        inverse,
-        mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
-            dependencies: Vec::new(),
-            base_version: authority.base_applied_edit_count() as u64,
-            author_id: Some(protocol::ActorId(authority.actor().to_string())),
-            timestamp: authority.next_clock(),
-            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-            payload_hash: None,
-            semantic_kind: None,
-            label: None,
-            group_id: None,
-            origin: Default::default(),
-            transaction: None,
-        }],
-        description, verb: None,
-        coalesce_key: None,
-        sequence_number: authority.next_sequence_number(),
-        started_at: String::new(),
-        finished_at: None,
     }
 }
 
@@ -2515,7 +2487,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle2dConfig, Puzzle2dConfigMutati
                     return Err("Puzzle2d Config preparation rejected its exact mutation envelope".into());
                 }
                 let completed_bytes = puzzle2d_config_store_bounded_bytes(base.get())?;
-                let inverse = mutation.inverse(base.get());
+                let inverse = mutation.inverse(base.get()).map_err(semio_framework_value::ValueError::into_message)?;
                 let post = mutation.diff(base.get()).into_parts().0.apply(base.get()).map_err(|_| "Puzzle2d Config mutation could not produce its post root".to_string())?;
                 self.candidate = Some((post, inverse, mutation, completed_bytes));
                 self.phase = 1;
@@ -2525,7 +2497,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle2dConfig, Puzzle2dConfigMutati
             1 => {
                 let (post, inverse, mutation, completed_bytes) = self.candidate.take().ok_or_else(|| "Puzzle2d Config preparation lost its semantic candidate".to_string())?;
                 let authority = self.authority.as_ref().ok_or_else(|| "Puzzle2d Config preparation lost its Store authority".to_string())?;
-                let prepared = authority.prepare_one_item(puzzle2d_config_store_edit(mutation, inverse, self.description.take(), authority), std::sync::Arc::new(post))?;
+                let prepared = authority.prepare_one_item(authority.next_edit(mutation, inverse), std::sync::Arc::new(post))?;
                 self.phase = 2;
                 self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: completed_bytes as u64, digest: prepared.edit_digest() };
                 self.prepared = Some(prepared);
@@ -2555,7 +2527,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle2dConfig, Puzzle2dConfigMutati
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -2564,7 +2536,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle2dConfig, Puzzle2dConfigMutati
         }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
-                return Err("Puzzle2d Config preparation could not return its exact base root".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Puzzle2d Config preparation could not return its exact base root"));
             }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -2589,7 +2561,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<Puzzle2dConfig, Puzzle2dConfi
             return Err("Puzzle2d Config preparation rejected its lane or description".into());
         }
         let retained_bytes = puzzle2d_config_store_mutation_bytes(mutation).ok_or_else(|| "Puzzle2d Config preparation rejected its exact mutation".to_string())?;
-        Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes })
+        Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))
     }
 
     fn begin(
@@ -2623,13 +2595,6 @@ impl store::ArtifactStoreOneItemPreparationFactory<Puzzle2dConfig, Puzzle2dConfi
 /// generically through `protocol::Mutation`/`protocol::MutationDiff` rather than an allowlist,
 /// because one retained completion emits whatever the granular document delta produced (create /
 /// delete node, connect / disconnect handles, manifest, compatibility, catalogs) one per store turn.
-/// 🧾️ Inverse rows one `delete-node` may yield: the re-created node plus one `connect-handles` per edge
-/// on its handles — a node carries at most one edge per handle, and Nakagin's densest node has 12 handles.
-const PUZZLE2D_DELETE_NODE_INVERSE_ROWS: usize = 1 + 64;
-/// 🧾️ Inverse rows one `rotate-selection` target may yield: the restoring `move-node` plus one
-/// `replace-node-handle` per turned handle, under the same per-node handle ceiling as a delete.
-/// `drag-selection` restores one position per target and `scale-selection` a region's corner AND extent.
-const PUZZLE2D_ROTATE_SELECTION_INVERSE_ROWS: usize = 1 + 64;
 
 struct Puzzle2dArtifactStorePreparationFactory;
 
@@ -2646,53 +2611,14 @@ struct Puzzle2dArtifactStorePreparation {
     closing: bool,
 }
 
-fn puzzle2d_artifact_store_edit(forward: Puzzle2dMutation, inverse: Vec<Puzzle2dMutation>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<Puzzle2dMutation> {
-    let id = format!("puzzle2d-artifact-retained-{}", authority.next_sequence_number());
-    protocol::Edit { line: authority.line_id().map(str::to_owned),
-        id: id.clone(),
-        actor: Some(authority.actor().to_string()),
-        forwards: vec![forward],
-        inverse,
-        mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
-            dependencies: Vec::new(),
-            base_version: authority.base_applied_edit_count() as u64,
-            author_id: Some(protocol::ActorId(authority.actor().to_string())),
-            timestamp: authority.next_clock(),
-            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-            payload_hash: None,
-            semantic_kind: None,
-            label: None,
-            group_id: None,
-            origin: Default::default(),
-            transaction: None,
-        }],
-        description, verb: None,
-        coalesce_key: None,
-        sequence_number: authority.next_sequence_number(),
-        started_at: String::new(),
-        finished_at: None,
-    }
-}
-
 impl store::ArtifactStoreOneItemPreparationFactory<Puzzle2dPlaySnapshot, Puzzle2dMutation> for Puzzle2dArtifactStorePreparationFactory {
-    /// 🧾️ `work_items` counts staged edit ROWS: the forward row plus every row the inverse yields.
-    /// `delete-node`'s inverse re-creates the node AND re-connects every edge that hung off its handles
-    /// (`🗑️delete-node/↩️inverse`), so a point-invertible `2` fail-closed every node delete with
-    /// `batched item candidate failed its exact fixed fold contract` (2026-09-16); the cascade is
-    /// bounded by the edges one node can carry.
+    /// 🧾️ The forward row plus the inverse rows the leaf's payload schema declares (`x-semio-inverse-rows`): `delete-node`
+    /// re-creates the node and re-connects every edge on its handles, a selection transform restores each target.
     fn preflight(&self, mutation: &Puzzle2dMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
             return Err("Puzzle2d Artifact preparation rejected its lane or description envelope".into());
         }
-        let work_items = match mutation {
-            Puzzle2dMutation::DeleteNode(_) => 1 + PUZZLE2D_DELETE_NODE_INVERSE_ROWS,
-            Puzzle2dMutation::DragSelection(payload) => 1 + payload.targets.len(),
-            Puzzle2dMutation::ScaleSelection(payload) => 1 + 2 * payload.targets.len(),
-            Puzzle2dMutation::RotateSelection(payload) => (1 + payload.targets.len() * PUZZLE2D_ROTATE_SELECTION_INVERSE_ROWS).min(store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_WORK_ITEMS),
-            _ => store::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS,
-        };
-        Ok(store::ArtifactStoreOneItemFootprint { work_items, retained_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES })
+        Ok(store::ArtifactStoreOneItemFootprint::for_leaf::<Puzzle2dPlaySnapshot, _>(mutation, store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
 
     fn begin(
@@ -2735,7 +2661,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle2dPlaySnapshot, Puzzle2dMutati
             0 => {
                 let base = self.base.as_ref().ok_or_else(|| "Puzzle2d Artifact preparation lost its exact base root".to_string())?;
                 let mutation = self.mutation.take().ok_or_else(|| "Puzzle2d Artifact preparation lost its mutation owner".to_string())?;
-                let inverse = mutation.inverse(base.get());
+                let inverse = mutation.inverse(base.get()).map_err(semio_framework_value::ValueError::into_message)?;
                 let post = mutation.diff(base.get()).into_parts().0.apply(base.get()).map_err(|_| "Puzzle2d Artifact mutation could not produce its post root".to_string())?;
                 self.candidate = Some((post, inverse, mutation));
                 self.phase = 1;
@@ -2745,7 +2671,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle2dPlaySnapshot, Puzzle2dMutati
             1 => {
                 let (post, inverse, mutation) = self.candidate.take().ok_or_else(|| "Puzzle2d Artifact preparation lost its semantic candidate".to_string())?;
                 let authority = self.authority.as_ref().ok_or_else(|| "Puzzle2d Artifact preparation lost its Store authority".to_string())?;
-                let prepared = authority.prepare_one_item(puzzle2d_artifact_store_edit(mutation, inverse, self.description.take(), authority), std::sync::Arc::new(post))?;
+                let prepared = authority.prepare_one_item(authority.next_edit(mutation, inverse), std::sync::Arc::new(post))?;
                 self.phase = 2;
                 self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: 1, digest: prepared.edit_digest() };
                 self.prepared = Some(prepared);
@@ -2775,7 +2701,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle2dPlaySnapshot, Puzzle2dMutati
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -2784,7 +2710,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle2dPlaySnapshot, Puzzle2dMutati
         }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
-                return Err("Puzzle2d Artifact preparation could not return its exact base root".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Puzzle2d Artifact preparation could not return its exact base root"));
             }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -3170,7 +3096,7 @@ fn puzzle2d_retained_reduce(
     let mut fixture = json!({ "nodes": [] });
     add_node_to_host_snapshot(&mut fixture, command.args().and_then(|args| args.get("kind")).and_then(Value::as_str), command.args());
     let node = fixture.get_mut("nodes").and_then(Value::as_array_mut).and_then(Vec::pop).ok_or_else(|| Fault::from("puzzle2d-add-node-owner-lost"))?;
-    let node = <crate::Puzzle2dNode as dsl::FromValue>::from_value(dsl::DslValue::from(&node)).map_err(|_| Fault::from("puzzle2d-add-node-malformed"))?;
+    let node = <crate::Puzzle2dNode as semio_framework_value::FromValue>::from_value(semio_framework_value::DslValue::from(&node)).map_err(|_| Fault::from("puzzle2d-add-node-malformed"))?;
     Ok(Emit { artifact_mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_node(node, None)], ui_scope: UiDirtyScope::Full, ..Default::default() })
 }
 
@@ -3269,7 +3195,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
             Puzzle2dExampleStage::ClearCompatibility => {
                 let source = snapshot.value().get("meta").and_then(|meta| meta.get("kindCompatibility")).and_then(Value::as_array).and_then(|rows| rows.get(self.source_cursor));
                 if let Some(source) = source {
-                    let row = <crate::Puzzle2dKindCompatibility as dsl::FromValue>::from_value(dsl::DslValue::from(source)).map_err(|_| Fault::from("puzzle2d-example-compatibility-malformed"))?;
+                    let row = <crate::Puzzle2dKindCompatibility as semio_framework_value::FromValue>::from_value(semio_framework_value::DslValue::from(source)).map_err(|_| Fault::from("puzzle2d-example-compatibility-malformed"))?;
                     self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::disconnect_kind_compatibility(row.source, row.target));
                     self.source_cursor += 1;
                     return Ok(Self::progress("puzzle2d-example-clear-compatibility", "Removing kind relation", "Artbeziehung wird entfernt"));
@@ -4124,7 +4050,7 @@ impl Puzzle2dRedrawHandlesWork {
         let object = nodes.get(node_index).and_then(Value::as_object).ok_or_else(|| Fault::from("puzzle2d-redraw-node-owner-lost"))?;
         let node_id = object.get("id").and_then(Value::as_str).ok_or_else(|| Fault::from("puzzle2d-redraw-node-id-missing"))?;
         let handle = object.get("handles").and_then(Value::as_array).and_then(|handles| handles.get(handle_index)).ok_or_else(|| Fault::from("puzzle2d-redraw-handle-owner-lost"))?;
-        let original = <crate::Puzzle2dHandle as dsl::FromValue>::from_value(dsl::DslValue::from(handle)).map_err(|_| Fault::from("puzzle2d-redraw-handle-malformed"))?;
+        let original = <crate::Puzzle2dHandle as semio_framework_value::FromValue>::from_value(semio_framework_value::DslValue::from(handle)).map_err(|_| Fault::from("puzzle2d-redraw-handle-malformed"))?;
         let mut next = original.clone();
         next.angle = angle;
         if next == original {
@@ -4496,6 +4422,7 @@ impl Puzzle2dImportJob {
     fn new(request: ArtifactReservedToolJobRequest<EditorApp<Puzzle2dPlayApp>>, port: String, media: Media) -> Self {
         let media_json = match media.payload {
             MediaPayload::Structured { json, .. } => Some(json),
+            MediaPayload::Intrinsic { value, .. } => Some(semio_framework_pack_json::to_json_string(&value)),
             MediaPayload::Binary { .. } => None,
         };
         Self {
@@ -4572,14 +4499,14 @@ impl Puzzle2dImportJob {
             _ => return Some(puzzle2d_job_fault(cx, "puzzle2d kit:in decoded item limit exceeded")),
         };
         self.catalogs = match existing_catalogs.as_ref() {
-            Some(value) => match <crate::Puzzle2dKindCatalogs as dsl::FromValue>::from_value(dsl::DslValue::from(value)) {
+            Some(value) => match <crate::Puzzle2dKindCatalogs as semio_framework_value::FromValue>::from_value(semio_framework_value::DslValue::from(value)) {
                 Ok(catalogs) => catalogs,
                 Err(_) => return Some(puzzle2d_job_fault(cx, "puzzle2d kit:in cannot read the document's own kind catalogs")),
             },
             None => crate::Puzzle2dKindCatalogs::default(),
         };
         for row in &existing_compatibility {
-            match <crate::Puzzle2dKindCompatibility as dsl::FromValue>::from_value(dsl::DslValue::from(row)) {
+            match <crate::Puzzle2dKindCompatibility as semio_framework_value::FromValue>::from_value(semio_framework_value::DslValue::from(row)) {
                 Ok(parsed) => self.compatibility.push(parsed),
                 Err(_) => return Some(puzzle2d_job_fault(cx, "puzzle2d kit:in cannot read the document's own kind relations")),
             }
@@ -4685,7 +4612,7 @@ impl InteractiveJob for Puzzle2dImportJob {
                     cx.consume_fuel(1);
                     return self.checkpoint(cx);
                 };
-                let Ok(parsed) = <crate::Puzzle2dKindCompatibility as dsl::FromValue>::from_value(dsl::DslValue::from(&row)) else {
+                let Ok(parsed) = <crate::Puzzle2dKindCompatibility as semio_framework_value::FromValue>::from_value(semio_framework_value::DslValue::from(&row)) else {
                     return puzzle2d_job_fault(cx, "puzzle2d kit:in kind relation is malformed");
                 };
                 let existing = self.compatibility.iter().position(|entry| entry.source == parsed.source && entry.target == parsed.target);
@@ -4901,7 +4828,7 @@ impl Puzzle2dClipboardJob {
                 Emit { artifact_mutations: mutations, effects: vec![Effect::ClipboardWrite { fragment }], interaction_writes: clear, ..Default::default() }
             }
             "paste" => {
-                let Some(fragment) = args.as_ref().and_then(|value| value.get("fragment")).and_then(|value| dsl::FromValue::from_value(value.clone()).ok()) else {
+                let Some(fragment) = args.as_ref().and_then(|value| value.get("fragment")).and_then(|value| semio_framework_value::FromValue::from_value(value.clone()).ok()) else {
                     return Ok(Emit::default());
                 };
                 let placement = PastePlacement::default();
@@ -5199,10 +5126,15 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         command.action_id()
     }
 
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
-        let window_id = args.and_then(|value| value.get("windowId").or_else(|| value.get("window_id"))).and_then(dsl::DslValue::as_str).map(str::to_string);
+    /// 📢️ The localized notices of this guest's refusal codes ([`puzzle2d_fault_notices`]).
+    fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
+        puzzle2d_fault_notices()
+    }
+
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
+        let window_id = args.and_then(|value| value.get("windowId").or_else(|| value.get("window_id"))).and_then(semio_framework_value::DslValue::as_str).map(str::to_string);
         if let Some(flag) = puzzle2d_flag_value_argument(action) {
-            args.and_then(|value| value.get(flag)).and_then(dsl::DslValue::as_bool).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("puzzle2d.action.flag-value-required"), format!("action '{action}' requires the boolean '{flag}' it sets")))?;
+            args.and_then(|value| value.get(flag)).and_then(semio_framework_value::DslValue::as_bool).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("puzzle2d.action.flag-value-required"), format!("action '{action}' requires the boolean '{flag}' it sets")))?;
         }
         let args = args.map(Value::from);
         Puzzle2dCommand::try_from_action(action, args, window_id).ok_or_else(|| Fault::from(format!("unknown Puzzle 2D action '{action}'")))
@@ -5241,7 +5173,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
     /// rebuilt from the next dispatch anyway. Without this hook (and the proofs below) both verbs fell
     /// through to `admit_command_json` and failed closed with `interactive-job.missing-factory`, so
     /// the Fill tool tab could not even be selected.
-    fn host_configuration_mutation(_action: &str, _args: Option<&dsl::DslValue>) -> Result<Option<Self::ConfigMutation>, Fault> {
+    fn host_configuration_mutation(_action: &str, _args: Option<&semio_framework_value::DslValue>) -> Result<Option<Self::ConfigMutation>, Fault> {
         Ok(None)
     }
 
@@ -5323,12 +5255,12 @@ impl ArtifactEditor for Puzzle2dPlayApp {
     /// so this is a 2d↔2d vocabulary, not block3d's object/vortex-kind one; `Puzzle2dImportJob` does the
     /// normalization one bounded row per step.
     fn io() -> Option<AppIo> {
-        let io = semio_framework::io::resolve_ready(AppIo::from_artifact(
+        let io = ::semio_framework_async::poll::resolve_ready(AppIo::from_artifact(
             "puzzle.2d",
             MediaType { class: MediaClass::TwoD, form: MediaForm::Design },
             ArtifactPresentation { id: "2d.puzzle".into(), name: "2D Puzzle".into(), dimension: "2d".into(), component_kind: "puzzle2d".into() },
         ));
-        Some(semio_framework::io::resolve_ready(io.with_ports(vec![
+        Some(::semio_framework_async::poll::resolve_ready(io.with_ports(vec![
             MediaPortSpec {
                 id: PUZZLE2D_IMPORT_PORT.into(),
                 label: "Kit Catalog".into(),
@@ -5492,12 +5424,11 @@ impl Puzzle2dPlayApp {
         interaction: &Puzzle2dInteractionSnapshot,
         registry: &semio_framework_plugin::AppActionRegistry,
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-        let is_de = view_state.locale == semio_framework_ui_locale::Locale::De;
         let mut selected: Vec<String> = request.surface.as_ref().map(|surface| surface.selection.iter().flat_map(|g| g.ids.iter().cloned()).collect()).unwrap_or_default();
         if selected.is_empty() {
             selected = interaction.selected.clone();
         }
-        semio_framework::io::resolve_ready(puzzle2d_context_menu_items(registry, doc.snapshot.value(), &selected, is_de))
+        ::semio_framework_async::poll::resolve_ready(puzzle2d_context_menu_items(registry, doc.snapshot.value(), &selected, view_state))
     }
 }
 //#endregion 🔖️PlayApp
@@ -5507,6 +5438,16 @@ impl Puzzle2dPlayApp {
 /// vocabulary dispatched by the canvas/panels, never surfaced as a standalone command palette entry.
 fn puzzle2d_internal_action(id: &str, label: impl Into<LocalizedLabel>, kind: ActionKind) -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(id, label, kind) }
+}
+
+/// 📢️ The localized notice of every refusal code the puzzle2d guest names (design §20.12): a set-verb's missing flag value.
+fn puzzle2d_fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
+    static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 1]> = std::sync::LazyLock::new(|| {
+        [
+            ("puzzle2d.action.flag-value-required", LocalizedLabel::native("Choose on or off for this setting.", "Für diese Einstellung Ein oder Aus wählen.")),
+        ]
+    });
+    &*NOTICES
 }
 
 /// 🙈️ The flag a set-verb sets to exactly the boolean its arguments carry (`setSelectionHidden{hidden}`,

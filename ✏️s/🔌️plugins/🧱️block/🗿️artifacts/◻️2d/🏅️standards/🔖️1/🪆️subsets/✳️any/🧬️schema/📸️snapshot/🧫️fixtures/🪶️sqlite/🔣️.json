@@ -1,0 +1,5 @@
+{
+  "dialect": "s.block.block2d@1/*",
+  "binary64Bits": ["0000000000000000", "8000000000000000", "0000000000000001", "3ff0000000000000", "7ff0000000000000", "fff0000000000000", "7ff0000000000001", "7ff8000000000042"],
+  "nativeCase": {"schema": "", "literal": "literal\u0000!@/😀", "kindId": "", "handleKindId": "", "unresolvedHandleKind": "unresolved\u0000!@/😀"}
+}

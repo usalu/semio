@@ -1523,7 +1523,7 @@
     },
     "cad-draw-projection-vectors-v1": {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/📐️cad-draw-path-projection/🔣️.json",
-      "sha256": "8bfd376637c2da7a77f8d94587df54bcdb842628be3d17997c6b44b9539b1697",
+      "sha256": "eca5acc066ccf1ec2f686a1a4cc98fccc3089a87dd354e3c5aa72f687a8b6080",
       "schemaVersion": 1,
       "coordinates": [
         {
@@ -12983,12 +12983,7 @@
         "🔗️republishes",
         "⚠️warns",
         "✒️mutate-writer-1",
-        "🟰️re",
-        "🟰️replaces",
-        "🟰️keeps",
         "🚫️refuses",
-        "🗜️clamps",
-        "🌊️mutate-flow-1",
         "⚡️mutate-din18599-1",
         "🧩️mutate-en1994-1",
         "🔩️mutate-en1993-1",
@@ -14782,6 +14777,7 @@
         "members-of-elements"
       ],
       "memberNames": [
+        "🧭️gumball",
         "🗂️local-catalog",
         "📎️local-folders"
       ],
@@ -15929,7 +15925,7 @@
     "nested-cargo-packages-v1": {
       "contractKind": "exact-nested-cargo-package-catalog",
       "authorityCatalogPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/📽️nested-cargo-package-projection/🔣️.json",
-      "authorityCatalogSha256": "9445dea9437059bf41cbc40487e4e0c1b66b7ba5f79dfb0ada9af0c10bec38af",
+      "authorityCatalogSha256": "0b43c775ed020418f913cc56ac276cc871472f3467ccb4b37573237c79bc47e7",
       "packageIds": [
         "wgpu-renderer",
         "jcoprobe-guest"
@@ -26735,6 +26731,30 @@
       ],
       "reason": "The Flow core command invokes wasm-pack, then delegates browser, host, declaration, manifest and snippet publication to the semantic browser publisher"
     },
+    "flow-graph-catalog": {
+      "ownership": "owned",
+      "ownerPath": "🌎️hub/🧩️compositions/🌊️flow/📦️packages/🦀️rust",
+      "target": "@semio-tech/flow-plugin:graph-generate",
+      "previewTarget": "@semio-tech/flow-plugin:preview-generated",
+      "nativeConsumers": [
+        "🌎️hub/🧩️compositions/🌊️flow/📦️packages/🦀️rust"
+      ],
+      "inputPatterns": [
+        "✏️s/🔌️plugins/🌊️flow/**/*manifest.json",
+        "🌎️hub/🧩️compositions/🌊️flow/📦️packages/🦀️rust/📋️project.json",
+        "🌎️hub/🧩️compositions/🌊️flow/📦️packages/🦀️rust/📜️script.ts",
+        "🌎️hub/🧩️compositions/🌊️flow/🛂️manifest/📇️outputs.json",
+        "🧰️framework/🔨️modules/🏃️process/🧭️routing/**/*.ts",
+        "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/**/*"
+      ],
+      "outputRoots": [
+        {
+          "path": "🌎️hub/🧩️compositions/🌊️flow/🤖️generated",
+          "inclusion": "ignored"
+        }
+      ],
+      "reason": "The Flow composition compiles its own graph catalog; every native and component consumer prepares the current owned projection before compiling"
+    },
     "framework-manifest": {
       "ownership": "owned",
       "ownerPath": "🧰️framework/📦️packages/🦀️rust",
@@ -27213,7 +27233,7 @@
       "packageGeneration": {
         "kind": "wgpu-package-artifacts",
         "catalogPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪪️package-catalog.json",
-        "catalogSha256": "50dadf52c537a5206447e5ba70f9871d76bf9ffd05d8b9ed00e0379ba644eb70",
+        "catalogSha256": "c368a601c7487290e48d015322a9331ff8a1bfe01a13ebf43f965fc1172eb780",
         "previewInput": {
           "protocol": "package-projected-inputs-v1",
           "maxBytes": 67108864,
@@ -27267,9 +27287,13 @@
             "🧰️framework/🔨️modules/⏳️async/🔁️jittered-backoff/🟦️.ts",
             "🧰️framework/🔨️modules/⏳️async/🔔️event-wait/🟦️.ts",
             "🧰️framework/🔨️modules/⏳️async/🥇️latest-wins/🟦️.ts",
+            "🧰️framework/🔨️modules/⚠️diagnostic/🎛️controlled/🟦️.ts",
+            "🧰️framework/🔨️modules/🌱️value/⚠️refusal/🔁️codec/🟦️.ts",
+            "🧰️framework/🔨️modules/🌱️value/⚠️refusal/🟦️.ts",
             "🧰️framework/🔨️modules/🌱️value/💾️resident/🟦️.ts",
             "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🟦️.ts",
             "🧰️framework/🔨️modules/🌱️value/🧬️schema/🌳️intrinsic/🟦️.ts",
+            "🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json",
             "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/🟦️.ts",
@@ -27300,6 +27324,8 @@
             "🧰️framework/🔨️modules/🔏️hash/🟦️.ts",
             "🧰️framework/🔨️modules/🕹️interaction/👆️gesture/🟦️.ts",
             "🧰️framework/🔨️modules/🖥️platform/🟦️.ts",
+            "🧰️framework/🔨️modules/🖱️ui/🌐️locale/🟦️.ts",
+            "🧰️framework/🔨️modules/🖱️ui/🎚️axes/🔣️.json",
             "🧰️framework/🔨️modules/🖱️ui/🎬️scene/✂️text-splice/🟦️.ts",
             "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📷️framing/🟦️.ts",
             "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🟦️.ts",
@@ -27340,6 +27366,7 @@
             "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/🟦️.ts",
             "🧰️framework/🔨️modules/🚪️io/🌐️fetch-timeout/🟦️.ts",
             "🧰️framework/🔨️modules/🚪️io/🔤️base64/🟦️.ts",
+            "🧰️framework/🔨️modules/🚪️io/🧬️schema/⚠️refusal/🟦️.ts",
             "🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json",
             "🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts",
             "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts",
@@ -28890,9 +28917,10 @@
         ],
         "externalPackages": []
       },
-      "framework-modules": {
+      "framework-neutral": {
         "ownerPaths": [
-          "🧰️framework/🔨️modules"
+          "🧰️framework/🔨️modules",
+          "🧰️framework/📦️packages"
         ],
         "externalPackages": []
       },
@@ -28913,9 +28941,9 @@
           "renderer"
         ]
       },
-      "framework-modules-no-products": {
+      "framework-no-products": {
         "fromRoles": [
-          "framework-modules"
+          "framework-neutral"
         ],
         "toRoles": [
           "framework-products"
@@ -29573,7 +29601,8 @@
         "🔀️reorder": "reorder-morph-target-attributes"
       },
       "📸️snapshot": {
-        "📸️set": "set-snapshot"
+        "📸️set": "set-snapshot",
+        "🩹️patch": "patch-snapshot"
       }
     }
   },

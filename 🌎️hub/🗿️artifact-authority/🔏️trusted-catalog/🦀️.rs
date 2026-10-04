@@ -2800,6 +2800,10 @@ fn headless_stdio_fixture_package(root: &Path) -> Result<(serde_json::Value, ser
 #[cfg(all(feature = "integration-fixtures", feature = "native-artifact-execution"))]
 #[path = "../../🧪️tests/🔏️trusted-catalog-profile/🦀️.rs"]
 pub mod trusted_catalog_fixture;
+#[cfg(all(feature = "integration-fixtures", feature = "native-artifact-execution"))]
+#[path = "../../🧪️tests/🔏️trusted-catalog-profile/🪶️count/🦀️.rs"]
+pub mod count_trusted_catalog_fixture;
+
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

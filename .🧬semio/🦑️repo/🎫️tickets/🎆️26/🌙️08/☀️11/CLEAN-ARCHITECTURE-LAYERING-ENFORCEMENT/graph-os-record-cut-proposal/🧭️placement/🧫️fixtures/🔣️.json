@@ -1,0 +1,1 @@
+{"version":1,"cases":[{"suffix":"🧪️tests/🔬️unit/🦀️.rs","functions":78,"comparison":"ExactFunctionTokens"},{"suffix":"🧪️tests/🔬️json-schema/🦀️.rs","functions":11,"comparison":"ExactFunctionTokens"},{"suffix":"🧪️tests/🫳️borrowed-object/🦀️.rs","functions":1,"comparison":"ExactAssertionsAndFixtureWithOwnerAllocator"}]}

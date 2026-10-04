@@ -1,0 +1,25 @@
+# Mounted six publication context origin audit
+
+Read-only current source and six authored JSON inputs. High supplied Source69 demand RED69/68pass1fail3228assertions at missing role; subsequent Source69/Python46 retries were active, no GREEN claimed here. No test/compiler or implementation edits performed.
+
+## Closed independent input authority
+
+All six publication inputs under existing mutation fixture directories contain exactly source,target,ownerRole. Source identities are pair for drag/patch and chain for delete/connect/disconnect/add; targets are authored pair-drag/pair-patch and chain-delete/chain-connect/chain-disconnect/chain-add. Both childId and artifactId are retained individually, exact Semio/v1/graph dialect and before-child role. These are declarative identities, not child data or expected semantic answers. Inputs do not carry JSON/native graph envelopes.
+
+Publication schema closes outer object; ArtifactChild base referenced in its allOf closes childId/target, whose actual ArtifactRef schema closes artifactId/dialect. Overlay requires nonempty identifiers and exact Semio/v1/graph dialect. Python publication_input181–194 independently checks exact outer/reference keys, string identities, exact dialect, source==actual before parent handle and explicit full role child==supplied actual child. The before-child role is resolved by exact existing fixture(ctx,role), no sibling discovery. Source69 at516–533 independently validates schema and actual beforehandle join, requires differing source/target and rejects extra opaqueJson/foreign dialect. No source-only closure assertion proves live execution.
+
+Actual spec_vector_handler337–354 reads before owner, publication context and mutation first. Relative apply_mutation196–280 computes a full deep-copied child with six authored mutation semantics, then installs the admitted publication target into the parent. Expected after owner is read **after** apply_mutation345–346 and used exclusively in full parent+child comparison. No relative mutation takes expected after child as execution input. Whole edit-before explicitly reads its declared replacement child, a separate semantic operation.
+
+Computed child preserves full node/port/edge/property structures and raw-word geometry except explicitly modified fields. The same exact endpoint/edge identity functions operate before publication; target changes do not bypass those semantics. Recursive plain JSON equality is valid for declared geometry bit strings and typed SemioValue lexemes; this is not generic DslValue Float PartialEq. All46 kinds/identities remain registered through original KINDS15 x3 + identity and feature examples. Publication adds inputs only for the six committed relative vectors; real mutate/inverse rows keep their own original authority behavior.
+
+Inverse283–288 captures original complete workingGraph and full original child, represents inverse as actual edit-before-fixture payload, and restores them through apply_mutation; no expected after parent/child is substituted. This consumer has complete retained-owner restoration rather than a reverse relative operation requiring a newly guessed target. Full projection equality retains both original parent and child IDs.
+
+## Current remaining qualifications
+
+Python publication_input permits target==source whereas the Source69 declaration contract separately asserts they differ; current six valid inputs all differ. This is a bounded admission inconsistency for a hostile execution context, not a current valid-fixture failure or permission to add guessed names. If Source distinctness is meant as runtime context contract, add an unchanged negative context assertion before pairing that validation.
+
+High's unmounted Rust helper any/🧪️tests/♻️mutate-rewrite-1/🪆️owner/🦀️.rs uses actual public Semio full JSON codec and Jack materialize/read APIs. Jack materialize_jack_snapshot at Jack/🪆️content/🦀️.rs62 attaches local owner to existing handle without rewriting its literal identity; jack_content_for_handle64 checks exact dialect and actual local owner. This preserves full declared typed owner for Rust setup, not a replacement graph carrier.
+
+The current oracle contribution JSON has no host package contribution; effective default subject features remain unqualified until generated host census/current run. High reports subjectfeatures[] and requires explicit firstparty Semio+Jack test-host package contributions before mounting helper. Rewriting subject itself is the actual owning package, not a product compatibility reexport. Current Rust scenario consumer remains stale and unmounted helper syntax alone does not prove Rust46. Root must authenticate unchanged registered Rust exact46 baseline and then pair current typed scenario consumer/host contributions. Do not turn Python46 or Source69 receipt into Rust/native/live-host evidence.
+
+No concrete data-from-expected or prose-classifier defect found in mounted six valid context execution paths. High Count and other implementation sources were untouched.

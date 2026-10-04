@@ -1,6 +1,7 @@
 /** 🧫️ Shared JSON semantic corpus with independent SQL editing and ownership validation. */
 import { Database } from "bun:sqlite";
 import { expect, test } from "bun:test";
+import "./💰️allocation/🟦️.ts";
 import fixture from "../../🧫️fixtures/🪶️sqlite/🔣️.json";
 import type { JsonSnapshot, JsonValue } from "../../🟦️.ts";
 import { parseJsonSnapshot } from "../../🟦️.ts";
@@ -93,9 +94,9 @@ test("JSON iterative trees honor bounds and cancellation without native serializ
   expect(count).toBe(3000);
   const controller = new AbortController();
   let events = 0;
-  await expect(jsonSnapshotToSqliteDatabase({ schema: "deep", value }, { signal: controller.signal, onProgress: () => { if (++events === 2) controller.abort(); } })).rejects.toMatchObject({ name: "AbortError" });
+  await expect(jsonSnapshotToSqliteDatabase({ schema: "deep", value }, { signal: controller.signal, onProgress: () => { if (++events === 2) controller.abort(); } })).rejects.toMatchObject({ name: "ValueError", kind: "canceled" });
   const reconstruction = new AbortController();
-  await expect(jsonSnapshotFromSqliteDatabase(database, { signal: reconstruction.signal, onProgress: () => reconstruction.abort() })).rejects.toMatchObject({ name: "AbortError" });
+  await expect(jsonSnapshotFromSqliteDatabase(database, { signal: reconstruction.signal, onProgress: () => reconstruction.abort() })).rejects.toMatchObject({ name: "ValueError", kind: "canceled" });
 });
 
 

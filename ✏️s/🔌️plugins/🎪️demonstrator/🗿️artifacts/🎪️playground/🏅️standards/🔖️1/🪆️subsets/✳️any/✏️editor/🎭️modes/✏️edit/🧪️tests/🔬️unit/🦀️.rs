@@ -2,6 +2,6 @@ use super::*;
 
 #[test]
 fn the_edit_layout_lists_the_one_window() {
-    let json = dsl::os_pack::json::to_json_string(&layout());
+    let json = semio_framework_pack_json::to_json_string(&layout());
     assert!(json.contains(main::WINDOW_KIND_ID), "layout must reference the main window kind: {json}");
 }

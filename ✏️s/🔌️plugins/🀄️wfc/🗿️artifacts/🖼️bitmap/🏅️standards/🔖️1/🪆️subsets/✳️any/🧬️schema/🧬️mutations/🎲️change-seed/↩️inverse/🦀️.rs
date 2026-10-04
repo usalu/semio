@@ -4,6 +4,9 @@
 use crate::mutations::{change_seed, BitmapMutation};
 use crate::schema::snapshot::BitmapSnapshot;
 
-pub fn inverse(_payload: &super::ChangeSeed, base: &BitmapSnapshot) -> Vec<BitmapMutation> {
+pub fn inverse(_payload: &super::ChangeSeed, base: &BitmapSnapshot) -> Result<Vec<BitmapMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![change_seed(base.seed)]
+
+    })())
 }

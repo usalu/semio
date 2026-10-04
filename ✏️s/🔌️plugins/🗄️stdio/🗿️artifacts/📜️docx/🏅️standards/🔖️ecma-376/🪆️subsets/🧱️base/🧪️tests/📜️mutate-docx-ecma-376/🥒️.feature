@@ -4,7 +4,7 @@
 @mutations-docx-ecma-376-base
 Feature: Apply every typed DOCX ECMA-376 mutation to a real-world document
   The committed `example.docx` under this artifact's own demo example is a genuine OOXML package but
-  only 1,648 bytes -- thin for exercising all 13 `DocxMutation` kinds. No larger real `.docx` exists
+  only 1,648 bytes -- thin for exercising all 14 `DocxMutation` kinds. No larger real `.docx` exists
   anywhere in this repository (`♻️mit-bestand`, `temp/` and every other tree were searched first) --
   a real `.pptx` and other office-adjacent binaries exist under `temp/`, but no `.docx`. Rather than
   a synthetic 2-paragraph stub, a substantial real DOCX was DERIVED ONCE from this repository's own
@@ -113,6 +113,13 @@ Feature: Apply every typed DOCX ECMA-376 mutation to a real-world document
   than restating it, so the two can never drift apart — and the same module pins the
   remove-style-of-an-interior-style refusal described above.
 
+  The `patch-snapshot` row is one RFC 6901 pointer operation on the subject's own `DocxSnapshot` reading — the logical XML
+  parts in archive order, each a retained arena whose `attributes` list every element's attributes in pre-order — and sets
+  the first body paragraph's `w:pStyle` `w:val` from Heading1 to Heading2. Its committed after-document was written by
+  python-docx through its own package/part/oxml model from that row, and re-read against the patched reading before it was
+  committed (this ticket's `🧪️s4-stdio-docx-patch-after.py`); the zip+quick-xml oracle applies the same pointer to its own
+  reading of the package.
+
   @id-mutate
   @level-exhaustive
   @mode-differential
@@ -137,6 +144,7 @@ Feature: Apply every typed DOCX ECMA-376 mutation to a real-world document
       | set-style-based-on | {"id": "Heading3", "based_on": "Heading1"}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | 🌳️set-style-based-on |
       | set-part           | {"path": "docProps/app.xml", "content_type": "application/vnd.openxmlformats-officedocument.extended-properties+xml", "bytes": [60, 80, 114, 111, 112, 101, 114, 116, 105, 101, 115, 32, 120, 109, 108, 110, 115, 61, 34, 104, 116, 116, 112, 58, 47, 47, 115, 99, 104, 101, 109, 97, 115, 46, 111, 112, 101, 110, 120, 109, 108, 102, 111, 114, 109, 97, 116, 115, 46, 111, 114, 103, 47, 111, 102, 102, 105, 99, 101, 68, 111, 99, 117, 109, 101, 110, 116, 47, 50, 48, 48, 54, 47, 101, 120, 116, 101, 110, 100, 101, 100, 45, 112, 114, 111, 112, 101, 114, 116, 105, 101, 115, 34, 62, 60, 65, 112, 112, 108, 105, 99, 97, 116, 105, 111, 110, 62, 115, 101, 109, 105, 111, 45, 119, 97, 118, 101, 55, 45, 109, 117, 116, 97, 116, 105, 111, 110, 45, 116, 101, 115, 116, 60, 47, 65, 112, 112, 108, 105, 99, 97, 116, 105, 111, 110, 62, 60, 47, 80, 114, 111, 112, 101, 114, 116, 105, 101, 115, 62]} | 🧩️set-part           |
       | remove-part        | {"path": "docProps/core.xml"}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | 🧹️remove-part        |
+      | patch-snapshot | {"patch": {"operation": "set", "path": "/xmlParts/0/document/attributes/1/value", "value": "Heading2"}} | 🩹️patch-snapshot |
 
   @id-inverse
   @level-exhaustive
@@ -161,6 +169,7 @@ Feature: Apply every typed DOCX ECMA-376 mutation to a real-world document
       | set-style-based-on | {"id": "Heading3", "based_on": "Heading1"}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
       | set-part           | {"path": "docProps/app.xml", "content_type": "application/vnd.openxmlformats-officedocument.extended-properties+xml", "bytes": [60, 80, 114, 111, 112, 101, 114, 116, 105, 101, 115, 32, 120, 109, 108, 110, 115, 61, 34, 104, 116, 116, 112, 58, 47, 47, 115, 99, 104, 101, 109, 97, 115, 46, 111, 112, 101, 110, 120, 109, 108, 102, 111, 114, 109, 97, 116, 115, 46, 111, 114, 103, 47, 111, 102, 102, 105, 99, 101, 68, 111, 99, 117, 109, 101, 110, 116, 47, 50, 48, 48, 54, 47, 101, 120, 116, 101, 110, 100, 101, 100, 45, 112, 114, 111, 112, 101, 114, 116, 105, 101, 115, 34, 62, 60, 65, 112, 112, 108, 105, 99, 97, 116, 105, 111, 110, 62, 115, 101, 109, 105, 111, 45, 119, 97, 118, 101, 55, 45, 109, 117, 116, 97, 116, 105, 111, 110, 45, 116, 101, 115, 116, 60, 47, 65, 112, 112, 108, 105, 99, 97, 116, 105, 111, 110, 62, 60, 47, 80, 114, 111, 112, 101, 114, 116, 105, 101, 115, 62]} |
       | remove-part        | {"path": "docProps/core.xml"}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+      | patch-snapshot | {"patch": {"operation": "set", "path": "/xmlParts/0/document/attributes/1/value", "value": "Heading2"}} |
 
   @id-mutate-set-snapshot
   @level-exhaustive

@@ -14,6 +14,7 @@ import type { SetAttributePayload } from './🏷️set-attribute/🟦️.ts';
 import type { SetTextPayload } from './✍️set-text/🟦️.ts';
 import type { SetViewBoxPayload } from './🖼️set-view-box/🟦️.ts';
 import type { SetTransformPayload } from './🔄️set-transform/🟦️.ts';
+import type { SnapshotPatch } from '../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts';
 export type SvgMutation =
   | { readonly mutation: 'setDeclaration'; readonly payload: { readonly phase: 'apply'; readonly value: SetDeclarationPayload } }
   | { readonly mutation: 'setDoctype'; readonly payload: { readonly phase: 'apply'; readonly value: SetDoctypePayload } }
@@ -25,3 +26,4 @@ export type SvgMutation =
   | { readonly mutation: 'setViewBox'; readonly payload: { readonly phase: 'apply'; readonly value: SetViewBoxPayload } }
   | { readonly mutation: 'setTransform'; readonly payload: { readonly phase: 'apply'; readonly value: SetTransformPayload } }
   | { readonly mutation: 'setSnapshot'; readonly payload: SetSnapshot };
+  | { readonly mutation: 'patchSnapshot'; readonly payload: { readonly patch: SnapshotPatch } }

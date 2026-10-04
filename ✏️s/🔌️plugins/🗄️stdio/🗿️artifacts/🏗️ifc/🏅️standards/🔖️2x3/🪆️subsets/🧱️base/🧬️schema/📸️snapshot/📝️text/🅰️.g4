@@ -1,2 +1,14 @@
 grammar Stdio_ifc_2x3_snapshot;
-DOCUMENT: 'schema' [ ]+ 'stdio.ifc.2x3' ;
+document: 'semio' 'stdio.ifc.2x3.dsl' 'v1' frame EOF;
+frame: 'schema' '=' text 'file-description' '=' indices 'file-name' '=' indices 'file-schema' '=' indices 'instances' '=' '[' instance* ']' 'values' '=' '[' node* ']' preamble?;
+instance: '{' 'id' '=' INTEGER 'entities' '=' '[' entity* ']' '}';
+entity: '{' 'name' '=' text 'arguments' '=' indices '}';
+node: '{' 'kind' '=' text ('integer' '=' INTEGER)? ('reference' '=' INTEGER)? ('text' '=' text)? ('name' '=' text)? ('negative' '=' boolean)? ('coefficient' '=' text)? ('scale' '=' INTEGER)? ('exponent' '=' INTEGER)? 'children' '=' indices '}';
+preamble: 'edm' '=' 'producer' '=' text 'module' '=' text 'creation-date' '=' text 'host' '=' text 'database' '=' text 'database-version' '=' text 'database-creation-date' '=' text 'schema' '=' text 'model' '=' text 'model-creation-date' '=' text 'header-model' '=' text 'header-model-creation-date' '=' text 'user' '=' text 'group' '=' text 'license' '=' text 'options' '=' text;
+indices: '[' INTEGER* ']';
+boolean: 'true' | 'false';
+text: STRING | IDENTIFIER | 'semio' | 'stdio.ifc.2x3.dsl' | 'v1' | 'schema' | 'file-description' | 'file-name' | 'file-schema' | 'instances' | 'values' | 'id' | 'entities' | 'name' | 'arguments' | 'kind' | 'integer' | 'reference' | 'text' | 'negative' | 'coefficient' | 'scale' | 'exponent' | 'children' | 'edm' | 'producer' | 'module' | 'creation-date' | 'host' | 'database' | 'database-version' | 'database-creation-date' | 'model' | 'model-creation-date' | 'header-model' | 'header-model-creation-date' | 'user' | 'group' | 'license' | 'options';
+INTEGER: '-'? [0-9]+;
+STRING: '"' ('\\' ('"' | '\\' | 'n' | 'r' | 't' | 'u' '{' [a-fA-F0-9]+ '}') | ~["\\\u0000-\u001F])* '"';
+IDENTIFIER: [\p{L}_] [\p{L}\p{N}_./-]*;
+TRIVIA: [ \t\r\n]+ -> skip;

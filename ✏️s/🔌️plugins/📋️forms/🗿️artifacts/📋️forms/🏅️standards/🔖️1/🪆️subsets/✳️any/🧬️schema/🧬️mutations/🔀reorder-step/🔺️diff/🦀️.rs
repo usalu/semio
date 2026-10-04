@@ -15,7 +15,7 @@ pub fn diff_reorder_step(payload: &ReorderStep, base: &FormsSnapshot) -> protoco
     order.retain(|id| id != &payload.id);
     let at = payload.to_index.min(order.len());
     if at == current_index {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Step \"{}\" is already at index {at}.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Step \"{}\" is already at index {at}.", payload.id));
     }
     order.insert(at, payload.id.clone());
     protocol::MutationOutcome::new(forms_diff_from_delta(&FormsStepsDelta { reordered: Some(order), ..Default::default() }, base))

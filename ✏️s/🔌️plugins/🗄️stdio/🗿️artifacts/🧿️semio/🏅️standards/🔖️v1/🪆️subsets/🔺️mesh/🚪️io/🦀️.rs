@@ -77,14 +77,14 @@ pub mod derived_composition {
 
     impl SubsetValidator for SemioMeshValidator {
         const DIALECT: Dialect = DIALECT;
-        async fn validate(payload: &IoPayload) -> Vec<dsl::Diagnostic> {
+        async fn validate(payload: &IoPayload) -> Vec<semio_framework_diagnostic::Diagnostic> {
             let decoded = match payload {
                 IoPayload::Binary(bytes) => <SemioMeshSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
                 IoPayload::Text(text) => <SemioMeshSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
             };
             match decoded {
                 Some(snapshot) => check_mesh_referential_invariants(&snapshot),
-                None => vec![dsl::Diagnostic::error("stdio.semio_mesh.validate-decode-failed", dsl::TextSpan::at(1, 1), "SemioMeshValidator: payload did not decode as a SemioMeshSnapshot".to_string())],
+                None => vec![semio_framework_diagnostic::Diagnostic::error("stdio.semio_mesh.validate-decode-failed", semio_framework_diagnostic::TextSpan::at(1, 1), "SemioMeshValidator: payload did not decode as a SemioMeshSnapshot".to_string())],
             }
         }
     }
@@ -92,24 +92,24 @@ pub mod derived_composition {
     /// 🔗 Real cross-collection referential check, shared by the registered validator above and its
     /// own direct unit tests below.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn check_mesh_referential_invariants(snapshot: &SemioMeshSnapshot) -> Vec<dsl::Diagnostic> {
+    pub fn check_mesh_referential_invariants(snapshot: &SemioMeshSnapshot) -> Vec<semio_framework_diagnostic::Diagnostic> {
         let mut diagnostics = Vec::new();
 
         let mut seen_mesh_ids = std::collections::HashSet::new();
         for mesh in &snapshot.meshes {
             if !seen_mesh_ids.insert(mesh.id.as_str()) {
-                diagnostics.push(dsl::Diagnostic::error("stdio.semio_mesh.duplicate-mesh-id", dsl::TextSpan::at(1, 1), format!("SemioMeshValidator: duplicate mesh id {:?}", mesh.id)));
+                diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.semio_mesh.duplicate-mesh-id", semio_framework_diagnostic::TextSpan::at(1, 1), format!("SemioMeshValidator: duplicate mesh id {:?}", mesh.id)));
             }
             let mut seen_primitive_ids = std::collections::HashSet::new();
             for primitive in &mesh.primitives {
                 if !seen_primitive_ids.insert(primitive.id.as_str()) {
-                    diagnostics.push(dsl::Diagnostic::error("stdio.semio_mesh.duplicate-primitive-id", dsl::TextSpan::at(1, 1), format!("SemioMeshValidator: mesh {:?} has duplicate primitive id {:?}", mesh.id, primitive.id)));
+                    diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.semio_mesh.duplicate-primitive-id", semio_framework_diagnostic::TextSpan::at(1, 1), format!("SemioMeshValidator: mesh {:?} has duplicate primitive id {:?}", mesh.id, primitive.id)));
                 }
                 if let Some(material_id) = &primitive.material_id {
                     if !snapshot.materials.iter().any(|m| &m.id == material_id) {
-                        diagnostics.push(dsl::Diagnostic::error(
+                        diagnostics.push(semio_framework_diagnostic::Diagnostic::error(
                             "stdio.semio_mesh.dangling-material-ref",
-                            dsl::TextSpan::at(1, 1),
+                            semio_framework_diagnostic::TextSpan::at(1, 1),
                             format!("SemioMeshValidator: mesh {:?} primitive {:?} references missing material {:?}", mesh.id, primitive.id, material_id),
                         ));
                     }
@@ -120,14 +120,14 @@ pub mod derived_composition {
         let mut seen_material_ids = std::collections::HashSet::new();
         for material in &snapshot.materials {
             if !seen_material_ids.insert(material.id.as_str()) {
-                diagnostics.push(dsl::Diagnostic::error("stdio.semio_mesh.duplicate-material-id", dsl::TextSpan::at(1, 1), format!("SemioMeshValidator: duplicate material id {:?}", material.id)));
+                diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.semio_mesh.duplicate-material-id", semio_framework_diagnostic::TextSpan::at(1, 1), format!("SemioMeshValidator: duplicate material id {:?}", material.id)));
             }
         }
 
         let mut seen_texture_ids = std::collections::HashSet::new();
         for texture in &snapshot.textures {
             if !seen_texture_ids.insert(texture.id.as_str()) {
-                diagnostics.push(dsl::Diagnostic::error("stdio.semio_mesh.duplicate-texture-id", dsl::TextSpan::at(1, 1), format!("SemioMeshValidator: duplicate texture id {:?}", texture.id)));
+                diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.semio_mesh.duplicate-texture-id", semio_framework_diagnostic::TextSpan::at(1, 1), format!("SemioMeshValidator: duplicate texture id {:?}", texture.id)));
             }
         }
 
@@ -240,15 +240,15 @@ pub enum SemioMeshFormat {
 #[cfg(feature = "conversion-mesh")]
 pub fn encode_mesh(mesh: &crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot, format: SemioMeshFormat) -> Result<Vec<u8>, String> {
     use crate::standards::v1::subsets::mesh::io::export::serializers::artifacts::{dwg::v_ac1024::any::SemioMeshToDwg, gltf::v2_0::any::SemioMeshToGltf, las::v1_0::any::SemioMeshToLas, obj::v3_0::any::SemioMeshToObj, ply::v1_0::any::SemioMeshToPly, png::v1_2::any::SemioMeshToPng, stl::v_ascii::any::SemioMeshToStl};
-    use semio_framework_plugin::{resolve_ready, ArtifactSerializer};
+    use semio_framework_plugin::{ ArtifactSerializer};
     match format {
-        SemioMeshFormat::Stl => Ok(semio_s_artifact_stdio_stl::engine::encode_stl_ascii(&resolve_ready(SemioMeshToStl::serialize(mesh)).map_err(|e| e.to_string())?).into_bytes()),
-        SemioMeshFormat::Obj => Ok(semio_s_artifact_stdio_obj::engine::encode_obj(&resolve_ready(SemioMeshToObj::serialize(mesh)).map_err(|e| e.to_string())?).into_bytes()),
-        SemioMeshFormat::Ply => semio_s_artifact_stdio_ply::engine::encode_ply(&resolve_ready(SemioMeshToPly::serialize(mesh)).map_err(|e| e.to_string())?),
-        SemioMeshFormat::Gltf => Ok(semio_s_artifact_stdio_gltf::engine::serialize_gltf_document(&resolve_ready(SemioMeshToGltf::serialize(mesh)).map_err(|e| e.to_string())?)),
-        SemioMeshFormat::Las => semio_s_artifact_stdio_las::engine::encode_las(&resolve_ready(SemioMeshToLas::serialize(mesh)).map_err(|e| e.to_string())?),
-        SemioMeshFormat::Dwg => semio_s_artifact_stdio_dwg::engine::dwg_to_bytes(&resolve_ready(SemioMeshToDwg::serialize(mesh)).map_err(|e| e.to_string())?.drawing.to_native()?),
-        SemioMeshFormat::Png => semio_s_artifact_stdio_png::io::encode_png(&resolve_ready(SemioMeshToPng::serialize(mesh)).map_err(|e| e.to_string())?),
+        SemioMeshFormat::Stl => Ok(semio_s_artifact_stdio_stl::engine::encode_stl_ascii(&::semio_framework_async::poll::resolve_ready(SemioMeshToStl::serialize(mesh)).map_err(|e| e.to_string())?).into_bytes()),
+        SemioMeshFormat::Obj => Ok(semio_s_artifact_stdio_obj::engine::encode_obj(&::semio_framework_async::poll::resolve_ready(SemioMeshToObj::serialize(mesh)).map_err(|e| e.to_string())?).into_bytes()),
+        SemioMeshFormat::Ply => semio_s_artifact_stdio_ply::engine::encode_ply(&::semio_framework_async::poll::resolve_ready(SemioMeshToPly::serialize(mesh)).map_err(|e| e.to_string())?),
+        SemioMeshFormat::Gltf => Ok(semio_s_artifact_stdio_gltf::engine::serialize_gltf_document(&::semio_framework_async::poll::resolve_ready(SemioMeshToGltf::serialize(mesh)).map_err(|e| e.to_string())?)),
+        SemioMeshFormat::Las => semio_s_artifact_stdio_las::engine::encode_las(&::semio_framework_async::poll::resolve_ready(SemioMeshToLas::serialize(mesh)).map_err(|e| e.to_string())?),
+        SemioMeshFormat::Dwg => semio_s_artifact_stdio_dwg::engine::dwg_to_bytes(&::semio_framework_async::poll::resolve_ready(SemioMeshToDwg::serialize(mesh)).map_err(|e| e.to_string())?.drawing.to_native()?),
+        SemioMeshFormat::Png => semio_s_artifact_stdio_png::io::encode_png(&::semio_framework_async::poll::resolve_ready(SemioMeshToPng::serialize(mesh)).map_err(|e| e.to_string())?),
     }
 }
 
@@ -258,18 +258,18 @@ pub fn encode_mesh(mesh: &crate::standards::v1::subsets::mesh::schema::snapshot:
 #[cfg(feature = "conversion-mesh")]
 pub fn decode_mesh(bytes: &[u8], format: SemioMeshFormat) -> Result<crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot, String> {
     use crate::standards::v1::subsets::mesh::io::import::deserializers::artifacts::{dwg::v_ac1024::any::SemioMeshFromDwg, gltf::v2_0::any::SemioMeshFromGltf, las::v1_0::any::SemioMeshFromLas, obj::v3_0::any::SemioMeshFromObj, ply::v1_0::any::SemioMeshFromPly, stl::v_ascii::any::SemioMeshFromStl};
-    use semio_framework_plugin::{resolve_ready, ArtifactDeserializer};
+    use semio_framework_plugin::{ ArtifactDeserializer};
     let text = || std::str::from_utf8(bytes).map_err(|e| e.to_string());
     match format {
-        SemioMeshFormat::Stl => resolve_ready(SemioMeshFromStl::deserialize(&semio_s_artifact_stdio_stl::io::decode_stl_auto(bytes)?)).map_err(|e| e.to_string()),
-        SemioMeshFormat::Obj => resolve_ready(SemioMeshFromObj::deserialize(&semio_s_artifact_stdio_obj::io::decode_obj(text()?)?)).map_err(|e| e.to_string()),
-        SemioMeshFormat::Ply => resolve_ready(SemioMeshFromPly::deserialize(&semio_s_artifact_stdio_ply::io::decode_ply(bytes)?)).map_err(|e| e.to_string()),
+        SemioMeshFormat::Stl => ::semio_framework_async::poll::resolve_ready(SemioMeshFromStl::deserialize(&semio_s_artifact_stdio_stl::io::decode_stl_auto(bytes)?)).map_err(|e| e.to_string()),
+        SemioMeshFormat::Obj => ::semio_framework_async::poll::resolve_ready(SemioMeshFromObj::deserialize(&semio_s_artifact_stdio_obj::io::decode_obj(text()?)?)).map_err(|e| e.to_string()),
+        SemioMeshFormat::Ply => ::semio_framework_async::poll::resolve_ready(SemioMeshFromPly::deserialize(&semio_s_artifact_stdio_ply::io::decode_ply(bytes)?)).map_err(|e| e.to_string()),
         SemioMeshFormat::Gltf => {
             let gltf = if bytes.starts_with(b"glTF") { semio_s_artifact_stdio_gltf::io::decode_glb(bytes)? } else { semio_s_artifact_stdio_gltf::io::parse_gltf_document(bytes)? };
-            resolve_ready(SemioMeshFromGltf::deserialize(&gltf)).map_err(|e| e.to_string())
+            ::semio_framework_async::poll::resolve_ready(SemioMeshFromGltf::deserialize(&gltf)).map_err(|e| e.to_string())
         }
-        SemioMeshFormat::Las => resolve_ready(SemioMeshFromLas::deserialize(&semio_s_artifact_stdio_las::io::decode_las(bytes)?)).map_err(|e| e.to_string()),
-        SemioMeshFormat::Dwg => resolve_ready(SemioMeshFromDwg::deserialize(&semio_s_artifact_stdio_dwg::schema::snapshot::decode_dwg(bytes)?)).map_err(|e| e.to_string()),
+        SemioMeshFormat::Las => ::semio_framework_async::poll::resolve_ready(SemioMeshFromLas::deserialize(&semio_s_artifact_stdio_las::io::decode_las(bytes)?)).map_err(|e| e.to_string()),
+        SemioMeshFormat::Dwg => ::semio_framework_async::poll::resolve_ready(SemioMeshFromDwg::deserialize(&semio_s_artifact_stdio_dwg::schema::snapshot::decode_dwg(bytes)?)).map_err(|e| e.to_string()),
         SemioMeshFormat::Png => Err("semio/mesh←png: a picture of a mesh carries no geometry".into()),
     }
 }

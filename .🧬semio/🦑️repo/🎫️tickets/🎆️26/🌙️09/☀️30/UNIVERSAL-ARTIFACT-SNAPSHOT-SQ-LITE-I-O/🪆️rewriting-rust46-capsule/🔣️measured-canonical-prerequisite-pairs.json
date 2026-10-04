@@ -1,0 +1,127 @@
+{
+  "status": "mounted-compiler-prerequisite-only",
+  "edits": [
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️typed/🗂️layout/🦀️.rs",
+      "beforeSha256": "92b061e699c425947a05b788e5f5d7cfcd82e4f37b2374f6dc2b8cf1c8da1964",
+      "afterSha256": "8edf664bfbc10f906df58719c49ec57f3135ce6d9ad9875587e7d7ab478a0acc",
+      "pairs": [
+        [
+          "replication::os_spr::command::MapDeltaTarget",
+          "replication::mutation::MapDeltaTarget"
+        ]
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "beforeSha256": "2855716011dfd51832ff39b0a1e8fd17bb6e86dc862f8f1366e035e126a3a1ab",
+      "afterSha256": "f49ddb9c0b352eb4ba0b59812ca0596b18543d07928e8a391a925cc30685a381",
+      "pairs": [
+        [
+          "pub rule_layout: super::RuleLayout,",
+          "pub rule_layout: crate::standards::v1::subsets::any::schema::RuleLayout,"
+        ]
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs",
+      "beforeSha256": "4c3a4419dd204d0430578dbf5262c499d10762395cdd82567ef6ac9e2b089383",
+      "afterSha256": "97430b1f55e0698330698afc01b49e31a4afdfea8a7f44820b6679547061570a",
+      "pairs": [
+        [
+          "Option<super::Lhs>",
+          "Option<crate::standards::v1::subsets::any::schema::Lhs>"
+        ],
+        [
+          "Option<super::Rhs>",
+          "Option<crate::standards::v1::subsets::any::schema::Rhs>"
+        ],
+        [
+          "super::snapshot::json::diff",
+          "crate::standards::v1::subsets::any::schema::snapshot::json::diff"
+        ],
+        [
+          "dsl::ToValue::to_value",
+          "semio_framework_value::ToValue::to_value"
+        ],
+        [
+          "dsl::FromValue::from_value",
+          "semio_framework_value::FromValue::from_value"
+        ]
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs",
+      "beforeSha256": "649e10266d820694916e9b702d8c461b28dc674f51d8afaf025f1bb2ac46af00",
+      "afterSha256": "77e84ee45df21a9ecd87b8b44000ef74db9f2c59d65db077653a18eda0d34b90",
+      "pairs": [
+        [
+          "Result<Self, protocol::ValueError>",
+          "Result<Self, semio_framework_value::ValueError>"
+        ]
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️add-working/🦀️.rs",
+      "beforeSha256": "159bdbf9f8389bc801232aeb354fdab1276908a5c0ea722b91f615e5ffa2388f",
+      "afterSha256": "15c6f979644f3c5c2ae326078eb3a3633d913997acacbb8f6901ec063c6559c5",
+      "pairs": [
+        [
+          "protocol::LocalizedLabel",
+          "semio_framework_ui_locale::LocalizedLabel"
+        ]
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust/Cargo.toml",
+      "beforeSha256": "c49ca05b62ca6f4ee37d9fcb01897c44164c402d523efd2e1bb31ebd623d1441",
+      "afterSha256": "6e885fccb4c71627aff9bb4f586aee9c465ba6eaa1ea9ea05bafe427eda00cf3",
+      "pairs": [
+        [
+          "semio-s-artifact-trinity-jack = { workspace = true }",
+          "semio-s-artifact-stdio-semio = { workspace = true }\nsemio-s-artifact-trinity-jack = { workspace = true }"
+        ],
+        [
+          "[dev-dependencies]\nsemio-s-artifact-stdio-semio = { workspace = true }",
+          "[dev-dependencies]"
+        ]
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👈️edit-lhs/🔣️.json",
+      "beforeSha256": "c9887a2bbad901aa3be45b344beda2ec97f81fd5e305ec833481820cc3f45b4b",
+      "afterSha256": "b251c7d892530ab3f8c69eb9461f72aaf932d34332e1e680a2868966614a8fdd",
+      "payloadSchema": "🧬️schema/🔣️.json",
+      "preservedPayloadRequired": [
+        "mutation",
+        "newLhs"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👉️edit-rhs/🔣️.json",
+      "beforeSha256": "b579e4b831b91ba64a444c9412ebc5eec8593e4a012bbf7f22e73c39224cfd70",
+      "afterSha256": "f082b6dbd71bd6921b3dbe4f3751317e6c84a906ab87b290922234c260f1d854",
+      "payloadSchema": "🧬️schema/🔣️.json",
+      "preservedPayloadRequired": [
+        "mutation",
+        "newRhs"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️edit-before-fixture/🔣️.json",
+      "beforeSha256": "0a0c8a9e25034f4244442e073b4333d6ed98315231fa45ef6008f90fb78fb985",
+      "afterSha256": "02d32456f25dd2b631bb1296d3f312765ae5c9b29b042cc4ca8f205440735ee8",
+      "payloadSchema": "🧬️schema/🔣️.json",
+      "preservedPayloadRequired": [
+        "mutation",
+        "newWorkingGraph"
+      ]
+    }
+  ],
+  "held": [
+    "baseline adapter",
+    "oracle registry/features",
+    "native SQLite provider",
+    "global child/frame"
+  ]
+}

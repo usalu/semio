@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "minItems": 8,
+  "maxItems": 8,
+  "items": {
+    "type": "object",
+    "required": ["action", "keys", "eventKey", "delta"],
+    "additionalProperties": false,
+    "properties": {
+      "action": {"enum": ["nudgeSelectionLeft", "nudgeSelectionLeftFast", "nudgeSelectionRight", "nudgeSelectionRightFast", "nudgeSelectionUp", "nudgeSelectionUpFast", "nudgeSelectionDown", "nudgeSelectionDownFast"]},
+      "keys": {"type": "string", "pattern": "^(shift\\+)?arrow(left|right|up|down)$"},
+      "eventKey": {"enum": ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"]},
+      "delta": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "integer"}}
+    }
+  }
+}

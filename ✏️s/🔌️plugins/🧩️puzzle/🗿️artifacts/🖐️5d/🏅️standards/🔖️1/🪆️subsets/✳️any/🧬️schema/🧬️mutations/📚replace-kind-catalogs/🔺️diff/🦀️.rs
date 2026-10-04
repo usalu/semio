@@ -17,7 +17,7 @@ pub fn diff(payload: &super::ReplaceKindCatalogs, base: &Puzzle5dSnapshot) -> pr
     let new_handle_id = kind_catalogs.as_ref().map(|handle| handle.child_id.clone());
     let base_handle_id = base.kind_catalogs.as_ref().map(|handle| handle.child_id.clone());
     if new_handle_id == base_handle_id && kind_catalogs_extra == base.kind_catalogs_extra {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Kind catalogs are unchanged.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Kind catalogs are unchanged.");
     }
     protocol::MutationOutcome::new(Puzzle5dDiff { kind_catalogs: Some(kind_catalogs), kind_catalogs_extra: Some(kind_catalogs_extra), ..Default::default() })
 }

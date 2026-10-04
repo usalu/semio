@@ -22,6 +22,7 @@ const SECTION_FIELDS: &[&str] = &[
     "lighting",
     "renewables",
     "climate",
+    "climate_table",
 ];
 
 /// 🧾️ `Din18599` document outline.

@@ -23,13 +23,13 @@ const DIFF_ABSENT: &str = include_str!("../../../../../🧫️fixtures/🧬️mu
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧹delete-tiles/🧪️rejects/🎯️outcome/🔣️.json");
 
 fn mutation() -> PresentationMutation {
-    dsl::os_pack::from_json_str(MUTATION).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 fn before() -> PresentationSnapshot {
-    dsl::os_pack::from_json_str(BEFORE).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> PresentationSnapshot {
-    dsl::os_pack::from_json_str(AFTER).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 
 /// ▶️ A wholly unsatisfiable `delete-tiles` leaves the document byte-identical to the committed
@@ -53,7 +53,7 @@ fn a_total_miss_is_one_error_listing_every_missing_id() {
     assert_eq!(messages.len(), 1, "a total miss collapses into exactly one diagnostic, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.target-missing", "a total miss is target-missing, not the partial-success code");
     assert_ne!(messages[0].code.0, "mutation.partial", "mutation.partial is reserved for a delete that still removed something");
-    assert_eq!(messages[0].level, protocol::Severity::Error, "a total miss is an Error, never Fatal");
+    assert_eq!(messages[0].level, semio_framework_diagnostic::Severity::Error, "a total miss is an Error, never Fatal");
     assert_eq!(messages[0].target, vec!["tiles".to_string(), "t-alpha".to_string(), "t-omega".to_string()], "the diagnostic lists the collection and then every missing id in payload order");
 }
 
@@ -70,12 +70,12 @@ fn the_committed_diff_is_declared_absent() {
 #[test]
 fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: PresentationSnapshot = dsl::os_pack::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: PresentationSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "delete-tiles/rejects-when-every-addressed-tile-is-missing: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&mutation())).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "delete-tiles/rejects-when-every-addressed-tile-is-missing: committed mutation JSON is not canonical");
     assert_eq!(original.get("DeleteTiles").and_then(|payload| payload.get("ids")).and_then(serde_json::Value::as_array).map(Vec::len), Some(2), "the threshold guard needs more than one addressed id to be a real threshold");
@@ -99,7 +99,7 @@ fn declared_outcome_holds() {
 /// total miss yields an EMPTY plan — not an empty `delete-tiles`, and not one step per requested id.
 #[test]
 fn inverse_of_a_total_miss_is_an_empty_plan() {
-    let inverse = inverse_presentation_mutation(&before(), &mutation());
+    let inverse = inverse_presentation_mutation(&before(), &mutation()).expect("valid retained mutation inverse fixture");
     assert!(inverse.is_empty(), "delete-tiles has nothing to re-create when every addressed tile is absent, got {inverse:?}");
 }
 

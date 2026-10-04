@@ -47,7 +47,7 @@ impl FromValue for World3dSnapshotLease {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let entries = value.into_object()?;
         let get = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
-        let field = |key: &str| get(key).ok_or_else(|| ValueError::new(format!("missing field `{key}`")));
+        let field = |key: &str| get(key).ok_or_else(|| ValueError::new(protocol::value::ValueRefusalKind::InvalidValue, format!("missing field `{key}`")));
         Ok(Self {
             slot: u8::from_value(field("slot")?)?,
             epoch: u64::from_value(field("epoch")?)?,

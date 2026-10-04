@@ -1,15 +1,15 @@
 //! 🎥️ Camera projection variants retain optional IEEE values and independent metadata.
 use super::*;
 const FLOATS:&[FloatColumn]=&[FloatColumn::Binary64(1),FloatColumn::Binary64(2),FloatColumn::Binary64(3),FloatColumn::Binary64(4)];
-pub(super) fn project(write:&mut Write<'_,'_>,cameras:&[GltfCamera])->Result<(),String>{
+pub(super) fn project(write:&mut Write<'_,'_>,cameras:&[GltfCamera])->Result<(), ValueError>{
  write.check(cameras.len())?;for(position,camera)in cameras.iter().enumerate(){let kind=match camera.projection{GltfCameraProjection::Perspective(_)=>"perspective",GltfCameraProjection::Orthographic(_)=>"orthographic"};let [extension,extra]=write.extras(&camera.extensions,&camera.extras)?;let key=write.insert("gltf_camera",&[Cell::Integer(1),ordinal(position)?,Cell::Text(kind),text(&camera.name),extension,extra])?;
   match &camera.projection{GltfCameraProjection::Perspective(value)=>{let [extension,extra]=write.extras(&value.extensions,&value.extras)?;write.float_key("gltf_camera_perspective",key,&[value.aspect_ratio.map_or(Cell::Null,Cell::Real),Cell::Real(value.yfov),value.zfar.map_or(Cell::Null,Cell::Real),Cell::Real(value.znear),extension,extra],FLOATS)?;},GltfCameraProjection::Orthographic(value)=>{let [extension,extra]=write.extras(&value.extensions,&value.extras)?;write.float_key("gltf_camera_orthographic",key,&[Cell::Real(value.xmag),Cell::Real(value.ymag),Cell::Real(value.zfar),Cell::Real(value.znear),extension,extra],FLOATS)?;}}
  }Ok(())
 }
-pub(super) fn reconstruct(read:&mut Read<'_,'_,'_>)->Result<Vec<GltfCamera>,String>{
+pub(super) fn reconstruct(read:&mut Read<'_,'_,'_>)->Result<Vec<GltfCamera>, ValueError>{
  let rows=read.rows("gltf_camera",1,1,2)?;let mut result=owned(Vec::with_capacity(rows.len()));for row in rows{let projection=match row.text(3)?{
   "perspective"=>{let row=read.key("gltf_camera_perspective",row.rowid)?;let value=FloatRow::new(row,FLOATS)?;let extensions=read.json_owned(row,5)?;let extras=read.json_owned(row,6)?;GltfCameraProjection::Perspective(GltfPerspective{aspect_ratio:if value.is_null(1)?{None}else{Some(value.real(1)?)},yfov:value.real(2)?,zfar:if value.is_null(3)?{None}else{Some(value.real(3)?)},znear:value.real(4)?,extensions:extensions.take(),extras:extras.take()})},
   "orthographic"=>{let row=read.key("gltf_camera_orthographic",row.rowid)?;let value=FloatRow::new(row,FLOATS)?;let extensions=read.json_owned(row,5)?;let extras=read.json_owned(row,6)?;GltfCameraProjection::Orthographic(GltfOrthographic{xmag:value.real(1)?,ymag:value.real(2)?,zfar:value.real(3)?,znear:value.real(4)?,extensions:extensions.take(),extras:extras.take()})},
-  _=>return Err("GLTF camera projection differs".into())
+  _=>return Err(ValueError::new(ValueRefusalKind::InvalidValue, "GLTF camera projection differs"))
  };let projection=owned(projection);let name=read.optional_text(row,4)?;let extensions=read.json_owned(row,5)?;let extras=read.json_owned(row,6)?;result.as_mut().push(GltfCamera{projection:projection.take(),name,extensions:extensions.take(),extras:extras.take()});}Ok(result.take())
 }

@@ -6,9 +6,12 @@ use crate::ProgramMutation;
 use crate::ProgramSnapshot;
 
 /// ↩️ Undo a replace by restoring the pre-state row content. Missing target ⇒ nothing to undo.
-pub fn inverse(payload: &super::ReplaceScheduleRequirement, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+pub fn inverse(payload: &super::ReplaceScheduleRequirement, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.schedules.iter().find(|row| row.header.id == payload.schedule_requirement.header.id) {
         Some(existing) => vec![ProgramMutation::ReplaceScheduleRequirement(super::ReplaceScheduleRequirement { schedule_requirement: existing.clone() })],
         None => Vec::new(),
     }
+
+    })())
 }

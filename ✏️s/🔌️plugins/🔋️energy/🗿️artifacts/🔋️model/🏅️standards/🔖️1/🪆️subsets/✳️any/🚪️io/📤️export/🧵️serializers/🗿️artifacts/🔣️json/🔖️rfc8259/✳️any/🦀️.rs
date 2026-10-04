@@ -10,11 +10,11 @@ use semio_s_artifact_stdio_json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 /// (`🏪️store/🦀️.rs:2996` — `ToValue`/`FromValue` only).
 pub async fn register() {}
 
-pub fn serialize(snapshot: &EnergyModelSnapshot) -> Result<JsonSnapshot, store::TextError> {
+pub fn serialize(snapshot: &EnergyModelSnapshot) -> Result<JsonSnapshot, semio_framework_diagnostic::TextError> {
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-    Ok(JsonSnapshot::from_value(parse_json_text(&pack::json::to_json_string(snapshot))?))
+    Ok(JsonSnapshot::from_value(parse_json_text(&semio_framework_pack_json::to_json_string(snapshot))?))
 }
 
-pub fn serialize_bytes(snapshot: &EnergyModelSnapshot) -> Result<Vec<u8>, store::TextError> {
+pub fn serialize_bytes(snapshot: &EnergyModelSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
     Ok(write_json_pretty(&serialize(snapshot)?.value).into_bytes())
 }

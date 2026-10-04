@@ -84,8 +84,8 @@ async fn note_document_round_trips_assets_and_grid_settings() {
     document.assets.insert("asset-1".into(), NoteImageAsset { mime: "image/png".into(), data: "data:image/png;base64,abc".into(), width: Some(10.0), height: Some(20.0) });
     document.grid_subdivisions = Some(6.0);
     document.grid_opacity = Some(0.5);
-    let json_text = dsl::os_pack::to_json_string(&document);
-    let parsed: NoteSnapshot = dsl::os_pack::from_json_str(&json_text).unwrap();
+    let json_text = semio_framework_pack_json::to_json_string(&document);
+    let parsed: NoteSnapshot = semio_framework_pack_json::from_json_str(&json_text, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(parsed.assets.get("asset-1").unwrap().mime, "image/png");
     assert_eq!(parsed.grid_subdivisions, Some(6.0));
     assert_eq!(parsed.grid_opacity, Some(0.5));
@@ -125,8 +125,8 @@ async fn regenerate_committed_diff_fixtures() {
     files.sort();
     for path in files {
         let text = std::fs::read_to_string(&path).expect("committed diff reads");
-        let decoded: crate::NoteDiff = dsl::os_pack::from_json_str(&text).expect("committed diff decodes");
-        let canonical = dsl::os_pack::to_json_string(&decoded);
+        let decoded: crate::NoteDiff = semio_framework_pack_json::from_json_str(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+        let canonical = semio_framework_pack_json::to_json_string(&decoded);
         if serde_json::from_str::<serde_json::Value>(&canonical).expect("canonical parses") != serde_json::from_str::<serde_json::Value>(&text).expect("committed parses") {
             std::fs::write(&path, canonical).expect("committed diff rewrites");
         }
@@ -189,5 +189,5 @@ async fn note_apply_ops_reduces_a_nonempty_batch_and_closes_its_store() {
 fn the_child_restore_projection_names_every_declared_child_slot() {
     let snapshot = crate::schema::empty_note_snapshot();
     let projection = crate::note_child_restore_projection(&snapshot).expect("the loaded-parent child projection");
-    assert_eq!(projection.len(), <crate::NoteSnapshot as store::os_schema_composition::ArtifactCompositionFields>::child_slots().len());
+    assert_eq!(projection.len(), <crate::NoteSnapshot as semio_framework_schema_composition::ArtifactCompositionFields>::child_slots().len());
 }

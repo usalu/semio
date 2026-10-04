@@ -1,5 +1,5 @@
 /// 📐️ Ephemeral local text range for one concrete Writer main window.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::DslRecord, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct WriterEditorSelection {
@@ -9,9 +9,9 @@ pub struct WriterEditorSelection {
     pub splice: u64,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact)]
 #[value(rename_all = "camelCase", default)]
-#[dsl(extension = "writer.mainwindowtransient")]
+#[artifact(extension = "writer.mainwindowtransient")]
 #[dsl(layout = "lines")]
 pub struct WriterMainWindowTransient {
     #[dsl(block)]

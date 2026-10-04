@@ -17,7 +17,8 @@
 #[path = "🔎️verification/🦀️.rs"]
 pub mod retained;
 
-use crate::codec::{CompressionCodec, PackError};
+use crate::codec::CompressionCodec;
+use semio_framework_pack_error::PackRefusal;
 use crate::source::{PackSink, PackSource};
 use crate::wire::{frame_flags, ProtocolError, ProtocolLimits, RecordHasher, FRAME_FLAG_COMPRESSED, FRAME_FLAG_CRITICAL};
 
@@ -54,14 +55,14 @@ async fn build_header_bytes(required_flags: u32, optional_flags: u32) -> [u8; HE
 /// restricted to `REQUIRED_KNOWN_MASK` (0..=2), `version_major == 1`. Every failure mode reuses a
 /// `crate::codec::PackError` variant wrapped in `ProtocolError::Pack` — all are directly constructible
 /// (no protocol_core amendment needed, unlike the contract's fallback-deviation clause anticipated).
-async fn validate_header<S: PackSource>(source: &S) -> Result<(), ProtocolError> {
+async fn validate_header<S: PackSource>(source: &S) -> Result<(), ProtocolError> where ProtocolError: From<S::Error> {
     read_header(source).await.map(|_| ())
 }
 
 /// 🧮️ Validates one caller-owned fixed header without retaining or borrowing a source future.
 pub fn parse_header_bytes(buf: &[u8; HEADER_SIZE]) -> Result<Header, ProtocolError> {
     if buf[0..8] != MAGIC {
-        return Err(ProtocolError::Pack(PackError::BadMagic));
+        return Err(ProtocolError::Pack(semio_framework_pack_error::PackError::Refusal(PackRefusal::BadMagic)));
     }
     let version_major = u16::from_le_bytes([buf[8], buf[9]]);
     let version_minor = u16::from_le_bytes([buf[10], buf[11]]);
@@ -69,14 +70,14 @@ pub fn parse_header_bytes(buf: &[u8; HEADER_SIZE]) -> Result<Header, ProtocolErr
     let stored_crc = u32::from_le_bytes(buf[20..24].try_into().unwrap());
     let computed_crc = crate::codec::crc32c(&buf[0..20]);
     if stored_crc != computed_crc {
-        return Err(ProtocolError::Pack(PackError::ChecksumMismatch { segment: "header", offset: 20 }));
+        return Err(ProtocolError::Pack(semio_framework_pack_error::PackError::Refusal(PackRefusal::ChecksumMismatch { segment: "header", offset: 20 })));
     }
     let unknown = required_flags & !REQUIRED_KNOWN_MASK;
     if unknown != 0 {
-        return Err(ProtocolError::Pack(PackError::UnknownRequiredFlags(unknown)));
+        return Err(ProtocolError::Pack(semio_framework_pack_error::PackError::Refusal(PackRefusal::UnknownRequiredFlags(unknown))));
     }
     if version_major != FORMAT_VERSION_MAJOR {
-        return Err(ProtocolError::Pack(PackError::UnsupportedVersion { major: version_major, minor: version_minor }));
+        return Err(ProtocolError::Pack(semio_framework_pack_error::PackError::Refusal(PackRefusal::UnsupportedVersion { major: version_major, minor: version_minor })));
     }
     Ok(Header { version_major, version_minor, required_flags, optional_flags: u32::from_le_bytes(buf[16..20].try_into().unwrap()) })
 }
@@ -93,9 +94,9 @@ pub struct Header {
 }
 
 /// 📖️ Validates (see `validate_header`) and returns a source's 32-byte header fields.
-pub async fn read_header<S: PackSource>(source: &S) -> Result<Header, ProtocolError> {
+pub async fn read_header<S: PackSource>(source: &S) -> Result<Header, ProtocolError> where ProtocolError: From<S::Error> {
     let total_len = source.len().await;
-    if total_len < HEADER_SIZE as u64 { return Err(ProtocolError::Pack(PackError::Truncated(total_len))); }
+    if total_len < HEADER_SIZE as u64 { return Err(ProtocolError::Pack(semio_framework_pack_error::PackError::Refusal(PackRefusal::Truncated(total_len)))); }
     let mut buf = [0u8; HEADER_SIZE];
     source.read_exact_at(0, &mut buf).await?;
     parse_header_bytes(&buf)
@@ -126,7 +127,7 @@ fn fixed_varint(mut value: u64, output: &mut [u8; 10]) -> &[u8] {
     }
 }
 
-async fn write_frame_retained<S: PackSink>(sink: &mut S, kind: u8, flags: u8, raw_len: Option<u64>, stored_payload: &[u8]) -> Result<(u64, [u8; 32]), ProtocolError> {
+async fn write_frame_retained<S: PackSink>(sink: &mut S, kind: u8, flags: u8, raw_len: Option<u64>, stored_payload: &[u8]) -> Result<(u64, [u8; 32]), ProtocolError> where ProtocolError: From<S::Error> {
     let mut raw_len_bytes = [0u8; 10];
     let raw_len_count = match raw_len {
         Some(value) => fixed_varint(value, &mut raw_len_bytes).len(),
@@ -205,7 +206,7 @@ async fn decode_frame_in_slice(bytes: &[u8], pos: usize) -> Result<(RecordFrame<
     let body_end = body_start.checked_add(body_len as usize).ok_or(ProtocolError::LimitExceeded("frame body_len overflows usize"))?;
     let trailer_end = body_end.checked_add(8).ok_or(ProtocolError::LimitExceeded("frame trailer offset overflows usize"))?;
     if trailer_end > bytes.len() {
-        return Err(ProtocolError::Pack(PackError::Truncated(body_start as u64)));
+        return Err(ProtocolError::Pack(semio_framework_pack_error::PackError::Refusal(PackRefusal::Truncated(body_start as u64))));
     }
     let body = &bytes[body_start..body_end];
     let kind = body[0];
@@ -224,7 +225,7 @@ async fn decode_frame_in_slice(bytes: &[u8], pos: usize) -> Result<(RecordFrame<
     let stored_crc = u32::from_le_bytes(bytes[body_end..body_end + 4].try_into().unwrap());
     let computed_crc = crate::codec::crc32c(body);
     if stored_crc != computed_crc {
-        return Err(ProtocolError::Pack(PackError::ChecksumMismatch { segment: "frame", offset: body_end as u64 }));
+        return Err(ProtocolError::Pack(semio_framework_pack_error::PackError::Refusal(PackRefusal::ChecksumMismatch { segment: "frame", offset: body_end as u64 })));
     }
     let back_len = u32::from_le_bytes(bytes[body_end + 4..trailer_end].try_into().unwrap()) as usize;
     let frame_len = trailer_end - pos;
@@ -384,10 +385,10 @@ async fn prepare_payload(codec: crate::codec::ids::CodecId, payload: &[u8]) -> R
             #[cfg(not(feature = "deflate"))]
             {
                 let _ = payload;
-                Err(ProtocolError::Pack(PackError::UnsupportedCodec(1)))
+                Err(ProtocolError::Pack(semio_framework_pack_error::PackError::Refusal(PackRefusal::UnsupportedCodec(1))))
             }
         }
-        other => Err(ProtocolError::Pack(PackError::UnsupportedCodec(other))),
+        other => Err(ProtocolError::Pack(semio_framework_pack_error::PackError::Refusal(PackRefusal::UnsupportedCodec(other)))),
     }
 }
 
@@ -415,7 +416,7 @@ pub struct SprIdentityRecord<'a, S: PackSink> {
     digest: semio_framework_hash::Hasher,
 }
 
-impl<'a, S: PackSink> SprIdentityRecord<'a, S> {
+impl<'a, S: PackSink> SprIdentityRecord<'a, S> where ProtocolError: From<S::Error> {
     pub async fn write_fragment(&mut self, fragment: &[u8]) -> Result<(), ProtocolError> {
         self.written = self.written.checked_add(fragment.len()).ok_or(ProtocolError::LimitExceeded("record payload length overflow"))?;
         if self.written > self.payload_len {
@@ -444,12 +445,12 @@ impl<'a, S: PackSink> SprIdentityRecord<'a, S> {
     }
 }
 
-impl<S: PackSink> SprWriter<S> {
+impl<S: PackSink> SprWriter<S> where ProtocolError: From<S::Error> {
     /// 🚀️ Writes the 32-byte header and seeds `chain_0 = blake3(header bytes)`.
     pub async fn begin(mut sink: S, options: &WriteOptions) -> Result<Self, ProtocolError> {
         let unknown = options.required_flags & !REQUIRED_KNOWN_MASK;
         if unknown != 0 {
-            return Err(ProtocolError::Pack(PackError::UnknownRequiredFlags(unknown)));
+            return Err(ProtocolError::Pack(semio_framework_pack_error::PackError::Refusal(PackRefusal::UnknownRequiredFlags(unknown))));
         }
         let header = build_header_bytes(options.required_flags, options.optional_flags).await;
         sink.write_all(&header).await?;
@@ -596,12 +597,12 @@ pub enum VerificationLevel {
 
 /// 🔢️ Reads one LEB128 varint at an absolute source offset, one byte at a time so it never
 /// over-reads a legitimately short remaining source. Mirrors `os_pack::format::read_varint_u64_at`.
-async fn read_varint_via_source<S: PackSource>(source: &S, offset: u64, total_len: u64) -> Result<(u64, u64), ProtocolError> {
+async fn read_varint_via_source<S: PackSource>(source: &S, offset: u64, total_len: u64) -> Result<(u64, u64), ProtocolError> where ProtocolError: From<S::Error> {
     let mut tmp: Vec<u8> = Vec::with_capacity(10);
     let mut i = 0u64;
     loop {
         if offset + i >= total_len {
-            return Err(ProtocolError::Pack(PackError::Truncated(offset + i)));
+            return Err(ProtocolError::Pack(semio_framework_pack_error::PackError::Refusal(PackRefusal::Truncated(offset + i))));
         }
         let mut byte = [0u8; 1];
         source.read_exact_at(offset + i, &mut byte).await?;
@@ -627,7 +628,7 @@ type SourceFrame = (u8, u8, Option<u64>, Vec<u8>, u64);
 /// `PackSource` twin of `decode_frame_in_slice`, used by `recover`'s forward scan and fast-path
 /// commit walk, both of which operate over `PackSource` rather than an in-memory slice. Validates
 /// `body_len` against `limits.max_frame_len` BEFORE allocating the body buffer.
-async fn read_frame_via_source<S: PackSource>(source: &S, offset: u64, limits: &ProtocolLimits) -> Result<SourceFrame, ProtocolError> {
+async fn read_frame_via_source<S: PackSource>(source: &S, offset: u64, limits: &ProtocolLimits) -> Result<SourceFrame, ProtocolError> where ProtocolError: From<S::Error> {
     let total_len = source.len().await;
     let (body_len, body_len_width) = read_varint_via_source(source, offset, total_len).await?;
     if body_len < 2 {
@@ -640,7 +641,7 @@ async fn read_frame_via_source<S: PackSource>(source: &S, offset: u64, limits: &
     let body_end = body_start.checked_add(body_len).ok_or(ProtocolError::LimitExceeded("frame body offset overflow"))?;
     let trailer_end = body_end.checked_add(8).ok_or(ProtocolError::LimitExceeded("frame trailer offset overflow"))?;
     if trailer_end > total_len {
-        return Err(ProtocolError::Pack(PackError::Truncated(body_start)));
+        return Err(ProtocolError::Pack(semio_framework_pack_error::PackError::Refusal(PackRefusal::Truncated(body_start))));
     }
     let mut body = vec![0u8; body_len as usize];
     source.read_exact_at(body_start, &mut body).await?;
@@ -661,7 +662,7 @@ async fn read_frame_via_source<S: PackSource>(source: &S, offset: u64, limits: &
     let stored_crc = u32::from_le_bytes(trailer[0..4].try_into().unwrap());
     let computed_crc = crate::codec::crc32c(&body);
     if stored_crc != computed_crc {
-        return Err(ProtocolError::Pack(PackError::ChecksumMismatch { segment: "frame", offset: body_end }));
+        return Err(ProtocolError::Pack(semio_framework_pack_error::PackError::Refusal(PackRefusal::ChecksumMismatch { segment: "frame", offset: body_end })));
     }
     let back_len = u32::from_le_bytes(trailer[4..8].try_into().unwrap()) as u64;
     let frame_len = trailer_end - offset;
@@ -678,7 +679,7 @@ async fn read_frame_via_source<S: PackSource>(source: &S, offset: u64, limits: &
 /// count), never touching an intervening non-commit record. `None` on any failure, signalling the
 /// caller to fall back to the forward scan; a fast-path success always means `torn_tail_bytes == 0`
 /// (the tail commit frame ends exactly at EOF), so it is valid regardless of `RecoveryMode`.
-async fn try_fast_path<S: PackSource>(source: &S, total_len: u64, limits: &ProtocolLimits) -> Option<RecoveryReport> {
+async fn try_fast_path<S: PackSource>(source: &S, total_len: u64, limits: &ProtocolLimits) -> Option<RecoveryReport> where ProtocolError: From<S::Error> {
     if total_len < HEADER_SIZE as u64 + COMMIT_FRAME_LEN {
         return None;
     }
@@ -725,7 +726,7 @@ async fn try_fast_path<S: PackSource>(source: &S, total_len: u64, limits: &Proto
 /// 🚑️ Recovers a `.spr` source: validates the header, then tries the O(commits) fast path
 /// before falling back to a bounded forward scan from `HEADER_SIZE`, stopping at the first invalid
 /// or truncated frame. See the contract's four-step algorithm (reproduced in the inline comments).
-pub async fn recover<S: PackSource>(source: &S, limits: &ProtocolLimits, mode: RecoveryMode) -> Result<RecoveryReport, ProtocolError> {
+pub async fn recover<S: PackSource>(source: &S, limits: &ProtocolLimits, mode: RecoveryMode) -> Result<RecoveryReport, ProtocolError> where ProtocolError: From<S::Error> {
     let total_len = source.len().await;
     if total_len > limits.max_file_len {
         return Err(ProtocolError::LimitExceeded("file exceeds ProtocolLimits::max_file_len"));

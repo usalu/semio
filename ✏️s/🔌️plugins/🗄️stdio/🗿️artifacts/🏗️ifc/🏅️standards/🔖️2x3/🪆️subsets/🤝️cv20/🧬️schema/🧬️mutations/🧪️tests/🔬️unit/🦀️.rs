@@ -24,7 +24,7 @@ fn round_trip(mutation: Ifc2x3Cv20Mutation) {
     let outcome = apply_ifc2x3_cv20_mutation(&mut mutated, &mutation);
     assert!(outcome.messages().is_empty(), "{mutation:?} was rejected: {:?}", outcome.messages());
     assert_ne!(mutated, start, "{mutation:?} changed nothing");
-    let inverse = Mutation::inverse(&mutation, &start).into_iter().next().expect("one inverse");
+    let inverse = Mutation::inverse(&mutation, &start).expect("valid retained mutation inverse fixture").into_iter().next().expect("one inverse");
     apply_ifc2x3_cv20_mutation(&mut mutated, &inverse);
     assert_eq!(mvd::canonical(&mutated), mvd::canonical(&start), "{mutation:?} then its inverse must restore the base exchange structure");
 }

@@ -18,20 +18,19 @@ async fn block_fields_roundtrip() {
             "step":1,
             "unit":"panels"
         }"#;
-    let block: PlaybookBlock = protocol::json::from_json_str(json).expect("block json");
+    let block: PlaybookBlock = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("block json");
     assert_eq!(block.min, Some(4.0));
     assert_eq!(block.unit.as_deref(), Some("panels"));
     assert!(block.required.unwrap_or(false));
 }
 
 #[semio_framework_async_macros::async_test]
-async fn playbook_child_restore_projection_accepts_the_exact_owned_children() {
+async fn playbook_child_restore_projection_accepts_the_one_owned_flow_child() {
     let snapshot = PlaybookSnapshot::default();
-    let projection = store::ChildRestoreProjection::from_snapshot(&snapshot).expect("canonical Playbook document and flow children");
-    assert_eq!(projection.len(), 2);
-    assert!(projection.admits_member("document", &snapshot.document.target));
+    let projection = playbook_child_restore_projection(&snapshot).expect("canonical Playbook flow child");
+    assert_eq!(projection.len(), 1);
     assert!(projection.admits_member("flow", &snapshot.flow.target));
-    assert_eq!(snapshot.document.child_id, snapshot.document.target.artifact_id);
+    assert_eq!(snapshot.flow.child_id, PLAYBOOK_GENESIS_FLOW_ID);
     assert_eq!(snapshot.flow.child_id, snapshot.flow.target.artifact_id);
 }
 
@@ -69,101 +68,83 @@ fn sample_steps() -> Vec<PlaybookStep> {
     ]
 }
 
-/// ⚖️ LAW: `flow` is the LOSSLESS source of truth — every step field (including nested
-/// `condition` trees) round-trips through `flow_content_snapshot_from_steps`/
-/// `steps_from_flow_content` exactly.
+/// ⚖️ LAW: `flow` is the LOSSLESS source of truth — every step field (including nested `condition` trees) round-trips through
+/// `flow_content_snapshot_from_steps`/`steps_from_flow_content` exactly.
 #[semio_framework_async_macros::async_test]
 async fn flow_content_round_trips_every_step_field_losslessly() {
     let steps = sample_steps();
     let content = flow_content_snapshot_from_steps(&steps);
     assert_eq!(content.nodes.len(), steps.len());
     assert_eq!(content.edges.len(), steps.len() - 1, "sequential steps chain via one edge per adjacent pair");
-    let restored = steps_from_flow_content(&content);
-    assert_eq!(restored, steps);
+    assert_eq!(steps_from_flow_content(&content).expect("decodable steps"), steps);
 }
 
-/// ⚖️ LAW: `document` is an HONEST narrative projection — `steps -> document` preserves every
-/// title/description, and `document -> steps` recovers exactly that title/description skeleton
-/// (never `blocks`/`condition`, which prose carries none of — documented lossy by design).
-#[semio_framework_async_macros::async_test]
-async fn document_projection_round_trips_titles_and_descriptions_only() {
-    let steps = sample_steps();
-    let content = document_snapshot_from_steps(Some("My Playbook"), &steps);
-    let (title, restored) = steps_from_document(&content);
-    assert_eq!(title.as_deref(), Some("My Playbook"));
-    assert_eq!(restored.len(), steps.len());
-    for (original, projected) in steps.iter().zip(restored.iter()) {
-        assert_eq!(projected.title, original.title);
-        assert_eq!(projected.description, original.description);
-        assert!(projected.blocks.is_empty(), "document alone cannot recover block data — flow is that data's source of truth");
-    }
+/// ⚖️ LAW: the chain of `sequence` edges, not the node vector, is the step order; nodes off the chain follow in node order.
+#[test]
+fn the_chain_not_the_node_vector_is_the_step_order() {
+    let mut content = flow_content_snapshot_from_steps(&sample_steps());
+    content.nodes.reverse();
+    assert_eq!(playbook_step_order(&content), vec!["intro", "review"]);
+    content.edges.clear();
+    assert_eq!(playbook_step_order(&content), vec!["review", "intro"], "with no chain the node order decides");
 }
 
-fn one_step(title: &str) -> Vec<PlaybookStep> {
-    vec![PlaybookStep { id: "step".into(), title: title.into(), description: None, blocks: Vec::new() }]
-}
-
-#[semio_framework_async_macros::async_test]
-async fn scene_owner_fixture_proves_identity_isolation_aba_wire_omission_and_bounded_close() {
-    let fixture: protocol::os_pack::json::Value = protocol::json::parse(include_str!("../../🧫️fixtures/👑️playbook-scene-owner-law.json")).expect("language-neutral playbook scene fixture");
-    let cases = fixture["cases"].as_array().expect("fixture cases");
-    assert_eq!(fixture["schemaVersion"], 1);
-    assert_eq!(fixture["ownedSlots"], 1);
-    assert_eq!(cases.len(), fixture["maximumCases"].as_u64().expect("bounded maximum") as usize);
-    assert_eq!(cases.len(), 5);
-
-    for case in cases {
-        let law = case["law"].as_str().expect("law");
-        let first = case["first"].as_str().expect("first");
-        let second = case["second"].as_str().expect("second");
-        match law {
-            "cloneIdentity" => {
-                let snapshot = playbook_snapshot_with_steps(PLAYBOOK_DOCUMENT_SCHEMA, "identity", "1", None, one_step(first));
-                let retained = playbook_working_scene_owner(&snapshot.flow);
-                let cloned = snapshot.clone();
-                let cloned_owner = playbook_working_scene_owner(&cloned.flow);
-                assert!(Arc::ptr_eq(&retained, &cloned_owner));
-                assert_eq!(cloned_owner.steps[0].title, first);
-                assert_eq!(Arc::strong_count(&retained), 4);
-            }
-            "instanceIsolation" => {
-                let mut left = flow_content_child_handle(&one_step(first));
-                let mut right = left.clone();
-                attach_playbook_steps(&mut left, one_step(first));
-                attach_playbook_steps(&mut right, one_step(second));
-                assert_eq!(playbook_working_scene_owner(&left).steps[0].title, first);
-                assert_eq!(playbook_working_scene_owner(&right).steps[0].title, second);
-            }
-            "abaIsolation" => {
-                let mut stale = flow_content_child_handle(&one_step("same-identity"));
-                attach_playbook_steps(&mut stale, one_step(first));
-                let mut reused_identity = flow_content_child_handle(&one_step("same-identity"));
-                assert_eq!(stale.child_id, reused_identity.child_id);
-                attach_playbook_steps(&mut reused_identity, one_step(second));
-                assert_eq!(playbook_working_scene_owner(&stale).steps[0].title, first);
-                assert_eq!(playbook_working_scene_owner(&reused_identity).steps[0].title, second);
-            }
-            "wireOmission" => {
-                let snapshot = playbook_snapshot_with_steps(PLAYBOOK_DOCUMENT_SCHEMA, "wire", "1", None, one_step(first));
-                let wire = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&snapshot)).expect("third-party JSON oracle reads snapshot wire");
-                assert!(wire.pointer("/flow/localOwner").is_none());
-                let decoded: PlaybookSnapshot = dsl::os_pack::from_json_str(&wire.to_string()).expect("first-party codec decodes snapshot wire");
-                assert!(decoded.flow.local_owner::<PlaybookWorkingScene>().is_none());
-                assert!(playbook_working_scene_owner(&decoded.flow).steps.is_empty());
-                assert_eq!(playbook_working_scene_owner(&snapshot.flow).steps[0].title, first);
-            }
-            "boundedClose" => {
-                let snapshot = playbook_snapshot_with_steps(PLAYBOOK_DOCUMENT_SCHEMA, "close", "1", None, one_step(first));
-                let retained = playbook_working_scene_owner(&snapshot.flow);
-                let weak = Arc::downgrade(&retained);
-                assert_eq!(Arc::strong_count(&retained), fixture["ownedSlots"].as_u64().expect("owned slots") as usize + 1);
-                drop(snapshot);
-                assert_eq!(Arc::strong_count(&retained), 1);
-                drop(retained);
-                assert!(weak.upgrade().is_none());
-            }
-            other => panic!("unexpected playbook scene law {other}"),
-        }
-    }
+#[test]
+fn an_undecodable_blocks_param_is_a_named_fault() {
+    let mut content = flow_content_snapshot_from_steps(&sample_steps());
+    content.nodes[0].params[0].value = "not json".into();
+    assert!(steps_from_flow_content(&content).expect_err("undecodable").contains("intro"));
+    assert_eq!(playbook_step_of(&content, "intro").expect_err("undecodable").code.0, "playbook.flow.content");
 }
 //#endregion 🌉️ContentBridgeLaws
+
+//#region 🧬️ChildLaneLaws
+/// 🧫️ The language-neutral child-leaf vectors (`🧫️fixtures/🧫️child-leaves/🔣️.json`): per verb, the exact flow leaves and the
+/// steps they leave. Each vector is applied leaf by leaf through the stdio flow fold and undone through each leaf's own inverse
+/// in reverse order, which must restore the base exactly (step order included).
+#[test]
+fn child_leaf_vectors_hold_and_every_edit_undoes_exactly() {
+    use protocol::{Mutation, MutationDiff};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️child-leaves/🔣️.json")).expect("child-leaf vectors");
+    let cases = fixture["cases"].as_array().expect("cases");
+    assert_eq!(cases.len(), 9);
+    for case in cases {
+        let name = case["name"].as_str().expect("name");
+        let base: Vec<PlaybookStep> = serde_json::from_value(case["base"].clone()).expect("base steps");
+        let content = flow_content_snapshot_from_steps(&base);
+        let verb = &case["verb"];
+        let text = |key: &str| verb[key].as_str().unwrap_or_default().to_string();
+        let index = verb["index"].as_u64().map(|value| value as usize);
+        let outcome = match verb["kind"].as_str().expect("verb kind") {
+            "add-step" => playbook_add_step_leaves(&content, &serde_json::from_value(verb["step"].clone()).expect("step")),
+            "remove-step" => playbook_remove_step_leaves(&content, &text("stepId")),
+            "move-step" => playbook_move_step_leaves(&content, &text("stepId"), index.unwrap_or_default()),
+            "add-block" => playbook_add_block_leaves(&content, &text("stepId"), serde_json::from_value(verb["block"].clone()).expect("block"), index),
+            "remove-block" => playbook_remove_block_leaves(&content, &text("stepId"), &text("blockId")),
+            "move-block" => playbook_move_block_leaves(&content, &text("blockId"), &text("fromStepId"), &text("toStepId"), index.unwrap_or_default()),
+            other => panic!("{name}: unknown verb {other}"),
+        };
+        if let Some(code) = case["refusal"].as_str() {
+            assert_eq!(outcome.expect_err(name).code.0, code, "{name}");
+            continue;
+        }
+        let leaves = outcome.unwrap_or_else(|fault| panic!("{name}: {fault:?}"));
+        let kinds: Vec<&str> = leaves.iter().map(|leaf| protocol::SemanticMutation::semantics(leaf).kind).collect();
+        let expected: Vec<&str> = case["leaves"].as_array().expect("leaves").iter().map(|kind| kind.as_str().expect("leaf kind")).collect();
+        assert_eq!(kinds, expected, "{name}: exact leaves in applied order");
+        let mut applied = content.clone();
+        let mut inverses: Vec<Vec<SemioFlowMutation>> = Vec::new();
+        for leaf in &leaves {
+            inverses.push(leaf.inverse(&applied).expect("leaf inverse"));
+            applied = MutationDiff::apply(leaf.diff(&applied).diff(), &applied).unwrap_or_else(|error| panic!("{name}: {error}"));
+        }
+        let after: Vec<PlaybookStep> = serde_json::from_value(case["after"].clone()).expect("after steps");
+        assert_eq!(steps_from_flow_content(&applied).expect("decodable after"), after, "{name}: steps after the edit");
+        for inverse in inverses.into_iter().rev().flatten() {
+            applied = MutationDiff::apply(inverse.diff(&applied).diff(), &applied).unwrap_or_else(|error| panic!("{name} undo: {error}"));
+        }
+        assert_eq!(steps_from_flow_content(&applied).expect("decodable undo"), base, "{name}: undo restores the base, order included");
+    }
+}
+//#endregion 🧬️ChildLaneLaws

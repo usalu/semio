@@ -13,7 +13,7 @@ pub fn diff(payload: &RenameRisk, base: &ProgramSnapshot) -> protocol::MutationO
         return protocol::MutationOutcome::error("mutation.target-missing", "No risk exists with this id.", [payload.id.0.clone()]);
     };
     if existing.header.name == payload.new_name {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This risk already has this name.").at([payload.id.0.clone()])]);
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This risk already has this name.").at([payload.id.0.clone()])]);
     }
     let patch = RiskPatch { name: Some(payload.new_name.clone()), ..Default::default() };
     protocol::MutationOutcome::new(ProgramDiff { risks: Some(ProgramRisksDelta { patched: vec![ProgramRisksPatchEntry { id: payload.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })

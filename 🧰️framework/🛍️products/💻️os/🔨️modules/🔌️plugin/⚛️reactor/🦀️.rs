@@ -74,7 +74,7 @@ pub const SURFACE_RENDER_FAULT_CODE: &str = "ui.surface-render";
 fn shell_fault_effect(instance: u32, fault: &semio_framework::Fault) -> Effect {
     let fault = store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(fault));
     let frame = protocol::AppFrame::Error { in_reply_to: None, fault, report: Vec::new() };
-    Effect::SendMessage { target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) }, payload: semio_framework::io::resolve_ready(protocol::encode_app_frame(&frame)) }
+    Effect::SendMessage { target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) }, payload: ::semio_framework_async::poll::resolve_ready(protocol::encode_app_frame(&frame)) }
 }
 
 #[cfg(test)]
@@ -130,6 +130,11 @@ crate::component_persistent_local! {
     static REACTOR_CLOSES: RefCell<ReactorCloseRegistry> = RefCell::new(ReactorCloseRegistry::new());
     static REACTOR_CLOSE_CURSOR: Cell<usize> = Cell::new(0);
     static COLD_PAIR_INGRESS: RefCell<cold_pair::ColdDocumentPairIngressRegistry<PLUGIN_REACTOR_INSTANCE_SLOTS>> = RefCell::new(cold_pair::ColdDocumentPairIngressRegistry::new());
+    /// 🛬️ The cold pair whose document still loads through the stepped archive load, stepped once per turn.
+    static COLD_PAIR_DOCUMENT_LOAD: RefCell<Option<cold_pair::ColdPairDocumentLoad>> = RefCell::new(None);
+    /// 📸️ Instances whose checkpoint-restored document still loads under `checkpoint::RESTORE_DOCUMENT_LOAD_OPERATION`,
+    /// each stepped once per turn.
+    static RESTORED_DOCUMENT_LOADS: RefCell<Vec<u32>> = RefCell::new(Vec::new());
 }
 
 /// 🧵️ A task retains its instance and optional checkpoint restart command.
@@ -732,16 +737,16 @@ pub(crate) fn drain_queued_effects(instance: u32) -> Vec<Effect> {
 /// mojibake, because the shell packs (`encodePackValue(JSON.parse(outputJson))`,
 /// `🏛️ShellHost/🟦️.tsx`) while only a native fixture ever sent raw JSON
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-pub fn extension_response_args(request_json: &str, outcome: &Result<Vec<u8>, semio_framework::Fault>) -> dsl::DslValue {
-    let mut fields: Vec<(String, dsl::DslValue)> = match dsl::json::from_json_str::<dsl::DslValue>(request_json) {
-        Ok(dsl::DslValue::Object(object)) => object,
+pub fn extension_response_args(request_json: &str, outcome: &Result<Vec<u8>, semio_framework::Fault>) -> semio_framework_value::DslValue {
+    let mut fields: Vec<(String, semio_framework_value::DslValue)> = match semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(request_json, semio_framework_pack_json::JsonMemberPolicy::Reject) {
+        Ok(semio_framework_value::DslValue::Object(object)) => object,
         _ => Vec::new(),
     };
     fields.retain(|(key, value)| {
         if key == "ok" || key == "outputJson" || key == "faultCode" || key == "faultMessage" {
             return false;
         }
-        let over_bound = matches!(value, dsl::DslValue::String(text) if text.chars().map(semio_framework::public_invocation_char_cost).sum::<usize>() > semio_framework::PUBLIC_INVOCATION_STRING_BYTES);
+        let over_bound = matches!(value, semio_framework_value::DslValue::String(text) if text.chars().map(semio_framework::public_invocation_char_cost).sum::<usize>() > semio_framework::PUBLIC_INVOCATION_STRING_BYTES);
         if over_bound && semio_framework_trace::runtime_diagnostics_enabled() {
             eprintln!("[TRACE] extension response dropped the oversized request field {key:?} from the echoed correlation");
         }
@@ -750,29 +755,29 @@ pub fn extension_response_args(request_json: &str, outcome: &Result<Vec<u8>, sem
     match outcome {
         Ok(bytes) => match store::pack_rt::decode_wire_value(bytes) {
             Ok(value) => {
-                fields.push(("ok".to_string(), dsl::DslValue::Bool(true)));
-                fields.push(("outputJson".to_string(), dsl::DslValue::String(dsl::json::to_json_string(&value))));
+                fields.push(("ok".to_string(), semio_framework_value::DslValue::Bool(true)));
+                fields.push(("outputJson".to_string(), semio_framework_value::DslValue::String(semio_framework_pack_json::to_json_string(&value))));
             }
             Err(error) => {
-                fields.push(("ok".to_string(), dsl::DslValue::Bool(false)));
-                fields.push(("faultCode".to_string(), dsl::DslValue::String("extension.answer-not-a-pack".to_string())));
-                fields.push(("faultMessage".to_string(), dsl::DslValue::String(format!("{} answer bytes are not a pack wire value: {error}", bytes.len()))));
+                fields.push(("ok".to_string(), semio_framework_value::DslValue::Bool(false)));
+                fields.push(("faultCode".to_string(), semio_framework_value::DslValue::String("extension.answer-not-a-pack".to_string())));
+                fields.push(("faultMessage".to_string(), semio_framework_value::DslValue::String(format!("{} answer bytes are not a pack wire value: {error}", bytes.len()))));
             }
         },
         Err(fault) => {
-            fields.push(("ok".to_string(), dsl::DslValue::Bool(false)));
-            fields.push(("faultCode".to_string(), dsl::DslValue::String(fault.code.0.clone())));
-            fields.push(("faultMessage".to_string(), dsl::DslValue::String(fault.message.clone())));
+            fields.push(("ok".to_string(), semio_framework_value::DslValue::Bool(false)));
+            fields.push(("faultCode".to_string(), semio_framework_value::DslValue::String(fault.code.0.clone())));
+            fields.push(("faultMessage".to_string(), semio_framework_value::DslValue::String(fault.message.clone())));
         }
     }
-    dsl::DslValue::object(fields)
+    semio_framework_value::DslValue::object(fields)
 }
 
 /// 🔁️ `Event::Completed`'s continuation branch, factored out of `poll`'s event loop so it is unit
 /// testable without a live `PluginRuntime`: takes the id's continuation (if any) and builds the
 /// exact `(instance, action, args)` triple the follow-up dispatch uses. `None` means the id is an
 /// ordinary parked-future request and must go to `RequestRegistry::resolve` instead.
-pub(crate) fn take_extension_response(req: semio_framework::kernel::RequestId, terminal: Result<Vec<u8>, semio_framework::Fault>) -> Result<(u32, String, dsl::DslValue), Result<Vec<u8>, semio_framework::Fault>> {
+pub(crate) fn take_extension_response(req: semio_framework::kernel::RequestId, terminal: Result<Vec<u8>, semio_framework::Fault>) -> Result<(u32, String, semio_framework_value::DslValue), Result<Vec<u8>, semio_framework::Fault>> {
     let Some(continuation) = REGISTRY.with(|registry| registry.take_continuation(req)) else { return Err(terminal) };
     let (instance, response_action, request_json, outcome) = continuation.into_response(terminal);
     Ok((instance, response_action, extension_response_args(&request_json, &outcome)))
@@ -1088,7 +1093,8 @@ pub async fn checkpoint_now<PA: crate::app::PluginApp>(runtime: &crate::plugin_r
     checkpoint::checkpoint(runtime, &instances, timers, pending, task_restarts).await
 }
 
-/// 📸️ `checkpoint::restore` body — re-arms the timer list from the restored pack;
+/// 📸️ `checkpoint::restore` body — re-arms the timer list from the restored pack and hands every admitted document load
+/// to the turn, which drives it to `Ready` (`📓️api-stepped-document-load.md` §4);
 /// `pending_requests` are intentionally NOT re-parked (design-abi.md §4: async tasks are marked
 /// re-run-on-restore, not resumed as though the host round-trip were still in flight).
 /// `task_restarts` ARE re-dispatched, though not synchronously here: each one is queued onto
@@ -1097,7 +1103,8 @@ pub async fn checkpoint_now<PA: crate::app::PluginApp>(runtime: &crate::plugin_r
 /// pure state-load, it must not itself re-enter app dispatch.
 #[expect(clippy::result_large_err, reason = "The fixed resume queue returns the admitted view snapshot, task metadata, and payload owner intact without allocating on rejection.")]
 pub async fn restore_now<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, state: &[u8]) -> Result<(), semio_framework::Fault> {
-    let pack = checkpoint::restore(runtime, state).await?;
+    let checkpoint::RestoredCheckpoint { pack, document_loads } = checkpoint::restore(runtime, state).await?;
+    RESTORED_DOCUMENT_LOADS.with(|loads| loads.borrow_mut().extend(document_loads));
     let instances = pack.instances().await;
     let armed_timers = pack.timers().await.to_vec();
     INSTANCE_METADATA.with(|metadata| {
@@ -1503,9 +1510,15 @@ mod wit_bridge {
             expires_ms: value.expires_ms.and_then(|value| u64::try_from(value).ok()),
         };
         match change {
-            wit_capabilities::CapabilityChange::Granted(value) => { let grant = grant(value); CapabilityChange::Granted { id: grant.id.clone(), grant } },
+            wit_capabilities::CapabilityChange::Granted(value) => {
+                let grant = grant(value);
+                CapabilityChange::Granted { id: grant.id.clone(), grant }
+            }
             wit_capabilities::CapabilityChange::Revoked(id) => CapabilityChange::Revoked { id: CapabilityId(id) },
-            wit_capabilities::CapabilityChange::Narrowed(value) => { let grant = grant(value); CapabilityChange::Narrowed { id: grant.id.clone(), grant } },
+            wit_capabilities::CapabilityChange::Narrowed(value) => {
+                let grant = grant(value);
+                CapabilityChange::Narrowed { id: grant.id.clone(), grant }
+            }
         }
     }
 
@@ -1601,7 +1614,7 @@ mod wit_bridge {
     // this packet's `path_scope`, `🏪️store/**`); safe to resolve synchronously here for the same "world
     // actor has no host-async import" reason as this file's other WIT-boundary bridges.
     fn pack_patch_field<T: serde::Serialize>(value: &T) -> Vec<u8> {
-        let value = serde_json::to_value(value).map_or(dsl::DslValue::Null, |json| dsl::DslValue::from(&json));
+        let value = serde_json::to_value(value).map_or(semio_framework_value::DslValue::Null, |json| semio_framework_value::DslValue::from(&json));
         store::pack_rt::encode_wire_value(&value)
     }
 
@@ -1651,7 +1664,7 @@ mod wit_bridge {
     fn kernel_effect_to_wit(effect: Effect) -> Result<crate::component::wasip2::exports::semio::framework::reactor::Effect, semio_framework::Fault> {
         use crate::component::wasip2::exports::semio::framework::reactor as wit;
         fn pack<T: serde::Serialize>(value: &T) -> Vec<u8> {
-            let value = serde_json::to_value(value).map_or(dsl::DslValue::Null, |json| dsl::DslValue::from(&json));
+            let value = serde_json::to_value(value).map_or(semio_framework_value::DslValue::Null, |json| semio_framework_value::DslValue::from(&json));
             store::pack_rt::encode_wire_value(&value)
         }
         Ok(match effect {
@@ -1667,8 +1680,8 @@ mod wit_bridge {
             Effect::DownloadMediaExport { filename, mime_type, data, encoding } => wit::Effect::DownloadMediaExport(wit_effects::DownloadMediaExportEffect { filename, mime_type, data, encoding }),
             Effect::IconRenderExport { items } => wit::Effect::IconRenderExport(wit_effects::IconRenderExportEffect { items: pack(&items) }),
             Effect::VideoRenderExport { filename, program } => wit::Effect::VideoRenderExport(wit_effects::VideoRenderExportEffect { filename, program: pack(&program) }),
-            Effect::RequestFileOpen { req, accept, read_as, import_action, multiple } => {
-                wit::Effect::RequestFileOpen(wit_effects::RequestFileOpenEffect { req: req.0, params: wit_effects::RequestFileOpenParams { accept, read_as, multiple, import_action } })
+            Effect::RequestFileOpen { req, accept, read_as, import_action, args, multiple } => {
+                wit::Effect::RequestFileOpen(wit_effects::RequestFileOpenEffect { req: req.0, params: wit_effects::RequestFileOpenParams { accept, read_as, multiple, import_action, args: args.map(|value| pack(&value)) } })
             }
             Effect::RequestMediaFrames { req, accept, frame_action, done_action, fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload, args } => wit::Effect::RequestMediaFrames(wit_effects::RequestMediaFramesEffect {
                 req: req.0,
@@ -1721,7 +1734,9 @@ mod wit_bridge {
             Effect::ReleaseCapability { id } => wit::Effect::ReleaseCapability(wit_effects::ReleaseCapabilityEffect { id: id.0 }),
             Effect::Subscribe { topic } => wit::Effect::Subscribe(wit_effects::SubscribeEffect { topic }),
             Effect::Unsubscribe { topic } => wit::Effect::Unsubscribe(wit_effects::SubscribeEffect { topic }),
-            Effect::RequestServiceOperation { owner, service_id, action, payload } => wit::Effect::RequestServiceOperation(wit_effects::RequestServiceOperationEffect { owner, service_id, action, payload: store::pack_rt::encode_wire_value(&payload) }),
+            Effect::RequestServiceOperation { owner, service_id, action, payload } => {
+                wit::Effect::RequestServiceOperation(wit_effects::RequestServiceOperationEffect { owner, service_id, action, payload: store::pack_rt::encode_wire_value(&payload) })
+            }
         })
     }
 

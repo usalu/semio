@@ -17,7 +17,8 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-protocol = { path = "../../../../📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
+semio-framework-dsl-record = { path = "../../../../🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }
 
 [dev-dependencies]

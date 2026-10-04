@@ -49,6 +49,7 @@ fn toy_definition(rebase: ToolRunRebasePolicy) -> ToolRunDefinition {
         revalidate_job: Some(JobKindId::new("toyFill.revalidate")),
         settings: ToolRunSettingsReads { config: fixture()["settingsReads"]["config"].as_array().expect("declared config reads").iter().map(|pointer| text(pointer).to_string()).collect(), ..ToolRunSettingsReads::default() },
         windows: Vec::new(),
+        member: None,
     }
 }
 
@@ -410,6 +411,9 @@ impl ArtifactApp for ToyRunApp {
 
     fn build_tool_run_job(request: ToolRunJobRequest<'_, Self>) -> Result<Option<ToolRunJob>, Fault> {
         TOY_REQUEST_WINDOWS.with(|windows| windows.borrow_mut().push((request.tool_id.to_string(), request.window_id.map(str::to_string), request.window_config.is_some())));
+        if request.tool_id == text(&fixture()["member"]["toolId"]) {
+            return Ok(Some(Box::new(member::toy_member_job(request)?)));
+        }
         if request.tool_id == text(&fixture()["compact"]["toolId"]) {
             return Ok(Some(Box::new(ToyCompactJob { port: request.port, writer: ToolRunTickWriter::with_provisional_base(request.identity, request.provisional.len() as u32), stage: 0, closing: false })));
         }
@@ -592,6 +596,14 @@ async fn toy_manifest() -> App {
         })
         .await;
     tools.push(ToolRef::new(read_only).await);
+    let member = &fixture["member"];
+    builder = builder
+        .tool(ToolDefinition {
+            run: Some(ToolRunDefinition { rebase: ToolRunRebasePolicy::Restart, revalidate_job: None, member: Some(text(&member["slot"]).to_string()), ..toy_definition(ToolRunRebasePolicy::Restart) }),
+            ..ToolDefinition::new(text(&member["toolId"]), LocalizedLabel::native(text(&member["toolLabel"]["en"]), text(&member["toolLabel"]["de"])), IconName::PaintBucket).await
+        })
+        .await;
+    tools.push(ToolRef::new(text(&member["toolId"])).await);
     App::from_builder(builder.mode_tools("edit", tools).await).await
 }
 
@@ -1861,7 +1873,10 @@ fn expected_flag(value: &Value) -> bool {
 async fn a_retained_config_over_one_envelope_page_closes_after_a_render() {
     for (bytes, rendered) in [(2_909usize, true), (3_706, true), (4_360, true), (16_384, true), (65_536, true), (3_820, false)] {
         let mut app = toy_app(1).await;
-        app.config_store.dispatch(ArtifactCommand::Apply { mutations: vec![ChangeTestConfigSelection { selected: Some("c".repeat(bytes)) }.into()], description: None, transaction: None }).await.expect("a retained config past one envelope page applies");
+        app.config_store
+            .dispatch(ArtifactCommand::Apply { mutations: vec![ChangeTestConfigSelection { selected: Some("c".repeat(bytes)) }.into()], description: None, transaction: None })
+            .await
+            .expect("a retained config past one envelope page applies");
         if rendered {
             let _ = render_text(&mut app, "main").await;
         }
@@ -1892,3 +1907,6 @@ async fn a_retained_config_over_one_envelope_page_closes_after_a_render() {
     }
 }
 //#endregion 🧹️RetainedConfigCloseCliff
+
+#[path = "../🧪️tool-run-member/🦀️.rs"]
+mod member;

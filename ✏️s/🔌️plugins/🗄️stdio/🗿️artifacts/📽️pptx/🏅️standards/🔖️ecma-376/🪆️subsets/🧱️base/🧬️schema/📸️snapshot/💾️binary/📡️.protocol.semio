@@ -7,7 +7,6 @@ framing literal
 
 enum Revision { V1=1 }
 enum Boolean { False=0 True=1 }
-enum ShapeKind { TextBox=0 Picture=1 Placeholder=2 Other=3 }
 enum XmlNodeKind { Element=0 Text=1 CData=2 Comment=3 ProcessingInstruction=4 }
 enum ExternalKind { Absent=0 System=1 Public=2 }
 enum DtdKind { Entity=1 }
@@ -17,26 +16,8 @@ record PptxSnapshot {
  schema utf8
  opc Ref(OpcPackage)
  xml_parts Array(Ref(PptxXmlPart),Varint)
- presentation Ref(Presentation)
 }
 record PptxXmlPart { path utf8 content_type utf8 document Ref(XmlDocument) }
-record Presentation { slides Array(Ref(Slide),Varint) }
-record Slide { shapes Array(Ref(Shape),Varint) }
-record Shape {
- kind Ref(ShapeKind)
- text_frame Array(Ref(Paragraph),Varint) if kind eq 0
- text_position Ref(Transform) if kind eq 0
- blip_rel_id utf8 if kind eq 1
- picture_position Ref(Transform) if kind eq 1
- placeholder_kind utf8 if kind eq 2
- placeholder_frame Array(Ref(Paragraph),Varint) if kind eq 2
- placeholder_position Ref(Transform) if kind eq 2
- node Ref(XmlNode) if kind eq 3
-}
-record Paragraph { runs Array(Ref(Run),Varint) }
-record Run { text utf8 bold Ref(Boolean) italic Ref(Boolean) font_size Ref(OptionalFontSize) }
-record OptionalFontSize { present Ref(Boolean) value varint if present eq 1 }
-record Transform { x varint y varint cx varint cy varint }
 record OpcPackage {
  parts Array(Ref(OpcPart),Varint)
  defaults Array(Ref(ContentTypePair),Varint)

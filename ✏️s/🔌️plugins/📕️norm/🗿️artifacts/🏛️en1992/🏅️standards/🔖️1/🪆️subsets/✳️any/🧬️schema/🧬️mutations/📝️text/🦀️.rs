@@ -6,11 +6,11 @@ use crate::artifact_schema::mutations::*;
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 
-fn enc_json<T: dsl::ToValue>(v: &T) -> String {
-    pack::json::to_json_string(v)
+fn enc_json<T: semio_framework_value::ToValue>(v: &T) -> String {
+    semio_framework_pack_json::to_json_string(v)
 }
-fn dec_json<T: dsl::FromValue>(s: &str) -> Result<T, String> {
-    pack::json::from_json_str(s).map_err(|e| e.to_string())
+fn dec_json<T: semio_framework_value::FromValue>(s: &str) -> Result<T, String> {
+    semio_framework_pack_json::from_json_str(s, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| e.to_string())
 }
 
 /// 🖨️ Print mutation as `kind key=value…` line.
@@ -91,7 +91,7 @@ pub fn parse_op(line: &str) -> Result<En1992Mutation, String> {
 
 impl protocol::OpText for En1992Mutation {
     fn print_op(&self) -> String { print_op(self) }
-    fn parse_op(text: &str) -> Result<Self, store::TextError> {
-        parse_op(text).map_err(|e| store::TextError::new(e, store::TextSpan::at(1, 1)))
+    fn parse_op(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_op(text).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 }

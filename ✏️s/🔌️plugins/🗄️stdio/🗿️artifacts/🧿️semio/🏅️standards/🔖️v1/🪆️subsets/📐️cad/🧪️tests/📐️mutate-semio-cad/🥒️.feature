@@ -89,6 +89,7 @@ Feature: Apply every typed semio CAD mutation to the real committed drawing, aga
       | remove-block-entity       | {"mutation":"removeBlockEntity","blockName":"door","handle":"be1"}                                                                                                                             |
       | set-block-entity-layer    | {"mutation":"setBlockEntityLayer","blockName":"door","handle":"be1","layer":"dim"}                                                                                                             |
       | set-block-entity-geometry | {"mutation":"setBlockEntityGeometry","blockName":"door","handle":"be1","entity":{"kind":"arc","center":{"x":0.0,"y":0.0},"radius":1.0,"startAngle":0.0,"endAngle":90.0}}                       |
+      | patch-snapshot | {"mutation": "patchSnapshot", "patch": {"operation": "set", "path": "/layers/0/colorIndex", "value": 5}} |
 
   @id-no-mutation-baseline-mutate
   @level-exhaustive
@@ -128,6 +129,7 @@ Feature: Apply every typed semio CAD mutation to the real committed drawing, aga
       | remove-block-entity       | {"mutation":"removeBlockEntity","blockName":"door","handle":"be1"}                                                                                                                             |
       | set-block-entity-layer    | {"mutation":"setBlockEntityLayer","blockName":"door","handle":"be1","layer":"dim"}                                                                                                             |
       | set-block-entity-geometry | {"mutation":"setBlockEntityGeometry","blockName":"door","handle":"be1","entity":{"kind":"arc","center":{"x":0.0,"y":0.0},"radius":1.0,"startAngle":0.0,"endAngle":90.0}}                       |
+      | patch-snapshot | {"mutation": "patchSnapshot", "patch": {"operation": "set", "path": "/layers/0/colorIndex", "value": 5}} |
 
   @id-no-mutation-baseline-inverse
   @level-exhaustive

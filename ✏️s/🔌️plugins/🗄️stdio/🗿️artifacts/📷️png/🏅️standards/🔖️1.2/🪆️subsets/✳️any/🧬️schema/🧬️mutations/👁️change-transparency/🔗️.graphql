@@ -1,3 +1,0 @@
-# 🧬️ change-transparency/ChangeTransparency
-scalar ChangeTransparencyMutationValue
-input ChangeTransparencyMutation { trns: ChangeTransparencyMutationValue }

@@ -44,7 +44,7 @@ from __future__ import annotations
 import json
 import struct
 
-from semio_repo_test import Adapter, Context, Outcome, digest
+from semio_repo_test import Adapter, Context, Outcome, digest, patched_snapshot, snapshot_patch_inverse
 
 # endregion 🔖️Imports
 
@@ -823,6 +823,7 @@ TAG_OF_KIND = {
     "replace-curve": "ReplaceCurve",
     "replace-surface": "ReplaceSurface",
     "move-vertex": "MoveVertex",
+    "patch-snapshot": "PatchSnapshot",
 }
 #: 🗂️ Which collection each simple `delete-<entity>` verb removes from.
 DELETE_SLOT = {"DeleteEdge": "edges", "DeleteFace": "faces", "DeleteShell": "shells", "DeleteSolid": "solids"}
@@ -863,6 +864,8 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
     loop-behind` vectors pin. An unaddressable id is a refusal, never a silent no-op."""
     result = clone(document)
     tag, args = tagged(mutation)
+    if tag == "PatchSnapshot":
+        return patched_snapshot(document, args["patch"])
     if tag == "CreateVertex":
         refuse_duplicate(result["vertices"], args["id"], tag, "vertex")
         result["vertices"].append({"id": args["id"], "point": clone(args["point"]), "tol": args["tol"]})
@@ -904,6 +907,8 @@ def inverse_mutation(document: dict, mutation: dict) -> list:
     geometry it displaced, and the cascading `delete-vertex` by re-creating the vertex AND every
     incident edge it severed."""
     tag, args = tagged(mutation)
+    if tag == "PatchSnapshot":
+        return [{"PatchSnapshot": {"patch": snapshot_patch_inverse(document, args["patch"])}}]
     if tag == "CreateVertex":
         return [{"DeleteVertex": {"id": args["id"]}}]
     if tag == "DeleteVertex":

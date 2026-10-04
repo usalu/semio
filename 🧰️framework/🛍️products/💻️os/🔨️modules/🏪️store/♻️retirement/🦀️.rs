@@ -1,8 +1,6 @@
 //! 🏪️ Store-specific retirement implementations over the neutral owner contract.
-use semio_framework_value::retirement::{RetireOwned, RetirementCursor, leaf, sequence};
 use semio_framework_value::artifact_retire_struct;
-artifact_retire_struct!(crate::os_io::ArtifactDialect { artifact_kind, standard, subset });
-artifact_retire_struct!(crate::os_io::ArtifactRef { artifact_id, dialect });
+use semio_framework_value::retirement::{RetireOwned, RetirementCursor, leaf, sequence};
 artifact_retire_struct!(super::BlobRef { hash, size, media_type });
 artifact_retire_struct!(super::ArtifactLink { target, pin, role });
 artifact_retire_struct!(super::OwnerRef { parent, slot, child_id });

@@ -1,0 +1,25 @@
+{
+  "schema": "generation3d.gltf-import-admission.v1",
+  "limits": { "inputBytes": 16000000, "primitives": 1024, "vertices": 100000, "triangles": 100000, "channels": 64, "decodedBytes": 16000000 },
+  "source": "gltfSurfaceAuthoring/cases/0/document",
+  "expected": { "primitives": 1, "vertices": 3, "triangles": 1 },
+  "refusals": [
+    { "id": "vertex-count-before-allocation", "accessor": 0, "count": 100001 },
+    { "id": "triangle-count-before-allocation", "indicesCount": 300003 },
+    { "id": "triangle-strip-count-before-allocation", "mode": 5, "indicesCount": 100003 },
+    { "id": "triangle-fan-count-before-allocation", "mode": 6, "indicesCount": 100003 },
+    { "id": "channel-count-before-decoding", "channels": 65 },
+    { "id": "primitive-count-before-projection", "primitives": 1025 },
+    { "id": "aggregate-decoded-bytes-before-allocation", "vertexCount": 100000, "channels": 64, "channelType": "MAT4" },
+    { "id": "input-byte-admission-before-parsing", "inputBytes": 16000001 }
+  ],
+  "modes": [
+    { "mode": 0, "count": 6, "triangles": 0 },
+    { "mode": 1, "count": 6, "triangles": 0 },
+    { "mode": 2, "count": 6, "triangles": 0 },
+    { "mode": 3, "count": 6, "triangles": 0 },
+    { "mode": 4, "count": 6, "triangles": 2 },
+    { "mode": 5, "count": 6, "triangles": 4 },
+    { "mode": 6, "count": 6, "triangles": 4 }
+  ]
+}

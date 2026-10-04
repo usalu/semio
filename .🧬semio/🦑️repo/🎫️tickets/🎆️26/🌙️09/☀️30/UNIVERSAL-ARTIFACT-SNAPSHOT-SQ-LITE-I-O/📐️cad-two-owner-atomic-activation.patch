@@ -1,0 +1,75 @@
+*** Begin Patch
+*** Update File: /Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs
+@@
+-use std::collections::BTreeMap;
++#[path = "📎️references/🦀️.rs"]
++pub mod references;
++pub use references::CadReferenceIndex;
+@@
+-    pub references_by_model_definition_id: BTreeMap<String, CadReferenceList>,
++    pub references_by_model_definition_id: CadReferenceIndex,
+@@
+-    use std::collections::BTreeMap;
+@@
+-    use crate::{CadSnapshot, CAD_PLAY_DOCUMENT_SCHEMA};
++    use crate::{CadSnapshot, CadReferenceIndex, CAD_PLAY_DOCUMENT_SCHEMA};
+@@
+-            references_by_model_definition_id: BTreeMap::new(),
++            references_by_model_definition_id: CadReferenceIndex::new(),
+*** Update File: /Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs
+@@
+-use std::collections::BTreeMap;
++use crate::CadReferenceIndex;
+@@
+-#[path = "🪶️sqlite/🦀️.rs"]
++#[path = "🪶️sqlite/🚦️owner/🦀️.rs"]
+@@
+-    pub references_by_model_definition_id: BTreeMap<String, CadReferenceList>,
++    pub references_by_model_definition_id: CadReferenceIndex,
+*** Update File: /Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🦀️.rs
+@@
+-use std::collections::BTreeMap;
++pub use crate::schema::CadReferenceIndex;
+@@
+-        references_by_model_definition_id: BTreeMap::new(),
++        references_by_model_definition_id: CadReferenceIndex::new(),
+*** Update File: /Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs
+@@
+-            references_by_model_definition_id: std::collections::BTreeMap::new(),
++            references_by_model_definition_id: crate::CadReferenceIndex::new(),
+@@
+-    fn forest_references_for_model_definitions(reference_z: f64) -> std::collections::BTreeMap<String, Vec<CadReference>> {
+-        CadPaneId::all()
+-            .into_iter()
+-            .map(|pane| {
+-                (
+-                    pane.model_definition_id().into(),
+-                    vec![CadReference {
+-                        id: "ref-concrete-forest".into(),
+-                        source_url: CAD_CONCRETE_FOREST_REFERENCE_URL.into(),
+-                        media_kind: "image".into(),
+-                        origin: forest_reference_origin(reference_z),
+-                        orientation: None,
+-                        scale: None,
+-                        width_world: CAD_FOREST_REFERENCE_WIDTH_WORLD,
+-                        hidden: false,
+-                        locked: true,
+-                        opacity: Some(1.0),
+-                    }],
+-                )
+-            })
+-            .collect()
+-    }
++    fn forest_references_for_model_definitions(reference_z: f64) -> crate::CadReferenceIndex {
++        let mut output = crate::CadReferenceIndex::new();
++        for pane in CadPaneId::all() {
++            output.insert(pane.model_definition_id().into(), vec![CadReference {
++                id: "ref-concrete-forest".into(), source_url: CAD_CONCRETE_FOREST_REFERENCE_URL.into(),
++                media_kind: "image".into(), origin: forest_reference_origin(reference_z),
++                orientation: None, scale: None, width_world: CAD_FOREST_REFERENCE_WIDTH_WORLD,
++                hidden: false, locked: true, opacity: Some(1.0),
++            }]);
++        }
++        output
++    }
+*** End Patch

@@ -88,15 +88,15 @@ impl ArtifactDeserializer for SemioMeshFromObj {
             let mut normals = Vec::new();
             let mut uvs = Vec::new();
             for &fi in &face_indices {
-                let index = usize::try_from(fi).map_err(|_| store::PackError::Schema(format!("SemioMeshFromObj: face index {fi} out of range")))?;
-                let face = from.faces.get(index).ok_or_else(|| store::PackError::Schema(format!("SemioMeshFromObj: face index {fi} out of range")))?;
-                append_triangulated_face(from, face, &mut positions, &mut normals, &mut uvs).map_err(|e| store::PackError::Schema(format!("SemioMeshFromObj: {e}")))?;
+                let index = usize::try_from(fi).map_err(|_| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("SemioMeshFromObj: face index {fi} out of range"))))?;
+                let face = from.faces.get(index).ok_or_else(|| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("SemioMeshFromObj: face index {fi} out of range"))))?;
+                append_triangulated_face(from, face, &mut positions, &mut normals, &mut uvs).map_err(|e| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("SemioMeshFromObj: {e}"))))?;
             }
             Ok(SemioPrimitive { id, topology: SemioTopology::Triangles, positions, normals, uvs, colors: Vec::new(), indices: Vec::new(), material_id: None })
         };
 
         let meshes = if from.objects.is_empty() {
-            let face_count = u64::try_from(from.faces.len()).map_err(|_| store::PackError::Schema("SemioMeshFromObj: face count exceeds schema word".into()))?;
+            let face_count = u64::try_from(from.faces.len()).map_err(|_| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "SemioMeshFromObj: face count exceeds schema word")))?;
             let all_faces: Vec<u64> = (0..face_count).collect();
             vec![SemioMesh { id: "mesh-0".to_string(), primitives: vec![build_primitive("mesh-0-prim-0".to_string(), all_faces)?] }]
         } else {

@@ -1,9 +1,14 @@
 {
-  "$schema": "../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json#/$defs/Outputs",
+  "contractId": "semio-s-artifact-puzzle-5d-graph-catalog",
   "version": 1,
   "inputAreas": [
     "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d"
   ],
+  "policy": {
+    "excludedInputPaths": [],
+    "genericEmojiIdentities": []
+  },
   "shared": {
     "rustRegistry": "📇️registry/🦀️.rs",
     "typescriptIndex": "🟦️.ts",

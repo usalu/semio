@@ -47,7 +47,8 @@
         "value": {
           "type": "string"
         }
-      }
+      },
+      "additionalProperties": false
     },
     "XmlNode": {
       "oneOf": [
@@ -336,6 +337,612 @@
             "description": {
               "en": "Declarations of the internal DTD subset in document order.",
               "de": "Deklarationen der internen DTD-Teilmenge in Dokumentreihenfolge."
+            }
+          }
+        }
+      }
+    },
+    "RetainedXmlAttribute": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "value"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Attribute name",
+              "de": "Attributname"
+            }
+          }
+        },
+        "value": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Attribute value",
+              "de": "Attributwert"
+            }
+          }
+        }
+      }
+    },
+    "RetainedXmlNodeKind": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "name",
+            "first_attribute",
+            "attribute_count",
+            "first_child"
+          ],
+          "properties": {
+            "kind": {
+              "const": "element",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Node kind",
+                  "de": "Knotenart"
+                }
+              }
+            },
+            "name": {
+              "type": "string",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Element name",
+                  "de": "Elementname"
+                }
+              }
+            },
+            "first_attribute": {
+              "type": "integer",
+              "minimum": 0,
+              "x-semio-ui": {
+                "label": {
+                  "en": "First attribute",
+                  "de": "Erstes Attribut"
+                }
+              }
+            },
+            "attribute_count": {
+              "type": "integer",
+              "minimum": 0,
+              "x-semio-ui": {
+                "label": {
+                  "en": "Attribute count",
+                  "de": "Attributanzahl"
+                }
+              }
+            },
+            "first_child": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "x-semio-ui": {
+                "label": {
+                  "en": "First child",
+                  "de": "Erstes Kindelement"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "text"
+          ],
+          "properties": {
+            "kind": {
+              "const": "text",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Node kind",
+                  "de": "Knotenart"
+                }
+              }
+            },
+            "text": {
+              "type": "string",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Text",
+                  "de": "Text"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "text"
+          ],
+          "properties": {
+            "kind": {
+              "const": "cData",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Node kind",
+                  "de": "Knotenart"
+                }
+              }
+            },
+            "text": {
+              "type": "string",
+              "x-semio-ui": {
+                "label": {
+                  "en": "CDATA text",
+                  "de": "CDATA-Text"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "text"
+          ],
+          "properties": {
+            "kind": {
+              "const": "comment",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Node kind",
+                  "de": "Knotenart"
+                }
+              }
+            },
+            "text": {
+              "type": "string",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Comment",
+                  "de": "Kommentar"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "target",
+            "data"
+          ],
+          "properties": {
+            "kind": {
+              "const": "processingInstruction",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Node kind",
+                  "de": "Knotenart"
+                }
+              }
+            },
+            "target": {
+              "type": "string",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Instruction target",
+                  "de": "Anweisungsziel"
+                }
+              }
+            },
+            "data": {
+              "type": "string",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Instruction data",
+                  "de": "Anweisungsdaten"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "RetainedXmlNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "nextSibling",
+        "value"
+      ],
+      "properties": {
+        "nextSibling": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Next sibling",
+              "de": "Nächstes Geschwisterelement"
+            }
+          }
+        },
+        "value": {
+          "$ref": "#/$defs/RetainedXmlNodeKind",
+          "x-semio-ui": {
+            "label": {
+              "en": "Node value",
+              "de": "Knotenwert"
+            }
+          }
+        }
+      }
+    },
+    "RetainedXmlExternalId": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "systemId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "system",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Identifier kind",
+                  "de": "Bezeichnerart"
+                }
+              }
+            },
+            "systemId": {
+              "type": "string",
+              "x-semio-ui": {
+                "label": {
+                  "en": "System identifier",
+                  "de": "Systembezeichner"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "publicId",
+            "systemId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "public",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Identifier kind",
+                  "de": "Bezeichnerart"
+                }
+              }
+            },
+            "publicId": {
+              "type": "string",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Public identifier",
+                  "de": "Öffentlicher Bezeichner"
+                }
+              }
+            },
+            "systemId": {
+              "type": "string",
+              "x-semio-ui": {
+                "label": {
+                  "en": "System identifier",
+                  "de": "Systembezeichner"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "RetainedXmlDtdDeclaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "parameter",
+        "name",
+        "value"
+      ],
+      "properties": {
+        "kind": {
+          "const": "entity",
+          "x-semio-ui": {
+            "label": {
+              "en": "Declaration kind",
+              "de": "Deklarationsart"
+            }
+          }
+        },
+        "parameter": {
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Parameter entity",
+              "de": "Parameter-Entity"
+            }
+          }
+        },
+        "name": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Entity name",
+              "de": "Entity-Name"
+            }
+          }
+        },
+        "value": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Entity value",
+              "de": "Entity-Wert"
+            }
+          }
+        }
+      }
+    },
+    "RetainedXmlDoctype": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "prologPosition",
+        "name",
+        "externalId",
+        "declarations"
+      ],
+      "properties": {
+        "prologPosition": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$",
+          "maxLength": 20,
+          "x-semio-ui": {
+            "label": {
+              "en": "Prolog position",
+              "de": "Position im Prolog"
+            }
+          }
+        },
+        "name": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Document type name",
+              "de": "Dokumenttypname"
+            }
+          }
+        },
+        "externalId": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/RetainedXmlExternalId"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "External identifier",
+              "de": "Externer Bezeichner"
+            }
+          }
+        },
+        "declarations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RetainedXmlDtdDeclaration"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Markup declarations",
+              "de": "Markup-Deklarationen"
+            }
+          }
+        }
+      }
+    },
+    "RetainedXmlDeclaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "encoding",
+        "standalone",
+        "quote"
+      ],
+      "properties": {
+        "version": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "XML version",
+              "de": "XML-Version"
+            }
+          }
+        },
+        "encoding": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Encoding",
+              "de": "Zeichenkodierung"
+            }
+          }
+        },
+        "standalone": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Standalone document",
+              "de": "Standalone-Dokument"
+            }
+          }
+        },
+        "quote": {
+          "type": "string",
+          "enum": [
+            "double",
+            "single"
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Quote character",
+              "de": "Anführungszeichen"
+            },
+            "options": {
+              "double": {
+                "en": "Double quotes",
+                "de": "Doppelte Anführungszeichen"
+              },
+              "single": {
+                "en": "Single quotes",
+                "de": "Einfache Anführungszeichen"
+              }
+            }
+          }
+        }
+      }
+    },
+    "RetainedXmlDocument": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "nodes",
+        "attributes",
+        "prolog",
+        "epilog",
+        "root",
+        "doctype",
+        "declaration"
+      ],
+      "properties": {
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RetainedXmlNode"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Nodes",
+              "de": "Knoten"
+            }
+          }
+        },
+        "attributes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RetainedXmlAttribute"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Attributes",
+              "de": "Attribute"
+            }
+          }
+        },
+        "prolog": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Prolog nodes",
+              "de": "Prolog-Knoten"
+            }
+          }
+        },
+        "epilog": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Epilog nodes",
+              "de": "Epilog-Knoten"
+            }
+          }
+        },
+        "root": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Root node",
+              "de": "Wurzelknoten"
+            }
+          }
+        },
+        "doctype": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/RetainedXmlDoctype"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Document type",
+              "de": "Dokumenttyp"
+            }
+          }
+        },
+        "declaration": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/RetainedXmlDeclaration"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "XML declaration",
+              "de": "XML-Deklaration"
             }
           }
         }

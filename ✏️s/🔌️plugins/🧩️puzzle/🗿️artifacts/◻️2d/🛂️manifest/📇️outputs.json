@@ -1,11 +1,12 @@
 {
-  "$schema": "../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json#/$defs/Outputs",
+  "contractId": "semio-s-artifact-puzzle-2d-graph-catalog",
   "version": 1,
   "inputAreas": [
     "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d"
   ],
   "policy": {
-    "excludedInputPaths": [],
+    "excludedInputPaths": ["✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🟦️typescript/node_modules"],
     "genericEmojiIdentities": ["📁️", "📂️", "📄️"]
   },
   "shared": {

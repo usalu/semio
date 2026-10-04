@@ -1,0 +1,91 @@
+{
+  "$schema": "s.stdio.tiff.fixture.canonical-storage.v1",
+  "cases": [
+    {
+      "id": "two-rgb-strips",
+      "snapshot": {
+        "schema": "stdio.tiff",
+        "byteOrder": "littleEndian",
+        "ifds": [{
+          "entries": [
+            {"tag": 256, "values": {"kind": "long", "value": [2]}},
+            {"tag": 257, "values": {"kind": "long", "value": [2]}},
+            {"tag": 258, "values": {"kind": "short", "value": [8, 8, 8]}},
+            {"tag": 259, "values": {"kind": "short", "value": [1]}},
+            {"tag": 262, "values": {"kind": "short", "value": [2]}},
+            {"tag": 277, "values": {"kind": "short", "value": [3]}},
+            {"tag": 278, "values": {"kind": "long", "value": [1]}}
+          ],
+          "storage": {
+            "kind": "strips",
+            "offsetsKind": "long",
+            "byteCountsKind": "short",
+            "chunks": [[255,0,0,0,255,0],[0,0,255,255,255,255]]
+          }
+        }]
+      },
+      "rgba": [255,0,0,255,0,255,0,255,0,0,255,255,255,255,255,255]
+    },
+    {
+      "id": "four-rgb-tiles",
+      "snapshot": {
+        "schema": "stdio.tiff",
+        "byteOrder": "bigEndian",
+        "ifds": [{
+          "entries": [
+            {"tag": 256, "values": {"kind": "long", "value": [2]}},
+            {"tag": 257, "values": {"kind": "long", "value": [2]}},
+            {"tag": 258, "values": {"kind": "short", "value": [8, 8, 8]}},
+            {"tag": 259, "values": {"kind": "short", "value": [1]}},
+            {"tag": 262, "values": {"kind": "short", "value": [2]}},
+            {"tag": 277, "values": {"kind": "short", "value": [3]}},
+            {"tag": 322, "values": {"kind": "long", "value": [1]}},
+            {"tag": 323, "values": {"kind": "long", "value": [1]}}
+          ],
+          "storage": {
+            "kind": "tiles",
+            "offsetsKind": "long",
+            "byteCountsKind": "long",
+            "chunks": [[1,2,3],[4,5,6],[7,8,9],[10,11,12]]
+          }
+        }]
+      },
+      "rgba": [1,2,3,255,4,5,6,255,7,8,9,255,10,11,12,255]
+    },
+    {
+      "id": "literal-ascii-and-ieee-words",
+      "snapshot": {
+        "schema": "stdio.tiff",
+        "byteOrder": "littleEndian",
+        "ifds": [{
+          "entries": [
+            {"tag": 270, "values": {"kind": "ascii", "value": [65,0,66,0]}},
+            {"tag": 65000, "values": {"kind": "float", "value": [{"bits": 2143289345},{"bits": 2147483648}]}},
+            {"tag": 65001, "values": {"kind": "double", "value": [{"bits": "9221120237041090561"},{"bits": "9223372036854775808"}]}}
+          ],
+          "storage": {
+            "kind": "none",
+            "offsetsKind": "long",
+            "byteCountsKind": "long",
+            "chunks": []
+          }
+        }]
+      },
+      "rgba": []
+    }
+  ],
+  "refusals": [
+    {
+      "id": "none-with-chunk",
+      "storage": {"kind":"none","offsetsKind":"long","byteCountsKind":"long","chunks":[[1]]}
+    },
+    {
+      "id": "strips-without-chunk",
+      "storage": {"kind":"strips","offsetsKind":"long","byteCountsKind":"long","chunks":[]}
+    },
+    {
+      "id": "float-offset-kind",
+      "storage": {"kind":"tiles","offsetsKind":"float","byteCountsKind":"long","chunks":[[1]]}
+    }
+  ]
+}

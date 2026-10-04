@@ -11,7 +11,7 @@ pub fn diff(payload: &super::ChangeVortexKindColor, base: &Block3dSnapshot) -> p
     };
     let replacement = Block3dVortexKind { color: payload.new_color.clone(), ..existing.clone() };
     if replacement == *existing {
-        return protocol::MutationOutcome::new(Block3dDiff::default()).absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "no changes to apply").at(vec![payload.id.clone()])]);
+        return protocol::MutationOutcome::new(Block3dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(vec![payload.id.clone()])]);
     }
     protocol::MutationOutcome::new(Block3dDiff {
         vortex_kinds: Some(Block3dVortexKindsDelta { patched: vec![Block3dVortexKindsPatchEntry { id: payload.id.clone(), patch: Block3dVortexKindsPatch { replacement: Some(replacement) } }], ..Default::default() }),

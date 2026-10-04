@@ -1,0 +1,355 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "valueKinds",
+    "unsignedWords",
+    "integerWords",
+    "decimals",
+    "literalText",
+    "longText",
+    "decimalOwnedExtras",
+    "dialects",
+    "envelopes",
+    "controlled",
+    "headerCase",
+    "retirementCase",
+    "binary64Words",
+    "nativeOwned"
+  ],
+  "properties": {
+    "valueKinds": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "ref",
+          "str",
+          "enum",
+          "int",
+          "real",
+          "list",
+          "typed",
+          "unset",
+          "derived"
+        ]
+      },
+      "minItems": 9,
+      "maxItems": 9,
+      "uniqueItems": true
+    },
+    "unsignedWords": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^(0|[1-9][0-9]*)$"
+      }
+    },
+    "integerWords": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^-?(0|[1-9][0-9]*)$"
+      }
+    },
+    "decimals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "negative",
+          "coefficient",
+          "scale"
+        ],
+        "properties": {
+          "negative": {
+            "type": "boolean"
+          },
+          "coefficient": {
+            "type": "string"
+          },
+          "scale": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "exponent": {
+            "type": "integer",
+            "minimum": -2147483648,
+            "maximum": 2147483647
+          }
+        }
+      }
+    },
+    "literalText": {
+      "type": "string"
+    },
+    "longText": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "unit",
+        "repeat"
+      ],
+      "properties": {
+        "unit": {
+          "type": "string"
+        },
+        "repeat": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "decimalOwnedExtras": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "negative",
+          "coefficient",
+          "scale"
+        ],
+        "properties": {
+          "negative": {
+            "type": "boolean"
+          },
+          "coefficient": {
+            "type": "string"
+          },
+          "scale": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "exponent": {
+            "type": "integer",
+            "minimum": -2147483648,
+            "maximum": 2147483647
+          }
+        }
+      }
+    },
+    "dialects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "artifactKind",
+          "standard",
+          "subsets"
+        ],
+        "properties": {
+          "artifactKind": {
+            "type": "string"
+          },
+          "standard": {
+            "type": "string"
+          },
+          "subsets": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "envelopes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "controlled": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recursiveDepth",
+        "wideItems",
+        "malformedValues",
+        "malformedInstances",
+        "malformedDecimals",
+        "workload"
+      ],
+      "properties": {
+        "recursiveDepth": {
+          "type": "integer",
+          "minimum": 65,
+          "maximum": 256
+        },
+        "wideItems": {
+          "type": "integer",
+          "minimum": 256,
+          "maximum": 4096
+        },
+        "malformedValues": {
+          "type": "array",
+          "minItems": 5,
+          "items": {
+            "type": "object"
+          }
+        },
+        "malformedInstances": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "type": "object"
+          }
+        },
+        "malformedDecimals": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "type": "object"
+          }
+        },
+        "workload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "parentTotal",
+            "parentBefore"
+          ],
+          "properties": {
+            "parentTotal": {
+              "const": 2
+            },
+            "parentBefore": {
+              "const": 1
+            }
+          }
+        }
+      }
+    },
+    "headerCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fileDescription",
+        "fileName",
+        "fileSchema"
+      ],
+      "properties": {
+        "fileDescription": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "fileName": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "fileSchema": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "retirementCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "typedName",
+        "value",
+        "maximumItems",
+        "maximumBytes",
+        "expectedReleasedBytes"
+      ],
+      "properties": {
+        "id": {
+          "const": "0"
+        },
+        "name": {
+          "type": "string"
+        },
+        "typedName": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "maximumItems": {
+          "const": 2
+        },
+        "maximumBytes": {
+          "const": 3
+        },
+        "expectedReleasedBytes": {
+          "const": 23
+        }
+      }
+    },
+    "binary64Words": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{16}$"
+      }
+    },
+    "nativeOwned": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "surrogateOffset",
+        "nodeIndexBase",
+        "typedSingleChild",
+        "rootTables",
+        "headerTables",
+        "decimalCoefficients"
+      ],
+      "properties": {
+        "schema": {
+          "const": "literal owned schema\u0000世界"
+        },
+        "surrogateOffset": {
+          "const": 4096
+        },
+        "nodeIndexBase": {
+          "const": 0
+        },
+        "typedSingleChild": {
+          "const": 1
+        },
+        "rootTables": {
+          "const": [
+            "step_document",
+            "ifc_document",
+            "ifc2x3_document"
+          ]
+        },
+        "headerTables": {
+          "const": [
+            "step_header",
+            "ifc_header",
+            "ifc2x3_header"
+          ]
+        },
+        "decimalCoefficients": {
+          "const": [
+            "",
+            "0",
+            "-1",
+            "NaN",
+            "1.2",
+            "世界\u0000"
+          ]
+        }
+      }
+    }
+  }
+}

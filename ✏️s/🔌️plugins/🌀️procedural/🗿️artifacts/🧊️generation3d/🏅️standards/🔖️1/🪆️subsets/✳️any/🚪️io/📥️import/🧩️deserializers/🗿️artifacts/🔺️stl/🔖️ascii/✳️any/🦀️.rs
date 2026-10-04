@@ -24,21 +24,21 @@ pub fn register() {}
 
 /// 🔺️ The geometry half, isolated so the round-trip test can assert triangle counts and bounds
 /// without a live flow evaluator.
-pub fn mesh_from_bytes(bytes: &[u8]) -> Result<SemioMeshSnapshot, store::TextError> {
+pub fn mesh_from_bytes(bytes: &[u8]) -> Result<SemioMeshSnapshot, semio_framework_diagnostic::TextError> {
     let stl = semio_s_artifact_stdio_stl::engine::decode_stl_auto(bytes).map_err(|error| io_error(format!("generation3d←stl: {error}")))?;
     mesh_from_snapshot(&stl)
 }
 
-pub fn mesh_from_snapshot(from: &StlSnapshot) -> Result<SemioMeshSnapshot, store::TextError> {
-    semio_framework_plugin::resolve_ready(SemioMeshFromStl::deserialize(from)).map_err(|error| io_error(format!("generation3d←stl: {error}")))
+pub fn mesh_from_snapshot(from: &StlSnapshot) -> Result<SemioMeshSnapshot, semio_framework_diagnostic::TextError> {
+    ::semio_framework_async::poll::resolve_ready(SemioMeshFromStl::deserialize(from)).map_err(|error| io_error(format!("generation3d←stl: {error}")))
 }
 
-pub fn deserialize(from: &StlSnapshot) -> Result<Generation3dSnapshot, store::TextError> {
+pub fn deserialize(from: &StlSnapshot) -> Result<Generation3dSnapshot, semio_framework_diagnostic::TextError> {
     mesh_from_snapshot(from)?;
     Ok(import_document(IMPORT_NEURON_KIND, base64_encode(&semio_s_artifact_stdio_stl::engine::encode_stl_ascii(from).into_bytes())))
 }
 
-pub fn deserialize_bytes(bytes: &[u8]) -> Result<Generation3dSnapshot, store::TextError> {
+pub fn deserialize_bytes(bytes: &[u8]) -> Result<Generation3dSnapshot, semio_framework_diagnostic::TextError> {
     mesh_from_bytes(bytes)?;
     Ok(import_document(IMPORT_NEURON_KIND, base64_encode(bytes)))
 }

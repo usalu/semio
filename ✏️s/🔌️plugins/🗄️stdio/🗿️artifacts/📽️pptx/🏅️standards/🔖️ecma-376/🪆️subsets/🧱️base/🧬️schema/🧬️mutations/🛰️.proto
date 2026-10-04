@@ -1,15 +1,29 @@
 syntax = "proto3";
 package semio.s_stdio_pptx.mutation;
+message PptxXmlAddress {
+  string part_path = 1;
+  repeated uint64 node_path = 2;
+  string namespace_uri = 3;
+  string local_name = 4;
+  string revision = 5;
+}
+message PptxSlideAddress {
+  PptxXmlAddress entry = 1;
+  string slide_part_path = 2;
+  string relationship_id = 3;
+  string slide_id = 4;
+}
+message PptxShapeAddress { PptxXmlAddress node = 1; string shape_id = 2; }
+message PptxXmlVacancyAddress { PptxXmlAddress container = 1; uint64 index = 2; }
 message PptxMutation {
   string mutation = 1;
   optional semio.s_stdio_pptx.snapshot.PptxSnapshot snapshot = 2;
-  optional uint64 index = 3;
-  optional uint64 from = 4;
-  optional uint64 to = 5;
-  optional uint64 slide_index = 6;
-  optional uint64 shape_index = 7;
-  optional semio.s_stdio_pptx.snapshot.PptxSlide slide = 8;
-  optional semio.s_stdio_pptx.snapshot.PptxShape shape = 9;
-  repeated semio.s_stdio_pptx.snapshot.PptxParagraph text_frame = 10;
-  optional semio.s_stdio_pptx.snapshot.PptxTransform position = 11;
+  optional PptxSlideAddress slide_address = 3;
+  optional PptxShapeAddress shape_address = 4;
+  optional PptxXmlVacancyAddress vacancy = 5;
+  optional semio.s_stdio_pptx.snapshot.XmlNode entry = 6;
+  optional semio.s_stdio_pptx.snapshot.XmlNode shape = 7;
+  optional uint64 destination_index = 8;
+  optional string text = 9;
+  optional semio.s_stdio_pptx.snapshot.PptxTransform position = 10;
 }

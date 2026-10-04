@@ -1,7 +1,7 @@
 //! ✒️ Direct `change-schema` payload and behavior owner.
 
 use crate::standards::v1::subsets::any::schema::{diff::PlaygroundDiff, mutations::PlaygroundMutation, snapshot::PlaygroundSnapshot};
-use dsl::os_pack::json::{array, from_dsl_value, from_json_str, object, to_string, Value};
+use semio_framework_pack_json::{array, from_dsl_value, from_json_str, object, to_string, Value};
 
 //#region 🔖️Mutation
 /// ✒️ Changes the playground document's schema identity.
@@ -18,9 +18,12 @@ impl protocol::MutationKind<PlaygroundSnapshot, PlaygroundMutation> for ChangeSc
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &PlaygroundSnapshot) -> Vec<PlaygroundMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &PlaygroundSnapshot) -> Result<Vec<PlaygroundMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change playground schema to \"{}\"", self.new_schema), &format!("Playground-Schema auf \"{}\" ändern", self.new_schema))
@@ -37,8 +40,8 @@ pub const KINDS: &[&str] = &["change-schema"];
 
 //#region 🌉️ExternalCodecBridge
 fn bridge_decode_pair(snapshot_json: &str, mutation_json: &str) -> Result<(PlaygroundSnapshot, PlaygroundMutation), String> {
-    let snapshot = from_json_str(snapshot_json).map_err(|error| format!("the committed playground snapshot JSON does not decode: {error}"))?;
-    let mutation = from_json_str(mutation_json).map_err(|error| format!("the committed playground mutation JSON does not decode: {error}"))?;
+    let snapshot = from_json_str(snapshot_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("the committed playground snapshot JSON does not decode: {error}"))?;
+    let mutation = from_json_str(mutation_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("the committed playground mutation JSON does not decode: {error}"))?;
     Ok((snapshot, mutation))
 }
 
@@ -50,7 +53,7 @@ fn bridge_step(snapshot: &PlaygroundSnapshot, mutation: &PlaygroundMutation) -> 
 }
 
 fn bridge_render(snapshot: &PlaygroundSnapshot, messages: Vec<String>) -> String {
-    let value = object([("snapshot".to_string(), from_dsl_value(&dsl::ToValue::to_value(snapshot))), ("messages".to_string(), array(messages.into_iter().map(Value::String)))]);
+    let value = object([("snapshot".to_string(), from_dsl_value(&semio_framework_value::ToValue::to_value(snapshot))), ("messages".to_string(), array(messages.into_iter().map(Value::String)))]);
     to_string(&value)
 }
 
@@ -66,7 +69,7 @@ pub fn undo_playground_mutation_json(snapshot_json: &str, mutation_json: &str) -
     use protocol::Mutation;
     let (base, mutation) = bridge_decode_pair(snapshot_json, mutation_json)?;
     let (mut current, mut messages) = bridge_step(&base, &mutation)?;
-    for undo in <PlaygroundMutation as Mutation<PlaygroundSnapshot>>::inverse(&mutation, &base) {
+    for undo in <PlaygroundMutation as Mutation<PlaygroundSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)? {
         let (next, raised) = bridge_step(&current, &undo)?;
         current = next;
         messages.extend(raised);
@@ -80,7 +83,7 @@ pub fn round_trip_playground_dsl(text: &str) -> Result<String, String> {
     let parsed = <PlaygroundSnapshot as ArtifactDsl>::parse_dsl(text).map_err(|error| format!("the committed playground example does not parse: {error:?}"))?;
     let printed = <PlaygroundSnapshot as ArtifactDsl>::print_dsl(&parsed);
     let reparsed = <PlaygroundSnapshot as ArtifactDsl>::parse_dsl(&printed).map_err(|error| format!("the reprinted playground document does not parse: {error:?}"))?;
-    let value = object([("printed".to_string(), Value::String(printed)), ("snapshot".to_string(), from_dsl_value(&dsl::ToValue::to_value(&parsed))), ("reparsed".to_string(), from_dsl_value(&dsl::ToValue::to_value(&reparsed)))]);
+    let value = object([("printed".to_string(), Value::String(printed)), ("snapshot".to_string(), from_dsl_value(&semio_framework_value::ToValue::to_value(&parsed))), ("reparsed".to_string(), from_dsl_value(&semio_framework_value::ToValue::to_value(&reparsed)))]);
     Ok(to_string(&value))
 }
 //#endregion 🌉️ExternalCodecBridge

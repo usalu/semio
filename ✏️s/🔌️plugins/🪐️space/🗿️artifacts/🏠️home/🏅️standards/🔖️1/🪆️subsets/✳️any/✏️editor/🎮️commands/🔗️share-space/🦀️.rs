@@ -11,7 +11,7 @@ use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, FaultOrigin};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "share-space")]
 pub struct ShareSpace {
     pub space_id: String,
@@ -30,7 +30,7 @@ pub fn handle(_payload: &ShareSpace, _doc: &ArtifactView<'_, SHomeSnapshot>, _cf
 /// space without one is local-only and cannot be shared until it is promoted.
 pub fn handle_with_row(payload: &ShareSpace, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>, hub_row: Option<&store::os_directory::DirectorySpace>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
     if hub_row.is_none() {
-        let args = Some(pack::json_to_dsl_value(&pack::json!({
+        let args = Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({
             "spaceId": payload.space_id.clone(),
             "dataClass": "ephemeralLocalOnly",
             "reason": "ephemeral-local-only"
@@ -38,11 +38,11 @@ pub fn handle_with_row(payload: &ShareSpace, _doc: &ArtifactView<'_, SHomeSnapsh
         return Ok(Emit::effect(Effect::OpenDialog { req: semio_framework_plugin::RequestId(128), dialog_id: "ephemeralShareBlocked".into(), args }));
     }
     if payload.email.trim().is_empty() {
-        let args = Some(pack::json_to_dsl_value(&pack::json!({ "spaceId": payload.space_id.clone() })));
+        let args = Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "spaceId": payload.space_id.clone() })));
         return Ok(Emit::effect(Effect::OpenDialog { req: semio_framework_plugin::RequestId(126), dialog_id: "shareSpace".into(), args }));
     }
     let role = if payload.role.trim().is_empty() { "spectator".to_string() } else { payload.role.clone() };
-    let args = Some(pack::json_to_dsl_value(&pack::json!({ "spaceId": payload.space_id.clone(), "email": payload.email.clone(), "role": role })));
+    let args = Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "spaceId": payload.space_id.clone(), "email": payload.email.clone(), "role": role })));
     Ok(Emit::effect(Effect::ReplayShellCommand { action_id: "os.directory.upsert-member".into(), args }))
 }
 //#endregion 🔖️Handle

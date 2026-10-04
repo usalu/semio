@@ -9,7 +9,7 @@ pub fn diff(payload: &UpdatePlatedInputs, base: &En1993Snapshot) -> protocol::Mu
     let mut values = base.plated_panels.clone();
     if let Some(idx) = values.iter().position(|x| x.id == payload.plated_panel.id) {
         if values[idx] == payload.plated_panel {
-            return protocol::MutationOutcome::empty().warn("mutation.no-op", "Entity already has this value.");
+            return protocol::MutationOutcome::empty().warning("mutation.no-op", "Entity already has this value.");
         }
         values[idx] = payload.plated_panel.clone();
     } else {

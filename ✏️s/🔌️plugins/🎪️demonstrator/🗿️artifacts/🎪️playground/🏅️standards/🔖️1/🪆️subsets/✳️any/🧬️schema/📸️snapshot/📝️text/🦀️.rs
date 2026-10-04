@@ -12,7 +12,7 @@ use crate::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
 pub const PLAYGROUND_DEMO_DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
 /// 📖️ Parses playground DSL text into a `PlaygroundSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<PlaygroundSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<PlaygroundSnapshot, semio_framework_diagnostic::TextError> {
     <PlaygroundSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 

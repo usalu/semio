@@ -110,6 +110,83 @@ fn set_addressed_cell(snapshot: &mut XlsxSnapshot, address: &cell_address::XlsxC
     Ok(())
 }
 
+fn cell_column(node: &XmlNode, scope: &[(String, String)]) -> Result<Option<u32>, String> {
+    if !element_matches(node, scope, &SPREADSHEETML_NAMESPACES, "c")? {
+        return Ok(None);
+    }
+    let Some(reference) = attribute_value(node, scope, &[""], "r")? else { return Ok(None) };
+    let letters = reference.chars().take_while(|character| character.is_ascii_alphabetic()).collect::<String>();
+    Ok(crate::standards::v_ecma_376::subsets::base::io::column_index(&letters))
+}
+
+fn insert_addressed_cell(snapshot: &mut XlsxSnapshot, address: &cell_address::XlsxCellVacancyAddress, value: &XlsxCellValue) -> Result<(), String> {
+    cell_address::resolve_xlsx_cell_vacancy_address(snapshot, address)?;
+    let namespace = address.worksheet.namespace_uri.clone();
+    let row_number = address.row;
+    let column = address.column;
+    let reference = format!("{}{}", crate::standards::v_ecma_376::subsets::base::io::column_letter(column), row_number);
+    let sheet_data_scope = cell_address::addressed_worksheet_scope(snapshot, &address.worksheet)?;
+    let sheet_data = cell_address::addressed_worksheet_mut(snapshot, &address.worksheet)?;
+    let XmlNode::Element { name: sheet_data_name, children: rows, .. } = sheet_data else { return Err("worksheet address resolved a non-element".into()) };
+    let make_cell = |cell_name: String, scope: &[(String, String)]| -> Result<XmlNode, String> {
+        let (cell_type, children) = cell_value_nodes(&cell_name, &[], scope, &namespace, value)?;
+        let mut attrs = vec![XmlAttr { name: "r".into(), value: reference.clone() }];
+        if let Some(cell_type) = cell_type {
+            attrs.push(XmlAttr { name: "t".into(), value: cell_type });
+        }
+        Ok(XmlNode::Element { name: cell_name, attrs, children })
+    };
+
+    let mut matching_row = None;
+    let mut row_insertion = rows.len();
+    let mut last_row = None;
+    for (index, node) in rows.iter().enumerate() {
+        let row_scope = namespace_scope(&sheet_data_scope, node);
+        if !element_matches(node, &row_scope, &[namespace.as_str()], "row")? {
+            continue;
+        }
+        let Some(existing) = attribute_value(node, &row_scope, &[""], "r")?.and_then(|value| value.parse::<u32>().ok()) else { continue };
+        if existing == row_number {
+            matching_row = Some((index, row_scope));
+            break;
+        }
+        if existing > row_number {
+            row_insertion = index;
+            break;
+        }
+        last_row = Some(index);
+    }
+    if let Some((row_index, row_scope)) = matching_row {
+        let XmlNode::Element { name: row_name, children, .. } = &mut rows[row_index] else { unreachable!() };
+        let cell_name = qualified_like(row_name, "c");
+        let mut insertion = children.len();
+        let mut last_cell = None;
+        for (index, node) in children.iter().enumerate() {
+            let cell_scope = namespace_scope(&row_scope, node);
+            let Some(existing_column) = cell_column(node, &cell_scope)? else { continue };
+            if existing_column > column {
+                insertion = index;
+                break;
+            }
+            last_cell = Some(index);
+        }
+        if insertion == children.len() {
+            insertion = last_cell.map_or(0, |index| index + 1);
+        }
+        children.insert(insertion, make_cell(cell_name, &row_scope)?);
+        return Ok(());
+    }
+
+    if row_insertion == rows.len() {
+        row_insertion = last_row.map_or(0, |index| index + 1);
+    }
+    let row_name = qualified_like(sheet_data_name, "row");
+    let cell_name = qualified_like(&row_name, "c");
+    let cell = make_cell(cell_name, &sheet_data_scope)?;
+    rows.insert(row_insertion, XmlNode::Element { name: row_name, attrs: vec![XmlAttr { name: "r".into(), value: row_number.to_string() }], children: vec![cell] });
+    Ok(())
+}
+
 fn shared_strings_path(snapshot: &XlsxSnapshot) -> Result<String, String> {
     let workbook_path = snapshot
         .opc
@@ -120,7 +197,7 @@ fn shared_strings_path(snapshot: &XlsxSnapshot) -> Result<String, String> {
     Ok(semio_s_artifact_stdio_zip::opc::resolve_relationship_target(&workbook_path, &relationship.target))
 }
 
-fn edit_shared_strings(snapshot: &mut XlsxSnapshot, edit: impl FnOnce(&mut Vec<XmlNode>, &[(String, String)], &str) -> Result<(), String>) -> Result<(), String> {
+fn edit_shared_strings(snapshot: &mut XlsxSnapshot, cardinality_changed: bool, edit: impl FnOnce(&mut Vec<XmlNode>, &[(String, String)], &str) -> Result<(), String>) -> Result<(), String> {
     let path = shared_strings_path(snapshot)?;
     let (scope, namespace) = {
         let root = snapshot.xml_part(&path).and_then(|part| part.document.root.as_ref()).ok_or_else(|| format!("missing shared strings part {path}"))?;
@@ -147,9 +224,53 @@ fn edit_shared_strings(snapshot: &mut XlsxSnapshot, edit: impl FnOnce(&mut Vec<X
             count += 1;
         }
     }
-    let count = count.to_string();
-    set_attr(attrs, "count", Some(count.clone()));
-    set_attr(attrs, "uniqueCount", Some(count));
+    if cardinality_changed {
+        if let Some(unique_count) = attrs.iter_mut().find(|attr| attr.name == "uniqueCount") {
+            unique_count.value = count.to_string();
+        }
+    }
+    Ok(())
+}
+
+fn shift_shared_string_references(snapshot: &mut XlsxSnapshot, removed: usize) -> Result<(), String> {
+    fn visit(node: &mut XmlNode, scope: &[(String, String)], namespace: &str, removed: usize) -> Result<(), String> {
+        let node_scope = namespace_scope(scope, node);
+        let is_cell = element_matches(node, &node_scope, &[namespace], "c")?;
+        let XmlNode::Element { attrs, children, .. } = node else { return Ok(()) };
+        if is_cell && attrs.iter().any(|attr| attr.name == "t" && attr.value == "s") {
+            for child in children.iter_mut() {
+                let child_scope = namespace_scope(&node_scope, child);
+                if !element_matches(child, &child_scope, &[namespace], "v")? {
+                    continue;
+                }
+                let XmlNode::Element { children: value_nodes, .. } = child else { continue };
+                for value_node in value_nodes {
+                    let XmlNode::Text { text } = value_node else { continue };
+                    let index = text.trim().parse::<usize>().map_err(|_| format!("shared-string cell value {text:?} is not an integer"))?;
+                    if index > removed {
+                        *text = (index - 1).to_string();
+                    }
+                }
+            }
+            return Ok(());
+        }
+        for child in children.iter_mut() {
+            visit(child, &node_scope, namespace, removed)?;
+        }
+        Ok(())
+    }
+
+    for part in &mut snapshot.xml_parts {
+        let Some(root) = part.document.root.as_mut() else { continue };
+        let scope = namespace_scope(&[], root);
+        let (namespace, local) = match root {
+            XmlNode::Element { name, .. } => expanded_element_name(name, &scope)?,
+            _ => continue,
+        };
+        if local == "worksheet" && SPREADSHEETML_NAMESPACES.contains(&namespace.as_str()) {
+            visit(root, &[], &namespace, removed)?;
+        }
+    }
     Ok(())
 }
 
@@ -380,8 +501,8 @@ fn remove_sheet(snapshot: &mut XlsxSnapshot, sheet_name: &str) -> Result<(), Str
     let XmlNode::Element { children, .. } = root else { unreachable!() };
     let XmlNode::Element { children: sheets, .. } = children.get_mut(sheets_index).ok_or_else(|| "worksheet container address is stale".to_string())? else { return Err("worksheet container is not an element".into()) };
     sheets.remove(sheet_index);
-    snapshot.opc.relationships.entry(workbook_path).and_modify(|relationships| relationships.retain(|relationship| relationship.id != relationship_id));
-    snapshot.opc.relationships.remove(&worksheet_path);
+    if let Some(relationships) = snapshot.opc.relationships.relationships_mut(&workbook_path) { relationships.retain(|relationship| relationship.id != relationship_id); }
+    snapshot.opc.relationships.remove_owner(&worksheet_path);
     snapshot.xml_parts.retain(|part| part.path != worksheet_path);
     let override_path = format!("/{worksheet_path}");
     snapshot.opc.content_types.overrides.retain(|(path, _)| path != &override_path);
@@ -389,16 +510,21 @@ fn remove_sheet(snapshot: &mut XlsxSnapshot, sheet_name: &str) -> Result<(), Str
 }
 
 pub(super) fn mutate(base: &XlsxSnapshot, mutation: &XlsxMutation) -> Result<XlsxSnapshot, String> {
-    if let XlsxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) = mutation {
-        snapshot.validate_authority().map_err(|error| error.to_string())?;
-        return Ok(snapshot.clone());
+    match mutation {
+        XlsxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => {
+            snapshot.validate_authority().map_err(|error| error.to_string())?;
+            return Ok(snapshot.clone());
+        }
+        XlsxMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => return semio_s_artifact_stdio_contract::editing::apply_snapshot_patch_checked(base, patch, XlsxSnapshot::validate_authority).map_err(|error| error.to_string()),
+        _ => {}
     }
     let mut next = base.clone();
     match mutation {
-        XlsxMutation::SetSnapshot(_) => unreachable!(),
+        XlsxMutation::SetSnapshot(_) | XlsxMutation::PatchSnapshot(_) => unreachable!(),
         XlsxMutation::SetCell(set_cell::SetCell { address, value }) => set_addressed_cell(&mut next, address, value)?,
+        XlsxMutation::InsertCell(insert_cell::InsertCell { address, value }) => insert_addressed_cell(&mut next, address, value)?,
         XlsxMutation::RemoveCell(remove_cell::RemoveCell { address }) => remove_addressed_cell(&mut next, address)?,
-        XlsxMutation::SetSharedString(set_shared_string::SetSharedString { index, value }) => edit_shared_strings(&mut next, |children, scope, namespace| {
+        XlsxMutation::SetSharedString(set_shared_string::SetSharedString { index, value }) => edit_shared_strings(&mut next, false, |children, scope, namespace| {
             let mut remaining = *index;
             let mut selected = None;
             for (physical, node) in children.iter().enumerate() {
@@ -415,7 +541,7 @@ pub(super) fn mutate(base: &XlsxSnapshot, mutation: &XlsxMutation) -> Result<Xls
             replace_text_contributions(&mut children[physical], &child_scope, namespace, value)?;
             Ok(())
         })?,
-        XlsxMutation::InsertSharedString(insert_shared_string::InsertSharedString { value }) => edit_shared_strings(&mut next, |children, scope, namespace| {
+        XlsxMutation::InsertSharedString(insert_shared_string::InsertSharedString { value }) => edit_shared_strings(&mut next, true, |children, scope, namespace| {
             let mut name = None;
             for node in children.iter() {
                 let child_scope = namespace_scope(scope, node);
@@ -438,7 +564,7 @@ pub(super) fn mutate(base: &XlsxSnapshot, mutation: &XlsxMutation) -> Result<Xls
             if workbook.sheets.iter().flat_map(|sheet| &sheet.cells).any(|cell| matches!(&cell.value, XlsxCellValue::SharedString(value) if *value == *index)) {
                 return Err(format!("shared string index {index} is still referenced"));
             }
-            edit_shared_strings(&mut next, |children, scope, namespace| {
+            edit_shared_strings(&mut next, true, |children, scope, namespace| {
                 let mut remaining = *index;
                 let mut physical = None;
                 for (position, node) in children.iter().enumerate() {
@@ -455,6 +581,7 @@ pub(super) fn mutate(base: &XlsxSnapshot, mutation: &XlsxMutation) -> Result<Xls
                 children.remove(physical);
                 Ok(())
             })?;
+            shift_shared_string_references(&mut next, *index)?;
         }
         XlsxMutation::RenameSheet(rename_sheet::RenameSheet { name, new_name }) => rename_sheet(&mut next, name, new_name)?,
         XlsxMutation::InsertSheet(insert_sheet::InsertSheet { sheet }) => insert_sheet(&mut next, sheet)?,

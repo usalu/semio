@@ -12,7 +12,7 @@
 //! rule for `EngineRep`-class types — the same class of transient bridge this module's sibling
 //! (`step_text` ↔ `SemioBrepSnapshot`, in `🚪️io/🦀️.rs`) already uses for STEP.
 
-use protocol::DslValue;
+use semio_framework_value::DslValue;
 use semio_framework_plugin::{ArtifactSerializer, MeshData};
 use semio_framework_3d::brep::engine::mesh_data_from_mesh_transfer;
 use semio_framework_3d::brep::engine::{Brep, BrepKernel, GeometryHandle, Vec3};
@@ -188,7 +188,7 @@ fn default_true() -> bool {
 
 //#region 🔖️Parse
 pub(crate) fn parse_geometry(value: Option<&DslValue>) -> CadGeometry {
-    value.and_then(|entry| <CadGeometry as protocol::FromValue>::from_value(entry.clone()).ok()).unwrap_or_default()
+    value.and_then(|entry| <CadGeometry as semio_framework_value::FromValue>::from_value(entry.clone()).ok()).unwrap_or_default()
 }
 
 fn vertex_map(geometry: &CadGeometry) -> HashMap<String, [f64; 3]> {
@@ -488,7 +488,7 @@ pub fn tessellate_geometry_handle(kernel: &mut Brep, handle_id: &str, kind: &str
         return curve_mesh_from_wire(kernel, &handle);
     }
     if let Ok(mesh) = kernel.tessellate(&handle, 0.1) {
-        let data = strip_degenerate_triangles(mesh_data_from_mesh_transfer(&mesh));
+        let data = strip_degenerate_triangles(mesh_data_from_mesh_transfer(&mesh).ok()?);
         if data.indices.len() < 3 {
             return None;
         }
@@ -499,7 +499,7 @@ pub fn tessellate_geometry_handle(kernel: &mut Brep, handle_id: &str, kind: &str
 
 fn curve_mesh_from_wire(kernel: &mut Brep, wire: &GeometryHandle) -> Option<MeshData> {
     let mesh = kernel.tessellate(wire, 0.1).ok()?;
-    Some(mesh_data_from_mesh_transfer(&mesh))
+    mesh_data_from_mesh_transfer(&mesh).ok()
 }
 
 //#region 🔖️MeshImport
@@ -527,7 +527,7 @@ fn semio_mesh_snapshot_from_mesh_data(mesh: &MeshData) -> Option<SemioMeshSnapsh
 /// kernel's OBJ reader can round-trip into a solid; `None` when the mesh has no real triangles.
 fn mesh_to_obj_text(mesh: &MeshData) -> Option<String> {
     let semio_mesh = semio_mesh_snapshot_from_mesh_data(mesh)?;
-    let obj_snapshot = semio_framework_plugin::resolve_ready(SemioMeshToObj::serialize(&semio_mesh)).ok()?;
+    let obj_snapshot = ::semio_framework_async::poll::resolve_ready(SemioMeshToObj::serialize(&semio_mesh)).ok()?;
     Some(encode_obj(&obj_snapshot))
 }
 
@@ -698,13 +698,13 @@ const CONCRETE_FOREST_LEFT_SHAPE_MODEL_JSON: &str = include_str!("../../📚️e
 /// 🌲️ Face loops for the shape-pane solid in the Hexagonal Cut Concrete Forest Left play fixture.
 pub fn concrete_forest_left_shape_solid_face_loops() -> Result<semio_framework_3d::brep::engine::SolidFaceLoops, String> {
     use semio_framework_3d::brep::engine::{Brep, BrepError, GeometryHandle};
-    let root = protocol::json::parse(CONCRETE_FOREST_LEFT_SHAPE_MODEL_JSON).map_err(|error| error.to_string())?;
-    let geometry_value = root.pointer("/models/0/model/geometry").map(protocol::json::to_dsl_value);
+    let root = semio_framework_pack_json::parse(CONCRETE_FOREST_LEFT_SHAPE_MODEL_JSON, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
+    let geometry_value = root.pointer("/models/0/model/geometry").map(semio_framework_pack_json::to_dsl_value);
     let geometry = parse_geometry(geometry_value.as_ref());
     let objects_value = root
         .pointer("/models/0/model/objects")
         .and_then(|value| value.as_array())
-        .map(|entries| entries.iter().map(protocol::json::to_dsl_value).collect::<Vec<_>>())
+        .map(|entries| entries.iter().map(semio_framework_pack_json::to_dsl_value).collect::<Vec<_>>())
         .unwrap_or_default();
     let mut kernel = Brep::new();
     let imported = objects_from_host_snapshot_model(&mut kernel, &objects_value, &geometry);

@@ -49,5 +49,5 @@ export const processProcess3dMutationsTextGuardConstant = <T extends string | nu
 //#endregion 🚪️Parsers
 
 export function parseProcess3dMutationsText(value: unknown, at = "$"): Process3dMutationsText {
-  return processProcess3dMutationsTextGuardObject(value, `${at}`);
+  return processProcess3dMutationsTextGuardString(value, `${at}`);
 }

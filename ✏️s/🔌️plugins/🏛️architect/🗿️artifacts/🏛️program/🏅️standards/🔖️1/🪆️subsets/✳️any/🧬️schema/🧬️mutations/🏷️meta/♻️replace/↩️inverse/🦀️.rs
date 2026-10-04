@@ -6,6 +6,9 @@ use crate::ProgramMutation;
 use crate::ProgramSnapshot;
 
 /// ↩️ Undo by restoring the pre-state meta wholesale.
-pub fn inverse(_payload: &super::ReplaceMeta, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+pub fn inverse(_payload: &super::ReplaceMeta, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![ProgramMutation::ReplaceMeta(super::ReplaceMeta { new_meta: base.meta.clone() })]
+
+    })())
 }

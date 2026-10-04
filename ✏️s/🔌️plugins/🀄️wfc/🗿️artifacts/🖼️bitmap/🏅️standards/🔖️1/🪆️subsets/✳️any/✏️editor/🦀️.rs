@@ -30,7 +30,8 @@ use crate::editor::bitmap::commands::{pin_solution, set_active_example};
 use crate::editor::bitmap::modes::edit;
 use crate::editor::bitmap::modes::edit::tools::fill as fill_tool;
 use crate::editor::bitmap::modes::edit::windows::input::transient::{self as input_transient, BitmapInputWindowTransient, BitmapInputWindowTransientOwner};
-use crate::editor::bitmap::modes::edit::windows::input::utilities::brush::{bitmap_brush_dispatch, bitmap_brush_pointer_stroke, bitmap_brush_preview, BitmapBrushPointer, BitmapStrokePhase, BrushToolRequest};
+use crate::editor::bitmap::modes::edit::windows::input::utilities::brush::{bitmap_brush_dispatch, bitmap_brush_pointer_stroke, bitmap_brush_preview, BitmapBrushPointer, BrushToolRequest};
+use semio_framework_tool_machine::GesturePhase;
 use crate::editor::bitmap::modes::edit::windows::{input, output};
 use crate::editor::bitmap::transient::{BitmapTransient, BitmapTransientMutation, SetSolve};
 use crate::mutations::{add_palette_color, change_model, change_palette_color, change_seed, pin_pixel, remove_palette_color, resize_input, resize_output, set_input_pixels, unpin_pixel, BitmapStrokePoint};
@@ -80,7 +81,7 @@ pub const BITMAP_EDITOR_CONTROLLER_ID: &str = "s.wfc.bitmap@1/*#editor";
 /// ✏️ The editor's typed command channel — one variant per real `BitmapMutation` kind an editor UI
 /// can trigger, plus the non-document verbs this file's own doc comment accounts for. Row order IS
 /// the binary variant ordinal: appending is safe, reordering is a wire-format break.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum)]
 pub enum BitmapEditorCommand {
     #[dsl(key = "change-seed")]
     ChangeSeed { seed: u64 },
@@ -223,32 +224,32 @@ mod args_bridge {
     use super::{BitmapEditorCommand, Fault};
     use semio_framework_plugin::{FaultCode, FaultOrigin};
 
-    fn field<'a>(args: Option<&'a dsl::DslValue>, key: &str) -> Option<&'a dsl::DslValue> {
+    fn field<'a>(args: Option<&'a semio_framework_value::DslValue>, key: &str) -> Option<&'a semio_framework_value::DslValue> {
         args?.get(key)
     }
 
     /// 🔤️ A string arg — also accepts a number, so a select whose option ids are numeric reads the
     /// same whether the host sends `"3"` or `3`.
-    fn text(args: Option<&dsl::DslValue>, key: &str) -> Option<String> {
+    fn text(args: Option<&semio_framework_value::DslValue>, key: &str) -> Option<String> {
         let value = field(args, key)?;
         value.as_str().map(str::to_owned).or_else(|| value.as_u64().map(|number| number.to_string())).or_else(|| value.as_i64().map(|number| number.to_string())).or_else(|| value.as_f64().map(|number| number.to_string()))
     }
 
     /// 🔢️ A numeric arg — also accepts a numeric string, which is how select-sourced numbers arrive.
-    fn number(args: Option<&dsl::DslValue>, key: &str) -> Option<f64> {
+    fn number(args: Option<&semio_framework_value::DslValue>, key: &str) -> Option<f64> {
         let value = field(args, key)?;
         value.as_f64().or_else(|| value.as_str()?.parse().ok())
     }
 
-    fn flag(args: Option<&dsl::DslValue>, key: &str) -> Option<bool> {
+    fn flag(args: Option<&semio_framework_value::DslValue>, key: &str) -> Option<bool> {
         let value = field(args, key)?;
         value.as_bool().or_else(|| value.as_str()?.parse().ok())
     }
 
     /// 🌍️ A canvas move's world samples — `worldSamples` (`[x, y]` pairs, oldest first), else its one `worldX` /
     /// `worldY` — split into two coordinate columns; a malformed pair is skipped.
-    fn world_samples(args: Option<&dsl::DslValue>) -> (Vec<f64>, Vec<f64>) {
-        let pairs: Vec<(f64, f64)> = match field(args, "worldSamples").and_then(dsl::DslValue::as_array) {
+    fn world_samples(args: Option<&semio_framework_value::DslValue>) -> (Vec<f64>, Vec<f64>) {
+        let pairs: Vec<(f64, f64)> = match field(args, "worldSamples").and_then(semio_framework_value::DslValue::as_array) {
             Some(rows) => rows.iter().filter_map(|row| match row.as_array() {
                 Some([x, y]) => x.as_f64().zip(y.as_f64()),
                 _ => None,
@@ -260,9 +261,9 @@ mod args_bridge {
 
     /// 📍️ The stroke points of a `paint-stroke` dispatch — each `{x, y}` or `[x, y]`, non-negative whole cells —
     /// split into the command's two coordinate columns; absent points are an empty stroke.
-    fn points(args: Option<&dsl::DslValue>) -> Result<(Vec<u32>, Vec<u32>), Fault> {
+    fn points(args: Option<&semio_framework_value::DslValue>) -> Result<(Vec<u32>, Vec<u32>), Fault> {
         let invalid = || Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid"), "paint-stroke points must be {x, y} or [x, y] pairs of non-negative whole cells");
-        let cell = |value: Option<&dsl::DslValue>| value.and_then(dsl::DslValue::as_f64).filter(|value| value.is_finite() && *value >= 0.0 && value.fract() == 0.0 && *value <= f64::from(u32::MAX)).map(|value| value as u32);
+        let cell = |value: Option<&semio_framework_value::DslValue>| value.and_then(semio_framework_value::DslValue::as_f64).filter(|value| value.is_finite() && *value >= 0.0 && value.fract() == 0.0 && *value <= f64::from(u32::MAX)).map(|value| value as u32);
         let Some(rows) = field(args, "points") else { return Ok((Vec::new(), Vec::new())) };
         let rows = rows.as_array().ok_or_else(invalid)?;
         let mut columns = (Vec::with_capacity(rows.len()), Vec::with_capacity(rows.len()));
@@ -282,7 +283,7 @@ mod args_bridge {
         Fault::new(FaultOrigin::App, FaultCode::new("app.command.unsupported"), format!("wfc bitmap has no command for action '{action}'"))
     }
 
-    pub fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<BitmapEditorCommand, Fault> {
+    pub fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<BitmapEditorCommand, Fault> {
         let u32_or = |key: &str, fallback: u32| number(args, key).map_or(fallback, |value| value.max(0.0) as u32);
         let u64_or = |key: &str, fallback: u64| number(args, key).map_or(fallback, |value| value.max(0.0) as u64);
         let usize_or = |key: &str, fallback: usize| number(args, key).map_or(fallback, |value| value.max(0.0) as usize);
@@ -419,7 +420,7 @@ impl ArtifactCommandWork<EditorApp<BitmapEditor>> for BitmapCommandWork {
         BITMAP_TOOL_IDS.contains(&bitmap_command_id(command)).then_some(1)
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<BitmapEditor>>) -> Result<ArtifactCommandWorkStep<EditorApp<BitmapEditor>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<BitmapEditor>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<BitmapEditor>>, Fault> {
         if self.consumed {
             return Err(Fault::from("wfc-bitmap-retained-work-repeated"));
         }
@@ -432,7 +433,7 @@ impl ArtifactCommandWork<EditorApp<BitmapEditor>> for BitmapCommandWork {
         let view_state = input.context.and_then(|context| context.view_state.as_ref());
         let pointer = input.command.brush_pointer();
         if pointer.is_some() || matches!(input.command, BitmapEditorCommand::PaintStroke { .. }) {
-            let window = input_transient::current(input.context.and_then(|context| context.window_transient.as_ref()));
+            let window = input_transient::from_snapshot(input.context.and_then(|context| context.window_transient.as_ref()));
             let stroke = match &pointer {
                 Some(pointer) => BitmapEditor::pointer_stroke(pointer, doc.snapshot, &window),
                 None => Some((input.command.clone(), window.clone())),
@@ -441,7 +442,7 @@ impl ArtifactCommandWork<EditorApp<BitmapEditor>> for BitmapCommandWork {
             let (emit, next) = BitmapEditor::paint_stroke(&stroke, &doc, &cfg, &base)?;
             let window_transient = match view_state {
                 Some(view) if next != window => vec![input_transient::addressed(view, next)?],
-                None if next != window => return Err(Fault::from("wfc-bitmap-view-state-required")),
+                None if next != window => return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.window.view-required"), "wfc.bitmap.window.view-required")),
                 _ => Vec::new(),
             };
             return Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral: EphemeralEmit { window_transient, ..Default::default() } });
@@ -531,25 +532,6 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for BitmapCommandJobFac
 //#region 📬️StorePreparation
 /// 🏷️ Id prefix every staged bitmap document edit is minted under.
 const BITMAP_STORE_PREFIX: &str = "wfc-bitmap-artifact-retained";
-/// 🧺️ Inverse rows `resize-output` may declare: its own prior spec plus ONE `pin-pixel` per pin the
-/// shrink cascaded away. `preflight` never sees the base, so this is the structural upper bound the
-/// lane proves from the mutation alone — a document that pins more than this cannot shrink its output
-/// in one gesture, which is honest refusal rather than a half-applied cascade.
-const BITMAP_PIN_CASCADE_ROWS: usize = 1_024;
-
-/// 🧺️ Staged inverse rows one bitmap mutation may fold. Two of this artifact's ten verbs are NOT
-/// point-invertible — `resize-input` answers `resize back` PLUS a full-buffer restore, and
-/// `resize-output` answers its prior spec PLUS the pins it cascaded — so the SDK's generic
-/// `for_one_invertible_item` (a flat two rows) under-declares them and `ArtifactStore::fold_batch_item`
-/// refuses the candidate with `batched item candidate failed its exact fixed fold contract`.
-fn bitmap_inverse_rows(mutation: &BitmapMutation) -> usize {
-    match mutation {
-        BitmapMutation::ResizeInput(_) => 2,
-        BitmapMutation::ResizeOutput(_) => 1 + BITMAP_PIN_CASCADE_ROWS,
-        _ => 1,
-    }
-}
-
 fn bitmap_mutation_retained_bytes(mutation: &BitmapMutation) -> Result<usize, String> {
     protocol::OpBinary::encode_op(mutation).map(|bytes| bytes.len()).map_err(|_| format!("{BITMAP_STORE_PREFIX}-mutation-encode-failed"))
 }
@@ -559,7 +541,7 @@ fn bitmap_one_item_footprint(mutation: &BitmapMutation, maximum_bytes: usize) ->
     if retained_bytes > maximum_bytes {
         return Err(format!("{BITMAP_STORE_PREFIX}-mutation-envelope"));
     }
-    Ok(store::ArtifactStoreOneItemFootprint::for_one_item(bitmap_inverse_rows(mutation), retained_bytes))
+    Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))
 }
 
 /// 🏭️ The bitmap document lane's own one-item publication authority.
@@ -667,7 +649,7 @@ impl store::ArtifactStoreOneItemPreparation<BitmapSnapshot, BitmapMutation> for 
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -679,7 +661,7 @@ impl store::ArtifactStoreOneItemPreparation<BitmapSnapshot, BitmapMutation> for 
         }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
-                return Err(format!("{BITMAP_STORE_PREFIX}-base-retirement-rejected"));
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, format!("{BITMAP_STORE_PREFIX}-base-retirement-rejected")));
             }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -699,12 +681,12 @@ impl BitmapOneItemPreparation {
         let base = self.base.as_ref().ok_or_else(|| format!("{BITMAP_STORE_PREFIX}-base-owner-missing"))?;
         let mutation = self.mutation.as_ref().ok_or_else(|| format!("{BITMAP_STORE_PREFIX}-mutation-owner-missing"))?;
         bitmap_one_item_footprint(mutation, self.maximum_bytes)?;
-        let inverse = protocol::Mutation::inverse(mutation, base.get());
+        let inverse = protocol::Mutation::inverse(mutation, base.get()).map_err(semio_framework_value::ValueError::into_message)?;
         let diff = protocol::Mutation::diff(mutation, base.get()).into_parts().0;
         let post = protocol::MutationDiff::apply(&diff, base.get()).map_err(|error| format!("{BITMAP_STORE_PREFIX}-diff-apply-failed:{error}"))?;
         let authority = self.authority.as_ref().ok_or_else(|| format!("{BITMAP_STORE_PREFIX}-authority-missing"))?;
         let forward = self.mutation.take().expect("the staged mutation was read above");
-        let edit = bitmap_next_edit(forward, inverse, self.description.take(), authority);
+        let edit = authority.next_edit(forward, inverse);
         let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
         self.prepared = Some(prepared);
@@ -712,35 +694,6 @@ impl BitmapOneItemPreparation {
     }
 }
 
-/// 🧬️ One staged `protocol::Edit` for the bitmap document lane.
-fn bitmap_next_edit(forward: BitmapMutation, inverse: Vec<BitmapMutation>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<BitmapMutation> {
-    let id = format!("{BITMAP_STORE_PREFIX}-{}", authority.next_sequence_number());
-    protocol::Edit { line: authority.line_id().map(str::to_owned),
-        id: id.clone(),
-        actor: Some(authority.actor().to_string()),
-        forwards: vec![forward],
-        inverse,
-        mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
-            dependencies: Vec::new(),
-            base_version: authority.base_applied_edit_count() as u64,
-            author_id: Some(protocol::ActorId(authority.actor().to_string())),
-            timestamp: authority.next_clock(),
-            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-            payload_hash: None,
-            semantic_kind: None,
-            label: None,
-            group_id: None,
-            origin: Default::default(),
-            transaction: None,
-        }],
-        description, verb: None,
-        coalesce_key: None,
-        sequence_number: authority.next_sequence_number(),
-        started_at: String::new(),
-        finished_at: None,
-    }
-}
 //#endregion 📬️StorePreparation
 
 //#region 🔖️Editor
@@ -748,6 +701,29 @@ fn bitmap_next_edit(forward: BitmapMutation, inverse: Vec<BitmapMutation>, descr
 pub struct BitmapEditor;
 
 impl ArtifactEditor for BitmapEditor {
+    /// 📢️ The localized notices of this editor's user-reachable refusals (design §20.12).
+    fn fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
+        use semio_framework_ui_locale::LocalizedLabel;
+        static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 13]> = std::sync::LazyLock::new(|| {
+            [
+            ("wfc.bitmap.stroke.phase-invalid", LocalizedLabel::native("This stroke step is not known.", "Dieser Strichschritt ist unbekannt.")),
+            ("wfc.bitmap.stroke.points-invalid", LocalizedLabel::native("The stroke's cells are not valid.", "Die Zellen des Strichs sind ungültig.")),
+            ("wfc.bitmap.stroke.points-required", LocalizedLabel::native("A stroke needs at least one cell.", "Ein Strich braucht mindestens eine Zelle.")),
+            ("wfc.bitmap.stroke.window-required", LocalizedLabel::native("A streamed stroke needs an open input window.", "Ein gestreamter Strich braucht ein geöffnetes Eingabefenster.")),
+            ("wfc.bitmap.palette.unknown-color", LocalizedLabel::native("This colour is not in the palette.", "Diese Farbe ist nicht in der Palette.")),
+            ("wfc.bitmap.window.view-required", LocalizedLabel::native("This action needs an open window.", "Diese Aktion braucht ein geöffnetes Fenster.")),
+            ("wfc.bitmap.window.stale", LocalizedLabel::native("The window of this action is no longer open.", "Das Fenster dieser Aktion ist nicht mehr geöffnet.")),
+            ("wfc.bitmap.input.window-required", LocalizedLabel::native("Focus the input window for this action.", "Für diese Aktion das Eingabefenster fokussieren.")),
+            ("wfc.bitmap.input.window-kind-required", LocalizedLabel::native("This action belongs to the input window.", "Diese Aktion gehört zum Eingabefenster.")),
+            ("wfc.bitmap.output.window-required", LocalizedLabel::native("Focus the output window for this action.", "Für diese Aktion das Ausgabefenster fokussieren.")),
+            ("wfc.bitmap.output.window-kind-required", LocalizedLabel::native("This action belongs to the output window.", "Diese Aktion gehört zum Ausgabefenster.")),
+            ("wfc.bitmap.solution.contradiction", LocalizedLabel::native("A contradicting solve cannot be pinned.", "Eine widersprüchliche Lösung lässt sich nicht fixieren.")),
+            ("wfc.bitmap.solution.pixels-invalid", LocalizedLabel::native("The solved pixels cannot be read.", "Die gelösten Pixel lassen sich nicht lesen.")),
+            ]
+        });
+        &*NOTICES
+    }
+
     type Snapshot = BitmapSnapshot;
     type Mutation = BitmapMutation;
     type Config = NoConfig;
@@ -819,7 +795,7 @@ impl ArtifactEditor for BitmapEditor {
 
     /// 🫧️ The input window's transient partition — where its brush stroke in flight lives between dispatches.
     fn register_window_transient_owners(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
-        registry.register::<BitmapInputWindowTransientOwner>()
+        input_transient::register(registry)
     }
 
     /// 📨️ Every host event ends the window's open brush stroke with zero trace under the reason the tool records: a
@@ -836,7 +812,7 @@ impl ArtifactEditor for BitmapEditor {
             HostEvent::TimeTravelFrozen { .. } => ToolAbortReason::Frozen,
             HostEvent::BaseMoved { .. } => return None,
         };
-        Some(BitmapEditorCommand::PaintStroke { xs: Vec::new(), ys: Vec::new(), color: None, phase: BitmapStrokePhase::Abort(reason).as_str().map(str::to_string), reason: Some(reason.as_str().to_string()) })
+        Some(BitmapEditorCommand::PaintStroke { xs: Vec::new(), ys: Vec::new(), color: None, phase: Some("abort".to_string()), reason: Some(reason.as_str().to_string()) })
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
@@ -901,7 +877,7 @@ impl ArtifactEditor for BitmapEditor {
         }
         let tool_id = bitmap_command_id(&request.command);
         if tool_id != request.tool_id {
-            return Err(Fault::from("wfc-bitmap-command-tool-mismatch"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "WFC bitmap command does not match its exact registered tool"));
         }
         let operation = AppOperationContext {
             app_instance_id: request.app_instance_id,
@@ -935,7 +911,7 @@ impl ArtifactEditor for BitmapEditor {
         bitmap_command_id(command)
     }
 
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
         args_bridge::command_from_action(action, args)
     }
 
@@ -1002,7 +978,7 @@ impl BitmapEditor {
         let Some(mutation) = Self::command_mutation(command) else {
             return match command {
                 BitmapEditorCommand::SetActiveColor { index } => Self::set_active_color(doc, cfg, view_state, *index),
-                BitmapEditorCommand::PaintStroke { phase, .. } if phase.as_deref() == BitmapStrokePhase::Stream.as_str() => Err(Fault::from("wfc-bitmap-stroke-stream-requires-window-transient")),
+                BitmapEditorCommand::PaintStroke { phase, .. } if phase.as_deref() == Some("stream") => Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.stroke.window-required"), "wfc.bitmap.stroke.window-required")),
                 BitmapEditorCommand::PaintStroke { .. } => Self::paint_stroke(command, doc, cfg, &BitmapInputWindowTransient::default()).map(|(emit, _)| emit),
                 BitmapEditorCommand::SetActiveExample { example_id } => set_active_example::handle(&set_active_example::SetActiveExample { example_id: example_id.clone() }, doc),
                 BitmapEditorCommand::PinSolution { pixels, contradiction } => pin_solution::handle(&pin_solution::PinSolution { pixels: pixels.clone(), contradiction: *contradiction }, doc),
@@ -1077,17 +1053,17 @@ impl BitmapEditor {
     /// cancel publishes nothing on the document. Answers the emit and the window transient to publish.
     pub fn paint_stroke(command: &BitmapEditorCommand, doc: &ArtifactView<'_, BitmapSnapshot>, cfg: &ConfigView<'_, NoConfig>, window: &BitmapInputWindowTransient) -> Result<(Emit<BitmapMutation>, BitmapInputWindowTransient), Fault> {
         let BitmapEditorCommand::PaintStroke { xs, ys, color, phase, reason } = command else { return Err(Fault::from("wfc-bitmap-command-unmapped")) };
-        let phase = BitmapStrokePhase::parse(phase.as_deref(), reason.as_deref()).ok_or_else(|| Fault::from("wfc-bitmap-stroke-phase-invalid"))?;
+        let phase = GesturePhase::parse(phase.as_deref(), reason.as_deref()).ok_or_else(|| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.stroke.phase-invalid"), "wfc.bitmap.stroke.phase-invalid"))?;
         if xs.len() != ys.len() {
-            return Err(Fault::from("wfc-bitmap-stroke-points-invalid"));
+            return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.stroke.points-invalid"), "wfc.bitmap.stroke.points-invalid"));
         }
         let color = color.unwrap_or_else(|| input::config::current(cfg).active_color);
-        let opens = matches!(phase, BitmapStrokePhase::Once) || (window.brush.is_none() && matches!(phase, BitmapStrokePhase::Stream | BitmapStrokePhase::Commit));
+        let opens = matches!(phase, GesturePhase::Once) || (window.brush.is_none() && matches!(phase, GesturePhase::Stream | GesturePhase::Commit));
         if opens && color as usize >= doc.snapshot.input.palette.len() {
-            return Err(Fault::from("wfc-bitmap-unknown-palette-color"));
+            return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.palette.unknown-color"), "wfc.bitmap.palette.unknown-color"));
         }
-        if matches!(phase, BitmapStrokePhase::Once) && xs.is_empty() {
-            return Err(Fault::from("wfc-bitmap-stroke-points-required"));
+        if matches!(phase, GesturePhase::Once) && xs.is_empty() {
+            return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.stroke.points-required"), "wfc.bitmap.stroke.points-required"));
         }
         let points = xs.iter().zip(ys).map(|(x, y)| BitmapStrokePoint { x: *x, y: *y }).collect();
         let seed = doc.operation_optional().map(|operation| operation.authoring_seed.as_str()).unwrap_or_default();
@@ -1106,21 +1082,23 @@ impl BitmapEditor {
     pub fn pointer_stroke(pointer: &BitmapBrushPointer, snapshot: &BitmapSnapshot, window: &BitmapInputWindowTransient) -> Option<(BitmapEditorCommand, BitmapInputWindowTransient)> {
         let stroke = bitmap_brush_pointer_stroke(pointer, snapshot.input.width, snapshot.input.height, window.brush.is_some())?;
         let (xs, ys) = stroke.points.iter().map(|point| (point.x, point.y)).unzip();
-        let reason = match stroke.phase {
-            BitmapStrokePhase::Abort(reason) => Some(reason.as_str().to_string()),
-            _ => None,
+        let (phase, reason) = match stroke.phase {
+            GesturePhase::Once => (None, None),
+            GesturePhase::Stream => (Some("stream"), None),
+            GesturePhase::Commit => (Some("commit"), None),
+            GesturePhase::Abort(reason) => (Some("abort"), Some(reason.as_str())),
         };
         let base = if stroke.interrupt { BitmapInputWindowTransient::default() } else { window.clone() };
-        Some((BitmapEditorCommand::PaintStroke { xs, ys, color: None, phase: stroke.phase.as_str().map(str::to_string), reason }, base))
+        Some((BitmapEditorCommand::PaintStroke { xs, ys, color: None, phase: phase.map(str::to_string), reason: reason.map(str::to_string) }, base))
     }
 
     /// 🎨️ The active brush colour is per-window-instance state: refused outright when the index is
     /// not a real palette entry, so a pane can never arm a colour the document does not have.
     fn set_active_color(doc: &ArtifactView<'_, BitmapSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: Option<&semio_framework_plugin::ViewModel>, index: u32) -> Result<Emit<BitmapMutation>, Fault> {
         if index as usize >= doc.snapshot.input.palette.len() {
-            return Err(Fault::from("wfc-bitmap-unknown-palette-color"));
+            return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.palette.unknown-color"), "wfc.bitmap.palette.unknown-color"));
         }
-        let view = view_state.ok_or_else(|| Fault::from("wfc-bitmap-view-state-required"))?;
+        let view = view_state.ok_or_else(|| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.window.view-required"), "wfc.bitmap.window.view-required"))?;
         let mut config = input::config::current(cfg);
         config.active_color = index;
         let mutation: WindowConfigMutation = input::config::addressed(view, config)?;
@@ -1145,7 +1123,7 @@ pub fn create_bitmap_editor() -> semio_framework_plugin::AppDefinition {
         .window_kind_def(output::definition())
         .default_layout(edit::layout())
         .tool(fill_tool::definition())
-        .mode_tools(edit::WFC_BITMAP_MODE_EDIT, vec![semio_framework::io::resolve_ready(ToolRef::new(fill_tool::TOOL_ID))])
+        .mode_tools(edit::WFC_BITMAP_MODE_EDIT, vec![::semio_framework_async::poll::resolve_ready(ToolRef::new(fill_tool::TOOL_ID))])
         .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Load Example", "Beispiel laden"), ActionKind::Mutation, "panel-left"))
         .action_destructive("setActiveExample")
         .action_destructive("remove-palette-color")

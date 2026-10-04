@@ -92,13 +92,13 @@ mod subject {
     }
 
     fn projection(snapshot: &SemioGraphSnapshot) -> Result<Json, String> {
-        parse_json(&encode_semio_graph_snapshot_json(snapshot))
+        parse_json(&encode_semio_graph_snapshot_json(snapshot).map_err(|error|error.into_message())?)
     }
 
     /// 🚨️ A failure message that names WHAT disagreed, in the same JSON both sides project, so a red
     /// scenario is readable without re-running anything.
-    fn disagreement(what: &str, got: &SemioGraphSnapshot, expected: &SemioGraphSnapshot) -> String {
-        format!("{what}\n     got: {}\nexpected: {}", encode_semio_graph_snapshot_json(got), encode_semio_graph_snapshot_json(expected))
+    fn disagreement(what: &str, got: &SemioGraphSnapshot, expected: &SemioGraphSnapshot) -> Result<String,String> {
+        Ok(format!("{what}\n     got: {}\nexpected: {}", encode_semio_graph_snapshot_json(got).map_err(|error|error.into_message())?, encode_semio_graph_snapshot_json(expected).map_err(|error|error.into_message())?))
     }
     //#endregion 🔖️Bridges
 
@@ -123,11 +123,11 @@ mod subject {
         let mut current = base.clone();
         apply(&mut current, &mutation, &ctx.scenario.id)?;
         let mutated = projection(&current)?;
-        for step in inverse_semio_graph_mutation(&mutation, &base) {
+        for step in inverse_semio_graph_mutation(&mutation, &base).expect("valid retained mutation inverse fixture") {
             apply(&mut current, &step, &ctx.scenario.id)?;
         }
         if current != base {
-            return Err(disagreement(&format!("{}: undoing the mutation did not restore the wires graph", ctx.scenario.id), &current, &base));
+            return Err(disagreement(&format!("{}: undoing the mutation did not restore the wires graph", ctx.scenario.id), &current, &base)?);
         }
         Ok(Outcome::projection(Json::Object(vec![("mutated".to_string(), mutated), ("restored".to_string(), projection(&current)?)])))
     }
@@ -148,7 +148,7 @@ mod subject {
         let mutation = decode_semio_graph_mutation_json(&payload).map_err(|error| format!("{}: the committed mutation payload must decode: {error}", ctx.scenario.id))?;
         apply(&mut current, &mutation, &ctx.scenario.id)?;
         if current != expected {
-            return Err(disagreement(&format!("{}: the applied snapshot does not match the committed after-snapshot", ctx.scenario.id), &current, &expected));
+            return Err(disagreement(&format!("{}: the applied snapshot does not match the committed after-snapshot", ctx.scenario.id), &current, &expected)?);
         }
         projection(&current).map(Outcome::projection)
     }
@@ -168,18 +168,18 @@ mod subject {
         carrier_is_exact(printed.as_bytes(), &dsl_bytes)?;
         let reparsed = parse_semio_graph_dsl(&printed)?;
         if reparsed != parsed {
-            return Err(disagreement(&format!("identity-round-trip: printing {what} back to DSL and reparsing it lost content"), &reparsed, &parsed));
+            return Err(disagreement(&format!("identity-round-trip: printing {what} back to DSL and reparsing it lost content"), &reparsed, &parsed)?);
         }
         let pack_bytes = ctx.fixture_bytes(pack_uri)?;
         let unpacked = decode_semio_graph_pack(&pack_bytes)?;
         if unpacked != parsed {
-            return Err(disagreement(&format!("identity-round-trip: the binary twin of {what} decodes to a different graph than its text"), &unpacked, &parsed));
+            return Err(disagreement(&format!("identity-round-trip: the binary twin of {what} decodes to a different graph than its text"), &unpacked, &parsed)?);
         }
         let repacked_bytes = encode_semio_graph_pack(&parsed);
         carrier_is_exact(&repacked_bytes, &pack_bytes)?;
         let repacked = decode_semio_graph_pack(&repacked_bytes)?;
         if repacked != parsed {
-            return Err(disagreement(&format!("identity-round-trip: encoding {what} to a pack and decoding it back lost content"), &repacked, &parsed));
+            return Err(disagreement(&format!("identity-round-trip: encoding {what} to a pack and decoding it back lost content"), &repacked, &parsed)?);
         }
         let report = Json::Object(vec![
             ("document".to_string(), projection(&parsed)?),

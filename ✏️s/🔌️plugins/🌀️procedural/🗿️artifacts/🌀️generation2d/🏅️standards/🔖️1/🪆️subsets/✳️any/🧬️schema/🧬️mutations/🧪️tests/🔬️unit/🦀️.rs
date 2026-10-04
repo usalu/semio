@@ -21,7 +21,7 @@ fn round_trip(projection: &Generation2dSnapshot, mutation: &Generation2dMutation
     let mut forward = Generation2dSnapshotRead::new(projection.clone());
     apply_generation2d_mutation(&mut forward, mutation).expect("valid mutation");
     let mut restored = Generation2dSnapshotRead::new((*forward).clone());
-    for back in mutation.inverse(projection) {
+    for back in mutation.inverse(projection).expect("valid retained mutation inverse fixture") {
         apply_generation2d_mutation(&mut restored, &back).expect("valid inverse mutation");
     }
     assert_eq!(restored, *projection, "inverse() must restore the pre-mutation document");
@@ -93,7 +93,7 @@ async fn replace_widget_inverse_law() {
 fn replace_widget_on_unknown_id_is_a_noop_with_no_inverse() {
     let base = empty_generation2d_snapshot();
     let mutation = replace_widget(Widget::InputNote { id: "does-not-exist".into(), text: String::new() });
-    assert!(mutation.inverse(&base).is_empty());
+    assert!(mutation.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -108,10 +108,10 @@ async fn delete_widget_inverse_law() {
 fn delete_widget_on_unknown_id_is_rejected_with_no_inverse() {
     let base = empty_generation2d_snapshot();
     let mutation = delete_widget("does-not-exist".into());
-    assert!(mutation.inverse(&base).is_empty());
+    assert!(mutation.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
     let mut projection = Generation2dSnapshotRead::new(base.clone());
     let refused = apply_generation2d_mutation(&mut projection, &mutation).expect_err("a missing delete target must be rejected");
-    assert_eq!(refused.iter().map(|message| (message.code.0.as_str(), message.level)).collect::<Vec<_>>(), [("mutation.target-missing", protocol::Severity::Error)]);
+    assert_eq!(refused.iter().map(|message| (message.code.0.as_str(), message.level)).collect::<Vec<_>>(), [("mutation.target-missing", semio_framework_diagnostic::Severity::Error)]);
     assert_eq!(*projection, base);
 }
 
@@ -127,11 +127,11 @@ fn checked_apply_propagates_the_vocabulary_outcome_unchanged() {
         match apply_generation2d_mutation(&mut projection, &mutation) {
             Err(refused) => {
                 assert_eq!(refused, expected, "{mutation:?}");
-                assert!(refused.iter().any(|message| matches!(message.level, protocol::Severity::Error | protocol::Severity::Fatal)), "{refused:?}");
+                assert!(refused.iter().any(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)), "{refused:?}");
                 assert!(refused.iter().all(|message| protocol::outcome_code_level(&message.code.0) == Some(message.level)), "{refused:?}");
                 assert_eq!(*projection, base);
             }
-            Ok(()) => assert!(expected.iter().all(|message| !matches!(message.level, protocol::Severity::Error | protocol::Severity::Fatal)), "{mutation:?}"),
+            Ok(()) => assert!(expected.iter().all(|message| !matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)), "{mutation:?}"),
         }
     }
     retire_snapshot(base);
@@ -165,7 +165,7 @@ async fn disconnect_synapse_inverse_law() {
 fn disconnect_synapse_on_unknown_id_is_a_noop_with_no_inverse() {
     let base = empty_generation2d_snapshot();
     let mutation = disconnect_synapse("missing".into());
-    assert!(mutation.inverse(&base).is_empty());
+    assert!(mutation.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -198,7 +198,7 @@ async fn clear_widget_layout_inverse_law() {
 fn clear_widget_layout_on_unknown_id_is_a_noop_with_no_inverse() {
     let base = empty_generation2d_snapshot();
     let mutation = clear_widget_layout("missing".into());
-    assert!(mutation.inverse(&base).is_empty());
+    assert!(mutation.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -233,9 +233,9 @@ async fn rename_generation_inverse_law() {
 async fn change_generation_value_diff_absorb_law() {
     let mut base = Generation2dSnapshotRead::new(empty_generation2d_snapshot());
     base.generation.cold_builder_mut().expect("unique cold generation owner").generations.push(FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: Default::default() });
-    let d1 = change_generation_value("generation-1".into(), "q1".into(), dsl::DslValue::float(1.0)).diff(&*base).into_parts().0;
+    let d1 = change_generation_value("generation-1".into(), "q1".into(), semio_framework_value::DslValue::float(1.0)).diff(&*base).into_parts().0;
     let mid = Generation2dSnapshotRead::new(d1.apply(&*base).expect("valid mutation diff"));
-    let d2 = change_generation_value("generation-1".into(), "q1".into(), dsl::DslValue::float(2.0)).diff(&*mid).into_parts().0;
+    let d2 = change_generation_value("generation-1".into(), "q1".into(), semio_framework_value::DslValue::float(2.0)).diff(&*mid).into_parts().0;
     assert_mutation_diff_absorb_law_cold(&*base, d1, d2, retire_snapshot, retire_diff).await;
 }
 //#endregion 🔖️MutationInverseLawTests

@@ -9,7 +9,7 @@ pub fn diff(payload: &ChangeDeltaUWb, base: &Din18599Snapshot) -> protocol::Muta
         return protocol::MutationOutcome::fatal("mutation.invariant", "delta-u-wb must be a non-negative finite number.", Vec::<String>::new());
     }
     if base.delta_u_wb_w_m2k == payload.new_delta_u_wb_w_m2k {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "delta-u-wb already has this value.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "delta-u-wb already has this value.");
     }
     protocol::MutationOutcome::new(Din18599Diff { delta_u_wb_w_m2k: Some(payload.new_delta_u_wb_w_m2k), ..Default::default() })
 }

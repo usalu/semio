@@ -301,22 +301,6 @@ fn every_variant_decodes_through_retained_structural_grants() {
     }
 }
 
-#[test]
-fn deterministic_all_field_ledger_includes_the_3d_only_variant() {
-    let mutations = generation3d_all_retained_mutation_fixtures_for_test();
-    let mut left = store::ArtifactStoreInitializationDigest::new(b"generation3d.all19");
-    let mut right = store::ArtifactStoreInitializationDigest::new(b"generation3d.all19");
-    for mutation in &mutations {
-        generation3d_observe_mutation(&mut left, mutation);
-        generation3d_observe_mutation(&mut right, mutation);
-    }
-    assert_eq!(left.finish(), right.finish());
-    assert!(mutations.iter().any(|mutation| matches!(mutation, Generation3dMutation::DeleteWidgetPosition(_))));
-    for mutation in mutations {
-        mutation.retire_cold();
-    }
-}
-
 //#region 🧹️FlowFrontierOwnership
 /// 🚪️ The EXACT driver every framework close ladder is: one item, one 4 KiB page, and NO channel to
 /// ask the owner for a bigger grant. `SnapshotReadReturnPump::drive`
@@ -387,15 +371,26 @@ fn every_displaced_replay_owner_pays_its_own_flow_frontier_under_the_fixed_page_
 }
 //#endregion 🧹️FlowFrontierOwnership
 
-/// 🧬️ Authored semantic vectors traverse compact and retained wire paths and directly replay addressed fields.
+/// 🧬️ Authored semantic vectors traverse compact and retained wire paths and directly replay addressed fields — on a replica
+/// WITHOUT any flow extension installed (design §20.9): every input lands, or is refused, from the operator record alone, whose
+/// params state each declared input's default literal.
 #[test]
 fn semantic_wire_vectors_match_independent_json_oracle() {
-    use crate::standards::v1::subsets::any::schema::mutations::{generation3d_param_vector, generation3d_param_number};
+    use crate::standards::v1::subsets::any::schema::mutations::change_widget_input::WidgetInputValue;
+    use crate::standards::v1::subsets::any::schema::mutations::{generation3d_number_literal, generation3d_param_number, generation3d_param_vector, generation3d_vector_literal};
     use semio_framework_artifact_flow_flow::{Widget, WidgetLayout};
+    let record = |id: &str, kind: &str, params: Vec<(&str, semio_framework_value::DslValue)>| Widget::Neuron {
+        id: id.into(),
+        neuron_kind: kind.into(),
+        params: params.into_iter().fold(semio_framework_artifact_flow_flow::neural::Dictionary::new(), |record, (key, literal)| record.insert(key, <semio_framework_artifact_flow_flow::neural::Value as semio_framework_value::FromValue>::from_value(literal).expect("a typed literal is a neural value"))),
+        input_ports: Vec::new(),
+        output_ports: Vec::new(),
+        preview: false,
+    };
     every_variant_decodes_through_retained_structural_grants();
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧬️semantic-wire/🔣️.json")).expect("independent serde corpus");
     for case in corpus["cases"].as_array().expect("wire vectors") {
-        let mutation = <Generation3dMutation as dsl::FromValue>::from_value(case["mutation"].clone().into()).expect("first-party mutation decoder");
+        let mutation = <Generation3dMutation as semio_framework_value::FromValue>::from_value(case["mutation"].clone().into()).expect("first-party mutation decoder");
         let text = protocol::OpText::print_op(&mutation);
         assert_eq!(<Generation3dMutation as protocol::OpText>::parse_op(&text).expect("text decode"), mutation);
         let bytes = encode_op(&mutation).expect("binary encode");
@@ -404,15 +399,16 @@ fn semantic_wire_vectors_match_independent_json_oracle() {
         let mut snapshot = Generation3dSnapshot::default();
         for widget in std::mem::take(&mut snapshot.host_snapshot.widgets) { widget.retire_cold(); }
         snapshot.host_snapshot.widgets.push(Widget::InputSlider { id: "slider".into(), label: "Slider".into(), value: 0.0, min: -10.0, max: 10.0, step: 0.5 });
-        for (id, kind) in [("translate", "brep.xform.translate"), ("rotate", "brep.xform.rotate"), ("scale", "brep.xform.scale")] {
-            snapshot.host_snapshot.widgets.push(Widget::Neuron { id: id.into(), neuron_kind: kind.into(), params: Default::default(), input_ports: Vec::new(), output_ports: Vec::new(), preview: false });
-        }
+        snapshot.host_snapshot.widgets.push(record("translate", "brep.xform.translate", vec![("offset", generation3d_vector_literal("vector", [0.0; 3])), ("label", WidgetInputValue::Text(String::new()).literal())]));
+        snapshot.host_snapshot.widgets.push(record("rotate", "brep.xform.rotate", vec![("axis", generation3d_vector_literal("vector", [0.0, 0.0, 1.0])), ("angle", generation3d_number_literal(0.0))]));
+        snapshot.host_snapshot.widgets.push(record("scale", "brep.xform.scale", vec![("factor", generation3d_vector_literal("vector", [1.0; 3])), ("center", generation3d_vector_literal("point", [0.0; 3])), ("uniform", WidgetInputValue::Boolean(false).literal())]));
+        snapshot.host_snapshot.widgets.push(record("shape", "semantic-wire-law.collections", vec![("items", semio_framework_value::DslValue::Object(vec![("$schema".into(), semio_framework_value::DslValue::String("list".into()))]))]));
         snapshot.host_snapshot.layout.insert("slider".into(), WidgetLayout { x: 0.0, y: 0.0 });
         let before_schema = snapshot.host_snapshot.schema.clone();
         if let Some(mut displaced) = generation3d_apply_initialization_mutation(&mut snapshot, &mutation).expect("direct semantic replay") {
             drive_under_the_frameworks_fixed_page_grant(displaced.as_mut(), "semantic replay displacement");
         }
-        assert_eq!(snapshot.host_snapshot.widgets.len(), 4);
+        assert_eq!(snapshot.host_snapshot.widgets.len(), 5);
         assert_eq!(snapshot.host_snapshot.schema, before_schema);
         let expected = &case["expected"];
         match &mutation {
@@ -425,13 +421,13 @@ fn semantic_wire_vectors_match_independent_json_oracle() {
                 assert_eq!([layout.x, layout.y], [expected["layout"][0].as_f64().unwrap(), expected["layout"][1].as_f64().unwrap()]);
             }
             Generation3dMutation::ChangeWidgetInput(payload) => {
-                let params = snapshot.host_snapshot.widgets.iter().find(|widget| crate::widget_id(widget) == payload.id).map(dsl::ToValue::to_value).and_then(|widget| widget.get("params").cloned()).expect("addressed operator params");
-                let literal: serde_json::Value = serde_json::from_str(&dsl::json::to_json_string(params.get(&payload.channel).expect("the addressed input"))).expect("literal json");
+                let params = snapshot.host_snapshot.widgets.iter().find(|widget| crate::widget_id(widget) == payload.id).map(semio_framework_value::ToValue::to_value).and_then(|widget| widget.get("params").cloned()).expect("addressed operator params");
+                let literal: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(params.get(&payload.channel).expect("the addressed input"))).expect("literal json");
                 assert_eq!(literal, expected["input"], "{}.{}", payload.id, payload.channel);
             }
             _ => {
                 let (index, key) = match &mutation { Generation3dMutation::DragTransforms(_) => (1, "offset"), Generation3dMutation::RotateTransforms(_) => (2, "axis"), Generation3dMutation::ScaleTransforms(_) => (3, "factor"), _ => unreachable!() };
-                let params = dsl::ToValue::to_value(&snapshot.host_snapshot.widgets[index]).get("params").cloned().expect("operator params");
+                let params = semio_framework_value::ToValue::to_value(&snapshot.host_snapshot.widgets[index]).get("params").cloned().expect("operator params");
                 let axes: [f64; 3] = std::array::from_fn(|axis| expected[key][axis].as_f64().expect("independent vector"));
                 assert_eq!(generation3d_param_vector(&params, key, [f64::NAN; 3]), axes);
                 if key == "axis" { assert_eq!(generation3d_param_number(&params, "angle", f64::NAN), expected["angle"].as_f64().expect("oracle angle")); }

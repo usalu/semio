@@ -5,9 +5,12 @@ use super::stroke_extent;
 use crate::mutations::{set_input_pixels, BitmapMutation};
 use crate::schema::snapshot::{encode_base64, read_region, BitmapSnapshot};
 
-pub fn inverse(payload: &super::PaintInputStroke, base: &BitmapSnapshot) -> Vec<BitmapMutation> {
+pub fn inverse(payload: &super::PaintInputStroke, base: &BitmapSnapshot) -> Result<Vec<BitmapMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(buffer) = base.input.indices() else { return Vec::new() };
     let Some(((x, y, width, height), _)) = stroke_extent(&payload.points, base.input.width, base.input.height) else { return Vec::new() };
     let Some(prior) = read_region(&buffer, base.input.width, base.input.height, x, y, width, height) else { return Vec::new() };
     vec![set_input_pixels(x, y, width, height, encode_base64(&prior))]
+
+    })())
 }

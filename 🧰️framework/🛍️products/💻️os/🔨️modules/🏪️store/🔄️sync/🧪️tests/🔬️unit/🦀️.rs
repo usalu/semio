@@ -182,8 +182,8 @@ async fn artifact_mailbox_nested_identifier_bytes_and_backbone_one_pop_preserve_
 // extension (this crate never compiled with `--features sync` before this packet, so the
 // mismatch was never exercised at runtime). `extension_suffix` is the id's LAST segment, so
 // `"demo.demo"` keeps `__DSL_EXTENSION` == "demo", unchanged from the old bare-extension form.
-#[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, crate::os_dsl::DslArtifact)]
-#[dsl(id = "demo.demo")]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, crate::os_dsl::DslArtifact)]
+#[artifact(id = "demo.demo")]
 pub(super) struct DemoSnapshot {
     n: i32,
 }
@@ -191,20 +191,20 @@ pub(super) struct DemoSnapshot {
 
 impl crate::os_store::ArtifactSqliteSnapshot for DemoSnapshot {
     const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
-    fn to_sqlite_database(&self, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<crate::sqlite_snapshot::SqliteDatabase, String> {
+    fn to_sqlite_database(&self, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<crate::sqlite_snapshot::SqliteDatabase, semio_framework_value::ValueError> {
         use crate::sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteValue, SqliteSnapshotPhase};
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1)?;
-        let mut database = SqliteDatabase::from_schema(Self::SQLITE_SCHEMA).map_err(|error| error.to_string())?;
+        let mut database = SqliteDatabase::from_schema(Self::SQLITE_SCHEMA)?;
         database.table_mut("demo_state")?.rows.push(SqliteRow { rowid: 1, values: vec![SqliteValue::Integer(1), SqliteValue::Integer(i64::from(self.n))] });
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 1, 1)?;
         Ok(database)
     }
-    fn from_sqlite_database(database: &crate::sqlite_snapshot::SqliteDatabase, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, String> {
+    fn from_sqlite_database(database: &crate::sqlite_snapshot::SqliteDatabase, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
         use crate::sqlite_snapshot::{SqliteValue, SqliteSnapshotPhase};
         control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 0, 1)?;
         let rows = &database.table("demo_state")?.rows;
-        if rows.len() != 1 || rows[0].rowid != 1 || rows[0].integer(0)? != 1 { return Err("demo SQLite snapshot requires one state row".into()); }
-        let snapshot = Self { n: i32::try_from(rows[0].integer(1)?).map_err(|error| error.to_string())? };
+        if rows.len() != 1 || rows[0].rowid != 1 || rows[0].integer(0)? != 1 { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"demo SQLite snapshot requires one state row")); }
+        let snapshot = Self { n: i32::try_from(rows[0].integer(1)?).map_err(|_|semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"demo state n exceeds i32"))? };
         control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 1, 1)?;
         Ok(snapshot)
     }
@@ -215,16 +215,16 @@ impl ArtifactDsl for DemoSnapshot {
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    fn parse_dsl(text: &str) -> Result<Self, crate::os_dsl::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let record = crate::os_dsl::parse(body, &Self::__dsl_spec(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document })?;
+        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
-        let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
         let envelope = semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_format::Component::Dsl, 1).expect("valid envelope_id");
         semio_format::wrap_text(&envelope, &body)
     }
@@ -238,18 +238,18 @@ impl ArtifactPack for DemoSnapshot {
 
     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_format::Component::Pack, 1).map_err(|e| PackError::Schema(e.to_string()))?;
+        let envelope = semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_format::Component::Pack, 1).map_err(|error| PackError::from(error.into_value_error()))?;
         Ok(semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
-        let (envelope, inner) = semio_format::unwrap_binary(bytes).map_err(|e| PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = semio_format::unwrap_binary(bytes).map_err(|error| PackError::from(error.into_value_error()))?;
         if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1) {
-            return Err(PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(|err| PackError::Schema(err.to_string()))
+        Self::__dsl_from_record(&record).map_err(crate::os_store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<crate::os_dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -271,7 +271,7 @@ impl MutationDiff<DemoSnapshot> for DemoDiff {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, crate::os_dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_dsl_record_derive::DslEnum)]
 #[serde(tag = "operation")]
 #[value(tag = "operation")]
 pub(super) enum DemoMutation {
@@ -280,29 +280,29 @@ pub(super) enum DemoMutation {
 }
 
 impl OpText for DemoMutation {
-    fn parse_op(line: &str) -> Result<Self, crate::os_dsl::TextError> {
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = crate::os_dsl::parse(line, &(spec_fn.ordinary)(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
-                return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = semio_framework_dsl_record::parse(line, &(spec_fn.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?;
+                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown operation line '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
     }
     fn print_op(&self) -> String {
-        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        crate::os_dsl::print(&record, &(spec_fn.ordinary)(), crate::os_dsl::JoinMode::Inline)
+        semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline)
     }
 }
 
 impl OpBinary for DemoMutation {
     fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
-        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let (idx, (_, spec_fn)) = variants.iter().enumerate().find(|(_, (k, _))| k == &keyword).expect("variant spec must exist");
         let body = crate::os_pack::encode_record_body(&(spec_fn.ordinary)(), &record, &PackEncodeOptions::default()).map_err(|e| crate::os_spr::ProtocolError::Malformed { what: "op pack", offset: 0, detail: e.to_string() })?;
         let mut out = Vec::with_capacity(2 + body.len());
@@ -318,13 +318,13 @@ impl OpBinary for DemoMutation {
             return Err(crate::os_spr::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op binary format: {format}") });
         }
         let ordinal = reader.read_u8().map_err(|e| crate::os_spr::ProtocolError::Malformed { what: "op ordinal", offset: 1, detail: e.to_string() })?;
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or_else(|| crate::os_spr::ProtocolError::Malformed { what: "op ordinal", offset: 1, detail: format!("op ordinal {ordinal} out of range for {}", variants.len()) })?;
         let spec = (spec_fn.ordinary)();
         let body = &bytes[reader.position()..];
         let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
         let offset = reader.position() as u64;
-        <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset, detail: error.to_string() })
+        <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset, detail: error.to_string() })
     }
 }
 
@@ -359,9 +359,12 @@ impl Mutation<DemoSnapshot> for DemoMutation {
         })
     }
 
-    fn inverse(&self, snapshot: &DemoSnapshot) -> Vec<Self> {
+    fn inverse(&self, snapshot: &DemoSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![DemoMutation::SetN { n: snapshot.n }]
-    }
+    
+    })())
+}
 
     fn may_emit_foreign_steps(&self) -> bool {
         false
@@ -870,7 +873,6 @@ async fn sample_operation_envelope(edit_id: &str, n: i32) -> MutationEnvelope {
         inverse: vec![DemoMutation::SetN { n: 0 }],
         mutation_meta: Vec::new(),
         description: None, verb: None,
-        coalesce_key: None,
         sequence_number: 1,
         started_at: "0".into(),
         finished_at: None,
@@ -1350,7 +1352,6 @@ async fn op_envelope_from_stored_edit_round_trips_through_ingest() {
         actor: Some("peer".into()),
         started_at: "0".into(),
         finished_at: None,
-        coalesce_key: None,
         description: None, verb: None,
         ops: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 42 }.encode_op().expect("encode")) }],
         inverse: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 0 }.encode_op().expect("encode")) }],
@@ -1486,7 +1487,6 @@ mod actor_tests {
             actor: Some("peer".into()),
             started_at: "0".into(),
             finished_at: None,
-            coalesce_key: None,
             description: None, verb: None,
             ops: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 42 }.encode_op().expect("encode")) }],
             inverse: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 1 }.encode_op().expect("encode")) }],
@@ -2660,7 +2660,7 @@ async fn a_refused_supersession_is_retracted_as_a_typed_refusal() {
     assert!(store_bound.contains(&BackboneMessage::Retract { mutation_ids: vec![transition.mutation_id.0.clone()] }), "the store's own channel carries the retraction: {store_bound:?}");
     assert!(matches!(outcome, Some(CommandAckOutcome::Rejected { .. })), "the batch's own outcome is still reported: {outcome:?}");
     let refusal = refusal.expect("a refused transition is a typed refusal the runtime can show");
-    assert_eq!((refusal.code.0.as_str(), refusal.level, refusal.target.clone()), (HISTORY_TRANSITION_REFUSED_CODE, crate::os_dsl::Severity::Error, vec![transition.mutation_id.0.clone()]));
+    assert_eq!((refusal.code.0.as_str(), refusal.level, refusal.target.clone()), (HISTORY_TRANSITION_REFUSED_CODE, semio_framework_diagnostic::Severity::Error, vec![transition.mutation_id.0.clone()]));
 
     assert!(!std::iter::from_fn(|| event_rx.try_recv().ok()).any(|event| matches!(event, ArtifactEvent::RebootstrapRequired { .. })), "a refusal asks for no rebuild");
     let (_, _, _, _, _, _, _, outbox, rebootstrap) = actor.bootstrap_test_state();

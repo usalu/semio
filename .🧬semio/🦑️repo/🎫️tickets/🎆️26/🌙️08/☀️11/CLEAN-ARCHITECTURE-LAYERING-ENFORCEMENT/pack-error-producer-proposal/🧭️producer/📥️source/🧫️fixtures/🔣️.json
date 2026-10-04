@@ -1,0 +1,310 @@
+{
+  "cases": [
+    {
+      "cause": {
+        "type": "value",
+        "kind": "invalidValue",
+        "reason": "same deliberately misleading canceled/work/allocation prose"
+      },
+      "code": "retained-pack.source-closed",
+      "offset": 7,
+      "expected": {
+        "kind": "invalidValue",
+        "reason": "same deliberately misleading canceled/work/allocation prose",
+        "allocatedBytes": null
+      }
+    },
+    {
+      "cause": {
+        "type": "value",
+        "kind": "canceled",
+        "reason": "same deliberately misleading canceled/work/allocation prose"
+      },
+      "code": "retained-pack.source-closed",
+      "offset": 7,
+      "expected": {
+        "kind": "canceled",
+        "reason": "same deliberately misleading canceled/work/allocation prose",
+        "allocatedBytes": null
+      }
+    },
+    {
+      "cause": {
+        "type": "value",
+        "kind": "ownershipLimit",
+        "reason": "same deliberately misleading canceled/work/allocation prose"
+      },
+      "code": "retained-pack.source-closed",
+      "offset": 7,
+      "expected": {
+        "kind": "ownershipLimit",
+        "reason": "same deliberately misleading canceled/work/allocation prose",
+        "allocatedBytes": null
+      }
+    },
+    {
+      "cause": {
+        "type": "value",
+        "kind": "allocationFailed",
+        "reason": "same deliberately misleading canceled/work/allocation prose"
+      },
+      "code": "retained-pack.source-closed",
+      "offset": 7,
+      "expected": {
+        "kind": "allocationFailed",
+        "reason": "same deliberately misleading canceled/work/allocation prose",
+        "allocatedBytes": null
+      }
+    },
+    {
+      "cause": {
+        "type": "value",
+        "kind": "workLimit",
+        "reason": "same deliberately misleading canceled/work/allocation prose"
+      },
+      "code": "retained-pack.source-closed",
+      "offset": 7,
+      "expected": {
+        "kind": "workLimit",
+        "reason": "same deliberately misleading canceled/work/allocation prose",
+        "allocatedBytes": null
+      }
+    },
+    {
+      "cause": {
+        "type": "value",
+        "kind": "depthLimit",
+        "reason": "same deliberately misleading canceled/work/allocation prose"
+      },
+      "code": "retained-pack.source-closed",
+      "offset": 7,
+      "expected": {
+        "kind": "depthLimit",
+        "reason": "same deliberately misleading canceled/work/allocation prose",
+        "allocatedBytes": null
+      }
+    },
+    {
+      "cause": {
+        "type": "value",
+        "kind": "unsupportedOwner",
+        "reason": "same deliberately misleading canceled/work/allocation prose"
+      },
+      "code": "retained-pack.source-closed",
+      "offset": 7,
+      "expected": {
+        "kind": "unsupportedOwner",
+        "reason": "same deliberately misleading canceled/work/allocation prose",
+        "allocatedBytes": null
+      }
+    },
+    {
+      "cause": {
+        "type": "value",
+        "kind": "invariantViolated",
+        "reason": "same deliberately misleading canceled/work/allocation prose"
+      },
+      "code": "retained-pack.source-closed",
+      "offset": 7,
+      "expected": {
+        "kind": "invariantViolated",
+        "reason": "same deliberately misleading canceled/work/allocation prose",
+        "allocatedBytes": null
+      }
+    },
+    {
+      "cause": {
+        "type": "paged",
+        "kind": "ownershipLimit",
+        "reason": "same deliberately misleading canceled/work/allocation prose"
+      },
+      "code": "retained-pack.source-closed",
+      "offset": 7,
+      "expected": {
+        "kind": "ownershipLimit",
+        "reason": "same deliberately misleading canceled/work/allocation prose",
+        "allocatedBytes": null
+      }
+    },
+    {
+      "cause": {
+        "type": "allocation",
+        "kind": "ownershipLimit",
+        "reason": "same deliberately misleading canceled/work/allocation prose",
+        "allocatedBytes": 0
+      },
+      "code": "retained-pack.source-closed",
+      "offset": 7,
+      "expected": {
+        "kind": "ownershipLimit",
+        "reason": "same deliberately misleading canceled/work/allocation prose",
+        "allocatedBytes": 0
+      }
+    },
+    {
+      "cause": {
+        "type": "allocation",
+        "kind": "ownershipLimit",
+        "reason": "same deliberately misleading canceled/work/allocation prose",
+        "allocatedBytes": 64
+      },
+      "code": "retained-pack.source-closed",
+      "offset": 7,
+      "expected": {
+        "kind": "ownershipLimit",
+        "reason": "same deliberately misleading canceled/work/allocation prose",
+        "allocatedBytes": 64
+      }
+    },
+    {
+      "cause": {
+        "type": "paged",
+        "kind": "allocationFailed",
+        "reason": "same deliberately misleading canceled/work/allocation prose"
+      },
+      "code": "retained-pack.source-closed",
+      "offset": 7,
+      "expected": {
+        "kind": "allocationFailed",
+        "reason": "same deliberately misleading canceled/work/allocation prose",
+        "allocatedBytes": null
+      }
+    },
+    {
+      "cause": {
+        "type": "allocation",
+        "kind": "allocationFailed",
+        "reason": "same deliberately misleading canceled/work/allocation prose",
+        "allocatedBytes": 0
+      },
+      "code": "retained-pack.source-closed",
+      "offset": 7,
+      "expected": {
+        "kind": "allocationFailed",
+        "reason": "same deliberately misleading canceled/work/allocation prose",
+        "allocatedBytes": 0
+      }
+    },
+    {
+      "cause": {
+        "type": "allocation",
+        "kind": "allocationFailed",
+        "reason": "same deliberately misleading canceled/work/allocation prose",
+        "allocatedBytes": 64
+      },
+      "code": "retained-pack.source-closed",
+      "offset": 7,
+      "expected": {
+        "kind": "allocationFailed",
+        "reason": "same deliberately misleading canceled/work/allocation prose",
+        "allocatedBytes": 64
+      }
+    },
+    {
+      "cause": {
+        "type": "paged",
+        "kind": "invariantViolated",
+        "reason": "same deliberately misleading canceled/work/allocation prose"
+      },
+      "code": "retained-pack.source-closed",
+      "offset": 7,
+      "expected": {
+        "kind": "invariantViolated",
+        "reason": "same deliberately misleading canceled/work/allocation prose",
+        "allocatedBytes": null
+      }
+    },
+    {
+      "cause": {
+        "type": "allocation",
+        "kind": "invariantViolated",
+        "reason": "same deliberately misleading canceled/work/allocation prose",
+        "allocatedBytes": 0
+      },
+      "code": "retained-pack.source-closed",
+      "offset": 7,
+      "expected": {
+        "kind": "invariantViolated",
+        "reason": "same deliberately misleading canceled/work/allocation prose",
+        "allocatedBytes": 0
+      }
+    },
+    {
+      "cause": {
+        "type": "allocation",
+        "kind": "invariantViolated",
+        "reason": "same deliberately misleading canceled/work/allocation prose",
+        "allocatedBytes": 64
+      },
+      "code": "retained-pack.source-closed",
+      "offset": 7,
+      "expected": {
+        "kind": "invariantViolated",
+        "reason": "same deliberately misleading canceled/work/allocation prose",
+        "allocatedBytes": 64
+      }
+    }
+  ],
+  "admissions": [
+    {
+      "state": {
+        "fault": true,
+        "closed": true,
+        "complete": true,
+        "pending": true,
+        "inflaterBackpressure": true
+      },
+      "expected": "fault"
+    },
+    {
+      "state": {
+        "fault": false,
+        "closed": true,
+        "complete": true,
+        "pending": true,
+        "inflaterBackpressure": false
+      },
+      "expected": "closed"
+    },
+    {
+      "state": {
+        "fault": false,
+        "closed": false,
+        "complete": true,
+        "pending": true,
+        "inflaterBackpressure": false
+      },
+      "expected": "complete"
+    },
+    {
+      "state": {
+        "fault": false,
+        "closed": false,
+        "complete": false,
+        "pending": true,
+        "inflaterBackpressure": true
+      },
+      "expected": "pending"
+    },
+    {
+      "state": {
+        "fault": false,
+        "closed": false,
+        "complete": false,
+        "pending": false,
+        "inflaterBackpressure": true
+      },
+      "expected": "inflaterBackpressure"
+    },
+    {
+      "state": {
+        "fault": false,
+        "closed": false,
+        "complete": false,
+        "pending": false,
+        "inflaterBackpressure": false
+      },
+      "expected": "ready"
+    }
+  ]
+}

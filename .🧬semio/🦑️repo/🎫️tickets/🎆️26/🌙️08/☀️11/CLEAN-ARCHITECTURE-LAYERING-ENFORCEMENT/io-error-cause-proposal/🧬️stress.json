@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "minItems": 3,
+  "maxItems": 3,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "unit",
+      "repeat",
+      "maximumBytes",
+      "cancelAfterCompleted",
+      "expectedKind"
+    ],
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "unit": {
+        "type": "string",
+        "minLength": 1
+      },
+      "repeat": {
+        "type": "integer",
+        "minimum": 20000
+      },
+      "maximumBytes": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "cancelAfterCompleted": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "expectedKind": {
+        "enum": [
+          "success",
+          "canceled",
+          "ownershipLimit"
+        ]
+      }
+    }
+  }
+}

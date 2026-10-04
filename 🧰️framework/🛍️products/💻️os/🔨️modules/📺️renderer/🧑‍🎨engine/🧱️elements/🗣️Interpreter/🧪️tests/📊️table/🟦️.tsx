@@ -97,6 +97,22 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(intents[1].args).toEqual({ row: 12, revision: "0123456789abcdef" });
     });
 
+    it("discards a cell draft on Escape without row focus committing it on blur", () => {
+      const intents: any[] = [];
+      const draftFixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(source.url)), "../../🧫️fixtures/♿️editable-controls/🔣️.json"), "utf8"));
+      mount((intent) => intents.push(intent));
+      const name = screen.getByRole("textbox", { name: "Name" }) as HTMLInputElement;
+      const published = name.value;
+      name.focus();
+      fireEvent.change(name, { target: { value: draftFixture.cases[0].draft } });
+      fireEvent.keyDown(name, { key: "Escape" });
+      expect(name.value).toBe(published);
+      expect(intents).toHaveLength(draftFixture.commitCounts.untouched);
+      expect(document.activeElement).toBe(name);
+      fireEvent.blur(name);
+      expect(intents).toHaveLength(draftFixture.commitCounts.untouched);
+    });
+
     it("scrolls a row the host has not streamed into view and reports the window it needs", async () => {
       const reports: any[] = [];
       mount(() => {}, { bodyKey: "framework.window.table", openStates: {}, setOpen: () => {}, reportWindows: (requests: unknown, viewportRows: number) => reports.push({ requests, viewportRows }) });
@@ -239,7 +255,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       fireEvent.keyDown(tableRow, { key: "Enter" });
       for (const action of rowTarget.rowActions) {
         const button = screen.getByRole("button", { name: `${action.label}: Studio` }) as HTMLButtonElement;
-        expect(button.disabled).toBe(action.disabled === true);
+        expect([button.getAttribute("aria-disabled") === "true", button.disabled]).toEqual([action.disabled === true, false]);
         fireEvent.click(button);
       }
       const answered = (intents: any[]) => [...dispatched(intents), ...rowTarget.rowActions.filter((action: any) => action.disabled === true).map((action: any) => ({ verb: action.verb, refusal: "disabled" }))];

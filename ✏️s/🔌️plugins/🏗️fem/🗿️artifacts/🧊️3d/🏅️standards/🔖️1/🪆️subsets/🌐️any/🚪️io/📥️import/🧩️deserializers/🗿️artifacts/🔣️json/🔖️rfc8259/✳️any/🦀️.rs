@@ -14,9 +14,9 @@ pub const JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", stand
 
 /// 🔣️ Parses rfc8259 text into this subset's snapshot.
 pub fn from_json_text(text: &str) -> Result<Fem3dSnapshot, IoError> {
-    let value = parse_json_text(text).map_err(|error| IoError { message: format!("json→fem3d: parse failed: {error}"), diagnostics: Vec::new() })?;
-    let raw: dsl::DslValue = JsonSnapshot::from_value(value).to_serde_value().into();
-    dsl::FromValue::from_value(raw).map_err(|error| IoError { message: format!("json→fem3d: {error}"), diagnostics: Vec::new() })
+    let value = parse_json_text(text).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("json→fem3d: parse failed: {error}"))))?;
+    let raw: semio_framework_value::DslValue = JsonSnapshot::from_value(value).to_serde_value().into();
+    semio_framework_value::FromValue::from_value(raw).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("json→fem3d: {error}"))))
 }
 
 /// 🧩️ `s.stdio.json@rfc8259/*` → `s.fem.fem3d@1/*`.
@@ -33,7 +33,7 @@ impl Deserializer<Fem3dSnapshot> for JsonIntoFem3d {
     }
     async fn deserialize(payload: &IoPayload) -> IoResult<Fem3dSnapshot> {
         let IoPayload::Text(text) = payload else {
-            return Err(IoError { message: "json→fem3d: expected a text json payload".to_string(), diagnostics: Vec::new() });
+            return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "json→fem3d: expected a text json payload".to_string())));
         };
         Ok(IoOutcome::clean(from_json_text(text)?))
     }

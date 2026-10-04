@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ReorderAnnualScheduleRules, base: &EnergyModelSnaps
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Annual schedule {} has {} rules, so {} .. {} is not a move.", payload.id.0, existing.rules.len(), payload.from, payload.to), [payload.id.0.to_string()]);
     }
     if payload.from == payload.to {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Annual schedule {} rule {} is already at that position.", payload.id.0, payload.from));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Annual schedule {} rule {} is already at that position.", payload.id.0, payload.from));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.schedules.annual.iter_mut().find(|item| item.id == payload.id) {

@@ -1,0 +1,155 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/xlsx/ecma-376/base/cell-vacancy-address.json",
+  "title": "XlsxCellVacancyAddress",
+  "description": "A vacant SpreadsheetML coordinate inside a revision-bound canonical sheetData element.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "worksheet",
+    "row",
+    "column"
+  ],
+  "properties": {
+    "worksheet": {
+      "$ref": "#/$defs/XlsxWorksheetAddress",
+      "x-semio-ui": {
+        "label": {
+          "en": "Worksheet location",
+          "de": "Arbeitsblattposition"
+        },
+        "description": {
+          "en": "Revision-bound sheetData element that owns the vacant cell.",
+          "de": "Revisionsgebundenes sheetData-Element, das die freie Zelle enthält."
+        }
+      }
+    },
+    "row": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1048576,
+      "x-semio-ui": {
+        "label": {
+          "en": "Row",
+          "de": "Zeile"
+        },
+        "description": {
+          "en": "One-based worksheet row for the new cell.",
+          "de": "Einsbasierte Arbeitsblattzeile für die neue Zelle."
+        }
+      }
+    },
+    "column": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 16383,
+      "x-semio-ui": {
+        "label": {
+          "en": "Column",
+          "de": "Spalte"
+        },
+        "description": {
+          "en": "Zero-based worksheet column for the new cell.",
+          "de": "Nullbasierte Arbeitsblattspalte für die neue Zelle."
+        }
+      }
+    }
+  },
+  "$defs": {
+    "XlsxWorksheetAddress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "partPath",
+        "nodePath",
+        "namespaceUri",
+        "localName",
+        "revision"
+      ],
+      "properties": {
+        "partPath": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^/\\\\]+(?:/[^/\\\\]+)*$",
+          "not": {
+            "pattern": "(^|/)\\.{1,2}(/|$)"
+          },
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Worksheet part",
+              "de": "Arbeitsblatt-Teil"
+            },
+            "description": {
+              "en": "Package part name of the worksheet, e.g. xl/worksheets/sheet1.xml.",
+              "de": "Teilname des Arbeitsblatts im Paket, z. B. xl/worksheets/sheet1.xml."
+            }
+          }
+        },
+        "nodePath": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Sheet data path",
+              "de": "Tabellendatenpfad"
+            },
+            "description": {
+              "en": "Child indices from the worksheet root to the sheetData element.",
+              "de": "Kindindizes vom Arbeitsblatt-Wurzelelement bis zum sheetData-Element."
+            }
+          }
+        },
+        "namespaceUri": {
+          "enum": [
+            "http://schemas.openxmlformats.org/spreadsheetml/2006/main",
+            "http://purl.oclc.org/ooxml/spreadsheetml/main"
+          ],
+          "x-semio-ui": {
+            "widget": "segmented",
+            "label": {
+              "en": "SpreadsheetML namespace",
+              "de": "SpreadsheetML-Namensraum"
+            },
+            "description": {
+              "en": "Namespace of the worksheet XML: Transitional or Strict.",
+              "de": "Namensraum des Arbeitsblatt-XML: Transitional oder Strict."
+            },
+            "options": {
+              "http://schemas.openxmlformats.org/spreadsheetml/2006/main": {
+                "en": "Transitional (ECMA-376)",
+                "de": "Transitional (ECMA-376)"
+              },
+              "http://purl.oclc.org/ooxml/spreadsheetml/main": {
+                "en": "Strict (ISO/IEC 29500)",
+                "de": "Strict (ISO/IEC 29500)"
+              }
+            }
+          }
+        },
+        "localName": {
+          "const": "sheetData"
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{16}$",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Worksheet revision",
+              "de": "Arbeitsblattrevision"
+            },
+            "description": {
+              "en": "Canonical revision guard for the addressed sheetData element.",
+              "de": "Kanonische Revisionssicherung für das adressierte sheetData-Element."
+            }
+          }
+        }
+      }
+    }
+  }
+}

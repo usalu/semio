@@ -219,7 +219,7 @@ mod subject {
         let operation = operation_of(&ctx.doc_json()?)?;
         let base = decode_ifc2x3(&input)?;
         let mutated = encoded(&input, &applied(base.clone(), std::slice::from_ref(&operation))?)?;
-        outcome(encode_ifc2x3(&applied(decode_ifc2x3(&mutated)?, &mutation_inverse(&operation, &base))?)?)
+        outcome(encode_ifc2x3(&applied(decode_ifc2x3(&mutated)?, &mutation_inverse(&operation, &base).expect("valid retained mutation inverse fixture"))?)?)
     }
 
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {

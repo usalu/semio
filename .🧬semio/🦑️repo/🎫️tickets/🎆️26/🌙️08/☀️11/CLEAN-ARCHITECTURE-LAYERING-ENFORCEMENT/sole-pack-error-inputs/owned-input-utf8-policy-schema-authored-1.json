@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "cause", "condition", "kind", "message", "messageClassification", "errorPayloadRecovery", "cases"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "cause": { "const": "std::string::FromUtf8Error" },
+    "condition": { "const": "OwnedUTF8ConversionRejected" },
+    "kind": { "const": "InvalidValue" },
+    "message": { "const": "Original Decoder Display" },
+    "messageClassification": { "const": false },
+    "errorPayloadRecovery": { "const": false },
+    "cases": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "input", "callerOriginalRetained"],
+        "properties": {
+          "id": { "enum": ["tsv-envelope", "csv-envelope", "txt-envelope", "txt-binary", "step-binary"] },
+          "input": { "enum": ["inner", "from.bytes.clone()"] },
+          "callerOriginalRetained": { "type": "boolean" }
+        },
+        "anyOf": [
+          {
+            "properties": {
+              "id": { "enum": ["tsv-envelope", "csv-envelope", "txt-envelope"] },
+              "input": { "const": "inner" },
+              "callerOriginalRetained": { "const": false }
+            }
+          },
+          {
+            "properties": {
+              "id": { "enum": ["txt-binary", "step-binary"] },
+              "input": { "const": "from.bytes.clone()" },
+              "callerOriginalRetained": { "const": true }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,9 +1,9 @@
 //! 🎥️ Actual native ownership laws before handwritten relational opt-in.
 use super::ShootingSnapshot;
-fn fixture()->ShootingSnapshot{let laws:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap();store::json::from_json_str(&laws["snapshot"].to_string()).unwrap()}
+fn fixture()->ShootingSnapshot{let laws:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap();semio_framework_pack_json::from_json_str(&laws["snapshot"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
 
 #[test]
-fn sqlite_snapshot_shooting_neutral_native_json_has_exact_optional_field_presence(){let laws:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap();let snapshot=fixture();let actual:serde_json::Value=serde_json::from_str(&store::json::to_json_string(&snapshot)).unwrap();assert_eq!(json_numeric_semantics(actual),json_numeric_semantics(laws["snapshot"].clone()));}
+fn sqlite_snapshot_shooting_neutral_native_json_has_exact_optional_field_presence(){let laws:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap();let snapshot=fixture();let actual:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&snapshot)).unwrap();assert_eq!(json_numeric_semantics(actual),json_numeric_semantics(laws["snapshot"].clone()));}
 
 fn json_numeric_semantics(value:serde_json::Value)->serde_json::Value{match value{serde_json::Value::Number(number)=>serde_json::Value::Number(serde_json::Number::from_f64(number.as_f64().unwrap()).unwrap()),serde_json::Value::Array(values)=>serde_json::Value::Array(values.into_iter().map(json_numeric_semantics).collect()),serde_json::Value::Object(values)=>serde_json::Value::Object(values.into_iter().map(|(key,value)|(key,json_numeric_semantics(value))).collect()),value=>value}}
 
@@ -40,7 +40,7 @@ fn set_geometry(snapshot:&mut ShootingSnapshot,value:f64){let a=&mut snapshot.as
 
 #[test]
 fn sqlite_snapshot_shooting_queryable_all_owned_fields_and_complete_optional_presence(){
- let expected=fixture();let d=database(&expected);assert_eq!(d.tables.len(),6);assert_eq!(restore(&import_sqlite_database(&file(&expected),SqliteDatabaseLimits::default(),&mut |_|true).unwrap()),expected);assert_eq!(store::json::to_json_string(&restore(&d)),store::json::to_json_string(&expected));
+ let expected=fixture();let d=database(&expected);assert_eq!(d.tables.len(),6);assert_eq!(restore(&import_sqlite_database(&file(&expected),SqliteDatabaseLimits::default(),&mut |_|true).unwrap()),expected);assert_eq!(semio_framework_pack_json::to_json_string(&restore(&d)),semio_framework_pack_json::to_json_string(&expected));
  let mut absent=expected.clone();absent.assets.clear();absent.saved_cameras.clear();absent.shots.clear();absent.emblem=None;assert_eq!(restore(&database(&absent)),absent);assert!(database(&absent).table("shooting_emblem").unwrap().rows.is_empty());
 }
 
@@ -62,7 +62,7 @@ fn sqlite_snapshot_shooting_independent_queries_and_surrogate_edits_retain_seman
 #[test]
 fn sqlite_snapshot_shooting_independent_malformed_sql_refuses_owned_shapes(){
  use std::{io::Write,process::{Command,Stdio}};let bytes=file(&fixture());let script=r#"import{Database}from'bun:sqlite';const input=JSON.parse(await Bun.stdin.text());const db=Database.deserialize(new Uint8Array(input.bytes));db.run('PRAGMA ignore_check_constraints=ON');db.run(input.sql);await Bun.write(Bun.stdout,db.serialize());db.close();"#;
- for sql in laws()["malformedSql"].as_array().unwrap(){let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(serde_json::json!({"bytes":bytes,"sql":sql}).to_string().as_bytes()).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{sql}: {}",String::from_utf8_lossy(&output.stderr));assert!(import_sqlite_database(&output.stdout,SqliteDatabaseLimits::default(),&mut |_|true).map_err(|e|e.to_string()).and_then(|d|ShootingSnapshot::from_sqlite_database(&d,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()))).is_err(),"{sql}");}
+ for sql in laws()["malformedSql"].as_array().unwrap(){let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(serde_json::json!({"bytes":bytes,"sql":sql}).to_string().as_bytes()).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{sql}: {}",String::from_utf8_lossy(&output.stderr));assert!(import_sqlite_database(&output.stdout,SqliteDatabaseLimits::default(),&mut |_|true).and_then(|d|ShootingSnapshot::from_sqlite_database(&d,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()))).is_err(),"{sql}");}
 }
 
 #[test]

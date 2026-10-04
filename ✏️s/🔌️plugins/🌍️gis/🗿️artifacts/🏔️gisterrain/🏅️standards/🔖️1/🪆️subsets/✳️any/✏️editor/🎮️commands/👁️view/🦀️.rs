@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 pub mod set_camera {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, ToValue, FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue)]
     #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "camera")]
     pub struct SetCamera {

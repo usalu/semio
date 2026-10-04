@@ -57,7 +57,7 @@ impl ArtifactSerializer for SemioCadToDwg {
     const INTO: Dialect = INTO_DIALECT;
 
     async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        DwgSnapshot::from_drawing(&cad_to_dwg_drawing(from)).map_err(store::PackError::Schema)
+        DwgSnapshot::from_drawing(&cad_to_dwg_drawing(from)).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))
     }
 }
 //#endregion 🔖️Serializer

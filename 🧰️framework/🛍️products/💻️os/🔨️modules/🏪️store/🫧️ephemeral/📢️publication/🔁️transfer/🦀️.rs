@@ -1,10 +1,8 @@
 //! 🔁️ Ownership-only ephemeral replacement with domain admission and bounded retirement.
 
 use super::{
-    ArtifactEphemeralOneItemPreparation, ArtifactEphemeralOneItemPreparationFactory,
-    ArtifactEphemeralOneItemPreparationRequest, ArtifactOwnedValueRetirementFactory, ArtifactStoreOneItemCheckpoint,
-    ArtifactStoreOneItemFootprint, ArtifactStoreOneItemGrant,
-    SnapshotRetirementStep,
+    ArtifactEphemeralOneItemPreparation, ArtifactEphemeralOneItemPreparationFactory, ArtifactEphemeralOneItemPreparationRequest, ArtifactOwnedValueRetirementFactory, ArtifactStoreOneItemCheckpoint, ArtifactStoreOneItemFootprint,
+    ArtifactStoreOneItemGrant, SnapshotRetirementStep,
 };
 use std::sync::Arc;
 
@@ -47,9 +45,7 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactEphemeralOneItemPrepar
         if self.preflight(&request.mutation).is_err() {
             return Err(request);
         }
-        Ok(Box::new(super::ephemeral_preparation::ArtifactEphemeralTaskPreparation::new(
-            request, Box::new(TransferTask { transfer: self.transfer }), self.state_retirement.clone(), self.mutation_retirement.clone(),
-        )))
+        Ok(Box::new(super::ephemeral_preparation::ArtifactEphemeralTaskPreparation::new(request, Box::new(TransferTask { transfer: self.transfer }), self.state_retirement.clone(), self.mutation_retirement.clone())))
     }
 }
 
@@ -59,14 +55,20 @@ struct TransferTask<P, M> {
 
 impl<P, M> super::ArtifactEphemeralPreparationTask<P, M> for TransferTask<P, M> {
     fn advance(&mut self, _: &P, mutation: &mut Option<M>, grant: ArtifactStoreOneItemGrant) -> Result<super::ArtifactEphemeralPreparationTaskStep<P>, String> {
-        if grant.maximum_items == 0 { return Ok(super::ArtifactEphemeralPreparationTaskStep::Blocked); }
+        if grant.maximum_items == 0 {
+            return Ok(super::ArtifactEphemeralPreparationTaskStep::Blocked);
+        }
         let Some(mutation) = mutation.take() else { return Ok(super::ArtifactEphemeralPreparationTaskStep::Blocked) };
         let root = (self.transfer)(mutation);
         Ok(super::ArtifactEphemeralPreparationTaskStep::Prepared { root, checkpoint: ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, ..Default::default() } })
     }
     fn begin_close(&mut self) {}
-    fn close_step(&mut self, _: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String> { Ok(SnapshotRetirementStep::Complete) }
-    fn terminal_is_empty(&self) -> bool { true }
+    fn close_step(&mut self, _: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
+        Ok(SnapshotRetirementStep::Complete)
+    }
+    fn terminal_is_empty(&self) -> bool {
+        true
+    }
 }
 
 #[cfg(test)]

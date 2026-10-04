@@ -13,17 +13,21 @@ pub mod set_line;
 pub mod set_line_ending;
 #[path = "↩️set-trailing-newline/🦀️.rs"]
 pub mod set_trailing_newline;
+#[path = "📸️set-snapshot/🦀️.rs"]
+pub mod set_snapshot;
 
 pub use self::insert_line::{InsertLineMutation, InsertLinePayload};
 pub use self::remove_line::{RemoveLineMutation, RemoveLinePayload};
 pub use self::set_line::{SetLineMutation, SetLinePayload};
 pub use self::set_line_ending::{SetLineEndingMutation, SetLineEndingPayload};
 pub use self::set_trailing_newline::{SetTrailingNewlineMutation, SetTrailingNewlinePayload};
+pub use self::set_snapshot::{SetSnapshotMutation, SetSnapshotPayload};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[value(tag = "mutation", content = "payload", rename_all = "kebab-case", deny_unknown_fields)]
 #[mutations(snapshot = TxtSnapshot, diff = TxtDiff, schema = "s.stdio.txt")]
 pub enum TxtMutation {
+    SetSnapshot(SetSnapshotMutation),
     SetTrailingNewline(SetTrailingNewlineMutation),
     SetLineEnding(SetLineEndingMutation),
     InsertLine(InsertLineMutation),

@@ -13,7 +13,7 @@ pub fn empty_vcs_snapshot() -> crate::VcsSnapshot {
 
 //#region 🔖️Artifact
 /// 🧬️ VCS demo document artifact state.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]

@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ScaleTargetVolume, base: &Puzzle5dSnapshot) -> prot
     let mut next = item.clone();
     next.scale = payload.new_scale;
     if next == *item {
-        return protocol::MutationOutcome::new(Puzzle5dDiff::default()).absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "no changes to apply").at(vec![payload.id.clone()])]);
+        return protocol::MutationOutcome::new(Puzzle5dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(vec![payload.id.clone()])]);
     }
     protocol::MutationOutcome::new(Puzzle5dDiff {
         target_volumes: Some(Puzzle5dTargetVolumesDelta { patched: vec![Puzzle5dTargetVolumePatchEntry { id: payload.id.clone(), patch: Puzzle5dTargetVolumePatch { replacement: Some(next) } }], ..Default::default() }),

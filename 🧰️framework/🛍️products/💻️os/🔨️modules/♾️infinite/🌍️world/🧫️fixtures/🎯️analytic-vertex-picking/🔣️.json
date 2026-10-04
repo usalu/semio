@@ -1,0 +1,86 @@
+{
+  "schema": "world.analytic-vertex-picking.v1",
+  "instance": "shape@solid#0",
+  "handle": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "revision": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "label": "9007199254740993",
+  "expected": "shape@solid#0.vertex.0~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~9007199254740993~bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "mesh": {
+    "positions": [
+      -1,
+      -1,
+      0,
+      1,
+      -1,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0.05,
+      0,
+      0
+    ],
+    "normals": [
+      0,
+      0,
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+      1
+    ],
+    "indices": [
+      0,
+      1,
+      2,
+      0,
+      1,
+      2
+    ],
+    "faceIds": [
+      0,
+      0
+    ],
+    "vertexIds": [
+      4294967295,
+      4294967295,
+      4294967295,
+      4294967295,
+      0
+    ],
+    "componentReferences": {
+      "vertex": [
+        "9007199254740993"
+      ]
+    }
+  },
+  "camera": {
+    "position": [
+      0,
+      0,
+      4
+    ],
+    "target": [
+      0,
+      0,
+      0
+    ],
+    "up": [
+      0,
+      1,
+      0
+    ],
+    "fov": 50
+  }
+}

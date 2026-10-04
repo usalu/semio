@@ -443,6 +443,7 @@ interface effects {
     accept: string,
     read-as: option<string>,
     import-action: string,
+    args: option<pack>,
     multiple: bool,
   }
   record request-file-open-effect {
@@ -1225,6 +1226,12 @@ interface reactor {
   /// which the canonical ABI passes directly, so this call — the one the host makes hundreds of
   /// thousands of times per session — allocates nothing in guest memory that outlives it.
   poll: async func(events: list<event>, budget: budget) -> result<turn-result, plugin-error>;
+
+  /// 🤝️ The app-channel version this guest was compiled for (`CHANNEL_VERSION`). A host reads it exactly once, right after
+  /// instantiation and before any frame, and refuses a guest of another version with `plugin.channel-mismatch`: the frame layout
+  /// is versioned as a whole, so a stale component is never misread under a stale or forged descriptor. `async` like every export
+  /// of `world actor`; the owned ABI's twin is `semio_owned_channel_version_v1`.
+  channel-version: async func() -> u32;
 }
 
 /// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse). `world actor`'s async import
@@ -1395,6 +1402,7 @@ interface codec {
   record snapshot-limits {
     max-file-bytes: u64,
     max-value-bytes: u64,
+    max-allocation-bytes: u64,
     max-schema-bytes: u64,
     max-rows: u64,
     max-columns: u64,
@@ -1404,7 +1412,8 @@ interface codec {
   /// 📦️ Diagnostic arrays use the first-party value pack; they are transport data, outside the SQLite file.
   record snapshot-file { bytes: list<u8>, diagnostics: pack }
   record snapshot-payload { encoding: snapshot-encoding, bytes: list<u8>, diagnostics: pack }
-  record snapshot-rejection { message: string, diagnostics: pack }
+  enum value-refusal-kind { invalid-value, canceled, ownership-limit, allocation-failed, work-limit, depth-limit, unsupported-owner, invariant-violated }
+  record snapshot-rejection { kind: value-refusal-kind, message: string, diagnostics: pack }
   variant snapshot-file-result { done(snapshot-file), rejected(snapshot-rejection) }
   variant snapshot-payload-result { done(snapshot-payload), rejected(snapshot-rejection) }
   /// 🏛️ The exact dialect's handwritten domain SQL declaration.

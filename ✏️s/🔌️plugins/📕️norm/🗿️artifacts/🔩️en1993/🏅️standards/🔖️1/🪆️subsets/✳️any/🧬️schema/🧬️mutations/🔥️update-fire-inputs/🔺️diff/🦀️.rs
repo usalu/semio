@@ -9,7 +9,7 @@ pub fn diff(payload: &UpdateFireInputs, base: &En1993Snapshot) -> protocol::Muta
     let mut values = base.fire_exposures.clone();
     if let Some(idx) = values.iter().position(|x| x.id == payload.fire_exposure.id) {
         if values[idx] == payload.fire_exposure {
-            return protocol::MutationOutcome::empty().warn("mutation.no-op", "Entity already has this value.");
+            return protocol::MutationOutcome::empty().warning("mutation.no-op", "Entity already has this value.");
         }
         values[idx] = payload.fire_exposure.clone();
     } else {

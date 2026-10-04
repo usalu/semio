@@ -19,6 +19,7 @@ import { acquireCargoBuildLeaseV1 } from "../../../../../🧰️framework/🔨�
 import { repoCacheDirectory } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { cargoTargetDirectory, cargoBuildDirectory } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { pluginModulesRootIn } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
+import { FRESH_COMPONENT_MAX_BYTES } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏗️component-build/🟦️.ts";
 
 import { prepareStdioComposition } from "../../🧩️composition/🟦️.ts";
 import { admitCompositionParentRemovalV1 } from "../../../../../✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/🧩️composition/🟦️.ts";
@@ -79,17 +80,37 @@ async function runControlled(command: string, args: string[], cwd: string, env: 
   if (failure) throw failure;
 }
 
-function assertRegularBounded(path: string, label: string): number {
+function assertRegularBounded(path: string, label: string, maxBytes = ARTIFACT_MAX_BYTES): number {
   const info = lstatSync(path);
   if (info.isSymbolicLink() || !info.isFile()) throw new Error(`${label} must be a regular non-symlink file`);
-  if (info.size > ARTIFACT_MAX_BYTES) throw new Error(`${label} exceeds ${ARTIFACT_MAX_BYTES} bytes`);
+  if (info.size > maxBytes) throw new Error(`${label} exceeds ${maxBytes} bytes`);
   return info.size;
 }
 
-function assertContainedBounded(root: string, path: string, label: string): number {
-  const size = assertRegularBounded(path, label);
+function assertContainedBounded(root: string, path: string, label: string, maxBytes = ARTIFACT_MAX_BYTES): number {
+  const size = assertRegularBounded(path, label, maxBytes);
   if (!pathIsWithin(realpathSync(root), realpathSync(path))) throw new Error(`${label} escapes the fresh build root`);
   return size;
+}
+
+/** 🗜️ Produces a cancellable release component before applying the distribution admission limit. */
+async function prepareReleaseComponent(input: string, output: string, repoRoot: string, env: NodeJS.ProcessEnv, control: CatalogControl): Promise<void> {
+  assertControlled(control);
+  const inputBytes = assertRegularBounded(input, "compiler component", FRESH_COMPONENT_MAX_BYTES);
+  if (resolve(input) === resolve(output)) throw new Error("release output cannot replace its compiler input");
+  if (existsSync(output)) assertRegularBounded(output, "previous release component");
+  const jco = resolveWorkspaceBin("@bytecodealliance/jco", repoRoot);
+  if (!jco) throw new Error("missing workspace component tooling");
+  mkdirSync(dirname(output), { recursive: true });
+  const stage = mkdtempSync(join(dirname(output), ".stdio-release-"));
+  const stagedOutput = join(stage, "component.wasm");
+  try {
+    await runControlled("node", [jco, "opt", input, "-o", stagedOutput, "--", "-Oz", "--low-memory-unused", "--enable-bulk-memory", "--enable-nontrapping-float-to-int", "--enable-sign-ext", "--strip-debug"], repoRoot, env, control);
+    assertControlled(control);
+    const outputBytes = assertRegularBounded(stagedOutput, "release component");
+    renameSync(stagedOutput, output);
+    console.log(`🗜️ release component optimized: ${JSON.stringify({ inputBytes, outputBytes })}`);
+  } finally { rmSync(stage, { recursive: true, force: true }); }
 }
 
 function copyCatalogArtifact(source: string, destination: string, label: string, control: CatalogControl): string {
@@ -299,6 +320,7 @@ async function runCatalogRootContractTests(root: string, repoRoot: string): Prom
     vectors: { raw: string; core: string; distinct: boolean }[];
     wasmStructures: { name: string; core: string; definedFunctions: number; componentizable: boolean }[];
     compilerCaches: { id: string; ambient: NodeJS.ProcessEnv; target: string; build: string }[];
+    releaseComponents: { name: string; wat: string; export: string; result: number; definedFunctions: number }[];
   };
   const validate = await compileStdioScopeExport(join(root, "../.."), "StdioCatalogRoot");
   if (!validate(fixture)) throw new Error(`catalog-root fixture schema failed: ${JSON.stringify(validate.errors)}`);
@@ -328,6 +350,29 @@ async function runCatalogRootContractTests(root: string, repoRoot: string): Prom
     }
     const wasmOpt = resolveWorkspaceBin("wasm-opt", root);
     if (!wasmOpt) throw new Error("missing Binaryen wasm-opt workspace binary");
+    const jco = await import("@bytecodealliance/jco");
+    for (const vector of fixture.releaseComponents) {
+      const input = join(scratch, `${vector.name}.input.wasm`);
+      const output = join(scratch, `${vector.name}.release.wasm`);
+      const original = await jco.parse(vector.wat);
+      writeFileSync(input, original);
+      await prepareReleaseComponent(input, output, repoRoot, devToolingEnv({}), active);
+      const optimized = readFileSync(output);
+      if (!readFileSync(input).equals(Buffer.from(original))) throw new Error(`${vector.name}: optimization mutated its compiler input`);
+      if (await jco.componentWit(original) !== await jco.componentWit(optimized)) throw new Error(`${vector.name}: optimization changed the component interface`);
+      const modules = (await jco.metadataShow(optimized)).filter((entry) => entry.metaType.tag === "module");
+      if (modules.length !== 1) throw new Error(`${vector.name}: expected one optimized core module`);
+      const core = optimized.subarray(modules[0].range[0], modules[0].range[1]);
+      if (assertComponentizableCore(core).definedFunctions !== vector.definedFunctions) throw new Error(`${vector.name}: unused functions survived release optimization`);
+      const instance = new WebAssembly.Instance(new WebAssembly.Module(core));
+      if ((instance.exports[vector.export] as () => number)() !== vector.result) throw new Error(`${vector.name}: native WebAssembly execution disagrees with the neutral result`);
+      await prepareReleaseComponent(input, output, repoRoot, devToolingEnv({}), active);
+      if (!readFileSync(output).equals(optimized)) throw new Error(`${vector.name}: repeated release optimization changed the output`);
+      const cancelledOutput = join(scratch, `${vector.name}.cancelled.wasm`);
+      let cancelled = false;
+      try { await prepareReleaseComponent(input, cancelledOutput, repoRoot, devToolingEnv({}), { cancelled: () => true, remainingMs: () => CATALOG_DEADLINE_MS }); } catch { cancelled = true; }
+      if (!cancelled || existsSync(cancelledOutput)) throw new Error(`${vector.name}: cancellation left a release artifact`);
+    }
     for (const vector of fixture.wasmStructures) {
       const bytes = Buffer.from(vector.core, "hex");
       const structure = inspectWasmCoreStructure(bytes);
@@ -1050,7 +1095,9 @@ class EditorComponentCheckScript extends BundleScript {
         }
         const out = join(outputRoot, id);
         mkdirSync(out, { recursive: true });
-        await runControlled("node", [jco, "transpile", join(cargoTargetDirectory(this.repoRoot, env), "wasm32-wasip2", COMPONENT_PROFILE, `${lib}.wasm`), "-o", out, "--name", lib, "--map", "semio:framework/pure=./pure.js", "--map", "semio:framework/host-async=./host-async.js"], this.repoRoot, env, control);
+        const release = join(out, `${lib}.wasm`);
+        await prepareReleaseComponent(join(cargoTargetDirectory(this.repoRoot, env), "wasm32-wasip2", COMPONENT_PROFILE, `${lib}.wasm`), release, this.repoRoot, env, control);
+        await runControlled("node", [jco, "transpile", release, "-o", out, "--name", lib, "--map", "semio:framework/pure=./pure.js", "--map", "semio:framework/host-async=./host-async.js"], this.repoRoot, env, control);
         const core = readFileSync(join(out, `${lib}.core.wasm`));
         const structure = assertComponentizableCore(core);
         console.log(`🧩️ ${index + 1}/${packages.length} ${id} component validated: ${JSON.stringify({ ...structure, coreBytes: core.byteLength })}`);
@@ -1158,8 +1205,11 @@ class CatalogRootScript extends BundleScript {
       mkdirSync(stageRoot, { recursive: true });
       const packageId = componentPackageId(join(this.root, "Cargo.toml"));
       await runControlled("cargo", ["rustc", "--manifest-path", join(this.root, "Cargo.toml"), "-p", PACKAGE_NAME, "--profile", COMPONENT_PROFILE, "--lib", "--crate-type", "cdylib", "--target", "wasm32-wasip2"], this.repoRoot, env, control);
-      const raw = join(cargoTarget, "wasm32-wasip2", COMPONENT_PROFILE, WASM_OUT);
-      assertContainedBounded(buildRoot, raw, "raw component");
+      const compiled = join(cargoTarget, "wasm32-wasip2", COMPONENT_PROFILE, WASM_OUT);
+      assertContainedBounded(buildRoot, compiled, "compiler component", FRESH_COMPONENT_MAX_BYTES);
+      const raw = join(workRoot, WASM_OUT);
+      await prepareReleaseComponent(compiled, raw, this.repoRoot, env, control);
+      assertContainedBounded(buildRoot, raw, "release component");
       const jco = resolveWorkspaceBin("@bytecodealliance/jco", this.repoRoot);
       if (!jco) throw new Error("missing @bytecodealliance/jco workspace binary; run bun install");
       const extractRoot = join(workRoot, "extract");

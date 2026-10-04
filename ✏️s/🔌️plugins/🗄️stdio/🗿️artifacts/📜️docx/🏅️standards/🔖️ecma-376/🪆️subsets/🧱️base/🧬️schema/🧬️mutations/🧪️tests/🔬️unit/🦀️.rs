@@ -9,13 +9,13 @@ fn namespace_formatting_fixture() -> serde_json::Value {
 fn namespace_formatting_snapshot(case: &serde_json::Value) -> DocxSnapshot {
     use semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text;
     let mut snapshot = crate::engine::build_minimal_docx(DocxDocument { body: Vec::new(), styles: vec![DocxStyle { id: "Heading".into(), name: "Heading title".into(), based_on: Some("Normal".into()) }] });
-    snapshot.xml_part_mut("word/document.xml").unwrap().document = xml_document_from_text(case["documentXml"].as_str().unwrap()).unwrap();
-    snapshot.xml_part_mut("word/styles.xml").unwrap().document = xml_document_from_text(case["stylesXml"].as_str().unwrap()).unwrap();
+    snapshot.xml_part_mut("word/document.xml").unwrap().replace_document(xml_document_from_text(case["documentXml"].as_str().unwrap()).unwrap()).unwrap();
+    snapshot.xml_part_mut("word/styles.xml").unwrap().replace_document(xml_document_from_text(case["stylesXml"].as_str().unwrap()).unwrap()).unwrap();
     snapshot
 }
 
 fn word_namespace_oracle(xml: &str, namespace: &str) -> Vec<(String, Vec<(String, String)>)> {
-    use quick_xml::{XmlVersion, events::Event, name::ResolveResult, reader::NsReader};
+    use quick_xml::{events::Event, name::ResolveResult, reader::NsReader, XmlVersion};
     let mut reader = NsReader::from_str(xml);
     let mut result = Vec::new();
     loop {
@@ -53,7 +53,11 @@ fn namespace_projection_matches_independent_expanded_names_and_false_flags() {
             let value = attrs.iter().find(|(name, _)| name == "val").map(|(_, value)| value.as_str());
             assert_eq!(!matches!(value, Some("0" | "false" | "off" | "none")), expected[index]);
         }
-        let document = project(&namespace_formatting_snapshot(case));
+        let snapshot = namespace_formatting_snapshot(case);
+        let run = docx_top_level_run_at(&snapshot, 0, 0).unwrap();
+        let formatting = docx_run_formatting(&snapshot, &run.address).unwrap();
+        assert_eq!([formatting.bold, formatting.italic, formatting.underline], expected.iter().copied().map(Some).collect::<Vec<_>>().as_slice());
+        let document = project(&snapshot);
         let DocxBlock::Paragraph(paragraph) = &document.body[0] else { panic!("paragraph") };
         assert_eq!(paragraph.style, case["paragraphStyle"].as_str().map(str::to_string), "{}", case["id"]);
         assert_eq!(paragraph.runs[0].text, "Grüße 文字");
@@ -80,7 +84,7 @@ fn namespace_formatting_and_style_edits_preserve_qualified_attributes_and_invers
         let prepared = prepare_addressed_xml_mutation(&before, &mutation).unwrap();
         let mut after = before.clone();
         apply_addressed_xml_mutation_in_place(&mut after, &mutation).unwrap();
-        let output = xml_document_to_text(&after.xml_part("word/document.xml").unwrap().document);
+        let output = xml_document_to_text(&after.xml_part("word/document.xml").unwrap().document.materialize_exact().unwrap());
         let oracle = word_namespace_oracle(&output, namespace);
         for marker in case["retainedMarkers"].as_array().unwrap() {
             assert!(output.contains(marker.as_str().unwrap()), "{}: {output}", case["id"]);
@@ -102,7 +106,7 @@ fn namespace_formatting_and_style_edits_preserve_qualified_attributes_and_invers
         } else {
             let prepared = prepare_addressed_xml_mutation(&before, &mutation).unwrap();
             apply_addressed_xml_mutation_in_place(&mut styled, &mutation).unwrap();
-            let output = xml_document_to_text(&styled.xml_part("word/document.xml").unwrap().document);
+            let output = xml_document_to_text(&styled.xml_part("word/document.xml").unwrap().document.materialize_exact().unwrap());
             let oracle = word_namespace_oracle(&output, namespace);
             for marker in case["retainedMarkers"].as_array().unwrap() {
                 assert!(output.contains(marker.as_str().unwrap()), "{}: {output}", case["id"]);
@@ -151,7 +155,7 @@ async fn block_run_style_and_part_mutations_apply_and_inverse() {
         let mut next = base.clone();
         apply(&mut next, &mutation);
         assert_ne!(next, base, "mutation must change authored state: {mutation:?}");
-        for inverse in Mutation::inverse(&mutation, &base) {
+        for inverse in Mutation::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
             apply(&mut next, &inverse);
         }
         assert_eq!(next, base, "inverse must restore exact XML/OPC authority: {mutation:?}");
@@ -251,12 +255,12 @@ fn identical_run_insertion_invalidates_the_original_canonical_address() {
 
     let mut before = fixture();
     let part_path = authored["partPath"].as_str().unwrap();
-    before.xml_part_mut(part_path).unwrap().document = xml_document_from_text(before_xml).unwrap();
+    before.xml_part_mut(part_path).unwrap().replace_document(xml_document_from_text(before_xml).unwrap()).unwrap();
     let target_path = authored["targetPath"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as usize).collect();
     let address = docx_xml_address(&before, part_path, target_path).unwrap();
 
     let mut displaced = before.clone();
-    displaced.xml_part_mut(part_path).unwrap().document = xml_document_from_text(displaced_xml).unwrap();
+    displaced.xml_part_mut(part_path).unwrap().replace_document(xml_document_from_text(displaced_xml).unwrap()).unwrap();
     let unchanged = displaced.clone();
     assert!(resolve_docx_xml_address(&displaced, &address).is_err());
     assert!(prepare_addressed_xml_mutation(&displaced, &DocxMutation::SetRunText(set_run_text::SetRunText { address, text: "edited".into() })).is_err());
@@ -287,12 +291,12 @@ fn canonical_xml_addresses_support_empty_and_default_namespaces_and_reject_unbou
         assert!(saw_field, "quick-xml oracle must observe the addressed fixture node");
 
         let mut snapshot = fixture();
-        snapshot.xml_parts.push(DocxXmlPart { path: part_path.into(), content_type: "application/xml".into(), document: xml_document_from_text(xml).unwrap() });
+        snapshot.xml_parts.try_push(DocxXmlPart { path: part_path.into(), content_type: "application/xml".into(), document: semio_s_artifact_stdio_xml::schema::snapshot::retained::RetainedXmlDocument::try_from_document(&xml_document_from_text(xml).unwrap()).unwrap() }).unwrap();
         let result = docx_xml_address(&snapshot, part_path, target_path.clone());
         if let Some(expected) = case.get("expectedName") {
             assert_eq!(result.unwrap().expected_name, expected.as_str().unwrap());
         } else {
-            assert!(result.unwrap_err().contains(case["errorContains"].as_str().unwrap()));
+            assert!(result.unwrap_err().message.contains(case["errorContains"].as_str().unwrap()));
         }
     }
 }
@@ -307,8 +311,12 @@ fn run_text_edit_replaces_all_text_contributions_and_has_compact_exact_inverse()
     let part_path = authored["partPath"].as_str().unwrap();
     for case in authored["cases"].as_array().unwrap() {
         let mut snapshot = fixture();
-        snapshot.xml_part_mut(part_path).unwrap().document = xml_document_from_text(case["xml"].as_str().unwrap()).unwrap();
+        snapshot.xml_part_mut(part_path).unwrap().replace_document(xml_document_from_text(case["xml"].as_str().unwrap()).unwrap()).unwrap();
         let before = snapshot.clone();
+        let initial = docx_top_level_run_at(&snapshot, 0, 0).unwrap();
+        assert_eq!(initial.text, case["originalText"].as_str().unwrap(), "{}", case["id"]);
+        let unchanged = DocxMutation::SetRunText(set_run_text::SetRunText { address: initial.address, text: initial.text });
+        assert!(!prepare_addressed_xml_mutation(&snapshot, &unchanged).unwrap().changed);
         let target_path = case["targetPath"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as usize).collect();
         let address = docx_xml_address(&snapshot, part_path, target_path).unwrap();
         let mutation = DocxMutation::SetRunText(set_run_text::SetRunText { address, text: case["replacement"].as_str().unwrap().into() });
@@ -321,10 +329,11 @@ fn run_text_edit_replaces_all_text_contributions_and_has_compact_exact_inverse()
 
         apply_addressed_xml_mutation_in_place(&mut snapshot, &mutation).unwrap();
         let inverse = prepared.inverse.clone();
-        let output = xml_document_to_text(&snapshot.xml_part(part_path).unwrap().document);
+        let output = xml_document_to_text(&snapshot.xml_part(part_path).unwrap().document.materialize_exact().unwrap());
         let mut reader = Reader::from_str(&output);
         let mut local_names = Vec::new();
         let mut text_elements = 0usize;
+        let mut text_content = String::new();
         loop {
             match reader.read_event().unwrap() {
                 Event::Start(event) | Event::Empty(event) => {
@@ -334,10 +343,14 @@ fn run_text_edit_replaces_all_text_contributions_and_has_compact_exact_inverse()
                     }
                     local_names.push(local);
                 }
+                Event::Text(text) => text_content.push_str(&text.xml10_content()),
+                Event::CData(text) => text_content.push_str(&text.xml10_content()),
                 Event::Eof => break,
                 _ => {}
             }
         }
+        assert_eq!(text_content, case["replacement"].as_str().unwrap());
+        assert_eq!(docx_top_level_run_at(&snapshot, 0, 0).unwrap().text, text_content);
         assert_eq!(text_elements, case["textElementCount"].as_u64().unwrap() as usize);
         for name in case["preservedLocalNames"].as_array().unwrap() {
             assert!(local_names.iter().any(|actual| actual == name.as_str().unwrap()), "quick-xml oracle lost {}", name.as_str().unwrap());
@@ -384,7 +397,7 @@ fn kinds_const_matches_enum_variants_in_declaration_order() {
 
 #[semio_framework_async_macros::async_test]
 async fn top_level_table_projection_matches_independent_xml_text_order() {
-    use quick_xml::{Reader, events::Event};
+    use quick_xml::{events::Event, Reader};
     use semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🧭️table-run-projection/🔣️.json")).unwrap();
     let xml = fixture["xml"].as_str().unwrap();
@@ -401,7 +414,7 @@ async fn top_level_table_projection_matches_independent_xml_text_order() {
     assert_eq!(oracle, expected.iter().flatten().cloned().collect::<Vec<_>>());
     let mut snapshot = crate::engine::build_minimal_docx(DocxDocument::default());
     let part_path = crate::standards::v_ecma_376::subsets::base::io::import::deserializers::main_document_path(&snapshot.opc).unwrap();
-    snapshot.xml_part_mut(&part_path).unwrap().document = xml_document_from_text(xml).unwrap();
+    snapshot.xml_part_mut(&part_path).unwrap().replace_document(xml_document_from_text(xml).unwrap()).unwrap();
     assert_eq!(docx_top_level_block_count(&snapshot).unwrap(), expected.len());
     for (block, runs) in expected.iter().enumerate() {
         assert_eq!(docx_top_level_run_count(&snapshot, block).unwrap(), runs.len());
@@ -413,5 +426,90 @@ async fn top_level_table_projection_matches_independent_xml_text_order() {
             assert_eq!(run.address.part_path, part_path);
             resolve_docx_xml_address(&snapshot, &run.address).unwrap();
         }
+    }
+}
+
+#[test]
+fn empty_paragraph_text_edit_preserves_markup_and_roundtrips_through_independent_xml() {
+    use quick_xml::{events::Event, name::ResolveResult, reader::NsReader};
+    use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, xml_document_to_text};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/✍️empty-paragraphs/🔣️.json")).unwrap();
+    let replacement = fixture["replacement"].as_str().unwrap();
+    for case in fixture["cases"].as_array().unwrap() {
+        let mut snapshot = crate::engine::build_minimal_docx(DocxDocument::default());
+        let part_path = crate::standards::v_ecma_376::subsets::base::io::import::deserializers::main_document_path(&snapshot.opc).unwrap();
+        snapshot.xml_part_mut(&part_path).unwrap().replace_document(xml_document_from_text(case["xml"].as_str().unwrap()).unwrap()).unwrap();
+        let before = snapshot.clone();
+        let expected_blocks: Vec<Vec<String>> = serde_json::from_value(case["blocks"].clone()).unwrap();
+        for (block, expected) in expected_blocks.iter().enumerate() {
+            let targets = docx_top_level_text_targets(&snapshot, block).unwrap();
+            assert_eq!(targets.iter().map(|target| &target.text).collect::<Vec<_>>(), expected.iter().collect::<Vec<_>>());
+            for (index, target) in targets.iter().enumerate() {
+                assert_eq!(target.address.node_path, serde_json::from_value::<Vec<usize>>(case["paths"][block][index].clone()).unwrap());
+                assert_eq!(target.kind, if expected[index].is_empty() { DocxTextTargetKind::EmptyParagraph } else { DocxTextTargetKind::Run });
+            }
+        }
+        let block = case["targetBlock"].as_u64().unwrap() as usize;
+        let item = case["targetItem"].as_u64().unwrap() as usize;
+        let path = serde_json::from_value(case["paths"][block][item].clone()).unwrap();
+        let address = docx_xml_address(&snapshot, &part_path, path).unwrap();
+        let prepare = xml_address::empty_paragraph_text_mutation;
+        assert!(prepare(&snapshot, &address, "").unwrap().is_none());
+        let mutation = prepare(&snapshot, &address, replacement).unwrap().unwrap();
+        assert!(matches!(mutation, DocxMutation::InsertXmlNode(_)));
+        let prepared = prepare_addressed_xml_mutation(&snapshot, &mutation).unwrap();
+        apply_addressed_xml_mutation_in_place(&mut snapshot, &mutation).unwrap();
+        assert!(prepare(&snapshot, &address, "stale draft").is_err());
+        let output = xml_document_to_text(&snapshot.xml_part(&part_path).unwrap().document.materialize_exact().unwrap());
+        for fragment in case["preserved"].as_array().unwrap() {
+            assert!(output.contains(fragment.as_str().unwrap()), "{}: {fragment}: {output}", case["id"]);
+        }
+        assert!(output.contains("xml:space=\"preserve\""));
+        let mut reader = NsReader::from_str(&output);
+        let mut inside = false;
+        let mut actual = Vec::new();
+        let mut elements = Vec::new();
+        loop {
+            let (namespace, event) = reader.read_resolved_event().unwrap();
+            if let Event::Start(node) | Event::Empty(node) = &event {
+                let namespace = match &namespace {
+                    ResolveResult::Bound(ns) => ns.as_ref(),
+                    _ => "",
+                };
+                let attributes: serde_json::Map<String, serde_json::Value> = node
+                    .attributes()
+                    .map(|attribute| {
+                        let attribute = attribute.unwrap();
+                        (attribute.key.as_ref().to_owned(), serde_json::Value::String(attribute.normalized_value(quick_xml::XmlVersion::Explicit1_0).unwrap().into_owned()))
+                    })
+                    .collect();
+                elements.push(serde_json::json!({"namespace": namespace, "localName": node.local_name().as_ref(), "attributes": attributes}));
+            }
+            match event {
+                Event::Start(node) => {
+                    if node.local_name().as_ref() == "t"
+                        && matches!(namespace, ResolveResult::Bound(ns) if ns.as_ref() == "http://schemas.openxmlformats.org/wordprocessingml/2006/main" || ns.as_ref() == "http://purl.oclc.org/ooxml/wordprocessingml/main")
+                    {
+                        inside = true;
+                    }
+                }
+                Event::Text(text) if inside => actual.push(text.xml10_content().into_owned()),
+                Event::End(node) if node.local_name().as_ref() == "t" => inside = false,
+                Event::Eof => break,
+                _ => {}
+            }
+        }
+        for element in case["preservedElements"].as_array().into_iter().flatten() {
+            assert!(elements.contains(element), "{}: missing {element}: {output}", case["id"]);
+        }
+        let mut expected: Vec<Vec<String>> = serde_json::from_value(case["blocks"].clone()).unwrap();
+        expected[block][item] = replacement.into();
+        assert_eq!(actual, expected.into_iter().flatten().collect::<Vec<_>>());
+        let saved = crate::engine::encode_docx(&snapshot).unwrap();
+        let reopened = crate::engine::decode_docx(&saved).unwrap();
+        assert_eq!(reopened.xml_part(&part_path).unwrap().document, snapshot.xml_part(&part_path).unwrap().document);
+        apply_addressed_xml_mutation_in_place(&mut snapshot, &prepared.inverse).unwrap();
+        assert_eq!(snapshot, before);
+        println!("[DEBUG] DOCX empty paragraph {} retains markup, namespace, save/reopen, and exact undo", case["id"]);
     }
 }

@@ -670,7 +670,7 @@ New React laws (time-travel suite):
 
 Successor executor S3-W2B. Aliases as above (`RE`, `UI`, `ENG`). Scratch output: `🗑️generated/s3-w2b/`.
 
-**Status: IN PROGRESS** (this section is kept current at every milestone).
+**Status: DONE** — every assigned item is in source and verified in the foreground (S3.9); open items and coordinator actions in S3.10–S3.11.
 
 ### S3.1 Repair (rule 28)
 
@@ -791,3 +791,157 @@ policy was derived with the repo's own `repositoryVitestPolicyV1(<package dir>)`
 | related set: `🔬️engine-contract editable-controls retained-control-commit puzzle3d-settings section-collapse toggle-semantics 🗣️Interpreter/🟦️.tsx keybinding-glyphs command-panel 📌️ChromePanels` (`vitest-related-1.txt`) | 19 ✘ in the first run; after the fixes none is W2-B's: puzzle3d-settings ×4 (peer continuous lane), text-editor key/paste/compose ×5 and portal `Worker is not defined` (pre-existing), SpaceToken ×1 + Overlay ×2 (peer layout), catalog-feedback timeout, `FlowGraphCanvasHost` "graph parameter keyboard" (peer NodeGraph/flow, `🕸️NodeGraph/🟦️.tsx` 12:01; red in isolation too, `vitest-recheck-1.txt`); ChromePanels tree order and the Interpreter surface-host law were load timeouts and pass in isolation |
 | test module `bun ./📜️script.ts schema mutation-inputs --under 🧰️framework/🛍️products/💻️os/🎚️config` | **0 findings** (51/51 inputs, 20 leaves) |
 | `cargo test -p semio-framework-os-config --lib -- local_folder` (private target, `cargo-os-config-{1,2}.txt`) | **BLOCKED by a peer**: `semio-framework-schema-registry` (28 errors at ~12:20) then `semio-framework` `🛂️manifest/🦀️.rs:1266-1269` (`with_schema_export_registry`, `SchemaFormat`, `registered_referenced_schema_documents` not in `semio_framework_schema`) — reported to the coordinator |
+
+### S3.8 Resume after the cut (13:05) and the machine reboot (~17:00) — N2 list inputs, row promotion
+
+- **Repair.** At the cut a temporary `[DEBUG]` log sat in the new N2 law of `⏪️time-travel/🧪️tests/🧩️component`; it is removed
+  (no `[DEBUG]` left in any W2-B file). Every edit listed in S3.3–S3.7 was on disk and complete.
+- **N2 landed in Rust source** (`🔌️plugin/⏪️time-travel/🦀️.rs` 12:47: "Add item"/"Remove item" = `historyEditInput{generation,
+  path: <list>/- | <list>/<i>, edit: insert | remove}`, disabled at the item bounds, en/de "Element hinzufügen"/"Element
+  entfernen"). React law `🧺️ListInputs`: both buttons are named in en and de and dispatch exactly those args; at the bounds all are
+  disabled and neither they nor their rows fire; 0 ARIA findings.
+- **Defect found and fixed (React interpreter, `RE/🗣️Interpreter/🟦️.tsx`).** A tree row whose one child is an enabled button was
+  ALWAYS promoted to that button's activation and the button was not rendered: the N2 row "Points" silently added an item and
+  "Points 1" silently removed one, and the action's own name never reached the accessibility tree. New rule
+  `treeRowStandsForControl`: a row stands in for its lone button only when it says what the button does (the button's text or
+  accessible name equals the row's label — the Rust "button row" recipe: Accept, Undo, Check In, Exit, Next problem, Clear …);
+  otherwise the button stays a named control inside the row. This is also the wgpu rule's direction (wgpu: "a row's activation is
+  the target's activation verb, never a record `Activate` binding"). Two time-travel laws used an outdated body shape (a history
+  row holding a lone "Edit" button); they now use the runtime's real shape (Edit as a row action with the row target's
+  activation).
+- **Finding routed (W1-E `🌳️Tree`, W2-A).** A tree row that holds a control renders in the Tree's property layout, which shows
+  the label only and DROPS `description`: in React the editor's per-input description, unit, "Cleared", the item count of a list
+  row and a refused input's reason (danger tone kept, words lost) are invisible. The refusal still reaches the person as the
+  band/notice text. Fix belongs to the Tree element (a description line in property layout) — not done here because it changes
+  every property row of the product.
+
+| Command (renderer-react package dir unless noted) | Result |
+|---|---|
+| `SEMIO_TEST_LEVEL=long bun x vitest run --config ../../🧪️tests/🎚️config/🟦️.ts ⏪️time-travel/🧪️tests/🧩️component` (`vitest-tt-8.txt`) | **40/40 ✔** |
+| same config, W2-B suites + related set (17 files: engine-contract, editable-controls, retained-control-commit, puzzle3d-settings, section-collapse, toggle-semantics, Interpreter in-source, keybinding-glyphs, command-panel, ChromePanels, local-folders, command-rejection, staged-arg-controls, chrome-history-locale, ShellHelpers component, scoped-presence, time-travel) (`vitest-related-2.txt`) | **1057 ✔ / 14 ✘ — none W2-B's**: puzzle3d-settings ×4 (peer continuous-lane payload `{value, gesture, commit}`), Overlay ×2 + SpaceToken ×1 (peer layout tokens), FlowGraphCanvasHost "graph parameter keyboard" (peer flow/NodeGraph), text-editor key/paste/compose ×5 and portal `Worker is not defined` (pre-existing) |
+| `bunx tsc --noEmit -p tsconfig.json` renderer-react (`tsc-react-4.txt`) | 4 errors, **0 in W2-B files** (same peer set) |
+| ui-react `bunx tsc --noEmit -p tsconfig.json` (`tsc-ui-3.txt`) | **exit 0** |
+
+### S3.9 Final Rust verification (after the reboot; gate `pgrep -x rustc` < 14, private `CARGO_TARGET_DIR=…/target-nde-s3-w2b`, `CARGO_INCREMENTAL=0`)
+
+| Command | Result |
+|---|---|
+| `cargo test -p semio-framework-os-config --lib --message-format=short -- local_folder` (`cargo-os-config-3.txt`) | **20/20 ✔** (the schema-registry peer break is gone) |
+| same, `-- the_folder_is_edited` | **1/1 ✔** `attach_local_folder::tests::the_folder_is_edited_in_history_through_its_path_and_its_kind_is_no_input` |
+| `cargo test -p semio-framework-plugin --lib --message-format=short -- the_draft_editor_keys` (`cargo-plugin-2.txt`) | **1/1 ✔** `the_draft_editor_keys_are_the_shared_corpus_keys_every_shell_focuses` (first attempt red on a peer's mid-edit `🎒️pack/🔤️json/🦀️.rs:1109`, 18:55; green at 18:58) |
+| same, `-- time_travel` (`cargo-plugin-3.txt`) | not run to the end: `semio-framework-os-kernel` red from a peer DSL crate split in flight (`🗣️dsl/🦀️.rs:15-16`, `🗣️dsl/📖️grammar/🦀️.rs:3`: `semio_framework_dsl` unresolved; 19:0x) — the W2-B law itself is green above |
+| `bun ./📜️script.ts verify taxonomy report --scope …/🗣️Interpreter/🧪️tests/🧪️number-keyboard-law` (`taxonomy-1.txt`) | **clean** (0 errors, 0 warnings) |
+
+### S3.10 Open items and routing
+
+- **W1-E (`🌳️Tree`)**: property-layout rows drop `description` (S3.8) — the editor's input descriptions, units, "Cleared", list
+  item counts and refused-input reasons are invisible in React; and whether disabled tree row actions should be focusable
+  `aria-disabled` instead of native `disabled` (N15; tried and reverted, S3.6) is a UI-wide decision.
+- **W2-A**: N2 rows give no reason when "Add item"/"Remove item" is disabled at `maxItems`/`minItems` (the wire has only
+  `disabled`); N1 member rows beyond a member's projection are not paged (their own open item).
+- **W2-C (wgpu parity)**: the band corpus gained `editorKeys` (+ `blocking`/`acceptedCount` on every transition row and the
+  `timeTravel.member-gone` refusal row); React now promotes a lone button to its row only when the row says what it does; wgpu
+  can assert both against the same corpus.
+- **S2.4 carried over**: live re-probe of R2-2/R2-4/R2-6 and the reconnect band; probe verdicts `history-panel-reveals-on-session-start`,
+  `focus-moves-to-the-editor`; `axe-core` still not installed (needs the dev's consent for a repo-wide `bun install`; the
+  aria-query + dom-accessibility-api structural oracle stands in).
+- **Peers (not W2-B)**: renderer-react tsc `line` in `🏪️store/👷️worker/🟦️.ts:3776,3842` + `🔄️sync/🧪️tests/🔬️backbone-parity/🟦️.ts:77`,
+  `idleInstalledServiceStatusV1` (`🐚️Shell/🟦️.tsx:1112`); the 14 red React laws listed in S3.8; the ui-react vitest config now
+  needs `SEMIO_VITEST_POLICY` (derive it with `repositoryVitestPolicyV1(<package dir>)`; the 15 s default budget is too short).
+
+### S3.11 Coordinator actions
+
+1. Central `schema generate` (the `attach-local-folder` payload schema and the band corpus schema changed).
+2. React re-activation (6012) for the live probe of the time-travel flow; add verdicts: reveal on session start, focus to the
+   editor, refused Edit named and inert, Add/Remove item named, staged dialog number controls with display units.
+3. Route the W1-E Tree items (S3.10) — they decide whether refusal reasons are visible in the React editor.
+
+### S3.12 Files (session 3)
+
+- Changed: `RE/🛠️ShellHelpers/🟦️.tsx` (contract key mapping, `StagedNumberField`, `stagedNumberFacetsV1`, facet-driven
+  stepper/slider/dial/number/vector, docstring emoji), `RE/🗣️Interpreter/🟦️.tsx` (`lawKey`, `treeRowStandsForControl`, new
+  in-source registration), `UI/🧱️elements/🪜️Stepper/🟦️.tsx` (Home/End), `UI/🧬️contract/🧩️component/🟦️.ts` (`uiNumberFieldKey`),
+  `UI/🧱️elements/📚️I18n/🟦️.tsx` + `UI/🎯️targets/⚛️react/🌐️i18n/🟦️.ts` (`ui.numberField.*` deleted),
+  `🎚️config/🧬️schema/🧬️mutations/📎️attach-local-folder/🧬️schema/🔣️.json` + its `🧪️tests/🔬️unit/🦀️.rs`,
+  `RE/🛠️ShellHelpers/🧫️fixtures/🧫️time-travel-band/🔣️.json` + `🧬️schema/🔣️time-travel-band/🔣️.json` (`editorKeys`),
+  `🔌️plugin/🧪️tests/🧪️time-travel/🦀️.rs` (appended region `🗝️EditorKeys` only).
+- Tests changed: `⏪️time-travel/🧪️tests/🧩️component` (editor keys, `🪟️MutationPages`, `🧺️ListInputs`, updated history shapes),
+  `🧪️staged-arg-controls` (all keys, number-facets corpus, facet refusals), `🪜️Stepper/🧪️tests/🧩️component` (Home/End rows),
+  `📎️local-folders/🧪️tests/🧩️component` (folder path input).
+- Created: `RE/🗣️Interpreter/🧪️tests/🧪️number-keyboard-law/🟦️.tsx`.
+- `UI/🧱️elements/🌳️Tree/🟦️.tsx`: touched and reverted to HEAD (no diff).
+- Scratch output: `🗑️generated/s3-w2b/`.
+
+### S3.13 Stepped whole-document load, history-lane notices, import abort (coordinator, from `📓️api-stepped-document-load.md` §7 + correction)
+
+TS/React only; no Rust was built for this part.
+
+- **(1) One stepped load.** `PluginWasmHandle.loadAppDocumentPack` (the `AppCommand::LoadDocument` sender) is deleted from
+  `RE/🔌️PluginRuntime/🟦️.tsx`; React sends no `LoadDocument` any more. Every whole-document load is `loadAppDocumentArchive`
+  (`AppChannelClient.loadDocumentArchive`: admit → poll per turn → acknowledge). In `RE/🏛️ShellHost/🟦️.tsx`:
+  - `loadDocumentArchive`/`loadDocumentPair` take a `task {signal, progress}`.
+  - `Effect::LoadDocument` (pack+spr = an archive with no members) runs as a Tasks-window document transfer named by the program,
+    with `completed/total` progress and Cancel.
+  - A cancelled or faulted load rebinds the document backbone to the unchanged previous document (`try … finally
+    bindDocumentBackbone`), and the person gets `load-cancelled` / `load-failed`: "Loading “{file}” was cancelled; the previous
+    document is unchanged." / "Laden von „{file}“ abgebrochen; das bisherige Dokument ist unverändert." and the failure twin.
+  - `AppChannelClient.loadDocumentArchive` (`💻️os/🟦️.ts`) now rejects a cancel the guest decided on its own (Cancel in the
+    history body) with an `AbortError`; `documentLoadCancelledV1` tells a cancel from a failure.
+  - `AppChannelClient.loadDocument` and the `LoadDocument` codec tag stay until the channel-bump wave: the wgpu
+    `🐚️plugin-bridge` (W2-C) and `🧪️backbone-envelope-io` still call them.
+- **(2) History-lane notices.** New in `RE/🛠️ShellHelpers/🟦️.tsx`:
+  - `historyLaneNoticeV1` (kernel `historyNotice(code)`: `toolTransaction.open|unknown`, `history.full` with `{n}` taken from the
+    fault message, `history.replaying`, `document.loading`, read as the fault's own code or a cause's), `historyFaultNoticeV1`
+    (history-edit refusal or lane refusal) and `historyOutputNoticeV1` (a verb's silent `{rejected}`), all in the shell's
+    language (`currentShellLocaleV1`).
+  - ShellHost's action catch, command catch, `{rejected}` result and sync-conflict branch use them, so the person reads the
+    localized text in the `role=status` notice; the code is only `data-notice-code`.
+- **(3) Import abort.** `importOpenedFilesV1` (ShellHelpers) runs a picked-file import as one cancellable task. When a cancel
+  stops an import after a chunk already reached the guest and the app declares `importAbort` (`IMPORT_ABORT_ACTION_ID`, remodel's
+  escape hatch), it dispatches `importAbort {}`, so the open import transaction leaves zero trace. ShellHost's `requestFileOpen`
+  branch uses it. `requestMediaFrames` has no host cancel at all, so nothing to abort there (open item).
+- **(4) Load progress in the history body.** Per the correction there is no `cancelDocumentLoad` verb and no
+  `framework.history.documentLoad` section. The Rust-built `framework.history.reprojection` section (`HistoryPatch.reprojection
+  {kind: "load"}`) renders through the interpreter like every section, and its Cancel replay row dispatches
+  `historyEditCancelReplay` to the program. React needs no special casing.
+
+| Command | Result |
+|---|---|
+| renderer-react `SEMIO_TEST_LEVEL=long bun x vitest run --config ../../🧪️tests/🎚️config/🟦️.ts ⏪️time-travel/🧪️tests/🧩️component 🧪️staged-arg-controls 📎️local-folders/🧪️tests 🧪️command-rejection` (`vitest-tt-9.txt`) | **4 files, 75/75 ✔** (new: `📢️HistoryLaneNotices` en/de over the kernel `🧫️history-notices` fixture incl. `document.loading`; `⛔️ImportAbort` after 1 or 2 files, undeclared, pre-cancel, done, failure rethrown; `⏹️DocumentLoad` section en/de + Cancel → `historyEditCancelReplay`, cancel vs failure) |
+| same, `🔌️PluginRuntime/🟦️.tsx` (`vitest-pluginruntime-1.txt`) | **135/135 ✔** (rewritten law: a pack+spr load is `LoadDocumentArchive` → 3 polls with progress 1/3, 2/3, 3/3 → `AcknowledgeDocumentArchiveLoad`, never `LoadDocument`; the handle has no `loadAppDocumentPack`) |
+| framework-os `bun x vitest run --config ../../🧪️tests/🎚️config/🟦️.ts ../../🟦️.ts -t loadDocumentArchive` (`vitest-os-archive-1.txt`) | **3/3 ✔** (new: a guest-side cancel rejects with `AbortError` after progress and acknowledgement, nothing cached) |
+| renderer-react related set (18 files) (`vitest-related-3.txt`) | **1201 ✔ / 14 ✘**, the same peer/pre-existing 14 as S3.8 |
+| `🧩️package-integration` (`vitest-load-1.txt`) | 26 ✔ / 3 ✘ — peer (`Current WGPU package artifact authority drift` ×2, `deps-javascript` provisioning id); the `loadAppDocumentPack` fake was removed |
+| `bunx tsc --noEmit -p tsconfig.json` renderer-react (`tsc-react-7.txt`) | 5 errors, **0 in W2-B files** (peer: worker/backbone-parity `line` ×3, `idleInstalledServiceStatusV1`, new `🗣️Interpreter/🧵️worker-cell/🧪️tests/🟦️.ts:80` `seed` unknown) |
+
+Open (routed): W2-C — wgpu `loadAppDocumentPack` still sends `LoadDocument` (`🐚️plugin-bridge/🟦️.ts:1921`) and needs the same
+notice mapping and `importAbort`; W2-A — `history.full` carries its count only in the message text (a structured `n` would avoid
+reading digits from prose); `requestMediaFrames` has no host cancel in either shell.
+
+Files (S3.13): `RE/🔌️PluginRuntime/🟦️.tsx`, `RE/🏛️ShellHost/🟦️.tsx`, `RE/🛠️ShellHelpers/🟦️.tsx`, `🧰️framework/🛍️products/💻️os/🟦️.ts`;
+tests `⏪️time-travel/🧪️tests/🧩️component`, `🧑‍🎨engine/🧪️tests/🔌️plugin-runtime/🟦️.tsx`, `🧑‍🎨engine/🧪️tests/🧩️package-integration/🟦️.ts`,
+`💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts`. Coordinator action added: none beyond S3.11 (no schema or Rust change).
+
+### S3.14 `HistoryPatch.editCount` replaces the digits in a fault message (coordinator, from S3-W2A)
+
+- The React history projection (`ShellHistoryProjectionV1`, `RE/🛠️ShellHelpers/🟦️.tsx`) gains `editCount`, folded from every
+  patch (`patch.editCount ?? 0`, "absent = 0" per the kernel twin).
+- `historyLaneNoticeV1(fault, editCount)`, `historyFaultNoticeV1(fault, editCount)` and `historyOutputNoticeV1(output, editCount)`
+  fill the `history.full` `{n}` from it. The `\d+` read of the fault message is deleted, with no fallback, and the notices no
+  longer take a message at all.
+- `RE/🏛️ShellHost/🟦️.tsx` passes the dispatching program's projected count at all four sites: the action catch and the
+  `{rejected}` result use the target program, the command catch the session, the sync-conflict branch the primary session.
+- Laws (`📢️HistoryLaneNotices`): every kernel notice, en and de, reached as the fault's own code, a cause's or a `{rejected}`
+  result, with `{n}` = the count passed. "This document's history is full (12 edits)." comes from the count, never from the
+  message. The projection fold law: 0 → 64 → 3, and a patch without the field → 0.
+
+| Command (renderer-react package dir) | Result |
+|---|---|
+| `SEMIO_TEST_LEVEL=long bun x vitest run --config ../../🧪️tests/🎚️config/🟦️.ts ⏪️time-travel/🧪️tests/🧩️component 🧪️staged-arg-controls 📎️local-folders/🧪️tests 🧪️command-rejection 🪟️spawned-program-session` (`vitest-editcount-1.txt`) | **5 files, 128/128 ✔** |
+| `bunx tsc --noEmit -p tsconfig.json` (`tsc-react-8.txt`) | 1 error, **0 in W2-B files**: `🌐️World3dHost/🟦️.tsx:2225` (peer). The earlier peer errors are gone |
+
+Session 3 ends here for W2-B. Open items and coordinator actions: S3.10, S3.11, S3.13.
+
+## Session 4 — 2026-10-04
+
+S4-UI inherits S3-W2B together with S3-W1E; the session-4 work of both is reported in `📓️w1-e-report.md` § "Session 4 — 2026-10-04".

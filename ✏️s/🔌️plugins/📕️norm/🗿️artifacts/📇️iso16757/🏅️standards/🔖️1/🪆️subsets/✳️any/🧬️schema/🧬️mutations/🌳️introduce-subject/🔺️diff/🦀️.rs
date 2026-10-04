@@ -18,7 +18,7 @@ pub fn diff(payload: &IntroduceSubject, base: &Iso16757Snapshot) -> protocol::Mu
     }
     let outcome = protocol::MutationOutcome::new(Iso16757Diff { dictionary: Some(dictionary), ..Default::default() });
     if clamped {
-        outcome.warn("mutation.clamped", format!("Insert index was out of range; appended subject \"{}\" at the end instead.", payload.subject.id))
+        outcome.warning("mutation.clamped", format!("Insert index was out of range; appended subject \"{}\" at the end instead.", payload.subject.id))
     } else {
         outcome
     }

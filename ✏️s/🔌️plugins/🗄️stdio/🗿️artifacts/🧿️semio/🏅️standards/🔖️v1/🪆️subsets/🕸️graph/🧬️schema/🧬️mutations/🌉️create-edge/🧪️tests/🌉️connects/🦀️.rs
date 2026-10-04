@@ -17,13 +17,13 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌉️create-edge/🌉️connects/🎯️outcome/🔣️.json");
 
 fn before() -> SemioGraphSnapshot {
-    dsl::json::from_json_str(BEFORE).expect("create-edge before snapshot decodes")
+    crate::standards::v1::subsets::graph::schema::snapshot::decode_semio_graph_snapshot_json(BEFORE).expect("create-edge before snapshot decodes")
 }
 fn expected_after() -> SemioGraphSnapshot {
-    dsl::json::from_json_str(AFTER).expect("create-edge after snapshot decodes")
+    crate::standards::v1::subsets::graph::schema::snapshot::decode_semio_graph_snapshot_json(AFTER).expect("create-edge after snapshot decodes")
 }
 fn mutation() -> SemioGraphMutation {
-    dsl::json::from_json_str(MUTATION).expect("create-edge mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("create-edge mutation decodes")
 }
 
 /// ▶️ The edge appears with both endpoints resolved, and neither endpoint node is rewritten.
@@ -46,7 +46,7 @@ async fn creates_the_edge_between_two_existing_nodes() {
 async fn the_undo_delete_edge_removes_the_connection_again() {
     let base = before();
     let mutation = mutation();
-    let undo = mutation.inverse(&base);
+    let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "create-edge undoes as exactly one delete-edge");
     assert!(matches!(undo[0], SemioGraphMutation::DeleteEdge(_)), "the undo of a create is the matching delete");
     let mut current = mutation.diff(&base).diff().apply(&base).expect("forward create-edge applies");
@@ -60,12 +60,12 @@ async fn the_undo_delete_edge_removes_the_connection_again() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioGraphSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: SemioGraphSnapshot = crate::standards::v1::subsets::graph::schema::snapshot::decode_semio_graph_snapshot_json(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&crate::standards::v1::subsets::graph::schema::snapshot::encode_semio_graph_snapshot_json(&decoded).expect("snapshot encodes")).expect("snapshot reparses");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "create-edge/connects-the-source-node-to-the-sink-node: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("create-edge mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(mutation()))).expect("create-edge mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("create-edge mutation reparses");
     assert_eq!(reencoded, original, "create-edge/connects-the-source-node-to-the-sink-node: committed mutation JSON is not canonical");
 }
@@ -84,7 +84,7 @@ async fn declared_outcome_holds_with_no_guard_branch_firing() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioGraphMutation as Mutation<SemioGraphSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "create-edge/connects-the-source-node-to-the-sink-node: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -93,19 +93,19 @@ async fn produces_committed_diff() {
 /// and nothing else.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_omits_nodes_entirely() {
-    let decoded: SemioGraphDiff = dsl::json::from_json_str(DIFF).expect("committed create-edge diff decodes");
+    let decoded: SemioGraphDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed create-edge diff decodes");
     assert!(decoded.nodes.is_none(), "create-edge must leave the nodes slot untouched");
     assert_eq!(decoded.edges.as_ref().map(|list| list.values.len()), Some(1), "the diff must carry the whole rebuilt edges list");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert!(committed.get("nodes").is_none(), "the committed diff JSON must not carry a nodes key at all");
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     assert_eq!(reencoded, committed, "create-edge/connects-the-source-node-to-the-sink-node: committed diff JSON is not canonical");
 }
 
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioGraphDiff = dsl::json::from_json_str(DIFF).expect("committed create-edge diff decodes");
+    let decoded: SemioGraphDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed create-edge diff decodes");
     let produced = decoded.apply(&before()).expect("committed create-edge diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-edge/connects-the-source-node-to-the-sink-node: committed diff did not carry before to after");
 }

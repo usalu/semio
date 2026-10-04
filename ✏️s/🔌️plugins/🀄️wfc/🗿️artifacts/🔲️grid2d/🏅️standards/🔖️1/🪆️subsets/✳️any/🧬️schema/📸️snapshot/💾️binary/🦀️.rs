@@ -54,7 +54,7 @@ impl Grid2dSnapshotRetirement {
 }
 
 impl ErasedSnapshotRetirement for Grid2dSnapshotRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if self.stage >= Grid2dRetirementStage::ORDER.len() {
             return Ok(SnapshotRetirementStep::Complete);
         }

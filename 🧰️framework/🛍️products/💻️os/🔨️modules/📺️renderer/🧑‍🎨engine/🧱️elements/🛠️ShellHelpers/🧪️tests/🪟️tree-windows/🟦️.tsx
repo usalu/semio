@@ -11,7 +11,11 @@ import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import type { BuiltNode } from "@semio-tech/framework";
 import { TREE_WINDOW_PATH_SEPARATOR } from "@semio-tech/ui-react";
 import { parseResolvedPluginViewState } from "@semio-tech/framework";
-import { createTreeWindowSchedulerV1, TREE_WINDOW_DEFAULT_ROWS, uiNodeToTreePanelConfig, type TreeWindowHostV1 } from "../../🟦️.tsx";
+import { createTreeWindowContextV1, createTreeWindowSchedulerV1, TREE_WINDOW_DEFAULT_ROWS, uiNodeToTreePanelConfig, type TreeWindowHostV1 } from "../../🟦️.tsx";
+import { createTreeWindowReporterV1 } from "../../../🗣️Interpreter/🟦️.tsx";
+import reportsFixture from "../../../../🧫️fixtures/🪟️body-window-reports/🔣️.json";
+import reportsSchema from "../../../../🧬️schema/🪟️body-window-reports/🔣️.json";
+import Ajv2020 from "ajv/dist/2020";
 // #endregion 🔌️Adapters
 
 //#region 🧱️Fixtures
@@ -28,7 +32,7 @@ function builtNode(key: string, component: AnyRecord, children: readonly AnyReco
 function outlinerBody(): BuiltNode {
   return builtNode("outliner", { type: "tree", interactionDomain: null }, [
     builtNode("outliner.objects", { type: "treeSection", label: "Objects", defaultOpen: true, headerToolbar: null, window: { rowExtent: "standard", total: 3, offset: 0 } }, [
-      builtNode("seed-left-001", { type: "treeItem", label: "Seed Left", description: null, icon: null, defaultOpen: null, draggable: null, dragData: null, dimmed: null, window: null, granularity: null, rowActions: [], target: null }),
+      builtNode("seed-left-001", { type: "treeItem", label: "Seed Left", description: null, icon: null, defaultOpen: null, draggable: null, dragData: null, dimmed: null, selected: null, window: null, granularity: null, rowActions: [], target: null }),
     ]),
   ]);
 }
@@ -66,6 +70,38 @@ function hostFor(openStates: Readonly<Record<string, boolean>>, sink: { readonly
 
 //#region ⏱️Scheduling
 describe("🪟️ tree window scheduler", () => {
+  it("reads current disclosure state through a stable body channel", () => {
+    const law = reportsFixture.disclosure;
+    let open: Readonly<Record<string, boolean>> = {};
+    const context = createTreeWindowContextV1(law.body, {
+      openStatesFor: () => open,
+      setOpen: (_body, key, value) => { open = { ...open, [key]: value }; },
+      reportWindows: () => {},
+    });
+    expect(context.openStates[law.node]).toBeUndefined();
+    context.setOpen(law.node, law.opened);
+    expect(context.openStates[law.node]).toBe(law.opened);
+    context.setOpen(law.node, law.closed);
+    expect(context.openStates[law.node]).toBe(law.closed);
+  });
+
+  it("merges sibling observers into a whole-body report and retires only the unmounted source", () => {
+    expect(new Ajv2020({ strict: true }).compile(reportsSchema)(reportsFixture)).toBe(true);
+    const reports: { keys: string[]; viewport: number }[] = [];
+    const reporter = createTreeWindowReporterV1((requests, viewport) => reports.push({ keys: requests.map((row) => row.nodeKey).sort(), viewport }));
+    const header = {};
+    const body = {};
+    reporter.publish(header, [reportsFixture.header], reportsFixture.headerViewportRows);
+    reporter.publish(body, [reportsFixture.body], reportsFixture.bodyViewportRows);
+    expect(reports.at(-1)).toEqual({ keys: reportsFixture.mergedKeys, viewport: reportsFixture.bodyViewportRows });
+    reporter.publish(body, [reportsFixture.shiftedBody], reportsFixture.bodyViewportRows);
+    expect(reports.at(-1)?.keys).toEqual(reportsFixture.mergedKeys);
+    reporter.remove(body);
+    expect(reports.at(-1)).toEqual({ keys: reportsFixture.remainingKeys, viewport: reportsFixture.headerViewportRows });
+    reporter.remove(header);
+    expect(reports.at(-1)?.keys).toEqual([]);
+  });
+
   it("sends an open toggle immediately and coalesces window reports onto the trailing edge", () => {
     const refreshed: string[] = [];
     const timers = manualTimers();
@@ -280,8 +316,8 @@ describe("🪟️ panel body tree window context", () => {
     const sink = { opens: [] as [string, string, boolean][] };
     const shared = (parent: string) =>
       builtNode(parent, { type: "treeSection", label: parent, defaultOpen: true, headerToolbar: null, window: { rowExtent: "standard", total: 2, offset: 0 } }, [
-        builtNode("shared", { type: "treeItem", label: "Shared", description: null, icon: null, defaultOpen: true, draggable: null, dragData: null, dimmed: null, granularity: null, rowActions: [], target: null, window: { rowExtent: "standard", total: 1, offset: 0 } }, [
-          builtNode(`${parent}.shared.0`, { type: "treeItem", label: `${parent} child`, description: null, icon: null, defaultOpen: null, draggable: null, dragData: null, dimmed: null, window: null, granularity: null, rowActions: [], target: null }),
+        builtNode("shared", { type: "treeItem", label: "Shared", description: null, icon: null, defaultOpen: true, draggable: null, dragData: null, dimmed: null, selected: null, granularity: null, rowActions: [], target: null, window: { rowExtent: "standard", total: 1, offset: 0 } }, [
+          builtNode(`${parent}.shared.0`, { type: "treeItem", label: `${parent} child`, description: null, icon: null, defaultOpen: null, draggable: null, dragData: null, dimmed: null, selected: null, window: null, granularity: null, rowActions: [], target: null }),
         ]),
       ]);
     const body = builtNode("outliner", { type: "tree", interactionDomain: null }, [shared("left"), shared("right")]);

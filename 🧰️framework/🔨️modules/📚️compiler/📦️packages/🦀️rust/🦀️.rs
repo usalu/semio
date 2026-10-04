@@ -2,7 +2,6 @@
 //!
 //! Each domain is a `🦀️.rs` in the owner tree; this entry file is pure wiring.
 
-pub use dsl_core::os_dsl;
 
 #[path = "../../📖️syntax/🦀️.rs"]
 pub mod syntax;

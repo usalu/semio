@@ -3,7 +3,7 @@
 
 use super::kernel_3d_scene::{Mat4Math, ProceduralGrid3d, ScenePass3d, SceneRenderProfile3d, PROCEDURAL_GRID_CELL_THICKNESS, PROCEDURAL_GRID_FADE_STRENGTH};
 use crate::wgpu::prepared::{PreparedRasterPages, RasterContentIdentity};
-use crate::wgpu::shaders::{world3d_painted_shader, BLUR_DOWNSAMPLE_SHADER, GLASS_SHADER, SCENE_BLIT_SHADER, UI_SHADER, VECTOR_SHADER, WORLD3D_CELEBRATION_SHADER, WORLD3D_GRID_SHADER, WORLD3D_LINES_SHADER, WORLD3D_SHADER, WORLD3D_TEXTURED_SHADER, WORLD3D_POSTPROCESS_SHADER};
+use crate::wgpu::shaders::{world3d_authored_shader, world3d_painted_shader, BLUR_DOWNSAMPLE_SHADER, GLASS_SHADER, SCENE_BLIT_SHADER, UI_SHADER, VECTOR_SHADER, WORLD3D_CELEBRATION_SHADER, WORLD3D_GRID_SHADER, WORLD3D_LINES_SHADER, WORLD3D_SHADER, WORLD3D_TEXTURED_SHADER, WORLD3D_POSTPROCESS_SHADER};
 #[cfg(test)]
 use crate::wgpu::theme::Rgba;
 use crate::wgpu::theme::Theme;
@@ -362,6 +362,8 @@ pub struct World3dVertex {
     pub normal: [f32; 3],
     pub color: [f32; 4],
     pub uv: [f32; 2],
+    pub surface_uvs:[[f32;2];4],
+    pub tangent:[f32;4],
 }
 
 #[repr(C)]
@@ -429,6 +431,7 @@ pub struct World3dGpuInstance {
     pub color: [f32; 4],
     pub flags: [f32; 4],
     pub emissive_cutoff: [f32; 4],
+    pub surface_parameters:[f32;4],
 }
 
 #[repr(C)]
@@ -469,12 +472,12 @@ impl World3dGpuInstance {
             model3: [model[12], model[13], model[14], model[15]],
             color,
             flags: [policy as f32, emissive_intensity, metalness, roughness],
-            emissive_cutoff: [0.0, 0.0, 0.0, -1.0],
+            emissive_cutoff: [0.0, 0.0, 0.0, -1.0],surface_parameters:[1.0,1.0,1.0,0.0],
         }
     }
 
     pub fn from_authored(model: [f32; 16], material: &crate::wgpu::kernel_3d_scene::SceneAuthoredMaterial3d, receives_shadow: bool) -> Self {
-        let policy = (if material.preserve_vertex_color { 1 } else { 0 }) | (if receives_shadow { 2 } else { 0 }) | 4;
+        let policy = (if material.preserve_vertex_color { 1 } else { 0 }) | (if receives_shadow { 2 } else { 0 }) | 4 | (if material.alpha == crate::wgpu::kernel_3d_scene::SceneMaterialAlpha3d::Opaque { 8 } else { 0 }) | (if material.normal_texture.is_some() { 16 } else { 0 });
         Self {
             model0: [model[0], model[1], model[2], model[3]],
             model1: [model[4], model[5], model[6], model[7]],
@@ -483,6 +486,7 @@ impl World3dGpuInstance {
             color: material.base_color,
             flags: [policy as f32, 0.0, material.metalness, material.roughness],
             emissive_cutoff: [material.emissive[0], material.emissive[1], material.emissive[2], if material.alpha == crate::wgpu::kernel_3d_scene::SceneMaterialAlpha3d::Mask { material.alpha_cutoff } else { -1.0 }],
+            surface_parameters:[material.normal_scale[0],material.normal_scale[1],material.occlusion_strength,0.0],
         }
     }
 }
@@ -687,7 +691,9 @@ impl MeshGpuTable {
             let normal = cursor.lease.vec3(crate::wgpu::kernel_3d_scene::Mesh3dField::Normals, cursor.vertex).unwrap_or([0.0, 1.0, 0.0]);
             let color = cursor.lease.vec4(crate::wgpu::kernel_3d_scene::Mesh3dField::Colors, cursor.vertex).unwrap_or([1.0, 1.0, 1.0, 1.0]);
             let uv = cursor.lease.vec2(crate::wgpu::kernel_3d_scene::Mesh3dField::Uvs, cursor.vertex).unwrap_or([0.0; 2]);
-            let vertex = World3dVertex { position, normal, color, uv };
+            let surface_uvs=[crate::wgpu::kernel_3d_scene::Mesh3dField::UvsMetallicRoughness,crate::wgpu::kernel_3d_scene::Mesh3dField::UvsNormal,crate::wgpu::kernel_3d_scene::Mesh3dField::UvsOcclusion,crate::wgpu::kernel_3d_scene::Mesh3dField::UvsEmissive].map(|field|cursor.lease.vec2(field,cursor.vertex).unwrap_or(uv));
+            let tangent=cursor.lease.vec4(crate::wgpu::kernel_3d_scene::Mesh3dField::Tangents,cursor.vertex).unwrap_or([0.0;4]);
+            let vertex = World3dVertex { position, normal, color, uv,surface_uvs,tangent };
             queue.write_buffer(cursor.vertex_buffer.as_ref().ok_or("mesh upload vertex buffer was retired")?, u64::from(cursor.vertex) * size_of::<World3dVertex>() as u64, bytemuck::bytes_of(&vertex));
             cursor.vertex += 1;
             return Ok(false);
@@ -1214,6 +1220,8 @@ impl RasterTextureKey {
 fn raster_texture_bytes(width: u32, height: u32) -> Option<usize> {
     usize::try_from(width).ok()?.checked_mul(usize::try_from(height).ok()?)?.checked_mul(4)
 }
+
+fn raster_mip_bytes(width:u32,height:u32,levels:u32)->Option<usize>{if levels==0 || width==0 || height==0 || levels>u32::BITS-width.max(height).leading_zeros(){return None}let mut bytes=0usize;for level in 0..levels {bytes=bytes.checked_add(raster_texture_bytes((width>>level).max(1),(height>>level).max(1))?)?;}Some(bytes)}
 
 fn raster_admission_fits(retained_items: usize, retained_bytes: usize, bytes: usize) -> bool {
     retained_items < RASTER_TEXTURE_TABLE_CAPACITY && retained_bytes.checked_add(bytes).is_some_and(|total| total <= RASTER_TEXTURE_TABLE_BYTE_CAPACITY)
@@ -1750,6 +1758,9 @@ impl RasterOperationWitnessLedger {
 }
 
 struct RasterTextureUploadCursor {
+    mip_levels:u32,
+    mip:u32,
+    mip_row:u32,
     admission: Option<RasterTextureAdmission>,
     row: u32,
     texture: Option<wgpu::Texture>,
@@ -1831,8 +1842,10 @@ impl RasterUploadPixels<'_> {
         }
     }
 
+    pub(crate) fn mip_levels(&self,width:u32,height:u32)->u32{if matches!(self,Self::Scene(lease) if matches!(lease.identity().descriptor().profile,crate::wgpu::raster_ownership::SceneRasterProfile::MeshBaseColorSrgb|crate::wgpu::raster_ownership::SceneRasterProfile::MeshNumericLinear)){u32::BITS-width.max(height).leading_zeros()}else{1}}
+
     fn texture_format(&self) -> wgpu::TextureFormat {
-        wgpu::TextureFormat::Rgba8UnormSrgb
+        if matches!(self,Self::Scene(lease) if lease.identity().descriptor().profile==crate::wgpu::raster_ownership::SceneRasterProfile::MeshNumericLinear){wgpu::TextureFormat::Rgba8Unorm}else{wgpu::TextureFormat::Rgba8UnormSrgb}
     }
 }
 
@@ -2010,7 +2023,7 @@ impl RasterTextureUploadCloseCursor {
                 return RasterTextureCleanupStep::retained();
             }
             if !self.row_retired {
-                source.row = 0;
+                source.row = 0;source.mip_levels=0;source.mip=0;source.mip_row=0;
                 self.row_retired = true;
                 return RasterTextureCleanupStep::scalar();
             }
@@ -2062,12 +2075,18 @@ pub struct RasterTextureTable {
     next_reservation_nonce: u64,
     layout: wgpu::BindGroupLayout,
     sampler: wgpu::Sampler,
+    mip_layout:wgpu::BindGroupLayout,
+    mip_pipelines:[wgpu::RenderPipeline;2],
     closing: bool,
 }
 
 impl RasterTextureTable {
     pub fn new(device: &wgpu::Device, layout: &wgpu::BindGroupLayout) -> Self {
         let sampler = device.create_sampler(&wgpu::SamplerDescriptor { label: Some("raster_sampler"), mag_filter: wgpu::FilterMode::Linear, min_filter: wgpu::FilterMode::Linear, ..Default::default() });
+        let shader=device.create_shader_module(wgpu::ShaderModuleDescriptor{label:Some("raster_mip_shader"),source:wgpu::ShaderSource::Wgsl(crate::wgpu::shaders::RASTER_MIP_SHADER.into())});
+        let mip_layout=device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor{label:Some("raster_mip_layout"),entries:&[wgpu::BindGroupLayoutEntry{binding:0,visibility:wgpu::ShaderStages::FRAGMENT,ty:wgpu::BindingType::Texture{sample_type:wgpu::TextureSampleType::Float{filterable:true},view_dimension:wgpu::TextureViewDimension::D2,multisampled:false},count:None},wgpu::BindGroupLayoutEntry{binding:1,visibility:wgpu::ShaderStages::FRAGMENT,ty:wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),count:None}]});
+        let mip_pipeline_layout=device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor{label:Some("raster_mip_pipeline_layout"),bind_group_layouts:&[Some(&mip_layout)],immediate_size:0});
+        let mip_pipelines=[wgpu::TextureFormat::Rgba8Unorm,wgpu::TextureFormat::Rgba8UnormSrgb].map(|format|device.create_render_pipeline(&wgpu::RenderPipelineDescriptor{label:Some("raster_mip_pipeline"),layout:Some(&mip_pipeline_layout),vertex:wgpu::VertexState{module:&shader,entry_point:Some("vs_main"),buffers:&[],compilation_options:Default::default()},fragment:Some(wgpu::FragmentState{module:&shader,entry_point:Some("fs_main"),targets:&[Some(wgpu::ColorTargetState{format,blend:None,write_mask:wgpu::ColorWrites::ALL})],compilation_options:Default::default()}),primitive:Default::default(),depth_stencil:None,multisample:Default::default(),multiview_mask:None,cache:None}));
         Self {
             live: FixedRasterTextureRegistry::default(),
             staged: FixedRasterTextureRegistry::default(),
@@ -2081,7 +2100,7 @@ impl RasterTextureTable {
             exact_close: None,
             next_reservation_nonce: 1,
             layout: layout.clone(),
-            sampler,
+            sampler,mip_layout,mip_pipelines,
             closing: false,
         }
     }
@@ -2131,9 +2150,10 @@ impl RasterTextureTable {
         self.residency.counts()
     }
 
-    pub fn prepare_admission_step(&mut self, key: &str, width: u32, height: u32, content_identity: RasterContentIdentity, witness: RasterTextureWitness) -> Result<bool, &'static str> {
-        let bytes = raster_texture_bytes(width, height).ok_or("raster texture byte credits overflowed")?;
-        if !content_identity.dimensions_match(width, height, bytes) {
+    pub fn prepare_admission_step(&mut self, key: &str, width: u32, height: u32,mip_levels:u32, content_identity: RasterContentIdentity, witness: RasterTextureWitness) -> Result<bool, &'static str> {
+        let base_bytes = raster_texture_bytes(width,height).ok_or("raster texture byte credits overflowed")?;
+        let bytes=raster_mip_bytes(width,height,mip_levels).ok_or("raster mip byte credits overflowed")?;
+        if !content_identity.dimensions_match(width, height, base_bytes) {
             return Err("raster content identity dimensions were stale");
         }
         if !self.residency.candidate_is_sealed(witness) {
@@ -2169,7 +2189,7 @@ impl RasterTextureTable {
         Err("raster texture credits are owned by retained frames")
     }
 
-    pub fn reserve_engine_texture(&mut self, key: &str, width: u32, height: u32, content_identity: RasterContentIdentity, candidate: RasterTextureWitness, expected: RasterTextureWitness) -> Result<RasterTextureAdmission, &'static str> {
+    pub fn reserve_engine_texture(&mut self, key: &str, width: u32, height: u32,mip_levels:u32, content_identity: RasterContentIdentity, candidate: RasterTextureWitness, expected: RasterTextureWitness) -> Result<RasterTextureAdmission, &'static str> {
         if let Some(retirement) = self.reservation_retirement.as_mut() {
             if matches!(retirement.step(), RasterTextureCleanupStep::Complete) {
                 assert!(retirement.terminal_is_empty(), "completed raster reservation must be terminal-empty");
@@ -2187,8 +2207,9 @@ impl RasterTextureTable {
             return Err("raster candidate generation was occupied");
         }
         let key = RasterTextureKey::new(key)?;
-        let bytes = raster_texture_bytes(width, height).ok_or("raster texture byte credits overflowed")?;
-        if !content_identity.dimensions_match(width, height, bytes) {
+        let base_bytes = raster_texture_bytes(width,height).ok_or("raster texture byte credits overflowed")?;
+        let bytes=raster_mip_bytes(width,height,mip_levels).ok_or("raster mip byte credits overflowed")?;
+        if !content_identity.dimensions_match(width, height, base_bytes) {
             return Err("raster content identity dimensions were stale");
         }
         if width == 0 || height == 0 || bytes > RASTER_TEXTURE_ITEM_BYTE_CAPACITY {
@@ -2272,7 +2293,7 @@ impl RasterTextureTable {
 
     pub(super) fn retain_engine_allocation_fault(&mut self, admission: RasterTextureAdmission, texture: Option<wgpu::Texture>, view: Option<wgpu::TextureView>) {
         assert!(self.upload.is_none() && self.upload_close.is_none(), "matching raster allocation fault must own its reserved close slot");
-        self.upload_close = Some(RasterTextureUploadCloseCursor::new(RasterTextureUploadCursor { admission: Some(admission), row: 0, texture, view, bind_group: None, allocation_claim: None, cpu_release: None }));
+        self.upload_close = Some(RasterTextureUploadCloseCursor::new(RasterTextureUploadCursor {mip_levels:1,mip:1,mip_row:0, admission: Some(admission), row: 0, texture, view, bind_group: None, allocation_claim: None, cpu_release: None }));
     }
 
     #[expect(clippy::result_large_err, reason = "GPU admission returns the exact resource and reservation owner without allocating during refusal.")]
@@ -2339,9 +2360,10 @@ impl RasterTextureTable {
             pixels.release_reused();
             return Ok(true);
         }
+        let mip_levels=pixels.mip_levels(width,height);
         if self.upload.is_none() {
-            let admission = self.reserve_engine_texture(key, width, height, content_identity, candidate, expected)?;
-            self.upload = Some(RasterTextureUploadCursor { admission: Some(admission), row: 0, texture: None, view: None, bind_group: None, allocation_claim: None, cpu_release: pixels.release_witness() });
+            let admission = self.reserve_engine_texture(key, width, height,mip_levels, content_identity, candidate, expected)?;
+            self.upload = Some(RasterTextureUploadCursor {mip_levels,mip:1,mip_row:0, admission: Some(admission), row: 0, texture: None, view: None, bind_group: None, allocation_claim: None, cpu_release: pixels.release_witness() });
             let allocation_claim = {
                 let admission = self.upload.as_ref().and_then(|cursor| cursor.admission.as_ref()).expect("retained raster texture admission");
                 self.claim_texture_allocation(admission, expected)?
@@ -2350,11 +2372,11 @@ impl RasterTextureTable {
             let texture = device.create_texture(&wgpu::TextureDescriptor {
                 label: Some("raster_texture"),
                 size: wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
-                mip_level_count: 1,
+                mip_level_count: mip_levels,
                 sample_count: 1,
                 dimension: wgpu::TextureDimension::D2,
                 format: pixels.texture_format(),
-                usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+                usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST | wgpu::TextureUsages::RENDER_ATTACHMENT,
                 view_formats: &[],
             });
             self.upload.as_mut().expect("retained raster texture upload").texture = Some(texture);
@@ -2409,6 +2431,14 @@ impl RasterTextureTable {
             cursor.row += page_rows;
             return Ok(false);
         }
+        if cursor.mip<cursor.mip_levels {
+            let texture=cursor.texture.as_ref().ok_or("raster mip texture was retired")?;let width=(width>>cursor.mip).max(1);let height=(height>>cursor.mip).max(1);
+            let view=|level|texture.create_view(&wgpu::TextureViewDescriptor{base_mip_level:level,mip_level_count:Some(1),..Default::default()});let source=view(cursor.mip-1);let target=view(cursor.mip);
+            let group=device.create_bind_group(&wgpu::BindGroupDescriptor{label:Some("raster_mip_bind_group"),layout:&self.mip_layout,entries:&[wgpu::BindGroupEntry{binding:0,resource:wgpu::BindingResource::TextureView(&source)},wgpu::BindGroupEntry{binding:1,resource:wgpu::BindingResource::Sampler(&self.sampler)}]});
+            let mut encoder=device.create_command_encoder(&wgpu::CommandEncoderDescriptor{label:Some("raster_mip_encoder")});let rows=(height-cursor.mip_row).min(8);
+            {let mut pass=encoder.begin_render_pass(&wgpu::RenderPassDescriptor{label:Some("raster_mip_pass"),color_attachments:&[Some(wgpu::RenderPassColorAttachment{view:&target,resolve_target:None,ops:wgpu::Operations{load:wgpu::LoadOp::Load,store:wgpu::StoreOp::Store},depth_slice:None})],depth_stencil_attachment:None,timestamp_writes:None,occlusion_query_set:None,multiview_mask:None});pass.set_pipeline(&self.mip_pipelines[usize::from(pixels.texture_format()==wgpu::TextureFormat::Rgba8UnormSrgb)]);pass.set_bind_group(0,&group,&[]);pass.set_scissor_rect(0,cursor.mip_row,width,rows);pass.draw(0..3,0..1);}
+            queue.submit(Some(encoder.finish()));cursor.mip_row+=rows;if cursor.mip_row==height{cursor.mip_row=0;cursor.mip+=1;}return Ok(false);
+        }
         let mut cursor = self.upload.take().expect("completed raster upload cursor");
         let admission = cursor.admission.take().expect("completed raster upload admission");
         let allocation_claim = cursor.allocation_claim.take().expect("completed raster allocation claim");
@@ -2421,7 +2451,7 @@ impl RasterTextureTable {
         };
         let cpu_release = cursor.cpu_release.take();
         if let Err((fault, admission, value, cpu_release)) = self.stage_claimed_texture(admission, value, allocation_claim, cpu_release) {
-            self.upload_close = Some(RasterTextureUploadCloseCursor::new(RasterTextureUploadCursor {
+            self.upload_close = Some(RasterTextureUploadCloseCursor::new(RasterTextureUploadCursor {mip_levels:1,mip:1,mip_row:0,
                 admission: Some(admission),
                 row: height,
                 texture: Some(value.texture),
@@ -2477,7 +2507,7 @@ impl RasterTextureTable {
         let value = RasterTexture { texture, view: raster_view, bind_group, width, height };
         if let Err((fault, admission, value, cpu_release)) = self.stage_claimed_texture(admission, value, allocation_claim, None) {
             assert!(self.upload.is_none() && self.upload_close.is_none(), "matching raster publication fault must own its reserved close slot");
-            self.upload_close = Some(RasterTextureUploadCloseCursor::new(RasterTextureUploadCursor {
+            self.upload_close = Some(RasterTextureUploadCloseCursor::new(RasterTextureUploadCursor {mip_levels:1,mip:1,mip_row:0,
                 admission: Some(admission),
                 row: height,
                 texture: Some(value.texture),
@@ -2765,6 +2795,8 @@ pub(crate) struct UiPipelines {
     world_standard_translucent_pipeline: wgpu::RenderPipeline,
     world_painted_pipeline: wgpu::RenderPipeline,
     world_painted_pipeline_translucent: wgpu::RenderPipeline,
+    world_authored_painted_double_pipeline: wgpu::RenderPipeline,
+    world_authored_painted_double_translucent_pipeline: wgpu::RenderPipeline,
     world_authored_painted_front_pipeline: wgpu::RenderPipeline,
     world_authored_painted_front_translucent_pipeline: wgpu::RenderPipeline,
     world_celebration_pipeline: wgpu::RenderPipeline,
@@ -2793,6 +2825,8 @@ pub(crate) struct UiPipelines {
     blur_bind_group_layout: wgpu::BindGroupLayout,
     postprocess_bind_group_layout: wgpu::BindGroupLayout,
     scene_bind_group_layout: wgpu::BindGroupLayout,
+    world_authored_bind_group_layout: wgpu::BindGroupLayout,
+    world_authored_white: wgpu::TextureView,
     glyph_texture: wgpu::Texture,
     glyph_sampler: wgpu::Sampler,
     icon_texture: wgpu::Texture,
@@ -3235,6 +3269,10 @@ impl UiPipelines {
                 wgpu::VertexAttribute { offset: 96, shader_location: 10, format: wgpu::VertexFormat::Float32x4 },
             ],
         };
+        let world_surface_vertex_layout=||wgpu::VertexBufferLayout {array_stride:size_of::<World3dVertex>() as wgpu::BufferAddress,step_mode:wgpu::VertexStepMode::Vertex,attributes:&[
+            wgpu::VertexAttribute{offset:0,shader_location:0,format:wgpu::VertexFormat::Float32x3},wgpu::VertexAttribute{offset:12,shader_location:1,format:wgpu::VertexFormat::Float32x3},wgpu::VertexAttribute{offset:24,shader_location:2,format:wgpu::VertexFormat::Float32x4},wgpu::VertexAttribute{offset:40,shader_location:9,format:wgpu::VertexFormat::Float32x4},wgpu::VertexAttribute{offset:56,shader_location:11,format:wgpu::VertexFormat::Float32x4},wgpu::VertexAttribute{offset:72,shader_location:12,format:wgpu::VertexFormat::Float32x2},wgpu::VertexAttribute{offset:80,shader_location:13,format:wgpu::VertexFormat::Float32x4},]};
+        let world_surface_instance_layout=||wgpu::VertexBufferLayout{array_stride:size_of::<World3dGpuInstance>() as wgpu::BufferAddress,step_mode:wgpu::VertexStepMode::Instance,attributes:&[
+            wgpu::VertexAttribute{offset:0,shader_location:3,format:wgpu::VertexFormat::Float32x4},wgpu::VertexAttribute{offset:16,shader_location:4,format:wgpu::VertexFormat::Float32x4},wgpu::VertexAttribute{offset:32,shader_location:5,format:wgpu::VertexFormat::Float32x4},wgpu::VertexAttribute{offset:48,shader_location:6,format:wgpu::VertexFormat::Float32x4},wgpu::VertexAttribute{offset:64,shader_location:7,format:wgpu::VertexFormat::Float32x4},wgpu::VertexAttribute{offset:80,shader_location:8,format:wgpu::VertexFormat::Float32x4},wgpu::VertexAttribute{offset:96,shader_location:10,format:wgpu::VertexFormat::Float32x4},wgpu::VertexAttribute{offset:112,shader_location:15,format:wgpu::VertexFormat::Float32x4},]};
         let world_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some("world3d_pipeline"),
             layout: Some(&world_mesh_pipeline_layout),
@@ -3371,6 +3409,13 @@ impl UiPipelines {
             ],
         });
 
+        let authored_entries: Vec<_> = (0..10).map(|binding| wgpu::BindGroupLayoutEntry { binding, visibility: wgpu::ShaderStages::FRAGMENT, ty: if binding % 2 == 0 { wgpu::BindingType::Texture { sample_type: wgpu::TextureSampleType::Float { filterable: true }, view_dimension: wgpu::TextureViewDimension::D2, multisampled: false } } else { wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering) }, count: None }).collect();
+        let world_authored_bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor { label: Some("world3d_authored_surface_layout"), entries: &authored_entries });
+        let authored_white = device.create_texture(&wgpu::TextureDescriptor { label: Some("world3d_authored_white"), size: wgpu::Extent3d { width: 1, height: 1, depth_or_array_layers: 1 }, mip_level_count: 1, sample_count: 1, dimension: wgpu::TextureDimension::D2, format: wgpu::TextureFormat::Rgba8Unorm, usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST, view_formats: &[] });
+        queue.write_texture(wgpu::TexelCopyTextureInfo { texture: &authored_white, mip_level: 0, origin: wgpu::Origin3d::ZERO, aspect: wgpu::TextureAspect::All }, &[255;4], wgpu::TexelCopyBufferLayout { offset: 0, bytes_per_row: Some(4), rows_per_image: Some(1) }, wgpu::Extent3d { width: 1, height: 1, depth_or_array_layers: 1 });
+        let world_authored_white = authored_white.create_view(&Default::default());
+        let world_authored_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor { label: Some("world3d_authored_shader"), source: wgpu::ShaderSource::Wgsl(world3d_authored_shader().into()) });
+        let world_authored_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("world3d_authored_pipeline_layout"), bind_group_layouts: &[Some(&world_bind_group_layout), Some(&world_shadow_bind_group_layout), Some(&world_authored_bind_group_layout)], immediate_size: 0 });
         let world_painted_source = world3d_painted_shader();
         let world_painted_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor { label: Some("world3d_painted_shader"), source: wgpu::ShaderSource::Wgsl(world_painted_source.into()) });
         let world_celebration_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor { label: Some("world3d_celebration_shader"), source: wgpu::ShaderSource::Wgsl(WORLD3D_CELEBRATION_SHADER.into()) });
@@ -3465,12 +3510,44 @@ impl UiPipelines {
             multiview_mask: None,
             cache: None,
         });
+        let world_authored_painted_double_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("world3d_authored_painted_front_pipeline"),
+            layout: Some(&world_authored_pipeline_layout),
+            vertex: wgpu::VertexState { module: &world_authored_shader, entry_point: Some("vs_main"), buffers: &[world_surface_vertex_layout(), world_surface_instance_layout()], compilation_options: Default::default() },
+            fragment: Some(wgpu::FragmentState {
+                module: &world_authored_shader,
+                entry_point: Some("fs_main"),
+                targets: &[Some(wgpu::ColorTargetState { format: world_encoded_format, blend: Some(wgpu::BlendState::REPLACE), write_mask: wgpu::ColorWrites::ALL })],
+                compilation_options: Default::default(),
+            }),
+            primitive: wgpu::PrimitiveState { cull_mode: None, ..Default::default() },
+            depth_stencil: Some(material_depth(true)),
+            multisample: Default::default(),
+            multiview_mask: None,
+            cache: None,
+        });
+        let world_authored_painted_double_translucent_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("world3d_authored_painted_front_translucent_pipeline"),
+            layout: Some(&world_authored_pipeline_layout),
+            vertex: wgpu::VertexState { module: &world_authored_shader, entry_point: Some("vs_main"), buffers: &[world_surface_vertex_layout(), world_surface_instance_layout()], compilation_options: Default::default() },
+            fragment: Some(wgpu::FragmentState {
+                module: &world_authored_shader,
+                entry_point: Some("fs_main"),
+                targets: &[Some(wgpu::ColorTargetState { format: world_encoded_format, blend: Some(wgpu::BlendState::ALPHA_BLENDING), write_mask: wgpu::ColorWrites::ALL })],
+                compilation_options: Default::default(),
+            }),
+            primitive: wgpu::PrimitiveState { cull_mode: None, ..Default::default() },
+            depth_stencil: Some(material_depth(false)),
+            multisample: Default::default(),
+            multiview_mask: None,
+            cache: None,
+        });
         let world_authored_painted_front_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some("world3d_authored_painted_front_pipeline"),
-            layout: Some(&world_painted_pipeline_layout),
-            vertex: wgpu::VertexState { module: &world_painted_shader, entry_point: Some("vs_main"), buffers: &[world_vertex_layout(), world_instance_layout()], compilation_options: Default::default() },
+            layout: Some(&world_authored_pipeline_layout),
+            vertex: wgpu::VertexState { module: &world_authored_shader, entry_point: Some("vs_main"), buffers: &[world_surface_vertex_layout(), world_surface_instance_layout()], compilation_options: Default::default() },
             fragment: Some(wgpu::FragmentState {
-                module: &world_painted_shader,
+                module: &world_authored_shader,
                 entry_point: Some("fs_main"),
                 targets: &[Some(wgpu::ColorTargetState { format: world_encoded_format, blend: Some(wgpu::BlendState::REPLACE), write_mask: wgpu::ColorWrites::ALL })],
                 compilation_options: Default::default(),
@@ -3483,10 +3560,10 @@ impl UiPipelines {
         });
         let world_authored_painted_front_translucent_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some("world3d_authored_painted_front_translucent_pipeline"),
-            layout: Some(&world_painted_pipeline_layout),
-            vertex: wgpu::VertexState { module: &world_painted_shader, entry_point: Some("vs_main"), buffers: &[world_vertex_layout(), world_instance_layout()], compilation_options: Default::default() },
+            layout: Some(&world_authored_pipeline_layout),
+            vertex: wgpu::VertexState { module: &world_authored_shader, entry_point: Some("vs_main"), buffers: &[world_surface_vertex_layout(), world_surface_instance_layout()], compilation_options: Default::default() },
             fragment: Some(wgpu::FragmentState {
-                module: &world_painted_shader,
+                module: &world_authored_shader,
                 entry_point: Some("fs_main"),
                 targets: &[Some(wgpu::ColorTargetState { format: world_encoded_format, blend: Some(wgpu::BlendState::ALPHA_BLENDING), write_mask: wgpu::ColorWrites::ALL })],
                 compilation_options: Default::default(),
@@ -3559,7 +3636,7 @@ impl UiPipelines {
             mipmap_filter: wgpu::MipmapFilterMode::Nearest,
             ..Default::default()
         });
-        let mut world_material_samplers = Vec::with_capacity(36);
+        let mut world_material_samplers = Vec::with_capacity(108);
         for wrap_u in [
             crate::wgpu::kernel_3d_scene::SceneTextureWrap3d::ClampToEdge,
             crate::wgpu::kernel_3d_scene::SceneTextureWrap3d::Repeat,
@@ -3571,7 +3648,7 @@ impl UiPipelines {
                 crate::wgpu::kernel_3d_scene::SceneTextureWrap3d::MirrorRepeat,
             ] {
                 for mag_filter in [crate::wgpu::kernel_3d_scene::SceneTextureFilter3d::Nearest, crate::wgpu::kernel_3d_scene::SceneTextureFilter3d::Linear] {
-                    for min_filter in [crate::wgpu::kernel_3d_scene::SceneTextureFilter3d::Nearest, crate::wgpu::kernel_3d_scene::SceneTextureFilter3d::Linear] {
+                    for min_filter in [crate::wgpu::kernel_3d_scene::SceneTextureFilter3d::Nearest, crate::wgpu::kernel_3d_scene::SceneTextureFilter3d::Linear,crate::wgpu::kernel_3d_scene::SceneTextureFilter3d::NearestMipmapNearest,crate::wgpu::kernel_3d_scene::SceneTextureFilter3d::LinearMipmapNearest,crate::wgpu::kernel_3d_scene::SceneTextureFilter3d::NearestMipmapLinear,crate::wgpu::kernel_3d_scene::SceneTextureFilter3d::LinearMipmapLinear] {
                         let descriptor = crate::wgpu::kernel_3d_scene::SceneTextureSampler3d { wrap_u, wrap_v, mag_filter, min_filter };
                         let address = |mode| match mode {
                             crate::wgpu::kernel_3d_scene::SceneTextureWrap3d::ClampToEdge => wgpu::AddressMode::ClampToEdge,
@@ -3579,8 +3656,8 @@ impl UiPipelines {
                             crate::wgpu::kernel_3d_scene::SceneTextureWrap3d::MirrorRepeat => wgpu::AddressMode::MirrorRepeat,
                         };
                         let filter = |mode| match mode {
-                            crate::wgpu::kernel_3d_scene::SceneTextureFilter3d::Nearest => wgpu::FilterMode::Nearest,
-                            crate::wgpu::kernel_3d_scene::SceneTextureFilter3d::Linear => wgpu::FilterMode::Linear,
+                            crate::wgpu::kernel_3d_scene::SceneTextureFilter3d::Nearest | crate::wgpu::kernel_3d_scene::SceneTextureFilter3d::NearestMipmapNearest | crate::wgpu::kernel_3d_scene::SceneTextureFilter3d::NearestMipmapLinear => wgpu::FilterMode::Nearest,
+                            _ => wgpu::FilterMode::Linear,
                         };
                         let sampler = device.create_sampler(&wgpu::SamplerDescriptor {
                             label: Some("world3d_material_sampler"),
@@ -3589,7 +3666,8 @@ impl UiPipelines {
                             address_mode_w: wgpu::AddressMode::Repeat,
                             mag_filter: filter(mag_filter),
                             min_filter: filter(min_filter),
-                            mipmap_filter: wgpu::MipmapFilterMode::Nearest,
+                            mipmap_filter:if matches!(min_filter,crate::wgpu::kernel_3d_scene::SceneTextureFilter3d::NearestMipmapLinear|crate::wgpu::kernel_3d_scene::SceneTextureFilter3d::LinearMipmapLinear){wgpu::MipmapFilterMode::Linear}else{wgpu::MipmapFilterMode::Nearest},
+                            lod_max_clamp:if matches!(min_filter,crate::wgpu::kernel_3d_scene::SceneTextureFilter3d::Nearest|crate::wgpu::kernel_3d_scene::SceneTextureFilter3d::Linear){0.0}else{32.0},
                             ..Default::default()
                         });
                         world_material_samplers.push((descriptor, sampler));
@@ -3794,6 +3872,8 @@ impl UiPipelines {
             world_standard_translucent_pipeline,
             world_painted_pipeline,
             world_painted_pipeline_translucent,
+            world_authored_painted_double_pipeline,
+            world_authored_painted_double_translucent_pipeline,
             world_authored_painted_front_pipeline,
             world_authored_painted_front_translucent_pipeline,
             world_celebration_pipeline,
@@ -3822,6 +3902,8 @@ impl UiPipelines {
             blur_bind_group_layout,
             postprocess_bind_group_layout,
             scene_bind_group_layout,
+            world_authored_bind_group_layout,
+            world_authored_white,
             glyph_texture,
             glyph_sampler,
             icon_texture,
@@ -4562,22 +4644,18 @@ impl UiPipelines {
                     .ok_or("prepared world celebration buffer admission failed")?
             }
             crate::wgpu::kernel_3d_scene::SceneMaterialKind3d::Authored(material) => {
-                painted_bind_group = if let Some(texture_key) = material.base_color_texture.as_deref() {
-                    let Some(raster) = raster_store.get(texture_key) else { return Ok(true) };
-                    let sampler = &self
-                        .world_material_samplers
-                        .iter()
-                        .find(|(descriptor, _)| *descriptor == material.texture_sampler)
-                        .ok_or("authored material sampler was not prepared")?
-                        .1;
-                    Some(device.create_bind_group(&wgpu::BindGroupDescriptor {
-                        label: Some("world3d_authored_bind_group"),
-                        layout: &self.scene_bind_group_layout,
-                        entries: &[wgpu::BindGroupEntry { binding: 0, resource: wgpu::BindingResource::TextureView(&raster.view) }, wgpu::BindGroupEntry { binding: 1, resource: wgpu::BindingResource::Sampler(sampler) }],
-                    }))
-                } else {
-                    None
-                };
+                let keys = [&material.base_color_texture, &material.metallic_roughness_texture, &material.normal_texture, &material.occlusion_texture, &material.emissive_texture];
+                painted_bind_group = if keys.iter().any(|key| key.is_some()) {
+                    let mut entries = Vec::with_capacity(10);
+                    for (role,key) in keys.into_iter().enumerate() {
+                        let view = if let Some(key) = key { let Some(raster) = raster_store.get(key) else { return Ok(true) }; &raster.view } else { &self.world_authored_white };
+                        let descriptor = if role == 0 { material.texture_sampler } else { material.additional_texture_samplers[role-1] };
+                        let sampler = &self.world_material_samplers.iter().find(|(candidate,_)| *candidate == descriptor).ok_or("authored material sampler was not prepared")?.1;
+                        entries.push(wgpu::BindGroupEntry { binding: role as u32 * 2, resource: wgpu::BindingResource::TextureView(view) });
+                        entries.push(wgpu::BindGroupEntry { binding: role as u32 * 2 + 1, resource: wgpu::BindingResource::Sampler(sampler) });
+                    }
+                    Some(device.create_bind_group(&wgpu::BindGroupDescriptor { label: Some("world3d_authored_bind_group"), layout: &self.world_authored_bind_group_layout, entries: &entries }))
+                } else { None };
                 let gpu_instance = World3dGpuInstance::from_authored(instance.model.to_cols_array_m(), material, pass_owner.shadow.enabled);
                 frame_buffers.world_instances.upload(device, queue, std::slice::from_ref(&gpu_instance), wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "prepared_world_authored").ok_or("prepared world authored buffer admission failed")?
             }
@@ -4615,12 +4693,12 @@ impl UiPipelines {
                 pass.set_bind_group(0, &self.world_globals_ring.bind_group, &[self.world_globals_ring.offset_for_slot(0)]);
             }
             crate::wgpu::kernel_3d_scene::SceneMaterialKind3d::Authored(material) => {
-                if material.base_color_texture.is_some() {
+                if painted_bind_group.is_some() {
                     pass.set_pipeline(match (draw_owner.translucent, material.double_sided) {
                         (false, false) => &self.world_authored_painted_front_pipeline,
-                        (false, true) => &self.world_painted_pipeline,
+                        (false, true) => &self.world_authored_painted_double_pipeline,
                         (true, false) => &self.world_authored_painted_front_translucent_pipeline,
-                        (true, true) => &self.world_painted_pipeline_translucent,
+                        (true, true) => &self.world_authored_painted_double_translucent_pipeline,
                     });
                     pass.set_bind_group(0, &self.world_globals_ring.bind_group, &[self.world_globals_ring.offset_for_slot(0)]);
                     pass.set_bind_group(1, &self.world_shadow_target.bind_group, &[]);

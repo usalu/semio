@@ -15,8 +15,8 @@ fn replace(_net: &[TestMutation], next: &[TestMutation]) -> TypingFold<TestMutat
 }
 
 fn type_into(runtime: &mut ToolMachineRuntime<TestSnapshot, TestMutation>, window: &str, leaves: Vec<TestMutation>, clock: u64) -> Vec<ToolStep<TestMutation>> {
-    let clock = protocol::HybridLogicalTimestamp { actor: 0, physical_ms: clock, logical: 0 };
-    runtime.typing.send(window, "s.test@1/*#editor#setLabel", &protocol::ActorId("actor".into()), TypingInput::Edit { buffer: "label".into(), leaves }, replace, clock).expect("typing is never refused")
+    let clock = HybridLogicalTimestamp { actor: 0, physical_ms: clock, logical: 0 };
+    runtime.typing.send(window, "s.test@1/*#editor#setLabel", &ActorId("actor".into()), TypingInput::Edit { buffer: "label".into(), leaves }, replace, clock).expect("typing is never refused")
 }
 
 /// ⚖️ LAW: while a run is open every render reads committed ⊕ its net leaves — a press and a run fold together, the press
@@ -27,16 +27,19 @@ fn the_overlay_folds_open_runs_over_an_untouched_committed_document() {
     let head = committed(1, "a");
     assert!(matches!(type_into(&mut runtime, "w1", vec![SetLabel { value: "h".into() }.into()], 1_000).as_slice(), [ToolStep::Open]));
     assert!(matches!(type_into(&mut runtime, "w1", vec![SetLabel { value: "hello".into() }.into()], 1_100).as_slice(), [ToolStep::Open]));
-    let clock = protocol::HybridLogicalTimestamp { actor: 0, physical_ms: 1_101, logical: 0 };
-    runtime.scrubs.send("w2", "s.test@1/*#editor#setCount", &protocol::ActorId("actor".into()), "r1", semio_framework_tool_machine::ScrubInput::Tick { gesture: "g".into(), leaves: vec![SetCount { value: 5 }.into()] }, clock).expect("a tick");
+    let clock = HybridLogicalTimestamp { actor: 0, physical_ms: 1_101, logical: 0 };
+    runtime
+        .presses
+        .send("w2", "s.test@1/*#editor#setCount", &ActorId("actor".into()), "r1", semio_framework_tool_machine::ScrubInput::Tick { gesture: "g".into(), leaves: vec![PressLeaf::Member(SetCount { value: 5 }.into())] }, clock)
+        .expect("a tick");
     let (displaced, aborted) = runtime.follow(&head, 1, true);
     assert_eq!((displaced.len(), aborted.len()), (1, 0), "the press's intermediate is displaced, no run conflicts");
     let overlay = runtime.overlay_or(&head);
     assert_eq!((overlay.count, overlay.label.as_str()), (5, "hello"));
     assert_eq!((head.count, head.label.as_str()), (1, "a"), "the committed document is untouched");
-    let clock = protocol::HybridLogicalTimestamp { actor: 0, physical_ms: 1_200, logical: 0 };
-    assert!(matches!(runtime.typing.commit("w1", semio_framework_tool_machine::TypingCommit::Blur, clock), Ok(ToolStep::Committed(_, ref leaves)) if leaves == &vec![TestMutation::from(SetLabel { value: "hello".into() })]));
-    runtime.scrubs.abort("w2", None, ToolAbortReason::Blur);
+    let clock = HybridLogicalTimestamp { actor: 0, physical_ms: 1_200, logical: 0 };
+    assert!(matches!(runtime.typing.commit("w1", TypingCommit::Blur, clock), Ok(ToolStep::Committed(_, ref leaves)) if leaves == &vec![TestMutation::from(SetLabel { value: "hello".into() })]));
+    runtime.presses.abort("w2", None, ToolAbortReason::Blur);
     assert_eq!(runtime.follow(&head, 1, true).0.len(), 1, "the dropped overlay goes back for retirement");
     assert!(Arc::ptr_eq(runtime.overlay_or(&head), &head), "every run committed, the render reads committed again");
 }

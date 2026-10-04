@@ -132,6 +132,7 @@ use super::set_snapshot::SetSnapshot;
 #[mutations(snapshot = GltfSnapshot, diff = GltfDiff, schema = "s.stdio.gltf")]
 pub enum GltfMutation {
     SetSnapshot(SetSnapshot),
+    PatchSnapshot(super::patch_snapshot::PatchSnapshot),
     BindDefaultScene(BindDefaultSceneMutation),
     BindMorphTargetAttribute(BindMorphTargetAttributeMutation),
     BindNodeCamera(BindNodeCameraMutation),
@@ -266,7 +267,7 @@ pub fn apply_gltf_mutation(snapshot: &mut GltfSnapshot, mutation: &GltfMutation)
 /// 🌉️ The `(kind, params)` row a mutation case states (`delete-camera`, `{"index":0}`) as the [`GltfMutation`] wire form
 /// `{"mutation": "deleteCamera", "payload": {"phase": "apply", "value": params}}`, decoded by the production codec.
 fn gltf_row_mutation(kind: &str, params_json: &str) -> Result<GltfMutation, String> {
-    let params: dsl::DslValue = dsl::json::from_json_str(params_json).map_err(|error| format!("{kind}: the parameters are not JSON: {error}"))?;
+    let params: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(params_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("{kind}: the parameters are not JSON: {error}"))?;
     let variant: String = kind
         .split('-')
         .enumerate()
@@ -278,9 +279,9 @@ fn gltf_row_mutation(kind: &str, params_json: &str) -> Result<GltfMutation, Stri
             }
         })
         .collect();
-    let payload = dsl::DslValue::object(vec![("phase".to_string(), dsl::DslValue::String("apply".to_string())), ("value".to_string(), params)]);
-    let wire = dsl::DslValue::object(vec![("mutation".to_string(), dsl::DslValue::String(variant)), ("payload".to_string(), payload)]);
-    <GltfMutation as dsl::FromValue>::from_value(wire).map_err(|error| format!("{kind}: not a glTF mutation of this vocabulary: {error}"))
+    let payload = semio_framework_value::DslValue::object(vec![("phase".to_string(), semio_framework_value::DslValue::String("apply".to_string())), ("value".to_string(), params)]);
+    let wire = semio_framework_value::DslValue::object(vec![("mutation".to_string(), semio_framework_value::DslValue::String(variant)), ("payload".to_string(), payload)]);
+    <GltfMutation as semio_framework_value::FromValue>::from_value(wire).map_err(|error| format!("{kind}: not a glTF mutation of this vocabulary: {error}"))
 }
 
 /// 🌉️ Reads a `.glb` container or `.gltf` JSON text through the production codec — whichever the bytes are.
@@ -300,7 +301,7 @@ fn gltf_bridge_write(snapshot: &GltfSnapshot) -> Result<Vec<u8>, String> {
 fn gltf_bridge_apply(kind: &str, step: &str, mutation: &GltfMutation, snapshot: &mut GltfSnapshot) -> Result<(), String> {
     let base = snapshot.clone();
     let outcome = <GltfMutation as protocol::Mutation<GltfSnapshot>>::diff(mutation, &base).apply_to(snapshot);
-    match outcome.messages().iter().find(|message| message.level >= protocol::Severity::Error) {
+    match outcome.messages().iter().find(|message| message.level >= semio_framework_diagnostic::Severity::Error) {
         Some(message) => Err(format!("{kind}: the {step} was refused — {} {}", message.code.0, message.message)),
         None => Ok(()),
     }
@@ -326,7 +327,7 @@ pub fn gltf_inverse_restored_document(document: &[u8], kind: &str, params_json: 
     let base = gltf_bridge_read(document)?;
     let mut restored = base.clone();
     gltf_bridge_apply(kind, "mutation", &mutation, &mut restored)?;
-    for step in <GltfMutation as protocol::Mutation<GltfSnapshot>>::inverse(&mutation, &base) {
+    for step in <GltfMutation as protocol::Mutation<GltfSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)? {
         gltf_bridge_apply(kind, "inverse", &step, &mut restored)?;
     }
     gltf_bridge_write(&restored)

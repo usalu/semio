@@ -33,19 +33,19 @@ pub struct SemioObjectDiff {
     pub properties: Option<Option<store::ArtifactChild<SemioValueSnapshot>>>,
 }
 
-impl dsl::FromValue for SemioObjectDiff {
-    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+impl semio_framework_value::FromValue for SemioObjectDiff {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         let mut diff = Self::default();
-        for (key, value) in dsl::DslValue::into_object(value)? {
+        for (key, value) in semio_framework_value::DslValue::into_object(value)? {
             match key.as_str() {
-                "transform" => diff.transform = Some(dsl::FromValue::from_value(value)?),
-                "brep" => diff.brep = Some(dsl::FromValue::from_value(value)?),
-                "mesh" => diff.mesh = Some(dsl::FromValue::from_value(value)?),
-                "properties" => diff.properties = Some(dsl::FromValue::from_value(value)?),
-                _ => return Err(dsl::ValueError::new(format!("unknown Object diff field {key}"))),
+                "transform" => diff.transform = Some(semio_framework_value::FromValue::from_value(value)?),
+                "brep" => diff.brep = Some(semio_framework_value::FromValue::from_value(value)?),
+                "mesh" => diff.mesh = Some(semio_framework_value::FromValue::from_value(value)?),
+                "properties" => diff.properties = Some(semio_framework_value::FromValue::from_value(value)?),
+                _ => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown Object diff field {key}"))),
             }
         }
-        diff.validate().map_err(dsl::ValueError::new)?;
+        diff.validate().map_err(|error|semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error))?;
         Ok(diff)
     }
 }
@@ -170,8 +170,8 @@ impl protocol::DiffCodec for SemioObjectDiff {
     fn print_diff(&self) -> String {
         print_object_diff(self)
     }
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_object_diff(line).and_then(|diff| { diff.validate()?; Ok(diff) }).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_diff(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_object_diff(line).and_then(|diff| { diff.validate()?; Ok(diff) }).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 
     /// ⚡️ Real binary diff frame: `format u8` + `presence u8` (bit0=transform, bit1=brep,

@@ -4,11 +4,14 @@
 use crate::mutations::{pin_pixel, resize_output, BitmapMutation};
 use crate::schema::snapshot::BitmapSnapshot;
 
-pub fn inverse(payload: &super::ResizeOutput, base: &BitmapSnapshot) -> Vec<BitmapMutation> {
+pub fn inverse(payload: &super::ResizeOutput, base: &BitmapSnapshot) -> Result<Vec<BitmapMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     if base.output.width == payload.width && base.output.height == payload.height && base.output.periodic == payload.periodic {
         return Vec::new();
     }
     let mut steps = vec![resize_output(base.output.width, base.output.height, base.output.periodic)];
     steps.extend(base.pinned.iter().filter(|pin| pin.x >= payload.width || pin.y >= payload.height).map(|pin| pin_pixel(pin.x, pin.y, pin.color)));
     steps
+
+    })())
 }

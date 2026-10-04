@@ -6,7 +6,7 @@ pub fn diff(payload: &ChangeInsulationThicknessM, base: &En1994Snapshot) -> prot
         return protocol::MutationOutcome::fatal("mutation.invariant", "invalid value", Vec::<String>::new());
     }
     if base.insulation_thickness_m == payload.new_insulation_thickness_m {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "unchanged");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "unchanged");
     }
     protocol::MutationOutcome::new(En1994Diff { insulation_thickness_m: Some(payload.new_insulation_thickness_m), ..Default::default() })
 }

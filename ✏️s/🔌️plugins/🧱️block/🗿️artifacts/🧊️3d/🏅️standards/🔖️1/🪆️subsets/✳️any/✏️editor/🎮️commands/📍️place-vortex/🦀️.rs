@@ -8,7 +8,7 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 🎯️ Manifest action id `worldSurfacePlace`, wire key `placeVortex`.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "placeVortex")]
 pub struct PlaceVortex {
     pub window_id: String,

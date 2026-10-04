@@ -1,0 +1,511 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/raster/raster/mutation/apply-filter/schema.json",
+  "title": "ApplyFilter",
+  "x-semio-inverse-rows": { "bounded": 3 },
+  "description": "One image filter on a layer's pixels, stated as its intent: the layer, the filter, its amount and the selection it is clipped to. Every application runs the filter on the layer image through the shared pixel engine and files the filtered image as a new content-addressed asset; a filter that changes no pixel is `mutation.no-op`, a missing layer or image is `mutation.target-missing`, a locked layer, a layer without pixels or a selection past the image is `mutation.target-mismatch`.",
+  "x-semio-invariant": [
+    {
+      "id": "ordered-selection-runs",
+      "description": {
+        "en": "Selection runs are ordered by their first pixel and do not overlap.",
+        "de": "Auswahlläufe sind nach ihrem ersten Pixel geordnet und überlappen nicht."
+      }
+    }
+  ],
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "layerId",
+    "filter",
+    "amount",
+    "selection"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "filter": {
+            "const": "invert"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "amount": {
+            "const": 0
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "filter": {
+            "const": "grayscale"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "amount": {
+            "const": 0
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "filter": {
+            "const": "clear"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "amount": {
+            "const": 0
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "filter": {
+            "const": "flipHorizontal"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "amount": {
+            "const": 0
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "filter": {
+            "const": "flipVertical"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "amount": {
+            "const": 0
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "filter": {
+            "const": "brightness"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "amount": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "filter": {
+            "const": "contrast"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "amount": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "filter": {
+            "const": "saturation"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "amount": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "filter": {
+            "const": "gamma"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "amount": {
+            "type": "number",
+            "minimum": 0.01,
+            "maximum": 10
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "filter": {
+            "const": "threshold"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "amount": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "filter": {
+            "const": "posterize"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "amount": {
+            "type": "number",
+            "minimum": 2,
+            "maximum": 256,
+            "multipleOf": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "filter": {
+            "const": "blur"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "amount": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 16,
+            "multipleOf": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "filter": {
+            "const": "sharpen"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "amount": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 5
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "filter": {
+            "const": "flipHorizontal"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "selection": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "filter": {
+            "const": "flipVertical"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "selection": {
+            "type": "null"
+          }
+        }
+      }
+    }
+  ],
+  "properties": {
+    "mutation": {
+      "const": "applyFilter"
+    },
+    "layerId": {
+      "type": "string",
+      "minLength": 1,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Layer",
+          "de": "Ebene"
+        },
+        "description": {
+          "en": "The layer the filter changes.",
+          "de": "Die Ebene, die der Filter verändert."
+        },
+        "ref": {
+          "kind": "layer",
+          "domain": "layers",
+          "granularity": "layer"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "filter": {
+      "type": "string",
+      "enum": [
+        "invert",
+        "grayscale",
+        "clear",
+        "flipHorizontal",
+        "flipVertical",
+        "brightness",
+        "contrast",
+        "saturation",
+        "gamma",
+        "threshold",
+        "posterize",
+        "blur",
+        "sharpen"
+      ],
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Filter",
+          "de": "Filter"
+        },
+        "description": {
+          "en": "The filter the image is run through.",
+          "de": "Der Filter, durch den das Bild läuft."
+        },
+        "options": {
+          "invert": {
+            "en": "Invert",
+            "de": "Invertieren"
+          },
+          "grayscale": {
+            "en": "Grayscale",
+            "de": "Graustufen"
+          },
+          "clear": {
+            "en": "Clear",
+            "de": "Leeren"
+          },
+          "flipHorizontal": {
+            "en": "Flip horizontally",
+            "de": "Horizontal spiegeln"
+          },
+          "flipVertical": {
+            "en": "Flip vertically",
+            "de": "Vertikal spiegeln"
+          },
+          "brightness": {
+            "en": "Brightness",
+            "de": "Helligkeit"
+          },
+          "contrast": {
+            "en": "Contrast",
+            "de": "Kontrast"
+          },
+          "saturation": {
+            "en": "Saturation",
+            "de": "Sättigung"
+          },
+          "gamma": {
+            "en": "Gamma",
+            "de": "Gamma"
+          },
+          "threshold": {
+            "en": "Threshold",
+            "de": "Schwellenwert"
+          },
+          "posterize": {
+            "en": "Posterize",
+            "de": "Tontrennung"
+          },
+          "blur": {
+            "en": "Blur",
+            "de": "Weichzeichnen"
+          },
+          "sharpen": {
+            "en": "Sharpen",
+            "de": "Schärfen"
+          }
+        },
+        "group": "filter",
+        "order": 10
+      }
+    },
+    "amount": {
+      "type": "number",
+      "minimum": -1,
+      "maximum": 256,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Amount",
+          "de": "Stärke"
+        },
+        "description": {
+          "en": "How strongly the filter acts: brightness, contrast and saturation −1…1, gamma 0.01…10, threshold 0…255, posterize 2…256 levels, blur 0…16 px radius, sharpen 0…5; invert, grayscale, clear and the flips take 0.",
+          "de": "Wie stark der Filter wirkt: Helligkeit, Kontrast und Sättigung −1…1, Gamma 0,01…10, Schwellenwert 0…255, Tontrennung 2…256 Stufen, Weichzeichnen 0…16 px Radius, Schärfen 0…5; Invertieren, Graustufen, Leeren und Spiegeln nehmen 0."
+        },
+        "step": 0.01,
+        "precision": 2,
+        "group": "filter",
+        "order": 20
+      }
+    },
+    "selection": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "title": "RasterSelectionSpan",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "start",
+          "length",
+          "coverage"
+        ],
+        "properties": {
+          "start": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 16777215,
+            "x-semio-ui": {
+              "widget": "stepper",
+              "role": "value",
+              "label": {
+                "en": "First pixel",
+                "de": "Erstes Pixel"
+              },
+              "description": {
+                "en": "Row-major index of the run's first pixel.",
+                "de": "Zeilenweiser Index des ersten Pixels des Laufs."
+              },
+              "step": 1,
+              "precision": 0,
+              "order": 10
+            }
+          },
+          "length": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 16777216,
+            "x-semio-ui": {
+              "widget": "stepper",
+              "role": "value",
+              "label": {
+                "en": "Pixels",
+                "de": "Pixel"
+              },
+              "description": {
+                "en": "How many consecutive pixels the run covers.",
+                "de": "Wie viele aufeinanderfolgende Pixel der Lauf abdeckt."
+              },
+              "step": 1,
+              "precision": 0,
+              "order": 20
+            }
+          },
+          "coverage": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255,
+            "x-semio-ui": {
+              "widget": "slider",
+              "role": "value",
+              "label": {
+                "en": "Coverage",
+                "de": "Abdeckung"
+              },
+              "description": {
+                "en": "How strongly the run is selected, out of 255.",
+                "de": "Wie stark der Lauf ausgewählt ist, von 255."
+              },
+              "step": 1,
+              "precision": 0,
+              "order": 30
+            }
+          }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Selection",
+          "de": "Auswahl"
+        },
+        "description": {
+          "en": "The pixel selection the filter is clipped to, as ordered disjoint runs: a run's coverage blends the filtered pixel over the original; none filters the whole image. A flip takes no selection.",
+          "de": "Die Pixelauswahl, auf die der Filter beschränkt ist, als geordnete disjunkte Läufe: die Abdeckung eines Laufs mischt das gefilterte Pixel über das ursprüngliche; ohne Auswahl wird das ganze Bild gefiltert. Spiegeln nimmt keine Auswahl."
+        },
+        "group": "filter",
+        "order": 30
+      }
+    }
+  }
+}

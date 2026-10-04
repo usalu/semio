@@ -335,7 +335,7 @@ mod subject {
                 Err(error) => return Err(format!("inverse-{kind}: the forward mutation could not be applied to its own committed before-snapshot: {error}")),
             };
             let mutated = projection(&current)?;
-            let steps = inverse_en1997_mutation(&mutation, &base);
+            let steps = inverse_en1997_mutation(&mutation, &base).expect("valid retained mutation inverse fixture");
             if super::committed_status(kind) == "applied" && steps.is_empty() {
                 return Err(format!("inverse-{kind}: this kind changes the document, so its computed inverse must not be empty"));
             }
@@ -399,7 +399,7 @@ pub fn adapter() -> Adapter {
     #[cfg(feature = "sut")]
     {
         for kind in KINDS {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind)).subject(&format!("inverse-{kind}"), subject::inverse(kind));
+            built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind)).subject(&format!("inverse-{kind}"), subject::inverse(kind).expect("valid retained mutation inverse fixture"));
         }
         for row in ROWS {
             built = built.subject(&format!("mutate-{row}"), subject::mutate(row));

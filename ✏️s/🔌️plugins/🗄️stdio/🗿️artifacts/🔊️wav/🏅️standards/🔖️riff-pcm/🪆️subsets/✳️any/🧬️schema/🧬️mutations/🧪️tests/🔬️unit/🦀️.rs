@@ -11,7 +11,7 @@ fn base_snapshot() -> WavSnapshot {
 fn variants(base: &WavSnapshot) -> Vec<WavMutation> {
     vec![
         WavMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: WavSnapshot { fmt: WavFmt { sample_rate: 48000, ..base.fmt.clone() }, ..base.clone() } }),
-        WavMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::prepare_snapshot_patch(base, &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent::SetValue { path: "/fmt/sampleRate".into(), value: dsl::DslValue::Number(dsl::Number::UInt(48_000)) }).unwrap() }),
+        WavMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::prepare_snapshot_patch(base, &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent::SetValue { path: "/fmt/sampleRate".into(), value: semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(48_000)) }).unwrap() }),
         WavMutation::SetFmt(set_fmt::SetFmt { fmt: WavFmt { channels: 2, ..WavFmt::default() } }),
         WavMutation::SetData(set_data::SetData { data: WavData::Float32(vec![0.25, -0.25]) }),
         WavMutation::PatchData(patch_data::PatchData { index: 1, remove_count: 1, data: WavData::Pcm16(vec![42]), move_to: None }),
@@ -42,7 +42,7 @@ async fn inverse_law_mutation_and_diff_level() {
     for m in variants(&base) {
         let mut round = base.clone();
         apply_wav_mutation(&mut round, &m);
-        for inv in m.inverse(&base) {
+        for inv in m.inverse(&base).expect("valid retained mutation inverse fixture") {
             apply_wav_mutation(&mut round, &inv);
         }
         assert_eq!(round, base, "mutation-level inverse failed for {m:?}");
@@ -114,8 +114,8 @@ async fn op_text_binary_roundtrip_law() {
 #[semio_framework_async_macros::async_test]
 async fn text_descriptor_recognizes_every_printer_variant() {
     let base = base_snapshot();
-    let grammar = dsl::parse_grammar(crate::standards::riff_pcm::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse WAV mutation grammar");
-    let recognizer = dsl::Recognizer::compile(&grammar);
+    let grammar = semio_framework_dsl::parse_grammar(crate::standards::riff_pcm::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse WAV mutation grammar");
+    let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
     for mutation in variants(&base) {
         let printed = mutation.print_op();
         assert!(recognizer.recognize(&printed).unwrap_or(false), "WAV mutation grammar did not recognize {printed:?}");

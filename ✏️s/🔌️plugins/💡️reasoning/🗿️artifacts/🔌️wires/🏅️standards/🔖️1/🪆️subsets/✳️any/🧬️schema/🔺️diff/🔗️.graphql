@@ -1,6 +1,1 @@
-type WiresDiff {
-  artifact: WiresArtifact @state(class: ARTIFACT)
-  wiresFixture: DslValue @state(class: ARTIFACT)
-  content: ArtifactChild @state(class: ARTIFACT)
-  meta: DslValue @state(class: ARTIFACT)
-}
+# 🔺️ WiresDiff carries nothing: the parent vocabulary is uninhabited, every board edit is a child-lane graph leaf.

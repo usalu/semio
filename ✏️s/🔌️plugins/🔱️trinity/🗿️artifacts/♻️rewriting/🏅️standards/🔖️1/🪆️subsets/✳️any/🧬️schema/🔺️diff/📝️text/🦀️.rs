@@ -18,14 +18,14 @@ impl RewritingDiff {
     pub fn apply_to_artifact(&self, artifact: &RewritingArtifact) -> protocol::MutationApplyResult<RewritingArtifact> {
         Ok({
             let mut next = artifact.clone();
-            if let Some(value) = &self.before_fixture_json {
-                next.before_fixture_json = value.clone();
+            if let Some(value) = &self.working_graph {
+                next.working_graph = value.clone();
             }
-            if let Some(value) = &self.lhs_json {
-                next.lhs_json = value.clone();
+            if let Some(value) = &self.lhs {
+                next.lhs = value.clone();
             }
-            if let Some(value) = &self.rhs_json {
-                next.rhs_json = value.clone();
+            if let Some(value) = &self.rhs {
+                next.rhs = value.clone();
             }
             if let Some(bindings) = &self.parameter_bindings {
                 bindings.apply_to(&mut next.parameter_bindings).map_err(|error| error.under(["parameterBindings"]))?;
@@ -42,14 +42,14 @@ impl MutationDiff<RewritingSnapshot> for RewritingDiff {
     fn apply(&self, snapshot: &RewritingSnapshot) -> protocol::MutationApplyResult<RewritingSnapshot> {
         Ok({
             let mut next = snapshot.clone();
-            if let Some(value) = &self.before_fixture_json {
-                next.before_fixture_json = value.clone();
+            if let Some(value) = &self.working_graph {
+                next.working_graph = value.clone();
             }
-            if let Some(value) = &self.lhs_json {
-                next.lhs_json = value.clone();
+            if let Some(value) = &self.lhs {
+                next.lhs = value.clone();
             }
-            if let Some(value) = &self.rhs_json {
-                next.rhs_json = value.clone();
+            if let Some(value) = &self.rhs {
+                next.rhs = value.clone();
             }
             if let Some(bindings) = &self.parameter_bindings {
                 bindings.apply_to(&mut next.parameter_bindings).map_err(|error| error.under(["parameterBindings"]))?;
@@ -68,9 +68,9 @@ impl MutationDiff<RewritingSnapshot> for RewritingDiff {
                 }
             };
         }
-        take!(before_fixture_json);
-        take!(lhs_json);
-        take!(rhs_json);
+        take!(working_graph);
+        take!(lhs);
+        take!(rhs);
         MapDelta::absorb_optional(&mut self.parameter_bindings, other.parameter_bindings);
         MapDelta::absorb_optional(&mut self.rule_layout, other.rule_layout);
     }

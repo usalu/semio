@@ -158,7 +158,7 @@ fn expand_struct(input: &DeriveInput, fields: &Fields) -> syn::Result<TokenStrea
                     if progress.copied_items >= grant.maximum_items {
                         return Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress));
                     }
-                    self.#value = Some(::semio_framework_value::retained_clone::RetainedCloneCursor::take(&mut self.#cursor).ok_or("retained struct field completed without an owner")?);
+                    self.#value = Some(::semio_framework_value::retained_clone::RetainedCloneCursor::take(&mut self.#cursor).ok_or_else(|| ::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvariantViolated, "retained struct field completed without an owner"))?);
                     let _ = ::semio_framework_value::retained_clone::RetainedCloneCursor::begin_close(&mut self.#cursor);
                     self.draining = true;
                     Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress.checked_add(::semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() })?))
@@ -172,16 +172,16 @@ fn expand_struct(input: &DeriveInput, fields: &Fields) -> syn::Result<TokenStrea
                     if grant.maximum_items == 0 {
                         return Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default()));
                     }
-                    return match ::semio_framework_value::retained_clone::admit_retained_clone_retirement(
+                    return match ::semio_framework_value::retained_clone::admit_retained_clone_scaffold_retirement(
                         ::semio_framework_value::retained_clone::RetainedCloneCursor::close_step(&mut self.#cursor, grant.maximum_items, grant.maximum_copy_bytes)?,
                         grant.maximum_items,
                         grant.maximum_copy_bytes,
                         "retained struct field scaffold close",
                     )? {
                     ::semio_framework_value::SnapshotRetirementStep::Pending { released_items, released_bytes } => Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(::semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: released_items, copied_bytes: released_bytes, retained_capacity_bytes: 0 })),
-                    ::semio_framework_value::SnapshotRetirementStep::Blocked => Err("retained struct field scaffold close blocked".into()),
+                    ::semio_framework_value::SnapshotRetirementStep::Blocked => Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvariantViolated, "retained struct field scaffold close blocked")),
                     ::semio_framework_value::SnapshotRetirementStep::Complete => {
-                        if !::semio_framework_value::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor) { return Err("retained struct field scaffold completed with a live owner".into()); }
+                        if !::semio_framework_value::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor) { return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvariantViolated, "retained struct field scaffold completed with a live owner")); }
                         self.draining = false;
                         self.phase += 1;
                         Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(::semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() }))
@@ -210,7 +210,7 @@ fn expand_struct(input: &DeriveInput, fields: &Fields) -> syn::Result<TokenStrea
                     "retained struct child close",
                 )?;
                 if step == ::semio_framework_value::SnapshotRetirementStep::Complete {
-                    if !::semio_framework_value::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor) { return Err("retained struct child completed close with a live owner".into()); }
+                    if !::semio_framework_value::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor) { return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvariantViolated, "retained struct child completed close with a live owner")); }
                     return Ok(::semio_framework_value::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
                 }
                 return Ok(step);
@@ -239,13 +239,13 @@ fn expand_struct(input: &DeriveInput, fields: &Fields) -> syn::Result<TokenStrea
         }
 
         impl #impl_generics ::semio_framework_value::retained_clone::RetainedCloneCursor<#name #ty_generics> for #cursor_name #ty_generics #where_clause {
-            fn advance(&mut self, source: ::semio_framework_value::retained_clone::RetainedCloneRef<'_, #name #ty_generics>, grant: ::semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<::semio_framework_value::retained_clone::RetainedCloneStep, String> {
-                if self.closing { return Err("retained struct clone cursor is closing".into()); }
-                if self.spent { return Err("retained struct clone cursor is spent".into()); }
+            fn advance(&mut self, source: ::semio_framework_value::retained_clone::RetainedCloneRef<'_, #name #ty_generics>, grant: ::semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<::semio_framework_value::retained_clone::RetainedCloneStep, ::semio_framework_value::ValueError> {
+                if self.closing { return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvariantViolated, "retained struct clone cursor is closing")); }
+                if self.spent { return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvariantViolated, "retained struct clone cursor is spent")); }
                 if self.output.is_some() { return Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default())); }
                 source.bind(&mut self.source)?;
                 if self.draining {
-                    return match self.phase { #(#drain_arms,)* _ => Err("retained struct drain state is invalid".into()) };
+                    return match self.phase { #(#drain_arms,)* _ => Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvariantViolated, "retained struct drain state is invalid")) };
                 }
                 match self.phase {
                     #(#advance_arms,)*
@@ -255,7 +255,7 @@ fn expand_struct(input: &DeriveInput, fields: &Fields) -> syn::Result<TokenStrea
                         self.phase += 1;
                         Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Complete(::semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() }))
                     }
-                    _ => Err("retained struct clone state is invalid".into()),
+                    _ => Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvariantViolated, "retained struct clone state is invalid")),
                 }
             }
             fn take(&mut self) -> Option<#name #ty_generics> {
@@ -268,7 +268,7 @@ fn expand_struct(input: &DeriveInput, fields: &Fields) -> syn::Result<TokenStrea
                 self.closing = true;
                 true
             }
-            fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<::semio_framework_value::SnapshotRetirementStep, String> {
+            fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<::semio_framework_value::SnapshotRetirementStep, ::semio_framework_value::ValueError> {
                 #(#close_children)*
                 if !self.close.is_empty() {
                     let step = self.close.step(maximum_items, maximum_bytes)?;
@@ -345,7 +345,7 @@ fn expand_enum(input: &DeriveInput, data: &syn::DataEnum) -> syn::Result<TokenSt
                         if progress.copied_items >= grant.maximum_items {
                             return Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress));
                         }
-                        self.#value = Some(::semio_framework_value::retained_clone::RetainedCloneCursor::take(&mut self.#cursor).ok_or("retained enum field completed without an owner")?);
+                        self.#value = Some(::semio_framework_value::retained_clone::RetainedCloneCursor::take(&mut self.#cursor).ok_or_else(|| ::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvariantViolated, "retained enum field completed without an owner"))?);
                         let _ = ::semio_framework_value::retained_clone::RetainedCloneCursor::begin_close(&mut self.#cursor);
                         self.draining = true;
                         Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress.checked_add(::semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() })?))
@@ -359,16 +359,16 @@ fn expand_enum(input: &DeriveInput, data: &syn::DataEnum) -> syn::Result<TokenSt
                     if grant.maximum_items == 0 {
                         return Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default()));
                     }
-                    return match ::semio_framework_value::retained_clone::admit_retained_clone_retirement(
+                    return match ::semio_framework_value::retained_clone::admit_retained_clone_scaffold_retirement(
                         ::semio_framework_value::retained_clone::RetainedCloneCursor::close_step(&mut self.#cursor, grant.maximum_items, grant.maximum_copy_bytes)?,
                         grant.maximum_items,
                         grant.maximum_copy_bytes,
                         "retained enum field scaffold close",
                     )? {
                         ::semio_framework_value::SnapshotRetirementStep::Pending { released_items, released_bytes } => Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(::semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: released_items, copied_bytes: released_bytes, retained_capacity_bytes: 0 })),
-                        ::semio_framework_value::SnapshotRetirementStep::Blocked => Err("retained enum field scaffold close blocked".into()),
+                        ::semio_framework_value::SnapshotRetirementStep::Blocked => Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvariantViolated, "retained enum field scaffold close blocked")),
                     ::semio_framework_value::SnapshotRetirementStep::Complete => {
-                        if !::semio_framework_value::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor) { return Err("retained enum field scaffold completed with a live owner".into()); }
+                        if !::semio_framework_value::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor) { return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvariantViolated, "retained enum field scaffold completed with a live owner")); }
                         self.draining = false;
                         self.phase += 1;
                         Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(::semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() }))
@@ -387,7 +387,7 @@ fn expand_enum(input: &DeriveInput, data: &syn::DataEnum) -> syn::Result<TokenSt
         quote! {
             (#variant_index, #pattern) => {
                 if self.draining {
-                    return match self.phase { #(#drain_arms,)* _ => Err("retained enum drain state is invalid".into()) };
+                    return match self.phase { #(#drain_arms,)* _ => Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvariantViolated, "retained enum drain state is invalid")) };
                 }
                 match self.phase {
                     #(#advance_arms,)*
@@ -397,7 +397,7 @@ fn expand_enum(input: &DeriveInput, data: &syn::DataEnum) -> syn::Result<TokenSt
                         self.phase += 1;
                         Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Complete(::semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() }))
                     }
-                    _ => Err("retained enum clone state is invalid".into()),
+                    _ => Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvariantViolated, "retained enum clone state is invalid")),
                 }
             }
         }
@@ -417,7 +417,7 @@ fn expand_enum(input: &DeriveInput, data: &syn::DataEnum) -> syn::Result<TokenSt
                     "retained enum child close",
                 )?;
                 if step == ::semio_framework_value::SnapshotRetirementStep::Complete {
-                    if !::semio_framework_value::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor) { return Err("retained enum child completed close with a live owner".into()); }
+                    if !::semio_framework_value::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor) { return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvariantViolated, "retained enum child completed close with a live owner")); }
                     return Ok(::semio_framework_value::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
                 }
                 return Ok(step);
@@ -446,9 +446,9 @@ fn expand_enum(input: &DeriveInput, data: &syn::DataEnum) -> syn::Result<TokenSt
         }
 
         impl #impl_generics ::semio_framework_value::retained_clone::RetainedCloneCursor<#name #ty_generics> for #cursor_name #ty_generics #where_clause {
-            fn advance(&mut self, source: ::semio_framework_value::retained_clone::RetainedCloneRef<'_, #name #ty_generics>, grant: ::semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<::semio_framework_value::retained_clone::RetainedCloneStep, String> {
-                if self.closing { return Err("retained enum clone cursor is closing".into()); }
-                if self.spent { return Err("retained enum clone cursor is spent".into()); }
+            fn advance(&mut self, source: ::semio_framework_value::retained_clone::RetainedCloneRef<'_, #name #ty_generics>, grant: ::semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<::semio_framework_value::retained_clone::RetainedCloneStep, ::semio_framework_value::ValueError> {
+                if self.closing { return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvariantViolated, "retained enum clone cursor is closing")); }
+                if self.spent { return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvariantViolated, "retained enum clone cursor is spent")); }
                 if self.output.is_some() { return Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default())); }
                 source.bind(&mut self.source)?;
                 if self.variant.is_none() {
@@ -458,7 +458,7 @@ fn expand_enum(input: &DeriveInput, data: &syn::DataEnum) -> syn::Result<TokenSt
                 }
                 match (self.variant.expect("initialized retained enum variant"), source.get()) {
                     #(#variant_arms,)*
-                    _ => Err("retained enum source variant changed during copy".into()),
+                    _ => Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvariantViolated, "retained enum source variant changed during copy")),
                 }
             }
             fn take(&mut self) -> Option<#name #ty_generics> {
@@ -471,7 +471,7 @@ fn expand_enum(input: &DeriveInput, data: &syn::DataEnum) -> syn::Result<TokenSt
                 self.closing = true;
                 true
             }
-            fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<::semio_framework_value::SnapshotRetirementStep, String> {
+            fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<::semio_framework_value::SnapshotRetirementStep, ::semio_framework_value::ValueError> {
                 #(#close_children)*
                 if !self.close.is_empty() {
                     let step = self.close.step(maximum_items, maximum_bytes)?;

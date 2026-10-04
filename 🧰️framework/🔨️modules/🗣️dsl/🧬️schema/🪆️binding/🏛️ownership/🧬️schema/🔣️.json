@@ -1,0 +1,193 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/framework/dsl/record/binding-owner-cases.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "owner",
+    "entry",
+    "manifest",
+    "binding",
+    "types",
+    "fields",
+    "controls",
+    "cases",
+    "sourceCases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "owner": {
+      "type": "string",
+      "minLength": 1
+    },
+    "entry": {
+      "type": "string",
+      "minLength": 1
+    },
+    "manifest": {
+      "type": "string",
+      "minLength": 1
+    },
+    "binding": {
+      "type": "string",
+      "minLength": 1
+    },
+    "types": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "fields": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "$ref": "#/$defs/field"
+        }
+      }
+    },
+    "controls": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "initialCancel",
+        "metadataZero",
+        "projection",
+        "construction"
+      ],
+      "properties": {
+        "initialCancel": {
+          "const": "canceled"
+        },
+        "metadataZero": {
+          "const": "ownershipLimit"
+        },
+        "projection": {
+          "enum": [
+            "ownershipLimit",
+            "unsupportedOwner"
+          ]
+        },
+        "construction": {
+          "enum": [
+            "ownershipLimit",
+            "unsupportedOwner"
+          ]
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/case"
+      }
+    },
+    "sourceCases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "$ref": "#/$defs/sourceCase"
+      }
+    }
+  },
+  "$defs": {
+    "field": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "key",
+        "shape",
+        "optional"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shape": {
+          "type": "string",
+          "minLength": 1
+        },
+        "optional": {
+          "type": "boolean"
+        }
+      }
+    },
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "type",
+        "value",
+        "expectedFields"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "value": {
+          "type": "object"
+        },
+        "expectedFields": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "prefixItems": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {}
+            ],
+            "items": false
+          }
+        }
+      }
+    },
+    "sourceCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "accepted"
+      ],
+      "properties": {
+        "id": {
+          "enum": [
+            "formatting",
+            "private-extension",
+            "missing-type-owner",
+            "hostile-dependency"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

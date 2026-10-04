@@ -28,37 +28,37 @@ type ChangeSiteNorthAxis {
   newNorthAxisDeg: Float!
 }
 
-type ChangeGroundTemperatureBuildingSurface {
+type ChangeGroundBuilding {
   month: Int!
   newTemperatureC: Float!
 }
 
-type ChangeGroundTemperatureShallow {
+type ChangeGroundShallow {
   month: Int!
   newTemperatureC: Float!
 }
 
-type ChangeGroundTemperatureDeep {
+type ChangeGroundDeep {
   newTemperatureC: Float!
 }
 
-type ChangeRunPeriodStartMonth {
+type ChangeRunStartMonth {
   newStartMonth: Int!
 }
 
-type ChangeRunPeriodStartDay {
+type ChangeRunStartDay {
   newStartDay: Int!
 }
 
-type ChangeRunPeriodEndMonth {
+type ChangeRunEndMonth {
   newEndMonth: Int!
 }
 
-type ChangeRunPeriodEndDay {
+type ChangeRunEndDay {
   newEndDay: Int!
 }
 
-type ChangeRunPeriodYear {
+type ChangeRunYear {
   newYear: Int!
 }
 
@@ -1635,14 +1635,14 @@ union EnergyModelMutation =
   | ChangeSiteElevation
   | ChangeSiteTimeZone
   | ChangeSiteNorthAxis
-  | ChangeGroundTemperatureBuildingSurface
-  | ChangeGroundTemperatureShallow
-  | ChangeGroundTemperatureDeep
-  | ChangeRunPeriodStartMonth
-  | ChangeRunPeriodStartDay
-  | ChangeRunPeriodEndMonth
-  | ChangeRunPeriodEndDay
-  | ChangeRunPeriodYear
+  | ChangeGroundBuilding
+  | ChangeGroundShallow
+  | ChangeGroundDeep
+  | ChangeRunStartMonth
+  | ChangeRunStartDay
+  | ChangeRunEndMonth
+  | ChangeRunEndDay
+  | ChangeRunYear
   | ReplaceAirflowNetwork
   | AddOutputVariable
   | RemoveOutputVariable

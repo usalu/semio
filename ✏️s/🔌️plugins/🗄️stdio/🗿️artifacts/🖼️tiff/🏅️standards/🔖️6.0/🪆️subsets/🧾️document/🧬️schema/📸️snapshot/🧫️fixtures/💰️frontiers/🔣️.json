@@ -1,0 +1,19 @@
+{
+  "asciiUnit": "q",
+  "asciiLength": 100000,
+  "asciiFrontier": 16384,
+  "schemaCommentCharacters": 100000,
+  "schemaFrontier": 16384,
+  "domainValueCount": 4096,
+  "domainRows": 4099,
+  "rowFrontier": 256,
+  "treeFrontier": 256,
+  "phases": [
+    "parseSchema",
+    "validateRows",
+    "buildTree"
+  ],
+  "retainedDebt": 7,
+  "refusal": "canceled",
+  "groupingPass": 2
+}

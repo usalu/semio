@@ -731,8 +731,8 @@ impl protocol::DiffCodec for SemioFlowDiff {
     fn print_diff(&self) -> String {
         print_flow_diff(self)
     }
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_flow_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_diff(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_flow_diff(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
     /// ⚡️ P2 pilot: real binary diff frame, replacing the old `print_diff().into_bytes()`
     /// text-as-binary shortcut. `format u8` + `presence u8` (bit0 = `nodes` present, bit1 =

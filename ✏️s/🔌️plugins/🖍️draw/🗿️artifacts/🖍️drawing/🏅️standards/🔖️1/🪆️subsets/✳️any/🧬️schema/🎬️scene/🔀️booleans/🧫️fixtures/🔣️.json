@@ -1,0 +1,2240 @@
+[
+ {
+  "name": "complete referenced difference",
+  "document": {
+   "schema": "drawing.document",
+   "id": "document",
+   "layers": [
+    {
+     "id": "a",
+     "name": "a",
+     "kind": "shape",
+     "visible": false,
+     "locked": false,
+     "opacity": 1,
+     "blendMode": "normal",
+     "transform": {
+      "x": 0,
+      "y": 0,
+      "scaleX": 1,
+      "scaleY": 1,
+      "shear": 0,
+      "rotation": 0
+     },
+     "attributes": {
+      "fillRule": "nonzero",
+      "fill": {
+       "kind": "solid",
+       "color": [
+        1,
+        0,
+        0,
+        1
+       ]
+      },
+      "stroke": null
+     },
+     "shapeKind": "rect",
+     "rect": {
+      "x": 0,
+      "y": 0,
+      "width": 10,
+      "height": 10
+     }
+    },
+    {
+     "id": "b",
+     "name": "b",
+     "kind": "shape",
+     "visible": false,
+     "locked": false,
+     "opacity": 1,
+     "blendMode": "normal",
+     "transform": {
+      "x": 0,
+      "y": 0,
+      "scaleX": 1,
+      "scaleY": 1,
+      "shear": 0,
+      "rotation": 0
+     },
+     "attributes": {
+      "fillRule": "nonzero",
+      "fill": {
+       "kind": "solid",
+       "color": [
+        1,
+        0,
+        0,
+        1
+       ]
+      },
+      "stroke": null
+     },
+     "shapeKind": "rect",
+     "rect": {
+      "x": 2,
+      "y": 2,
+      "width": 5,
+      "height": 5
+     }
+    },
+    {
+     "id": "result",
+     "name": "result",
+     "kind": "boolean",
+     "visible": true,
+     "locked": false,
+     "opacity": 1,
+     "blendMode": "normal",
+     "transform": {
+      "x": 0,
+      "y": 0,
+      "scaleX": 1,
+      "scaleY": 1,
+      "shear": 0,
+      "rotation": 0
+     },
+     "attributes": {
+      "fillRule": "nonzero",
+      "fill": {
+       "kind": "solid",
+       "color": [
+        1,
+        0,
+        0,
+        1
+       ]
+      },
+      "stroke": null
+     },
+     "operation": "difference",
+     "children": [
+      "a",
+      "b"
+     ]
+    }
+   ],
+   "assets": {}
+  },
+  "preparation": {
+   "maxNodes": 32,
+   "maxDepth": 16,
+   "maxSegments": 65536,
+   "maxReferences": 256,
+   "maxSourceBytes": 100000
+  },
+  "limits": {
+   "tolerance": 0.005,
+   "epsilon": 1e-08,
+   "maxDepth": 32,
+   "maxReferences": 256,
+   "maxEdges": 65536,
+   "maxParameters": 262144,
+   "maxAtomicEdges": 65536,
+   "maxSegments": 65536,
+   "maxRetainedSegments": 262144,
+   "maxWork": 10000000
+  },
+  "expected": {
+   "area": 75,
+   "contours": 2
+  },
+  "oracle": {
+   "d": "M0 0H10V10H0Z M2 2V7H7V2Z",
+   "matrix": [
+    1,
+    0,
+    0,
+    1,
+    0,
+    0
+   ]
+  }
+ },
+ {
+  "name": "independently moved result",
+  "document": {
+   "schema": "drawing.document",
+   "id": "document",
+   "layers": [
+    {
+     "id": "a",
+     "name": "a",
+     "kind": "shape",
+     "visible": false,
+     "locked": false,
+     "opacity": 1,
+     "blendMode": "normal",
+     "transform": {
+      "x": 0,
+      "y": 0,
+      "scaleX": 1,
+      "scaleY": 1,
+      "shear": 0,
+      "rotation": 0
+     },
+     "attributes": {
+      "fillRule": "nonzero",
+      "fill": {
+       "kind": "solid",
+       "color": [
+        1,
+        0,
+        0,
+        1
+       ]
+      },
+      "stroke": null
+     },
+     "shapeKind": "rect",
+     "rect": {
+      "x": 0,
+      "y": 0,
+      "width": 10,
+      "height": 10
+     }
+    },
+    {
+     "id": "b",
+     "name": "b",
+     "kind": "shape",
+     "visible": false,
+     "locked": false,
+     "opacity": 1,
+     "blendMode": "normal",
+     "transform": {
+      "x": 0,
+      "y": 0,
+      "scaleX": 1,
+      "scaleY": 1,
+      "shear": 0,
+      "rotation": 0
+     },
+     "attributes": {
+      "fillRule": "nonzero",
+      "fill": {
+       "kind": "solid",
+       "color": [
+        1,
+        0,
+        0,
+        1
+       ]
+      },
+      "stroke": null
+     },
+     "shapeKind": "rect",
+     "rect": {
+      "x": 5,
+      "y": 5,
+      "width": 10,
+      "height": 10
+     }
+    },
+    {
+     "id": "result",
+     "name": "result",
+     "kind": "boolean",
+     "visible": true,
+     "locked": false,
+     "opacity": 1,
+     "blendMode": "normal",
+     "transform": {
+      "x": 20,
+      "y": 3,
+      "scaleX": 1,
+      "scaleY": 1,
+      "shear": 0,
+      "rotation": 0
+     },
+     "attributes": {
+      "fillRule": "nonzero",
+      "fill": {
+       "kind": "solid",
+       "color": [
+        1,
+        0,
+        0,
+        1
+       ]
+      },
+      "stroke": null
+     },
+     "operation": "union",
+     "children": [
+      "a",
+      "b"
+     ]
+    }
+   ],
+   "assets": {}
+  },
+  "preparation": {
+   "maxNodes": 32,
+   "maxDepth": 16,
+   "maxSegments": 65536,
+   "maxReferences": 256,
+   "maxSourceBytes": 100000
+  },
+  "limits": {
+   "tolerance": 0.005,
+   "epsilon": 1e-08,
+   "maxDepth": 32,
+   "maxReferences": 256,
+   "maxEdges": 65536,
+   "maxParameters": 262144,
+   "maxAtomicEdges": 65536,
+   "maxSegments": 65536,
+   "maxRetainedSegments": 262144,
+   "maxWork": 10000000
+  },
+  "expected": {
+   "area": 175,
+   "contours": 1
+  },
+  "oracle": {
+   "d": "M0 0H10V5H15V15H5V10H0Z",
+   "matrix": [
+    1,
+    0,
+    0,
+    1,
+    20,
+    3
+   ]
+  }
+ },
+ {
+  "name": "full ancestor reference and result transforms",
+  "document": {
+   "schema": "drawing.document",
+   "id": "document",
+   "layers": [
+    {
+     "id": "parent",
+     "name": "parent",
+     "kind": "group",
+     "visible": true,
+     "locked": false,
+     "opacity": 1,
+     "blendMode": "normal",
+     "transform": {
+      "x": 13,
+      "y": 9,
+      "scaleX": -2,
+      "scaleY": 2,
+      "shear": 0.5,
+      "rotation": 0
+     },
+     "attributes": {
+      "fillRule": "nonzero",
+      "fill": {
+       "kind": "solid",
+       "color": [
+        1,
+        0,
+        0,
+        1
+       ]
+      },
+      "stroke": null
+     },
+     "isolation": false,
+     "children": [
+      {
+       "id": "a",
+       "name": "a",
+       "kind": "shape",
+       "visible": false,
+       "locked": false,
+       "opacity": 1,
+       "blendMode": "normal",
+       "transform": {
+        "x": 0,
+        "y": 0,
+        "scaleX": 1,
+        "scaleY": 1,
+        "shear": 0,
+        "rotation": 0
+       },
+       "attributes": {
+        "fillRule": "nonzero",
+        "fill": {
+         "kind": "solid",
+         "color": [
+          1,
+          0,
+          0,
+          1
+         ]
+        },
+        "stroke": null
+       },
+       "shapeKind": "rect",
+       "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 10,
+        "height": 10
+       }
+      },
+      {
+       "id": "b",
+       "name": "b",
+       "kind": "shape",
+       "visible": false,
+       "locked": false,
+       "opacity": 1,
+       "blendMode": "normal",
+       "transform": {
+        "x": 0,
+        "y": 0,
+        "scaleX": 1,
+        "scaleY": 1,
+        "shear": 0,
+        "rotation": 0
+       },
+       "attributes": {
+        "fillRule": "nonzero",
+        "fill": {
+         "kind": "solid",
+         "color": [
+          1,
+          0,
+          0,
+          1
+         ]
+        },
+        "stroke": null
+       },
+       "shapeKind": "rect",
+       "rect": {
+        "x": 2,
+        "y": 2,
+        "width": 5,
+        "height": 5
+       }
+      },
+      {
+       "id": "result",
+       "name": "result",
+       "kind": "boolean",
+       "visible": true,
+       "locked": false,
+       "opacity": 1,
+       "blendMode": "normal",
+       "transform": {
+        "x": 7,
+        "y": -3,
+        "scaleX": 1.25,
+        "scaleY": 0.75,
+        "shear": 0.25,
+        "rotation": 0
+       },
+       "attributes": {
+        "fillRule": "nonzero",
+        "fill": {
+         "kind": "solid",
+         "color": [
+          1,
+          0,
+          0,
+          1
+         ]
+        },
+        "stroke": null
+       },
+       "operation": "difference",
+       "children": [
+        "a",
+        "b"
+       ]
+      }
+     ]
+    }
+   ],
+   "assets": {}
+  },
+  "preparation": {
+   "maxNodes": 32,
+   "maxDepth": 16,
+   "maxSegments": 65536,
+   "maxReferences": 256,
+   "maxSourceBytes": 100000
+  },
+  "limits": {
+   "tolerance": 0.005,
+   "epsilon": 1e-08,
+   "maxDepth": 32,
+   "maxReferences": 256,
+   "maxEdges": 65536,
+   "maxParameters": 262144,
+   "maxAtomicEdges": 65536,
+   "maxSegments": 65536,
+   "maxRetainedSegments": 262144,
+   "maxWork": 10000000
+  },
+  "expected": {
+   "area": 75,
+   "contours": 2
+  },
+  "oracle": {
+   "d": "M0 0H10V10H0Z M2 2V7H7V2Z",
+   "matrix": [
+    -2.5,
+    0,
+    -0.125,
+    1.5,
+    -2.5,
+    3
+   ]
+  }
+ },
+ {
+  "name": "authored even odd holes",
+  "document": {
+   "schema": "drawing.document",
+   "id": "document",
+   "layers": [
+    {
+     "id": "a",
+     "name": "a",
+     "kind": "path",
+     "visible": false,
+     "locked": false,
+     "opacity": 1,
+     "blendMode": "normal",
+     "transform": {
+      "x": 0,
+      "y": 0,
+      "scaleX": 1,
+      "scaleY": 1,
+      "shear": 0,
+      "rotation": 0
+     },
+     "attributes": {
+      "fillRule": "evenodd",
+      "fill": {
+       "kind": "solid",
+       "color": [
+        1,
+        0,
+        0,
+        1
+       ]
+      },
+      "stroke": null
+     },
+     "segments": [
+      {
+       "kind": "move",
+       "to": [
+        0,
+        0
+       ]
+      },
+      {
+       "kind": "line",
+       "to": [
+        10,
+        0
+       ]
+      },
+      {
+       "kind": "line",
+       "to": [
+        10,
+        10
+       ]
+      },
+      {
+       "kind": "line",
+       "to": [
+        0,
+        10
+       ]
+      },
+      {
+       "kind": "close"
+      },
+      {
+       "kind": "move",
+       "to": [
+        2,
+        2
+       ]
+      },
+      {
+       "kind": "line",
+       "to": [
+        8,
+        2
+       ]
+      },
+      {
+       "kind": "line",
+       "to": [
+        8,
+        8
+       ]
+      },
+      {
+       "kind": "line",
+       "to": [
+        2,
+        8
+       ]
+      },
+      {
+       "kind": "close"
+      }
+     ]
+    },
+    {
+     "id": "result",
+     "name": "result",
+     "kind": "boolean",
+     "visible": true,
+     "locked": false,
+     "opacity": 1,
+     "blendMode": "normal",
+     "transform": {
+      "x": 0,
+      "y": 0,
+      "scaleX": 1,
+      "scaleY": 1,
+      "shear": 0,
+      "rotation": 0
+     },
+     "attributes": {
+      "fillRule": "nonzero",
+      "fill": {
+       "kind": "solid",
+       "color": [
+        1,
+        0,
+        0,
+        1
+       ]
+      },
+      "stroke": null
+     },
+     "operation": "union",
+     "children": [
+      "a"
+     ]
+    }
+   ],
+   "assets": {}
+  },
+  "preparation": {
+   "maxNodes": 32,
+   "maxDepth": 16,
+   "maxSegments": 65536,
+   "maxReferences": 256,
+   "maxSourceBytes": 100000
+  },
+  "limits": {
+   "tolerance": 0.005,
+   "epsilon": 1e-08,
+   "maxDepth": 32,
+   "maxReferences": 256,
+   "maxEdges": 65536,
+   "maxParameters": 262144,
+   "maxAtomicEdges": 65536,
+   "maxSegments": 65536,
+   "maxRetainedSegments": 262144,
+   "maxWork": 10000000
+  },
+  "expected": {
+   "area": 64,
+   "contours": 2
+  },
+  "oracle": {
+   "d": "M0 0H10V10H0Z M2 2V8H8V2Z",
+   "matrix": [
+    1,
+    0,
+    0,
+    1,
+    0,
+    0
+   ]
+  }
+ },
+ {
+  "name": "nested result geometry retains movement",
+  "document": {
+   "schema": "drawing.document",
+   "id": "document",
+   "layers": [
+    {
+     "id": "a",
+     "name": "a",
+     "kind": "shape",
+     "visible": false,
+     "locked": false,
+     "opacity": 1,
+     "blendMode": "normal",
+     "transform": {
+      "x": 0,
+      "y": 0,
+      "scaleX": 1,
+      "scaleY": 1,
+      "shear": 0,
+      "rotation": 0
+     },
+     "attributes": {
+      "fillRule": "nonzero",
+      "fill": {
+       "kind": "solid",
+       "color": [
+        1,
+        0,
+        0,
+        1
+       ]
+      },
+      "stroke": null
+     },
+     "shapeKind": "rect",
+     "rect": {
+      "x": 0,
+      "y": 0,
+      "width": 10,
+      "height": 10
+     }
+    },
+    {
+     "id": "b",
+     "name": "b",
+     "kind": "shape",
+     "visible": false,
+     "locked": false,
+     "opacity": 1,
+     "blendMode": "normal",
+     "transform": {
+      "x": 0,
+      "y": 0,
+      "scaleX": 1,
+      "scaleY": 1,
+      "shear": 0,
+      "rotation": 0
+     },
+     "attributes": {
+      "fillRule": "nonzero",
+      "fill": {
+       "kind": "solid",
+       "color": [
+        1,
+        0,
+        0,
+        1
+       ]
+      },
+      "stroke": null
+     },
+     "shapeKind": "rect",
+     "rect": {
+      "x": 5,
+      "y": 5,
+      "width": 10,
+      "height": 10
+     }
+    },
+    {
+     "id": "nested",
+     "name": "nested",
+     "kind": "boolean",
+     "visible": false,
+     "locked": false,
+     "opacity": 1,
+     "blendMode": "normal",
+     "transform": {
+      "x": 4,
+      "y": 3,
+      "scaleX": 1,
+      "scaleY": 1,
+      "shear": 0,
+      "rotation": 0
+     },
+     "attributes": {
+      "fillRule": "nonzero",
+      "fill": {
+       "kind": "solid",
+       "color": [
+        1,
+        0,
+        0,
+        1
+       ]
+      },
+      "stroke": null
+     },
+     "operation": "union",
+     "children": [
+      "a",
+      "b"
+     ]
+    },
+    {
+     "id": "c",
+     "name": "c",
+     "kind": "shape",
+     "visible": false,
+     "locked": false,
+     "opacity": 1,
+     "blendMode": "normal",
+     "transform": {
+      "x": 0,
+      "y": 0,
+      "scaleX": 1,
+      "scaleY": 1,
+      "shear": 0,
+      "rotation": 0
+     },
+     "attributes": {
+      "fillRule": "nonzero",
+      "fill": {
+       "kind": "solid",
+       "color": [
+        1,
+        0,
+        0,
+        1
+       ]
+      },
+      "stroke": null
+     },
+     "shapeKind": "rect",
+     "rect": {
+      "x": 10,
+      "y": 0,
+      "width": 10,
+      "height": 30
+     }
+    },
+    {
+     "id": "result",
+     "name": "result",
+     "kind": "boolean",
+     "visible": true,
+     "locked": false,
+     "opacity": 1,
+     "blendMode": "normal",
+     "transform": {
+      "x": 0,
+      "y": 0,
+      "scaleX": 1,
+      "scaleY": 1,
+      "shear": 0,
+      "rotation": 0
+     },
+     "attributes": {
+      "fillRule": "nonzero",
+      "fill": {
+       "kind": "solid",
+       "color": [
+        1,
+        0,
+        0,
+        1
+       ]
+      },
+      "stroke": null
+     },
+     "operation": "difference",
+     "children": [
+      "nested",
+      "c"
+     ]
+    }
+   ],
+   "assets": {}
+  },
+  "preparation": {
+   "maxNodes": 32,
+   "maxDepth": 16,
+   "maxSegments": 65536,
+   "maxReferences": 256,
+   "maxSourceBytes": 100000
+  },
+  "limits": {
+   "tolerance": 0.005,
+   "epsilon": 1e-08,
+   "maxDepth": 32,
+   "maxReferences": 256,
+   "maxEdges": 65536,
+   "maxParameters": 262144,
+   "maxAtomicEdges": 65536,
+   "maxSegments": 65536,
+   "maxRetainedSegments": 262144,
+   "maxWork": 10000000
+  },
+  "expected": {
+   "area": 65,
+   "contours": 1
+  },
+  "oracle": {
+   "d": "M4 3H10V18H9V13H4Z",
+   "matrix": [
+    1,
+    0,
+    0,
+    1,
+    0,
+    0
+   ]
+  }
+ },
+ {
+  "name": "group references union all child world fills",
+  "document": {
+   "schema": "drawing.document",
+   "id": "document",
+   "layers": [
+    {
+     "id": "group",
+     "name": "group",
+     "kind": "group",
+     "visible": false,
+     "locked": false,
+     "opacity": 1,
+     "blendMode": "normal",
+     "transform": {
+      "x": 15,
+      "y": 2,
+      "scaleX": 1,
+      "scaleY": 1,
+      "shear": 0,
+      "rotation": 0
+     },
+     "attributes": {
+      "fillRule": "nonzero",
+      "fill": {
+       "kind": "solid",
+       "color": [
+        1,
+        0,
+        0,
+        1
+       ]
+      },
+      "stroke": null
+     },
+     "isolation": false,
+     "children": [
+      {
+       "id": "a",
+       "name": "a",
+       "kind": "shape",
+       "visible": false,
+       "locked": false,
+       "opacity": 1,
+       "blendMode": "normal",
+       "transform": {
+        "x": 0,
+        "y": 0,
+        "scaleX": 1,
+        "scaleY": 1,
+        "shear": 0,
+        "rotation": 0
+       },
+       "attributes": {
+        "fillRule": "nonzero",
+        "fill": {
+         "kind": "solid",
+         "color": [
+          1,
+          0,
+          0,
+          1
+         ]
+        },
+        "stroke": null
+       },
+       "shapeKind": "rect",
+       "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 10,
+        "height": 10
+       }
+      },
+      {
+       "id": "b",
+       "name": "b",
+       "kind": "shape",
+       "visible": false,
+       "locked": false,
+       "opacity": 1,
+       "blendMode": "normal",
+       "transform": {
+        "x": 0,
+        "y": 0,
+        "scaleX": 1,
+        "scaleY": 1,
+        "shear": 0,
+        "rotation": 0
+       },
+       "attributes": {
+        "fillRule": "nonzero",
+        "fill": {
+         "kind": "solid",
+         "color": [
+          1,
+          0,
+          0,
+          1
+         ]
+        },
+        "stroke": null
+       },
+       "shapeKind": "rect",
+       "rect": {
+        "x": 5,
+        "y": 5,
+        "width": 10,
+        "height": 10
+       }
+      }
+     ]
+    },
+    {
+     "id": "result",
+     "name": "result",
+     "kind": "boolean",
+     "visible": true,
+     "locked": false,
+     "opacity": 1,
+     "blendMode": "normal",
+     "transform": {
+      "x": 0,
+      "y": 0,
+      "scaleX": 1,
+      "scaleY": 1,
+      "shear": 0,
+      "rotation": 0
+     },
+     "attributes": {
+      "fillRule": "nonzero",
+      "fill": {
+       "kind": "solid",
+       "color": [
+        1,
+        0,
+        0,
+        1
+       ]
+      },
+      "stroke": null
+     },
+     "operation": "union",
+     "children": [
+      "group"
+     ]
+    }
+   ],
+   "assets": {}
+  },
+  "preparation": {
+   "maxNodes": 32,
+   "maxDepth": 16,
+   "maxSegments": 65536,
+   "maxReferences": 256,
+   "maxSourceBytes": 100000
+  },
+  "limits": {
+   "tolerance": 0.005,
+   "epsilon": 1e-08,
+   "maxDepth": 32,
+   "maxReferences": 256,
+   "maxEdges": 65536,
+   "maxParameters": 262144,
+   "maxAtomicEdges": 65536,
+   "maxSegments": 65536,
+   "maxRetainedSegments": 262144,
+   "maxWork": 10000000
+  },
+  "expected": {
+   "area": 175,
+   "contours": 1
+  },
+  "oracle": {
+   "d": "M0 0H10V5H15V15H5V10H0Z",
+   "matrix": [
+    1,
+    0,
+    0,
+    1,
+    15,
+    2
+   ]
+  }
+ },
+ {
+  "name": "empty intersection operand is retained",
+  "document": {
+   "schema": "drawing.document",
+   "id": "document",
+   "layers": [
+    {
+     "id": "a",
+     "name": "a",
+     "kind": "shape",
+     "visible": false,
+     "locked": false,
+     "opacity": 1,
+     "blendMode": "normal",
+     "transform": {
+      "x": 0,
+      "y": 0,
+      "scaleX": 1,
+      "scaleY": 1,
+      "shear": 0,
+      "rotation": 0
+     },
+     "attributes": {
+      "fillRule": "nonzero",
+      "fill": {
+       "kind": "solid",
+       "color": [
+        1,
+        0,
+        0,
+        1
+       ]
+      },
+      "stroke": null
+     },
+     "shapeKind": "rect",
+     "rect": {
+      "x": 0,
+      "y": 0,
+      "width": 10,
+      "height": 10
+     }
+    },
+    {
+     "id": "b",
+     "name": "b",
+     "kind": "path",
+     "visible": false,
+     "locked": false,
+     "opacity": 1,
+     "blendMode": "normal",
+     "transform": {
+      "x": 0,
+      "y": 0,
+      "scaleX": 1,
+      "scaleY": 1,
+      "shear": 0,
+      "rotation": 0
+     },
+     "attributes": {
+      "fillRule": "nonzero",
+      "fill": {
+       "kind": "solid",
+       "color": [
+        1,
+        0,
+        0,
+        1
+       ]
+      },
+      "stroke": null
+     },
+     "segments": []
+    },
+    {
+     "id": "result",
+     "name": "result",
+     "kind": "boolean",
+     "visible": true,
+     "locked": false,
+     "opacity": 1,
+     "blendMode": "normal",
+     "transform": {
+      "x": 0,
+      "y": 0,
+      "scaleX": 1,
+      "scaleY": 1,
+      "shear": 0,
+      "rotation": 0
+     },
+     "attributes": {
+      "fillRule": "nonzero",
+      "fill": {
+       "kind": "solid",
+       "color": [
+        1,
+        0,
+        0,
+        1
+       ]
+      },
+      "stroke": null
+     },
+     "operation": "intersection",
+     "children": [
+      "a",
+      "b"
+     ]
+    }
+   ],
+   "assets": {}
+  },
+  "preparation": {
+   "maxNodes": 32,
+   "maxDepth": 16,
+   "maxSegments": 65536,
+   "maxReferences": 256,
+   "maxSourceBytes": 100000
+  },
+  "limits": {
+   "tolerance": 0.005,
+   "epsilon": 1e-08,
+   "maxDepth": 32,
+   "maxReferences": 256,
+   "maxEdges": 65536,
+   "maxParameters": 262144,
+   "maxAtomicEdges": 65536,
+   "maxSegments": 65536,
+   "maxRetainedSegments": 262144,
+   "maxWork": 10000000
+  },
+  "expected": {
+   "area": 0,
+   "contours": 0
+  },
+  "oracle": {
+   "d": "",
+   "matrix": [
+    1,
+    0,
+    0,
+    1,
+    0,
+    0
+   ]
+  }
+ },
+ {
+  "name": "empty minuend remains empty",
+  "document": {
+   "schema": "drawing.document",
+   "id": "document",
+   "layers": [
+    {
+     "id": "a",
+     "name": "a",
+     "kind": "path",
+     "visible": false,
+     "locked": false,
+     "opacity": 1,
+     "blendMode": "normal",
+     "transform": {
+      "x": 0,
+      "y": 0,
+      "scaleX": 1,
+      "scaleY": 1,
+      "shear": 0,
+      "rotation": 0
+     },
+     "attributes": {
+      "fillRule": "nonzero",
+      "fill": {
+       "kind": "solid",
+       "color": [
+        1,
+        0,
+        0,
+        1
+       ]
+      },
+      "stroke": null
+     },
+     "segments": []
+    },
+    {
+     "id": "b",
+     "name": "b",
+     "kind": "shape",
+     "visible": false,
+     "locked": false,
+     "opacity": 1,
+     "blendMode": "normal",
+     "transform": {
+      "x": 0,
+      "y": 0,
+      "scaleX": 1,
+      "scaleY": 1,
+      "shear": 0,
+      "rotation": 0
+     },
+     "attributes": {
+      "fillRule": "nonzero",
+      "fill": {
+       "kind": "solid",
+       "color": [
+        1,
+        0,
+        0,
+        1
+       ]
+      },
+      "stroke": null
+     },
+     "shapeKind": "rect",
+     "rect": {
+      "x": 0,
+      "y": 0,
+      "width": 10,
+      "height": 10
+     }
+    },
+    {
+     "id": "result",
+     "name": "result",
+     "kind": "boolean",
+     "visible": true,
+     "locked": false,
+     "opacity": 1,
+     "blendMode": "normal",
+     "transform": {
+      "x": 0,
+      "y": 0,
+      "scaleX": 1,
+      "scaleY": 1,
+      "shear": 0,
+      "rotation": 0
+     },
+     "attributes": {
+      "fillRule": "nonzero",
+      "fill": {
+       "kind": "solid",
+       "color": [
+        1,
+        0,
+        0,
+        1
+       ]
+      },
+      "stroke": null
+     },
+     "operation": "difference",
+     "children": [
+      "a",
+      "b"
+     ]
+    }
+   ],
+   "assets": {}
+  },
+  "preparation": {
+   "maxNodes": 32,
+   "maxDepth": 16,
+   "maxSegments": 65536,
+   "maxReferences": 256,
+   "maxSourceBytes": 100000
+  },
+  "limits": {
+   "tolerance": 0.005,
+   "epsilon": 1e-08,
+   "maxDepth": 32,
+   "maxReferences": 256,
+   "maxEdges": 65536,
+   "maxParameters": 262144,
+   "maxAtomicEdges": 65536,
+   "maxSegments": 65536,
+   "maxRetainedSegments": 262144,
+   "maxWork": 10000000
+  },
+  "expected": {
+   "area": 0,
+   "contours": 0
+  },
+  "oracle": {
+   "d": "",
+   "matrix": [
+    1,
+    0,
+    0,
+    1,
+    0,
+    0
+   ]
+  }
+ },
+ {
+  "name": "empty boolean reference list is valid geometry",
+  "document": {
+   "schema": "drawing.document",
+   "id": "document",
+   "layers": [
+    {
+     "id": "result",
+     "name": "result",
+     "kind": "boolean",
+     "visible": true,
+     "locked": false,
+     "opacity": 1,
+     "blendMode": "normal",
+     "transform": {
+      "x": 0,
+      "y": 0,
+      "scaleX": 1,
+      "scaleY": 1,
+      "shear": 0,
+      "rotation": 0
+     },
+     "attributes": {
+      "fillRule": "nonzero",
+      "fill": {
+       "kind": "solid",
+       "color": [
+        1,
+        0,
+        0,
+        1
+       ]
+      },
+      "stroke": null
+     },
+     "operation": "union",
+     "children": []
+    }
+   ],
+   "assets": {}
+  },
+  "preparation": {
+   "maxNodes": 32,
+   "maxDepth": 16,
+   "maxSegments": 65536,
+   "maxReferences": 256,
+   "maxSourceBytes": 100000
+  },
+  "limits": {
+   "tolerance": 0.005,
+   "epsilon": 1e-08,
+   "maxDepth": 32,
+   "maxReferences": 256,
+   "maxEdges": 65536,
+   "maxParameters": 262144,
+   "maxAtomicEdges": 65536,
+   "maxSegments": 65536,
+   "maxRetainedSegments": 262144,
+   "maxWork": 10000000
+  },
+  "expected": {
+   "area": 0,
+   "contours": 0
+  },
+  "oracle": {
+   "d": "",
+   "matrix": [
+    1,
+    0,
+    0,
+    1,
+    0,
+    0
+   ]
+  }
+ },
+ {
+  "name": "real curved source reaches the document result",
+  "document": {
+   "schema": "drawing.document",
+   "id": "document",
+   "layers": [
+    {
+     "id": "a",
+     "name": "a",
+     "kind": "path",
+     "visible": false,
+     "locked": false,
+     "opacity": 1,
+     "blendMode": "normal",
+     "transform": {
+      "x": 12,
+      "y": 20,
+      "scaleX": 1,
+      "scaleY": 1,
+      "shear": 0,
+      "rotation": 0
+     },
+     "attributes": {
+      "fillRule": "nonzero",
+      "fill": {
+       "kind": "solid",
+       "color": [
+        1,
+        0,
+        0,
+        1
+       ]
+      },
+      "stroke": null
+     },
+     "segments": [
+      {
+       "kind": "move",
+       "to": [
+        0,
+        0
+       ]
+      },
+      {
+       "kind": "quad",
+       "ctrl": [
+        10,
+        -12
+       ],
+       "to": [
+        20,
+        0
+       ]
+      },
+      {
+       "kind": "quad",
+       "ctrl": [
+        10,
+        12
+       ],
+       "to": [
+        0,
+        0
+       ]
+      },
+      {
+       "kind": "close"
+      }
+     ]
+    },
+    {
+     "id": "b",
+     "name": "b",
+     "kind": "shape",
+     "visible": false,
+     "locked": false,
+     "opacity": 1,
+     "blendMode": "normal",
+     "transform": {
+      "x": 0,
+      "y": 0,
+      "scaleX": 1,
+      "scaleY": 1,
+      "shear": 0,
+      "rotation": 0
+     },
+     "attributes": {
+      "fillRule": "nonzero",
+      "fill": {
+       "kind": "solid",
+       "color": [
+        1,
+        0,
+        0,
+        1
+       ]
+      },
+      "stroke": null
+     },
+     "shapeKind": "rect",
+     "rect": {
+      "x": -100,
+      "y": -100,
+      "width": 200,
+      "height": 200
+     }
+    },
+    {
+     "id": "result",
+     "name": "result",
+     "kind": "boolean",
+     "visible": true,
+     "locked": false,
+     "opacity": 1,
+     "blendMode": "normal",
+     "transform": {
+      "x": 0,
+      "y": 0,
+      "scaleX": 1,
+      "scaleY": 1,
+      "shear": 0,
+      "rotation": 0
+     },
+     "attributes": {
+      "fillRule": "nonzero",
+      "fill": {
+       "kind": "solid",
+       "color": [
+        1,
+        0,
+        0,
+        1
+       ]
+      },
+      "stroke": null
+     },
+     "operation": "intersection",
+     "children": [
+      "a",
+      "b"
+     ]
+    }
+   ],
+   "assets": {}
+  },
+  "preparation": {
+   "maxNodes": 32,
+   "maxDepth": 16,
+   "maxSegments": 65536,
+   "maxReferences": 256,
+   "maxSourceBytes": 100000
+  },
+  "limits": {
+   "tolerance": 0.005,
+   "epsilon": 1e-08,
+   "maxDepth": 32,
+   "maxReferences": 256,
+   "maxEdges": 65536,
+   "maxParameters": 262144,
+   "maxAtomicEdges": 65536,
+   "maxSegments": 65536,
+   "maxRetainedSegments": 262144,
+   "maxWork": 10000000
+  },
+  "expected": {
+   "area": 160,
+   "contours": 1,
+   "tolerance": 0.1
+  },
+  "oracle": {
+   "d": "M0 0Q10 -12 20 0Q10 12 0 0Z",
+   "matrix": [
+    1,
+    0,
+    0,
+    1,
+    12,
+    20
+   ]
+  }
+ },
+ {
+  "name": "independently magnified tiny quadratic result",
+  "document": {
+   "schema": "drawing.document",
+   "id": "document",
+   "layers": [
+    {
+     "id": "a",
+     "name": "a",
+     "kind": "path",
+     "visible": false,
+     "locked": false,
+     "opacity": 1,
+     "blendMode": "normal",
+     "transform": {
+      "x": 0,
+      "y": 0,
+      "scaleX": 1,
+      "scaleY": 1,
+      "shear": 0,
+      "rotation": 0
+     },
+     "attributes": {
+      "fillRule": "nonzero",
+      "fill": {
+       "kind": "solid",
+       "color": [
+        1,
+        0,
+        0,
+        1
+       ]
+      },
+      "stroke": null
+     },
+     "segments": [
+      {
+       "kind": "move",
+       "to": [
+        0.0,
+        0.0
+       ]
+      },
+      {
+       "kind": "quad",
+       "ctrl": [
+        0.15625,
+        -0.1875
+       ],
+       "to": [
+        0.3125,
+        0.0
+       ]
+      },
+      {
+       "kind": "quad",
+       "ctrl": [
+        0.15625,
+        0.1875
+       ],
+       "to": [
+        0.0,
+        0.0
+       ]
+      },
+      {
+       "kind": "close"
+      }
+     ]
+    },
+    {
+     "id": "b",
+     "name": "b",
+     "kind": "shape",
+     "visible": false,
+     "locked": false,
+     "opacity": 1,
+     "blendMode": "normal",
+     "transform": {
+      "x": 0,
+      "y": 0,
+      "scaleX": 1,
+      "scaleY": 1,
+      "shear": 0,
+      "rotation": 0
+     },
+     "attributes": {
+      "fillRule": "nonzero",
+      "fill": {
+       "kind": "solid",
+       "color": [
+        1,
+        0,
+        0,
+        1
+       ]
+      },
+      "stroke": null
+     },
+     "shapeKind": "rect",
+     "rect": {
+      "x": -1,
+      "y": -1,
+      "width": 2,
+      "height": 2
+     }
+    },
+    {
+     "id": "result",
+     "name": "result",
+     "kind": "boolean",
+     "visible": true,
+     "locked": false,
+     "opacity": 1,
+     "blendMode": "normal",
+     "transform": {
+      "x": 12,
+      "y": 20,
+      "scaleX": 64,
+      "scaleY": 64,
+      "shear": 0,
+      "rotation": 0
+     },
+     "attributes": {
+      "fillRule": "nonzero",
+      "fill": {
+       "kind": "solid",
+       "color": [
+        1,
+        0,
+        0,
+        1
+       ]
+      },
+      "stroke": null
+     },
+     "operation": "intersection",
+     "children": [
+      "a",
+      "b"
+     ]
+    }
+   ],
+   "assets": {}
+  },
+  "preparation": {
+   "maxNodes": 32,
+   "maxDepth": 16,
+   "maxSegments": 65536,
+   "maxReferences": 256,
+   "maxSourceBytes": 100000
+  },
+  "limits": {
+   "tolerance": 0.005,
+   "epsilon": 1e-08,
+   "maxDepth": 32,
+   "maxReferences": 256,
+   "maxEdges": 65536,
+   "maxParameters": 262144,
+   "maxAtomicEdges": 65536,
+   "maxSegments": 65536,
+   "maxRetainedSegments": 262144,
+   "maxWork": 10000000
+  },
+  "expected": {
+   "area": 0.0390625,
+   "contours": 1,
+   "tolerance": 2.5e-05
+  },
+  "oracle": {
+   "d": "M0 0Q.15625 -.1875 .3125 0Q.15625 .1875 0 0Z",
+   "matrix": [
+    64,
+    0,
+    0,
+    64,
+    12,
+    20
+   ]
+  }
+ },
+ {
+  "name": "shared tiny curve remains precise after earlier unscaled consumer",
+  "document": {
+   "schema": "drawing.document",
+   "id": "document",
+   "layers": [
+    {
+     "id": "a",
+     "name": "a",
+     "kind": "path",
+     "visible": false,
+     "locked": false,
+     "opacity": 1,
+     "blendMode": "normal",
+     "transform": {
+      "x": 0,
+      "y": 0,
+      "scaleX": 1,
+      "scaleY": 1,
+      "shear": 0,
+      "rotation": 0
+     },
+     "attributes": {
+      "fillRule": "nonzero",
+      "fill": {
+       "kind": "solid",
+       "color": [
+        1,
+        0,
+        0,
+        1
+       ]
+      },
+      "stroke": null
+     },
+     "segments": [
+      {
+       "kind": "move",
+       "to": [
+        0.0,
+        0.0
+       ]
+      },
+      {
+       "kind": "quad",
+       "ctrl": [
+        0.15625,
+        -0.1875
+       ],
+       "to": [
+        0.3125,
+        0.0
+       ]
+      },
+      {
+       "kind": "quad",
+       "ctrl": [
+        0.15625,
+        0.1875
+       ],
+       "to": [
+        0.0,
+        0.0
+       ]
+      },
+      {
+       "kind": "close"
+      }
+     ]
+    },
+    {
+     "id": "b",
+     "name": "b",
+     "kind": "shape",
+     "visible": false,
+     "locked": false,
+     "opacity": 1,
+     "blendMode": "normal",
+     "transform": {
+      "x": 0,
+      "y": 0,
+      "scaleX": 1,
+      "scaleY": 1,
+      "shear": 0,
+      "rotation": 0
+     },
+     "attributes": {
+      "fillRule": "nonzero",
+      "fill": {
+       "kind": "solid",
+       "color": [
+        1,
+        0,
+        0,
+        1
+       ]
+      },
+      "stroke": null
+     },
+     "shapeKind": "rect",
+     "rect": {
+      "x": -1,
+      "y": -1,
+      "width": 2,
+      "height": 2
+     }
+    },
+    {
+     "id": "early",
+     "name": "early",
+     "kind": "boolean",
+     "visible": false,
+     "locked": false,
+     "opacity": 1,
+     "blendMode": "normal",
+     "transform": {
+      "x": 0,
+      "y": 0,
+      "scaleX": 1,
+      "scaleY": 1,
+      "shear": 0,
+      "rotation": 0
+     },
+     "attributes": {
+      "fillRule": "nonzero",
+      "fill": {
+       "kind": "solid",
+       "color": [
+        1,
+        0,
+        0,
+        1
+       ]
+      },
+      "stroke": null
+     },
+     "operation": "intersection",
+     "children": [
+      "a",
+      "b"
+     ]
+    },
+    {
+     "id": "result",
+     "name": "result",
+     "kind": "boolean",
+     "visible": true,
+     "locked": false,
+     "opacity": 1,
+     "blendMode": "normal",
+     "transform": {
+      "x": 12,
+      "y": 20,
+      "scaleX": 64,
+      "scaleY": 64,
+      "shear": 0,
+      "rotation": 0
+     },
+     "attributes": {
+      "fillRule": "nonzero",
+      "fill": {
+       "kind": "solid",
+       "color": [
+        1,
+        0,
+        0,
+        1
+       ]
+      },
+      "stroke": null
+     },
+     "operation": "intersection",
+     "children": [
+      "a",
+      "b"
+     ]
+    }
+   ],
+   "assets": {}
+  },
+  "preparation": {
+   "maxNodes": 32,
+   "maxDepth": 16,
+   "maxSegments": 65536,
+   "maxReferences": 256,
+   "maxSourceBytes": 100000
+  },
+  "limits": {
+   "tolerance": 0.005,
+   "epsilon": 1e-08,
+   "maxDepth": 32,
+   "maxReferences": 256,
+   "maxEdges": 65536,
+   "maxParameters": 262144,
+   "maxAtomicEdges": 65536,
+   "maxSegments": 65536,
+   "maxRetainedSegments": 262144,
+   "maxWork": 10000000
+  },
+  "expected": {
+   "area": 0.0390625,
+   "contours": 1,
+   "tolerance": 2.5e-05
+  },
+  "oracle": {
+   "d": "M0 0Q.15625 -.1875 .3125 0Q.15625 .1875 0 0Z",
+   "matrix": [
+    64,
+    0,
+    0,
+    64,
+    12,
+    20
+   ]
+  }
+ },
+ {
+  "name": "nested result magnification propagates to source curves",
+  "document": {
+   "schema": "drawing.document",
+   "id": "document",
+   "layers": [
+    {
+     "id": "a",
+     "name": "a",
+     "kind": "path",
+     "visible": false,
+     "locked": false,
+     "opacity": 1,
+     "blendMode": "normal",
+     "transform": {
+      "x": 0,
+      "y": 0,
+      "scaleX": 1,
+      "scaleY": 1,
+      "shear": 0,
+      "rotation": 0
+     },
+     "attributes": {
+      "fillRule": "nonzero",
+      "fill": {
+       "kind": "solid",
+       "color": [
+        1,
+        0,
+        0,
+        1
+       ]
+      },
+      "stroke": null
+     },
+     "segments": [
+      {
+       "kind": "move",
+       "to": [
+        0.0,
+        0.0
+       ]
+      },
+      {
+       "kind": "quad",
+       "ctrl": [
+        0.15625,
+        -0.1875
+       ],
+       "to": [
+        0.3125,
+        0.0
+       ]
+      },
+      {
+       "kind": "quad",
+       "ctrl": [
+        0.15625,
+        0.1875
+       ],
+       "to": [
+        0.0,
+        0.0
+       ]
+      },
+      {
+       "kind": "close"
+      }
+     ]
+    },
+    {
+     "id": "b",
+     "name": "b",
+     "kind": "shape",
+     "visible": false,
+     "locked": false,
+     "opacity": 1,
+     "blendMode": "normal",
+     "transform": {
+      "x": 0,
+      "y": 0,
+      "scaleX": 1,
+      "scaleY": 1,
+      "shear": 0,
+      "rotation": 0
+     },
+     "attributes": {
+      "fillRule": "nonzero",
+      "fill": {
+       "kind": "solid",
+       "color": [
+        1,
+        0,
+        0,
+        1
+       ]
+      },
+      "stroke": null
+     },
+     "shapeKind": "rect",
+     "rect": {
+      "x": -4,
+      "y": -4,
+      "width": 8,
+      "height": 8
+     }
+    },
+    {
+     "id": "inner",
+     "name": "inner",
+     "kind": "boolean",
+     "visible": false,
+     "locked": false,
+     "opacity": 1,
+     "blendMode": "normal",
+     "transform": {
+      "x": 0,
+      "y": 0,
+      "scaleX": 8,
+      "scaleY": 8,
+      "shear": 0,
+      "rotation": 0
+     },
+     "attributes": {
+      "fillRule": "nonzero",
+      "fill": {
+       "kind": "solid",
+       "color": [
+        1,
+        0,
+        0,
+        1
+       ]
+      },
+      "stroke": null
+     },
+     "operation": "intersection",
+     "children": [
+      "a",
+      "b"
+     ]
+    },
+    {
+     "id": "result",
+     "name": "result",
+     "kind": "boolean",
+     "visible": true,
+     "locked": false,
+     "opacity": 1,
+     "blendMode": "normal",
+     "transform": {
+      "x": 12,
+      "y": 20,
+      "scaleX": 8,
+      "scaleY": 8,
+      "shear": 0,
+      "rotation": 0
+     },
+     "attributes": {
+      "fillRule": "nonzero",
+      "fill": {
+       "kind": "solid",
+       "color": [
+        1,
+        0,
+        0,
+        1
+       ]
+      },
+      "stroke": null
+     },
+     "operation": "intersection",
+     "children": [
+      "inner",
+      "b"
+     ]
+    }
+   ],
+   "assets": {}
+  },
+  "preparation": {
+   "maxNodes": 32,
+   "maxDepth": 16,
+   "maxSegments": 65536,
+   "maxReferences": 256,
+   "maxSourceBytes": 100000
+  },
+  "limits": {
+   "tolerance": 0.005,
+   "epsilon": 1e-08,
+   "maxDepth": 32,
+   "maxReferences": 256,
+   "maxEdges": 65536,
+   "maxParameters": 262144,
+   "maxAtomicEdges": 65536,
+   "maxSegments": 65536,
+   "maxRetainedSegments": 262144,
+   "maxWork": 10000000
+  },
+  "expected": {
+   "area": 2.5,
+   "contours": 1,
+   "tolerance": 0.0016
+  },
+  "oracle": {
+   "d": "M0 0Q1.25 -1.5 2.5 0Q1.25 1.5 0 0Z",
+   "matrix": [
+    8,
+    0,
+    0,
+    8,
+    12,
+    20
+   ]
+  }
+ }
+]

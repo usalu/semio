@@ -126,7 +126,7 @@ fn flow_window_ownership_runtime_isolates_restores_and_resets_exact_windows() {
                     // recorded in 📓️flow.md §5; it is NOT this law's subject, which is exact-window partitioning.
                     if lanes != (4, 1) { return Err(format!("Flow exact-window publication lane count changed: {lanes:?} instead of (4, 1) window-config/window-transient pages")); }
                     let config_packs = app.window_config_packs().await.map_err(|error| format!("{error:?}"))?;
-                    app.load_document_pack(&document_before).await.map_err(|error| format!("{error:?}"))?;
+                    semio_framework_plugin::artifact_app_laws::load_document(&mut app, &document_before).await.map_err(|error| format!("{error:?}"))?;
                     // 🫧️ A same-byte reload is still a NEW document instance for every window: the whole
                     // window-transient registry is replaced at `document_generation + 1`, so each partition
                     // is reborn at generation 0 holding its own `Default` state. `capture` answers `Some`
@@ -259,20 +259,20 @@ fn flow_two_window_config_commands_in_one_turn_both_land() {
 #[test]
 fn flow_window_ownership_mutations_match_neutral_fixture_and_codecs() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
-    let base_config: FlowMainWindowConfig = dsl::json::from_json_str(&fixture["baseConfig"].to_string()).unwrap();
-    let base_transient: FlowWindowTransient = dsl::json::from_json_str(&fixture["baseTransient"].to_string()).unwrap();
+    let base_config: FlowMainWindowConfig = semio_framework_pack_json::from_json_str(&fixture["baseConfig"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let base_transient: FlowWindowTransient = semio_framework_pack_json::from_json_str(&fixture["baseTransient"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for row in fixture["configMutations"].as_array().unwrap() {
-        let mutation: FlowMainWindowConfigMutation = dsl::json::from_json_str(&row["mutation"].to_string()).unwrap();
+        let mutation: FlowMainWindowConfigMutation = semio_framework_pack_json::from_json_str(&row["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let after = mutation.diff(&base_config).diff().apply(&base_config).unwrap();
-        let restored = mutation.inverse(&base_config).into_iter().fold(after, |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
+        let restored = mutation.inverse(&base_config).expect("valid retained mutation inverse fixture").into_iter().fold(after, |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
         assert_eq!(restored, base_config);
         assert_eq!(FlowMainWindowConfigMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
         assert_eq!(FlowMainWindowConfigMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
     }
     for row in fixture["transientMutations"].as_array().unwrap() {
-        let mutation: FlowWindowTransientMutation = dsl::json::from_json_str(&row["mutation"].to_string()).unwrap();
+        let mutation: FlowWindowTransientMutation = semio_framework_pack_json::from_json_str(&row["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let after = mutation.diff(&base_transient).diff().apply(&base_transient).unwrap();
-        let restored = mutation.inverse(&base_transient).into_iter().fold(after, |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
+        let restored = mutation.inverse(&base_transient).expect("valid retained mutation inverse fixture").into_iter().fold(after, |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
         assert_eq!(restored, base_transient);
         assert_eq!(FlowWindowTransientMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
         assert_eq!(FlowWindowTransientMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);

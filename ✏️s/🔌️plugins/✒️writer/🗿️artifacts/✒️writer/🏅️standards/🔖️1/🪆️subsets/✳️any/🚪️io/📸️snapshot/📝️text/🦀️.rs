@@ -18,18 +18,18 @@ impl store::ArtifactDsl for WriterSnapshot {
     fn envelope_id() -> &'static str {
         "writer.writer"
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
         let mut snapshot = Self::__dsl_from_record(&record)?;
         crate::attach_writer_document_text(&mut snapshot.document, &snapshot.text.clone());
         Ok(snapshot)
     }
     fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -46,7 +46,7 @@ pub const DAG_JACK_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/�
 
 
 /// 📖️ Parses `.writer` DSL text into a `WriterSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<WriterSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<WriterSnapshot, semio_framework_diagnostic::TextError> {
     <WriterSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
@@ -82,7 +82,7 @@ pub fn jack_example_document() -> WriterSnapshot {
 /// 📄️ JSON re-serialization of {@link jack_example_document}, for the framework-generic call sites
 /// (`.example(...)`, `render(...)`) that still take a document as a JSON string.
 pub fn jack_example_json() -> String {
-    dsl::os_pack::json::to_json_string(&jack_example_document())
+    semio_framework_pack_json::to_json_string(&jack_example_document())
 }
 
 /// 📄️ The `dag.jack` example, parsed once from {@link DAG_JACK_EXAMPLE_TEXT} — see {@link jack_example_document}.
@@ -92,7 +92,7 @@ pub fn dag_jack_example_document() -> WriterSnapshot {
 
 /// 📄️ JSON re-serialization of {@link dag_jack_example_document} — see {@link jack_example_json}.
 pub fn dag_jack_example_json() -> String {
-    dsl::os_pack::json::to_json_string(&dag_jack_example_document())
+    semio_framework_pack_json::to_json_string(&dag_jack_example_document())
 }
 //#endregion 🔖️Examples
 

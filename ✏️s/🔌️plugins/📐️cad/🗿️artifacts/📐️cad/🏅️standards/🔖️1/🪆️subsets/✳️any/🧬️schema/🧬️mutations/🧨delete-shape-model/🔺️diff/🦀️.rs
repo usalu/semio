@@ -8,7 +8,7 @@ use crate::CadSnapshot;
 //#region 🔖️Diff
 pub fn diff(_payload: &DeleteShapeModel, base: &CadSnapshot) -> protocol::MutationOutcome<CadDiff> {
     if base.shape_model.is_none() {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Shape-model child is already empty.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Shape-model child is already empty.");
     }
     protocol::MutationOutcome::new(CadDiff { shape_model: Some(None), ..Default::default() })
 }

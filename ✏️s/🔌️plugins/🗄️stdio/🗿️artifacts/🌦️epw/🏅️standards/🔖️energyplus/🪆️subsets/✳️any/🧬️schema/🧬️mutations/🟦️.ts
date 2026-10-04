@@ -1,8 +1,10 @@
 /** 🧬️ EpwMutation union — mirrors 🦀️.rs's `#[serde(tag = "mutation")]` enum. */
 import type { EpwSnapshot, EpwLocation, EpwDataPeriods, EpwRecord } from '../📸️snapshot/🟦️.ts';
+import type { SnapshotPatch } from '../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts';
 
 export type EpwMutation =
   | { mutation: 'setSnapshot'; snapshot: EpwSnapshot }
+  | { readonly mutation: 'patchSnapshot'; readonly patch: SnapshotPatch }
   | { mutation: 'setLocation'; location: EpwLocation }
   | { mutation: 'setDesignConditions'; value: string }
   | { mutation: 'setTypicalExtremePeriods'; value: string }

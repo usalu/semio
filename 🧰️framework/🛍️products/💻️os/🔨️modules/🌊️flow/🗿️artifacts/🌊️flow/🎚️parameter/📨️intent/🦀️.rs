@@ -5,7 +5,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔣️Payload
 /// 🎚️ One finite numeric intent addressed to a domain widget; surface_id is transport metadata only.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SetGraphParameter {
@@ -50,7 +50,7 @@ pub struct SetGraphParameterRetirement {
 }
 
 impl crate::os_store::ErasedSnapshotRetirement for SetGraphParameterRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<crate::os_store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<crate::os_store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         use crate::os_store::SnapshotRetirementStep as Step;
         if maximum_items == 0 || maximum_bytes == 0 { return Ok(Step::Blocked); }
         if self.index == self.bytes.len() { return Ok(Step::Complete); }

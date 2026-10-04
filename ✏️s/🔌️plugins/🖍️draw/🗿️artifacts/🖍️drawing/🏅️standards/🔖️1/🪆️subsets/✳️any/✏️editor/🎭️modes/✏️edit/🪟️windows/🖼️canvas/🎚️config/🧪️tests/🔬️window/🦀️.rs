@@ -83,7 +83,7 @@ fn drawing_canvas_window_ownership_runtime_isolates_reloads_and_restores_exact_i
                 let document_after = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
                 if document_before.pack != document_after.pack || document_before.spr != document_after.spr { return Err("Drawing window publication changed document bytes".into()); }
                 let packs = app.window_config_packs().await.map_err(|error| format!("{error:?}"))?;
-                app.load_document_pack(&document_before).await.map_err(|error| format!("{error:?}"))?;
+                semio_framework_plugin::artifact_app_laws::load_document(&mut app, &document_before).await.map_err(|error| format!("{error:?}"))?;
                 let cleared = app.window_transient_snapshot(&left).map_err(|error| format!("{error:?}"))?.ok_or("Drawing Canvas transient owner missing after reload")?;
                 if cleared.get::<DrawingCanvasWindowTransientOwner>() != Some(&DrawingCanvasWindowTransient::default()) { return Err("Drawing Canvas transient survived same-byte reload".into()); }
                 for context in [&left, &right] {
@@ -118,24 +118,24 @@ fn drawing_canvas_window_ownership_matches_neutral_fixture_and_codecs() {
     use store::{ArtifactDsl, ArtifactPack};
 
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
-    let base_config: DrawingCanvasWindowConfig = dsl::json::from_json_str(&fixture["baseConfig"].to_string()).unwrap();
-    let next_config: DrawingCanvasWindowConfig = dsl::json::from_json_str(&fixture["nextConfig"].to_string()).unwrap();
-    let config_mutation: DrawingCanvasWindowConfigMutation = dsl::json::from_json_str(&fixture["configMutation"].to_string()).unwrap();
+    let base_config: DrawingCanvasWindowConfig = semio_framework_pack_json::from_json_str(&fixture["baseConfig"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let next_config: DrawingCanvasWindowConfig = semio_framework_pack_json::from_json_str(&fixture["nextConfig"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let config_mutation: DrawingCanvasWindowConfigMutation = semio_framework_pack_json::from_json_str(&fixture["configMutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let after = config_mutation.diff(&base_config).diff().apply(&base_config).unwrap();
     assert_eq!(after, next_config);
-    let restored = config_mutation.inverse(&base_config).into_iter().fold(after, |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
+    let restored = config_mutation.inverse(&base_config).expect("valid retained mutation inverse fixture").into_iter().fold(after, |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
     assert_eq!(restored, base_config);
     assert_eq!(DrawingCanvasWindowConfig::parse_dsl(&base_config.print_dsl()).unwrap(), base_config);
     assert_eq!(DrawingCanvasWindowConfig::decode_pack(&base_config.encode_pack()).unwrap(), base_config);
     assert_eq!(DrawingCanvasWindowConfigMutation::parse_op(&config_mutation.print_op()).unwrap(), config_mutation);
     assert_eq!(DrawingCanvasWindowConfigMutation::decode_op(&config_mutation.encode_op().unwrap()).unwrap(), config_mutation);
 
-    let base_transient: DrawingCanvasWindowTransient = dsl::json::from_json_str(&fixture["baseTransient"].to_string()).unwrap();
-    let next_transient: DrawingCanvasWindowTransient = dsl::json::from_json_str(&fixture["nextTransient"].to_string()).unwrap();
-    let transient_mutation: DrawingCanvasWindowTransientMutation = dsl::json::from_json_str(&fixture["transientMutation"].to_string()).unwrap();
+    let base_transient: DrawingCanvasWindowTransient = semio_framework_pack_json::from_json_str(&fixture["baseTransient"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let next_transient: DrawingCanvasWindowTransient = semio_framework_pack_json::from_json_str(&fixture["nextTransient"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let transient_mutation: DrawingCanvasWindowTransientMutation = semio_framework_pack_json::from_json_str(&fixture["transientMutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let after = transient_mutation.diff(&base_transient).diff().apply(&base_transient).unwrap();
     assert_eq!(after, next_transient);
-    let restored = transient_mutation.inverse(&base_transient).into_iter().fold(after, |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
+    let restored = transient_mutation.inverse(&base_transient).expect("valid retained mutation inverse fixture").into_iter().fold(after, |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
     assert_eq!(restored, base_transient);
     assert_eq!(DrawingCanvasWindowTransient::parse_dsl(&base_transient.print_dsl()).unwrap(), base_transient);
     assert_eq!(DrawingCanvasWindowTransient::decode_pack(&base_transient.encode_pack()).unwrap(), base_transient);

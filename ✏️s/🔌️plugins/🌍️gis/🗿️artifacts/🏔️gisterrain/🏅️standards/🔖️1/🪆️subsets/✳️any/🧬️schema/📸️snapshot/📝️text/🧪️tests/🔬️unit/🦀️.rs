@@ -8,12 +8,12 @@ async fn gis3d_terrain_document_dsl_round_trips_bundled_reuse_example() {
 
 #[semio_framework_async_macros::async_test]
 async fn gis3d_terrain_document_dsl_round_trips_arbitrary_exaggeration() {
-    store::os_store::test_support::assert_dsl_round_trip(&GisTerrainSnapshot { exaggeration: 2.75, imported_features_json: String::new(), ..Default::default() });
+    store::os_store::test_support::assert_dsl_round_trip(&GisTerrainSnapshot { exaggeration: 2.75, imported_map: None, ..Default::default() });
 }
 
 #[semio_framework_async_macros::async_test]
-async fn gis3d_terrain_document_dsl_round_trips_imported_features_json() {
-    store::os_store::test_support::assert_dsl_round_trip(&GisTerrainSnapshot { exaggeration: 1.0, imported_features_json: r#"{"positions":[{"id":"p1","lon":1.0,"lat":2.0}],"routes":[],"regions":[]}"#.into(), ..Default::default() });
+async fn gis3d_terrain_document_dsl_round_trips_imported_map() {
+    store::os_store::test_support::assert_dsl_round_trip(&GisTerrainSnapshot { exaggeration: 1.0, imported_map: Some(crate::schema::ImportedMap::from_json(r#"{"positions":[{"id":"p1","lon":1.0,"lat":2.0}],"routes":[],"regions":[]}"#).unwrap()), ..Default::default() });
 }
 
 #[semio_framework_async_macros::async_test]

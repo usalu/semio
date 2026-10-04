@@ -45,10 +45,10 @@ fn the_renderer_row_fixture_decodes_exactly() {
     let fixture: serde_json::Value = serde_json::from_str(NODE_GRAPH_EDIT_ROWS).expect("the row fixture parses");
     for case in fixture["accepted"].as_array().expect("accepted rows") {
         let carried = !matches!(case["row"]["operation"].as_str(), Some("setSlider" | "insertPort"));
-        assert_eq!(super::node_graph_edit::sequence_node_graph_row(&dsl::DslValue::from(case["row"].clone())).is_ok(), carried, "accepted row {}", case["id"]);
+        assert_eq!(super::node_graph_edit::sequence_node_graph_row(&semio_framework_value::DslValue::from(case["row"].clone())).is_ok(), carried, "accepted row {}", case["id"]);
     }
     for case in fixture["refused"].as_array().expect("refused rows") {
-        assert!(super::node_graph_edit::sequence_node_graph_row(&dsl::DslValue::from(case["row"].clone())).is_err(), "refused row {} decoded", case["id"]);
+        assert!(super::node_graph_edit::sequence_node_graph_row(&semio_framework_value::DslValue::from(case["row"].clone())).is_err(), "refused row {} decoded", case["id"]);
     }
 }
 
@@ -60,7 +60,7 @@ fn fold(base: &semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schem
     let mut state = base.clone();
     for leaf in leaves {
         let outcome = semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::apply_semio_flow_mutation(&mut state, leaf);
-        assert!(outcome.worst_level().is_none_or(|level| level < protocol::Severity::Error), "{leaf:?} refused: {:?}", outcome.messages());
+        assert!(outcome.worst_level().is_none_or(|level| level < semio_framework_diagnostic::Severity::Error), "{leaf:?} refused: {:?}", outcome.messages());
     }
     state
 }

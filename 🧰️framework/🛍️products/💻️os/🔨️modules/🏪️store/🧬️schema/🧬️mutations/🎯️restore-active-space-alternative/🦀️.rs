@@ -42,9 +42,12 @@ impl crate::os_spr::MutationKind<SpaceHistorySnapshot, SpaceHistoryMutation> for
     fn diff(&self, _base: &SpaceHistorySnapshot) -> crate::os_spr::MutationOutcome<SpaceHistoryDiff> {
         crate::os_spr::MutationOutcome::new(SpaceHistoryDiff { set_active_alternative_id: Some(self.alternative_id.clone()), ..Default::default() })
     }
-    fn inverse(&self, base: &SpaceHistorySnapshot) -> Vec<SpaceHistoryMutation> {
+    fn inverse(&self, base: &SpaceHistorySnapshot) -> Result<Vec<SpaceHistoryMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![SpaceHistoryMutation::RestoreActiveSpaceAlternative(Self { alternative_id: base.active_alternative_id.clone() })]
-    }
+    
+    })())
+}
     fn label(&self) -> crate::LocalizedLabel {
         crate::LocalizedLabel::native("Restore active space alternative", "Aktive Space-Alternative wiederherstellen")
     }

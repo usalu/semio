@@ -18,5 +18,5 @@ pub fn diff(payload: &InsertMember, base: &En1990Snapshot) -> MutationOutcome<En
     if index == payload.index {
         return outcome;
     }
-    outcome.warn("mutation.clamped", format!("Position {} is past the end of the member list; inserted at {index}.", payload.index))
+    outcome.warning("mutation.clamped", format!("Position {} is past the end of the member list; inserted at {index}.", payload.index))
 }

@@ -28,7 +28,7 @@ use std::sync::Arc;
 pub const DRAWING_GESTURE_PREVIEW_POINT_CAPACITY: usize = 256;
 
 /// 🪢 Bounded lasso polygon retained during incremental document traversal.
-#[derive(Clone,Debug)]
+#[derive(Clone, Debug)]
 pub struct LassoPolygon {
     points: [[f64;2];DRAWING_GESTURE_PREVIEW_POINT_CAPACITY],
     len: usize,
@@ -117,18 +117,18 @@ pub(crate) fn selection_merge_mode(shift: bool, ctrl: bool, meta: bool) -> &'sta
 
 /// 🕹️ Requests the shell to redispatch a framework-owned interaction verb (`interactionSelect`/`interactionHover`)
 /// through its normal action funnel — selection and hover are framework-owned state, never a document mutation.
-pub(crate) fn request_interaction_action(action_id: &str, args: dsl::DslValue) -> Effect {
+pub(crate) fn request_interaction_action(action_id: &str, args: semio_framework_value::DslValue) -> Effect {
     Effect::ReplayShellCommand { action_id: action_id.into(), args: Some(args) }
 }
 
 pub(crate) fn interaction_select_effect_from_targets(targets: String, merge: &str) -> Effect {
     request_interaction_action(
         semio_framework::INTERACTION_SELECT_ACTION_ID,
-        dsl::DslValue::object([
-            ("domainId".to_string(), dsl::DslValue::String(DRAWING_INTERACTION_DOMAIN.to_string())),
-            ("targets".to_string(), dsl::DslValue::String(targets)),
-            ("merge".to_string(), dsl::DslValue::String(merge.to_string())),
-            ("method".to_string(), dsl::DslValue::String("pick".to_string())),
+        semio_framework_value::DslValue::object([
+            ("domainId".to_string(), semio_framework_value::DslValue::String(DRAWING_INTERACTION_DOMAIN.to_string())),
+            ("targets".to_string(), semio_framework_value::DslValue::String(targets)),
+            ("merge".to_string(), semio_framework_value::DslValue::String(merge.to_string())),
+            ("method".to_string(), semio_framework_value::DslValue::String("pick".to_string())),
         ]),
     )
 }
@@ -136,27 +136,27 @@ pub(crate) fn interaction_select_effect_from_targets(targets: String, merge: &st
 pub(crate) fn interaction_hover_effect_from_targets(targets: String) -> Effect {
     request_interaction_action(
         semio_framework::INTERACTION_HOVER_ACTION_ID,
-        dsl::DslValue::object([("domainId".to_string(), dsl::DslValue::String(DRAWING_INTERACTION_DOMAIN.to_string())), ("channel".to_string(), dsl::DslValue::String("pointer".to_string())), ("targets".to_string(), dsl::DslValue::String(targets))]),
+        semio_framework_value::DslValue::object([("domainId".to_string(), semio_framework_value::DslValue::String(DRAWING_INTERACTION_DOMAIN.to_string())), ("channel".to_string(), semio_framework_value::DslValue::String("pointer".to_string())), ("targets".to_string(), semio_framework_value::DslValue::String(targets))]),
     )
 }
 
 pub(crate) fn interaction_select_effect(ids: &[String], merge: &str) -> Effect {
-    let items = ids.iter().map(|id| dsl::DslValue::object([("granularity".to_string(), dsl::DslValue::String(DRAWING_INTERACTION_GRANULARITY.to_string())), ("id".to_string(), dsl::DslValue::String(id.clone()))])).collect::<Vec<_>>();
-    let targets = dsl::json::to_json_string(&dsl::DslValue::Array(items));
+    let items = ids.iter().map(|id| semio_framework_value::DslValue::object([("granularity".to_string(), semio_framework_value::DslValue::String(DRAWING_INTERACTION_GRANULARITY.to_string())), ("id".to_string(), semio_framework_value::DslValue::String(id.clone()))])).collect::<Vec<_>>();
+    let targets = semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Array(items));
     interaction_select_effect_from_targets(targets, merge)
 }
 
 pub(crate) fn point_selection_effect(ids:&[String])->Effect {
-    let targets=ids.iter().map(|id|dsl::DslValue::object([("granularity".into(),dsl::DslValue::String(DRAWING_POINT_GRANULARITY.into())),("id".into(),dsl::DslValue::String(id.clone()))])).collect::<Vec<_>>();
-    point_selection_effect_from_targets(dsl::json::to_json_string(&dsl::DslValue::Array(targets)))
+    let targets=ids.iter().map(|id|semio_framework_value::DslValue::object([("granularity".into(),semio_framework_value::DslValue::String(DRAWING_POINT_GRANULARITY.into())),("id".into(),semio_framework_value::DslValue::String(id.clone()))])).collect::<Vec<_>>();
+    point_selection_effect_from_targets(semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Array(targets)))
 }
 
 pub(crate) fn point_selection_effect_from_targets(targets:String)->Effect {
-    request_interaction_action(semio_framework::INTERACTION_SELECT_ACTION_ID,dsl::DslValue::object([
-        ("domainId".into(),dsl::DslValue::String(DRAWING_POINT_DOMAIN.into())),
-        ("targets".into(),dsl::DslValue::String(targets)),
-        ("merge".into(),dsl::DslValue::String("replace".into())),
-        ("method".into(),dsl::DslValue::String("pick".into())),
+    request_interaction_action(semio_framework::INTERACTION_SELECT_ACTION_ID,semio_framework_value::DslValue::object([
+        ("domainId".into(),semio_framework_value::DslValue::String(DRAWING_POINT_DOMAIN.into())),
+        ("targets".into(),semio_framework_value::DslValue::String(targets)),
+        ("merge".into(),semio_framework_value::DslValue::String("replace".into())),
+        ("method".into(),semio_framework_value::DslValue::String("pick".into())),
     ]))
 }
 
@@ -692,7 +692,7 @@ static DRAWING_TOOL_TICK: AtomicU64 = AtomicU64::new(0);
 /// ⏰️ The host clock a canvas tool event runs on: the host's wall time and a process-monotone tick, so a transaction id
 /// minted at an upsert is unique per author, moment and event even when two gestures share a millisecond.
 pub fn drawing_tool_clock() -> protocol::HybridLogicalTimestamp {
-    protocol::HybridLogicalTimestamp { actor: 0, physical_ms: semio_framework_job::default_now_ms().unwrap_or(0), logical: DRAWING_TOOL_TICK.fetch_add(1, Ordering::Relaxed) }
+    semio_framework_tool_machine::authoring_clock(DRAWING_TOOL_TICK.fetch_add(1, Ordering::Relaxed))
 }
 
 /// 🛠️ One canvas tool: the runner of the canvas statechart for one utility, its transactions scoped
@@ -764,7 +764,7 @@ const DRAWING_QUERY_TARGET_BYTES: usize = 8_192;
 const MAX_GESTURE_POINTS: usize = 48;
 static NEXT_TRACE_POINTER_REQUEST: AtomicU64 = AtomicU64::new(20_000);
 
-#[derive(Clone, Copy, Debug, Default, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Copy, Debug, Default, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 struct TracePath {
     indices: [u16; TRACE_POINTER_MAX_DEPTH],
     len: u8,
@@ -806,7 +806,7 @@ enum TracePointerWork {
     PolygonBounds { path: TracePath, next: usize, matrix: [f64;6], min: [f64; 2], max: [f64; 2] },
 }
 
-#[derive(Clone, Debug, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 pub(crate) struct TracePickCandidate {
     generality: i32,
     pub(crate) layer_id: String,
@@ -1286,7 +1286,7 @@ pub struct DrawingGesturePreview {
 }
 
 /// 📍️ The points a node drag moves and its world offset so far.
-#[derive(Clone,Debug,PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct DrawingNodeTranslation {
     pub targets:Vec<DrawingPathPointTarget>,
     pub delta:[f64;2],
@@ -1405,7 +1405,7 @@ impl DrawingPointQuery {
             None
         };
         if let Some(id) = id {
-            let id = dsl::json::to_json_string(id);
+            let id = semio_framework_pack_json::to_json_string(id);
             let prefix = if self.target_cursor == 0 { "" } else { "," };
             let granularity=if self.node_selection.is_some() {DRAWING_POINT_GRANULARITY}else {DRAWING_INTERACTION_GRANULARITY};
             let item = format!("{prefix}{{\"granularity\":\"{granularity}\",\"id\":{id}}}");
@@ -1704,7 +1704,8 @@ impl DrawingSession {
 }
 //#endregion 🔖️DrawingSession
 
-use dsl::{FromValue, ToValue};
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
 
 //#region 🧵️TracePointerContinuation
 fn retain_trace_progress(session: &mut DrawingSession, job: &TracePointerJob) {
@@ -1726,7 +1727,7 @@ fn queue_trace_pointer(payload: &CanvasPointerDown, job: &TracePointerJob) -> Ef
         checkpoint_pending_work: Some(job.work.len() as u64),
         ..payload.clone()
     };
-    let args = Some(ToValue::to_value(&continuation));
+    let args = Some(semio_framework_value::ToValue::to_value(&continuation));
     Effect::DispatchAction { req: RequestId(NEXT_TRACE_POINTER_REQUEST.fetch_add(1, Ordering::Relaxed)), action: "canvasPointerDown".into(), args, delay_ms: 0 }
 }
 
@@ -1747,7 +1748,7 @@ fn advance_trace_pointer(session: &mut DrawingSession, mut job: TracePointerJob,
 }
 //#endregion 🧵️TracePointerContinuation
 
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "canvas-pointer-down")]
 pub struct CanvasPointerDown {

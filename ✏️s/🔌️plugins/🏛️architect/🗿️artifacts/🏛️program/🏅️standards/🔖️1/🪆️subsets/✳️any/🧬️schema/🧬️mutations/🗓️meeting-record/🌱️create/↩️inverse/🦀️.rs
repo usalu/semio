@@ -6,6 +6,9 @@ use crate::ProgramMutation;
 use crate::ProgramSnapshot;
 
 /// ↩️ Undo a create by deleting the row it added.
-pub fn inverse(payload: &super::CreateMeetingRecord, _base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+pub fn inverse(payload: &super::CreateMeetingRecord, _base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![ProgramMutation::DeleteMeetingRecord(super::super::delete_meeting_record::DeleteMeetingRecord { id: payload.meeting_record.header.id.clone() })]
+
+    })())
 }

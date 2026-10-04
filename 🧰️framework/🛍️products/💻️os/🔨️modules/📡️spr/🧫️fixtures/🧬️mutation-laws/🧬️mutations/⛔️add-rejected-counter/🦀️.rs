@@ -17,9 +17,12 @@ impl MutationKind<i64, CounterMutation> for AddRejectedCounter {
     fn diff(&self, _base: &i64) -> MutationOutcome<CounterDiff> {
         MutationOutcome::fatal("mutation.invariant", "boom", ["x"])
     }
-    fn inverse(&self, _base: &i64) -> Vec<CounterMutation> {
+    fn inverse(&self, _base: &i64) -> Result<Vec<CounterMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         Vec::new()
-    }
+    
+    })())
+}
     fn label(&self) -> crate::LocalizedLabel {
         crate::LocalizedLabel::native("Add rejected counter", "Abgelehnten Zähler hinzufügen")
     }
@@ -31,11 +34,11 @@ impl OpText for AddRejectedCounter {
     fn print_op(&self) -> String {
         "add-rejected-counter".into()
     }
-    fn parse_op(line: &str) -> Result<Self, crate::os_dsl::TextError> {
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         if line == "add-rejected-counter" {
             Ok(Self {})
         } else {
-            Err(crate::os_dsl::TextError::new("expected add-rejected-counter", crate::os_dsl::TextSpan::at(1, 1)))
+            Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected add-rejected-counter", semio_framework_diagnostic::TextSpan::at(1, 1)))
         }
     }
 }

@@ -1,0 +1,30 @@
+{
+  "authority": "actualSvgSnapshot",
+  "documentFields": [
+    "root",
+    "doctype",
+    "declaration",
+    "prolog",
+    "epilog"
+  ],
+  "snapshotFields": [
+    "schema",
+    "root",
+    "doctype",
+    "declaration",
+    "prolog",
+    "epilog"
+  ],
+  "tableCount": 13,
+  "literal": "Grüße\t\n\u0000🌠",
+  "literalUtf8Hex": "4772c3bcc39f65090a00f09f8ca0",
+  "backing": "admitBeforeAllocation",
+  "forecast": "borrowedFieldsWithPaidFrontiers",
+  "retirementRefund": false,
+  "refusalKinds": {
+    "owned": "ownershipLimit",
+    "allocator": "allocationFailed",
+    "work": "workLimit",
+    "cancellation": "canceled"
+  }
+}

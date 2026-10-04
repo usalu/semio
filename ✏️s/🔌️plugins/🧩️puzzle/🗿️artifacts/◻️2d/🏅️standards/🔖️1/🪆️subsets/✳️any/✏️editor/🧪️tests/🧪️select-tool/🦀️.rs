@@ -21,7 +21,7 @@ fn board() -> Puzzle2dSnapshot {
         "edges": [],
         "targetRegions": [{ "id": "region-1", "x": 10.0, "y": 10.0, "width": 20.0, "height": 20.0, "hidden": false, "locked": false }]
     });
-    dsl::FromValue::from_value(dsl::DslValue::from(&fixture)).expect("typed board")
+    semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(&fixture)).expect("typed board")
 }
 
 fn ids(values: &[&str]) -> Vec<String> {
@@ -160,7 +160,7 @@ fn a_streamed_gesture_spans_dispatches_and_commits_one_transaction() {
     assert_eq!(tool.send(select_tool::Event::Stream(request(&base, vec![Puzzle2dSelectionRecord::drag(ids(&["right"]), -548.0, 0.0)]))), Ok(ToolStep::Open));
     let second = tool.persist().expect("the gesture is still open");
     assert_eq!(second.transaction, first.transaction, "every tick of one gesture joins ONE transaction");
-    assert_eq!(second.entries, vec![Puzzle2dSelectToolEntry { key: PUZZLE2D_SELECT_TOOL_LEAF_KEY.into(), mutation: dsl::ToValue::to_value(&Puzzle2dMutation::DragSelection(DragSelection { targets: ids(&["right"]), dx: -948.0, dy: 0.0 })) }], "the ticks add up into the one leaf");
+    assert_eq!(second.entries, vec![Puzzle2dSelectToolEntry { key: PUZZLE2D_SELECT_TOOL_LEAF_KEY.into(), mutation: semio_framework_value::ToValue::to_value(&Puzzle2dMutation::DragSelection(DragSelection { targets: ids(&["right"]), dx: -948.0, dy: 0.0 })) }], "the ticks add up into the one leaf");
     let mut tool = Puzzle2dSelectTool::resume(&second).expect("resumes again");
     let Ok(ToolStep::Committed(transaction, mutations)) = tool.send(select_tool::Event::Finish(request(&base, Vec::new()))) else { panic!("the finish commits") };
     assert_eq!(transaction, first.transaction, "the commit publishes the ref minted at the first tick");
@@ -197,7 +197,7 @@ fn a_tampered_or_resting_state_never_resumes() {
     assert!(matches!(Puzzle2dSelectTool::resume(&resting), Err(ToolRefusal::Unclosed)), "a resting chart with an open transaction would let the next gesture join it");
     let unknown = Puzzle2dSelectToolState { states: vec!["root".into(), "dragging".into()], ..state.clone() };
     assert!(Puzzle2dSelectTool::resume(&unknown).is_err(), "a configuration the chart does not know is refused");
-    let garbled = Puzzle2dSelectToolState { entries: vec![Puzzle2dSelectToolEntry { key: PUZZLE2D_SELECT_TOOL_LEAF_KEY.into(), mutation: dsl::DslValue::from(&json!({ "kind": "nonsense" })) }], ..state };
+    let garbled = Puzzle2dSelectToolState { entries: vec![Puzzle2dSelectToolEntry { key: PUZZLE2D_SELECT_TOOL_LEAF_KEY.into(), mutation: semio_framework_value::DslValue::from(&json!({ "kind": "nonsense" })) }], ..state };
     assert!(matches!(Puzzle2dSelectTool::resume(&garbled), Err(ToolRefusal::Closed)), "an entry that does not decode drops the gesture");
 }
 
@@ -207,11 +207,11 @@ fn a_persisted_gesture_round_trips_the_window_transient_wire() {
     let mut tool = Puzzle2dSelectTool::start("translateSelection", "seed-1", "rev-1").expect("starts");
     tool.send(select_tool::Event::Stream(request(&base, vec![Puzzle2dSelectionRecord::drag(ids(&["right"]), -400.0, 0.0)]))).expect("opens");
     let state = tool.persist().expect("open");
-    let text = dsl::json::to_json_string(&state);
-    assert_eq!(dsl::json::from_json_str::<Puzzle2dSelectToolState>(&text).as_ref().ok(), Some(&state), "the gesture state survives its wire: {text}");
+    let text = semio_framework_pack_json::to_json_string(&state);
+    assert_eq!(semio_framework_pack_json::from_json_str::<Puzzle2dSelectToolState>(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).as_ref().ok(), Some(&state), "the gesture state survives its wire: {text}");
     let transient = crate::editor::puzzle2d::window::Puzzle2dWindowTransient { select_tool: Some(Box::new(state)), ..Default::default() };
-    let text = dsl::json::to_json_string(&transient);
-    assert_eq!(dsl::json::from_json_str::<crate::editor::puzzle2d::window::Puzzle2dWindowTransient>(&text).as_ref().ok(), Some(&transient), "the window transient carries it: {text}");
+    let text = semio_framework_pack_json::to_json_string(&transient);
+    assert_eq!(semio_framework_pack_json::from_json_str::<crate::editor::puzzle2d::window::Puzzle2dWindowTransient>(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).as_ref().ok(), Some(&transient), "the window transient carries it: {text}");
 }
 
 #[test]

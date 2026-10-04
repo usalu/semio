@@ -5,16 +5,15 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "exaggeration",
-    "importedFeaturesJson"
+    "exaggeration"
   ],
   "properties": {
     "exaggeration": {
       "type": "number",
       "x-semio-state": "artifact"
     },
-    "importedFeaturesJson": {
-      "type": "string",
+    "importedMap": {
+      "$ref": "#/definitions/map",
       "x-semio-state": "artifact"
     },
     "mesh": {
@@ -28,6 +27,78 @@
       ],
       "x-semio-state": "artifact",
       "x-semio-child-kind": "s.stdio.semio"
+    }
+  },
+  "definitions": {
+    "intrinsic": {
+      "$comment": "Finite JSON projection only. Native intrinsic null, boolean, u64, i64, binary64 exact words, text, octets, ordered arrays and ordered members are authoritative in DSL/Pack/Proto. JSON media explicitly refuses inexpressible domains.",
+      "type": [
+        "null",
+        "boolean",
+        "number",
+        "string",
+        "array",
+        "object"
+      ]
+    },
+    "member": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "value"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "not": {
+            "enum": [
+              "positions",
+              "routes",
+              "regions"
+            ]
+          }
+        },
+        "value": {
+          "$ref": "#/definitions/intrinsic"
+        }
+      }
+    },
+    "map": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "positions",
+        "routes",
+        "regions",
+        "properties"
+      ],
+      "properties": {
+        "positions": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "routes": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "regions": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/member"
+          }
+        }
+      }
     }
   }
 }

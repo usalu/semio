@@ -1,0 +1,11 @@
+{
+ "$schema":"https://json-schema.org/draft/2020-12/schema",
+ "type":"object",
+ "additionalProperties":false,
+ "required":["authority","layoutTables","mutations"],
+ "properties":{
+  "authority":{"const":"literalSqlTopologyBeforeCallback"},
+  "layoutTables":{"const":43},
+  "mutations":{"const":["tableMetadata","rowOwnerArray","cellOwnerArray","literalCellReplacement","tableOwnerArray"]}
+ }
+}

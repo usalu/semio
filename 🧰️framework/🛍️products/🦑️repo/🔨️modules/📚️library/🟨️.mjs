@@ -1,7 +1,7 @@
 import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, realpathSync, statSync, writeFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
-import { createRequire } from "node:module";
+import { createRequire, isBuiltin } from "node:module";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import * as loadedCommandInputs from "./⚡️caching/📥️inference/🟨️.mjs";
@@ -40,14 +40,15 @@ async function importRevision(source, revision) {
   return import(url.href);
 }
 
-/** 🧷️ Admits only the command input parser whose bytes are the current authority. */
+/** 🧷️ Admits only the command input parsers whose bytes are the current authority. */
 function currentCommandInputs(commandInputs) {
   if (commandInputs.sourceHash !== commandInputHash) throw Error("Stale command input parser implementation");
-  return commandInputs.commandSourceImports;
+  return commandInputs;
 }
 
 const commandInputHash = createHash("sha256").update(readPhysicalSource(join(LIBRARY_ROOT, COMMAND_INPUT_MODULE))).digest("hex");
-let commandSourceImports = (path, source) => currentCommandInputs(loadedCommandInputs)(path, source);
+let commandSourceImports = (path, source) => currentCommandInputs(loadedCommandInputs).commandSourceImports(path, source);
+let moduleSourceImports = (path, source) => currentCommandInputs(loadedCommandInputs).moduleSourceImports(path, source);
 
 let declaredBrowserSessionEnginesV1;
 let admitPlaygroundNativeHostV1;
@@ -58,7 +59,9 @@ let readSourceInputContract;
 let relativeSourceInputs;
 let componentDeploymentDirectoryV1;
 const libraryBootstrap = (loadedCommandInputs.sourceHash === commandInputHash ? Promise.resolve(loadedCommandInputs) : importRevision(new URL(`./${COMMAND_INPUT_MODULE}`, import.meta.url), commandInputHash)).then((commandInputs) => {
-  commandSourceImports = currentCommandInputs(commandInputs);
+  const admitted = currentCommandInputs(commandInputs);
+  commandSourceImports = admitted.commandSourceImports;
+  moduleSourceImports = admitted.moduleSourceImports;
   return importRevision(new URL(`./${RUNTIME_COMPONENT_MODULE}`, import.meta.url), createHash("sha256").update(readPhysicalSource(join(LIBRARY_ROOT, RUNTIME_COMPONENT_MODULE))).digest("hex"));
 }).then((runtime) => {
   runtimeComponentClosure = runtime.runtimeComponentClosure;
@@ -1370,105 +1373,113 @@ function emojiProjectJsonNodes(configFiles, _options, context) {
   return results;
 }
 
-/** 🗂️ Nx workspace-data directory used for durable import-edge digests. */
+/** 🗂️ Current Nx workspace-data location for immutable source facts. */
 function workspaceDataDirectory(workspaceRoot) {
   return process.env.NX_WORKSPACE_DATA_DIRECTORY || join(workspaceRoot, ".nx", "workspace-data");
 }
 
-/** ⚡️ On-disk import-edge cache root keyed by Nx file hashes. */
-function importEdgeCacheRoot(workspaceRoot) {
-  return join(workspaceDataDirectory(workspaceRoot), "emoji-import-edges");
+/** 🧬️ Keeps parser revisions and source identities apart from resolved project authority. */
+function moduleSourceFactCacheRoot(workspaceRoot) {
+  return join(workspaceDataDirectory(workspaceRoot), "emoji-module-source-facts", commandInputHash);
 }
 
-/** ♻️ Reads a prior import-target list for one content hash, or `undefined` when absent. */
-function readCachedImportTargets(cacheRoot, hash) {
-  if (!hash) return undefined;
-  const path = join(cacheRoot, `${hash}.json`);
-  if (!existsSync(path)) return undefined;
+const MODULE_FACT_BYTES = 1024 * 1024;
+
+/** 🔑️ Identifies immutable content at one normalized source path under the actual parser revision. */
+function moduleSourceFactIdentity(file, hash) {
+  const identity = { parser: commandInputHash, file: nxPath(file), hash: String(hash) };
+  return { ...identity, key: createHash("sha256").update(JSON.stringify(identity)).digest("hex") };
+}
+
+/** 📥️ Admits a bounded closed source fact record without granting any project target authority. */
+function readCachedModuleImports(cacheRoot, identity) {
   try {
+    const path = join(cacheRoot, `${identity.key}.json`);
+    if (statSync(path).size > MODULE_FACT_BYTES) return undefined;
     const value = JSON.parse(readFileSync(path, "utf8"));
-    return Array.isArray(value) ? value : undefined;
+    if (!value || Object.keys(value).length !== 4 || value.parser !== identity.parser || value.file !== identity.file || value.hash !== identity.hash || !Array.isArray(value.imports) || value.imports.length > 16384 || !value.imports.every(specifier => typeof specifier === "string")) return undefined;
+    return value.imports;
   } catch {
     return undefined;
   }
 }
 
-/** ✍️ Persists import targets for one content hash without partial writes. */
-function writeCachedImportTargets(cacheRoot, hash, targets) {
-  if (!hash) return;
+/** 📤️ Persists only bounded source facts; partial cache reads simply cause a fresh parse. */
+function writeCachedModuleImports(cacheRoot, identity, imports) {
+  if (imports.length > 16384) return;
+  const value = JSON.stringify({ parser: identity.parser, file: identity.file, hash: identity.hash, imports });
+  if (Buffer.byteLength(value) > MODULE_FACT_BYTES) return;
   mkdirSync(cacheRoot, { recursive: true });
-  writeFileSync(join(cacheRoot, `${hash}.json`), JSON.stringify(targets));
+  writeFileSync(join(cacheRoot, `${identity.key}.json`), value);
 }
 
-/**
- * 🔗️ Resolves every Static import/require in one source file to workspace or npm project names.
- * @param {string} text
- * @param {string} file
- * @param {string} workspaceRoot
- * @param {Record<string, { root: string }>} projects
- * @param {Map<string, string>} byPackage
- * @param {{ resolveImport?: Function, externalNodes?: Record<string, unknown> } | undefined} locked
- */
-function importTargetsFromSource(text, file, workspaceRoot, projects, byPackage, locked) {
+/** 🏛️ Snapshots current project roots once, in deterministic ownership precedence. */
+function importProjectOwners(projects) {
+  return Object.entries(projects).filter(([name]) => name !== "workspace").map(([name, project]) => ({ name, root: nxPath(project.root) })).sort((a, b) => b.root.length - a.root.length || a.name.localeCompare(b.name));
+}
+
+/** 🧭️ Uses bare and explicit core loader identity so bundled packages retain their package identity. */
+function coreModuleImport(specifier) {
+  try {
+    const loader = createRequire(import.meta.url);
+    if (specifier.startsWith("node:")) return loader.resolve(specifier) === specifier;
+    if (!isBuiltin(specifier)) return false;
+    const core = "node:" + specifier;
+    return loader.resolve(specifier) === specifier && loader.resolve(core) === core;
+  } catch { return false; }
+}
+
+/** 🔗️ Resolves immutable runtime import strings against current ownership, package names, and lock scope. */
+function importTargetsFromFacts(imports, file, workspaceRoot, owners, byPackage, locked) {
   const targets = new Set();
-  for (const match of text.matchAll(/(?:\bfrom\s*|\bimport\s*(?:\(\s*)?|\brequire\s*\(\s*)["']([^"']+)["']/g)) {
-    const specifier = match[1];
-    const packageName = specifier.startsWith("@") ? specifier.split("/").slice(0, 2).join("/") : specifier.split("/")[0];
-    if (!specifier.startsWith(".")) {
-      const key = locked?.resolveImport?.(file, packageName);
-      const target = byPackage.get(packageName) ?? (key && locked?.externalNodes?.[`npm:${key}`] ? `npm:${key}` : undefined);
+  for (const specifier of imports) {
+    if (specifier.startsWith(".")) {
+      const path = nxPath(relative(workspaceRoot, resolve(dirname(join(workspaceRoot, file)), specifier)));
+      const target = owners.find(project => owned(path, project.root))?.name;
       if (target) targets.add(target);
       continue;
     }
-    const path = nxPath(relative(workspaceRoot, resolve(dirname(join(workspaceRoot, file)), specifier)));
-    const target = Object.entries(projects).filter(([candidate, project]) => candidate !== "workspace" && owned(path, project.root)).sort((a, b) => b[1].root.length - a[1].root.length)[0]?.[0];
-    if (target) targets.add(target);
+    const packageName = specifier.startsWith("@") ? specifier.split("/").slice(0, 2).join("/") : specifier.split("/")[0];
+    if (coreModuleImport(packageName)) continue;
+    const workspaceTarget = byPackage.get(packageName);
+    if (workspaceTarget) { targets.add(workspaceTarget); continue; }
+    const key = locked?.resolveImport?.(file, packageName);
+    if (key && locked?.externalNodes?.[`npm:${key}`]) targets.add(`npm:${key}`);
   }
   return [...targets].sort();
 }
 
-/**
- * ⚡️ Scans JS/TS files (full or filesToProcess) with hash-keyed reuse and bounded parallel reads.
- * @param {string} workspaceRoot
- * @param {Record<string, { file: string, hash?: string }[]>} projectFiles
- * @param {Record<string, { root: string }>} projects
- * @param {Map<string, string>} byPackage
- * @param {{ resolveImport?: Function, externalNodes?: Record<string, unknown> } | undefined} locked
- * @param {(source: string, target: string | undefined, sourceFile: string) => void} add
- */
+/** 🔍️ Parses one module through the canonical owned string interface and current project authority. */
+function importTargetsFromSource(text, file, workspaceRoot, projects, byPackage, locked) {
+  return importTargetsFromFacts(moduleSourceImports(file, text), nxPath(file), workspaceRoot, importProjectOwners(projects), byPackage, locked);
+}
+
+/** ⚡️ Reuses bounded source facts while resolving every full or incremental file against current authority. */
 async function collectImportEdges(workspaceRoot, projectFiles, projects, byPackage, locked, add) {
-  const cacheRoot = importEdgeCacheRoot(workspaceRoot);
-  const jobs = [];
+  const cacheRoot = moduleSourceFactCacheRoot(workspaceRoot), owners = importProjectOwners(projects), jobs = [];
   for (const [name, files] of Object.entries(projectFiles)) {
     if (name === "workspace") continue;
-    for (const file of files) {
-      if (!/\.[cm]?[jt]sx?$/.test(file.file)) continue;
-      jobs.push({ name, file });
-    }
+    for (const file of files) if (/\.[cm]?[jt]sx?$/.test(file.file)) jobs.push({ name, file });
   }
-  const concurrency = Math.min(32, Math.max(1, jobs.length));
   let cursor = 0;
-  const workers = Array.from({ length: concurrency }, async () => {
+  await Promise.all(Array.from({ length: Math.min(32, jobs.length) }, async () => {
     for (;;) {
       const index = cursor++;
       if (index >= jobs.length) return;
-      const { name, file } = jobs[index];
-      let targets = readCachedImportTargets(cacheRoot, file.hash);
-      if (!targets) {
+      const { name, file } = jobs[index], sourceFile = nxPath(file.file);
+      let identity = file.hash ? moduleSourceFactIdentity(sourceFile, file.hash) : undefined;
+      let imports = identity ? readCachedModuleImports(cacheRoot, identity) : undefined;
+      if (!imports) {
         let text;
-        try {
-          text = await readFile(join(workspaceRoot, file.file), "utf8");
-        } catch (error) {
-          if (error.code === "ENOENT") continue;
-          throw error;
-        }
-        targets = importTargetsFromSource(text, file.file, workspaceRoot, projects, byPackage, locked);
-        writeCachedImportTargets(cacheRoot, file.hash ?? createHash("sha256").update(text).digest("hex"), targets);
+        try { text = await readFile(join(workspaceRoot, sourceFile), "utf8"); }
+        catch (error) { if (error.code === "ENOENT") continue; throw error; }
+        identity ??= moduleSourceFactIdentity(sourceFile, createHash("sha256").update(text).digest("hex"));
+        imports = moduleSourceImports(sourceFile, text);
+        writeCachedModuleImports(cacheRoot, identity, imports);
       }
-      for (const target of targets) add(name, target, file.file);
+      for (const target of importTargetsFromFacts(imports, sourceFile, workspaceRoot, owners, byPackage, locked)) add(name, target, sourceFile);
     }
-  });
-  await Promise.all(workers);
+  }));
 }
 
 /**
@@ -1481,10 +1492,6 @@ function projectFilesToProcess(context) {
 
 /** 🕸️ Native manifests and package imports contribute edges without spawning a build or installer. */
 async function createDependenciesImplementation(_options, context) {
-  if (process.platform === "win32") {
-    const locked = _options?.analyzeLockfile && existsSync(join(context.workspaceRoot, "bun.lock")) ? readBunLockGraph(context.workspaceRoot) : undefined;
-    return locked?.dependencies ?? [];
-  }
   const { workspaceRoot, projects } = context;
   const locked = _options?.analyzeLockfile && existsSync(join(workspaceRoot, "bun.lock")) ? readBunLockGraph(workspaceRoot) : undefined;
   const byRoot = new Map(Object.entries(projects).map(([name, project]) => [resolve(workspaceRoot, project.root), name]));
@@ -1573,17 +1580,49 @@ let reloadedImplementation;
 function invokeCurrentImplementation(kind, args) {
   return libraryBootstrap.then(() => {
     const revision = implementationRevision();
-    if (revision === IMPLEMENTATION_REVISION) return kind === "nodes" ? emojiProjectJsonNodes(...args) : createDependenciesImplementation(...args);
+    if (revision === IMPLEMENTATION_REVISION) return kind === "nodes" ? emojiProjectJsonNodes(...args) : kind === "authority" ? dependencyResolutionAuthorityImplementation(...args) : createDependenciesImplementation(...args);
     if (reloadedImplementation?.revision !== revision) {
       const entry = { revision, module: importRevision(import.meta.url, revision).catch((error) => { if (reloadedImplementation === entry) reloadedImplementation = undefined; throw error; }) };
       reloadedImplementation = entry;
     }
     return reloadedImplementation.module.then((module) => {
       if (module.cacheInternals === cacheInternals) throw new Error("Graph runtime retained an obsolete implementation");
-      return kind === "nodes" ? module.default.createNodesV2[1](...args) : module.createDependencies(...args);
+      return kind === "nodes" ? module.default.createNodesV2[1](...args) : kind === "authority" ? module.dependencyResolutionAuthority(...args) : module.createDependencies(...args);
     });
   });
 }
+
+/** 🧬️ Identifies current dependency resolution authority using only owned immutable source facts.
+ * @param {string} workspaceRoot
+ * @param {Record<string, { root: string }>} projects
+ * @returns {string}
+ */
+function dependencyResolutionAuthorityImplementation(workspaceRoot, projects) {
+  const hash = createHash("sha256").update(implementationRevision());
+  const source = (path) => { hash.update(JSON.stringify(nxPath(relative(workspaceRoot, path)))); hash.update(existsSync(path) ? readPhysicalSource(path) : "\0absent\0"); };
+  for (const path of ["nx.json", "Cargo.toml", "go.work", "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟨️.mjs", "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🕸️dependencies/🟨️.mjs"]) source(join(workspaceRoot, path));
+  const recipe = join(workspaceRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools"), manifest = join(recipe, "package.json");
+  for (const path of [join(workspaceRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts"), join(recipe, "📜️script.ts"), manifest, join(recipe, "bun.lock")]) source(path);
+  if (existsSync(manifest)) for (const path of [...new Set(Object.values(JSON.parse(readPhysicalSource(manifest)).semio?.toolPatches ?? {}))].sort()) {
+    if (typeof path !== "string") throw new Error("Invalid tooling authority patch path");
+    const file = resolve(workspaceRoot, path), local = nxPath(relative(workspaceRoot, file));
+    if (isAbsolute(local) || local === ".." || local.startsWith("../")) throw new Error("Tooling authority patch must belong to this workspace");
+    source(file);
+  }
+  if (existsSync(join(workspaceRoot, "bun.lock"))) { readBunLockGraph(workspaceRoot); hash.update(BUN_LOCK_CACHE.hash); }
+  else hash.update("\0no-bun-lock\0");
+  for (const [name, project] of Object.entries(projects).sort(([a], [b]) => a.localeCompare(b))) {
+    hash.update(JSON.stringify([name, nxPath(project.root)]));
+    for (const filename of ["package.json", "📋️project.json", "Cargo.toml"]) source(join(workspaceRoot, project.root, filename));
+    const go = goManifest(project.root, workspaceRoot);
+    if (go) source(go);
+  }
+  return hash.digest("hex");
+}
+
+/** 🏛️ Supplies current roots, manifests, lock scope, and actual implementation identity behind an owned digest interface. */
+export function dependencyResolutionAuthority(...args) { return invokeCurrentImplementation("authority", args); }
+
 
 export function createDependencies(...args) { return invokeCurrentImplementation("dependencies", args); }
 
@@ -1605,4 +1644,4 @@ export default {
 
 export { libraryBootstrap };
 
-export const cacheInternals = { async declaredSourceInputs(...args) { await libraryBootstrap; return declaredSourceInputs(...args); }, nativeLockInputs, withWasmTooling, get runtimeComponentClosure() { return runtimeComponentClosure; }, playgroundPreparationTargets, collectPlaygroundCatalog, pluginSiteTargetsForCrate, bunLockGraph, printDocumentTargets, targetPolicy, matchesUncached, cacheableFamily, mutatingName, liveName, verifyCommand, nativeDependencies, nativeDependencyRoots, nativePreparation, withNativePreparation, cargoTargets, goDependencies, rustSourceFiles, createRustSourceCache, relativeScriptInputs, nativeTargetCommandInputs, targetScriptClosure, genericTargetCommandInputs, genericCommandFallbackInputs, generatorContractInputs, outputRootInputs, resolveOutputPath, generatorOutputCouplingInputs, projectInputs, rootCommandTargets, createDependenciesImplementation, importTargetsFromSource, collectImportEdges, projectFilesToProcess, importEdgeCacheRoot, nxTrackedSourceFile, walkCargoToml };
+export const cacheInternals = { async declaredSourceInputs(...args) { await libraryBootstrap; return declaredSourceInputs(...args); }, nativeLockInputs, withWasmTooling, get runtimeComponentClosure() { return runtimeComponentClosure; }, playgroundPreparationTargets, collectPlaygroundCatalog, pluginSiteTargetsForCrate, bunLockGraph, printDocumentTargets, targetPolicy, matchesUncached, cacheableFamily, mutatingName, liveName, verifyCommand, nativeDependencies, nativeDependencyRoots, nativePreparation, withNativePreparation, cargoTargets, goDependencies, rustSourceFiles, createRustSourceCache, relativeScriptInputs, nativeTargetCommandInputs, targetScriptClosure, genericTargetCommandInputs, genericCommandFallbackInputs, generatorContractInputs, outputRootInputs, resolveOutputPath, generatorOutputCouplingInputs, projectInputs, rootCommandTargets, createDependenciesImplementation, importTargetsFromSource, collectImportEdges, projectFilesToProcess, moduleSourceFactCacheRoot, nxTrackedSourceFile, walkCargoToml };

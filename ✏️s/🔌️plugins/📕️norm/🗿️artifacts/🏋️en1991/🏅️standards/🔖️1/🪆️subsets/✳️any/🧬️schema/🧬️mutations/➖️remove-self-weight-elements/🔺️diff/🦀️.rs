@@ -1,4 +1,4 @@
-//! Diff for `remove-self-weight-elements`.
+//! 🔺️ Diff for `remove-self-weight-elements`.
 use super::RemoveSelfWeightElements;
 use crate::artifact_schema::diff::En1991SelfWeightElementsList;
 use crate::{En1991Diff, En1991Snapshot};

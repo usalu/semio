@@ -4,11 +4,14 @@ use crate::mutations::{remove_content, RemodelingMutation};
 use crate::RemodelingSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::AppendContent, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
+pub fn inverse(payload: &super::AppendContent, base: &RemodelingSnapshot) -> Result<Vec<RemodelingMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let stored = base.durable_artifacts.get(&payload.content_id).map_or(0, |artifact| artifact.chunks.len() as u64);
     if payload.first + payload.chunks.len() as u64 <= stored {
         return Vec::new();
     }
     vec![remove_content(payload.content_id.clone(), stored)]
+
+    })())
 }
 //#endregion 🔖️Inverse

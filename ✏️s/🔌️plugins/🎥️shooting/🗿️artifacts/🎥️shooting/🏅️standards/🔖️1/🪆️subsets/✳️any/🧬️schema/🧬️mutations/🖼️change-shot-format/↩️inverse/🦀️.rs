@@ -4,9 +4,12 @@ use super::ChangeShotFormat;
 use crate::mutations::ShootingMutation;
 use crate::ShootingSnapshot;
 
-pub fn inverse(payload: &ChangeShotFormat, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
+pub fn inverse(payload: &ChangeShotFormat, base: &ShootingSnapshot) -> Result<Vec<ShootingMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.shots.iter().find(|shot| shot.id == payload.id) {
         Some(shot) => vec![ShootingMutation::ChangeShotFormat(ChangeShotFormat { id: payload.id.clone(), new_format: shot.format.clone() })],
         None => Vec::new(),
     }
+
+    })())
 }

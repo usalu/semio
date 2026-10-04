@@ -7,7 +7,7 @@ pub(crate) fn sample_pdf() -> PdfSnapshot {
 
 #[semio_framework_async_macros::async_test]
 async fn each_page_becomes_a_paragraph_separated_by_pagebreak() {
-    let semio = semio_framework_plugin::resolve_ready(SemioDocumentFromPdf::deserialize(&sample_pdf())).expect("deserialize");
+    let semio = ::semio_framework_async::poll::resolve_ready(SemioDocumentFromPdf::deserialize(&sample_pdf())).expect("deserialize");
     assert_eq!(semio.blocks.len(), 3);
     assert!(matches!(&semio.blocks[0], DocBlock::Paragraph { runs, .. } if runs[0].text == "Page one text."));
     assert!(matches!(&semio.blocks[1], DocBlock::PageBreak));
@@ -16,6 +16,6 @@ async fn each_page_becomes_a_paragraph_separated_by_pagebreak() {
 
 #[semio_framework_async_macros::async_test]
 async fn zero_pages_yields_zero_blocks() {
-    let semio = semio_framework_plugin::resolve_ready(SemioDocumentFromPdf::deserialize(&PdfSnapshot::default())).expect("deserialize");
+    let semio = ::semio_framework_async::poll::resolve_ready(SemioDocumentFromPdf::deserialize(&PdfSnapshot::default())).expect("deserialize");
     assert!(semio.blocks.is_empty());
 }

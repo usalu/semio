@@ -180,12 +180,12 @@ fn bundle() -> ExtensionBundle {
     let bundle = bundle.mode(semio_framework_plugin::ExecutionMode::Declarative);
     bundle.contributes_topic(
         "process.machines",
-        semio_framework_os_kernel::DslValue::object([
-            ("appId".to_string(), semio_framework_os_kernel::DslValue::String(HOST_APP_ID.to_string())),
-            ("moduleId".to_string(), semio_framework_os_kernel::DslValue::String(catalog.catalog_id().to_string())),
-            ("label".to_string(), semio_framework_os_kernel::DslValue::String(catalog.label().to_string())),
-            ("iconId".to_string(), semio_framework_os_kernel::DslValue::String(catalog.icon_id().to_string())),
-            ("machinesJson".to_string(), semio_framework_os_kernel::DslValue::String(semio_framework_os_kernel::json::to_json_string(&catalog.machines()))),
+        semio_framework_value::DslValue::object([
+            ("appId".to_string(), semio_framework_value::DslValue::String(HOST_APP_ID.to_string())),
+            ("moduleId".to_string(), semio_framework_value::DslValue::String(catalog.catalog_id().to_string())),
+            ("label".to_string(), semio_framework_value::DslValue::String(catalog.label().to_string())),
+            ("iconId".to_string(), semio_framework_value::DslValue::String(catalog.icon_id().to_string())),
+            ("machinesJson".to_string(), semio_framework_value::DslValue::String(semio_framework_os_kernel::json::to_json_string(&catalog.machines()))),
         ]),
     )
 }

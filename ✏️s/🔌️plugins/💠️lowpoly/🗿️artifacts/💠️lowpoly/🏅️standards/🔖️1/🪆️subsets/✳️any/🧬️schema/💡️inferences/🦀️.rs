@@ -23,8 +23,11 @@ pub struct LowpolyInference {
 }
 
 impl protocol::Inference<LowpolySnapshot> for LowpolyInference {
-    fn infer(snapshot: &LowpolySnapshot) -> Self {
+    fn infer(snapshot: &LowpolySnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { object_count: snapshot.objects.len(), bounds: scene_bounds(snapshot) }
+    
+        })
     }
 }
 
@@ -40,13 +43,6 @@ impl protocol::InferenceSpec<LowpolySnapshot> for LowpolyInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-impl semio_framework_plugin::ArtifactInferrer for crate::standards::v1::subsets::any::schema::LowpolyBuilder {
-    type Snapshot = LowpolySnapshot;
-    type Inference = LowpolyInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.lowpoly.lowpoly.inference`'s facet leaves into the OS-wide inference catalog —

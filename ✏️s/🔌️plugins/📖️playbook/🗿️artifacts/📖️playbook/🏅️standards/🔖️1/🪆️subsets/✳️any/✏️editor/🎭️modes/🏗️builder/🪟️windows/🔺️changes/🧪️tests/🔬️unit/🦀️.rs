@@ -10,12 +10,12 @@ fn definition_declares_the_diff_view_surface_and_body_key() {
 
 #[test]
 fn authored_playbook_projects_to_a_real_diff_view_scene() {
-    let mut spec = crate::PlaybookSnapshot::default();
+    let mut spec = crate::playbook::empty_playbook_snapshot();
     spec.title = Some("Emergency response".into());
     let projected = scene(&spec);
     assert_eq!(projected.language.as_deref(), Some("json"));
     assert_eq!(projected.mode.as_deref(), Some("unified"));
     assert_ne!(projected.before, projected.after);
-    let roundtrip: crate::PlaybookSnapshot = protocol::json::from_json_str(&projected.after).expect("authored after payload");
+    let roundtrip: crate::PlaybookSpec = semio_framework_pack_json::from_json_str(&projected.after, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("authored after payload");
     assert_eq!(roundtrip, spec);
 }

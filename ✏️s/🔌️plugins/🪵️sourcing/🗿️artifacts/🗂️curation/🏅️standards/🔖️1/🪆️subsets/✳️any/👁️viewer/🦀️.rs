@@ -69,9 +69,12 @@ impl ArtifactViewer for SourcingViewer {
         crate::curation_child_restore_projection(snapshot)
     }
 
-    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {
+ Ok((||{
         crate::genesis_catalog_pack(snapshot, slot, child_id)
-    }
+    
+})())
+}
 
     /// 👁️ Structurally read-only: the sole `SourcingViewCommand::Noop` variant never carries a config
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty

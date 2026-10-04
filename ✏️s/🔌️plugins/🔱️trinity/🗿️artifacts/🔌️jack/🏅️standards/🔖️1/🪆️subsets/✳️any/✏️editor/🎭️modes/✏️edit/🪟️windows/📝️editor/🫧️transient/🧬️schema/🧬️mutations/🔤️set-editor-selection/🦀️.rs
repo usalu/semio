@@ -3,7 +3,7 @@
 use super::{JackEditorWindowTransient, JackEditorWindowTransientMutation};
 use crate::editor::jack::transient::JackEditorSelection;
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[dsl(keyword = "set-editor-selection")]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetEditorSelection {
@@ -20,9 +20,12 @@ impl protocol::MutationKind<JackEditorWindowTransient, JackEditorWindowTransient
         protocol::MutationOutcome::new(next)
     }
 
-    fn inverse(&self, base: &JackEditorWindowTransient) -> Vec<JackEditorWindowTransientMutation> {
+    fn inverse(&self, base: &JackEditorWindowTransient) -> Result<Vec<JackEditorWindowTransientMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![Self { selection: base.selection.clone() }.into()]
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set Editor Window Selection", "Auswahl im Editorfenster setzen")

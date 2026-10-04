@@ -22,7 +22,7 @@ fn sample_tiff() -> TiffSnapshot {
 
 #[semio_framework_async_macros::async_test]
 async fn maps_pixels_and_description_tag() {
-    let semio = semio_framework_plugin::resolve_ready(SemioImageFromTiff::deserialize(&sample_tiff())).expect("deserialize");
+    let semio = ::semio_framework_async::poll::resolve_ready(SemioImageFromTiff::deserialize(&sample_tiff())).expect("deserialize");
     assert_eq!(semio.width, 2);
     assert_eq!(semio.height, 1);
     assert_eq!(semio.colorspace, SemioColorspace::Rgb);

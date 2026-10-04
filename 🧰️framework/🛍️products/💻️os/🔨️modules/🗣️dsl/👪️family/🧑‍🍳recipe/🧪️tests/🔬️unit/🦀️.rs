@@ -47,7 +47,7 @@ async fn round_trip_matrix() {
 #[semio_framework_async_macros::async_test]
 async fn grammar_file_is_syntactically_valid() {
     let source = include_str!("../../📖️.grammar.semio");
-    let grammar = crate::os_dsl::grammar::parse_grammar(source).expect("family-recipe.grammar must parse");
+    let grammar = semio_framework_dsl::grammar::parse_grammar(source).expect("family-recipe.grammar must parse");
     assert_eq!(grammar.id, "family-recipe");
     assert!(grammar.productions.len() > 4, "family-recipe should cover named and positional args");
 }

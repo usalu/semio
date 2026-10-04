@@ -350,6 +350,7 @@ pub struct RetainedPuzzleCommandJob<A: ArtifactApp> {
     /// ⬇️ The segmented download this command resolved instead of a store emission, held for exactly one
     /// `Publish` phase — see [`PuzzleCommandWorkStep::Download`].
     download: Option<ArtifactDownloadOutput>,
+    download_retirement:Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
     ephemeral: Option<EphemeralEmit<A>>,
     pending_completion_rejection: Option<ArtifactToolCompletionRejection<A>>,
     phase: PuzzleCommandPhase,
@@ -431,6 +432,7 @@ impl<A: ArtifactApp> RetainedPuzzleCommandJob<A> {
             restore_target: None,
             emit: None,
             download: None,
+            download_retirement:None,
             ephemeral: None,
             pending_completion_rejection: None,
             phase,
@@ -629,7 +631,8 @@ impl<A: ArtifactApp> RetainedPuzzleCommandJob<A> {
                 }
                 let Some(ephemeral) = self.ephemeral.take() else { return self.fault(cx, b"puzzle command ephemeral result owner is absent") };
                 if let Some(download) = self.download.take() {
-                    if completion.complete_download(Ok(download), ephemeral).is_err() {
+                    if let Err(rejected)=completion.complete_download(Ok(download), ephemeral) {
+                        self.download=rejected.download.ok();self.ephemeral=Some(rejected.ephemeral);
                         return self.fault(cx, b"puzzle command download publication was rejected");
                     }
                     self.phase = PuzzleCommandPhase::Complete;
@@ -752,7 +755,8 @@ impl<A: ArtifactApp> InteractiveJob for RetainedPuzzleCommandJob<A> {
             };
         }
         retire_one!(emit);
-        retire_one!(download);
+        if self.download_retirement.is_none(){if let Some(download)=self.download.take(){self.download_retirement=Some(semio_framework_value::retirement::owned_retirement(download));}}
+        if let Some(retirement)=self.download_retirement.as_mut(){return match retirement.close_step(maximum_items,maximum_bytes){Ok(semio_framework_value::SnapshotRetirementStep::Complete)=>{self.download_retirement.take();InteractiveJobCloseStep::Pending{released_items:1,released_bytes:0}},Ok(semio_framework_value::SnapshotRetirementStep::Pending{released_items,released_bytes})=>InteractiveJobCloseStep::Pending{released_items,released_bytes},_=>InteractiveJobCloseStep::Blocked};}
         retire_one!(ephemeral);
         if let Some(work) = self.work.as_mut() {
             let step = work.close_step(maximum_items.min(1), maximum_bytes);
@@ -792,6 +796,7 @@ impl<A: ArtifactApp> InteractiveJob for RetainedPuzzleCommandJob<A> {
             && self.pending_completion_rejection.is_none()
             && self.emit.is_none()
             && self.download.is_none()
+            && self.download_retirement.is_none()
             && self.ephemeral.is_none()
             && self.work.is_none()
             && self.command.is_none()

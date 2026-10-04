@@ -15,11 +15,11 @@ use std::sync::Arc;
 const MOUNTED_OWNER_PAGE_BYTES: usize = 4_096;
 const ASSEMBLY_TRIPLET_INDEX_SPACE: usize = usize::MAX;
 
-fn encode_value<T: dsl::ToValue>(value: &T) -> Vec<u8> {
+fn encode_value<T: semio_framework_value::ToValue>(value: &T) -> Vec<u8> {
     store::pack_rt::encode_wire_value(&value.to_value())
 }
 
-fn decode_value<T: dsl::FromValue>(bytes: &[u8]) -> Result<T, String> {
+fn decode_value<T: semio_framework_value::FromValue>(bytes: &[u8]) -> Result<T, String> {
     let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| error.to_string())?;
     T::from_value(value).map_err(|error| error.to_string())
 }
@@ -159,7 +159,7 @@ impl<T, const N: usize> Default for MountedModelItems<T, N> {
 impl<T, const N: usize> MountedModelItems<T, N> {
     fn next_allocation_bytes(&self, target: usize) -> Result<Option<usize>, MountedAnalysisFault> {
         if target > N { return Err(MountedAnalysisFault::Capacity { requested: target, maximum: N }); }
-        self.values.next_capacity_allocation_bytes(target).map_err(|reason| MountedAnalysisFault::Allocation { allocated_bytes: 0, reason })
+        self.values.next_capacity_allocation_bytes(target).map_err(|error| MountedAnalysisFault::Allocation { allocated_bytes: 0, reason: error.reason })
     }
 
     fn admit_one(&mut self, target: usize, maximum_bytes: usize) -> Result<MountedAnalysisAdmission, MountedAnalysisFault> {

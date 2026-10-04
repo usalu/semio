@@ -28,7 +28,7 @@ fn walk(layers: &[RasterLayerNode], level: u32, topo_order: &mut Vec<String>, de
 }
 
 /// 🧭️ Raster's layer-tree topology — see module doc for the structural-nesting derivation.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct RasterTopology {
     pub topo_order: Vec<String>,

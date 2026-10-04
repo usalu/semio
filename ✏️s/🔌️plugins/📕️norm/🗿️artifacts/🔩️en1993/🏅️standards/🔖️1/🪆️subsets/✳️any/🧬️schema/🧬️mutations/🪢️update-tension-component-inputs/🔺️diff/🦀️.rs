@@ -9,7 +9,7 @@ pub fn diff(payload: &UpdateTensionComponentInputs, base: &En1993Snapshot) -> pr
     let mut values = base.tension_components.clone();
     if let Some(idx) = values.iter().position(|x| x.id == payload.tension_component.id) {
         if values[idx] == payload.tension_component {
-            return protocol::MutationOutcome::empty().warn("mutation.no-op", "Entity already has this value.");
+            return protocol::MutationOutcome::empty().warning("mutation.no-op", "Entity already has this value.");
         }
         values[idx] = payload.tension_component.clone();
     } else {

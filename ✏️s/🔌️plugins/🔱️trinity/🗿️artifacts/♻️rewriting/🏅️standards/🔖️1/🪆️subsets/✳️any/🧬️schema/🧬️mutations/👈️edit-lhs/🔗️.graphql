@@ -1,2 +1,2 @@
-# 🔍️ Direct edit-lhs / EditLhs payload.
-input EditLhsInput { newLhsJson: String! }
+# 🧬️ EditLhsInput owns its declared typed payload.
+input EditLhsInput { newLhs: LhsInput! }

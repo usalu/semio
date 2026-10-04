@@ -2056,6 +2056,128 @@
         ]
       },
       "accepted": false
+    },
+    {
+      "id": "distinct-logical-member-key-and-target",
+      "input": {
+        "root": {
+          "reference": {
+            "artifactId": "root",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "kit"
+            }
+          },
+          "children": [
+            {
+              "slot": "objects",
+              "childId": "logical-object",
+              "target": {
+                "artifactId": "addressed-object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              }
+            }
+          ]
+        },
+        "members": [
+          {
+            "reference": {
+              "artifactId": "addressed-object",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "root",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "kit"
+                }
+              },
+              "slot": "objects",
+              "childId": "logical-object"
+            },
+            "children": []
+          }
+        ]
+      },
+      "accepted": true
+    },
+    {
+      "id": "distinct-logical-keys-cannot-own-one-target-twice",
+      "input": {
+        "root": {
+          "reference": {
+            "artifactId": "root",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "kit"
+            }
+          },
+          "children": [
+            {
+              "slot": "objects",
+              "childId": "logical-first",
+              "target": {
+                "artifactId": "addressed-object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              }
+            },
+            {
+              "slot": "objects",
+              "childId": "logical-second",
+              "target": {
+                "artifactId": "addressed-object",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "object"
+                }
+              }
+            }
+          ]
+        },
+        "members": [
+          {
+            "reference": {
+              "artifactId": "addressed-object",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "object"
+              }
+            },
+            "owner": {
+              "parent": {
+                "artifactId": "root",
+                "dialect": {
+                  "artifactKind": "s.stdio.semio",
+                  "standard": "v1",
+                  "subset": "kit"
+                }
+              },
+              "slot": "objects",
+              "childId": "logical-first"
+            },
+            "children": []
+          }
+        ]
+      },
+      "accepted": false
     }
   ],
   "chainCases": [

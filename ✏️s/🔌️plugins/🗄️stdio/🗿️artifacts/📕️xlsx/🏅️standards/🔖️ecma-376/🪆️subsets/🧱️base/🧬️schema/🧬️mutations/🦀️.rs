@@ -21,22 +21,12 @@ use semio_s_artifact_stdio_zip::opc::OpcTargetMode;
 mod canonical_edit;
 #[path = "🧭️cell-address/🦀️.rs"]
 pub mod cell_address;
+#[path = "➕️insert-cell/🦀️.rs"]
+pub mod insert_cell;
 #[path = "📥️insert-shared-string/🦀️.rs"]
 pub mod insert_shared_string;
 #[path = "➕insert-sheet/🦀️.rs"]
 pub mod insert_sheet;
-#[path = "🧽️remove-cell/🦀️.rs"]
-pub mod remove_cell;
-#[path = "📤️remove-shared-string/🦀️.rs"]
-pub mod remove_shared_string;
-#[path = "➖remove-sheet/🦀️.rs"]
-pub mod remove_sheet;
-#[path = "🏷️rename-sheet/🦀️.rs"]
-pub mod rename_sheet;
-#[path = "✍️set-cell/🦀️.rs"]
-pub mod set_cell;
-#[path = "🔤️set-shared-string/🦀️.rs"]
-pub mod set_shared_string;
 /// 📐️ Typed content mutation for `stdio.xlsx`. Beyond the baseline `{NoMutation, SetSnapshot}`,
 /// this addresses sheets by NAME (identity), cells by `(sheet name, row, col)`, and shared
 /// strings by index.
@@ -56,6 +46,20 @@ pub mod set_shared_string;
 /// `XlsxSnapshot`/`XlsxSheet`. `OpText`/`OpBinary` hand-rolled below, reusing `XlsxDiff`'s
 /// `pub(crate)` grammar primitives (`enc_str`/`enc_cell_value`/`enc_sheet`/`split_top_level`/...).
 //#region 🔖️Leaves
+#[path = "🩹️patch-snapshot/🦀️.rs"]
+pub mod patch_snapshot;
+#[path = "🧽️remove-cell/🦀️.rs"]
+pub mod remove_cell;
+#[path = "📤️remove-shared-string/🦀️.rs"]
+pub mod remove_shared_string;
+#[path = "➖remove-sheet/🦀️.rs"]
+pub mod remove_sheet;
+#[path = "🏷️rename-sheet/🦀️.rs"]
+pub mod rename_sheet;
+#[path = "✍️set-cell/🦀️.rs"]
+pub mod set_cell;
+#[path = "🔤️set-shared-string/🦀️.rs"]
+pub mod set_shared_string;
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 //#endregion 🔖️Leaves
@@ -67,6 +71,7 @@ pub mod set_snapshot;
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum XlsxMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
+    PatchSnapshot(patch_snapshot::PatchSnapshot),
     /// ➕️ Inserts a brand-new sheet (possibly pre-populated with cells).
     InsertSheet(insert_sheet::InsertSheet),
     /// ➖️ Removes the sheet named `name`.
@@ -76,6 +81,8 @@ pub enum XlsxMutation {
     RenameSheet(rename_sheet::RenameSheet),
     /// ✍️ Replaces one revision-bound canonical SpreadsheetML cell value.
     SetCell(set_cell::SetCell),
+    /// ➕️ Inserts one cell into a revision-bound canonical SpreadsheetML vacancy.
+    InsertCell(insert_cell::InsertCell),
     /// ➖️ Removes the cell at `(row, col)` in sheet `sheet_name`.
     RemoveCell(remove_cell::RemoveCell),
     /// ➕️ Appends a new shared string.
@@ -89,7 +96,7 @@ pub enum XlsxMutation {
 /// 🧾️ Kebab-case spelling of every `XlsxMutation` variant, in declaration order — the exhaustive
 /// mutation catalog `xlsx-ecma-376-base` (`../../🔣️oracle.json`) is measured against
 /// this exact list. `kinds_match_enum_and_catalog` proves it never drifts from either side.
-pub const KINDS: &[&str] = &["set-snapshot", "insert-sheet", "remove-sheet", "rename-sheet", "set-cell", "remove-cell", "insert-shared-string", "remove-shared-string", "set-shared-string"];
+pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "insert-sheet", "remove-sheet", "rename-sheet", "set-cell", "insert-cell", "remove-cell", "insert-shared-string", "remove-shared-string", "set-shared-string"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -112,6 +119,9 @@ pub fn apply_xlsx_mutation(snapshot: &mut XlsxSnapshot, mutation: &XlsxMutation)
 //#region 🔖️MutationTrait
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_diff(this: &XlsxMutation, base: &XlsxSnapshot) -> protocol::MutationOutcome<XlsxDiff> {
+    if let XlsxMutation::PatchSnapshot(patch) = this {
+        return <patch_snapshot::PatchSnapshot as protocol::MutationKind<XlsxSnapshot, XlsxMutation>>::diff(patch, base);
+    }
     match canonical_edit::mutate(base, this) {
         Ok(next) => protocol::MutationOutcome::new(diff_set_snapshot(base, &next)),
         Err(message) => protocol::MutationOutcome::error("mutation.target-mismatch", message, ["xmlParts"]),
@@ -119,8 +129,14 @@ pub(crate) fn agg_diff(this: &XlsxMutation, base: &XlsxSnapshot) -> protocol::Mu
 }
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &XlsxMutation, base: &XlsxSnapshot) -> Vec<XlsxMutation> {
+pub(crate) fn agg_inverse(this: &XlsxMutation, base: &XlsxSnapshot) -> Result<Vec<XlsxMutation>, semio_framework_value::ValueError> {
+    Ok({
+    if let XlsxMutation::PatchSnapshot(patch) = this {
+        return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<XlsxSnapshot, XlsxMutation>>::inverse(patch, base)?);
+    }
     canonical_edit::mutate(base, this).ok().filter(|next| next != base).map_or_else(Vec::new, |_| vec![XlsxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })])
+
+    })
 }
 //#endregion 🔖️MutationTrait
 
@@ -132,19 +148,27 @@ pub(crate) fn agg_inverse(this: &XlsxMutation, base: &XlsxSnapshot) -> Vec<XlsxM
 //#region 🔖️SnapshotCodec
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_xlsx_snapshot(s: &XlsxSnapshot) -> String {
-    enc_str(&dsl::json::to_json_string(s))
+    enc_str(&semio_framework_pack_json::to_json_string(s))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_xlsx_snapshot(s: &str) -> Result<XlsxSnapshot, String> {
-    dsl::json::from_json_str(&dec_str(s)?).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(&dec_str(s)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 
 fn enc_cell_address(address: &cell_address::XlsxCellAddress) -> String {
-    enc_str(&dsl::json::to_json_string(address))
+    enc_str(&semio_framework_pack_json::to_json_string(address))
 }
 
 fn dec_cell_address(value: &str) -> Result<cell_address::XlsxCellAddress, String> {
-    dsl::json::from_json_str(&dec_str(value)?).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(&dec_str(value)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
+}
+
+fn enc_cell_vacancy_address(address: &cell_address::XlsxCellVacancyAddress) -> String {
+    enc_str(&semio_framework_pack_json::to_json_string(address))
+}
+
+fn dec_cell_vacancy_address(value: &str) -> Result<cell_address::XlsxCellVacancyAddress, String> {
+    semio_framework_pack_json::from_json_str(&dec_str(value)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 //#endregion 🔖️SnapshotCodec
 
@@ -153,10 +177,12 @@ fn dec_cell_address(value: &str) -> Result<cell_address::XlsxCellAddress, String
 fn print_xlsx_mutation(m: &XlsxMutation) -> String {
     match m {
         XlsxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", enc_xlsx_snapshot(snapshot)),
+        XlsxMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(patch),
         XlsxMutation::InsertSheet(insert_sheet::InsertSheet { sheet }) => format!("insert-sheet sheet={}", enc_sheet(sheet)),
         XlsxMutation::RemoveSheet(remove_sheet::RemoveSheet { name }) => format!("remove-sheet name={}", enc_str(name)),
         XlsxMutation::RenameSheet(rename_sheet::RenameSheet { name, new_name }) => format!("rename-sheet name={} new-name={}", enc_str(name), enc_str(new_name)),
         XlsxMutation::SetCell(set_cell::SetCell { address, value }) => format!("set-cell address={} value={}", enc_cell_address(address), enc_cell_value(value)),
+        XlsxMutation::InsertCell(insert_cell::InsertCell { address, value }) => format!("insert-cell address={} value={}", enc_cell_vacancy_address(address), enc_cell_value(value)),
         XlsxMutation::RemoveCell(remove_cell::RemoveCell { address }) => format!("remove-cell address={}", enc_cell_address(address)),
         XlsxMutation::InsertSharedString(insert_shared_string::InsertSharedString { value }) => format!("insert-shared-string value={}", enc_str(value)),
         XlsxMutation::RemoveSharedString(remove_shared_string::RemoveSharedString { index }) => format!("remove-shared-string index={index}"),
@@ -170,11 +196,13 @@ fn parse_xlsx_mutation(line: &str) -> Result<XlsxMutation, String> {
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("xlsx mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
+        "patch-snapshot" => semio_s_artifact_stdio_contract::editing::snapshot_patch_from_text(line).map(|patch| XlsxMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch })),
         "set-snapshot" => Ok(XlsxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_xlsx_snapshot(arg("snapshot")?)? })),
         "insert-sheet" => Ok(XlsxMutation::InsertSheet(insert_sheet::InsertSheet { sheet: dec_sheet(arg("sheet")?)? })),
         "remove-sheet" => Ok(XlsxMutation::RemoveSheet(remove_sheet::RemoveSheet { name: dec_str(arg("name")?)? })),
         "rename-sheet" => Ok(XlsxMutation::RenameSheet(rename_sheet::RenameSheet { name: dec_str(arg("name")?)?, new_name: dec_str(arg("new-name")?)? })),
         "set-cell" => Ok(XlsxMutation::SetCell(set_cell::SetCell { address: dec_cell_address(arg("address")?)?, value: dec_cell_value(arg("value")?)? })),
+        "insert-cell" => Ok(XlsxMutation::InsertCell(insert_cell::InsertCell { address: dec_cell_vacancy_address(arg("address")?)?, value: dec_cell_value(arg("value")?)? })),
         "remove-cell" => Ok(XlsxMutation::RemoveCell(remove_cell::RemoveCell { address: dec_cell_address(arg("address")?)? })),
         "insert-shared-string" => Ok(XlsxMutation::InsertSharedString(insert_shared_string::InsertSharedString { value: dec_str(arg("value")?)? })),
         "remove-shared-string" => Ok(XlsxMutation::RemoveSharedString(remove_shared_string::RemoveSharedString { index: usize_arg("index")? })),
@@ -187,19 +215,19 @@ impl OpText for XlsxMutation {
     fn print_op(&self) -> String {
         print_xlsx_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_xlsx_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_xlsx_mutation(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 }
 
 //#region 🔖️OpBinaryCodec
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_xlsx_snapshot_bin(s: &XlsxSnapshot, out: &mut Vec<u8>) {
-    write_str_lp(out, &dsl::json::to_json_string(s));
+    write_str_lp(out, &semio_framework_pack_json::to_json_string(s));
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_xlsx_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxSnapshot, String> {
-    dsl::json::from_json_str(&read_str_lp(reader)?).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(&read_str_lp(reader)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 //#endregion 🔖️OpBinaryCodec
 
@@ -207,10 +235,12 @@ fn dec_xlsx_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxSnaps
 /// 🏷️ Op tags of `XlsxMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
 const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
 const TAG_INSERT_SHEET: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-sheet");
 const TAG_REMOVE_SHEET: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-sheet");
 const TAG_RENAME_SHEET: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "rename-sheet");
 const TAG_SET_CELL: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-cell");
+const TAG_INSERT_CELL: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-cell");
 const TAG_REMOVE_CELL: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-cell");
 const TAG_INSERT_SHARED_STRING: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-shared-string");
 const TAG_REMOVE_SHARED_STRING: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-shared-string");
@@ -227,10 +257,12 @@ impl OpBinary for XlsxMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             XlsxMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
+            XlsxMutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
             XlsxMutation::InsertSheet(_) => TAG_INSERT_SHEET,
             XlsxMutation::RemoveSheet(_) => TAG_REMOVE_SHEET,
             XlsxMutation::RenameSheet(_) => TAG_RENAME_SHEET,
             XlsxMutation::SetCell(_) => TAG_SET_CELL,
+            XlsxMutation::InsertCell(_) => TAG_INSERT_CELL,
             XlsxMutation::RemoveCell(_) => TAG_REMOVE_CELL,
             XlsxMutation::InsertSharedString(_) => TAG_INSERT_SHARED_STRING,
             XlsxMutation::RemoveSharedString(_) => TAG_REMOVE_SHARED_STRING,
@@ -239,6 +271,7 @@ impl OpBinary for XlsxMutation {
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
             XlsxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => enc_xlsx_snapshot_bin(snapshot, &mut out),
+            XlsxMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => out.extend(protocol::OpBinary::encode_op(patch)?),
             XlsxMutation::InsertSheet(insert_sheet::InsertSheet { sheet }) => enc_sheet_bin(sheet, &mut out),
             XlsxMutation::RemoveSheet(remove_sheet::RemoveSheet { name }) => write_str_lp(&mut out, name),
             XlsxMutation::RenameSheet(rename_sheet::RenameSheet { name, new_name }) => {
@@ -246,10 +279,14 @@ impl OpBinary for XlsxMutation {
                 write_str_lp(&mut out, new_name);
             }
             XlsxMutation::SetCell(set_cell::SetCell { address, value }) => {
-                write_str_lp(&mut out, &dsl::json::to_json_string(address));
+                write_str_lp(&mut out, &semio_framework_pack_json::to_json_string(address));
                 enc_cell_value_bin(value, &mut out);
             }
-            XlsxMutation::RemoveCell(remove_cell::RemoveCell { address }) => write_str_lp(&mut out, &dsl::json::to_json_string(address)),
+            XlsxMutation::InsertCell(insert_cell::InsertCell { address, value }) => {
+                write_str_lp(&mut out, &semio_framework_pack_json::to_json_string(address));
+                enc_cell_value_bin(value, &mut out);
+            }
+            XlsxMutation::RemoveCell(remove_cell::RemoveCell { address }) => write_str_lp(&mut out, &semio_framework_pack_json::to_json_string(address)),
             XlsxMutation::InsertSharedString(insert_shared_string::InsertSharedString { value }) => write_str_lp(&mut out, value),
             XlsxMutation::RemoveSharedString(remove_shared_string::RemoveSharedString { index }) => store::pack_rt::write_varint_u64(&mut out, *index as u64),
             XlsxMutation::SetSharedString(set_shared_string::SetSharedString { index, value }) => {
@@ -266,6 +303,13 @@ impl OpBinary for XlsxMutation {
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
         let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
+            TAG_PATCH_SNAPSHOT => Ok(XlsxMutation::PatchSnapshot(patch_snapshot::PatchSnapshot {
+                patch: <semio_s_artifact_stdio_contract::editing::SnapshotPatch as protocol::OpBinary>::decode_op(reader.read_bytes(reader.remaining()).map_err(|e| protocol::ProtocolError::Malformed {
+                    what: "patch-snapshot payload",
+                    offset: reader.position() as u64,
+                    detail: e.to_string(),
+                })?)?,
+            })),
             TAG_SET_SNAPSHOT => {
                 let snapshot = dec_xlsx_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
                 Ok(XlsxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
@@ -284,12 +328,20 @@ impl OpBinary for XlsxMutation {
                 Ok(XlsxMutation::RenameSheet(rename_sheet::RenameSheet { name, new_name }))
             }
             TAG_SET_CELL => {
-                let address = dsl::json::from_json_str(&read_str_lp(&mut reader).map_err(|e| malformed("op address", reader.position(), e))?).map_err(|error| malformed("op address", reader.position(), error.to_string()))?;
+                let address = semio_framework_pack_json::from_json_str(&read_str_lp(&mut reader).map_err(|e| malformed("op address", reader.position(), e))?, semio_framework_pack_json::JsonMemberPolicy::Reject)
+                    .map_err(|error| malformed("op address", reader.position(), error.to_string()))?;
                 let value = dec_cell_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
                 Ok(XlsxMutation::SetCell(set_cell::SetCell { address, value }))
             }
+            TAG_INSERT_CELL => {
+                let address = semio_framework_pack_json::from_json_str(&read_str_lp(&mut reader).map_err(|e| malformed("op vacancy address", reader.position(), e))?, semio_framework_pack_json::JsonMemberPolicy::Reject)
+                    .map_err(|error| malformed("op vacancy address", reader.position(), error.to_string()))?;
+                let value = dec_cell_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
+                Ok(XlsxMutation::InsertCell(insert_cell::InsertCell { address, value }))
+            }
             TAG_REMOVE_CELL => {
-                let address = dsl::json::from_json_str(&read_str_lp(&mut reader).map_err(|e| malformed("op address", reader.position(), e))?).map_err(|error| malformed("op address", reader.position(), error.to_string()))?;
+                let address = semio_framework_pack_json::from_json_str(&read_str_lp(&mut reader).map_err(|e| malformed("op address", reader.position(), e))?, semio_framework_pack_json::JsonMemberPolicy::Reject)
+                    .map_err(|error| malformed("op address", reader.position(), error.to_string()))?;
                 Ok(XlsxMutation::RemoveCell(remove_cell::RemoveCell { address }))
             }
             TAG_INSERT_SHARED_STRING => {
@@ -360,8 +412,8 @@ pub(crate) fn sweep_a() -> XlsxSnapshot {
     snapshot.opc.content_types.set_default("bin", SWEEP_BINARY_CONTENT_TYPE);
     snapshot.opc.set_part("xl/media/toModify.bin", SWEEP_BINARY_CONTENT_TYPE, b"old".to_vec());
     snapshot.opc.set_part("xl/media/toRemove.bin", SWEEP_BINARY_CONTENT_TYPE, b"gone".to_vec());
-    snapshot.opc.relationships.insert("xl/media/toModify.bin".into(), vec![OpcRelationship { id: "rId1".into(), rel_type: "http://example/sweep".into(), target: "old.bin".into(), target_mode: OpcTargetMode::Internal }]);
-    snapshot.opc.relationships.insert("xl/media/toRemove.bin".into(), vec![OpcRelationship { id: "rId1".into(), rel_type: "http://example/sweep".into(), target: "gone.bin".into(), target_mode: OpcTargetMode::Internal }]);
+    snapshot.opc.relationships.replace_owner("xl/media/toModify.bin".into(), vec![OpcRelationship { id: "rId1".into(), rel_type: "http://example/sweep".into(), target: "old.bin".into(), target_mode: OpcTargetMode::Internal }]);
+    snapshot.opc.relationships.replace_owner("xl/media/toRemove.bin".into(), vec![OpcRelationship { id: "rId1".into(), rel_type: "http://example/sweep".into(), target: "gone.bin".into(), target_mode: OpcTargetMode::Internal }]);
     snapshot.opc.parts.sort_by(|left, right| left.path.cmp(&right.path));
     snapshot
 }
@@ -393,8 +445,8 @@ pub(crate) fn sweep_b() -> XlsxSnapshot {
     snapshot.opc.content_types.set_default("dat", SWEEP_BINARY_CONTENT_TYPE);
     snapshot.opc.set_part("xl/media/toModify.bin", "application/x-semio-sweep", b"new".to_vec());
     snapshot.opc.set_part("xl/media/added.dat", SWEEP_BINARY_CONTENT_TYPE, b"fresh".to_vec());
-    snapshot.opc.relationships.insert("xl/media/toModify.bin".into(), vec![OpcRelationship { id: "rId1".into(), rel_type: "http://example/sweep".into(), target: "new.bin".into(), target_mode: OpcTargetMode::Internal }]);
-    snapshot.opc.relationships.insert("xl/media/added.dat".into(), vec![OpcRelationship { id: "rId1".into(), rel_type: "http://example/sweep".into(), target: "added.bin".into(), target_mode: OpcTargetMode::External }]);
+    snapshot.opc.relationships.replace_owner("xl/media/toModify.bin".into(), vec![OpcRelationship { id: "rId1".into(), rel_type: "http://example/sweep".into(), target: "new.bin".into(), target_mode: OpcTargetMode::Internal }]);
+    snapshot.opc.relationships.replace_owner("xl/media/added.dat".into(), vec![OpcRelationship { id: "rId1".into(), rel_type: "http://example/sweep".into(), target: "added.bin".into(), target_mode: OpcTargetMode::External }]);
     snapshot.opc.parts.sort_by(|left, right| left.path.cmp(&right.path));
     snapshot
 }
@@ -406,7 +458,9 @@ pub(crate) fn sweep_b() -> XlsxSnapshot {
 pub(crate) fn demo_mutation_cases() -> Vec<XlsxMutation> {
     let base = fixture();
     let address = cell_address::xlsx_cell_address(&base, "Sheet1", 1, 0).expect("fixture cell address");
+    let vacancy = cell_address::xlsx_cell_vacancy_address(&base, "Sheet1", 2, 1).expect("fixture cell vacancy address");
     vec![
+        XlsxMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         XlsxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: sweep_b() }),
         XlsxMutation::InsertSheet(insert_sheet::InsertSheet { sheet: XlsxSheet { name: "x".into(), cells: vec![] } }),
         // 🎯️ `RemoveSheet`/`RenameSheet` target `"Sheet2"`, the LAST sheet in `fixture()` --
@@ -417,6 +471,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<XlsxMutation> {
         XlsxMutation::RemoveSheet(remove_sheet::RemoveSheet { name: "Sheet2".into() }),
         XlsxMutation::RenameSheet(rename_sheet::RenameSheet { name: "Sheet2".into(), new_name: "Renamed".into() }),
         XlsxMutation::SetCell(set_cell::SetCell { address, value: XlsxCellValue::Boolean(true) }),
+        XlsxMutation::InsertCell(insert_cell::InsertCell { address: vacancy, value: XlsxCellValue::InlineString("created".into()) }),
         XlsxMutation::RemoveCell(remove_cell::RemoveCell { address: cell_address::xlsx_cell_address(&base, "Sheet1", 1, 0).expect("fixture cell address") }),
         XlsxMutation::InsertSharedString(insert_shared_string::InsertSharedString { value: "z".into() }),
         // 🎯️ `RemoveSharedString` targets index 0, the LAST-in-position entry `fixture()`

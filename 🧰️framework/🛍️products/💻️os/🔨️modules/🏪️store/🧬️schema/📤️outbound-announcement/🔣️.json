@@ -2,16 +2,15 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/os/store/outbound-announcement/v1.json",
   "title": "Outbound Announcement V1",
-  "description": "What a store attached to a backbone announces for each locally authored event: every operation exactly once. A batched gesture announces exactly the operations it appended — a coalesced gesture amends the tail edit the previous gesture already announced, so it announces only its own operations, never the tail edit's earlier ones (a hub refuses a re-announced, already accepted operation as a replay). An undo announces its one history transition. Every announced operation — a batched gesture's like any other — names as `observed` the newest operation of another author the store had applied when it was authored; `observed` is advisory, so a replica applies a remote operation whose observation it never saw at once, never holding it back.",
+  "description": "What a store attached to a backbone announces for each locally authored event: every operation exactly once. A batched gesture is its own edit and announces exactly the operations it appended, never an earlier edit's (a hub refuses a re-announced, already accepted operation as a replay). An undo announces its one history transition. Every announced operation — a batched gesture's like any other — names as `observed` the newest operation of another author the store had applied when it was authored; `observed` is advisory, so a replica applies a remote operation whose observation it never saw at once, never holding it back.",
   "$defs": {
     "Count": { "type": "integer", "minimum": 0 },
     "Gesture": {
       "title": "Batched Gesture",
       "type": "object",
       "additionalProperties": false,
-      "required": ["coalesceKey", "items"],
+      "required": ["items"],
       "properties": {
-        "coalesceKey": { "type": ["string", "null"], "minLength": 1, "description": "The gesture's undo coalescing key; `null` never amends." },
         "items": { "type": "integer", "minimum": 1, "maximum": 8, "description": "How many mutations the gesture folds into its one edit." }
       }
     },

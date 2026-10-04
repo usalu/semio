@@ -1,0 +1,721 @@
+{
+  "cases": [
+    {
+      "id": "TextSpan full",
+      "owner": "TextSpan",
+      "input": {
+        "line": 1,
+        "column": 2,
+        "length": 3
+      },
+      "accepted": true,
+      "expected": {
+        "line": 1,
+        "column": 2,
+        "length": 3
+      }
+    },
+    {
+      "id": "FaultCode full",
+      "owner": "FaultCode",
+      "input": "module.test",
+      "accepted": true,
+      "expected": "module.test"
+    },
+    {
+      "id": "TextError full",
+      "owner": "TextError",
+      "input": {
+        "kind": "invalidValue",
+        "message": "bad 雪",
+        "span": {
+          "line": 1,
+          "column": 2,
+          "length": 3
+        },
+        "expected": "name"
+      },
+      "accepted": true,
+      "expected": {
+        "kind": "invalidValue",
+        "message": "bad 雪",
+        "span": {
+          "line": 1,
+          "column": 2,
+          "length": 3
+        },
+        "expected": "name"
+      }
+    },
+    {
+      "id": "ExpectedSet full",
+      "owner": "ExpectedSet",
+      "input": {
+        "tokens": [
+          "=",
+          "雪"
+        ],
+        "keywords": [
+          "let"
+        ],
+        "keys": [
+          "name"
+        ]
+      },
+      "accepted": true,
+      "expected": {
+        "tokens": [
+          "=",
+          "雪"
+        ],
+        "keywords": [
+          "let"
+        ],
+        "keys": [
+          "name"
+        ]
+      }
+    },
+    {
+      "id": "FaultScope full",
+      "owner": "FaultScope",
+      "input": {
+        "pluginId": "plugin",
+        "appId": "app",
+        "instanceId": "instance",
+        "module": "module",
+        "bodyKey": "body"
+      },
+      "accepted": true,
+      "expected": {
+        "pluginId": "plugin",
+        "appId": "app",
+        "instanceId": "instance",
+        "module": "module",
+        "bodyKey": "body"
+      }
+    },
+    {
+      "id": "FaultCause full",
+      "owner": "FaultCause",
+      "input": {
+        "message": "cause",
+        "code": "module.cause"
+      },
+      "accepted": true,
+      "expected": {
+        "message": "cause",
+        "code": "module.cause"
+      }
+    },
+    {
+      "id": "Diagnostic full",
+      "owner": "Diagnostic",
+      "input": {
+        "code": "module.test",
+        "severity": "warning",
+        "span": {
+          "line": 1,
+          "column": 2,
+          "length": 3
+        },
+        "message": "message",
+        "expected": {
+          "tokens": [
+            "=",
+            "雪"
+          ],
+          "keywords": [
+            "let"
+          ],
+          "keys": [
+            "name"
+          ]
+        },
+        "scope": {
+          "pluginId": "plugin",
+          "appId": "app",
+          "instanceId": "instance",
+          "module": "module",
+          "bodyKey": "body"
+        }
+      },
+      "accepted": true,
+      "expected": {
+        "code": "module.test",
+        "severity": "warning",
+        "span": {
+          "line": 1,
+          "column": 2,
+          "length": 3
+        },
+        "message": "message",
+        "expected": {
+          "tokens": [
+            "=",
+            "雪"
+          ],
+          "keywords": [
+            "let"
+          ],
+          "keys": [
+            "name"
+          ]
+        },
+        "scope": {
+          "pluginId": "plugin",
+          "appId": "app",
+          "instanceId": "instance",
+          "module": "module",
+          "bodyKey": "body"
+        }
+      }
+    },
+    {
+      "id": "Fault full",
+      "owner": "Fault",
+      "input": {
+        "origin": "framework",
+        "code": "framework.test",
+        "severity": "fatal",
+        "message": "message",
+        "scope": {
+          "pluginId": "plugin",
+          "appId": "app",
+          "instanceId": "instance",
+          "module": "module",
+          "bodyKey": "body"
+        },
+        "span": {
+          "line": 1,
+          "column": 2,
+          "length": 3
+        },
+        "causes": [
+          {
+            "message": "cause",
+            "code": "module.cause"
+          },
+          {
+            "message": "second"
+          }
+        ],
+        "retryable": true
+      },
+      "accepted": true,
+      "expected": {
+        "origin": "framework",
+        "code": "framework.test",
+        "severity": "fatal",
+        "message": "message",
+        "scope": {
+          "pluginId": "plugin",
+          "appId": "app",
+          "instanceId": "instance",
+          "module": "module",
+          "bodyKey": "body"
+        },
+        "span": {
+          "line": 1,
+          "column": 2,
+          "length": 3
+        },
+        "causes": [
+          {
+            "message": "cause",
+            "code": "module.cause"
+          },
+          {
+            "message": "second"
+          }
+        ],
+        "retryable": true
+      }
+    },
+    {
+      "id": "Severity info",
+      "owner": "Severity",
+      "input": "info",
+      "accepted": true,
+      "expected": "info"
+    },
+    {
+      "id": "Severity warning",
+      "owner": "Severity",
+      "input": "warning",
+      "accepted": true,
+      "expected": "warning"
+    },
+    {
+      "id": "Severity error",
+      "owner": "Severity",
+      "input": "error",
+      "accepted": true,
+      "expected": "error"
+    },
+    {
+      "id": "Severity fatal",
+      "owner": "Severity",
+      "input": "fatal",
+      "accepted": true,
+      "expected": "fatal"
+    },
+    {
+      "id": "FaultOrigin edge",
+      "owner": "FaultOrigin",
+      "input": "edge",
+      "accepted": true,
+      "expected": "edge"
+    },
+    {
+      "id": "FaultOrigin renderer",
+      "owner": "FaultOrigin",
+      "input": "renderer",
+      "accepted": true,
+      "expected": "renderer"
+    },
+    {
+      "id": "FaultOrigin os",
+      "owner": "FaultOrigin",
+      "input": "os",
+      "accepted": true,
+      "expected": "os"
+    },
+    {
+      "id": "FaultOrigin module",
+      "owner": "FaultOrigin",
+      "input": "module",
+      "accepted": true,
+      "expected": "module"
+    },
+    {
+      "id": "FaultOrigin plugin",
+      "owner": "FaultOrigin",
+      "input": "plugin",
+      "accepted": true,
+      "expected": "plugin"
+    },
+    {
+      "id": "FaultOrigin app",
+      "owner": "FaultOrigin",
+      "input": "app",
+      "accepted": true,
+      "expected": "app"
+    },
+    {
+      "id": "FaultOrigin extension",
+      "owner": "FaultOrigin",
+      "input": "extension",
+      "accepted": true,
+      "expected": "extension"
+    },
+    {
+      "id": "FaultOrigin framework",
+      "owner": "FaultOrigin",
+      "input": "framework",
+      "accepted": true,
+      "expected": "framework"
+    },
+    {
+      "id": "Scope null optional",
+      "owner": "FaultScope",
+      "input": {
+        "pluginId": null
+      },
+      "accepted": true,
+      "expected": {}
+    },
+    {
+      "id": "Expected defaults",
+      "owner": "ExpectedSet",
+      "input": {
+        "tokens": null
+      },
+      "accepted": true,
+      "expected": {
+        "tokens": [],
+        "keywords": [],
+        "keys": []
+      }
+    },
+    {
+      "id": "TextError null expected",
+      "owner": "TextError",
+      "input": {
+        "kind": "invalidValue",
+        "message": "",
+        "span": {
+          "line": 1,
+          "column": 2,
+          "length": 3
+        },
+        "expected": null
+      },
+      "accepted": true,
+      "expected": {
+        "kind": "invalidValue",
+        "message": "",
+        "span": {
+          "line": 1,
+          "column": 2,
+          "length": 3
+        }
+      }
+    },
+    {
+      "id": "Cause null code",
+      "owner": "FaultCause",
+      "input": {
+        "message": "",
+        "code": null
+      },
+      "accepted": true,
+      "expected": {
+        "message": ""
+      }
+    },
+    {
+      "id": "Diagnostic defaults",
+      "owner": "Diagnostic",
+      "input": {
+        "code": "",
+        "severity": "info",
+        "span": {
+          "line": 1,
+          "column": 2,
+          "length": 3
+        },
+        "message": "",
+        "expected": null,
+        "scope": null
+      },
+      "accepted": true,
+      "expected": {
+        "code": "",
+        "severity": "info",
+        "span": {
+          "line": 1,
+          "column": 2,
+          "length": 3
+        },
+        "message": "",
+        "scope": {}
+      }
+    },
+    {
+      "id": "Fault defaults",
+      "owner": "Fault",
+      "input": {
+        "origin": "os",
+        "code": "os.test",
+        "severity": "error",
+        "message": "",
+        "scope": null,
+        "span": null,
+        "causes": null,
+        "retryable": null
+      },
+      "accepted": true,
+      "expected": {
+        "origin": "os",
+        "code": "os.test",
+        "severity": "error",
+        "message": "",
+        "scope": {},
+        "retryable": false
+      }
+    },
+    {
+      "id": "Severity unknown",
+      "owner": "Severity",
+      "input": "warn",
+      "accepted": false
+    },
+    {
+      "id": "Origin unknown",
+      "owner": "FaultOrigin",
+      "input": "host",
+      "accepted": false
+    },
+    {
+      "id": "Code wrong kind",
+      "owner": "FaultCode",
+      "input": 3,
+      "accepted": false
+    },
+    {
+      "id": "Span negative",
+      "owner": "TextSpan",
+      "input": {
+        "line": -1,
+        "column": 2,
+        "length": 3
+      },
+      "accepted": false
+    },
+    {
+      "id": "Span fraction",
+      "owner": "TextSpan",
+      "input": {
+        "line": 1,
+        "column": 1.5,
+        "length": 3
+      },
+      "accepted": false
+    },
+    {
+      "id": "Span overflow",
+      "owner": "TextSpan",
+      "input": {
+        "line": 1,
+        "column": 2,
+        "length": 4294967296
+      },
+      "accepted": false
+    },
+    {
+      "id": "Span missing",
+      "owner": "TextSpan",
+      "input": {
+        "line": 1,
+        "column": 2
+      },
+      "accepted": false
+    },
+    {
+      "id": "Scope unknown",
+      "owner": "FaultScope",
+      "input": {
+        "other": "x"
+      },
+      "accepted": false
+    },
+    {
+      "id": "Expected wrong item",
+      "owner": "ExpectedSet",
+      "input": {
+        "tokens": [
+          true
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "id": "Cause missing message",
+      "owner": "FaultCause",
+      "input": {},
+      "accepted": false
+    },
+    {
+      "id": "FaultParams named values",
+      "owner": "FaultParams",
+      "input": {
+        "kind": "brep.mesh.translate",
+        "n": "64"
+      },
+      "accepted": true,
+      "expected": {
+        "kind": "brep.mesh.translate",
+        "n": "64"
+      }
+    },
+    {
+      "id": "FaultParams empty",
+      "owner": "FaultParams",
+      "input": {},
+      "accepted": true,
+      "expected": {}
+    },
+    {
+      "id": "FaultParams number value",
+      "owner": "FaultParams",
+      "input": {
+        "n": 64
+      },
+      "accepted": false
+    },
+    {
+      "id": "FaultParams invalid name",
+      "owner": "FaultParams",
+      "input": {
+        "Kind": "x"
+      },
+      "accepted": false
+    },
+    {
+      "id": "Fault missing code",
+      "owner": "Fault",
+      "input": {
+        "origin": "os",
+        "severity": "error",
+        "message": "x"
+      },
+      "accepted": false
+    },
+    {
+      "id": "Fault params",
+      "owner": "Fault",
+      "input": {
+        "origin": "app",
+        "code": "generation3d.gumball.kind-unavailable",
+        "severity": "warning",
+        "message": "widget kind brep.mesh.translate is unavailable",
+        "params": {
+          "kind": "brep.mesh.translate"
+        },
+        "retryable": false
+      },
+      "accepted": true,
+      "expected": {
+        "origin": "app",
+        "code": "generation3d.gumball.kind-unavailable",
+        "severity": "warning",
+        "message": "widget kind brep.mesh.translate is unavailable",
+        "scope": {},
+        "params": {
+          "kind": "brep.mesh.translate"
+        },
+        "retryable": false
+      }
+    },
+    {
+      "id": "Fault empty params",
+      "owner": "Fault",
+      "input": {
+        "origin": "app",
+        "code": "app.refused",
+        "severity": "error",
+        "message": "",
+        "params": {}
+      },
+      "accepted": true,
+      "expected": {
+        "origin": "app",
+        "code": "app.refused",
+        "severity": "error",
+        "message": "",
+        "scope": {},
+        "retryable": false
+      }
+    },
+    {
+      "id": "Fault params not text",
+      "owner": "Fault",
+      "input": {
+        "origin": "app",
+        "code": "app.refused",
+        "severity": "error",
+        "message": "",
+        "params": {
+          "n": 1
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "Diagnostic extra",
+      "owner": "Diagnostic",
+      "input": {
+        "code": "",
+        "severity": "info",
+        "span": {
+          "line": 1,
+          "column": 2,
+          "length": 3
+        },
+        "message": "",
+        "extra": 1
+      },
+      "accepted": false
+    },
+    {
+      "id": "TextError wrong expected",
+      "owner": "TextError",
+      "input": {
+        "kind": "invalidValue",
+        "message": "",
+        "span": {
+          "line": 1,
+          "column": 2,
+          "length": 3
+        },
+        "expected": []
+      },
+      "accepted": false
+    }
+  ],
+  "stress": {
+    "listCount": 1024,
+    "textRepetitions": 70000,
+    "text": "雪",
+    "maximumBytes": 8388608,
+    "cancelAt": 65536
+  },
+  "duplicateCases": [
+    {
+      "id": "duplicate cause message",
+      "owner": "FaultCause",
+      "entries": [
+        [
+          "message",
+          "first"
+        ],
+        [
+          "message",
+          "second"
+        ]
+      ]
+    },
+    {
+      "id": "duplicate scope plugin",
+      "owner": "FaultScope",
+      "entries": [
+        [
+          "pluginId",
+          "first"
+        ],
+        [
+          "pluginId",
+          "second"
+        ]
+      ]
+    },
+    {
+      "id": "duplicate span line",
+      "owner": "TextSpan",
+      "entries": [
+        [
+          "line",
+          1
+        ],
+        [
+          "line",
+          2
+        ],
+        [
+          "length",
+          3
+        ]
+      ]
+    },
+    {
+      "id": "duplicate params name",
+      "owner": "FaultParams",
+      "entries": [
+        [
+          "kind",
+          "first"
+        ],
+        [
+          "kind",
+          "second"
+        ]
+      ]
+    }
+  ],
+  "refusalKinds": {
+    "malformed": "invalidValue",
+    "ownership": "ownershipLimit",
+    "cancel": "canceled"
+  }
+}

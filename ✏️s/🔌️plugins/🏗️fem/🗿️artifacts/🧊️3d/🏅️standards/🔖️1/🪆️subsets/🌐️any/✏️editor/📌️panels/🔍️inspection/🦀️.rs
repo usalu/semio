@@ -315,7 +315,7 @@ fn load_pick_row(load: &FemLoad, labels: &Fem3dLabels) -> UiAssemblyResult<Built
 
 fn select_action(id: &str) -> UiAssemblyResult<(ActionId, Option<UiValue>)> {
     let target = protocol::InteractionTarget { granularity: FEM3D_GRANULARITY_LOAD.into(), id: id.into() };
-    let targets = protocol::json::to_json_string(&protocol::DslValue::Array(vec![protocol::ToValue::to_value(&target)]));
+    let targets = semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Array(vec![semio_framework_value::ToValue::to_value(&target)]));
     let mut args = UiMapBuilder::try_new().ok_or_else(|| ui_error("ui.value.map"))?;
     for (key, value) in [("domainId", ui_value_text(FEM3D_INTERACTION_DOMAIN)?), ("merge", ui_value_text("replace")?), ("method", ui_value_text("pick")?), ("targets", ui_value_text(targets)?)] {
         args.push(key.into(), value).map_err(|_| ui_error("ui.value.map.entry"))?;

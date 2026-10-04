@@ -995,6 +995,32 @@ fn a_streamed_rotate_is_one_record_however_many_frames_it_painted() {
 }
 
 #[cfg(test)]
+/// 🎛️ The rotate ring and the area brush are DIRECT lanes: the retained plan refuses their moves and releases, so a host
+/// (wgpu) drives them through `pointer_move_screen`/`pointer_up_screen` as React does, while a leave still plans; the ring's
+/// release closes the lane.
+#[test]
+fn direct_pointer_lanes_refuse_the_retained_plan() {
+    let mut host = transform_gumball_host();
+    host.set_selection_ids_silent(&["node-a".into(), "node-b".into()]);
+    let _ = host.drain_events_json();
+    let intent = |phase: BoardPointerPhase, at: Point| BoardPointerIntent { phase, x: at.x, y: at.y, shift: false, ctrl_or_meta: false, alt: false };
+    let grab = transform_ring_screen_at(&host, 0.0);
+    assert!(!host.pointer_lane_is_direct(), "an idle select board plans every pointer");
+    host.pointer_down_screen(grab.x, grab.y, 0, false, false);
+    assert!(host.pointer_lane_is_direct(), "a press on the ring opens a direct lane");
+    let quarter = transform_ring_screen_at(&host, 90.0);
+    for phase in [BoardPointerPhase::Move, BoardPointerPhase::Up] {
+        assert_eq!(host.plan_pointer(intent(phase, quarter)).err(), Some(BoardPointerPlanFault::Unsupported), "{phase:?} on the ring is direct");
+    }
+    assert!(host.plan_pointer(intent(BoardPointerPhase::Leave, quarter)).is_ok(), "a leave still plans");
+    host.pointer_up_screen(quarter.x, quarter.y, false, false, false);
+    assert!(!host.pointer_lane_is_direct(), "the release closes the lane");
+    host.set_active_utility("areaBrush");
+    assert!(host.pointer_lane_is_direct(), "the area brush is direct from the first move");
+    assert_eq!(host.plan_pointer(intent(BoardPointerPhase::Move, grab)).err(), Some(BoardPointerPlanFault::Unsupported));
+}
+
+#[cfg(test)]
 /// 👁️ The live preview turns node CENTRES and handle ANGLES together, so edges keep their geometry
 /// through the drag exactly as the guest reducer will recompute them on commit.
 #[test]

@@ -26,13 +26,13 @@ fn malformed(offset: u64, detail: impl Into<String>) -> protocol::ProtocolError 
 }
 
 fn identity(payload: &[u8]) -> Result<String, protocol::ProtocolError> {
-    let value = pack::parse_json_bytes(payload).map_err(|error| malformed(2, error.to_string()))?;
-    value.get("mutation").and_then(pack::JsonValue::as_str).map(str::to_owned).ok_or_else(|| malformed(2, "missing mutation identity"))
+    let value = semio_framework_pack_json::parse_bytes(payload, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| malformed(2, error.to_string()))?;
+    value.get("mutation").and_then(semio_framework_pack_json::Value::as_str).map(str::to_owned).ok_or_else(|| malformed(2, "missing mutation identity"))
 }
 
 impl OpBinary for PdfHMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let payload = pack::json_to_string(&pack::json_from_dsl_value(&dsl::ToValue::to_value(self))).into_bytes();
+        let payload = semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(self))).into_bytes();
         if payload.len() > MAX_PAYLOAD_BYTES {
             return Err(protocol::ProtocolError::LimitExceeded("PDF/H mutation payload"));
         }
@@ -66,8 +66,8 @@ impl OpBinary for PdfHMutation {
         if actual_identity != *expected_identity {
             return Err(malformed(2, format!("tag {tag} declares {expected_identity}, payload declares {actual_identity}")));
         }
-        let parsed = pack::parse_json_bytes(payload).map_err(|error| malformed(2, error.to_string()))?;
-        <Self as dsl::FromValue>::from_value(pack::json_to_dsl_value(&parsed)).map_err(|error| malformed(2, error.to_string()))
+        let parsed = semio_framework_pack_json::parse_bytes(payload, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| malformed(2, error.to_string()))?;
+        <Self as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|error| malformed(2, error.to_string()))
     }
 }
 //#endregion 🧱️Framing

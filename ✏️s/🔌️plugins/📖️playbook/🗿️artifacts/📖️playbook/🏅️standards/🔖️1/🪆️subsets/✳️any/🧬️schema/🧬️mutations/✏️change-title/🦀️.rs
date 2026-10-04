@@ -13,7 +13,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[mutation_leaf(contract = ::protocol)]
@@ -36,9 +36,12 @@ impl protocol::MutationKind<PlaybookSnapshot, PlaybookMutation> for ChangeTitle 
     fn diff(&self, base: &PlaybookSnapshot) -> protocol::MutationOutcome<PlaybookDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &PlaybookSnapshot) -> Vec<PlaybookMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &PlaybookSnapshot) -> Result<Vec<PlaybookMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change playbook title to \"{}\"", self.new_title.clone().unwrap_or_default()), &format!("Playbook-Titel auf \"{}\" ändern", self.new_title.clone().unwrap_or_default()))
     }

@@ -1,0 +1,38 @@
+{
+  "name": "@semio-tech/io-binary-source",
+  "targets": {
+    "test-typescript": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🚪️io/🔢️binary/📥️source",
+        "command": "bun ./📜️script.ts test typescript",
+        "forwardAllArgs": true
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🔤️base64/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🪉️supplement/⚖️medium/🔤️outline.ttf",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/🌍️world/🔤️fonts/⌨️LibertinusMono-Regular.otf"
+      ]
+    },
+    "test-rust": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🚪️io/🔢️binary/📥️source",
+        "command": "bun ./📜️script.ts test rust",
+        "forwardAllArgs": true
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🔤️base64/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🪉️supplement/⚖️medium/🔤️outline.ttf",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/🌍️world/🔤️fonts/⌨️LibertinusMono-Regular.otf"
+      ]
+    }
+  },
+  "metadata": {
+    "nativeRoot": "🧰️framework/🔨️modules/🚪️io/🔢️binary/📥️source/📦️packages/🦀️rust"
+  }
+}

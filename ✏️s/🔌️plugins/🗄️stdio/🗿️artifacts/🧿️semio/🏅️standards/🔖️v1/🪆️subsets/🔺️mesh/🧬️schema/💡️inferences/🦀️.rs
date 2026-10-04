@@ -14,7 +14,6 @@
 
 use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 use std::collections::BTreeMap;
 
 #[cfg(test)]
@@ -35,8 +34,11 @@ pub struct SemioMeshInference {
 }
 
 impl protocol::Inference<SemioMeshSnapshot> for SemioMeshInference {
-    fn infer(snapshot: &SemioMeshSnapshot) -> Self {
+    fn infer(snapshot: &SemioMeshSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { aabb: store::infer_field::<SemioMeshSnapshot, super::aabb::MeshAabb>(snapshot, None) }
+    
+        })
     }
 }
 
@@ -52,18 +54,6 @@ impl protocol::InferenceSpec<SemioMeshSnapshot> for SemioMeshInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::standards::v1::subsets::mesh::schema::SemioMeshBuilder {
-    type Snapshot = SemioMeshSnapshot;
-    type Inference = SemioMeshInference;
-
-    async fn infer_cached(snapshot: &Self::Snapshot, cache: &mut store::InferenceCache, session: &mut store::InferenceSession) -> Self::Inference {
-        let _ = session;
-        SemioMeshInference { aabb: store::infer_field::<SemioMeshSnapshot, super::aabb::MeshAabb>(snapshot, Some(cache)) }
-    }
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.semio.mesh.inference`'s facet leaves into the OS-wide inference catalog.

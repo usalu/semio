@@ -1,0 +1,11 @@
+The third selected epoch65919 completed terminal0 with [46 fresh full source pairs](🗑️generated/cargo-workspace-general-transfer/canonical-standard-utf8-current-forest-source-ready-3.json), zero scoped refusals and all52 roles accounted for:37 current source edits and15 extracted shared macro obligations. All46 direct NORMAL Value provider identities close under both parsers. Independent source review is pending; owning native consumer results and actual publication remain unclaimed.
+
+The standard UTF-8 caller forest is being reconciled against current physical functions and the shared transient macro. The four generated text writer roundtrips remain in their separate String API cohort. No consumer source or provider has been published by this staging.
+
+The first selected epoch4357 completed with [44 full source pairs](🗑️generated/cargo-workspace-general-transfer/canonical-standard-utf8-current-forest-source-ready-1.json) and 49 of the 52 historical roles. It is not Ready: Raster Composite and Forms Try each retain an explicit association refusal. Their retired `OpBinary` standard decoder causes were outside the older generic JSON/Semio cause map. This does not establish a current runtime defect.
+
+The complete successor verifies the current transient macro's parsed `state` or `mutation` field against the precise retired implementation type. Only the macro's defining `ArtifactPack` state and `OpBinary` mutation contracts admit this transfer. Its reviewed lower and upper UTF-8 projections both use the actual canonical Value producer conversion. Missing, ambiguous or wrong type associations refuse; no local function is restored.
+
+Surviving callers bind the actual standard decoder expression and its `map_err` closure within the resolved physical function. Changes outside that expression remain current bytes. Forty-six direct normal Value declarations are reread and independently parsed, including actual inherited provider resolution and canonical physical package identity. Owning compiler/runtime acceptance remains separate from this source proof.
+
+The second epoch is retained separately:51roles and one explicit Lowpoly alias refusal. The third admits only its actual parsed `use store::ArtifactPack;` association and exact macro state/type field, preserving all current Lowpoly source bytes.

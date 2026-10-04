@@ -103,7 +103,7 @@ pub(crate) fn generation2d_targets_invariant(targets: &[String]) -> Result<(), &
 
 /// 🩹️ The `mutation.partial` warning of the targets a relative leaf skipped, or nothing.
 pub(crate) fn generation2d_partial(skipped: Vec<String>, total: usize, reason: &str) -> Option<protocol::MutationMessage> {
-    (!skipped.is_empty()).then(|| protocol::MutationMessage::warn("mutation.partial", format!("{} of {total} target(s) skipped ({reason}): {}", skipped.len(), skipped.join(", "))).at(skipped))
+    (!skipped.is_empty()).then(|| protocol::MutationMessage::warning("mutation.partial", format!("{} of {total} target(s) skipped ({reason}): {}", skipped.len(), skipped.join(", "))).at(skipped))
 }
 //#endregion 🔖️GestureLeaves
 //#endregion 🔖️Mutations
@@ -216,7 +216,7 @@ pub type Generation2dStore = ArtifactStore<Generation2dSnapshot, Generation2dMut
 /// `Fatal` `mutation.apply.*` message `MutationOutcome::apply_to` would persist.
 pub fn apply_generation2d_mutation(projection: &mut Generation2dSnapshot, mutation: &Generation2dMutation) -> Result<(), Vec<protocol::MutationMessage>> {
     let (delta, messages) = protocol::Mutation::diff(mutation, &*projection).into_parts();
-    if messages.iter().any(|message| matches!(message.level, protocol::Severity::Error | protocol::Severity::Fatal)) {
+    if messages.iter().any(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)) {
         delta.retire_cold();
         return Err(messages);
     }
@@ -232,8 +232,11 @@ pub fn apply_generation2d_mutation(projection: &mut Generation2dSnapshot, mutati
 }
 
 /// ↩️ Computes a mutation's inverse against a projection — generic over every variant.
-pub fn inverse_generation2d_mutation(projection: &Generation2dSnapshot, mutation: &Generation2dMutation) -> Vec<Generation2dMutation> {
-    mutation.inverse(projection)
+pub fn inverse_generation2d_mutation(projection: &Generation2dSnapshot, mutation: &Generation2dMutation) -> Result<Vec<Generation2dMutation>, semio_framework_value::ValueError> {
+    Ok({
+    mutation.inverse(projection)?
+
+    })
 }
 
 //#region 🧪️Tests

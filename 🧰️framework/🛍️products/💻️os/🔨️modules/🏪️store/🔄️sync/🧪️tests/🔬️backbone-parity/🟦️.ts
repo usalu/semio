@@ -86,6 +86,7 @@ function wireEnvelope(documentId: string, mutationId: string, n: number): WireMu
     timestamp: { actor: 1, physical_ms: 1, logical: 1 },
     transaction: null,
     verb: null,
+    line: null,
   };
 }
 

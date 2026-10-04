@@ -98,7 +98,7 @@ mod subject {
             let original = projection(&base)?;
             let (mut current, _messages) = apply_din16798_mutation(&base, &mutation).map_err(|error| format!("inverse-{kind}: the forward mutation failed: {error}"))?;
             let mutated = projection(&current)?;
-            let steps = inverse_din16798_mutation(&mutation, &base);
+            let steps = inverse_din16798_mutation(&mutation, &base).expect("valid retained mutation inverse fixture");
             if parse_json(&outcome)?.str("status") == "applied" && steps.is_empty() {
                 return Err(format!("inverse-{kind}: this kind changes the document, so its computed inverse must not be empty"));
             }
@@ -162,7 +162,7 @@ pub fn adapter() -> Adapter {
     #[cfg(feature = "sut")]
     {
         for kind in semio_s_artifact_norm_din16798::standards::v1::subsets::any::schema::mutations::KINDS {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind.to_string())).subject(&format!("inverse-{kind}"), subject::inverse(kind));
+            built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind.to_string())).subject(&format!("inverse-{kind}"), subject::inverse(kind).expect("valid retained mutation inverse fixture"));
         }
         for row in subject::rows() {
             built = built.subject(&format!("mutate-{row}"), subject::mutate(row));

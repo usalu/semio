@@ -194,6 +194,24 @@
       },
       "outputs": []
     },
+    "test-schema-fault-notices": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
+        "command": "bun ./📜️script.ts schema fault-notices",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "test-schema-fault-notices-census": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
+        "command": "bun ./📜️script.ts schema fault-notices --census",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
     "test-schema-mutation-editability": {
       "executor": "nx:run-commands",
       "options": {
@@ -217,6 +235,15 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
         "command": "bun ./📜️script.ts test mutation-payload-parity",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "test-fault-notices-gate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
+        "command": "bun ./📜️script.ts test fault-notices-gate",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -328,6 +355,19 @@
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
         "command": "bun ./📜️script.ts inventory-provider-check"
       }
+    },
+    "test-artifact-root-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test artifact-root-source",
+        "forwardAllArgs": true
+      },
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": []
     }
   },
   "namedInputs": {

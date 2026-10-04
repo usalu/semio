@@ -7,10 +7,10 @@ fn sample_dict() -> Dictionary {
 
 /// 🌱️ Wire-shape twin of [`sample_dict`], built with the first-party `pack::json::Value`
 /// instead of `Dictionary`'s own `serde` codec — for JSON-text tests only.
-fn json_sample_dict() -> pack::json::Value {
-    let number = pack::json::object([("$schema".to_string(), pack::json::Value::from("number")), ("value".to_string(), pack::json::Value::from(3.0))]);
-    let text = pack::json::object([("$schema".to_string(), pack::json::Value::from("text")), ("value".to_string(), pack::json::Value::from("hi"))]);
-    pack::json::object([("$schema".to_string(), pack::json::Value::from("dictionary")), ("number".to_string(), number), ("text".to_string(), text)])
+fn json_sample_dict() -> semio_framework_pack_json::Value {
+    let number = semio_framework_pack_json::object([("$schema".to_string(), semio_framework_pack_json::Value::from("number")), ("value".to_string(), semio_framework_pack_json::Value::from(3.0))]);
+    let text = semio_framework_pack_json::object([("$schema".to_string(), semio_framework_pack_json::Value::from("text")), ("value".to_string(), semio_framework_pack_json::Value::from("hi"))]);
+    semio_framework_pack_json::object([("$schema".to_string(), semio_framework_pack_json::Value::from("dictionary")), ("number".to_string(), number), ("text".to_string(), text)])
 }
 
 #[semio_framework_async_macros::async_test]
@@ -67,8 +67,8 @@ async fn manifest_lists_dictionary_operators() {
 
 #[semio_framework_async_macros::async_test]
 async fn evaluate_json_pack() {
-    let out_json = evaluate_json(&neural_engine::ColdOwner::new(module_registry()), "dictionary.pack", &pack::json::to_string(&json_sample_dict()));
-    let out = pack::json::parse(&out_json).unwrap();
+    let out_json = evaluate_json(&neural_engine::ColdOwner::new(module_registry()), "dictionary.pack", &semio_framework_pack_json::to_string(&json_sample_dict()));
+    let out = semio_framework_pack_json::parse(&out_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let dictionary = out.get("dictionary").expect("dictionary channel");
-    assert_eq!(dictionary.get("$schema").and_then(pack::json::Value::as_str), Some("dictionary"));
+    assert_eq!(dictionary.get("$schema").and_then(semio_framework_pack_json::Value::as_str), Some("dictionary"));
 }

@@ -5,8 +5,9 @@ use crate::standards::v1::subsets::graph::schema::mutations::{connect_nodes, cre
 use crate::{EquationMutation, EquationSnapshot};
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::DeleteNode, base: &EquationSnapshot) -> Vec<EquationMutation> {
-    let graph = crate::equation_graph(base);
+pub fn inverse(payload: &super::DeleteNode, base: &EquationSnapshot) -> Result<Vec<EquationMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
+    let graph = base.graph.clone();
     let Some(position) = graph.nodes.iter().position(|node| node.id == payload.id) else {
         return Vec::new();
     };
@@ -22,5 +23,7 @@ pub fn inverse(payload: &super::DeleteNode, base: &EquationSnapshot) -> Vec<Equa
     );
     steps.reverse();
     steps
+
+    })())
 }
 //#endregion 🔖️Inverse

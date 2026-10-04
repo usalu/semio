@@ -1,0 +1,16 @@
+{
+  "contractId": "owned-child-emission-refusal",
+  "slot": "slot !@/\u0000引用😀",
+  "childId": "logical !@/\u0000引用😀",
+  "validValue": -2147483648,
+  "refusal": {
+    "what": "owned-child-operation",
+    "offset": 9,
+    "detail": "codec refusal \u0000引用😀"
+  },
+  "expected": {
+    "acceptedOperations": 1,
+    "acceptedLabels": 1,
+    "failedAppendPublishes": false
+  }
+}

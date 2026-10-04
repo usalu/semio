@@ -28,7 +28,7 @@ fn snapshot_with_master_and_spread() -> LayoutSnapshot {
         ],
         "printTarget": null
     });
-    dsl::os_pack::from_json_str(&json.to_string()).expect("valid layout snapshot json")
+    semio_framework_pack_json::from_json_str(&json.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("valid layout snapshot json")
 }
 //#endregion 🧸️Fixtures
 
@@ -36,12 +36,12 @@ fn snapshot_with_master_and_spread() -> LayoutSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
     let snapshot = snapshot_with_master_and_spread();
-    assert_eq!(LayoutInference::infer(&snapshot), LayoutInference::infer(&snapshot));
+    assert_eq!(LayoutInference::infer(&snapshot).expect("valid materialized inference fixture"), LayoutInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
-    let empty = dsl::os_pack::from_json_str::<LayoutSnapshot>(
+    let empty = semio_framework_pack_json::from_json_str::<LayoutSnapshot>(
         &(serde_json::json!({
             "schema": "semio.layout/v1",
             "name": "",
@@ -49,16 +49,16 @@ async fn inference_default_law() {
             "paragraphStyles": [], "characterStyles": [], "stories": [], "links": [],
             "parentPages": [], "spreads": [], "pages": [], "printTarget": null
         }))
-        .to_string(),
+        .to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject,
     )
     .expect("valid empty layout snapshot json");
-    assert_eq!(LayoutInference::infer(&empty), LayoutInference::default());
+    assert_eq!(LayoutInference::infer(&empty).expect("valid materialized inference fixture"), LayoutInference::default());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn page_topologically_follows_its_master_and_spread() {
     let snapshot = snapshot_with_master_and_spread();
-    let inferred = LayoutInference::infer(&snapshot);
+    let inferred = LayoutInference::infer(&snapshot).expect("valid materialized inference fixture");
     let master_index = inferred.topology.topo_order.iter().position(|id| id == "master-1").unwrap();
     let spread_index = inferred.topology.topo_order.iter().position(|id| id == "spread-1").unwrap();
     let page_index = inferred.topology.topo_order.iter().position(|id| id == "page-1").unwrap();

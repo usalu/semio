@@ -9,7 +9,7 @@ use framework_schema::ArtifactSchema;
 /// `mesh: Option<Option<ArtifactChild<…>>>` precedent; writer's `document` slot is never absent,
 /// only ever replaced, so a single `Option<WriterDocumentChild>` — not the double-`Option` an
 /// optional slot needs — is the sparse-vs-unchanged signal here).
-#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.writer.writer")]
 pub struct WriterDiff {

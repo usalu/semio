@@ -196,7 +196,6 @@ fn fingerprint(edit: &crate::os_spr::HistoryEdit) -> String {
     edit.actor.hash(&mut hasher);
     edit.started_at.hash(&mut hasher);
     edit.finished_at.hash(&mut hasher);
-    edit.coalesce_key.hash(&mut hasher);
     edit.description.hash(&mut hasher);
     for op in &edit.ops {
         op.text.hash(&mut hasher);
@@ -210,13 +209,13 @@ fn fingerprint(edit: &crate::os_spr::HistoryEdit) -> String {
 /// 🔍️ `protocol inspect <file>` — header, commit chain (all generations), record counts by kind,
 /// and dictionary/snapshot/index record tallies. Never panics on corrupt input: a malformed
 /// frame simply stops the walk early and the summary prints whatever was scanned so far.
-async fn cmd_inspect(rest: &[String]) -> i32 {
+async fn cmd_inspect(rest: &[String], context: &crate::os_pack::control::CommandContext) -> i32 {
     let (positional, _flags) = parse_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: protocol inspect <file>");
         return 2;
     };
-    let bytes = match std::fs::read(path) {
+    let bytes = match crate::os_pack::control::read_command_file(Path::new(path), crate::os_spr::ProtocolLimits::default().max_file_len, context).await {
         Ok(bytes) => bytes,
         Err(error) => {
             eprintln!("protocol: cannot read '{path}': {error}");
@@ -295,7 +294,7 @@ async fn open_and_log(bytes: &[u8], options: &crate::os_spr::DecodeOptions) -> R
 /// requested `VerificationLevel` and forces a full decode; `full` additionally recomputes the
 /// commit hash chain (see `crate::os_spr::history::decode_history_from`'s `VerificationLevel::Full`
 /// branch). Prints `OK`/`FAIL: <reason>`, never panics on corrupt input.
-async fn cmd_verify(rest: &[String]) -> i32 {
+async fn cmd_verify(rest: &[String], context: &crate::os_pack::control::CommandContext) -> i32 {
     let (positional, flags) = parse_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: protocol verify <file> [--level=trusted|standard|full]");
@@ -308,7 +307,7 @@ async fn cmd_verify(rest: &[String]) -> i32 {
             return 2;
         }
     };
-    let bytes = match std::fs::read(path) {
+    let bytes = match crate::os_pack::control::read_command_file(Path::new(path), crate::os_spr::ProtocolLimits::default().max_file_len, context).await {
         Ok(bytes) => bytes,
         Err(error) => {
             println!("FAIL: cannot read '{path}': {error}");
@@ -335,13 +334,13 @@ async fn cmd_verify(rest: &[String]) -> i32 {
 //#region 🔖️Hash
 /// #⃣ `protocol hash <file>` — prints `(commit_seq, chain_hash)`, the file's current commit
 /// identity, via `crate::os_spr::content_frontier`.
-async fn cmd_hash(rest: &[String]) -> i32 {
+async fn cmd_hash(rest: &[String], context: &crate::os_pack::control::CommandContext) -> i32 {
     let (positional, _flags) = parse_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: protocol hash <file>");
         return 2;
     };
-    let bytes = match std::fs::read(path) {
+    let bytes = match crate::os_pack::control::read_command_file(Path::new(path), crate::os_spr::ProtocolLimits::default().max_file_len, context).await {
         Ok(bytes) => bytes,
         Err(error) => {
             eprintln!("protocol: cannot read '{path}': {error}");
@@ -364,9 +363,8 @@ async fn cmd_hash(rest: &[String]) -> i32 {
 //#region 🔖️Log
 /// 📜️ `protocol log <file> [--limit N] [--actor ID] [--alternative ID] [--reverse]` — a timeline
 /// text dump: one line per edit (ordinal, id, actor column, op count, description), annotated with
-/// `[checkpoint ...]` lane markers where a checkpoint's reachable edits top out, and `(amends
-/// <id>)` when an edit shares a `coalesce_key` with an earlier one in the printed range.
-async fn cmd_log(rest: &[String]) -> i32 {
+/// `[checkpoint ...]` lane markers where a checkpoint's reachable edits top out.
+async fn cmd_log(rest: &[String], context: &crate::os_pack::control::CommandContext) -> i32 {
     let (positional, flags, reverse) = parse_log_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: protocol log <file> [--limit N] [--actor ID] [--alternative ID] [--reverse]");
@@ -385,7 +383,7 @@ async fn cmd_log(rest: &[String]) -> i32 {
     let actor_filter = flags.get("actor");
     let alternative_filter = flags.get("alternative");
 
-    let bytes = match std::fs::read(path) {
+    let bytes = match crate::os_pack::control::read_command_file(Path::new(path), crate::os_spr::ProtocolLimits::default().max_file_len, context).await {
         Ok(bytes) => bytes,
         Err(error) => {
             eprintln!("protocol: cannot read '{path}': {error}");
@@ -438,7 +436,6 @@ async fn cmd_log(rest: &[String]) -> i32 {
         }
     }
 
-    let mut seen_coalesce: HashMap<&str, &str> = HashMap::new();
     let mut lines = Vec::new();
     for (ordinal, edit) in log.edits.iter().enumerate() {
         let ordinal = ordinal as u64;
@@ -453,15 +450,9 @@ async fn cmd_log(rest: &[String]) -> i32 {
             }
         }
         let actor_display = edit.actor.as_deref().unwrap_or("-");
-        let mut amend_marker = String::new();
-        if let Some(key) = &edit.coalesce_key {
-            if let Some(previous_id) = seen_coalesce.insert(key.as_str(), edit.id.as_str()) {
-                amend_marker = format!(" (amends {previous_id})");
-            }
-        }
         let checkpoint_marker = checkpoint_lane_at.get(&ordinal).map_or(String::new(), |ids| format!(" [checkpoint {}]", ids.join(", ")));
         let description = edit.description.as_deref().map_or(String::new(), |d| format!(" \"{d}\""));
-        lines.push(format!("#{ordinal:<5} {} actor={actor_display} started={} ops={}{amend_marker}{checkpoint_marker}{description}", edit.id, edit.started_at, edit.ops.len()));
+        lines.push(format!("#{ordinal:<5} {} actor={actor_display} started={} ops={}{checkpoint_marker}{description}", edit.id, edit.started_at, edit.ops.len()));
     }
 
     if reverse {
@@ -480,13 +471,13 @@ async fn cmd_log(rest: &[String]) -> i32 {
 //#region 🔖️Compile
 /// 🔨️ `protocol compile <doc.ops> [--out doc.spr]` — ops text -> `.spr` binary via
 /// `crate::os_spr::compile_ops`. Writes to `--out` when given, else emits the raw bytes to stdout.
-async fn cmd_compile(rest: &[String]) -> i32 {
+async fn cmd_compile(rest: &[String], context: &crate::os_pack::control::CommandContext) -> i32 {
     let (positional, flags) = parse_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: protocol compile <doc.ops> [--out doc.spr]");
         return 2;
     };
-    let text = match std::fs::read_to_string(path) {
+    let text = match crate::os_pack::control::read_command_file(Path::new(path), crate::os_spr::ProtocolLimits::default().max_file_len, context).await.and_then(|bytes|bytes.into_text()) {
         Ok(text) => text,
         Err(error) => {
             eprintln!("protocol: cannot read '{path}': {error}");
@@ -501,7 +492,7 @@ async fn cmd_compile(rest: &[String]) -> i32 {
         }
     };
     match flags.get("out") {
-        Some(out_path) => match std::fs::write(out_path, &bytes) {
+        Some(out_path) => match crate::os_pack::io::write_atomic(Path::new(out_path), &bytes, context.transport()) {
             Ok(()) => {
                 println!("wrote {out_path} ({} bytes)", bytes.len());
                 0
@@ -525,13 +516,13 @@ async fn cmd_compile(rest: &[String]) -> i32 {
 //#region 🔖️Decompile
 /// 🔧️ `protocol decompile <doc.spr> [--out doc.ops]` — `.spr` binary -> ops text via
 /// `crate::os_spr::decompile_ops`. Writes to `--out` when given, else prints the text to stdout.
-async fn cmd_decompile(rest: &[String]) -> i32 {
+async fn cmd_decompile(rest: &[String], context: &crate::os_pack::control::CommandContext) -> i32 {
     let (positional, flags) = parse_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: protocol decompile <doc.spr> [--out doc.ops]");
         return 2;
     };
-    let bytes = match std::fs::read(path) {
+    let bytes = match crate::os_pack::control::read_command_file(Path::new(path), crate::os_spr::ProtocolLimits::default().max_file_len, context).await {
         Ok(bytes) => bytes,
         Err(error) => {
             eprintln!("protocol: cannot read '{path}': {error}");
@@ -546,7 +537,7 @@ async fn cmd_decompile(rest: &[String]) -> i32 {
         }
     };
     match flags.get("out") {
-        Some(out_path) => match std::fs::write(out_path, &text) {
+        Some(out_path) => match crate::os_pack::io::write_atomic(Path::new(out_path), text.as_bytes(), context.transport()) {
             Ok(()) => {
                 println!("wrote {out_path} ({} bytes)", text.len());
                 0
@@ -569,7 +560,7 @@ async fn cmd_decompile(rest: &[String]) -> i32 {
 /// `only-in-a`/`only-in-b` by `(ordinal, id)` and content-mismatch lines (see `fingerprint`'s doc
 /// comment for why these are labelled `fp=`, not `hash=`) for edits present on both sides past the
 /// prefix. Exit `0` when identical, `1` when they differ, `2` on a usage/read/decode error.
-async fn cmd_diff(rest: &[String]) -> i32 {
+async fn cmd_diff(rest: &[String], context: &crate::os_pack::control::CommandContext) -> i32 {
     let (positional, _flags) = parse_args(rest).await;
     if positional.len() < 2 {
         eprintln!("usage: protocol diff <a.spr> <b.spr>");
@@ -577,14 +568,14 @@ async fn cmd_diff(rest: &[String]) -> i32 {
     }
     let path_a = &positional[0];
     let path_b = &positional[1];
-    let bytes_a = match std::fs::read(path_a) {
+    let bytes_a = match crate::os_pack::control::read_command_file(Path::new(path_a), crate::os_spr::ProtocolLimits::default().max_file_len, context).await {
         Ok(bytes) => bytes,
         Err(error) => {
             eprintln!("protocol: cannot read '{path_a}': {error}");
             return 1;
         }
     };
-    let bytes_b = match std::fs::read(path_b) {
+    let bytes_b = match crate::os_pack::control::read_command_file(Path::new(path_b), crate::os_spr::ProtocolLimits::default().max_file_len, context).await {
         Ok(bytes) => bytes,
         Err(error) => {
             eprintln!("protocol: cannot read '{path_b}': {error}");
@@ -651,7 +642,7 @@ async fn cmd_diff(rest: &[String]) -> i32 {
 /// rewrite). `--out`, when given, first copies `<file>` to `FIXED` and compacts the copy, leaving
 /// the original untouched; without it, `<file>` is compacted in place (matching `compact`'s own
 /// in-place-only signature).
-async fn cmd_compact(rest: &[String]) -> i32 {
+async fn cmd_compact(rest: &[String], context: &crate::os_pack::control::CommandContext) -> i32 {
     let (positional, flags) = parse_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: protocol compact <file> [--out FIXED]");
@@ -659,7 +650,8 @@ async fn cmd_compact(rest: &[String]) -> i32 {
     };
     let target: PathBuf = match flags.get("out") {
         Some(out_path) => {
-            if let Err(error) = std::fs::copy(path, out_path) {
+            let bytes=match crate::os_pack::control::read_command_file(Path::new(path),crate::os_spr::ProtocolLimits::default().max_file_len,context).await{Ok(bytes)=>bytes,Err(error)=>{eprintln!("protocol: cannot read for compaction: {error}");return 1}};
+            if let Err(error) = crate::os_pack::io::write_atomic(Path::new(out_path), &bytes, context.transport()) {
                 eprintln!("protocol: cannot copy '{path}' to '{out_path}': {error}");
                 return 1;
             }
@@ -668,7 +660,7 @@ async fn cmd_compact(rest: &[String]) -> i32 {
         None => PathBuf::from(path),
     };
     let options = crate::os_spr::CompactOptions { drop_ephemeral: true, keep_snapshots: crate::os_spr::KeepSnapshots::All };
-    match crate::os_spr::compact(&target, &options, &crate::os_spr::ProtocolLimits::default()).await {
+    match crate::os_spr::compact(&target, &options, &crate::os_spr::ProtocolLimits::default(), context).await {
         Ok(()) => {
             println!("compacted {}", target.display());
             0
@@ -690,14 +682,14 @@ async fn cmd_compact(rest: &[String]) -> i32 {
 /// needs `crate::os_spr::history::IndexBuilder`/`IndexReader`, which are not part of the facade's
 /// re-export surface (this crate's sole dependency) — same rationale as `upgrade`'s "hook exists,
 /// v1 passthrough" note in the contract.
-async fn cmd_repair(rest: &[String]) -> i32 {
+async fn cmd_repair(rest: &[String], context: &crate::os_pack::control::CommandContext) -> i32 {
     let (positional, truncate_torn_tail, rebuild_indexes) = parse_repair_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: protocol repair <file> [--truncate-torn-tail] [--rebuild-indexes]");
         return 2;
     };
     let limits = crate::os_spr::ProtocolLimits::default();
-    let report = match crate::os_spr::recover_file(Path::new(path), &limits, crate::os_spr::RecoveryMode::LastCommit).await {
+    let report = match crate::os_spr::recover_file(Path::new(path), &limits, crate::os_spr::RecoveryMode::LastCommit, context).await {
         Ok(report) => report,
         Err(error) => {
             eprintln!("protocol: recovery failed: {error}");
@@ -710,14 +702,14 @@ async fn cmd_repair(rest: &[String]) -> i32 {
     println!("torn_tail_bytes: {}", report.torn_tail_bytes);
 
     if truncate_torn_tail && report.torn_tail_bytes > 0 {
-        let file = match std::fs::OpenOptions::new().write(true).open(path) {
+        let file = match context.transport().operation(crate::os_pack::PackTransportCategory::NativeIo, crate::os_pack::PackRetryDisposition::Never, 0, ||std::fs::OpenOptions::new().write(true).open(path).map(|file|(file,0))) {
             Ok(file) => file,
             Err(error) => {
                 eprintln!("protocol: cannot open '{path}' for truncation: {error}");
                 return 1;
             }
         };
-        if let Err(error) = file.set_len(report.bytes_recovered) {
+        if let Err(error) = context.transport().operation(crate::os_pack::PackTransportCategory::NativeIo, crate::os_pack::PackRetryDisposition::Never, 0, ||file.set_len(report.bytes_recovered).map(|value|(value,0))) {
             eprintln!("protocol: truncate failed: {error}");
             return 1;
         }
@@ -734,13 +726,13 @@ async fn cmd_repair(rest: &[String]) -> i32 {
 /// ⬆️ `protocol upgrade <file>` — v1 `RecordUpcaster`-driven rewrite hook: no upcaster exists yet
 /// in this family, so `upgrade` validates the file decodes cleanly (Full verification) and passes
 /// it through unmodified, exactly as the contract's "no-op passthrough, hook exists" note specifies.
-async fn cmd_upgrade(rest: &[String]) -> i32 {
+async fn cmd_upgrade(rest: &[String], context: &crate::os_pack::control::CommandContext) -> i32 {
     let (positional, _flags) = parse_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: protocol upgrade <file>");
         return 2;
     };
-    let bytes = match std::fs::read(path) {
+    let bytes = match crate::os_pack::control::read_command_file(Path::new(path), crate::os_spr::ProtocolLimits::default().max_file_len, context).await {
         Ok(bytes) => bytes,
         Err(error) => {
             eprintln!("protocol: cannot read '{path}': {error}");
@@ -781,22 +773,22 @@ async fn print_help() {
 /// around this. Never panics on malformed input; every subcommand handler maps errors to a
 /// printed message and a non-zero exit code instead. Exit codes: `0` success, `1` runtime/decode
 /// failure, `2` usage error.
-pub async fn main_impl(args: &[String]) -> i32 {
+pub async fn main_impl(args: &[String], context: &crate::os_pack::control::CommandContext) -> i32 {
     let Some((command, rest)) = args.split_first() else {
         print_help().await;
         return 2;
     };
     match command.as_str() {
-        "inspect" => cmd_inspect(rest).await,
-        "verify" => cmd_verify(rest).await,
-        "hash" => cmd_hash(rest).await,
-        "log" => cmd_log(rest).await,
-        "compile" => cmd_compile(rest).await,
-        "decompile" => cmd_decompile(rest).await,
-        "diff" => cmd_diff(rest).await,
-        "compact" => cmd_compact(rest).await,
-        "repair" => cmd_repair(rest).await,
-        "upgrade" => cmd_upgrade(rest).await,
+        "inspect" => cmd_inspect(rest, context).await,
+        "verify" => cmd_verify(rest, context).await,
+        "hash" => cmd_hash(rest, context).await,
+        "log" => cmd_log(rest, context).await,
+        "compile" => cmd_compile(rest, context).await,
+        "decompile" => cmd_decompile(rest, context).await,
+        "diff" => cmd_diff(rest, context).await,
+        "compact" => cmd_compact(rest, context).await,
+        "repair" => cmd_repair(rest, context).await,
+        "upgrade" => cmd_upgrade(rest, context).await,
         "help" | "--help" | "-h" => {
             print_help().await;
             0

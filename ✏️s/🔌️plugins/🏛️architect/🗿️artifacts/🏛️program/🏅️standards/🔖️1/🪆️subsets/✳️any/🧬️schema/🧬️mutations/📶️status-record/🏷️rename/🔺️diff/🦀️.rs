@@ -13,7 +13,7 @@ pub fn diff(payload: &RenameStatusRecord, base: &ProgramSnapshot) -> protocol::M
         return protocol::MutationOutcome::error("mutation.target-missing", "No status record exists with this id.", [payload.id.0.clone()]);
     };
     if existing.header.name == payload.new_name {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This status record already has this name.").at([payload.id.0.clone()])]);
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This status record already has this name.").at([payload.id.0.clone()])]);
     }
     let patch = StatusRecordPatch { name: Some(payload.new_name.clone()), ..Default::default() };
     protocol::MutationOutcome::new(ProgramDiff { status_records: Some(ProgramStatusRecordsDelta { patched: vec![ProgramStatusRecordsPatchEntry { id: payload.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })

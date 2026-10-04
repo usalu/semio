@@ -4,9 +4,14 @@
 //! pairs" (`b-l -- b-s`, an anonymous undirected edge — exactly what that grammar already is, no
 //! catalog-specific extension needed).
 
-pub use crate::os_dsl::notation::{print_edge, EdgeLabel, EdgeLink, EdgeNode, EdgeValue};
 
-use crate::os_dsl::{lex, Limits, TextError, TextSpan, TokenKind};
+
+use semio_framework_dsl::lex;
+use semio_framework_diagnostic::Limits;
+use semio_framework_diagnostic::TextError;
+use semio_framework_value::ValueRefusalKind;
+use semio_framework_diagnostic::TextSpan;
+use semio_framework_dsl::TokenKind;
 
 //#region 🔖️SlashPath
 /// 🌲️ Parses a slash-path ident (`beams/solid-timber/glulam`) into its segments. `/` is
@@ -17,15 +22,15 @@ pub async fn parse_slash_path_text(text: &str) -> Result<Vec<String>, TextError>
     let limits = Limits::default();
     let tokens: Vec<_> = lex(text, &limits, false)?.into_iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).collect();
     let [token] = tokens.as_slice() else {
-        return Err(TextError::new("expected a single slash-path ident", tokens.get(1).map_or(TextSpan::at(1, 1), |t| t.span)));
+        return Err(TextError::new(ValueRefusalKind::InvalidValue, "expected a single slash-path ident", tokens.get(1).map_or(TextSpan::at(1, 1), |t| t.span)));
     };
     if token.kind != TokenKind::Ident {
-        return Err(TextError::new(format!("expected an ident, found {:?}", token.kind), token.span));
+        return Err(TextError::new(ValueRefusalKind::InvalidValue, format!("expected an ident, found {:?}", token.kind), token.span));
     }
     let raw = token.text.as_str();
     let segments: Vec<String> = raw.split('/').map(str::to_string).collect();
     if segments.iter().any(|s| s.is_empty()) {
-        return Err(TextError::new(format!("slash-path `{raw}` has an empty segment (leading/trailing/doubled `/`)"), token.span));
+        return Err(TextError::new(ValueRefusalKind::InvalidValue, format!("slash-path `{raw}` has an empty segment (leading/trailing/doubled `/`)"), token.span));
     }
     Ok(segments)
 }
@@ -45,17 +50,17 @@ pub async fn parse_count_text(text: &str) -> Result<u64, TextError> {
     let limits = Limits::default();
     let tokens: Vec<_> = lex(text, &limits, false)?.into_iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).collect();
     let [token] = tokens.as_slice() else {
-        return Err(TextError::new("expected a single count literal", tokens.get(1).map_or(TextSpan::at(1, 1), |t| t.span)));
+        return Err(TextError::new(ValueRefusalKind::InvalidValue, "expected a single count literal", tokens.get(1).map_or(TextSpan::at(1, 1), |t| t.span)));
     };
     if token.kind != TokenKind::Ident {
-        return Err(TextError::new(format!("expected an ident, found {:?}", token.kind), token.span));
+        return Err(TextError::new(ValueRefusalKind::InvalidValue, format!("expected an ident, found {:?}", token.kind), token.span));
     }
     let raw = token.text.as_str();
     let digits = raw.strip_prefix('x').filter(|d| !d.is_empty() && d.bytes().all(|b| b.is_ascii_digit()));
     let Some(digits) = digits else {
-        return Err(TextError::new(format!("expected a count literal like `x24`, found `{raw}`"), token.span));
+        return Err(TextError::new(ValueRefusalKind::InvalidValue, format!("expected a count literal like `x24`, found `{raw}`"), token.span));
     };
-    digits.parse().map_err(|_| TextError::new(format!("count `{raw}` overflows u64"), token.span))
+    digits.parse().map_err(|_| TextError::new(ValueRefusalKind::InvalidValue, format!("count `{raw}` overflows u64"), token.span))
 }
 
 /// 🖨️ Canonical printer — the inverse of [`parse_count_text`].

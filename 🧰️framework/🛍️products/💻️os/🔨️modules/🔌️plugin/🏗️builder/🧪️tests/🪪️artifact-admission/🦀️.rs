@@ -28,7 +28,7 @@ fn declaration(kind: &str) -> ArtifactDeclaration {
 async fn publication_witness() -> Vec<bool> {
     let mut witness = Vec::new();
     for (id, codec) in [("s.testkit.w1c-fixture@1/*", "semio.testkit.w1c-fixture.std1-any/v1"), ("s.testkit.w1c-fixture@1/strict", "semio.testkit.w1c-fixture.std1-strict/v1"), ("s.testkit.w1c-fixture@2/*", "semio.testkit.w1c-fixture.std2-any/v1")] {
-        witness.push(semio_framework_schema::artifact_schema_descriptor_registered(id));
+        witness.push(semio_framework_schema_registry::artifact_schema_descriptor_registered(id));
         witness.push(store::document_codec(codec).await.expect("registry available").is_some());
     }
     witness.push(semio_framework::io::io_mechanism::io_entries().iter().any(|row| row.from.artifact_kind == "s.testkit.w1c-fixture" || row.into.artifact_kind == "s.testkit.w1c-fixture"));
@@ -93,6 +93,6 @@ async fn strict_artifact_identity_owned_tree_and_definition_channels_publish() {
     let tree = Plugin::builder("testkit").label("Admission").version("0.1.0").package_id("semio:testkit").declare_artifact(fixture::build_declaration()).try_build().expect("owned tree");
     assert_eq!(tree.manifest.plugin_id, "testkit");
     assert_eq!(tree.manifest.apps.len(), 6);
-    assert!(semio_framework_schema::artifact_schema_descriptor_registered("s.testkit.w1c-fixture@1/*"));
+    assert!(semio_framework_schema_registry::artifact_schema_descriptor_registered("s.testkit.w1c-fixture@1/*"));
     assert!(store::document_codec("semio.testkit.w1c-fixture.std1-any/v1").await.unwrap().is_some());
 }

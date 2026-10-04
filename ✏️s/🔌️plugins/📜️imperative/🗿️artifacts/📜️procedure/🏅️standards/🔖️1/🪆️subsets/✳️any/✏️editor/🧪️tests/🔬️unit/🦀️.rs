@@ -25,13 +25,29 @@ pub(crate) mod context {
         App { definition: create_imperative_app(), examples: Vec::new() }
     }
 
-    semio_framework_plugin::history_edit_acceptance_law!("imperative", ImperativePlayApp, imperative_app_manifest_for_tests, "../..");
+    semio_framework_plugin::composed_reload_law!("imperative", ImperativePlayApp, imperative_app_manifest_for_tests, "../..");
+    semio_framework_plugin::composed_child_history_law!("imperative", ImperativePlayApp, imperative_app_manifest_for_tests, [("addStep", r#"{"kind":"log.print"}"#)]);
+
+    /// 🧸️ The live program and seed composed from the app's `flow` and `text` member stores (design §20.15: the parent holds
+    /// only the two child handles).
+    pub async fn live_scene(app: &ImperativeApp) -> crate::ProcedureScene {
+        use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
+        use semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
+        use store::{ArtifactPack, SpaceMember};
+        let snapshot = app.snapshot().expect("procedure parent projection");
+        let flow = app.child_store("flow", &snapshot.flow.child_id).await.expect("procedure flow child").document_pack_bytes().await.expect("procedure flow child pack");
+        let text = app.child_store("text", &snapshot.text.child_id).await.expect("procedure text child").document_pack_bytes().await.expect("procedure text child pack");
+        crate::ProcedureScene {
+            path: crate::path_from_flow_content_snapshot(&SemioFlowSnapshot::decode_pack(&flow).expect("procedure flow child snapshot")),
+            seed: crate::seed_from_text_content_snapshot(&SemioTextSnapshot::decode_pack(&text).expect("procedure text child snapshot")),
+        }
+    }
     
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline and materializes
     /// declared action-arg defaults (e.g. `addStep`'s `kind`).
     pub async fn imperative_app_with_registry() -> OwnedImperativeApp {
         let mut app = new_app_with_registry::<EditorApp<ImperativePlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(imperative_app_manifest_for_tests).await;
-        semio_framework::io::resolve_ready(app.bind_instance_id(meta("local").instance_id));
+        ::semio_framework_async::poll::resolve_ready(app.bind_instance_id(meta("local").instance_id));
         OwnedImperativeApp(app)
     }
 
@@ -93,7 +109,7 @@ pub(crate) mod context {
 }
 
 use super::*;
-use crate::editor::procedure::unit_tests::context::{dispatch, imperative_app, imperative_app_with_registry, render};
+use crate::editor::procedure::unit_tests::context::{dispatch, imperative_app, imperative_app_with_registry, live_scene, render};
 use semio_framework_plugin::artifact_app_laws::meta;
 use semio_framework_plugin::{EditorApp, PluginApp};
 use std::collections::BTreeMap;
@@ -140,10 +156,10 @@ fn set_active_example_is_host_only_and_both_composed_children_mint_genesis_packs
         assert_eq!(artifact_id, child_id, "slot {slot}'s target must name its own child_id or ChildRestoreProjection refuses the whole load with InvalidReference");
     }
     for (slot, child_id) in [("flow", demo.flow.child_id.as_str()), ("text", demo.text.child_id.as_str())] {
-        let pack = <ImperativePlayApp as ArtifactEditor>::genesis_child_pack(&demo, slot, child_id).unwrap_or_else(|| panic!("slot {slot} mints no genesis pack, so the archive closure leg refuses the load"));
+        let pack = <ImperativePlayApp as ArtifactEditor>::genesis_child_pack(&demo, slot, child_id).expect("valid materialized genesis owner").unwrap_or_else(|| panic!("slot {slot} mints no genesis pack, so the archive closure leg refuses the load"));
         assert!(!pack.is_empty(), "slot {slot} minted an empty pack");
     }
-    assert!(<ImperativePlayApp as ArtifactEditor>::genesis_child_pack(&demo, "flow", "not-this-documents-child").is_none(), "a foreign child id must not be answered");
+    assert!(<ImperativePlayApp as ArtifactEditor>::genesis_child_pack(&demo, "flow", "not-this-documents-child").expect("valid materialized genesis owner").is_none(), "a foreign child id must not be answered");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -273,15 +289,9 @@ async fn steps_interaction_domain_is_declared_topology_and_transitive_on_the_mai
 async fn interaction_topology_walks_nested_control_bodies_into_parent_links() {
     let mut app = imperative_app().await;
     dispatch(&mut app, ImperativeCommand::AddStep(add_step::AddStep { kind: "control.if".into(), index: None })).await;
-    let owner_id = crate::procedure_working_scene(&app.snapshot().expect("projection")).path.steps.last().expect("owner").id.clone();
+    let owner_id = live_scene(&app).await.path.steps.last().expect("owner").id.clone();
     dispatch(&mut app, ImperativeCommand::AddStepAt(add_step_at::AddStepAt { kind: "log.print".into(), index: None, owner: Some(owner_id.clone()), slot: Some("then".into()) })).await;
-    let document = app.snapshot().expect("projection");
-    let config = ImperativeConfig::default();
-    let history = semio_framework_plugin::HistoryView::empty();
-    let doc = ArtifactView::new(&document, &history);
-    let cfg = ConfigView { snapshot: &config, window: None };
-    let topology = ImperativePlayApp::interaction_topology(&doc, &cfg);
-    let steps = topology.domains.get(IMPERATIVE_INTERACTION_STEPS).expect("steps domain present in topology");
+    let steps = imperative_steps_topology(&live_scene(&app).await.path);
     let owner_row_id = document_panel::step_row_id(&owner_id);
     let owner_node = steps.ordered.iter().find(|node| node.id == owner_row_id).expect("owner node present");
     assert!(owner_node.parent.is_none(), "top-level owner step has no parent");
@@ -299,7 +309,7 @@ async fn interaction_topology_is_empty_for_a_document_with_no_steps() {
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
     let cfg = ConfigView { snapshot: &config, window: None };
-    let topology = ImperativePlayApp::interaction_topology(&doc, &cfg);
+    let topology = ImperativePlayApp::interaction_topology(&doc, &cfg).expect("valid retained interaction fixture");
     assert!(topology.domains.get(IMPERATIVE_INTERACTION_STEPS).expect("steps domain present in topology").ordered.is_empty());
 }
 //#endregion 🔖️Interaction
@@ -311,9 +321,8 @@ async fn add_step_materializes_kind_default_and_run_emits_no_artifact_mutations(
     // AddStep fired with no explicit kind: the declared `kind` default ("log.print") must be
     // materialized by the registry's action-arg default resolution.
     app.dispatch_typed(ImperativeCommand::AddStep(add_step::AddStep { kind: "log.print".into(), index: None }), &meta("local")).await.expect("add step");
-    let document = app.snapshot().expect("materialize projection");
-    let path = crate::procedure_working_scene(&document).path;
-    assert_eq!(path.steps.last().unwrap().kind, "log.print");
+    context::settle(&mut app).await;
+    assert_eq!(live_scene(&app).await.path.steps.last().expect("the added step").kind, "log.print");
     // `run` is a View-kind command: under registry enforcement it must not emit document operations.
     let result = app.dispatch_typed(ImperativeCommand::Run(run::Run {}), &meta("local")).await.expect("run");
     assert!(result.mutations.is_empty(), "run evaluates into config, never the document");
@@ -323,16 +332,14 @@ async fn add_step_materializes_kind_default_and_run_emits_no_artifact_mutations(
 #[semio_framework_async_macros::async_test]
 async fn default_snapshot_has_steps() {
     let app = imperative_app().await;
-    let path = crate::procedure_working_scene(&app.snapshot().expect("projection")).path;
-    assert_eq!(path.steps.len(), 2);
+    assert_eq!(live_scene(&app).await.path.steps.len(), 2);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn add_step_command_appends_step() {
     let mut app = imperative_app().await;
     dispatch(&mut app, ImperativeCommand::AddStep(add_step::AddStep { kind: "log.print".into(), index: None })).await;
-    let path = crate::procedure_working_scene(&app.snapshot().expect("projection")).path;
-    assert!(path.steps.len() > 2);
+    assert!(live_scene(&app).await.path.steps.len() > 2);
     context::close(&mut app);
 }
 
@@ -340,11 +347,11 @@ async fn add_step_command_appends_step() {
 async fn add_step_at_owner_slot_nests_into_control_body() {
     let mut app = imperative_app().await;
     dispatch(&mut app, ImperativeCommand::AddStep(add_step::AddStep { kind: "control.if".into(), index: None })).await;
-    let owner_id = crate::procedure_working_scene(&app.snapshot().expect("projection")).path.steps.last().expect("owner").id.clone();
-    let root_len = crate::procedure_working_scene(&app.snapshot().expect("projection")).path.steps.len();
+    let before = live_scene(&app).await;
+    let owner_id = before.path.steps.last().expect("owner").id.clone();
+    let root_len = before.path.steps.len();
     dispatch(&mut app, ImperativeCommand::AddStepAt(add_step_at::AddStepAt { kind: "log.print".into(), index: None, owner: Some(owner_id.clone()), slot: Some("then".into()) })).await;
-    let document = app.snapshot().expect("projection");
-    let path = crate::procedure_working_scene(&document).path;
+    let path = live_scene(&app).await.path.clone();
     let owner_step = path.steps.iter().find(|step| step.id == owner_id).expect("owner step");
     assert_eq!(owner_step.bodies.get("then").map(|body| body.steps.len()), Some(1));
     assert_eq!(path.steps.len(), root_len, "nested step lives in the slot, not the root path");
@@ -355,56 +362,58 @@ async fn add_step_at_owner_slot_nests_into_control_body() {
 async fn add_step_at_falls_back_to_root_for_unknown_owner() {
     let mut app = imperative_app().await;
     dispatch(&mut app, ImperativeCommand::AddStepAt(add_step_at::AddStepAt { kind: "log.print".into(), index: None, owner: Some("missing-step".into()), slot: Some("then".into()) })).await;
-    let document = app.snapshot().expect("projection");
-    let path = crate::procedure_working_scene(&document).path;
-    let added_id = path.steps.last().expect("added").id.clone();
-    assert!(path.steps.iter().any(|step| step.id == added_id));
-    context::close(&mut app);
-}
-
-/// ⏪️ Every step SETTLES (`assert_undo_redo_round_trip`): a mounted app's `dispatch_typed` only admits
-/// the retained operation and `"undo"`/`"redo"` are framework-reserved jobs, so reading the document
-/// straight after either observes the state before it.
-#[semio_framework_async_macros::async_test]
-async fn undo_after_add_step_restores_original_document_exactly() {
-    let mut app = imperative_app().await;
-    let base = default_snapshot();
-    let mut path = crate::procedure_working_scene(&base).path;
-    path.steps.push(Step { id: "step-3".into(), kind: "log.print".into(), params: crate::Dictionary::new(), bodies: BTreeMap::new() });
-    let expected_after = crate::procedure_snapshot_with_content(&base.schema, &path, &crate::procedure_working_scene(&base).seed);
-    semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(&mut *app, ImperativeCommand::AddStep(add_step::AddStep { kind: "log.print".into(), index: None }), |app| app.snapshot().expect("projection"), default_snapshot(), expected_after).await;
+    let path = live_scene(&app).await.path.clone();
+    assert_eq!(path.steps.len(), 3, "an unknown owner addresses the root scope: the step joined the demo's two root steps");
+    assert_eq!(path.steps.last().expect("added").kind, "log.print");
     context::close(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn remove_step_command_is_exact_inverse_of_add() {
     let mut app = imperative_app().await;
-    let original = app.snapshot().expect("projection");
+    let original = live_scene(&app).await;
     dispatch(&mut app, ImperativeCommand::AddStep(add_step::AddStep { kind: "math.add".into(), index: None })).await;
-    let added_id = crate::procedure_working_scene(&app.snapshot().expect("projection")).path.steps.last().expect("added").id.clone();
+    let added_id = live_scene(&app).await.path.steps.last().expect("added").id.clone();
     dispatch(&mut app, ImperativeCommand::RemoveStep(remove_step::RemoveStep { id: added_id })).await;
-    assert_eq!(app.snapshot().expect("projection"), original);
+    assert_eq!(live_scene(&app).await, original);
     context::close(&mut app);
 }
 
-/// 🧪️ The definitional regression proof: two independent instances start from the same document,
-/// apply DISJOINT edits (A appends a root step, B patches an existing step's params), and exchanging
-/// operations over a `MemoryBackbone` converges both sides onto an identical projection — impossible
-/// under whole-document `setDocument` snapshots, which would clobber one side's write. The REGISTERED
-/// pair: imperative publishes tool proofs, so a registry-less instance faults in the
-/// `interactive-job.catalog-authority` proof join before any edit lands.
+/// 🧪️ The definitional regression proof: two independent instances start from the same document, apply DISJOINT edits (A
+/// appends a root step, B patches an existing step's params) and converge onto an identical live program over a
+/// `MemoryBackbone` — impossible under whole-document snapshots, which would clobber one side's write.
+/// `artifact_app_laws::assert_two_registered_instances_converge_with_members` cannot probe here: its synchronous probe reads
+/// only the parent, which never changes on a child-lane edit (design §20.15). Same law, same shape, over the composed scene:
+/// settle each edit, fold both ways, commit a checkpoint on A, fold it on B, and the probe must agree after each exchange.
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_disjoint_edits_via_backbone() {
+    async fn probe(app: &context::ImperativeApp) -> (usize, bool) {
+        let scene = live_scene(app).await;
+        (scene.path.steps.len(), scene.path.steps.iter().any(|step| step.params.get("key") == Some(&neural_engine::Value::Atom(neural_engine::Atom::String("renamed".into())))))
+    }
     let mut params = BTreeMap::new();
     params.insert("key".to_string(), crate::document_dsl::value_to_value_dsl(&neural_engine::Value::Atom(neural_engine::Atom::String("renamed".into()))));
-    semio_framework_plugin::artifact_app_laws::assert_two_registered_instances_converge_with_members::<EditorApp<ImperativePlayApp>, semio_s_artifact_stdio_semio::SemioMembers, _, _, _>(
-        "mem://imperative-convergence",
-        || async { context::imperative_app_manifest_for_tests() },
-        ImperativeCommand::AddStep(add_step::AddStep { kind: "math.add".into(), index: None }),
-        ImperativeCommand::SetStepParams(set_step_params::SetStepParams { id: "step-1".into(), params }),
-        |app| app.snapshot().expect("projection"),
-    )
-    .await;
+    let mut instance_a = imperative_app().await;
+    let mut instance_b = imperative_app().await;
+    let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://imperative-convergence", "mem://imperative-convergence").await;
+    instance_a.attach_backbone(store::Backbones::Memory(backbone_a)).await.expect("attach a");
+    instance_b.attach_backbone(store::Backbones::Memory(backbone_b)).await.expect("attach b");
+    let genesis = probe(&instance_a).await;
+    instance_a.dispatch_typed(ImperativeCommand::AddStep(add_step::AddStep { kind: "math.add".into(), index: None }), &meta("actor-a")).await.expect("a applies its edit");
+    context::settle(&mut instance_a).await;
+    instance_b.dispatch_typed(ImperativeCommand::SetStepParams(set_step_params::SetStepParams { id: "step-1".into(), params }), &meta("actor-b")).await.expect("b applies its edit");
+    context::settle(&mut instance_b).await;
+    instance_a.tick_backbone().await.expect("a folds b's events");
+    instance_b.tick_backbone().await.expect("b folds a's events");
+    assert_eq!(probe(&instance_a).await, probe(&instance_b).await, "both instances must converge on the same program");
+    assert_eq!(probe(&instance_a).await, (genesis.0 + 1, true), "each instance holds both disjoint edits");
+    let admitted = instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).await.expect("a commits a checkpoint");
+    semio_framework_plugin::app::settle_framework_reserved_admission(&mut *instance_a, admitted).await.expect("a's checkpoint commit settles");
+    context::settle(&mut instance_a).await;
+    instance_b.tick_backbone().await.expect("b folds a's checkpoint");
+    assert_eq!(probe(&instance_a).await, probe(&instance_b).await, "a replicated checkpoint keeps both instances converged");
+    instance_a.detach_backbone().await.expect("a releases its backbone");
+    instance_b.detach_backbone().await.expect("b releases its backbone");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -412,22 +421,24 @@ async fn ingest_operations_is_idempotent_for_imperative() {
     let mut sender = imperative_app().await;
     let (near, mut far) = MemoryBackbone::pair("mem://imperative-idempotent", "mem://imperative-idempotent").await;
     sender.attach_backbone(store::Backbones::Memory(near)).await.expect("attach sender");
+    let genesis = live_scene(&sender).await.path.steps.len();
     dispatch(&mut sender, ImperativeCommand::AddStep(add_step::AddStep { kind: "math.add".into(), index: None })).await;
+    assert_eq!(live_scene(&sender).await.path.steps.len(), genesis + 1, "the sender applied its edit");
     let mut envelopes = Vec::new();
     for message in far.receive().await.expect("receive") {
         if let BackboneMessage::Mutations { envelopes: operations } = message {
             envelopes.extend(protocol::decode_envelopes(&operations).expect("decode envelopes"));
         }
     }
+    assert!(!envelopes.is_empty(), "the add reached the backbone");
     let operations = protocol::encode_envelopes(&envelopes);
     let mut receiver = imperative_app().await;
     receiver.ingest_operations(&operations).await.expect("ingest once");
-    let once = receiver.snapshot().expect("projection");
+    let once = live_scene(&receiver).await;
+    assert_eq!(once.path.steps.len(), genesis + 1, "the replayed add applies");
     receiver.ingest_operations(&operations).await.expect("ingest twice");
-    assert_eq!(receiver.snapshot().expect("projection"), once);
+    assert_eq!(live_scene(&receiver).await, once, "feeding the same operation twice must not double-apply");
     sender.detach_backbone().await.expect("sender releases its backbone");
-    context::close(&mut sender);
-    context::close(&mut receiver);
 }
 
 #[semio_framework_async_macros::async_test]

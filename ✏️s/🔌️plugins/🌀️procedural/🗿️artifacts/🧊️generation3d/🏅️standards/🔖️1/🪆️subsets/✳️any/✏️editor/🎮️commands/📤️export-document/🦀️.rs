@@ -7,8 +7,8 @@
 //! (`📓️audit-user-journey-gaps-2026-09-13.md` §6, P0 #1).
 //!
 //! ⏳️ Progress and cancellation for the expensive half are the chain that already owns them, not a
-//! second one: a geometry export reads the RETAINED [`FlowEvalSession`]'s already-tessellated
-//! preview (`export_mesh_from_session`) and evaluates nothing itself. So an export taken after the
+//! second one: a geometry export reads the RETAINED [`FlowEvalSession`]'s already-prepared
+//! surfaces (`export_meshes_from_session`) and evaluates nothing itself. So an export taken after the
 //! preview has settled does no kernel work at all, and one taken while it is still computing is the
 //! same `flowEvalTick` chain the status pill reports `phase`/`ratio` for and the `cancelPreviewEval`
 //! button retires. `txt` — the one full-fidelity target — touches no geometry and is always a
@@ -25,10 +25,13 @@ use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "export-document")]
+#[value(rename_all = "camelCase")]
 pub struct ExportDocument {
     pub format: String,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub widget_id: Option<String>,
 }
 
 /// 📤️ Encodes the document in the picked format and hands the shell one download.
@@ -39,37 +42,39 @@ pub struct ExportDocument {
 pub fn emit(
     payload: &ExportDocument,
     doc: &ArtifactView<'_, Generation3dSnapshot>,
-    preview: Option<&semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot>,
+    meshes: Option<&[semio_framework_plugin::MeshData]>,
 ) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
     let export = (if payload.format == "txt" {
         document_io::export_document(doc.snapshot)
     } else {
-        preview.ok_or_else(|| crate::standards::v1::subsets::any::io::mesh_bridge::io_error("generation3d geometry export requires prepared geometry from the retained evaluation"))
-            .and_then(|mesh| document_io::export_geometry(mesh, &payload.format))
-    }).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("generation3d.io.export"), error.to_string()))?;
+        meshes.ok_or_else(|| crate::standards::v1::subsets::any::io::mesh_bridge::io_error("generation3d geometry export requires prepared geometry from the retained evaluation"))
+            .and_then(|meshes| document_io::export_prepared_geometry(meshes, &payload.format))
+    }).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new(crate::GENERATION3D_IO_EXPORT), error.to_string()))?;
     Ok(Emit::effect(Effect::DownloadMediaExport { filename: export.filename, mime_type: export.mime_type, data: export.data, encoding: export.encoding }))
 }
 
 /// 📤️ The session-aware entry point: the retained evaluation IS the geometry, so the export reads
-/// its merged preview; absent prepared geometry produces a named export fault.
+/// its prepared surfaces; absent geometry produces a named export fault.
 pub fn handle(
     payload: &ExportDocument,
     doc: &ArtifactView<'_, Generation3dSnapshot>,
     cfg: &ConfigView<'_, Generation3dConfig>,
     session: &mut FlowEvalSession,
 ) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
-    emit(payload, doc, retained_preview(doc, cfg, session).as_ref())
+    let meshes = if payload.format == "txt" { None } else { retained_meshes(doc, cfg, session, payload.widget_id.as_deref())? };
+    emit(payload, doc, meshes.as_deref())
 }
 
-/// 👁️ The retained session's merged preview as this repo's own typed mesh, or `None` when nothing
-/// has been evaluated yet.
-pub fn retained_preview(
+/// 👁️ Reads the existing retained evaluation's prepared surfaces without reducing authored channels.
+pub fn retained_meshes(
     doc: &ArtifactView<'_, Generation3dSnapshot>,
     cfg: &ConfigView<'_, Generation3dConfig>,
     session: &FlowEvalSession,
-) -> Option<semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot> {
-    let mesh = crate::editor::generation3d::export_mesh_from_session(doc.snapshot, cfg.snapshot, session);
-    crate::standards::v1::subsets::any::io::mesh_bridge::semio_mesh_from_mesh_data(&mesh).ok()
+    widget_id: Option<&str>,
+) -> Result<Option<Vec<semio_framework_plugin::MeshData>>, Fault> {
+    let meshes = crate::editor::generation3d::export_meshes_from_session(doc.snapshot, cfg.snapshot, session, widget_id);
+    meshes.map(Some)
+        .map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new(crate::GENERATION3D_IO_EXPORT), error.to_string()))
 }
 
 //#region 🧪️Tests

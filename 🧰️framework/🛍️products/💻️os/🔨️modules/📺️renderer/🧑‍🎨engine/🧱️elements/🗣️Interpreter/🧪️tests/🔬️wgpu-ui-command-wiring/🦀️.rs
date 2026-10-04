@@ -125,7 +125,7 @@ fn window_action_context_retained_commands_preserve_the_clicked_window() {
         apply_ui_commands(&[ui_wgpu::wgpu::UiCommand::App { window_id: window_id.into(), intent: fixture_intent(descriptor, case_index) }], None, &mut input);
         let queued = crate::collect_fixture_actions(&mut input);
         assert_eq!(queued.len(), 1);
-        let actual: Option<Value> = queued[0].args.as_ref().map(|args| serde_json::from_str(&dsl::json::from_dsl_value(args).to_string()).unwrap());
+        let actual: Option<Value> = queued[0].args.as_ref().map(|args| serde_json::from_str(&semio_framework_pack_json::from_dsl_value(args).to_string()).unwrap());
         assert_eq!(actual, Some(case["expected"].clone()));
     }
 }
@@ -166,7 +166,7 @@ fn merge_action_args_lets_the_patch_win_over_existing_args() {
     patch.insert("id".to_string(), Value::from("overridden"));
     patch.insert("targetId".to_string(), Value::from("t1"));
 
-    let merged: Value = serde_json::from_str(&dsl::json::from_dsl_value(&merge_action_args(Some(&existing_dsl), patch).expect("merged args")).to_string()).expect("json args");
+    let merged: Value = serde_json::from_str(&semio_framework_pack_json::from_dsl_value(&merge_action_args(Some(&existing_dsl), patch).expect("merged args")).to_string()).expect("json args");
 
     assert_eq!(merged.get("id").and_then(Value::as_str), Some("overridden"));
     assert_eq!(merged.get("kept").and_then(Value::as_bool), Some(true));

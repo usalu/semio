@@ -12,7 +12,7 @@ pub struct TxtIntoBlock5d;
 
 /// 🏗 Parses UTF-8 DSL text into this subset snapshot — also used by the zip container leaf.
 pub fn from_dsl_text(text: &str) -> Result<Block5dSnapshot, IoError> {
-    <Block5dSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| IoError { message: error.to_string(), diagnostics: Vec::new() })
+    <Block5dSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(error.kind, error.to_string())))
 }
 
 impl Deserializer<Block5dSnapshot> for TxtIntoBlock5d {

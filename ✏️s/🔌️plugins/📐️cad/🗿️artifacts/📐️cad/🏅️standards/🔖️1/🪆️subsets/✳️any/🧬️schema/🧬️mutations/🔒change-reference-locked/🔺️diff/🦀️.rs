@@ -13,7 +13,7 @@ pub fn diff(payload: &ChangeReferenceLocked, base: &CadSnapshot) -> protocol::Mu
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Reference \"{}\" does not exist.", payload.reference_id), [payload.model_definition_id.clone(), payload.reference_id.clone()]);
     };
     if existing.locked == payload.new_locked {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Reference \"{}\" already has locked = {}.", payload.reference_id, payload.new_locked));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Reference \"{}\" already has locked = {}.", payload.reference_id, payload.new_locked));
     }
     let patch = CadReferencePatch { locked: Some(payload.new_locked), ..Default::default() };
     let next = references

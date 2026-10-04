@@ -16,3 +16,7 @@ export function operationProgressText(locale:"en"|"de",completed:bigint,cancelli
 export function cancellationResultLane(userRequested:boolean,workerFault:boolean):"terminal"|"fault" {
   return userRequested&&!workerFault?"terminal":"fault";
 }
+/** 🎯️ Cancellation is accepted only while its exact operation and live lease still exist. */
+export function operationCancellationTargetAdmitted(present:boolean,terminal:boolean,cancellable:boolean):boolean {
+  return present&&!terminal&&cancellable;
+}

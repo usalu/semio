@@ -1,19 +1,17 @@
 //! 📕️ Xlsx editor (ecma-376/🧱️base) — the first authored `ArtifactEditor` surface for
 //! `s.stdio.xlsx@ecma-376/*`. This subset has zero pre-existing document apps, so this is authored
-//! fresh straight against `XlsxSnapshot`'s own composed shape (`opc`: the verbatim OPC package;
-//! `workbook`: the typed semantic view — name-keyed sheets, each a sparse `(row, col)`-addressed
-//! cell list, plus an index-keyed shared-strings table). One real window, `🪟️main`
-//! (`TableWindowKit`), flattens every sheet's cells into a single row-per-cell table (see
-//! `xlsx_flat_cells`'s own doc comment for why a per-sheet pick was rejected). Its one editable
-//! column (`value`) funnels through this file's single typed command, `XlsxEditorCommand::SetCell`,
-//! into `XlsxMutation::SetCell` — the cleanest possible fit `TableWindowKit`'s `set-cell` action has
-//! in this artifact's whole mutation surface.
+//! fresh against `XlsxSnapshot`'s canonical OPC/XML authority. `🪟️main` renders one windowed A1
+//! grid per worksheet, including revision-bound vacancies that insert cells without rebuilding XML.
 
 use crate::editor::xlsx::standards::v_ecma_376::subsets::base::modes::edit;
 use crate::editor::xlsx::standards::v_ecma_376::subsets::base::modes::edit::windows::main;
-use crate::standards::v_ecma_376::subsets::base::schema::mutations::{cell_address::xlsx_cell_address, set_cell, set_snapshot};
+use crate::standards::v_ecma_376::subsets::base::schema::mutations::{
+    cell_address::{xlsx_cell_address, xlsx_cell_target_revision, xlsx_cell_vacancy_address},
+    insert_cell, patch_snapshot, set_cell, set_snapshot,
+};
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCellValue;
 use crate::{XlsxMutation, XlsxSnapshot, STDIO_XLSX_DOCUMENT_SCHEMA};
+use semio_framework_2d::compute::EngineHandles;
 use semio_framework_plugin::ArtifactEditor;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ConfigView;
@@ -22,7 +20,6 @@ use semio_framework_plugin::DraftView;
 use semio_framework_plugin::Editor;
 use semio_framework_plugin::Emit;
 use semio_framework_plugin::Fault;
-use semio_framework_ui_locale::Label;
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
 use semio_framework_plugin::NoDraft;
@@ -33,7 +30,7 @@ use semio_framework_plugin::NoTransient;
 use semio_framework_plugin::NoTransientMutation;
 use semio_framework_plugin::StandardId;
 use semio_framework_plugin::SubsetId;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_ui_locale::Label;
 
 //#region 🔖️Dialect
 /// 🪪️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1: the canonical surface-id
@@ -48,18 +45,6 @@ pub const XLSX_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.xlsx", stand
 //#endregion 🔖️Dialect
 
 //#region 🔖️TableProjection
-/// 🧮 Flattens every sheet's cells into one row-per-cell projection — `(sheet, row, col, value)`.
-/// Picked over a fixed "render one sheet" first pass because a workbook this artifact composes may
-/// hold any number of sheets, and hiding every sheet but one would silently drop data from view;
-/// this flat projection stays lossless and uniform regardless of sheet count. Row order is sheets in
-/// `workbook.sheets` storage order, then each sheet's own `cells` storage order (sparse, never
-/// re-sorted). Editing uses each row's worksheet name and native row/column identity, independent
-/// of this display order.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn xlsx_flat_cells(document: &XlsxSnapshot) -> Vec<(String, u32, u32, XlsxCellValue)> {
-    document.project_workbook().map_or_else(|_| Vec::new(), |workbook| workbook.sheets.into_iter().flat_map(|sheet| sheet.cells.into_iter().map(move |cell| (sheet.name.clone(), cell.row, cell.col, cell.value))).collect())
-}
-
 /// 🔎 Renders one cell value to display text. `SharedString` resolves against this document's own
 /// `workbook.shared_strings` (the typed semantic view's own index-keyed table — never `opc`'s raw
 /// XML, see the snapshot module's own doc comment on why the two must stay distinct); an
@@ -187,6 +172,29 @@ impl ArtifactEditor for XlsxEditor {
     const DIALECT: Dialect = XLSX_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_XLSX_DOCUMENT_SCHEMA;
 
+    fn natural_file_codec() -> Option<semio_framework_plugin::NaturalFileCodec> {
+        Some(semio_framework_plugin::NaturalFileCodec {
+            format_kind: "s.stdio.xlsx@ecma-376",
+            extension: ".xlsx",
+            media_type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            binary: true,
+        })
+    }
+
+    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
+        crate::standards::v_ecma_376::subsets::base::io::export::serializers::encode_xlsx(snapshot)
+            .map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
+    }
+
+    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
+        crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_xlsx(bytes)
+            .map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
+    }
+
+    fn whole_document_operation(snapshot: Self::Snapshot) -> Option<Self::Mutation> {
+        Some(XlsxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
+    }
+
     semio_s_artifact_stdio_contract::snapshot_details_editor_support! {
         owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/✏️editor/🦀️.rs",
         controller: "s.stdio.xlsx@ecma-376/*#editor",
@@ -199,10 +207,10 @@ impl ArtifactEditor for XlsxEditor {
         semio_s_artifact_stdio_contract::editing::snapshot_editing_command_id(command, |_| "set-cell")
     }
 
-    fn agent_target_revision(_action: &str, args: &dsl::DslValue, doc: &semio_framework_plugin::ArtifactView<'_, Self::Snapshot>) -> Result<Option<String>, Fault> {
+    fn agent_target_revision(_action: &str, args: &semio_framework_value::DslValue, doc: &semio_framework_plugin::ArtifactView<'_, Self::Snapshot>) -> Result<Option<String>, Fault> {
         xlsx_agent_target_revision(doc.snapshot, args)
     }
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
         semio_s_artifact_stdio_contract::editing::snapshot_editing_command_from_action(action, args, |action, args| match action {
             "set-cell" => {
                 let edit = semio_s_artifact_stdio_contract::window_kit_stable_cell_edit(args)?;
@@ -236,9 +244,12 @@ impl ArtifactEditor for XlsxEditor {
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot, view_state.locale, &semio_framework_plugin::TreeWindows::for_body(view_state, main::BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
+            main::BODY_KEY => {
+                let publication_revision = semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?;
+                main::render(doc.snapshot, view_state.locale, &semio_framework_plugin::TreeWindows::for_body(view_state, main::BODY_KEY), publication_revision).map(semio_framework_plugin::built_to_component_tree)
+            }
             semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY => semio_s_artifact_stdio_contract::editing::render_snapshot_details(
-                doc.snapshot,
+                doc,
                 view_state.locale,
                 "s.stdio.xlsx@ecma-376/*#editor",
                 &semio_framework_plugin::TreeWindows::for_body(view_state, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY),
@@ -251,34 +262,59 @@ impl ArtifactEditor for XlsxEditor {
 
 /// 🔐️ The token an agent's omitted `set-cell` revision is admitted against: the addressed cell's own token, as its rendered
 /// binding carries it; a stale address is refused exactly as the edit itself would refuse it.
-pub(crate) fn xlsx_agent_target_revision(snapshot: &XlsxSnapshot, args: &dsl::DslValue) -> Result<Option<String>, Fault> {
+pub(crate) fn xlsx_agent_target_revision(snapshot: &XlsxSnapshot, args: &semio_framework_value::DslValue) -> Result<Option<String>, Fault> {
     let sheet_name = semio_s_artifact_stdio_contract::window_kit_required_text_argument(Some(args), "sheetName")?;
     let row = semio_s_artifact_stdio_contract::window_kit_required_index_argument(Some(args), "row")?;
     let column = semio_s_artifact_stdio_contract::window_kit_required_index_argument(Some(args), "column")?;
-    xlsx_cell_address(snapshot, &sheet_name, row, column).map(|address| Some(address.revision)).map_err(|message| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.xlsx.cell-stale"), message))
+    xlsx_cell_target_revision(snapshot, &sheet_name, row, column).map(Some).map_err(|message| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.xlsx.cell-stale"), message))
 }
 
 fn xlsx_set_cell_emit(snapshot: &XlsxSnapshot, command: &XlsxEditorCommand) -> Result<Emit<XlsxMutation>, Fault> {
     let XlsxEditorCommand::SetCell { sheet_name, row, column, revision, value } = command;
-    let workbook = snapshot.project_workbook().map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.xlsx.projection-invalid"), error.to_string()))?;
-    let sheet = workbook
-        .sheets
-        .iter()
-        .find(|sheet| sheet.name == *sheet_name)
-        .ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.xlsx.sheet-stale"), format!("worksheet '{sheet_name}' no longer exists")))?;
-    let cell = sheet
-        .cells
-        .iter()
-        .find(|cell| cell.row == *row && cell.col == *column)
-        .ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.xlsx.cell-stale"), format!("cell {sheet_name}!{row},{column} no longer exists")))?;
-    let address = xlsx_cell_address(snapshot, sheet_name, *row, *column).map_err(|message| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.xlsx.cell-stale"), message))?;
-    if address.revision != *revision {
-        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.xlsx.cell-conflict"), format!("cell {sheet_name}!{row},{column} changed before this draft was applied")));
+    xlsx_set_cell_emit_fields(snapshot, sheet_name, *row, *column, revision, value, "stdio.xlsx")
+}
+
+pub(crate) fn xlsx_set_cell_emit_fields(snapshot: &XlsxSnapshot, sheet_name: &str, row: u32, column: u32, revision: &str, value: &str, fault_prefix: &'static str) -> Result<Emit<XlsxMutation>, Fault> {
+    let fault = |suffix: &'static str, message: String| {
+        Fault::new(
+            semio_framework_plugin::FaultOrigin::App,
+            semio_framework_plugin::FaultCode::new(match (fault_prefix, suffix) {
+                ("stdio.xlsx.strict", "projection-invalid") => "stdio.xlsx.strict.projection-invalid",
+                ("stdio.xlsx.strict", "sheet-stale") => "stdio.xlsx.strict.sheet-stale",
+                ("stdio.xlsx.strict", "cell-stale") => "stdio.xlsx.strict.cell-stale",
+                ("stdio.xlsx.strict", "cell-conflict") => "stdio.xlsx.strict.cell-conflict",
+                ("stdio.xlsx.transitional", "projection-invalid") => "stdio.xlsx.transitional.projection-invalid",
+                ("stdio.xlsx.transitional", "sheet-stale") => "stdio.xlsx.transitional.sheet-stale",
+                ("stdio.xlsx.transitional", "cell-stale") => "stdio.xlsx.transitional.cell-stale",
+                ("stdio.xlsx.transitional", "cell-conflict") => "stdio.xlsx.transitional.cell-conflict",
+                (_, "projection-invalid") => "stdio.xlsx.projection-invalid",
+                (_, "sheet-stale") => "stdio.xlsx.sheet-stale",
+                (_, "cell-conflict") => "stdio.xlsx.cell-conflict",
+                _ => "stdio.xlsx.cell-stale",
+            }),
+            message,
+        )
+    };
+    let workbook = snapshot.project_workbook().map_err(|error| fault("projection-invalid", error.to_string()))?;
+    let sheet = workbook.sheets.iter().find(|sheet| sheet.name == sheet_name).ok_or_else(|| fault("sheet-stale", format!("worksheet '{sheet_name}' no longer exists")))?;
+    if let Some(cell) = sheet.cells.iter().find(|cell| cell.row == row && cell.col == column) {
+        let address = xlsx_cell_address(snapshot, sheet_name, row, column).map_err(|message| fault("cell-stale", message))?;
+        if address.revision != revision {
+            return Err(fault("cell-conflict", format!("cell {sheet_name}!{row},{column} changed before this draft was applied")));
+        }
+        if render_xlsx_cell_value(&cell.value, &workbook.shared_strings) == value {
+            return Ok(Emit::default());
+        }
+        return Ok(Emit { artifact_mutations: vec![XlsxMutation::SetCell(set_cell::SetCell { address, value: parse_xlsx_cell_value(value) })], ..Default::default() });
     }
-    if render_xlsx_cell_value(&cell.value, &workbook.shared_strings) == *value {
+    let address = xlsx_cell_vacancy_address(snapshot, sheet_name, row, column).map_err(|message| fault("cell-stale", message))?;
+    if address.worksheet.revision != revision {
+        return Err(fault("cell-conflict", format!("cell vacancy {sheet_name}!{row},{column} changed before this draft was applied")));
+    }
+    if value.is_empty() {
         return Ok(Emit::default());
     }
-    Ok(Emit { artifact_mutations: vec![XlsxMutation::SetCell(set_cell::SetCell { address, value: parse_xlsx_cell_value(value) })], ..Default::default() })
+    Ok(Emit { artifact_mutations: vec![XlsxMutation::InsertCell(insert_cell::InsertCell { address, value: parse_xlsx_cell_value(value) })], ..Default::default() })
 }
 
 impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for XlsxEditor {
@@ -290,7 +326,7 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for XlsxEdi
     }
 
     fn snapshot_edit_mutations(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| XlsxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_patch(event, snapshot, |patch| XlsxMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| XlsxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot })))
     }
 }
 

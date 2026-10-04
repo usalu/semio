@@ -1,4 +1,1 @@
-syntax = "proto3";
-package stdio.png.mutation;
-// 🧬️ change-gamma/ChangeGamma; complex fields follow the direct payload schema.
-message ChangeGammaMutation { bytes gama = 1; }
+syntax = "proto3"; package stdio.png.mutation; message ChangeGammaMutation { string revision = 1; optional uint32 gama = 2; }

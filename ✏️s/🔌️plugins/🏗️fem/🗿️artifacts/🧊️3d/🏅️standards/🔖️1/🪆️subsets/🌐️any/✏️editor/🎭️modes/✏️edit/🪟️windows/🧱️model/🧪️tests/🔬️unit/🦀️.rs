@@ -31,17 +31,17 @@ fn transform_utility_arms_the_gumball_over_the_selection() {
     let doc = crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_demo_snapshot();
     let window = Fem3dModelWindowConfig::default();
     let armed = model_scene(&doc, &window, &Fem3dInteractionSnapshot::selecting(["n20_l1"]), true);
-    let record: dsl::json::Value = dsl::json::parse(&armed.selection_json).expect("selection json");
-    assert_eq!(record.get("gumballActive").and_then(dsl::json::Value::as_bool), Some(true));
-    assert_eq!(record.get("gumballLiveDispatch").and_then(dsl::json::Value::as_bool), Some(true));
-    assert_eq!(record.get("transformMode").and_then(dsl::json::Value::as_str), Some("transform"));
-    let pivot: Vec<f64> = record.get("gumballTarget").and_then(dsl::json::Value::as_array).expect("pivot").iter().filter_map(dsl::json::Value::as_f64).collect();
+    let record: semio_framework_pack_json::Value = semio_framework_pack_json::parse(&armed.selection_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("selection json");
+    assert_eq!(record.get("gumballActive").and_then(semio_framework_pack_json::Value::as_bool), Some(true));
+    assert_eq!(record.get("gumballLiveDispatch").and_then(semio_framework_pack_json::Value::as_bool), Some(true));
+    assert_eq!(record.get("transformMode").and_then(semio_framework_pack_json::Value::as_str), Some("transform"));
+    let pivot: Vec<f64> = record.get("gumballTarget").and_then(semio_framework_pack_json::Value::as_array).expect("pivot").iter().filter_map(semio_framework_pack_json::Value::as_f64).collect();
     assert_eq!(pivot, vec![8.0, 0.0, 2.8]);
     let idle = model_scene(&doc, &window, &Fem3dInteractionSnapshot::default(), true);
-    let record: dsl::json::Value = dsl::json::parse(&idle.selection_json).expect("selection json");
-    assert_eq!(record.get("gumballActive").and_then(dsl::json::Value::as_bool), Some(false));
+    let record: semio_framework_pack_json::Value = semio_framework_pack_json::parse(&idle.selection_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("selection json");
+    assert_eq!(record.get("gumballActive").and_then(semio_framework_pack_json::Value::as_bool), Some(false));
     let plain = model_scene(&doc, &window, &Fem3dInteractionSnapshot::selecting(["n20_l1"]), false);
-    let record: dsl::json::Value = dsl::json::parse(&plain.selection_json).expect("selection json");
+    let record: semio_framework_pack_json::Value = semio_framework_pack_json::parse(&plain.selection_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("selection json");
     assert!(record.get("transformMode").is_none(), "no gumball descriptor without the transform utility");
-    assert_eq!(record.get("ids").and_then(dsl::json::Value::as_array).map(Vec::len), Some(1));
+    assert_eq!(record.get("ids").and_then(semio_framework_pack_json::Value::as_array).map(Vec::len), Some(1));
 }

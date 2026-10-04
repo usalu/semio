@@ -89,8 +89,8 @@
         },
         {
           "mutationId": "change-altitude",
-          "sourceMutationDirectoryName": "❄change-altitude",
-          "mutationDirectoryName": "❄change-altitude",
+          "sourceMutationDirectoryName": "❄️change-altitude",
+          "mutationDirectoryName": "❄️change-altitude",
           "scenarios": [
             {
               "id": "apply",
@@ -111,8 +111,8 @@
         },
         {
           "mutationId": "change-north-german-lowland-snow",
-          "sourceMutationDirectoryName": "🏔change-north-german-lowland-snow",
-          "mutationDirectoryName": "🏔change-north-german-lowland-snow",
+          "sourceMutationDirectoryName": "🏔️change-north-german-lowland-snow",
+          "mutationDirectoryName": "🏔️change-north-german-lowland-snow",
           "scenarios": [
             {
               "id": "apply",
@@ -133,8 +133,8 @@
         },
         {
           "mutationId": "change-en-vb",
-          "sourceMutationDirectoryName": "🌬change-en-vb",
-          "mutationDirectoryName": "🌬change-en-vb",
+          "sourceMutationDirectoryName": "🌬️change-en-vb",
+          "mutationDirectoryName": "🌬️change-en-vb",
           "scenarios": [
             {
               "id": "apply",
@@ -243,8 +243,8 @@
         },
         {
           "mutationId": "change-assumed-delta-t",
-          "sourceMutationDirectoryName": "🌡change-assumed-delta-t",
-          "mutationDirectoryName": "🌡change-assumed-delta-t",
+          "sourceMutationDirectoryName": "🌡️change-assumed-delta-t",
+          "mutationDirectoryName": "🌡️change-assumed-delta-t",
           "scenarios": [
             {
               "id": "apply",
@@ -265,8 +265,8 @@
         },
         {
           "mutationId": "change-assumed-construction-qk",
-          "sourceMutationDirectoryName": "⚙change-assumed-construction-qk",
-          "mutationDirectoryName": "⚙change-assumed-construction-qk",
+          "sourceMutationDirectoryName": "⚙️change-assumed-construction-qk",
+          "mutationDirectoryName": "⚙️change-assumed-construction-qk",
           "scenarios": [
             {
               "id": "apply",
@@ -298,8 +298,8 @@
         },
         {
           "mutationId": "change-bridge-span",
-          "sourceMutationDirectoryName": "🏗change-bridge-span",
-          "mutationDirectoryName": "🏗change-bridge-span",
+          "sourceMutationDirectoryName": "🏗️change-bridge-span",
+          "mutationDirectoryName": "🏗️change-bridge-span",
           "scenarios": [
             {
               "id": "apply",
@@ -331,8 +331,8 @@
         },
         {
           "mutationId": "change-assumed-bridge-udl",
-          "sourceMutationDirectoryName": "🛣change-assumed-bridge-udl",
-          "mutationDirectoryName": "🛣change-assumed-bridge-udl",
+          "sourceMutationDirectoryName": "🛣️change-assumed-bridge-udl",
+          "mutationDirectoryName": "🛣️change-assumed-bridge-udl",
           "scenarios": [
             {
               "id": "apply",
@@ -364,8 +364,8 @@
         },
         {
           "mutationId": "change-storey-count",
-          "sourceMutationDirectoryName": "🏙change-storey-count",
-          "mutationDirectoryName": "🏙change-storey-count",
+          "sourceMutationDirectoryName": "🏙️change-storey-count",
+          "mutationDirectoryName": "🏙️change-storey-count",
           "scenarios": [
             {
               "id": "apply",
@@ -375,8 +375,8 @@
         },
         {
           "mutationId": "change-t-max",
-          "sourceMutationDirectoryName": "🌡change-t-max",
-          "mutationDirectoryName": "🌡change-t-max",
+          "sourceMutationDirectoryName": "🌡️change-t-max",
+          "mutationDirectoryName": "🌡️change-t-max",
           "scenarios": [
             {
               "id": "apply",
@@ -397,8 +397,8 @@
         },
         {
           "mutationId": "change-initial-temperature",
-          "sourceMutationDirectoryName": "🕰change-initial-temperature",
-          "mutationDirectoryName": "🕰change-initial-temperature",
+          "sourceMutationDirectoryName": "🕰️change-initial-temperature",
+          "mutationDirectoryName": "🕰️change-initial-temperature",
           "scenarios": [
             {
               "id": "apply",
@@ -408,8 +408,8 @@
         },
         {
           "mutationId": "change-thermal-element-type",
-          "sourceMutationDirectoryName": "🏗change-thermal-element-type",
-          "mutationDirectoryName": "🏗change-thermal-element-type",
+          "sourceMutationDirectoryName": "🏗️change-thermal-element-type",
+          "mutationDirectoryName": "🏗️change-thermal-element-type",
           "scenarios": [
             {
               "id": "apply",
@@ -463,8 +463,8 @@
         },
         {
           "mutationId": "change-fire-duration",
-          "sourceMutationDirectoryName": "⏱change-fire-duration",
-          "mutationDirectoryName": "⏱change-fire-duration",
+          "sourceMutationDirectoryName": "⏱️change-fire-duration",
+          "mutationDirectoryName": "⏱️change-fire-duration",
           "scenarios": [
             {
               "id": "apply",
@@ -474,8 +474,8 @@
         },
         {
           "mutationId": "change-assumed-gas-temperature",
-          "sourceMutationDirectoryName": "♨change-assumed-gas-temperature",
-          "mutationDirectoryName": "♨change-assumed-gas-temperature",
+          "sourceMutationDirectoryName": "♨️change-assumed-gas-temperature",
+          "mutationDirectoryName": "♨️change-assumed-gas-temperature",
           "scenarios": [
             {
               "id": "apply",
@@ -496,8 +496,8 @@
         },
         {
           "mutationId": "change-fire-compartment-area",
-          "sourceMutationDirectoryName": "🗺change-fire-compartment-area",
-          "mutationDirectoryName": "🗺change-fire-compartment-area",
+          "sourceMutationDirectoryName": "🗺️change-fire-compartment-area",
+          "mutationDirectoryName": "🗺️change-fire-compartment-area",
           "scenarios": [
             {
               "id": "apply",
@@ -683,8 +683,8 @@
         },
         {
           "mutationId": "change-silo-kind",
-          "sourceMutationDirectoryName": "⚖change-silo-kind",
-          "mutationDirectoryName": "⚖change-silo-kind",
+          "sourceMutationDirectoryName": "⚖️change-silo-kind",
+          "mutationDirectoryName": "⚖️change-silo-kind",
           "scenarios": [
             {
               "id": "apply",
@@ -705,8 +705,8 @@
         },
         {
           "mutationId": "change-silo-height",
-          "sourceMutationDirectoryName": "🏷change-silo-height",
-          "mutationDirectoryName": "🏷change-silo-height",
+          "sourceMutationDirectoryName": "🏷️change-silo-height",
+          "mutationDirectoryName": "🏷️change-silo-height",
           "scenarios": [
             {
               "id": "apply",
@@ -815,8 +815,8 @@
         },
         {
           "mutationId": "change-wind-face-assumed-wp",
-          "sourceMutationDirectoryName": "🛡change-wind-face-assumed-wp",
-          "mutationDirectoryName": "🛡change-wind-face-assumed-wp",
+          "sourceMutationDirectoryName": "🛡️change-wind-face-assumed-wp",
+          "mutationDirectoryName": "🛡️change-wind-face-assumed-wp",
           "scenarios": [
             {
               "id": "apply",

@@ -13,15 +13,14 @@
 
 use crate::Block5dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
-use dsl::json;
-use dsl::os_pack::json::{array, Value};
+
+use semio_framework_pack_json::{array, Value};
 use super::bounds::{compute_block5d_bounds};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a block5d snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `bounds`, backed by the `📦bounds/` slug dir).
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -32,8 +31,11 @@ pub struct Block5dInference {
 }
 
 impl protocol::Inference<Block5dSnapshot> for Block5dInference {
-    fn infer(snapshot: &Block5dSnapshot) -> Self {
+    fn infer(snapshot: &Block5dSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { bounds: compute_block5d_bounds(snapshot) }
+    
+        })
     }
 }
 
@@ -50,13 +52,6 @@ impl protocol::InferenceSpec<Block5dSnapshot> for Block5dInference {
 }
 //#endregion 🔖️Inference
 
-//#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::Block5dBuilder {
-    type Snapshot = Block5dSnapshot;
-    type Inference = Block5dInference;
-}
-//#endregion 🔖️ArtifactInferrer
-
 //#region 🔖️PuzzleCatalogFragment
 /// 🌉️ Maps this `PartKind` definition into the `s/plugin/puzzle` 5d catalog shape
 /// (`Puzzle5dKindCatalogs`: `parts`/`grips`/`fasteners`/`ropes`), the seam puzzle imports through its
@@ -67,7 +62,7 @@ pub fn puzzle5d_catalog_fragment(definition: &Block5dSnapshot) -> Value {
         .grips
         .iter()
         .map(|grip| {
-            json!({
+            semio_framework_pack_json::json!({
                 "gripKind": grip.grip_kind.as_str(),
                 "2d": { "angle": grip.angle, "gripKind": grip.grip_kind.as_str(), "radius": grip.radius_2d },
                 "3d": { "position": vec3(grip.position), "direction": vec3(grip.direction), "radius": grip.radius_3d },
@@ -75,21 +70,21 @@ pub fn puzzle5d_catalog_fragment(definition: &Block5dSnapshot) -> Value {
         })
         .collect();
     let mesh_url = definition.representations.first().and_then(|representation| representation.mesh_url.clone());
-    let part = json!({
+    let part = semio_framework_pack_json::json!({
         "id": definition.part_kind.id.as_str(),
         "name": definition.part_kind.name.as_str(),
         "label": definition.part_kind.label.as_str(),
         "meshUrl": mesh_url,
         "grips": grips,
     });
-    let grip_kinds: Vec<Value> = definition.grip_kinds.iter().map(|kind| json!({ "id": kind.id.as_str(), "name": kind.name.as_str(), "label": kind.label.as_str(), "color": kind.color.as_str(), "defaultRopeKind": kind.default_rope_kind.as_str() })).collect();
-    json!({
+    let grip_kinds: Vec<Value> = definition.grip_kinds.iter().map(|kind| semio_framework_pack_json::json!({ "id": kind.id.as_str(), "name": kind.name.as_str(), "label": kind.label.as_str(), "color": kind.color.as_str(), "defaultRopeKind": kind.default_rope_kind.as_str() })).collect();
+    semio_framework_pack_json::json!({
         "schema": "manifest",
         "parts": [part],
         "grips": grip_kinds,
         "fasteners": Vec::<Value>::new(),
         "ropes": Vec::<Value>::new(),
-        "kindCompatibility": definition.compatibility.iter().map(|rule| json!({ "source": rule.source.as_str(), "target": rule.target.as_str(), "bidirectional": rule.bidirectional })).collect::<Vec<Value>>(),
+        "kindCompatibility": definition.compatibility.iter().map(|rule| semio_framework_pack_json::json!({ "source": rule.source.as_str(), "target": rule.target.as_str(), "bidirectional": rule.bidirectional })).collect::<Vec<Value>>(),
     })
 }
 //#endregion 🔖️PuzzleCatalogFragment

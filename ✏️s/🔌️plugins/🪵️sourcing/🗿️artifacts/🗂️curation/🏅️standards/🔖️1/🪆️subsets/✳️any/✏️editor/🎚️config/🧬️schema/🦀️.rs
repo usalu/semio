@@ -2,7 +2,7 @@
 
 use framework_schema::ArtifactSchema;
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.sourcing.curation.config")]
 pub struct SourcingCurationConfig {

@@ -1,0 +1,13 @@
+{
+  "kindUnit": " \u2003\t",
+  "repeat": 40000,
+  "utf8Bytes": 200000,
+  "unicodeScalars": 120000,
+  "cancelAfterBytes": 65536,
+  "phase": "encodeNative",
+  "encodings": ["binary", "text"],
+  "cancellationKind": "canceled",
+  "completedValidationKind": "invalidValue",
+  "ownedScanBytes": 0,
+  "validationAfterCensus": true
+}

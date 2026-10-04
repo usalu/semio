@@ -3,7 +3,7 @@ use super::*;
 #[test]
 fn text_edit_requires_an_explicit_text_value_and_allows_empty_documents() {
     assert!(txt_command_from_action(TXT_KIT_ACTION_ID, None).is_err());
-    let args = dsl::DslValue::object([("revision".into(), dsl::DslValue::String("revision".into())), ("text".into(), dsl::DslValue::String(String::new()))]);
+    let args = semio_framework_value::DslValue::object([("revision".into(), semio_framework_value::DslValue::String("revision".into())), ("text".into(), semio_framework_value::DslValue::String(String::new()))]);
     assert_eq!(txt_command_from_action(TXT_KIT_ACTION_ID, Some(&args)).expect("explicit empty text"), TxtEditorCommand::ReplaceText { revision: "revision".into(), text: String::new() });
 }
 
@@ -38,6 +38,21 @@ async fn native_body_codec_preserves_crlf_extra_carriage_returns_and_empty_text(
     for source in ["a\nb\n", "a\nb", "", "a\r\r\nb\r\n"] {
         assert_eq!(TxtSnapshot::from_body(source).to_body(), source);
     }
+}
+
+#[test]
+fn natural_file_route_exports_utf8_and_reopens_through_one_mutation() {
+    let edited = TxtSnapshot::from_body("Natural Open Save\r\nGrüße 🌍\r\n");
+    let bytes = <TxtEditor as ArtifactEditor>::encode_natural_file(&edited).expect("TXT natural bytes");
+    let (lines, trailing_newline, is_crlf) = semio_s_artifact_stdio_txt_test_oracle::standards::v_utf_8::subsets::any::bstr_split(&bytes).expect("bstr reads exported TXT");
+    assert_eq!(lines, edited.lines);
+    assert!(trailing_newline);
+    assert!(is_crlf);
+    let reopened = <TxtEditor as ArtifactEditor>::decode_natural_file(&bytes).expect("TXT natural bytes reopen");
+    let Some(TxtMutation::SetSnapshot(SetSnapshotMutation { snapshot: opened })) = <TxtEditor as ArtifactEditor>::whole_document_operation(reopened) else {
+        panic!("natural TXT opens through one event-sourced snapshot mutation")
+    };
+    assert_eq!(opened, edited);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -102,7 +117,7 @@ fn an_applied_text_is_its_net_line_leaves() {
     let emit = |text: &str| txt_emit(&TxtEditorCommand::ReplaceText { revision: revision.clone(), text: text.into() }, &snapshot, None).expect("a native replacement");
     let changed = emit("alpha\nBETA\ngamma\n");
     assert!(matches!(changed.artifact_mutations.as_slice(), [TxtMutation::SetLine(set)] if (set.index, set.text.as_str()) == (1, "BETA")), "{:?}", changed.artifact_mutations);
-    assert!(changed.description.is_none(), "the history row is labelled from its leaf");
+    assert_eq!(<TxtMutation as protocol::SemanticMutation<TxtSnapshot>>::label(&changed.artifact_mutations[0]), semio_framework_ui_locale::LocalizedLabel::native("Set Line", "Zeile setzen"), "the history row is labelled from its leaf in every supported locale");
     let added = emit("alpha\nbeta\ndelta\ngamma\n");
     assert!(matches!(added.artifact_mutations.as_slice(), [TxtMutation::InsertLine(insert)] if (insert.index, insert.text.as_str()) == (2, "delta")), "{:?}", added.artifact_mutations);
     let dropped = emit("alpha\ngamma\n");
@@ -115,7 +130,7 @@ fn an_applied_text_is_its_net_line_leaves() {
 fn invariant_refusals_are_fatal() {
     let terminated = TxtSnapshot::from_body("only\n");
     let outcome = <TxtMutation as protocol::Mutation<TxtSnapshot>>::diff(&TxtMutation::RemoveLine(RemoveLineMutation { index: 0 }), &terminated);
-    assert_eq!(outcome.messages().iter().map(|message| (message.code.0.as_str(), message.level)).collect::<Vec<_>>(), vec![("mutation.invariant", protocol::Severity::Fatal)]);
+    assert_eq!(outcome.messages().iter().map(|message| (message.code.0.as_str(), message.level)).collect::<Vec<_>>(), vec![("mutation.invariant", semio_framework_diagnostic::Severity::Fatal)]);
     assert_eq!(outcome.diff(), &Default::default());
 }
 
@@ -165,7 +180,7 @@ async fn the_curated_example_carries_visible_content() {
 #[semio_framework_async_macros::async_test]
 async fn the_shell_action_pair_resolves_into_the_typed_command() {
     for key in ["exampleId", "example_id", "id", "value"] {
-        let args = dsl::DslValue::object([(key.to_string(), dsl::DslValue::String("demo".into()))]);
+        let args = semio_framework_value::DslValue::object([(key.to_string(), semio_framework_value::DslValue::String("demo".into()))]);
         assert_eq!(txt_command_from_action(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, Some(&args)).expect("declared verb"), TxtEditorCommand::SetActiveExample { example_id: "demo".into() });
     }
     assert!(txt_command_from_action("noSuchVerb", None).is_err());
@@ -181,7 +196,7 @@ async fn kit_fixture_holding(document: &TxtSnapshot) -> KitFixtureApp {
     use semio_framework_plugin::PluginApp;
     let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<TxtEditor>, _>(async { semio_framework_plugin::App { definition: create_txt_editor(), examples: Vec::new() } }).await;
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(document, STDIO_TXT_DOCUMENT_SCHEMA) else { panic!("the example switch hands the host one whole document") };
-    app.load_document_pack(&store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.expect("the host loads the example document");
+    semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.expect("the host loads the example document");
     app
 }
 
@@ -190,7 +205,7 @@ async fn kit_fixture_holding(document: &TxtSnapshot) -> KitFixtureApp {
 async fn dispatch_settled(app: &mut KitFixtureApp, action: &str, args: &[(&str, &str)]) -> Result<(), Fault> {
     use semio_framework_plugin::PluginApp;
     let meta = semio_framework_plugin::artifact_app_laws::meta("local");
-    let args = dsl::DslValue::object(args.iter().map(|(key, value)| ((*key).to_string(), dsl::DslValue::String((*value).to_string()))).collect::<Vec<_>>());
+    let args = semio_framework_value::DslValue::object(args.iter().map(|(key, value)| ((*key).to_string(), semio_framework_value::DslValue::String((*value).to_string()))).collect::<Vec<_>>());
     app.handle_action(action, Some(&args), &meta).await?;
     semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id).await.map(|_| ())
 }

@@ -17,6 +17,7 @@ import type { SetSnapshot } from './📸️set-snapshot/🟦️.ts';
 import type { DrawLayer, DrawNode, DrawStyle, PathSegment, Rgba, SemioPoint2 } from "../📸️snapshot/🟦️";
 
 import type {SemioPoint3,SemioQuaternion,SemioTransform} from "../../../✉️base/🧬️schema/🧮️geometry/🟦️.ts";
+import type { SnapshotPatch } from '../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts';
 export type {SemioPoint3,SemioQuaternion,SemioTransform} from "../../../✉️base/🧬️schema/🧮️geometry/🟦️.ts";
 
 export interface NodePath {
@@ -126,4 +127,5 @@ export type SemioDrawingMutation =
   | { ReplaceFill: ReplaceFill }
   | { ChangeStrokeColor: ChangeStrokeColor }
   | { ChangeStrokeWidth: ChangeStrokeWidth }
-  | { SetSnapshot: SetSnapshot };
+  | { SetSnapshot: SetSnapshot }
+  | { readonly PatchSnapshot: { readonly patch: SnapshotPatch } };

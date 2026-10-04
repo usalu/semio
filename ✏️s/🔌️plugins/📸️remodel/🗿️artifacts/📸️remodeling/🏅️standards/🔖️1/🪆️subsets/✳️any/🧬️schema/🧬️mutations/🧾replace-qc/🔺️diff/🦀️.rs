@@ -9,7 +9,7 @@ pub fn diff(payload: &super::ReplaceQc, base: &RemodelingSnapshot) -> protocol::
         return protocol::MutationOutcome::error("mutation.target-missing", "There is no QC report to clear.".to_string(), [base.id.clone()]);
     }
     if payload.qc == base.results.qc {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "QC report is already up to date.".to_string());
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "QC report is already up to date.".to_string());
     }
     let mut results = base.results.clone();
     results.qc = payload.qc.clone();

@@ -7,7 +7,7 @@ fn sample_jpg() -> JpgSnapshot {
 
 #[semio_framework_async_macros::async_test]
 async fn maps_pixels_and_comment() {
-    let semio = semio_framework_plugin::resolve_ready(SemioImageFromJpg::deserialize(&sample_jpg())).expect("deserialize");
+    let semio = ::semio_framework_async::poll::resolve_ready(SemioImageFromJpg::deserialize(&sample_jpg())).expect("deserialize");
     assert_eq!(semio.width, 2);
     assert_eq!(semio.height, 1);
     assert_eq!(semio.colorspace, SemioColorspace::Rgb);

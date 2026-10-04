@@ -6,7 +6,8 @@ use crate::EnergyModelSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ A refused or no-op forward step has nothing to undo, so it answers with no steps at all.
-pub fn inverse(payload: &super::RemoveConstructionLayer, base: &EnergyModelSnapshot) -> Vec<EnergyModelMutation> {
+pub fn inverse(payload: &super::RemoveConstructionLayer, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.model.constructions.iter().find(|item| item.id == payload.id) {
         Some(construction) => match construction.layer_material_ids.get(payload.index as usize) {
             Some(material_id) => vec![vocabulary::add_construction_layer(payload.id, payload.index, *material_id)],
@@ -14,5 +15,7 @@ pub fn inverse(payload: &super::RemoveConstructionLayer, base: &EnergyModelSnaps
         },
         None => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

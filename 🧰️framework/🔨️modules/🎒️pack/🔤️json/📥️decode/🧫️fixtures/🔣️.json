@@ -1,0 +1,304 @@
+{
+  "contract": "json-controlled-syntax-decoding",
+  "cases": [
+    {
+      "id": "null",
+      "source": "null",
+      "policy": "Reject",
+      "expected": {
+        "kind": "null"
+      }
+    },
+    {
+      "id": "true",
+      "source": "true",
+      "policy": "Reject",
+      "expected": {
+        "kind": "boolean",
+        "value": true
+      }
+    },
+    {
+      "id": "false",
+      "source": "false",
+      "policy": "Reject",
+      "expected": {
+        "kind": "boolean",
+        "value": false
+      }
+    },
+    {
+      "id": "large-integer",
+      "source": "9007199254740993",
+      "policy": "Reject",
+      "expected": {
+        "kind": "number",
+        "text": "9007199254740993"
+      }
+    },
+    {
+      "id": "large-exponent",
+      "source": "1e9999",
+      "policy": "Reject",
+      "expected": {
+        "kind": "number",
+        "text": "1e9999"
+      }
+    },
+    {
+      "id": "signed-zero",
+      "source": "-0",
+      "policy": "Reject",
+      "expected": {
+        "kind": "number",
+        "text": "-0"
+      }
+    },
+    {
+      "id": "decimal",
+      "source": "1.250e+03",
+      "policy": "Reject",
+      "expected": {
+        "kind": "number",
+        "text": "1.250e+03"
+      }
+    },
+    {
+      "id": "unicode",
+      "source": "\"ä😀\"",
+      "policy": "Reject",
+      "expected": {
+        "kind": "string",
+        "value": "ä😀"
+      }
+    },
+    {
+      "id": "escaped-string",
+      "source": "\"a\\/b\\n\\u0061\\ud83d\\ude00\"",
+      "policy": "Reject",
+      "expected": {
+        "kind": "string",
+        "value": "a/b\na😀"
+      }
+    },
+    {
+      "id": "lone-escaped-surrogate",
+      "source": "\"\\ud800\"",
+      "policy": "Reject",
+      "expected": {
+        "kind": "string",
+        "value": "\ud800"
+      }
+    },
+    {
+      "id": "prototype-name",
+      "source": "{\"__proto__\":1,\"constructor\":2}",
+      "policy": "Reject",
+      "expected": {
+        "kind": "object",
+        "members": [
+          {
+            "name": "__proto__",
+            "value": {
+              "kind": "number",
+              "text": "1"
+            }
+          },
+          {
+            "name": "constructor",
+            "value": {
+              "kind": "number",
+              "text": "2"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "nested",
+      "source": " [true,{\"a\":null},[\"x\"]] \r\n",
+      "policy": "Reject",
+      "expected": {
+        "kind": "array",
+        "items": [
+          {
+            "kind": "boolean",
+            "value": true
+          },
+          {
+            "kind": "object",
+            "members": [
+              {
+                "name": "a",
+                "value": {
+                  "kind": "null"
+                }
+              }
+            ]
+          },
+          {
+            "kind": "array",
+            "items": [
+              {
+                "kind": "string",
+                "value": "x"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "replace-position",
+      "source": "{\"z\":1,\"a\":2,\"z\":3}",
+      "policy": "Replace",
+      "expected": {
+        "kind": "object",
+        "members": [
+          {
+            "name": "z",
+            "value": {
+              "kind": "number",
+              "text": "3"
+            }
+          },
+          {
+            "name": "a",
+            "value": {
+              "kind": "number",
+              "text": "2"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "duplicate",
+      "source": "{\"a\":1,\"a\":2}",
+      "policy": "Reject",
+      "expected": {
+        "error": "duplicate-member"
+      }
+    },
+    {
+      "id": "escaped-duplicate",
+      "source": "{\"a\":1,\"\\u0061\":2}",
+      "policy": "Reject",
+      "expected": {
+        "error": "duplicate-member"
+      }
+    },
+    {
+      "id": "slash-duplicate",
+      "source": "{\"a/b\":1,\"a\\/b\":2}",
+      "policy": "Reject",
+      "expected": {
+        "error": "duplicate-member"
+      }
+    },
+    {
+      "id": "emoji-duplicate",
+      "source": "{\"😀\":1,\"\\ud83d\\ude00\":2}",
+      "policy": "Reject",
+      "expected": {
+        "error": "duplicate-member"
+      }
+    },
+    {
+      "id": "trailing-comma",
+      "source": "[1,]",
+      "policy": "Reject",
+      "expected": {
+        "error": "malformed-json"
+      }
+    },
+    {
+      "id": "leading-zero",
+      "source": "01",
+      "policy": "Reject",
+      "expected": {
+        "error": "malformed-json"
+      }
+    },
+    {
+      "id": "incomplete-exponent",
+      "source": "1e+",
+      "policy": "Reject",
+      "expected": {
+        "error": "malformed-json"
+      }
+    },
+    {
+      "id": "incomplete-fraction",
+      "source": "1.",
+      "policy": "Reject",
+      "expected": {
+        "error": "malformed-json"
+      }
+    },
+    {
+      "id": "bad-escape",
+      "source": "\"\\x00\"",
+      "policy": "Reject",
+      "expected": {
+        "error": "malformed-json"
+      }
+    },
+    {
+      "id": "control-character",
+      "source": "\"\n\"",
+      "policy": "Reject",
+      "expected": {
+        "error": "malformed-json"
+      }
+    },
+    {
+      "id": "wrong-whitespace",
+      "source": " null",
+      "policy": "Reject",
+      "expected": {
+        "error": "malformed-json"
+      }
+    },
+    {
+      "id": "comment",
+      "source": "/*x*/null",
+      "policy": "Reject",
+      "expected": {
+        "error": "malformed-json"
+      }
+    },
+    {
+      "id": "object-delimiter",
+      "source": "{\"a\" 1}",
+      "policy": "Reject",
+      "expected": {
+        "error": "malformed-json"
+      }
+    },
+    {
+      "id": "trailing-token",
+      "source": "true false",
+      "policy": "Reject",
+      "expected": {
+        "error": "malformed-json"
+      }
+    },
+    {
+      "id": "empty",
+      "source": "",
+      "policy": "Reject",
+      "expected": {
+        "error": "malformed-json"
+      }
+    },
+    {
+      "id": "raw-lone-surrogate",
+      "source": "\"\ud800\"",
+      "policy": "Reject",
+      "expected": {
+        "error": "invalid-unicode"
+      }
+    }
+  ]
+}

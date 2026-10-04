@@ -23,6 +23,16 @@ message SemioMaterialDiff {
   semio.s_stdio_semio_mesh.snapshot.SemioRgba base_color = 1;
   optional float metallic = 2;
   optional float roughness = 3;
+  optional string base_color_texture = 4;
+  optional string metallic_roughness_texture = 5;
+  optional string normal_texture = 6;
+  optional string occlusion_texture = 7;
+  optional string emissive_texture = 8;
+  bool has_base_color_texture = 9;
+  bool has_metallic_roughness_texture = 10;
+  bool has_normal_texture = 11;
+  bool has_occlusion_texture = 12;
+  bool has_emissive_texture = 13;
 }
 
 message SemioTextureDiff {

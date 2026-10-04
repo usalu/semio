@@ -1,5 +1,5 @@
 /// 📷️ Persisted local viewport transform for one concrete Writer main window.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::DslRecord, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct WriterCamera {
@@ -21,7 +21,7 @@ impl Default for WriterCamera {
 }
 
 /// ⚙️ Persisted local editor chrome for one concrete Writer main window.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::DslRecord, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase", default)]
 #[value(rename_all = "camelCase", default)]
 pub struct WriterEditorSettings {
@@ -45,10 +45,10 @@ pub fn default_camera() -> WriterCamera {
     WriterCamera { x: 0.0, y: 0.0, zoom: 1.0 }
 }
 
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::DslArtifact, dsl::ToValue, dsl::FromValue)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_os_kernel::DslArtifact, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase", default)]
 #[value(rename_all = "camelCase", default)]
-#[dsl(extension = "writer.mainwindowconfig")]
+#[artifact(extension = "writer.mainwindowconfig")]
 #[dsl(layout = "lines")]
 pub struct WriterMainWindowConfig {
     #[dsl(block)]

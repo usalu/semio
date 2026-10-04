@@ -52,7 +52,7 @@ fn granularity_toggle(id: &str, icon: &str, label: LabelText, granularity_id: &s
         text: None,
         on_change: lowpoly_window_action(
             "setInteractionGranularity",
-            Some(dsl::DslValue::object([("domainId".to_string(), dsl::DslValue::String(MESH_INTERACTION_DOMAIN.to_string())), ("granularityId".to_string(), dsl::DslValue::String(granularity_id.to_string()))])),
+            Some(semio_framework_value::DslValue::object([("domainId".to_string(), semio_framework_value::DslValue::String(MESH_INTERACTION_DOMAIN.to_string())), ("granularityId".to_string(), semio_framework_value::DslValue::String(granularity_id.to_string()))])),
         ),
     }
 }
@@ -67,7 +67,7 @@ fn selection_mode_toggle(id: &str, icon: &str, label: LabelText, mode: &str, pre
         text: None,
         on_change: lowpoly_window_action(
             "setSelectionMode",
-            Some(dsl::DslValue::object([("domainId".to_string(), dsl::DslValue::String(MESH_INTERACTION_DOMAIN.to_string())), ("mode".to_string(), dsl::DslValue::String(mode.to_string()))])),
+            Some(semio_framework_value::DslValue::object([("domainId".to_string(), semio_framework_value::DslValue::String(MESH_INTERACTION_DOMAIN.to_string())), ("mode".to_string(), semio_framework_value::DslValue::String(mode.to_string()))])),
         ),
     }
 }

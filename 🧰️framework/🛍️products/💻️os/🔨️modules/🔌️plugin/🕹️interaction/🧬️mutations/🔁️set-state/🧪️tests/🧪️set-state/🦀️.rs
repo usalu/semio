@@ -9,7 +9,7 @@ fn local_interaction_mutation_leaf_descriptor_and_exact_codecs_are_owned() {
     let mutation = InteractionConfigMutation::set_state(state.clone());
     assert_eq!(::store::os_store::test_support::assert_wire_witness::<InteractionConfigMutation>(include_str!("../../🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json")), mutation);
     assert_eq!(InteractionConfigMutation::DESCRIPTORS.len(), 1);
-    assert_eq!(serde_json::Value::from(protocol::ToValue::to_value(mutation.descriptor())), descriptor);
+    assert_eq!(serde_json::Value::from(semio_framework_value::ToValue::to_value(mutation.descriptor())), descriptor);
     assert_eq!(mutation.descriptor(), &SetInteractionState::DESCRIPTOR);
     assert!(SetInteractionState::PROVENANCE.source_path.ends_with("/🔁️set-state/🦀️.rs"));
     assert_eq!(SetInteractionState::PROVENANCE.owner, mutation.descriptor().owner);
@@ -20,6 +20,6 @@ fn local_interaction_mutation_leaf_descriptor_and_exact_codecs_are_owned() {
     assert_eq!(serde_json::from_slice::<serde_json::Value>(&binary).unwrap(), source);
     assert_eq!(InteractionConfigMutation::decode_op(&binary).unwrap(), mutation);
     assert_eq!(mutation.apply(&InteractionState::default()).unwrap(), state);
-    let inverse = mutation.inverse(&InteractionState::default());
+    let inverse = mutation.inverse(&InteractionState::default()).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse[0].apply(&state).unwrap(), InteractionState::default());
 }

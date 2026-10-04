@@ -5,10 +5,13 @@ use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
 use crate::Generation2dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &RenameGeneration, base: &Generation2dSnapshot) -> Vec<Generation2dMutation> {
+pub fn inverse(payload: &RenameGeneration, base: &Generation2dSnapshot) -> Result<Vec<Generation2dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.generation.generations.iter().find(|entry| entry.id == payload.id) {
         Some(entry) => vec![rename_generation(payload.id.clone(), entry.name.clone())],
         None => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

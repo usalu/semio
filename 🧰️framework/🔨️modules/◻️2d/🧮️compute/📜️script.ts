@@ -9,9 +9,9 @@ import { cmdBudgetMs } from "../../🏃️process/⏱️budget/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (segments.length !== 1 || !["schema", "ownership"].includes(segments[0]!)) throw Error("Expected test schema or test ownership");
+    if (segments.length !== 1 || !["schema", "ownership", "neutral-ownership"].includes(segments[0]!)) throw Error("Expected test schema or test ownership");
     if (!process.env.SEMIO_TEST_ARTIFACT_DIR) throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
-    await runBudgetedTestCommand(process.execPath, ["test", resolve(this.root, segments[0] === "schema" ? "🧪️tests/🟦️.ts" : "🧪️tests/📍️ownership/🟦️.ts")], { cwd: this.root, budgetMs: testLevelBudgetMs(), env: process.env, throwOnFailure: true });
+    await runBudgetedTestCommand(process.execPath, ["test", resolve(this.root, segments[0] === "schema" ? "🧪️tests/🟦️.ts" : segments[0] === "ownership" ? "🧪️tests/📍️ownership/🟦️.ts" : "🧪️tests/📍️ownership/🧭️direction/🟦️.ts")], { cwd: this.root, budgetMs: testLevelBudgetMs(), env: process.env, throwOnFailure: true });
   }
 }
 

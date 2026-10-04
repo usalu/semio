@@ -1,60 +1,60 @@
 semio process.process3d.dsl v1
-stock-id=beam stock-label="Timber Beam" workshop=machines=[ id=saw label="Generic Saw" icon-id=scissors capabilities=[ id=cut label=Cut icon-id=scissors parameters=[ id=kerf label=Kerf value=0.05m id=length label=Length value=0.5m id=depth label=Depth value=0.5m ]
+stock-id=beam stock-label="Timber Beam" workshop=machines=[ { id=saw label="Generic Saw" icon-id=scissors capabilities=[ { id=cut label=Cut icon-id=scissors parameters=[ { id=kerf label=Kerf value=0.05m } { id=length label=Length value=0.5m } { id=depth label=Depth value=0.5m } ]
 rules {
 }
-blade-cut kerf=kerf length=length depth=depth ] id=drill label="Generic Drill" icon-id=circle-dot capabilities=[ id=drill label=Drill icon-id=circle-dot parameters=[ id=radius label=Radius value=0.05m id=depth label=Depth value=0.3m ]
+blade-cut kerf=kerf length=length depth=depth } ] } { id=drill label="Generic Drill" icon-id=circle-dot capabilities=[ { id=drill label=Drill icon-id=circle-dot parameters=[ { id=radius label=Radius value=0.05m } { id=depth label=Depth value=0.3m } ]
 rules {
 }
-bore-drill radius=radius depth=depth ] id=attacher label="Generic Attacher" icon-id=plus capabilities=[ id=attach label=Attach icon-id=plus parameters=[ id=radius label=Radius value=0.03m id=length label=Length value=0.2m ]
+bore-drill radius=radius depth=depth } ] } { id=attacher label="Generic Attacher" icon-id=plus capabilities=[ { id=attach label=Attach icon-id=plus parameters=[ { id=radius label=Radius value=0.03m } { id=length label=Length value=0.2m } ]
 rules {
 }
-cylinder-attach radius=radius length=length ] id=circularSaw label="Circular Saw" icon-id=scissors capabilities=[ id=crosscut label=Crosscut icon-id=scissors parameters=[ id=bladeDiameter label="Blade Diameter" value=0.184m id=kerf label=Kerf value=0.002m id=maxCutDepth label="Max Cut Depth" value=0.065m ]
+cylinder-attach radius=radius length=length } ] } { id=circularSaw label="Circular Saw" icon-id=scissors capabilities=[ { id=crosscut label=Crosscut icon-id=scissors parameters=[ { id=bladeDiameter label="Blade Diameter" value=0.184m } { id=kerf label=Kerf value=0.002m } { id=maxCutDepth label="Max Cut Depth" value=0.065m } ]
 rules {
   max quantity=height parameter=maxCutDepth margin=0m
 }
-disc-cut diameter=bladeDiameter kerf=kerf ] id=tableSaw label="Table Saw" icon-id=scissors capabilities=[ id=rip label=Rip icon-id=scissors parameters=[ id=bladeDiameter label="Blade Diameter" value=0.315m id=kerf label=Kerf value=0.0032m id=maxCutDepth label="Max Cut Depth" value=0.102m id=fenceWidth label="Fence Width" value=0.8m ]
+disc-cut diameter=bladeDiameter kerf=kerf } ] } { id=tableSaw label="Table Saw" icon-id=scissors capabilities=[ { id=rip label=Rip icon-id=scissors parameters=[ { id=bladeDiameter label="Blade Diameter" value=0.315m } { id=kerf label=Kerf value=0.0032m } { id=maxCutDepth label="Max Cut Depth" value=0.102m } { id=fenceWidth label="Fence Width" value=0.8m } ]
 rules {
   max quantity=height parameter=maxCutDepth margin=0m
   max quantity=width parameter=fenceWidth margin=0m
 }
-disc-cut diameter=bladeDiameter kerf=kerf ] id=bandSaw label="Band Saw" icon-id=scissors capabilities=[ id=curveCut label="Curve Cut" icon-id=scissors parameters=[ id=kerf label=Kerf value=0.0015m id=bladeLength label="Blade Length" value=0.5m id=maxCutHeight label="Max Cut Height" value=0.3m id=throatDepth label="Throat Depth" value=0.44m ]
+disc-cut diameter=bladeDiameter kerf=kerf } ] } { id=bandSaw label="Band Saw" icon-id=scissors capabilities=[ { id=curveCut label="Curve Cut" icon-id=scissors parameters=[ { id=kerf label=Kerf value=0.0015m } { id=bladeLength label="Blade Length" value=0.5m } { id=maxCutHeight label="Max Cut Height" value=0.3m } { id=throatDepth label="Throat Depth" value=0.44m } ]
 rules {
   max quantity=height parameter=maxCutHeight margin=0m
   max quantity=width parameter=throatDepth margin=0m
 }
-blade-cut kerf=kerf length=bladeLength depth=maxCutHeight ] id=chainSaw label="Chain Saw" icon-id=scissors capabilities=[ id=roughCut label="Rough Cut" icon-id=scissors parameters=[ id=kerf label=Kerf value=0.008m id=barLength label="Bar Length" value=0.45m id=minStockDimension label="Min Stock Dimension" value=0.05m ]
+blade-cut kerf=kerf length=bladeLength depth=maxCutHeight } ] } { id=chainSaw label="Chain Saw" icon-id=scissors capabilities=[ { id=roughCut label="Rough Cut" icon-id=scissors parameters=[ { id=kerf label=Kerf value=0.008m } { id=barLength label="Bar Length" value=0.45m } { id=minStockDimension label="Min Stock Dimension" value=0.05m } ]
 rules {
   max quantity=height parameter=barLength margin=0m
   min quantity=min-dimension parameter=minStockDimension margin=0m
 }
-blade-cut kerf=kerf length=barLength depth=barLength ] id=drillPress label="Drill Press" icon-id=circle-dot capabilities=[ id=bore label=Bore icon-id=circle-dot parameters=[ id=bitRadius label="Bit Radius" value=0.005m id=strokeDepth label="Stroke Depth" value=0.1m id=throatDepth label="Throat Depth" value=0.16m ]
+blade-cut kerf=kerf length=barLength depth=barLength } ] } { id=drillPress label="Drill Press" icon-id=circle-dot capabilities=[ { id=bore label=Bore icon-id=circle-dot parameters=[ { id=bitRadius label="Bit Radius" value=0.005m } { id=strokeDepth label="Stroke Depth" value=0.1m } { id=throatDepth label="Throat Depth" value=0.16m } ]
 rules {
   max quantity=height parameter=strokeDepth margin=0m
 }
-bore-drill radius=bitRadius depth=strokeDepth ] id=cncRouter label="CNC Router" icon-id=cpu capabilities=[ id=pocket label=Pocket icon-id=cpu parameters=[ id=endmillDiameter label="Endmill Diameter" value=0.012m id=pocketDepth label="Pocket Depth" value=0.04m id=bedWidth label="Bed Width" value=1.25m id=bedDepth label="Bed Depth" value=2.5m ]
+bore-drill radius=bitRadius depth=strokeDepth } ] } { id=cncRouter label="CNC Router" icon-id=cpu capabilities=[ { id=pocket label=Pocket icon-id=cpu parameters=[ { id=endmillDiameter label="Endmill Diameter" value=0.012m } { id=pocketDepth label="Pocket Depth" value=0.04m } { id=bedWidth label="Bed Width" value=1.25m } { id=bedDepth label="Bed Depth" value=2.5m } ]
 rules {
   max quantity=width parameter=bedWidth margin=0m
   max quantity=depth parameter=bedDepth margin=0m
 }
-pocket-cut diameter=endmillDiameter depth=pocketDepth id=bore label=Bore icon-id=cpu parameters=[ id=bitRadius label="Bit Radius" value=0.006m id=boreDepth label="Bore Depth" value=0.04m id=bedWidth label="Bed Width" value=1.25m id=bedDepth label="Bed Depth" value=2.5m ]
+pocket-cut diameter=endmillDiameter depth=pocketDepth } { id=bore label=Bore icon-id=cpu parameters=[ { id=bitRadius label="Bit Radius" value=0.006m } { id=boreDepth label="Bore Depth" value=0.04m } { id=bedWidth label="Bed Width" value=1.25m } { id=bedDepth label="Bed Depth" value=2.5m } ]
 rules {
   max quantity=width parameter=bedWidth margin=0m
   max quantity=depth parameter=bedDepth margin=0m
 }
-bore-drill radius=bitRadius depth=boreDepth ] id=dowelJig label="Doweling Jig" icon-id=plus capabilities=[ id=dowel label=Dowel icon-id=plus parameters=[ id=dowelRadius label="Dowel Radius" value=0.004m id=dowelLength label="Dowel Length" value=0.04m id=minStockThickness label="Min Stock Thickness" value=0.018m ]
+bore-drill radius=bitRadius depth=boreDepth } ] } { id=dowelJig label="Doweling Jig" icon-id=plus capabilities=[ { id=dowel label=Dowel icon-id=plus parameters=[ { id=dowelRadius label="Dowel Radius" value=0.004m } { id=dowelLength label="Dowel Length" value=0.04m } { id=minStockThickness label="Min Stock Thickness" value=0.018m } ]
 rules {
   min quantity=height parameter=minStockThickness margin=0m
 }
-cylinder-attach radius=dowelRadius length=dowelLength ] id=screwGun label="Screw Gun" icon-id=wrench capabilities=[ id=screw label=Screw icon-id=wrench parameters=[ id=screwRadius label="Screw Radius" value=0.0025m id=screwLength label="Screw Length" value=0.05m ]
+cylinder-attach radius=dowelRadius length=dowelLength } ] } { id=screwGun label="Screw Gun" icon-id=wrench capabilities=[ { id=screw label=Screw icon-id=wrench parameters=[ { id=screwRadius label="Screw Radius" value=0.0025m } { id=screwLength label="Screw Length" value=0.05m } ]
 rules {
   min quantity=height parameter=screwLength margin=0m
 }
-cylinder-attach radius=screwRadius length=screwLength ] ] stock-pose=position=@0,0,0.15 axis=^0,0,1 angle=0rad stock-payload=id=beam label="Timber Beam" pose=position=@0,0,0.15 axis=^0,0,1 angle=0rad
-box width=3m depth=0.2m height=0.3m stock-solid=child_id=stock-brep-65db27c3b8e17c85 target="stock-brep-65db27c3b8e17c85!s.stdio.semio@v1/brep" steps=child_id=steps-flow-49e2ee4b04a4a2a0 target="steps-flow-49e2ee4b04a4a2a0!s.stdio.semio@v1/flow" step-payloads=[ id=crosscut label="Crosscut To Length" enabled=true origin=machine-id=circularSaw capability-id=crosscut
+cylinder-attach radius=screwRadius length=screwLength } ] } ] stock-pose=position=@0,0,0.15 axis=^0,0,1 angle=0rad stock-payload=id=beam label="Timber Beam" pose=position=@0,0,0.15 axis=^0,0,1 angle=0rad
+box width=3m depth=0.2m height=0.3m stock-solid=child_id=stock-brep-65db27c3b8e17c85 target=artifact-id=stock-brep-65db27c3b8e17c85 artifact-kind=s.stdio.semio standard=v1 subset=brep steps=child_id=steps-flow-49e2ee4b04a4a2a0 target=artifact-id=steps-flow-49e2ee4b04a4a2a0 artifact-kind=s.stdio.semio standard=v1 subset=flow step-payloads=[ { id=crosscut label="Crosscut To Length" enabled=true origin=machine-id=circularSaw capability-id=crosscut
 cut pose=position=@1.35,0,0.15 axis=^0,0,1 angle=0rad
-box width=0.02m depth=0.3m height=0.4m id=lap-joint-cut label="Cut Lap Joint" enabled=true origin=machine-id=cncRouter capability-id=pocket
+box width=0.02m depth=0.3m height=0.4m } { id=lap-joint-cut label="Cut Lap Joint" enabled=true origin=machine-id=cncRouter capability-id=pocket
 cut pose=position=@0.6,0,0.26 axis=^0,0,1 angle=0rad
-box width=0.3m depth=0.2m height=0.08m id=dowel-drill label="Drill Dowel Hole" enabled=true origin=machine-id=drillPress capability-id=bore
-drill radius=0.004m depth=0.08m pose=position=@0.6,0.05,0.19999999999999998 axis=^0,0,1 angle=0rad id=dowel-attach label="Insert Dowel" enabled=true origin=machine-id=dowelJig capability-id=dowel
+box width=0.3m depth=0.2m height=0.08m } { id=dowel-drill label="Drill Dowel Hole" enabled=true origin=machine-id=drillPress capability-id=bore
+drill radius=0.004m depth=0.08m pose=position=@0.6,0.05,0.19999999999999998 axis=^0,0,1 angle=0rad } { id=dowel-attach label="Insert Dowel" enabled=true origin=machine-id=dowelJig capability-id=dowel
 attach pose=position=@0.6,0.05,0.21999999999999997 axis=^0,0,1 angle=0rad
-cylinder radius=0.004m height=0.12m ] tool-solids=[ child_id=tool-crosscut-brep-afa665580fd19d22 target="tool-crosscut-brep-afa665580fd19d22!s.stdio.semio@v1/brep" child_id=tool-lap-joint-cut-brep-3d69fc1a8e58dce7 target="tool-lap-joint-cut-brep-3d69fc1a8e58dce7!s.stdio.semio@v1/brep" child_id=tool-dowel-attach-brep-270d2a32adce6225 target="tool-dowel-attach-brep-270d2a32adce6225!s.stdio.semio@v1/brep" ]
+cylinder radius=0.004m height=0.12m } ] tool-solids=[ { child_id=tool-crosscut-brep-afa665580fd19d22 target=artifact-id=tool-crosscut-brep-afa665580fd19d22 artifact-kind=s.stdio.semio standard=v1 subset=brep } { child_id=tool-lap-joint-cut-brep-3d69fc1a8e58dce7 target=artifact-id=tool-lap-joint-cut-brep-3d69fc1a8e58dce7 artifact-kind=s.stdio.semio standard=v1 subset=brep } { child_id=tool-dowel-attach-brep-270d2a32adce6225 target=artifact-id=tool-dowel-attach-brep-270d2a32adce6225 artifact-kind=s.stdio.semio standard=v1 subset=brep } ]

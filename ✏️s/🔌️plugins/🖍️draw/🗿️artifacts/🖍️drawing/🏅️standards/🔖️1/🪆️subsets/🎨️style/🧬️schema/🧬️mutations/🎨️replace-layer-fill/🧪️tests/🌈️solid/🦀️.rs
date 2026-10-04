@@ -57,7 +57,7 @@ async fn the_fill_variant_itself_is_swapped() {
 async fn inverse_restores_the_previous_fill() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_drawing_mutation(&base, &mutation);
+    let inverse = inverse_drawing_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "replace-layer-fill undoes with exactly one counter-replace");
     let mut snapshot = base.clone();
     apply_drawing_mutation(&mut snapshot, &mutation).expect("forward applies");

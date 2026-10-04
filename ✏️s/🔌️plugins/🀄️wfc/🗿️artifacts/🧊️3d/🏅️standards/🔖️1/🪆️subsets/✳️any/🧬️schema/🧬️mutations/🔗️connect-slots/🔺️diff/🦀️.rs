@@ -23,7 +23,7 @@ pub fn diff(payload: &super::ConnectSlots, base: &Wfc3dSnapshot) -> protocol::Mu
         .iter()
         .any(|existing| existing.relation == edge.relation && ((existing.from_slot_id == edge.from_slot_id && existing.to_slot_id == edge.to_slot_id) || (existing.from_slot_id == edge.to_slot_id && existing.to_slot_id == edge.from_slot_id)))
     {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("\"{}\" already relates to \"{}\" as \"{}\".", edge.from_slot_id, edge.to_slot_id, edge.relation));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("\"{}\" already relates to \"{}\" as \"{}\".", edge.from_slot_id, edge.to_slot_id, edge.relation));
     }
     protocol::MutationOutcome::new(Wfc3dDiff { edges_upserted: vec![(payload.index, edge.clone())], ..Default::default() })
 }

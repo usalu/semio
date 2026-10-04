@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "phase": "read-only-preparation",
+  "owners": [
+    { "id": "value", "taxonomy": "🧰️framework/🔨️modules/🌱️value", "dependsOn": [], "surface": ["DslValue", "Number", "NativeDecodeControl", "NativeEncodeControl", "DecodedValue"] },
+    { "id": "diagnostic", "taxonomy": "🧰️framework/🔨️modules/⚠️diagnostic", "dependsOn": ["value"], "surface": ["TextError", "TextSpan", "Limits"] },
+    { "id": "lexical", "taxonomy": "🧰️framework/🔨️modules/🗣️dsl", "dependsOn": ["value", "diagnostic"], "surface": ["Token", "Lexer", "Language", "GrammarFile", "Recognizer", "FragmentRegistry"] },
+    { "id": "json", "taxonomy": "🧰️framework/🔨️modules/🎒️pack/🔤️json", "dependsOn": ["value"], "surface": ["Number", "Object", "Value", "JsonError", "parse", "parse_bytes", "from_dsl_value", "to_dsl_value", "controlled-reader", "controlled-writer", "json-macro"] },
+    { "id": "record", "taxonomy": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema", "dependsOn": ["value", "diagnostic", "lexical", "json"], "surface": ["RecordLayout", "Shape", "FieldSpec", "RecordSpec", "GrammarSpec", "FieldValue", "RecordValue", "WireValue", "ExprValue", "RecordSpecProducer", "NativeSchemaControl", "DslField", "DslVariants", "binding-runtime", "record-text", "record-json-schema"] },
+    { "id": "derive", "taxonomy": "🧰️framework/🔨️modules/🗣️dsl/✨️derive", "dependsOn": [], "surface": ["DslRecord", "DslScalar", "DslEnum", "absolute-neutral-record-emission"] },
+    { "id": "pack-container", "taxonomy": "🧰️framework/🔨️modules/🎒️pack", "dependsOn": ["json", "value"], "surface": ["PackFile", "PackSource", "CodecId", "VerificationLevel", "container-format", "retained-container-cursors"] },
+    { "id": "pack-record", "taxonomy": "🧰️framework/🔨️modules/🎒️pack/🌱️value", "dependsOn": ["record", "pack-container", "json", "value"], "surface": ["PackSchemaGraph", "EncodeOptions", "DecodeOptions", "DecodeReport", "record-codec", "document-codec", "controlled-codec", "schema-hash", "generic-variants-binary", "generic-tagged-value-binary", "generic-tagged-text-binary"] }
+  ],
+  "bindingLaws": [
+    { "name": "sqlite_snapshot_native_binding_controls_typed_field_materialization", "owner": "record", "oracles": ["Ajv", "BunSQLite"] },
+    { "name": "sqlite_snapshot_native_binding_restores_declared_parent_workload", "owner": "record", "oracles": ["owned-original-control-law"] },
+    { "name": "sqlite_snapshot_native_binding_retires_partial_owned_fields", "owner": "record", "oracles": ["Ajv", "BunSQLite"] },
+    { "name": "sqlite_snapshot_native_binding_controls_declared_variants", "owner": "record", "oracles": ["owned-original-control-law"] },
+    { "name": "sqlite_snapshot_native_binding_controlled_pack_keeps_one_cumulative_budget", "owner": "pack-record", "oracles": ["owned-original-control-law"] },
+    { "name": "sqlite_snapshot_native_binding_controlled_document_cancels_during_inflation", "owner": "pack-record", "oracles": ["inflateRawSync"] },
+    { "name": "sqlite_snapshot_native_binding_controls_artifact_child_identity", "owner": "artifact-child", "oracles": ["Ajv", "BunSQLite"] },
+    { "name": "sqlite_snapshot_native_binding_controlled_text_preserves_owned_literals", "owner": "record", "oracles": ["JSON.parse"] },
+    { "name": "sqlite_snapshot_native_binding_controls_chunk_reconstruction", "owner": "pack-record", "oracles": ["inflateRawSync"] }
+  ],
+  "requiredProofs": [
+    "strict-schema-admission-and-hostile-extra-owner-refusal",
+    "actual-package-DAG-including-dev-build-and-target-dependencies",
+    "all-original-source-law-bodies-and-fixtures-exact-inverse",
+    "whole-native-binary-discovery-roster-before-and-after",
+    "preserved-original-default-feature-and-explicit-protocol-feature-cohorts",
+    "same-language-neutral-output-with-existing-third-party-oracles",
+    "actual-neutral-public-package-command-with-products-S-Hub-and-ticket-physically-absent",
+    "all-generic-caller-provider-bindings-and-macro-emission-neutral",
+    "ArtifactChild-ArtifactRef-and-artifact-derive-extensions-remain-higher",
+    "ordinary-prepare-locked-metadata-and-selected-input-hash-fence"
+  ]
+}

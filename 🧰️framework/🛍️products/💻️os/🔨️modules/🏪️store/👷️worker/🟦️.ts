@@ -105,13 +105,13 @@ import { browserActorChildCapacity, reserveBrowserActorChild, type BrowserActorC
 import { DOCUMENT_ACTOR_RECOVERY_FRESH_V1, DOCUMENT_ACTOR_RECOVERY_V1, documentActorRecoveryStepV1, type DocumentActorLossCauseV1, type DocumentActorRecoveryMemoryV1 } from "./🚑️actor-recovery/🟦️.ts";
 import { assertBrowserActorDescribeCapacityV1, verifyBrowserActorDescribeV1 } from "../../🔌️plugin/🌐️browser-bundle/🧾️describe/🟦️.ts";
 import { BROWSER_ACTOR_CHILD_LIMITS, COMMAND_INGRESS_KINDS, boundChildText, measureChildValue, type CommandIngressKindV1 } from "../../🔌️plugin/🌐️browser-bundle/🧵️child/🧬️schema/🟦️.ts";
-import { coldDocumentPairCursorEquals, coldDocumentPairFrontierEquals, parseColdDocumentPairLifetime, parseWitColdPairIngressStatus, type ColdDocumentPairFrontier, type ColdPairIngressStatus } from "../../../../../🔨️modules/🎭️actor/📥️cold-pair/🟦️.ts";
+import { coldDocumentPairCursorEquals, coldDocumentPairFrontierEquals, parseColdDocumentPairLifetime, parseWitColdPairIngressStatus, type ColdDocumentPairCursor, type ColdDocumentPairFrontier, type ColdPairIngressStatus } from "../../../../../🔨️modules/🎭️actor/📥️cold-pair/🟦️.ts";
 import { createShardCommandIngressPages, type ShardCommandIngressPage } from "../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { driveSpawnedJob, spawnedJobCompletedEvent, typedOperationPageAnswerV1, typedOperationResult, wireSpawnJob } from "../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
 import { actorInstanceCapturedReceiptMatches, actorInstanceCloseReceiptMatches, actorInstanceLifetimeEquals, type ActorInstanceCloseRequest, type ActorInstanceLifecycleReceipt, type ActorInstanceLifetime, type ActorInstanceOpenRequest } from "../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts";
 import { encodeActorUiPatchReceipt, type ActorUiPatchReceipt } from "../../../../../🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts";
 import { BROWSER_ACTOR_UI_PATCH_SURFACE_MAXIMUM, browserActorUiPatchOwnerMatchesV1, captureBrowserActorUiPatchV1, type BrowserActorUiPatchOfferV1, type BrowserActorUiPatchResultV1 } from "../../🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts";
-import { BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION, BROWSER_ACTOR_ACTION_MUTATION_MAXIMUM, browserActorAdmissionRefusalReasonV1, browserActorGuestRefusalReasonV1, parseBrowserActorActionRequestV1, parseBrowserActorHistoryPatchBytesV1, parseBrowserActorHostEffectBytesV1, type BrowserActorActionRequestV1, type BrowserActorActionResultV1 } from "../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts";
+import { BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION, BROWSER_ACTOR_ACTION_MUTATION_MAXIMUM, browserActorAdmissionRefusalReasonV1, browserActorGuestRefusalReasonV1, parseBrowserActorActionRequestV1, parseBrowserActorHistoryPatchBytesV1, parseBrowserActorHostEffectBytesV1, type BrowserActorActionCommitReceiptV1, type BrowserActorActionRequestV1, type BrowserActorActionResultV1 } from "../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts";
 import { decodeBrowserActorCommandPublicationV1, decodeBrowserActorIntentPublicationV1, decodeBrowserActorUnsolicitedPublicationV1, encodeBrowserActorHostEffectV1, requireBrowserActorCommandBackboneProjectionV1, type BrowserActorCommandBackboneEnvelopeV1, type BrowserActorCommandPublicationV1, type BrowserActorEphemeralSnapshotV1 } from "../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📤️publication/🟦️.ts";
 import { ActorDocumentBindingV1, documentBackboneEffectV1, encodeDocumentBackboneControlV1 } from "../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts";
 import { parseBrowserActorViewStateRequest } from "../../🔌️plugin/🌐️browser-bundle/🪟️view-context/🟦️.ts";
@@ -1787,6 +1787,87 @@ function coldPairIngressStatusDiagnostic(status: ColdPairIngressStatus): string 
   return `${status.kind} page ${status.cursor.pageIndex + 1}/${status.cursor.pageCount} generation ${status.cursor.transferGeneration}`;
 }
 
+/** ⏱️ How long and how hard the host waits on a cold pair whose guest keeps answering `loading` (its whole-document load still
+ * folding the history, `📓️api-stepped-document-load.md` §8) or `backpressure` (an older pair still settling). The bound is
+ * wall time (design §20.14): `deadlineMs` from the first answer, `maximumTurns` only a secondary cap. The first `eagerTurns`
+ * turns follow each other at once — every one gives the guest a full turn budget, so a progressing load is never slowed —
+ * and later turns back off exponentially from `backoffMs` to `maximumBackoffMs`, so a guest stuck in `loading` stops
+ * spinning the worker until the deadline refuses it. `now`/`sleep` are the clock (a fake one in the law). */
+export type ColdPairWaitPolicy = Readonly<{
+  deadlineMs: number;
+  maximumTurns: number;
+  eagerTurns: number;
+  backoffMs: number;
+  maximumBackoffMs: number;
+  now: () => number;
+  sleep: (ms: number) => Promise<void>;
+}>;
+
+/** ⏱️ The host's cold-pair wait: 5 minutes of wall time, back to back for the first 4096 turns (≈ 20 s of continuous
+ * folding at a 4–5 ms turn), then backing off 1 → 64 ms. */
+export const COLD_PAIR_WAIT_POLICY: ColdPairWaitPolicy = Object.freeze({
+  deadlineMs: 300_000,
+  maximumTurns: 1 << 20,
+  eagerTurns: 4096,
+  backoffMs: 1,
+  maximumBackoffMs: 64,
+  now: () => performance.now(),
+  sleep: (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)),
+});
+
+/** 📈️ The pause the host takes before wait turn `turn` (0-based): none during the eager turns, then `backoffMs` doubling
+ * per turn up to `maximumBackoffMs`. */
+export function coldPairWaitDelay(policy: ColdPairWaitPolicy, turn: number): number {
+  if (turn < policy.eagerTurns) return 0;
+  return Math.min(policy.maximumBackoffMs, policy.backoffMs * 2 ** Math.min(turn - policy.eagerTurns, 30));
+}
+
+/** ⏳️ Waits before the next turn of a cold-pair wait that began at `started`, refusing with `exhausted` once the turn cap or the
+ * wall deadline is reached; a backoff never sleeps past the deadline. */
+async function coldPairWaitTurn(policy: ColdPairWaitPolicy, started: number, turn: number, unit: string, exhausted: (why: string) => Error): Promise<void> {
+  if (turn >= policy.maximumTurns) throw exhausted(`${turn} ${unit}`);
+  const remaining = policy.deadlineMs - (policy.now() - started);
+  if (remaining <= 0) throw exhausted(`${policy.deadlineMs} ms (${turn} ${unit})`);
+  const delay = Math.min(coldPairWaitDelay(policy, turn), remaining);
+  if (delay > 0) await policy.sleep(delay);
+}
+
+/** ⏳️ Settles the last page of a cold-pair transfer whose guest answers `loading` while its whole-document load runs across
+ * turns: polls empty turns until the guest answers anything else, holds every `loading` to exactly the last page of this
+ * transfer, and releases every answer it moves past. Answers the settling turn (the caller requires `applied`). Cancelling
+ * is `poll` throwing — the owner stopped being current — and leaves the guest to restore its previous document. The wait is
+ * bounded and paced by `policy` ([`ColdPairWaitPolicy`]). */
+export async function settleColdPairLoading<T>(first: T, status: (value: T) => ColdPairIngressStatus, expected: ColdDocumentPairCursor, poll: () => Promise<T>, release: (value: T) => void, policy: ColdPairWaitPolicy = COLD_PAIR_WAIT_POLICY): Promise<T> {
+  const started = policy.now();
+  let value = first;
+  for (let turn = 0; ; turn += 1) {
+    const current = status(value);
+    if (current.kind !== "loading") return value;
+    release(value);
+    if (!coldDocumentPairCursorEquals(current.cursor, expected)) throw new Error(`document browser actor: invalid loading receipt (${coldPairIngressStatusDiagnostic(current)})`);
+    await coldPairWaitTurn(policy, started, turn, "turns", (why) => new Error(`document browser actor: cold pair still loading after ${why}`));
+    value = await poll();
+  }
+}
+
+/** 🚦️ Sends one cold-pair page until the guest takes it: a `backpressure` answer names the pair the same guest lifetime
+ * still settles (an older transfer whose whole-document load the guest is cancelling, `📓️api-stepped-document-load.md` §8),
+ * so the host releases it, gives the guest one empty turn to finish that pair, and sends a fresh copy of the page. A
+ * backpressure for another lifetime is refused; every answer moved past is released. Answers the first other answer. The
+ * resends are bounded and paced by `policy` ([`ColdPairWaitPolicy`]). */
+export async function retryColdPairBackpressure<T>(send: () => Promise<T>, status: (value: T) => ColdPairIngressStatus, lifetime: ActorInstanceLifetime, poll: () => Promise<T>, release: (value: T) => void, policy: ColdPairWaitPolicy = COLD_PAIR_WAIT_POLICY): Promise<T> {
+  const started = policy.now();
+  for (let attempt = 0; ; attempt += 1) {
+    const value = await send();
+    const current = status(value);
+    if (current.kind !== "backpressure") return value;
+    release(value);
+    if (!actorInstanceLifetimeEquals(current.cursor.lifetime, lifetime)) throw new Error(`document browser actor: invalid backpressure receipt (${coldPairIngressStatusDiagnostic(current)})`);
+    release(await poll());
+    await coldPairWaitTurn(policy, started, attempt + 1, "attempts", (why) => new Error(`document browser actor: cold page still refused after ${why}`));
+  }
+}
+
 function browserActorColdStatus(value: BrowserActorChildValue, allowLifecycleReceipt = false): ColdPairIngressStatus {
   const result = browserActorTurnResult(value);
   if (!allowLifecycleReceipt && unwrapBrowserActorOption(result.lifecycleReceipt) !== undefined) throw new Error("document browser actor: unexpected lifecycle receipt");
@@ -1948,7 +2029,7 @@ function browserActorAppCommandV1(request: BrowserActorActionRequestV1, fields: 
   return { bytes, surfaceKey: windowKindId };
 }
 
-function browserActorActionDisposition(request: BrowserActorActionRequestV1, outcome: "guest-applied" | "rejected", mutationCount: number, hostEffects: readonly (readonly number[])[] = [], reason?: string, historyPatches: readonly (readonly number[])[] = []): BrowserActorActionResultV1 {
+function browserActorActionDisposition(request: BrowserActorActionRequestV1, outcome: "guest-applied" | "rejected", mutationCount: number, commit: BrowserActorActionCommitReceiptV1 | null, hostEffects: readonly (readonly number[])[] = [], reason?: string, historyPatches: readonly (readonly number[])[] = []): BrowserActorActionResultV1 {
   return {
     kind: "browser-actor-action-result",
     scope: { ...request.scope },
@@ -1960,13 +2041,14 @@ function browserActorActionDisposition(request: BrowserActorActionRequestV1, out
     actionSequence: request.actionSequence,
     outcome,
     mutationCount,
+    commit,
     hostEffects,
     historyPatches,
     ...(reason === undefined ? {} : { reason }),
   };
 }
 
-type BrowserActorActionPublication = { readonly kind: "ui-intent" | "app-command"; readonly sequence: number; frames: number; readonly refusals: string[]; readonly hostEffects: (readonly number[])[]; readonly historyPatches: (readonly number[])[] };
+type BrowserActorActionPublication = { readonly kind: "ui-intent" | "app-command"; readonly sequence: number; frames: number; commit: BrowserActorActionCommitReceiptV1 | null; readonly refusals: string[]; readonly hostEffects: (readonly number[])[]; readonly historyPatches: (readonly number[])[] };
 
 /** 🚫️ The guest refused the action (a typed-operation fault page or its `AppFrame::Error` reply) — raised only after the
  * whole turn was answered, so the actor stays open; `detail` is the guest's first fault as the shell displays it. */
@@ -2251,7 +2333,11 @@ class DocumentBrowserActorReservation {
             continue;
           }
           if (publication.kind !== "emit" && publication.historyPatch !== null) historyPatches.push(publication.historyPatch);
-          if (publication.kind === "operation-completed") continue;
+          if (publication.kind === "operation-completed") {
+            if (mode.commit !== null) throw new Error("action-publication-mismatch");
+            mode.commit = { operation: publication.operation.toString(10), revision: publication.revision.toString(10) };
+            continue;
+          }
           if (publication.kind === "completion") {
             completions.push(publication);
             continue;
@@ -2490,7 +2576,7 @@ class DocumentBrowserActorReservation {
         const child = this.child;
         if (child === null) throw new Error("action-child-unavailable");
         this.lastActionSequence = request.actionSequence;
-        const publication: BrowserActorActionPublication = { kind: request.payload.kind, sequence: request.actionSequence, frames: 0, refusals: [], hostEffects: [], historyPatches: [] };
+        const publication: BrowserActorActionPublication = { kind: request.payload.kind, sequence: request.actionSequence, frames: 0, commit: null, refusals: [], hostEffects: [], historyPatches: [] };
         let mutationCount = 0;
         if (intent !== null) {
           invoked = true;
@@ -2518,7 +2604,7 @@ class DocumentBrowserActorReservation {
         if (publication.frames !== 1) throw new Error("action-publication-mismatch");
         await this.refreshDocumentSurfaces(child, () => this.assertDocumentOwnerCurrent(), command !== null || mutationCount > 0);
         this.state.actorRecovery = documentActorRecoveryStepV1(this.state.actorRecovery, { kind: "applied", atMs: Date.now() }).memory;
-        return browserActorActionDisposition(request, "guest-applied", mutationCount, parseBrowserActorHostEffectBytesV1(publication.hostEffects), undefined, parseBrowserActorHistoryPatchBytesV1(publication.historyPatches));
+        return browserActorActionDisposition(request, "guest-applied", mutationCount, publication.commit, parseBrowserActorHostEffectBytesV1(publication.hostEffects), undefined, parseBrowserActorHistoryPatchBytesV1(publication.historyPatches));
       });
     } catch (error) {
       const explicitRefusal = error instanceof BrowserActorGuestRefusalV1;
@@ -2527,7 +2613,7 @@ class DocumentBrowserActorReservation {
         requestDocumentActorRecoveryV1(this.state, "action-unconfirmed");
       }
       const reason = explicitRefusal ? browserActorGuestRefusalReasonV1(error.detail) : error instanceof Error && /^(action-owner-mismatch|action-catching-up|action-child-unavailable)$/u.test(error.message) ? error.message : invoked ? "action-state-unconfirmed" : browserActorAdmissionRefusalReasonV1(error instanceof Error ? error.message : String(error));
-      return browserActorActionDisposition(request, "rejected", 0, [], reason);
+      return browserActorActionDisposition(request, "rejected", 0, null, [], reason);
     }
   }
   private readonly retire = () => this.close();
@@ -2734,31 +2820,57 @@ class DocumentBrowserActorReservation {
     this.documentBackboneReady = false;
     this.coldTransfer = this.enqueueTurn(async () => {
       for (let pageIndex = 0; pageIndex < owner.pageCount; pageIndex += 1) {
-        assertCurrent();
-        const page = owner.page(lifetime, pageIndex);
-        const pageRecord = browserActorRecord(page, "document browser actor: invalid cold page");
-        const bytes = pageRecord.bytes;
-        if (!(bytes instanceof Uint8Array)) throw new Error("document browser actor: invalid cold bytes");
+        const sendPage = async (): Promise<BrowserActorChildValue> => {
+          assertCurrent();
+          const page = owner.page(lifetime, pageIndex);
+          const pageRecord = browserActorRecord(page, "document browser actor: invalid cold page");
+          const bytes = pageRecord.bytes;
+          if (!(bytes instanceof Uint8Array)) throw new Error("document browser actor: invalid cold bytes");
+          try {
+            const sent = await this.invokePoll(child, [], page, assertCurrent);
+            if (bytes.byteLength !== 0) {
+              wipeBrowserActorValue(sent);
+              throw new Error("document browser actor: cold page ownership not transferred");
+            }
+            return sent;
+          } finally {
+            if (bytes.byteLength) bytes.fill(0);
+          }
+        };
         let result: BrowserActorChildValue | null = null;
         try {
-          result = await this.invokePoll(child, [], page, assertCurrent);
-          if (bytes.byteLength !== 0) throw new Error("document browser actor: cold page ownership not transferred");
+          result = await retryColdPairBackpressure(sendPage, (value) => browserActorColdStatus(value), lifetime, () => {
+            assertCurrent();
+            return this.invokePoll(child, [], null, assertCurrent);
+          }, wipeBrowserActorValue);
           assertCurrent();
-          const status = browserActorColdStatus(result);
           if (pageIndex + 1 === owner.pageCount) {
+            const cursor = { lifetime, transferGeneration: owner.transferGeneration, pageIndex, pageCount: owner.pageCount };
+            const loadingStatus = (value: BrowserActorChildValue): ColdPairIngressStatus => {
+              const answered = browserActorColdStatus(value);
+              if (answered.kind === "loading" && this.captureUiPatch(value, lifetime) !== null) throw new Error("document browser actor: patch before cold pair applied");
+              return answered;
+            };
+            result = await settleColdPairLoading(result, loadingStatus, cursor, () => {
+              assertCurrent();
+              return this.invokePoll(child, [], null, assertCurrent);
+            }, wipeBrowserActorValue);
+            assertCurrent();
+            const status = browserActorColdStatus(result);
+            if (status.kind !== "applied") throw new Error(`document browser actor: cold pair not applied (${coldPairIngressStatusDiagnostic(status)})`);
             owner.assertApplied(status, lifetime);
             this.coldApplied = owner;
             await this.bindDocumentBackbone(child);
             await this.reconcileUiPatches(result, child, assertCurrent);
             await this.renderSurface(child, assertCurrent);
           } else {
+            const status = browserActorColdStatus(result);
             const expected = { lifetime, transferGeneration: owner.transferGeneration, pageIndex, pageCount: owner.pageCount };
             if (status.kind !== "pageAccepted" || !coldDocumentPairCursorEquals(status.cursor, expected))
               throw new Error(`document browser actor: invalid page receipt (page ${pageIndex + 1}/${owner.pageCount} answered ${coldPairIngressStatusDiagnostic(status)})`);
             if (this.captureUiPatch(result, lifetime) !== null) throw new Error("document browser actor: patch before cold pair applied");
           }
         } finally {
-          if (bytes.byteLength) bytes.fill(0);
           if (result !== null) wipeBrowserActorValue(result);
         }
       }
@@ -3785,6 +3897,7 @@ function toWireEnvelope(envelope: MutationEnvelope, timestamp: WireMutationEnvel
     timestamp,
     transaction: envelope.transaction ?? null,
     verb: envelope.verb ?? null,
+    line: null,
   };
 }
 
@@ -3855,6 +3968,7 @@ function exactWireEnvelope(envelope: WireMutationEnvelope): ExactWireMutationEnv
     },
     transaction: envelope.transaction,
     verb: envelope.verb,
+    line: envelope.line,
   };
 }
 
@@ -7041,7 +7155,7 @@ function handleTsRequest(request: BackboneWorkerRequest): void {
       void (async () => {
         const result = state?.openClientInstanceId === clientInstanceId && state.browserActorReservation !== null
           ? await state.browserActorReservation.dispatchAction(action)
-          : browserActorActionDisposition(action, "rejected", 0, [], "action-owner-mismatch");
+          : browserActorActionDisposition(action, "rejected", 0, null, [], "action-owner-mismatch");
         post({ ...result, clientInstanceId });
       })();
       break;
@@ -7109,6 +7223,8 @@ if (import.meta.vitest) {
   const testSeams = dependencies.testSeams;
   const { registerFolderArchiveRestoreTests } = await import("../../../🧪️tests/🧪️folder-archive-restore/🟦️.ts");
   await registerFolderArchiveRestoreTests(import.meta.vitest, { testSeams, artifactState, closeArtifact, handleTsRequest, installStreamMuxEndpoint });
+  const { registerColdPairLoadingTests } = await import("./🧪️tests/🧪️cold-pair-loading/🟦️.ts");
+  await registerColdPairLoadingTests(import.meta.vitest, { settleColdPairLoading, retryColdPairBackpressure, coldPairWaitDelay, COLD_PAIR_WAIT_POLICY });
   const { registerBackboneParityTests } = await import("../🔄️sync/🧪️tests/🔬️backbone-parity/🟦️.ts");
   await registerBackboneParityTests(import.meta.vitest, { testSeams, DOCUMENT_BACKBONE_RETENTION_LIMITS, handleAck, ARTIFACT_BOOTSTRAP_DIAGNOSTIC_MAX_BYTES, ArtifactBootstrapAssembler, DIRECTORY_COMMAND_TRANSPORT_CAPACITY, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, DirectoryClient, DirectoryEventPageBootstrapV1, DocumentExecutionTargetLease, HUB_RECONNECT_MAX_MS, IDENTITY_CONFIG_SCHEMA, PENDING_MUTATIONS_QUEUE_LIMIT, SANITY_POLL_MIN_MS, SUSTAINED_HEALTHY_MS, VerifiedColdDocumentPair, abortArtifactBootstrap, installStreamMuxEndpoint, artifactBootstrapFailure, artifactState, artifacts, browserActorChildCapacity, hubSessionFetch, browserDirectoryRequest, browserExecutionTargetAssetRequest, bytesHex, clearHubSessionCapability, closeArtifact, closeArtifactRuntime, closeDirectory, connectHubOnce, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeClientFrame, decodePackPayload, decodePackValue, decodeServerFrame, directoryAdministration, directoryClient, directoryCommandOperations, directoryCommandQueue, directoryCommandSha256, directorySessionEpoch, directoryWorkerEpoch, dispatchBackboneWorkerRequest, documentExecutionOwners, documentExecutionTargetLeaseMintToken, documentExecutionTargetStatusRoleV1, documentOpenPlanAuthority, documentRuntimeKeyForConfig, documentRuntimeKeyV1, documentCatchingUpV1, newArtifactState, requestDocumentActorRecoveryV1, dropDocumentExecutionTargetLease, dropVerifiedColdDocumentPair, emitEvent, encodeActorUiPatchReceipt, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentBackboneEnvelopeBatchExact, encodePackValue, encodeServerFrame, executionTargetHex, executionTargetSha256Hex, executionTargetStatusObserver, extractServerCommandsDocumentBackboneBatchExact, flushDirectoryQueue, foldIdentityEvent, fromWireEnvelope, handleHubFrame, handleTsRequest, hubBinding, identityActorConfig, installHubSessionCapability, hubSessionQueued, openArtifact, ownedArrayBuffer, parseDocumentBackboneMessage, parseDocumentExecutionTargetLeaseFieldsV1, queueOutbox, readExecutionTargetBody, relayMutationsToHub, requestDocumentSocketAuthority, reserveDocumentBrowserActorChild, revokeDirectoryAdministrationForScope, rollbackEnvelope, sameLeaseFieldsV1, scopedDirectoryStreams, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1, settleDirectoryCommand, socketGrantTestIssue, spaceArtifactCreationCatalogOperations, spaceArtifactCreationOperations, spaceArtifactCreationTestFetch, stampSession, toWireEnvelope, verifiedColdDocumentPairMintToken, verifyBrowserActorDescribeV1, workerPostTestSink }, import.meta.url);
 

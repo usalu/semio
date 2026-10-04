@@ -4,7 +4,10 @@ use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use crate::Fem3dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &ChangeLoadCaseSelfWeight, base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {
+pub fn inverse(payload: &ChangeLoadCaseSelfWeight, base: &Fem3dSnapshot) -> Result<Vec<Fem3dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     base.load_cases.iter().find(|case| case.id == payload.case_id).map(|case| vec![Fem3dMutation::ChangeLoadCaseSelfWeight(ChangeLoadCaseSelfWeight { case_id: payload.case_id.clone(), new_self_weight: case.self_weight })]).unwrap_or_default()
+
+    })())
 }
 //#endregion 🔖️Inverse

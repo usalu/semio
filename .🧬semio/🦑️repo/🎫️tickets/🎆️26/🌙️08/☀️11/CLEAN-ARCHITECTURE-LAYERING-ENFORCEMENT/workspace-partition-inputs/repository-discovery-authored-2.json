@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "ownerManifests": [
+    "🧰️framework/Cargo.toml",
+    "🧰️framework/🛍️products/❓️quiz/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/Cargo.toml",
+    "🧰️framework/🛍️products/🖥️server/Cargo.toml",
+    "🧰️framework/🛍️products/🦑️repo/Cargo.toml"
+  ],
+  "ownerPatterns": ["[!.]*/Cargo.toml"]
+}

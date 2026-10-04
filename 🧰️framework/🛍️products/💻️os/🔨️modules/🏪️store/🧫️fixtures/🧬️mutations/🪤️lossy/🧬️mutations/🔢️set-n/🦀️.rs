@@ -46,9 +46,12 @@ impl crate::os_spr::MutationKind<DemoSnapshot, LossyMutation> for SetN {
     fn diff(&self, _base: &DemoSnapshot) -> crate::os_spr::MutationOutcome<LossyDiff> {
         crate::os_spr::MutationOutcome::new(LossyDiff {})
     }
-    fn inverse(&self, _base: &DemoSnapshot) -> Vec<LossyMutation> {
+    fn inverse(&self, _base: &DemoSnapshot) -> Result<Vec<LossyMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![LossyMutation::SetN(self.clone())]
-    }
+    
+    })())
+}
     fn label(&self) -> crate::LocalizedLabel {
         crate::LocalizedLabel::native("Set N", "N setzen")
     }

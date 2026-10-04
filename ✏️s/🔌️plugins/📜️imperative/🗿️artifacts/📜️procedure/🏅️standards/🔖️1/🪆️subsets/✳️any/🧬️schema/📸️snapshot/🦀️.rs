@@ -11,7 +11,7 @@ use framework_schema::ArtifactSchema;
 /// this plugin no longer defines its own program-graph or seed-content model, it composes stdio's
 /// `flow` and `text` subsets instead. `#[child(...)]` drives `#[derive(ArtifactSchema)]`'s
 /// slot-table emission; never hand-written.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact_schema(id = "s.imperative.procedure")]
 pub struct ProcedureSnapshot {
@@ -27,74 +27,55 @@ pub struct ProcedureSnapshot {
 
 impl Default for ProcedureSnapshot {
     fn default() -> Self {
-        crate::procedure_snapshot_with_content("procedure.document", &crate::Path::new(), &std::collections::BTreeMap::new())
+        crate::procedure_snapshot_naming(&crate::Path::new(), &std::collections::BTreeMap::new())
     }
 }
 //#endregion 🔖️Snapshot
 
 //#region 🔖️PackRecord
-/// 🛤️ Derived pack record of a `ProcedureSnapshot`: both composed-child handles plus the content their
-/// local owners hold (the flow child's `path`, the text child's `seed`), which a bare-handle pack would
-/// lose. Text and pack are both derived from this record.
-#[derive(dsl::DslRecord)]
+/// 🛤️ Derived pack record of a `ProcedureSnapshot`: the schema marker and both composed-child handles — the content lives in
+/// the member stores (design §20.15), so text and pack carry addresses only.
+#[derive(semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(extension = "imperative")]
 struct ProcedurePackRecord {
     schema: String,
     flow: ProcedureFlowChild,
     text: ProcedureTextChild,
-    path: dsl::DslValue,
-    seed: dsl::DslValue,
 }
 
 impl ProcedurePackRecord {
-    fn snapshot_record_controlled(snapshot: &ProcedureSnapshot, control: &mut dsl::NativeEncodeControl<'_>) -> Result<dsl::RecordValue, String> {
+    fn snapshot_record_controlled(snapshot: &ProcedureSnapshot, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::RecordValue, semio_framework_value::ValueError> {
         control.scoped_depth(64, |control| control.scoped_stage(|control| {
-            control.begin_stage(5)?;
-            let mut record = dsl::native_encoding::EncodedRecord::new(5, control)?;
-            record.insert(0, <String as dsl::DslField>::to_value_controlled(&snapshot.schema, control)?); control.step()?;
-            record.insert(1, <ProcedureFlowChild as dsl::DslField>::to_value_controlled(&snapshot.flow, control)?); control.step()?;
-            record.insert(2, <ProcedureTextChild as dsl::DslField>::to_value_controlled(&snapshot.text, control)?); control.step()?;
-            let path = match snapshot.flow.local_owner::<crate::ProcedureFlowWorkingData>() { Some(scene) => dsl::ToValue::to_value_controlled(&scene.path, control), None => dsl::ToValue::to_value_controlled(&crate::Path::new(), control) }.map_err(|error| error.to_string())?;
-            record.insert(3, dsl::FieldValue::Value(path)); control.step()?;
-            let seed = match snapshot.text.local_owner::<crate::ProcedureTextWorkingData>() { Some(scene) => dsl::ToValue::to_value_controlled(&scene.seed, control), None => dsl::ToValue::to_value_controlled(&std::collections::BTreeMap::<String, crate::Value>::new(), control) }.map_err(|error| error.to_string())?;
-            record.insert(4, dsl::FieldValue::Value(seed)); control.step()?;
+            control.begin_stage(3)?;
+            let mut record = semio_framework_dsl_record::native_encoding::EncodedRecord::new(3, control)?;
+            record.insert(0, control.scoped_stage(|control| { control.begin_stage(0)?; <String as semio_framework_dsl_record::DslField>::to_value_controlled(&snapshot.schema, control) })?)?; control.step()?;
+            record.insert(1, control.scoped_stage(|control| { control.begin_stage(0)?; <ProcedureFlowChild as semio_framework_dsl_record::DslField>::to_value_controlled(&snapshot.flow, control) })?)?; control.step()?;
+            record.insert(2, control.scoped_stage(|control| { control.begin_stage(0)?; <ProcedureTextChild as semio_framework_dsl_record::DslField>::to_value_controlled(&snapshot.text, control) })?)?; control.step()?;
             Ok(record.take())
         }))
     }
+    fn into_snapshot_controlled(self, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ProcedureSnapshot, semio_framework_value::ValueError> {
+        control.checkpoint()?;
+        Ok(self.into_snapshot())
+    }
     fn from_snapshot(snapshot: &ProcedureSnapshot) -> Self {
-        let scene = crate::procedure_working_scene(snapshot);
-        Self { schema: snapshot.schema.clone(), flow: snapshot.flow.clone(), text: snapshot.text.clone(), path: dsl::ToValue::to_value(&scene.path), seed: dsl::ToValue::to_value(&scene.seed) }
+        Self { schema: snapshot.schema.clone(), flow: snapshot.flow.clone(), text: snapshot.text.clone() }
     }
 
-    fn into_snapshot(self) -> Result<ProcedureSnapshot, String> {
-        let (mut flow, mut text) = (self.flow, self.text);
-        let seed = neural_engine::ColdOwner::new(<std::collections::BTreeMap<String, crate::Value> as dsl::FromValue>::from_value(self.seed).map_err(|error| error.to_string())?);
-        let path: crate::Path = dsl::FromValue::from_value(self.path).map_err(|error| error.to_string())?;
-        text.set_local_owner(std::sync::Arc::new(crate::ProcedureTextWorkingData { seed: seed.into_inner() }));
-        flow.set_local_owner(std::sync::Arc::new(crate::ProcedureFlowWorkingData { path }));
-        Ok(ProcedureSnapshot { schema: self.schema, flow, text })
-    }
-    fn into_snapshot_controlled(self, control: &mut dsl::NativeDecodeControl<'_>) -> Result<ProcedureSnapshot, store::TextError> {
-        let error = |error: dsl::ValueError| store::TextError::new(error.to_string(), dsl::TextSpan::at(1, 1));
-        let seed = neural_engine::ColdOwner::new(<std::collections::BTreeMap<String, crate::Value> as dsl::FromValue>::from_value_controlled(&self.seed, control).map_err(error)?);
-        let path = <crate::Path as dsl::FromValue>::from_value_controlled(&self.path, control).map_err(error)?;
-        control.charge(std::mem::size_of::<crate::ProcedureFlowWorkingData>() + std::mem::size_of::<crate::ProcedureTextWorkingData>() + 4 * std::mem::size_of::<usize>()).map_err(|message| store::TextError::new(message, dsl::TextSpan::at(1, 1)))?;
-        let (mut flow, mut text) = (self.flow, self.text);
-        flow.set_local_owner(std::sync::Arc::new(crate::ProcedureFlowWorkingData { path }));
-        text.set_local_owner(std::sync::Arc::new(crate::ProcedureTextWorkingData { seed: seed.into_inner() }));
-        Ok(ProcedureSnapshot { schema: self.schema, flow, text })
+    fn into_snapshot(self) -> ProcedureSnapshot {
+        ProcedureSnapshot { schema: self.schema, flow: self.flow, text: self.text }
     }
 }
 
 /// 🖨️ The derived text body: the same `ProcedurePackRecord` the pack encodes, printed by the spec-driven engine.
 pub(crate) fn print_pack_record_text(snapshot: &ProcedureSnapshot) -> String {
-    dsl::print(&ProcedurePackRecord::from_snapshot(snapshot).__dsl_to_record(), &ProcedurePackRecord::__dsl_spec(), dsl::JoinMode::Document)
+    semio_framework_dsl_record::print(&ProcedurePackRecord::from_snapshot(snapshot).__dsl_to_record(), &ProcedurePackRecord::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document)
 }
 
 /// 📖️ Parses a derived text body back through `ProcedurePackRecord`, with the same decode steps as the pack.
-pub(crate) fn parse_pack_record_text(body: &str) -> Result<ProcedureSnapshot, store::TextError> {
-    let record = dsl::parse(body, &ProcedurePackRecord::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
-    ProcedurePackRecord::__dsl_from_record(&record)?.into_snapshot().map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))
+pub(crate) fn parse_pack_record_text(body: &str) -> Result<ProcedureSnapshot, semio_framework_diagnostic::TextError> {
+    let record = semio_framework_dsl_record::parse(body, &ProcedurePackRecord::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
+    Ok(ProcedurePackRecord::__dsl_from_record(&record)?.into_snapshot())
 }
 //#endregion 🔖️PackRecord
 
@@ -105,7 +86,7 @@ impl store::ArtifactDsl for ProcedureSnapshot {
     fn envelope_id() -> &'static str {
         "imperative.imperative"
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -123,55 +104,42 @@ impl store::ArtifactPack for ProcedureSnapshot {
     fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> { Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec()) }
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&ProcedurePackRecord::__dsl_spec(), &ProcedurePackRecord::from_snapshot(self).__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &ProcedurePackRecord::__dsl_spec(), options)?;
-        ProcedurePackRecord::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)?.into_snapshot().map_err(store::PackError::Schema)
+        Ok(ProcedurePackRecord::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)?.into_snapshot())
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(ProcedurePackRecord::__dsl_spec())
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 //#region 🌉️ExternalCodecBridge
-/// 📤️ Renders an [`ProcedureSnapshot`] as this facet's own camelCase JSON projection — the
-/// comparison surface `🛟️mutate-procedure-1`'s scenarios are measured through, and the shape the
-/// committed `../🧫️fixtures/🧬️mutations/<slug>/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️.json`
-/// specification vectors are written in. It carries `flow` and `text` as content-addressed HANDLES,
-/// never as content, which is what makes it a usable observability surface here: the `flow` handle
-/// moves if and only if the program moved.
-///
-/// A thin `dsl::os_pack::json` wrapper over `ProcedureSnapshot`'s own `ToValue` impl — first-party,
-/// infallible (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS).
+/// 📤️ Renders a [`ProcedureSnapshot`] as this facet's own camelCase JSON projection: the schema and the two
+/// content-addressed child HANDLES, never content (first-party JSON codec behind this interface).
 pub fn encode_procedure_snapshot_json(snapshot: &ProcedureSnapshot) -> String {
-    dsl::os_pack::json::to_json_string(snapshot)
+    semio_framework_pack_json::to_json_string(snapshot)
 }
 
-/// 📥️ The inverse of [`encode_procedure_snapshot_json`] — decodes those committed specification
-/// vectors into real [`ProcedureSnapshot`] values, so `🛟️mutate-procedure-1`'s adapter reads the
-/// committed fixture rather than re-declaring it as a Rust literal beside it.
+/// 📥️ The inverse of [`encode_procedure_snapshot_json`].
 pub fn decode_procedure_snapshot_json(text: &str) -> Result<ProcedureSnapshot, String> {
-    dsl::os_pack::json::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 
-/// 📝️ Parses `.imperative.dsl.semio` text into an [`ProcedureSnapshot`] — a named, non-async
-/// pass-through of this type's own `store::ArtifactDsl` impl above, whose trait and error type are
-/// both unnameable outside this crate, so `🛟️mutate-procedure-1`'s `identity-round-trip` scenario
-/// reaches the real committed artifact (`../../🖼️assets/🎬️demo/🗣️.dsl.semio`)
-/// through this instead.
+/// 📝️ Parses `.imperative.dsl.semio` text into a [`ProcedureSnapshot`] — a named pass-through of this type's own
+/// `store::ArtifactDsl` impl, whose trait and error type are both unnameable outside this crate.
 pub fn parse_procedure_dsl(text: &str) -> Result<ProcedureSnapshot, String> {
     <ProcedureSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
 }
 
-/// 📝️ Renders an [`ProcedureSnapshot`] back as `.imperative.dsl.semio` text — the inverse of
-/// [`parse_procedure_dsl`], preamble and both composed child handles included.
+/// 📝️ Renders a [`ProcedureSnapshot`] back as `.imperative.dsl.semio` text — the inverse of [`parse_procedure_dsl`].
 pub fn print_procedure_dsl(snapshot: &ProcedureSnapshot) -> String {
     store::ArtifactDsl::print_dsl(snapshot)
 }

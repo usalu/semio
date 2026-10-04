@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "neutralRoots": [
+    "🧰️framework/🔨️modules/🎒️pack/🔤️json",
+    "🧰️framework/🔨️modules/🌱️value",
+    "🧰️framework/🔨️modules/🏃️process",
+    "🧰️framework/🔨️modules/🧬️schema/✅️validator"
+  ],
+  "absentRoots": [
+    "🧰️framework/🛍️products",
+    "✏️s",
+    "🌎️hub"
+  ],
+  "reference": {
+    "script": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/📜️script.ts",
+    "command": "test-reference",
+    "budgetMs": 30000
+  },
+  "testDependencies": [
+    "typescript",
+    "@types/bun",
+    "bun-types",
+    "@types/node",
+    "undici-types",
+    "ajv",
+    "fast-deep-equal",
+    "fast-uri",
+    "json-schema-traverse",
+    "require-from-string",
+    "@iarna/toml",
+    "jsonc-parser"
+  ]
+}

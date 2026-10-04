@@ -7,9 +7,7 @@ field = 'schema', '=', text
       | 'id', '=', text
       | 'version', '=', text
       | 'title', '=', text
-      | 'document', '=', child handle
-      | 'flow', '=', child handle
-      | 'steps', '=', text ;
+      | 'flow', '=', child handle ;
 child handle = 'child_id', '=', text, 'target', '=', text ;
 
 (* Framework dialect-primitive terminal: a bare word or a double-quoted, backslash-escaped string. *)

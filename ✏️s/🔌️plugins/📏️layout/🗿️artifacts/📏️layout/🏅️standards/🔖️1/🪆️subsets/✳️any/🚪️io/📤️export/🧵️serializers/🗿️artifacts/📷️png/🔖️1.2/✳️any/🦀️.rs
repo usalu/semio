@@ -10,5 +10,5 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::{encode_d
 pub fn register() {}
 
 pub fn serialize_bytes(from: &LayoutSnapshot) -> Result<Vec<u8>, store::PackError> {
-    encode_drawing(&layout_snapshot_to_semio_drawing(from), SemioDrawingFormat::Png).map_err(|error| store::PackError::Schema(format!("layout→png: {error}")))
+    encode_drawing(&layout_snapshot_to_semio_drawing(from), SemioDrawingFormat::Png).map_err(|error| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("layout→png: {error}"))))
 }

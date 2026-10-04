@@ -1,40 +1,5 @@
 syntax = "proto3";
 package semio.s.flow.flow.mutation;
 
-// 🧬️ Flow mutation schema — artifact-lane fields only.
-
-message FlowMutation {
-  // @state artifact
-  string schema = 1;
-  // @state artifact
-  CameraJson camera = 2;
-  // @state artifact
-  repeated Widget widgets = 3;
-  // @state artifact
-  repeated SynapseSpec synapses = 4;
-  // @state artifact
-  map<string, WidgetLayout> layout = 5;
-}
-
-message CameraJson {
-  double x = 1;
-  double y = 2;
-  double zoom = 3;
-}
-
-message WidgetLayout {
-  double x = 1;
-  double y = 2;
-}
-
-message SynapseSpec {
-  string id = 1;
-  string from = 2;
-  string to = 3;
-  string from_port = 4;
-  string to_port = 5;
-}
-
-message Widget {
-  string json = 1;
-}
+// 🌊️ Empty: a flow's content edits are child-lane leaves of its composed `content` flow child (design §20.15).
+message FlowMutation {}

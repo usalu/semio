@@ -10,13 +10,13 @@ pub const TEXT_OPCODE: &str = OPCODE;
 //#region 🔖️Codec
 /// 🖨️ Prints the owned payload as schema JSON.
 pub fn print(payload: &RemoveTrimBox) -> Result<String, String> {
-    Ok(pack::json_to_string(&pack::json_from_dsl_value(&dsl::ToValue::to_value(payload))))
+    Ok(semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(payload))))
 }
 
 /// 📥️ Parses the owned payload from schema JSON.
 pub fn parse(text: &str) -> Result<RemoveTrimBox, String> {
-    let parsed = pack::parse_json(text).map_err(|error| error.to_string())?;
-    <RemoveTrimBox as dsl::FromValue>::from_value(pack::json_to_dsl_value(&parsed)).map_err(|error| error.to_string())
+    let parsed = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
+    <RemoveTrimBox as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Codec
 

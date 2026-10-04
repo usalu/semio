@@ -1,0 +1,14 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "$id":"https://json.schemas.assets.semio-tech.com/framework/pack/error/identity/schema.json",
+  "title":"Canonical Pack Error Identity",
+  "type":"object","additionalProperties":false,
+  "required":["schemaVersion","definingOwner","consumers","fault","primitiveCases","typedCause"],
+  "properties":{
+    "schemaVersion":{"const":1},"definingOwner":{"const":"semio-framework-pack-error"},
+    "consumers":{"const":["semio-framework-pack","semio-framework-replication"]},
+    "fault":{"type":"object","additionalProperties":false,"required":["origin","code","severity"],"properties":{"origin":{"const":"Module"},"code":{"const":"module.pack"},"severity":{"const":"Error"}}},
+    "primitiveCases":{"type":"array","minItems":2,"maxItems":2,"uniqueItems":true,"items":{"type":"object","additionalProperties":false,"required":["id","bytes","position","display","convertedKind"],"properties":{"id":{"type":"string","minLength":1},"bytes":{"type":"array","maxItems":1,"items":{"type":"integer","minimum":0,"maximum":255}},"position":{"type":"integer","minimum":0,"maximum":1},"display":{"type":"string","minLength":1},"convertedKind":{"const":"InvalidValue"}}}},
+    "typedCause":{"type":"object","additionalProperties":false,"required":["valueVariant","textVariant","convertedMessage","source","retiredVariant"],"properties":{"valueVariant":{"const":"ValueRefusal"},"textVariant":{"const":"TextRefusal"},"convertedMessage":{"const":"exact-owned-cause"},"source":{"const":"exact-borrowed-cause"},"retiredVariant":{"const":"Schema"}}}
+  }
+}

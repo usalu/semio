@@ -1349,7 +1349,11 @@ pub fn closest_point_on_face(body: &Body, face: FaceId, point: Pnt3) -> Result<(
         _ => {
             let domain = surface.domain();
             let closest = surface_ops::closest_uv(surface, domain, point, 1e-9);
-            Ok((closest.point, closest.distance))
+            if crate::brep::queries::classification::point_in_face_uv_closure(body, face, Pnt2::new(closest.u, closest.v), 1e-9)? {
+                Ok((closest.point, closest.distance))
+            } else {
+                closest_point_on_face_boundary(body, face, point)
+            }
         }
     }
 }
@@ -1363,7 +1367,12 @@ fn closest_point_on_planar_face(body: &Body, face: FaceId, point: Pnt3) -> Resul
     if point_in_face_plane(body, face, p)? {
         return Ok((p, d));
     }
-    let mut best_p = p;
+    closest_point_on_face_boundary(body, face, point)
+}
+
+/// 🎯️ Projects onto the actual edge ranges of a face's outer and inner trim loops.
+fn closest_point_on_face_boundary(body: &Body, face: FaceId, point: Pnt3) -> Result<(Pnt3, f64), KernelError> {
+    let mut best_p = point;
     let mut best_d = f64::INFINITY;
     for loop_id in body.face_loops(face) {
         for coedge in body.loop_coedges(loop_id) {
@@ -1377,7 +1386,7 @@ fn closest_point_on_planar_face(body: &Body, face: FaceId, point: Pnt3) -> Resul
             }
         }
     }
-    Ok((best_p, best_d))
+    if best_d.is_finite() { Ok((best_p, best_d)) } else { Err(KernelError::MissingEntity("face has no projectable trim boundary".into())) }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

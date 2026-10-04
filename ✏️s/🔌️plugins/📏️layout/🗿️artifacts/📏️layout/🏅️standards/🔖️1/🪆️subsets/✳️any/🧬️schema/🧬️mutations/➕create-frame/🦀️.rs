@@ -25,9 +25,12 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for CreateFrame {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_create_frame(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
-        inverse_create_frame(self, base)
-    }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok({
+        inverse_create_frame(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Create frame \"{}\"", self.frame.id()), &format!("Rahmen \"{}\" erstellen", self.frame.id()))
     }
@@ -56,7 +59,10 @@ pub fn diff_create_frame(payload: &CreateFrame, base: &LayoutSnapshot) -> protoc
 //#endregion ➕️CreateFrame
 
 //#region ➕️CreateFrame
-pub fn inverse_create_frame(payload: &CreateFrame, _base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_create_frame(payload: &CreateFrame, _base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![LayoutMutation::DeleteFrame(delete_frame::DeleteFrame { page_id: payload.page_id.clone(), frame_id: payload.frame.id().to_string() })]
+
+    })())
 }
 //#endregion ➕️CreateFrame

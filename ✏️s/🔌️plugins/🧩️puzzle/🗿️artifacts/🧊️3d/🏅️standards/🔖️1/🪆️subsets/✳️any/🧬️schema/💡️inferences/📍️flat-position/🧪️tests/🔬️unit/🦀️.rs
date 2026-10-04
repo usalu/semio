@@ -33,64 +33,64 @@ pub(crate) fn chain_snapshot() -> Puzzle3dSnapshot {
 //#endregion 🧸️Fixtures
 
 //#region 🧪️IncrementalityLaw
-#[test]
-fn changing_a_leaf_own_vortex_does_not_recompute_ancestors() {
-    let mut cache = semio_framework::io::resolve_ready(InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() }));
+#[semio_framework_async_macros::async_test]
+async fn changing_a_leaf_own_vortex_does_not_recompute_ancestors() {
+    let mut cache = (InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() })).await;
     let base = chain_snapshot();
     let _ = store::infer_field::<Puzzle3dSnapshot, Puzzle3dFlatPlane>(&base, Some(&mut cache));
 
     let mut changed = base.clone();
     changed.objects[2].vortices[0].position = [0.0, 0.0, -5.0]; // leaf's own vortex moves
-    let before = semio_framework::io::resolve_ready(cache.stats());
+    let before = (cache.stats()).await;
     let planes = store::infer_field::<Puzzle3dSnapshot, Puzzle3dFlatPlane>(&changed, Some(&mut cache));
-    let after = semio_framework::io::resolve_ready(cache.stats());
+    let after = (cache.stats()).await;
 
     assert_eq!(after.misses - before.misses, 1, "only the leaf itself may miss when its own vortex changes");
     assert_eq!(planes.get("root"), Some(&orientation_to_plane([0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0])));
 }
 
-#[test]
-fn changing_the_root_position_recomputes_the_whole_chain() {
-    let mut cache = semio_framework::io::resolve_ready(InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() }));
+#[semio_framework_async_macros::async_test]
+async fn changing_the_root_position_recomputes_the_whole_chain() {
+    let mut cache = (InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() })).await;
     let base = chain_snapshot();
     let _ = store::infer_field::<Puzzle3dSnapshot, Puzzle3dFlatPlane>(&base, Some(&mut cache));
 
     let mut changed = base.clone();
     changed.objects[0].origin = [9.0, 9.0, 9.0]; // root moves
-    let before = semio_framework::io::resolve_ready(cache.stats());
+    let before = (cache.stats()).await;
     let _ = store::infer_field::<Puzzle3dSnapshot, Puzzle3dFlatPlane>(&changed, Some(&mut cache));
-    let after = semio_framework::io::resolve_ready(cache.stats());
+    let after = (cache.stats()).await;
 
     assert_eq!(after.misses - before.misses, 3, "root + mid + leaf must all miss when the root's own plane changes");
 }
 
-#[test]
-fn changing_an_attraction_center_param_never_touches_the_plane_chain() {
-    let mut plane_cache = semio_framework::io::resolve_ready(InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() }));
+#[semio_framework_async_macros::async_test]
+async fn changing_an_attraction_center_param_never_touches_the_plane_chain() {
+    let mut plane_cache = (InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() })).await;
     let base = chain_snapshot();
     let _ = store::infer_field::<Puzzle3dSnapshot, Puzzle3dFlatPlane>(&base, Some(&mut plane_cache));
 
     let mut changed = base.clone();
     changed.attractions[0].x = 42.0; // center-only param
-    let before = semio_framework::io::resolve_ready(plane_cache.stats());
+    let before = (plane_cache.stats()).await;
     let _ = store::infer_field::<Puzzle3dSnapshot, Puzzle3dFlatPlane>(&changed, Some(&mut plane_cache));
-    let after = semio_framework::io::resolve_ready(plane_cache.stats());
+    let after = (plane_cache.stats()).await;
     assert_eq!(after.misses, before.misses, "the plane chain must be cache-hit-only when only a center param (x/y) changes");
 
-    let mut center_cache = semio_framework::io::resolve_ready(InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() }));
+    let mut center_cache = (InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() })).await;
     let _ = store::infer_field::<Puzzle3dSnapshot, Puzzle3dFlatCenter>(&base, Some(&mut center_cache));
-    let before = semio_framework::io::resolve_ready(center_cache.stats());
+    let before = (center_cache.stats()).await;
     let _ = store::infer_field::<Puzzle3dSnapshot, Puzzle3dFlatCenter>(&changed, Some(&mut center_cache));
-    let after = semio_framework::io::resolve_ready(center_cache.stats());
+    let after = (center_cache.stats()).await;
     assert!(after.misses > before.misses, "the center chain must miss when a center param changes");
 }
 //#endregion 🧪️IncrementalityLaw
 
 //#region 🧪️CacheTransparencyLaw
-#[test]
-fn disabled_cache_matches_pure_recompute() {
+#[semio_framework_async_macros::async_test]
+async fn disabled_cache_matches_pure_recompute() {
     let snapshot = chain_snapshot();
-    let mut disabled = semio_framework::io::resolve_ready(InferenceCache::new(InferenceCacheConfig { enabled: false, ..Default::default() }));
+    let mut disabled = (InferenceCache::new(InferenceCacheConfig { enabled: false, ..Default::default() })).await;
     let pure_planes = store::infer_field::<Puzzle3dSnapshot, Puzzle3dFlatPlane>(&snapshot, None);
     let via_disabled = store::infer_field::<Puzzle3dSnapshot, Puzzle3dFlatPlane>(&snapshot, Some(&mut disabled));
     assert_eq!(pure_planes, via_disabled);

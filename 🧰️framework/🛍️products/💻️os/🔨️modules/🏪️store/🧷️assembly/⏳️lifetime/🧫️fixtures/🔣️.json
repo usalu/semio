@@ -1,0 +1,29 @@
+{
+  "contract": "semio.framework.os.store.assembly-lifetime/v1",
+  "scenarios": [
+    {
+      "id": "explicit-release",
+      "baselineAccepted": true,
+      "accepted": false,
+      "diagnostic": "E0505"
+    },
+    {
+      "id": "implicit-scope",
+      "baselineAccepted": true,
+      "accepted": false,
+      "diagnostic": "E0597"
+    },
+    {
+      "id": "escaping-return",
+      "baselineAccepted": true,
+      "accepted": false,
+      "diagnostic": "E0515"
+    },
+    {
+      "id": "valid-order",
+      "baselineAccepted": true,
+      "accepted": true,
+      "diagnostic": null
+    }
+  ]
+}

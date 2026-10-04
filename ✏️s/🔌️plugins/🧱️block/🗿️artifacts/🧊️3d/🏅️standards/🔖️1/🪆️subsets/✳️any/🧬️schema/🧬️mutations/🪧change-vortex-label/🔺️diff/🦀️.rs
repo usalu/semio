@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeVortexLabel, base: &Block3dSnapshot) -> proto
     };
     let replacement = Block3dVortexTemplate { label: payload.new_label.clone(), ..existing.clone() };
     if replacement == *existing {
-        return protocol::MutationOutcome::new(Block3dDiff::default()).absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "no changes to apply").at(vec![payload.id.clone()])]);
+        return protocol::MutationOutcome::new(Block3dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(vec![payload.id.clone()])]);
     }
     protocol::MutationOutcome::new(Block3dDiff {
         vortices: Some(Block3dVorticesDelta { patched: vec![Block3dVorticesPatchEntry { id: payload.id.clone(), patch: Block3dVorticesPatch { replacement: Some(replacement) } }], ..Default::default() }),

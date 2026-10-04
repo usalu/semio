@@ -7,7 +7,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Mutation
 /// 👥 `duplicate-blocks` payload — copies several blocks at once (multi-select duplicate).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "duplicate-blocks")]
@@ -28,9 +28,12 @@ impl MutationKind<NoteSnapshot, NoteMutation> for DuplicateBlocks {
     fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<NoteMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Duplicate {} blocks", self.source_ids.len()), &format!("{} Blöcke duplizieren", self.source_ids.len()))
     }

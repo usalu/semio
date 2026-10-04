@@ -2,7 +2,7 @@
 use crate::editor::raster::config::{RasterConfig,RasterConfigMutation,RasterPixelSelection};
 use crate::{RasterMutation,RasterSnapshot};
 use semio_framework_plugin::{ArtifactView,ConfigView,Emit,Fault};
-#[derive(Clone,Debug,PartialEq,dsl::ToValue,dsl::FromValue,dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all="camelCase")]
 #[dsl(keyword="pixel-selection")]
 pub struct SetPixelSelection {

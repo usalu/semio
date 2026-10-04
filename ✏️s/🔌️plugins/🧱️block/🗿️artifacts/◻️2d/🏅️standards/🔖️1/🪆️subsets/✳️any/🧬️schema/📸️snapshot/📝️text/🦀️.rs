@@ -15,7 +15,7 @@ pub const BLOCK2D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT: &str = include_str!("../../
 pub const BLOCK2D_CONCRETE_FOREST_RIGHT_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/➡️hexagonal-cut-concrete-forest-right/🖼️assets/➡️hexagonal-cut-concrete-forest/🗣️.dsl.semio");
 
 /// 📖️ Parses `.block2d` DSL text into a `Block2dSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<Block2dSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<Block2dSnapshot, semio_framework_diagnostic::TextError> {
     <Block2dSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 

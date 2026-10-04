@@ -26,13 +26,13 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕️insert-frame/🆕️appends/🎯️outcome/🔣️.json");
 
 fn before() -> SemioImageSnapshot {
-    dsl::json::from_json_str(BEFORE).expect("insert-frame before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("insert-frame before snapshot decodes")
 }
 fn expected_after() -> SemioImageSnapshot {
-    dsl::json::from_json_str(AFTER).expect("insert-frame after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("insert-frame after snapshot decodes")
 }
 fn mutation() -> SemioImageMutation {
-    dsl::json::from_json_str(MUTATION).expect("insert-frame mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("insert-frame mutation decodes")
 }
 fn leaf_outcome() -> protocol::MutationOutcome<SemioImageDiff> {
     let SemioImageMutation::InsertFrame(insert_frame::InsertFrame { index, frame }) = mutation() else { panic!("insert-frame/appends-a-second-frame-at-the-end: the committed mutation must be the insert-frame variant") };
@@ -59,7 +59,7 @@ async fn appends_the_second_frame_with_its_own_delay_and_pixels() {
 async fn the_undo_remove_frame_takes_the_second_frame_back_out() {
     let base = before();
     let mutation = mutation();
-    let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base);
+    let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![SemioImageMutation::RemoveFrame(remove_frame::RemoveFrame { index: 1 })], "insert-frame at #1 must undo as remove-frame at #1");
     let mut current = before();
     apply_semio_image_mutation(&mut current, &mutation);
@@ -73,12 +73,12 @@ async fn the_undo_remove_frame_takes_the_second_frame_back_out() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioImageSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: SemioImageSnapshot = semio_framework_pack_json::from_json_str(text,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "insert-frame/appends-a-second-frame-at-the-end: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("insert-frame mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(mutation()))).expect("insert-frame mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("insert-frame mutation reparses");
     assert_eq!(reencoded, original, "insert-frame/appends-a-second-frame-at-the-end: committed mutation JSON is not canonical");
 }
@@ -95,7 +95,7 @@ async fn declared_outcome_holds_with_no_guard_branch_firing() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = leaf_outcome();
-    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "insert-frame/appends-a-second-frame-at-the-end: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -103,10 +103,10 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff is a decode→encode fixed point and touches only the `frames` slot.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_touches_only_frames() {
-    let decoded: SemioImageDiff = dsl::json::from_json_str(DIFF).expect("committed insert-frame diff decodes");
+    let decoded: SemioImageDiff = semio_framework_pack_json::from_json_str(DIFF,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed insert-frame diff decodes");
     assert!(decoded.frames.is_some(), "insert-frame must write the frames slot");
     assert!(decoded.width.is_none() && decoded.height.is_none() && decoded.colorspace.is_none() && decoded.bit_depth.is_none() && decoded.icc.is_none() && decoded.metadata.is_none(), "insert-frame must touch no scalar field and no metadata");
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "insert-frame/appends-a-second-frame-at-the-end: committed diff JSON is not canonical");
 }
@@ -114,7 +114,7 @@ async fn committed_diff_is_canonical_and_touches_only_frames() {
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioImageDiff = dsl::json::from_json_str(DIFF).expect("committed insert-frame diff decodes");
+    let decoded: SemioImageDiff = semio_framework_pack_json::from_json_str(DIFF,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed insert-frame diff decodes");
     let produced = decoded.apply(&before()).expect("committed insert-frame diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "insert-frame/appends-a-second-frame-at-the-end: committed diff did not carry before to after");
 }

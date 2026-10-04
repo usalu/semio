@@ -109,7 +109,7 @@ function sourceOracle(fixture: Fixture, source: string): boolean {
     && source.includes("struct Process3dResumableCommandWork")
     && source.includes("stage: \"process3d-config-prepare\"")
     && source.includes("fn checkpoint(&self")
-    && source.includes("process3d-retained-checkpoint-tool-mismatch")
+    && source.includes("Process 3D checkpoint belongs to another registered tool")
     && source.includes("fn begin_close(&mut self)")
     && source.includes("fn terminal_is_empty(&self)")
     && source.includes("fn build_config_store_one_item_preparation_factory()")

@@ -9,6 +9,6 @@ use crate::standards::v1::subsets::any::schema::inferences::export_registers_csv
 
 pub fn register() {}
 
-pub fn serialize_bytes(snapshot: &ProgramSnapshot) -> Result<Vec<u8>, store::TextError> {
-    export_registers_csv(snapshot).map(String::into_bytes).map_err(|error| store::TextError::new(format!("program→csv: {error}"), dsl::TextSpan::at(1, 1)))
+pub fn serialize_bytes(snapshot: &ProgramSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
+    export_registers_csv(snapshot).map(String::into_bytes).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("program→csv: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))
 }

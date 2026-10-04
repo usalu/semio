@@ -16,7 +16,7 @@ async fn task_restarts_round_trip_through_json_and_are_exposed_by_the_accessor()
     let runtime = plugin_runtime::PluginRuntime::<crate::app::NoPluginApp>::new();
     let restarts = vec![TaskRestart { instance: 5, command: vec![1, 2, 3] }, TaskRestart { instance: 6, command: vec![4] }];
     let bytes = checkpoint(&runtime, &[], Vec::new(), Vec::new(), restarts.clone()).await.expect("must encode");
-    let pack = restore(&runtime, &bytes).await.expect("must decode back");
+    let pack = restore(&runtime, &bytes).await.expect("must decode back").pack;
     assert_eq!(pack.task_restarts().await.len(), 2);
     assert_eq!(pack.task_restarts().await[0].instance, 5);
     assert_eq!(pack.task_restarts().await[0].command, vec![1, 2, 3]);

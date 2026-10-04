@@ -53,7 +53,7 @@ async fn missing_source_is_reported_as_target_missing() {
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.target-missing", "duplicate-layer reports a missing source as target-missing");
-    assert_eq!(messages[0].level, protocol::Severity::Error, "a missing source is an Error, not a Fatal — the duplicate-id guard is the Fatal one");
+    assert_eq!(messages[0].level, semio_framework_diagnostic::Severity::Error, "a missing source is an Error, not a Fatal — the duplicate-id guard is the Fatal one");
     assert_eq!(messages[0].target, vec!["shape-missing".to_string()], "the diagnostic addresses the payload's own layer_id");
 }
 
@@ -61,7 +61,7 @@ async fn missing_source_is_reported_as_target_missing() {
 /// of an id that was never minted.
 #[semio_framework_async_macros::async_test]
 async fn inverse_has_nothing_to_undo() {
-    let inverse = inverse_drawing_mutation(&before(), &mutation());
+    let inverse = inverse_drawing_mutation(&before(), &mutation()).expect("valid retained mutation inverse fixture");
     assert!(inverse.is_empty(), "duplicate-layer/rejects-a-missing-source-layer: a rejected duplicate must have no inverse steps, got {inverse:?}");
 }
 

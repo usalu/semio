@@ -49,5 +49,5 @@ export const blockBlock2dMutationsTextGuardConstant = <T extends string | number
 //#endregion 🚪️Parsers
 
 export function parseBlock2dMutationsText(value: unknown, at = "$"): Block2dMutationsText {
-  return blockBlock2dMutationsTextGuardObject(value, `${at}`);
+  return blockBlock2dMutationsTextGuardString(value, at);
 }

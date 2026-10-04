@@ -25,9 +25,9 @@ impl Deserializer<RemodelingSnapshot> for PngIntoRemodeling {
     }
     async fn deserialize(payload: &IoPayload) -> IoResult<RemodelingSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
-            return Err(IoError { message: "png→remodeling: expected a binary png payload".to_string(), diagnostics: Vec::new() });
+            return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "png→remodeling: expected a binary png payload".to_string())));
         };
-        let scene = io_root::scene_from_png_bytes(bytes).map_err(|reason| IoError { message: format!("png→remodeling: {reason}"), diagnostics: Vec::new() })?;
+        let scene = io_root::scene_from_png_bytes(bytes).map_err(|reason| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("png→remodeling: {reason}"))))?;
         Ok(IoOutcome::clean(scene))
     }
 }

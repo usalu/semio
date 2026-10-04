@@ -8,7 +8,6 @@
 
 use crate::standards::v2_0::subsets::base::schema::snapshot::ZipSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::entries::compute_zip_entries;
 //#region 🔖️Inference
@@ -23,8 +22,11 @@ pub struct ZipInference {
 }
 
 impl protocol::Inference<ZipSnapshot> for ZipInference {
-    fn infer(snapshot: &ZipSnapshot) -> Self {
+    fn infer(snapshot: &ZipSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { entries: compute_zip_entries(snapshot) }
+    
+        })
     }
 }
 
@@ -32,7 +34,9 @@ impl protocol::Inference<ZipSnapshot> for ZipInference {
 /// `ZipSnapshot::default()`'s `entries` ever stop being empty.
 impl Default for ZipInference {
     fn default() -> Self {
-        <Self as protocol::Inference<ZipSnapshot>>::infer(&ZipSnapshot::default())
+        let snapshot = &ZipSnapshot::default();
+
+        Self { entries: compute_zip_entries(snapshot) }
     }
 }
 
@@ -48,17 +52,6 @@ impl protocol::InferenceSpec<ZipSnapshot> for ZipInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 💡️ No `InferredField`s here — `entries` is a single fold over `entries` (count, byte-size sum,
-/// content digest), already O(n) in entry count with no honest per-entity incremental
-/// decomposition worth a merkle dep-chain over one flat `Vec<ZipEntry>` — the default
-/// `infer_cached` passthrough is exact.
-impl ArtifactInferrer for crate::standards::v2_0::subsets::base::schema::ZipBuilder {
-    type Snapshot = ZipSnapshot;
-    type Inference = ZipInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.zip.inference`'s facet leaves into the OS-wide inference catalog — call

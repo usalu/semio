@@ -130,7 +130,7 @@ pub const VCS_APP_ID: &str = "s.vcs.vcs@1/*#editor";
 /// first, so building the effect that way panics (ticket 26/09/18, B1a fix #7).
 pub fn vcs_example_document_effect() -> semio_framework_plugin::Effect {
     let pack = <VcsSnapshot as store::ArtifactPack>::encode_pack(&crate::examples::demo::snapshot());
-    let spr = semio_framework_plugin::resolve_ready(store::empty_document_spr(VCS_APP_ID, VCS_DOCUMENT_SCHEMA));
+    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr(VCS_APP_ID, VCS_DOCUMENT_SCHEMA));
     semio_framework_plugin::Effect::LoadDocument { pack, spr }
 }
 //#endregion 📚️ExampleDocument
@@ -296,7 +296,7 @@ impl VcsEditCommandWork {
                 if text.len() > VCS_BOUNDED_RAW_BYTES || snapshot.tags.len() > VCS_EDIT_MAXIMUM_TAGS {
                     return Err(Fault::from("vcs-edit-input-capacity"));
                 }
-                match dsl::json::from_json_str::<VcsSnapshot>(text) {
+                match semio_framework_pack_json::from_json_str::<VcsSnapshot>(text, semio_framework_pack_json::JsonMemberPolicy::Reject) {
                     Ok(next) if next.tags.len() <= VCS_EDIT_MAXIMUM_TAGS => {
                         self.next = Some(next);
                         self.phase = VcsEditPhase::Reserve;
@@ -419,7 +419,7 @@ impl ArtifactCommandWork<EditorApp<VcsPlayApp>> for VcsEditCommandWork {
         vcs_edit_extent(command, snapshot, interaction)
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<VcsPlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<VcsPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<VcsPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<VcsPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, history: _history, interaction: _interaction, hover: _hover, context: _context, operation: _operation } = *input;
         let replaying = self.steps < self.replay_target;
         match self.advance(command, snapshot)? {
@@ -666,46 +666,17 @@ struct VcsOneItemPreparation<P, M> {
     closing: bool,
 }
 
-fn vcs_one_item_edit<M>(forward: M, inverse: Vec<M>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<M> {
-    let id = format!("vcs-retained-{}-{}", authority.operation().0, authority.next_sequence_number());
-    protocol::Edit { line: authority.line_id().map(str::to_owned),
-        id: id.clone(),
-        actor: Some(authority.actor().to_string()),
-        forwards: vec![forward],
-        inverse,
-        mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
-            dependencies: Vec::new(),
-            base_version: authority.base_applied_edit_count() as u64,
-            author_id: Some(protocol::ActorId(authority.actor().to_string())),
-            timestamp: authority.next_clock(),
-            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-            payload_hash: None,
-            semantic_kind: None,
-            label: None,
-            group_id: None,
-            origin: Default::default(),
-            transaction: None,
-        }],
-        description, verb: None,
-        coalesce_key: None,
-        sequence_number: authority.next_sequence_number(),
-        started_at: String::new(),
-        finished_at: None,
-    }
-}
-
 impl<P, M> store::ArtifactStoreOneItemPreparationFactory<P, M> for VcsOneItemPreparationFactory<P, M>
 where
     P: Clone + Send + Sync + 'static,
     M: protocol::Mutation<P> + Send + Sync + 'static,
     M::Diff: protocol::MutationDiff<P>,
 {
-    fn preflight(&self, _mutation: &M, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    fn preflight(&self, mutation: &M, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != self.lane || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
             return Err("VCS one-item preparation rejected its lane or description envelope".into());
         }
-        Ok(store::ArtifactStoreOneItemFootprint::for_one_invertible_item(store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
+        Ok(store::ArtifactStoreOneItemFootprint::for_leaf::<P, M>(mutation, store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
 
     fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<P, M>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, store::ArtifactStoreOneItemPreparationRequest<P, M>> {
@@ -745,10 +716,10 @@ where
         }
         let base = self.base.as_ref().ok_or_else(|| "VCS one-item preparation lost its exact base root".to_string())?;
         let mutation = self.mutation.take().ok_or_else(|| "VCS one-item preparation lost its mutation owner".to_string())?;
-        let inverse = mutation.inverse(base.get());
+        let inverse = mutation.inverse(base.get()).map_err(semio_framework_value::ValueError::into_message)?;
         let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
         let authority = self.authority.as_ref().ok_or_else(|| "VCS one-item preparation lost its Store authority".to_string())?;
-        let prepared = authority.prepare_one_item(vcs_one_item_edit(mutation, inverse, self.description.take(), authority), std::sync::Arc::new(post))?;
+        let prepared = authority.prepare_one_item(authority.next_edit(mutation, inverse), std::sync::Arc::new(post))?;
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
         self.prepared = Some(prepared);
         Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
@@ -770,7 +741,7 @@ where
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -779,7 +750,7 @@ where
         }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
-                return Err("VCS one-item preparation could not return its exact base root".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"VCS one-item preparation could not return its exact base root"));
             }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -856,6 +827,11 @@ impl ArtifactEditor for VcsPlayApp {
 
     const DIALECT: Dialect = crate::VCS_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = VCS_DOCUMENT_SCHEMA;
+
+    fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
+        static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 1]> = std::sync::LazyLock::new(|| [("vcs.command.payload-too-large", LocalizedLabel::native("This edit is too large to apply in one step.", "Diese Änderung ist zu groß, um sie in einem Schritt anzuwenden."))]);
+        NOTICES.as_slice()
+    }
 
     /// 🧺️ Without these owners the document store holds no `initial_snapshot_retirement_factory`, so
     /// the FIRST verb that returns a snapshot read fails validation with `returned snapshot read
@@ -941,11 +917,11 @@ impl ArtifactEditor for VcsPlayApp {
             return Ok(None);
         }
         if request.command.command_id() != request.tool_id {
-            return Err(Fault::from("vcs-command-tool-mismatch"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "VCS command does not match its exact registered tool"));
         }
         let extent = if bounded { vcs_bounded_extent(&request.command, &request.snapshot, &request.interaction_state) } else { vcs_edit_extent(&request.command, &request.snapshot, &request.interaction_state) };
         if extent.is_none() {
-            return Err(Fault::from("vcs-command-payload-too-large"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("vcs.command.payload-too-large"), "the vcs command payload exceeds its bounded capacity"));
         }
         let tool_id = request.command.command_id();
         let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = if bounded { Box::new(BoundedArtifactCommandWork::new(tool_id, vcs_bounded_reduce, vcs_bounded_extent)) } else { Box::new(VcsEditCommandWork::new(tool_id)) };
@@ -990,27 +966,22 @@ impl ArtifactEditor for VcsPlayApp {
         command.command_id()
     }
 
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
-        let args = args.cloned().unwrap_or(dsl::DslValue::Null);
-        let text_arg = |key: &str| args.get(key).and_then(dsl::DslValue::as_str).unwrap_or_default().to_string();
-        // 🧵️ `samples: [[x, y], …]` (design L4): every well-formed pair in order; a legacy wire
-        // without `samples` folds its `x`/`y` into one sample.
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
+        let args = args.cloned().unwrap_or(semio_framework_value::DslValue::Null);
+        let text_arg = |key: &str| args.get(key).and_then(semio_framework_value::DslValue::as_str).unwrap_or_default().to_string();
         let pointer_samples = || {
-            let parsed = args
-                .get("samples")
-                .and_then(dsl::DslValue::as_array)
-                .map(|items| items.iter().filter_map(|item| { let pair = item.as_array()?; Some([pair.first()?.as_f64()?, pair.get(1)?.as_f64()?]) }).collect::<Vec<[f64; 2]>>())
-                .unwrap_or_default();
-            if parsed.is_empty() {
-                match (args.get("x").and_then(dsl::DslValue::as_f64), args.get("y").and_then(dsl::DslValue::as_f64)) {
-                    (Some(x), Some(y)) => vec![[x, y]],
-                    _ => Vec::new(),
+            args.get("samples")
+                .and_then(semio_framework_value::DslValue::as_array)
+                .ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.invalid-args"), "canvasPointerMove requires its `samples` batch"))?
+                .iter()
+                .map(|item| match item.as_array() {
+                    Some([x, y]) => x.as_f64().zip(y.as_f64()).map(|(x, y)| [x, y]),
+                    _ => None,
                 }
-            } else {
-                parsed
-            }
+                .ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.invalid-args"), "every canvasPointerMove sample is an [x, y] number pair")))
+                .collect::<Result<Vec<[f64; 2]>, Fault>>()
         };
-        let pointer_cancelled = || args.get("cancelled").and_then(dsl::DslValue::as_bool).unwrap_or(false);
+        let pointer_cancelled = || args.get("cancelled").and_then(semio_framework_value::DslValue::as_bool).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.invalid-args"), "canvasPointerUp requires its `cancelled` flag"));
         match action {
             "incrementCounter" => Ok(VcsCommand::IncrementCounter(increment_counter::IncrementCounter {})),
             "setActiveExample" => Ok(VcsCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: text_arg("exampleId") })),
@@ -1018,30 +989,30 @@ impl ArtifactEditor for VcsPlayApp {
                 let field = text_arg("field");
                 let value = text_arg("value");
                 if field.len().checked_add(value.len()).is_none_or(|bytes| bytes > VCS_BOUNDED_RAW_BYTES) {
-                    return Err(Fault::from("vcs-command-payload-too-large"));
+                    return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("vcs.command.payload-too-large"), "the vcs command payload exceeds its bounded capacity"));
                 }
                 Ok(VcsCommand::PatchSnapshot(patch_snapshot::PatchSnapshot { field, value }))
             }
             "textEdit" => {
                 let text = text_arg("text");
                 if text.len() > VCS_BOUNDED_RAW_BYTES {
-                    return Err(Fault::from("vcs-command-payload-too-large"));
+                    return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("vcs.command.payload-too-large"), "the vcs command payload exceeds its bounded capacity"));
                 }
                 Ok(VcsCommand::TextEdit(text_edit::TextEdit { text }))
             }
             "edit" => {
                 let text = text_arg("text");
                 if text.len() > VCS_BOUNDED_RAW_BYTES {
-                    return Err(Fault::from("vcs-command-payload-too-large"));
+                    return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("vcs.command.payload-too-large"), "the vcs command payload exceeds its bounded capacity"));
                 }
                 Ok(VcsCommand::Edit(edit_command::Edit { text }))
             }
             "noMutation" => Ok(VcsCommand::NoMutation(no_operation::NoMutation {})),
             "canvasPointerDown" => Ok(VcsCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {})),
-            "canvasPointerMove" => Ok(VcsCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { samples: pointer_samples() })),
-            "canvasPointerUp" => Ok(VcsCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: pointer_cancelled() })),
+            "canvasPointerMove" => Ok(VcsCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { samples: pointer_samples()? })),
+            "canvasPointerUp" => Ok(VcsCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: pointer_cancelled()? })),
             "canvasWheel" => Ok(VcsCommand::CanvasWheel(canvas_wheel::CanvasWheel {})),
-            other => Err(Fault::from(format!("unknown VCS app action '{other}'"))),
+            other => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.unsupported"), format!("unknown VCS app action '{other}'"))),
         }
     }
 

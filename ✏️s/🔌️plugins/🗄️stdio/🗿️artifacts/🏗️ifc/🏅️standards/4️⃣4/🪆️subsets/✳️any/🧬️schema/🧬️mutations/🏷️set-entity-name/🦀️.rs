@@ -19,9 +19,12 @@ impl protocol::MutationKind<IfcSnapshot, IfcMutation> for SetEntityName {
     fn diff(&self, base: &IfcSnapshot) -> protocol::MutationOutcome<<IfcMutation as Mutation<IfcSnapshot>>::Diff> {
         agg_diff(&IfcMutation::SetEntityName(self.clone()), base)
     }
-    fn inverse(&self, base: &IfcSnapshot) -> Vec<IfcMutation> {
-        agg_inverse(&IfcMutation::SetEntityName(self.clone()), base)
-    }
+    fn inverse(&self, base: &IfcSnapshot) -> Result<Vec<IfcMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&IfcMutation::SetEntityName(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set entity name", "Entitätsname setzen")
     }

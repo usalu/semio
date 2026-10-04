@@ -227,8 +227,8 @@ fn an_approval_receipt_must_bind_the_exact_job_proposal_and_durable_undo_scope()
 fn neutral_job_pages_refuse_foreign_jobs_and_private_payloads() {
     let source = include_str!("🧫️fixtures/🔣️.json");
     let vectors: serde_json::Value = serde_json::from_str(source).unwrap();
-    let owned: DslValue = semio_framework_os_kernel::os_pack::json::from_json_str(source).unwrap();
-    assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_os_kernel::os_pack::json::to_json_string(&owned)).unwrap(), vectors);
+    let owned: DslValue = semio_framework_pack_json::from_json_str(source, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&owned)).unwrap(), vectors);
     for case in vectors["operationLabels"].as_array().unwrap() {
         assert_eq!(inference_operation_label(case["spaceId"].as_str().unwrap(), case["documentId"].as_str().unwrap(), case["jobId"].as_str()), case["expected"].as_str().unwrap());
     }

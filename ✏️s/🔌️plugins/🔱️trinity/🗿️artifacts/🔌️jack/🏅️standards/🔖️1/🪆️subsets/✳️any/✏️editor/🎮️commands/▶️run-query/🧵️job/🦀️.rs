@@ -7,7 +7,8 @@ use crate::{JackSnapshot, TRINITY_GRAPH_SCHEMA};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::app::ArtifactOwnedToolJobContext;
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
-use semio_framework_plugin::{AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolPublicationContract, ArtifactToolPublicationLane, EditorApp, Emit, EphemeralEmit, Fault};
+use semio_framework_plugin::{AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolPublicationContract, ArtifactToolPublicationLane, EditorApp, EphemeralEmit, Fault, FaultCode, FaultOrigin};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
 
 type Owner = EditorApp<TrinityJackPlayApp>;
 pub(crate) const JACK_QUERY_TOOL_IDS: &[&str] = &["runQuery", "loadExampleQuery"];
@@ -16,7 +17,7 @@ const QUERY_BYTES: usize = 4_096;
 const QUERY_CHECKPOINT_BYTES: usize = 32;
 const QUERY_REPLAY_MAXIMUM_STEPS: u64 = (QUERY_BYTES as u64) * 16_384 * 16_384 * 16_384 + 1_000_000;
 const PAYLOAD_SCHEMA: &str = "trinity.jack.query-command.v1";
-const LANES: &[ArtifactToolPublicationLane] = &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient];
+const LANES: &[ArtifactToolPublicationLane] = &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Child, ArtifactToolPublicationLane::WindowTransient];
 
 pub(crate) struct JackQueryJobFactory {
     keys: Vec<ToolFactoryKey>,
@@ -137,6 +138,11 @@ pub(crate) fn build_job(request: ArtifactOwnedToolJobRequest<Owner>) -> Result<s
     Ok(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation))
 }
 
+/// 🚫️ A query run without the document's child view cannot read or edit the scene.
+fn content_missing() -> Fault {
+    Fault::new(FaultOrigin::App, FaultCode::new("trinity.jack.content-missing"), "the query operation carries no child view")
+}
+
 struct JackQueryWork {
     tool: &'static str,
     source: Option<String>,
@@ -185,14 +191,13 @@ impl JackQueryWork {
         input: &ArtifactCommandInputs<'_, Owner>,
         result: Option<crate::ast::QueryResult>,
         error: Option<String>,
-        mutations: Vec<crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation>,
+        leaves: Vec<SemioGraphMutation>,
     ) -> ArtifactCommandWorkStep<Owner> {
         self.finished = true;
+        let mut emit = crate::jack_child_emit(input.snapshot, &leaves);
+        emit.artifact_mutations = self.adopts_query.then(|| set_query(self.source.as_ref().expect("query source is retained").clone())).into_iter().collect();
         ArtifactCommandWorkStep::CompleteWithEphemeral {
-            emit: Emit {
-                artifact_mutations: self.adopts_query.then(|| set_query(self.source.as_ref().expect("query source is retained").clone())).into_iter().chain(mutations).collect(),
-                ..Default::default()
-            },
+            emit,
             ephemeral: EphemeralEmit {
                 presence: Vec::new(),
                 transient: Vec::new(),
@@ -212,16 +217,16 @@ impl ArtifactCommandWork<Owner> for JackQueryWork {
     fn workspace_identity(&self) -> u64 {
         self.identity()
     }
-    fn extent(&self, command: &TrinityJackCommand, snapshot: &JackSnapshot, _interaction: &protocol::InteractionState, _context: Option<&ArtifactOwnedToolJobContext<Owner>>) -> Option<usize> {
+    fn extent(&self, command: &TrinityJackCommand, snapshot: &JackSnapshot, _interaction: &protocol::InteractionState, context: Option<&ArtifactOwnedToolJobContext<Owner>>) -> Option<usize> {
         let bytes = match command {
             TrinityJackCommand::RunQuery { query, results_window_id } => query.as_ref().map_or(0, String::len).saturating_add(results_window_id.len()),
             TrinityJackCommand::LoadExampleQuery { query, results_window_id } => query.len().saturating_add(results_window_id.len()),
             _ => return None,
         };
-        let scene = snapshot.content.local_owner::<crate::JackWorkingScene>()?;
+        let scene = crate::jack_content_from_children(snapshot, &context?.children).ok()?;
         (bytes <= QUERY_BYTES && scene.nodes.len() <= 16_384 && scene.edges.len() <= 16_384 && snapshot.manifest.node_kinds.len() <= 16_384 && snapshot.manifest.edge_kinds.len() <= 16_384 && snapshot.manifest.port_kinds.len() <= 16_384).then_some(1)
     }
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, Owner>) -> Result<ArtifactCommandWorkStep<Owner>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, Owner>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<Owner>, Fault> {
         if self.finished || self.closing {
             return Err(Fault::from("query operation is terminal"));
         }
@@ -236,20 +241,24 @@ impl ArtifactCommandWork<Owner> for JackQueryWork {
             return Ok(self.progress("query-parse", br#"{"en":"Parsing query","de":"Abfrage wird analysiert"}"#));
         }
         if let Some(preparation) = self.preparation.as_mut() {
-            match preparation.step(input.snapshot, QUERY_BYTES) {
+            let content = crate::jack_content_from_children(input.snapshot, &input.context.ok_or_else(content_missing)?.children)?;
+            match preparation.step(input.snapshot, &content, QUERY_BYTES) {
                 Ok(crate::executor::QueryPreparationStep::Pending) => return Ok(self.progress("query-prepare", br#"{"en":"Preparing query","de":"Abfrage wird vorbereitet"}"#)),
                 Ok(crate::executor::QueryPreparationStep::Complete(execution)) => {
                     self.execution = Some(execution);
                     self.preparation = None;
                     return Ok(self.progress("query-prepare", br#"{"en":"Preparing query","de":"Abfrage wird vorbereitet"}"#));
                 }
-                Err(error) => return Ok(self.complete(input, None, Some(error), Vec::new())),
+                Err(error) => return Ok(self.complete(input, None, Some(error.into_message()), Vec::new())),
             }
         }
         match self.execution.as_mut().expect("query execution is retained").step() {
-            Ok(Some((result, mutations))) => Ok(self.complete(input, Some(result), None, mutations)),
+            Ok(Some((result, effects))) => {
+                let leaves = if effects.is_empty() { Vec::new() } else { crate::graph_leaves(&*crate::jack_content_from_children(input.snapshot, &input.context.ok_or_else(content_missing)?.children)?, &effects) };
+                Ok(self.complete(input, Some(result), None, leaves))
+            }
             Ok(None) => Ok(self.progress("query-evaluate", br#"{"en":"Evaluating query","de":"Abfrage wird ausgewertet"}"#)),
-            Err(error) => Ok(self.complete(input, None, Some(error), Vec::new())),
+            Err(error) => Ok(self.complete(input, None, Some(error.into_message()), Vec::new())),
         }
     }
     fn checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {

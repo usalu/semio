@@ -2,95 +2,41 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/bmp/v3/any/mutations.json",
   "title": "BmpMutation",
-  "description": "Discriminated union over this module's mutation leaves (adjacently tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
     {
       "type": "object",
       "additionalProperties": false,
       "required": ["mutation", "payload"],
       "properties": {
-        "mutation": { "const": "set-snapshot" },
-        "payload": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/bmp/v3/any/mutation/set-snapshot/schema.json" }
+        "mutation": {"const": "set-snapshot"},
+        "payload": {"$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/bmp/v3/any/mutation/set-snapshot/schema.json"}
       }
     },
     {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
+      "required": ["mutation", "payload"],
       "properties": {
-        "mutation": {
-          "const": "change-header-fields"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/bmp/v3/any/mutation/change-header-fields/schema.json"
-        }
+        "mutation": {"const": "patch-snapshot"},
+        "payload": {"$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/bmp/v3/any/mutation/patch-snapshot/schema.json"}
       }
     },
     {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
+      "required": ["mutation", "payload"],
       "properties": {
-        "mutation": {
-          "const": "insert-palette-entry"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/bmp/v3/any/mutation/insert-palette-entry/schema.json"
-        }
+        "mutation": {"const": "paint-indexed-region"},
+        "payload": {"$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/bmp/v3/any/mutation/paint-indexed-region/schema.json"}
       }
     },
     {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
+      "required": ["mutation", "payload"],
       "properties": {
-        "mutation": {
-          "const": "remove-palette-entry"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/bmp/v3/any/mutation/remove-palette-entry/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "replace-palette-entry"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/bmp/v3/any/mutation/replace-palette-entry/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "replace-pixel-data"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/bmp/v3/any/mutation/replace-pixel-data/schema.json"
-        }
+        "mutation": {"const": "paint-direct-region"},
+        "payload": {"$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/bmp/v3/any/mutation/paint-direct-region/schema.json"}
       }
     }
   ]

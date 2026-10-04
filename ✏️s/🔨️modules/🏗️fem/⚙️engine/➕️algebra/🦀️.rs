@@ -69,15 +69,15 @@ impl Mat2 {
 #[derive(Clone, Debug, PartialEq)]
 pub struct VecD(pub Vec<f64>);
 
-impl dsl::ToValue for VecD {
-    fn to_value(&self) -> dsl::DslValue {
-        dsl::ToValue::to_value(&self.0)
+impl semio_framework_value::ToValue for VecD {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::ToValue::to_value(&self.0)
     }
 }
 
-impl dsl::FromValue for VecD {
-    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
-        Ok(Self(dsl::FromValue::from_value(value)?))
+impl semio_framework_value::FromValue for VecD {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        Ok(Self(semio_framework_value::FromValue::from_value(value)?))
     }
 }
 

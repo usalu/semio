@@ -1,0 +1,151 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/pptx/ecma-376/base/xml-address.json",
+  "title": "PptxXmlAddress",
+  "$ref": "#/$defs/PptxXmlAddress",
+  "$defs": {
+    "PptxXmlAddress": {
+      "description": "Revision-bound address of one authoritative PresentationML XML element.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["partPath", "nodePath", "namespaceUri", "localName", "revision"],
+      "properties": {
+        "partPath": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^/\\\\]+(?:/[^/\\\\]+)*$",
+          "not": { "pattern": "(^|/)\\.{1,2}(/|$)" },
+          "x-semio-ui": {
+            "widget": "text",
+            "label": { "en": "Presentation part", "de": "Präsentationsteil" },
+            "description": { "en": "Package part that owns the addressed PresentationML element.", "de": "Paketteil, der das adressierte PresentationML-Element enthält." }
+          }
+        },
+        "nodePath": {
+          "type": "array",
+          "items": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+          "x-semio-ui": {
+            "label": { "en": "Node path", "de": "Knotenpfad" },
+            "description": { "en": "Child indices from the XML root to the addressed element.", "de": "Kindindizes vom XML-Wurzelelement bis zum adressierten Element." }
+          }
+        },
+        "namespaceUri": {
+          "type": "string",
+          "minLength": 1,
+          "x-semio-ui": {
+            "widget": "text",
+            "label": { "en": "Namespace", "de": "Namensraum" },
+            "description": { "en": "Expanded namespace URI of the addressed element.", "de": "Erweiterter Namensraum-URI des adressierten Elements." }
+          }
+        },
+        "localName": {
+          "type": "string",
+          "minLength": 1,
+          "x-semio-ui": {
+            "widget": "text",
+            "label": { "en": "Element name", "de": "Elementname" },
+            "description": { "en": "Local XML name of the addressed element.", "de": "Lokaler XML-Name des adressierten Elements." }
+          }
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{16}$",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": { "en": "Element revision", "de": "Elementrevision" },
+            "description": { "en": "Canonical revision guard for the addressed XML subtree.", "de": "Kanonische Revisionssicherung für den adressierten XML-Teilbaum." }
+          }
+        }
+      }
+    },
+    "PptxSlideAddress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entry", "slidePartPath", "relationshipId", "slideId"],
+      "properties": {
+        "entry": {
+          "$ref": "#/$defs/PptxXmlAddress",
+          "x-semio-ui": {
+            "label": { "en": "Slide entry", "de": "Folieneintrag" },
+            "description": { "en": "Revision-bound presentation slide-list entry.", "de": "Revisionsgebundener Eintrag in der Folienliste der Präsentation." }
+          }
+        },
+        "slidePartPath": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^/\\\\]+(?:/[^/\\\\]+)*$",
+          "not": { "pattern": "(^|/)\\.{1,2}(/|$)" },
+          "x-semio-ui": {
+            "widget": "text",
+            "label": { "en": "Slide part", "de": "Folienteil" },
+            "description": { "en": "Relationship-resolved package part for the slide.", "de": "Über die Beziehung aufgelöster Paketteil der Folie." }
+          }
+        },
+        "relationshipId": {
+          "type": "string",
+          "minLength": 1,
+          "x-semio-ui": {
+            "widget": "text",
+            "label": { "en": "Slide relationship", "de": "Folienbeziehung" },
+            "description": { "en": "Presentation relationship identity for the slide.", "de": "Beziehungskennung der Präsentation für die Folie." }
+          }
+        },
+        "slideId": {
+          "type": "string",
+          "pattern": "^[0-9]+$",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": { "en": "Slide identity", "de": "Folienkennung" },
+            "description": { "en": "Authored numeric PresentationML slide identity.", "de": "Verfasste numerische PresentationML-Folienkennung." }
+          }
+        }
+      }
+    },
+    "PptxShapeAddress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["node", "shapeId"],
+      "properties": {
+        "node": {
+          "$ref": "#/$defs/PptxXmlAddress",
+          "x-semio-ui": {
+            "label": { "en": "Shape element", "de": "Formelement" },
+            "description": { "en": "Revision-bound XML element for the shape.", "de": "Revisionsgebundenes XML-Element der Form." }
+          }
+        },
+        "shapeId": {
+          "type": "string",
+          "pattern": "^[0-9]+$",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": { "en": "Shape identity", "de": "Formkennung" },
+            "description": { "en": "Authored non-visual shape identity.", "de": "Verfasste nicht-visuelle Formkennung." }
+          }
+        }
+      }
+    },
+    "PptxXmlVacancyAddress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["container", "index"],
+      "properties": {
+        "container": {
+          "$ref": "#/$defs/PptxXmlAddress",
+          "x-semio-ui": {
+            "label": { "en": "Insertion container", "de": "Einfügecontainer" },
+            "description": { "en": "Revision-bound XML container that owns the vacant position.", "de": "Revisionsgebundener XML-Container der freien Position." }
+          }
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991,
+          "x-semio-ui": {
+            "label": { "en": "Insertion position", "de": "Einfügeposition" },
+            "description": { "en": "Zero-based child position inside the addressed container.", "de": "Nullbasierte Kindposition im adressierten Container." }
+          }
+        }
+      }
+    }
+  }
+}

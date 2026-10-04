@@ -4,15 +4,20 @@ extension raster
 use family-scene
 start document
 
-# Real grammar for `RasterSnapshot::print_dsl`/`parse_dsl`: the derived spec-driven text of
-# `RasterPackRecord` (📸️snapshot/🦀️.rs), the same record the pack encodes. Each layer is its
-# first-party JSON text (a quoted string); each asset row carries its map key, the composed
-# `s.stdio.semio@v1/image` child handle and that child's own pack bytes as base64 (`""` when the
-# handle carries no materialization).
-# Fields are space-separated `key=value` tokens in any order; an absent optional field is omitted.
 artifact-mark = "semio raster.raster.dsl v1"
-document = artifact-mark field*
-field = {"schema" "=" TEXT} | {"id" "=" TEXT} | {"title" "=" TEXT} | {"layers" "=" "[" TEXT* "]"} | {"assets" "=" "[" asset-row* "]"}
-asset-row = asset-field+
-asset-field = {"key" "=" TEXT} | {"child" "=" child-handle} | {"content" "=" TEXT}
-child-handle = {"child_id" "=" TEXT} {"target" "=" TEXT}
+document = artifact-mark document-field*
+document-field = {"schema" "=" TEXT} | {"id" "=" TEXT} | {"title" "=" TEXT} | {"layers" "=" "[" layer* "]"} | {"assets" "=" "[" asset* "]"} | {"values" "=" "[" value* "]"} | {"items" "=" "[" item* "]"} | {"members" "=" "[" member* "]"}
+layer = "{" layer-field* "}"
+layer-field = {"parent" "=" INT} | {"ordinal" "=" INT} | {"kind" "=" TEXT} | {"id" "=" TEXT} | {"name" "=" TEXT} | {"visible" "=" BOOL} | {"locked" "=" BOOL} | {"opacity" "=" number} | {"blend" "=" TEXT} | {"transform" "{" transform-field* "}"} | {"mask" "{" mask-field* "}"} | {"width" "=" INT} | {"height" "=" INT} | {"image" "=" TEXT} | {"adjustment" "=" TEXT} | {"parameters" "=" "[" parameter* "]"}
+transform-field = {"x" "=" number} | {"y" "=" number} | {"a" "=" number} | {"b" "=" number} | {"c" "=" number} | {"d" "=" number}
+mask-field = {"enabled" "=" BOOL} | {"linked" "=" BOOL} | {"invert" "=" BOOL} | {"width" "=" INT} | {"height" "=" INT} | {"image-key" "=" TEXT} | {"transform" "=" transform}
+transform = transform-field+
+parameter = "{" "key" "=" TEXT "root" "=" INT "}"
+asset = "{" "key" "=" TEXT "child" "=" child "}"
+child = "child_id" "=" TEXT "target" "=" reference
+reference = "artifact-id" "=" TEXT "artifact-kind" "=" TEXT "standard" "=" TEXT "subset" "=" TEXT
+value = "{" value-field* "}"
+value-field = {"kind" "=" TEXT} | {"boolean" "=" BOOL} | {"signed" "=" INT} | {"unsigned" "=" INT} | {"float" "=" number} | {"text" "=" TEXT} | {"bytes" "=" TEXT}
+item = "{" "array" "=" INT "ordinal" "=" INT "value" "=" INT "}"
+member = "{" "object" "=" INT "ordinal" "=" INT "key" "=" TEXT "value" "=" INT "}"
+number = INT | FLOAT | IDENT

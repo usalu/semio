@@ -1,0 +1,299 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🛬️decoding/🦀️.rs",
+    "imports": [
+      {
+        "line": 12,
+        "text": "use semio_framework_os_kernel::pack_rt;"
+      }
+    ],
+    "sites": [
+      {
+        "line": 25,
+        "symbol": "encode_record_body"
+      },
+      {
+        "line": 25,
+        "symbol": "encode_record_body"
+      },
+      {
+        "line": 51,
+        "symbol": "encode_document"
+      },
+      {
+        "line": 51,
+        "symbol": "decode_document_controlled"
+      },
+      {
+        "line": 51,
+        "symbol": "encode_record_body"
+      },
+      {
+        "line": 51,
+        "symbol": "encode_record_body"
+      },
+      {
+        "line": 52,
+        "symbol": "encode_document"
+      },
+      {
+        "line": 52,
+        "symbol": "decode_document_controlled"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🔬️unit/🦀️.rs",
+    "imports": [
+      {
+        "line": 3,
+        "text": "use crate::os_store::{\n    create_document_envelope, pack_rt, parse_document_pack, parse_document_text, print_document_pack, print_document_text, print_edit_lines, register_document_codec, ArtifactCodec, ArtifactCommand, ArtifactDsl, ArtifactPack, BlobStore,\n    PackDecodeOptions, PackEncodeOptions, PackError, ParsedDocumentText,\n};"
+      },
+      {
+        "line": 150,
+        "text": "use crate::os_store::Backbone;"
+      },
+      {
+        "line": 643,
+        "text": "use crate::os_store::Backbone;"
+      },
+      {
+        "line": 716,
+        "text": "use crate::os_store::Backbone;"
+      },
+      {
+        "line": 789,
+        "text": "use crate::os_store::Backbone;"
+      },
+      {
+        "line": 2612,
+        "text": "use crate::os_store::Backbone;"
+      }
+    ],
+    "sites": [
+      {
+        "line": 240,
+        "symbol": "encode_document"
+      },
+      {
+        "line": 249,
+        "symbol": "decode_document"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+    "imports": [
+      {
+        "line": 165,
+        "text": "use crate::os_store::test_support::assert_wire_witness as assert_witness;"
+      }
+    ],
+    "sites": [
+      {
+        "line": 1830,
+        "symbol": "encode_document"
+      },
+      {
+        "line": 1840,
+        "symbol": "decode_document"
+      }
+    ],
+    "owner": "use super::* at line1 inherits crate::os_store::pack_rt"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🦀️.rs",
+    "imports": [],
+    "sites": [
+      {
+        "line": 84,
+        "symbol": "encode_document"
+      },
+      {
+        "line": 94,
+        "symbol": "decode_document"
+      },
+      {
+        "line": 202,
+        "symbol": "encode_record_body"
+      },
+      {
+        "line": 206,
+        "symbol": "decode_record_body"
+      }
+    ],
+    "owner": "use super::* at line1; trace parent native-decoding imports"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs",
+    "imports": [
+      {
+        "line": 11,
+        "text": "use crate::os_store::{ArtifactDsl, ArtifactPack, ArtifactStore, ArtifactStoreOneItemLiveAuthority, ArtifactStoreOneItemPrepared, OwnerRef, PackDecodeOptions, PackEncodeOptions, PackError, PackVerificationLevel, TextError, pack_rt};"
+      }
+    ],
+    "sites": [
+      {
+        "line": 2992,
+        "symbol": "encode_document"
+      },
+      {
+        "line": 3002,
+        "symbol": "decode_document"
+      },
+      {
+        "line": 3033,
+        "symbol": "encode_document"
+      },
+      {
+        "line": 3043,
+        "symbol": "decode_document"
+      },
+      {
+        "line": 3311,
+        "symbol": "encode_document"
+      },
+      {
+        "line": 3320,
+        "symbol": "decode_document"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs",
+    "imports": [],
+    "sites": [
+      {
+        "line": 1124,
+        "symbol": "encode_document"
+      },
+      {
+        "line": 1131,
+        "symbol": "encode_document"
+      }
+    ],
+    "owner": "use super::* at line3 inherits durable-group parent crate::os_store::{...,pack_rt} line11"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🪆️binding/🦀️.rs",
+    "imports": [
+      {
+        "line": 95,
+        "text": "use dsl::{PackDecodeOptions,PackEncodeOptions,PackLimits,pack_rt};"
+      },
+      {
+        "line": 109,
+        "text": "use dsl::{PackDecodeOptions,PackEncodeOptions,pack_rt};"
+      },
+      {
+        "line": 157,
+        "text": "use dsl::{PackDecodeOptions,PackEncodeOptions,pack_rt};"
+      }
+    ],
+    "sites": [
+      {
+        "line": 98,
+        "symbol": "encode_record_body"
+      },
+      {
+        "line": 100,
+        "symbol": "decode_record_body_exact_controlled"
+      },
+      {
+        "line": 102,
+        "symbol": "encode_record_body"
+      },
+      {
+        "line": 103,
+        "symbol": "decode_record_body_exact_controlled"
+      },
+      {
+        "line": 104,
+        "symbol": "decode_record_body_exact_controlled"
+      },
+      {
+        "line": 113,
+        "symbol": "encode_document"
+      },
+      {
+        "line": 116,
+        "symbol": "decode_document_controlled"
+      },
+      {
+        "line": 117,
+        "symbol": "decode_document_controlled"
+      },
+      {
+        "line": 118,
+        "symbol": "decode_document_controlled"
+      },
+      {
+        "line": 158,
+        "symbol": "encode_document"
+      },
+      {
+        "line": 158,
+        "symbol": "decode_document_controlled"
+      },
+      {
+        "line": 159,
+        "symbol": "encode_document"
+      },
+      {
+        "line": 160,
+        "symbol": "decode_document_controlled"
+      },
+      {
+        "line": 161,
+        "symbol": "decode_document_controlled"
+      },
+      {
+        "line": 162,
+        "symbol": "decode_document_controlled"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🛬️decoding/🦀️.rs",
+    "imports": [
+      {
+        "line": 12,
+        "text": "use semio_framework_os_kernel::pack_rt;"
+      }
+    ],
+    "sites": [
+      {
+        "line": 25,
+        "symbol": "encode_record_body"
+      },
+      {
+        "line": 25,
+        "symbol": "encode_record_body"
+      },
+      {
+        "line": 60,
+        "symbol": "encode_document"
+      },
+      {
+        "line": 60,
+        "symbol": "decode_document_controlled"
+      },
+      {
+        "line": 60,
+        "symbol": "encode_record_body"
+      },
+      {
+        "line": 60,
+        "symbol": "encode_record_body"
+      },
+      {
+        "line": 61,
+        "symbol": "encode_document"
+      },
+      {
+        "line": 61,
+        "symbol": "decode_document_controlled"
+      }
+    ]
+  }
+]

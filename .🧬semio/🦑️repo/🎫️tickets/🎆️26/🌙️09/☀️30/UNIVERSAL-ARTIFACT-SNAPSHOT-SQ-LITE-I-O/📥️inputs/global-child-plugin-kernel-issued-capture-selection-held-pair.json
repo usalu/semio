@@ -1,0 +1,19 @@
+{
+  "state": "AdjacentUnmountedExactKernelCapabilityAliasSelectionNoCrossCrateIssuerTrait",
+  "pairs": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪆️child/👁️capture/🦀️.rs",
+      "before": "//! 🧵️ Unmounted host capture retains the exact immutable entry and its existing snapshot lease.\nuse super::*;\nuse semio_framework_value::{ValueError,ValueRefusalKind};\nfn capture_invalid(message:&str)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}\nimpl<S:Send+Sync+'static> store::ArtifactChildSnapshotOwner<S> for ChildContentEntry{\n fn slot(&self)->&str{&self.slot}\n fn child_id(&self)->&str{&self.child_id}\n fn artifact_id(&self)->&str{&self.reference.artifact_id}\n fn dialect(&self)->&ArtifactDialect{&self.reference.dialect}\n fn revision(&self)->&[u8;32]{&self.revision}\n fn snapshot(&self)->Result<&S,ValueError>{\n  self.snapshot.get::<S>().ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,\"captured child snapshot exact type changed\"))\n }\n}\nimpl ChildContentView{\n pub fn capture_read<S:Send+Sync+'static>(&self,slot:&str,child_id:&str,dialect:&ArtifactDialect)->Result<store::ArtifactChildRead<S>,ValueError>{\n  if slot.len()>CHILD_CONTENT_ID_BYTES||child_id.len()>CHILD_CONTENT_ID_BYTES{return Err(capture_invalid(\"child capture identity exceeds fixed metadata bounds\"))}\n  let root=self.root.as_deref().ok_or_else(||capture_invalid(\"no immutable child root to capture\"))?;\n  let entry=root.pages.iter().flatten().flat_map(|page|page.entries.iter().flatten()).find(|entry|entry.slot==slot&&entry.child_id==child_id).ok_or_else(||capture_invalid(\"no exact child entry to capture\"))?;\n  if &entry.dialect!=dialect{return Err(capture_invalid(\"captured child dialect differs from the declared handle\"))}\n  if entry.snapshot.get::<S>().is_none(){return Err(capture_invalid(\"captured child snapshot exact type differs\"))}\n  Ok(store::ArtifactChildRead::from_owner(std::sync::Arc::clone(entry)))\n }\n}\n",
+      "beforeSha256": "0378131fd121731e01315ac52e3fb61e85725e29186306efa37dcb069ea487d8",
+      "after": "//! 🧵️ Child selection aliases a Kernel-issued immutable member read with its exact admitted identities.\nuse super::*;\nuse semio_framework_value::{ValueError,ValueRefusalKind};\nfn capture_invalid(message:&str)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}\nimpl ChildContentView{\n pub fn capture_read<S:Send+Sync+'static>(&self,slot:&str,child_id:&str,dialect:&ArtifactDialect)->Result<store::ArtifactChildRead<S>,ValueError>{\n  if slot.len()>CHILD_CONTENT_ID_BYTES||child_id.len()>CHILD_CONTENT_ID_BYTES{return Err(capture_invalid(\"child capture identity exceeds fixed metadata bounds\"))}\n  let root=self.root.as_deref().ok_or_else(||capture_invalid(\"no immutable child root to capture\"))?;\n  let entry=root.pages.iter().flatten().flat_map(|page|page.entries.iter().flatten()).find(|entry|entry.captured.owner().slot==slot&&entry.captured.owner().child_id==child_id).ok_or_else(||capture_invalid(\"no exact child entry to capture\"))?;\n  if &entry.captured.reference().dialect!=dialect{return Err(capture_invalid(\"captured child dialect differs from the declared handle\"))}\n  entry.captured.typed_child_read::<S>()\n }\n}\n"
+    }
+  ],
+  "requires": [
+    "global-child-kernel-sealed-exact-read-replacement-held-pair.json",
+    "Captured-entry Root integration"
+  ],
+  "limitations": [
+    "Capture selection does not itself bind or copy a parent snapshot",
+    "No production mount or runtime receipt"
+  ]
+}

@@ -7,7 +7,7 @@ use crate::{CurationSnapshot, CuratedItem};
 //#region 🔖️Mutation
 /// 🌱 `create-curated-item` payload — full initial payload (`object_id` + starting `count` fixed
 /// at creation); a subsequent count adjustment goes through `change-curated-item-count`.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "create-curated-item")]
@@ -27,9 +27,12 @@ impl protocol::MutationKind<CurationSnapshot, SourcingMutation> for CreateCurate
     fn diff(&self, base: &CurationSnapshot) -> protocol::MutationOutcome<CurationDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &CurationSnapshot) -> Vec<SourcingMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &CurationSnapshot) -> Result<Vec<SourcingMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Curation \"{}\"", self.item.object_id), &format!("Kuratierung \"{}\"", self.item.object_id))
     }

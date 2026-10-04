@@ -1,0 +1,13 @@
+# GLTF Current Adjacent Paid Authority
+
+Read-only evolving draft interval, no current ready or Native verdict inferred.
+
+Active SQL provider still uses semantic max_value_bytes for NativeDecodeControl at line95 plus ordinary record_spec metadata. Active Read caches at54 use unpaid BTreeMap keys/groups and BTreeSet used identities; their checkpointing alone does not pay owned indexes. This is distinct from the newly prepared adjacent SQL/🚦️native input producer.
+
+Adjacent input now obtains actual remaining allocation_stage allowance, builds spec through supplied RecordSpecProducer.decode, maps intrinsic SemioError/PackError kinds explicitly, holds decoded record through EncodedRecord and reconstructs the typed GltfSnapshot. Final snapshot guard calls semantic SQL validation before publication. That validation also consumes ownership and must remain cumulative; active unpaid indexes cannot establish complete paid validation merely because native input is paid. Text parsing currently converts TextError into ValueError(kind,message), losing span/expected; Shared High received this concrete public diagnostic concern. Producer kind itself remains retained.
+
+Adjacent borrowed encoding bound uses allocate_frontier/push_frontier for extras traversal. Thus it is a paid borrowed-reference frontier, not allocation-free preflight. Bounds include String extent and collection metadata, with explicit larger float spellings. Full replacement frontier allocation must settle actual new backing before growth, not a capacity delta estimate. Complete controlled native encode and paid SQL reconstruction/index candidates were requested from Shared when ready; no absent path is assumed implemented.
+
+Handwritten SQL remains composed from ten domain facet schemas, covering literal entities rather than a native serialized payload. Extras are authored gltf_json_value/array_element/object_member domain relationships: ordered object members are stored individually, so duplicate names must remain literal and ordinal-based rather than map-normalized. Existing project extras uses VecDeque pending, and reconstruction uses Read key/group ownership; these actual frontiers need their own paid controls and orphan/duplicate ownership checks. IEEE companion FloatColumn authority remains separate from logical integer fields; do not widen unsigned counters or ordinals through float witnesses.
+
+The declared fifty-seven-table inventory is historical authoring context; this bounded readback does not assert a new independent count or full current Native cohort. Root's GLTF owning baseline and Shared's complete paired readiness will establish the next precise authority. No source mutated.

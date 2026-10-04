@@ -4,6 +4,9 @@ use super::ChangeSceneSunIntensity;
 use crate::mutations::ShootingMutation;
 use crate::ShootingSnapshot;
 
-pub fn inverse(_payload: &ChangeSceneSunIntensity, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
+pub fn inverse(_payload: &ChangeSceneSunIntensity, base: &ShootingSnapshot) -> Result<Vec<ShootingMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![ShootingMutation::ChangeSceneSunIntensity(ChangeSceneSunIntensity { new_intensity: base.scene.sun.intensity })]
+
+    })())
 }

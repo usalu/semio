@@ -9,7 +9,7 @@ pub fn diff(payload: &UpdateBoltInputs, base: &En1993Snapshot) -> protocol::Muta
     let mut values = base.joints.clone();
     if let Some(idx) = values.iter().position(|x| x.id == payload.joint.id) {
         if values[idx] == payload.joint {
-            return protocol::MutationOutcome::empty().warn("mutation.no-op", "Entity already has this value.");
+            return protocol::MutationOutcome::empty().warning("mutation.no-op", "Entity already has this value.");
         }
         values[idx] = payload.joint.clone();
     } else {

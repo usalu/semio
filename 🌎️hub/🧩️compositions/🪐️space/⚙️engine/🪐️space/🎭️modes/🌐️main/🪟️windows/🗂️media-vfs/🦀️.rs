@@ -40,23 +40,23 @@ pub async fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 pub async fn render(projection: &WorkflowSnapshot, view_state: &ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let labels = resolve_labels::<SStudioLabels>(view_state);
-    let mut rows = vec![pack::json_object([
-        ("id".to_string(), pack::JsonValue::from(OS_WORKFLOW_VFS_ROOT_ID)),
-        ("fileNodeKindId".to_string(), pack::JsonValue::from("root")),
-        ("name".to_string(), pack::JsonValue::from("Workflow")),
-        ("path".to_string(), pack::JsonValue::from("/")),
-        ("parentId".to_string(), pack::JsonValue::Null),
-        ("hasChildren".to_string(), pack::JsonValue::from(true)),
-        ("descriptorValues".to_string(), pack::json_object([])),
+    let mut rows = vec![semio_framework_pack_json::object([
+        ("id".to_string(), semio_framework_pack_json::Value::from(OS_WORKFLOW_VFS_ROOT_ID)),
+        ("fileNodeKindId".to_string(), semio_framework_pack_json::Value::from("root")),
+        ("name".to_string(), semio_framework_pack_json::Value::from("Workflow")),
+        ("path".to_string(), semio_framework_pack_json::Value::from("/")),
+        ("parentId".to_string(), semio_framework_pack_json::Value::Null),
+        ("hasChildren".to_string(), semio_framework_pack_json::Value::from(true)),
+        ("descriptorValues".to_string(), semio_framework_pack_json::object([])),
     ])];
     // 🚧️ `flatten_media_vfs_rows` is a no-op stub (os-core dissolve deleted the `🔖️WorkflowVfs` region
     // it depended on) — the media VFS window shows only its root node until a full collection-browser
     // UI replaces it in a later wave.
     crate::engine::space::engine::flatten_media_vfs_rows(OS_WORKFLOW_VFS_ROOT_ID, &projection.graph, &projection.parameter_bindings, &projection.parameters, &mut rows).await;
-    let schema = pack::json_object([
-        ("descriptorKinds".to_string(), pack::json_object([])),
-        ("fileNodeKinds".to_string(), pack::json_object([("root".to_string(), pack::json_object([("id".to_string(), pack::JsonValue::from("root")), ("name".to_string(), pack::JsonValue::from("Workflow")), ("descriptors".to_string(), pack::json_array([]))]))])),
-        ("descriptorColumnIds".to_string(), pack::json_array([])),
+    let schema = semio_framework_pack_json::object([
+        ("descriptorKinds".to_string(), semio_framework_pack_json::object([])),
+        ("fileNodeKinds".to_string(), semio_framework_pack_json::object([("root".to_string(), semio_framework_pack_json::object([("id".to_string(), semio_framework_pack_json::Value::from("root")), ("name".to_string(), semio_framework_pack_json::Value::from("Workflow")), ("descriptors".to_string(), semio_framework_pack_json::array([]))]))])),
+        ("descriptorColumnIds".to_string(), semio_framework_pack_json::array([])),
     ]);
     // 🕹️ The old `UiNode`-tree builder also stamped `pane_id: Some(S_PLAY_WINDOW_MEDIA_VFS)` /
     // `binding_id: None` onto the surface node; the contract's `SurfaceBuilder` carries no such
@@ -67,7 +67,7 @@ pub async fn render(projection: &WorkflowSnapshot, view_state: &ViewModel) -> se
         semio_framework_ui_contract::SurfaceKind::VirtualFileSystem,
         &VirtualFileSystemScene {
             schema_json: schema.to_string(),
-            rows_json: pack::JsonValue::Array(rows).to_string(),
+            rows_json: semio_framework_pack_json::Value::Array(rows).to_string(),
             selected_row_ids_json: None,
             hovered_row_id: None,
             empty_message: Some(labels.media_vfs_empty_message.into()),

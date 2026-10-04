@@ -1,7 +1,7 @@
 //! 🖌️ `close-vortex-suggestions` command.
 
 use crate::editor::puzzle3d::Puzzle3dActionCtx;
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 
 /// 🔒️ Closing the menu releases its vortex from the brush suggestions run: with no armed brush target left,
 /// the refresh after it aborts the run. A `fullId` scopes the close to the menu opened on that vortex, so a

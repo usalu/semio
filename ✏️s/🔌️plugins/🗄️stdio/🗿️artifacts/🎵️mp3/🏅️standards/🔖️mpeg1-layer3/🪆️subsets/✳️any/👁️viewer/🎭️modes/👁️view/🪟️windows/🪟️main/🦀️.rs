@@ -16,12 +16,13 @@ pub fn definition() -> WindowKindDefinition {
     MediaWindowKit::window_kind()
 }
 
-/// 🎬️ Projects inferred timing and exact live identity without claiming an unregistered encoded-byte producer.
+/// 🎬️ Projects inferred timing and exact live identity for the registered resumable MP3 producer.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn render(snapshot: &Mp3Snapshot, locale: Locale, resource: Option<MediaResource>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let duration_ms = semio_s_artifact_stdio_contract::media_duration_ms(compute_mp3_duration(snapshot).duration_seconds);
     let revision = resource.as_ref().map_or_else(|| "0".to_string(), |resource| resource.revision.clone());
-    let reason = match locale { Locale::En => "Encoded playback export is not registered for this app.", Locale::De => "Der kodierte Wiedergabeexport ist für diese App nicht registriert." };
+    let ready = resource.is_some();
+    let reason = match locale { Locale::En => "Playback waits for a revision-bound document resource.", Locale::De => "Die Wiedergabe wartet auf eine revisionsgebundene Dokumentressource." };
     MediaWindowKit::render(&MediaView {
         duration_ms,
         position_ms: 0,
@@ -32,8 +33,8 @@ pub fn render(snapshot: &Mp3Snapshot, locale: Locale, resource: Option<MediaReso
         revision,
         locale,
         resource,
-        capability: MediaCapabilityStatus::Unsupported,
-        capability_reason: Some(reason.into()),
+        capability: if ready { MediaCapabilityStatus::Ready } else { MediaCapabilityStatus::Unsupported },
+        capability_reason: (!ready).then(|| reason.into()),
         host_content_height: 88.0,
     })
 }

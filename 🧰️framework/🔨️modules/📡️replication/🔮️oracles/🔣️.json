@@ -1,0 +1,32 @@
+{
+  "$schema": "../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🔮️ This owner's contribution to the repository test platform: the third-party references its own laws judge against.",
+  "oracles": [
+    {
+      "id": "replication-supersede-fold-fast-check",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "fast-check",
+      "version": "3.23.2",
+      "engine": {
+        "family": "fast-check",
+        "implementation": "fast-check fc.assert",
+        "version": "3.23.2"
+      },
+      "capabilities": [
+        "replication.supersede-fold"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://fast-check.dev",
+      "rationale": "Shuffles the events of every `🧫️supersede-fold` vector in `🧪️tests/🧪️supersede-fold` (design §2): the resolved supersessions must not depend on the order the events arrive in."
+    }
+  ],
+  "noOracleDecisions": []
+}

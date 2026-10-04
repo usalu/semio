@@ -115,9 +115,9 @@ use semio_framework_2d::compute::EngineHandles;
 // 🕹️ `InteractionView`'s canonical home is `semio_framework_plugin::app`; it is now also re-exported
 // at that crate's root alongside `InteractionWrite`, and this path keeps the module-qualified spelling
 // the other reference implementations (`process3d`, `generation3d`) use.
-use dsl::json;
-use dsl::FromValue;
-use dsl::os_pack::json::{from_json_str, object, parse, to_json_string, to_string, Object, Value};
+
+use semio_framework_value::FromValue;
+use semio_framework_pack_json::{from_json_str, json, object, parse, to_json_string, to_string, Object, Value};
 use semio_framework_plugin::app::{EphemeralEmit, InteractionView};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::atomic::{AtomicU32, Ordering};
@@ -180,8 +180,8 @@ pub static PUZZLE3D_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 /// this module's `from_json_str::<Puzzle3dFixture>`/`.example(...)` call sites expect.
 pub static CONCRETE_FOREST_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| crate::examples::puzzle3d::concrete_forest::SOURCE.document_json().to_string());
 pub static NAKAGIN_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| crate::examples::puzzle3d::nakagin_capsule_tower::SOURCE.document_json().to_string());
-static CONCRETE_FOREST_EXAMPLE_FIXTURE: LazyLock<Puzzle3dFixture> = LazyLock::new(|| from_json_str(CONCRETE_FOREST_EXAMPLE_JSON.as_str()).unwrap_or_else(|_| empty_fixture()));
-static NAKAGIN_EXAMPLE_FIXTURE: LazyLock<Puzzle3dFixture> = LazyLock::new(|| from_json_str(NAKAGIN_EXAMPLE_JSON.as_str()).unwrap_or_else(|_| empty_fixture()));
+static CONCRETE_FOREST_EXAMPLE_FIXTURE: LazyLock<Puzzle3dFixture> = LazyLock::new(|| from_json_str(CONCRETE_FOREST_EXAMPLE_JSON.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| empty_fixture()));
+static NAKAGIN_EXAMPLE_FIXTURE: LazyLock<Puzzle3dFixture> = LazyLock::new(|| from_json_str(NAKAGIN_EXAMPLE_JSON.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| empty_fixture()));
 static EMPTY_EXAMPLE_FIXTURE: LazyLock<Puzzle3dFixture> = LazyLock::new(empty_fixture);
 
 fn parse_example_dsl(dsl_text: &str, label: &str) -> String {
@@ -190,7 +190,7 @@ fn parse_example_dsl(dsl_text: &str, label: &str) -> String {
 }
 
 pub fn puzzle3d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: PUZZLE3D_PLAY_CONTROLLER_ID.into(), action: action.into(), args: args.map(|value| json::to_dsl_value(&value)) }
+    ActionDescriptor { controller_id: PUZZLE3D_PLAY_CONTROLLER_ID.into(), action: action.into(), args: args.map(|value| semio_framework_pack_json::to_dsl_value(&value)) }
 }
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: builds a framework `interactionSelect`
@@ -259,7 +259,7 @@ pub struct Puzzle3dObject {
     #[value(default)]
     pub orientation: Option<[f64; 4]>,
     #[value(default)]
-    pub scale: Option<dsl::DslValue>,
+    pub scale: Option<semio_framework_value::DslValue>,
     #[value(default, rename = "meshUrl")]
     pub mesh_url: Option<String>,
     #[value(default)]
@@ -286,9 +286,9 @@ pub struct Puzzle3dObject {
 #[value(rename_all = "camelCase")]
 pub struct Puzzle3dFixtureMeta {
     #[value(default, rename = "kindCatalogs", skip_serializing_if = "Option::is_none")]
-    pub kind_catalogs: Option<dsl::DslValue>,
+    pub kind_catalogs: Option<semio_framework_value::DslValue>,
     #[value(default, rename = "kindCompatibility", skip_serializing_if = "Option::is_none")]
-    pub kind_compatibility: Option<dsl::DslValue>,
+    pub kind_compatibility: Option<semio_framework_value::DslValue>,
 }
 
 /// 🧊️ Persisted oriented box constraining fill placement. Volume Brush creates axis-aligned
@@ -302,7 +302,7 @@ pub struct Puzzle3dTargetVolume {
     #[value(default)]
     pub orientation: Option<[f64; 4]>,
     #[value(default)]
-    pub scale: Option<dsl::DslValue>,
+    pub scale: Option<semio_framework_value::DslValue>,
     #[value(default)]
     pub hidden: bool,
     #[value(default)]
@@ -380,7 +380,7 @@ fn puzzle3d_fixture_from_play_snapshot(snapshot: &Puzzle3dPlaySnapshot) -> Puzzl
 /// document's typed authority: the two are separate decodings of one document, and a disagreement
 /// between them shows up as a pick that paints and then silently vanishes rather than as an error.
 pub fn puzzle3d_fixture_from_projection(projection: &Value) -> Puzzle3dFixture {
-    dsl::FromValue::from_value(json::to_dsl_value(projection)).unwrap_or_else(|_| empty_fixture())
+    semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(projection)).unwrap_or_else(|_| empty_fixture())
 }
 
 fn puzzle3d_mutations_between(before: &Puzzle3dFixture, after: &Puzzle3dFixture) -> Vec<Puzzle3dMutation> {
@@ -432,7 +432,7 @@ fn puzzle3d_copy_fragment_from(fixture: &Puzzle3dFixture, objects: Vec<Puzzle3dO
     Ok(ClipboardFragment {
         schema: PUZZLE3D_CLIPBOARD_SCHEMA.into(),
         media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Design },
-        dsl_text: to_json_string(&puzzle3d_projection_value(dsl::ToValue::to_value(&clip))),
+        dsl_text: to_json_string(&puzzle3d_projection_value(semio_framework_value::ToValue::to_value(&clip))),
         pack_bytes: None,
         source_app: PUZZLE3D_PLAY_APP_ID.into(),
         label: format!("{} objects", clip.objects.len()),
@@ -467,8 +467,8 @@ fn puzzle3d_paste_operations_on(before: &Puzzle3dFixture, fragment: &ClipboardFr
     if fragment.media_type != expected {
         return Err(ClipboardError::IncompatibleMediaType(fragment.media_type.clone()));
     }
-    let value = parse(&fragment.dsl_text).map_err(|error| ClipboardError::ParseFailed(error.to_string()))?;
-    let clip = Puzzle3dFixture::from_value(json::to_dsl_value(&value)).map_err(|error| ClipboardError::ParseFailed(error.to_string()))?;
+    let value = parse(&fragment.dsl_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| ClipboardError::ParseFailed(error.to_string()))?;
+    let clip = Puzzle3dFixture::from_value(semio_framework_pack_json::to_dsl_value(&value)).map_err(|error| ClipboardError::ParseFailed(error.to_string()))?;
     if clip.objects.is_empty() {
         return Err(ClipboardError::EmptySelection);
     }
@@ -500,15 +500,15 @@ pub fn nakagin_fixture() -> Puzzle3dFixture {
 /// bound rather than a spelled-out type.
 pub(crate) fn puzzle3d_projection_value<T>(value: T) -> Value
 where
-    dsl::DslValue: From<T>,
+    semio_framework_value::DslValue: From<T>,
 {
-    json::from_dsl_value(&dsl::DslValue::from(value))
+    semio_framework_pack_json::from_dsl_value(&semio_framework_value::DslValue::from(value))
 }
 
 /// 🧾️ Materializes the transient scene from the persisted projection (bare fixture json) and the
 /// app's current view state; an unparseable projection degrades to an empty board.
 pub fn scene_from_projection(projection: &Value, runtime: Puzzle3dRuntime, active_utility: &str) -> Puzzle3dScene {
-    let fixture = dsl::FromValue::from_value(json::to_dsl_value(projection)).unwrap_or_else(|_| empty_fixture());
+    let fixture = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(projection)).unwrap_or_else(|_| empty_fixture());
     Puzzle3dScene { fixture, runtime, active_utility: active_utility.to_string() }
 }
 
@@ -531,7 +531,7 @@ pub fn puzzle3d_fixture_from_snapshot(document: &Puzzle3dSnapshot) -> Puzzle3dFi
     Puzzle3dFixture {
         schema: document.schema.clone(),
         domain: document.domain.clone(),
-        meta: Puzzle3dFixtureMeta { kind_catalogs: document.meta.kind_catalogs.as_ref().map(dsl::ToValue::to_value), kind_compatibility: Some(dsl::ToValue::to_value(&document.meta.kind_compatibility)) },
+        meta: Puzzle3dFixtureMeta { kind_catalogs: document.meta.kind_catalogs.as_ref().map(semio_framework_value::ToValue::to_value), kind_compatibility: Some(semio_framework_value::ToValue::to_value(&document.meta.kind_compatibility)) },
         objects: document.objects.iter().map(fixture_object_from_snapshot).collect(),
         attractions: document.attractions.iter().map(fixture_attraction_from_snapshot).collect(),
         target_volumes: document.target_volumes.iter().map(fixture_target_volume_from_snapshot).collect(),
@@ -546,8 +546,8 @@ pub fn puzzle3d_snapshot_from_host_snapshot(fixture: &Puzzle3dFixture) -> Puzzle
         schema: fixture.schema.clone(),
         domain: fixture.domain.clone(),
         meta: crate::Puzzle3dMeta {
-            kind_catalogs: fixture.meta.kind_catalogs.clone().and_then(|value| dsl::FromValue::from_value(value).ok()),
-            kind_compatibility: fixture.meta.kind_compatibility.clone().and_then(|value| dsl::FromValue::from_value(value).ok()).unwrap_or_default(),
+            kind_catalogs: fixture.meta.kind_catalogs.clone().and_then(|value| semio_framework_value::FromValue::from_value(value).ok()),
+            kind_compatibility: fixture.meta.kind_compatibility.clone().and_then(|value| semio_framework_value::FromValue::from_value(value).ok()).unwrap_or_default(),
         },
         objects: fixture.objects.iter().map(snapshot_object_from_host_snapshot).collect(),
         attractions: fixture.attractions.iter().map(snapshot_attraction_from_host_snapshot).collect(),
@@ -564,7 +564,7 @@ fn snapshot_object_from_host_snapshot(object: &Puzzle3dObject) -> crate::Puzzle3
         anchor: crate::Puzzle3dObjectAnchor::default(),
         origin: object.origin,
         orientation: object.orientation,
-        scale: object.scale.clone().and_then(|value| dsl::FromValue::from_value(value).ok()),
+        scale: object.scale.clone().and_then(|value| semio_framework_value::FromValue::from_value(value).ok()),
         mesh_url: object.mesh_url.clone(),
         vortices: object.vortices.iter().map(snapshot_vortex_from_host_snapshot).collect(),
         hidden: object.hidden,
@@ -593,7 +593,7 @@ fn snapshot_attraction_from_host_snapshot(attraction: &Puzzle3dAttraction) -> cr
 }
 
 fn snapshot_target_volume_from_host_snapshot(volume: &Puzzle3dTargetVolume) -> crate::Puzzle3dTargetVolume {
-    crate::Puzzle3dTargetVolume { id: volume.id.clone(), origin: volume.origin, orientation: volume.orientation, scale: volume.scale.clone().and_then(|value| dsl::FromValue::from_value(value).ok()), hidden: volume.hidden, locked: volume.locked }
+    crate::Puzzle3dTargetVolume { id: volume.id.clone(), origin: volume.origin, orientation: volume.orientation, scale: volume.scale.clone().and_then(|value| semio_framework_value::FromValue::from_value(value).ok()), hidden: volume.hidden, locked: volume.locked }
 }
 
 fn snapshot_reference_from_host_snapshot(reference: &Puzzle3dReference) -> crate::Puzzle3dReference {
@@ -614,7 +614,7 @@ pub(crate) fn fixture_object_from_snapshot(object: &crate::Puzzle3dObject) -> Pu
         object_kind: object.object_kind.clone(),
         origin: object.origin,
         orientation: object.orientation,
-        scale: object.scale.as_ref().map(dsl::ToValue::to_value),
+        scale: object.scale.as_ref().map(semio_framework_value::ToValue::to_value),
         mesh_url: object.mesh_url.clone(),
         vortices: object.vortices.iter().map(fixture_vortex_from_snapshot).collect(),
         hidden: object.hidden,
@@ -641,7 +641,7 @@ fn fixture_attraction_from_snapshot(attraction: &crate::Puzzle3dAttraction) -> P
 }
 
 fn fixture_target_volume_from_snapshot(volume: &crate::Puzzle3dTargetVolume) -> Puzzle3dTargetVolume {
-    Puzzle3dTargetVolume { id: volume.id.clone(), origin: volume.origin, orientation: volume.orientation, scale: volume.scale.as_ref().map(dsl::ToValue::to_value), hidden: volume.hidden, locked: volume.locked }
+    Puzzle3dTargetVolume { id: volume.id.clone(), origin: volume.origin, orientation: volume.orientation, scale: volume.scale.as_ref().map(semio_framework_value::ToValue::to_value), hidden: volume.hidden, locked: volume.locked }
 }
 
 fn fixture_reference_from_snapshot(reference: &crate::Puzzle3dReference) -> Puzzle3dReference {
@@ -657,7 +657,7 @@ fn fixture_reference_from_snapshot(reference: &crate::Puzzle3dReference) -> Puzz
 
 /// 🧮️ Document operations for a fixture mutation through the typed semantic delta vocabulary.
 pub fn puzzle3d_operations_from_host_snapshot_change(before: &Value, after_fixture: &Puzzle3dFixture) -> Vec<Puzzle3dMutation> {
-    let before_fixture: Puzzle3dFixture = dsl::FromValue::from_value(json::to_dsl_value(before)).unwrap_or_else(|_| empty_fixture());
+    let before_fixture: Puzzle3dFixture = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(before)).unwrap_or_else(|_| empty_fixture());
     let before_snapshot = puzzle3d_snapshot_from_host_snapshot(&before_fixture);
     let after_snapshot = puzzle3d_snapshot_from_host_snapshot(after_fixture);
     if before_snapshot == after_snapshot {
@@ -704,27 +704,27 @@ fn puzzle3d_normalize_object_kind_row(row: Value) -> Value {
 /// still-`Value`-shaped `import_media` fragment; `DslValue`'s `Object`/`Array` variants are bare
 /// `Vec`s with no `entry`/`as_*_mut` sugar, so the section lookup below is index-based instead of
 /// `serde_json::Value`'s `entry(...).or_insert_with(...)`.
-fn puzzle3d_upsert_catalog_rows(catalogs: &mut dsl::DslValue, section: &str, incoming: Option<&Value>) {
+fn puzzle3d_upsert_catalog_rows(catalogs: &mut semio_framework_value::DslValue, section: &str, incoming: Option<&Value>) {
     let Some(incoming_rows) = incoming.and_then(Value::as_array) else {
         return;
     };
     if incoming_rows.is_empty() {
         return;
     }
-    let dsl::DslValue::Object(catalog_entries) = catalogs else {
+    let semio_framework_value::DslValue::Object(catalog_entries) = catalogs else {
         return;
     };
     let section_index = match catalog_entries.iter().position(|(key, _)| key == section) {
         Some(index) => index,
         None => {
-            catalog_entries.push((section.to_string(), dsl::DslValue::Array(Vec::new())));
+            catalog_entries.push((section.to_string(), semio_framework_value::DslValue::Array(Vec::new())));
             catalog_entries.len() - 1
         }
     };
-    if !matches!(catalog_entries[section_index].1, dsl::DslValue::Array(_)) {
-        catalog_entries[section_index].1 = dsl::DslValue::Array(Vec::new());
+    if !matches!(catalog_entries[section_index].1, semio_framework_value::DslValue::Array(_)) {
+        catalog_entries[section_index].1 = semio_framework_value::DslValue::Array(Vec::new());
     }
-    let dsl::DslValue::Array(existing) = &mut catalog_entries[section_index].1 else {
+    let semio_framework_value::DslValue::Array(existing) = &mut catalog_entries[section_index].1 else {
         return;
     };
     for row in incoming_rows {
@@ -732,8 +732,8 @@ fn puzzle3d_upsert_catalog_rows(catalogs: &mut dsl::DslValue, section: &str, inc
         let Some(id) = row.get("id").and_then(Value::as_str) else {
             continue;
         };
-        let row_dsl = json::to_dsl_value(&row);
-        match existing.iter().position(|entry| entry.get("id").and_then(dsl::DslValue::as_str) == Some(id)) {
+        let row_dsl = semio_framework_pack_json::to_dsl_value(&row);
+        match existing.iter().position(|entry| entry.get("id").and_then(semio_framework_value::DslValue::as_str) == Some(id)) {
             Some(index) => existing[index] = row_dsl,
             None => existing.push(row_dsl),
         }
@@ -741,7 +741,20 @@ fn puzzle3d_upsert_catalog_rows(catalogs: &mut dsl::DslValue, section: &str, inc
 }
 
 pub fn mesh_selection_ids(args: Option<&Value>, fallback: &[String]) -> Vec<String> {
-    args.and_then(|value| value.get("ids")).and_then(|value| dsl::FromValue::from_value(json::to_dsl_value(value)).ok()).filter(|ids: &Vec<String>| !ids.is_empty()).unwrap_or_else(|| fallback.to_vec())
+    args.and_then(|value| value.get("ids")).and_then(|value| semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(value)).ok()).filter(|ids: &Vec<String>| !ids.is_empty()).unwrap_or_else(|| fallback.to_vec())
+}
+
+/// 📢️ The localized notice of every refusal code the puzzle 3d guest names (design §20.12): a set-verb's missing flag value and
+/// the fill tool's run refusals (`🛠️tools/🪣️fill`).
+fn puzzle3d_fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
+    static NOTICES: LazyLock<[(&str, LocalizedLabel); 3]> = LazyLock::new(|| {
+        [
+            ("puzzle3d.action.flag-value-required", LocalizedLabel::native("Choose on or off for this setting.", "Für diese Einstellung Ein oder Aus wählen.")),
+            ("puzzle3d.fill.scene-unavailable", LocalizedLabel::native("Fill cannot start: the document has nothing to place against.", "Füllen kann nicht starten: Das Dokument enthält nichts, woran platziert werden kann.")),
+            ("puzzle3d.fill.provisional-unreadable", LocalizedLabel::native("The fill's unconfirmed placements could not be read back. Start the fill again.", "Die unbestätigten Platzierungen des Füllens konnten nicht gelesen werden. Füllen erneut starten.")),
+        ]
+    });
+    &*NOTICES
 }
 
 /// 🙈️ The flag a set-verb sets to exactly the boolean its arguments carry (`setSelectionHidden{hidden}`,
@@ -804,15 +817,15 @@ pub struct Puzzle3dKindMeshIndex<'a> {
 
 impl<'a> Puzzle3dKindMeshIndex<'a> {
     pub fn of(meta: &'a Puzzle3dFixtureMeta) -> Self {
-        let rows = meta.kind_catalogs.as_ref().and_then(|catalogs| catalogs.get("objects")).and_then(dsl::DslValue::as_array).unwrap_or_default();
+        let rows = meta.kind_catalogs.as_ref().and_then(|catalogs| catalogs.get("objects")).and_then(semio_framework_value::DslValue::as_array).unwrap_or_default();
         let mut by_kind = HashMap::with_capacity(rows.len());
         for entry in rows {
             // 🐛️ Imported rows are normalized to `representations` (`puzzle3d_normalize_object_kind_row` drops
             // `meshUrl`), so reading `meshUrl` alone dropped every kind no placed object renders: the fill's
             // mesh lane had no body for it and each of its candidates was rejected `mesh-unavailable`. Same
             // order as `resolve_object_kind_mesh_url`, so the lane key IS the key a candidate looks up.
-            let url = entry.get("representations").and_then(dsl::DslValue::as_array).into_iter().flatten().filter_map(|rep| rep.get("url").and_then(dsl::DslValue::as_str)).map(str::trim).find(|url| !url.is_empty());
-            let (Some(id), Some(url)) = (entry.get("id").and_then(dsl::DslValue::as_str), url.or_else(|| entry.get("meshUrl").and_then(dsl::DslValue::as_str))) else {
+            let url = entry.get("representations").and_then(semio_framework_value::DslValue::as_array).into_iter().flatten().filter_map(|rep| rep.get("url").and_then(semio_framework_value::DslValue::as_str)).map(str::trim).find(|url| !url.is_empty());
+            let (Some(id), Some(url)) = (entry.get("id").and_then(semio_framework_value::DslValue::as_str), url.or_else(|| entry.get("meshUrl").and_then(semio_framework_value::DslValue::as_str))) else {
                 continue;
             };
             by_kind.insert(id, url);
@@ -852,19 +865,19 @@ pub fn collect_mesh_urls(fixture: &Puzzle3dFixture) -> Vec<String> {
     urls.into_iter().map(str::to_string).collect()
 }
 
-fn scale_array_to_dsl_value(scale: [f64; 3]) -> dsl::DslValue {
-    dsl::DslValue::Array(scale.iter().map(|component| dsl::DslValue::float(*component)).collect())
+fn scale_array_to_dsl_value(scale: [f64; 3]) -> semio_framework_value::DslValue {
+    semio_framework_value::DslValue::Array(scale.iter().map(|component| semio_framework_value::DslValue::float(*component)).collect())
 }
 
 pub fn object_scale_json(object: &Puzzle3dObject) -> [f64; 3] {
-    match object.scale.as_ref().and_then(dsl::DslValue::as_array) {
+    match object.scale.as_ref().and_then(semio_framework_value::DslValue::as_array) {
         Some(values) if values.len() >= 3 => [values[0].as_f64().unwrap_or(1.0), values[1].as_f64().unwrap_or(1.0), values[2].as_f64().unwrap_or(1.0)],
         _ => [1.0, 1.0, 1.0],
     }
 }
 
 pub fn target_volume_scale_json(volume: &Puzzle3dTargetVolume) -> [f64; 3] {
-    match volume.scale.as_ref().and_then(dsl::DslValue::as_array) {
+    match volume.scale.as_ref().and_then(semio_framework_value::DslValue::as_array) {
         Some(values) if values.len() >= 3 => [values[0].as_f64().unwrap_or(1.0), values[1].as_f64().unwrap_or(1.0), values[2].as_f64().unwrap_or(1.0)],
         _ => [1.0, 1.0, 1.0],
     }
@@ -909,7 +922,7 @@ pub fn puzzle3d_kinds_compatible(fixture: &Puzzle3dFixture, source_kind: &str, t
     })
 }
 
-pub fn puzzle3d_catalog_entries<'a>(fixture: &'a Puzzle3dFixture, section: &str) -> &'a [dsl::DslValue] {
+pub fn puzzle3d_catalog_entries<'a>(fixture: &'a Puzzle3dFixture, section: &str) -> &'a [semio_framework_value::DslValue] {
     fixture.meta.kind_catalogs.as_ref().and_then(|catalogs| catalogs.get(section)).and_then(|entries| entries.as_array()).unwrap_or(&[])
 }
 
@@ -926,7 +939,7 @@ pub fn next_object_id() -> String {
 pub fn puzzle3d_kind_catalog_label(fixture: &Puzzle3dFixture, kind_id: &str) -> String {
     puzzle3d_catalog_entries(fixture, "objects")
         .iter()
-        .find(|entry| entry.get("id").and_then(dsl::DslValue::as_str) == Some(kind_id))
+        .find(|entry| entry.get("id").and_then(semio_framework_value::DslValue::as_str) == Some(kind_id))
         .map(catalogue::catalog_entry_label)
         .unwrap_or_else(|| kind_id.to_string())
 }
@@ -1032,7 +1045,7 @@ pub fn puzzle3d_next_object_label(objects: &[Puzzle3dObject], fixture: &Puzzle3d
 /// seeded vortex of every catalogued kind at the object origin, so a freshly added object offered one
 /// degenerate seat instead of its real rim. `position` is kept as the fallback for the
 /// already-placed-shaped rows `kit:in` imports carry.
-pub fn puzzle3d_vortices_from_kind_template(catalog_entry: &dsl::DslValue) -> Vec<Puzzle3dVortex> {
+pub fn puzzle3d_vortices_from_kind_template(catalog_entry: &semio_framework_value::DslValue) -> Vec<Puzzle3dVortex> {
     catalog_entry
         .get("vortices")
         .and_then(|value| value.as_array())
@@ -1041,8 +1054,8 @@ pub fn puzzle3d_vortices_from_kind_template(catalog_entry: &dsl::DslValue) -> Ve
                 .iter()
                 .enumerate()
                 .map(|(index, template)| {
-                    let position = template.get("point").or_else(|| template.get("position")).and_then(|value| dsl::FromValue::from_value(value.clone()).ok()).unwrap_or([0.0, 0.0, 0.0]);
-                    let direction = template.get("direction").and_then(|value| dsl::FromValue::from_value(value.clone()).ok());
+                    let position = template.get("point").or_else(|| template.get("position")).and_then(|value| semio_framework_value::FromValue::from_value(value.clone()).ok()).unwrap_or([0.0, 0.0, 0.0]);
+                    let direction = template.get("direction").and_then(|value| semio_framework_value::FromValue::from_value(value.clone()).ok());
                     let radius = template.get("radius").and_then(|value| value.as_f64());
                     Puzzle3dVortex { id: format!("v{index}"), vortex_kind: template.get("vortexKind").and_then(|value| value.as_str()).map(str::to_string), position, direction, radius, hidden: false, locked: false }
                 })
@@ -1594,12 +1607,12 @@ pub fn apply_puzzle3d_focus_selection(envelope: &mut Puzzle3dScene, selected_obj
 pub(crate) fn scene_config(envelope: &Puzzle3dScene) -> Option<crate::standards::v1::subsets::any::schema::SceneConfig> {
     let meta = &envelope.fixture.meta;
     let kind_catalogs = match meta.kind_catalogs.as_ref() {
-        None | Some(dsl::DslValue::Null) => None,
-        Some(catalogs) => Some(dsl::FromValue::from_value(catalogs.clone()).ok()?),
+        None | Some(semio_framework_value::DslValue::Null) => None,
+        Some(catalogs) => Some(semio_framework_value::FromValue::from_value(catalogs.clone()).ok()?),
     };
     let kind_compatibility = match meta.kind_compatibility.as_ref() {
         None => Vec::new(),
-        Some(entries) => dsl::FromValue::from_value(entries.clone()).ok()?,
+        Some(entries) => semio_framework_value::FromValue::from_value(entries.clone()).ok()?,
     };
     Some(crate::standards::v1::subsets::any::schema::SceneConfig {
         fixture: crate::standards::v1::subsets::any::schema::Fixture {
@@ -1665,21 +1678,21 @@ fn engine_world_volume_props(volume: &Puzzle3dTargetVolume) -> crate::standards:
 /// so `puzzle3d_typed_scene_config_matches_the_value_bridge_for_every_example` can prove the typed
 /// construction agrees with it on every shipped document.
 #[cfg(test)]
-pub(crate) fn scene_config_value(envelope: &Puzzle3dScene) -> dsl::DslValue {
-    dsl::DslValue::object([
+pub(crate) fn scene_config_value(envelope: &Puzzle3dScene) -> semio_framework_value::DslValue {
+    semio_framework_value::DslValue::object([
         (
             "fixture".to_string(),
-            dsl::DslValue::object([
-                ("objects".to_string(), dsl::ToValue::to_value(&envelope.fixture.objects)),
-                ("attractions".to_string(), dsl::ToValue::to_value(&envelope.fixture.attractions)),
-                ("targetVolumes".to_string(), dsl::ToValue::to_value(&envelope.fixture.target_volumes)),
+            semio_framework_value::DslValue::object([
+                ("objects".to_string(), semio_framework_value::ToValue::to_value(&envelope.fixture.objects)),
+                ("attractions".to_string(), semio_framework_value::ToValue::to_value(&envelope.fixture.attractions)),
+                ("targetVolumes".to_string(), semio_framework_value::ToValue::to_value(&envelope.fixture.target_volumes)),
             ]),
         ),
-        ("kindCatalogs".to_string(), envelope.fixture.meta.kind_catalogs.clone().unwrap_or(dsl::DslValue::Null)),
-        ("kindCompatibility".to_string(), envelope.fixture.meta.kind_compatibility.clone().unwrap_or_else(|| dsl::DslValue::Array(Vec::new()))),
-        ("contactTolerance".to_string(), dsl::DslValue::float(envelope.runtime.contact_tolerance)),
-        ("seed".to_string(), dsl::DslValue::uint(1)),
-        ("weights".to_string(), dsl::DslValue::object([("objectWeights".to_string(), dsl::ToValue::to_value(&envelope.runtime.object_kind_weights)), ("vortexWeights".to_string(), dsl::ToValue::to_value(&envelope.runtime.vortex_kind_weights))])),
+        ("kindCatalogs".to_string(), envelope.fixture.meta.kind_catalogs.clone().unwrap_or(semio_framework_value::DslValue::Null)),
+        ("kindCompatibility".to_string(), envelope.fixture.meta.kind_compatibility.clone().unwrap_or_else(|| semio_framework_value::DslValue::Array(Vec::new()))),
+        ("contactTolerance".to_string(), semio_framework_value::DslValue::float(envelope.runtime.contact_tolerance)),
+        ("seed".to_string(), semio_framework_value::DslValue::uint(1)),
+        ("weights".to_string(), semio_framework_value::DslValue::object([("objectWeights".to_string(), semio_framework_value::ToValue::to_value(&envelope.runtime.object_kind_weights)), ("vortexWeights".to_string(), semio_framework_value::ToValue::to_value(&envelope.runtime.vortex_kind_weights))])),
     ])
 }
 
@@ -1755,11 +1768,11 @@ pub fn drive_precompute(session: &mut Puzzle3dPrecomputeSession, envelope: &Puzz
 /// between two independently-evolved Rust types) exactly like `scene_config_json` bridges the other
 /// direction.
 pub fn fixture_from_engine_fixture(envelope: &Puzzle3dScene, fixture: &crate::standards::v1::subsets::any::schema::Fixture) -> Option<Puzzle3dScene> {
-    let parsed = dsl::ToValue::to_value(fixture);
+    let parsed = semio_framework_value::ToValue::to_value(fixture);
     let mut next = envelope.clone();
-    next.fixture.objects = dsl::FromValue::from_value(parsed.get("objects")?.clone()).ok()?;
-    next.fixture.attractions = parsed.get("attractions").and_then(|v| dsl::FromValue::from_value(v.clone()).ok()).unwrap_or_default();
-    next.fixture.target_volumes = parsed.get("targetVolumes").and_then(|v| dsl::FromValue::from_value(v.clone()).ok()).unwrap_or_default();
+    next.fixture.objects = semio_framework_value::FromValue::from_value(parsed.get("objects")?.clone()).ok()?;
+    next.fixture.attractions = parsed.get("attractions").and_then(|v| semio_framework_value::FromValue::from_value(v.clone()).ok()).unwrap_or_default();
+    next.fixture.target_volumes = parsed.get("targetVolumes").and_then(|v| semio_framework_value::FromValue::from_value(v.clone()).ok()).unwrap_or_default();
     Some(next)
 }
 
@@ -2587,9 +2600,9 @@ impl protocol::OpBinary for Puzzle3dCommand {
         Ok(to_string(&self.to_json()).into_bytes())
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))?;
-        let value = parse(text).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))?;
-        Self::from_json(&value).ok_or_else(|| protocol::ProtocolError::Pack(store::PackError::Schema("unrecognized Puzzle3dCommand tag".to_string())))
+        let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(semio_framework_value::ValueError::from(error))))?;
+        let value = parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(error.into_value_error())))?;
+        Self::from_json(&value).ok_or_else(|| protocol::ProtocolError::Pack(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "unrecognized Puzzle3dCommand tag"))))
     }
 }
 //#endregion 🔖️Puzzle3dCommand
@@ -2754,7 +2767,7 @@ impl<'a> Puzzle3dActionCtx<'a> {
             return;
         }
         let request = utilities::transform::TransformToolRequest { base: std::sync::Arc::clone(self.base), records };
-        if let Some((transaction, mutations)) = utilities::transform::puzzle3d_transform_tool_commit(verb, self.authoring_seed, utilities::transform::puzzle3d_transform_tool_clock(), request) {
+        if let Some((transaction, mutations)) = utilities::transform::puzzle3d_transform_tool_commit(verb, self.authoring_seed, semio_framework_tool_machine::authoring_clock(0), request) {
             *self.transaction = (!self.authoring_seed.is_empty()).then_some(transaction);
             self.artifact_mutations.extend(mutations);
         }
@@ -2785,7 +2798,7 @@ fn puzzle3d_context_menu_row(id: &str, label: impl Into<String>, icon: &str, act
         label: Some(label.into()),
         icon: Some(icon.into()),
         action: Some(action.into()),
-        args: args.map(|value| json::to_dsl_value(&value)),
+        args: args.map(|value| semio_framework_pack_json::to_dsl_value(&value)),
         destructive: destructive.then_some(true),
         ..Default::default()
     }
@@ -2879,7 +2892,7 @@ impl Puzzle3dContextSelection {
     }
 }
 
-fn puzzle3d_context_menu_items(envelope: &Puzzle3dScene, selection: &Puzzle3dContextSelection, labels: &Puzzle3dLabels, registry: &semio_framework_plugin::AppActionRegistry) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+fn puzzle3d_context_menu_items(envelope: &Puzzle3dScene, selection: &Puzzle3dContextSelection, labels: &Puzzle3dLabels, view_state: &semio_framework_plugin::ViewModel, registry: &semio_framework_plugin::AppActionRegistry) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
     use semio_framework_plugin::Menu;
     if !selection.object_ids.is_empty() {
         let all_hidden = envelope.fixture.objects.iter().filter(|object| selection.object_ids.contains(&object.id)).all(|object| object.hidden);
@@ -2887,7 +2900,7 @@ fn puzzle3d_context_menu_items(envelope: &Puzzle3dScene, selection: &Puzzle3dCon
         let count = selection.object_ids.len();
         let phrase = if count == 1 { format!("1 {}", labels.object.as_str()) } else { format!("{count} {}", labels.objects.as_str()) };
         return {
-            Menu::of(registry)
+            Menu::of(registry, view_state)
                 .item(puzzle3d_context_menu_row("duplicate", labels.duplicate, "copy", "duplicateSelection", None, false))
                 .item(puzzle3d_context_menu_row("select-same-kind", labels.select_same_kind, "layers", "selectSameKindSelection", None, false))
                 .item(puzzle3d_context_menu_row("zoom", labels.zoom_to_selection, "crosshair", "focusSelection", None, false))
@@ -2907,21 +2920,21 @@ fn puzzle3d_context_menu_items(envelope: &Puzzle3dScene, selection: &Puzzle3dCon
         };
     }
     if !selection.vortex_ids.is_empty() {
-        let mut menu = Menu::of(registry);
+        let mut menu = Menu::of(registry, view_state);
         if let [only] = selection.vortex_ids.as_slice() {
             menu = menu.item(puzzle3d_context_menu_row("suggest", labels.suggest_objects, "sparkles", "openVortexSuggestions", Some(json!({ "fullId": only.as_str() })), false));
         }
         return menu.item(puzzle3d_context_menu_row("zoom", labels.zoom_to_selection, "crosshair", "focusSelection", None, false)).item(puzzle3d_context_menu_row("delete", labels.delete, "trash", "deleteSelection", None, true)).build();
     }
     if let Some(id) = selection.attraction_ids.first() {
-        return Menu::of(registry).item(puzzle3d_context_menu_row("delete", labels.delete, "trash", "deleteAttraction", Some(json!({ "id": id.as_str() })), true)).build();
+        return Menu::of(registry, view_state).item(puzzle3d_context_menu_row("delete", labels.delete, "trash", "deleteAttraction", Some(json!({ "id": id.as_str() })), true)).build();
     }
     if let Some(id) = selection.target_volume_ids.first() {
         let target_volume = envelope.fixture.target_volumes.iter().find(|volume| &volume.id == id);
         let hidden = target_volume.is_some_and(|volume| volume.hidden);
         let locked = target_volume.is_some_and(|volume| volume.locked);
         return {
-            Menu::of(registry)
+            Menu::of(registry, view_state)
                 .group("targets", |m| {
                     m.item(puzzle3d_context_menu_row(
                         "hide-show",
@@ -2946,7 +2959,7 @@ fn puzzle3d_context_menu_items(envelope: &Puzzle3dScene, selection: &Puzzle3dCon
     }
     if !selection.reference_ids.is_empty() {
         return {
-            Menu::of(registry).item(puzzle3d_context_menu_row("zoom", labels.zoom_to_selection, "crosshair", "focusSelection", None, false)).item(puzzle3d_context_menu_row("delete", labels.delete, "trash", "deleteSelection", None, true)).build()
+            Menu::of(registry, view_state).item(puzzle3d_context_menu_row("zoom", labels.zoom_to_selection, "crosshair", "focusSelection", None, false)).item(puzzle3d_context_menu_row("delete", labels.delete, "trash", "deleteSelection", None, true)).build()
         };
     }
     Vec::new()
@@ -3049,11 +3062,16 @@ impl Puzzle3dSessionRegistry {
     /// check in. Driven in production the moment one instance id is observed carrying a different
     /// parent document — the framework reuses instance ids, and a reused id is a new document.
     fn retire(&mut self, slot: usize) {
+        self.vacate(slot);
+        crate::editor::puzzle3d::precompute::retire_abandoned_brush_mesh_uploads();
+    }
+
+    /// 🕳️ Empties one slot and bumps its generation without sweeping the process-wide page-run uploads.
+    fn vacate(&mut self, slot: usize) {
         if let Some(entry) = self.slots[slot].take() {
             self.aggregate_bytes = self.aggregate_bytes.saturating_sub(entry.bytes);
         }
         self.generations[slot] = self.generations[slot].saturating_add(1);
-        crate::editor::puzzle3d::precompute::retire_abandoned_brush_mesh_uploads();
     }
 
     fn resolve_slot(&mut self, app_instance_id: u32, artifact_id: Option<&str>) -> Option<usize> {
@@ -3102,11 +3120,13 @@ impl Puzzle3dSessionRegistry {
     }
 }
 
-/// 🎟️ Adopts one instance's session onto a freshly built app. A contended registry, an exhausted slot
-/// row or a first-ever call all resolve to "no cached state", which is exactly the pre-session
-/// behaviour — this path can never make a call wrong, only cold.
+/// 🎟️ Adopts one instance's session onto a freshly built app. An exhausted slot row or a first-ever call
+/// resolves to "no cached state", which is exactly the pre-session behaviour. The registry lock is WAITED
+/// for, never skipped: its critical section is a slot move, and the session carries behaviour, not only
+/// speed — the standing mesh re-upload set lives here, so a skipped adoption would answer an already
+/// requested identity as new and re-arm the re-announce storm (wave B32).
 fn puzzle3d_session_check_out(app_instance_id: u32, artifact_id: Option<&str>, app: &Puzzle3dPlayApp) -> Option<Puzzle3dSessionLease> {
-    let (lease, state) = puzzle3d_session_registry().try_lock().ok()?.check_out(app_instance_id, artifact_id)?;
+    let (lease, state) = puzzle3d_session_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner).check_out(app_instance_id, artifact_id)?;
     *app.instance_residency.lock().expect("instance residency") = state.instances;
     *app.mesh_cache.lock().expect("mesh cache") = state.meshes;
     {
@@ -3118,8 +3138,9 @@ fn puzzle3d_session_check_out(app_instance_id: u32, artifact_id: Option<&str>, a
     Some(lease)
 }
 
-/// 🎟️ Returns the app's caches to their slot. A stale lease (the slot was retired or re-keyed mid-call)
-/// is rejected and the state simply dropped.
+/// 🎟️ Returns the app's caches to their slot, waiting for the registry lock like
+/// [`puzzle3d_session_check_out`]. A stale lease (the slot was retired or re-keyed mid-call) is rejected and
+/// the state simply dropped.
 fn puzzle3d_session_check_in(lease: Puzzle3dSessionLease, app: &Puzzle3dPlayApp) {
     let collision = Some(app.precompute.borrow_mut().take_collision_session());
     let state = Puzzle3dSessionState {
@@ -3127,8 +3148,19 @@ fn puzzle3d_session_check_in(lease: Puzzle3dSessionLease, app: &Puzzle3dPlayApp)
         meshes: app.mesh_cache.lock().expect("mesh cache").take(),
         collision,
     };
-    if let Ok(mut registry) = puzzle3d_session_registry().try_lock() {
-        registry.check_in(lease, state);
+    puzzle3d_session_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner).check_in(lease, state);
+}
+
+/// 🧹️ Vacates every slot `app_instance_id` owns — what a fixture app does when it is dropped, so one law's
+/// session never outlives it into the process-global row the next law probes. The page-run upload sweep is
+/// left to the production retirements, so a concurrent law's open upload is never swept by another's drop.
+#[cfg(test)]
+pub(crate) fn puzzle3d_session_release(app_instance_id: u32) {
+    let mut registry = puzzle3d_session_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    for slot in Puzzle3dSessionRegistry::candidates(app_instance_id).collect::<Vec<_>>() {
+        if registry.owns(slot, app_instance_id) {
+            registry.vacate(slot);
+        }
     }
 }
 
@@ -3534,7 +3566,7 @@ fn puzzle3d_shell_only_emit(action: &str) -> Option<Puzzle3dActionEmission> {
                     read_as: Some("text".into()),
                     import_action: "importFixture".into(),
                     multiple: false,
-                }],
+                args: None, }],
                 ui_scope: UiDirtyScope::None,
                 ..Default::default()
             },
@@ -4503,7 +4535,7 @@ impl Puzzle3dTransformWork {
             return puzzle3d_notice_emit(self.view_state.as_ref(), |labels| labels.selection_locked.as_str());
         }
         let request = utilities::transform::TransformToolRequest { base, records: vec![record] };
-        match utilities::transform::puzzle3d_transform_tool_commit(self.tool_id, &self.authoring_seed, utilities::transform::puzzle3d_transform_tool_clock(), request) {
+        match utilities::transform::puzzle3d_transform_tool_commit(self.tool_id, &self.authoring_seed, semio_framework_tool_machine::authoring_clock(0), request) {
             Some((transaction, mutations)) => Emit { artifact_mutations: mutations, transaction: (!self.authoring_seed.is_empty()).then_some(transaction), ui_scope: puzzle3d_scope(puzzle3d_command_scope_class(self.tool_id)), ..Default::default() },
             None => Emit { ui_scope: UiDirtyScope::None, ..Default::default() },
         }
@@ -5276,8 +5308,8 @@ impl Puzzle3dSetActiveExampleWork {
         }
     }
 
-    fn compatibility_rows(target: &Puzzle3dFixture) -> &[dsl::DslValue] {
-        target.meta.kind_compatibility.as_ref().and_then(dsl::DslValue::as_array).unwrap_or_default()
+    fn compatibility_rows(target: &Puzzle3dFixture) -> &[semio_framework_value::DslValue] {
+        target.meta.kind_compatibility.as_ref().and_then(semio_framework_value::DslValue::as_array).unwrap_or_default()
     }
 
     fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>> {
@@ -5408,7 +5440,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 Ok(Self::progress("puzzle3d-example-catalogs", "Updating kind catalogs", "Artenkataloge werden aktualisiert"))
             }
             Puzzle3dSetActiveExampleStage::Catalogs => {
-                let catalogs = target.meta.kind_catalogs.as_ref().map(|catalogs| dsl::FromValue::from_value(catalogs.clone())).transpose().map_err(|_| Fault::from("puzzle3d-set-active-example-catalogs-malformed"))?;
+                let catalogs = target.meta.kind_catalogs.as_ref().map(|catalogs| semio_framework_value::FromValue::from_value(catalogs.clone())).transpose().map_err(|_| Fault::from("puzzle3d-set-active-example-catalogs-malformed"))?;
                 self.push(crate::standards::v1::subsets::any::schema::mutations::replace_kind_catalogs(catalogs))?;
                 self.advance(Puzzle3dSetActiveExampleStage::CreateObjects);
                 Ok(Self::progress("puzzle3d-example-create-object", "Adding example object", "Beispielobjekt wird hinzugefügt"))
@@ -5418,8 +5450,8 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 let range = Self::take_chunk(&mut self.cursor, items.len());
                 if !range.is_empty() {
                     for object in &items[range] {
-                        let value = dsl::ToValue::to_value(object);
-                        let object = dsl::FromValue::from_value(value).map_err(|_| Fault::from("puzzle3d-set-active-example-object-malformed"))?;
+                        let value = semio_framework_value::ToValue::to_value(object);
+                        let object = semio_framework_value::FromValue::from_value(value).map_err(|_| Fault::from("puzzle3d-set-active-example-object-malformed"))?;
                         self.push(crate::standards::v1::subsets::any::schema::mutations::create_object(object, None))?;
                     }
                     return Ok(Self::progress("puzzle3d-example-create-object", "Adding example object", "Beispielobjekt wird hinzugefügt"));
@@ -5456,8 +5488,8 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 let range = Self::take_chunk(&mut self.cursor, items.len());
                 if !range.is_empty() {
                     for volume in &items[range] {
-                        let value = dsl::ToValue::to_value(volume);
-                        let volume = dsl::FromValue::from_value(value).map_err(|_| Fault::from("puzzle3d-set-active-example-volume-malformed"))?;
+                        let value = semio_framework_value::ToValue::to_value(volume);
+                        let volume = semio_framework_value::FromValue::from_value(value).map_err(|_| Fault::from("puzzle3d-set-active-example-volume-malformed"))?;
                         self.push(crate::standards::v1::subsets::any::schema::mutations::create_target_volume(volume, None))?;
                     }
                     return Ok(Self::progress("puzzle3d-example-create-volume", "Adding example target volume", "Beispielzielvolumen wird hinzugefügt"));
@@ -5470,8 +5502,8 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 let range = Self::take_chunk(&mut self.cursor, items.len());
                 if !range.is_empty() {
                     for reference in &items[range] {
-                        let value = dsl::ToValue::to_value(reference);
-                        let reference = dsl::FromValue::from_value(value).map_err(|_| Fault::from("puzzle3d-set-active-example-reference-malformed"))?;
+                        let value = semio_framework_value::ToValue::to_value(reference);
+                        let reference = semio_framework_value::FromValue::from_value(value).map_err(|_| Fault::from("puzzle3d-set-active-example-reference-malformed"))?;
                         self.push(crate::standards::v1::subsets::any::schema::mutations::create_reference(reference, None))?;
                     }
                     return Ok(Self::progress("puzzle3d-example-create-reference", "Adding example reference", "Beispielreferenz wird hinzugefügt"));
@@ -5484,7 +5516,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 let range = Self::take_chunk(&mut self.cursor, items.len());
                 if !range.is_empty() {
                     for row in items[range].iter().cloned() {
-                        let row: crate::Puzzle3dKindCompatibility = dsl::FromValue::from_value(row).map_err(|_| Fault::from("puzzle3d-set-active-example-compatibility-malformed"))?;
+                        let row: crate::Puzzle3dKindCompatibility = semio_framework_value::FromValue::from_value(row).map_err(|_| Fault::from("puzzle3d-set-active-example-compatibility-malformed"))?;
                         self.push(crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility(row.source, row.target, row.bidirectional, row.important, row.specificity))?;
                     }
                     return Ok(Self::progress("puzzle3d-example-create-compatibility", "Adding example compatibility", "Beispielkompatibilität wird hinzugefügt"));
@@ -6203,7 +6235,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                     anchor: Default::default(),
                     origin: candidate.origin,
                     orientation: Some(candidate.orientation),
-                    scale: candidate.scale.clone().and_then(|value| dsl::FromValue::from_value(value).ok()),
+                    scale: candidate.scale.clone().and_then(|value| semio_framework_value::FromValue::from_value(value).ok()),
                     mesh_url: Some(candidate.mesh_url.clone()),
                     vortices: std::mem::take(&mut self.vortices),
                     hidden: false,
@@ -6731,7 +6763,7 @@ struct Puzzle3dConfigStorePreparation {
 struct Puzzle3dConfigStorePreparationFactory;
 
 /// 🌉️ `serde_json::to_writer` streamed into a byte-counting `Write` sink so an oversize config could
-/// abort mid-encode without materializing it; the in-house `dsl::json::to_json_string` has no
+/// abort mid-encode without materializing it; the in-house `semio_framework_pack_json::to_json_string` has no
 /// streaming writer, so this measures the fully-encoded string's byte length against the same
 /// `PUZZLE3D_CONFIG_STORE_MAXIMUM_BYTES` bound instead — same bound, same error, one buffer instead
 /// of zero (`Puzzle3dConfig` is a small, fixed-shape record, never large enough for this to matter).
@@ -6757,35 +6789,6 @@ fn puzzle3d_config_store_mutation_bytes(mutation: &Puzzle3dConfigMutation) -> Op
     (encoded <= PUZZLE3D_CONFIG_STORE_MAXIMUM_BYTES).then_some(encoded)
 }
 
-fn puzzle3d_config_store_edit(forward: Puzzle3dConfigMutation, inverse: Vec<Puzzle3dConfigMutation>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<Puzzle3dConfigMutation> {
-    let id = format!("puzzle3d-config-retained-{}", authority.next_sequence_number());
-    protocol::Edit { line: authority.line_id().map(str::to_owned),
-        id: id.clone(),
-        actor: Some(authority.actor().to_string()),
-        forwards: vec![forward],
-        inverse,
-        mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
-            dependencies: Vec::new(),
-            base_version: authority.base_applied_edit_count() as u64,
-            author_id: Some(protocol::ActorId(authority.actor().to_string())),
-            timestamp: authority.next_clock(),
-            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-            payload_hash: None,
-            semantic_kind: None,
-            label: None,
-            group_id: None,
-            origin: Default::default(),
-            transaction: None,
-        }],
-        description, verb: None,
-        coalesce_key: None,
-        sequence_number: authority.next_sequence_number(),
-        started_at: String::new(),
-        finished_at: None,
-    }
-}
-
 impl store::ArtifactStoreOneItemPreparation<Puzzle3dConfig, Puzzle3dConfigMutation> for Puzzle3dConfigStorePreparation {
     fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
         use protocol::{Mutation as _, MutationDiff as _};
@@ -6803,7 +6806,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle3dConfig, Puzzle3dConfigMutati
                     return Err("Puzzle3d Config preparation rejected its exact mutation envelope".into());
                 }
                 let completed_bytes = puzzle3d_config_store_bounded_bytes(base.get())?;
-                let inverse = mutation.inverse(base.get());
+                let inverse = mutation.inverse(base.get()).map_err(semio_framework_value::ValueError::into_message)?;
                 let post = mutation.diff(base.get()).into_parts().0.apply(base.get()).map_err(|_| "Puzzle3d Config mutation could not produce its post root".to_string())?;
                 self.candidate = Some((post, inverse, mutation, completed_bytes));
                 self.phase = 1;
@@ -6813,7 +6816,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle3dConfig, Puzzle3dConfigMutati
             1 => {
                 let (post, inverse, mutation, completed_bytes) = self.candidate.take().ok_or_else(|| "Puzzle3d Config preparation lost its semantic candidate".to_string())?;
                 let authority = self.authority.as_ref().ok_or_else(|| "Puzzle3d Config preparation lost its Store authority".to_string())?;
-                let prepared = authority.prepare_one_item(puzzle3d_config_store_edit(mutation, inverse, self.description.take(), authority), std::sync::Arc::new(post))?;
+                let prepared = authority.prepare_one_item(authority.next_edit(mutation, inverse), std::sync::Arc::new(post))?;
                 self.phase = 2;
                 self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: completed_bytes as u64, digest: prepared.edit_digest() };
                 self.prepared = Some(prepared);
@@ -6843,7 +6846,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle3dConfig, Puzzle3dConfigMutati
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -6852,7 +6855,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle3dConfig, Puzzle3dConfigMutati
         }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
-                return Err("Puzzle3d Config preparation could not return its exact base root".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Puzzle3d Config preparation could not return its exact base root"));
             }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -6877,7 +6880,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<Puzzle3dConfig, Puzzle3dConfi
             return Err("Puzzle3d Config preparation rejected its lane or description".into());
         }
         let retained_bytes = puzzle3d_config_store_mutation_bytes(mutation).ok_or_else(|| "Puzzle3d Config preparation rejected its exact mutation".to_string())?;
-        Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes })
+        Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))
     }
 
     fn begin(
@@ -6919,15 +6922,6 @@ impl store::ArtifactStoreOneItemPreparationFactory<Puzzle3dConfig, Puzzle3dConfi
 // is ONE document-replacement edit (no coalesce key), not one store commit per item.
 struct Puzzle3dArtifactStorePreparationFactory;
 
-/// 🧾️ Inverse rows a selection leaf may restore: every object its attraction re-solve carries along and every
-/// attraction it re-derives is one absolute setter per changed field, a count only the base knows. `preflight`
-/// never sees the base, so it declares as many rows as the one-item byte budget can retain.
-const PUZZLE3D_SELECTION_INVERSE_ROWS: usize = store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES / std::mem::size_of::<Puzzle3dMutation>();
-
-/// 🪢️ Inverse rows a removal may restore: the record itself plus the attractions it severs, bounded like puzzle 2d's
-/// edges per node.
-const PUZZLE3D_REMOVAL_INVERSE_ROWS: usize = 1 + 64;
-
 struct Puzzle3dArtifactStorePreparation {
     base: Option<store::SnapshotRead<Puzzle3dPlaySnapshot>>,
     mutation: Option<Puzzle3dMutation>,
@@ -6941,50 +6935,15 @@ struct Puzzle3dArtifactStorePreparation {
     closing: bool,
 }
 
-fn puzzle3d_artifact_store_edit(forward: Puzzle3dMutation, inverse: Vec<Puzzle3dMutation>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<Puzzle3dMutation> {
-    let id = format!("puzzle3d-artifact-retained-{}", authority.next_sequence_number());
-    protocol::Edit { line: authority.line_id().map(str::to_owned),
-        id: id.clone(),
-        actor: Some(authority.actor().to_string()),
-        forwards: vec![forward],
-        inverse,
-        mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
-            dependencies: Vec::new(),
-            base_version: authority.base_applied_edit_count() as u64,
-            author_id: Some(protocol::ActorId(authority.actor().to_string())),
-            timestamp: authority.next_clock(),
-            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-            payload_hash: None,
-            semantic_kind: None,
-            label: None,
-            group_id: None,
-            origin: Default::default(),
-            transaction: None,
-        }],
-        description, verb: None,
-        coalesce_key: None,
-        sequence_number: authority.next_sequence_number(),
-        started_at: String::new(),
-        finished_at: None,
-    }
-}
-
 impl store::ArtifactStoreOneItemPreparationFactory<Puzzle3dPlaySnapshot, Puzzle3dMutation> for Puzzle3dArtifactStorePreparationFactory {
-    /// 🧾️ `work_items` counts staged edit ROWS — the forward row plus every row the inverse yields: a selection
-    /// leaf restores up to one setter per changed pose field of every record it moves (scaling: one per target, no
-    /// re-solve), a removal restores the record and the attractions it severed, every other kind is point-invertible.
+    /// 🧾️ The forward row plus the inverse rows the leaf's payload schema declares (`x-semio-inverse-rows`): a selection
+    /// leaf one setter per changed pose field of every record its attraction re-solve carries along, a scaling one per
+    /// target, a removal the record and the attractions it severs.
     fn preflight(&self, mutation: &Puzzle3dMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
             return Err("Puzzle3d Artifact preparation rejected its lane or description envelope".into());
         }
-        let retained = store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES;
-        Ok(match mutation {
-            Puzzle3dMutation::DragSelection(_) | Puzzle3dMutation::RotateSelection(_) => store::ArtifactStoreOneItemFootprint::for_one_item(PUZZLE3D_SELECTION_INVERSE_ROWS, retained),
-            Puzzle3dMutation::ScaleSelection(payload) => store::ArtifactStoreOneItemFootprint::for_one_item(payload.targets.len(), retained),
-            Puzzle3dMutation::DeleteObject(_) | Puzzle3dMutation::RemoveObjectVortex(_) => store::ArtifactStoreOneItemFootprint::for_one_item(PUZZLE3D_REMOVAL_INVERSE_ROWS, retained),
-            _ => store::ArtifactStoreOneItemFootprint::for_one_invertible_item(retained),
-        })
+        Ok(store::ArtifactStoreOneItemFootprint::for_leaf::<Puzzle3dPlaySnapshot, _>(mutation, store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
 
     fn begin(
@@ -7027,7 +6986,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle3dPlaySnapshot, Puzzle3dMutati
             0 => {
                 let base = self.base.as_ref().ok_or_else(|| "Puzzle3d Artifact preparation lost its exact base root".to_string())?;
                 let mutation = self.mutation.take().ok_or_else(|| "Puzzle3d Artifact preparation lost its mutation owner".to_string())?;
-                let inverse = mutation.inverse(base.get());
+                let inverse = mutation.inverse(base.get()).map_err(semio_framework_value::ValueError::into_message)?;
                 let post = mutation.diff(base.get()).into_parts().0.apply(base.get()).map_err(|_| "Puzzle3d Artifact mutation could not produce its post root".to_string())?;
                 self.candidate = Some((post, inverse, mutation));
                 self.phase = 1;
@@ -7037,7 +6996,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle3dPlaySnapshot, Puzzle3dMutati
             1 => {
                 let (post, inverse, mutation) = self.candidate.take().ok_or_else(|| "Puzzle3d Artifact preparation lost its semantic candidate".to_string())?;
                 let authority = self.authority.as_ref().ok_or_else(|| "Puzzle3d Artifact preparation lost its Store authority".to_string())?;
-                let prepared = authority.prepare_one_item(puzzle3d_artifact_store_edit(mutation, inverse, self.description.take(), authority), std::sync::Arc::new(post))?;
+                let prepared = authority.prepare_one_item(authority.next_edit(mutation, inverse), std::sync::Arc::new(post))?;
                 self.phase = 2;
                 self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: 1, digest: prepared.edit_digest() };
                 self.prepared = Some(prepared);
@@ -7067,7 +7026,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle3dPlaySnapshot, Puzzle3dMutati
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -7076,7 +7035,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle3dPlaySnapshot, Puzzle3dMutati
         }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
-                return Err("Puzzle3d Artifact preparation could not return its exact base root".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Puzzle3d Artifact preparation could not return its exact base root"));
             }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -7180,7 +7139,7 @@ impl Puzzle3dClipboardJob {
             },
             "paste" => {
                 let Some(args) = args else { return Emit::default() };
-                let Some(fragment) = args.get("fragment").and_then(|value| dsl::FromValue::from_value(value.clone()).ok()) else { return Emit::default() };
+                let Some(fragment) = args.get("fragment").and_then(|value| semio_framework_value::FromValue::from_value(value.clone()).ok()) else { return Emit::default() };
                 let placement = PastePlacement::default();
                 match puzzle3d_paste_operations_on(&fixture, &fragment, &placement) {
                     Ok(mutations) => Emit { artifact_mutations: mutations, ..Default::default() },
@@ -7347,7 +7306,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     /// 🧰️ `setActiveUtility` needs no variant of its own: puzzle3d's active utility IS host view state
     /// (`puzzle3d_scene_active_utility` reads `ViewModel.active_utility_by_window_id`), and the only
     /// app-owned state a utility switch invalidates is that window's engagement input.
-    fn host_configuration_mutation(_action: &str, _args: Option<&dsl::DslValue>) -> Result<Option<Self::ConfigMutation>, Fault> {
+    fn host_configuration_mutation(_action: &str, _args: Option<&semio_framework_value::DslValue>) -> Result<Option<Self::ConfigMutation>, Fault> {
         Ok(None)
     }
 
@@ -7369,6 +7328,11 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     /// 🎯️ The fill tool's run and finalize revalidation jobs, retargeted in place across base and count changes.
     fn build_retargetable_tool_run_job(request: semio_framework_plugin::ToolRunJobRequest<'_, EditorApp<Self>>) -> Result<Option<Box<dyn semio_framework_plugin::ToolRunRetargetableJob<Self::Config>>>, Fault> {
         fill_tool::build_run_job(request)
+    }
+
+    /// 📢️ The localized notices of this guest's refusal codes ([`puzzle3d_fault_notices`]).
+    fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
+        puzzle3d_fault_notices()
     }
 
     /// 🧠️ The instance-retained owner the brush suggestions link lives in.
@@ -7483,7 +7447,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     /// first body (`with_puzzle3d_app_for`), so that work reached no one — while every `codec` call of a hub
     /// creating or validating a document paid for it in the interpreter.
     fn initial_snapshot() -> Puzzle3dPlaySnapshot {
-        Puzzle3dPlaySnapshot::new((&dsl::ToValue::to_value(&default_fixture())).into())
+        Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&default_fixture())).into())
     }
 
     fn clipboard_media_type() -> Option<MediaType> {
@@ -7516,12 +7480,12 @@ impl ArtifactEditor for Puzzle3dPlayApp {
 
     /// 🎯️ Maps the host's transitional `{action,args}` wire onto Puzzle 3D's closed command
     /// enum until React and wgpu send `OpBinary` command bytes directly.
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
-        let window_id = args.and_then(|value| value.get("windowId").or_else(|| value.get("window_id"))).and_then(dsl::DslValue::as_str).map(str::to_string);
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
+        let window_id = args.and_then(|value| value.get("windowId").or_else(|| value.get("window_id"))).and_then(semio_framework_value::DslValue::as_str).map(str::to_string);
         if let Some(flag) = puzzle3d_flag_value_argument(action) {
-            args.and_then(|value| value.get(flag)).and_then(dsl::DslValue::as_bool).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("puzzle3d.action.flag-value-required"), format!("action '{action}' requires the boolean '{flag}' it sets")))?;
+            args.and_then(|value| value.get(flag)).and_then(semio_framework_value::DslValue::as_bool).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("puzzle3d.action.flag-value-required"), format!("action '{action}' requires the boolean '{flag}' it sets")))?;
         }
-        let args = args.map(json::from_dsl_value);
+        let args = args.map(semio_framework_pack_json::from_dsl_value);
         Puzzle3dCommand::from_action(action, args, window_id).ok_or_else(|| Fault::from(format!("unknown Puzzle 3D action '{action}'")))
     }
 
@@ -7555,7 +7519,8 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     /// pick land on the leftover and then vanish — with no error anywhere. One authority is what
     /// makes "the user can see it" and "the user can pick it" the same statement
     /// (26/09/02/PUZZLE-3D-END-TO-END wave B9 lane 2).
-    fn interaction_topology(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, _cfg: &ConfigView<'_, Puzzle3dConfig>) -> semio_framework_plugin::InteractionTopology {
+    fn interaction_topology(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, _cfg: &ConfigView<'_, Puzzle3dConfig>) -> Result<semio_framework_plugin::InteractionTopology, semio_framework_value::ValueError> {
+ Ok((||{
         #[cfg(test)]
         PUZZLE3D_INTERACTION_TOPOLOGY_BUILDS.with(|counter| counter.set(counter.get().saturating_add(1)));
         let snapshot = puzzle3d_fixture_from_projection(&puzzle3d_projection_value(doc.snapshot.value()));
@@ -7581,7 +7546,9 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         let mut domains = std::collections::BTreeMap::new();
         domains.insert(PUZZLE3D_INTERACTION_DOMAIN.to_string(), semio_framework_plugin::DomainTopology { ordered });
         semio_framework_plugin::InteractionTopology { domains }
-    }
+    
+})())
+}
 
     /// 🔌️ Declares puzzle3d's typed media I/O surface — the implicit document ports plus the flagship
     /// `kit:in` seam: an input port accepting `Kit×Type` media tagged `kit.catalog`, fanning IN from
@@ -7603,15 +7570,15 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         let semio_framework_plugin::MediaPayload::Structured { json, .. } = &media.payload else {
             return Err(MediaError::Payload(port.to_string(), "kit:in only accepts a Structured (JSON) payload".into()));
         };
-        let fragment: Value = parse(json.as_str()).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-        let mut fixture: Puzzle3dFixture = dsl::FromValue::from_value(dsl::DslValue::from(doc.snapshot.value())).map_err(|error: dsl::ValueError| MediaError::Payload(port.to_string(), error.to_string()))?;
+        let fragment: Value = parse(json.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+        let mut fixture: Puzzle3dFixture = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(doc.snapshot.value())).map_err(|error: semio_framework_value::ValueError| MediaError::Payload(port.to_string(), error.to_string()))?;
 
-        let mut catalogs: dsl::DslValue = fixture.meta.kind_catalogs.clone().unwrap_or_else(|| {
-            dsl::DslValue::object([
-                ("objects".to_string(), dsl::DslValue::Array(Vec::new())),
-                ("vortices".to_string(), dsl::DslValue::Array(Vec::new())),
-                ("cables".to_string(), dsl::DslValue::Array(Vec::new())),
-                ("attractions".to_string(), dsl::DslValue::Array(Vec::new())),
+        let mut catalogs: semio_framework_value::DslValue = fixture.meta.kind_catalogs.clone().unwrap_or_else(|| {
+            semio_framework_value::DslValue::object([
+                ("objects".to_string(), semio_framework_value::DslValue::Array(Vec::new())),
+                ("vortices".to_string(), semio_framework_value::DslValue::Array(Vec::new())),
+                ("cables".to_string(), semio_framework_value::DslValue::Array(Vec::new())),
+                ("attractions".to_string(), semio_framework_value::DslValue::Array(Vec::new())),
             ])
         });
         puzzle3d_upsert_catalog_rows(&mut catalogs, "objects", fragment.get("objectKinds"));
@@ -7621,17 +7588,17 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         fixture.meta.kind_catalogs = Some(catalogs);
 
         if let Some(incoming_compat) = fragment.get("kindCompatibility").and_then(Value::as_array) {
-            let mut compat: Vec<dsl::DslValue> = fixture.meta.kind_compatibility.as_ref().and_then(dsl::DslValue::as_array).map(<[dsl::DslValue]>::to_vec).unwrap_or_default();
+            let mut compat: Vec<semio_framework_value::DslValue> = fixture.meta.kind_compatibility.as_ref().and_then(semio_framework_value::DslValue::as_array).map(<[semio_framework_value::DslValue]>::to_vec).unwrap_or_default();
             for row in incoming_compat {
                 let source = row.get("source").and_then(Value::as_str).unwrap_or_default();
                 let target = row.get("target").and_then(Value::as_str).unwrap_or_default();
-                let row_dsl = json::to_dsl_value(row);
-                match compat.iter().position(|entry| entry.get("source").and_then(dsl::DslValue::as_str) == Some(source) && entry.get("target").and_then(dsl::DslValue::as_str) == Some(target)) {
+                let row_dsl = semio_framework_pack_json::to_dsl_value(row);
+                match compat.iter().position(|entry| entry.get("source").and_then(semio_framework_value::DslValue::as_str) == Some(source) && entry.get("target").and_then(semio_framework_value::DslValue::as_str) == Some(target)) {
                     Some(index) => compat[index] = row_dsl,
                     None => compat.push(row_dsl),
                 }
             }
-            fixture.meta.kind_compatibility = Some(dsl::DslValue::Array(compat));
+            fixture.meta.kind_compatibility = Some(semio_framework_value::DslValue::Array(compat));
         }
 
         let operations = puzzle3d_operations_from_host_snapshot_change(&puzzle3d_projection_value(doc.snapshot.value()), &fixture);
@@ -7749,7 +7716,7 @@ impl Puzzle3dPlayApp {
         let envelope = scene_from_projection(&puzzle3d_projection_value(doc.snapshot.value()), config, &active_utility);
         let mut selection = Puzzle3dContextSelection::from_surface(request.surface.as_ref());
         selection.fill_from_interaction(interaction);
-        puzzle3d_context_menu_items(&envelope, &selection, labels, registry)
+        puzzle3d_context_menu_items(&envelope, &selection, labels, view_state, registry)
     }
 
     /// 🖼️ The ONE render implementation — both `ArtifactEditor::render` and
@@ -7825,8 +7792,8 @@ impl Puzzle3dPlayApp {
 /// left the manifest's `io` empty, so a host reading the manifest could not route a document to this
 /// surface at all — caught by the demonstrator bundle's `every_pane_declares_a_document_schema`.
 pub fn puzzle3d_io() -> AppIo {
-    semio_framework::io::resolve_ready(
-        semio_framework::io::resolve_ready(AppIo::from_artifact(
+    ::semio_framework_async::poll::resolve_ready(
+        ::semio_framework_async::poll::resolve_ready(AppIo::from_artifact(
             "puzzle.3d",
             MediaType { class: MediaClass::ThreeD, form: MediaForm::Design },
             semio_framework_plugin::ArtifactPresentation { id: "3d.puzzle".into(), name: "3D Puzzle".into(), dimension: "3d".into(), component_kind: "puzzle3d".into() },
@@ -8070,7 +8037,7 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             // 🛠️ Fill is a mode-level tool (a whole-document generator), not a window utility — it keeps
             // its viewport interaction via `Puzzle3dConfig::active_tool_id`.
             .tool(fill_tool::definition(puzzle3d_localized(|l| l.fill)))
-            .mode_tools(edit::PUZZLE3D_PLAY_MODE_EDIT, vec![semio_framework::io::resolve_ready(ToolRef::new(fill_tool::TOOL_ID))])
+            .mode_tools(edit::PUZZLE3D_PLAY_MODE_EDIT, vec![::semio_framework_async::poll::resolve_ready(ToolRef::new(fill_tool::TOOL_ID))])
             // 🎓️ Reference introduction: a short first-run walkthrough of the viewport, the catalogue
             // panel, adding an object, and the Transform utility.
             .introduction(IntroductionDefinition {
@@ -8094,9 +8061,9 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
                     )
                         .introduce(window_element_id(main::WINDOW_KIND_ID))
                         .interact(vec![
-                            semio_framework::io::resolve_ready(IntroductionInteraction::zoom(main::WINDOW_KIND_ID, "Zoom")),
-                            semio_framework::io::resolve_ready(IntroductionInteraction::pan(main::WINDOW_KIND_ID, "Pan")),
-                            semio_framework::io::resolve_ready(IntroductionInteraction::orbit(main::WINDOW_KIND_ID, "Orbit")),
+                            ::semio_framework_async::poll::resolve_ready(IntroductionInteraction::zoom(main::WINDOW_KIND_ID, "Zoom")),
+                            ::semio_framework_async::poll::resolve_ready(IntroductionInteraction::pan(main::WINDOW_KIND_ID, "Pan")),
+                            ::semio_framework_async::poll::resolve_ready(IntroductionInteraction::orbit(main::WINDOW_KIND_ID, "Orbit")),
                         ]),
                     IntroductionStepDefinition::new(
                         "catalogue",
@@ -8117,7 +8084,7 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
                         .introduce(panel_tab_first_draggable_element_id(semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID))
                         .show(vec![panel_tab_element_id(semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID), window_element_id(main::WINDOW_KIND_ID)])
                         .placement(IntroductionPlacement::Right)
-                        .interact(vec![semio_framework::io::resolve_ready(IntroductionInteraction::action("addObjectKind", "Add an object"))]),
+                        .interact(vec![::semio_framework_async::poll::resolve_ready(IntroductionInteraction::action("addObjectKind", "Add an object"))]),
                     IntroductionStepDefinition::new(
                         "transform-utility",
                         puzzle3d_localized_phrase(|l| l.objects, |w| format!("Transform {w}"), |w| format!("{w} transformieren")),
@@ -8129,7 +8096,7 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
                     )
                         .introduce(utilities::transform::UTILITY_ID)
                         .show(vec![window_element_id(main::WINDOW_KIND_ID)])
-                        .interact(vec![semio_framework::io::resolve_ready(IntroductionInteraction::utility(utilities::transform::UTILITY_ID, "Activate Transform"))]),
+                        .interact(vec![::semio_framework_async::poll::resolve_ready(IntroductionInteraction::utility(utilities::transform::UTILITY_ID, "Activate Transform"))]),
                 ],
             })
             // 🗨️ Reference dialog opened by `openAddObjectDialog`, driving the existing `addObjectKind`

@@ -38,9 +38,9 @@ impl Default for SemioObjectArtifact {
 
 //#region 🔖️ValueCodec
 /// 🔀️ Encodes composite child and link fields through their first-party value contracts.
-impl dsl::ToValue for SemioObjectArtifact {
-    fn to_value(&self) -> dsl::DslValue {
-        let mut entries = vec![("schema".to_string(), dsl::ToValue::to_value(&self.schema)), ("transform".to_string(), dsl::ToValue::to_value(&self.transform))];
+impl semio_framework_value::ToValue for SemioObjectArtifact {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        let mut entries = vec![("schema".to_string(), semio_framework_value::ToValue::to_value(&self.schema)), ("transform".to_string(), semio_framework_value::ToValue::to_value(&self.transform))];
         if let Some(brep) = &self.brep {
             entries.push(("brep".to_string(), semio_framework_value::ToValue::to_value(brep)));
         }
@@ -50,12 +50,12 @@ impl dsl::ToValue for SemioObjectArtifact {
         if let Some(properties) = &self.properties {
             entries.push(("properties".to_string(), semio_framework_value::ToValue::to_value(properties)));
         }
-        dsl::DslValue::object(entries)
+        semio_framework_value::DslValue::object(entries)
     }
 }
-impl dsl::FromValue for SemioObjectArtifact {
-    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
-        <SemioObjectSnapshot as dsl::FromValue>::from_value(value).map(Self::from_snapshot)
+impl semio_framework_value::FromValue for SemioObjectArtifact {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        <SemioObjectSnapshot as semio_framework_value::FromValue>::from_value(value).map(Self::from_snapshot)
     }
 }
 //#endregion 🔖️ValueCodec
@@ -155,7 +155,7 @@ pub mod derived_construction {
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(Self::from_snapshot(<SemioObjectSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
@@ -169,8 +169,8 @@ pub mod derived_construction {
             self.snapshot = <SemioObjectDiff as protocol::MutationDiff<SemioObjectSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            self.snapshot.validate().map_err(|message| vec![dsl::Diagnostic::error("object.document", dsl::TextSpan::at(1, 1), message)])?;
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
+            self.snapshot.validate().map_err(|message| vec![semio_framework_diagnostic::Diagnostic::error("object.document", semio_framework_diagnostic::TextSpan::at(1, 1), message)])?;
             Ok(self.snapshot)
         }
     }
@@ -229,14 +229,14 @@ pub mod derived_analysis {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.object.text", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.object.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <SemioObjectSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.object.binary", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.object.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }

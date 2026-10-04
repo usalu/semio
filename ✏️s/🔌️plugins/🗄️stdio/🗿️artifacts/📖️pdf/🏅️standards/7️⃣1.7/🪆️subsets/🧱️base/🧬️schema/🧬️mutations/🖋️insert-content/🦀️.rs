@@ -25,10 +25,13 @@ impl MutationKind<PdfSnapshot, PdfMutation> for InsertContent {
         MutationOutcome::new(diff::diff_insert_content(self.index, self.at, &self.content))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         let _ = base;
         vec![PdfMutation::RemoveContent(super::remove_content::RemoveContent { index: self.index, at: self.at, count: self.content.len() })]
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert {} operators at {} on page {}", self.content.len(), self.at, self.index), &format!("{} Operatoren an {} auf Seite {} einfügen", self.content.len(), self.at, self.index))

@@ -5,8 +5,8 @@ const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutation
 const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀️reorder-members/✅apply/🦠️mutation/🔣️.json");
 const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀️reorder-members/✅apply/🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀️reorder-members/✅apply/🎯️outcome/🔣️.json");
-fn before() -> En1992Snapshot { pack::json::from_json_str(BEFORE).expect("before") }
-fn mutation() -> En1992Mutation { pack::json::from_json_str(MUTATION).expect("mutation") }
+fn before() -> En1992Snapshot { semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before") }
+fn mutation() -> En1992Mutation { semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation") }
 fn apply(mutation: &En1992Mutation, base: &En1992Snapshot) -> En1992Snapshot {
     let raised = <En1992Mutation as protocol::Mutation<En1992Snapshot>>::diff(mutation, base);
     assert!(raised.messages().is_empty(), "reorder-members raised {:?}", raised.messages());
@@ -20,15 +20,15 @@ fn mutation_is_the_canonical_wire() {
 fn applies_to_committed_after_and_diff() {
     let base = before();
     let raised = <En1992Mutation as protocol::Mutation<En1992Snapshot>>::diff(&mutation(), &base);
-    assert_eq!(*raised.diff(), pack::json::from_json_str::<En1992Diff>(DIFF).expect("diff"));
+    assert_eq!(*raised.diff(), semio_framework_pack_json::from_json_str::<En1992Diff>(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("diff"));
     let after = apply(&mutation(), &base);
     assert_ne!(after, base, "reorder-members must move the document");
-    assert_eq!(after, pack::json::from_json_str::<En1992Snapshot>(AFTER).expect("after"));
+    assert_eq!(after, semio_framework_pack_json::from_json_str::<En1992Snapshot>(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after"));
 }
 #[test]
 fn inverse_restores_before() {
     let base = before();
-    let inverse = <En1992Mutation as protocol::Mutation<En1992Snapshot>>::inverse(&mutation(), &base);
+    let inverse = <En1992Mutation as protocol::Mutation<En1992Snapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
     assert!(!inverse.is_empty(), "reorder-members changes the document, so its inverse must not be empty");
     let restored = inverse.iter().fold(apply(&mutation(), &base), |snapshot, step| apply(step, &snapshot));
     assert_eq!(restored, base);

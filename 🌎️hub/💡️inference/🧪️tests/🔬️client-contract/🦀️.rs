@@ -5,8 +5,8 @@ use directory::{DslValue,FromValue,ToValue};
 use directory::os_directory::DocumentScope;
 use semio_framework_schema::OwnedJsonSchemaValidator;
 
-fn dsl(value:&serde_json::Value)->DslValue {directory::os_pack::json::from_json_str(&value.to_string()).unwrap()}
-fn json(value:&DslValue)->serde_json::Value {serde_json::from_str(&directory::os_pack::json::to_json_string(value)).unwrap()}
+fn dsl(value:&serde_json::Value)->DslValue {semio_framework_pack_json::from_json_str(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
+fn json(value:&DslValue)->serde_json::Value {serde_json::from_str(&semio_framework_pack_json::to_json_string(value)).unwrap()}
 fn fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../../../🧫️fixtures/🗳️gis-map-proposal-approval-v1/🔣️.json")).expect("GIS proposal fixture")
 }
@@ -211,7 +211,7 @@ fn the_hub_approval_request_consumes_the_installed_owner_contract() {
     let approval = HubInferenceApprovalRequestV1::new("00112233445566778899aabbccddeeff", &"ab".repeat(32));
     let owned = OwnedJsonSchemaValidator::compile(&mirror.to_string()).expect("the contract compiles");
     let request=(gis_map_mcp_protocol_v1().encode)("approve",&dsl(&serde_json::to_value(approval).unwrap())).unwrap();
-    owned.validate_json(&directory::os_pack::json::to_json_string(&request)).expect("the installed owner consumes the approval contract");
+    owned.validate_json(&semio_framework_pack_json::to_json_string(&request)).expect("the installed owner consumes the approval contract");
 }
 
 /// 🔗️ Replaces every `{"$ref": "#/$defs/X"}` with the document's own `X`, so a mirror that inlines

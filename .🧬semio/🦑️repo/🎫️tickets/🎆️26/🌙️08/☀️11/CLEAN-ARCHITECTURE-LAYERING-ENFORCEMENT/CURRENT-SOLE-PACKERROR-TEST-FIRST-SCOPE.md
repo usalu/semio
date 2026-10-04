@@ -1,0 +1,10 @@
+# Sole PackError Test First Scope
+
+Successor1 NOT Ready: primitive fixture compares InvalidValue to canonical as_str invalidValue. Correct only machinekind fixture/schema literal; Pascal enums in original8Value vectors remain. Three full inverse/hash checks and original test prefix exact. Actual third-party hasError=false, missing=0; no compiler inference. Identity assignment deliberately exposes Pack/Replication/leaf native type mismatch. TypedValue8law checks owned message pointer/path/display/source/Fault and explicitly adopts raw conversion; Text8original vectors remain separate, no newText callback claim. Fullauthority: `🗑️generated/sole-pack-error/independent-test-only-scope-admission-1.json`.
+
+Successor3 finite test-only Ready: exact3fullhash/inverse/prefix guards, canonical lowercamel invalidValue machinekind/as_str and actual Rust hasErrorfalse. No production admission; broader Specific Schema consumers remain separately open. Authority `🗑️generated/sole-pack-error/independent-test-only-scope-admission-3.json`.
+
+Actual test-only publication independentReady=true: three current bodies agree exact correctedstage3/full fresh inverse/hash; previous33 scoped predicates conserved. Native typeidentity RED still unexecuted here; production consumer closure remains open. Authority `🗑️generated/sole-pack-error/independent-mounted-test-three-current33-admission-1.json`.
+
+
+Actual whole Pack 43280 stopped at compiler RED: five appended identity/typed-cause E0308 diagnostics and 32 earlier producer API diagnostics. Complete coverage2 retains five full law pre/current pairs, freshly exact; linked twelve defining-owner/provider/schema pairs remain separate. Post75442 records nine emitted units/102 checks with zero pre/current/owned gaps and all 41 scoped predicates conserved. No roster or runtime ran, and no failed-unit checksum or whole-source zero claim is inferred. Independent full receipt: `🗑️generated/sole-pack-error/independent-whole-pack-identity-red-current41-admission-1.json`.

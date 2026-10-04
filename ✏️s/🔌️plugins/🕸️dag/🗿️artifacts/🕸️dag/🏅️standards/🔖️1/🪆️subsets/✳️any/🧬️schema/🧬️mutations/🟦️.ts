@@ -1,49 +1,5 @@
-/** 🧩 dag 🧬️mutations WASM facade — mirrors `DagMutation` (see `🦀️.rs`). */
-import type { MoveNodes } from "./🚚️move-nodes/🦠️mutation/🟦️.ts";
-import type { SetNodePositions } from "./📍️set-node-positions/🦠️mutation/🟦️.ts";
-import type { SetSlider } from "./🎚️set-slider/🦠️mutation/🟦️.ts";
+/** 🕸️ DAG parent mutation union — empty: content edits are child-lane leaves of the composed `content` graph child. */
 
-export type { MoveNodes } from "./🚚️move-nodes/🦠️mutation/🟦️.ts";
-export type { DagNodePosition, SetNodePositions } from "./📍️set-node-positions/🦠️mutation/🟦️.ts";
-export type { DagSliderField, SetSlider } from "./🎚️set-slider/🦠️mutation/🟦️.ts";
-export { parseMoveNodes } from "./🚚️move-nodes/🦠️mutation/🟦️.ts";
-export { parseSetNodePositions } from "./📍️set-node-positions/🦠️mutation/🟦️.ts";
-export { parseSetSlider } from "./🎚️set-slider/🦠️mutation/🟦️.ts";
-
-/** 📸️ Structural mirror of the Rust `DagNodeSpec` — only the address/scalar fields this facade
- * needs; `kind`/`properties` cross the WASM boundary as opaque JSON (see `ReplaceNodeKind`/
- * `ReplaceNodeProperties` below). */
-export interface DagNodeSpecFacade {
-  id: string;
-  name: string;
-  abbreviation: string;
-  icon: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  operatorKind?: string;
-  /** 🧬️ Opaque JSON — `DagNodeKind` (11-variant tagged enum), decoded by the host. */
-  kindJson: string;
-  /** 🧬️ Opaque JSON — `PropertyBag`. */
-  propertiesJson: string;
-}
-
-export type DagMutation =
-  | { mutation: "createNode"; node: DagNodeSpecFacade; index?: number }
-  | { mutation: "deleteNode"; id: string }
-  | { mutation: "renameNode"; id: string; newId: string }
-  | { mutation: "changeNodeName"; id: string; newName: string }
-  | { mutation: "moveNode"; id: string; x: number; y: number }
-  | { mutation: "resizeNode"; id: string; width: number; height: number }
-  | { mutation: "changeNodeIcon"; id: string; newIcon: string }
-  | { mutation: "changeNodeAbbreviation"; id: string; newAbbreviation: string }
-  | { mutation: "changeNodeOperatorKind"; id: string; newOperatorKind?: string }
-  | { mutation: "replaceNodeKind"; id: string; newKindJson: string }
-  | { mutation: "replaceNodeProperties"; id: string; newPropertiesJson: string }
-  | { mutation: "reorderNodes"; order: string[] }
-  | { mutation: "connectNodes"; id: string; source: string; target: string; routeStyle: "bezier" | "sharpSz"; propertiesJson: string; index?: number }
-  | { mutation: "disconnectNodes"; id: string }
-  | MoveNodes
-  | SetNodePositions
-  | SetSlider;
+//#region 🧬️Aggregate
+export type DagMutation = never;
+//#endregion 🧬️Aggregate

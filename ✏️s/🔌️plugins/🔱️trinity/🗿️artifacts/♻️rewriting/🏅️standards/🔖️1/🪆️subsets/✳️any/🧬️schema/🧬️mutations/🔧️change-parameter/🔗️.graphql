@@ -1,3 +1,2 @@
-# 🔧️ Direct change-parameter-binding / ChangeParameterBinding payload.
-scalar JSON
-input ChangeParameterBindingInput { key: String!, newValue: JSON! }
+# 🧬️ ChangeParameterBindingInput owns its declared typed payload.
+input ChangeParameterBindingInput { key: String! newValue: PropertyValueInput! }

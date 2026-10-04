@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 /// text, `deleted` became `insert`, with `before`/`after` the context the author saw. Applying it to any other text relocates it
 /// by that context, so two humans typing at once keep both runs; replaying it after the store rewinds to a fork point is the
 /// rebase. Diff/inverse delegate to the sibling `🔺️diff`/`↩️inverse` leaves.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[mutation_leaf(contract = ::protocol)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
@@ -43,9 +43,12 @@ impl MutationKind<WriterSnapshot, WriterMutation> for SpliceText {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &WriterSnapshot) -> Vec<WriterMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &WriterSnapshot) -> Result<Vec<WriterMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 
     /// 🎯️ The writer's authored body, like `EditText`: its composed `document` child derives from it.
     fn target(&self) -> Vec<String> {

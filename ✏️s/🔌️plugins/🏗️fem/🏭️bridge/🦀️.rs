@@ -18,8 +18,8 @@ fn descriptors<S, M: Mutation<S>>() -> &'static [MutationLeafDescriptor] {
 
 /// 🧭️ Every mutation aggregate the artifact crates below mount, with its type name.
 const AGGREGATES: &[(&str, fn() -> &'static [MutationLeafDescriptor])] = &[
+    ("FemResultsWindowTransientMutation", descriptors::<semio_s_artifact_fem_2d::editor::fem2d::modes::edit::windows::results::transient::FemResultsWindowTransient, semio_s_artifact_fem_2d::editor::fem2d::modes::edit::windows::results::transient::FemResultsWindowTransientMutation>),
     ("Fem2dMutation", descriptors::<semio_s_artifact_fem_2d::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot, semio_s_artifact_fem_2d::standards::v1::subsets::any::schema::mutations::Fem2dMutation>),
-    ("Fem3dResultsWindowTransientMutation", descriptors::<semio_s_artifact_fem_3d::editor::fem3d::modes::edit::windows::results::transient::Fem3dResultsWindowTransient, semio_s_artifact_fem_3d::editor::fem3d::modes::edit::windows::results::transient::Fem3dResultsWindowTransientMutation>),
     ("Fem3dMutation", descriptors::<semio_s_artifact_fem_3d::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot, semio_s_artifact_fem_3d::standards::v1::subsets::any::schema::mutations::Fem3dMutation>),
 ];
 
@@ -28,8 +28,8 @@ const AGGREGATES: &[(&str, fn() -> &'static [MutationLeafDescriptor])] = &[
 /// prefix that is that subset's dispatch.
 const COORDINATES: &[(&str, &str, &str, &str, &str, &str)] = &[
     ("s.fem.2d", "1", "any", "", "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets", ""),
+    ("s.fem.2d", "1", "any", "✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient", "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient", ""),
     ("s.fem.3d", "1", "any", "", "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets", ""),
-    ("s.fem.3d", "1", "any", "✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient", "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient", ""),
 ];
 
 /// 🎚️ The subset surface directories whose state lanes (config, presence, transient) are never document dispatch.
@@ -51,33 +51,33 @@ fn main() {
     };
     let owner_prefix = format!("{owner}/");
     let in_state_lane = |leaf: &str| surface.is_empty() && leaf.split('/').any(|segment| SURFACE_DIRS.contains(&segment));
-    let mut rows: Vec<pack::JsonValue> = Vec::new();
+    let mut rows: Vec<semio_framework_pack_json::Value> = Vec::new();
     let mut seen: Vec<&str> = Vec::new();
     for descriptor in AGGREGATES.iter().filter(|(name, _)| name.starts_with(prefix)).flat_map(|(_, aggregate)| aggregate().iter()) {
         if !descriptor.owner.starts_with(&owner_prefix) || in_state_lane(&descriptor.owner[owner_prefix.len()..]) || seen.contains(&descriptor.semantic_kind) {
             continue;
         }
         seen.push(descriptor.semantic_kind);
-        rows.push(pack::json_object([
-            ("id".to_string(), pack::JsonValue::from(descriptor.semantic_kind)),
-            ("variant".to_string(), pack::JsonValue::from(descriptor.aggregate_variant)),
-            ("outcomes".to_string(), pack::json_array(descriptor.outcome_classes.iter().map(|class| pack::JsonValue::from(class.as_str())))),
+        rows.push(semio_framework_pack_json::object([
+            ("id".to_string(), semio_framework_pack_json::Value::from(descriptor.semantic_kind)),
+            ("variant".to_string(), semio_framework_pack_json::Value::from(descriptor.aggregate_variant)),
+            ("outcomes".to_string(), semio_framework_pack_json::array(descriptor.outcome_classes.iter().map(|class| semio_framework_pack_json::Value::from(class.as_str())))),
         ]));
     }
     let mut fields = vec![
-        ("schema".to_string(), pack::JsonValue::from("semio.repository-test.runtime-inventory/v2")),
-        ("artifact".to_string(), pack::JsonValue::from(artifact.as_str())),
-        ("standard".to_string(), pack::JsonValue::from(standard.as_str())),
-        ("subset".to_string(), pack::JsonValue::from(subset.as_str())),
+        ("schema".to_string(), semio_framework_pack_json::Value::from("semio.repository-test.runtime-inventory/v2")),
+        ("artifact".to_string(), semio_framework_pack_json::Value::from(artifact.as_str())),
+        ("standard".to_string(), semio_framework_pack_json::Value::from(standard.as_str())),
+        ("subset".to_string(), semio_framework_pack_json::Value::from(subset.as_str())),
     ];
     if !surface.is_empty() {
-        fields.push(("surface".to_string(), pack::JsonValue::from(surface)));
+        fields.push(("surface".to_string(), semio_framework_pack_json::Value::from(surface)));
     }
     fields.extend([
-        ("bridgeVersion".to_string(), pack::JsonValue::from(1_i64)),
-        ("producedBy".to_string(), pack::JsonValue::from("semio-fem-mutation-bridge")),
-        ("mutations".to_string(), pack::json_array(rows)),
+        ("bridgeVersion".to_string(), semio_framework_pack_json::Value::from(1_i64)),
+        ("producedBy".to_string(), semio_framework_pack_json::Value::from("semio-fem-mutation-bridge")),
+        ("mutations".to_string(), semio_framework_pack_json::array(rows)),
     ]);
-    let out = pack::json_object(fields);
-    println!("{}", pack::json_to_string(&out));
+    let out = semio_framework_pack_json::object(fields);
+    println!("{}", semio_framework_pack_json::to_string(&out));
 }

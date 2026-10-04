@@ -38,6 +38,7 @@ use super::set_snapshot::SetSnapshot;
 #[mutations(snapshot = SemioKitSnapshot, diff = SemioKitDiff, schema = "s.stdio.semio.kit")]
 pub enum SemioKitMutation {
     SetSnapshot(SetSnapshot),
+    PatchSnapshot(super::patch_snapshot::PatchSnapshot),
     CreateObject(create_object::CreateObject),
     DeleteObject(delete_object::DeleteObject),
     CreateModel(create_model::CreateModel),
@@ -60,7 +61,7 @@ pub enum SemioKitMutation {
 /// `🧰️mutate-semio-kit`'s exhaustive test case measures itself against. `kinds_match_the_enum_and_
 /// the_catalog` below is what keeps this list honest against the enum, since the framework never
 /// parses Rust.
-pub const KINDS: &[&str] = &["set-snapshot", 
+pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", 
     "create-object",
     "delete-object",
     "create-model",
@@ -94,9 +95,12 @@ pub fn apply_semio_kit_mutation(snapshot: &mut SemioKitSnapshot, mutation: &Semi
 /// item (e.g. `🧰️mutate-semio-kit`'s test adapter, whose `@id-inverse` scenario needs a mutation's
 /// own computed inverse and cannot `use protocol::Mutation;` itself) can still exercise the
 /// inverse-law scenario `apply_semio_kit_mutation` alone can't reach.
-pub fn inverse_semio_kit_mutation(mutation: &SemioKitMutation, base: &SemioKitSnapshot) -> Vec<SemioKitMutation> {
+pub fn inverse_semio_kit_mutation(mutation: &SemioKitMutation, base: &SemioKitSnapshot) -> Result<Vec<SemioKitMutation>, semio_framework_value::ValueError> {
+    Ok({
     use protocol::Mutation;
-    mutation.inverse(base)
+    mutation.inverse(base)?
+
+    })
 }
 
 /// 📥️ Decodes this subset's own default-derived JSON projection — the exact shape the committed
@@ -105,7 +109,7 @@ pub fn inverse_semio_kit_mutation(mutation: &SemioKitMutation, base: &SemioKitSn
 /// this enum or its payload structs) — into a real `SemioKitMutation`. Same rationale as
 /// `../📸️snapshot/🦀️.rs`'s `decode_kit_snapshot_json`.
 pub fn decode_kit_mutation_json(text: &str) -> Result<SemioKitMutation, String> {
-    pack::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Apply
 

@@ -1,4 +1,5 @@
 {
+  "backing": { "authority": "completeSystemAllocatorRequests", "phases": ["projectSnapshot", "reconstructSnapshot"], "ceilings": ["zero", "exact", "oneBelow", "cumulative"], "cancellation": ["start", "materializedInterior"], "diagnosticOwnership": "actualCapacity", "retirementRefund": false },
   "binary64": [
     {"bits":"7ff0000000000001","class":"nan"},
     {"bits":"7ff8000000001234","class":"nan"},

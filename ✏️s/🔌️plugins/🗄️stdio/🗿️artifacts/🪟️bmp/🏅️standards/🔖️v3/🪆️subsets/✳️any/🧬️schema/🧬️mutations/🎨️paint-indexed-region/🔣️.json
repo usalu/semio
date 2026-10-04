@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️paint-indexed-region",
+  "semanticKind": "paint-indexed-region",
+  "displayName": "Paint Indexed Region",
+  "emoji": "🎨️",
+  "aggregateVariant": "PaintIndexedRegion",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "paint-indexed-region",
+  "binaryTag": 9,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": ["applied", "rejected"],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": ["rust", "typescript", "graphql", "protobuf", "json-schema", "text", "binary"]
+}

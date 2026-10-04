@@ -1,0 +1,10 @@
+{
+  "$schema": "semio.framework.input-publication-receipt-law.v1",
+  "target": "table-cell.v1/25/s.stdio.csv@rfc4180/*#editor/5/row-0/8/set-cell/0",
+  "base": { "value": "A", "revision": "1" },
+  "queued": ["B", "C"],
+  "foreignPublication": { "value": "B", "revision": "81985529216486895" },
+  "localCompletion": { "operation": "18446744073709551614", "revision": "18364758544493064720" },
+  "localPublication": { "value": "B", "revision": "18364758544493064720" },
+  "expected": { "dispatchesBeforeLocalPublication": 1, "dispatchesAfterLocalPublication": 2 }
+}

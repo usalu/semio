@@ -13,6 +13,8 @@
             "x": 0.0,
             "y": 0.0
           },
+          "width": 0.0,
+          "height": 0.0,
           "ports": [],
           "properties": []
         },
@@ -26,6 +28,8 @@
             "x": 4.0,
             "y": 0.0
           },
+          "width": 0.0,
+          "height": 0.0,
           "ports": [],
           "properties": []
         }
@@ -42,7 +46,8 @@
             "value": "b"
           },
           "kind": "data",
-          "label": "A to B"
+          "label": "A to B",
+          "properties": []
         },
         {
           "id": {
@@ -55,7 +60,8 @@
             "value": "a"
           },
           "kind": "feedback",
-          "label": "B back to A"
+          "label": "B back to A",
+          "properties": []
         }
       ]
     }

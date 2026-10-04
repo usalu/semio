@@ -5,10 +5,10 @@ use semio_s_artifact_stdio_txt::TxtSnapshot;
 
 pub fn register() {}
 
-pub fn serialize(from: &GisMapSnapshot) -> Result<TxtSnapshot, store::TextError> {
+pub fn serialize(from: &GisMapSnapshot) -> Result<TxtSnapshot, semio_framework_diagnostic::TextError> {
     Ok(TxtSnapshot::from_body(&<GisMapSnapshot as store::ArtifactDsl>::print_dsl(from)))
 }
 
-pub fn serialize_bytes(from: &GisMapSnapshot) -> Result<Vec<u8>, store::TextError> {
+pub fn serialize_bytes(from: &GisMapSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
     Ok(serialize(from)?.to_body().into_bytes())
 }

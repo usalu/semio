@@ -13,16 +13,32 @@
           ],
           "routes": [
             "addLayer",
+            "applyFilter",
             "deleteLayer",
             "dropLayerKind",
             "duplicateLayer",
-            "editPixels",
+            "fillRegion",
+            "fillSelection",
+            "flattenLayers",
+            "maskFromSelection",
+            "mergeDown",
             "moveLayer",
             "patchLayer",
             "patchLayers",
             "setActiveExample",
             "setLayerVisible",
-            "toggleLayerVisible"
+            "toggleLayerVisible",
+            "transformImage"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "artifact",
+            "transient"
+          ],
+          "routes": [
+            "paintStroke"
           ]
         },
         {
@@ -38,7 +54,20 @@
             "setBrushSize",
             "setCamera",
             "setCameraZoom",
-            "setCompositeViewport"
+            "setCompositeViewport",
+            "setFillTolerance",
+            "setMaskValue",
+            "setPaintTarget",
+            "setPixelSelection"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "host-only"
+          ],
+          "routes": [
+            "exportPng"
           ]
         }
       ]

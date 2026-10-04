@@ -30,7 +30,8 @@ pub mod derived_construction {
     use crate::standards::v_ecma_376::subsets::base::schema::PptxBuilder as PptxAnyBuilder;
     use crate::standards::v_ecma_376::subsets::transitional::schema::check_transitional_conformance;
     use crate::{PptxDiff, PptxMutation, PptxSnapshot};
-    use dsl::{Diagnostic, Severity};
+    use semio_framework_diagnostic::Diagnostic;
+    use semio_framework_diagnostic::Severity;
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
@@ -52,7 +53,7 @@ pub mod derived_construction {
             Self { inner: PptxAnyBuilder::from_snapshot(snapshot) }
         }
 
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(Self { inner: PptxAnyBuilder::from_text(text)? })
         }
 
@@ -95,7 +96,11 @@ pub use derived_construction::*;
 pub mod derived_analysis {
     use crate::standards::v_ecma_376::subsets::base::schema::{PptxAnalyzer as PptxAnyAnalyzer, PptxParts};
     use crate::PptxSnapshot;
-    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
+    use semio_framework_diagnostic::Diagnostic;
+    use semio_framework_diagnostic::FaultCode;
+    use semio_framework_diagnostic::FaultScope;
+    use semio_framework_diagnostic::Severity;
+    use semio_framework_diagnostic::TextSpan;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
     use semio_s_artifact_stdio_zip::opc::OpcPackage;
 
@@ -160,10 +165,8 @@ pub mod derived_analysis {
             }
         }
 
-        let mut owners: Vec<&String> = opc.relationships.keys().collect();
-        owners.sort();
-        for owner in owners {
-            for rel in &opc.relationships[owner] {
+        for (owner, relationships) in opc.relationships.groups() {
+            for rel in relationships {
                 if rel.rel_type.contains(STRICT_NS_MARKER) {
                     out.push(hard(CODE_STRICT_NS_PRESENT, format!("relationship {} owned by '{owner}' uses a Strict relationship base ({}) -- Transitional forbids it", rel.id, rel.rel_type)));
                 }

@@ -177,7 +177,10 @@ Selection record (`WorldSelectionRecord`, published by the guest's world surface
 
 ## Session 3 — 2026-10-02
 
-Executor S3-SPATIAL (Opus successor). Status: IN PROGRESS; this section is updated at every milestone.
+Executor S3-SPATIAL (Opus successor). Status (10-03 11:05): source complete for S3.2 items 1–7 and audit S1/S2 (S3.6).
+Law-green: React gumball laws, wgpu world laws (os-infinite), manifest audience law, lints, outcome law, lowpoly TS.
+WRITTEN BUT UNVERIFIED: the four plugin crates' Rust tests and the plugin-crate Use-selection laws (reason: peer
+stdio/plugin-test ValueError/IoError migration keeps every dependency red). Audit S3 (twin clocks) open. This section is updated at every milestone.
 
 ### S3.0 Repair-first diff (rule 28)
 
@@ -200,9 +203,9 @@ S2-SPATIAL edit found on disk; the S2 work was compile-unverified, not half-writ
    `🌐️World3dHost/🟦️.tsx` replaces the eight gumball refs + `dispatchGumballPoseDelta`/`pumpGumballLiveDispatch`/
    `abortGumballLiveGesture` callbacks; the component only steps it and chains the dispatch (a stream tick settles back as
    `settled`). Fix found by the law: the host `abort` used to send `{mode, ids, phase, reason}` without the verb's identity
-   args (`dx/dy/dz` …), which a guest whose payload requires them (fem 3d) cannot decode; it now sends the identity delta.
+   args (`dx/dy/dz` …), which a guest decoder that requires them refuses (fem 3d happens to default them to 0); it now sends the verb's identity delta.
    The live flag and transform mode are pinned at the grab. Fixture `🌐️World3dHost/🧫️fixtures/🛠️gumball-live-protocol.json`
-   (10 cases, schema `🧬️schema/🛠️gumball-live-protocol/🔣️.json`): TS law `worldGumballStep answers every step …`
+   (10 cases, schema `🧬️schema/🔣️gumball-live-protocol/🔣️.json`): TS law `worldGumballStep answers every step …`
    (engine-contract, Ajv 2020 strict) replaces the old source-text scan of the B31 "no fabricated axis step" law;
    Rust guest law `the_world3d_gumball_live_protocol_lands_as_its_guest_edits` (fem 3d `🎮️commands/🧭️gumball/🧪️tests`) decodes
    every dispatch through `ArtifactApp::command_from_action` from the host's exact wire args and checks `guest.edits` +
@@ -238,6 +241,125 @@ S2-SPATIAL edit found on disk; the S2 work was compile-unverified, not half-writ
    Begin → UseSelection `/vertexIds` → Accept → Finalize → overwrite = fresh fold). Chips: the generic N3 default (document
    `name`, else glossary kind word + short id) reads well for fem nodes/solids, lowpoly objects/components and shooting
    assets, so no `entity_label` override was added.
-7. **Fem playback, interim (§20.1)**: fem 3d's tick parks/ends the run with ONE plain config edit (no `PLAYBACK_COALESCE_KEY`);
-   `setResultAnimation` keeps the key until S3-CONTROLS lands the config-lane press (coordinator decision 12:4x). Fem 2d still
-   advances the phase in window config per frame: port of fem 3d's window-transient playback clock is OPEN.
+7. **Fem playback (§20.1, no amend on any lane)**: `PLAYBACK_COALESCE_KEY` is deleted in fem 2d AND fem 3d. Every playback
+   publication is ONE plain window-config edit; a dragged phase/speed slider rides S3-CONTROLS' config-lane press (both
+   hosts already send `gesture`/`commit`/`abort` on every slider Change: React `createContinuousGestureLane`, wgpu
+   `🖱️ui/🎯️targets/🧊️wgpu/⚡️events` scrub binding), so its ticks stay provisional and the release is ONE edit. Fem 2d
+   got fem 3d's window-transient playback CLOCK (ported, same laws): new
+   `…/◻️2d/…/🪟️windows/📊️results/🫧️transient/` (state `Fem2dResultsWindowTransient{clock}`, leaf `set-playback-clock`,
+   schema/TS/graphql/proto facets, fixtures, oracle with recomputed hashes, unit laws); `Fem2dResultsAnimation::advanced`
+   moved to `Fem2dPlaybackClock::advanced`; `config::effective` draws the running clock; the tick carries `windowId`, frames
+   land in the transient only, park/end are one config edit; editor: `WindowTransient` publication lane, retained
+   `CompleteWithEphemeral` for both playback verbs, `register_window_transient_owners`, `retained_window_transient_target`,
+   render reads the clock. Tick laws ported from fem 3d to fem 2d (`🎮️commands/⏱️result-animation-tick/🧪️tests`). New law
+   (both fem crates) `playback_presses_are_one_config_edit_and_never_a_history_row`: play + pause = 2 edits, two slider
+   ticks = 0, release = 1, a cancelled press = 0 (phase unchanged), no history row. Deleted (dead after the port): the
+   `📌️.empty.md` placeholder of fem 2d's results `🫧️transient`.
+
+### S3.3 Verification (continued)
+
+| Time | Command | Result |
+|---|---|---|
+| 12:21 / 12:35 / 12:43 | `cargo test --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-fem-2d -p semio-s-artifact-fem-3d -p semio-s-artifact-lowpoly-lowpoly [-p semio-s-artifact-shooting-shooting] --features …component-app-assembly --lib --no-fail-fast` (private target `target-nde-s3-spatial`) | BLOCKED ×3 before reaching my crates: 12:30 SIGKILL (exit 137) while waiting for a peer's file lock; 12:35 peer `🧬️schema/📇️registry/🦀️.rs` duplicated definitions (28 errors); 12:58 peer `🛂️manifest/🦀️.rs:1266-1269` calls schema-registry exports the schema crate no longer re-exports. Both reported to the coordinator. |
+| 13:00 | `bun ./📜️script.ts schema mutation-inputs --under ✏️s/🔌️plugins/<p>` (cwd `🦑️repo/🔨️modules/🧪️test`) | lowpoly 60/60, **0 findings** (N12 closed); shooting 66/66, 1 finding = the deleted `set-camera-draft-label` still in the central catalog; fem 109/109, 1 finding = new fem 2d `set-playback-clock` `leafUncatalogued`. Both need the coordinator's central `schema generate`. |
+| 19:05 | `cargo check … (4 crates) --lib --tests --keep-going` (`check-4.txt`) | libs PASS; test targets: 3 errors in my trees fixed — fem 2d `🛠️options/🔄️transform` test lost `set_gumball_flag` with my import cleanup (now imported in the test); shooting/lowpoly tests used `protocol::{Terminology, Locale}`, now private after a peer change (→ `semio_framework_plugin::{Terminology, Locale}`); lowpoly `🧪️tests/🔬️unit` imported `framework_schema::parse_state_class_kebab`, moved by the schema split (→ `semio_framework_schema_state`) |
+| 19:08 / 19:17 | same (`check-5/6.txt`) | BLOCKED by peers: os-kernel `OS/🗣️dsl/🦀️.rs:931` ambiguous `canonicalize` (fixed 19:16), then `OS/🔌️plugin/🦀️.rs:3015…39124` `dsl::LanguageSpec`/`preflight_languages`/`register_languages` gone (dsl refactor in flight; reported) |
+| 19:18 | `bun ./📜️script.ts verify mutation-outcome-law` (repo root) | PASS |
+| 19:19 | `schema mutation-payloads --under ✏️s/🔌️plugins/<p>` | lowpoly 39/39, 21/21 witnessed, **0**; shooting 100/100, 38/38, **0**; fem 250/250, 62/62, **0** |
+| 19:20 | lowpoly `📦️packages/🟦️typescript` `bun ./📜️script.ts test` | PASS 2 + 6, 0 fail |
+| 19:21 | `verify taxonomy report --scope …/🌐️World3dHost` | my new schema dir renamed `🧬️schema/🔣️gumball-live-protocol` (open pattern) → clean; 4 remaining findings are pre-existing (`🧭️gesture-targets`, `🔀️projection-pane` ×2, `🤏️multi-touch`) |
+| 19:22 | `verify taxonomy report --scope` fem 2d results | new `🫧️transient` fixture dirs renamed to `🧫️fixtures/🧫️codec`, `🧫️clock` (also in fem 3d, tests updated); the remaining transient findings are `path-too-long` (> 240 B), the same class fem 3d's original has (REPO-PATH-BUDGET, §14 hand-off) |
+| 19:23 | engine-contract `-t "worldGumballStep\|worldPaintStep\|gumball" --reporter=verbose` after the rename | PASS 13/13 |
+
+### S3.4 Open items
+
+- **Rust laws not yet run** (cargo blocked by peer breaks; see S3.3): fem 2d/3d/lowpoly/shooting `--lib` tests incl. the new
+  laws (`the_world3d_gumball_live_protocol_lands_as_its_guest_edits`, `playback_presses_are_one_config_edit_and_never_a_history_row`
+  ×2, the ported fem 2d tick + clock laws, `use_selection_retargets_a_vertex_move_onto_the_selected_vertices`,
+  `mesh_rows_name_the_references_of_their_granularity`, `save_camera_stores_the_submitted_label`), the manifest
+  `gumball_verb_audience` law, and the `wasm32-wasip2` checks of the four plugin crates.
+- **N9 wgpu parity (P3), not implemented — design**: (a) the wgpu world engine (`OS/♾️infinite/🌍️world/🦀️.rs`) has no
+  `gumballLiveDispatch`: `World3dState` must parse it from the selection record, `WorldGumballGesture` must remember the pose its
+  last tick reached, every completed `update_step` must publish the incremental delta as `phase:"stream"` (a stream variant of
+  `WorldGumballCommitJob`), the release must publish the tail as `phase:"commit"` (identity when zero), and the local instance
+  preview must be skipped while live (the guest previews); the same `🛠️gumball-live-protocol.json` cases are the law.
+  (b) wgpu has no window-level blur at all (only widget focus blur in `🖱️ui/…/⚡️events`), so a paint `blur` abort needs a
+  renderer focus-lost signal first (S3-W2C, wgpu shell); the reachable part is `captureLost` on `WorldInteractionPhase::Close`
+  while `paint_stroke_active` (publish `paintAt{phase:"abort", reason:"captureLost"}` before `begin_close`).
+- `FemGumballTransient` and lowpoly's paint drive still duplicate the per-window runner bookkeeping (S2.6, follow-up for
+  `🛠️tool-machine`). Fem 2d and fem 3d results-window playback clocks are twin modules (ported verbatim); unifying them
+  needs one shared `FemResultsAnimation` config type first.
+- Census F hazard (lowpoly `move-/rotate-/scale-selection` declared flat2): verified by reading — every selection leaf inverts
+  to at most ONE `CreateMesh` (`lowpoly_selection_motion_inverse`), so forward + inverse = 2 rows per item is exact.
+- Peer-owned warnings seen in my crates: `🏗️fem/⚙️engine/🖥️app-surface/🦀️.rs:15` unused `Buildable`/`HasBase`; lowpoly
+  `🌐️model/🦀️.rs:10`, `🖼️uv/🦀️.rs:6,9` unused `lowpoly_window_engagement` (window-engagement peer).
+
+### S3.5 Coordinator actions
+
+- Central `schema generate`: removes the deleted shooting `set-camera-draft-label`, catalogues fem 2d `set-playback-clock`
+  (the two remaining `schema mutation-inputs` findings in my scope).
+- `describe` for the hub compositions `🎥️shooting` (verb `setCameraDraftLabel` gone, `saveCamera` describe text, lanes),
+  `🏗️fem` (playback lanes, `resultAnimationTick{windowId}`), `💠️lowpoly`, `🎪️demonstrator`, `🧩️puzzle` (stale
+  `transformBegin/End`, `paintStrokeBegin/End`), and the `OS/🧑‍💻dev/🔌️plugin-modules/*` copies.
+- Re-activation of the fem, lowpoly and shooting lanes for a live check (gumball stream/commit/abort, playback press, the
+  camera-label field, lowpoly colour picker on `apply-paint-stroke`).
+
+### S3.6 Audit fixes (`📓️audit-s3-tools.md` S3-SPATIAL, 2026-10-03)
+
+- **S1 (major) — wgpu live gumball consumer: DONE, law-green.** In `OS/♾️infinite/🌍️world/🦀️.rs` (my World3d region):
+  - The selection record now carries `gumballLiveDispatch` (`World3dState.gumball_live_dispatch`), pinned into the gesture at
+    the grab.
+  - `WorldGumballGesture` remembers the pose its last tick reached (`sent_*`) and whether it `streamed`. Its protocol methods
+    are `owed`, `moves`, `stream`, `release`, `cancel` and `publication`.
+  - `WorldGumballPhase { Skip, Once, Stream, Commit, Abort(reason) }` drives the one publication job
+    (`WorldGumballCommitJob::new(generation, gesture, phase)` appends `phase`/`reason` after the motion).
+  - Every completed pose update of a live gesture publishes its owed delta as `phase:"stream"`. The release commits the tail
+    (the identity when it moved nothing). A local gesture publishes ONE net delta, and nothing when it never moved along its
+    handle or grabbed nothing (it used to publish a zero delta on every release).
+  - The local preview is skipped while live (`retained_gumball_preview_model`).
+  - New host cancel `WorldInteractionPhase::Cancel` / `WorldInteractionIntent::cancel(WorldCancelReason::{Blur, CaptureLost})`:
+    a streamed live gesture aborts with its identity motion plus `reason`, and the rest of that drag is swallowed through its
+    release. An open paint stroke publishes `paintAt{phase:"abort", reason}` (`plan_world3d_paint_abort`,
+    `WorldFlatActionKind::PaintAbort`).
+  - S3-W2C wired window blur → `cancel(Blur)` on every world state (native `Focused(false)`, browser `semioWgpuHostWindowBlur`).
+    I asked for `cancel(CaptureLost)` one drive before a world surface retires. Plugin-local window gestures (fem
+    `FemGumballTransient`, lowpoly paint, gen3d `GumballGestures`) are not covered by the runtime's `retired` abort.
+- **S2 (major) — the corpus runs in every consumer.** React (engine-contract) and fem 3d as before. **wgpu**: the new law
+  `world_gumball_gesture_answers_the_shared_live_protocol` drives the real gesture methods and publication job over all
+  10 cases. Terminal dispatch (once/commit/abort/none) is exact; a local gesture never streams; stream ticks sum to the
+  motion React streamed (wgpu has no in-flight hold, its queue coalesces moves). **gen3d**: S3-PROCEDURAL wrote
+  `the_world3d_gumball_live_protocol_lands_as_its_guest_edits` (`DEV/🧊️generation3d/…/↔️translate-selection`) from my recipe.
+- **S3 (minor) — twin fem playback clocks: OPEN.** The clean fix is one `FemResultsAnimation` (+ loop mode/waveform) and
+  one `FemPlaybackClock` in the fem 2d crate (the shared FEM editor crate fem 3d already depends on for `FemGumballTransient`),
+  each editor keeping only its window-kind owner. That changes both results-window config schemas (`$defs`, DSL records,
+  fixtures), and the fem 3d transient leaf also feeds the language-neutral bridge (`🏗️fem/🏭️bridge/🦀️.rs`) and the
+  `🧪️tests/🫧️mutate-fem-3d-1-any-editor-edit-results-transient` feature corpus. I left it until both crates compile again.
+  Plan: shared `FemPlaybackClock` / `FemResultsWindowTransient{Mutation}` / `set-playback-clock` in fem 2d, plus a trait
+  `FemPlaybackTransport { phase, reverse, speed, playback_loop, rested_at }` that each results config implements; fem 3d keeps
+  only `Fem3dResultsWindowTransientOwner` (`fem3d-results`) and the `addressed_to`/`captured_clock` wrappers; the bridge and
+  the feature corpus move to the shared leaf.
+
+| Time (10-03) | Command | Result |
+|---|---|---|
+| 05:51 | `cargo check -p semio-framework-os-infinite --lib --tests` | PASS, 0 errors, no new warnings in my code |
+| 05:54 | `cargo test -p semio-framework-os-infinite --lib -- gumball paint` (private target) | PASS 31/31 (incl. the corpus law) |
+| 05:58 | same `-- gumball paint world` | 222 passed / 30 failed; again with `--test-threads=1` 207/30. My 3 new laws pass; the 30 are scene-bridge/pick tests unrelated to the gumball ("scene bridge stopped at Fault(Unavailable)", `pick_hover_action` → None). Peer, owner unknown (05:41 texture-sampler edit suspected), reported. |
+| 06:05 | `cargo check --manifest-path ✏️s/Cargo.toml` (my 4 crates) | BLOCKED: peer ValueError migration in `OS/🔁️workflow/🦀️.rs:325-1189` and its sqlite snapshot (E0053/E0277), reported |
+| 06:10 | `bun ./📜️script.ts typecheck` (React target package) | 1 error, a peer's: `🌐️World3dHost/🟦️.tsx:2225` surface-material `normalScale` (`'{}'` not assignable to `number`). The gumball reducer/driver code and engine-contract have 0 errors |
+| 06:20 | new `pub fn world3d_cancel_owed(&World3dState) -> bool` (S3-W2C defers a closing world's retirement only when owed) + law `world_cancel_is_owed_only_by_a_streamed_live_gesture_or_an_open_stroke` | `cargo test -p semio-framework-os-infinite --lib -- gumball paint cancel`: 42 pass, 1 fail = the peer `authored_inline_surface_…_cancellation` (one of the 30) |
+| 06:27 | `cargo check --manifest-path ✏️s/Cargo.toml` (my 4 crates) | still BLOCKED by the peer ValueError migration (`workflow` 222 errors, stdio jpg/gif/zip/svg/gltf) |
+| 10:44 | `cargo test -p semio-framework --lib -- gumball_verb_audience` | PASS 1/1 (bracket-free fixture) |
+| 10:47 | `cargo test -p semio-framework-os-infinite --lib -- gumball paint cancel` | 42 pass (all S3-SPATIAL laws), 1 fail = peer `authored_inline_surface_…_cancellation` |
+| 10:50 | `cargo check -p semio-framework-plugin --lib` | PASS (the `selection_reference_id` hook + `draft_time_travel_selection` mapping compile; no warning in my lines) |
+| 10:55 | `cargo test -p semio-framework-plugin --lib -- use_selection selection_value reference_chips` | BLOCKED: the plugin TEST target is red from the peer sqlite/IoError migration (`🧪️tests/🧩️composition/🦀️.rs:19,29,569`, `🔬️app-declarations-fixture/🦀️.rs:74-325`, `🖥️test-app-mutations-document`, `🧬️mutation-fixtures-*`: E0053/E0560/E0277) |
+| 11:03 | `cargo check --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-fem-2d -p semio-s-artifact-fem-3d …` | BLOCKED: every fem/lowpoly/shooting crate depends on a red stdio crate (ply, dxf, svg, pdf, jpg, gif, zip, gltf, workflow — the same peer migration) |
+
+**Owed after the stdio/plugin-test peer migration lands** (one gated cargo each, private target `target-nde-s3-spatial`):
+1. `cargo test --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-fem-2d -p semio-s-artifact-fem-3d -p semio-s-artifact-lowpoly-lowpoly -p semio-s-artifact-shooting-shooting --features …component-app-assembly --lib --no-fail-fast`;
+2. `cargo test -p semio-framework-plugin --lib -- use_selection selection_value reference_chips`;
+3. `cargo check --manifest-path ✏️s/Cargo.toml -p <each of the 4> --lib --target wasm32-wasip2`;
+4. then S3 (twin fem playback clocks → one shared clock + transient in fem 2d, plan above), which needs compile iterations.
+
+## Session 4 — 2026-10-04
+
+Continued by S4-TOOLS-A (draw + note + layout + fem/lowpoly/shooting) in `📓️s4-tools-a-report.md` § Session 4.

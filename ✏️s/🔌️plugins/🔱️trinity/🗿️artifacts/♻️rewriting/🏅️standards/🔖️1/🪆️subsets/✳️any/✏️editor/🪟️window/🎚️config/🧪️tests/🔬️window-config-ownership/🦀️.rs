@@ -157,14 +157,14 @@ async fn rewriting_window_config_retained_publication_renders_and_reloads_two_co
 #[test]
 fn rewriting_window_config_mutations_match_the_independent_patch_trace() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window-config-ownership/🔣️.json")).unwrap();
-    let base: RewritingWindowConfig = pack::from_json_str(&fixture["base"].to_string()).unwrap();
+    let base: RewritingWindowConfig = semio_framework_pack_json::from_json_str(&fixture["base"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut windows = std::collections::BTreeMap::from([(fixture["leftWindowId"].as_str().unwrap().to_string(), base.clone()), (fixture["rightWindowId"].as_str().unwrap().to_string(), base)]);
     for row in fixture["cases"].as_array().unwrap() {
         let id = row["windowId"].as_str().unwrap();
         let (_, mutation) = witness(row);
         let before = windows[id].clone();
         let after = mutation.diff(&before).diff().apply(&before).unwrap();
-        let restored = mutation.inverse(&before).into_iter().fold(after.clone(), |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
+        let restored = mutation.inverse(&before).expect("valid retained mutation inverse fixture").into_iter().fold(after.clone(), |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
         assert_eq!(restored, before);
         assert_eq!(RewritingWindowConfigMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
         let wire = mutation.encode_op().unwrap();
@@ -176,11 +176,11 @@ fn rewriting_window_config_mutations_match_the_independent_patch_trace() {
         assert_eq!(RewritingWindowConfigMutation::decode_op(&wire).unwrap(), mutation);
         windows.insert(id.into(), after);
         for (id, state) in &windows {
-            let expected: RewritingWindowConfig = pack::from_json_str(&row["expected"][id].to_string()).unwrap();
+            let expected: RewritingWindowConfig = semio_framework_pack_json::from_json_str(&row["expected"][id].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
             assert_eq!(state, &expected);
         }
     }
-    assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&semio_framework_plugin::NoConfig::default())).unwrap(), fixture["expectedAppConfig"]);
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&semio_framework_plugin::NoConfig::default())).unwrap(), fixture["expectedAppConfig"]);
 }
 
 #[test]

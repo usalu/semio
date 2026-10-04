@@ -23,10 +23,13 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetEmbeddedFile {
         MutationOutcome::new(diff::diff_set_embedded_file(base, self.file.clone()))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         let _ = base;
         match base.embedded_files.iter().find(|item| item.id == self.file.id) { Some(previous) => vec![PdfMutation::SetEmbeddedFile(SetEmbeddedFile { file: previous.clone() })], None => vec![PdfMutation::RemoveEmbeddedFile(super::remove_embedded_file::RemoveEmbeddedFile { id: self.file.id.clone() })] }
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set embedded-file {}", self.file.id), &format!("Eingebettete Datei {} setzen", self.file.id))

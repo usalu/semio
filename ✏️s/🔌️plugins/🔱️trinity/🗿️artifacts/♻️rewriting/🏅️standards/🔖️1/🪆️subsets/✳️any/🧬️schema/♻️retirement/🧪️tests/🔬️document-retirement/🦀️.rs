@@ -25,7 +25,7 @@ fn rewriting_window_config_document_retirement_respects_exact_grants() {
         let items = budget["items"].as_u64().unwrap() as usize;
         let bytes = budget["bytes"].as_u64().unwrap() as usize;
         for row in fixture["snapshots"].as_array().unwrap() {
-            let value: RewritingSnapshot = pack::from_json_str(&row["value"].to_string()).unwrap();
+            let value = crate::standards::v1::subsets::any::schema::snapshot::decode_rewriting_snapshot_json(&row["value"].to_string()).unwrap();
             let expected = row["bytes"].as_u64().unwrap() as usize;
             let root = std::sync::Arc::new(value.clone());
             let mut shared = semio_framework_value::retirement::shared_retirement(std::sync::Arc::clone(&root));
@@ -35,7 +35,7 @@ fn rewriting_window_config_document_retirement_respects_exact_grants() {
             assert_eq!(drain(semio_framework_value::retirement::owned_retirement(value), items, bytes), expected);
         }
         for row in fixture["mutations"].as_array().unwrap() {
-            let value: RewriteRuleMutation = pack::from_json_str(&row["value"].to_string()).unwrap();
+            let value = crate::standards::v1::subsets::any::schema::mutations::text::decode_rewriting_mutation_json(&row["value"].to_string()).unwrap();
             assert_eq!(drain(semio_framework_value::retirement::owned_retirement(value), items, bytes), row["bytes"].as_u64().unwrap() as usize);
         }
     }

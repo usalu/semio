@@ -1,0 +1,44 @@
+{
+  "ownedSchema": "PNG Snapshot 世界\u0000 literal",
+  "fieldText": "Grüße\t\n🌠",
+  "bytePattern": [
+    0,
+    255,
+    1,
+    128
+  ],
+  "workItems": 1024,
+  "copyBytes": 100000,
+  "cancelAfter": 256,
+  "copyCancelAfter": 65536,
+  "lowRows": 1,
+  "unsigned32": 4294967295,
+  "unsigned16": 65535,
+  "unsigned8": 255,
+  "preflight": {
+    "encodings": [
+      "binary",
+      "text"
+    ],
+    "ownershipBytes": 0,
+    "fixedHuffmanBitsPerOctet": 9,
+    "terminalAllowanceBits": 17,
+    "zlibFramingBytes": 6,
+    "pngSignatureBytes": 8,
+    "chunkFramingBytes": 12,
+    "ihdrBytes": 13,
+    "refusalKinds": {
+      "file": "ownershipLimit",
+      "cancellation": "canceled"
+    },
+    "cancelAt": "firstBorrowedCheckpoint",
+    "retirementRefund": false
+  },
+  "maxAllocationBytes": 1,
+  "allocationRole": "cumulativeOwnedBacking",
+  "allocationFailure": {
+    "origin": "allocatorRefusalAfterAdmission",
+    "kind": "allocationFailed",
+    "physicalCeiling": "ownershipLimit"
+  }
+}

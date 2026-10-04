@@ -3,7 +3,10 @@
 use crate::mutations::{rotate_objects::inverse::CAD_IDENTITY_ORIENTATION, rotate_selection::RotateSelection, CadMutation};
 use crate::sample_scene_fixture::{materialized_objects, materialized_shape_scene, sample_object};
 use crate::CadPaneId;
-use protocol::{Mutation, MutationDiff, SemanticMutation, Severity};
+use protocol::Mutation;
+use protocol::MutationDiff;
+use protocol::SemanticMutation;
+use semio_framework_diagnostic::Severity;
 
 fn base() -> crate::CadSnapshot {
     materialized_shape_scene(vec![sample_object("object-a", [0.0, 0.0, 0.0]), sample_object("object-b", [4.0, 0.0, 0.0])])
@@ -46,7 +49,7 @@ async fn composes_onto_the_base_orientation() {
 async fn inverse_restores_the_exact_base() {
     let base = base();
     let mutation = turn(&["object-a", "object-b"], [1.0, 1.0, 0.0], 0.7);
-    let inverse = mutation.inverse(&base);
+    let inverse = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1);
     assert!(matches!(&inverse[0], CadMutation::RotateObjects(step) if step.placements.len() == 2), "{inverse:?}");
     let mut snapshot = mutation.diff(&base).diff().apply(&base).expect("turn applies");
@@ -72,6 +75,6 @@ async fn refuses_by_the_outcome_vocabulary() {
 #[test]
 fn labels_the_row_in_degrees() {
     let label = turn(&["object-a"], [0.0, 0.0, 1.0], std::f64::consts::FRAC_PI_2).label();
-    assert_eq!(label.resolve(protocol::Terminology::Native, protocol::Locale::En), "Rotate 1 object by 90°");
-    assert_eq!(label.resolve(protocol::Terminology::Native, protocol::Locale::De), "1 Objekt um 90° drehen");
+    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Rotate 1 object by 90°");
+    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "1 Objekt um 90° drehen");
 }

@@ -1,8 +1,9 @@
-/** 🧾️ Norm wire twins witness: every committed `🦠️mutation` and `📸️snapshot` of the fifteen norm artifacts meets its
+/** 🧾️ Norm wire twins witness: every committed `🦠️mutation`, `📸️snapshot` and `🔺️diff` of the fifteen norm artifacts meets its
  * generated TypeScript twin exactly as it meets the strict Ajv oracle (`semioSchemaAjvV1`). An admitted wire decodes through
  * the twin and re-encodes byte for byte in the committed spelling (two-space JSON, Python float repr at `number` positions,
- * integers at `integer` positions), so the twin keeps every member, its order and its value; a refused one — the negative
- * witnesses — is refused by the twin too. Every admitted object wire also refuses an undeclared member and an unknown tag.
+ * integers at `integer` positions), so the twin keeps every member, its order and its value; only the negative witnesses
+ * (outcome `mutation.invariant`) may be refused, and the twin refuses them too. Every admitted object wire also refuses an
+ * undeclared member and an unknown tag.
  * @see ../../📇️registry/🧬️contract/🟦️.ts
  * @see ../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/🧪️s2-norm-ts-twins.ts */
 import { describe, expect, test } from "bun:test";
@@ -95,15 +96,21 @@ const encode = (schemas: Schemas, value: Json, node: Schema, base: Schema, inden
 //#endregion 🔤️Spelling
 
 //#region 🗂️Corpus
-interface Wire { readonly path: string; readonly text: string; readonly role: "mutation" | "snapshot" }
+interface Wire { readonly path: string; readonly text: string; readonly role: "mutation" | "snapshot" | "diff"; readonly negative: boolean }
 const bundles = (directory: string): string[] =>
   existsSync(join(directory, "🦠️mutation/🔣️.json")) ? [directory] : existsSync(directory) ? readdirSync(directory, { withFileTypes: true }).filter((entry) => entry.isDirectory()).flatMap((entry) => bundles(join(directory, entry.name))) : [];
+/** 🚫️ A negative witness (design §11): its committed outcome refuses the payload with `mutation.invariant`, so its leaf schema must too. */
+const negativeWitness = (bundle: string): boolean => {
+  const outcome = join(bundle, "🎯️outcome/🔣️.json");
+  return existsSync(outcome) && (read(outcome) as { code?: unknown }).code === "mutation.invariant";
+};
 const wires = (subset: string): Wire[] =>
   bundles(join(subset, "🧫️fixtures/🧬️mutations"))
     .sort()
     .flatMap((bundle) => [
-      { path: join(bundle, "🦠️mutation/🔣️.json"), role: "mutation" as const },
-      ...["⬅️before", "➡️after"].map((role) => ({ path: join(bundle, `📸️snapshot/${role}/🔣️.json`), role: "snapshot" as const })).filter((wire) => existsSync(wire.path)),
+      { path: join(bundle, "🦠️mutation/🔣️.json"), role: "mutation" as const, negative: negativeWitness(bundle) },
+      ...["⬅️before", "➡️after"].map((role) => ({ path: join(bundle, `📸️snapshot/${role}/🔣️.json`), role: "snapshot" as const, negative: false })).filter((wire) => existsSync(wire.path)),
+      ...[{ path: join(bundle, "🔺️diff/🔣️.json"), role: "diff" as const, negative: false }].filter((wire) => existsSync(wire.path)),
     ])
     .map((wire) => ({ ...wire, text: readFileSync(wire.path, "utf8") }));
 
@@ -164,10 +171,11 @@ const setup = async (artifact: string): Promise<Setup> => {
   const schema = join(subset, "🧬️schema");
   const aggregate = read(join(schema, "🧬️mutations/🔣️.json"));
   const snapshot = read(join(schema, "📸️snapshot/🔣️.json"));
+  const diff = read(join(schema, "🔺️diff/🔣️.json"));
   const prefix = (aggregate.title as string).replace(/Mutation$/u, "");
   const ajv = semioSchemaAjvV1({ strict: true, allErrors: true });
   const schemas = new Schemas();
-  const documents = [snapshot, read(join(schema, "🔺️diff/🔣️.json")), read(join(schema, "🔣️.json"))];
+  const documents = [snapshot, diff, read(join(schema, "🔣️.json"))];
   for (const leaf of readdirSync(join(schema, "🧬️mutations"), { withFileTypes: true }).filter((entry) => entry.isDirectory() && existsSync(join(schema, "🧬️mutations", entry.name, "🧬️schema/🔣️.json"))))
     documents.push(read(join(schema, "🧬️mutations", leaf.name, "🧬️schema/🔣️.json")));
   for (const document of [...documents, aggregate]) {
@@ -182,9 +190,10 @@ const setup = async (artifact: string): Promise<Setup> => {
     twins: {
       mutation: (await import(join(schema, "🧬️mutations/🟦️.ts")))[`parse${aggregate.title}`],
       snapshot: (await import(join(schema, "📸️snapshot/🟦️.ts")))[`parse${snapshot.title ?? `${prefix}Snapshot`}`],
+      diff: (await import(join(schema, "🔺️diff/🟦️.ts")))[`parse${diff.title ?? `${prefix}Diff`}`],
     },
-    oracles: { mutation: ajv.getSchema(aggregate.$id)!, snapshot: ajv.getSchema(snapshot.$id)! },
-    roots: { mutation: aggregate, snapshot },
+    oracles: { mutation: ajv.getSchema(aggregate.$id)!, snapshot: ajv.getSchema(snapshot.$id)!, diff: ajv.getSchema(diff.$id)! },
+    roots: { mutation: aggregate, snapshot, diff },
     external: (aggregate.oneOf as Schema[]).every((branch) => branch.properties && Object.keys(branch.properties).length === 1),
     corpus: wires(subset),
   };
@@ -198,13 +207,16 @@ describe("norm wire twins", () => {
       test("commits a corpus with every role and a twin per role", () => {
         expect(corpus.some((wire) => wire.role === "mutation")).toBe(true);
         expect(corpus.some((wire) => wire.role === "snapshot")).toBe(true);
+        expect(corpus.some((wire) => wire.role === "diff")).toBe(true);
         expect(typeof twins.mutation).toBe("function");
         expect(typeof twins.snapshot).toBe("function");
+        expect(typeof twins.diff).toBe("function");
       });
       for (const wire of corpus) {
         test(wire.path.slice(subset.length + 1), () => {
           const value = JSON.parse(wire.text) as Json;
           const admitted = oracles[wire.role](value) === true;
+          expect(admitted).toBe(!wire.negative);
           expect(refuses(twins[wire.role], value)).toBe(!admitted);
           if (!admitted) return;
           const parsed = twins[wire.role](value) as Json;

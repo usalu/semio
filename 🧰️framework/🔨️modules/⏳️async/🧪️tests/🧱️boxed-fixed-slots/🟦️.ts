@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fixedSlotTableFaults, inlineSlotTableBytes, type BoxedFixedSlotsBudget } from "../../🟦️.ts";
+import { fixedSlotTableFaults, inlineSlotTableBytes, type BoxedFixedSlotsBudget } from "./⚖️oracle/🟦️.ts";
 
 const { readFileSync } = await import("node:fs");
 const { fileURLToPath } = await import("node:url");

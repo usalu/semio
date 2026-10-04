@@ -1,0 +1,14 @@
+{
+  "name": "@semio-tech/framework-dsl-record-derive-rs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bundleKind": "library",
+  "scripts": {
+    "test-ownership": "bun nx run @semio-tech/framework-dsl-record-derive-rs:test-ownership",
+    "test-native": "bun nx run @semio-tech/framework-dsl-record-derive-rs:test-native"
+  },
+  "nx": {
+    "includedScripts": []
+  }
+}

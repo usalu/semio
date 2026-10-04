@@ -9,7 +9,7 @@ pub use crate::schema::operations::*;
 
 //#region 🔖️Aggregate
 /// 🧮️ Closed curated-selection mutation vocabulary backed by direct semantic owners.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::Mutations)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = CurationSnapshot, diff = CurationDiff, schema = "sourcing.curation")]
 pub enum SourcingMutation {

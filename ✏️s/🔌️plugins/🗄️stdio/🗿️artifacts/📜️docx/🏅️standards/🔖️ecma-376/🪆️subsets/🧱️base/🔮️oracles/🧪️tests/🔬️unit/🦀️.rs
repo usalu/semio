@@ -22,7 +22,7 @@ fn spec(kind: &str, params: &Json) -> Json {
 /// through, and every declared kind's own computed inverse lands back on the untouched
 /// package's projection. Nothing is exempt from either — a DOCX carries its whole typed view in
 /// `word/document.xml` and `word/styles.xml`, and the OPC parts the typed view does not model
-/// are projected by content-type and digest, so all thirteen kinds reach the surface.
+/// are projected by content-type and digest, so all fourteen kinds reach the surface.
 #[test]
 fn every_declared_kind_is_observable_and_its_inverse_restores_the_document() {
     let base = project_docx_ecma_376(FIXTURE).expect("the independent reader projects the real package");
@@ -132,5 +132,5 @@ fn kinds_matches_the_catalog() {
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "the docx-ecma-376-any catalog is missing {kind:?}");
     }
-    assert_eq!(KINDS.len(), 13, "the docx-ecma-376-any catalog declares thirteen kinds");
+    assert_eq!(KINDS.len(), 14, "the docx-ecma-376-any catalog declares fourteen kinds");
 }

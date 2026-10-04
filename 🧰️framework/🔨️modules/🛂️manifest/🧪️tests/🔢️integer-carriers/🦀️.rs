@@ -10,7 +10,7 @@
 //! to, and the refusal a widened float earns (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 
 use super::*;
-use dsl::Number;
+use semio_framework_value::Number;
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -35,7 +35,7 @@ fn unhex(text: &str) -> Vec<u8> {
 }
 
 fn entry<'a>(value: &'a DslValue, key: &str) -> &'a DslValue {
-    let DslValue::Object(entries) = value else { panic!("{key} is not reachable: the carrier is not an object") };
+    let semio_framework_value::DslValue::Object(entries) = value else { panic!("{key} is not reachable: the carrier is not an object") };
     &entries.iter().find(|(name, _)| name == key).unwrap_or_else(|| panic!("the carried context keeps {key}")).1
 }
 
@@ -44,13 +44,13 @@ fn replace(value: &mut DslValue, path: &[String], replacement: DslValue) {
         *value = replacement;
         return;
     };
-    let DslValue::Object(entries) = value else { panic!("{key} is not reachable: the carrier is not an object") };
+    let semio_framework_value::DslValue::Object(entries) = value else { panic!("{key} is not reachable: the carrier is not an object") };
     let slot = &mut entries.iter_mut().find(|(name, _)| name == key).unwrap_or_else(|| panic!("the fixture context carries {key}")).1;
     replace(slot, &path[1..], replacement);
 }
 
 fn fixture_view(fixture: &IntegerCarrierFixture) -> ViewModel {
-    dsl::os_pack::json::from_json_str(&fixture.view_context.to_string()).expect("the fixture context decodes")
+    semio_framework_pack_json::from_json_str(&fixture.view_context.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the fixture context decodes")
 }
 
 #[semio_framework_async_macros::async_test]
@@ -71,7 +71,7 @@ async fn the_guest_decodes_every_integer_field_exactly() {
         }
         assert!(matches!(cursor, DslValue::Number(Number::UInt(_))), "{path:?} must cross as an exact integer carrier, found {cursor:?}");
     }
-    let ingress = <ViewModel as dsl::FromValue>::from_value(value.clone()).expect("actor ingress decodes the carried context");
+    let ingress = <ViewModel as semio_framework_value::FromValue>::from_value(value.clone()).expect("actor ingress decodes the carried context");
     assert_eq!(ingress.tool_run_trace_cursor_by_window_id.get("procedural-preview"), Some(&ToolRunTraceCursor { run: 1, generation: 0, page: 0 }), "actor ingress (`decode_wire_serialized`) keeps every echoed cursor");
     let view: ViewModel = semio_framework_value::FromValue::from_value(value).expect("the carried context decodes in the guest");
     assert_eq!(view.tool_run_trace_cursor_by_window_id.get("procedural-preview"), Some(&ToolRunTraceCursor { run: 1, generation: 0, page: 0 }));
@@ -83,11 +83,11 @@ async fn a_widened_float_is_refused_and_never_rounded() {
     let carried = semio_framework_value::ToValue::to_value(&fixture_view(&fixture));
 
     let mut widened = carried.clone();
-    replace(&mut widened, &fixture.integer_paths[0], DslValue::Number(Number::Float(1.0)));
+    replace(&mut widened, &fixture.integer_paths[0], semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(1.0)));
     let error = <ViewModel as semio_framework_value::FromValue>::from_value(widened).expect_err("a whole float in a u64 slot must be refused");
     assert_eq!(error.to_string(), fixture.guest_refusal);
 
     let mut fractional = carried;
-    replace(&mut fractional, &fixture.integer_paths[0], DslValue::Number(Number::Float(fixture.non_integral)));
+    replace(&mut fractional, &fixture.integer_paths[0], semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(fixture.non_integral)));
     assert!(<ViewModel as semio_framework_value::FromValue>::from_value(fractional).is_err(), "a non-integral float in a u64 slot must be refused");
 }

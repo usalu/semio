@@ -7,7 +7,7 @@ async fn layer_transforms_preserve_exact_inverse_and_sequential_moves(){
     let fixture:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();
     for kind in ["pixel","group"] {for row in fixture["cases"].as_array().unwrap(){
         let mut base=empty_raster_snapshot();base.layers.push(create_layer_of_kind(kind));let id=layer_node_id(&base.layers[0]).to_owned();
-        let transform:RasterTransform=dsl::json::from_json_str(&row["transform"].to_string()).unwrap();
+        let transform:RasterTransform=semio_framework_pack_json::from_json_str(&row["transform"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let payload=ChangeLayerTransform {layer_id:id.clone(),expected:RasterTransform::default(),transform:transform.clone()};
         let mutation=RasterMutation::ChangeLayerTransform(payload.clone());
         let (diff,messages)=mutation.diff(&base).into_parts();assert!(messages.is_empty());let after=diff.apply(&base).unwrap();assert_eq!(layer_transform(&after.layers[0]),&transform);
@@ -16,8 +16,8 @@ async fn layer_transforms_preserve_exact_inverse_and_sequential_moves(){
             if horizontal {patch.transform_x=Some(0.0);}else{patch.transform_y=Some(0.0);}
             assert!(ambiguous.apply(&base).is_err());ambiguous.retire_cold();
         }
-        assert_eq!(validate(&payload,&after),Err("mutation.target-mismatch"));
-        let inverse=mutation.inverse(&base).remove(0);let (undo,_)=inverse.diff(&after).into_parts();let restored=undo.apply(&after).unwrap();assert_eq!(restored,base);
+        assert_eq!(validate(&payload,&after),Err(protocol::OutcomeCode::TargetMismatch));
+        let inverse=mutation.inverse(&base).expect("valid retained mutation inverse fixture").remove(0);let (undo,_)=inverse.diff(&after).into_parts();let restored=undo.apply(&after).unwrap();assert_eq!(restored,base);
         let movement=RasterMutation::MoveLayer(crate::mutations::move_layer::MoveLayer {layer_id:id,new_x:9.0,new_y:10.0});
         for full_first in [false,true] {
             let full=mutation.diff(&base).diff().clone();let partial=movement.diff(&base).diff().clone();
@@ -34,6 +34,6 @@ async fn layer_transforms_preserve_exact_inverse_and_sequential_moves(){
 fn committed_wire_witness_is_the_canonical_rust_wire(){
     let fixture:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();
     let witnessed:RasterMutation=store::os_store::test_support::assert_wire_witness(include_str!("../../../../🧫️fixtures/🧬️mutations/📐️change-layer-transform/🧾️wire-witness/🦠️mutation/🔣️.json"));
-    let expected=RasterMutation::ChangeLayerTransform(ChangeLayerTransform{layer_id:"ink".into(),expected:dsl::json::from_json_str(&fixture["identity"].to_string()).unwrap(),transform:dsl::json::from_json_str(&fixture["cases"][0]["transform"].to_string()).unwrap()});
+    let expected=RasterMutation::ChangeLayerTransform(ChangeLayerTransform{layer_id:"ink".into(),expected:semio_framework_pack_json::from_json_str(&fixture["identity"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(),transform:semio_framework_pack_json::from_json_str(&fixture["cases"][0]["transform"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()});
     assert_eq!(witnessed,expected);
 }

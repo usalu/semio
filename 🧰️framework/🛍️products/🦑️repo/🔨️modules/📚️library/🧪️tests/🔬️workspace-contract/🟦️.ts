@@ -3028,14 +3028,35 @@ describe("loadTaxonomy", () => {
     expect(selected.every(Boolean)).toBe(true);
     const contract = { ...actor, ownerPath: "compiler", target: "@neutral/compiler:generate-browser", previewTarget: "@neutral/compiler:preview-browser", previewArguments: ["browser", "preview"], previewLimits: fixture.previewLimits[0].limits };
     for (const javascript of [new Bun.Transpiler({ loader: "ts" }).transformSync(selected.join("\n") + "\nreturn invokeGeneratorPreview;"), ts.transpileModule(selected.join("\n") + "\nreturn invokeGeneratorPreview;", { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText]) {
-      let command = "bun ./📜️script.ts browser preview";
+      let command = "bun ./📜️script.ts browser preview", cwd = "compiler";
       const invocations: unknown[] = [];
-      const invoke = new Function("nxTargetRecord", "requireRecord", "generatorPreviewScriptArguments", "generatorPreviewResourceLimits", "checkCancellation", "absolutePath", "spawnSync", "parseGeneratorPreviewManifest", "generatorPathCompare", "sha256", javascript)(() => ({ executor: "nx:run-commands", options: { cwd: "compiler", command } }), requireRecord, discovery.generatorPreviewScriptArguments, discovery.generatorPreviewResourceLimits, () => {}, join, (executable: string, args: string[], options: unknown) => { invocations.push({ executable, args, options }); return { stdout: "{}\n", stderr: "", status: 0, signal: null }; }, () => ({}), (left: string, right: string) => left.localeCompare(right), () => "digest");
+      const invoke = new Function("nxTargetRecord", "requireRecord", "generatorPreviewExecution", "generatorPreviewResourceLimits", "checkCancellation", "absolutePath", "spawnSync", "parseGeneratorPreviewManifest", "generatorPathCompare", "sha256", javascript)(() => ({ executor: "nx:run-commands", options: { cwd, command } }), requireRecord, discovery.generatorPreviewExecution, discovery.generatorPreviewResourceLimits, () => {}, join, (executable: string, args: string[], options: unknown) => { invocations.push({ executable, args, options }); return { stdout: "{}\n", stderr: "", status: 0, signal: null }; }, () => ({}), (left: string, right: string) => left.localeCompare(right), () => "digest");
       invoke({ repoRoot: "/neutral" }, "neutral", contract, { exclusions: [] });
       expect(invocations).toMatchObject([{ executable: "bun", args: ["./📜️script.ts", "browser", "preview"], options: { cwd: "/neutral/compiler", maxBuffer: 268435456, timeout: 240000 } }]);
+      command = fixture.ownerExecutionRoutes.find((row: { id: string }) => row.id === "native-owner").command.replace("preview-generated", "browser preview");
+      cwd = ".";
+      invoke({ repoRoot: "/neutral" }, "neutral", contract, { exclusions: [] });
+      expect(invocations[1]).toMatchObject({ executable: "bun", args: command.split(" ").slice(1), options: { cwd: "/neutral", maxBuffer: 268435456, timeout: 240000 } });
       command = "bun ./📜️script.ts preview-generated";
       expect(() => invoke({ repoRoot: "/neutral" }, "neutral", contract, { exclusions: [] })).toThrow("exact owner JSON preview");
-      expect(invocations).toHaveLength(1);
+      expect(invocations).toHaveLength(2);
+    }
+  });
+
+  test("routes native generator previews through their declared owner", async () => {
+    const root = join(import.meta.dir, "../../🧫️fixtures/🏭️owned-generator-preview-inventory"), fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
+    const oracle = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🏭️owned-generator-preview-inventory/🔣️.json"), "utf8")));
+    expect(oracle(fixture), JSON.stringify(oracle.errors)).toBe(true);
+    const discovery = await import("../../🔍️discovery/🟦️.ts");
+    const contract = { ownership: "owned" as const, ownerPath: "compiler", target: "@neutral/compiler:generate", previewTarget: "@neutral/compiler:preview-generated" };
+    for (const row of fixture.ownerExecutionRoutes) {
+      const target = { executor: "nx:run-commands", options: { cwd: row.cwd, command: row.command } };
+      if (!row.valid) expect(() => discovery.generatorPreviewExecution(contract, target)).toThrow("exact owner JSON preview");
+      else {
+        const route = discovery.generatorPreviewExecution(contract, target);
+        expect([route.command, ...route.args].join(" "), row.id).toBe(row.command);
+        expect(route.cwd, row.id).toBe(row.cwd);
+      }
     }
   });
 
@@ -4282,7 +4303,6 @@ type ArtifactProjectionGoldenEntry = Readonly<{
   maxPathBytes: number;
   mappingDigest: string;
   mappings: readonly Readonly<{ sourcePath: string; destinationPath: string }>[];
-  liveBindings?: readonly Readonly<{ source: string; live: string }>[];
   modelCatalog?: Readonly<{
     models: readonly Readonly<{ directoryName: string; id: string; schema: string; version: string }>[];
     categoryRules: readonly Readonly<{ sourceDirectoryName: string; sourceShape: string; manifestSchema: string; count: number }>[];
@@ -4290,6 +4310,11 @@ type ArtifactProjectionGoldenEntry = Readonly<{
 }>;
 
 const ARTIFACT_PROJECTION_GOLDEN = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/📐️cad-draw-path-projection/🔣️.json"), "utf8")) as ArtifactProjectionGolden;
+
+/** 🧵️ The live CAD carriers of the sealed golden's authored sources — unsealed, so moves rewrite them like any reference. */
+type CadLiveBindings = Readonly<{ schemaVersion: 1; contract: "cad-draw-live-bindings-v1"; sealedContractId: "cad-draw-projection-vectors-v1"; projection: "artifact-example-model-catalog-v1"; bindings: readonly Readonly<{ mapping: number; live: string }>[] }>;
+const CAD_LIVE_BINDINGS = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧫️cad-draw-live-bindings/🔣️.json"), "utf8")) as CadLiveBindings;
+const CAD_LIVE_BINDINGS_SCHEMA = JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🔣️cad-draw-live-bindings/🔣️.json"), "utf8")) as object;
 
 type DrawSourceScenario = Readonly<{
   schemaVersion: 1;
@@ -4361,8 +4386,8 @@ function drawSourceScenarioPreimage(destinationPath: string): string {
 
 /** 🧵️ Binds every frozen CAD scenario source to its exact current carrier: each declared live path is one owned file,
  * and every owned file carries exactly one scenario source. */
-function cadProjectionLiveSources(projection: ArtifactProjectionGoldenEntry, paths = ownedFilePaths(join(getWorkspaceRoot(), projection.sourceRoot)).filter((path) => path.endsWith(".json"))): ReadonlyMap<string, string> {
-  if (projection.contractId !== "artifact-example-model-catalog-v1" || !projection.liveBindings) throw new Error("CAD source bindings require the exact catalog projection");
+function cadProjectionLiveSources(projection: ArtifactProjectionGoldenEntry, paths = ownedFilePaths(join(getWorkspaceRoot(), projection.sourceRoot)).filter((path) => path.endsWith(".json")), live = CAD_LIVE_BINDINGS): ReadonlyMap<string, string> {
+  if (projection.contractId !== live.projection) throw new Error("CAD source bindings require the exact catalog projection");
   const owned = new Set<string>();
   for (const path of paths) {
     const livePath = `${projection.sourceRoot}/${path}`;
@@ -4370,9 +4395,9 @@ function cadProjectionLiveSources(projection: ArtifactProjectionGoldenEntry, pat
     owned.add(livePath);
   }
   const bound = new Map<string, string>(), carriers = new Set<string>();
-  for (const { source, live } of projection.liveBindings) {
-    if ([source, live].some((path) => !path || path.startsWith("/") || path.split("/").some((part) => !part || part === "." || part === ".."))) throw new Error("CAD scenario binding is outside its exact root");
-    const sourcePath = `${projection.sourceRoot}/${source}`, livePath = `${projection.sourceRoot}/${live}`;
+  for (const { mapping, live: livePath } of live.bindings) {
+    const sourcePath = projection.mappings[mapping]?.sourcePath;
+    if (!sourcePath || !livePath.startsWith(`${projection.sourceRoot}/`) || livePath.split("/").some((part) => !part || part === "." || part === "..")) throw new Error("CAD scenario binding is outside its exact root");
     if (!owned.has(livePath) || bound.has(sourcePath) || carriers.has(livePath)) throw new Error(`Missing or duplicate CAD scenario binding: ${livePath}`);
     bound.set(sourcePath, livePath);
     carriers.add(livePath);
@@ -4943,6 +4968,17 @@ describe.if(testLevelAtLeast("long"))("artifact path projection authority", () =
     expect(result.maxPathBytes).toBe(237);
     expect(projection.modelCatalog?.models).toHaveLength(9);
     expect(projection.modelCatalog?.categoryRules.map(({ count }) => count).reduce((sum, count) => sum + count, 0)).toBe(220);
+  });
+
+  test("CAD live bindings live outside the sealed golden: schema-valid (Ajv), one row per golden mapping, no live data sealed", () => {
+    const validate = new Ajv({ strict: true, allErrors: true }).compile(CAD_LIVE_BINDINGS_SCHEMA);
+    expect(validate(CAD_LIVE_BINDINGS), JSON.stringify(validate.errors)).toBe(true);
+    const projection = projectionGolden("artifact-example-model-catalog-v1");
+    expect(CAD_LIVE_BINDINGS.bindings.map(({ mapping }) => mapping)).toEqual(projection.mappings.map((_, index) => index));
+    expect(ARTIFACT_PROJECTION_GOLDEN.projections.every((entry) => !("liveBindings" in entry))).toBe(true);
+    const tampered = { ...CAD_LIVE_BINDINGS, bindings: [...CAD_LIVE_BINDINGS.bindings.slice(1), { ...CAD_LIVE_BINDINGS.bindings[0]!, live: `../${CAD_LIVE_BINDINGS.bindings[0]!.live}` }] };
+    expect(validate(tampered)).toBe(false);
+    expect(() => cadProjectionLiveSources(projection, undefined, tampered)).toThrow("outside its exact root");
   });
 
   test("CAD frozen scenario bindings read exact current bytes and reject missing, duplicate, or extra identities", () => {

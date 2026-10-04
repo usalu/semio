@@ -1,0 +1,51 @@
+# Canonical ValueType Controlled Construction
+
+Jack’s valid ten-law Native baseline executed on the sole Root lane: one passed and nine failed (Nextest `8c706ec0-b54a-41c7-b41a-041360071c96`). The typed controlled Value law failed at JackSnapshot’s strict default. That failure does not independently prove the deeper ValueType boundary. Source inspection finds canonical ValueType has only ordinary conversion and recursive List handling; Graph PropertyDef explicitly names an ordinary custom converter. These are pending primitive obligations, not measured primitive failures.
+
+Two new laws are mounted in ValueType’s existing Rust test facet, consuming the existing language-neutral `wire` corpus (all seven variants and nested List). Independent serde JSON observes each exact emitted object. The implementation remains unchanged until the sole Root lane executes these laws. Input selector: `controlled_value_type_preserves_the_neutral_wire_without_ordinary_fallback`; output selector: `controlled_value_encoding_type_preserves_the_neutral_wire_without_ordinary_fallback`. Existing owned Value test commands already admit these selectors; no new executable or launch command is introduced.
+
+The intended canonical implementation preserves exact closed kind/of semantics, admits every owned slot/string/box cumulatively, traverses type chains iteratively, reaches interior checkpoints, and retires partial types iteratively. Graph PropertyDef’s custom conversion will explicitly opt into that owner after measured primitive RED.
+
+## Genuine primitive RED and mounted repair
+
+The sole Root lane executed both exact new wire laws: Nextest `165d692c-143d-4b31-b406-67f2684a49af`, eighteen of forty-one selected executed (sixteen pass/two fail, twenty-three not run under failfast, seventy-six outside selection), 27 ms. Input and output failed at the actual strict missing-owner defaults. Following that receipt the canonical implementation is mounted, using iterative kind/of scanning and construction, admitted object-key validation, exact slot/box/string accounting and explicit iterative retirement. No ordinary constructor/encoder is used by controlled paths.
+
+The corpus/schema also now author a 300-layer List, a long Unicode schema string, and 256-unit cancellation boundary. Two additional Native laws verify exact cumulative-budget equality/one-byte-under refusal, deep construction/output, duplicate-key refusal, iterative partial retirement and actual 64 KiB text-copy cancellation. These are pending fresh execution; no primitive green claim is made.
+
+## Root Executed Authentic Controlled-Type RED
+
+Registered uncached @semio-tech/value-rs:test-controlled-construction executed Nextest165d692c-143d-4b31-b406-67f2684a49af,27ms. Eighteen of41 selected tests ran:16passed and2failed;76 tests outside selector and23selected tests not run due fail-fast. Both newly staged neutral wire laws reached assertions. Input failed with ValueError(value owner has no controlled native construction implementation); output failed with ValueError(value owner has no controlled native encoding implementation). This authorizes the narrow canonical owner fix; it is not a compiler or harness failure. Root retained the log under 🗑️generated/root-value-type-controlled-native-red.log. Four mounted type laws and the actual controlled owner fix remain fresh-runtime-pending.
+
+Registered Source validation: the first `value-rs:test-type-ownership` invocation passed four type laws/195 assertions, then its existing absence fixture refused because this invocation omitted `SEMIO_TEST_ARTIFACT_DIR`. The same uncached registered route with the explicit existing ticket output directory passed all four type laws/195 assertions plus two absence laws/eight assertions in 2.4 seconds. This verifies the new neutral corpus/schema and existing iterative Source reader; it does not prove Native controlled methods.
+
+Graph’s direct staged custom-field law uses the existing seven-type Graph corpus and an independent test-only serde JSON oracle. `@semio-tech/framework-graph:test-quick` admits the filter `--lib graph_property_controlled_constructor_preserves_canonical_type_and_optional_expression`; its generation prerequisite uses Bun catalog rendering only, and its test command subsequently invokes the canonical Cargo runner. That production custom field remains unchanged until Root executes its genuine refusal.
+
+Graph’s first direct run did not reach assertions: after the Source suite passed, eleven measured library-test references still named removed `dsl_core::json`. The two actual manifest/DSL unit test files now directly name first-party Pack JSON; every raw/string/include_str parser explicitly selects Reject. The staged custom-field production remains unmounted. This is compiler prerequisite repair, not a Graph controlled constructor RED.
+
+The first mounted Native retry stopped before assertions on three new fixture typing mistakes: progress structs live under `native_decoding`/`native_encoding`, and a callback inferred for encoding cannot be reused for decoding. These test-only qualifications and the separate callback are corrected; all neutral vectors, equality/one-byte-under limits and cancellation assertions remain. The prior two genuine strict-default REDs remain the only measured primitive feature verdict until the next retry.
+
+## Fresh controlled Native GREEN
+
+The sole Root lane reran the existing registered construction selector after the fixture typing corrections: all 43 selected laws passed, 72 ms assertions, 76 outside selection, Nextest `6e160516-35ef-4998-8eb3-c0e48efa891c` (log `🗑️generated/root-value-type-controlled-harness-fixed.log`). All four new Type laws executed: neutral input/output wire, 300-layer iterative construction/output, exact cumulative byte equality and one-byte-under refusal, duplicate-key refusal, interior 256-unit cancellation/retirement and real long-Unicode text-copy cancellation. The owning whole Value suite remains a separate pending verification. Graph’s custom field still awaits its own authentic refusal before production mounting.
+
+## Current Owning Whole Native Suite
+
+Root broadened after43focused laws passed. Actual registered uncached @semio-tech/value-rs:test is freshly GREEN119/119,0outside,419ms,3.2sNx; Nextest241e190e-5108-41c7-93cd-3ae69e9e37ff. Original closed-wire/refusal/corpus laws and every existing controlled value/encoding/retained owner law executed. This whole-core-Value proof is independent of pending Graph and Jack checks. Retained log 🗑️generated/root-value-owning-whole-native-current.log.
+
+## Graph PropertyDef Authentic Custom-Field RED and Mounted Owner
+
+The direct owning law genuinely executed: Nextest `40c1c65c-4da6-4d8c-a4e0-16384f7f0277`, one selected/one failure, 15 ms, 185 outside. It failed at `ValueError("valueType.custom controlled value conversion requires explicit retirement")`; log `🗑️generated/root-graph-property-controlled-callers-fixed-red.log`. Following this receipt Graph mounts its handwritten borrowed type conversion and explicit canonical iterative retirement. It preserves the Graph transport's declared string/schema spellings and delegates closed kind/of objects to canonical ValueType controlled construction. The existing ordinary custom converter is not called by the controlled path. Optional expressions retain generated admitted Option<String> construction.
+
+Two further laws and schema-first neutral cases now cover every declared alternate type family, absent versus empty expression, 300-layer Lists, long Unicode/NUL schema and expression text, exact cumulative budget equality and one-byte-under refusal, and interior expression-copy cancellation after a completed deep type. The independent serde oracle checks canonical owned type output. All three laws use selector `graph_property_controlled_constructor`; fresh Native execution is pending.
+
+The first Source contract invocation passed the three type corpus laws but six unrelated publication laws refused because this invocation supplied singular `SEMIO_TEST_ARTIFACT_DIR` while their explicit owner requires plural `SEMIO_TEST_ARTIFACTS_DIR`. This is a caller/harness prerequisite, not a semantic failure. The same registered uncached contract is rerunning with both explicit ticket-owned directories.
+
+The corrected registered Source-only Graph contract is genuinely GREEN: fourteen laws, 190 assertions, 237 ms Bun assertions, 5.2 s uncached Nx. The new closed corpus/schema passed independent Ajv validation; all existing publication/admission laws also passed. Log `🗑️generated/graph-property-controlled-source-contract-artifacts-dir.log`. Native Graph custom construction remains pending its fresh three-law selector.
+
+## Fresh Graph Three-Law Result and Stage Repair
+
+The mounted selector genuinely ran three laws: two passed/one failed, 17 ms, 185 outside, Nextest `9433d932-4ef5-40a9-9ab4-94b85bf20fc1`. The original canonical-type law and deep type/partial-expression cancellation law passed. The declared spellings/presence law failed with `native decoding exceeded declared stage workload`; string/schema custom conversion incorrectly advanced its enclosing generated field stage. The actual handwritten custom conversion now creates its own scoped unknown-length work stage, retaining the same cumulative ownership budget and checkpoints and restoring parent progress afterward. No neutral case, limit, cancellation assertion or law is removed. Fresh runtime verification remains pending. Log `🗑️generated/root-graph-property-three-controlled-native-current.log`.
+
+## Scoped Graph Constructor GREEN
+
+The fresh owning prefix selector after the explicit stage repair passed all three laws: Nextest `2f5d1726-627b-4b9a-a210-55bd95c1fb29`, 3/3, 12 ms, 185 outside. This verifies the canonical seven-type property corpus, all seven declared alternate type families with absent/empty expression distinction, and actual 300-layer partial construction, exact cumulative byte boundaries and interior long-expression cancellation/retirement. Log `🗑️generated/root-graph-property-scoped-stage-current.log`. The owning whole Graph suite and whole Value suite are separate from these focused controls verdicts.

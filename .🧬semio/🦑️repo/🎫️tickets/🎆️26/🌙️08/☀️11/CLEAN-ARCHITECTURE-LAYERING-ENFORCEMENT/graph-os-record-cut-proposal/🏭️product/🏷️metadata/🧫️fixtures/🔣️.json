@@ -1,0 +1,11 @@
+{"version":1,"cases":[
+{"id":"envelope-and-keyword","source":"keyword = \"wall\", id = \"urn:wall\", extension = \"wall\"","record":["keyword = \"wall\""],"artifact":["id = \"urn:wall\"","extension = \"wall\""],"valid":true},
+{"id":"extension-only","source":"extension = \"txt\"","record":[],"artifact":["extension = \"txt\""],"valid":true},
+{"id":"record-only","source":"keyword = \"node\", layout = \"named\"","record":["keyword = \"node\"","layout = \"named\""],"artifact":[],"valid":true},
+{"id":"nested-value-and-trailing-comma","source":"retire_with = hooks(a, b), id = \"urn:node\",","record":["retire_with = hooks(a, b)"],"artifact":["id = \"urn:node\""],"valid":true},
+{"id":"comma-in-literal","source":"keyword = \"a,b\", id = \"urn:a,b\"","record":["keyword = \"a,b\""],"artifact":["id = \"urn:a,b\""],"valid":true},
+{"id":"raw-literal","source":"id = r#\"urn:a,b\"#, keyword = \"node\"","record":["keyword = \"node\""],"artifact":["id = r#\"urn:a,b\"#"],"valid":true},
+{"id":"duplicate-envelope","source":"id = \"a\", id = \"b\"","record":[],"artifact":[],"valid":false},
+{"id":"missing-envelope-value","source":"id = , keyword = \"node\"","record":[],"artifact":[],"valid":false},
+{"id":"unclosed-nested-value","source":"retire_with = hooks(a, b, id = \"a\"","record":[],"artifact":[],"valid":false}
+]}

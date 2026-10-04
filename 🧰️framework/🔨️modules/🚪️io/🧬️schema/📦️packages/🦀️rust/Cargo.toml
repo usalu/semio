@@ -1,0 +1,28 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-io-schema"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Product-neutral artifact identities, payloads and I/O outcomes"
+
+[package.metadata.semio]
+role = "framework"
+id = "io-schema"
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_io_schema"
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-dsl-record = { path = "../../../../🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-derive = { path = "../../../../🌱️value/✨️derive/📦️packages/🦀️rust" }
+semio-framework-diagnostic = { path = "../../../../⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-schema-registry = { path = "../../../../🧬️schema/📇️registry/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde_json = "1.0.140"

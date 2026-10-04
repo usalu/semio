@@ -1,2 +1,2 @@
-# 🧹️ Direct remove-parameter-binding / RemoveParameterBinding payload.
+# 🧬️ RemoveParameterBindingInput owns its declared typed payload.
 input RemoveParameterBindingInput { key: String! }

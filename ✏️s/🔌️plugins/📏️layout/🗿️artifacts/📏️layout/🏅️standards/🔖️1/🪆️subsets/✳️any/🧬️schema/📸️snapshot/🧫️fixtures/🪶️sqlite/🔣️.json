@@ -1,0 +1,44 @@
+{
+  "schema": "layout.snapshot.sqlite/v1",
+  "float64Bits": [
+    "0000000000000000",
+    "8000000000000000",
+    "0000000000000001",
+    "000fffffffffffff",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff8000000000011",
+    "7ff0000000000007"
+  ],
+  "float32Bits": [
+    "00000000",
+    "80000000",
+    "00000001",
+    "007fffff",
+    "7f800000",
+    "ff800000",
+    "7fc00011",
+    "7f800007"
+  ],
+  "maximumU64": "18446744073709551615",
+  "maximumU32": 4294967295,
+  "childIdentity": [
+    "child!/@",
+    "",
+    "v1/@!",
+    "*",
+    ""
+  ],
+  "imageArtifactKind": "kind!/@",
+  "imageArtifactRef": "",
+  "drawingSchema": "full-inline-drawing\u0000",
+  "columns": [
+    "artifact_kind",
+    "artifact_ref"
+  ],
+  "query": "SELECT artifact_kind,artifact_ref FROM layout_image_link ORDER BY ordinal",
+  "componentNodes": 1024,
+  "componentDepth": 256,
+  "intrinsicBytes": 100000,
+  "cancelAfter": 256
+}

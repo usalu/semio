@@ -8,7 +8,7 @@ use crate::editor::space_index::config::{SpaceIndexConfig, SpaceIndexConfigMutat
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "create-artifact")]
 pub struct CreateArtifact {
     pub name: String,
@@ -25,7 +25,7 @@ pub fn handle(payload: &CreateArtifact, _doc: &ArtifactView<'_, SSpaceSnapshot>,
     }
     Ok(Emit::effect(Effect::ReplayShellCommand {
         action_id: "os.create-space-artifact".into(),
-        args: Some(pack::json_to_dsl_value(&pack::json!({ "kindChoice": payload.kind_choice, "name": payload.name.trim() }))),
+        args: Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "kindChoice": payload.kind_choice, "name": payload.name.trim() }))),
     }))
 }
 

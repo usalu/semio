@@ -1,0 +1,7 @@
+{
+  "amount": 0.0,
+  "filter": "invert",
+  "layerId": "ghost",
+  "mutation": "applyFilter",
+  "selection": null
+}

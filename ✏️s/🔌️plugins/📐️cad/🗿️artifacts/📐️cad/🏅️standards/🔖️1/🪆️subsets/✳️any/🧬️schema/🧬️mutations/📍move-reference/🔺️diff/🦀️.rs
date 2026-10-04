@@ -16,7 +16,7 @@ pub fn diff(payload: &MoveReference, base: &CadSnapshot) -> protocol::MutationOu
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Reference \"{}\" origin must be finite, got {:?}.", payload.reference_id, payload.new_origin), [payload.model_definition_id.clone(), payload.reference_id.clone()]);
     }
     if existing.origin == payload.new_origin {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Reference \"{}\" is already at {:?}.", payload.reference_id, payload.new_origin));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Reference \"{}\" is already at {:?}.", payload.reference_id, payload.new_origin));
     }
     let patch = CadReferencePatch { origin: Some(payload.new_origin), ..Default::default() };
     let next = references

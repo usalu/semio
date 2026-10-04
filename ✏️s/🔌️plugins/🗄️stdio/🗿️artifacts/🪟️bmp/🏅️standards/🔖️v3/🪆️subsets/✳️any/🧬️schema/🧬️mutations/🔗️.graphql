@@ -1,9 +1,20 @@
-# 🧬️ Transparent BmpMutation descriptor assembly.
-# change-header-fields/ChangeHeaderFields: 📐️change-header-fields/🔗️.graphql
-# insert-palette-entry/InsertPaletteEntry: 📥️insert-palette-entry/🔗️.graphql
-# remove-palette-entry/RemovePaletteEntry: 📤️remove-palette-entry/🔗️.graphql
-# replace-palette-entry/ReplacePaletteEntry: 🎨️replace-palette-entry/🔗️.graphql
-# replace-pixel-data/ReplacePixelData: 🔲️replace-pixel-data/🔗️.graphql
-# set-snapshot/SetSnapshot: 📸️set-snapshot/🔗️.graphql
-enum BmpMutationKind { SET_SNAPSHOT CHANGE_HEADER_FIELDS INSERT_PALETTE_ENTRY REMOVE_PALETTE_ENTRY REPLACE_PALETTE_ENTRY REPLACE_PIXEL_DATA }
-input BmpMutation { set_snapshot: SetSnapshot change_header_fields: ChangeHeaderFieldsMutation insert_palette_entry: InsertPaletteEntryMutation remove_palette_entry: RemovePaletteEntryMutation replace_palette_entry: ReplacePaletteEntryMutation replace_pixel_data: ReplacePixelDataMutation }
+type PaintIndexedRegion {
+  revision: String!
+  x: Int!
+  y: Int!
+  width: Int!
+  height: Int!
+  paletteIndex: Int!
+}
+
+type PaintDirectRegion {
+  revision: String!
+  x: Int!
+  y: Int!
+  width: Int!
+  height: Int!
+  red: Int!
+  green: Int!
+  blue: Int!
+  alpha: Int!
+}

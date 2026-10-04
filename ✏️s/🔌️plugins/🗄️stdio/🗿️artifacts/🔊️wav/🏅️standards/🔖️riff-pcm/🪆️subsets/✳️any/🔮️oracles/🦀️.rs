@@ -252,14 +252,13 @@ mod reference {
         write(&PcmWav { format: fmt_spec_of(snapshot.get("fmt"))?, samples: samples(snapshot.get("data"))?, other_chunks: chunk_list(snapshot, "otherChunks") })
     }
 
-    /// 🩹️ `PatchSnapshot` — every `SnapshotPatch` edit, in order, interpreted independently over the owned PCM model:
-    /// `set` of a `fmt` field or of one `data.value` sample, `insert`/`insertAt`/`remove` within `data.value`, and
-    /// `remove` of one `otherChunks` entry. A path this model has no member for is refused, never skipped.
+    /// 🩹️ `PatchSnapshot` — the one `SnapshotPatch` operation interpreted independently over the owned PCM model: `set` of a
+    /// `fmt` field or of one `data.value` sample, `insert`/`remove` of one `data.value` sample, and `remove` of one `otherChunks`
+    /// entry. A path this model has no member for is refused, never skipped.
     pub fn mutate_patch_snapshot(input: &[u8], params: &Json) -> Result<Vec<u8>, String> {
         let mut wav = read(input)?;
-        for edit in params.get("patch").map(|patch| patch.array("edits")).unwrap_or_default() {
-            let path: Vec<String> = edit.array("path").iter().map(|segment| if let Json::String(text) = segment { text.clone() } else { String::new() }).collect();
-            let operation = edit.get("edit").cloned().unwrap_or(Json::Null);
+        if let Some(operation) = params.get("patch").cloned() {
+            let path: Vec<String> = operation.str("path").split('/').skip(1).map(|segment| segment.replace("~1", "/").replace("~0", "~")).collect();
             let value = operation.get("value").cloned();
             let index = |segment: &str| segment.parse::<usize>().map_err(|_| format!("patch-snapshot index {segment:?} is not a number"));
             match (path.iter().map(String::as_str).collect::<Vec<_>>().as_slice(), operation.str("operation").as_str()) {
@@ -271,10 +270,9 @@ mod reference {
                     if at >= wav.samples.len() { return Err(format!("patch-snapshot sample {at} is outside the sample lane")); }
                     wav.samples.remove(at);
                 }
-                (["data", "value"], "insert") => wav.samples.push(sample_of(value)?),
-                (["data", "value"], "insertAt") => {
-                    let at = number(&operation, "index", f64::MAX) as usize;
-                    if at > wav.samples.len() { return Err(format!("patch-snapshot insertAt {at} is outside the sample lane")); }
+                (["data", "value", at], "insert") => {
+                    let at = index(at)?;
+                    if at > wav.samples.len() { return Err(format!("patch-snapshot insert {at} is outside the sample lane")); }
                     wav.samples.insert(at, sample_of(value)?);
                 }
                 (["otherChunks", at], "remove") => {
@@ -318,13 +316,12 @@ mod reference {
             "patch-data" => restored.samples = original.samples,
             "set-other-chunks" => restored.other_chunks = original.other_chunks,
             "patch-snapshot" => {
-                for edit in params.get("patch").map(|patch| patch.array("edits")).unwrap_or_default() {
-                    match edit.array("path").first() {
-                        Some(Json::String(facet)) if facet == "fmt" => restored.format = original.format,
-                        Some(Json::String(facet)) if facet == "data" => restored.samples = original.samples.clone(),
-                        Some(Json::String(facet)) if facet == "otherChunks" => restored.other_chunks = original.other_chunks.clone(),
-                        other => return Err(format!("patch-snapshot edit facet {other:?} has no oracle inverse")),
-                    }
+                let path = params.get("patch").map(|patch| patch.str("path")).unwrap_or_default();
+                match path.split('/').nth(1) {
+                    Some("fmt") => restored.format = original.format,
+                    Some("data") => restored.samples = original.samples.clone(),
+                    Some("otherChunks") => restored.other_chunks = original.other_chunks.clone(),
+                    other => return Err(format!("patch-snapshot edit facet {other:?} has no oracle inverse")),
                 }
             }
             other => return Err(format!("mutation kind {other:?} has no oracle inverse ({} mutated byte(s))", mutated.len())),

@@ -12,8 +12,6 @@ export interface PlaybookSnapshot {
   /** @state artifact */
   title: string | null;
   /** @state artifact @child kind=s.stdio.semio */
-  document: ArtifactChild;
-  /** @state artifact @child kind=s.stdio.semio */
   flow: ArtifactChild;
 }
 

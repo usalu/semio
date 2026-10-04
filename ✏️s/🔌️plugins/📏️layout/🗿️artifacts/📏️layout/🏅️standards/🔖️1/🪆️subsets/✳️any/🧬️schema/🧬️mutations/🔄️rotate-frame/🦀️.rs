@@ -23,9 +23,12 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for RotateFrame {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_rotate_frame(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
-        inverse_rotate_frame(self, base)
-    }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok({
+        inverse_rotate_frame(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Rotate frame \"{}\"", self.frame_id), &format!("Rahmen \"{}\" drehen", self.frame_id))
     }
@@ -60,7 +63,8 @@ pub fn diff_rotate_frame(payload: &RotateFrame, base: &LayoutSnapshot) -> protoc
 //#endregion 🔄️RotateFrame
 
 //#region 🔄️RotateFrame
-pub fn inverse_rotate_frame(payload: &RotateFrame, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_rotate_frame(payload: &RotateFrame, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else {
         return Vec::new();
     };
@@ -68,5 +72,7 @@ pub fn inverse_rotate_frame(payload: &RotateFrame, base: &LayoutSnapshot) -> Vec
         return Vec::new();
     };
     vec![LayoutMutation::RotateFrame(RotateFrame { page_id: payload.page_id.clone(), frame_id: payload.frame_id.clone(), new_rotation: frame.bounds().rotation })]
+
+    })())
 }
 //#endregion 🔄️RotateFrame

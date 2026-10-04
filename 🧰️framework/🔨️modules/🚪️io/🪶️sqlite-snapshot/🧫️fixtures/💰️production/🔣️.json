@@ -1,0 +1,39 @@
+{
+  "sql": "CREATE TABLE authored_scalar (id INTEGER PRIMARY KEY, label TEXT NOT NULL, payload BLOB NOT NULL)",
+  "table": "authored_scalar",
+  "label": "\u0000世界😀",
+  "payload": [
+    0,
+    255,
+    65,
+    0
+  ],
+  "refusedBackingBytes": 0,
+  "semanticBytes": 64,
+  "expectedSemanticBytes": 23,
+  "expectedRefusal": "ownershipLimit",
+  "format": "SQLite format 3\u0000",
+  "routes": [
+    "artifactProjection",
+    "physicalExport",
+    "physicalImport"
+  ],
+  "cloneBytes": 4,
+  "replacementRequests": [
+    4,
+    4
+  ],
+  "refusedCumulativeBytes": 7,
+  "exactCumulativeBytes": 8,
+  "interior": {
+    "labelUnit": "世界😀\u0000",
+    "repeats": 20000,
+    "codeUnits": 100000,
+    "scalarBytes": 220000,
+    "chunkCodeUnits": 16384
+  },
+  "tableSlotBytes": 8,
+  "refusedOperationBytes": 15,
+  "exactOperationBytes": 16,
+  "firstCloneOperationBytes": 12
+}

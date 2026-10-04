@@ -7,7 +7,7 @@ use crate::{EquationGraph, EquationSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "set-directed")]
 pub struct SetDirected {
     pub directed: bool,
@@ -22,5 +22,5 @@ pub(crate) fn set_directed_leaves(payload: &SetDirected, graph: &EquationGraph) 
 }
 
 pub fn handle(payload: &SetDirected, doc: &ArtifactView<'_, EquationSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<EquationMutation, NoConfigMutation>, Fault> {
-    Ok(Emit::mutations(set_directed_leaves(payload, &crate::equation_graph(doc.snapshot))))
+    Ok(Emit::mutations(set_directed_leaves(payload, &doc.snapshot.graph.clone())))
 }

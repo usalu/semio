@@ -19,9 +19,12 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetSnapshot {
         MutationOutcome::new(PdfDiff::between(base, &self.snapshot))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![PdfMutation::SetSnapshot(SetSnapshot { snapshot: base.clone() })]
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Replace PDF snapshot", "PDF-Snapshot ersetzen")

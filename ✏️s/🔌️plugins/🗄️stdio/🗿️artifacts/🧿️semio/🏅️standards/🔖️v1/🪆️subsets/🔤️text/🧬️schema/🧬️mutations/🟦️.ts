@@ -9,6 +9,7 @@
  * leaf's own field names are the literal Rust snake_case names verbatim. */
 import type { SetSnapshot } from './📸️set-snapshot/🟦️.ts';
 import type { SemioTextRun, SemioTextMark } from "../📸️snapshot/🟦️.ts";
+import type { SnapshotPatch } from '../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts';
 
 export interface InsertRun {
   index: number;
@@ -54,3 +55,4 @@ export type SemioTextMutation =
   | { AddMark: AddMark }
   | { RemoveMark: RemoveMark }
   | { SetSnapshot: SetSnapshot };
+  | { readonly PatchSnapshot: { readonly patch: SnapshotPatch } }

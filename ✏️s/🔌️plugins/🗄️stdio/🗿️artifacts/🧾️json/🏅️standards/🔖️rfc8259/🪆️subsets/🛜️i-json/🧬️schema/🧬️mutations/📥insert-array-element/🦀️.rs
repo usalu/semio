@@ -19,9 +19,12 @@ impl protocol::MutationKind<JsonSnapshot, JsonIJsonMutation> for InsertArrayElem
     fn diff(&self, base: &JsonSnapshot) -> protocol::MutationOutcome<<JsonIJsonMutation as Mutation<JsonSnapshot>>::Diff> {
         agg_diff(&JsonIJsonMutation::InsertArrayElement(self.clone()), base)
     }
-    fn inverse(&self, base: &JsonSnapshot) -> Vec<JsonIJsonMutation> {
-        agg_inverse(&JsonIJsonMutation::InsertArrayElement(self.clone()), base)
-    }
+    fn inverse(&self, base: &JsonSnapshot) -> Result<Vec<JsonIJsonMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&JsonIJsonMutation::InsertArrayElement(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert array element", "Array-Element einfügen")
     }

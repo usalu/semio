@@ -19,17 +19,15 @@ fn hex_decode(value: &str) -> Result<Vec<u8>, String> {
 
 pub fn print(value: &PngMutation) -> Option<String> {
     let PngMutation::SetSnapshot(SetSnapshot { snapshot }) = value else { return None };
-    Some(format!("{TEXT_OPCODE} snapshot={}", hex_encode(pack::to_json_string(snapshot).as_bytes())))
+    Some(format!("{TEXT_OPCODE} snapshot={}", hex_encode(semio_framework_pack_json::to_json_string(snapshot).as_bytes())))
 }
 
-pub fn parse(line: &str) -> Result<PngMutation, String> {
-    let (opcode, arguments) = line.split_once(' ').unwrap_or((line, ""));
-    if opcode != TEXT_OPCODE {
-        return Err(format!("expected {TEXT_OPCODE}"));
-    }
-    let encoded = arguments.strip_prefix("snapshot=").ok_or_else(|| "missing snapshot".to_string())?;
-    let bytes = hex_decode(encoded)?;
-    let parsed = pack::parse_json_bytes(&bytes).map_err(|error| error.to_string())?;
-    let snapshot = <PngSnapshot as dsl::FromValue>::from_value(pack::json_to_dsl_value(&parsed)).map_err(|error| error.to_string())?;
+pub fn parse(line: &str) -> Result<PngMutation, semio_framework_diagnostic::TextError> {
+    let (opcode, arguments) = line.split_once(' ').unwrap_or((line, Default::default()));
+    if opcode != TEXT_OPCODE { return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected {TEXT_OPCODE}"),semio_framework_diagnostic::TextSpan::at(1,1))); }
+    let encoded = arguments.strip_prefix("snapshot=").ok_or_else(|| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"missing snapshot",semio_framework_diagnostic::TextSpan::at(1,1)))?;
+    let bytes = hex_decode(encoded).map_err(|message| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message,semio_framework_diagnostic::TextSpan::at(1,1)))?;
+    let parsed = semio_framework_pack_json::parse_bytes(&bytes, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error.into_value_error(),semio_framework_diagnostic::TextSpan::at(1,1)))?;
+    let snapshot = <PngSnapshot as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error,semio_framework_diagnostic::TextSpan::at(1,1)))?;
     Ok(PngMutation::SetSnapshot(SetSnapshot { snapshot }))
 }

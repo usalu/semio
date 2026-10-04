@@ -17,7 +17,7 @@ pub fn diff(payload: &super::ChangeInfiltrationFlowPerExteriorArea, base: &Energ
         );
     }
     if existing.flow_per_exterior_area_m3_s_m2 == payload.new_flow_per_exterior_area_m3_s_m2 {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Infiltration {} already carries this flow per exterior area (m³/s·m²): {}.", payload.id.0, payload.new_flow_per_exterior_area_m3_s_m2));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Infiltration {} already carries this flow per exterior area (m³/s·m²): {}.", payload.id.0, payload.new_flow_per_exterior_area_m3_s_m2));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.infiltrations.iter_mut().find(|item| item.id == payload.id) {

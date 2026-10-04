@@ -6,6 +6,5 @@ message PlaybookSnapshot {
   string id = 2;
   string version = 3;
   optional string title = 4;
-  semio.os.store.ArtifactChild document = 5;
   semio.os.store.ArtifactChild flow = 6;
 }

@@ -4,8 +4,8 @@ use super::*;
 fn drawing_scene_framing_fixtures() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
-        let nodes: Vec<crate::schema::DrawingSceneNode> = dsl::json::from_json_str(&case["nodes"].to_string()).unwrap();
-        let artboard: Option<crate::DrawingArtboard> = dsl::json::from_json_str(&case["artboard"].to_string()).unwrap();
+        let nodes: Vec<crate::schema::DrawingSceneNode> = semio_framework_pack_json::from_json_str(&case["nodes"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let artboard: Option<crate::DrawingArtboard> = semio_framework_pack_json::from_json_str(&case["artboard"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let actual = drawing_scene_bounds(artboard.as_ref(),&nodes);
         for (index,value) in actual.iter().enumerate() { assert!((value-case["expected"][index].as_f64().unwrap()).abs()<1e-8,"{}: {actual:?}",case["name"]); }
     }

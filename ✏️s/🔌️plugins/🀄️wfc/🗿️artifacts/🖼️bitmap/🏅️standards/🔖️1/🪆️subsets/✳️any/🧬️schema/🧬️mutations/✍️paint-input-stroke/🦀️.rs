@@ -89,9 +89,12 @@ impl MutationKind<BitmapSnapshot, BitmapMutation> for PaintInputStroke {
     fn diff(&self, base: &BitmapSnapshot) -> protocol::MutationOutcome<BitmapDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &BitmapSnapshot) -> Vec<BitmapMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &BitmapSnapshot) -> Result<Vec<BitmapMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let cells = stroke_cells(&self.points).len();
         let (en, de) = if cells == 1 { ("1 cell".to_string(), "1 Zelle".to_string()) } else { (format!("{cells} cells"), format!("{cells} Zellen")) };

@@ -130,3 +130,5 @@ pub mod io_registry {
     }
 }
 //#endregion 🚪️DerivedIoRegistry
+
+#[path="🔣️json/🦀️.rs"] pub(crate)mod json_native;

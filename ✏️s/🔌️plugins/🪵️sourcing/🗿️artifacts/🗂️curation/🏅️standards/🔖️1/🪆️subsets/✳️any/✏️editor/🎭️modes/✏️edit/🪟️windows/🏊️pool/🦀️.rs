@@ -11,7 +11,7 @@ use semio_framework_plugin::Buildable;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_plugin::HasBase;
 use semio_framework_plugin::HasChildren;
-use semio_framework_ui_locale::{Label, LocalizedLabel};
+use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::PluginAssemblyError;
 use semio_framework_plugin::SurfaceKind;
 use semio_framework_plugin::TableCell;
@@ -71,7 +71,7 @@ fn pool_kinds(document: &CurationSnapshot, cfg: &SourcingCurationConfig) -> Vec<
 
 /// 🧺️ One pool row: catalogue fields plus a single curated-count stepper (`curationSetCount`). Row
 /// buttons were removed — they duplicated the stepper's +/- and stacked extra plus icons beside it.
-fn pool_row(document: &CurationSnapshot, kind: &ObjectKind, _labels: &SourcingLabels) -> protocol::DslValue {
+fn pool_row(document: &CurationSnapshot, kind: &ObjectKind, _labels: &SourcingLabels) -> semio_framework_value::DslValue {
     sourcing_table_row(
         &kind.id,
         vec![
@@ -92,8 +92,8 @@ fn ui_text(value: impl AsRef<str>) -> UiAssemblyResult<UiText> {
     UiText::try_from_str(value.as_ref()).ok_or_else(|| filter_error("text"))
 }
 
-fn ui_label(value: impl AsRef<str>) -> UiAssemblyResult<Label> {
-    Label::try_from(value.as_ref().to_string()).map_err(|_| filter_error("label"))
+fn ui_label(value: impl AsRef<str>) -> UiAssemblyResult<semio_framework_plugin::UiLabel> {
+    semio_framework_plugin::UiLabel::try_from(value.as_ref().to_string()).map_err(|_| filter_error("label"))
 }
 
 /// 🔍️ The pool's filter chrome: free-text query, one toggle per module, the typology path, and the

@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/process/workspaces/cargo/preparation-policy.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "leaseDirectory"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "leaseDirectory": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?:/|[A-Za-z]:[\\\\/]|\\\\\\\\)[^\\u0000]*$"
+    }
+  }
+}

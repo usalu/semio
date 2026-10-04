@@ -1,0 +1,1712 @@
+[
+  {
+    "name": "opaque solid rectangle",
+    "input": {
+      "width": 2,
+      "height": 2,
+      "origin": [
+        0,
+        0
+      ],
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            2
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            0,
+            2
+          ]
+        },
+        {
+          "kind": "close"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0.0001,
+      "fillRule": "nonzero",
+      "fill": {
+        "kind": "solid",
+        "color": [
+          1,
+          0,
+          0,
+          1
+        ]
+      },
+      "stroke": null
+    },
+    "expected": [
+      255,
+      0,
+      0,
+      255,
+      255,
+      0,
+      0,
+      255,
+      255,
+      0,
+      0,
+      255,
+      255,
+      0,
+      0,
+      255
+    ]
+  },
+  {
+    "name": "transparent paint",
+    "input": {
+      "width": 2,
+      "height": 2,
+      "origin": [
+        0,
+        0
+      ],
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            2
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            0,
+            2
+          ]
+        },
+        {
+          "kind": "close"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0.0001,
+      "fillRule": "nonzero",
+      "fill": {
+        "kind": "solid",
+        "color": [
+          1,
+          0,
+          0,
+          0
+        ]
+      },
+      "stroke": null
+    },
+    "expected": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "no appearance",
+    "input": {
+      "width": 2,
+      "height": 2,
+      "origin": [
+        0,
+        0
+      ],
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            2
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            0,
+            2
+          ]
+        },
+        {
+          "kind": "close"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0.0001,
+      "fillRule": "nonzero",
+      "fill": null,
+      "stroke": null
+    },
+    "expected": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "solid opacity",
+    "input": {
+      "width": 2,
+      "height": 2,
+      "origin": [
+        0,
+        0
+      ],
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            2
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            0,
+            2
+          ]
+        },
+        {
+          "kind": "close"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0.0001,
+      "fillRule": "nonzero",
+      "fill": {
+        "kind": "solid",
+        "color": [
+          0,
+          1,
+          0,
+          0.5
+        ]
+      },
+      "stroke": null
+    },
+    "expected": [
+      0,
+      255,
+      0,
+      128,
+      0,
+      255,
+      0,
+      128,
+      0,
+      255,
+      0,
+      128,
+      0,
+      255,
+      0,
+      128
+    ]
+  },
+  {
+    "name": "half coverage",
+    "input": {
+      "width": 1,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            0.5,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            0.5,
+            1
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            0,
+            1
+          ]
+        },
+        {
+          "kind": "close"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0.0001,
+      "fillRule": "nonzero",
+      "fill": {
+        "kind": "solid",
+        "color": [
+          1,
+          0,
+          0,
+          1
+        ]
+      },
+      "stroke": null
+    },
+    "expected": [
+      255,
+      0,
+      0,
+      128
+    ]
+  },
+  {
+    "name": "local linear gradient",
+    "input": {
+      "width": 2,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            2
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            0,
+            2
+          ]
+        },
+        {
+          "kind": "close"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0.0001,
+      "fillRule": "nonzero",
+      "fill": {
+        "kind": "linearGradient",
+        "x1": 0,
+        "y1": 0,
+        "x2": 2,
+        "y2": 0,
+        "stops": [
+          {
+            "offset": 0,
+            "color": [
+              1,
+              0,
+              0,
+              1
+            ]
+          },
+          {
+            "offset": 1,
+            "color": [
+              0,
+              0,
+              1,
+              1
+            ]
+          }
+        ]
+      },
+      "stroke": null
+    },
+    "expected": [
+      191,
+      0,
+      64,
+      255,
+      64,
+      0,
+      191,
+      255
+    ]
+  },
+  {
+    "name": "reflected local gradient",
+    "input": {
+      "width": 2,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            2
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            0,
+            2
+          ]
+        },
+        {
+          "kind": "close"
+        }
+      ],
+      "transform": [
+        -1,
+        0,
+        0,
+        1,
+        2,
+        0
+      ],
+      "tolerance": 0.0001,
+      "fillRule": "nonzero",
+      "fill": {
+        "kind": "linearGradient",
+        "x1": 0,
+        "y1": 0,
+        "x2": 2,
+        "y2": 0,
+        "stops": [
+          {
+            "offset": 0,
+            "color": [
+              1,
+              0,
+              0,
+              1
+            ]
+          },
+          {
+            "offset": 1,
+            "color": [
+              0,
+              0,
+              1,
+              1
+            ]
+          }
+        ]
+      },
+      "stroke": null
+    },
+    "expected": [
+      64,
+      0,
+      191,
+      255,
+      191,
+      0,
+      64,
+      255
+    ]
+  },
+  {
+    "name": "gradient alpha",
+    "input": {
+      "width": 2,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            2
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            0,
+            2
+          ]
+        },
+        {
+          "kind": "close"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0.0001,
+      "fillRule": "nonzero",
+      "fill": {
+        "kind": "linearGradient",
+        "x1": 0,
+        "y1": 0,
+        "x2": 2,
+        "y2": 0,
+        "stops": [
+          {
+            "offset": 0,
+            "color": [
+              1,
+              0,
+              0,
+              0.5
+            ]
+          },
+          {
+            "offset": 1,
+            "color": [
+              0,
+              0,
+              1,
+              1
+            ]
+          }
+        ]
+      },
+      "stroke": null
+    },
+    "expected": [
+      191,
+      0,
+      64,
+      159,
+      64,
+      0,
+      191,
+      223
+    ]
+  },
+  {
+    "name": "radial gradient",
+    "input": {
+      "width": 2,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            2
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            0,
+            2
+          ]
+        },
+        {
+          "kind": "close"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0.0001,
+      "fillRule": "nonzero",
+      "fill": {
+        "kind": "radialGradient",
+        "cx": 0.5,
+        "cy": 0.5,
+        "r": 1,
+        "stops": [
+          {
+            "offset": 0,
+            "color": [
+              1,
+              0,
+              0,
+              1
+            ]
+          },
+          {
+            "offset": 1,
+            "color": [
+              0,
+              0,
+              1,
+              1
+            ]
+          }
+        ]
+      },
+      "stroke": null
+    },
+    "expected": [
+      255,
+      0,
+      0,
+      255,
+      0,
+      0,
+      255,
+      255
+    ]
+  },
+  {
+    "name": "stable gradient stop tie",
+    "input": {
+      "width": 1,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            2
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            0,
+            2
+          ]
+        },
+        {
+          "kind": "close"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0.0001,
+      "fillRule": "nonzero",
+      "fill": {
+        "kind": "linearGradient",
+        "x1": 0,
+        "y1": 0,
+        "x2": 1,
+        "y2": 0,
+        "stops": [
+          {
+            "offset": 0,
+            "color": [
+              1,
+              0,
+              0,
+              1
+            ]
+          },
+          {
+            "offset": 0.5,
+            "color": [
+              0,
+              1,
+              0,
+              1
+            ]
+          },
+          {
+            "offset": 0.5,
+            "color": [
+              0,
+              0,
+              1,
+              1
+            ]
+          },
+          {
+            "offset": 1,
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ]
+          }
+        ]
+      },
+      "stroke": null
+    },
+    "expected": [
+      0,
+      0,
+      255,
+      255
+    ]
+  },
+  {
+    "name": "empty gradient",
+    "input": {
+      "width": 2,
+      "height": 2,
+      "origin": [
+        0,
+        0
+      ],
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            2
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            0,
+            2
+          ]
+        },
+        {
+          "kind": "close"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0.0001,
+      "fillRule": "nonzero",
+      "fill": {
+        "kind": "linearGradient",
+        "x1": 0,
+        "y1": 0,
+        "x2": 2,
+        "y2": 0,
+        "stops": []
+      },
+      "stroke": null
+    },
+    "expected": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "degenerate gradient",
+    "input": {
+      "width": 2,
+      "height": 2,
+      "origin": [
+        0,
+        0
+      ],
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            2
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            0,
+            2
+          ]
+        },
+        {
+          "kind": "close"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0.0001,
+      "fillRule": "nonzero",
+      "fill": {
+        "kind": "linearGradient",
+        "x1": 0,
+        "y1": 0,
+        "x2": 0,
+        "y2": 0,
+        "stops": [
+          {
+            "offset": 0,
+            "color": [
+              1,
+              0,
+              0,
+              1
+            ]
+          },
+          {
+            "offset": 1,
+            "color": [
+              0,
+              0,
+              1,
+              1
+            ]
+          }
+        ]
+      },
+      "stroke": null
+    },
+    "expected": [
+      0,
+      0,
+      255,
+      255,
+      0,
+      0,
+      255,
+      255,
+      0,
+      0,
+      255,
+      255,
+      0,
+      0,
+      255,
+      255
+    ]
+  },
+  {
+    "name": "origin and affine translation",
+    "input": {
+      "width": 2,
+      "height": 2,
+      "origin": [
+        13,
+        -9
+      ],
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            2
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            0,
+            2
+          ]
+        },
+        {
+          "kind": "close"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        13,
+        -9
+      ],
+      "tolerance": 0.0001,
+      "fillRule": "nonzero",
+      "fill": {
+        "kind": "solid",
+        "color": [
+          1,
+          0,
+          0,
+          1
+        ]
+      },
+      "stroke": null
+    },
+    "expected": [
+      255,
+      0,
+      0,
+      255,
+      255,
+      0,
+      0,
+      255,
+      255,
+      0,
+      0,
+      255,
+      255,
+      0,
+      0,
+      255
+    ]
+  },
+  {
+    "name": "singular affine",
+    "input": {
+      "width": 2,
+      "height": 2,
+      "origin": [
+        0,
+        0
+      ],
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            2
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            0,
+            2
+          ]
+        },
+        {
+          "kind": "close"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "tolerance": 0.0001,
+      "fillRule": "nonzero",
+      "fill": {
+        "kind": "solid",
+        "color": [
+          1,
+          0,
+          0,
+          1
+        ]
+      },
+      "stroke": null
+    },
+    "expected": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "offscreen path",
+    "input": {
+      "width": 2,
+      "height": 2,
+      "origin": [
+        0,
+        0
+      ],
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            2
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            0,
+            2
+          ]
+        },
+        {
+          "kind": "close"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        10,
+        10
+      ],
+      "tolerance": 0.0001,
+      "fillRule": "nonzero",
+      "fill": {
+        "kind": "solid",
+        "color": [
+          1,
+          0,
+          0,
+          1
+        ]
+      },
+      "stroke": null
+    },
+    "expected": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "fill then stroke source over",
+    "input": {
+      "width": 1,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            1,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            1,
+            1
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            0,
+            1
+          ]
+        },
+        {
+          "kind": "close"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0.0001,
+      "fillRule": "nonzero",
+      "fill": {
+        "kind": "solid",
+        "color": [
+          0,
+          0,
+          1,
+          0.5
+        ]
+      },
+      "stroke": {
+        "color": [
+          1,
+          0,
+          0,
+          0.5
+        ],
+        "width": 2,
+        "cap": "butt",
+        "join": "miter"
+      }
+    },
+    "expected": [
+      170,
+      0,
+      85,
+      191
+    ]
+  },
+  {
+    "name": "dashed stroke",
+    "input": {
+      "width": 2,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            0,
+            0.5
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            0.5
+          ]
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0.0001,
+      "fillRule": "nonzero",
+      "fill": null,
+      "stroke": {
+        "color": [
+          0,
+          1,
+          0,
+          1
+        ],
+        "width": 1,
+        "cap": "butt",
+        "join": "miter",
+        "dash": [
+          1,
+          1
+        ]
+      }
+    },
+    "expected": [
+      0,
+      255,
+      0,
+      255,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "even odd duplicated ring",
+    "input": {
+      "width": 2,
+      "height": 2,
+      "origin": [
+        0,
+        0
+      ],
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            2
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            0,
+            2
+          ]
+        },
+        {
+          "kind": "close"
+        },
+        {
+          "kind": "move",
+          "to": [
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            2
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            0,
+            2
+          ]
+        },
+        {
+          "kind": "close"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0.0001,
+      "fillRule": "evenodd",
+      "fill": {
+        "kind": "solid",
+        "color": [
+          1,
+          0,
+          0,
+          1
+        ]
+      },
+      "stroke": null
+    },
+    "expected": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "nonzero duplicated ring",
+    "input": {
+      "width": 2,
+      "height": 2,
+      "origin": [
+        0,
+        0
+      ],
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            2
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            0,
+            2
+          ]
+        },
+        {
+          "kind": "close"
+        },
+        {
+          "kind": "move",
+          "to": [
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            2
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            0,
+            2
+          ]
+        },
+        {
+          "kind": "close"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0.0001,
+      "fillRule": "nonzero",
+      "fill": {
+        "kind": "solid",
+        "color": [
+          1,
+          0,
+          0,
+          1
+        ]
+      },
+      "stroke": null
+    },
+    "expected": [
+      255,
+      0,
+      0,
+      255,
+      255,
+      0,
+      0,
+      255,
+      255,
+      0,
+      0,
+      255,
+      255,
+      0,
+      0,
+      255
+    ]
+  },
+  {
+    "name": "zero length round cap",
+    "input": {
+      "width": 1,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            0.5,
+            0.5
+          ]
+        },
+        {
+          "kind": "close"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0.0001,
+      "fillRule": "nonzero",
+      "fill": null,
+      "stroke": {
+        "color": [
+          1,
+          0,
+          0,
+          1
+        ],
+        "width": 1,
+        "cap": "round",
+        "join": "round"
+      }
+    },
+    "expected": [
+      255,
+      0,
+      0,
+      200
+    ]
+  }
+]

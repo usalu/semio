@@ -1,6 +1,6 @@
 //! 🧩 Installed remote inference codecs and revocable owner contribution lifetime.
 use super::*;
-use semio_framework_os_kernel::DslValue;
+use semio_framework_value::DslValue;
 use semio_framework_os_kernel::os_directory::client::{DocumentHttpPortDeclarationV1,DocumentHttpPortCodeV1,HttpMethod};
 use semio_framework_os_kernel::os_directory::client::document_http::CompiledDocumentHttpPortV1;
 

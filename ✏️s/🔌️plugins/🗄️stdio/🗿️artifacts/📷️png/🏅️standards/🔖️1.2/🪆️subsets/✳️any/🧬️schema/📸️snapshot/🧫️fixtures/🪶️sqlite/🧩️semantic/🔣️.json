@@ -1,0 +1,40 @@
+{
+  "role": "exactNativeChunks",
+  "ihdr": {
+    "width": 4,
+    "height": 1,
+    "bitDepth": 2,
+    "colorType": 3,
+    "compression": 0,
+    "filter": 0,
+    "interlace": 0
+  },
+  "chunkKinds": [
+    "IHDR",
+    "PLTE",
+    "tRNS",
+    "bKGD",
+    "IDAT",
+    "IEND"
+  ],
+  "edit": {
+    "table": "png_ihdr",
+    "field": "width",
+    "value": 3
+  },
+  "editedRgba": [
+    255,
+    0,
+    0,
+    255,
+    255,
+    0,
+    0,
+    64,
+    0,
+    255,
+    0,
+    128
+  ],
+  "compressedPixels": "unclosed"
+}

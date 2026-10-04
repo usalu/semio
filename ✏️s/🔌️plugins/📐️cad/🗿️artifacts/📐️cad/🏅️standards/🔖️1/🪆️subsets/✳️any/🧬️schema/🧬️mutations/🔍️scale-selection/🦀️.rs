@@ -10,7 +10,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Mutation
 /// 🔍️ `scale-selection` payload — the pane, the objects it scales and the factor per axis each scale is multiplied by.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "scale-selection")]
@@ -26,9 +26,12 @@ impl MutationKind<CadSnapshot, CadMutation> for ScaleSelection {
     fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<CadDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &CadSnapshot) -> Result<Vec<CadMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let (items_en, items_de) = cad_selection_items(self.targets.len());
         let (factors_en, factors_de) = cad_selection_vector(self.factors);

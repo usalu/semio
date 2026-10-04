@@ -17,9 +17,12 @@ impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for InsertSharedString {
     fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<<XlsxMutation as Mutation<XlsxSnapshot>>::Diff> {
         agg_diff(&XlsxMutation::InsertSharedString(self.clone()), base)
     }
-    fn inverse(&self, base: &XlsxSnapshot) -> Vec<XlsxMutation> {
-        agg_inverse(&XlsxMutation::InsertSharedString(self.clone()), base)
-    }
+    fn inverse(&self, base: &XlsxSnapshot) -> Result<Vec<XlsxMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&XlsxMutation::InsertSharedString(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert shared string", "Gemeinsame Zeichenfolge einfügen")
     }

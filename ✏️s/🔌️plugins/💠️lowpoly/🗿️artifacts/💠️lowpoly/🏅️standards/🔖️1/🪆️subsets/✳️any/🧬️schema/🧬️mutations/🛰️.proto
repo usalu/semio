@@ -1,5 +1,6 @@
 syntax = "proto3";
 package semio.s.lowpoly.lowpoly.mutation;
+import "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🕸️mesh/🛰️.proto";
 import "🧰️framework/🔨️modules/🚪️io/🧬️schema/🛰️.proto";
 import "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
 
@@ -57,6 +58,7 @@ message CreateMesh {
   string child_id = 2;
   semio.framework.io.ArtifactRef target = 3;
   string mesh_workspace = 4;
+  optional semio.s.lowpoly.lowpoly.artifact.LowpolyMeshState mesh_state = 5;
 }
 
 message DeleteMesh {

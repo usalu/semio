@@ -10,7 +10,7 @@
 //! never `serde_json::Value` — see that snapshot module's own doc). Bridges via json's own text
 //! codec rather than a per-leaf structural converter, mirroring `s/plugin/lowpoly`'s identical leaf.
 use crate::CurationSnapshot;
-use dsl::FromValue;
+use semio_framework_value::FromValue;
 use crate::SOURCING_CURATION_SCHEMA;
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
@@ -20,13 +20,13 @@ use semio_s_artifact_stdio_json::JsonSnapshot;
 
 pub const JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId::ANY };
 
-pub fn deserialize(from: &JsonSnapshot) -> Result<CurationSnapshot, store::TextError> {
+pub fn deserialize(from: &JsonSnapshot) -> Result<CurationSnapshot, semio_framework_diagnostic::TextError> {
     let _ = SOURCING_CURATION_SCHEMA;
-    CurationSnapshot::from_value(dsl::json::to_dsl_value(&from.to_pack_value())).map_err(|e| store::TextError::new(format!("curation<-json: {e}"), dsl::TextSpan::at(1, 1)))
+    CurationSnapshot::from_value(semio_framework_pack_json::to_dsl_value(&from.to_pack_value())).map_err(|e| semio_framework_diagnostic::TextError::new(e.kind, format!("curation<-json: {e}"), semio_framework_diagnostic::TextSpan::at(1, 1)))
 }
 
-pub fn deserialize_bytes(bytes: &[u8]) -> Result<CurationSnapshot, store::TextError> {
-    let text = std::str::from_utf8(bytes).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
+pub fn deserialize_bytes(bytes: &[u8]) -> Result<CurationSnapshot, semio_framework_diagnostic::TextError> {
+    let text = std::str::from_utf8(bytes).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e.to_string(), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
     let value = parse_json_text(text)?;
     deserialize(&JsonSnapshot::from_value(value))
 }
@@ -38,8 +38,8 @@ impl Deserializer<CurationSnapshot> for JsonIntoCuration {
     const FIDELITY: IoFidelity = IoFidelity::Exact;
     async fn deserialize(payload: &IoPayload) -> IoResult<CurationSnapshot> {
         let IoPayload::Text(text) = payload else {
-            return Err(IoError { message: "JsonIntoCuration: expected a text json payload".to_string(), diagnostics: Vec::new() });
+            return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "JsonIntoCuration: expected a text json payload".to_string())));
         };
-        deserialize_bytes(text.as_bytes()).map(IoOutcome::clean).map_err(|error| IoError { message: format!("JsonIntoCuration: {error}"), diagnostics: Vec::new() })
+        deserialize_bytes(text.as_bytes()).map(IoOutcome::clean).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("JsonIntoCuration: {error}"))))
     }
 }

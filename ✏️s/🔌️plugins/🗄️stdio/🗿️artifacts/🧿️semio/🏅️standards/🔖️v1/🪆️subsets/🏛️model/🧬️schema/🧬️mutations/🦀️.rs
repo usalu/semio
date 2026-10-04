@@ -36,6 +36,8 @@ pub mod remove_spatial_node;
 pub mod set_element;
 #[path = "🔧️set-relation/🦀️.rs"]
 pub mod set_relation;
+#[path = "🩹️patch-snapshot/🦀️.rs"]
+pub mod patch_snapshot;
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "🧭set-spatial-node/🦀️.rs"]
@@ -53,6 +55,7 @@ pub enum SemioModelMutation {
     /// 🧩 Sparse full-state replace -- `diff()` is `SemioModelDiff::between`, never a
     /// `snapshot: Option<Snapshot>` full-replace slot (schema-design.md).
     SetSnapshot(set_snapshot::SetSnapshot),
+    PatchSnapshot(patch_snapshot::PatchSnapshot),
     InsertSpatialNode(insert_spatial_node::InsertSpatialNode),
     RemoveSpatialNode(remove_spatial_node::RemoveSpatialNode),
     SetSpatialNode(set_spatial_node::SetSpatialNode),
@@ -69,7 +72,7 @@ pub enum SemioModelMutation {
 /// (catalog `semio-v1-model` in `../../🔮️oracles/🔣️.json`). 
 /// `kinds_match_the_enum_and_the_catalog` keeps it honest against the enum, the manifest and the
 /// `💾️binary/📡️.protocol.semio` records that carry each kind's wire tag.
-pub const KINDS: &[&str] = &["set-snapshot", "insert-spatial-node", "remove-spatial-node", "set-spatial-node", "insert-element", "remove-element", "set-element", "insert-relation", "remove-relation", "set-relation"];
+pub const KINDS: &[&str] = &["set-snapshot", "insert-spatial-node", "remove-spatial-node", "set-spatial-node", "insert-element", "remove-element", "set-element", "insert-relation", "remove-relation", "set-relation", "patch-snapshot"];
 
 /// ▶️ Applies a mutation to `snapshot` in place, returning the diff (mirrors gif's
 /// `apply_gif_mutation` convention — used by the builder's `mutate()` and the set-snapshot leaf).
@@ -85,8 +88,11 @@ pub fn apply_semio_model_mutation(snapshot: &mut SemioModelSnapshot, mutation: &
 /// into scope and therefore cannot call the trait method at all. This wrapper's signature names
 /// only types this subset already exports (`kit`'s precedent for the same structural gap).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn semio_model_mutation_inverse(mutation: &SemioModelMutation, base: &SemioModelSnapshot) -> Vec<SemioModelMutation> {
-    <SemioModelMutation as Mutation<SemioModelSnapshot>>::inverse(mutation, base)
+pub fn semio_model_mutation_inverse(mutation: &SemioModelMutation, base: &SemioModelSnapshot) -> Result<Vec<SemioModelMutation>, semio_framework_value::ValueError> {
+    Ok({
+    <SemioModelMutation as Mutation<SemioModelSnapshot>>::inverse(mutation, base)?
+
+    })
 }
 //#endregion 🔖️Mutation
 
@@ -95,6 +101,7 @@ pub fn semio_model_mutation_inverse(mutation: &SemioModelMutation, base: &SemioM
 pub(crate) fn agg_diff(this: &SemioModelMutation, base: &SemioModelSnapshot) -> protocol::MutationOutcome<SemioModelDiff> {
     protocol::MutationOutcome::new(match this {
         SemioModelMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff_set_snapshot(base, snapshot),
+        SemioModelMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<SemioModelSnapshot, SemioModelMutation>>::diff(patch, base),
         SemioModelMutation::InsertSpatialNode(insert_spatial_node::InsertSpatialNode { node }) => SemioModelDiff { spatial: Some(NamedTripleDiff { added: vec![node.clone()], ..Default::default() }), ..Default::default() },
         SemioModelMutation::RemoveSpatialNode(remove_spatial_node::RemoveSpatialNode { id }) => SemioModelDiff { spatial: Some(NamedTripleDiff { removed: vec![id.clone()], ..Default::default() }), ..Default::default() },
         SemioModelMutation::SetSpatialNode(set_spatial_node::SetSpatialNode { id, kind, name, parent_id, placement }) => SemioModelDiff {
@@ -119,9 +126,11 @@ pub(crate) fn agg_diff(this: &SemioModelMutation, base: &SemioModelSnapshot) -> 
 }
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &SemioModelMutation, base: &SemioModelSnapshot) -> Vec<SemioModelMutation> {
+pub(crate) fn agg_inverse(this: &SemioModelMutation, base: &SemioModelSnapshot) -> Result<Vec<SemioModelMutation>, semio_framework_value::ValueError> {
+    Ok({
     match this {
         SemioModelMutation::SetSnapshot(_) => vec![SemioModelMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
+        SemioModelMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<SemioModelSnapshot, SemioModelMutation>>::inverse(patch, base)?),
 
         SemioModelMutation::InsertSpatialNode(insert_spatial_node::InsertSpatialNode { node }) => vec![SemioModelMutation::RemoveSpatialNode(remove_spatial_node::RemoveSpatialNode { id: node.id.clone() })],
         SemioModelMutation::RemoveSpatialNode(remove_spatial_node::RemoveSpatialNode { id }) => match base.spatial.iter().find(|n| &n.id == id) {
@@ -168,6 +177,8 @@ pub(crate) fn agg_inverse(this: &SemioModelMutation, base: &SemioModelSnapshot) 
             None => Vec::new(),
         },
     }
+
+    })
 }
 //#endregion 🔖️MutationTrait
 
@@ -204,6 +215,7 @@ fn dec_semio_model_snapshot(s: &str) -> Result<SemioModelSnapshot, String> {
 fn print_semio_model_mutation(m: &SemioModelMutation) -> String {
     match m {
         SemioModelMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", enc_semio_model_snapshot(snapshot)),
+        SemioModelMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(patch),
         SemioModelMutation::InsertSpatialNode(insert_spatial_node::InsertSpatialNode { node }) => format!("insert-spatial-node node={}", enc_spatial_node(node)),
         SemioModelMutation::RemoveSpatialNode(remove_spatial_node::RemoveSpatialNode { id }) => format!("remove-spatial-node id={}", enc_str(id)),
         SemioModelMutation::SetSpatialNode(set_spatial_node::SetSpatialNode { id, kind, name, parent_id, placement }) => format!(
@@ -234,6 +246,10 @@ fn print_semio_model_mutation(m: &SemioModelMutation) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_semio_model_mutation(line: &str) -> Result<SemioModelMutation, String> {
+    if let Some(source) = line.strip_prefix("patch-snapshot patch=") {
+        let patch = semio_s_artifact_stdio_contract::editing::snapshot_patch_from_hex(source)?;
+        return Ok(SemioModelMutation::PatchSnapshot(crate::standards::v1::subsets::model::schema::mutations::patch_snapshot::PatchSnapshot { patch }));
+    }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
     let args: std::collections::BTreeMap<&str, &str> =
         rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("model mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
@@ -272,8 +288,8 @@ impl OpText for SemioModelMutation {
     fn print_op(&self) -> String {
         print_semio_model_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_semio_model_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_semio_model_mutation(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 }
 
@@ -281,6 +297,7 @@ impl OpText for SemioModelMutation {
 /// 🏷️ Op tags of `SemioModelMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
 const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
 const TAG_INSERT_SPATIAL_NODE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-spatial-node");
 const TAG_REMOVE_SPATIAL_NODE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-spatial-node");
 const TAG_SET_SPATIAL_NODE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-spatial-node");
@@ -296,6 +313,7 @@ const TAG_SET_RELATION: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-re
 fn wire_tag(m: &SemioModelMutation) -> u8 {
     match m {
         SemioModelMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
+        SemioModelMutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
         SemioModelMutation::InsertSpatialNode(_) => TAG_INSERT_SPATIAL_NODE,
         SemioModelMutation::RemoveSpatialNode(_) => TAG_REMOVE_SPATIAL_NODE,
         SemioModelMutation::SetSpatialNode(_) => TAG_SET_SPATIAL_NODE,
@@ -325,6 +343,11 @@ fn print_semio_model_mutation_args(m: &SemioModelMutation) -> String {
 /// second independent encoding.
 impl OpBinary for SemioModelMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        if let Self::PatchSnapshot(payload) = self {
+            let mut out = vec![1, TAG_PATCH_SNAPSHOT];
+            out.extend(protocol::OpBinary::encode_op(&payload.patch)?);
+            return Ok(out);
+        }
         const OP_BINARY_FORMAT: u8 = 1;
         let mut out = vec![OP_BINARY_FORMAT, wire_tag(self)];
         out.extend_from_slice(print_semio_model_mutation_args(self).as_bytes());
@@ -337,6 +360,9 @@ impl OpBinary for SemioModelMutation {
         }
         if bytes[0] != OP_BINARY_FORMAT {
             return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {}", bytes[0]) });
+        }
+        if bytes[1] == TAG_PATCH_SNAPSHOT {
+            return Ok(Self::PatchSnapshot(crate::standards::v1::subsets::model::schema::mutations::patch_snapshot::PatchSnapshot { patch: protocol::OpBinary::decode_op(&bytes[2..])? }));
         }
         let tag = bytes[1];
         let keyword = dsl::protocol_record::kind(WIRE_PROTOCOL, u64::from(tag)).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} names no record of 📡️.protocol.semio") })?;
@@ -373,6 +399,7 @@ pub(crate) fn fixture() -> SemioModelSnapshot {
 pub(crate) fn demo_mutation_cases() -> Vec<SemioModelMutation> {
     let base = fixture();
     vec![
+        SemioModelMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         SemioModelMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
         SemioModelMutation::InsertSpatialNode(insert_spatial_node::InsertSpatialNode { node: SpatialNode { id: "s2".into(), kind: SpatialKind::Space, name: "Room".into(), parent_id: None, placement: SemioTransform::identity() } }),
         SemioModelMutation::RemoveSpatialNode(remove_spatial_node::RemoveSpatialNode { id: "s1".into() }),

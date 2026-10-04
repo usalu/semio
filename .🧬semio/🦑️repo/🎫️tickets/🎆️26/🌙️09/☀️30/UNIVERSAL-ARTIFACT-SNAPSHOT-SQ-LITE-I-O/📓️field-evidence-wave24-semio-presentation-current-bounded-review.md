@@ -1,0 +1,11 @@
+# Wave 24: Semio Presentation Current Bounded Review
+
+Read-only; no execution. Declared field/union model, complete27 SQL definitions, shape projection/full root projection, visible reconstruction47–59 and child DocBlock helper cross-join read. Source/native/neutral and truncated intervening trait boilerplate not credited as complete.
+
+Owner schema, ordered masters(id/shapes), layouts(id/master ID/shapes), slides(id/optional layout/shapes/notes). Four shapes carry raw64 frame x/y/width/height: TextBox complete DocBlock collection; Picture assetID/mime/literal media bytes; Table ordered rows/cells/complete block collections; Placeholder six named cases plus Other literalString. All examined fields map to explicit presentation/master/layout/slide/shape/detail/row/cell/collection entities. Exact float companion columns preserve frame and nested DocBlock optional IEEE fields. Embedded DocBlock reference strings use TEXT with None named maps, so arbitrary style/image literal IDs are not incorrectly forced to parent Document image/style authorities absent from this model.
+
+Complete projection root44 preserves order, resolves master/layout references, rejects duplicate IDs/foreign reference. Such constructor/native legality remains unreviewed before loss verdict. Shape one-of master/layout/slide parent is checked reconstruction; active variant detail/placeholder Other fields consumed and orphan/contradictory data refused. Nested collections use reviewed Wave23 iterative forest; rich shape/collection/master/layout/slide partial owners are actual Owned wrappers. No copied graph/whole Snapshot JSON carrier in examined paths. Picture media bytes remain explicit native payload; interpretation by selected media owner separate.
+
+Physical/cancellation gap is concrete ordinary names/detail/group/owner BTree indexes, FloatRow wrapper Vec, roots Vec, native shape/collection maps and output Vec growth; shared scalar Reconstruction copies do not pay these. Ordinary sorts and identity/name/root scans lack bounded checkpoints; restore per-shape progress remains. Full numerical/System/error release obligations require actual owning laws, not inferred sizes.
+
+Source/native/strict neutral thirdparty full field laws remain residue; report is not full owner or runtime closure.

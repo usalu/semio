@@ -2,7 +2,7 @@
 import type { ConnectSynapse, SynapseSpec } from "../🦠️mutation/🟦️.ts";
 
 export interface ConnectSynapseDiff {
-  synapses: { removed: string[]; set: Array<[number, SynapseSpec]> };
+  synapses: { removed: string[]; set: Array<[bigint, SynapseSpec]> };
 }
 
 export function diff(payload: ConnectSynapse): ConnectSynapseDiff {

@@ -1,0 +1,7 @@
+{
+  "closeGrantBytes": 16384,
+  "patchBytes": 262144,
+  "fullRegion": { "width": 4096, "height": 2048, "patches": 128 },
+  "stalePublication": { "width": 1024, "height": 512, "fill": 7, "laterPixel": [31, 32, 33, 34] },
+  "cancelledRegion": { "width": 1024, "height": 512, "x": 1, "y": 0, "regionWidth": 1, "regionHeight": 512, "preparedPatches": 1, "maximumCloseTurns": 19, "publishedPatches": 0 }
+}

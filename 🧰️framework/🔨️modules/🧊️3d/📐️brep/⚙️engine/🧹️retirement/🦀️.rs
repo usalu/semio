@@ -10,7 +10,7 @@ pub enum NativeRetirementStep { Blocked, Pending { released_items: usize, releas
 pub trait RetirementFrontier: Send { fn advance(&mut self, payloads: &mut PayloadRetirement) -> bool; }
 trait Allocation: Send {}
 impl<T: Send> Allocation for Vec<T> {}
-enum Owner { Allocation { values: Box<dyn Allocation>, remaining: usize }, Frontier(Box<dyn RetirementFrontier>) }
+enum Owner { Allocation { values: Box<dyn Allocation>, remaining: usize }, Frontier(Box<dyn RetirementFrontier>), Owned(Box<dyn semio_framework_value::ErasedSnapshotRetirement>) }
 /// 🧹️ Owns native payloads until explicit terminal-empty retirement.
 #[must_use = "native resources require explicit terminal-empty retirement"]
 pub struct PayloadRetirement { owners: ManuallyDrop<LinkedList<Owner>> }
@@ -18,6 +18,7 @@ impl Default for PayloadRetirement { fn default() -> Self { Self { owners: Manua
 impl PayloadRetirement {
     pub fn terminal_is_empty(&self) -> bool { self.owners.is_empty() }
     pub fn frontier(&mut self, frontier: impl RetirementFrontier + 'static) { self.owners.push_back(Owner::Frontier(Box::new(frontier))); }
+    pub fn owned<T: semio_framework_value::retirement::RetireOwned>(&mut self, value: T) { self.owners.push_back(Owner::Owned(semio_framework_value::retirement::owned_retirement(value))); }
     pub fn pod<T: Copy + Send + 'static>(&mut self, values: Vec<T>) { self.allocation(values); }
     pub fn empty_allocation<T: Send + 'static>(&mut self, values: Vec<T>) { assert!(values.is_empty()); self.allocation(values); }
     fn allocation<T: Send + 'static>(&mut self, values: Vec<T>) {
@@ -37,6 +38,17 @@ impl PayloadRetirement {
                 if remaining != 0 { self.owners.push_front(Owner::Allocation { values, remaining }); }
             }
             Owner::Frontier(mut frontier) => if !frontier.advance(self) { self.owners.push_front(Owner::Frontier(frontier)); },
+            Owner::Owned(mut owned) => {
+                use semio_framework_value::SnapshotRetirementStep as Step;
+                match owned.close_step(1,maximum_bytes).expect("native owned retirement invariant") {
+                    Step::Pending { released_items,released_bytes:bytes } => {
+                        assert!(released_items<=1 && bytes<=maximum_bytes,"native owned retirement exceeded its grant");
+                        released_bytes=bytes;self.owners.push_front(Owner::Owned(owned));
+                    }
+                    Step::Blocked => { self.owners.push_front(Owner::Owned(owned));return NativeRetirementStep::Blocked; }
+                    Step::Complete => assert!(owned.terminal_is_empty(),"native owned retirement lacks a terminal witness"),
+                }
+            }
         }
         NativeRetirementStep::Pending { released_items: 1, released_bytes }
     }
@@ -93,6 +105,7 @@ impl<T: Send + 'static> RetirementFrontier for Metadata<T> {
 impl PayloadRetirement {
     pub fn mesh_transfer(&mut self, mesh: MeshTransfer) {
         self.pod(mesh.position); self.pod(mesh.normal); self.pod(mesh.index); self.pod(mesh.edges); self.pod(mesh.points);
+        self.frontier(Metadata { values:mesh.vertex_groups, text:|v| v.entity_id });
         self.frontier(Metadata { values:mesh.face_groups, text:|v| v.entity_id }); self.frontier(Metadata { values:mesh.edge_groups, text:|v| v.entity_id });
         self.frontier(Metadata { values:mesh.face_infos, text:|v| v.entity_id }); self.frontier(Metadata { values:mesh.edge_infos, text:|v| v.entity_id });
     }

@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeSiteNorthAxis, base: &EnergyModelSnapshot) ->
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("A site north axis of {}° is not admissible.", payload.new_north_axis_deg), Vec::<String>::new());
     }
     if base.model.site.north_axis_deg == payload.new_north_axis_deg {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("The site north axis is already {}°.", payload.new_north_axis_deg));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("The site north axis is already {}°.", payload.new_north_axis_deg));
     }
     let mut model = base.model.clone();
     model.site.north_axis_deg = payload.new_north_axis_deg;

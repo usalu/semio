@@ -11,7 +11,7 @@ use semio_framework_os_kernel::os_spr::protocol_laws::{assert_mutation_diff_abso
 /// that the ownership laws reject must fail the test loudly, never land as a silent no-op.
 fn applied(base: &RemodelingSnapshot, mutation: &RemodelingMutation) -> RemodelingSnapshot {
     let outcome = mutation.diff(base);
-    let rejected: Vec<_> = outcome.messages().iter().filter(|message| matches!(message.level, protocol::Severity::Error | protocol::Severity::Fatal)).map(|message| format!("{message:?}")).collect();
+    let rejected: Vec<_> = outcome.messages().iter().filter(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)).map(|message| format!("{message:?}")).collect();
     assert!(rejected.is_empty(), "scenario step {mutation:?} was rejected: {rejected:?}");
     protocol::MutationDiff::apply(outcome.diff(), base).expect("valid mutation diff")
 }

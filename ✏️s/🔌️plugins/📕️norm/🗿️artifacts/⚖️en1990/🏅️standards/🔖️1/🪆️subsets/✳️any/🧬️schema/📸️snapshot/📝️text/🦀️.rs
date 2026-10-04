@@ -16,7 +16,7 @@ use crate::En1990Snapshot;
 pub const EN1990_HIGH_CONSEQUENCE_OFFICE_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🏢️high-consequence-office/🏢️high-consequence-office/🗣️.dsl.semio");
 
 /// 📖️ Parses `.en1990` DSL text into a `Document`.
-pub fn parse_dsl(text: &str) -> Result<En1990Snapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<En1990Snapshot, semio_framework_diagnostic::TextError> {
     <En1990Snapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 

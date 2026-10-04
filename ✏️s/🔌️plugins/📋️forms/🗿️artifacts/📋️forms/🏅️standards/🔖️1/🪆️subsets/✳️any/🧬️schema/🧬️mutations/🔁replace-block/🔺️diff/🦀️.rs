@@ -15,7 +15,7 @@ pub fn diff_replace_block(payload: &ReplaceBlock, base: &FormsSnapshot) -> proto
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Block \"{}\" does not exist in step \"{}\".", payload.block.id, payload.step_id), [payload.step_id.clone(), payload.block.id.clone()]);
     };
     if existing == &payload.block {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Block \"{}\" is already unchanged.", payload.block.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Block \"{}\" is already unchanged.", payload.block.id));
     }
     let blocks: Vec<_> = step.blocks.iter().map(|block| if block.id == payload.block.id { payload.block.clone() } else { block.clone() }).collect();
     let patch = FormsStepPatch { blocks: Some(blocks), ..Default::default() };

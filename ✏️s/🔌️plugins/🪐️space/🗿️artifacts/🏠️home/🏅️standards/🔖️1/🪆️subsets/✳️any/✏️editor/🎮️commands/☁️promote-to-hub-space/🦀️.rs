@@ -7,7 +7,7 @@ use crate::SHomeSnapshot;
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "promote-to-hub-space")]
 pub struct PromoteToHubSpace {
     pub space_id: String,
@@ -16,7 +16,7 @@ pub struct PromoteToHubSpace {
 
 pub fn handle(payload: &PromoteToHubSpace, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
     let name = if payload.name.trim().is_empty() { payload.space_id.clone() } else { payload.name.clone() };
-    let args = Some(pack::json_to_dsl_value(&pack::json!({ "name": name, "spaceKind": "atelier", "visibility": "private", "sourceSpaceId": payload.space_id.clone() })));
+    let args = Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "name": name, "spaceKind": "atelier", "visibility": "private", "sourceSpaceId": payload.space_id.clone() })));
     Ok(Emit::effect(Effect::ReplayShellCommand { action_id: "os.directory.create-space".into(), args }))
 }
 

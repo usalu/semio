@@ -31,35 +31,35 @@ fn declared_dispositions(definition: &AppDefinition) -> BTreeMap<String, Interac
 /// 📜️ The `execution`/`status` fixture shape (studio, space index): ids whose status is
 /// `Migrated`, plus the tool ids whose sole publication lane is `HostOnly`.
 fn migrated_and_host_only(fixture: &str) -> (BTreeSet<String>, BTreeSet<String>) {
-    let document: pack::JsonValue = pack::parse_json(fixture).expect("language-neutral retained catalog fixture");
+    let document: semio_framework_pack_json::Value = semio_framework_pack_json::parse(fixture, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-neutral retained catalog fixture");
     let migrated = document
         .get("routes")
-        .and_then(pack::JsonValue::as_array)
+        .and_then(semio_framework_pack_json::Value::as_array)
         .expect("routes array")
         .iter()
-        .filter(|route| route.get("status").and_then(pack::JsonValue::as_str) == Some("Migrated"))
-        .filter_map(|route| route.get("id").and_then(pack::JsonValue::as_str).map(str::to_string))
+        .filter(|route| route.get("status").and_then(semio_framework_pack_json::Value::as_str) == Some("Migrated"))
+        .filter_map(|route| route.get("id").and_then(semio_framework_pack_json::Value::as_str).map(str::to_string))
         .collect::<BTreeSet<_>>();
     let host_only = document
         .get("publicationContracts")
-        .and_then(pack::JsonValue::as_array)
+        .and_then(semio_framework_pack_json::Value::as_array)
         .expect("publication contracts array")
         .iter()
-        .filter(|contract| contract.get("lanes").and_then(pack::JsonValue::as_array).is_some_and(|lanes| lanes.as_slice() == [pack::JsonValue::String("HostOnly".into())]))
-        .filter_map(|contract| contract.get("toolId").and_then(pack::JsonValue::as_str).map(str::to_string))
+        .filter(|contract| contract.get("lanes").and_then(semio_framework_pack_json::Value::as_array).is_some_and(|lanes| lanes.as_slice() == [semio_framework_pack_json::Value::String("HostOnly".into())]))
+        .filter_map(|contract| contract.get("toolId").and_then(semio_framework_pack_json::Value::as_str).map(str::to_string))
         .collect::<BTreeSet<_>>();
     (migrated, host_only)
 }
 
 /// 📜️ The `disposition`/`lanes` fixture shape (home).
 fn migrated_and_host_only_rows(fixture: &str) -> (BTreeSet<String>, BTreeSet<String>) {
-    let document: pack::JsonValue = pack::parse_json(fixture).expect("language-neutral retained catalog fixture");
-    let routes = document.get("routes").and_then(pack::JsonValue::as_array).expect("routes array");
-    let migrated = routes.iter().filter(|route| route.get("disposition").and_then(pack::JsonValue::as_str) == Some("Migrated")).filter_map(|route| route.get("id").and_then(pack::JsonValue::as_str).map(str::to_string)).collect::<BTreeSet<_>>();
+    let document: semio_framework_pack_json::Value = semio_framework_pack_json::parse(fixture, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-neutral retained catalog fixture");
+    let routes = document.get("routes").and_then(semio_framework_pack_json::Value::as_array).expect("routes array");
+    let migrated = routes.iter().filter(|route| route.get("disposition").and_then(semio_framework_pack_json::Value::as_str) == Some("Migrated")).filter_map(|route| route.get("id").and_then(semio_framework_pack_json::Value::as_str).map(str::to_string)).collect::<BTreeSet<_>>();
     let host_only = routes
         .iter()
-        .filter(|route| route.get("lanes").and_then(pack::JsonValue::as_array).is_some_and(|lanes| lanes.as_slice() == [pack::JsonValue::String("HostOnly".into())]))
-        .filter_map(|route| route.get("id").and_then(pack::JsonValue::as_str).map(str::to_string))
+        .filter(|route| route.get("lanes").and_then(semio_framework_pack_json::Value::as_array).is_some_and(|lanes| lanes.as_slice() == [semio_framework_pack_json::Value::String("HostOnly".into())]))
+        .filter_map(|route| route.get("id").and_then(semio_framework_pack_json::Value::as_str).map(str::to_string))
         .collect::<BTreeSet<_>>();
     (migrated, host_only)
 }

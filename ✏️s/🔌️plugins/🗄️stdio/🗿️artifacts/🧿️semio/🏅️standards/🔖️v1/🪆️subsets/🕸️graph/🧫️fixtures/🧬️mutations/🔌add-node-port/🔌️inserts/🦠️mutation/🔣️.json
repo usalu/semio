@@ -6,7 +6,9 @@
     "index": 0,
     "port": {
       "name": "reset",
-      "kind": "in"
+      "kind": "in",
+      "category": "",
+      "properties": []
     }
   }
 }

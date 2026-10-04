@@ -7,12 +7,12 @@ use semio_s_artifact_stdio_json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 /// own key-order/lexeme-preserving model, not `serde_json::Value` -- see json's snapshot module).
 pub fn register() {}
 
-pub fn serialize(snapshot: &LowpolySnapshot) -> Result<JsonSnapshot, store::TextError> {
+pub fn serialize(snapshot: &LowpolySnapshot) -> Result<JsonSnapshot, semio_framework_diagnostic::TextError> {
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-    let value: serde_json::Value = dsl::ToValue::to_value(snapshot).into();
+    let value: serde_json::Value = semio_framework_value::ToValue::to_value(snapshot).into();
     Ok(JsonSnapshot::from_value(value))
 }
 
-pub fn serialize_bytes(snapshot: &LowpolySnapshot) -> Result<Vec<u8>, store::TextError> {
+pub fn serialize_bytes(snapshot: &LowpolySnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
     Ok(write_json_pretty(&serialize(snapshot)?.value).into_bytes())
 }

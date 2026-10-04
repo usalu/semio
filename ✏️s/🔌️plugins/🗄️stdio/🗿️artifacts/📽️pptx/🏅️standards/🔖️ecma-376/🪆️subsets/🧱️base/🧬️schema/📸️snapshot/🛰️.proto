@@ -26,4 +26,4 @@ message PptxParagraph { repeated PptxRun runs = 1; }
 message PptxShape { string shape_kind = 1; repeated PptxParagraph text_frame = 2; optional PptxTransform position = 3; string blip_rel_id = 4; string kind = 5; optional XmlNode node = 6; }
 message PptxSlide { repeated PptxShape shapes = 1; }
 message PptxPresentation { repeated PptxSlide slides = 1; }
-message PptxSnapshot { string schema = 1; OpcPackage opc = 2; repeated PptxXmlPart xml_parts = 3; PptxPresentation presentation = 4; }
+message PptxSnapshot { string schema = 1; OpcPackage opc = 2; repeated PptxXmlPart xml_parts = 3; }

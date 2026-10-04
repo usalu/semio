@@ -49,7 +49,7 @@ fn a_mesh_child_handle_addresses_the_stdio_mesh_subset() {
 fn every_pilot_language_carries_the_surface_its_role_needs() {
     for language in crate::pilot_languages() {
         match language.role {
-            dsl::LanguageRole::Document | dsl::LanguageRole::Ops => assert!(language.grammar.is_some() && language.protocol.is_some(), "{} needs both surfaces", language.id),
+            semio_framework_dsl::LanguageRole::Document | semio_framework_dsl::LanguageRole::Ops => assert!(language.grammar.is_some() && language.protocol.is_some(), "{} needs both surfaces", language.id),
             _ => assert!(language.protocol.is_some(), "{} needs a binary protocol", language.id),
         }
     }
@@ -137,7 +137,7 @@ fn every_committed_vector_applies_to_the_base_and_inverts_back() {
     let base = fixture_base();
     for (kind, case, mutation) in fixture_vectors() {
         let mut snapshot = base.clone();
-        let inverse = inverse_grid3d_mutation(&base, &mutation);
+        let inverse = inverse_grid3d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
         apply_grid3d_mutation(&mut snapshot, &mutation).unwrap_or_else(|error| panic!("{kind}/{case}: the vector must apply to the base ({error})"));
         assert_ne!(snapshot, base, "{kind}/{case}: an `applied` vector must change the document");
         for step in &inverse {
@@ -166,10 +166,10 @@ fn debug_emit_mutation_fixtures() {
         let mut after = base.clone();
         apply_grid3d_mutation(&mut after, &mutation).expect("the vector applies");
         let outcome = <crate::Grid3dMutation as Mutation<crate::Grid3dSnapshot>>::diff(&mutation, &base);
-        std::fs::write(directory.join("📸️snapshot/⬅️before/🔣️.json"), pretty(&dsl::json::to_json_string(&base))).expect("write before");
-        std::fs::write(directory.join("📸️snapshot/➡️after/🔣️.json"), pretty(&dsl::json::to_json_string(&after))).expect("write after");
-        std::fs::write(directory.join("🦠️mutation/🔣️.json"), pretty(&dsl::json::to_json_string(&mutation))).expect("write mutation");
-        std::fs::write(directory.join("🔺️diff/🔣️.json"), pretty(&dsl::json::to_json_string(outcome.diff()))).expect("write diff");
+        std::fs::write(directory.join("📸️snapshot/⬅️before/🔣️.json"), pretty(&semio_framework_pack_json::to_json_string(&base))).expect("write before");
+        std::fs::write(directory.join("📸️snapshot/➡️after/🔣️.json"), pretty(&semio_framework_pack_json::to_json_string(&after))).expect("write after");
+        std::fs::write(directory.join("🦠️mutation/🔣️.json"), pretty(&semio_framework_pack_json::to_json_string(&mutation))).expect("write mutation");
+        std::fs::write(directory.join("🔺️diff/🔣️.json"), pretty(&semio_framework_pack_json::to_json_string(outcome.diff()))).expect("write diff");
         std::fs::write(directory.join("🎯️outcome/🔣️.json"), "{\n  \"status\": \"applied\"\n}\n").expect("write outcome");
     }
 }

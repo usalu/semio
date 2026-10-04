@@ -1,0 +1,176 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "status",
+    "lockOrder",
+    "scenarios"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.framework.io.assembly-barrier-audit/v1"
+    },
+    "status": {
+      "const": "proposal-not-runtime-proof"
+    },
+    "lockOrder": {
+      "const": [
+        "barrier",
+        "document",
+        "migration",
+        "composer",
+        "subset",
+        "format",
+        "snapshot"
+      ]
+    },
+    "scenarios": {
+      "type": "array",
+      "minItems": 26,
+      "maxItems": 26,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "mode",
+          "actions",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "single-writer",
+              "waiting-writer-resumes",
+              "exact-duplicate-idempotent",
+              "conflict-document",
+              "poison-document",
+              "conflict-migration",
+              "poison-migration",
+              "conflict-composer",
+              "poison-composer",
+              "conflict-subset",
+              "poison-subset",
+              "conflict-format",
+              "poison-format",
+              "conflict-snapshot",
+              "poison-snapshot",
+              "poison-barrier",
+              "preflight-only",
+              "reader-before-and-after",
+              "missing-assembled-sqlite-capability",
+              "pack-only-construction-remains-legal",
+              "controlled-cancel-before-acquire",
+              "controlled-busy-returns-progress",
+              "controlled-cancel-before-publication",
+              "controlled-commit-is-indivisible",
+              "partial-lock-busy-releases-before-retry",
+              "no-recursive-begin-contract"
+            ]
+          },
+          "mode": {
+            "enum": [
+              "preservation",
+              "provider-policy",
+              "control-extension"
+            ]
+          },
+          "actions": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "enum": [
+                "A.acquire-all",
+                "A.acquire-until-composer",
+                "A.acquire-until-document",
+                "A.acquire-until-format",
+                "A.acquire-until-migration",
+                "A.acquire-until-snapshot",
+                "A.acquire-until-subset",
+                "A.begin",
+                "A.cancel",
+                "A.checkpoint",
+                "A.commit-all",
+                "A.commit-all-no-callback",
+                "A.conflict-composer",
+                "A.conflict-document",
+                "A.conflict-format",
+                "A.conflict-migration",
+                "A.conflict-snapshot",
+                "A.conflict-subset",
+                "A.construct-bare-pack-only",
+                "A.pending",
+                "A.plan-codec-without-sqlite",
+                "A.preflight-all",
+                "A.preflight-identical",
+                "A.release",
+                "A.release-partial-locks",
+                "A.step-acquire",
+                "A.try-begin-busy",
+                "B.acquire-all",
+                "B.begin-waits",
+                "B.cancel",
+                "B.commit-all",
+                "B.preflight-all",
+                "B.progress",
+                "B.release",
+                "B.step-acquire",
+                "B.step-acquire-busy",
+                "fixture.hold-format-read",
+                "fixture.panic-with-barrier",
+                "fixture.poison-composer",
+                "fixture.poison-document",
+                "fixture.poison-format",
+                "fixture.poison-migration",
+                "fixture.poison-snapshot",
+                "fixture.poison-subset",
+                "fixture.release-format-read",
+                "reader.read-new",
+                "reader.read-old",
+                "reader.read-waits"
+              ]
+            }
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "result",
+              "published",
+              "progressEvents",
+              "cancelled",
+              "poisoned"
+            ],
+            "properties": {
+              "result": {
+                "enum": [
+                  "committed",
+                  "unchanged",
+                  "conflict",
+                  "unavailable",
+                  "cancelled",
+                  "pending"
+                ]
+              },
+              "published": {
+                "type": "boolean"
+              },
+              "progressEvents": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "cancelled": {
+                "type": "boolean"
+              },
+              "poisoned": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

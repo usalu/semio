@@ -1,0 +1,4 @@
+{
+  "mutation": "changeRunStartDay",
+  "newStartDay": 30
+}

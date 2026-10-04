@@ -1,0 +1,24 @@
+{
+  "ownedNative": "preserveLiteralState",
+  "ownedSqlite": "preserveLiteralState",
+  "externalXml": "validateForPublication",
+  "cases": [
+    "doctype-position-past-prolog",
+    "non-misc-epilog-node",
+    "declaration-encoding-quote-injection",
+    "declaration-conflicts-with-utf8-transport"
+  ],
+  "mutationKinds": [
+    "set-snapshot",
+    "patch-snapshot",
+    "set-declaration",
+    "set-doctype",
+    "insert-element",
+    "remove-element",
+    "set-element-name",
+    "set-attribute",
+    "set-text",
+    "set-view-box",
+    "set-transform"
+  ]
+}

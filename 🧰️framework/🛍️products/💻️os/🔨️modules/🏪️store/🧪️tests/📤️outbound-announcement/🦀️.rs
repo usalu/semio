@@ -1,8 +1,8 @@
 //! 📤️ LAW: a store attached to a backbone announces every locally authored operation exactly once
 //! (`🧬️schema/📤️outbound-announcement`, fixture `🧫️fixtures/📤️outbound-announcement`, TS twin
-//! `💻️os/🧪️tests/📤️outbound-announcement`). A coalesced batched gesture amends the tail edit the
-//! previous gesture already announced and must announce only its own operations: re-announcing the
-//! earlier ones made the hub refuse a writer's second keystroke as a replay (ticket 26/09/23 C10 09:4x). Every
+//! `💻️os/🧪️tests/📤️outbound-announcement`). A batched gesture is its own edit and announces only its own
+//! operations: re-announcing earlier ones made the hub refuse a writer's second keystroke as a replay (ticket 26/09/23
+//! C10 09:4x). Every
 //! announced operation — a batched gesture's like any other — names the newest foreign operation its author had
 //! applied as `observed`, and a remote operation observing something this replica never saw applies at once
 //! (ticket 26/09/23 LD item 2).
@@ -44,7 +44,6 @@ struct Remote {
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Gesture {
-    coalesce_key: Option<String>,
     items: usize,
 }
 
@@ -72,8 +71,8 @@ fn drain_announced(remote: &ChannelBackboneRemote) -> (Vec<crate::os_spr::Mutati
     (operations, transitions)
 }
 
-/// 🧺️ Publishes one gesture exactly as the plugin SDK does on a store with a backbone: an outbound batch, its
-/// coalescing key, advanced to its receipt, announced once, then acknowledged and closed.
+/// 🧺️ Publishes one gesture exactly as the plugin SDK does on a store with a backbone: an outbound batch advanced to its
+/// receipt, announced once, then acknowledged and closed.
 async fn publish_outbound_gesture(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>, operation: u64, gesture: &Gesture, next_value: &mut i32) {
     let factory: Arc<dyn ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = Arc::new(DemoOneItemPreparationFactory::admissible());
     let mutations = (0..gesture.items)
@@ -85,7 +84,6 @@ async fn publish_outbound_gesture(store: &mut ArtifactStore<DemoSnapshot, DemoMu
     let mut publication = store
         .begin_outbound_apply_batch(semio_framework_job::OperationId(operation), store.generation_now(), store.content_revision_now(), "retained-test".into(), mutations, None, Some(&factory), None)
         .unwrap_or_else(|rejected| panic!("outbound batch admission: {}", rejected.reason));
-    publication.set_coalesce_key(gesture.coalesce_key.clone());
     let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 512 };
     for _ in 0..4_096 {
         if let ArtifactStoreOneItemAdvance::Published(_) = store.advance_apply_batch(&mut publication, grant).expect("bounded batch step") {
@@ -143,5 +141,5 @@ async fn every_locally_authored_operation_is_announced_exactly_once() {
         let ledger: HashSet<String> = store.envelope().vcs.edits.iter().flat_map(|edit| crate::os_spr::mutation_ids_for_edit::<DemoSnapshot, DemoMutation>(edit)).map(|id| id.0).filter(|id| !foreign.contains(id)).collect();
         assert_eq!(unique.into_iter().cloned().collect::<HashSet<_>>(), ledger, "{}: the announced operations are exactly the ledger's", vector.id);
     }
-    assert!(steps >= 22, "the fixture walks every declared step");
+    assert!(steps >= 14, "the fixture walks every declared step");
 }

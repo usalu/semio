@@ -1,7 +1,7 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
-  "_comment": "🧩️ XLSX ECMA-376/🧱️base's own contribution to the repository test platform — its mutation oracle registration and its declared mutation vocabulary (wave 7, ticket 26/08/23/END-TO-END-TESTING-REFACTOR). Discovered by convention alongside ✏️s/🔌️plugins/🗄️stdio's own top-level manifest; merged into one registry, no central edit required. Registers ONE oracle id for the reference PAIRING this subset needs (no single crate both reads and modifies an XLSX): `calamine` 0.36 parses a real workbook into resolved cell data; `rust_xlsxwriter` 0.96 assembles a brand-new package from a grid built out of that read — never opens and patches the original. Seven of the ten declared kinds (`no-mutation`, `set-snapshot`, `insert-sheet`, `remove-sheet`, `rename-sheet`, `set-cell`, `remove-cell`) are fully representable as 'read the whole workbook into a grid, change the grid, rebuild the whole workbook' and stay `@mode-differential`. The remaining three (`insert-shared-string`, `remove-shared-string`, `set-shared-string`) address the shared-string pool by an INDEX independent of any cell reference — the one axis neither crate exposes (`calamine`'s own `strings: Vec<String>` field and `read_shared_strings` method are both private; `rust_xlsxwriter`'s shared-string table is populated only as a byproduct of `write_string` on a cell, with no API to target an entry directly) — so their `mutate`/`inverse` scenarios are `@mode-round-trip`/`@mode-property` instead of `@mode-differential`; see the Feature file's own description and this subset's `🦀️.rs` module doc comment for the full reasoning.",
+  "_comment": "🧩️ XLSX ECMA-376/🧱️base's own contribution to the repository test platform — its mutation oracle registration and its declared mutation vocabulary (wave 7, ticket 26/08/23/END-TO-END-TESTING-REFACTOR). Discovered by convention alongside ✏️s/🔌️plugins/🗄️stdio's own top-level manifest; merged into one registry, no central edit required. Registers ONE oracle id for the reference PAIRING this subset needs (no single crate both reads and modifies an XLSX): `calamine` 0.36 parses a real workbook into resolved cell data; `rust_xlsxwriter` 0.96 assembles a brand-new package from a grid built out of that read — never opens and patches the original. Worksheet and cell mutations are independently readable as a per-sheet grid; `insert-cell` additionally carries a revision-guarded vacancy address and has a native Calamine save/read law. The three shared-string mutations address the shared-string pool by an INDEX independent of any cell reference — the one axis neither crate exposes (`calamine`'s own `strings: Vec<String>` field and `read_shared_strings` method are both private; `rust_xlsxwriter`'s shared-string table is populated only as a byproduct of `write_string` on a cell, with no API to target an entry directly) — so their `mutate`/`inverse` scenarios are `@mode-round-trip`/`@mode-property` instead of `@mode-differential`; see the Feature file's own description and this subset's `🦀️.rs` module doc comment for the full reasoning.",
   "oracles": [
     {
       "id": "xlsx-ecma-376-mutate",
@@ -83,10 +83,12 @@
       ],
       "kinds": [
         "set-snapshot",
+        "patch-snapshot",
         "insert-sheet",
         "remove-sheet",
         "rename-sheet",
         "set-cell",
+        "insert-cell",
         "remove-cell",
         "insert-shared-string",
         "remove-shared-string",
@@ -99,7 +101,7 @@
     {
       "id": "semantic-spreadsheet-v1",
       "description": "XLSX workbooks compared by their real per-sheet cell grid (sheet name, then every non-empty cell's row/col/resolved value, read independently by `calamine` on both sides) PLUS a caller-tracked `sharedStringCount` field — `calamine` exposes no accessor for the raw shared-string pool size (see this subset's `🦀️.rs` module doc comment), so that one field is supplied by the case adapter rather than derived from the projected bytes: the oracle side by structural arithmetic on the applied kind, the subject side by reading its own real `XlsxWorkbook::shared_strings.len()`. `Number` cells carry a small floating-point tolerance since ECMA-376 stores every number as an IEEE-754 double and two independent writers may round the same value's textual form a few ULPs apart.",
-      "tolerance": 1e-9,
+      "tolerance": 1e-09,
       "ignoreKeys": []
     }
   ],
@@ -112,6 +114,27 @@
       "standardDirectoryName": "🔖️ecma-376",
       "subsetDirectoryName": "🧱️base",
       "mutations": [
+        {
+          "id": "insert-cell",
+          "capability": "xlsx-ecma-376-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-cell",
+            "bridgeVersion": 1,
+            "variant": "InsertCell"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "xlsx-ecma-376-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "openpyxl-xlsx-ecma-376-mutate-reader"
+            }
+          ]
+        },
         {
           "id": "insert-shared-string",
           "capability": "xlsx-ecma-376-mutate",
@@ -292,6 +315,27 @@
             "operation": "set-snapshot",
             "bridgeVersion": 1,
             "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "xlsx-ecma-376-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "openpyxl-xlsx-ecma-376-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "patch-snapshot",
+          "capability": "xlsx-ecma-376-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "patch-snapshot",
+            "bridgeVersion": 1,
+            "variant": "PatchSnapshot"
           },
           "oracleRequirements": [
             {

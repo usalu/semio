@@ -1,6 +1,6 @@
 //! 📊️ Static, modal and buckling analysis views read their concrete Results window config.
 //! [`config::Fem3dResultsWindowConfig`] owns the camera, the result display selection and the
-//! deformation transport; [`transient::Fem3dResultsWindowTransient`] carries the running playback
+//! deformation transport; [`transient::FemResultsWindowTransient`] carries the running playback
 //! clock while the window plays. The solved fields are cached per document revision, so playback
 //! frames and selection repaints never re-run the solver, while every document edit — including
 //! each coalesced transform step of a gumball drag — is a new revision and re-solves.
@@ -214,7 +214,7 @@ fn with_caption(scene: BuiltNode, caption: String) -> semio_framework_plugin::Ui
 }
 
 /// ⏯️ The transport read-out a running window carries in its caption — silent while stopped.
-fn playback_caption(animation: &config::Fem3dResultsAnimation) -> String {
+fn playback_caption(animation: &crate::app_surface::FemResultsAnimation) -> String {
     if animation.playing {
         format!(" · phase {:.2} · \u{25b6} {} Hz", animation.phase, animation.speed)
     } else {

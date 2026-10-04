@@ -1,0 +1,13 @@
+# Durable octet final whole native successor
+
+The unchanged whole OS native session39455 compiled successfully27.60seconds and selected1346active laws plus4configuredskips. Runtime completed858laws:857passed and1failed;488were not run after fail-fast cancellation. Runtime49.955seconds, Nx approximately86seconds.
+
+All20 durable-group laws passed, including the new four-case octet/allocator law, the schema-first JSON duplicate-member boundary cases with independent Serde Data/EOF checks inside the existing forged identity law, canonical fixture/decision hashes, numeric carrier boundaries, journal decisions and request cancellation/owner retention. The semantic carrier/fixture/JSON successor is therefore confirmed in its actual whole-run scope. This does not claim complete OS GREEN.
+
+The only observed failure is sqlite_snapshot_framework_space_history_builtin_creation_and_reload_publish_io_without_manual_registration. Its actual isolated builtin create returns typed IoError with ValueRefusalKind::UnsupportedOwner and message unregistered typed snapshot dialect os.space.history@1/*. The native law points to SpaceHistory snapshot tests lines5and12; the producer is generic IO native_snapshot_registry lookup at IO root line2453. This later baseline had not been reached in prior fail-fast runs. No source repair or ownership attribution is claimed by this lane.
+
+At terminal all119 unique owned guard paths match. The16884alias inventory has2post changes, both aliases of the generic DSL borrowed-object test leaf, from an unknown external writer. That leaf is outside this actual OS normal dependency compiler closure. Full later bytes and prior expected hashes are preserved in the SpaceHistory handoff JSON. Actual main633andlower168=801compiler BLAKE3/length checks across28units match the retained immediate pre-source and current bytes, with0gaps. The OS borrowed-object measurement still belongs to its explicit OS test leaf; it is not attributed to this foreign generic test change.
+
+Evidence prefix generated/current-native-worker/os-octet-fixture-successor includes fresh before/immediate sources, whole log/artifacts, terminal-post and actual-compiler-checks. The space-history-handoff JSON retains exact pre-native law/schema/fixture/native binding owners, generic IO and Store roots plus native failure block and unknown-writer post deltas.
+
+Preparation18001andlockedmetadata98818 both exited0. Source fence is released for Root's bounded SpaceHistory registration investigation/test-first successor. Pack production remains subject to Root's whole OS GREEN hold; Renderer remains queued.

@@ -34,7 +34,7 @@ use std::collections::BTreeMap;
 /// ⏱️ One evaluation hop, naming the preview window whose target session it advances. An
 /// `Effect::DispatchAction` carries no window of its own — the shell redispatches it under whichever
 /// window is current — so the address rides on the payload.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "flow-eval-tick")]
 pub struct FlowEvalTick {
     pub window_id: String,
@@ -43,7 +43,7 @@ pub struct FlowEvalTick {
 
 /// ✅️ One `evaluate` answer, echoed back onto the response action by `reactor::extension_response_args`
 /// together with the window address the request carried.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "flow-eval-resolve")]
 pub struct FlowEvalResolve {
     pub window_id: String,
@@ -96,10 +96,10 @@ pub fn may_rearm(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSna
 }
 
 /// 🪟️ The one argument object every hop carries, on the redispatch and on the extension request alike.
-pub fn window_args(window_id: &str, window_kind_id: &str) -> dsl::DslValue {
-    dsl::DslValue::object([
-        ("windowId".to_string(), dsl::DslValue::String(window_id.to_string())),
-        ("windowKindId".to_string(), dsl::DslValue::String(window_kind_id.to_string())),
+pub fn window_args(window_id: &str, window_kind_id: &str) -> semio_framework_value::DslValue {
+    semio_framework_value::DslValue::object([
+        ("windowId".to_string(), semio_framework_value::DslValue::String(window_id.to_string())),
+        ("windowKindId".to_string(), semio_framework_value::DslValue::String(window_kind_id.to_string())),
     ])
 }
 
@@ -142,7 +142,7 @@ pub fn owe_attached_previews_carrying<M, C, D>(sessions: PreviewEvalSessions<'_>
     let woken = link.port.is_some() && link.settled.is_none();
     if !windows.is_empty() && servable && !woken && link.requested.is_none() {
         link.requested = Some((PreviewEvalRunRequest::Start, None));
-        emit.effects.push(run_action_effect(TOOL_RUN_START_ACTION_ID, dsl::DslValue::object([(TOOL_RUN_ARG_TOOL_ID.to_string(), dsl::DslValue::String(PREVIEW_EVAL_TOOL_ID.into()))])));
+        emit.effects.push(run_action_effect(TOOL_RUN_START_ACTION_ID, semio_framework_value::DslValue::object([(TOOL_RUN_ARG_TOOL_ID.to_string(), semio_framework_value::DslValue::String(PREVIEW_EVAL_TOOL_ID.into()))])));
     }
 }
 //#endregion 🪟️Addressing
@@ -174,13 +174,13 @@ pub fn evaluate_tick(window_id: &str, window_kind_id: &str, host_snapshot: &semi
     let extension_invocations: Vec<ExtensionInvocation> = pending_extension_evals
         .into_iter()
         .map(|pending| {
-            let request_json = dsl::json::to_json_string(&dsl::DslValue::object([
-                ("operatorId".to_string(), dsl::DslValue::String(pending.operator_id.clone())),
-                ("inputJson".to_string(), dsl::DslValue::String(pending.input_json.clone())),
-                ("nodeHash".to_string(), dsl::DslValue::uint(pending.node_hash)),
-                ("windowId".to_string(), dsl::DslValue::String(window_id.to_string())),
-                ("windowKindId".to_string(), dsl::DslValue::String(window_kind_id.to_string())),
-                ("extensionId".to_string(), dsl::DslValue::String(pending.extension_id.clone())),
+            let request_json = semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::object([
+                ("operatorId".to_string(), semio_framework_value::DslValue::String(pending.operator_id.clone())),
+                ("inputJson".to_string(), semio_framework_value::DslValue::String(pending.input_json.clone())),
+                ("nodeHash".to_string(), semio_framework_value::DslValue::uint(pending.node_hash)),
+                ("windowId".to_string(), semio_framework_value::DslValue::String(window_id.to_string())),
+                ("windowKindId".to_string(), semio_framework_value::DslValue::String(window_kind_id.to_string())),
+                ("extensionId".to_string(), semio_framework_value::DslValue::String(pending.extension_id.clone())),
             ]));
             ExtensionInvocation::new(pending.extension_id, "evaluate", request_json, "flowEvalResolve")
         })

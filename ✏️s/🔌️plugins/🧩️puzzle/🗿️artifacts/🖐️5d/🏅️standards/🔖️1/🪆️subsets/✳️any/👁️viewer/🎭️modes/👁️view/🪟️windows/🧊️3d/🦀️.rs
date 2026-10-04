@@ -38,7 +38,7 @@ fn default_camera_json() -> String {
 /// `dsl::ToValue`/`dsl::DslValue` instead of `serde_json::to_value` — `Puzzle5dScale` only derives
 /// `Serialize` under `#[cfg(test)]` now.
 fn scale_json(scale: Option<Puzzle5dScale>) -> serde_json::Value {
-    serde_json::Value::from(dsl::ToValue::to_value(&scale.unwrap_or(Puzzle5dScale::Uniform(1.0))))
+    serde_json::Value::from(semio_framework_value::ToValue::to_value(&scale.unwrap_or(Puzzle5dScale::Uniform(1.0))))
 }
 
 const FALLBACK_MESH_ID: &str = "box";
@@ -50,11 +50,11 @@ fn mesh_id_for(part: &Puzzle5dPart) -> String {
 fn meshes_json(document: &Puzzle5dSnapshot) -> String {
     let urls: Vec<String> = document.parts.iter().filter_map(|part| part.part_3d.mesh_url.clone()).collect();
     if urls.is_empty() {
-        let fallback = dsl::DslValue::Array(vec![dsl::DslValue::object([
-            ("id".to_string(), dsl::DslValue::String(FALLBACK_MESH_ID.to_string())),
-            ("data".to_string(), dsl::ToValue::to_value(&semio_framework_plugin::mesh_from_kind(FALLBACK_MESH_ID))),
+        let fallback = semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::object([
+            ("id".to_string(), semio_framework_value::DslValue::String(FALLBACK_MESH_ID.to_string())),
+            ("data".to_string(), semio_framework_value::ToValue::to_value(&semio_framework_plugin::mesh_from_kind(FALLBACK_MESH_ID))),
         ])]);
-        return dsl::json::to_json_string(&fallback);
+        return semio_framework_pack_json::to_json_string(&fallback);
     }
     world3d_meshes_json_from_urls(&urls)
 }

@@ -1,9 +1,11 @@
+import { inspectRustCompileReferences } from "../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 import { dirname, join, posix, resolve } from "node:path";
 import { lstatSync, readFileSync, readdirSync } from "node:fs";
 import { mkdir, stat as followedStat, writeFile } from "node:fs/promises";
-import { rustSourceDirectionEdges, rustSourceReferences, rustSourceTargets, rustSourceTargetProblem, type RustSourceDirectionEdge, type RustSourceInputNode, type RustSourceInputProblem, type RustSourceTarget } from "../🟦️.ts";
+import { rustSourceDirectionEdges, rustSourceTargets, rustSourceTargetProblem, type RustSourceDirectionEdge, type RustSourceInputNode, type RustSourceInputProblem, type RustSourceTarget } from "../🟦️.ts";
 import type { DependencyDirectionRule } from "../../🟦️.ts";
-import { inspectRustModuleGraph, inspectRustModuleGraphFacts, type RustCompileExpansion } from "../../../../🔍️discovery/🟦️.ts";
+import { inspectRustModuleGraph, inspectRustModuleGraphFacts } from "../../../../🔍️discovery/🟦️.ts";
+import { type RustCompileExpansion } from "../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 import { loadDependencyDirectionPolicy } from "../../🚀️bootstrap/🟦️.ts";
 import { rustCompilerAttributeOriginsClosed } from "../🔗️binding/🟦️.ts";
 import { COMPUTE_OWNERSHIP_CONTRACT_PATH, rustFamilyOwnershipActive, inspectRustFamilyOwnership, readRustFamilyOwnershipContract, type RustFamilyOwnershipProblem } from "../📍️ownership/🟦️.ts";
@@ -134,11 +136,11 @@ export async function inspectRustSourceDirection(root: string): Promise<RustSour
       pending = children.flat();
     }
     sources = new Map([...sources].sort(([left], [right]) => Buffer.from(left).compare(Buffer.from(right))));
-    const compileReferences = new Map<string, ReturnType<typeof rustSourceReferences>>();
+    const compileReferences = new Map<string, ReturnType<typeof inspectRustCompileReferences>>();
     for (const [path, source] of sources) {
       await checkpoint();
       if (!path.endsWith(".rs")) continue;
-      try { compileReferences.set(path, rustSourceReferences(source)); } catch (error) { problems.push({ code: "unsupported-expression", from: path, detail: (error as Error).message }); }
+      try { compileReferences.set(path, inspectRustCompileReferences(source)); } catch (error) { problems.push({ code: "unsupported-expression", from: path, detail: (error as Error).message }); }
     }
     const graph = inspectRustModuleGraph([...sources.keys()], (path) => sources.get(path), { checkCancellation: check, compileReferences, strictManifests: true });
     if (rustFamilyOwnershipActive({ sources, graph, inventory, checkCancellation: check })) try {

@@ -4,18 +4,15 @@
   "title": "RemoveSlide",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "mutation",
-    "index"
-  ],
+  "required": ["mutation", "address"],
   "properties": {
-    "mutation": {
-      "const": "removeSlide",
-      "description": "Aggregate discriminator spliced in by PptxMutation; absent when the payload stands alone."
-    },
-    "index": {
-      "type": "integer",
-      "minimum": 0
+    "mutation": { "const": "removeSlide" },
+    "address": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pptx/ecma-376/base/xml-address.json#/$defs/PptxSlideAddress",
+      "x-semio-ui": {
+        "label": { "en": "Slide", "de": "Folie" },
+        "description": { "en": "Revision-bound slide to remove.", "de": "Revisionsgebundene zu entfernende Folie." }
+      }
     }
   }
 }

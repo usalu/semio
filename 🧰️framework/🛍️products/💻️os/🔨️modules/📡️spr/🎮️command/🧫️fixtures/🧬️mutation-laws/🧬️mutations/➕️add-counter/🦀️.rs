@@ -3,7 +3,7 @@ use super::super::{Counter, CounterDiff, CounterMutation};
 use crate::os_spr::{MutationKind, MutationOutcome, SemanticDescriptor};
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl_derive::DslRecord, dsl_derive::MutationLeaf, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_dsl_record_derive::DslRecord, dsl_derive::MutationLeaf, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[mutation_leaf(contract = ::protocol)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -17,13 +17,16 @@ impl MutationKind<Counter, CounterMutation> for AddCounter {
     fn diff(&self, _base: &Counter) -> MutationOutcome<CounterDiff> {
         MutationOutcome::new(CounterDiff { deltas: vec![self.delta] })
     }
-    fn inverse(&self, _base: &Counter) -> Vec<CounterMutation> {
+    fn inverse(&self, _base: &Counter) -> Result<Vec<CounterMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         if self.delta == i64::MIN {
             vec![CounterMutation::AddCounter(AddCounter { delta: 1 }), CounterMutation::AddCounter(AddCounter { delta: i64::MAX })]
         } else {
             vec![CounterMutation::AddCounter(AddCounter { delta: -self.delta })]
         }
-    }
+    
+    })())
+}
     fn label(&self) -> crate::LocalizedLabel {
         crate::LocalizedLabel::native(&format!("Add {}", self.delta), &format!("{} hinzufügen", self.delta))
     }

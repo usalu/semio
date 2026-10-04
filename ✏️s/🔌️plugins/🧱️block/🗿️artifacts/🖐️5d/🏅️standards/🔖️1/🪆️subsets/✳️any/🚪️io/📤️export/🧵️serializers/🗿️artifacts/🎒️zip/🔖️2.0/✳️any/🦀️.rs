@@ -12,7 +12,7 @@
 use crate::standards::v1::subsets::any::io::export::serializers::artifacts::json::v_rfc8259::any::json_text;
 use crate::standards::v1::subsets::any::io::export::serializers::artifacts::txt::v_utf_8::any::dsl_text;
 use crate::Block5dSnapshot;
-use semio_framework::io::io_mechanism::Serializer;
+use semio_framework::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
 use semio_s_artifact_stdio_zip::io::encode_zip;
@@ -44,8 +44,8 @@ pub struct Block5dIntoZip;
 impl Serializer<Block5dSnapshot> for Block5dIntoZip {
     const INTO: Dialect = ZIP_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn serialize(from: &Block5dSnapshot) -> IoResult<IoPayload> {
-        let bytes = encode_zip(&archive_of(from)).map_err(|error| IoError { message: format!("block5d→zip: {error}"), diagnostics: Vec::new() })?;
+    async fn serialize(from: &Block5dSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+        let bytes = encode_zip(&archive_of(from)).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("block5d→zip: {error}"))))?;
         Ok(IoOutcome::clean(IoPayload::Binary(bytes)))
     }
 }

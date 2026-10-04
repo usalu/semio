@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::fem2d::modes::edit::windows::results::config::Fem2dResultsAnimation;
+use crate::app_surface::FemResultsAnimation;
 use crate::editor::fem2d::terminology::Fem2dLabels;
 
 fn labels() -> &'static Fem2dLabels {
@@ -8,7 +8,7 @@ fn labels() -> &'static Fem2dLabels {
 
 fn panel_json(window: &Fem2dResultsWindowConfig) -> String {
     let doc = crate::standards::v1::subsets::any::schema::default_fem2d_snapshot();
-    let node = render(&doc, Some(window), "results-left", labels()).expect("results panel admission");
+    let node = render(&doc, Some(window), None, "results-left", labels()).expect("results panel admission");
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("fixture projection")
 }
 
@@ -42,7 +42,7 @@ async fn results_panel_tags_every_control_with_its_window() {
 async fn results_panel_play_button_switches_to_pause_while_running() {
     let stopped = panel_json(&Fem2dResultsWindowConfig::default());
     assert!(stopped.contains(labels().play.as_str()), "{stopped}");
-    let running = Fem2dResultsWindowConfig { animation: Fem2dResultsAnimation { playing: true, ..Fem2dResultsAnimation::default() }, ..Fem2dResultsWindowConfig::default() };
+    let running = Fem2dResultsWindowConfig { animation: FemResultsAnimation { playing: true, ..FemResultsAnimation::default() }, ..Fem2dResultsWindowConfig::default() };
     let running = panel_json(&running);
     assert!(running.contains(labels().pause.as_str()), "{running}");
 }
@@ -87,7 +87,7 @@ async fn results_panel_tag_resolves_to_the_partition_the_command_writes() {
 #[semio_framework_async_macros::async_test]
 async fn results_panel_without_a_captured_window_offers_a_toggle_and_a_focus_hint() {
     let doc = crate::standards::v1::subsets::any::schema::default_fem2d_snapshot();
-    let node = render(&doc, None, "results-left", labels()).expect("results panel admission");
+    let node = render(&doc, None, None, "results-left", labels()).expect("results panel admission");
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("fixture projection");
     assert!(json.contains(labels().focus_results_hint.as_str()), "{json}");
     assert!(json.contains(&format!("{} / {}", labels().play.as_str(), labels().pause.as_str())), "{json}");

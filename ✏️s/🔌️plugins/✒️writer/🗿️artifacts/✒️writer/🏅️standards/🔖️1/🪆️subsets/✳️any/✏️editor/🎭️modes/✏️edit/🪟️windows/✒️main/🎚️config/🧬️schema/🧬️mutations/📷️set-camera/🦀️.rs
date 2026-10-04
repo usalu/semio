@@ -1,7 +1,7 @@
 use super::{WriterMainWindowConfig, WriterMainWindowConfigMutation};
 use crate::WriterCamera;
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[dsl(keyword = "set-camera")]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetCamera {
@@ -18,9 +18,12 @@ impl protocol::MutationKind<WriterMainWindowConfig, WriterMainWindowConfigMutati
         protocol::MutationOutcome::new(next)
     }
 
-    fn inverse(&self, base: &WriterMainWindowConfig) -> Vec<WriterMainWindowConfigMutation> {
+    fn inverse(&self, base: &WriterMainWindowConfig) -> Result<Vec<WriterMainWindowConfigMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![Self { camera: base.camera.clone() }.into()]
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set Writer Window Camera", "Kamera des Schreibfensters setzen")

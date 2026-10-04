@@ -1,0 +1,501 @@
+{
+  "budget": 1,
+  "faultRetirement": {
+    "payloadBytes": 16000001,
+    "grantBytes": 65536,
+    "phase": "mesh-fault-retire",
+    "error": "mesh output exceeds 16 MB"
+  },
+  "reconstructionFault": {
+    "mesh": {
+      "vertices": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          1,
+          2
+        ]
+      ]
+    },
+    "ownedFaces": [
+      [
+        0,
+        1,
+        3
+      ]
+    ],
+    "phase": "mesh-fault-retire",
+    "grantBytes": 8
+  },
+  "importAdmissionFault": {
+    "tolerance": 0,
+    "grantBytes": 8,
+    "positionStride": 3,
+    "triangleStride": 3
+  },
+  "sourceParsing": {
+    "initialPhase": "mesh-source-parse",
+    "phases": [
+      "mesh-source-parse",
+      "mesh-source-project",
+      "mesh-source-admit",
+      "mesh-source-capture"
+    ],
+    "mesh": {
+      "vertices": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          1,
+          2
+        ]
+      ]
+    },
+    "textUnit": "Mesh 😀 Label ",
+    "textRepeats": 256,
+    "offset": [
+      1,
+      2,
+      3
+    ],
+    "expectedVertices": [
+      [
+        1,
+        2,
+        3
+      ],
+      [
+        2,
+        2,
+        3
+      ],
+      [
+        1,
+        3,
+        3
+      ]
+    ],
+    "area": 0.5,
+    "closeBytes": 8
+  },
+  "inputPreparation": {
+    "initialPhase": "mesh-source-parse",
+    "phases": [
+      "mesh-source-parse",
+      "mesh-source-project",
+      "mesh-source-admit",
+      "mesh-source-capture",
+      "mesh-import-reconstruct",
+      "mesh-source-assets",
+      "transform-vertices"
+    ],
+    "offset": [
+      1,
+      2,
+      3
+    ],
+    "minimum": [
+      0.5,
+      1.5,
+      2.5
+    ],
+    "maximum": [
+      1.5,
+      2.5,
+      3.5
+    ],
+    "vertices": 8,
+    "faces": 6,
+    "area": 6,
+    "volume": 1
+  },
+  "analysisPhases": [
+    "mesh-analysis-corners",
+    "mesh-analysis-topology",
+    "mesh-analysis-bounds",
+    "mesh-analysis-tessellate",
+    "mesh-analysis-triangles"
+  ],
+  "analysis": {
+    "area": 6,
+    "volume": 1,
+    "edges": 12,
+    "triangles": 12
+  },
+  "phases": [
+    "mesh-output-vertices",
+    "mesh-output-face-corners",
+    "mesh-output-face-json",
+    "mesh-output-tessellate",
+    "mesh-output-edge-identities",
+    "mesh-output-pack",
+    "mesh-output-base64"
+  ],
+  "limits": {
+    "vertices": 100000,
+    "faces": 100000,
+    "corners": 600000,
+    "dataBytes": 16000000,
+    "previewBytes": 64000000
+  },
+  "cases": [
+    {
+      "name": "Concave Polygon",
+      "mesh": {
+        "vertices": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            3,
+            0,
+            0
+          ],
+          [
+            3,
+            3,
+            0
+          ],
+          [
+            1.5,
+            1,
+            0
+          ],
+          [
+            0,
+            3,
+            0
+          ]
+        ],
+        "faces": [
+          [
+            0,
+            1,
+            2,
+            3,
+            4
+          ]
+        ]
+      },
+      "triangles": 3,
+      "area": 6
+    },
+    {
+      "name": "Quad",
+      "mesh": {
+        "vertices": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            2,
+            2,
+            0
+          ],
+          [
+            0,
+            2,
+            0
+          ]
+        ],
+        "faces": [
+          [
+            0,
+            1,
+            2,
+            3
+          ]
+        ]
+      },
+      "triangles": 2,
+      "area": 4
+    },
+    {
+      "name": "Oblique Triangle",
+      "mesh": {
+        "vertices": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            1
+          ]
+        ],
+        "faces": [
+          [
+            0,
+            1,
+            2
+          ]
+        ]
+      },
+      "triangles": 1,
+      "area": 0.7071067811865476
+    }
+  ],
+  "large": {
+    "segments": 1024,
+    "maximumUnitsPerStep": 1
+  },
+  "mirroring": {
+    "phases": [
+      "snapshot",
+      "mirror-side",
+      "mirror-vertices",
+      "mirror-corners",
+      "mirror-reconstruct"
+    ],
+    "translation": [
+      0.5,
+      0,
+      0
+    ],
+    "vertices": 12,
+    "faces": 10,
+    "area": 10,
+    "volume": 2
+  },
+  "merging": {
+    "phases": [
+      "merge-selection",
+      "snapshot",
+      "merge-pairs",
+      "merge-remap",
+      "merge-corners",
+      "merge-reconstruct"
+    ]
+  },
+  "subdivision": {
+    "phases": [
+      "subdivide-selection",
+      "snapshot",
+      "subdivide-convexity",
+      "subdivide-triangulate",
+      "subdivide-corners",
+      "subdivide-reconstruct"
+    ]
+  },
+  "jsonExportPhases": [
+    "mesh-output-vertices",
+    "mesh-output-face-corners",
+    "mesh-output-face-json",
+    "mesh-output-metadata",
+    "mesh-output-json-done"
+  ],
+  "jsonExportChannel": "text",
+  "objExport": {
+    "mesh": {
+      "vertices": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          1,
+          2
+        ]
+      ],
+      "attributes": {
+        "uv": {
+          "domain": "corner",
+          "semantic": "uv",
+          "interpolation": "linear",
+          "values": [
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              0
+            ],
+            [
+              0,
+              1
+            ]
+          ]
+        }
+      }
+    },
+    "expected": "# kernel_3d_mesh OBJ export\nv 0 0 0\nv 1 0 0\nv 0 1 0\nvt 0 0\nvt 1 0\nvt 0 1\nf 1/1 2/2 3/3\n",
+    "area": 0.5,
+    "phases": [
+      "mesh-output-vertices",
+      "mesh-output-obj-uv-scan",
+      "mesh-output-obj-uv",
+      "mesh-output-face-corners",
+      "mesh-output-face-json",
+      "mesh-output-json-done"
+    ]
+  },
+  "toBrep": {
+    "privateInitialPhase": "mesh-source-parse",
+    "guestFirstPhase": "input-parse",
+    "mesh": {
+      "vertices": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          1,
+          2,
+          3
+        ]
+      ]
+    },
+    "triangles": 2,
+    "area": 1,
+    "phases": [
+      "mesh-to-brep-tessellate",
+      "mesh-to-brep-admit",
+      "mesh-to-brep-triangles",
+      "mesh-to-brep-shell",
+      "mesh-to-brep-solid",
+      "mesh-to-brep-ready"
+    ],
+    "cancelEntities": "preserve exact initial live entity and handle counts",
+    "quality": "MeshDerivedBRep",
+    "retirementBytes": [
+      0,
+      8,
+      4096
+    ],
+    "interleavedRetention": "private generated entities survive live-handle pruning",
+    "kind": "shell",
+    "solids": 0,
+    "closedMesh": {
+      "vertices": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          2,
+          1
+        ],
+        [
+          0,
+          1,
+          3
+        ],
+        [
+          1,
+          2,
+          3
+        ],
+        [
+          2,
+          0,
+          3
+        ]
+      ]
+    },
+    "closedTriangles": 4,
+    "closedKind": "solid",
+    "closedArea": 2.3660254037844384,
+    "closedVolume": 0.16666666666666666
+  }
+}

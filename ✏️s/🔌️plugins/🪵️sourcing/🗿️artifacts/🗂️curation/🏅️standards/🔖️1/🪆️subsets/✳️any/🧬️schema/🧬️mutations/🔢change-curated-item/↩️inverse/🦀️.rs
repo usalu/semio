@@ -4,10 +4,13 @@ use crate::mutations::SourcingMutation;
 use crate::CurationSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::ChangeCuratedItemCount, base: &CurationSnapshot) -> Vec<SourcingMutation> {
+pub fn inverse(payload: &super::ChangeCuratedItemCount, base: &CurationSnapshot) -> Result<Vec<SourcingMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.curated.iter().find(|item| item.object_id == payload.object_id) {
         Some(item) => vec![crate::mutations::change_curated_item_count::change_curated_item_count(payload.object_id.clone(), item.count)],
         None => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

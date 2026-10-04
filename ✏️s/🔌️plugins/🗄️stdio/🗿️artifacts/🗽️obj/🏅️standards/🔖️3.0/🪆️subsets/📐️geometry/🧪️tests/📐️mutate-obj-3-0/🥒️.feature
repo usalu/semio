@@ -114,6 +114,7 @@ Feature: Apply every typed OBJ 3.0 mutation to a real-world mesh
       | remove-object         | {"name":"pattern-sphere"}                                                                    |
       | set-smoothing-groups  | {"smoothingGroups": [{"faceIndexFrom": 0, "group": 1}]} |
       | set-unknown-statements | {"unknownStatements": [{"lineIndex": 0, "raw": "# replaced by mutation"}]} |
+      | patch-snapshot | {"patch": {"operation": "set", "path": "/vertices/0/x", "value": 1.5}} |
 
   @id-inverse
   @level-exhaustive
@@ -147,6 +148,7 @@ Feature: Apply every typed OBJ 3.0 mutation to a real-world mesh
       | remove-object         | {"name":"pattern-sphere"}                                                                    |
       | set-smoothing-groups  | {"smoothingGroups": [{"faceIndexFrom": 0, "group": 1}]} |
       | set-unknown-statements | {"unknownStatements": [{"lineIndex": 0, "raw": "# replaced by mutation"}]} |
+      | patch-snapshot | {"patch": {"operation": "set", "path": "/vertices/0/x", "value": 1.5}} |
 
   @id-identity-round-trip
   @level-long

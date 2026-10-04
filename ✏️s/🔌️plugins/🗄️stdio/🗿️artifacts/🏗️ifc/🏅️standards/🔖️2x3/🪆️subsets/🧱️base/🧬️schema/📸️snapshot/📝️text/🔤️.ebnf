@@ -1,3 +1,17 @@
-(* ebnf stdio.ifc.2x3 snapshot *)
-document = header, body ;
-header = 'schema', space, 'stdio.ifc.2x3', newline ;
+(* 🏗️ IFC2x3 full owned native records; trivia separates tokens. *)
+document = "semio", "stdio.ifc.2x3.dsl", "v1", frame ;
+frame = "schema", "=", text, "file-description", "=", indices, "file-name", "=", indices, "file-schema", "=", indices, "instances", "=", "[", {instance}, "]", "values", "=", "[", {node}, "]", [preamble] ;
+instance = "{", "id", "=", integer, "entities", "=", "[", {entity}, "]", "}" ;
+entity = "{", "name", "=", text, "arguments", "=", indices, "}" ;
+node = "{", "kind", "=", text, ["integer", "=", integer], ["reference", "=", integer], ["text", "=", text], ["name", "=", text], ["negative", "=", boolean], ["coefficient", "=", text], ["scale", "=", integer], ["exponent", "=", integer], "children", "=", indices, "}" ;
+preamble = "edm", "=", "producer", "=", text, "module", "=", text, "creation-date", "=", text, "host", "=", text, "database", "=", text, "database-version", "=", text, "database-creation-date", "=", text, "schema", "=", text, "model", "=", text, "model-creation-date", "=", text, "header-model", "=", text, "header-model-creation-date", "=", text, "user", "=", text, "group", "=", text, "license", "=", text, "options", "=", text ;
+indices = "[", {integer}, "]" ;
+boolean = "true" | "false" ;
+integer = ["-"], digit, {digit} ;
+text = identifier | '"', {character | escape}, '"' ;
+identifier = (letter | "_"), {letter | digit | "_" | "-" | "." | "/"} ;
+escape = "\\", ('"' | "\\" | "n" | "r" | "t" | "u", "{", hex, {hex}, "}") ;
+letter = ? Unicode alphabetic scalar ? ;
+character = ? Unicode scalar except quotation mark, reverse solidus and control scalars ? ;
+digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+hex = digit | "a" | "b" | "c" | "d" | "e" | "f" ;

@@ -113,38 +113,38 @@ pub fn sourcing_action(action: &str, args: Option<semio_framework_plugin::UiValu
 }
 
 /// 🪟️ Bridges semantic app actions into the retained window-measure transport.
-pub fn sourcing_window_action(action: &str, args: Option<protocol::DslValue>) -> ActionDescriptor {
+pub fn sourcing_window_action(action: &str, args: Option<semio_framework_value::DslValue>) -> ActionDescriptor {
     ActionDescriptor { controller_id: SOURCING_CONTROLLER_ID.into(), action: action.into(), args }
 }
 
 /// 🎯️ The table-scene action descriptor a stepper, row button or drop target dispatches to this app.
 pub fn sourcing_table_action(action: &str, object_id: Option<&str>) -> semio_framework_plugin::ActionDescriptor {
-    let args = object_id.map(|id| protocol::DslValue::object([("objectId".to_string(), protocol::DslValue::String(id.to_string()))]));
+    let args = object_id.map(|id| semio_framework_value::DslValue::object([("objectId".to_string(), semio_framework_value::DslValue::String(id.to_string()))]));
     semio_framework_plugin::ActionDescriptor { controller_id: SOURCING_CONTROLLER_ID.into(), action: action.into(), args }
 }
 
 /// 🧾️ One table row record for a stock kind: its id, the `{objectId}` payload a drag carries under
 /// [`SOURCING_DRAG_MIME`], and `cells` keyed by column id.
-pub fn sourcing_table_row(object_id: &str, cells: Vec<(&str, semio_framework_plugin::TableCell)>) -> protocol::DslValue {
+pub fn sourcing_table_row(object_id: &str, cells: Vec<(&str, semio_framework_plugin::TableCell)>) -> semio_framework_value::DslValue {
     let mut entries = vec![
-        ("id".to_string(), protocol::DslValue::String(object_id.to_string())),
-        ("_drag".to_string(), protocol::DslValue::object([("objectId".to_string(), protocol::DslValue::String(object_id.to_string()))])),
+        ("id".to_string(), semio_framework_value::DslValue::String(object_id.to_string())),
+        ("_drag".to_string(), semio_framework_value::DslValue::object([("objectId".to_string(), semio_framework_value::DslValue::String(object_id.to_string()))])),
     ];
-    entries.extend(cells.into_iter().map(|(column, cell)| (column.to_string(), protocol::ToValue::to_value(&cell))));
-    protocol::DslValue::object(entries)
+    entries.extend(cells.into_iter().map(|(column, cell)| (column.to_string(), semio_framework_value::ToValue::to_value(&cell))));
+    semio_framework_value::DslValue::object(entries)
 }
 
 /// 📊️ One sourcing table surface: `(id, label, sortable)` columns, [`sourcing_table_row`] records
 /// draggable under [`SOURCING_DRAG_MIME`], and `drop_action` answering a row dropped onto it.
-pub fn sourcing_table(surface_id: &str, columns: &[(&str, &str, bool)], rows: Vec<protocol::DslValue>, drop_action: &str, sort: Option<&crate::TableSort>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn sourcing_table(surface_id: &str, columns: &[(&str, &str, bool)], rows: Vec<semio_framework_value::DslValue>, drop_action: &str, sort: Option<&crate::TableSort>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let columns = columns
         .iter()
-        .map(|(id, label, sortable)| protocol::DslValue::object([("id".to_string(), protocol::DslValue::String(id.to_string())), ("label".to_string(), protocol::DslValue::String(label.to_string())), ("sortable".to_string(), protocol::DslValue::Bool(*sortable))]))
+        .map(|(id, label, sortable)| semio_framework_value::DslValue::object([("id".to_string(), semio_framework_value::DslValue::String(id.to_string())), ("label".to_string(), semio_framework_value::DslValue::String(label.to_string())), ("sortable".to_string(), semio_framework_value::DslValue::Bool(*sortable))]))
         .collect();
-    let mut scene = semio_framework_plugin::TableScene::base(protocol::json::to_json_string(&protocol::DslValue::Array(columns)), protocol::json::to_json_string(&protocol::DslValue::Array(rows)));
+    let mut scene = semio_framework_plugin::TableScene::base(semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Array(columns)), semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Array(rows)));
     scene.row_drag_mime = Some(SOURCING_DRAG_MIME.into());
-    scene.drop_action_json = Some(protocol::json::to_json_string(&protocol::ToValue::to_value(&sourcing_table_action(drop_action, None))));
-    scene.sort_json = sort.map(|sort| protocol::json::to_json_string(&protocol::ToValue::to_value(sort)));
+    scene.drop_action_json = Some(semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&sourcing_table_action(drop_action, None))));
+    scene.sort_json = sort.map(|sort| semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(sort)));
     scene.domain_id = Some(SOURCING_ROWS_DOMAIN.into());
     scene.domain_granularity_id = Some(SOURCING_OBJECT_GRANULARITY.into());
     semio_framework_plugin::scene_surface(surface_id, semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::Table, &scene)
@@ -238,27 +238,27 @@ use crate::editor::sourcing::commands::{set_filter_min_availability, set_filter_
 ///
 /// Without this, `ArtifactApp::command_from_action`'s default rejects every app-owned action and the
 /// pane cannot even load its own example. See `📐️cad`'s `cad_command_from_action` twin.
-fn sourcing_curation_command_from_action(action: &str, args: Option<&protocol::DslValue>) -> Result<SourcingCurationCommand, Fault> {
-    let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(protocol::DslValue::as_str).map(str::to_string);
-    let f64_field = |key: &str| args.and_then(|value| value.get(key)).and_then(protocol::DslValue::as_f64);
-    let bool_field = |key: &str| args.and_then(|value| value.get(key)).and_then(protocol::DslValue::as_bool);
+fn sourcing_curation_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<SourcingCurationCommand, Fault> {
+    let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_str).map(str::to_string);
+    let f64_field = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_f64);
+    let bool_field = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_bool);
     let text_of = |key: &str| -> Option<String> {
         args.and_then(|value| value.get(key)).and_then(|value| match value {
-            protocol::DslValue::String(text) => Some(text.clone()),
-            protocol::DslValue::Bool(flag) => Some(flag.to_string()),
-            protocol::DslValue::Number(number) => Some(match number {
-                protocol::Number::UInt(number) => number.to_string(),
-                protocol::Number::Int(number) => number.to_string(),
-                protocol::Number::Float(number) => number.to_string(),
+            semio_framework_value::DslValue::String(text) => Some(text.clone()),
+            semio_framework_value::DslValue::Bool(flag) => Some(flag.to_string()),
+            semio_framework_value::DslValue::Number(number) => Some(match number {
+                semio_framework_value::Number::UInt(number) => number.to_string(),
+                semio_framework_value::Number::Int(number) => number.to_string(),
+                semio_framework_value::Number::Float(number) => number.to_string(),
             }),
             _ => None,
         })
     };
     let json_field = |key: &str| -> String {
         match args.and_then(|value| value.get(key)) {
-            Some(protocol::DslValue::String(text)) => text.clone(),
-            Some(other) => protocol::json::to_json_string(other),
-            None => args.map(protocol::json::to_json_string).unwrap_or_default(),
+            Some(semio_framework_value::DslValue::String(text)) => text.clone(),
+            Some(other) => semio_framework_pack_json::to_json_string(other),
+            None => args.map(semio_framework_pack_json::to_json_string).unwrap_or_default(),
         }
     };
     let object_id = || str_field("objectId").unwrap_or_default();
@@ -524,22 +524,22 @@ fn sourcing_curation_config_bytes(config: &SourcingCurationConfig) -> Result<usi
     Ok(bytes)
 }
 
-/// 🧺️ The shared tail every admitted config footprint pays — the mutation owner plus one `String`
-/// owner per work item, checked against the one-item preparation envelope.
-fn sourcing_curation_config_footprint(work_items: usize, retained_bytes: usize) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-    let retained_bytes = retained_bytes.saturating_add(size_of::<SourcingCurationConfigMutation>()).saturating_add(work_items.saturating_mul(size_of::<String>()));
-    if work_items > SOURCING_CURATION_CONFIG_STORE_MAXIMUM_ITEMS || retained_bytes > SOURCING_CURATION_CONFIG_STORE_MAXIMUM_BYTES {
+/// 🧺️ The shared tail every admitted config mutation pays — the mutation owner plus one `String` owner per item it
+/// carries, checked against the one-item preparation envelope; answers the retained bytes.
+fn sourcing_curation_config_retained_bytes(items: usize, retained_bytes: usize) -> Result<usize, String> {
+    let retained_bytes = retained_bytes.saturating_add(size_of::<SourcingCurationConfigMutation>()).saturating_add(items.saturating_mul(size_of::<String>()));
+    if items > SOURCING_CURATION_CONFIG_STORE_MAXIMUM_ITEMS || retained_bytes > SOURCING_CURATION_CONFIG_STORE_MAXIMUM_BYTES {
         return Err("Sourcing Config mutation exceeds its fixed one-item preparation envelope".into());
     }
-    Ok(store::ArtifactStoreOneItemFootprint { work_items, retained_bytes })
+    Ok(retained_bytes)
 }
 
-pub(crate) fn sourcing_curation_config_mutation_footprint(mutation: &SourcingCurationConfigMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+pub(crate) fn sourcing_curation_config_mutation_retained_bytes(mutation: &SourcingCurationConfigMutation) -> Result<usize, String> {
     if let SourcingCurationConfigMutation::SetContributions { json } = mutation {
         if json.len() > SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES { return Err("Sourcing Config contributions exceed their retained contributions envelope".into()); }
-        return sourcing_curation_config_footprint(1, json.len());
+        return sourcing_curation_config_retained_bytes(1, json.len());
     }
-    let (work_items, retained_bytes) = match mutation {
+    let (items, retained_bytes) = match mutation {
         SourcingCurationConfigMutation::Snapshot { .. } | SourcingCurationConfigMutation::SetContributions { .. } => return Err("Sourcing Config preparation rejects a non-retained mutation".into()),
         SourcingCurationConfigMutation::SetFilterQuery { value } => (1, value.len()),
         SourcingCurationConfigMutation::SetFilterModules { module_ids } => {
@@ -554,11 +554,11 @@ pub(crate) fn sourcing_curation_config_mutation_footprint(mutation: &SourcingCur
         SourcingCurationConfigMutation::SetFilterMinAvailability { .. } => (1, 0),
     };
     if retained_bytes > SOURCING_CURATION_CONFIG_TEXT_BYTES { return Err("Sourcing Config mutation exceeds its encoded text envelope".into()); }
-    sourcing_curation_config_footprint(work_items, retained_bytes)
+    sourcing_curation_config_retained_bytes(items, retained_bytes)
 }
 
 fn prepare_sourcing_curation_config(base: &SourcingCurationConfig, mutation: SourcingCurationConfigMutation) -> Result<(SourcingCurationConfig, Vec<SourcingCurationConfigMutation>, SourcingCurationConfigMutation), String> {
-    sourcing_curation_config_mutation_footprint(&mutation)?;
+    sourcing_curation_config_mutation_retained_bytes(&mutation)?;
     sourcing_curation_config_bytes(base)?;
     let mut post = base.clone();
     let inverse = match &mutation {
@@ -574,47 +574,13 @@ fn prepare_sourcing_curation_config(base: &SourcingCurationConfig, mutation: Sou
     Ok((post, vec![inverse], mutation))
 }
 
-fn sourcing_curation_store_edit(
-    forward: SourcingCurationConfigMutation,
-    inverse: Vec<SourcingCurationConfigMutation>,
-    description: Option<String>,
-    authority: &store::ArtifactStoreOneItemLiveAuthority,
-) -> protocol::Edit<SourcingCurationConfigMutation> {
-    let id = format!("sourcing-curation-config-retained-{}", authority.next_sequence_number());
-    protocol::Edit { line: authority.line_id().map(str::to_owned),
-        id: id.clone(),
-        actor: Some(authority.actor().to_string()),
-        forwards: vec![forward],
-        inverse,
-        mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
-            dependencies: Vec::new(),
-            base_version: authority.base_applied_edit_count() as u64,
-            author_id: Some(protocol::ActorId(authority.actor().to_string())),
-            timestamp: authority.next_clock(),
-            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-            payload_hash: None,
-            semantic_kind: None,
-            label: None,
-            group_id: None,
-            origin: Default::default(),
-            transaction: None,
-        }],
-        description, verb: None,
-        coalesce_key: None,
-        sequence_number: authority.next_sequence_number(),
-        started_at: String::new(),
-        finished_at: None,
-    }
-}
-
 impl store::ArtifactStoreOneItemPreparationFactory<SourcingCurationConfig, SourcingCurationConfigMutation> for SourcingCurationConfigPreparationFactory {
     fn preflight(&self, mutation: &SourcingCurationConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > SOURCING_CURATION_CONFIG_METADATA_BYTES) {
             return Err("Sourcing Config preparation rejected its lane or description envelope".into());
         }
-        sourcing_curation_config_mutation_footprint(mutation)?;
-        Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: SOURCING_CURATION_CONFIG_GRANT_BYTES })
+        sourcing_curation_config_mutation_retained_bytes(mutation)?;
+        Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, SOURCING_CURATION_CONFIG_GRANT_BYTES))
     }
 
     fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<SourcingCurationConfig, SourcingCurationConfigMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<SourcingCurationConfig, SourcingCurationConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<SourcingCurationConfig, SourcingCurationConfigMutation>> {
@@ -651,7 +617,7 @@ impl store::ArtifactStoreOneItemPreparation<SourcingCurationConfig, SourcingCura
         if grant.maximum_bytes < self.retained_bytes { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
         let (post, inverse, forward) = self.candidate.take().ok_or_else(|| "Sourcing Config preparation lost its candidate".to_string())?;
         let authority = self.authority.as_ref().ok_or_else(|| "Sourcing Config preparation lost its Store authority".to_string())?;
-        let prepared = authority.prepare_one_item(sourcing_curation_store_edit(forward, inverse, self.description.take(), authority), std::sync::Arc::new(post))?;
+        let prepared = authority.prepare_one_item(authority.next_edit(forward, inverse), std::sync::Arc::new(post))?;
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
         self.prepared = Some(prepared);
         Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
@@ -663,7 +629,7 @@ impl store::ArtifactStoreOneItemPreparation<SourcingCurationConfig, SourcingCura
     fn cancel(&mut self) { self.cancelled = true; }
     fn begin_close(&mut self) { self.closing = true; }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || !grant.permits_one() { return Ok(store::SnapshotRetirementStep::Blocked); }
         if self.prepared.is_some() || self.candidate.is_some() {
             if grant.maximum_bytes < self.retained_bytes { return Ok(store::SnapshotRetirementStep::Blocked); }
@@ -671,7 +637,7 @@ impl store::ArtifactStoreOneItemPreparation<SourcingCurationConfig, SourcingCura
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
         }
         if let Some(mutation) = self.mutation.as_ref() {
-            let bytes = sourcing_curation_config_mutation_footprint(mutation)?.retained_bytes;
+            let bytes = sourcing_curation_config_mutation_retained_bytes(mutation)?;
             if grant.maximum_bytes < bytes { return Ok(store::SnapshotRetirementStep::Blocked); }
             self.mutation = None;
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
@@ -683,7 +649,7 @@ impl store::ArtifactStoreOneItemPreparation<SourcingCurationConfig, SourcingCura
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
         }
         if let Some(base) = self.base.take() {
-            if !base.return_to_registry() { return Err("Sourcing Config preparation could not return its exact base root".into()); }
+            if !base.return_to_registry() { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Sourcing Config preparation could not return its exact base root")); }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(authority) = self.authority.as_ref() {
@@ -752,7 +718,7 @@ fn sourcing_curation_document_bytes(document: &CurationSnapshot) -> Result<usize
 
 /// 📏️ One semantic mutation's own retained footprint. Every variant addresses exactly one curated row,
 /// so the item count is one and the byte count is that row's id.
-fn sourcing_curation_mutation_footprint(mutation: &SourcingMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+fn sourcing_curation_mutation_retained_bytes(mutation: &SourcingMutation) -> Result<usize, String> {
     let text = match mutation {
         SourcingMutation::CreateCuratedItem(payload) => payload.item.object_id.len(),
         SourcingMutation::DeleteCuratedItem(payload) => payload.object_id.len(),
@@ -761,57 +727,23 @@ fn sourcing_curation_mutation_footprint(mutation: &SourcingMutation) -> Result<s
     if text > SOURCING_CURATION_DOCUMENT_TEXT_BYTES { return Err("Sourcing Curation mutation exceeds its encoded text envelope".into()); }
     let retained_bytes = text.saturating_add(size_of::<SourcingMutation>()).saturating_add(size_of::<String>());
     if retained_bytes > SOURCING_CURATION_DOCUMENT_MAXIMUM_BYTES { return Err("Sourcing Curation mutation exceeds its fixed one-item preparation envelope".into()); }
-    Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes })
+    Ok(retained_bytes)
 }
 
 /// 🧮️ Runs the mutation's own semantic `diff`/`inverse` against `base` and applies the resulting diff.
 /// A `Fatal`/`Error` outcome (duplicate id, missing target) is a REJECTION here, not a silent no-op —
 /// the retained lane must never publish an edit whose forward diff the vocabulary refused.
 fn prepare_sourcing_curation_document(base: &CurationSnapshot, mutation: SourcingMutation) -> Result<(CurationSnapshot, Vec<SourcingMutation>, SourcingMutation), String> {
-    sourcing_curation_mutation_footprint(&mutation)?;
+    sourcing_curation_mutation_retained_bytes(&mutation)?;
     sourcing_curation_document_bytes(base)?;
     let outcome = protocol::Mutation::diff(&mutation, base);
-    if let Some(message) = outcome.messages().iter().find(|message| matches!(message.level, protocol::Severity::Error | protocol::Severity::Fatal)) {
+    if let Some(message) = outcome.messages().iter().find(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)) {
         return Err(format!("Sourcing Curation mutation was refused by its own vocabulary: {}", message.message));
     }
-    let inverse = protocol::Mutation::inverse(&mutation, base);
+    let inverse = protocol::Mutation::inverse(&mutation, base).map_err(semio_framework_value::ValueError::into_message)?;
     let post = protocol::MutationDiff::apply(outcome.diff(), base).map_err(|error| format!("Sourcing Curation mutation could not apply onto its exact base: {}", error.message))?;
     sourcing_curation_document_bytes(&post)?;
     Ok((post, inverse, mutation))
-}
-
-fn sourcing_curation_document_edit(
-    forward: SourcingMutation,
-    inverse: Vec<SourcingMutation>,
-    description: Option<String>,
-    authority: &store::ArtifactStoreOneItemLiveAuthority,
-) -> protocol::Edit<SourcingMutation> {
-    let id = format!("sourcing-curation-document-retained-{}", authority.next_sequence_number());
-    protocol::Edit { line: authority.line_id().map(str::to_owned),
-        id: id.clone(),
-        actor: Some(authority.actor().to_string()),
-        forwards: vec![forward],
-        inverse,
-        mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
-            dependencies: Vec::new(),
-            base_version: authority.base_applied_edit_count() as u64,
-            author_id: Some(protocol::ActorId(authority.actor().to_string())),
-            timestamp: authority.next_clock(),
-            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-            payload_hash: None,
-            semantic_kind: None,
-            label: None,
-            group_id: None,
-            origin: Default::default(),
-            transaction: None,
-        }],
-        description, verb: None,
-        coalesce_key: None,
-        sequence_number: authority.next_sequence_number(),
-        started_at: String::new(),
-        finished_at: None,
-    }
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<CurationSnapshot, SourcingMutation> for SourcingCurationArtifactPreparationFactory {
@@ -819,8 +751,8 @@ impl store::ArtifactStoreOneItemPreparationFactory<CurationSnapshot, SourcingMut
         if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > SOURCING_CURATION_DOCUMENT_METADATA_BYTES) {
             return Err("Sourcing Curation preparation rejected its lane or description envelope".into());
         }
-        sourcing_curation_mutation_footprint(mutation)?;
-        Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: SOURCING_CURATION_DOCUMENT_GRANT_BYTES })
+        sourcing_curation_mutation_retained_bytes(mutation)?;
+        Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, SOURCING_CURATION_DOCUMENT_GRANT_BYTES))
     }
 
     fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<CurationSnapshot, SourcingMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<CurationSnapshot, SourcingMutation>>, store::ArtifactStoreOneItemPreparationRequest<CurationSnapshot, SourcingMutation>> {
@@ -857,7 +789,7 @@ impl store::ArtifactStoreOneItemPreparation<CurationSnapshot, SourcingMutation> 
         if grant.maximum_bytes < self.retained_bytes { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
         let (post, inverse, forward) = self.candidate.take().ok_or_else(|| "Sourcing Curation preparation lost its candidate".to_string())?;
         let authority = self.authority.as_ref().ok_or_else(|| "Sourcing Curation preparation lost its Store authority".to_string())?;
-        let prepared = authority.prepare_one_item(sourcing_curation_document_edit(forward, inverse, self.description.take(), authority), std::sync::Arc::new(post))?;
+        let prepared = authority.prepare_one_item(authority.next_edit(forward, inverse), std::sync::Arc::new(post))?;
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
         self.prepared = Some(prepared);
         Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
@@ -869,7 +801,7 @@ impl store::ArtifactStoreOneItemPreparation<CurationSnapshot, SourcingMutation> 
     fn cancel(&mut self) { self.cancelled = true; }
     fn begin_close(&mut self) { self.closing = true; }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || !grant.permits_one() { return Ok(store::SnapshotRetirementStep::Blocked); }
         if self.prepared.is_some() || self.candidate.is_some() {
             if grant.maximum_bytes < self.retained_bytes { return Ok(store::SnapshotRetirementStep::Blocked); }
@@ -877,7 +809,7 @@ impl store::ArtifactStoreOneItemPreparation<CurationSnapshot, SourcingMutation> 
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
         }
         if let Some(mutation) = self.mutation.as_ref() {
-            let bytes = sourcing_curation_mutation_footprint(mutation)?.retained_bytes;
+            let bytes = sourcing_curation_mutation_retained_bytes(mutation)?;
             if grant.maximum_bytes < bytes { return Ok(store::SnapshotRetirementStep::Blocked); }
             self.mutation = None;
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
@@ -889,7 +821,7 @@ impl store::ArtifactStoreOneItemPreparation<CurationSnapshot, SourcingMutation> 
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
         }
         if let Some(base) = self.base.take() {
-            if !base.return_to_registry() { return Err("Sourcing Curation preparation could not return its exact base root".into()); }
+            if !base.return_to_registry() { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Sourcing Curation preparation could not return its exact base root")); }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(authority) = self.authority.as_ref() {
@@ -1000,9 +932,12 @@ impl ArtifactEditor for SourcingCurationApp {
         crate::curation_child_restore_projection(snapshot)
     }
 
-    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {
+ Ok((||{
         crate::genesis_catalog_pack(snapshot, slot, child_id)
-    }
+    
+})())
+}
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<SourcingCurationApp>,
@@ -1087,7 +1022,7 @@ impl ArtifactEditor for SourcingCurationApp {
         match port {
             "catalog:out" => Ok(Media {
                 media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
-                payload: MediaPayload::Structured { schema: "kit.catalog".into(), json: dsl::json::to_json_string(&crate::schema::inferences::sourcing_catalog_fragment(doc.snapshot)) },
+                payload: MediaPayload::Structured { schema: "kit.catalog".into(), json: semio_framework_pack_json::to_json_string(&crate::schema::inferences::sourcing_catalog_fragment(doc.snapshot)) },
             }),
             "artifact:out" => {
                 let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.artifact_media_type);
@@ -1124,13 +1059,13 @@ impl ArtifactEditor for SourcingCurationApp {
     /// 🎯️ Production action bridge — see `sourcing_curation_command_from_action`. Overriding this is
     /// mandatory for any app that declares its own actions: the trait default only admits the
     /// framework-reserved ids and rejects everything else.
-    fn command_from_action(action: &str, args: Option<&protocol::DslValue>) -> Result<SourcingCurationCommand, Fault> {
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<SourcingCurationCommand, Fault> {
         sourcing_curation_command_from_action(action, args)
     }
 
-    fn host_configuration_mutation(action: &str, args: Option<&protocol::DslValue>) -> Result<Option<Self::ConfigMutation>, Fault> {
+    fn host_configuration_mutation(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Option<Self::ConfigMutation>, Fault> {
         Ok((action == "setContributions").then(|| SourcingCurationConfigMutation::SetContributions {
-            json: crate::schema::installable_contributions(args.and_then(|value| value.get("json")).and_then(protocol::DslValue::as_str).unwrap_or("[]"), SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES),
+            json: crate::schema::installable_contributions(args.and_then(|value| value.get("json")).and_then(semio_framework_value::DslValue::as_str).unwrap_or("[]"), SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES),
         }))
     }
 
@@ -1197,7 +1132,7 @@ impl ArtifactEditor for SourcingCurationApp {
 /// fresh, edit-free op-log for `document` — a genesis envelope with no history to encode.
 pub fn reset_document_effect(document: &CurationSnapshot) -> semio_framework::kernel::Effect {
     let pack = <CurationSnapshot as ArtifactPack>::encode_pack(document);
-    let spr = semio_framework_plugin::resolve_ready(store::empty_document_spr("curation", SOURCING_CURATION_SCHEMA));
+    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr("curation", SOURCING_CURATION_SCHEMA));
     semio_framework::kernel::Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️ResetDocument

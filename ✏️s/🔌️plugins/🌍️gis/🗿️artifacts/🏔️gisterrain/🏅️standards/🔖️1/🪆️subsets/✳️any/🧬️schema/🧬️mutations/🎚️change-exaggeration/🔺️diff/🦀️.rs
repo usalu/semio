@@ -9,7 +9,7 @@ use crate::GisTerrainSnapshot;
 /// `new_exaggeration` already equals `base.exaggeration`.
 pub fn diff(payload: &ChangeExaggeration, base: &GisTerrainSnapshot) -> protocol::MutationOutcome<GisTerrainDiff> {
     if base.exaggeration == payload.new_exaggeration {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Exaggeration is already {}.", payload.new_exaggeration));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Exaggeration is already {}.", payload.new_exaggeration));
     }
     protocol::MutationOutcome::new(crate::diff::diff_exaggeration(payload.new_exaggeration))
 }

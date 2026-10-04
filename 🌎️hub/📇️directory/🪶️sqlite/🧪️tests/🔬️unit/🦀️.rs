@@ -46,7 +46,7 @@ async fn document_index_neutral_transactions_survive_projection_rebuild() {
             }])
             .await
             .unwrap();
-        let events: Vec<DirectoryEvent> = directory::os_pack::json::from_json_str(&row["events"].to_string()).unwrap();
+        let events: Vec<DirectoryEvent> = semio_framework_pack_json::from_json_str(&row["events"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let mut ids = std::collections::BTreeSet::new();
         let events: Vec<_> = events.into_iter().filter(|event| ids.insert(event.id.clone())).map(|event| NewDirectoryEvent { hlc: event.hlc, actor: event.actor, space_id: event.space_id, user_id: event.user_id, body: event.body }).collect();
         let result = directory.append_events(&events).await;
@@ -462,11 +462,11 @@ async fn directory_event_page_v1_append_admission_is_transactional_sqlite() {
         body: DirectoryEventBody::SpaceRenamed { space_id: "default".into(), name: String::new() },
     };
     let candidate = DirectoryEvent { seq: head + 1, id: time_ordered_id(), hlc: event.hlc, actor: event.actor.clone(), space_id: event.space_id.clone(), user_id: None, body: event.body.clone(), recorded_at_ms: now_ms() };
-    let base = directory::os_pack::json::to_json_string(&candidate).len();
+    let base = semio_framework_pack_json::to_json_string(&candidate).len();
     let DirectoryEventBody::SpaceRenamed { name, .. } = &mut event.body else { unreachable!() };
     *name = "x".repeat(directory::os_directory::DIRECTORY_EVENT_PAGE_MAX_EVENT_BYTES - base);
     let exact = directory.append_events(&[event.clone()]).await.expect("append exact event-page boundary");
-    assert_eq!(directory::os_pack::json::to_json_string(&exact[0]).len(), directory::os_directory::DIRECTORY_EVENT_PAGE_MAX_EVENT_BYTES);
+    assert_eq!(semio_framework_pack_json::to_json_string(&exact[0]).len(), directory::os_directory::DIRECTORY_EVENT_PAGE_MAX_EVENT_BYTES);
     let head = directory.head_seq().await.expect("head before oversized event");
     let before = directory.get_space("default").await.expect("space before oversized event");
     let DirectoryEventBody::SpaceRenamed { name, .. } = &mut event.body else { unreachable!() };

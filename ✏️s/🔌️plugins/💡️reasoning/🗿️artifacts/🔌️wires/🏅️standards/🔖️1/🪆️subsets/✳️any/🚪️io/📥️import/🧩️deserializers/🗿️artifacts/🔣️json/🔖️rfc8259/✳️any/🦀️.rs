@@ -19,10 +19,10 @@ impl Deserializer<WiresSnapshot> for JsonIntoWires {
     async fn deserialize(payload: &IoPayload) -> IoResult<WiresSnapshot> {
         let _ = MINDMAP_WIRES_SCHEMA;
         let text = match payload {
-            IoPayload::Text(text) => text.clone(),
-            IoPayload::Binary(bytes) => std::str::from_utf8(bytes).map_err(|error| IoError { message: format!("JsonIntoWires: invalid utf-8: {error}"), diagnostics: Vec::new() })?.to_string(),
+            IoPayload::Text(text) => text.as_str(),
+            IoPayload::Binary(bytes) => std::str::from_utf8(bytes).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("JsonIntoWires: invalid utf-8: {error}"))))?,
         };
-        let snapshot: WiresSnapshot = dsl::os_pack::json::from_json_str(&text).map_err(|error| IoError { message: format!("JsonIntoWires: {error}"), diagnostics: Vec::new() })?;
+        let snapshot: WiresSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(IoError::from_value_error)?;
         Ok(IoOutcome::clean(snapshot))
     }
 }

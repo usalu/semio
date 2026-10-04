@@ -26,6 +26,11 @@ export interface SemioMaterial {
   baseColor: SemioRgba;
   metallic: Binary32;
   roughness: Binary32;
+  baseColorTexture?: string | null;
+  metallicRoughnessTexture?: string | null;
+  normalTexture?: string | null;
+  occlusionTexture?: string | null;
+  emissiveTexture?: string | null;
 }
 
 export interface SemioTexture {

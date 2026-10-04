@@ -31,7 +31,7 @@ fn drain_retired_ui_owners() {
 }
 
 fn labels() -> &'static Puzzle5dLabels {
-    crate::editor::puzzle5d::terminology::puzzle5d_labels(&semio_framework_plugin::ViewModel::new(protocol::Locale::En, protocol::Terminology::Native)).expect("an admitted host label axis")
+    crate::editor::puzzle5d::terminology::puzzle5d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("an admitted host label axis")
 }
 
 /// 🏗️ A synthetic document of `parts` parts carrying `grips` grips each, plus `fasteners` fasteners.

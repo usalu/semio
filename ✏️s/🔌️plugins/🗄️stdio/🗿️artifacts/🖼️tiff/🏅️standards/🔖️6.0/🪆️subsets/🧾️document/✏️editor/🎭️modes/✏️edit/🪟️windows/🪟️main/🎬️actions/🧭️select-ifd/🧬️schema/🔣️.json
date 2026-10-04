@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/editor/actions/select-ifd.json",
+  "title": "SelectIfdAction",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["ifdIndex"],
+  "properties": {
+    "ifdIndex": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "label": { "en": "Image page", "de": "Bildseite" },
+        "group": "target",
+        "order": 10
+      }
+    }
+  }
+}

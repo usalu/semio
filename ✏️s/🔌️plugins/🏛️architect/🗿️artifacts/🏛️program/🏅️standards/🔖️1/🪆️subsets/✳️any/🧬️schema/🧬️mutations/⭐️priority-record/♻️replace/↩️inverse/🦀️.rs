@@ -6,9 +6,12 @@ use crate::ProgramMutation;
 use crate::ProgramSnapshot;
 
 /// ↩️ Undo a replace by restoring the pre-state row content. Missing target ⇒ nothing to undo.
-pub fn inverse(payload: &super::ReplacePriorityRecord, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+pub fn inverse(payload: &super::ReplacePriorityRecord, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.priorities.iter().find(|row| row.header.id == payload.priority_record.header.id) {
         Some(existing) => vec![ProgramMutation::ReplacePriorityRecord(super::ReplacePriorityRecord { priority_record: existing.clone() })],
         None => Vec::new(),
     }
+
+    })())
 }

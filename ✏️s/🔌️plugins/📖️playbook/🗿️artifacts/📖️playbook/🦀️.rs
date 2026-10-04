@@ -3,12 +3,10 @@
 //! Step/block/expr records live in the shared kernel `playbook` crate; this plugin owns
 //! `PlaybookSnapshot`, `PlaybookArtifact`, facet schemas, and app-facing wrappers.
 //!
-//! Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (`playbook→C:document,flow`): the inline
-//! `steps: Vec<PlaybookStep>` field is replaced by TWO composed CHILD slots — `document` (stdio's
-//! `s.stdio.semio`/`document`, a narrative projection: title + per-step Heading/Paragraph) and `flow`
-//! (stdio's `s.stdio.semio`/`flow`, the LOSSLESS procedural source of truth: one `FlowNode` per step,
-//! its `blocks`/`description` JSON-encoded into params, sequential `FlowEdge`s witnessing step
-//! order) — see `🔖️ContentBridge` below.
+//! The steps live in ONE composed CHILD, `flow` (stdio's `s.stdio.semio@v1/flow`): one `FlowNode` per step, its
+//! `blocks`/`description` JSON-encoded into params, the step order the chain of `sequence` edges. Composed content is edited
+//! only on the child lane and read by composing parent + child on read (design §20.15 of ticket
+//! 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING) — see `🔖️ContentBridge` and `🔖️ChildLane` below.
 
 extern crate semio_framework as semio_framework;
 extern crate semio_framework_os_kernel as dsl;
@@ -22,13 +20,14 @@ extern crate semio_framework_schema as framework_schema;
 use semio_framework_artifact_playbook_playbook as playbook;
 
 use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
+use semio_framework_plugin::{ChildContentView, Fault, FaultCode, FaultOrigin};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun, SemioDocumentSnapshot, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::{insert_edge, insert_node, remove_edge, remove_node, set_node_param, SemioFlowMutation};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge as SemioFlowEdge, FlowNode as SemioFlowNode, FlowParam as SemioFlowParam, PortRef as SemioPortRef, SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA};
-use std::sync::Arc;
+use std::collections::{BTreeMap, BTreeSet};
 
 //#region 🔖️Types
-pub use crate::playbook::{PlaybookBlock, PlaybookBlockOption, PlaybookExpr, PlaybookStep, PlaybookVectorField, PLAYBOOK_BUILTIN_KINDS, PLAYBOOK_DOCUMENT_SCHEMA};
+pub use crate::playbook::{PlaybookBlock, PlaybookBlockOption, PlaybookExpr, PlaybookSpec, PlaybookStep, PlaybookVectorField, PLAYBOOK_BUILTIN_KINDS, PLAYBOOK_DOCUMENT_SCHEMA};
 pub use crate::schema::diff::{PlaybookDiff, PlaybookStringList};
 pub use crate::schema::mutations::PlaybookMutation;
 pub use crate::schema::snapshot::PlaybookSnapshot;
@@ -45,227 +44,276 @@ pub const PLAYBOOK_ARTIFACT_SCHEMA_ID: &str = "s.playbook.playbook";
 /// `s.playbook.playbook@1/*#viewer`.
 pub const PLAYBOOK_DIALECT: Dialect = Dialect { artifact_kind: "s.playbook.playbook", standard: StandardId("1"), subset: SubsetId::ANY };
 
-/// 📸️ Default persisted playbook document for new stores and demos.
+/// 📸️ Default persisted playbook document for new stores: its `flow` child is the genesis flow ([`playbook_genesis_flow`]).
 pub fn empty_playbook_snapshot() -> PlaybookSnapshot {
     PlaybookSnapshot::default()
-}
-
-/// 🧱️ Flattens all blocks across steps — delegates to the kernel helper.
-pub fn flatten_playbook_blocks(snapshot: &PlaybookSnapshot) -> Vec<PlaybookBlock> {
-    playbook::flatten_playbook_blocks(&snapshot.as_kernel()).into_iter().cloned().collect()
 }
 //#endregion 🔖️Types
 
 //#region 🔖️ContentBridge
-/// 🕸️ Owned CHILD handle types for the composed `s.stdio.semio` `document`/`flow`
-/// documents — playbook's steps now live in these composed children rather than inline on
-/// `PlaybookSnapshot`.
-pub type PlaybookDocumentChild = store::ArtifactChild<SemioDocumentSnapshot>;
+/// 🕸️ Owned CHILD handle type of the composed `s.stdio.semio@v1/flow` document that holds playbook's steps.
 pub type PlaybookFlowChild = store::ArtifactChild<SemioFlowSnapshot>;
 
-/// 🌉 REAL, LOSSLESS converter: steps -> the `flow` child's node/edge graph — the procedural source
-/// of truth. Each step becomes one `FlowNode` (`kind = "step"`, `label` = step title); the step's
-/// `blocks` (its full ~18-field form-field vocabulary, including nested `condition` trees) are
-/// JSON-encoded wholesale into one `blocksJson` param — the same "honest string boundary" flow's own
-/// `Widget -> FlowNode` converter (`📓️wave4-reports/flow-report.md`) established for a generic flow
-/// DAG's per-node config; `description` becomes its own param, present only when `Some`. Steps are
-/// chained via sequential `FlowEdge`s (`kind = "sequence"`) as a redundant procedural witness of
-/// document order — `nodes`' own `Vec` order is the actual source read back by
-/// [`steps_from_flow_content`], never the edges (a `Vec` already carries order; the edges exist so a
-/// flow-graph consumer sees genuine `next`/`prev` connectivity, not just an implicit array position).
+/// 🎫️ The `flow` child a new playbook composes (see [`playbook_genesis_flow`]).
+pub const PLAYBOOK_GENESIS_FLOW_ID: &str = "playbook-flow";
+/// 🏷️ The node kind of one step.
+pub const PLAYBOOK_STEP_NODE_KIND: &str = "step";
+/// 🔗️ The edge kind chaining one step to the next.
+pub const PLAYBOOK_SEQUENCE_EDGE_KIND: &str = "sequence";
+const PLAYBOOK_FLOW_SLOT: &str = "flow";
+const PLAYBOOK_BLOCKS_PARAM: &str = "blocksJson";
+const PLAYBOOK_DESCRIPTION_PARAM: &str = "description";
+const PLAYBOOK_NEXT_PORT: &str = "next";
+const PLAYBOOK_PREV_PORT: &str = "prev";
+const PLAYBOOK_STEP_SPACING: f64 = 220.0;
+
+/// 🧷️ The `flow` child handle named `child_id` — minted once per document and kept by every edit, since every content edit is a
+/// child-lane leaf in that child's own store (`child_id` is also the child's artifact id, as `ChildRestoreProjection` requires).
+pub fn playbook_flow_child(child_id: &str) -> PlaybookFlowChild {
+    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() };
+    store::ArtifactChild::new(child_id.to_string(), store::os_io::ArtifactRef { artifact_id: child_id.to_string(), dialect })
+}
+
+/// 🧱️ One step as its flow node at chain position `index`: `label` = title, `blocks` JSON-encoded wholesale into the
+/// `blocksJson` param (the "honest string boundary" flow's own widget converter established), `description` its own param, present
+/// only when `Some`.
+pub fn playbook_step_node(step: &PlaybookStep, index: usize) -> SemioFlowNode {
+    let mut params = vec![SemioFlowParam { key: PLAYBOOK_BLOCKS_PARAM.into(), value: semio_framework_pack_json::to_json_string(&step.blocks) }];
+    if let Some(description) = &step.description {
+        params.push(SemioFlowParam { key: PLAYBOOK_DESCRIPTION_PARAM.into(), value: description.clone() });
+    }
+    SemioFlowNode { id: step.id.clone(), kind: PLAYBOOK_STEP_NODE_KIND.into(), label: step.title.clone(), params, position: SemioPoint2 { x: index as f64 * PLAYBOOK_STEP_SPACING, y: 0.0 } }
+}
+
+/// ⛓️ The `sequence` edge chaining step `from` to step `to`.
+pub fn playbook_sequence_edge(from: &str, to: &str) -> SemioFlowEdge {
+    SemioFlowEdge {
+        id: format!("seq-{from}-{to}"),
+        from: SemioPortRef { node: from.into(), port: PLAYBOOK_NEXT_PORT.into() },
+        to: SemioPortRef { node: to.into(), port: PLAYBOOK_PREV_PORT.into() },
+        kind: PLAYBOOK_SEQUENCE_EDGE_KIND.into(),
+    }
+}
+
+/// 🌉 Steps → the flow content holding them: one node per step, consecutive steps chained by `sequence` edges.
 pub fn flow_content_snapshot_from_steps(steps: &[PlaybookStep]) -> SemioFlowSnapshot {
-    let nodes: Vec<SemioFlowNode> = steps
-        .iter()
-        .enumerate()
-        .map(|(index, step)| {
-            let mut params = vec![SemioFlowParam { key: "blocksJson".into(), value: protocol::json::to_json_string(&step.blocks) }];
-            if let Some(description) = &step.description {
-                params.push(SemioFlowParam { key: "description".into(), value: description.clone() });
-            }
-            SemioFlowNode { id: step.id.clone(), kind: "step".into(), label: step.title.clone(), params, position: SemioPoint2 { x: index as f64 * 220.0, y: 0.0 } }
-        })
-        .collect();
-    let edges: Vec<SemioFlowEdge> = steps
-        .windows(2)
-        .map(|pair| SemioFlowEdge { id: format!("seq-{}-{}", pair[0].id, pair[1].id), from: SemioPortRef { node: pair[0].id.clone(), port: "next".into() }, to: SemioPortRef { node: pair[1].id.clone(), port: "prev".into() }, kind: "sequence".into() })
-        .collect();
+    let nodes = steps.iter().enumerate().map(|(index, step)| playbook_step_node(step, index)).collect();
+    let edges = steps.windows(2).map(|pair| playbook_sequence_edge(&pair[0].id, &pair[1].id)).collect();
     SemioFlowSnapshot { schema: STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(), nodes, edges }
 }
 
-/// 🌉 Inverse of [`flow_content_snapshot_from_steps`] — real and lossless: every `PlaybookStep`
-/// field (including the full `blocks` vocabulary) round-trips through `blocksJson`/`description`.
-pub fn steps_from_flow_content(content: &SemioFlowSnapshot) -> Vec<PlaybookStep> {
-    content
-        .nodes
-        .iter()
-        .map(|node| {
-            let blocks_json = node.params.iter().find(|param| param.key == "blocksJson").map_or("[]", |param| param.value.as_str());
-            let blocks: Vec<PlaybookBlock> = protocol::json::from_json_str(blocks_json).unwrap_or_default();
-            let description = node.params.iter().find(|param| param.key == "description").map(|param| param.value.clone());
-            PlaybookStep { id: node.id.clone(), title: node.label.clone(), description, blocks }
-        })
-        .collect()
-}
-
-/// 🌉 REAL converter: (title, steps) -> a narrative projection into the `document` child's block
-/// tree — one `Heading(1)` for the playbook title (if present), then one `Heading(2)` + optional
-/// `Paragraph` per step (title/description). LOSSY BY DESIGN in the reverse direction only: a bare
-/// document cannot recover a step's `blocks`/`condition` data (see [`steps_from_document`]'s own doc
-/// comment) — `flow` is this data's lossless source of truth, `document` is a read/export companion.
-pub fn document_snapshot_from_steps(title: Option<&str>, steps: &[PlaybookStep]) -> SemioDocumentSnapshot {
-    let mut blocks = Vec::new();
-    if let Some(title) = title {
-        blocks.push(DocBlock::Heading { level: 1, style_id: None, runs: vec![DocRun::plain(title)] });
-    }
-    for step in steps {
-        blocks.push(DocBlock::Heading { level: 2, style_id: None, runs: vec![DocRun::plain(step.title.clone())] });
-        if let Some(description) = &step.description {
-            blocks.push(DocBlock::paragraph(description.clone()));
+/// 🔢️ The step ids of `content` in step order: every chain of `sequence` edges walked from its head (a step node no chain edge
+/// enters) in node order, then every step node no walk reached, in node order. The chain — not the node vector — is the order,
+/// because `insert-node` appends and the inverse of `remove-node` re-appends: an undo never reorders the steps.
+pub fn playbook_step_order(content: &SemioFlowSnapshot) -> Vec<&str> {
+    let steps: Vec<&str> = content.nodes.iter().filter(|node| node.kind == PLAYBOOK_STEP_NODE_KIND).map(|node| node.id.as_str()).collect();
+    let next: BTreeMap<&str, &str> = playbook_chain(content).map(|edge| (edge.from.node.as_str(), edge.to.node.as_str())).collect();
+    let entered: BTreeSet<&str> = next.values().copied().collect();
+    let known: BTreeSet<&str> = steps.iter().copied().collect();
+    let mut seen = BTreeSet::new();
+    let mut order = Vec::with_capacity(steps.len());
+    for head in steps.iter().copied().filter(|id| !entered.contains(id)).chain(steps.iter().copied()) {
+        let mut cursor = Some(head);
+        while let Some(id) = cursor.filter(|id| known.contains(id) && seen.insert(*id)) {
+            order.push(id);
+            cursor = next.get(id).copied();
         }
     }
-    SemioDocumentSnapshot { schema: STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(), styles: Vec::new(), images: Vec::new(), blocks }
+    order
 }
 
-/// 🌉 Inverse of [`document_snapshot_from_steps`] — HONESTLY LOSSY: a `Heading(2)`/`Paragraph` pair
-/// recovers only a step's `title`/`description` skeleton, never `blocks`/`condition` (prose carries
-/// none of that). Only used when a caller genuinely has nothing but narrative content to start from
-/// (e.g. a bare txt/md/pdf import with no procedural side) — every in-app mutation instead reads/
-/// writes through the lossless `flow` child via [`steps_from_flow_content`].
-pub fn steps_from_document(content: &SemioDocumentSnapshot) -> (Option<String>, Vec<PlaybookStep>) {
-    let mut title = None;
-    let mut steps: Vec<PlaybookStep> = Vec::new();
-    let mut index = 0usize;
-    for block in &content.blocks {
-        match block {
-            DocBlock::Heading { level: 1, runs, .. } if title.is_none() && steps.is_empty() => {
-                title = Some(runs.iter().map(|run| run.text.as_str()).collect::<String>());
-            }
-            DocBlock::Heading { level: 2, runs, .. } => {
-                index += 1;
-                steps.push(PlaybookStep { id: format!("s{index}"), title: runs.iter().map(|run| run.text.as_str()).collect::<String>(), description: None, blocks: Vec::new() });
-            }
-            DocBlock::Paragraph { runs, .. } => {
-                if let Some(last) = steps.last_mut() {
-                    last.description = Some(runs.iter().map(|run| run.text.as_str()).collect::<String>());
-                }
-            }
-            _ => {}
-        }
-    }
-    (title, steps)
+fn playbook_chain(content: &SemioFlowSnapshot) -> impl Iterator<Item = &SemioFlowEdge> {
+    content.edges.iter().filter(|edge| edge.kind == PLAYBOOK_SEQUENCE_EDGE_KIND && edge.from.port == PLAYBOOK_NEXT_PORT && edge.to.port == PLAYBOOK_PREV_PORT)
 }
 
-/// 🕸️ Deterministic content-addressed CHILD handle for the flow content — same `(child_id, target)`
-/// for identical `steps`, a different pair once the content actually changes; mirrors writer's
-/// `document_child_handle`/flow's `flow_content_child_handle`.
-pub fn flow_content_child_handle(steps: &[PlaybookStep]) -> PlaybookFlowChild {
-    let snapshot = flow_content_snapshot_from_steps(steps);
-    let content_json = protocol::json::to_json_string(&snapshot);
-    let child_id = store::content_id("playbook-flow", content_json.as_bytes());
-    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() };
-    let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
-    store::ArtifactChild::new(child_id, target)
+/// 🔓️ One step node → its step, losslessly: every `PlaybookStep` field (the full `blocks` vocabulary included) round-trips through
+/// `blocksJson`/`description`; a `blocksJson` that does not decode is refused with the node named.
+pub fn playbook_step_from_node(node: &SemioFlowNode) -> Result<PlaybookStep, String> {
+    let param = |key: &str| node.params.iter().find(|param| param.key == key).map(|param| param.value.as_str());
+    let blocks = semio_framework_pack_json::from_json_str(param(PLAYBOOK_BLOCKS_PARAM).unwrap_or("[]"), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("step {:?}: {error}", node.id))?;
+    Ok(PlaybookStep { id: node.id.clone(), title: node.label.clone(), description: param(PLAYBOOK_DESCRIPTION_PARAM).map(str::to_string), blocks })
 }
 
-/// 🕸️ Deterministic content-addressed CHILD handle for the narrative document projection — same
-/// `(child_id, target)` for identical `(title, steps)`.
-pub fn document_child_handle(title: Option<&str>, steps: &[PlaybookStep]) -> PlaybookDocumentChild {
-    let snapshot = document_snapshot_from_steps(title, steps);
-    let content_json = protocol::json::to_json_string(&snapshot);
-    let child_id = store::content_id("playbook-document", content_json.as_bytes());
-    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "document".into() };
-    let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
-    store::ArtifactChild::new(child_id, target)
+/// 🔁️ Flow content → its steps in step order ([`playbook_step_order`]).
+pub fn steps_from_flow_content(content: &SemioFlowSnapshot) -> Result<Vec<PlaybookStep>, String> {
+    let nodes: BTreeMap<&str, &SemioFlowNode> = content.nodes.iter().map(|node| (node.id.as_str(), node)).collect();
+    playbook_step_order(content).into_iter().map(|id| playbook_step_from_node(nodes[id])).collect()
 }
 //#endregion 🔖️ContentBridge
 
-//#region 🔖️WorkingScene
-/// 🌱 Ephemeral, session-side working representation of the composed `flow` child's live steps —
-/// NEVER persisted, NEVER a durable field on `PlaybookSnapshot` itself (matches the `EngineRep`
-/// contract: wholly derived, droppable at any instant, rebuilt from base). Exists because
-/// `protocol::MutationKind::diff(&self, base: &PlaybookSnapshot)` — the sole signature every
-/// mutation triad's `🔺️diff` leaf builds against — receives only the opaque-handle-bearing `base`,
-/// never a live children view, so a persisted content-addressed HANDLE cannot round-trip to real
-/// steps within that call. The scene is retained by the exact `PlaybookFlowChild` instance —
-/// mirrors `WriterWorkingScene`/`FlowWorkingScene` without a process-global id map.
-///
-/// ⚠️ **Checked against the real resolver seam before building this** (per this ticket's migration
-/// recipe §3): `🔌️plugin/🦀️.rs`'s `ArtifactView::with_children`/`ChildContentView` IS real
-/// and IS generically threaded through `VcsArtifactApp`'s `handle`/`render`/`import_media` call
-/// sites (`ArtifactView::with_children(snapshot, history, ChildContentView::new(children))`, not
-/// `ArtifactView::new`) — traced directly in the framework source, not assumed. Mutation traits do
-/// not receive that resolver, so the opaque child handle carries an ephemeral local owner used only
-/// while the handle is live in this process. Cloning the handle retains the same immutable owner;
-/// minting a new handle attaches a new owner.
-///
-/// A deserialized handle has no ephemeral owner and therefore resolves to an empty scene until the
-/// child store attaches one. This is fail-soft and instance-local: equal ids cannot leak content
-/// across documents, sessions, threads, or ABA handle reuse.
-#[derive(Clone, Debug, Default)]
-pub struct PlaybookWorkingScene {
-    pub steps: Vec<PlaybookStep>,
+//#region 🔖️ComposeOnRead
+const PLAYBOOK_FLOW_UNAVAILABLE: &str = "playbook.flow.unavailable";
+const PLAYBOOK_FLOW_DIALECT: &str = "playbook.flow.dialect";
+const PLAYBOOK_FLOW_CONTENT: &str = "playbook.flow.content";
+const PLAYBOOK_FLOW_PROJECTION: &str = "playbook.flow.projection";
+const PLAYBOOK_STEP_MISSING: &str = "playbook.step.missing";
+const PLAYBOOK_STEP_DUPLICATE: &str = "playbook.step.duplicate";
+const PLAYBOOK_BLOCK_MISSING: &str = "playbook.block.missing";
+
+fn playbook_fault(code: &'static str, message: impl Into<String>) -> Fault {
+    Fault::new(FaultOrigin::App, FaultCode::new(code), message)
 }
 
-/// 📝 Attaches one immutable working scene to this exact flow child owner.
-pub fn attach_playbook_steps(handle: &mut PlaybookFlowChild, steps: Vec<PlaybookStep>) {
-    handle.set_local_owner(Arc::new(PlaybookWorkingScene { steps }));
+/// 📣️ The localized notice of every refusal this artifact raises (design §20.12), declared by its editor and viewer.
+pub fn playbook_fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
+    use semio_framework_ui_locale::LocalizedLabel;
+    static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 7]> = std::sync::LazyLock::new(|| {
+        [
+            (PLAYBOOK_FLOW_UNAVAILABLE, LocalizedLabel::native("The playbook's steps are not loaded yet.", "Die Schritte des Playbooks sind noch nicht geladen.")),
+            (PLAYBOOK_FLOW_DIALECT, LocalizedLabel::native("The playbook's steps are stored in an unsupported format.", "Die Schritte des Playbooks liegen in einem nicht unterstützten Format vor.")),
+            (PLAYBOOK_FLOW_CONTENT, LocalizedLabel::native("A step of the playbook cannot be read.", "Ein Schritt des Playbooks kann nicht gelesen werden.")),
+            (PLAYBOOK_FLOW_PROJECTION, LocalizedLabel::native("The playbook's steps cannot be restored.", "Die Schritte des Playbooks können nicht wiederhergestellt werden.")),
+            (PLAYBOOK_STEP_MISSING, LocalizedLabel::native("The step no longer exists.", "Der Schritt existiert nicht mehr.")),
+            (PLAYBOOK_STEP_DUPLICATE, LocalizedLabel::native("A step with this id already exists.", "Ein Schritt mit dieser Id existiert bereits.")),
+            (PLAYBOOK_BLOCK_MISSING, LocalizedLabel::native("The block no longer exists.", "Der Baustein existiert nicht mehr.")),
+        ]
+    });
+    &*NOTICES
 }
 
-/// 🧵️ Retains this exact flow child's immutable scene without cloning its rows.
-pub fn playbook_working_scene_owner(handle: &PlaybookFlowChild) -> Arc<PlaybookWorkingScene> {
-    handle.local_owner::<PlaybookWorkingScene>().unwrap_or_else(|| Arc::new(PlaybookWorkingScene::default()))
+/// 🪆️ The loaded-parent child projection: the one `flow` child `snapshot` names, so a reload restores exactly that member.
+pub fn playbook_child_restore_projection(snapshot: &PlaybookSnapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+    store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| playbook_fault(PLAYBOOK_FLOW_PROJECTION, error.to_string()))
 }
 
-/// 🔎 Reads an owned scene clone for mutation paths that edit a private next value.
-pub fn playbook_working_scene_for_handle(handle: &PlaybookFlowChild) -> PlaybookWorkingScene {
-    playbook_working_scene_owner(handle).as_ref().clone()
+/// 🌊️ The `flow` child content `snapshot` names, read through `children` (design §20.15: readers compose on read, never through
+/// the handle). A child that is not composed, or composed as anything but `s.stdio.semio@v1/flow`, is a named fault.
+pub fn playbook_flow_content<'a>(snapshot: &PlaybookSnapshot, children: &'a ChildContentView) -> Result<store::SnapshotReadRef<'a, SemioFlowSnapshot>, Fault> {
+    let child_id = snapshot.flow.child_id.as_str();
+    match children.dialect(PLAYBOOK_FLOW_SLOT, child_id) {
+        Some(dialect) if dialect.artifact_kind == "s.stdio.semio" && dialect.standard == "v1" && dialect.subset == "flow" => children.typed_read::<SemioFlowSnapshot>(PLAYBOOK_FLOW_SLOT, child_id),
+        Some(dialect) => Err(playbook_fault(PLAYBOOK_FLOW_DIALECT, format!("the playbook flow child {child_id:?} is {}@{}/{}, not s.stdio.semio@v1/flow", dialect.artifact_kind, dialect.standard, dialect.subset))),
+        None => Err(playbook_fault(PLAYBOOK_FLOW_UNAVAILABLE, format!("the playbook flow child {child_id:?} is not composed"))),
+    }
 }
 
-/// 🔎 Reads the current document's live steps off its `flow` child handle — the single read call
-/// site every mutation diff/inverse/render path in this plugin uses instead of the old
-/// `snapshot.steps` field access.
-pub fn playbook_working_scene(snapshot: &PlaybookSnapshot) -> PlaybookWorkingScene {
-    playbook_working_scene_for_handle(&snapshot.flow)
+/// 🧮️ The playbook every reader works on: the parent's own fields composed with the steps of its `flow` child.
+pub fn playbook_composed_spec(snapshot: &PlaybookSnapshot, children: &ChildContentView) -> Result<PlaybookSpec, Fault> {
+    let content = playbook_flow_content(snapshot, children)?;
+    let steps = steps_from_flow_content(&content).map_err(|message| playbook_fault(PLAYBOOK_FLOW_CONTENT, message))?;
+    Ok(PlaybookSpec { schema: snapshot.schema.clone(), id: snapshot.id.clone(), version: snapshot.version.clone(), title: snapshot.title.clone(), steps })
 }
 
-/// 🔎 Convenience: just the steps (see [`playbook_working_scene`]).
-pub fn playbook_steps(snapshot: &PlaybookSnapshot) -> Vec<PlaybookStep> {
-    playbook_working_scene(snapshot).steps
-}
-
-/// 🏗️ Mints new content-addressed `document`+`flow` handles and attaches the exact flow handle's
-/// immutable local working scene in one call.
-pub fn playbook_content_handles(title: Option<&str>, steps: Vec<PlaybookStep>) -> (PlaybookDocumentChild, PlaybookFlowChild) {
-    let mut flow_handle = flow_content_child_handle(&steps);
-    let document_handle = document_child_handle(title, &steps);
-    attach_playbook_steps(&mut flow_handle, steps);
-    (document_handle, flow_handle)
-}
-
-/// 🏗️ Builds a full `PlaybookSnapshot` from literal steps — the standard fixture/import constructor
-/// replacing the old 5-field `PlaybookSnapshot { ..., steps }` struct literal now that
-/// `document`/`flow` are composed child handles, not a plain field.
-pub fn playbook_snapshot_with_steps(schema: &str, id: &str, version: &str, title: Option<String>, steps: Vec<PlaybookStep>) -> PlaybookSnapshot {
-    let (document, flow) = playbook_content_handles(title.as_deref(), steps);
-    PlaybookSnapshot { schema: schema.into(), id: id.into(), version: version.into(), title, document, flow }
-}
-
-/// 🧩️ Materialises the pack of either composed `s.stdio.semio` child from the parent snapshot alone.
-/// A whole-document `Effect::LoadDocument` hands the host a pack whose two child handles name
-/// documents no store has ever seen; the archive's closure leg asks the app for each one's genesis
-/// bytes and refuses the whole replacement when the app returns `None`. `PlaybookSnapshot` owns TWO
-/// children, so both slots must answer — `document` is the narrative projection, `flow` the
-/// procedural graph, both derived from the same live steps.
-pub fn genesis_playbook_child_pack(snapshot: &PlaybookSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
-    use store::ArtifactPack;
-    let steps = playbook_steps(snapshot);
-    match slot {
-        "document" if child_id == snapshot.document.child_id => Some(<SemioDocumentSnapshot as ArtifactPack>::encode_pack(&document_snapshot_from_steps(snapshot.title.as_deref(), &steps))),
-        "flow" if child_id == snapshot.flow.child_id => Some(<SemioFlowSnapshot as ArtifactPack>::encode_pack(&flow_content_snapshot_from_steps(&steps))),
+/// 🌱️ The flow content a document's `flow` child `child_id` is composed from when no archive member carries it — answered by
+/// id from this plugin's own catalogue (the empty playbook's flow, every built-in example's), never from the parent.
+pub fn playbook_genesis_flow(child_id: &str) -> Option<SemioFlowSnapshot> {
+    match child_id {
+        PLAYBOOK_GENESIS_FLOW_ID => Some(flow_content_snapshot_from_steps(&playbook::empty_playbook_snapshot().steps)),
+        examples::demo::FLOW_ID => examples::demo::flow().ok(),
         _ => None,
     }
 }
-//#endregion 🔖️WorkingScene
+
+/// 🧩️ The genesis pack of `snapshot`'s `flow` child ([`playbook_genesis_flow`]) for a whole-document load whose archive carries
+/// no such member.
+pub fn genesis_playbook_child_pack(snapshot: &PlaybookSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    use store::ArtifactPack;
+    if slot != PLAYBOOK_FLOW_SLOT || child_id != snapshot.flow.child_id {
+        return None;
+    }
+    playbook_genesis_flow(child_id).map(|content| <SemioFlowSnapshot as ArtifactPack>::encode_pack(&content))
+}
+//#endregion 🔖️ComposeOnRead
+
+//#region 🔖️ChildLane
+/// 🧬️ The `ChildEmit` that publishes `leaves` on `snapshot`'s `flow` child — the ONE lane every content edit takes.
+pub fn playbook_flow_emit(snapshot: &PlaybookSnapshot, leaves: &[SemioFlowMutation]) -> semio_framework_plugin::app::ChildEmit {
+    semio_framework_plugin::app::ChildEmit::of::<SemioFlowSnapshot, _>(PLAYBOOK_FLOW_SLOT, snapshot.flow.child_id.as_str(), leaves)
+}
+
+/// 🪢️ The leaves that make `content`'s step chain read `order`: every `sequence` edge the new chain drops is removed first, every
+/// one it gains inserted after, so a reorder keeps every node and its identity.
+pub fn playbook_chain_leaves(content: &SemioFlowSnapshot, order: &[&str]) -> Vec<SemioFlowMutation> {
+    let wanted: BTreeSet<(&str, &str)> = order.windows(2).map(|pair| (pair[0], pair[1])).collect();
+    let present: BTreeSet<(&str, &str)> = playbook_chain(content).map(|edge| (edge.from.node.as_str(), edge.to.node.as_str())).collect();
+    let removed = playbook_chain(content).filter(|edge| !wanted.contains(&(edge.from.node.as_str(), edge.to.node.as_str()))).map(|edge| SemioFlowMutation::RemoveEdge(remove_edge::RemoveEdge { id: edge.id.clone() }));
+    let inserted = order.windows(2).filter(|pair| !present.contains(&(pair[0], pair[1]))).map(|pair| SemioFlowMutation::InsertEdge(insert_edge::InsertEdge::new(playbook_sequence_edge(pair[0], pair[1]))));
+    removed.chain(inserted).collect()
+}
+
+fn playbook_step_node_of<'a>(content: &'a SemioFlowSnapshot, step_id: &str) -> Result<&'a SemioFlowNode, Fault> {
+    content.nodes.iter().find(|node| node.id == step_id && node.kind == PLAYBOOK_STEP_NODE_KIND).ok_or_else(|| playbook_fault(PLAYBOOK_STEP_MISSING, format!("Step \"{step_id}\" does not exist.")))
+}
+
+/// 📋️ Step `step_id` of `content`, decoded; a missing step or an undecodable `blocksJson` is a named fault.
+pub fn playbook_step_of(content: &SemioFlowSnapshot, step_id: &str) -> Result<PlaybookStep, Fault> {
+    playbook_step_from_node(playbook_step_node_of(content, step_id)?).map_err(|message| playbook_fault(PLAYBOOK_FLOW_CONTENT, message))
+}
+
+/// 🎛️ The ONE absolute leaf that sets step `step_id`'s blocks to `blocks`.
+pub fn playbook_blocks_leaf(step_id: &str, blocks: Vec<PlaybookBlock>) -> SemioFlowMutation {
+    SemioFlowMutation::SetNodeParam(set_node_param::SetNodeParam { id: step_id.into(), key: PLAYBOOK_BLOCKS_PARAM.into(), value: semio_framework_pack_json::to_json_string(&blocks) })
+}
+
+/// ➕️ Appends `step`: its node, then its chain edge; a step id already present is refused.
+pub fn playbook_add_step_leaves(content: &SemioFlowSnapshot, step: &PlaybookStep) -> Result<Vec<SemioFlowMutation>, Fault> {
+    if content.nodes.iter().any(|node| node.id == step.id) {
+        return Err(playbook_fault(PLAYBOOK_STEP_DUPLICATE, format!("Step \"{}\" already exists.", step.id)));
+    }
+    let mut order = playbook_step_order(content);
+    let node = SemioFlowMutation::InsertNode(insert_node::InsertNode::new(playbook_step_node(step, order.len())));
+    order.push(&step.id);
+    Ok(std::iter::once(node).chain(playbook_chain_leaves(content, &order)).collect())
+}
+
+/// ➖️ Removes step `step_id`: its chain edges and the bridge over it first, then its node.
+pub fn playbook_remove_step_leaves(content: &SemioFlowSnapshot, step_id: &str) -> Result<Vec<SemioFlowMutation>, Fault> {
+    playbook_step_node_of(content, step_id)?;
+    let order: Vec<&str> = playbook_step_order(content).into_iter().filter(|id| *id != step_id).collect();
+    Ok(playbook_chain_leaves(content, &order).into_iter().chain(std::iter::once(SemioFlowMutation::RemoveNode(remove_node::RemoveNode { id: step_id.into() }))).collect())
+}
+
+/// ↔️ Moves step `step_id` to position `index` (clamped) by rewiring the chain only; a step already there yields no leaf.
+pub fn playbook_move_step_leaves(content: &SemioFlowSnapshot, step_id: &str, index: usize) -> Result<Vec<SemioFlowMutation>, Fault> {
+    playbook_step_node_of(content, step_id)?;
+    let mut order: Vec<&str> = playbook_step_order(content).into_iter().filter(|id| *id != step_id).collect();
+    order.insert(index.min(order.len()), step_id);
+    Ok(playbook_chain_leaves(content, &order))
+}
+
+/// ✍️ Step `step_id`'s blocks as `edit` leaves them: ONE absolute `blocksJson` set (none when `edit` changes nothing).
+pub fn playbook_edit_blocks_leaves(content: &SemioFlowSnapshot, step_id: &str, edit: impl FnOnce(&mut Vec<PlaybookBlock>) -> Result<(), Fault>) -> Result<Vec<SemioFlowMutation>, Fault> {
+    let step = playbook_step_of(content, step_id)?;
+    let mut blocks = step.blocks.clone();
+    edit(&mut blocks)?;
+    Ok(if blocks == step.blocks { Vec::new() } else { vec![playbook_blocks_leaf(step_id, blocks)] })
+}
+
+/// 🆕️ Inserts `block` into step `step_id` at `index` (appended when `None` or past the end).
+pub fn playbook_add_block_leaves(content: &SemioFlowSnapshot, step_id: &str, block: PlaybookBlock, index: Option<usize>) -> Result<Vec<SemioFlowMutation>, Fault> {
+    playbook_edit_blocks_leaves(content, step_id, |blocks| {
+        blocks.insert(index.unwrap_or(blocks.len()).min(blocks.len()), block);
+        Ok(())
+    })
+}
+
+/// 🚮️ Removes block `block_id` from step `step_id`; a block the step does not hold is a named fault.
+pub fn playbook_remove_block_leaves(content: &SemioFlowSnapshot, step_id: &str, block_id: &str) -> Result<Vec<SemioFlowMutation>, Fault> {
+    playbook_edit_blocks_leaves(content, step_id, |blocks| {
+        let position = blocks.iter().position(|block| block.id == block_id).ok_or_else(|| playbook_fault(PLAYBOOK_BLOCK_MISSING, format!("Block \"{block_id}\" is not in step \"{step_id}\".")))?;
+        blocks.remove(position);
+        Ok(())
+    })
+}
+
+/// 🚚️ Moves block `block_id` from step `from` to position `index` (clamped) of step `to`: one leaf within a step, one per step
+/// across two.
+pub fn playbook_move_block_leaves(content: &SemioFlowSnapshot, block_id: &str, from: &str, to: &str, index: usize) -> Result<Vec<SemioFlowMutation>, Fault> {
+    let mut source = playbook_step_of(content, from)?.blocks;
+    let position = source.iter().position(|block| block.id == block_id).ok_or_else(|| playbook_fault(PLAYBOOK_BLOCK_MISSING, format!("Block \"{block_id}\" is not in step \"{from}\".")))?;
+    let block = source.remove(position);
+    if from == to {
+        return playbook_edit_blocks_leaves(content, from, |blocks| {
+            *blocks = source;
+            blocks.insert(index.min(blocks.len()), block);
+            Ok(())
+        });
+    }
+    let mut target = playbook_step_of(content, to)?.blocks;
+    target.insert(index.min(target.len()), block);
+    Ok(vec![playbook_blocks_leaf(from, source), playbook_blocks_leaf(to, target)])
+}
+//#endregion 🔖️ChildLane
 
 //#region 🔖️Register
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
@@ -326,7 +374,7 @@ pub fn artifact<A: PlaybookApplication>() -> semio_framework_plugin::app::declar
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.playbook.playbook").expect("canonical playbook kind"), localization: &[], standards: vec![standards::v1::standard()] }
 }
 
-/// 📖️ Application variants required to assemble the Playbook artifact.
+/// 🧰️ Application variants required to assemble the Playbook artifact.
 pub trait PlaybookApplication:
     semio_framework_plugin::PluginApp
     + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::playbook::PlaybookPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
@@ -345,60 +393,60 @@ impl<A> PlaybookApplication for A where
 /// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`. Private:
 /// `declaration()` above is its only caller (moved here with it from `⚙️engine`, ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g7 — kept unexported, not widened).
-pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
-    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+pub fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
             vec![
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "playbook.playbook",
                     extension: Some("playbook"),
-                    role: dsl::LanguageRole::Document,
+                    role: semio_framework_dsl::LanguageRole::Document,
                     grammar: Some(document_dsl::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(document_dsl::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("playbook.playbook"),
+                    hooks: semio_framework_dsl::passthrough_hooks("playbook.playbook"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "playbook.playbook.op",
                     extension: None,
-                    role: dsl::LanguageRole::Ops,
+                    role: semio_framework_dsl::LanguageRole::Ops,
                     grammar: Some(op::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(op::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("playbook.playbook.op"),
+                    hooks: semio_framework_dsl::passthrough_hooks("playbook.playbook.op"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "playbook.playbook.diff",
                     extension: None,
-                    role: dsl::LanguageRole::Diff,
+                    role: semio_framework_dsl::LanguageRole::Diff,
                     grammar: Some(schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(schema::diff::text::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
-                    hooks: dsl::passthrough_hooks("playbook.playbook.diff"),
+                    hooks: semio_framework_dsl::passthrough_hooks("playbook.playbook.diff"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "playbook.pack",
                     extension: None,
-                    role: dsl::LanguageRole::Pack,
+                    role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("playbook.pack"),
+                    hooks: semio_framework_dsl::passthrough_hooks("playbook.pack"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "playbook.spr",
                     extension: None,
-                    role: dsl::LanguageRole::Spr,
+                    role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("playbook.spr"),
+                    hooks: semio_framework_dsl::passthrough_hooks("playbook.spr"),
                 },
             ]
         })
@@ -501,84 +549,6 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
                         pub mod text;
                         #[path = "."]
-                        pub mod move_block {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀move-block/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀move-block/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀move-block/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀move-block/🧪️tests/🧪️rejects/🦀️.rs"]
-                            mod tests_rejects_moving_a_block_into_a_missing_step;
-                        }
-                        #[path = "."]
-                        pub mod move_step {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️move-step/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️move-step/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️move-step/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️move-step/🧪️tests/🧪️no/🦀️.rs"]
-                            mod tests_no_ops_when_the_step_is_already_at_that_index;
-                        }
-                        #[path = "."]
-                        pub mod add_block {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱add-block/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱add-block/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱add-block/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱add-block/🧪️tests/🧪️rejects/🦀️.rs"]
-                            mod tests_rejects_adding_a_block_to_a_missing_step;
-                        }
-                        #[path = "."]
-                        pub mod add_step {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-step/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-step/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-step/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-step/🧪️tests/🧪️no/🦀️.rs"]
-                            mod tests_no_ops_on_a_duplicate_step_id;
-                        }
-                        #[path = "."]
-                        pub mod remove_block {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-block/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-block/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-block/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-block/🧪️tests/🧪️rejects/🦀️.rs"]
-                            mod tests_rejects_removing_a_block_missing_from_its_step;
-                        }
-                        #[path = "."]
-                        pub mod remove_step {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-step/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-step/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-step/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-step/🧪️tests/🧪️rejects/🦀️.rs"]
-                            mod tests_rejects_removing_a_missing_step;
-                        }
-                        #[path = "."]
                         pub mod change_title {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️change-title/🦀️.rs"]
                             mod component;
@@ -590,32 +560,6 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️change-title/🧪️tests/🧪️changes/🦀️.rs"]
                             mod tests_changes_the_playbook_title;
-                        }
-                        #[path = "."]
-                        pub mod replace_block {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄replace-block/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄replace-block/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄replace-block/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄replace-block/🧪️tests/🧪️no/🦀️.rs"]
-                            mod tests_no_ops_when_the_block_is_already_identical;
-                        }
-                        #[path = "."]
-                        pub mod update_step {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹update-step/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹update-step/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹update-step/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹update-step/🧪️tests/🧪️no/🦀️.rs"]
-                            mod tests_no_ops_when_the_header_is_already_current;
                         }
                     }
                 }

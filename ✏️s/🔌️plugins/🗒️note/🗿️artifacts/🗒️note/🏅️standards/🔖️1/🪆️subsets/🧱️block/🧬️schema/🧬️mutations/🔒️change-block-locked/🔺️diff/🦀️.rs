@@ -11,7 +11,7 @@ pub fn diff(payload: &ChangeBlockLocked, base: &NoteSnapshot) -> protocol::Mutat
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Block \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if crate::schema::block_locked(block) == payload.new_locked {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Block \"{}\" locked is already {}.", payload.id, payload.new_locked));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Block \"{}\" locked is already {}.", payload.id, payload.new_locked));
     }
     let mut updated = block.clone();
     match &mut updated {

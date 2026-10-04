@@ -5,8 +5,11 @@ use crate::PresentationSnapshot;
 
 //#region 🔹Inverse
 /// ↩️ Undo restores `base.source.frame` — captured from pre-state, never from the applied diff.
-pub fn inverse(_payload: &ResizeSourceFrame, base: &PresentationSnapshot) -> Vec<PresentationMutation> {
+pub fn inverse(_payload: &ResizeSourceFrame, base: &PresentationSnapshot) -> Result<Vec<PresentationMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let (source, _) = crate::presentation_working_scene(base);
     vec![PresentationMutation::ResizeSourceFrame(ResizeSourceFrame { new_frame: source.frame })]
+
+    })())
 }
 //#endregion 🔹Inverse

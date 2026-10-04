@@ -19,7 +19,7 @@ pub struct SetLineMutation {
 
 pub type SetLinePayload = SetLineMutation;
 
-pub fn decode_set_line_payload(value: &dsl::DslValue) -> Result<SetLinePayload, String> {
+pub fn decode_set_line_payload(value: &semio_framework_value::DslValue) -> Result<SetLinePayload, String> {
     let fields = crate::schema::mutation_support::txt_required_object(value, &["index", "text"])?;
     Ok(SetLinePayload { index: crate::schema::mutation_support::txt_graphql_u32_variable(fields[0].1)?, text: crate::schema::mutation_support::txt_unicode_string(fields[1].1, "text")? })
 }
@@ -55,14 +55,17 @@ impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for SetLineMutation
         })
     }
 
-    fn inverse(&self, base: &TxtSnapshot) -> Vec<super::TxtMutation> {
+    fn inverse(&self, base: &TxtSnapshot) -> Result<Vec<super::TxtMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         let outcome = self.diff(base);
         if !outcome.messages().is_empty() || outcome.diff().lines.is_none() {
             return Vec::new();
         }
         let index = txt_u32_to_usize(self.index).expect("a non-empty diff has a representable line index");
         vec![super::TxtMutation::SetLine(Self { index: self.index, text: base.lines[index].clone() })]
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set Line", "Zeile setzen")

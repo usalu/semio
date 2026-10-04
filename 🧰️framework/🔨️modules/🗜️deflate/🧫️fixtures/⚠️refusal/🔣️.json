@@ -1,0 +1,173 @@
+{
+  "version": 1,
+  "callbacks": [
+    {
+      "id": "checkpoint-invalidValue",
+      "mode": "checkpoint",
+      "kind": "invalidValue",
+      "message": "unchanged invalidValue refusal",
+      "checkpointCount": 1,
+      "admissionCount": 0
+    },
+    {
+      "id": "checkpoint-canceled",
+      "mode": "checkpoint",
+      "kind": "canceled",
+      "message": "unchanged canceled refusal",
+      "checkpointCount": 1,
+      "admissionCount": 0
+    },
+    {
+      "id": "checkpoint-ownershipLimit",
+      "mode": "checkpoint",
+      "kind": "ownershipLimit",
+      "message": "unchanged ownershipLimit refusal",
+      "checkpointCount": 1,
+      "admissionCount": 0
+    },
+    {
+      "id": "checkpoint-allocationFailed",
+      "mode": "checkpoint",
+      "kind": "allocationFailed",
+      "message": "unchanged allocationFailed refusal",
+      "checkpointCount": 1,
+      "admissionCount": 0
+    },
+    {
+      "id": "checkpoint-workLimit",
+      "mode": "checkpoint",
+      "kind": "workLimit",
+      "message": "unchanged workLimit refusal",
+      "checkpointCount": 1,
+      "admissionCount": 0
+    },
+    {
+      "id": "checkpoint-depthLimit",
+      "mode": "checkpoint",
+      "kind": "depthLimit",
+      "message": "unchanged depthLimit refusal",
+      "checkpointCount": 1,
+      "admissionCount": 0
+    },
+    {
+      "id": "checkpoint-unsupportedOwner",
+      "mode": "checkpoint",
+      "kind": "unsupportedOwner",
+      "message": "unchanged unsupportedOwner refusal",
+      "checkpointCount": 1,
+      "admissionCount": 0
+    },
+    {
+      "id": "checkpoint-invariantViolated",
+      "mode": "checkpoint",
+      "kind": "invariantViolated",
+      "message": "unchanged invariantViolated refusal",
+      "checkpointCount": 1,
+      "admissionCount": 0
+    },
+    {
+      "id": "admit-invalidValue",
+      "mode": "admit",
+      "kind": "invalidValue",
+      "message": "unchanged invalidValue refusal",
+      "checkpointCount": 2,
+      "admissionCount": 1
+    },
+    {
+      "id": "admit-canceled",
+      "mode": "admit",
+      "kind": "canceled",
+      "message": "unchanged canceled refusal",
+      "checkpointCount": 2,
+      "admissionCount": 1
+    },
+    {
+      "id": "admit-ownershipLimit",
+      "mode": "admit",
+      "kind": "ownershipLimit",
+      "message": "unchanged ownershipLimit refusal",
+      "checkpointCount": 2,
+      "admissionCount": 1
+    },
+    {
+      "id": "admit-allocationFailed",
+      "mode": "admit",
+      "kind": "allocationFailed",
+      "message": "unchanged allocationFailed refusal",
+      "checkpointCount": 2,
+      "admissionCount": 1
+    },
+    {
+      "id": "admit-workLimit",
+      "mode": "admit",
+      "kind": "workLimit",
+      "message": "unchanged workLimit refusal",
+      "checkpointCount": 2,
+      "admissionCount": 1
+    },
+    {
+      "id": "admit-depthLimit",
+      "mode": "admit",
+      "kind": "depthLimit",
+      "message": "unchanged depthLimit refusal",
+      "checkpointCount": 2,
+      "admissionCount": 1
+    },
+    {
+      "id": "admit-unsupportedOwner",
+      "mode": "admit",
+      "kind": "unsupportedOwner",
+      "message": "unchanged unsupportedOwner refusal",
+      "checkpointCount": 2,
+      "admissionCount": 1
+    },
+    {
+      "id": "admit-invariantViolated",
+      "mode": "admit",
+      "kind": "invariantViolated",
+      "message": "unchanged invariantViolated refusal",
+      "checkpointCount": 2,
+      "admissionCount": 1
+    }
+  ],
+  "owned": [
+    {
+      "id": "match-work-overflow",
+      "kind": "workLimit",
+      "message": "Deflate match work overflow"
+    },
+    {
+      "id": "position-allocation-overflow",
+      "kind": "allocationFailed",
+      "message": "Deflate position allocation"
+    }
+  ],
+  "samples": [
+    {
+      "id": "empty",
+      "hex": "",
+      "repeat": 1
+    },
+    {
+      "id": "repeated",
+      "hex": "68656c6c6f2c20776f726c6421",
+      "repeat": 64
+    }
+  ],
+  "retained": [
+    {
+      "id": "allocator-refused",
+      "kind": "allocationFailed",
+      "reason": "retained inflate history allocation failed",
+      "requestedBytes": 32768,
+      "allocatedBytes": 0
+    },
+    {
+      "id": "physical-ceiling",
+      "kind": "ownershipLimit",
+      "reason": "retained inflate history allocation exceeded physical ceiling",
+      "requestedBytes": 32767,
+      "allocatedBytes": 32768
+    }
+  ]
+}

@@ -155,8 +155,8 @@ impl protocol::DiffCodec for SemioTableDiff {
     fn print_diff(&self) -> String {
         print_table_diff(self)
     }
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_table_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_diff(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_table_diff(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 
     /// ⚡️ Real binary diff frame: `format u8` + `presence u8` (bit0=`columns`, bit1=`rows`) are

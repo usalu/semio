@@ -1150,7 +1150,7 @@ impl crate::value::ToValue for PresenceWindowView {
 impl crate::value::FromValue for PresenceWindowView {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(format!("expected an object for PresenceWindowView, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for PresenceWindowView, found {value:?}")));
         };
         let mut window_id = None;
         let mut space = None;
@@ -1170,10 +1170,10 @@ impl crate::value::FromValue for PresenceWindowView {
             }
         }
         Ok(PresenceWindowView {
-            window_id: window_id.ok_or_else(|| crate::value::ValueError::new("PresenceWindowView missing windowId"))?,
-            space: space.ok_or_else(|| crate::value::ValueError::new("PresenceWindowView missing space"))?,
-            kind: kind.ok_or_else(|| crate::value::ValueError::new("PresenceWindowView missing kind"))?,
-            size: size.ok_or_else(|| crate::value::ValueError::new("PresenceWindowView missing size"))?,
+            window_id: window_id.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "PresenceWindowView missing windowId"))?,
+            space: space.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "PresenceWindowView missing space"))?,
+            kind: kind.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "PresenceWindowView missing kind"))?,
+            size: size.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "PresenceWindowView missing size"))?,
             pointer,
             ray_origin,
         })
@@ -1220,33 +1220,33 @@ impl crate::value::ToValue for PresenceViewKind {
 impl crate::value::FromValue for PresenceViewKind {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(format!("expected an object for PresenceViewKind, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for PresenceViewKind, found {value:?}")));
         };
         let get = |key: &str| fields.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
         let kind = match get("kind") {
             Some(crate::value::DslValue::String(s)) => s,
-            _ => return Err(crate::value::ValueError::new("PresenceViewKind missing kind")),
+            _ => return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "PresenceViewKind missing kind")),
         };
         match kind.as_str() {
             "canvas" => Ok(PresenceViewKind::Canvas {
-                x: <f64 as crate::value::FromValue>::from_value(get("x").ok_or_else(|| crate::value::ValueError::new("PresenceViewKind.canvas missing x"))?).map_err(|e| e.under("x"))?,
-                y: <f64 as crate::value::FromValue>::from_value(get("y").ok_or_else(|| crate::value::ValueError::new("PresenceViewKind.canvas missing y"))?).map_err(|e| e.under("y"))?,
-                zoom: <f64 as crate::value::FromValue>::from_value(get("zoom").ok_or_else(|| crate::value::ValueError::new("PresenceViewKind.canvas missing zoom"))?).map_err(|e| e.under("zoom"))?,
+                x: <f64 as crate::value::FromValue>::from_value(get("x").ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "PresenceViewKind.canvas missing x"))?).map_err(|e| e.under("x"))?,
+                y: <f64 as crate::value::FromValue>::from_value(get("y").ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "PresenceViewKind.canvas missing y"))?).map_err(|e| e.under("y"))?,
+                zoom: <f64 as crate::value::FromValue>::from_value(get("zoom").ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "PresenceViewKind.canvas missing zoom"))?).map_err(|e| e.under("zoom"))?,
             }),
             "orbit" => Ok(PresenceViewKind::Orbit {
-                position: <[f64; 3] as crate::value::FromValue>::from_value(get("position").ok_or_else(|| crate::value::ValueError::new("PresenceViewKind.orbit missing position"))?).map_err(|e| e.under("position"))?,
-                target: <[f64; 3] as crate::value::FromValue>::from_value(get("target").ok_or_else(|| crate::value::ValueError::new("PresenceViewKind.orbit missing target"))?).map_err(|e| e.under("target"))?,
-                up: <[f64; 3] as crate::value::FromValue>::from_value(get("up").ok_or_else(|| crate::value::ValueError::new("PresenceViewKind.orbit missing up"))?).map_err(|e| e.under("up"))?,
-                fov: <f64 as crate::value::FromValue>::from_value(get("fov").ok_or_else(|| crate::value::ValueError::new("PresenceViewKind.orbit missing fov"))?).map_err(|e| e.under("fov"))?,
+                position: <[f64; 3] as crate::value::FromValue>::from_value(get("position").ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "PresenceViewKind.orbit missing position"))?).map_err(|e| e.under("position"))?,
+                target: <[f64; 3] as crate::value::FromValue>::from_value(get("target").ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "PresenceViewKind.orbit missing target"))?).map_err(|e| e.under("target"))?,
+                up: <[f64; 3] as crate::value::FromValue>::from_value(get("up").ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "PresenceViewKind.orbit missing up"))?).map_err(|e| e.under("up"))?,
+                fov: <f64 as crate::value::FromValue>::from_value(get("fov").ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "PresenceViewKind.orbit missing fov"))?).map_err(|e| e.under("fov"))?,
             }),
             "geo" => Ok(PresenceViewKind::Geo {
-                lng: <f64 as crate::value::FromValue>::from_value(get("lng").ok_or_else(|| crate::value::ValueError::new("PresenceViewKind.geo missing lng"))?).map_err(|e| e.under("lng"))?,
-                lat: <f64 as crate::value::FromValue>::from_value(get("lat").ok_or_else(|| crate::value::ValueError::new("PresenceViewKind.geo missing lat"))?).map_err(|e| e.under("lat"))?,
-                zoom: <f64 as crate::value::FromValue>::from_value(get("zoom").ok_or_else(|| crate::value::ValueError::new("PresenceViewKind.geo missing zoom"))?).map_err(|e| e.under("zoom"))?,
-                bearing: <f64 as crate::value::FromValue>::from_value(get("bearing").ok_or_else(|| crate::value::ValueError::new("PresenceViewKind.geo missing bearing"))?).map_err(|e| e.under("bearing"))?,
-                pitch: <f64 as crate::value::FromValue>::from_value(get("pitch").ok_or_else(|| crate::value::ValueError::new("PresenceViewKind.geo missing pitch"))?).map_err(|e| e.under("pitch"))?,
+                lng: <f64 as crate::value::FromValue>::from_value(get("lng").ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "PresenceViewKind.geo missing lng"))?).map_err(|e| e.under("lng"))?,
+                lat: <f64 as crate::value::FromValue>::from_value(get("lat").ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "PresenceViewKind.geo missing lat"))?).map_err(|e| e.under("lat"))?,
+                zoom: <f64 as crate::value::FromValue>::from_value(get("zoom").ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "PresenceViewKind.geo missing zoom"))?).map_err(|e| e.under("zoom"))?,
+                bearing: <f64 as crate::value::FromValue>::from_value(get("bearing").ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "PresenceViewKind.geo missing bearing"))?).map_err(|e| e.under("bearing"))?,
+                pitch: <f64 as crate::value::FromValue>::from_value(get("pitch").ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "PresenceViewKind.geo missing pitch"))?).map_err(|e| e.under("pitch"))?,
             }),
-            other => Err(crate::value::ValueError::new(format!("unknown PresenceViewKind kind `{other}`"))),
+            other => Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("unknown PresenceViewKind kind `{other}`"))),
         }
     }
 }
@@ -1279,7 +1279,7 @@ impl crate::value::ToValue for PresenceUi {
 impl crate::value::FromValue for PresenceUi {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(format!("expected an object for PresenceUi, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for PresenceUi, found {value:?}")));
         };
         let mut out = PresenceUi::default();
         for (key, entry) in fields {
@@ -1444,7 +1444,7 @@ impl crate::value::ToValue for PresenceTyping {
 impl crate::value::FromValue for PresenceTyping {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(format!("expected an object for PresenceTyping, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for PresenceTyping, found {value:?}")));
         };
         let (mut window_id, mut deleted, mut insert) = (None, None, None);
         for (key, entry) in fields {
@@ -1456,9 +1456,9 @@ impl crate::value::FromValue for PresenceTyping {
             }
         }
         Ok(PresenceTyping {
-            window_id: window_id.ok_or_else(|| crate::value::ValueError::new("PresenceTyping missing windowId"))?,
-            deleted: deleted.ok_or_else(|| crate::value::ValueError::new("PresenceTyping missing deleted"))?,
-            insert: insert.ok_or_else(|| crate::value::ValueError::new("PresenceTyping missing insert"))?,
+            window_id: window_id.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "PresenceTyping missing windowId"))?,
+            deleted: deleted.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "PresenceTyping missing deleted"))?,
+            insert: insert.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "PresenceTyping missing insert"))?,
         })
     }
 }
@@ -1561,7 +1561,7 @@ impl crate::value::ToValue for PresenceToolRun {
 impl crate::value::FromValue for PresenceToolRun {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(format!("expected an object for PresenceToolRun, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for PresenceToolRun, found {value:?}")));
         };
         let mut tool_id = None;
         let mut state = None;
@@ -1573,7 +1573,7 @@ impl crate::value::FromValue for PresenceToolRun {
                 "toolId" => tool_id = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("toolId"))?),
                 "state" => {
                     let name = <String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("state"))?;
-                    state = Some(PresenceToolRunState::from_wire_name(&name).ok_or_else(|| crate::value::ValueError::new(format!("unknown tool run state {name}")).under("state"))?);
+                    state = Some(PresenceToolRunState::from_wire_name(&name).ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("unknown tool run state {name}")).under("state"))?);
                 }
                 "stage" => stage = Some(<u16 as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("stage"))?),
                 "completed" => completed = Some(<u64 as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("completed"))?),
@@ -1582,10 +1582,10 @@ impl crate::value::FromValue for PresenceToolRun {
             }
         }
         Ok(PresenceToolRun {
-            tool_id: tool_id.ok_or_else(|| crate::value::ValueError::new("PresenceToolRun missing toolId"))?,
-            state: state.ok_or_else(|| crate::value::ValueError::new("PresenceToolRun missing state"))?,
-            stage: stage.ok_or_else(|| crate::value::ValueError::new("PresenceToolRun missing stage"))?,
-            completed: completed.ok_or_else(|| crate::value::ValueError::new("PresenceToolRun missing completed"))?,
+            tool_id: tool_id.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "PresenceToolRun missing toolId"))?,
+            state: state.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "PresenceToolRun missing state"))?,
+            stage: stage.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "PresenceToolRun missing stage"))?,
+            completed: completed.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "PresenceToolRun missing completed"))?,
             total,
         })
     }
@@ -1645,7 +1645,7 @@ impl crate::value::ToValue for PresenceHistoryEdit {
 impl crate::value::FromValue for PresenceHistoryEdit {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(format!("expected an object for PresenceHistoryEdit, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for PresenceHistoryEdit, found {value:?}")));
         };
         let mut mutation_id = None;
         let mut stage = None;
@@ -1655,16 +1655,16 @@ impl crate::value::FromValue for PresenceHistoryEdit {
                 "mutationId" => mutation_id = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("mutationId"))?),
                 "stage" => {
                     let name = <String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("stage"))?;
-                    stage = Some(PresenceHistoryEditStage::from_wire_name(&name).ok_or_else(|| crate::value::ValueError::new(format!("unknown history edit stage {name}")).under("stage"))?);
+                    stage = Some(PresenceHistoryEditStage::from_wire_name(&name).ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("unknown history edit stage {name}")).under("stage"))?);
                 }
                 "drafts" => drafts = Some(<u32 as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("drafts"))?),
                 _ => {}
             }
         }
         Ok(PresenceHistoryEdit {
-            mutation_id: mutation_id.ok_or_else(|| crate::value::ValueError::new("PresenceHistoryEdit missing mutationId"))?,
-            stage: stage.ok_or_else(|| crate::value::ValueError::new("PresenceHistoryEdit missing stage"))?,
-            drafts: drafts.ok_or_else(|| crate::value::ValueError::new("PresenceHistoryEdit missing drafts"))?,
+            mutation_id: mutation_id.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "PresenceHistoryEdit missing mutationId"))?,
+            stage: stage.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "PresenceHistoryEdit missing stage"))?,
+            drafts: drafts.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "PresenceHistoryEdit missing drafts"))?,
         })
     }
 }
@@ -1728,7 +1728,7 @@ impl crate::value::ToValue for PresencePeer {
 impl crate::value::FromValue for PresencePeer {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(format!("expected an object for PresencePeer, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for PresencePeer, found {value:?}")));
         };
         let mut actor = None;
         let mut connected_at_ms = None;
@@ -1754,9 +1754,9 @@ impl crate::value::FromValue for PresencePeer {
                 "label" => label = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("label"))?,
                 "presencePack" => {
                     let crate::value::DslValue::String(encoded) = entry else {
-                        return Err(crate::value::ValueError::new("PresencePeer.presencePack must be a string").under("presencePack"));
+                        return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "PresencePeer.presencePack must be a string").under("presencePack"));
                     };
-                    presence_pack = Some(crate::base64_standard_decode(encoded.as_bytes()).map_err(|error| crate::value::ValueError::new(error.to_string()).under("presencePack"))?);
+                    presence_pack = Some(crate::base64_standard_decode(encoded.as_bytes()).map_err(|error| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, error.to_string()).under("presencePack"))?);
                 }
                 "userId" => user_id = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("userId"))?,
                 "role" => role = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("role"))?,
@@ -1771,9 +1771,9 @@ impl crate::value::FromValue for PresencePeer {
                     principal_kind = match entry {
                         crate::value::DslValue::Null => None,
                         crate::value::DslValue::String(name) => {
-                            Some(PresencePrincipalKind::from_wire_name(&name).ok_or_else(|| crate::value::ValueError::new(format!("unknown PresencePeer.principalKind `{name}`")).under("principalKind"))?)
+                            Some(PresencePrincipalKind::from_wire_name(&name).ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("unknown PresencePeer.principalKind `{name}`")).under("principalKind"))?)
                         }
-                        other => return Err(crate::value::ValueError::new(format!("PresencePeer.principalKind must be a string, found {other:?}")).under("principalKind")),
+                        other => return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("PresencePeer.principalKind must be a string, found {other:?}")).under("principalKind")),
                     }
                 }
                 "activeTool" => active_tool = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("activeTool"))?,
@@ -1783,8 +1783,8 @@ impl crate::value::FromValue for PresencePeer {
             }
         }
         Ok(PresencePeer {
-            actor: actor.ok_or_else(|| crate::value::ValueError::new("PresencePeer missing actor"))?,
-            connected_at_ms: connected_at_ms.ok_or_else(|| crate::value::ValueError::new("PresencePeer missing connectedAtMs"))?,
+            actor: actor.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "PresencePeer missing actor"))?,
+            connected_at_ms: connected_at_ms.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "PresencePeer missing connectedAtMs"))?,
             label,
             presence_pack,
             user_id,
@@ -2270,7 +2270,7 @@ impl crate::value::ToValue for HoverSpec {
 impl crate::value::FromValue for HoverSpec {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(format!("expected an object for HoverSpec, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for HoverSpec, found {value:?}")));
         };
         let mut out = HoverSpec::default();
         for (key, entry) in fields {
@@ -2323,7 +2323,7 @@ impl crate::value::ToValue for SelectionSpec {
 impl crate::value::FromValue for SelectionSpec {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(format!("expected an object for SelectionSpec, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for SelectionSpec, found {value:?}")));
         };
         let mut modes = None;
         let mut methods = None;
@@ -2341,9 +2341,9 @@ impl crate::value::FromValue for SelectionSpec {
             }
         }
         Ok(SelectionSpec {
-            modes: modes.ok_or_else(|| crate::value::ValueError::new("SelectionSpec missing modes"))?,
-            methods: methods.ok_or_else(|| crate::value::ValueError::new("SelectionSpec missing methods"))?,
-            merges: merges.ok_or_else(|| crate::value::ValueError::new("SelectionSpec missing merges"))?,
+            modes: modes.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "SelectionSpec missing modes"))?,
+            methods: methods.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "SelectionSpec missing methods"))?,
+            merges: merges.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "SelectionSpec missing merges"))?,
             transitive,
             broadcast,
         })
@@ -2383,21 +2383,21 @@ impl crate::value::ToValue for HierarchyProvider {
 impl crate::value::FromValue for HierarchyProvider {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(format!("expected an object for HierarchyProvider, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for HierarchyProvider, found {value:?}")));
         };
-        let kind = fields.iter().find(|(k, _)| k == "kind").map(|(_, v)| v.clone()).ok_or_else(|| crate::value::ValueError::new("HierarchyProvider missing kind"))?;
+        let kind = fields.iter().find(|(k, _)| k == "kind").map(|(_, v)| v.clone()).ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "HierarchyProvider missing kind"))?;
         let crate::value::DslValue::String(kind) = kind else {
-            return Err(crate::value::ValueError::new("HierarchyProvider kind must be a string"));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "HierarchyProvider kind must be a string"));
         };
         match kind.as_str() {
             "flat" => Ok(HierarchyProvider::Flat),
             "topology" => Ok(HierarchyProvider::Topology),
             "uiTree" => Ok(HierarchyProvider::UiTree),
             "pathDelimited" => {
-                let delimiter = fields.into_iter().find(|(k, _)| k == "delimiter").map(|(_, v)| v).ok_or_else(|| crate::value::ValueError::new("HierarchyProvider.pathDelimited missing delimiter"))?;
+                let delimiter = fields.into_iter().find(|(k, _)| k == "delimiter").map(|(_, v)| v).ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "HierarchyProvider.pathDelimited missing delimiter"))?;
                 Ok(HierarchyProvider::PathDelimited { delimiter: <String as crate::value::FromValue>::from_value(delimiter).map_err(|e| e.under("delimiter"))? })
             }
-            other => Err(crate::value::ValueError::new(format!("unknown HierarchyProvider kind `{other}`"))),
+            other => Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("unknown HierarchyProvider kind `{other}`"))),
         }
     }
 }
@@ -2437,9 +2437,9 @@ impl crate::value::FromValue for SelectionMode {
             crate::value::DslValue::String(s) => match s.as_str() {
                 "single" => Ok(SelectionMode::Single),
                 "multiple" => Ok(SelectionMode::Multiple),
-                other => Err(crate::value::ValueError::new(format!("unknown SelectionMode variant `{other}`"))),
+                other => Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("unknown SelectionMode variant `{other}`"))),
             },
-            other => Err(crate::value::ValueError::new(format!("expected a string, found {other:?}"))),
+            other => Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected a string, found {other:?}"))),
         }
     }
 }
@@ -2466,9 +2466,9 @@ impl crate::value::FromValue for SelectionMethod {
                 "pick" => Ok(SelectionMethod::Pick),
                 "rectangle" => Ok(SelectionMethod::Rectangle),
                 "lasso" => Ok(SelectionMethod::Lasso),
-                other => Err(crate::value::ValueError::new(format!("unknown SelectionMethod variant `{other}`"))),
+                other => Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("unknown SelectionMethod variant `{other}`"))),
             },
-            other => Err(crate::value::ValueError::new(format!("expected a string, found {other:?}"))),
+            other => Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected a string, found {other:?}"))),
         }
     }
 }
@@ -2531,8 +2531,8 @@ impl crate::value::ToValue for MergeMode {
 impl crate::value::FromValue for MergeMode {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         match value {
-            crate::value::DslValue::String(s) => MergeMode::from_wire_label(&s).ok_or_else(|| crate::value::ValueError::new(format!("unknown MergeMode variant `{s}`"))),
-            other => Err(crate::value::ValueError::new(format!("expected a string, found {other:?}"))),
+            crate::value::DslValue::String(s) => MergeMode::from_wire_label(&s).ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("unknown MergeMode variant `{s}`"))),
+            other => Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected a string, found {other:?}"))),
         }
     }
 }
@@ -2561,7 +2561,7 @@ impl crate::value::ToValue for InteractionTarget {
 impl crate::value::FromValue for InteractionTarget {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(format!("expected an object for InteractionTarget, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for InteractionTarget, found {value:?}")));
         };
         let mut granularity = None;
         let mut id = None;
@@ -2573,8 +2573,8 @@ impl crate::value::FromValue for InteractionTarget {
             }
         }
         Ok(InteractionTarget {
-            granularity: granularity.ok_or_else(|| crate::value::ValueError::new("InteractionTarget missing granularity"))?,
-            id: id.ok_or_else(|| crate::value::ValueError::new("InteractionTarget missing id"))?,
+            granularity: granularity.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "InteractionTarget missing granularity"))?,
+            id: id.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "InteractionTarget missing id"))?,
         })
     }
 }
@@ -2614,11 +2614,11 @@ impl crate::value::FromValue for DomainSelection {
         let entries = value.into_object()?;
         let granularity = match entries.iter().find(|(k, _)| k == "granularity") {
             Some((_, v)) => crate::value::FromValue::from_value(v.clone()).map_err(|error: crate::value::ValueError| error.under("granularity"))?,
-            None => return Err(crate::value::ValueError::new("missing field `granularity`")),
+            None => return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "missing field `granularity`")),
         };
         let ids = match entries.iter().find(|(k, _)| k == "ids") {
             Some((_, v)) => crate::value::FromValue::from_value(v.clone()).map_err(|error: crate::value::ValueError| error.under("ids"))?,
-            None => return Err(crate::value::ValueError::new("missing field `ids`")),
+            None => return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "missing field `ids`")),
         };
         let anchor_id = match entries.iter().find(|(k, _)| k == "anchorId") {
             Some((_, v)) => crate::value::FromValue::from_value(v.clone()).map_err(|error: crate::value::ValueError| error.under("anchorId"))?,
@@ -2651,11 +2651,11 @@ impl crate::value::FromValue for DomainHover {
         let entries = value.into_object()?;
         let channel = match entries.iter().find(|(k, _)| k == "channel") {
             Some((_, v)) => crate::value::FromValue::from_value(v.clone()).map_err(|error: crate::value::ValueError| error.under("channel"))?,
-            None => return Err(crate::value::ValueError::new("missing field `channel`")),
+            None => return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "missing field `channel`")),
         };
         let ids = match entries.iter().find(|(k, _)| k == "ids") {
             Some((_, v)) => crate::value::FromValue::from_value(v.clone()).map_err(|error: crate::value::ValueError| error.under("ids"))?,
-            None => return Err(crate::value::ValueError::new("missing field `ids`")),
+            None => return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "missing field `ids`")),
         };
         Ok(Self { channel, ids })
     }
@@ -2691,19 +2691,19 @@ impl crate::value::FromValue for InteractionState {
         let entries = value.into_object()?;
         let selection = match entries.iter().find(|(k, _)| k == "selection") {
             Some((_, v)) => crate::value::FromValue::from_value(v.clone()).map_err(|error: crate::value::ValueError| error.under("selection"))?,
-            None => return Err(crate::value::ValueError::new("missing field `selection`")),
+            None => return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "missing field `selection`")),
         };
         let hover = match entries.iter().find(|(k, _)| k == "hover") {
             Some((_, v)) => crate::value::FromValue::from_value(v.clone()).map_err(|error: crate::value::ValueError| error.under("hover"))?,
-            None => return Err(crate::value::ValueError::new("missing field `hover`")),
+            None => return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "missing field `hover`")),
         };
         let active_mode = match entries.iter().find(|(k, _)| k == "activeMode") {
             Some((_, v)) => crate::value::FromValue::from_value(v.clone()).map_err(|error: crate::value::ValueError| error.under("activeMode"))?,
-            None => return Err(crate::value::ValueError::new("missing field `activeMode`")),
+            None => return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "missing field `activeMode`")),
         };
         let active_granularity = match entries.iter().find(|(k, _)| k == "activeGranularity") {
             Some((_, v)) => crate::value::FromValue::from_value(v.clone()).map_err(|error: crate::value::ValueError| error.under("activeGranularity"))?,
-            None => return Err(crate::value::ValueError::new("missing field `activeGranularity`")),
+            None => return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "missing field `activeGranularity`")),
         };
         Ok(Self { selection, hover, active_mode, active_granularity })
     }
@@ -2732,7 +2732,7 @@ impl crate::value::ToValue for TopologyNode {
 impl crate::value::FromValue for TopologyNode {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(format!("expected an object for TopologyNode, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for TopologyNode, found {value:?}")));
         };
         let mut id = None;
         let mut granularity = None;
@@ -2746,8 +2746,8 @@ impl crate::value::FromValue for TopologyNode {
             }
         }
         Ok(TopologyNode {
-            id: id.ok_or_else(|| crate::value::ValueError::new("TopologyNode missing id"))?,
-            granularity: granularity.ok_or_else(|| crate::value::ValueError::new("TopologyNode missing granularity"))?,
+            id: id.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "TopologyNode missing id"))?,
+            granularity: granularity.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "TopologyNode missing granularity"))?,
             parent,
         })
     }
@@ -2769,7 +2769,7 @@ impl crate::value::ToValue for DomainTopology {
 impl crate::value::FromValue for DomainTopology {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(format!("expected an object for DomainTopology, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for DomainTopology, found {value:?}")));
         };
         let mut ordered = Vec::new();
         for (key, entry) in fields {
@@ -2859,7 +2859,7 @@ impl crate::value::ToValue for InteractionTopology {
 impl crate::value::FromValue for InteractionTopology {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(format!("expected an object for InteractionTopology, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for InteractionTopology, found {value:?}")));
         };
         let mut domains = BTreeMap::new();
         for (key, entry) in fields {
@@ -2895,7 +2895,7 @@ impl crate::value::ToValue for SelectionInput {
 impl crate::value::FromValue for SelectionInput {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(format!("expected an object for SelectionInput, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for SelectionInput, found {value:?}")));
         };
         let mut targets = None;
         let mut merge = None;
@@ -2909,9 +2909,9 @@ impl crate::value::FromValue for SelectionInput {
             }
         }
         Ok(SelectionInput {
-            targets: targets.ok_or_else(|| crate::value::ValueError::new("SelectionInput missing targets"))?,
-            merge: merge.ok_or_else(|| crate::value::ValueError::new("SelectionInput missing merge"))?,
-            mode: mode.ok_or_else(|| crate::value::ValueError::new("SelectionInput missing mode"))?,
+            targets: targets.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "SelectionInput missing targets"))?,
+            merge: merge.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "SelectionInput missing merge"))?,
+            mode: mode.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "SelectionInput missing mode"))?,
         })
     }
 }
@@ -3025,7 +3025,7 @@ impl crate::value::ToValue for HoverInput {
 impl crate::value::FromValue for HoverInput {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(format!("expected an object for HoverInput, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for HoverInput, found {value:?}")));
         };
         let mut channel = None;
         let mut targets = None;
@@ -3037,8 +3037,8 @@ impl crate::value::FromValue for HoverInput {
             }
         }
         Ok(HoverInput {
-            channel: channel.ok_or_else(|| crate::value::ValueError::new("HoverInput missing channel"))?,
-            targets: targets.ok_or_else(|| crate::value::ValueError::new("HoverInput missing targets"))?,
+            channel: channel.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "HoverInput missing channel"))?,
+            targets: targets.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "HoverInput missing targets"))?,
         })
     }
 }
@@ -3098,7 +3098,7 @@ impl crate::value::ToValue for InteractionOutline {
 impl crate::value::FromValue for InteractionOutline {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(format!("expected an object for InteractionOutline, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for InteractionOutline, found {value:?}")));
         };
         let mut id = None;
         let mut granularity_ids = None;
@@ -3112,9 +3112,9 @@ impl crate::value::FromValue for InteractionOutline {
             }
         }
         Ok(InteractionOutline {
-            id: id.ok_or_else(|| crate::value::ValueError::new("InteractionOutline missing id"))?,
-            granularity_ids: granularity_ids.ok_or_else(|| crate::value::ValueError::new("InteractionOutline missing granularityIds"))?,
-            selection: selection.ok_or_else(|| crate::value::ValueError::new("InteractionOutline missing selection"))?,
+            id: id.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "InteractionOutline missing id"))?,
+            granularity_ids: granularity_ids.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "InteractionOutline missing granularityIds"))?,
+            selection: selection.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "InteractionOutline missing selection"))?,
         })
     }
 }
@@ -3190,7 +3190,7 @@ impl crate::value::ToValue for PresenceInteraction {
 impl crate::value::FromValue for PresenceInteraction {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(format!("expected an object for PresenceInteraction, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for PresenceInteraction, found {value:?}")));
         };
         let mut out = PresenceInteraction::default();
         for (key, entry) in fields {
@@ -3228,7 +3228,7 @@ impl crate::value::ToValue for PresenceDomain {
 impl crate::value::FromValue for PresenceDomain {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(format!("expected an object for PresenceDomain, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for PresenceDomain, found {value:?}")));
         };
         let mut out = PresenceDomain::default();
         for (key, entry) in fields {

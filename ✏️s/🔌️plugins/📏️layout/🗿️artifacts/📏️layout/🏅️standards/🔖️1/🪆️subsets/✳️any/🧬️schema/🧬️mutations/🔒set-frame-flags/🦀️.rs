@@ -23,9 +23,12 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for SetFrameFlags {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_set_frame_flags(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
-        inverse_set_frame_flags(self, base)
-    }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok({
+        inverse_set_frame_flags(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set flags on frame \"{}\"", self.frame_id), &format!("Markierungen von Rahmen \"{}\" setzen", self.frame_id))
     }
@@ -42,10 +45,10 @@ pub fn diff_set_frame_flags(payload: &SetFrameFlags, base: &LayoutSnapshot) -> p
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Frame \"{}\" does not exist on page \"{}\".", payload.frame_id, payload.page_id), [payload.frame_id.clone()]);
     };
     if payload.locked.is_none() && payload.visible.is_none() {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Frame flags were not changed.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Frame flags were not changed.");
     }
     if payload.locked.is_some_and(|locked| locked == frame.locked()) && payload.visible.is_some_and(|visible| visible == frame.visible()) && payload.locked.is_some() && payload.visible.is_some() {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Frame flags are already set to that value.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Frame flags are already set to that value.");
     }
     protocol::MutationOutcome::new(LayoutDiff {
         pages: Some(LayoutPagesDelta {
@@ -59,7 +62,8 @@ pub fn diff_set_frame_flags(payload: &SetFrameFlags, base: &LayoutSnapshot) -> p
     })
 }
 
-pub fn inverse_set_frame_flags(payload: &SetFrameFlags, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_set_frame_flags(payload: &SetFrameFlags, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else { return Vec::new() };
     let Some(frame) = page.frames.iter().find(|frame| frame.id() == payload.frame_id) else { return Vec::new() };
     vec![LayoutMutation::SetFrameFlags(SetFrameFlags {
@@ -68,6 +72,8 @@ pub fn inverse_set_frame_flags(payload: &SetFrameFlags, base: &LayoutSnapshot) -
         locked: payload.locked.map(|_| frame.locked()),
         visible: payload.visible.map(|_| frame.visible()),
     })]
+
+    })())
 }
 
 #[cfg(test)]

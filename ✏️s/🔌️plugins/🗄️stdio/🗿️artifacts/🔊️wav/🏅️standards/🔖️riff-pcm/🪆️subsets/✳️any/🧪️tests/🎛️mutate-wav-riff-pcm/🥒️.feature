@@ -62,11 +62,11 @@ Feature: Apply every typed WAV RIFF-PCM mutation to a real-world recording
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id               | params |
-      | set-snapshot     | {"snapshot":{"schema":"stdio.wav","fmt":{"audioFormat":1,"channels":1,"sampleRate":8000,"byteRate":16000,"blockAlign":2,"bitsPerSample":16},"data":{"kind":"pcm16","value":[1000,-1000,500,-500,250,-250,125,-125]},"otherChunks":[{"fourcc":"fact","data":[8,0,0,0]}],"chunkOrder":[{"kind":"format"},{"kind":"samples"},{"kind":"other","value":0}]}} |
+      | set-snapshot     | {"snapshot":{"schema":"stdio.wav","fmt":{"audioFormat":1,"channels":1,"sampleRate":8000,"byteRate":16000,"blockAlign":2,"bitsPerSample":16},"data":{"kind":"pcm16","value":[1000,-1000,500,-500,250,-250,125,-125]},"otherChunks":[{"fourcc":"fact","data":[8,0,0,0]}],"chunkOrder":[{"kind":"format"},{"kind":"samples"},{"kind":"other","value":"0"}]}} |
       | set-fmt          | {"fmt":{"audioFormat":1,"channels":2,"sampleRate":22050,"byteRate":88200,"blockAlign":4,"bitsPerSample":16}} |
       | set-data         | {"data":{"kind":"pcm16","value":[3000,-3000,1500,-1500,750,-750,375,-375]}} |
       | patch-data       | {"index":4000,"removeCount":8,"data":{"kind":"pcm16","value":[3000,-3000,1500,-1500]}} |
-      | patch-snapshot   | {"patch":{"edits":[{"path":["data","value","4000"],"edit":{"operation":"set","value":1234}},{"path":["data","value","4001"],"edit":{"operation":"remove"}}]}} |
+      | patch-snapshot   | {"patch":{"operation":"set","path":"/data/value/4000","value":1234}} |
       | set-other-chunks | {"chunks":[{"fourcc":"fact","data":[4,0,0,0]},{"fourcc":"LIST","data":[73,78,70,79]}]} |
 
   @id-inverse
@@ -82,11 +82,11 @@ Feature: Apply every typed WAV RIFF-PCM mutation to a real-world recording
     Then the recording is restored to its original semantic projection
     Examples:
       | id               | params |
-      | set-snapshot     | {"snapshot":{"schema":"stdio.wav","fmt":{"audioFormat":1,"channels":1,"sampleRate":8000,"byteRate":16000,"blockAlign":2,"bitsPerSample":16},"data":{"kind":"pcm16","value":[1000,-1000,500,-500,250,-250,125,-125]},"otherChunks":[{"fourcc":"fact","data":[8,0,0,0]}],"chunkOrder":[{"kind":"format"},{"kind":"samples"},{"kind":"other","value":0}]}} |
+      | set-snapshot     | {"snapshot":{"schema":"stdio.wav","fmt":{"audioFormat":1,"channels":1,"sampleRate":8000,"byteRate":16000,"blockAlign":2,"bitsPerSample":16},"data":{"kind":"pcm16","value":[1000,-1000,500,-500,250,-250,125,-125]},"otherChunks":[{"fourcc":"fact","data":[8,0,0,0]}],"chunkOrder":[{"kind":"format"},{"kind":"samples"},{"kind":"other","value":"0"}]}} |
       | set-fmt          | {"fmt":{"audioFormat":1,"channels":2,"sampleRate":22050,"byteRate":88200,"blockAlign":4,"bitsPerSample":16}} |
       | set-data         | {"data":{"kind":"pcm16","value":[3000,-3000,1500,-1500,750,-750,375,-375]}} |
       | patch-data       | {"index":4000,"removeCount":8,"data":{"kind":"pcm16","value":[3000,-3000,1500,-1500]}} |
-      | patch-snapshot   | {"patch":{"edits":[{"path":["data","value","4000"],"edit":{"operation":"set","value":1234}},{"path":["data","value","4001"],"edit":{"operation":"remove"}}]}} |
+      | patch-snapshot   | {"patch":{"operation":"set","path":"/data/value/4000","value":1234}} |
       | set-other-chunks | {"chunks":[{"fourcc":"fact","data":[4,0,0,0]},{"fourcc":"LIST","data":[73,78,70,79]}]} |
 
   @id-identity-round-trip

@@ -517,62 +517,62 @@ pub fn results_report_json(case: &str, weather: WeatherData, weather_file: &str,
 
 /// 📄️ Serialize a [`CaseResults`] into `semio.energy.bestest-results/1`.
 pub fn report_json(projected: &CaseResults, weather_file: &str, weather_sha256: &str) -> String {
-    let numbers = |values: &[f64]| pack::json::array(values.iter().map(|value| pack::json::Value::from(*value)));
+    let numbers = |values: &[f64]| semio_framework_pack_json::array(values.iter().map(|value| semio_framework_pack_json::Value::from(*value)));
     let controlled = !is_free_float(&projected.case);
     let annual =
-        if controlled { pack::json::object([("heatingKwh".to_string(), pack::json::Value::from(projected.annual_heating_kwh)), ("coolingKwh".to_string(), pack::json::Value::from(projected.annual_cooling_kwh))]) } else { pack::json::Value::Null };
+        if controlled { semio_framework_pack_json::object([("heatingKwh".to_string(), semio_framework_pack_json::Value::from(projected.annual_heating_kwh)), ("coolingKwh".to_string(), semio_framework_pack_json::Value::from(projected.annual_cooling_kwh))]) } else { semio_framework_pack_json::Value::Null };
     let peak = if controlled {
-        pack::json::object([
-            ("heatingKw".to_string(), pack::json::Value::from(projected.peak_heating_kw)),
-            ("heatingHour".to_string(), pack::json::Value::from(projected.peak_heating_hour)),
-            ("coolingKw".to_string(), pack::json::Value::from(projected.peak_cooling_kw)),
-            ("coolingHour".to_string(), pack::json::Value::from(projected.peak_cooling_hour)),
+        semio_framework_pack_json::object([
+            ("heatingKw".to_string(), semio_framework_pack_json::Value::from(projected.peak_heating_kw)),
+            ("heatingHour".to_string(), semio_framework_pack_json::Value::from(projected.peak_heating_hour)),
+            ("coolingKw".to_string(), semio_framework_pack_json::Value::from(projected.peak_cooling_kw)),
+            ("coolingHour".to_string(), semio_framework_pack_json::Value::from(projected.peak_cooling_hour)),
         ])
     } else {
-        pack::json::Value::Null
+        semio_framework_pack_json::Value::Null
     };
     let free_float = if controlled {
-        pack::json::Value::Null
+        semio_framework_pack_json::Value::Null
     } else {
-        pack::json::object([
-            ("minC".to_string(), pack::json::Value::from(projected.free_float_min_c)),
-            ("minHour".to_string(), pack::json::Value::from(projected.free_float_min_hour)),
-            ("maxC".to_string(), pack::json::Value::from(projected.free_float_max_c)),
-            ("maxHour".to_string(), pack::json::Value::from(projected.free_float_max_hour)),
-            ("meanC".to_string(), pack::json::Value::from(projected.free_float_mean_c)),
+        semio_framework_pack_json::object([
+            ("minC".to_string(), semio_framework_pack_json::Value::from(projected.free_float_min_c)),
+            ("minHour".to_string(), semio_framework_pack_json::Value::from(projected.free_float_min_hour)),
+            ("maxC".to_string(), semio_framework_pack_json::Value::from(projected.free_float_max_c)),
+            ("maxHour".to_string(), semio_framework_pack_json::Value::from(projected.free_float_max_hour)),
+            ("meanC".to_string(), semio_framework_pack_json::Value::from(projected.free_float_mean_c)),
         ])
     };
-    let report = pack::json::object([
-        ("schema".to_string(), pack::json::Value::from("semio.energy.bestest-results/1")),
-        ("case".to_string(), pack::json::Value::from(projected.case.as_str())),
+    let report = semio_framework_pack_json::object([
+        ("schema".to_string(), semio_framework_pack_json::Value::from("semio.energy.bestest-results/1")),
+        ("case".to_string(), semio_framework_pack_json::Value::from(projected.case.as_str())),
         (
             "producer".to_string(),
-            pack::json::object([
-                ("name".to_string(), pack::json::Value::from("semio-energy-engine")),
-                ("version".to_string(), pack::json::Value::from(env!("CARGO_PKG_VERSION"))),
-                ("via".to_string(), pack::json::Value::from(concat!("semio-s-plugin-energy ", env!("CARGO_PKG_VERSION")))),
+            semio_framework_pack_json::object([
+                ("name".to_string(), semio_framework_pack_json::Value::from("semio-energy-engine")),
+                ("version".to_string(), semio_framework_pack_json::Value::from(env!("CARGO_PKG_VERSION"))),
+                ("via".to_string(), semio_framework_pack_json::Value::from(concat!("semio-s-plugin-energy ", env!("CARGO_PKG_VERSION")))),
             ]),
         ),
-        ("weather".to_string(), pack::json::object([("file".to_string(), pack::json::Value::from(weather_file)), ("sha256".to_string(), if weather_sha256.is_empty() { pack::json::Value::Null } else { pack::json::Value::from(weather_sha256) })])),
-        ("timestepMinutes".to_string(), pack::json::Value::from(projected.timestep_minutes)),
+        ("weather".to_string(), semio_framework_pack_json::object([("file".to_string(), semio_framework_pack_json::Value::from(weather_file)), ("sha256".to_string(), if weather_sha256.is_empty() { semio_framework_pack_json::Value::Null } else { semio_framework_pack_json::Value::from(weather_sha256) })])),
+        ("timestepMinutes".to_string(), semio_framework_pack_json::Value::from(projected.timestep_minutes)),
         ("annual".to_string(), annual),
         ("peak".to_string(), peak),
         ("freeFloat".to_string(), free_float),
-        ("hourly".to_string(), pack::json::object([("zoneAirTemperatureC".to_string(), numbers(&projected.zone_air_temperature_c)), ("heatingW".to_string(), numbers(&projected.heating_w)), ("coolingW".to_string(), numbers(&projected.cooling_w))])),
+        ("hourly".to_string(), semio_framework_pack_json::object([("zoneAirTemperatureC".to_string(), numbers(&projected.zone_air_temperature_c)), ("heatingW".to_string(), numbers(&projected.heating_w)), ("coolingW".to_string(), numbers(&projected.cooling_w))])),
     ]);
-    pack::json::to_string(&report)
+    semio_framework_pack_json::to_string(&report)
 }
 
 /// 📄️ One case's model as the engine's own canonical JSON — the exact bytes the committed
 /// `🧫️fixtures/🏛️bestest-<case>/🔋️model.json` carries and the `model` field of an
 /// `EnergyModelSnapshot` holds.
 pub fn model_json(case: &str) -> Option<String> {
-    Some(pack::json::to_json_string(&model(case)?))
+    Some(semio_framework_pack_json::to_json_string(&model(case)?))
 }
 
 /// 📄️ The inverse of [`model_json`] — the committed fixture back into a typed model.
 pub fn model_from_json(text: &str) -> Result<Model, String> {
-    pack::json::from_json_str::<Model>(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str::<Model>(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 
 /// 📐️ The derived quantities ANSI/ASHRAE 140 §5.2 states directly (areas, air-to-air U-values,
@@ -590,42 +590,42 @@ pub fn case_parameters_json(case: &str) -> Option<String> {
             construction.map_or(0.0, |construction| construction.layer_material_ids.iter().filter_map(|id| built.materials.iter().find(|material| material.id == *id)).map(|material| material.thickness_m / material.conductivity_w_m_k).sum());
         layers + crate::material::R_FILM_INTERIOR_M2K_W + crate::material::R_FILM_EXTERIOR_M2K_W
     };
-    let surfaces = pack::json::array(built.surfaces.iter().map(|surface| {
+    let surfaces = semio_framework_pack_json::array(built.surfaces.iter().map(|surface| {
         let gross = crate::geometry::surface_area_m2(&surface.vertices_m);
         let glazed: f64 = built.fenestrations.iter().filter(|window| window.surface_id == surface.id).map(|window| window.area_m2).sum();
         let orientation = crate::geometry::surface_tilt_azimuth(crate::geometry::polygon_normal(&surface.vertices_m), built.site.north_axis_deg);
-        pack::json::object([
-            ("name".to_string(), pack::json::Value::from(surface.name.as_str())),
-            ("grossAreaM2".to_string(), pack::json::Value::from(gross)),
-            ("netOpaqueAreaM2".to_string(), pack::json::Value::from(gross - glazed)),
-            ("uValueWM2K".to_string(), pack::json::Value::from(1.0 / resistance(surface.construction_id))),
-            ("tiltDeg".to_string(), pack::json::Value::from(orientation.tilt_deg)),
-            ("azimuthDeg".to_string(), pack::json::Value::from(orientation.azimuth_deg)),
+        semio_framework_pack_json::object([
+            ("name".to_string(), semio_framework_pack_json::Value::from(surface.name.as_str())),
+            ("grossAreaM2".to_string(), semio_framework_pack_json::Value::from(gross)),
+            ("netOpaqueAreaM2".to_string(), semio_framework_pack_json::Value::from(gross - glazed)),
+            ("uValueWM2K".to_string(), semio_framework_pack_json::Value::from(1.0 / resistance(surface.construction_id))),
+            ("tiltDeg".to_string(), semio_framework_pack_json::Value::from(orientation.tilt_deg)),
+            ("azimuthDeg".to_string(), semio_framework_pack_json::Value::from(orientation.azimuth_deg)),
         ])
     }));
-    let windows = pack::json::array(built.fenestrations.iter().map(|window| {
-        pack::json::object([
-            ("name".to_string(), pack::json::Value::from(window.name.as_str())),
-            ("areaM2".to_string(), pack::json::Value::from(window.area_m2)),
-            ("uValueWM2K".to_string(), pack::json::Value::from(window.u_value_w_m2k)),
-            ("shgc".to_string(), pack::json::Value::from(window.shgc)),
-            ("overhangDepthM".to_string(), pack::json::Value::from(window.overhang_depth_m)),
-            ("finDepthM".to_string(), pack::json::Value::from(window.fin_depth_m)),
+    let windows = semio_framework_pack_json::array(built.fenestrations.iter().map(|window| {
+        semio_framework_pack_json::object([
+            ("name".to_string(), semio_framework_pack_json::Value::from(window.name.as_str())),
+            ("areaM2".to_string(), semio_framework_pack_json::Value::from(window.area_m2)),
+            ("uValueWM2K".to_string(), semio_framework_pack_json::Value::from(window.u_value_w_m2k)),
+            ("shgc".to_string(), semio_framework_pack_json::Value::from(window.shgc)),
+            ("overhangDepthM".to_string(), semio_framework_pack_json::Value::from(window.overhang_depth_m)),
+            ("finDepthM".to_string(), semio_framework_pack_json::Value::from(window.fin_depth_m)),
         ])
     }));
     let zone = built.zones.first()?;
-    let report = pack::json::object([
-        ("schema".to_string(), pack::json::Value::from("semio.energy.bestest-parameters/1")),
-        ("case".to_string(), pack::json::Value::from(case)),
-        ("zoneVolumeM3".to_string(), pack::json::Value::from(zone.volume_m3)),
-        ("floorAreaM2".to_string(), pack::json::Value::from(FLOOR_AREA_M2)),
-        ("infiltrationAch".to_string(), pack::json::Value::from(built.infiltrations.first().map_or(0.0, |infiltration| infiltration.design_flow_ach))),
-        ("internalGainW".to_string(), pack::json::Value::from(built.equipment.iter().map(|gain| gain.watts_per_area * FLOOR_AREA_M2).sum::<f64>())),
-        ("conditioned".to_string(), pack::json::Value::Bool(!built.ideal_loads.is_empty())),
+    let report = semio_framework_pack_json::object([
+        ("schema".to_string(), semio_framework_pack_json::Value::from("semio.energy.bestest-parameters/1")),
+        ("case".to_string(), semio_framework_pack_json::Value::from(case)),
+        ("zoneVolumeM3".to_string(), semio_framework_pack_json::Value::from(zone.volume_m3)),
+        ("floorAreaM2".to_string(), semio_framework_pack_json::Value::from(FLOOR_AREA_M2)),
+        ("infiltrationAch".to_string(), semio_framework_pack_json::Value::from(built.infiltrations.first().map_or(0.0, |infiltration| infiltration.design_flow_ach))),
+        ("internalGainW".to_string(), semio_framework_pack_json::Value::from(built.equipment.iter().map(|gain| gain.watts_per_area * FLOOR_AREA_M2).sum::<f64>())),
+        ("conditioned".to_string(), semio_framework_pack_json::Value::Bool(!built.ideal_loads.is_empty())),
         ("surfaces".to_string(), surfaces),
         ("windows".to_string(), windows),
     ]);
-    Some(pack::json::to_string(&report))
+    Some(semio_framework_pack_json::to_string(&report))
 }
 
 fn extremum(values: &[f64], minimum: bool) -> (f64, u32) {

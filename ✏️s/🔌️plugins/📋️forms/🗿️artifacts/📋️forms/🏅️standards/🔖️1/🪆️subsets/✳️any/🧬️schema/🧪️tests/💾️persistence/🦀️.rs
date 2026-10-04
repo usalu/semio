@@ -3,11 +3,11 @@ use crate::{forms_steps, FormsSnapshot};
 #[test]
 fn definition_and_answers_survive_json_text_and_pack_restart() {
     let input = include_str!("../../🧫️fixtures/💾️persistence/🔣️.json");
-    let snapshot: FormsSnapshot = dsl::json::from_json_str(input).unwrap();
+    let snapshot: FormsSnapshot = semio_framework_pack_json::from_json_str(input,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(forms_steps(&snapshot).len(), 1);
     assert_eq!(snapshot.responses.len(), 1);
-    let json = dsl::os_pack::json::to_json_string(&snapshot);
-    assert_eq!(dsl::json::from_json_str::<FormsSnapshot>(&json).unwrap(), snapshot);
+    let json = semio_framework_pack_json::to_json_string(&snapshot);
+    assert_eq!(semio_framework_pack_json::from_json_str::<FormsSnapshot>(&json,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(), snapshot);
     let text = <FormsSnapshot as store::ArtifactDsl>::print_dsl(&snapshot);
     let from_text = <FormsSnapshot as store::ArtifactDsl>::parse_dsl(&text).unwrap();
     assert_eq!(from_text, snapshot);

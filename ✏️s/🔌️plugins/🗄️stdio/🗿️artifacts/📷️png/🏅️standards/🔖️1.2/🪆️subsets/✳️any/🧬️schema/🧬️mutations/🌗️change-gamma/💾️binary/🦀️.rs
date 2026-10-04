@@ -6,23 +6,11 @@ pub const CODEC: Entry = Entry { tag: BINARY_TAG, encode, decode };
 
 pub fn encode(value: &PngMutation) -> Option<Result<Vec<u8>, protocol::ProtocolError>> {
     let PngMutation::ChangeGamma(payload) = value else { return None };
-    Some(encode_payload(payload))
+    Some(Ok(semio_framework_pack_json::to_json_string(payload).into_bytes()))
 }
-pub fn encode_payload(payload: &ChangeGammaMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
-    let ChangeGammaMutation { gama } = payload;
-    let mut w = dsl::ByteWriter::new();
-    write_bin_option(&mut w, gama, |w, v: &u32| w.write_u32_le(*v));
-    Ok(w.into_bytes())
-}
-fn op_pack_err(error: &dsl::PackError) -> protocol::ProtocolError {
-    protocol::ProtocolError::Malformed { what: "change-gamma", offset: 0, detail: error.to_string() }
-}
+
 pub fn decode(bytes: &[u8]) -> Result<PngMutation, protocol::ProtocolError> {
-    let mut r = dsl::ByteReader::new(bytes);
-    let result: Result<PngMutation, protocol::ProtocolError> = Ok(PngMutation::ChangeGamma(ChangeGammaMutation { gama: read_bin_option(&mut r, |r| r.read_u32_le()).map_err(|error| op_pack_err(&error))? }));
-    let position = r.position();
-    if position != bytes.len() {
-        return Err(protocol::ProtocolError::Malformed { what: "change-gamma", offset: position as u64, detail: "trailing payload bytes".into() });
-    }
-    result
+    let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "change-gamma", offset: 0, detail: error.to_string() })?;
+    let payload = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Malformed { what: "change-gamma", offset: 0, detail: error.to_string() })?;
+    Ok(PngMutation::ChangeGamma(payload))
 }

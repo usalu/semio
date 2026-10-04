@@ -29,7 +29,7 @@ where
 {
     fn preflight(&self, mutation: &M) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         let retained_bytes = protocol::OpBinary::encode_op(mutation).map_err(|error| error.to_string())?.len();
-        let footprint = store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes };
+        let footprint = store::ArtifactStoreOneItemFootprint::for_ephemeral_item(retained_bytes);
         footprint.is_admissible().then_some(footprint).ok_or_else(|| "transient mutation exceeds the one-item publication bound".into())
     }
 
@@ -58,7 +58,7 @@ where
         if self.prepared.is_none() {
             let request = self.request.take().ok_or_else(|| "transient preparation lost its request".to_string())?;
             let outcome = protocol::Mutation::diff(&request.mutation, request.base.as_ref());
-            if outcome.worst_level().is_some_and(|level| level >= protocol::Severity::Error) {
+            if outcome.worst_level().is_some_and(|level| level >= semio_framework_diagnostic::Severity::Error) {
                 return Err("transient mutation was rejected against its captured base".into());
             }
             let next_root = protocol::MutationDiff::apply(outcome.diff(), request.base.as_ref()).map_err(|error| error.to_string())?;
@@ -90,7 +90,7 @@ where
 
     /// 🎒️ Pages its byte accounting instead of demanding the whole root in one grant — the closing
     /// half of the same deadlock `advance` documents above.
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -117,7 +117,7 @@ struct BoundedTransientRootRetirement<P> {
 impl<P: Send + Sync + 'static> store::ErasedSnapshotRetirement for BoundedTransientRootRetirement<P> {
     /// 🎒️ Pages its byte accounting: a displaced transient root larger than one grant (lowpoly's mesh
     /// workspace) otherwise never retires, and every later publication blocks behind it.
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -283,7 +283,7 @@ where
             return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
         }
         let retirement = self.retirement.as_mut().expect("checked transient retirement remains present");
-        match retirement.close_step(maximum_items, maximum_bytes).map_err(Fault::from)? {
+        match retirement.close_step(maximum_items, maximum_bytes).map_err(|error| Fault::from(error.into_message()))? {
             store::SnapshotRetirementStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
             store::SnapshotRetirementStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "transient read remains live" }),
             store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {

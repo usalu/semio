@@ -6,6 +6,9 @@ use crate::ProgramMutation;
 use crate::ProgramSnapshot;
 
 /// ↩️ Undo a create by deleting the row it added.
-pub fn inverse(payload: &super::CreateCostRequirement, _base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+pub fn inverse(payload: &super::CreateCostRequirement, _base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![ProgramMutation::DeleteCostRequirement(super::super::delete_cost_requirement::DeleteCostRequirement { id: payload.cost_requirement.header.id.clone() })]
+
+    })())
 }

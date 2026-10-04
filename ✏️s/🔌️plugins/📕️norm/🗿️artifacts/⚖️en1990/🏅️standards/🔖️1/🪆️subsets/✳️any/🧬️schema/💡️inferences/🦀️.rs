@@ -2,7 +2,6 @@
 
 use crate::En1990Snapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a en1990 snapshot.
@@ -17,8 +16,11 @@ pub struct En1990Inference {
 }
 
 impl protocol::Inference<En1990Snapshot> for En1990Inference {
-    fn infer(snapshot: &En1990Snapshot) -> Self {
+    fn infer(snapshot: &En1990Snapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { outline: En1990Outline::compute(snapshot) }
+    
+        })
     }
 }
 
@@ -58,13 +60,6 @@ impl protocol::InferenceSpec<En1990Snapshot> for En1990Inference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::En1990Builder {
-    type Snapshot = En1990Snapshot;
-    type Inference = En1990Inference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.norm.en1990.inference`'s facet leaves into the OS-wide inference catalog.

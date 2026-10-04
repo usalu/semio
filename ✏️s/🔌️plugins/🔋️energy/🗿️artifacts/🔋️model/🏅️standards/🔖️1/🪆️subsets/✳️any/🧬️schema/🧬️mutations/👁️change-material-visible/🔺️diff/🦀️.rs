@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeMaterialVisibleAbsorptance, base: &EnergyMode
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Material {}: visible absorptance must be a fraction in [0, 1], got {}.", payload.id.0, payload.new_visible_absorptance), [payload.id.0.to_string()]);
     }
     if existing.visible_absorptance == payload.new_visible_absorptance {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Material {} already carries this visible absorptance: {}.", payload.id.0, payload.new_visible_absorptance));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Material {} already carries this visible absorptance: {}.", payload.id.0, payload.new_visible_absorptance));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.materials.iter_mut().find(|item| item.id == payload.id) {

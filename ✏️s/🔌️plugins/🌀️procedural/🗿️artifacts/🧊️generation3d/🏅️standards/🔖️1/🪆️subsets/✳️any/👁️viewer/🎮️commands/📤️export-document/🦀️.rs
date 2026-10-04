@@ -17,32 +17,22 @@ use crate::standards::v1::subsets::any::io::document_io;
 use crate::viewer::generation3d::config::{Generation3dViewConfig, Generation3dViewConfigMutation};
 use crate::Generation3dSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Fault, FaultCode, FaultOrigin, ViewEmit};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "export-document")]
 #[value(rename_all = "camelCase")]
 pub struct ExportDocument {
     pub format: String,
 }
 
-/// 👁️ The retained session's merged preview as this repo's own typed mesh, or `None` when nothing
-/// has been evaluated yet.
+/// 👁️ Reads the existing retained evaluation's prepared surfaces without reducing authored channels.
 ///
 /// 🧵️ Geometry remains owned by the supplied retained evaluation.
-pub fn retained_preview(doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dViewConfig>, session: &semio_framework_os_flow::FlowEvalSession) -> Option<SemioMeshSnapshot> {
-    let payload = crate::viewer::generation3d::modes::view::windows::preview::preview_payload(session.eval_json(), &doc.snapshot.host_snapshot, cfg.snapshot, Some(session), &Default::default());
-    let meshes: Vec<semio_framework_plugin::MeshData> = dsl::json::parse(&payload.meshes_json)
-        .ok()
-        .and_then(|value| value.as_array().cloned())
-        .unwrap_or_default()
-        .into_iter()
-        .filter_map(|entry| entry.get("data").cloned())
-        .filter_map(|data| dsl::FromValue::from_value(dsl::json::to_dsl_value(&data)).ok())
-        .collect();
-    let merged = crate::standards::v1::subsets::any::io::mesh_bridge::merge_meshes(&meshes);
-    crate::standards::v1::subsets::any::io::mesh_bridge::semio_mesh_from_mesh_data(&merged).ok()
+pub fn retained_meshes(doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dViewConfig>, session: &semio_framework_os_flow::FlowEvalSession) -> Result<Option<Vec<semio_framework_plugin::MeshData>>, Fault> {
+    crate::editor::generation3d::export_meshes_from_evaluation(&doc.snapshot.host_snapshot, session, None)
+        .map(Some)
+        .map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new(crate::GENERATION3D_IO_EXPORT), error.to_string()))
 }
 
 /// 📤️ Encodes the viewed document in the picked format and hands the shell one download.
@@ -51,12 +41,12 @@ pub fn handle(payload: &ExportDocument, doc: &ArtifactView<'_, Generation3dSnaps
 }
 
 /// 📤️ The session-aware entry point the retained route takes.
-pub fn emit(payload: &ExportDocument, doc: &ArtifactView<'_, Generation3dSnapshot>, preview: Option<&SemioMeshSnapshot>) -> Result<ViewEmit<Generation3dViewConfigMutation>, Fault> {
+pub fn emit(payload: &ExportDocument, doc: &ArtifactView<'_, Generation3dSnapshot>, meshes: Option<&[semio_framework_plugin::MeshData]>) -> Result<ViewEmit<Generation3dViewConfigMutation>, Fault> {
     let export = (if payload.format == "txt" {
         document_io::export_document(doc.snapshot)
     } else {
-        preview.ok_or_else(|| crate::standards::v1::subsets::any::io::mesh_bridge::io_error("generation3d geometry export requires prepared geometry from the retained evaluation"))
-            .and_then(|mesh| document_io::export_geometry(mesh, &payload.format))
-    }).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("generation3d.io.export"), error.to_string()))?;
+        meshes.ok_or_else(|| crate::standards::v1::subsets::any::io::mesh_bridge::io_error("generation3d geometry export requires prepared geometry from the retained evaluation"))
+            .and_then(|meshes| document_io::export_prepared_geometry(meshes, &payload.format))
+    }).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new(crate::GENERATION3D_IO_EXPORT), error.to_string()))?;
     Ok(ViewEmit::effect(Effect::DownloadMediaExport { filename: export.filename, mime_type: export.mime_type, data: export.data, encoding: export.encoding }))
 }

@@ -1,4 +1,4 @@
-use super::{assert_fixture_descriptor, DemoSnapshot, LossyDiff};
+use super::{DemoSnapshot, LossyDiff, assert_fixture_descriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 

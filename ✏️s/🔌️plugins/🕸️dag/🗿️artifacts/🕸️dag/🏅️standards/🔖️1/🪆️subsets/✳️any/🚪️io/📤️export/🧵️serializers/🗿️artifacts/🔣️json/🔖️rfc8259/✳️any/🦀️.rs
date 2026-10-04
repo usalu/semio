@@ -3,8 +3,8 @@
 //! serialization of every field, so this hop is `IoFidelity::Exact`.
 
 use crate::DagSnapshot;
-use dsl::ToValue;
-use semio_framework::io::io_mechanism::Serializer;
+use semio_framework_value::ToValue;
+use semio_framework::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
 use semio_s_artifact_stdio_json::JsonSnapshot;
@@ -13,7 +13,7 @@ pub const JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", stand
 
 /// 🖨️ Typed encode of `DagSnapshot` into a `JsonSnapshot`'s free-form `value`.
 pub fn serialize(from: &DagSnapshot) -> Result<JsonSnapshot, store::PackError> {
-    Ok(JsonSnapshot::from_value(dsl::json::from_dsl_value(&from.to_value())))
+    Ok(JsonSnapshot::from_value(semio_framework_pack_json::from_dsl_value(&from.to_value())))
 }
 
 pub struct DagIntoJson;
@@ -21,8 +21,8 @@ pub struct DagIntoJson;
 impl Serializer<DagSnapshot> for DagIntoJson {
     const INTO: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn serialize(from: &DagSnapshot) -> IoResult<IoPayload> {
-        let json = serialize(from).map_err(|error| IoError { message: format!("DagIntoJson: {error}"), diagnostics: Vec::new() })?;
+    async fn serialize(from: &DagSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+        let json = serialize(from).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("DagIntoJson: {error}"))))?;
         Ok(IoOutcome::clean(IoPayload::Binary(<JsonSnapshot as store::ArtifactPack>::encode_pack(&json))))
     }
 }

@@ -28,7 +28,7 @@ pub fn diff(payload: &super::ReplaceSetpointManagerKind, base: &EnergyModelSnaps
         crate::model::SetpointManagerKind::Scheduled
     };
     if existing.kind == kind {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Setpoint manager {} already runs that control law.", payload.id.0));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Setpoint manager {} already runs that control law.", payload.id.0));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.setpoint_managers.iter_mut().find(|item| item.id == payload.id) {

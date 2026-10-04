@@ -1,0 +1,27 @@
+{
+  "status": "source-bound preparation; no production or runtime claim",
+  "cases": [
+    { "id": "caller allocation ceiling", "source": "🧰️framework/🔨️modules/🎒️pack/📐️format/🦀️.rs", "origin": "check_controlled_allocation compares cumulative owned bytes to caller and PackLimits max_total_alloc", "expectedKind": "ownershipLimit" },
+    { "id": "collection physical width overflow", "source": "🧰️framework/🔨️modules/🎒️pack/📐️format/🦀️.rs", "origin": "controlled_vec count.checked_mul(size_of::<T>())", "expectedKind": "ownershipLimit" },
+    { "id": "fixed prefix impossible width", "source": "🧰️framework/🔨️modules/🎒️pack/📐️format/🛫️encoding/🦀️.rs", "origin": "Prefix::bytes exceeds its fixed physical prefix buffer", "expectedKind": "invariantViolated" },
+    { "id": "chunk slot allocation", "source": "🧰️framework/🔨️modules/🎒️pack/📐️format/🛫️encoding/🦀️.rs", "origin": "self.chunks.try_reserve_exact(1) returns allocation failure", "expectedKind": "allocationFailed" },
+    { "id": "retained history allocation", "source": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🦀️.rs", "origin": "reserve_retained_history returns RetainedInflateAllocationError", "upstreamKind": "allocationFailed", "expectedKind": "allocationFailed" },
+    { "id": "retained history caller ceiling", "source": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🦀️.rs", "origin": "reserve_retained_history returns RetainedInflateAllocationError", "upstreamKind": "ownershipLimit", "expectedKind": "ownershipLimit" },
+    { "id": "retained history grant contradiction", "source": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🦀️.rs", "origin": "reserve_retained_history returns RetainedInflateAllocationError", "upstreamKind": "invariantViolated", "expectedKind": "invariantViolated" },
+    { "id": "retained reset transition", "source": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🦀️.rs", "origin": "reset attempted while decoder is incomplete, closed, pending or faulted", "expectedKind": "invariantViolated" },
+    { "id": "retained requested length beyond caller ceiling", "source": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🦀️.rs", "origin": "expected > limit at try_new", "expectedKind": "ownershipLimit" },
+    { "id": "retained reset new length beyond caller ceiling", "source": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🦀️.rs", "origin": "reset expected > limit; currently merged with illegal transition guard and requires split", "expectedKind": "ownershipLimit" },
+    { "id": "declared decoded size disagrees", "source": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🦀️.rs", "origin": "decoded produced bytes exceed source declared expected length", "expectedKind": "invalidValue" },
+    { "id": "read token cancellation", "source": "🧰️framework/🔨️modules/🎒️pack/⏳️async/🦀️.rs", "origin": "CancellationToken::poll_cancelled returns true", "expectedKind": "canceled" },
+    { "id": "atomic write target lacks filename", "source": "🧰️framework/🔨️modules/🎒️pack/🔌️io/🦀️.rs", "origin": "caller path.file_name() is None", "expectedKind": "invalidValue" },
+    { "id": "configured symbol count ceiling", "source": "🧰️framework/🔨️modules/🎒️pack/📐️format/🦀️.rs", "origin": "count > limits.max_symbols; currently combined with impossible source count and requires split", "expectedKind": "workLimit" },
+    { "id": "impossible symbol source count", "source": "🧰️framework/🔨️modules/🎒️pack/📐️format/🦀️.rs", "origin": "count > bytes.len(); currently combined with configured symbol ceiling and requires split", "expectedKind": "invalidValue" }
+  ],
+  "unresolvedMachineOrigins": [
+    "native io_err erases std::io::Error machine kind and operation context",
+    "HTTP call.call() erases external response/transport error authority",
+    "HTTP body read_to_end erases machine IO kind",
+    "HTTP is_transient retries every Io variant; actual retry policy needs owned machine authority",
+    "ordinary inflate OutputLimitExceeded means declared raw length admission in one path and caller ceiling in another; producer context controls the kind"
+  ]
+}

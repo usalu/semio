@@ -1,35 +1,37 @@
 //! 🛬️ DWG's borrowed literal domain occurrences precede every typed field allocation.
 use crate::dsl;
+use semio_framework_value::{ValueError, ValueRefusalKind};
 use semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits;
-use dsl::{FieldValue as V,RecordValue,NativeDecodeControl};
+use semio_framework_dsl_record::{FieldValue as V,RecordValue};
+use semio_framework_value::{NativeDecodeControl};
 type R<'a>=Option<&'a RecordValue>;
-fn record(value:Option<&V>)->Result<R<'_>,String>{match value{None|Some(V::Absent)=>Ok(None),Some(V::Record(value))=>Ok(Some(value)),_=>Err("DWG owned native component requires a record".into())}}
+fn record(value:Option<&V>)->Result<R<'_>,ValueError>{match value{None|Some(V::Absent)=>Ok(None),Some(V::Record(value))=>Ok(Some(value)),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG owned native component requires a record"))}}
 fn field(record:R<'_>,id:u16)->Option<&V>{record.and_then(|value|value.get(id))}
-fn child(record:R<'_>,id:u16)->Result<R<'_>,String>{self::record(field(record,id))}
-fn list(value:Option<&V>)->Result<&[V],String>{match value{None|Some(V::Absent)=>Ok(&[]),Some(V::List(values))=>Ok(values),_=>Err("DWG owned native occurrence requires a list".into())}}
-fn tag(record:R<'_>,id:u16)->Result<u32,String>{match field(record,id){Some(V::Enum(value))=>Ok(*value),_=>Err("DWG owned native kind is missing".into())}}
+fn child(record:R<'_>,id:u16)->Result<R<'_>,ValueError>{self::record(field(record,id))}
+fn list(value:Option<&V>)->Result<&[V],ValueError>{match value{None|Some(V::Absent)=>Ok(&[]),Some(V::List(values))=>Ok(values),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG owned native occurrence requires a list"))}}
+fn tag(record:R<'_>,id:u16)->Result<u32,ValueError>{match field(record,id){Some(V::Enum(value))=>Ok(*value),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG owned native kind is missing"))}}
 struct Rows<'a,'p>{count:usize,maximum:usize,native:&'a mut NativeDecodeControl<'p>}
 impl Rows<'_,'_>{
- fn add(&mut self,count:usize)->Result<(),String>{let total=self.count.checked_add(count).ok_or("DWG borrowed row count overflow")?;if total>self.maximum{return Err("DWG borrowed native occurrences exceed row limit".into())}self.native.step()?;self.count=total;Ok(())}
- fn lists(&mut self,row:R<'_>,ids:&[u16])->Result<(),String>{for &id in ids{self.add(list(field(row,id))?.len())?;}Ok(())}
- fn values(&mut self,values:&[V])->Result<(),String>{self.add(values.len())?;for value in values{let row=record(Some(value))?;if tag(row,0)?==8{match field(row,7){Some(V::Bytes64(bytes))=>self.add(bytes.len())?,_=>return Err("DWG native XRecord intrinsic octets missing".into())}}self.native.step()?;}Ok(())}
- fn expression(&mut self,row:R<'_>)->Result<(),String>{self.add(1)?;if let Some(value)=child(row,3)?{match tag(Some(value),0)?{2=>self.lists(Some(value),&[2])?,3=>self.lists(Some(value),&[3])?,0|1|4|5|6|7=>{},_=>return Err("DWG native evaluation value kind unknown".into())}}Ok(())}
- fn associative_action(&mut self,row:R<'_>)->Result<(),String>{self.add(1)?;self.lists(row,&[5])}
- fn element(&mut self,row:R<'_>)->Result<(),String>{self.add(1)?;self.expression(child(row,0)?)}
- fn grip(&mut self,row:R<'_>)->Result<(),String>{self.add(1)?;self.element(child(row,0)?)?;self.lists(row,&[1])}
- fn properties(&mut self,value:Option<&V>)->Result<(),String>{let values=list(value)?;self.add(values.len())?;for value in values{self.lists(record(Some(value))?,&[0])?;}Ok(())}
- fn two_point(&mut self,row:R<'_>)->Result<(),String>{self.add(1)?;self.element(child(row,0)?)?;self.lists(row,&[3,4,6])?;self.properties(field(row,5))}
- fn one_point(&mut self,row:R<'_>)->Result<(),String>{self.add(1)?;self.element(child(row,0)?)?;self.lists(row,&[3])?;self.properties(field(row,4))}
- fn block_action(&mut self,row:R<'_>)->Result<(),String>{self.add(1)?;self.expression(child(row,0)?)?;self.lists(row,&[2,3,4])}
- fn record_body(&mut self,row:R<'_>)->Result<(),String>{let kind=tag(row,1)?;let value=child(row,kind as u16+2)?;match kind{
+ fn add(&mut self,count:usize)->Result<(),ValueError>{let total=self.count.checked_add(count).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"DWG borrowed row count overflow"))?;if total>self.maximum{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"DWG borrowed native occurrences exceed row limit"))}self.native.step()?;self.count=total;Ok(())}
+ fn lists(&mut self,row:R<'_>,ids:&[u16])->Result<(),ValueError>{for &id in ids{self.add(list(field(row,id))?.len())?;}Ok(())}
+ fn values(&mut self,values:&[V])->Result<(),ValueError>{self.add(values.len())?;for value in values{let row=record(Some(value))?;if tag(row,0)?==8{match field(row,7){Some(V::Bytes64(bytes))=>self.add(bytes.len())?,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG native XRecord intrinsic octets missing"))}}self.native.step()?;}Ok(())}
+ fn expression(&mut self,row:R<'_>)->Result<(),ValueError>{self.add(1)?;if let Some(value)=child(row,3)?{match tag(Some(value),0)?{2=>self.lists(Some(value),&[2])?,3=>self.lists(Some(value),&[3])?,0|1|4|5|6|7=>{},_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG native evaluation value kind unknown"))}}Ok(())}
+ fn associative_action(&mut self,row:R<'_>)->Result<(),ValueError>{self.add(1)?;self.lists(row,&[5])}
+ fn element(&mut self,row:R<'_>)->Result<(),ValueError>{self.add(1)?;self.expression(child(row,0)?)}
+ fn grip(&mut self,row:R<'_>)->Result<(),ValueError>{self.add(1)?;self.element(child(row,0)?)?;self.lists(row,&[1])}
+ fn properties(&mut self,value:Option<&V>)->Result<(),ValueError>{let values=list(value)?;self.add(values.len())?;for value in values{self.lists(record(Some(value))?,&[0])?;}Ok(())}
+ fn two_point(&mut self,row:R<'_>)->Result<(),ValueError>{self.add(1)?;self.element(child(row,0)?)?;self.lists(row,&[3,4,6])?;self.properties(field(row,5))}
+ fn one_point(&mut self,row:R<'_>)->Result<(),ValueError>{self.add(1)?;self.element(child(row,0)?)?;self.lists(row,&[3])?;self.properties(field(row,4))}
+ fn block_action(&mut self,row:R<'_>)->Result<(),ValueError>{self.add(1)?;self.expression(child(row,0)?)?;self.lists(row,&[2,3,4])}
+ fn record_body(&mut self,row:R<'_>)->Result<(),ValueError>{let kind=tag(row,1)?;let value=child(row,kind as u16+2)?;match kind{
   0|1=>self.add(2),
   2|5=>self.add(3),
   3=>{self.add(2)?;self.lists(value,&[4])},
   4=>{self.add(2)?;self.lists(value,&[6,9])},
   6=>self.add(11),
-  _=>Err("DWG native symbol-table record kind unknown".into())
+  _=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG native symbol-table record kind unknown"))
  }}
- fn entity(&mut self,row:R<'_>)->Result<(),String>{let kind=tag(row,0)?;let value=child(row,kind as u16+1)?;self.add(4)?;match kind{
+ fn entity(&mut self,row:R<'_>)->Result<(),ValueError>{let kind=tag(row,0)?;let value=child(row,kind as u16+1)?;self.add(4)?;match kind{
   0=>self.lists(value,&[1,2,4]),
   1|9=>self.lists(value,&[1,4]),
   2=>{self.lists(value,&[5])?;let vertices=list(field(value,6))?;self.add(vertices.len())?;for vertex in vertices{self.lists(record(Some(vertex))?,&[0])?;}Ok(())},
@@ -45,13 +47,13 @@ impl Rows<'_,'_>{
   14|15=>self.lists(value,&[3]),
   16=>self.lists(value,&[2]),
   17=>self.lists(value,&[1]),
-  _=>Err("DWG native entity kind unknown".into())
+  _=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG native entity kind unknown"))
  }}
- fn constraints(&mut self,row:R<'_>)->Result<(),String>{
+ fn constraints(&mut self,row:R<'_>)->Result<(),ValueError>{
   self.add(1)?;self.associative_action(child(row,0)?)?;self.lists(row,&[3])?;
   let planes=list(field(row,2))?;self.add(planes.len())?;for plane in planes{self.add(list(Some(plane))?.len())?;}
   for node in list(field(row,4))?{
-   let node=record(Some(node))?;let kind=tag(node,0)?;let id=match kind{0=>1,1|3|5|7|8|9|10|12=>2,2=>3,4=>4,6|13=>5,11=>6,_=>return Err("DWG native constraint node kind unknown".into())};let value=child(node,id)?;
+   let node=record(Some(node))?;let kind=tag(node,0)?;let id=match kind{0=>1,1|3|5|7|8|9|10|12=>2,2=>3,4=>4,6|13=>5,11=>6,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG native constraint node kind unknown"))};let value=child(node,id)?;
    let core=match kind{
     0=>{self.add(3)?;self.lists(value,&[1])?;child(child(value,0)?,0)?},
     2=>{self.add(3)?;self.lists(value,&[1,2,5,6])?;child(child(value,0)?,0)?},
@@ -62,12 +64,12 @@ impl Rows<'_,'_>{
    };self.lists(core,&[1])?;
   }Ok(())
  }
- fn table_style(&mut self,row:R<'_>)->Result<(),String>{self.add(21)?;for id in[3,4,5,6]{let borders=child(child(row,id)?,6)?;for edge in 0..6{if child(borders,edge)?.is_some(){self.add(2)?;}}}Ok(())}
- fn body(&mut self,row:R<'_>)->Result<(),String>{
-  let kind=tag(row,0)?;if kind>42{return Err("DWG owned native body kind unknown".into())}let value=child(row,kind as u16+1)?;
+ fn table_style(&mut self,row:R<'_>)->Result<(),ValueError>{self.add(21)?;for id in[3,4,5,6]{let borders=child(child(row,id)?,6)?;for edge in 0..6{if child(borders,edge)?.is_some(){self.add(2)?;}}}Ok(())}
+ fn body(&mut self,row:R<'_>)->Result<(),ValueError>{
+  let kind=tag(row,0)?;if kind>42{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG owned native body kind unknown"))}let value=child(row,kind as u16+1)?;
   match kind{
    0=>{self.add(1)?;self.lists(value,&[0])},
-   1=>{self.add(1)?;let kind=tag(value,1)?;let id=match kind{0=>3,1|2|4|5|6|7=>2,3=>4,8=>5,_=>return Err("DWG native table-control kind unknown".into())};let control=child(value,id)?;self.lists(control,&[0])?;if kind==8{self.lists(control,&[1])?;}Ok(())},
+   1=>{self.add(1)?;let kind=tag(value,1)?;let id=match kind{0=>3,1|2|4|5|6|7=>2,3=>4,8=>5,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG native table-control kind unknown"))};let control=child(value,id)?;self.lists(control,&[0])?;if kind==8{self.lists(control,&[1])?;}Ok(())},
    2=>self.record_body(value),
    3=>{self.add(1)?;self.values(list(field(value,0))?)?;self.lists(value,&[1])},
    4=>self.entity(value),
@@ -99,11 +101,11 @@ impl Rows<'_,'_>{
    39=>{self.add(1)?;self.one_point(child(value,0)?)?;self.lists(value,&[1,2])},
    40|41=>{self.add(1)?;self.two_point(child(value,0)?)?;self.lists(child(value,6)?,&[0])},
    42=>{self.add(2)?;self.lists(value,&[6,7,8,12,13,18,24,25,26,27,28,29,32,33,40])},
-   _=>Err("DWG owned native body kind unknown".into())
+   _=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG owned native body kind unknown"))
   }
  }
 }
-pub(super) fn root(input:&RecordValue,native:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<usize,String>{
+pub(super) fn root(input:&RecordValue,native:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<usize,ValueError>{
  native.scoped_stage(|native|{
   native.begin_stage(0)?;let mut rows=Rows{count:0,maximum:limits.max_rows,native};rows.add(22)?;
   let root=Some(input);let header=child(root,5)?;

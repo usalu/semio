@@ -1,0 +1,89 @@
+{
+  "schema": "procedural.native-controls/v1",
+  "ownedByteLimit": 16,
+  "textUnit": "文",
+  "textRepeats": 40000,
+  "relationalIdentityOffset": 1000,
+  "rowFrontier": {
+    "width": 513,
+    "cancelAt": 256,
+    "limitOffsets": [
+      -1,
+      0
+    ]
+  },
+  "wireBinding": {
+    "from": {
+      "id": "日本\u0000from",
+      "kind": "",
+      "port": null
+    },
+    "to": {
+      "id": "",
+      "kind": null,
+      "port": "🧬️port"
+    },
+    "directed": false,
+    "edgeLabel": {
+      "id": "",
+      "kind": "kind\u0000"
+    },
+    "unsigned": "18446744073709551615",
+    "floatBits": "7ff0000000000001",
+    "bytes": [
+      0,
+      255,
+      127
+    ],
+    "duplicateKey": "重複",
+    "depth": 1024,
+    "maximumOwnedBytes": 1048576
+  },
+  "intrinsicNumbers": [
+    {
+      "variant": "int",
+      "value": "0",
+      "literal": "int64(0)"
+    },
+    {
+      "variant": "int",
+      "value": "1",
+      "literal": "int64(1)"
+    },
+    {
+      "variant": "int",
+      "value": "9223372036854775807",
+      "literal": "int64(9223372036854775807)"
+    },
+    {
+      "variant": "int",
+      "value": "-1",
+      "literal": "-1"
+    },
+    {
+      "variant": "int",
+      "value": "-9223372036854775808",
+      "literal": "-9223372036854775808"
+    },
+    {
+      "variant": "uint",
+      "value": "0",
+      "literal": "0"
+    },
+    {
+      "variant": "uint",
+      "value": "18446744073709551615",
+      "literal": "18446744073709551615"
+    },
+    {
+      "variant": "float",
+      "value": "1.0",
+      "literal": "1.0"
+    },
+    {
+      "variant": "float",
+      "value": "-0.0",
+      "literal": "-0.0"
+    }
+  ]
+}

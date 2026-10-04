@@ -1,0 +1,1070 @@
+{
+  "version": 1,
+  "ports": [
+    {
+      "name": "width",
+      "valueTypes": [
+        "number"
+      ],
+      "default": {
+        "$schema": "number",
+        "value": 1
+      }
+    },
+    {
+      "name": "segments",
+      "valueTypes": [
+        "number"
+      ],
+      "default": 8
+    },
+    {
+      "name": "text",
+      "valueTypes": [
+        "text"
+      ],
+      "default": {
+        "$schema": "text",
+        "value": "true"
+      }
+    },
+    {
+      "name": "smooth",
+      "valueTypes": [
+        "boolean"
+      ],
+      "default": {
+        "$schema": "boolean",
+        "value": true
+      }
+    },
+    {
+      "name": "point",
+      "valueTypes": [
+        "point"
+      ],
+      "default": {
+        "$schema": "point",
+        "x": 1,
+        "y": 2,
+        "z": 3
+      }
+    },
+    {
+      "name": "vector",
+      "valueTypes": [
+        "vector"
+      ],
+      "default": {
+        "$schema": "vector",
+        "x": 0,
+        "y": 0,
+        "z": 1
+      }
+    },
+    {
+      "name": "points",
+      "valueTypes": [
+        "list"
+      ],
+      "collection": true,
+      "default": {
+        "0": {
+          "$schema": "point",
+          "x": 1,
+          "y": 2,
+          "z": 3
+        },
+        "$schema": "list"
+      },
+      "itemTypes": [
+        "point"
+      ]
+    },
+    {
+      "name": "rows",
+      "valueTypes": [
+        "list"
+      ],
+      "collection": true,
+      "default": {
+        "0": {
+          "$schema": "number",
+          "value": 7
+        },
+        "$schema": "list"
+      },
+      "itemTypes": [
+        "number"
+      ]
+    },
+    {
+      "name": "profiles",
+      "valueTypes": [
+        "list"
+      ],
+      "collection": true,
+      "default": {
+        "0": {
+          "$schema": "text",
+          "value": "alpha"
+        },
+        "$schema": "list"
+      },
+      "itemTypes": [
+        "text"
+      ]
+    },
+    {
+      "name": "sides",
+      "valueTypes": [
+        "list"
+      ],
+      "collection": true,
+      "default": {
+        "0": {
+          "$schema": "boolean",
+          "value": true
+        },
+        "$schema": "list"
+      },
+      "itemTypes": [
+        "boolean"
+      ]
+    },
+    {
+      "name": "direction",
+      "valueTypes": [
+        "list"
+      ],
+      "collection": true,
+      "default": {
+        "0": {
+          "$schema": "vector",
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "$schema": "list"
+      },
+      "itemTypes": [
+        "vector"
+      ]
+    },
+    {
+      "name": "mesh",
+      "valueTypes": [
+        "geometry"
+      ]
+    },
+    {
+      "name": "height",
+      "valueTypes": [
+        "number"
+      ],
+      "default": {
+        "$schema": "number",
+        "value": 2
+      }
+    }
+  ],
+  "controls": [
+    {
+      "port": "width",
+      "component": null,
+      "type": "input",
+      "kind": "number",
+      "value": "1",
+      "trigger": "commit",
+      "en": "Width",
+      "de": "Breite"
+    },
+    {
+      "port": "segments",
+      "component": null,
+      "type": "input",
+      "kind": "number",
+      "value": "8",
+      "trigger": "commit",
+      "en": "Segments",
+      "de": "Segmente"
+    },
+    {
+      "port": "text",
+      "component": null,
+      "type": "input",
+      "kind": "longText",
+      "value": "true",
+      "trigger": "commit",
+      "en": "Text",
+      "de": "Text"
+    },
+    {
+      "port": "smooth",
+      "component": null,
+      "type": "toggle",
+      "appearance": "checkbox",
+      "trigger": "change",
+      "en": "Smooth",
+      "de": "Glätten"
+    },
+    {
+      "port": "point",
+      "component": "x",
+      "type": "input",
+      "kind": "number",
+      "value": "1",
+      "trigger": "commit",
+      "en": "Point x",
+      "de": "Punkt x"
+    },
+    {
+      "port": "point",
+      "component": "y",
+      "type": "input",
+      "kind": "number",
+      "value": "2",
+      "trigger": "commit",
+      "en": "Point y",
+      "de": "Punkt y"
+    },
+    {
+      "port": "point",
+      "component": "z",
+      "type": "input",
+      "kind": "number",
+      "value": "3",
+      "trigger": "commit",
+      "en": "Point z",
+      "de": "Punkt z"
+    },
+    {
+      "port": "vector",
+      "component": "x",
+      "type": "input",
+      "kind": "number",
+      "value": "0",
+      "trigger": "commit",
+      "en": "Vector x",
+      "de": "Vektor x"
+    },
+    {
+      "port": "vector",
+      "component": "y",
+      "type": "input",
+      "kind": "number",
+      "value": "0",
+      "trigger": "commit",
+      "en": "Vector y",
+      "de": "Vektor y"
+    },
+    {
+      "port": "vector",
+      "component": "z",
+      "type": "input",
+      "kind": "number",
+      "value": "1",
+      "trigger": "commit",
+      "en": "Vector z",
+      "de": "Vektor z"
+    }
+  ],
+  "readonly": [
+    "height",
+    "mesh"
+  ],
+  "collectionControls": [
+    {
+      "port": "rows",
+      "index": 0,
+      "component": null,
+      "type": "input",
+      "kind": "number",
+      "value": "7",
+      "trigger": "commit",
+      "en": "Rows Item 1",
+      "de": "Zeilen Eintrag 1"
+    },
+    {
+      "port": "profiles",
+      "index": 0,
+      "component": null,
+      "type": "input",
+      "kind": "longText",
+      "value": "alpha",
+      "trigger": "commit",
+      "en": "Profiles Item 1",
+      "de": "Profile Eintrag 1"
+    },
+    {
+      "port": "sides",
+      "index": 0,
+      "component": null,
+      "type": "toggle",
+      "appearance": "checkbox",
+      "trigger": "change",
+      "en": "Sides Item 1",
+      "de": "Seiten Eintrag 1"
+    },
+    {
+      "port": "points",
+      "index": 0,
+      "component": "x",
+      "type": "input",
+      "kind": "number",
+      "value": "1",
+      "trigger": "commit",
+      "en": "Points Item 1 x",
+      "de": "Punkte Eintrag 1 x"
+    },
+    {
+      "port": "points",
+      "index": 0,
+      "component": "y",
+      "type": "input",
+      "kind": "number",
+      "value": "2",
+      "trigger": "commit",
+      "en": "Points Item 1 y",
+      "de": "Punkte Eintrag 1 y"
+    },
+    {
+      "port": "points",
+      "index": 0,
+      "component": "z",
+      "type": "input",
+      "kind": "number",
+      "value": "3",
+      "trigger": "commit",
+      "en": "Points Item 1 z",
+      "de": "Punkte Eintrag 1 z"
+    },
+    {
+      "port": "direction",
+      "index": 0,
+      "component": "x",
+      "type": "input",
+      "kind": "number",
+      "value": "0",
+      "trigger": "commit",
+      "en": "Direction Item 1 x",
+      "de": "Richtung Eintrag 1 x"
+    },
+    {
+      "port": "direction",
+      "index": 0,
+      "component": "y",
+      "type": "input",
+      "kind": "number",
+      "value": "1",
+      "trigger": "commit",
+      "en": "Direction Item 1 y",
+      "de": "Richtung Eintrag 1 y"
+    },
+    {
+      "port": "direction",
+      "index": 0,
+      "component": "z",
+      "type": "input",
+      "kind": "number",
+      "value": "0",
+      "trigger": "commit",
+      "en": "Direction Item 1 z",
+      "de": "Richtung Eintrag 1 z"
+    }
+  ],
+  "collectionActions": [
+    {
+      "port": "rows",
+      "index": 1,
+      "operation": "add",
+      "key": "add"
+    },
+    {
+      "port": "rows",
+      "index": 0,
+      "operation": "remove",
+      "key": "0.remove"
+    },
+    {
+      "port": "profiles",
+      "index": 1,
+      "operation": "add",
+      "key": "add"
+    },
+    {
+      "port": "profiles",
+      "index": 0,
+      "operation": "remove",
+      "key": "0.remove"
+    },
+    {
+      "port": "sides",
+      "index": 1,
+      "operation": "add",
+      "key": "add"
+    },
+    {
+      "port": "sides",
+      "index": 0,
+      "operation": "remove",
+      "key": "0.remove"
+    },
+    {
+      "port": "points",
+      "index": 1,
+      "operation": "add",
+      "key": "add"
+    },
+    {
+      "port": "points",
+      "index": 0,
+      "operation": "remove",
+      "key": "0.remove"
+    },
+    {
+      "port": "direction",
+      "index": 1,
+      "operation": "add",
+      "key": "add"
+    },
+    {
+      "port": "direction",
+      "index": 0,
+      "operation": "remove",
+      "key": "0.remove"
+    }
+  ],
+  "widgets": [
+    {
+      "widget": {
+        "kind": "variable",
+        "id": "parameter",
+        "name": "height",
+        "schema": "number"
+      },
+      "controls": [
+        {
+          "key": "variable-name",
+          "facet": "variableName",
+          "channel": "name",
+          "type": "input",
+          "value": "height",
+          "trigger": "commit",
+          "en": "Variable name",
+          "de": "Variablenname"
+        },
+        {
+          "key": "variable-schema",
+          "facet": "variableSchema",
+          "channel": "schema",
+          "type": "input",
+          "value": "number",
+          "trigger": "commit",
+          "en": "Variable type",
+          "de": "Variablentyp"
+        }
+      ],
+      "evaluation": {
+        "parameter": {
+          "out": {
+            "height": {
+              "$schema": "number",
+              "value": 42
+            }
+          }
+        }
+      },
+      "reflectedValue": "42"
+    },
+    {
+      "widget": {
+        "kind": "outputExport",
+        "id": "download",
+        "format": "obj"
+      },
+      "controls": [
+        {
+          "key": "export-format",
+          "facet": "exportFormat",
+          "channel": "format",
+          "type": "select",
+          "value": "obj",
+          "trigger": "change",
+          "en": "Export format",
+          "de": "Exportformat"
+        }
+      ]
+    }
+  ],
+  "exportStatuses": [
+    {
+      "ready": true,
+      "format": "stl",
+      "normals": [
+        0,
+        0,
+        1
+      ],
+      "codes": [
+        "normal"
+      ],
+      "en": "Authored normals will not be retained by STL. The Semio Text document retains the editable data.",
+      "de": "Erstellte Normalen bleiben in STL nicht erhalten. Das Semio-Text-Dokument erhält die bearbeitbaren Daten."
+    },
+    {
+      "ready": false,
+      "format": "gltf",
+      "normals": [],
+      "codes": [],
+      "en": "Connected geometry is not ready",
+      "de": "Verbundene Geometrie ist noch nicht bereit"
+    }
+  ],
+  "meshSourceControls": [
+    {
+      "key": "procedural-play-inspector.mesh.0.1.field.0.field.input",
+      "path": [
+        "vertices",
+        "1",
+        "0"
+      ],
+      "kind": "number",
+      "value": "1",
+      "en": "Vertices Item 2 Item 1",
+      "de": "Punkte Eintrag 2 Eintrag 1"
+    },
+    {
+      "key": "procedural-play-inspector.mesh.1.0.field.2.field.input",
+      "path": [
+        "faces",
+        "0",
+        "2"
+      ],
+      "kind": "number",
+      "value": "2",
+      "en": "Faces Item 1 Item 3",
+      "de": "Flächen Eintrag 1 Eintrag 3"
+    }
+  ],
+  "meshSourceActions": [
+    {
+      "key": "procedural-play-inspector.mesh.0.add",
+      "path": [
+        "vertices"
+      ],
+      "operation": "add",
+      "value": ""
+    },
+    {
+      "key": "procedural-play-inspector.mesh.2.add.color",
+      "path": [
+        "attributes",
+        "color"
+      ],
+      "operation": "add",
+      "value": "color"
+    }
+  ],
+  "selectionPublication": {
+    "widgetId": "height",
+    "value": 3,
+    "committedValue": 4,
+    "actions": [
+      "selectNextNode",
+      "activateSelection"
+    ],
+    "controlKey": "procedural-play-inspector.value.input",
+    "control": {
+      "type": "input",
+      "kind": "number",
+      "commit": "blur",
+      "trigger": "commit",
+      "action": "patchFlowWidgets",
+      "en": "Value",
+      "de": "Wert"
+    }
+  },
+  "meshAssetsControls": [
+    {
+      "path": [
+        "materials",
+        "paint",
+        "metallic"
+      ],
+      "type": "input",
+      "en": "Metallic",
+      "de": "Metallisch"
+    },
+    {
+      "path": [
+        "materials",
+        "paint",
+        "alphaMode"
+      ],
+      "type": "select",
+      "en": "Alpha mode",
+      "de": "Alphamodus"
+    },
+    {
+      "path": [
+        "materials",
+        "paint",
+        "normalTexture"
+      ],
+      "type": "select",
+      "en": "Normal texture",
+      "de": "Normalentextur"
+    },
+    {
+      "path": [
+        "materials",
+        "paint",
+        "textureCoordinates",
+        "normalTexture"
+      ],
+      "type": "input",
+      "en": "UV set",
+      "de": "UV-Satz"
+    },
+    {
+      "path": [
+        "materials",
+        "paint",
+        "textureSamplers",
+        "normalTexture",
+        "minFilter"
+      ],
+      "type": "select",
+      "en": "Minification filter",
+      "de": "Verkleinerungsfilter"
+    },
+    {
+      "path": [
+        "textures",
+        "image",
+        "name"
+      ],
+      "type": "input",
+      "en": "Asset name",
+      "de": "Assetname"
+    }
+  ],
+  "selectedOutputs": {
+    "kind": "inspector-analysis-law",
+    "id": "analysis",
+    "outputs": {
+      "area": {
+        "$schema": "number",
+        "value": 2
+      },
+      "center": {
+        "$schema": "point",
+        "x": 1,
+        "y": 2,
+        "z": 3
+      },
+      "topology": {
+        "0": {
+          "$schema": "number",
+          "value": 3
+        },
+        "1": {
+          "$schema": "number",
+          "value": 4
+        },
+        "$schema": "list"
+      },
+      "report": {
+        "$schema": "text",
+        "value": "Closed mesh"
+      }
+    },
+    "expectedText": {
+      "area": "2",
+      "center": "(1, 2, 3)",
+      "topology": "4",
+      "report": "Closed mesh"
+    }
+  },
+  "meshAssetsWindows": [
+    {
+      "nodeKey": "procedural-play-inspector.mesh.0",
+      "open": false,
+      "offset": 0,
+      "rows": 0
+    },
+    {
+      "nodeKey": "procedural-play-inspector.mesh.1",
+      "open": false,
+      "offset": 0,
+      "rows": 0
+    },
+    {
+      "nodeKey": "procedural-play-inspector.mesh.2",
+      "open": false,
+      "offset": 0,
+      "rows": 0
+    },
+    {
+      "nodeKey": "procedural-play-inspector.mesh.3",
+      "open": true,
+      "offset": 0,
+      "rows": 1
+    },
+    {
+      "nodeKey": "procedural-play-inspector.mesh.3␟procedural-play-inspector.mesh.3.0.field",
+      "open": true,
+      "offset": 0,
+      "rows": 16
+    },
+    {
+      "nodeKey": "procedural-play-inspector.mesh.3␟procedural-play-inspector.mesh.3.0.field␟procedural-play-inspector.mesh.3.0.field.normalTexture.fields",
+      "open": true,
+      "offset": 0,
+      "rows": 7
+    },
+    {
+      "nodeKey": "procedural-play-inspector.mesh.4",
+      "open": true,
+      "offset": 0,
+      "rows": 1
+    },
+    {
+      "nodeKey": "procedural-play-inspector.mesh.4␟procedural-play-inspector.mesh.4.0.field",
+      "open": true,
+      "offset": 0,
+      "rows": 5
+    }
+  ],
+  "selectedBrepControls": {
+    "version": 1,
+    "cases": [
+      {
+        "id": "fillet",
+        "kind": "brep.solid.filletEdges",
+        "controls": [
+          {
+            "channel": "radius",
+            "value": 0.1,
+            "committedValue": 0.2,
+            "en": "Radius",
+            "de": "Radius",
+            "kind": "number",
+            "commit": "blur",
+            "trigger": "commit",
+            "action": "setWidgetInput"
+          }
+        ],
+        "connections": [
+          {
+            "channel": "geometry",
+            "source": "source-geometry",
+            "port": "geometry",
+            "en": "Geometry",
+            "de": "Geometrie"
+          },
+          {
+            "channel": "edges",
+            "source": "source-edges",
+            "port": "edges",
+            "en": "Edges",
+            "de": "Kanten"
+          }
+        ],
+        "outputs": [
+          {
+            "port": "solid",
+            "en": "Solid",
+            "de": "Körper",
+            "value": {
+              "$schema": "geometry",
+              "handle": "geometry:fixture:solid",
+              "kind": "solid",
+              "label": "4294967297"
+            },
+            "expectedText": "geometry"
+          }
+        ]
+      },
+      {
+        "id": "chamfer",
+        "kind": "brep.solid.chamferEdges",
+        "controls": [
+          {
+            "channel": "distance",
+            "value": 0.1,
+            "committedValue": 0.2,
+            "en": "Distance",
+            "de": "Abstand",
+            "kind": "number",
+            "commit": "blur",
+            "trigger": "commit",
+            "action": "setWidgetInput"
+          }
+        ],
+        "connections": [
+          {
+            "channel": "geometry",
+            "source": "source-geometry",
+            "port": "geometry",
+            "en": "Geometry",
+            "de": "Geometrie"
+          },
+          {
+            "channel": "edges",
+            "source": "source-edges",
+            "port": "edges",
+            "en": "Edges",
+            "de": "Kanten"
+          }
+        ],
+        "outputs": [
+          {
+            "port": "solid",
+            "en": "Solid",
+            "de": "Körper",
+            "value": {
+              "$schema": "geometry",
+              "handle": "geometry:fixture:solid",
+              "kind": "solid",
+              "label": "4294967297"
+            },
+            "expectedText": "geometry"
+          }
+        ]
+      },
+      {
+        "id": "shell",
+        "kind": "brep.solid.shell",
+        "controls": [
+          {
+            "channel": "thickness",
+            "value": 0.1,
+            "committedValue": 0.2,
+            "en": "Thickness",
+            "de": "Dicke",
+            "kind": "number",
+            "commit": "blur",
+            "trigger": "commit",
+            "action": "setWidgetInput"
+          }
+        ],
+        "connections": [
+          {
+            "channel": "geometry",
+            "source": "source-geometry",
+            "port": "geometry",
+            "en": "Geometry",
+            "de": "Geometrie"
+          },
+          {
+            "channel": "openFaces",
+            "source": "source-openFaces",
+            "port": "openFaces",
+            "en": "Open Faces",
+            "de": "Offene Flächen"
+          }
+        ],
+        "outputs": [
+          {
+            "port": "solid",
+            "en": "Solid",
+            "de": "Körper",
+            "value": {
+              "$schema": "geometry",
+              "handle": "geometry:fixture:solid",
+              "kind": "solid",
+              "label": "4294967297"
+            },
+            "expectedText": "geometry"
+          }
+        ]
+      },
+      {
+        "id": "topology-label",
+        "kind": "brep.topology.label",
+        "controls": [],
+        "connections": [
+          {
+            "channel": "geometry",
+            "source": "source-geometry",
+            "port": "geometry",
+            "en": "Geometry",
+            "de": "Geometrie"
+          }
+        ],
+        "outputs": [
+          {
+            "port": "label",
+            "en": "Topology label",
+            "de": "Topologiekennzeichnung",
+            "value": {
+              "$schema": "text",
+              "value": "4294967297"
+            },
+            "expectedText": "4294967297"
+          }
+        ]
+      },
+      {
+        "id": "deconstruct-shell",
+        "kind": "brep.brep",
+        "controls": [],
+        "connections": [
+          {
+            "channel": "brep",
+            "source": "source-brep",
+            "port": "brep",
+            "en": "BRep",
+            "de": "BRep"
+          }
+        ],
+        "outputs": [
+          {
+            "port": "shell",
+            "en": "Shells",
+            "de": "Schalen",
+            "value": {
+              "0": {
+                "$schema": "shell",
+                "handle": "geometry:fixture:shell",
+                "label": "4294967298"
+              },
+              "$schema": "list"
+            },
+            "expectedText": "4294967298"
+          },
+          {
+            "port": "selectedEdges",
+            "en": "Selected edges",
+            "de": "Ausgewählte Kanten",
+            "value": {
+              "0": {
+                "$schema": "edge",
+                "handle": "geometry:fixture:edge",
+                "label": "18446744073709551615"
+              },
+              "$schema": "list"
+            },
+            "expectedText": "18446744073709551615"
+          },
+          {
+            "port": "selectedFaces",
+            "en": "Selected faces",
+            "de": "Ausgewählte Flächen",
+            "value": {
+              "0": {
+                "$schema": "face",
+                "handle": "geometry:fixture:face",
+                "label": "4294967298"
+              },
+              "$schema": "list"
+            },
+            "expectedText": "4294967298"
+          },
+          {"port":"sourceIndex","en":"Source index","de":"Quellindex","value":{"$schema":"number","value":1},"expectedText":"1"}
+        ],
+        "readOnlyInputs": [
+          {"channel":"sourceHandle","en":"Source geometry","de":"Quellgeometrie","value":"4294967300","labels":["4294967300"]},
+          {
+            "channel": "edgeLabels",
+            "en": "Selected edge labels",
+            "de": "Kennzeichnungen ausgewählter Kanten",
+            "value": "[\"4294967297\",\"18446744073709551615\"]",
+            "labels": [
+              "4294967297",
+              "18446744073709551615"
+            ]
+          },
+          {
+            "channel": "faceLabels",
+            "en": "Selected face labels",
+            "de": "Kennzeichnungen ausgewählter Flächen",
+            "value": "[\"4294967298\"]",
+            "labels": [
+              "4294967298"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "shell-schema",
+        "kind": "brep.shell",
+        "controls": [],
+        "connections": [
+          {
+            "channel": "shell",
+            "source": "source-shell",
+            "port": "shell",
+            "en": "Shells",
+            "de": "Schalen"
+          }
+        ],
+        "outputs": [
+          {
+            "port": "shellOut",
+            "en": "Shell",
+            "de": "Schale",
+            "value": {
+              "$schema": "shell",
+              "handle": "geometry:fixture:shell",
+              "label": "4294967298"
+            },
+            "expectedText": "4294967298"
+          }
+        ]
+      },
+      {
+        "id": "measure-area",
+        "kind": "brep.measure.area",
+        "controls": [],
+        "connections": [
+          {
+            "channel": "geometry",
+            "source": "source-geometry",
+            "port": "geometry",
+            "en": "Geometry",
+            "de": "Geometrie"
+          }
+        ],
+        "outputs": [
+          {
+            "port": "area",
+            "en": "Area",
+            "de": "Fläche",
+            "value": {
+              "$schema": "number",
+              "value": 13
+            },
+            "expectedText": "13"
+          }
+        ]
+      }
+    ],
+    "statuses": [
+      "ok",
+      "stale",
+      "error"
+    ],
+    "readonly": true,
+    "numericOracle": {
+      "kind": "box",
+      "width": 2,
+      "depth": 1.5,
+      "height": 1,
+      "area": 13
+    },
+    "selectionWindow": {
+      "channel": "edgeLabels",
+      "count": 1024,
+      "start": "4294967297",
+      "offset": 1000,
+      "rows": 2,
+      "expected": [
+        "4294968297",
+        "4294968298"
+      ]
+    }
+  }
+}

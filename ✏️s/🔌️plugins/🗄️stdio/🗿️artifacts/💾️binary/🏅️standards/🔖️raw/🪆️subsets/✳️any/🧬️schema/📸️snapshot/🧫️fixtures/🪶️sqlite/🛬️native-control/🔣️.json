@@ -1,0 +1,32 @@
+{
+  "preflight": {
+    "encodings": [
+      "binary",
+      "text"
+    ],
+    "ownershipBytes": 0,
+    "byteAuthority": "actualLiteralOutputUTF8OrOctets",
+    "refusalKinds": {
+      "file": "ownershipLimit",
+      "cancellation": "canceled"
+    },
+    "cancelAt": "firstBorrowedCheckpoint",
+    "retirementRefund": false
+  },
+  "ownedSchema": "Snapshot 世界\u0000 literal",
+  "fieldText": "Grüße,\t\n\u0000🌠",
+  "bytePattern": [
+    0,
+    255,
+    1,
+    128
+  ],
+  "workItems": 1024,
+  "copyBytes": 100000,
+  "cancelAfter": 256,
+  "copyCancelAfter": 65536,
+  "lowRows": 1,
+  "expectedRows": 1025,
+  "maxAllocationBytes": 1,
+  "allocationRole": "cumulativeOwnedBacking"
+}

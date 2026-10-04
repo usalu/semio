@@ -10,7 +10,8 @@ fn package_ref(package:&str,bytes:&[u8])->PackageRef {PackageRef {package:Packag
 fn jit_budget()->Budget {Budget {fuel:u64::MAX,deadline_ms:120_000,max_effects:64,max_patch_bytes:1<<20,max_frames:64}}
 enum CodecSweepRuntime {Owned,Jit}
 async fn sqlite_snapshot_note_guest_law(which:CodecSweepRuntime){
-    use semio_framework_os_kernel::{ArtifactDsl,ArtifactPack,ArtifactSqliteSnapshot,FromValue,sqlite_snapshot::{self,SqliteDatabaseLimits,SqliteSnapshotControl,SnapshotEncoding}};
+    use semio_framework_os_kernel::{ArtifactDsl,ArtifactPack,ArtifactSqliteSnapshot,sqlite_snapshot::{self,SqliteDatabaseLimits,SqliteSnapshotControl,SnapshotEncoding}};
+    use semio_framework_value::FromValue;
     let root=repo_root();let source=root.join("✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🧫️fixtures/🔣️.json");let snapshot=crate::NoteSnapshot::from_value(serde_json::from_str(&std::fs::read_to_string(source).unwrap()).unwrap()).unwrap();
     let path=plugin_wasm();let bytes=std::fs::read(path).unwrap();let runtime=match which{CodecSweepRuntime::Owned=>GuestRuntimes::Owned(OwnedRuntime::new()),CodecSweepRuntime::Jit=>GuestRuntimes::Wasmtime(WasmtimeRuntime::new(SharedEngineConfig::default()).await.unwrap())};let compiled=runtime.compile(&package_ref("semio:note",&bytes),&bytes).await.unwrap();let budget=jit_budget();let limits=SqliteDatabaseLimits::default();let dialect="s.note.note@1/*";
     let schema=runtime.codec_sqlite_schema(&compiled,dialect,&budget).await.unwrap();assert_eq!(schema,<crate::NoteSnapshot as ArtifactSqliteSnapshot>::SQLITE_SCHEMA);

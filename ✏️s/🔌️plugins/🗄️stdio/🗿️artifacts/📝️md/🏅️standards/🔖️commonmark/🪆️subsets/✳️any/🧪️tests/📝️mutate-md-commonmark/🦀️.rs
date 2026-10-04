@@ -142,7 +142,7 @@ mod subject {
         let original_projection = project_md(&input)?;
         let kind = spec.str("kind");
         let mutation = mutation_from_spec(&spec)?;
-        let undo = mutation_inverse(&mutation, &original);
+        let undo = mutation_inverse(&mutation, &original).expect("valid retained mutation inverse fixture");
         let mut restored = original;
         apply_md_mutation(&mut restored, &mutation);
         if restored.to_text().into_bytes() == input {

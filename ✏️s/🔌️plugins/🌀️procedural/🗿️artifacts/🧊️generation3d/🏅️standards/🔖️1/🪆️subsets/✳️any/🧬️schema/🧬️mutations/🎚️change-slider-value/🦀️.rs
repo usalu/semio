@@ -29,9 +29,12 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Chan
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Generation3dSnapshot) -> Vec<Generation3dMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let (en, de) = generation3d_label_number(self.value);

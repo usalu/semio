@@ -12,7 +12,7 @@ async fn applies_change_annex() {
     assert_eq!(outcome.worst_level(), None, "change-annex should apply cleanly on the default subject");
     let after = MutationDiff::apply(outcome.diff(), &base).expect("applies");
     assert_ne!(after, base, "change-annex must change the snapshot");
-    let inverse = <Din16798Mutation as protocol::Mutation<Din16798Snapshot>>::inverse(&mutation, &base);
+    let inverse = <Din16798Mutation as protocol::Mutation<Din16798Snapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     let mut restored = after;
     for step in &inverse {
         let undo = <Din16798Mutation as protocol::Mutation<Din16798Snapshot>>::diff(step, &restored);

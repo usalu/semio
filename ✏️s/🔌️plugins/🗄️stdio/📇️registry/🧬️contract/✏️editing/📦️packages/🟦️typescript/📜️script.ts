@@ -7,8 +7,8 @@ import { runScriptMain } from "../../../../../../../../🧰️framework/🔨️m
 class TestScript extends BundleScript {
   run(): void {
     const root = join(this.repoRoot, "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing");
-    runCmd(process.execPath, ["x", "--no-install", "tsc", "--noEmit", "--strict", "--skipLibCheck", "--target", "esnext", "--module", "nodenext", "--moduleResolution", "nodenext", join(root, "🟦️.ts"), join(root, "🩹️patch/🟦️.ts")], { cwd: this.repoRoot });
-    runCmd(process.execPath, ["test", join(root, "🧪️tests/🔬️unit/🟦️.test.ts"), join(root, "🩹️patch/🧪️tests/🟦️.test.ts")]);
+    runCmd(process.execPath, ["x", "--no-install", "tsc", "--noEmit", "--strict", "--skipLibCheck", "--target", "esnext", "--module", "nodenext", "--moduleResolution", "nodenext", join(root, "🟦️.ts"), join(root, "🩹️patch/🟦️.ts"), join(root, "🖼️raster/🟦️.ts")], { cwd: this.repoRoot });
+    runCmd(process.execPath, ["test", join(root, "🧪️tests/🔬️unit/🟦️.test.ts"), join(root, "🩹️patch/🧪️tests/🟦️.test.ts"), join(root, "🖼️raster/🧪️tests/🟦️.test.ts")]);
   }
 }
 await runScriptMain(new ScriptRouter(import.meta.dir).register("test", TestScript), { defaultCommand: "test" });

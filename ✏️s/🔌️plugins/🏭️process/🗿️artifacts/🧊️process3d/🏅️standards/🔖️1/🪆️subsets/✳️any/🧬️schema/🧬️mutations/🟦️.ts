@@ -1,9 +1,9 @@
 /** 🏭️ Process3d direct-mutation discriminated union. */
-import type { ArtifactChildHandle, Process3dCapability, Process3dPose, Process3dStep, Process3dStepOrigin, Process3dWorkshopMachine } from "../🟦️.ts";
+import type { ArtifactChildHandle, Process3dCapability, Process3dPose, Process3dStep, Process3dStepOrigin, Process3dWorkshopMachine, Process3dMeasure } from "../🟦️.ts";
 
 /** 📋️ `create-step` payload — full initial payload for a new step appended to the timeline. */
 export interface CreateStep {
-  index: number;
+  index: bigint;
   step: Process3dStep;
 }
 
@@ -33,18 +33,18 @@ export interface ChangeStepOrigin {
 /** 📐️ `replace-step-measure` payload — whole-value swap of a step's tool/pose geometry. */
 export interface ReplaceStepMeasure {
   id: string;
-  newMeasure: Record<string, unknown>;
+  newMeasure: Process3dMeasure;
 }
 
 /** 🔀️ `reorder-steps` payload — `toIndex` is final-state, clamped to the list length. */
 export interface ReorderSteps {
   id: string;
-  toIndex: number;
+  toIndex: bigint;
 }
 
 /** 🏭️ `create-machine` payload — full initial payload for a new workshop machine. */
 export interface CreateMachine {
-  index: number;
+  index: bigint;
   machine: Process3dWorkshopMachine;
 }
 

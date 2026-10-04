@@ -2,7 +2,7 @@
 
 use super::*;
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "replace-config")]
 #[mutation_leaf(contract = ::protocol)]
@@ -16,9 +16,12 @@ impl protocol::MutationKind<ShootingConfig, ShootingConfigMutation> for ReplaceC
     fn diff(&self, _base: &ShootingConfig) -> protocol::MutationOutcome<ShootingConfig> {
         protocol::MutationOutcome::new(self.config.clone())
     }
-    fn inverse(&self, base: &ShootingConfig) -> Vec<ShootingConfigMutation> {
+    fn inverse(&self, base: &ShootingConfig) -> Result<Vec<ShootingConfigMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![ShootingConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })]
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Replace Config", "Konfiguration ersetzen")
     }

@@ -21,10 +21,10 @@ fn owned_intrinsic_bytes_chunk_budget_rejects_before_payload_integrity_work(){
     let value=DslValue::Bytes(vec![0xab;131072]);let record=RecordValue{fields:[(1,FieldValue::Value(value))].into_iter().collect()};
     let options=crate::store::PackEncodeOptions{codec:crate::codec::CodecId(0),chunk_threshold:1,chunk_size:65536,..Default::default()};
     let mut bytes=crate::store::pack_rt::encode_document(&spec,&record,&options).unwrap();
-    let file=crate::os_io::resolve_ready(crate::os_pack::format::PackFile::open_manifest(bytes.as_slice(),&crate::store::PackLimits::default(),crate::os_pack::format::VerificationLevel::Standard)).unwrap();
+    let file=::semio_framework_async::poll::resolve_ready(crate::os_pack::format::PackFile::open_manifest(bytes.as_slice(),&crate::store::PackLimits::default(),crate::os_pack::format::VerificationLevel::Standard)).unwrap();
     let offset=file.chunk_range(crate::codec::ids::ChunkId(0)).unwrap().offset as usize;drop(file);bytes[offset]^=1;
     let options=crate::store::PackDecodeOptions{limits:crate::store::PackLimits{max_total_alloc:4096,..Default::default()},..Default::default()};
-    assert!(matches!(crate::store::pack_rt::decode_document(&bytes,&spec,&options),Err(crate::store::PackError::LimitExceeded(_))));
+    assert!(matches!(crate::store::pack_rt::decode_document(&bytes,&spec,&options),Err(crate::store::PackError::Refusal(pack::PackRefusal::LimitExceeded { kind: semio_framework_value::ValueRefusalKind::OwnershipLimit, .. }))));
 }
 
 #[test]

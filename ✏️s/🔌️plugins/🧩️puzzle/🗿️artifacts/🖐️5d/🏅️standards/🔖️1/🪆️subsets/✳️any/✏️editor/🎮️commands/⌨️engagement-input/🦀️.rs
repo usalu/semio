@@ -1,7 +1,7 @@
 //! ⌨️ `engagement-input` command.
 
 use crate::editor::puzzle5d::Puzzle5dActionCtx;
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 
 pub fn engagement_input(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
     let value = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).unwrap_or("");

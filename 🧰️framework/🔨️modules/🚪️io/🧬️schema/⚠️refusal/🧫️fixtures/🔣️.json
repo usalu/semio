@@ -1,0 +1,484 @@
+[
+  {
+    "id": "value-invalidValue",
+    "operation": "value",
+    "kind": "invalidValue",
+    "message": "canceled ownershipLimit invalidValue spoofed prose",
+    "span": {
+      "line": 7,
+      "column": 11,
+      "length": 4
+    },
+    "expected": "required",
+    "expectedWire": {
+      "cause": {
+        "kind": "invalidValue",
+        "message": "canceled ownershipLimit invalidValue spoofed prose"
+      },
+      "diagnostics": []
+    }
+  },
+  {
+    "id": "text-invalidValue",
+    "operation": "text",
+    "kind": "invalidValue",
+    "message": "canceled ownershipLimit invalidValue spoofed prose",
+    "span": {
+      "line": 7,
+      "column": 11,
+      "length": 4
+    },
+    "expected": "required",
+    "expectedWire": {
+      "cause": {
+        "kind": "invalidValue",
+        "message": "canceled ownershipLimit invalidValue spoofed prose"
+      },
+      "diagnostics": [
+        {
+          "code": "io.text-refusal",
+          "severity": "error",
+          "message": "canceled ownershipLimit invalidValue spoofed prose",
+          "span": {
+            "line": 7,
+            "column": 11,
+            "length": 4
+          },
+          "expected": {
+            "tokens": [
+              "required"
+            ],
+            "keywords": [],
+            "keys": []
+          },
+          "scope": {}
+        }
+      ]
+    }
+  },
+  {
+    "id": "value-canceled",
+    "operation": "value",
+    "kind": "canceled",
+    "message": "canceled ownershipLimit invalidValue spoofed prose",
+    "span": {
+      "line": 7,
+      "column": 11,
+      "length": 4
+    },
+    "expected": "required",
+    "expectedWire": {
+      "cause": {
+        "kind": "canceled",
+        "message": "canceled ownershipLimit invalidValue spoofed prose"
+      },
+      "diagnostics": []
+    }
+  },
+  {
+    "id": "text-canceled",
+    "operation": "text",
+    "kind": "canceled",
+    "message": "canceled ownershipLimit invalidValue spoofed prose",
+    "span": {
+      "line": 7,
+      "column": 11,
+      "length": 4
+    },
+    "expected": "required",
+    "expectedWire": {
+      "cause": {
+        "kind": "canceled",
+        "message": "canceled ownershipLimit invalidValue spoofed prose"
+      },
+      "diagnostics": [
+        {
+          "code": "io.text-refusal",
+          "severity": "error",
+          "message": "canceled ownershipLimit invalidValue spoofed prose",
+          "span": {
+            "line": 7,
+            "column": 11,
+            "length": 4
+          },
+          "expected": {
+            "tokens": [
+              "required"
+            ],
+            "keywords": [],
+            "keys": []
+          },
+          "scope": {}
+        }
+      ]
+    }
+  },
+  {
+    "id": "value-ownershipLimit",
+    "operation": "value",
+    "kind": "ownershipLimit",
+    "message": "canceled ownershipLimit invalidValue spoofed prose",
+    "span": {
+      "line": 7,
+      "column": 11,
+      "length": 4
+    },
+    "expected": "required",
+    "expectedWire": {
+      "cause": {
+        "kind": "ownershipLimit",
+        "message": "canceled ownershipLimit invalidValue spoofed prose"
+      },
+      "diagnostics": []
+    }
+  },
+  {
+    "id": "text-ownershipLimit",
+    "operation": "text",
+    "kind": "ownershipLimit",
+    "message": "canceled ownershipLimit invalidValue spoofed prose",
+    "span": {
+      "line": 7,
+      "column": 11,
+      "length": 4
+    },
+    "expected": "required",
+    "expectedWire": {
+      "cause": {
+        "kind": "ownershipLimit",
+        "message": "canceled ownershipLimit invalidValue spoofed prose"
+      },
+      "diagnostics": [
+        {
+          "code": "io.text-refusal",
+          "severity": "error",
+          "message": "canceled ownershipLimit invalidValue spoofed prose",
+          "span": {
+            "line": 7,
+            "column": 11,
+            "length": 4
+          },
+          "expected": {
+            "tokens": [
+              "required"
+            ],
+            "keywords": [],
+            "keys": []
+          },
+          "scope": {}
+        }
+      ]
+    }
+  },
+  {
+    "id": "value-allocationFailed",
+    "operation": "value",
+    "kind": "allocationFailed",
+    "message": "canceled ownershipLimit invalidValue spoofed prose",
+    "span": {
+      "line": 7,
+      "column": 11,
+      "length": 4
+    },
+    "expected": "required",
+    "expectedWire": {
+      "cause": {
+        "kind": "allocationFailed",
+        "message": "canceled ownershipLimit invalidValue spoofed prose"
+      },
+      "diagnostics": []
+    }
+  },
+  {
+    "id": "text-allocationFailed",
+    "operation": "text",
+    "kind": "allocationFailed",
+    "message": "canceled ownershipLimit invalidValue spoofed prose",
+    "span": {
+      "line": 7,
+      "column": 11,
+      "length": 4
+    },
+    "expected": "required",
+    "expectedWire": {
+      "cause": {
+        "kind": "allocationFailed",
+        "message": "canceled ownershipLimit invalidValue spoofed prose"
+      },
+      "diagnostics": [
+        {
+          "code": "io.text-refusal",
+          "severity": "error",
+          "message": "canceled ownershipLimit invalidValue spoofed prose",
+          "span": {
+            "line": 7,
+            "column": 11,
+            "length": 4
+          },
+          "expected": {
+            "tokens": [
+              "required"
+            ],
+            "keywords": [],
+            "keys": []
+          },
+          "scope": {}
+        }
+      ]
+    }
+  },
+  {
+    "id": "value-workLimit",
+    "operation": "value",
+    "kind": "workLimit",
+    "message": "canceled ownershipLimit invalidValue spoofed prose",
+    "span": {
+      "line": 7,
+      "column": 11,
+      "length": 4
+    },
+    "expected": "required",
+    "expectedWire": {
+      "cause": {
+        "kind": "workLimit",
+        "message": "canceled ownershipLimit invalidValue spoofed prose"
+      },
+      "diagnostics": []
+    }
+  },
+  {
+    "id": "text-workLimit",
+    "operation": "text",
+    "kind": "workLimit",
+    "message": "canceled ownershipLimit invalidValue spoofed prose",
+    "span": {
+      "line": 7,
+      "column": 11,
+      "length": 4
+    },
+    "expected": "required",
+    "expectedWire": {
+      "cause": {
+        "kind": "workLimit",
+        "message": "canceled ownershipLimit invalidValue spoofed prose"
+      },
+      "diagnostics": [
+        {
+          "code": "io.text-refusal",
+          "severity": "error",
+          "message": "canceled ownershipLimit invalidValue spoofed prose",
+          "span": {
+            "line": 7,
+            "column": 11,
+            "length": 4
+          },
+          "expected": {
+            "tokens": [
+              "required"
+            ],
+            "keywords": [],
+            "keys": []
+          },
+          "scope": {}
+        }
+      ]
+    }
+  },
+  {
+    "id": "value-depthLimit",
+    "operation": "value",
+    "kind": "depthLimit",
+    "message": "canceled ownershipLimit invalidValue spoofed prose",
+    "span": {
+      "line": 7,
+      "column": 11,
+      "length": 4
+    },
+    "expected": "required",
+    "expectedWire": {
+      "cause": {
+        "kind": "depthLimit",
+        "message": "canceled ownershipLimit invalidValue spoofed prose"
+      },
+      "diagnostics": []
+    }
+  },
+  {
+    "id": "text-depthLimit",
+    "operation": "text",
+    "kind": "depthLimit",
+    "message": "canceled ownershipLimit invalidValue spoofed prose",
+    "span": {
+      "line": 7,
+      "column": 11,
+      "length": 4
+    },
+    "expected": "required",
+    "expectedWire": {
+      "cause": {
+        "kind": "depthLimit",
+        "message": "canceled ownershipLimit invalidValue spoofed prose"
+      },
+      "diagnostics": [
+        {
+          "code": "io.text-refusal",
+          "severity": "error",
+          "message": "canceled ownershipLimit invalidValue spoofed prose",
+          "span": {
+            "line": 7,
+            "column": 11,
+            "length": 4
+          },
+          "expected": {
+            "tokens": [
+              "required"
+            ],
+            "keywords": [],
+            "keys": []
+          },
+          "scope": {}
+        }
+      ]
+    }
+  },
+  {
+    "id": "value-unsupportedOwner",
+    "operation": "value",
+    "kind": "unsupportedOwner",
+    "message": "canceled ownershipLimit invalidValue spoofed prose",
+    "span": {
+      "line": 7,
+      "column": 11,
+      "length": 4
+    },
+    "expected": "required",
+    "expectedWire": {
+      "cause": {
+        "kind": "unsupportedOwner",
+        "message": "canceled ownershipLimit invalidValue spoofed prose"
+      },
+      "diagnostics": []
+    }
+  },
+  {
+    "id": "text-unsupportedOwner",
+    "operation": "text",
+    "kind": "unsupportedOwner",
+    "message": "canceled ownershipLimit invalidValue spoofed prose",
+    "span": {
+      "line": 7,
+      "column": 11,
+      "length": 4
+    },
+    "expected": "required",
+    "expectedWire": {
+      "cause": {
+        "kind": "unsupportedOwner",
+        "message": "canceled ownershipLimit invalidValue spoofed prose"
+      },
+      "diagnostics": [
+        {
+          "code": "io.text-refusal",
+          "severity": "error",
+          "message": "canceled ownershipLimit invalidValue spoofed prose",
+          "span": {
+            "line": 7,
+            "column": 11,
+            "length": 4
+          },
+          "expected": {
+            "tokens": [
+              "required"
+            ],
+            "keywords": [],
+            "keys": []
+          },
+          "scope": {}
+        }
+      ]
+    }
+  },
+  {
+    "id": "value-invariantViolated",
+    "operation": "value",
+    "kind": "invariantViolated",
+    "message": "canceled ownershipLimit invalidValue spoofed prose",
+    "span": {
+      "line": 7,
+      "column": 11,
+      "length": 4
+    },
+    "expected": "required",
+    "expectedWire": {
+      "cause": {
+        "kind": "invariantViolated",
+        "message": "canceled ownershipLimit invalidValue spoofed prose"
+      },
+      "diagnostics": []
+    }
+  },
+  {
+    "id": "text-invariantViolated",
+    "operation": "text",
+    "kind": "invariantViolated",
+    "message": "canceled ownershipLimit invalidValue spoofed prose",
+    "span": {
+      "line": 7,
+      "column": 11,
+      "length": 4
+    },
+    "expected": "required",
+    "expectedWire": {
+      "cause": {
+        "kind": "invariantViolated",
+        "message": "canceled ownershipLimit invalidValue spoofed prose"
+      },
+      "diagnostics": [
+        {
+          "code": "io.text-refusal",
+          "severity": "error",
+          "message": "canceled ownershipLimit invalidValue spoofed prose",
+          "span": {
+            "line": 7,
+            "column": 11,
+            "length": 4
+          },
+          "expected": {
+            "tokens": [
+              "required"
+            ],
+            "keywords": [],
+            "keys": []
+          },
+          "scope": {}
+        }
+      ]
+    }
+  },
+  {
+    "id": "textCanceled",
+    "operation": "textCanceled",
+    "kind": "invalidValue",
+    "message": "canceled ownershipLimit invalidValue spoofed prose",
+    "span": {
+      "line": 7,
+      "column": 11,
+      "length": 4
+    },
+    "expected": "required",
+    "expectedKind": "canceled"
+  },
+  {
+    "id": "textOwnership",
+    "operation": "textOwnership",
+    "kind": "invalidValue",
+    "message": "canceled ownershipLimit invalidValue spoofed prose",
+    "span": {
+      "line": 7,
+      "column": 11,
+      "length": 4
+    },
+    "expected": "required",
+    "expectedKind": "ownershipLimit"
+  }
+]

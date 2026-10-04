@@ -28,6 +28,7 @@ Feature: Apply every typed RFC 4180 CSV mutation to a real-world table
       | insert-record | {"index": 5, "record": {"fields": [{"value": "BB-99", "quoted": false}, {"value": "Marktplätze", "quoted": false}, {"value": "Baustoffbörse Hannover", "quoted": false}, {"value": "Deutschland", "quoted": false}, {"value": "Angebotsübersicht, Detailseite", "quoted": false}, {"value": "öffentlich", "quoted": false}, {"value": "Website", "quoted": false}, {"value": "—", "quoted": false}, {"value": "Beschreibung, Bilder, Preis, Menge, Materialstandort", "quoted": false}, {"value": "Kategorien, Suche, Filter", "quoted": false}, {"value": "Anfrage, Reservierung", "quoted": false}, {"value": "Abholung, Lieferung", "quoted": false}]}} |
       | remove-record | {"index": 25} |
       | set-field | {"recordIndex": 1, "fieldIndex": 8, "value": "Beschreibung, Bilder, Preis", "quoted": false} |
+      | patch-snapshot | {"patch": {"operation": "set", "path": "/records/1/fields/8/value", "value": "Beschreibung, Bilder, Preis"}} |
   @id-inverse
   @level-exhaustive
   @mode-differential
@@ -46,6 +47,7 @@ Feature: Apply every typed RFC 4180 CSV mutation to a real-world table
       | insert-record | {"index": 5, "record": {"fields": [{"value": "BB-99", "quoted": false}, {"value": "Marktplätze", "quoted": false}, {"value": "Baustoffbörse Hannover", "quoted": false}, {"value": "Deutschland", "quoted": false}, {"value": "Angebotsübersicht, Detailseite", "quoted": false}, {"value": "öffentlich", "quoted": false}, {"value": "Website", "quoted": false}, {"value": "—", "quoted": false}, {"value": "Beschreibung, Bilder, Preis, Menge, Materialstandort", "quoted": false}, {"value": "Kategorien, Suche, Filter", "quoted": false}, {"value": "Anfrage, Reservierung", "quoted": false}, {"value": "Abholung, Lieferung", "quoted": false}]}} |
       | remove-record | {"index": 25} |
       | set-field | {"recordIndex": 1, "fieldIndex": 8, "value": "Beschreibung, Bilder, Preis", "quoted": false} |
+      | patch-snapshot | {"patch": {"operation": "set", "path": "/records/1/fields/8/value", "value": "Beschreibung, Bilder, Preis"}} |
   @id-identity-round-trip
   @level-long
   @mode-round-trip

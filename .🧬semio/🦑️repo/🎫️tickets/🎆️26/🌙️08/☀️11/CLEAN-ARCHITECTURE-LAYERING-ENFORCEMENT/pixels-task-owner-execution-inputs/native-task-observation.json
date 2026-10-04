@@ -1,0 +1,267 @@
+{
+  "cases": [
+    {
+      "args": [],
+      "originalCalls": [
+        {
+          "request": {
+            "manifestPath": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust/Cargo.toml",
+            "packages": [
+              "semio-framework-pixels",
+              "semio-framework-deflate",
+              "semio-framework-io-base64",
+              "semio-framework-io-binary-source"
+            ],
+            "cwd": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels",
+            "extraArgs": []
+          },
+          "policy": {
+            "source": "unchanged-policy"
+          }
+        }
+      ],
+      "currentCalls": [
+        {
+          "request": {
+            "manifestPath": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust/Cargo.toml",
+            "packages": [
+              "semio-framework-pixels",
+              "semio-framework-deflate",
+              "semio-framework-io-base64",
+              "semio-framework-io-binary-source"
+            ],
+            "cwd": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels",
+            "extraArgs": []
+          },
+          "policy": {
+            "source": "unchanged-policy"
+          }
+        }
+      ],
+      "equal": true
+    },
+    {
+      "args": [
+        "--lib",
+        "affine_sampling",
+        "--",
+        "--nocapture"
+      ],
+      "originalCalls": [
+        {
+          "request": {
+            "manifestPath": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust/Cargo.toml",
+            "packages": [
+              "semio-framework-pixels",
+              "semio-framework-deflate",
+              "semio-framework-io-base64",
+              "semio-framework-io-binary-source"
+            ],
+            "cwd": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels",
+            "extraArgs": [
+              "--lib",
+              "affine_sampling",
+              "--",
+              "--nocapture"
+            ]
+          },
+          "policy": {
+            "source": "unchanged-policy"
+          }
+        }
+      ],
+      "currentCalls": [
+        {
+          "request": {
+            "manifestPath": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust/Cargo.toml",
+            "packages": [
+              "semio-framework-pixels",
+              "semio-framework-deflate",
+              "semio-framework-io-base64",
+              "semio-framework-io-binary-source"
+            ],
+            "cwd": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels",
+            "extraArgs": [
+              "--lib",
+              "affine_sampling",
+              "--",
+              "--nocapture"
+            ]
+          },
+          "policy": {
+            "source": "unchanged-policy"
+          }
+        }
+      ],
+      "equal": true
+    },
+    {
+      "args": [
+        "--lib",
+        "png_decode",
+        "--",
+        "--nocapture"
+      ],
+      "originalCalls": [
+        {
+          "request": {
+            "manifestPath": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust/Cargo.toml",
+            "packages": [
+              "semio-framework-pixels",
+              "semio-framework-deflate",
+              "semio-framework-io-base64",
+              "semio-framework-io-binary-source"
+            ],
+            "cwd": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels",
+            "extraArgs": [
+              "--lib",
+              "png_decode",
+              "--",
+              "--nocapture"
+            ]
+          },
+          "policy": {
+            "source": "unchanged-policy"
+          }
+        }
+      ],
+      "currentCalls": [
+        {
+          "request": {
+            "manifestPath": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust/Cargo.toml",
+            "packages": [
+              "semio-framework-pixels",
+              "semio-framework-deflate",
+              "semio-framework-io-base64",
+              "semio-framework-io-binary-source"
+            ],
+            "cwd": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels",
+            "extraArgs": [
+              "--lib",
+              "png_decode",
+              "--",
+              "--nocapture"
+            ]
+          },
+          "policy": {
+            "source": "unchanged-policy"
+          }
+        }
+      ],
+      "equal": true
+    },
+    {
+      "args": [
+        "--lib",
+        "image_sources",
+        "--",
+        "--nocapture"
+      ],
+      "originalCalls": [
+        {
+          "request": {
+            "manifestPath": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust/Cargo.toml",
+            "packages": [
+              "semio-framework-pixels",
+              "semio-framework-deflate",
+              "semio-framework-io-base64",
+              "semio-framework-io-binary-source"
+            ],
+            "cwd": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels",
+            "extraArgs": [
+              "--lib",
+              "image_sources",
+              "--",
+              "--nocapture"
+            ]
+          },
+          "policy": {
+            "source": "unchanged-policy"
+          }
+        }
+      ],
+      "currentCalls": [
+        {
+          "request": {
+            "manifestPath": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust/Cargo.toml",
+            "packages": [
+              "semio-framework-pixels",
+              "semio-framework-deflate",
+              "semio-framework-io-base64",
+              "semio-framework-io-binary-source"
+            ],
+            "cwd": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels",
+            "extraArgs": [
+              "--lib",
+              "image_sources",
+              "--",
+              "--nocapture"
+            ]
+          },
+          "policy": {
+            "source": "unchanged-policy"
+          }
+        }
+      ],
+      "equal": true
+    },
+    {
+      "args": [
+        "--offline",
+        "--features",
+        "retained-feature",
+        "--no-default-features"
+      ],
+      "originalCalls": [
+        {
+          "request": {
+            "manifestPath": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust/Cargo.toml",
+            "packages": [
+              "semio-framework-pixels",
+              "semio-framework-deflate",
+              "semio-framework-io-base64",
+              "semio-framework-io-binary-source"
+            ],
+            "cwd": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels",
+            "extraArgs": [
+              "--offline",
+              "--features",
+              "retained-feature",
+              "--no-default-features"
+            ]
+          },
+          "policy": {
+            "source": "unchanged-policy"
+          }
+        }
+      ],
+      "currentCalls": [
+        {
+          "request": {
+            "manifestPath": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust/Cargo.toml",
+            "packages": [
+              "semio-framework-pixels",
+              "semio-framework-deflate",
+              "semio-framework-io-base64",
+              "semio-framework-io-binary-source"
+            ],
+            "cwd": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels",
+            "extraArgs": [
+              "--offline",
+              "--features",
+              "retained-feature",
+              "--no-default-features"
+            ]
+          },
+          "policy": {
+            "source": "unchanged-policy"
+          }
+        }
+      ],
+      "equal": true
+    }
+  ],
+  "oracle": "node:assert/strict request equality on actual old/current script dispatch",
+  "cargoExecuted": false,
+  "rustExecuted": false
+}

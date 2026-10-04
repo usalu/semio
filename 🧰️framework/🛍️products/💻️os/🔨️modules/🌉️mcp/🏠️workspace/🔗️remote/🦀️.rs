@@ -6,7 +6,8 @@ use semio_framework_os_kernel::os_directory::{
     client::{DirectoryClient, DirectoryClientError, DirectoryTransport, HubSocketGrantSource, LocalHubCredential},
     descriptor_digest_v1, hex_lower, DirectoryAccessChange, DirectoryEventBody, DirectorySessionKindV1, DirectorySpaceAdministrationPageV1, DirectorySpaceRole, DirectoryStreamMessage, DocumentExecutionTargetLeaseFieldsV1, DocumentOpenIntentV1, DocumentScope, DocumentView, MemberSpaceViewV1, MemberView,
 };
-use semio_framework_os_kernel::{FromValue, ToValue};
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Condvar, Mutex, PoisonError, RwLock};
@@ -1916,9 +1917,9 @@ impl NativeHubBindingDriver {
         scope: &DocumentScope,
         hub_origin: &str,
         route: &str,
-        request:&semio_framework_os_kernel::DslValue,
+        request:&semio_framework_value::DslValue,
         cancel: &semio_framework_async::CancelToken,
-    ) -> Result<semio_framework_os_kernel::DslValue,crate::inference::InferenceRouteErrorV1> {
+    ) -> Result<semio_framework_value::DslValue,crate::inference::InferenceRouteErrorV1> {
         let (context, _) = self.operation_context(cancel, HUB_INFERENCE_OPERATION_TIMEOUT_MS);
         self.runtime.block_on(crate::inference::undo_hub_inference_approval(self.inference_transport.as_ref(), &context, hub_origin, scope, route, request))
     }

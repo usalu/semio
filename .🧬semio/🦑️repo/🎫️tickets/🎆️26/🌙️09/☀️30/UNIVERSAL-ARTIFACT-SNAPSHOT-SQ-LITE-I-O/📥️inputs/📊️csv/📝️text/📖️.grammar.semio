@@ -1,0 +1,12 @@
+dialect grammar
+grammar stdio.csv.snapshot
+extension csv
+start document
+comment none
+
+document = snapshot
+snapshot = "schema" "=" text "has-header" "=" bool "records" "=" "[" record* "]"
+record = "{" "fields" "=" "[" field* "]" "}"
+field = "{" "value" "=" text "quoted" "=" bool "}"
+text = STRING / IDENT / INT / FLOAT
+bool = "true" / "false"

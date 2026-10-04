@@ -112,13 +112,12 @@ pub fn encode_app_command(command: &AppCommand) -> serde_json::Value {
         AppCommand::ReadHistory => serde_json::json!({ "kind": "readHistory" }),
         AppCommand::ReadArtifact => serde_json::json!({ "kind": "readArtifact" }),
         AppCommand::PureCommand { capability_id, input } => serde_json::json!({ "kind": "pureCommand", "capabilityId": capability_id, "input": input }),
-        AppCommand::TransactionPrepare { txn_id, ops, label, origin } => {
+        AppCommand::TransactionPrepare { txn_id, ops, origin } => {
             let MutationOrigin::Agent { principal, invocation_id } = origin;
             serde_json::json!({
                 "kind": "transactionPrepare",
                 "txnId": txn_id,
                 "ops": encode_prepared_ops(ops),
-                "label": label,
                 "origin": { "kind": "agent", "principal": principal, "invocationId": invocation_id },
             })
         }

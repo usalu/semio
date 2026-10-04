@@ -1,38 +1,41 @@
-/** 🧬️ Process3d snapshot schema — artifact-lane fields only. */
-
-export interface Process3dSnapshot {
-  /** @state artifact */
-  workshop: Process3dWorkshop;
-  /** @state artifact */
-  stockId: string;
-  stockLabel: string;
-  stockPose: Process3dPose;
-  stockPayload: Process3dStock;
-  stockSolid: ArtifactChildHandle;
-  /** @state artifact */
-  steps: ArtifactChildHandle;
-  stepPayloads: Process3dStep[];
-  toolSolids: ArtifactChildHandle[];
-}
-
-export interface Process3dWorkshop { machines: Process3dWorkshopMachine[]; }
-export interface Process3dWorkshopMachine { id: string; label: string; iconId: string; catalogId?: string; capabilities: unknown[]; }
-export interface Process3dStock { id: string; label: string; solid: Record<string, unknown>; pose: Process3dPose; }
-export interface Process3dPose { position: [number, number, number]; axis: [number, number, number]; angle: number; }
-export interface Process3dStep { id: string; label: string; enabled: boolean; origin?: { machineId: string; capabilityId: string }; measure: Record<string, unknown>; }
-export interface ArtifactDialect {
-  artifactKind: string;
-  standard: string;
-  subset: string;
-}
-
-export interface ArtifactRef {
-  artifactId: string;
-  dialect: ArtifactDialect;
-}
-/** 🌉️ Mirrors `store::ArtifactChild<S>` — `childId`/`target` only; `local_owner` and
- *  `PhantomData<S>` are `#[serde(skip)]`. */
-export interface ArtifactChildHandle {
-  childId: string;
-  target: ArtifactRef;
-}
+/** 🏭️ Complete canonical Process3d persisted parent and exact native scalar words. */
+import {type Binary64,parseBinary64Transport} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+export type{Binary64};
+export interface ArtifactDialect{artifactKind:string;standard:string;subset:string}
+export interface ArtifactRef{artifactId:string;dialect:ArtifactDialect}
+export interface ArtifactChildHandle{childId:string;target:ArtifactRef}
+export interface Process3dPose{position:[Binary64,Binary64,Binary64];axis:[Binary64,Binary64,Binary64];angle:Binary64}
+export type StockQuantity="width"|"depth"|"height"|"maxDimension"|"minDimension";
+export type Process3dCapabilityRule={kind:"min"|"max";quantity:StockQuantity;parameter:string;margin:Binary64};
+export type Process3dMeasureRecipe={recipe:"discCut";diameter:string;kerf:string}|{recipe:"bladeCut";kerf:string;length:string;depth:string}|{recipe:"pocketCut";diameter:string;depth:string}|{recipe:"boreDrill";radius:string;depth:string}|{recipe:"cylinderAttach";radius:string;length:string}|{recipe:"boxAttach";width:string;depth:string;height:string};
+export interface Process3dCapabilityParameter{id:string;label:string;value:Binary64}
+export interface Process3dCapability{id:string;label:string;iconId:string;recipe:Process3dMeasureRecipe;parameters:Process3dCapabilityParameter[];rules:Process3dCapabilityRule[]}
+export interface Process3dWorkshopMachine{id:string;label:string;iconId:string;catalogId?:string;capabilities:Process3dCapability[]}
+export interface Process3dWorkshop{machines:Process3dWorkshopMachine[]}
+export type Process3dWorkingSolid={kind:"box";width:Binary64;depth:Binary64;height:Binary64}|{kind:"cylinder";radius:Binary64;height:Binary64}|{kind:"sphere";radius:Binary64}|{kind:"importedMesh";meshUrl:string}|{kind:"importedSolid";solidHandle:string}|{kind:"reference";referenceId:string};
+export interface Process3dStock{id:string;label:string;solid:Process3dWorkingSolid;pose:Process3dPose}
+export interface Process3dStepOrigin{machineId:string;capabilityId:string}
+export type Process3dMeasure={measure:"cut";tool:Process3dWorkingSolid;pose:Process3dPose}|{measure:"drill";radius:Binary64;depth:Binary64;pose:Process3dPose}|{measure:"attach";component:Process3dWorkingSolid;pose:Process3dPose};
+export interface Process3dStep{id:string;label:string;enabled:boolean;origin?:Process3dStepOrigin;measure:Process3dMeasure}
+export interface Process3dSnapshot{workshop:Process3dWorkshop;stockId:string;stockLabel:string;stockPose:Process3dPose;stockPayload:Process3dStock;stockSolid:ArtifactChildHandle;steps:ArtifactChildHandle;stepPayloads:Process3dStep[];toolSolids:ArtifactChildHandle[]}
+/** 🛂️ Refuse malformed owned fields without guessing native variants. */
+export function processRecord(v:unknown):Record<string,unknown>{if(!v||typeof v!=="object"||Array.isArray(v))throw Error("Process3d object required");return v as Record<string,unknown>}
+export function processText(v:unknown):string{if(typeof v!=="string")throw Error("Process3d text required");for(let i=0;i<v.length;i++){const n=v.charCodeAt(i);if(n>=0xd800&&n<=0xdbff){const low=v.charCodeAt(++i);if(!(low>=0xdc00&&low<=0xdfff))throw Error("Process3d invalid Unicode")}else if(n>=0xdc00&&n<=0xdfff)throw Error("Process3d invalid Unicode")}return v}
+export function processArray(v:unknown):unknown[]{if(!Array.isArray(v))throw Error("Process3d ordered list required");return v}
+function optionalText(v:unknown):string|undefined{return v===undefined?undefined:processText(v)}
+function triple(v:unknown):[Binary64,Binary64,Binary64]{const a=processArray(v);if(a.length!==3)throw Error("Process3d exact triple required");return[parseBinary64Transport(a[0]),parseBinary64Transport(a[1]),parseBinary64Transport(a[2])]}
+function boolean(v:unknown):boolean{if(typeof v!=="boolean")throw Error("Process3d boolean required");return v}
+export function parseArtifactChildHandle(v:unknown):ArtifactChildHandle{const r=processRecord(v),t=processRecord(r.target),d=processRecord(t.dialect);return{childId:processText(r.childId),target:{artifactId:processText(t.artifactId),dialect:{artifactKind:processText(d.artifactKind),standard:processText(d.standard),subset:processText(d.subset)}}}}
+export function parseProcess3dPose(v:unknown):Process3dPose{const r=processRecord(v);return{position:triple(r.position),axis:triple(r.axis),angle:parseBinary64Transport(r.angle)}}
+export function parseProcess3dWorkingSolid(v:unknown):Process3dWorkingSolid{const r=processRecord(v);switch(r.kind){case"box":return{kind:"box",width:parseBinary64Transport(r.width),depth:parseBinary64Transport(r.depth),height:parseBinary64Transport(r.height)};case"cylinder":return{kind:"cylinder",radius:parseBinary64Transport(r.radius),height:parseBinary64Transport(r.height)};case"sphere":return{kind:"sphere",radius:parseBinary64Transport(r.radius)};case"importedMesh":return{kind:"importedMesh",meshUrl:processText(r.meshUrl)};case"importedSolid":return{kind:"importedSolid",solidHandle:processText(r.solidHandle)};case"reference":return{kind:"reference",referenceId:processText(r.referenceId)};default:throw Error("Process3d unknown solid variant")}}
+export function parseProcess3dMeasureRecipe(v:unknown):Process3dMeasureRecipe{const r=processRecord(v);switch(r.recipe){case"discCut":return{recipe:"discCut",diameter:processText(r.diameter),kerf:processText(r.kerf)};case"bladeCut":return{recipe:"bladeCut",kerf:processText(r.kerf),length:processText(r.length),depth:processText(r.depth)};case"pocketCut":return{recipe:"pocketCut",diameter:processText(r.diameter),depth:processText(r.depth)};case"boreDrill":return{recipe:"boreDrill",radius:processText(r.radius),depth:processText(r.depth)};case"cylinderAttach":return{recipe:"cylinderAttach",radius:processText(r.radius),length:processText(r.length)};case"boxAttach":return{recipe:"boxAttach",width:processText(r.width),depth:processText(r.depth),height:processText(r.height)};default:throw Error("Process3d unknown recipe")}}
+export function parseProcess3dCapabilityRule(v:unknown):Process3dCapabilityRule{const r=processRecord(v);if(r.kind!=="min"&&r.kind!=="max")throw Error("Process3d unknown rule");if(!["width","depth","height","maxDimension","minDimension"].includes(processText(r.quantity)))throw Error("Process3d unknown stock quantity");return{kind:r.kind,quantity:r.quantity as StockQuantity,parameter:processText(r.parameter),margin:parseBinary64Transport(r.margin)}}
+export function parseProcess3dCapability(v:unknown):Process3dCapability{const r=processRecord(v);return{id:processText(r.id),label:processText(r.label),iconId:processText(r.iconId),recipe:parseProcess3dMeasureRecipe(r.recipe),parameters:processArray(r.parameters).map(v=>{const p=processRecord(v);return{id:processText(p.id),label:processText(p.label),value:parseBinary64Transport(p.value)}}),rules:processArray(r.rules).map(parseProcess3dCapabilityRule)}}
+export function parseProcess3dWorkshopMachine(v:unknown):Process3dWorkshopMachine{const r=processRecord(v);return{id:processText(r.id),label:processText(r.label),iconId:processText(r.iconId),catalogId:optionalText(r.catalogId),capabilities:processArray(r.capabilities).map(parseProcess3dCapability)}}
+export function parseProcess3dWorkshop(v:unknown):Process3dWorkshop{const r=processRecord(v);return{machines:processArray(r.machines).map(parseProcess3dWorkshopMachine)}}
+export function parseProcess3dStock(v:unknown):Process3dStock{const r=processRecord(v);return{id:processText(r.id),label:processText(r.label),solid:parseProcess3dWorkingSolid(r.solid),pose:parseProcess3dPose(r.pose)}}
+export function parseProcess3dStepOrigin(v:unknown):Process3dStepOrigin{const r=processRecord(v);return{machineId:processText(r.machineId),capabilityId:processText(r.capabilityId)}}
+export function parseProcess3dMeasure(v:unknown):Process3dMeasure{const r=processRecord(v),pose=parseProcess3dPose(r.pose);switch(r.measure){case"cut":return{measure:"cut",tool:parseProcess3dWorkingSolid(r.tool),pose};case"drill":return{measure:"drill",radius:parseBinary64Transport(r.radius),depth:parseBinary64Transport(r.depth),pose};case"attach":return{measure:"attach",component:parseProcess3dWorkingSolid(r.component),pose};default:throw Error("Process3d unknown measure")}}
+export function parseProcess3dStep(v:unknown):Process3dStep{const r=processRecord(v);return{id:processText(r.id),label:processText(r.label),enabled:boolean(r.enabled),origin:r.origin===undefined?undefined:parseProcess3dStepOrigin(r.origin),measure:parseProcess3dMeasure(r.measure)}}
+export function parseProcess3dSnapshot(v:unknown):Process3dSnapshot{const r=processRecord(v);return{workshop:parseProcess3dWorkshop(r.workshop),stockId:processText(r.stockId),stockLabel:processText(r.stockLabel),stockPose:parseProcess3dPose(r.stockPose),stockPayload:parseProcess3dStock(r.stockPayload),stockSolid:parseArtifactChildHandle(r.stockSolid),steps:parseArtifactChildHandle(r.steps),stepPayloads:processArray(r.stepPayloads).map(parseProcess3dStep),toolSolids:processArray(r.toolSolids).map(parseArtifactChildHandle)}}
+export{process3dSnapshotToSqliteDatabase,process3dSnapshotFromSqliteDatabase}from"./🪶️sqlite/🟦️.ts";

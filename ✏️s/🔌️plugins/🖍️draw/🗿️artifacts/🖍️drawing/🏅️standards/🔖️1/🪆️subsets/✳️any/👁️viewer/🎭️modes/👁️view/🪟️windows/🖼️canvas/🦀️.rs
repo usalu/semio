@@ -7,7 +7,7 @@
 
 use crate::schema::{flatten_drawing_document_to_scene_nodes, resolve_drawing_artboard};
 use crate::{DrawingArtboard, DrawingSnapshot, PathSegment};
-use dsl::DslValue;
+use semio_framework_value::DslValue;
 use semio_framework_plugin::scene_surface;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_plugin::Canvas2dScene;
@@ -74,9 +74,9 @@ pub fn render_with_camera(document: &DrawingSnapshot,config: &config::DrawingVie
     let mut records: Vec<DslValue> = Vec::with_capacity(scene_nodes.len() + artboard_records.len());
     records.extend(artboard_records);
     for node in &scene_nodes {
-        records.push(dsl::ToValue::to_value(node));
+        records.push(semio_framework_value::ToValue::to_value(node));
     }
-    scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene { framing: (!config.framed).then(|| semio_framework_plugin::Canvas2dFraming { revision: 0,bounds: crate::schema::geometry::framing::drawing_scene_bounds(document.artboard.as_ref(),&scene_nodes),padding: 48.0 }), camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: dsl::json::to_json_string(&records), snapshot: None, tool_run_trace: None, lanes: Vec::new() })
+    scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene { framing: (!config.framed).then(|| semio_framework_plugin::Canvas2dFraming { revision: 0,bounds: crate::schema::geometry::framing::drawing_scene_bounds(document.artboard.as_ref(),&scene_nodes),padding: 48.0 }), camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: semio_framework_pack_json::to_json_string(&records), snapshot: None, tool_run_trace: None, lanes: Vec::new() })
 }
 
 /// 👁️ Read-only twin of the editor's `edit::artboard_scene_records` frame-only half (no dimension
@@ -87,25 +87,25 @@ fn artboard_scene_records(document: &DrawingSnapshot) -> Vec<DslValue> {
     let width = artboard.width.max(1.0);
     let height = artboard.height.max(1.0);
     let segments = vec![PathSegment::Move { to: [0.0, 0.0] }, PathSegment::Line { to: [width, 0.0] }, PathSegment::Line { to: [width, height] }, PathSegment::Line { to: [0.0, height] }, PathSegment::Close];
-    vec![DslValue::object([
-        ("id".to_string(), DslValue::String("artboard:frame".to_string())),
-        ("role".to_string(), DslValue::String("overlay".to_string())),
-        ("transform".to_string(), dsl::ToValue::to_value(&vec![1.0_f64, 0.0, 0.0, 1.0, 0.0, 0.0])),
-        ("segments".to_string(), dsl::ToValue::to_value(&segments)),
-        ("fill".to_string(), DslValue::object([("kind".to_string(), DslValue::String("solid".to_string())), ("color".to_string(), dsl::ToValue::to_value(&DRAWING_ARTBOARD_FILL.to_vec()))])),
+    vec![semio_framework_value::DslValue::object([
+        ("id".to_string(), semio_framework_value::DslValue::String("artboard:frame".to_string())),
+        ("role".to_string(), semio_framework_value::DslValue::String("overlay".to_string())),
+        ("transform".to_string(), semio_framework_value::ToValue::to_value(&vec![1.0_f64, 0.0, 0.0, 1.0, 0.0, 0.0])),
+        ("segments".to_string(), semio_framework_value::ToValue::to_value(&segments)),
+        ("fill".to_string(), semio_framework_value::DslValue::object([("kind".to_string(), semio_framework_value::DslValue::String("solid".to_string())), ("color".to_string(), semio_framework_value::ToValue::to_value(&DRAWING_ARTBOARD_FILL.to_vec()))])),
         (
             "stroke".to_string(),
-            DslValue::object([
-                ("color".to_string(), dsl::ToValue::to_value(&DRAWING_ARTBOARD_STROKE.to_vec())),
-                ("width".to_string(), DslValue::float(1.0)),
-                ("cap".to_string(), DslValue::String("round".to_string())),
-                ("join".to_string(), DslValue::String("round".to_string())),
+            semio_framework_value::DslValue::object([
+                ("color".to_string(), semio_framework_value::ToValue::to_value(&DRAWING_ARTBOARD_STROKE.to_vec())),
+                ("width".to_string(), semio_framework_value::DslValue::float(1.0)),
+                ("cap".to_string(), semio_framework_value::DslValue::String("round".to_string())),
+                ("join".to_string(), semio_framework_value::DslValue::String("round".to_string())),
             ]),
         ),
-        ("opacity".to_string(), DslValue::float(1.0)),
-        ("blendMode".to_string(), DslValue::String("normal".to_string())),
-        ("visible".to_string(), DslValue::Bool(true)),
-        ("fillRule".to_string(), DslValue::String("evenodd".to_string())),
+        ("opacity".to_string(), semio_framework_value::DslValue::float(1.0)),
+        ("blendMode".to_string(), semio_framework_value::DslValue::String("normal".to_string())),
+        ("visible".to_string(), semio_framework_value::DslValue::Bool(true)),
+        ("fillRule".to_string(), semio_framework_value::DslValue::String("evenodd".to_string())),
     ])]
 }
 //#endregion 🔖️Render

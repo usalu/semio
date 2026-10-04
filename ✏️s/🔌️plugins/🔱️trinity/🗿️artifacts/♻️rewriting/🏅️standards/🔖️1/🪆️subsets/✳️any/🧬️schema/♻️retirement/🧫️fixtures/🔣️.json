@@ -1,24 +1,347 @@
 {
   "schema": "semio.rewriting.document-retirement/v1",
-  "budgets": [{ "items": 1, "bytes": 1 }, { "items": 3, "bytes": 5 }],
+  "budgets": [
+    {
+      "items": 1,
+      "bytes": 1
+    },
+    {
+      "items": 3,
+      "bytes": 5
+    }
+  ],
   "snapshots": [
-    { "id": "empty", "value": { "beforeFixtureJson": "", "lhsJson": "", "rhsJson": "", "parameterBindings": {}, "ruleLayout": {} }, "bytes": 0 },
-    { "id": "nested-properties-and-layout", "value": { "beforeFixtureJson": "B", "lhsJson": "L", "rhsJson": "R", "parameterBindings": { "a": ["Ü", true, 4, null, { "nested": "😀" }] }, "ruleLayout": { "node": { "x": 1, "y": 2 } } }, "bytes": 45 }
+    {
+      "id": "empty",
+      "value": {
+        "workingGraph": {
+          "schema": "trinity.graph",
+          "name": "",
+          "manifest": {
+            "nodeKinds": [],
+            "edgeKinds": [],
+            "portKinds": []
+          },
+          "camera": {
+            "x": {
+              "bits": "0000000000000000"
+            },
+            "y": {
+              "bits": "0000000000000000"
+            },
+            "zoom": {
+              "bits": "3ff0000000000000"
+            }
+          },
+          "content": {
+            "childId": "c",
+            "target": {
+              "artifactId": "c",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "graph"
+              }
+            }
+          },
+          "query": ""
+        },
+        "lhs": {
+          "pattern": {
+            "leftVar": "",
+            "leftKind": ""
+          }
+        },
+        "rhs": {
+          "create": [],
+          "delete": [],
+          "set": [],
+          "merge": [],
+          "parameters": []
+        },
+        "parameterBindings": {},
+        "ruleLayout": {}
+      },
+      "bytes": 59
+    },
+    {
+      "id": "nested-properties-and-layout",
+      "value": {
+        "workingGraph": {
+          "schema": "trinity.graph",
+          "name": "B",
+          "manifest": {
+            "nodeKinds": [],
+            "edgeKinds": [],
+            "portKinds": []
+          },
+          "camera": {
+            "x": {
+              "bits": "0000000000000000"
+            },
+            "y": {
+              "bits": "0000000000000000"
+            },
+            "zoom": {
+              "bits": "3ff0000000000000"
+            }
+          },
+          "content": {
+            "childId": "c",
+            "target": {
+              "artifactId": "c",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "graph"
+              }
+            }
+          },
+          "query": ""
+        },
+        "lhs": {
+          "pattern": {
+            "leftVar": "L",
+            "leftKind": ""
+          }
+        },
+        "rhs": {
+          "create": [],
+          "delete": [],
+          "set": [
+            {
+              "var": "R",
+              "prop": "label",
+              "value": {
+                "kind": "string",
+                "value": "😀"
+              }
+            }
+          ],
+          "merge": [],
+          "parameters": []
+        },
+        "parameterBindings": {
+          "a": {
+            "kind": "array",
+            "values": [
+              {
+                "kind": "string",
+                "value": "Ü"
+              },
+              {
+                "kind": "bool",
+                "value": true
+              },
+              {
+                "kind": "number",
+                "value": {
+                  "bits": "4010000000000000"
+                }
+              },
+              {
+                "kind": "null"
+              },
+              {
+                "kind": "object",
+                "values": {
+                  "nested": {
+                    "kind": "string",
+                    "value": "😀"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "ruleLayout": {
+          "node": {
+            "x": {
+              "bits": "3ff0000000000000"
+            },
+            "y": {
+              "bits": "4000000000000000"
+            }
+          }
+        }
+      },
+      "bytes": 113
+    }
   ],
   "mutations": [
-    { "value": { "mutation": "editBeforeFixture", "newBeforeFixtureJson": "Ü" }, "bytes": 2 },
-    { "value": { "mutation": "editLhs", "newLhsJson": "abc" }, "bytes": 3 },
-    { "value": { "mutation": "editRhs", "newRhsJson": "😀" }, "bytes": 4 },
-    { "value": { "mutation": "changeParameterBinding", "key": "a", "newValue": ["Ü", true, 4, null, { "nested": "😀" }] }, "bytes": 22 },
-    { "value": { "mutation": "removeParameterBinding", "key": "abc" }, "bytes": 3 },
-    { "value": { "mutation": "changeRuleLayoutPoint", "key": "node", "newPoint": { "x": 1, "y": 2 } }, "bytes": 20 },
-    { "value": { "mutation": "removeRuleLayoutPoint", "key": "node" }, "bytes": 4 },
-    { "value": { "mutation": "dragWorkingNodes", "targets": ["a", "Ü"], "dx": 1.5, "dy": -2 }, "bytes": 19 },
-    { "value": { "mutation": "patchWorkingNodes", "targets": ["a"], "field": "name", "value": "😀" }, "bytes": 9 },
-    { "value": { "mutation": "dragRuleNodes", "targets": ["rhs-set-0"], "dx": 0, "dy": 80 }, "bytes": 25 },
-    { "value": { "mutation": "setRuleLayoutPoints", "points": [{ "key": "lhs-match", "x": 1, "y": 2 }], "cleared": ["node"] }, "bytes": 29 },
-    { "value": { "mutation": "deleteWorkingNodes", "targets": ["a", "Ü"] }, "bytes": 3 },
-    { "value": { "mutation": "connectWorkingPorts", "source": "a@out", "target": "Ü@in", "kind": "K" }, "bytes": 11 },
-    { "value": { "mutation": "disconnectWorkingEdges", "targets": ["e", "Ü"] }, "bytes": 3 }
+    {
+      "value": {
+        "mutation": "editBeforeFixture",
+        "newWorkingGraph": {
+          "schema": "trinity.graph",
+          "name": "Ü",
+          "manifest": {
+            "nodeKinds": [],
+            "edgeKinds": [],
+            "portKinds": []
+          },
+          "camera": {
+            "x": {
+              "bits": "0000000000000000"
+            },
+            "y": {
+              "bits": "0000000000000000"
+            },
+            "zoom": {
+              "bits": "3ff0000000000000"
+            }
+          },
+          "content": {
+            "childId": "c",
+            "target": {
+              "artifactId": "c",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "graph"
+              }
+            }
+          },
+          "query": ""
+        }
+      },
+      "bytes": 61
+    },
+    {
+      "value": {
+        "mutation": "editLhs",
+        "newLhs": {
+          "pattern": {
+            "leftVar": "abc",
+            "leftKind": ""
+          }
+        }
+      },
+      "bytes": 3
+    },
+    {
+      "value": {
+        "mutation": "editRhs",
+        "newRhs": {
+          "create": [],
+          "delete": [],
+          "set": [
+            {
+              "var": "",
+              "prop": "",
+              "value": {
+                "kind": "string",
+                "value": "😀"
+              }
+            }
+          ],
+          "merge": [],
+          "parameters": []
+        }
+      },
+      "bytes": 4
+    },
+    {
+      "value": {
+        "mutation": "changeParameterBinding",
+        "key": "a",
+        "newValue": {
+          "kind": "array",
+          "values": [
+            {
+              "kind": "string",
+              "value": "Ü"
+            },
+            {
+              "kind": "bool",
+              "value": true
+            },
+            {
+              "kind": "number",
+              "value": {
+                "bits": "4010000000000000"
+              }
+            },
+            {
+              "kind": "null"
+            },
+            {
+              "kind": "object",
+              "values": {
+                "nested": {
+                  "kind": "string",
+                  "value": "😀"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "bytes": 22
+    },
+    {
+      "value": {
+        "mutation": "removeParameterBinding",
+        "key": "abc"
+      },
+      "bytes": 3
+    },
+    {
+      "value": {
+        "mutation": "changeRuleLayoutPoint",
+        "key": "node",
+        "newPoint": {
+          "x": {
+            "bits": "3ff0000000000000"
+          },
+          "y": {
+            "bits": "4000000000000000"
+          }
+        }
+      },
+      "bytes": 20
+    },
+    {
+      "value": {
+        "mutation": "removeRuleLayoutPoint",
+        "key": "node"
+      },
+      "bytes": 4
+    },
+    {
+      "value": {
+        "mutation": "dragRuleNodes",
+        "targets": [
+          "rhs-set-0"
+        ],
+        "dx": {
+          "bits": "0000000000000000"
+        },
+        "dy": {
+          "bits": "4054000000000000"
+        }
+      },
+      "bytes": 25
+    },
+    {
+      "value": {
+        "mutation": "setRuleLayoutPoints",
+        "points": [
+          {
+            "key": "lhs-match",
+            "x": {
+              "bits": "3ff0000000000000"
+            },
+            "y": {
+              "bits": "4000000000000000"
+            }
+          }
+        ],
+        "cleared": [
+          "node"
+        ]
+      },
+      "bytes": 29
+    }
   ]
 }

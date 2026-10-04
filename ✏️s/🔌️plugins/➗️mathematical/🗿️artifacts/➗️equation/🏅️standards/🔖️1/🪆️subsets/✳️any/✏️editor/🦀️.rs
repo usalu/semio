@@ -26,7 +26,7 @@ use crate::editor::equation::modes::edit::windows::graph::config::{EquationCamer
 use crate::editor::equation::modes::edit::windows::{geometry as geometry_window, graph as graph_window};
 use crate::op::EquationMutation;
 use crate::{EquationGeometry, EquationGraph, EquationSnapshot, EQUATION_DIALECT, MATH_DOCUMENT_SCHEMA};
-use pack::json::{self, Value};
+use semio_framework_pack_json::Value;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_job::InteractiveJobCloseStep;
 use semio_framework_plugin::app::InteractionView;
@@ -77,7 +77,7 @@ pub const MATH_APP_ID: &str = "equation-play";
 /// is edit-free by construction, which is exactly what a whole-document replace carries.
 pub fn reset_equation_document_effect(document: &EquationSnapshot) -> semio_framework_plugin::Effect {
     let pack = EquationSnapshot::encode_pack(document);
-    let spr = semio_framework_plugin::resolve_ready(store::empty_document_spr(MATH_APP_ID, MATH_DOCUMENT_SCHEMA));
+    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr(MATH_APP_ID, MATH_DOCUMENT_SCHEMA));
     semio_framework_plugin::Effect::LoadDocument { pack, spr }
 }
 pub use geometry_window::MATH_PLAY_BODY_GEOMETRY;
@@ -204,7 +204,7 @@ pub fn geometry_layers_json(geometry: &EquationGeometry) -> String {
 
     let mut layers: Vec<Value> = Vec::new();
     for (i, p) in points.iter().enumerate() {
-        layers.push(json::object([
+        layers.push(semio_framework_pack_json::object([
             ("kind".to_string(), Value::from("circle")),
             ("id".to_string(), Value::from(format!("point-{i}"))),
             ("x".to_string(), Value::from(p.x() - 5.0)),
@@ -219,12 +219,12 @@ pub fn geometry_layers_json(geometry: &EquationGeometry) -> String {
         for i in 0..hull.len() {
             let a = hull[i];
             let b = hull[(i + 1) % hull.len()];
-            hull_points.push(json::array([Value::from(a.x()), Value::from(a.y())]));
-            hull_points.push(json::array([Value::from(b.x()), Value::from(b.y())]));
+            hull_points.push(semio_framework_pack_json::array([Value::from(a.x()), Value::from(a.y())]));
+            hull_points.push(semio_framework_pack_json::array([Value::from(b.x()), Value::from(b.y())]));
         }
-        layers.push(json::object([("kind".to_string(), Value::from("polyline")), ("id".to_string(), Value::from("hull")), ("points".to_string(), json::array(hull_points)), ("color".to_string(), Value::from("#facc15"))]));
+        layers.push(semio_framework_pack_json::object([("kind".to_string(), Value::from("polyline")), ("id".to_string(), Value::from("hull")), ("points".to_string(), semio_framework_pack_json::array(hull_points)), ("color".to_string(), Value::from("#facc15"))]));
     }
-    layers.push(json::object([
+    layers.push(semio_framework_pack_json::object([
         ("kind".to_string(), Value::from("circle")),
         ("id".to_string(), Value::from("centroid")),
         ("x".to_string(), Value::from(centroid.x() - 4.0)),
@@ -233,7 +233,7 @@ pub fn geometry_layers_json(geometry: &EquationGeometry) -> String {
         ("height".to_string(), Value::from(8.0)),
         ("color".to_string(), Value::from("#f472b6")),
     ]));
-    json::to_string(&json::array(layers))
+    semio_framework_pack_json::to_string(&semio_framework_pack_json::array(layers))
 }
 //#endregion 🔖️Geometry
 
@@ -313,7 +313,7 @@ fn equation_edit_preflight(payload: &node_graph_edit::NodeGraphEdit) -> Option<u
     if payload.operations_json.len() > EQUATION_MAX_EDIT_JSON_BYTES {
         return None;
     }
-    let values = json::parse(&payload.operations_json).ok().and_then(|value| value.as_array().map(|values| values.to_vec()))?;
+    let values = semio_framework_pack_json::parse(&payload.operations_json, semio_framework_pack_json::JsonMemberPolicy::Reject).ok().and_then(|value| value.as_array().map(|values| values.to_vec()))?;
     if values.len() > EQUATION_MAX_EDIT_OPERATIONS {
         return None;
     }
@@ -324,22 +324,13 @@ fn equation_edit_preflight(payload: &node_graph_edit::NodeGraphEdit) -> Option<u
 }
 
 fn equation_command_extent(command: &EquationCommand, snapshot: &EquationSnapshot) -> Option<usize> {
-    // 🎬️ Answered BEFORE the scene lookup: loading an example is what makes a scene owner exist, so
-    // measuring this verb against one would refuse it at exactly the boot moment it is dispatched.
     if let EquationCommand::SetActiveExample(payload) = command {
         return (payload.example_id.len() <= EQUATION_MAX_TEXT_BYTES).then_some(1);
     }
-    // 🧩️ The FAIL-SOFT projection, never `equation_scene_owner`: the working scene is an ephemeral
-    // artifact-instance owner that only a mutation in THIS session mints, so a document arriving by
-    // `Effect::LoadDocument`/archive decode carries none — see `crate::equation_scene`'s own doc
-    // comment, which `genesis_equation_child_pack` already relies on. Measuring the extent against
-    // the owner refused every document verb on exactly the documents the user just loaded.
-    let scene = crate::equation_scene(snapshot);
-    if !equation_graph_shape_admitted(&scene.graph) || scene.geometry.points.len() > EQUATION_MAX_POINTS {
+    if !equation_graph_shape_admitted(&snapshot.graph) || snapshot.geometry.points.len() > EQUATION_MAX_POINTS {
         return None;
     }
     let extent = match command {
-        // 🎬️ Answered above, before the scene lookup; this arm is unreachable by construction.
         EquationCommand::SetActiveExample(_) => return None,
         EquationCommand::NodeGraphViewport(_) => 1,
         // 🧮️ `EquationRetainedCommandWork::step` charges ONE step per phase BOUNDARY on top of the
@@ -463,16 +454,8 @@ impl EquationRetainedCommandWork {
         Ok(ArtifactCommandWorkStep::Progress { stage, preview: br#"{"en":"Preparing Equation command","de":"Gleichungs-Befehl wird vorbereitet"}"# })
     }
 
-    /// 🧩️ Reads the scene the phases mutate through the same fail-soft projection
-    /// `equation_command_extent` measures, so the admission and the work never disagree about which
-    /// document is editable. A decoded archive owns no live scene; its projection is the empty one
-    /// the committed asset itself describes, which is a legal base for every phase.
-    fn source_scene(snapshot: &EquationSnapshot) -> Result<Arc<crate::EquationWorkingScene>, Fault> {
-        Ok(crate::equation_scene_owner(snapshot).unwrap_or_else(|| Arc::new(crate::equation_scene(snapshot))))
-    }
-
     fn initialize(&mut self, command: &EquationCommand, snapshot: &EquationSnapshot) -> Result<(), Fault> {
-        let source = Self::source_scene(snapshot)?;
+        let source = snapshot;
         match command {
             // 🎬️ Completed in `step` before any phase runs — it exists to CREATE the scene these
             // phases read, so reaching the phase machine at all is a routing defect.
@@ -581,7 +564,7 @@ impl ArtifactCommandWork<EditorApp<EquationPlayApp>> for EquationRetainedCommand
     /// framework measures [`Self::extent`] once in its preflight phase, so a turn never re-derives it:
     /// doing so cloned the whole working scene and re-parsed the edit JSON on every per-item turn,
     /// which made each microturn cost O(document) and the operation quadratic.
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<EquationPlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<EquationPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<EquationPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<EquationPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, history: _history, interaction: _interaction, hover: _hover, context, operation } = *input;
         if self.cursor > self.extent {
             return Err(Fault::from("equation-command-extent-overflow"));
@@ -590,7 +573,7 @@ impl ArtifactCommandWork<EditorApp<EquationPlayApp>> for EquationRetainedCommand
         if let EquationCommand::SetActiveExample(payload) = command {
             return set_active_example::emit(&payload.example_id).map(ArtifactCommandWorkStep::Complete);
         }
-        let source = Self::source_scene(snapshot)?;
+        let source = snapshot;
         match self.phase {
             EquationWorkPhase::Initialize => {
                 self.initialize(command, snapshot)?;
@@ -677,7 +660,7 @@ impl ArtifactCommandWork<EditorApp<EquationPlayApp>> for EquationRetainedCommand
             }
             EquationWorkPhase::JsonDecode => {
                 let EquationCommand::NodeGraphEdit(payload) = command else { return Err(Fault::from("equation-command-json-decode")) };
-                let values = json::parse(&payload.operations_json).ok().and_then(|value| value.as_array().map(|values| values.to_vec())).unwrap_or_default();
+                let values = semio_framework_pack_json::parse(&payload.operations_json, semio_framework_pack_json::JsonMemberPolicy::Reject).ok().and_then(|value| value.as_array().map(|values| values.to_vec())).unwrap_or_default();
                 if values.len() > EQUATION_MAX_EDIT_OPERATIONS {
                     return Err(Fault::from("equation-command-operation-capacity"));
                 }
@@ -927,52 +910,17 @@ struct EquationStorePreparation<P, M> {
     closing: bool,
 }
 
-fn equation_store_edit<M>(forward: M, inverse: Vec<M>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<M> {
-    let id = format!("equation-retained-{}", authority.next_sequence_number());
-    protocol::Edit { line: authority.line_id().map(str::to_owned),
-        id: id.clone(),
-        actor: Some(authority.actor().to_string()),
-        forwards: vec![forward],
-        inverse,
-        mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
-            dependencies: Vec::new(),
-            base_version: authority.base_applied_edit_count() as u64,
-            author_id: Some(protocol::ActorId(authority.actor().to_string())),
-            timestamp: authority.next_clock(),
-            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-            payload_hash: None,
-            semantic_kind: None,
-            label: None,
-            group_id: None,
-            origin: Default::default(),
-            transaction: None,
-        }],
-        description, verb: None,
-        coalesce_key: None,
-        sequence_number: authority.next_sequence_number(),
-        started_at: String::new(),
-        finished_at: None,
-    }
-}
-
 impl<P, M> store::ArtifactStoreOneItemPreparationFactory<P, M> for EquationStorePreparationFactory<P, M>
 where
     P: Clone + Send + Sync + 'static,
     M: protocol::Mutation<P> + Send + Sync + 'static,
     M::Diff: protocol::MutationDiff<P>,
 {
-    fn preflight(&self, _mutation: &M, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    fn preflight(&self, mutation: &M, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
             return Err("Equation Store preparation rejected its lane or description envelope".into());
         }
-        // 🧺️ `work_items` counts staged edit ROWS, never mutations: `fold_batch_item` compares
-        // `forwards.len() + inverse.len()`, so a point-invertible item costs 2 and the hand-written
-        // `1` fail-closed EVERY durable equation gesture with `batched item candidate failed its
-        // exact fixed fold contract`. The two mutations this editor ever emits — `ReplaceGraph` and
-        // `ReplacePoints` — both yield exactly one inverse row, which is what this constructor
-        // declares; the number is never written at the call site.
-        Ok(store::ArtifactStoreOneItemFootprint::for_one_invertible_item(store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
+        Ok(store::ArtifactStoreOneItemFootprint::for_leaf::<P, M>(mutation, store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
 
     fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<P, M>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, store::ArtifactStoreOneItemPreparationRequest<P, M>> {
@@ -1012,10 +960,10 @@ where
         }
         let base = self.base.as_ref().ok_or_else(|| "Equation preparation lost its exact base root".to_string())?;
         let mutation = self.mutation.take().ok_or_else(|| "Equation preparation lost its mutation owner".to_string())?;
-        let inverse = mutation.inverse(base.get());
+        let inverse = mutation.inverse(base.get()).map_err(semio_framework_value::ValueError::into_message)?;
         let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
         let authority = self.authority.as_ref().ok_or_else(|| "Equation preparation lost its Store authority".to_string())?;
-        let prepared = authority.prepare_one_item(equation_store_edit(mutation, inverse, self.description.take(), authority), Arc::new(post))?;
+        let prepared = authority.prepare_one_item(authority.next_edit(mutation, inverse), Arc::new(post))?;
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
         self.prepared = Some(prepared);
         Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
@@ -1037,7 +985,7 @@ where
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -1046,7 +994,7 @@ where
         }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
-                return Err("Equation preparation could not return its exact base root".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Equation preparation could not return its exact base root"));
             }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -1178,7 +1126,7 @@ impl ArtifactEditor for EquationPlayApp {
             return Ok(None);
         }
         if request.command.command_id() != request.tool_id {
-            return Err(Fault::from("equation-command-tool-mismatch"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "Equation command does not match its exact retained tool registration"));
         }
         let extent = equation_command_extent(&request.command, &request.snapshot).ok_or_else(|| Fault::from("equation-command-capacity"))?;
         let tool_id = request.command.command_id();
@@ -1213,9 +1161,12 @@ impl ArtifactEditor for EquationPlayApp {
 
     /// 🌱️ The derivable `notation`/`results`/`computed` members — see
     /// `crate::genesis_equation_child_pack`.
-    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {
+ Ok((||{
         crate::genesis_equation_child_pack(snapshot, slot, child_id)
-    }
+    
+})())
+}
 
     fn initial_snapshot() -> EquationSnapshot {
         EquationSnapshot::default()
@@ -1237,9 +1188,9 @@ impl ArtifactEditor for EquationPlayApp {
     /// every graph gesture died before reaching `handle`. The three block-shaped payloads
     /// (`graph`/`geometry`/`viewport`) are decoded through `semio_framework_value::FromValue::from_value`, the same codec the
     /// typed channel uses, so the shell needs no staging shim.
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<EquationCommand, Fault> {
-        let text_arg = |keys: &[&str]| keys.iter().find_map(|key| args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_str).map(str::to_string));
-        fn decode<T: dsl::FromValue>(action: &str, args: Option<&dsl::DslValue>, key: &str) -> Result<T, Fault> {
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<EquationCommand, Fault> {
+        let text_arg = |keys: &[&str]| keys.iter().find_map(|key| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_str).map(str::to_string));
+        fn decode<T: semio_framework_value::FromValue>(action: &str, args: Option<&semio_framework_value::DslValue>, key: &str) -> Result<T, Fault> {
             let value = args.and_then(|value| value.get(key)).cloned().ok_or_else(|| Fault::from(format!("equation {action} requires a '{key}' block")))?;
             semio_framework_value::FromValue::from_value(value).map_err(|error| Fault::from(format!("invalid equation {action} '{key}': {error}")))
         }
@@ -1247,17 +1198,17 @@ impl ArtifactEditor for EquationPlayApp {
             "setDocument" => Ok(EquationCommand::SetArtifact(set_artifact::SetArtifact { graph: decode(action, args, "graph")?, geometry: decode(action, args, "geometry")? })),
             "setAlgorithm" => Ok(EquationCommand::SetAlgorithm(set_algorithm::SetAlgorithm { algorithm: text_arg(&["algorithm", "value"]).unwrap_or_default(), seed: text_arg(&["seed"]) })),
             "setDirected" => Ok(EquationCommand::SetDirected(set_directed::SetDirected {
-                directed: args.and_then(|value| value.get("directed").or_else(|| value.get("value"))).and_then(dsl::DslValue::as_bool).unwrap_or(false),
+                directed: args.and_then(|value| value.get("directed").or_else(|| value.get("value"))).and_then(semio_framework_value::DslValue::as_bool).unwrap_or(false),
             })),
             // 🧬️ A staged `json_text` argument arrives as a STRING already holding the JSON document
             // (the `setFixtureJson.json`/`patchLayer.value` shape); re-stringifying it would wrap the
             // array in quotes and `equation_edit_preflight` would refuse it as a non-array. A
             // structured `DslValue` (an engagement or an MCP caller) still prints normally.
             "nodeGraphEdit" => Ok(EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit {
-                operations_json: args.and_then(|value| value.get("operations")).map_or_else(|| "[]".into(), |value| value.as_str().map_or_else(|| json::to_json_string(value), str::to_string)),
+                operations_json: args.and_then(|value| value.get("operations")).map_or_else(|| "[]".into(), |value| value.as_str().map_or_else(|| semio_framework_pack_json::to_json_string(value), str::to_string)),
             })),
             "addNode" => {
-                let coordinate = |key: &str| args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_f64).ok_or_else(|| Fault::from(format!("equation addNode requires a numeric '{key}'")));
+                let coordinate = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_f64).ok_or_else(|| Fault::from(format!("equation addNode requires a numeric '{key}'")));
                 Ok(EquationCommand::AddNode(add_node::AddNode { x: coordinate("x")?, y: coordinate("y")? }))
             }
             "nodeGraphViewport" => Ok(EquationCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: decode(action, args, "viewport")? })),
@@ -1296,10 +1247,10 @@ impl ArtifactEditor for EquationPlayApp {
     fn export_media(port: &str, doc: &ArtifactView<'_, EquationSnapshot>) -> Result<Media, MediaError> {
         match port {
             "result:out" => {
-                let graph = crate::equation_graph(doc.snapshot);
+                let graph = doc.snapshot.graph.clone();
                 let overlay = algorithm_overlay(&graph);
-                let overlay_json = json::object(overlay.iter().map(|(id, suffix)| (id.clone(), Value::from(suffix.as_str()))));
-                let json = json::to_string(&json::object([("algorithm".to_string(), Value::from(graph.algorithm.as_str())), ("overlay".to_string(), overlay_json)]));
+                let overlay_json = semio_framework_pack_json::object(overlay.iter().map(|(id, suffix)| (id.clone(), Value::from(suffix.as_str()))));
+                let json = semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("algorithm".to_string(), Value::from(graph.algorithm.as_str())), ("overlay".to_string(), overlay_json)]));
                 Ok(Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: "computation.equation".into(), json } })
             }
             "artifact:out" => {
@@ -1313,8 +1264,8 @@ impl ArtifactEditor for EquationPlayApp {
 
     fn render(body_key: &str, doc: &ArtifactView<'_, EquationSnapshot>, cfg: &ConfigView<'_, NoConfig>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let node = match body_key {
-            MATH_PLAY_BODY_GRAPH => graph_window::render(&crate::equation_graph(doc.snapshot), &graph_window::config::current(cfg).cloned().unwrap_or_default().camera),
-            MATH_PLAY_BODY_GEOMETRY => geometry_window::render(&crate::equation_geometry(doc.snapshot)),
+            MATH_PLAY_BODY_GRAPH => graph_window::render(&doc.snapshot.graph.clone(), &graph_window::config::current(cfg).cloned().unwrap_or_default().camera),
+            MATH_PLAY_BODY_GEOMETRY => geometry_window::render(&doc.snapshot.geometry.clone()),
             _ => return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }?;
         Ok(semio_framework_plugin::built_to_component_tree(node))
@@ -1360,11 +1311,6 @@ pub fn create_equation_app() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("addNode", InteractiveJobClassification::Migrated)
         .action_interactive_job("nodeGraphViewport", InteractiveJobClassification::Migrated)
         .action_interactive_job("setPoints", InteractiveJobClassification::Migrated)
-        // 📚️ The playground navbar dispatches `setActiveExample` on boot for its example combobox,
-        // and the shell offers that combobox only to an app that declares the verb on some window
-        // kind. Undeclared, it was dropped before dispatch — this app's only console ERROR at boot,
-        // and the reason every document verb then refused: `equation_command_extent` needs a scene
-        // owner, and nothing but the example load ever produced one.
         .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_framework_plugin::ActionKind::Mutation, "panel-left"))
         .action_destructive("setActiveExample")
         .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)

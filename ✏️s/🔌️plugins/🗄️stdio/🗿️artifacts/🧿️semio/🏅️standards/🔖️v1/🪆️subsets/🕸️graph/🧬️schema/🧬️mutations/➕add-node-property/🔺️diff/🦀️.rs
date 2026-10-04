@@ -10,7 +10,7 @@ pub fn diff(payload: &super::AddNodeProperty, base: &SemioGraphSnapshot) -> prot
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Node \"{}\" does not exist.", payload.node_id.value), [payload.node_id.value.clone()]);
     };
     if node.properties.iter().any(|p| p.key == payload.property.key) {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Node \"{}\" already has a property \"{}\".", payload.node_id.value, payload.property.key));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Node \"{}\" already has a property \"{}\".", payload.node_id.value, payload.property.key));
     }
     let mut nodes = base.nodes.clone();
     let node = nodes.iter_mut().find(|n| n.id == payload.node_id).expect("checked above");

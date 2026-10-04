@@ -12,7 +12,7 @@ pub fn diff(payload: &super::mutation::ReplaceObjectVortex, base: &Puzzle3dSnaps
     }
     let mut next = object.clone();
     if next == *object {
-        return protocol::MutationOutcome::new(Puzzle3dDiff::default()).absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "no changes to apply").at(vec![payload.object_id.clone()])]);
+        return protocol::MutationOutcome::new(Puzzle3dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(vec![payload.object_id.clone()])]);
     }
     for vortex in next.vortices.iter_mut() {
         if vortex.id == payload.vortex_id {

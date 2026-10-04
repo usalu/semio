@@ -139,6 +139,14 @@ export const fireEvent = {
   pointerCancel(target: UiTestEventTarget, init?: UiTestEventInit): boolean {
     return testingFireEvent.pointerCancel(target, init);
   },
+  /** 💬️ A hover hint opens on a hovering pointer entering and closes on it leaving (`pointerType` tells a mouse from a
+   * touch), so a law about what a hover reveals plays these two events, never a click. */
+  pointerEnter(target: UiTestEventTarget, init?: UiTestEventInit): boolean {
+    return testingFireEvent.pointerEnter(target, init);
+  },
+  pointerLeave(target: UiTestEventTarget, init?: UiTestEventInit): boolean {
+    return testingFireEvent.pointerLeave(target, init);
+  },
 };
 
 /** 🔎️ Provides owned document-level semantic queries. */

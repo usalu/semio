@@ -43,7 +43,7 @@ fn minimum_inverse_is_stored_as_one_then_maximum() {
     let operation = JobTestOp::AddValue(AddValue { delta: i32::MIN });
     for value in [0, 1, i32::MAX] {
         let base = JobTestSnapshot { value };
-        let stored = operation.inverse(&base);
+        let stored = operation.inverse(&base).expect("valid retained mutation inverse fixture");
         assert_eq!(stored, vec![JobTestOp::AddValue(AddValue { delta: 1 }), JobTestOp::AddValue(AddValue { delta: i32::MAX })]);
         let after = operation.diff(&base).diff().apply(&base).expect("minimum delta");
         assert_eq!(apply_stored_inverse(&stored, &after), Ok(base));
@@ -58,7 +58,7 @@ fn neutral_inverse_vectors_restore_in_store_order() {
         let after = operation.diff(&base).diff().apply(&base).expect("valid direct operation");
         assert_eq!(after.value, serde_json::from_value::<i32>(row["result"].clone()).expect("expected result"));
         let expected: Vec<i32> = serde_json::from_value(row["stored"].clone()).expect("stored inverse deltas");
-        let stored = operation.inverse(&base);
+        let stored = operation.inverse(&base).expect("valid retained mutation inverse fixture");
         assert_eq!(stored, expected.into_iter().map(|delta| JobTestOp::AddValue(AddValue { delta })).collect::<Vec<_>>());
         assert_eq!(apply_stored_inverse(&stored, &after), Ok(base), "{}", row["id"]);
     }
@@ -73,7 +73,7 @@ fn mixed_inverse_groups_stay_forward_before_store_reversal() {
         let mut stored = Vec::new();
         for delta in deltas {
             let operation = JobTestOp::AddValue(AddValue { delta });
-            stored.extend(operation.inverse(&state));
+            stored.extend(operation.inverse(&state).expect("valid retained mutation inverse fixture"));
             state = operation.diff(&state).diff().apply(&state).expect("valid operation sequence");
         }
         assert_eq!(state.value, serde_json::from_value::<i32>(row["result"].clone()).expect("expected result"));
@@ -95,7 +95,7 @@ fn ordinary_contributed_plan_keeps_direct_leaf_and_label() {
         let leaf = AddValue { delta };
         let plan = protocol::plan_of::<JobTestSnapshot, JobTestOp, AddValue>(&leaf, &base).expect("contribution plan");
         assert_eq!(plan.len(), 1);
-        assert_eq!(<AddValue as protocol::CompositeMutationKind<JobTestSnapshot, JobTestOp>>::label(&leaf), protocol::LocalizedLabel::native(&format!("Add {delta} to value"), &format!("{delta} zu Wert hinzufügen")));
+        assert_eq!(<AddValue as protocol::CompositeMutationKind<JobTestSnapshot, JobTestOp>>::label(&leaf), semio_framework_ui_locale::LocalizedLabel::native(&format!("Add {delta} to value"), &format!("{delta} zu Wert hinzufügen")));
         assert_eq!(JobTestOp::AddValue(leaf).diff(&base).diff(), &JobTestDiff { deltas: vec![delta] });
     }
 }

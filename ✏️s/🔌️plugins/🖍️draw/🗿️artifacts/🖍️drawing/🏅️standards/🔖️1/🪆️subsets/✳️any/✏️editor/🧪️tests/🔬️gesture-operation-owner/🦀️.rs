@@ -177,8 +177,9 @@ fn drawing_preview_rejects_a_stale_revision_and_cancels_the_owner() {
     let mut owner = DrawingInstanceOperationOwner::new();
     let operation = key(9, 4);
     assert!(owner.operations.admit(operation, DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY, "")).is_ok());
-    owner.active = Some((operation, [1; 32]));
-    assert!(owner.preview_projection([2; 32], "selectDirect").is_none());
+    let source=SceneIdentity{instance:1,base:11,generation:4,revision:[1;32]};
+    owner.active = Some((operation, source));
+    assert!(owner.preview_projection(SceneIdentity{revision:[2;32],..source}, "selectDirect").is_none());
     assert!(owner.active.is_none());
     for _ in 0..128 {
         if owner.operations.is_empty() {
@@ -187,6 +188,16 @@ fn drawing_preview_rejects_a_stale_revision_and_cancels_the_owner() {
         let _ = owner.operations.close_step(1, DRAWING_GESTURE_RETAINED_BYTES);
     }
     assert!(owner.operations.is_empty());
+}
+
+#[test]
+fn mounted_vector_gesture_preview_requires_all_captured_full_width_source_lanes(){
+ let cases:serde_json::Value=serde_json::from_str(include_str!("../../../🧬️schema/🎬️scene/🪪️identity/🧫️fixtures/🔣️.json")).unwrap();
+ let decode=|value:&serde_json::Value|SceneIdentity{instance:u32::try_from(value["instance"].as_u64().unwrap()).unwrap(),base:crate::schema::scene_identity::parse_scene_identity_u64(value["base"].as_str().unwrap()).unwrap(),generation:crate::schema::scene_identity::parse_scene_identity_u64(value["generation"].as_str().unwrap()).unwrap(),revision:value["revision"].as_array().unwrap().iter().map(|byte|u8::try_from(byte.as_u64().unwrap()).unwrap()).collect::<Vec<_>>().try_into().unwrap()};
+ for row in cases.as_array().unwrap(){let captured=decode(&row["captured"]);let live=decode(&row["live"]);let mut owner=DrawingInstanceOperationOwner::new();let operation=key(901,captured.generation);let mut gesture=DrawingGestureOperationOwner::new("selectDirect","");let document=crate::schema::default_drawing_document("empty",None);
+  gesture.session.as_mut().unwrap().point_query=Some(canvas_pointer_down::DrawingPointQuery::new("canvasPointerDown",canvas_pointer_down::TracePointerJob::new_query(&document,[0.0,0.0],0.0,false),false,"replace".into(),false));assert!(owner.operations.admit(operation,gesture).is_ok());owner.active=Some((operation,captured));let expected=row["matches"].as_bool().unwrap();assert_eq!(owner.preview_projection(live,"selectDirect").is_some(),expected,"{}",row["name"]);assert_eq!(owner.active.is_some(),expected);owner.operations.cancel(operation);owner.active=None;drain(&mut owner.operations);
+  eprintln!("[DEBUG] Actual gesture preview {} matched={expected} base={} generation={} and retired its query owner",row["name"],captured.base,captured.generation);
+ }
 }
 
 /// 🚪️ Owners admitted on BOTH cursor parities close through the instance owner's own close

@@ -36,7 +36,7 @@
     "from": {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/Unsigned64Transport",
       "x-semio-ui": {
-        "widget": "stepper",
+        "widget": "hidden",
         "role": "value",
         "label": {
           "en": "From Leaf Index",
@@ -46,8 +46,6 @@
           "en": "Leaves from this index on are removed.",
           "de": "Blöcke ab diesem Index werden entfernt."
         },
-        "step": 1,
-        "precision": 0,
         "group": "media",
         "order": 20
       }

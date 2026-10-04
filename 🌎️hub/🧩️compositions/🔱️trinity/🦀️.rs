@@ -14,8 +14,8 @@ semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum TrinityApps: PluginApp {
         JackEditor(VcsArtifactApp<EditorApp<semio_s_artifact_trinity_jack::editor::jack::TrinityJackPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>),
         JackViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_trinity_jack::viewer::jack::TrinityJackViewer>, semio_s_artifact_stdio_semio::SemioMembers>),
-        RewritingEditor(VcsArtifactApp<EditorApp<semio_s_artifact_trinity_rewriting::editor::rewriting::TrinityRewritingPlayApp>>),
-        RewritingViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_trinity_rewriting::viewer::rewriting::TrinityRewritingViewer>>),
+        RewritingEditor(VcsArtifactApp<EditorApp<semio_s_artifact_trinity_rewriting::editor::rewriting::TrinityRewritingPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>),
+        RewritingViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_trinity_rewriting::viewer::rewriting::TrinityRewritingViewer>, semio_s_artifact_stdio_semio::SemioMembers>),
     }
 }
 //#endregion 🗃️Apps

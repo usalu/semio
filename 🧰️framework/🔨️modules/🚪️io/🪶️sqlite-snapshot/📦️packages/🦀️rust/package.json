@@ -1,0 +1,15 @@
+{
+  "name": "@semio-tech/framework-sqlite-snapshot-rs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bundleKind": "library",
+  "scripts": {
+    "test-refusal": "bun nx run @semio-tech/framework-sqlite-snapshot-rs:test-refusal",
+    "test-native": "bun nx run @semio-tech/framework-sqlite-snapshot-rs:test-native",
+    "test-operation": "bun nx run @semio-tech/framework-sqlite-snapshot-rs:test-operation"
+  },
+  "nx": {
+    "includedScripts": []
+  }
+}

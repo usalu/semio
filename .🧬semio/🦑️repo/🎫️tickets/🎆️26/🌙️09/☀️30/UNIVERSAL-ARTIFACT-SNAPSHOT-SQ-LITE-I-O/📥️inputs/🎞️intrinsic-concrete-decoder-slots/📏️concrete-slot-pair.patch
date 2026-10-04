@@ -1,0 +1,36 @@
+*** Begin Patch
+*** Update File: /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/🌱️value/🦀️.rs
+@@
+-/// 🧮️ Logical owned storage: UTF-8 bytes, 32-byte symbol slots, and 64-byte value/map slots.
++/// 🧮️ Cumulative concrete requested storage for owned UTF-8 and typed collection slots.
+@@
+-    fn value_slots<T>(&self,count:u64)->Result<Vec<T>,PackError>{self.check_items(count)?;self.materialization.charge(count.checked_mul((size_of::<T>() as u64).max(64)).ok_or(PackError::LimitExceeded("wire value slot overflow"))?)?;let mut output=Vec::new();output.try_reserve_exact(usize::try_from(count).map_err(|_|PackError::LimitExceeded("wire value slot count"))?).map_err(|_|PackError::LimitExceeded("wire value slot allocation"))?;Ok(output)}
++    fn value_slots<T>(&self,count:u64)->Result<Vec<T>,PackError>{self.check_items(count)?;self.materialization.charge(count.checked_mul(size_of::<T>() as u64).ok_or(PackError::LimitExceeded("wire value slot overflow"))?)?;let mut output=Vec::new();output.try_reserve_exact(usize::try_from(count).map_err(|_|PackError::LimitExceeded("wire value slot count"))?).map_err(|_|PackError::LimitExceeded("wire value slot allocation"))?;Ok(output)}
+@@
+-    if size_of::<String>()>32{return Err(PackError::LimitExceeded("wire symbol slot representation"));}
+-    materialization.charge(symbol_count.checked_mul(32).ok_or(PackError::LimitExceeded("wire symbol slot overflow"))?)?;
++    materialization.charge(symbol_count.checked_mul(size_of::<String>() as u64).ok_or(PackError::LimitExceeded("wire symbol slot overflow"))?)?;
+@@
+-/// 🛡️ Decodes one exact DslValue field with cumulative pre-allocation storage credits.
+-/// Credits cover owned UTF-8 bytes, 32 bytes per symbol slot and 64 per list/map slot;
+-/// allocator bookkeeping and generic record, expression, table and chunk decoding are excluded.
++/// 🛡️ Decodes one exact intrinsic field with cumulative concrete storage admission.
++/// Owned UTF-8 and typed symbol, list and member slots are admitted before allocation.
+*** Update File: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/🦀️.rs
+@@
+-/// 🧮️ Logical owned storage: UTF-8 bytes, 32-byte symbol slots, and 64-byte value/map slots.
++/// 🧮️ Cumulative concrete requested storage for owned UTF-8 and typed collection slots.
+@@
+-    fn value_slots<T>(&self,count:u64)->Result<Vec<T>,PackError>{self.check_items(count)?;self.materialization.charge(count.checked_mul((size_of::<T>() as u64).max(64)).ok_or(PackError::LimitExceeded("wire value slot overflow"))?)?;let mut output=Vec::new();output.try_reserve_exact(usize::try_from(count).map_err(|_|PackError::LimitExceeded("wire value slot count"))?).map_err(|_|PackError::LimitExceeded("wire value slot allocation"))?;Ok(output)}
++    fn value_slots<T>(&self,count:u64)->Result<Vec<T>,PackError>{self.check_items(count)?;self.materialization.charge(count.checked_mul(size_of::<T>() as u64).ok_or(PackError::LimitExceeded("wire value slot overflow"))?)?;let mut output=Vec::new();output.try_reserve_exact(usize::try_from(count).map_err(|_|PackError::LimitExceeded("wire value slot count"))?).map_err(|_|PackError::LimitExceeded("wire value slot allocation"))?;Ok(output)}
+@@
+-    if size_of::<String>()>32{return Err(PackError::LimitExceeded("wire symbol slot representation"));}
+-    materialization.charge(symbol_count.checked_mul(32).ok_or(PackError::LimitExceeded("wire symbol slot overflow"))?)?;
++    materialization.charge(symbol_count.checked_mul(size_of::<String>() as u64).ok_or(PackError::LimitExceeded("wire symbol slot overflow"))?)?;
+@@
+-/// 🛡️ Decodes one exact DslValue field with cumulative pre-allocation storage credits.
+-/// Credits cover owned UTF-8 bytes, 32 bytes per symbol slot and 64 per list/map slot;
+-/// allocator bookkeeping and generic record, expression, table and chunk decoding are excluded.
++/// 🛡️ Decodes one exact intrinsic field with cumulative concrete storage admission.
++/// Owned UTF-8 and typed symbol, list and member slots are admitted before allocation.
+*** End Patch

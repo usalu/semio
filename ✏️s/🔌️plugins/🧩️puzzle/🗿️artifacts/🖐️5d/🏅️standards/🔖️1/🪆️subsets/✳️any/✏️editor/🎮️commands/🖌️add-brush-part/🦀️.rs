@@ -5,7 +5,7 @@ use crate::editor::puzzle5d::{
     find_part_by_grip_full_id, grips_from_templates, puzzle5d_grip_full_id, puzzle5d_next_part_label, resolve_part_kind_mesh_url, set_part_2d_position, world_grip_direction, world_grip_position, Puzzle5dActionCtx, Puzzle5dFastener,
     Puzzle5dFreshIds, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, PUZZLE5D_DEFAULT_PART_RADIUS,
 };
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 
 fn arg_str<'a>(args: Option<&'a Value>, key: &str) -> Option<&'a str> {
     args.and_then(|value| value.get(key)).and_then(Value::as_str).filter(|text| !text.is_empty())

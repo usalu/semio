@@ -6,6 +6,7 @@ import { semioSchemaAjvV1 } from "../../../../../../../../../../../../🧰️fra
 import { parseJackArtifact } from "../../🟦️.ts";
 import { parseJackSnapshot } from "../../📸️snapshot/🟦️.ts";
 import { parseJackDiff } from "../../🔺️diff/🟦️.ts";
+import { parseJackJsonValue } from "../../../🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🟦️.ts";
 
 const json = (url: URL): unknown => JSON.parse(readFileSync(url, "utf8"));
 
@@ -29,6 +30,7 @@ export function testJackDocumentContract(): void {
   const snapshot = json(new URL(cases.snapshotFixture, import.meta.url));
   const diff = json(new URL(cases.diffFixture, import.meta.url));
   const ajv = semioSchemaAjvV1({ allErrors: true });
+  ajv.addSchema(schema(new URL("../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🏷️type/🧬️schema/🔣️.json",import.meta.url)));
   ajv.addSchema(ioSchema);
   ajv.addSchema(childSchema);
   ajv.addSchema(artifactSchema);
@@ -38,8 +40,8 @@ export function testJackDocumentContract(): void {
   assert(validateArtifact?.(snapshot), JSON.stringify(validateArtifact?.errors));
   assert(validateSnapshot(snapshot), JSON.stringify(validateSnapshot.errors));
   assert(validateDiff(diff), JSON.stringify(validateDiff.errors));
-  const artifact = parseJackArtifact(snapshot);
-  const parsedSnapshot = parseJackSnapshot(snapshot);
+  const artifact = parseJackJsonValue(snapshot);
+  const parsedSnapshot = parseJackSnapshot(artifact);
   const parsedDiff = parseJackDiff(diff);
   assert.equal(artifact.content.childId, parsedSnapshot.content.childId);
   assert.equal(artifact.content.target.dialect.artifactKind, cases.expectedChildKind);
@@ -50,16 +52,16 @@ export function testJackDocumentContract(): void {
   const snapshotFixtures = readdirSync(fixtureRoot, { recursive: true })
     .map((path) => String(path).replaceAll("\\", "/"))
     .filter((path) => path.includes("/📸️snapshot/") && path.endsWith("/🔣️.json"));
-  assert.equal(snapshotFixtures.length, 18);
+  assert.equal(snapshotFixtures.length, 2);
   for (const path of snapshotFixtures) {
-    const parsed = parseJackSnapshot(json(new URL(join(fixtureRoot, path), import.meta.url)));
+    const parsed = parseJackSnapshot(parseJackJsonValue(json(new URL(join(fixtureRoot, path), import.meta.url))));
     assert.equal(parsed.content.target.dialect.artifactKind, cases.expectedChildKind, path);
     assert.equal(parsed.content.target.artifactId, parsed.content.childId, path);
   }
   assert.equal(parsedDiff.content, null);
   for (const invalid of cases.invalidDocuments) {
     assert.equal(validateArtifact?.(invalid), false);
-    assert.throws(() => parseJackArtifact(invalid));
+    assert.throws(() => parseJackJsonValue(invalid));
     assert.equal(validateSnapshot(invalid), false);
     assert.throws(() => parseJackSnapshot(invalid));
   }

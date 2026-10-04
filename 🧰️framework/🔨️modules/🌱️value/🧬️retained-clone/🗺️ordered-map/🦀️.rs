@@ -1,6 +1,6 @@
 //! 🗺️ Fixed-page ordered owners with resumable native key comparison and insertion.
 
-use super::{RetainedClone, RetainedCloneBinding, RetainedCloneClose, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, admit_retained_clone_progress, admit_retained_clone_retirement};
+use super::{RetainedClone, RetainedCloneBinding, RetainedCloneClose, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, admit_retained_clone_progress, admit_retained_clone_retirement, admit_retained_clone_scaffold_retirement};
 use crate::{SnapshotRetirementStep, retirement::RetireOwned};
 use serde::{Serialize, Serializer, ser::SerializeMap};
 use std::{cmp::Ordering, mem::size_of, sync::Arc};
@@ -47,16 +47,16 @@ impl<K, V> RetainedOrderedMap<K, V> {
     }
 
     #[cfg(test)]
-    pub(crate) fn from_sorted_entries_for_test(entries: Vec<(K, V)>) -> Result<Self, String>
+    pub(crate) fn from_sorted_entries_for_test(entries: Vec<(K, V)>) -> Result<Self, crate::ValueError>
     where
         K: Ord,
     {
         if entries.windows(2).any(|pair| pair[0].0 >= pair[1].0) {
-            return Err("retained ordered-map fixture entries are not strictly ordered".into());
+            return Err(crate::ValueError::new(crate::ValueRefusalKind::InvalidValue, "retained ordered-map fixture entries are not strictly ordered"));
         }
         let len = entries.len();
         let page_count = len.div_ceil(RETAINED_ORDERED_MAP_PAGE_CAPACITY);
-        let mut pages = Vec::with_capacity(page_count.checked_add(1).ok_or("retained ordered-map fixture page count overflow")?);
+        let mut pages = Vec::with_capacity(page_count.checked_add(1).ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::OwnershipLimit, "retained ordered-map fixture page count overflow"))?);
         let mut entries = entries.into_iter();
         for _ in 0..page_count {
             let mut page = Vec::with_capacity(RETAINED_ORDERED_MAP_PAGE_CAPACITY);
@@ -124,23 +124,23 @@ impl<K: RetainedClone, V: RetainedClone> Default for RetainedOrderedMapCloneCurs
 }
 
 impl<K: RetainedClone, V: RetainedClone> RetainedOrderedMapCloneCursor<K, V> {
-    fn progress_from_close(step: SnapshotRetirementStep, terminal_is_empty: bool, grant: RetainedCloneGrant, label: &str) -> Result<RetainedCloneStep, String> {
-        match admit_retained_clone_retirement(step, grant.maximum_items, grant.maximum_copy_bytes, &format!("retained ordered-map {label} scaffold close"))? {
+    fn progress_from_close(step: SnapshotRetirementStep, terminal_is_empty: bool, grant: RetainedCloneGrant, label: &str) -> Result<RetainedCloneStep, crate::ValueError> {
+        match admit_retained_clone_scaffold_retirement(step, grant.maximum_items, grant.maximum_copy_bytes, &format!("retained ordered-map {label} scaffold close"))? {
             SnapshotRetirementStep::Pending { released_items, released_bytes } => Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: released_items, copied_bytes: released_bytes, retained_capacity_bytes: 0 })),
-            SnapshotRetirementStep::Blocked => Err(format!("retained ordered-map {label} scaffold close blocked")),
+            SnapshotRetirementStep::Blocked => Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, format!("retained ordered-map {label} scaffold close blocked"))),
             SnapshotRetirementStep::Complete if terminal_is_empty => Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default())),
-            SnapshotRetirementStep::Complete => Err(format!("retained ordered-map {label} scaffold completed with a live owner")),
+            SnapshotRetirementStep::Complete => Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, format!("retained ordered-map {label} scaffold completed with a live owner"))),
         }
     }
 }
 
 impl<K: RetainedClone, V: RetainedClone> RetainedCloneCursor<RetainedOrderedMap<K, V>> for RetainedOrderedMapCloneCursor<K, V> {
-    fn advance(&mut self, source: RetainedCloneRef<'_, RetainedOrderedMap<K, V>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, String> {
+    fn advance(&mut self, source: RetainedCloneRef<'_, RetainedOrderedMap<K, V>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
         if self.closing {
-            return Err("retained ordered-map clone cursor is closing".into());
+            return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map clone cursor is closing"));
         }
         if self.spent {
-            return Err("retained ordered-map clone cursor is spent".into());
+            return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map clone cursor is spent"));
         }
         if self.output.is_some() {
             return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));
@@ -149,16 +149,16 @@ impl<K: RetainedClone, V: RetainedClone> RetainedCloneCursor<RetainedOrderedMap<
         let source_value = source.get();
         match self.phase {
             0 => {
-                let planned_pages = source_value.pages.len().checked_add(1).ok_or("retained ordered-map directory page count overflow")?;
-                let planned_capacity = planned_pages.checked_mul(size_of::<Vec<(K, V)>>()).ok_or("retained ordered-map directory capacity overflow")?;
+                let planned_pages = source_value.pages.len().checked_add(1).ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::OwnershipLimit, "retained ordered-map directory page count overflow"))?;
+                let planned_capacity = planned_pages.checked_mul(size_of::<Vec<(K, V)>>()).ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::OwnershipLimit, "retained ordered-map directory capacity overflow"))?;
                 let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: planned_capacity };
                 if !progress.fits(grant) {
                     return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
                 }
-                self.pages.try_reserve_exact(planned_pages).map_err(|_| "retained ordered-map directory allocation failed")?;
-                let actual = self.pages.capacity().checked_mul(size_of::<Vec<(K, V)>>()).ok_or("retained ordered-map directory actual capacity overflow")?;
+                self.pages.try_reserve_exact(planned_pages).map_err(|_| crate::ValueError::new(crate::ValueRefusalKind::AllocationFailed, "retained ordered-map directory allocation failed"))?;
+                let actual = self.pages.capacity().checked_mul(size_of::<Vec<(K, V)>>()).ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::OwnershipLimit, "retained ordered-map directory actual capacity overflow"))?;
                 if actual > grant.maximum_capacity_bytes {
-                    return Err("retained ordered-map directory allocator exceeded its admitted capacity".into());
+                    return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map directory allocator exceeded its admitted capacity"));
                 }
                 self.phase = 1;
                 Ok(RetainedCloneStep::Progress(RetainedCloneProgress { retained_capacity_bytes: actual, ..progress }))
@@ -190,20 +190,20 @@ impl<K: RetainedClone, V: RetainedClone> RetainedCloneCursor<RetainedOrderedMap<
                     self.phase = 2;
                     return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
                 }
-                let source_page = source_value.pages.get(self.page).ok_or("retained ordered-map source page is missing")?;
+                let source_page = source_value.pages.get(self.page).ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map source page is missing"))?;
                 if source_page.is_empty() || source_page.len() > RETAINED_ORDERED_MAP_PAGE_CAPACITY {
-                    return Err("retained ordered-map source page violates its fixed capacity".into());
+                    return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map source page violates its fixed capacity"));
                 }
-                let planned = RETAINED_ORDERED_MAP_PAGE_CAPACITY.checked_mul(size_of::<(K, V)>()).ok_or("retained ordered-map page capacity overflow")?;
+                let planned = RETAINED_ORDERED_MAP_PAGE_CAPACITY.checked_mul(size_of::<(K, V)>()).ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::OwnershipLimit, "retained ordered-map page capacity overflow"))?;
                 let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: planned };
                 if !progress.fits(grant) {
                     return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
                 }
                 let mut page = Vec::new();
-                page.try_reserve_exact(RETAINED_ORDERED_MAP_PAGE_CAPACITY).map_err(|_| "retained ordered-map page allocation failed")?;
-                let actual = page.capacity().checked_mul(size_of::<(K, V)>()).ok_or("retained ordered-map page actual capacity overflow")?;
+                page.try_reserve_exact(RETAINED_ORDERED_MAP_PAGE_CAPACITY).map_err(|_| crate::ValueError::new(crate::ValueRefusalKind::AllocationFailed, "retained ordered-map page allocation failed"))?;
+                let actual = page.capacity().checked_mul(size_of::<(K, V)>()).ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::OwnershipLimit, "retained ordered-map page actual capacity overflow"))?;
                 if actual > grant.maximum_capacity_bytes {
-                    return Err("retained ordered-map page allocator exceeded its admitted capacity".into());
+                    return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map page allocator exceeded its admitted capacity"));
                 }
                 self.source_page_len = source_page.len();
                 self.page_output = Some(page);
@@ -216,7 +216,7 @@ impl<K: RetainedClone, V: RetainedClone> RetainedCloneCursor<RetainedOrderedMap<
                     RetainedCloneStep::Progress(progress) => Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(grant, progress, "retained ordered-map key")?)),
                     RetainedCloneStep::Complete(progress) => {
                         let progress = admit_retained_clone_progress(grant, progress, "retained ordered-map key")?;
-                        self.key = Some(self.key_cursor.take().ok_or("retained ordered-map key completed without an owner")?);
+                        self.key = Some(self.key_cursor.take().ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map key completed without an owner"))?);
                         let _ = self.key_cursor.begin_close();
                         self.phase = 3;
                         Ok(RetainedCloneStep::Progress(progress))
@@ -241,7 +241,7 @@ impl<K: RetainedClone, V: RetainedClone> RetainedCloneCursor<RetainedOrderedMap<
                     RetainedCloneStep::Progress(progress) => Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(grant, progress, "retained ordered-map value")?)),
                     RetainedCloneStep::Complete(progress) => {
                         let progress = admit_retained_clone_progress(grant, progress, "retained ordered-map value")?;
-                        self.value = Some(self.value_cursor.take().ok_or("retained ordered-map value completed without an owner")?);
+                        self.value = Some(self.value_cursor.take().ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map value completed without an owner"))?);
                         let _ = self.value_cursor.begin_close();
                         self.phase = 5;
                         Ok(RetainedCloneStep::Progress(progress))
@@ -264,13 +264,16 @@ impl<K: RetainedClone, V: RetainedClone> RetainedCloneCursor<RetainedOrderedMap<
                 if grant.maximum_items == 0 {
                     return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
                 }
-                self.page_output.as_mut().ok_or("retained ordered-map output page is missing")?.push((self.key.take().ok_or("retained ordered-map key owner is missing")?, self.value.take().ok_or("retained ordered-map value owner is missing")?));
+                self.page_output.as_mut().ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map output page is missing"))?.push((
+                    self.key.take().ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map key owner is missing"))?,
+                    self.value.take().ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map value owner is missing"))?,
+                ));
                 self.entry += 1;
                 self.phase = 1;
                 Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
             }
             7 => Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())),
-            _ => Err("retained ordered-map clone state is invalid".into()),
+            _ => Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map clone state is invalid")),
         }
     }
 
@@ -290,7 +293,7 @@ impl<K: RetainedClone, V: RetainedClone> RetainedCloneCursor<RetainedOrderedMap<
         true
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, crate::ValueError> {
         if !self.key_cursor.terminal_is_empty() {
             if self.key_cursor.begin_close() {
                 if maximum_items == 0 {
@@ -301,7 +304,7 @@ impl<K: RetainedClone, V: RetainedClone> RetainedCloneCursor<RetainedOrderedMap<
             let step = admit_retained_clone_retirement(self.key_cursor.close_step(maximum_items, maximum_bytes)?, maximum_items, maximum_bytes, "retained ordered-map key close")?;
             if step == SnapshotRetirementStep::Complete {
                 if !self.key_cursor.terminal_is_empty() {
-                    return Err("retained ordered-map key cursor completed close with a live owner".into());
+                    return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map key cursor completed close with a live owner"));
                 }
                 return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
             }
@@ -317,7 +320,7 @@ impl<K: RetainedClone, V: RetainedClone> RetainedCloneCursor<RetainedOrderedMap<
             let step = admit_retained_clone_retirement(self.value_cursor.close_step(maximum_items, maximum_bytes)?, maximum_items, maximum_bytes, "retained ordered-map value close")?;
             if step == SnapshotRetirementStep::Complete {
                 if !self.value_cursor.terminal_is_empty() {
-                    return Err("retained ordered-map value cursor completed close with a live owner".into());
+                    return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map value cursor completed close with a live owner"));
                 }
                 return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
             }
@@ -401,7 +404,7 @@ pub trait BoundedOrd: Ord + Send + Sync + Sized + 'static {
 }
 
 pub trait BoundedOrdCursor<T: BoundedOrd>: Send {
-    fn compare(&mut self, left: RetainedCloneRef<'_, T>, right: RetainedCloneRef<'_, T>, grant: BoundedOrdGrant) -> Result<BoundedOrdStep, String>;
+    fn compare(&mut self, left: RetainedCloneRef<'_, T>, right: RetainedCloneRef<'_, T>, grant: BoundedOrdGrant) -> Result<BoundedOrdStep, crate::ValueError>;
 }
 
 pub struct ScalarBoundedOrdCursor<T> {
@@ -418,7 +421,7 @@ impl<T> Default for ScalarBoundedOrdCursor<T> {
 }
 
 impl<T: BoundedOrd + Copy> BoundedOrdCursor<T> for ScalarBoundedOrdCursor<T> {
-    fn compare(&mut self, left: RetainedCloneRef<'_, T>, right: RetainedCloneRef<'_, T>, grant: BoundedOrdGrant) -> Result<BoundedOrdStep, String> {
+    fn compare(&mut self, left: RetainedCloneRef<'_, T>, right: RetainedCloneRef<'_, T>, grant: BoundedOrdGrant) -> Result<BoundedOrdStep, crate::ValueError> {
         if let Some(ordering) = self.complete {
             return Ok(BoundedOrdStep::Complete { ordering, progress: BoundedOrdProgress::default() });
         }
@@ -454,7 +457,7 @@ pub struct StringBoundedOrdCursor {
 }
 
 impl BoundedOrdCursor<String> for StringBoundedOrdCursor {
-    fn compare(&mut self, left: RetainedCloneRef<'_, String>, right: RetainedCloneRef<'_, String>, grant: BoundedOrdGrant) -> Result<BoundedOrdStep, String> {
+    fn compare(&mut self, left: RetainedCloneRef<'_, String>, right: RetainedCloneRef<'_, String>, grant: BoundedOrdGrant) -> Result<BoundedOrdStep, crate::ValueError> {
         if let Some(ordering) = self.complete {
             return Ok(BoundedOrdStep::Complete { ordering, progress: BoundedOrdProgress::default() });
         }
@@ -527,7 +530,7 @@ impl<K: BoundedOrd> Default for RetainedOrderedMapLookupCursor<K> {
 }
 
 impl<K: BoundedOrd> RetainedOrderedMapLookupCursor<K> {
-    pub fn advance<V>(&mut self, source: RetainedCloneRef<'_, RetainedOrderedMap<K, V>>, target: RetainedCloneRef<'_, K>, grant: BoundedOrdGrant) -> Result<(Option<RetainedOrderedMapLookup>, BoundedOrdProgress), String> {
+    pub fn advance<V>(&mut self, source: RetainedCloneRef<'_, RetainedOrderedMap<K, V>>, target: RetainedCloneRef<'_, K>, grant: BoundedOrdGrant) -> Result<(Option<RetainedOrderedMapLookup>, BoundedOrdProgress), crate::ValueError> {
         if let Some(result) = self.complete {
             return Ok((Some(result), BoundedOrdProgress::default()));
         }
@@ -648,17 +651,17 @@ impl<K: BoundedOrd + RetireOwned, V: RetireOwned> RetainedOrderedMapInsertCursor
         }
     }
 
-    pub fn advance(&mut self, grant: RetainedOrderedMapInsertGrant) -> Result<RetainedOrderedMapInsertStep, String> {
+    pub fn advance(&mut self, grant: RetainedOrderedMapInsertGrant) -> Result<RetainedOrderedMapInsertStep, crate::ValueError> {
         if self.closing {
-            return Err("retained ordered-map insertion cursor is closing".into());
+            return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion cursor is closing"));
         }
         if self.spent {
-            return Err("retained ordered-map insertion cursor is spent".into());
+            return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion cursor is spent"));
         }
         match self.phase {
             0 => {
-                let map = self.map.as_ref().ok_or("retained ordered-map insertion workspace is missing")?;
-                let key = self.key.as_ref().ok_or("retained ordered-map insertion key is missing")?;
+                let map = self.map.as_ref().ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion workspace is missing"))?;
+                let key = self.key.as_ref().ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion key is missing"))?;
                 let map_ref = super::retained_clone_exclusive_ref(map, &self.lookup_lease, 1);
                 let key_ref = super::retained_clone_exclusive_ref(key, &self.lookup_lease, 2);
                 let (result, comparison) = self.lookup.advance(map_ref, key_ref, grant.comparison)?;
@@ -667,7 +670,7 @@ impl<K: BoundedOrd + RetireOwned, V: RetireOwned> RetainedOrderedMapInsertCursor
                     None => Ok(RetainedOrderedMapInsertStep::Progress(progress)),
                     Some(RetainedOrderedMapLookup::Found(_)) => {
                         self.phase = 255;
-                        Err("retained ordered-map insertion refused a duplicate key".into())
+                        Err(crate::ValueError::new(crate::ValueRefusalKind::InvalidValue, "retained ordered-map insertion refused a duplicate key"))
                     }
                     Some(RetainedOrderedMapLookup::Missing(ordinal)) => {
                         self.target = Some(ordinal);
@@ -677,22 +680,22 @@ impl<K: BoundedOrd + RetireOwned, V: RetireOwned> RetainedOrderedMapInsertCursor
                 }
             }
             1 => {
-                let map = self.map.as_mut().ok_or("retained ordered-map insertion workspace is missing")?;
+                let map = self.map.as_mut().ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion workspace is missing"))?;
                 if map.len % RETAINED_ORDERED_MAP_PAGE_CAPACITY == 0 {
                     if map.pages.len() == map.pages.capacity() {
                         self.phase = 10;
                         return Ok(RetainedOrderedMapInsertStep::Progress(Default::default()));
                     }
-                    let capacity = RETAINED_ORDERED_MAP_PAGE_CAPACITY.checked_mul(size_of::<(K, V)>()).ok_or("retained ordered-map insertion page capacity overflow")?;
+                    let capacity = RETAINED_ORDERED_MAP_PAGE_CAPACITY.checked_mul(size_of::<(K, V)>()).ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::OwnershipLimit, "retained ordered-map insertion page capacity overflow"))?;
                     let progress = RetainedOrderedMapInsertProgress { retained_capacity_bytes: capacity, ..Default::default() };
                     if !progress.fits(grant) {
                         return Ok(RetainedOrderedMapInsertStep::Progress(Default::default()));
                     }
                     let mut page = Vec::new();
-                    page.try_reserve_exact(RETAINED_ORDERED_MAP_PAGE_CAPACITY).map_err(|_| "retained ordered-map insertion page allocation failed")?;
-                    let actual = page.capacity().checked_mul(size_of::<(K, V)>()).ok_or("retained ordered-map insertion page actual capacity overflow")?;
+                    page.try_reserve_exact(RETAINED_ORDERED_MAP_PAGE_CAPACITY).map_err(|_| crate::ValueError::new(crate::ValueRefusalKind::AllocationFailed, "retained ordered-map insertion page allocation failed"))?;
+                    let actual = page.capacity().checked_mul(size_of::<(K, V)>()).ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::OwnershipLimit, "retained ordered-map insertion page actual capacity overflow"))?;
                     if actual > grant.maximum_capacity_bytes {
-                        return Err("retained ordered-map insertion page allocator exceeded its admitted capacity".into());
+                        return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion page allocator exceeded its admitted capacity"));
                     }
                     map.pages.push(page);
                     self.shift_page = map.pages.len().checked_sub(1);
@@ -707,67 +710,76 @@ impl<K: BoundedOrd + RetireOwned, V: RetireOwned> RetainedOrderedMapInsertCursor
                 Ok(RetainedOrderedMapInsertStep::Progress(RetainedOrderedMapInsertProgress::default()))
             }
             2 => {
-                let map = self.map.as_mut().ok_or("retained ordered-map insertion workspace is missing")?;
-                let ordinal = self.target.ok_or("retained ordered-map insertion target is missing")?;
+                let map = self.map.as_mut().ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion workspace is missing"))?;
+                let ordinal = self.target.ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion target is missing"))?;
                 let target_page = ordinal / RETAINED_ORDERED_MAP_PAGE_CAPACITY;
-                let shift_page = self.shift_page.ok_or("retained ordered-map insertion shift page is missing")?;
+                let shift_page = self.shift_page.ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion shift page is missing"))?;
                 if shift_page == target_page {
                     self.phase = 3;
                     return Ok(RetainedOrderedMapInsertStep::Progress(RetainedOrderedMapInsertProgress::default()));
                 }
                 let (left, right) = map.pages.split_at_mut(shift_page);
-                let previous = left.get_mut(shift_page - 1).ok_or("retained ordered-map insertion previous page is missing")?;
-                let current = right.first_mut().ok_or("retained ordered-map insertion current page is missing")?;
+                let previous = left.get_mut(shift_page - 1).ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion previous page is missing"))?;
+                let current = right.first_mut().ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion current page is missing"))?;
                 if current.len() >= RETAINED_ORDERED_MAP_PAGE_CAPACITY {
-                    return Err("retained ordered-map insertion shift page has no admitted slot".into());
+                    return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion shift page has no admitted slot"));
                 }
-                let moved_items = current.len().checked_add(1).ok_or("retained ordered-map insertion move count overflow")?;
-                let moved_bytes = moved_items.checked_mul(size_of::<(K, V)>()).ok_or("retained ordered-map insertion shift overflow")?;
+                let moved_items = current.len().checked_add(1).ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::WorkLimit, "retained ordered-map insertion move count overflow"))?;
+                let moved_bytes = moved_items.checked_mul(size_of::<(K, V)>()).ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::WorkLimit, "retained ordered-map insertion shift overflow"))?;
                 let progress = RetainedOrderedMapInsertProgress { moved_items, moved_bytes, ..Default::default() };
                 if !progress.fits(grant) {
                     return Ok(RetainedOrderedMapInsertStep::Progress(Default::default()));
                 }
-                let entry = previous.pop().ok_or("retained ordered-map insertion previous page is empty")?;
+                let entry = previous.pop().ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion previous page is empty"))?;
                 current.insert(0, entry);
                 self.shift_page = Some(shift_page - 1);
                 Ok(RetainedOrderedMapInsertStep::Progress(progress))
             }
             3 => {
-                let map = self.map.as_mut().ok_or("retained ordered-map insertion workspace is missing")?;
-                let ordinal = self.target.ok_or("retained ordered-map insertion target is missing")?;
+                let map = self.map.as_mut().ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion workspace is missing"))?;
+                let ordinal = self.target.ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion target is missing"))?;
                 let page_index = ordinal / RETAINED_ORDERED_MAP_PAGE_CAPACITY;
                 let entry_index = ordinal % RETAINED_ORDERED_MAP_PAGE_CAPACITY;
-                let page = map.pages.get_mut(page_index).ok_or("retained ordered-map insertion target page is missing")?;
+                let page = map.pages.get_mut(page_index).ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion target page is missing"))?;
                 if page.len() >= RETAINED_ORDERED_MAP_PAGE_CAPACITY {
-                    return Err("retained ordered-map insertion target page has no admitted slot".into());
+                    return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion target page has no admitted slot"));
                 }
-                let moved_items = page.len().saturating_sub(entry_index).checked_add(1).ok_or("retained ordered-map insertion move count overflow")?;
-                let moved_bytes = moved_items.checked_mul(size_of::<(K, V)>()).ok_or("retained ordered-map insertion target shift overflow")?;
+                let moved_items = page.len().saturating_sub(entry_index).checked_add(1).ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::WorkLimit, "retained ordered-map insertion move count overflow"))?;
+                let moved_bytes = moved_items.checked_mul(size_of::<(K, V)>()).ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::WorkLimit, "retained ordered-map insertion target shift overflow"))?;
                 let progress = RetainedOrderedMapInsertProgress { moved_items, moved_bytes, ..Default::default() };
                 if !progress.fits(grant) {
                     return Ok(RetainedOrderedMapInsertStep::Progress(Default::default()));
                 }
-                let new_len = map.len.checked_add(1).ok_or("retained ordered-map insertion length overflow")?;
-                page.insert(entry_index, (self.key.take().ok_or("retained ordered-map insertion key owner is missing")?, self.value.take().ok_or("retained ordered-map insertion value owner is missing")?));
+                let new_len = map.len.checked_add(1).ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::OwnershipLimit, "retained ordered-map insertion length overflow"))?;
+                page.insert(
+                    entry_index,
+                    (
+                        self.key.take().ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion key owner is missing"))?,
+                        self.value.take().ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion value owner is missing"))?,
+                    ),
+                );
                 map.len = new_len;
                 self.output = self.map.take();
                 self.phase = 4;
                 Ok(RetainedOrderedMapInsertStep::Complete { ordinal, progress })
             }
-            4 => Ok(RetainedOrderedMapInsertStep::Complete { ordinal: self.target.ok_or("retained ordered-map insertion target is missing")?, progress: RetainedOrderedMapInsertProgress::default() }),
+            4 => Ok(RetainedOrderedMapInsertStep::Complete {
+                ordinal: self.target.ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion target is missing"))?,
+                progress: RetainedOrderedMapInsertProgress::default(),
+            }),
             10 => {
-                let map = self.map.as_ref().ok_or("retained ordered-map insertion workspace is missing")?;
-                let planned = map.pages.len().checked_mul(2).and_then(|value| value.checked_add(1)).ok_or("retained ordered-map directory growth overflow")?;
-                let capacity = planned.checked_mul(size_of::<Vec<(K, V)>>()).ok_or("retained ordered-map directory capacity overflow")?;
+                let map = self.map.as_ref().ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion workspace is missing"))?;
+                let planned = map.pages.len().checked_mul(2).and_then(|value| value.checked_add(1)).ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::OwnershipLimit, "retained ordered-map directory growth overflow"))?;
+                let capacity = planned.checked_mul(size_of::<Vec<(K, V)>>()).ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::OwnershipLimit, "retained ordered-map directory capacity overflow"))?;
                 let progress = RetainedOrderedMapInsertProgress { retained_capacity_bytes: capacity, ..Default::default() };
                 if !progress.fits(grant) {
                     return Ok(RetainedOrderedMapInsertStep::Progress(Default::default()));
                 }
                 let mut directory = Vec::new();
-                directory.try_reserve_exact(planned).map_err(|_| "retained ordered-map directory growth allocation failed")?;
-                let actual = directory.capacity().checked_mul(size_of::<Vec<(K, V)>>()).ok_or("retained ordered-map directory actual capacity overflow")?;
+                directory.try_reserve_exact(planned).map_err(|_| crate::ValueError::new(crate::ValueRefusalKind::AllocationFailed, "retained ordered-map directory growth allocation failed"))?;
+                let actual = directory.capacity().checked_mul(size_of::<Vec<(K, V)>>()).ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::OwnershipLimit, "retained ordered-map directory actual capacity overflow"))?;
                 if actual > grant.maximum_capacity_bytes {
-                    return Err("retained ordered-map directory allocator exceeded its admitted capacity".into());
+                    return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map directory allocator exceeded its admitted capacity"));
                 }
                 self.new_directory = Some(directory);
                 self.phase = 11;
@@ -778,13 +790,13 @@ impl<K: BoundedOrd + RetireOwned, V: RetireOwned> RetainedOrderedMapInsertCursor
                 if !progress.fits(grant) {
                     return Ok(RetainedOrderedMapInsertStep::Progress(Default::default()));
                 }
-                let map = self.map.as_mut().ok_or("retained ordered-map insertion workspace is missing")?;
+                let map = self.map.as_mut().ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion workspace is missing"))?;
                 self.old_directory = Some(std::mem::take(&mut map.pages));
                 self.phase = 12;
                 Ok(RetainedOrderedMapInsertStep::Progress(progress))
             }
             12 => {
-                let old = self.old_directory.as_mut().ok_or("retained ordered-map old directory is missing")?;
+                let old = self.old_directory.as_mut().ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map old directory is missing"))?;
                 if self.directory_index == old.len() {
                     self.phase = 13;
                     return Ok(RetainedOrderedMapInsertStep::Progress(Default::default()));
@@ -793,7 +805,7 @@ impl<K: BoundedOrd + RetireOwned, V: RetireOwned> RetainedOrderedMapInsertCursor
                 if !progress.fits(grant) {
                     return Ok(RetainedOrderedMapInsertStep::Progress(Default::default()));
                 }
-                self.new_directory.as_mut().ok_or("retained ordered-map new directory is missing")?.push(std::mem::take(&mut old[self.directory_index]));
+                self.new_directory.as_mut().ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map new directory is missing"))?.push(std::mem::take(&mut old[self.directory_index]));
                 self.directory_index += 1;
                 Ok(RetainedOrderedMapInsertStep::Progress(progress))
             }
@@ -802,12 +814,13 @@ impl<K: BoundedOrd + RetireOwned, V: RetireOwned> RetainedOrderedMapInsertCursor
                 if !progress.fits(grant) {
                     return Ok(RetainedOrderedMapInsertStep::Progress(Default::default()));
                 }
-                self.map.as_mut().ok_or("retained ordered-map insertion workspace is missing")?.pages = self.new_directory.take().ok_or("retained ordered-map relocated directory is missing")?;
+                self.map.as_mut().ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion workspace is missing"))?.pages =
+                    self.new_directory.take().ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map relocated directory is missing"))?;
                 self.directory_index = 0;
                 self.phase = 1;
                 Ok(RetainedOrderedMapInsertStep::Progress(progress))
             }
-            _ => Err("retained ordered-map insertion state is invalid".into()),
+            _ => Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion state is invalid")),
         }
     }
 
@@ -838,7 +851,7 @@ impl<K: BoundedOrd + RetireOwned, V: RetireOwned> RetainedOrderedMapInsertCursor
         true
     }
 
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, crate::ValueError> {
         if !self.close.is_empty() {
             let step = self.close.step(maximum_items, maximum_bytes)?;
             return Ok(if step == SnapshotRetirementStep::Complete { SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 } } else { step });

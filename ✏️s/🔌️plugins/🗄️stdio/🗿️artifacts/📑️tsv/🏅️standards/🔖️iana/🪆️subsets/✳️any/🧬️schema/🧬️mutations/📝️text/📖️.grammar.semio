@@ -3,6 +3,7 @@ root = mutation
 ; wire text is the hand-rolled `keyword arg=value ...` token line `protocol::OpText` prints
 ; (see 🦀️.rs `print_tsv_mutation`/`parse_tsv_mutation`) — not JSON.
 mutation = "set-snapshot" SP "snapshot=" hexsnapshot
+         / "patch-snapshot" SP "patch=" hexstr
          / "set-trailing-newline" SP "trailing-newline=" BIT
          / "set-line-ending" SP "line-ending=" ("lf" / "crlf")
          / "insert-row" SP "index=" INT SP "row=" hexrow

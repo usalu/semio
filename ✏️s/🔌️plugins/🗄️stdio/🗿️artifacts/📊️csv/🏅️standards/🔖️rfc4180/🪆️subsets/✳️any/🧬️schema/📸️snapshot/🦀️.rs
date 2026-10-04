@@ -8,6 +8,8 @@ use framework_schema::ArtifactSchema;
 
 #[path = "🪶️sqlite/🦀️.rs"]
 mod sqlite;
+#[path = "🚦️native/🦀️.rs"]
+mod sqlite_native;
 #[cfg(test)]
 #[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
 mod sqlite_tests;
@@ -21,7 +23,7 @@ fn default_true() -> bool {
 /// quoting means whether a field WAS quoted is real information worth preserving losslessly,
 /// so re-serializing can reproduce the exact source bytes rather than a lossy normal form
 /// (https://www.rfc-editor.org/rfc/rfc4180#section-2, rule 5).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct CsvField {
     #[value(default)]
@@ -35,7 +37,7 @@ pub struct CsvField {
 /// 📄 One RFC 4180 record (row) — a strong-like entity, index-keyed within
 /// `CsvSnapshot::records`. Field COUNT is real, per-record information (rfc4180 is a
 /// loosely-typed grid on the wire even though most producers keep it rectangular).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct CsvRecord {
     #[value(default)]
@@ -47,7 +49,7 @@ pub struct CsvRecord {
 /// 📸️ Persisted `stdio.csv` snapshot (RFC 4180 table, with a header-row option). The
 /// header row (when present) is `records[0]` — RFC 4180 draws no structural distinction
 /// between a header record and a data record, only a convention of which one comes first.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.csv")]
 pub struct CsvSnapshot {
@@ -194,47 +196,22 @@ pub fn demo_csv_snapshot() -> CsvSnapshot {
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️HandcraftedArtifactCodecs
-impl store::ArtifactDsl for CsvSnapshot {
-    const EXTENSION: &'static str = "csv";
-    fn envelope_id() -> &'static str {
-        "stdio.csv"
-    }
+/// 📥️ Reads authored CSV files or the declared logical Text document.
+pub fn read_csv_source_text(text:&str)->Result<CsvSnapshot,semio_framework_diagnostic::TextError>{if text.starts_with("semio "){<CsvSnapshot as store::ArtifactDsl>::parse_dsl(text)}else{Ok(decode_csv_with(text,true))}}
+/// 📥️ Reads the logical Pack document or authored UTF-8 CSV bytes.
+pub fn read_csv_source_binary(bytes:&[u8])->Result<CsvSnapshot,store::PackError>{if bytes.starts_with(&[137,83,69,77,13,10,26,10]){<CsvSnapshot as store::ArtifactPack>::decode_pack(bytes)}else{let text=std::str::from_utf8(bytes).map_err(|error|store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error.to_string())))?;read_csv_source_text(text).map_err(store::PackError::from)}}
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        Ok(decode_csv_with(body, true))
-    }
-    fn print_dsl(&self) -> String {
-        let body = encode_csv(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
+impl store::ArtifactDsl for CsvSnapshot{
+ const EXTENSION:&'static str="csv";
+ fn envelope_id()->&'static str{"stdio.csv"}
+ fn parse_dsl(text:&str)->Result<Self,semio_framework_diagnostic::TextError>{let(envelope,body)=store::semio_format::split_text_preamble(text).map_err(|error|semio_framework_diagnostic::TextError::from_value_error(error.into_value_error(),semio_framework_diagnostic::TextSpan::at(1,1)))?;if !envelope.matches_identity(Self::envelope_id(),store::semio_format::Component::Dsl,1){return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"CSV logical Text envelope mismatch",semio_framework_diagnostic::TextSpan::at(1,1)))}Self::__dsl_from_record(&semio_framework_dsl_record::parse_exact(body,&Self::__dsl_spec(),&Default::default())?)}
+ fn print_dsl(&self)->String{let body=semio_framework_dsl_record::print(&self.__dsl_to_record(),&Self::__dsl_spec(),semio_framework_dsl_record::JoinMode::Document);let envelope=store::semio_format::SemioEnvelope::from_envelope_id(Self::envelope_id(),store::semio_format::Component::Dsl,1).expect("declared CSV logical envelope");store::semio_format::wrap_text(&envelope,&body)}
 }
-
-impl store::ArtifactPack for CsvSnapshot {
-    /// 🪶️ Publishes this owner's actual relational snapshot capability.
-    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
-        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
-    }
-
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let _ = options;
-        let raw = encode_csv(self).into_bytes();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &raw))
-    }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
-        }
-        let _ = options;
-        let text = String::from_utf8(inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(decode_csv_with(&text, true))
-    }
+impl store::ArtifactPack for CsvSnapshot{
+ fn record_spec()->Option<semio_framework_dsl_record::RecordSpec>{Some(Self::__dsl_spec())}
+ fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}
+ fn encode_pack_with(&self,options:&store::PackEncodeOptions)->Result<Vec<u8>,store::PackError>{let body=store::pack_rt::encode_document(&Self::__dsl_spec(),&self.__dsl_to_record(),options)?;let envelope=store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1).map_err(|error|store::PackError::from(error.into_value_error()))?;Ok(store::semio_format::wrap_binary(&envelope,&body))}
+ fn decode_pack_with(bytes:&[u8],options:&store::PackDecodeOptions)->Result<Self,store::PackError>{let(envelope,body)=store::semio_format::unwrap_binary(bytes).map_err(|error|store::PackError::from(error.into_value_error()))?;if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1){return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"CSV logical Pack envelope mismatch")))}Self::__dsl_from_record(&store::pack_rt::decode_document(&body,&Self::__dsl_spec(),options)?.0).map_err(store::PackError::from)}
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 

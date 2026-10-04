@@ -1,4 +1,4 @@
-//! Diff for `insert-floors`.
+//! 🔺️ Diff for `insert-floors`.
 use super::InsertFloors;
 use crate::artifact_schema::diff::En1991FloorsList;
 use crate::{En1991Diff, En1991Snapshot};

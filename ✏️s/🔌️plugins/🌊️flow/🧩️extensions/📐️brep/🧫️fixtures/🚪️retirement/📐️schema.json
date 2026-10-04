@@ -7,9 +7,25 @@
     "tessellate",
     "grant",
     "steps",
-    "geometrySchema"
+    "geometrySchema",
+    "ownerIsolation",
+    "bypassIdentity",
+    "exactCancellation"
   ],
   "properties": {
+    "bypassIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nodeHashes","cancellationGroup","roundUnits","compactHops","cacheMode","complete"],
+      "properties": {
+        "nodeHashes": {"type":"array","minItems":2,"maxItems":2,"uniqueItems":true,"items":{"type":"integer","minimum":1}},
+        "cancellationGroup": {"type":"string","minLength":1},
+        "roundUnits": {"const":1},
+        "compactHops": {"const":8},
+        "cacheMode": {"const":"bypass"},
+        "complete": {"const":false}
+      }
+    },
     "evaluate": {
       "type": "object",
       "required": [
@@ -72,6 +88,32 @@
     },
     "geometrySchema": {
       "const": "geometry"
+    },
+    "exactCancellation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nodeHashLiteral", "roundUnits", "retired", "pending", "malformed", "faultCode"],
+      "properties": {
+        "nodeHashLiteral": {"const": "18446744073709551613"},
+        "roundUnits": {"const": 1},
+        "retired": {"const": 1},
+        "pending": {"const": true},
+        "malformed": {"type": "array", "minItems": 4, "maxItems": 4, "items": {"type": "string"}},
+        "faultCode": {"const": "extension.evaluate-cancel.bad-request"}
+      }
+    },
+    "ownerIsolation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sharedNodeHash", "roundUnits", "maximumTurns", "halfExtents", "liveOwnerMustRemainPendingAfterOtherClose", "originalReaderHops"],
+      "properties": {
+        "sharedNodeHash": {"type": "integer", "minimum": 1},
+        "roundUnits": {"const": 1},
+        "maximumTurns": {"type": "integer", "minimum": 1},
+        "halfExtents": {"type": "array", "minItems": 3, "maxItems": 3, "items": {"type": "number", "exclusiveMinimum": 0}},
+        "liveOwnerMustRemainPendingAfterOtherClose": {"const": true},
+        "originalReaderHops": {"const": 8}
+      }
     }
   }
 }

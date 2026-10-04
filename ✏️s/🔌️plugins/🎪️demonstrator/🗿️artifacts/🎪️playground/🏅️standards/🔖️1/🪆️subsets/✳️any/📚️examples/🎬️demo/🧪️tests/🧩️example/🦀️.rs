@@ -12,7 +12,7 @@ fn inference_determinism_law() {
     use protocol::Inference;
 
     let snapshot = PlaygroundSnapshot::default();
-    assert_eq!(PlaygroundInference::infer(&snapshot), PlaygroundInference::infer(&snapshot));
+    assert_eq!(PlaygroundInference::infer(&snapshot).expect("valid materialized inference fixture"), PlaygroundInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
 #[test]
@@ -21,6 +21,6 @@ fn inference_default_law() {
     use crate::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
     use protocol::Inference;
 
-    assert_eq!(PlaygroundInference::infer(&PlaygroundSnapshot::default()), PlaygroundInference::default());
+    assert_eq!(PlaygroundInference::infer(&PlaygroundSnapshot::default()).expect("valid materialized inference fixture"), PlaygroundInference::default());
 }
 //#endregion 🧪️InferenceLaws

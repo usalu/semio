@@ -5,7 +5,7 @@ use crate::demo_space_projection;
 #[semio_framework_async_macros::async_test]
 async fn patch_parameter_op_updates_numeric_value() {
     let projection = demo_space_projection().await;
-    let patch = pack::json::object([("value".to_string(), Value::from(48.0))]);
+    let patch = semio_framework_pack_json::object([("value".to_string(), Value::from(48.0))]);
     let operation = patch_parameter_operation(&projection, "param-brush-size", &patch).await.expect("operation");
     match operation {
         WorkflowMutation::ChangeParameter(ChangeParameter { parameter, .. }) => match *parameter {

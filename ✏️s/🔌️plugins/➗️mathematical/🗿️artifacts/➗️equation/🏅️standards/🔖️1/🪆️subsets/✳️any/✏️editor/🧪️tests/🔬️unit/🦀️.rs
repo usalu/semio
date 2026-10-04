@@ -28,6 +28,7 @@ pub(crate) mod context {
     }
 
     semio_framework_plugin::history_edit_acceptance_law!("mathematical", EquationPlayApp, equation_app_manifest_for_tests, "../..");
+    semio_framework_plugin::composed_reload_law!("mathematical", EquationPlayApp, equation_app_manifest_for_tests, "../..");
     
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
     /// 🪪️ Bound to the live runtime instance `meta("local")` addresses. Binding is mandatory now that
@@ -109,29 +110,30 @@ fn graph_with_shape(node_count: usize, edge_count: usize) -> EquationGraph {
     EquationGraph { directed: true, nodes, edges, algorithm: "bfs".into(), algorithm_seed: Some("n0".into()) }
 }
 
-fn drive_retained(work: &mut EquationRetainedCommandWork, command: &EquationCommand, snapshot: &EquationSnapshot, operation: &AppOperationContext) -> protocol::DslValue {
+fn drive_retained(work: &mut EquationRetainedCommandWork, command: &EquationCommand, snapshot: &EquationSnapshot, operation: &AppOperationContext) -> semio_framework_value::DslValue {
     let config = NoConfig::default();
     let history = semio_framework_plugin::HistoryView::empty();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
     loop {
-        match work.step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation }).expect("retained Equation turn") {
+        match work.step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut 0)).expect("retained Equation turn") {
             ArtifactCommandWorkStep::Replay { .. } | ArtifactCommandWorkStep::Progress { .. } => {}
             // 🌱️ `ToValue`/`DslValue` in place of the old `serde_json::to_value` oracle: `DslValue`
             // already implements `PartialEq`, so the two runs compare directly with no JSON text
             // round trip needed.
-            ArtifactCommandWorkStep::Complete(emit) => return protocol::ToValue::to_value(&emit.artifact_mutations),
+            ArtifactCommandWorkStep::Complete(emit) => return semio_framework_value::ToValue::to_value(&emit.artifact_mutations),
             ArtifactCommandWorkStep::CompleteWithEphemeral { .. } => panic!("Equation commands do not publish ephemeral state"),
+            ArtifactCommandWorkStep::CompleteDownload { .. } => panic!("Equation commands do not publish downloads"),
         }
     }
 }
 
 #[test]
 fn retained_schema_contract_and_factory_identity_are_exact() {
-    let fixture: Value = json::parse(include_str!("../../../../../../../🧫️fixtures/⚖️equation-retained-command-law.json")).expect("language-neutral retained fixture");
+    let fixture: Value = semio_framework_pack_json::parse(include_str!("../../../../../../../🧫️fixtures/⚖️equation-retained-command-law.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-neutral retained fixture");
     assert_eq!(fixture["contract"]["workItems"], 65_536);
     assert_eq!(fixture["contract"]["maximumStepMillis"], 8);
-    assert_eq!(fixture["actions"], json::array(EQUATION_TOOL_IDS.iter().map(|id| Value::from(*id))));
+    assert_eq!(fixture["actions"], semio_framework_pack_json::array(EQUATION_TOOL_IDS.iter().map(|id| Value::from(*id))));
     assert_eq!(fixture["hostileCases"].as_array().map(|values| values.len()), Some(14));
     let factory = EquationCommandJobFactory::new("s.mathematical.equation@1/*#editor");
     let keys = <EquationCommandJobFactory as semio_framework::ToolJobFactory>::keys(&factory);
@@ -166,10 +168,10 @@ async fn retained_semantic_maxima_accept_exact_and_reject_maximum_plus_one() {
     assert!(equation_command_extent(&EquationCommand::SetAlgorithm(set_algorithm::SetAlgorithm { algorithm: maximum_text, seed: None }), &snapshot).is_some());
     assert!(equation_command_extent(&EquationCommand::SetAlgorithm(set_algorithm::SetAlgorithm { algorithm: excessive_text, seed: None }), &snapshot).is_none());
 
-    let operations = |count: usize| json::to_string(&json::array(std::iter::repeat(json::object([("operation".to_string(), Value::from("disconnect")), ("synapseId".to_string(), Value::from("e1"))])).take(count)));
+    let operations = |count: usize| semio_framework_pack_json::to_string(&semio_framework_pack_json::array(std::iter::repeat(semio_framework_pack_json::object([("operation".to_string(), Value::from("disconnect")), ("synapseId".to_string(), Value::from("e1"))])).take(count)));
     assert!(equation_command_extent(&EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: operations(EQUATION_MAX_EDIT_OPERATIONS) }), &snapshot).is_some());
     assert!(equation_command_extent(&EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: operations(EQUATION_MAX_EDIT_OPERATIONS + 1) }), &snapshot).is_none());
-    let delete = |count: usize| json::to_string(&json::array([json::object([("operation".to_string(), Value::from("delete")), ("nodeIds".to_string(), json::array((0..count).map(|index| Value::from(format!("n{index}"))))), ("synapseIds".to_string(), json::array([]))])]));
+    let delete = |count: usize| semio_framework_pack_json::to_string(&semio_framework_pack_json::array([semio_framework_pack_json::object([("operation".to_string(), Value::from("delete")), ("nodeIds".to_string(), semio_framework_pack_json::array((0..count).map(|index| Value::from(format!("n{index}"))))), ("synapseIds".to_string(), semio_framework_pack_json::array([]))])]));
     assert!(equation_command_extent(&EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: delete(EQUATION_MAX_DELETE_IDS) }), &snapshot).is_some());
     assert!(equation_command_extent(&EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: delete(EQUATION_MAX_DELETE_IDS + 1) }), &snapshot).is_none());
     let exact_json = format!("[{}]", " ".repeat(EQUATION_MAX_EDIT_JSON_BYTES - 2));
@@ -185,10 +187,10 @@ async fn retained_interruption_replay_aba_cancel_and_repeated_close_are_exact() 
     let graph = graph_with_shape(8, 12);
     let snapshot = crate::equation_snapshot_with_state(&graph, &EquationGeometry::default());
     let command = EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit {
-        operations_json: json::to_string(&json::array([
-            json::object([("operation".to_string(), Value::from("move")), ("gestureId".to_string(), Value::from("node-drag:7")), ("nodeIds".to_string(), json::array([Value::from("n7")])), ("dx".to_string(), Value::from(41.0)), ("dy".to_string(), Value::from(42.0))]),
-            json::object([("operation".to_string(), Value::from("delete")), ("nodeIds".to_string(), json::array([Value::from("n1"), Value::from("n3")])), ("synapseIds".to_string(), json::array([]))]),
-            json::object([("operation".to_string(), Value::from("connect")), ("sourceNodeId".to_string(), Value::from("n2")), ("sourcePortId".to_string(), Value::from("")), ("targetNodeId".to_string(), Value::from("n5")), ("targetPortId".to_string(), Value::from(""))]),
+        operations_json: semio_framework_pack_json::to_string(&semio_framework_pack_json::array([
+            semio_framework_pack_json::object([("operation".to_string(), Value::from("move")), ("gestureId".to_string(), Value::from("node-drag:7")), ("nodeIds".to_string(), semio_framework_pack_json::array([Value::from("n7")])), ("dx".to_string(), Value::from(41.0)), ("dy".to_string(), Value::from(42.0))]),
+            semio_framework_pack_json::object([("operation".to_string(), Value::from("delete")), ("nodeIds".to_string(), semio_framework_pack_json::array([Value::from("n1"), Value::from("n3")])), ("synapseIds".to_string(), semio_framework_pack_json::array([]))]),
+            semio_framework_pack_json::object([("operation".to_string(), Value::from("connect")), ("sourceNodeId".to_string(), Value::from("n2")), ("sourcePortId".to_string(), Value::from("")), ("targetNodeId".to_string(), Value::from("n5")), ("targetPortId".to_string(), Value::from(""))]),
         ])),
     });
     let operation = retained_operation(13);
@@ -202,7 +204,7 @@ async fn retained_interruption_replay_aba_cancel_and_repeated_close_are_exact() 
     for _ in 0..9 {
         assert!(matches!(
             uninterrupted
-                .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation })
+                .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut 0))
                 .expect("checkpoint prefix"),
             ArtifactCommandWorkStep::Progress { .. }
         ));
@@ -229,7 +231,7 @@ async fn retained_interruption_replay_aba_cancel_and_repeated_close_are_exact() 
     let mut cancelled_after = EquationRetainedCommandWork::new("nodeGraphEdit", identity, extent);
     assert!(matches!(
         cancelled_after
-            .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation })
+            .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut 0))
             .expect("cancel after admission"),
         ArtifactCommandWorkStep::Progress { .. }
     ));
@@ -258,9 +260,9 @@ async fn retained_maximum_microturns_stay_below_eight_milliseconds() {
     let graph = graph_with_shape(EQUATION_MAX_NODES, EQUATION_MAX_EDGES);
     let snapshot = crate::equation_snapshot_with_state(&graph, &EquationGeometry::default());
     let ids = (0..EQUATION_MAX_DELETE_IDS).map(|index| format!("n{index}")).collect::<Vec<_>>();
-    let mut operations = vec![json::object([("operation".to_string(), Value::from("delete")), ("nodeIds".to_string(), json::array(ids.iter().map(|id| Value::from(id.as_str())))), ("synapseIds".to_string(), json::array([]))])];
-    operations.resize(EQUATION_MAX_EDIT_OPERATIONS, json::object([("operation".to_string(), Value::from("disconnect")), ("synapseId".to_string(), Value::from("e1"))]));
-    let command = EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: json::to_string(&json::array(operations)) });
+    let mut operations = vec![semio_framework_pack_json::object([("operation".to_string(), Value::from("delete")), ("nodeIds".to_string(), semio_framework_pack_json::array(ids.iter().map(|id| Value::from(id.as_str())))), ("synapseIds".to_string(), semio_framework_pack_json::array([]))])];
+    operations.resize(EQUATION_MAX_EDIT_OPERATIONS, semio_framework_pack_json::object([("operation".to_string(), Value::from("disconnect")), ("synapseId".to_string(), Value::from("e1"))]));
+    let command = EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: semio_framework_pack_json::to_string(&semio_framework_pack_json::array(operations)) });
     let operation = retained_operation(23);
     let extent = equation_command_extent(&command, &snapshot).expect("maximum retained extent");
     let mut work = EquationRetainedCommandWork::new("nodeGraphEdit", equation_operation_identity("nodeGraphEdit", &operation), extent);
@@ -271,7 +273,7 @@ async fn retained_maximum_microturns_stay_below_eight_milliseconds() {
     loop {
         let started = std::time::Instant::now();
         let step = work
-            .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation })
+            .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut 0))
             .expect("maximum retained turn");
         admit(started.elapsed(), "micro");
         if matches!(step, ArtifactCommandWorkStep::Complete(_)) {
@@ -296,7 +298,7 @@ const NODE_GRAPH_EDIT_ROWS: &str = include_str!("../../../../../../../../../../.
 /// `setSlider`/`insertPort` rows it has no widget for are refused by name.
 #[test]
 fn the_renderer_row_fixture_decodes_exactly() {
-    let fixture: Value = json::parse(NODE_GRAPH_EDIT_ROWS).expect("the row fixture parses");
+    let fixture: Value = semio_framework_pack_json::parse(NODE_GRAPH_EDIT_ROWS, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the row fixture parses");
     for case in fixture["accepted"].as_array().expect("accepted rows") {
         let carried = !matches!(case["row"]["operation"].as_str(), Some("setSlider" | "insertPort"));
         assert_eq!(EquationEditOperation::from_value(&case["row"]).is_ok(), carried, "accepted row {:?}", case["id"].as_str());
@@ -507,30 +509,25 @@ async fn geometry_layers_include_hull_and_centroid() {
 //#endregion 🔖️Geometry
 
 //#region 🔖️LoadedDocumentDispatch
-/// 🧩️ A document that reaches the app through the VALUE projection carries no local
-/// `EquationWorkingScene` owner — `to_value` writes the three child handles only (the scene owner law's
-/// `wireOmission` case). Every document verb used to be measured against that owner and refused with
-/// `equation-command-capacity` (measured live 2026-09-20, slice PB2). The extent reads the fail-soft
-/// projection, so an owner-less snapshot stays editable. The text and pack codecs carry the scene since
-/// ticket 26/09/19 and are no longer an owner-less transport.
+/// 🧩️ A document that reaches the app through the VALUE projection (a decoded archive, `Effect::LoadDocument`) carries its
+/// parent-owned graph and point cloud (model (a), design §20.15), so it decodes to exactly the authored document and admits
+/// its document verbs — the extent and the phase machine read `snapshot.graph`/`snapshot.geometry`, never a session owner.
 #[semio_framework_async_macros::async_test]
-async fn a_decoded_document_without_a_scene_owner_still_admits_its_document_verbs() {
+async fn a_value_decoded_document_carries_its_graph_and_admits_its_document_verbs() {
     let authored = crate::equation_snapshot_with_state(&graph_with_shape(4, 3), &EquationGeometry::default());
-    assert!(crate::equation_scene_owner(&authored).is_some(), "an authored snapshot mints the live scene owner");
-    let decoded = <crate::EquationSnapshot as semio_framework_os_kernel::FromValue>::from_value(semio_framework_os_kernel::ToValue::to_value(&authored)).expect("value projection decodes");
-    assert!(crate::equation_scene_owner(&decoded).is_none(), "a value-decoded snapshot carries no local owner");
+    let decoded = <crate::EquationSnapshot as semio_framework_value::FromValue>::from_value(semio_framework_value::ToValue::to_value(&authored)).expect("value projection decodes");
+    assert_eq!(decoded, authored, "the value projection carries the whole parent-owned state and its derived handles");
     let command = EquationCommand::SetDirected(set_directed::SetDirected { directed: false });
-    assert!(equation_command_extent(&command, &decoded).is_some(), "a decoded document must still admit its document verbs");
-    assert!(EquationRetainedCommandWork::source_scene(&decoded).is_ok(), "the phase machine reads the same fail-soft projection the extent measures");
+    assert!(equation_command_extent(&command, &decoded).is_some(), "a decoded document admits its document verbs");
 }
 
 /// 🧬️ The Actions pane stages `nodeGraphEdit.operations` as a `json_text` argument, which arrives as
 /// a `DslValue::String` already holding the JSON document. Re-printing it wrapped the array in
 /// quotes and `equation_edit_preflight` refused it as a non-array, so the pane could dispatch no
-/// document verb at all. A structured value still prints through `json::to_json_string`.
+/// document verb at all. A structured value still prints through `semio_framework_pack_json::to_json_string`.
 #[semio_framework_async_macros::async_test]
 async fn a_staged_json_text_operations_argument_survives_command_from_action() {
-    let staged = dsl::DslValue::Object(vec![("operations".to_string(), dsl::DslValue::String(EQUATION_DEFAULT_EDIT_OPERATIONS.to_string()))]);
+    let staged = semio_framework_value::DslValue::Object(vec![("operations".to_string(), semio_framework_value::DslValue::String(EQUATION_DEFAULT_EDIT_OPERATIONS.to_string()))]);
     let command = <EquationPlayApp as ArtifactEditor>::command_from_action("nodeGraphEdit", Some(&staged)).expect("staged operations");
     let EquationCommand::NodeGraphEdit(payload) = &command else { panic!("nodeGraphEdit routes to its own command") };
     assert_eq!(payload.operations_json, EQUATION_DEFAULT_EDIT_OPERATIONS);
@@ -539,15 +536,15 @@ async fn a_staged_json_text_operations_argument_survives_command_from_action() {
     assert!(equation_command_extent(&command, &snapshot).is_some());
 }
 
-/// 🧺️ `ArtifactStoreOneItemFootprint::work_items` counts staged edit ROWS, so a point-invertible
-/// item costs 2 — the hand-written `1` fail-closed every durable equation gesture with
-/// `batched item candidate failed its exact fixed fold contract`.
+/// 🧺️ The Store preparation derives its fold footprint from the leaf's schema-declared inverse rows: a point-invertible
+/// `disconnect-nodes` folds its forward row plus one inverse row, `delete-node` the re-created node plus every edge it
+/// reconnects (`x-semio-inverse-rows` bounded by the editor's edge cap).
 #[semio_framework_async_macros::async_test]
-async fn the_store_preparation_declares_a_point_invertible_footprint() {
-    assert_eq!(
-        store::ArtifactStoreOneItemFootprint::for_one_invertible_item(store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES).work_items,
-        store::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS
-    );
-    assert_eq!(store::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS, 2);
+async fn the_store_preparation_derives_its_footprint_from_the_leaf() {
+    use crate::standards::v1::subsets::graph::schema::mutations::{delete_node::DeleteNode, disconnect_nodes::DisconnectNodes};
+    let factory = EquationStorePreparationFactory::<EquationSnapshot, EquationMutation>::default();
+    let rows = |mutation: EquationMutation| store::ArtifactStoreOneItemPreparationFactory::preflight(&factory, &mutation, None, store::HistoryLane::Document).expect("admitted").work_items;
+    assert_eq!(rows(EquationMutation::DisconnectNodes(DisconnectNodes { id: "edge".into() })), store::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS);
+    assert_eq!(rows(EquationMutation::DeleteNode(DeleteNode { id: "node".into() })), 1 + 1 + EQUATION_MAX_EDGES);
 }
 //#endregion 🔖️LoadedDocumentDispatch

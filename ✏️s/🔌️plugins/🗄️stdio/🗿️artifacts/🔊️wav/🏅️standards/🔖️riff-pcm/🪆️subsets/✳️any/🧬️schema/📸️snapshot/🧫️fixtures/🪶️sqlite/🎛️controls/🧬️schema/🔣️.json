@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["exactFixtureRows", "schemaLimitOffsets", "rowLimitOffsets", "rowRefusalKind", "largeCharacters", "maximumOwnedBytes", "checkpointBytes"],
+  "properties": {
+    "exactFixtureRows": {"const": 22},
+    "schemaLimitOffsets": {"const": [-1, 0]},
+    "rowLimitOffsets": {"const": [-1, 0]},
+    "rowRefusalKind": {"const": "workLimit"},
+    "largeCharacters": {"type": "integer", "minimum": 1},
+    "maximumOwnedBytes": {"type": "integer", "minimum": 1},
+    "checkpointBytes": {"type": "integer", "minimum": 1}
+  }
+}

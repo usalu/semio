@@ -33,6 +33,8 @@ pub mod set_file_name;
 pub mod set_file_schema;
 /// 📐️ Typed content mutation for `stdio.step`.
 //#region 🔖️Leaves
+#[path = "🩹️patch-snapshot/🦀️.rs"]
+pub mod patch_snapshot;
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 //#endregion 🔖️Leaves
@@ -44,6 +46,7 @@ pub mod set_snapshot;
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum StepMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
+    PatchSnapshot(patch_snapshot::PatchSnapshot),
     SetFileDescription(set_file_description::SetFileDescription),
     SetFileName(set_file_name::SetFileName),
     SetFileSchema(set_file_schema::SetFileSchema),
@@ -59,7 +62,7 @@ pub enum StepMutation {
 /// mutation catalog `../🔣️oracle.json`'s `kinds` array is required to match verbatim
 /// (`kinds_const_matches_enum_variants_in_declaration_order` below is what keeps that honest; the
 /// framework never parses Rust to check it itself).
-pub const KINDS: &[&str] = &["set-snapshot", "set-file-description", "set-file-name", "set-file-schema", "insert-entity", "remove-entity", "set-entity-name", "set-entity-arg", "insert-entity-arg", "remove-entity-arg"];
+pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "set-file-description", "set-file-name", "set-file-schema", "insert-entity", "remove-entity", "set-entity-name", "set-entity-arg", "insert-entity-arg", "remove-entity-arg"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -83,6 +86,7 @@ pub fn apply_step_mutation(snapshot: &mut StepSnapshot, mutation: &StepMutation)
 pub(crate) fn agg_diff(this: &StepMutation, base: &StepSnapshot) -> protocol::MutationOutcome<StepDiff> {
     protocol::MutationOutcome::new(match this {
         StepMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff_set_snapshot(base, snapshot),
+        StepMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<StepSnapshot, StepMutation>>::diff(patch, base),
 
         StepMutation::SetFileDescription(set_file_description::SetFileDescription { file_description }) => StepDiff { file_description: (base.header.file_description != *file_description).then(|| file_description.clone()), ..Default::default() },
         StepMutation::SetFileName(set_file_name::SetFileName { file_name }) => StepDiff { file_name: (base.header.file_name != *file_name).then(|| file_name.clone()), ..Default::default() },
@@ -132,9 +136,11 @@ pub(crate) fn agg_diff(this: &StepMutation, base: &StepSnapshot) -> protocol::Mu
 }
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &StepMutation, base: &StepSnapshot) -> Vec<StepMutation> {
+pub(crate) fn agg_inverse(this: &StepMutation, base: &StepSnapshot) -> Result<Vec<StepMutation>, semio_framework_value::ValueError> {
+    Ok({
     match this {
         StepMutation::SetSnapshot(_) => vec![StepMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
+        StepMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<StepSnapshot, StepMutation>>::inverse(patch, base)?),
 
         StepMutation::SetFileDescription(_) => {
             vec![StepMutation::SetFileDescription(set_file_description::SetFileDescription { file_description: base.header.file_description.clone() })]
@@ -166,6 +172,8 @@ pub(crate) fn agg_inverse(this: &StepMutation, base: &StepSnapshot) -> Vec<StepM
             None => Vec::new(),
         },
     }
+
+    })
 }
 //#endregion 🔖️MutationTrait
 
@@ -184,6 +192,7 @@ pub(crate) fn agg_inverse(this: &StepMutation, base: &StepSnapshot) -> Vec<StepM
 fn print_step_mutation(m: &StepMutation) -> String {
     match m {
         StepMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", enc_step_snapshot(snapshot)),
+        StepMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(patch),
         StepMutation::SetFileDescription(set_file_description::SetFileDescription { file_description }) => format!("set-file-description file-description={}", enc_file_description(file_description)),
         StepMutation::SetFileName(set_file_name::SetFileName { file_name }) => format!("set-file-name file-name={}", enc_file_name(file_name)),
         StepMutation::SetFileSchema(set_file_schema::SetFileSchema { file_schema }) => format!("set-file-schema file-schema={}", enc_file_schema(file_schema)),
@@ -203,6 +212,7 @@ fn parse_step_mutation(line: &str) -> Result<StepMutation, String> {
     let usize_arg = |k: &str| -> Result<usize, String> { parse_usize(arg(k)?) };
     let u64_arg = |k: &str| -> Result<u64, String> { parse_u64(arg(k)?) };
     match keyword {
+        "patch-snapshot" => semio_s_artifact_stdio_contract::editing::snapshot_patch_from_text(line).map(|patch| StepMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch })),
         "set-snapshot" => Ok(StepMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_step_snapshot(arg("snapshot")?)? })),
         "set-file-description" => Ok(StepMutation::SetFileDescription(set_file_description::SetFileDescription { file_description: dec_file_description(arg("file-description")?)? })),
         "set-file-name" => Ok(StepMutation::SetFileName(set_file_name::SetFileName { file_name: dec_file_name(arg("file-name")?)? })),
@@ -221,8 +231,8 @@ impl OpText for StepMutation {
     fn print_op(&self) -> String {
         print_step_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_step_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_step_mutation(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 }
 
@@ -230,6 +240,7 @@ impl OpText for StepMutation {
 /// 🏷️ Op tags of `StepMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
 const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
 const TAG_SET_FILE_DESCRIPTION: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-file-description");
 const TAG_SET_FILE_NAME: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-file-name");
 const TAG_SET_FILE_SCHEMA: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-file-schema");
@@ -254,6 +265,7 @@ impl OpBinary for StepMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             StepMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
+            StepMutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
             StepMutation::SetFileDescription(_) => TAG_SET_FILE_DESCRIPTION,
             StepMutation::SetFileName(_) => TAG_SET_FILE_NAME,
             StepMutation::SetFileSchema(_) => TAG_SET_FILE_SCHEMA,
@@ -267,6 +279,7 @@ impl OpBinary for StepMutation {
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
             StepMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => enc_step_snapshot_bin(snapshot, &mut out),
+            StepMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => out.extend(protocol::OpBinary::encode_op(patch)?),
             StepMutation::SetFileDescription(set_file_description::SetFileDescription { file_description }) => enc_file_description_bin(file_description, &mut out),
             StepMutation::SetFileName(set_file_name::SetFileName { file_name }) => enc_file_name_bin(file_name, &mut out),
             StepMutation::SetFileSchema(set_file_schema::SetFileSchema { file_schema }) => enc_file_schema_bin(file_schema, &mut out),
@@ -303,6 +316,7 @@ impl OpBinary for StepMutation {
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
         let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
+            TAG_PATCH_SNAPSHOT => Ok(StepMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: <semio_s_artifact_stdio_contract::editing::SnapshotPatch as protocol::OpBinary>::decode_op(reader.read_bytes(reader.remaining()).map_err(|e| protocol::ProtocolError::Malformed { what: "patch-snapshot payload", offset: reader.position() as u64, detail: e.to_string() })?)? })),
             TAG_SET_SNAPSHOT => {
                 let snapshot = dec_step_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
                 Ok(StepMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
@@ -367,6 +381,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<StepMutation> {
     use crate::schema::snapshot::{StepFileDescription, StepFileName, StepFileSchema, StepValue as SV};
     let demo_entity = |id: u64, name: &str, args: Vec<StepValue>| StepEntity { id, name: name.into(), args, complex: Vec::new() };
     vec![
+        StepMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         StepMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: crate::engine::demo_step_snapshot() }),
         StepMutation::SetFileDescription(set_file_description::SetFileDescription { file_description: StepFileDescription { description: vec!["demo".into()], implementation_level: "2;1".into() } }),
         StepMutation::SetFileName(set_file_name::SetFileName {

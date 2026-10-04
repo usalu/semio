@@ -19,12 +19,12 @@ pub const GEOMETRY_MEMBERS: [&str; 7] = ["id", "lon", "lat", "alt", "points", "r
 pub fn register() {}
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn error(message: impl Into<String>) -> store::TextError {
-    store::TextError::new(format!("gismap→geojson: {}", message.into()), dsl::TextSpan::at(1, 1))
+fn error(message: impl Into<String>) -> semio_framework_diagnostic::TextError {
+    semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("gismap→geojson: {}", message.into()), semio_framework_diagnostic::TextSpan::at(1, 1))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn chain(value: &Value, feature: &str) -> Result<Vec<GeoJsonPosition>, store::TextError> {
+fn chain(value: &Value, feature: &str) -> Result<Vec<GeoJsonPosition>, semio_framework_diagnostic::TextError> {
     let Some(items) = value.as_array() else { return Err(error(format!("`{feature}` carries a non-array chain"))) };
     items
         .iter()
@@ -33,7 +33,7 @@ fn chain(value: &Value, feature: &str) -> Result<Vec<GeoJsonPosition>, store::Te
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn feature(map_feature: &MapFeature, geometry: impl Fn(&serde_json::Map<String, Value>) -> Result<Option<GeoJsonGeometry>, store::TextError>) -> Result<GeoJsonFeature, store::TextError> {
+fn feature(map_feature: &MapFeature, geometry: impl Fn(&serde_json::Map<String, Value>) -> Result<Option<GeoJsonGeometry>, semio_framework_diagnostic::TextError>) -> Result<GeoJsonFeature, semio_framework_diagnostic::TextError> {
     let payload = match Value::from(&map_feature.data) {
         Value::Object(members) => members,
         _ => return Err(error(format!("feature `{}` has a non-object payload", map_feature.id))),
@@ -44,7 +44,7 @@ fn feature(map_feature: &MapFeature, geometry: impl Fn(&serde_json::Map<String, 
 
 /// 🗺️ The map's features in the GeoJSON model, positions → routes → regions.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn geojson_features(snapshot: &GisMapSnapshot) -> Result<Vec<GeoJsonFeature>, store::TextError> {
+pub fn geojson_features(snapshot: &GisMapSnapshot) -> Result<Vec<GeoJsonFeature>, semio_framework_diagnostic::TextError> {
     let mut features = Vec::with_capacity(snapshot.positions.len() + snapshot.routes.len() + snapshot.regions.len());
     for position in &snapshot.positions {
         features.push(feature(position, |payload| {
@@ -70,7 +70,7 @@ pub fn geojson_features(snapshot: &GisMapSnapshot) -> Result<Vec<GeoJsonFeature>
     Ok(features)
 }
 
-pub fn serialize_bytes(snapshot: &GisMapSnapshot) -> Result<Vec<u8>, store::TextError> {
+pub fn serialize_bytes(snapshot: &GisMapSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
     let document = write_geojson(&geojson_features(snapshot)?).map_err(|failure| error(failure.to_string()))?;
     serde_json::to_vec_pretty(&document).map_err(|failure| error(failure.to_string()))
 }

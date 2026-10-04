@@ -601,10 +601,10 @@ export function parseInferenceCatalogSelectionV1(value: unknown): InferenceCatal
   return { scope: { spaceId: scope.spaceId as string, documentId: scope.documentId as string }, descriptor: parseInferenceCatalogDescriptorV1(row.descriptor), package: parseInferenceCatalogPackageV1(row.package), services: row.services.map(parseInferenceCatalogServiceV1) };
 }
 
-export type GisMapFrozenExecutionProtocolV1 = { readonly appChannelVersion: 20 };
+export type GisMapFrozenExecutionProtocolV1 = { readonly appChannelVersion: 21 };
 export function parseGisMapFrozenExecutionProtocolV1(value: unknown): GisMapFrozenExecutionProtocolV1 {
   const row = rows(value, ["appChannelVersion"], "hub.inference/GisMapFrozenExecutionProtocolV1");
-  return row.appChannelVersion === 20 ? { appChannelVersion: 20 } : fail("hub.inference/GisMapFrozenExecutionProtocolV1");
+  return row.appChannelVersion === 21 ? { appChannelVersion: 21 } : fail("hub.inference/GisMapFrozenExecutionProtocolV1");
 }
 
 export type GisMapFrozenPackageV1 = {

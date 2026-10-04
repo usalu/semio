@@ -5,15 +5,15 @@ use crate::editor::shooting::unit_tests::context::{scene_window_measures, shooti
 async fn renders_world_model_scene() {
     let mut app = shooting_app().await;
     let scene = crate::editor::shooting::unit_tests::context::world_scene(&mut app).await;
-    let environment: Value = parse(scene.environment_json.as_deref().unwrap()).unwrap();
+    let environment: Value = parse(scene.environment_json.as_deref().unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(environment["sun"]["azimuth"], json!(45.0));
     assert_eq!(environment["material"]["roughness"], json!(1.0));
-    let frame: Value = parse(scene.frame_json.as_deref().unwrap()).unwrap();
+    let frame: Value = parse(scene.frame_json.as_deref().unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(frame["width"], json!(256));
     assert_eq!(frame["shape"], json!("rectangle"));
-    let fit: Value = parse(scene.fit_json.as_deref().unwrap()).unwrap();
+    let fit: Value = parse(scene.fit_json.as_deref().unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(fit["enabled"], json!(true));
-    let camera: Value = parse(&scene.camera_json).unwrap();
+    let camera: Value = parse(&scene.camera_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(camera["zoom"], json!(1.0));
     assert_eq!(camera["projection"], json!("perspective"));
 }

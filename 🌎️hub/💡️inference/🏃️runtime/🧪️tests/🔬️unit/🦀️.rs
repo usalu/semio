@@ -56,10 +56,10 @@ fn canonical_identity_and_base() -> (Identity, InferenceMapBaseV1) {
 fn canonical_approval(identity: &Identity, job_id: &str, base: &InferenceMapBaseV1, now_ms: u64) -> (InferencePrivateBytesV1, InferencePrivateBytesV1) {
     let (snapshot, inference) = deterministic_map_inference(base, job_id).expect("real GIS Map inference");
     let work = inference.create_region_group_work(&snapshot, job_id).expect("server-derived fixed-three CreateRegion work");
-    let proposal_bytes = directory::os_pack::json::to_json_string(&work.parent).into_bytes();
+    let proposal_bytes = semio_framework_pack_json::to_json_string(&work.parent).into_bytes();
     let proposal = InferencePrivateBytesV1::new(proposal_bytes, PROPOSAL_MAX_BYTES).expect("bounded canonical proposal");
     let proposal_hash = sha256(proposal.as_slice());
-    let inverse = directory::os_pack::json::to_json_string(&work.parent_inverse).into_bytes();
+    let inverse = semio_framework_pack_json::to_json_string(&work.parent_inverse).into_bytes();
     let scope = DocumentScope::new(identity.space_id.clone(), identity.document_id.clone());
     let mutation_id = approval_mutation_id(job_id, &proposal_hash);
     let document_id = document_key(&scope);
@@ -705,7 +705,7 @@ async fn gis_map_approval_committed_event_reaches_actor_frontier_and_public_chec
             Some(RetainedGisMapDocumentStateV1::Published { owners, .. }) => owners,
             _ => panic!("the approved publication retains its exact three Store owners"),
         };
-        semio_framework::io::resolve_ready(owners.parent.as_ref().expect("retained parent Store").snapshot_pack()).expect("approved Map snapshot").pack
+        ::semio_framework_async::poll::resolve_ready(owners.parent.as_ref().expect("retained parent Store").snapshot_pack()).expect("approved Map snapshot").pack
     };
     let after_base = InferenceMapBaseV1 {
         frontier: ArtifactFrontier {
@@ -722,15 +722,15 @@ async fn gis_map_approval_committed_event_reaches_actor_frontier_and_public_chec
     assert_eq!(target.after_frontier, terminal.frontier);
     assert_eq!(target.after_base_digest, after_base.digest());
     let original = CanonicalInferenceCommandV1::decode(target.original_command.as_slice()).expect("retained original command");
-    let inverses = directory::os_pack::json::from_json_str::<Vec<semio_s_artifact_gis_gismap::mutations::GisMapMutation>>(std::str::from_utf8(original.inverse_payload()).expect("canonical inverse text")).expect("canonical inverse mutations");
+    let inverses = semio_framework_pack_json::from_json_str::<Vec<semio_s_artifact_gis_gismap::mutations::GisMapMutation>>(std::str::from_utf8(original.inverse_payload()).expect("canonical inverse text"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("canonical inverse mutations");
     assert_eq!(inverses.len(), 1, "the retained approval owns one exact parent inverse");
     let current = <semio_s_artifact_gis_gismap::GisMapSnapshot as directory::ArtifactPack>::decode_pack(after_base.pack.as_slice()).expect("approved Map snapshot");
     let mut before = current.clone();
     semio_s_artifact_gis_gismap::mutations::apply_gis_map_mutation(&mut before, &inverses[0]).expect("server inverse applies to the exact current Map");
     use directory::Inference as _;
     let work = semio_s_artifact_gis_gismap::standards::v1::subsets::any::schema::inferences::GisMapInference::infer(&before).create_region_group_work(&before, &target.original_job_id).expect("server reconstructs the original fixed-three work");
-    let undo_diff = directory::os_pack::json::to_json_string(&inverses[0]).into_bytes();
-    let undo_inverse = directory::os_pack::json::to_json_string(&vec![work.parent]).into_bytes();
+    let undo_diff = semio_framework_pack_json::to_json_string(&inverses[0]).into_bytes();
+    let undo_inverse = semio_framework_pack_json::to_json_string(&vec![work.parent]).into_bytes();
     let undo_idempotency_key = "55".repeat(16);
     let undo_operation_id = sha256(format!("semio.hub.gis-map-approval-undo-operation/v1\0{}\0{}", target.target_id, undo_idempotency_key).as_bytes())[..32].to_owned();
     let undo_proposal_hash = sha256(&undo_diff);
@@ -798,7 +798,7 @@ async fn gis_map_approval_committed_event_reaches_actor_frontier_and_public_chec
             Some(RetainedGisMapDocumentStateV1::Published { owners, .. }) => owners,
             _ => panic!("the undo publication retains its exact three Store owners"),
         };
-        semio_framework::io::resolve_ready(owners.parent.as_ref().expect("retained reverted parent Store").snapshot_pack()).expect("reverted Map snapshot")
+        ::semio_framework_async::poll::resolve_ready(owners.parent.as_ref().expect("retained reverted parent Store").snapshot_pack()).expect("reverted Map snapshot")
     };
     let reverted = published_pair_snapshot(&reverted_pair.pack, &reverted_pair.spr).await.expect("reverted Map pair folds to its exact head state");
     assert!(undo_contract["restoresExactInitialSnapshot"].as_bool().expect("snapshot contract"));

@@ -17,20 +17,20 @@ const DIFF_ABSENT: &str = include_str!("../../../../../🧫️fixtures/🧬️mu
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔍️scale-selection/🚫️rejects-ghosts/🎯️outcome/🔣️.json");
 
 fn before() -> Puzzle2dSnapshot {
-    dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> Puzzle2dSnapshot {
-    dsl::json::from_json_str(AFTER).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> Puzzle2dMutation {
-    dsl::json::from_json_str(MUTATION).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 fn outcome() -> serde_json::Value {
     serde_json::from_str(OUTCOME).expect("outcome decodes")
 }
 
 /// 🗣️ `(level, code, target)` of every message `scale-selection` raises on the committed base.
-fn produced_messages() -> Vec<(protocol::Severity, String, Vec<String>)> {
+fn produced_messages() -> Vec<(semio_framework_diagnostic::Severity, String, Vec<String>)> {
     let produced = <Puzzle2dMutation as protocol::Mutation<Puzzle2dSnapshot>>::diff(&mutation(), &before());
     produced.messages().iter().map(|message| (message.level, message.code.0.clone(), message.target.clone())).collect()
 }
@@ -39,12 +39,12 @@ fn produced_messages() -> Vec<(protocol::Severity, String, Vec<String>)> {
 #[test]
 fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: Puzzle2dSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: Puzzle2dSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "scale-selection/rejects-ghosts: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&mutation())).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "scale-selection/rejects-ghosts: committed mutation JSON is not canonical");
 }
@@ -69,11 +69,11 @@ fn the_refusal_is_the_declared_one() {
     let outcome = outcome();
     assert_eq!(outcome["status"].as_str(), Some("rejected"), "scale-selection/rejects-ghosts declares a rejected outcome");
     let path: Vec<String> = outcome["path"].as_array().expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();
-    assert_eq!(produced_messages(), vec![(protocol::Severity::Error, outcome["code"].as_str().expect("a code").to_string(), path)], "scale-selection/rejects-ghosts: the refusal differs from the declared one");
+    assert_eq!(produced_messages(), vec![(semio_framework_diagnostic::Severity::Error, outcome["code"].as_str().expect("a code").to_string(), path)], "scale-selection/rejects-ghosts: the refusal differs from the declared one");
 }
 
 /// ↩️ Nothing moved, so nothing is undone.
 #[test]
 fn inverse_of_a_refusal_is_empty() {
-    assert!(inverse_puzzle2d_mutation(&before(), &mutation()).is_empty(), "scale-selection/rejects-ghosts: a refusal must yield no inverse step");
+    assert!(inverse_puzzle2d_mutation(&before(), &mutation()).expect("valid retained mutation inverse fixture").is_empty(), "scale-selection/rejects-ghosts: a refusal must yield no inverse step");
 }

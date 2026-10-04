@@ -6,7 +6,7 @@ use crate::editor::flow::modes::edit::windows::main::FLOW_PLAY_WINDOW_MAIN;
 use crate::editor::flow::commands::reorganize::reorganize_edit;
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
-use crate::{op::FlowMutation, FlowSnapshot};
+use crate::{FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -26,7 +26,7 @@ pub const FLOW_AUTOMATIONS: &[(&str, &str, &str, &str, &str)] =
 
 /// 🧩️ Dynamic extension-provided action — `action_id` is resolved at runtime against
 /// [`super::FLOW_AUTOMATIONS`]; declared `in_palette: false` in the manifest.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct RunExtensionAction {
     pub action_id: String,
 }

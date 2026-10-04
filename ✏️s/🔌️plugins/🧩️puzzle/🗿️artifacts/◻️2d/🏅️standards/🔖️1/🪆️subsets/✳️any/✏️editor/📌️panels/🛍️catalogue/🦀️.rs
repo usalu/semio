@@ -90,9 +90,9 @@ fn kind_catalog_item(section_id: &str, slice: &str, entry: &Value) -> semio_fram
     let action = actions.action("addNode", Some(add_node_args(kind_id)?))?;
     if slice == "nodes" {
         let drag_data = puzzle2d_catalog_item_drag_data(slice, kind_id, entry);
-        // 🌉️ `tree_item_with_action_draggable` (framework-owned) is typed against `dsl::os_pack::json::Value`;
+        // 🌉️ `tree_item_with_action_draggable` (framework-owned) is typed against `semio_framework_pack_json::Value`;
         // bridges this panel's own `serde_json::Value` drag payload through `DslValue` at this one call.
-        let drag_data = dsl::os_pack::json::from_dsl_value(&dsl::DslValue::from(&drag_data));
+        let drag_data = semio_framework_pack_json::from_dsl_value(&semio_framework_value::DslValue::from(&drag_data));
         tree_item_with_action_draggable(id, ui_label(catalog_kind_label(entry))?, Some(kind_id.into()), action, &drag_data)
     } else {
         tree_item_with_action(id, ui_label(catalog_kind_label(entry))?, Some(kind_id.into()), action)

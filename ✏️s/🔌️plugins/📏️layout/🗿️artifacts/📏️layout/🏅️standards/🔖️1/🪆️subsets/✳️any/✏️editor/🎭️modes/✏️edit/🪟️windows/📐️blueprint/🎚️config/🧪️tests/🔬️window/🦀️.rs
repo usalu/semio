@@ -79,7 +79,7 @@ fn layout_window_ownership_runtime_isolates_restores_and_resets_exact_windows() 
                 let document_after = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
                 if document_before.pack != document_after.pack || document_before.spr != document_after.spr { return Err("Layout window publication changed document bytes".into()); }
                 let packs = app.window_config_packs().await.map_err(|error| format!("{error:?}"))?;
-                app.load_document_pack(&document_before).await.map_err(|error| format!("{error:?}"))?;
+                semio_framework_plugin::artifact_app_laws::load_document(&mut app, &document_before).await.map_err(|error| format!("{error:?}"))?;
                 let cleared = app.window_transient_snapshot(&left).map_err(|error| format!("{error:?}"))?.ok_or("Layout transient owner missing after reload")?;
                 if cleared.get::<LayoutBlueprintWindowTransientOwner>() != Some(&LayoutWindowTransient::default()) { return Err("Layout transient survived same-byte reload".into()); }
                 for context in [&left, &right] {
@@ -111,20 +111,20 @@ fn layout_window_ownership_runtime_isolates_restores_and_resets_exact_windows() 
 #[test]
 fn layout_window_ownership_mutations_match_neutral_fixture_and_codecs() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
-    let base_config: LayoutWindowConfig = dsl::json::from_json_str(&fixture["baseConfig"].to_string()).unwrap();
-    let base_transient: LayoutWindowTransient = dsl::json::from_json_str(&fixture["baseTransient"].to_string()).unwrap();
+    let base_config: LayoutWindowConfig = semio_framework_pack_json::from_json_str(&fixture["baseConfig"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let base_transient: LayoutWindowTransient = semio_framework_pack_json::from_json_str(&fixture["baseTransient"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for row in fixture["configMutations"].as_array().unwrap() {
-        let mutation: LayoutWindowConfigMutation = dsl::json::from_json_str(&row["mutation"].to_string()).unwrap();
+        let mutation: LayoutWindowConfigMutation = semio_framework_pack_json::from_json_str(&row["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let after = mutation.diff(&base_config).diff().apply(&base_config).unwrap();
-        let restored = mutation.inverse(&base_config).into_iter().fold(after, |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
+        let restored = mutation.inverse(&base_config).expect("valid retained mutation inverse fixture").into_iter().fold(after, |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
         assert_eq!(restored, base_config);
         assert_eq!(LayoutWindowConfigMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
         assert_eq!(LayoutWindowConfigMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
     }
     for row in fixture["transientMutations"].as_array().unwrap() {
-        let mutation: LayoutWindowTransientMutation = dsl::json::from_json_str(&row["mutation"].to_string()).unwrap();
+        let mutation: LayoutWindowTransientMutation = semio_framework_pack_json::from_json_str(&row["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let after = mutation.diff(&base_transient).diff().apply(&base_transient).unwrap();
-        let restored = mutation.inverse(&base_transient).into_iter().fold(after, |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
+        let restored = mutation.inverse(&base_transient).expect("valid retained mutation inverse fixture").into_iter().fold(after, |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
         assert_eq!(restored, base_transient);
         assert_eq!(LayoutWindowTransientMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
         assert_eq!(LayoutWindowTransientMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);

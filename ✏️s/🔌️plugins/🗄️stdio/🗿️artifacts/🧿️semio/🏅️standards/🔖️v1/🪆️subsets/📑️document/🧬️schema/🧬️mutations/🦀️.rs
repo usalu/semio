@@ -163,6 +163,8 @@ pub mod set_paragraph_style;
 pub mod set_run_style;
 #[path = "🧵set-run-text/🦀️.rs"]
 pub mod set_run_text;
+#[path = "🩹️patch-snapshot/🦀️.rs"]
+pub mod patch_snapshot;
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "🧬️set-style-based-on/🦀️.rs"]
@@ -178,6 +180,7 @@ pub mod set_style_name;
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioDocumentMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
+    PatchSnapshot(patch_snapshot::PatchSnapshot),
     /// ➕️ Inserts `block` at `path` (`path.index` = insertion index, FINAL state).
     InsertBlock(insert_block::InsertBlock),
     /// ➖️ Removes the block at `path` (`path.index` = BASE-state index).
@@ -218,8 +221,7 @@ pub enum SemioDocumentMutation {
 /// the `semio-v1-document` catalog in `../../🔣️oracle.json`. The framework never parses
 /// Rust, so `kinds_match_the_enum_and_the_catalog` below is what keeps all three honest.
 pub const KINDS: &[&str] = &[
-    "set-snapshot",
-    "insert-block",
+    "set-snapshot", "insert-block",
     "remove-block",
     "set-block-content",
     "set-paragraph-style",
@@ -234,7 +236,7 @@ pub const KINDS: &[&str] = &[
     "set-style-based-on",
     "insert-image",
     "remove-image",
-    "set-image-bytes",
+    "set-image-bytes", "patch-snapshot",
 ];
 //#endregion 🔖️Mutations
 
@@ -255,8 +257,11 @@ pub fn apply_semio_document_mutation(snapshot: &mut SemioDocumentSnapshot, mutat
 /// [`apply_semio_document_mutation`] alone cannot. Same shape as `🧰️kit`'s
 /// `inverse_semio_kit_mutation`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse_semio_document_mutation(mutation: &SemioDocumentMutation, base: &SemioDocumentSnapshot) -> Vec<SemioDocumentMutation> {
-    Mutation::inverse(mutation, base)
+pub fn inverse_semio_document_mutation(mutation: &SemioDocumentMutation, base: &SemioDocumentSnapshot) -> Result<Vec<SemioDocumentMutation>, semio_framework_value::ValueError> {
+    Ok({
+    Mutation::inverse(mutation, base)?
+
+    })
 }
 
 /// 📥️ Decodes this facet's own internally-tagged (`{"mutation": "<camelCaseVariant>", ...}`) JSON
@@ -266,7 +271,7 @@ pub fn inverse_semio_document_mutation(mutation: &SemioDocumentMutation, base: &
 /// the committed vector instead of re-declaring it as a Rust literal beside it.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_document_mutation_json(text: &str) -> Result<SemioDocumentMutation, String> {
-    pack::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Apply
 
@@ -307,6 +312,7 @@ fn wrap_runs_diff(block: &DocBlock, runs: RunsDiff) -> Option<DocBlockDiff> {
 pub(crate) fn agg_diff(this: &SemioDocumentMutation, base: &SemioDocumentSnapshot) -> protocol::MutationOutcome<SemioDocumentDiff> {
     protocol::MutationOutcome::new(match this {
         SemioDocumentMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff_set_snapshot(base, snapshot),
+        SemioDocumentMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<SemioDocumentSnapshot, SemioDocumentMutation>>::diff(patch, base),
         SemioDocumentMutation::InsertBlock(insert_block::InsertBlock { path, block }) => wrap_body_diff(path, DocBlockLeaf::Inserted(block.clone())),
         SemioDocumentMutation::RemoveBlock(remove_block::RemoveBlock { path }) => wrap_body_diff(path, DocBlockLeaf::Removed),
         SemioDocumentMutation::SetBlockContent(set_block_content::SetBlockContent { path, block }) => match block_at(base, path) {
@@ -425,9 +431,11 @@ pub(crate) fn agg_diff(this: &SemioDocumentMutation, base: &SemioDocumentSnapsho
 }
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &SemioDocumentMutation, base: &SemioDocumentSnapshot) -> Vec<SemioDocumentMutation> {
+pub(crate) fn agg_inverse(this: &SemioDocumentMutation, base: &SemioDocumentSnapshot) -> Result<Vec<SemioDocumentMutation>, semio_framework_value::ValueError> {
+    Ok({
     match this {
         SemioDocumentMutation::SetSnapshot(_) => vec![SemioDocumentMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
+        SemioDocumentMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<SemioDocumentSnapshot, SemioDocumentMutation>>::inverse(patch, base)?),
         SemioDocumentMutation::InsertBlock(insert_block::InsertBlock { path, .. }) => vec![SemioDocumentMutation::RemoveBlock(remove_block::RemoveBlock { path: path.clone() })],
         SemioDocumentMutation::RemoveBlock(remove_block::RemoveBlock { path }) => match block_at(base, path) {
             Some(block) => vec![SemioDocumentMutation::InsertBlock(insert_block::InsertBlock { path: path.clone(), block: block.clone() })],
@@ -486,6 +494,8 @@ pub(crate) fn agg_inverse(this: &SemioDocumentMutation, base: &SemioDocumentSnap
             None => Vec::new(),
         },
     }
+
+    })
 }
 //#endregion 🔖️MutationTrait
 
@@ -585,6 +595,7 @@ fn dec_snapshot(s: &str) -> Result<SemioDocumentSnapshot, String> {
 fn print_document_mutation(m: &SemioDocumentMutation) -> String {
     match m {
         SemioDocumentMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", enc_snapshot(snapshot)),
+        SemioDocumentMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(patch),
         SemioDocumentMutation::InsertBlock(insert_block::InsertBlock { path, block }) => format!("insert-block path={} block={}", enc_block_path(path), enc_block(block)),
         SemioDocumentMutation::RemoveBlock(remove_block::RemoveBlock { path }) => format!("remove-block path={}", enc_block_path(path)),
         SemioDocumentMutation::SetBlockContent(set_block_content::SetBlockContent { path, block }) => format!("set-block-content path={} block={}", enc_block_path(path), enc_block(block)),
@@ -607,6 +618,10 @@ fn print_document_mutation(m: &SemioDocumentMutation) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_document_mutation(line: &str) -> Result<SemioDocumentMutation, String> {
+    if let Some(source) = line.strip_prefix("patch-snapshot patch=") {
+        let patch = semio_s_artifact_stdio_contract::editing::snapshot_patch_from_hex(source)?;
+        return Ok(SemioDocumentMutation::PatchSnapshot(crate::standards::v1::subsets::document::schema::mutations::patch_snapshot::PatchSnapshot { patch }));
+    }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
     let args: std::collections::BTreeMap<&str, &str> =
         rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("document mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
@@ -644,8 +659,8 @@ impl OpText for SemioDocumentMutation {
     fn print_op(&self) -> String {
         print_document_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_document_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_document_mutation(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 }
 
@@ -653,6 +668,7 @@ impl OpText for SemioDocumentMutation {
 /// 🏷️ Op tags of `SemioDocumentMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
 const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
 const TAG_INSERT_BLOCK: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-block");
 const TAG_REMOVE_BLOCK: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-block");
 const TAG_SET_BLOCK_CONTENT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-block-content");
@@ -675,6 +691,7 @@ const TAG_SET_IMAGE_BYTES: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set
 fn wire_tag(m: &SemioDocumentMutation) -> u8 {
     match m {
         SemioDocumentMutation::SetSnapshot(..) => TAG_SET_SNAPSHOT,
+        SemioDocumentMutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
         SemioDocumentMutation::InsertBlock(..) => TAG_INSERT_BLOCK,
         SemioDocumentMutation::RemoveBlock(..) => TAG_REMOVE_BLOCK,
         SemioDocumentMutation::SetBlockContent(..) => TAG_SET_BLOCK_CONTENT,
@@ -713,6 +730,11 @@ fn print_document_mutation_args(m: &SemioDocumentMutation) -> String {
 /// independent encoding.
 impl OpBinary for SemioDocumentMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        if let Self::PatchSnapshot(payload) = self {
+            let mut out = vec![1, TAG_PATCH_SNAPSHOT];
+            out.extend(protocol::OpBinary::encode_op(&payload.patch)?);
+            return Ok(out);
+        }
         const OP_BINARY_FORMAT: u8 = 1;
         let mut out = vec![OP_BINARY_FORMAT, wire_tag(self)];
         out.extend_from_slice(print_document_mutation_args(self).as_bytes());
@@ -725,6 +747,9 @@ impl OpBinary for SemioDocumentMutation {
         }
         if bytes[0] != OP_BINARY_FORMAT {
             return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {}", bytes[0]) });
+        }
+        if bytes[1] == TAG_PATCH_SNAPSHOT {
+            return Ok(Self::PatchSnapshot(crate::standards::v1::subsets::document::schema::mutations::patch_snapshot::PatchSnapshot { patch: protocol::OpBinary::decode_op(&bytes[2..])? }));
         }
         let tag = bytes[1];
         let keyword = dsl::protocol_record::kind(WIRE_PROTOCOL, u64::from(tag)).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} names no record of 📡️.protocol.semio") })?;
@@ -745,6 +770,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioDocumentMutation> {
     let table_block =
         DocBlock::Table { rows: vec![crate::standards::v1::subsets::document::schema::snapshot::DocTableRow { cells: vec![crate::standards::v1::subsets::document::schema::snapshot::DocTableCell { blocks: vec![DocBlock::paragraph("cell")] }] }] };
     vec![
+        SemioDocumentMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         SemioDocumentMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: crate::standards::v1::subsets::document::schema::diff::snapshot_b() }),
         SemioDocumentMutation::InsertBlock(insert_block::InsertBlock { path: DocBlockPath::top(1), block: table_block.clone() }),
         SemioDocumentMutation::InsertBlock(insert_block::InsertBlock { path: DocBlockPath { segments: vec![DocPathSegment::TableCell { block_index: 0, row: 0, cell: 0 }], index: 0 }, block: DocBlock::paragraph("nested") }),

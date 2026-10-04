@@ -1,0 +1,11 @@
+# Held Real Parent Host Frame Bounded Audit
+
+Read-only adjacent `global-child-current-real-parent-host-and-root-merged-held-pairs.json`; no mount/type/runtime proof. Full nested document after-body read, Root3MBafter only searched relevant names. Host12dispatch integration not comprehensively audited.
+
+Concrete frame authority coherent in nested body: synchronous real Store SnapshotRead + snapshot_owner alias pointer verified, complete current child root retained, actual `A::child_restore_projection(parent.get())`, owner.parent exact artifactID+dialect versus real envelope, projection incoming logical childID and independently captured actual target ArtifactRef, complete projection admission, and final actual parent/child publication words/commit authority checked. Child selector receives authentic borrowed parent; capture_read identity validates exact slot/logicalID/target. No copied rich Snapshot, independent new child root or rawtarget→logical replacement.
+
+Actual Store admit_complete3616–3633 uses inline64seen array and compares current full expected fields; schema visitor max256 and refsmax64, no heap ABI guess. It does no control callbacks within full-field string comparisons; long literal metadata byte scans are a separate unproved cancellation/accounting scope. Do not call those comparisons borrowed byte-bounded solely because reference count is64. Current document capture checks caller before/after and root entries; no invented failure assertion here.
+
+Fallible actual app projection errors already Fault and propagate directly; typed ValueError branches retain enum as refusalKind parameter. No From<ValueError> assumption. Capture rejects changed parent/root authority synchronously. On failure local authentic read/alias/root handles drop while Store/currentroot still retain rich owners; global terminal/rejected lifecycle still depends on held retirement and actual issuer, not merely Arc reference counting.
+
+Nested retirement module placement correctly preserves access to defining document private fields. Actual parent/provisional derived provenance, pure test issuers, emittedchild/inverse/publication, wrongS/Any/nestedmapunioncaller closure remain explicit requirements. Full Root/host source after not read completely; no READY/physical exact/zeroallocation/runtime claims.

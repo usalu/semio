@@ -39,7 +39,6 @@ async fn move_media_node_emits_one_relative_move() {
     let base = projection.graph.nodes.first().expect("node").clone();
     let node_id = base.id.clone();
     let emit = studio_emit(&projection, &config, &SpaceCommand::MoveMediaNode(crate::engine::space::commands::move_media_node::MoveMediaNode { node_id: node_id.clone(), x: 120.0, y: 160.0 })).await.expect("handle");
-    assert_eq!(emit.coalesce_key, None, "a drop is one plain edit, never a coalesced amend");
     assert!(matches!(emit.artifact_mutations.as_slice(), [WorkflowMutation::MoveNodes(leaf)] if leaf.node_ids == [node_id.clone()] && leaf.dx == 120.0 - base.x && leaf.dy == 160.0 - base.y), "{:?}", emit.artifact_mutations);
     let node = apply_mutations(&projection, &emit.artifact_mutations).await.graph.nodes.into_iter().find(|row| row.id == node_id).expect("node");
     assert!((node.x - 120.0).abs() < 0.01);

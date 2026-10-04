@@ -11,7 +11,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub mod connect_steps {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "connect-steps")]
     pub struct ConnectSteps {
         pub source_node_id: String,
@@ -30,7 +30,7 @@ pub mod connect_steps {
 pub mod disconnect_steps {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "disconnect-steps")]
     pub struct DisconnectSteps {
         pub from_id: String,

@@ -47,7 +47,7 @@ fn results_window_large_output_preserves_alias_cancel_and_bounded_disposal() {
     let crate::PropertyValue::String(actual) = &result.rows[0][0] else { panic!("published string cell") };
     assert_eq!(actual.as_ptr(), payload_pointer, "publication must move the large allocation exactly once");
     assert_eq!(published.query_execution_id.as_deref(), fixture["published"]["queryExecutionId"].as_str());
-    let kind: serde_json::Value = serde_json::from_str(&dsl::json::to_json_string(&result.kind)).unwrap();
+    let kind: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&result.kind)).unwrap();
     assert_eq!(kind, fixture["published"]["kind"]);
     close_publication(&mut publication, grant);
     assert_eq!(held_base.query_execution_id, None);

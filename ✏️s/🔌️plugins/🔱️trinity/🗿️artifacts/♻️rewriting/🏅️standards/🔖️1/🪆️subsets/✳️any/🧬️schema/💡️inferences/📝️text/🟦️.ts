@@ -49,5 +49,5 @@ export const trinityRewritingInferenceTextGuardConstant = <T extends string | nu
 //#endregion 🚪️Parsers
 
 export function parseRewritingInferenceText(value: unknown, at = "$"): RewritingInferenceText {
-  return trinityRewritingInferenceTextGuardObject(value, `${at}`);
+  return trinityRewritingInferenceTextGuardString(value, `${at}`);
 }

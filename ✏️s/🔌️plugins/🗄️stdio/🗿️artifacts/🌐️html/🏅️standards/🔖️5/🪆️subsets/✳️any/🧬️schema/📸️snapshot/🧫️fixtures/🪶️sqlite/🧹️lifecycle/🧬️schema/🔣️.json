@@ -1,0 +1,15 @@
+{
+ "$schema":"http://json-schema.org/draft-07/schema#",
+ "type":"object","additionalProperties":false,
+ "required":["retirementDepth","lateSqlDepth","wide","stackBytes","oracleDepth","lateTextUnit","lateTextRepeat","cancelAfterBytes","cancelUtf8ByteBoundary","schema","doctype","elementName","attributes","leaves"],
+ "properties":{
+  "retirementDepth":{"type":"integer","minimum":1},"lateSqlDepth":{"type":"integer","minimum":1},"wide":{"type":"integer","minimum":1},"stackBytes":{"type":"integer","minimum":65536},"oracleDepth":{"type":"integer","minimum":1},
+  "lateTextUnit":{"type":"string","minLength":1},"lateTextRepeat":{"type":"integer","minimum":1},"cancelAfterBytes":{"type":"integer","minimum":1},"cancelUtf8ByteBoundary":{"type":"integer","minimum":1},
+  "schema":{"type":"string"},"doctype":{"type":"string"},"elementName":{"type":"string"},
+  "attributes":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["name"],"properties":{"name":{"type":"string"},"value":{"type":"string"}}}},
+  "leaves":{"type":"array","minItems":4,"maxItems":4,"items":{"oneOf":[
+   {"type":"object","additionalProperties":false,"required":["kind","text"],"properties":{"kind":{"enum":["text","comment"]},"text":{"type":"string"}}},
+   {"type":"object","additionalProperties":false,"required":["kind","parentKind","text"],"properties":{"kind":{"const":"rawText"},"parentKind":{"enum":["script","style"]},"text":{"type":"string"}}}
+  ]}}
+ }
+}

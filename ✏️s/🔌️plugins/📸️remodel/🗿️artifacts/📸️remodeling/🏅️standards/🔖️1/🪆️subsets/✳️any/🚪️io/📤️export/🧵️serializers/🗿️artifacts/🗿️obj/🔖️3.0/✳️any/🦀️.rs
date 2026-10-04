@@ -1,8 +1,8 @@
 use crate::standards::v1::subsets::any::io as io_root;
 use crate::RemodelingSnapshot;
-use semio_framework::io::io_mechanism::Serializer;
+use semio_framework::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
-use semio_framework_plugin::{resolve_ready, ArtifactSerializer};
+use semio_framework_plugin::{ ArtifactSerializer};
 use semio_framework_plugin::{StandardId, SubsetId};
 use semio_s_artifact_stdio_obj::standards::v3_0::engine::encode_obj;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::obj::v3_0::any::SemioMeshToObj;
@@ -18,9 +18,9 @@ pub struct RemodelingIntoObj;
 impl Serializer<RemodelingSnapshot> for RemodelingIntoObj {
     const INTO: Dialect = OBJ_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &RemodelingSnapshot) -> IoResult<IoPayload> {
-        let semio = io_root::scene_mesh_semio(from).map_err(|reason| IoError { message: format!("remodeling→obj: nothing to export: {reason}"), diagnostics: Vec::new() })?;
-        let obj = resolve_ready(SemioMeshToObj::serialize(&semio)).map_err(|error| IoError { message: format!("remodeling→obj: {error}"), diagnostics: Vec::new() })?;
+    async fn serialize(from: &RemodelingSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+        let semio = io_root::scene_mesh_semio(from).map_err(|reason| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("remodeling→obj: nothing to export: {reason}"))))?;
+        let obj = ::semio_framework_async::poll::resolve_ready(SemioMeshToObj::serialize(&semio)).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("remodeling→obj: {error}"))))?;
         Ok(IoOutcome::clean(IoPayload::Text(encode_obj(&obj))))
     }
 }

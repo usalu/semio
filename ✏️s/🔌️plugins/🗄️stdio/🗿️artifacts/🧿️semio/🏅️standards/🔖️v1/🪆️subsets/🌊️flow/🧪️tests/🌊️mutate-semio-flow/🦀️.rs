@@ -137,7 +137,7 @@ mod subject {
         let mut current = base.clone();
         apply(&mut current, &step, &ctx.scenario.id)?;
         let mutated = projection(&current)?;
-        for undo in inverse_semio_flow_mutation(&step, &base) {
+        for undo in inverse_semio_flow_mutation(&step, &base).expect("valid retained mutation inverse fixture") {
             apply(&mut current, &undo, &ctx.scenario.id)?;
         }
         if current != base {
@@ -160,7 +160,7 @@ mod subject {
             return Err(disagreement(&format!("{}: the applied flow does not match the vector's after-snapshot", ctx.scenario.id), &current, &expected));
         }
         let applied = projection(&current)?;
-        for undo in inverse_semio_flow_mutation(&step, &base) {
+        for undo in inverse_semio_flow_mutation(&step, &base).expect("valid retained mutation inverse fixture") {
             apply(&mut current, &undo, &ctx.scenario.id)?;
         }
         if current != base {

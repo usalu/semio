@@ -74,7 +74,7 @@ pub const PROCEDURE_DOCUMENT_SCHEMA: &str = "procedure.document/v1";
 pub use crate::schema::snapshot::ProcedureSnapshot;
 
 /// 📍️ Address of a nested step list inside a control step body.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct PathRef {
     #[value(default)]
@@ -85,206 +85,233 @@ pub struct PathRef {
 //#endregion 🔖️Types
 
 //#region 🔖️ContentBridge
-/// 🕸️ Owned CHILD handle types for the two composed stdio subsets this artifact's persisted
-/// `path: Path`/`seed: BTreeMap<String, Value>` inline fields were replaced with (ticket
-/// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM, `imperative→C:text,flow`). `path` (the ordered/
-/// nested `Step` control-flow tree) maps onto `flow`'s id-keyed node/edge graph; `seed` (the
-/// initial variable dictionary) maps onto `text`'s run list as ONE literal-JSON run — an honest,
-/// documented, non-prose use of the `text` subset (see `text_content_snapshot_from_seed`'s own doc
-/// comment for why), the only persisted-content field left once `path` claims `flow`.
+/// 🕸️ Owned CHILD handles of the two composed stdio subsets (design §20.15): the program lives in the `flow` member store
+/// (`s.stdio.semio@v1/flow`), the initial variable dictionary in the `text` member store; the parent owns no content.
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+pub use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, FlowParam, PortRef, SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::snapshot::{SemioTextRun, SemioTextSnapshot, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
 
 pub type ProcedureFlowChild = store::ArtifactChild<SemioFlowSnapshot>;
 pub type ProcedureTextChild = store::ArtifactChild<SemioTextSnapshot>;
 
-/// 🌉 REAL bidirectional converter, `Path` → `SemioFlowSnapshot` half (the "ModelBridge" pattern
-/// from `📓️wave3-reports/cad-report.md`, also used by `📓️wave4-reports/flow-report.md`). Each
-/// top-level `Step` becomes one `FlowNode` (`id`/`kind` = the step's own, `label` = the step id,
-/// `position` a simple sequential layout); `step.params` (a `neural_engine::Dictionary`) becomes
-/// one `FlowParam` per entry, JSON-encoding each `Value` into flow's own documented "string-valued
-/// is the honest boundary" param shape. `Step::bodies` (nested `control.if`/`control.while` scopes)
-/// has no flat id-keyed-graph counterpart in the `flow` subset, so — exactly mirroring how the
-/// `flow` plugin's own migration JSON-encoded `Widget::Cluster`'s nested tree
-/// (`📓️wave4-reports/flow-report.md`) — it is JSON-encoded wholesale into one reserved `__bodies`
-/// param: lossless, honestly opaque to any generic flow-subset consumer. `edges` are a purely
-/// derived, honestly redundant "next in sequence" view (`kind = "sequence"`) between adjacent
-/// siblings; decode never reads them back — step order is recovered from `nodes`' own `Vec` order,
-/// which every encode path here preserves (append-only, never reordered independently of `path`).
+/// 🔗️ The flow edge kind that chains consecutive steps of one scope.
+pub const PROCEDURE_SEQUENCE_EDGE: &str = "sequence";
+/// 🪆️ The flow edge kind from a control step (port = body slot) to the first step of that body.
+pub const PROCEDURE_BODY_EDGE: &str = "body";
+
+/// 🔗️ The id of the sequence edge between two consecutive steps.
+pub fn procedure_sequence_edge_id(from: &str, to: &str) -> String {
+    format!("s-{from}-{to}")
+}
+
+/// 🪆️ The id of the body edge of one control step's slot (stable while the slot exists).
+pub fn procedure_body_edge_id(owner: &str, slot: &str) -> String {
+    format!("b-{owner}-{slot}")
+}
+
+/// 🌉 The program as a flow graph (design §20.15): EVERY step — nested ones included — is one node (`id`/`kind`, params one
+/// JSON-encoded value each); a scope's order is its chain of `sequence` edges, a control step's body slot is one `body`
+/// edge (port = slot) to the slot's first step. Nesting, order and params are therefore each edited by one id-keyed flow
+/// leaf; positions only lay the nodes out for generic flow tooling (depth-first column, nesting row).
 pub fn flow_content_snapshot_from_path(path: &Path) -> SemioFlowSnapshot {
-    let mut nodes = Vec::with_capacity(path.steps.len());
-    let mut edges = Vec::new();
-    for (index, step) in path.steps.iter().enumerate() {
-        let mut params: Vec<FlowParam> = step.params.keys().map(|key| FlowParam { key: key.clone(), value: dsl::os_pack::json::to_json_string(step.params.get(key).expect("key came from Dictionary::keys()")) }).collect();
-        if !step.bodies.is_empty() {
-            params.push(FlowParam { key: "__bodies".into(), value: dsl::os_pack::json::to_json_string(&step.bodies) });
-        }
-        nodes.push(FlowNode { id: step.id.clone(), kind: step.kind.clone(), label: step.id.clone(), params, position: SemioPoint2 { x: index as f64 * 160.0, y: 0.0 } });
-        if index > 0 {
-            let prev = &path.steps[index - 1];
-            edges.push(FlowEdge { id: format!("e-{}-{}", prev.id, step.id), from: PortRef { node: prev.id.clone(), port: "out".into() }, to: PortRef { node: step.id.clone(), port: "in".into() }, kind: "sequence".into() });
+    fn walk(steps: &[Step], depth: usize, owner: Option<(&str, &str)>, nodes: &mut Vec<FlowNode>, edges: &mut Vec<FlowEdge>) {
+        let edge = |id: String, from: &str, port: &str, to: &str, kind: &str| FlowEdge { id, from: PortRef { node: from.into(), port: port.into() }, to: PortRef { node: to.into(), port: "in".into() }, kind: kind.into() };
+        for (index, step) in steps.iter().enumerate() {
+            let params = step.params.keys().map(|key| FlowParam { key: key.clone(), value: semio_framework_pack_json::to_json_string(step.params.get(key).expect("key came from Dictionary::keys()")) }).collect();
+            nodes.push(FlowNode { id: step.id.clone(), kind: step.kind.clone(), label: step.id.clone(), params, position: SemioPoint2 { x: nodes.len() as f64 * 160.0, y: depth as f64 * 120.0 } });
+            match (index, owner) {
+                (0, Some((owner, slot))) => edges.push(edge(procedure_body_edge_id(owner, slot), owner, slot, &step.id, PROCEDURE_BODY_EDGE)),
+                (0, None) => {}
+                _ => edges.push(edge(procedure_sequence_edge_id(&steps[index - 1].id, &step.id), &steps[index - 1].id, "out", &step.id, PROCEDURE_SEQUENCE_EDGE)),
+            }
+            for (slot, body) in &step.bodies {
+                walk(&body.steps, depth + 1, Some((&step.id, slot)), nodes, edges);
+            }
         }
     }
+    let (mut nodes, mut edges) = (Vec::new(), Vec::new());
+    walk(&path.steps, 0, None, &mut nodes, &mut edges);
     SemioFlowSnapshot { schema: STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(), nodes, edges }
 }
 
-/// 🌉 Inverse of [`flow_content_snapshot_from_path`] — `nodes`' own `Vec` order IS the step order
-/// (see that function's doc comment); the reserved `__bodies` param round-trips back into
-/// `Step::bodies`, every other param round-trips back into `step.params` via JSON-decode. `edges`
-/// are never read (a purely derived view, see above).
+/// 🌉 Inverse of [`flow_content_snapshot_from_path`]: the top scope starts at the first node no edge enters; every scope
+/// follows its `sequence` chain; every `body` edge opens its slot. A node no scope reaches is not part of the program
+/// (a foreign author's stray node), and a cycle stops at the first revisit.
 pub fn path_from_flow_content_snapshot(snapshot: &SemioFlowSnapshot) -> Path {
-    let steps = snapshot
-        .nodes
-        .iter()
-        .map(|node| {
-            let mut params = Dictionary::new();
-            let mut bodies: BTreeMap<String, Path> = BTreeMap::new();
-            for param in &node.params {
-                if param.key == "__bodies" {
-                    bodies = dsl::os_pack::json::from_json_str(&param.value).unwrap_or_default();
-                } else {
-                    let value: Value = dsl::os_pack::json::from_json_str(&param.value).unwrap_or(Value::Atom(neural_engine::Atom::Null));
-                    params = params.insert(param.key.clone(), value);
-                }
-            }
-            Step { id: node.id.clone(), kind: node.kind.clone(), params, bodies }
-        })
-        .collect();
-    Path { steps }
+    let entered: std::collections::BTreeSet<&str> = snapshot.edges.iter().map(|edge| edge.to.node.as_str()).collect();
+    let next = |id: &str| snapshot.edges.iter().find(|edge| edge.kind == PROCEDURE_SEQUENCE_EDGE && edge.from.node == id).map(|edge| edge.to.node.as_str());
+    let mut visited = std::collections::BTreeSet::new();
+    fn scope<'a>(first: Option<&'a str>, snapshot: &'a SemioFlowSnapshot, next: &dyn Fn(&str) -> Option<&'a str>, visited: &mut std::collections::BTreeSet<&'a str>) -> Path {
+        let mut steps = Vec::new();
+        let mut cursor = first;
+        while let Some(id) = cursor.filter(|id| visited.insert(*id)) {
+            let Some(node) = snapshot.nodes.iter().find(|node| node.id == id) else { break };
+            let params = node.params.iter().fold(Dictionary::new(), |params, param| {
+                let value: Value = semio_framework_pack_json::from_json_str(&param.value, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or(Value::Atom(neural_engine::Atom::Null));
+                params.insert(param.key.clone(), value)
+            });
+            let bodies = snapshot.edges.iter().filter(|edge| edge.kind == PROCEDURE_BODY_EDGE && edge.from.node == id).map(|edge| (edge.from.port.clone(), scope(Some(edge.to.node.as_str()), snapshot, next, visited))).collect();
+            steps.push(Step { id: node.id.clone(), kind: node.kind.clone(), params, bodies });
+            cursor = next(id);
+        }
+        Path { steps }
+    }
+    let first = snapshot.nodes.iter().map(|node| node.id.as_str()).find(|id| !entered.contains(id));
+    scope(first, snapshot, &next, &mut visited)
 }
 
-/// 🌉 REAL bidirectional converter, `seed: BTreeMap<String, Value>` → `SemioTextSnapshot` half.
-/// `text`'s `SemioTextRun{language, content, marks}` shape is built for prose (BCP-47 language,
-/// inline marks); `seed` is an initial-variable dictionary with no natural-language content at
-/// all. The honest, lossless boundary chosen here (matching writer's `document_snapshot_from_text`
-/// mapping raw text into ONE `DocBlock::Code` leaf): the WHOLE seed map is JSON-encoded into ONE
-/// run's `content` (`language`/`marks` unused, always empty) — never split per-key into runs
-/// (there is no natural per-key "prose" to split), and an empty seed maps to zero runs so the
-/// default snapshot's `runs` stays empty like every other subset's default.
+/// 🌉 `seed` → the text child: the WHOLE seed map JSON-encoded into ONE run (an empty seed is zero runs) — the honest,
+/// lossless boundary for a dictionary with no prose (matching writer's raw text in one code block).
 pub fn text_content_snapshot_from_seed(seed: &BTreeMap<String, Value>) -> SemioTextSnapshot {
-    let runs = if seed.is_empty() { Vec::new() } else { vec![SemioTextRun { language: String::new(), content: dsl::os_pack::json::to_json_string(seed), marks: Vec::new() }] };
+    let runs = if seed.is_empty() { Vec::new() } else { vec![SemioTextRun { language: String::new(), content: semio_framework_pack_json::to_json_string(seed), marks: Vec::new() }] };
     SemioTextSnapshot { schema: STDIO_SEMIOTEXT_DOCUMENT_SCHEMA.into(), runs }
 }
 
-/// 🌉 Inverse of [`text_content_snapshot_from_seed`] — concatenates every run's `content` (the
-/// common, lossless case is exactly one, or zero for an empty seed) and JSON-decodes the result;
-/// an empty/unparseable join honestly reads back as an empty seed rather than panicking.
+/// 🌉 Inverse of [`text_content_snapshot_from_seed`]; an empty or unparseable join reads as an empty seed.
 pub fn seed_from_text_content_snapshot(snapshot: &SemioTextSnapshot) -> BTreeMap<String, Value> {
     let joined: String = snapshot.runs.iter().map(|run| run.content.as_str()).collect();
     if joined.is_empty() {
         return BTreeMap::new();
     }
-    dsl::os_pack::json::from_json_str(&joined).unwrap_or_default()
+    semio_framework_pack_json::from_json_str(&joined, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_default()
 }
 
-/// 🕸️ Deterministic content-addressed CHILD handle for `flow` — same `(child_id, target)` for an
-/// identical `path`, a different pair once the content actually changes; mirrors `writer`'s
-/// `document_child_handle`/`flow`'s own `flow_content_child_handle`.
+/// 🕸️ The content-addressed `flow` CHILD handle of a program.
 pub fn procedure_flow_child_handle(path: &Path) -> ProcedureFlowChild {
-    let snapshot = flow_content_snapshot_from_path(path);
-    let content_json = dsl::os_pack::json::to_json_string(&snapshot);
-    let child_id = store::content_id("imperative-flow", content_json.as_bytes());
+    use store::ArtifactPack;
+    let child_id = store::content_id("imperative-flow", &flow_content_snapshot_from_path(path).encode_pack());
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() };
-    let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
-    store::ArtifactChild::new(child_id, target)
+    store::ArtifactChild::new(child_id.clone(), store::os_io::ArtifactRef { artifact_id: child_id, dialect })
 }
 
-/// 🕸️ `seed`'s content-addressed CHILD handle, the `text`-side twin of [`procedure_flow_child_handle`].
+/// 🕸️ The content-addressed `text` CHILD handle of a seed.
 pub fn procedure_text_child_handle(seed: &BTreeMap<String, Value>) -> ProcedureTextChild {
-    let snapshot = text_content_snapshot_from_seed(seed);
-    let content_json = dsl::os_pack::json::to_json_string(&snapshot);
-    let child_id = store::content_id("imperative-text", content_json.as_bytes());
+    use store::ArtifactPack;
+    let child_id = store::content_id("imperative-text", &text_content_snapshot_from_seed(seed).encode_pack());
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "text".into() };
-    let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
-    store::ArtifactChild::new(child_id, target)
+    store::ArtifactChild::new(child_id.clone(), store::os_io::ArtifactRef { artifact_id: child_id, dialect })
+}
+
+/// 🏗️ The parent document naming the content-addressed children of a program and seed (their content lives in the member
+/// stores, derived at genesis for the bundled examples and the empty program).
+pub fn procedure_snapshot_naming(path: &Path, seed: &BTreeMap<String, Value>) -> ProcedureSnapshot {
+    ProcedureSnapshot { schema: "procedure.document".into(), flow: procedure_flow_child_handle(path), text: procedure_text_child_handle(seed) }
 }
 //#endregion 🔖️ContentBridge
 
-//#region 🔖️WorkingScene
-/// 🌱 Ephemeral combined view of the two exact child owners. It is reconstructed on demand and
-/// is never persisted or process-global.
-pub struct ProcedureWorkingScene {
+//#region 🔖️Scene
+/// 🌱 The program and seed as the editor reads them: composed on read from the two member stores (design §20.15).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct ProcedureScene {
     pub path: Path,
     pub seed: BTreeMap<String, Value>,
 }
 
-#[derive(Clone)]
-pub struct ProcedureFlowWorkingData {
-    pub path: Path,
+/// 🧊️ The scene is the cold boundary of its seed's neural values (a step already retires its own params on drop).
+impl Drop for ProcedureScene {
+    fn drop(&mut self) {
+        neural_engine::ColdRetire::retire_cold(std::mem::take(&mut self.seed));
+    }
 }
 
-#[derive(Clone)]
-pub struct ProcedureTextWorkingData {
-    pub seed: BTreeMap<String, Value>,
+/// 🧸️ Composes the scene from the document's exact published `flow` and `text` children.
+pub fn procedure_scene_from_children(snapshot: &ProcedureSnapshot, children: &semio_framework_plugin::app::ChildContentView) -> Result<ProcedureScene, semio_framework_plugin::Fault> {
+    let subset = |slot: &str, child_id: &str, expected: &str| -> Result<(), semio_framework_plugin::Fault> {
+        let dialect = children.dialect(slot, child_id).ok_or_else(|| semio_framework_plugin::Fault::from(format!("procedure-{slot}-child-dialect-required")))?;
+        (dialect.artifact_kind == "s.stdio.semio" && dialect.standard == "v1" && dialect.subset == expected).then_some(()).ok_or_else(|| semio_framework_plugin::Fault::from(format!("procedure-{slot}-child-dialect-mismatch")))
+    };
+    subset("flow", &snapshot.flow.child_id, "flow")?;
+    subset("text", &snapshot.text.child_id, "text")?;
+    let flow = children.typed_read::<SemioFlowSnapshot>("flow", &snapshot.flow.child_id)?;
+    let text = children.typed_read::<SemioTextSnapshot>("text", &snapshot.text.child_id)?;
+    Ok(ProcedureScene { path: path_from_flow_content_snapshot(&flow), seed: seed_from_text_content_snapshot(&text) })
 }
 
-/// 📝 Transfers a decoded or test-provided program into one exact flow-child owner.
-pub fn materialize_procedure_flow(handle: &mut ProcedureFlowChild, path: &Path) {
-    handle.set_local_owner(std::sync::Arc::new(ProcedureFlowWorkingData { path: path.clone() }));
+/// 🧸️ [`procedure_scene_from_children`] over a document view.
+pub fn procedure_scene(doc: &semio_framework_plugin::ArtifactView<'_, ProcedureSnapshot>) -> Result<ProcedureScene, semio_framework_plugin::Fault> {
+    procedure_scene_from_children(doc.snapshot, &doc.children)
 }
 
-/// 🔎 Reads only the addressed flow child's owner. A wire-only handle fails soft until the
-/// host materializes its child document.
-pub fn procedure_flow_for_handle(handle: &ProcedureFlowChild) -> Path {
-    handle.local_owner::<ProcedureFlowWorkingData>().map(|data| data.path.clone()).unwrap_or_default()
+/// 🌱️ The scene a document's children derive without member stores: a bundled example's or the empty program's. Readers
+/// without a child view (inference, foreign serializers) read this until the framework hands them child head packs.
+pub fn procedure_derivable_scene(snapshot: &ProcedureSnapshot) -> Option<ProcedureScene> {
+    if (snapshot.flow.child_id.as_str(), snapshot.text.child_id.as_str()) == (crate::examples::demo::FLOW_CHILD_ID, crate::examples::demo::TEXT_CHILD_ID) {
+        return Some(crate::examples::demo::scene());
+    }
+    let empty = ProcedureScene::default();
+    (procedure_flow_child_handle(&empty.path).child_id == snapshot.flow.child_id && procedure_text_child_handle(&empty.seed).child_id == snapshot.text.child_id).then_some(empty)
 }
 
-/// 🔎 `seed`-side twin of [`procedure_flow_for_handle`].
-pub fn procedure_seed_for_handle(handle: &ProcedureTextChild) -> BTreeMap<String, Value> {
-    handle.local_owner::<ProcedureTextWorkingData>().map(|data| data.seed.clone()).unwrap_or_default()
-}
-
-/// 🔎 Reads BOTH composed children's live content off a snapshot's two handles — the single read
-/// call site every render/mutation-diff/inference/export path in this plugin uses instead of the
-/// old direct `.path`/`.seed` field access.
-pub fn procedure_working_scene(snapshot: &ProcedureSnapshot) -> ProcedureWorkingScene {
-    ProcedureWorkingScene { path: procedure_flow_for_handle(&snapshot.flow), seed: procedure_seed_for_handle(&snapshot.text) }
-}
-
-/// 🏗️ Mints a flow child and transfers its program into that exact owner.
-pub fn procedure_flow_child_with_owner(path: &Path) -> ProcedureFlowChild {
-    let handle = procedure_flow_child_handle(path);
-    handle.with_local_owner(std::sync::Arc::new(ProcedureFlowWorkingData { path: path.clone() }))
-}
-
-/// 🏗️ `seed`-side twin of [`procedure_flow_child_with_owner`].
-pub fn procedure_text_child_with_owner(seed: &BTreeMap<String, Value>) -> ProcedureTextChild {
-    let handle = procedure_text_child_handle(seed);
-    handle.with_local_owner(std::sync::Arc::new(ProcedureTextWorkingData { seed: seed.clone() }))
-}
-
-/// 🏗️ Builds a full [`ProcedureSnapshot`] from literal `Path`/seed content — the standard fixture/
-/// import constructor replacing the old 3-field `ProcedureSnapshot { schema, path, seed }` struct
-/// literal now that `flow`/`text` are composed child handles, not plain fields.
-pub fn procedure_snapshot_with_content(schema: &str, path: &Path, seed: &BTreeMap<String, Value>) -> ProcedureSnapshot {
-    ProcedureSnapshot { schema: schema.into(), flow: procedure_flow_child_with_owner(path), text: procedure_text_child_with_owner(seed) }
-}
-
-/// 🧩️ Materialises the pack of either composed `s.stdio.semio` child from the parent snapshot alone.
-/// A whole-document `Effect::LoadDocument` hands the host a pack whose two child handles name
-/// documents no store has ever seen; the archive's closure leg asks the app for each one's genesis
-/// bytes and refuses the whole replacement when the app returns `None`. `ProcedureSnapshot` owns TWO
-/// children, so both slots must answer — `flow` is the program graph, `text` the seed projection.
+/// 🌱️ Packs either derivable member (the react shell's `loadDocumentPair` sends `members: []`).
 pub fn genesis_procedure_child_pack(snapshot: &ProcedureSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
     use store::ArtifactPack;
-    let scene = procedure_working_scene(snapshot);
+    let scene = procedure_derivable_scene(snapshot)?;
     match slot {
-        "flow" if child_id == snapshot.flow.child_id => Some(<SemioFlowSnapshot as ArtifactPack>::encode_pack(&flow_content_snapshot_from_path(&scene.path))),
-        "text" if child_id == snapshot.text.child_id => Some(<SemioTextSnapshot as ArtifactPack>::encode_pack(&text_content_snapshot_from_seed(&scene.seed))),
+        "flow" if child_id == snapshot.flow.child_id => Some(flow_content_snapshot_from_path(&scene.path).encode_pack()),
+        "text" if child_id == snapshot.text.child_id => Some(text_content_snapshot_from_seed(&scene.seed).encode_pack()),
         _ => None,
     }
 }
 
-/// 📸️ A sparse `ProcedureDiff` that whole-handle-replaces `flow` from a fully computed `Path` —
-/// composed children are opaque, so a diff never edits a sub-slice, only mints a whole replacement
-/// (the "mint+cache whole handle, never apply-then-capture" pattern `writer`'s `diff_set_text`/
-/// `flow`'s `diff_replace_content` both establish). `text`/`seed` is left untouched (`None`) since
-/// no mutation triad in this plugin edits `seed` — it is write-once at document construction.
-pub fn diff_replace_flow(path: &Path) -> ProcedureDiff {
-    ProcedureDiff { flow: Some(procedure_flow_child_with_owner(path)), ..Default::default() }
+/// 🧮️ The flow child leaves that carry program `base` to `next` (positions are layout, never diffed): severed edges first,
+/// removed steps, inserted steps, each kept step's kind/param changes, then re-pointed and inserted edges — every row
+/// point-invertible, so undo and history edits replay exactly.
+pub fn procedure_flow_leaves(base: &Path, next: &Path) -> Vec<SemioFlowMutation> {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations as flow;
+    let (before, after) = (flow_content_snapshot_from_path(base), flow_content_snapshot_from_path(next));
+    let mut leaves = Vec::new();
+    for edge in &before.edges {
+        if !after.edges.iter().any(|entry| entry.id == edge.id) {
+            leaves.push(SemioFlowMutation::RemoveEdge(flow::remove_edge::RemoveEdge { id: edge.id.clone() }));
+        }
+    }
+    for node in &before.nodes {
+        if !after.nodes.iter().any(|entry| entry.id == node.id) {
+            leaves.push(SemioFlowMutation::RemoveNode(flow::remove_node::RemoveNode { id: node.id.clone() }));
+        }
+    }
+    for node in &after.nodes {
+        let Some(prior) = before.nodes.iter().find(|entry| entry.id == node.id) else {
+            leaves.push(SemioFlowMutation::InsertNode(flow::insert_node::InsertNode::new(node.clone())));
+            continue;
+        };
+        if prior.kind != node.kind {
+            leaves.push(SemioFlowMutation::SetNodeKind(flow::set_node_kind::SetNodeKind { id: node.id.clone(), kind: node.kind.clone() }));
+        }
+        for param in node.params.iter().filter(|param| !prior.params.contains(param)) {
+            leaves.push(SemioFlowMutation::SetNodeParam(flow::set_node_param::SetNodeParam { id: node.id.clone(), key: param.key.clone(), value: param.value.clone() }));
+        }
+        for param in prior.params.iter().filter(|param| !node.params.iter().any(|entry| entry.key == param.key)) {
+            leaves.push(SemioFlowMutation::RemoveNodeParam(flow::remove_node_param::RemoveNodeParam { id: node.id.clone(), key: param.key.clone() }));
+        }
+    }
+    for edge in &after.edges {
+        match before.edges.iter().find(|entry| entry.id == edge.id) {
+            None => leaves.push(SemioFlowMutation::InsertEdge(flow::insert_edge::InsertEdge::new(edge.clone()))),
+            Some(prior) if prior.from != edge.from || prior.to != edge.to => leaves.push(SemioFlowMutation::SetEdgeEndpoints(flow::set_edge_endpoints::SetEdgeEndpoints { id: edge.id.clone(), from: edge.from.clone(), to: edge.to.clone() })),
+            Some(_) => {}
+        }
+    }
+    leaves
 }
-//#endregion 🔖️WorkingScene
+
+/// 🧬️ Publishes flow child `leaves` as ONE edit of the exact composed `flow` child; no leaf is the empty emit.
+pub fn procedure_child_emit<C, D>(snapshot: &ProcedureSnapshot, leaves: &[SemioFlowMutation]) -> semio_framework_plugin::Emit<ProcedureMutation, C, D> {
+    if leaves.is_empty() {
+        return semio_framework_plugin::Emit::default();
+    }
+    semio_framework_plugin::Emit { child_emits: vec![semio_framework_plugin::app::ChildEmit::of::<SemioFlowSnapshot, _>("flow", &snapshot.flow.child_id, leaves)], ..Default::default() }
+}
+
+/// 🧰️ Applies one program edit to the composed scene and publishes its flow leaves as ONE child edit.
+pub fn procedure_edit_emit<C, D>(doc: &semio_framework_plugin::ArtifactView<'_, ProcedureSnapshot>, edit: impl FnOnce(&mut Path)) -> Result<semio_framework_plugin::Emit<ProcedureMutation, C, D>, semio_framework_plugin::Fault> {
+    let base = procedure_scene(doc)?.path.clone();
+    let mut next = base.clone();
+    edit(&mut next);
+    Ok(procedure_child_emit(doc.snapshot, &procedure_flow_leaves(&base, &next)))
+}
+//#endregion 🔖️Scene
 
 //#region 🔖️Register
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
@@ -303,7 +330,7 @@ pub fn diff_replace_flow(path: &Path) -> ProcedureDiff {
 ///
 /// 🔄️ UPDATE (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): `⚙️engine` is deleted.
 /// `bootstrap_imperative_runtime()` and `io_registry` now live in `🚪️io` (multi-caller: this
-/// `declaration()`, the app's `🎚️config`, and the app engine's `ImperativeHost::from_snapshot` — an
+/// `declaration()`, the app's `🎚️config`, and the app engine's `ImperativeHost::from_scene` — an
 /// artifact must not depend on its app, so both stayed artifact-side rather than moving to the app),
 /// reached below by their full qualified path. `bootstrap_imperative_runtime` stays `pub` (widened from
 /// its former `pub(crate)`) since the app engine module now reaches it by the same long qualified path.
@@ -317,10 +344,8 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         ("s.imperative.procedure.composer.native", "composer", "s.imperative.procedure@1/*", &[("dialect", "s.imperative.procedure@1/*")], None),
         ("s.imperative.procedure.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
         ("s.imperative.procedure.grammar.document", "grammar", "procedure.document", &[("grammar", "procedure.document")], None),
-        ("s.imperative.procedure.grammar.op", "grammar", "imperative.procedure.op", &[("grammar", "imperative.procedure.op")], None),
         ("s.imperative.procedure.grammar.diff", "grammar", "imperative.procedure.diff", &[("grammar", "imperative.procedure.diff")], None),
         ("s.imperative.procedure.grammar.pack", "grammar", "procedure.pack", &[("grammar", "procedure.pack")], None),
-        ("s.imperative.procedure.grammar.spr", "grammar", "procedure.spr", &[("grammar", "procedure.spr")], None),
         ("s.imperative.procedure.codec.document.v1", "codec", "procedure.document/v1:imperative", &[("codec", "procedure.document/v1"), ("codec-extension", "21:procedure.document/v1:imperative")], None),
         ("s.imperative.procedure.localization.en", "localization", "Procedure", &[], Some(("en", "Procedure"))),
         ("s.imperative.procedure.localization.de", "localization", "Prozedur", &[], Some(("de", "Prozedur"))),
@@ -354,60 +379,40 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
 /// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`. Private:
 /// `declaration()` above is its only caller (moved here with it from `⚙️engine`, ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g7 — kept unexported, not widened).
-fn pilot_languages() -> &'static [dsl::LanguageSpec] {
-    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
             vec![
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "procedure.document",
                     extension: Some("procedure"),
-                    role: dsl::LanguageRole::Document,
+                    role: semio_framework_dsl::LanguageRole::Document,
                     grammar: Some(document_dsl::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(document_dsl::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("procedure.document"),
+                    hooks: semio_framework_dsl::passthrough_hooks("procedure.document"),
                 },
-                dsl::LanguageSpec {
-                    id: "imperative.procedure.op",
-                    extension: None,
-                    role: dsl::LanguageRole::Ops,
-                    grammar: Some(op::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(op::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("imperative.procedure.op"),
-                },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "imperative.procedure.diff",
                     extension: None,
-                    role: dsl::LanguageRole::Diff,
+                    role: semio_framework_dsl::LanguageRole::Diff,
                     grammar: Some(diff::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
-                    hooks: dsl::passthrough_hooks("imperative.procedure.diff"),
+                    hooks: semio_framework_dsl::passthrough_hooks("imperative.procedure.diff"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "procedure.pack",
                     extension: None,
-                    role: dsl::LanguageRole::Pack,
+                    role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("procedure.pack"),
-                },
-                dsl::LanguageSpec {
-                    id: "procedure.spr",
-                    extension: None,
-                    role: dsl::LanguageRole::Spr,
-                    grammar: None,
-                    grammar_path: None,
-                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("procedure.spr"),
+                    hooks: semio_framework_dsl::passthrough_hooks("procedure.pack"),
                 },
             ]
         })
@@ -436,23 +441,6 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 }
 //#endregion 🔖️ArtifactKind
 
-/// 🧹️ Releases a test document's exact child owners and their nested neural dictionaries.
-/// 🧊️ The flow side needs no walk any more: [`Step`] declares its own cold boundary (`Drop` retires
-/// `params` and recurses through `bodies`), so dropping the owner IS the retirement. Kept as a named
-/// helper because the `seed` side still has to be retired explicitly and because the fixtures read
-/// better naming what they release.
-#[cfg(test)]
-pub(crate) fn retire_procedure_fixture(mut snapshot: ProcedureSnapshot) {
-    use neural_engine::ColdRetire;
-    if let Some(owner) = snapshot.flow.take_local_owner::<ProcedureFlowWorkingData>().expect("flow fixture owner") {
-        drop(std::sync::Arc::into_inner(owner));
-    }
-    if let Some(owner) = snapshot.text.take_local_owner::<ProcedureTextWorkingData>().expect("text fixture owner") {
-        if let Some(data) = std::sync::Arc::into_inner(owner) {
-            data.seed.retire_cold();
-        }
-    }
-}
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -517,78 +505,6 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
-                        pub mod text;
-                        #[path = "."]
-                        pub mod create_step {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/💾️binary/🦀️.rs"]
-                            pub mod binary;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🧪️tests/🧪️rejects/🦀️.rs"]
-                            mod tests_rejects_a_duplicate_step_id_at_the_root_path;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/📝️text/🦀️.rs"]
-                            pub mod text;
-                        }
-                        #[path = "."]
-                        pub mod delete_step {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/💾️binary/🦀️.rs"]
-                            pub mod binary;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🧪️tests/🧪️rejects/🦀️.rs"]
-                            mod tests_rejects_a_root_step_id_addressed_inside_a_branch_body;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/📝️text/🦀️.rs"]
-                            pub mod text;
-                        }
-                        #[path = "."]
-                        pub mod reorder_steps {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/💾️binary/🦀️.rs"]
-                            pub mod binary;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/🧪️tests/🧪️warns/🦀️.rs"]
-                            mod tests_warns_that_an_over_clamped_index_leaves_the_tail_step_in_place;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/📝️text/🦀️.rs"]
-                            pub mod text;
-                        }
-                        #[path = "."]
-                        pub mod edit_step_params {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧edit-step-params/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧edit-step-params/💾️binary/🦀️.rs"]
-                            pub mod binary;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧edit-step-params/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧edit-step-params/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧edit-step-params/🧪️tests/🧪️warns/🦀️.rs"]
-                            mod tests_warns_that_step_1_already_carries_the_requested_params;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧edit-step-params/📝️text/🦀️.rs"]
-                            pub mod text;
-                        }
                     }
                 }
                 #[path = "."]
@@ -675,14 +591,8 @@ pub mod schema {
 pub mod io {
     pub use super::standards::v1::subsets::any::io::*;
 }
-pub mod op {
-    pub use crate::standards::v1::subsets::any::schema::mutations::text::*;
-}
 pub mod document_dsl {
     pub use crate::standards::v1::subsets::any::schema::snapshot::text::*;
-}
-pub mod spr {
-    pub use crate::standards::v1::subsets::any::schema::mutations::binary::*;
 }
 pub mod diff {
     pub use crate::standards::v1::subsets::any::schema::diff::*;

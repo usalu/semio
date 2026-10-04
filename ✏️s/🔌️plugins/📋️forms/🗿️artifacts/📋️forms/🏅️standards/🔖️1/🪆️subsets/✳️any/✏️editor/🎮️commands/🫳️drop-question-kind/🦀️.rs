@@ -19,7 +19,7 @@ fn resolve_step_id_from_tree_target(spec: &FormsSnapshot, target_id: &str) -> Op
 
 //#endregion 🔖️Shell
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "drop-question-kind")]
 pub struct DropQuestionKind {
     pub kind: String,

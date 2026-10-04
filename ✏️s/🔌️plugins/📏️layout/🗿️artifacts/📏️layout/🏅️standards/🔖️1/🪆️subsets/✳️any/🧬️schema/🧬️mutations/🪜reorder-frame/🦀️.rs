@@ -20,7 +20,10 @@ pub struct ReorderFrame {
 impl MutationKind<LayoutSnapshot, LayoutMutation> for ReorderFrame {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "reorder", entity: "frame", kind: "reorder-frame", record: "ReorderFrame" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> { diff_reorder_frame(self, base) }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> { inverse_reorder_frame(self, base) }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok({ inverse_reorder_frame(self, base)? 
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         if self.forward {
             semio_framework_ui_locale::LocalizedLabel::native(&format!("Bring frame \"{}\" forward", self.frame_id), &format!("Rahmen \"{}\" nach vorn holen", self.frame_id))
@@ -43,7 +46,7 @@ pub fn diff_reorder_frame(payload: &ReorderFrame, base: &LayoutSnapshot) -> prot
         return protocol::MutationOutcome::error("mutation.target-mismatch", "A locked frame stays in its stack position.", [payload.frame_id.clone()]);
     }
     let Some(target) = neighbor(index, page.frames.len(), payload.forward) else {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "The frame is already at that end of the stack.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "The frame is already at that end of the stack.");
     };
     let mut order: Vec<String> = page.frames.iter().map(|frame| frame.id().to_string()).collect();
     order.swap(index, target);
@@ -53,13 +56,16 @@ pub fn diff_reorder_frame(payload: &ReorderFrame, base: &LayoutSnapshot) -> prot
     })
 }
 
-pub fn inverse_reorder_frame(payload: &ReorderFrame, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_reorder_frame(payload: &ReorderFrame, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else { return Vec::new() };
     let Some(index) = page.frames.iter().position(|frame| frame.id() == payload.frame_id) else { return Vec::new() };
     if neighbor(index, page.frames.len(), payload.forward).is_none() {
         return Vec::new();
     }
     vec![LayoutMutation::ReorderFrame(ReorderFrame { page_id: payload.page_id.clone(), frame_id: payload.frame_id.clone(), forward: !payload.forward })]
+
+    })())
 }
 
 fn neighbor(index: usize, len: usize, forward: bool) -> Option<usize> {

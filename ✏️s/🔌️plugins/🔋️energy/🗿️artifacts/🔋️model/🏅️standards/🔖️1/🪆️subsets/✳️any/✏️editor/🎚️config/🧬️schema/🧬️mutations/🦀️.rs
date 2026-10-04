@@ -12,7 +12,7 @@ mod change_result_field;
 pub use change_result_field::ChangeResultField;
 
 /// 🧬️ `EnergyModelEditor::ConfigMutation`.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::DslOps, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "mutation", content = "payload", rename_all = "camelCase")]
 #[cfg_attr(test, serde(tag = "mutation", content = "payload", rename_all = "camelCase"))]
@@ -23,11 +23,11 @@ pub enum EnergyModelConfigMutation {
 }
 
 impl protocol::OpText for EnergyModelConfigMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        dsl::variants_text::parse_op(line)
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        semio_framework_dsl_record::variants_text::parse_op(line)
     }
     fn print_op(&self) -> String {
-        dsl::variants_text::print_op(self)
+        semio_framework_dsl_record::variants_text::print_op(self)
     }
 }
 

@@ -129,7 +129,10 @@ impl<D, C, Q: LocalInteractionQueryCapture> LocalInteractionLiveQuery<D, C, Q> {
             }
             if let Some(query) = self.owned.query.as_mut() {
                 if !query.terminal_is_empty() {
-                    return query.close_step(grant).map(|step| LocalInteractionLiveStep::retirement(if step == SnapshotRetirementStep::Complete { SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 } } else { step }));
+                    return query
+                        .close_step(grant)
+                        .map_err(semio_framework_value::ValueError::into_message)
+                        .map(|step| LocalInteractionLiveStep::retirement(if step == SnapshotRetirementStep::Complete { SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 } } else { step }));
                 }
             }
             return self.owned.inputs.close_step(grant).map(LocalInteractionLiveStep::retirement);

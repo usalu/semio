@@ -1,0 +1,7 @@
+# Current Associated Pack Source Error Contract
+
+Successor2 finite source Ready: true. Three complete pairs retain exact hashes, inverse and zero-fuzz forward replay; Rust grammar and both manifest parsers are clean. Seven closed output-type cases retain genuine seven-miss baseline followed by seven exact authored results and seven General/Ajv hostile refusals.
+
+PackSource/PackSink own associated Error: From<PackRefusal>; slice and Vec implementations use the genuine semantic error. Default short read converts Truncated into caller-owned associated error. Existing six law assertions remain conserved and unexecuted. Draft1 omitted type_identifier edits and remains historical defective evidence. Generic format callers, all source/sink implementations, whole compiler/runtime and source publication remain pending; mount Ready is false.
+
+Associated format successor2 is independently Ready at bounded source level: one fresh full pair, exact hash/inverse/fuzz-zero replay and clean Rust grammar, with all 54 parsed selected return identities agreeing. Unrelated retained-source fault functions with the same names are preserved outside this contract roster. Five typed Catalog factories retain their original cause conversion. Full proof: `🗑️generated/cargo-workspace-general-transfer/independent-associated-format-fifty-four-return-contract-admission-2.json`. Complete generic source/sink type closure, exported API and native compile/runtime remain pending.

@@ -17,7 +17,7 @@ pub fn diff(payload: &super::ChangeInfiltrationDischargeCoefficient, base: &Ener
         );
     }
     if existing.discharge_coefficient == payload.new_discharge_coefficient {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Infiltration {} already carries this the orifice discharge coefficient: {}.", payload.id.0, payload.new_discharge_coefficient));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Infiltration {} already carries this the orifice discharge coefficient: {}.", payload.id.0, payload.new_discharge_coefficient));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.infiltrations.iter_mut().find(|item| item.id == payload.id) {

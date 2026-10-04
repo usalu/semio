@@ -7,7 +7,6 @@
 
 use crate::standards::riff_pcm::subsets::any::schema::snapshot::WavSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::duration::compute_wav_duration;
 //#region 🔖️Inference
@@ -22,8 +21,11 @@ pub struct WavInference {
 }
 
 impl protocol::Inference<WavSnapshot> for WavInference {
-    fn infer(snapshot: &WavSnapshot) -> Self {
+    fn infer(snapshot: &WavSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { duration: compute_wav_duration(snapshot) }
+    
+        })
     }
 }
 
@@ -32,7 +34,9 @@ impl protocol::Inference<WavSnapshot> for WavInference {
 /// `Default` already picks a real 44.1kHz mono PCM16 form, not a zeroed struct).
 impl Default for WavInference {
     fn default() -> Self {
-        <Self as protocol::Inference<WavSnapshot>>::infer(&WavSnapshot::default())
+        let snapshot = &WavSnapshot::default();
+
+        Self { duration: compute_wav_duration(snapshot) }
     }
 }
 
@@ -48,17 +52,6 @@ impl protocol::InferenceSpec<WavSnapshot> for WavInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 💡️ No `InferredField`s here — `duration` is a single sample-count fold over `data`, already
-/// O(n) in sample count with no honest per-entity incremental decomposition (a merkle dep-chain
-/// over one flat sample buffer costs more than the fold it would cache) — the default
-/// `infer_cached` passthrough is exact.
-impl ArtifactInferrer for crate::standards::riff_pcm::subsets::any::schema::WavBuilder {
-    type Snapshot = WavSnapshot;
-    type Inference = WavInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.wav.inference`'s facet leaves into the OS-wide inference catalog — call

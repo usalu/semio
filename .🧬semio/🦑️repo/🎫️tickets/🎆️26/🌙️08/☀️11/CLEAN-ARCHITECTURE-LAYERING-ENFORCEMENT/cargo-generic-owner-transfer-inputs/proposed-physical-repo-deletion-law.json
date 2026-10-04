@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "owner": "🧰️framework/🔨️modules/🏃️process/🗂️workspaces/🦀️cargo",
+  "requiredAbsentTrees": [
+    "🧰️framework/🛍️products/🦑️repo"
+  ],
+  "fixtureAuthority": "Original membership/discovery/preparation/invocation/queued fixtures retained unchanged",
+  "law": "Import the actual General owner and run its original pure contract laws plus an owned Bun preparation recipe under a caller-supplied leaseDirectory with Repo physically absent; observe publication and machine stdout without invoking Cargo",
+  "policy": {
+    "version": 1,
+    "leaseDirectory": "Caller absolute artifact-root child"
+  },
+  "retainedLawRoster": {
+    "workspaceTests": 10,
+    "queuedTests": 1,
+    "capabilityRunners": 2
+  },
+  "refusals": [
+    "missing lease directory",
+    "unknown policy field",
+    "relative lease directory",
+    "recipe escape",
+    "runtime Repo import",
+    "implicit Repo cache path"
+  ],
+  "originalNativeLaws": "Native-only; unchanged 10+1 test bodies and capabilities retained",
+  "sourceExecuted": false,
+  "nativeExecuted": 0
+}

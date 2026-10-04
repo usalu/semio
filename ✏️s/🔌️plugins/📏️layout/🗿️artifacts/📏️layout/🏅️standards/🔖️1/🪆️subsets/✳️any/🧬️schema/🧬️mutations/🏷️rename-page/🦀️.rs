@@ -22,9 +22,12 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for RenamePage {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_rename_page(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
-        inverse_rename_page(self, base)
-    }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok({
+        inverse_rename_page(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename page to \"{}\"", self.new_name), &format!("Seite in \"{}\" umbenennen", self.new_name))
     }
@@ -40,7 +43,7 @@ pub fn diff_rename_page(payload: &RenamePage, base: &LayoutSnapshot) -> protocol
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Page \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if page.name == payload.new_name {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Page \"{}\" already has that name.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Page \"{}\" already has that name.", payload.id));
     }
     protocol::MutationOutcome::new(LayoutDiff {
         pages: Some(LayoutPagesDelta { patched: vec![LayoutPagePatchEntry { id: payload.id.clone(), patch: PagePatch { name: Some(payload.new_name.clone()), ..Default::default() } }], ..Default::default() }),
@@ -50,10 +53,13 @@ pub fn diff_rename_page(payload: &RenamePage, base: &LayoutSnapshot) -> protocol
 //#endregion 🏷️RenamePage
 
 //#region 🏷️RenamePage
-pub fn inverse_rename_page(payload: &RenamePage, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_rename_page(payload: &RenamePage, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.pages.iter().find(|page| page.id == payload.id) {
         Some(page) => vec![LayoutMutation::RenamePage(RenamePage { id: payload.id.clone(), new_name: page.name.clone() })],
         None => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🏷️RenamePage

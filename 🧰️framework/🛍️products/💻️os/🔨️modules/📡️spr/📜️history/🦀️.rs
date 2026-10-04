@@ -11,7 +11,14 @@
 #[path = "🛂️identity/🦀️.rs"]
 pub(crate) mod identity;
 
-use crate::os_dsl::schema::{FieldSpec, FieldValue, JoinMode, ParseOptions, RecordLayout, RecordSpec, RecordValue, Shape};
+use semio_framework_dsl_record::FieldSpec;
+use semio_framework_dsl_record::FieldValue;
+use semio_framework_dsl_record::JoinMode;
+use semio_framework_dsl_record::ParseOptions;
+use semio_framework_dsl_record::RecordLayout;
+use semio_framework_dsl_record::RecordSpec;
+use semio_framework_dsl_record::RecordValue;
+use semio_framework_dsl_record::Shape;
 use crate::os_pack::{ByteReader, ByteWriter, CodecId, PackSink};
 use crate::os_spr::format::{Blake3Hasher, FrameCursor, RecoveryMode, ReverseFrameCursor, SprWriter, VerificationLevel, WriteOptions, HEADER_SIZE};
 use crate::os_spr::wire::{DictBuilder, DictReader, ProtocolError, ProtocolLimits, RecordHasher};
@@ -95,7 +102,7 @@ pub struct HistoryConflict {
 }
 
 /// 📨️ Durable form of `crate::os_spr::command::MutationMessage`: `level` is the numeric
-/// mirror of `crate::os_dsl::Severity` (`as_u8`/`from_u8`, 0..3), `code` is dict-interned (the
+/// mirror of `semio_framework_diagnostic::Severity` (`as_u8`/`from_u8`, 0..3), `code` is dict-interned (the
 /// frozen nine `mutation.*` codes repeat heavily across one document's history — see
 /// `📋️contract-freeze.md` §C2), `message`/`target` are plain strings (English prose / element
 /// address, never interned — they vary per occurrence).
@@ -114,7 +121,6 @@ pub struct HistoryEdit {
     pub actor: Option<String>,
     pub started_at: String,
     pub finished_at: Option<String>,
-    pub coalesce_key: Option<String>,
     pub description: Option<String>,
     /// 🏷️ The id of the action or command that authored this edit (mirrors `crate::os_spr::command::Edit::verb`).
     pub verb: Option<String>,
@@ -283,33 +289,29 @@ const F_EDIT_ID: u16 = 0;
 const F_EDIT_STARTED: u16 = 1;
 const F_EDIT_ACTOR: u16 = 2;
 const F_EDIT_FINISHED: u16 = 3;
-const F_EDIT_KEY: u16 = 4;
-const F_EDIT_DESCRIPTION: u16 = 5;
-const F_EDIT_VERB: u16 = 6;
-const F_EDIT_LINE: u16 = 7;
+const F_EDIT_DESCRIPTION: u16 = 4;
+const F_EDIT_VERB: u16 = 5;
+const F_EDIT_LINE: u16 = 6;
 const F_TRANSITION_ID: u16 = 0;
 const F_TRANSITION_ACTOR: u16 = 1;
 const F_TRANSITION_HLC: u16 = 2;
 const F_TRANSITION_DEPENDENCIES: u16 = 3;
 const F_TRANSITION_PAYLOAD: u16 = 4;
 const F_TRANSITION_OBSERVED: u16 = 5;
-const F_VIEWER_LINE: u16 = 0;
-const F_VIEWER_CHECKPOINT: u16 = 1;
 
 fn doc_spec() -> RecordSpec {
-    RecordSpec::new(Some("doc"), RecordLayout::Inline, vec![FieldSpec::new(F_DOC_ID, "", Shape::Text).positional(0), FieldSpec::new(F_DOC_SCHEMA, "schema", Shape::Text)])
+    semio_framework_dsl_record::RecordSpec::new(Some("doc"), semio_framework_dsl_record::RecordLayout::Inline, vec![FieldSpec::new(F_DOC_ID, "", Shape::Text).positional(0), FieldSpec::new(F_DOC_SCHEMA, "schema", Shape::Text)])
 }
 
 fn edit_spec() -> RecordSpec {
-    RecordSpec::new(
+    semio_framework_dsl_record::RecordSpec::new(
         Some("edit"),
-        RecordLayout::Inline,
+        semio_framework_dsl_record::RecordLayout::Inline,
         vec![
             FieldSpec::new(F_EDIT_ID, "", Shape::Text).positional(0),
             FieldSpec::new(F_EDIT_STARTED, "started", Shape::Text),
             FieldSpec::new(F_EDIT_ACTOR, "actor", Shape::Text).optional(),
             FieldSpec::new(F_EDIT_FINISHED, "finished", Shape::Text).optional(),
-            FieldSpec::new(F_EDIT_KEY, "key", Shape::Text).optional(),
             FieldSpec::new(F_EDIT_DESCRIPTION, "description", Shape::Text).optional(),
             FieldSpec::new(F_EDIT_VERB, "verb", Shape::Text).optional(),
             FieldSpec::new(F_EDIT_LINE, "line", Shape::List(Box::new(Shape::Text))),
@@ -320,9 +322,9 @@ fn edit_spec() -> RecordSpec {
 /// 🔀️ `transition <id> actor=<actor> hlc=<actor>,<physical_ms>,<logical> dependencies=[...]
 /// payload=<base64> [observed=<id>]` — one [`HistoryTransitionRecord`].
 fn transition_spec() -> RecordSpec {
-    RecordSpec::new(
+    semio_framework_dsl_record::RecordSpec::new(
         Some("transition"),
-        RecordLayout::Inline,
+        semio_framework_dsl_record::RecordLayout::Inline,
         vec![
             FieldSpec::new(F_TRANSITION_ID, "", Shape::Text).positional(0),
             FieldSpec::new(F_TRANSITION_ACTOR, "actor", Shape::Text),
@@ -334,19 +336,13 @@ fn transition_spec() -> RecordSpec {
     )
 }
 
-/// 👁 `viewer [line=<alternative>] [checkpoint=<checkpoint>]` — this replica's head ([`HistoryLog::viewer_line`],
-/// [`HistoryLog::viewer_checkpoint`]), the text twin of `REC_VIEWER`; no `viewer` line is the canonical trunk tip.
-fn viewer_spec() -> RecordSpec {
-    RecordSpec::new(Some("viewer"), RecordLayout::Inline, vec![FieldSpec::new(F_VIEWER_LINE, "line", Shape::Text).optional(), FieldSpec::new(F_VIEWER_CHECKPOINT, "checkpoint", Shape::Text).optional()])
-}
-
 fn record_with(fields: Vec<(u16, FieldValue)>) -> RecordValue {
     RecordValue { fields: fields.into_iter().collect() }
 }
 
 fn field_text(record: &RecordValue, id: u16) -> Option<String> {
     match record.get(id) {
-        Some(FieldValue::Text(s)) => Some(s.clone()),
+        Some(semio_framework_dsl_record::FieldValue::Text(s)) => Some(s.clone()),
         _ => None,
     }
 }
@@ -357,15 +353,15 @@ fn required_text(record: &RecordValue, id: u16, what: &'static str) -> Result<St
 
 fn field_text_list(record: &RecordValue, id: u16) -> Vec<String> {
     match record.get(id) {
-        Some(FieldValue::List(items)) => items.iter().filter_map(|v| if let FieldValue::Text(s) = v { Some(s.clone()) } else { None }).collect(),
+        Some(semio_framework_dsl_record::FieldValue::List(items)) => items.iter().filter_map(|v| if let semio_framework_dsl_record::FieldValue::Text(s) = v { Some(s.clone()) } else { None }).collect(),
         _ => Vec::new(),
     }
 }
 
 fn field_hlc(record: &RecordValue, id: u16) -> Result<(u64, u64, u64), ProtocolError> {
     match record.get(id) {
-        Some(FieldValue::Tuple(items)) => match items.as_slice() {
-            [FieldValue::UInt(actor), FieldValue::UInt(physical_ms), FieldValue::UInt(logical)] => Ok((*actor, *physical_ms, *logical)),
+        Some(semio_framework_dsl_record::FieldValue::Tuple(items)) => match items.as_slice() {
+            [semio_framework_dsl_record::FieldValue::UInt(actor), semio_framework_dsl_record::FieldValue::UInt(physical_ms), semio_framework_dsl_record::FieldValue::UInt(logical)] => Ok((*actor, *physical_ms, *logical)),
             _ => Err(ProtocolError::Malformed { what: "transition hlc", offset: 0, detail: "expected three unsigned integers".to_string() }),
         },
         _ => Err(ProtocolError::Malformed { what: "transition hlc", offset: 0, detail: "missing required field in ops text".to_string() }),
@@ -374,14 +370,14 @@ fn field_hlc(record: &RecordValue, id: u16) -> Result<(u64, u64, u64), ProtocolE
 
 fn field_bytes(record: &RecordValue, id: u16, what: &'static str) -> Result<Vec<u8>, ProtocolError> {
     match record.get(id) {
-        Some(FieldValue::Bytes64(bytes)) => Ok(bytes.clone()),
+        Some(semio_framework_dsl_record::FieldValue::Bytes64(bytes)) => Ok(bytes.clone()),
         _ => Err(ProtocolError::Malformed { what, offset: 0, detail: "missing required field in ops text".to_string() }),
     }
 }
 
 // 🚫️async: R9 pure accessor — only consumer is `.map_err(text_error_to_protocol)`, and
 // `Result::map_err` requires a sync `FnOnce`; no suspension point exists in the body either.
-fn text_error_to_protocol(err: crate::os_dsl::TextError) -> ProtocolError {
+fn text_error_to_protocol(err: semio_framework_diagnostic::TextError) -> ProtocolError {
     ProtocolError::Malformed { what: "ops text", offset: err.span.line as u64, detail: err.message }
 }
 
@@ -395,14 +391,12 @@ pub fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
         actor: Option<String>,
         started_at: String,
         finished_at: Option<String>,
-        coalesce_key: Option<String>,
         description: Option<String>,
         verb: Option<String>,
         line: Option<String>,
     }
 
     let mut log = HistoryLog::default();
-    let mut viewer_seen = false;
     let mut pending: Option<PendingEdit> = None;
     let mut forwards: Vec<OpPayload> = Vec::new();
 
@@ -413,7 +407,6 @@ pub fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
                 actor: header.actor,
                 started_at: header.started_at,
                 finished_at: header.finished_at,
-                coalesce_key: header.coalesce_key,
                 description: header.description, verb: header.verb, line: header.line,
                 ops: std::mem::take(forwards),
                 inverse: Vec::new(),
@@ -433,42 +426,32 @@ pub fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
         }
         flush(&mut pending, &mut forwards, &mut log.edits);
 
-        let opts = ParseOptions::default();
+        let opts = semio_framework_dsl_record::ParseOptions::default();
         let keyword = trimmed.split_whitespace().next().unwrap_or("");
         match keyword {
             "doc" => {
-                let record = crate::os_dsl::schema::parse(trimmed, &doc_spec(), &opts).map_err(text_error_to_protocol)?;
+                let record = semio_framework_dsl_record::parse(trimmed, &doc_spec(), &opts).map_err(text_error_to_protocol)?;
                 log.doc_id = required_text(&record, F_DOC_ID, "doc id")?;
                 log.schema = required_text(&record, F_DOC_SCHEMA, "doc schema")?;
             }
-            "viewer" => {
-                if viewer_seen {
-                    return Err(ProtocolError::Malformed { what: "ops text viewer", offset: 0, detail: "repeated viewer line".to_string() });
-                }
-                viewer_seen = true;
-                let record = crate::os_dsl::schema::parse(trimmed, &viewer_spec(), &opts).map_err(text_error_to_protocol)?;
-                log.viewer_line = field_text(&record, F_VIEWER_LINE);
-                log.viewer_checkpoint = field_text(&record, F_VIEWER_CHECKPOINT);
-            }
             "edit" => {
-                let record = crate::os_dsl::schema::parse(trimmed, &edit_spec(), &opts).map_err(text_error_to_protocol)?;
+                let record = semio_framework_dsl_record::parse(trimmed, &edit_spec(), &opts).map_err(text_error_to_protocol)?;
                 pending = Some(PendingEdit {
                     id: required_text(&record, F_EDIT_ID, "edit id")?,
                     started_at: required_text(&record, F_EDIT_STARTED, "edit started")?,
                     actor: field_text(&record, F_EDIT_ACTOR),
                     finished_at: field_text(&record, F_EDIT_FINISHED),
-                    coalesce_key: field_text(&record, F_EDIT_KEY),
                     description: field_text(&record, F_EDIT_DESCRIPTION),
                     verb: field_text(&record, F_EDIT_VERB),
                     line: match record.get(F_EDIT_LINE) {
-                        Some(FieldValue::List(values)) if values.len() <= 1 => values.first().map(|value| match value { FieldValue::Text(line) => Ok(line.clone()), _ => Err(ProtocolError::Malformed { what: "edit line", offset: 0, detail: "expected text".into() }) }).transpose()?,
+                        Some(semio_framework_dsl_record::FieldValue::List(values)) if values.len() <= 1 => values.first().map(|value| match value { semio_framework_dsl_record::FieldValue::Text(line) => Ok(line.clone()), _ => Err(ProtocolError::Malformed { what: "edit line", offset: 0, detail: "expected text".into() }) }).transpose()?,
                         _ => return Err(ProtocolError::Malformed { what: "edit line", offset: 0, detail: "expected explicit zero-or-one text list".into() }),
                     },
                 });
                 forwards = Vec::new();
             }
             "transition" => {
-                let record = crate::os_dsl::schema::parse(trimmed, &transition_spec(), &opts).map_err(text_error_to_protocol)?;
+                let record = semio_framework_dsl_record::parse(trimmed, &transition_spec(), &opts).map_err(text_error_to_protocol)?;
                 log.transitions.push(HistoryTransitionRecord {
                     id: required_text(&record, F_TRANSITION_ID, "transition id")?,
                     actor: required_text(&record, F_TRANSITION_ACTOR, "transition actor")?,
@@ -485,8 +468,9 @@ pub fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
     Ok(log)
 }
 
-/// 📤️ Prints a `HistoryLog` back to `.ops` text: `doc`, the `viewer` head unless it is the canonical trunk tip, every
-/// edit (header + two-space indented forward op lines), then one `transition` line per [`HistoryTransitionRecord`]. Errors if any op payload carries no text
+/// 📤️ Prints a `HistoryLog` back to `.ops` text: `doc`, every edit (header + two-space indented forward op lines), then one
+/// `transition` line per [`HistoryTransitionRecord`] — the shared log only: the viewer head stays `.spr`-local
+/// (`REC_VIEWER`). Errors if any op payload carries no text
 /// (the binary-only `.spr` convention): this crate is schema-agnostic and cannot recover text
 /// from an opaque binary payload — printing `.ops` for a real app document goes through the
 /// concrete `Mutation::print_op` path instead (`crate::os_store::print_document_pack`'s `.ops` mirror).
@@ -494,32 +478,24 @@ pub fn print_ops_text(log: &HistoryLog) -> Result<String, ProtocolError> {
     let mut out = String::new();
 
     let doc_record = record_with(vec![(F_DOC_ID, FieldValue::Text(log.doc_id.clone())), (F_DOC_SCHEMA, FieldValue::Text(log.schema.clone()))]);
-    out.push_str(&crate::os_dsl::schema::print(&doc_record, &doc_spec(), JoinMode::Inline));
+    out.push_str(&semio_framework_dsl_record::print(&doc_record, &doc_spec(), semio_framework_dsl_record::JoinMode::Inline));
     out.push('\n');
-    if log.viewer_line.is_some() || log.viewer_checkpoint.is_some() {
-        let fields = [(F_VIEWER_LINE, &log.viewer_line), (F_VIEWER_CHECKPOINT, &log.viewer_checkpoint)].into_iter().filter_map(|(id, value)| value.clone().map(|value| (id, FieldValue::Text(value)))).collect();
-        out.push_str(&crate::os_dsl::schema::print(&record_with(fields), &viewer_spec(), JoinMode::Inline));
-        out.push('\n');
-    }
 
     for edit in &log.edits {
         let mut fields = vec![(F_EDIT_ID, FieldValue::Text(edit.id.clone())), (F_EDIT_STARTED, FieldValue::Text(edit.started_at.clone())), (F_EDIT_LINE, FieldValue::List(edit.line.iter().cloned().map(FieldValue::Text).collect()))];
         if let Some(actor) = &edit.actor {
-            fields.push((F_EDIT_ACTOR, FieldValue::Text(actor.clone())));
+            fields.push((F_EDIT_ACTOR, semio_framework_dsl_record::FieldValue::Text(actor.clone())));
         }
         if let Some(finished) = &edit.finished_at {
-            fields.push((F_EDIT_FINISHED, FieldValue::Text(finished.clone())));
-        }
-        if let Some(key) = &edit.coalesce_key {
-            fields.push((F_EDIT_KEY, FieldValue::Text(key.clone())));
+            fields.push((F_EDIT_FINISHED, semio_framework_dsl_record::FieldValue::Text(finished.clone())));
         }
         if let Some(description) = &edit.description {
-            fields.push((F_EDIT_DESCRIPTION, FieldValue::Text(description.clone())));
+            fields.push((F_EDIT_DESCRIPTION, semio_framework_dsl_record::FieldValue::Text(description.clone())));
         }
         if let Some(verb) = &edit.verb {
-            fields.push((F_EDIT_VERB, FieldValue::Text(verb.clone())));
+            fields.push((F_EDIT_VERB, semio_framework_dsl_record::FieldValue::Text(verb.clone())));
         }
-        out.push_str(&crate::os_dsl::schema::print(&record_with(fields), &edit_spec(), JoinMode::Inline));
+        out.push_str(&semio_framework_dsl_record::print(&record_with(fields), &edit_spec(), semio_framework_dsl_record::JoinMode::Inline));
         out.push('\n');
         for op in &edit.ops {
             let Some(text) = &op.text else {
@@ -540,9 +516,9 @@ pub fn print_ops_text(log: &HistoryLog) -> Result<String, ProtocolError> {
             (F_TRANSITION_PAYLOAD, FieldValue::Bytes64(transition.payload.clone())),
         ];
         if let Some(observed) = &transition.observed {
-            fields.push((F_TRANSITION_OBSERVED, FieldValue::Text(observed.clone())));
+            fields.push((F_TRANSITION_OBSERVED, semio_framework_dsl_record::FieldValue::Text(observed.clone())));
         }
-        out.push_str(&crate::os_dsl::schema::print(&record_with(fields), &transition_spec(), JoinMode::Inline));
+        out.push_str(&semio_framework_dsl_record::print(&record_with(fields), &transition_spec(), semio_framework_dsl_record::JoinMode::Inline));
         out.push('\n');
     }
 
@@ -600,8 +576,8 @@ async fn write_id_field(out: &mut ByteWriter, id: &str, dict: &mut DictBuilder, 
 fn read_id_field<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ordinal_to_id: &(dyn Fn(u64) -> Result<&'d str, ProtocolError> + Send + Sync)) -> Result<String, ProtocolError> {
     crate::os_spr::scalar::read_id(
         input,
-        |idx: u32| dict.resolve(idx).map_err(|_| crate::os_pack::PackError::Malformed { what: "dict index", offset: idx as u64, detail: "out of range".to_string() }),
-        |ord: u64| ordinal_to_id(ord).map_err(|_| crate::os_pack::PackError::Malformed { what: "edit ordinal", offset: ord, detail: "unresolvable".to_string() }),
+        |idx: u32| dict.resolve(idx).map_err(|_| crate::os_pack::PackRefusal::Malformed { kind: semio_framework_value::ValueRefusalKind::InvalidValue, what: "dict index", offset: idx as u64, detail: "out of range".to_string() }),
+        |ord: u64| ordinal_to_id(ord).map_err(|_| crate::os_pack::PackRefusal::Malformed { kind: semio_framework_value::ValueRefusalKind::InvalidValue, what: "edit ordinal", offset: ord, detail: "unresolvable".to_string() }),
     )
     .map_err(ProtocolError::from)
 }
@@ -633,7 +609,7 @@ async fn write_history_message(out: &mut ByteWriter, message: &HistoryMessage, d
 /// 🎯️ Inverse of [`write_history_message`].
 async fn read_history_message(input: &mut ByteReader<'_>, dict: &DictReader) -> Result<HistoryMessage, ProtocolError> {
     let level = input.read_u8()?;
-    if crate::os_dsl::Severity::from_u8(level).is_none() {
+    if semio_framework_diagnostic::Severity::from_u8(level).is_none() {
         return Err(ProtocolError::Malformed { what: "history message severity", offset: input.position() as u64 - 1, detail: format!("unknown severity {level}") });
     }
     let code = read_id_field(input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?;
@@ -783,7 +759,7 @@ async fn write_op_meta(out: &mut ByteWriter, meta: &HistoryOpMeta, dict: &mut Di
     // `Contributed`/`Transaction` payload is structured data that won't repeat verbatim across
     // siblings the way a shared composite-gesture id does.
     if !meta.origin.is_owner() {
-        let encoded = crate::os_pack::json::to_json_string(&meta.origin);
+        let encoded = semio_framework_pack_json::to_json_string(&meta.origin);
         write_str_field(out, &encoded).await;
     }
     // 🎯️ Appended past `origin` (bit6 of the same presence byte, same "absent for logs predating
@@ -824,7 +800,7 @@ async fn read_op_meta<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ordi
     let group_id = if presence & (1 << 4) != 0 { Some(read_id_field(input, dict, ordinal_to_id)?) } else { None };
     let origin = if presence & (1 << 5) != 0 {
         let encoded = read_str_field(input).await?;
-        crate::os_pack::json::from_json_str(&encoded).map_err(|error| ProtocolError::Malformed { what: "op meta origin", offset: 0, detail: error.to_string() })?
+        semio_framework_pack_json::from_json_str(&encoded, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| ProtocolError::Malformed { what: "op meta origin", offset: 0, detail: error.to_string() })?
     } else {
         crate::os_spr::command::MutationOrigin::Owner
     };
@@ -853,9 +829,6 @@ pub async fn encode_edit(edit: &HistoryEdit, dict: &mut DictBuilder, edit_ordina
     if edit.finished_at.is_some() {
         presence |= 1 << 1;
     }
-    if edit.coalesce_key.is_some() {
-        presence |= 1 << 2;
-    }
     if edit.description.is_some() {
         presence |= 1 << 3;
     }
@@ -881,9 +854,6 @@ pub async fn encode_edit(edit: &HistoryEdit, dict: &mut DictBuilder, edit_ordina
         prev_epoch_ms = crate::os_spr::scalar::write_timestamp(&mut out, finished, prev_epoch_ms);
     }
     let _ = prev_epoch_ms;
-    if let Some(key) = &edit.coalesce_key {
-        write_str_field(&mut out, key).await;
-    }
     if let Some(description) = &edit.description {
         write_str_field(&mut out, description).await;
     }
@@ -940,7 +910,9 @@ pub async fn decode_edit<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id
         None
     };
     let _ = prev_epoch_ms;
-    let coalesce_key = if presence & (1 << 2) != 0 { Some(read_str_field(&mut input).await?) } else { None };
+    if presence & (1 << 2) != 0 {
+        return Err(ProtocolError::Malformed { what: "edit presence", offset: 0, detail: "bit 2 is unassigned".into() });
+    }
     let description = if presence & (1 << 3) != 0 { Some(read_str_field(&mut input).await?) } else { None };
     let lane = if presence & (1 << 6) != 0 { Some(read_str_field(&mut input).await?) } else { None };
     let verb = if presence & (1 << 7) != 0 { Some(read_str_field(&mut input).await?) } else { None };
@@ -980,7 +952,7 @@ pub async fn decode_edit<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id
     } else {
         None
     };
-    Ok(HistoryEdit { id, actor, started_at, finished_at, coalesce_key, description, verb, line, ops, inverse, meta, lane })
+    Ok(HistoryEdit { id, actor, started_at, finished_at, description, verb, line, ops, inverse, meta, lane })
 }
 //#endregion 🔖️Edit
 
@@ -1417,8 +1389,8 @@ impl RetainedHistoryDecode {
                 self.phase = RetainedHistoryDecodePhase::Fault;
                 return Err("SPR history semantic cursor escaped its verified span".into());
             }
-            let mut cursor = crate::os_io::resolve_ready(FrameCursor::new(&bytes[..trusted_end], self.offset));
-            let frame = crate::os_io::resolve_ready(cursor.next_frame())
+            let mut cursor = ::semio_framework_async::poll::resolve_ready(FrameCursor::new(&bytes[..trusted_end], self.offset));
+            let frame = ::semio_framework_async::poll::resolve_ready(cursor.next_frame())
                 .map_err(|error| {
                     self.phase = RetainedHistoryDecodePhase::Fault;
                     format!("SPR history record framing failed: {error}")
@@ -1427,7 +1399,7 @@ impl RetainedHistoryDecode {
                     self.phase = RetainedHistoryDecodePhase::Fault;
                     "SPR history ended before its verified span".to_string()
                 })?;
-            let frame_len = crate::os_io::resolve_ready(frame.frame_len());
+            let frame_len = ::semio_framework_async::poll::resolve_ready(frame.frame_len());
             if frame_len > self.limits.frame_body_bytes.saturating_add(18) {
                 self.phase = RetainedHistoryDecodePhase::Fault;
                 return Err("SPR history record exceeds retained frame byte authority".into());
@@ -1496,36 +1468,36 @@ impl RetainedHistoryDecode {
     }
 
     fn decode_frame(&mut self, frame: crate::os_spr::RecordFrame<'_>) -> Result<(), String> {
-        let payload = crate::os_io::resolve_ready(frame.payload());
+        let payload = ::semio_framework_async::poll::resolve_ready(frame.payload());
         let log = self.log.as_mut().ok_or_else(|| "SPR history log owner is absent".to_string())?;
         match frame.kind {
-            crate::os_spr::REC_STR_DICT => crate::os_io::resolve_ready(apply_dict_record(&mut self.dict, payload)).map_err(|error| error.to_string())?,
+            crate::os_spr::REC_STR_DICT => ::semio_framework_async::poll::resolve_ready(apply_dict_record(&mut self.dict, payload)).map_err(|error| error.to_string())?,
             crate::os_spr::REC_ACTOR_DICT => {}
             crate::os_spr::REC_DOC => {
-                let (doc_id, schema) = crate::os_io::resolve_ready(decode_doc(payload, &self.dict)).map_err(|error| error.to_string())?;
+                let (doc_id, schema) = ::semio_framework_async::poll::resolve_ready(decode_doc(payload, &self.dict)).map_err(|error| error.to_string())?;
                 log.doc_id = doc_id;
                 log.schema = schema;
             }
             crate::os_spr::REC_EDIT => {
                 let edit_ids = &self.edit_ids;
-                let edit = crate::os_io::resolve_ready(decode_edit(payload, &self.dict, |ordinal| edit_ids.get(ordinal as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ordinal as u32))))
+                let edit = ::semio_framework_async::poll::resolve_ready(decode_edit(payload, &self.dict, |ordinal| edit_ids.get(ordinal as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ordinal as u32))))
                     .map_err(|error| error.to_string())?;
                 self.edit_ids.push(edit.id.clone());
                 log.edits.push(edit);
             }
-            REC_TRANSITION => log.transitions.push(crate::os_io::resolve_ready(decode_transition(payload, &self.dict)).map_err(|error| error.to_string())?),
-            REC_COMPOSITION => log.composition = Some(crate::os_io::resolve_ready(decode_composition(payload, &self.dict)).map_err(|error| error.to_string())?),
+            REC_TRANSITION => log.transitions.push(::semio_framework_async::poll::resolve_ready(decode_transition(payload, &self.dict)).map_err(|error| error.to_string())?),
+            REC_COMPOSITION => log.composition = Some(::semio_framework_async::poll::resolve_ready(decode_composition(payload, &self.dict)).map_err(|error| error.to_string())?),
             REC_CONFLICT => {
                 if self.saw_conflicts {
                     return Err("SPR history repeats its conflict record".into());
                 }
                 let edit_ids = &self.edit_ids;
-                log.conflicts = crate::os_io::resolve_ready(decode_conflicts(payload, &self.dict, |ordinal| edit_ids.get(ordinal as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ordinal as u32))))
+                log.conflicts = ::semio_framework_async::poll::resolve_ready(decode_conflicts(payload, &self.dict, |ordinal| edit_ids.get(ordinal as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ordinal as u32))))
                     .map_err(|error| error.to_string())?;
                 self.saw_conflicts = true;
             }
             REC_VIEWER => {
-                let (viewer_line, viewer_checkpoint) = crate::os_io::resolve_ready(decode_viewer(payload, &self.dict)).map_err(|error| error.to_string())?;
+                let (viewer_line, viewer_checkpoint) = ::semio_framework_async::poll::resolve_ready(decode_viewer(payload, &self.dict)).map_err(|error| error.to_string())?;
                 log.viewer_line = viewer_line;
                 log.viewer_checkpoint = viewer_checkpoint;
             }
@@ -1567,7 +1539,7 @@ impl Drop for RetainedHistoryDecode {
     }
 }
 
-async fn flush_dict_delta<S: PackSink>(writer: &mut SprWriter<S>, dict: &DictBuilder, base: &mut u32) -> Result<(), ProtocolError> {
+async fn flush_dict_delta<S: PackSink>(writer: &mut SprWriter<S>, dict: &DictBuilder, base: &mut u32) -> Result<(), ProtocolError> where ProtocolError: From<S::Error> {
     let len = dict.len();
     if len > *base {
         let entries = dict.entries_since(*base);
@@ -1753,7 +1725,7 @@ pub struct HistoryAppender<S: PackSink> {
     next_edit_ordinal: u64,
 }
 
-impl<S: PackSink> HistoryAppender<S> {
+impl<S: PackSink> HistoryAppender<S> where ProtocolError: From<S::Error> {
     pub async fn begin(sink: S, doc_id: &str, schema: &str, options: &WriteOptions) -> Result<Self, ProtocolError> {
         let mut writer = SprWriter::begin(sink, options).await?;
         let mut dict = DictBuilder::new();
@@ -1861,19 +1833,19 @@ impl<'a> Iterator for EditIter<'a> {
     // the crate's one sanctioned E5 bridge (`os_io::resolve_ready`) rather than awaited.
     fn next(&mut self) -> Option<Self::Item> {
         loop {
-            match crate::os_io::resolve_ready(self.cursor.next_frame()) {
+            match ::semio_framework_async::poll::resolve_ready(self.cursor.next_frame()) {
                 Ok(Some(frame)) => match frame.kind {
                     crate::os_spr::REC_STR_DICT => {
-                        let payload = crate::os_io::resolve_ready(frame.payload());
-                        if let Err(e) = crate::os_io::resolve_ready(apply_dict_record(&mut self.dict, payload)) {
+                        let payload = ::semio_framework_async::poll::resolve_ready(frame.payload());
+                        if let Err(e) = ::semio_framework_async::poll::resolve_ready(apply_dict_record(&mut self.dict, payload)) {
                             return Some(Err(e));
                         }
                     }
                     crate::os_spr::REC_EDIT => {
                         let edit_ids_ref = &self.edit_ids;
                         let dict_ref = &self.dict;
-                        let payload = crate::os_io::resolve_ready(frame.payload());
-                        let result = crate::os_io::resolve_ready(decode_edit(payload, dict_ref, |ord| edit_ids_ref.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32))));
+                        let payload = ::semio_framework_async::poll::resolve_ready(frame.payload());
+                        let result = ::semio_framework_async::poll::resolve_ready(decode_edit(payload, dict_ref, |ord| edit_ids_ref.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32))));
                         match result {
                             Ok(edit) => {
                                 self.edit_ids.push(edit.id.clone());
@@ -1918,13 +1890,13 @@ impl<'a> Iterator for RevEditIter<'a> {
                     return None;
                 }
                 loop {
-                    match crate::os_io::resolve_ready(ready.cursor.prev_frame()) {
+                    match ::semio_framework_async::poll::resolve_ready(ready.cursor.prev_frame()) {
                         Ok(Some(frame)) => {
                             if frame.kind == crate::os_spr::REC_EDIT {
                                 let edit_ids_ref = &ready.edit_ids;
                                 let dict_ref = &ready.dict;
-                                let payload = crate::os_io::resolve_ready(frame.payload());
-                                let result = crate::os_io::resolve_ready(decode_edit(payload, dict_ref, |ord| edit_ids_ref.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32))));
+                                let payload = ::semio_framework_async::poll::resolve_ready(frame.payload());
+                                let result = ::semio_framework_async::poll::resolve_ready(decode_edit(payload, dict_ref, |ord| edit_ids_ref.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32))));
                                 ready.remaining -= 1;
                                 return Some(result);
                             }

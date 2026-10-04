@@ -28,7 +28,7 @@ pub fn diff(payload: &ConnectAdjacency, base: &ProgramSnapshot) -> protocol::Mut
         Some(existing) => {
             value.header.id = existing.header.id.clone();
             if existing == &value {
-                return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This adjacency already matches the requested value.").at([existing.header.id.0.clone()])]);
+                return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This adjacency already matches the requested value.").at([existing.header.id.0.clone()])]);
             }
             let patch = existing.diff_patch(&value).expect("diff_patch always produces a full patch");
             protocol::MutationOutcome::new(ProgramDiff { adjacencies: Some(ProgramAdjacenciesDelta { patched: vec![ProgramAdjacenciesPatchEntry { id: existing.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })

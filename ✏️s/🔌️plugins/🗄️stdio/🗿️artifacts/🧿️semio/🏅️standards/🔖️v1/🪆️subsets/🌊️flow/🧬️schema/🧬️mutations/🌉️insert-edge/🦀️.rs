@@ -24,9 +24,12 @@ impl protocol::MutationKind<SemioFlowSnapshot, SemioFlowMutation> for InsertEdge
     fn diff(&self, base: &SemioFlowSnapshot) -> protocol::MutationOutcome<<SemioFlowMutation as Mutation<SemioFlowSnapshot>>::Diff> {
         agg_diff(&SemioFlowMutation::InsertEdge(self.clone()), base)
     }
-    fn inverse(&self, base: &SemioFlowSnapshot) -> Vec<SemioFlowMutation> {
-        agg_inverse(&SemioFlowMutation::InsertEdge(self.clone()), base)
-    }
+    fn inverse(&self, base: &SemioFlowSnapshot) -> Result<Vec<SemioFlowMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&SemioFlowMutation::InsertEdge(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert edge", "Kante einfügen")
     }

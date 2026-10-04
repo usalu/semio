@@ -8,7 +8,7 @@ fn original_unique_demo_dsl_materializes_through_owned_codecs_and_independent_js
     assert!(original.iter().all(|source| source.format == SpaceFixtureFormat::Dsl));
     admit().unwrap();
     let drawing_json = document_for_app("draw", "draw").unwrap();
-    let drawing: semio_s_artifact_draw_drawing::DrawingSnapshot = store::os_pack::json::from_json_str(&drawing_json).unwrap();
+    let drawing: semio_s_artifact_draw_drawing::DrawingSnapshot = semio_framework_pack_json::from_json_str(&drawing_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let drawing_dsl = <semio_s_artifact_draw_drawing::DrawingSnapshot as store::ArtifactDsl>::parse_dsl(&original[0].text).unwrap();
     assert_eq!(drawing, drawing_dsl);
     assert!(!drawing.layers.is_empty());
@@ -17,7 +17,7 @@ fn original_unique_demo_dsl_materializes_through_owned_codecs_and_independent_js
     assert_eq!(drawing_oracle["id"], "semio");
     assert_eq!(drawing_oracle["title"], "Semio Emblem");
     let writer_json = document_for_app("writer", "writer").unwrap();
-    let writer: semio_s_artifact_writer_writer::WriterSnapshot = store::os_pack::json::from_json_str(&writer_json).unwrap();
+    let writer: semio_s_artifact_writer_writer::WriterSnapshot = semio_framework_pack_json::from_json_str(&writer_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let writer_dsl = <semio_s_artifact_writer_writer::WriterSnapshot as store::ArtifactDsl>::parse_dsl(&original[1].text).unwrap();
     assert_eq!(writer, writer_dsl);
     let writer_oracle: serde_json::Value = serde_json::from_str(&writer_json).unwrap();

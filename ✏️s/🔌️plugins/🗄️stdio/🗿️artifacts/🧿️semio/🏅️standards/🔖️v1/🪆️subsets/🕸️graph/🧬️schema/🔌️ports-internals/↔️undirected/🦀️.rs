@@ -283,7 +283,9 @@ impl PortUndirectedGraph {
             let attrs = view.edge_attrs(edge.id).cloned().unwrap_or_default();
             out.add_edge_with(edge.u, edge.v, attrs);
         }
-        out.storage.graph_attrs_mut().extend(self.storage.graph_attrs().clone());
+        for (key,value) in self.storage.graph_attrs().clone() {
+                if let Some(previous)=out.storage.graph_attrs_mut().insert(key,value){<PropertyValue as semio_framework_value::FromValue>::retire_decoded(previous);}
+            }
         out
     }
 
@@ -300,7 +302,9 @@ impl PortUndirectedGraph {
             let attrs = view.edge_attrs(edge.id).cloned().unwrap_or_default();
             out.add_edge_with(edge.u, edge.v, attrs);
         }
-        out.storage.graph_attrs_mut().extend(self.storage.graph_attrs().clone());
+        for (key,value) in self.storage.graph_attrs().clone() {
+                if let Some(previous)=out.storage.graph_attrs_mut().insert(key,value){<PropertyValue as semio_framework_value::FromValue>::retire_decoded(previous);}
+            }
         out
     }
 
@@ -323,7 +327,9 @@ impl PortUndirectedGraph {
             attrs.insert("weight".to_string(), PropertyValue::Number(weight));
             simple.add_edge_with(u, v, attrs);
         }
-        simple.graph_attrs_mut().extend(self.storage.graph_attrs().clone());
+        for (key,value) in self.storage.graph_attrs().clone() {
+                if let Some(previous)=simple.graph_attrs_mut().insert(key,value){<PropertyValue as semio_framework_value::FromValue>::retire_decoded(previous);}
+            }
         simple
     }
 
@@ -345,7 +351,9 @@ impl PortUndirectedGraph {
                 directed.add_edge_with(hv, hu, attrs);
             }
         }
-        directed.graph_attrs_mut().extend(self.storage.graph_attrs().clone());
+        for (key,value) in self.storage.graph_attrs().clone() {
+                if let Some(previous)=directed.graph_attrs_mut().insert(key,value){<PropertyValue as semio_framework_value::FromValue>::retire_decoded(previous);}
+            }
         directed
     }
 
@@ -369,7 +377,9 @@ impl PortUndirectedGraph {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_node_attributes(&mut self, node: NodeId, attrs: PropertyBag) {
         if let Some(bag) = self.storage.node_attrs_mut(node) {
-            bag.extend(attrs);
+            for (key,value) in attrs {
+                if let Some(previous)=bag.insert(key,value){<PropertyValue as semio_framework_value::FromValue>::retire_decoded(previous);}
+            }
         }
     }
 
@@ -382,7 +392,9 @@ impl PortUndirectedGraph {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_edge_attributes(&mut self, edge: EdgeId, attrs: PropertyBag) {
         if let Some(bag) = self.storage.edge_attrs_mut(edge) {
-            bag.extend(attrs);
+            for (key,value) in attrs {
+                if let Some(previous)=bag.insert(key,value){<PropertyValue as semio_framework_value::FromValue>::retire_decoded(previous);}
+            }
         }
     }
 

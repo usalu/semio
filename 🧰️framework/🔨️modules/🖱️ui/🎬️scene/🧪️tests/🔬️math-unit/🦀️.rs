@@ -1,5 +1,52 @@
 use super::*;
 
+/// 🎯️ The existing paged mesh owner retains original labels without cloning or narrowing.
+#[test]
+fn mesh3d_original_component_references_and_source_are_exact_and_retired() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-source/🔣️.json")).unwrap();
+    let source = ComponentSource3d::new(fixture["source"]["handle"].as_str().unwrap(), fixture["source"]["revision"].as_str().unwrap()).unwrap();
+    assert_eq!(source.handle(), fixture["source"]["handle"].as_str().unwrap());
+    assert_eq!(source.revision(), fixture["source"]["revision"].as_str().unwrap());
+    assert!(ComponentSource3d::new(&source.handle().to_uppercase(), source.revision()).is_none());
+    assert!(ComponentSource3d::new(&source.handle()[..63], source.revision()).is_none());
+    let field = |kind| match kind { "face" => Mesh3dField::FaceIds, "edge" => Mesh3dField::EdgeIds, "vertex" => Mesh3dField::VertexIds, _ => panic!("unknown neutral component kind") };
+    let publish = |references: &mut std::collections::BTreeMap<String, Vec<String>>| {
+        let token = mesh3d_begin(77, 88, Mesh3dSchema::triangle_mesh(3, 3)).unwrap();
+        while !mesh3d_allocate_step(token).unwrap() {}
+        for point in [[-1.0, -1.0, 0.0], [1.0, -1.0, 0.0], [0.0, 1.0, 0.0]] { mesh3d_write_vec3(token, Mesh3dField::Positions, point).unwrap(); mesh3d_write_vec3(token, Mesh3dField::Normals, [0.0, 0.0, 1.0]).unwrap(); }
+        for index in 0..3 { mesh3d_write_u32(token, Mesh3dField::Indices, index).unwrap(); }
+        mesh3d_move_component_references(token, references).unwrap();
+        mesh3d_seal(token).unwrap()
+    };
+    let close = |lease| { mesh3d_begin_close(lease).unwrap(); let mut turns = 0; while !mesh3d_close_step(lease).unwrap() { turns += 1; assert!(turns < 256); } assert!(mesh3d_terminal_is_empty(lease)); };
+    let mut references: std::collections::BTreeMap<String, Vec<String>> = serde_json::from_value(fixture["references"].clone()).unwrap();
+    let rows_pointer = references["face"].as_ptr();
+    let label_pointer = references["face"][1].as_ptr();
+    let lease = publish(&mut references);
+    assert!(references.is_empty());
+    {
+        let authority = mesh3d_authority().lock().unwrap();
+        let original = authority.ready(lease).unwrap().component_references.as_ref().unwrap();
+        assert_eq!(original["face"].as_ptr(), rows_pointer);
+        assert_eq!(original["face"][1].as_ptr(), label_pointer);
+    }
+    for row in fixture["cases"].as_array().unwrap() {
+        let expected: u64 = serde_json::from_str(row["label"].as_str().unwrap()).unwrap();
+        assert_eq!(lease.component_label(field(row["kind"].as_str().unwrap()), row["group"].as_u64().unwrap() as u32).unwrap(), Some(expected));
+    }
+    assert_eq!(lease.component_label(Mesh3dField::FaceIds, 2).unwrap(), None);
+    assert_eq!(lease.component_label(Mesh3dField::Indices, 0), Err(Mesh3dFault::Schema));
+    close(lease);
+    assert_eq!(lease.component_label(Mesh3dField::FaceIds, 0), Err(Mesh3dFault::Stale));
+    for label in fixture["invalidLabels"].as_array().unwrap() {
+        let mut original = std::collections::BTreeMap::from([("face".into(), vec![label.as_str().unwrap().into()])]);
+        let lease = publish(&mut original);
+        assert_eq!(lease.component_label(Mesh3dField::FaceIds, 0), Err(Mesh3dFault::Schema));
+        close(lease);
+    }
+    eprintln!("[DEBUG] originalComponentSource labels=4 invalidLabels=5 originalPointers=true independentSerdeU64=true terminalEmpty=true");
+}
+
 struct LegacyMeshOracleData {
     positions: Vec<[f32; 3]>,
     normals: Vec<[f32; 3]>,
@@ -38,7 +85,7 @@ fn paged_mesh_fixture(data: LegacyMeshOracleData) -> Mesh3dLease {
         edge_ids: data.edge_ids.len() as u32,
         uvs: data.uvs.len() as u32,
         colors: data.colors.len() as u32,
-    };
+    surface_uvs:[0;4],tangents:0,};
     let token = mesh3d_begin(1, 1, schema).expect("test mesh claim");
     while !mesh3d_allocate_step(token).expect("test mesh page allocation") {}
     for value in data.positions {
@@ -189,7 +236,7 @@ fn ray_hits_triangle_direct() {
 #[test]
 fn ray_hits_box() {
     let mesh = test_box_mesh();
-    let instance = Instance3d { id: "box".into(), model: mat4_identity_m(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() };
+    let instance = Instance3d { component_source: None, id: "box".into(), model: mat4_identity_m(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() };
     let hit = ray_pick_instance(vec3_new_m(0.0, 0.0, -5.0), vec3_new_m(0.0, 0.0, 1.0), mesh, &instance);
     assert!(hit.is_some());
 }
@@ -197,7 +244,7 @@ fn ray_hits_box() {
 #[test]
 fn ray_aabb_misses_offset_box() {
     let mesh = test_box_mesh();
-    let instance = Instance3d { id: "box".into(), model: mat4_translation_m(vec3_new_m(100.0, 0.0, 0.0)), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() };
+    let instance = Instance3d { component_source: None, id: "box".into(), model: mat4_translation_m(vec3_new_m(100.0, 0.0, 0.0)), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() };
     let hit = ray_pick_instance(vec3_new_m(0.0, 0.0, -5.0), vec3_new_m(0.0, 0.0, 1.0), mesh, &instance);
     assert!(hit.is_none());
 }
@@ -272,7 +319,7 @@ fn rectangle_marquee_bounds_use_start_and_end_corners() {
 #[test]
 fn projected_aabb_skips_far_instance() {
     let mesh = test_box_mesh();
-    let draws = vec![SceneDraw3d { mesh_key: "box".into(), mesh_version: 0, instances: vec![Instance3d { id: "far".into(), model: mat4_translation_m(vec3_new_m(0.0, 0.0, -500.0)), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() }], shadow_role: Default::default() }];
+    let draws = vec![SceneDraw3d { mesh_key: "box".into(), mesh_version: 0, instances: vec![Instance3d { component_source: None, id: "far".into(), model: mat4_translation_m(vec3_new_m(0.0, 0.0, -500.0)), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() }], shadow_role: Default::default() }];
     let mut lookup = std::collections::HashMap::new();
     lookup.insert("box".into(), mesh);
     let camera = Camera3d::default();
@@ -298,7 +345,7 @@ fn marquee_is_crossing_from_path_lasso_uses_first_horizontal_step() {
 #[test]
 fn screen_select_instances_window_requires_full_vertex_enclosure() {
     let mesh = test_box_mesh();
-    let draws = vec![SceneDraw3d { mesh_key: "box".into(), mesh_version: 0, instances: vec![Instance3d { id: "partial".into(), model: mat4_identity_m(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() }], shadow_role: Default::default() }];
+    let draws = vec![SceneDraw3d { mesh_key: "box".into(), mesh_version: 0, instances: vec![Instance3d { component_source: None, id: "partial".into(), model: mat4_identity_m(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() }], shadow_role: Default::default() }];
     let mut lookup = std::collections::HashMap::new();
     lookup.insert("box".into(), mesh);
     let camera = Camera3d::default();
@@ -668,7 +715,7 @@ fn orbit_controller_zoom_clamps_distance_bounds() {
 #[test]
 fn ray_pick_mesh_detail_returns_triangle_index_and_barycentrics() {
     let mesh = test_box_mesh();
-    let instance = Instance3d { id: "box".into(), model: mat4_identity_m(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() };
+    let instance = Instance3d { component_source: None, id: "box".into(), model: mat4_identity_m(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() };
     let hit = ray_pick_mesh_detail(vec3_new_m(0.0, -0.5, -5.0), vec3_new_m(0.0, 0.0, 1.0), mesh, &instance).expect("hit");
     assert_eq!(hit.triangle_index, 0);
     assert!(hit.bary_u >= 0.0 && hit.bary_v >= 0.0 && hit.bary_u + hit.bary_v <= 1.0);
@@ -677,7 +724,7 @@ fn ray_pick_mesh_detail_returns_triangle_index_and_barycentrics() {
 #[test]
 fn ray_pick_mesh_detail_misses_when_aabb_not_hit() {
     let mesh = test_box_mesh();
-    let instance = Instance3d { id: "box".into(), model: mat4_translation_m(vec3_new_m(50.0, 0.0, 0.0)), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() };
+    let instance = Instance3d { component_source: None, id: "box".into(), model: mat4_translation_m(vec3_new_m(50.0, 0.0, 0.0)), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() };
     assert!(ray_pick_mesh_detail(vec3_new_m(0.0, 0.0, -5.0), vec3_new_m(0.0, 0.0, 1.0), mesh, &instance).is_none());
 }
 
@@ -812,7 +859,7 @@ fn screen_select_components_face_granularity_selects_visible_triangle() {
     let mut data = LegacyMeshOracleData::triangle();
     data.face_ids = vec![42];
     let mesh = paged_mesh_fixture(data);
-    let draws = vec![SceneDraw3d { mesh_key: "box".into(), mesh_version: 0, instances: vec![Instance3d { id: "box".into(), model: mat4_identity_m(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() }], shadow_role: Default::default() }];
+    let draws = vec![SceneDraw3d { mesh_key: "box".into(), mesh_version: 0, instances: vec![Instance3d { component_source: None, id: "box".into(), model: mat4_identity_m(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() }], shadow_role: Default::default() }];
     let mut lookup = std::collections::HashMap::new();
     lookup.insert("box".into(), mesh);
     let camera = Camera3d::default();
@@ -827,7 +874,7 @@ fn screen_select_components_vertex_granularity_selects_ids() {
     let mut data = LegacyMeshOracleData::triangle();
     data.vertex_ids = vec![10, 11, 12];
     let mesh = paged_mesh_fixture(data);
-    let draws = vec![SceneDraw3d { mesh_key: "box".into(), mesh_version: 0, instances: vec![Instance3d { id: "box".into(), model: mat4_identity_m(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() }], shadow_role: Default::default() }];
+    let draws = vec![SceneDraw3d { mesh_key: "box".into(), mesh_version: 0, instances: vec![Instance3d { component_source: None, id: "box".into(), model: mat4_identity_m(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() }], shadow_role: Default::default() }];
     let mut lookup = std::collections::HashMap::new();
     lookup.insert("box".into(), mesh);
     let camera = Camera3d::default();
@@ -844,7 +891,7 @@ fn screen_select_components_edge_granularity_selects_ids() {
     data.edges = vec![[[-1.0, -1.0, 0.0], [1.0, -1.0, 0.0]]];
     data.edge_ids = vec![99];
     let mesh = paged_mesh_fixture(data);
-    let draws = vec![SceneDraw3d { mesh_key: "box".into(), mesh_version: 0, instances: vec![Instance3d { id: "box".into(), model: mat4_identity_m(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() }], shadow_role: Default::default() }];
+    let draws = vec![SceneDraw3d { mesh_key: "box".into(), mesh_version: 0, instances: vec![Instance3d { component_source: None, id: "box".into(), model: mat4_identity_m(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() }], shadow_role: Default::default() }];
     let mut lookup = std::collections::HashMap::new();
     lookup.insert("box".into(), mesh);
     let camera = Camera3d::default();
@@ -857,7 +904,7 @@ fn screen_select_components_edge_granularity_selects_ids() {
 #[test]
 fn screen_select_components_default_granularity_selects_whole_instance() {
     let mesh = test_box_mesh();
-    let draws = vec![SceneDraw3d { mesh_key: "box".into(), mesh_version: 0, instances: vec![Instance3d { id: "whole".into(), model: mat4_identity_m(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() }], shadow_role: Default::default() }];
+    let draws = vec![SceneDraw3d { mesh_key: "box".into(), mesh_version: 0, instances: vec![Instance3d { component_source: None, id: "whole".into(), model: mat4_identity_m(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() }], shadow_role: Default::default() }];
     let mut lookup = std::collections::HashMap::new();
     lookup.insert("box".into(), mesh);
     let camera = Camera3d::default();
@@ -874,8 +921,8 @@ fn screen_select_components_filters_by_active_instance_id() {
         mesh_key: "box".into(),
         mesh_version: 0,
         instances: vec![
-            Instance3d { id: "keep".into(), model: mat4_identity_m(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() },
-            Instance3d { id: "skip".into(), model: mat4_identity_m(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() },
+            Instance3d { component_source: None, id: "keep".into(), model: mat4_identity_m(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() },
+            Instance3d { component_source: None, id: "skip".into(), model: mat4_identity_m(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() },
         ],
         shadow_role: Default::default(),
     }];

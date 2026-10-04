@@ -75,7 +75,7 @@ async fn mutation_diff_law_and_inverse_law_hold_for_every_variant() {
         assert_eq!(returned, diff, "apply_avi_mutation must return the SAME diff as Mutation::diff for {m:?}");
         assert_eq!(snap, expected, "mutation_diff_law failed for {m:?}");
 
-        let inv = <AviMutation as Mutation<AviSnapshot>>::inverse(&m, &base);
+        let inv = <AviMutation as Mutation<AviSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
         assert_eq!(inv.len(), 1);
         let mut round = snap.clone();
         apply_avi_mutation(&mut round, &inv[0]);
@@ -91,7 +91,7 @@ async fn remove_stream_then_insert_stream_round_trips() {
     let mut snap = base.clone();
     apply_avi_mutation(&mut snap, &m);
     assert_eq!(snap.streams.len(), 1);
-    let inv = <AviMutation as Mutation<AviSnapshot>>::inverse(&m, &base);
+    let inv = <AviMutation as Mutation<AviSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
     let mut round = snap.clone();
     apply_avi_mutation(&mut round, &inv[0]);
     assert_eq!(round, base);
@@ -105,7 +105,7 @@ async fn set_snapshot_still_works_as_a_full_replace() {
     let mutation = AviMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: next.clone() });
     let diff = <AviMutation as Mutation<AviSnapshot>>::diff(&mutation, &base);
     assert_eq!(diff.diff().apply(&base).unwrap(), next);
-    let inv = <AviMutation as Mutation<AviSnapshot>>::inverse(&mutation, &base);
+    let inv = <AviMutation as Mutation<AviSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     let mut round = next.clone();
     apply_avi_mutation(&mut round, &inv[0]);
     assert_eq!(round, base);
@@ -142,6 +142,7 @@ async fn kinds_const_matches_enum_variants_in_declaration_order() {
     fn kind_of(m: &AviMutation) -> &'static str {
         match m {
             AviMutation::SetSnapshot(_) => "set-snapshot",
+            AviMutation::PatchSnapshot(_) => "patch-snapshot",
             AviMutation::SetMainHeader(_) => "set-main-header",
             AviMutation::SetIdx1Present(_) => "set-idx1-present",
             AviMutation::InsertStream(_) => "insert-stream",
@@ -158,6 +159,7 @@ async fn kinds_const_matches_enum_variants_in_declaration_order() {
     let base = base_snapshot();
     let one_per_variant = vec![
         AviMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
+        AviMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         AviMutation::SetMainHeader(set_main_header::SetMainHeader { main_header: base.main_header.clone() }),
         AviMutation::SetIdx1Present(set_idx1_present::SetIdx1Present { idx1_present: false }),
         AviMutation::InsertStream(insert_stream::InsertStream { index: 1, stream: base.streams[0].clone() }),

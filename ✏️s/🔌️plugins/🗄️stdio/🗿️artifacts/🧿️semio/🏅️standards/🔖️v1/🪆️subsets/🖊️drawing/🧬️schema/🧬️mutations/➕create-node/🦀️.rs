@@ -23,9 +23,12 @@ impl protocol::MutationKind<SemioDrawingSnapshot, SemioDrawingMutation> for Crea
     fn diff(&self, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<<SemioDrawingMutation as protocol::Mutation<SemioDrawingSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioDrawingSnapshot) -> Vec<SemioDrawingMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &SemioDrawingSnapshot) -> Result<Vec<SemioDrawingMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Create node in layer #{} at #{}", self.parent.layer, self.index), &format!("Knoten in Ebene #{} an #{} erstellen", self.parent.layer, self.index))
     }

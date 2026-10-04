@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/mutation/rotate-transforms/schema.json",
   "title": "RotateTransforms",
+  "x-semio-inverse-rows": { "perTarget": { "targets": 1 } },
   "description": "The `rotate-transforms` mutation record — one gumball rotation as intent: the world-axis rotation every addressed rotate operator composes after its own rotation, read off the BASE graph.",
   "type": "object",
   "additionalProperties": false,

@@ -43,7 +43,7 @@ export async function stlSnapshotToSqliteDatabase(snapshot: StlSnapshot, options
     }
     if ((ordinal + 1) % 64 === 0) await artifactSqliteCheckpoint(options, "projectSnapshot", (ordinal + 1) * 4, total);
   }
-  const database = artifactSqliteDatabase(STL_SQLITE_SCHEMA, [[{ rowid: 1n, values: [1n, snapshot.schema, snapshot.solidName] }], facets, vertices], options);
+  const database = await artifactSqliteDatabase(STL_SQLITE_SCHEMA, [[{ rowid: 1n, values: [1n, snapshot.schema, snapshot.solidName] }], facets, vertices], options);
   await artifactSqliteCheckpoint(options, "projectSnapshot", total, total);
   return database;
 }

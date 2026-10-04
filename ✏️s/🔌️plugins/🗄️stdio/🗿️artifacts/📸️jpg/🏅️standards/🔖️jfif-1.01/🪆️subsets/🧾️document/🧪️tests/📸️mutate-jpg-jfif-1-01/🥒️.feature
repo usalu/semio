@@ -113,7 +113,7 @@ Feature: Apply every typed JFIF 1.01 mutation to a real-world scanned document
       | remove-other-segment | {"index":0} |
       | change-re-encode-quality | {"quality":50} |
       | set-snapshot | {"snapshot":{"arithmetic":false,"height":1,"huffmanTables":[],"jfifDensityUnits":"aspect","jfifVersion":[1,1],"jfifXDensity":1,"jfifYDensity":1,"otherSegments":[{"data":[83,119,97,116,99,104],"marker":254}],"pixels":[18,52,86,255],"quantTables":[],"reEncodeQuality":90,"schema":"stdio.jpg","sofMarker":0,"width":1}} |
-      | patch-snapshot | {"patch":{"edits":[{"path":["jfifXDensity"],"edit":{"operation":"set","value":300}}]}} |
+      | patch-snapshot | {"patch":{"operation":"set","path":"/jfifXDensity","value":300}} |
 
   @id-mutate
   @level-exhaustive
@@ -151,7 +151,7 @@ Feature: Apply every typed JFIF 1.01 mutation to a real-world scanned document
       | remove-other-segment | {"index":0} |
       | change-re-encode-quality | {"quality":50} |
       | set-snapshot | {"snapshot":{"arithmetic":false,"height":1,"huffmanTables":[],"jfifDensityUnits":"aspect","jfifVersion":[1,1],"jfifXDensity":1,"jfifYDensity":1,"otherSegments":[{"data":[83,119,97,116,99,104],"marker":254}],"pixels":[18,52,86,255],"quantTables":[],"reEncodeQuality":90,"schema":"stdio.jpg","sofMarker":0,"width":1}} |
-      | patch-snapshot | {"patch":{"edits":[{"path":["jfifXDensity"],"edit":{"operation":"set","value":300}}]}} |
+      | patch-snapshot | {"patch":{"operation":"set","path":"/jfifXDensity","value":300}} |
 
   @id-inverse
   @level-exhaustive

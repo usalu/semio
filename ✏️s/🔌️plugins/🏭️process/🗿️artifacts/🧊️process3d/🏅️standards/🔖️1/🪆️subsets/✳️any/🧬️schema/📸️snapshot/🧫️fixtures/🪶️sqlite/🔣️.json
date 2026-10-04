@@ -1,0 +1,114 @@
+{
+  "dialect": {
+    "artifactKind": "s.process.process3d",
+    "standard": "1",
+    "subset": "*"
+  },
+  "binary64Bits": [
+    "0000000000000000",
+    "8000000000000000",
+    "0000000000000001",
+    "3fe0000000000000",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff8000000000001",
+    "7ff0000000000001"
+  ],
+  "scalarStorage": {
+    "width": 64,
+    "sqliteStorage": "signedIntegerWord",
+    "query": "realOrNullForNaN",
+    "classification": "finite/positiveInfinity/negativeInfinity/nan"
+  },
+  "literal": "independent\\literal\u0000!@/😀",
+  "rootStock": {
+    "id": "root-stock",
+    "label": "root-label"
+  },
+  "payloadStock": {
+    "id": "payload-stock",
+    "label": "payload-label"
+  },
+  "recipeVariants": [
+    "discCut",
+    "bladeCut",
+    "pocketCut",
+    "boreDrill",
+    "cylinderAttach",
+    "boxAttach"
+  ],
+  "solidVariants": [
+    "box",
+    "cylinder",
+    "sphere",
+    "importedMesh",
+    "importedSolid",
+    "reference"
+  ],
+  "measureVariants": [
+    "cut",
+    "drill",
+    "attach"
+  ],
+  "stockQuantities": [
+    "width",
+    "depth",
+    "height",
+    "maxDimension",
+    "minDimension"
+  ],
+  "ruleVariants": [
+    "min",
+    "max"
+  ],
+  "childAddresses": [
+    {
+      "childId": "",
+      "artifactId": "target!@/😀",
+      "artifactKind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "brep"
+    },
+    {
+      "childId": "local\u0000!@/😀",
+      "artifactId": "",
+      "artifactKind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "flow"
+    }
+  ],
+  "tableWidths": {
+    "process3_document": 3,
+    "process3_stock_pose": 23,
+    "process3_stock_payload": 4,
+    "process3_stock_payload_pose": 23,
+    "process3_solid": 2,
+    "process3_solid_box": 11,
+    "process3_solid_cylinder": 8,
+    "process3_solid_sphere": 5,
+    "process3_solid_imported_mesh": 3,
+    "process3_solid_imported_solid": 3,
+    "process3_solid_reference": 3,
+    "process3_stock_payload_solid": 3,
+    "process3_machine": 7,
+    "process3_capability": 7,
+    "process3_recipe_disc_cut": 4,
+    "process3_recipe_blade_cut": 5,
+    "process3_recipe_pocket_cut": 4,
+    "process3_recipe_bore_drill": 4,
+    "process3_recipe_cylinder_attach": 4,
+    "process3_recipe_box_attach": 5,
+    "process3_parameter": 8,
+    "process3_rule": 9,
+    "process3_step": 6,
+    "process3_step_origin": 4,
+    "process3_measure": 3,
+    "process3_measure_cut": 3,
+    "process3_measure_drill": 8,
+    "process3_measure_attach": 3,
+    "process3_measure_pose": 23,
+    "process3_stock_solid_child": 7,
+    "process3_steps_child": 7,
+    "process3_tool_solid_child": 8
+  }
+}

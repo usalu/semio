@@ -129,7 +129,7 @@ async fn extensible_fmt_chunk_round_trips_ext_bytes() {
 #[semio_framework_async_macros::async_test]
 async fn complete_chunk_sequence_preserves_order_and_duplicate_canonical_chunks() {
     use std::io::Cursor;
-    let snapshot: WavSnapshot = dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧭️preserve-chunk-sequence/🔣️.json")).expect("neutral ordered-chunk fixture decodes");
+    let snapshot: WavSnapshot = semio_framework_pack_json::from_json_str(include_str!("../../../🧫️fixtures/🧭️preserve-chunk-sequence/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral ordered-chunk fixture decodes");
     let encoded = encode_wav(&snapshot);
     let mut cursor = Cursor::new(&encoded);
     let riff = riff::Chunk::read(&mut cursor, 0).expect("riff oracle reads WAVE container");

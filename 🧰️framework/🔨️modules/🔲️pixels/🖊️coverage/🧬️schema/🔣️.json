@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["width", "height", "transform", "rule", "contours"],
+  "additionalProperties": false,
+  "definitions": {
+    "retirementProgress": {
+      "type":"object","additionalProperties":false,"required":["phase","work","done"],
+      "properties":{"phase":{"enum":["closing","complete"]},"work":{"type":"integer","minimum":0,"maximum":9007199254740991},"done":{"type":"boolean"}},
+      "allOf":[{"if":{"properties":{"done":{"const":true}}},"then":{"properties":{"phase":{"const":"complete"}}},"else":{"properties":{"phase":{"const":"closing"}}}}]
+    }
+  },
+  "properties": {
+    "width": {"type": "integer", "minimum": 1, "maximum": 16384},
+    "height": {"type": "integer", "minimum": 1, "maximum": 16384},
+    "transform": {"type": "array", "minItems": 6, "maxItems": 6, "items": {"type": "number", "minimum": -1000000000, "maximum": 1000000000}},
+    "rule": {"enum": ["nonzero", "evenodd"]},
+    "contours": {"type": "array", "maxItems": 65536, "items": {"type": "array", "maxItems": 65536, "items": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "number", "minimum": -1000000000, "maximum": 1000000000}}}}
+  }
+}

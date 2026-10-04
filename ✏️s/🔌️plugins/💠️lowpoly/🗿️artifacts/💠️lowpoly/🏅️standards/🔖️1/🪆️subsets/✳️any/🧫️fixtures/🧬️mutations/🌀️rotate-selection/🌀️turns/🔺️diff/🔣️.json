@@ -21,7 +21,8 @@
           "meshContent": "{\"vertices\":[{\"position\":[-0.99999994,0.0,1.0],\"normal\":[0.0,-1.0,0.0],\"halfedge\":0},{\"position\":[-1.0,0.0,-0.99999994],\"normal\":[0.0,-1.0,0.0],\"halfedge\":1},{\"position\":[0.99999994,0.0,-1.0],\"normal\":[0.0,-1.0,0.0],\"halfedge\":2},{\"position\":[1.0,0.0,0.99999994],\"normal\":[0.0,-1.0,0.0],\"halfedge\":3}],\"halfedges\":[{\"vertex\":0,\"twin\":null,\"next\":1,\"face\":0,\"uv\":[0.0,0.0]},{\"vertex\":1,\"twin\":null,\"next\":2,\"face\":0,\"uv\":[1.0,0.0]},{\"vertex\":2,\"twin\":null,\"next\":3,\"face\":0,\"uv\":[1.0,1.0]},{\"vertex\":3,\"twin\":null,\"next\":0,\"face\":0,\"uv\":[0.0,1.0]}],\"faces\":[{\"halfedge\":0,\"smooth\":false,\"flipped\":false}],\"uv_seams\":[]}",
           "name": null,
           "smoothShading": null,
-          "transform": null
+          "transform": null,
+          "meshState": null
         }
       }
     ],

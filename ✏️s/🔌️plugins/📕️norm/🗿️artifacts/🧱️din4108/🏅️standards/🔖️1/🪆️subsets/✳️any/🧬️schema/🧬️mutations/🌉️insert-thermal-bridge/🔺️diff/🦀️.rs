@@ -22,5 +22,5 @@ pub fn diff(payload: &InsertThermalBridge, base: &Din4108Snapshot) -> protocol::
     if index == payload.index {
         return outcome;
     }
-    outcome.warn("mutation.clamped", format!("Position {} is past the end of the thermal bridge list; inserted at {index}.", payload.index))
+    outcome.warning("mutation.clamped", format!("Position {} is past the end of the thermal bridge list; inserted at {index}.", payload.index))
 }

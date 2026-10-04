@@ -15,7 +15,7 @@ fn base_snapshot() -> GifSnapshot {
 fn round_trips(base: &GifSnapshot, mutation: GifMutation) {
     let diff = mutation.diff(base);
     let mutated = diff.diff().apply(base).expect("diff must apply to base");
-    let inverses = mutation.inverse(base);
+    let inverses = mutation.inverse(base).expect("valid retained mutation inverse fixture");
     let mut restored = mutated.clone();
     for inv in &inverses {
         let inv_diff = inv.diff(&restored);
@@ -74,9 +74,9 @@ async fn mutation_apply_inverse_round_trips_every_variant() {
 async fn kinds_match_enum_variants_and_manifest_catalog() {
     assert_eq!(
         KINDS,
-        ["set-snapshot", "set-screen-size", "set-global-color-table", "set-background-color-index", "set-pixel-aspect-ratio", "insert-image", "remove-image", "move-image", "set-image-geometry", "set-image-pixels", "set-image-interlace"]
+        ["set-snapshot", "patch-snapshot", "set-screen-size", "set-global-color-table", "set-background-color-index", "set-pixel-aspect-ratio", "insert-image", "remove-image", "move-image", "set-image-geometry", "set-image-pixels", "set-image-interlace"]
     );
-    assert_eq!(KINDS.len(), 11, "one kebab-case entry per GifMutation variant");
+    assert_eq!(KINDS.len(), 12, "one kebab-case entry per GifMutation variant");
     let manifest = include_str!("../../../../🔮️oracles/🔣️.json");
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "manifest mutationCatalogs[].kinds must list {kind:?}");

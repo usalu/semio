@@ -12,7 +12,7 @@ type Fem2dSnapshot = crate::Fem2dSnapshot;
 //#region 🔖️SetCamera
 //#endregion 🔖️SetCamera
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "camera")]
 pub struct SetCamera {
     pub x: f64,

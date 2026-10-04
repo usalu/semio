@@ -486,6 +486,8 @@ export type UiTranslationSchema = {
     };
     readonly host: {
       readonly emptyScene: UiLabelValue;
+      readonly inputDraftConflict: UiLabelValue;
+      readonly inputDraftDiscard: UiLabelValue;
       /** ♿️ The polite status under a windowed table: which of its rows are materialised. */
       readonly tableRowRange: UiLabelValue;
       readonly preview: UiLabelValue;
@@ -756,7 +758,6 @@ export type UiTranslationSchema = {
         readonly blocked: UiLabelValue;
         readonly ready: UiLabelValue;
       };
-      readonly fault: UiLabelValue;
       readonly accepted: UiLabelValue;
       readonly accept: UiLabelValue;
       readonly discard: UiLabelValue;
@@ -934,9 +935,9 @@ export type UiTranslateFn = <K extends UiTranslationKey>(key: K, options?: Recor
 /** @emoji 🪁️ Shared UI i18n port (wraps i18next; do not import i18next outside this bundle). */
 export interface UiI18nPort {
   readonly t: UiTranslateFn;
-  /** A key resolved in one given locale, whatever locale the port stands at — for text journalled in every locale. */
+  /** 🗺️ A key resolved in one given locale, whatever locale the port stands at — for text journalled in every locale. */
   tIn<K extends UiTranslationKey>(locale: UiLocale, key: K, options?: Record<string, unknown>): unknown;
-  /** Whether the live bundles define `key` — for a caller holding an open id space that only sometimes names a label. */
+  /** 🔍️ Whether the live bundles define `key` — for a caller holding an open id space that only sometimes names a label. */
   exists(key: string): boolean;
   changeLanguage(locale: UiLocale): Promise<unknown>;
   readonly language: string | undefined;

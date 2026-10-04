@@ -12,13 +12,13 @@ impl SetTransactionCountAndNotify {
     const TAG: u8 = 0x64;
 }
 impl OpText for SetTransactionCountAndNotify {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         Ok(Self {
             value: line
                 .strip_prefix("set-transaction-count-and-notify ")
-                .ok_or_else(|| store::TextError::new("expected set-transaction-count-and-notify", store::TextSpan::at(1, 1)))?
+                .ok_or_else(|| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected set-transaction-count-and-notify", semio_framework_diagnostic::TextSpan::at(1, 1)))?
                 .parse()
-                .map_err(|_| store::TextError::new("transaction count must be i32", store::TextSpan::at(1, 1)))?,
+                .map_err(|_| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "transaction count must be i32", semio_framework_diagnostic::TextSpan::at(1, 1)))?,
         })
     }
     fn print_op(&self) -> String {
@@ -43,11 +43,11 @@ impl MutationKind<TxnSnapshot, TxnMutation> for SetTransactionCountAndNotify {
     fn diff(&self, _: &TxnSnapshot) -> MutationOutcome<TxnDiff> {
         MutationOutcome::new(TxnDiff { count: Some(self.value) })
     }
-    fn inverse(&self, base: &TxnSnapshot) -> Vec<TxnMutation> {
-        vec![SetTransactionCount { value: base.count }.into()]
+    fn inverse(&self, base: &TxnSnapshot) -> Result<Vec<TxnMutation>, semio_framework_value::ValueError> {
+        Ok((|| vec![SetTransactionCount { value: base.count }.into()])())
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set transaction count and notify to {}", self.value), &format!("Transaktionsanzahl und Benachrichtigung auf {} setzen", self.value))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set transaction count and notify to {}", self.value), &format!("Transaktionsanzahl und Benachrichtigung auf {} setzen", self.value))
     }
     fn foreign_steps(&self, _: &TxnSnapshot) -> Vec<protocol::ForeignStep> {
         vec![protocol::ForeignStep {

@@ -1,0 +1,13 @@
+{
+ "$schema":"http://json-schema.org/draft-07/schema#",
+ "type":"array","minItems":18,"maxItems":18,
+ "items":{"type":"object","additionalProperties":false,"required":["name","source","stop","output","work"],
+  "properties":{
+   "name":{"type":"string","minLength":1},"source":{"type":"string","minLength":1},
+   "stop":{"enum":["fresh","preparing","events","apply","copy","sort","cross","wind","span","finish","write","done","failure","cancelled"]},
+   "publishedBeforeCancel":{"type":"boolean"},"cancelBeforeTransfer":{"type":"boolean"},"output":{"type":"boolean"},
+   "work":{"type":"object","additionalProperties":false,"required":["native","typescript"],"properties":{"native":{"type":"integer","minimum":14,"maximum":300000},"typescript":{"type":"integer","minimum":14,"maximum":300000}}}
+  },
+  "allOf":[{"if":{"required":["publishedBeforeCancel"],"properties":{"publishedBeforeCancel":{"const":true}}},"then":{"properties":{"stop":{"const":"done"},"output":{"const":false}}}},{"if":{"required":["cancelBeforeTransfer"],"properties":{"cancelBeforeTransfer":{"const":true}}},"then":{"properties":{"stop":{"const":"done"},"output":{"const":false}}}}]
+ }
+}

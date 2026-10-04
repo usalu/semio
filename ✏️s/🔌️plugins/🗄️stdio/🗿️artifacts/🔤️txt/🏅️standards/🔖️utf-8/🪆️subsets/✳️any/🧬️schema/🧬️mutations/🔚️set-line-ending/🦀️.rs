@@ -19,7 +19,7 @@ pub struct SetLineEndingMutation {
 
 pub type SetLineEndingPayload = SetLineEndingMutation;
 
-pub fn decode_set_line_ending_payload(value: &dsl::DslValue) -> Result<SetLineEndingPayload, String> {
+pub fn decode_set_line_ending_payload(value: &semio_framework_value::DslValue) -> Result<SetLineEndingPayload, String> {
     let fields = crate::schema::mutation_support::txt_required_object(value, &["value"])?;
     let value = match fields[0].1.as_str() {
         Some("lf") => LineEnding::Lf,
@@ -44,12 +44,15 @@ impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for SetLineEndingMu
         protocol::MutationOutcome::new(if base.line_ending == self.value { TxtDiff::default() } else { TxtDiff { line_ending: Some(self.value), ..Default::default() } })
     }
 
-    fn inverse(&self, base: &TxtSnapshot) -> Vec<super::TxtMutation> {
+    fn inverse(&self, base: &TxtSnapshot) -> Result<Vec<super::TxtMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         if self.diff(base).diff().line_ending.is_none() {
             return Vec::new();
         }
         vec![super::TxtMutation::SetLineEnding(Self { value: base.line_ending })]
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set Line Ending", "Zeilenende setzen")

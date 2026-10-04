@@ -357,7 +357,7 @@ async fn build_envelope(actor_stable: u64, generation: u16, lane_byte: u8, event
 /// `host_fault_bytes` helper exactly — duplicated locally rather than reached via `super::`, so
 /// this module stays fully self-contained (no coupling to that file's own dead-code lint state).
 async fn fault_bytes(code: impl Into<String>, message: impl Into<String>) -> Vec<u8> {
-    store::pack_rt::encode_wire_value(&dsl::ToValue::to_value(&dsl::Fault::new(dsl::FaultOrigin::Os, dsl::FaultCode::new(code), message)))
+    store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&semio_framework_diagnostic::Fault::new(semio_framework_diagnostic::FaultOrigin::Os, semio_framework_diagnostic::FaultCode::new(code), message)))
 }
 
 async fn encode_event(event: &Event) -> Vec<u8> {
@@ -1229,7 +1229,7 @@ struct HttpResponseWire {
 }
 
 async fn encode_http_response(response: &ServiceHttpResponse) -> Vec<u8> {
-    dsl::os_pack::json::to_json_string(&HttpResponseWire { status: response.status, headers: response.headers.clone(), body: response.body.clone() }).into_bytes()
+    semio_framework_pack_json::to_json_string(&HttpResponseWire { status: response.status, headers: response.headers.clone(), body: response.body.clone() }).into_bytes()
 }
 
 #[derive(Clone, Debug)]

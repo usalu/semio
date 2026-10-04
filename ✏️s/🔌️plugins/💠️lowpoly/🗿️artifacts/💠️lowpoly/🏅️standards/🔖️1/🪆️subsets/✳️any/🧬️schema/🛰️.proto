@@ -1,5 +1,6 @@
 syntax = "proto3";
 package semio.s.lowpoly.lowpoly.artifact;
+import "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🕸️mesh/🛰️.proto";
 import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
 
 // 🧬️ Lowpoly artifact schema — every field with its state class.
@@ -49,6 +50,7 @@ message LowpolyObject {
   // absent when the object owns no mesh yet — confirmed against the `create-object` mutation fixture.
   semio.os.store.ArtifactChild mesh = 5;
   repeated LowpolyPaintLayer paint_layers = 6;
-  // half-edge-mesh JSON the `mesh` handle hashes; empty in legacy handle-only documents.
+  // 🧱️ Independent source text preserves legal literal intermediate states.
   string mesh_content = 7;
+  optional LowpolyMeshState mesh_state = 8;
 }

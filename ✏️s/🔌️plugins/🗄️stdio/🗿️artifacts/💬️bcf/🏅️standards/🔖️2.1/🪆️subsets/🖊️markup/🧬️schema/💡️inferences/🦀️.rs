@@ -22,8 +22,11 @@ pub struct BcfInference {
 }
 
 impl protocol::Inference<BcfSnapshot> for BcfInference {
-    fn infer(snapshot: &BcfSnapshot) -> Self {
+    fn infer(snapshot: &BcfSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { topic_stats: compute_bcf_topic_stats(snapshot) }
+    
+        })
     }
 }
 
@@ -31,7 +34,9 @@ impl protocol::Inference<BcfSnapshot> for BcfInference {
 /// `BcfSnapshot::default()`'s `topics` ever stops being empty.
 impl Default for BcfInference {
     fn default() -> Self {
-        <Self as protocol::Inference<BcfSnapshot>>::infer(&BcfSnapshot::default())
+        let snapshot = &BcfSnapshot::default();
+
+        Self { topic_stats: compute_bcf_topic_stats(snapshot) }
     }
 }
 
@@ -47,17 +52,6 @@ impl protocol::InferenceSpec<BcfSnapshot> for BcfInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 💡️ No `InferredField`s here — `topicStats` is a single fold over `topics` (already O(n) in
-/// total topic/comment/viewpoint count), with no honest per-entity incremental decomposition (a
-/// merkle dep-chain over this flat whole-snapshot count/fold costs more than the fold it would
-/// cache) — the default `infer_cached` passthrough is exact.
-impl semio_framework_plugin::ArtifactInferrer for crate::standards::v2_1::subsets::any::schema::BcfBuilder {
-    type Snapshot = BcfSnapshot;
-    type Inference = BcfInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.bcf.inference`'s facet leaves into the OS-wide inference catalog — call

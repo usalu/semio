@@ -8,7 +8,7 @@ use crate::editor::space_index::config::{SpaceIndexConfig, SpaceIndexConfigMutat
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "open-artifact-with")]
 pub struct OpenArtifactWith {
     pub id: String,
@@ -22,8 +22,8 @@ pub fn handle(payload: &OpenArtifactWith, doc: &ArtifactView<'_, SSpaceSnapshot>
     let artifact_ref = format!("{}@{}/{}", row.dialect.artifact_kind, row.dialect.standard, row.dialect.subset);
     Ok(Emit::effect(Effect::ReplayShellCommand {
         action_id: "os.open-artifact-with".into(),
-        args: Some(pack::json_to_dsl_value(
-            &pack::json!({ "artifactRef": artifact_ref, "documentId": row.id.clone(), "spaceId": doc.snapshot.space_id.clone(), "schema": row.schema.clone(), "role": payload.role.clone(), "pluginId": payload.plugin_id.clone(), "appId": payload.app_id.clone() }),
+        args: Some(semio_framework_pack_json::to_dsl_value(
+            &semio_framework_pack_json::json!({ "artifactRef": artifact_ref, "documentId": row.id.clone(), "spaceId": doc.snapshot.space_id.clone(), "schema": row.schema.clone(), "role": payload.role.clone(), "pluginId": payload.plugin_id.clone(), "appId": payload.app_id.clone() }),
         )),
     }))
 }

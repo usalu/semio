@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import Ajv from "ajv";
 import ts from "typescript";
-import colorString from "color-string";
+import { colorOracle as colorString } from "./⚖️color-oracle/🟦️.ts";
 import { resolve } from "node:path";
 import schema from "../🧬️schema/🔣️.json";
 import corpus from "../🧫️fixtures/🔣️.json";
@@ -33,7 +33,11 @@ export function proveStylingVerificationContractV1(): number {
     if (accepted !== row.accepted || JSON.stringify(actual) !== JSON.stringify(row.roots)) failures.push(row.id);
   }
   for (const row of corpus.scans) {
-    const files = row.files as Record<string, string>;
+    const files: Record<string, string> = {};
+    for (const [path, text] of Object.entries(row.files)) {
+      if (typeof text !== "string") throw Error("Invalid styling fixture source: " + path);
+      files[path] = text;
+    }
     const source = { roots: row.roots, files: Object.keys(files), readText: (path: string) => files[path]! };
     const literals: string[] = [], colorLiterals: string[] = [];
     for (const [path, text] of Object.entries(files)) {

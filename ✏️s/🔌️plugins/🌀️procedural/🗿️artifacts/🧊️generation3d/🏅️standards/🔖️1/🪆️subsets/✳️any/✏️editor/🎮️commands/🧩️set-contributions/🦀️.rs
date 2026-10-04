@@ -13,7 +13,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// (4 KiB) by `validate_public_json_envelope`, which runs BEFORE the addressed tool's own wire
 /// contract, and the generation3d closure is 293 642 characters. `page`/`page_count` address this
 /// page inside the run the shell's `publicInvocationStringPages` cut.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "set-contributions")]
 pub struct SetContributions {
     pub json: String,

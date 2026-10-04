@@ -1,7 +1,0 @@
-{
-  "beforeFixtureJson": "{\"edges\":[],\"manifestId\":\"nakagin\",\"name\":\"pair\",\"nodes\":[{\"id\":\"a\",\"kind\":\"Piece\",\"name\":\"a\",\"x\":0.0,\"y\":0.0},{\"id\":\"b\",\"kind\":\"Piece\",\"name\":\"b\",\"x\":120.0,\"y\":30.0}],\"schema\":\"trinity.graph\"}",
-  "lhsJson": null,
-  "rhsJson": null,
-  "parameterBindings": null,
-  "ruleLayout": null
-}

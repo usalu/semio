@@ -12,7 +12,7 @@ pub fn diff(payload: &DeleteWidgetPosition, base: &Generation3dSnapshot) -> prot
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Widget \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }
     if !base.host_snapshot.layout.contains_key(&payload.id) {
-        return protocol::MutationOutcome::new(Generation3dDiff::default()).warn("mutation.no-op", format!("Widget \"{}\" already has no position override.", payload.id));
+        return protocol::MutationOutcome::new(Generation3dDiff::default()).warning("mutation.no-op", format!("Widget \"{}\" already has no position override.", payload.id));
     }
     protocol::MutationOutcome::new(diff_fixture_from_helpers(base, &WidgetsDiff::default(), &SynapsesDiff::default(), &LayoutDiff { removed: vec![payload.id.clone()], set: vec![] }, None, None))
 }

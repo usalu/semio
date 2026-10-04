@@ -28,10 +28,10 @@
     {
       "id": "binary-adapter",
       "relativePath": "📦️packages/🦀️rust/💾️binary/🦀️.rs",
-      "targetRelativePath": "⌨️native-entrypoint/🦀️.rs",
+      "targetRelativePath": "⌨️native-entrypoint/💾️binary/🦀️.rs",
       "language": "rust",
       "role": "declaration",
-      "content": "//! ⌨️ Native renderer executable with an empty document-service inventory.\n\n#[cfg(target_arch = \"wasm32\")]\nfn main() {}\n\n#[cfg(not(target_arch = \"wasm32\"))]\nfn main() {\n    semio_framework_os_renderer_wgpu::run_native_entrypoint(Vec::new());\n}\n"
+      "content": "//! ⌨️ Native renderer binary package declaration.\n\ninclude!(\"../../../⌨️native-entrypoint/💾️binary/🦀️.rs\");\n"
     },
     {
       "id": "typescript-adapter",

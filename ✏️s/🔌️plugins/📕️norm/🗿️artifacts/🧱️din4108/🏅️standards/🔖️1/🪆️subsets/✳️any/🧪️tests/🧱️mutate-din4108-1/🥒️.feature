@@ -97,7 +97,7 @@ Feature: Apply every typed DIN 4108 mutation against an independent Python imple
       | remove-layer                           | ➖️remove-layer                      | ✅apply  |
       | reorder-layers                         | 🔀️reorder-layers                    | ✅apply  |
       | change-layer-thickness                 | 📏️change-layer-thickness            | ✅apply  |
-      | change-layer-lambda                    | 🌡change-layer-lambda                | ✅apply  |
+      | change-layer-lambda                    | 🌡️change-layer-lambda                | ✅apply  |
       | change-layer-mu                        | 💧change-layer-mu                    | ✅apply  |
       | change-layer-material-id               | 🧽️change-layer-material-id          | ✅apply  |
       | insert-thermal-bridge                  | 🌉️insert-thermal-bridge             | ✅apply  |
@@ -111,7 +111,7 @@ Feature: Apply every typed DIN 4108 mutation against an independent Python imple
       | change-element-delta-ug                | 📈️change-element-delta-ug           | ✅apply  |
       | change-element-delta-uf                | 📈️change-element-delta-uf           | ✅apply  |
       | change-element-delta-ur                | 📈️change-element-delta-ur           | ✅apply  |
-      | change-thermal-bridge-bb2-type         | 🏷change-thermal-bridge-bb2-type     | ✅apply  |
+      | change-thermal-bridge-bb2-type         | 🏷️change-thermal-bridge-bb2-type     | ✅apply  |
       | change-zone-window-orientation         | 🧭change-zone-window-orientation     | ✅apply  |
       | change-zone-window-inclination-deg     | 📐change-zone-window-inclination-deg | ✅apply  |
       | change-layer-application-type          | 🏷️change-layer-application-type     | ✅apply  |
@@ -155,7 +155,7 @@ Feature: Apply every typed DIN 4108 mutation against an independent Python imple
       | remove-layer                       | ➖️remove-layer                      | ✅apply  |
       | reorder-layers                     | 🔀️reorder-layers                    | ✅apply  |
       | change-layer-thickness             | 📏️change-layer-thickness            | ✅apply  |
-      | change-layer-lambda                | 🌡change-layer-lambda                | ✅apply  |
+      | change-layer-lambda                | 🌡️change-layer-lambda                | ✅apply  |
       | change-layer-mu                    | 💧change-layer-mu                    | ✅apply  |
       | change-layer-material-id           | 🧽️change-layer-material-id          | ✅apply  |
       | insert-thermal-bridge              | 🌉️insert-thermal-bridge             | ✅apply  |
@@ -167,7 +167,7 @@ Feature: Apply every typed DIN 4108 mutation against an independent Python imple
       | change-element-delta-ug            | 📈️change-element-delta-ug           | ✅apply  |
       | change-element-delta-uf            | 📈️change-element-delta-uf           | ✅apply  |
       | change-element-delta-ur            | 📈️change-element-delta-ur           | ✅apply  |
-      | change-thermal-bridge-bb2-type     | 🏷change-thermal-bridge-bb2-type     | ✅apply  |
+      | change-thermal-bridge-bb2-type     | 🏷️change-thermal-bridge-bb2-type     | ✅apply  |
       | change-zone-window-orientation     | 🧭change-zone-window-orientation     | ✅apply  |
       | change-zone-window-inclination-deg | 📐change-zone-window-inclination-deg | ✅apply  |
       | change-layer-application-type      | 🏷️change-layer-application-type     | ✅apply  |

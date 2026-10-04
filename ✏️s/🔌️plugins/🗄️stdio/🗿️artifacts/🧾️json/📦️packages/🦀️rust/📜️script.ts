@@ -42,4 +42,4 @@ class NativeSchemaScript extends BundleScript {
     }
   }
 }
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-stdio-json", { commands: { "native-schema-check": NativeSchemaScript }, snapshotSqliteTests: ["../../🏅️standards/🔖️rfc8259/🪆️subsets/🌍️geojson/🧬️schema/🧪️tests/🪶️sqlite/🟦️.ts", "../../🏅️standards/🔖️rfc8259/🪆️subsets/🛜️i-json/🧬️schema/🧪️tests/🪶️sqlite/🟦️.ts","../../🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"] });
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-stdio-json", { commands: { "native-schema-check": NativeSchemaScript }, testFeatures: ["component-app-assembly"], snapshotSqliteTests: ["../../🏅️standards/🔖️rfc8259/🪆️subsets/🌍️geojson/🧬️schema/🧪️tests/🪶️sqlite/🟦️.ts", "../../🏅️standards/🔖️rfc8259/🪆️subsets/🛜️i-json/🧬️schema/🧪️tests/🪶️sqlite/🟦️.ts","../../🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"] });

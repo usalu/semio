@@ -821,34 +821,26 @@ const DOCSTRING_MARKER = /^(?:\p{Extended_Pictographic}|\p{So}|\p{Sm}|\p{Regiona
 const AT_EMOJI_LINE = /(?:\/\/\/|\/\/!|\/\*\*)\s*@emoji|^\s*\*\s*@emoji/u;
 const RUST_LINE_DOC = /^\/\/[/!](?!\/)/u;
 
-/** 🏷️ Every docstring finding of one source. `at-emoji`: each line where a doc opener (`///`, `//!`, `/**`) or a block
- * continuation (` * `) is followed by the `@emoji` token — wherever it stands, so an `@emoji` paragraph inside a run and a
- * generator's emitted doc line count too. `no-emoji`: each docstring opener — a Rust `///` / `//!` run's first non-empty
- * line, a `/** … *\/` block's first non-empty content line (Rust and TypeScript; `/**\/` and `/***` are no docstrings, and
- * a `/**` behind `//` or a quote is text) — that starts with neither an emoji nor a symbol glyph. */
-export function docstringHitsOfText(path: string, text: string): DocstringHit[] {
+/** 🧷️ Every docstring opener of one source, by 1-based line with its trimmed content: a Rust `///` or `//!` run's first non-empty
+ * line (a run ends where its doc kind changes) and a `/** … *\/` block's first non-empty content line (Rust and TypeScript; `/**\/` and `/***` are no docstrings, and a `/**`
+ * behind `//` or a quote is text), in line order. */
+export function docstringOpenersOfText(path: string, text: string): { readonly line: number; readonly content: string }[] {
   const lines = text.split("\n");
-  const hits: DocstringHit[] = [];
-  lines.forEach((raw, index) => {
-    if (AT_EMOJI_LINE.test(raw)) hits.push({ path, line: index + 1, rule: "at-emoji", text: raw.trim().slice(0, 80) });
-  });
-  const flagged = new Set(hits.map((hit) => hit.line));
+  const openers: { readonly line: number; readonly content: string }[] = [];
   const opener = (index: number, content: string): void => {
-    const trimmed = content.trim();
-    if (flagged.has(index + 1) || trimmed.startsWith("@emoji") || DOCSTRING_MARKER.test(trimmed)) return;
-    hits.push({ path, line: index + 1, rule: "no-emoji", text: trimmed.slice(0, 80) });
+    openers.push({ line: index + 1, content: content.trim() });
   };
   if (path.endsWith(".rs")) {
-    let inRun = false;
+    let run: string | null = null;
     let opened = false;
     lines.forEach((raw, index) => {
       const line = raw.trimStart();
       if (!RUST_LINE_DOC.test(line)) {
-        inRun = false;
+        run = null;
         return;
       }
-      if (!inRun) opened = false;
-      inRun = true;
+      if (run !== line.slice(0, 3)) opened = false;
+      run = line.slice(0, 3);
       if (opened || line.slice(3).trim().length === 0) return;
       opened = true;
       opener(index, line.slice(3));
@@ -878,15 +870,54 @@ export function docstringHitsOfText(path: string, text: string): DocstringHit[] 
     }
     if (closeAt >= 0) open = false;
   });
+  return openers.sort((left, right) => left.line - right.line);
+}
+
+/** 🔖️ Every docstring finding of one source. `at-emoji`: each line where a doc opener (`///`, `//!`, `/**`) or a block
+ * continuation (` * `) is followed by the `@emoji` token — wherever it stands, so an `@emoji` paragraph inside a run and a
+ * generator's emitted doc line count too. `no-emoji`: each docstring opener ({@link docstringOpenersOfText}) that starts with
+ * neither an emoji nor a symbol glyph. */
+export function docstringHitsOfText(path: string, text: string): DocstringHit[] {
+  const hits: DocstringHit[] = [];
+  text.split("\n").forEach((raw, index) => {
+    if (AT_EMOJI_LINE.test(raw)) hits.push({ path, line: index + 1, rule: "at-emoji", text: raw.trim().slice(0, 80) });
+  });
+  const flagged = new Set(hits.map((hit) => hit.line));
+  for (const { line, content } of docstringOpenersOfText(path, text)) {
+    if (!flagged.has(line) && !content.startsWith("@emoji") && !DOCSTRING_MARKER.test(content)) hits.push({ path, line, rule: "no-emoji", text: content.slice(0, 80) });
+  }
   return hits.sort((left, right) => left.line - right.line);
 }
 
-/** 🏷️ The docstring census over every tracked Rust / TypeScript source outside the ticket tree, generated trees and
- * declaration files, with its `@emoji` findings cross-checked line for line against `git grep` (the oracle). */
-export function runDocstringCensus(repoRoot: string, signal: AbortSignal, onProgress: (line: string) => void) {
+/** 🪞️ One marker that opens more than one docstring of a source (AGENTS.md: every docstring starts with a unique emoji; design
+ * §21.2 holds that per file): the marker's grapheme without its variation selector, and every opener line it starts. */
+export type DocstringEmojiReuse = Readonly<{ path: string; emoji: string; lines: readonly number[] }>;
+
+const DOCSTRING_GRAPHEMES = new Intl.Segmenter("en", { granularity: "grapheme" });
+
+/** 🔁️ Every marker of one source that opens more than one docstring ({@link docstringOpenersOfText}; an opener without a marker or
+ * behind the `@emoji` residue is the `docstrings` census's own finding), in the order of each marker's first opener. */
+export function docstringEmojiReuseOfText(path: string, text: string): DocstringEmojiReuse[] {
+  const openers = new Map<string, number[]>();
+  for (const { line, content } of docstringOpenersOfText(path, text)) {
+    if (!DOCSTRING_MARKER.test(content)) continue;
+    const emoji = DOCSTRING_GRAPHEMES.segment(content)[Symbol.iterator]().next().value!.segment.replaceAll("\uFE0F", "");
+    openers.set(emoji, [...(openers.get(emoji) ?? []), line]);
+  }
+  return [...openers].filter(([, lines]) => lines.length > 1).map(([emoji, lines]) => ({ path, emoji, lines }));
+}
+
+/** 📚️ Every tracked Rust / TypeScript source the docstring censuses read: outside the ticket tree, generated trees and declaration files. */
+function docstringSources(repoRoot: string): string[] {
   const listed = spawnSync("git", ["ls-files", "-z", "--", "*.rs", "*.ts", "*.tsx", ":!.🧬semio", ":!*.d.ts", ":!**/🤖️generated/**"], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 });
   if (listed.status !== 0) throw new Error(`git ls-files failed: ${listed.stderr}`);
-  const sources = listed.stdout.split("\0").filter(Boolean);
+  return listed.stdout.split("\0").filter(Boolean);
+}
+
+/** 🗳️ The docstring census over every source {@link docstringSources} lists, with its `@emoji` findings cross-checked line for line
+ * against `git grep` (the oracle). */
+export function runDocstringCensus(repoRoot: string, signal: AbortSignal, onProgress: (line: string) => void) {
+  const sources = docstringSources(repoRoot);
   const hits: DocstringHit[] = [];
   for (const [index, path] of sources.entries()) {
     if (signal.aborted) throw new Error("docstring census cancelled");
@@ -905,6 +936,26 @@ export function runDocstringCensus(repoRoot: string, signal: AbortSignal, onProg
   const disagreements = [...oracle].filter((key) => !scanned.has(key)).concat([...scanned].filter((key) => !oracle.has(key)));
   onProgress(`${sources.length}/${sources.length} sources scanned`);
   return { files: sources.length, hits, disagreements };
+}
+
+/** 🧮️ The per-file docstring-emoji census over `paths` (repository-relative Rust / TypeScript sources; every source
+ * {@link docstringSources} lists when absent): each marker reused within one file, see {@link docstringEmojiReuseOfText}. */
+export function runDocstringEmojiCensus(repoRoot: string, signal: AbortSignal, onProgress: (line: string) => void, paths?: readonly string[]) {
+  const sources = (paths ?? docstringSources(repoRoot)).filter((path) => /\.(?:rs|tsx?)$/u.test(path) && !path.endsWith(".d.ts"));
+  const reuse: DocstringEmojiReuse[] = [];
+  for (const [index, path] of sources.entries()) {
+    if (signal.aborted) throw new Error("docstring emoji census cancelled");
+    if (index % 5000 === 0) onProgress(`${index}/${sources.length} sources scanned`);
+    let text: string;
+    try {
+      text = readFileSync(join(repoRoot, path), "utf8");
+    } catch {
+      continue;
+    }
+    reuse.push(...docstringEmojiReuseOfText(path, text));
+  }
+  onProgress(`${sources.length}/${sources.length} sources scanned`);
+  return { files: sources.length, reuse };
 }
 /** 🐞️ One line carrying the `[DEBUG]` tag, which AGENTS.md reserves for temporary logs removed before a change lands. */
 export type DebugTagHit = Readonly<{ path: string; line: number; text: string }>;

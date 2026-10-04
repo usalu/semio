@@ -100,3 +100,10 @@ CREATE TABLE din18599_renewables (
   pv_efficiency_ieee754_bits INTEGER NOT NULL, pv_efficiency_ieee754_class TEXT NOT NULL,
   solar_thermal_kwh_a_ieee754_bits INTEGER NOT NULL, solar_thermal_kwh_a_ieee754_class TEXT NOT NULL
 );
+CREATE TABLE din18599_climate_month (
+  id INTEGER PRIMARY KEY CHECK (id BETWEEN 1 AND 12),
+  document_id INTEGER NOT NULL REFERENCES din18599_document(id),
+  theta_e_c REAL, g_h_w_m2 REAL,
+  theta_e_c_ieee754_bits INTEGER NOT NULL, theta_e_c_ieee754_class TEXT NOT NULL,
+  g_h_w_m2_ieee754_bits INTEGER NOT NULL, g_h_w_m2_ieee754_class TEXT NOT NULL
+);

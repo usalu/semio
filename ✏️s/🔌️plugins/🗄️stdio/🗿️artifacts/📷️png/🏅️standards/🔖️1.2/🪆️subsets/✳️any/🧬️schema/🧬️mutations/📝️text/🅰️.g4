@@ -1,7 +1,7 @@
 grammar Stdio_png_mutation;
 // Leaf payload grammars are authoritative in the direct text facets.
 mutation: opcode argument* EOF;
-opcode: 'set-snapshot' | 'change-header' | 'replace-palette' | 'change-transparency' | 'change-gamma' | 'change-chromaticities' | 'change-srgb-intent' | 'change-physical-dims' | 'change-timestamp' | 'change-background' | 'insert-text-chunk' | 'remove-text-chunk' | 'replace-text-chunk' | 'replace-pixels' | 'insert-unknown-chunk' | 'remove-unknown-chunk' | 'patch-pixels';
+opcode: 'change-gamma' | 'set-snapshot' | 'patch-pixels' | 'patch-snapshot' | 'paint-native-samples';
 argument: WORD '=' VALUE;
 WORD: [a-zA-Z][a-zA-Z0-9_-]*;
 VALUE: ~[ \t\r\n]+;

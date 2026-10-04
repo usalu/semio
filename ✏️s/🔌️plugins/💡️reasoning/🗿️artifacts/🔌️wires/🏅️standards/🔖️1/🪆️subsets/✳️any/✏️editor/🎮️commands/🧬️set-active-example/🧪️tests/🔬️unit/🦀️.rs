@@ -23,7 +23,10 @@ async fn set_active_example_metabolism_loads_seven_nodes() {
         panic!("expected a LoadDocument effect");
     };
     let document = <crate::WiresSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
-    assert_eq!(fixture_nodes(&crate::wires_working_board(&document)).len(), 7);
+    let child_pack = crate::genesis_wires_child_pack(&document, crate::WIRES_CONTENT_SLOT, &document.content.child_id).expect("declared example child pack");
+    let content = <crate::SemioGraphSnapshot as store::ArtifactPack>::decode_pack(&child_pack).expect("full example graph child");
+    let board = crate::wires_composed(&document, &content).board;
+    assert_eq!(fixture_nodes(&board).len(), 7);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -35,5 +38,8 @@ async fn set_active_example_unknown_id_loads_empty_document() {
         panic!("expected a LoadDocument effect");
     };
     let document = <crate::WiresSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
-    assert!(fixture_nodes(&crate::wires_working_board(&document)).is_empty());
+    let child_pack = crate::genesis_wires_child_pack(&document, crate::WIRES_CONTENT_SLOT, &document.content.child_id).expect("declared example child pack");
+    let content = <crate::SemioGraphSnapshot as store::ArtifactPack>::decode_pack(&child_pack).expect("full example graph child");
+    let board = crate::wires_composed(&document, &content).board;
+    assert!(fixture_nodes(&board).is_empty());
 }

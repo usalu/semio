@@ -1,41 +1,41 @@
 //! 🔣️ Declared Remodeling JSON preserves every literal owned scalar word.
-use dsl::DslValue;
+use semio_framework_value::DslValue;
 use semio_framework_value::{FromValue, Number, ToValue};
 
-fn member<'a>(value:&'a mut DslValue,key:&str)->Result<Option<&'a mut DslValue>,String>{match value{DslValue::Object(entries)=>Ok(entries.iter_mut().find(|(name,_)|name==key).map(|(_,value)|value)),_=>Err("Remodeling JSON requires an object".into())}}
+fn member<'a>(value:&'a mut DslValue,key:&str)->Result<Option<&'a mut DslValue>,String>{match value{semio_framework_value::DslValue::Object(entries)=>Ok(entries.iter_mut().find(|(name,_)|name==key).map(|(_,value)|value)),_=>Err("Remodeling JSON requires an object".into())}}
 fn field(value:&mut DslValue,key:&str,convert:fn(&mut DslValue,bool)->Result<(),String>,decode:bool)->Result<(),String>{if let Some(value)=member(value,key)?{if !matches!(value,DslValue::Null){convert(value,decode)?}}Ok(())}
-fn rows(value:&mut DslValue,convert:fn(&mut DslValue,bool)->Result<(),String>,decode:bool)->Result<(),String>{match value{DslValue::Array(rows)=>{for row in rows{convert(row,decode)?}Ok(())},_=>Err("Remodeling JSON requires an array".into())}}
-fn word(value:&DslValue,digits:usize)->Result<u64,String>{let DslValue::Object(fields)=value else{return Err("Remodeling JSON IEEE word requires an object".into())};if fields.len()!=1||fields[0].0!="bits"{return Err("Remodeling JSON IEEE word requires only bits".into())}let raw=fields[0].1.as_str().ok_or("Remodeling JSON IEEE bits require text")?;if raw.len()!=digits||!raw.bytes().all(|byte|byte.is_ascii_digit()||(b'a'..=b'f').contains(&byte)){return Err(format!("Remodeling JSON IEEE word requires {digits} lowercase hexadecimal digits"))}u64::from_str_radix(raw,16).map_err(|error|error.to_string())}
+fn rows(value:&mut DslValue,convert:fn(&mut DslValue,bool)->Result<(),String>,decode:bool)->Result<(),String>{match value{semio_framework_value::DslValue::Array(rows)=>{for row in rows{convert(row,decode)?}Ok(())},_=>Err("Remodeling JSON requires an array".into())}}
+fn word(value:&DslValue,digits:usize)->Result<u64,String>{let semio_framework_value::DslValue::Object(fields)=value else{return Err("Remodeling JSON IEEE word requires an object".into())};if fields.len()!=1||fields[0].0!="bits"{return Err("Remodeling JSON IEEE word requires only bits".into())}let raw=fields[0].1.as_str().ok_or("Remodeling JSON IEEE bits require text")?;if raw.len()!=digits||!raw.bytes().all(|byte|byte.is_ascii_digit()||(b'a'..=b'f').contains(&byte)){return Err(format!("Remodeling JSON IEEE word requires {digits} lowercase hexadecimal digits"))}u64::from_str_radix(raw,16).map_err(|error|error.to_string())}
 fn float64(value:&mut DslValue,decode:bool)->Result<(),String>{
- if decode{let number=match value{DslValue::Number(value)=>{let number=value.as_f64();if !number.is_finite(){return Err("Remodeling JSON numeric binary64 must be finite".into())}number},_=>f64::from_bits(word(value,16)?)};*value=DslValue::float(number)}
- else{let number=value.as_f64().ok_or("Remodeling JSON native binary64 is absent")?;*value=DslValue::object([("bits".into(),DslValue::String(format!("{:016x}",number.to_bits())))])}
+ if decode{let number=match value{semio_framework_value::DslValue::Number(value)=>{let number=value.as_f64();if !number.is_finite(){return Err("Remodeling JSON numeric binary64 must be finite".into())}number},_=>f64::from_bits(word(value,16)?)};*value=semio_framework_value::DslValue::float(number)}
+ else{let number=value.as_f64().ok_or("Remodeling JSON native binary64 is absent")?;*value=semio_framework_value::DslValue::object([("bits".into(),semio_framework_value::DslValue::String(format!("{:016x}",number.to_bits())))])}
  Ok(())
 }
 fn float32(value:&mut DslValue,decode:bool)->Result<(),String>{
- if decode{let number=match value{DslValue::Number(value)=>{let wide=value.as_f64();let number=wide as f32;if !wide.is_finite()||!number.is_finite(){return Err("Remodeling JSON numeric binary32 must be finite and representable".into())}number},_=>f32::from_bits(word(value,8)? as u32)};*value=number.to_value()}
- else{let number=f32::from_value(std::mem::replace(value,DslValue::Null)).map_err(|error|error.to_string())?;*value=DslValue::object([("bits".into(),DslValue::String(format!("{:08x}",number.to_bits())))])}
+ if decode{let number=match value{semio_framework_value::DslValue::Number(value)=>{let wide=value.as_f64();let number=wide as f32;if !wide.is_finite()||!number.is_finite(){return Err("Remodeling JSON numeric binary32 must be finite and representable".into())}number},_=>f32::from_bits(word(value,8)? as u32)};*value=number.to_value()}
+ else{let number=f32::from_value(std::mem::replace(value,semio_framework_value::DslValue::Null)).map_err(|error|error.to_string())?;*value=semio_framework_value::DslValue::object([("bits".into(),semio_framework_value::DslValue::String(format!("{:08x}",number.to_bits())))])}
  Ok(())
 }
 fn unsigned64(value:&mut DslValue,decode:bool)->Result<(),String>{
  if decode{let number=match value{
- DslValue::String(raw)=>{if raw.is_empty()||raw.len()>20||!raw.bytes().all(|byte|byte.is_ascii_digit())||(raw.len()>1&&raw.starts_with('0')){return Err("Remodeling JSON unsigned64 requires canonical decimal text".into())}raw.parse::<u64>().map_err(|error|error.to_string())?},
- DslValue::Number(Number::UInt(number)) if *number<=9007199254740991=>*number,
- DslValue::Number(Number::Int(number)) if *number>=0&&*number<=9007199254740991=>*number as u64,
- DslValue::Number(Number::Float(number)) if number.is_finite()&&*number>=0.0&&*number<=9007199254740991.0&&number.fract()==0.0=>*number as u64,
+ semio_framework_value::DslValue::String(raw)=>{if raw.is_empty()||raw.len()>20||!raw.bytes().all(|byte|byte.is_ascii_digit())||(raw.len()>1&&raw.starts_with('0')){return Err("Remodeling JSON unsigned64 requires canonical decimal text".into())}raw.parse::<u64>().map_err(|error|error.to_string())?},
+ semio_framework_value::DslValue::Number(Number::UInt(number)) if *number<=9007199254740991=>*number,
+ semio_framework_value::DslValue::Number(Number::Int(number)) if *number>=0&&*number<=9007199254740991=>*number as u64,
+ semio_framework_value::DslValue::Number(Number::Float(number)) if number.is_finite()&&*number>=0.0&&*number<=9007199254740991.0&&number.fract()==0.0=>*number as u64,
  _=>return Err("Remodeling JSON unsigned64 numeric input must be a safe unsigned integer".into())
- };*value=DslValue::uint(number)}
- else{*value=DslValue::String(value.as_u64().ok_or("Remodeling JSON native unsigned64 is absent")?.to_string())}
+ };*value=semio_framework_value::DslValue::uint(number)}
+ else{*value=semio_framework_value::DslValue::String(value.as_u64().ok_or("Remodeling JSON native unsigned64 is absent")?.to_string())}
  Ok(())
 }
 fn signed64(value:&mut DslValue,decode:bool)->Result<(),String>{
  if decode{let number=match value{
- DslValue::String(raw)=>{let number=raw.parse::<i64>().map_err(|error|error.to_string())?;if number.to_string()!=*raw{return Err("Remodeling JSON signed64 requires canonical decimal text".into())}number},
- DslValue::Number(Number::Int(number)) if (-9007199254740991..=9007199254740991).contains(number)=>*number,
- DslValue::Number(Number::UInt(number)) if *number<=9007199254740991=>*number as i64,
- DslValue::Number(Number::Float(number)) if number.is_finite()&&number.abs()<=9007199254740991.0&&number.fract()==0.0=>*number as i64,
+ semio_framework_value::DslValue::String(raw)=>{let number=raw.parse::<i64>().map_err(|error|error.to_string())?;if number.to_string()!=*raw{return Err("Remodeling JSON signed64 requires canonical decimal text".into())}number},
+ semio_framework_value::DslValue::Number(Number::Int(number)) if (-9007199254740991..=9007199254740991).contains(number)=>*number,
+ semio_framework_value::DslValue::Number(Number::UInt(number)) if *number<=9007199254740991=>*number as i64,
+ semio_framework_value::DslValue::Number(Number::Float(number)) if number.is_finite()&&number.abs()<=9007199254740991.0&&number.fract()==0.0=>*number as i64,
  _=>return Err("Remodeling JSON signed64 numeric input must be a safe integer".into())
- };*value=DslValue::int(number)}
- else{*value=DslValue::String(value.as_i64().ok_or("Remodeling JSON native signed64 is absent")?.to_string())}
+ };*value=semio_framework_value::DslValue::int(number)}
+ else{*value=semio_framework_value::DslValue::String(value.as_i64().ok_or("Remodeling JSON native signed64 is absent")?.to_string())}
  Ok(())
 }
 fn vector32(value:&mut DslValue,decode:bool)->Result<(),String>{rows(value,float32,decode)}

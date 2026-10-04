@@ -1,0 +1,228 @@
+{
+  "schema": "s.stdio.semio.graph",
+  "nodes": [
+    {
+      "id": {
+        "value": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1"
+      },
+      "kind": "Piece",
+      "label": "b",
+      "position": {
+        "x": {
+          "bits": "0000000000000000"
+        },
+        "y": {
+          "bits": "0000000000000000"
+        }
+      },
+      "width": {
+        "bits": "4058000000000000"
+      },
+      "height": {
+        "bits": "4048000000000000"
+      },
+      "ports": [
+        {
+          "name": "c5465220-19ba-4443-8f1d-617c832dd13c",
+          "kind": "out",
+          "category": "Connector",
+          "properties": []
+        }
+      ],
+      "properties": [
+        {
+          "key": "label",
+          "value": {
+            "kind": "str",
+            "value": "tower-core"
+          }
+        },
+        {
+          "key": "position",
+          "value": {
+            "kind": "map",
+            "entries": [
+              {
+                "key": "x",
+                "value": {
+                  "kind": "float",
+                  "lexeme": "0"
+                }
+              },
+              {
+                "key": "y",
+                "value": {
+                  "kind": "float",
+                  "lexeme": "0"
+                }
+              },
+              {
+                "key": "z",
+                "value": {
+                  "kind": "float",
+                  "lexeme": "0"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "key": "tier",
+          "value": {
+            "kind": "float",
+            "lexeme": "0"
+          }
+        }
+      ]
+    },
+    {
+      "id": {
+        "value": "5f0266bc-856b-4ef2-9eb0-16ef5e1fb952"
+      },
+      "kind": "Piece",
+      "label": "t_f0_b_c0",
+      "position": {
+        "x": {
+          "bits": "c061800000000000"
+        },
+        "y": {
+          "bits": "4054000000000000"
+        }
+      },
+      "width": {
+        "bits": "4056000000000000"
+      },
+      "height": {
+        "bits": "4044000000000000"
+      },
+      "ports": [
+        {
+          "name": "7be6cfda-db1b-47e4-bcea-cd011e516e2e",
+          "kind": "in",
+          "category": "Connector",
+          "properties": []
+        }
+      ],
+      "properties": [
+        {
+          "key": "label",
+          "value": {
+            "kind": "str",
+            "value": "floor0-left"
+          }
+        },
+        {
+          "key": "position",
+          "value": {
+            "kind": "map",
+            "entries": [
+              {
+                "key": "x",
+                "value": {
+                  "kind": "float",
+                  "lexeme": "-1.2"
+                }
+              },
+              {
+                "key": "y",
+                "value": {
+                  "kind": "float",
+                  "lexeme": "1.2"
+                }
+              },
+              {
+                "key": "z",
+                "value": {
+                  "kind": "float",
+                  "lexeme": "0"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "key": "tier",
+          "value": {
+            "kind": "float",
+            "lexeme": "0"
+          }
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": {
+        "value": "cc0d14f5-11b2-4258-ac52-287d0d46b23b"
+      },
+      "source": {
+        "value": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1"
+      },
+      "target": {
+        "value": "5f0266bc-856b-4ef2-9eb0-16ef5e1fb952"
+      },
+      "sourcePort": "c5465220-19ba-4443-8f1d-617c832dd13c",
+      "targetPort": "7be6cfda-db1b-47e4-bcea-cd011e516e2e",
+      "kind": "Connection",
+      "label": "",
+      "properties": [
+        {
+          "key": "gap",
+          "value": {
+            "kind": "float",
+            "lexeme": "0"
+          }
+        },
+        {
+          "key": "rise",
+          "value": {
+            "kind": "float",
+            "lexeme": "0"
+          }
+        },
+        {
+          "key": "rotation",
+          "value": {
+            "kind": "float",
+            "lexeme": "270"
+          }
+        },
+        {
+          "key": "shift",
+          "value": {
+            "kind": "float",
+            "lexeme": "0"
+          }
+        },
+        {
+          "key": "tilt",
+          "value": {
+            "kind": "float",
+            "lexeme": "0"
+          }
+        },
+        {
+          "key": "turn",
+          "value": {
+            "kind": "float",
+            "lexeme": "0"
+          }
+        },
+        {
+          "key": "u",
+          "value": {
+            "kind": "float",
+            "lexeme": "-1.2"
+          }
+        },
+        {
+          "key": "v",
+          "value": {
+            "kind": "float",
+            "lexeme": "1.2"
+          }
+        }
+      ]
+    }
+  ]
+}

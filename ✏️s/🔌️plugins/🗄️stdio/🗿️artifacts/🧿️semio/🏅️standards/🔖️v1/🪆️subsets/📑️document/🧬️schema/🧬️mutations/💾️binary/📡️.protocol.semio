@@ -45,3 +45,5 @@ record remove-image tag=15
 field payload bytes
 record set-image-bytes tag=16
 field payload bytes
+record patch-snapshot tag=17
+field payload bytes

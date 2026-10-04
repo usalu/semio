@@ -17,7 +17,7 @@ fn block_on_gis_map_windows<F: std::future::Future>(future: F) -> F::Output {
 #[test]
 fn gis_map_window_ownership_mutations_match_neutral_fixture_and_codecs() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
-    let base: MapWindowConfig = dsl::json::from_json_str(&fixture["baseConfig"].to_string()).unwrap();
+    let base: MapWindowConfig = semio_framework_pack_json::from_json_str(&fixture["baseConfig"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut windows = std::collections::BTreeMap::<String, MapWindowConfig>::new();
     for row in fixture["windowInstances"].as_array().unwrap() {
         if row["windowKindId"] == "gis2d-main" {
@@ -27,33 +27,33 @@ fn gis_map_window_ownership_mutations_match_neutral_fixture_and_codecs() {
     for row in fixture["mutations"].as_array().unwrap() {
         let id = row["windowId"].as_str().unwrap().to_string();
         let before = windows.get(&id).cloned().unwrap();
-        let mutation: MapWindowConfigMutation = dsl::json::from_json_str(&row["mutation"].to_string()).unwrap();
+        let mutation: MapWindowConfigMutation = semio_framework_pack_json::from_json_str(&row["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let after = mutation.diff(&before).diff().apply(&before).unwrap();
-        let restored = mutation.inverse(&before).into_iter().fold(after.clone(), |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
+        let restored = mutation.inverse(&before).expect("valid retained mutation inverse fixture").into_iter().fold(after.clone(), |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
         assert_eq!(restored, before);
         assert_eq!(MapWindowConfigMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
         assert_eq!(MapWindowConfigMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
         windows.insert(id, after);
     }
     for (id, expected) in fixture["expected"].as_object().unwrap() {
-        let expected: MapWindowConfig = dsl::json::from_json_str(&expected.to_string()).unwrap();
+        let expected: MapWindowConfig = semio_framework_pack_json::from_json_str(&expected.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         assert_eq!(windows.get(id), Some(&expected));
     }
     for row in fixture["undoMutations"].as_array().unwrap() {
         let id = row["windowId"].as_str().unwrap().to_string();
         let before = windows.get(&id).cloned().unwrap();
-        let mutation: MapWindowConfigMutation = dsl::json::from_json_str(&row["mutation"].to_string()).unwrap();
+        let mutation: MapWindowConfigMutation = semio_framework_pack_json::from_json_str(&row["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         windows.insert(id, mutation.diff(&before).diff().apply(&before).unwrap());
     }
     assert!(windows.values().all(|config| config == &base));
     for row in fixture["redoMutations"].as_array().unwrap() {
         let id = row["windowId"].as_str().unwrap().to_string();
         let before = windows.get(&id).cloned().unwrap();
-        let mutation: MapWindowConfigMutation = dsl::json::from_json_str(&row["mutation"].to_string()).unwrap();
+        let mutation: MapWindowConfigMutation = semio_framework_pack_json::from_json_str(&row["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         windows.insert(id, mutation.diff(&before).diff().apply(&before).unwrap());
     }
     for (id, expected) in fixture["expected"].as_object().unwrap() {
-        let expected: MapWindowConfig = dsl::json::from_json_str(&expected.to_string()).unwrap();
+        let expected: MapWindowConfig = semio_framework_pack_json::from_json_str(&expected.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         assert_eq!(windows.get(id), Some(&expected));
     }
 }

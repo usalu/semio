@@ -5,7 +5,8 @@ use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
 
 //#region 🔖️Inverse
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(payload: &super::AddNodePort, base: &SemioGraphSnapshot) -> Vec<SemioGraphMutation> {
+pub fn inverse(payload: &super::AddNodePort, base: &SemioGraphSnapshot) -> Result<Vec<SemioGraphMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.nodes.iter().find(|n| n.id == payload.node_id) {
         Some(node) => {
             let at = payload.index.min(node.ports.len());
@@ -13,5 +14,7 @@ pub fn inverse(payload: &super::AddNodePort, base: &SemioGraphSnapshot) -> Vec<S
         }
         None => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

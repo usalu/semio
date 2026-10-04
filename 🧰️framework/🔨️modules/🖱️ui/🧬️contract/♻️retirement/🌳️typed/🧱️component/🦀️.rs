@@ -125,6 +125,7 @@ typed_scalar!(
     f64,
     UiNodeId,
     UiRevision,
+    UiPublicationRevision,
     Activity,
     TransitionHint,
     StyleSpec,
@@ -230,13 +231,13 @@ impl<T: UiTypedRetire, const N: usize> UiTypedRetire for UiFixedList<T, N> {
     fn retire_typed(&mut self, path: &mut [u8], value: &mut Option<UiValueRetirement>, bytes: usize) -> Result<UiValueRetirementStep, &'static str> {
         let (index, path) = split(path)?;
         if *index == 1 {
-            self.truncate_retired_last()?;
+            self.truncate_retired_last().map_err(|error| error.reason)?;
             *index = 0;
             path.fill(0);
             return Ok(UiValueRetirementStep::progress(1, 0));
         }
         let Some(field) = self.last_mut() else {
-            let released = self.release_empty_page(usize::MAX)?;
+            let released = self.release_empty_page(usize::MAX).map_err(|error| error.reason)?;
             return Ok(UiValueRetirementStep { complete: self.terminal_is_empty(), progressed: released.progressed, released_items: usize::from(released.progressed), released_bytes: 0 });
         };
         let mut step = field.retire_typed(path, value, bytes)?;

@@ -3,7 +3,7 @@
 
 use crate::editor::flow::modes::edit::tools::drag::flow_drag_tool_emit;
 use semio_framework_tool_machine::NodeDragRecord;
-use crate::{op::FlowMutation, FlowSnapshot};
+use crate::{FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
@@ -14,7 +14,7 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot
 /// 🪪️ The verb a `moveMediaNode` drag-tool transaction is scoped by.
 pub const MOVE_MEDIA_NODE_VERB: &str = "moveMediaNode";
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct MoveMediaNode {
     pub node_id: String,
     pub x: f64,

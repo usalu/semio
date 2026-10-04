@@ -1,221 +1,75 @@
-//! 🧬️ Flow artifact — typed invertible semantic mutations over [`FlowSnapshot`]. Verbs drawn from
-//! the closed taxonomy (`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️taxonomy.md`);
-//! every variant wraps a `MutationKind<FlowSnapshot, FlowMutation>` payload from its own
-//! `🧬️mutations/<kind>/` triad leaf. `impl Mutation`/`impl SemanticMutation` are
-//! `#[derive(protocol::Mutations)]`-generated — never hand-written.
-
-//#region 📖️SemioGrammar
-/// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
-pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
-pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
-//#endregion 📖️SemioGrammar
+//! 🌊️ Flow parent mutation vocabulary — empty by design (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING design §12,
+//! §20.15): a flow's widgets, synapses and layout live in its composed `content` child (`s.stdio.semio@v1/flow`), so every
+//! content edit is a child-lane leaf in that child's store (`insert-node`, `remove-edge`, `drag-nodes`, `set-node-param`, …)
+//! and the parent owns no leaf that could read the child. Editors publish those child leaves
+//! (`crate::editor::flow::flow_content_leaves`, `crate::editor::flow::flow_removal_leaves`).
 
 use crate::schema::diff::text::FlowDiff;
 use crate::FlowSnapshot;
-use protocol::{Mutation, MutationDiff};
-use store::{ArtifactEnvelope, ArtifactStore};
 
-//#region 🔹Operation
-/// 🌊️ Typed, invertible flow-document semantic mutations.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, protocol::Mutations)]
-#[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = FlowSnapshot, diff = FlowDiff, schema = "flow.flow", retire_cold = retire_flow_mutation)]
-pub enum FlowMutation {
-    CreateWidget(super::create_widget::CreateWidget),
-    DeleteWidget(super::delete_widget::DeleteWidget),
-    ReorderWidgets(super::reorder_widgets::ReorderWidgets),
-    ReplaceWidget(super::replace_widget::ReplaceWidget),
-    ConnectWidgets(super::connect_widgets::ConnectWidgets),
-    DisconnectWidgets(super::disconnect_widgets::DisconnectWidgets),
-    ReorderSynapses(super::reorder_synapses::ReorderSynapses),
-    UpdateSynapseEndpoints(super::update_synapse_endpoints::UpdateSynapseEndpoints),
-    MoveWidgets(super::move_widgets::MoveWidgets),
-    DuplicateWidget(super::duplicate_widget::mutation::DuplicateWidget),
-}
+//#region 🔖️Aggregate
+/// 🕳️ The uninhabited parent vocabulary of a document whose whole content is its composed child.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+pub enum FlowMutation {}
 
-/// 🏷️ The kebab spelling of every [`FlowMutation`] variant, in DECLARATION ORDER — the one list the
-/// language-neutral test platform is measured against. It is duplicated in exactly two other places
-/// on purpose: this subset's own oracle manifest catalog `flow-1-any`
-/// (`../../🔣️oracle.json`), which the completeness gate counts, and the `🌊️mutate-flow-1`
-/// case adapter, which must not link this crate in the oracle role.
-/// [`tests::kinds_match_the_enum_and_the_catalog`] is what keeps all three honest.
-pub const KINDS: &[&str] = &["create-widget", "delete-widget", "reorder-widgets", "replace-widget", "connect-widgets", "disconnect-widgets", "reorder-synapses", "update-synapse-endpoints", "move-widgets", "duplicate-widget"];
+impl protocol::Mutation<FlowSnapshot> for FlowMutation {
+    type Diff = FlowDiff;
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[];
 
-pub type FlowEnvelope = ArtifactEnvelope<FlowSnapshot, FlowMutation>;
-pub type FlowStore = ArtifactStore<FlowSnapshot, FlowMutation>;
-
-/// 🌈️ Applies a mutation onto a snapshot in place.
-pub fn apply_flow_mutation(snapshot: &mut FlowSnapshot, mutation: &FlowMutation) -> protocol::MutationApplyResult<()> {
-    let next = <FlowMutation as Mutation<FlowSnapshot>>::diff(mutation, snapshot).diff().apply(snapshot)?;
-
-    *snapshot = next;
-    Ok(())
-}
-
-/// ↩️ Inverse mutations for undo.
-pub fn inverse_flow_mutation(snapshot: &FlowSnapshot, mutation: &FlowMutation) -> Vec<FlowMutation> {
-    <FlowMutation as Mutation<FlowSnapshot>>::inverse(mutation, snapshot)
-}
-
-/// 🧊️ Cold-retires one flow operation — the generated `Mutation::retire_cold`. The widget a create or replace carries owns
-/// fail-closed roots (`Dictionary`, `OrderedSet`, `Tree`) that refuse a bare drop; every other payload is plain data.
-pub fn retire_flow_mutation(mutation: FlowMutation) {
-    match mutation {
-        FlowMutation::CreateWidget(create) => create.widget.retire_cold(),
-        FlowMutation::ReplaceWidget(replace) => replace.widget.retire_cold(),
-        _ => {}
+    fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
+        match *self {}
+    }
+    fn diff(&self, _base: &FlowSnapshot) -> protocol::MutationOutcome<FlowDiff> {
+        match *self {}
+    }
+    fn inverse(&self, _base: &FlowSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+        match *self {}
     }
 }
-//#endregion 🔹Operation
 
-//#region 🔖️CaseBridges
-/// 📥️ Decodes this facet's own internally-tagged (`{"mutation": "createWidget", …}`) JSON projection
-/// — the shape the `🌊️mutate-flow-1` case's `Examples` rows carry — into a real [`FlowMutation`]. A
-/// thin `serde_json` wrapper (already a direct dependency of this crate, used behind this interface
-/// per CLAUDE.md's "external libraries behind an interface" rule, never a new one), so the case reads
-/// the committed feature row instead of re-declaring it as a Rust literal beside it.
-pub fn decode_flow_mutation_json(text: &str) -> Result<FlowMutation, String> {
-    let json: serde_json::Value = serde_json::from_str(text).map_err(|error| error.to_string())?;
-    let value: dsl::DslValue = json.into();
-    dsl::FromValue::from_value(value).map_err(|error| error.to_string())
-}
-
-/// 📥️ Decodes a committed `{"widgets": [...], "synapses": [...], "layout": { … }}` document into the
-/// real values a composed content child is seeded with. `Widget` is a typed UNION whose variant
-/// decides its own field set, so a caller outside this crate cannot rebuild one by hand without
-/// re-implementing that discriminant — which is exactly the knowledge this subset owns.
-pub fn decode_flow_scene_json(text: &str) -> Result<(Vec<semio_framework_artifact_flow_flow::Widget>, Vec<semio_framework_artifact_flow_flow::SynapseSpec>, flow::OrderedMap<semio_framework_artifact_flow_flow::WidgetLayout>), String> {
-    #[derive(value_derive::FromValue)]
-    struct CommittedScene {
-        #[value(default)]
-        widgets: Vec<semio_framework_artifact_flow_flow::Widget>,
-        #[value(default)]
-        synapses: Vec<semio_framework_artifact_flow_flow::SynapseSpec>,
-        #[value(default)]
-        layout: flow::OrderedMap<semio_framework_artifact_flow_flow::WidgetLayout>,
+/// 🏷️ No parent kind exists, so no parent operation is ever labelled; child leaves label their own rows.
+impl protocol::SemanticMutation<FlowSnapshot> for FlowMutation {
+    fn kinds() -> &'static [protocol::SemanticDescriptor] {
+        &[]
     }
-    let json: serde_json::Value = serde_json::from_str(text).map_err(|error| error.to_string())?;
-    let value: dsl::DslValue = json.into();
-    let scene: CommittedScene = dsl::FromValue::from_value(value).map_err(|error| error.to_string())?;
-    Ok((scene.widgets, scene.synapses, scene.layout))
-}
-
-/// ⚖️ The SEMANTIC PROJECTION this subset is compared through — `(schema, widgets, synapses,
-/// layout)`, the inline document fields plus the composed content child's working scene. It belongs
-/// to the subset rather than to a test adapter, because what counts as this document's meaning is
-/// this subset's ruling, not a case's. The content handle is deliberately absent:
-/// `flow_content_child_handle` content-addresses that triple with domain-separated SHA-256.
-/// Dedicated cross-language identity fixtures pin its exact canonical bytes and digest, while this
-/// projection measures semantic mutation behavior without comparing the same content twice.
-pub fn encode_flow_projection_json(snapshot: &FlowSnapshot) -> String {
-    let scene = crate::flow_working_scene(snapshot);
-    let value = dsl::DslValue::object([
-        ("schema".to_string(), dsl::ToValue::to_value(&snapshot.schema)),
-        ("widgets".to_string(), dsl::ToValue::to_value(&scene.widgets)),
-        ("synapses".to_string(), dsl::ToValue::to_value(&scene.synapses)),
-        ("layout".to_string(), dsl::ToValue::to_value(&scene.layout)),
-    ]);
-    let json: serde_json::Value = value.into();
-    json.to_string()
-}
-//#endregion 🔖️CaseBridges
-
-//#region 🌉️FrameworkBridge
-/// 🌎️ Converts a framework kernel mutation into this plugin's semantic mutation vocabulary.
-/// `ReplaceFlowHostSnapshot` (whole-fixture replace) has no semantic-mutation representation — banned
-/// per the taxonomy's `set-snapshot` ruling, "it has NO replacement mutation" — so it returns
-/// `None`; callers route that case through `store::ArtifactStore::reset` instead of the `Mutation`
-/// enum. The framework's own diffing helper (`semio_framework_artifact_flow_flow::flow_host_snapshot_operations`) never emits
-/// `ReplaceFlowHostSnapshot` (only the add/remove/move/change leaves), so this arm is unreachable on the
-/// live host-bridge path and only matters for a hand-authored/decoded `flow.op` line.
-pub fn from_framework_mutation(mutation: semio_framework_artifact_flow_flow::FlowMutation) -> Option<FlowMutation> {
-    Some(match mutation {
-        semio_framework_artifact_flow_flow::FlowMutation::AddWidget(payload) => FlowMutation::CreateWidget(super::create_widget::CreateWidget { index: payload.index as usize, widget: payload.widget }),
-        semio_framework_artifact_flow_flow::FlowMutation::RemoveWidget(payload) => FlowMutation::DeleteWidget(super::delete_widget::DeleteWidget { id: payload.id }),
-        semio_framework_artifact_flow_flow::FlowMutation::MoveWidget(payload) => FlowMutation::ReorderWidgets(super::reorder_widgets::ReorderWidgets { id: payload.id, to_index: payload.to_index as usize }),
-        semio_framework_artifact_flow_flow::FlowMutation::ChangeWidget(payload) => FlowMutation::ReplaceWidget(super::replace_widget::ReplaceWidget { id: payload.id, widget: payload.widget }),
-        semio_framework_artifact_flow_flow::FlowMutation::AddSynapse(payload) => FlowMutation::ConnectWidgets(super::connect_widgets::ConnectWidgets {
-            index: payload.index as usize,
-            id: payload.synapse.id,
-            from: payload.synapse.from,
-            from_port: payload.synapse.from_port,
-            to: payload.synapse.to,
-            to_port: payload.synapse.to_port,
-        }),
-        semio_framework_artifact_flow_flow::FlowMutation::RemoveSynapse(payload) => FlowMutation::DisconnectWidgets(super::disconnect_widgets::DisconnectWidgets { id: payload.id }),
-        semio_framework_artifact_flow_flow::FlowMutation::MoveSynapse(payload) => FlowMutation::ReorderSynapses(super::reorder_synapses::ReorderSynapses { id: payload.id, to_index: payload.to_index as usize }),
-        semio_framework_artifact_flow_flow::FlowMutation::ChangeSynapse(payload) => {
-            FlowMutation::UpdateSynapseEndpoints(super::update_synapse_endpoints::UpdateSynapseEndpoints { id: payload.id, from: payload.synapse.from, from_port: payload.synapse.from_port, to: payload.synapse.to, to_port: payload.synapse.to_port })
-        }
-        semio_framework_artifact_flow_flow::FlowMutation::ChangeLayout(payload) => FlowMutation::MoveWidgets(super::move_widgets::MoveWidgets { entries: payload.entries }),
-        semio_framework_artifact_flow_flow::FlowMutation::ReplaceFlowHostSnapshot(_) => return None,
-    })
-}
-
-/// 🌎️ Converts this plugin's semantic mutation into the framework kernel mutation enum — `None` for
-/// `DuplicateWidget`: a composite folds to a SINGLE `FlowDiff`, but it is not itself a single
-/// framework-generic op (it plans two: an `AddWidget` then an `AddSynapse`), so there is no
-/// framework-generic counterpart to bridge to — mirrors [`from_framework_mutation`]'s
-/// `ReplaceFlowHostSnapshot` case, one direction over.
-pub fn to_framework_mutation(mutation: &FlowMutation) -> Option<semio_framework_artifact_flow_flow::FlowMutation> {
-    Some(match mutation {
-        FlowMutation::CreateWidget(payload) => semio_framework_artifact_flow_flow::FlowMutation::AddWidget(semio_framework_artifact_flow_flow::AddWidget { index: payload.index as u32, widget: payload.widget.clone() }),
-        FlowMutation::DeleteWidget(payload) => semio_framework_artifact_flow_flow::FlowMutation::RemoveWidget(semio_framework_artifact_flow_flow::RemoveWidget { id: payload.id.clone() }),
-        FlowMutation::ReorderWidgets(payload) => semio_framework_artifact_flow_flow::FlowMutation::MoveWidget(semio_framework_artifact_flow_flow::MoveWidget { id: payload.id.clone(), to_index: payload.to_index as u32 }),
-        FlowMutation::ReplaceWidget(payload) => semio_framework_artifact_flow_flow::FlowMutation::ChangeWidget(semio_framework_artifact_flow_flow::ChangeWidget { id: payload.id.clone(), widget: payload.widget.clone() }),
-        FlowMutation::ConnectWidgets(payload) => semio_framework_artifact_flow_flow::FlowMutation::AddSynapse(semio_framework_artifact_flow_flow::AddSynapse {
-            index: payload.index as u32,
-            synapse: semio_framework_artifact_flow_flow::SynapseSpec { id: payload.id.clone(), from: payload.from.clone(), from_port: payload.from_port.clone(), to: payload.to.clone(), to_port: payload.to_port.clone() },
-        }),
-        FlowMutation::DisconnectWidgets(payload) => semio_framework_artifact_flow_flow::FlowMutation::RemoveSynapse(semio_framework_artifact_flow_flow::RemoveSynapse { id: payload.id.clone() }),
-        FlowMutation::ReorderSynapses(payload) => semio_framework_artifact_flow_flow::FlowMutation::MoveSynapse(semio_framework_artifact_flow_flow::MoveSynapse { id: payload.id.clone(), to_index: payload.to_index as u32 }),
-        FlowMutation::UpdateSynapseEndpoints(payload) => semio_framework_artifact_flow_flow::FlowMutation::ChangeSynapse(semio_framework_artifact_flow_flow::ChangeSynapse {
-            id: payload.id.clone(),
-            synapse: semio_framework_artifact_flow_flow::SynapseSpec { id: payload.id.clone(), from: payload.from.clone(), from_port: payload.from_port.clone(), to: payload.to.clone(), to_port: payload.to_port.clone() },
-        }),
-        FlowMutation::MoveWidgets(payload) => semio_framework_artifact_flow_flow::FlowMutation::ChangeLayout(semio_framework_artifact_flow_flow::ChangeLayout { entries: payload.entries.clone() }),
-        FlowMutation::DuplicateWidget(_) => return None,
-    })
-}
-//#endregion 🌉️FrameworkBridge
-
-//#region 🔹WireCodecs
-const DUPLICATE_WIDGET_OP_TEXT_KEYWORD: &str = "duplicate-widget ";
-
-//#region 🏷️WireTags
-/// 🏷️ `FlowMutation`'s wire protocol: its `record <kind> tag=<n>` lines are the only source of the op tags.
-const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
-//#endregion 🏷️WireTags
-
-impl protocol::OpBinary for FlowMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::tagged_value_binary::encode_op(WIRE_PROTOCOL, dsl::tagged_value_binary::VariantTag::Field("mutation"), self)
+    fn semantics(&self) -> &'static protocol::SemanticDescriptor {
+        match *self {}
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::tagged_value_binary::decode_op(WIRE_PROTOCOL, dsl::tagged_value_binary::VariantTag::Field("mutation"), bytes)
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        match *self {}
+    }
+    fn target(&self) -> Vec<String> {
+        match *self {}
     }
 }
+
+/// 📝️ No parent operation line exists.
 impl protocol::OpText for FlowMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        if let Some(rest) = line.strip_prefix(DUPLICATE_WIDGET_OP_TEXT_KEYWORD) {
-            let json: serde_json::Value = serde_json::from_str(rest).map_err(|error| store::TextError::new(format!("duplicate-widget: {error}"), store::TextSpan::at(1, 1)))?;
-            let value: dsl::DslValue = json.into();
-            let payload: super::duplicate_widget::mutation::DuplicateWidget = dsl::FromValue::from_value(value).map_err(|error| store::TextError::new(format!("duplicate-widget: {error}"), store::TextSpan::at(1, 1)))?;
-            return Ok(FlowMutation::DuplicateWidget(payload));
-        }
-        let framework_mutation = <semio_framework_artifact_flow_flow::FlowMutation as protocol::OpText>::parse_op(line)?;
-        from_framework_mutation(framework_mutation).ok_or_else(|| store::TextError::new("replace-flow-host-snapshot has no semantic mutation representation (whole-document replace is banned; route through ArtifactStore::reset)", store::TextSpan::at(1, 1)))
+    fn parse_op(_line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "a flow has no parent-lane mutation; content edits are child-lane leaves", semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
     fn print_op(&self) -> String {
-        let FlowMutation::DuplicateWidget(payload) = self else {
-            let framework_mutation = to_framework_mutation(self).expect("only DuplicateWidget has no framework-generic op");
-            return protocol::OpText::print_op(&framework_mutation);
-        };
-        let json: serde_json::Value = dsl::ToValue::to_value(payload).into();
-        format!("{DUPLICATE_WIDGET_OP_TEXT_KEYWORD}{json}")
+        match *self {}
     }
 }
-//#endregion 🔹WireCodecs
+
+/// 💾️ No parent operation record exists.
+impl protocol::OpBinary for FlowMutation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        match *self {}
+    }
+    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        Err(protocol::ProtocolError::Malformed { what: "flow-mutation", offset: 0, detail: "a flow has no parent-lane mutation; content edits are child-lane leaves".into() })
+    }
+}
+
+/// 🧊️ Nothing to retire: the vocabulary is uninhabited.
+impl flow::neural::ColdRetire for FlowMutation {
+    fn retire_cold(self) {
+        match self {}
+    }
+}
+//#endregion 🔖️Aggregate
 
 //#region 🧪️Tests
 #[cfg(test)]

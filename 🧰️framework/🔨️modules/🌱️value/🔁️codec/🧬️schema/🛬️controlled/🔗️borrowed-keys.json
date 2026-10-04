@@ -1,0 +1,186 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "unit",
+    "repeat",
+    "cases",
+    "expectedKind",
+    "maximumOwnedBytes",
+    "indexAuthority",
+    "canonicalRetirement"
+  ],
+  "properties": {
+    "unit": {
+      "type": "string",
+      "minLength": 1
+    },
+    "repeat": {
+      "type": "integer",
+      "minimum": 20000,
+      "maximum": 20000
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "entries",
+          "cancelStage"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "single",
+              "duplicate",
+              "duplicate-equality"
+            ]
+          },
+          "entries": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2
+          },
+          "cancelStage": {
+            "enum": [
+              1,
+              3
+            ]
+          }
+        }
+      }
+    },
+    "expectedKind": {
+      "const": "canceled"
+    },
+    "maximumOwnedBytes": {
+      "const": 65536
+    },
+    "indexAuthority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "storage",
+        "requests",
+        "probes",
+        "cases",
+        "wide"
+      ],
+      "properties": {
+        "storage": {
+          "const": "indexedOwnedSlots"
+        },
+        "requests": {
+          "const": "fullConcreteReplacement"
+        },
+        "probes": {
+          "const": "boundedFullUtf8Equality"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "keys",
+              "unique"
+            ],
+            "properties": {
+              "id": {
+                "enum": [
+                  "empty",
+                  "literalOrdered",
+                  "nulDuplicate",
+                  "emptyDuplicate",
+                  "unicodeDuplicate"
+                ]
+              },
+              "keys": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "unique": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "wide": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "prefix",
+            "count",
+            "duplicateOrdinal"
+          ],
+          "properties": {
+            "prefix": {
+              "const": "member/文🌠/"
+            },
+            "count": {
+              "const": 1024
+            },
+            "duplicateOrdinal": {
+              "const": 7
+            }
+          }
+        }
+      }
+    },
+    "canonicalRetirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requestBytes",
+        "releasedBytes",
+        "sourceCorpus",
+        "depth",
+        "longBranch"
+      ],
+      "properties": {
+        "requestBytes": {
+          "const": 0
+        },
+        "releasedBytes": {
+          "const": "completeBorrowedCapacityCensus"
+        },
+        "sourceCorpus": {
+          "const": "intrinsic-media-wire-v1"
+        },
+        "depth": {
+          "const": 256
+        },
+        "longBranch": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "unit",
+            "repeat",
+            "utf8Bytes"
+          ],
+          "properties": {
+            "unit": {
+              "const": "文🌠"
+            },
+            "repeat": {
+              "const": 20000
+            },
+            "utf8Bytes": {
+              "const": 140000
+            }
+          }
+        }
+      }
+    }
+  }
+}

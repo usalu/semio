@@ -118,7 +118,7 @@ fn an_edited_drag_replays_relative_to_its_base() {
     let leaf = &mutations[0];
     let mut payload = serde_json::Value::from(leaf.payload_value());
     payload["offset"] = serde_json::json!([5.0, 0.0, 0.0]);
-    let edited = leaf.with_payload_value(protocol::DslValue::from(payload)).expect("the edited offset decodes as the same leaf");
+    let edited = leaf.with_payload_value(semio_framework_value::DslValue::from(payload)).expect("the edited offset decodes as the same leaf");
     assert!(matches!(&edited, CadMutation::DragSelection(drag) if drag.offset == [5.0, 0.0, 0.0]), "{edited:?}");
     assert_eq!(origin(&apply(&base, std::slice::from_ref(&edited)), CadPaneId::Shape, "object-a"), [5.0, 0.0, 0.0]);
     let elsewhere = materialized_shape_scene(vec![sample_object("object-a", [10.0, 0.0, 0.0])]);
@@ -132,10 +132,10 @@ fn a_move_interaction_commits_a_parametric_drag() {
     let mut runtime = CadPlayRuntime::default();
     assert!(start_interaction_session(&mut runtime, CadPaneId::Shape, "transform.move"));
     let session = runtime.engagement_session.as_mut().expect("the move session starts");
-    let targets = protocol::DslValue::Array(vec![protocol::DslValue::object([("id".to_string(), protocol::DslValue::String("object-a".into())), ("kind".to_string(), protocol::DslValue::String("object".into()))])]);
-    assert!(apply_event(session, "selection.changed", Some(&protocol::DslValue::object([("targets".to_string(), targets)]))));
+    let targets = semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::object([("id".to_string(), semio_framework_value::DslValue::String("object-a".into())), ("kind".to_string(), semio_framework_value::DslValue::String("object".into()))])]);
+    assert!(apply_event(session, "selection.changed", Some(&semio_framework_value::DslValue::object([("targets".to_string(), targets)]))));
     assert!(apply_event(session, "confirm", None));
-    let point = |x: f64, y: f64| protocol::DslValue::Array(vec![protocol::DslValue::float(x), protocol::DslValue::float(y), protocol::DslValue::float(0.0)]);
+    let point = |x: f64, y: f64| semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::float(x), semio_framework_value::DslValue::float(y), semio_framework_value::DslValue::float(0.0)]);
     assert!(apply_event(session, "pointer.down", Some(&point(0.0, 0.0))));
     assert!(apply_event(session, "pointer.down", Some(&point(3.0, 4.0))));
     let snapshot = session.clone();
@@ -188,25 +188,25 @@ async fn a_mounted_translate_is_one_history_row_keyed_by_its_transaction() {
     let transaction = rows[0].transaction.as_ref().expect("the row is keyed by its tool transaction");
     assert!(transaction.id.starts_with("tx-") && transaction.tool == "s.cad.cad@1/*#editor#translateSelection", "{transaction:?}");
     assert!(rows[0].op_lines.iter().any(|line| line.starts_with("drag-selection")), "the op is the parametric leaf: {:?}", rows[0].op_lines);
-    assert_eq!(rows[0].label.resolve(protocol::Terminology::Native, protocol::Locale::En), "Drag 1 object by (1, 0, 0)");
-    assert_eq!(rows[0].label.resolve(protocol::Terminology::Native, protocol::Locale::De), "1 Objekt um (1; 0; 0) ziehen");
+    assert_eq!(rows[0].label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Drag 1 object by (1, 0, 0)");
+    assert_eq!(rows[0].label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "1 Objekt um (1; 0; 0) ziehen");
     assert_eq!(origin(&app.snapshot().expect("snapshot"), CadPaneId::Shape, &placed)[0], 1.0, "the leaf moved the box");
     crate::editor::cad::unit_tests::context::close(&mut app);
 }
 
 /// 🎚️ One streamed gumball dispatch of the press `gesture` (design §13.1, §17.4): the cumulative offset from the press, the
 /// release adding `commit`, a cancel naming its `abort` reason — settled like the host settles it.
-async fn stream_translate(app: &mut crate::editor::cad::unit_tests::context::CadFixtureApp, target: &str, gesture: &str, dx: f64, phase: Option<(&str, protocol::DslValue)>) {
+async fn stream_translate(app: &mut crate::editor::cad::unit_tests::context::CadFixtureApp, target: &str, gesture: &str, dx: f64, phase: Option<(&str, semio_framework_value::DslValue)>) {
     use semio_framework_plugin::PluginApp;
     let mut args = vec![
-        ("objectIds".to_string(), protocol::DslValue::Array(vec![protocol::DslValue::String(target.into())])),
-        ("dx".to_string(), protocol::DslValue::float(dx)),
-        ("dy".to_string(), protocol::DslValue::float(0.0)),
-        ("dz".to_string(), protocol::DslValue::float(0.0)),
-        ("gesture".to_string(), protocol::DslValue::String(gesture.into())),
+        ("objectIds".to_string(), semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::String(target.into())])),
+        ("dx".to_string(), semio_framework_value::DslValue::float(dx)),
+        ("dy".to_string(), semio_framework_value::DslValue::float(0.0)),
+        ("dz".to_string(), semio_framework_value::DslValue::float(0.0)),
+        ("gesture".to_string(), semio_framework_value::DslValue::String(gesture.into())),
     ];
     args.extend(phase.map(|(key, value)| (key.to_string(), value)));
-    app.handle_action("translateSelection", Some(&protocol::DslValue::Object(args)), &crate::editor::cad::unit_tests::context::meta("local")).await.expect("the streamed translate is admitted");
+    app.handle_action("translateSelection", Some(&semio_framework_value::DslValue::Object(args)), &crate::editor::cad::unit_tests::context::meta("local")).await.expect("the streamed translate is admitted");
     let _ = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, crate::editor::cad::unit_tests::context::TEST_INSTANCE).await;
 }
 
@@ -225,13 +225,13 @@ async fn a_streamed_gumball_press_is_one_transaction_and_a_cancel_leaves_zero_tr
     assert_eq!(app.edit_transactions().len(), edits, "ticks publish no edit");
     assert_eq!(origin(&app.snapshot().expect("snapshot"), CadPaneId::Shape, &placed)[0], 0.0, "the committed box never moves during the press");
     assert_eq!(origin(&app.rendered_snapshot(), CadPaneId::Shape, &placed)[0], 1.25, "the render previews the press's cumulative offset");
-    stream_translate(&mut app, &placed, "gumball:1", 2.0, Some(("commit", protocol::DslValue::Bool(true)))).await;
+    stream_translate(&mut app, &placed, "gumball:1", 2.0, Some(("commit", semio_framework_value::DslValue::Bool(true)))).await;
     let transactions = app.edit_transactions();
     assert_eq!(transactions.len(), edits + 1, "the release is ONE edit");
     assert!(transactions.last().and_then(Option::as_ref).is_some_and(|transaction| transaction.tool == "s.cad.cad@1/*#editor#translateSelection"), "{transactions:?}");
     assert_eq!(origin(&app.snapshot().expect("snapshot"), CadPaneId::Shape, &placed)[0], 2.0, "the release lands the cumulative offset");
     stream_translate(&mut app, &placed, "gumball:2", 5.0, None).await;
-    stream_translate(&mut app, &placed, "gumball:2", 0.0, Some(("abort", protocol::DslValue::String("captureLost".into())))).await;
+    stream_translate(&mut app, &placed, "gumball:2", 0.0, Some(("abort", semio_framework_value::DslValue::String("captureLost".into())))).await;
     assert_eq!(app.edit_transactions().len(), edits + 1, "a cancelled press leaves zero trace");
     assert_eq!(origin(&app.rendered_snapshot(), CadPaneId::Shape, &placed)[0], 2.0, "the cancelled preview is gone");
     crate::editor::cad::unit_tests::context::close(&mut app);

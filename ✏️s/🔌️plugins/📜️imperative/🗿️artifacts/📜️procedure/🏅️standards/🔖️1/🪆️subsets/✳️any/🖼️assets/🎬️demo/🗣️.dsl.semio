@@ -1,20 +1,2 @@
 semio imperative.imperative.dsl v1
-schema=procedure.document flow=child_id=imperative-flow-ea1c93b14d7e5d85 target="imperative-flow-ea1c93b14d7e5d85!s.stdio.semio@v1/flow" text=child_id=imperative-text-affb292810845ed5 target="imperative-text-affb292810845ed5!s.stdio.semio@v1/text" path={
-  steps=[ {
-    bodies={
-    }
-    id="step-1" kind="state.set" params={
-      key="counter" value=1
-    }
-  }
- {
-    bodies={
-    }
-    id="step-2" kind="log.print" params={
-      message="hello"
-    }
-  }
-  ]
-}
-seed={
-}
+schema=procedure.document flow=child_id=demo-flow target="demo-flow!s.stdio.semio@v1/flow" text=child_id=demo-text target="demo-text!s.stdio.semio@v1/text"

@@ -241,6 +241,11 @@ pub mod layout {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[value(default, skip_serializing_if = "Option::is_none")]
         pub disabled: Option<bool>,
+        /// 💬️ Why a disabled row cannot run, producer-localized: the row stays focusable (`aria-disabled`) and every host
+        /// announces this as its description (`aria-describedby`) — the `RowAction::disabled_because` contract on menu rows.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
+        pub reason: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[value(default, skip_serializing_if = "Option::is_none")]
         pub separator: Option<bool>,
@@ -269,6 +274,15 @@ pub mod layout {
         #[serde(skip_serializing_if = "Option::is_none")]
         #[value(skip_serializing_if = "Option::is_none")]
         pub children: Option<Vec<ContextMenuItemSpec>>,
+    }
+
+    impl ContextMenuItemSpec {
+        /// 🧾️ This row disabled because of `reason` — still focusable, never dispatched, the reason announced as its description.
+        pub fn disabled_because(mut self, reason: String) -> Self {
+            self.disabled = Some(true);
+            self.reason = Some(reason);
+            self
+        }
     }
 
     //#region 🗂️ContextMenuOrganizer
@@ -896,9 +910,9 @@ pub mod layout {
     }
 
     fn window_layout_node_is_stack(value: &DslValue) -> Result<bool, semio_framework_value::ValueError> {
-        let DslValue::Object(entries) = value else { return Err(semio_framework_value::ValueError::new("expected window layout object".to_string())) };
-        let kind = entries.iter().find(|(key, _)| key == "kind").and_then(|(_, value)| value.as_str()).ok_or_else(|| semio_framework_value::ValueError::new("missing field `kind`".to_string()))?;
-        window_layout_kind_is_stack(kind).map_err(semio_framework_value::ValueError::new)
+        let DslValue::Object(entries) = value else { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected window layout object")) };
+        let kind = entries.iter().find(|(key, _)| key == "kind").and_then(|(_, value)| value.as_str()).ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "missing field `kind`"))?;
+        window_layout_kind_is_stack(kind).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error))
     }
 
     fn serde_window_layout_node_is_stack(value: &serde_json::Value) -> Result<bool, String> {
@@ -2472,6 +2486,11 @@ pub mod ui {
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
         #[value(default, skip_serializing_if = "std::ops::Not::not")]
         pub disabled: bool,
+        /// 💬️ Why a disabled action cannot run, producer-localized — the contract's `RowAction.reason`, which every renderer
+        /// announces as the disabled action's description.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
+        pub reason: Option<Label>,
     }
 
     impl UiTreeItemAction {
@@ -2621,6 +2640,12 @@ pub mod ui {
                 window: None,
                 granularity: None,
             }
+        }
+
+        /// 🗂️ Whether the item discloses rows: materialised `items`, or a tree window over rows not streamed yet
+        /// (`window.total > 0` with no children — React's `TreeDataWindow` reads it the same way).
+        pub fn has_rows(&self) -> bool {
+            self.items.as_deref().is_some_and(|items| !items.is_empty()) || self.window.is_some_and(|window| window.total > 0)
         }
     }
 
@@ -3192,7 +3217,7 @@ pub mod ui {
         Canvas2dSnapshotWriteToken, DiffViewScene, EventFeedScene, GraphTimelineScene, IconRenderScene, InkCanvasInteractionDomain, InkCanvasScene, NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphHover, NodeGraphInteractionDomain,
         NodeGraphNodeRecord, NodeGraphOperatorChannelRecord, NodeGraphOperatorRecord, NodeGraphOperatorVariadicRecord, NodeGraphPortRecord, NodeGraphScene, Paint2dScene, SceneDoc, TableScene, TextEditorScene, TextSplice, TextSpliceComposition, LocatedTextSplice, AppliedTextSplice, TEXT_EDITOR_TYPING_BUFFER_ARG, TEXT_EDITOR_TYPING_COMMIT_ARG, TEXT_EDITOR_TYPING_IDLE_MS, TEXT_SPLICE_CONTEXT_SCALARS, TiledMapScene, VirtualFileSystemScene,
         World3dPresentation, World3dPresentationClear, World3dRejectedSnapshotPage, World3dScene, World3dSnapshotDescriptor, World3dSnapshotDrawPermit, World3dSnapshotFault, World3dSnapshotItem, World3dSnapshotLease, World3dSnapshotPage,
-        World3dSnapshotPageKind, World3dSnapshotSpan, World3dSnapshotWriteToken, WORLD3D_SNAPSHOT_PAGE_CAPACITY, WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY,
+        World3dSnapshotPageKind, World3dSnapshotSpan, World3dSnapshotWriteToken, WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY, WORLD3D_SNAPSHOT_PAGE_CAPACITY, WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY,
     };
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]

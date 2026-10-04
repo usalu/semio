@@ -25,6 +25,9 @@ mutation = create-layer / delete-layer / reorder-layers / rename-layer / change-
      / change-layer-adjustment-kind / add-layer-asset / remove-layer-asset / change-layer-pixels / change-layer-mask / change-layer-adjustment-parameter / change-layer-transform
      / paint-stroke
      / fill-region
+     / apply-filter
+     / transform-image
+     / fill-selection
 
 create-layer = "create-layer" SP index SP layer SP ("parent=" id)?
 delete-layer = "delete-layer" SP "id=" id
@@ -79,4 +82,10 @@ expected-transform-block = "expected" "{" "x=" number SP "y=" number SP "a=" num
 # optional selection runs as their JSON text.
 paint-stroke = "paint-stroke" SP "id=" id SP text SP text SP number SP number SP number SP numbers SP numbers SP numbers SP ("selection=" TEXT)?
 fill-region = "fill-region" SP "id=" id SP text SP number SP number SP number SP numbers SP ("selection=" TEXT)?
+# One image filter on the layer's pixels: the filter name, its amount (0 for a filter without one), the optional selection runs.
+apply-filter = "apply-filter" SP "id=" id SP text SP number SP ("selection=" TEXT)?
+# One change of the layer image's pixel grid: the operation, the crop origin, the width and height, whether a resize samples bilinearly.
+transform-image = "transform-image" SP "id=" id SP text SP number SP number SP number SP number SP bool
+# One fill over the selection: the target, the four unit colour channels, the optional selection runs.
+fill-selection = "fill-selection" SP "id=" id SP text SP numbers SP ("selection=" TEXT)?
 numbers = "[" (number ("," number)*)? "]"

@@ -449,8 +449,8 @@
         },
         {
           "mutationId": "change-layer-lambda",
-          "sourceMutationDirectoryName": "🌡change-layer-lambda",
-          "mutationDirectoryName": "🌡change-layer-lambda",
+          "sourceMutationDirectoryName": "🌡️change-layer-lambda",
+          "mutationDirectoryName": "🌡️change-layer-lambda",
           "scenarios": [
             {
               "id": "apply",
@@ -589,8 +589,8 @@
         },
         {
           "mutationId": "change-thermal-bridge-bb2-type",
-          "sourceMutationDirectoryName": "🏷change-thermal-bridge-bb2-type",
-          "mutationDirectoryName": "🏷change-thermal-bridge-bb2-type",
+          "sourceMutationDirectoryName": "🏷️change-thermal-bridge-bb2-type",
+          "mutationDirectoryName": "🏷️change-thermal-bridge-bb2-type",
           "scenarios": [
             {
               "id": "apply",

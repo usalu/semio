@@ -52,7 +52,7 @@ use std::collections::{BTreeMap, HashSet};
 /// its own: the shell redispatches it under whichever window is current. Carrying the id ON THE
 /// PAYLOAD is how `retained_window_transient_target` can capture the preview window's transient
 /// authority (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "flow-eval-tick")]
 pub struct FlowEvalTick {
     pub window_id: String,
@@ -62,7 +62,7 @@ pub struct FlowEvalTick {
 /// ✅️ One `evaluate` round trip's answer, echoed back onto the response action by
 /// `reactor::extension_response_args` — including the window address, so the re-armed tick keeps
 /// addressing the preview window that owns this evaluation.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "flow-eval-resolve")]
 pub struct FlowEvalResolve {
     pub window_id: String,
@@ -86,7 +86,7 @@ pub struct FlowEvalResolve {
 
 /// 🔺️ One budgeted `tessellate` round trip's answer, carrying the same echoed window address so a
 /// resumable tessellation re-arms the tick on the window that owns the mesh it is building.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "flow-tessellate-resolve")]
 pub struct FlowTessellateResolve {
     pub window_id: String,
@@ -100,7 +100,7 @@ pub struct FlowTessellateResolve {
 /// extension actor actually retired — publication-free bookkeeping, kept because a cancel that
 /// retires nothing on an actor that was supposed to be busy is the one symptom that distinguishes
 /// "the gesture reached the kernel" from "the gesture reached only this process".
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "flow-tessellate-cancel-resolve")]
 pub struct FlowTessellateCancelResolve {
     pub window_id: String,
@@ -116,7 +116,7 @@ pub struct FlowTessellateCancelResolve {
 /// gesture, and this hop is how its close reaches the registries the guest cannot see. Addressed at a
 /// preview window because `reactor::extension_response_args` echoes the request's fields onto
 /// `flowTessellateCancelResolve`, whose retained route needs a window it may name.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "flow-eval-release")]
 pub struct FlowEvalRelease {
     #[value(default)]
@@ -179,10 +179,10 @@ pub fn may_rearm(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSna
 /// extension request alike — `reactor::extension_response_args` echoes an invocation request's own
 /// fields back onto the response action, so the window address survives the round trip without the
 /// SDK ever learning what it means.
-pub fn window_args(window_id: &str, window_kind_id: &str) -> dsl::DslValue {
-    dsl::DslValue::object([
-        ("windowId".to_string(), dsl::DslValue::String(window_id.to_string())),
-        ("windowKindId".to_string(), dsl::DslValue::String(window_kind_id.to_string())),
+pub fn window_args(window_id: &str, window_kind_id: &str) -> semio_framework_value::DslValue {
+    semio_framework_value::DslValue::object([
+        ("windowId".to_string(), semio_framework_value::DslValue::String(window_id.to_string())),
+        ("windowKindId".to_string(), semio_framework_value::DslValue::String(window_kind_id.to_string())),
     ])
 }
 
@@ -279,7 +279,7 @@ pub fn owe_attached_previews_carrying<M, C, D>(session: &mut FlowEvalSession, li
     let woken = link.port.is_some() && link.settled.is_none();
     if !windows.is_empty() && servable && !woken && link.requested.is_none() {
         link.requested = Some((PreviewEvalRunRequest::Start, None));
-        emit.effects.push(run_action_effect(TOOL_RUN_START_ACTION_ID, dsl::DslValue::object([(TOOL_RUN_ARG_TOOL_ID.to_string(), dsl::DslValue::String(PREVIEW_EVAL_TOOL_ID.into()))])));
+        emit.effects.push(run_action_effect(TOOL_RUN_START_ACTION_ID, semio_framework_value::DslValue::object([(TOOL_RUN_ARG_TOOL_ID.to_string(), semio_framework_value::DslValue::String(PREVIEW_EVAL_TOOL_ID.into()))])));
     }
 }
 
@@ -380,8 +380,8 @@ pub struct PreviewChannelItem {
 /// 🔎️ A `$schema: "list"` dictionary's entries in index order (`"0"`, `"1"`, …) — the wire form
 /// flow dictionary lists actually take (an object with numeric-string keys, not a JSON array), so
 /// ordering has to be recovered by parsing the keys rather than trusting map iteration.
-fn preview_channel_list_entries(map: &dsl::json::Object) -> Vec<&dsl::json::Value> {
-    let mut entries: Vec<(usize, &dsl::json::Value)> = map.iter().filter_map(|(key, value)| key.parse::<usize>().ok().map(|index| (index, value))).collect();
+fn preview_channel_list_entries(map: &semio_framework_pack_json::Object) -> Vec<&semio_framework_pack_json::Value> {
+    let mut entries: Vec<(usize, &semio_framework_pack_json::Value)> = map.iter().filter_map(|(key, value)| key.parse::<usize>().ok().map(|index| (index, value))).collect();
     entries.sort_by_key(|(index, _)| *index);
     entries.into_iter().map(|(_, value)| value).collect()
 }
@@ -390,38 +390,38 @@ fn preview_channel_list_entries(map: &dsl::json::Object) -> Vec<&dsl::json::Valu
 /// geometry-bearing leaf in encounter order. Arrays and `$schema: "list"` dictionaries recurse; a
 /// handle passing [`is_brep_geometry_handle`] or an `x`/`y`/`z` point/vector is a leaf; everything
 /// else is pure data and yields nothing.
-fn collect_preview_channel_items(channel: &str, value: &dsl::json::Value, index: &mut usize, items: &mut Vec<PreviewChannelItem>) {
+fn collect_preview_channel_items(channel: &str, value: &semio_framework_pack_json::Value, index: &mut usize, items: &mut Vec<PreviewChannelItem>) {
     match value {
-        dsl::json::Value::Object(map) => {
-            if map.get("$schema").and_then(dsl::json::Value::as_str) == Some("mesh") {
-                if let (Some(preview), Some(data)) = (map.get("preview").and_then(dsl::json::Value::as_str), map.get("data").and_then(dsl::json::Value::as_str)) {
+        semio_framework_pack_json::Value::Object(map) => {
+            if map.get("$schema").and_then(semio_framework_pack_json::Value::as_str) == Some("mesh") {
+                if let (Some(preview), Some(data)) = (map.get("preview").and_then(semio_framework_pack_json::Value::as_str), map.get("data").and_then(semio_framework_pack_json::Value::as_str)) {
                     items.push(PreviewChannelItem { channel: channel.into(), index: *index, handle: String::new(), inline: Some(PreviewInlineGeometry::Mesh { preview: preview.into(), data: data.into() }) });
                     *index += 1;
                 }
                 return;
             }
-            if let Some(handle) = map.get("handle").and_then(dsl::json::Value::as_str) {
+            if let Some(handle) = map.get("handle").and_then(semio_framework_pack_json::Value::as_str) {
                 if is_brep_geometry_handle(handle) {
                     items.push(PreviewChannelItem { channel: channel.into(), index: *index, handle: handle.into(), inline: None });
                     *index += 1;
                     return;
                 }
             }
-            if map.get("$schema").and_then(dsl::json::Value::as_str) == Some("list") {
+            if map.get("$schema").and_then(semio_framework_pack_json::Value::as_str) == Some("list") {
                 for entry in preview_channel_list_entries(map) {
                     collect_preview_channel_items(channel, entry, index, items);
                 }
                 return;
             }
-            let coords = ["x", "y", "z"].into_iter().map(|key| map.get(key).and_then(dsl::json::Value::as_f64)).collect::<Option<Vec<_>>>();
+            let coords = ["x", "y", "z"].into_iter().map(|key| map.get(key).and_then(semio_framework_pack_json::Value::as_f64)).collect::<Option<Vec<_>>>();
             if let Some(coords) = coords {
                 let (x, y, z) = (coords[0], coords[1], coords[2]);
-                let inline = if map.get("$schema").and_then(dsl::json::Value::as_str) == Some("vector") { PreviewInlineGeometry::Vector { x, y, z } } else { PreviewInlineGeometry::Point { x, y, z } };
+                let inline = if map.get("$schema").and_then(semio_framework_pack_json::Value::as_str) == Some("vector") { PreviewInlineGeometry::Vector { x, y, z } } else { PreviewInlineGeometry::Point { x, y, z } };
                 items.push(PreviewChannelItem { channel: channel.into(), index: *index, handle: String::new(), inline: Some(inline) });
                 *index += 1;
             }
         }
-        dsl::json::Value::Array(list) => {
+        semio_framework_pack_json::Value::Array(list) => {
             for entry in list {
                 collect_preview_channel_items(channel, entry, index, items);
             }
@@ -433,7 +433,7 @@ fn collect_preview_channel_items(channel: &str, value: &dsl::json::Value, index:
 /// 🔌️ Channel-by-channel enumeration of one widget's preview-bearing values: sorted `"out"` channel
 /// keys (falling back to `"in"` only when the widget has no `"out"` at all), each walked depth-first
 /// into its geometry-bearing leaves.
-pub fn preview_channel_items_for_widget(eval: &dsl::json::Value, widget_id: &str) -> Vec<PreviewChannelItem> {
+pub fn preview_channel_items_for_widget(eval: &semio_framework_pack_json::Value, widget_id: &str) -> Vec<PreviewChannelItem> {
     let Some(widget_eval) = eval.get(widget_id) else {
         return Vec::new();
     };
@@ -455,17 +455,9 @@ pub fn preview_channel_items_for_widget(eval: &dsl::json::Value, widget_id: &str
     items
 }
 
-/// 👁️ Whether a widget contributes preview geometry at all. A `Neuron` carries its own author-set
-/// `preview` toggle; an `OutputPreview` is a preview by construction; a `Cluster` has no toggle of
-/// its own, so its contract output channels always preview, which is the only way a grouped
-/// sub-graph's geometry reaches the 3D world at all.
-pub fn widget_previews(widget: &semio_framework_artifact_flow_flow::Widget) -> bool {
-    matches!(widget, semio_framework_artifact_flow_flow::Widget::Neuron { preview: true, .. } | semio_framework_artifact_flow_flow::Widget::OutputPreview { .. } | semio_framework_artifact_flow_flow::Widget::Cluster { .. })
-}
-
 /// 🪪️ Every preview-bearing widget id of a host_snapshot, in declaration order.
 pub fn preview_widget_ids(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> Vec<String> {
-    host_snapshot.widgets.iter().filter(|widget| widget_previews(widget)).map(|widget| crate::widget_id(widget).to_string()).collect()
+    host_snapshot.widgets.iter().filter(|widget| crate::widget_previews(widget)).map(|widget| crate::widget_id(widget).to_string()).collect()
 }
 
 pub fn mesh_has_preview_geometry(data: &MeshData) -> bool {
@@ -511,14 +503,14 @@ pub fn preview_mesh_role(inline: Option<&PreviewInlineGeometry>, data: &MeshData
 /// browser oracle and the native lane grade the same number instead of an envelope
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️boot-camera-framing-2026-09-15.md`).
 pub fn preview_payload_bounds(meshes_json: &str) -> Option<([f64; 3], [f64; 3])> {
-    let parsed = dsl::json::parse(meshes_json).ok()?;
+    let parsed = semio_framework_pack_json::parse(meshes_json, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()?;
     let entries = parsed.as_array()?;
     let mut minimum = [f64::INFINITY; 3];
     let mut maximum = [f64::NEG_INFINITY; 3];
     for entry in entries {
         let Some(data) = entry.get("data") else { continue };
         for lane in ["positions", "edgePositions"] {
-            let Some(values) = data.get(lane).and_then(dsl::json::Value::as_array) else { continue };
+            let Some(values) = data.get(lane).and_then(semio_framework_pack_json::Value::as_array) else { continue };
             for point in values.chunks_exact(3) {
                 for axis in 0..3 {
                     let Some(value) = point[axis].as_f64() else { continue };
@@ -685,7 +677,7 @@ fn converged_preview_handle(session: &FlowEvalSession, host_snapshot: &semio_fra
     if converged.is_empty() {
         return None;
     }
-    let eval = dsl::json::parse(converged).unwrap_or_else(|_| dsl::json::Value::Object(dsl::json::Object::new()));
+    let eval = semio_framework_pack_json::parse(converged, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| semio_framework_pack_json::Value::Object(semio_framework_pack_json::Object::new()));
     preview_channel_items_for_widget(&eval, widget_id)
         .into_iter()
         .find(|item| item.channel == channel && item.index == index)
@@ -750,11 +742,11 @@ pub fn preview_mesh_pack_fingerprint(
 
 /// 📏️ What the preview would paint from `eval` given the session's current mesh packs — changes when
 /// `flowTessellateResolve` lands even though the evaluation text did not move one byte.
-fn preview_mesh_residency_digest(session: &FlowEvalSession, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, eval: &dsl::json::Value) -> u64 {
+fn preview_mesh_residency_digest(session: &FlowEvalSession, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, eval: &semio_framework_pack_json::Value) -> u64 {
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    for id in preview_widget_ids(host_snapshot) {
-        for item in preview_channel_items_for_widget(eval, &id) {
+    for (id, channel) in crate::standards::v1::subsets::any::io::mesh_bridge::retained_geometry_channels(host_snapshot) {
+        for item in preview_channel_items_for_widget(eval, &id).into_iter().filter(|item| channel.as_ref().is_none_or(|channel| *channel == item.channel)) {
             if item.handle.is_empty() {
                 continue;
             }
@@ -773,7 +765,7 @@ pub fn preview_eval_publication_for(session: &mut FlowEvalSession, host_snapshot
     let digest = if painted.is_empty() {
         0
     } else {
-        dsl::json::parse(&painted).map(|eval| preview_mesh_residency_digest(session, host_snapshot, &eval)).unwrap_or(0)
+        semio_framework_pack_json::parse(&painted, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|eval| preview_mesh_residency_digest(session, host_snapshot, &eval)).unwrap_or(0)
     };
     let publication = session.eval_publication_for(retained_eval);
     match publication {
@@ -790,7 +782,7 @@ pub fn preview_eval_publication_for(session: &mut FlowEvalSession, host_snapshot
 }
 
 /// 🧹 Every brep handle whose tessellation pack must stay live across a handle supersession.
-pub fn preview_mesh_retention_handles(eval: &dsl::json::Value, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, session: &FlowEvalSession) -> HashSet<String> {
+pub fn preview_mesh_retention_handles(eval: &semio_framework_pack_json::Value, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, session: &FlowEvalSession) -> HashSet<String> {
     let mut live = HashSet::new();
     let mut channel_missing_pack = false;
     for widget in &host_snapshot.widgets {
@@ -824,10 +816,10 @@ pub fn preview_mesh_retention_handles(eval: &dsl::json::Value, host_snapshot: &s
 /// 🧊 Geometry handles on preview widgets that still need an extension tessellate. Takes the ALREADY
 /// PARSED evaluation: its caller parses the same document one line earlier to collect the live
 /// handle set, and re-parsing a whole eval session per tick is the cost this path exists to avoid.
-pub fn pending_preview_tessellate_handles(eval: &dsl::json::Value, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, session: &FlowEvalSession) -> Vec<String> {
+pub fn pending_preview_tessellate_handles(eval: &semio_framework_pack_json::Value, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, session: &FlowEvalSession) -> Vec<String> {
     let mut handles = Vec::new();
-    for id in preview_widget_ids(host_snapshot) {
-        for handle in preview_channel_items_for_widget(eval, &id).into_iter().filter_map(|item| (!item.handle.is_empty()).then_some(item.handle)) {
+    for (id, channel) in crate::standards::v1::subsets::any::io::mesh_bridge::retained_geometry_channels(host_snapshot) {
+        for handle in preview_channel_items_for_widget(eval, &id).into_iter().filter(|item| channel.as_ref().is_none_or(|channel| *channel == item.channel)).filter_map(|item| (!item.handle.is_empty()).then_some(item.handle)) {
             if session.preview_diagnostics(&handle).is_some() {
                 continue;
             }
@@ -860,7 +852,7 @@ pub fn preview_tessellate_invocations(window_id: &str, window_kind_id: &str, ses
         if eval_json.is_empty() {
             return Vec::new();
         }
-        let eval = dsl::json::parse(eval_json).unwrap_or_else(|_| dsl::json::Value::Object(dsl::json::Object::new()));
+        let eval = semio_framework_pack_json::parse(eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| semio_framework_pack_json::Value::Object(semio_framework_pack_json::Object::new()));
         let live = preview_mesh_retention_handles(&eval, host_snapshot, session);
         (live, pending_preview_tessellate_handles(&eval, host_snapshot, session))
     };
@@ -869,16 +861,16 @@ pub fn preview_tessellate_invocations(window_id: &str, window_kind_id: &str, ses
     for handle in pending {
         let node_hash = semio_framework_os_flow::preview_tessellate_node_hash(&handle, tolerance_bits);
         if session.note_pending_tessellate(node_hash, handle.clone()) {
-            let mut request_object = dsl::json::Object::new();
-            request_object.insert("handle", dsl::json::Value::String(handle));
-            request_object.insert("tolerance", dsl::json::Value::from(tolerance));
-            request_object.insert("nodeHash", dsl::json::Value::from(node_hash));
-            request_object.insert("budget", dsl::json::Value::from(u64::from(PREVIEW_TESSELLATE_STEP_BUDGET)));
-            request_object.insert("wallMicros", dsl::json::Value::from(PREVIEW_TESSELLATE_STEP_WALL_MICROS));
-            request_object.insert("chunk", dsl::json::Value::from(u64::from(session.next_tessellate_chunk(node_hash))));
-            request_object.insert("windowId", dsl::json::Value::String(window_id.to_string()));
-            request_object.insert("windowKindId", dsl::json::Value::String(window_kind_id.to_string()));
-            let request_json = dsl::json::to_string(&dsl::json::Value::Object(request_object));
+            let mut request_object = semio_framework_pack_json::Object::new();
+            request_object.insert("handle", semio_framework_pack_json::Value::String(handle));
+            request_object.insert("tolerance", semio_framework_pack_json::Value::from(tolerance));
+            request_object.insert("nodeHash", semio_framework_pack_json::Value::from(node_hash));
+            request_object.insert("budget", semio_framework_pack_json::Value::from(u64::from(PREVIEW_TESSELLATE_STEP_BUDGET)));
+            request_object.insert("wallMicros", semio_framework_pack_json::Value::from(PREVIEW_TESSELLATE_STEP_WALL_MICROS));
+            request_object.insert("chunk", semio_framework_pack_json::Value::from(u64::from(session.next_tessellate_chunk(node_hash))));
+            request_object.insert("windowId", semio_framework_pack_json::Value::String(window_id.to_string()));
+            request_object.insert("windowKindId", semio_framework_pack_json::Value::String(window_kind_id.to_string()));
+            let request_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Object(request_object));
             invocations.push(ExtensionInvocation::new(geometry_extension_address.clone(), "tessellate", request_json, "flowTessellateResolve"));
         }
     }
@@ -935,6 +927,8 @@ pub fn tick_is_unfinished(more: bool, parked_extension_invocations: usize) -> bo
     more || parked_extension_invocations > 0
 }
 
+pub use semio_framework_os_flow::flow_inference_dependency_json as geometry_dependency_json;
+
 /// 🧮️ ONE evaluation tick of the shared chain, for ANY surface.
 ///
 /// ⏱️ The tick's own wall cost is recorded into `semio_framework_os_flow`'s evaluation-step ledger
@@ -975,23 +969,27 @@ pub fn evaluate_tick(
     // example spend seven `flowEvalTick` hops at roughly a second apiece
     // (`📓️react-perf-ceilings-audit-2026-09-14.md` §1, §3 item 3).
     for pending in pending_extension_evals {
+        let resume=session.has_evaluation_progress(pending.node_hash);
         // 🪪️ `extensionId` is CORRELATION, not payload: `reactor::extension_response_args` echoes the
         // request's own fields back onto `flowEvalResolve`, and a refused answer has to be able to
         // name which extension refused it — the tick's geometry address is a different extension
         // from the one an operator hop was routed to (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-        let request_json = dsl::json::to_json_string(&dsl::DslValue::object([
-            ("operatorId".to_string(), dsl::DslValue::String(pending.operator_id.clone())),
-            ("inputJson".to_string(), dsl::DslValue::String(pending.input_json.clone())),
-            ("nodeHash".to_string(), dsl::DslValue::uint(pending.node_hash)),
+        let request_json = semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::object([
+            ("operatorId".to_string(), semio_framework_value::DslValue::String(pending.operator_id.clone())),
+            ("inputJson".to_string(), semio_framework_value::DslValue::String(if resume {String::new()}else{pending.input_json})),
+            ("dependencyJson".to_string(), semio_framework_value::DslValue::String(if resume {String::new()}else{geometry_dependency_json(host_snapshot, &pending.neuron_id)})),
+            ("operatorVersion".to_string(), semio_framework_value::DslValue::String(format!("registry:{};geometry:1;policy:1", semio_framework_os_flow::flow_extension_registry_generation()))),
+            ("nodeHash".to_string(), semio_framework_value::DslValue::uint(pending.node_hash)),
+            ("resume".to_string(),semio_framework_value::DslValue::Bool(resume)),
             // ⏱️ The budget the extension's `evaluate` step honours. `nodeHash` doubles as the key
             // its retained job is resumed by, so an identical re-emitted request continues the SAME
             // evaluation instead of restarting it — the exact resumption mechanism budgeted
             // `tessellate` already uses (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-            ("budget".to_string(), dsl::DslValue::uint(EVALUATE_STEP_BUDGET)),
-            ("wallMicros".to_string(), dsl::DslValue::uint(EVALUATE_STEP_WALL_MICROS)),
-            ("windowId".to_string(), dsl::DslValue::String(window_id.to_string())),
-            ("windowKindId".to_string(), dsl::DslValue::String(window_kind_id.to_string())),
-            ("extensionId".to_string(), dsl::DslValue::String(pending.extension_id.clone())),
+            ("budget".to_string(), semio_framework_value::DslValue::uint(EVALUATE_STEP_BUDGET)),
+            ("wallMicros".to_string(), semio_framework_value::DslValue::uint(EVALUATE_STEP_WALL_MICROS)),
+            ("windowId".to_string(), semio_framework_value::DslValue::String(window_id.to_string())),
+            ("windowKindId".to_string(), semio_framework_value::DslValue::String(window_kind_id.to_string())),
+            ("extensionId".to_string(), semio_framework_value::DslValue::String(pending.extension_id.clone())),
         ]));
         extension_invocations.push(ExtensionInvocation::new(pending.extension_id, "evaluate", request_json, "flowEvalResolve"));
     }
@@ -1042,7 +1040,7 @@ fn node_census_digest(status_json: &str) -> u64 {
 /// order. Two censuses that differ only in WHICH busy node is the active one reduce to the same
 /// marks, and an empty answer means the chrome is off.
 pub fn census_chrome_marks(status_json: &str) -> String {
-    let Ok(status) = dsl::json::parse(status_json) else {
+    let Ok(status) = semio_framework_pack_json::parse(status_json, semio_framework_pack_json::JsonMemberPolicy::Reject) else {
         return status_json.to_string();
     };
     let Some(map) = status.as_object() else {
@@ -1050,11 +1048,11 @@ pub fn census_chrome_marks(status_json: &str) -> String {
     };
     let mut marks = String::new();
     for (id, entry) in map.iter() {
-        match entry.get("status").and_then(dsl::json::Value::as_str).unwrap_or("ok") {
+        match entry.get("status").and_then(semio_framework_pack_json::Value::as_str).unwrap_or("ok") {
             "ok" => continue,
             "error" => {
                 marks.push('e');
-                marks.push_str(entry.get("message").and_then(dsl::json::Value::as_str).unwrap_or_default());
+                marks.push_str(entry.get("message").and_then(semio_framework_pack_json::Value::as_str).unwrap_or_default());
             }
             "blocked" => marks.push('b'),
             _ => marks.push('\u{b7}'),
@@ -1134,13 +1132,19 @@ pub fn release_invocations_for(payload: &FlowEvalRelease, address: Result<String
     ]
 }
 
-/// 🧯️ Folds the `evaluateCancel` / `tessellateCancel` answer. Deliberately touches no latch and
-/// publishes nothing: the closed run already left every latch quiescent. The answer is only observed.
-pub fn resolve_tessellate_cancel(payload: &FlowTessellateCancelResolve, session: &mut FlowEvalSession) {
+/// 🧯️ Pending cancellation continues bounded retirement through the same response chain.
+pub fn resolve_tessellate_cancel(payload: &FlowTessellateCancelResolve, session: &mut FlowEvalSession) -> Vec<ExtensionInvocation> {
+    resolve_tessellate_cancel_for(payload, session, geometry_extension_address())
+}
+
+/// 🔓️ A resolved address keeps cancellation independent of any new evaluator or task registry.
+pub fn resolve_tessellate_cancel_for(payload: &FlowTessellateCancelResolve, session: &mut FlowEvalSession, address: Result<String, semio_framework_os_flow::FlowExtensionAddressMiss>) -> Vec<ExtensionInvocation> {
     let _ = session;
-    if !payload.ok {
-        eprintln!("flowTessellateCancelResolve: geometry extension refused the cancel for window {}", payload.window_id);
-    }
+    if !payload.ok { eprintln!("flowTessellateCancelResolve: geometry extension refused the cancel for window {}", payload.window_id); return Vec::new(); }
+    let pending = semio_framework_pack_json::parse(&payload.output_json, semio_framework_pack_json::JsonMemberPolicy::Reject).ok().filter(|reply| reply.get("ok").and_then(semio_framework_pack_json::Value::as_bool) == Some(true)).and_then(|reply| reply.get("pending").and_then(semio_framework_pack_json::Value::as_bool)).unwrap_or(false);
+    let Ok(address) = address else { return Vec::new() };
+    if !pending { return Vec::new(); }
+    vec![ExtensionInvocation::new(address, "evaluateCancel", FlowEvalSession::preview_eval_cancel_invocation_request_json(&payload.window_id, &payload.window_kind_id), "flowTessellateCancelResolve")]
 }
 
 /// ✅️ Folds one budgeted `tessellate` round trip into the retained session and settles the window's
@@ -1178,26 +1182,26 @@ pub fn resolve_tessellate(payload: &FlowTessellateResolve, session: &mut FlowEva
 /// whose evaluation carries one. Surface-neutral — it reads the evaluation text and the fixture the
 /// surface is looking at, nothing else.
 pub fn preview_status_json(eval_json: &str, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> Option<String> {
-    let eval = dsl::json::parse(eval_json).ok()?;
-    if eval.get("error").and_then(dsl::json::Value::as_str).is_some() {
-        let mut error_object = dsl::json::Object::new();
-        error_object.insert("error", eval.get("error").cloned().unwrap_or(dsl::json::Value::Null));
-        return Some(dsl::json::to_string(&dsl::json::Value::Object(error_object)));
+    let eval = semio_framework_pack_json::parse(eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()?;
+    if eval.get("error").and_then(semio_framework_pack_json::Value::as_str).is_some() {
+        let mut error_object = semio_framework_pack_json::Object::new();
+        error_object.insert("error", eval.get("error").cloned().unwrap_or(semio_framework_pack_json::Value::Null));
+        return Some(semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Object(error_object)));
     }
-    let mut errors = dsl::json::Object::new();
+    let mut errors = semio_framework_pack_json::Object::new();
     for widget in &host_snapshot.widgets {
         let id = crate::widget_id(widget).to_string();
         let Some(entry) = eval.get(&id) else { continue };
-        if let Some(error) = entry.get("error").and_then(dsl::json::Value::as_str) {
-            errors.insert(id, dsl::json::Value::String(error.to_string()));
+        if let Some(error) = entry.get("error").and_then(semio_framework_pack_json::Value::as_str) {
+            errors.insert(id, semio_framework_pack_json::Value::String(error.to_string()));
         }
     }
     if errors.is_empty() {
         None
     } else {
-        let mut wrapper = dsl::json::Object::new();
-        wrapper.insert("widgetErrors", dsl::json::Value::Object(errors));
-        Some(dsl::json::to_string(&dsl::json::Value::Object(wrapper)))
+        let mut wrapper = semio_framework_pack_json::Object::new();
+        wrapper.insert("widgetErrors", semio_framework_pack_json::Value::Object(errors));
+        Some(semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Object(wrapper)))
     }
 }
 
@@ -1205,16 +1209,16 @@ pub fn preview_status_json(eval_json: &str, host_snapshot: &semio_framework_arti
 fn merge_status_json(computing: Option<String>, preview_status: Option<String>) -> Option<String> {
     match (computing, preview_status) {
         (Some(c), Some(p)) => {
-            let mut computing_object = dsl::json::parse(&c).ok().and_then(|value| value.as_object().cloned()).unwrap_or_else(|| {
-                let mut fallback = dsl::json::Object::new();
-                fallback.insert("computing", dsl::json::Value::Bool(true));
+            let mut computing_object = semio_framework_pack_json::parse(&c, semio_framework_pack_json::JsonMemberPolicy::Reject).ok().and_then(|value| value.as_object().cloned()).unwrap_or_else(|| {
+                let mut fallback = semio_framework_pack_json::Object::new();
+                fallback.insert("computing", semio_framework_pack_json::Value::Bool(true));
                 fallback
             });
-            let preview_object = dsl::json::parse(&p).ok().and_then(|value| value.as_object().cloned()).unwrap_or_default();
+            let preview_object = semio_framework_pack_json::parse(&p, semio_framework_pack_json::JsonMemberPolicy::Reject).ok().and_then(|value| value.as_object().cloned()).unwrap_or_default();
             for (key, value) in preview_object.iter() {
                 computing_object.insert(key, value.clone());
             }
-            Some(dsl::json::to_string(&dsl::json::Value::Object(computing_object)))
+            Some(semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Object(computing_object)))
         }
         (Some(c), None) => Some(c),
         (None, Some(p)) => Some(p),
@@ -1304,10 +1308,10 @@ pub fn preview_progress_status_json_for(session: Option<&FlowEvalSession>, run: 
         let (english, german) = phase.labels();
         (phase.tag(), english, german)
     };
-    let mut label = dsl::json::Object::new();
-    label.insert("en", dsl::json::Value::String(english.to_string()));
-    label.insert("de", dsl::json::Value::String(german.to_string()));
-    let mut progress = dsl::json::Object::new();
+    let mut label = semio_framework_pack_json::Object::new();
+    label.insert("en", semio_framework_pack_json::Value::String(english.to_string()));
+    label.insert("de", semio_framework_pack_json::Value::String(german.to_string()));
+    let mut progress = semio_framework_pack_json::Object::new();
     // 📈 `unitsDone`/`unitsTotal` are the UNITS OF THE WORK THIS STATUS IS ABOUT, which is what the
     // consumer contract declares them to be (`World3dComputeStatusV1`, and its Rust twin
     // `world3d_compute_status`) and what both renderers price the pill's `n/m (x%)` off.
@@ -1325,21 +1329,21 @@ pub fn preview_progress_status_json_for(session: Option<&FlowEvalSession>, run: 
     // (100%)` is the same lie as `idle`.
     let chain_progress = chain.working && status.in_flight == 0 && matches!(phase, semio_framework_os_flow::PreviewTessellatePhase::Idle) && (chain.nodes_total > 0 || eval_status.in_flight == 0);
     let (units_done, units_total) = if chain_progress { chain.units() } else { (status.units_done, status.units_total) };
-    progress.insert("unitsDone", dsl::json::Value::from(u64::from(units_done)));
-    progress.insert("unitsTotal", dsl::json::Value::from(u64::from(units_total)));
-    progress.insert("facesDone", dsl::json::Value::from(u64::from(status.faces_done)));
-    progress.insert("facesTotal", dsl::json::Value::from(u64::from(status.faces_total)));
+    progress.insert("unitsDone", semio_framework_pack_json::Value::from(u64::from(units_done)));
+    progress.insert("unitsTotal", semio_framework_pack_json::Value::from(u64::from(units_total)));
+    progress.insert("facesDone", semio_framework_pack_json::Value::from(u64::from(status.faces_done)));
+    progress.insert("facesTotal", semio_framework_pack_json::Value::from(u64::from(status.faces_total)));
     // ⏱️ `inFlight` counts EVERY kind of outstanding kernel work. A boolean preview spends its
     // whole slow half in `evaluate` round trips that admit no tessellation, so the tessellation
     // ledger alone published `inFlight: 0` while the kernel was busy for sixteen seconds
     // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). The three ledgers OVERLAP by construction — a
     // parked tessellate is a row in the tessellation ledger and a parked request in the chain's —
     // so the count is whichever of them sees more, never their sum.
-    progress.insert("inFlight", dsl::json::Value::from(u64::from(chain.in_flight.max(status.in_flight.saturating_add(eval_status.in_flight)))));
-    progress.insert("evalUnitsDone", dsl::json::Value::from(u64::from(eval_status.units_done)));
-    progress.insert("evalUnitsTotal", dsl::json::Value::from(u64::from(eval_status.units_total)));
-    progress.insert("nodesDone", dsl::json::Value::from(u64::from(chain.nodes_done)));
-    progress.insert("nodesTotal", dsl::json::Value::from(u64::from(chain.nodes_total)));
+    progress.insert("inFlight", semio_framework_pack_json::Value::from(u64::from(chain.in_flight.max(status.in_flight.saturating_add(eval_status.in_flight)))));
+    progress.insert("evalUnitsDone", semio_framework_pack_json::Value::from(u64::from(eval_status.units_done)));
+    progress.insert("evalUnitsTotal", semio_framework_pack_json::Value::from(u64::from(eval_status.units_total)));
+    progress.insert("nodesDone", semio_framework_pack_json::Value::from(u64::from(chain.nodes_done)));
+    progress.insert("nodesTotal", semio_framework_pack_json::Value::from(u64::from(chain.nodes_total)));
     let ratio = if chain_progress {
         chain.ratio()
     } else if show_eval_phase {
@@ -1347,18 +1351,18 @@ pub fn preview_progress_status_json_for(session: Option<&FlowEvalSession>, run: 
     } else {
         status.ratio()
     };
-    progress.insert("ratio", dsl::json::Value::from(ratio));
-    let mut object = dsl::json::Object::new();
-    object.insert("phase", dsl::json::Value::String(phase_tag.to_string()));
-    object.insert("phaseLabel", dsl::json::Value::Object(label));
-    object.insert("progress", dsl::json::Value::Object(progress));
-    object.insert("cancellable", dsl::json::Value::Bool(abortable.is_some()));
-    object.insert("cancelAction", dsl::json::Value::String(TOOL_RUN_ABORT_ACTION_ID.to_string()));
+    progress.insert("ratio", semio_framework_pack_json::Value::from(ratio));
+    let mut object = semio_framework_pack_json::Object::new();
+    object.insert("phase", semio_framework_pack_json::Value::String(phase_tag.to_string()));
+    object.insert("phaseLabel", semio_framework_pack_json::Value::Object(label));
+    object.insert("progress", semio_framework_pack_json::Value::Object(progress));
+    object.insert("cancellable", semio_framework_pack_json::Value::Bool(abortable.is_some()));
+    object.insert("cancelAction", semio_framework_pack_json::Value::String(TOOL_RUN_ABORT_ACTION_ID.to_string()));
     if let Some(run) = abortable {
-        let mut arguments = dsl::json::Object::new();
-        arguments.insert(TOOL_RUN_ARG_RUN_ID, dsl::json::Value::String(run.identity.id.run.to_string()));
-        arguments.insert(TOOL_RUN_ARG_GENERATION, dsl::json::Value::from(u64::from(run.identity.generation)));
-        object.insert("cancelArgs", dsl::json::Value::Object(arguments));
+        let mut arguments = semio_framework_pack_json::Object::new();
+        arguments.insert(TOOL_RUN_ARG_RUN_ID, semio_framework_pack_json::Value::String(run.identity.id.run.to_string()));
+        arguments.insert(TOOL_RUN_ARG_GENERATION, semio_framework_pack_json::Value::from(u64::from(run.identity.generation)));
+        object.insert("cancelArgs", semio_framework_pack_json::Value::Object(arguments));
     }
     // 💥 A live evaluate fault OUTRANKS the ledger phase for the same reason an addressing miss
     // does — the surface must state what it is actually living with. It can only exist once the
@@ -1367,64 +1371,64 @@ pub fn preview_progress_status_json_for(session: Option<&FlowEvalSession>, run: 
     // (`FlowEvalSession::invalidate_for_flow_extension_registry`) before the first tick settles.
     if let Some(evaluate_fault) = session.and_then(FlowEvalSession::extension_evaluate_fault) {
         let (english, german) = evaluate_fault.labels();
-        let mut message = dsl::json::Object::new();
-        message.insert("en", dsl::json::Value::String(english));
-        message.insert("de", dsl::json::Value::String(german));
-        let mut fault = dsl::json::Object::new();
-        fault.insert("code", dsl::json::Value::String(semio_framework_os_flow::ExtensionEvaluateFault::CODE.to_string()));
-        fault.insert("extensionId", dsl::json::Value::String(evaluate_fault.extension_id.clone()));
-        fault.insert("capability", dsl::json::Value::String(evaluate_fault.capability.clone()));
-        fault.insert("faultCode", dsl::json::Value::String(evaluate_fault.code.clone()));
-        fault.insert("faultMessage", dsl::json::Value::String(evaluate_fault.message.clone()));
-        fault.insert("message", dsl::json::Value::Object(message));
+        let mut message = semio_framework_pack_json::Object::new();
+        message.insert("en", semio_framework_pack_json::Value::String(english));
+        message.insert("de", semio_framework_pack_json::Value::String(german));
+        let mut fault = semio_framework_pack_json::Object::new();
+        fault.insert("code", semio_framework_pack_json::Value::String(semio_framework_os_flow::ExtensionEvaluateFault::CODE.to_string()));
+        fault.insert("extensionId", semio_framework_pack_json::Value::String(evaluate_fault.extension_id.clone()));
+        fault.insert("capability", semio_framework_pack_json::Value::String(evaluate_fault.capability.clone()));
+        fault.insert("faultCode", semio_framework_pack_json::Value::String(evaluate_fault.code.clone()));
+        fault.insert("faultMessage", semio_framework_pack_json::Value::String(evaluate_fault.message.clone()));
+        fault.insert("message", semio_framework_pack_json::Value::Object(message));
         let (faulted_en, faulted_de) = semio_framework_os_flow::PreviewTessellatePhase::Faulted.labels();
-        let mut faulted_label = dsl::json::Object::new();
-        faulted_label.insert("en", dsl::json::Value::String(faulted_en.to_string()));
-        faulted_label.insert("de", dsl::json::Value::String(faulted_de.to_string()));
-        object.insert("phase", dsl::json::Value::String(semio_framework_os_flow::PreviewTessellatePhase::Faulted.tag().to_string()));
-        object.insert("phaseLabel", dsl::json::Value::Object(faulted_label));
-        object.insert("fault", dsl::json::Value::Object(fault));
+        let mut faulted_label = semio_framework_pack_json::Object::new();
+        faulted_label.insert("en", semio_framework_pack_json::Value::String(faulted_en.to_string()));
+        faulted_label.insert("de", semio_framework_pack_json::Value::String(faulted_de.to_string()));
+        object.insert("phase", semio_framework_pack_json::Value::String(semio_framework_os_flow::PreviewTessellatePhase::Faulted.tag().to_string()));
+        object.insert("phaseLabel", semio_framework_pack_json::Value::Object(faulted_label));
+        object.insert("fault", semio_framework_pack_json::Value::Object(fault));
     } else if let Err(miss) = address {
         let (english, german) = miss.labels();
-        let mut message = dsl::json::Object::new();
-        message.insert("en", dsl::json::Value::String(english));
-        message.insert("de", dsl::json::Value::String(german));
-        let mut fault = dsl::json::Object::new();
-        fault.insert("code", dsl::json::Value::String(semio_framework_os_flow::FlowExtensionAddressMiss::CODE.to_string()));
-        fault.insert("extensionId", dsl::json::Value::String(miss.extension_id));
-        fault.insert("message", dsl::json::Value::Object(message));
+        let mut message = semio_framework_pack_json::Object::new();
+        message.insert("en", semio_framework_pack_json::Value::String(english));
+        message.insert("de", semio_framework_pack_json::Value::String(german));
+        let mut fault = semio_framework_pack_json::Object::new();
+        fault.insert("code", semio_framework_pack_json::Value::String(semio_framework_os_flow::FlowExtensionAddressMiss::CODE.to_string()));
+        fault.insert("extensionId", semio_framework_pack_json::Value::String(miss.extension_id));
+        fault.insert("message", semio_framework_pack_json::Value::Object(message));
         fault.insert(
             "contributed",
-            dsl::json::Value::Array(
+            semio_framework_pack_json::Value::Array(
                 miss.contributed
                     .into_iter()
                     .map(|(extension_id, plugin_id)| {
-                        let mut entry = dsl::json::Object::new();
-                        entry.insert("extensionId", dsl::json::Value::String(extension_id));
-                        entry.insert("pluginId", dsl::json::Value::String(plugin_id));
-                        dsl::json::Value::Object(entry)
+                        let mut entry = semio_framework_pack_json::Object::new();
+                        entry.insert("extensionId", semio_framework_pack_json::Value::String(extension_id));
+                        entry.insert("pluginId", semio_framework_pack_json::Value::String(plugin_id));
+                        semio_framework_pack_json::Value::Object(entry)
                     })
                     .collect(),
             ),
         );
-        object.insert("fault", dsl::json::Value::Object(fault));
+        object.insert("fault", semio_framework_pack_json::Value::Object(fault));
     }
     if status.diagnostics > 0 {
-        object.insert("diagnosticCount", dsl::json::Value::from(u64::from(status.diagnostics)));
-        let entries: Vec<dsl::json::Value> = session
+        object.insert("diagnosticCount", semio_framework_pack_json::Value::from(u64::from(status.diagnostics)));
+        let entries: Vec<semio_framework_pack_json::Value> = session
             .map(FlowEvalSession::preview_diagnostic_entries)
             .unwrap_or_default()
             .into_iter()
             .map(|(handle, issues)| {
-                let mut entry = dsl::json::Object::new();
-                entry.insert("handle", dsl::json::Value::String(handle.to_string()));
-                entry.insert("issues", dsl::json::parse(issues).unwrap_or(dsl::json::Value::Array(Vec::new())));
-                dsl::json::Value::Object(entry)
+                let mut entry = semio_framework_pack_json::Object::new();
+                entry.insert("handle", semio_framework_pack_json::Value::String(handle.to_string()));
+                entry.insert("issues", semio_framework_pack_json::parse(issues, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or(semio_framework_pack_json::Value::Array(Vec::new())));
+                semio_framework_pack_json::Value::Object(entry)
             })
             .collect();
-        object.insert("diagnostics", dsl::json::Value::Array(entries));
+        object.insert("diagnostics", semio_framework_pack_json::Value::Array(entries));
     }
-    dsl::json::to_string(&dsl::json::Value::Object(object))
+    semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Object(object))
 }
 
 /// 🐞️ The observable counters a preview window stamps onto its status so the browser probe can read
@@ -1448,15 +1452,15 @@ pub struct PreviewStatusDebug<'a> {
 /// windows publish exactly this, so a probe, a shell pane and a law can name one shape.
 pub fn preview_window_status_json(session: Option<&FlowEvalSession>, run: Option<&ToolRunView>, widget_status: Option<String>, debug: &PreviewStatusDebug<'_>, hint: Option<&str>) -> Option<String> {
     let base = preview_scene_status_json(session, run, widget_status);
-    let mut object = base.as_deref().and_then(|text| dsl::json::parse(text).ok()).and_then(|value| value.as_object().cloned()).unwrap_or_else(dsl::json::Object::new);
-    let mut debug_object = dsl::json::Object::new();
-    debug_object.insert("meshesLen", dsl::json::Value::from(debug.meshes_json.len()));
-    debug_object.insert("instancesLen", dsl::json::Value::from(debug.instances_json.len()));
-    object.insert("debug", dsl::json::Value::Object(debug_object));
+    let mut object = base.as_deref().and_then(|text| semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()).and_then(|value| value.as_object().cloned()).unwrap_or_else(semio_framework_pack_json::Object::new);
+    let mut debug_object = semio_framework_pack_json::Object::new();
+    debug_object.insert("meshesLen", semio_framework_pack_json::Value::from(debug.meshes_json.len()));
+    debug_object.insert("instancesLen", semio_framework_pack_json::Value::from(debug.instances_json.len()));
+    object.insert("debug", semio_framework_pack_json::Value::Object(debug_object));
     if let Some(hint) = hint {
-        object.insert("hint", dsl::json::Value::String(hint.to_string()));
+        object.insert("hint", semio_framework_pack_json::Value::String(hint.to_string()));
     }
-    Some(dsl::json::to_string(&dsl::json::Value::Object(object)))
+    Some(semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Object(object)))
 }
 //#endregion 📈️Status
 

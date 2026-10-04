@@ -66,6 +66,144 @@
           ]
         }
       }
+    },
+    {
+      "operator": "brep.prim3d.convexHull",
+      "direction": "inputs",
+      "expected": {
+        "points": {
+          "valueTypes": [
+            "list"
+          ],
+          "cardinality": "*",
+          "itemTypes": [
+            "point",
+            "vector"
+          ]
+        }
+      }
+    },
+    {
+      "operator": "brep.curve.polyline",
+      "direction": "inputs",
+      "expected": {
+        "points": {
+          "valueTypes": [
+            "list"
+          ],
+          "cardinality": "*",
+          "itemTypes": [
+            "point",
+            "vector"
+          ]
+        }
+      }
+    },
+    {
+      "operator": "brep.curve.interpolate",
+      "direction": "inputs",
+      "expected": {
+        "points": {
+          "valueTypes": [
+            "list"
+          ],
+          "cardinality": "*",
+          "itemTypes": [
+            "point",
+            "vector"
+          ]
+        }
+      }
+    },
+    {
+      "operator": "brep.curve.approximate",
+      "direction": "inputs",
+      "expected": {
+        "points": {
+          "valueTypes": [
+            "list"
+          ],
+          "cardinality": "*",
+          "itemTypes": [
+            "point",
+            "vector"
+          ]
+        }
+      }
+    },
+    {
+      "operator": "brep.surf.planarFace",
+      "direction": "inputs",
+      "expected": {
+        "points": {
+          "valueTypes": [
+            "list"
+          ],
+          "cardinality": "*",
+          "itemTypes": [
+            "point",
+            "vector"
+          ]
+        }
+      }
+    },
+    {
+      "operator": "brep.surf.nurbsGrid",
+      "direction": "inputs",
+      "expected": {
+        "points": {
+          "valueTypes": [
+            "list"
+          ],
+          "cardinality": "*",
+          "itemTypes": [
+            "point",
+            "vector"
+          ]
+        }
+      }
+    },
+    {
+      "operator": "brep.mesh.construct",
+      "direction": "inputs",
+      "expected": {
+        "data": {
+          "valueTypes": [
+            "text"
+          ],
+          "default": {
+            "$schema": "text",
+            "value": "{\"vertices\":[[0,0,0],[1,0,0],[0,1,0]],\"faces\":[[0,1,2]]}"
+          }
+        }
+      }
+    },
+    {
+      "operator": "brep.topology.label",
+      "direction": "outputs",
+      "expected": {
+        "label": {
+          "code": "L",
+          "abbreviation": "Lbl",
+          "valueTypes": [
+            "text"
+          ]
+        }
+      }
+    },
+    {
+      "operator": "brep.brep",
+      "direction": "outputs",
+      "expected": {
+        "shell": {
+          "code": "S",
+          "abbreviation": "Shl",
+          "valueTypes": [
+            "list"
+          ],
+          "cardinality": "*"
+        }
+      }
     }
   ]
 }

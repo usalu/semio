@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "minItems": 4,
+  "maxItems": 4,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "operation",
+      "key",
+      "value",
+      "expectedKind",
+      "reason"
+    ],
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "operation": {
+        "enum": [
+          "duplicate",
+          "full",
+          "unadmitted",
+          "backing"
+        ]
+      },
+      "key": {
+        "type": "string"
+      },
+      "value": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      },
+      "expectedKind": {
+        "$ref": "https://semio.tech/schema/value/refusal#/$defs/kind"
+      },
+      "reason": {
+        "enum": [
+          "raster-map.duplicate-key",
+          "raster-map.item-capacity",
+          "raster-map.page-not-admitted",
+          "raster-map.page-capacity"
+        ]
+      }
+    }
+  }
+}

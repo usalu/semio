@@ -16,9 +16,12 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for RemoveTableRow {
         agg_diff(&DocxMutation::RemoveTableRow(self.clone()), base)
     }
 
-    fn inverse(&self, base: &DocxSnapshot) -> Vec<DocxMutation> {
-        agg_inverse(&DocxMutation::RemoveTableRow(self.clone()), base)
-    }
+    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&DocxMutation::RemoveTableRow(self.clone()), base)?
+    
+    })
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove table row", "Tabellenzeile entfernen")

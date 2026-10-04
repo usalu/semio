@@ -45,7 +45,7 @@ fn is_rectangle(node: &Puzzle2dNode) -> bool {
 /// 👁️ Read-only twin of the editor's own node placement — real per-node position/kind/label, flattened
 /// onto `z = 0` (duplicated shape math, not imported, per `policyViewerPurityBreaches`).
 fn world_instances_json(snapshot: &Puzzle2dSnapshot) -> String {
-    let instances: Vec<dsl::DslValue> = snapshot
+    let instances: Vec<semio_framework_value::DslValue> = snapshot
         .nodes
         .iter()
         .map(|node| {
@@ -57,25 +57,25 @@ fn world_instances_json(snapshot: &Puzzle2dSnapshot) -> String {
                 let diameter = node.radius.unwrap_or(PUZZLE2D_VIEW_DEFAULT_RADIUS) * 2.0;
                 [diameter, diameter, PUZZLE2D_VIEW_FLAT_DEPTH]
             };
-            dsl::DslValue::object([
-                ("id".to_string(), dsl::DslValue::String(node.id.clone())),
-                ("meshId".to_string(), dsl::DslValue::String(mesh_id.to_string())),
-                ("position".to_string(), dsl::ToValue::to_value(&[node.x, node.y, 0.0])),
-                ("rotation".to_string(), dsl::ToValue::to_value(&[0.0, 0.0, 0.0, 1.0])),
-                ("scale".to_string(), dsl::ToValue::to_value(&scale)),
-                ("label".to_string(), dsl::DslValue::String(node.text.clone().unwrap_or_default())),
+            semio_framework_value::DslValue::object([
+                ("id".to_string(), semio_framework_value::DslValue::String(node.id.clone())),
+                ("meshId".to_string(), semio_framework_value::DslValue::String(mesh_id.to_string())),
+                ("position".to_string(), semio_framework_value::ToValue::to_value(&[node.x, node.y, 0.0])),
+                ("rotation".to_string(), semio_framework_value::ToValue::to_value(&[0.0, 0.0, 0.0, 1.0])),
+                ("scale".to_string(), semio_framework_value::ToValue::to_value(&scale)),
+                ("label".to_string(), semio_framework_value::DslValue::String(node.text.clone().unwrap_or_default())),
             ])
         })
         .collect();
-    dsl::json::to_json_string(&dsl::DslValue::Array(instances))
+    semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Array(instances))
 }
 
 fn world_meshes_json() -> String {
-    let meshes = dsl::DslValue::Array(vec![
-        dsl::DslValue::object([("id".to_string(), dsl::DslValue::String(PUZZLE2D_VIEW_CIRCLE_MESH_KIND.to_string())), ("data".to_string(), dsl::ToValue::to_value(&mesh_from_kind(PUZZLE2D_VIEW_CIRCLE_MESH_KIND)))]),
-        dsl::DslValue::object([("id".to_string(), dsl::DslValue::String(PUZZLE2D_VIEW_RECTANGLE_MESH_KIND.to_string())), ("data".to_string(), dsl::ToValue::to_value(&mesh_from_kind(PUZZLE2D_VIEW_RECTANGLE_MESH_KIND)))]),
+    let meshes = semio_framework_value::DslValue::Array(vec![
+        semio_framework_value::DslValue::object([("id".to_string(), semio_framework_value::DslValue::String(PUZZLE2D_VIEW_CIRCLE_MESH_KIND.to_string())), ("data".to_string(), semio_framework_value::ToValue::to_value(&mesh_from_kind(PUZZLE2D_VIEW_CIRCLE_MESH_KIND)))]),
+        semio_framework_value::DslValue::object([("id".to_string(), semio_framework_value::DslValue::String(PUZZLE2D_VIEW_RECTANGLE_MESH_KIND.to_string())), ("data".to_string(), semio_framework_value::ToValue::to_value(&mesh_from_kind(PUZZLE2D_VIEW_RECTANGLE_MESH_KIND)))]),
     ]);
-    dsl::json::to_json_string(&meshes)
+    semio_framework_pack_json::to_json_string(&meshes)
 }
 
 /// 👁️ Pure `Puzzle2dSnapshot -> UiNode` read: default overhead camera, no selection/utility/engagement

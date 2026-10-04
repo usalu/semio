@@ -6,15 +6,18 @@
 //! `26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION`); moved here from step's `io::part21` (ticket
 //! `26/09/23/END-TO-END-OS-HUB-COLLABORATION-MCP`, LB2 p16).
 
-use crate::kernel::{edit_through_value, DslValue, FromValue, ToValue, ValueEdit, ValueError};
+use semio_framework_value::{edit_through_value, DslValue, FromValue, ToValue, ValueEdit, ValueError};
 use crate::value_derive;
 use std::fmt;
 use std::fmt::Write as _;
 
+#[path = "🚦️controlled/🦀️.rs"]
+mod controlled;
+
 //#region 🔖️Value
 /// 🔢️ Exact logical STEP real: decimal coefficient/scale plus an optional base-10 exponent.
 #[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields, retire_with = "controlled::retire_decimal")]
 pub struct Part21Decimal {
     pub negative: bool,
     pub coefficient: String,
@@ -189,7 +192,7 @@ impl Part21Instance {
 /// 📇️ The three standard `HEADER;` records (`FILE_DESCRIPTION`/`FILE_NAME`/`FILE_SCHEMA`),
 /// each a parenthesized tuple of typed values — kept verbatim, not schema-interpreted.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields, retire_with = "controlled::retire_header")]
 pub struct Part21Header {
     pub file_description: Vec<Part21Value>,
     pub file_name: Vec<Part21Value>,
@@ -255,6 +258,7 @@ impl Default for Part21Header {
 //#region 🔖️Document
 /// 📦️ The full, lossless generic Part-21 graph: header + every `DATA;` instance.
 #[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue)]
+#[value(deny_unknown_fields, retire_with = "controlled::retire_document")]
 pub struct Part21Document {
     pub header: Part21Header,
     pub instances: Vec<Part21Instance>,
@@ -333,6 +337,13 @@ impl fmt::Display for Part21Error {
     }
 }
 impl std::error::Error for Part21Error {}
+/// 🧷️ Unsupported escapes are unsupported grammar; every other lexical refusal is invalid input.
+impl From<Part21Error> for semio_framework_value::ValueError {
+    fn from(error: Part21Error) -> Self {
+        let kind = match &error { Part21Error::UnsupportedEscape { .. } => semio_framework_value::ValueRefusalKind::UnsupportedOwner, _ => semio_framework_value::ValueRefusalKind::InvalidValue };
+        Self::new(kind, error.to_string())
+    }
+}
 //#endregion 🔖️Error
 
 //#region 🔖️Lexer
@@ -1014,18 +1025,22 @@ fn escape_part21_string(s: &str) -> String {
 //#region 🔖️ValueCodec
 /// 🔎️ Takes one member out of a Part-21 JSON record, naming the record and the member when it is missing.
 fn part21_member(entries: &mut Vec<(String, DslValue)>, record: &str, key: &str) -> Result<DslValue, ValueError> {
-    let index = entries.iter().position(|(candidate, _)| candidate == key).ok_or_else(|| ValueError::new(format!("a Part-21 {record} carries `{key}`")))?;
+    let index = entries.iter().position(|(candidate, _)| candidate == key).ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("a Part-21 {record} carries `{key}`")))?;
     Ok(entries.remove(index).1)
 }
 
 /// 🚫️ Refuses a member a Part-21 JSON record does not declare.
 fn part21_exhausted(entries: &[(String, DslValue)], record: &str) -> Result<(), ValueError> {
-    entries.first().map_or(Ok(()), |(key, _)| Err(ValueError::new(format!("a Part-21 {record} carries no `{key}`"))))
+    entries.first().map_or(Ok(()), |(key, _)| Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("a Part-21 {record} carries no `{key}`"))))
 }
 
 /// 🌱️ The canonical JSON projection of a Part-21 value: kind-tagged, the payload under `value` (a scalar, a reference, a
 /// decimal), `values` (a list) or `typeName` + `values` (a defined-type wrapper); `unset`/`derived` carry the tag alone.
 impl ToValue for Part21Value {
+    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<DslValue, ValueError> {
+        controlled::output::encode_value(self, control)
+    }
+
     fn to_value(&self) -> DslValue {
         let tagged = |kind: &str, payload: Vec<(&str, DslValue)>| DslValue::object(std::iter::once(("kind".to_string(), DslValue::String(kind.to_string()))).chain(payload.into_iter().map(|(key, value)| (key.to_string(), value))));
         match self {
@@ -1044,6 +1059,14 @@ impl ToValue for Part21Value {
 
 /// 🔀️ Decodes exactly the projection [`ToValue`] emits; an unknown kind or member is refused.
 impl FromValue for Part21Value {
+    fn from_value_controlled(value: &DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
+        controlled::input::decode_value(value, control)
+    }
+
+    fn retire_decoded(self) {
+        controlled::retire_value(self);
+    }
+
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let mut entries = value.into_object()?;
         let kind = String::from_value(part21_member(&mut entries, "value", "kind")?)?;
@@ -1058,7 +1081,7 @@ impl FromValue for Part21Value {
             "typed" => Self::Typed { name: String::from_value(part21_member(&mut entries, &record, "typeName")?)?, items: Vec::from_value(part21_member(&mut entries, &record, "values")?)? },
             "unset" => Self::Unset,
             "derived" => Self::Derived,
-            other => return Err(ValueError::new(format!("unknown Part-21 value kind `{other}`"))),
+            other => return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown Part-21 value kind `{other}`"))),
         };
         part21_exhausted(&entries, &record)?;
         Ok(decoded)
@@ -1072,6 +1095,10 @@ impl FromValue for Part21Value {
 /// 🌱️ The canonical JSON projection of an instance: its `id` and its `entities` as `{typeName, arguments}` records — a
 /// complex instance keeps every entity, in order.
 impl ToValue for Part21Instance {
+    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<DslValue, ValueError> {
+        controlled::output::encode_instance(self, control)
+    }
+
     fn to_value(&self) -> DslValue {
         let entities = self.entities.iter().map(|(name, arguments)| DslValue::object([("typeName".to_string(), name.to_value()), ("arguments".to_string(), arguments.to_value())])).collect();
         DslValue::object([("id".to_string(), self.id.to_value()), ("entities".to_string(), DslValue::Array(entities))])
@@ -1080,11 +1107,19 @@ impl ToValue for Part21Instance {
 
 /// 🔀️ Decodes exactly the projection [`ToValue`] emits; an unknown member is refused.
 impl FromValue for Part21Instance {
+    fn from_value_controlled(value: &DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
+        controlled::input::decode_instance(value, control)
+    }
+
+    fn retire_decoded(self) {
+        controlled::retire_instance(self);
+    }
+
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let mut entries = value.into_object()?;
         let id = u64::from_value(part21_member(&mut entries, "instance", "id")?)?;
         let DslValue::Array(records) = part21_member(&mut entries, "instance", "entities")? else {
-            return Err(ValueError::new("a Part-21 instance carries its entities as an array"));
+            return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "a Part-21 instance carries its entities as an array"));
         };
         part21_exhausted(&entries, "instance")?;
         let entities = records

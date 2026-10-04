@@ -22,6 +22,7 @@ semio-framework-geometry = { workspace = true }
 semio-framework-graph = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { path = "../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value-derive = { workspace = true }
 
 [dev-dependencies]

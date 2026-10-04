@@ -1,40 +1,86 @@
 use super::*;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
+use standards::v1::subsets::any::schema::{evaluate_document, mutations::update_climate::UpdateClimate, snapshot};
 
-trait Din18599ChildOwnerOracle {
-    fn expected() -> serde_json::Value;
+/// 🧾️ Language-neutral expectation of the derived climate table (Python `hashlib` oracle, ticket script `🧪️s4-norm-din18599-climate.py`).
+fn derivation() -> serde_json::Value {
+    serde_json::from_str(include_str!("../../🧫️fixtures/🧫️climate-table-derivation/🔣️.json")).expect("language-neutral DIN 18599 climate-table fixture")
 }
 
-struct SerdeJsonDin18599ChildOwnerOracle;
+/// 🥶️ A document whose climate is not the Potsdam reference, reached through the `update-climate` leaf.
+fn cold_document() -> Din18599Snapshot {
+    let potsdam = Din18599Snapshot::default();
+    let new_climate = MonthlyClimate { theta_e_c: potsdam.climate.theta_e_c.map(|theta| theta - 6.0), g_h_w_m2: potsdam.climate.g_h_w_m2.map(|g| g * 0.8) };
+    let raised = <Din18599Mutation as protocol::Mutation<Din18599Snapshot>>::diff(&Din18599Mutation::UpdateClimate(UpdateClimate { new_climate }), &potsdam);
+    <Din18599Diff as protocol::MutationDiff<Din18599Snapshot>>::apply(raised.diff(), &potsdam).expect("update-climate applies")
+}
 
-impl Din18599ChildOwnerOracle for SerdeJsonDin18599ChildOwnerOracle {
-    fn expected() -> serde_json::Value {
-        serde_json::from_str(include_str!("../../🧫️fixtures/🧫️child-owner-isolation/🔣️.json")).expect("language-neutral DIN 18599 child-owner fixture")
+#[test]
+fn the_climate_table_handle_is_the_content_id_of_the_climate() {
+    let expected = derivation();
+    let climate: MonthlyClimate = serde_json::from_value(expected["climate"].clone()).expect("fixture climate");
+    assert_eq!(semio_framework_pack_json::to_json_string(&climate), expected["canonicalJson"].as_str().expect("canonical JSON"));
+    let child = din18599_climate_table_child(&climate);
+    assert_eq!(child.child_id, expected["childId"].as_str().expect("child id"));
+    assert_eq!(child.target.artifact_id, child.child_id);
+    let dialect = &child.target.dialect;
+    assert_eq!([dialect.artifact_kind.as_str(), dialect.standard.as_str(), dialect.subset.as_str()], [&expected["dialect"]["artifactKind"], &expected["dialect"]["standard"], &expected["dialect"]["subset"]].map(|value| value.as_str().expect("dialect")));
+    let table = din18599_climate_table_from_data(&climate);
+    assert_eq!(serde_json::json!(table.columns.iter().map(|column| column.name.as_str()).collect::<Vec<_>>()), expected["columns"]);
+    let rows: Vec<Vec<&str>> = table.rows.iter().map(|row| row.cells.iter().map(|cell| match cell { SemioValue::Float { lexeme } => lexeme.as_str(), other => panic!("non-float climate cell {other:?}") }).collect()).collect();
+    assert_eq!(serde_json::json!(rows), expected["rows"]);
+    assert_eq!(din18599_climate_data_from_table(&table), climate);
+}
+
+#[test]
+fn update_climate_writes_the_parent_climate_and_re_derives_its_table() {
+    let edited = cold_document();
+    assert_ne!(edited.climate, MonthlyClimate::potsdam_reference());
+    assert_eq!(edited.climate_table, din18599_climate_table_child(&edited.climate));
+    let inverse = <Din18599Mutation as protocol::Mutation<Din18599Snapshot>>::inverse(&Din18599Mutation::UpdateClimate(UpdateClimate { new_climate: edited.climate.clone() }), &Din18599Snapshot::default()).expect("inverse");
+    assert_eq!(inverse, vec![Din18599Mutation::UpdateClimate(UpdateClimate { new_climate: MonthlyClimate::potsdam_reference() })]);
+}
+
+#[test]
+fn the_genesis_pack_is_the_snapshot_s_own_climate_table() {
+    let edited = cold_document();
+    let pack = genesis_din18599_child_pack(&edited, DIN18599_CLIMATE_TABLE_SLOT, &edited.climate_table.child_id).expect("derived climate table");
+    let table = <SemioTableSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("table pack");
+    assert_eq!(din18599_climate_data_from_table(&table), edited.climate);
+    assert!(genesis_din18599_child_pack(&edited, "climate", &edited.climate_table.child_id).is_none());
+    assert!(genesis_din18599_child_pack(&edited, DIN18599_CLIMATE_TABLE_SLOT, &din18599_climate_table_child(&MonthlyClimate::potsdam_reference()).child_id).is_none());
+}
+
+/// 💾️ LAW (design §20.15): a saved document reloads through every persisted carrier with its own climate and evaluates with
+/// it — never with the Potsdam reference — and its derived climate table opens from the reloaded parent alone.
+#[test]
+fn a_reloaded_document_evaluates_with_its_own_climate() {
+    use store::sqlite_snapshot::{export_sqlite_database, import_sqlite_database, SqliteDatabaseLimits, SqliteSnapshotControl};
+    use store::ArtifactSqliteSnapshot;
+    let edited = cold_document();
+    let report = serde_json::to_value(evaluate_document(&edited)).expect("report");
+    assert_ne!(report, serde_json::to_value(evaluate_document(&Din18599Snapshot::default())).expect("potsdam report"), "the cold climate must change the evaluation");
+    let limits = SqliteDatabaseLimits::default();
+    let sqlite = export_sqlite_database(&edited.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).expect("sqlite projection"), limits, &mut |_| true).expect("sqlite bytes");
+    let reloaded = [
+        ("dsl", snapshot::decode_din18599_dsl(&snapshot::encode_din18599_dsl(&edited)).expect("dsl")),
+        ("pack", snapshot::decode_din18599_pack(&snapshot::encode_din18599_pack(&edited)).expect("pack")),
+        ("json", snapshot::decode_din18599_snapshot_json(&snapshot::encode_din18599_snapshot_json(&edited)).expect("json")),
+        ("sqlite", Din18599Snapshot::from_sqlite_database(&import_sqlite_database(&sqlite, limits, &mut |_| true).expect("sqlite import"), &mut SqliteSnapshotControl::new(&mut |_| true, limits)).expect("sqlite")),
+    ];
+    for (carrier, document) in reloaded {
+        assert_eq!(document, edited, "{carrier}: reload changed the document");
+        assert_eq!(serde_json::to_value(evaluate_document(&document)).expect("report"), report, "{carrier}: reload changed the evaluation");
+        assert!(genesis_din18599_child_pack(&document, DIN18599_CLIMATE_TABLE_SLOT, &document.climate_table.child_id).is_some(), "{carrier}: the derived table does not open");
     }
 }
 
 #[test]
-fn climate_working_data_is_owned_by_the_exact_child() {
-    let owned = din18599_climate_child_from_data(&MonthlyClimate { theta_e_c: [1.0; 12], g_h_w_m2: [2.0; 12] });
-    let wire = dsl::json::to_json_string(&owned);
-    let reconstructed: Din18599ClimateChild = dsl::json::from_json_str(&wire).expect("DIN 18599 child wire roundtrip");
-    let mut oracle_wire = Vec::new();
-    document::child_identity_oracle::serialize(&owned, &mut serde_json::Serializer::new(&mut oracle_wire)).expect("independent child identity oracle");
-    assert_eq!(serde_json::from_str::<serde_json::Value>(&wire).expect("first-party child identity JSON"), serde_json::from_slice::<serde_json::Value>(&oracle_wire).expect("Serde child identity JSON"));
-    let observed = serde_json::json!({
-        "ownedHasPayload": owned.local_owner::<Din18599ClimateWorkingData>().is_some(),
-        "wireIdentityMatches": owned == reconstructed,
-        "wireHasPayload": reconstructed.local_owner::<Din18599ClimateWorkingData>().is_some(),
-    });
-
-    assert_eq!(observed, SerdeJsonDin18599ChildOwnerOracle::expected());
-}
-
-
-#[test]
-fn din18599_child_restore_projection_accepts_the_exact_owned_climate_table() {
+fn din18599_child_restore_projection_accepts_the_derived_climate_table() {
     let snapshot = Din18599Snapshot::default();
-    let projection = store::ChildRestoreProjection::from_snapshot(&snapshot).expect("canonical DIN 18599 climate child");
+    let projection = din18599_child_restore_projection(&snapshot).expect("canonical DIN 18599 climate table child");
     assert_eq!(projection.len(), 1);
-    assert!(projection.admits_member("climate", &snapshot.climate.target));
-    assert_eq!(snapshot.climate.child_id, snapshot.climate.target.artifact_id);
+    assert!(projection.admits_member(DIN18599_CLIMATE_TABLE_SLOT, &snapshot.climate_table.target));
+    assert_eq!(snapshot.climate_table, din18599_climate_table_child(&snapshot.climate));
 }

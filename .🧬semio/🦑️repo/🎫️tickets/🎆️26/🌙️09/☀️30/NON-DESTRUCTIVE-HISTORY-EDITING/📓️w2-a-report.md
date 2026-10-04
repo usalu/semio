@@ -870,3 +870,482 @@ Status: **in progress** — this section is updated at every milestone.
   `remoteReplay` on the wire, Cancel replay pauses, Replay again resumes, adoption = author head). Independent Python oracle
   `🐍️.py` beside it (jsonschema + shapely, reuses the select-tool oracle's `fold`): **5 scenarios, 20 head nodes agree**;
   negative control (one head x off by 1) exits 1. Taxonomy report on the 3 new dirs: clean ×3.
+
+### 9.3 After the reboot (18:40–19:25)
+
+- **Repair (rule 28):** every session-3 edit was intact (§19.1, N1, N3, N15, §20.6, the puzzle corpus and laws). S3-W1E's
+  N2 runtime regions (`time_travel_pointer_insert/remove`, `time_travel_default_value`, the `edit` arm) landed in
+  `P/⏪️time-travel/🦀️.rs`. I reviewed them while reading the file and found nothing touching my regions.
+- `cargo check -p semio-framework-plugin --lib` at 18:46: **Finished**, with no warning in `⏪️time-travel`.
+- **Plugin test-target repair (coordinator GO).** The peer locale move (auto-commit 202c4b7b5b1: a private
+  `use semio_framework_ui_locale::{…}` in the os-kernel root) broke 58 sites.
+  - Ticket input `🧪️s3-w2a-plugin-locale-imports.py` migrated 29 plugin test/fixture files, idempotently, to
+    `semio_framework_ui_locale::{LocalizedLabel, Locale, Terminology}`.
+  - The same pass moved `artifact_schema_descriptor_registered` to its new home `semio_framework_schema_registry::`.
+  - S3-W1G's N17 reload law needs the private `ArtifactStoreInitializationJob::take_candidate`. Rather than widen it, I
+    moved the law, unchanged, into `app` as `P/🧪️tests/🧪️bounded-reload/🦀️.rs`, mounted beside `time_travel_tests`, and
+    removed it from `🧾️document-archive-load-legs`.
+  - Result: `cargo check -p semio-framework-plugin --lib --tests` **Finished** at 18:57.
+- **Kernel TS vitest:** **6 files, 75 passed** (18:5x), and **75 passed** again after the N17 wire rename (19:1x).
+- **N17 runtime adoption — SOURCE WRITTEN, ticket input `🧪️s3-w2a-n17-reprojection.py`:**
+  - **Kernel wire, rename:** `HistoryRemoteReplay` → `HistoryReprojection {done, total, local, paused, fault?}`, and
+    `HistoryPatch.remoteReplay` → `reprojection`. Rust, TS twin, schema and fixture changed together; the fixture gains
+    the valid case `a-local-history-step-replays-before-it-is-adopted` and the invalid case `reprojection-local-not-a-boolean`.
+  - **New notice `history.replaying`:** en "History is still replaying — wait for it or cancel it first." / de "Der Verlauf
+    wird noch neu angewendet — abwarten oder zuerst abbrechen." It is in `HISTORY_NOTICE_LABELS` (4 rows), the TS twin and
+    the fixture.
+  - **Store settings:** `defer_local_replays(Some(TIME_TRAVEL_REPLAY_OPERATIONS))` is set beside both
+    `defer_remote_replays` sites. The constant was renamed from `…_REMOTE_REPLAY_…`.
+  - **Driving:** one turn step, `step_reprojection_turn`, drives local and remote. A local step is always driven; a remote
+    change only while it is not paused.
+  - **Cancel:** Cancel replay on a local step calls `discard_local_step()`, which leaves zero trace.
+  - **Blocked finalize:** a local finalize whose report blocks reads "History step refused: Errors must be fixed or
+    withdrawn before finalizing".
+  - **Body:** the section `framework.history.reprojection` reads "History step / Replaying history: {done} of {total}
+    mutations" (de "Verlaufsschritt / Verlauf wird neu angewendet: …").
+  - **Busy:** `historyEditBegin` answers `timeTravel.busy` while a local step waits.
+  - **History row:** the row of a deferred history verb is held back (`defer_history_step_row`). It is recorded on
+    adoption and dropped on cancel or refusal, so a cancelled step leaves no row either.
+  - **Laws:**
+    - `an_interior_undo_over_a_long_history_replays_over_turns_and_cancel_leaves_zero_trace` (toy: the author's undo under
+      another author's 600-op edit);
+    - `switching_to_a_long_alternative_replays_over_turns_and_cancel_leaves_zero_trace` (puzzle 2d, 360 drags, ≥ 2
+      turns, at most one budget per turn).
+  - **Open:** routing `load_document_pack/text` and `hydrate_document_lane` through
+    `begin_persisted_document_store_replacement` (§3.5 of `📓️api-deferred-history-replays.md`).
+- **Blocked since 19:00:** os-kernel peers. First the `🗣️dsl` crate extraction, then
+  `📡️spr/🧵️channel/🦀️.rs:216` (`crate::Fault*` gone) and `🚪️io/🦀️.rs:7` (`dsl::Diagnostic`). No plugin or kernel cargo run
+  is possible until they land.
+- **N15 per S3-W1E's new contract (19:35):** the refused Edit keeps label "Edit"/"Bearbeiten" and carries
+  `RowAction::disabled_because(<refusal text>)`, which both renderers announce as the description. The law
+  `every_mutation_of_a_long_transaction_is_reachable_and_edit_follows_the_begin_law` asserts `reason`.
+- **Review of S3-W1E's N2 runtime regions:** `time_travel_pointer_insert/remove`, `time_travel_default_value`, and the `edit`
+  arm of `draft_time_travel_input`. They are sound:
+  - every list edit is judged by the payload schema;
+  - refusals land on the list row;
+  - the regions are fail-closed when no validator compiles.
+  
+  One nit: array indexes with leading zeros (`/targets/01`) are accepted, which RFC 6901 forbids. No blocker.
+- **Reload routing (N17 §3.5): NOT STARTED, needs a coordinator decision.** `load_document_pack/text` and
+  `hydrate_document_lane` are reached from the component host through `resolve_ready(..)` (`P/🦀️.rs` ≈41852, ≈44056), which
+  panics on any suspension. A stepped reload therefore needs a multi-turn load/hydrate protocol between host and guest
+  (an operation handle plus completion, like the archive load), not a local change. `parse_document_pack` also folds the
+  history before any initializer runs. The archive path already avoids that with the stepped `PersistedDocumentHydration`.
+
+### 9.4 Stepped whole-document load (coordinator decision 19:40) — API on disk, guest source in progress
+
+- **API:** `T/📓️api-stepped-document-load.md`. Every whole-document load becomes the existing stepped, ACK-owned
+  document-archive load with no members. `AppCommand::LoadDocument` is to be deleted; that frame-layout change rides the
+  §20.7 bump wave. Progress and cancel are covered, cancel leaves zero trace, and a `document.loading` refusal holds while
+  the load runs.
+- **Wire changes (not yet consumed by any host), ticket input `🧪️s3-w2a-n17-reprojection-kind.py`:**
+  - `HistoryReprojection.kind: remote|step|load` (`HistoryReprojectionKind`) replaces `local: bool`;
+  - fixture cases `a-whole-document-load-replays-before-it-is-adopted` and `reprojection-kind-unknown`;
+  - kernel notice `document.loading`: en "The document is still loading — wait for it or cancel it first." / de "Das
+    Dokument wird noch geladen — abwarten oder zuerst abbrechen." (`HISTORY_NOTICE_LABELS` now has 5 rows).
+  - Kernel vitest: **75 passed**, also after these changes.
+- **Guest source (unverified while the tree is red):**
+  - `DOCUMENT_LOADING_CODE`;
+  - `document_loading_refusal`, wired at the head of `dispatch_action` and of `dispatch_typed_command_inner`;
+  - `live_document_load`;
+  - `reprojection_status`, which reports a live load as kind `load` using the archive status;
+  - `historyEditCancelReplay`, which cancels a live load first;
+  - the body section text "Document load / Loading document: {done} of {total}".
+- **Open, in this order:**
+  1. cold-pair ingress and checkpoint restore onto the archive load (multi-turn `ColdPairIngressStatus::Loading`);
+  2. the MCP workspace and `🏃️run` senders onto archive admit + poll;
+  3. op-level `completed/total`, which needs a progress hook on the retained initializer (S3-W1G region);
+  4. removing `load_document_pack/text` from the `PluginApp` surface (55 files and 84 test call sites, done as a sweep to
+     `artifact_app_laws::load_document`);
+  5. the decision on `PureCommand`: its `.pack` is the INITIAL snapshot, so a head-only hydration is impossible on today's
+     wire. I proposed that the sender send head-snapshot packs;
+  6. laws §6.
+
+### 9.5 Pure command head-only (decision §4 = b, 20:00) — SOURCE WRITTEN, ticket input `🧪️s3-w2a-pure-head.py`
+
+- `hydrate_document_lane(pack, spr)` now has three cases:
+  - **Empty lanes:** the live document is kept, and nothing changes. This is what the MCP workspace sends today.
+  - **A history lane (`spr` non-empty):** refused with `pure.history-unavailable` (`PURE_HISTORY_UNAVAILABLE_CODE`).
+  - **A head pack alone:** decoded straight into a genesis-only store. That is O(snapshot), with no fold and no suspension.
+    The ledger is then marked `history_unavailable`.
+- **In head-only mode:**
+  - the history-lane verbs, `revertToCommand` and every `historyEdit*` verb answer `pure.history-unavailable`;
+  - `history_snapshot` (ReadHistory) answers the same;
+  - `load_document_pack/text` lift the mode.
+- **Kernel notice** (6 rows now): en "This is a head-only evaluation without history — open the document in a live instance to
+  use its history." / de "Dies ist eine Auswertung nur des aktuellen Stands ohne Verlauf — für den Verlauf das Dokument in
+  einer laufenden Instanz öffnen."
+- **Law:** `a_pure_lane_hydrates_the_head_without_history_and_history_verbs_refuse` (240 edits).
+
+### 9.6 State at 20:05 — waiting for TREE GREEN
+
+The tree is red: os-kernel and the replication ↔ dsl crate cycle are a peer's DSL extraction, and the coordinator tracks it.
+**Nothing written after 18:57 has been compiled.** Owed, in order, once TREE GREEN:
+1. `cargo check -p semio-framework-plugin --lib --tests`, and the puzzle crate check (`--manifest-path ✏️s/Cargo.toml -p semio-s-artifact-puzzle-2d --features component-app-assembly --tests`).
+2. The targeted plugin laws: `time_travel supersede history_label_reload history_alternatives ui_history_panel
+   rendering_the_history_body activated_tool_factory document_archive composed_child_history scrub history_ bounded_reload`.
+   These include the new §19.1, N1/N15, N3, §20.6, N17 interior-undo and pure-head laws.
+3. `cargo test -p semio-framework --lib -- history_patch history_notices history_edit` (kernel and manifest wire).
+4. The puzzle 2d laws `history_edit_runtime_tests` (corpus, progress, remote, alternative switch).
+5. `cargo check --target wasm32-wasip2` of the plugin and the puzzle plugin.
+6. The full plugin lib suite against the baseline.
+
+**Open items** (owners in brackets):
+- Stepped load: cold-pair ingress (multi-turn `Loading` needs host and actor protocol coordination), checkpoint restore,
+  the MCP/`🏃️run` `LoadDocument` senders, removal of `load_document_pack/text` from `PluginApp` (55 files / 84 test call
+  sites), and op-level progress (waiting for S3-W1G's initializer hook) [S3-W2A].
+- Delete `AppCommand::LoadDocument` in the §20.7 bump wave [coordinator].
+- React mapping of the notice codes through `historyNotice()` [S3-W2B].
+
+**Coordinator actions:**
+- Descriptor regeneration: none new. The history-edit verb set is unchanged, because the stepped load reuses
+  `historyEditCancelReplay`.
+- Activation is needed for live proof.
+- The §20.7 bump wave must carry the `LoadDocument` deletion.
+- **20:15 op-level load progress (source).** S3-W1G landed `ArtifactStoreInitializationJob::progress() -> (folded, to_fold)`,
+  plus linear edit validation and linear applied/redo lookup (no more N² reload). In my regions:
+  - `ActiveArtifactStoreReplacement.fold_progress` captures it at every checked-out initializer outcome.
+  - `ActiveDocumentArchiveLoad.fold` copies it while awaiting the replacement.
+  - `DocumentArchiveLoadStatus` reports `completed + folded` of `total + to_fold`. That is real per-operation progress on
+    the wire and in `reprojection {kind: load}`.
+
+### 9.7 Resume 2026-10-03 05:47 (after the ~21:00 usage cut; TREE GREEN from the coordinator)
+
+- Repair: every edit from 9.2–9.6 is intact. Nothing was half-written: the 19:58 kernel check was green and nothing was in
+  flight at the cut. Running the owed list now (9.6 order).
+- `cargo test -p semio-framework --lib -- history_patch history_notices history_edit` (06:04): **10 passed, 0 failed**. This
+  includes the reprojection kind rename and the 6-row notice table. Fix in my region first:
+  `K/🧪️tests/💡️service-operation/🦀️.rs:9`, where `dsl::json::from_json_str` (gone after the DSL extraction) became
+  `semio_framework_pack_json::from_json_str(.., JsonMemberPolicy::Reject)`.
+- The plugin TEST target is red from the peer sqlite-snapshot `ValueError` change (05:36; 81 errors in fixture impls).
+  S3-INFRA owns that sweep, per the coordinator.
+- Puzzle 2d `history_edit_runtime_tests` (06:27): blocked by the same peer sqlite `ValueError` change, now in the stdio zip
+  artifact crate (`✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/…/🪶️sqlite/🦀️.rs`), which the puzzle test build pulls in. S3-INFRA's
+  sweep covers it.
+- New: `HistoryPatch.editCount: u32` (Rust, TS twin, schema, fixture: valid case and invalid `edit-count-negative`). It is
+  filled by the runtime from `vcs.edits.len()` and is the structured `{n}` of the `history.full` notice. S3-W2B should
+  read it instead of matching `\d+` in the fault message (`🛠️ShellHelpers/🟦️.tsx:2362`). Kernel vitest: **75 passed**.
+- F6 (`📓️audit-s3-tools.md`) is already resolved on disk: `commit_time_travel` applies `Finalized` before
+  `publish_time_travel_member`, and the member row label is the `TimeTravelLabel::MemberEdited` glossary entry.
+- Cold-pair ingress analysis: the browser host (`🏪️store/👷️worker/🟦️.ts` `transferColdPair`) requires the LAST page's turn
+  to answer `Applied` (`owner.assertApplied`). A multi-turn `Loading` therefore needs a host change: keep invoking empty
+  poll turns while the status is `loading`. The wgpu renderer and gis cold-pair tests need the same. Guest and host must
+  change together, so this is now a coordinated item in `📓️api-stepped-document-load.md` §4.
+- `cargo check -p semio-framework-plugin --lib --target wasm32-wasip2` (06:29): **Finished**, with no warning in my regions.
+- `cargo test -p semio-framework-time-travel` (06:32): **14 passed, 0 failed**, including the new N15 law
+  `begin_is_refused_exactly_where_the_reducer_refuses_it`. FWT TS conformance: 20 passed (session 3).
+- 06:40: handoffs sent to `main`:
+  - cold-pair needs a host change first (store worker, wgpu);
+  - the MCP/`🏃️run` senders belong to other WPs; the recipe is in `📓️api-stepped-document-load.md` §8;
+  - F7 plan: `Menu::of(registry, locale)`, a glossary count phrase, and a disabled delete row with a reason once S3-W1E
+    adds `ContextMenuItemSpec.reason`. Waiting for a decision.
+
+### 9.8 Stepped load hosts, publication gate, F7 (2026-10-03 06:40–07:05) — SOURCE WRITTEN, compile pending TREE GREEN
+
+- **Publication regression (puzzle 3d 22 vs 1590 units, `6f33e313da9`)**: the fix was agreed with S3-W1G and is applied in
+  `P/🦀️.rs`. `PUBLICATION_RETURNED_ROOT_ALLOWANCE = 1` lets one returned root-snapshot read through before the
+  `reclaim_document_snapshot_read_returns` deferral, and the deferral now applies only to `PendingArtifactStorePublication::Artifact`.
+  S3-W1G measures it on TREE GREEN.
+- **F7 approved** (coordinator). W1E's contract is on disk: `ContextMenuItemSpec.reason` + `disabled_because(String)`, the
+  TS `reason?`, React done, wgpu with W2C. The sweep runs **after** the owed laws: `Menu::of(registry, locale)`,
+  `selection_count_phrase(locale, &[(count, kind_key)])` with glossary kind words, and a disabled delete row
+  "Nothing selected" / "Nichts ausgewählt". It covers every `Menu::of` caller (procedural gen2d/gen3d, flow, sequence,
+  layout, trinity rewriting/jack, dag, puzzle 2d/5d, hub space, plugin `🧪️node-graph-delete-row`, the builder-contract test).
+- **In-guest archive load helpers** (`P/🦀️.rs` `plugin_runtime`): `plugin_begin_document_archive_load`,
+  `plugin_poll_document_archive_load` (one poll wall via `drive_self_waking_ready`) and `plugin_acknowledge_document_archive_load`.
+  They are the in-guest twins of `LoadDocumentArchive` / `Poll` / `Acknowledge`.
+- **Cold-pair ingress, guest step 2** (ticket input `🧪️s3-w2a-cold-pair-stepped.py`). Host contract per S3-W1G
+  (`settleColdPairLoading`); S3-W2C confirmed wgpu never sends cold pairs.
+  - The verified pair is admitted as an archive load (`members: []`) under `COLD_PAIR_DOCUMENT_LOAD_OPERATION | transfer_generation`
+    (bit 63). It is held in the reactor's `COLD_PAIR_DOCUMENT_LOAD` and stepped by one poll per turn
+    (`⚛️reactor/🔄️turn` `step_cold_pair_document_load`).
+  - While running, every turn answers `ColdPairIngressStatus::Loading(last page cursor)`, sends **no UI patch**, and reports `MoreWork`.
+  - At the terminal state: acknowledge, then `finish_load`. `Ready` answers `Applied`. `Cancelled` answers `cold-pair.load-cancelled`
+    (the previous document is kept, so the guest has restored). A fault carries its bytes. A dead lifetime answers `cold-pair.not-live`.
+- **Checkpoint restore** (ticket input `🧪️s3-w2a-checkpoint-restore-stepped.py`).
+  - `checkpoint::restore` re-creates each instance under its **checkpointed id**. It now uses `plugin_create_app_with_id`;
+    before, a fresh auto id disagreed with the `INSTANCE_METADATA` and task-restart rows that `restore_now` keys by the old id.
+  - It admits the document as an archive load under `RESTORE_DOCUMENT_LOAD_OPERATION = 1 << 62` and answers
+    `RestoredCheckpoint { pack, document_loads }`.
+  - `restore_now` queues the loads in `RESTORED_DOCUMENT_LOADS`. Each turn, `step_restored_document_loads` polls each one:
+    - a terminal load is acknowledged;
+    - a fault reaches the instance's shell as an error frame;
+    - a cancel keeps the initial document;
+    - a closed instance's load is dropped.
+  - While any load runs, the instance answers `document.loading`.
+- **Named MoreWork source** `TurnMoreWorkSources.document_load` (cold pair loading or restore loads pending) replaces the
+  ad-hoc `|| cold_pair_loading` in the status, so an idle law names it.
+- **Tree at 06:53** (`check-plugin-tests-12.txt`): `semio-framework-os-kernel` red, 31 errors, all peer work. They are the
+  `IoError` / `ValueError` / `PackError::into_value_error` / `ValueRefusalKind` reshape in `🚪️io/🦀️.rs:2470`, `🏪️store/🦀️.rs:10917`,
+  `🧬️semio/🦀️.rs:4` and the sqlite snapshot files. Nothing in my regions; S3-INFRA's sweep.
+- **Cold-pair supersession** (S3-W1G review; ticket input `🧪️s3-w2a-cold-pair-supersede.py`). A cold-pair page of another
+  `transfer_generation` for an instance whose earlier pair still loads means the host abandoned that transfer.
+  `supersede_cold_pair_document_load` cancels the stale archive load, using the new `plugin_cancel_document_archive_load`,
+  the in-guest twin of `CancelDocumentArchiveLoad`. The step then ends it as `cold-pair.load-cancelled`, so a stale fold
+  never publishes. An instance close is already covered: the app close ladder (`drive_document_archive_load_retirements`,
+  `closing`) cancels and drops every non-terminal load, and the turn step finishes the pair as `cold-pair.not-live`.
+- **10:45 resume (usage cut 07:15).** All 9.8 edits are intact. `cargo check -p semio-framework-plugin --lib`: **Finished** (10:50).
+  `--target wasm32-wasip2`: **Finished** (10:55). No warning in the cold-pair, checkpoint or turn edits.
+  - The reactor's `thread_local!` block is the framework macro, which refuses `const { … }`. A peer had wrapped my two
+    initializers in parentheses, which only moved the problem to a warning. Both are now plain `RefCell::new(..)`, like
+    their neighbours.
+
+### 9.9 F7 context menus, archive load lifts head-only (2026-10-03 11:00–11:40) — SOURCE WRITTEN; ICU oracle green, Rust pending TREE GREEN
+
+- **New domain module `P/🖱️context-menu/`.** The `🖱️MenuBuilder` region moved out of `P/🦀️.rs`, mounted as `app::context_menu` and
+  re-exported unchanged at the crate root. It holds:
+  - `🦀️.rs`;
+  - `🧬️schema/🔣️.json` (`semio.plugin.context-menu-selection/v1`);
+  - `🧫️fixtures/🔣️.json`: the glossary of 5 kinds × en/de `one`/`other`, the `deleteSelection`/`nothingSelected` labels,
+    20 phrase cases and 5 delete-row cases;
+  - `🧪️tests/🟦️.ts`: the language-agnostic oracle. Ajv checks the schema, with negative controls. **ICU via `Intl.PluralRules` +
+    `Intl.ListFormat` + `Intl.NumberFormat`** reproduces every phrase and delete row: `bun test` **27 pass / 0 fail**
+    (`ts-context-menu-1.txt`);
+  - `🧪️tests/🦀️.rs`: 4 Rust laws. The glossary equals the fixture both ways, every phrase case and delete row reproduces, and
+    `Menu` resolves rows and reasons in the caller's axes.
+- **API**, with no default language anywhere:
+  - `Menu::of(registry, axes: &impl LabelAxes)` resolves every declared row in the call's **locale and terminology**. The approved
+    plan said `locale`; terminology rides along, because labels are terminology-dependent.
+  - `Menu::disabled_because(&LocalizedLabel)` disables the most recent row with its reason, for example
+    `.destructive("clearSelection").when(empty, |m| m.disabled_because(&nothing_selected()))`. The reason-less
+    `Menu::disabled(id, bool)` is gone; it had no callers.
+  - `SelectionKind {Node, Edge, Frame, Item, Part}` and `selection_count_phrase(locale, &[(count, SelectionKind)]) -> Option<String>`
+    follow CLDR `one`/`other`, ICU list conjunctions ("a, b, and c" / "a, b und c") and no digit grouping.
+  - `delete_selection()` / `nothing_selected() -> LocalizedLabel`.
+  - `node_graph_delete_selection_spec(label, axes, nodes, edges, dispatch) -> ContextMenuItemSpec`: an empty selection is now a
+    **visible, disabled row with reason "Nothing selected" / "Nichts ausgewählt" and no action/args** (W1E's `ContextMenuItemSpec.reason`),
+    never an omitted row.
+- **Sweep** (ticket input `🧪️s3-w2a-f7-plugins.py`): 76 edits over 19 files, compile-atomic per crate. Covers writer, gen2d, gen3d, flow,
+  gismap, sequence, process3d, layout, cad, trinity rewriting/jack, dag, and puzzle 2d/5d/3d.
+  - Every `is_de: bool` helper now takes `view_state`.
+  - Flow's hand-built delete row uses the shared spec (`Direct`).
+  - Sequence and trinity lost their English-only "Delete selection" literal (now `delete_selection()`).
+  - Disabled `clearSelection` (gismap, layout) and writer copy/cut rows now carry the reason.
+  - Plugin-crate callers too: the builder-contract test, `🧪️node-graph-delete-row`, and the `TestApp` menu.
+  - Tests that pinned "an empty selection omits delete" now pin the disabled row: gen2d unit, three flow unit asserts.
+- **Archive load lifts head-only** (S3-LOAD §6 item 5; ticket input `🧪️s3-w2a-archive-lifts-head-only.py`). The committed store replacement
+  (`P/🦀️.rs` replacement commit, beside `retire_displaced_document_rows`) calls `set_history_unavailable(false)`.
+  - Every whole-document archive load restores history exactly like the old `load_document_pack/text`.
+  - The law `a_pure_lane_hydrates_the_head_without_history_and_history_verbs_refuse` now ends through the stamped archive load
+    over real polls: `Ready`, head-only lifted, source head + 240 edits.
+- **Tree 11:20** (`check-plugin-lib-17.txt`): os-kernel red from a peer, 4 errors. `🏪️store/🦀️.rs:17806/17823` `shared_prefix_len` not found;
+  `:22122` a 5→6-argument call. Nothing in my regions; the plugin lib with the moved module compiled green at 11:06
+  (`check-plugin-lib-16.txt`) before the label refinement.
+- **W2A-4 cold-pair load slot** (ticket input `🧪️s3-w2a-cold-pair-serialized.py`). The TurnResult carries ONE `ColdPairIngressStatus`,
+  so a turn can answer only one transfer. The guest therefore runs **one cold-pair document load per actor at a time** and answers each
+  turn for the page that arrived:
+  - **Serialization.** While another lifetime's load runs, a terminal page answers `Backpressure(its own cursor)` *before* `accept_page`,
+    so the page is not consumed. W1G's `retryColdPairBackpressure` resends it fresh until the running load ends. Non-terminal pages
+    still buffer.
+  - **Answer precedence.** A load's step answers a turn only when that turn carried no page or a page of the load's own lifetime.
+    A non-terminal page of instance B no longer gets instance A's `Loading`.
+  - **Supersession.** A newer `transfer_generation` of the same lifetime marks the running load `superseded` and cancels it. Its terminal
+    answer is never sent. The registry (`accept_page`) then retires the finished owner in bounded steps, one page wiped per attempt,
+    each answering `Backpressure(stale cursor)`, before taking the newer page 0. Before this, a second transfer on a lifetime got
+    `Backpressure` forever.
+  - `document_load` MoreWork now reads "a cold-pair load is pending", so a silenced load is still driven.
+  - New registry law `a_newer_transfer_of_the_same_lifetime_retires_the_finished_pair_in_bounded_steps`.
+  - **Residual, needs the bump wave:** in a pooled actor (opt-in, unused today; the browser host runs one document per actor child), a
+    load that ends during another transfer's turn has no lifetime-addressed answer channel. A per-lifetime status list on `TurnResult`
+    would close it. A turn-level two-instance law is still owed; it needs a cold-pair header builder over a real instance's pack in
+    the native lifecycle harness.
+
+## Session 4 — 2026-10-04
+
+Successor S4-RUNTIME (Opus), session-4 coordinator `⚪487b04ad…`. Owns `OSM/🔌️plugin/**` time-travel/history regions,
+`FW/🎠️kernel/**`, `FW/⏪️time-travel`. Scratch: `🗑️generated/s4-runtime/`.
+
+### 10.1 Repair (rule 34) — done (02:30)
+
+- No half-edit of S3-W2A found: every file I own that changed after the 9.9 section (11:40 10-03) changed through peer sweeps
+  (value/DSL, sqlite fixtures, 23:30–01:31) or session-3 owners that landed callee-first (S3-W1G `ReplayTurnBudget` 12:06).
+- L4 (W2A-2) predicate is already on disk (landed between 11:40 and the 12:07 cut, not reported): `dispatch_emit` records no row for a
+  config-only emit (`!in_transaction && !config_edited`), `record_settled_typed_operation_command` skips `published_config`, and
+  `record_typed_operation_lane` runs only on the artifact and child lanes. The three pinned laws no longer exist under those names
+  (`git grep` 0 outside a 08-06 ticket backup). Verification: energy L4 law + plugin `history_` laws (10.3).
+- First tree check 02:07–02:24 (`check-plugin-1.txt`): plugin lib 3 errors / lib test 12 errors, ALL in S4-BUMP's in-flight frame
+  and `begin_*apply_batch(description)` removal (`🦀️.rs` 9025/9049/34728/43671/45133, builder-contract 4718–4749,
+  mutation-fixtures-transaction 535–564). Not mine; re-checked after BUMP lands.
+
+### 10.2 Source changes (02:30–03:20) — WRITTEN, compile pending BUMP
+
+- **W2A-1 incremental `HistoryView` (design §20.14).** `P` CommandLog region: `HistoryViewStamp`, `HistoryViewCache`,
+  `HistoryViewPatch`, `HistoryBackfillMark`, `HistoryRowReads`; runtime fields `history_view` (survives `self.cache = None`) and
+  `history_backfill`. `refresh_cache` drops the cache's share of the view, then `refresh_history_view` patches it in place
+  (`Arc::make_mut`: same allocation unless a command job holds it) or rebuilds:
+  - `TT` region `🔖️HistoryViewStamps`: `HistoryStoreStamp` (generation, ledger/transition/checkpoint/alternative counts, line, checkpoint,
+    applied/redo tails of ≤ 8 ids, tail op count), `history_store_change` (Append/amend → applied positions `[prev-1, now)`; undo/redo
+    of ≤ 8 tail edits → the moved ids + the uncovered/covered top; anything else → `None` = rebuild), `MemberHistoryStampVisitor`.
+  - `history_view_patch`: new log rows (`partition_point` on seq), the previous newest row (the log amends only `last_mut`), the held rows
+    of touched document + member edits (found from the log tail), shell rows whose undo flipped; rows retired / member set changed /
+    supersede records changed → rebuild.
+  - One row builder `history_row` for full build and patch: per-edit slice reads `applied_edit_mutations/outcomes(position)` (W1G-3),
+    position from the touched set or the previous row (hint checked against the stack, else `applied_edit_position`). The per-row
+    `mutation_ops()`/`mutation_outcomes()` whole-history reads are gone from the runtime (MemberHistoryVisitor too: per-edit slices,
+    `wanted` filter for a patch).
+  - `backfill_command_log` is O(change): past a `HistoryBackfillMark` whose document and member ledger prefixes still stand (length + last
+    id, `MemberLedgerTailVisitor`) only new edits / member edits / supersede records are read against rows logged since the mark's row;
+    `retire_displaced_document_rows` drops the mark.
+  - `history_patch` shares the cached view (was a deep clone per patch) and finds dirty rows by binary search on `seq`.
+  - The snapshot-override render reads the cached view (was a full build per render). The streamed-tick special arm and
+    `history_edit_mutation_views` are deleted (the patch covers a growing tail edit).
+  - `history_mutation_pages` reads only each paged row's edit slice.
+- **W2A-11 / D13.** `history_projected_operations(len, flagged)`: the first 32 + at most 32 later flagged, most severe first → a row's
+  `worst` is the worst over the whole edit. Member-only rows (flow/sequence/dag child drags) page past their projection
+  (`history_row_mutation_extent` + `MemberMutationPageVisitor`). Residual: a MIXED row's member edits past their own projection
+  (CommandView carries no member op count) — see 10.6.
+- **W2A-10.** A page miss renders a dimmed placeholder row (`HistoryPanelText::MutationUnavailable` en/de), never a failed body.
+- **W2A-3.** One wall deadline per driver turn on the ledger's injectable `turn_clock` (`time_travel_turn_deadline`), passed to the
+  session replay (`StepReplay { deadline_us, clock }`), the finalize-undo authoring and `store.step_reprojection(Some(deadline))`.
+- **Laws (plugin `🧪️time-travel`)**: `the_history_view_patches_only_the_rows_a_change_touched` (200 edits; append/undo/redo ≤ 3 rows,
+  render 0 rows, patched == full rebuild, a history edit rebuilds), `the_projected_rows_carry_the_worst_severity_of_the_whole_edit`,
+  `a_deferred_history_step_ends_its_turn_at_the_wall_deadline_not_an_operation_count` (1 ms counted clock: ≤ 8 ops / 4 ms turn).
+
+### 10.3 Minors, relays and vocabulary (03:20–04:25) — WRITTEN; plugin `--lib` GREEN 04:23
+
+- **W2A-8** (with S4-UI's kernel region): `time_travel_reprojection_section` takes title + line from
+  `kernel::history_reprojection_status` (one copy for both shells and the body; a refused adoption reads its named notice, never a raw
+  code). Deleted `HistoryPanelText::{RemoteReplay, RemoteReplayProgress, RemoteReplayPaused, RemoteReplayRefused, LocalReplay,
+  LocalReplayProgress, LocalReplayRefused, DocumentLoad, DocumentLoadProgress}` and the raw-code `reason()` fallback. Icon by kind
+  (remote cloud-download, step undo, load download). A refused local step stores `HISTORY_STEP_BLOCKED_CODE = "history.step-blocked"`
+  (S4-UI kernel notice). The pause is lifted when nothing waits any more (adoption, or at the start of a driver turn); a refused
+  adoption's row is dismissed by the next non-view/non-interaction dispatch (`dismiss_refused_reprojection`, head of `dispatch_action`).
+- **W2A-9**: `time_travel_busy()` is the one predicate behind the `timeTravel.busy` refusal and the panel: `ui_history_panel` gained
+  `busy: bool` (callers: runtime + 12 test call sites incl. wgpu `🧪️wgpu-time-travel`); the Edit row action is disabled with the
+  `RefusalBusy` reason (`history_panel_mutation_row` now takes a `TimeTravelLabel`).
+- **W2A-13**: `document_loading_refusal` exempts declared `View` AND `Interaction` verbs and `INTERACTION_ACTION_IDS` (hover/pick no longer
+  spam faults during a restore) via `declared_action_kind`. (The "emit history event on adoption" half: the adoption already calls
+  `note_time_travel_changed(true, true)` → patch + body refresh.)
+- **W2A-14**: `time_travel_pointer_index` (RFC 6901: `0` or a digit run without leading zero, no sign) replaces every `parse::<usize>()` of a
+  pointer token in TT (get/set/get_mut/insert/remove/input_at/optionSource templates).
+- **W2A-12** (tool-id parsing): NOT changed — `tool_intent_kinds(tool)` keeps the stamped `<appId>#<toolId>` (two adopters, gen3d + flow,
+  parse it; changing the trait signature touches their crates — routed to `main` as a D-item for S4-TOOLS-B / S4-FLOWCAD, not done here).
+- **History filter vocabulary** (E2E routing): the declared `setHistoryCommandFilter` options were `withoutOperations/onlyOperations` while the
+  body dispatched `withoutMutations/onlyMutations`. One vocabulary now: manifest consts `HISTORY_COMMAND_FILTER_{ALL,WITHOUT_MUTATIONS,
+  ONLY_MUTATIONS}` are the declared options (labels en/de "Without/Only Mutations", "Ohne/Nur Mutationen"); `HistoryCommandFilter::{ALL,
+  value, from_value}` is the only reader (body select, `HistoryPatch.commandFilter`, dispatch); an undeclared value is refused
+  `history-filter.unknown` (was: silently `All`). Law `every_declared_history_filter_option_is_dispatched_and_echoed`. Generated hub
+  descriptors still carry the old options → describe wave (coordinator).
+- **D6 review (S4-GRAPHS' fix in my region)**: `close_streamed_transaction_unit` keeps `emit.transaction` when `child_emits` is non-empty
+  (commit), strips it on abort — correct: `PendingChildGroupPublication::new(…, emit.transaction.take())` stamps every member op, the
+  backfill groups member edits by transaction id. Law owed (child-only commit = one row with the ref; abort = zero trace) — 10.5.
+- Rule-39 incidents caused by me: TT:3901 `ui_label(&String)` (03:02–03:13) and the manifest-constant ordering (callers seen before the
+  manifest crate rebuilt, 03:41). Both fixed; PLUGIN GREEN 04:23 (`check-plugin-5.txt`, exit 0, 259 warnings, none in TT/my regions).
+
+### 10.4 Resume 06:45 → owed runs and fixes (06:45–08:50)
+
+- Resume (coordinator 06:45): nothing was half-written at the 04:15 cut; the filter vocabulary was complete on disk. PLUGIN GREEN 04:23
+  (`check-plugin-5.txt`).
+- `cargo check -p semio-framework-plugin --lib --tests` 07:34–07:37 **exit 0** (`check-plugin-tests-9.txt`) after fixing my two test
+  errors: the pure-lane law onto S4-LOAD's `PluginApp::hydrate_pure_head(head)` (the history-carrying refusal cannot exist any more by
+  type), `ArgSchema` path in the filter law. (A 07:15 red at PLG 17563–17665 was a stale queued build — S4-STORE's callees were on disk.)
+- **W2A law run** 07:37–07:53: `CARGO_INCREMENTAL=0 CARGO_TARGET_DIR=…/target-nde-s4-runtime cargo test -p semio-framework-plugin --lib --
+  time_travel supersede history_label_reload history_alternatives ui_history_panel rendering_the_history_body activated_tool_factory
+  document_archive composed_child_history scrub history_ bounded_reload` → **75 passed / 15 failed**. Green incl.: all L4 laws
+  (`a_config_lane_edit_is_never_a_history_row_and_undo_never_steps_over_it`, `a_config_only_view_action_is_not_a_history_row`,
+  `consecutive_config_only_view_dispatches_add_no_history_rows`, `history_rows_exclude_interactions_and_pure_views`), the new
+  `every_declared_history_filter_option_is_dispatched_and_echoed`, `the_projected_rows_carry_the_worst_severity_of_the_whole_edit`,
+  fixture scenarios, overwrite == fresh fold, alternatives, §19.1, N1 long transaction, finalize-undo over a long history, replay progress.
+  The 15 failures and what I did (laws OWED under rule 43 — no test builds until TESTS RESUMED):
+  1. 5 × "artifact history ledger reached Drop before every exact entry owner was retired" (history_label_reload, intent-leaf reload,
+     warning reload, history-edit row reload): `artifact_app_laws::load_document_text` / `plugin_load_document_text` dropped the parsed
+     envelope after printing its pack → now `envelope.retire_unadopted()` (exact owners). [shared helper, told `main` for S4-LOAD]
+  2. `a_history_edit_is_its_own_row…after_reload` (S4-STORE root cause): the archive-load adoption took the local actor from the tail
+     edit → the replacement commit now carries the replaced store's `local_actor_id()` into the adopted store.
+  3. `a_streamed_tick_extends_cached_history_in_place`: `toolTransaction.shape` "streamed … no tool transaction" — the retained
+     publication took `emit.transaction` for the artifact lane but left `transaction_phase = Stream`, so the next lane step's shape check
+     refused the same emission. Fixed: the phase becomes `Commit` with the take (one line, PLG retained publication).
+  4. `a_long_remote_history_change_replays_over_turns_and_pauses_on_cancel`: (a) the law asserted "no driver work" while the cancel's own
+     patch was still due — moved after the 4 driver turns; (b) the paused body had no Replay-again row because the section showed controls
+     only while `total > 0` and a cancelled replay counts 0 → Replay again shows whenever a remote change is paused (S4-UI routing (c)).
+  5. `an_interior_undo…` and my `a_deferred_history_step_ends_its_turn_at_the_wall_deadline…`: "the interior undo waits for its replay"
+     failed — the store steps a replay per EDIT, so one 600-operation edit replays inside the first budget; both laws now put 600 one-op
+     edits of another author downstream (`apply_other_edits`).
+  6. `undo_and_redo_of_a_finalize…` replicas converge: a relayed change may now span turns → `relay_adopted` (relay + pump until the
+     store's reprojection settles) in that law.
+  7. `the_history_view_patches_only_the_rows_a_change_touched`: an undo/redo is a `Revert`/`Reinstate` transition, and the store stamp
+     counted transitions → every undo rebuilt. Transitions dropped from `HistoryStoreStamp` (stacks show undo/redo; supersede records
+     are counted by the view stamp). Also: the stamp carries the content revision (a replaced store may restart at the same generation),
+     a fresh row whose edit no change named finds its position from the stack tail, and the history-patch wire marks exactly the rows
+     whose projection changed (patch: rebuilt rows that differ + fresh rows; rebuild: diff against the previous view) — so
+     `record_command(History)` no longer re-sends every row on each undo/redo (O(change) wire).
+  8. `sourced_options_are_the_keys_of_the_previewed_document`: resolved `optionSource` options became an `enum` in the row's JSON schema
+     ("never narrows" breach) → the row keeps its `optionSource`; manifest `arg_schema_json_schema` emits `enum` only for declared
+     options (Edit tool, region-scoped). Law expectation updated (`option_source: Some(_)`).
+  9. `a_pure_lane_hydrates…`: expected 240 edits, the source holds seed + 240 → compares with the source's count.
+  10. `a_document_archive_round_trip_lists_every_history_row_of_its_source`: expected edit DESCRIPTIONS as row labels (§20.6 breach in
+      the law) — someone fixed the expectation to leaf labels at 07:53.
+  11. Not mine → S4-STORE (routed by `main`): `bounded_reload` "supersession … targets an operation that plans foreign steps",
+      `retained_window_input_recursive_document_archive…` ("adopted initialization runtime released its seeded operation ids").
+- **No raw codes** (S4-UI routing): `time_travel_band_section` reads `ReplayFaulted` for an unknown fault code; `history_code_text` answers
+  the frozen-code words, else the framework's placeholder-free notice (`history_notice`/`framework_fault_notice`), else "Could not apply" /
+  "Nicht anwendbar" — never the code.
+- **K3 (written, WRITTEN BUT UNVERIFIED — rule 43 blocks the law build):** `transient_root!` and `window_transient_owners!` (exported,
+  `🪟️window/🫧️transient/🦀️.rs` region `🔖️TransientRoot`) generate a whole-root transient's `Snapshot` mutation (wire
+  `{"kind":"snapshot","transient":…}`), descriptor, diff/inverse, JSON op/DSL/pack codecs in its semio envelope, retirement, the
+  ephemeral transfer (`footprint` = encoded root bytes, `into_state`), the per-kind owners and `register`/`from_snapshot`/`current`/
+  `addressed` (refusals `window-transient.window-required|window-stale|kind-unknown`). Hidden re-exports `__kernel`, `__value`,
+  `__pack_json`, `__diagnostic` at the crate root. Law `🧪️tests/🧪️transient-root/🦀️.rs` (4 tests: wire + inverse, codecs + envelope,
+  footprint, owners register/address). Adoption in flow/fem/remodel/cad/lowpoly/layout/forms/draw/raster/wfc needs their owners
+  (`main` asked) — each replaces ~150 hand-written lines by one invocation; wire shapes unify (local-only state, no persisted bytes).
+
+### 10.5 Resume 11:35 → K3 conversions (§21.5) — WRITTEN; framework GREEN, plugin crates OWED (rules 43/44)
+
+- Repair: nothing half-written at the 08:55 cut (content-revision guard was on disk). The 08:4x wasip2 check died with the session.
+- `cargo check -p semio-framework -p semio-framework-plugin --lib` 12:04–12:28 **exit 0** (`check-plugin-13.txt`; two earlier runs died:
+  build dir swept by the disk guard, then SIGKILL by the deadlock breaker). Fixed 3 "unnecessary qualification" warnings in TT afterwards.
+- **Macros final shape** (`🪟️window/🫧️transient/🦀️.rs` region `🔖️TransientRoot`, exported):
+  - `transient_root!` — mutation enum (wire `{"kind":"snapshot","transient":…}`), descriptor, diff/inverse, JSON op text/binary, the
+    state's DSL/pack in its envelope. Enough for an artifact-level transient (fem gumball, lowpoly session).
+  - `window_transient_transfer!` — the mutation's owned retirement, `footprint` (encoded bytes, refused above the one-item bound),
+    `into_state`, and the **compile-time inline-size assertion** (audit F8: state and mutation ≤ `ARTIFACT_EPHEMERAL_TRANSFER_MAXIMUM_INLINE_BYTES`).
+  - `window_transient_owners!` — the transfer + one owner per window kind + `register`/`from_snapshot`/`current`/`addressed`.
+  - Kernel framework notices for the generic refusals: `window-transient.window-required|window-stale|kind-unknown` (en/de) in
+    `FRAMEWORK_FAULT_NOTICE_LABELS` (17 rows), TS twin, fixture `🧫️framework-notices`, schema namespace pattern. `bun test
+    ./🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🧪️framework-notices/🟦️.ts` **4 pass / 0 fail**.
+- **Conversions** (ticket inputs `🧪️s4-runtime-k3-transient-root.py` + `🧪️s4-runtime-k3-tidy.py`; every state, its retirement and domain
+  helpers kept byte for byte; owner names kept, so registrations elsewhere stand):
+  flow (4 window kinds), cad (4 kinds; the four per-window `🫧️transient/🦀️.rs` owner stubs DELETED with their `mod transient;` lines:
+  `📐️shape`, `🏢️building`, `🔥️energy`, `🏛️structure-classic` — zero references left), layout (2), draw (1), forms (1), raster (1),
+  remodel (3; the generic `RemodelingWindowTransientOwner<K>` + kind markers replaced by `RemodelingModelWindowTransientOwner`,
+  `…Frames…`, `…Report…`), wfc bitmap input (1; app registers via the generated `register`), wfc grid2d (`transient_root!` +
+  `window_transient_transfer!`; its own owners stay — one config + transient owner pair per window kind), fem 2d gumball (`transient_root!`,
+  artifact transient; fem 3d reuses it), lowpoly session (`transient_root!`, artifact transient). Callers switched from
+  `current(snapshot)` to `from_snapshot(snapshot)` (raster paint-stroke, remodel editor, wfc bitmap editor).
+  Wire changes (local-only, never persisted): remodel/raster/wfc bitmap/fem/lowpoly mutation op text now the tagged JSON form (lowpoly
+  lost its `snapshot ` prefix); descriptors: lowpoly's transient leaf emoji 🖌️ → 🫧️ (describe wave regenerates).
+  Not converted (not in the §21.5 list): puzzle 2d/3d/5d, note, sequence window transients (same pattern; S4-PUZZLE/TOOLS-A/GRAPHS).
+- **OWED (rules 43/44)**: `cargo check --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-flow-flow -p semio-s-artifact-cad-cad
+  -p semio-s-artifact-fem-2d -p semio-s-artifact-fem-3d -p semio-s-artifact-lowpoly-lowpoly -p semio-s-artifact-remodel-remodeling
+  -p semio-s-artifact-raster-raster -p semio-s-artifact-wfc-grid2d -p semio-s-artifact-wfc-bitmap -p semio-s-artifact-layout-layout
+  -p semio-s-artifact-draw-drawing -p semio-s-artifact-forms-forms --lib --features semio-s-artifact-fem-2d/component-app-assembly,
+  semio-s-artifact-fem-3d/component-app-assembly,semio-s-artifact-wfc-grid2d/component-app-assembly,semio-s-artifact-wfc-bitmap/component-app-assembly`
+  (+ the same with `--target wasm32-wasip2`), then `cargo test -p semio-framework-plugin --lib -- transient_root` (K3 law) and the
+  10.4 W2A list.
+- 12:3x rule-39 incident (mine): following rustc's "unnecessary qualification" lint I unqualified `crate::dsl::HistoryPageStack` in TT
+  1884/1925 under the freeze → E0425; reverted, **PLUGIN GREEN 12:36** (`check-plugin-14.txt`, the one check the coordinator allowed).
+
+### 10.6 State at 12:40 (cargo frozen, rule 44) — open items and coordinator actions
+
+Done in source this session (verified by checks where named): W2A-1 incremental history view + O(change) backfill + per-edit slices +
+exact-row wire; W2A-2 L4 verified green by laws (10.4); W2A-3 one wall deadline per turn; W2A-8 (kernel status copy, pause/fault
+lifecycle, `history.step-blocked`); W2A-9 busy reason; W2A-10 placeholder row; W2A-11/D13 worst over the whole edit + member-only paging;
+W2A-13 interaction exemption; W2A-14 canonical pointer indices; filter vocabulary; no raw codes; optionSource never an enum; archive-load
+actor adoption; streamed-tick phase; law-helper envelope retirement; K3 macros + ten plugin conversions + window-transient notices.
+
+Open (not done):
+- **OWED runs (rules 43/44)**: plugin-crate checks of the ten K3 conversions (native + wasip2, command in 10.5); plugin wasip2 lib check;
+  plugin `--tests` check; W2A law list (10.4) + `transient_root` law; `cargo test -p semio-framework --lib -- history_patch history_notices
+  history_edit framework_notices`; `cargo test -p semio-framework-time-travel`; kernel vitest + FWT TS conformance.
+- **D8** turn-level two-instance cold-pair law: not written (needs a reactor-turn harness feeding two lifetimes' pages; cannot be compiled
+  under rules 43/44). The serialization/supersession code it proves is on disk since 9.9.
+- **D7** publication gate: held for S4-PUZZLE's clean thread-local census numbers (coordinator relay 02:50).
+- **D13 residual**: a row with BOTH a parent edit and member edits pages only its parent edit past the projection (CommandView carries no
+  member op count).
+- **W2A-12** (`tool_intent_kinds` gets the bare tool id): not changed — touches gen3d + flow adopters; proposal for `main`.
+- Puzzle 2d/3d/5d, note and sequence window transients use the same hand-written pattern (not in §21.5's list).
+
+Coordinator actions:
+- Describe wave must regenerate: hub descriptors (old `withoutOperations/onlyOperations` filter options), lowpoly transient leaf emoji
+  (🖌️ → 🫧️), and every converted plugin (owner/descriptor unchanged otherwise).
+- At CARGO OPEN: let S4-RUNTIME run the OWED list above first (K3 crates native + wasip2 → COMPOSITION GREEN per plugin).

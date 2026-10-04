@@ -993,7 +993,8 @@ export function testId(owner: string, caseSlug: string, scenario: string, implem
 //#region ⚡️Cache
 /** ⚡️ Root of every generated test artifact. Nothing outside this tree is ever written or deleted. */
 export function testCacheRoot(repoRoot: string): string {
-  return repoCacheDirectory(repoRoot, testTaxonomy(repoRoot).testOutputCacheDirName);
+  const configured = process.env.SEMIO_TEST_ARTIFACT_DIR?.trim();
+  return configured ? resolve(repoRoot, configured) : repoCacheDirectory(repoRoot, testTaxonomy(repoRoot).testOutputCacheDirName);
 }
 
 /** ⚡️ One of the six generated output roots (`work`, `hosts`, `oracles`, `results`, `diffs`, `reports`). */
@@ -1005,7 +1006,7 @@ export function testCacheDir(repoRoot: string, child: string): string {
     // 🥒️A project name is a canonical, emoji-prefixed case slug (see `canonicalCase`), never ASCII-only —
     // this only rejects what would escape the two path segments it becomes (`/`, `.`, `..`, empty, NUL).
     const segments = scope.split("/");
-    if (segments.length !== 2 || segments.some((segment) => segment === "" || segment === "." || segment === ".." || segment.includes("\0"))) throw new Error(`invalid test output scope ${JSON.stringify(scope)}`);
+    if (segments.length !== 2 || segments.some((segment) => segment === "" || segment === "." || segment === ".." || segment.includes("\0") || segment.includes("\\") || segment.includes(":"))) throw new Error(`invalid test output scope ${JSON.stringify(scope)}`);
     return join(testCacheRoot(repoRoot), "tasks", scope, child);
   }
   return join(testCacheRoot(repoRoot), child);
@@ -1024,8 +1025,20 @@ export function markOutputDir(repoRoot: string, absDir: string, marker: Omit<Out
   const taxonomy = testTaxonomy(repoRoot);
   const root = resolve(testCacheRoot(repoRoot));
   if (!resolve(absDir).startsWith(root + sep) && resolve(absDir) !== root) throw new Error(`refusing to mark ${absDir}: outside the test cache root`);
+  let rootAncestor = root;
+  while (!existsSync(rootAncestor)) rootAncestor = dirname(rootAncestor);
+  let targetAncestor = resolve(absDir);
+  while (!existsSync(targetAncestor)) targetAncestor = dirname(targetAncestor);
+  const physicalRoot = resolve(realpathSync(rootAncestor), relative(rootAncestor, root));
+  const physicalTarget = resolve(realpathSync(targetAncestor), relative(targetAncestor, resolve(absDir)));
+  if (physicalTarget !== physicalRoot && !physicalTarget.startsWith(physicalRoot + sep)) throw new Error(`refusing to mark ${absDir}: outside the physical test artifact root`);
+  const markerPath = join(absDir, testFilenameForKind(taxonomy, taxonomy.testOutputMarkerFileKindId));
+  if (existsSync(markerPath)) {
+    const previous = readOutputMarker(repoRoot, absDir);
+    if (previous === null || previous.testId !== marker.testId) throw new Error(`refusing to mark ${absDir}: different output ownership`);
+  }
   mkdirSync(absDir, { recursive: true });
-  writeFileSync(join(absDir, testFilenameForKind(taxonomy, taxonomy.testOutputMarkerFileKindId)), `${JSON.stringify({ kind: taxonomy.testOutputMarkerKind, ...marker }, null, 2)}\n`);
+  writeFileSync(markerPath, `${JSON.stringify({ kind: taxonomy.testOutputMarkerKind, ...marker }, null, 2)}\n`);
 }
 
 /** 🧾️ Reads a directory's ownership marker, or `null` when it carries none. */
@@ -4266,6 +4279,7 @@ export const SCHEMA_DIAGNOSTIC_CODE_TABLE = {
   "schema-mutation-payload-parity": { emitters: ["harness"], description: "a committed mutation fixture's leaf payload (cut out of the aggregate wire value as `payload_value()` does) fails or is not fully described by its leaf payload schema, sits in another wire layout, maps to no leaf, or the leaf schema holds an object node without members" },
   "schema-mutation-label": { emitters: ["harness"], description: "a history row could show something other than its leaf's label in every locale: a leaf label that is locale-invariant data, an empty locale, an operation's text line, a body the gate cannot read, or an app overriding the leaf label" },
   "schema-mutation-editability": { emitters: ["harness"], description: "a mutation aggregate the generic history editor cannot edit without a declared reason: a hand-written `impl Mutation` that neither forwards the payload accessors nor is a lane, fixture or uninhabited, a generic aggregate without an emitted payload law, or an aggregate variant without a leaf descriptor" },
+  "schema-fault-notice": { emitters: ["harness"], description: "a fault a guest can refuse with could reach the person as a raw code or English text: a guest code no framework or app table labels in every locale, a code that cannot be an app notice code, an anonymous `Fault::from(text)`, an invalid, unreadable or stale `fault_notices` table, or a committed descriptor publishing other notices than the sources declare" },
   "schema-fixture-defines-schema": { emitters: ["harness", "check"], description: "a schema DEFINITION lives inside a `🧪️*`/`🧫️*` tree without the enclosing case declaring `inertSchemaData`" },
   "schema-fixture-local-schema-fallback": { emitters: ["harness"], description: "a fixture resolves its contract from a fixture-local copy instead of the owning scope" },
   "schema-fixture-metadata-invalid": { emitters: ["harness"], description: "a schema-bound fixture's declaration is not the shape the test protocol states" },

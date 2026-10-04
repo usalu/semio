@@ -5,7 +5,7 @@
 use super::*;
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[dsl(keyword = "set-frame-user-input")]
 #[value(rename_all = "camelCase")]
@@ -20,9 +20,12 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for SetFrameUserInput {
     fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<<GifMutation as Mutation<GifSnapshot>>::Diff> {
         agg_diff(&GifMutation::SetFrameUserInput(self.clone()), base)
     }
-    fn inverse(&self, base: &GifSnapshot) -> Vec<GifMutation> {
-        agg_inverse(&GifMutation::SetFrameUserInput(self.clone()), base)
-    }
+    fn inverse(&self, base: &GifSnapshot) -> Result<Vec<GifMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&GifMutation::SetFrameUserInput(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set frame user input", "Benutzereingabe-Kennung des Einzelbilds setzen")
     }

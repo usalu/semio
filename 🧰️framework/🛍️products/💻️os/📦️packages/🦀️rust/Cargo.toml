@@ -20,10 +20,6 @@ crate-type = ["rlib", "cdylib"]
 path = "🦀️.rs"
 
 [[test]]
-name = "pack_schema_hash"
-path = "../../🔨️modules/🎒️pack/🌱️value/🧪️tests/🔬️schema-hash/🦀️.rs"
-
-[[test]]
 name = "sqlite_snapshot_native_admission"
 path = "../../🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🚪️public/🦀️.rs"
 
@@ -53,11 +49,17 @@ worker = ["sync"]
 typegen = []
 # ⌨️ The native command-line binaries (`pack`, `spr`, `semio`). Their `cli` modules are mounted only
 # off wasm32 (`os_pack::cli`, `os_spr::cli` need the native file layer), so the bins are opt-in: a
-# wasm32 test build of this crate (`--target wasm32-wasip2 --test pack_schema_hash`) never tries to
+# wasm32 test build of this crate never tries to
 # link them, and a native caller asks for them with `--features native-bin`.
 native-bin = []
 
 [dependencies]
+semio-framework-io-schema = { path = "../../../../🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-diagnostic = { path = "../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-dsl = { path = "../../../../🔨️modules/🗣️dsl/📦️packages/🦀️rust" }
+semio-framework-dsl-record = { path = "../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-dsl-record-derive = { path = "../../../../🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-schema-state = { path = "../../../../🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-schema-composition = { path = "../../../../🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }

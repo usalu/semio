@@ -1,17 +1,12 @@
 /** 📍️ GIS feature data preserves the full intrinsic native Value domain. */
 import {parseSchemaRecord} from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
-import {parseBinary64,type Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-export type GisMapValue={kind:"null"}|{kind:"boolean";value:boolean}|{kind:"unsigned";value:bigint}|{kind:"signed";value:bigint}|{kind:"float";value:Binary64}|{kind:"text";value:string}|{kind:"bytes";value:Uint8Array}|{kind:"array";items:GisMapValue[]}|{kind:"object";members:{name:string;value:GisMapValue}[]};
+import {parseIntrinsicValue,type IntrinsicValue} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🌳️intrinsic/🟦️.ts";
+export type GisMapValue=IntrinsicValue;
 export interface GisMapFeature{id:string;data:GisMapValue}
 export interface GisMapFeaturePatch{data:GisMapValue|null}
-/** 🧬️ Bind literal owned variants without JSON numeric or object-key normalization. */
-export function parseGisMapValue(value:unknown):GisMapValue{
- const pending:{source:unknown;put:(value:GisMapValue)=>void}[]=[];let result:GisMapValue|undefined;pending.push({source:value,put:value=>{result=value}});const seen=new Set<object>();
- while(pending.length){const{source,put}=pending.pop()!;if(source===null||typeof source!=="object"||!("kind"in source)||typeof source.kind!=="string"||seen.has(source))throw Error("GIS feature Value variant or ownership differs");seen.add(source);const kind=source.kind;const row=parseSchemaRecord(source,kind==="null"?["kind"]:kind==="array"?["kind","items"]:kind==="object"?["kind","members"]:["kind","value"]);
-  switch(kind){case"null":put({kind});break;case"boolean":if(typeof row.value!=="boolean")throw Error("GIS boolean differs");put({kind,value:row.value});break;case"unsigned":case"signed":if(typeof row.value!=="bigint"||(kind==="unsigned"?(row.value<0n||row.value>18446744073709551615n):(row.value< -9223372036854775808n||row.value>9223372036854775807n)))throw Error("GIS native integer differs");put({kind,value:row.value});break;case"float":put({kind,value:parseBinary64(row.value)});break;case"text":if(typeof row.value!=="string")throw Error("GIS text differs");put({kind,value:row.value});break;case"bytes":if(!(row.value instanceof Uint8Array))throw Error("GIS octets differ");put({kind,value:row.value.slice()});break;case"array":{if(!Array.isArray(row.items))throw Error("GIS array differs");const items:GisMapValue[]=new Array(row.items.length);put({kind,items});for(let i=row.items.length-1;i>=0;i--)pending.push({source:row.items[i],put:value=>{items[i]=value}});break;}case"object":{if(!Array.isArray(row.members))throw Error("GIS object differs");const members:{name:string;value:GisMapValue}[]=new Array(row.members.length);put({kind,members});for(let i=row.members.length-1;i>=0;i--){const m=parseSchemaRecord(row.members[i],["name","value"]);if(typeof m.name!=="string")throw Error("GIS member name differs");const name=m.name;pending.push({source:m.value,put:value=>{members[i]={name,value}}});}break;}default:throw Error("GIS native Value variant differs");}
- }return result!;
-}
+/** 🧬️ GIS feature data owns the canonical full intrinsic primitive domain. */
+export const parseGisMapValue=parseIntrinsicValue;
 /** 📍️ Bind a feature without imposing spatial or identifier restrictions. */
-export function parseGisMapFeature(value:unknown,at="$"):GisMapFeature{const row=parseSchemaRecord(value,["id","data"],at);if(typeof row.id!=="string")throw Error(`${at}.id: string required`);return{id:row.id,data:parseGisMapValue(row.data)}}
+export function parseGisMapFeature(value:unknown,at="$"):GisMapFeature{const row=parseSchemaRecord(value,["id","data"],at);if(typeof row.id!=="string"||/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/.test(row.id as string))throw Error(`${at}.id: string required`);return{id:row.id,data:parseGisMapValue(row.data)}}
 /** 🩹️ Preserve unchanged absence independently from an explicit native Null value. */
 export function parseGisMapFeaturePatch(value:unknown,at="$"):GisMapFeaturePatch{const row=parseSchemaRecord(value,["data"],at);return{data:row.data==null?null:parseGisMapValue(row.data)}}

@@ -66,7 +66,7 @@ pub use update_node_ports::UpdateNodePorts;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Aggregate
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations, semio_framework_dsl_record_derive::DslEnum)]
 #[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[mutations(snapshot = WorkflowSnapshot, diff = WorkflowDiff, schema = "os.workflow")]
 pub enum WorkflowMutation {

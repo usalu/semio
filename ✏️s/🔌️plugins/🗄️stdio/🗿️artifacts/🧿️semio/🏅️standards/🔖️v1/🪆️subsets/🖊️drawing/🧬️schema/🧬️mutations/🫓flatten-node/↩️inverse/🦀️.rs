@@ -6,12 +6,15 @@ use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDr
 
 //#region 🔖️Inverse
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(payload: &super::FlattenNode, base: &SemioDrawingSnapshot) -> Vec<SemioDrawingMutation> {
+pub fn inverse(payload: &super::FlattenNode, base: &SemioDrawingSnapshot) -> Result<Vec<SemioDrawingMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match node_at(base, &payload.at) {
         Some(node @ DrawNode::Group { children, .. }) if super::collect_flattened_leaves(children).is_some() => {
             vec![SemioDrawingMutation::UnflattenNode(unflatten_node::UnflattenNode { at: payload.at.clone(), original: node.clone() })]
         }
         _ => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

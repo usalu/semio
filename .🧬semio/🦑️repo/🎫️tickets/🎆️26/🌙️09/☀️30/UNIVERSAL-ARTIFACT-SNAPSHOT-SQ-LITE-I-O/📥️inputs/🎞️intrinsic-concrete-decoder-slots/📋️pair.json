@@ -1,0 +1,26 @@
+{
+  "contract": "intrinsic-concrete-decoder-slots-v1",
+  "state": "held-until-authentic-native-allocation-red",
+  "paths": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/🌱️value/🦀️.rs",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/🦀️.rs"
+  ],
+  "replacements": [
+    {
+      "before": "/// 🧮️ Logical owned storage: UTF-8 bytes, 32-byte symbol slots, and 64-byte value/map slots.",
+      "after": "/// 🧮️ Cumulative concrete requested storage for owned UTF-8 and typed collection slots."
+    },
+    {
+      "before": "count.checked_mul((size_of::<T>() as u64).max(64))",
+      "after": "count.checked_mul(size_of::<T>() as u64)"
+    },
+    {
+      "before": "    if size_of::<String>()>32{return Err(PackError::LimitExceeded(\"wire symbol slot representation\"));}\n    materialization.charge(symbol_count.checked_mul(32).ok_or(PackError::LimitExceeded(\"wire symbol slot overflow\"))?)?;",
+      "after": "    materialization.charge(symbol_count.checked_mul(size_of::<String>() as u64).ok_or(PackError::LimitExceeded(\"wire symbol slot overflow\"))?)?;"
+    },
+    {
+      "before": "/// 🛡️ Decodes one exact DslValue field with cumulative pre-allocation storage credits.\n/// Credits cover owned UTF-8 bytes, 32 bytes per symbol slot and 64 per list/map slot;\n/// allocator bookkeeping and generic record, expression, table and chunk decoding are excluded.",
+      "after": "/// 🛡️ Decodes one exact intrinsic field with cumulative concrete storage admission.\n/// Owned UTF-8 and typed symbol, list and member slots are admitted before allocation."
+    }
+  ]
+}

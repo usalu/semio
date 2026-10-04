@@ -91,6 +91,7 @@ fn retained_component_copy_overallocated_backing_error_retains_exact_owner() {
     let mut owner = UiComponentCopy::new(source());
     let factor = fixture["allocatorMultiplier"].as_u64().unwrap() as usize;
     let fault = reserve_byte_candidate(&mut owner.owned.byte_candidate, 32768, |candidate, request| candidate.try_reserve_exact(request * factor).map_err(|_| ())).unwrap_err();
+    assert_eq!(fault.kind, PagedListRefusalKind::InvariantViolated);
     assert_eq!(fault.allocated_bytes, owner.owned.byte_candidate.capacity());
     assert!(fault.allocated_bytes >= 65536);
     assert_eq!(owner.owned.byte_candidate.len(), 0);

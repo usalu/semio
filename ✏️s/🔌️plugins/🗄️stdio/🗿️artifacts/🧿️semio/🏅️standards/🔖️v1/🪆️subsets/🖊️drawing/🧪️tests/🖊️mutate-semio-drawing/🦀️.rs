@@ -178,7 +178,7 @@ mod subject {
         let mut current = base.clone();
         apply(&mut current, &step, &ctx.scenario.id)?;
         let mutated = snapshot_json(&current)?;
-        for undo in &inverse_semio_drawing_mutation(&step, &base) {
+        for undo in &inverse_semio_drawing_mutation(&step, &base).expect("valid retained mutation inverse fixture") {
             apply(&mut current, undo, &ctx.scenario.id)?;
         }
         if current != base {

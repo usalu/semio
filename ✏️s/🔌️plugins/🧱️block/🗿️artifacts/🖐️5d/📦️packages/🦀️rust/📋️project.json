@@ -57,6 +57,15 @@
         "command": "bun ./📜️script.ts verify snapshot-sqlite-source",
         "forwardAllArgs": true
       }
+    },
+    "test-snapshot-sqlite-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite native",
+        "forwardAllArgs": true
+      }
     }
   }
 }

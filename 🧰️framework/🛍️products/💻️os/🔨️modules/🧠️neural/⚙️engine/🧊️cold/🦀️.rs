@@ -41,8 +41,8 @@ impl ColdRetire for OperatorRecord {
     fn retire_cold(self) { self.info.retire_cold(); for implementation in self.implementations { implementation.operator.retire_cold(); } }
 }
 impl ColdRetire for Registry { fn retire_cold(self) { self.schemas.retire_cold(); self.operators.retire_cold(); } }
-impl ColdRetire for Neuron { fn retire_cold(self) { self.params.retire_cold(); if let Some(tree) = self.tree { (*tree).retire_cold(); } } }
-impl ColdRetire for Tree { fn retire_cold(self) { self.neurons.retire_cold(); } }
+impl ColdRetire for Neuron { fn retire_cold(self) { super::native_controlled::retire_neuron(self); } }
+impl ColdRetire for Tree { fn retire_cold(self) { super::native_controlled::retire_tree(self); } }
 impl ColdRetire for EvalChannels { fn retire_cold(self) { self.outputs.retire_cold(); self.inputs.retire_cold(); } }
 impl ColdRetire for BudgetedEval { fn retire_cold(self) { self.channels.retire_cold(); } }
 impl ColdRetire for NeuralCache {

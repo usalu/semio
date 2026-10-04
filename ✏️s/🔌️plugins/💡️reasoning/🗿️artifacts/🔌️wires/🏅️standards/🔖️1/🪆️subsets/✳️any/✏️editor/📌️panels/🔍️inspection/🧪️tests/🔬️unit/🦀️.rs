@@ -47,11 +47,9 @@ async fn topic_lookup_stays_local_to_the_wires_extension() {
 
 #[semio_framework_async_macros::async_test]
 async fn metabolism_fixture_hydrates_extension() {
-    // 📜️ The `.wires` fixture is handcrafted in `crate::dsl`'s DSL — parse it,
-    // then hydrate this crate's JSON-facing extension from its `wires_fixture` value, the same
-    // shape `from_host_snapshot_json` has always expected.
     let document = crate::schema::metabolism_wires_example_snapshot().expect("valid metabolism fixture mutations");
-    let json = dsl::os_pack::json::to_string(&crate::schema::dsl_to_json(&document.wires_fixture));
+    let (_, content) = crate::wires_bundled_contents().iter().find(|(id, _)| id == &document.content.child_id).expect("the demo parent names its bundled board");
+    let json = fixture_json_string(&crate::wires_composed(&document, content).fixture);
     let ext = DefaultWiresExtension::from_host_snapshot_json(&json).expect("metabolism fixture");
     assert_eq!(ext.topics.len(), 7);
     assert_eq!(ext.relationships.len(), 9);
@@ -68,7 +66,7 @@ async fn txt_dsl_carrier_round_trips_exactly() {
     use semio_framework::io::io_mechanism::{Deserializer, Serializer};
     use semio_framework::io_schema::IoPayload;
     let snapshot = crate::empty_wires_snapshot();
-    let exported = export::txt::v_utf_8::any::WiresIntoTxt::serialize(&snapshot).await.expect("dsl txt export");
+    let exported = export::txt::v_utf_8::any::WiresIntoTxt::serialize(&snapshot, &semio_framework::io::io_mechanism::ArchiveChildren::empty()).await.expect("dsl txt export");
     let IoPayload::Text(text) = exported.value else { panic!("txt is a text payload") };
     let back = import::txt::v_utf_8::any::TxtIntoWires::deserialize(&IoPayload::Text(text)).await.expect("dsl txt import");
     assert_eq!(back.value, snapshot);

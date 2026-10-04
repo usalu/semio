@@ -1,7 +1,7 @@
 //! 🔒️ `close-vortex-suggestions` command.
 
 use crate::editor::puzzle5d::Puzzle5dActionCtx;
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 use semio_s_artifact_puzzle_3d::editor::puzzle3d::modes::edit::windows::main::utilities::brush::run_effects;
 
 /// 🔒️ Closing the menu releases its grip from the brush suggestions run: with no armed brush target left, the

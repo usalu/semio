@@ -75,7 +75,7 @@ pub(crate) mod context {
         for effect in &result.requested_effects {
             if let Effect::LoadDocument { pack, spr } = effect {
                 let files = store::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
-                app.load_document_pack(&files).await.expect("test host applies load-document effect");
+                semio_framework_plugin::artifact_app_laws::load_document(app, &files).await.expect("test host applies load-document effect");
             }
         }
         result
@@ -88,7 +88,7 @@ pub(crate) mod context {
     }
 
     /// 🕹️ The framework's own injected `interactionSelect` verb takes that same reserved-job lane.
-    pub async fn framework_verb(app: &mut ArchitectApp, action: &str, payload: &dsl::DslValue) {
+    pub async fn framework_verb(app: &mut ArchitectApp, action: &str, payload: &semio_framework_value::DslValue) {
         let admitted = app.handle_action(action, Some(payload), &meta("local")).await.unwrap_or_else(|fault| panic!("{action} admission: {fault:?}"));
         semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.unwrap_or_else(|fault| panic!("{action} reserved-job commit: {fault:?}"));
         settle_registered_typed_operation(&mut app.0, meta("local").instance_id).await.unwrap_or_else(|fault| panic!("{action} publication: {fault:?}"));
@@ -231,9 +231,9 @@ async fn command_from_action_covers_every_declared_action_and_rejects_unknown_on
 #[semio_framework_async_macros::async_test]
 async fn command_from_action_bridges_declared_actions() {
     assert!(matches!(ArchitectPlayApp::command_from_action("runValidation", None), Ok(ArchitectCommand::RunValidation(_))));
-    assert!(matches!(ArchitectPlayApp::command_from_action("search", Some(&dsl::json::to_dsl_value(&dsl::json!({ "query": "hall" })))), Ok(ArchitectCommand::Search(query::Search { query })) if query == "hall"));
+    assert!(matches!(ArchitectPlayApp::command_from_action("search", Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "query": "hall" })))), Ok(ArchitectCommand::Search(query::Search { query })) if query == "hall"));
     assert!(matches!(
-        ArchitectPlayApp::command_from_action("selectRegister", Some(&dsl::json::to_dsl_value(&dsl::json!({ "registerId": "risks" })))),
+        ArchitectPlayApp::command_from_action("selectRegister", Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "registerId": "risks" })))),
         Ok(ArchitectCommand::SelectRegister(select_register::SelectRegister { register_id })) if register_id == "risks"
     ));
 }
@@ -253,7 +253,7 @@ async fn set_active_example_is_declared_bridged_and_loads_the_document() {
         definition.actions.iter().any(|action| action.id == "setActiveExample"),
         "setActiveExample must sit in the app-level action roster, else the shell drops the navbar's boot dispatch"
     );
-    let command = ArchitectPlayApp::command_from_action("setActiveExample", Some(&dsl::json::to_dsl_value(&dsl::json!({ "exampleId": "demo" })))).expect("setActiveExample bridges");
+    let command = ArchitectPlayApp::command_from_action("setActiveExample", Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "exampleId": "demo" })))).expect("setActiveExample bridges");
     assert!(matches!(&command, ArchitectCommand::SetActiveExample(payload) if payload.example_id == "demo"));
     assert_eq!(ArchitectPlayApp::command_id(&command), "setActiveExample");
     let emit = context::drive(&command, &sample_plugin());
@@ -265,7 +265,7 @@ async fn set_active_example_is_declared_bridged_and_loads_the_document() {
 /// whatever its combobox holds, including ids belonging to a sibling plugin.
 #[semio_framework_async_macros::async_test]
 async fn an_unknown_example_id_loads_nothing() {
-    let command = ArchitectPlayApp::command_from_action("setActiveExample", Some(&dsl::json::to_dsl_value(&dsl::json!({ "exampleId": "not-an-architect-example" })))).expect("setActiveExample bridges");
+    let command = ArchitectPlayApp::command_from_action("setActiveExample", Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "exampleId": "not-an-architect-example" })))).expect("setActiveExample bridges");
     let emit = context::drive(&command, &sample_plugin());
     assert!(emit.effects.is_empty() && emit.artifact_mutations.is_empty());
 }
@@ -464,7 +464,7 @@ async fn interaction_select_stamps_the_picked_element_as_selected_in_the_documen
     let mut app = context::app_with_registry().await;
     let element_id = app.snapshot().expect("snapshot").elements[0].header.id.to_string();
     let targets = serde_json::to_string(&[serde_json::json!({ "granularity": ARCHITECT_INTERACTION_GRANULARITY_ENTITY, "id": element_id })]).expect("targets json");
-    context::framework_verb(&mut app, "interactionSelect", &dsl::json::to_dsl_value(&dsl::json!({ "domainId": ARCHITECT_INTERACTION_PROGRAM, "targets": targets, "merge": "replace" }))).await;
+    context::framework_verb(&mut app, "interactionSelect", &semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "domainId": ARCHITECT_INTERACTION_PROGRAM, "targets": targets, "merge": "replace" }))).await;
     let rendered = context::render(&mut app, document_panel::ARCHITECT_BODY_ARTIFACT).await;
     assert!(rendered.contains(&element_id), "the rendered tree must still list the picked element");
     assert!(rendered.contains(&format!("\"interactionDomain\":\"{ARCHITECT_INTERACTION_PROGRAM}\"")), "the rendered tree must carry the one tree-level pick binding that makes its rows pickable: {rendered}");

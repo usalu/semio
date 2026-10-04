@@ -142,7 +142,7 @@ mod subject {
     /// ↩️ Applies `mutation` to `base` and then `XlsxStrictMutation::inverse` of it — the vocabulary's own algebra is the law
     /// under test, never a transcription of it.
     fn applied_and_undone(base: XlsxSnapshot, mutation: &XlsxStrictMutation) -> XlsxSnapshot {
-        let undo = mutation_inverse(mutation, &base);
+        let undo = mutation_inverse(mutation, &base).expect("valid retained mutation inverse fixture");
         let mut snapshot = base;
         apply_xlsx_strict_mutation(&mut snapshot, mutation);
         for step in &undo {

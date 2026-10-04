@@ -5,7 +5,8 @@ use crate::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
 
 //#region 🔖️Inverse
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(payload: &super::AddMark, base: &SemioTextSnapshot) -> Vec<SemioTextMutation> {
+pub fn inverse(payload: &super::AddMark, base: &SemioTextSnapshot) -> Result<Vec<SemioTextMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.runs.get(payload.run_index) {
         Some(run) => {
             let at = payload.index.min(run.marks.len());
@@ -13,5 +14,7 @@ pub fn inverse(payload: &super::AddMark, base: &SemioTextSnapshot) -> Vec<SemioT
         }
         None => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

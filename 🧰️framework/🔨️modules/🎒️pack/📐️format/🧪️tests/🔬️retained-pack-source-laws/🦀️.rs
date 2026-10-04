@@ -1,4 +1,5 @@
 
+use semio_framework_pack_error::PackRefusal;
 use super::*;
 
 fn page(bytes: &[u8]) -> RetainedPackPage {
@@ -267,7 +268,7 @@ fn cancellation_is_observable_and_still_requires_terminal_empty_close() {
     cursor.seal().expect("seal");
     assert!(matches!(cursor.grant(), Ok(Some(RetainedPackSourceEvent::Byte { offset: 0, value: b'S' }))));
     cursor.request_cancel();
-    assert_eq!(cursor.grant(), Err("retained-pack.cancelled"));
+    assert_eq!(cursor.grant(), Err(RetainedPackSourceFault::refusal(ValueRefusalKind::Canceled, "retained-pack.cancelled")));
     assert_eq!(close(&mut cursor), admitted);
 }
 
@@ -275,7 +276,7 @@ fn cancellation_is_observable_and_still_requires_terminal_empty_close() {
 fn physical_allocation_refusal_preserves_the_page_producer_and_zero_ledger() {
     let mut cursor = RetainedPackSourceCursor::try_new(1, 1, 1).expect("separate payload and physical limits");
     let required = cursor.next_allocation_bytes().expect_err("physical limit is smaller than metadata backing");
-    assert_eq!(required, "retained-pack.allocation-credits");
+    assert_eq!(required, RetainedPackSourceFault::refusal(ValueRefusalKind::OwnershipLimit, "retained-pack.allocation-credits"));
     let producer = page(&[91]);
     let producer = cursor.admit_page(producer).expect_err("allocation refusal returns producer");
     assert_eq!((producer.len(), producer.bytes[0]), (1, 91));
@@ -641,7 +642,7 @@ async fn retained_anchor_rejects_hostile_crc_and_requires_explicit_close() {
     while failure.is_none() {
         failure = anchor.grant(None).err();
     }
-    assert!(matches!(failure, Some(PackError::ChecksumMismatch { segment: "header", .. })));
+    assert!(matches!(failure, Some(PackRefusal::ChecksumMismatch { segment: "header", .. })));
     anchor.close_step();
     close(&mut source);
 }
@@ -657,14 +658,14 @@ fn retained_pack_pipeline_diagnostic_anchor_is_inline_sticky_and_closes_the_sour
     };
     let mut anchor = RetainedPackAnchorCursor::new();
     let first = anchor.grant(Some(hostile)).expect_err("non-contiguous anchor input");
-    assert_eq!(first, PackError::RetainedMalformed { what: "retained-anchor", offset: 1, detail: "non-contiguous source event" });
+    assert_eq!(first, PackRefusal::RetainedMalformed { kind:ValueRefusalKind::InvariantViolated, what: "retained-anchor", offset: 1, detail: "non-contiguous source event" });
     assert_eq!(anchor.grant(Some(event)).expect_err("first anchor fault remains sticky"), first);
     assert_eq!(anchor.close_step(), RetainedPackCloseStep::Complete);
     assert!(anchor.terminal_is_empty());
     assert_eq!(close(&mut source), allocated);
 }
 
-fn segment_byte(cursor: &mut RetainedPackSegmentCursor, offset: u64, value: u8) -> Result<Option<RetainedPackSegmentEvent>, PackError> {
+fn segment_byte(cursor: &mut RetainedPackSegmentCursor, offset: u64, value: u8) -> Result<Option<RetainedPackSegmentEvent>, PackRefusal> {
     cursor.admit(RetainedPackSourceEvent::Byte { offset, value }).expect("segment byte admission");
     cursor.grant()
 }
@@ -687,7 +688,7 @@ fn retained_pack_pipeline_diagnostic_segment_and_varint_are_inline_sticky_and_re
         assert_eq!(segment_byte(&mut varint, offset, 0x80).expect("continued varint"), None);
     }
     let first = segment_byte(&mut varint, start + 9, 0x80).expect_err("overlong retained varint");
-    assert_eq!(first, PackError::RetainedMalformed { what: "varint", offset: start, detail: "overlong retained varint" });
+    assert_eq!(first, PackRefusal::RetainedMalformed { kind:ValueRefusalKind::InvalidValue, what: "varint", offset: start, detail: "overlong retained varint" });
     assert_eq!(varint.grant().expect_err("first varint fault remains sticky"), first);
     let later = RetainedPackSourceEvent::Byte { offset: start + 10, value: 0 };
     assert_eq!(varint.admit(later).expect_err("faulted segment rejects later ingress"), later);
@@ -698,7 +699,7 @@ fn retained_pack_pipeline_diagnostic_segment_and_varint_are_inline_sticky_and_re
     let stored_len = segment_prefix(&mut segment, 0xf0);
     assert_eq!(segment_byte(&mut segment, stored_len, 0).expect("stored length"), None);
     let first = segment.grant().expect_err("reserved segment flags");
-    assert_eq!(first, PackError::RetainedMalformed { what: "segment", offset: HEADER_SIZE as u64 + 1, detail: "reserved segment flags are set" });
+    assert_eq!(first, PackRefusal::RetainedMalformed { kind:ValueRefusalKind::InvalidValue, what: "segment", offset: HEADER_SIZE as u64 + 1, detail: "reserved segment flags are set" });
     assert_eq!(segment.grant().expect_err("first segment fault remains sticky"), first);
     let later = RetainedPackSourceEvent::Byte { offset: stored_len + 1, value: 0 };
     assert_eq!(segment.admit(later).expect_err("faulted segment rejects later ingress"), later);
@@ -746,7 +747,7 @@ fn retained_pack_pipeline_diagnostic_deflate_is_inline_sticky_and_closes_after_r
     }
     assert_eq!(produced, raw);
     let first = first.expect("declared raw length mismatch");
-    assert_eq!(first, PackError::RetainedMalformed { what: "deflate", offset: raw.len() as u64, detail: "decompressed length mismatch or trailing input" });
+    assert_eq!(first, PackRefusal::RetainedMalformed { kind:ValueRefusalKind::InvalidValue, what: "deflate", offset: raw.len() as u64, detail: "decompressed length mismatch or trailing input" });
     assert_eq!(cursor.grant(true).expect_err("first inflater fault remains sticky"), first);
     assert_eq!(cursor.admit_byte(0).expect_err("faulted inflater rejects later ingress"), 0);
     let mut released = 0;

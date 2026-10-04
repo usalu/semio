@@ -38,6 +38,14 @@ fn every_user_visible_label_is_declared_in_every_locale_exactly_as_the_shared_fi
             assert_eq!(text.as_str(), expected, "{field}: {locale_key}");
             assert!(!text.as_str().is_empty(), "{field}: {locale_key} is never empty");
         });
+        for (id, field) in fixture["catalogueLabels"].as_object().expect("the fixture declares localized catalogue entries") {
+            let field = field.as_str().expect("a catalogue entry names its declared label field");
+            assert_eq!(generation3d_catalogue_name(set, id, id), rows[field][locale_key].as_str().expect("localized catalogue copy"), "{id}: {locale_key}");
+        }
+        for (port, field) in fixture["portLabels"].as_object().expect("the fixture declares localized ports") {
+            let field = field.as_str().expect("a port names its declared label field");
+            assert_eq!(generation3d_input_name(set, port, port), rows[field][locale_key].as_str().expect("localized port copy"), "{port}: {locale_key}");
+        }
     }
 }
 

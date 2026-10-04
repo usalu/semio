@@ -151,6 +151,7 @@
       ],
       "kinds": [
         "set-snapshot",
+        "patch-snapshot",
         "insert-block",
         "remove-block",
         "set-block-content",
@@ -351,6 +352,26 @@
             "operation": "set-snapshot",
             "bridgeVersion": 1,
             "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "docx-ecma-376-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-docx-ecma-376-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "patch-snapshot",
+          "capability": "docx-ecma-376-mutate",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "patch-snapshot",
+            "bridgeVersion": 1,
+            "variant": "PatchSnapshot"
           },
           "oracleRequirements": [
             {
@@ -2438,6 +2459,57 @@
       "reproducible": true,
       "family": "structural",
       "notes": "The package relationship to docProps/core.xml dropped, so the part is no longer written."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "patch-snapshot-readme-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.docx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "patch-snapshot",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "before-docx",
+          "path": "../🧫️fixtures/📜️example-readme.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:f168e4b2edaa3a18d193004160d76a1e107776c7d0b568f0da10f27f958fc7de",
+          "bytes": 17024
+        },
+        {
+          "role": "after-docx",
+          "path": "../🧫️fixtures/🧾️readme-afters/🩹️patch-snapshot/➡️after.docx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "sha256": "sha256:5119d4ac43d422de69e294a211df60be59dbf74500ddcf8cd54a2d43ce045477",
+          "bytes": 17026
+        }
+      ],
+      "generator": {
+        "oracle": "jszip-docx-ecma-376-mutate-reader",
+        "packageVersion": "python-docx 1.2.0",
+        "engineFamily": "python-docx",
+        "engineVersion": "1.2.0",
+        "command": ".venv/bin/python .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/🧪️s4-stdio-docx-patch-after.py",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (python-docx)",
+        "attribution": "Generated with python-docx (MIT): the case's patch-snapshot row resolved against the subject's retained reading to one attribute, written through python-docx's package/part/oxml model and saved; untouched parts stay verbatim, entries re-zipped with a fixed date",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "semantic-docx-ecma-376-jszip-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "The first body paragraph's pStyle w:val (attribute 1 of word/document.xml's retained reading) set from Heading1 to Heading2."
     }
   ],
   "oracleHostPackages": []

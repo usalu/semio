@@ -1,0 +1,36 @@
+{
+  "basis": "Actual Rewriting12 zero-assertion DOCX canonical Value controls/DecodedValue prerequisite, existing direct Value dependency",
+  "rows": [
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🧩️native/🦀️.rs",
+      "pairs": [
+        [
+          "use semio_framework_value::{ValueError,ValueRefusalKind};",
+          "use semio_framework_value::{NativeEncodeControl,NativeDecodeControl,ValueError,ValueRefusalKind};\nuse semio_framework_value::DecodedValue;",
+          1
+        ],
+        [
+          "use semio_framework_os_kernel::{NativeEncodeControl,NativeDecodeControl,DecodedValue,sqlite_snapshot::",
+          "use semio_framework_os_kernel::{sqlite_snapshot::",
+          1
+        ]
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/💰️backing/📤️projection/🦀️.rs",
+      "pairs": [
+        [
+          "    ArtifactSqliteSnapshot, NativeEncodeControl,\n",
+          "    ArtifactSqliteSnapshot,\n",
+          1
+        ],
+        [
+          "use semio_framework_value::native_encoding::NativeEncodeProgress;",
+          "use semio_framework_value::native_encoding::NativeEncodeProgress;\nuse semio_framework_value::NativeEncodeControl;",
+          1
+        ]
+      ]
+    }
+  ],
+  "guardAuthority": "Canonical Value root39 explicitly reexports codec::DecodedValue; controlled decode defines struct at codec/controlled"
+}

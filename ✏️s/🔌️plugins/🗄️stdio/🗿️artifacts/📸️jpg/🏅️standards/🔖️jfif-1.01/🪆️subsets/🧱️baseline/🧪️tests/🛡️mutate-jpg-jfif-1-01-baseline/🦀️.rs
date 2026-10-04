@@ -145,7 +145,7 @@ mod subject {
         if projection(&current)? == original {
             return Err(format!("inverse-{kind}: the forward mutation left the conformance projection untouched, so restoring it proves nothing"));
         }
-        for step in mutation_inverse(&mutation, &base) {
+        for step in mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
             apply_jpg_baseline_mutation(&mut current, &step);
         }
         let restored = projection(&current)?;

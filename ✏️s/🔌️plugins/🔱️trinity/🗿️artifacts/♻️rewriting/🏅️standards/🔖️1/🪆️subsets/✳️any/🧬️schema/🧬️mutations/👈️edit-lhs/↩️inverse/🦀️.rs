@@ -3,7 +3,10 @@ use crate::standards::v1::subsets::any::schema::mutations::{edit_lhs, RewriteRul
 use crate::RewritingSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &super::EditLhs, base: &RewritingSnapshot) -> Vec<RewriteRuleMutation> {
-    vec![edit_lhs(base.lhs_json.clone())]
+pub fn inverse(_payload: &super::EditLhs, base: &RewritingSnapshot) -> Result<Vec<RewriteRuleMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
+    vec![edit_lhs(base.lhs.clone())]
+
+    })())
 }
 //#endregion 🔖️Inverse

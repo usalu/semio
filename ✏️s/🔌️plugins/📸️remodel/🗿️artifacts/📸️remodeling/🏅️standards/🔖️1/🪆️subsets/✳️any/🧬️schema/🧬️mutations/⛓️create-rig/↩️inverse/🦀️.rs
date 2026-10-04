@@ -4,10 +4,13 @@ use crate::mutations::RemodelingMutation;
 use crate::RemodelingSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::CreateRigExtrinsic, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
+pub fn inverse(payload: &super::CreateRigExtrinsic, base: &RemodelingSnapshot) -> Result<Vec<RemodelingMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     if base.calibration.rig.iter().any(|extrinsic| extrinsic.camera_id == payload.extrinsic.camera_id) {
         return Vec::new();
     }
     vec![crate::mutations::delete_rig_extrinsic::delete_rig_extrinsic(payload.extrinsic.camera_id.clone())]
+
+    })())
 }
 //#endregion 🔖️Inverse

@@ -11,7 +11,7 @@ pub fn diff(payload: &super::ChangeZoneEquipmentType, base: &EnergyModelSnapshot
     };
 
     if existing.equipment_type == payload.new_equipment_type {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Zone equipment {} already has that equipment type.", payload.id.0));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Zone equipment {} already has that equipment type.", payload.id.0));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.zone_equipment.iter_mut().find(|item| item.id == payload.id) {

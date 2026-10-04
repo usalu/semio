@@ -11,12 +11,23 @@ extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
 
-pub use semio_framework_os_kernel::encode_fault_bytes;
+pub use semio_framework_diagnostic::encode_fault_bytes;
 
 /// 🌱️ `app_commands!`'s generated enum spells its derives as `$crate::ToValue`/`$crate::FromValue`
 /// so the path resolves identically for every invoking plugin crate regardless of what it has
 /// imported — re-exported here at this crate's own root for that macro hygiene to find them.
 pub use semio_framework_value_derive::{FromValue, ToValue};
+
+/// 🫧️ The crates `transient_root!`/`window_transient_owners!` expand against, re-exported so the expansion resolves the same in
+/// every invoking plugin crate (audit K3).
+#[doc(hidden)]
+pub use semio_framework_diagnostic as __diagnostic;
+#[doc(hidden)]
+pub use semio_framework_os_kernel as __kernel;
+#[doc(hidden)]
+pub use semio_framework_pack_json as __pack_json;
+#[doc(hidden)]
+pub use semio_framework_value as __value;
 
 #[path = "../../🦀️.rs"]
 pub mod component;

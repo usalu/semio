@@ -7,7 +7,7 @@ use crate::RewritingSnapshot;
 
 //#region 🔖️Mutation
 /// 📍️ One rule node at an explicit position.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct RuleLayoutPlacement {
     pub key: String,
@@ -16,7 +16,7 @@ pub struct RuleLayoutPlacement {
 }
 
 /// 📍️ `set-rule-layout-points` payload.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "set-rule-layout-points")]
@@ -45,9 +45,12 @@ impl protocol::MutationKind<RewritingSnapshot, RewriteRuleMutation> for SetRuleL
     fn diff(&self, base: &RewritingSnapshot) -> protocol::MutationOutcome<RewritingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RewritingSnapshot) -> Vec<RewriteRuleMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &RewritingSnapshot) -> Result<Vec<RewriteRuleMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         match self.points.len() + self.cleared.len() {
             1 => semio_framework_ui_locale::LocalizedLabel::native("Place 1 rule node", "1 Regelknoten platzieren"),

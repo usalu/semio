@@ -56,14 +56,16 @@ async fn parse_dialects(input: &MigrateInput) -> Result<(semio_framework::io_sch
 /// reports `"{from}->{to}"` as the first slice's progress bytes.
 async fn decode(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
     let input_text = std::str::from_utf8(input).map_err(|error| super::fault("job.migrate.decode", format!("invalid {} input: {error}", super::JOB_KIND_MIGRATE)))?;
-    let parsed: MigrateInput = dsl::os_pack::json::from_json_str(input_text).map_err(|error| super::fault("job.migrate.decode", format!("invalid {} input: {error}", super::JOB_KIND_MIGRATE)))?;
+    let parsed: MigrateInput =
+        semio_framework_pack_json::from_json_str(input_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| super::fault("job.migrate.decode", format!("invalid {} input: {error}", super::JOB_KIND_MIGRATE)))?;
     let (from, to) = parse_dialects(&parsed).await?;
     Ok(format!("{}->{}", from.to_coordinate(), to.to_coordinate()).into_bytes())
 }
 
 async fn execute(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
     let input_text = std::str::from_utf8(input).map_err(|error| super::fault("job.migrate.decode", format!("invalid {} input: {error}", super::JOB_KIND_MIGRATE)))?;
-    let parsed: MigrateInput = dsl::os_pack::json::from_json_str(input_text).map_err(|error| super::fault("job.migrate.decode", format!("invalid {} input: {error}", super::JOB_KIND_MIGRATE)))?;
+    let parsed: MigrateInput =
+        semio_framework_pack_json::from_json_str(input_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| super::fault("job.migrate.decode", format!("invalid {} input: {error}", super::JOB_KIND_MIGRATE)))?;
     let (from, to) = parse_dialects(&parsed).await?;
     store::migrate_document(&from, &to, &parsed.pack).await.map_err(|error| super::fault("job.migrate", format!("{error:?}")))
 }

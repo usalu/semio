@@ -1,0 +1,157 @@
+{
+  "format": 1,
+  "fieldMap": {
+    "unsorted": [
+      {
+        "key": "zeta",
+        "entries": [
+          {
+            "key": "é",
+            "value": 9
+          },
+          {
+            "key": "z",
+            "value": 8
+          },
+          {
+            "key": "a\u0000",
+            "value": 7
+          }
+        ]
+      },
+      {
+        "key": "é",
+        "entries": [
+          {
+            "key": "b",
+            "value": 6
+          },
+          {
+            "key": "a",
+            "value": 5
+          }
+        ]
+      },
+      {
+        "key": "alpha",
+        "entries": [
+          {
+            "key": "b",
+            "value": 4
+          },
+          {
+            "key": "a",
+            "value": 3
+          }
+        ]
+      },
+      {
+        "key": "a\u0000",
+        "entries": [
+          {
+            "key": "q",
+            "value": 2
+          }
+        ]
+      },
+      {
+        "key": "Mid",
+        "entries": [
+          {
+            "key": "y",
+            "value": 1
+          },
+          {
+            "key": "x",
+            "value": 0
+          }
+        ]
+      }
+    ],
+    "canonical": [
+      {
+        "key": "Mid",
+        "entries": [
+          {
+            "key": "x",
+            "value": 0
+          },
+          {
+            "key": "y",
+            "value": 1
+          }
+        ]
+      },
+      {
+        "key": "a\u0000",
+        "entries": [
+          {
+            "key": "q",
+            "value": 2
+          }
+        ]
+      },
+      {
+        "key": "alpha",
+        "entries": [
+          {
+            "key": "a",
+            "value": 3
+          },
+          {
+            "key": "b",
+            "value": 4
+          }
+        ]
+      },
+      {
+        "key": "zeta",
+        "entries": [
+          {
+            "key": "a\u0000",
+            "value": 7
+          },
+          {
+            "key": "z",
+            "value": 8
+          },
+          {
+            "key": "é",
+            "value": 9
+          }
+        ]
+      },
+      {
+        "key": "é",
+        "entries": [
+          {
+            "key": "a",
+            "value": 5
+          },
+          {
+            "key": "b",
+            "value": 6
+          }
+        ]
+      }
+    ]
+  },
+  "literalObject": [
+    {
+      "key": "z",
+      "value": "first"
+    },
+    {
+      "key": "a\u0000",
+      "value": "middle"
+    },
+    {
+      "key": "z",
+      "value": "duplicate"
+    },
+    {
+      "key": "é",
+      "value": "last"
+    }
+  ]
+}

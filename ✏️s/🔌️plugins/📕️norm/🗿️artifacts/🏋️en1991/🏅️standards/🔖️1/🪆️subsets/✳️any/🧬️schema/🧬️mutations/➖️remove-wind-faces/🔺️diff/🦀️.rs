@@ -1,4 +1,4 @@
-//! Diff for `remove-wind-faces`.
+//! 🔺️ Diff for `remove-wind-faces`.
 use super::RemoveWindFaces;
 use crate::artifact_schema::diff::En1991WindFacesList;
 use crate::{En1991Diff, En1991Snapshot};

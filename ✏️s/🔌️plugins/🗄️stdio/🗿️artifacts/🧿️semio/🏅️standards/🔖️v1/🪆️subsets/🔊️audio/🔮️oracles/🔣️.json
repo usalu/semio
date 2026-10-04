@@ -70,6 +70,7 @@
       ],
       "kinds": [
         "set-snapshot",
+        "patch-snapshot",
         "set-sample-rate",
         "set-format",
         "insert-channel",
@@ -250,6 +251,26 @@
             "operation": "set-snapshot",
             "bridgeVersion": 1,
             "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-audio-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "patch-snapshot",
+          "capability": "semio-v1-audio-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "patch-snapshot",
+            "bridgeVersion": 1,
+            "variant": "PatchSnapshot"
           },
           "oracleRequirements": [
             {

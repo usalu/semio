@@ -1,0 +1,41 @@
+{
+  "authority": "🗑️generated/graph-os-record-cut/caller-provider-closure-12.json",
+  "sha256": "6163a7c5a8a4892f9574e50b1969597cbbbb192bc497efbf673d0b240918edfb",
+  "providerFrames": [
+    {
+      "provider": "semio_framework_dsl_record",
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "source": "[package]\nworkspace = \"../../../../../..\"\nname = \"semio-framework-dsl-record\"\nversion = \"0.1.0\"\nedition = \"2021\"\nrust-version.workspace = true\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"dsl-record\"\n\n[lints]\nworkspace = true\n\n[lib]\nname = \"semio_framework_dsl_record\"\npath = \"../../🦀️.rs\"\n\n[dependencies]\nsemio-framework-dsl = { path = \"../../../📦️packages/🦀️rust\" }\nsemio-framework-value = { path = \"../../../../🌱️value/📦️packages/🦀️rust\" }\nsemio-framework-diagnostic = { path = \"../../../../⚠️diagnostic/📦️packages/🦀️rust\" }\nsemio-framework-pack-json = { path = \"../../../../🎒️pack/🔤️json/📦️packages/🦀️rust\" }\n\n[dev-dependencies]\nsemio-framework-async-macros = { path = \"../../../../⏳️async/✨️macros/📦️packages/🦀️rust\" }\nsemio-framework-dsl-record-derive = { path = \"../../✨️derive/📦️packages/🦀️rust\" }\nserde_json = { version = \"1.0\", features = [\"float_roundtrip\"] }\n\n[[test]]\nname = \"field_refusal_public\"\npath = \"../../🧪️tests/🪆️refusal/🚪️public/🦀️.rs\"\n",
+      "inverse": "[package]\nworkspace = \"../../../../../..\"\nname = \"semio-framework-dsl-record\"\nversion = \"0.1.0\"\nedition = \"2021\"\nrust-version.workspace = true\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"dsl-record\"\n\n[lints]\nworkspace = true\n\n[lib]\nname = \"semio_framework_dsl_record\"\npath = \"../../🦀️.rs\"\n\n[dependencies]\nsemio-framework-dsl = { path = \"../../../📦️packages/🦀️rust\" }\nsemio-framework-value = { path = \"../../../../🌱️value/📦️packages/🦀️rust\" }\nsemio-framework-diagnostic = { path = \"../../../../⚠️diagnostic/📦️packages/🦀️rust\" }\nsemio-framework-pack-json = { path = \"../../../../🎒️pack/🔤️json/📦️packages/🦀️rust\" }\n\n[dev-dependencies]\nsemio-framework-async-macros = { path = \"../../../../⏳️async/✨️macros/📦️packages/🦀️rust\" }\nsemio-framework-dsl-record-derive = { path = \"../../✨️derive/📦️packages/🦀️rust\" }\nserde_json = { version = \"1.0\", features = [\"float_roundtrip\"] }\n\n[[test]]\nname = \"field_refusal_public\"\npath = \"../../🧪️tests/🪆️refusal/🚪️public/🦀️.rs\"\n",
+      "sha256": "a5b711cf2d190abf50aec059369ca6fb5b11dcc42243f943f70717da7b39bbf4"
+    },
+    {
+      "provider": "semio_framework_dsl_record_derive",
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust/Cargo.toml",
+      "source": "[package]\nworkspace = \"../../../../../../..\"\nname = \"semio-framework-dsl-record-derive\"\nversion = \"0.1.0\"\nedition = \"2021\"\nrust-version.workspace = true\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"dsl-record-derive\"\n\n[lints]\nworkspace = true\n\n[lib]\nname = \"semio_framework_dsl_record_derive\"\npath = \"../../🦀️.rs\"\nproc-macro = true\n\n[dependencies]\nsyn = { version = \"2.0\", features = [\"full\", \"extra-traits\"] }\nquote = \"1.0\"\nproc-macro2 = \"1.0\"\n\n[dev-dependencies]\nserde_json = \"1.0\"\n",
+      "inverse": "[package]\nworkspace = \"../../../../../../..\"\nname = \"semio-framework-dsl-record-derive\"\nversion = \"0.1.0\"\nedition = \"2021\"\nrust-version.workspace = true\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"dsl-record-derive\"\n\n[lints]\nworkspace = true\n\n[lib]\nname = \"semio_framework_dsl_record_derive\"\npath = \"../../🦀️.rs\"\nproc-macro = true\n\n[dependencies]\nsyn = { version = \"2.0\", features = [\"full\", \"extra-traits\"] }\nquote = \"1.0\"\nproc-macro2 = \"1.0\"\n\n[dev-dependencies]\nserde_json = \"1.0\"\n",
+      "sha256": "5ed6e8e4f1610fd6e5be0d50c810b6baac32e79a092b1d34e0a8d0bf52898244"
+    },
+    {
+      "provider": "semio_framework_value",
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "source": "[package]\nworkspace = \"../../../../..\"\nname = \"semio-framework-value\"\nversion = \"0.1.0\"\nedition = \"2021\"\nrust-version.workspace = true\ndescription = \"Neutral typed value conversion, ordered ownership, bounded retained cloning and explicit retirement.\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"value\"\n\n[lints]\nworkspace = true\n\n[lib]\nname = \"semio_framework_value\"\npath = \"🦀️.rs\"\n\n[features]\ndefault = []\nordered-set-serde = []\n\n[dependencies]\nsemio-framework-value-derive = { path = \"../../✨️derive/📦️packages/🦀️rust\" }\nsemio-framework-io-base64 = { path = \"../../../🚪️io/🔤️base64/📦️packages/🦀️rust\" }\nserde = { version = \"1.0.219\", features = [\"derive\"] }\nserde_json = \"1.0.140\"\n",
+      "inverse": "[package]\nworkspace = \"../../../../..\"\nname = \"semio-framework-value\"\nversion = \"0.1.0\"\nedition = \"2021\"\nrust-version.workspace = true\ndescription = \"Neutral typed value conversion, ordered ownership, bounded retained cloning and explicit retirement.\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"value\"\n\n[lints]\nworkspace = true\n\n[lib]\nname = \"semio_framework_value\"\npath = \"🦀️.rs\"\n\n[features]\ndefault = []\nordered-set-serde = []\n\n[dependencies]\nsemio-framework-value-derive = { path = \"../../✨️derive/📦️packages/🦀️rust\" }\nsemio-framework-io-base64 = { path = \"../../../🚪️io/🔤️base64/📦️packages/🦀️rust\" }\nserde = { version = \"1.0.219\", features = [\"derive\"] }\nserde_json = \"1.0.140\"\n",
+      "sha256": "2f10ca5328d67a68f407d2ab20b63f7b17ed332d1ec53119885fdebc3f244057"
+    },
+    {
+      "provider": "semio_framework_diagnostic",
+      "path": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust/Cargo.toml",
+      "source": "[package]\nworkspace = \"../../../../..\"\nname = \"semio-framework-diagnostic\"\nversion = \"0.1.0\"\nedition = \"2021\"\nrust-version.workspace = true\ndescription = \"Canonical neutral source spans, bounded text errors and structured fault diagnostics.\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"diagnostic\"\n\n[lints]\nworkspace = true\n\n[lib]\nname = \"semio_framework_diagnostic\"\npath = \"🦀️.rs\"\n\n[dependencies]\nsemio-framework-value = { path = \"../../../🌱️value/📦️packages/🦀️rust\" }\nserde = { version = \"1.0.219\", features = [\"derive\"] }\nserde_json = \"1.0.140\"\n\n",
+      "inverse": "[package]\nworkspace = \"../../../../..\"\nname = \"semio-framework-diagnostic\"\nversion = \"0.1.0\"\nedition = \"2021\"\nrust-version.workspace = true\ndescription = \"Canonical neutral source spans, bounded text errors and structured fault diagnostics.\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"diagnostic\"\n\n[lints]\nworkspace = true\n\n[lib]\nname = \"semio_framework_diagnostic\"\npath = \"🦀️.rs\"\n\n[dependencies]\nsemio-framework-value = { path = \"../../../🌱️value/📦️packages/🦀️rust\" }\nserde = { version = \"1.0.219\", features = [\"derive\"] }\nserde_json = \"1.0.140\"\n\n",
+      "sha256": "8b42de2fa4ec607c66a25082bec0c6a4b5a3935dad3bbe4340f8617018440dfc"
+    }
+  ],
+  "normalDirectionCheck": {
+    "rows": 112,
+    "proofs": 133,
+    "selfDependencies": 0,
+    "valueToRecordNormal": 0,
+    "recordToDeriveNormal": 0
+  }
+}

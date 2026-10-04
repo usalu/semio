@@ -1,0 +1,222 @@
+{
+  "version": 1,
+  "owner": "semio-framework-ui-viewport",
+  "entry": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🦀️.rs",
+  "manifest": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust/Cargo.toml",
+  "binding": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🪆️binding/🦀️.rs",
+  "types": [
+    "Viewport2d",
+    "Viewport3dOrbit"
+  ],
+  "fields": {
+    "Viewport2d": [
+      {
+        "id": 1,
+        "key": "x",
+        "shape": "Float",
+        "optional": false
+      },
+      {
+        "id": 2,
+        "key": "y",
+        "shape": "Float",
+        "optional": false
+      },
+      {
+        "id": 3,
+        "key": "zoom",
+        "shape": "Float",
+        "optional": false
+      }
+    ],
+    "Viewport3dOrbit": [
+      {
+        "id": 1,
+        "key": "position",
+        "shape": "Tuple3",
+        "optional": false
+      },
+      {
+        "id": 2,
+        "key": "target",
+        "shape": "Tuple3",
+        "optional": false
+      },
+      {
+        "id": 3,
+        "key": "zoom",
+        "shape": "Float",
+        "optional": false
+      },
+      {
+        "id": 4,
+        "key": "up",
+        "shape": "Tuple3",
+        "optional": true
+      }
+    ]
+  },
+  "controls": {
+    "initialCancel": "canceled",
+    "metadataZero": "ownershipLimit",
+    "projection": "unsupportedOwner",
+    "construction": "unsupportedOwner"
+  },
+  "cases": [
+    {
+      "id": "canvas identity",
+      "type": "Viewport2d",
+      "value": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "expectedFields": [
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          1
+        ]
+      ]
+    },
+    {
+      "id": "canvas panned and zoomed",
+      "type": "Viewport2d",
+      "value": {
+        "x": 12.5,
+        "y": -6.5,
+        "zoom": 3.5
+      },
+      "expectedFields": [
+        [
+          1,
+          12.5
+        ],
+        [
+          2,
+          -6.5
+        ],
+        [
+          3,
+          3.5
+        ]
+      ]
+    },
+    {
+      "id": "orbit renderer gesture",
+      "type": "Viewport3dOrbit",
+      "value": {
+        "position": [
+          8,
+          -3,
+          5
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "zoom": 1.25
+      },
+      "expectedFields": [
+        [
+          1,
+          [
+            8,
+            -3,
+            5
+          ]
+        ],
+        [
+          2,
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        [
+          3,
+          1.25
+        ]
+      ]
+    },
+    {
+      "id": "orbit explicit up",
+      "type": "Viewport3dOrbit",
+      "value": {
+        "position": [
+          1,
+          2,
+          3
+        ],
+        "target": [
+          3,
+          2,
+          1
+        ],
+        "zoom": 0.5,
+        "up": [
+          0,
+          0,
+          1
+        ]
+      },
+      "expectedFields": [
+        [
+          1,
+          [
+            1,
+            2,
+            3
+          ]
+        ],
+        [
+          2,
+          [
+            3,
+            2,
+            1
+          ]
+        ],
+        [
+          3,
+          0.5
+        ],
+        [
+          4,
+          [
+            0,
+            0,
+            1
+          ]
+        ]
+      ]
+    }
+  ],
+  "sourceCases": [
+    {
+      "id": "formatting",
+      "accepted": true
+    },
+    {
+      "id": "private-extension",
+      "accepted": true
+    },
+    {
+      "id": "missing-type-owner",
+      "accepted": false
+    },
+    {
+      "id": "hostile-dependency",
+      "accepted": false
+    }
+  ]
+}

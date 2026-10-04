@@ -14,7 +14,7 @@ pub fn diff(payload: &ChangeBlockFontSize, base: &NoteSnapshot) -> protocol::Mut
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Block \"{}\" is not a text block.", payload.id), [payload.id.clone()]);
     };
     if *font_size == payload.new_font_size {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Block \"{}\" font size is already {}.", payload.id, payload.new_font_size));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Block \"{}\" font size is already {}.", payload.id, payload.new_font_size));
     }
     let mut updated = block.clone();
     if let crate::NoteBlockNode::Text { font_size, .. } = &mut updated {

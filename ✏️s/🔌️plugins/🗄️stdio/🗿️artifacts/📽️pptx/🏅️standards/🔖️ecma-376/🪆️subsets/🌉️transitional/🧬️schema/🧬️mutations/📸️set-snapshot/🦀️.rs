@@ -17,9 +17,12 @@ impl protocol::MutationKind<PptxSnapshot, PptxTransitionalMutation> for SetSnaps
     fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<<PptxTransitionalMutation as Mutation<PptxSnapshot>>::Diff> {
         agg_diff(&PptxTransitionalMutation::SetSnapshot(self.clone()), base)
     }
-    fn inverse(&self, base: &PptxSnapshot) -> Vec<PptxTransitionalMutation> {
-        agg_inverse(&PptxTransitionalMutation::SetSnapshot(self.clone()), base)
-    }
+    fn inverse(&self, base: &PptxSnapshot) -> Result<Vec<PptxTransitionalMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&PptxTransitionalMutation::SetSnapshot(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set snapshot", "Momentaufnahme setzen")
     }

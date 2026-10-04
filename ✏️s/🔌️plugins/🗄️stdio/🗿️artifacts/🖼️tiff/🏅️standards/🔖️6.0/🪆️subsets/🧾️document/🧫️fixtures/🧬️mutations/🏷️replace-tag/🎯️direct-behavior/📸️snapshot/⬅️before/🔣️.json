@@ -4,7 +4,6 @@
     {
       "entries": [
         {
-          "kind": "short",
           "tag": 256,
           "values": {
             "kind": "short",
@@ -14,7 +13,6 @@
           }
         },
         {
-          "kind": "short",
           "tag": 257,
           "values": {
             "kind": "short",
@@ -24,7 +22,6 @@
           }
         },
         {
-          "kind": "short",
           "tag": 258,
           "values": {
             "kind": "short",
@@ -37,7 +34,6 @@
           }
         },
         {
-          "kind": "short",
           "tag": 259,
           "values": {
             "kind": "short",
@@ -47,7 +43,6 @@
           }
         },
         {
-          "kind": "short",
           "tag": 262,
           "values": {
             "kind": "short",
@@ -57,34 +52,45 @@
           }
         },
         {
-          "kind": "ascii",
           "tag": 305,
           "values": {
             "kind": "ascii",
-            "value": "semio"
+            "value": [
+              115,
+              101,
+              109,
+              105,
+              111
+            ]
           }
         }
       ],
-      "pixels": []
+      "storage": {
+        "kind": "strips",
+        "offsetsKind": "long",
+        "byteCountsKind": "long",
+        "chunks": [
+          [
+            255,
+            0,
+            0,
+            255,
+            0,
+            255,
+            0,
+            255,
+            0,
+            0,
+            255,
+            255,
+            255,
+            255,
+            255,
+            255
+          ]
+        ]
+      }
     }
-  ],
-  "pixels": [
-    255,
-    0,
-    0,
-    255,
-    0,
-    255,
-    0,
-    255,
-    0,
-    0,
-    255,
-    255,
-    255,
-    255,
-    255,
-    255
   ],
   "schema": "stdio.tiff"
 }

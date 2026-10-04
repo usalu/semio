@@ -10,9 +10,9 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::{encode_d
 pub fn register() {}
 
 pub fn serialize_bytes(from: &LayoutSnapshot) -> Result<Vec<u8>, store::PackError> {
-    encode_drawing(&layout_snapshot_to_semio_drawing(from), SemioDrawingFormat::Svg).map_err(|error| store::PackError::Schema(format!("layout→svg: {error}")))
+    encode_drawing(&layout_snapshot_to_semio_drawing(from), SemioDrawingFormat::Svg).map_err(|error| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("layout→svg: {error}"))))
 }
 
 pub fn serialize_text(from: &LayoutSnapshot) -> Result<String, store::PackError> {
-    String::from_utf8(serialize_bytes(from)?).map_err(|error| store::PackError::Schema(error.to_string()))
+    String::from_utf8(serialize_bytes(from)?).map_err(|error| store::PackError::from(semio_framework_value::ValueError::from(error)))
 }

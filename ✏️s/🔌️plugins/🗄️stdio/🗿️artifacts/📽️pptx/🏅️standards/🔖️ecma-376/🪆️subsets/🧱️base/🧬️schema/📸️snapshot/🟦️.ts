@@ -27,7 +27,6 @@ export interface PptxSnapshot {
   /** @state artifact */ schema: string;
   /** @state artifact */ opc: OpcPackage;
   /** @state artifact */ xmlParts: PptxXmlPart[];
-  /** @state artifact */ presentation: PptxPresentation;
 }
 
 /** 🚪️ A precise position and reason for refusing a malformed PPTX snapshot. */
@@ -60,7 +59,7 @@ export function parsePptxShape(value: unknown, at: string): PptxShape {
 export function parsePptxSlide(value: unknown, at: string): PptxSlide { const row = pptxGuardObject(value, at); return { shapes: array(row.shapes, `${at}.shapes`).map((item, index) => parsePptxShape(item, `${at}.shapes[${index}]`)) }; }
 export function parseOpcPart(value: unknown, at: string): OpcPart { const row = pptxGuardObject(value, at); return { path: text(row.path, `${at}.path`), contentType: text(row.contentType, `${at}.contentType`), bytes: array(row.bytes, `${at}.bytes`).map((item, index) => integer(item, `${at}.bytes[${index}]`, 0, 255)) }; }
 export function parseOpcRelationship(value: unknown, at: string): OpcRelationship { const row = pptxGuardObject(value, at), targetMode = text(row.targetMode, `${at}.targetMode`); if (targetMode !== 'internal' && targetMode !== 'external') reject(`${at}.targetMode`, 'unknown OPC target mode'); return { id: text(row.id, `${at}.id`), relType: text(row.relType, `${at}.relType`), target: text(row.target, `${at}.target`), targetMode }; }
-function parseOpcPackage(value: unknown, at: string): OpcPackage {
+export function parseOpcPackage(value: unknown, at: string): OpcPackage {
   const row = pptxGuardObject(value, at), contentTypes = pptxGuardObject(row.contentTypes, `${at}.contentTypes`), pair = (value: unknown, pairAt: string): [string, string] => { const values = array(value, pairAt); if (values.length !== 2) reject(pairAt, 'tuple does not contain exactly two items'); return [text(values[0], `${pairAt}[0]`), text(values[1], `${pairAt}[1]`)]; };
   const relationships: Record<string, OpcRelationship[]> = Object.create(null);
   for (const [owner, entries] of Object.entries(pptxGuardObject(row.relationships, `${at}.relationships`))) relationships[owner] = array(entries, `${at}.relationships.${owner}`).map((item, index) => parseOpcRelationship(item, `${at}.relationships.${owner}[${index}]`));
@@ -68,6 +67,6 @@ function parseOpcPackage(value: unknown, at: string): OpcPackage {
 }
 /** 🚪️ Parses the complete PPTX snapshot through one typed authority. */
 export function parsePptxSnapshot(value: unknown, at = '$'): PptxSnapshot {
-  const row = pptxGuardObject(value, at), presentation = pptxGuardObject(row.presentation, `${at}.presentation`);
-  return { schema: text(row.schema, `${at}.schema`), opc: parseOpcPackage(row.opc, `${at}.opc`), xmlParts: array(row.xmlParts, `${at}.xmlParts`).map((item, index) => parsePptxXmlPart(item, `${at}.xmlParts[${index}]`)), presentation: { slides: array(presentation.slides, `${at}.presentation.slides`).map((item, index) => parsePptxSlide(item, `${at}.presentation.slides[${index}]`)) } };
+  const row = pptxGuardObject(value, at);
+  return { schema: text(row.schema, `${at}.schema`), opc: parseOpcPackage(row.opc, `${at}.opc`), xmlParts: array(row.xmlParts, `${at}.xmlParts`).map((item, index) => parsePptxXmlPart(item, `${at}.xmlParts[${index}]`)) };
 }

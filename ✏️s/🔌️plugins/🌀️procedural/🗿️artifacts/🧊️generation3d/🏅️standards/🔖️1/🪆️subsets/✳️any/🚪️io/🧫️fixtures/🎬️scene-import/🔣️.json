@@ -1,0 +1,472 @@
+{
+  "schema": "generation3d.gltf-scene-graph.v1",
+  "cases": [
+    {
+      "id": "Hierarchy And Instances",
+      "document": {
+        "asset": {
+          "version": "2.0"
+        },
+        "scene": 0,
+        "scenes": [
+          {
+            "nodes": [
+              0,
+              3
+            ]
+          },
+          {
+            "nodes": [
+              4
+            ]
+          }
+        ],
+        "nodes": [
+          {
+            "translation": [
+              10,
+              0,
+              0
+            ],
+            "children": [
+              1,
+              2
+            ]
+          },
+          {
+            "mesh": 0,
+            "scale": [
+              -2,
+              3,
+              1
+            ],
+            "rotation": [
+              0,
+              0,
+              0.7071067811865476,
+              0.7071067811865476
+            ]
+          },
+          {
+            "mesh": 0,
+            "matrix": [
+              1,
+              0,
+              0,
+              0,
+              0.5,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              5,
+              0,
+              1
+            ]
+          },
+          {
+            "mesh": 1,
+            "translation": [
+              0,
+              0,
+              2
+            ]
+          },
+          {
+            "mesh": 0,
+            "translation": [
+              100,
+              0,
+              0
+            ]
+          }
+        ],
+        "meshes": [
+          {
+            "primitives": [
+              {
+                "attributes": {}
+              }
+            ]
+          },
+          {
+            "primitives": [
+              {
+                "attributes": {}
+              },
+              {
+                "attributes": {}
+              }
+            ]
+          }
+        ]
+      },
+      "paths": [
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3
+        ],
+        [
+          3
+        ]
+      ],
+      "sources": [
+        0,
+        0,
+        1,
+        2
+      ]
+    },
+    {
+      "id": "Mesh Assets Without Nodes",
+      "document": {
+        "asset": {
+          "version": "2.0"
+        },
+        "meshes": [
+          {
+            "primitives": [
+              {
+                "attributes": {}
+              }
+            ]
+          },
+          {
+            "primitives": [
+              {
+                "attributes": {}
+              },
+              {
+                "attributes": {}
+              }
+            ]
+          }
+        ]
+      },
+      "paths": [],
+      "sources": []
+    },
+    {
+      "id": "First Scene Without Default",
+      "document": {
+        "asset": {
+          "version": "2.0"
+        },
+        "scenes": [
+          {
+            "nodes": [
+              0
+            ]
+          },
+          {
+            "nodes": [
+              1
+            ]
+          }
+        ],
+        "nodes": [
+          {
+            "mesh": 0,
+            "translation": [
+              1,
+              0,
+              0
+            ]
+          },
+          {
+            "mesh": 0,
+            "translation": [
+              9,
+              0,
+              0
+            ]
+          }
+        ],
+        "meshes": [
+          {
+            "primitives": [
+              {
+                "attributes": {}
+              }
+            ]
+          }
+        ]
+      },
+      "paths": [
+        [
+          0
+        ]
+      ],
+      "sources": [
+        0
+      ]
+    }
+  ],
+  "refusals": [
+    {
+      "id": "Cycle",
+      "nodes": [
+        {
+          "children": [
+            1
+          ]
+        },
+        {
+          "mesh": 0,
+          "children": [
+            0
+          ]
+        }
+      ],
+      "scenes": []
+    },
+    {
+      "id": "Multiple Parents",
+      "nodes": [
+        {
+          "children": [
+            2
+          ]
+        },
+        {
+          "children": [
+            2
+          ]
+        },
+        {
+          "mesh": 0
+        }
+      ],
+      "scenes": []
+    },
+    {
+      "id": "Missing Child",
+      "nodes": [
+        {
+          "mesh": 0,
+          "children": [
+            2
+          ]
+        }
+      ],
+      "scenes": []
+    },
+    {
+      "id": "Missing Mesh",
+      "nodes": [
+        {
+          "mesh": 2
+        }
+      ],
+      "scenes": []
+    },
+    {
+      "id": "Animated Source",
+      "nodes": [
+        {
+          "mesh": 0
+        }
+      ],
+      "animations": [
+        {
+          "channels": [],
+          "samplers": []
+        }
+      ],
+      "scenes": []
+    },
+    {
+      "id": "Skinned Source",
+      "nodes": [
+        {
+          "mesh": 0,
+          "skin": 0
+        }
+      ],
+      "scenes": []
+    },
+    {
+      "id": "Morph Source",
+      "nodes": [
+        {
+          "mesh": 0
+        }
+      ],
+      "meshes": [
+        {
+          "primitives": [
+            {
+              "targets": [
+                {}
+              ],
+              "attributes": {}
+            }
+          ]
+        }
+      ],
+      "scenes": []
+    },
+    {
+      "id": "Conflicting Transform",
+      "nodes": [
+        {
+          "mesh": 0,
+          "translation": [
+            1,
+            0,
+            0
+          ],
+          "matrix": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ]
+        }
+      ],
+      "scenes": []
+    },
+    {
+      "id": "Nonunit Rotation",
+      "nodes": [
+        {
+          "mesh": 0,
+          "rotation": [
+            0,
+            0,
+            0,
+            2
+          ]
+        }
+      ],
+      "scenes": []
+    },
+    {
+      "id": "Singular Scale",
+      "nodes": [
+        {
+          "mesh": 0,
+          "scale": [
+            0,
+            1,
+            1
+          ]
+        }
+      ],
+      "scenes": []
+    },
+    {
+      "id": "Projective Matrix",
+      "nodes": [
+        {
+          "mesh": 0,
+          "matrix": [
+            1,
+            0,
+            0,
+            0.1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ]
+        }
+      ],
+      "scenes": []
+    },
+    {
+      "id": "Out Of Range",
+      "nodes": [
+        {
+          "mesh": 0,
+          "translation": [
+            1e+39,
+            0,
+            0
+          ]
+        }
+      ],
+      "scenes": []
+    },
+    {
+      "id": "Duplicate Roots",
+      "nodes": [
+        {
+          "mesh": 0
+        }
+      ],
+      "scenes": [
+        {
+          "nodes": [
+            0,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "id": "Child Is Scene Root",
+      "nodes": [
+        {
+          "children": [
+            1
+          ]
+        },
+        {
+          "mesh": 0
+        }
+      ],
+      "scenes": [
+        {
+          "nodes": [
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "id": "Empty Selected Scene",
+      "nodes": [
+        {
+          "mesh": 0
+        }
+      ],
+      "scenes": [
+        {
+          "nodes": []
+        }
+      ]
+    }
+  ]
+}

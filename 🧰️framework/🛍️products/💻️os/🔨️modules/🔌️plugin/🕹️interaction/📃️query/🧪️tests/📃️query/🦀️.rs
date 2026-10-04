@@ -180,7 +180,7 @@ impl LocalInteractionQueryCapture for EmptyCapture {
     }
     fn cancel(&mut self) {}
     fn begin_close(&mut self) {}
-    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if self.returned {
             return Ok(SnapshotRetirementStep::Complete);
         }
@@ -251,7 +251,7 @@ impl store::SnapshotRetirementFactory<HostileRoot> for HostileRetirementFactory 
 }
 
 impl ErasedSnapshotRetirement for HostileRetirement {
-    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if self.terminal_is_empty() {
             return Ok(SnapshotRetirementStep::Complete);
         }
@@ -312,7 +312,7 @@ impl LocalInteractionQueryCapture for HostileCapture {
     fn begin_close(&mut self) {
         self.reader.begin_close();
     }
-    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         self.reader.close_step(grant)
     }
     fn terminal_is_empty(&self) -> bool {

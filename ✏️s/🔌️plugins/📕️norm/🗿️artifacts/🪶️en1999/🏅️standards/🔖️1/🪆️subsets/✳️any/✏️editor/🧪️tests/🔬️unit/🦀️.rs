@@ -13,7 +13,7 @@ pub(crate) mod context {
 
     pub async fn app_with_registry() -> NormApp {
         let mut app = new_app_with_registry::<EditorApp<En1999PlayApp>>(en1999_manifest_for_tests).await;
-        semio_framework::io::resolve_ready(app.bind_instance_id(meta("local").instance_id));
+        ::semio_framework_async::poll::resolve_ready(app.bind_instance_id(meta("local").instance_id));
         app
     }
 
@@ -51,3 +51,5 @@ use super::*;
 fn editor_module_links() {
     let _ = create_en1999_app();
 }
+
+semio_framework_plugin::history_edit_acceptance_law!("norm", super::En1999PlayApp, || semio_framework_plugin::App { definition: super::create_en1999_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");

@@ -9,7 +9,7 @@ pub fn diff(payload: &super::ResizeGrid, base: &Grid3dSnapshot) -> protocol::Mut
         return protocol::MutationOutcome::fatal("mutation.invariant", "A grid axis cannot be empty.".to_string(), ["grid".to_string()]);
     }
     if (base.width, base.height, base.depth) == (payload.width, payload.height, payload.depth) {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("The grid is already {}×{}×{}.", payload.width, payload.height, payload.depth));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("The grid is already {}×{}×{}.", payload.width, payload.height, payload.depth));
     }
     if let Some(cell) = base.pinned.iter().find(|cell| cell.x >= payload.width || cell.y >= payload.height || cell.z >= payload.depth) {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Pinned cell {} would fall outside the resized grid.", cell_key(cell.x, cell.y, cell.z)), [cell_key(cell.x, cell.y, cell.z)]);

@@ -331,7 +331,7 @@ describe("⚙️ General Settings Tree and bottom-panel flow", () => {
     const anchorStyle = reactTarget.slice(reactTarget.indexOf("export function anchorPositionStyle"), reactTarget.indexOf("export function chromeHostedOpenPanelPositionStyle"));
     expect(anchorStyle).toContain(`${fixture.stableGeneral.react.extentProperty}:`);
     expect(fixture.stableGeneral.react.bondedEdge).toBe("bottom");
-    expect(anchorStyle).toContain('style[vertical] = "var(--spacing-single)"');
+    expect(anchorStyle).toContain('style[vertical] = "var(--panel-inset)"');
     expect(anchorStyle).not.toMatch(/\bheight\s*:/);
   });
 

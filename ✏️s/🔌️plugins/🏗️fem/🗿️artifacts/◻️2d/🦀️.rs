@@ -42,7 +42,10 @@ pub mod fem2d_engine {
 }
 
 use crate::model::Dof;
-use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
+use semio_framework_value::DslValue;
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
+use semio_framework_value::ValueError;
 
 pub const FEM_2D_SCHEMA: &str = "fem.2d";
 
@@ -57,7 +60,7 @@ pub const FEM2D_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_
 
 // #region 🔖️Document
 /// 📍️ A structural node in plan (x, y in meters).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct FemNode {
     pub id: String,
@@ -75,7 +78,7 @@ pub struct FemNode {
 /// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4): `fem3d`'s `FemDof` used to be a byte-identical
 /// second copy of this exact enum; it now re-exports this one (`crate::FemDof`)
 /// instead — see `🗿️artifacts/🧊️3d/🦀️.rs`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar)]
 pub enum FemDof {
     #[dsl(key = "Tx")]
     Tx,
@@ -105,22 +108,22 @@ impl ToValue for FemDof {
             FemDof::Ry => "Ry",
             FemDof::Rz => "Rz",
         };
-        DslValue::String(name.to_string())
+        semio_framework_value::DslValue::String(name.to_string())
     }
 }
 impl FromValue for FemDof {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         match value {
-            DslValue::String(s) => match s.as_str() {
+            semio_framework_value::DslValue::String(s) => match s.as_str() {
                 "Tx" => Ok(FemDof::Tx),
                 "Ty" => Ok(FemDof::Ty),
                 "Tz" => Ok(FemDof::Tz),
                 "Rx" => Ok(FemDof::Rx),
                 "Ry" => Ok(FemDof::Ry),
                 "Rz" => Ok(FemDof::Rz),
-                other => Err(ValueError::new(format!("unknown FemDof variant `{other}`"))),
+                other => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown FemDof variant `{other}`"))),
             },
-            other => Err(ValueError::new(format!("expected a string, found {other:?}"))),
+            other => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string, found {other:?}"))),
         }
     }
 }
@@ -156,7 +159,7 @@ impl From<Dof> for FemDof {
 }
 
 /// 🔩️ A 2-node structural member — axial-only `Bar` or axial+bending `Beam`.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslEnum)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum FemElement {
     #[value(rename_all = "camelCase")]
@@ -174,7 +177,7 @@ pub fn element_id(element: &FemElement) -> &str {
 
 /// 🧱️ An isotropic material — Young's modulus `e` in Pascals, Poisson's ratio `nu`, density `rho`
 /// in kg/m³ (the latter two required for continuum `FemRegion` elements and self-weight).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct FemMaterial {
     pub id: String,
@@ -187,7 +190,7 @@ pub struct FemMaterial {
 }
 
 /// 📏️ A cross-section — area in m², strong-axis moment of inertia `iy` in m⁴.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct FemSection {
     pub id: String,
@@ -199,7 +202,7 @@ pub struct FemSection {
 }
 
 /// 🔒️ A support: the subset of a node's DOFs restrained to zero displacement.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct FemSupport {
     pub id: String,
@@ -209,7 +212,7 @@ pub struct FemSupport {
 
 /// 🏋️ A load — a concentrated nodal force/moment, a member UDL, or a normal pressure (Pa) over a
 /// meshed `FemRegion`, simplified as a uniform global `-Y` nodal load (see `area_load_nodal_loads`).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslEnum)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum FemLoad {
     #[value(rename_all = "camelCase")]
@@ -228,7 +231,7 @@ pub fn load_id(load: &FemLoad) -> &str {
 }
 
 /// 📦️ A named set of loads applied together for one analysis run, optionally including self-weight.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct FemLoadCase {
     pub id: String,
@@ -240,7 +243,7 @@ pub struct FemLoadCase {
 
 /// 🟩️ A meshed continuum region — a polygon (with optional holes) filled with `Tri3Cst` elements at
 /// solve time (see `crate::fem2d_engine::meshing::build_nodes_and_elements`).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct FemRegion {
     pub id: String,
@@ -255,7 +258,7 @@ pub struct FemRegion {
 /// 🔗️ One combination term — a referenced load case (or nested combination) id and its scale
 /// factor. A named record instead of a bare `(String, f64)` tuple: the DSL engine's `DslField`
 /// binding has no impl for raw Rust tuples, only for named types deriving `DslRecord`/`DslScalar`.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct FemCombinationTerm {
     pub case_id: String,
@@ -263,7 +266,7 @@ pub struct FemCombinationTerm {
 }
 
 /// 🧮️ A linear combination of load cases — terms superposed by `fem2d_solve_all`.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct FemCombination {
     pub id: String,
@@ -280,7 +283,7 @@ pub struct FemCombination {
 /// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4): `fem3d`'s `FemAnalysisSettings` used to be a
 /// byte-identical second copy of this exact struct; it now re-exports this one
 /// (`crate::FemAnalysisSettings`) instead — see `🗿️artifacts/🧊️3d/🦀️.rs`.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct FemAnalysisSettings {
     pub modal_count: usize,
@@ -422,60 +425,60 @@ pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
 /// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring
 /// `🗒️note`'s own `pilot_languages()` convention.
-pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
-    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+pub fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
             vec![
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "fem.fem2d",
                     extension: Some("fem2d"),
-                    role: dsl::LanguageRole::Document,
+                    role: semio_framework_dsl::LanguageRole::Document,
                     grammar: Some(standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("fem.fem2d"),
+                    hooks: semio_framework_dsl::passthrough_hooks("fem.fem2d"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "fem.fem2d.op",
                     extension: None,
-                    role: dsl::LanguageRole::Ops,
+                    role: semio_framework_dsl::LanguageRole::Ops,
                     grammar: Some(standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("fem.fem2d.op"),
+                    hooks: semio_framework_dsl::passthrough_hooks("fem.fem2d.op"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "fem.fem2d.diff",
                     extension: None,
-                    role: dsl::LanguageRole::Diff,
+                    role: semio_framework_dsl::LanguageRole::Diff,
                     grammar: Some(standards::v1::subsets::any::schema::diff::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(standards::v1::subsets::any::schema::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
-                    hooks: dsl::passthrough_hooks("fem.fem2d.diff"),
+                    hooks: semio_framework_dsl::passthrough_hooks("fem.fem2d.diff"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "fem2d.pack",
                     extension: None,
-                    role: dsl::LanguageRole::Pack,
+                    role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("fem2d.pack"),
+                    hooks: semio_framework_dsl::passthrough_hooks("fem2d.pack"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "fem2d.spr",
                     extension: None,
-                    role: dsl::LanguageRole::Spr,
+                    role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("fem2d.spr"),
+                    hooks: semio_framework_dsl::passthrough_hooks("fem2d.spr"),
                 },
             ]
         })

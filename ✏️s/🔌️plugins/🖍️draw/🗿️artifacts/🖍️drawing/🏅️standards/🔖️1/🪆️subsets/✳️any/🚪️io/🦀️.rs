@@ -138,8 +138,8 @@ pub fn drawing_document_to_svg(doc: &DrawingSnapshot) -> Result<(String, u32, u3
     export::svg::v1_1::any::drawing_document_to_svg(doc)
 }
 
-pub fn drawing_document_json_to_svg(value: &dsl::DslValue) -> Result<(String, u32, u32), String> {
-    let doc: DrawingSnapshot = dsl::FromValue::from_value(value.clone()).map_err(|error: dsl::ValueError| error.to_string())?;
+pub fn drawing_document_json_to_svg(value: &semio_framework_value::DslValue) -> Result<(String, u32, u32), String> {
+    let doc: DrawingSnapshot = semio_framework_value::FromValue::from_value(value.clone()).map_err(|error: semio_framework_value::ValueError| error.to_string())?;
     drawing_document_to_svg(&doc)
 }
 //#endregion 🔖️SemioBridge

@@ -16,10 +16,10 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔅️change-scene-ambient/🔅️dims/🎯️outcome/🔣️.json");
 
 fn before() -> ShootingSnapshot {
-    dsl::os_pack::from_json_str(BEFORE).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> ShootingSnapshot {
-    dsl::os_pack::from_json_str(AFTER).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> ShootingMutation {
     serde_json::from_str(MUTATION).expect("mutation decodes")
@@ -46,7 +46,7 @@ async fn sets_the_fill_light_strength() {
 async fn inverse_restores_the_previous_intensity() {
     let base = before();
     let forward = mutation();
-    let inverse = forward.inverse(&base);
+    let inverse = forward.inverse(&base).expect("valid retained mutation inverse fixture");
     let mut snapshot = apply(&base, &forward);
     for step in &inverse {
         snapshot = apply(&snapshot, step);
@@ -58,8 +58,8 @@ async fn inverse_restores_the_previous_intensity() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: ShootingSnapshot = dsl::os_pack::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: ShootingSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "change-scene-ambient-intensity/dims-scene-ambient-to-quarter: committed {label} JSON is not canonical");
     }
@@ -78,7 +78,7 @@ async fn declared_outcome_holds_and_a_negative_intensity_is_fatal() {
 
     let negative: ShootingMutation = serde_json::from_str(r#"{"mutation":"changeSceneAmbientIntensity","newIntensity":-0.5}"#).expect("probe mutation decodes");
     let rejected = negative.diff(&before());
-    assert_eq!(rejected.worst_level(), Some(protocol::Severity::Fatal), "change-scene-ambient-intensity/dims-scene-ambient-to-quarter: a negative ambient intensity must be Fatal");
+    assert_eq!(rejected.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal), "change-scene-ambient-intensity/dims-scene-ambient-to-quarter: a negative ambient intensity must be Fatal");
     assert_eq!(rejected.messages()[0].code.0, "mutation.invariant", "change-scene-ambient-intensity/dims-scene-ambient-to-quarter: the non-negativity guard's frozen code");
 
     let again = mutation().diff(&expected_after());
@@ -90,7 +90,7 @@ async fn declared_outcome_holds_and_a_negative_intensity_is_fatal() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = mutation().diff(&before());
-    let produced = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-scene-ambient-intensity/dims-scene-ambient-to-quarter: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert_eq!(committed["scene"]["ambient"]["intensity"], 0.25, "change-scene-ambient-intensity/dims-scene-ambient-to-quarter: the AMBIENT intensity is the edited field");
@@ -101,8 +101,8 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to `ShootingDiff` — the committed whole-scene block round-trips through `ShootingDiff` unchanged.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: ShootingDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("diff re-encodes");
+    let decoded: ShootingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-scene-ambient-intensity/dims-scene-ambient-to-quarter: committed diff JSON is not canonical");
 }
@@ -110,7 +110,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 Applying the committed diff straight to `before` yields `after` — the cloned scene block is enough to rebuild the after-snapshot.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: ShootingDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: ShootingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let produced = decoded.apply(&before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-scene-ambient-intensity/dims-scene-ambient-to-quarter: committed diff did not carry before to after");
 }

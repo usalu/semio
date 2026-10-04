@@ -1100,7 +1100,7 @@ fn p7c1_live_nested_authorities_gate_cancel_deadline_and_stale_before_mutation()
 #[test]
 fn p7c1_language_agnostic_law_fixture_matches_reference_parser() {
     let source = include_str!("../../../../../../🧫️fixtures/🧮️numerical-laws/🔣️.json");
-    let reference: pack::json::Value = pack::json::parse(source).expect("reference JSON parser");
+    let reference: semio_framework_pack_json::Value = semio_framework_pack_json::parse(source, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("reference JSON parser");
     let marker = "\"schema\": \"";
     let start = source.find(marker).expect("schema field") + marker.len();
     let end = start + source[start..].find('"').expect("schema terminator");

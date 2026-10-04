@@ -15,7 +15,7 @@ use crate::standards::v1::subsets::any::schema::{FillRunCheckpoint, SceneConfig}
 use semio_framework_job::{allocate_operation_id, Generation, InteractiveJob, InteractiveJobCloseStep, Operation, RevisionId, StepContext, StepOutcome};
 use semio_framework_plugin::ActionDescriptor;
 use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Fault;
+use semio_framework_plugin::{Fault, FaultCode, FaultOrigin};
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ToolDefinition;
 use semio_framework_plugin::ToolRunJobPurpose;
@@ -42,7 +42,7 @@ pub const RUN_SETTINGS_CONFIG: [&str; 4] = ["/fillCount", "/contactTolerance", "
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::puzzle3d::create_puzzle3d_app`.
 pub fn definition(label: LocalizedLabel) -> ToolDefinition {
-    ToolDefinition { run: Some(run_definition()), ..semio_framework::io::resolve_ready(ToolDefinition::new(TOOL_ID, label, "paint-bucket")) }
+    ToolDefinition { run: Some(run_definition()), ..::semio_framework_async::poll::resolve_ready(ToolDefinition::new(TOOL_ID, label, "paint-bucket")) }
 }
 
 /// ⏯️ A mutating `instance3d` run: provisional placements rebase by revalidation at finalize, and a count
@@ -61,6 +61,7 @@ pub fn run_definition() -> ToolRunDefinition {
         revalidate_job: Some(JobKindId::new(REVALIDATE_JOB_KIND)),
         settings: ToolRunSettingsReads { config: RUN_SETTINGS_CONFIG.iter().map(|pointer| pointer.to_string()).collect(), ..ToolRunSettingsReads::default() },
         windows: Vec::new(),
+        member: None,
     }
 }
 
@@ -98,7 +99,7 @@ pub(crate) fn live_fill_run(tool_run: Option<&ToolRunView>) -> Option<&ToolRunVi
 /// 🛑️ `toolRunAbort` bound to the live fill run's current identity, or `None` without one.
 pub fn abort_action(tool_run: Option<&ToolRunView>) -> Option<ActionDescriptor> {
     let run = live_fill_run(tool_run)?;
-    Some(puzzle3d_action(TOOL_RUN_ABORT_ACTION_ID, Some(dsl::os_pack::json::object([(TOOL_RUN_ARG_RUN_ID.to_string(), run.identity.id.run.to_string().into()), (TOOL_RUN_ARG_GENERATION.to_string(), u64::from(run.identity.generation).into())]))))
+    Some(puzzle3d_action(TOOL_RUN_ABORT_ACTION_ID, Some(semio_framework_pack_json::object([(TOOL_RUN_ARG_RUN_ID.to_string(), run.identity.id.run.to_string().into()), (TOOL_RUN_ARG_GENERATION.to_string(), u64::from(run.identity.generation).into())]))))
 }
 //#endregion 🔖️Definition
 
@@ -113,13 +114,13 @@ pub fn build_run_job(request: ToolRunJobRequest<'_, EditorApp<Puzzle3dPlayApp>>)
     let config = request.config.as_ref();
     let runtime = Puzzle3dRuntime { fill_count: config.fill_count, contact_tolerance: config.contact_tolerance, object_kind_weights: config.object_kind_weights.clone(), vortex_kind_weights: config.vortex_kind_weights.clone(), ..Puzzle3dRuntime::default() };
     let envelope = Puzzle3dScene { fixture: puzzle3d_fixture_from_snapshot(request.snapshot.typed()), runtime, active_utility: TOOL_ID.into() };
-    let scene = scene_config(&envelope).ok_or_else(|| Fault::from("puzzle3d-fill-run-scene"))?;
+    let scene = scene_config(&envelope).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("puzzle3d.fill.scene-unavailable"), "the fill run's document builds no engine scene"))?;
     let lane = main::mesh_lane(&envelope.fixture);
     let target = match request.purpose {
         ToolRunJobPurpose::Run => FillToolRunTarget::Run { requested: config.fill_count as usize, checkpoint: request.checkpoint.and_then(FillRunCheckpoint::decode), provisional: request.provisional.len() as u32 },
         ToolRunJobPurpose::Revalidate => {
             let keys = request.trace_keys.allocate(request.provisional.len() as u64 / u64::from(FILL_RUN_OPS_PER_PLACEMENT));
-            FillToolRunTarget::Revalidate(fill_run_placements(request.provisional, &lane, keys.start).ok_or_else(|| Fault::from("puzzle3d-fill-run-provisional"))?)
+            FillToolRunTarget::Revalidate(fill_run_placements(request.provisional, &lane, keys.start).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("puzzle3d.fill.provisional-unreadable"), "the fill run's provisional ops do not decode to whole placements"))?)
         }
     };
     Ok(Some(Box::new(Puzzle3dFillToolRunJob::new(request.identity, scene, lane, target, FillRunInputs::of(config)))))

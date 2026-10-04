@@ -9,7 +9,10 @@ pub struct RemoveAccidental { pub index: usize, }
 impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for RemoveAccidental {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "accidental", kind: "remove-accidental", record: "RemovedAccidental" };
     fn diff(&self, base: &En1990Snapshot) -> protocol::MutationOutcome<<En1990Mutation as protocol::Mutation<En1990Snapshot>>::Diff> { super::diff::diff(self, base) }
-    fn inverse(&self, base: &En1990Snapshot) -> Vec<En1990Mutation> { super::inverse::inverse(self, base) }
+    fn inverse(&self, base: &En1990Snapshot) -> Result<Vec<En1990Mutation>, semio_framework_value::ValueError> {
+    Ok({ super::inverse::inverse(self, base)? 
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove accidental action", "Außergewöhnliche Einwirkung entfernen")
     }

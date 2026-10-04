@@ -56,24 +56,24 @@ pub mod derived_composition {
     /// composer (if it ever gains a pre-serialization hard gate, pdf `✳️a`-style) and this validator's
     /// post-hoc wire recheck can share one implementation.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn check_flow_referential_invariants(snapshot: &SemioFlowSnapshot) -> Vec<dsl::Diagnostic> {
+    pub fn check_flow_referential_invariants(snapshot: &SemioFlowSnapshot) -> Vec<semio_framework_diagnostic::Diagnostic> {
         let mut diagnostics = Vec::new();
         let mut seen_node_ids = std::collections::HashSet::new();
         for node in &snapshot.nodes {
             if !seen_node_ids.insert(node.id.as_str()) {
-                diagnostics.push(dsl::Diagnostic::error("stdio.semio_flow.duplicate-node-id", dsl::TextSpan::at(1, 1), format!("SemioFlowValidator: duplicate node id {:?}", node.id)));
+                diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.semio_flow.duplicate-node-id", semio_framework_diagnostic::TextSpan::at(1, 1), format!("SemioFlowValidator: duplicate node id {:?}", node.id)));
             }
         }
         let mut seen_edge_ids = std::collections::HashSet::new();
         for edge in &snapshot.edges {
             if !seen_edge_ids.insert(edge.id.as_str()) {
-                diagnostics.push(dsl::Diagnostic::error("stdio.semio_flow.duplicate-edge-id", dsl::TextSpan::at(1, 1), format!("SemioFlowValidator: duplicate edge id {:?}", edge.id)));
+                diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.semio_flow.duplicate-edge-id", semio_framework_diagnostic::TextSpan::at(1, 1), format!("SemioFlowValidator: duplicate edge id {:?}", edge.id)));
             }
             if !seen_node_ids.contains(edge.from.node.as_str()) {
-                diagnostics.push(dsl::Diagnostic::error("stdio.semio_flow.dangling-edge-endpoint", dsl::TextSpan::at(1, 1), format!("SemioFlowValidator: edge {:?}'s from.node {:?} references a node that does not exist", edge.id, edge.from.node)));
+                diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.semio_flow.dangling-edge-endpoint", semio_framework_diagnostic::TextSpan::at(1, 1), format!("SemioFlowValidator: edge {:?}'s from.node {:?} references a node that does not exist", edge.id, edge.from.node)));
             }
             if !seen_node_ids.contains(edge.to.node.as_str()) {
-                diagnostics.push(dsl::Diagnostic::error("stdio.semio_flow.dangling-edge-endpoint", dsl::TextSpan::at(1, 1), format!("SemioFlowValidator: edge {:?}'s to.node {:?} references a node that does not exist", edge.id, edge.to.node)));
+                diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.semio_flow.dangling-edge-endpoint", semio_framework_diagnostic::TextSpan::at(1, 1), format!("SemioFlowValidator: edge {:?}'s to.node {:?} references a node that does not exist", edge.id, edge.to.node)));
             }
         }
         diagnostics
@@ -81,14 +81,14 @@ pub mod derived_composition {
 
     impl SubsetValidator for SemioFlowValidator {
         const DIALECT: Dialect = DIALECT;
-        async fn validate(payload: &IoPayload) -> Vec<dsl::Diagnostic> {
+        async fn validate(payload: &IoPayload) -> Vec<semio_framework_diagnostic::Diagnostic> {
             let decoded = match payload {
                 IoPayload::Binary(bytes) => <SemioFlowSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
                 IoPayload::Text(text) => <SemioFlowSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
             };
             match decoded {
                 Some(snapshot) => check_flow_referential_invariants(&snapshot),
-                None => vec![dsl::Diagnostic::error("stdio.semio_flow.validate-decode-failed", dsl::TextSpan::at(1, 1), "SemioFlowValidator: payload did not decode as a SemioFlowSnapshot".to_string())],
+                None => vec![semio_framework_diagnostic::Diagnostic::error("stdio.semio_flow.validate-decode-failed", semio_framework_diagnostic::TextSpan::at(1, 1), "SemioFlowValidator: payload did not decode as a SemioFlowSnapshot".to_string())],
             }
         }
     }

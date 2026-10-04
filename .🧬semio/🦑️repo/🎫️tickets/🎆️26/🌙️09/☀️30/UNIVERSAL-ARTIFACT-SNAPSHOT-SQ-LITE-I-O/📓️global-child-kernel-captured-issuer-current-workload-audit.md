@@ -1,0 +1,22 @@
+# Held Kernel Captured Issuer Workload Audit
+
+Read both current held JSON candidates: global-child-kernel-owned-captured-member-issuer-held-pair and global-child-kernel-sealed-exact-read-replacement-held-pair. No activation or execution.
+
+The proposed concrete CapturedMemberSnapshotRead has private fields, reads actual existing ErasedSnapshotRead, and gives external Plugin a typed read only from a Kernel-issued concrete capability. Actual Store ErasedSnapshotRead451–467 has private owner/lease and private constructor; public get only borrows. This removes the previous direct cross-crate private-trait construction and avoids an arbitrary copied rich-S Arc constructor. Current snapshot_read_erased_now still returns String at25202; the separate typed-origin capsule is a required dependency, not current compiled evidence. Module exports, Plugin storage, metadata retirement and full typed caller closure remain held.
+
+Concrete workload defect in the held issuer: begin_stage(10), ten metadata-loop step calls, then four step calls after copying slot, child_id, parent and reference. Actual canonical Value decode/🦀️.rs:50 advance refuses completed>total; copy_text69–73 does not begin/reset a stage. First post-loop step therefore produces WorkLimit even for a legitimate current member. Use the complete14 authored work units or separate complete scoped stages, preserving all ten field bounds and copied metadata. Sent to High Shared. No success or lease runtime credit is asserted.
+
+Failure/cancellation ownership source: snapshot is obtained before metadata copying, so any later failure drops its real ErasedSnapshotRead local guard. Actual lease return/drop authority must remain included in a full observed retirement law; scoped_stage restores workload only and does not refund cumulative bytes. The held Arc capability and copied metadata need their own paid backing and bounded retirement proof; this audit does not infer those from private fields.
+
+
+High Shared paired the held stage to14; direct capsule readback now confirms begin_stage(14) and no begin_stage(10). This closes the concrete static workload prerequisite only. High supplied parser0, not owning runtime; all issuer/module/origin/caller/retirement scopes remain held as described.
+
+## Existing Exact Member Registry Precedent
+
+Fresh current Kernel OS Store root470–486 has private `ErasedSnapshotRead::into_typed(mut self, registry)` explicitly checking Arc::ptr_eq lease registry against provided actual registry, actual owner type, then registry.try_take(index,generation). Failed take restores owner+lease rather than discarding capability. Current authority_matches176 and typed commit_authority_matches403 validate only stable generation/revision publication words, not registry identity. High proposed borrowed member owns_snapshot_read is warranted for held derived preview, using this pointer/live-slot precedent while keeping exact tracked lease alive. Consuming private into_typed is not a borrowed preview substitute and must not be reopened merely for arbitrary owner construction. Shared informed; no mounted production changes or runtime proof.
+
+## Current Held Fallible Registry Admission Join
+
+Fresh read of membership capsule verifies concrete registry pointer, live occupied slot, generation, P type and exact Arc owner pointer under try_lock. Busy/Poisoned are preserved typed refusals via `SnapshotReadLeaseRefusal`; no arbitrary rich owner constructor is introduced. The proposed public trait method is now `admit_snapshot_read_owner(&ErasedSnapshotRead) -> Result<(), ValueError>`. However the separately retained published/derived capture capsule still invokes the removed proposed boolean `owns_snapshot_read` at published issuer, derived issuer (twice) and retirement. This is an exact held API prerequisite mismatch, not a production failure. Shared was informed to refresh fallible joins and preserve complete original read on retirement refusal. The latest retirement capsule supersedes earlier consuming draft; no legacy method restoration or bool error discard is recommended. Global integration remains unmounted/unproved.
+
+Shared refreshed the held capture body after the API mismatch. Fresh machine read confirms zero `owns_snapshot_read` references, five fallible `admit_snapshot_read_owner` references, and complete after-body equality with the current bounded-metadata-retirement capsule. This closes the previously reported held signature drift only; global construction/caller/retirement activation and owning runtime remain unproved.

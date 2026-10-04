@@ -312,7 +312,7 @@ mod tests;
 
 //#region 🌉️ExternalCodecBridge
 pub fn decode_en1993_mutation_json(text: &str) -> Result<En1993Mutation, String> {
-    pack::json::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 pub fn apply_en1993_mutation(base: &En1993Snapshot, mutation: &En1993Mutation) -> Result<(En1993Snapshot, Vec<String>), String> {
     let raised = <En1993Mutation as protocol::Mutation<En1993Snapshot>>::diff(mutation, base);
@@ -320,8 +320,11 @@ pub fn apply_en1993_mutation(base: &En1993Snapshot, mutation: &En1993Mutation) -
     let applied = <En1993Diff as protocol::MutationDiff<En1993Snapshot>>::apply(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
     Ok((applied, messages))
 }
-pub fn inverse_en1993_mutation(mutation: &En1993Mutation, base: &En1993Snapshot) -> Vec<En1993Mutation> {
-    <En1993Mutation as protocol::Mutation<En1993Snapshot>>::inverse(mutation, base)
+pub fn inverse_en1993_mutation(mutation: &En1993Mutation, base: &En1993Snapshot) -> Result<Vec<En1993Mutation>, semio_framework_value::ValueError> {
+    Ok({
+    <En1993Mutation as protocol::Mutation<En1993Snapshot>>::inverse(mutation, base)?
+
+    })
 }
 //#endregion 🌉️ExternalCodecBridge
 

@@ -7,7 +7,7 @@ use protocol::MutationOutcome;
 
 pub fn diff(mutation: &ChangeEffects, base: &En1990Snapshot) -> MutationOutcome<En1990Diff> {
     if &base.effects == &mutation.new_effects {
-        return MutationOutcome::empty().warn("mutation.no-op", "effects already has this value.");
+        return MutationOutcome::empty().warning("mutation.no-op", "effects already has this value.");
     }
     MutationOutcome::new(En1990Diff {
         effects: Some(mutation.new_effects.clone()),

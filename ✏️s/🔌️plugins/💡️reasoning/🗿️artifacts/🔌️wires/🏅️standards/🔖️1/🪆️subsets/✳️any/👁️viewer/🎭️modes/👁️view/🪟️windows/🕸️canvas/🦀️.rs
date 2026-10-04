@@ -2,15 +2,15 @@
 //! independent of the sibling editor module (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET
 //! contract §2.2) — never calls into it; duplicates the small, pure 2D-scene projection instead,
 //! built only from framework-level `build_canvas_2d_scene`/`Canvas2dScene` and artifact-level pure
-//! helpers (`wires_working_board`, `fixture_camera`, `fixture_nodes`, `fixture_edges`,
+//! helpers (`wires_composed`, `fixture_camera`, `fixture_nodes`, `fixture_edges`,
 //! `wires_relationships`, `dsl_to_json`) — the wires board is a general node/edge graph (cycles legal,
 //! see the artifact's own `topology.cycle_free` inference), so no SDK window kit (Text/Table/Tree/
 //! Image/Mesh/Document/Media) matches it directly; `TreeWindowKit` was checked and rejected for this
 //! reason before writing this render function by hand.
 
 use crate::schema::fixture_camera;
-use crate::WiresSnapshot;
-use dsl::os_pack::json::Value;
+use crate::WiresComposed;
+use semio_framework_pack_json::Value;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_plugin::Canvas2dScene;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -50,15 +50,13 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 🖼️ The read-only canvas: the schema's own `wires_canvas_layers` projection — the viewer stays
 /// independent of the editor (contract §2.2) by sharing the schema, never an editor window.
-pub fn render(document: &WiresSnapshot) -> UiAssemblyResult<BuiltNode> {
-    let board = crate::wires_working_board(document);
-    let wires = &document.wires_fixture;
-    let (camera_x, camera_y, zoom) = fixture_camera(&board);
-    let layers = crate::schema::wires_canvas_layers(&board, wires);
+pub fn render(composed: &WiresComposed) -> UiAssemblyResult<BuiltNode> {
+    let (camera_x, camera_y, zoom) = fixture_camera(&composed.board);
+    let layers = crate::schema::wires_canvas_layers(&composed.board, &composed.fixture);
     semio_framework_plugin::scene_surface(
         WIRES_VIEW_CANVAS_SURFACE_ID,
         semio_framework_ui_contract::SurfaceKind::Canvas2d,
-        &Canvas2dScene { framing: None, camera_x, camera_y, zoom, layers_json: dsl::os_pack::json::to_string(&Value::Array(layers)), snapshot: None, tool_run_trace: None, lanes: Vec::new() },
+        &Canvas2dScene { framing: None, camera_x, camera_y, zoom, layers_json: semio_framework_pack_json::to_string(&Value::Array(layers)), snapshot: None, tool_run_trace: None, lanes: Vec::new() },
     )
 }
 //#endregion 🔖️Render

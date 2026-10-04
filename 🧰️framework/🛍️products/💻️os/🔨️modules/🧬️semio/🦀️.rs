@@ -1,6 +1,7 @@
 //! 🧬️ Universal `.semio` container: content-derived envelope for every OS artifact encoding.
 
 use std::collections::HashMap;
+use semio_framework_value::{ValueError, ValueRefusalKind};
 use std::sync::{Mutex, OnceLock};
 
 //#region 🔖️Errors
@@ -11,7 +12,7 @@ pub enum SemioError {
     InvalidBinaryHeader(String),
     UnknownEnvelope(String),
     AmbiguousEnvelope,
-    DecodingControl(String),
+    DecodingControl(semio_framework_value::ValueError),
 }
 
 impl std::fmt::Display for SemioError {
@@ -21,12 +22,23 @@ impl std::fmt::Display for SemioError {
             Self::InvalidBinaryHeader(detail) => write!(formatter, "invalid binary semio header: {detail}"),
             Self::UnknownEnvelope(detail) => write!(formatter, "unknown semio envelope: {detail}"),
             Self::AmbiguousEnvelope => formatter.write_str("ambiguous semio envelope match"),
-            Self::DecodingControl(detail) => formatter.write_str(detail),
+            Self::DecodingControl(detail) => write!(formatter,"{detail}"),
         }
     }
 }
 
 impl std::error::Error for SemioError {}
+
+impl SemioError {
+    /// 🧭️ Preserves envelope controller refusals at the first-party value boundary.
+    pub fn into_value_error(self) -> semio_framework_value::ValueError {
+        match self {
+            Self::DecodingControl(error) => error,
+            error @ Self::UnknownEnvelope(_) => semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, error.to_string()),
+            error @ (Self::InvalidPreamble(_) | Self::InvalidBinaryHeader(_) | Self::AmbiguousEnvelope) => semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()),
+        }
+    }
+}
 
 pub type SemioResult<T> = Result<T, SemioError>;
 //#endregion 🔖️Errors
@@ -119,11 +131,11 @@ pub const BINARY_MAGIC: [u8; 8] = [0x89, b'S', b'E', b'M', 0x0D, 0x0A, 0x1A, 0x0
 const BINARY_HEADER_PREFIX_LEN: usize = 8 + 4;
 
 /// 📏️ Counts the exact declared framing bytes without allocating an identity token.
-pub fn declared_envelope_prefix_len(envelope_id:&str,component:Component,version:u16)->Result<usize,String>{
-    if !envelope_id.contains('.') { return Err("invalid declared envelope identity".into()); }
+pub fn declared_envelope_prefix_len(envelope_id:&str,component:Component,version:u16)->Result<usize,ValueError>{
+    if !envelope_id.contains('.') { return Err(ValueError::new(ValueRefusalKind::InvalidValue, "invalid declared envelope identity")); }
     let mut digits=1usize;let mut remaining=version;while remaining>=10{digits+=1;remaining/=10;}
-    let token=envelope_id.len().checked_add(component.as_str().len()).and_then(|length|length.checked_add(3+digits)).ok_or("native envelope identity length overflow")?;
-    token.checked_add(if component.is_text(){7}else{BINARY_HEADER_PREFIX_LEN}).ok_or_else(||"native envelope prefix length overflow".into())
+    let token=envelope_id.len().checked_add(component.as_str().len()).and_then(|length|length.checked_add(3+digits)).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit, "native envelope identity length overflow"))?;
+    token.checked_add(if component.is_text(){7}else{BINARY_HEADER_PREFIX_LEN}).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit, "native envelope prefix length overflow"))
 }
 
 /// 📦️ Wraps a binary payload with the semio binary header.
@@ -139,8 +151,8 @@ pub fn wrap_binary(envelope: &SemioEnvelope, payload: &[u8]) -> Vec<u8> {
 }
 
 /// 🛫️ Emits an exact declared binary envelope without allocating an unchecked identity token.
-pub fn wrap_binary_controlled(envelope_id:&str,component:Component,version:u16,payload:&[u8],control:&mut crate::os_dsl::NativeEncodeControl<'_>)->Result<Vec<u8>,String>{
-    control.scoped_stage(|control|{control.checkpoint()?;if !envelope_id.contains('.')||component.is_text(){return Err("invalid declared binary envelope identity".into())}let mut digits=[0u8;5];let mut start=digits.len();let mut value=version;loop{start-=1;digits[start]=b'0'+(value%10)as u8;value/=10;if value==0{break;}}let digits=&digits[start..];let length=envelope_id.len().checked_add(component.as_str().len()+3+digits.len()).ok_or("native envelope identity length overflow")?;let token=u32::try_from(length).map_err(|_|"native envelope identity exceeds u32")?;let total=BINARY_HEADER_PREFIX_LEN.checked_add(length).and_then(|length|length.checked_add(payload.len())).ok_or("native binary envelope length overflow")?;let mut output=control.allocate_vec::<u8>(total)?;output.extend_from_slice(&BINARY_MAGIC);output.extend_from_slice(&token.to_le_bytes());for bytes in [envelope_id.as_bytes(),b".",component.as_str().as_bytes(),b" v",digits,payload]{control.scoped_stage(|control|{control.begin_stage(bytes.len())?;for fragment in bytes.chunks(65536){output.extend_from_slice(fragment);control.advance(fragment.len())?;}Ok::<_,String>(())})?;}Ok(output)})
+pub fn wrap_binary_controlled(envelope_id:&str,component:Component,version:u16,payload:&[u8],control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<Vec<u8>,ValueError>{
+    control.scoped_stage(|control|{control.checkpoint()?;if !envelope_id.contains('.')||component.is_text(){return Err(ValueError::new(ValueRefusalKind::InvalidValue, "invalid declared binary envelope identity"))}let mut digits=[0u8;5];let mut start=digits.len();let mut value=version;loop{start-=1;digits[start]=b'0'+(value%10)as u8;value/=10;if value==0{break;}}let digits=&digits[start..];let length=envelope_id.len().checked_add(component.as_str().len()+3+digits.len()).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit, "native envelope identity length overflow"))?;let token=u32::try_from(length).map_err(|_|ValueError::new(ValueRefusalKind::OwnershipLimit, "native envelope identity exceeds u32"))?;let total=BINARY_HEADER_PREFIX_LEN.checked_add(length).and_then(|length|length.checked_add(payload.len())).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit, "native binary envelope length overflow"))?;let mut output=control.allocate_vec::<u8>(total)?;output.extend_from_slice(&BINARY_MAGIC);output.extend_from_slice(&token.to_le_bytes());for bytes in [envelope_id.as_bytes(),b".",component.as_str().as_bytes(),b" v",digits,payload]{control.scoped_stage(|control|{control.begin_stage(bytes.len())?;for fragment in bytes.chunks(65536){output.extend_from_slice(fragment);control.advance(fragment.len())?;}Ok::<_,ValueError>(())})?;}Ok(output)})
 }
 
 /// 📖️ Strips the semio binary header and returns envelope + inner payload.
@@ -163,7 +175,7 @@ pub fn unwrap_binary(bytes: &[u8]) -> SemioResult<(SemioEnvelope, Vec<u8>)> {
 }
 
 /// 🚦️ Admits the exact declared envelope and borrows its binary body without a payload copy.
-pub fn unwrap_binary_controlled<'input>(bytes:&'input[u8],envelope_id:&str,component:Component,version:u16,control:&mut crate::os_dsl::NativeDecodeControl<'_>)->SemioResult<&'input[u8]>{
+pub fn unwrap_binary_controlled<'input>(bytes:&'input[u8],envelope_id:&str,component:Component,version:u16,control:&mut semio_framework_value::NativeDecodeControl<'_>)->SemioResult<&'input[u8]>{
     control.checkpoint().map_err(SemioError::DecodingControl)?;
     if bytes.len()<BINARY_HEADER_PREFIX_LEN||bytes[..8]!=BINARY_MAGIC{return Err(SemioError::InvalidBinaryHeader("invalid binary envelope prefix".into()));}
     let length=u32::from_le_bytes(bytes[8..12].try_into().unwrap()) as usize;
@@ -172,7 +184,7 @@ pub fn unwrap_binary_controlled<'input>(bytes:&'input[u8],envelope_id:&str,compo
     Ok(&bytes[end..])
 }
 
-fn matches_declared_token(token:&[u8],envelope_id:&str,component:Component,version:u16,control:&mut crate::os_dsl::NativeDecodeControl<'_>)->SemioResult<bool>{
+fn matches_declared_token(token:&[u8],envelope_id:&str,component:Component,version:u16,control:&mut semio_framework_value::NativeDecodeControl<'_>)->SemioResult<bool>{
     let mut digits=[0u8;5];let mut start=digits.len();let mut remaining=version;
     loop{start-=1;digits[start]=b'0'+(remaining%10) as u8;remaining/=10;if remaining==0{break;}}
     let pieces=[envelope_id.as_bytes(),b".".as_slice(),component.as_str().as_bytes(),b" v".as_slice(),&digits[start..]];
@@ -208,8 +220,74 @@ pub fn wrap_text(envelope: &SemioEnvelope, body: &str) -> String {
 }
 
 /// 🛫️ Emits canonical declared Text and its exact body under cumulative ownership admission.
-pub fn wrap_text_controlled(envelope_id:&str,component:Component,version:u16,body:&str,control:&mut crate::os_dsl::NativeEncodeControl<'_>)->Result<String,String>{
-    control.scoped_stage(|control|{control.checkpoint()?;if !envelope_id.contains('.')||!component.is_text(){return Err("invalid declared text envelope identity".into())}let mut digits=[0u8;5];let mut start=digits.len();let mut value=version;loop{start-=1;digits[start]=b'0'+(value%10)as u8;value/=10;if value==0{break;}}let digits=std::str::from_utf8(&digits[start..]).map_err(|_|"native envelope version is not ASCII")?;let total=6usize.checked_add(envelope_id.len()).and_then(|length|length.checked_add(component.as_str().len()+4+digits.len())).and_then(|length|length.checked_add(body.len())).ok_or("native text envelope length overflow")?;control.charge(total)?;let mut output=String::new();output.try_reserve_exact(total).map_err(|_|"native text envelope allocation failed")?;for text in ["semio ",envelope_id,".",component.as_str()," v",digits,"\n",body]{control.scoped_stage(|control|{control.begin_stage(text.len())?;let mut start=0;while start<text.len(){let mut end=(start+65536).min(text.len());while !text.is_char_boundary(end){end-=1;}output.push_str(&text[start..end]);control.advance(end-start)?;start=end;}Ok::<_,String>(())})?;}Ok(output)})
+pub fn wrap_text_controlled(envelope_id:&str,component:Component,version:u16,body:&str,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<String,ValueError>{
+    control.scoped_stage(|control|{control.checkpoint()?;if !envelope_id.contains('.')||!component.is_text(){return Err(ValueError::new(ValueRefusalKind::InvalidValue, "invalid declared text envelope identity"))}let mut digits=[0u8;5];let mut start=digits.len();let mut value=version;loop{start-=1;digits[start]=b'0'+(value%10)as u8;value/=10;if value==0{break;}}let digits=std::str::from_utf8(&digits[start..]).map_err(|_|ValueError::new(ValueRefusalKind::InvariantViolated, "native envelope version is not ASCII"))?;let total=6usize.checked_add(envelope_id.len()).and_then(|length|length.checked_add(component.as_str().len()+4+digits.len())).and_then(|length|length.checked_add(body.len())).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit, "native text envelope length overflow"))?;control.charge(total)?;let mut output=String::new();output.try_reserve_exact(total).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed, "native text envelope allocation failed"))?;for text in ["semio ",envelope_id,".",component.as_str()," v",digits,"\n",body]{control.scoped_stage(|control|{control.begin_stage(text.len())?;let mut start=0;while start<text.len(){let mut end=(start+65536).min(text.len());while !text.is_char_boundary(end){end-=1;}output.push_str(&text[start..end]);control.advance(end-start)?;start=end;}Ok::<_,ValueError>(())})?;}Ok(output)})
+}
+
+/// 🧵️ Owns one declared Text body until physical bytes and source retirement finish.
+pub struct RetainedTextEnvelope {
+    identity: Option<String>, body: Option<String>, component: Component,
+    digits: [u8; 5], digit_start: usize, segment: usize, offset: usize,
+    position: usize, output: Option<String>, admitted: bool, complete: bool,
+    retirement: Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
+}
+impl RetainedTextEnvelope {
+    /// 🌱️ Moves the original identity and body without creating a source mirror.
+    pub fn new(identity: String, component: Component, version: u16, body: String) -> Self {
+        let mut digits=[0u8;5]; let mut digit_start=digits.len(); let mut remaining=version;
+        loop { digit_start-=1; digits[digit_start]=b'0'+(remaining%10) as u8; remaining/=10; if remaining==0 { break; } }
+        Self { identity:Some(identity),body:Some(body),component,digits,digit_start,segment:0,offset:0,position:0,output:None,admitted:false,complete:false,retirement:None }
+    }
+    /// 🔎️ Borrows the exact original source while it remains owned by this operation.
+    pub fn source_body(&self) -> Option<&str> { self.body.as_deref() }
+    /// 📍️ Returns the cumulative physical byte position.
+    pub fn position(&self) -> usize { self.position }
+    /// ⏱️ Writes one original scalar per unit and bounds source release by the supplied byte grant.
+    pub fn step(&mut self, maximum_units: usize, maximum_bytes: usize, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<Option<String>,ValueError> {
+        if maximum_units==0 || maximum_bytes==0 || self.complete { return Ok(None); }
+        let mut remaining_bytes=maximum_bytes;
+        for _ in 0..maximum_units {
+            control.checkpoint()?;
+            if !self.admitted {
+                let identity=self.identity.as_deref().expect("declared identity is retained");
+                if !identity.contains('.') || !self.component.is_text() { return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid declared text envelope identity")); }
+                let length=6usize.checked_add(identity.len()).and_then(|length|length.checked_add(self.component.as_str().len()+4+self.digits.len()-self.digit_start)).and_then(|length|length.checked_add(self.body.as_ref().expect("declared body is retained").len())).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"native text envelope length overflow"))?;
+                control.charge(length)?;
+                let mut output=String::new(); output.try_reserve_exact(length).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"native text envelope allocation failed"))?;
+                self.output=Some(output); self.admitted=true;
+            } else if let Some(retirement)=self.retirement.as_mut() {
+                if remaining_bytes==0 { return Ok(None); }
+                match retirement.close_step(1,remaining_bytes)? {
+                    semio_framework_value::SnapshotRetirementStep::Pending { released_bytes,.. } => remaining_bytes-=released_bytes,
+                    semio_framework_value::SnapshotRetirementStep::Complete | semio_framework_value::SnapshotRetirementStep::Blocked => {}
+                }
+                if retirement.terminal_is_empty() {
+                    self.retirement.take(); self.complete=true; control.step()?; return Ok(self.output.take());
+                }
+            } else if self.segment==8 {
+                self.retirement=Some(semio_framework_value::retirement::owned_retirement((self.identity.take(),self.body.take())));
+            } else {
+                let text=match self.segment {
+                    0=>"semio ",1=>self.identity.as_deref().expect("identity retained"),2=>".",3=>self.component.as_str(),4=>" v",
+                    5=>std::str::from_utf8(&self.digits[self.digit_start..]).map_err(|_|ValueError::new(ValueRefusalKind::InvariantViolated,"native version is not ASCII"))?,
+                    6=>"\n",7=>self.body.as_deref().expect("body retained"),_=>unreachable!(),
+                };
+                if let Some(character)=text[self.offset..].chars().next() {
+                    self.output.as_mut().expect("output admitted").push(character); self.offset+=character.len_utf8(); self.position+=character.len_utf8();
+                } else { self.segment+=1; self.offset=0; }
+            }
+            control.step()?;
+        }
+        Ok(None)
+    }
+}
+impl semio_framework_value::retirement::RetireOwned for RetainedTextEnvelope {
+    fn retirement(mut self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
+        use semio_framework_value::retirement::{sequence,erased_cursor};
+        let pending=self.retirement.take().map(erased_cursor);
+        let fields=semio_framework_value::artifact_retirement_sequence!(self.identity,self.body,self.output);
+        match pending { Some(pending)=>sequence(vec![pending,fields]),None=>fields }
+    }
 }
 
 /// 📖️ Parses a text `.semio` file into envelope and body (without preamble line).
@@ -222,7 +300,7 @@ pub fn split_text_preamble(text: &str) -> SemioResult<(SemioEnvelope, &str)> {
 }
 
 /// 🛂️ Borrows canonical text after exact owner, component and version admission.
-pub fn split_text_preamble_controlled<'input>(text:&'input str,envelope_id:&str,component:Component,version:u16,control:&mut crate::os_dsl::NativeDecodeControl<'_>)->SemioResult<&'input str>{
+pub fn split_text_preamble_controlled<'input>(text:&'input str,envelope_id:&str,component:Component,version:u16,control:&mut semio_framework_value::NativeDecodeControl<'_>)->SemioResult<&'input str>{
     control.checkpoint().map_err(SemioError::DecodingControl)?;
     let bytes=text.as_bytes();let token_start=6usize;
     if !bytes.starts_with(b"semio "){return Err(SemioError::InvalidPreamble("missing canonical envelope prefix".into()));}

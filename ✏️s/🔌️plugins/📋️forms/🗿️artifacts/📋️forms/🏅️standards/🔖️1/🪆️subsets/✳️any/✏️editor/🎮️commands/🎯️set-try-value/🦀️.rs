@@ -3,7 +3,7 @@
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::editor::forms::modes::blueprint::windows::try_wizard::transient::{try_value_content_id, FormsTryValues, FormsTryWindowLease, FormsTryWindowTransient, MAX_TRY_VALUE_ENTRIES};
 use crate::{op::FormMutation, FormsSnapshot};
-use dsl::os_pack::json::{Object, Value};
+use semio_framework_pack_json::{Object, Value};
 use semio_framework::kernel::{Effect, UiDirtyScope};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, RequestId};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -70,29 +70,29 @@ impl<'de> Deserialize<'de> for ChunkAddressableJson {
     }
 }
 
-impl dsl::ToValue for ChunkAddressableJson {
-    fn to_value(&self) -> dsl::DslValue { dsl::DslValue::String(self.to_string()) }
+impl semio_framework_value::ToValue for ChunkAddressableJson {
+    fn to_value(&self) -> semio_framework_value::DslValue { semio_framework_value::DslValue::String(self.to_string()) }
 }
 
-impl dsl::FromValue for ChunkAddressableJson {
-    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
-        let dsl::DslValue::String(value) = value else { return Err(dsl::ValueError::new("expected a JSON chunk string")) };
-        if value.len() > MAX_TRY_VALUE_BYTES_PER_STEP { return Err(dsl::ValueError::new("Forms command JSON chunks are limited to 4,096 UTF-8 bytes")); }
+impl semio_framework_value::FromValue for ChunkAddressableJson {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        let semio_framework_value::DslValue::String(value) = value else { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected a JSON chunk string")) };
+        if value.len() > MAX_TRY_VALUE_BYTES_PER_STEP { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit, "Forms command JSON chunks are limited to 4,096 UTF-8 bytes")); }
         Ok(value.into())
     }
 }
 
-impl dsl::DslField for ChunkAddressableJson {
-    fn shape() -> dsl::Shape { dsl::Shape::Text }
-    fn to_value(&self) -> dsl::FieldValue { dsl::FieldValue::Text(self.to_string()) }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
-        let dsl::FieldValue::Text(value) = value else { return Err(format!("expected Text, found {value:?}")) };
+impl semio_framework_dsl_record::DslField for ChunkAddressableJson {
+    fn shape() -> semio_framework_dsl_record::Shape { semio_framework_dsl_record::Shape::Text }
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue { semio_framework_dsl_record::FieldValue::Text(self.to_string()) }
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
+        let semio_framework_dsl_record::FieldValue::Text(value) = value else { return Err(format!("expected Text, found {value:?}")) };
         if value.len() > MAX_TRY_VALUE_BYTES_PER_STEP { return Err("Forms command JSON chunks are limited to 4,096 UTF-8 bytes".into()); }
         Ok(value.as_str().into())
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "try-value")]
 pub struct SetTryValue {
@@ -108,7 +108,7 @@ pub struct SetTryValue {
     pub window_kind_id: String,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "try-value-step")]
 pub struct SetTryValueStep {
@@ -307,7 +307,7 @@ fn continuation(session: &TryValueSession) -> SetTryValueStep {
 }
 
 fn queue(payload: &SetTryValueStep) -> Effect {
-    Effect::DispatchAction { req: RequestId(NEXT_TRY_VALUE_REQUEST.fetch_add(1, Ordering::Relaxed)), action: SET_TRY_VALUE_STEP_ACTION_ID.into(), args: Some(dsl::ToValue::to_value(payload)), delay_ms: 0 }
+    Effect::DispatchAction { req: RequestId(NEXT_TRY_VALUE_REQUEST.fetch_add(1, Ordering::Relaxed)), action: SET_TRY_VALUE_STEP_ACTION_ID.into(), args: Some(semio_framework_value::ToValue::to_value(payload)), delay_ms: 0 }
 }
 
 pub(crate) struct TryWindowCommandOutput {
@@ -388,8 +388,8 @@ fn apply_single(values: &FormsTryValues, payload: &SetTryValue, source: &str) ->
     if values.get_json(&payload.key).is_none() && values.len() >= MAX_TRY_VALUE_ENTRIES {
         return Err(fault("forms.try-value.too-many-entries", "Forms Try values are limited to 64 entries"));
     }
-    let incoming = dsl::os_pack::json::parse(source).unwrap_or(Value::Null);
-    let current = materialize(values, &payload.key).and_then(|raw| dsl::os_pack::json::parse(&raw).ok()).unwrap_or(Value::Null);
+    let incoming = semio_framework_pack_json::parse(source, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or(Value::Null);
+    let current = materialize(values, &payload.key).and_then(|raw| semio_framework_pack_json::parse(&raw, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()).unwrap_or(Value::Null);
     let value = if let Some(index) = payload.vector_index.and_then(|index| usize::try_from(index).ok()) {
         let mut array = match current { Value::Array(array) => array, _ => Vec::new() };
         if index < array.len() { array[index] = incoming; } else if index == array.len() { array.push(incoming); }
@@ -405,7 +405,7 @@ fn apply_single(values: &FormsTryValues, payload: &SetTryValue, source: &str) ->
     } else {
         incoming
     };
-    Ok(with_raw(values, &payload.key, &dsl::os_pack::json::to_string(&value)))
+    Ok(with_raw(values, &payload.key, &semio_framework_pack_json::to_string(&value)))
 }
 
 fn with_raw(values: &FormsTryValues, key: &str, raw: &str) -> FormsTryValues {
@@ -429,13 +429,13 @@ fn split_chunks(raw: &str) -> Vec<Arc<str>> {
 }
 
 fn apply_bulk(values: &FormsTryValues, source: &str) -> Result<FormsTryValues, Fault> {
-    let Value::Object(entries) = dsl::os_pack::json::parse(source).map_err(|_| fault("forms.try-values.invalid", "Forms Try values must be a JSON object"))? else {
+    let Value::Object(entries) = semio_framework_pack_json::parse(source, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| fault("forms.try-values.invalid", "Forms Try values must be a JSON object"))? else {
         return Err(fault("forms.try-values.invalid", "Forms Try values must be a JSON object"));
     };
     let result = entries.into_iter().try_fold(values.clone(), |values, (key, value)| {
         if key.len() > 512 { return Err(fault("forms.try-values.key-too-large", "a Forms Try-values key exceeds 512 UTF-8 bytes")); }
         if values.get_json(&key).is_none() && values.len() >= MAX_TRY_VALUE_ENTRIES { return Err(fault("forms.try-values.too-many-entries", "Forms Try values are limited to 64 entries")); }
-        Ok(with_raw(&values, &key, &dsl::os_pack::json::to_string(&value)))
+        Ok(with_raw(&values, &key, &semio_framework_pack_json::to_string(&value)))
     });
     result
 }

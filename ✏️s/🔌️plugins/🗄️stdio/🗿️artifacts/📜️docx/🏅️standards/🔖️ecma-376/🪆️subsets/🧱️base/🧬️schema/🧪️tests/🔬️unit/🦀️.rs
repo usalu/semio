@@ -103,7 +103,7 @@ async fn unmodeled_parts_survive_decode_encode_verbatim() {
     let decoded = decode_docx(&bytes).expect("decode");
     let numbering = decoded.xml_part("word/numbering.xml").expect("an unmodeled XML part is authoritative XML, never an opaque byte part").document.clone();
     assert!(decoded.opc.part("word/numbering.xml").is_none(), "an XML part is never duplicated into the binary lane");
-    assert_eq!(xml_document_to_text(&numbering), "<w:numbering/>", "the unmodeled part's text survives decode");
+    assert_eq!(xml_document_to_text(&numbering.materialize_exact().unwrap()), "<w:numbering/>", "the unmodeled part's text survives decode");
     let re_encoded = encode_docx(&decoded).expect("re-encode");
     let re_decoded = decode_docx(&re_encoded).expect("re-decode");
     assert_eq!(re_decoded.xml_part("word/numbering.xml").map(|part| &part.document), Some(&numbering), "the unmodeled part survives encode/decode exactly");
@@ -164,29 +164,29 @@ mod conformance_laws {
     #[semio_framework_async_macros::async_test]
     async fn committed_facet_files_parse() {
         for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
-            let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
-            assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
+            let grammar = semio_framework_dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
+            assert_eq!(grammar.dialect, semio_framework_dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
         }
         for (label, text) in [("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO)] {
-            dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
+            semio_framework_dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
         }
     }
 
     /// 🧾️ The native Text grammar recognizes the complete owned logical document.
     #[semio_framework_async_macros::async_test]
     async fn grammar_conformance_law() {
-        let grammar=dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).unwrap();
+        let grammar=semio_framework_dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).unwrap();
         let text=store::ArtifactDsl::print_dsl(&demo_docx_snapshot().await);
         let(envelope,body)=store::semio_format::split_text_preamble(&text).unwrap();
-        assert!(dsl::Recognizer::compile(&grammar).recognize(&format!("{}\n{body}",envelope.envelope_id())).unwrap());
+        assert!(semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments").recognize(&format!("{}\n{body}",envelope.envelope_id())).unwrap());
     }
 
     /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
     /// output for every `DocxMutation` variant (`mutations::demo_mutation_cases()`).
     #[semio_framework_async_macros::async_test]
     async fn ops_grammar_conformance_law() {
-        let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
-        let recognizer = dsl::Recognizer::compile(&grammar);
+        let grammar = semio_framework_dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
+        let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
         for mutation in mutations::demo_mutation_cases() {
             let printed = mutation.print_op();
             assert!(recognizer.recognize(&printed).unwrap_or(false), "mutations grammar did not recognize {printed:?} (from {mutation:?})");
@@ -197,8 +197,8 @@ mod conformance_laws {
     /// for every representative `DocxDiff` (`diff::demo_diff_cases()`).
     #[semio_framework_async_macros::async_test]
     async fn diff_grammar_conformance_law() {
-        let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
-        let recognizer = dsl::Recognizer::compile(&grammar);
+        let grammar = semio_framework_dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
+        let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
         for d in diff::demo_diff_cases() {
             let printed = d.print_diff();
             assert!(recognizer.recognize(&printed).unwrap_or(false), "diff grammar did not recognize {printed:?} (from {d:?})");
@@ -208,24 +208,24 @@ mod conformance_laws {
     /// 🧭️ The literal native protocol consumes every snapshot, mutation and diff byte.
     #[semio_framework_async_macros::async_test]
     async fn protocol_walk_law() {
-        let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
+        let pack_spec = semio_framework_dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
         let demo = demo_docx_snapshot().await;
         let packed = store::ArtifactPack::encode_pack(&demo);
         let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
-        let trace = dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
+        let trace = semio_framework_dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
         assert_eq!(trace.consumed, inner.len(), "pack walk must consume every literal snapshot byte");
 
-        let op_spec = dsl::parse_protocol(mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
+        let op_spec = semio_framework_dsl::parse_protocol(mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
         for mutation in mutations::demo_mutation_cases() {
             let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
-            let trace = dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
+            let trace = semio_framework_dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
             assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");
         }
 
-        let diff_spec = dsl::parse_protocol(diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
+        let diff_spec = semio_framework_dsl::parse_protocol(diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
         for d in diff::demo_diff_cases() {
             let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
-            let trace = dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
+            let trace = semio_framework_dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
             assert_eq!(trace.consumed, bytes.len(), "diff walk did not consume every byte for {d:?}");
         }
     }
@@ -289,8 +289,13 @@ fn save_preserves_relationship_selected_part_paths_and_clears_the_last_style() {
         let address = crate::schema::mutations::docx_block_run_address(&snapshot, &DocxBlockPath { segments: Vec::new(), index: 0 }, 0).unwrap();
         apply_docx_mutation(&mut snapshot, &DocxMutation::SetRunText(set_run_text::SetRunText { address, text: fixture["text"].as_str().unwrap().into() }));
         if case["removeRequiredRelationships"].as_bool().unwrap_or(false) {
-            snapshot.opc.relationships.get_mut("").unwrap().retain(|relationship| relationship.rel_type != REL_TYPE_OFFICE_DOCUMENT);
-            snapshot.opc.relationships.get_mut(main).unwrap().retain(|relationship| relationship.rel_type != REL_TYPE_STYLES);
+            snapshot
+                .opc
+                .edit_package(|package| {
+                    package.relationships.relationships_mut("").unwrap().retain(|relationship| relationship.rel_type != REL_TYPE_OFFICE_DOCUMENT);
+                    package.relationships.relationships_mut(main).unwrap().retain(|relationship| relationship.rel_type != REL_TYPE_STYLES);
+                })
+                .unwrap();
             let refused = snapshot.clone();
             assert!(encode_docx(&snapshot).is_err(), "missing required authored relationships must be refused before publication");
             assert_eq!(snapshot, refused, "refused publication must not mutate authored state");
@@ -305,12 +310,12 @@ fn save_preserves_relationship_selected_part_paths_and_clears_the_last_style() {
         assert_eq!(reopened.opc.resolve_relationship(main, REL_TYPE_STYLES).as_deref(), Some(styles));
         if let Some(ids) = case["occupiedIds"].as_array() {
             for owner in ["", main] {
-                let relationships = reopened.opc.relationships_for(owner);
+                let relationships = reopened.opc.relationships_for(owner).unwrap();
                 assert_eq!(relationships.len(), ids.len() + 1);
                 for id in ids {
-                    assert!(relationships.iter().any(|relationship| relationship.id == id.as_str().unwrap() && relationship.rel_type.starts_with("urn:retained:")));
+                    assert!(relationships.iter().any(|relationship| relationship.id.eq_str(id.as_str().unwrap()) && relationship.rel_type.to_string_owner().starts_with("urn:retained:")));
                 }
-                assert!(relationships.iter().any(|relationship| relationship.id == "rId3"));
+                assert!(relationships.iter().any(|relationship| relationship.id.eq_str("rId3")));
             }
         }
         let mut archive = zip::ZipArchive::new(std::io::Cursor::new(&output)).unwrap();
@@ -347,10 +352,10 @@ fn canonical_authority_fixture() -> (DocxSnapshot, serde_json::Value) {
     let snapshot = DocxSnapshot::from_parts(
         opc,
         vec![
-            DocxXmlPart { path: main_path.into(), content_type: MAIN_DOCUMENT_CONTENT_TYPE.into(), document: xml_document_from_text(main["xml"].as_str().unwrap()).unwrap() },
-            DocxXmlPart { path: styles_path.into(), content_type: STYLES_CONTENT_TYPE.into(), document: xml_document_from_text(styles["xml"].as_str().unwrap()).unwrap() },
+            DocxXmlPart { path: main_path.into(), content_type: MAIN_DOCUMENT_CONTENT_TYPE.into(), document: semio_s_artifact_stdio_xml::schema::snapshot::retained::RetainedXmlDocument::try_from_document(&xml_document_from_text(main["xml"].as_str().unwrap()).unwrap()).unwrap() },
+            DocxXmlPart { path: styles_path.into(), content_type: STYLES_CONTENT_TYPE.into(), document: semio_s_artifact_stdio_xml::schema::snapshot::retained::RetainedXmlDocument::try_from_document(&xml_document_from_text(styles["xml"].as_str().unwrap()).unwrap()).unwrap() },
         ],
-    );
+    ).expect("bounded test OPC converts to retained ownership");
     (snapshot, fixture)
 }
 
@@ -370,7 +375,8 @@ fn canonical_marker_path(snapshot: &DocxSnapshot, part_path: &str, marker: &str)
         }
         false
     }
-    let root = snapshot.xml_part(part_path).unwrap().document.root.as_ref().unwrap();
+    let document=snapshot.xml_part(part_path).unwrap().materialize_document_exact().unwrap();
+    let root = document.root.as_ref().unwrap();
     let mut path = Vec::new();
     assert!(locate(root, marker, &mut path), "missing marker {marker}");
     path
@@ -396,7 +402,7 @@ fn canonical_xml_authority_edits_nested_run_without_losing_unknown_markup() {
     let edit = |id: &str| fixture["edits"].as_array().unwrap().iter().find(|edit| edit["id"] == id).unwrap();
     let mut inverses = Vec::new();
     fn commit(snapshot: &mut DocxSnapshot, mutation: DocxMutation, inverses: &mut Vec<DocxMutation>) {
-        let inverse = Mutation::inverse(&mutation, &*snapshot);
+        let inverse = Mutation::inverse(&mutation, &*snapshot).expect("valid retained mutation inverse fixture");
         assert_eq!(inverse.len(), 1, "canonical edit has one compact inverse");
         assert!(!matches!(inverse[0], DocxMutation::SetSnapshot(_)), "canonical edit inverse is not a whole snapshot");
         let outcome = apply_docx_mutation(snapshot, &mutation);
@@ -417,7 +423,7 @@ fn canonical_xml_authority_edits_nested_run_without_losing_unknown_markup() {
     let cells = row_edit["value"]["cells"].as_array().unwrap().iter().map(|cell| cell.as_str().unwrap().to_string()).collect();
     commit(&mut snapshot, DocxMutation::InsertTableRow(insert_table_row::InsertTableRow { address, index: row_edit["value"]["index"].as_u64().unwrap() as usize, cells }), &mut inverses);
 
-    let document_xml = xml_document_to_text(&snapshot.xml_part(main_path).unwrap().document);
+    let document_xml = xml_document_to_text(&snapshot.xml_part(main_path).unwrap().document.materialize_exact().unwrap());
     let mut reader = Reader::from_str(&document_xml);
     let mut rows = 0usize;
     let mut paragraph_styles = Vec::new();
@@ -479,10 +485,13 @@ fn malformed_authored_authority_is_refused_atomically() {
 
     let mut invalid = Vec::new();
     let mut duplicate = valid.clone();
-    duplicate.xml_parts.push(duplicate.xml_parts[0].clone());
+    duplicate.xml_parts.try_push(duplicate.xml_parts[0].clone()).unwrap();
     invalid.push(duplicate);
     let mut overlap = valid.clone();
-    overlap.opc.parts.push(OpcPart { path: overlap.xml_parts[0].path.clone(), content_type: "application/octet-stream".into(), bytes: vec![0] });
+    overlap
+        .opc
+        .edit_package(|package| package.parts.push(OpcPart { path: overlap.xml_parts[0].path.clone(), content_type: "application/octet-stream".into(), bytes: vec![0] }))
+        .unwrap();
     invalid.push(overlap);
     let mut metadata = valid.clone();
     metadata.xml_parts[0].path = "[Content_Types].xml".into();
@@ -491,13 +500,13 @@ fn malformed_authored_authority_is_refused_atomically() {
     content_type_drift.xml_parts[0].content_type = "application/xml".into();
     invalid.push(content_type_drift.clone());
     let mut external_main = valid.clone();
-    external_main.opc.relationships.get_mut("").unwrap()[0].target_mode = OpcTargetMode::External;
+    external_main.opc.edit_package(|package| package.relationships.relationships_mut("").unwrap()[0].target_mode = OpcTargetMode::External).unwrap();
     invalid.push(external_main);
     let mut duplicate_main = valid.clone();
-    duplicate_main.opc.add_relationship("", "rId9", REL_TYPE_OFFICE_DOCUMENT, &main_path);
+    duplicate_main.opc.edit_package(|package| package.add_relationship("", "rId9", REL_TYPE_OFFICE_DOCUMENT, &main_path)).unwrap();
     invalid.push(duplicate_main);
     let mut missing_styles = valid.clone();
-    missing_styles.opc.relationships.get_mut(&main_path).unwrap()[0].target = "missing/styles.xml".into();
+    missing_styles.opc.edit_package(|package| package.relationships.relationships_mut(&main_path).unwrap()[0].target = "missing/styles.xml".into()).unwrap();
     invalid.push(missing_styles);
 
     for candidate in invalid {

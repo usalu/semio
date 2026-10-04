@@ -1,0 +1,1300 @@
+{
+  "scope": "Root-private artifact duplicate library files only; retained two newer equivalent compiler/feature/target/profile/source/config variants; no framework or foreign cache removal",
+  "rows": [
+    {
+      "variant": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-semio/8adf864faf31273e",
+      "newerRetained": [
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-semio/9f460577908389bd",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-semio/13e7dd8fe869cce5"
+      ],
+      "key": {
+        "compile_kind": 0,
+        "config": 8362119626465528914,
+        "features": "[\"conversion-drawing\", \"conversion-drawing-dwg\", \"conversion-drawing-dxf\", \"conversion-drawing-pdf\", \"conversion-drawing-png\", \"conversion-drawing-svg\", \"conversion-drawing-xml\", \"conversion-mesh\", \"conversion-mesh-dwg\", \"conversion-mesh-gltf\", \"conversion-mesh-las\", \"conversion-mesh-obj\", \"conversion-mesh-ply\", \"conversion-mesh-stl\", \"default\"]",
+        "path": 13067017971103496067,
+        "profile": 16253270031121296954,
+        "rustc": 4695965181093895349,
+        "rustflags": [
+          "-Z",
+          "threads=8"
+        ],
+        "target": 9719365454471500176
+      },
+      "files": [
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-semio/8adf864faf31273e/out/libsemio_s_artifact_stdio_semio-8adf864faf31273e.rlib",
+          "mtimeNs": 1791083155706037328,
+          "bytes": 355485680,
+          "links": 1
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-semio/8adf864faf31273e/out/libsemio_s_artifact_stdio_semio-8adf864faf31273e.rmeta",
+          "mtimeNs": 1791083135578283569,
+          "bytes": 51948213,
+          "links": 1
+        }
+      ],
+      "bytes": 407433893
+    },
+    {
+      "variant": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-semio/df057dc2c89ba1d4",
+      "newerRetained": [
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-semio/ddbbc1f59ddd384f",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-semio/eebfe681922f3737"
+      ],
+      "key": {
+        "compile_kind": 0,
+        "config": 8362119626465528914,
+        "features": "[\"conversion-drawing\", \"conversion-drawing-dwg\", \"conversion-drawing-dxf\", \"conversion-drawing-pdf\", \"conversion-drawing-png\", \"conversion-drawing-svg\", \"conversion-drawing-xml\", \"default\"]",
+        "path": 13067017971103496067,
+        "profile": 16253270031121296954,
+        "rustc": 4695965181093895349,
+        "rustflags": [
+          "-Z",
+          "threads=8"
+        ],
+        "target": 9719365454471500176
+      },
+      "files": [
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-semio/df057dc2c89ba1d4/out/libsemio_s_artifact_stdio_semio-df057dc2c89ba1d4.rmeta",
+          "mtimeNs": 1791099204322636348,
+          "bytes": 51383876,
+          "links": 1
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-semio/df057dc2c89ba1d4/out/libsemio_s_artifact_stdio_semio-df057dc2c89ba1d4.rlib",
+          "mtimeNs": 1791099217199927196,
+          "bytes": 352762240,
+          "links": 1
+        }
+      ],
+      "bytes": 404146116
+    },
+    {
+      "variant": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-pdf/78dc8bc2fedd5839",
+      "newerRetained": [
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-pdf/455d5471f888a787",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-pdf/3a44d98096f134d7"
+      ],
+      "key": {
+        "compile_kind": 0,
+        "config": 8362119626465528914,
+        "features": "[\"default\"]",
+        "path": 10692510834752266582,
+        "profile": 16253270031121296954,
+        "rustc": 4695965181093895349,
+        "rustflags": [
+          "-Z",
+          "threads=8"
+        ],
+        "target": 11793989879561034566
+      },
+      "files": [
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-pdf/78dc8bc2fedd5839/out/libsemio_s_artifact_stdio_pdf-78dc8bc2fedd5839.rlib",
+          "mtimeNs": 1791099176500411678,
+          "bytes": 118153688,
+          "links": 1
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-pdf/78dc8bc2fedd5839/out/libsemio_s_artifact_stdio_pdf-78dc8bc2fedd5839.rmeta",
+          "mtimeNs": 1791099163675009067,
+          "bytes": 48454295,
+          "links": 1
+        }
+      ],
+      "bytes": 166607983
+    },
+    {
+      "variant": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-pdf/da62ab079471806a",
+      "newerRetained": [
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-pdf/455d5471f888a787",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-pdf/3a44d98096f134d7"
+      ],
+      "key": {
+        "compile_kind": 0,
+        "config": 8362119626465528914,
+        "features": "[\"default\"]",
+        "path": 10692510834752266582,
+        "profile": 16253270031121296954,
+        "rustc": 4695965181093895349,
+        "rustflags": [
+          "-Z",
+          "threads=8"
+        ],
+        "target": 11793989879561034566
+      },
+      "files": [
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-pdf/da62ab079471806a/out/libsemio_s_artifact_stdio_pdf-da62ab079471806a.rlib",
+          "mtimeNs": 1791057232430095720,
+          "bytes": 117830288,
+          "links": 1
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-pdf/da62ab079471806a/out/libsemio_s_artifact_stdio_pdf-da62ab079471806a.rmeta",
+          "mtimeNs": 1791057222051545672,
+          "bytes": 48437763,
+          "links": 1
+        }
+      ],
+      "bytes": 166268051
+    },
+    {
+      "variant": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-dwg/920620ba4109c381",
+      "newerRetained": [
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-dwg/e32db8073de8a40a",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-dwg/8f347c3b0534d600"
+      ],
+      "key": {
+        "compile_kind": 0,
+        "config": 8362119626465528914,
+        "features": "[\"default\"]",
+        "path": 9053501847595971089,
+        "profile": 16253270031121296954,
+        "rustc": 4695965181093895349,
+        "rustflags": [
+          "-Z",
+          "threads=8"
+        ],
+        "target": 11924633043319665446
+      },
+      "files": [
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-dwg/920620ba4109c381/out/libsemio_s_artifact_stdio_dwg-920620ba4109c381.rmeta",
+          "mtimeNs": 1791099159636805307,
+          "bytes": 20208403,
+          "links": 1
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-dwg/920620ba4109c381/out/libsemio_s_artifact_stdio_dwg-920620ba4109c381.rlib",
+          "mtimeNs": 1791099182152696269,
+          "bytes": 110112960,
+          "links": 1
+        }
+      ],
+      "bytes": 130321363
+    },
+    {
+      "variant": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-gltf/e99407c5508e5d83",
+      "newerRetained": [
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-gltf/e3cb5413e8cc0e59",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-gltf/db4f58d354553205"
+      ],
+      "key": {
+        "compile_kind": 0,
+        "config": 8362119626465528914,
+        "features": "[\"default\"]",
+        "path": 14465674696078850711,
+        "profile": 16253270031121296954,
+        "rustc": 4695965181093895349,
+        "rustflags": [
+          "-Z",
+          "threads=8"
+        ],
+        "target": 5181138109195291754
+      },
+      "files": [
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-gltf/e99407c5508e5d83/out/libsemio_s_artifact_stdio_gltf-e99407c5508e5d83.rlib",
+          "mtimeNs": 1791057245578685095,
+          "bytes": 98886704,
+          "links": 1
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-gltf/e99407c5508e5d83/out/libsemio_s_artifact_stdio_gltf-e99407c5508e5d83.rmeta",
+          "mtimeNs": 1791057239079399263,
+          "bytes": 22530546,
+          "links": 1
+        }
+      ],
+      "bytes": 121417250
+    },
+    {
+      "variant": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-dwg/975199238851a2d6",
+      "newerRetained": [
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-dwg/e32db8073de8a40a",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-dwg/8f347c3b0534d600"
+      ],
+      "key": {
+        "compile_kind": 0,
+        "config": 8362119626465528914,
+        "features": "[\"default\"]",
+        "path": 9053501847595971089,
+        "profile": 16253270031121296954,
+        "rustc": 4695965181093895349,
+        "rustflags": [
+          "-Z",
+          "threads=8"
+        ],
+        "target": 11924633043319665446
+      },
+      "files": [
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-dwg/975199238851a2d6/out/libsemio_s_artifact_stdio_dwg-975199238851a2d6.rlib",
+          "mtimeNs": 1791057239321327983,
+          "bytes": 99986912,
+          "links": 1
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-dwg/975199238851a2d6/out/libsemio_s_artifact_stdio_dwg-975199238851a2d6.rmeta",
+          "mtimeNs": 1791057216182077202,
+          "bytes": 18490286,
+          "links": 1
+        }
+      ],
+      "bytes": 118477198
+    },
+    {
+      "variant": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-gif/31fd20d813ac7c98",
+      "newerRetained": [
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-gif/10768128979530b7",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-gif/9919114f3bc8aa59"
+      ],
+      "key": {
+        "compile_kind": 0,
+        "config": 8362119626465528914,
+        "features": "[\"default\"]",
+        "path": 10899822218541969213,
+        "profile": 16253270031121296954,
+        "rustc": 4695965181093895349,
+        "rustflags": [
+          "-Z",
+          "threads=8"
+        ],
+        "target": 16271527765664609178
+      },
+      "files": [
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-gif/31fd20d813ac7c98/out/libsemio_s_artifact_stdio_gif-31fd20d813ac7c98.rmeta",
+          "mtimeNs": 1790979436598069559,
+          "bytes": 23103668,
+          "links": 1
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-gif/31fd20d813ac7c98/out/libsemio_s_artifact_stdio_gif-31fd20d813ac7c98.rlib",
+          "mtimeNs": 1790979447103305142,
+          "bytes": 41985008,
+          "links": 1
+        }
+      ],
+      "bytes": 65088676
+    },
+    {
+      "variant": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-dxf/46390e51cbdc2c18",
+      "newerRetained": [
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-dxf/f856bf9af60c0779",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-dxf/64cfd91aecda8164"
+      ],
+      "key": {
+        "compile_kind": 0,
+        "config": 8362119626465528914,
+        "features": "[\"default\"]",
+        "path": 11757992055919353284,
+        "profile": 16253270031121296954,
+        "rustc": 4695965181093895349,
+        "rustflags": [
+          "-Z",
+          "threads=8"
+        ],
+        "target": 18120291903455943801
+      },
+      "files": [
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-dxf/46390e51cbdc2c18/out/libsemio_s_artifact_stdio_dxf-46390e51cbdc2c18.rlib",
+          "mtimeNs": 1791099130661690817,
+          "bytes": 31661488,
+          "links": 1
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-dxf/46390e51cbdc2c18/out/libsemio_s_artifact_stdio_dxf-46390e51cbdc2c18.rmeta",
+          "mtimeNs": 1791099123923301753,
+          "bytes": 4026863,
+          "links": 1
+        }
+      ],
+      "bytes": 35688351
+    },
+    {
+      "variant": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-dxf/26d102e4fd2ac118",
+      "newerRetained": [
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-dxf/f856bf9af60c0779",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-dxf/64cfd91aecda8164"
+      ],
+      "key": {
+        "compile_kind": 0,
+        "config": 8362119626465528914,
+        "features": "[\"default\"]",
+        "path": 11757992055919353284,
+        "profile": 16253270031121296954,
+        "rustc": 4695965181093895349,
+        "rustflags": [
+          "-Z",
+          "threads=8"
+        ],
+        "target": 18120291903455943801
+      },
+      "files": [
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-dxf/26d102e4fd2ac118/out/libsemio_s_artifact_stdio_dxf-26d102e4fd2ac118.rlib",
+          "mtimeNs": 1791057208041919665,
+          "bytes": 31277496,
+          "links": 1
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-dxf/26d102e4fd2ac118/out/libsemio_s_artifact_stdio_dxf-26d102e4fd2ac118.rmeta",
+          "mtimeNs": 1791057201147385113,
+          "bytes": 4017503,
+          "links": 1
+        }
+      ],
+      "bytes": 35294999
+    },
+    {
+      "variant": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-obj/340052215e77a90b",
+      "newerRetained": [
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-obj/77e6aaeb94d35d29",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-obj/09d298c830fc5a32"
+      ],
+      "key": {
+        "compile_kind": 0,
+        "config": 8362119626465528914,
+        "features": "[\"default\"]",
+        "path": 10520235179549140781,
+        "profile": 16253270031121296954,
+        "rustc": 4695965181093895349,
+        "rustflags": [
+          "-Z",
+          "threads=8"
+        ],
+        "target": 15469552013836215016
+      },
+      "files": [
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-obj/340052215e77a90b/out/libsemio_s_artifact_stdio_obj-340052215e77a90b.rmeta",
+          "mtimeNs": 1791057195665295703,
+          "bytes": 4178596,
+          "links": 1
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-obj/340052215e77a90b/out/libsemio_s_artifact_stdio_obj-340052215e77a90b.rlib",
+          "mtimeNs": 1791057201421143557,
+          "bytes": 29915352,
+          "links": 1
+        }
+      ],
+      "bytes": 34093948
+    },
+    {
+      "variant": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-step/2d3ebb7e481bf975",
+      "newerRetained": [
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-step/765d665740544081",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-step/67371b09ff2f84bb"
+      ],
+      "key": {
+        "compile_kind": 0,
+        "config": 8362119626465528914,
+        "features": "[\"default\"]",
+        "path": 985958510514058762,
+        "profile": 16253270031121296954,
+        "rustc": 4695965181093895349,
+        "rustflags": [
+          "-Z",
+          "threads=8"
+        ],
+        "target": 11881172239517000148
+      },
+      "files": [
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-step/2d3ebb7e481bf975/out/libsemio_s_artifact_stdio_step-2d3ebb7e481bf975.rlib",
+          "mtimeNs": 1791057200503078554,
+          "bytes": 24760960,
+          "links": 1
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-step/2d3ebb7e481bf975/out/libsemio_s_artifact_stdio_step-2d3ebb7e481bf975.rmeta",
+          "mtimeNs": 1791057195766445995,
+          "bytes": 5604372,
+          "links": 1
+        }
+      ],
+      "bytes": 30365332
+    },
+    {
+      "variant": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-svg/bd8e2a75f017219b",
+      "newerRetained": [
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-svg/1afcb942e9c71cea",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-svg/a43f289edaa2e954"
+      ],
+      "key": {
+        "compile_kind": 0,
+        "config": 8362119626465528914,
+        "features": "[\"default\"]",
+        "path": 8975186120393411034,
+        "profile": 16253270031121296954,
+        "rustc": 4695965181093895349,
+        "rustflags": [
+          "-Z",
+          "threads=8"
+        ],
+        "target": 8247800916025071513
+      },
+      "files": [
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-svg/bd8e2a75f017219b/out/libsemio_s_artifact_stdio_svg-bd8e2a75f017219b.rmeta",
+          "mtimeNs": 1791099151167008036,
+          "bytes": 5191337,
+          "links": 1
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-svg/bd8e2a75f017219b/out/libsemio_s_artifact_stdio_svg-bd8e2a75f017219b.rlib",
+          "mtimeNs": 1791099158288624903,
+          "bytes": 22156616,
+          "links": 1
+        }
+      ],
+      "bytes": 27347953
+    },
+    {
+      "variant": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-svg/bafd3c636df2f5c6",
+      "newerRetained": [
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-svg/1afcb942e9c71cea",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-svg/a43f289edaa2e954"
+      ],
+      "key": {
+        "compile_kind": 0,
+        "config": 8362119626465528914,
+        "features": "[\"default\"]",
+        "path": 8975186120393411034,
+        "profile": 16253270031121296954,
+        "rustc": 4695965181093895349,
+        "rustflags": [
+          "-Z",
+          "threads=8"
+        ],
+        "target": 8247800916025071513
+      },
+      "files": [
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-svg/bafd3c636df2f5c6/out/libsemio_s_artifact_stdio_svg-bafd3c636df2f5c6.rlib",
+          "mtimeNs": 1791057430583929803,
+          "bytes": 21773944,
+          "links": 1
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-svg/bafd3c636df2f5c6/out/libsemio_s_artifact_stdio_svg-bafd3c636df2f5c6.rmeta",
+          "mtimeNs": 1791057428418226650,
+          "bytes": 5180814,
+          "links": 1
+        }
+      ],
+      "bytes": 26954758
+    },
+    {
+      "variant": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-xml/2a0823a1eb5f4b5e",
+      "newerRetained": [
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-xml/82f450108792ff4e",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-xml/cd0e9b8ecd2fd192"
+      ],
+      "key": {
+        "compile_kind": 0,
+        "config": 8362119626465528914,
+        "features": "[\"default\"]",
+        "path": 9814701239660884962,
+        "profile": 16253270031121296954,
+        "rustc": 4695965181093895349,
+        "rustflags": [
+          "-Z",
+          "threads=8"
+        ],
+        "target": 16492352320278735555
+      },
+      "files": [
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-xml/2a0823a1eb5f4b5e/out/libsemio_s_artifact_stdio_xml-2a0823a1eb5f4b5e.rlib",
+          "mtimeNs": 1791099125401145478,
+          "bytes": 22250392,
+          "links": 1
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-xml/2a0823a1eb5f4b5e/out/libsemio_s_artifact_stdio_xml-2a0823a1eb5f4b5e.rmeta",
+          "mtimeNs": 1791099119310763601,
+          "bytes": 3773519,
+          "links": 1
+        }
+      ],
+      "bytes": 26023911
+    },
+    {
+      "variant": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-xlsx/2f5d588f0e7b0943",
+      "newerRetained": [
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-xlsx/1d6b3c49991cf2dd",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-xlsx/a7b640d63d89ae69"
+      ],
+      "key": {
+        "compile_kind": 0,
+        "config": 8362119626465528914,
+        "features": "[\"default\"]",
+        "path": 8105842916610543723,
+        "profile": 16253270031121296954,
+        "rustc": 4695965181093895349,
+        "rustflags": [
+          "-Z",
+          "threads=8"
+        ],
+        "target": 17906712509331034310
+      },
+      "files": [
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-xlsx/2f5d588f0e7b0943/out/libsemio_s_artifact_stdio_xlsx-2f5d588f0e7b0943.rlib",
+          "mtimeNs": 1791099158912455075,
+          "bytes": 20858120,
+          "links": 1
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-xlsx/2f5d588f0e7b0943/out/libsemio_s_artifact_stdio_xlsx-2f5d588f0e7b0943.rmeta",
+          "mtimeNs": 1791099155781080061,
+          "bytes": 3679993,
+          "links": 1
+        }
+      ],
+      "bytes": 24538113
+    },
+    {
+      "variant": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-zip/d5dfafd980449ca2",
+      "newerRetained": [
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-zip/7dd9a96c7818ff34",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-zip/e43a88a039286ee9"
+      ],
+      "key": {
+        "compile_kind": 0,
+        "config": 8362119626465528914,
+        "features": "[\"default\"]",
+        "path": 4485425664481252970,
+        "profile": 16253270031121296954,
+        "rustc": 4695965181093895349,
+        "rustflags": [
+          "-Z",
+          "threads=8"
+        ],
+        "target": 912592600209774221
+      },
+      "files": [
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-zip/d5dfafd980449ca2/out/libsemio_s_artifact_stdio_zip-d5dfafd980449ca2.rlib",
+          "mtimeNs": 1791099144888048443,
+          "bytes": 19892920,
+          "links": 1
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-zip/d5dfafd980449ca2/out/libsemio_s_artifact_stdio_zip-d5dfafd980449ca2.rmeta",
+          "mtimeNs": 1791099134067083874,
+          "bytes": 3275075,
+          "links": 1
+        }
+      ],
+      "bytes": 23167995
+    },
+    {
+      "variant": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-json/9819c4429d6cbfd0",
+      "newerRetained": [
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-json/458ca1016cf5dde6",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-json/ce04747dc9e7f9f9"
+      ],
+      "key": {
+        "compile_kind": 0,
+        "config": 8362119626465528914,
+        "features": "[\"default\"]",
+        "path": 18115448536005374543,
+        "profile": 16253270031121296954,
+        "rustc": 4695965181093895349,
+        "rustflags": [
+          "-Z",
+          "threads=8"
+        ],
+        "target": 4341208503078224022
+      },
+      "files": [
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-json/9819c4429d6cbfd0/out/libsemio_s_artifact_stdio_json-9819c4429d6cbfd0.rlib",
+          "mtimeNs": 1791099122150726216,
+          "bytes": 18741352,
+          "links": 1
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-json/9819c4429d6cbfd0/out/libsemio_s_artifact_stdio_json-9819c4429d6cbfd0.rmeta",
+          "mtimeNs": 1791099117751085797,
+          "bytes": 3022496,
+          "links": 1
+        }
+      ],
+      "bytes": 21763848
+    },
+    {
+      "variant": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-las/22c7436565ff5455",
+      "newerRetained": [
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-las/c0bdf26c8f76bfef",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-las/08354b229e6f49d8"
+      ],
+      "key": {
+        "compile_kind": 0,
+        "config": 8362119626465528914,
+        "features": "[\"default\"]",
+        "path": 12964724032200462155,
+        "profile": 16253270031121296954,
+        "rustc": 4695965181093895349,
+        "rustflags": [
+          "-Z",
+          "threads=8"
+        ],
+        "target": 15808231449344629071
+      },
+      "files": [
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-las/22c7436565ff5455/out/libsemio_s_artifact_stdio_las-22c7436565ff5455.rmeta",
+          "mtimeNs": 1791057179920428150,
+          "bytes": 2722043,
+          "links": 1
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-las/22c7436565ff5455/out/libsemio_s_artifact_stdio_las-22c7436565ff5455.rlib",
+          "mtimeNs": 1791057184477821730,
+          "bytes": 18799760,
+          "links": 1
+        }
+      ],
+      "bytes": 21521803
+    },
+    {
+      "variant": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-ply/a441930dcd670cc1",
+      "newerRetained": [
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-ply/9852397729778fc6",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-ply/7e347d1fe18531ec"
+      ],
+      "key": {
+        "compile_kind": 0,
+        "config": 8362119626465528914,
+        "features": "[\"default\"]",
+        "path": 7775587890055903872,
+        "profile": 16253270031121296954,
+        "rustc": 4695965181093895349,
+        "rustflags": [
+          "-Z",
+          "threads=8"
+        ],
+        "target": 12399164890970874377
+      },
+      "files": [
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-ply/a441930dcd670cc1/out/libsemio_s_artifact_stdio_ply-a441930dcd670cc1.rmeta",
+          "mtimeNs": 1791057190402483697,
+          "bytes": 2144512,
+          "links": 1
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-ply/a441930dcd670cc1/out/libsemio_s_artifact_stdio_ply-a441930dcd670cc1.rlib",
+          "mtimeNs": 1791057194262919928,
+          "bytes": 17971728,
+          "links": 1
+        }
+      ],
+      "bytes": 20116240
+    },
+    {
+      "variant": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-md/0d4091ff71ad5d78",
+      "newerRetained": [
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-md/e9a65dfedbe0f839",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-md/058b1c8ba8d33121"
+      ],
+      "key": {
+        "compile_kind": 0,
+        "config": 8362119626465528914,
+        "features": "[\"default\"]",
+        "path": 13624117963085609905,
+        "profile": 16253270031121296954,
+        "rustc": 4695965181093895349,
+        "rustflags": [
+          "-Z",
+          "threads=8"
+        ],
+        "target": 9999849398770285807
+      },
+      "files": [
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-md/0d4091ff71ad5d78/out/libsemio_s_artifact_stdio_md-0d4091ff71ad5d78.rlib",
+          "mtimeNs": 1791057422299770675,
+          "bytes": 17247344,
+          "links": 1
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-md/0d4091ff71ad5d78/out/libsemio_s_artifact_stdio_md-0d4091ff71ad5d78.rmeta",
+          "mtimeNs": 1791057419610163407,
+          "bytes": 1839472,
+          "links": 1
+        }
+      ],
+      "bytes": 19086816
+    },
+    {
+      "variant": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-png/c48e8a82d6086ed8",
+      "newerRetained": [
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-png/8cef89eaafb5c3e2",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-png/9f51aad4ac1ba105"
+      ],
+      "key": {
+        "compile_kind": 0,
+        "config": 8362119626465528914,
+        "features": "[\"default\"]",
+        "path": 14331050714181352610,
+        "profile": 16253270031121296954,
+        "rustc": 4695965181093895349,
+        "rustflags": [
+          "-Z",
+          "threads=8"
+        ],
+        "target": 2701620475742561325
+      },
+      "files": [
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-png/c48e8a82d6086ed8/out/libsemio_s_artifact_stdio_png-c48e8a82d6086ed8.rlib",
+          "mtimeNs": 1791098075756401944,
+          "bytes": 12703224,
+          "links": 1
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-png/c48e8a82d6086ed8/out/libsemio_s_artifact_stdio_png-c48e8a82d6086ed8.rmeta",
+          "mtimeNs": 1791098075240340991,
+          "bytes": 1831794,
+          "links": 1
+        }
+      ],
+      "bytes": 14535018
+    },
+    {
+      "variant": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-png/f7b1b28ce4c58c10",
+      "newerRetained": [
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-png/8cef89eaafb5c3e2",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-png/9f51aad4ac1ba105"
+      ],
+      "key": {
+        "compile_kind": 0,
+        "config": 8362119626465528914,
+        "features": "[\"default\"]",
+        "path": 14331050714181352610,
+        "profile": 16253270031121296954,
+        "rustc": 4695965181093895349,
+        "rustflags": [
+          "-Z",
+          "threads=8"
+        ],
+        "target": 2701620475742561325
+      },
+      "files": [
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-png/f7b1b28ce4c58c10/out/libsemio_s_artifact_stdio_png-f7b1b28ce4c58c10.rlib",
+          "mtimeNs": 1791097189731835162,
+          "bytes": 12663840,
+          "links": 1
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-png/f7b1b28ce4c58c10/out/libsemio_s_artifact_stdio_png-f7b1b28ce4c58c10.rmeta",
+          "mtimeNs": 1791097187662686228,
+          "bytes": 1838533,
+          "links": 1
+        }
+      ],
+      "bytes": 14502373
+    },
+    {
+      "variant": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-png/0282f19014a67bc2",
+      "newerRetained": [
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-png/8cef89eaafb5c3e2",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-png/9f51aad4ac1ba105"
+      ],
+      "key": {
+        "compile_kind": 0,
+        "config": 8362119626465528914,
+        "features": "[\"default\"]",
+        "path": 14331050714181352610,
+        "profile": 16253270031121296954,
+        "rustc": 4695965181093895349,
+        "rustflags": [
+          "-Z",
+          "threads=8"
+        ],
+        "target": 2701620475742561325
+      },
+      "files": [
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-png/0282f19014a67bc2/out/libsemio_s_artifact_stdio_png-0282f19014a67bc2.rmeta",
+          "mtimeNs": 1791099152632397399,
+          "bytes": 1838594,
+          "links": 1
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-png/0282f19014a67bc2/out/libsemio_s_artifact_stdio_png-0282f19014a67bc2.rlib",
+          "mtimeNs": 1791099155869394134,
+          "bytes": 12662336,
+          "links": 1
+        }
+      ],
+      "bytes": 14500930
+    },
+    {
+      "variant": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-png/8da9b8ab0927aae5",
+      "newerRetained": [
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-png/8cef89eaafb5c3e2",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-png/9f51aad4ac1ba105"
+      ],
+      "key": {
+        "compile_kind": 0,
+        "config": 8362119626465528914,
+        "features": "[\"default\"]",
+        "path": 14331050714181352610,
+        "profile": 16253270031121296954,
+        "rustc": 4695965181093895349,
+        "rustflags": [
+          "-Z",
+          "threads=8"
+        ],
+        "target": 2701620475742561325
+      },
+      "files": [
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-png/8da9b8ab0927aae5/out/libsemio_s_artifact_stdio_png-8da9b8ab0927aae5.rmeta",
+          "mtimeNs": 1791097712864992374,
+          "bytes": 1838533,
+          "links": 1
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-png/8da9b8ab0927aae5/out/libsemio_s_artifact_stdio_png-8da9b8ab0927aae5.rlib",
+          "mtimeNs": 1791097714836711095,
+          "bytes": 12662064,
+          "links": 1
+        }
+      ],
+      "bytes": 14500597
+    },
+    {
+      "variant": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-png/4758bd43ba3f1af2",
+      "newerRetained": [
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-png/8cef89eaafb5c3e2",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-png/9f51aad4ac1ba105"
+      ],
+      "key": {
+        "compile_kind": 0,
+        "config": 8362119626465528914,
+        "features": "[\"default\"]",
+        "path": 14331050714181352610,
+        "profile": 16253270031121296954,
+        "rustc": 4695965181093895349,
+        "rustflags": [
+          "-Z",
+          "threads=8"
+        ],
+        "target": 2701620475742561325
+      },
+      "files": [
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-png/4758bd43ba3f1af2/out/libsemio_s_artifact_stdio_png-4758bd43ba3f1af2.rmeta",
+          "mtimeNs": 1791083081976691243,
+          "bytes": 1838051,
+          "links": 1
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-png/4758bd43ba3f1af2/out/libsemio_s_artifact_stdio_png-4758bd43ba3f1af2.rlib",
+          "mtimeNs": 1791083082905978855,
+          "bytes": 12656248,
+          "links": 1
+        }
+      ],
+      "bytes": 14494299
+    },
+    {
+      "variant": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-csv/fa4a13d3dd6f9076",
+      "newerRetained": [
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-csv/98fe311bc39db39e",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-csv/3be1c889e2a5162d"
+      ],
+      "key": {
+        "compile_kind": 0,
+        "config": 8362119626465528914,
+        "features": "[\"default\"]",
+        "path": 13621430545293555179,
+        "profile": 16253270031121296954,
+        "rustc": 4695965181093895349,
+        "rustflags": [
+          "-Z",
+          "threads=8"
+        ],
+        "target": 15557591231040380051
+      },
+      "files": [
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-csv/fa4a13d3dd6f9076/out/libsemio_s_artifact_stdio_csv-fa4a13d3dd6f9076.rmeta",
+          "mtimeNs": 1791099112606559084,
+          "bytes": 1328145,
+          "links": 1
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-csv/fa4a13d3dd6f9076/out/libsemio_s_artifact_stdio_csv-fa4a13d3dd6f9076.rlib",
+          "mtimeNs": 1791099117573614485,
+          "bytes": 12358384,
+          "links": 1
+        }
+      ],
+      "bytes": 13686529
+    },
+    {
+      "variant": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-stl/a29615c97ef2a602",
+      "newerRetained": [
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-stl/cd777a340823c054",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-stl/989ccf09798530d0"
+      ],
+      "key": {
+        "compile_kind": 0,
+        "config": 8362119626465528914,
+        "features": "[\"default\"]",
+        "path": 15184931933256111126,
+        "profile": 16253270031121296954,
+        "rustc": 4695965181093895349,
+        "rustflags": [
+          "-Z",
+          "threads=8"
+        ],
+        "target": 4701671492384884863
+      },
+      "files": [
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-stl/a29615c97ef2a602/out/libsemio_s_artifact_stdio_stl-a29615c97ef2a602.rmeta",
+          "mtimeNs": 1791057184117811857,
+          "bytes": 1410905,
+          "links": 1
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-stl/a29615c97ef2a602/out/libsemio_s_artifact_stdio_stl-a29615c97ef2a602.rlib",
+          "mtimeNs": 1791057185987064459,
+          "bytes": 11831048,
+          "links": 1
+        }
+      ],
+      "bytes": 13241953
+    },
+    {
+      "variant": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-deflate/0e2d402e3710d590",
+      "newerRetained": [
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-deflate/3b2d7e1553a21c2b",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-deflate/e4ed5f000075bfc5"
+      ],
+      "key": {
+        "compile_kind": 0,
+        "config": 8362119626465528914,
+        "features": "[\"default\"]",
+        "path": 13476379455053325695,
+        "profile": 16253270031121296954,
+        "rustc": 4695965181093895349,
+        "rustflags": [
+          "-Z",
+          "threads=8"
+        ],
+        "target": 15057392161579629857
+      },
+      "files": [
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-deflate/0e2d402e3710d590/out/libsemio_s_artifact_stdio_deflate-0e2d402e3710d590.rlib",
+          "mtimeNs": 1791099107724648843,
+          "bytes": 11684536,
+          "links": 1
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-deflate/0e2d402e3710d590/out/libsemio_s_artifact_stdio_deflate-0e2d402e3710d590.rmeta",
+          "mtimeNs": 1791099106652539855,
+          "bytes": 1423986,
+          "links": 1
+        }
+      ],
+      "bytes": 13108522
+    },
+    {
+      "variant": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-contract/4e2a51cce173b600",
+      "newerRetained": [
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-contract/0cd99217de756c8b",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-contract/99ada66ba3796308"
+      ],
+      "key": {
+        "compile_kind": 0,
+        "config": 8362119626465528914,
+        "features": "[]",
+        "path": 12324760282248638174,
+        "profile": 16253270031121296954,
+        "rustc": 4695965181093895349,
+        "rustflags": [
+          "-Z",
+          "threads=8"
+        ],
+        "target": 8613719930245928804
+      },
+      "files": [
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-contract/4e2a51cce173b600/out/libsemio_s_artifact_stdio_contract-4e2a51cce173b600.rlib",
+          "mtimeNs": 1791099094762491544,
+          "bytes": 10726224,
+          "links": 1
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-contract/4e2a51cce173b600/out/libsemio_s_artifact_stdio_contract-4e2a51cce173b600.rmeta",
+          "mtimeNs": 1791099093834413361,
+          "bytes": 2223959,
+          "links": 1
+        }
+      ],
+      "bytes": 12950183
+    },
+    {
+      "variant": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-contract/40c70b061226c13f",
+      "newerRetained": [
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-contract/0cd99217de756c8b",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-contract/99ada66ba3796308"
+      ],
+      "key": {
+        "compile_kind": 0,
+        "config": 8362119626465528914,
+        "features": "[]",
+        "path": 12324760282248638174,
+        "profile": 16253270031121296954,
+        "rustc": 4695965181093895349,
+        "rustflags": [
+          "-Z",
+          "threads=8"
+        ],
+        "target": 8613719930245928804
+      },
+      "files": [
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-contract/40c70b061226c13f/out/libsemio_s_artifact_stdio_contract-40c70b061226c13f.rlib",
+          "mtimeNs": 1791068125595132553,
+          "bytes": 10455560,
+          "links": 1
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-contract/40c70b061226c13f/out/libsemio_s_artifact_stdio_contract-40c70b061226c13f.rmeta",
+          "mtimeNs": 1791068124771311226,
+          "bytes": 2097811,
+          "links": 1
+        }
+      ],
+      "bytes": 12553371
+    },
+    {
+      "variant": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-png/d9f0758a344d7a7b",
+      "newerRetained": [
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-png/8cef89eaafb5c3e2",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-png/9f51aad4ac1ba105"
+      ],
+      "key": {
+        "compile_kind": 0,
+        "config": 8362119626465528914,
+        "features": "[\"default\"]",
+        "path": 14331050714181352610,
+        "profile": 16253270031121296954,
+        "rustc": 4695965181093895349,
+        "rustflags": [
+          "-Z",
+          "threads=8"
+        ],
+        "target": 2701620475742561325
+      },
+      "files": [
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-png/d9f0758a344d7a7b/out/libsemio_s_artifact_stdio_png-d9f0758a344d7a7b.rmeta",
+          "mtimeNs": 1791057430281703216,
+          "bytes": 1435659,
+          "links": 1
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-png/d9f0758a344d7a7b/out/libsemio_s_artifact_stdio_png-d9f0758a344d7a7b.rlib",
+          "mtimeNs": 1791057430773116108,
+          "bytes": 10656272,
+          "links": 1
+        }
+      ],
+      "bytes": 12091931
+    },
+    {
+      "variant": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-txt/2711a3ed5d859085",
+      "newerRetained": [
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-txt/5a024b48d5437da8",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-txt/c6209c25f89fdc94"
+      ],
+      "key": {
+        "compile_kind": 0,
+        "config": 8362119626465528914,
+        "features": "[\"default\"]",
+        "path": 1837814137003712081,
+        "profile": 16253270031121296954,
+        "rustc": 4695965181093895349,
+        "rustflags": [
+          "-Z",
+          "threads=8"
+        ],
+        "target": 3287139831859597485
+      },
+      "files": [
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-txt/2711a3ed5d859085/out/libsemio_s_artifact_stdio_txt-2711a3ed5d859085.rmeta",
+          "mtimeNs": 1791099105797558178,
+          "bytes": 1360442,
+          "links": 1
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-txt/2711a3ed5d859085/out/libsemio_s_artifact_stdio_txt-2711a3ed5d859085.rlib",
+          "mtimeNs": 1791099106632437960,
+          "bytes": 10524080,
+          "links": 1
+        }
+      ],
+      "bytes": 11884522
+    },
+    {
+      "variant": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-txt/636cdeabfbc9dcdb",
+      "newerRetained": [
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-txt/5a024b48d5437da8",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-txt/c6209c25f89fdc94"
+      ],
+      "key": {
+        "compile_kind": 0,
+        "config": 8362119626465528914,
+        "features": "[\"default\"]",
+        "path": 1837814137003712081,
+        "profile": 16253270031121296954,
+        "rustc": 4695965181093895349,
+        "rustflags": [
+          "-Z",
+          "threads=8"
+        ],
+        "target": 3287139831859597485
+      },
+      "files": [
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-txt/636cdeabfbc9dcdb/out/libsemio_s_artifact_stdio_txt-636cdeabfbc9dcdb.rlib",
+          "mtimeNs": 1791068139358810766,
+          "bytes": 10466344,
+          "links": 1
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-txt/636cdeabfbc9dcdb/out/libsemio_s_artifact_stdio_txt-636cdeabfbc9dcdb.rmeta",
+          "mtimeNs": 1791068138584500275,
+          "bytes": 1360371,
+          "links": 1
+        }
+      ],
+      "bytes": 11826715
+    },
+    {
+      "variant": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-binary/a87660ff3e97b580",
+      "newerRetained": [
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-binary/d9a05fec281ed351",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-binary/a0fd1dd3e8771d10"
+      ],
+      "key": {
+        "compile_kind": 0,
+        "config": 8362119626465528914,
+        "features": "[\"default\"]",
+        "path": 9016737068983232758,
+        "profile": 16253270031121296954,
+        "rustc": 4695965181093895349,
+        "rustflags": [
+          "-Z",
+          "threads=8"
+        ],
+        "target": 12970584754879643565
+      },
+      "files": [
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-binary/a87660ff3e97b580/out/libsemio_s_artifact_stdio_binary-a87660ff3e97b580.rlib",
+          "mtimeNs": 1791099102554403450,
+          "bytes": 9534832,
+          "links": 1
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-binary/a87660ff3e97b580/out/libsemio_s_artifact_stdio_binary-a87660ff3e97b580.rmeta",
+          "mtimeNs": 1791099100697074210,
+          "bytes": 1119265,
+          "links": 1
+        }
+      ],
+      "bytes": 10654097
+    },
+    {
+      "variant": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-binary/295c0dbae2d6666f",
+      "newerRetained": [
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-binary/d9a05fec281ed351",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-binary/a0fd1dd3e8771d10"
+      ],
+      "key": {
+        "compile_kind": 0,
+        "config": 8362119626465528914,
+        "features": "[\"default\"]",
+        "path": 9016737068983232758,
+        "profile": 16253270031121296954,
+        "rustc": 4695965181093895349,
+        "rustflags": [
+          "-Z",
+          "threads=8"
+        ],
+        "target": 12970584754879643565
+      },
+      "files": [
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-binary/295c0dbae2d6666f/out/libsemio_s_artifact_stdio_binary-295c0dbae2d6666f.rmeta",
+          "mtimeNs": 1791068130473949402,
+          "bytes": 1120925,
+          "links": 1
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-stdio-binary/295c0dbae2d6666f/out/libsemio_s_artifact_stdio_binary-295c0dbae2d6666f.rlib",
+          "mtimeNs": 1791068132654537982,
+          "bytes": 9530568,
+          "links": 1
+        }
+      ],
+      "bytes": 10651493
+    },
+    {
+      "variant": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-norm-contract/5be0bbbc5dcb46d9",
+      "newerRetained": [
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-norm-contract/01bd9a752eb9a17c",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-norm-contract/e6171d4a656545dc"
+      ],
+      "key": {
+        "compile_kind": 0,
+        "config": 8362119626465528914,
+        "features": "[\"compliance-testing\", \"default\"]",
+        "path": 2394368347014905952,
+        "profile": 16253270031121296954,
+        "rustc": 4695965181093895349,
+        "rustflags": [
+          "-Z",
+          "threads=8"
+        ],
+        "target": 6088280368208994689
+      },
+      "files": [
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-norm-contract/5be0bbbc5dcb46d9/out/libsemio_s_artifact_norm_contract-5be0bbbc5dcb46d9.rmeta",
+          "mtimeNs": 1790921617073387562,
+          "bytes": 2045418,
+          "links": 1
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/build/semio-s-artifact-norm-contract/5be0bbbc5dcb46d9/out/libsemio_s_artifact_norm_contract-5be0bbbc5dcb46d9.rlib",
+          "mtimeNs": 1790921617721549929,
+          "bytes": 4451368,
+          "links": 1
+        }
+      ],
+      "bytes": 6496786
+    }
+  ]
+}

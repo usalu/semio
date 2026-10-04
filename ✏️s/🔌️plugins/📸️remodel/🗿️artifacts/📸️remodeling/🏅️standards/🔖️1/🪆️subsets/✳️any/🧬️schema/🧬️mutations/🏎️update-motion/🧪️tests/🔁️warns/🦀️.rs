@@ -17,19 +17,19 @@ const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutati
 const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏎️update-motion/🔁️warns/🔺️diff/🔣️.json");
 
 fn before() -> RemodelingSnapshot {
-    pack::from_json_str(BEFORE).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> RemodelingSnapshot {
-    pack::from_json_str(AFTER).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> RemodelingMutation {
-    pack::from_json_str(MUTATION).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 fn produced() -> protocol::MutationOutcome<RemodelingDiff> {
     <RemodelingMutation as protocol::Mutation<RemodelingSnapshot>>::diff(&mutation(), &before())
 }
-fn json_of<T: dsl::ToValue>(value: &T) -> pack::JsonValue {
-    pack::json_from_dsl_value(&dsl::ToValue::to_value(value))
+fn json_of<T: semio_framework_value::ToValue>(value: &T) -> semio_framework_pack_json::Value {
+    semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(value))
 }
 
 /// 🔁️ A warned no-op leaves the document byte-identical to its committed after-document, which for
@@ -46,15 +46,15 @@ async fn no_op_leaves_the_document_untouched() {
 /// still committed as a real all-null delta rather than as an absent one.
 #[semio_framework_async_macros::async_test]
 async fn declared_warning_holds() {
-    let declared = pack::parse_json(OUTCOME).expect("outcome decodes");
+    let declared = semio_framework_pack_json::parse(OUTCOME, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
     assert_eq!(declared.get("status").and_then(|status| status.as_str()), Some("no-op"), "update-motion-params/warns-that-the-83ff67 declares a no-op outcome");
     let produced = produced();
     assert_eq!(produced.diff(), &RemodelingDiff::default(), "update-motion-params/warns-that-the-83ff67: a no-op leaf must carry an empty diff");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "update-motion-params/warns-that-the-83ff67: exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.no-op", "update-motion-params/warns-that-the-83ff67: an identical resubmission is a no-op");
-    assert_eq!(messages[0].level, protocol::Severity::Warning, "update-motion-params/warns-that-the-83ff67: a no-op is a Warning, never an Error");
-    let committed = pack::parse_json(DIFF).expect("committed diff decodes");
+    assert_eq!(messages[0].level, semio_framework_diagnostic::Severity::Warning, "update-motion-params/warns-that-the-83ff67: a no-op is a Warning, never an Error");
+    let committed = semio_framework_pack_json::parse(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert_eq!(json_of(produced.diff()), committed, "update-motion-params/warns-that-the-83ff67: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
@@ -64,7 +64,7 @@ async fn declared_warning_holds() {
 async fn inverse_restores_the_before_document() {
     let base = before();
     let mut snapshot = apply_remodeling_mutation(&base, &mutation()).expect("forward applies");
-    for step in &inverse_remodeling_mutation(&base, &mutation()) {
+    for step in &inverse_remodeling_mutation(&base, &mutation()).expect("valid retained mutation inverse fixture") {
         snapshot = apply_remodeling_mutation(&snapshot, step).expect("inverse step applies");
     }
     assert_eq!(snapshot, base, "update-motion-params/warns-that-the-83ff67: inverse did not restore the before-snapshot");
@@ -75,10 +75,10 @@ async fn inverse_restores_the_before_document() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: RemodelingSnapshot = pack::from_json_str(text).expect("snapshot decodes");
-        let original = pack::parse_json(text).expect("snapshot reparses");
+        let decoded: RemodelingSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let original = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot reparses");
         assert_eq!(json_of(&decoded), original, "update-motion-params/warns-that-the-83ff67: committed {label} JSON is not canonical");
     }
-    let original = pack::parse_json(MUTATION).expect("mutation reparses");
+    let original = semio_framework_pack_json::parse(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation reparses");
     assert_eq!(json_of(&mutation()), original, "update-motion-params/warns-that-the-83ff67: committed mutation JSON is not canonical");
 }

@@ -64,11 +64,11 @@ Feature: Apply every typed EN 1991 mutation against an independent Python implem
       | id                                 | dir                                 | fixture |
       | change-annex                       | 🌍change-annex                       | ✅apply  |
       | change-snow-zone                   | 🗺️change-snow-zone                  | ✅apply  |
-      | change-altitude                    | ❄change-altitude                    | ✅apply  |
+      | change-altitude                    | ❄️change-altitude                    | ✅apply  |
       | change-en-sk                       | ❄️change-en-sk                      | ✅apply  |
-      | change-north-german-lowland-snow   | 🏔change-north-german-lowland-snow   | ✅apply  |
+      | change-north-german-lowland-snow   | 🏔️change-north-german-lowland-snow   | ✅apply  |
       | change-wind-zone                   | 🪁change-wind-zone                   | ✅apply  |
-      | change-en-vb                       | 🌬change-en-vb                       | ✅apply  |
+      | change-en-vb                       | 🌬️change-en-vb                       | ✅apply  |
       | change-terrain-category            | 🏞️change-terrain-category           | ✅apply  |
       | change-mixed-terrain-upwind        | 🧭change-mixed-terrain-upwind        | ✅apply  |
       | change-mixed-terrain-distance      | 📏change-mixed-terrain-distance      | ✅apply  |
@@ -78,30 +78,30 @@ Feature: Apply every typed EN 1991 mutation against an independent Python implem
       | change-height                      | 🧱change-height                      | ✅apply  |
       | change-width                       | 🏠change-width                       | ✅apply  |
       | change-depth                       | 💨change-depth                       | ✅apply  |
-      | change-assumed-delta-t             | 🌡change-assumed-delta-t             | ✅apply  |
+      | change-assumed-delta-t             | 🌡️change-assumed-delta-t             | ✅apply  |
       | change-construction-activity       | 🔥change-construction-activity       | ✅apply  |
-      | change-assumed-construction-qk     | ⚙change-assumed-construction-qk     | ✅apply  |
+      | change-assumed-construction-qk     | ⚙️change-assumed-construction-qk     | ✅apply  |
       | change-structure-kind              | 🌉change-structure-kind              | ✅apply  |
       | change-bridge-lane                 | 🌉change-bridge-lane                 | ✅apply  |
-      | change-bridge-span                 | 🏗change-bridge-span                 | ✅apply  |
+      | change-bridge-span                 | 🏗️change-bridge-span                 | ✅apply  |
       | change-bridge-lane-width           | ↔️change-bridge-lane-width          | ✅apply  |
       | change-assumed-bridge-tandem       | 🌾change-assumed-bridge-tandem       | ✅apply  |
-      | change-assumed-bridge-udl          | 🛣change-assumed-bridge-udl          | ✅apply  |
+      | change-assumed-bridge-udl          | 🛣️change-assumed-bridge-udl          | ✅apply  |
       | change-assumed-bridge-lm2          | 🚛change-assumed-bridge-lm2          | ✅apply  |
       | change-assumed-bridge-footway      | 🚶change-assumed-bridge-footway      | ✅apply  |
-      | change-storey-count                | 🏙change-storey-count                | ✅apply  |
-      | change-t-max                       | 🌡change-t-max                       | ✅apply  |
+      | change-storey-count                | 🏙️change-storey-count                | ✅apply  |
+      | change-t-max                       | 🌡️change-t-max                       | ✅apply  |
       | change-t-min                       | 🧊change-t-min                       | ✅apply  |
-      | change-initial-temperature         | 🕰change-initial-temperature         | ✅apply  |
-      | change-thermal-element-type        | 🏗change-thermal-element-type        | ✅apply  |
+      | change-initial-temperature         | 🕰️change-initial-temperature         | ✅apply  |
+      | change-thermal-element-type        | 🏗️change-thermal-element-type        | ✅apply  |
       | change-thermal-bridge-type         | 🌉change-thermal-bridge-type         | ✅apply  |
       | change-linear-temperature-gradient | 📏change-linear-temperature-gradient | ✅apply  |
       | change-fire-mode                   | 🔥change-fire-mode                   | ✅apply  |
       | change-fire-curve                  | 📉change-fire-curve                  | ✅apply  |
-      | change-fire-duration               | ⏱change-fire-duration               | ✅apply  |
-      | change-assumed-gas-temperature     | ♨change-assumed-gas-temperature     | ✅apply  |
+      | change-fire-duration               | ⏱️change-fire-duration               | ✅apply  |
+      | change-assumed-gas-temperature     | ♨️change-assumed-gas-temperature     | ✅apply  |
       | change-assumed-h-net               | 🔆change-assumed-h-net               | ✅apply  |
-      | change-fire-compartment-area       | 🗺change-fire-compartment-area       | ✅apply  |
+      | change-fire-compartment-area       | 🗺️change-fire-compartment-area       | ✅apply  |
       | change-fire-compartment-height     | 📐change-fire-compartment-height     | ✅apply  |
       | change-fire-opening-factor         | 🪟change-fire-opening-factor         | ✅apply  |
       | change-fire-thermal-inertia        | 🧱change-fire-thermal-inertia        | ✅apply  |
@@ -118,9 +118,9 @@ Feature: Apply every typed EN 1991 mutation against an independent Python implem
       | change-assumed-crane-wheel         | ➖change-assumed-crane-wheel         | ✅apply  |
       | change-assumed-crane-horizontal    | ↔️change-assumed-crane-horizontal   | ✅apply  |
       | change-silo-claimed                | 🏭change-silo-claimed                | ✅apply  |
-      | change-silo-kind                   | ⚖change-silo-kind                   | ✅apply  |
+      | change-silo-kind                   | ⚖️change-silo-kind                   | ✅apply  |
       | change-silo-bulk-density           | 🌾change-silo-bulk-density           | ✅apply  |
-      | change-silo-height                 | 🏷change-silo-height                 | ✅apply  |
+      | change-silo-height                 | 🏷️change-silo-height                 | ✅apply  |
       | change-silo-hydraulic-radius       | ⭕change-silo-hydraulic-radius       | ✅apply  |
       | change-silo-mu                     | 🔎change-silo-mu                     | ✅apply  |
       | change-silo-k                      | ⚙️change-silo-k                     | ✅apply  |
@@ -130,7 +130,7 @@ Feature: Apply every typed EN 1991 mutation against an independent Python implem
       | change-floor-assumed-qk            | 🏢change-floor-assumed-qk            | ✅apply  |
       | change-self-weight-assumed-gk      | 🚧change-self-weight-assumed-gk      | ✅apply  |
       | change-roof-assumed-sk             | 🌨️change-roof-assumed-sk            | ✅apply  |
-      | change-wind-face-assumed-wp        | 🛡change-wind-face-assumed-wp        | ✅apply  |
+      | change-wind-face-assumed-wp        | 🛡️change-wind-face-assumed-wp        | ✅apply  |
       | change-accidental-assumed-force    | 🚗change-accidental-assumed-force    | ✅apply  |
       | insert-floors                      | ➕️insert-floors                     | ✅apply  |
       | remove-floors                      | ➖️remove-floors                     | ✅apply  |
@@ -157,11 +157,11 @@ Feature: Apply every typed EN 1991 mutation against an independent Python implem
       | id                                 | dir                                 | fixture |
       | change-annex                       | 🌍change-annex                       | ✅apply  |
       | change-snow-zone                   | 🗺️change-snow-zone                  | ✅apply  |
-      | change-altitude                    | ❄change-altitude                    | ✅apply  |
+      | change-altitude                    | ❄️change-altitude                    | ✅apply  |
       | change-en-sk                       | ❄️change-en-sk                      | ✅apply  |
-      | change-north-german-lowland-snow   | 🏔change-north-german-lowland-snow   | ✅apply  |
+      | change-north-german-lowland-snow   | 🏔️change-north-german-lowland-snow   | ✅apply  |
       | change-wind-zone                   | 🪁change-wind-zone                   | ✅apply  |
-      | change-en-vb                       | 🌬change-en-vb                       | ✅apply  |
+      | change-en-vb                       | 🌬️change-en-vb                       | ✅apply  |
       | change-terrain-category            | 🏞️change-terrain-category           | ✅apply  |
       | change-mixed-terrain-upwind        | 🧭change-mixed-terrain-upwind        | ✅apply  |
       | change-mixed-terrain-distance      | 📏change-mixed-terrain-distance      | ✅apply  |
@@ -171,30 +171,30 @@ Feature: Apply every typed EN 1991 mutation against an independent Python implem
       | change-height                      | 🧱change-height                      | ✅apply  |
       | change-width                       | 🏠change-width                       | ✅apply  |
       | change-depth                       | 💨change-depth                       | ✅apply  |
-      | change-assumed-delta-t             | 🌡change-assumed-delta-t             | ✅apply  |
+      | change-assumed-delta-t             | 🌡️change-assumed-delta-t             | ✅apply  |
       | change-construction-activity       | 🔥change-construction-activity       | ✅apply  |
-      | change-assumed-construction-qk     | ⚙change-assumed-construction-qk     | ✅apply  |
+      | change-assumed-construction-qk     | ⚙️change-assumed-construction-qk     | ✅apply  |
       | change-structure-kind              | 🌉change-structure-kind              | ✅apply  |
       | change-bridge-lane                 | 🌉change-bridge-lane                 | ✅apply  |
-      | change-bridge-span                 | 🏗change-bridge-span                 | ✅apply  |
+      | change-bridge-span                 | 🏗️change-bridge-span                 | ✅apply  |
       | change-bridge-lane-width           | ↔️change-bridge-lane-width          | ✅apply  |
       | change-assumed-bridge-tandem       | 🌾change-assumed-bridge-tandem       | ✅apply  |
-      | change-assumed-bridge-udl          | 🛣change-assumed-bridge-udl          | ✅apply  |
+      | change-assumed-bridge-udl          | 🛣️change-assumed-bridge-udl          | ✅apply  |
       | change-assumed-bridge-lm2          | 🚛change-assumed-bridge-lm2          | ✅apply  |
       | change-assumed-bridge-footway      | 🚶change-assumed-bridge-footway      | ✅apply  |
-      | change-storey-count                | 🏙change-storey-count                | ✅apply  |
-      | change-t-max                       | 🌡change-t-max                       | ✅apply  |
+      | change-storey-count                | 🏙️change-storey-count                | ✅apply  |
+      | change-t-max                       | 🌡️change-t-max                       | ✅apply  |
       | change-t-min                       | 🧊change-t-min                       | ✅apply  |
-      | change-initial-temperature         | 🕰change-initial-temperature         | ✅apply  |
-      | change-thermal-element-type        | 🏗change-thermal-element-type        | ✅apply  |
+      | change-initial-temperature         | 🕰️change-initial-temperature         | ✅apply  |
+      | change-thermal-element-type        | 🏗️change-thermal-element-type        | ✅apply  |
       | change-thermal-bridge-type         | 🌉change-thermal-bridge-type         | ✅apply  |
       | change-linear-temperature-gradient | 📏change-linear-temperature-gradient | ✅apply  |
       | change-fire-mode                   | 🔥change-fire-mode                   | ✅apply  |
       | change-fire-curve                  | 📉change-fire-curve                  | ✅apply  |
-      | change-fire-duration               | ⏱change-fire-duration               | ✅apply  |
-      | change-assumed-gas-temperature     | ♨change-assumed-gas-temperature     | ✅apply  |
+      | change-fire-duration               | ⏱️change-fire-duration               | ✅apply  |
+      | change-assumed-gas-temperature     | ♨️change-assumed-gas-temperature     | ✅apply  |
       | change-assumed-h-net               | 🔆change-assumed-h-net               | ✅apply  |
-      | change-fire-compartment-area       | 🗺change-fire-compartment-area       | ✅apply  |
+      | change-fire-compartment-area       | 🗺️change-fire-compartment-area       | ✅apply  |
       | change-fire-compartment-height     | 📐change-fire-compartment-height     | ✅apply  |
       | change-fire-opening-factor         | 🪟change-fire-opening-factor         | ✅apply  |
       | change-fire-thermal-inertia        | 🧱change-fire-thermal-inertia        | ✅apply  |
@@ -211,9 +211,9 @@ Feature: Apply every typed EN 1991 mutation against an independent Python implem
       | change-assumed-crane-wheel         | ➖change-assumed-crane-wheel         | ✅apply  |
       | change-assumed-crane-horizontal    | ↔️change-assumed-crane-horizontal   | ✅apply  |
       | change-silo-claimed                | 🏭change-silo-claimed                | ✅apply  |
-      | change-silo-kind                   | ⚖change-silo-kind                   | ✅apply  |
+      | change-silo-kind                   | ⚖️change-silo-kind                   | ✅apply  |
       | change-silo-bulk-density           | 🌾change-silo-bulk-density           | ✅apply  |
-      | change-silo-height                 | 🏷change-silo-height                 | ✅apply  |
+      | change-silo-height                 | 🏷️change-silo-height                 | ✅apply  |
       | change-silo-hydraulic-radius       | ⭕change-silo-hydraulic-radius       | ✅apply  |
       | change-silo-mu                     | 🔎change-silo-mu                     | ✅apply  |
       | change-silo-k                      | ⚙️change-silo-k                     | ✅apply  |
@@ -223,7 +223,7 @@ Feature: Apply every typed EN 1991 mutation against an independent Python implem
       | change-floor-assumed-qk            | 🏢change-floor-assumed-qk            | ✅apply  |
       | change-self-weight-assumed-gk      | 🚧change-self-weight-assumed-gk      | ✅apply  |
       | change-roof-assumed-sk             | 🌨️change-roof-assumed-sk            | ✅apply  |
-      | change-wind-face-assumed-wp        | 🛡change-wind-face-assumed-wp        | ✅apply  |
+      | change-wind-face-assumed-wp        | 🛡️change-wind-face-assumed-wp        | ✅apply  |
       | change-accidental-assumed-force    | 🚗change-accidental-assumed-force    | ✅apply  |
       | insert-floors                      | ➕️insert-floors                     | ✅apply  |
       | remove-floors                      | ➖️remove-floors                     | ✅apply  |

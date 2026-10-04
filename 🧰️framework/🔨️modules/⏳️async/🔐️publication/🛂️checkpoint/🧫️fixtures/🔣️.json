@@ -1,0 +1,159 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "live-owner",
+      "depth": 1,
+      "maxTokenNodes": 1,
+      "actions": [
+        "checkpoint",
+        "checkpoint"
+      ],
+      "expected": {
+        "outcomes": [
+          "live",
+          "live"
+        ],
+        "attempts": 1,
+        "progressEvents": 1,
+        "gateHeld": true,
+        "reacquired": true
+      }
+    },
+    {
+      "id": "cancel-current",
+      "depth": 1,
+      "maxTokenNodes": 1,
+      "actions": [
+        "cancel-current",
+        "checkpoint"
+      ],
+      "expected": {
+        "outcomes": [
+          "cancelled"
+        ],
+        "attempts": 1,
+        "progressEvents": 1,
+        "gateHeld": true,
+        "reacquired": true
+      }
+    },
+    {
+      "id": "park-current-resume",
+      "depth": 1,
+      "maxTokenNodes": 1,
+      "actions": [
+        "park-current",
+        "checkpoint",
+        "unpark-current",
+        "checkpoint"
+      ],
+      "expected": {
+        "outcomes": [
+          "parked",
+          "live"
+        ],
+        "attempts": 1,
+        "progressEvents": 1,
+        "gateHeld": true,
+        "reacquired": true
+      }
+    },
+    {
+      "id": "cancel-parent",
+      "depth": 2,
+      "maxTokenNodes": 2,
+      "actions": [
+        "cancel-parent",
+        "checkpoint"
+      ],
+      "expected": {
+        "outcomes": [
+          "cancelled"
+        ],
+        "attempts": 1,
+        "progressEvents": 1,
+        "gateHeld": true,
+        "reacquired": true
+      }
+    },
+    {
+      "id": "park-parent-resume",
+      "depth": 2,
+      "maxTokenNodes": 2,
+      "actions": [
+        "park-parent",
+        "checkpoint",
+        "unpark-parent",
+        "checkpoint"
+      ],
+      "expected": {
+        "outcomes": [
+          "parked",
+          "live"
+        ],
+        "attempts": 1,
+        "progressEvents": 1,
+        "gateHeld": true,
+        "reacquired": true
+      }
+    },
+    {
+      "id": "cancel-parent-dominates-park",
+      "depth": 2,
+      "maxTokenNodes": 2,
+      "actions": [
+        "cancel-parent",
+        "park-current",
+        "checkpoint"
+      ],
+      "expected": {
+        "outcomes": [
+          "cancelled"
+        ],
+        "attempts": 1,
+        "progressEvents": 1,
+        "gateHeld": true,
+        "reacquired": true
+      }
+    },
+    {
+      "id": "exact-ancestry-bound",
+      "depth": 4096,
+      "maxTokenNodes": 4096,
+      "actions": [
+        "checkpoint",
+        "cancel-parent",
+        "checkpoint"
+      ],
+      "expected": {
+        "outcomes": [
+          "live",
+          "cancelled"
+        ],
+        "attempts": 1,
+        "progressEvents": 1,
+        "gateHeld": true,
+        "reacquired": true
+      }
+    },
+    {
+      "id": "unrelated-token",
+      "depth": 1,
+      "maxTokenNodes": 1,
+      "actions": [
+        "cancel-other",
+        "checkpoint"
+      ],
+      "expected": {
+        "outcomes": [
+          "live"
+        ],
+        "attempts": 1,
+        "progressEvents": 1,
+        "gateHeld": true,
+        "reacquired": true
+      }
+    }
+  ]
+}

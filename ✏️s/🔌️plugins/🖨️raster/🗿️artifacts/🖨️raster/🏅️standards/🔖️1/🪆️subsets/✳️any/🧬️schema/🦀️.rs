@@ -5,7 +5,7 @@ use schema::ArtifactSchema;
 
 //#region 🔖️Artifact
 /// 🧬️ raster document artifact state.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.raster.raster")]
 pub struct RasterArtifact {
@@ -85,7 +85,7 @@ pub mod derived_construction {
     #[derive(Clone, Debug, Default)]
     pub struct RasterBuilderConstruction {
         snapshot: RasterSnapshot,
-        diagnostics: Vec<dsl::Diagnostic>,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
     }
 
     impl ArtifactBuilder for RasterBuilderConstruction {
@@ -98,7 +98,7 @@ pub mod derived_construction {
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(Self::from_snapshot(<RasterSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
@@ -108,7 +108,7 @@ pub mod derived_construction {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("build.apply", dsl::TextSpan::at(1, 1), error.to_string())),
+                Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
@@ -117,7 +117,7 @@ pub mod derived_construction {
             self.snapshot = snapshot;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -159,14 +159,14 @@ pub mod derived_analysis {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <RasterSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }
@@ -227,7 +227,7 @@ pub fn layer_name(layer: &RasterLayerNode) -> &str {
     }
 }
 
-#[derive(Clone,Copy,Debug,PartialEq,Eq,dsl::ToValue,dsl::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all="camelCase")]
 pub struct LayerProtection {pub locked:bool,pub inherited:bool,pub descendant:bool,pub editable:bool,pub structural:bool,pub can_change_lock:bool}
 pub fn layer_locked(layer:&RasterLayerNode)->bool {match layer {RasterLayerNode::Pixel {locked,..}|RasterLayerNode::Group {locked,..}|RasterLayerNode::Adjustment {locked,..}=>*locked}}
@@ -370,8 +370,8 @@ pub fn semio_fixture_snapshot() -> RasterSnapshot {
     let emblem = RasterImageAsset { mime: "image/png".into(), data: base64_codec::base64_standard_decode("iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEklEQVR42mP4z8DwHwyBNBgAAEnICfcD2WTxAAAAAElFTkSuQmCC").unwrap_or_default() };
     assets.insert("semio-emblem".into(), crate::mint_raster_asset_child("semio-emblem", &emblem)).expect("single fixture asset fits the owned map");
     let mut params = RasterOwnedMap::new();
-    params.insert("brightness".into(), dsl::DslValue::float(0.12)).expect("first fixture adjustment fits the owned map");
-    params.insert("contrast".into(), dsl::DslValue::float(0.08)).expect("second fixture adjustment has a distinct key and fits the owned map");
+    params.insert("brightness".into(), semio_framework_value::DslValue::float(0.12)).expect("first fixture adjustment fits the owned map");
+    params.insert("contrast".into(), semio_framework_value::DslValue::float(0.08)).expect("second fixture adjustment has a distinct key and fits the owned map");
     RasterSnapshot {
         schema: RASTER_DOCUMENT_SCHEMA.into(),
         id: "semio-demo".into(),

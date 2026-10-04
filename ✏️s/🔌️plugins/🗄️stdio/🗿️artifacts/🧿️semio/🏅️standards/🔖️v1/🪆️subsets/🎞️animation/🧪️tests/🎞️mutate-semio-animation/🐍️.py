@@ -40,7 +40,7 @@ from __future__ import annotations
 # region 🔖️Imports
 import json
 
-from semio_repo_test import Adapter, Context, Outcome, digest
+from semio_repo_test import Adapter, Context, Outcome, digest, patched_snapshot
 
 # endregion 🔖️Imports
 
@@ -51,6 +51,7 @@ from semio_repo_test import Adapter, Context, Outcome, digest
 KINDS = (
     "no-mutation",
     "set-snapshot",
+    "patch-snapshot",
     "insert-timeline",
     "remove-timeline",
     "set-timeline-name",
@@ -340,6 +341,8 @@ def apply_mutation(snapshot: dict, mutation: dict) -> dict:
     kind, args = parts(mutation)
     if kind == "no-mutation":
         return result
+    if kind == "patch-snapshot":
+        return patched_snapshot(snapshot, args["patch"])
     if kind == "set-snapshot":
         return clone(args["snapshot"])
     if kind == "insert-timeline":
@@ -389,6 +392,8 @@ def inverse_mutation(snapshot: dict, mutation: dict) -> dict:
     kind, args = parts(mutation)
     if kind == "no-mutation":
         return wire("no-mutation", {})
+    if kind == "patch-snapshot":
+        return wire("set-snapshot", {"snapshot": clone(snapshot)})
     if kind == "set-snapshot":
         return wire("set-snapshot", {"snapshot": clone(snapshot)})
     if kind == "insert-timeline":

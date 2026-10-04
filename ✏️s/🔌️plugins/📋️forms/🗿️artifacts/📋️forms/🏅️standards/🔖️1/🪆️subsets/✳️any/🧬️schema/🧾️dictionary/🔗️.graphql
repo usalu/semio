@@ -1,0 +1,5 @@
+"""🧾️ Unique literal question identities retain complete intrinsic value owners."""
+type FormDictionaryEntry { questionId: String! value: DslValue! }
+type FormDictionary { entries: [FormDictionaryEntry!]! }
+input FormDictionaryEntryInput { questionId: String! value: DslValueInput! }
+input FormDictionaryInput { entries: [FormDictionaryEntryInput!]! }

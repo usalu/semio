@@ -1,6 +1,6 @@
 mod tests {
     use super::*;
-    use crate::standards::v6_0::subsets::document::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffTag, TiffValues};
+    use crate::standards::v6_0::subsets::document::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffStorage, TiffStorageKind, TiffTag, TiffValues};
     use semio_framework_plugin::AnalyzeSource;
 
     /// 🩹 `TiffSnapshot::default()` has no IFD at all, which the real encoder rejects ("tiff:
@@ -12,8 +12,7 @@ mod tests {
     fn minimal_non_degenerate_snapshot() -> TiffSnapshot {
         TiffSnapshot {
             byte_order: TiffByteOrder::LittleEndian,
-            ifds: vec![TiffIfd { pixels: Vec::new(), entries: vec![TiffTag { tag: 256, kind: TiffFieldType::Long, values: TiffValues::Long(vec![1]) }, TiffTag { tag: 257, kind: TiffFieldType::Long, values: TiffValues::Long(vec![1]) }] }],
-            pixels: vec![0, 0, 0, 255],
+            ifds: vec![TiffIfd { storage: TiffStorage { kind: TiffStorageKind::Strips, chunks: vec![vec![0, 0, 0, 255]], ..TiffStorage::default() }, entries: vec![TiffTag { tag: 256, values: TiffValues::Long(vec![1]) }, TiffTag { tag: 257, values: TiffValues::Long(vec![1]) }, TiffTag { tag: 258, values: TiffValues::Short(vec![8, 8, 8, 8]) }, TiffTag { tag: 259, values: TiffValues::Short(vec![1]) }, TiffTag { tag: 262, values: TiffValues::Short(vec![2]) }, TiffTag { tag: 277, values: TiffValues::Short(vec![4]) }, TiffTag { tag: 278, values: TiffValues::Long(vec![1]) }] }],
             ..TiffSnapshot::default()
         }
     }

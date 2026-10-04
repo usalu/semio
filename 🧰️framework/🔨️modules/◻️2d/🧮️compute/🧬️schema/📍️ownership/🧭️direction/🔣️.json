@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/2d/compute/ownership/direction.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "keys",
+    "neutralPrefix",
+    "absent",
+    "copied"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "keys": {
+      "const": [
+        "version",
+        "source",
+        "unit",
+        "retainedUnitSha256",
+        "family",
+        "laws",
+        "cacheBehavior"
+      ]
+    },
+    "neutralPrefix": {
+      "const": "🧰️framework/🔨️modules/◻️2d/🧮️compute"
+    },
+    "absent": {
+      "const": [
+        "🧰️framework/🛍️products",
+        "✏️s",
+        "🌎️hub"
+      ]
+    },
+    "copied": {
+      "const": [
+        "🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️tests/📍️ownership/🟦️.ts",
+        "🧰️framework/🔨️modules/◻️2d/🧮️compute/🧫️fixtures/📍️ownership/🔣️.json",
+        "🧰️framework/🔨️modules/◻️2d/🧮️compute/🧬️schema/📍️ownership/🔣️.json",
+        "🧰️framework/🔨️modules/◻️2d/🧮️compute/🦀️.rs",
+        "🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️tests/🔬️unit/🦀️.rs",
+        "🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust/🦀️.rs",
+        "🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust/Cargo.toml"
+      ]
+    }
+  }
+}

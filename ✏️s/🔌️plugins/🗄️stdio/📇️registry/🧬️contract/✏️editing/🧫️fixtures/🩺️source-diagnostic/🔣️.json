@@ -1,0 +1,15 @@
+{
+  "why": "Malformed whole-source edits are admitted by bounded preflight, then refused by the semantic reducer with an exact one-based source span that survives the typed Fault carrier.",
+  "cases": [
+    {
+      "id": "unexpected-token-on-third-line",
+      "source": "{\n  \"title\": \"ok\",\n  @\n}",
+      "expected": { "code": "snapshot-edit.invalid-source", "line": 3, "column": 3, "length": 1 }
+    },
+    {
+      "id": "trailing-token-on-second-line",
+      "source": "{\"title\":\"ok\"}\n@",
+      "expected": { "code": "snapshot-edit.invalid-source", "line": 2, "column": 1, "length": 1 }
+    }
+  ]
+}

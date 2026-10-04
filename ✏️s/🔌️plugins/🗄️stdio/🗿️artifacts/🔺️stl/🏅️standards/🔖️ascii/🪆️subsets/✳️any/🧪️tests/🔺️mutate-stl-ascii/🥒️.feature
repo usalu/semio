@@ -55,6 +55,7 @@ Feature: Apply every typed STL ascii mutation to a real-world mesh
       | remove-triangle        | {"index": 500} |
       | set-triangle-normal    | {"index": 500, "normal": [0.0, 1.0, 0.0]} |
       | set-triangle-vertices  | {"index": 500, "vertices": [[1.0, 1.0, 1.0], [2.0, 1.0, 1.0], [1.0, 2.0, 1.0]]} |
+      | patch-snapshot | {"patch": {"operation": "set", "path": "/solidName", "value": "patched-hexagonal-forest"}} |
 
   @id-inverse
   @level-exhaustive
@@ -75,6 +76,7 @@ Feature: Apply every typed STL ascii mutation to a real-world mesh
       | remove-triangle        | {"index": 500} |
       | set-triangle-normal    | {"index": 500, "normal": [0.0, 1.0, 0.0]} |
       | set-triangle-vertices  | {"index": 500, "vertices": [[1.0, 1.0, 1.0], [2.0, 1.0, 1.0], [1.0, 2.0, 1.0]]} |
+      | patch-snapshot | {"patch": {"operation": "set", "path": "/solidName", "value": "patched-hexagonal-forest"}} |
 
   @id-identity-round-trip
   @level-long

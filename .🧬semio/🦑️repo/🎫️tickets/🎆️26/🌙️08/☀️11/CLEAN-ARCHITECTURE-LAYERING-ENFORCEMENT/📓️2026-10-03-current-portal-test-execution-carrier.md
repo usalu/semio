@@ -1,0 +1,11 @@
+# Current Portal Test Execution Carrier
+
+The original portal-layer law failed before its assertions with ReferenceError Worker is not defined. Its owned backboneWorkerFactory now receives an explicit local EventTarget test port; no global Worker shim or production behavior was changed. Plugin/app axes and both original assertions are retained. Whole original source and exact inverse are captured in generated/current-native-worker/portal-execution-carrier-before-inverse.json.
+
+Actual unchanged three-file scope746 replay passes739 and retains seven original semantic failures. The original portal law passes, all30 embedded and17 argument-gate laws pass. Whole React TypeScript passes49.4seconds. Exact entire engine fixture TypeScript separately refuses eight original component literals missing now-mandatory precision/snaps fields. Only those eight literals have been handcrafted with null precision/empty snap arrays; every existing scalar and assertion remains. Whole source before/after and exact inverse are retained in portal-carrier-strict-fixture-eight-bindings-before-inverse.json. Exact fixture strict compilation and entire746 replay after those bindings are pending; no final strict or whole runtime GREEN claimed.
+
+The EventTarget port proves this rendered portal law only; no backbone worker behavior or full Store assembly is claimed. Seven spacing/gesture/history/title assertion conflicts remain unchanged.
+
+### Final exact fixture and whole scope receipt
+
+The entire actual engine-contract fixture source now strict-compiles, zero diagnostics, session26688/Nx64seconds; no virtual or excluded original fixture substituted. After the eight explicit property bindings, the complete same746-case scope actually passes739 and fails the exact original seven semantic cases. Runtime32.81seconds/Nx35.3. Actual746 verbose identities are retained and match the prior full746 IDs exactly: missing0/added0. Both original portal assertions pass; all30 embedded and17 new argument laws pass. Whole current original source matches the declared after bytes. Separate whole React TSC passed49.4seconds. Receipt: generated/current-native-worker/portal-carrier-whole-runtime-roster-binding-2.json. No whole746 GREEN is claimed.

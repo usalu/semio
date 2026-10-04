@@ -13,7 +13,7 @@ pub fn diff(payload: &super::mutation::UpdateLayerTransform, base: &DrawingSnaps
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Layer \"{}\" transform must be finite.", payload.layer_id), [payload.layer_id.clone()]);
     }
     if layer_base(layer).transform == payload.transform {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Layer \"{}\" transform is unchanged.", payload.layer_id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Layer \"{}\" transform is unchanged.", payload.layer_id));
     }
     protocol::MutationOutcome::new(diff_set_layer_transform(&payload.layer_id, &payload.transform))
 }

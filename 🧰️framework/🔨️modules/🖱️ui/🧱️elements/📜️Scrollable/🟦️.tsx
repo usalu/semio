@@ -12,7 +12,7 @@ import * as React from "react";
 // 🧱️elements/🔌️Ports/🟦️.tsx's header comment for why the barrel import caused a real bug).
 import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-import { useWindowContentDeadLineScroll, windowContentDeadLineScrollClass } from "../🚧️WindowContentDeadLine/🟦️.tsx";
+import { useWindowContentDeadLineInset, windowContentDeadLineScrollClass } from "../🚧️WindowContentDeadLine/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🎮️Scrollable
@@ -27,7 +27,7 @@ const Scrollable = reactHostPort.forwardRef<HTMLDivElement, React.ComponentProps
     },
     [ref],
   );
-  useWindowContentDeadLineScroll(scrollerRef);
+  useWindowContentDeadLineInset(scrollerRef);
   return (
     <div
       ref={setScrollerRef}

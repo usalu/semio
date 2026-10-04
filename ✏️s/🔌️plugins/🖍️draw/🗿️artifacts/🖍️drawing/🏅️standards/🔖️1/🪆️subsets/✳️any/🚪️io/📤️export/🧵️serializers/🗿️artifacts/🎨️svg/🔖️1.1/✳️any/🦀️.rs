@@ -1,7 +1,7 @@
 //! 🎨️ Drawing scene to typed SVG, preserving authored geometry, paint and affine transforms.
 
 use crate::DrawingSnapshot;
-use semio_framework::io::io_mechanism::Serializer;
+use semio_framework::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
 
@@ -12,14 +12,15 @@ pub struct DrawingIntoSvg;
 impl Serializer<DrawingSnapshot> for DrawingIntoSvg {
     const INTO: Dialect = SVG_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &DrawingSnapshot) -> IoResult<IoPayload> {
-        let (svg_text, _width, _height) = drawing_document_to_svg(from).map_err(|message| IoError { message: format!("DrawingIntoSvg: {message}"), diagnostics: Vec::new() })?;
+    async fn serialize(from: &DrawingSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+        let (svg_text, _width, _height) = drawing_document_to_svg(from).map_err(|message| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("DrawingIntoSvg: {message}"))))?;
         Ok(IoOutcome::clean(IoPayload::Text(svg_text)))
     }
 }
 
 use crate::schema::{DrawingSceneNode, flatten_drawing_document_to_scene_nodes};
 use crate::{FillStyle, GradientStop, PathSegment};
+use crate::schema::fill::sampling::PreparedFill;
 use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot::{CommonAttrs, PathCommand, SvgElement, TransformOp, ViewBox, typed_to_svg_document, write_svg_xml};
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlAttr;
 
@@ -35,14 +36,15 @@ fn stops(values: &[GradientStop]) -> Vec<SvgElement> {
     values.into_iter().map(|stop| SvgElement::Stop { common: CommonAttrs::default(), offset: stop.offset.clamp(0.0,1.0).to_string(), stop_color: Some(rgb(&stop.color)), stop_opacity: Some(stop.color[3].to_string()) }).collect()
 }
 
-fn presentation(node: &DrawingSceneNode, index: usize, defs: &mut Vec<SvgElement>) -> CommonAttrs {
+fn presentation(node: &DrawingSceneNode, index: usize, defs: &mut Vec<SvgElement>) -> Result<CommonAttrs,String> {
     let mut common = CommonAttrs::default().with_fill("none").with_stroke("none");
-    match &node.fill {
-        Some(FillStyle::Solid { color }) => {
-            common.presentation.fill = Some(rgb(color));
+    let constant=node.fill.as_ref().map(PreparedFill::new).transpose().map_err(|message|format!("SVG layer {}: {message}",node.id))?.and_then(|fill|fill.constant_color());
+    match (&node.fill,constant) {
+        (_,Some(color)) => {
+            common.presentation.fill = Some(rgb(&color));
             common.presentation.fill_opacity = Some(color[3].to_string());
         }
-        Some(fill) => {
+        (Some(fill),None) => {
             let id = format!("draw-gradient-{index}");
             let gradient_common = CommonAttrs { extra_attrs: vec![attr("gradientUnits", "userSpaceOnUse")], ..Default::default() };
             let element = match fill {
@@ -53,7 +55,7 @@ fn presentation(node: &DrawingSceneNode, index: usize, defs: &mut Vec<SvgElement
             defs.push(element);
             common.presentation.fill = Some(format!("url(#{id})"));
         }
-        None => {}
+        (None,None) => {}
     }
     if let Some(stroke) = node.stroke.as_ref().filter(|stroke| stroke.width.is_finite() && stroke.width > 0.0) {
         common.presentation.stroke = Some(rgb(&stroke.color));
@@ -63,7 +65,7 @@ fn presentation(node: &DrawingSceneNode, index: usize, defs: &mut Vec<SvgElement
         if let Some(dash) = &stroke.dash { common.extra_attrs.push(attr("stroke-dasharray", dash.iter().map(ToString::to_string).collect::<Vec<_>>().join(" "))); }
     }
     common.extra_attrs.push(attr("fill-rule", node.fill_rule.as_deref().unwrap_or("evenodd")));
-    common
+    Ok(common)
 }
 
 fn path_command(segment: &PathSegment) -> PathCommand {
@@ -129,7 +131,7 @@ pub fn drawing_scene_to_svg(nodes: &[DrawingSceneNode], view_box: [f64;4]) -> Re
             if group.id.is_empty() || !opened.insert(group.id.clone()) || !group.opacity.is_finite() || !(0.0..=1.0).contains(&group.opacity) || group.blend_mode!="normal" && blend(&group.blend_mode)=="normal" {return Err("Invalid scene compositing hierarchy".into());}
             stack.push((group,Vec::new()));
         }
-        let mut common = presentation(node,index,&mut defs);
+        let mut common = presentation(node,index,&mut defs)?;
         let leaf = if let Some(text) = &node.text {
             common.presentation.font_size = Some(text.size.to_string());
             common.presentation.font_family = Some("ui-sans-serif, system-ui, sans-serif".into());

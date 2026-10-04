@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio:world:component-contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "marquee",
+    "granularities",
+    "methods",
+    "merges"
+  ],
+  "properties": {
+    "schema": {
+      "const": "world.component-contract.v1"
+    },
+    "marquee": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "slot",
+          "group"
+        ],
+        "properties": {
+          "slot": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1023
+          },
+          "group": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          }
+        }
+      }
+    },
+    "granularities": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "surface",
+          "item",
+          "vertex",
+          "edge",
+          "face"
+        ]
+      }
+    },
+    "methods": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "pick",
+          "rectangle",
+          "lasso"
+        ]
+      }
+    },
+    "merges": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "replace",
+          "additive",
+          "subtractive",
+          "invertive"
+        ]
+      }
+    }
+  }
+}

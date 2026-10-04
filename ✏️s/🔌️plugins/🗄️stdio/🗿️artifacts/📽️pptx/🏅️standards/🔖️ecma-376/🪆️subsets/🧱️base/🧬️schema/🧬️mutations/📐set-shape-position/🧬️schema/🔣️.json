@@ -4,88 +4,21 @@
   "title": "SetShapePosition",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "mutation",
-    "slideIndex",
-    "shapeIndex",
-    "position"
-  ],
+  "required": ["mutation", "address", "position"],
   "properties": {
-    "mutation": {
-      "const": "setShapePosition",
-      "description": "Aggregate discriminator spliced in by PptxMutation; absent when the payload stands alone."
-    },
-    "slideIndex": {
-      "type": "integer",
-      "minimum": 0,
+    "mutation": { "const": "setShapePosition" },
+    "address": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pptx/ecma-376/base/xml-address.json#/$defs/PptxShapeAddress",
       "x-semio-ui": {
-        "widget": "stepper",
-        "label": {
-          "en": "Slide Index",
-          "de": "Folienindex"
-        },
-        "description": {
-          "en": "Zero-based position of the slide in the deck.",
-          "de": "Nullbasierte Position der Folie im Foliensatz."
-        },
-        "precision": 0,
-        "group": "target",
-        "order": 10
-      }
-    },
-    "shapeIndex": {
-      "type": "integer",
-      "minimum": 0,
-      "x-semio-ui": {
-        "widget": "stepper",
-        "label": {
-          "en": "Shape Index",
-          "de": "Formindex"
-        },
-        "description": {
-          "en": "Zero-based position of the shape on its slide.",
-          "de": "Nullbasierte Position der Form auf ihrer Folie."
-        },
-        "precision": 0,
-        "group": "target",
-        "order": 20
+        "label": { "en": "Shape", "de": "Form" },
+        "description": { "en": "Revision-bound positioned shape to edit.", "de": "Revisionsgebundene positionierte Form zur Bearbeitung." }
       }
     },
     "position": {
-      "$ref": "#/$defs/PptxTransform"
-    }
-  },
-  "$defs": {
-    "PptxTransform": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "x",
-        "y",
-        "cx",
-        "cy"
-      ],
-      "properties": {
-        "x": {
-          "type": "string",
-          "pattern": "^(-?[1-9][0-9]*|0)$",
-          "maxLength": 20
-        },
-        "y": {
-          "type": "string",
-          "pattern": "^(-?[1-9][0-9]*|0)$",
-          "maxLength": 20
-        },
-        "cx": {
-          "type": "string",
-          "pattern": "^(-?[1-9][0-9]*|0)$",
-          "maxLength": 20
-        },
-        "cy": {
-          "type": "string",
-          "pattern": "^(-?[1-9][0-9]*|0)$",
-          "maxLength": 20
-        }
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pptx/ecma-376/base/snapshot.json#/$defs/PptxTransform",
+      "x-semio-ui": {
+        "label": { "en": "Shape position", "de": "Formposition" },
+        "description": { "en": "Replacement DrawingML position and extent in EMUs.", "de": "Ersatzposition und -ausdehnung in DrawingML-EMUs." }
       }
     }
   }

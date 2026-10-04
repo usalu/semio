@@ -21,7 +21,7 @@ fn text(value: &Value) -> &str {
 }
 
 fn dsl(value: &Value) -> DslValue {
-    dsl::os_pack::json::to_dsl_value(&dsl::os_pack::json::parse(&value.to_string()).expect("fixture value is JSON"))
+    semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture value is JSON"))
 }
 
 //#region 🧸️ToyHistoryApp
@@ -60,12 +60,16 @@ impl ArtifactApp for ToyHistoryApp {
     }
 
     fn tool_intent_kinds(tool: &str) -> &'static [&'static str] {
-        if tool.ends_with("#gesture") { &["set-label"] } else { &[] }
+        if tool.ends_with("#gesture") {
+            &["set-label"]
+        } else {
+            &[]
+        }
     }
 
     fn catalogue_example_document(example_id: &str) -> Option<Result<String, Fault>> {
         let example = TestSnapshot { count: 5, ..TestSnapshot::default() };
-        (example_id == "five").then(|| Ok(dsl::os_pack::json::to_string(&dsl::os_pack::json::from_dsl_value(&protocol::ToValue::to_value(&example)))))
+        (example_id == "five").then(|| Ok(semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&example)))))
     }
 
     async fn initial_snapshot() -> TestSnapshot {
@@ -408,7 +412,11 @@ async fn cancel_keeps_drafts_and_a_remote_edit_replays_again() {
     assert_eq!(app.time_travel.session().stage, TimeTravelStage::Reviewing);
     assert!(app.time_travel.session().report.is_none() && app.time_travel.session().accepted.len() == 1, "the draft stays, no report");
     let status = app.time_travel.status().expect("a reviewing session");
-    assert_eq!((status.review, status.rerunnable, status.fault.as_deref()), (Some(semio_framework::kernel::HistoryTimeTravelReview::NeedsReplay), true, Some(semio_framework_time_travel::TIME_TRAVEL_CANCELLED_CODE)), "a cancelled replay needs a rerun, never reads as no changes");
+    assert_eq!(
+        (status.review, status.rerunnable, status.fault.as_deref()),
+        (Some(semio_framework::kernel::HistoryTimeTravelReview::NeedsReplay), true, Some(semio_framework_time_travel::TIME_TRAVEL_CANCELLED_CODE)),
+        "a cancelled replay needs a rerun, never reads as no changes"
+    );
     let history = render_history(&mut app, Locale::En).await;
     assert!(find_node(&history, "framework.history.timeTravel.rerun").is_some_and(|rerun| rerun["disabled"] != Value::Bool(true)), "the band offers Replay again");
     let rerun = verb(&mut app, &fixture, "historyEditRerun", Vec::new()).await;
@@ -427,7 +435,8 @@ async fn cancel_keeps_drafts_and_a_remote_edit_replays_again() {
     let generation = app.store.generation();
     app.tick_backbone().await.expect("ingest remote edit");
     assert!(app.store.generation() > generation, "the remote edit is ingested while the session reviews");
-    pump_until(&mut app, "the moved base replays again", |app| app.time_travel.session().stage == TimeTravelStage::Reviewing && app.time_travel.session().report.is_some() && app.time_travel.session().base.store_generation == app.store.generation()).await;
+    pump_until(&mut app, "the moved base replays again", |app| app.time_travel.session().stage == TimeTravelStage::Reviewing && app.time_travel.session().report.is_some() && app.time_travel.session().base.store_generation == app.store.generation())
+        .await;
     assert!(render_body(&mut app).await.contains("label=b"), "the replayed head keeps the draft");
     verb(&mut app, &fixture, "historyEditExit", Vec::new()).await;
     pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work()).await;
@@ -437,8 +446,7 @@ async fn cancel_keeps_drafts_and_a_remote_edit_replays_again() {
 }
 
 /// ⚖️ LAW: one committed tool transaction is one edit and one history row carrying its `TransactionRef`, labelled from
-/// its mutations when it has no description, with one editable mutation row per op; a transaction riding a coalesced
-/// amend is refused.
+/// its mutations when it has no description, with one editable mutation row per op.
 #[semio_framework_async_macros::async_test]
 async fn a_committed_tool_transaction_is_one_row_with_its_reference_and_mutation_rows() {
     let fixture = fixture();
@@ -460,8 +468,6 @@ async fn a_committed_tool_transaction_is_one_row_with_its_reference_and_mutation
     let mut rendered = find_node(&history, &format!("framework.history.entry.{}", row.seq)).unwrap_or_else(|| panic!("the transaction row: {history}")).clone();
     rendered.as_object_mut().expect("a node").remove("children");
     assert!(row.op_lines.iter().all(|line| !rendered.to_string().contains(line.as_str())), "labelled mutation children replace the raw op-lines description: {rendered}");
-    let coalesced = Emit::<TestMutation, TestConfigMutation, NoDraftMutation> { coalesce_key: Some("drag".into()), ..Emit::commit_transaction(transaction, vec![SetCount { value: 3 }.into()]) };
-    assert_eq!(app.dispatch_emit("select", coalesced, &meta(&fixture)).await.err().map(|fault| fault.code), Some(FaultCode::new("toolTransaction.shape")));
     close(&mut app);
 }
 
@@ -480,10 +486,10 @@ async fn a_transaction_row_reads_its_declared_intent_leaf_before_and_after_reloa
         app.dispatch_emit("select", Emit::<TestMutation, TestConfigMutation, NoDraftMutation>::commit_transaction(transaction.clone(), support_then_intent()), &meta(&fixture)).await.expect("the transaction publishes");
     }
     let mut reloaded = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest()).await;
-    reloaded.load_document_text(&app.document_text().await.expect("document text")).await.expect("text reload");
+    artifact_app_laws::load_document_text(&mut reloaded, &app.document_text().await.expect("document text")).await.expect("text reload");
     reloaded.refresh_cache().await.expect("the reloaded log backfills");
     let mut repacked = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest()).await;
-    repacked.load_document_pack(&app.document_pack().await.expect("document pack")).await.expect("pack reload");
+    artifact_app_laws::load_document(&mut repacked, &app.document_pack().await.expect("document pack")).await.expect("pack reload");
     repacked.refresh_cache().await.expect("the repacked log backfills");
     for (who, app) in [("authored", &mut app), ("text reload", &mut reloaded), ("pack reload", &mut repacked)] {
         let patch = app.history_patch(true).await.expect("history patch");
@@ -545,7 +551,11 @@ async fn every_mutation_of_a_long_transaction_is_reachable_and_edit_follows_the_
     let row = app.history_patch(true).await.expect("history patch").upserts.into_iter().find(|entry| entry.transaction.as_ref().is_some_and(|reference| reference.id == transaction.id)).expect("the transaction row");
     let ids: Vec<String> = app.store.mutation_ops().expect("applied operations").iter().filter(|op| row.edit_id.as_deref() == Some(op.edit_id)).map(|op| op.mutation_id.0.clone()).collect();
     assert_eq!((row.op_count, ids.len()), (40, 40), "one edit of forty operations");
-    assert!(row.mutations.len() < 40 && row.mutations.iter().any(|mutation| mutation.mutation_id == ids[39] && mutation.worst == Some(dsl::Severity::Warning)), "the wire stays bounded and keeps the flagged no-op: {}", row.mutations.len());
+    assert!(
+        row.mutations.len() < 40 && row.mutations.iter().any(|mutation| mutation.mutation_id == ids[39] && mutation.worst == Some(semio_framework_diagnostic::Severity::Warning)),
+        "the wire stays bounded and keeps the flagged no-op: {}",
+        row.mutations.len()
+    );
     let key = format!("framework.history.entry.{}", row.seq);
 
     let unrequested = render_history(&mut app, Locale::En).await;
@@ -559,21 +569,30 @@ async fn every_mutation_of_a_long_transaction_is_reachable_and_edit_follows_the_
     let tail = find_node(&last, &key).expect("the row opened past its projection");
     assert_eq!(mutation_row_ids(tail), ids[31..39].to_vec(), "the 33rd to 40th rows: the last projected one, then the rest of the edit");
     let edited = find_node(tail, &format!("framework.history.mutation.{}", ids[38])).expect("the 39th mutation row");
-    assert_eq!((edited["component"]["rowActions"][0]["verb"].as_str(), edited["component"]["target"]["args"]["mutationId"].as_str(), edited["component"]["target"]["activation"].as_str()), (Some("historyEditBegin"), Some(ids[38].as_str()), Some("historyEditBegin")), "{edited}");
+    assert_eq!(
+        (edited["component"]["rowActions"][0]["verb"].as_str(), edited["component"]["target"]["args"]["mutationId"].as_str(), edited["component"]["target"]["activation"].as_str()),
+        (Some("historyEditBegin"), Some(ids[38].as_str()), Some("historyEditBegin")),
+        "{edited}"
+    );
 
     let begun = app.handle_action("historyEditBegin", Some(&dsl(&edited["component"]["target"]["args"])), &meta(&fixture)).await.expect("Edit dispatches");
     assert_eq!(rejected(&begun), None, "{:?}", begun.output);
     assert_eq!(app.time_travel.editor().map(|editor| editor.target.0.clone()), Some(ids[38].clone()), "Edit opens the 39th mutation");
-    let edit_action = |body: &Value, id: &str| find_node(body, &format!("framework.history.mutation.{id}")).map(|row| (row["component"]["rowActions"][0].clone(), row["component"]["target"]["activation"].clone())).unwrap_or_else(|| panic!("the row of {id}: {body}"));
+    let edit_action = |body: &Value, id: &str| {
+        find_node(body, &format!("framework.history.mutation.{id}")).map(|row| (row["component"]["rowActions"][0].clone(), row["component"]["target"]["activation"].clone())).unwrap_or_else(|| panic!("the row of {id}: {body}"))
+    };
     let (action, activation) = edit_action(&render_history_window(&mut app, row.seq, 32, 8).await, &ids[37]);
     assert!(action["disabled"] != Value::Bool(true) && activation.as_str() == Some("historyEditBegin"), "an unchanged draft lets Edit switch targets: {action}");
     verb(&mut app, &fixture, "historyEditInput", vec![("path".into(), DslValue::String("/value".into())), ("value".into(), DslValue::uint(77))]).await;
     let (action, activation) = edit_action(&render_history_window(&mut app, row.seq, 32, 8).await, &ids[37]);
-    assert!(action["disabled"] == Value::Bool(true) && activation.is_null() && action["label"].as_str().is_some_and(|label| label.starts_with("Edit: Blocked")), "a changed draft blocks Edit, naming why: {action}");
+    assert!(
+        action["disabled"] == Value::Bool(true) && activation.is_null() && action["label"].as_str() == Some("Edit") && action["reason"].as_str().is_some_and(|reason| reason.starts_with("Blocked")),
+        "a changed draft blocks Edit, naming why: {action}"
+    );
     verb(&mut app, &fixture, "historyEditAccept", Vec::new()).await;
     assert_eq!(app.time_travel.session().stage, TimeTravelStage::Replaying);
     let (action, activation) = edit_action(&render_history_window(&mut app, row.seq, 32, 8).await, &ids[37]);
-    assert!(action["disabled"] == Value::Bool(true) && activation.is_null() && action["label"].as_str() == Some("Edit: Not possible right now"), "a running replay disables Edit: {action}");
+    assert!(action["disabled"] == Value::Bool(true) && activation.is_null() && action["label"].as_str() == Some("Edit") && action["reason"].as_str() == Some("Not possible right now"), "a running replay disables Edit, naming why: {action}");
     pump_until(&mut app, "the replay completes", |app| app.time_travel.session().stage != TimeTravelStage::Replaying).await;
     let (action, activation) = edit_action(&render_history_window(&mut app, row.seq, 32, 8).await, &ids[37]);
     assert!(action["disabled"] != Value::Bool(true) && activation.as_str() == Some("historyEditBegin") && action["label"].as_str() == Some("Edit"), "the review edits again: {action}");
@@ -642,17 +661,34 @@ fn input_pointers_and_host_values_take_the_declared_shape() {
     let flag = semio_framework::ActionArgDef::toggle("/on", LocalizedLabel::native("On", "An"));
     assert_eq!(time_travel::time_travel_coerce(&flag, false, &DslValue::String("true".into())), Some(DslValue::Bool(true)));
     let angle = semio_framework::ActionArgDef::number("/angle", LocalizedLabel::native("Angle", "Winkel"));
-    let handles = semio_framework::ActionArgDef { schema: semio_framework::ArgSchema::Array { items: Box::new(semio_framework::ArgSchema::Object { fields: vec![angle] }), min_items: None, max_items: None }, ..semio_framework::ActionArgDef::text("/handles", LocalizedLabel::native("Handles", "Griffe")) };
-    let inputs = vec![semio_framework::ActionArgDef::object("/pivot", LocalizedLabel::native("Pivot", "Drehpunkt"), vec![semio_framework::ActionArgDef::number("/x", LocalizedLabel::native("X", "X"))]), semio_framework::ActionArgDef::vector("/offset", LocalizedLabel::native("Offset", "Versatz"), 2), handles];
+    let handles = semio_framework::ActionArgDef {
+        schema: semio_framework::ArgSchema::Array { items: Box::new(semio_framework::ArgSchema::Object { fields: vec![angle] }), min_items: None, max_items: None },
+        ..semio_framework::ActionArgDef::text("/handles", LocalizedLabel::native("Handles", "Griffe"))
+    };
+    let inputs = vec![
+        semio_framework::ActionArgDef::object("/pivot", LocalizedLabel::native("Pivot", "Drehpunkt"), vec![semio_framework::ActionArgDef::number("/x", LocalizedLabel::native("X", "X"))]),
+        semio_framework::ActionArgDef::vector("/offset", LocalizedLabel::native("Offset", "Versatz"), 2),
+        handles,
+    ];
     let payload = dsl(&serde_json::json!({ "pivot": { "x": 1.0 }, "offset": [0.0, 0.0], "handles": [{ "angle": 0.0 }, { "angle": 90.0 }] }));
     assert!(time_travel::time_travel_input_at(&inputs, &payload, "/pivot/x").is_some_and(|(input, element)| input.id == "/x" && !element));
     assert!(time_travel::time_travel_input_at(&inputs, &payload, "/offset/1").is_some_and(|(input, element)| input.id == "/offset" && element));
-    assert!(time_travel::time_travel_input_at(&inputs, &payload, "/handles/1/angle").is_some_and(|(input, element)| input.id == "/angle" && !element && matches!(input.schema, semio_framework::ArgSchema::Number { .. })), "a field inside an array of objects is addressable");
+    assert!(
+        time_travel::time_travel_input_at(&inputs, &payload, "/handles/1/angle").is_some_and(|(input, element)| input.id == "/angle" && !element && matches!(input.schema, semio_framework::ArgSchema::Number { .. })),
+        "a field inside an array of objects is addressable"
+    );
     assert!(time_travel::time_travel_input_at(&inputs, &payload, "/handles/1").is_some_and(|(input, element)| !element && matches!(input.schema, semio_framework::ArgSchema::Object { .. })), "an item takes the array's item schema");
     assert!(time_travel::time_travel_input_at(&inputs, &payload, "/handles/x/angle").is_none() && time_travel::time_travel_input_at(&inputs, &payload, "/missing").is_none());
     let rows = time_travel::time_travel_input_rows(&inputs, &payload);
-    assert_eq!(rows.iter().map(|row| row.pointer.as_str()).collect::<Vec<_>>(), ["/pivot/x", "/offset", "/handles", "/handles/0", "/handles/0/angle", "/handles/1", "/handles/1/angle"], "objects flatten into field rows; a list is its own row, then every item's row and fields");
-    assert_eq!((rows[2].list, rows[2].item, rows[3].list, rows[3].item, rows[4].item), (Some(time_travel::TimeTravelList { len: 2, addable: true }), None, None, Some(time_travel::TimeTravelListItem { index: 0, removable: true }), None));
+    assert_eq!(
+        rows.iter().map(|row| row.pointer.as_str()).collect::<Vec<_>>(),
+        ["/pivot/x", "/offset", "/handles", "/handles/0", "/handles/0/angle", "/handles/1", "/handles/1/angle"],
+        "objects flatten into field rows; a list is its own row, then every item's row and fields"
+    );
+    assert_eq!(
+        (rows[2].list, rows[2].item, rows[3].list, rows[3].item, rows[4].item),
+        (Some(time_travel::TimeTravelList { len: 2, addable: true, max: None }), None, None, Some(time_travel::TimeTravelListItem { index: 0, removable: true, min: None }), None)
+    );
     assert_eq!((rows[6].label.resolve(Terminology::Native, Locale::En), rows[6].label.resolve(Terminology::Native, Locale::De), rows[6].value.as_f64()), ("Handles 2 \u{b7} Angle", "Griffe 2 \u{b7} Winkel", Some(90.0)));
 }
 
@@ -662,23 +698,38 @@ fn input_pointers_and_host_values_take_the_declared_shape() {
 #[test]
 fn list_inputs_add_and_remove_items_within_their_bounds() {
     let point = semio_framework::ArgSchema::Object { fields: vec![semio_framework::ActionArgDef::number("/x", LocalizedLabel::native("X", "X")).required(), semio_framework::ActionArgDef::text("/tag", LocalizedLabel::native("Tag", "Markierung"))] };
-    let points = semio_framework::ActionArgDef { schema: semio_framework::ArgSchema::Array { items: Box::new(point.clone()), min_items: Some(1), max_items: Some(2) }, ..semio_framework::ActionArgDef::text("/points", LocalizedLabel::native("Points", "Punkte")) };
-    let weights = semio_framework::ActionArgDef { schema: semio_framework::ArgSchema::Array { items: Box::new(semio_framework::ArgSchema::number(Some(0.0), Some(1.0), None, false)), min_items: None, max_items: None }, ..semio_framework::ActionArgDef::text("/weights", LocalizedLabel::native("Weights", "Gewichte")) };
+    let points = semio_framework::ActionArgDef {
+        schema: semio_framework::ArgSchema::Array { items: Box::new(point.clone()), min_items: Some(1), max_items: Some(2) },
+        ..semio_framework::ActionArgDef::text("/points", LocalizedLabel::native("Points", "Punkte"))
+    };
+    let weights = semio_framework::ActionArgDef {
+        schema: semio_framework::ArgSchema::Array { items: Box::new(semio_framework::ArgSchema::number(Some(0.0), Some(1.0), None, false)), min_items: None, max_items: None },
+        ..semio_framework::ActionArgDef::text("/weights", LocalizedLabel::native("Weights", "Gewichte"))
+    };
     let inputs = vec![points, weights];
     let mut value = dsl(&serde_json::json!({ "points": [{ "x": 1.0 }, { "x": 2.0 }], "weights": [0.5] }));
     let rows = time_travel::time_travel_input_rows(&inputs, &value);
     assert_eq!(rows.iter().map(|row| row.pointer.as_str()).collect::<Vec<_>>(), ["/points", "/points/0", "/points/0/x", "/points/0/tag", "/points/1", "/points/1/x", "/points/1/tag", "/weights", "/weights/0"]);
-    assert_eq!(rows[0].list, Some(time_travel::TimeTravelList { len: 2, addable: false }), "two points fill maxItems");
-    assert_eq!((rows[1].item, rows[4].item), (Some(time_travel::TimeTravelListItem { index: 0, removable: true }), Some(time_travel::TimeTravelListItem { index: 1, removable: true })));
-    assert!(matches!(rows[8].input.schema, semio_framework::ArgSchema::Number { .. }) && rows[8].item == Some(time_travel::TimeTravelListItem { index: 0, removable: true }), "a number item is its own row: {:?}", rows[8]);
+    assert_eq!(rows[0].list, Some(time_travel::TimeTravelList { len: 2, addable: false, max: Some(2) }), "two points fill maxItems");
+    assert_eq!((rows[1].item, rows[4].item), (Some(time_travel::TimeTravelListItem { index: 0, removable: true, min: Some(1) }), Some(time_travel::TimeTravelListItem { index: 1, removable: true, min: Some(1) })));
+    assert!(matches!(rows[8].input.schema, semio_framework::ArgSchema::Number { .. }) && rows[8].item == Some(time_travel::TimeTravelListItem { index: 0, removable: true, min: None }), "a number item is its own row: {:?}", rows[8]);
     assert!(time_travel::time_travel_pointer_insert(&mut value, "/weights/-", DslValue::float(0.25)));
     assert!(time_travel::time_travel_pointer_insert(&mut value, "/weights/0", DslValue::float(0.75)));
     assert!(time_travel::time_travel_pointer_remove(&mut value, "/points/0"));
     assert_eq!(time_travel::time_travel_pointer_get(&value, "/weights").and_then(DslValue::as_array).map(|items| items.iter().filter_map(DslValue::as_f64).collect::<Vec<_>>()), Some(vec![0.75, 0.5, 0.25]));
     assert_eq!(time_travel::time_travel_pointer_get(&value, "/points/0/x").and_then(DslValue::as_f64), Some(2.0));
-    assert!(!time_travel::time_travel_pointer_insert(&mut value, "/weights/9", DslValue::Null) && !time_travel::time_travel_pointer_remove(&mut value, "/weights/3") && !time_travel::time_travel_pointer_remove(&mut value, "/missing/0") && !time_travel::time_travel_pointer_insert(&mut value, "/points/0/x/-", DslValue::Null));
+    assert!(
+        !time_travel::time_travel_pointer_insert(&mut value, "/weights/9", DslValue::Null)
+            && !time_travel::time_travel_pointer_remove(&mut value, "/weights/3")
+            && !time_travel::time_travel_pointer_remove(&mut value, "/missing/0")
+            && !time_travel::time_travel_pointer_insert(&mut value, "/points/0/x/-", DslValue::Null)
+    );
     let rows = time_travel::time_travel_input_rows(&inputs, &value);
-    assert_eq!((rows[0].list, rows[1].item), (Some(time_travel::TimeTravelList { len: 1, addable: true }), Some(time_travel::TimeTravelListItem { index: 0, removable: false })), "one point left: addable, not removable below minItems");
+    assert_eq!(
+        (rows[0].list, rows[1].item),
+        (Some(time_travel::TimeTravelList { len: 1, addable: true, max: Some(2) }), Some(time_travel::TimeTravelListItem { index: 0, removable: false, min: Some(1) })),
+        "one point left: addable, not removable below minItems"
+    );
     let item = time_travel::time_travel_default_value(&point);
     assert_eq!((time_travel::time_travel_pointer_get(&item, "/x").and_then(DslValue::as_f64), time_travel::time_travel_pointer_get(&item, "/tag")), (Some(0.0), None), "a new point holds its required fields only");
     let mut floor = semio_framework::ArgSchema::number(Some(0.0), Some(4.0), Some(0.5), false);
@@ -686,6 +737,8 @@ fn list_inputs_add_and_remove_items_within_their_bounds() {
         *min_exclusive = true;
     }
     assert_eq!(time_travel::time_travel_default_value(&floor).as_f64(), Some(0.5), "an excluded floor is stepped over");
+    let limits = [(8, true, Locale::En), (8, true, Locale::De), (1, false, Locale::En), (1, false, Locale::De), (1, true, Locale::En), (3, false, Locale::De)].map(|(limit, max, locale)| time_travel::time_travel_item_limit_text(limit, max, locale));
+    assert_eq!(limits, ["Maximum 8 items", "Höchstens 8 Einträge", "Minimum 1 item", "Mindestens 1 Eintrag", "Maximum 1 item", "Mindestens 3 Einträge"].map(str::to_string), "a disabled list edit names its bound");
 }
 
 /// 🔀️ A union payload's inputs resolve against the variant the draft is in: the reader groups every variant's fields by
@@ -696,13 +749,21 @@ fn list_inputs_add_and_remove_items_within_their_bounds() {
 fn union_inputs_resolve_against_the_active_variant() {
     let option = |value: &str, en: &str, de: &str| semio_framework::ActionArgOption { value: value.into(), label: LocalizedLabel::native(en, de) };
     let phase = semio_framework::ActionArgDef {
-        schema: semio_framework::ArgSchema::String { options: vec![option("apply", "Apply", "Anwenden"), option("restore", "Restore", "Wiederherstellen")], min_len: None, max_len: None, pattern: None, format: None },
+        schema: semio_framework::ArgSchema::String { options: vec![option("apply", "Apply", "Anwenden"), option("restore", "Restore", "Wiederherstellen")], option_source: None, min_len: None, max_len: None, pattern: None, format: None },
         required: true,
         ..semio_framework::ActionArgDef::text("/phase", LocalizedLabel::native("Mutation phase", "Mutationsphase"))
     };
-    let parameters = semio_framework::ActionArgDef { group: Some("apply".into()), ..semio_framework::ActionArgDef::object("/value", LocalizedLabel::native("Parameters", "Parameter"), vec![semio_framework::ActionArgDef::index("/position", LocalizedLabel::native("Insert position", "Einfügeposition"))]) };
+    let parameters = semio_framework::ActionArgDef {
+        group: Some("apply".into()),
+        ..semio_framework::ActionArgDef::object("/value", LocalizedLabel::native("Parameters", "Parameter"), vec![semio_framework::ActionArgDef::index("/position", LocalizedLabel::native("Insert position", "Einfügeposition"))])
+    };
     let weight = semio_framework::ActionArgDef { group: Some("apply".into()), ..semio_framework::ActionArgDef::number("/weight", LocalizedLabel::native("Weight", "Gewicht")) };
-    let diff = semio_framework::ActionArgDef { group: Some("restore".into()), presentation: Some(semio_framework::ArgPresentation::Hidden), schema: semio_framework::ArgSchema::Any, ..semio_framework::ActionArgDef::text("/value", LocalizedLabel::native("Restore diff", "Wiederherstellungs-Diff")) };
+    let diff = semio_framework::ActionArgDef {
+        group: Some("restore".into()),
+        presentation: Some(semio_framework::ArgPresentation::Hidden),
+        schema: semio_framework::ArgSchema::Any,
+        ..semio_framework::ActionArgDef::text("/value", LocalizedLabel::native("Restore diff", "Wiederherstellungs-Diff"))
+    };
     let union = vec![phase, parameters, weight, diff];
     assert_eq!(time_travel::time_travel_variant_selector(&union).map(|selector| selector.id.as_str()), Some("/phase"));
     let applying = dsl(&serde_json::json!({ "phase": "apply", "value": { "position": 2 }, "weight": 1.0 }));
@@ -715,9 +776,61 @@ fn union_inputs_resolve_against_the_active_variant() {
     assert_eq!(pointers(&restoring), ["/phase"], "a hidden restore diff is never a row");
     let switched = time_travel::time_travel_switch_variant(&union, &union[0], &applying, "restore");
     assert_eq!(switched, dsl(&serde_json::json!({ "phase": "restore", "value": { "position": 2 } })), "members only other variants declare are dropped");
-    let laid_out = vec![semio_framework::ActionArgDef { group: Some("position".into()), ..semio_framework::ActionArgDef::number("/newX", LocalizedLabel::native("X", "X")) }, semio_framework::ActionArgDef { group: Some("target".into()), ..semio_framework::ActionArgDef::text("/id", LocalizedLabel::native("Target region", "Zielregion")) }];
+    let laid_out = vec![
+        semio_framework::ActionArgDef { group: Some("position".into()), ..semio_framework::ActionArgDef::number("/newX", LocalizedLabel::native("X", "X")) },
+        semio_framework::ActionArgDef { group: Some("target".into()), ..semio_framework::ActionArgDef::text("/id", LocalizedLabel::native("Target region", "Zielregion")) },
+    ];
     assert!(time_travel::time_travel_variant_selector(&laid_out).is_none());
     assert_eq!(time_travel::time_travel_input_rows(&laid_out, &dsl(&serde_json::json!({ "newX": 1.0, "id": "r" }))).len(), 2, "layout groups hide nothing");
+}
+
+/// 🗝️ LAW (design §20.11): an `optionSource` choice offers the keys of the object its template leads to in the previewed
+/// document, each `{field}` segment taking the edited payload's member — an object's key, or the record of an array whose own
+/// `field` equals it; a key names itself by its record's `label`/`name`, else the glossary, else the key. The row's own value stays an option when the document lacks it — the editor adds no enum, so the
+/// fold refuses an unknown key — and a template the payload cannot fill offers nothing (a plain text field).
+#[test]
+fn sourced_options_are_the_keys_of_the_previewed_document() {
+    let schema = r#"{
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["mutation", "id", "channel"],
+        "properties": {
+            "mutation": { "const": "changeWidgetInput" },
+            "id": { "type": "string", "minLength": 1, "x-semio-ui": { "label": { "en": "Widget", "de": "Widget" } } },
+            "channel": { "type": "string", "minLength": 1, "x-semio-ui": { "widget": "select", "label": { "en": "Channel", "de": "Kanal" }, "optionSource": { "snapshot": "/hostSnapshot/widgets/{id}/params" } } }
+        }
+    }"#;
+    let inputs = semio_framework::mutation_input_defs(schema, &semio_framework::registered_input_schema_document).expect("the sourced choice reads");
+    let document = dsl(&serde_json::json!({ "hostSnapshot": { "widgets": [{ "kind": "source", "id": "w0" }, { "kind": "operator", "id": "w/1", "params": { "gain": { "label": { "en": "Gain", "de": "Verstärkung" } }, "zorp": 1.0 } }] } }));
+    let resolved = |payload: serde_json::Value| {
+        let payload = dsl(&payload);
+        let mut rows = time_travel::time_travel_input_rows(&inputs, &payload);
+        time_travel::time_travel_resolve_options(&mut rows, &payload, &document);
+        rows.into_iter().find(|row| row.pointer == "/channel").expect("the channel row")
+    };
+    let keyed = dsl(&serde_json::json!({ "groups": { "a/b": { "x": 1 } }, "list": [{ "n": 7, "v": { "y": 2 } }] }));
+    assert_eq!(time_travel::time_travel_option_target("/groups/{g}", &dsl(&serde_json::json!({ "g": "a/b" })), &keyed), Some(&dsl(&serde_json::json!({ "x": 1 }))), "a filled segment is an object key, never re-parsed as a pointer");
+    assert_eq!(time_travel::time_travel_option_target("/list/{n}/v", &dsl(&serde_json::json!({ "n": 7 })), &keyed), Some(&dsl(&serde_json::json!({ "y": 2 }))), "on an array a filled segment selects the record whose own member matches");
+    assert_eq!(time_travel::time_travel_option_target("/list/0/v", &DslValue::Null, &keyed), Some(&dsl(&serde_json::json!({ "y": 2 }))), "a literal segment indexes");
+    assert_eq!(time_travel::time_travel_option_target("/list/{n}/v", &dsl(&serde_json::json!({ "n": 8 })), &keyed), None, "no record matches");
+    let channel = resolved(serde_json::json!({ "mutation": "changeWidgetInput", "id": "w/1", "channel": "gain" }));
+    let semio_framework::ActionArgControl::Select { options } = channel.input.control() else { panic!("a sourced choice is a select: {:?}", channel.input.control()) };
+    let named = options.iter().map(|option| (option.value.as_str(), option.label.resolve(Terminology::Native, Locale::En).to_string(), option.label.resolve(Terminology::Native, Locale::De).to_string())).collect::<Vec<_>>();
+    assert_eq!(named, [("gain", "Gain".to_string(), "Verstärkung".to_string()), ("zorp", "zorp".to_string(), "zorp".to_string())], "keys in document order, named by their record");
+    let stale = resolved(serde_json::json!({ "mutation": "changeWidgetInput", "id": "w/1", "channel": "gone" }));
+    assert!(
+        matches!(&stale.input.schema, semio_framework::ArgSchema::String { options, option_source: Some(_), .. } if options.iter().map(|option| option.value.as_str()).collect::<Vec<_>>() == ["gain", "zorp", "gone"]),
+        "the recorded key stays selectable for the fold to judge: {:?}",
+        stale.input.schema
+    );
+    assert!(!format!("{:?}", stale.input.json_schema(Terminology::Native, Locale::En)).contains("enum"), "the editor never narrows the payload schema");
+    let unfilled = resolved(serde_json::json!({ "mutation": "changeWidgetInput", "channel": "gain" }));
+    assert!(
+        matches!(unfilled.input.control(), semio_framework::ActionArgControl::Select { ref options } if options.iter().map(|option| option.value.as_str()).collect::<Vec<_>>() == ["gain"]),
+        "an unfillable template offers only the recorded key: {:?}",
+        unfilled.input.control()
+    );
 }
 
 /// 🧲️ LAW: every `snapSource` is numbers before a host sees it. Puzzle 2d's position inputs (`newX`, `snapSource:
@@ -779,7 +892,13 @@ async fn the_open_draft_references_its_reference_inputs_per_domain() {
         ..semio_framework::ActionArgDef::number(pointer, LocalizedLabel::native(pointer, pointer))
     };
     let editor = app.time_travel.editor_mut().expect("the draft editor");
-    editor.inputs = vec![reference("/targets", Some("items"), true), reference("/anchor", Some("items"), false), reference("/cells", Some("cells"), true), reference("/loose", None, true), semio_framework::ActionArgDef::number("/dx", LocalizedLabel::native("dx", "dx"))];
+    editor.inputs = vec![
+        reference("/targets", Some("items"), true),
+        reference("/anchor", Some("items"), false),
+        reference("/cells", Some("cells"), true),
+        reference("/loose", None, true),
+        semio_framework::ActionArgDef::number("/dx", LocalizedLabel::native("dx", "dx")),
+    ];
     editor.value = dsl(&serde_json::json!({ "targets": ["a", "b", "a"], "anchor": "c", "cells": ["k"], "loose": ["z"], "dx": 4.0 }));
     let references = app.time_travel.draft_references();
     assert_eq!(references.get("items").map(Vec::as_slice), Some(["a".to_string(), "b".to_string(), "c".to_string()].as_slice()), "{references:?}");
@@ -887,7 +1006,8 @@ async fn the_band_and_the_editor_rows_hold_at_most_one_single_control() {
     let mut app = seeded_app(&fixture).await;
     run_step(&mut app, &fixture, &serde_json::json!({ "begin": 0 })).await;
     let editor = app.time_travel.editor_mut().expect("the draft editor");
-    editor.inputs = vec![semio_framework::ActionArgDef { nullable: true, ..semio_framework::ActionArgDef::number("/scale", LocalizedLabel::native("Scale", "Maßstab")) }, semio_framework::ActionArgDef::number("/width", LocalizedLabel::native("Width", "Breite"))];
+    editor.inputs =
+        vec![semio_framework::ActionArgDef { nullable: true, ..semio_framework::ActionArgDef::number("/scale", LocalizedLabel::native("Scale", "Maßstab")) }, semio_framework::ActionArgDef::number("/width", LocalizedLabel::native("Width", "Breite"))];
     editor.value = dsl(&serde_json::json!({ "scale": 2.0, "width": 1.0 }));
     let history = render_history(&mut app, Locale::En).await;
     assert!(find_node(&history, "framework.history.editor.input.scale.clear").is_some(), "the nullable input keeps its Clear: {history}");
@@ -1133,7 +1253,10 @@ async fn noted_shell_commands_keep_every_locale_and_undo_matches_its_chord() {
 /// typed `ledger-not-replayable` naming only its blocking messages; any other refusal keeps its own fault.
 #[test]
 fn a_blocking_ledger_replay_crosses_the_guest_boundary_as_ledger_not_replayable() {
-    let fault = replay_envelopes_fault(store::VcsError::Rejected { policy: protocol::MergePolicy::Normal, messages: vec![protocol::MutationMessage::error("mutation.target-missing", "gone"), protocol::MutationMessage::warn("mutation.clamped", "clamped")] });
+    let fault = replay_envelopes_fault(store::VcsError::Rejected {
+        policy: protocol::MergePolicy::Normal,
+        messages: vec![protocol::MutationMessage::error("mutation.target-missing", "gone"), protocol::MutationMessage::warning("mutation.clamped", "clamped")],
+    });
     assert_eq!(fault.code, FaultCode::new("ledger-not-replayable"));
     assert!(fault.message.contains("mutation.target-missing") && !fault.message.contains("mutation.clamped"), "{}", fault.message);
     assert_ne!(replay_envelopes_fault(store::VcsError::Deserialize("malformed".into())).code, FaultCode::new("ledger-not-replayable"));
@@ -1143,7 +1266,23 @@ fn a_blocking_ledger_replay_crosses_the_guest_boundary_as_ledger_not_replayable(
 /// most one fixed list of them fits, else the grid spacing as the step; a colour input takes `#rrggbb` text.
 #[test]
 fn snap_sources_resolve_to_numbers_and_colours_take_hex_text() {
-    let grid = |min: f64, max: f64| semio_framework::ArgSchema::Number { min: Some(min), min_exclusive: false, max: Some(max), max_exclusive: false, step: None, integer: false, unit: None, snaps: Vec::new(), snap_source: Some(semio_framework::SnapSource::Config { key: "gridFactor".into() }), soft_min: None, soft_max: None, precision: None, display_unit: None, display_factor: None, scale: None };
+    let grid = |min: f64, max: f64| semio_framework::ArgSchema::Number {
+        min: Some(min),
+        min_exclusive: false,
+        max: Some(max),
+        max_exclusive: false,
+        step: None,
+        integer: false,
+        unit: None,
+        snaps: Vec::new(),
+        snap_source: Some(semio_framework::SnapSource::Config { key: "gridFactor".into() }),
+        soft_min: None,
+        soft_max: None,
+        precision: None,
+        display_unit: None,
+        display_factor: None,
+        scale: None,
+    };
     let mut fine = grid(-1.0, 1.0);
     time_travel::time_travel_apply_snap_spacing(&mut fine, Some(0.5));
     assert!(matches!(&fine, semio_framework::ArgSchema::Number { snaps, snap_source: None, step: None, .. } if *snaps == vec![-1.0, -0.5, 0.0, 0.5, 1.0]), "{fine:?}");
@@ -1185,6 +1324,13 @@ async fn relay(from: &mut MemoryBackbone, into: &mut MemoryBackbone, to: &mut To
     }
     to.tick_backbone().await.expect("ingest the relayed events");
     to.refresh_cache().await.expect("the command log backfills the relayed events");
+}
+
+/// 🔀️ [`relay`], then drives `to`'s turns until the relayed change is adopted — its replay may span turns (gap N17).
+async fn relay_adopted(from: &mut MemoryBackbone, into: &mut MemoryBackbone, to: &mut ToyApp) {
+    relay(from, into, to).await;
+    pump_until(to, "the relayed change is adopted", |app| app.store.reprojection_progress().is_none()).await;
+    to.refresh_cache().await.expect("the command log backfills the adopted change");
 }
 
 /// 🏁️ Runs fixture scenario `id`, which ends in a commit, on `app`.
@@ -1242,11 +1388,11 @@ async fn a_history_edit_is_its_own_row_locally_remotely_and_after_reload() {
     relay(&mut local_probe, &mut remote_probe, &mut remote).await;
     let mut reloaded = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest()).await;
     reloaded.store.set_local_actor_id(Some(actor.clone())).expect("the author reopens the document");
-    reloaded.load_document_text(&local.document_text().await.expect("document text")).await.expect("text reload");
+    artifact_app_laws::load_document_text(&mut reloaded, &local.document_text().await.expect("document text")).await.expect("text reload");
     reloaded.refresh_cache().await.expect("the reloaded log backfills");
     let mut repacked = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest()).await;
     repacked.store.set_local_actor_id(Some("reader".into())).expect("another reader opens the document");
-    repacked.load_document_pack(&local.document_pack().await.expect("document pack")).await.expect("pack reload");
+    artifact_app_laws::load_document(&mut repacked, &local.document_pack().await.expect("document pack")).await.expect("pack reload");
     repacked.refresh_cache().await.expect("the repacked log backfills");
     for (who, app, revertible) in [("local", &mut local, true), ("remote", &mut remote, false), ("text reload", &mut reloaded, true), ("pack reload", &mut repacked, false)] {
         let rows = history_edit_rows(app).await;
@@ -1279,9 +1425,9 @@ async fn undo_and_redo_of_a_finalize_author_restoring_supersedes_on_both_replica
     let actor = text(&fixture["actor"]).to_string();
     let (mut local, mut local_probe) = replica(&fixture, "history-edit-undo-local", &actor, true).await;
     let (mut remote, mut remote_probe) = replica(&fixture, "history-edit-undo-remote", "remote", false).await;
-    relay(&mut local_probe, &mut remote_probe, &mut remote).await;
+    relay_adopted(&mut local_probe, &mut remote_probe, &mut remote).await;
     commit_scenario(&mut local, &fixture, "overwrite-supersedes-in-place").await;
-    relay(&mut local_probe, &mut remote_probe, &mut remote).await;
+    relay_adopted(&mut local_probe, &mut remote_probe, &mut remote).await;
     let edits = local.store.envelope().vcs.edits.len();
 
     history_verb(&mut local, &actor, "undo", None).await;
@@ -1292,7 +1438,7 @@ async fn undo_and_redo_of_a_finalize_author_restoring_supersedes_on_both_replica
     assert!(!seeded_mutation_row(&mut local, 1).await.superseded, "an input restored to its original is not superseded");
     assert_eq!(local.store.envelope().vcs.edits.len(), edits, "the undo is a history transition, never a document edit");
     assert!(local.history_patch(true).await.expect("patch").can_redo, "the undone history edit can be redone");
-    relay(&mut local_probe, &mut remote_probe, &mut remote).await;
+    relay_adopted(&mut local_probe, &mut remote_probe, &mut remote).await;
     assert_eq!(head(&remote), (5, "a".to_string()), "the remote replica folds the restoring supersede");
     assert_eq!(english(&history_edit_rows(&mut remote).await), ["History edit undone — overwrite: 1 mutation", "History edited — overwrite: 1 mutation"]);
 
@@ -1301,7 +1447,7 @@ async fn undo_and_redo_of_a_finalize_author_restoring_supersedes_on_both_replica
     let rows = history_edit_rows(&mut local).await;
     assert_eq!(english(&rows), ["History edit redone — overwrite: 1 mutation", "History edit undone — overwrite: 1 mutation", "History edited — overwrite: 1 mutation"]);
     assert!(rows[0].applied && !rows[1].applied && rows[2].applied && rows[2].revertible, "the redone history edit is in effect again");
-    relay(&mut local_probe, &mut remote_probe, &mut remote).await;
+    relay_adopted(&mut local_probe, &mut remote_probe, &mut remote).await;
     assert_eq!(head(&remote), (5, "b".to_string()));
 
     local.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value: 7 }.into()], description: None, transaction: None }).await.expect("a newer document edit");
@@ -1318,11 +1464,11 @@ async fn undo_and_redo_of_a_finalize_author_restoring_supersedes_on_both_replica
     let edited = history_edit_rows(&mut local).await.into_iter().rev().find(|row| row.revertible).expect("the revertible history edit row");
     history_verb(&mut local, &actor, REVERT_TO_COMMAND_ACTION_ID, Some(DslValue::object([("entrySeq".to_string(), DslValue::float(edited.seq as f64))]))).await;
     assert_eq!(head(&local), (7, "a".to_string()), "Backwards takes the history edit back and leaves the document edits");
-    relay(&mut local_probe, &mut remote_probe, &mut remote).await;
+    relay_adopted(&mut local_probe, &mut remote_probe, &mut remote).await;
     assert_eq!(head(&remote), (7, "a".to_string()), "the replicas converge");
 
     history_verb(&mut local, &actor, "redo", None).await;
-    relay(&mut local_probe, &mut remote_probe, &mut remote).await;
+    relay_adopted(&mut local_probe, &mut remote_probe, &mut remote).await;
     assert_eq!((head(&local), head(&remote)), ((7, "b".to_string()), (7, "b".to_string())));
     let foreign = history_edit_rows(&mut remote).await;
     assert!(foreign.iter().all(|row| !row.revertible && row.author.as_deref() == Some(actor.as_str())), "another author's history edits are never revertible here");
@@ -1350,7 +1496,10 @@ async fn an_alternative_history_edit_is_undone_within_its_alternative() {
     let rows = history_edit_rows(&mut app).await;
     assert_eq!(english(&rows), ["History edit undone — alternative Variant: 1 mutation", "History edited — alternative Variant: 1 mutation"]);
     assert_eq!(rows[1].label.resolve(Terminology::Native, Locale::De), "Verlauf bearbeitet — Alternative Variant: 1 Mutation");
-    assert!(app.store.supersessions().values().all(|supersession| supersession.scope.as_deref() == Some(variant.as_str()) && Some(supersession.transition_id.as_str()) == rows[0].transition_id.as_deref()), "the restoring supersede is scoped to the alternative");
+    assert!(
+        app.store.supersessions().values().all(|supersession| supersession.scope.as_deref() == Some(variant.as_str()) && Some(supersession.transition_id.as_str()) == rows[0].transition_id.as_deref()),
+        "the restoring supersede is scoped to the alternative"
+    );
     assert_eq!(app.store.envelope().active_alternative_id.as_deref(), Some(variant.as_str()), "the alternative stays active");
     history_verb(&mut app, &actor, "redo", None).await;
     assert_eq!(head(&app), (5, "b".to_string()));
@@ -1492,9 +1641,9 @@ async fn a_warning_an_edit_introduces_stays_visible_after_finalize_and_reload() 
         run_step(&mut app, &fixture, &step).await;
     }
     let status = app.time_travel.status().expect("a review");
-    assert_eq!((status.review, status.blocking, status.worst), (Some(semio_framework::kernel::HistoryTimeTravelReview::Ready), false, Some(dsl::Severity::Warning)), "a warning never blocks finalizing");
+    assert_eq!((status.review, status.blocking, status.worst), (Some(semio_framework::kernel::HistoryTimeTravelReview::Ready), false, Some(semio_framework_diagnostic::Severity::Warning)), "a warning never blocks finalizing");
     let downstream = seeded_mutation_row(&mut app, 1).await;
-    assert!(downstream.introduced && downstream.worst == Some(dsl::Severity::Warning) && downstream.messages.iter().any(|message| message.code == "mutation.no-op"), "the edit introduced the no-op: {downstream:?}");
+    assert!(downstream.introduced && downstream.worst == Some(semio_framework_diagnostic::Severity::Warning) && downstream.messages.iter().any(|message| message.code == "mutation.no-op"), "the edit introduced the no-op: {downstream:?}");
     assert!(!seeded_mutation_row(&mut app, 0).await.introduced, "the edited mutation itself raises nothing new");
     let history = render_history(&mut app, Locale::En).await.to_string();
     assert!(history.contains("New since this edit") && history.contains("Warning: No change"), "{history}");
@@ -1504,15 +1653,15 @@ async fn a_warning_an_edit_introduces_stays_visible_after_finalize_and_reload() 
     pump_until(&mut app, "the finalize retires", |app| !app.time_travel.has_pending_work()).await;
     let mut reloaded = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest()).await;
     reloaded.store.set_local_actor_id(Some(actor.clone())).expect("the author reopens the document");
-    reloaded.load_document_text(&app.document_text().await.expect("document text")).await.expect("text reload");
+    artifact_app_laws::load_document_text(&mut reloaded, &app.document_text().await.expect("document text")).await.expect("text reload");
     reloaded.refresh_cache().await.expect("the reloaded log backfills");
     let mut repacked = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest()).await;
     repacked.store.set_local_actor_id(Some("reader".into())).expect("another reader opens the document");
-    repacked.load_document_pack(&app.document_pack().await.expect("document pack")).await.expect("pack reload");
+    artifact_app_laws::load_document(&mut repacked, &app.document_pack().await.expect("document pack")).await.expect("pack reload");
     repacked.refresh_cache().await.expect("the repacked log backfills");
     for (who, app) in [("finalized", &mut app), ("text reload", &mut reloaded), ("pack reload", &mut repacked)] {
         let row = seeded_mutation_row(app, 1).await;
-        assert!(row.worst == Some(dsl::Severity::Warning) && row.messages.iter().any(|message| message.code == "mutation.no-op") && !row.introduced, "{who}: the warning persists without a session: {row:?}");
+        assert!(row.worst == Some(semio_framework_diagnostic::Severity::Warning) && row.messages.iter().any(|message| message.code == "mutation.no-op") && !row.introduced, "{who}: the warning persists without a session: {row:?}");
         assert_eq!(head(app).1, "b", "{who}: the edited head");
         for (locale, line) in [(Locale::En, "Warning: No change"), (Locale::De, "Warnung: Keine Änderung")] {
             let history = render_history(app, locale).await.to_string();
@@ -1567,7 +1716,10 @@ async fn a_new_alternative_is_one_branch_then_one_scoped_supersede() {
     let alternative = app.store.envelope().active_alternative_id.clone().expect("the new alternative is current");
     let (checkpoints, tail) = added.split_at(added.len().saturating_sub(2));
     assert!(checkpoints.iter().all(|transition| matches!(transition, store::os_spr::HistoryTransition::Commit(..))), "only a checkpoint of pending edits precedes the branch: {added:?}");
-    assert!(matches!(tail, [store::os_spr::HistoryTransition::Branch { .. }, store::os_spr::HistoryTransition::Supersede(supersede)] if supersede.scope.as_deref() == Some(alternative.as_str())), "Branch, then a Supersede scoped to the new alternative: {added:?}");
+    assert!(
+        matches!(tail, [store::os_spr::HistoryTransition::Branch { .. }, store::os_spr::HistoryTransition::Supersede(supersede)] if supersede.scope.as_deref() == Some(alternative.as_str())),
+        "Branch, then a Supersede scoped to the new alternative: {added:?}"
+    );
     close(&mut app);
 }
 /// 🧱️ `replica` with one long edit after the seed, so a replay downstream of the seed exceeds one turn's budget.
@@ -1580,7 +1732,7 @@ async fn long_replica(fixture: &Value, uri: &str, actor: &str) -> (ToyApp, Memor
 }
 
 /// ⚖️ LAW (design §16.6, G9): a remote history change whose replay exceeds one turn's budget waits while the replica shows
-/// the history before it, its progress rides the history wire (`remoteReplay`) and the body's remote section; Cancel replay
+/// the history before it, its progress rides the history wire (`reprojection`) and the body's reprojection section; Cancel replay
 /// pauses it (driver turns leave it alone), Replay again resumes it, and the adoption equals the author's head. The remote
 /// store replays one operation per turn, so the seed's downstream suffix already spans several turns.
 #[semio_framework_async_macros::async_test]
@@ -1589,32 +1741,34 @@ async fn a_long_remote_history_change_replays_over_turns_and_pauses_on_cancel() 
     let actor = text(&fixture["actor"]).to_string();
     let (mut local, mut local_probe) = replica(&fixture, "remote-replay-local", &actor, true).await;
     let (mut remote, mut remote_probe) = replica(&fixture, "remote-replay-remote", "remote", false).await;
-    remote.store.defer_remote_replays(Some(1));
+    remote.store.defer_remote_replays(Some(store::ReplayTurnBudget::operations(1)));
     relay(&mut local_probe, &mut remote_probe, &mut remote).await;
     assert_eq!(head(&remote), head(&local), "the remote replica holds the seed");
     commit_scenario(&mut local, &fixture, "overwrite-supersedes-in-place").await;
     relay(&mut local_probe, &mut remote_probe, &mut remote).await;
-    let status = remote.remote_replay_status().expect("the remote history change waits for its replay");
-    assert!(status.total > 0 && status.done < status.total && !status.paused && status.fault.is_none(), "{status:?}");
+    let status = remote.reprojection_status().expect("the remote history change waits for its replay");
+    assert!(status.total > 0 && status.done < status.total && !status.paused && status.kind == semio_framework::kernel::HistoryReprojectionKind::Remote && status.fault.is_none(), "{status:?}");
     assert_eq!(head(&remote).1, "a", "the replica shows the history before the change");
-    assert_eq!(remote.history_patch(true).await.expect("history patch").remote_replay.as_ref().map(|remote| remote.total), Some(status.total), "the wire carries the remote replay");
+    assert_eq!(remote.history_patch(true).await.expect("history patch").reprojection.as_ref().map(|remote| remote.total), Some(status.total), "the wire carries the remote replay");
     let body = render_history(&mut remote, Locale::En).await;
-    assert!(find_node(&body, "framework.history.remoteReplay.status").is_some_and(|row| row.to_string().contains("Replaying a remote history change")), "{body}");
+    assert!(find_node(&body, "framework.history.reprojection.status").is_some_and(|row| row.to_string().contains("Replaying a remote history change")), "{body}");
     let cancelled = verb(&mut remote, &fixture, "historyEditCancelReplay", Vec::new()).await;
     assert_eq!(rejected(&cancelled), None, "{:?}", cancelled.output);
-    assert!(remote.time_travel.remote_replay_paused() && !remote.time_travel_has_pending_work(), "a paused remote replay is no driver work");
+    assert!(remote.time_travel.reprojection_paused(), "the remote replay is paused");
     for _ in 0..4 {
         remote.advance_typed_operation_publication().await.expect("driver turn");
+        while remote.take_typed_operation_ui_progress().is_some() {}
     }
+    assert!(remote.time_travel.reprojection_paused() && !remote.time_travel_has_pending_work(), "once its patch shipped, a paused remote replay is no driver work");
     assert_eq!(head(&remote).1, "a", "paused, the change is not adopted");
     let body = render_history(&mut remote, Locale::De).await;
-    assert!(find_node(&body, "framework.history.remoteReplay.rerun").is_some() && body.to_string().contains("pausiert"), "{body}");
+    assert!(find_node(&body, "framework.history.reprojection.rerun").is_some() && body.to_string().contains("pausiert"), "{body}");
     let resumed = verb(&mut remote, &fixture, "historyEditRerun", Vec::new()).await;
     assert_eq!(rejected(&resumed), None, "{:?}", resumed.output);
     assert_eq!(rejected(&verb(&mut remote, &fixture, "historyEditRerun", Vec::new()).await), Some("timeTravel.illegal"), "nothing is paused any more");
     pump_until(&mut remote, "the remote change is adopted", |app| app.store.reprojection_progress().is_none()).await;
     assert_eq!(head(&remote), head(&local), "the adoption equals the author's head");
-    assert!(remote.remote_replay_status().is_none(), "nothing waits any more");
+    assert!(remote.reprojection_status().is_none(), "nothing waits any more");
     drop((local_probe, remote_probe));
     close(&mut local);
     close(&mut remote);
@@ -1643,6 +1797,144 @@ async fn the_undo_of_a_finalize_over_a_long_history_lands_through_the_driver() {
     drop(probe);
     close(&mut app);
 }
+/// 🔁️ A history verb as `actor`, admitted and settled, answering the fault code of a refusal (`None`: applied).
+async fn history_verb_refusal(app: &mut ToyApp, actor: &str, action: &str) -> Option<String> {
+    let meta = ActionMeta { view_state: Some(ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), ..artifact_app_laws::meta(actor) };
+    let settled = match app.handle_action(action, None, &meta).await {
+        Ok(admitted) => crate::app::settle_framework_reserved_admission(app, admitted).await,
+        Err(fault) => Err(fault),
+    };
+    settled.err().map(|fault| fault.code.0)
+}
+
+/// 🧮️ What a history step may change: the head, the content revision, the edits, the transitions and the history rows.
+async fn history_trace(app: &mut ToyApp) -> ((i32, String), [u8; 32], usize, usize, usize) {
+    let rows = app.history_patch(true).await.expect("history patch").upserts.len();
+    (head(app), app.store.content_revision_now(), app.store.envelope().vcs.edits.len(), app.store.envelope().transitions.len(), rows)
+}
+
+/// ✏️ `count` one-operation edits on `app`'s store as its current local actor — a long downstream history a replay steps through
+/// edit by edit.
+async fn apply_other_edits(app: &mut ToyApp, count: i32) {
+    for value in 0..count {
+        app.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value }.into()], description: None, transaction: None }).await.expect("another author's edit");
+    }
+}
+
+/// ⚖️ LAW (gap N17): an interior undo over a long downstream history — the author's own edit under 600 edits of another
+/// author — is a local history step the runtime replays over driver turns:
+/// - the undo answers at once, the head, the edits and the history rows unchanged;
+/// - the wire carries `reprojection.kind = step`, the body reads "Replaying history" / "Verlauf wird neu angewendet";
+/// - each turn replays at most `TIME_TRAVEL_REPLAY_OPERATIONS`;
+/// - meanwhile undo and redo answer `history.replaying` and `historyEditBegin` answers `timeTravel.busy`;
+/// - the adoption equals the undo of a store that replays inside the dispatch, and records the undo row.
+/// Cancel replay instead drops the step with zero trace: head, revision, edits, transitions and history rows as before.
+#[semio_framework_async_macros::async_test]
+async fn an_interior_undo_over_a_long_history_replays_over_turns_and_cancel_leaves_zero_trace() {
+    let fixture = fixture();
+    let actor = text(&fixture["actor"]).to_string();
+    let mut undeferred = seeded_app(&fixture).await;
+    undeferred.store.defer_local_replays(None);
+    undeferred.store.set_local_actor_id(Some("other".into())).expect("another author");
+    apply_other_edits(&mut undeferred, 600).await;
+    undeferred.refresh_cache().await.expect("backfill");
+    history_verb(&mut undeferred, &actor, "undo", None).await;
+    let undone = undeferred.store.snapshot().expect("the undeferred undo");
+    for cancel in [true, false] {
+        let mut app = seeded_app(&fixture).await;
+        app.store.set_local_actor_id(Some("other".into())).expect("another author");
+        apply_other_edits(&mut app, 600).await;
+        app.refresh_cache().await.expect("backfill");
+        let before = history_trace(&mut app).await;
+        history_verb(&mut app, &actor, "undo", None).await;
+        assert!(app.store.local_step_pending(), "the interior undo waits for its replay");
+        assert_eq!(history_trace(&mut app).await, before, "nothing of the step shows before its adoption");
+        let status = app.history_patch(true).await.expect("history patch").reprojection.expect("the wire carries the waiting step");
+        assert!(status.kind == semio_framework::kernel::HistoryReprojectionKind::Step && status.total > 0 && !status.paused && status.fault.is_none(), "{status:?}");
+        for (locale, line) in [(Locale::En, "Replaying history"), (Locale::De, "Verlauf wird neu angewendet")] {
+            let body = render_history(&mut app, locale).await;
+            assert!(find_node(&body, "framework.history.reprojection.status").is_some_and(|row| row.to_string().contains(line)), "{locale:?}: {body}");
+        }
+        assert_eq!(history_verb_refusal(&mut app, &actor, "undo").await.as_deref(), Some("history.replaying"), "a further history step waits");
+        assert_eq!(history_verb_refusal(&mut app, &actor, "redo").await.as_deref(), Some("history.replaying"));
+        let first = seeded_mutation(&app, 0);
+        assert_eq!(rejected(&verb(&mut app, &fixture, "historyEditBegin", vec![("mutationId".into(), DslValue::String(first))]).await), Some("timeTravel.busy"), "history editing waits for the step");
+        if cancel {
+            let cancelled = verb(&mut app, &fixture, "historyEditCancelReplay", Vec::new()).await;
+            assert_eq!(rejected(&cancelled), None, "{:?}", cancelled.output);
+            assert!(!app.store.local_step_pending() && app.reprojection_status().is_none(), "the step is gone");
+            for _ in 0..4 {
+                app.advance_typed_operation_publication().await.expect("driver turn");
+            }
+            assert_eq!(history_trace(&mut app).await, before, "a cancelled step leaves zero trace");
+        } else {
+            let mut turns = 0;
+            while app.store.local_step_pending() {
+                let done = app.store.reprojection_progress().map_or(0, |progress| progress.done);
+                app.advance_typed_operation_publication().await.expect("driver turn");
+                while app.take_typed_operation_ui_progress().is_some() {}
+                let after = app.store.reprojection_progress().map_or(u32::MAX, |progress| progress.done);
+                assert!(after == u32::MAX || after.saturating_sub(done) as usize <= time_travel::TIME_TRAVEL_REPLAY_OPERATIONS, "one turn replays at most one budget: {done} → {after}");
+                turns += 1;
+                assert!(turns < 64, "the step is adopted");
+            }
+            assert!(turns >= 2, "a 600-operation downstream spans several turns ({turns})");
+            assert_eq!(app.store.snapshot().expect("the adopted undo"), undone, "the adoption equals the undeferred undo");
+            let (_, _, edits, _, rows) = history_trace(&mut app).await;
+            assert_eq!((edits, rows), (before.2, before.4 + 1), "the adoption records the undo row");
+        }
+        close(&mut app);
+    }
+    close(&mut undeferred);
+}
+
+/// ⚖️ LAW (decision §4 of `📓️api-stepped-document-load.md`): a pure command's document lane hydrates the HEAD snapshot of
+/// a 240-edit document without its history (`PluginApp::hydrate_pure_head` takes the head pack alone, so no history can
+/// ride it) — the store holds no edit, the head is the source head, nothing folds; in that head-only mode undo, a history
+/// edit and the history query refuse `pure.history-unavailable`, and the whole-document archive load of the history (the
+/// only load path) lifts it over real polls, landing the source head and all 240 edits.
+#[semio_framework_async_macros::async_test]
+async fn a_pure_lane_hydrates_the_head_without_history_and_history_verbs_refuse() {
+    let fixture = fixture();
+    let actor = text(&fixture["actor"]).to_string();
+    let mut source = seeded_app(&fixture).await;
+    for value in 0..240 {
+        source.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value }.into()], description: None, transaction: None }).await.expect("a source edit");
+    }
+    let head = source.store.snapshot().expect("the source head");
+    let files = source.document_pack().await.expect("the source pair");
+    let mut pure = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest()).await;
+    let code = |fault: Fault| fault.code.0;
+    PluginApp::hydrate_pure_head(&mut pure, &head.encode_pack()).await.expect("the head-only lane hydrates");
+    assert_eq!(pure.store.snapshot().expect("the pure head"), head, "the pure document is the source head");
+    assert!(pure.store.envelope().vcs.edits.is_empty() && pure.time_travel.history_unavailable(), "no history was folded or kept");
+    assert_eq!(history_verb_refusal(&mut pure, &actor, "undo").await.as_deref(), Some(PURE_HISTORY_UNAVAILABLE_CODE));
+    let meta = ActionMeta { view_state: Some(ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), ..artifact_app_laws::meta(&actor) };
+    let begin = pure.handle_action("historyEditBegin", Some(&DslValue::object([("mutationId".to_string(), DslValue::String("any".into()))])), &meta).await;
+    assert_eq!(begin.err().map(code).as_deref(), Some(PURE_HISTORY_UNAVAILABLE_CODE), "a history edit needs the history");
+    assert_eq!(pure.history_snapshot().await.err().map(code).as_deref(), Some(PURE_HISTORY_UNAVAILABLE_CODE), "so does the history query");
+    let envelope = pure.store.envelope();
+    let dialect: ArtifactDialect = <ToyHistoryApp as ArtifactApp>::DIALECT.into();
+    let parent_spr = store::stamp_document_spr_identity(&files.spr, &envelope.id, <ToyHistoryApp as ArtifactApp>::DOCUMENT_SCHEMA, &dialect, envelope.owner.as_ref()).await.expect("the load identity stamp");
+    let operation = 0x51;
+    PluginApp::begin_document_archive_load(&mut pure, operation, protocol::DocumentArchivePack { parent_pack: files.pack.clone(), parent_spr, members: Vec::new() }).expect("the archive load is admitted");
+    let mut polls = 0;
+    let status = loop {
+        let status = PluginApp::poll_document_archive_load(&mut pure, operation).await.expect("the archive load status");
+        if !matches!(status.state, protocol::DocumentArchiveLoadState::Pending | protocol::DocumentArchiveLoadState::Running) {
+            break status;
+        }
+        polls += 1;
+        assert!(polls < 1_000_000, "the archive load reaches a terminal state");
+    };
+    assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "the archive load lands: {}", if status.fault.is_empty() { String::new() } else { semio_framework_diagnostic::decode_fault_bytes(&status.fault).describe() });
+    PluginApp::acknowledge_document_archive_load(&mut pure, operation).expect("the terminal load is released");
+    assert!(!pure.time_travel.history_unavailable() && pure.history_snapshot().await.is_ok(), "the archive load with history lifts head-only mode");
+    assert_eq!((pure.store.snapshot().expect("the loaded head"), pure.store.envelope().vcs.edits.len()), (head, source.store.envelope().vcs.edits.len()), "the archive load lands the source head and its whole history (seed + 240 edits)");
+    close(&mut pure);
+    close(&mut source);
+}
+
 //#endregion 🧭️AcceptanceLaws
 
 //#region 🗝️EditorKeys
@@ -1682,3 +1974,147 @@ async fn the_draft_editor_keys_are_the_shared_corpus_keys_every_shell_focuses() 
     close(&mut app);
 }
 //#endregion 🗝️EditorKeys
+
+//#region 🩹️HistoryViewPatch
+/// ✏️ Applies one toy edit straight on the document store — a row the command log backfills, like a seeded or ingested edit.
+async fn apply_toy_edit(app: &mut ToyApp, value: i32) {
+    app.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value }.into()], description: None, transaction: None }).await.expect("toy edit applies");
+}
+
+/// 🧮️ Refreshes the history and answers how many rows it built and whether the cached view equals a full rebuild.
+async fn refreshed_rows(app: &mut ToyApp) -> usize {
+    HISTORY_ROWS_BUILT.with(|built| built.set(0));
+    app.refresh_cache().await.expect("history refreshes");
+    let built = HISTORY_ROWS_BUILT.with(std::cell::Cell::get);
+    let cached = std::sync::Arc::clone(&app.cache.as_ref().expect("history cache").3);
+    assert_eq!(cached.as_ref(), &app.build_history_view(None).await, "the patched history equals a full rebuild");
+    built
+}
+
+/// ⚖️ LAW (design §20.14, audit W2A-1): over a long history, appending an edit, undoing it, redoing it and re-rendering rebuild
+/// at most the touched rows (the new row, the previous newest row and the previous top's row) — never the history — and the
+/// patched view always equals a full rebuild; a history edit (a supersede transition) rebuilds the whole view.
+#[semio_framework_async_macros::async_test]
+async fn the_history_view_patches_only_the_rows_a_change_touched() {
+    let fixture = fixture();
+    let mut app = seeded_app(&fixture).await;
+    for value in 0..200 {
+        apply_toy_edit(&mut app, value).await;
+    }
+    let seeded = app.command_log.len();
+    let built = refreshed_rows(&mut app).await;
+    let rows = app.command_log.len();
+    assert_eq!(rows, seeded + 200, "the 200 edits are backfilled rows");
+    assert!(built <= 200 + 2, "the first refresh after 200 backfilled edits builds the new rows once ({built})");
+    assert_eq!(refreshed_rows(&mut app).await, 0, "a refresh without a change builds no row");
+    apply_toy_edit(&mut app, 1_000).await;
+    assert!(refreshed_rows(&mut app).await <= 3, "an appended edit rebuilds its own row and its neighbours only");
+    app.store.dispatch(ArtifactCommand::Undo).await.expect("undo");
+    assert!(refreshed_rows(&mut app).await <= 3, "an undo rebuilds the undone row and the uncovered top only");
+    app.store.dispatch(ArtifactCommand::Redo).await.expect("redo");
+    assert!(refreshed_rows(&mut app).await <= 3, "a redo rebuilds the redone row and the covered top only");
+    let _ = render_history(&mut app, Locale::En).await;
+    assert_eq!(refreshed_rows(&mut app).await, 0, "rendering the history builds no row");
+    let target = app.store.mutation_ops().expect("mutation ops")[0].mutation_id.clone();
+    app.store.dispatch(ArtifactCommand::Supersede { scope: None, inputs: vec![store::SupersedeInput { target, replacement: Some(SetCount { value: 7 }.into()) }] }).await.expect("a history edit lands");
+    assert!(refreshed_rows(&mut app).await >= rows, "a history edit rebuilds the whole view");
+    close(&mut app);
+}
+
+/// ⚖️ LAW (audit W2A-11): a row whose operations past the cap carry outcomes projects its most severe one, so the row's worst
+/// severity is the worst over every operation of its edit, however many are flagged; the projection stays bounded and in op
+/// order.
+#[test]
+fn the_projected_rows_carry_the_worst_severity_of_the_whole_edit() {
+    use semio_framework_diagnostic::Severity;
+    for (len, error_at) in [(200, 199), (200, 33), (65, 64), (40, 39), (10, 5)] {
+        let flagged = (0..len).filter(|index| *index >= HISTORY_ROW_MUTATION_ROWS || *index == error_at).map(|index| (index, Some(if index == error_at { Severity::Error } else { Severity::Warning })));
+        let shown = time_travel::history_projected_operations(len, flagged);
+        assert!(shown.contains(&error_at), "{len} operations: the Error at {error_at} is projected");
+        assert!(shown.len() <= 2 * HISTORY_ROW_MUTATION_ROWS, "{len} operations: the projection stays bounded");
+        assert!(shown.windows(2).all(|pair| pair[0] < pair[1]), "{len} operations: the projection is in op order");
+        assert!(shown.iter().take(len.min(HISTORY_ROW_MUTATION_ROWS)).copied().eq(0..len.min(HISTORY_ROW_MUTATION_ROWS)), "{len} operations: the first ones always lead");
+    }
+}
+//#endregion 🩹️HistoryViewPatch
+
+//#region ⏱️WallDeadline
+thread_local! {
+    /// ⏱️ A clock on this test thread that advances one millisecond per read: every replayed operation "costs" 1 ms.
+    static COUNTED_CLOCK_US: std::cell::Cell<u64> = const { std::cell::Cell::new(0) };
+}
+
+/// ⏱️ Reads [`COUNTED_CLOCK_US`], advancing it by one millisecond.
+fn counted_clock() -> Option<u64> {
+    Some(COUNTED_CLOCK_US.with(|now| {
+        now.set(now.get() + 1_000);
+        now.get()
+    }))
+}
+
+/// ⚖️ LAW (design §20.14, audit W2A-3): a deferred history step ends its driver turn at the turn's wall deadline, never at
+/// the operation cap — with every clock read costing 1 ms, an interior undo over 600 downstream edits replays a handful of
+/// them per 4 ms turn (well under the 256-operation cap), over many turns, and still lands.
+#[semio_framework_async_macros::async_test]
+async fn a_deferred_history_step_ends_its_turn_at_the_wall_deadline_not_an_operation_count() {
+    let fixture = fixture();
+    let actor = text(&fixture["actor"]).to_string();
+    let mut app = seeded_app(&fixture).await;
+    app.time_travel.set_turn_clock(counted_clock);
+    app.store.defer_local_replays(Some(store::ReplayTurnBudget { wall_us: TIME_TRAVEL_TURN_WALL_US, operations: time_travel::TIME_TRAVEL_REPLAY_OPERATIONS, now_us: counted_clock }));
+    app.store.set_local_actor_id(Some("other".into())).expect("another author");
+    apply_other_edits(&mut app, 600).await;
+    app.refresh_cache().await.expect("backfill");
+    history_verb(&mut app, &actor, "undo", None).await;
+    assert!(app.store.local_step_pending(), "the interior undo waits for its replay");
+    let mut turns = 0usize;
+    while app.store.local_step_pending() {
+        let done = app.store.reprojection_progress().map_or(0, |progress| progress.done);
+        app.advance_typed_operation_publication().await.expect("driver turn");
+        while app.take_typed_operation_ui_progress().is_some() {}
+        let after = app.store.reprojection_progress().map_or(u32::MAX, |progress| progress.done);
+        assert!(after == u32::MAX || after.saturating_sub(done) <= 8, "a 4 ms turn of 1 ms operations replays a handful: {done} → {after}");
+        turns += 1;
+        assert!(turns < 1_000, "the step is adopted");
+    }
+    assert!(turns >= 600 / 8, "600 operations of 1 ms span many 4 ms turns ({turns})");
+    close(&mut app);
+}
+//#endregion ⏱️WallDeadline
+
+//#region 🎚️HistoryFilter
+/// ⚖️ LAW (schema-first, one vocabulary): every option `setHistoryCommandFilter` declares is a value its dispatch accepts and
+/// the history wire echoes as `commandFilter`, the history body's select offers exactly those values, and an undeclared value
+/// is refused instead of silently showing every row.
+#[semio_framework_async_macros::async_test]
+async fn every_declared_history_filter_option_is_dispatched_and_echoed() {
+    let fixture = fixture();
+    let actor = text(&fixture["actor"]).to_string();
+    let mut app = seeded_app(&fixture).await;
+    let definition = semio_framework::set_history_command_filter_action_definition();
+    let declared: Vec<String> = match &definition.args[0].schema {
+        semio_framework::ArgSchema::String { options, .. } => options.iter().map(|option| option.value.clone()).collect(),
+        other => panic!("the filter is a choice: {other:?}"),
+    };
+    assert_eq!(declared, HistoryCommandFilter::ALL.map(|filter| filter.value().to_string()), "the declared options are the runtime's filters, in order");
+    let meta = ActionMeta { view_state: Some(ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), ..artifact_app_laws::meta(&actor) };
+    for value in &declared {
+        let args = DslValue::Object(vec![("value".into(), DslValue::String(value.clone()))]);
+        let admitted = app.handle_action(SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&args), &meta).await.unwrap_or_else(|fault| panic!("{value}: {fault:?}"));
+        crate::app::settle_framework_reserved_admission(&mut app, admitted).await.unwrap_or_else(|fault| panic!("{value}: {fault:?}"));
+        assert_eq!(&app.history_patch(true).await.expect("history patch").command_filter, value, "the wire echoes the declared option");
+        let body = render_history(&mut app, Locale::En).await;
+        let select = find_node(&body, "framework.history.filter.control").expect("the filter select");
+        for option in &declared {
+            assert!(select.to_string().contains(&format!("\"{option}\"")), "the select offers {option}: {select}");
+        }
+    }
+    let undeclared = DslValue::Object(vec![("value".into(), DslValue::String("withoutOperations".into()))]);
+    let refused = match app.handle_action(SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&undeclared), &meta).await {
+        Ok(admitted) => crate::app::settle_framework_reserved_admission(&mut app, admitted).await.err(),
+        Err(fault) => Some(fault),
+    };
+    assert!(refused.is_some(), "an undeclared filter value is refused");
+    close(&mut app);
+}
+//#endregion 🎚️HistoryFilter

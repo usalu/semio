@@ -19,7 +19,7 @@ async fn import_stl_produces_faces() {
     let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
     let bytes = export_solid_stl(&body, solid, 0.1).unwrap();
     let mut imported_body = Body::new();
-    let imported = import_stl_to_body(&mut imported_body, &bytes, 1e-4).unwrap();
+    let EntityRef::Solid(imported) = import_stl_to_body(&mut imported_body, &bytes, 1e-4).unwrap() else {panic!("closed STL requires solid")};
     assert!(!imported_body.solid_faces(imported).is_empty());
 }
 
@@ -52,6 +52,6 @@ async fn import_glb_to_body_has_faces() {
     let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
     let bytes = export_solid_glb(&body, solid, 0.1).unwrap();
     let mut imported = Body::new();
-    let imported_solid = import_glb_to_body(&mut imported, &bytes, 1e-4).unwrap();
+    let EntityRef::Solid(imported_solid) = import_glb_to_body(&mut imported, &bytes, 1e-4).unwrap() else {panic!("closed GLB requires solid")};
     assert!(!imported.solid_faces(imported_solid).is_empty());
 }

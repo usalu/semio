@@ -4,17 +4,16 @@ use crate::standards::v1::subsets::graph::schema::diff::{SemioGraphDiff, SemioGr
 use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
 
 //#region 🔖️Diff
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+/// 🧮️ A node the graph lacks, or a key it does not carry, is `mutation.target-missing`; otherwise that entry leaves.
 pub fn diff(payload: &super::RemoveNodeProperty, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<SemioGraphDiff> {
-    let Some(node) = base.nodes.iter().find(|n| n.id == payload.node_id) else {
+    let Some(position) = base.nodes.iter().position(|node| node.id == payload.node_id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Node \"{}\" does not exist.", payload.node_id.value), [payload.node_id.value.clone()]);
     };
-    if payload.index >= node.properties.len() {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("Node \"{}\" has no property at index {}.", payload.node_id.value, payload.index), [payload.node_id.value.clone(), payload.index.to_string()]);
-    }
+    let Some(index) = base.nodes[position].properties.iter().position(|property| property.key == payload.key) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Node \"{}\" has no property \"{}\".", payload.node_id.value, payload.key), [payload.node_id.value.clone(), payload.key.clone()]);
+    };
     let mut nodes = base.nodes.clone();
-    let node = nodes.iter_mut().find(|n| n.id == payload.node_id).expect("checked above");
-    node.properties.remove(payload.index);
+    nodes[position].properties.remove(index);
     protocol::MutationOutcome::new(SemioGraphDiff { nodes: Some(SemioGraphNodeList { values: nodes }), edges: None })
 }
 //#endregion 🔖️Diff

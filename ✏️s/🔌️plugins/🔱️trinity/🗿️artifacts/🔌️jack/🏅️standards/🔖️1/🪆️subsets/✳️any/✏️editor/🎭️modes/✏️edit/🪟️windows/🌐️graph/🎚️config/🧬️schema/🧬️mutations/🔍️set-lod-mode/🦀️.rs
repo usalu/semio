@@ -2,7 +2,7 @@
 
 use super::{JackGraphWindowConfig, JackGraphWindowConfigMutation};
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[dsl(keyword = "set-lod-mode")]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetLodMode {
@@ -18,9 +18,12 @@ impl protocol::MutationKind<JackGraphWindowConfig, JackGraphWindowConfigMutation
         protocol::MutationOutcome::new(next)
     }
 
-    fn inverse(&self, base: &JackGraphWindowConfig) -> Vec<JackGraphWindowConfigMutation> {
+    fn inverse(&self, base: &JackGraphWindowConfig) -> Result<Vec<JackGraphWindowConfigMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![Self { value: base.lod_mode.clone() }.into()]
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set Window Lod Mode", "Detailstufenmodus des Fensters setzen")

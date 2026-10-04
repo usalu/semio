@@ -1,0 +1,7 @@
+# Graph Caller Catalog Publication
+
+Six actual imported GenerateScript caller catalogs are corrected in place. Writer, Puzzle2D, Puzzle3D and Puzzle5D now declare their explicit package-derived contract identities; Wires and Jack additionally own explicit empty exclusion and generic-identity policies. All six schema references now address the exact Outputs definition. General parsing and all existing policies, inputAreas, shared outputs, manifest IDs and language output pairs are preserved. The two already admitted Rewriting/Drawing catalogs were left untouched under Native’s six-asset checkpoint.
+
+Independent prepublication audit identified six genuine runtime and Ajv refusals. Root’s actual prepare, mount and verify all completed: six immediate byte guards, six exact full inverses, six current runtime parser and Ajv admissions, six retained unknown-field refusals, independent JSON5/JSON agreement, zero owned gaps. Original failed Jack73633 remains a preexecution refusal; failure-consumed byte identity is unproven. The unchanged whole Jack retry is required to establish its intended API compiler baseline. No Cargo, compiler, Graph generator or source/test/manifest mutation ran in Root’s lane.
+
+Full source authority and publication journal: graph-catalog-jack-boundary-inputs/root-six-catalog-ready-1.json, root-six-catalog-publication-journal-1.json and root-six-catalog-mounted-1.json. Read-only diagnosis: 📓️2026-10-03-jack-graph-catalog-boundary-audit.md.

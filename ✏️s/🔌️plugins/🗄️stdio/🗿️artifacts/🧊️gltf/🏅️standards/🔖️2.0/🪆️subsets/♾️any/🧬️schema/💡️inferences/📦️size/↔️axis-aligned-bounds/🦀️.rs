@@ -23,8 +23,8 @@ pub fn unavailable_measure(ids: &[String]) -> GltfMeasure<GltfBounds3> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_result(indicators: &GltfEntityIndicators) -> dsl::DslValue {
-    dsl::ToValue::to_value(&indicators.size.axis_aligned_bounds)
+pub fn encode_result(indicators: &GltfEntityIndicators) -> semio_framework_value::DslValue {
+    semio_framework_value::ToValue::to_value(&indicators.size.axis_aligned_bounds)
 }
 #[cfg(test)]
 #[path = "🧪️tests/🔬️canonical-vectors/🦀️.rs"]

@@ -4,7 +4,7 @@
 //! extensibility tier: an extension registering mutations/inferences on an artifact it does not own,
 //! gated by a declared `.depends_on("cad", …)` runtime dependency (contract freeze §3/§4).
 
-use pack::json::{self, Value as JsonValue};
+use semio_framework_pack_json::{self, Value as JsonValue};
 use semio_framework_os_kernel::{pack_rt, DslValue, FromValue, ToValue};
 use semio_framework_plugin::app::ArtifactContribution;
 use semio_framework_plugin::{ArtifactInferenceExecution, ArtifactInferenceExecutionError, ArtifactInferenceExecutionRequest, ArtifactInferenceService, ArtifactInferenceServiceMetadata, ExecutionMode, ExtensionBundle};
@@ -107,7 +107,7 @@ fn bundle() -> ExtensionBundle {
             ("computersJson".to_string(), DslValue::String(json::to_string(&computers_manifest()))),
         ]),
     );
-    semio_framework::io::resolve_ready(bundle.contributes(building_storey_contribution()))
+    ::semio_framework_async::poll::resolve_ready(bundle.contributes(building_storey_contribution()))
 }
 
 semio_framework_plugin::extension_exports!(bundle);
@@ -170,9 +170,9 @@ fn infer_building_structure_summary(request: &ArtifactInferenceExecutionRequest<
 // path_scope; that file's own `.mutation` doc comment already notes its body is "pure, no-real-
 // suspension calls" bridged via `resolve_ready`) — bridged the same way here. See R9.
 fn building_storey_contribution() -> ArtifactContribution {
-    let contribution = semio_framework::io::resolve_ready(ArtifactContribution::builder(CAD_ARTIFACT_KIND));
-    let contribution = semio_framework::io::resolve_ready(contribution.mutation::<CadSnapshot, CadMutation, CreateBuildingStorey>(CAD_DOCUMENT_SCHEMA, 1, 1));
-    let contribution = semio_framework::io::resolve_ready(contribution.inference_service(building_structure_summary_service()));
+    let contribution = ::semio_framework_async::poll::resolve_ready(ArtifactContribution::builder(CAD_ARTIFACT_KIND));
+    let contribution = ::semio_framework_async::poll::resolve_ready(contribution.mutation::<CadSnapshot, CadMutation, CreateBuildingStorey>(CAD_DOCUMENT_SCHEMA, 1, 1));
+    let contribution = ::semio_framework_async::poll::resolve_ready(contribution.inference_service(building_structure_summary_service()));
     contribution.build()
 }
 //#endregion 🔖️Composite

@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛫️change-run-start-month",
+  "semanticKind": "change-run-start-month",
+  "displayName": "Change Run Start Month",
+  "emoji": "🛫️",
+  "aggregateVariant": "ChangeRunStartMonth",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "change-run-start-month",
+  "binaryTag": 295,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

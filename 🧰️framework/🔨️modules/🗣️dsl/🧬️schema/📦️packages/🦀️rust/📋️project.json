@@ -1,0 +1,18 @@
+{
+  "name": "@semio-tech/framework-dsl-record-rs",
+  "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema",
+  "namedInputs": {
+    "default": ["{workspaceRoot}/🧰️framework/🔨️modules/🗣️dsl/🧬️schema/**/*", "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/**/*"]
+  },
+  "targets": {
+    "test-ownership": {
+      "executor": "nx:run-commands", "cache": false, "inputs": ["default"],
+      "options": {"cwd": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test-ownership"}
+    },
+    "test-native": {
+      "executor": "nx:run-commands", "cache": false, "inputs": ["default"],
+      "options": {"cwd": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test-native"}
+    }
+  }
+}

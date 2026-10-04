@@ -22,7 +22,8 @@
     "cooling",
     "lighting",
     "renewables",
-    "climate"
+    "climate",
+    "climateTable"
   ],
   "properties": {
     "buildingCategory": {
@@ -201,6 +202,60 @@
       }
     },
     "climate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "thetaEC",
+        "gHWM2"
+      ],
+      "properties": {
+        "thetaEC": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 12,
+          "maxItems": 12,
+          "x-semio-ui": {
+            "label": {
+              "en": "Monthly mean outdoor temperature θ_e",
+              "de": "Monatsmittelwert der Außentemperatur θ_e"
+            },
+            "description": {
+              "en": "Twelve values, January to December.",
+              "de": "Zwölf Werte, Januar bis Dezember."
+            },
+            "unit": "°C",
+            "step": 0.1
+          }
+        },
+        "gHWM2": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "minimum": 0
+          },
+          "minItems": 12,
+          "maxItems": 12,
+          "x-semio-ui": {
+            "label": {
+              "en": "Monthly mean global irradiance on the horizontal",
+              "de": "Monatsmittelwert der Globalstrahlung auf die Horizontale"
+            },
+            "description": {
+              "en": "Twelve values, January to December.",
+              "de": "Zwölf Werte, Januar bis Dezember."
+            },
+            "unit": "W/m²",
+            "step": 1
+          }
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
+    },
+    "climateTable": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -685,7 +740,17 @@
           }
         },
         "usageProfile": {
-          "$ref": "#/$defs/UsageProfile"
+          "$ref": "#/$defs/UsageProfile",
+          "x-semio-ui": {
+            "label": {
+              "en": "Usage profile",
+              "de": "Nutzungsprofil"
+            },
+            "description": {
+              "en": "Standard usage profile of DIN V 18599-10.",
+              "de": "Standard-Nutzungsprofil nach DIN V 18599-10."
+            }
+          }
         },
         "areaM2": {
           "type": "number",
@@ -889,7 +954,13 @@
           }
         },
         "kind": {
-          "$ref": "#/$defs/ElementKind"
+          "$ref": "#/$defs/ElementKind",
+          "x-semio-ui": {
+            "label": {
+              "en": "Element type",
+              "de": "Bauteilart"
+            }
+          }
         },
         "zoneId": {
           "type": "string"
@@ -968,7 +1039,17 @@
           }
         },
         "adjacency": {
-          "$ref": "#/$defs/Adjacency"
+          "$ref": "#/$defs/Adjacency",
+          "x-semio-ui": {
+            "label": {
+              "en": "Adjacent to",
+              "de": "Angrenzung"
+            },
+            "description": {
+              "en": "What the element borders; sets its temperature correction factor F_x (DIN V 18599-2).",
+              "de": "Woran das Bauteil grenzt; bestimmt seinen Temperatur-Korrekturfaktor F_x (DIN V 18599-2)."
+            }
+          }
         }
       },
       "x-semio-formats": [

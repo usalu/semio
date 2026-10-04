@@ -15,7 +15,7 @@
       "id": "addNode",
       "disposition": "Migrated",
       "lanes": [
-        "Artifact"
+        "Child"
       ],
       "reason": "The fresh node id is derived under the exact artifact one-item preparation factory and published on the Artifact lane."
     },
@@ -23,7 +23,7 @@
       "id": "addRelationship",
       "disposition": "Migrated",
       "lanes": [
-        "Artifact"
+        "Child"
       ],
       "reason": "The fresh edge id is derived under the exact artifact one-item preparation factory and published on the Artifact lane."
     },
@@ -31,7 +31,7 @@
       "id": "deleteSelection",
       "disposition": "Migrated",
       "lanes": [
-        "Artifact"
+        "Child"
       ],
       "reason": "Selection resolution walks the graph child one item per work step and publishes the removals on the Artifact lane."
     },
@@ -55,7 +55,7 @@
       "id": "canvasPointerUp",
       "disposition": "Migrated",
       "lanes": [
-        "Artifact",
+        "Child",
         "WindowTransient"
       ],
       "reason": "Release scans the current target, rebases the frozen total delta, and atomically publishes one durable move with the exact-window clear."

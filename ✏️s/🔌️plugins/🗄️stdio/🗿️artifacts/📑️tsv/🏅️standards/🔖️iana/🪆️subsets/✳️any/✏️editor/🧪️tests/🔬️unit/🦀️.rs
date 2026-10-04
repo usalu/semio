@@ -26,6 +26,26 @@ async fn editor_declares_the_table_window() {
     assert!(def.window_kinds.iter().any(|window| window.id == main::WINDOW_KIND_ID));
 }
 
+#[test]
+fn natural_file_route_exports_tabular_bytes_and_reopens_through_one_mutation() {
+    let edited = TsvSnapshot { records: vec![vec!["name".into(), "value".into()], vec!["Natural Open Save".into(), "Grüße".into()]], trailing_newline: true, ..Default::default() };
+    let bytes = <TsvEditor as ArtifactEditor>::encode_natural_file(&edited).expect("TSV natural bytes");
+    let records = csv::ReaderBuilder::new()
+        .delimiter(b'\t')
+        .has_headers(false)
+        .flexible(true)
+        .from_reader(bytes.as_slice())
+        .records()
+        .collect::<Result<Vec<_>, _>>()
+        .expect("csv crate reads exported TSV");
+    assert_eq!(records[1].get(0), Some("Natural Open Save"));
+    let reopened = <TsvEditor as ArtifactEditor>::decode_natural_file(&bytes).expect("TSV natural bytes reopen");
+    let Some(TsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: opened })) = <TsvEditor as ArtifactEditor>::whole_document_operation(reopened) else {
+        panic!("natural TSV opens through one event-sourced snapshot mutation")
+    };
+    assert_eq!(opened, edited);
+}
+
 #[semio_framework_async_macros::async_test]
 async fn op_text_roundtrip() {
     let command = TsvEditorCommand::SetCell { row: 2, column: 5, revision: "révision %20".into(), value: "a \\s value %20\nGrüße 🌍".into() };
@@ -41,15 +61,15 @@ fn op_text_rejects_malformed_unicode_hex_without_panicking() {
 
 #[test]
 fn set_cell_requires_its_full_address_and_accepts_an_empty_value() {
-    let args = dsl::DslValue::object([
-        ("row".into(), dsl::DslValue::Number(dsl::Number::UInt(1))),
-        ("column".into(), dsl::DslValue::Number(dsl::Number::UInt(2))),
-        ("revision".into(), dsl::DslValue::String("rev".into())),
-        ("value".into(), dsl::DslValue::String(String::new())),
+    let args = semio_framework_value::DslValue::object([
+        ("row".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(1))),
+        ("column".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(2))),
+        ("revision".into(), semio_framework_value::DslValue::String("rev".into())),
+        ("value".into(), semio_framework_value::DslValue::String(String::new())),
     ]);
     assert_eq!(tsv_command_from_action(TSV_KIT_ACTION_ID, Some(&args)).expect("complete cell address"), TsvEditorCommand::SetCell { row: 1, column: 2, revision: "rev".into(), value: String::new() });
     assert!(tsv_command_from_action(TSV_KIT_ACTION_ID, None).is_err());
-    let missing_value = dsl::DslValue::object([("row".into(), dsl::DslValue::Number(dsl::Number::UInt(1))), ("column".into(), dsl::DslValue::Number(dsl::Number::UInt(2)))]);
+    let missing_value = semio_framework_value::DslValue::object([("row".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(1))), ("column".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(2)))]);
     assert!(tsv_command_from_action(TSV_KIT_ACTION_ID, Some(&missing_value)).is_err());
 }
 
@@ -99,7 +119,7 @@ async fn the_curated_example_carries_visible_content() {
 #[semio_framework_async_macros::async_test]
 async fn the_shell_action_pair_resolves_into_the_typed_command() {
     for key in ["exampleId", "example_id", "id", "value"] {
-        let args = dsl::DslValue::object([(key.to_string(), dsl::DslValue::String("demo".into()))]);
+        let args = semio_framework_value::DslValue::object([(key.to_string(), semio_framework_value::DslValue::String("demo".into()))]);
         assert_eq!(tsv_command_from_action(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, Some(&args)).expect("declared verb"), TsvEditorCommand::SetActiveExample { example_id: "demo".into() });
     }
     assert!(tsv_command_from_action("noSuchVerb", None).is_err());
@@ -115,13 +135,13 @@ async fn kit_fixture_holding(document: &TsvSnapshot) -> KitFixtureApp {
     use semio_framework_plugin::PluginApp;
     let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<TsvEditor>, _>(async { semio_framework_plugin::App { definition: create_tsv_editor(), examples: Vec::new() } }).await;
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(document, STDIO_TSV_DOCUMENT_SCHEMA) else { panic!("the example switch hands the host one whole document") };
-    app.load_document_pack(&store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.expect("the host loads the example document");
+    semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.expect("the host loads the example document");
     app
 }
 
 /// 🕹️ Dispatches `action` with typed renderer `args`, exactly as the editable cell sends them, and settles it through
 /// the host's bounded publication loop.
-async fn dispatch_settled(app: &mut KitFixtureApp, action: &str, args: dsl::DslValue) -> Result<(), Fault> {
+async fn dispatch_settled(app: &mut KitFixtureApp, action: &str, args: semio_framework_value::DslValue) -> Result<(), Fault> {
     use semio_framework_plugin::PluginApp;
     let meta = semio_framework_plugin::artifact_app_laws::meta("local");
     app.handle_action(action, Some(&args), &meta).await?;
@@ -136,11 +156,11 @@ async fn the_kit_verb_edits_the_document_through_its_exact_retained_factory() {
     let source = tsv_example_snapshot(crate::examples::demo::ID);
     let mut app = kit_fixture_holding(&source).await;
     let revision = semio_s_artifact_stdio_contract::window_kit_canonical_revision(app.test_document_revision());
-    let args = dsl::DslValue::object([
-        ("row".into(), dsl::DslValue::Number(dsl::Number::UInt(0))),
-        ("column".into(), dsl::DslValue::Number(dsl::Number::UInt(1))),
-        ("revision".into(), dsl::DslValue::String(revision)),
-        ("value".into(), dsl::DslValue::String("Oak Board".into())),
+    let args = semio_framework_value::DslValue::object([
+        ("row".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(0))),
+        ("column".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(1))),
+        ("revision".into(), semio_framework_value::DslValue::String(revision)),
+        ("value".into(), semio_framework_value::DslValue::String("Oak Board".into())),
     ]);
     dispatch_settled(&mut app, "set-cell", args).await.expect("set-cell settles");
     assert_eq!(app.snapshot().expect("tsv snapshot").records[0][1], "Oak Board");

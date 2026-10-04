@@ -1,7 +1,7 @@
 //! 🖱️ `hover-suggestion` command.
 
 use crate::editor::puzzle5d::Puzzle5dActionCtx;
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 
 /// 🖱️ The suggestion row under the pointer becomes the candidate an argument-less accept or cycle starts from.
 pub fn hover_suggestion(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {

@@ -83,18 +83,18 @@ pub struct QueryResult {
     pub graph_fixture: Option<Box<JackSnapshot>>,
 }
 
-impl dsl::DslField for QueryResult {
-    fn shape() -> dsl::Shape {
-        dsl::Shape::Value
+impl semio_framework_dsl_record::DslField for QueryResult {
+    fn shape() -> semio_framework_dsl_record::Shape {
+        semio_framework_dsl_record::Shape::Value
     }
 
-    fn to_value(&self) -> dsl::FieldValue {
-        dsl::FieldValue::Value(dsl::ToValue::to_value(self))
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
+        semio_framework_dsl_record::FieldValue::Value(semio_framework_value::ToValue::to_value(self))
     }
 
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
         match value {
-            dsl::FieldValue::Value(value) => dsl::FromValue::from_value(value.clone()).map_err(|error| error.to_string()),
+            semio_framework_dsl_record::FieldValue::Value(value) => semio_framework_value::FromValue::from_value(value.clone()).map_err(|error| error.to_string()),
             other => Err(format!("expected Value, found {other:?}")),
         }
     }

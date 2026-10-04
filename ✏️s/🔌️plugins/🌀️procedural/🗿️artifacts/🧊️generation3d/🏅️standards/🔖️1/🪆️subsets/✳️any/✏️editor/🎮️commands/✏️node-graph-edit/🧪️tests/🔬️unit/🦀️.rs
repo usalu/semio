@@ -60,7 +60,7 @@ fn slider_value(host_snapshot: &FlowHostSnapshot, widget_id: &str) -> Option<f64
 /// settled through the registered ladder.
 async fn send(app: &mut Generation3dApp, args: serde_json::Value) {
     let action_meta = meta("local");
-    let args: dsl::DslValue = args.into();
+    let args: semio_framework_value::DslValue = args.into();
     app.handle_action("nodeGraphEdit", Some(&args), &action_meta).await.expect("nodeGraphEdit admitted");
     settle_registered_typed_operation(app, action_meta.instance_id).await.expect("nodeGraphEdit settles");
 }
@@ -81,11 +81,11 @@ async fn place_every_widget(app: &mut Generation3dApp) -> Vec<(String, (f64, f64
 }
 
 fn english(entry: &HistoryEntry) -> String {
-    entry.label.resolve(protocol::Terminology::Native, protocol::Locale::En).to_string()
+    entry.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).to_string()
 }
 
 fn german(entry: &HistoryEntry) -> String {
-    entry.label.resolve(protocol::Terminology::Native, protocol::Locale::De).to_string()
+    entry.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De).to_string()
 }
 
 //#region 🎚️SliderPress
@@ -209,7 +209,7 @@ fn node_graph_edit_takes_exactly_the_shared_row_vocabulary() {
     for case in fixture["refused"].as_array().expect("refused rows") {
         let batch = serde_json::json!([{ "operation": "disconnect", "synapseId": "s1" }, case["row"]]);
         assert!(rows(&NodeGraphEdit { operations_json: batch.to_string() }).is_err(), "{} refuses the whole batch", case["id"]);
-        let args: dsl::DslValue = serde_json::json!({ "operations": batch }).into();
+        let args: semio_framework_value::DslValue = serde_json::json!({ "operations": batch }).into();
         assert!(<crate::editor::generation3d::Generation3dPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action("nodeGraphEdit", Some(&args)).is_err(), "{} is refused at admission", case["id"]);
     }
 }

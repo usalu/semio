@@ -3,7 +3,7 @@
 //! field and the sibling `📥️import` leaf reconstructs the snapshot exactly: `IoFidelity::Exact`.
 
 use crate::Block5dSnapshot;
-use semio_framework::io::io_mechanism::Serializer;
+use semio_framework::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{Dialect, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
 use semio_s_artifact_stdio_json::schema::snapshot::write_json_text;
@@ -15,7 +15,8 @@ pub const JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", stand
 /// 🔣️ This subset's snapshot as compact rfc8259 text — also the body the `🎒️zip` container leaf
 /// embeds, and the exact bytes the TypeScript mirror's parity test compares against.
 pub fn json_text(from: &Block5dSnapshot) -> String {
-    write_json_text(&JsonSnapshot::from_value(dsl::json::from_dsl_value(&dsl::ToValue::to_value(from))).value)
+    let value = crate::standards::v1::subsets::any::io::json_native::convert(semio_framework_value::ToValue::to_value(from), false).expect("complete typed Block5d scalar paths");
+    write_json_text(&JsonSnapshot::from_value(semio_framework_pack_json::from_dsl_value(&value)).value)
 }
 
 /// 🧵️ `s.block.block5d@1/*` → `s.stdio.json@rfc8259/*`.
@@ -24,7 +25,7 @@ pub struct Block5dIntoJson;
 impl Serializer<Block5dSnapshot> for Block5dIntoJson {
     const INTO: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn serialize(from: &Block5dSnapshot) -> IoResult<IoPayload> {
+    async fn serialize(from: &Block5dSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
         Ok(IoOutcome::clean(IoPayload::Text(json_text(from))))
     }
 }

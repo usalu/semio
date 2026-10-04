@@ -80,7 +80,7 @@ impl ArtifactDeserializer for SemioMeshFromDwg {
     const INTO: Dialect = INTO_DIALECT;
 
     async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        let drawing = from.drawing.to_native().map_err(store::PackError::Schema)?;
+        let drawing = from.drawing.to_native().map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))?;
         Ok(SemioMeshSnapshot { schema: STDIO_SEMIOMESH_DOCUMENT_SCHEMA.into(), meshes: semio_meshes_from_drawing(&drawing), materials: Vec::new(), textures: Vec::new() })
     }
 }

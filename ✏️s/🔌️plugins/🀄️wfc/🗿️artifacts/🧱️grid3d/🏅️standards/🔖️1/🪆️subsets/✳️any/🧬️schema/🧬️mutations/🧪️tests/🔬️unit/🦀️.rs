@@ -64,7 +64,7 @@ fn every_mutation_and_its_inverse_return_the_document_to_where_it_started() {
     let base = crate::examples::blocks::snapshot();
     for mutation in every_mutation() {
         let mut snapshot = base.clone();
-        let inverse = inverse_grid3d_mutation(&base, &mutation);
+        let inverse = inverse_grid3d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
         if apply_grid3d_mutation(&mut snapshot, &mutation).is_err() {
             continue;
         }
@@ -142,12 +142,12 @@ mod roster {
     const FEATURE: &str = include_str!("../../../../🧪️tests/🧩️mutate-wfc-grid3d-1/🥒️.feature");
     const PYTHON_ORACLE: &str = include_str!("../../../../🧪️tests/🧩️mutate-wfc-grid3d-1/🐍️.py");
 
-    fn value(text: &str) -> dsl::DslValue {
-        dsl::os_pack::json::to_dsl_value(&dsl::os_pack::json::parse(text).expect("committed json"))
+    fn value(text: &str) -> semio_framework_value::DslValue {
+        semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed json"))
     }
 
-    fn field(value: &dsl::DslValue, key: &str) -> String {
-        value.get(key).and_then(dsl::DslValue::as_str).unwrap_or_default().to_string()
+    fn field(value: &semio_framework_value::DslValue, key: &str) -> String {
+        value.get(key).and_then(semio_framework_value::DslValue::as_str).unwrap_or_default().to_string()
     }
 
     #[test]
@@ -186,8 +186,8 @@ mod roster {
     #[test]
     fn the_oracle_catalog_carries_a_vector_for_every_kind() {
         let catalog = value(ORACLE_CATALOG);
-        let catalogs = catalog.get("mutationCatalogs").and_then(dsl::DslValue::as_array).expect("the manifest declares mutationCatalogs");
-        let vectors = catalogs[0].get("vectors").and_then(dsl::DslValue::as_array).expect("the catalog declares vectors");
+        let catalogs = catalog.get("mutationCatalogs").and_then(semio_framework_value::DslValue::as_array).expect("the manifest declares mutationCatalogs");
+        let vectors = catalogs[0].get("vectors").and_then(semio_framework_value::DslValue::as_array).expect("the catalog declares vectors");
         assert_eq!(vectors.len(), KINDS.len());
         for (index, vector) in vectors.iter().enumerate() {
             assert_eq!(field(vector, "mutationId"), KINDS[index]);

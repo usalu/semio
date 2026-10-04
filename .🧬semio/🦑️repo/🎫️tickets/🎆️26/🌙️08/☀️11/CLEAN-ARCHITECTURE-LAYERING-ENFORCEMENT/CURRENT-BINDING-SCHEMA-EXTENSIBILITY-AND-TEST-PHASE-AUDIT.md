@@ -1,0 +1,11 @@
+# Binding schema extensibility and test phase
+
+[Current canonical inputs](neutral-field-binding-inputs/extension-neutral-shape-current-inputs-1.json) and [Stage6 full proposal](🗑️generated/neutral-field-binding/stage-6/source-ready-1.json) retain source evidence.
+
+The shared field shape enum Text/Float/Tuple3 describes the present IO/viewport witnesses, not canonical Record's Shape algebra. Canonical Shape also includes Bool, Int, UInt, Bytes64, Enum, Tuple, List, Record, Block, Statements, Map and Value. The current neutral schema/🔣️.json defines numeric cases; it supplies no reusable exhaustive Shape JSON descriptor. The generic helper validates the fixture envelope but never interprets field.shape. Thus every future differently shaped owner would require editing this generic enum unnecessarily.
+
+Use a nonempty string descriptor in the shared fixture envelope and keep current owner fixtures' exact field descriptors plus their native comparisons closed. This changes no runtime feature. The shared expectedFields value union is likewise a bounded present-witness vocabulary, excluding boolean/null/object observations; it should not be described as exhaustive canonical shape authority. No generic helper implementation change is needed for the proposed nonempty descriptor.
+
+The four explicit testAuthored rows are coherent: IO/UI entries add only cfg(test) owner-law mounts; their manifests add canonical Record under dev-dependencies (UI also adds Value for tests) while retaining original normal dependencies and production bodies. New owner tests resolve their shared native oracle path to the proposed neutral Record test asset. Existing entry mounts resolve to present files. Fixtures and owner-law assets must be published with those four test-phase rows; production binding impls and final normal dependencies must remain untouched during RED.
+
+The native laws then require DslField for the actual ArtifactRef/Viewport types, absent before owner binding publication, so missing-trait RED is the intended compiler outcome. It has not been executed: grammar/portable strict evidence cannot establish that specific compiler refusal. Full registered native execution must distinguish missing-trait RED from preparation or unrelated failures before production publication.

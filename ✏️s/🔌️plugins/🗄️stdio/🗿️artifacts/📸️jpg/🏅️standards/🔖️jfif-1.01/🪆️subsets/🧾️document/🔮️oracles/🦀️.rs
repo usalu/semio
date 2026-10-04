@@ -346,15 +346,14 @@ mod oracles {
         Ok(())
     }
 
-    /// 🩹️ The `(member, value)` pairs of a `SnapshotPatch` whose every edit sets (or inserts, when absent) one top-level member — the only
+    /// 🩹️ The `(member, value)` pairs of a `SnapshotPatch` whose operation sets (or inserts, when absent) one top-level member — the only
     /// edits this model has a slot for; any other path or operation is refused, never skipped.
     fn patch_members(params: &Json) -> Result<Vec<(String, Json)>, String> {
-        params.get("patch").map(|patch| patch.array("edits")).unwrap_or_default().into_iter().map(|edit| {
-            let path = edit.array("path");
-            let operation = edit.get("edit").cloned().unwrap_or(Json::Null);
-            match (path.as_slice(), operation.str("operation").as_str()) {
-                ([Json::String(member)], "set" | "insert") => Ok((member.clone(), operation.get("value").cloned().unwrap_or(Json::Null))),
-                (other, operation) => Err(format!("patch-snapshot {operation} at {} has no oracle implementation", Json::Array(other.to_vec()).to_string())),
+        params.get("patch").into_iter().map(|patch| {
+            let path = patch.str("path").split('/').skip(1).map(|segment| segment.replace("~1", "/").replace("~0", "~")).collect::<Vec<_>>();
+            match (path.as_slice(), patch.str("operation").as_str()) {
+                ([member], "set" | "insert") => Ok((member.clone(), patch.get("value").cloned().unwrap_or(Json::Null))),
+                (other, operation) => Err(format!("patch-snapshot {operation} at {other:?} has no oracle implementation")),
             }
         }).collect()
     }

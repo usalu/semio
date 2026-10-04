@@ -63,9 +63,9 @@ async fn child_local_text_fixture_proves_bounded_identity_isolation_aba_and_wire
             }
             "wireOmission" => {
                 let handle = document_child_handle_with_text("wire", first, "plaintext");
-                let wire: serde_json::Value = serde_json::from_str(&dsl::os_pack::json::to_json_string(&handle)).expect("third-party JSON oracle reads handle");
+                let wire: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&handle)).expect("third-party JSON oracle reads handle");
                 assert!(wire.get("localText").is_none());
-                let decoded: WriterDocumentChild = dsl::os_pack::json::from_json_str(&wire.to_string()).expect("owned handle decoder reads oracle JSON");
+                let decoded: WriterDocumentChild = semio_framework_pack_json::from_json_str(&wire.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("owned handle decoder reads oracle JSON");
                 assert_eq!(writer_text_for_handle(&decoded), expected);
                 assert_eq!(writer_text_for_handle(&handle), first);
             }

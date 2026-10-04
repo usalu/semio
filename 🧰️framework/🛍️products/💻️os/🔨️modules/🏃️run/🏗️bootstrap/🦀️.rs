@@ -15,7 +15,7 @@ extern crate semio_framework as store;
 extern crate semio_framework_artifact_workflow_workflow as workflow;
 extern crate semio_framework_os_kernel as protocol;
 
-use semio_framework_os_run::{plan, register_builtin_converters, MediaCache, RunSink, SpaceBundle, SpaceRunner, WasmtimeNodeHost};
+use semio_framework_os_run::{plan, register_builtin_converters, MediaCache, NodeDocumentLoadProgress, RunSink, SpaceBundle, SpaceRunner, WasmtimeNodeHost};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -40,14 +40,14 @@ impl FileMediaCache {
 impl MediaCache for FileMediaCache {
     fn get(&self, fingerprint: &MediaFingerprint) -> Option<Media> {
         let text = std::fs::read_to_string(self.entry_path(fingerprint)).ok()?;
-        protocol::os_pack::json::from_json_str(&text).ok()
+        semio_framework_pack_json::from_json_str(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()
     }
 
     fn put(&mut self, fingerprint: &MediaFingerprint, media: &Media) {
         if std::fs::create_dir_all(&self.root).is_err() {
             return;
         }
-        let _ = std::fs::write(self.entry_path(fingerprint), protocol::os_pack::json::to_json_string(media));
+        let _ = std::fs::write(self.entry_path(fingerprint), semio_framework_pack_json::to_json_string(media));
     }
 }
 //#endregion 🔖️FileMediaCache
@@ -311,7 +311,7 @@ async fn run_async(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     let descriptor_paths = resolve_descriptor_paths(&repo_root)?;
     let blob_store = Arc::new(bundle.blob_store());
     let host = WasmtimeNodeHost::new(plugin_paths, descriptor_paths, Arc::clone(&blob_store)).await;
-    let mut runner = SpaceRunner::new(host, blob_store, args.policy);
+    let mut runner = SpaceRunner::new(host, blob_store, args.policy).with_document_load_progress(document_load_reporter());
     let mut cache = FileMediaCache::new(bundle.media_cache_dir());
 
     let mut sink = RunSink::new(semio_framework_artifact_workflow_run::empty_run_document().await);
@@ -352,6 +352,19 @@ async fn run_async(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
             let _ = sink.record(semio_framework_artifact_workflow_run::RunMutation::SealRun(semio_framework_artifact_workflow_run::SealRun { status: semio_framework_artifact_workflow_run::RunStatus::Failed })).await;
             persist_run(&bundle, &sink).await?;
             Err(error.into())
+        }
+    }
+}
+
+/// 📊️ The CLI's document-load progress: one `[os run]` line per node whenever its polled load crosses another tenth, so a
+/// long history shows it is moving without printing every poll.
+fn document_load_reporter() -> impl FnMut(&NodeDocumentLoadProgress) + Send + 'static {
+    let mut reported: Option<(String, u64)> = None;
+    move |progress| {
+        let tenth = if progress.total == 0 { 0 } else { progress.completed.saturating_mul(10) / progress.total };
+        if reported.as_ref().is_none_or(|(node_id, last)| node_id != &progress.node_id || *last != tenth) {
+            eprintln!("[os run] {}: loading document {}/{}", progress.node_id, progress.completed, progress.total);
+            reported = Some((progress.node_id.clone(), tenth));
         }
     }
 }

@@ -26,7 +26,8 @@ impl MutationKind<PdfSnapshot, PdfHMutation> for RemoveFontFile {
         MutationOutcome::new(support::graph_edit_diff(base, next))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfHMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfHMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         support::font_descriptors(base)
             .get(self.descriptor_ordinal)
             .copied()
@@ -34,7 +35,9 @@ impl MutationKind<PdfSnapshot, PdfHMutation> for RemoveFontFile {
             .map(|(key, program)| PdfHMutation::EmbedFontFile(EmbedFontFile { descriptor_ordinal: self.descriptor_ordinal, key, program }))
             .into_iter()
             .collect()
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove font program from descriptor {}", self.descriptor_ordinal), &format!("Schriftprogramm aus Deskriptor {} entfernen", self.descriptor_ordinal))

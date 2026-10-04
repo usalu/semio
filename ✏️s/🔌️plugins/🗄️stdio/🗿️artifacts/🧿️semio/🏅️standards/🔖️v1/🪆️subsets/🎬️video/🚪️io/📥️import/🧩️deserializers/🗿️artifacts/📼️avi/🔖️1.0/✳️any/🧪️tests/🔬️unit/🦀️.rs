@@ -52,7 +52,7 @@ fn real_world_avi() -> AviSnapshot {
 
 #[semio_framework_async_macros::async_test]
 async fn deserialize_maps_vids_stream_and_synthesizes_pts_from_scale() {
-    let video = semio_framework_plugin::resolve_ready(SemioVideoFromAvi::deserialize(&real_world_avi())).expect("deserialize");
+    let video = ::semio_framework_async::poll::resolve_ready(SemioVideoFromAvi::deserialize(&real_world_avi())).expect("deserialize");
     assert_eq!(video.streams.len(), 1);
     let stream = &video.streams[0];
     assert_eq!(stream.kind, SemioVideoStreamKind::Video);
@@ -71,6 +71,6 @@ async fn deserialize_maps_vids_stream_and_synthesizes_pts_from_scale() {
 async fn non_vids_non_auds_stream_kind_is_honestly_dropped_not_fabricated() {
     let mut avi = real_world_avi();
     avi.streams[0].strh.fcc_type = "txts".into();
-    let video = semio_framework_plugin::resolve_ready(SemioVideoFromAvi::deserialize(&avi)).expect("deserialize");
+    let video = ::semio_framework_async::poll::resolve_ready(SemioVideoFromAvi::deserialize(&avi)).expect("deserialize");
     assert!(video.streams.is_empty());
 }

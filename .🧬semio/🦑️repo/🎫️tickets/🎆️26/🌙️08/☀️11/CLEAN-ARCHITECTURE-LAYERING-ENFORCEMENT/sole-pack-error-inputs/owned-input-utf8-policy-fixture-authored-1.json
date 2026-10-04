@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "cause": "std::string::FromUtf8Error",
+  "condition": "OwnedUTF8ConversionRejected",
+  "kind": "InvalidValue",
+  "message": "Original Decoder Display",
+  "messageClassification": false,
+  "errorPayloadRecovery": false,
+  "cases": [
+    { "id": "tsv-envelope", "input": "inner", "callerOriginalRetained": false },
+    { "id": "csv-envelope", "input": "inner", "callerOriginalRetained": false },
+    { "id": "txt-envelope", "input": "inner", "callerOriginalRetained": false },
+    { "id": "txt-binary", "input": "from.bytes.clone()", "callerOriginalRetained": true },
+    { "id": "step-binary", "input": "from.bytes.clone()", "callerOriginalRetained": true }
+  ]
+}

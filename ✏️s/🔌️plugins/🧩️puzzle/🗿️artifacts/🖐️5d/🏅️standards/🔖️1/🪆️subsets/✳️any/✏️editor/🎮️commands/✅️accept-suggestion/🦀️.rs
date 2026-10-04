@@ -2,7 +2,7 @@
 
 use crate::editor::puzzle5d::precompute::brush::puzzle5d_brush_placement;
 use crate::editor::puzzle5d::{Puzzle5dActionCtx, Puzzle5dFreshIds, PUZZLE5D_GRANULARITY_PART};
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 
 /// ✅️ Places the `index`-th (else the hovered) free candidate the brush suggestions run found for the menu's
 /// grip, posed exactly as the search posed it and fastened to that grip, then selects the new part. The menu

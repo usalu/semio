@@ -454,6 +454,90 @@ where
 }
 //#endregion 🔖️Machine
 
+//#region 🌊️Gesture
+/// 🌊️ Where one dispatch of a streamed window gesture (a gumball drag, a paint stroke) sits: a one-shot `Once`, a
+/// `Stream` tick into the window's open transaction, the `Commit` that ends it, or a host `Abort` with its reason.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum GesturePhase {
+    Once,
+    Stream,
+    Commit,
+    Abort(ToolAbortReason),
+}
+
+impl GesturePhase {
+    /// 🔡️ Reads a gesture verb's `phase` (`stream` | `commit` | `abort`, absent = one-shot) and an abort's `reason`
+    /// (`blur`, `captureLost`, `baseMoved`, `frozen`, `retired`; absent = `tool`); `None` for an unknown one.
+    pub fn parse(phase: Option<&str>, reason: Option<&str>) -> Option<Self> {
+        match phase {
+            None => Some(Self::Once),
+            Some("stream") => Some(Self::Stream),
+            Some("commit") => Some(Self::Commit),
+            Some("abort") => reason.map_or(Some(ToolAbortReason::Tool), ToolAbortReason::parse).map(Self::Abort),
+            Some(_) => None,
+        }
+    }
+}
+
+/// 🖐️ One window's streamed tool for ONE dispatch — a [`ToolMachineRunner`] started at rest, or resumed from the gesture
+/// its window persisted between dispatches (window or artifact transient, never history).
+pub trait GestureTool: Sized {
+    type Gesture: PartialEq;
+    type Tick;
+    type Mutation;
+    fn start(verb: &str, authoring_seed: &str, base_revision: &str) -> Result<Self, ToolRefusal>;
+    fn resume(gesture: &Self::Gesture) -> Result<Self, ToolRefusal>;
+    fn verb(&self) -> &str;
+    fn base_revision(&self) -> &str;
+    fn abort(&mut self, reason: ToolAbortReason);
+    fn send(&mut self, phase: GesturePhase, tick: Option<Self::Tick>) -> Result<ToolStep<Self::Mutation>, ToolRefusal>;
+    fn persist(self) -> Option<Self::Gesture>;
+}
+
+/// 📬️ What one gesture dispatch did: the transaction it committed (publish it as ONE edit) and, when the window's
+/// persisted gesture changed, its next one (`Some(None)` clears it).
+pub struct GestureDrive<G, M> {
+    pub committed: Option<(TransactionRef, Vec<M>)>,
+    pub next: Option<Option<G>>,
+}
+
+/// 🚂️ Drives one window's streamed tool through ONE dispatch. `Once` commits `tick` as one transaction; `Stream` upserts
+/// it into the window's open transaction (opening it on the first tick), `Commit` folds it in and commits the whole
+/// gesture, `Abort` drops the open gesture with zero trace. An open gesture another verb or a one-shot interrupts is
+/// aborted `captureLost`; one whose base moved under it is aborted `baseMoved`, and a stream tick or commit that found
+/// it is dropped with it.
+pub fn drive_gesture<T: GestureTool>(persisted: Option<&T::Gesture>, verb: &str, phase: GesturePhase, tick: Option<T::Tick>, authoring_seed: &str, base_revision: &str) -> GestureDrive<T::Gesture, T::Mutation> {
+    let dropped = || GestureDrive { committed: None, next: persisted.map(|_| None) };
+    let open = match (persisted.and_then(|gesture| T::resume(gesture).ok()), phase) {
+        (Some(mut tool), GesturePhase::Abort(reason)) => {
+            tool.abort(reason);
+            return dropped();
+        }
+        (None, GesturePhase::Abort(_)) => return dropped(),
+        (Some(mut tool), _) if tool.base_revision() != base_revision => {
+            tool.abort(ToolAbortReason::BaseMoved);
+            if phase != GesturePhase::Once {
+                return dropped();
+            }
+            None
+        }
+        (Some(mut tool), _) if tool.verb() != verb || phase == GesturePhase::Once => {
+            tool.abort(ToolAbortReason::CaptureLost);
+            None
+        }
+        (open, _) => open,
+    };
+    let Some(mut tool) = open.or_else(|| T::start(verb, authoring_seed, base_revision).ok()) else { return dropped() };
+    let step = tool.send(phase, tick);
+    let gesture = tool.persist();
+    let next = (gesture.as_ref() != persisted).then_some(gesture);
+    match step {
+        Ok(ToolStep::Committed(reference, mutations)) => GestureDrive { committed: Some((reference, mutations)), next },
+        Ok(_) | Err(_) => GestureDrive { committed: None, next },
+    }
+}
+//#endregion 🌊️Gesture
+
 //#region 🔖️Scrub
 /// 🎚️ The argument naming the press a continuous control's dispatch belongs to (`"<control>:<ms>"`); a dispatch
 /// without it is a plain one-shot edit.
@@ -761,7 +845,8 @@ impl<M: Clone + 'static> ScrubLedger<M> {
     /// 📨️ Runs one input of `window`'s press. A tick or release of the press the window last closed is a silent no-op;
     /// an open scrub of another tool or opened on another document revision is host-aborted first (`captureLost`,
     /// `baseMoved`, zero trace), so the input opens a fresh transaction on the current revision — the leaves are
-    /// absolute. The release closes the press.
+    /// absolute. The release closes the press. A refused input leaves the ledger exactly as it was: the press stays open,
+    /// so a retry or a host abort decides.
     pub fn send(&mut self, window: &str, tool: &str, actor: &ActorId, base_revision: &str, input: ScrubInput<M>, clock: HybridLogicalTimestamp) -> Result<ToolStep<M>, ToolRefusal> {
         let (gesture, release) = match &input {
             ScrubInput::Abort { reason } => return Ok(self.abort(window, None, *reason)),
@@ -771,12 +856,18 @@ impl<M: Clone + 'static> ScrubLedger<M> {
         if self.closed.get(window) == Some(&gesture) {
             return Ok(ToolStep::Idle);
         }
-        let open = self.windows.remove(window).filter(|state| state.tool == tool && state.base_revision == base_revision);
-        let mut scrub = match open.map(Scrub::resume) {
+        let previous = self.windows.remove(window);
+        let mut scrub = match previous.clone().filter(|state| state.tool == tool && state.base_revision == base_revision).map(Scrub::resume) {
             Some(Ok(scrub)) => scrub,
             _ => Scrub::start(tool, actor.clone(), base_revision),
         };
         let step = scrub.send(input, clock);
+        if step.is_err() {
+            if let Some(previous) = previous {
+                self.windows.insert(window.to_string(), previous);
+            }
+            return step;
+        }
         if release {
             self.closed.insert(window.to_string(), gesture);
         }
@@ -893,6 +984,41 @@ pub fn node_drag_commit<M: Clone + 'static>(tool: impl Into<String>, actor: Acto
     match Scrub::start(tool, actor, "").send(ScrubInput::Commit { gesture: gesture.to_string(), leaves }, clock).ok()? {
         ToolStep::Committed(transaction, mutations) => Some((transaction, mutations)),
         ToolStep::Idle | ToolStep::Open | ToolStep::Aborted(..) | ToolStep::Empty(_) => None,
+    }
+}
+
+/// ⏱️ The clock a guest mints its tool transaction refs and tool ticks from: the host's wall-clock millisecond at `logical`
+/// (actor 0 — the admission's authoring seed, not the clock, names the writer).
+pub fn authoring_clock(logical: u64) -> HybridLogicalTimestamp {
+    HybridLogicalTimestamp { actor: 0, physical_ms: semio_framework_job::default_now_ms().unwrap_or(0), logical }
+}
+
+/// 🛠️ What a released node drag publishes ([`node_drag_emit`]): ONE tool transaction of its leaves, the leaves as a plain
+/// edit (a view without command authority: no authoring seed), or nothing (no leaves: zero trace).
+#[derive(Clone, Debug, PartialEq)]
+pub enum NodeDragEmit<M> {
+    Commit(TransactionRef, Vec<M>),
+    Plain(Vec<M>),
+    Nothing,
+}
+
+impl<M> NodeDragEmit<M> {
+    /// 🔓️ The committed tool transaction and its leaves; `None` for a plain or an empty release.
+    pub fn committed(self) -> Option<(TransactionRef, Vec<M>)> {
+        match self {
+            Self::Commit(transaction, leaves) => Some((transaction, leaves)),
+            Self::Plain(_) | Self::Nothing => None,
+        }
+    }
+}
+
+/// 🛠️ The ONE node-drag emission of every guest: `leaves` of the press `gesture` through [`node_drag_commit`] as the tool
+/// `<app_id>#<verb>`, minted from the admission's `authoring_seed` and [`authoring_clock`].
+pub fn node_drag_emit<M: Clone + 'static>(app_id: &str, verb: &str, authoring_seed: &str, gesture: &str, leaves: Vec<M>) -> NodeDragEmit<M> {
+    match node_drag_commit(format!("{app_id}#{verb}"), ActorId(authoring_seed.to_string()), gesture, leaves, authoring_clock(0)) {
+        Some((transaction, leaves)) if !authoring_seed.is_empty() => NodeDragEmit::Commit(transaction, leaves),
+        Some((_, leaves)) => NodeDragEmit::Plain(leaves),
+        None => NodeDragEmit::Nothing,
     }
 }
 //#endregion 🔖️NodeDrag
@@ -1450,6 +1576,6 @@ impl<M: Clone + 'static> TypingLedger<M> {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 #[cfg(test)]
-#[path = "🧪️tests/🔬️node-graph-edit-rows/🦀️.rs"]
+#[path = "🧪️tests/🧪️node-graph-edit-rows/🦀️.rs"]
 mod node_graph_edit_rows_tests;
 //#endregion 🧪️Tests

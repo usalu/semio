@@ -59,7 +59,7 @@ async fn email_and_role_relay_upsert_member() {
         })
         .expect("a ReplayShellCommand effect");
     assert_eq!(action_id, "os.directory.upsert-member");
-    let args_value: pack::JsonValue = pack::json_from_dsl_value(&args.expect("args"));
+    let args_value: semio_framework_pack_json::Value = semio_framework_pack_json::from_dsl_value(&args.expect("args"));
     assert_eq!(args_value["email"], "ada@semio.dev");
     assert_eq!(args_value["role"], "author");
 }
@@ -76,7 +76,7 @@ async fn blank_role_defaults_to_spectator() {
             _ => None,
         })
         .expect("args");
-    let args_value: pack::JsonValue = pack::json_from_dsl_value(&args);
+    let args_value: semio_framework_pack_json::Value = semio_framework_pack_json::from_dsl_value(&args);
     assert_eq!(args_value["role"], "spectator");
 }
 

@@ -16,7 +16,7 @@ function nxRoutingServices(): typeof import("../../📦️packages/🟦️typesc
   return createRequire(import.meta.url)("../../📦️packages/🟦️typescript/🟦️.ts");
 }
 
-/** 🛠️ Loads acquisition only when the selected Nx installation needs it. */
+/** 🛠️ Loads the owner of the current immutable Nx recipe and patch identity. */
 function nxBootstrapServices(): typeof import("./🛠️tools/📜️script.ts") {
   return createRequire(import.meta.url)("./🛠️tools/📜️script.ts");
 }
@@ -92,8 +92,8 @@ export class NxScript extends Script {
     return owned.sort((a, b) => a - b);
   }
   async run(segments: string[]): Promise<void> {
-    let tooling: { cli: string; modulePath: string } | undefined;
-    if (!existsSync(join(this.root, "node_modules/nx/package.json")) || segments.some(argument => /(?:^|[:,=])(?:deps-javascript|deps-js-all|setup)(?:$|[,:])/.test(argument))) {
+    let tooling: { cli: string; modulePath: string };
+    {
       const controller = new AbortController();
       let stopped: NodeJS.Signals | undefined;
       const stop = (signal: NodeJS.Signals): void => { stopped ??= signal; controller.abort(); };
@@ -106,9 +106,9 @@ export class NxScript extends Script {
       } catch (error) { if (!stopped) throw error; process.exitCode = stopped === "SIGINT" ? 130 : 143; return; }
       finally { process.removeListener("SIGINT", interrupt); process.removeListener("SIGTERM", terminate); }
     }
-    const nxCli = tooling?.cli ?? createRequire(join(this.root, existsSync(join(this.root, ".nx/installation/package.json")) ? ".nx/installation/package.json" : "package.json")).resolve("nx/bin/nx.js");
+    const nxCli = tooling.cli;
     const invocation = resolveNxInvocation(segments), children: ReturnType<typeof spawnNxProcess>[] = [];
-    const env = devToolingEnv({ ...invocation.env, ...(tooling ? { NODE_PATH: tooling.modulePath } : {}), NX_WORKSPACE_DATA_DIRECTORY: invocation.env.NX_WORKSPACE_DATA_DIRECTORY || process.env.NX_WORKSPACE_DATA_DIRECTORY || join(this.root, ".nx", "workspace-data"), NX_SOCKET_DIR: undefined, NX_DAEMON_SOCKET_DIR: undefined, npm_lifecycle_event: undefined, npm_lifecycle_script: undefined });
+    const env = devToolingEnv({ ...invocation.env, NODE_PATH: tooling.modulePath, NX_WORKSPACE_DATA_DIRECTORY: invocation.env.NX_WORKSPACE_DATA_DIRECTORY || process.env.NX_WORKSPACE_DATA_DIRECTORY || join(this.root, ".nx", "workspace-data"), NX_SOCKET_DIR: undefined, NX_DAEMON_SOCKET_DIR: undefined, npm_lifecycle_event: undefined, npm_lifecycle_script: undefined });
     let cancelled: NodeJS.Signals | undefined, cancellationDeadline = 0, watchFailure = 0, finishing = false;
     let force: ReturnType<typeof setTimeout> | undefined, watcher: ReturnType<typeof spawnNxProcess> | undefined;
     const descendants = new Set<number>();

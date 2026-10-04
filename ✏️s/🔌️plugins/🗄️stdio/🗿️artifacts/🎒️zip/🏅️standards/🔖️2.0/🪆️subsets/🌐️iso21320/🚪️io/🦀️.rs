@@ -9,7 +9,10 @@ pub mod derived_composition {
     use crate::standards::v2_0::subsets::base::schema::ZipComposer as ZipAnyComposer;
     use crate::standards::v2_0::subsets::iso21320::schema::check_iso21320_conformance;
     use crate::standards::v2_0::subsets::iso21320::schema::check_iso21320_wire_conformance;
-    use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
+    use semio_framework_diagnostic::Diagnostic;
+use semio_framework_diagnostic::FaultCode;
+use semio_framework_diagnostic::Severity;
+use semio_framework_diagnostic::TextSpan;
     use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
     use std::sync::OnceLock;
 
@@ -80,7 +83,7 @@ pub mod derived_composition {
                     span: TextSpan::at(1, 1),
                     message: "ISO/IEC 21320-1 SubsetValidator: payload did not decode as a ZipSnapshot -- skipped".into(),
                     expected: None,
-                    scope: dsl::FaultScope::default(),
+                    scope: semio_framework_diagnostic::FaultScope::default(),
                 }],
             }
         }

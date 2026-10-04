@@ -9,9 +9,8 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct SetShapeText {
-    pub(crate) slide_index: usize,
-    pub(crate) shape_index: usize,
-    pub(crate) text_frame: Vec<PptxParagraph>,
+    pub(crate) address: PptxShapeAddress,
+    pub(crate) text: String,
 }
 
 impl protocol::MutationKind<PptxSnapshot, PptxMutation> for SetShapeText {
@@ -20,14 +19,17 @@ impl protocol::MutationKind<PptxSnapshot, PptxMutation> for SetShapeText {
     fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<<PptxMutation as Mutation<PptxSnapshot>>::Diff> {
         agg_diff(&PptxMutation::SetShapeText(self.clone()), base)
     }
-    fn inverse(&self, base: &PptxSnapshot) -> Vec<PptxMutation> {
-        agg_inverse(&PptxMutation::SetShapeText(self.clone()), base)
-    }
+    fn inverse(&self, base: &PptxSnapshot) -> Result<Vec<PptxMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&PptxMutation::SetShapeText(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set shape text", "Text der Form setzen")
     }
     fn target(&self) -> Vec<String> {
-        Vec::new()
+        std::iter::once(self.address.node.part_path.clone()).chain(self.address.node.node_path.iter().map(usize::to_string)).collect()
     }
 }
 //#endregion 🔖️Payload

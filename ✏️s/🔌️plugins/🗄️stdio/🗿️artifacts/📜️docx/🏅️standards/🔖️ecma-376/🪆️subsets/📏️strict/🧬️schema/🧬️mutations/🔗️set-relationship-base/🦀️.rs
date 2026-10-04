@@ -17,9 +17,12 @@ impl protocol::MutationKind<DocxSnapshot, DocxStrictMutation> for SetRelationshi
     fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<<DocxStrictMutation as Mutation<DocxSnapshot>>::Diff> {
         agg_diff(&DocxStrictMutation::SetRelationshipBase(self.clone()), base)
     }
-    fn inverse(&self, base: &DocxSnapshot) -> Vec<DocxStrictMutation> {
-        agg_inverse(&DocxStrictMutation::SetRelationshipBase(self.clone()), base)
-    }
+    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxStrictMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&DocxStrictMutation::SetRelationshipBase(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set relationship base", "Beziehungsbasis setzen")
     }

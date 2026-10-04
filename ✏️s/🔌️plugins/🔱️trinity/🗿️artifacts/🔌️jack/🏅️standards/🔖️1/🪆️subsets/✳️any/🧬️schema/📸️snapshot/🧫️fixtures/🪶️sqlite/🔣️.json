@@ -1,0 +1,623 @@
+{
+  "schema": "jack.owned-snapshot-sqlite.v1",
+  "sourceControl": {"deep": 1024, "renumberOffset": 1000, "cancelAt": 256},
+  "invalidUtf16CodeUnits": [[55296], [57343]],
+  "invalidSqlEdits": [
+    "DELETE FROM jack_camera",
+    "INSERT INTO jack_document SELECT 999,schema,name,manifest_id,root_node_id,query FROM jack_document",
+    "UPDATE jack_content_child SET document_id=999",
+    "UPDATE jack_node_kind SET ordinal=8 WHERE ordinal=0",
+    "UPDATE jack_node_kind_port SET ordinal=8 WHERE ordinal=0",
+    "UPDATE jack_node_property SET ordinal=8 WHERE ordinal=0",
+    "UPDATE jack_edge_property SET property_kind='unknown'",
+    "UPDATE jack_port_kind SET direction='unknown'",
+    "UPDATE jack_value_type SET variant='unknown' WHERE id=1",
+    "UPDATE jack_value_type_list SET child_type_id=value_type_id",
+    "DELETE FROM jack_value_type_schema",
+    "INSERT INTO jack_value_type VALUES(9999,'any')",
+    "UPDATE jack_node_property SET value_type_id=(SELECT value_type_id FROM jack_edge_property LIMIT 1)",
+    "UPDATE jack_camera SET x_numeric_class='nan'",
+    "UPDATE jack_camera SET x=42"
+  ],
+  "documentSchema": "trinity.graph",
+  "name": "Jack eigene Manifest 🌍",
+  "query": "node\u0000!@/😀\nwhere property = \"nicht registriert\"",
+  "manifestId": "independent-registry-id",
+  "rootNodeId": "unresolved-root\u0000!@/😀",
+  "literal": "\u0000!@/引用🌍",
+  "binary64Bits": [
+    "0000000000000000",
+    "8000000000000000",
+    "0000000000000001",
+    "3fe0000000000000",
+    "7fefffffffffffff",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff8000000000001",
+    "7ff0000000000001"
+  ],
+  "valueTypes": [
+    {
+      "kind": "boolean"
+    },
+    {
+      "kind": "integer"
+    },
+    {
+      "kind": "decimal"
+    },
+    {
+      "kind": "text"
+    },
+    {
+      "kind": "any"
+    },
+    {
+      "kind": "schema",
+      "of": ""
+    },
+    {
+      "kind": "schema",
+      "of": "literal\u0000!@/Schema🌍"
+    },
+    {
+      "kind": "list",
+      "of": {
+        "kind": "list",
+        "of": {
+          "kind": "schema",
+          "of": "unresolved-schema"
+        }
+      }
+    }
+  ],
+  "propertyKinds": [
+    "data",
+    "derived"
+  ],
+  "directions": [
+    "in",
+    "out"
+  ],
+  "optionalIdentifiers": [
+    null,
+    "",
+    "independent\u0000!@/🌍"
+  ],
+  "expressions": [
+    null,
+    "",
+    "expression\u0000!@/🌍"
+  ],
+  "childAddresses": [
+    {
+      "childId": "",
+      "artifactId": "target\u0000!@/🌍",
+      "artifactKind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "graph"
+    },
+    {
+      "childId": "alias\u0000!@/🌍",
+      "artifactId": "",
+      "artifactKind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "graph"
+    }
+  ],
+  "tableWidths": {
+    "jack_document": 6,
+    "jack_camera": 11,
+    "jack_content_child": 7,
+    "jack_node_kind": 4,
+    "jack_edge_kind": 4,
+    "jack_port_kind": 5,
+    "jack_node_kind_port": 4,
+    "jack_value_type": 2,
+    "jack_value_type_list": 3,
+    "jack_value_type_schema": 3,
+    "jack_node_property": 7,
+    "jack_edge_property": 7,
+    "jack_port_property": 7
+  },
+  "nativeCase": {
+    "schema": "trinity.graph",
+    "name": "Jack eigene Manifest 🌍",
+    "manifestId": "independent-registry-id",
+    "rootNodeId": "unresolved-root\u0000!@/😀",
+    "query": "node\u0000!@/😀\nwhere property = \"nicht registriert\"",
+    "cameraWord": "8000000000000000",
+    "manifest": {
+      "nodeKinds": [
+        {
+          "name": "",
+          "properties": [
+            {
+              "name": "",
+              "kind": "data",
+              "valueType": {
+                "kind": "boolean"
+              }
+            },
+            {
+              "name": "",
+              "kind": "derived",
+              "valueType": {
+                "kind": "integer"
+              },
+              "expr": ""
+            },
+            {
+              "name": "",
+              "kind": "data",
+              "valueType": {
+                "kind": "decimal"
+              },
+              "expr": "expression\u0000!@/🌍"
+            },
+            {
+              "name": "",
+              "kind": "derived",
+              "valueType": {
+                "kind": "text"
+              }
+            },
+            {
+              "name": "",
+              "kind": "data",
+              "valueType": {
+                "kind": "any"
+              },
+              "expr": ""
+            },
+            {
+              "name": "",
+              "kind": "derived",
+              "valueType": {
+                "kind": "schema",
+                "of": ""
+              },
+              "expr": "expression\u0000!@/🌍"
+            },
+            {
+              "name": "",
+              "kind": "data",
+              "valueType": {
+                "kind": "schema",
+                "of": "literal\u0000!@/Schema🌍"
+              }
+            },
+            {
+              "name": "",
+              "kind": "derived",
+              "valueType": {
+                "kind": "list",
+                "of": {
+                  "kind": "list",
+                  "of": {
+                    "kind": "schema",
+                    "of": "unresolved-schema"
+                  }
+                }
+              },
+              "expr": ""
+            }
+          ],
+          "portKinds": [
+            "",
+            "\u0000!@/引用🌍",
+            ""
+          ]
+        },
+        {
+          "name": "",
+          "properties": [
+            {
+              "name": "",
+              "kind": "data",
+              "valueType": {
+                "kind": "boolean"
+              }
+            },
+            {
+              "name": "",
+              "kind": "derived",
+              "valueType": {
+                "kind": "integer"
+              },
+              "expr": ""
+            },
+            {
+              "name": "",
+              "kind": "data",
+              "valueType": {
+                "kind": "decimal"
+              },
+              "expr": "expression\u0000!@/🌍"
+            },
+            {
+              "name": "",
+              "kind": "derived",
+              "valueType": {
+                "kind": "text"
+              }
+            },
+            {
+              "name": "",
+              "kind": "data",
+              "valueType": {
+                "kind": "any"
+              },
+              "expr": ""
+            },
+            {
+              "name": "",
+              "kind": "derived",
+              "valueType": {
+                "kind": "schema",
+                "of": ""
+              },
+              "expr": "expression\u0000!@/🌍"
+            },
+            {
+              "name": "",
+              "kind": "data",
+              "valueType": {
+                "kind": "schema",
+                "of": "literal\u0000!@/Schema🌍"
+              }
+            },
+            {
+              "name": "",
+              "kind": "derived",
+              "valueType": {
+                "kind": "list",
+                "of": {
+                  "kind": "list",
+                  "of": {
+                    "kind": "schema",
+                    "of": "unresolved-schema"
+                  }
+                }
+              },
+              "expr": ""
+            }
+          ],
+          "portKinds": [
+            "",
+            "\u0000!@/引用🌍",
+            ""
+          ]
+        }
+      ],
+      "edgeKinds": [
+        {
+          "name": "",
+          "properties": [
+            {
+              "name": "",
+              "kind": "data",
+              "valueType": {
+                "kind": "boolean"
+              }
+            },
+            {
+              "name": "",
+              "kind": "derived",
+              "valueType": {
+                "kind": "integer"
+              },
+              "expr": ""
+            },
+            {
+              "name": "",
+              "kind": "data",
+              "valueType": {
+                "kind": "decimal"
+              },
+              "expr": "expression\u0000!@/🌍"
+            },
+            {
+              "name": "",
+              "kind": "derived",
+              "valueType": {
+                "kind": "text"
+              }
+            },
+            {
+              "name": "",
+              "kind": "data",
+              "valueType": {
+                "kind": "any"
+              },
+              "expr": ""
+            },
+            {
+              "name": "",
+              "kind": "derived",
+              "valueType": {
+                "kind": "schema",
+                "of": ""
+              },
+              "expr": "expression\u0000!@/🌍"
+            },
+            {
+              "name": "",
+              "kind": "data",
+              "valueType": {
+                "kind": "schema",
+                "of": "literal\u0000!@/Schema🌍"
+              }
+            },
+            {
+              "name": "",
+              "kind": "derived",
+              "valueType": {
+                "kind": "list",
+                "of": {
+                  "kind": "list",
+                  "of": {
+                    "kind": "schema",
+                    "of": "unresolved-schema"
+                  }
+                }
+              },
+              "expr": ""
+            }
+          ]
+        },
+        {
+          "name": "",
+          "properties": [
+            {
+              "name": "",
+              "kind": "data",
+              "valueType": {
+                "kind": "boolean"
+              }
+            },
+            {
+              "name": "",
+              "kind": "derived",
+              "valueType": {
+                "kind": "integer"
+              },
+              "expr": ""
+            },
+            {
+              "name": "",
+              "kind": "data",
+              "valueType": {
+                "kind": "decimal"
+              },
+              "expr": "expression\u0000!@/🌍"
+            },
+            {
+              "name": "",
+              "kind": "derived",
+              "valueType": {
+                "kind": "text"
+              }
+            },
+            {
+              "name": "",
+              "kind": "data",
+              "valueType": {
+                "kind": "any"
+              },
+              "expr": ""
+            },
+            {
+              "name": "",
+              "kind": "derived",
+              "valueType": {
+                "kind": "schema",
+                "of": ""
+              },
+              "expr": "expression\u0000!@/🌍"
+            },
+            {
+              "name": "",
+              "kind": "data",
+              "valueType": {
+                "kind": "schema",
+                "of": "literal\u0000!@/Schema🌍"
+              }
+            },
+            {
+              "name": "",
+              "kind": "derived",
+              "valueType": {
+                "kind": "list",
+                "of": {
+                  "kind": "list",
+                  "of": {
+                    "kind": "schema",
+                    "of": "unresolved-schema"
+                  }
+                }
+              },
+              "expr": ""
+            }
+          ]
+        }
+      ],
+      "portKinds": [
+        {
+          "name": "",
+          "direction": "in",
+          "properties": [
+            {
+              "name": "",
+              "kind": "data",
+              "valueType": {
+                "kind": "boolean"
+              }
+            },
+            {
+              "name": "",
+              "kind": "derived",
+              "valueType": {
+                "kind": "integer"
+              },
+              "expr": ""
+            },
+            {
+              "name": "",
+              "kind": "data",
+              "valueType": {
+                "kind": "decimal"
+              },
+              "expr": "expression\u0000!@/🌍"
+            },
+            {
+              "name": "",
+              "kind": "derived",
+              "valueType": {
+                "kind": "text"
+              }
+            },
+            {
+              "name": "",
+              "kind": "data",
+              "valueType": {
+                "kind": "any"
+              },
+              "expr": ""
+            },
+            {
+              "name": "",
+              "kind": "derived",
+              "valueType": {
+                "kind": "schema",
+                "of": ""
+              },
+              "expr": "expression\u0000!@/🌍"
+            },
+            {
+              "name": "",
+              "kind": "data",
+              "valueType": {
+                "kind": "schema",
+                "of": "literal\u0000!@/Schema🌍"
+              }
+            },
+            {
+              "name": "",
+              "kind": "derived",
+              "valueType": {
+                "kind": "list",
+                "of": {
+                  "kind": "list",
+                  "of": {
+                    "kind": "schema",
+                    "of": "unresolved-schema"
+                  }
+                }
+              },
+              "expr": ""
+            }
+          ]
+        },
+        {
+          "name": "",
+          "direction": "out",
+          "properties": [
+            {
+              "name": "",
+              "kind": "data",
+              "valueType": {
+                "kind": "boolean"
+              }
+            },
+            {
+              "name": "",
+              "kind": "derived",
+              "valueType": {
+                "kind": "integer"
+              },
+              "expr": ""
+            },
+            {
+              "name": "",
+              "kind": "data",
+              "valueType": {
+                "kind": "decimal"
+              },
+              "expr": "expression\u0000!@/🌍"
+            },
+            {
+              "name": "",
+              "kind": "derived",
+              "valueType": {
+                "kind": "text"
+              }
+            },
+            {
+              "name": "",
+              "kind": "data",
+              "valueType": {
+                "kind": "any"
+              },
+              "expr": ""
+            },
+            {
+              "name": "",
+              "kind": "derived",
+              "valueType": {
+                "kind": "schema",
+                "of": ""
+              },
+              "expr": "expression\u0000!@/🌍"
+            },
+            {
+              "name": "",
+              "kind": "data",
+              "valueType": {
+                "kind": "schema",
+                "of": "literal\u0000!@/Schema🌍"
+              }
+            },
+            {
+              "name": "",
+              "kind": "derived",
+              "valueType": {
+                "kind": "list",
+                "of": {
+                  "kind": "list",
+                  "of": {
+                    "kind": "schema",
+                    "of": "unresolved-schema"
+                  }
+                }
+              },
+              "expr": ""
+            }
+          ]
+        }
+      ]
+    },
+    "content": {
+      "childId": "",
+      "artifactId": "target\u0000!@/🌍",
+      "artifactKind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "graph"
+    }
+  },
+  "tableRowCounts": {
+    "jack_document": 1,
+    "jack_camera": 1,
+    "jack_content_child": 1,
+    "jack_node_kind": 2,
+    "jack_edge_kind": 2,
+    "jack_port_kind": 2,
+    "jack_node_kind_port": 6,
+    "jack_value_type": 60,
+    "jack_value_type_list": 12,
+    "jack_value_type_schema": 18,
+    "jack_node_property": 16,
+    "jack_edge_property": 16,
+    "jack_port_property": 16
+  }
+}

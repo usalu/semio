@@ -21,6 +21,7 @@ use crate::editor::drawing::panels::{catalogue as catalogue_panel, layers as lay
 use crate::editor::drawing::presence::{DrawingPresence, DrawingPresenceMutation};
 use crate::editor::drawing::terminology::DrawingPlayLabels;
 use crate::op::DrawingMutation;
+use crate::schema::scene_identity::SceneIdentity;
 use crate::{DrawingSnapshot, DRAWING_DOCUMENT_SCHEMA};
 use semio_framework_job::FixedOperationOwner;
 use semio_framework_plugin::app::InteractionView;
@@ -344,7 +345,7 @@ mod args_bridge {
         out
     }
 
-    fn put(entries: &mut Vec<(String, dsl::DslValue)>, key: &str, value: dsl::DslValue) {
+    fn put(entries: &mut Vec<(String, semio_framework_value::DslValue)>, key: &str, value: semio_framework_value::DslValue) {
         entries.retain(|(existing, _)| existing != key);
         entries.push((key.to_string(), value));
     }
@@ -352,13 +353,13 @@ mod args_bridge {
     /// 🔢️ The host's JSON round trip delivers every integer as `Number::Float`; the exact-integer
     /// codecs refuse that, so whole finite floats go back to their integer variant (`f64` fields
     /// accept any `Number`, so nothing else changes).
-    fn integral(value: dsl::DslValue) -> dsl::DslValue {
+    fn integral(value: semio_framework_value::DslValue) -> semio_framework_value::DslValue {
         match value {
-            dsl::DslValue::Number(dsl::Number::Float(float)) if float.is_finite() && float.fract() == 0.0 && float.abs() < 9.007_199_254_740_992e15 => {
-                if float >= 0.0 { dsl::DslValue::Number(dsl::Number::UInt(float as u64)) } else { dsl::DslValue::Number(dsl::Number::Int(float as i64)) }
+            semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(float)) if float.is_finite() && float.fract() == 0.0 && float.abs() < 9.007_199_254_740_992e15 => {
+                if float >= 0.0 { semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(float as u64)) } else { semio_framework_value::DslValue::Number(semio_framework_value::Number::Int(float as i64)) }
             }
-            dsl::DslValue::Array(items) => dsl::DslValue::Array(items.into_iter().map(integral).collect()),
-            dsl::DslValue::Object(entries) => dsl::DslValue::Object(entries.into_iter().map(|(key, value)| (key, integral(value))).collect()),
+            semio_framework_value::DslValue::Array(items) => semio_framework_value::DslValue::Array(items.into_iter().map(integral).collect()),
+            semio_framework_value::DslValue::Object(entries) => semio_framework_value::DslValue::Object(entries.into_iter().map(|(key, value)| (key, integral(value))).collect()),
             other => other,
         }
     }
@@ -366,42 +367,42 @@ mod args_bridge {
     /// 🔁️ Every key under both spellings (`FromValue` ignores keys it does not know), `aliases`
     /// applied on the snake_case key, and each `json` key printed to JSON text when the host sent a
     /// structured value for a `String` wire field (`patchLayer.value`, `setFixtureJson.json`).
-    fn fold(args: Option<&dsl::DslValue>, aliases: &[(&str, &str)], json: &[&str]) -> dsl::DslValue {
-        let mut entries: Vec<(String, dsl::DslValue)> = Vec::new();
-        if let Some(dsl::DslValue::Object(object)) = args {
+    fn fold(args: Option<&semio_framework_value::DslValue>, aliases: &[(&str, &str)], json: &[&str]) -> semio_framework_value::DslValue {
+        let mut entries: Vec<(String, semio_framework_value::DslValue)> = Vec::new();
+        if let Some(semio_framework_value::DslValue::Object(object)) = args {
             for (key, value) in object {
                 let mut key = snake(key);
                 if let Some((_, to)) = aliases.iter().find(|(from, _)| *from == key) {
                     key = (*to).to_string();
                 }
                 let mut value = integral(value.clone());
-                if json.contains(&key.as_str()) && !matches!(value, dsl::DslValue::String(_)) {
-                    value = dsl::DslValue::String(dsl::json::to_json_string(&value));
+                if json.contains(&key.as_str()) && !matches!(value, semio_framework_value::DslValue::String(_)) {
+                    value = semio_framework_value::DslValue::String(semio_framework_pack_json::to_json_string(&value));
                 }
                 put(&mut entries, &camel(&key), value.clone());
                 put(&mut entries, &key, value);
             }
         }
-        dsl::DslValue::Object(entries)
+        semio_framework_value::DslValue::Object(entries)
     }
 
     /// 🧩️ Supplies `key = value` when the host sent no such argument (a palette/Actions-pane row
     /// dispatches its verb arg-less; `create_layer_by_kind` treats any unknown kind as a path).
-    fn default_key(mut folded: dsl::DslValue, key: &str, value: &str) -> dsl::DslValue {
-        if let dsl::DslValue::Object(entries) = &mut folded {
+    fn default_key(mut folded: semio_framework_value::DslValue, key: &str, value: &str) -> semio_framework_value::DslValue {
+        if let semio_framework_value::DslValue::Object(entries) = &mut folded {
             if !entries.iter().any(|(existing, _)| existing == key) {
-                put(entries, &camel(key), dsl::DslValue::String(value.into()));
-                put(entries, key, dsl::DslValue::String(value.into()));
+                put(entries, &camel(key), semio_framework_value::DslValue::String(value.into()));
+                put(entries, key, semio_framework_value::DslValue::String(value.into()));
             }
         }
         folded
     }
 
-    fn decode<T: dsl::FromValue>(action: &str, value: dsl::DslValue) -> Result<T, Fault> {
+    fn decode<T: semio_framework_value::FromValue>(action: &str, value: semio_framework_value::DslValue) -> Result<T, Fault> {
         T::from_value(value).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-args"), format!("draw action '{action}' arguments do not decode: {error}")))
     }
 
-    pub fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<DrawingCommand, Fault> {
+    pub fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<DrawingCommand, Fault> {
         let plain = || fold(args, &[], &[]);
         Ok(match action {
             "setSnapshot" => DrawingCommand::SetSnapshot(decode(action, plain())?),
@@ -419,16 +420,16 @@ mod args_bridge {
             "toggleLayerVisible" => DrawingCommand::ToggleLayerVisible(decode(action, fold(args, &[("id", "layer_id")], &[]))?),
             "editFill" => {
                 let mut value = plain();
-                if let dsl::DslValue::Object(entries) = &mut value {
+                if let semio_framework_value::DslValue::Object(entries) = &mut value {
                     let edit = entries.iter().find(|(key,_)| key == "edit").map(|(_,value)| value.clone()).ok_or_else(|| Fault::from("Missing fill edit"))?;
-                    let mut edit = if let dsl::DslValue::String(json) = edit { dsl::json::from_json_str::<dsl::DslValue>(&json).map_err(|error| Fault::from(error.to_string()))? } else { edit };
-                    if let (Some((_,input)),dsl::DslValue::Object(fields)) = (entries.iter().find(|(key,_)| key == "value"),&mut edit) {
+                    let mut edit: semio_framework_value::DslValue = if let semio_framework_value::DslValue::String(json) = edit { semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| Fault::from(error.to_string()))? } else { edit };
+                    if let (Some((_,input)),semio_framework_value::DslValue::Object(fields)) = (entries.iter().find(|(key,_)| key == "value"),&mut edit) {
                         let kind = fields.iter().find(|(key,_)| key == "kind").and_then(|(_,value)| value.as_str()).unwrap_or("");
                         let input = if matches!(kind,"type"|"color") {
-                            dsl::DslValue::String(input.as_str().ok_or_else(|| Fault::from("Choose a fill value"))?.into())
+                            semio_framework_value::DslValue::String(input.as_str().ok_or_else(|| Fault::from("Choose a fill value"))?.into())
                         } else {
-                            let number = match input { dsl::DslValue::String(text) => text.parse::<f64>().ok(), other => <f64 as dsl::FromValue>::from_value(other.clone()).ok() }.filter(|number| number.is_finite()).ok_or_else(|| Fault::from("Enter a finite number"))?;
-                            dsl::DslValue::Number(dsl::Number::Float(number))
+                            let number = match input { semio_framework_value::DslValue::String(text) => text.parse::<f64>().ok(), other => <f64 as semio_framework_value::FromValue>::from_value(other.clone()).ok() }.filter(|number| number.is_finite()).ok_or_else(|| Fault::from("Enter a finite number"))?;
+                            semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(number))
                         };
                         put(fields,"value",input);
                     }
@@ -438,15 +439,15 @@ mod args_bridge {
             },
             "editPath" => {
                 let mut value = plain();
-                if let dsl::DslValue::Object(entries) = &mut value {
+                if let semio_framework_value::DslValue::Object(entries) = &mut value {
                     let edit = entries.iter().find(|(key, _)| key == "edit").map(|(_, value)| value.clone()).ok_or_else(|| Fault::from("Missing path edit"))?;
-                    let mut edit = if let dsl::DslValue::String(json) = edit { dsl::json::from_json_str::<dsl::DslValue>(&json).map_err(|error| Fault::from(error.to_string()))? } else { edit };
+                    let mut edit: semio_framework_value::DslValue = if let semio_framework_value::DslValue::String(json) = edit { semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| Fault::from(error.to_string()))? } else { edit };
                     if let Some((_, input)) = entries.iter().find(|(key, _)| key == "value") {
                         let number = match input {
-                            dsl::DslValue::String(text) => text.parse::<f64>().ok(),
-                            other => <f64 as dsl::FromValue>::from_value(other.clone()).ok(),
+                            semio_framework_value::DslValue::String(text) => text.parse::<f64>().ok(),
+                            other => <f64 as semio_framework_value::FromValue>::from_value(other.clone()).ok(),
                         }.filter(|number| number.is_finite()).ok_or_else(|| Fault::from("Enter a finite coordinate"))?;
-                        if let dsl::DslValue::Object(fields) = &mut edit { put(fields, "value", dsl::DslValue::Number(dsl::Number::Float(number))); }
+                        if let semio_framework_value::DslValue::Object(fields) = &mut edit { put(fields, "value", semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(number))); }
                     }
                     put(entries, "edit", integral(edit));
                 }
@@ -463,8 +464,8 @@ mod args_bridge {
             "nudgeSelectionDownFast" => DrawingCommand::NudgeSelectionDownFast(decode(action, plain())?),
             "editSelection" => {
                 let mut value = plain();
-                if let dsl::DslValue::Object(entries) = &mut value {
-                    if !entries.iter().any(|(key, _)| key == "ids") { put(entries, "ids", dsl::DslValue::Array(Vec::new())); }
+                if let semio_framework_value::DslValue::Object(entries) = &mut value {
+                    if !entries.iter().any(|(key, _)| key == "ids") { put(entries, "ids", semio_framework_value::DslValue::Array(Vec::new())); }
                 }
                 DrawingCommand::EditSelection(decode(action, value)?)
             },
@@ -559,7 +560,7 @@ const DRAWING_GESTURE_OPERATION_SLOTS: usize = 64;
 
 struct DrawingInstanceOperationOwner {
     operations: semio_framework_job::FixedOperationRegistry<DrawingGestureOperationOwner, DRAWING_GESTURE_OPERATION_SLOTS>,
-    active: Option<(semio_framework_job::FixedOperationKey, [u8; 32])>,
+    active: Option<(semio_framework_job::FixedOperationKey, SceneIdentity)>,
     closing: bool,
     /// 🚪️ Every slot has been marked closing. `FixedOperationRegistry::begin_close_step` and
     /// `close_step` share one cursor and each advance it by one, so a close that calls both per step
@@ -576,7 +577,7 @@ impl DrawingInstanceOperationOwner {
 
     fn dispatch(&mut self, payload: &DrawingGestureOperationPayload) -> Result<Option<(Emit<DrawingMutation, NoConfigMutation, NoDraftMutation>, DrawingCanvasWindowTransient)>, Fault> {
         let key = semio_framework_job::FixedOperationKey::new(semio_framework_job::OperationId(payload.operation_context.operation_id), semio_framework_job::Generation(payload.operation_context.generation));
-        let base_revision = payload.operation_context.canonical_base_revision;
+        let source_identity = payload.source_identity;
         let command = &payload.command;
         let snapshot = payload.snapshot.as_ref();
         let config = payload.config.as_ref();
@@ -588,7 +589,7 @@ impl DrawingInstanceOperationOwner {
         }
         if let Some((active, observed_revision)) = self.active {
             let same_utility = self.operations.get(active).and_then(|owner| owner.session.as_ref()).is_some_and(|session| session.active_utility_id == active_utility_id);
-            if observed_revision != base_revision || !same_utility {
+            if !observed_revision.matches(source_identity) || !same_utility {
                 self.operations.cancel(active);
                 self.active = None;
             }
@@ -615,7 +616,7 @@ impl DrawingInstanceOperationOwner {
                 let _ = rejected.owner.close_step(1, DRAWING_GESTURE_RETAINED_BYTES);
                 Fault::new(FaultOrigin::App, FaultCode::new("drawing.gesture.saturated"), "the fixed Drawing gesture operation authority is saturated")
             })?;
-            self.active = Some((live_key, base_revision));
+            self.active = Some((live_key, source_identity));
         }
         let retained = self.operations.get_mut(live_key).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("drawing.gesture.owner"), "the exact Drawing gesture owner changed before its bounded reducer step"))?;
         let session = retained.session.as_mut().ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("drawing.gesture.owner"), "the Drawing gesture session is already closing"))?;
@@ -764,9 +765,9 @@ impl DrawingInstanceOperationOwner {
         Ok(Some((emit, window_transient)))
     }
 
-    fn preview_projection(&mut self, canonical_base_revision: [u8; 32], active_utility: &str) -> Option<DrawingGesturePreview> {
+    fn preview_projection(&mut self, source_identity: SceneIdentity, active_utility: &str) -> Option<DrawingGesturePreview> {
         let (key, observed_revision) = self.active?;
-        if observed_revision != canonical_base_revision {
+        if !observed_revision.matches(source_identity) {
             self.operations.cancel(key);
             self.active = None;
             return None;
@@ -823,6 +824,7 @@ impl semio_framework_plugin::ArtifactInstanceOperationOwner for DrawingInstanceO
 }
 
 struct DrawingGestureOperationPayload {
+    source_identity: SceneIdentity,
     command: DrawingCommand,
     snapshot: std::sync::Arc<DrawingSnapshot>,
     config: std::sync::Arc<NoConfig>,
@@ -1211,6 +1213,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
     fn step(
         &mut self,
         input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<DrawingPlayApp>>,
+    _cx: &mut semio_framework_job::StepContext<'_>,
     ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<DrawingPlayApp>>, Fault> {
         use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
         if self.completed || input.command.command_id() != self.tool_id { return Err(Fault::from("drawing-window-work-terminal")); }
@@ -1318,7 +1321,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for DrawingBoundedComma
 /// non-gesture route, refused outright when the id, the typed command and the live extent disagree.
 fn drawing_bounded_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<DrawingPlayApp>>) -> Result<semio_framework::ToolOperationSpec, Fault> {
     if request.command.command_id() != request.tool_id || drawing_bounded_extent(&request.command, &request.snapshot, &request.interaction_state) != Some(1) {
-        return Err(Fault::new(FaultOrigin::App, FaultCode::new("drawing.bounded.tool-mismatch"), "bounded Drawing command does not match its exact registered tool or exceeds its declared extent"));
+        return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.tool-mismatch"), "bounded Drawing command does not match its exact registered tool or exceeds its declared extent"));
     }
     let tool_id = request.command.command_id();
     let work: Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<DrawingPlayApp>>> = Box::new(DrawingWindowCommandWork::new(tool_id));
@@ -1352,36 +1355,6 @@ fn drawing_bounded_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJo
 //#endregion 🧵️BoundedCommands
 
 //#region 📬️StorePreparation
-/// 🧬️ Builds the single described edit both preparation lanes publish — the two differ only in their
-/// mutation type and id prefix.
-fn drawing_prepared_edit<M>(prefix: &str, forward: M, inverse: Vec<M>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> ::protocol::Edit<M> {
-    let id = format!("{prefix}-{}", authority.next_sequence_number());
-    ::protocol::Edit { line: authority.line_id().map(str::to_owned),
-        id: id.clone(),
-        actor: Some(authority.actor().to_string()),
-        forwards: vec![forward],
-        inverse,
-        mutation_meta: vec![::protocol::MutationMeta {
-            mutation_id: Some(::protocol::MutationId(format!("{id}#0"))),
-            dependencies: Vec::new(),
-            base_version: authority.base_applied_edit_count() as u64,
-            author_id: Some(::protocol::ActorId(authority.actor().to_string())),
-            timestamp: authority.next_clock(),
-            undo_policy: ::protocol::UndoPolicy::ExactBaseOnly,
-            payload_hash: None,
-            semantic_kind: None,
-            label: None,
-            group_id: None,
-            origin: Default::default(),
-            transaction: None,
-        }],
-        description, verb: None,
-        coalesce_key: None,
-        sequence_number: authority.next_sequence_number(),
-        started_at: String::new(),
-        finished_at: None,
-    }
-}
 
 struct DrawingArtifactStorePreparationFactory;
 
@@ -1401,7 +1374,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<DrawingSnapshot, DrawingMutat
         if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
             return Err("drawing-artifact-lane-or-description-envelope".into());
         }
-        Ok(store::ArtifactStoreOneItemFootprint::for_one_item(crate::mutations::drawing_inverse_rows(mutation), store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
+        Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
 
     fn begin(
@@ -1442,10 +1415,10 @@ impl store::ArtifactStoreOneItemPreparation<DrawingSnapshot, DrawingMutation> fo
         }
         let base = self.base.as_ref().ok_or_else(|| "drawing-artifact-base-owner-missing".to_string())?;
         let mutation = self.mutation.take().ok_or_else(|| "drawing-artifact-mutation-owner-missing".to_string())?;
-        let inverse = mutation.inverse(base.get());
+        let inverse = mutation.inverse(base.get()).map_err(semio_framework_value::ValueError::into_message)?;
         let post = ::protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
         let authority = self.authority.as_ref().ok_or_else(|| "drawing-artifact-authority-missing".to_string())?;
-        let edit = drawing_prepared_edit("drawing-artifact-bounded", mutation, inverse, self.description.take(), authority);
+        let edit = authority.next_edit(mutation, inverse);
         let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
         self.prepared = Some(prepared);
@@ -1472,7 +1445,7 @@ impl store::ArtifactStoreOneItemPreparation<DrawingSnapshot, DrawingMutation> fo
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -1481,7 +1454,7 @@ impl store::ArtifactStoreOneItemPreparation<DrawingSnapshot, DrawingMutation> fo
         }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
-                return Err("drawing-artifact-base-retirement-rejected".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"drawing-artifact-base-retirement-rejected"));
             }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -1560,20 +1533,21 @@ impl DrawingPlayApp {
 
 fn render_drawing_body(
     body_key: &str,
-    document: &DrawingSnapshot,
+    doc: &ArtifactView<'_ ,DrawingSnapshot>,
     config: &DrawingCanvasWindowConfig,
     preview: &DrawingGesturePreview,
     selection: &[String],
     point_selection: &[String],
     view_state: &semio_framework_plugin::ViewModel,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    let document=doc.snapshot;
     let labels = semio_framework_plugin::resolve_labels::<DrawingPlayLabels>(view_state);
     let active_utility = drawing_active_utility(view_state);
     // 🪟️ One `TreeWindows` per panel body: the host's open/scroll state for exactly the containers
     // that body owns, plus the shared first-paint budget the panel spends in document order.
     let windows = semio_framework_plugin::TreeWindows::for_body(view_state, body_key);
     let root = match body_key {
-        DRAWING_PLAY_BODY_COMPOSITE => canvas_window::render(document, config, preview, active_utility, selection, point_selection),
+        DRAWING_PLAY_BODY_COMPOSITE => geometry_session::with_visual(doc.render_operation(),|plan,revision,fresh|{let idle=DrawingGesturePreview::default();canvas_window::render(plan,revision,document,config,if fresh{preview}else{&idle},active_utility,if fresh{selection}else{&[]},if fresh{point_selection}else{&[]})}),
         DRAWING_PLAY_BODY_LAYERS => layers_panel::render(document, labels, &windows),
         DRAWING_PLAY_BODY_CATALOGUE => catalogue_panel::render(document, labels, &windows),
         DRAWING_PLAY_BODY_PROPERTIES => properties_panel::render(document, &[], labels, &windows),
@@ -1593,6 +1567,11 @@ impl Default for DrawingPlayApp {
 }
 
 impl ArtifactEditor for DrawingPlayApp {
+    /// 📢️ The localized notices of the retained gesture owner's refusals (design §20.12).
+    fn fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
+        drawing_fault_notices()
+    }
+
     type Snapshot = DrawingSnapshot;
     type Mutation = DrawingMutation;
     type Config = NoConfig;
@@ -1609,9 +1588,12 @@ impl ArtifactEditor for DrawingPlayApp {
     const DIALECT: semio_framework::Dialect = crate::DRAWING_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = DRAWING_DOCUMENT_SCHEMA;
 
-    fn interaction_topology(doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> protocol::InteractionTopology {
+    fn interaction_topology(doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> Result<protocol::InteractionTopology, semio_framework_value::ValueError> {
+ Ok((||{
         protocol::InteractionTopology { domains: [(DRAWING_INTERACTION_DOMAIN.into(), interaction::drawing_interaction_topology(doc.snapshot)),(DRAWING_POINT_DOMAIN.into(),interaction::drawing_point_topology(doc.snapshot))].into() }
-    }
+
+})())
+}
 
 
     /// 🧬️ The loaded-parent child projection, read off the snapshot's own derived composition fields;
@@ -1699,6 +1681,12 @@ impl ArtifactEditor for DrawingPlayApp {
         DrawingGestureProofs::bounded_first_step_tool_proofs().into_iter().chain(DrawingBoundedProofs::bounded_first_step_tool_proofs()).collect()
     }
 
+    fn mounted_job_prepare_snapshot_read(operation:semio_framework_plugin::AppRenderOperationContext,snapshot:&Self::Snapshot)->bool{geometry_session::prepare(operation,snapshot)}
+    fn mounted_job_maintenance_step(instance:u32,items:usize,bytes:usize)->Result<semio_framework_plugin::PluginCloseStep,Fault>{Ok(geometry_session::maintenance(instance,items,bytes))}
+    fn mounted_job_close_step(instance:u32,items:usize,bytes:usize)->Result<semio_framework_plugin::PluginCloseStep,Fault>{Ok(geometry_session::close(instance,items,bytes))}
+    fn mounted_jobs_terminal_is_empty(instance:u32)->bool{geometry_session::terminal_is_empty(instance)}
+    fn pending_effects(_owner:&semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,doc:&ArtifactView<'_,DrawingSnapshot>,_cfg:&ConfigView<'_,NoConfig>,_view:Option<&semio_framework_plugin::ViewModel>)->Vec<semio_framework::kernel::Effect>{geometry_session::reconcile(doc)}
+
     fn build_instance_operation_owner() -> Box<dyn semio_framework_plugin::ArtifactInstanceOperationOwner> {
         Box::new(DrawingInstanceOperationOwner::new())
     }
@@ -1717,7 +1705,7 @@ impl ArtifactEditor for DrawingPlayApp {
             return Ok(None);
         }
         if request.command.command_id() != request.tool_id {
-            return Err(Fault::new(FaultOrigin::App, FaultCode::new("drawing.gesture.tool-mismatch"), "Drawing gesture command does not match its exact registered tool"));
+            return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.tool-mismatch"), "Drawing gesture command does not match its exact registered tool"));
         }
         let view_state = request.context.view_state.clone().ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("drawing.canvas.window-required"), "Drawing gesture commands require one concrete Canvas window instance"))?;
         let window_config = canvas_window::config::from_snapshot(request.context.window_config.as_ref());
@@ -1731,6 +1719,7 @@ impl ArtifactEditor for DrawingPlayApp {
             authoring_seed: request.authoring_seed.clone(),
         };
         let payload = DrawingGestureOperationPayload {
+            source_identity: SceneIdentity{instance:request.app_instance_id,base:request.operation.base_revision.0,generation:request.operation.generation.0,revision:request.canonical_base_revision},
             command: *request.command,
             snapshot: request.snapshot,
             config: request.config,
@@ -1788,7 +1777,7 @@ impl ArtifactEditor for DrawingPlayApp {
 
     /// 🌉️ Shell `{action, args}` → `DrawingCommand` (see `args_bridge`); the trait default refuses
     /// every app action, which left the whole ribbon/palette dead in the React shell.
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
         args_bridge::command_from_action(action, args)
     }
 
@@ -1812,7 +1801,7 @@ impl ArtifactEditor for DrawingPlayApp {
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, DrawingSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        render_drawing_body(body_key, doc.snapshot, &canvas_window::config::current(cfg), &DrawingSession::default().preview(), &[], &[], view_state)
+        render_drawing_body(body_key, doc, &canvas_window::config::current(cfg), &DrawingSession::default().preview(), &[], &[], view_state)
     }
 
     fn render_with_instance_operation_owner(
@@ -1824,12 +1813,12 @@ impl ArtifactEditor for DrawingPlayApp {
     ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let preview = match doc.render_operation() {
             Some(operation) => owner
-                .with_mut::<DrawingInstanceOperationOwner, _>(|owner| Ok(owner.preview_projection(operation.canonical_base_revision, drawing_active_utility(view_state))))
+                .with_mut::<DrawingInstanceOperationOwner, _>(|owner| Ok(owner.preview_projection(geometry_session::identity(operation), drawing_active_utility(view_state))))
                 .map_err(|error| semio_framework_plugin::PluginAssemblyError::new("drawing.gesture.preview-owner", error.message))?
                 .unwrap_or_default(),
             None => DrawingGesturePreview::default(),
         };
-        render_drawing_body(body_key, doc.snapshot, &canvas_window::config::current(cfg), &preview, &[], &[], view_state)
+        render_drawing_body(body_key, doc, &canvas_window::config::current(cfg), &preview, &[], &[], view_state)
     }
 
     fn render_with_request_context(
@@ -1845,11 +1834,11 @@ impl ArtifactEditor for DrawingPlayApp {
             return properties_panel::render(doc.snapshot, &interaction.selection(DRAWING_INTERACTION_DOMAIN).ids, semio_framework_plugin::resolve_labels::<DrawingPlayLabels>(view_state), &semio_framework_plugin::TreeWindows::for_body(view_state, body_key)).map(semio_framework_plugin::built_to_component_tree);
         }
         let preview=match doc.render_operation() {
-            Some(operation)=>owner.with_mut::<DrawingInstanceOperationOwner,_>(|owner|Ok(owner.preview_projection(operation.canonical_base_revision,drawing_active_utility(view_state))))
+            Some(operation)=>owner.with_mut::<DrawingInstanceOperationOwner,_>(|owner|Ok(owner.preview_projection(geometry_session::identity(operation),drawing_active_utility(view_state))))
                 .map_err(|error|semio_framework_plugin::PluginAssemblyError::new("drawing.gesture.preview-owner",error.message))?.unwrap_or_default(),
             None=>DrawingGesturePreview::default(),
         };
-        render_drawing_body(body_key,doc.snapshot,&canvas_window::config::current(cfg),&preview,&interaction.selection(DRAWING_INTERACTION_DOMAIN).ids,&interaction.selection(DRAWING_POINT_DOMAIN).ids,view_state)
+        render_drawing_body(body_key,doc,&canvas_window::config::current(cfg),&preview,&interaction.selection(DRAWING_INTERACTION_DOMAIN).ids,&interaction.selection(DRAWING_POINT_DOMAIN).ids,view_state)
     }
 
     fn window_engagements(doc: &ArtifactView<'_, DrawingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
@@ -1907,7 +1896,7 @@ impl ArtifactEditor for DrawingPlayApp {
 /// (ticket 26/09/05/DRAW-PLUGIN-END-TO-END, 2026-09-16).
 pub(crate) fn drawing_reset_document_effect(scene: &DrawingSnapshot) -> semio_framework_plugin::Effect {
     let pack = <DrawingSnapshot as ArtifactPack>::encode_pack(scene);
-    let spr = semio_framework_plugin::resolve_ready(store::empty_document_spr(&scene.id, DRAWING_DOCUMENT_SCHEMA));
+    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr(&scene.id, DRAWING_DOCUMENT_SCHEMA));
     semio_framework_plugin::Effect::LoadDocument { pack, spr }
 }
 
@@ -2286,14 +2275,14 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
             .keybinding("enter", "canvasCommitDraft")
             .keybinding("delete", "deleteSelection")
             .keybinding("backspace", "deleteSelection")
-            .keybinding("left", "nudgeSelectionLeft")
-            .keybinding("shift+left", "nudgeSelectionLeftFast")
-            .keybinding("right", "nudgeSelectionRight")
-            .keybinding("shift+right", "nudgeSelectionRightFast")
-            .keybinding("up", "nudgeSelectionUp")
-            .keybinding("shift+up", "nudgeSelectionUpFast")
-            .keybinding("down", "nudgeSelectionDown")
-            .keybinding("shift+down", "nudgeSelectionDownFast")
+            .keybinding("arrowleft", "nudgeSelectionLeft")
+            .keybinding("shift+arrowleft", "nudgeSelectionLeftFast")
+            .keybinding("arrowright", "nudgeSelectionRight")
+            .keybinding("shift+arrowright", "nudgeSelectionRightFast")
+            .keybinding("arrowup", "nudgeSelectionUp")
+            .keybinding("shift+arrowup", "nudgeSelectionUpFast")
+            .keybinding("arrowdown", "nudgeSelectionDown")
+            .keybinding("shift+arrowdown", "nudgeSelectionDownFast")
             .default_layout(edit::layout())
             // 🎯️ Typed channel surface — the SAME `drawing_io()` the trait's `io()` override returns,
             // declared on the manifest so the committed descriptor carries it too. Without this the
@@ -2334,3 +2323,24 @@ pub mod demo_session;
 #[path = "📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
 mod example;
 //#endregion 🪢️TaxonomyMounts
+
+#[path="🧵️geometry/🦀️.rs"]
+pub mod geometry_session;
+
+/// 📣️ The en/de notices of every `drawing.gesture.*` refusal code (design §20.12).
+pub fn drawing_fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
+    static NOTICES: std::sync::LazyLock<[(&str, semio_framework_ui_locale::LocalizedLabel); 9]> = std::sync::LazyLock::new(|| {
+        [
+            ("drawing.gesture.retained-route", semio_framework_ui_locale::LocalizedLabel::native("This drawing gesture can only run in an open drawing window.", "Diese Zeichengeste läuft nur in einem geöffneten Zeichenfenster.")),
+            ("drawing.gesture.closing", semio_framework_ui_locale::LocalizedLabel::native("The drawing is closing; the gesture was not applied.", "Die Zeichnung wird geschlossen; die Geste wurde nicht angewendet.")),
+            ("drawing.gesture.saturated", semio_framework_ui_locale::LocalizedLabel::native("Too many drawing gestures are running at once.", "Zu viele Zeichengesten laufen gleichzeitig.")),
+            ("drawing.gesture.owner", semio_framework_ui_locale::LocalizedLabel::native("The drawing gesture ended before it could continue.", "Die Zeichengeste endete, bevor sie fortgesetzt werden konnte.")),
+            ("drawing.gesture.point-capacity", semio_framework_ui_locale::LocalizedLabel::native("The stroke has too many points.", "Der Strich hat zu viele Punkte.")),
+            ("drawing.gesture.query-owner", semio_framework_ui_locale::LocalizedLabel::native("Another drawing gesture owns this query.", "Eine andere Zeichengeste besitzt diese Abfrage.")),
+            ("drawing.gesture.query-capacity", semio_framework_ui_locale::LocalizedLabel::native("Too many shapes match this point.", "Zu viele Formen treffen diesen Punkt.")),
+            ("drawing.gesture.query-output-capacity", semio_framework_ui_locale::LocalizedLabel::native("The interaction produced too many results.", "Die Interaktion erzeugte zu viele Ergebnisse.")),
+            ("drawing.gesture.command", semio_framework_ui_locale::LocalizedLabel::native("This action cannot run during a drawing gesture.", "Diese Aktion kann während einer Zeichengeste nicht ausgeführt werden.")),
+        ]
+    });
+    &*NOTICES
+}

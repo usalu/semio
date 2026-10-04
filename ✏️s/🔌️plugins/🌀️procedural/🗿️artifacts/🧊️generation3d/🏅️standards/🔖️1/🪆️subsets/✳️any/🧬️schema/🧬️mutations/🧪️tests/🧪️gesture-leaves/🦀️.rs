@@ -18,20 +18,21 @@ const TRANSLATE: &str = "shape__gumball_translate";
 const ROTATE: &str = "shape__gumball_rotate";
 const SCALE: &str = "shape__gumball_scale";
 
-fn neuron(id: &str, kind: &str, params: Vec<(&'static str, dsl::DslValue)>) -> Widget {
+fn neuron(id: &str, kind: &str, params: Vec<(&'static str, semio_framework_value::DslValue)>) -> Widget {
     let mut dictionary = Dictionary::new();
     for (key, value) in params {
-        dictionary = dictionary.insert(key, <Value as dsl::FromValue>::from_value(value).expect("a typed literal is a neural value"));
+        dictionary = dictionary.insert(key, <Value as semio_framework_value::FromValue>::from_value(value).expect("a typed literal is a neural value"));
     }
     Widget::Neuron { id: id.into(), neuron_kind: kind.into(), params: dictionary, input_ports: Vec::new(), output_ports: Vec::new(), preview: false }
 }
 
-/// 🧱️ A base with one operator of each gumball family, one slider, one note and two placed nodes.
+/// 🧱️ A base with one operator of each gumball family (each recording its inputs' literals, design §20.9), one slider, one
+/// note and two placed nodes.
 fn base(offset: [f64; 3]) -> Generation3dSnapshot {
     let mut snapshot = empty_generation3d_snapshot();
-    snapshot.host_snapshot.widgets.push(neuron(TRANSLATE, "brep.mesh.translate", vec![("offset", generation3d_vector_literal("vector", offset))]));
+    snapshot.host_snapshot.widgets.push(neuron(TRANSLATE, "brep.mesh.translate", vec![("offset", generation3d_vector_literal("vector", offset)), ("label", WidgetInputValue::Text(String::new()).literal())]));
     snapshot.host_snapshot.widgets.push(neuron(ROTATE, "brep.xform.rotate", vec![("axis", generation3d_vector_literal("vector", [0.0, 0.0, 1.0])), ("angle", generation3d_number_literal(std::f64::consts::FRAC_PI_2))]));
-    snapshot.host_snapshot.widgets.push(neuron(SCALE, "brep.mesh.scale", vec![("factor", generation3d_vector_literal("vector", [2.0, 2.0, 2.0])), ("center", generation3d_vector_literal("point", [0.0; 3]))]));
+    snapshot.host_snapshot.widgets.push(neuron(SCALE, "brep.mesh.scale", vec![("factor", generation3d_vector_literal("vector", [2.0, 2.0, 2.0])), ("center", generation3d_vector_literal("point", [0.0; 3])), ("uniform", WidgetInputValue::Boolean(false).literal())]));
     snapshot.host_snapshot.widgets.push(Widget::InputSlider { id: "height".into(), label: "Height".into(), value: 6.0, min: 0.0, max: 10.0, step: 0.5 });
     snapshot.host_snapshot.widgets.push(Widget::InputNote { id: "note".into(), text: "Note".into() });
     for (id, x, y) in [("height", 10.0, 20.0), ("note", -5.0, 0.0)] {
@@ -40,12 +41,12 @@ fn base(offset: [f64; 3]) -> Generation3dSnapshot {
     snapshot
 }
 
-fn params_of(snapshot: &Generation3dSnapshot, id: &str) -> dsl::DslValue {
+fn params_of(snapshot: &Generation3dSnapshot, id: &str) -> semio_framework_value::DslValue {
     let widget = snapshot.host_snapshot.widgets.iter().find(|widget| crate::widget_id(widget) == id).expect("operator present");
-    dsl::ToValue::to_value(widget).get("params").cloned().unwrap_or(dsl::DslValue::Null)
+    semio_framework_value::ToValue::to_value(widget).get("params").cloned().unwrap_or(semio_framework_value::DslValue::Null)
 }
 
-fn outcome_codes(mutation: &Generation3dMutation, base: &Generation3dSnapshot) -> Vec<(protocol::Severity, String)> {
+fn outcome_codes(mutation: &Generation3dMutation, base: &Generation3dSnapshot) -> Vec<(semio_framework_diagnostic::Severity, String)> {
     let (delta, messages) = protocol::Mutation::diff(mutation, base).into_parts();
     delta.retire_cold();
     messages.into_iter().map(|message| (message.level, message.code.0)).collect()
@@ -54,7 +55,7 @@ fn outcome_codes(mutation: &Generation3dMutation, base: &Generation3dSnapshot) -
 /// ♻️ Applies `mutation` to a copy of `base`, then its inverse, and answers the applied copy; the inverse must restore
 /// `base` exactly.
 fn applied_and_restored(mutation: &Generation3dMutation, base: &Generation3dSnapshot) -> Generation3dSnapshot {
-    let inverse = inverse_generation3d_mutation(base, mutation);
+    let inverse = inverse_generation3d_mutation(base, mutation).expect("valid retained mutation inverse fixture");
     let mut applied = base.clone();
     apply_generation3d_mutation(&mut applied, mutation).expect("the gesture leaf applies to its base");
     let mut restored = applied.clone();
@@ -118,13 +119,14 @@ fn a_scaling_multiplies_the_base_factors() {
 /// the identity is `mutation.no-op` with no inverse.
 #[test]
 fn skipped_targets_and_the_identity_report_their_vocabulary_codes() {
-    use protocol::Severity::{Error, Warning};
+    use semio_framework_diagnostic::Severity::Error;
+use semio_framework_diagnostic::Severity::Warning;
     let base = base([0.0; 3]);
     assert_eq!(outcome_codes(&drag_transforms(vec![TRANSLATE.into(), "ghost".into(), ROTATE.into()], [1.0, 0.0, 0.0]), &base), vec![(Warning, "mutation.partial".into()), (Warning, "mutation.partial".into())]);
     assert_eq!(outcome_codes(&drag_transforms(vec!["ghost".into()], [1.0, 0.0, 0.0]), &base), vec![(Error, "mutation.target-missing".into())]);
     assert_eq!(outcome_codes(&drag_transforms(vec![SCALE.into(), "height".into()], [1.0, 0.0, 0.0]), &base), vec![(Error, "mutation.target-mismatch".into())]);
     assert_eq!(outcome_codes(&drag_transforms(vec![TRANSLATE.into()], [0.0; 3]), &base), vec![(Warning, "mutation.no-op".into())]);
-    assert!(inverse_generation3d_mutation(&base, &drag_transforms(vec![TRANSLATE.into()], [0.0; 3])).is_empty(), "an identity drag owes no inverse");
+    assert!(inverse_generation3d_mutation(&base, &drag_transforms(vec![TRANSLATE.into()], [0.0; 3])).expect("valid retained mutation inverse fixture").is_empty(), "an identity drag owes no inverse");
     base.retire_cold();
 }
 
@@ -132,7 +134,7 @@ fn skipped_targets_and_the_identity_report_their_vocabulary_codes() {
 /// (`axis-nonzero`), a non-positive scale factor.
 #[test]
 fn payload_invariants_are_fatal() {
-    use protocol::Severity::Fatal;
+    use semio_framework_diagnostic::Severity::Fatal;
     let base = base([0.0; 3]);
     let invariant = vec![(Fatal, "mutation.invariant".to_string())];
     assert_eq!(outcome_codes(&drag_transforms(Vec::new(), [1.0, 0.0, 0.0]), &base), invariant);
@@ -148,7 +150,8 @@ fn payload_invariants_are_fatal() {
 /// base slider whole (range included).
 #[test]
 fn a_slider_value_is_absolute_and_inverts_to_the_whole_base_slider() {
-    use protocol::Severity::{Error, Warning};
+    use semio_framework_diagnostic::Severity::Error;
+use semio_framework_diagnostic::Severity::Warning;
     let base = base([0.0; 3]);
     for (value, range) in [(7.5, (0.0, 10.0)), (42.0, (0.0, 50.0))] {
         let applied = applied_and_restored(&change_slider_value("height", value), &base);
@@ -169,7 +172,7 @@ fn a_slider_value_is_absolute_and_inverts_to_the_whole_base_slider() {
 /// an unplaced node is skipped with `mutation.partial`, a zero offset is `mutation.no-op`.
 #[test]
 fn a_node_drag_moves_placed_nodes_relative_to_their_base_position() {
-    use protocol::Severity::Warning;
+    use semio_framework_diagnostic::Severity::Warning;
     let base = base([0.0; 3]);
     let applied = applied_and_restored(&move_nodes(vec!["height".into(), "note".into()], 40.0, -12.5), &base);
     assert_eq!(applied.host_snapshot.layout.get("height").map(|layout| (layout.x, layout.y)), Some((50.0, 7.5)));
@@ -192,10 +195,14 @@ fn gesture_leaves_label_their_rows_in_english_and_german() {
         (move_nodes(vec!["a".into(), "b".into()], 40.0, -12.5), "Move 2 node(s) by (40, -12.5)", "2 Knoten um (40; -12,5) verschieben"),
         (change_widget_input(SCALE, "center", WidgetInputValue::Point([0.5, -1.0, 2.0])), "Set input \\\"center\\\" of \\\"shape__gumball_scale\\\" to (0.5, -1, 2)", "Eingang \\\"center\\\" von \\\"shape__gumball_scale\\\" auf (0,5; -1; 2) setzen"),
         (change_widget_input("note", "text", WidgetInputValue::Text("Hi".into())), "Set input \\\"text\\\" of \\\"note\\\" to \\\"Hi\\\"", "Eingang \\\"text\\\" von \\\"note\\\" auf \\\"Hi\\\" setzen"),
+        (Generation3dMutation::CreateWidget(create_widget::CreateWidget { index: 0, widget: neuron("mesh__extrude", "brep.mesh.extrude", Vec::new()) }), "Insert \\\"Extrude Mesh Faces\\\" (mesh__extrude)", "\\\"Mesh-Flächen extrudieren\\\" (mesh__extrude) einfügen"),
     ] {
         let label = label(mutation);
         assert!(label.contains(english) && label.contains(german), "{label}");
     }
+    let shown = "a".repeat(32);
+    let elided = label(change_widget_input("note", "text", WidgetInputValue::Text(format!("{shown}tail"))));
+    assert!(elided.contains(&format!("to \\\"{shown}…\\\"")) && elided.contains(&format!("auf \\\"{shown}…\\\" setzen")) && !elided.contains("tail"), "a long text prints its first 32 characters and elides the rest: {elided}");
 }
 
 /// 🧾️ Every committed wire witness decodes to its leaf and round-trips the binary op codec unchanged.
@@ -210,7 +217,7 @@ fn every_wire_witness_decodes_and_round_trips_the_binary_codec() {
         include_str!("../../../../🧫️fixtures/🧬️mutations/🎛️change-widget-input/🧾️wire-witness/🦠️mutation/🔣️.json"),
     ];
     for (witness, kind) in witnesses.iter().zip(["change-slider-value", "drag-transforms", "rotate-transforms", "scale-transforms", "move-nodes", "change-widget-input"]) {
-        let mutation: Generation3dMutation = dsl::json::from_json_str(witness).unwrap_or_else(|error| panic!("{kind} witness decodes: {error}"));
+        let mutation: Generation3dMutation = semio_framework_pack_json::from_json_str(witness, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|error| panic!("{kind} witness decodes: {error}"));
         assert_eq!(<Generation3dMutation as protocol::SemanticMutation<Generation3dSnapshot>>::semantics(&mutation).kind, kind);
         let bytes = protocol::OpBinary::encode_op(&mutation).expect("witness encodes");
         assert_eq!(<Generation3dMutation as protocol::OpBinary>::decode_op(&bytes).expect("witness decodes back"), mutation, "{kind} round-trips the binary codec");
@@ -242,22 +249,26 @@ fn a_widget_input_sets_its_typed_literal_and_inverts_to_the_whole_base_widget() 
     base.retire_cold();
 }
 
-/// 🎯️ The vocabulary of a widget input: the value it holds is `no-op`; a missing widget `target-missing`; a literal of
-/// another type, a wired input, a slider or a text source off its `text` channel `target-mismatch`; an empty or overlong
-/// address and a non-finite number Fatal `mutation.invariant`.
+/// 🎯️ The vocabulary of a widget input (design §20.9): the value it holds is `no-op`; a missing widget, an input the
+/// operator's record does not hold (a phantom channel), a slider or a text source off its `text` channel `target-missing`;
+/// a literal of another type or shape and a wired input `target-mismatch`; an empty or overlong address and a non-finite
+/// number Fatal `mutation.invariant`.
 #[test]
 fn a_widget_input_reports_its_vocabulary_codes() {
-    use protocol::Severity::{Error, Fatal, Warning};
+    use semio_framework_diagnostic::Severity::{Error, Fatal, Warning};
     let mut base = base([2.0, 0.0, 0.0]);
     base.host_snapshot.synapses.push(semio_framework_artifact_flow_flow::SynapseSpec { id: "wire".into(), from: "height".into(), to: SCALE.into(), from_port: "number".into(), to_port: "factor".into() });
     let mismatch = vec![(Error, "mutation.target-mismatch".to_string())];
+    let missing = vec![(Error, "mutation.target-missing".to_string())];
     let invariant = vec![(Fatal, "mutation.invariant".to_string())];
     assert_eq!(outcome_codes(&change_widget_input(TRANSLATE, "offset", WidgetInputValue::Vector([2.0, 0.0, 0.0])), &base), vec![(Warning, "mutation.no-op".into())]);
-    assert_eq!(outcome_codes(&change_widget_input("ghost", "offset", WidgetInputValue::Number(1.0)), &base), vec![(Error, "mutation.target-missing".into())]);
+    assert_eq!(outcome_codes(&change_widget_input("ghost", "offset", WidgetInputValue::Number(1.0)), &base), missing);
+    assert_eq!(outcome_codes(&change_widget_input(TRANSLATE, "phantom", WidgetInputValue::Number(1.0)), &base), missing, "a channel the record does not hold");
+    assert_eq!(outcome_codes(&change_widget_input(TRANSLATE, "offset", WidgetInputValue::VectorList(vec![[1.0, 0.0, 0.0]])), &base), mismatch, "a list never lands on a scalar input");
     assert_eq!(outcome_codes(&change_widget_input(TRANSLATE, "offset", WidgetInputValue::Number(1.0)), &base), mismatch, "a vector input holds no number");
     assert_eq!(outcome_codes(&change_widget_input(SCALE, "factor", WidgetInputValue::Vector([1.0; 3])), &base), mismatch, "a wired input");
-    assert_eq!(outcome_codes(&change_widget_input("height", "value", WidgetInputValue::Number(1.0)), &base), mismatch, "a slider has no operator input");
-    assert_eq!(outcome_codes(&change_widget_input("note", "value", WidgetInputValue::Text("x".into())), &base), mismatch, "a text source has only its text");
+    assert_eq!(outcome_codes(&change_widget_input("height", "value", WidgetInputValue::Number(1.0)), &base), missing, "a slider has no operator input");
+    assert_eq!(outcome_codes(&change_widget_input("note", "value", WidgetInputValue::Text("x".into())), &base), missing, "a text source has only its text");
     assert_eq!(outcome_codes(&change_widget_input("note", "text", WidgetInputValue::Number(1.0)), &base), mismatch, "a text source holds text");
     assert_eq!(outcome_codes(&change_widget_input(TRANSLATE, "", WidgetInputValue::Number(1.0)), &base), invariant);
     assert_eq!(outcome_codes(&change_widget_input(TRANSLATE, "x".repeat(257), WidgetInputValue::Number(1.0)), &base), invariant);
@@ -358,7 +369,7 @@ async fn a_gesture_edited_onto_a_missing_target_blocks_finalizing() {
         let report = store.replay_report(&result).expect("report");
         assert!(report.blocks_finalize(), "a missing slider blocks finalizing: {report:?}");
         let edited = report.outcomes.iter().find(|outcome| outcome.mutation_id == ids[0]).expect("the edited leaf reports");
-        assert!(edited.messages.iter().any(|message| message.code.0 == "mutation.target-missing" && message.level == protocol::Severity::Error), "{edited:?}");
+        assert!(edited.messages.iter().any(|message| message.code.0 == "mutation.target-missing" && message.level == semio_framework_diagnostic::Severity::Error), "{edited:?}");
         drop(result);
         base.retire_cold();
         crate::store_fixture::close(store);

@@ -16,6 +16,44 @@
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
+/// 🧾️ Exact native committed-document revision projected onto the u64 completion lane.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+pub struct UiPublicationRevision(pub u64);
+
+impl UiPublicationRevision {
+    pub fn decimal(self) -> String { self.0.to_string() }
+}
+
+impl Serialize for UiPublicationRevision {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> { serializer.serialize_str(&self.0.to_string()) }
+}
+
+impl<'de> Deserialize<'de> for UiPublicationRevision {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = String::deserialize(deserializer)?;
+        if value == "0" || (!value.starts_with('0') && value.bytes().all(|byte| byte.is_ascii_digit())) {
+            return value.parse::<u64>().map(Self).map_err(serde::de::Error::custom);
+        }
+        Err(serde::de::Error::custom("publication revision must be canonical decimal u64"))
+    }
+}
+
+impl ::protocol::value::ToValue for UiPublicationRevision {
+    fn to_value(&self) -> ::protocol::value::DslValue { ::protocol::value::DslValue::String(self.0.to_string()) }
+}
+
+impl ::protocol::value::FromValue for UiPublicationRevision {
+    fn from_value(value: ::protocol::value::DslValue) -> Result<Self, ::protocol::value::ValueError> {
+        let ::protocol::value::DslValue::String(value) = value else {
+            return Err(::protocol::value::ValueError::new(::protocol::value::ValueRefusalKind::InvalidValue, "publication revision must be a decimal string"));
+        };
+        if value != "0" && (value.starts_with('0') || !value.bytes().all(|byte| byte.is_ascii_digit())) {
+            return Err(::protocol::value::ValueError::new(::protocol::value::ValueRefusalKind::InvalidValue, "publication revision must be canonical decimal u64"));
+        }
+        value.parse::<u64>().map(Self).map_err(|_| ::protocol::value::ValueError::new(::protocol::value::ValueRefusalKind::InvalidValue, "publication revision must fit u64"))
+    }
+}
+
 //#region 🔖️Component
 
 //#region 🏷️Label
@@ -165,12 +203,24 @@ pub struct RowAction {
     #[serde(default, skip_serializing_if = "is_enabled_row_action")]
     #[value(default, skip_serializing_if = "is_enabled_row_action")]
     pub disabled: bool,
+    /// 💬️ Why a disabled action cannot run, producer-localized. A disabled action stays focusable (`aria-disabled`, WAI-ARIA
+    /// focusable-when-disabled) and every renderer names this reason as its description (`aria-describedby`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub reason: Option<Label>,
 }
 
 impl RowAction {
     /// 🚫️ This action with its enabled state set — `true` paints it disabled and refuses its dispatch.
     pub fn disabled(mut self, disabled: bool) -> Self {
         self.disabled = disabled;
+        self
+    }
+
+    /// 🧾️ This action disabled because of `reason` — the text every renderer announces as the disabled action's description.
+    pub fn disabled_because(mut self, reason: Label) -> Self {
+        self.disabled = true;
+        self.reason = Some(reason);
         self
     }
 }
@@ -390,6 +440,15 @@ pub struct InputProps {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub limits: Option<UiNumberLimits>,
+    /// 🎯️ Opaque producer-owned identity for retaining an in-progress draft across
+    /// revisions while the same semantic edit target remains mounted.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub draft_target: Option<crate::UiText>,
+    /// 🧾️ Decimal u64 revision of the native document projection that authored this input.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub publication_revision: Option<UiPublicationRevision>,
 }
 
 impl InputProps {
@@ -1097,6 +1156,11 @@ pub struct TreeItemProps {
     /// same axis as the record's `activity`/`disabled` — a dimmed row is still fully interactive.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub dimmed: Option<bool>,
+    /// ☑️ The row's choice state when it is one option of a single-choice list: `Some(true)` is the chosen option, `Some(false)` a
+    /// choosable one that is not chosen, `None` not an option row. Every renderer exposes it as the row's selected state (React
+    /// `aria-selected`, the wgpu ARIA mirror's `selected`) and paints the chosen row selected — never by its icon alone.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub selected: Option<bool>,
     /// 🪟️ The materialised slice of this row's logical child list — see [`TreeWindow`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub window: Option<TreeWindow>,
@@ -1131,6 +1195,7 @@ impl TreeItemProps {
             draggable: self.draggable,
             drag_data: self.drag_data.clone(),
             dimmed: self.dimmed,
+            selected: self.selected,
             window: self.window,
             granularity: self.granularity.clone(),
             inline_toolbar: self.inline_toolbar,

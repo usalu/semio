@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeBatteryMaxDischarge, base: &EnergyModelSnapsh
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Battery {}: maximum discharge power (W) must be a positive finite value, got {}.", payload.id.0, payload.new_max_discharge_w), [payload.id.0.to_string()]);
     }
     if existing.max_discharge_w == payload.new_max_discharge_w {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Battery {} already carries this maximum discharge power (W): {}.", payload.id.0, payload.new_max_discharge_w));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Battery {} already carries this maximum discharge power (W): {}.", payload.id.0, payload.new_max_discharge_w));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.battery_storage.iter_mut().find(|item| item.id == payload.id) {

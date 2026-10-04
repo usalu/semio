@@ -1,0 +1,19 @@
+# Architecture Owner Native Successor
+
+The unchanged whole OS native command compiled in 22.61 seconds, then exited 1 after 895 of 1,346 selected laws completed: 894 passed, one failed, four were configured skips and 451 selected laws were not run under the existing fail-fast policy. Session 94752 used the registered OS route and its original sync,ureq whole-library configuration.
+
+The new native-input retained-materialization law failed its cumulative ownership increase assertion at the explicitly owned SpaceHistory SQLite test leaf, line 61. The explicit owner-registration create/reload/retained law and the new Unicode cancellation law passed. All 20 durable group laws passed, including the actual octet carrier allocation law and the canonical JSON/Serde refusal cases. No source repair or narrowed replay was made.
+
+Ordinary preparation session 46881 and locked metadata session 72552 exited 0. The immediate source fence retained 17,441 aliases and 344,219,605 bytes through the immutable full base plus current bounded deltas. All 137 unique owned guards and every alias match at terminal. Actual OS compiler inputs contain 634 main-unit checks and 168 lower checks across 28 units; all 802 pre/current BLAKE3 checks match. Historical reconstruction provenance remains explicitly separate from this fresh epoch.
+
+Generated receipts live under [current-native-worker](🗑️generated/current-native-worker): architecture-owner-os-successor-immediate-pre-native-1.json, architecture-owner-os-successor-terminal-post-1.json, architecture-owner-os-successor-actual-compiler-checks-1.json and architecture-owner-os-successor-space-history-handoff-1.json. The last retains the exact failure block and full eight mutation-owner sources.
+
+The source hold remains active for the queued unchanged whole Renderer replay. Pack and other production drafts remain unmounted.
+
+Renderer session 67793 then compiled the whole unchanged cohort in 1m29s and reached actual runtime: 92 passed and one failed out of 93 completed from 1,641 selected, with 11 configured skips and 1,548 not run under the original policy. The embedded GLB material law fails at its tangent vector assertion: actual [0,0,1,-1], expected [0,1,0,-1], at the async-boundary law line 586. The prior NativeSocketProbeSnapshot ValueError compiler failures did not recur. This run did not reach all Renderer or worker laws, so their whole runtime remains unproven.
+
+Renderer ordinary preparation 37327 completed after waiting through the owned Cargo preparation lease; foreign owners/processes were preserved. Locked metadata 82188 exited 0. Immediate and terminal sources match across 17,442 aliases / 344,222,364 bytes and all 137 unique guards. All 67 conservative local package owner manifests are unchanged. Actual post-fence emitted local units contain 1,706 BLAKE3 source checks across 16 units, including the 690-input Renderer main test unit; all pre/current checks match. Eighty-seven separately labeled retained feature-context units contain 1,621 checks and five stale pre/current entries; these are not attributed as actual selected dependency variants. Previously observed generated include physical paths are captured before this run; there is no emitted compiler pre-source omission.
+
+The exact failure, full pre/current Renderer caller, native law and GLB/JSON fixture bytes are retained in architecture-owner-renderer-successor-glb-tangent-handoff-1.json. Terminal and compiler receipts use the same unique prefix. Both whole native terminals are RED, with source coherence verified and no repairs mounted by this lane.
+
+Both native source fences were released after terminal/post/compiler receipts closed. Root may now publish its guarded same-caller ledger repair; there is no active managed native command. The release receipt is architecture-owner-native-successor-fence-released-1.json.

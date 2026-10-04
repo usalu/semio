@@ -137,7 +137,7 @@ pub fn native_codec_artifact_kinds() -> Vec<semio_framework_plugin::ArtifactKind
 
 #[cfg(feature = "full-artifact-catalog")]
 fn validate_native_openable_projection(receipts: &[NativeCodecFactoryReceipt], factories: &[NativeCodecFactory]) -> Result<(), PluginAssemblyError> {
-    let provider: NativeOpenableProviderSourceV1 = pack::from_json_str(include_str!("📜️native-codec-factories.json")).map_err(|error| failure(format!("cannot parse native codec receipt projection: {error}")))?;
+    let provider: NativeOpenableProviderSourceV1 = semio_framework_pack_json::from_json_str(include_str!("📜️native-codec-factories.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| failure(format!("cannot parse native codec receipt projection: {error}")))?;
     if provider.schema != "semio.stdio.native-openable-catalog-provider/v1" || provider.provider_id != "stdio/native-codecs/v1" || provider.plugin_id != "stdio" || provider.package_id != "semio:stdio" {
         return Err(failure("native codec receipt projection identity or closure is invalid"));
     }
@@ -423,8 +423,8 @@ pub fn artifact_catalog_contribution_for(registry: &ContributionRegistry, assemb
     if actual.len() != assemblies.len() || selected.len() != actual.len() || !actual.iter().all(|identity| selected.contains(*identity)) {
         return Err(failure("native catalog assemblies differ from the exact selected roster"));
     }
-    let payload = kernel::ToValue::to_value(&native_artifact_catalog(registry, assemblies)?);
-    if pack::json_to_string(&pack::json_from_dsl_value(&payload)).len() > 2 * 1024 * 1024 {
+    let payload = semio_framework_value::ToValue::to_value(&native_artifact_catalog(registry, assemblies)?);
+    if semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&payload)).len() > 2 * 1024 * 1024 {
         return Err(failure("native catalog semantic commitment exceeds 2 MiB"));
     }
     Ok(semio_framework::TopicContribution::new(NATIVE_ARTIFACT_CATALOG_TOPIC, payload))

@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "nativeConstruction",
+    "limits",
+    "nativeRoles"
+  ],
+  "properties": {
+    "nativeConstruction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "header",
+        "values",
+        "typedValue",
+        "root",
+        "forecast"
+      ],
+      "properties": {
+        "header": {
+          "const": "threeOrderedValueRoots"
+        },
+        "values": {
+          "const": "flatExclusiveForest"
+        },
+        "typedValue": {
+          "const": "orderedItems"
+        },
+        "root": {
+          "const": "inlineNoBacking"
+        },
+        "forecast": {
+          "const": "paidFrontiersOnly"
+        }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "semantic",
+        "backing",
+        "file"
+      ],
+      "properties": {
+        "semantic": {
+          "const": "maxValueBytes"
+        },
+        "backing": {
+          "const": "maxAllocationBytes"
+        },
+        "file": {
+          "const": "maxFileBytes"
+        }
+      }
+    },
+    "nativeRoles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owned",
+        "semantic",
+        "preflight",
+        "nonfinite"
+      ],
+      "properties": {
+        "owned": {
+          "const": "maxAllocationBytes"
+        },
+        "semantic": {
+          "const": "maxValueBytes"
+        },
+        "preflight": {
+          "const": "paidFrontiersOnly"
+        },
+        "nonfinite": {
+          "const": "retainedBinary64"
+        }
+      }
+    }
+  }
+}

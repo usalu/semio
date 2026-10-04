@@ -8,13 +8,13 @@ use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "select-generation")]
 pub struct SelectGeneration {
     pub id: Option<String>,
 }
 
 pub fn handle(payload: &SelectGeneration, doc: &ArtifactView<'_, Generation2dSnapshot>, cfg: &ConfigView<'_, Generation2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation>, Fault> {
-    let args = dsl::DslValue::object([("id".into(), payload.id.clone().map_or(dsl::DslValue::Null, dsl::DslValue::String))]);
+    let args = semio_framework_value::DslValue::object([("id".into(), payload.id.clone().map_or(semio_framework_value::DslValue::Null, semio_framework_value::DslValue::String))]);
     Ok(handle_generation("selectGeneration", Some(&args), doc, cfg).emit)
 }

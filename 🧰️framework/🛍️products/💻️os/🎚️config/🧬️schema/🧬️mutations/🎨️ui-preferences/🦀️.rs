@@ -6,15 +6,18 @@ macro_rules! optional_setting_impl {
             const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: $entity, kind: $kind, record: "Set" };
             fn diff(&self, base: &UiPreferences) -> protocol::MutationOutcome<UiPreferencesDiff> {
                 if base.$field == self.$field {
-                    return protocol::MutationOutcome::new(UiPreferencesDiff(base.clone())).warn("mutation.no-op", concat!($label, " is already selected."));
+                    return protocol::MutationOutcome::new(UiPreferencesDiff(base.clone())).warning("mutation.no-op", concat!($label, " is already selected."));
                 }
                 let mut next = base.clone();
                 next.$field = self.$field.clone();
                 protocol::MutationOutcome::new(UiPreferencesDiff(next))
             }
-            fn inverse(&self, base: &UiPreferences) -> Vec<UiPreferencesConfigMutation> {
+            fn inverse(&self, base: &UiPreferences) -> Result<Vec<UiPreferencesConfigMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
                 vec![UiPreferencesConfigMutation::$variant(Self { $field: base.$field.clone() })]
-            }
+            
+    })())
+}
             fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
                 semio_framework_ui_locale::LocalizedLabel::native(&format!(concat!("Set ", $label, " to {:?}"), self.$field), &format!(concat!("Setzen", $label, "zu {:?}"), self.$field))
             }
@@ -31,7 +34,7 @@ macro_rules! keyed_setting_impl {
             const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: $entity, kind: $kind, record: "Set" };
             fn diff(&self, base: &UiPreferences) -> protocol::MutationOutcome<UiPreferencesDiff> {
                 if base.$map.get(&self.$id) == self.$value.as_ref() {
-                    return protocol::MutationOutcome::new(UiPreferencesDiff(base.clone())).warn("mutation.no-op", concat!($label, " already has the requested value."));
+                    return protocol::MutationOutcome::new(UiPreferencesDiff(base.clone())).warning("mutation.no-op", concat!($label, " already has the requested value."));
                 }
                 let mut next = base.clone();
                 match &self.$value {
@@ -44,9 +47,12 @@ macro_rules! keyed_setting_impl {
                 }
                 protocol::MutationOutcome::new(UiPreferencesDiff(next))
             }
-            fn inverse(&self, base: &UiPreferences) -> Vec<UiPreferencesConfigMutation> {
+            fn inverse(&self, base: &UiPreferences) -> Result<Vec<UiPreferencesConfigMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
                 vec![UiPreferencesConfigMutation::$variant(Self { $id: self.$id.clone(), $value: base.$map.get(&self.$id).cloned() })]
-            }
+            
+    })())
+}
             fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
                 semio_framework_ui_locale::LocalizedLabel::native(&format!(concat!("Set ", $label, " {:?}"), self.$id), &format!(concat!("Setzen", $label, "{:?}"), self.$id))
             }

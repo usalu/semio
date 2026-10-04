@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ReorderRuns, base: &SemioTextSnapshot) -> protocol:
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Run #{} does not exist.", payload.from), [payload.from.to_string()]);
     }
     if payload.from == payload.to {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Run #{} is already at position #{}.", payload.from, payload.to));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Run #{} is already at position #{}.", payload.from, payload.to));
     }
     let mut runs = base.runs.clone();
     let item = runs.remove(payload.from);

@@ -6,7 +6,8 @@ use crate::EnergyModelSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ A refused or no-op forward step has nothing to undo, so it answers with no steps at all.
-pub fn inverse(payload: &super::ReplaceSetpointManagerKind, base: &EnergyModelSnapshot) -> Vec<EnergyModelMutation> {
+pub fn inverse(payload: &super::ReplaceSetpointManagerKind, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let kind = if payload.new_kind == "OutdoorAirReset" {
         crate::model::SetpointManagerKind::OutdoorAirReset { low_outdoor_c: payload.new_low_outdoor_c, high_outdoor_c: payload.new_high_outdoor_c, low_setpoint_c: payload.new_low_setpoint_c, high_setpoint_c: payload.new_high_setpoint_c }
     } else if payload.new_kind == "WarmestZone" {
@@ -51,5 +52,7 @@ pub fn inverse(payload: &super::ReplaceSetpointManagerKind, base: &EnergyModelSn
         }
         _ => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

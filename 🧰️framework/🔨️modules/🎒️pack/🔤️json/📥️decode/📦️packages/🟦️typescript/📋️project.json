@@ -1,0 +1,8 @@
+{
+  "name":"@semio-tech/pack-json-decode-ts",
+  "targets":{"test":{
+    "executor":"nx:run-commands","cache":false,"dependsOn":[],"outputs":[],
+    "inputs":["{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/**/*","{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🔤️json/🧩️members/**/*","sharedGlobals"],
+    "options":{"cwd":"🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/📦️packages/🟦️typescript","command":"bun ./📜️script.ts test","forwardAllArgs":true}
+  }}
+}

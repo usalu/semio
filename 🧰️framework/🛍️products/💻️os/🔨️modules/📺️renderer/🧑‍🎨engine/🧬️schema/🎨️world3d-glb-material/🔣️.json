@@ -3,41 +3,130 @@
   "$id": "https://semio.tech/schema/framework/world3d-glb-material-v1.json",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "asset", "primitiveOrder", "publication", "cases"],
+  "required": [
+    "schema",
+    "asset",
+    "primitiveOrder",
+    "publication",
+    "cases",
+    "textureRoles"
+  ],
   "properties": {
-    "schema": { "const": "framework.world3d.glb-material/v1" },
-    "asset": { "const": "🧊️two-primitive.glb" },
-    "primitiveOrder": { "const": ["vertex-alpha-blend", "textured-alpha-mask"] },
+    "schema": {
+      "const": "framework.world3d.glb-material/v1"
+    },
+    "asset": {
+      "const": "🧊️two-primitive.glb"
+    },
+    "primitiveOrder": {
+      "const": [
+        "vertex-alpha-blend",
+        "textured-alpha-mask"
+      ]
+    },
     "publication": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["workUnit", "ownership", "commit", "cancellation", "override"],
+      "required": [
+        "workUnit",
+        "ownership",
+        "commit",
+        "cancellation",
+        "override"
+      ],
       "properties": {
-        "workUnit": { "const": "onePrimitiveMaterialFieldPerStep" },
-        "ownership": { "const": "primitiveLocal" },
-        "commit": { "const": "geometryAndMaterialsTogether" },
-        "cancellation": { "const": "retirePartialWithoutPublication" },
-        "override": { "const": "replaceEveryPrimitiveMaterial" }
+        "workUnit": {
+          "const": "onePrimitiveMaterialFieldPerStep"
+        },
+        "ownership": {
+          "const": "primitiveLocal"
+        },
+        "commit": {
+          "const": "geometryAndMaterialsTogether"
+        },
+        "cancellation": {
+          "const": "retirePartialWithoutPublication"
+        },
+        "override": {
+          "const": "replaceEveryPrimitiveMaterial"
+        }
       }
     },
     "cases": {
       "type": "array",
       "minItems": 2,
       "maxItems": 2,
-      "items": { "$ref": "#/$defs/materialCase" }
+      "items": {
+        "$ref": "#/$defs/materialCase"
+      }
+    },
+    "textureRoles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "map",
+        "metalnessMap",
+        "roughnessMap",
+        "normalMap",
+        "aoMap",
+        "emissiveMap"
+      ],
+      "properties": {
+        "map": {
+          "const": "srgb"
+        },
+        "metalnessMap": {
+          "const": ""
+        },
+        "roughnessMap": {
+          "const": ""
+        },
+        "normalMap": {
+          "const": ""
+        },
+        "aoMap": {
+          "const": ""
+        },
+        "emissiveMap": {
+          "const": "srgb"
+        }
+      }
     }
   },
   "$defs": {
     "rgb": {
       "type": "array",
-      "prefixItems": [{ "type": "number" }, { "type": "number" }, { "type": "number" }],
+      "prefixItems": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        }
+      ],
       "items": false,
       "minItems": 3,
       "maxItems": 3
     },
     "rgba": {
       "type": "array",
-      "prefixItems": [{ "type": "number" }, { "type": "number" }, { "type": "number" }, { "type": "number" }],
+      "prefixItems": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        }
+      ],
       "items": false,
       "minItems": 4,
       "maxItems": 4
@@ -45,44 +134,121 @@
     "materialCase": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "baseColorFactor", "metalness", "roughness", "emissiveFactor", "alphaMode", "alphaCutoff", "doubleSided", "vertexColor", "texture", "expectedThree"],
+      "required": [
+        "id",
+        "baseColorFactor",
+        "metalness",
+        "roughness",
+        "emissiveFactor",
+        "alphaMode",
+        "alphaCutoff",
+        "doubleSided",
+        "vertexColor",
+        "texture",
+        "expectedThree"
+      ],
       "properties": {
-        "id": { "enum": ["vertex-alpha-blend", "textured-alpha-mask"] },
-        "baseColorFactor": { "$ref": "#/$defs/rgba" },
-        "metalness": { "type": "number", "minimum": 0, "maximum": 1 },
-        "roughness": { "type": "number", "minimum": 0, "maximum": 1 },
-        "emissiveFactor": { "$ref": "#/$defs/rgb" },
-        "alphaMode": { "enum": ["BLEND", "MASK"] },
-        "alphaCutoff": { "type": "number", "minimum": 0, "maximum": 1 },
-        "doubleSided": { "type": "boolean" },
+        "id": {
+          "enum": [
+            "vertex-alpha-blend",
+            "textured-alpha-mask"
+          ]
+        },
+        "baseColorFactor": {
+          "$ref": "#/$defs/rgba"
+        },
+        "metalness": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "roughness": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "emissiveFactor": {
+          "$ref": "#/$defs/rgb"
+        },
+        "alphaMode": {
+          "enum": [
+            "BLEND",
+            "MASK"
+          ]
+        },
+        "alphaCutoff": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 3.4028234663852886e+38
+        },
+        "doubleSided": {
+          "type": "boolean"
+        },
         "vertexColor": {
           "anyOf": [
-            { "type": "null" },
+            {
+              "type": "null"
+            },
             {
               "type": "object",
               "additionalProperties": false,
-              "required": ["itemSize", "normalized", "bytes"],
+              "required": [
+                "itemSize",
+                "normalized",
+                "bytes"
+              ],
               "properties": {
-                "itemSize": { "const": 4 },
-                "normalized": { "const": true },
-                "bytes": { "type": "array", "minItems": 12, "maxItems": 12, "items": { "type": "integer", "minimum": 0, "maximum": 255 } }
+                "itemSize": {
+                  "const": 4
+                },
+                "normalized": {
+                  "const": true
+                },
+                "bytes": {
+                  "type": "array",
+                  "minItems": 12,
+                  "maxItems": 12,
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 255
+                  }
+                }
               }
             }
           ]
         },
         "texture": {
           "anyOf": [
-            { "type": "null" },
+            {
+              "type": "null"
+            },
             {
               "type": "object",
               "additionalProperties": false,
-              "required": ["mimeType", "wrapS", "wrapT", "magFilter", "minFilter"],
+              "required": [
+                "mimeType",
+                "wrapS",
+                "wrapT",
+                "magFilter",
+                "minFilter"
+              ],
               "properties": {
-                "mimeType": { "const": "image/png" },
-                "wrapS": { "const": "ClampToEdgeWrapping" },
-                "wrapT": { "const": "MirroredRepeatWrapping" },
-                "magFilter": { "const": "LinearFilter" },
-                "minFilter": { "const": "NearestFilter" }
+                "mimeType": {
+                  "const": "image/png"
+                },
+                "wrapS": {
+                  "const": "ClampToEdgeWrapping"
+                },
+                "wrapT": {
+                  "const": "MirroredRepeatWrapping"
+                },
+                "magFilter": {
+                  "const": "LinearFilter"
+                },
+                "minFilter": {
+                  "const": "NearestFilter"
+                }
               }
             }
           ]
@@ -90,19 +256,83 @@
         "expectedThree": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["color", "opacity", "metalness", "roughness", "emissive", "transparent", "alphaTest", "side", "depthWrite", "vertexColors", "mapColorSpace"],
+          "required": [
+            "color",
+            "opacity",
+            "metalness",
+            "roughness",
+            "emissive",
+            "transparent",
+            "alphaTest",
+            "side",
+            "depthWrite",
+            "vertexColors",
+            "mapColorSpace",
+            "normalScale",
+            "occlusionStrength",
+            "textureCoordinates"
+          ],
           "properties": {
-            "color": { "$ref": "#/$defs/rgb" },
-            "opacity": { "type": "number" },
-            "metalness": { "type": "number" },
-            "roughness": { "type": "number" },
-            "emissive": { "$ref": "#/$defs/rgb" },
-            "transparent": { "type": "boolean" },
-            "alphaTest": { "type": "number" },
-            "side": { "enum": ["FrontSide", "DoubleSide"] },
-            "depthWrite": { "type": "boolean" },
-            "vertexColors": { "type": "boolean" },
-            "mapColorSpace": { "type": ["string", "null"] }
+            "color": {
+              "$ref": "#/$defs/rgb"
+            },
+            "opacity": {
+              "type": "number"
+            },
+            "metalness": {
+              "type": "number"
+            },
+            "roughness": {
+              "type": "number"
+            },
+            "emissive": {
+              "$ref": "#/$defs/rgb"
+            },
+            "transparent": {
+              "type": "boolean"
+            },
+            "alphaTest": {
+              "type": "number"
+            },
+            "side": {
+              "enum": [
+                "FrontSide",
+                "DoubleSide"
+              ]
+            },
+            "depthWrite": {
+              "type": "boolean"
+            },
+            "vertexColors": {
+              "type": "boolean"
+            },
+            "mapColorSpace": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "normalScale": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
+            },
+            "occlusionStrength": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "textureCoordinates": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 63
+              }
+            }
           }
         }
       }

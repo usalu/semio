@@ -70,7 +70,7 @@ pub fn import_mesh_bytes(name: &str, bytes: &[u8]) -> Result<LowpolySnapshot, Fa
 pub mod export_mesh {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "export-mesh")]
     pub struct ExportMesh {
@@ -89,13 +89,13 @@ pub mod export_mesh {
 pub mod load_mesh_request {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "load-mesh-request")]
     pub struct LoadMeshRequest {}
 
     pub fn handle(_payload: &LoadMeshRequest, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
-        Ok(Emit::effect(Effect::RequestFileOpen { req: semio_framework_plugin::RequestId(LOWPOLY_MESH_FILE_OPEN_REQUEST), accept: LOWPOLY_MESH_FILE_ACCEPT.into(), read_as: Some("dataUrl".into()), import_action: "importMeshFile".into(), multiple: false }))
+        Ok(Emit::effect(Effect::RequestFileOpen { req: semio_framework_plugin::RequestId(LOWPOLY_MESH_FILE_OPEN_REQUEST), accept: LOWPOLY_MESH_FILE_ACCEPT.into(), read_as: Some("dataUrl".into()), import_action: "importMeshFile".into(), multiple: false, args: None }))
     }
 }
 //#endregion 🔖️LoadMeshRequest
@@ -104,7 +104,7 @@ pub mod load_mesh_request {
 pub mod import_mesh_file {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "import-mesh-file")]
     pub struct ImportMeshFile {

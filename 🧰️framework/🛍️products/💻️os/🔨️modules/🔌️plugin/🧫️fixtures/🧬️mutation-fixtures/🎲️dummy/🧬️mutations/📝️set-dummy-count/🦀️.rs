@@ -14,9 +14,12 @@ impl SetDummyCount {
     const TAG: u8 = 0x61;
 }
 impl OpText for SetDummyCount {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let value =
-            line.strip_prefix("set-dummy-count ").ok_or_else(|| store::TextError::new("expected set-dummy-count", store::TextSpan::at(1, 1)))?.parse().map_err(|_| store::TextError::new("dummy count must be i32", store::TextSpan::at(1, 1)))?;
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        let value = line
+            .strip_prefix("set-dummy-count ")
+            .ok_or_else(|| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected set-dummy-count", semio_framework_diagnostic::TextSpan::at(1, 1)))?
+            .parse()
+            .map_err(|_| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "dummy count must be i32", semio_framework_diagnostic::TextSpan::at(1, 1)))?;
         Ok(Self { value })
     }
     fn print_op(&self) -> String {
@@ -41,10 +44,10 @@ impl MutationKind<DummySnapshot, DummyMutation> for SetDummyCount {
     fn diff(&self, _: &DummySnapshot) -> MutationOutcome<DummyDiff> {
         MutationOutcome::new(DummyDiff { count: Some(self.value) })
     }
-    fn inverse(&self, base: &DummySnapshot) -> Vec<DummyMutation> {
-        vec![Self { value: base.count }.into()]
+    fn inverse(&self, base: &DummySnapshot) -> Result<Vec<DummyMutation>, semio_framework_value::ValueError> {
+        Ok((|| vec![Self { value: base.count }.into()])())
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set dummy count to {}", self.value), &format!("Platzhalteranzahl auf {} setzen", self.value))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set dummy count to {}", self.value), &format!("Platzhalteranzahl auf {} setzen", self.value))
     }
 }

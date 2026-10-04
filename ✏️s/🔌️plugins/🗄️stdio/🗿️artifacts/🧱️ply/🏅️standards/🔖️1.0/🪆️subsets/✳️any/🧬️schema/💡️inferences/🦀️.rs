@@ -8,7 +8,6 @@
 
 use crate::PlySnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::bounds::compute_ply_bounds;
 //#region 🔖️Inference
@@ -23,8 +22,11 @@ pub struct PlyInference {
 }
 
 impl protocol::Inference<PlySnapshot> for PlyInference {
-    fn infer(snapshot: &PlySnapshot) -> Self {
+    fn infer(snapshot: &PlySnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { bounds: compute_ply_bounds(snapshot) }
+    
+        })
     }
 }
 
@@ -32,7 +34,9 @@ impl protocol::Inference<PlySnapshot> for PlyInference {
 /// `PlySnapshot::default()`'s `elements` ever stops being empty.
 impl Default for PlyInference {
     fn default() -> Self {
-        <Self as protocol::Inference<PlySnapshot>>::infer(&PlySnapshot::default())
+        let snapshot = &PlySnapshot::default();
+
+        Self { bounds: compute_ply_bounds(snapshot) }
     }
 }
 
@@ -48,18 +52,6 @@ impl protocol::InferenceSpec<PlySnapshot> for PlyInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 💡️ No `InferredField`s here — `bounds` is a single min/max fold over the `"vertex"` element's
-/// own `x`/`y`/`z` property columns plus a row count of the `"face"` element, already O(n) in
-/// total row count with no honest per-row incremental decomposition (a merkle dep-chain over this
-/// flat row list costs more than the fold it would cache) — the default `infer_cached`
-/// passthrough is exact.
-impl ArtifactInferrer for crate::standards::v1_0::subsets::any::schema::PlyBuilder {
-    type Snapshot = PlySnapshot;
-    type Inference = PlyInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.ply.inference`'s facet leaves into the OS-wide inference catalog —

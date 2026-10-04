@@ -25,7 +25,10 @@ pub struct UpdateCharacterStyle {
 impl MutationKind<LayoutSnapshot, LayoutMutation> for UpdateCharacterStyle {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "update", entity: "character-style", kind: "update-character-style", record: "UpdatedCharacterStyle" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> { diff_update_character_style(self, base) }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> { inverse_update_character_style(self, base) }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok({ inverse_update_character_style(self, base)? 
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Update character style \"{}\"", self.id), &format!("Zeichenformat \"{}\" aktualisieren", self.id)) }
     fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }
@@ -38,7 +41,7 @@ pub fn diff_update_character_style(payload: &UpdateCharacterStyle, base: &Layout
         return protocol::MutationOutcome::fatal("mutation.invariant", "A character style size must be positive, its weight non-zero, and its tracking finite.", std::iter::empty::<String>());
     }
     if style.name == payload.name && style.font_family == payload.font_family && style.font_size == payload.font_size && style.font_weight == payload.font_weight && style.italic == payload.italic && style.color == payload.color && style.tracking == payload.tracking {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Character style is already set to that value.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Character style is already set to that value.");
     }
     protocol::MutationOutcome::new(LayoutDiff {
         character_styles: Some(LayoutCharacterStylesDelta {
@@ -60,9 +63,12 @@ pub fn diff_update_character_style(payload: &UpdateCharacterStyle, base: &Layout
     })
 }
 
-pub fn inverse_update_character_style(payload: &UpdateCharacterStyle, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_update_character_style(payload: &UpdateCharacterStyle, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(style) = base.character_styles.iter().find(|style| style.id == payload.id) else { return Vec::new() };
     vec![LayoutMutation::UpdateCharacterStyle(UpdateCharacterStyle { id: style.id.clone(), name: style.name.clone(), font_family: style.font_family.clone(), font_size: style.font_size, font_weight: style.font_weight, italic: style.italic, color: style.color, tracking: style.tracking })]
+
+    })())
 }
 
 #[cfg(test)]

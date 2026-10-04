@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.semio.tech/framework/ui/render/owner-routes",
+  "type": "object", "additionalProperties": false,
+  "required": ["contract", "owners", "levels", "wholeArguments"],
+  "properties": {
+    "contract": { "const": "neutral-render-owner-routes/v1" },
+    "owners": {
+      "type": "array", "minItems": 3, "maxItems": 3, "uniqueItems": true,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "project", "package", "domain"],
+        "properties": {
+          "id": { "enum": ["canvas", "board", "dag-model"] },
+          "project": { "type": "string", "pattern": "^@semio-tech/framework-ui-(?:canvas|board|board-dag-model)-rs$" },
+          "package": { "type": "string", "pattern": "^semio-framework-ui-(?:canvas|board|board-dag-model)$" },
+          "domain": { "type": "string", "pattern": "^🧰️framework/🔨️modules/🖱️ui/" }
+        }
+      }
+    },
+    "levels": { "const": ["quick", "long", "exhaustive"] },
+    "wholeArguments": { "const": ["--lib", "--no-fail-fast"] }
+  }
+}

@@ -68,7 +68,7 @@ fn line_behind_offset(copy_index: usize, cell: f64) -> f64 {
     -(copy_index as f64) * cell * GRID_LINE_BEHIND_SPACING
 }
 
-fn push_kind_copies(instances: &mut Vec<dsl::DslValue>, kind: &ObjectKind, count: u32, position: [f64; 3], scale: f64, line_behind: bool) {
+fn push_kind_copies(instances: &mut Vec<semio_framework_value::DslValue>, kind: &ObjectKind, count: u32, position: [f64; 3], scale: f64, line_behind: bool) {
     let copies = if line_behind { count.max(1) as usize } else { 1 };
     for copy in 0..copies {
         let z = position[2] + if line_behind { line_behind_offset(copy, SOURCING_CURATION_GRID_CELL) } else { 0.0 };
@@ -106,8 +106,8 @@ pub fn render(document: &CurationSnapshot, cfg: &SourcingCurationConfig, window:
     }
     MeshWindowKit::render(&MeshView {
         camera_json: world3d_default_camera(),
-        meshes_json: dsl::json::to_json_string(&dsl::DslValue::Array(meshes)),
-        instances_json: dsl::json::to_json_string(&dsl::DslValue::Array(instances)),
+        meshes_json: semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Array(meshes)),
+        instances_json: semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Array(instances)),
         selection_json: world3d_selection_json("rectangle", &[], None),
     })
 }

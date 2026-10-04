@@ -65,7 +65,7 @@ fn draw_wire(host: &mut DagHost, gesture: &Value) {
 
 /// 🔗️ The rows the journal encoder writes for `edits` — the very `nodeGraphEdit` operations every renderer dispatches.
 fn edit_rows(edits: &[DagGraphEdit]) -> Vec<Value> {
-    let rows: Value = serde_json::from_str(&dag_graph_edit_rows_json(edits.to_vec())).expect("journal rows json");
+    let rows: Value = serde_json::from_str(&dag_graph_edit_rows_json(edits, None)).expect("journal rows json");
     rows["operations"].as_array().expect("journal operations").clone()
 }
 

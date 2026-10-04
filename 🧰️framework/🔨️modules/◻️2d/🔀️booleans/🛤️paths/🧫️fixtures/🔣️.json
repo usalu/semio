@@ -1,0 +1,635 @@
+{
+ "cases": [
+  {
+   "id": "transformed overlapping rectangles",
+   "operation": "union",
+   "operands": [
+    {
+     "segments": [
+      {
+       "kind": "move",
+       "to": [
+        0,
+        0
+       ]
+      },
+      {
+       "kind": "line",
+       "to": [
+        10,
+        0
+       ]
+      },
+      {
+       "kind": "line",
+       "to": [
+        10,
+        10
+       ]
+      },
+      {
+       "kind": "line",
+       "to": [
+        0,
+        10
+       ]
+      },
+      {
+       "kind": "close"
+      }
+     ],
+     "transform": [
+      1,
+      0,
+      0,
+      1,
+      10,
+      8
+     ],
+     "tolerance": 0.01,
+     "fillRule": "nonzero"
+    },
+    {
+     "segments": [
+      {
+       "kind": "move",
+       "to": [
+        0,
+        0
+       ]
+      },
+      {
+       "kind": "line",
+       "to": [
+        10,
+        0
+       ]
+      },
+      {
+       "kind": "line",
+       "to": [
+        10,
+        10
+       ]
+      },
+      {
+       "kind": "line",
+       "to": [
+        0,
+        10
+       ]
+      },
+      {
+       "kind": "close"
+      }
+     ],
+     "transform": [
+      1,
+      0,
+      0,
+      1,
+      15,
+      13
+     ],
+     "tolerance": 0.01,
+     "fillRule": "nonzero"
+    }
+   ],
+   "area": 175,
+   "contours": 1
+  },
+  {
+   "id": "reflected quadratic lens intersection",
+   "operation": "intersection",
+   "operands": [
+    {
+     "segments": [
+      {
+       "kind": "move",
+       "to": [
+        0,
+        0
+       ]
+      },
+      {
+       "kind": "quad",
+       "ctrl": [
+        10,
+        -12
+       ],
+       "to": [
+        20,
+        0
+       ]
+      },
+      {
+       "kind": "quad",
+       "ctrl": [
+        10,
+        12
+       ],
+       "to": [
+        0,
+        0
+       ]
+      },
+      {
+       "kind": "close"
+      }
+     ],
+     "transform": [
+      1,
+      0.2,
+      0.25,
+      1,
+      14,
+      20
+     ],
+     "tolerance": 0.005,
+     "fillRule": "nonzero"
+    },
+    {
+     "segments": [
+      {
+       "kind": "move",
+       "to": [
+        0,
+        0
+       ]
+      },
+      {
+       "kind": "line",
+       "to": [
+        14,
+        0
+       ]
+      },
+      {
+       "kind": "line",
+       "to": [
+        14,
+        14
+       ]
+      },
+      {
+       "kind": "line",
+       "to": [
+        0,
+        14
+       ]
+      },
+      {
+       "kind": "close"
+      }
+     ],
+     "transform": [
+      -1,
+      0,
+      0.2,
+      1,
+      34,
+      12
+     ],
+     "tolerance": 0.005,
+     "fillRule": "nonzero"
+    }
+   ],
+   "contours": 1
+  },
+  {
+   "id": "cubic difference",
+   "operation": "difference",
+   "operands": [
+    {
+     "segments": [
+      {
+       "kind": "move",
+       "to": [
+        0,
+        0
+       ]
+      },
+      {
+       "kind": "cubic",
+       "ctrl1": [
+        0,
+        -15
+       ],
+       "ctrl2": [
+        20,
+        -15
+       ],
+       "to": [
+        20,
+        0
+       ]
+      },
+      {
+       "kind": "cubic",
+       "ctrl1": [
+        20,
+        15
+       ],
+       "ctrl2": [
+        0,
+        15
+       ],
+       "to": [
+        0,
+        0
+       ]
+      },
+      {
+       "kind": "close"
+      }
+     ],
+     "transform": [
+      1,
+      0,
+      0,
+      1,
+      22,
+      23
+     ],
+     "tolerance": 0.005,
+     "fillRule": "nonzero"
+    },
+    {
+     "segments": [
+      {
+       "kind": "move",
+       "to": [
+        0,
+        0
+       ]
+      },
+      {
+       "kind": "line",
+       "to": [
+        7,
+        0
+       ]
+      },
+      {
+       "kind": "line",
+       "to": [
+        7,
+        28
+       ]
+      },
+      {
+       "kind": "line",
+       "to": [
+        0,
+        28
+       ]
+      },
+      {
+       "kind": "close"
+      }
+     ],
+     "transform": [
+      1,
+      0,
+      0,
+      1,
+      28,
+      9
+     ],
+     "tolerance": 0.005,
+     "fillRule": "nonzero"
+    }
+   ],
+   "contours": 2
+  },
+  {
+   "id": "rotated arc exclusive or",
+   "operation": "xor",
+   "operands": [
+    {
+     "segments": [
+      {
+       "kind": "move",
+       "to": [
+        -9,
+        0
+       ]
+      },
+      {
+       "kind": "arc",
+       "rx": 9,
+       "ry": 6,
+       "rotation": 25,
+       "largeArc": false,
+       "sweep": true,
+       "to": [
+        9,
+        0
+       ]
+      },
+      {
+       "kind": "arc",
+       "rx": 9,
+       "ry": 6,
+       "rotation": 25,
+       "largeArc": false,
+       "sweep": true,
+       "to": [
+        -9,
+        0
+       ]
+      },
+      {
+       "kind": "close"
+      }
+     ],
+     "transform": [
+      1,
+      0.1,
+      0.3,
+      1,
+      27,
+      24
+     ],
+     "tolerance": 0.005,
+     "fillRule": "nonzero"
+    },
+    {
+     "segments": [
+      {
+       "kind": "move",
+       "to": [
+        -9,
+        0
+       ]
+      },
+      {
+       "kind": "arc",
+       "rx": 9,
+       "ry": 6,
+       "rotation": 25,
+       "largeArc": false,
+       "sweep": true,
+       "to": [
+        9,
+        0
+       ]
+      },
+      {
+       "kind": "arc",
+       "rx": 9,
+       "ry": 6,
+       "rotation": 25,
+       "largeArc": false,
+       "sweep": true,
+       "to": [
+        -9,
+        0
+       ]
+      },
+      {
+       "kind": "close"
+      }
+     ],
+     "transform": [
+      1,
+      0,
+      0,
+      1,
+      33,
+      24
+     ],
+     "tolerance": 0.005,
+     "fillRule": "nonzero"
+    }
+   ],
+   "contours": 2
+  },
+  {
+   "id": "open filled contour closes implicitly",
+   "operation": "union",
+   "operands": [
+    {
+     "segments": [
+      {
+       "kind": "move",
+       "to": [
+        0,
+        0
+       ]
+      },
+      {
+       "kind": "line",
+       "to": [
+        8,
+        0
+       ]
+      },
+      {
+       "kind": "line",
+       "to": [
+        8,
+        8
+       ]
+      }
+     ],
+     "transform": [
+      1,
+      0,
+      0,
+      1,
+      18,
+      14
+     ],
+     "tolerance": 0.01,
+     "fillRule": "nonzero"
+    }
+   ],
+   "area": 32,
+   "contours": 1
+  },
+  {
+   "id": "even odd authored open hole",
+   "operation": "union",
+   "operands": [
+    {
+     "segments": [
+      {
+       "kind": "move",
+       "to": [
+        0,
+        0
+       ]
+      },
+      {
+       "kind": "line",
+       "to": [
+        16,
+        0
+       ]
+      },
+      {
+       "kind": "line",
+       "to": [
+        16,
+        16
+       ]
+      },
+      {
+       "kind": "line",
+       "to": [
+        0,
+        16
+       ]
+      },
+      {
+       "kind": "move",
+       "to": [
+        4,
+        4
+       ]
+      },
+      {
+       "kind": "line",
+       "to": [
+        12,
+        4
+       ]
+      },
+      {
+       "kind": "line",
+       "to": [
+        12,
+        12
+       ]
+      },
+      {
+       "kind": "line",
+       "to": [
+        4,
+        12
+       ]
+      }
+     ],
+     "transform": [
+      1,
+      0,
+      0,
+      1,
+      20,
+      15
+     ],
+     "tolerance": 0.01,
+     "fillRule": "evenodd"
+    }
+   ],
+   "area": 192,
+   "contours": 2
+  },
+  {
+   "id": "singular transform regularizes to empty",
+   "operation": "union",
+   "operands": [
+    {
+     "segments": [
+      {
+       "kind": "move",
+       "to": [
+        0,
+        0
+       ]
+      },
+      {
+       "kind": "line",
+       "to": [
+        8,
+        0
+       ]
+      },
+      {
+       "kind": "line",
+       "to": [
+        8,
+        8
+       ]
+      },
+      {
+       "kind": "close"
+      }
+     ],
+     "transform": [
+      1,
+      0,
+      0,
+      0,
+      18,
+      14
+     ],
+     "tolerance": 0.01,
+     "fillRule": "nonzero"
+    }
+   ],
+   "area": 0,
+   "contours": 0
+  },
+  {
+   "id": "empty operand remains an empty intersection",
+   "operation": "intersection",
+   "operands": [
+    {
+     "segments": [],
+     "transform": [
+      1,
+      0,
+      0,
+      1,
+      0,
+      0
+     ],
+     "tolerance": 0.01,
+     "fillRule": "nonzero"
+    },
+    {
+     "segments": [
+      {
+       "kind": "move",
+       "to": [
+        0,
+        0
+       ]
+      },
+      {
+       "kind": "line",
+       "to": [
+        8,
+        0
+       ]
+      },
+      {
+       "kind": "line",
+       "to": [
+        8,
+        8
+       ]
+      },
+      {
+       "kind": "close"
+      }
+     ],
+     "transform": [
+      1,
+      0,
+      0,
+      1,
+      18,
+      14
+     ],
+     "tolerance": 0.01,
+     "fillRule": "nonzero"
+    }
+   ],
+   "area": 0,
+   "contours": 0
+  }
+ ]
+}

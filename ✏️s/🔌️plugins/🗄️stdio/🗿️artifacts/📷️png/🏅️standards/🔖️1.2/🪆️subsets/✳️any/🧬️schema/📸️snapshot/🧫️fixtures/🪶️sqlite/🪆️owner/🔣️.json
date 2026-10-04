@@ -1,0 +1,10 @@
+{
+  "role": "completeLogicalOwnerAndSeparateRawPublication",
+  "encodings": ["binary", "text"],
+  "cases": [
+    {"schema": "", "bytes": []},
+    {"schema": "arbitrary 世界\u0000schema", "bytes": [137, 80, 0, 255]},
+    {"schema": "stdio.png", "bytes": [0, 1, 127, 128, 254, 255]}
+  ],
+  "editedOctet": 17
+}

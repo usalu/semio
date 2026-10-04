@@ -12,7 +12,7 @@ use crate::standards::v1::subsets::any::schema::{
     ObjectKindVortexTemplate, Quat, Vec3, VortexKindCatalog, VortexProps,
 };
 use crate::editor::puzzle3d::precompute::geometry::{
-    collision_body_from_buffers, compute_brush_placement_pose, normalize_vec3, pose_isometry, quat_rotate_vec, vec3_add, CollisionAabb, CollisionBody, CollisionPenetrationState, CollisionStepContext, CollisionStepResult, Pose3d,
+    collision_body_from_buffers, compute_brush_placement_pose, normalize_vec3, pose_isometry, precompute_work, quat_rotate_vec, vec3_add, CollisionAabb, CollisionBody, CollisionPenetrationState, CollisionStepContext, CollisionStepResult, Pose3d,
 };
 use crate::standards::v1::subsets::any::schema::{BrushSuggestionsRunCounter, BrushSuggestionsRunReason, BrushSuggestionsRunStage, SceneConfig};
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, RetainedJobPayload, StepContext, StepOutcome};
@@ -776,8 +776,8 @@ impl CollisionStepContext for BrushSuggestionsCollisionContext<'_, '_> {
 }
 
 /// 📏️ The uniform trace scale of a pose: a number, else the first vector component, else 1.
-fn brush_suggestions_scale(scale: &Option<dsl::DslValue>) -> f32 {
-    scale.as_ref().and_then(|value| value.as_f64().or_else(|| value.as_array().and_then(|values| values.first()).and_then(dsl::DslValue::as_f64))).map_or(1.0, |value| value as f32)
+fn brush_suggestions_scale(scale: &Option<semio_framework_value::DslValue>) -> f32 {
+    scale.as_ref().and_then(|value| value.as_f64().or_else(|| value.as_array().and_then(|values| values.first()).and_then(semio_framework_value::DslValue::as_f64))).map_or(1.0, |value| value as f32)
 }
 
 /// 🥽️ Where a run reads one mesh identity's geometry: the process-wide derived mesh store in production.
@@ -859,6 +859,7 @@ impl<O: BrushSuggestionsOwner> BrushSuggestionsRunJob<O> {
             BrushSuggestionsPhase::Placed(cursor) => {
                 self.phase = match self.scene.fixture.objects.get(cursor) {
                     Some(object) => {
+                        precompute_work(1);
                         if let Some(mesh_url) = resolve_placed_object_mesh_url(object, &self.catalogs, &self.scene.fixture) {
                             let world = pose_isometry(object.origin, object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), &object.scale);
                             let bounds = CollisionAabb::from_body(self.meshes.get(&mesh_url).unwrap_or(&self.fallback), &world);
@@ -886,6 +887,7 @@ impl<O: BrushSuggestionsOwner> BrushSuggestionsRunJob<O> {
         let mut found = BrushSuggestionsFound { writer: self.writer_run(), target: target.clone(), previews: Vec::new(), verdicts: Vec::new(), done: true };
         let scene = Arc::clone(&self.scene);
         let host = scene.fixture.objects.iter().find_map(|object| object.vortices.iter().position(|vortex| puzzle3d_vortex_full_id(&object.id, &vortex.id) == target).map(|index| (object, index)));
+        precompute_work(scene.fixture.objects.len());
         let refusal = match host {
             None => Some(BrushSuggestionsRunReason::TargetMissing),
             Some((host, index)) if !brush_target_vortex_allows_suggestion(host.vortices[index].vortex_kind.as_deref(), &scene.weights) => Some(BrushSuggestionsRunReason::SuggestionsBlocked),
@@ -895,6 +897,7 @@ impl<O: BrushSuggestionsOwner> BrushSuggestionsRunJob<O> {
                     let context = AttractionVortexContext { object_kind: host.object_kind.clone(), vortex_kind: host.vortices[index].vortex_kind.clone() };
                     let world = TargetVortexWorld { position, direction, reference_orientation: host.orientation };
                     let candidates = brush_compatible_candidates(&context, &self.catalogs, &scene.kind_compatibility, &scene.host_rules);
+                    precompute_work(candidates.len());
                     found.previews = candidates.iter().filter(|candidate| brush_candidate_suggestion_weight(candidate, &scene.weights, &self.catalogs) > 0.0).map(|candidate| brush_preview_from_candidate(&target, candidate, &context, world, &self.catalogs, &scene.fixture)).collect();
                     found.verdicts = vec![BrushSuggestionVerdict::Pending; found.previews.len()];
                     found.done = false;
@@ -946,6 +949,7 @@ impl<O: BrushSuggestionsOwner> BrushSuggestionsRunJob<O> {
         let bounds = CollisionAabb::from_body(body, &world);
         let budget = scene.contact_tolerance;
         let collides = loop {
+            precompute_work(1);
             let Some(entry) = placed.get(search.pair) else { break Some(false) };
             if search.collision.is_none() && !entry.bounds.intersects(&bounds) {
                 search.pair += 1;
@@ -1031,6 +1035,7 @@ impl<O: BrushSuggestionsOwner> InteractiveJob for BrushSuggestionsRunJob<O> {
             return self.flush(context);
         };
         while !context.deadline_exceeded() && !context.fuel_exhausted() {
+            precompute_work(1);
             if !self.prepare_one() {
                 continue;
             }

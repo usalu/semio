@@ -1,0 +1,1 @@
+{"schema":"zip.native.control/v1","copyBytes":100000,"copyCancelAfter":65536,"collectionItems":1024,"cancelAfter":256,"maximumBytes":16777216,"tinyBytes":1024,"fixtureRows":30}

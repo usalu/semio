@@ -1,36 +1,20 @@
 //! 🩹️ Trinity Rewriting app command — `patch-nodes`.
 
-use semio_s_artifact_trinity_jack::JackWorkingScene;
-use crate::standards::v1::subsets::any::schema::mutations::patch_working_nodes;
+use crate::content::{read, working_child_emit};
 use crate::standards::v1::subsets::any::schema::mutations::text::RewriteRuleMutation;
 use crate::RewritingSnapshot;
+use semio_framework_plugin::app::ChildContentView;
 use semio_framework_plugin::{Emit, Fault, FaultCode, FaultOrigin, NoConfigMutation};
-use semio_s_artifact_trinity_jack::{Graph, JackSnapshot};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::{change_node_kind::ChangeNodeKind, change_node_label::ChangeNodeLabel, SemioGraphMutation};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::GraphNodeId;
 
-fn patch_fixture_nodes(fixture_json: &str, node_ids: &[String], field: &str, value: &str) -> Result<String, String> {
-    let fixture = JackSnapshot::from_json(fixture_json).map_err(|error| error.to_string())?;
-    let mut nodes = fixture.nodes();
-    for node in nodes.iter_mut() {
-        if !node_ids.iter().any(|id| id == &node.id) {
-            continue;
-        }
-        match field {
-            "name" => node.name = value.into(),
-            "kind" => node.kind = value.into(),
-            _ => {}
-        }
-    }
-    let fixture = JackSnapshot::with_content(fixture.schema.clone(), fixture.name.clone(), fixture.manifest_id.clone(), fixture.manifest.clone(), fixture.camera.clone(), JackWorkingScene { nodes: nodes, edges: fixture.edges() }, fixture.root_node_id);
-    Graph::from_snapshot(fixture).and_then(|graph| graph.host_snapshot_json()).map_err(|error| error.to_string())
-}
-
-/// 🩹️ ONE `patch-working-nodes` leaf setting `name` or `kind` of the named nodes of the rule's working (before) graph — or, when
-/// `node_ids` is empty, of the nodes selected in the `graph` domain, which is what a rail press means.
-/// Every request that cannot move the document is refused by name instead of answering an empty emit (the
-/// silent empty emit read as an accepted edit that moved nothing, S15 session 11): `app.command.targets-required`
-/// when neither `nodeIds` nor a selection names a node — an agent has no selection and names them —
-/// `mutation.target-missing`, `app.command.invalid-args`.
-pub(crate) fn patch_nodes(state: &RewritingSnapshot, node_ids: &[String], selection: &[String], field: &str, value: &str) -> Result<Emit<RewriteRuleMutation, NoConfigMutation>, Fault> {
+/// 🩹️ Sets `name` or `kind` of the named nodes of the rule's working (before) graph — or, when `node_ids` is empty, of the nodes
+/// selected in the `graph` domain, which is what a rail press means — as ONE edit of the composed `workingGraph` child: one
+/// `change-node-label` or `change-node-kind` leaf per node (design §20.15). Every request that cannot move the document is refused
+/// by name instead of answering an empty emit (the silent empty emit read as an accepted edit that moved nothing, S15 session 11):
+/// `app.command.targets-required` when neither `nodeIds` nor a selection names a node — an agent has no selection and names them —
+/// `mutation.target-missing`, `app.command.invalid-args` (also for a kind the resolved manifest does not declare).
+pub(crate) fn patch_nodes(state: &RewritingSnapshot, children: &ChildContentView, node_ids: &[String], selection: &[String], field: &str, value: &str) -> Result<Emit<RewriteRuleMutation, NoConfigMutation>, Fault> {
     let invalid = |detail: String| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-args"), detail);
     if !matches!(field, "name" | "kind") {
         return Err(invalid(format!("rewriting nodes have no patchable field '{field}' (only 'name' or 'kind')")));
@@ -43,12 +27,17 @@ pub(crate) fn patch_nodes(state: &RewritingSnapshot, node_ids: &[String], select
     if targets.is_empty() {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.targets-required"), "patchNodes needs the nodes it patches: name them in nodeIds, or select them in the graph"));
     }
-    let fixture = JackSnapshot::from_json(&state.before_fixture_json).map_err(|error| invalid(format!("the working graph does not decode: {error}")))?;
-    let nodes = fixture.nodes();
-    let missing: Vec<&str> = targets.iter().filter(|id| !nodes.iter().any(|node| &node.id == *id)).map(String::as_str).collect();
+    let work = read(state, children)?;
+    let missing: Vec<&str> = targets.iter().filter(|id| !work.nodes.iter().any(|node| &node.id.value == *id)).map(String::as_str).collect();
     if !missing.is_empty() {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("mutation.target-missing"), format!("the working graph has no node {}", missing.join(", "))));
     }
-    patch_fixture_nodes(&state.before_fixture_json, targets, field, value).map_err(|error| invalid(format!("the patched working graph is not a valid graph: {error}")))?;
-    Ok(Emit::mutations(vec![patch_working_nodes(targets.to_vec(), field.to_string(), value.to_string())]))
+    if field == "kind" && crate::editor::rewriting::resolved_working_manifest(state).is_some_and(|manifest| manifest.node_kind(value).is_none()) {
+        return Err(invalid(format!("the working graph's manifest declares no node kind “{value}”")));
+    }
+    let leaf = |id: &String| match field {
+        "name" => SemioGraphMutation::ChangeNodeLabel(ChangeNodeLabel { id: GraphNodeId::new(id.clone()), new_label: value.into() }),
+        _ => SemioGraphMutation::ChangeNodeKind(ChangeNodeKind { id: GraphNodeId::new(id.clone()), new_kind: value.into() }),
+    };
+    Ok(working_child_emit(state, &targets.iter().map(leaf).collect::<Vec<_>>()))
 }

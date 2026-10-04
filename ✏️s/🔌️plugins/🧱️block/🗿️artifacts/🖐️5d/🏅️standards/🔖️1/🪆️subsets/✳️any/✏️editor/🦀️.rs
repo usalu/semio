@@ -47,7 +47,7 @@ use semio_framework_plugin::MediaPayload;
 use semio_framework_plugin::MediaType;
 use semio_framework_plugin::NoDraft;
 use semio_framework_plugin::NoDraftMutation;
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 use std::collections::BTreeMap;
 use semio_framework_2d::compute::EngineHandles;
 
@@ -125,12 +125,12 @@ pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framew
 /// (`Kit×Type`, matching the `"5d.block"` artifact kind) plus a `"catalog:out"` port giving
 /// `puzzle5d_catalog_fragment` a real caller (see `export_media` below).
 pub fn block5d_io() -> semio_framework_plugin::AppIo {
-    let io = semio_framework_plugin::resolve_ready(semio_framework_plugin::AppIo::from_artifact(
+    let io = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::AppIo::from_artifact(
         BLOCK_5D_SCHEMA,
         MediaType { class: MediaClass::Kit, form: MediaForm::Type },
         semio_framework_plugin::ArtifactPresentation { id: "5d.block".into(), name: "Part Kind".into(), dimension: "5d".into(), component_kind: "block5d".into() },
     ));
-    semio_framework_plugin::resolve_ready(io.with_ports(vec![semio_framework_plugin::MediaPortSpec {
+    ::semio_framework_async::poll::resolve_ready(io.with_ports(vec![semio_framework_plugin::MediaPortSpec {
         id: "catalog:out".into(),
         label: "Kit Catalog".into(),
         direction: semio_framework_plugin::MediaPortDirection::Out,
@@ -255,14 +255,11 @@ struct Block5dStorePreparation {
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<Block5dSnapshot, Block5dMutation> for Block5dStorePreparationFactory {
-    fn preflight(&self, _mutation: &Block5dMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    fn preflight(&self, mutation: &Block5dMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
             return Err("Block5d Store preparation rejected its lane or description envelope".into());
         }
-        // 🧾️ Every `Block5dMutation` is point-invertible (its `inverse` yields at most one row), and the
-        // fold counts staged edit ROWS: one forward plus one inverse. Declaring one row fail-closed
-        // every durable gesture with `batched item candidate failed its exact fixed fold contract`.
-        Ok(store::ArtifactStoreOneItemFootprint::for_one_invertible_item(store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
+        Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
 
     fn begin(
@@ -312,35 +309,10 @@ impl store::ArtifactStoreOneItemPreparation<Block5dSnapshot, Block5dMutation> fo
         }
         let base = self.base.as_ref().ok_or_else(|| "Block5d preparation lost its exact base root".to_string())?;
         let mutation = self.mutation.take().ok_or_else(|| "Block5d preparation lost its mutation owner".to_string())?;
-        let inverse = mutation.inverse(base.get());
+        let inverse = mutation.inverse(base.get()).map_err(semio_framework_value::ValueError::into_message)?;
         let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
         let authority = self.authority.as_ref().ok_or_else(|| "Block5d preparation lost its Store authority".to_string())?;
-        let id = format!("block5d-retained-{}", authority.next_sequence_number());
-        let edit = protocol::Edit { line: authority.line_id().map(str::to_owned),
-            id: id.clone(),
-            actor: Some(authority.actor().to_string()),
-            forwards: vec![mutation],
-            inverse,
-            mutation_meta: vec![protocol::MutationMeta {
-                mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
-                dependencies: Vec::new(),
-                base_version: authority.base_applied_edit_count() as u64,
-                author_id: Some(protocol::ActorId(authority.actor().to_string())),
-                timestamp: authority.next_clock(),
-                undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-                payload_hash: None,
-                semantic_kind: None,
-                label: None,
-                group_id: None,
-                origin: Default::default(),
-                transaction: None,
-            }],
-            description: self.description.take(), verb: None,
-            coalesce_key: None,
-            sequence_number: authority.next_sequence_number(),
-            started_at: String::new(),
-            finished_at: None,
-        };
+        let edit = authority.next_edit(mutation, inverse);
         let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
         self.prepared = Some(prepared);
@@ -353,7 +325,7 @@ impl store::ArtifactStoreOneItemPreparation<Block5dSnapshot, Block5dMutation> fo
     fn cancel(&mut self) { self.cancelled = true; }
     fn begin_close(&mut self) { self.closing = true; }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -361,7 +333,7 @@ impl store::ArtifactStoreOneItemPreparation<Block5dSnapshot, Block5dMutation> fo
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(base) = self.base.take() {
-            if !base.return_to_registry() { return Err("Block5d preparation could not return its exact base root".into()); }
+            if !base.return_to_registry() { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Block5d preparation could not return its exact base root")); }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(authority) = self.authority.as_ref() {
@@ -518,8 +490,8 @@ impl ArtifactEditor for Block5dPlayApp {
     /// 🎯️ Maps host action id + JSON args onto `Block5dCommand` — React/wgpu still speak the stringly
     /// `{action,args}` wire; this is the typed-command bridge until those call sites send `OpBinary`
     /// bytes directly.
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
-        let args = args.map(dsl::os_pack::json::from_dsl_value);
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
+        let args = args.map(semio_framework_pack_json::from_dsl_value);
         let str_field = |key: &str| args.as_ref().and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
         match action {
             "patchPartKind" => Ok(Block5dCommand::PatchPartKind(patch_part_kind::PatchPartKind { field: str_field("field").unwrap_or_default(), value: str_field("value").unwrap_or_default() })),
@@ -552,7 +524,8 @@ impl ArtifactEditor for Block5dPlayApp {
     /// nests under its own `grip_kind` (`grip` granularity), so a stale selection is pruned the moment
     /// `removeGripKind`/`removeGrip` deletes its target, and hovering/selecting a kind can transitively
     /// reach its grips.
-    fn interaction_topology(doc: &ArtifactView<'_, Block5dSnapshot>, _cfg: &ConfigView<'_, Block5dConfig>) -> InteractionTopology {
+    fn interaction_topology(doc: &ArtifactView<'_, Block5dSnapshot>, _cfg: &ConfigView<'_, Block5dConfig>) -> Result<InteractionTopology, semio_framework_value::ValueError> {
+ Ok((||{
         let mut ordered: Vec<TopologyNode> = Vec::new();
         for kind in &doc.snapshot.grip_kinds {
             ordered.push(TopologyNode { id: format!("gripKind:{}", kind.id), granularity: BLOCK5D_GRANULARITY_GRIP_KIND.into(), parent: None });
@@ -563,7 +536,9 @@ impl ArtifactEditor for Block5dPlayApp {
         let mut domains = BTreeMap::new();
         domains.insert(BLOCK5D_INTERACTION_GRIP.to_string(), DomainTopology { ordered });
         InteractionTopology { domains }
-    }
+    
+})())
+}
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Block5dSnapshot>, _cfg: &ConfigView<'_, Block5dConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let labels = block5d_labels(view_state);

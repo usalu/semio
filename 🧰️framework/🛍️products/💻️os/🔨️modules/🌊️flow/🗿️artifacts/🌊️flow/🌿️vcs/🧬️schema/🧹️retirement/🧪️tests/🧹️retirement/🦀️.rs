@@ -7,8 +7,8 @@ use super::super::{AddSynapse, AddWidget, ChangeLayout, ChangeSynapse, ChangeWid
 
 //#region 🧭️Fixtures
 fn fixture() -> FlowHostSnapshot {
-    let vectors = crate::os_pack::json::parse(include_str!("../../../🔺️diff/🧫️fixtures/🧾️ownership/🔣️.json")).expect("actual retained ownership vectors");
-    crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(vectors.get("base").expect("base fixture"))).expect("actual retained Flow fixture")
+    let vectors = semio_framework_pack_json::parse(include_str!("../../../🔺️diff/🧫️fixtures/🧾️ownership/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("actual retained ownership vectors");
+    semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(vectors.get("base").expect("base fixture"))).expect("actual retained Flow fixture")
 }
 
 fn mutations() -> Vec<FlowMutation> {
@@ -75,7 +75,7 @@ fn direct_leaf_retirement_refuses_zero_grants_then_reaches_terminal_empty() {
 fn injected_inner_fault_preserves_transferred_payload() {
     let mut retirement = FlowMutationRetirementFrontier::new(FlowMutation::RemoveWidget(RemoveWidget { id: "cancelled".into() }));
     assert!(matches!(retirement.close_step(1, 64).expect("handoff to actual frontier"), SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }));
-    let injected_fault = retirement.close_step_with_injected(1, 64, |_frontier, _items, _bytes| Err("injected nested retirement fault".into()));
+    let injected_fault = retirement.close_step_with_injected(1, 64, |_frontier, _items, _bytes| Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"injected nested retirement fault")));
     assert!(injected_fault.is_err());
     assert!(!retirement.terminal_is_empty());
     for _ in 0..4096 {
@@ -91,7 +91,7 @@ fn false_inner_completion_keeps_retained_payload_owned() {
     let mut retirement = FlowMutationRetirementFrontier::new(FlowMutation::RemoveWidget(RemoveWidget { id: "owned".into() }));
     assert!(matches!(retirement.close_step(1, 1).unwrap(), SnapshotRetirementStep::Pending { .. }));
     let result = retirement.close_step_with_injected(1, 1, |_, _, _| Ok(SnapshotRetirementStep::Complete));
-    assert_eq!(result.unwrap_err(), "flow mutation retirement frontier reported Complete before terminal-empty");
+    let refusal=result.unwrap_err();assert_eq!(refusal.kind,semio_framework_value::ValueRefusalKind::InvariantViolated);assert_eq!(refusal.message,"flow mutation retirement frontier reported Complete before terminal-empty");
     assert!(!retirement.terminal_is_empty());
     for _ in 0..32 {
         if matches!(retirement.close_step(1, 1).unwrap(), SnapshotRetirementStep::Complete) { break; }

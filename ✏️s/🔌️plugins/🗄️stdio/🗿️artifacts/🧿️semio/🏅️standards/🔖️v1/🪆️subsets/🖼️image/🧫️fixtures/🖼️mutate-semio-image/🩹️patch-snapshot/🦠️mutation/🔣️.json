@@ -1,0 +1,1 @@
+{"mutation":"patchSnapshot","patch":{"operation":"set","path":"/frames/0/delayMs","value":200}}

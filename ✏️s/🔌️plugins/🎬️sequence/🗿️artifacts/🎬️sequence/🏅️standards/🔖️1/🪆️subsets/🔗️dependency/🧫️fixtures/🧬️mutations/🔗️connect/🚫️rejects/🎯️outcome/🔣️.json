@@ -1,8 +1,0 @@
-{
-  "status": "rejected",
-  "code": "mutation.invariant",
-  "invariant": "no-self-loop",
-  "path": [
-    "edge-self"
-  ]
-}

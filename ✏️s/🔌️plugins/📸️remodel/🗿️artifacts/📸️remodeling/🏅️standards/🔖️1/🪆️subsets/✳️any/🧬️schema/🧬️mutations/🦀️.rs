@@ -14,7 +14,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// inseparable `ReconstructionParams` sub-facets and the calibration/rig full-record replace, and
 /// `replace` for the engine-owned result sub-payloads, `append`/`truncate` for durable content leaves and
 /// the atomic `commit-reconstruction` result.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslEnum, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = RemodelingSnapshot, diff = RemodelingDiff, schema = "remodeling.scene")]
 pub enum RemodelingMutation {
@@ -121,8 +121,11 @@ pub fn apply_remodeling_mutation(snapshot: &RemodelingSnapshot, mutation: &Remod
 
 /// ↩️ Computes the inverse mutations from pre-state — kept as a free-function wrapper (matching
 /// `🎬️sequence`'s `inverse_sequence_mutation`).
-pub fn inverse_remodeling_mutation(base: &RemodelingSnapshot, mutation: &RemodelingMutation) -> Vec<RemodelingMutation> {
-    mutation.inverse(base)
+pub fn inverse_remodeling_mutation(base: &RemodelingSnapshot, mutation: &RemodelingMutation) -> Result<Vec<RemodelingMutation>, semio_framework_value::ValueError> {
+    Ok({
+    mutation.inverse(base)?
+
+    })
 }
 //#endregion 🔖️ApplyInverse
 
@@ -138,8 +141,8 @@ mod tests;
 /// reads — into real typed values.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn bridge_decode_pair(snapshot_json: &str, mutation_json: &str) -> Result<(RemodelingSnapshot, RemodelingMutation), String> {
-    let snapshot: RemodelingSnapshot = pack::from_json_str(snapshot_json).map_err(|error| format!("the committed remodeling snapshot JSON does not decode: {error}"))?;
-    let mutation: RemodelingMutation = pack::from_json_str(mutation_json).map_err(|error| format!("the committed remodeling mutation JSON does not decode: {error}"))?;
+    let snapshot: RemodelingSnapshot = semio_framework_pack_json::from_json_str(snapshot_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("the committed remodeling snapshot JSON does not decode: {error}"))?;
+    let mutation: RemodelingMutation = semio_framework_pack_json::from_json_str(mutation_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("the committed remodeling mutation JSON does not decode: {error}"))?;
     Ok((snapshot, mutation))
 }
 
@@ -160,7 +163,7 @@ fn bridge_step(snapshot: &RemodelingSnapshot, mutation: &RemodelingMutation) -> 
 /// that cannot name `protocol::MutationOutcome` can still tell an application from a refusal.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn bridge_render(snapshot: &RemodelingSnapshot, messages: Vec<String>) -> String {
-    pack::json_to_string(&pack::json_object([("snapshot".to_string(), pack::json_from_dsl_value(&dsl::ToValue::to_value(snapshot))), ("messages".to_string(), pack::json_array(messages.into_iter().map(pack::JsonValue::String)))]))
+    semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("snapshot".to_string(), semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(snapshot))), ("messages".to_string(), semio_framework_pack_json::array(messages.into_iter().map(semio_framework_pack_json::Value::String)))]))
 }
 
 /// 🌉️ Applies one committed mutation payload to one committed before-document and answers
@@ -186,7 +189,7 @@ pub fn undo_remodeling_mutation_json(snapshot_json: &str, mutation_json: &str) -
     use protocol::Mutation;
     let (base, mutation) = bridge_decode_pair(snapshot_json, mutation_json)?;
     let (mut current, mut messages) = bridge_step(&base, &mutation)?;
-    for undo in <RemodelingMutation as Mutation<RemodelingSnapshot>>::inverse(&mutation, &base) {
+    for undo in <RemodelingMutation as Mutation<RemodelingSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)? {
         let (next, raised) = bridge_step(&current, &undo)?;
         current = next;
         messages.extend(raised);
@@ -203,10 +206,10 @@ pub fn round_trip_remodeling_dsl(text: &str) -> Result<String, String> {
     let parsed = <RemodelingSnapshot as ArtifactDsl>::parse_dsl(text).map_err(|error| format!("the committed remodeling example does not parse: {error:?}"))?;
     let printed = <RemodelingSnapshot as ArtifactDsl>::print_dsl(&parsed);
     let reparsed = <RemodelingSnapshot as ArtifactDsl>::parse_dsl(&printed).map_err(|error| format!("the reprinted remodeling document does not parse: {error:?}"))?;
-    Ok(pack::json_to_string(&pack::json_object([
-        ("printed".to_string(), pack::JsonValue::String(printed)),
-        ("snapshot".to_string(), pack::json_from_dsl_value(&dsl::ToValue::to_value(&parsed))),
-        ("reparsed".to_string(), pack::json_from_dsl_value(&dsl::ToValue::to_value(&reparsed))),
+    Ok(semio_framework_pack_json::to_string(&semio_framework_pack_json::object([
+        ("printed".to_string(), semio_framework_pack_json::Value::String(printed)),
+        ("snapshot".to_string(), semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&parsed))),
+        ("reparsed".to_string(), semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&reparsed))),
     ])))
 }
 //#endregion 🌉️ExternalCodecBridge

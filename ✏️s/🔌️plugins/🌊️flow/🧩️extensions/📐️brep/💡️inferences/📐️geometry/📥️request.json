@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "s.flow-extension-brep.geometry.request",
+  "title": "GeometryInferenceRequest",
+  "type": "object",
+  "required": [
+    "operatorId",
+    "inputJson"
+  ],
+  "properties": {
+    "operatorId": {
+      "type": "string",
+      "pattern": "^brep\\."
+    },
+    "inputJson": {
+      "type": "string"
+    },
+    "nodeHash": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "budget": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "wallMicros": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "dependencyJson": {
+      "type": "string"
+    },
+    "operatorVersion": {
+      "type": "string"
+    },
+    "cancellationId": {
+      "type": "string"
+    },
+    "inferenceSchema": {
+      "const": "s.flow-extension-brep.geometry"
+    },
+    "resume": {
+      "type": "boolean",
+      "description": "Resume the same parked owner with empty inputJson and dependencyJson; operator, node hash, version and cancellation identity must match."
+    }
+  },
+  "additionalProperties": true,
+  "description": "Canonical initial or replacement operator input and source/wiring/version dependencies. Compact resumes reuse the same parked owner and do not resend source payloads. Output handles are transient instance resources.",
+  "x-semio-reads": [
+    "operatorId",
+    "operatorVersion",
+    "inputJson",
+    "dependencyJson"
+  ]
+}

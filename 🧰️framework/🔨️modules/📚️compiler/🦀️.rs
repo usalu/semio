@@ -60,7 +60,7 @@ pub struct SvgSnippet {
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum CompileError {
-    Syntax(crate::os_dsl::TextError),
+    Syntax(semio_framework_diagnostic::TextError),
 }
 
 impl std::fmt::Display for CompileError {

@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/animate/presentation/mutation/delete-tiles/schema.json",
   "title": "DeleteTiles",
+  "x-semio-inverse-rows": { "perTarget": { "ids": 1 } },
   "type": "object",
   "additionalProperties": false,
   "required": [

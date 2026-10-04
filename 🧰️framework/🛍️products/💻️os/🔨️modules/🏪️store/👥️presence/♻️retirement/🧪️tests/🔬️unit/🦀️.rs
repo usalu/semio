@@ -23,7 +23,7 @@ fn direct_presence_fixture_value_inverse() {
     let op = serde_json::from_value::<ValueMutation>(wire).unwrap();
     let after = op.diff(&before).diff().apply(&before).unwrap();
     assert_eq!(after.0, serde_json::from_value::<i32>(row["after"].clone()).unwrap());
-    assert_eq!(op.inverse(&before)[0].diff(&after).diff().apply(&after).unwrap().0, before.0);
+    assert_eq!(op.inverse(&before).expect("valid retained mutation inverse fixture")[0].diff(&after).diff().apply(&after).unwrap().0, before.0);
     assert_eq!(serde_json::from_value::<ValueMutation>(serde_json::to_value(&op).unwrap()).unwrap(), op);
     for json in ["{\"operation\":\"setValue\"}", "{\"operation\":\"setValue\",\"n\":null}", "{\"operation\":\"setValue\",\"n\":2147483648}", "{\"operation\":\"setValue\",\"n\":0.5}", "{\"operation\":\"setValue\",\"n\":7,\"unknown\":true}"] {
         assert!(serde_json::from_str::<ValueMutation>(json).is_err());
@@ -35,14 +35,14 @@ pub(crate) struct Value(pub(super) i32);
 
 /// 🔀️ Hand-written, not derived: tuple struct, not one of `#[derive(ToValue, FromValue)]`'s
 /// supported shapes.
-impl ::semio_framework_os_kernel::ToValue for Value {
-    fn to_value(&self) -> ::semio_framework_os_kernel::DslValue {
-        ::semio_framework_os_kernel::ToValue::to_value(&self.0)
+impl semio_framework_value::ToValue for Value {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::ToValue::to_value(&self.0)
     }
 }
-impl ::semio_framework_os_kernel::FromValue for Value {
-    fn from_value(value: ::semio_framework_os_kernel::DslValue) -> Result<Self, ::semio_framework_os_kernel::ValueError> {
-        Ok(Self(::semio_framework_os_kernel::FromValue::from_value(value)?))
+impl semio_framework_value::FromValue for Value {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        Ok(Self(semio_framework_value::FromValue::from_value(value)?))
     }
 }
 
@@ -68,7 +68,7 @@ impl SnapshotRetirementFactory<Value> for Factory {
 }
 
 impl ErasedSnapshotRetirement for Retirement {
-    fn close_step(&mut self, items: usize, _bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, items: usize, _bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }

@@ -1,72 +1,19 @@
-//! ♻️ Wires document retirement transfers each exact child materialization before retiring its handle.
+//! ♻️ Wires document retirement: the parent's identity layer, its board child handle and its meta retire as owned values.
 
-use crate::op::WiresMutation;
-use crate::{WiresSnapshot, WiresWorkingScene};
-use std::{mem::ManuallyDrop, sync::Arc};
-use semio_framework_value::retirement::{OwnedValueRetirementFactory, RetireOwned, RetirementCursor, RetirementStep, SharedValueRetirementFactory};
+use crate::{WiresMutation, WiresSnapshot};
+use semio_framework_value::retirement::{OwnedValueRetirementFactory, RetireOwned, RetirementCursor, SharedValueRetirementFactory};
+use std::sync::Arc;
 
-semio_framework_value::artifact_retire_struct!(WiresWorkingScene { nodes, edges });
-semio_framework_value::artifact_retire_struct!(crate::mutations::WiresNodePosition { node_id, x, y });
-
-struct SceneRoot(ManuallyDrop<Option<Arc<WiresWorkingScene>>>);
-impl RetirementCursor for SceneRoot {
-    fn close_step(&mut self, _: usize) -> RetirementStep {
-        self.0.take().and_then(Arc::into_inner).map_or(RetirementStep::Complete, |value| RetirementStep::Child(value.retirement()))
-    }
-    fn terminal_is_empty(&self) -> bool {
-        self.0.is_none()
-    }
-}
-impl Drop for SceneRoot {
-    fn drop(&mut self) {
-        assert!(self.0.is_none(), "Wires scene root retired before terminal-empty");
-    }
-}
-
-struct SnapshotRetirement(ManuallyDrop<Option<WiresSnapshot>>);
-impl RetirementCursor for SnapshotRetirement {
-    fn close_step(&mut self, _: usize) -> RetirementStep {
-        let Some(value) = self.0.as_mut() else {
-            return RetirementStep::Complete;
-        };
-        let scene = match value.content.take_local_owner::<WiresWorkingScene>() {
-            Ok(scene) => scene,
-            Err(_) => return RetirementStep::BudgetExhausted,
-        };
-        let WiresSnapshot { wires_fixture, content, meta } = self.0.take().expect("exact Wires snapshot remains owned");
-        RetirementStep::Child(semio_framework_value::retirement::sequence(vec![wires_fixture.retirement(), content.retirement(), meta.retirement(), Box::new(SceneRoot(ManuallyDrop::new(scene)))]))
-    }
-    fn terminal_is_empty(&self) -> bool {
-        self.0.is_none()
-    }
-}
-impl Drop for SnapshotRetirement {
-    fn drop(&mut self) {
-        assert!(self.0.is_none(), "Wires snapshot retired before terminal-empty");
-    }
-}
 impl RetireOwned for WiresSnapshot {
     fn retirement(self) -> Box<dyn RetirementCursor> {
-        Box::new(SnapshotRetirement(ManuallyDrop::new(Some(self))))
+        let WiresSnapshot { wires_fixture, content, meta } = self;
+        semio_framework_value::retirement::sequence(vec![wires_fixture.retirement(), content.retirement(), meta.retirement()])
     }
 }
 
 impl RetireOwned for WiresMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
-        match self {
-            Self::CreateNode(value) => value.node.retirement(),
-            Self::DeleteNode(value) => value.node_id.retirement(),
-            Self::MoveNode(value) => (value.node_id, value.new_x, value.new_y).retirement(),
-            Self::ResizeNode(value) => semio_framework_value::artifact_retirement_sequence![value.node_id, value.new_radius, value.new_width, value.new_height],
-            Self::ChangeNodeKind(value) => (value.node_id, value.new_node_kind).retirement(),
-            Self::ChangeNodeShape(value) => (value.node_id, value.new_shape).retirement(),
-            Self::EditNodeText(value) => (value.node_id, value.new_text).retirement(),
-            Self::SetNodeRoot(value) => (value.node_id, value.new_root).retirement(),
-            Self::ConnectNodes(value) => (value.edge, value.relationship).retirement(),
-            Self::DisconnectNodes(value) => value.edge_id.retirement(),
-            Self::MoveNodes(value) => (value.node_ids, value.dx, value.dy).retirement(),
-            Self::SetNodePositions(value) => value.positions.retirement(),
-        }
+        match self {}
     }
 }
 

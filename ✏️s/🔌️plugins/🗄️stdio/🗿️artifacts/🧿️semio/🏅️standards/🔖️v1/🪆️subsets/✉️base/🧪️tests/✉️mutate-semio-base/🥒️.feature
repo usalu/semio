@@ -145,6 +145,26 @@ Feature: Route every typed semio ENVELOPE mutation over its JSON carrier, agains
     When set-snapshot is applied through apply_semio_mutation
     Then the envelope equals the committed empty image envelope, carries the image subset and raises no diagnostic
 
+  @id-mutate-patch-snapshot
+  @level-exhaustive
+  @mode-differential
+  Scenario: patch-snapshot edits one value of the committed value-subset envelope through its pointer
+    Given the committed before-envelope shared://🧬️mutations/🩹️patch-snapshot/✏️edits/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation shared://🧬️mutations/🩹️patch-snapshot/✏️edits/🦠️mutation/🔣️.json
+    And the committed after-envelope shared://🧬️mutations/🩹️patch-snapshot/✏️edits/📸️snapshot/➡️after/🔣️.json
+    When patch-snapshot is applied through apply_semio_mutation
+    Then the envelope equals the committed after-envelope, still carries the value subset and raises no diagnostic
+
+  @id-inverse-patch-snapshot
+  @level-exhaustive
+  @mode-property
+  Scenario: Undoing patch-snapshot restores the committed before-envelope
+    Given the committed before-envelope shared://🧬️mutations/🩹️patch-snapshot/✏️edits/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation shared://🧬️mutations/🩹️patch-snapshot/✏️edits/🦠️mutation/🔣️.json
+    When patch-snapshot is applied through apply_semio_mutation
+    And the mutation's own computed inverse is applied through apply_semio_mutation
+    Then the envelope equals the committed before-envelope, still carries the value subset and raises no diagnostic
+
   @id-identity-round-trip
   @level-long
   @mode-round-trip

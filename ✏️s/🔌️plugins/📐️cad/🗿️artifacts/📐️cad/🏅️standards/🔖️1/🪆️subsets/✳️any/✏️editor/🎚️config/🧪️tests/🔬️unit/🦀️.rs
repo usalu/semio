@@ -44,7 +44,7 @@ async fn cad_config_operation_snapshot_round_trips_and_restores_exactly() {
     let operation = CadConfigMutation::Snapshot { config: Box::new(next.clone()) };
     let forward = operation.diff(&base).diff().clone();
     assert_eq!(forward, next);
-    let backwards = operation.inverse(&base);
+    let backwards = operation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(backwards, vec![CadConfigMutation::Snapshot { config: Box::new(base.clone()) }]);
     assert_eq!(serde_json::to_value(&forward.selected_node_ids).expect("selection JSON oracle"), fixture["selectedNodeIds"]);
     let bytes = protocol::OpBinary::encode_op(&operation).expect("config mutation binary");

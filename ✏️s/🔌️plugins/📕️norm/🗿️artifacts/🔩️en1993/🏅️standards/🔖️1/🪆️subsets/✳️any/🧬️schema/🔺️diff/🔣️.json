@@ -6,208 +6,346 @@
   "additionalProperties": false,
   "properties": {
     "artifact": {
-      "type": [
-        "object",
-        "null"
-      ]
+      "anyOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/artifact.json"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
     },
     "annex": {
-      "type": [
-        "string",
-        "null"
-      ]
+      "anyOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/properties/annex"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
     },
     "materials": {
-      "type": [
-        "object",
-        "null"
-      ],
-      "properties": {
-        "values": {
-          "type": "array"
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "values"
+          ],
+          "properties": {
+            "values": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/properties/materials"
+            }
+          }
+        },
+        {
+          "type": "null"
         }
-      },
-      "additionalProperties": true
+      ],
+      "x-semio-state": "artifact"
     },
     "sections": {
-      "type": [
-        "object",
-        "null"
-      ],
-      "properties": {
-        "values": {
-          "type": "array"
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "values"
+          ],
+          "properties": {
+            "values": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/properties/sections"
+            }
+          }
+        },
+        {
+          "type": "null"
         }
-      },
-      "additionalProperties": true
+      ],
+      "x-semio-state": "artifact"
     },
     "members": {
-      "type": [
-        "object",
-        "null"
-      ],
-      "properties": {
-        "values": {
-          "type": "array"
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "values"
+          ],
+          "properties": {
+            "values": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/properties/members"
+            }
+          }
+        },
+        {
+          "type": "null"
         }
-      },
-      "additionalProperties": true
+      ],
+      "x-semio-state": "artifact"
     },
     "loadCases": {
-      "type": [
-        "object",
-        "null"
-      ],
-      "properties": {
-        "values": {
-          "type": "array"
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "values"
+          ],
+          "properties": {
+            "values": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/properties/loadCases"
+            }
+          }
+        },
+        {
+          "type": "null"
         }
-      },
-      "additionalProperties": true
+      ],
+      "x-semio-state": "artifact"
     },
     "memberActions": {
-      "type": [
-        "object",
-        "null"
-      ],
-      "properties": {
-        "values": {
-          "type": "array"
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "values"
+          ],
+          "properties": {
+            "values": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/properties/memberActions"
+            }
+          }
+        },
+        {
+          "type": "null"
         }
-      },
-      "additionalProperties": true
+      ],
+      "x-semio-state": "artifact"
     },
     "joints": {
-      "type": [
-        "object",
-        "null"
-      ],
-      "properties": {
-        "values": {
-          "type": "array"
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "values"
+          ],
+          "properties": {
+            "values": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/properties/joints"
+            }
+          }
+        },
+        {
+          "type": "null"
         }
-      },
-      "additionalProperties": true
+      ],
+      "x-semio-state": "artifact"
     },
     "fatigueDetails": {
-      "type": [
-        "object",
-        "null"
-      ],
-      "properties": {
-        "values": {
-          "type": "array"
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "values"
+          ],
+          "properties": {
+            "values": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/properties/fatigueDetails"
+            }
+          }
+        },
+        {
+          "type": "null"
         }
-      },
-      "additionalProperties": true
+      ],
+      "x-semio-state": "artifact"
     },
     "fireExposures": {
-      "type": [
-        "object",
-        "null"
-      ],
-      "properties": {
-        "values": {
-          "type": "array"
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "values"
+          ],
+          "properties": {
+            "values": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/properties/fireExposures"
+            }
+          }
+        },
+        {
+          "type": "null"
         }
-      },
-      "additionalProperties": true
+      ],
+      "x-semio-state": "artifact"
     },
     "coldFormedMembers": {
-      "type": [
-        "object",
-        "null"
-      ],
-      "properties": {
-        "values": {
-          "type": "array"
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "values"
+          ],
+          "properties": {
+            "values": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/properties/coldFormedMembers"
+            }
+          }
+        },
+        {
+          "type": "null"
         }
-      },
-      "additionalProperties": true
+      ],
+      "x-semio-state": "artifact"
     },
     "platedPanels": {
-      "type": [
-        "object",
-        "null"
-      ],
-      "properties": {
-        "values": {
-          "type": "array"
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "values"
+          ],
+          "properties": {
+            "values": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/properties/platedPanels"
+            }
+          }
+        },
+        {
+          "type": "null"
         }
-      },
-      "additionalProperties": true
+      ],
+      "x-semio-state": "artifact"
     },
     "siloShells": {
-      "type": [
-        "object",
-        "null"
-      ],
-      "properties": {
-        "values": {
-          "type": "array"
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "values"
+          ],
+          "properties": {
+            "values": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/properties/siloShells"
+            }
+          }
+        },
+        {
+          "type": "null"
         }
-      },
-      "additionalProperties": true
+      ],
+      "x-semio-state": "artifact"
     },
     "tensionComponents": {
-      "type": [
-        "object",
-        "null"
-      ],
-      "properties": {
-        "values": {
-          "type": "array"
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "values"
+          ],
+          "properties": {
+            "values": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/properties/tensionComponents"
+            }
+          }
+        },
+        {
+          "type": "null"
         }
-      },
-      "additionalProperties": true
+      ],
+      "x-semio-state": "artifact"
     },
     "bridgeFatigue": {
-      "type": [
-        "object",
-        "null"
-      ],
-      "properties": {
-        "values": {
-          "type": "array"
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "values"
+          ],
+          "properties": {
+            "values": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/properties/bridgeFatigue"
+            }
+          }
+        },
+        {
+          "type": "null"
         }
-      },
-      "additionalProperties": true
+      ],
+      "x-semio-state": "artifact"
     },
     "towerLegs": {
-      "type": [
-        "object",
-        "null"
-      ],
-      "properties": {
-        "values": {
-          "type": "array"
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "values"
+          ],
+          "properties": {
+            "values": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/properties/towerLegs"
+            }
+          }
+        },
+        {
+          "type": "null"
         }
-      },
-      "additionalProperties": true
+      ],
+      "x-semio-state": "artifact"
     },
     "piles": {
-      "type": [
-        "object",
-        "null"
-      ],
-      "properties": {
-        "values": {
-          "type": "array"
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "values"
+          ],
+          "properties": {
+            "values": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/properties/piles"
+            }
+          }
+        },
+        {
+          "type": "null"
         }
-      },
-      "additionalProperties": true
+      ],
+      "x-semio-state": "artifact"
     },
     "craneRunways": {
-      "type": [
-        "object",
-        "null"
-      ],
-      "properties": {
-        "values": {
-          "type": "array"
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "values"
+          ],
+          "properties": {
+            "values": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/properties/craneRunways"
+            }
+          }
+        },
+        {
+          "type": "null"
         }
-      },
-      "additionalProperties": true
+      ],
+      "x-semio-state": "artifact"
     }
   }
 }

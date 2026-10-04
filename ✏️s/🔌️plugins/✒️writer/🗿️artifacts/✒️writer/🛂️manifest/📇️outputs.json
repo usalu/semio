@@ -1,5 +1,6 @@
 {
-  "$schema": "../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json#/$defs/Outputs",
+  "contractId": "semio-s-artifact-writer-writer-graph-catalog",
   "version": 1,
   "inputAreas": [
     "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer"

@@ -1,7 +1,7 @@
 {
   "$schema": "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
-  "_comment": "🎚️ The transient state lane of `s.fem.2d`'s editor (✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient): its mutation vocabulary `Fem2dResultsWindowTransientMutation` over `Fem2dResultsWindowTransient`, measured by the plugin bridge on the surface coordinate, claimed by `../../🧪️tests/🫧️mutate-fem-2d-1-any-editor-edit-results-transient` and backed by one committed vector per declared outcome class.",
+  "_comment": "🎚️ The transient state lane of `s.fem.2d`'s editor (✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient): its mutation vocabulary `FemResultsWindowTransientMutation` over `FemResultsWindowTransient`, measured by the plugin bridge on the surface coordinate, claimed by `../../🧪️tests/🧪️mutate-fem-2d-1-any-editor-edit-results-transient` and backed by one committed vector per declared outcome class.",
   "oracles": [],
   "noOracleDecisions": [
     {
@@ -9,7 +9,7 @@
       "capabilities": [
         "fem-2d-1-any-editor-edit-results-transient-mutate"
       ],
-      "rationale": "`Fem2dResultsWindowTransientMutation` is the transient state lane of `s.fem.2d`'s ✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient surface: it holds the results window's playback clock (phase and direction), or none while playback is stopped. This is this repository's own editor state record, not a published format, so no third party implements it. What is under test is that each kind (`set-playback-clock`) changes exactly its own part of `Fem2dResultsWindowTransient`, that a kind declaring `no-op` leaves a record that already holds its value untouched with a warned `mutation.no-op`, and that every kind's computed inverse, read off the pre-mutation record, restores it exactly. Confidence comes from one committed, handcrafted (before, mutation, after, diff, outcome) vector per kind and declared outcome class under `../🧫️fixtures/`, exercised end to end through the production dispatch bridge, and from the inverse law as a metamorphic property.",
+      "rationale": "`FemResultsWindowTransientMutation` is the transient state lane of `s.fem.2d`'s ✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient surface: it holds the results window's playback clock (phase and direction), or none while playback is stopped. This is this repository's own editor state record, not a published format, so no third party implements it. What is under test is that each kind (`set-playback-clock`) changes exactly its own part of `FemResultsWindowTransient`, that a kind declaring `no-op` leaves a record that already holds its value untouched with a warned `mutation.no-op`, and that every kind's computed inverse, read off the pre-mutation record, restores it exactly. Confidence comes from one committed, handcrafted (before, mutation, after, diff, outcome) vector per kind and declared outcome class under `../🧫️fixtures/`, exercised end to end through the production dispatch bridge, and from the inverse law as a metamorphic property.",
       "substitutes": [
         "specification-vectors",
         "metamorphic-laws"
@@ -34,7 +34,7 @@
             "reason": "Persistent immutable collections; they version values structurally but define no mutation kinds, no-op guards or inverses over this surface's record."
           }
         ],
-        "whyNoneQualifies": "`Fem2dResultsWindowTransient` is a state record defined by this repository with its own typed mutation vocabulary; generic state containers can hold its values but cannot adjudicate what each kind must change, when it is a no-op, or what its inverse is."
+        "whyNoneQualifies": "`FemResultsWindowTransient` is a state record defined by this repository with its own typed mutation vocabulary; generic state containers can hold its values but cannot adjudicate what each kind must change, when it is a no-op, or what its inverse is."
       }
     }
   ],

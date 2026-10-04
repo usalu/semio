@@ -5,7 +5,10 @@ use crate::mutations::Process3dMutation;
 use crate::Process3dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::RenameMachine, base: &Process3dSnapshot) -> Vec<Process3dMutation> {
+pub fn inverse(payload: &super::RenameMachine, base: &Process3dSnapshot) -> Result<Vec<Process3dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     base.workshop.machines.iter().find(|machine| machine.id == payload.id).map(|machine| vec![Process3dMutation::RenameMachine(super::RenameMachine { id: payload.id.clone(), new_label: machine.label.clone() })]).unwrap_or_default()
+
+    })())
 }
 //#endregion 🔖️Inverse

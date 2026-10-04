@@ -2,7 +2,7 @@
 
 use crate::standards::v1::subsets::any::schema::inferences::audit_trail;
 use crate::ProgramSnapshot;
-use dsl::ToValue;
+use semio_framework_value::ToValue;
 use semio_framework_plugin::scene_surface;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -68,8 +68,8 @@ fn rfc3339_utc_epoch_ms(value: &str) -> Option<i64> {
     (((days * 24 + hour) * 60 + minute) * 60 + second).checked_mul(1_000)?.checked_add(fraction_ms)
 }
 
-fn event_feed_entries(program: &ProgramSnapshot) -> dsl::DslValue {
-    dsl::DslValue::Array(
+fn event_feed_entries(program: &ProgramSnapshot) -> semio_framework_value::DslValue {
+    semio_framework_value::DslValue::Array(
         audit_trail(program, None)
             .events
             .into_iter()
@@ -84,7 +84,7 @@ fn event_feed_entries(program: &ProgramSnapshot) -> dsl::DslValue {
                 if !event.details.text.is_empty() {
                     entry.push(("detail".into(), event.details.text.to_value()));
                 }
-                dsl::DslValue::Object(entry)
+                semio_framework_value::DslValue::Object(entry)
             })
             .collect(),
     )
@@ -94,7 +94,7 @@ fn event_feed_entries(program: &ProgramSnapshot) -> dsl::DslValue {
 //#region 🔖️Render
 /// 📰️ Projects the document-wide audit trail as the neutral EventFeed scene used by every renderer.
 pub fn render(program: &ProgramSnapshot, _windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
-    let scene = EventFeedScene { entries_json: dsl::json::to_json_string(&event_feed_entries(program)), follow: Some(true), activate_action: None, domain_id: None };
+    let scene = EventFeedScene { entries_json: semio_framework_pack_json::to_json_string(&event_feed_entries(program)), follow: Some(true), activate_action: None, domain_id: None };
     scene_surface(ARCHITECT_SURFACE_TRACE, semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::EventFeed, &scene)
 }
 //#endregion 🔖️Render

@@ -2,7 +2,7 @@
 
 use super::{DagConfig, DagConfigMutation};
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
@@ -19,9 +19,12 @@ impl protocol::MutationKind<DagConfig, DagConfigMutation> for ChangeCamera {
     fn diff(&self, _base: &DagConfig) -> protocol::MutationOutcome<DagConfig> {
         protocol::MutationOutcome::new(DagConfig { camera_x: self.x, camera_y: self.y, camera_zoom: self.zoom })
     }
-    fn inverse(&self, base: &DagConfig) -> Vec<DagConfigMutation> {
+    fn inverse(&self, base: &DagConfig) -> Result<Vec<DagConfigMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![DagConfigMutation::ChangeCamera(ChangeCamera { x: base.camera_x, y: base.camera_y, zoom: base.camera_zoom })]
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Change Camera", "Kamera ändern")
     }

@@ -26,7 +26,8 @@ impl protocol::MutationKind<JpgSnapshot, JpgMutation> for ReplaceQuantTableMutat
         let Self { table } = self;
         protocol::MutationOutcome::new(contribute(base, table.clone()))
     }
-    fn inverse(&self, base: &JpgSnapshot) -> Vec<JpgMutation> {
+    fn inverse(&self, base: &JpgSnapshot) -> Result<Vec<JpgMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         let Self { table } = self;
         let outcome = <Self as protocol::MutationKind<JpgSnapshot, JpgMutation>>::diff(self, base);
         if <JpgDiff as protocol::DiffAlgebra<JpgSnapshot>>::is_empty(outcome.diff()) {
@@ -36,7 +37,9 @@ impl protocol::MutationKind<JpgSnapshot, JpgMutation> for ReplaceQuantTableMutat
             Some(existing) => vec![JpgMutation::ReplaceQuantTable(ReplaceQuantTableMutation { table: existing.clone() })],
             None => vec![JpgMutation::RemoveQuantTable(crate::schema::mutations::RemoveQuantTableMutation { id: table.id })],
         }
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Replace quant table", "Quantisierungstabelle ersetzen")
     }
@@ -63,7 +66,7 @@ pub fn contribute(base: &JpgSnapshot, table: JpgQuantTable) -> JpgDiff {
 
 #[cfg(test)]
 pub(crate) fn test_case() -> JpgMutation {
-    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/📊️replace-quant/🎯️direct/🦠️mutation/🔣️.json")).expect("committed replace-quant-table payload")
+    semio_framework_pack_json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/📊️replace-quant/🎯️direct/🦠️mutation/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed replace-quant-table payload")
 }
 #[cfg(test)]
 #[path = "🧪️tests/🎯️direct/🦀️.rs"]

@@ -4,7 +4,8 @@ use crate::schema::mutations::NoteMutation;
 use crate::NoteSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &EditBlockText, base: &NoteSnapshot) -> Vec<NoteMutation> {
+pub fn inverse(payload: &EditBlockText, base: &NoteSnapshot) -> Result<Vec<NoteMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match crate::schema::find_block(&base.blocks, &payload.id) {
         Some(crate::NoteBlockNode::Text { content, .. }) => {
             let paragraphs = crate::note_block_text(content);
@@ -12,5 +13,7 @@ pub fn inverse(payload: &EditBlockText, base: &NoteSnapshot) -> Vec<NoteMutation
         }
         _ => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

@@ -108,7 +108,7 @@ impl fmt::Display for ClauseId {
 /// leaf field inside `Names`/`Subject`/`CatalogueProduct` etc., not a top-level content slot; a
 /// composed child handle is for a single large content slot with its own working-scene cache
 /// (`📓️migration-recipe.md` §1/§3), not a value type reused pervasively as a struct field.
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
 pub struct LocalizedText {
     pub locale: String,
@@ -134,7 +134,7 @@ pub enum CheckStatus {
 }
 
 /// 🌐️ Mandatory bilingual copy for norm report text (en + de; no default language).
-#[derive(Clone, Debug, PartialEq, Eq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "compliance-testing"), serde(rename_all = "camelCase"))]
 pub struct LocalizedCopy {
@@ -147,17 +147,17 @@ impl LocalizedCopy {
         Self { en: en.into(), de: de.into() }
     }
 
-    /// 🗣️ Exact locale match against the framework [`protocol::Locale`] axis.
-    pub fn resolve(&self, locale: &protocol::Locale) -> &str {
+    /// 🗣️ Exact locale match against the framework [`semio_framework_ui_locale::Locale`] axis.
+    pub fn resolve(&self, locale: &semio_framework_ui_locale::Locale) -> &str {
         match locale {
-            protocol::Locale::En => &self.en,
-            protocol::Locale::De => &self.de,
+            semio_framework_ui_locale::Locale::En => &self.en,
+            semio_framework_ui_locale::Locale::De => &self.de,
         }
     }
 }
 
 /// 🎯 Stable pointer to the subject entity a check concerns.
-#[derive(Clone, Debug, PartialEq, Eq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "compliance-testing"), serde(rename_all = "camelCase"))]
 pub struct SubjectRef {
@@ -177,7 +177,7 @@ impl SubjectRef {
 }
 
 /// 📐️ How a remedy's required value relates to the subject field.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
 pub enum RemedyBound {
     AtLeast,
@@ -511,7 +511,7 @@ impl CheckReport {
 
 // #region 🔖️Annex
 /// 🇪️🇺️ National annex selection for Eurocode / DIN EN families.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
 pub enum AnnexChoice {
     #[dsl(key = "en")]
@@ -607,7 +607,7 @@ pub fn table_lookup_bilinear(x: f64, y: f64, x_vals: &[f64], y_vals: &[f64], z: 
 
 // #region 🔖️DesignSituation
 /// 🏗️ Design situation per EN 1990 Table A1.1.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
 pub enum DesignSituation {
     #[dsl(key = "persistent")]
@@ -640,7 +640,7 @@ impl ConsequenceClass {
 }
 
 /// 📊️ Variable action category per EN 1991-1-1 Table 6.1.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
 pub enum ImposedCategory {
     #[dsl(key = "a")]
@@ -713,7 +713,7 @@ pub enum LoadDuration {
 }
 
 /// 🌡️ Reference climate zone for thermal norms (Germany).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
 pub enum ClimateZoneDe {
     #[dsl(key = "zone1")]
@@ -756,7 +756,7 @@ impl ClimateZoneDe {
 }
 
 /// 🏠️ Occupancy type for indoor environment norms.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
 pub enum OccupancyType {
     #[dsl(key = "residential")]
@@ -844,7 +844,7 @@ impl NormFamilyId {
 
 /// 🧩️ Headless norm family contract: typed document, undoable operations, and compliance evaluation.
 pub trait NormFamily: Send + Sync + 'static {
-    type Document: Clone + Default + PartialEq + dsl::ToValue + dsl::FromValue + Send;
+    type Document: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send;
     type Mutation: Mutation<Self::Document> + Clone + PartialEq + Send;
 
     fn family_id() -> NormFamilyId;
@@ -852,10 +852,10 @@ pub trait NormFamily: Send + Sync + 'static {
 }
 
 /// 🧾 Snapshot revision fingerprint used as the paint-path report cache key.
-pub fn document_revision_key<D: dsl::ToValue>(document: &D) -> u64 {
+pub fn document_revision_key<D: semio_framework_value::ToValue>(document: &D) -> u64 {
     use std::collections::hash_map::DefaultHasher;
     use std::hash::{Hash, Hasher};
-    let json = pack::json::to_json_string(&dsl::ToValue::to_value(document));
+    let json = semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(document));
     let mut hasher = DefaultHasher::new();
     json.hash(&mut hasher);
     hasher.finish()
@@ -895,7 +895,7 @@ pub fn invalidate_cached_report_for<F: NormFamily>(document: &F::Document) {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "compliance-testing"), serde(bound(serialize = "F::Document: serde::Serialize", deserialize = "F::Document: serde::de::DeserializeOwned")))]
-#[value(bound = "F::Document: dsl::ToValue, F::Document: dsl::FromValue")]
+#[value(bound = "F::Document: semio_framework_value::ToValue, F::Document: semio_framework_value::FromValue")]
 pub struct NormHost<F: NormFamily> {
     pub document: F::Document,
     pub report: CheckReport,
@@ -1009,9 +1009,9 @@ pub trait NormArtifactRecord: Sized {
     const EXTENSION: &'static str;
     /// 🆔️ Semio envelope id (`"norm.<family>"`) both the text and pack wire wrap themselves in.
     const ENVELOPE_ID: &'static str;
-    fn dsl_spec() -> dsl::RecordSpec;
-    fn dsl_to_record(&self) -> dsl::RecordValue;
-    fn dsl_from_record(record: &dsl::RecordValue) -> Result<Self, TextError>;
+    fn dsl_spec() -> semio_framework_dsl_record::RecordSpec;
+    fn dsl_to_record(&self) -> semio_framework_dsl_record::RecordValue;
+    fn dsl_from_record(record: &semio_framework_dsl_record::RecordValue) -> Result<Self, TextError>;
 }
 
 /// 📖️ Shared `ArtifactDsl::parse_dsl` body: strip the optional semio-format text preamble, parse the
@@ -1021,13 +1021,13 @@ pub fn norm_parse_dsl<T: NormArtifactRecord>(text: &str) -> Result<T, TextError>
         Ok((_, rest)) => rest,
         Err(_) => text,
     };
-    let record = dsl::parse(body, &T::dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+    let record = semio_framework_dsl_record::parse(body, &T::dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
     T::dsl_from_record(&record)
 }
 
 /// 🖨️ Shared `ArtifactDsl::print_dsl` body: print `T`'s record, then wrap it in its semio envelope.
 pub fn norm_print_dsl<T: NormArtifactRecord>(value: &T) -> String {
-    let body = dsl::print(&value.dsl_to_record(), &T::dsl_spec(), dsl::JoinMode::Document);
+    let body = semio_framework_dsl_record::print(&value.dsl_to_record(), &T::dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
     let envelope = store::semio_format::SemioEnvelope::from_envelope_id(T::ENVELOPE_ID, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
     store::semio_format::wrap_text(&envelope, &body)
 }
@@ -1035,16 +1035,16 @@ pub fn norm_print_dsl<T: NormArtifactRecord>(value: &T) -> String {
 /// 📦️ Shared `ArtifactPack::encode_pack_with` body: pack-encode `T`'s record, then envelope-wrap it.
 pub fn norm_encode_pack<T: NormArtifactRecord>(value: &T, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
     let inner = store::pack_rt::encode_document(&T::dsl_spec(), &value.dsl_to_record(), options)?;
-    let envelope = store::semio_format::SemioEnvelope::from_envelope_id(T::ENVELOPE_ID, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+    let envelope = store::semio_format::SemioEnvelope::from_envelope_id(T::ENVELOPE_ID, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
     Ok(store::semio_format::wrap_binary(&envelope, &inner))
 }
 
 /// 📦️ Shared `ArtifactPack::decode_pack_with` body: unwrap the envelope (checking it matches `T`'s
 /// own), pack-decode the inner record, then lower it back into `T`.
 pub fn norm_decode_pack<T: NormArtifactRecord>(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<T, store::PackError> {
-    let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+    let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
     if !envelope.matches_identity(T::ENVELOPE_ID, store::semio_format::Component::Pack, 1) {
-        return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", T::ENVELOPE_ID, envelope.binary_token())));
+        return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", T::ENVELOPE_ID, envelope.binary_token()))));
     }
     let (record, _report) = store::pack_rt::decode_document(&inner, &T::dsl_spec(), options)?;
     T::dsl_from_record(&record).map_err(store::text_error_to_pack_error)
@@ -1058,13 +1058,13 @@ macro_rules! impl_norm_artifact_record {
         impl $crate::document::NormArtifactRecord for $Snapshot {
             const EXTENSION: &'static str = $extension;
             const ENVELOPE_ID: &'static str = $envelope_id;
-            fn dsl_spec() -> dsl::RecordSpec {
+            fn dsl_spec() -> semio_framework_dsl_record::RecordSpec {
                 Self::__dsl_spec()
             }
-            fn dsl_to_record(&self) -> dsl::RecordValue {
+            fn dsl_to_record(&self) -> semio_framework_dsl_record::RecordValue {
                 self.__dsl_to_record()
             }
-            fn dsl_from_record(record: &dsl::RecordValue) -> Result<Self, store::TextError> {
+            fn dsl_from_record(record: &semio_framework_dsl_record::RecordValue) -> Result<Self, store::TextError> {
                 Self::__dsl_from_record(record)
             }
         }
@@ -1087,7 +1087,7 @@ macro_rules! impl_norm_artifact_record {
             fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
                 $crate::document::norm_decode_pack(bytes, options)
             }
-            fn record_spec() -> Option<dsl::RecordSpec> {
+            fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
                 Some(<Self as $crate::document::NormArtifactRecord>::dsl_spec())
             }
             fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {

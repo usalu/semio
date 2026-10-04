@@ -267,6 +267,7 @@ if (!(transformed_length_squared > 0.000000000001 && transformed_length_squared 
 out.normal = normalize(transformed_normal);
 let vertex_weight = f32(u32(instance.flags.x) & 1u);
 out.color = vec4<f32>(instance.color.rgb * mix(vec3<f32>(1.0), vertex.color.rgb, vertex_weight), instance.color.a * mix(1.0, vertex.color.a, vertex_weight));
+if ((u32(instance.flags.x) & 8u) != 0u) {out.color.a = 1.0;}
 out.flags = instance.flags;
 out.world_position = world_pos.xyz;
 out.emissive_cutoff = instance.emissive_cutoff;
@@ -549,6 +550,57 @@ pub const WORLD3D_PAINTED_SHADER_EDITS: [(&str, &str); 6] = [
         "let color = world3d_lighting(n, v, lit_color, metalness, roughness, shadow_visibility) + emissive;\nreturn vec4<f32>(world3d_attachment_output(color), sampled.a * in.color.a);",
     ),
 ];
+
+/// 🎨️ Samples the five owned authored surface roles through the canonical lighting shader.
+pub fn world3d_authored_shader() -> String {
+    let mut shader = world3d_painted_shader();
+    shader = shader.replace("@group(2) @binding(1) var paint_sampler: sampler;", "@group(2) @binding(1) var paint_sampler: sampler;\n@group(2) @binding(2) var metallic_roughness_map: texture_2d<f32>;\n@group(2) @binding(3) var metallic_roughness_sampler: sampler;\n@group(2) @binding(4) var normal_map: texture_2d<f32>;\n@group(2) @binding(5) var normal_sampler: sampler;\n@group(2) @binding(6) var occlusion_map: texture_2d<f32>;\n@group(2) @binding(7) var occlusion_sampler: sampler;\n@group(2) @binding(8) var emissive_map: texture_2d<f32>;\n@group(2) @binding(9) var emissive_sampler: sampler;");
+    shader = shader.replace("if (in.emissive_cutoff.w >= 0.0 && in.color.a < in.emissive_cutoff.w) {\n    discard;\n}", "");
+    shader = shader.replace("let n = normalize(in.normal);", r#"var n = normalize(in.normal) * select(-1.0, 1.0, front_facing);
+    let q0 = dpdx(in.world_position);
+    let q1 = -dpdy(in.world_position);
+    let st0 = dpdx(in.uv);
+    let st1 = -dpdy(in.uv);
+    let q1perp = cross(q1, n);
+    let q0perp = cross(n, q0);
+    let tangent = q1perp * st0.x + q0perp * st1.x;
+    let bitangent = q1perp * st0.y + q0perp * st1.y;
+    let determinant = max(dot(tangent, tangent), dot(bitangent, bitangent));
+    let scale = select(0.0, inverseSqrt(max(determinant, 0.00000001)), determinant > 0.0);
+    if ((u32(in.flags.x) & 16u) != 0u) { n = normalize(mat3x3<f32>(tangent * scale * select(select(-1.0,1.0,front_facing),1.0,abs(in.tangent.w)>0.5), bitangent * scale * select(select(-1.0,1.0,front_facing),1.0,abs(in.tangent.w)>0.5), n) * sampled_normal); }"#);
+    shader = shader.replace("let metalness = clamp(in.flags.z, 0.0, 1.0);", "let metallic_roughness = textureSample(metallic_roughness_map, metallic_roughness_sampler, in.uv);\nlet metalness = clamp(in.flags.z * metallic_roughness.b, 0.0, 1.0);");
+    shader = shader.replace("max(in.flags.w, 0.0525)", "max(in.flags.w * metallic_roughness.g, 0.0525)");
+    shader = shader.replace("sampled.a * in.color.a", "select(sampled.a * in.color.a, 1.0, (u32(in.flags.x) & 8u) != 0u)");
+    shader = shader.replace("+ in.emissive_cutoff.rgb;", "+ in.emissive_cutoff.rgb * textureSample(emissive_map, emissive_sampler, in.uv).rgb;");
+    shader = shader.replace("shadow_visibility: f32) -> vec3<f32>", "shadow_visibility: f32, occlusion: f32) -> vec3<f32>");
+    shader = shader.replace("return indirect * base_color", "return indirect * occlusion * base_color");
+    shader = shader.replace("roughness, shadow_visibility) + emissive", "roughness, shadow_visibility, textureSample(occlusion_map, occlusion_sampler, in.uv).r) + emissive");
+    for (expression, name) in [
+        ("textureSample(normal_map, normal_sampler, in.uv).xyz * 2.0 - vec3<f32>(1.0)", "sampled_normal"),
+        ("textureSample(metallic_roughness_map, metallic_roughness_sampler, in.uv)", "sampled_metallic_roughness"),
+        ("textureSample(paint_map, paint_sampler, in.uv)", "sampled_base"),
+        ("textureSample(emissive_map, emissive_sampler, in.uv).rgb", "sampled_emissive"),
+        ("textureSample(occlusion_map, occlusion_sampler, in.uv).r", "sampled_occlusion"),
+        ("max(abs(dpdx(in.normal)), abs(dpdy(in.normal)))", "authored_normal_derivative"),
+    ] {
+        shader = shader.replace(expression, name);
+        shader = shader.replace("fn fs_main(in: VertexOutput, @builtin(front_facing) front_facing: bool) -> @location(0) vec4<f32> {", &format!("fn fs_main(in: VertexOutput, @builtin(front_facing) front_facing: bool) -> @location(0) vec4<f32> {{\nlet {name} = {expression};"));
+    }
+    shader = shader.replace("let sampled_normal = sampled_normal;", "");
+    shader = shader.replace("var face_normal = normalize(cross(dpdx(in.world_position), dpdy(in.world_position)));", "var face_normal = normalize(cross(q0, q1));");
+    shader = shader.replace("@location(9) uv: vec2<f32>,", "@location(9) uv_base_metallic:vec4<f32>,\n@location(11) uv_normal_occlusion:vec4<f32>,\n@location(12) uv_emissive:vec2<f32>,\n@location(13) tangent:vec4<f32>,");
+    shader = shader.replace("@location(10) emissive_cutoff: vec4<f32>,", "@location(10) emissive_cutoff: vec4<f32>,\n@location(15) surface_parameters:vec4<f32>,");
+    shader = shader.replace("@location(5) uv: vec2<f32>,", "@location(5) uv: vec2<f32>,\n@location(6) surface_parameters:vec4<f32>,\n@location(7) uv_metallic_roughness:vec2<f32>,\n@location(8) uv_normal:vec2<f32>,\n@location(9) uv_occlusion:vec2<f32>,\n@location(10) uv_emissive:vec2<f32>,\n@location(11) tangent:vec4<f32>,");
+    shader = shader.replace("out.uv = vertex.uv;", "out.uv = vertex.uv_base_metallic.xy;\nout.uv_metallic_roughness=vertex.uv_base_metallic.zw;\nout.uv_normal=vertex.uv_normal_occlusion.xy;\nout.uv_occlusion=vertex.uv_normal_occlusion.zw;\nout.uv_emissive=vertex.uv_emissive;\nout.surface_parameters=instance.surface_parameters;");
+    for (role,coordinate) in [("metallic_roughness","uv_metallic_roughness"),("normal","uv_normal"),("occlusion","uv_occlusion"),("emissive","uv_emissive")] {shader=shader.replace(&format!("{role}_sampler, in.uv)"),&format!("{role}_sampler, in.{coordinate})"));}
+    shader=shader.replace("out.world_position = world_pos.xyz;","out.world_position = world_pos.xyz;\nlet authored_tangent=(model * vec4<f32>(vertex.tangent.xyz,0.0)).xyz;\nlet tangent_length=max(length(authored_tangent),0.00000001);\nout.tangent=vec4<f32>(authored_tangent/tangent_length,vertex.tangent.w);");
+    shader=shader.replace("let tangent = q1perp", "var tangent = q1perp").replace("let bitangent = q1perp", "var bitangent = q1perp");
+    shader=shader.replace("let determinant = max(dot(tangent, tangent)","if (abs(in.tangent.w)>0.5) { tangent=normalize(in.tangent.xyz) * select(-1.0,1.0,front_facing); bitangent=normalize(cross(normalize(in.normal),normalize(in.tangent.xyz))) * in.tangent.w * select(-1.0,1.0,front_facing); }\n    let determinant = max(dot(tangent, tangent)");
+    shader=shader.replace("dpdx(in.uv)","dpdx(in.uv_normal)").replace("dpdy(in.uv)","dpdy(in.uv_normal)");
+    shader=shader.replace("* sampled_normal);", "* vec3<f32>(sampled_normal.xy * in.surface_parameters.xy, sampled_normal.z));");
+    shader=shader.replace("roughness, shadow_visibility, sampled_occlusion)","roughness, shadow_visibility, mix(1.0,sampled_occlusion,in.surface_parameters.z))");
+    shader
+}
 
 pub const WORLD3D_CELEBRATION_SHADER: &str = r#"
 struct Globals {
@@ -1053,3 +1105,11 @@ return vec4<f32>(rgb, fill_alpha);
 }
 "#;
 // #endregion shaders
+
+/// 🖼️ Generates one filtered authored raster mip through the existing upload owner.
+pub const RASTER_MIP_SHADER:&str=r#"
+@group(0) @binding(0) var source:texture_2d<f32>;
+@group(0) @binding(1) var source_sampler:sampler;
+@vertex fn vs_main(@builtin(vertex_index) index:u32)->@builtin(position) vec4<f32>{let positions=array<vec2<f32>,3>(vec2<f32>(-1.0,-1.0),vec2<f32>(3.0,-1.0),vec2<f32>(-1.0,3.0));return vec4<f32>(positions[index],0.0,1.0);}
+@fragment fn fs_main(@builtin(position) position:vec4<f32>)->@location(0) vec4<f32>{let target_size=max(textureDimensions(source)/vec2<u32>(2u),vec2<u32>(1u));return textureSampleLevel(source,source_sampler,position.xy/vec2<f32>(target_size),0.0);}
+"#;

@@ -22,8 +22,8 @@ async fn empty_plugin_has_schema() {
 #[semio_framework_async_macros::async_test]
 async fn sample_plugin_round_trips_json() {
     let program = sample_plugin();
-    let json = dsl::json::to_json_string(&program);
-    let decoded: ProgramSnapshot = dsl::json::from_json_str(&json).expect("deserialize");
+    let json = semio_framework_pack_json::to_json_string(&program);
+    let decoded: ProgramSnapshot = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("deserialize");
     let oracle: serde_json::Value = serde_json::from_str(&json).expect("third-party JSON oracle");
     assert_eq!(oracle["elements"].as_array().expect("elements").len(), decoded.elements.len());
     assert_eq!(oracle["adjacencies"].as_array().expect("adjacencies").len(), decoded.adjacencies.len());
@@ -38,23 +38,23 @@ fn program_document_contract_json_text_pack_and_projection() {
     assert!(oracle.get("documents").is_none(), "obsolete documents alias must be rejected from the final fixture");
     assert!(oracle.get("artifacts").is_some(), "native artifacts register must be present");
 
-    let snapshot: ProgramSnapshot = dsl::json::from_json_str(source).expect("native Program JSON decoder");
-    let canonical: serde_json::Value = serde_json::from_str(&dsl::json::to_json_string(&snapshot)).expect("native Program canonical JSON");
+    let snapshot: ProgramSnapshot = semio_framework_pack_json::from_json_str(source, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("native Program JSON decoder");
+    let canonical: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&snapshot)).expect("native Program canonical JSON");
     assert_eq!(canonical, oracle, "native JSON codec must preserve the fixture contract");
 
     let mut foreign_parent = oracle.clone();
     foreign_parent.as_object_mut().expect("Program fixture object").insert("foreign".into(), serde_json::Value::Bool(true));
     let foreign_parent_json = serde_json::to_string(&foreign_parent).expect("foreign parent JSON");
-    assert!(dsl::json::from_json_str::<ProgramSnapshot>(&foreign_parent_json).is_err(), "native Program snapshot decoder must reject a foreign parent field");
-    assert!(dsl::json::from_json_str::<crate::schema::ProgramArtifact>(&foreign_parent_json).is_err(), "native Program artifact decoder must reject a foreign parent field");
+    assert!(semio_framework_pack_json::from_json_str::<ProgramSnapshot>(&foreign_parent_json, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "native Program snapshot decoder must reject a foreign parent field");
+    assert!(semio_framework_pack_json::from_json_str::<crate::schema::ProgramArtifact>(&foreign_parent_json, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "native Program artifact decoder must reject a foreign parent field");
 
-    let mut foreign_row: serde_json::Value = serde_json::from_str(&dsl::json::to_json_string(&sample_plugin())).expect("sample Program JSON");
+    let mut foreign_row: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&sample_plugin())).expect("sample Program JSON");
     foreign_row["stakeholders"].as_array_mut().expect("stakeholder register")[0]
         .as_object_mut()
         .expect("stakeholder row")
         .insert("foreign".into(), serde_json::Value::Bool(true));
     let foreign_row_json = serde_json::to_string(&foreign_row).expect("foreign nested row JSON");
-    assert!(dsl::json::from_json_str::<ProgramSnapshot>(&foreign_row_json).is_err(), "native Program snapshot decoder must reject a foreign nested row field");
+    assert!(semio_framework_pack_json::from_json_str::<ProgramSnapshot>(&foreign_row_json, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "native Program snapshot decoder must reject a foreign nested row field");
     for child in [&snapshot.knowledge, &snapshot.benchmarks] {
         assert_eq!(child.child_id, child.target.artifact_id, "child target must address its minted child identity");
         assert_eq!(child.target.dialect.artifact_kind, "s.stdio.semio");
@@ -72,10 +72,10 @@ fn program_document_contract_json_text_pack_and_projection() {
 async fn composed_register_rows_belong_to_each_exact_child() {
     let benchmarks = benchmarks_child_from_records(&[]);
     let knowledge = knowledge_child_from_records(&[]);
-    let benchmark_wire = dsl::json::to_json_string(&benchmarks);
-    let knowledge_wire = dsl::json::to_json_string(&knowledge);
-    let reconstructed_benchmarks: ProgramBenchmarksChild = dsl::json::from_json_str(&benchmark_wire).expect("Architect benchmark child wire roundtrip");
-    let reconstructed_knowledge: ProgramKnowledgeChild = dsl::json::from_json_str(&knowledge_wire).expect("Architect knowledge child wire roundtrip");
+    let benchmark_wire = semio_framework_pack_json::to_json_string(&benchmarks);
+    let knowledge_wire = semio_framework_pack_json::to_json_string(&knowledge);
+    let reconstructed_benchmarks: ProgramBenchmarksChild = semio_framework_pack_json::from_json_str(&benchmark_wire, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("Architect benchmark child wire roundtrip");
+    let reconstructed_knowledge: ProgramKnowledgeChild = semio_framework_pack_json::from_json_str(&knowledge_wire, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("Architect knowledge child wire roundtrip");
     let observed = serde_json::json!({
         "benchmarksOwned": benchmarks.local_owner::<ProgramBenchmarksWorkingTable>().is_some(),
         "knowledgeOwned": knowledge.local_owner::<ProgramKnowledgeWorkingTable>().is_some(),

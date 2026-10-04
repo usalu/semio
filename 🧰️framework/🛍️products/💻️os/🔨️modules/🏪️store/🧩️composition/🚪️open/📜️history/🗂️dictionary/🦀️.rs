@@ -8,8 +8,8 @@ mod index;
 #[path = "🧾️record/🦀️.rs"]
 mod record;
 
-use super::{diagnostic, ErasedSnapshotRetirement, MemberOpenDiagnostic, MemberOpenPhase, MemberOpenProgress, MemberOpenRequest, SnapshotRetirementStep, VerifiedMemberHistoryInput};
-use crate::os_spr::format::retained::{record::RetainedSprRecordObservation, RetainedSprLimits, RetainedSprVerification};
+use super::{ErasedSnapshotRetirement, MemberOpenDiagnostic, MemberOpenPhase, MemberOpenProgress, MemberOpenRequest, SnapshotRetirementStep, VerifiedMemberHistoryInput, diagnostic};
+use crate::os_spr::format::retained::{RetainedSprLimits, RetainedSprVerification, record::RetainedSprRecordObservation};
 use crate::os_spr::history::identity::id::{HistoryIdDiagnostic, RetainedHistoryIdV1};
 use identity::SemanticRecord;
 use index::{DictionaryIndexClose, DictionaryIndexError, DictionaryRange, RetainedDictionaryIndex};
@@ -59,7 +59,7 @@ impl DictionaryOwners {
     fn terminal_is_empty(&self) -> bool {
         self.input.is_none() && self.index.is_none()
     }
-    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if self.terminal_is_empty() {
             return Ok(SnapshotRetirementStep::Complete);
         }
@@ -72,18 +72,20 @@ impl DictionaryOwners {
                     self.index.take();
                     SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }
                 }
-                DictionaryIndexClose::Complete => return Err("dictionary index returned false terminal".into()),
+                DictionaryIndexClose::Complete => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "dictionary index returned false terminal")),
                 DictionaryIndexClose::Pending { released_items, released_bytes } => SnapshotRetirementStep::Pending { released_items, released_bytes },
             });
         }
-        let input = self.input.as_mut().ok_or("dictionary input owner is absent")?;
+        let input = self.input.as_mut().ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "dictionary input owner is absent"))?;
         match input.close_step(items, bytes)? {
             SnapshotRetirementStep::Complete if input.terminal_is_empty() => {
                 self.input.take();
                 Ok(SnapshotRetirementStep::Complete)
             }
-            SnapshotRetirementStep::Complete => Err("dictionary input returned false terminal".into()),
-            SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > items || released_bytes > bytes => Err("dictionary input exceeded retirement grant".into()),
+            SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "dictionary input returned false terminal")),
+            SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > items || released_bytes > bytes => {
+                Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "dictionary input exceeded retirement grant"))
+            }
             step => Ok(step),
         }
     }
@@ -438,7 +440,7 @@ impl MemberHistoryDictionaryOwner {
 }
 
 impl ErasedSnapshotRetirement for MemberHistoryDictionaryOwner {
-    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if self.terminal_is_empty() {
             return Ok(SnapshotRetirementStep::Complete);
         }
@@ -533,11 +535,7 @@ impl VerifiedMemberHistoryDictionary {
 
     pub(super) fn copy_verified_history_chunk(&mut self, offset: usize, output: &mut [u8], cx: &mut StepContext<'_>) -> Result<usize, MemberOpenDiagnostic> {
         self.check_step_authority(cx)?;
-        self.owners
-            .as_mut()
-            .and_then(|owners| owners.input.as_mut())
-            .ok_or(MemberOpenDiagnostic::Stale)?
-            .copy_verified_history_chunk(offset, output, cx)
+        self.owners.as_mut().and_then(|owners| owners.input.as_mut()).ok_or(MemberOpenDiagnostic::Stale)?.copy_verified_history_chunk(offset, output, cx)
     }
 
     pub(super) fn clone_initial_identity(&mut self, cx: &StepContext<'_>) -> Result<(crate::os_io::ArtifactRef, Option<crate::os_store::OwnerRef>, &'static str), MemberOpenDiagnostic> {
@@ -548,7 +546,7 @@ impl VerifiedMemberHistoryDictionary {
 }
 
 impl ErasedSnapshotRetirement for VerifiedMemberHistoryDictionary {
-    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         self.closing = true;
         let Some(owners) = self.owners.as_mut() else {
             return Ok(SnapshotRetirementStep::Complete);

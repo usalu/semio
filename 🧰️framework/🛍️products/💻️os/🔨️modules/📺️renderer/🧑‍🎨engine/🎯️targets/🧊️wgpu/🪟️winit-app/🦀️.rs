@@ -1034,6 +1034,8 @@ mod native {
         /// so the only thing owed here is a redraw — the twin of React's ONE shared
         /// `matchMedia("(prefers-color-scheme: dark)")` `change` listener
         /// (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx`'s `ensureElementsSurfaceChromeSystemListeners`).
+        /// 🫥️ The window lost focus: every open text-editor typing run ends as ONE edit (`blur`, design §13.2 of ticket
+        /// 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING); the open run's pending outbox keeps the frame loop driving its commit.
         /// 🚫️async: U1 — sync per winit's own `ApplicationHandler` trait.
         fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
             let Some(window) = self.window.clone() else { return };
@@ -1081,6 +1083,10 @@ mod native {
                             window.request_redraw();
                         }
                     }
+                }
+                WindowEvent::Focused(false) => {
+                    crate::shell::note_host_window_blur();
+                    window.request_redraw();
                 }
                 WindowEvent::RedrawRequested => {
                     if let Some(reason) = self.pending_reason.take() {

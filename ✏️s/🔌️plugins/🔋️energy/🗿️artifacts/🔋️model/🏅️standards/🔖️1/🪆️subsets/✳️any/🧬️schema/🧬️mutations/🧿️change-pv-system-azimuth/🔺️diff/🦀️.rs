@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangePvSystemAzimuth, base: &EnergyModelSnapshot) 
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("PV system {}: azimuth must be a compass bearing in [0, 360] degrees, got {}.", payload.id.0, payload.new_azimuth_deg), [payload.id.0.to_string()]);
     }
     if existing.azimuth_deg == payload.new_azimuth_deg {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("PV system {} already carries this azimuth_deg: {}.", payload.id.0, payload.new_azimuth_deg));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("PV system {} already carries this azimuth_deg: {}.", payload.id.0, payload.new_azimuth_deg));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.pv_systems.iter_mut().find(|item| item.id == payload.id) {

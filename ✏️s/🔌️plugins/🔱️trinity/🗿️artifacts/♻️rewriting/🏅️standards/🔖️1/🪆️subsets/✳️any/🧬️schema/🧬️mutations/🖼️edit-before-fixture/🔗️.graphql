@@ -1,2 +1,2 @@
-# 🖼️ Direct edit-before-fixture / EditBeforeFixture payload.
-input EditBeforeFixtureInput { newBeforeFixtureJson: String! }
+# 🧬️ EditBeforeFixtureInput owns its declared typed payload.
+input EditBeforeFixtureInput { newWorkingGraph: JackSnapshotInput! }

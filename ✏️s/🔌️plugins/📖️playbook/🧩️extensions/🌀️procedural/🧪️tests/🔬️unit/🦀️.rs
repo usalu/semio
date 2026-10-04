@@ -1,5 +1,6 @@
 use super::*;
 use semio_framework_plugin::{ActionMeta, PluginApp, VcsArtifactApp};
+use semio_framework_ui_locale::{AppLabels, Locale, Terminology};
 
 #[semio_framework_async_macros::async_test]
 async fn embedded_parameters_use_the_parent_input_and_exact_window_without_mutating_the_document() {
@@ -28,7 +29,7 @@ async fn embedded_parameters_use_the_parent_input_and_exact_window_without_mutat
 fn procedural_payload_vectors_match_the_json_oracle() {
     use protocol::{Mutation, MutationDiff, OpBinary, OpText};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔁️payload-mutations.json")).expect("independent JSON parser");
-    let base: ModuleRenderPayload = pack::json::from_json_str(&fixture["base"].to_string()).expect("owned base");
+    let base: ModuleRenderPayload = semio_framework_pack_json::from_json_str(&fixture["base"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("owned base");
     assert_eq!(ModulePayloadMutation::DESCRIPTORS.len(), 1);
     const WITNESSES: [(&str, &str); 2] = [
         ("🎚️sets-params", include_str!("../../🧫️fixtures/🧬️mutations/📦️set-payload/🎚️sets-params/🦠️mutation/🔣️.json")),
@@ -41,7 +42,7 @@ fn procedural_payload_vectors_match_the_json_oracle() {
         assert_eq!(serde_json::from_str::<serde_json::Value>(&to_json_string(&post)).expect("independent state oracle"), row["expected"]);
         assert_eq!(ModulePayloadMutation::parse_op(&mutation.print_op()).expect("operation text"), mutation);
         assert_eq!(ModulePayloadMutation::decode_op(&mutation.encode_op().expect("operation binary")).expect("decode binary"), mutation);
-        let restored = mutation.inverse(&base).iter().fold(post, |current, inverse| inverse.diff(&current).diff().apply(&current).expect("inverse"));
+        let restored = mutation.inverse(&base).expect("valid retained mutation inverse fixture").iter().fold(post, |current, inverse| inverse.diff(&current).diff().apply(&current).expect("inverse"));
         assert_eq!(restored, base);
     }
 }
@@ -50,9 +51,9 @@ fn procedural_payload_vectors_match_the_json_oracle() {
 async fn procedural_actor_descriptor_matches_the_json_oracle() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🛂️actor.json")).expect("independent actor fixture");
     __semio_install_plugin_bundle();
-    let manifest = __SEMIO_PLUGIN_RUNTIME.with(|runtime| resolve_ready(semio_framework_plugin::plugin_runtime::plugin_manifest(runtime)));
+    let manifest = __SEMIO_PLUGIN_RUNTIME.with(|runtime| ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::plugin_runtime::plugin_manifest(runtime)));
     assert_eq!(manifest.plugin_id, MODULE_PLUGIN_ID, "bundle assembly: {}", manifest.label);
-    let bytes = __SEMIO_PLUGIN_RUNTIME.with(|runtime| resolve_ready(semio_framework_plugin::describe::describe_extension_with_apps(runtime)));
+    let bytes = __SEMIO_PLUGIN_RUNTIME.with(|runtime| ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::describe::describe_extension_with_apps(runtime)));
     semio_framework_plugin::plugin_runtime::extension_dispose_cold().expect("cold actor inspection retires its installed extension");
     assert!(semio_framework_plugin::plugin_runtime::extension_terminal_is_empty());
     let value = store::pack_rt::decode_wire_value(&bytes).expect("first-party wire decoder");
@@ -77,10 +78,10 @@ async fn procedural_actor_descriptor_matches_the_json_oracle() {
 fn procedural_parameter_controls_match_the_json_oracle() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎚️controls.json")).expect("independent control vectors");
     for row in fixture["cases"].as_array().expect("controls") {
-        let question: PlaybookBlock = pack::json::from_json_str(&row["question"].to_string()).expect("owned block decoder");
+        let question: PlaybookBlock = semio_framework_pack_json::from_json_str(&row["question"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("owned block decoder");
         let independent: PlaybookBlock = serde_json::from_value(row["question"].clone()).expect("independent block decoder");
         assert_eq!(question, independent);
-        let value = parse_json(&row["value"].to_string()).expect("owned value");
+        let value = parse_json(&row["value"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("owned value");
         let payload = ModuleRenderPayload {
             question_id: "parent".into(),
             controller_id: "s.forms.forms@1/*#editor".into(),
@@ -157,7 +158,7 @@ async fn module_manifest_contributes_building_component() {
 #[semio_framework_async_macros::async_test]
 async fn preview_body_emits_world_scene() {
     let mut app = new_app().await;
-    let document = payload_json(pack::json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 }));
+    let document = payload_json(semio_framework_pack_json::json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 }));
     let node = app.render(BODY_PREVIEW, Some(&document), &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
     let json = artifact_app_laws::project_and_retire_fixture_tree(node).expect("preview projection");
     assert!(json.contains("world-3d"));
@@ -192,7 +193,7 @@ async fn export_solid_action_stashes_result_and_is_undoable() {
     assert!(app.snapshot().expect("projection").params.get("__solidExport").is_none());
     // The export action emits a whole-payload `SetPayload` operation; the store applies it and the
     // stashed result is read back through the materialized projection.
-    let export_args = json_to_dsl_value(&pack::json!({ "format": "obj" }));
+    let export_args = json_to_dsl_value(&semio_framework_pack_json::json!({ "format": "obj" }));
     act(&mut app, ACTION_EXPORT_SOLID, Some(&export_args)).await;
     assert!(app.snapshot().expect("projection").params.get("__solidExport").is_some(), "export result stashed on params via the SetPayload operation");
     // The operation carries a true inverse (the pre-operation payload), so undo removes the stashed result.
@@ -204,7 +205,7 @@ async fn export_solid_action_stashes_result_and_is_undoable() {
 #[semio_framework_async_macros::async_test]
 async fn import_solid_action_stashes_result_on_params() {
     let mut app = new_app().await;
-    let import_args = json_to_dsl_value(&pack::json!({ "format": "obj", "data": "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n" }));
+    let import_args = json_to_dsl_value(&semio_framework_pack_json::json!({ "format": "obj", "data": "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n" }));
     act(&mut app, ACTION_IMPORT_SOLID, Some(&import_args)).await;
     assert!(app.snapshot().expect("projection").params.get("__solidImport").is_some(), "import result stashed on params via the SetPayload operation");
     artifact_app_laws::close_registered_fixture_app(&mut app);
@@ -213,7 +214,7 @@ async fn import_solid_action_stashes_result_on_params() {
 #[semio_framework_async_macros::async_test]
 async fn import_solid_action_reports_error_when_no_data_given() {
     let mut app = new_app().await;
-    let import_args = json_to_dsl_value(&pack::json!({ "format": "obj" }));
+    let import_args = json_to_dsl_value(&semio_framework_pack_json::json!({ "format": "obj" }));
     act(&mut app, ACTION_IMPORT_SOLID, Some(&import_args)).await;
     let payload = app.snapshot().expect("projection");
     let import = payload.params.get("__solidImport").expect("import result present");
@@ -285,7 +286,7 @@ async fn module_render_payload_dsl_round_trips() {
 /// through_the_first_party_json_bridge`).
 #[semio_framework_async_macros::async_test]
 async fn module_payload_value_codec_round_trips() {
-    use semio_framework_os_kernel::{FromValue, ToValue};
+    use semio_framework_value::{FromValue, ToValue};
 
     let payload = default_payload();
     let mutation = ModulePayloadMutation::SetPayload(SetPayload { payload: payload.clone() });
@@ -351,7 +352,7 @@ fn instance_geometry_admits_session_shell_before_terminal() {
 #[semio_framework_async_macros::async_test]
 async fn instance_geometry_replays_durable_sources_and_preserves_preview_authority() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌐️geometry-lifetime/🔣️.json")).expect("independent lifetime fixture");
-    let own_fixture = parse_json(include_str!("../../🧫️fixtures/🌐️geometry-lifetime/🔣️.json")).expect("first-party lifetime fixture");
+    let own_fixture = parse_json(include_str!("../../🧫️fixtures/🌐️geometry-lifetime/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("first-party lifetime fixture");
     assert_eq!(serde_json::from_str::<serde_json::Value>(&json_to_string(&own_fixture)).expect("independent fixture output"), fixture);
     for row in fixture["handles"].as_array().expect("canonical handle vectors") {
         assert_eq!(is_brep_geometry_handle(row["value"].as_str().unwrap()), row["valid"].as_bool().unwrap());
@@ -379,9 +380,9 @@ async fn instance_geometry_replays_durable_sources_and_preserves_preview_authori
         assert!(!params_as_json(&payload.params).get("__solidExport").unwrap().get("error").is_some());
         assert_eq!(json_to_string(&stored), before);
     }
-    let snapshot: FlowHostSnapshot = pack::json::from_json_str(HEX_COLUMN_FIXTURE_JSON).unwrap();
+    let snapshot: FlowHostSnapshot = semio_framework_pack_json::from_json_str(HEX_COLUMN_FIXTURE_JSON, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for params in fixture["parameters"].as_array().expect("preview variants") {
-        let params = parse_json(&params.to_string()).unwrap();
+        let params = parse_json(&params.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let (meshes, instances) = evaluated_preview_payload(&mut first, &snapshot, &params);
         let meshes: serde_json::Value = serde_json::from_str(&meshes).unwrap();
         let instances: serde_json::Value = serde_json::from_str(&instances).unwrap();

@@ -1,0 +1,16 @@
+{
+  "name": "@semio-tech/framework-io-schema-rs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bundleKind": "library",
+  "scripts": {
+    "test-ownership": "bun nx run @semio-tech/framework-io-schema-rs:test-ownership",
+    "test-native": "bun nx run @semio-tech/framework-io-schema-rs:test-native",
+    "test-refusal": "bun nx run @semio-tech/framework-io-schema-rs:test-refusal",
+    "test:binding": "nx run @semio-tech/framework-io-schema-rs:test-binding"
+  },
+  "nx": {
+    "includedScripts": []
+  }
+}

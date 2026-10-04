@@ -3,6 +3,9 @@ use super::Puzzle2dSnapshot;
 use crate::{Puzzle2dCamera,Puzzle2dNode,Puzzle2dNodeAnchor,Puzzle2dHandle,Puzzle2dEdge,Puzzle2dTargetRegion,Puzzle2dMeta,Puzzle2dKindCompatibility,Puzzle2dCompatSpecificity,Puzzle2dKindCatalogs,Puzzle2dCatalogNodeKind,Puzzle2dRepresentation,Puzzle2dHandleTemplate,Puzzle2dAttribute,Puzzle2dAuthor,Puzzle2dCatalogHandleKind,Puzzle2dCatalogEdgeKind,Puzzle2dCatalogWireKind};
 use std::collections::{BTreeMap,BTreeSet};
 use store::{ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,validate_sqlite_database_schema,artifact::{Projection,Cell,NativeEncodingBound,FloatColumn,insert_ieee754,read_binary64,ieee754_is_null}}};
+use semio_framework_value::{ValueError,ValueRefusalKind};
+fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
+
 const CAMERA:&[FloatColumn]=&[FloatColumn::Binary64(2),FloatColumn::Binary64(3),FloatColumn::Binary64(4)];
 const NODE:&[FloatColumn]=&[FloatColumn::Binary64(6),FloatColumn::Binary64(7),FloatColumn::Binary64(8),FloatColumn::Binary64(9),FloatColumn::Binary64(10),FloatColumn::Binary64(14)];
 const HANDLE:&[FloatColumn]=&[FloatColumn::Binary64(5),FloatColumn::Binary64(6),FloatColumn::Binary64(9)];
@@ -13,24 +16,24 @@ fn optional_text(value:&Option<String>)->Cell<'_>{value.as_deref().map_or(Cell::
 fn optional_real(value:Option<f64>)->Cell<'static>{value.map_or(Cell::Null,Cell::Real)}
 fn optional_flag(value:Option<bool>)->Cell<'static>{value.map_or(Cell::Null,|value|Cell::Integer(i64::from(value)))}
 fn optional_i32(value:Option<i32>)->Cell<'static>{value.map_or(Cell::Null,|value|Cell::Integer(i64::from(value)))}
-fn ordinal(value:usize)->Result<Cell<'static>,String>{Ok(Cell::Integer(i64::try_from(value).map_err(|e|e.to_string())?))}
-fn identity(row:&SqliteRow,columns:usize)->Result<(),String>{if row.values.len()!=columns||row.rowid<=0||row.integer(0)?!=row.rowid{return Err("Puzzle 2D requires complete positive aliased entities".into())}Ok(())}
-fn flag(row:&SqliteRow,index:usize)->Result<bool,String>{match row.integer(index)?{0=>Ok(false),1=>Ok(true),_=>Err("Puzzle 2D flag exceeds Boolean domain".into())}}
-fn restore_optional_flag(row:&SqliteRow,index:usize)->Result<Option<bool>,String>{if matches!(row.values.get(index),Some(SqliteValue::Null)){Ok(None)}else{flag(row,index).map(Some)}}
-fn restore_optional_i32(row:&SqliteRow,index:usize)->Result<Option<i32>,String>{if matches!(row.values.get(index),Some(SqliteValue::Null)){Ok(None)}else{Ok(Some(i32::try_from(row.integer(index)?).map_err(|e|e.to_string())?))}}
-fn restore_optional_real(row:&SqliteRow,index:usize,columns:&[FloatColumn])->Result<Option<f64>,String>{if ieee754_is_null(row,index,columns)?{Ok(None)}else{read_binary64(row,index,columns).map(Some)}}
-fn restore_optional_text(row:&SqliteRow,index:usize,control:&mut dsl::NativeDecodeControl<'_>)->Result<Option<String>,String>{match row.values.get(index){Some(SqliteValue::Null)=>Ok(None),Some(SqliteValue::Text(value))=>control.copy_text(value).map(Some),_=>Err("Puzzle 2D optional TEXT has another storage class".into())}}
+fn ordinal(value:usize)->Result<Cell<'static>,ValueError>{Ok(Cell::Integer(i64::try_from(value).map_err(|e|invalid(e.to_string()))?))}
+fn identity(row:&SqliteRow,columns:usize)->Result<(),ValueError>{if row.values.len()!=columns||row.rowid<=0||row.integer(0)?!=row.rowid{return Err(invalid("Puzzle 2D requires complete positive aliased entities"))}Ok(())}
+fn flag(row:&SqliteRow,index:usize)->Result<bool,ValueError>{match row.integer(index)?{0=>Ok(false),1=>Ok(true),_=>Err(invalid("Puzzle 2D flag exceeds Boolean domain"))}}
+fn restore_optional_flag(row:&SqliteRow,index:usize)->Result<Option<bool>,ValueError>{if matches!(row.values.get(index),Some(SqliteValue::Null)){Ok(None)}else{flag(row,index).map(Some)}}
+fn restore_optional_i32(row:&SqliteRow,index:usize)->Result<Option<i32>,ValueError>{if matches!(row.values.get(index),Some(SqliteValue::Null)){Ok(None)}else{Ok(Some(i32::try_from(row.integer(index)?).map_err(|e|invalid(e.to_string()))?))}}
+fn restore_optional_real(row:&SqliteRow,index:usize,columns:&[FloatColumn])->Result<Option<f64>,ValueError>{if ieee754_is_null(row,index,columns)?{Ok(None)}else{read_binary64(row,index,columns).map(Some)}}
+fn restore_optional_text(row:&SqliteRow,index:usize,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Option<String>,ValueError>{match row.values.get(index){Some(SqliteValue::Null)=>Ok(None),Some(SqliteValue::Text(value))=>control.copy_text(value).map(Some),_=>Err(invalid("Puzzle 2D optional TEXT has another storage class"))}}
 fn specificity(value:Puzzle2dCompatSpecificity)->&'static str{match value{Puzzle2dCompatSpecificity::General=>"general",Puzzle2dCompatSpecificity::Node=>"node",Puzzle2dCompatSpecificity::Edge=>"edge",Puzzle2dCompatSpecificity::Handle=>"handle",Puzzle2dCompatSpecificity::Wire=>"wire",Puzzle2dCompatSpecificity::Vortex=>"vortex"}}
-fn restore_specificity(value:&str)->Result<Puzzle2dCompatSpecificity,String>{match value{"general"=>Ok(Puzzle2dCompatSpecificity::General),"node"=>Ok(Puzzle2dCompatSpecificity::Node),"edge"=>Ok(Puzzle2dCompatSpecificity::Edge),"handle"=>Ok(Puzzle2dCompatSpecificity::Handle),"wire"=>Ok(Puzzle2dCompatSpecificity::Wire),"vortex"=>Ok(Puzzle2dCompatSpecificity::Vortex),_=>Err("Puzzle 2D compatibility specificity is undeclared".into())}}
-fn workload(snapshot:&Puzzle2dSnapshot,checkpoint:&mut impl FnMut(usize)->Result<(),String>)->Result<usize,String>{
- let mut rows=3usize;let mut units=0usize;let mut add=|count:usize|->Result<(),String>{rows=rows.checked_add(count).ok_or("Puzzle 2D row workload overflow")?;units+=1;if units%256==0{checkpoint(units)?}Ok(())};
+fn restore_specificity(value:&str)->Result<Puzzle2dCompatSpecificity,ValueError>{match value{"general"=>Ok(Puzzle2dCompatSpecificity::General),"node"=>Ok(Puzzle2dCompatSpecificity::Node),"edge"=>Ok(Puzzle2dCompatSpecificity::Edge),"handle"=>Ok(Puzzle2dCompatSpecificity::Handle),"wire"=>Ok(Puzzle2dCompatSpecificity::Wire),"vortex"=>Ok(Puzzle2dCompatSpecificity::Vortex),_=>Err(invalid("Puzzle 2D compatibility specificity is undeclared"))}}
+fn workload(snapshot:&Puzzle2dSnapshot,checkpoint:&mut impl FnMut(usize)->Result<(),ValueError>)->Result<usize,ValueError>{
+ let mut rows=3usize;let mut units=0usize;let mut add=|count:usize|->Result<(),ValueError>{rows=rows.checked_add(count).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Puzzle 2D row workload overflow"))?;units+=1;if units%256==0{checkpoint(units)?}Ok(())};
  add(snapshot.nodes.len())?;add(snapshot.edges.len())?;add(snapshot.target_regions.len())?;add(snapshot.meta.kind_compatibility.len())?;for node in &snapshot.nodes{add(node.handles.len())?;}
  if let Some(catalogs)=&snapshot.meta.kind_catalogs{add(1)?;add(catalogs.nodes.len())?;add(catalogs.handles.len())?;add(catalogs.edges.len())?;add(catalogs.wires.len())?;for node in &catalogs.nodes{add(node.base_kinds.len())?;add(node.representations.len())?;add(node.handles.len())?;add(node.attributes.len())?;add(node.authors.len())?;for representation in &node.representations{add(representation.tags.len())?;}}for handle in &catalogs.handles{add(handle.compatible_with.len())?;}}
  checkpoint(units)?;Ok(rows)
 }
-fn bound_text(bound:&mut NativeEncodingBound<'_,'_>,value:&str)->Result<(),String>{bound.add(value.len().checked_mul(6).and_then(|n|n.checked_add(192)).ok_or("Puzzle 2D encoded text bound overflow")?)}
-fn bound_optional_text(bound:&mut NativeEncodingBound<'_,'_>,value:&Option<String>)->Result<(),String>{if let Some(value)=value{bound_text(bound,value)?}Ok(())}
-fn bound_strings(snapshot:&Puzzle2dSnapshot,bound:&mut NativeEncodingBound<'_,'_>)->Result<(),String>{
+fn bound_text(bound:&mut NativeEncodingBound<'_,'_>,value:&str)->Result<(),ValueError>{bound.add(value.len().checked_mul(6).and_then(|n|n.checked_add(192)).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Puzzle 2D encoded text bound overflow"))?)}
+fn bound_optional_text(bound:&mut NativeEncodingBound<'_,'_>,value:&Option<String>)->Result<(),ValueError>{if let Some(value)=value{bound_text(bound,value)?}Ok(())}
+fn bound_strings(snapshot:&Puzzle2dSnapshot,bound:&mut NativeEncodingBound<'_,'_>)->Result<(),ValueError>{
  bound_text(bound,&snapshot.schema)?;bound_optional_text(bound,&snapshot.meta.manifest_id)?;
  for node in &snapshot.nodes{bound_text(bound,&node.id)?;for value in[&node.node_kind,&node.shape,&node.text,&node.icon_kind]{bound_optional_text(bound,value)?;}for handle in &node.handles{bound_text(bound,&handle.id)?;for value in[&handle.handle_kind,&handle.color,&handle.icon_kind]{bound_optional_text(bound,value)?;}}}
  for edge in &snapshot.edges{for value in[&edge.id,&edge.source,&edge.target]{bound_text(bound,value)?;}for value in[&edge.edge_kind,&edge.source_tip,&edge.target_tip]{bound_optional_text(bound,value)?;}}
@@ -50,21 +53,21 @@ fn bound_strings(snapshot:&Puzzle2dSnapshot,bound:&mut NativeEncodingBound<'_,'_
 }
 struct Members<'a>{groups:BTreeMap<i64,BTreeMap<usize,&'a SqliteRow>>}
 impl<'a> Members<'a>{
- fn new(rows:&'a[SqliteRow],columns:usize,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{
-  control.charge(rows.len().checked_mul(384).ok_or("Puzzle 2D lookup byte overflow")?)?;control.begin_stage(rows.len())?;let mut identities=BTreeSet::new();let mut groups:BTreeMap<i64,BTreeMap<usize,&'a SqliteRow>>=BTreeMap::new();
-  for row in rows{control.step()?;identity(row,columns)?;let parent=row.integer(1)?;let ordinal=usize::try_from(row.integer(2)?).map_err(|e|e.to_string())?;if parent<=0||!identities.insert(row.rowid)||groups.entry(parent).or_default().insert(ordinal,row).is_some(){return Err("Puzzle 2D repeats surrogate identity or owner ordinal".into())}}
+ fn new(rows:&'a[SqliteRow],columns:usize,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{
+  control.charge(rows.len().checked_mul(384).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Puzzle 2D lookup byte overflow"))?)?;control.begin_stage(rows.len())?;let mut identities=BTreeSet::new();let mut groups:BTreeMap<i64,BTreeMap<usize,&'a SqliteRow>>=BTreeMap::new();
+  for row in rows{control.step()?;identity(row,columns)?;let parent=row.integer(1)?;let ordinal=usize::try_from(row.integer(2)?).map_err(|e|invalid(e.to_string()))?;if parent<=0||!identities.insert(row.rowid)||groups.entry(parent).or_default().insert(ordinal,row).is_some(){return Err(invalid("Puzzle 2D repeats surrogate identity or owner ordinal"))}}
   control.checkpoint()?;Ok(Self{groups})
  }
- fn take(&mut self,parent:i64,control:&mut dsl::NativeDecodeControl<'_>)->Result<Vec<&'a SqliteRow>,String>{
-  let Some(rows)=self.groups.remove(&parent)else{return Ok(Vec::new())};let mut output=control.allocate_vec::<&SqliteRow>(rows.len())?;control.begin_stage(rows.len())?;for(ordinal,(actual,row))in rows.into_iter().enumerate(){control.step()?;if ordinal!=actual{return Err("Puzzle 2D collection ordinals are not dense".into())}output.push(row)}control.checkpoint()?;Ok(output)
+ fn take(&mut self,parent:i64,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Vec<&'a SqliteRow>,ValueError>{
+  let Some(rows)=self.groups.remove(&parent)else{return Ok(Vec::new())};let mut output=control.allocate_vec::<&SqliteRow>(rows.len())?;control.begin_stage(rows.len())?;for(ordinal,(actual,row))in rows.into_iter().enumerate(){control.step()?;if ordinal!=actual{return Err(invalid("Puzzle 2D collection ordinals are not dense"))}output.push(row)}control.checkpoint()?;Ok(output)
  }
- fn finish(&self)->Result<(),String>{if self.groups.is_empty(){Ok(())}else{Err("Puzzle 2D has unmatched owned entities".into())}}
+ fn finish(&self)->Result<(),ValueError>{if self.groups.is_empty(){Ok(())}else{Err(invalid("Puzzle 2D has unmatched owned entities"))}}
 }
 
-fn put(out:&mut Projection<'_,'_>,completed:&mut usize,total:usize,table:&str,cells:&[Cell<'_>],columns:&[FloatColumn])->Result<i64,String>{
+fn put(out:&mut Projection<'_,'_>,completed:&mut usize,total:usize,table:&str,cells:&[Cell<'_>],columns:&[FloatColumn])->Result<i64,ValueError>{
  let key=if columns.is_empty(){out.insert(table,cells)?}else{insert_ieee754(out,table,cells,columns)?};*completed+=1;if *completed%256==0{out.checkpoint_total(total)?}Ok(key)
 }
-fn project(snapshot:&Puzzle2dSnapshot,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,String>{
+fn project(snapshot:&Puzzle2dSnapshot,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{
  let mut out=Projection::new(<Puzzle2dSnapshot as ArtifactSqliteSnapshot>::SQLITE_SCHEMA,control)?;let total=workload(snapshot,&mut |_|out.checkpoint())?;out.check_rows(total)?;out.checkpoint_total(total)?;let mut completed=0usize;
  put(&mut out,&mut completed,total,"puzzle2d_document",&[Cell::Text(&snapshot.schema)],&[])?;
  let camera=&snapshot.camera;put(&mut out,&mut completed,total,"puzzle2d_camera",&[Cell::Integer(1),Cell::Real(camera.x),Cell::Real(camera.y),Cell::Real(camera.zoom)],CAMERA)?;
@@ -96,19 +99,19 @@ fn project(snapshot:&Puzzle2dSnapshot,control:&mut SqliteSnapshotControl<'_>)->R
   for(i,edge)in catalogs.edges.iter().enumerate(){put(&mut out,&mut completed,total,"puzzle2d_catalog_edge_kind",&[Cell::Integer(key),ordinal(i)?,Cell::Text(&edge.id),Cell::Text(&edge.name),Cell::Text(&edge.label),Cell::Text(&edge.description),Cell::Text(&edge.icon),Cell::Text(&edge.color)],&[])?;}
   for(i,wire)in catalogs.wires.iter().enumerate(){put(&mut out,&mut completed,total,"puzzle2d_catalog_wire_kind",&[Cell::Integer(key),ordinal(i)?,Cell::Text(&wire.id),Cell::Text(&wire.name),Cell::Text(&wire.label),Cell::Text(&wire.description),Cell::Text(&wire.icon),Cell::Text(&wire.color),Cell::Text(&wire.default_edge_kind)],&[])?;}
  }
- if completed!=total{return Err("Puzzle 2D projection differs from known owned workload".into())}out.checkpoint_total(total)?;out.finish()
+ if completed!=total{return Err(invalid("Puzzle 2D projection differs from known owned workload"))}out.checkpoint_total(total)?;out.finish()
 }
 
-fn restore(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Puzzle2dSnapshot,String>{
+fn restore(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Puzzle2dSnapshot,ValueError>{
  restore_authority(database,control,0)
 }
 
-fn restore_authority(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,additional:usize)->Result<Puzzle2dSnapshot,String>{
- validate_sqlite_database_schema(database,<Puzzle2dSnapshot as ArtifactSqliteSnapshot>::SQLITE_SCHEMA,control.limits()).map_err(|e|e.to_string())?;control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;
+fn restore_authority(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,additional:usize)->Result<Puzzle2dSnapshot,ValueError>{
+ validate_sqlite_database_schema(database,<Puzzle2dSnapshot as ArtifactSqliteSnapshot>::SQLITE_SCHEMA,control.limits())?;control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;
  let documents=&database.table("puzzle2d_document")?.rows;let cameras=&database.table("puzzle2d_camera")?.rows;let metas=&database.table("puzzle2d_meta")?.rows;let catalog_rows=&database.table("puzzle2d_kind_catalogs")?.rows;
- if documents.len()!=1||documents[0].rowid!=1||documents[0].values.len()!=2||documents[0].integer(0)?!=1||cameras.len()!=1||metas.len()!=1||catalog_rows.len()>1{return Err("Puzzle 2D requires one complete board, camera and metadata with at most one catalog".into())}identity(&cameras[0],11)?;identity(&metas[0],3)?;if cameras[0].integer(1)?!=1||metas[0].integer(1)?!=1{return Err("Puzzle 2D singleton has another board owner".into())}for row in catalog_rows{identity(row,2)?;if row.integer(1)?!=metas[0].rowid{return Err("Puzzle 2D catalog has another metadata owner".into())}}
- let maximum=control.limits().max_value_bytes;let mut progress=|event:semio_framework_value::native_decoding::NativeDecodeProgress|control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,event.completed,event.total).is_ok();let mut native=dsl::NativeDecodeControl::new(maximum,&mut progress);
- native.charge(std::mem::size_of::<Puzzle2dSnapshot>().checked_add(additional).ok_or("Puzzle authority allocation overflow")?)?;
+ if documents.len()!=1||documents[0].rowid!=1||documents[0].values.len()!=2||documents[0].integer(0)?!=1||cameras.len()!=1||metas.len()!=1||catalog_rows.len()>1{return Err(invalid("Puzzle 2D requires one complete board, camera and metadata with at most one catalog"))}identity(&cameras[0],11)?;identity(&metas[0],3)?;if cameras[0].integer(1)?!=1||metas[0].integer(1)?!=1{return Err(invalid("Puzzle 2D singleton has another board owner"))}for row in catalog_rows{identity(row,2)?;if row.integer(1)?!=metas[0].rowid{return Err(invalid("Puzzle 2D catalog has another metadata owner"))}}
+ let maximum=control.limits().max_value_bytes;let mut progress=|event:semio_framework_value::native_decoding::NativeDecodeProgress|control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,event.completed,event.total).is_ok();let mut native=semio_framework_value::NativeDecodeControl::new(maximum,&mut progress);
+ native.charge(std::mem::size_of::<Puzzle2dSnapshot>().checked_add(additional).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Puzzle authority allocation overflow"))?)?;
  let mut nodes=Members::new(&database.table("puzzle2d_node")?.rows,30,&mut native)?;let mut handles=Members::new(&database.table("puzzle2d_handle")?.rows,18,&mut native)?;let mut edges=Members::new(&database.table("puzzle2d_edge")?.rows,35,&mut native)?;let mut regions=Members::new(&database.table("puzzle2d_target_region")?.rows,19,&mut native)?;let mut compatibility=Members::new(&database.table("puzzle2d_kind_compatibility")?.rows,8,&mut native)?;
  let mut kinds=Members::new(&database.table("puzzle2d_catalog_node_kind")?.rows,11,&mut native)?;let mut bases=Members::new(&database.table("puzzle2d_base_kind")?.rows,4,&mut native)?;let mut representations=Members::new(&database.table("puzzle2d_representation")?.rows,9,&mut native)?;let mut tags=Members::new(&database.table("puzzle2d_representation_tag")?.rows,4,&mut native)?;let mut templates=Members::new(&database.table("puzzle2d_handle_template")?.rows,19,&mut native)?;let mut attributes=Members::new(&database.table("puzzle2d_attribute")?.rows,7,&mut native)?;let mut authors=Members::new(&database.table("puzzle2d_author")?.rows,8,&mut native)?;
  let mut handle_kinds=Members::new(&database.table("puzzle2d_catalog_handle_kind")?.rows,11,&mut native)?;let mut compatible_kinds=Members::new(&database.table("puzzle2d_compatible_kind")?.rows,4,&mut native)?;let mut edge_kinds=Members::new(&database.table("puzzle2d_catalog_edge_kind")?.rows,9,&mut native)?;let mut wire_kinds=Members::new(&database.table("puzzle2d_catalog_wire_kind")?.rows,10,&mut native)?;
@@ -117,7 +120,7 @@ fn restore_authority(database:&SqliteDatabase,control:&mut SqliteSnapshotControl
  for row in node_rows{
   let handle_rows=handles.take(row.rowid,&mut native)?;let mut restored_handles=native.allocate_vec::<Puzzle2dHandle>(handle_rows.len())?;native.begin_stage(handle_rows.len())?;
   for h in handle_rows{native.step()?;restored_handles.push(Puzzle2dHandle{id:native.copy_text(h.text(3)?)?,handle_kind:restore_optional_text(h,4,&mut native)?,angle:read_binary64(h,5,HANDLE)?,radius:restore_optional_real(h,6,HANDLE)?,color:restore_optional_text(h,7,&mut native)?,icon_kind:restore_optional_text(h,8,&mut native)?,scale:restore_optional_real(h,9,HANDLE)?,visible:restore_optional_flag(h,10)?,locked:restore_optional_flag(h,11)?});}native.checkpoint()?;
-  restored_nodes.push(Puzzle2dNode{id:native.copy_text(row.text(3)?)?,node_kind:restore_optional_text(row,4,&mut native)?,shape:restore_optional_text(row,5,&mut native)?,x:read_binary64(row,6,NODE)?,y:read_binary64(row,7,NODE)?,radius:restore_optional_real(row,8,NODE)?,width:restore_optional_real(row,9,NODE)?,height:restore_optional_real(row,10,NODE)?,text:restore_optional_text(row,11,&mut native)?,icon_kind:restore_optional_text(row,12,&mut native)?,root:restore_optional_flag(row,13)?,scale:restore_optional_real(row,14,NODE)?,visible:restore_optional_flag(row,15)?,locked:restore_optional_flag(row,16)?,anchor:match row.text(17)?{"fixed"=>Puzzle2dNodeAnchor::Fixed,"derived"=>Puzzle2dNodeAnchor::Derived,_=>return Err("Puzzle 2D node anchor is undeclared".into())},handles:restored_handles});native.checkpoint()?;
+  restored_nodes.push(Puzzle2dNode{id:native.copy_text(row.text(3)?)?,node_kind:restore_optional_text(row,4,&mut native)?,shape:restore_optional_text(row,5,&mut native)?,x:read_binary64(row,6,NODE)?,y:read_binary64(row,7,NODE)?,radius:restore_optional_real(row,8,NODE)?,width:restore_optional_real(row,9,NODE)?,height:restore_optional_real(row,10,NODE)?,text:restore_optional_text(row,11,&mut native)?,icon_kind:restore_optional_text(row,12,&mut native)?,root:restore_optional_flag(row,13)?,scale:restore_optional_real(row,14,NODE)?,visible:restore_optional_flag(row,15)?,locked:restore_optional_flag(row,16)?,anchor:match row.text(17)?{"fixed"=>Puzzle2dNodeAnchor::Fixed,"derived"=>Puzzle2dNodeAnchor::Derived,_=>return Err(invalid("Puzzle 2D node anchor is undeclared"))},handles:restored_handles});native.checkpoint()?;
  }
  let edge_rows=edges.take(1,&mut native)?;let mut restored_edges=native.allocate_vec::<Puzzle2dEdge>(edge_rows.len())?;native.begin_stage(edge_rows.len())?;
  for row in edge_rows{native.step()?;restored_edges.push(Puzzle2dEdge{id:native.copy_text(row.text(3)?)?,source:native.copy_text(row.text(4)?)?,target:native.copy_text(row.text(5)?)?,edge_kind:restore_optional_text(row,6,&mut native)?,gap:read_binary64(row,7,EDGE)?,shift:read_binary64(row,8,EDGE)?,rise:read_binary64(row,9,EDGE)?,rotation:read_binary64(row,10,EDGE)?,turn:read_binary64(row,11,EDGE)?,tilt:read_binary64(row,12,EDGE)?,x:read_binary64(row,13,EDGE)?,y:read_binary64(row,14,EDGE)?,source_tip:restore_optional_text(row,15,&mut native)?,target_tip:restore_optional_text(row,16,&mut native)?,visible:restore_optional_flag(row,17)?,locked:restore_optional_flag(row,18)?});}native.checkpoint()?;
@@ -159,36 +162,36 @@ fn restore_authority(database:&SqliteDatabase,control:&mut SqliteSnapshotControl
  Ok(Puzzle2dSnapshot{schema,camera,nodes:restored_nodes,edges:restored_edges,target_regions,meta:Puzzle2dMeta{manifest_id,kind_compatibility,kind_catalogs}})
 }
 
-fn native_list(value:Option<&dsl::FieldValue>)->Result<&[dsl::FieldValue],dsl::TextError>{match value{None|Some(dsl::FieldValue::Absent)=>Ok(&[]),Some(dsl::FieldValue::List(values))=>Ok(values),_=>Err(dsl::__rt::field_error("Puzzle 2D requires an ordered native list"))}}
-fn native_record(value:&dsl::FieldValue)->Result<&dsl::RecordValue,dsl::TextError>{match value{dsl::FieldValue::Record(record)=>Ok(record),dsl::FieldValue::Block(value)=>match value.as_ref(){dsl::FieldValue::Record(record)=>Ok(record),_=>Err(dsl::__rt::field_error("Puzzle 2D block requires its literal record"))},_=>Err(dsl::__rt::field_error("Puzzle 2D requires a literal native record"))}}
-fn native_optional_record(value:Option<&dsl::FieldValue>)->Result<Option<&dsl::RecordValue>,dsl::TextError>{match value{None|Some(dsl::FieldValue::Absent)=>Ok(None),Some(value)=>native_record(value).map(Some)}}
-fn native_rows(record:&dsl::RecordValue,native:&mut dsl::NativeDecodeControl<'_>,maximum:usize)->Result<(),dsl::TextError>{
- let mut total=3usize;let mut add=|count:usize|->Result<(),dsl::TextError>{total=total.checked_add(count).filter(|total|*total<=maximum).ok_or_else(||dsl::__rt::field_error("Puzzle 2D native ownership exceeds row limit"))?;Ok(())};
+fn native_list(value:Option<&semio_framework_dsl_record::FieldValue>)->Result<&[semio_framework_dsl_record::FieldValue],semio_framework_value::ValueError>{match value{None|Some(semio_framework_dsl_record::FieldValue::Absent)=>Ok(&[]),Some(semio_framework_dsl_record::FieldValue::List(values))=>Ok(values),_=>Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("Puzzle 2D requires an ordered native list").to_string()))}}
+fn native_record(value:&semio_framework_dsl_record::FieldValue)->Result<&semio_framework_dsl_record::RecordValue,semio_framework_value::ValueError>{match value{semio_framework_dsl_record::FieldValue::Record(record)=>Ok(record),semio_framework_dsl_record::FieldValue::Block(value)=>match value.as_ref(){semio_framework_dsl_record::FieldValue::Record(record)=>Ok(record),_=>Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("Puzzle 2D block requires its literal record").to_string()))},_=>Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("Puzzle 2D requires a literal native record").to_string()))}}
+fn native_optional_record(value:Option<&semio_framework_dsl_record::FieldValue>)->Result<Option<&semio_framework_dsl_record::RecordValue>,ValueError>{match value{None|Some(semio_framework_dsl_record::FieldValue::Absent)=>Ok(None),Some(value)=>native_record(value).map(Some)}}
+fn native_rows(record:&semio_framework_dsl_record::RecordValue,native:&mut semio_framework_value::NativeDecodeControl<'_>,maximum:usize)->Result<(),semio_framework_value::ValueError>{
+ let mut total=3usize;let mut add=|count:usize|->Result<(),semio_framework_value::ValueError>{total=total.checked_add(count).filter(|total|*total<=maximum).ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("Puzzle 2D native ownership exceeds row limit").to_string()))?;Ok(())};
  let nodes=native_list(record.get(2))?;add(nodes.len())?;add(native_list(record.get(3))?.len())?;add(native_list(record.get(4))?.len())?;
- native.scoped_stage(|native|{native.begin_stage(nodes.len()).map_err(dsl::__rt::field_error)?;for row in nodes{native.step().map_err(dsl::__rt::field_error)?;add(native_list(native_record(row)?.get(15))?.len())?;}Ok(())})?;
+ native.scoped_stage(|native|->Result<(),semio_framework_value::ValueError>{native.begin_stage(nodes.len())?;for row in nodes{native.step()?;add(native_list(native_record(row)?.get(15))?.len())?;}Ok(())})?;
  if let Some(meta)=native_optional_record(record.get(5))?{
   add(native_list(meta.get(1))?.len())?;
   if let Some(catalogs)=native_optional_record(meta.get(2))?{
    add(1)?;let kinds=native_list(catalogs.get(0))?;let handles=native_list(catalogs.get(1))?;add(kinds.len())?;add(handles.len())?;add(native_list(catalogs.get(2))?.len())?;add(native_list(catalogs.get(3))?.len())?;
-   native.scoped_stage(|native|{native.begin_stage(kinds.len()).map_err(dsl::__rt::field_error)?;for value in kinds{native.step().map_err(dsl::__rt::field_error)?;let kind=native_record(value)?;for field in[8,9,10,11,12]{add(native_list(kind.get(field))?.len())?;}
-    let representations=native_list(kind.get(9))?;native.scoped_stage(|native|{native.begin_stage(representations.len()).map_err(dsl::__rt::field_error)?;for value in representations{native.step().map_err(dsl::__rt::field_error)?;add(native_list(native_record(value)?.get(4))?.len())?;}Ok(())})?;
+   native.scoped_stage(|native|->Result<(),semio_framework_value::ValueError>{native.begin_stage(kinds.len())?;for value in kinds{native.step()?;let kind=native_record(value)?;for field in[8,9,10,11,12]{add(native_list(kind.get(field))?.len())?;}
+    let representations=native_list(kind.get(9))?;native.scoped_stage(|native|->Result<(),semio_framework_value::ValueError>{native.begin_stage(representations.len())?;for value in representations{native.step()?;add(native_list(native_record(value)?.get(4))?.len())?;}Ok(())})?;
    }Ok(())})?;
-   native.scoped_stage(|native|{native.begin_stage(handles.len()).map_err(dsl::__rt::field_error)?;for value in handles{native.step().map_err(dsl::__rt::field_error)?;add(native_list(native_record(value)?.get(4))?.len())?;}Ok(())})?;
+   native.scoped_stage(|native|->Result<(),semio_framework_value::ValueError>{native.begin_stage(handles.len())?;for value in handles{native.step()?;add(native_list(native_record(value)?.get(4))?.len())?;}Ok(())})?;
   }
  }Ok(())
 }
 impl ArtifactSqliteSnapshot for Puzzle2dSnapshot{
  const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,String>{
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,ValueError>{
   control.checkpoint(SqliteSnapshotPhase::EncodeNative,0,0)?;let rows=workload(self,&mut |units|control.checkpoint(SqliteSnapshotPhase::EncodeNative,units,0))?;control.check_rows(rows)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control)
  }
  fn retire_sqlite_snapshot(self){drop(self)}
- fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,String>{project(self,control)}
- fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,String>{restore(database,control)}
- fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,String>{
+ fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{project(self,control)}
+ fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{restore(database,control)}
+ fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
   control.check_rows(3)?;let maximum=control.limits().max_rows;store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record,native|{native_rows(record,native,maximum)?;Self::__dsl_from_record_controlled(record,native)},control)
  }
- fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),String>{
+ fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
   let mut bound=NativeEncodingBound::new(control)?;let rows=workload(self,&mut |_|bound.checkpoint())?;bound.check_rows(rows)?;bound.add(1024)?;bound.repeated(rows,1024)?;bound_strings(self,&mut bound)?;bound.finish()
  }
 }
@@ -196,19 +199,19 @@ impl ArtifactSqliteSnapshot for Puzzle2dSnapshot{
 /// 🎮️ Persists the editor's typed authority through the declared board schema.
 impl ArtifactSqliteSnapshot for crate::Puzzle2dPlaySnapshot{
  const SQLITE_SCHEMA:&'static str=<Puzzle2dSnapshot as ArtifactSqliteSnapshot>::SQLITE_SCHEMA;
- fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,String>{self.typed().to_sqlite_database(control)}
- fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,String>{
-  let bytes=std::mem::size_of::<Puzzle2dSnapshot>().checked_add(2*std::mem::size_of::<usize>()).ok_or("Play authority allocation overflow")?;
+ fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{self.typed().to_sqlite_database(control)}
+ fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
+  let bytes=std::mem::size_of::<Puzzle2dSnapshot>().checked_add(2*std::mem::size_of::<usize>()).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Play authority allocation overflow"))?;
   restore_authority(database,control,bytes).map(Self::from_typed)
  }
- fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,String>{
+ fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
   control.check_rows(3)?;let maximum=control.limits().max_rows;
   store::decode_sqlite_snapshot_record_native(payload,<Puzzle2dSnapshot as store::ArtifactDsl>::envelope_id(),Puzzle2dSnapshot::__dsl_spec_producer(),|record,native|{
    native_rows(record,native,maximum)?;
-   native.charge(std::mem::size_of::<Puzzle2dSnapshot>()+2*std::mem::size_of::<usize>()).map_err(dsl::__rt::field_error)?;
+   native.charge(std::mem::size_of::<Puzzle2dSnapshot>()+2*std::mem::size_of::<usize>())?;
    Puzzle2dSnapshot::__dsl_from_record_controlled(record,native).map(Self::from_typed)
   },control)
  }
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,String>{self.typed().encode_sqlite_snapshot_native(encoding,control)}
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,ValueError>{self.typed().encode_sqlite_snapshot_native(encoding,control)}
  fn validate_sqlite_snapshot_subset(&self,dialect:&store::io_schema::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{self.typed().validate_sqlite_snapshot_subset(dialect,database,control)}
 }

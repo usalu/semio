@@ -1,0 +1,229 @@
+cargo-features = ["trim-paths"]
+
+[workspace]
+resolver = "2"
+members = [
+    "🎚️config/📦️packages/🦀️rust",
+    "📦️packages/🦀️rust",
+    "🔨️modules/♾️infinite/📦️packages/🦀️rust",
+    "🔨️modules/♾️infinite/🖼️canvas/🔤️fonts/📦️packages/🦀️rust",
+    "🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/📦️packages/🦀️rust",
+    "🔨️modules/🌉️mcp/📦️packages/🦀️rust",
+    "🔨️modules/🌊️flow/📦️packages/🦀️rust",
+    "🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust",
+    "🔨️modules/🏃️run/📦️packages/🦀️rust",
+    "🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/📦️packages/🦀️rust",
+    "🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust",
+    "🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/📦️packages/🦀️rust",
+    "🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/📦️packages/🦀️rust",
+    "🔨️modules/🔌️plugin/📦️packages/🦀️rust",
+    "🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust",
+    "🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/📦️packages/🦀️rust",
+    "🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust",
+    "🔨️modules/🖥️shell/📦️packages/🦀️rust",
+    "🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
+    "🔨️modules/🛎️services/📦️packages/🦀️rust",
+    "🔨️modules/🛢️db/📦️packages/🦀️rust",
+    "🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust",
+    "🔨️modules/🪐️space/🗿️artifacts/🗂️collection/📦️packages/🦀️rust",
+    "🔨️modules/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust",
+    "🖥️host/📦️packages/🦀️rust",
+    "🧫️fixtures/⚖️scale/📦️packages/🦀️rust",
+]
+exclude = ["**/🏅️standards/**", "**/🔮️oracles/**", "**/👽️guest/**"]
+
+[workspace.metadata.semio.repository]
+schema-version = 1
+member-manifests = ["🎚️config/📦️packages/🦀️rust/Cargo.toml", "📦️packages/🦀️rust/Cargo.toml", "🔨️modules/**/📦️packages/🦀️rust/Cargo.toml", "🖥️host/📦️packages/🦀️rust/Cargo.toml", "🧫️fixtures/⚖️scale/📦️packages/🦀️rust/Cargo.toml"]
+owner-manifests = []
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.95"
+
+[workspace.dependencies]
+semio-framework = { path = "../../📦️packages/🦀️rust" }
+semio-framework-2d = { path = "../../🔨️modules/◻️2d/📦️packages/🦀️rust" }
+semio-framework-actor = { path = "../../🔨️modules/🎭️actor/📦️packages/🦀️rust" }
+semio-framework-artifact-flow-flow = { path = "🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust" }
+semio-framework-artifact-infinite-dag = { path = "🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/📦️packages/🦀️rust" }
+semio-framework-artifact-playbook-playbook = { path = "🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/📦️packages/🦀️rust" }
+semio-framework-artifact-space-collection = { path = "🔨️modules/🪐️space/🗿️artifacts/🗂️collection/📦️packages/🦀️rust" }
+semio-framework-artifact-space-space = { path = "🔨️modules/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust" }
+semio-framework-artifact-workflow-run = { path = "🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/📦️packages/🦀️rust" }
+semio-framework-artifact-workflow-workflow = { path = "🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/📦️packages/🦀️rust" }
+semio-framework-async = { path = "../../🔨️modules/⏳️async/📦️packages/🦀️rust" }
+semio-framework-async-macros = { path = "../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-dispatch-macros = { path = "../../🔨️modules/🔀️dispatch/📦️packages/🦀️rust" }
+semio-framework-hash = { path = "../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
+semio-framework-job = { path = "../../🔨️modules/🧵️job/📦️packages/🦀️rust" }
+semio-framework-os-config = { path = "🎚️config/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { path = "📦️packages/🦀️rust" }
+semio-framework-os-services = { path = "🔨️modules/🛎️services/📦️packages/🦀️rust" }
+semio-framework-os-shell = { path = "🔨️modules/🖥️shell/📦️packages/🦀️rust" }
+semio-framework-pack = { path = "../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
+semio-framework-plugin = { path = "🔨️modules/🔌️plugin/📦️packages/🦀️rust" }
+semio-framework-replication = { path = "../../🔨️modules/📡️replication/📦️packages/🦀️rust" }
+semio-framework-schema = { path = "../../🔨️modules/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-schema-registry = { path = "../../🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
+semio-framework-schema-validator = { path = "../../🔨️modules/🧬️schema/✅️validator/📦️packages/🦀️rust" }
+semio-framework-time-travel = { path = "../../🔨️modules/⏪️time-travel/📦️packages/🦀️rust" }
+semio-framework-tool-machine = { path = "../../🔨️modules/🛠️tool-machine/📦️packages/🦀️rust" }
+semio-framework-tool-run = { path = "../../🔨️modules/⏯️tool-run/📦️packages/🦀️rust" }
+semio-framework-trace = { path = "../../🔨️modules/⏱️trace/📦️packages/🦀️rust" }
+semio-framework-ui = { path = "../../🔨️modules/🖱️ui/📦️packages/🦀️rust" }
+semio-framework-ui-viewport = { path = "../../🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-derive = { path = "../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = { version = "1.0.149", features = ["raw_value"] }
+tokio = { version = "1" }
+
+[profile.dev]
+debug = false
+incremental = false
+
+[profile.dev.build-override]
+opt-level = 3
+
+[profile.dev.package.wasmtime]
+opt-level = 3
+
+[profile.dev.package.wasmtime-environ]
+opt-level = 3
+
+[profile.dev.package.wasmtime-internal-core]
+opt-level = 3
+
+[profile.dev.package.wasmtime-internal-cranelift]
+opt-level = 3
+
+[profile.dev.package.wasmtime-internal-fiber]
+opt-level = 3
+
+[profile.dev.package.wasmtime-internal-unwinder]
+opt-level = 3
+
+[profile.dev.package.wasmtime-internal-cache]
+opt-level = 3
+
+[profile.dev.package.wasmtime-internal-component-util]
+opt-level = 3
+
+[profile.dev.package.wasmtime-internal-jit-debug]
+opt-level = 3
+
+[profile.dev.package.wasmtime-internal-jit-icache-coherence]
+opt-level = 3
+
+[profile.dev.package.wasmtime-wasi]
+opt-level = 3
+
+[profile.dev.package.wasmtime-wasi-io]
+opt-level = 3
+
+[profile.dev.package.cranelift-codegen]
+opt-level = 3
+
+[profile.dev.package.cranelift-frontend]
+opt-level = 3
+
+[profile.dev.package.cranelift-entity]
+opt-level = 3
+
+[profile.dev.package.cranelift-bforest]
+opt-level = 3
+
+[profile.dev.package.cranelift-bitset]
+opt-level = 3
+
+[profile.dev.package.cranelift-control]
+opt-level = 3
+
+[profile.dev.package.cranelift-native]
+opt-level = 3
+
+[profile.dev.package.cranelift-codegen-shared]
+opt-level = 3
+
+[profile.dev.package.cranelift-assembler-x64]
+opt-level = 3
+
+[profile.dev.package.regalloc2]
+opt-level = 3
+
+[profile.dev.package.wasmparser]
+opt-level = 3
+
+[profile.dev.package.pulley-interpreter]
+opt-level = 3
+
+[profile.dev.package.gimli]
+opt-level = 3
+
+[profile.dev.package.object]
+opt-level = 3
+
+[profile.dev.package.wit-parser]
+opt-level = 3
+
+[profile.dev.package.semio-framework-plugin-host]
+opt-level = 3
+
+[profile.dev.package.semio-framework-hash]
+opt-level = 3
+
+[profile.wasm-dev]
+inherits = "dev"
+codegen-units = 1
+incremental = false
+
+[profile.wasm-dev.package.semio-framework-os-flow]
+opt-level = 2
+
+[profile.wasm-dev.package.semio-framework-os-kernel-neural-engine]
+opt-level = 2
+
+[profile.wasm-dev.package.semio-framework-replication]
+opt-level = 2
+
+[profile.wasm-dev.package.semio-framework-pack]
+opt-level = 2
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = "debuginfo"
+incremental = false
+trim-paths = "object"
+
+[profile.wasm-release]
+inherits = "release"
+opt-level = "s"
+lto = "thin"
+codegen-units = 1
+strip = "symbols"
+incremental = false
+trim-paths = "object"
+
+[profile.wasm-release.package.semio-framework-os-kernel]
+codegen-units = 1
+
+[workspace.lints.rust]
+future_incompatible = { level = "warn", priority = -1 }
+rust_2018_idioms = { level = "warn", priority = -1 }
+unsafe_op_in_unsafe_fn = "warn"
+unused_lifetimes = "warn"
+unused_qualifications = "warn"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+cloned_instead_of_copied = "warn"
+inefficient_to_string = "warn"
+map_unwrap_or = "warn"
+needless_pass_by_value = "warn"
+semicolon_if_nothing_returned = "warn"
+unnecessary_wraps = "warn"
+redundant_clone = "warn"

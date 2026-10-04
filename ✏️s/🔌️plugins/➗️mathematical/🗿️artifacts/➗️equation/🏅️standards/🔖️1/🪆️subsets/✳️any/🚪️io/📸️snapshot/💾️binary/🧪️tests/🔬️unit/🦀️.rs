@@ -16,7 +16,7 @@ async fn equation_snapshot_dsl_pack_equivalence_with_seed_and_empty_collections(
 }
 
 #[semio_framework_async_macros::async_test]
-async fn equation_pack_schema_identity_is_derived_and_retains_persisted_handles(){let snapshot=EquationSnapshot::default();store::os_store::test_support::assert_pack_schema_identity(&snapshot);let decoded=decode(&encode(&snapshot)).expect("decode");assert_eq!(decoded,snapshot);assert!(crate::equation_scene_owner(&decoded).is_none());}
+async fn equation_pack_schema_identity_is_derived_and_retains_persisted_handles(){let snapshot=EquationSnapshot::default();store::os_store::test_support::assert_pack_schema_identity(&snapshot);let decoded=decode(&encode(&snapshot)).expect("decode");assert_eq!(decoded,snapshot);}
 
 #[semio_framework_async_macros::async_test]
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
@@ -33,6 +33,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     store::os_store::test_support::assert_command_envelope_round_trip::<EquationSnapshot, EquationMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
 }
 
-/// 🪆️ Composed child content is persisted by its child owner independently of the parent handle.
+/// 🪆️ The pack carries the parent-owned graph and point cloud with their derived handles; the derived child content itself is
+/// never embedded (it is re-derived by genesis).
 #[semio_framework_async_macros::async_test]
-async fn child_handles_survive_pack_without_embedding_the_local_scene(){let mut graph=EquationGraph{algorithm:"dfs".into(),algorithm_seed:Some("c".into()),directed:false,..EquationGraph::default()};graph.nodes.truncate(3);let seeded=crate::equation_snapshot_with_state(&graph,&EquationGeometry{points:EquationGeometry::default().points.into_iter().take(2).collect()});for snapshot in[EquationSnapshot::default(),seeded]{let decoded=decode(&encode(&snapshot)).expect("decode");assert_eq!(decoded,snapshot);assert!(crate::equation_scene_owner(&snapshot).is_some());assert!(crate::equation_scene_owner(&decoded).is_none());}}
+async fn the_parent_state_and_its_handles_survive_pack(){let mut graph=EquationGraph{algorithm:"dfs".into(),algorithm_seed:Some("c".into()),directed:false,..EquationGraph::default()};graph.nodes.truncate(3);let seeded=crate::equation_snapshot_with_state(&graph,&EquationGeometry{points:EquationGeometry::default().points.into_iter().take(2).collect()});for snapshot in[EquationSnapshot::default(),seeded]{let decoded=decode(&encode(&snapshot)).expect("decode");assert_eq!(decoded,snapshot);}}

@@ -1,0 +1,2 @@
+semio stdio.ifc.2x3.dsl v1
+schema=stdio.ifc.2x3 file-description=[ 0 2 ] file-name=[ 3 ] file-schema=[ 4 ] instances=[ ] values=[ { kind=list children=[ 1 ] } { kind=string text="ViewDefinition [CoordinationView_V2.0]" children=[ ] } { kind=string text="2;1" children=[ ] } { kind=string text=cv20-before.ifc children=[ ] } { kind=list children=[ 5 ] } { kind=string text=IFC2X3 children=[ ] } ]

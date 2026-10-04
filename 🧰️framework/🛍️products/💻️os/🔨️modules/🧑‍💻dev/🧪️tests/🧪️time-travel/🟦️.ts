@@ -23,7 +23,7 @@
  *    alternative and switching between the two;
  * 8. fatal path: duplicate a node, drag the clone, withdraw the clone's `create-node` → review `blocked`, the drag row
  *    reads Error "Target missing", Finalize disabled; Next problem → Withdraw the drag → `ready`; Exit → zero trace;
- * 9. console: uncaught page errors, hard faults and `[DEBUG] ` lines fail the run; errors and warnings are digested;
+ * 9. console: uncaught page errors, hard faults and lines with AGENTS.md's temporary-log tag fail the run; errors and warnings are digested;
  * 10. input controls (G6, design §18): a rotate command → Edit → the angle dial (ticks at 0, ±90, 180°, degrees, Arrow = one
  *     step, PageUp = next detent); a scale command → Edit → the factor slider (log ticks at its snaps, a typed value beyond
  *     the hard bound refused naming the bound, the draft kept); Exit leaves zero trace;
@@ -38,24 +38,39 @@
  * 14. phone width (G13): a fresh 375 px touch context — band, editor and finalize prompt inside the viewport, touch-sized,
  *     reachable by touch and keyboard, no horizontal page scroll;
  * 15. tablet width (G13): the same journey in a fresh 768 × 1024 touch context (the tablet breakpoint of `📱️device`);
- * 16. long history (G9): a fresh document whose example load is one transaction of several hundred mutations — edit its first
- *     mutation, Accept, replay progress over at least `--long-history` mutations, Cancel (review "Replay needed"), Replay
- *     again with an Edit pressed while it replays (refused, the session keeps its target), Exit with zero trace; the history
- *     grows through the palette's Set Active Example until the replay is observable;
+ * 16. long history (G9, N1, N15): a fresh document whose example load is one transaction of several hundred mutations — its
+ *     row is a tree window whose `total` (React `data-tree-window-total`) counts every mutation and whose LAST one opens for
+ *     editing; edit its first mutation, Accept, replay progress over at least `--long-history` mutations, Cancel (review
+ *     "Replay needed"), Replay again with an Edit pressed while it replays (disabled, naming why; the session keeps its
+ *     target), Exit with zero trace; the history grows through the palette's Set Active Example until the replay is observable;
  * 17. two peers on one local folder (G10): two fresh contexts attached to the same folder — the second reads the first's
  *     document, the first begins a history edit, the second's drag arrives as a base move (the session survives, the remote
- *     edit stays downstream and unapplied), Accept replays it too, Finalize reaches the second peer. Presence (the ⏪ roster
- *     badge, "is editing") travels only through a hub and is recorded as such.
+ *     edit stays downstream and unapplied), Accept replays it too, Finalize reaches the second peer, whose history body shows
+ *     what it replays (`HistoryPatch.reprojection`). Presence (the ⏪ roster badge, "is editing") travels only through a hub
+ *     and is recorded as such;
+ * 18. history steps and the stepped document load (N17, §20.8): a fresh document, bound to a fresh folder, grown by a second
+ *     example load, its first mutation finalized as a new alternative; switching back to the main line is a deferred history
+ *     step — the body's `framework.history.reprojection` section ("History step", "Replaying history: d of t mutations") —
+ *     during which Undo is refused (`history.replaying`) and Cancel replay drops the step with zero trace; switching again
+ *     completes it. A second fresh page attaching that folder loads the archive stepwise ("Document load", "Loading
+ *     document: d of t"), refuses a command meanwhile (`document.loading`) and Cancel replay keeps its previous document;
+ * 19. configuration is not history (L4, §20.13), windows count rows (N1), list inputs (N2), transaction labels (§19.1): camera
+ *     zoom and pan add no history row; a drag adds exactly one (the commands window `total` grows by one) labelled by its
+ *     intent leaf; Undo after a camera move takes back the drag and leaves the camera; Edit of a duplicated node's
+ *     `create-node` → Add item / Remove item on its handles list (the row names its item count) → Exit with zero trace.
  *
  * Step 3 also asserts the G13 transitions (`history-panel-reveals-on-session-start`, `focus-moves-to-the-editor`), step 4
- * focus on the band, step 5 focus in the prompt; steps 3, 5, 14 and 15 run the structural ARIA oracle (`aria-query`'s WAI-ARIA
+ * focus on the band and the N15 refusal of Edit on another mutation while a changed draft is open (disabled, its reason named
+ * and shown), step 5 focus in the prompt and Edit refused while choosing; steps 3, 5, 14 and 15 run the structural ARIA oracle (`aria-query`'s WAI-ARIA
  * role model + `dom-accessibility-api`'s accessible names, bundled into the page) over the band, the history panel and the
  * prompt (wgpu: over its ARIA mirror). The reload check (G5) runs after step 13 and is attributed to step 5: every pre-reload
  * row with its localized label, the alternatives (main line + alternatives) and the current alternative.
  *
  * Every control is the real one, reached the way a user reaches it: the windowed history body is scrolled until the
  * section holds the row, steppers take keyboard input, arg-carrying commands run from the palette (`mod+p`) through the
- * command panel's staged form.
+ * command panel's staged form. Counts come from the windows' own `total` (the rows a window holds, materialised or not),
+ * never from the rows the DOM happens to hold (W1E-6); the wgpu mirror publishes no window size, so wgpu pages until the
+ * expected rows were all seen.
  *
  * `--renderer wgpu` drives the puzzle 2d wgpu shell (default serve :6112) through the same steps: rows, buttons, inputs and
  * the dialog through its ARIA mirror (`#semio-wgpu-accessibility`), chrome through `dumpChrome` hit rects, the board with the
@@ -94,7 +109,8 @@ const HISTORY_TAB = "framework.panel.history";
 const INSPECTION_TAB = "framework.panel.inspection";
 const PLUGIN_VARIANT = "puzzle2d";
 const CHECK_ID = "time-travel";
-const ORDER = [1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17, 9] as const;
+const ORDER = [1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 19, 14, 15, 16, 17, 18, 9] as const;
+const STEP_NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19] as const;
 const DEFAULT_SERVES: Readonly<Record<Renderer, string>> = { react: "http://127.0.0.1:6012/", wgpu: "http://127.0.0.1:6112/" };
 
 let renderer: Renderer = "react";
@@ -140,7 +156,7 @@ const configure = (segments: readonly string[], defaultOutDir: string, signal: A
   writeFileSync(ndjsonPath, "");
   t0 = Date.now();
   cancelled = signal;
-  for (const rows of [verdicts, notes, timeline, consoleRows, pageErrors, hardFaults, harvestedNotices] as unknown[][]) rows.length = 0;
+  for (const rows of [verdicts, notes, timeline, consoleRows, pageErrors, hardFaults, harvestedNotices, harvestedBandFaults] as unknown[][]) rows.length = 0;
 };
 
 /** 🌐️ The puzzle 2d playground route of the serve under test. */
@@ -205,8 +221,24 @@ const COPY = {
     createNode: (id: string) => `Create node "${id}"`,
     row: (role: "edit" | "undo" | "redo", scope: string | null, count: number) =>
       `${{ edit: "History edited", undo: "History edit undone", redo: "History edit redone" }[role]} — ${scope === null ? "overwrite" : `alternative ${scope}`}: ${count === 1 ? "1 mutation" : `${count} mutations`}`,
-    edit: /^(Edit)$/,
+    edit: /^(Edit)(:|$)/,
     withdraw: /^(Withdraw)$/,
+    switchAction: /^(Switch)(:|$)/i,
+    refusalIllegal: "Not possible right now",
+    refusalBlocked: "Blocked: resolve the pending change or the errors first",
+    stepTitle: "History step",
+    stepProgress: /Replaying history: (\d+) of (\d+) mutations/,
+    loadTitle: "Document load",
+    loadProgress: /Loading document: (\d+) of (\d+)/,
+    remoteTitle: "Remote history change",
+    remoteProgress: /Replaying a remote history change: (\d+) of (\d+) mutations/,
+    remotePaused: "Remote history change paused",
+    itemCount: (count: number) => `Items: ${count}`,
+    noticeReplaying: "History is still replaying — wait for it or cancel it first.",
+    noticeLoading: "The document is still loading — wait for it or cancel it first.",
+    historyFull: /^This document's history is full \((\d+) edits\)\.$/,
+    replayFaulted: "Replay failed: later mutations could not be checked",
+    channelMismatch: /^This plugin was built for app channel \d+, but this app speaks app channel \d+ — rebuild the plugin\.$/,
     pending: "Not applied while editing",
     targetMissing: "Error: Target missing",
     severityError: /\b(Error|Fatal)\b/,
@@ -245,8 +277,24 @@ const COPY = {
     createNode: (id: string) => `Knoten "${id}" erstellen`,
     row: (role: "edit" | "undo" | "redo", scope: string | null, count: number) =>
       `${{ edit: "Verlauf bearbeitet", undo: "Verlaufsbearbeitung rückgängig", redo: "Verlaufsbearbeitung wiederhergestellt" }[role]} — ${scope === null ? "überschrieben" : `Alternative ${scope}`}: ${count === 1 ? "1 Mutation" : `${count} Mutationen`}`,
-    edit: /^(Bearbeiten)$/,
+    edit: /^(Bearbeiten)(:|$)/,
     withdraw: /^(Zurückziehen)$/,
+    switchAction: /^(Wechseln)(:|$)/i,
+    refusalIllegal: "Derzeit nicht möglich",
+    refusalBlocked: "Blockiert: zuerst die offene Änderung oder die Fehler auflösen",
+    stepTitle: "Verlaufsschritt",
+    stepProgress: /Verlauf wird neu angewendet: (\d+) von (\d+) Mutationen/,
+    loadTitle: "Dokument laden",
+    loadProgress: /Dokument wird geladen: (\d+) von (\d+)/,
+    remoteTitle: "Entfernte Verlaufsänderung",
+    remoteProgress: /Entfernte Verlaufsänderung wird angewendet: (\d+) von (\d+) Mutationen/,
+    remotePaused: "Entfernte Verlaufsänderung pausiert",
+    itemCount: (count: number) => `Elemente: ${count}`,
+    noticeReplaying: "Der Verlauf wird noch neu angewendet — abwarten oder zuerst abbrechen.",
+    noticeLoading: "Das Dokument wird noch geladen — abwarten oder zuerst abbrechen.",
+    historyFull: /^Der Verlauf dieses Dokuments ist voll \((\d+) Bearbeitungen\)\.$/,
+    replayFaulted: "Erneutes Anwenden fehlgeschlagen: Spätere Mutationen konnten nicht geprüft werden",
+    channelMismatch: /^Dieses Plugin wurde für App-Kanal \d+ gebaut, diese App spricht aber App-Kanal \d+ — Plugin neu bauen\.$/,
     pending: "Beim Bearbeiten nicht angewendet",
     targetMissing: "Fehler: Ziel fehlt",
     severityError: /\b(Fehler|Kritisch)\b/,
@@ -971,6 +1019,60 @@ const reactReadHistory = () =>
     [] as HistoryRow[],
   );
 
+type TreeWindowRead = { key: string; path: string | null; total: number; offset: number; length: number };
+
+/** 🏢️ The tree window whose authored key is `key` (exact, or `/`-namespaced) as React stamps it on its branch container:
+ * `data-tree-window-total` (every row the window holds, materialised or not), `-offset` and `-length` (the slice it
+ * materialises now). Null while the container is not mounted, and always on wgpu, whose ARIA mirror publishes no window size.
+ * @see ../../../../../../🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🟦️.tsx */
+const treeWindow = (key: string): Promise<TreeWindowRead | null> =>
+  renderer === "wgpu"
+    ? Promise.resolve(null)
+    : evalSafe(
+        (target) => {
+          const el = Array.from(document.querySelectorAll<HTMLElement>("[data-tree-window-key]")).find((node) => {
+            const authored = node.getAttribute("data-tree-window-key") ?? "";
+            return authored === target || authored.endsWith(`/${target}`);
+          });
+          if (!el) return null;
+          const number = (name: string) => Number(el.getAttribute(name) ?? "NaN");
+          return { key: el.getAttribute("data-tree-window-key") ?? target, path: el.getAttribute("data-tree-window-path"), total: number("data-tree-window-total"), offset: number("data-tree-window-offset"), length: number("data-tree-window-length") };
+        },
+        null as TreeWindowRead | null,
+        key,
+      );
+
+/** 📶️ How many rows the history's Commands section holds — its window's `total`, never the rows the DOM holds (W1E-6). */
+const historyCommandsTotal = async () => {
+  const read = await treeWindow("framework.history.commands");
+  return read && Number.isFinite(read.total) ? read.total : null;
+};
+
+/** ⏬️ Scrolls the tree window `key` until it materialises its last row (`offset + length = total`), the way a person scrolls a
+ * long list to its end; answers the final window and how many scrolls it took (React only; null on wgpu). */
+const reachWindowEnd = async (key: string) => {
+  if (renderer === "wgpu") return null;
+  let read = await treeWindow(key);
+  let scrolls = 0;
+  for (; read && read.offset + read.length < read.total && scrolls < 60; scrolls++) {
+    await evalSafe(
+      (target) => {
+        const el = Array.from(document.querySelectorAll<HTMLElement>("[data-tree-window-key]")).find((node) => {
+          const authored = node.getAttribute("data-tree-window-key") ?? "";
+          return authored === target || authored.endsWith(`/${target}`);
+        });
+        (el?.lastElementChild as HTMLElement | null)?.scrollIntoView({ block: "end" });
+        return Boolean(el);
+      },
+      false,
+      key,
+    );
+    await sleep(500);
+    read = await treeWindow(key);
+  }
+  return read ? { ...read, scrolls, atEnd: read.offset + read.length >= read.total } : null;
+};
+
 /** ⏫️ Scrolls the history panel's scroll container to its start or end (the Commands section is windowed). wgpu: a wheel
  * over the panel's registered scroll region. */
 const scrollHistory = async (where: "start" | "end") => {
@@ -1038,20 +1140,23 @@ const scrollHistoryBy = async (fraction: number) => {
 };
 
 /** 📖️ Pages through the windowed History body from its start (`down`) or its end (`up`), calling `visit` with the rows each
- * page materialises until it answers true (found) or the body stops moving / shows nothing new for two pages. */
+ * page materialises until it answers true (found), every row the Commands window counts (`total`) was seen, or the body stops
+ * moving / shows nothing new (two pages without a window total — wgpu —, four while the total says rows remain). */
 const pageHistory = async (direction: "down" | "up", visit: (rows: HistoryRow[]) => Promise<boolean>) => {
   await openHistory();
   const scrolled = await scrollHistory(direction === "down" ? "start" : "end");
   if (scrolled) await sleep(600);
+  const total = await historyCommandsTotal();
   const seen = new Set<string>();
   let idle = 0;
-  for (let index = 0; index < 40; index++) {
+  for (let index = 0; index < 80; index++) {
     const rows = await readHistory();
     const fresh = rows.filter((row) => !seen.has(row.id)).length;
     for (const row of rows) seen.add(row.id);
     if (await visit(rows)) return true;
     idle = fresh ? 0 : idle + 1;
-    if (!scrolled || idle >= 2 || !(await scrollHistoryBy(direction === "down" ? 0.8 : -0.8))) break;
+    if (total !== null && [...seen].filter((id) => /framework\.history\.entry\.\d+$/.test(id)).length >= total) break;
+    if (!scrolled || idle >= (total === null ? 2 : 4) || !(await scrollHistoryBy(direction === "down" ? 0.8 : -0.8))) break;
     await sleep(350);
   }
   return false;
@@ -1190,10 +1295,101 @@ const pressRowAction = async (rowId: string, name: RegExp) => {
   return via;
 };
 
-/** 🔘️ Clicks a panel-body button by its authored id (`framework.history.editor.withdraw`, …). */
-const pressAuthored = async (authored: string) => {
+type ReasonReveal = { hover: boolean; leave: boolean; focus: boolean; escape: boolean; click: boolean; blur: boolean; describedBy: boolean };
+type RowActionState = { present: boolean; disabled: boolean | null; reason: string; label: string; shown: string | null; reveal: ReasonReveal | null; via: string };
+
+/** 🚫️ The row action of `rowId` named by `name` as a person perceives it (gap N15, W1E-1): whether it is disabled, the reason
+ * it names to assistive technology (always the button's `aria-describedby`; wgpu the mirror button's description) and, on
+ * React unless `reveal` is false, the reason a sighted person sees — `[data-slot=row-action-reason][data-revealed]` carrying
+ * the reason under the same id: revealed after a hover (≈ 400 ms), on keyboard focus and on a press, concealed again on
+ * leave, Escape and blur. wgpu's painted tooltip is outside the DOM, so its mirror description stands for it. */
+const rowActionState = async (rowId: string, name: RegExp, reveal = true): Promise<RowActionState> => {
+  if (renderer === "wgpu") {
+    const action = (await mirror()).find((node) => node.key.startsWith(`${rowId}::row-action::`) && name.test(node.label.trim()));
+    return action ? { present: true, disabled: action.disabled, reason: action.description, label: action.label, shown: action.description || null, reveal: null, via: action.key } : { present: false, disabled: null, reason: "", label: "", shown: null, reveal: null, via: "absent" };
+  }
+  const token = markToken();
+  const read = await evalSafe(
+    (arg) => {
+      const row = document.getElementById(arg.rowId);
+      const pattern = new RegExp(arg.source, arg.flags);
+      const button = Array.from(row?.querySelectorAll<HTMLElement>('button, [role="button"]') ?? []).find((el) => pattern.test((el.getAttribute("aria-label") ?? el.getAttribute("title") ?? el.innerText ?? "").trim()));
+      if (!button) return null;
+      button.setAttribute("data-probe-target", arg.token);
+      const reason = (button.getAttribute("aria-describedby") ?? "").split(/\s+/u).filter(Boolean).map((id) => document.getElementById(id)?.textContent ?? "").join(" ").trim();
+      return { disabled: button.getAttribute("aria-disabled") === "true" || (button as HTMLButtonElement).disabled, reason, label: (button.getAttribute("aria-label") ?? button.innerText ?? "").trim() };
+    },
+    null as { disabled: boolean; reason: string; label: string } | null,
+    { rowId, source: name.source, flags: name.flags, token },
+  );
+  if (!read) return { present: false, disabled: null, reason: "", label: "", shown: null, reveal: null, via: "absent" };
+  if (!reveal || !read.reason) return { present: true, ...read, shown: null, reveal: null, via: "action" };
+  const target = page.locator(`[data-probe-target="${token}"]`).first();
+  const revealed = () =>
+    evalSafe(
+      (arg) => {
+        const button = document.querySelector(`[data-probe-target="${arg.token}"]`);
+        const ids = (button?.getAttribute("aria-describedby") ?? "").split(/\s+/u).filter(Boolean);
+        const hint = Array.from(document.querySelectorAll<HTMLElement>('[data-slot="row-action-reason"][data-revealed]')).find((el) => (el.textContent ?? "").includes(arg.reason) && el.getBoundingClientRect().width > 2 && getComputedStyle(el).visibility !== "hidden");
+        return { shown: hint ? (hint.textContent ?? "").trim().slice(0, 160) : null, describedBy: Boolean(hint && ids.includes(hint.id)) };
+      },
+      { shown: null as string | null, describedBy: false },
+      { token, reason: read.reason },
+    );
+  await target.hover({ timeout: 3000, force: true }).catch(() => {});
+  await sleep(900);
+  const hover = await revealed();
+  await page.mouse.move(1, 1).catch(() => {});
+  await sleep(400);
+  const leave = await revealed();
+  await target.focus().catch(() => {});
+  await sleep(300);
+  const focus = await revealed();
+  await page.keyboard.press("Escape").catch(() => {});
+  await sleep(300);
+  const escape = await revealed();
+  await target.click({ force: true, timeout: 3000 }).catch(() => {});
+  await sleep(300);
+  const click = await revealed();
+  await evalSafe(() => (document.activeElement as HTMLElement | null)?.blur?.(), undefined);
+  await page.mouse.move(1, 1).catch(() => {});
+  await sleep(300);
+  const blur = await revealed();
+  const sequence: ReasonReveal = { hover: hover.shown !== null, leave: leave.shown === null, focus: focus.shown !== null, escape: escape.shown === null, click: click.shown !== null, blur: blur.shown === null, describedBy: hover.describedBy || focus.describedBy || click.describedBy };
+  const shown = hover.shown ?? focus.shown ?? click.shown;
+  return { present: true, ...read, shown: Object.values(sequence).every(Boolean) ? shown : null, reveal: sequence, via: "action" };
+};
+
+/** 👇️ Taps the row action of `rowId` named by `name` with a touch (a phone or tablet person) and answers whether the reason of
+ * a disabled one then shows as `[data-slot=row-action-reason][data-revealed]` (React; null on wgpu, whose tooltip is painted). */
+const tapRevealsReason = async (rowId: string, name: RegExp) => {
+  if (renderer === "wgpu") return null;
+  const target = await evalSafe(
+    (arg) => {
+      const row = document.getElementById(arg.rowId);
+      const pattern = new RegExp(arg.source, arg.flags);
+      const button = Array.from(row?.querySelectorAll<HTMLElement>('button, [role="button"]') ?? []).find((el) => pattern.test((el.getAttribute("aria-label") ?? el.getAttribute("title") ?? el.innerText ?? "").trim()));
+      if (!button) return null;
+      button.scrollIntoView({ block: "center" });
+      const rect = button.getBoundingClientRect();
+      const reason = (button.getAttribute("aria-describedby") ?? "").split(/\s+/u).filter(Boolean).map((id) => document.getElementById(id)?.textContent ?? "").join(" ").trim();
+      return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2, disabled: button.getAttribute("aria-disabled") === "true", reason };
+    },
+    null as { x: number; y: number; disabled: boolean; reason: string } | null,
+    { rowId, source: name.source, flags: name.flags },
+  );
+  if (!target) return { tapped: false, disabled: null as boolean | null, reason: "", shown: null as string | null };
+  await page.touchscreen.tap(target.x, target.y);
+  await sleep(500);
+  const shown = await evalSafe((reason) => (reason ? (Array.from(document.querySelectorAll<HTMLElement>('[data-slot="row-action-reason"][data-revealed]')).find((el) => (el.textContent ?? "").includes(reason) && el.getBoundingClientRect().width > 2)?.textContent?.trim() ?? null) : null), null as string | null, target.reason);
+  return { tapped: true, disabled: target.disabled as boolean | null, reason: target.reason, shown };
+};
+
+/** 🔘️ Clicks a panel-body button by its authored id (`framework.history.editor.withdraw`, …), first scrolling its section and
+ * its row into view unless `reveal` is false (a deep row of a windowed section the caller already scrolled to). */
+const pressAuthored = async (authored: string, reveal = true) => {
   const section = authored.match(/framework\.history\.(editor|timeTravel)/)?.[0];
-  if (section) {
+  if (section && reveal) {
     await revealHistory(section);
     await revealHistory(`${authored}.row`);
   }
@@ -1286,18 +1482,23 @@ const reactBand = () =>
   );
 
 /** 🎞️ Installs an in-page MutationObserver that records every distinct band state (stage | review | progress) with
- * its time, so a stage React rendered for one frame is still seen. Re-install after every reload. */
+ * its time, so a stage React rendered for one frame is still seen, and — for the page's life — every fault line the band shows
+ * (React: `data-semio-time-travel-fault` code + its words; wgpu: a status line carrying a code-like token). Re-install after
+ * every reload. */
 const installBandTrace = () =>
   renderer === "wgpu"
     ? evalSafe(
         (words) => {
-          const host = window as unknown as { __probeBandTrace?: { t: number; key: string }[]; __probeBandObserver?: MutationObserver };
+          const host = window as unknown as { __probeBandTrace?: { t: number; key: string }[]; __probeBandObserver?: MutationObserver; __probeBandFaults?: { code: string | null; text: string }[] };
           host.__probeBandTrace = [];
+          host.__probeBandFaults ??= [];
           host.__probeBandObserver?.disconnect();
           let last = "";
           const read = () => {
             const el = document.querySelector('#semio-wgpu-accessibility [data-node-key="shell.time-travel.status"]');
             const text = el?.getAttribute("aria-label") ?? "";
+            const code = /\b(?:timeTravel|vcs|history|plugin|document|module)\.[\w-]+/u.exec(text)?.[0] ?? null;
+            if (code && !host.__probeBandFaults!.some((row) => row.text === text)) host.__probeBandFaults!.push({ code, text: text.slice(0, 300) });
             const stage = words.stages.find(([, source]) => new RegExp(source).test(text))?.[0] ?? "";
             const review = words.reviews.find(([, source]) => new RegExp(source).test(text))?.[0] ?? "";
             const progress = el?.getAttribute("aria-valuenow") !== null && el?.getAttribute("aria-valuenow") !== undefined ? `${el?.getAttribute("aria-valuenow")}/${el?.getAttribute("aria-valuemax")}` : "";
@@ -1319,12 +1520,17 @@ const installBandTrace = () =>
     : reactInstallBandTrace();
 const reactInstallBandTrace = () =>
   evalSafe(() => {
-    const host = window as unknown as { __probeBandTrace?: { t: number; key: string }[]; __probeBandObserver?: MutationObserver };
+    const host = window as unknown as { __probeBandTrace?: { t: number; key: string }[]; __probeBandObserver?: MutationObserver; __probeBandFaults?: { code: string | null; text: string }[] };
     host.__probeBandTrace = [];
+    host.__probeBandFaults ??= [];
     host.__probeBandObserver?.disconnect();
     let last = "";
     const read = () => {
       const el = document.querySelector("[data-semio-time-travel]");
+      const fault = el?.querySelector<HTMLElement>("[data-semio-time-travel-fault]");
+      const code = fault?.getAttribute("data-semio-time-travel-fault") ?? null;
+      const words = (fault?.textContent ?? "").replace(/\s+/g, " ").trim();
+      if (fault && !host.__probeBandFaults!.some((row) => row.code === code && row.text === words)) host.__probeBandFaults!.push({ code, text: words.slice(0, 300) });
       const progress = el?.querySelector("progress");
       const key = el ? `${el.getAttribute("data-semio-time-travel")}|${el.querySelector("[data-semio-time-travel-review]")?.getAttribute("data-semio-time-travel-review") ?? ""}|${progress ? `${progress.getAttribute("value")}/${progress.getAttribute("max")}` : ""}` : "none";
       if (key === last) return;
@@ -1337,40 +1543,60 @@ const reactInstallBandTrace = () =>
     read();
     return true;
   }, false);
-/** 🔔️ Records every transient notice code the shell shows for the page's life — React's `[data-notice-code]`, wgpu's polite
- * `shell.notice` mirror node described by the code (`🧯️wgpu-transient-notice` corpus); re-install after a reload. */
+type ShownNotice = { code: string; text: string };
+
+/** 🔔️ Records every transient notice the shell shows for the page's life, by code with its words — React's
+ * `[data-notice-code]`, wgpu's polite `shell.notice` mirror node named by the message and described by the code
+ * (`🧯️wgpu-transient-notice` corpus); re-install after a reload. */
 const installNoticeTrace = () =>
   evalSafe((wgpu) => {
-    const host = window as unknown as { __probeNoticeCodes?: string[]; __probeNoticeObserver?: MutationObserver };
-    host.__probeNoticeCodes ??= [];
+    const host = window as unknown as { __probeNotices?: ShownNotice[]; __probeNoticeObserver?: MutationObserver };
+    host.__probeNotices ??= [];
     host.__probeNoticeObserver?.disconnect();
-    const keep = (code: string | null | undefined) => {
-      if (code && !host.__probeNoticeCodes!.includes(code)) host.__probeNoticeCodes!.push(code);
+    const keep = (code: string | null | undefined, text: string) => {
+      if (code && !host.__probeNotices!.some((row) => row.code === code && row.text === text)) host.__probeNotices!.push({ code, text: text.replace(/\s+/g, " ").trim().slice(0, 300) });
     };
     const read = () => {
       if (wgpu) {
         const node = document.querySelector('#semio-wgpu-accessibility [data-node-key="shell.notice"]');
         const describedBy = node?.getAttribute("aria-describedby");
-        keep(describedBy ? document.getElementById(describedBy)?.textContent?.trim() : null);
+        keep(describedBy ? document.getElementById(describedBy)?.textContent?.trim() : null, node?.getAttribute("aria-label") ?? "");
         return;
       }
-      for (const el of Array.from(document.querySelectorAll("[data-notice-code]"))) keep(el.getAttribute("data-notice-code"));
+      for (const el of Array.from(document.querySelectorAll<HTMLElement>("[data-notice-code]"))) keep(el.getAttribute("data-notice-code"), el.textContent ?? "");
     };
     host.__probeNoticeObserver = new MutationObserver(read);
     host.__probeNoticeObserver.observe(document.body, { subtree: true, childList: true, attributes: true, characterData: true, attributeFilter: wgpu ? undefined : ["data-notice-code"] });
     read();
     return true;
   }, false, renderer === "wgpu");
-const noticeCodes = () => evalSafe(() => ((window as unknown as { __probeNoticeCodes?: string[] }).__probeNoticeCodes ?? []).slice(), [] as string[]);
-const harvestedNotices: { locale: Locale; code: string }[] = [];
+const pageNotices = () => evalSafe(() => ((window as unknown as { __probeNotices?: ShownNotice[] }).__probeNotices ?? []).slice(), [] as ShownNotice[]);
+const harvestedNotices: ({ locale: Locale } & ShownNotice)[] = [];
 
-/** 🧺️ Keeps the current page's notice codes for the locale before its page goes away (a reload, a closed fresh context). */
+/** 🧺️ Keeps the current page's notices for the locale before its page goes away (a reload, a closed fresh context). */
 const harvestNotices = async () => {
-  for (const code of await noticeCodes()) if (!harvestedNotices.some((row) => row.locale === currentLocale && row.code === code)) harvestedNotices.push({ locale: currentLocale, code });
+  for (const row of await pageNotices()) if (!harvestedNotices.some((kept) => kept.locale === currentLocale && kept.code === row.code && kept.text === row.text)) harvestedNotices.push({ locale: currentLocale, ...row });
+  for (const row of await pageBandFaults()) if (!harvestedBandFaults.some((kept) => kept.locale === currentLocale && kept.code === row.code && kept.text === row.text)) harvestedBandFaults.push({ locale: currentLocale, ...row });
 };
 
-/** 🗣️ Every notice code the locale's pages showed so far: the harvested ones and the current page's. */
-const shownNoticeCodes = async () => [...new Set([...harvestedNotices.filter((row) => row.locale === currentLocale).map((row) => row.code), ...(await noticeCodes())])];
+type BandFault = { code: string | null; text: string };
+const pageBandFaults = () => evalSafe(() => ((window as unknown as { __probeBandFaults?: BandFault[] }).__probeBandFaults ?? []).slice(), [] as BandFault[]);
+const harvestedBandFaults: ({ locale: Locale } & BandFault)[] = [];
+
+/** 🧨️ Every fault line the locale's bands showed so far (harvested pages and the current one). */
+const shownBandFaults = async (): Promise<BandFault[]> => {
+  const rows = [...harvestedBandFaults.filter((row) => row.locale === currentLocale).map(({ code, text }) => ({ code, text })), ...(await pageBandFaults())];
+  return rows.filter((row, index) => rows.findIndex((other) => other.code === row.code && other.text === row.text) === index);
+};
+
+/** 🗣️ Every notice the locale's pages showed so far (code and words): the harvested ones and the current page's. */
+const shownNotices = async (): Promise<ShownNotice[]> => {
+  const rows = [...harvestedNotices.filter((row) => row.locale === currentLocale).map(({ code, text }) => ({ code, text })), ...(await pageNotices())];
+  return rows.filter((row, index) => rows.findIndex((other) => other.code === row.code && other.text === row.text) === index);
+};
+
+/** 📻️ Every notice code the locale's pages showed so far. */
+const shownNoticeCodes = async () => [...new Set((await shownNotices()).map((row) => row.code))];
 const bandTrace = () => evalSafe(() => ((window as unknown as { __probeBandTrace?: { t: number; key: string }[] }).__probeBandTrace ?? []).slice(), [] as { t: number; key: string }[]);
 const clearBandTrace = () => evalSafe(() => ((window as unknown as { __probeBandTrace?: unknown[] }).__probeBandTrace = []).length, 0);
 
@@ -1501,14 +1727,14 @@ const wgpuEditor = async (): Promise<Editor | null> => {
     const steppers = nodes.filter((other) => other.key.startsWith(`${node.key}::`) || other.key.startsWith(`${node.key}.`));
     return { id: node.key, tag: node.tag, stepper: node.role === "spinbutton", value: node.value ?? node.valueNow, step: null, min: null, max: null, plus: steppers.some((other) => /increase|erhöhen|\+/i.test(other.label)), minus: steppers.some((other) => /decrease|verringern|−|-/i.test(other.label)), role: node.role };
   };
-  const targets = mirrorFind(nodes, "framework.history.editor.input.targets");
-  const chips = nodes.filter((node) => /framework\.history\.editor\.input\.targets\.chip\.\d+$/.test(node.key)).map((node) => node.label);
+  const targets = mirrorFind(nodes, "framework.history.editor.input.targets.row");
+  const chips = nodes.filter((node) => /framework\.history\.editor\.input\.targets\.chip\.\d+\.row$/.test(node.key)).map((node) => node.label);
   return {
     heading: mirrorFind(nodes, "framework.history.editor.target")?.label ?? null,
     status: mirrorFind(nodes, "framework.history.timeTravel.status")?.label ?? null,
     dx: number("dx"),
     dy: number("dy"),
-    targets: targets ? { id: targets.key, chips, useSelection: nodes.some((node) => /use selection|auswahl verwenden/i.test(node.label) && node.key.includes("framework.history.editor")), text: targets.label } : null,
+    targets: targets ? { id: targets.key, chips, useSelection: Boolean(mirrorFind(nodes, "framework.history.editor.input.targets.useSelection")), text: `${targets.label} ${targets.description}`.trim() } : null,
     inputs: nodes.filter((node) => /framework\.history\.editor\.input\.[^/]*\.row$/.test(node.key)).map((node) => `${node.key.replace(/^.*framework\.history\.editor\.input/, "")}=${node.label.slice(0, 60)}`),
   };
 };
@@ -1534,14 +1760,15 @@ const reactEditor = () =>
           role: el.getAttribute("role") ?? el.querySelector('[role="slider"]')?.getAttribute("role") ?? null,
         };
       };
-      const targetsEl = find("framework.history.editor.input.targets");
-      const chips = Array.from(document.querySelectorAll("[id]")).filter((el) => /framework\.history\.editor\.input\.targets\.chip\.\d+$/.test(el.id)).map((el) => (el as HTMLElement).innerText.replace(/\s+/g, " ").trim());
+      const targetsEl = find("framework.history.editor.input.targets.row");
+      const chipLabel = (el: Element) => ((el.querySelector('[data-slot="tree-label"] span') ?? el.querySelector('[data-slot="tree-label"]') ?? el) as HTMLElement).innerText.replace(/\s+/g, " ").trim();
+      const chips = Array.from(document.querySelectorAll("[id]")).filter((el) => /framework\.history\.editor\.input\.targets\.chip\.\d+\.row$/.test(el.id)).map(chipLabel);
       return {
         heading: find("framework.history.editor.target")?.innerText.replace(/\s+/g, " ").trim() ?? null,
         status: find("framework.history.timeTravel.status")?.innerText.replace(/\s+/g, " ").trim() ?? null,
         dx: number("dx"),
         dy: number("dy"),
-        targets: targetsEl ? { id: targetsEl.id, chips, useSelection: Array.from(targetsEl.querySelectorAll("button")).some((b) => /use selection|auswahl verwenden/i.test(`${b.innerText} ${b.getAttribute("aria-label") ?? ""}`)), text: targetsEl.innerText.replace(/\s+/g, " ").trim().slice(0, 200) } : null,
+        targets: targetsEl ? { id: targetsEl.id, chips, useSelection: Boolean(find("framework.history.editor.input.targets.useSelection")), text: targetsEl.innerText.replace(/\s+/g, " ").trim().slice(0, 200) } : null,
         inputs: Array.from(document.querySelectorAll("[id]")).filter((el) => /framework\.history\.editor\.input\.[^/]*\.row$/.test(el.id)).map((el) => `${el.id.replace(/^.*framework\.history\.editor\.input/, "")}=${(el as HTMLElement).innerText.replace(/\s+/g, " ").trim().slice(0, 60)}`),
       };
     },
@@ -1708,32 +1935,12 @@ const typeSliderText = async (pointer: string, text: string) => {
   return { present: true, typed, via: "readout" };
 };
 
-/** 🫳️ Presses "Use selection" of the editor's reference input at `pointer` (React: the button inside the reference list;
- * wgpu: the mirrored button so named). */
+/** 🫳️ Presses "Use selection" of the editor's reference input at `pointer`: the first row of its windowed reference row,
+ * the button `framework.history.editor.input.<pointer>.useSelection` (its row `….useSelection.row`), on both renderers. */
 const pressUseSelection = async (pointer: string) => {
   await revealHistory(`framework.history.editor.input.${pointer}.row`);
-  const pattern = COPY[currentLocale].useSelection;
-  if (renderer === "wgpu") {
-    const nodes = await mirror();
-    const node = nodes.find((other) => other.key.includes(`framework.history.editor.input.${pointer}`) && pattern.test(other.label.trim())) ?? nodes.find((other) => /(^|[./])useSelection$/.test(other.key) && pattern.test(other.label.trim())) ?? nodes.find((other) => pattern.test(other.label.trim()));
-    if (!node) return null;
-    await mirrorActivate(node.key, node.window);
-    return `mirror:${node.key}`;
-  }
-  const token = markToken();
-  const found = await evalSafe(
-    (arg) => {
-      const host = Array.from(document.querySelectorAll<HTMLElement>("[id]")).find((el) => el.id === arg.target || el.id.endsWith(`/${arg.target}`));
-      const pattern = new RegExp(arg.source, arg.flags);
-      const button = Array.from(host?.querySelectorAll<HTMLElement>("button") ?? []).find((el) => pattern.test(`${el.innerText}`.trim()) || pattern.test((el.getAttribute("aria-label") ?? "").trim()));
-      button?.setAttribute("data-probe-target", arg.token);
-      return button ? (button.id || "button") : null;
-    },
-    null as string | null,
-    { target: `framework.history.editor.input.${pointer}`, source: pattern.source, flags: pattern.flags, token },
-  );
-  if (found) await page.locator(`[data-probe-target="${token}"]`).first().click({ timeout: 4000 }).catch((error) => log(`use selection click failed ${String(error).split("\n")[0]}`));
-  return found;
+  const pressed = await pressAuthored(`framework.history.editor.input.${pointer}.useSelection`);
+  return pressed.present && pressed.disabled !== true ? (pressed.id ?? "useSelection") : null;
 };
 
 type FocusRead = { key: string | null; tag: string; isBand: boolean; inBand: boolean; inDialog: boolean; inHistory: boolean };
@@ -1901,7 +2108,7 @@ const ariaVerdict = async (name: string, kind: "session" | "prompt") => {
 
 //#region 🔖️ReplayArm
 type ArmSample = { t: number; stage: string; review: string; done: number | null; total: number | null };
-type ArmLog = { samples: ArmSample[]; acted: { t: number; via: string; disabled: boolean | null; stage: string } | null };
+type ArmLog = { samples: ArmSample[]; acted: { t: number; via: string; disabled: boolean | null; reason: string; stage: string } | null };
 type ArmAction = { kind: "cancel" } | { kind: "edit"; rowId: string; source: string; flags: string };
 
 /** 🪤️ Arms the page to act in the first frame the band shows `replaying` — a person pressing the moment the progress bar
@@ -1930,14 +2137,15 @@ const armReplay = (action: ArmAction) =>
         const progress = band?.querySelector("progress");
         return { stage: band?.getAttribute("data-semio-time-travel") ?? "none", review: band?.querySelector("[data-semio-time-travel-review]")?.getAttribute("data-semio-time-travel-review") ?? "", done: progress ? Number(progress.getAttribute("value")) : null, total: progress ? Number(progress.getAttribute("max")) : null };
       };
-      const press = (): { via: string; disabled: boolean | null } => {
+      const press = (): { via: string; disabled: boolean | null; reason: string } => {
         const disabledOf = (el: Element) => (el as HTMLButtonElement).disabled === true || el.getAttribute("aria-disabled") === "true";
+        const reasonOf = (el: Element) => (el.getAttribute("aria-describedby") ?? "").split(/\s+/u).filter(Boolean).map((id) => document.getElementById(id)?.textContent ?? "").join(" ").trim();
         if (arg.action.kind === "cancel") {
           const control = document.querySelector<HTMLElement>(arg.wgpu ? '#semio-wgpu-accessibility [data-node-key="shell.time-travel.cancel-replay"]' : '[data-semio-time-travel-control="cancelReplay"]');
-          if (!control) return { via: "absent", disabled: null };
+          if (!control) return { via: "absent", disabled: null, reason: "" };
           const disabled = disabledOf(control);
           control.click();
-          return { via: "cancelReplay", disabled };
+          return { via: "cancelReplay", disabled, reason: reasonOf(control) };
         }
         const pattern = new RegExp(arg.action.source, arg.action.flags);
         const rowId = arg.action.rowId;
@@ -1945,18 +2153,18 @@ const armReplay = (action: ArmAction) =>
           const nodes = Array.from(document.querySelectorAll<HTMLElement>("#semio-wgpu-accessibility [data-node-key]"));
           const button = nodes.find((node) => (node.dataset.nodeKey ?? "").startsWith(`${rowId}::row-action::`) && pattern.test((node.getAttribute("aria-label") ?? "").trim()));
           const target = button ?? nodes.find((node) => node.dataset.nodeKey === rowId);
-          if (!target) return { via: "absent", disabled: null };
+          if (!target) return { via: "absent", disabled: null, reason: "" };
           const disabled = disabledOf(target);
           target.click();
-          return { via: button ? "action" : "row", disabled };
+          return { via: button ? "action" : "row", disabled, reason: reasonOf(target) };
         }
         const row = document.getElementById(rowId);
-        if (!row) return { via: "absent", disabled: null };
+        if (!row) return { via: "absent", disabled: null, reason: "" };
         const button = Array.from(row.querySelectorAll<HTMLElement>('button, [role="button"]')).find((el) => pattern.test((el.getAttribute("aria-label") ?? el.getAttribute("title") ?? el.innerText ?? "").trim()));
         const target = button ?? row.querySelector<HTMLElement>('[data-slot="tree-label"]') ?? row;
         const disabled = disabledOf(target) || row.getAttribute("aria-disabled") === "true";
         target.click();
-        return { via: button ? "action" : "row", disabled };
+        return { via: button ? "action" : "row", disabled, reason: reasonOf(target) };
       };
       const tick = () => {
         const state = read();
@@ -1986,6 +2194,169 @@ const disarmReplay = async () => {
   return final;
 };
 //#endregion 🔖️ReplayArm
+
+//#region 🔖️Reprojection
+type ReprojectionKind = "step" | "load" | "remote";
+type ReprojectionRead = { title: string; status: string; kind: ReprojectionKind | null; done: number | null; total: number | null; paused: boolean; cancel: boolean; rerun: boolean };
+
+/** 🎴️ Which history change a reprojection status line names, with its progress (`HistoryPatch.reprojection {kind, done,
+ * total, paused}`, rendered by the runtime's `time_travel_reprojection_section` in the current locale). */
+const reprojectionKindOf = (status: string): { kind: ReprojectionKind | null; done: number | null; total: number | null; paused: boolean } => {
+  const copy = COPY[currentLocale];
+  for (const [kind, pattern] of [["step", copy.stepProgress], ["load", copy.loadProgress], ["remote", copy.remoteProgress]] as const) {
+    const match = pattern.exec(status);
+    if (match) return { kind, done: Number(match[1]), total: Number(match[2]), paused: false };
+  }
+  return { kind: status.includes(copy.remotePaused) ? "remote" : null, done: null, total: null, paused: status.includes(copy.remotePaused) };
+};
+
+/** 📡️ The history body's `framework.history.reprojection` section (design §16.6, gap N17, §20.8): what replays — this
+ * replica's own history step, a whole-document load or a remote change — its progress in words, paused, and its Cancel
+ * replay / Replay again controls; null while nothing replays (or the History panel is closed). */
+const reprojection = async (): Promise<ReprojectionRead | null> => {
+  const section = await presentKey("framework.history.reprojection");
+  if (section === null) return null;
+  const status = (await textOfKey("framework.history.reprojection.status")).replace(/\s+/g, " ").trim();
+  const sectionText = renderer === "wgpu" ? (mirrorFind(await mirror(), "framework.history.reprojection")?.label ?? "") : await textOfKey("framework.history.reprojection");
+  const title = (sectionText.split("\n").map((line) => line.trim()).find(Boolean) ?? "").slice(0, 80);
+  return { title, status, ...reprojectionKindOf(status), cancel: (await presentKey("framework.history.reprojection.cancelReplay")) !== null, rerun: (await presentKey("framework.history.reprojection.rerun")) !== null };
+};
+
+type ReprojectionSample = { t: number; text: string; title: string; shell: string; kind: string | null; phase: string | null; notice: string | null; role: string | null; live: string | null; control: string | null; session: boolean };
+type ReprojectionPress = { t: number; via: string; disabled: boolean | null; notices: string[] };
+type ReprojectionArmLog = { samples: ReprojectionSample[]; undo: ReprojectionPress | null; cancel: ReprojectionPress | null };
+type ReprojectionArmAction = "observe" | "cancel" | "undo-then-cancel";
+
+/** 🕸️ Arms the page to react to a replaying history change the frame it is announced — a person hearing "History step: Replaying
+ * history…" or "Document load: Loading document…" — and samples, with its in-page time, both of its surfaces until
+ * {@link disarmReprojection}: the shell's polite status outside the History panel (React `[data-semio-history-reprojection]`
+ * with its `-phase`, `data-notice-code`, `role=status` announcement and `-control`; wgpu the mirror node
+ * `shell.history.reprojection`) and the History body's `framework.history.reprojection` section, plus whether a session band
+ * is open. `undo-then-cancel` first presses the body's Undo (`framework.history.undo.run`, a history step that must be refused
+ * while one replays or a document loads), then — once the refusal's notice showed or 1.5 s passed with the change still up —
+ * Cancel replay (the shell's `cancelReplay` control, else the body's); `cancel` presses Cancel replay at once; `observe` only
+ * samples. */
+const armReprojection = (action: ReprojectionArmAction) =>
+  evalSafe(
+    (arg) => {
+      const host = window as unknown as { __probeReprojection?: ReprojectionArmLog; __probeReprojectionObserver?: MutationObserver; __probeNotices?: { code: string }[] };
+      host.__probeReprojectionObserver?.disconnect();
+      const armedAt = performance.now();
+      const armLog: ReprojectionArmLog = { samples: [], undo: null, cancel: null };
+      host.__probeReprojection = armLog;
+      const find = (authored: string) => document.querySelector<HTMLElement>(arg.wgpu ? `#semio-wgpu-accessibility [data-node-key="${authored}"], #semio-wgpu-accessibility [data-node-key$="/${authored}"]` : `[id="${authored}"], [id$="/${authored}"]`);
+      const textOf = (el: HTMLElement | null) => (el === null ? "" : arg.wgpu ? `${el.getAttribute("aria-label") ?? ""}` : el.innerText).replace(/\s+/g, " ").trim();
+      const titleOf = (el: HTMLElement | null) => (el === null ? "" : arg.wgpu ? (el.getAttribute("aria-label") ?? "") : (el.innerText.split("\n").map((line) => line.trim()).find(Boolean) ?? "")).slice(0, 80);
+      const notices = () => (host.__probeNotices ?? []).map((row) => row.code);
+      const click = (el: HTMLElement | null, via: string): ReprojectionPress => {
+        const button = el === null ? null : arg.wgpu || el.matches("button") ? el : (el.querySelector<HTMLElement>("button") ?? el);
+        const disabled = button === null ? null : (button as HTMLButtonElement).disabled === true || button.getAttribute("aria-disabled") === "true";
+        button?.click();
+        return { t: Math.round(performance.now() - armedAt), via: button === null ? "absent" : via, disabled, notices: notices() };
+      };
+      const shell = () => {
+        if (arg.wgpu) {
+          const node = document.querySelector<HTMLElement>('#semio-wgpu-accessibility [data-node-key="shell.history.reprojection"]');
+          return { shell: (node?.getAttribute("aria-label") ?? "").trim(), kind: null, phase: null, notice: null, role: node?.getAttribute("role") ?? null, live: node?.getAttribute("aria-live") ?? null, control: null };
+        }
+        const el = document.querySelector<HTMLElement>("[data-semio-history-reprojection]");
+        const announcement = el?.querySelector<HTMLElement>("[data-semio-history-reprojection-announcement]") ?? null;
+        return { shell: (announcement?.textContent ?? "").replace(/\s+/g, " ").trim(), kind: el?.getAttribute("data-semio-history-reprojection") ?? null, phase: el?.getAttribute("data-semio-history-reprojection-phase") ?? null, notice: el?.getAttribute("data-notice-code") ?? null, role: announcement?.getAttribute("role") ?? null, live: announcement?.getAttribute("aria-live") ?? null, control: el?.querySelector("[data-semio-history-reprojection-control]")?.getAttribute("data-semio-history-reprojection-control") ?? null };
+      };
+      const tick = () => {
+        const status = textOf(find("framework.history.reprojection.status"));
+        const sample = { text: status, title: status === "" ? "" : titleOf(find("framework.history.reprojection")), ...shell(), session: document.querySelector(arg.wgpu ? '#semio-wgpu-accessibility [data-node-key="shell.time-travel.status"]' : "[data-semio-time-travel]") !== null };
+        const last = armLog.samples[armLog.samples.length - 1];
+        if (!last || last.text !== sample.text || last.shell !== sample.shell || last.phase !== sample.phase || last.control !== sample.control || last.session !== sample.session) {
+          armLog.samples.push({ t: Math.round(performance.now() - armedAt), ...sample });
+          if (armLog.samples.length > 600) armLog.samples.splice(1, 1);
+        }
+        const live = sample.text !== "" || sample.shell !== "";
+        if (!live || arg.action === "observe") return;
+        const cancel = () => (arg.wgpu ? null : document.querySelector<HTMLElement>('[data-semio-history-reprojection-control="cancelReplay"]')) ?? find("framework.history.reprojection.cancelReplay");
+        if (arg.action === "cancel" && armLog.cancel === null) {
+          armLog.cancel = click(cancel(), "cancelReplay");
+          return;
+        }
+        if (armLog.undo === null) {
+          armLog.undo = click(find("framework.history.undo.run") ?? find("framework.history.undo"), "framework.history.undo");
+          setTimeout(tick, 1600);
+          return;
+        }
+        if (armLog.cancel === null && (notices().some((code) => code === "history.replaying" || code === "document.loading") || performance.now() - armedAt - armLog.undo.t >= 1500)) armLog.cancel = click(cancel(), "cancelReplay");
+      };
+      host.__probeReprojectionObserver = new MutationObserver(tick);
+      host.__probeReprojectionObserver.observe(document.body, { subtree: true, childList: true, attributes: true, characterData: true });
+      tick();
+      return true;
+    },
+    false,
+    { action, wgpu: renderer === "wgpu" },
+  );
+
+/** 🛑️ Stops the reprojection arm and answers its log: every status it sampled and the presses it made. */
+const disarmReprojection = async () => {
+  const final = await evalSafe(() => (window as unknown as { __probeReprojection?: ReprojectionArmLog }).__probeReprojection ?? null, null as ReprojectionArmLog | null);
+  await evalSafe(() => (window as unknown as { __probeReprojectionObserver?: MutationObserver }).__probeReprojectionObserver?.disconnect(), undefined);
+  return final;
+};
+
+/** 📉️ An armed reprojection log summarised: the statuses it saw on either surface (de-duplicated), their kinds and largest
+ * progress total, when the change first showed and when it went away, the shell samples, and the presses. */
+const reprojectionSummary = (armLog: ReprojectionArmLog | null) => {
+  const samples = armLog?.samples ?? [];
+  const shown = samples.filter((sample) => sample.text !== "" || sample.shell !== "");
+  const lines = shown.flatMap((sample) => [sample.text, sample.shell]).filter(Boolean);
+  const kinds = [...new Set([...lines.map((line) => reprojectionKindOf(line).kind), ...shown.map((sample) => sample.kind)].filter((kind): kind is ReprojectionKind => kind === "step" || kind === "load" || kind === "remote"))];
+  const totals = lines.map((line) => reprojectionKindOf(line).total ?? 0);
+  const firstAt = shown[0]?.t ?? null;
+  const goneAt = firstAt === null ? null : (samples.find((sample) => sample.t > firstAt && sample.text === "" && sample.shell === "")?.t ?? null);
+  return { seen: shown.length > 0, kinds, total: totals.length ? Math.max(...totals) : null, titles: [...new Set(shown.map((sample) => sample.title).filter(Boolean))].slice(0, 4), texts: [...new Set(lines)].slice(0, 6), shell: shown.filter((sample) => sample.shell !== "").map(({ t, shell, kind, phase, notice, role, live, control, session }) => ({ t, shell, kind, phase, notice, role, live, control, session })).slice(0, 12), firstAt, goneAt, undo: armLog?.undo ?? null, cancel: armLog?.cancel ?? null };
+};
+
+/** 📢️ The shell-status verdicts of one observed history change (audit W1E-3, contract of S4-UI): it is announced outside the
+ * History panel — React `[data-semio-history-reprojection=<kind>]` with its `-phase`, a `role=status` `aria-live=polite`
+ * announcement reading the kernel copy "<title>: <text>"; wgpu the polite (or progressbar) mirror node
+ * `shell.history.reprojection` named by the kernel line —, its Cancel replay / Replay again controls show only while no
+ * session is open, and a refused change names its reason in words (its code only as `data-notice-code`). `suffix` tells two
+ * observations of one step apart; nothing is judged when the shell never showed the change. */
+const reprojectionShellVerdicts = (summary: ReturnType<typeof reprojectionSummary>, suffix = "") => {
+  const copy = COPY[currentLocale];
+  const titles: Record<ReprojectionKind, string> = { step: copy.stepTitle, load: copy.loadTitle, remote: copy.remoteTitle };
+  const shell = summary.shell;
+  if (!shell.length) {
+    note(`reprojection-shell-status-not-seen${suffix}`, { summary, reading: "the change came and went without a shell frame showing it (progress refreshes ≥ 100 ms)" });
+    return;
+  }
+  const announced = (sample: (typeof shell)[number]) => {
+    const kind = (sample.kind as ReprojectionKind | null) ?? reprojectionKindOf(sample.shell).kind;
+    const line = reprojectionKindOf(sample.shell);
+    const words = line.kind !== null || line.paused || /:\s*\S/.test(sample.shell);
+    if (renderer === "wgpu") return words && (sample.live === "polite" || sample.role === "progressbar");
+    return kind !== null && sample.shell.startsWith(`${titles[kind]}: `) && words && sample.role === "status" && sample.live === "polite" && ["progress", "paused", "refused"].includes(sample.phase ?? "");
+  };
+  verdict(`reprojection-status-is-announced-outside-the-history-panel${suffix}`, shell.every(announced), { shell, reading: renderer === "wgpu" ? "W1E-3 on wgpu: the mirror node `shell.history.reprojection` is a polite status (a progressbar while it replays) named by the kernel's status line" : "W1E-3: `[data-semio-history-reprojection=<kind>]` + `-phase=progress|paused|refused`, a `role=status` `aria-live=polite` announcement reading the kernel copy \"<title>: <text>\" (`historyReprojectionStatus`)" });
+  if (renderer === "wgpu") note(`reprojection-controls-live-in-the-history-body${suffix}`, { reading: "the wgpu shell status dispatches nothing; Cancel replay / Replay again are the History body's `framework.history.reprojection` rows" });
+  else verdict(`reprojection-controls-show-only-while-no-session-is-open${suffix}`, shell.every((sample) => (sample.session ? sample.control === null : sample.phase === "refused" || sample.control !== null)), { shell, reading: "`historyReprojectionControlV1`: Cancel replay (Replay again while a remote change is paused) only while no history-edit session is open — the session's band owns both while it is" });
+  const refused = shell.filter((sample) => sample.phase === "refused");
+  if (refused.length) verdict(`a-refused-history-change-names-its-reason-in-words${suffix}`, refused.every((sample) => sample.notice !== null && !sample.shell.includes(sample.notice)), { refused, reading: "a refused adoption reads `<kind>.refused` with the notice's words; its code is only `data-notice-code`" });
+};
+
+/** ⌛️ Waits until neither the shell status nor the history body shows a replaying change for `quietMs` in a row (the step
+ * adopted, the load finished or a cancel dropped it), at most `timeoutMs`. */
+const reprojectionSettled = async (timeoutMs = 120000, quietMs = 1500) => {
+  const start = Date.now();
+  let quietSince: number | null = null;
+  const shellLive = () => (renderer === "wgpu" ? mirror().then((nodes) => nodes.some((node) => node.key === "shell.history.reprojection")) : evalSafe(() => document.querySelector("[data-semio-history-reprojection]") !== null, false));
+  while (Date.now() - start < timeoutMs) {
+    const live = (await reprojection()) !== null || (await shellLive());
+    quietSince = !live ? (quietSince ?? Date.now()) : null;
+    if (quietSince !== null && Date.now() - quietSince >= quietMs) return { ok: true, waitedMs: Date.now() - start };
+    await sleep(250);
+  }
+  return { ok: false, waitedMs: Date.now() - start };
+};
+//#endregion 🔖️Reprojection
 //#endregion 🔖️Band
 
 //#region 🔖️Steps
@@ -2067,6 +2438,7 @@ const step2 = async (ctx: Ctx) => {
   await closePanels();
   await frameBoard(6);
   const newestBefore = newestEntrySeq(await allHistoryRows());
+  const totalBefore = await historyCommandsTotal();
   await closePanels();
   const { camera, picked } = await pickNodes(3, [[80, 40], [-60, 30]], [], 50);
   if (picked.length < 3) {
@@ -2104,6 +2476,9 @@ const step2 = async (ctx: Ctx) => {
   const grew = await waitUntil(async () => documentEntries(await allHistoryRows()).filter((row) => Number(row.key) > newestBefore), (rows) => rows.length >= 1, 30000, 1000);
   const added = grew.value;
   verdict("exactly-one-new-history-row", added.length === 1, { added: added.map((row) => `${row.id}=${row.label}`), waitedMs: grew.waitedMs });
+  const totalAfter = await historyCommandsTotal();
+  if (renderer === "wgpu") note("n1-commands-window-total-not-published", { reading: "the wgpu ARIA mirror publishes no tree-window size; the new row is proven by its sequence above" });
+  else verdict("n1-commands-window-total-grows-by-one-per-edit", totalBefore !== null && totalAfter === totalBefore + 1, { totalBefore, totalAfter, reading: "N1 / W1E-6: the Commands section is a tree window whose `total` counts every row, materialised or not" });
   const row = added.find((entry) => entry.label.startsWith(expected) || entry.text.includes(expected)) ?? added[0];
   verdict("row-labelled-from-the-drag-mutation", Boolean(row && (row.label === expected || row.label.startsWith(expected))), { expected, label: row?.label, text: row?.text?.slice(0, 160) });
   if (row) {
@@ -2112,6 +2487,7 @@ const step2 = async (ctx: Ctx) => {
     const mutation = expanded.mutations.find((entry) => entry.label.startsWith(expected)) ?? expanded.mutations[0];
     ctx.dragMutation = mutation?.key;
     verdict("row-expands-to-its-drag-selection-mutation", Boolean(mutation && mutation.label.startsWith(expected)), { state: expanded.state, mutations: expanded.mutations.map((entry) => `${entry.key}=${entry.label}`).slice(0, 8) });
+    verdict("s19-the-transaction-row-reads-its-intent-leaf", Boolean(mutation && row.label === mutation.label && !expanded.mutations.some((entry) => entry.key !== mutation.key && row.label === entry.label)), { row: row.label, intent: mutation?.label, children: expanded.mutations.map((entry) => entry.label).slice(0, 8), reading: "design §19.1: a tool transaction's row is labelled by its declared intent leaf (the drag), never by a structural support leaf that rides with it (proximity `connect-handles`); a one-leaf transaction holds it trivially" });
   }
   await shot("dragged");
   await closePanels();
@@ -2171,7 +2547,7 @@ const step3 = async (ctx: Ctx) => {
   const steppers = renderer === "wgpu" ? Boolean(ed?.dx?.stepper && ed?.dy?.stepper) : Boolean(ed?.dx?.stepper && ed?.dy?.stepper && ed.dx.step === "1" && ed.dy.step === "1" && ed.dx.plus && ed.dx.minus);
   verdict("editor-shows-dx-dy-steppers-with-grid-snap-step", steppers, { dx: ed?.dx, dy: ed?.dy, note: renderer === "wgpu" ? "the mirror announces a spinbutton; its snap step is proven by ArrowUp/ArrowDown in step 4" : "snapSource {config: gridFactor} resolves to the grid factor (default 1) as the stepper step" });
   verdict("editor-dx-dy-read-the-original-input", Boolean(ed?.dx && ed?.dy && near(Number(ed.dx.value), ctx.dx!, 0.005) && near(Number(ed.dy.value), ctx.dy!, 0.005)), { dx: ed?.dx?.value, dy: ed?.dy?.value, expected: [ctx.dx, ctx.dy] });
-  verdict("editor-shows-the-targets-reference-list", Boolean(ed?.targets && ed.targets.chips.length === 2 && ed.targets.chips.some((chip) => chip.includes(ctx.a!)) && ed.targets.chips.some((chip) => chip.includes(ctx.b!)) && ed.targets.useSelection), { targets: ed?.targets, inputs: ed?.inputs });
+  verdict("editor-shows-the-targets-reference-list", Boolean(ed?.targets && ed.targets.chips.length === 2 && ed.targets.chips.every((chip) => chip.trim().length > 0) && ed.targets.useSelection), { targets: ed?.targets, ids: [ctx.a, ctx.b], inputs: ed?.inputs, reading: "the reference row is a tree window: \"Use selection\" (`….targets.useSelection`), then one chip row per referenced id (`….targets.chip.<i>.row`) named by the entity's label (`ArtifactApp::entity_label`)" });
   await ariaVerdict("aria-band-editor-and-history-have-no-structural-findings", "session");
   emit({ kind: "inventory", tag: "editing", rows: await historyInventory(), editor: ed, band: b });
   await shot("editing");
@@ -2195,6 +2571,13 @@ const step4 = async (ctx: Ctx) => {
     verdict("arrow-keys-step-dx-by-the-snap-step", up.ok && down.ok, { up: up.value[ctx.a], down: down.value[ctx.a], dxField: (await editor())?.dx?.value });
   }
   const accepted = (await editor())?.dx?.value ?? null;
+  if (typed.present && ctx.cMutation) {
+    const copy = COPY[currentLocale];
+    const cRow = await findMutationRow(ctx.cMutation);
+    const state = cRow ? await rowActionState(cRow.id, copy.edit) : null;
+    verdict("n15-edit-is-refused-while-a-changed-draft-is-open-naming-why", Boolean(state?.present && state.disabled === true && state.reason.includes(copy.refusalBlocked)), { row: cRow?.label ?? null, state, expected: copy.refusalBlocked, reading: "gap N15: `TimeTravelSession::begin_refusal` is Blocked while the open draft differs from its original, so Edit on every other mutation row is disabled and names why (`RowAction::disabled_because` → React `aria-describedby`, wgpu the mirror button's description)" });
+    verdict("n15-the-refusal-reason-is-visible", Boolean(state?.shown?.includes(copy.refusalBlocked)), { shown: state?.shown ?? null, reveal: state?.reveal ?? null, reason: state?.reason ?? null, reading: renderer === "wgpu" ? "wgpu: the mirror button's description (its painted tooltip is outside the DOM)" : "W1E-1: `[data-slot=row-action-reason][data-revealed]` shows the reason after a hover (≈ 400 ms), on keyboard focus and on a press, hides it on leave, Escape and blur, and is always the button's `aria-describedby`" });
+  }
   await clearBandTrace();
   const via = await pressBand("accept");
   const review = await waitUntil(band, (b) => b?.stage === "reviewing" && Boolean(b.review), 60000, 100);
@@ -2231,6 +2614,11 @@ const step5 = async (ctx: Ctx) => {
   verdict("dialog-offers-new-alternative-with-a-name-field", Boolean(d?.submit && d.submit.text.includes(copy.newAlternative) && d.name && d.name.value === copy.defaultName), { submit: d?.submit, name: d?.name });
   if (renderer === "wgpu") note("band-while-the-dialog-is-open", { band: (await band())?.stage ?? null, reading: "the wgpu chrome projects only the modal dialog's nodes while it is open (`chrome_accessibility_nodes`), so the band's status is not announced then" });
   else verdict("band-reads-choosing-while-the-dialog-is-open", (await band())?.stage === "choosing", { band: (await band())?.stage });
+  const behind = renderer === "wgpu" ? null : (await readHistory()).find((row) => row.kind === "mutation" && row.key === ctx.cMutation);
+  if (behind) {
+    const state = await rowActionState(behind.id, copy.edit, false);
+    verdict("n15-edit-is-refused-while-choosing-naming-why", state.present && state.disabled === true && state.reason.includes(copy.refusalIllegal), { row: behind.label, state, expected: copy.refusalIllegal, reading: "gap N15: Begin is illegal while the finalize prompt is open (Choosing), so every Edit behind it is disabled and names why" });
+  } else note("n15-edit-while-choosing-not-observable", { reading: renderer === "wgpu" ? "the wgpu chrome projects only the modal prompt's nodes while it is open" : "the downstream mutation row is not materialised behind the prompt" });
   await ariaVerdict("aria-finalize-prompt-has-no-structural-findings", "prompt");
   await shot("dialog");
   await dialogChoose("overwrite");
@@ -2272,8 +2660,10 @@ const pickSyncFolder = async () => {
 
 /** 🗂️ Attaches the session document to the local folder `path` through the sync chip (`s-sync-status` →
  * `framework.sync.folder` → `framework.sync.folder.path` → Attach): `openSyncTarget` opens it with a
- * `persistedLocalOnly` folder binding the backbone worker reads and writes through the dev serve's `/semio-backbone`. */
-const attachFolder = async (path: string) => {
+ * `persistedLocalOnly` folder binding the backbone worker reads and writes through the dev serve's `/semio-backbone`.
+ * `afterPress` runs the moment Attach is pressed — a person turning to the History panel while the folder's archive loads —
+ * instead of the settle and the Escape that close the card. */
+const attachFolder = async (path: string, afterPress?: () => Promise<unknown>) => {
   if (renderer === "wgpu") {
     if (!(await openPanelTabIds()).includes("s-sync-status")) await wgpuPress("s-sync-status");
     await sleep(600);
@@ -2284,6 +2674,10 @@ const attachFolder = async (path: string) => {
     const typed = field ? await field.inputValue({ timeout: 2000 }).catch(() => null) : null;
     await sleep(400);
     const attached = await wgpuPress("framework.sync.attach");
+    if (afterPress) {
+      await afterPress();
+      return { card: shown.ok, typed, attachButton: attached !== null };
+    }
     await sleep(1500);
     await prepareChord();
     await page.keyboard.press("Escape").catch(() => {});
@@ -2301,6 +2695,10 @@ const attachFolder = async (path: string) => {
   const attachCount = await attach.count().catch(() => 0);
   if (attachCount) await attach.click({ timeout: 4000 }).catch(() => {});
   else await field.press("Enter").catch(() => {});
+  if (afterPress) {
+    await afterPress();
+    return { card: shown.ok, typed, attachButton: attachCount > 0 };
+  }
   await sleep(1500);
   await page.keyboard.press("Escape").catch(() => {});
   return { card: shown.ok, typed, attachButton: attachCount > 0 };
@@ -2368,11 +2766,19 @@ const reloadCheck = async (ctx: Ctx) => {
   verdict("folder-reconnect-offered", Boolean(offered && offered.state === "offered" && offered.role === "status" && offered.live === "polite" && offered.message.includes(folderName) && offered.reconnect && offered.forget), { band: offered, folderName, waitedMs: offer.waitedMs });
   let reattached: Record<string, unknown>;
   if (offered?.reconnect) {
+    await openHistory();
+    await armReprojection("observe");
     const via = renderer === "wgpu" ? await wgpuPress("s-folder-reconnect") : await page.locator("#s-folder-reconnect").click({ timeout: 4000 }).then(() => "button").catch(() => null);
     const busy = await waitUntil(reconnectBand, (state) => state === null || state.state === "reconnecting", 10000, 100);
     const settled = await waitUntil(reconnectBand, (state) => state === null, 60000, 500);
-    reattached = { via, sawBusy: busy.value?.state === "reconnecting", bandGone: settled.ok, waitedMs: settled.waitedMs };
+    await reprojectionSettled(60000);
+    const load = reprojectionSummary(await disarmReprojection());
+    reattached = { via, sawBusy: busy.value?.state === "reconnecting", bandGone: settled.ok, waitedMs: settled.waitedMs, load };
     verdict("folder-reconnect-attaches-and-closes-the-band", Boolean(via) && settled.ok, reattached);
+    if (load.seen) {
+      verdict("stepped-load-shows-its-progress", load.kinds.includes("load") && (load.total ?? 0) > 0, { load, reading: "§20.8: a whole-document load rides the history wire (`HistoryPatch.reprojection {kind: load}`) — \"Document load\" / \"Loading document: d of t\" in the shell status and the body's `framework.history.reprojection` section" });
+      reprojectionShellVerdicts(load, "-load");
+    } else note("stepped-load-finished-within-one-refresh", { load, reading: "the reconnect's archive load finished before anything re-rendered (progress refreshes ≥ 100 ms); step 18 loads a grown archive" });
   } else {
     reattached = { fallback: await attachFolder(folder) };
     note("folder-reconnect-fallback-manual-attach", reattached);
@@ -2614,7 +3020,7 @@ const readAlternatives = async (): Promise<AlternativeRow[]> => {
 const isCurrentAlternative = (row: AlternativeRow) => row.active || new RegExp(`\\b${COPY[currentLocale].current}\\b`).test(row.text);
 
 /** 🔃️ Switches to one alternative through its Switch row action, else the row's own activation. */
-const switchAlternative = async (row: AlternativeRow) => pressRowAction(row.id, /^(Switch|Switch to|Switch alternative|Wechseln|Umschalten|Alternative wechseln)$/i);
+const switchAlternative = async (row: AlternativeRow) => pressRowAction(row.id, COPY[currentLocale].switchAction);
 
 /** 🍀️ One history-edit session on the drag's dy through the real stepper → Accept → Finalize → New alternative `name`;
  * verdicts carry `suffix` so a second alternative reads apart from the first. Answers whether the session committed. */
@@ -2784,24 +3190,40 @@ const step8 = async (ctx: Ctx) => {
   await closePanels();
 };
 
-/** 📟️ Step 9 — the locale's console: uncaught page errors and hard guest faults fail; errors, warnings and `[DEBUG] `
- * lines are digested with their most frequent texts. */
+/** 📟️ Step 9 — the locale's console: uncaught page errors and hard guest faults fail; errors, warnings and lines with
+ * AGENTS.md's temporary-log tag are digested with their most frequent texts. */
 const step9 = async (_ctx: Ctx) => {
   const mine = consoleRows.filter((row) => row.locale === currentLocale);
   const errors = mine.filter((row) => row.type === "error" && !BENIGN_RE.test(row.text));
   const warnings = mine.filter((row) => row.type === "warning" && !BENIGN_RE.test(row.text));
-  const debug = mine.filter((row) => row.text.includes("[DEBUG] "));
+  const debug = mine.filter((row) => /\[DEBUG\] /u.test(row.text));
   const http = mine.filter((row) => row.type === "http");
   const top = (rows: ConsoleRow[]) => [...rows.reduce((map, row) => map.set(row.text.slice(0, 160), (map.get(row.text.slice(0, 160)) ?? 0) + 1), new Map<string, number>())].sort((x, y) => y[1] - x[1]).slice(0, 12);
   const refusals = [...new Set(mine.map((row) => /refused a local batch \S+ ((?:local|sync)\.[\w.-]+)/.exec(row.text)?.[1]).filter((code): code is string => Boolean(code)))];
   const shownCodes = await shownNoticeCodes();
+  const notices = await shownNotices();
+  const copy = COPY[currentLocale];
+  const full = notices.filter((row) => row.code === "history.full");
+  if (full.length) verdict("history-full-notice-names-the-edit-count", full.every((row) => Number(copy.historyFull.exec(row.text)?.[1] ?? "0") > 0), { full, reading: "`HistoryPatch.editCount` is the `{n}` this notice names, carried as data (never digits read from a fault message)" });
+  else note("no-history-full-notice", { reading: "the paged edit ledger admits far more edits than a run makes, so `HistoryPatch.editCount` shows only as this notice's `{n}`; its folding from every patch is the React law `folds the history's edit count from every patch` (W2-B suite)" });
+  const laneWords: Record<string, string> = { "history.replaying": copy.noticeReplaying, "document.loading": copy.noticeLoading };
+  const lane = notices.filter((row) => row.code in laneWords);
+  if (lane.length) verdict("history-lane-notices-speak-the-locale", lane.every((row) => row.text.includes(laneWords[row.code]!)), { lane, expected: laneWords, reading: "kernel `HISTORY_NOTICE_LABELS` (`🧫️history-notices`): a refused history-lane command reaches the person in the UI locale, by code" });
+  note("notices-shown", { notices: notices.slice(0, 24) });
+  const faults = await shownBandFaults();
+  if (faults.length) verdict("band-never-shows-a-raw-fault-code", faults.every((row) => row.text !== "" && (row.code === null ? false : !row.text.includes(row.code)) && (row.code === null || row.code.startsWith("timeTravel.") ? true : row.text.includes(copy.replayFaulted))), { faults, expected: copy.replayFaulted, reading: renderer === "wgpu" ? "the wgpu band's status line must never carry a fault code (any `<scope>.<code>` token here is one)" : "the band reads a known fault in its own words and any other as \"Replay failed: later mutations could not be checked\"; the code is only `data-semio-time-travel-fault`" });
+  else note("no-band-fault-in-this-run", { reading: "no replay fault or cancel showed on a band (step 16's Cancel shows `timeTravel.cancelled` as \"Replay cancelled\")" });
+  const mismatch = notices.filter((row) => row.code === "plugin.channel-mismatch");
+  const mismatchLines = mine.filter((row) => /plugin\.channel-mismatch|speaks app channel \d+, the host app channel \d+/u.test(row.text)).map((row) => row.text.slice(0, 300));
+  verdict("no-plugin-is-refused-for-a-channel-mismatch", mismatch.length === 0 && mismatchLines.length === 0, { mismatch, lines: mismatchLines.slice(0, 6), reading: "S4-BUMP's guest↔host channel handshake (`admit_guest_channel_version`, channel 21): a component built for another app channel is refused before its first frame — on a fresh activation none is" });
+  if (mismatch.length) verdict("channel-mismatch-notice-is-localized", mismatch.every((row) => copy.channelMismatch.test(row.text)), { mismatch, reading: "kernel `🧫️framework-notices`: the refusal names both channels in the UI locale, never the raw code" });
   if (!refusals.length) note("no-command-rejection-in-this-run", { shownCodes });
   else verdict("rejection-notices-carry-their-code", refusals.every((code) => shownCodes.includes(code)), { refusals, shownCodes, reading: renderer === "wgpu" ? "wgpu projects the transient notice as the polite `shell.notice` mirror node described by its code (`🧯️wgpu-transient-notice`); the main page's trace saw these codes" : "React `[data-notice-code]` over the main page's life" });
   const uncaught = pageErrors.filter((row) => row.locale === currentLocale);
   verdict("no-uncaught-page-errors", uncaught.length === 0, { count: uncaught.length, first: uncaught.slice(0, 3) });
   const hard = hardFaults.filter((row) => row.locale === currentLocale);
   verdict("no-hard-guest-faults", hard.length === 0, { count: hard.length, first: hard.slice(0, 3) });
-  verdict("console-is-debug-free", debug.length === 0, { count: debug.length, top: top(debug).slice(0, 6), reading: "AGENTS.md: temporary `[DEBUG] ` logs are removed before a run counts" });
+  verdict("console-is-debug-free", debug.length === 0, { count: debug.length, top: top(debug).slice(0, 6), reading: "AGENTS.md: temporary-log tagged lines are removed before a run counts" });
   note("console-digest", { lines: mine.length, errors: errors.length, warnings: warnings.length, debug: debug.length, http: top(http), topErrors: top(errors), topWarnings: top(warnings), topDebug: top(debug) });
 };
 
@@ -3381,6 +3803,12 @@ const deviceJourney = (device: Device) => async (_ctx: Ctx) =>
     const dxId = renderer === "wgpu" ? null : await resolveDomId("framework.history.editor.input.dx");
     const dxBox = dxId ? await byId(dxId).boundingBox({ timeout: 2000 }).catch(() => null) : null;
     verdict(`${key}-editor-input-reachable-by-keyboard`, typed.present && previewed.ok && (renderer === "wgpu" || insideViewport(dxBox)), { typed, dxBox, a: previewed.value[m.id] });
+    if (renderer === "wgpu") note(`${key}-a-tap-on-a-refused-edit-tells-its-reason`, { reading: "wgpu paints its tooltip; the mirror description carries the reason (step 4)" });
+    else {
+      const edited = typed.present ? await findMutationRow(row.mutation.key) : null;
+      const tapped = edited ? await tapRevealsReason(edited.id, copy.edit) : null;
+      verdict(`${key}-a-tap-on-a-refused-edit-tells-its-reason`, Boolean(tapped?.tapped && tapped.disabled && tapped.shown?.includes(copy.refusalBlocked)), { row: edited?.label ?? null, tapped, expected: copy.refusalBlocked, reading: "W1E-1 on touch: with a changed draft open every Edit is refused (Blocked); a tap on one reveals its reason (`[data-slot=row-action-reason][data-revealed]`)" });
+    }
     const accept = await tapBand("accept");
     const review = await waitUntil(band, (b) => b?.stage === "reviewing" && Boolean(b.review), 60000, 100);
     verdict(`${key}-accept-by-touch-reviews-ready`, review.value?.review === "ready", { accept, review: review.value?.review, text: review.value?.text?.slice(0, 160) });
@@ -3418,13 +3846,43 @@ const exampleTransaction = async () => {
     return entry !== null;
   });
   const found = entry as HistoryRow | null;
-  if (!found) return { entry: null as HistoryRow | null, mutations: [] as HistoryRow[], more: false };
+  if (!found) return { entry: null as HistoryRow | null, mutations: [] as HistoryRow[], window: null as TreeWindowRead | null };
   const expanded = await expandEntry(found.id);
-  const moreText = /^\s*\+?\d+\s+(more|weitere)\b/i;
-  const more = renderer === "wgpu"
-    ? (await mirror()).some((node) => /framework\.history\./.test(node.key) && !/framework\.history\.mutation\./.test(node.key) && (/(^|[./])more\b/i.test(node.key) || moreText.test(node.label)))
-    : await evalSafe((source) => Array.from(document.querySelectorAll<HTMLElement>("[id]")).some((el) => /framework\.history\./.test(el.id) && !/framework\.history\.mutation\./.test(el.id) && (/(^|[./])more\b/i.test(el.id.split("/").pop() ?? "") || new RegExp(source, "i").test(el.innerText ?? ""))), false, moreText.source);
-  return { entry: found as HistoryRow | null, mutations: expanded.mutations, more };
+  return { entry: found as HistoryRow | null, mutations: expanded.mutations, window: await treeWindow(`framework.history.entry.${found.key}`) };
+};
+
+/** 🔚️ The LAST mutation row of the history row `entry` (gap N1). React scrolls the row's tree window until it materialises its
+ * last row (`offset + length = total`) and answers the window. wgpu, whose mirror publishes no window size, pages the body down
+ * and keeps, in reading order, every mutation row between `entry` and the next history row — across pages, so a page that
+ * starts inside the row (its entry scrolled off) still counts — until `expected` were seen or nothing new shows. */
+const lastMutationOf = async (entry: HistoryRow, expected: number) => {
+  if (renderer !== "wgpu") {
+    const end = await reachWindowEnd(`framework.history.entry.${entry.key}`);
+    const rows = (await readHistory()).filter((row) => row.kind === "mutation" && row.parent === entry.id);
+    const last = rows[rows.length - 1] ?? null;
+    const lastIndex = last ? await evalSafe((id) => {
+      const el = document.getElementById(id);
+      const index = el?.getAttribute("data-tree-window-row") ?? el?.closest("[data-tree-window-row]")?.getAttribute("data-tree-window-row") ?? el?.querySelector("[data-tree-window-row]")?.getAttribute("data-tree-window-row");
+      return index === null || index === undefined ? null : Number(index);
+    }, null as number | null, last.id) : null;
+    return { total: end?.total ?? null, atEnd: end?.atEnd ?? false, scrolls: end?.scrolls ?? 0, seen: rows.length, last, lastIndex, createNodes: rows.filter((row) => COPY[currentLocale].createNodeRow.test(row.label)).length };
+  }
+  const seen = new Map<string, HistoryRow>();
+  let inside = false;
+  let idle = 0;
+  for (let page = 0; page < 80 && seen.size < expected && idle < 4; page++) {
+    const before = seen.size;
+    const rows = await readHistory();
+    for (const row of rows) {
+      if (row.kind === "entry") inside = row.id === entry.id;
+      else if (inside) seen.set(row.key, row);
+    }
+    idle = seen.size > before ? 0 : idle + 1;
+    if (!(await scrollHistoryBy(0.8))) break;
+    await sleep(400);
+  }
+  const rows = [...seen.values()];
+  return { total: null as number | null, atEnd: seen.size >= expected, scrolls: 0, seen: rows.length, last: rows[rows.length - 1] ?? null, lastIndex: rows.length ? rows.length - 1 : null, createNodes: rows.filter((row) => COPY[currentLocale].createNodeRow.test(row.label)).length };
 };
 
 /** 🖌️ Begins a session on the first editable of `candidates` and drafts a real change: the manifest id (a text input), else
@@ -3473,8 +3931,18 @@ const step16 = async (_ctx: Ctx) =>
     const board = await waitUntil(vitals, (v) => (v?.nodes ?? 0) > 0, 30000);
     const created = (board.value?.nodes ?? 0) + Math.max(0, board.value?.edges ?? 0);
     const tx = await exampleTransaction();
-    verdict("g9-every-mutation-of-the-long-transaction-is-reachable", Boolean(tx.entry) && (tx.mutations.length >= created || tx.more), { entry: tx.entry?.label ?? null, listed: tx.mutations.length, createdAtLeast: created, more: tx.more, rows: tx.mutations.map((row) => row.label).slice(0, 10), reading: "acceptance item 1: every mutation is editable — the example's transaction holds one create-node per node and one connect-handles per edge, so the panel must list them all or offer a way to the rest (N1: `HISTORY_PANEL_MUTATION_ROWS` = 8, no \"more\" row)" });
+    const nodes = board.value?.nodes ?? 0;
+    const end = tx.entry ? await lastMutationOf(tx.entry, created) : null;
+    const reachable = renderer === "wgpu" ? Boolean(end?.atEnd && end.last && end.createNodes >= nodes) : Boolean(tx.window && tx.window.total >= created && end?.atEnd && end.last && end.total !== null && end.lastIndex === end.total - 1);
+    verdict("g9-every-mutation-of-the-long-transaction-is-reachable", reachable, { entry: tx.entry?.label ?? null, window: tx.window, end: end ? { ...end, last: end.last?.label ?? null } : null, createdAtLeast: created, firstRows: tx.mutations.map((row) => row.label).slice(0, 6), reading: renderer === "wgpu" ? "acceptance item 1 / N1: the wgpu mirror publishes no window size, so the body is paged until the row's mutations seen reach one create-node per node (counted by label) and nodes + edges in all" : "acceptance item 1 / N1: the example's row is a tree window whose `total` counts every mutation (≥ one create-node per node + one connect-handles per edge); scrolled to its end it materialises row `total − 1` (`data-tree-window-row`) — W1E-6: counts come from `window.total`, never from DOM rows" });
     if (!tx.entry || !tx.mutations.length) return;
+    if (end?.last) {
+      const lastRow = end.last;
+      const via = await pressRowAction(lastRow.id, copy.edit);
+      const opened = await waitUntil(band, (b) => b?.stage === "editing" && (b.target ?? b.text).includes(lastRow.label.slice(0, 12)), 20000);
+      verdict("n1-the-last-mutation-of-the-long-transaction-opens-for-editing", opened.ok, { via, row: lastRow.label, key: lastRow.key, band: opened.value?.text?.slice(0, 160) });
+      if (opened.value) await exitSession();
+    }
     const headBefore = await positions();
     let rowsBefore = documentEntries(await allHistoryRows()).map((row) => row.label);
     let session: Awaited<ReturnType<typeof draftLongHistoryTarget>> = null;
@@ -3530,6 +3998,7 @@ const step16 = async (_ctx: Ctx) =>
       const codes = await shownNoticeCodes();
       const editedAfter = (second.samples ?? []).some((sample) => sample.stage === "editing" && sample.t > (second.acted?.t ?? Number.POSITIVE_INFINITY));
       verdict("g9-edit-during-replay-is-refused", second.acted !== null && second.acted.via !== "absent" && (second.acted.disabled === true || codes.includes("timeTravel.illegal")) && !editedAfter, { started, acted: second.acted, codes, editedAfter, frames: second.frames, row: otherRow.label, reading: "design §4: Begin is legal only from Inactive and Reviewing — while Replaying the press is refused (`timeTravel.illegal`, a warning notice) or the Edit action is disabled (N15)" });
+      if (second.acted && second.acted.via !== "absent") verdict("n15-edit-is-disabled-while-replaying-naming-why", second.acted.via === "action" && second.acted.disabled === true && second.acted.reason.includes(copy.refusalIllegal), { acted: second.acted, expected: copy.refusalIllegal, reading: "gap N15: while a replay runs every Edit row action is disabled (`RowAction::disabled_because`) and names why — an aria-disabled button with its reason as the accessible description, never an enabled control whose press is refused afterwards" });
       verdict("g9-the-replay-completes-the-review", completed.ok && (completed.value?.review === "ready" || completed.value?.review === "blocked"), { started, review: completed.value?.review, text: completed.value?.text?.slice(0, 200), total: second.total, reviewedAt: second.reviewedAt });
     }
     await shot("g9-reviewed");
@@ -3605,6 +4074,7 @@ const step17 = async (_ctx: Ctx) =>
     const begun = await beginEditOf(aRow.key);
     verdict("g10-first-peer-begins-a-history-edit", begun.band?.stage === "editing", { via: begun.via, band: begun.band?.text?.slice(0, 160) });
     if (begun.band?.stage !== "editing") return;
+    await armReprojection("observe");
     note("g10-presence-travels-only-through-a-hub", { a: await presenceText(), reading: "the roster's ⏪ badge and the \"is editing\" notes come from presence frames (presence bit 13), which only a hub socket carries (`🏪️store/👷️worker` `presenceAuthority` is set from hub frames); a folder binding carries none — the live two-peer presence case needs a hub-backed space serve (`🚀️local-hub` + `?space=`)" });
     use(b);
     await closePanels();
@@ -3622,12 +4092,17 @@ const step17 = async (_ctx: Ctx) =>
     const bOff = offsetOf(beforeB, movedB.value, n2);
     verdict("g10-second-peer-drags-another-node", Boolean(bOff), { n2, bOff });
     if (!bOff) return;
+    await openHistory();
+    await armReprojection("observe");
     use(a);
     const bLabel = dragLabel(1, bOff[0], bOff[1]);
     const arrived = await waitUntil(() => mutationLabelled(bLabel), (row) => row !== null, 45000, 1500);
     verdict("g10-a-remote-edit-arrives-while-editing", arrived.ok, { expected: bLabel, row: arrived.value?.text?.slice(0, 160) ?? null, waitedMs: arrived.waitedMs, reading: "B's write reaches A over the folder's change stream; A's store takes the new history while the session edits" });
     const during = await band();
     verdict("g10-the-session-survives-the-base-move", during?.stage === "editing" && Boolean((during.target ?? during.text).includes(aRow.label)), { stage: during?.stage, target: during?.target, text: during?.text?.slice(0, 160), reading: "design §7: remote ingests keep arriving while frozen → BaseMoved; in Editing the preview is re-shown, the draft stays" });
+    const whileEditing = reprojectionSummary(await disarmReprojection());
+    if (whileEditing.seen) reprojectionShellVerdicts(whileEditing, "-during-a-session");
+    else note("g10-the-base-move-replayed-within-one-refresh", { whileEditing });
     const previewA = await positions();
     verdict("g10-the-remote-edit-stays-downstream-and-unapplied-while-editing", placed(previewA, n2, p0[n2], 0, 0, 0.05) && Boolean(arrived.value?.text.includes(copy.pending)), { n2: previewA[n2], n2Before: p0[n2], row: arrived.value?.text?.slice(0, 160) ?? null, expected: copy.pending });
     const dxNew = Math.round(aOff[0] + 20);
@@ -3644,14 +4119,301 @@ const step17 = async (_ctx: Ctx) =>
     verdict("g10-finalize-closes-the-session", finalized.closed, finalized);
     use(b);
     const converged = await waitUntil(positions, (p) => placed(p, n1, p0[n1], dxNew, aOff[1], 0.05) && placed(p, n2, p0[n2], bOff[0], bOff[1], 0.05), 45000, 1000);
+    const adopted = reprojectionSummary(await disarmReprojection());
     const overwriteRow = documentEntries(await allHistoryRows()).find((row) => row.label.startsWith(copy.row("edit", null, 1)));
     verdict("g10-the-second-peer-sees-the-finalized-edit", converged.ok && Boolean(overwriteRow), { n1: converged.value[n1], n2: converged.value[n2], row: overwriteRow?.label ?? null, waitedMs: converged.waitedMs });
+    if (adopted.seen) {
+      verdict("g10-the-second-peer-shows-what-it-replays", adopted.kinds.length > 0, { adopted, reading: "N17 / §20.8: the peer names the change it replays (`HistoryPatch.reprojection {kind: remote|load}`) with its progress in words while it adopts the finalized edit" });
+      reprojectionShellVerdicts(adopted, "-peer");
+    } else note("g10-the-second-peer-adopted-within-one-refresh", { adopted, reading: "the folder change stream replaced the archive and the peer adopted it before its body re-rendered (progress refreshes ≥ 100 ms)" });
     await shot("g10-peers");
   });
 //#endregion 🔖️Peers
+
+//#region 🔖️HistorySteps
+/** 🧗️ Step 18 — N17 history steps and the §20.8 stepped document load, in fresh documents. Page A, bound to a fresh folder (its
+ * archive lands there), grows by a second example load and finalizes an edit of its first example's first mutation as a new
+ * alternative; switching back to the main line is a deferred local step the body shows as "History step" / "Replaying
+ * history: d of t mutations" — Undo meanwhile is refused (`history.replaying`), Cancel replay drops the step with zero trace
+ * (the alternative stays current) — and switching again completes it; one drag then marks A's head. Page B attaches A's folder:
+ * the archive loads stepwise ("Document load" / "Loading document: d of t"), Undo meanwhile is refused (`document.loading`) and
+ * Cancel replay keeps B's own document; uncancelled, B shows A's head. Presses land the frame the status shows (a person
+ * reacting to it); a step or a load that finishes before any frame shows it is recorded as such. */
+const step18 = async (_ctx: Ctx) =>
+  onFreshPages(async (open) => {
+    const copy = COPY[currentLocale];
+    const folder = join(OUT, `folder-${stamp}-${currentLocale}-steps`);
+    mkdirSync(folder, { recursive: true });
+    const a = await open(DESKTOP, "history-step");
+    verdict("n17-fresh-document-boots", a !== null, {});
+    if (!a) return;
+    await closePanels();
+    const attached = await attachFolder(folder);
+    await closePanels();
+    const examples = async () => documentEntries(await allHistoryRows()).filter((row) => copy.example.test(row.label)).length;
+    const examplesBefore = await examples();
+    const grown = await runPaletteCommand(copy.exampleQuery, copy.example, "setActiveExample");
+    const landed = await waitUntil(examples, (count) => count > examplesBefore, 120000, 2000);
+    verdict("n17-history-grows-by-a-second-example-load", landed.ok, { run: grown, examples: [examplesBefore, landed.value], waitedMs: landed.waitedMs });
+    await closePanels();
+    const tx = await exampleTransaction();
+    const session = tx.mutations.length ? await draftLongHistoryTarget(tx.mutations) : null;
+    verdict("n17-a-mutation-of-the-first-example-opens-with-a-draft", session !== null, { entry: tx.entry?.label ?? null, kind: session?.kind ?? null, target: session?.target.label ?? null });
+    if (!session) return;
+    await sleep(900);
+    await pressBand("accept");
+    const review = await waitUntil(band, (b) => b?.stage === "reviewing" && b.review !== null && b.review !== "needsReplay", 240000, 200);
+    if (review.value?.review !== "ready") {
+      verdict("n17-the-edit-reviews-ready", false, { review: review.value?.review ?? null, text: review.value?.text?.slice(0, 200) });
+      await exitSession();
+      return;
+    }
+    const name = `probe steps ${currentLocale} ${stamp.slice(11, 19)}`;
+    await pressBand("finalize");
+    await waitUntil(finalizeDialog, (d) => d !== null, 15000);
+    const typedName = await dialogFillName(name);
+    await dialogChoose("submit");
+    const closed = await waitUntil(band, (b) => b === null, 60000);
+    const listed = await waitUntil(readAlternatives, (rows) => rows.some((row) => row.text.includes(name)) && rows.some((row) => row.text.includes(copy.trunk)), 20000, 1000);
+    verdict("n17-the-edit-is-kept-as-a-new-alternative", closed.ok && listed.ok, { typedName, alternatives: listed.value.map((row) => `${row.key}=${row.text.slice(0, 60)}${isCurrentAlternative(row) ? " [current]" : ""}`) });
+    if (!listed.ok) return;
+    const onAlternative = await positions();
+    const rowsOnAlternative = documentEntries(await allHistoryRows()).map((row) => row.label);
+    const trunkRow = async () => (await readAlternatives()).find((row) => row.text.includes(copy.trunk)) ?? null;
+    const currentIsTrunk = async () => Boolean((await readAlternatives()).find(isCurrentAlternative)?.text.includes(copy.trunk));
+    const trunk = await trunkRow();
+    await armReprojection("undo-then-cancel");
+    const via = trunk ? await switchAlternative(trunk) : "absent";
+    await sleep(800);
+    await reprojectionSettled(180000);
+    const step = reprojectionSummary(await disarmReprojection());
+    emit({ kind: "history-step", via, step });
+    if (!step.seen) note("n17-the-history-step-adopted-within-one-refresh", { via, step, reading: "the switch's replay finished before the body re-rendered (progress refreshes ≥ 100 ms), so neither the refusal nor Cancel could be pressed while it ran" });
+    else {
+      verdict("n17-a-history-step-shows-its-progress", step.kinds.includes("step") && (step.total ?? 0) > 0, { step, reading: "N17: an alternative switch away from the applied tail is a deferred local step — \"History step\" / \"Replaying history: d of t mutations\" in the shell status and the body's `framework.history.reprojection` section (`HistoryPatch.reprojection {kind: step}`)" });
+      reprojectionShellVerdicts(step, "-step");
+      const refused = (await shownNotices()).find((row) => row.code === "history.replaying");
+      if (step.undo) verdict("n17-a-second-history-step-is-refused-while-one-replays", Boolean(refused?.text.includes(copy.noticeReplaying)), { undo: step.undo, notice: refused ?? null, expected: copy.noticeReplaying, reading: "`VcsError::HistoryReplaying`: every further history step (here Undo) is refused while one replays, with the localized notice" });
+      if (step.cancel) {
+        const back = await waitUntil(positions, (p) => movedIds(onAlternative, p, 1e-6).length === 0, 15000, 500);
+        const rowsAfter = documentEntries(await allHistoryRows()).map((row) => row.label);
+        verdict("n17-cancel-replay-drops-the-history-step-with-zero-trace", step.cancel.via !== "absent" && !(await currentIsTrunk()) && back.ok && rowsAfter.length === rowsOnAlternative.length, { cancel: step.cancel, drift: movedIds(onAlternative, back.value, 1e-6).slice(0, 6), rows: [rowsOnAlternative.length, rowsAfter.length], reading: "`discard_local_step`: Cancel replay drops a local step with zero trace — the alternative stays current and nothing is recorded" });
+      }
+    }
+    if (!(await currentIsTrunk())) {
+      const again = await trunkRow();
+      if (again) await switchAlternative(again);
+      await reprojectionSettled(180000);
+    }
+    const done = await waitUntil(currentIsTrunk, (ok) => ok, 60000, 1000);
+    verdict("n17-the-history-step-completes-on-the-main-line", done.ok, { alternatives: (await readAlternatives()).map((row) => `${row.text.slice(0, 50)}${isCurrentAlternative(row) ? " [current]" : ""}`) });
+    await closePanels();
+    await frameBoard(4);
+    const { camera, picked } = await pickNodes(1, [[60, 30]], [], 40);
+    if (picked[0]) {
+      await selectNodes(picked);
+      const before = await positions();
+      await dragBy(picked[0].at, 60 * camera.zoom, 30 * camera.zoom);
+      await waitUntil(positions, (p) => offsetOf(before, p, picked[0]!.id)?.some((v) => Math.abs(v) > 0.5) === true, 20000);
+    }
+    const headA = await positions();
+    await closePanels();
+    if (!attached.card) {
+      note("n17-no-folder-route-for-the-stepped-load", { attached, reading: "this build offers no folder card (browser wgpu), so the stepped archive load is reached only through a hub or a file import" });
+      return;
+    }
+    const written = await waitUntil(async () => readdirSync(folder, { recursive: true, withFileTypes: true }).filter((entry) => entry.isFile()).length, (count) => count > 0, 30000, 1000);
+    const b = await open(DESKTOP, "document-load");
+    verdict("n17-second-page-boots", b !== null, { archiveFiles: written.value });
+    if (!b) return;
+    const own = await positions();
+    await closePanels();
+    await armReprojection("undo-then-cancel");
+    const attachedB = await attachFolder(folder, () => openHistory());
+    await sleep(800);
+    await reprojectionSettled(180000);
+    const load = reprojectionSummary(await disarmReprojection());
+    emit({ kind: "document-load", load, attachedB });
+    const shown = await positions();
+    const isOwn = movedIds(own, shown, 1e-6).length === 0;
+    const isA = movedIds(headA, shown, 1e-6).length === 0;
+    if (!load.seen) {
+      note("n17-the-document-load-finished-within-one-refresh", { load, reading: "the archive load finished before the body re-rendered (progress refreshes ≥ 100 ms)" });
+      verdict("n17-attaching-the-folder-loads-the-shared-document", isA, { drift: movedIds(headA, shown, 1e-6).slice(0, 6), attachedB });
+      return;
+    }
+    verdict("n17-the-stepped-load-shows-its-progress", load.kinds.includes("load") && (load.total ?? 0) > 0, { load, reading: "§20.8: a whole-document load is stepped on the history wire (`HistoryPatch.reprojection {kind: load}`), never one `LoadDocument` — \"Document load\" / \"Loading document: d of t\" in the shell status and the body" });
+    reprojectionShellVerdicts(load, "-load");
+    const refused = (await shownNotices()).find((row) => row.code === "document.loading");
+    if (load.undo) verdict("n17-a-command-during-the-load-is-refused-naming-the-load", Boolean(refused?.text.includes(copy.noticeLoading)), { undo: load.undo, notice: refused ?? null, expected: copy.noticeLoading, reading: "N17: any command while a whole-document load is live is refused with the localized `document.loading` notice" });
+    if (load.cancel) verdict("n17-cancel-replay-keeps-the-previous-document", isOwn, { cancel: load.cancel, drift: movedIds(own, shown, 1e-6).slice(0, 6), reading: "`historyEditCancelReplay` without a session cancels a live load: the previous document stays, zero trace" });
+    else verdict("n17-attaching-the-folder-loads-the-shared-document", isA, { drift: movedIds(headA, shown, 1e-6).slice(0, 6), attachedB });
+  });
+//#endregion 🔖️HistorySteps
+
+//#region 🔖️ConfigAndLists
+/** 🛤️ Scrolls the tree window `windowKey` slice by slice from its start until the row `authored` is materialised and in view —
+ * how a person scrolls a long editor to one of its rows (wgpu: the body pages until the mirror projects it). */
+const revealWindowRow = async (windowKey: string, authored: string) => {
+  for (let attempt = 0; attempt < 40; attempt++) {
+    if (renderer === "wgpu" ? Boolean(mirrorFind(await mirror(), authored)) : await revealHistory(authored)) return true;
+    const moved = renderer === "wgpu"
+      ? await scrollHistoryBy(0.5)
+      : await evalSafe(
+          (arg) => {
+            const el = Array.from(document.querySelectorAll<HTMLElement>("[data-tree-window-key]")).find((node) => {
+              const key = node.getAttribute("data-tree-window-key") ?? "";
+              return key === arg.key || key.endsWith(`/${arg.key}`);
+            });
+            const rows = Array.from(el?.children ?? []).filter((child) => !child.hasAttribute("data-tree-window-spacer"));
+            const anchor = (arg.first ? el?.firstElementChild : rows[rows.length - 1]) as HTMLElement | null | undefined;
+            anchor?.scrollIntoView({ block: "start" });
+            return Boolean(anchor);
+          },
+          false,
+          { key: windowKey, first: attempt === 0 },
+        );
+    if (!moved) return false;
+    await sleep(500);
+  }
+  return false;
+};
+
+/** 📊️ The item count a list input's row names (`Items: n` / `Elemente: n`), scrolling its row into view only when it is not
+ * materialised; null while it cannot be reached. */
+const listItemCount = async (pointerKey: string) => {
+  const pattern = new RegExp(COPY[currentLocale].itemCount(0).replace("0", "(\\d+)"));
+  const read = async () => {
+    const match = pattern.exec(await textOfKey(`${pointerKey}.row`));
+    return match ? Number(match[1]) : null;
+  };
+  return (await read()) ?? ((await revealWindowRow("framework.history.editor.inputs", `${pointerKey}.row`)) ? read() : null);
+};
+
+/** ⚙️ Step 19 — on the main document: L4 (§20.13) — camera zoom and pan add no history row at all; N1 — one drag adds exactly
+ * one row, the Commands window `total` grows by one, and §19.1 — the row reads its intent leaf; L4 again — Undo after a camera
+ * move takes back the drag and leaves the camera, Redo re-applies it; N2 — Edit of a duplicated node's `create-node`: its
+ * handles list names its item count, Add item drafts one more item, Remove item drops it, Exit leaves zero trace. */
+const step19 = async (ctx: Ctx) => {
+  const copy = COPY[currentLocale];
+  const cameraNow = async () => cameraOf(await vitals());
+  const sameCamera = (left: { x: number; y: number; zoom: number }, right: { x: number; y: number; zoom: number }) => near(left.x, right.x, 1e-3) && near(left.y, right.y, 1e-3) && near(left.zoom, right.zoom, 1e-4);
+  await closePanels();
+  await frameBoard(6);
+  const newestBefore = newestEntrySeq(await allHistoryRows());
+  const totalBefore = await historyCommandsTotal();
+  await closePanels();
+  const cameraBefore = await cameraNow();
+  const box = await paneBox();
+  const centre = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  await page.mouse.move(centre.x, centre.y);
+  await page.mouse.wheel(0, -240);
+  await sleep(700);
+  await page.mouse.down({ button: "middle" });
+  for (let index = 1; index <= 10; index++) await page.mouse.move(centre.x + 6 * index, centre.y + 4 * index);
+  await page.mouse.up({ button: "middle" });
+  await sleep(700);
+  await page.mouse.wheel(0, 120);
+  await sleep(1500);
+  const cameraAfter = await cameraNow();
+  const rowsAfter = await allHistoryRows();
+  const totalAfter = await historyCommandsTotal();
+  const added = rowsAfter.filter((row) => row.kind === "entry" && Number(row.key) > newestBefore);
+  verdict("l4-camera-moves-are-never-history-rows", !sameCamera(cameraBefore, cameraAfter) && added.length === 0 && (renderer === "wgpu" || (totalBefore !== null && totalAfter === totalBefore)), { cameraBefore, cameraAfter, added: added.map((row) => row.label), totals: [totalBefore, totalAfter], reading: "L4 / §20.13: camera zoom and pan stream through the window transient and commit config edits, which the history projection never lists — not as a row, not as a mutation (the law observes ALL rows)" });
+  await closePanels();
+  const exclude = [ctx.a, ctx.b, ctx.c].filter((id): id is string => Boolean(id));
+  const { picked } = await pickNodes(1, [[50, 30]], exclude, 40);
+  if (!picked[0]) {
+    verdict("l4-one-clickable-node", false, {});
+    return;
+  }
+  const node = picked[0].id;
+  const newestBeforeDrag = newestEntrySeq(await allHistoryRows());
+  const totalBeforeDrag = await historyCommandsTotal();
+  const [target] = await rowsOf([node]);
+  await selectNodes(target ? [target] : picked);
+  const p0 = await positions();
+  const zoom = (await cameraNow()).zoom;
+  const [grab] = await rowsOf([node]);
+  await dragBy((grab ?? picked[0]).at, 50 * zoom, 30 * zoom);
+  const moved = await waitUntil(positions, (p) => offsetOf(p0, p, node)?.some((v) => Math.abs(v) > 0.5) === true, 20000);
+  const offset = offsetOf(p0, moved.value, node);
+  if (!offset) {
+    verdict("l4-the-drag-moves-the-node", false, { node });
+    return;
+  }
+  const row = await newMutation(newestBeforeDrag, (entry) => entry.label.startsWith(dragLabel(1, offset[0], offset[1])));
+  const totalAfterDrag = await historyCommandsTotal();
+  if (renderer === "wgpu") note("n1-commands-window-total-not-published", { reading: "the wgpu ARIA mirror publishes no tree-window size" });
+  else verdict("n1-one-drag-adds-exactly-one-row-to-the-window-total", Boolean(row.entry) && totalBeforeDrag !== null && totalAfterDrag === totalBeforeDrag + 1, { totals: [totalBeforeDrag, totalAfterDrag], row: row.entry?.label ?? null });
+  verdict("s19-the-drag-row-reads-its-intent-leaf", Boolean(row.entry && row.mutation && row.entry.label === row.mutation.label), { row: row.entry?.label ?? null, intent: row.mutation?.label ?? null, expected: dragLabel(1, offset[0], offset[1]) });
+  await closePanels();
+  await page.mouse.move(centre.x, centre.y);
+  await page.mouse.wheel(0, -180);
+  await sleep(1500);
+  const zoomed = await cameraNow();
+  await prepareChord();
+  await page.keyboard.press(`${mod}+z`).catch(() => {});
+  const undone = await waitUntil(async () => placed(await positions(), node, p0[node], 0, 0), (ok) => ok, 12000, 400);
+  await sleep(600);
+  const cameraUndone = await cameraNow();
+  verdict("l4-undo-takes-back-the-drag-not-the-camera", undone.ok && sameCamera(zoomed, cameraUndone), { node, at: (await positions())[node], before: p0[node], zoomed, cameraUndone, reading: "L4: undo of the artifact never steps over config edits — one Undo after a camera move takes back the drag, the camera stays" });
+  await prepareChord();
+  await page.keyboard.press(`${mod}+Shift+z`).catch(() => {});
+  const redone = await waitUntil(async () => placed(await positions(), node, p0[node], offset[0], offset[1]), (ok) => ok, 12000, 400);
+  verdict("l4-redo-re-applies-the-drag", redone.ok, { node, at: (await positions())[node], expected: [p0[node]![0] + offset[0], p0[node]![1] + offset[1]] });
+  await closePanels();
+  await frameBoard(4);
+  const spot = await pickCloneSource([...exclude, node]);
+  if (!spot) {
+    verdict("n2-clone-source-with-free-space", false, {});
+    return;
+  }
+  const idsBefore = Object.keys(await positions());
+  const nodesBefore = (await vitals())?.nodes ?? -1;
+  const newestBeforeClone = newestEntrySeq(await allHistoryRows());
+  const [source] = await rowsOf([spot.row.id]);
+  await selectNodes(source ? [source] : [spot.row]);
+  await prepareChord();
+  await page.keyboard.press(`${mod}+d`).catch(() => {});
+  await waitUntil(vitals, (v) => (v?.nodes ?? -1) === nodesBefore + 1, 30000);
+  const clone = Object.keys(await positions()).find((id) => !idsBefore.includes(id));
+  await prepareChord();
+  await page.keyboard.press("Escape").catch(() => {});
+  const createRow = clone ? await newMutation(newestBeforeClone, (entry) => entry.label.startsWith(copy.createNode(clone))) : { entry: null, mutation: null, waitedMs: 0 };
+  verdict("n2-duplicate-adds-a-create-node-row", Boolean(createRow.mutation), { clone, mutation: createRow.mutation?.label ?? null });
+  if (!createRow.mutation) return;
+  const head = await positions();
+  const rowsPre = documentEntries(await allHistoryRows()).map((entry) => entry.label);
+  const begun = await beginEditOf(createRow.mutation.key);
+  verdict("n2-edit-opens-the-create-node-session", begun.band?.stage === "editing", { via: begun.via, band: begun.band?.text?.slice(0, 160) });
+  if (begun.band?.stage !== "editing") return;
+  const list = "framework.history.editor.input.node.handles";
+  await readEditor();
+  const count = await listItemCount(list);
+  const handlesBefore = (await vitals())?.handles ?? null;
+  await revealWindowRow("framework.history.editor.inputs", `${list}.row`);
+  const add = await pressAuthored(`${list}.add`, false);
+  const grew = await waitUntil(() => listItemCount(list), (now) => count !== null && now === count + 1, 10000, 400);
+  verdict("n2-add-item-drafts-one-more-list-item", count !== null && add.present && add.disabled !== true && grew.ok, { add, count: [count, grew.value], handles: [handlesBefore, (await vitals())?.handles ?? null], reading: "N2: a list input's row names its item count and holds Add item (`historyEditInput{path: …/handles/-, edit: insert}`), which drafts the item's default" });
+  if (count !== null && grew.ok) {
+    await revealWindowRow("framework.history.editor.inputs", `${list}.${count}.row`);
+    const remove = await pressAuthored(`${list}.${count}.remove`, false);
+    const shrank = await waitUntil(() => listItemCount(list), (now) => now === count, 10000, 400);
+    verdict("n2-remove-item-drops-the-drafted-item", remove.present && remove.disabled !== true && shrank.ok, { remove, count: [grew.value, shrank.value], reading: "N2: each list item's first row holds Remove item (`edit: remove` at its pointer)" });
+  }
+  note("n2-long-option-rows-not-offered-by-puzzle-2d", { reading: "a select or segmented input with MORE than `UI_FIXED_LIST_ITEMS` (32) options becomes windowed option rows (`….option.<i>`, `role=treeitem` with `aria-selected=true|false`, the chosen row `data-selected`); no puzzle 2d leaf offers that many, so the contract is proven by the React `🧺️ListInputs` and wgpu `the_guest_editor_offers_list_and_chip_edits_within_their_bounds` laws (S4-UI), not live" });
+  const exited = await exitSession();
+  const restored = await waitUntil(positions, (p) => movedIds(head, p, 1e-6).length === 0, 15000, 500);
+  const rowsPost = documentEntries(await allHistoryRows()).map((entry) => entry.label);
+  verdict("n2-exit-leaves-zero-trace", exited.ok && restored.ok && rowsPost.length === rowsPre.length, { band: exited.value?.stage ?? null, drift: movedIds(head, restored.value, 1e-6).slice(0, 6), rows: [rowsPre.length, rowsPost.length] });
+  await shot("config-and-lists");
+  await closePanels();
+};
+//#endregion 🔖️ConfigAndLists
 //#endregion 🔖️Gaps
 
-const STEPS: Record<number, (ctx: Ctx) => Promise<void>> = { 1: step1, 2: step2, 3: step3, 4: step4, 5: step5, 6: step6, 7: step7, 8: step8, 9: step9, 10: step10, 11: step11, 12: step12, 13: step13, 14: step14, 15: step15, 16: step16, 17: step17 };
+const STEPS: Record<number, (ctx: Ctx) => Promise<void>> = { 1: step1, 2: step2, 3: step3, 4: step4, 5: step5, 6: step6, 7: step7, 8: step8, 9: step9, 10: step10, 11: step11, 12: step12, 13: step13, 14: step14, 15: step15, 16: step16, 17: step17, 18: step18, 19: step19 };
 //#endregion 🔖️Steps
 
 //#region 🔖️Main
@@ -3673,6 +4435,8 @@ const runLocale = async (locale: Locale) => {
   mod = (await page.evaluate(() => navigator.platform).catch(() => "MacIntel")).includes("Mac") ? "Meta" : "Control";
   currentStep = 1;
   if (!verdict("boot", booted, { mod })) {
+    const mismatch = consoleRows.filter((row) => row.locale === locale && /plugin\.channel-mismatch|speaks app channel \d+, the host app channel \d+/u.test(row.text)).map((row) => row.text.slice(0, 300));
+    if (mismatch.length) verdict("no-plugin-is-refused-for-a-channel-mismatch", false, { lines: mismatch.slice(0, 6), reading: "the serve's plugin component speaks another app channel than its host (S4-BUMP handshake): a stale build — coordinator action: re-describe / re-activate" });
     dumpJson("boot-failure", { inventory: await historyInventory(), console: consoleRows.filter((row) => row.locale === locale).slice(-80) });
     await shot("boot-failure");
     await context.close().catch(() => {});
@@ -3795,7 +4559,7 @@ const runProbe = async (): Promise<RunSummary> => {
   }
   const stepLines: string[] = [];
   for (const locale of locales) {
-    for (const step of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]) {
+    for (const step of STEP_NUMBERS) {
       const rows = verdicts.filter((row) => row.locale === locale && row.step === step);
       if (!rows.length) continue;
       const failed = rows.filter((row) => !row.ok);

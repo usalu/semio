@@ -76,19 +76,19 @@ pub mod derived_composition {
     /// 🔍️ Real referential-invariant sweep over a decoded snapshot — separated from `validate` so both
     /// the registered `SubsetValidator` and this module's own tests exercise the exact same logic.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn check_semio_animation_invariants(snapshot: &SemioAnimationSnapshot) -> Vec<dsl::Diagnostic> {
+    fn check_semio_animation_invariants(snapshot: &SemioAnimationSnapshot) -> Vec<semio_framework_diagnostic::Diagnostic> {
         let mut diagnostics = Vec::new();
         for (ti, timeline) in snapshot.timelines.iter().enumerate() {
             for (ci, channel) in timeline.channels.iter().enumerate() {
                 if channel.keyframes.is_empty() {
-                    diagnostics.push(dsl::Diagnostic::error("stdio.semio_animation.empty-channel", dsl::TextSpan::at(1, 1), format!("timeline[{ti}] channel[{ci}] (node {:?}) has zero keyframes", channel.target.node)));
+                    diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.semio_animation.empty-channel", semio_framework_diagnostic::TextSpan::at(1, 1), format!("timeline[{ti}] channel[{ci}] (node {:?}) has zero keyframes", channel.target.node)));
                     continue;
                 }
                 for w in channel.keyframes.windows(2) {
                     if w[1].t < w[0].t {
-                        diagnostics.push(dsl::Diagnostic::error(
+                        diagnostics.push(semio_framework_diagnostic::Diagnostic::error(
                             "stdio.semio_animation.non-monotonic-keyframes",
-                            dsl::TextSpan::at(1, 1),
+                            semio_framework_diagnostic::TextSpan::at(1, 1),
                             format!("timeline[{ti}] channel[{ci}] (node {:?}): keyframe t must be non-decreasing, got {} after {}", channel.target.node, w[1].t, w[0].t),
                         ));
                     }
@@ -100,14 +100,14 @@ pub mod derived_composition {
 
     impl SubsetValidator for SemioAnimationValidator {
         const DIALECT: Dialect = DIALECT;
-        async fn validate(payload: &IoPayload) -> Vec<dsl::Diagnostic> {
+        async fn validate(payload: &IoPayload) -> Vec<semio_framework_diagnostic::Diagnostic> {
             let decoded = match payload {
                 IoPayload::Binary(bytes) => <SemioAnimationSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
                 IoPayload::Text(text) => <SemioAnimationSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
             };
             match decoded {
                 Some(snapshot) => check_semio_animation_invariants(&snapshot),
-                None => vec![dsl::Diagnostic::error("stdio.semio_animation.validate-decode-failed", dsl::TextSpan::at(1, 1), "SemioAnimationValidator: payload did not decode as a SemioAnimationSnapshot".to_string())],
+                None => vec![semio_framework_diagnostic::Diagnostic::error("stdio.semio_animation.validate-decode-failed", semio_framework_diagnostic::TextSpan::at(1, 1), "SemioAnimationValidator: payload did not decode as a SemioAnimationSnapshot".to_string())],
             }
         }
     }

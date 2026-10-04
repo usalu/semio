@@ -56,6 +56,17 @@
           ]
         },
         {
+          "mutationId": "patch-snapshot",
+          "sourceMutationDirectoryName": "🩹️patch-snapshot",
+          "mutationDirectoryName": "🩹️patch-snapshot",
+          "scenarios": [
+            {
+              "id": "edits-the-value-arm-of-the-envelope",
+              "directoryName": "✏️edits"
+            }
+          ]
+        },
+        {
           "mutationId": "apply-image",
           "sourceMutationDirectoryName": "🖼️apply-image",
           "mutationDirectoryName": "🖼️apply-image",
@@ -69,6 +80,7 @@
       ],
       "kinds": [
         "set-snapshot",
+        "patch-snapshot",
         "apply-brep",
         "apply-mesh",
         "apply-model",
@@ -112,6 +124,27 @@
             "operation": "set-snapshot",
             "bridgeVersion": 1,
             "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-base-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "json-rust-semio-envelope-carrier-reader"
+            }
+          ]
+        },
+        {
+          "id": "patch-snapshot",
+          "capability": "semio-v1-base-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "patch-snapshot",
+            "bridgeVersion": 1,
+            "variant": "PatchSnapshot"
           },
           "oracleRequirements": [
             {
@@ -1357,22 +1390,22 @@
           "role": "expected-before-json",
           "path": "../🧫️fixtures/🔺️apply-mesh-applied/⬅️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:910e779d26c7a29a866006a446d79ef40424db3049b7892e8d218ffec3b504dd",
-          "bytes": 369
+          "sha256": "sha256:1cc9c9327a9a556a5d883a48730ba8be97b87ff3f1cae420b8f0c0d6560c11fb",
+          "bytes": 543
         },
         {
           "role": "mutation-json",
           "path": "../🧫️fixtures/🔺️apply-mesh-applied/🦠️mutation.json",
           "mediaType": "application/json",
-          "sha256": "sha256:b2485ef7fe2f42bab79247dcb2541c4640ae984af648d471696a663843410571",
-          "bytes": 343
+          "sha256": "sha256:9cd3105d88e6d96513bfec3a67fd1f35f5e6cfae88a51f33474f5641c051e06f",
+          "bytes": 527
         },
         {
           "role": "expected-after-json",
           "path": "../🧫️fixtures/🔺️apply-mesh-applied/➡️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:5a2f79baae1996067966e02a0c83327530bf24de1d133a2492be97cbeec50a9f",
-          "bytes": 571
+          "sha256": "sha256:1855cf91a30343b81bf91f8fe54584bb012a3d725c05052d8e71b63dd7c4dcb2",
+          "bytes": 919
         }
       ],
       "provenance": {
@@ -1690,6 +1723,64 @@
       "reproducible": true,
       "family": "structural",
       "notes": "A wrapped image set-dimensions mutation against a value envelope: the arms do not match, so the envelope refuses it with `mutation.target-missing` and stays exactly as it stood. No diff exists.",
+      "comparisonPipeline": "semio-v1-base-carrier-reproduce-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "patch-snapshot-edits-the-value-arm-of-the-envelope",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "base"
+      },
+      "mutation": "patch-snapshot",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../🧫️fixtures/🧬️mutations/🩹️patch-snapshot/✏️edits/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:1138e8bc0ddffdccf2b46322a0ee12b49d7ed4ed9c87a2aae4a210481a8c03af",
+          "bytes": 624
+        },
+        {
+          "role": "mutation-json",
+          "path": "../🧫️fixtures/🧬️mutations/🩹️patch-snapshot/✏️edits/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:fbd9fb1c06efad5cf1d8877e70bb82f05668e6ffb9ef3ffa597868fa0dd92b95",
+          "bytes": 196
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../🧫️fixtures/🧬️mutations/🩹️patch-snapshot/✏️edits/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:a41bb08dfa50c85dfea3d0f344f811433c7a59d42ae4f4816fe8922f0c1ca0f0",
+          "bytes": 633
+        },
+        {
+          "role": "outcome-json",
+          "path": "../🧫️fixtures/🧬️mutations/🩹️patch-snapshot/✏️edits/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a",
+          "bytes": 26
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "AGPL-3.0-only",
+        "attribution": "Handcrafted envelope-level specification vector of this subset; no third-party content embedded.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "One RFC 6901 set into the value arm: the title entry's string moves from `Envelope Fixture` to `Envelope Fixture, patched`. The after-envelope is the host's independent `patched_snapshot` of the before-envelope; the committed carrier records no diff, because the patch's diff is the subject's own derivation.",
       "comparisonPipeline": "semio-v1-base-carrier-reproduce-v1"
     }
   ],

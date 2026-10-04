@@ -1,36 +1,25 @@
-# 📸️ Equation mutation schema.
+# 🧬️ EquationMutation — one type per semantic mutation variant, in declaration order.
+# import EquationGraph, EquationPoint from "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔗️.graphql"
 
-type EquationMutation {
-  graph: EquationGraph! @state(class: ARTIFACT)
-  geometry: EquationGeometry! @state(class: ARTIFACT)
-}
+type ChangeGraphDirected { newDirected: Boolean! }
+type UpdateGraphAlgorithm { newAlgorithm: String! newAlgorithmSeed: String }
+type ReplaceGraph { graph: EquationGraph! }
+type CreateNode { id: String! label: String! x: Float! y: Float! index: Int }
+type DeleteNode { id: String! }
+type DeleteNodes { ids: [String!]! }
+type ChangeNodeLabel { id: String! newLabel: String! }
+type MoveNode { id: String! x: Float! y: Float! }
+type ConnectNodes { id: String! source: String! target: String! index: Int }
+type DisconnectNodes { id: String! }
+type ReplacePoints { points: [EquationPoint!]! }
+type InsertPoint { index: Int! x: Float! y: Float! }
+type RemovePoint { index: Int! }
+type MovePoints { indices: [Int!]! dx: Float! dy: Float! }
+type ChangeCoefficient { label: Int! numer: String! denom: String! }
+type MoveNodes { ids: [String!]! dx: Float! dy: Float! }
+type EquationNodePosition { id: String! x: Float! y: Float! }
+type SetNodePositions { positions: [EquationNodePosition!]! }
+type EquationPointPosition { index: Int! x: Float! y: Float! }
+type SetPointPositions { positions: [EquationPointPosition!]! }
 
-type EquationGraph {
-  directed: Boolean!
-  nodes: [EquationNode!]!
-  edges: [EquationEdge!]!
-  algorithm: String!
-  algorithmSeed: String
-}
-
-type EquationNode {
-  id: String!
-  label: String!
-  x: Float!
-  y: Float!
-}
-
-type EquationEdge {
-  id: String!
-  source: String!
-  target: String!
-}
-
-type EquationPoint {
-  x: Float!
-  y: Float!
-}
-
-type EquationGeometry {
-  points: [EquationPoint!]!
-}
+union EquationMutation = ChangeGraphDirected | UpdateGraphAlgorithm | ReplaceGraph | CreateNode | DeleteNode | DeleteNodes | ChangeNodeLabel | MoveNode | ConnectNodes | DisconnectNodes | ReplacePoints | InsertPoint | RemovePoint | MovePoints | ChangeCoefficient | MoveNodes | SetNodePositions | SetPointPositions

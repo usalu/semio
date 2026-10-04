@@ -28,7 +28,7 @@ fn sorted_by_id(mut s: SemioBrepSnapshot) -> SemioBrepSnapshot {
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn round_trip(base: &SemioBrepSnapshot, operation: &SemioBrepMutation) -> SemioBrepSnapshot {
     let forward = operation.diff(base).diff().apply(base).expect("apply must succeed for a well-formed fixture");
-    let backwards = operation.inverse(base);
+    let backwards = operation.inverse(base).expect("valid retained mutation inverse fixture");
     let mut restored = forward.clone();
     for back in &backwards {
         restored = back.diff(&restored).diff().apply(&restored).expect("apply must succeed for a well-formed fixture");
@@ -53,7 +53,7 @@ async fn create_delete_vertex_round_trips_explicitly() {
     let after_create = round_trip(&base, &create);
     assert!(after_create.vertices.iter().any(|v| v.id == "v3"));
 
-    let undo = create.inverse(&base);
+    let undo = create.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![SemioBrepMutation::DeleteVertex(delete_vertex::DeleteVertex { id: "v3".into() })]);
 
     let delete = SemioBrepMutation::DeleteVertex(delete_vertex::DeleteVertex { id: "v2".into() });
@@ -70,7 +70,7 @@ async fn delete_vertex_cascades_to_dependent_edges_and_inverse_restores_both() {
     assert!(!after.vertices.iter().any(|v| v.id == "v1"), "v1 must be gone");
     assert!(!after.edges.iter().any(|e| e.id == "e1"), "e1 (dependent on v1) must be cascade-deleted");
 
-    let undo = delete.inverse(&base);
+    let undo = delete.inverse(&base).expect("valid retained mutation inverse fixture");
     assert!(undo.iter().any(|m| matches!(m, SemioBrepMutation::CreateVertex(v) if v.id == "v1")), "inverse must reconstruct the deleted vertex");
     assert!(undo.iter().any(|m| matches!(m, SemioBrepMutation::CreateEdge(e) if e.id == "e1")), "inverse must reconstruct the one cascade-deleted edge");
     let mut restored = after;
@@ -86,7 +86,7 @@ async fn delete_vertex_cascades_to_dependent_edges_and_inverse_restores_both() {
 async fn delete_of_an_absent_id_has_an_empty_inverse_and_is_a_diff_level_no_op() {
     let base = fixture();
     let delete = SemioBrepMutation::DeleteFace(delete_face::DeleteFace { id: "f-missing".into() });
-    assert!(delete.inverse(&base).is_empty(), "deleting an absent id has nothing to undo");
+    assert!(delete.inverse(&base).expect("valid retained mutation inverse fixture").is_empty(), "deleting an absent id has nothing to undo");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -99,11 +99,11 @@ async fn replace_and_move_of_an_absent_target_have_empty_inverse_and_are_no_ops(
             direction: crate::standards::v1::subsets::base::schema::geometry::SemioPoint3::default(),
         },
     });
-    assert!(replace.inverse(&base).is_empty());
+    assert!(replace.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
     assert_eq!(replace.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "replace-curve on an absent edge is a no-op");
 
     let mv = SemioBrepMutation::MoveVertex(move_vertex::MoveVertex { vertex_id: "v-missing".into(), new_point: crate::standards::v1::subsets::base::schema::geometry::SemioPoint3::default() });
-    assert!(mv.inverse(&base).is_empty());
+    assert!(mv.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
     assert_eq!(mv.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "move-vertex on an absent vertex is a no-op");
 }
 //#endregion 🧪️InverseRoundTripLaw
@@ -138,7 +138,7 @@ async fn determinism_law_diff_and_inverse_are_pure_functions_of_payload_and_base
     let base = fixture();
     for m in demo_mutation_cases() {
         assert_eq!(m.diff(&base), m.diff(&base), "diff({m:?}) must be deterministic");
-        assert_eq!(m.inverse(&base), m.inverse(&base), "inverse({m:?}) must be deterministic");
+        assert_eq!(m.inverse(&base).expect("valid retained mutation inverse fixture"), m.inverse(&base).expect("valid retained mutation inverse fixture"), "inverse({m:?}) must be deterministic");
     }
 }
 //#endregion 🧪️DeterminismLaw
@@ -178,7 +178,7 @@ async fn language_neutral_delete_inverses_preserve_distinct_tolerances() {
         let base = crate::standards::v1::subsets::brep::schema::snapshot::decode_semio_brep_snapshot_json(&test_case["before"].to_string()).expect("inverse base decodes");
         let mutation = decode_semio_brep_mutation_json(&test_case["mutation"].to_string()).expect("delete mutation decodes");
         let expected = test_case["expectedInverse"].as_array().expect("expected inverse is an array").iter().map(|operation| decode_semio_brep_mutation_json(&operation.to_string()).expect("expected inverse operation decodes")).collect::<Vec<_>>();
-        let actual = mutation.inverse(&base);
+        let actual = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
         assert_eq!(actual, expected, "{}", test_case["id"].as_str().expect("inverse case id is a string"));
         let mut restored = mutation.diff(&base).diff().apply(&base).expect("delete diff applies");
         for operation in actual {

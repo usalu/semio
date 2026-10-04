@@ -6,7 +6,6 @@
       "entries": [
         {
           "tag": 256,
-          "kind": "long",
           "values": {
             "kind": "long",
             "value": [
@@ -16,7 +15,6 @@
         },
         {
           "tag": 257,
-          "kind": "long",
           "values": {
             "kind": "long",
             "value": [
@@ -26,7 +24,6 @@
         },
         {
           "tag": 258,
-          "kind": "short",
           "values": {
             "kind": "short",
             "value": [
@@ -36,7 +33,6 @@
         },
         {
           "tag": 259,
-          "kind": "short",
           "values": {
             "kind": "short",
             "value": [
@@ -46,7 +42,6 @@
         },
         {
           "tag": 262,
-          "kind": "short",
           "values": {
             "kind": "short",
             "value": [
@@ -56,7 +51,6 @@
         },
         {
           "tag": 273,
-          "kind": "long",
           "values": {
             "kind": "long",
             "value": [
@@ -66,7 +60,6 @@
         },
         {
           "tag": 277,
-          "kind": "short",
           "values": {
             "kind": "short",
             "value": [
@@ -76,7 +69,6 @@
         },
         {
           "tag": 278,
-          "kind": "long",
           "values": {
             "kind": "long",
             "value": [
@@ -86,7 +78,6 @@
         },
         {
           "tag": 279,
-          "kind": "long",
           "values": {
             "kind": "long",
             "value": [
@@ -95,25 +86,31 @@
           }
         }
       ],
-      "pixels": []
+      "storage": {
+        "kind": "strips",
+        "offsetsKind": "long",
+        "byteCountsKind": "long",
+        "chunks": [
+          [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15
+          ]
+        ]
+      }
     }
-  ],
-  "pixels": [
-    0,
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    10,
-    11,
-    12,
-    13,
-    14,
-    15
   ]
 }

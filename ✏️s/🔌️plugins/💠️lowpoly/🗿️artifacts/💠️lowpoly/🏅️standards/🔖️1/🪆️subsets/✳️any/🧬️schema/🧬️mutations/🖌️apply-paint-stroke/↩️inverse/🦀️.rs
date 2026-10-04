@@ -7,10 +7,13 @@ use crate::mutations::edit_paint_layer::EditPaintLayer;
 use crate::{LowpolyMutation, LowpolySnapshot};
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &ApplyPaintStroke, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {
+pub fn inverse(payload: &ApplyPaintStroke, base: &LowpolySnapshot) -> Result<Vec<LowpolyMutation>, semio_framework_value::ValueError> {
+    Ok({
     let Some(runs) = payload.runs(base).filter(|runs| !runs.is_empty() && payload.invariant_violation().is_none()) else {
-        return Vec::new();
+        return Ok(Vec::new());
     };
-    crate::mutations::edit_paint_layer::inverse::inverse(&EditPaintLayer { object_id: payload.object_id.clone(), layer_index: payload.layer_index, runs }, base)
+    crate::mutations::edit_paint_layer::inverse::inverse(&EditPaintLayer { object_id: payload.object_id.clone(), layer_index: payload.layer_index, runs }, base)?
+
+    })
 }
 //#endregion 🔖️Inverse

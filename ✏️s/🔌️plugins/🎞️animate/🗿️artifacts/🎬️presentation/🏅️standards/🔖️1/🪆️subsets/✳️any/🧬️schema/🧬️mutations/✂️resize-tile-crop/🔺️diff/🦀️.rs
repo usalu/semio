@@ -20,7 +20,7 @@ pub fn diff(payload: &ResizeTileCrop, base: &PresentationSnapshot) -> protocol::
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Tile \"{}\" crop width/height must be positive, got ({}, {}).", payload.id, crop.width, crop.height), ["tiles".to_string(), payload.id.clone()]);
     }
     if existing.crop == payload.new_crop {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Tile \"{}\" crop is already unchanged.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Tile \"{}\" crop is already unchanged.", payload.id));
     }
     if let Some(tile) = tiles.iter_mut().find(|tile| tile.id == payload.id) {
         tile.crop = payload.new_crop.clone();

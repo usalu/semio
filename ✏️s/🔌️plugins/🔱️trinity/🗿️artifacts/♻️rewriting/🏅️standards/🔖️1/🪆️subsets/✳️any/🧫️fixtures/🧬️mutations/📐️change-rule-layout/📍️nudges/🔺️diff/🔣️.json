@@ -1,7 +1,7 @@
 {
-  "beforeFixtureJson": null,
-  "lhsJson": null,
-  "rhsJson": null,
+  "workingGraph": null,
+  "lhs": null,
+  "rhs": null,
   "parameterBindings": null,
   "ruleLayout": {
     "entries": [
@@ -11,8 +11,12 @@
         "operation": {
           "kind": "set",
           "value": {
-            "x": 24.0,
-            "y": 16.5
+            "x": {
+              "bits": "4038000000000000"
+            },
+            "y": {
+              "bits": "4030800000000000"
+            }
           }
         }
       }

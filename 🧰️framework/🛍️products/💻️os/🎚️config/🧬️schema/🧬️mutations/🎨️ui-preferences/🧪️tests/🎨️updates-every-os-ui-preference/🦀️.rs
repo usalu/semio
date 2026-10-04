@@ -8,19 +8,19 @@ const AFTER: &str = include_str!("../../🧫️fixtures/🎨️updates-every-os-
 const MUTATIONS: &str = include_str!("../../🧫️fixtures/🎨️updates-every-os-ui-preference/🦠️mutations/🔣️.json");
 
 fn preferences(text: &str) -> UiPreferences {
-    dsl::os_pack::json::from_json_str(text).expect("OS UI preferences decode")
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("OS UI preferences decode")
 }
 
 fn mutations() -> Vec<UiPreferencesConfigMutation> {
     serde_json::from_str::<Vec<serde_json::Value>>(MUTATIONS)
         .expect("mutation fixture is a JSON array")
         .into_iter()
-        .map(|value| dsl::os_pack::json::from_json_str(&serde_json::to_string(&value).expect("mutation JSON encodes")).expect("OS UI-preferences mutation decodes"))
+        .map(|value| semio_framework_pack_json::from_json_str(&serde_json::to_string(&value).expect("mutation JSON encodes"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("OS UI-preferences mutation decodes"))
         .collect()
 }
 
-fn canonical_json<T: dsl::ToValue>(value: &T) -> serde_json::Value {
-    serde_json::from_str(&dsl::os_pack::json::to_json_string(value)).expect("canonical JSON parses in serde_json")
+fn canonical_json<T: semio_framework_value::ToValue>(value: &T) -> serde_json::Value {
+    serde_json::from_str(&semio_framework_pack_json::to_json_string(value)).expect("canonical JSON parses in serde_json")
 }
 
 #[test]
@@ -29,7 +29,7 @@ fn every_persisted_ui_preference_folds_and_inverts() {
     let mut snapshot = original.clone();
     let mut inverses = Vec::new();
     for mutation in mutations() {
-        inverses.push(<UiPreferencesConfigMutation as protocol::Mutation<UiPreferences>>::inverse(&mutation, &snapshot));
+        inverses.push(<UiPreferencesConfigMutation as protocol::Mutation<UiPreferences>>::inverse(&mutation, &snapshot).expect("valid retained mutation inverse fixture"));
         let outcome = <UiPreferencesConfigMutation as protocol::Mutation<UiPreferences>>::diff(&mutation, &snapshot);
         snapshot = protocol::MutationDiff::apply(outcome.diff(), &snapshot).expect("UI-preferences mutation applies");
         assert!(outcome.messages().is_empty(), "fixture mutations must change their requested preference");

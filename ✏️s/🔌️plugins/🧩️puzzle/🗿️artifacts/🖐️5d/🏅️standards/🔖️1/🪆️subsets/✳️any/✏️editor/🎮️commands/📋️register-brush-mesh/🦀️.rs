@@ -1,7 +1,7 @@
 //! 📋️ `register-brush-mesh` command.
 
 use crate::editor::puzzle5d::Puzzle5dActionCtx;
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 use semio_s_artifact_puzzle_3d::editor::puzzle3d::precompute::derive_brush_mesh;
 
 /// 🧊️ The ONE install: real GLB geometry the browser round-tripped for one mesh url, derived into puzzle

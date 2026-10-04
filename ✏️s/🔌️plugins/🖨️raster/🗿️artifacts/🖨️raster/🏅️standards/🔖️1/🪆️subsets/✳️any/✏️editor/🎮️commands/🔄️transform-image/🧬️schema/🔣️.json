@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Transform Image",
+  "description": "One grid change from the editing menu: the layer, the operation (a quarter turn, a resize or a crop), the crop origin, the resize or crop extent and the resize sampling — zero and false where the operation has none. The session must edit pixels.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "layerId",
+    "operation",
+    "x",
+    "y",
+    "width",
+    "height",
+    "bilinear"
+  ],
+  "properties": {
+    "layerId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "operation": {
+      "type": "string",
+      "enum": [
+        "rotateClockwise",
+        "rotateCounterclockwise",
+        "resize",
+        "crop"
+      ]
+    },
+    "x": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 16383
+    },
+    "y": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 16383
+    },
+    "width": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 16384
+    },
+    "height": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 16384
+    },
+    "bilinear": {
+      "type": "boolean"
+    }
+  }
+}

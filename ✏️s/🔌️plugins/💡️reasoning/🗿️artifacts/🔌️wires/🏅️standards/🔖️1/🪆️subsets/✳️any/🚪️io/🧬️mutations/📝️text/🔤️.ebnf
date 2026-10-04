@@ -1,3 +1,0 @@
-(* ebnf reasoning.wires.mutations *)
-document = header, body ;
-header = 'schema', space, 'reasoning.wires.mutations', newline ;

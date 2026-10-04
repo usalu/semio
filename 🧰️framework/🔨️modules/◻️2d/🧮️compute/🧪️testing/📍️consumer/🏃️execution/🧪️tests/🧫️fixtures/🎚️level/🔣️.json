@@ -1,0 +1,134 @@
+{
+  "version": 1,
+  "vectors": [
+    {
+      "id": "default",
+      "args": [],
+      "env": {},
+      "accepted": true,
+      "level": "fundamental",
+      "budgetMs": 15000
+    },
+    {
+      "id": "quick",
+      "args": [
+        "quick"
+      ],
+      "env": {},
+      "accepted": true,
+      "level": "quick",
+      "budgetMs": 300000
+    },
+    {
+      "id": "long",
+      "args": [
+        "long"
+      ],
+      "env": {},
+      "accepted": true,
+      "level": "long",
+      "budgetMs": 900000
+    },
+    {
+      "id": "exhaustive",
+      "args": [
+        "exhaustive"
+      ],
+      "env": {},
+      "accepted": true,
+      "level": "exhaustive",
+      "budgetMs": 1800000,
+      "coverage": "1"
+    },
+    {
+      "id": "environment-quick",
+      "args": [],
+      "env": {
+        "SEMIO_TEST_LEVEL": "quick"
+      },
+      "accepted": true,
+      "level": "quick",
+      "budgetMs": 300000
+    },
+    {
+      "id": "environment-long",
+      "args": [],
+      "env": {
+        "SEMIO_TEST_LEVEL": "long"
+      },
+      "accepted": true,
+      "level": "long",
+      "budgetMs": 900000
+    },
+    {
+      "id": "argument-precedence",
+      "args": [
+        "exhaustive"
+      ],
+      "env": {
+        "SEMIO_TEST_LEVEL": "quick"
+      },
+      "accepted": true,
+      "level": "exhaustive",
+      "budgetMs": 1800000,
+      "coverage": "1"
+    },
+    {
+      "id": "budget-override",
+      "args": [
+        "quick"
+      ],
+      "env": {
+        "SEMIO_TEST_BUDGET_MS": "251"
+      },
+      "accepted": true,
+      "level": "quick",
+      "budgetMs": 251
+    },
+    {
+      "id": "unknown",
+      "args": [
+        "foreign"
+      ],
+      "env": {},
+      "accepted": false,
+      "level": "fundamental",
+      "budgetMs": 15000
+    },
+    {
+      "id": "remaining",
+      "args": [
+        "quick",
+        "foreign"
+      ],
+      "env": {},
+      "accepted": false,
+      "level": "quick",
+      "budgetMs": 300000
+    },
+    {
+      "id": "missing-output",
+      "args": [
+        "quick"
+      ],
+      "env": {},
+      "accepted": false,
+      "level": "quick",
+      "budgetMs": 300000,
+      "missingOutput": true
+    },
+    {
+      "id": "coverage-override",
+      "args": [
+        "exhaustive"
+      ],
+      "env": {
+        "SEMIO_COVERAGE": "0"
+      },
+      "accepted": true,
+      "level": "exhaustive",
+      "budgetMs": 1800000,
+      "coverage": "0"
+    }
+  ]
+}

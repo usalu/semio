@@ -206,7 +206,7 @@ pub fn apply_blocks_delta(blocks: &[NoteBlockNode], delta: &NoteBlocksDelta) -> 
                 .block_json
                 .as_ref()
                 .map(|json| {
-                    dsl::os_pack::from_json_str::<NoteBlockNode>(json)
+                    semio_framework_pack_json::from_json_str::<NoteBlockNode>(json, semio_framework_pack_json::JsonMemberPolicy::Reject)
                         .map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-value", format!("block patch is not valid JSON: {error}")).at(["patched".to_string(), index.to_string(), "blockJson".to_string()]))
                 })
                 .transpose()
@@ -392,7 +392,7 @@ impl MutationDiff<NoteSnapshot> for NoteDiff {
 /// `move-block`/`resize-block`/`edit-block-*`/table-row-column mutation leaf: each computes the
 /// updated `NoteBlockNode` value from `(payload, base)` and hands it here.
 pub fn note_block_patch_diff(id: &str, block: &NoteBlockNode) -> NoteDiff {
-    NoteDiff { blocks: Some(NoteBlocksDelta { patched: vec![NoteBlockPatchEntry { id: id.to_string(), patch: NoteBlockPatch { block_json: Some(dsl::os_pack::to_json_string(block)) } }], ..Default::default() }), ..Default::default() }
+    NoteDiff { blocks: Some(NoteBlocksDelta { patched: vec![NoteBlockPatchEntry { id: id.to_string(), patch: NoteBlockPatch { block_json: Some(semio_framework_pack_json::to_json_string(block)) } }], ..Default::default() }), ..Default::default() }
 }
 
 /// ➕ Sparse single-block insertion at `(parent_id, index)` — shared by `create-block`,

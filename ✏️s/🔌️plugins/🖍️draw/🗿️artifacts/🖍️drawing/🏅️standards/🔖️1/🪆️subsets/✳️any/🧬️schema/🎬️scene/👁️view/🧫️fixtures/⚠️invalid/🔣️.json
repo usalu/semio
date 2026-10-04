@@ -1,0 +1,14 @@
+[
+  {
+    "name": "completed image has no actual asset",
+    "source": "shared asset geometry",
+    "action": "remove-assets",
+    "error": "Missing completed scene image asset"
+  },
+  {
+    "name": "authored algorithms are not a completed picture",
+    "source": "complete referenced difference",
+    "action": "prepare-only",
+    "error": "Unresolved algorithm"
+  }
+]

@@ -43,7 +43,7 @@ async fn applies_to_committed_after() {
 async fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_block2d_mutation(&base, &mutation);
+    let inverse = inverse_block2d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
     let mut snapshot = base.clone();
     apply_block2d_mutation(&mut snapshot, &mutation).expect("forward applies");
     for step in &inverse {

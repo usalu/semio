@@ -5,7 +5,7 @@ use protocol::{Mutation, MutationDiff};
 #[test]
 fn layer_drop_shared_vectors_match_json_tree_oracle() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
-    let snapshot: RasterSnapshot = dsl::os_pack::json::from_json_str(&fixture["document"].to_string()).unwrap();
+    let snapshot: RasterSnapshot = semio_framework_pack_json::from_json_str(&fixture["document"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let payload = MoveLayer { layer_id: row["layerId"].as_str().unwrap().into(), target_row_id: row["targetRowId"].as_str().unwrap().into(), drop_position: row["dropPosition"].as_str().unwrap().into() };
         let resolved = resolve_drop(&payload, &snapshot).unwrap();
@@ -15,7 +15,7 @@ fn layer_drop_shared_vectors_match_json_tree_oracle() {
         let mutation = RasterMutation::ReorderLayers(change);
         let (diff, _) = mutation.diff(&snapshot).into_parts();
         let result = diff.apply(&snapshot).unwrap();
-        let encoded: serde_json::Value = serde_json::from_str(&dsl::os_pack::json::to_string(&dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&result)))).unwrap();
+        let encoded: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&result)))).unwrap();
         let container = match row["parentId"].as_str() { Some(id) => &json_layer(&encoded["layers"], id).unwrap()["children"], None => &encoded["layers"] };
         assert_eq!(container[row["index"].as_u64().unwrap() as usize]["id"], row["layerId"], "{row}");
         assert_eq!(json_count(&encoded["layers"]), json_count(&fixture["document"]["layers"]));

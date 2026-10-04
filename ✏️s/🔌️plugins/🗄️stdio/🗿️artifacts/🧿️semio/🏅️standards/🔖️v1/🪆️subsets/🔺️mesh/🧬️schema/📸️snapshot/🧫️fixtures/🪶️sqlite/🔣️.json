@@ -77,7 +77,7 @@
   "roughness": 0.75,
   "mime": "image/custom",
   "textureHex": "0001ff",
-  "query": "SELECT topology,vertex_index,x,y,z FROM semio_mesh_primitive JOIN semio_mesh_index ON semio_mesh_index.primitive_id=semio_mesh_primitive.id JOIN semio_mesh_position ON semio_mesh_index.position_id=semio_mesh_position.id ORDER BY semio_mesh_primitive.ordinal,semio_mesh_index.ordinal",
+  "query": "SELECT topology,vertex_index,x,y,z FROM semio_mesh_primitive JOIN semio_mesh_index ON semio_mesh_index.primitive_id=semio_mesh_primitive.id JOIN semio_mesh_position ON semio_mesh_index.primitive_id=semio_mesh_position.primitive_id AND semio_mesh_index.vertex_index=semio_mesh_position.ordinal ORDER BY semio_mesh_primitive.ordinal,semio_mesh_index.ordinal",
   "float64Bits": [
     "0000000000000000",
     "8000000000000000",
@@ -124,5 +124,13 @@
     "collectionItems": 1024,
     "cancelAfter": 256,
     "tinyBudgetBytes": 32
-  }
+  },
+  "materialTextures": {
+    "baseColorTexture": "texture",
+    "metallicRoughnessTexture": "texture",
+    "normalTexture": "texture",
+    "occlusionTexture": "texture",
+    "emissiveTexture": "texture"
+  },
+  "materialTextureQuery": "SELECT b.native_id AS baseColorTexture, m.native_id AS metallicRoughnessTexture, n.native_id AS normalTexture, o.native_id AS occlusionTexture, e.native_id AS emissiveTexture FROM semio_mesh_material JOIN semio_mesh_texture b ON b.native_id=base_color_texture_native_id JOIN semio_mesh_texture m ON m.native_id=metallic_roughness_texture_native_id JOIN semio_mesh_texture n ON n.native_id=normal_texture_native_id JOIN semio_mesh_texture o ON o.native_id=occlusion_texture_native_id JOIN semio_mesh_texture e ON e.native_id=emissive_texture_native_id"
 }

@@ -1,7 +1,7 @@
 //! 🧮️ `set-fill-count` command.
 
 use crate::editor::puzzle5d::Puzzle5dActionCtx;
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 use semio_framework::kernel::Effect;
 
 /// 📨️ Routes a text-entry or repeat-last request through the retained public command, so the count lands on the

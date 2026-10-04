@@ -109,7 +109,7 @@ fn an_unknown_kind_is_an_error_not_a_silent_no_op() {
 fn kinds_match_the_catalog_and_the_vocabulary() {
     let manifest = include_str!("../../🔣️.json");
     let vocabulary = include_str!("../../../🧬️schema/🧬️mutations/🦀️.rs");
-    let variants = ["SetSnapshot", "SetId3v2", "SetFrames", "SetId3v1"];
+    let variants = ["SetSnapshot", "PatchSnapshot", "SetId3v2", "SetFrames", "SetId3v1"];
     assert_eq!(KINDS.len(), variants.len());
     for (kind, variant) in KINDS.iter().zip(variants.iter()) {
         assert!(manifest.contains(&format!("\"{kind}\"")), "catalog is missing kind {kind:?}");

@@ -94,7 +94,7 @@ impl Grid2dFillPayload {
 pub fn definition() -> ToolDefinition {
     ToolDefinition {
         run: Some(run_definition()),
-        ..semio_framework_plugin::resolve_ready(ToolDefinition::new(TOOL_ID, LocalizedLabel::native("Fill", "Füllen"), "paint-bucket"))
+        ..::semio_framework_async::poll::resolve_ready(ToolDefinition::new(TOOL_ID, LocalizedLabel::native("Fill", "Füllen"), "paint-bucket"))
     }
 }
 
@@ -122,6 +122,7 @@ pub fn run_definition() -> ToolRunDefinition {
         revalidate_job: None,
         settings: ToolRunSettingsReads::default(),
         windows: vec![preview::WINDOW_KIND_ID.into()],
+        member: None,
     }
 }
 
@@ -143,7 +144,7 @@ pub fn start_effect() -> semio_framework::kernel::Effect {
 
 /// 💾 `commit-fill` effect that lands the finished cache in `solve_json`.
 pub fn commit_effect(commit: &Grid2dInferenceCommit) -> semio_framework::kernel::Effect {
-    let args = semio_framework::dsl_value!({ "solveJson": protocol::json::to_json_string(commit) });
+    let args = semio_framework::dsl_value!({ "solveJson": semio_framework_pack_json::to_json_string(commit) });
     semio_framework::kernel::Effect::DispatchAction {
         req: semio_framework_plugin::RequestId(semio_framework_job::allocate_operation_id().0),
         action: COMMIT_FILL_ACTION_ID.into(),

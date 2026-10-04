@@ -1,0 +1,54 @@
+{
+  "at": "2026-10-03T06:28:21.045Z",
+  "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+  "before": null,
+  "after": "[package]\nworkspace = \"../../../../../..\"\nname = \"semio-framework-pack-record\"\nversion = \"0.1.0\"\nedition = \"2021\"\nrust-version.workspace = true\ndescription = \"Product-neutral schema-aware Record codec for Pack documents and wire values\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"pack-record\"\n\n[lints]\nworkspace = true\n\n[lib]\nname = \"semio_framework_pack_record\"\npath = \"../../🦀️.rs\"\n\n[dependencies]\npack = { path = \"../../../📦️packages/🦀️rust\", package = \"semio-framework-pack\" }\nsemio-framework-async = { path = \"../../../../⏳️async/📦️packages/🦀️rust\" }\nsemio-framework-diagnostic = { path = \"../../../../⚠️diagnostic/📦️packages/🦀️rust\" }\nsemio-framework-dsl-record = { path = \"../../../../🗣️dsl/🧬️schema/📦️packages/🦀️rust\" }\nsemio-framework-hash = { path = \"../../../../🔏️hash/📦️packages/🦀️rust\" }\nsemio-framework-pack-json = { path = \"../../../🔤️json/📦️packages/🦀️rust\" }\nsemio-framework-value = { path = \"../../../../🌱️value/📦️packages/🦀️rust\" }\nsemio-framework-pack-error = { path = \"../../../⚠️error/📦️packages/🦀️rust\" }\n\n[dev-dependencies]\nsemio-framework-async-macros = { path = \"../../../../⏳️async/✨️macros/📦️packages/🦀️rust\" }\nsemio-framework-dsl = { path = \"../../../../🗣️dsl/📦️packages/🦀️rust\" }\nserde_json = { version = \"1.0.140\", features = [\"float_roundtrip\"] }\n",
+  "afterSha256": "0b10be37879f694af47c1de7af84294c71fbc67ed4efa377454548a0c969566c",
+  "targetPaths": [
+    {
+      "alias": "pack",
+      "target": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/Cargo.toml",
+      "exists": true
+    },
+    {
+      "alias": "semio-framework-async",
+      "target": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/Cargo.toml",
+      "exists": true
+    },
+    {
+      "alias": "semio-framework-diagnostic",
+      "target": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust/Cargo.toml",
+      "exists": true
+    },
+    {
+      "alias": "semio-framework-dsl-record",
+      "target": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "exists": true
+    },
+    {
+      "alias": "semio-framework-hash",
+      "target": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust/Cargo.toml",
+      "exists": true
+    },
+    {
+      "alias": "semio-framework-pack-json",
+      "target": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/Cargo.toml",
+      "exists": true
+    },
+    {
+      "alias": "semio-framework-value",
+      "target": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "exists": true
+    },
+    {
+      "alias": "semio-framework-pack-error",
+      "target": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/⚠️error/📦️packages/🦀️rust/Cargo.toml",
+      "exists": true
+    }
+  ],
+  "fixtureMatched": true,
+  "tomlOraclesAgreed": true,
+  "mounted": false,
+  "requiresCanonicalErrorProvider": true,
+  "requiresRootWorkspaceMembership": true
+}

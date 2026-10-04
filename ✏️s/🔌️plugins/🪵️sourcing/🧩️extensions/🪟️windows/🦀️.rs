@@ -19,13 +19,13 @@ fn bundle() -> ExtensionBundle {
     let bundle = bundle.mode(ExecutionMode::Declarative);
     bundle.contributes_topic(
         "sourcing.module",
-        semio_framework_os_kernel::DslValue::object([
-            ("appId".to_string(), semio_framework_os_kernel::DslValue::String(HOST_APP_ID.to_string())),
-            ("moduleId".to_string(), semio_framework_os_kernel::DslValue::String(module.module_id().to_string())),
-            ("label".to_string(), semio_framework_os_kernel::DslValue::String(module.label().to_string())),
-            ("iconId".to_string(), semio_framework_os_kernel::DslValue::String("window".to_string())),
-            ("typologyJson".to_string(), semio_framework_os_kernel::DslValue::String(semio_framework_os_kernel::json::to_json_string(&module.typology()))),
-            ("kindsJson".to_string(), semio_framework_os_kernel::DslValue::String(semio_framework_os_kernel::json::to_json_string(&module.demo_kinds()))),
+        semio_framework_value::DslValue::object([
+            ("appId".to_string(), semio_framework_value::DslValue::String(HOST_APP_ID.to_string())),
+            ("moduleId".to_string(), semio_framework_value::DslValue::String(module.module_id().to_string())),
+            ("label".to_string(), semio_framework_value::DslValue::String(module.label().to_string())),
+            ("iconId".to_string(), semio_framework_value::DslValue::String("window".to_string())),
+            ("typologyJson".to_string(), semio_framework_value::DslValue::String(semio_framework_os_kernel::json::to_json_string(&module.typology()))),
+            ("kindsJson".to_string(), semio_framework_value::DslValue::String(semio_framework_os_kernel::json::to_json_string(&module.demo_kinds()))),
         ]),
     )
 }

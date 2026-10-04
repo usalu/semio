@@ -132,7 +132,7 @@ async fn command_from_action_covers_every_declared_action_and_rejects_unknown_on
 
 #[semio_framework_async_macros::async_test]
 async fn command_from_action_reads_the_nested_camera_object() {
-    let camera = Gis3dPlayApp::command_from_action("setCamera", Some(&dsl::json::to_dsl_value(&dsl::json!({ "camera": { "position": [1.0, 2.0, 3.0] } })))).expect("setCamera");
+    let camera = Gis3dPlayApp::command_from_action("setCamera", Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "camera": { "position": [1.0, 2.0, 3.0] } })))).expect("setCamera");
     assert!(matches!(camera, Gis3dCommand::SetCamera(ref payload) if payload.camera_json.contains("position")));
 }
 
@@ -154,7 +154,7 @@ fn retained_command_factory_matches_the_language_neutral_maximum_oracle() {
     assert_eq!(gis3d_retained_extent(&rejected, &snapshot, &interaction), None);
     let factory = Gis3dCommandJobFactory::new("s.gis.gisterrain@1/*#editor");
     assert_eq!(factory.execution_contract(), ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500));
-    assert!(Gis3dPlayApp::command_from_action("setCamera", Some(&dsl::json::to_dsl_value(&dsl::json!({ "cameraJson": "c".repeat(maximum + additional) })))).is_err());
+    assert!(Gis3dPlayApp::command_from_action("setCamera", Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "cameraJson": "c".repeat(maximum + additional) })))).is_err());
 }
 //#endregion 🔖️CommandSurface
 
@@ -236,10 +236,10 @@ async fn import_media_map_in_writes_the_imported_features_operation() {
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
     let incoming = json!({ "positions": [{ "id": "imported-1", "lon": 1.0, "lat": 2.0 }] }).to_string();
-    let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "2d.map".into(), json: incoming.clone() } };
+    let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Intrinsic { schema: "2d.map".into(), value: semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(&incoming,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()) } };
     let emit = Gis3dPlayApp::import_media("map:in", &media, &doc).expect("map:in import");
     use crate::mutations::change_imported_features::ChangeImportedFeatures;
-    assert_eq!(emit.artifact_mutations, vec![GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures { new_imported_features_json: incoming })]);
+    assert_eq!(emit.artifact_mutations, vec![GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures { new_imported_map: Some(crate::schema::ImportedMap::from_json(&incoming).unwrap()) })]);
     close(&mut app);
 }
 
@@ -293,12 +293,12 @@ async fn set_exaggeration_stages_a_bounded_default_that_actually_edits() {
         panic!("exaggeration stages as a bounded number");
     };
     assert_eq!((min, max), (Some(GIS3D_EXAGGERATION_MINIMUM), Some(GIS3D_EXAGGERATION_MAXIMUM)));
-    assert_eq!(arg.default.as_ref().and_then(dsl::DslValue::as_f64), Some(GIS3D_EXAGGERATION_STAGED_DEFAULT));
+    assert_eq!(arg.default.as_ref().and_then(semio_framework_value::DslValue::as_f64), Some(GIS3D_EXAGGERATION_STAGED_DEFAULT));
 
     let mut app = context::app().await;
     let seeded = app.snapshot().expect("projection").exaggeration;
     assert_ne!(seeded, GIS3D_EXAGGERATION_STAGED_DEFAULT, "a staged default equal to the seeded value would dispatch a no-op");
-    let staged = semio_framework::effective_action_args(&action.args, &dsl::DslValue::Object(Vec::new()), None);
+    let staged = semio_framework::effective_action_args(&action.args, &semio_framework_value::DslValue::Object(Vec::new()), None);
     let command = <EditorApp<Gis3dPlayApp> as semio_framework_plugin::ArtifactApp>::command_from_action("setExaggeration", Some(&staged)).await.expect("the staged default bridges to a command");
     semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(&mut app, command, |app| app.snapshot().expect("projection").exaggeration, seeded, GIS3D_EXAGGERATION_STAGED_DEFAULT).await;
     context::close(&mut app);

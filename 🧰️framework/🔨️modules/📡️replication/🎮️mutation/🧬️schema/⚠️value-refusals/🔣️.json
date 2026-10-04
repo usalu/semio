@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "additionalProperties": false,
+  "required": ["cases", "controlledKinds"],
+  "properties": {
+    "cases": {"type":"array","minItems":4,"items":{"type":"object","additionalProperties":false,"required":["owner","input","kind","messageContains"],"properties":{"owner":{"enum":["payloadHash","timestamp","mutationMessage","mutationOrigin"]},"input":{},"kind":{"const":"invalidValue"},"messageContains":{"type":"string"}}}},
+    "controlledKinds":{"const":["canceled","ownershipLimit"]}
+  }
+}

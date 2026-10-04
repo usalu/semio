@@ -1,0 +1,29 @@
+{
+  "owner": "csv/document-one/client-one",
+  "baseRevision": "18446744073709551000",
+  "firstRevision": "9007199254740993",
+  "secondRevision": "17",
+  "foreignRevision": "18446744073709551615",
+  "fields": [
+    {
+      "target": "csv/cell/0/0",
+      "label": "Name",
+      "base": "alpha",
+      "draft": "CrossName"
+    },
+    {
+      "target": "csv/cell/0/1",
+      "label": "Note",
+      "base": "plain",
+      "draft": "CrossNote"
+    }
+  ],
+  "expected": {
+    "pending": 1,
+    "complete": 2,
+    "foreign": 1,
+    "retired": 1,
+    "maxPending": 64,
+    "cancelled": 1
+  }
+}

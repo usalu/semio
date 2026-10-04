@@ -576,6 +576,8 @@ fn retained_modeling_jobs_slice_work_and_match_synchronous_geometry() {
             while job.progress().phase != phase {
                 assert!(matches!(job.step(1).unwrap(),MeshModelingStep::Working(_)),"missing phase {phase}");
             }
+            let budget = case["sliceEvidence"]["cancelPhaseUnits"].as_u64().unwrap() as usize;
+            assert!(matches!(job.step(budget).unwrap(), MeshModelingStep::Working(_)));
             let held = job.progress();
             job.cancel();
             assert!(matches!(job.step(1000).unwrap(),MeshModelingStep::Cancelled(progress) if progress == held));

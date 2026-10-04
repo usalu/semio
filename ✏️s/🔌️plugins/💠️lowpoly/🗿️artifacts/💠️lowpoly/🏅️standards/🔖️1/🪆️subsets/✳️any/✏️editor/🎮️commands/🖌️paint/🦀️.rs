@@ -11,7 +11,8 @@
 //! `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/📋️design.md` §5).
 
 use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
-use crate::editor::lowpoly::session::{lowpoly_paint_drive, lowpoly_tool_emit, paint_uv_from_command, LowpolyScratch, LowpolyToolPhase, LowpolyTransientMutation};
+use crate::editor::lowpoly::session::{lowpoly_paint_drive, lowpoly_tool_emit, paint_uv_from_command, LowpolyScratch, LowpolyTransientMutation};
+use semio_framework_tool_machine::GesturePhase;
 use crate::editor::lowpoly::view::{resolve_active_object_id, utility_param_f32, utility_params_value};
 use crate::editor::lowpoly::LowpolyPlayApp;
 use crate::mutations::{apply_paint_stroke::ApplyPaintStroke, edit_paint_layer::EditPaintLayer, PixelRun};
@@ -93,7 +94,7 @@ fn paint_points(u: Option<f32>, v: Option<f32>, x: Option<f32>, y: Option<f32>, 
 /// 🛠️ The unmounted route of a paint verb (no retained context, so no persisted gesture): a one-shot or a commit at
 /// rest is ONE tool transaction of its tick; a streamed phase needs the retained route's transient.
 fn paint_once(verb: &str, phase: Option<&str>, reason: Option<&str>, object_id: Option<&str>, points: &[(f32, f32)], doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
-    if !matches!(LowpolyToolPhase::parse(phase, reason), Some(LowpolyToolPhase::Once | LowpolyToolPhase::Commit)) {
+    if !matches!(GesturePhase::parse(phase, reason), Some(GesturePhase::Once | GesturePhase::Commit)) {
         return Err(Fault::from("lowpoly.paint.transient-context-required"));
     }
     let object_id = object_id.map_or_else(|| resolve_active_object_id(doc.snapshot, cfg.snapshot), str::to_string);
@@ -120,9 +121,9 @@ pub fn lowpoly_paint_step(
     context: &ArtifactOwnedToolJobContext<EditorApp<LowpolyPlayApp>>,
     operation: &AppOperationContext,
 ) -> Result<ArtifactCommandWorkStep<EditorApp<LowpolyPlayApp>>, Fault> {
-    let phase = LowpolyToolPhase::parse(phase, reason).ok_or_else(|| Fault::from("lowpoly.paint.phase-unknown"))?;
+    let phase = GesturePhase::parse(phase, reason).ok_or_else(|| Fault::from("lowpoly.paint.phase-unknown"))?;
     let window = context.view_state.as_ref().and_then(|view| view.window_id.clone()).unwrap_or_default();
-    if phase == LowpolyToolPhase::Stream && !opens && context.transient.paint(&window).is_none() {
+    if phase == GesturePhase::Stream && !opens && context.transient.paint(&window).is_none() {
         return Ok(ArtifactCommandWorkStep::Complete(Emit::default()));
     }
     let gesture_object = context.transient.paint(&window).and_then(|gesture| match &gesture.leaf {
@@ -154,7 +155,7 @@ pub fn lowpoly_paint_step(
 pub mod paint_at {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "paint-at")]
     pub struct PaintAt {
         pub object_id: Option<String>,
@@ -183,7 +184,7 @@ pub mod paint_at {
 pub mod paint_stroke {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "paint-stroke")]
     pub struct PaintStroke {
         pub object_id: Option<String>,
@@ -212,7 +213,7 @@ pub mod paint_stroke {
 pub mod canvas_pointer_down {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "canvas-pointer-down")]
     pub struct CanvasPointerDown {
         pub object_id: Option<String>,
@@ -239,7 +240,7 @@ pub mod canvas_pointer_down {
 pub mod canvas_pointer_move {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "canvas-pointer-move")]
     pub struct CanvasPointerMove {
         pub object_id: Option<String>,
@@ -267,7 +268,7 @@ pub mod canvas_pointer_move {
 pub mod canvas_pointer_up {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "canvas-pointer-up")]
     pub struct CanvasPointerUp {
         pub cancelled: Option<bool>,
@@ -290,7 +291,7 @@ pub mod canvas_pointer_up {
 pub mod paint_fill {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "paint-fill")]
     pub struct PaintFill {
         pub object_id: Option<String>,
@@ -310,7 +311,7 @@ pub mod paint_fill {
 pub mod fill_bucket {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "fill-bucket")]
     pub struct FillBucket {
         pub object_id: Option<String>,
@@ -341,7 +342,7 @@ fn fill_once(verb: &str, object_id: Option<&str>, point: Option<(f32, f32)>, doc
 pub mod paint_sample {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "paint-sample")]
     pub struct PaintSample {
         pub object_id: Option<String>,
@@ -366,7 +367,7 @@ pub mod paint_sample {
 pub mod add_paint_layer {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "add-paint-layer")]
     pub struct AddPaintLayer {
         pub object_id: Option<String>,

@@ -5,11 +5,27 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "id"
+    "id",
+    "kind",
+    "label",
+    "position",
+    "width",
+    "height",
+    "ports",
+    "properties"
   ],
   "properties": {
     "id": {
-      "$ref": "#/$defs/GraphNodeId"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      }
     },
     "kind": {
       "type": "string"
@@ -18,41 +34,6 @@
       "type": "string"
     },
     "position": {
-      "$ref": "#/$defs/SemioPoint2"
-    },
-    "ports": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/SemioGraphPort"
-      },
-      "x-semio-ui": {
-        "label": {
-          "en": "Ports",
-          "de": "Ports"
-        }
-      }
-    },
-    "properties": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/SemioValueEntry"
-      }
-    }
-  },
-  "$defs": {
-    "GraphNodeId": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "value"
-      ],
-      "properties": {
-        "value": {
-          "type": "string"
-        }
-      }
-    },
-    "SemioPoint2": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -61,70 +42,174 @@
       ],
       "properties": {
         "x": {
-          "type": "number"
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "bits"
+              ],
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              }
+            },
+            {
+              "type": "number"
+            }
+          ]
         },
         "y": {
-          "type": "number"
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "bits"
+              ],
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{16}$"
+                }
+              }
+            },
+            {
+              "type": "number"
+            }
+          ]
         }
       }
     },
-    "SemioGraphPort": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "name",
-        "kind"
-      ],
-      "properties": {
-        "name": {
-          "type": "string"
+    "width": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bits"
+          ],
+          "properties": {
+            "bits": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{16}$"
+            }
+          }
         },
-        "kind": {
-          "$ref": "#/$defs/SemioGraphPortKind",
-          "x-semio-ui": {
-            "options": {
-              "in": {
-                "en": "Input",
-                "de": "Eingang"
-              },
-              "out": {
-                "en": "Output",
-                "de": "Ausgang"
-              },
-              "inOut": {
-                "en": "Input and output",
-                "de": "Ein- und Ausgang"
+        {
+          "type": "number"
+        }
+      ]
+    },
+    "height": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bits"
+          ],
+          "properties": {
+            "bits": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{16}$"
+            }
+          }
+        },
+        {
+          "type": "number"
+        }
+      ]
+    },
+    "ports": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "kind",
+          "category",
+          "properties"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "in",
+              "out",
+              "inOut"
+            ]
+          },
+          "category": {
+            "type": "string"
+          },
+          "properties": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "key",
+                "value"
+              ],
+              "properties": {
+                "key": {
+                  "type": "string"
+                },
+                "value": {
+                  "$ref": "#/$defs/SemioValue"
+                }
               }
             }
           }
         }
       }
     },
-    "SemioGraphPortKind": {
-      "type": "string",
-      "enum": [
-        "in",
-        "out",
-        "inOut"
-      ]
-    },
-    "SemioValueEntry": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "key",
-        "value"
-      ],
-      "properties": {
-        "key": {
-          "type": "string"
-        },
-        "value": {
-          "$ref": "#/$defs/SemioValue"
+    "properties": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "value"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "value": {
+            "$ref": "#/$defs/SemioValue"
+          }
         }
       }
     },
+    "at": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1048575,
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Position in set",
+          "de": "Position in der Menge"
+        },
+        "description": {
+          "en": "Index the node is inserted at; absent appends it. Undo of a delete names the removed index.",
+          "de": "Index, an dem der Knoten eingefügt wird; fehlt er, wird angehängt. Das Rückgängigmachen eines Löschens nennt den entfernten Index."
+        }
+      }
+    }
+  },
+  "$defs": {
     "SemioValue": {
+      "description": "One typed value, internally tagged on `kind` exactly as the Rust `SemioValue` enum: numbers keep their lexeme, bytes are raw octets.",
       "oneOf": [
         {
           "type": "object",
@@ -135,6 +220,12 @@
           "properties": {
             "kind": {
               "const": "null"
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Null",
+              "de": "Null"
             }
           }
         },
@@ -150,7 +241,20 @@
               "const": "bool"
             },
             "value": {
-              "type": "boolean"
+              "type": "boolean",
+              "x-semio-ui": {
+                "widget": "toggle",
+                "label": {
+                  "en": "Value",
+                  "de": "Wert"
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Boolean",
+              "de": "Wahrheitswert"
             }
           }
         },
@@ -166,7 +270,24 @@
               "const": "int"
             },
             "lexeme": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "label": {
+                  "en": "Lexeme",
+                  "de": "Lexem"
+                },
+                "description": {
+                  "en": "Exact textual form of a number or string value.",
+                  "de": "Genaue Textform eines Zahlen- oder Zeichenkettenwerts."
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Integer",
+              "de": "Ganzzahl"
             }
           }
         },
@@ -182,7 +303,24 @@
               "const": "float"
             },
             "lexeme": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "label": {
+                  "en": "Lexeme",
+                  "de": "Lexem"
+                },
+                "description": {
+                  "en": "Exact textual form of a number or string value.",
+                  "de": "Genaue Textform eines Zahlen- oder Zeichenkettenwerts."
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Floating point",
+              "de": "Gleitkommazahl"
             }
           }
         },
@@ -198,7 +336,20 @@
               "const": "str"
             },
             "value": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "label": {
+                  "en": "Value",
+                  "de": "Wert"
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Text",
+              "de": "Text"
             }
           }
         },
@@ -219,7 +370,19 @@
                 "type": "integer",
                 "minimum": 0,
                 "maximum": 255
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Bytes",
+                  "de": "Bytes"
+                }
               }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Bytes",
+              "de": "Bytes"
             }
           }
         },
@@ -238,7 +401,19 @@
               "type": "array",
               "items": {
                 "$ref": "#/$defs/SemioValue"
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "List items",
+                  "de": "Listenelemente"
+                }
               }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "List",
+              "de": "Liste"
             }
           }
         },
@@ -257,7 +432,19 @@
               "type": "array",
               "items": {
                 "$ref": "#/$defs/SemioValueEntry"
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Map entries",
+                  "de": "Map-Einträge"
+                }
               }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Map",
+              "de": "Map"
             }
           }
         },
@@ -273,10 +460,53 @@
               "const": "ref"
             },
             "id": {
-              "$ref": "#/$defs/ValueId"
+              "$ref": "#/$defs/ValueId",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Referenced node",
+                  "de": "Referenzierter Knoten"
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Reference",
+              "de": "Referenz"
             }
           }
         }
+      ]
+    },
+    "SemioValueEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "value"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/$defs/SemioValue"
+        }
+      }
+    },
+    "SemioValueNode": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/ValueId"
+        },
+        "value": {
+          "$ref": "#/$defs/SemioValue"
+        }
+      },
+      "required": [
+        "id",
+        "value"
       ]
     },
     "ValueId": {

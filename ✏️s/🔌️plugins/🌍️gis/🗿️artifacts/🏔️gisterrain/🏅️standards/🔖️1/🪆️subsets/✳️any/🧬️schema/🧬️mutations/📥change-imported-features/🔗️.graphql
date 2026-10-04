@@ -1,4 +1,5 @@
+# import ImportedMap, ImportedMapChange, ImportedMapInput from "🗺️imported-map/🔗️.graphql"
 """📥 Direct change-imported-features payload."""
 input ChangeImportedFeaturesInput {
-  newImportedFeaturesJson: String!
+  newImportedMap: ImportedMapInput
 }

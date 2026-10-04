@@ -447,7 +447,7 @@ fn painting_a_field_with_description_required_and_error_emits_extra_glyphs() {
 fn tree_with_item_description() -> UiNode {
     let mut item = UiTreeItemNode::base("i1", Label::data("Item One"));
     item.description = Some("desc".into());
-    item.actions = Some(vec![UiTreeItemAction { icon_id: IconName::Sparkles, label: None, action: action(), placement: None, disabled: false }]);
+    item.actions = Some(vec![UiTreeItemAction { icon_id: IconName::Sparkles, label: None, action: action(), placement: None, disabled: false, reason: None }]);
     UiNode::Tree(UiTreeNode {
         presentation: Default::default(),
         sections: vec![UiTreeSectionNode { header_toolbar: None, window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] }],

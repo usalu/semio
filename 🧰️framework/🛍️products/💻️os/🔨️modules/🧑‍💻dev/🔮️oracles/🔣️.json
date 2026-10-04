@@ -1,0 +1,56 @@
+{
+  "$schema": "../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🔮️ This owner's contribution to the repository test platform: the third-party references its own laws judge against.",
+  "oracles": [
+    {
+      "id": "dev-time-travel-aria-query",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "aria-query",
+      "version": "5.3.0",
+      "engine": {
+        "family": "aria-query",
+        "implementation": "aria-query roles",
+        "version": "5.3.0"
+      },
+      "capabilities": [
+        "dev.time-travel.accessibility"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "Apache-2.0",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://github.com/A11yance/aria-query",
+      "rationale": "The ARIA role model the time-travel probe (`🧪️tests/🧪️time-travel`) checks the history panel, editor and finalize dialog against: unknown or unsupported `aria-*` attributes and roles fail the run."
+    },
+    {
+      "id": "dev-time-travel-dom-accessibility-api",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "dom-accessibility-api",
+      "version": "0.5.16",
+      "engine": {
+        "family": "dom-accessibility-api",
+        "implementation": "dom-accessibility-api computeAccessibleName()",
+        "version": "0.5.16"
+      },
+      "capabilities": [
+        "dev.time-travel.accessibility"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://github.com/eps1lon/dom-accessibility-api",
+      "rationale": "Computes the accessible name and description of every interactive history control in the time-travel probe (`🧪️tests/🧪️time-travel`) independently of the renderer's own labelling."
+    }
+  ],
+  "noOracleDecisions": []
+}

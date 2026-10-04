@@ -32,6 +32,31 @@
       }
     }
   },
+  "nativeTableRowCounts": {
+    "puzzle3_document": 1,
+    "puzzle3_meta": 1,
+    "puzzle3_catalog": 1,
+    "puzzle3_object_kind": 1,
+    "puzzle3_object_kind_base": 2,
+    "puzzle3_representation": 1,
+    "puzzle3_representation_tag": 2,
+    "puzzle3_vortex_template": 1,
+    "puzzle3_attribute": 1,
+    "puzzle3_author": 1,
+    "puzzle3_vortex_kind": 1,
+    "puzzle3_vortex_kind_compatible": 2,
+    "puzzle3_cable_kind": 1,
+    "puzzle3_attraction_kind": 1,
+    "puzzle3_compatibility": 5,
+    "puzzle3_object": 1,
+    "puzzle3_object_scale": 1,
+    "puzzle3_vortex": 1,
+    "puzzle3_attraction": 1,
+    "puzzle3_target": 1,
+    "puzzle3_target_scale": 1,
+    "puzzle3_reference": 1,
+    "puzzle3_reference_source": 1
+  },
   "sqlEdits": [
     {
       "sql": "UPDATE puzzle3_reference_source SET url='edited literal'",
@@ -51,5 +76,13 @@
     "UPDATE puzzle3_reference_source SET reference_id=999",
     "DELETE FROM puzzle3_reference_source",
     "UPDATE puzzle3_vortex SET hidden=2"
+  ],
+  "nativeMalformedSql": [
+    "UPDATE puzzle3_object SET ordinal=7",
+    "UPDATE puzzle3_object SET origin_x_numeric_class='nan'",
+    "UPDATE puzzle3_object SET hidden=4",
+    "UPDATE puzzle3_object_scale SET kind='other'",
+    "DELETE FROM puzzle3_reference_source",
+    "UPDATE puzzle3_vortex SET object_id=999"
   ]
 }

@@ -27,7 +27,7 @@ async fn pack_source_read_at_offset_past_end_errors_never_panics() {
     let data: &[u8] = b"hi";
     let mut buf = [0u8; 4];
     let result = data.read_at(100, &mut buf).await;
-    assert_eq!(result, Err(PackError::Truncated(100)));
+    assert_eq!(result, Err(PackRefusal::Truncated(100)));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -35,7 +35,7 @@ async fn pack_source_read_exact_at_errors_on_truncated_input() {
     let data: &[u8] = b"hi";
     let mut buf = [0u8; 5];
     let result = data.read_exact_at(0, &mut buf).await;
-    assert!(matches!(result, Err(PackError::Truncated(_))));
+    assert!(matches!(result, Err(PackRefusal::Truncated(_))));
 }
 
 #[semio_framework_async_macros::async_test]

@@ -5,7 +5,7 @@ use semio_framework_schema_registry::{resolve_schema_export, SchemaFormat};
 #[test]
 fn plugin_module_schema_exports_match_declared_formats() {
     let schema: serde_json::Value = serde_json::from_str(include_str!("../../🧬️schema/🔣️.json")).expect("shared publication schema");
-    let declared: std::collections::BTreeSet<_> = schema["$defs"].as_object().unwrap().keys().map(String::as_str).collect();
+    let declared: std::collections::BTreeSet<_> = schema["$defs"].as_object().unwrap().iter().filter(|(_, definition)| definition.get("x-semio-formats").is_some()).map(|(id, _)| id.as_str()).collect();
     assert_eq!(declared, EXPORTS.iter().map(|export| export.id).collect());
     register_scope_exports();
     for export in &EXPORTS {

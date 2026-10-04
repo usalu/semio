@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-03T19:41:54.542175+00:00",
+  "sourceLane": "complete",
+  "stages": [
+    "COMPUTE-SOURCE-OWNER-ISOLATION.md",
+    "COMPUTE-SOURCE-LEVEL-ADMISSION.md"
+  ],
+  "finalAuthority": "compute-source-level-admission-inputs/full-current-inverse.json",
+  "stageOneAuthority": "compute-source-owner-isolation-inputs/full-current-inverse.json",
+  "registeredSourceTasks": 22,
+  "registeredPass": 63,
+  "registeredFail": 0,
+  "inferredLevelsTasks": 21,
+  "sourceDeletionPass": 12,
+  "sourceDeletionFail": 0,
+  "fixtureVectors": 12,
+  "policyExpectationsPerRun": 155,
+  "guiNewPolicyLevelObjects": 22,
+  "helperChangedOwnedSpans": 2,
+  "originalWitnessBodiesUnchanged": 15,
+  "managedProjection": "Native-owned pending; final22 seed objects notified",
+  "noCargoRustManifestExecutionOrWrites": true,
+  "generatedEvidence": "Retained for Root/Native integration; remove only owned generated subdirectories once integrated"
+}

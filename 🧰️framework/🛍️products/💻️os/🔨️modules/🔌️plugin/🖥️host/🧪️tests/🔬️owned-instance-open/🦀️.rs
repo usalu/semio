@@ -1,6 +1,9 @@
 //! 🧫️ Private host interpreter and origin laws run against the neutral SDK component.
 use super::*;
 
+#[path = "🪶️lease/🦀️.rs"]
+mod count_component_tests;
+
 const FIXTURE_EDITOR_APP:&str="fixture.neutral-host-fixture.counter@1/*#editor";
 fn repo_root()->PathBuf {
     let mut path=PathBuf::from(env!("CARGO_MANIFEST_DIR"));
@@ -377,8 +380,8 @@ fn a_call_waiting_for_another_calls_assembly_relays_its_fuel_honours_its_cancell
 fn neutral_component_inventory_is_portable_and_names_both_independent_runtime_oracles() {
     let source=include_str!("../../🧫️fixtures/🧩️component/🧫️fixtures/🔣️.json");
     let law:serde_json::Value=serde_json::from_str(source).unwrap();
-    let owned:semio_framework_os_kernel::DslValue=semio_framework_os_kernel::os_pack::json::from_json_str(source).unwrap();
-    assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_os_kernel::os_pack::json::to_json_string(&owned)).unwrap(),law);
+    let owned:semio_framework_value::DslValue=semio_framework_pack_json::from_json_str(source, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&owned)).unwrap(),law);
     assert_eq!(law["artifactKind"],FIXTURE_ARTIFACT_KIND);
     assert_eq!(law["documentSchema"],FIXTURE_DOCUMENT_SCHEMA);
     assert_eq!(law["runtimeOracles"],serde_json::json!(["owned","wasmtime"]));

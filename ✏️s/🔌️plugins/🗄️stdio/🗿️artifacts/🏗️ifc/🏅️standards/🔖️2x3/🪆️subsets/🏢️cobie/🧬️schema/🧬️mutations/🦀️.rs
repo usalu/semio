@@ -235,7 +235,8 @@ pub(crate) fn agg_diff(this: &Ifc2x3CobieMutation, base: &Ifc2x3Snapshot) -> pro
 }
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &Ifc2x3CobieMutation, base: &Ifc2x3Snapshot) -> Vec<Ifc2x3CobieMutation> {
+pub(crate) fn agg_inverse(this: &Ifc2x3CobieMutation, base: &Ifc2x3Snapshot) -> Result<Vec<Ifc2x3CobieMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match this {
         Ifc2x3CobieMutation::SetSnapshot(_) => vec![Ifc2x3CobieMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
         Ifc2x3CobieMutation::SetViewDefinition(_) => vec![Ifc2x3CobieMutation::SetViewDefinition(set_view_definition::SetViewDefinition { view: mvd::view_definition_name(base).unwrap_or_default() })],
@@ -263,6 +264,8 @@ pub(crate) fn agg_inverse(this: &Ifc2x3CobieMutation, base: &Ifc2x3Snapshot) -> 
             vec![Ifc2x3CobieMutation::SetTypeAssignment(set_type_assignment::SetTypeAssignment { id: *id, assignment })]
         }
     }
+
+    })())
 }
 //#endregion 🔖️MutationTrait
 

@@ -6,9 +6,10 @@ import { resolveTestLevel } from "../../../../🔨️modules/🏃️process/🧪
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { type ValidateFunction } from "ajv";
 import Ajv2020 from "ajv/dist/2020.js";
+import {buildBudgetMs} from "../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 import { runCargo, runRepositoryCargoTests, runRepositoryTestCommand, runRepositoryExactCargoLaws } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
@@ -1493,6 +1494,7 @@ class DurableOwnedGroupDecisionCheckScript extends BundleScript {
             package: "semio-framework-os-kernel",
             target: { kind: "lib" },
             laws: [
+              "durable_group::tests::durable_byte_carriers_preserve_octets_under_the_declared_ownership_ceiling",
               "durable_group::tests::durable_owned_group_decision_matches_neutral_canonical_hash_and_bounds",
               "durable_group::tests::durable_group_journal_record_projects_edits_only_after_all_three_bound_outcomes_verify",
               "durable_group::tests::durable_store_prepared_outcome_derives_and_verifies_exact_unbound_bytes",
@@ -1896,6 +1898,15 @@ class TestScript extends BundleScript {
   }
 }
 
+/** 🚦️ Verifies the neutral caller input and transport contract through the independent Source oracle. */
+class CommandTransportSourceTestScript extends BundleScript {
+ async run(segments:string[]):Promise<void>{if(segments.length)throw Error("test-command-transport-source accepts no arguments");const source=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🚦️control/🧪️tests/🟦️.ts");await runRepositoryTestCommand(process.execPath,["x","--no-install","tsc","--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot});await runRepositoryTestCommand(process.execPath,["test",source],{cwd:this.repoRoot});}
+}
+/** 🪪️ Keeps all original CLI and SPR I/O laws beside actual retained caller-context laws. */
+class CommandTransportNativeTestScript extends BundleScript {
+ async run(segments:string[]):Promise<void>{if(segments.length)throw Error("test-command-transport-native accepts no arguments");await runRepositoryCargoTests(["semio-framework-os-kernel"],this.repoRoot,["--lib","--features","sync,ureq","-E","test(command_transport_neutral_) | test(os_pack::cli::tests::) | test(os_spr::cli::tests::) | test(os_spr::io::native::tests::)","--no-fail-fast"]);}
+}
+
 class ListRecordNativeTestScript extends BundleScript {
   async run(segments:string[]):Promise<void>{if(segments.length)throw new Error("test-list-record-boundaries accepts no arguments");await runRepositoryCargoTests(["semio-framework-os-kernel"],this.repoRoot,["--lib","--no-fail-fast","list_record_"]);}
 }
@@ -1979,6 +1990,12 @@ type RetainedClonePreparationCaseV1 = {
 type RetainedClonePreparationFixtureV1 = {
   readonly grant: { readonly maximumItems: 1; readonly maximumBytes: number; readonly maximumDepth: number };
   readonly largeCapacity: { readonly stringByteLength: number; readonly expectedCode: "retained-clone.step-grant-too-small" };
+  readonly handoff: {
+    readonly sourceEntries: number;
+    readonly copiedEntriesBeforeLoss: number;
+    readonly closeGrant: { readonly maximumItems: 1; readonly maximumBytes: 4096 };
+    readonly expected: { readonly driverOwnsCursor: true; readonly sourcePreserved: true; readonly closeRequiresMultipleTurns: true; readonly terminalEmpty: true };
+  };
   readonly cases: readonly RetainedClonePreparationCaseV1[];
 };
 
@@ -1990,6 +2007,15 @@ type RetainedPagedListCopyFixtureV1 = {
   readonly grant: { readonly maximumItems: 5; readonly maximumCopyBytes: 32; readonly maximumCapacityBytes: 4096; readonly maximumDepth: 64 };
   readonly cancellationAfterEntries: 173;
   readonly expected: { readonly ordered: true; readonly sourcePreserved: true; readonly copyRequiresMultipleTurns: true; readonly closeRequiresMultipleTurns: true; readonly terminalEmpty: true };
+};
+
+/** 📦️ `📦️paged/🧫️fixtures/📦️owners` — retained paged text and map ownership corpus. */
+type RetainedPagedOwnerFixtureV1 = {
+  readonly grant: { readonly maximumItems: number; readonly maximumCopyBytes: number; readonly maximumCapacityBytes: 4096; readonly maximumDepth: number };
+  readonly text: { readonly segment: string; readonly repetitions: number; readonly capacityBytes: 8192 };
+  readonly bytes: { readonly length: 6145; readonly capacityBytes: 8192; readonly multiplier: number; readonly increment: number };
+  readonly map: { readonly entryCount: 70; readonly capacityEntries: 128; readonly keyPrefix: string; readonly valuePrefix: string };
+  readonly expected: { readonly copyRequiresMultipleTurns: true; readonly closeRequiresMultipleTurns: true; readonly ordered: true; readonly terminalEmpty: true };
 };
 //#endregion 🧬️RetainedCloneFixtures
 
@@ -2059,6 +2085,37 @@ class RetainedCloneCheckScript extends BundleScript {
     assert(validatePreparation(preparationFixture), JSON.stringify(validatePreparation.errors));
     assert(preparationFixture.largeCapacity.stringByteLength > preparationFixture.grant.maximumBytes);
     assert.equal(preparationFixture.largeCapacity.expectedCode, "retained-clone.step-grant-too-small");
+    const handoffSource = Array.from({ length: preparationFixture.handoff.sourceEntries }, (_, ordinal) => `handoff-${ordinal.toString().padStart(2, "0")}`);
+    const handoffSourceOracle = structuredClone(handoffSource);
+    let activeCursor: null | { retainedSource: string[]; partialOutput: string[] } = {
+      retainedSource: handoffSourceOracle,
+      partialOutput: handoffSourceOracle.slice(0, preparationFixture.handoff.copiedEntriesBeforeLoss),
+    };
+    const storeCloseQueue: { retainedSource: string[]; partialOutput: string[] }[] = [activeCursor];
+    activeCursor = null;
+    let handoffTurns = 0;
+    while (storeCloseQueue.length && storeCloseQueue[0].partialOutput.length) {
+      storeCloseQueue[0].partialOutput.pop();
+      handoffTurns += 1;
+    }
+    storeCloseQueue.shift();
+    assert.equal(activeCursor, null);
+    assert.deepEqual(handoffSource, handoffSourceOracle);
+    assert(handoffTurns > 1);
+    assert.equal(storeCloseQueue.length, 0);
+    assert.equal(preparationFixture.handoff.expected.driverOwnsCursor, true);
+    assert.equal(preparationFixture.handoff.expected.sourcePreserved, true);
+    assert.equal(preparationFixture.handoff.expected.closeRequiresMultipleTurns, true);
+    assert.equal(preparationFixture.handoff.expected.terminalEmpty, true);
+    const storeSource = readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs"), "utf8");
+    const handoffMethod = storeSource.slice(storeSource.indexOf("pub fn handoff_batch_publication_close("), storeSource.indexOf("pub fn maintenance_retirements_terminal_is_empty", storeSource.indexOf("pub fn handoff_batch_publication_close(")));
+    assert(handoffMethod.indexOf("displaced_retirements.reserve(1)?") < handoffMethod.indexOf("publication.take()"), "Store reserves surviving close authority before taking the scheduler owner");
+    assert(storeSource.includes("ErasedSnapshotRetirement for ArtifactStoreBatchPublication"));
+    const pluginSource = readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs"), "utf8");
+    assert(pluginSource.includes("fn handoff_mounted_durable_publication("));
+    assert(pluginSource.match(/handoff_mounted_durable_publication\(/g)?.length ?? 0 >= 4, "cancel, stale and terminal-error paths transfer durable publications");
+    const toolRunSource = readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/🦀️.rs"), "utf8");
+    assert(toolRunSource.includes("store.handoff_batch_publication_close(&mut owner)"), "tool-run replacement and abort transfer publications to Store maintenance");
     for (const row of preparationFixture.cases) {
       let value = row.initial;
       let history = 0;
@@ -2091,7 +2148,28 @@ class RetainedCloneCheckScript extends BundleScript {
     assert.equal(pagedFixture.expected.copyRequiresMultipleTurns, true);
     assert.equal(pagedFixture.expected.closeRequiresMultipleTurns, true);
     assert.equal(pagedFixture.expected.terminalEmpty, true);
-    console.log(`retained-clone-check: choices=${fixture.source.choices.length} payload=${fixture.payloadByteLength} cancellation=${fixture.cancellationStops.length} orderedMap=${ordered.length} growth=${growth.size} preparation=${preparationFixture.cases.length} paged=${pagedOracle.length}`);
+    const pagedOwnerRoot = join(this.repoRoot, "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️paged/🧫️fixtures/📦️owners");
+    const pagedOwnerSchema = JSON.parse(readFileSync(join(pagedOwnerRoot, "🧬️schema/🔣️.json"), "utf8"));
+    const pagedOwnerFixture = JSON.parse(readFileSync(join(pagedOwnerRoot, "🔣️.json"), "utf8"));
+    const validatePagedOwner = new Ajv2020({ strict: true, allErrors: true }).compile<RetainedPagedOwnerFixtureV1>(pagedOwnerSchema);
+    assert(validatePagedOwner(pagedOwnerFixture), JSON.stringify(validatePagedOwner.errors));
+    const pagedTextOracle = structuredClone(pagedOwnerFixture.text.segment.repeat(pagedOwnerFixture.text.repetitions));
+    assert.equal(new TextEncoder().encode(pagedTextOracle).byteLength <= pagedOwnerFixture.text.capacityBytes, true);
+    assert(new TextEncoder().encode(pagedTextOracle).byteLength > pagedOwnerFixture.grant.maximumCopyBytes);
+    const pagedBytesSource = Uint8Array.from({ length: pagedOwnerFixture.bytes.length }, (_, ordinal) => (ordinal * pagedOwnerFixture.bytes.multiplier + pagedOwnerFixture.bytes.increment) & 255);
+    const pagedBytesOracle = structuredClone(pagedBytesSource);
+    assert.deepEqual(pagedBytesOracle, pagedBytesSource);
+    assert.equal(pagedBytesOracle.byteLength <= pagedOwnerFixture.bytes.capacityBytes, true);
+    assert(pagedBytesOracle.byteLength > pagedOwnerFixture.grant.maximumCopyBytes);
+    const pagedMapOracle = structuredClone(Array.from({ length: pagedOwnerFixture.map.entryCount }, (_, ordinal) => [`${pagedOwnerFixture.map.keyPrefix}${ordinal.toString().padStart(3, "0")}`, `${pagedOwnerFixture.map.valuePrefix}${ordinal}`] as const));
+    assert.equal(pagedMapOracle.length, pagedOwnerFixture.map.entryCount);
+    assert(pagedMapOracle.length <= pagedOwnerFixture.map.capacityEntries);
+    assert.deepEqual(pagedMapOracle.map(([key]) => key), [...pagedMapOracle].map(([key]) => key));
+    assert.equal(pagedOwnerFixture.expected.copyRequiresMultipleTurns, true);
+    assert.equal(pagedOwnerFixture.expected.closeRequiresMultipleTurns, true);
+    assert.equal(pagedOwnerFixture.expected.ordered, true);
+    assert.equal(pagedOwnerFixture.expected.terminalEmpty, true);
+    console.log(`retained-clone-check: choices=${fixture.source.choices.length} payload=${fixture.payloadByteLength} cancellation=${fixture.cancellationStops.length} orderedMap=${ordered.length} growth=${growth.size} preparation=${preparationFixture.cases.length} paged=${pagedOracle.length} pagedText=${new TextEncoder().encode(pagedTextOracle).byteLength} pagedBytes=${pagedBytesOracle.byteLength} pagedMap=${pagedMapOracle.length}`);
   }
 }
 
@@ -2122,6 +2200,22 @@ class DocumentOpeningAttemptNativeCheckScript extends BundleScript {
   }
 }
 
+/** ♻️ Proves canonical intrinsic cleanup has no requests and releases every owned capacity. */
+class IntrinsicRetirementNativeTestScript extends BundleScript {
+ async run(segments:string[]):Promise<void>{
+  if(segments.length)throw new Error("test-intrinsic-retirement-native accepts no arguments");
+  await runRepositoryCargoTests(["semio-framework-os-kernel"],this.repoRoot,["--lib","--features","sync,ureq","value_intrinsic_retirement_full_system_requests_and_release","--no-fail-fast"]);
+ }
+}
+
+/** 🔗️ Measures actual borrowed UTF8 key index backing and typed refusal ownership. */
+class BorrowedKeyIndexNativeTestScript extends BundleScript {
+ async run(segments:string[]):Promise<void>{
+  if(segments.length)throw new Error("test-borrowed-key-index-native accepts no arguments");
+  await runRepositoryCargoTests(["semio-framework-os-kernel"],this.repoRoot,["--lib","--features","sync,ureq","value_borrowed_key_index_full_requests_and_same_caller_are_admitted","--no-fail-fast"]);
+ }
+}
+
 class NativeTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
@@ -2129,9 +2223,31 @@ class NativeTestScript extends BundleScript {
   }
 }
 
+/** 🧷️ Enforces actual Store assembly guard lifetimes with closed native client laws. */
+class AssemblyLifetimeNativeTestScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("test-assembly-lifetime-native accepts no arguments");
+    const source = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧷️assembly/⏳️lifetime/🧪️tests/🟦️.ts");
+    await runBudgetedTestCommand(process.execPath, [Bun.resolveSync("typescript/bin/tsc", this.root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", source], { cwd: this.repoRoot, budgetMs: 30000, throwOnFailure: true });
+    await runRepositoryTestCommand(process.execPath, ["test", "--timeout", "60000", source], { cwd: this.repoRoot });
+  }
+}
+
+class SpaceHistorySqliteNativeTestScript extends BundleScript {
+  async run(segments:string[]):Promise<void>{const {rest}=resolveTestLevel(segments);await runRepositoryCargoTests(["semio-framework-os-kernel"],this.repoRoot,["--lib","sqlite_snapshot_framework_space_history_","--no-fail-fast",...rest]);}
+}
+class SpaceHistorySqliteSourceTestScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("test-space-history-sqlite-source accepts no arguments");
+    const source = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts");
+    await runBudgetedTestCommand(process.execPath, [Bun.resolveSync("typescript/bin/tsc", this.root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", source], { cwd: this.repoRoot, budgetMs: 30000, throwOnFailure: true });
+    await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot });
+  }
+}
+
 class SnapshotNativeAdmissionTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await runRepositoryTestCommand(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🟦️.ts"), join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/📖️grammar/📡️literal/🧪️tests/🟦️.ts"), join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🧪️tests/🚦️controlled/🟦️.ts"), join(this.repoRoot, "🧰️framework/🔨️modules/🚪️io/🧬️schema/🔗️reference/🧪️tests/🟦️.ts")], { cwd: this.repoRoot });
+    await runRepositoryTestCommand(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🚪️public/🧩️ownership/🟦️.ts"), join(this.repoRoot, "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🟦️.ts"), join(this.repoRoot, "🧰️framework/🔨️modules/🗣️dsl/📖️grammar/📡️literal/🧪️tests/🟦️.ts"), join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🧪️tests/🚦️controlled/🟦️.ts"), join(this.repoRoot, "🧰️framework/🔨️modules/🚪️io/🧬️schema/🔗️reference/🧪️tests/🟦️.ts")], { cwd: this.repoRoot });
     if (segments.length === 1 && segments[0] === "portable") return;
     const { rest } = resolveTestLevel(segments);
     await runRepositoryCargoTests(["semio-framework-os-kernel"], this.repoRoot, ["--test", "sqlite_snapshot_native_admission", ...rest, ...(rest.includes("--no-fail-fast") ? [] : ["--no-fail-fast"])]);
@@ -2618,7 +2734,17 @@ class DocumentHttpCheckScript extends BundleScript {
 }
 
 
-const router = new ScriptRouter(import.meta.dir)
+/** 🧩️ Proves this owner's complete canonical command ingress consumer contract. */
+class CommandIngressConsumerScript extends BundleScript {
+ async run(segments:string[]):Promise<void>{
+  if(segments.length)throw Error("test-command-ingress-consumer accepts no arguments");
+  const {runBudgetedTestCommand}=await import("../../../../🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts"),{testLevelBudgetMs}=await import("../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts"),source=resolve(this.root,"../../🔨️modules/📡️spr/🧵️channel/🏛️ownership/📥️command-ingress/🧪️tests/🟦️.ts");
+  await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs(),throwOnFailure:true});
+  await runBudgetedTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs(),throwOnFailure:true});
+ }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("test-command-ingress-consumer",CommandIngressConsumerScript)
   .register("check", CheckScript)
   .register("retained-clone-check", RetainedCloneCheckScript)
   .register("test", TestScript)
@@ -2633,7 +2759,14 @@ const router = new ScriptRouter(import.meta.dir)
   .register("preview-generated", PreviewGeneratedScript)
   .register("check-jco-package-adapter", CheckJcoPackageAdapterScript)
   .register("test-native", NativeTestScript)
+  .register("test-command-transport-source", CommandTransportSourceTestScript)
+  .register("test-command-transport-native", CommandTransportNativeTestScript)
+  .register("test-intrinsic-retirement-native", IntrinsicRetirementNativeTestScript)
+  .register("test-borrowed-key-index-native", BorrowedKeyIndexNativeTestScript)
   .register("test-snapshot-native-admission", SnapshotNativeAdmissionTestScript)
+  .register("test-space-history-sqlite-native",SpaceHistorySqliteNativeTestScript)
+  .register("test-space-history-sqlite-source",SpaceHistorySqliteSourceTestScript)
+  .register("test-assembly-lifetime-native", AssemblyLifetimeNativeTestScript)
   .register("test-directory-runtime-source", DirectoryRuntimeSourceScript)
   .register("directory-session-authority-check", DirectorySessionAuthorityCheckScript)
   .register("directory-event-page-contract-check", DirectoryEventPageContractCheckScript)
@@ -2674,5 +2807,40 @@ class DirectoryLeaseFixtureScript extends BundleScript {
 
 router.register("test-directory-lease-fixture", DirectoryLeaseFixtureScript);
 
+
+/** 🧱️ Verifies actual OS composition and full original DSL/diagnostic source-law preservation. */
+class DslArchitectureProofScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("test-dsl-architecture accepts no arguments");
+    await runBudgetedTestCommand(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧪️tests/🧱️architecture/🟦️.ts"), join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧪️tests/🧬️record-floor/🟦️.ts")], {cwd: this.repoRoot, budgetMs: 30000, throwOnFailure: true});
+  }
+}
+
+router.register("test-dsl-architecture", DslArchitectureProofScript);
+
+/** 🪪️ Verifies the OS native artifact-kind admission against the neutral grammar. */
+class ArtifactKindNativeScript extends BundleScript {
+ async run(segments:string[]):Promise<void>{
+ if(segments.length)throw Error("test-artifact-kind accepts no arguments");
+     const artifactDir = process.env.SEMIO_TEST_ARTIFACT_DIR;
+    if (!artifactDir) throw new Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned native output");
+    let cancelled = false;
+    const stop = (): void => { cancelled = true; };
+    process.once("SIGINT", stop); process.once("SIGTERM", stop);
+    try {
+      const receipts = await runRepositoryExactCargoLaws({ cwd: this.repoRoot, artifactDir, buildBudgetMs: buildBudgetMs(), listBudgetMs: 60_000, lawBudgetMs: 60_000, cancelled: () => cancelled, progress: event => console.log(`[artifact-kind] ${event.stage}`), groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: ["os_io::tests::artifact_kind_id_follows_owner_neutral_corpus"] }] });
+      console.log(`[DEBUG] artifact-kind native laws=${receipts.reduce((count, receipt) => count + receipt.assertions, 0)}`);
+    } finally { process.off("SIGINT", stop); process.off("SIGTERM", stop); }
+
+ }
+}
+/** 🪶️ Verifies native OS SQLite snapshot admission under its exact owner. */
+class SnapshotSqliteAdmissionScript extends BundleScript {
+ async run(segments:string[]):Promise<void>{
+ if(segments.length)throw Error("test-snapshot-sqlite-admission accepts no arguments");
+ await runRepositoryCargoTests(["semio-framework-os-kernel"],this.repoRoot,["--test","sqlite_snapshot_native_admission"]);
+ }
+}
+router.register("test-artifact-kind",ArtifactKindNativeScript).register("test-snapshot-sqlite-admission",SnapshotSqliteAdmissionScript);
 
 await runScriptMain(router, { defaultCommand: "check" });

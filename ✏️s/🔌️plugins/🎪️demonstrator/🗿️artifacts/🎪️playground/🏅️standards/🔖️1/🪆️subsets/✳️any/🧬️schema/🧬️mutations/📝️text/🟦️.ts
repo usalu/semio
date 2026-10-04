@@ -49,5 +49,5 @@ export const demonstratorPlaygroundMutationsTextGuardConstant = <T extends strin
 //#endregion 🚪️Parsers
 
 export function parsePlaygroundMutationsText(value: unknown, at = "$"): PlaygroundMutationsText {
-  return demonstratorPlaygroundMutationsTextGuardObject(value, `${at}`);
+  return demonstratorPlaygroundMutationsTextGuardString(value, at);
 }

@@ -14,7 +14,7 @@ fn attach_serializes_like_the_typescript_projection() {
 #[test]
 fn attaching_a_new_document_inverts_to_its_detachment() {
     let base = LocalFolderBindings::default();
-    assert_eq!(attach_local_folder(binding("puzzle.2d.fixture", "/data/puzzles")).inverse(&base), vec![super::super::detach_local_folder("puzzle.2d.fixture")]);
+    assert_eq!(attach_local_folder(binding("puzzle.2d.fixture", "/data/puzzles")).inverse(&base).expect("valid retained mutation inverse fixture"), vec![super::super::detach_local_folder("puzzle.2d.fixture")]);
 }
 
 #[test]
@@ -24,7 +24,7 @@ fn reattaching_a_bound_document_replaces_it_in_place_and_inverts_to_the_prior_bi
     let mut snapshot = base.clone();
     apply_local_folders_config_mutation(&mut snapshot, &moved).expect("attach applies");
     assert_eq!(snapshot.bindings.iter().map(|entry| entry.folder.clone()).collect::<Vec<_>>(), vec![LocalFolderRef::Path { path: "/data/a-moved".into() }, LocalFolderRef::Path { path: "/data/b".into() }], "one binding per document, ordered by id");
-    assert_eq!(moved.inverse(&base), vec![attach_local_folder(binding("a.fixture", "/data/a"))]);
+    assert_eq!(moved.inverse(&base).expect("valid retained mutation inverse fixture"), vec![attach_local_folder(binding("a.fixture", "/data/a"))]);
 }
 
 #[test]

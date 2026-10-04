@@ -1,0 +1,736 @@
+{
+  "at": "2026-10-03T21:06:26.504Z",
+  "manifests": [
+    {
+      "path": "🧰️framework/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-framework",
+      "normal": [
+        [
+          "replication",
+          {
+            "package": "semio-framework-replication",
+            "path": "../../🔨️modules/📡️replication/📦️packages/🦀️rust"
+          }
+        ],
+        [
+          "semio-framework-io-schema",
+          {
+            "path": "../../🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust"
+          }
+        ],
+        [
+          "semio-framework-pack-json",
+          {
+            "path": "../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust"
+          }
+        ],
+        [
+          "semio-framework-diagnostic",
+          {
+            "path": "../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust"
+          }
+        ],
+        [
+          "semio-framework-dsl",
+          {
+            "path": "../../🔨️modules/🗣️dsl/📦️packages/🦀️rust"
+          }
+        ],
+        [
+          "semio-framework-ui-locale",
+          {
+            "path": "../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust"
+          }
+        ],
+        [
+          "semio-framework-schema-registry",
+          {
+            "path": "../../🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust"
+          }
+        ],
+        [
+          "semio-framework-value",
+          {
+            "path": "../../🔨️modules/🌱️value/📦️packages/🦀️rust"
+          }
+        ],
+        [
+          "semio-framework-ui-contract",
+          {
+            "path": "../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",
+            "package": "semio-framework-ui-contract"
+          }
+        ],
+        [
+          "semio-framework-actor",
+          {
+            "workspace": true
+          }
+        ],
+        [
+          "semio-framework-job",
+          {
+            "path": "../../🔨️modules/🧵️job/📦️packages/🦀️rust",
+            "package": "semio-framework-job"
+          }
+        ],
+        [
+          "semio-framework-tool-run",
+          {
+            "workspace": true
+          }
+        ],
+        [
+          "serde",
+          {
+            "workspace": true
+          }
+        ],
+        [
+          "serde_json",
+          {
+            "workspace": true
+          }
+        ],
+        [
+          "ui_wgpu",
+          {
+            "path": "../../🔨️modules/🖱️ui/📦️packages/🦀️rust",
+            "package": "semio-framework-ui",
+            "features": [
+              "wgpu"
+            ]
+          }
+        ],
+        [
+          "semio-framework-hash",
+          {
+            "path": "../../🔨️modules/🔏️hash/📦️packages/🦀️rust",
+            "package": "semio-framework-hash"
+          }
+        ],
+        [
+          "semio-framework-io-base64",
+          {
+            "path": "../../🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust",
+            "package": "semio-framework-io-base64"
+          }
+        ],
+        [
+          "semio-framework-trace",
+          {
+            "workspace": true
+          }
+        ],
+        [
+          "semio-framework-mesh-engine",
+          {
+            "path": "../../🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust",
+            "package": "semio-framework-mesh-engine"
+          }
+        ],
+        [
+          "semio-framework-os-kernel",
+          {
+            "path": "../../🛍️products/💻️os/📦️packages/🦀️rust",
+            "package": "semio-framework-os-kernel"
+          }
+        ],
+        [
+          "semio-framework-value-derive",
+          {
+            "path": "../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust",
+            "package": "semio-framework-value-derive"
+          }
+        ],
+        [
+          "semio-framework-schema",
+          {
+            "workspace": true
+          }
+        ]
+      ],
+      "dev": [
+        [
+          "semio-framework-async-macros",
+          {
+            "path": "../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust"
+          }
+        ],
+        [
+          "base64",
+          "0.22.1"
+        ]
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-framework-io-schema",
+      "normal": [
+        [
+          "semio-framework-dsl-record",
+          {
+            "path": "../../../../🗣️dsl/🧬️schema/📦️packages/🦀️rust"
+          }
+        ],
+        [
+          "semio-framework-value",
+          {
+            "path": "../../../../🌱️value/📦️packages/🦀️rust"
+          }
+        ],
+        [
+          "semio-framework-value-derive",
+          {
+            "path": "../../../../🌱️value/✨️derive/📦️packages/🦀️rust"
+          }
+        ],
+        [
+          "semio-framework-diagnostic",
+          {
+            "path": "../../../../⚠️diagnostic/📦️packages/🦀️rust"
+          }
+        ],
+        [
+          "semio-framework-schema-registry",
+          {
+            "path": "../../../../🧬️schema/📇️registry/📦️packages/🦀️rust"
+          }
+        ]
+      ],
+      "dev": [
+        [
+          "serde_json",
+          "1.0.140"
+        ]
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-framework-io-sqlite-snapshot",
+      "normal": [
+        [
+          "semio-framework-value",
+          {
+            "workspace": true
+          }
+        ]
+      ],
+      "dev": [
+        [
+          "semio-framework-trace",
+          {
+            "workspace": true
+          }
+        ],
+        [
+          "serde_json",
+          "1.0.140"
+        ]
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-framework-pack",
+      "normal": [
+        [
+          "semio-framework-replication",
+          {
+            "workspace": true
+          }
+        ],
+        [
+          "semio-framework-value",
+          {
+            "path": "../../../🌱️value/📦️packages/🦀️rust"
+          }
+        ],
+        [
+          "semio-framework-async",
+          {
+            "workspace": true,
+            "features": [
+              "entrypoint"
+            ]
+          }
+        ],
+        [
+          "semio-framework-hash",
+          {
+            "path": "../../../🔏️hash/📦️packages/🦀️rust"
+          }
+        ],
+        [
+          "ureq",
+          {
+            "version": "2",
+            "optional": true
+          }
+        ]
+      ],
+      "dev": [
+        [
+          "semio-framework-pack-error",
+          {
+            "path": "../../⚠️error/📦️packages/🦀️rust"
+          }
+        ],
+        [
+          "semio-framework-diagnostic",
+          {
+            "path": "../../../⚠️diagnostic/📦️packages/🦀️rust"
+          }
+        ],
+        [
+          "semio-framework-async-macros",
+          {
+            "path": "../../../⏳️async/✨️macros/📦️packages/🦀️rust"
+          }
+        ],
+        [
+          "serde_json",
+          {
+            "version": "1.0.140",
+            "features": [
+              "float_roundtrip"
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-framework-os-kernel",
+      "normal": [
+        [
+          "semio-framework-io-schema",
+          {
+            "path": "../../../../🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust"
+          }
+        ],
+        [
+          "semio-framework-pack-json",
+          {
+            "path": "../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust"
+          }
+        ],
+        [
+          "semio-framework-diagnostic",
+          {
+            "path": "../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust"
+          }
+        ],
+        [
+          "semio-framework-dsl",
+          {
+            "path": "../../../../🔨️modules/🗣️dsl/📦️packages/🦀️rust"
+          }
+        ],
+        [
+          "semio-framework-ui-locale",
+          {
+            "path": "../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust"
+          }
+        ],
+        [
+          "semio-framework-schema-state",
+          {
+            "path": "../../../../🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust"
+          }
+        ],
+        [
+          "semio-framework-schema-composition",
+          {
+            "path": "../../../../🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust"
+          }
+        ],
+        [
+          "semio-framework-schema-validator",
+          {
+            "workspace": true
+          }
+        ],
+        [
+          "semio-framework-value",
+          {
+            "path": "../../../../🔨️modules/🌱️value/📦️packages/🦀️rust"
+          }
+        ],
+        [
+          "dsl_derive",
+          {
+            "path": "../../🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
+            "package": "semio-framework-os-kernel-dsl-derive"
+          }
+        ],
+        [
+          "semio-framework-value-derive",
+          {
+            "path": "../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust",
+            "package": "semio-framework-value-derive"
+          }
+        ],
+        [
+          "semio-framework-pack",
+          {
+            "workspace": true
+          }
+        ],
+        [
+          "semio-framework-replication",
+          {
+            "workspace": true
+          }
+        ],
+        [
+          "semio-framework-schema-registry",
+          {
+            "workspace": true
+          }
+        ],
+        [
+          "semio-framework-ui-viewport",
+          {
+            "workspace": true
+          }
+        ],
+        [
+          "semio-framework-async",
+          {
+            "workspace": true,
+            "features": [
+              "entrypoint"
+            ]
+          }
+        ],
+        [
+          "semio-framework-io-base64",
+          {
+            "path": "../../../../🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust"
+          }
+        ],
+        [
+          "serde",
+          {
+            "version": "1.0.219",
+            "features": [
+              "derive"
+            ]
+          }
+        ],
+        [
+          "serde_json",
+          "1.0.140"
+        ],
+        [
+          "semio-framework-hash",
+          {
+            "path": "../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust",
+            "package": "semio-framework-hash"
+          }
+        ],
+        [
+          "semio-framework-job",
+          {
+            "workspace": true
+          }
+        ],
+        [
+          "semio-framework-trace",
+          {
+            "workspace": true
+          }
+        ]
+      ],
+      "dev": [
+        [
+          "semio-framework-schema",
+          {
+            "workspace": true
+          }
+        ],
+        [
+          "blake3",
+          "1.8.2"
+        ],
+        [
+          "semio-framework-pack",
+          {
+            "workspace": true,
+            "features": [
+              "corruption-testing"
+            ]
+          }
+        ],
+        [
+          "semio-framework-async-macros",
+          {
+            "path": "../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust"
+          }
+        ]
+      ]
+    }
+  ],
+  "ioStoreTextualCouplings": [
+    {
+      "line": 998,
+      "text": "    let assembly = store::begin_artifact_assembly().map_err(|_| IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: \"artifact-assembly\" }))?;"
+    },
+    {
+      "line": 1003,
+      "text": "pub async fn preflight_composer_entry_refs_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, entries: &[&'static ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {"
+    },
+    {
+      "line": 1017,
+      "text": "    let assembly = store::begin_artifact_assembly().map_err(|_| IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: \"artifact-assembly\" }))?;"
+    },
+    {
+      "line": 1022,
+      "text": "pub fn register_composer_entry_refs_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, entries: &[&'static ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {"
+    },
+    {
+      "line": 1178,
+      "text": "/// payload internally (via `store::ArtifactPack`/`ArtifactDsl`, exactly like `ComposerEntry`'s"
+    },
+    {
+      "line": 1273,
+      "text": "    let assembly = store::begin_artifact_assembly().map_err(|_| SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: \"artifact-assembly\" }))?;"
+    },
+    {
+      "line": 1278,
+      "text": "pub async fn preflight_subset_validators_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, entries: &[&'static SubsetValidatorEntry]) -> Result<(), SubsetValidatorRegistryError> {"
+    },
+    {
+      "line": 1285,
+      "text": "    let assembly = store::begin_artifact_assembly().map_err(|_| SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: \"artifact-assembly\" }))?;"
+    },
+    {
+      "line": 1290,
+      "text": "pub fn register_subset_validators_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, entries: &[&'static SubsetValidatorEntry]) -> Result<(), SubsetValidatorRegistryError> {"
+    },
+    {
+      "line": 1698,
+      "text": "    let assembly = store::begin_artifact_assembly().map_err(|_| FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: \"artifact-assembly\" }))?;"
+    },
+    {
+      "line": 1703,
+      "text": "pub fn register_format_descriptors_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, descriptors: impl IntoIterator<Item = FormatDescriptor>) -> Result<(), FormatRegistryError> {"
+    },
+    {
+      "line": 1715,
+      "text": "    let assembly = store::begin_artifact_assembly().map_err(|_| FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: \"artifact-assembly\" }))?;"
+    },
+    {
+      "line": 1720,
+      "text": "pub fn preflight_format_descriptors_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, rows: &[FormatDescriptor]) -> Result<(), FormatRegistryError> {"
+    },
+    {
+      "line": 1865,
+      "text": "    pub document_codecs: Vec<store::ArtifactCodec>,"
+    },
+    {
+      "line": 1866,
+      "text": "    pub dialect_migrations: Vec<store::DialectMigration>,"
+    },
+    {
+      "line": 1880,
+      "text": "    Transaction(store::ArtifactAssemblyTransactionError),"
+    },
+    {
+      "line": 1884,
+      "text": "    Store(Box<store::ArtifactAssemblyStoreRegistryError>),"
+    },
+    {
+      "line": 1904,
+      "text": "pub fn register_native_snapshot_codec(dialect: Dialect, codec: store::ArtifactCodec) -> Result<(), ArtifactAssemblyRegistryError> {"
+    },
+    {
+      "line": 1905,
+      "text": "    let assembly = store::begin_artifact_assembly().map_err(ArtifactAssemblyRegistryError::Transaction)?;"
+    },
+    {
+      "line": 1911,
+      "text": "pub fn register_native_document_codec(dialect: Dialect, codec: store::ArtifactCodec) -> Result<(), ArtifactAssemblyRegistryError> {"
+    },
+    {
+      "line": 1912,
+      "text": "    let assembly = store::begin_artifact_assembly().map_err(ArtifactAssemblyRegistryError::Transaction)?;"
+    },
+    {
+      "line": 1919,
+      "text": "pub fn commit_artifact_assembly_registry_plan(assembly: &store::ArtifactAssemblyTransaction, plan: ArtifactAssemblyRegistryPlan) -> Result<(), ArtifactAssemblyRegistryError> {"
+    },
+    {
+      "line": 1920,
+      "text": "    let mut store_guards = store::acquire_artifact_assembly_store_registry_guards(assembly).map_err(|error| ArtifactAssemblyRegistryError::Store(Box::new(error)))?;"
+    },
+    {
+      "line": 1931,
+      "text": "    store::preflight_artifact_assembly_store_registry_guards(&store_guards, &plan.document_codecs, &plan.dialect_migrations).map_err(|error| ArtifactAssemblyRegistryError::Store(Box::new(error)))?;"
+    },
+    {
+      "line": 1941,
+      "text": "    store::commit_artifact_assembly_store_registry_guards(&mut store_guards, plan.document_codecs, plan.dialect_migrations);"
+    },
+    {
+      "line": 2038,
+      "text": "    /// (`store::channel::DocumentArchivePack`), addressed by slot and child id. A native without owned children gets the empty view."
+    },
+    {
+      "line": 2041,
+      "text": "        members: Vec<store::channel::OwnedDocumentMemberPackEntry>,"
+    },
+    {
+      "line": 2051,
+      "text": "        pub fn from_archive(archive: &store::channel::DocumentArchivePack) -> Self {"
+    },
+    {
+      "line": 2068,
+      "text": "            S: Clone + store::ArtifactPack,"
+    },
+    {
+      "line": 2069,
+      "text": "            M: store::OpText + store::OpBinary + store::Mutation<S>,"
+    },
+    {
+      "line": 2072,
+      "text": "            let (pack, spr) = store::decode_document_pack_bytes(&member.envelope_pack).await.map_err(|error| refusal(ValueRefusalKind::InvalidValue, format!(\"owned child {slot}/{child_id}: {error}\")))?;"
+    },
+    {
+      "line": 2073,
+      "text": "            store::parse_document_pack::<S, M>(&pack, &spr).await.map(store::ParsedDocumentText::into_snapshot).map_err(text_refusal)"
+    },
+    {
+      "line": 2077,
+      "text": "        fn find(&self, slot: &str, child_id: &str) -> Option<&store::channel::OwnedDocumentMemberPackEntry> {"
+    },
+    {
+      "line": 2085,
+      "text": "    pub fn serialize_dsl_txt<S: store::ArtifactDsl>(from: &S) -> IoResult<IoPayload> {"
+    },
+    {
+      "line": 2086,
+      "text": "        Ok(IoOutcome::clean(IoPayload::Text(store::ArtifactDsl::print_dsl(from))))"
+    },
+    {
+      "line": 2090,
+      "text": "    pub fn deserialize_dsl_txt<S: store::ArtifactDsl>(payload: &IoPayload) -> IoResult<S> {"
+    },
+    {
+      "line": 2146,
+      "text": "        pub codec: store::ArtifactCodec,"
+    },
+    {
+      "line": 2151,
+      "text": "        pub fn from_capability(dialect: ArtifactDialect, codec: store::ArtifactCodec) -> Option<Self> {"
+    },
+    {
+      "line": 2157,
+      "text": "    pub(super) type NativeSnapshotMap = BTreeMap<ArtifactDialect, store::ArtifactCodec>;"
+    },
+    {
+      "line": 2188,
+      "text": "    pub fn register_native_snapshots_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, registrations: &[NativeSnapshotRegistration]) -> Result<(), IoRegistryError> {"
+    },
+    {
+      "line": 2390,
+      "text": "    /// 📌️ Registers `entries` atomically under the SAME `store::begin_artifact_assembly()`"
+    },
+    {
+      "line": 2398,
+      "text": "        let _assembly = store::begin_artifact_assembly().map_err(|_| IoRegistryError::Unavailable)?;"
+    },
+    {
+      "line": 2500,
+      "text": "    fn typed_snapshot_codec<P: store::ArtifactSqliteSnapshot + 'static>(dialect: &ArtifactDialect) -> Result<store::ArtifactCodec, IoError> {"
+    },
+    {
+      "line": 2509,
+      "text": "    fn validate_typed_snapshot_subset<P: store::ArtifactSqliteSnapshot>(dialect: &ArtifactDialect, snapshot: &P, database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Vec<semio_framework_diagnostic::Diagnostic>, IoError> {"
+    },
+    {
+      "line": 2510,
+      "text": "        store::validate_owned_sqlite_snapshot_subset(snapshot, dialect, database, control).map(|outcome| outcome.diagnostics)"
+    },
+    {
+      "line": 2514,
+      "text": "    pub async fn io_export_sqlite_snapshot<P: store::ArtifactSqliteSnapshot + 'static>(dialect: &ArtifactDialect, snapshot: &P, encoding: SnapshotEncoding, limits: SqliteDatabaseLimits, progress: &mut dyn FnMut(SqliteSnapshotProgress) -> bool) -> IoResult<Vec<u8>> {"
+    },
+    {
+      "line": 2526,
+      "text": "    pub async fn io_import_sqlite_snapshot<P: store::ArtifactSqliteSnapshot + 'static>(dialect: &ArtifactDialect, bytes: &[u8], limits: SqliteDatabaseLimits, progress: &mut dyn FnMut(SqliteSnapshotProgress) -> bool) -> IoResult<P> {"
+    },
+    {
+      "line": 2686,
+      "text": "    /// `store::ArtifactPack` directly rather than inventing a parallel \"native decode\" trait —"
+    },
+    {
+      "line": 2687,
+      "text": "    /// this file already depends on `store::` throughout (e.g. `ArtifactAssemblyRegistryPlan`"
+    },
+    {
+      "line": 2693,
+      "text": "    pub fn serializer_entry<S: store::ArtifactPack, T: Serializer<S>>(own: Dialect) -> IoEntry {"
+    },
+    {
+      "line": 2698,
+      "text": "        fn run<S: store::ArtifactPack, T: Serializer<S>>(payload: &IoPayload) -> IoResult<IoPayload> {"
+    },
+    {
+      "line": 2702,
+      "text": "            let value = S::decode_pack(bytes).map_err(|error| match error { store::PackError::TextRefusal(error) => text_refusal(error), error => IoError::from_value_error(error.into_value_error().under(\"native pack decode\")) })?;"
+    },
+    {
+      "line": 2708,
+      "text": "    /// 🎹️ `serializer_entry`'s twin for a DSL-text-native `S` (`store::ArtifactDsl` instead of"
+    },
+    {
+      "line": 2709,
+      "text": "    /// `store::ArtifactPack`) — together the smallest constructor pair covering both halves of the"
+    },
+    {
+      "line": 2711,
+      "text": "    pub fn serializer_entry_text<S: store::ArtifactDsl, T: Serializer<S>>(own: Dialect) -> IoEntry {"
+    },
+    {
+      "line": 2713,
+      "text": "        fn run<S: store::ArtifactDsl, T: Serializer<S>>(payload: &IoPayload) -> IoResult<IoPayload> {"
+    },
+    {
+      "line": 2734,
+      "text": "    pub fn deserializer_entry<S: store::ArtifactPack, T: Deserializer<S>>(own: Dialect) -> IoEntry {"
+    },
+    {
+      "line": 2738,
+      "text": "        fn run<S: store::ArtifactPack, T: Deserializer<S>>(payload: &IoPayload) -> IoResult<IoPayload> {"
+    },
+    {
+      "line": 2750,
+      "text": "    pub fn deserializer_entry_text<S: store::ArtifactDsl, T: Deserializer<S>>(own: Dialect) -> IoEntry {"
+    },
+    {
+      "line": 2752,
+      "text": "        fn run<S: store::ArtifactDsl, T: Deserializer<S>>(payload: &IoPayload) -> IoResult<IoPayload> {"
+    }
+  ],
+  "traits": [
+    {
+      "name": "ArtifactDsl",
+      "start": 310225,
+      "body": "pub trait ArtifactDsl: Sized {\n    /// 🏷️ Legacy single-segment suffix used by fixture paths and codecs.\n    const EXTENSION: &'static str;\n    fn parse_dsl(text: &str) -> Result<Self, TextError>;\n    fn print_dsl(&self) -> String;\n    /// 🪪️ Dotted `plugin.artifact` identity for `.semio` preambles and on-disk names.\n    fn envelope_id() -> &'static str {\n        Self::EXTENSION\n    }\n}"
+    },
+    {
+      "name": "ArtifactPack",
+      "start": 574207,
+      "body": "pub trait ArtifactPack: Sized {\n    /// 🪶️ Optional relational snapshot capability declared by this snapshot owner.\n    fn sqlite_snapshot_codec() -> Option<ArtifactSqliteSnapshotCodec> {\n        None\n    }\n\n    fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError>;\n    fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError>;\n\n    /// 📦️ `encode_pack_with` at default options — infallible in practice (mirrors\n    /// `ArtifactDsl::print_dsl`'s infallible signature); panics only on a `PackLimits` overflow.\n    fn encode_pack(&self) -> Vec<u8> {\n        self.encode_pack_with(&PackEncodeOptions::default()).expect(\"default-options pack encode is infallible\")\n    }\n\n    /// 📦️ `decode_pack_with` at default (Standard) verification.\n    fn decode_pack(bytes: &[u8]) -> Result<Self, PackError> {\n        Self::decode_pack_with(bytes, &PackDecodeOptions::default())\n    }\n\n    /// 🧬️ This document kind's structural field spec, for `ArtifactCodec::pack_schema_hash`\n    /// (W5.7's semio_hub schema-hash validation — see that field's doc). Default `None` for hand-written\n    /// `ArtifactPack` impls with no `RecordSpec` (schema-erased or synthetic fixture types, e.g.\n    /// `serde_json::Value` above): those document kinds simply opt out (a zero hash reads as\n    /// \"schema-agnostic\" everywhere this is consumed). `#[derive(crate::os_dsl::DslArtifact)]` overrides this\n    /// with the real generated `__dsl_spec()`, giving every derive-based app kind (the overwhelming\n    /// majority) a genuine structural fingerprint with zero manual per-app wiring.\n    fn record_spec() -> Option<crate::os_dsl::RecordSpec> {\n        None\n    }\n}"
+    },
+    {
+      "name": "ArtifactSqliteSnapshot",
+      "start": 581373,
+      "body": "pub trait ArtifactSqliteSnapshot: Sized {\n    const SQLITE_SCHEMA: &'static str;\n    fn to_sqlite_database(&self, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<crate::sqlite_snapshot::SqliteDatabase, ValueError>;\n    fn from_sqlite_database(database: &crate::sqlite_snapshot::SqliteDatabase, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, ValueError>;\n\n    /// ♻️ Retires a snapshot through its declared owner after an erased conversion.\n    fn retire_sqlite_snapshot(self) {\n        drop(self);\n    }\n\n    /// 🛬️ Materializes native snapshot fields under the caller's limits and cancellation control.\n    fn decode_sqlite_snapshot_native(_payload: &crate::io_schema::IoPayload, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {\n        control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative, 0, 1)?;\n        Err(ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, \"snapshot owner has no controlled native decoding implementation\"))\n    }\n\n    /// 🛫️ Emits native state through an owner-declared bounded and cancellable encoder.\n    fn encode_sqlite_snapshot_native(&self, _encoding: crate::sqlite_snapshot::SnapshotEncoding, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<crate::io_schema::IoPayload, ValueError> {\n        control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative, 0, 1)?;\n        Err(ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, \"snapshot owner has no controlled native encoding implementation\"))\n    }\n\n    /// 🚧️ Checks the owner's native encoding expansion before printing or packing any fields.\n    fn preflight_sqlite_snapshot_encoding(&self, _encoding: crate::sqlite_snapshot::SnapshotEncoding, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<(), ValueError> {\n        control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative, 0, 1)?;\n        Err(ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, \"snapshot owner has no bounded native encoding preflight\"))\n    }\n\n    /// 🛡️ Validates the exact owned subset without lowering fields into a native wire format.\n    fn validate_sqlite_snapshot_subset(&self, dialect: &crate::io_schema::ArtifactDialect, _database: &crate::sqlite_snapshot::SqliteDatabase, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> crate::io_schema::IoResult<()> {\n        control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot, 0, 0).map_err(crate::io_schema::IoError::from_value_error)?;\n        if dialect.subset == \"*\" {\n            return Ok(crate::io_schema::IoOutcome::clean(()));\n        }\n        Err(crate::io_schema::IoError::from_value_error(ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, format!(\"owned snapshot subset {} has no semantic validator\", dialect.to_coordinate()))))\n    }\n\n    /// 🪶️ Builds the relational codec only when the snapshot actually implements it.\n    fn sqlite_codec() -> ArtifactSqliteSnapshotCodec\n    where\n        Self: ArtifactDsl + ArtifactPack + 'static,\n    {\n        fn export_snapshot_impl<P: ArtifactDsl + ArtifactPack + ArtifactSqliteSnapshot>(\n            _schema: &str,\n            dialect: &crate::io_schema::ArtifactDialect,\n            payload: &crate::io_schema::IoPayload,\n            control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>,\n        ) -> crate::io_schema::IoResult<crate::sqlite_snapshot::SqliteDatabase> {\n            control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative, 0, 1).map_err(crate::io_schema::IoError::from_value_error)?;\n            let snapshot = sqlite_snapshot_retirement::OwnedSqliteSnapshot::new(P::decode_sqlite_snapshot_native(payload, control).map_err(crate::io_schema::IoError::from_value_error)?);\n            control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative, 1, 1).map_err(crate::io_schema::IoError::from_value_error)?;\n            let database = snapshot.to_sqlite_database(control).map_err(crate::io_schema::IoError::from_value_error)?;\n            control.check_database(&database, crate::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot).map_err(crate::io_schema::IoError::from_value_error)?;\n            let validation = validate_owned_sqlite_snapshot_subset(&*snapshot, dialect, &database, control)?;\n            Ok(crate::io_schema::IoOutcome { value: database, diagnostics: validation.diagnostics })\n        }\n\n        fn import_snapshot_impl<P: ArtifactDsl + ArtifactPack + ArtifactSqliteSnapshot>(\n            _schema: &str,\n            dialect: &crate::io_schema::ArtifactDialect,\n            database: crate::sqlite_snapshot::SqliteDatabase,\n            encoding: crate::sqlite_snapshot::SnapshotEncoding,\n            control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>,\n        ) -> crate::io_schema::IoResult<crate::io_schema::IoPayload> {\n            let snapshot = sqlite_snapshot_retirement::OwnedSqliteSnapshot::new(P::from_sqlite_database(&database, control).map_err(crate::io_schema::IoError::from_value_error)?);\n            let validation = validate_owned_sqlite_snapshot_subset(&*snapshot, dialect, &database, control)?;\n            control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative, 0, 1).map_err(crate::io_schema::IoError::from_value_error)?;\n            let payload = snapshot.encode_sqlite_snapshot_native(encoding, control).map_err(crate::io_schema::IoError::from_value_error)?;\n            control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative, 1, 1).map_err(crate::io_schema::IoError::from_value_error)?;\n            Ok(crate::io_schema::IoOutcome { value: payload, diagnostics: validation.diagnostics })\n        }\n\n        ArtifactSqliteSnapshotCodec { schema: std::borrow::Cow::Borrowed(Self::SQLITE_SCHEMA), snapshot_type: Some(std::any::TypeId::of::<Self>()), export: export_snapshot_impl::<Self>, import: import_snapshot_impl::<Self> }\n    }\n}"
+    }
+  ],
+  "scope": "Exact staged current source observations; not Rust resolved graph or compiler proof",
+  "sourceWrites": 0,
+  "nativeExecuted": 0
+}

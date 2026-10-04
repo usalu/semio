@@ -16,17 +16,19 @@ impl ChangePublicationTransient {
     pub const TEXT_OPCODE: &'static str = "change-publication-transient";
     pub const BINARY_TAG: u8 = 0x52;
 
-    fn parse_revision(line: &str) -> Result<u64, store::TextError> {
-        let revision = line.strip_prefix(&format!("{} ", Self::TEXT_OPCODE)).ok_or_else(|| store::TextError::new(format!("unknown publication transient op '{line}'"), store::TextSpan::at(1, 1)))?;
+    fn parse_revision(line: &str) -> Result<u64, semio_framework_diagnostic::TextError> {
+        let revision = line
+            .strip_prefix(&format!("{} ", Self::TEXT_OPCODE))
+            .ok_or_else(|| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown publication transient op '{line}'"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
         if revision.is_empty() || !revision.bytes().all(|byte| byte.is_ascii_digit()) {
-            return Err(store::TextError::new("publication transient revision must be one unsigned decimal", store::TextSpan::at(1, 1)));
+            return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "publication transient revision must be one unsigned decimal", semio_framework_diagnostic::TextSpan::at(1, 1)));
         }
-        revision.parse().map_err(|_| store::TextError::new("publication transient revision is outside u64", store::TextSpan::at(1, 1)))
+        revision.parse().map_err(|_| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "publication transient revision is outside u64", semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 }
 
 impl OpText for ChangePublicationTransient {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         Ok(Self { revision: Self::parse_revision(line)? })
     }
 
@@ -58,11 +60,11 @@ impl MutationKind<PublicationTransient, PublicationTransientMutation> for Change
         MutationOutcome::new(super::super::PublicationTransientDiff { revision: Some(self.revision) })
     }
 
-    fn inverse(&self, base: &PublicationTransient) -> Vec<PublicationTransientMutation> {
-        vec![Self { revision: base.revision }.into()]
+    fn inverse(&self, base: &PublicationTransient) -> Result<Vec<PublicationTransientMutation>, semio_framework_value::ValueError> {
+        Ok((|| vec![Self { revision: base.revision }.into()])())
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change publication transient to {}", self.revision), &format!("Transiente Veröffentlichung auf {} ändern", self.revision))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change publication transient to {}", self.revision), &format!("Transiente Veröffentlichung auf {} ändern", self.revision))
     }
 }

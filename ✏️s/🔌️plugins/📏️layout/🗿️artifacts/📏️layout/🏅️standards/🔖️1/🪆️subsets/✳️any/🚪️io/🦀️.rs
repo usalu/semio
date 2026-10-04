@@ -104,7 +104,7 @@ pub use derived_composition::*;
 /// direction, not a layering violation.
 #[derive(Debug)]
 pub enum LayoutError {
-    Json(dsl::ValueError),
+    Json(semio_framework_value::ValueError),
     UnexpectedSchema(String),
     PageNotFound(String),
     Io(std::io::Error),
@@ -133,8 +133,8 @@ impl std::error::Error for LayoutError {
     }
 }
 
-impl From<dsl::ValueError> for LayoutError {
-    fn from(error: dsl::ValueError) -> Self {
+impl From<semio_framework_value::ValueError> for LayoutError {
+    fn from(error: semio_framework_value::ValueError) -> Self {
         Self::Json(error)
     }
 }
@@ -159,8 +159,10 @@ impl From<std::io::Error> for LayoutError {
 /// the app engine's `export_display_list_svg` is now a cross-module SECOND consumer — see this
 /// region's own header on the "more than one consumer" rule).
 use crate::{Frame, GridSettings, Layer, LayoutSnapshot, Page, PageColumns, PageMargins, Spread, LAYOUT_DOCUMENT_SCHEMA};
-use dsl::{DslValue as Value, FromValue, ToValue};
-use semio_framework_plugin::{io_dispatch, resolve_ready, Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
+use semio_framework_value::DslValue as Value;
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
+use semio_framework_plugin::{io_dispatch,  Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
 #[cfg(test)]
 use semio_s_artifact_stdio_dwg::{DwgColor, DwgEntity};
 use semio_s_artifact_stdio_dwg::{DwgDrawing, DwgGeometry};
@@ -247,7 +249,7 @@ pub fn compose_svg_from_drawing(drawing: &SemioDrawingSnapshot) -> Result<String
     };
     let bytes = <SemioDrawingSnapshot as store::ArtifactPack>::encode_pack(drawing);
     let source = ErasedComposeSource { dialect: DRAWING_DIALECT, payload: IoPayload::Binary(bytes) };
-    let composed = resolve_ready(io_dispatch(&key, std::slice::from_ref(&source))).map_err(|e| format!("layout->semio/drawing->svg: {}", e.message))?;
+    let composed = ::semio_framework_async::poll::resolve_ready(io_dispatch(&key, std::slice::from_ref(&source))).map_err(|e| format!("layout->semio/drawing->svg: {}", e.message))?;
     let svg_bytes = match composed.payload {
         IoPayload::Binary(bytes) => bytes,
         IoPayload::Text(text) => text.into_bytes(),
@@ -425,7 +427,7 @@ pub fn layout_document_json_from_drawing(drawing_snapshot: &SemioDrawingSnapshot
         spreads: vec![Spread { id: "spread-1".into(), name: "Spread 1".into(), page_ids }],
         pages,
         print_target: None,
-        data_fields_json: None,
+        data_fields: None,
         background_drawing: Some(background_child),
         referenced_model: None,
     };

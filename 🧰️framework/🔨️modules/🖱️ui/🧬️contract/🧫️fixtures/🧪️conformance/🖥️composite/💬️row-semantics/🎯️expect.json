@@ -1,0 +1,165 @@
+{
+  "case": "row-semantics",
+  "kind": "composite",
+  "description": "Tree row semantics every renderer shares: a property row's description (here a refused value's reason) is always shown and named by its control (React `aria-describedby`, the wgpu ARIA mirror's control description); a disabled row action stays focusable with `aria-disabled`, never runs, names its reason as its description, and shows that same reason as visible text anchored to the action while it is hovered, keyboard-focused or pressed (`revealReason.on`) until the pointer leaves, focus moves away or Escape (`revealReason.off`); an option row of a single-choice list exposes its choice (`selected`) as the row's selected state (React `aria-selected`, the wgpu ARIA mirror's `selected`) and paints the chosen row selected, never by its icon alone.",
+  "outcome": "accept",
+  "limits": null,
+  "tree": {
+    "root": 0,
+    "nodeCount": 7,
+    "shape": [
+      {
+        "id": 0,
+        "key": "#0",
+        "type": "tree",
+        "children": [
+          1
+        ]
+      },
+      {
+        "id": 1,
+        "key": "inputs",
+        "type": "treeSection",
+        "children": [
+          2,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "id": 2,
+        "key": "scale.row",
+        "type": "treeItem",
+        "children": [
+          3
+        ]
+      },
+      {
+        "id": 3,
+        "key": "scale",
+        "type": "slider",
+        "children": []
+      },
+      {
+        "id": 4,
+        "key": "entry.7",
+        "type": "treeItem",
+        "children": []
+      },
+      {
+        "id": 5,
+        "key": "interpolation.option.0.row",
+        "type": "treeItem",
+        "children": []
+      },
+      {
+        "id": 6,
+        "key": "interpolation.option.1.row",
+        "type": "treeItem",
+        "children": []
+      }
+    ]
+  },
+  "accessibility": [
+    {
+      "id": 0,
+      "label": null,
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 1,
+      "label": null,
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 2,
+      "label": "Scale",
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 3,
+      "label": "Scale",
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 4,
+      "label": "Move",
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 5,
+      "label": "Linear",
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 6,
+      "label": "Smooth",
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    }
+  ],
+  "actionIds": [
+    "app.setScale@1",
+    "app.historyEditBegin@1"
+  ],
+  "rowSemantics": {
+    "describedControls": [
+      {
+        "row": 2,
+        "control": 3,
+        "description": "Must be greater than 0"
+      }
+    ],
+    "disabledRowActions": [
+      {
+        "row": 4,
+        "index": 0,
+        "label": "Edit: Move",
+        "reason": "Not possible right now",
+        "revealReason": {
+          "on": [
+            "hover",
+            "focus",
+            "press"
+          ],
+          "off": [
+            "leave",
+            "blur",
+            "escape"
+          ]
+        }
+      }
+    ],
+    "selectedRows": [
+      {
+        "row": 5,
+        "selected": true
+      },
+      {
+        "row": 6,
+        "selected": false
+      }
+    ]
+  }
+}

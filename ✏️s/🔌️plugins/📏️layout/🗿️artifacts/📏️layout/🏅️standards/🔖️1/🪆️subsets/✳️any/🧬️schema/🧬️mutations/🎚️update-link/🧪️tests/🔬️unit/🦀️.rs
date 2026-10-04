@@ -23,7 +23,7 @@ fn update_link_raises_resolution_and_switches_the_print_profile() {
     let after = crate::editor::layout::panels::preflight::run_layout_preflight(&next, labels);
     assert!(after.iter().all(|issue| issue.code != "asset.low_resolution"));
     assert!(after.iter().all(|issue| issue.code != "asset.rgb_in_print"));
-    let restored = mutation.inverse(&base)[0].diff(&next).diff().apply(&next).expect("inverse");
+    let restored = mutation.inverse(&base).expect("valid retained mutation inverse fixture")[0].diff(&next).diff().apply(&next).expect("inverse");
     assert_eq!(restored.links[0].dpi, 72);
     assert_eq!(restored.links[0].color_profile.as_deref(), Some("RGB"));
 }

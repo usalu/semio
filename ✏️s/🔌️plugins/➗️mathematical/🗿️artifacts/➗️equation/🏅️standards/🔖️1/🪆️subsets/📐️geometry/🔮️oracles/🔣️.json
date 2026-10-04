@@ -1,7 +1,7 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
-  "_comment": "📐 This subset's own contribution — the point cloud playground (4 of s.mathematical.equation's 15 mutation kinds; ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION). None of the four reach any exported carrier — EquationIntoCsv writes only graph nodes, and the JSON export skips the composed-child scene entirely — so all four fall to the equation-mutation-semantics noOracleDecision recorded on the ✳️graph sibling (the merged test registry resolves it from there; it need not be duplicated per subset).",
+  "_comment": "📐 This subset's own contribution — the point cloud playground (5 of s.mathematical.equation's 18 mutation kinds; ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION). The JSON export now carries the point cloud inline (`{graph, geometry, equation}`, model (a)), but no registered reader replays these kinds yet, so all five still fall to the equation-mutation-semantics noOracleDecision recorded on the ✳️graph sibling (the merged test registry resolves it from there; it need not be duplicated per subset).",
   "oracles": [],
   "noOracleDecisions": [],
   "mutationCatalogs": [
@@ -45,13 +45,24 @@
           ]
         },
         {
-          "mutationId": "move-point",
-          "sourceMutationDirectoryName": "🎯️move-point",
-          "mutationDirectoryName": "🎯️move-point",
+          "mutationId": "move-points",
+          "sourceMutationDirectoryName": "🎯️move-points",
+          "mutationDirectoryName": "🎯️move-points",
           "scenarios": [
             {
-              "id": "rejects-moving-a-point-that-is-not-in-the-cloud",
-              "directoryName": "🧪️rejects"
+              "id": "translates-two-points-by-the-drag-offset",
+              "directoryName": "🧪️translates"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-point-positions",
+          "sourceMutationDirectoryName": "📌️set-point-positions",
+          "mutationDirectoryName": "📌️set-point-positions",
+          "scenarios": [
+            {
+              "id": "restores-two-points-to-their-base-positions",
+              "directoryName": "🧪️restores"
             }
           ]
         }
@@ -60,7 +71,8 @@
         "replace-points",
         "insert-point",
         "remove-point",
-        "move-point"
+        "move-points",
+        "set-point-positions"
       ]
     }
   ],
@@ -161,7 +173,7 @@
           }
         },
         {
-          "id": "move-point",
+          "id": "move-points",
           "capability": "equation-1-geometry-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -170,9 +182,38 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "move-point",
+            "operation": "move-points",
             "bridgeVersion": 1,
-            "variant": "MovePoint"
+            "variant": "MovePoints"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "equation-1-mutate-uncarried",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "not-encoded-by-any-exported-carrier"
+            ],
+            "enclosing": [
+              "node-identity-preserved-across-untouched-rows"
+            ]
+          }
+        },
+        {
+          "id": "set-point-positions",
+          "capability": "equation-1-geometry-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-point-positions",
+            "bridgeVersion": 1,
+            "variant": "SetPointPositions"
           },
           "oracleRequirements": [
             {

@@ -1,0 +1,78 @@
+{
+  "schema": "s.stdio.semio.graph",
+  "nodes": [
+    {
+      "id": {
+        "value": "a"
+      },
+      "kind": "Piece",
+      "label": "a",
+      "position": {
+        "x": {
+          "bits": "0000000000000000"
+        },
+        "y": {
+          "bits": "0000000000000000"
+        }
+      },
+      "width": {
+        "bits": "0000000000000000"
+      },
+      "height": {
+        "bits": "0000000000000000"
+      },
+      "ports": [
+        {
+          "name": "out",
+          "kind": "out",
+          "category": "Signal",
+          "properties": []
+        },
+        {
+          "name": "in",
+          "kind": "in",
+          "category": "Input",
+          "properties": []
+        }
+      ],
+      "properties": []
+    },
+    {
+      "id": {
+        "value": "b"
+      },
+      "kind": "Piece",
+      "label": "b",
+      "position": {
+        "x": {
+          "bits": "4059000000000000"
+        },
+        "y": {
+          "bits": "4044000000000000"
+        }
+      },
+      "width": {
+        "bits": "0000000000000000"
+      },
+      "height": {
+        "bits": "0000000000000000"
+      },
+      "ports": [
+        {
+          "name": "out",
+          "kind": "out",
+          "category": "Signal",
+          "properties": []
+        },
+        {
+          "name": "in",
+          "kind": "in",
+          "category": "Input",
+          "properties": []
+        }
+      ],
+      "properties": []
+    }
+  ],
+  "edges": []
+}

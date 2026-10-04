@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "testOwners": ["🧪️tests/🧱️boxed-fixed-slots/🟦️.ts", "🪃️continuation/🧪️tests/🪃️scheduler/🟦️.ts"],
+  "exports": [
+    { "name": "CancelState", "kind": "type", "owner": "wire" },
+    { "name": "CapabilityTokenId", "kind": "type", "owner": "wire" },
+    { "name": "ChannelPolicy", "kind": "type", "owner": "wire" },
+    { "name": "ContinuationCancel", "kind": "type", "owner": "scheduler" },
+    { "name": "ContinuationPorts", "kind": "type", "owner": "scheduler" },
+    { "name": "ContinuationScheduler", "kind": "type", "owner": "scheduler" },
+    { "name": "Lane", "kind": "type", "owner": "wire" },
+    { "name": "ProcessKind", "kind": "type", "owner": "wire" },
+    { "name": "ScopeDrainReport", "kind": "type", "owner": "wire" },
+    { "name": "ScopeId", "kind": "type", "owner": "wire" },
+    { "name": "TraceId", "kind": "type", "owner": "wire" },
+    { "name": "createContinuationScheduler", "kind": "value", "owner": "scheduler" },
+    { "name": "hostContinuations", "kind": "value", "owner": "scheduler" }
+  ],
+  "retired": [
+    "BoxedFixedSlotsBudget",
+    "ContinuationCase",
+    "ContinuationCaseRun",
+    "ContinuationRequestCase",
+    "ContinuationSuite",
+    "FixedSlotTableBudget",
+    "VirtualContinuationHost",
+    "WebAsyncScope",
+    "WebAsyncScopeDrainReport",
+    "WebAsyncScopeOwner",
+    "continuationCaseFaults",
+    "createVirtualContinuationHost",
+    "defaultContinuationPorts",
+    "fixedSlotTableFaults",
+    "inlineSlotTableBytes",
+    "runContinuationCase",
+    "runContinuationCaseLive"
+  ]
+}

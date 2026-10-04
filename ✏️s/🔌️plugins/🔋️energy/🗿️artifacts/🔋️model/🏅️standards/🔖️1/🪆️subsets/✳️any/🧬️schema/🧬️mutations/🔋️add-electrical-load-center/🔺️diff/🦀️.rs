@@ -16,7 +16,7 @@ pub fn diff(payload: &super::AddElectricalLoadCenterBattery, base: &EnergyModelS
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Index {} is past the end of Electrical load center {}'s {} members.", payload.index, payload.id.0, existing.battery_ids.len()), [payload.id.0.to_string()]);
     }
     if existing.battery_ids.contains(&payload.battery_id) {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Battery {} already belongs to Electrical load center {}.", payload.battery_id.0, payload.id.0));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Battery {} already belongs to Electrical load center {}.", payload.battery_id.0, payload.id.0));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.electrical_load_centers.iter_mut().find(|item| item.id == payload.id) {

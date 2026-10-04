@@ -252,7 +252,7 @@ mod subject {
         let base = XmlSnapshot::import_utf8(&mutable_input(ctx)?).map_err(|error| format!("import_utf8 failed: {error}"))?;
         let spec = ctx.doc_json()?;
         let mutation = mutation_from_spec(&spec)?;
-        let undo = mutation_inverse(&mutation, &base);
+        let undo = mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
         let original = project_xml_1_0(&base.export_utf8().map_err(|error| format!("export_utf8 failed: {error}"))?)?;
         let mut snapshot = base;
         let forward = apply_xml_mutation(&mut snapshot, &mutation);

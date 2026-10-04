@@ -13,7 +13,7 @@ pub fn diff(payload: &ReplaceSupport, base: &Fem3dSnapshot) -> protocol::Mutatio
         return target_mismatch("Support", &payload.id, &payload.new_support.id);
     }
     if existing == &payload.new_support {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Support \"{}\" already has that value.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Support \"{}\" already has that value.", payload.id));
     }
     if !base.nodes.iter().any(|node| node.id == payload.new_support.node_id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Node \"{}\" does not exist.", payload.new_support.node_id), [payload.new_support.node_id.clone()]);

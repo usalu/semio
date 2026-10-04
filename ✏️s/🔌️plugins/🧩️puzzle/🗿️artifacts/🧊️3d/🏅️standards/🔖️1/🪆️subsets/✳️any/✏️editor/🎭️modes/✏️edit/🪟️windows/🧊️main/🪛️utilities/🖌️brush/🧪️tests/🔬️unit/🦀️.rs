@@ -9,7 +9,7 @@ fn actions(effects: &[Effect]) -> Vec<(String, serde_json::Value)> {
     effects
         .iter()
         .map(|effect| match effect {
-            Effect::DispatchAction { action, args, .. } => (action.clone(), serde_json::from_str(&dsl::json::to_json_string(&dsl::json::from_dsl_value(args.as_ref().expect("a tool run action carries its args")))).expect("args json")),
+            Effect::DispatchAction { action, args, .. } => (action.clone(), serde_json::from_str(&semio_framework_pack_json::to_json_string(&semio_framework_pack_json::from_dsl_value(args.as_ref().expect("a tool run action carries its args")))).expect("args json")),
             other => panic!("the reconciler only dispatches tool run actions: {other:?}"),
         })
         .collect()

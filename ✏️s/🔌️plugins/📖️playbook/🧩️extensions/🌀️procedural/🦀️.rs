@@ -59,8 +59,8 @@ use semio_framework_plugin::WorldSunConfig;
 // goes through `pack::json::from_json_str` below instead. Every other JSON value in this file is
 // arbitrary-shaped and goes through `pack::json` instead.
 #[cfg(test)]
-use pack::to_json_string;
-use pack::{json_from_dsl_value, json_to_dsl_value, json_to_string, parse_json, JsonObject as Map, JsonValue as Value};
+use semio_framework_pack_json::to_json_string;
+use semio_framework_pack_json::{from_dsl_value as json_from_dsl_value, to_dsl_value as json_to_dsl_value, to_string as json_to_string, parse as parse_json, Object as Map, Value};
 use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Constants
@@ -139,9 +139,9 @@ app_labels! {
 //#endregion 🔖️Terminology
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, dsl::DslArtifact, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_os_kernel::DslArtifact, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[value(rename_all = "camelCase", default)]
-#[dsl(extension = "procmodule")]
+#[artifact(extension = "procmodule")]
 pub struct ModuleRenderPayload {
     fixture_slug: String,
     /// 🧬️ Deliberately untyped: binds through the engine's `Shape::Value` escape hatch because the key
@@ -170,11 +170,11 @@ impl store::ArtifactDsl for ModuleRenderPayload {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -184,26 +184,26 @@ impl store::ArtifactDsl for ModuleRenderPayload {
 impl store::ArtifactPack for ModuleRenderPayload {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
 
 /// 🧒️ Composition view of the module payload — every field is a scalar or the untyped `params`
 /// escape hatch, so this block-kind module owns no child artifacts and links to none.
-impl store::os_schema_composition::ArtifactCompositionFields for ModuleRenderPayload {
-    fn visit_child_refs<'a, V: store::os_schema_composition::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {
+impl semio_framework_schema_composition::ArtifactCompositionFields for ModuleRenderPayload {
+    fn visit_child_refs<'a, V: semio_framework_schema_composition::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {
         Ok(())
     }
 }
@@ -219,7 +219,7 @@ fn default_params_field() -> DslValue {
 fn default_payload() -> ModuleRenderPayload {
     ModuleRenderPayload {
         fixture_slug: "hexagonal-mushroom-column".into(),
-        params: json_to_dsl_value(&pack::json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 })),
+        params: json_to_dsl_value(&semio_framework_pack_json::json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 })),
         question_id: String::new(),
         controller_id: String::new(),
         surface: "try".into(),
@@ -483,7 +483,7 @@ fn evaluated_preview_payload(owner: &mut ModuleGeometryOwner, host_snapshot: &Fl
     apply_flow_params(&mut host, host_snapshot, params);
     let evaluated = host.evaluate();
     let eval_json = evaluated.unwrap_or_default();
-    let eval: Value = parse_json(&eval_json).unwrap_or(pack::json!({}));
+    let eval: Value = parse_json(&eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or(semio_framework_pack_json::json!({}));
     let mut preview_handles = Vec::new();
     let mut meshes: Vec<Value> = Vec::new();
     let mut instances: Vec<Value> = Vec::new();
@@ -501,11 +501,11 @@ fn evaluated_preview_payload(owner: &mut ModuleGeometryOwner, host_snapshot: &Fl
         if !meshes.iter().any(|entry| entry.get("id").and_then(|value| value.as_str()) == Some(mesh_id.as_str())) {
             let tessellated = owner.session.tessellate_geometry(&handle, 0.05);
             if let Ok(data) = tessellated {
-                meshes.push(pack::json!({ "id": mesh_id, "data": data }));
+                meshes.push(semio_framework_pack_json::json!({ "id": mesh_id, "data": data }));
             }
         }
         if meshes.iter().any(|entry| entry.get("id").and_then(|value| value.as_str()) == Some(mesh_id.as_str())) {
-            instances.push(pack::json!({
+            instances.push(semio_framework_pack_json::json!({
                 "id": id,
                 "meshId": mesh_id,
                 "position": [0.0, 0.0, 0.0],
@@ -521,16 +521,16 @@ fn evaluated_preview_payload(owner: &mut ModuleGeometryOwner, host_snapshot: &Fl
         for (index, handle) in handles.iter().enumerate() {
             if let Ok(data) = owner.session.tessellate_geometry(handle, 0.05) {
                 let id = format!("import-{index}");
-                meshes.push(pack::json!({ "id": id, "data": data }));
-                instances.push(pack::json!({ "id": id, "meshId": id, "position": [0.0, 0.0, 0.0], "rotation": [0.0, 0.0, 0.0, 1.0], "scale": [1.0, 1.0, 1.0], "label": id, "selected": false, "hovered": false }));
+                meshes.push(semio_framework_pack_json::json!({ "id": id, "data": data }));
+                instances.push(semio_framework_pack_json::json!({ "id": id, "meshId": id, "position": [0.0, 0.0, 0.0], "rotation": [0.0, 0.0, 0.0, 1.0], "scale": [1.0, 1.0, 1.0], "label": id, "selected": false, "hovered": false }));
             }
         }
     }
     owner.retain_current(&preview_handles);
     host.retire_cold();
     if meshes.is_empty() {
-        let fallback = pack::json!([{ "id": PREVIEW_FALLBACK_MESH_KIND, "data": mesh_from_kind(PREVIEW_FALLBACK_MESH_KIND) }]);
-        let fallback_instances = pack::json!([{
+        let fallback = semio_framework_pack_json::json!([{ "id": PREVIEW_FALLBACK_MESH_KIND, "data": mesh_from_kind(PREVIEW_FALLBACK_MESH_KIND) }]);
+        let fallback_instances = semio_framework_pack_json::json!([{
             "id": "preview",
             "meshId": PREVIEW_FALLBACK_MESH_KIND,
             "position": [0.0, 0.0, 0.0],
@@ -550,7 +550,7 @@ fn render_preview_body(owner: &mut ModuleGeometryOwner, payload: &ModuleRenderPa
     let Some(fixture_json) = fixture_json_for_slug(slug) else {
         return text_node(format!("Unknown fixture slug: {slug}"));
     };
-    let host_snapshot: FlowHostSnapshot = pack::json::from_json_str(fixture_json).unwrap_or_else(|_| FlowHostSnapshot::default());
+    let host_snapshot: FlowHostSnapshot = semio_framework_pack_json::from_json_str(fixture_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| FlowHostSnapshot::default());
     let params = params_as_json(&payload.params);
     let (meshes_json, instances_json) = evaluated_preview_payload(owner, &host_snapshot, &params);
     // 🧊️ The decoded fixture is this function's own owner of the widgets' dictionaries.
@@ -568,7 +568,7 @@ fn evaluated_preview_geometry_handles(owner: &mut ModuleGeometryOwner, host_snap
     };
     apply_flow_params(&mut host, host_snapshot, params);
     let eval_json = host.evaluate().unwrap_or_default();
-    let eval: Value = parse_json(&eval_json).unwrap_or(pack::json!({}));
+    let eval: Value = parse_json(&eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or(semio_framework_pack_json::json!({}));
     let mut handles: Vec<String> = Vec::new();
     for widget in &host_snapshot.widgets {
         let id = widget_id(widget).to_string();
@@ -593,7 +593,7 @@ fn handle_export_solid(owner: &mut ModuleGeometryOwner, payload: &mut ModuleRend
     let Some(fixture_json) = fixture_json_for_slug(slug) else {
         return;
     };
-    let host_snapshot: FlowHostSnapshot = pack::json::from_json_str(fixture_json).unwrap_or_else(|_| FlowHostSnapshot::default());
+    let host_snapshot: FlowHostSnapshot = semio_framework_pack_json::from_json_str(fixture_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| FlowHostSnapshot::default());
     let params = params_as_json(&payload.params);
     let mut handles = evaluated_preview_geometry_handles(owner, &host_snapshot, &params);
     if let Ok(imported) = imported_geometry_handles(owner, &params) {
@@ -603,7 +603,7 @@ fn handle_export_solid(owner: &mut ModuleGeometryOwner, payload: &mut ModuleRend
     host_snapshot.retire_cold();
     owner.retain_current(&handles);
     let result_json =
-        if handles.is_empty() { pack::json!({ "error": "no procedural solid geometry to export" }) } else { parse_json(&owner.session.export_solid_json(&handles, format, SOLID_EXPORT_DEFLECTION)).unwrap_or(pack::json!({ "error": "export failed" })) };
+        if handles.is_empty() { semio_framework_pack_json::json!({ "error": "no procedural solid geometry to export" }) } else { parse_json(&owner.session.export_solid_json(&handles, format, SOLID_EXPORT_DEFLECTION), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or(semio_framework_pack_json::json!({ "error": "export failed" })) };
     let mut object = params_as_json(&payload.params);
     let Some(map) = object.as_object_mut() else {
         return;
@@ -614,12 +614,12 @@ fn handle_export_solid(owner: &mut ModuleGeometryOwner, payload: &mut ModuleRend
 
 /// 📥️ Handles `Command::ImportSolid`: imports `data` (UTF-8 text for STEP/OBJ, base64 for STL/GLB) as `format` through `flow` brep geometry session's in-process kernel (GLB bridges through mesh tessellation into an OBJ ingestion) and persists the replayable interchange source on `params.__solidImport`.
 fn handle_import_solid(owner: &mut ModuleGeometryOwner, payload: &mut ModuleRenderPayload, format: &str, data: &str) {
-    let source = pack::json!({ "format": format, "data": data, "tolerance": SOLID_IMPORT_TOLERANCE });
-    let params = pack::json!({ "__solidImport": source });
-    let result_json = if data.is_empty() { pack::json!({ "error": "no import data provided" }) } else {
+    let source = semio_framework_pack_json::json!({ "format": format, "data": data, "tolerance": SOLID_IMPORT_TOLERANCE });
+    let params = semio_framework_pack_json::json!({ "__solidImport": source });
+    let result_json = if data.is_empty() { semio_framework_pack_json::json!({ "error": "no import data provided" }) } else {
         match imported_geometry_handles(owner, &params) {
             Ok(_) => source,
-            Err(_) => pack::json!({ "error": "import failed" }),
+            Err(_) => semio_framework_pack_json::json!({ "error": "import failed" }),
         }
     };
     let mut object = params_as_json(&payload.params);
@@ -643,7 +643,7 @@ fn imported_geometry_handles(owner: &mut ModuleGeometryOwner, params: &Value) ->
     let format = source.get("format").and_then(Value::as_str).ok_or_else(|| Fault::from("playbook.module.procedural.import-source-format"))?;
     let data = source.get("data").and_then(Value::as_str).ok_or_else(|| Fault::from("playbook.module.procedural.import-source-data"))?;
     let tolerance = source.get("tolerance").and_then(Value::as_f64).ok_or_else(|| Fault::from("playbook.module.procedural.import-source-tolerance"))?;
-    let result = parse_json(&owner.session.import_solid_json(format, data, tolerance)).map_err(|_| Fault::from("playbook.module.procedural.import-source-invalid"))?;
+    let result = parse_json(&owner.session.import_solid_json(format, data, tolerance), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| Fault::from("playbook.module.procedural.import-source-invalid"))?;
     if result.get("error").is_some() { return Err(Fault::from("playbook.module.procedural.import-source-failed")); }
     let values = result.get("handles").and_then(Value::as_array).ok_or_else(|| Fault::from("playbook.module.procedural.import-handles-missing"))?;
     let handles: Vec<String> = values.iter().map(|value| value.as_str().filter(|handle| is_brep_geometry_handle(handle)).map(str::to_owned).ok_or_else(|| Fault::from("playbook.module.procedural.import-handle-invalid"))).collect::<Result<_, _>>()?;
@@ -704,7 +704,7 @@ fn render_params_body(payload: &ModuleRenderPayload, labels: &ModuleLabels, pare
     let Some(fixture_json) = fixture_json_for_slug(slug) else {
         return text_node(format!("Unknown fixture slug: {slug}"));
     };
-    let host_snapshot: FlowHostSnapshot = pack::json::from_json_str(fixture_json).map_err(|error| PluginAssemblyError::new("procedural.fixture", error.to_string()))?;
+    let host_snapshot: FlowHostSnapshot = semio_framework_pack_json::from_json_str(fixture_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| PluginAssemblyError::new("procedural.fixture", error.to_string()))?;
     let spec = flow_host_snapshot_to_form_spec(&host_snapshot);
     // 🧊️ `spec` is an OWNED form projection, so the decoded fixture is done here — closed, never
     // dropped (see `evaluated_preview_payload`). Retired BEFORE the `?`-returning body below so no
@@ -714,8 +714,9 @@ fn render_params_body(payload: &ModuleRenderPayload, labels: &ModuleLabels, pare
     let Some(step) = spec.steps.first() else {
         return text_node(labels.no_flow_inputs.as_str());
     };
-    let values_dsl: HashMap<String, DslValue> = values.iter().map(|(key, value)| (key.to_string(), json_to_dsl_value(value))).collect();
+    let values_dsl: semio_framework_artifact_playbook_playbook::PlaybookValues = values.iter().map(|(key, value)| (key.to_string(), json_to_dsl_value(value))).collect();
     let visible = visible_blocks(step, &values_dsl);
+    semio_framework_value::FromValue::retire_decoded(values_dsl);
     let mut column = column();
     if visible.is_empty() {
         column = ui_admit(column.try_child(text_node(labels.no_procedural_parameters.as_str())?))?;
@@ -733,11 +734,11 @@ fn render_params_body(payload: &ModuleRenderPayload, labels: &ModuleLabels, pare
 
 fn embedded_payload(input: &str, body_key: &str) -> UiAssemblyResult<(ModuleRenderPayload, Option<(String, String)>)> {
     let error = || PluginAssemblyError::new("procedural.extension-input", "invalid embedded surface input");
-    let props = parse_json(input).map_err(|_| error())?;
+    let props = parse_json(input, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| error())?;
     if props.get("bodyKey").and_then(Value::as_str) != Some(body_key) { return Err(error()); }
     let json = props.get("paramsJson").and_then(Value::as_str).ok_or_else(error)?;
-    let payload: ModuleRenderPayload = pack::json::from_json_str(json).map_err(|_| error())?;
-    let target = parse_json(json).map_err(|_| error())?;
+    let payload: ModuleRenderPayload = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| error())?;
+    let target = parse_json(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| error())?;
     let window = match (target.get("windowId").and_then(Value::as_str), target.get("windowKindId").and_then(Value::as_str)) {
         (None, None) => None,
         (Some(id), Some(kind)) if !id.is_empty() && !kind.is_empty() && payload.surface == "try" => Some((id.to_string(), kind.to_string())),
@@ -751,7 +752,7 @@ fn embedded_payload(input: &str, body_key: &str) -> UiAssemblyResult<(ModuleRend
 //#region 🔖️Command
 /// 🎯️ B1: this module's `ArtifactApp::Command` — the SOLE dispatch surface for the solid
 /// import/export behavior previously routed through the deleted stringly-typed `handle_action`.
-#[derive(Clone, Debug, PartialEq, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
 pub enum Command {
     #[dsl(key = "export-solid")]
     ExportSolid { format: String },
@@ -828,7 +829,7 @@ impl ArtifactCommandWork<ModuleApp> for ModuleGeometryCommandWork {
         module_retained_extent(command, snapshot, interaction)
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, ModuleApp>) -> Result<ArtifactCommandWorkStep<ModuleApp>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, ModuleApp>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<ModuleApp>, Fault> {
         if self.consumed { return Err(Fault::from("playbook.module.procedural.geometry-work-repeated")); }
         self.consumed = true;
         self.instance_owner.with_mut::<ModuleGeometryOwner, _>(|owner| {
@@ -980,7 +981,7 @@ impl ArtifactApp for ModuleApp {
             return Ok(None);
         }
         if module_retained_command_id(&request.command) != request.tool_id {
-            return Err(Fault::new(FaultOrigin::App, FaultCode::new("playbook.module.procedural.tool-mismatch"), "the procedural module command does not match its exact registered tool"));
+            return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.tool-mismatch"), "the procedural module command does not match its exact registered tool"));
         }
         let tool_id = module_retained_command_id(&request.command);
         let work = Box::new(ModuleGeometryCommandWork { tool_id, instance_owner: request.instance_operation_owner.clone(), consumed: false });
@@ -1141,7 +1142,7 @@ fn module_plugin_bundle() -> Result<Plugin<ProceduralModuleApps>, PluginAssembly
         // The sibling `ExtensionBundle` already declared the same edge — the plugin bundle did not.
         .depends_on("playbook", semio_framework::tree_pin!())
         .foreign_document_codec::<ModuleApp>(MODULE_DOCUMENT_SCHEMA)
-        .document_app::<ModuleApp>(resolve_ready(create_module_app())?)
+        .document_app::<ModuleApp>(::semio_framework_async::poll::resolve_ready(create_module_app())?)
         .try_build()
 }
 
@@ -1152,7 +1153,7 @@ fn module_extension_bundle() -> ExtensionBundle {
         bundle = bundle.contributes_topic(topic, DslValue::object([
             ("appId".to_string(), DslValue::String(MODULE_APP_ID.to_string())),
             (kind_key.to_string(), DslValue::String("buildingComponent".to_string())),
-            ("label".to_string(), if topic == "forms.questionKind" { dsl::ToValue::to_value(&LocalizedLabel::native("Building Component", "Bauteil")) } else { DslValue::String("Building Component".to_string()) }),
+            ("label".to_string(), if topic == "forms.questionKind" { semio_framework_value::ToValue::to_value(&LocalizedLabel::native("Building Component", "Bauteil")) } else { DslValue::String("Building Component".to_string()) }),
             ("iconId".to_string(), DslValue::String("building".to_string())),
             ("defaultValueJson".to_string(), DslValue::String(r#"{"height":6,"radius":0.5,"sides":6}"#.to_string())),
             ("paramsBodyKey".to_string(), DslValue::String(BODY_PARAMS.to_string())),

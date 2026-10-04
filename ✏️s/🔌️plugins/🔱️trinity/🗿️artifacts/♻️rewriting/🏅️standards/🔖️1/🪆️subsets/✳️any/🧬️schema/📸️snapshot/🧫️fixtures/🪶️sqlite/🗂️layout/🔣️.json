@@ -1,0 +1,76 @@
+{
+  "contractId": "rewriting-rule-layout-owned-slots",
+  "authority": "literalSortedContiguousSlots",
+  "budget": "cumulativeCallerAllocation",
+  "cases": [
+    {
+      "id": "empty",
+      "members": [],
+      "expected": []
+    },
+    {
+      "id": "single",
+      "members": [
+        {
+          "key": "",
+          "xBits": "8000000000000000",
+          "yBits": "7ff0000000000001"
+        }
+      ],
+      "expected": [
+        [
+          "",
+          "8000000000000000",
+          "7ff0000000000001"
+        ]
+      ]
+    },
+    {
+      "id": "literalWords",
+      "members": [
+        {
+          "key": "引用😀",
+          "xBits": "fff0000000000000",
+          "yBits": "0000000000000001"
+        },
+        {
+          "key": "a",
+          "xBits": "7ff8000000001234",
+          "yBits": "bff0000000000000"
+        },
+        {
+          "key": "\u0000",
+          "xBits": "7ff0000000000000",
+          "yBits": "8000000000000000"
+        },
+        {
+          "key": "",
+          "xBits": "0000000000000000",
+          "yBits": "7ff0000000000011"
+        }
+      ],
+      "expected": [
+        [
+          "",
+          "0000000000000000",
+          "7ff0000000000011"
+        ],
+        [
+          "\u0000",
+          "7ff0000000000000",
+          "8000000000000000"
+        ],
+        [
+          "a",
+          "7ff8000000001234",
+          "bff0000000000000"
+        ],
+        [
+          "引用😀",
+          "fff0000000000000",
+          "0000000000000001"
+        ]
+      ]
+    }
+  ]
+}

@@ -8,7 +8,7 @@ use protocol::{MutationKind, SemanticDescriptor};
 //#region 🗑️DeleteStep
 /// 🗑️ Removes a step by id, cascading to every block it carried. Inverse recreates it (with its
 /// captured base position and blocks) via `create-step`.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct DeleteStep {
@@ -21,9 +21,12 @@ impl MutationKind<FormsSnapshot, FormMutation> for DeleteStep {
     fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
         super::diff::diff_delete_step(self, base)
     }
-    fn inverse(&self, base: &FormsSnapshot) -> Vec<FormMutation> {
-        super::inverse::inverse_delete_step(self, base)
-    }
+    fn inverse(&self, base: &FormsSnapshot) -> Result<Vec<FormMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse_delete_step(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete step \"{}\"", self.id), &format!("Schritt \"{}\" löschen", self.id))
     }

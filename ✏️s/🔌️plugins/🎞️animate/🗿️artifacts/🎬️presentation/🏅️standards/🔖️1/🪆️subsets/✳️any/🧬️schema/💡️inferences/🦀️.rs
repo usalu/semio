@@ -6,7 +6,6 @@
 
 use crate::PresentationSnapshot;
 use schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::topology::compute_presentation_topology;
 //#region 🔖️Inference
@@ -24,8 +23,11 @@ pub struct PresentationInference {
 }
 
 impl protocol::Inference<PresentationSnapshot> for PresentationInference {
-    fn infer(snapshot: &PresentationSnapshot) -> Self {
+    fn infer(snapshot: &PresentationSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { topology: compute_presentation_topology(snapshot) }
+    
+        })
     }
 }
 
@@ -34,7 +36,9 @@ impl protocol::Inference<PresentationSnapshot> for PresentationInference {
 /// families for the same trick where the default snapshot is NOT the zero value.
 impl Default for PresentationInference {
     fn default() -> Self {
-        <Self as protocol::Inference<PresentationSnapshot>>::infer(&PresentationSnapshot::default())
+        let snapshot = &PresentationSnapshot::default();
+
+        Self { topology: compute_presentation_topology(snapshot) }
     }
 }
 
@@ -50,21 +54,6 @@ impl protocol::InferenceSpec<PresentationSnapshot> for PresentationInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 🎯️ Local zero-sized marker (not `schema::Construction`/`SnapshotBuilder<S, M>` — that is a
-/// foreign generic struct, so `impl ArtifactInferrer for SnapshotBuilder<PresentationSnapshot,
-/// PresentationMutation>` is an orphan-rule violation, E0117; confirmed by `🎬️sequence`'s identical
-/// pass, ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM `📓️w4-sequence-report.md`
-/// `## recipeGaps` #1). `ArtifactInferrer::infer` takes `&Self::Snapshot`, never `&self`, so this
-/// type is a pure type-level anchor.
-pub struct PresentationInferrer;
-
-impl ArtifactInferrer for PresentationInferrer {
-    type Snapshot = PresentationSnapshot;
-    type Inference = PresentationInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.animate.presentation.inference`'s facet leaves into the OS-wide inference catalog —

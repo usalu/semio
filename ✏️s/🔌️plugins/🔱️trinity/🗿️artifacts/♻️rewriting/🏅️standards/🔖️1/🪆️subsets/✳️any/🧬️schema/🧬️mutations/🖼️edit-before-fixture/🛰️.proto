@@ -1,4 +1,7 @@
 syntax = "proto3";
 package semio.s.trinity.rewriting.mutation.edit_before_fixture;
-// edit-before-fixture / EditBeforeFixture
-message EditBeforeFixture { string new_before_fixture_json = 1; }
+import "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
+import "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🛰️.proto";
+import "🧰️framework/🔨️modules/🌱️value/🧬️schema/🛰️.proto";
+import "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🌱️value/🧬️schema/🛰️.proto";
+message EditBeforeFixture { semio.s.trinity.jack.snapshot.JackSnapshot new_working_graph = 1; }

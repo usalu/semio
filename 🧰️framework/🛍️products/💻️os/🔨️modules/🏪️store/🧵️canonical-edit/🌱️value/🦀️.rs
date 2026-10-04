@@ -1,6 +1,6 @@
 //! 🌱️ Indexed framework dynamic-value projection for Store canonical JSON encoding.
 
-use super::{ArtifactCanonicalJson, ArtifactCanonicalJsonNode, ARTIFACT_CANONICAL_JSON_DEPTH};
+use super::{ARTIFACT_CANONICAL_JSON_DEPTH, ArtifactCanonicalJson, ArtifactCanonicalJsonNode};
 use crate::DslValue;
 use protocol::value::DslValueSource;
 
@@ -26,10 +26,12 @@ fn indexed_value<'a>(root: &'a DslValue, path: &[usize]) -> Result<&'a DslValue,
 
 impl<R: DslValueSource + Sync> ArtifactCanonicalJson for ArtifactCanonicalValue<R> {
     fn canonical_json_node(&self, path: &[usize]) -> Result<ArtifactCanonicalJsonNode<'_>, String> {
-        use protocol::value::Number;
         use ArtifactCanonicalJsonNode as N;
-        if let Some((index,parent))=path.split_last(){
-            if let DslValue::Bytes(bytes)=indexed_value(self.value(),parent)?{return bytes.get(*index).map(|byte|N::U64(u64::from(*byte))).ok_or_else(super::invalid_path);}
+        use protocol::value::Number;
+        if let Some((index, parent)) = path.split_last() {
+            if let DslValue::Bytes(bytes) = indexed_value(self.value(), parent)? {
+                return bytes.get(*index).map(|byte| N::U64(u64::from(*byte))).ok_or_else(super::invalid_path);
+            }
         }
         Ok(match indexed_value(self.value(), path)? {
             DslValue::Null => N::Null,
@@ -38,7 +40,7 @@ impl<R: DslValueSource + Sync> ArtifactCanonicalJson for ArtifactCanonicalValue<
             DslValue::Number(Number::Int(value)) => N::I64(*value),
             DslValue::Number(Number::Float(value)) => N::F64(*value),
             DslValue::String(value) => N::String(value),
-            DslValue::Bytes(bytes)=>N::Array(bytes.len()),
+            DslValue::Bytes(bytes) => N::Array(bytes.len()),
             DslValue::Array(values) => N::Array(values.len()),
             DslValue::Object(values) => N::Object(values.len()),
         })

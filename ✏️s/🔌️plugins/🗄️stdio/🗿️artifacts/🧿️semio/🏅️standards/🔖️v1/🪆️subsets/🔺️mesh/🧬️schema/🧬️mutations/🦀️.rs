@@ -102,6 +102,7 @@ use super::set_snapshot::SetSnapshot;
 #[mutations(snapshot = SemioMeshSnapshot, diff = SemioMeshDiff, schema = "s.stdio.semio.mesh")]
 pub enum SemioMeshMutation {
     SetSnapshot(SetSnapshot),
+    PatchSnapshot(super::patch_snapshot::PatchSnapshot),
     CreateMesh(create_mesh::CreateMesh),
     DeleteMesh(delete_mesh::DeleteMesh),
     CreatePrimitive(create_primitive::CreatePrimitive),
@@ -126,7 +127,7 @@ pub enum SemioMeshMutation {
 /// `🔺️mutate-semio-mesh`'s exhaustive test case measures itself against. `kinds_match_the_enum_and_
 /// the_catalog` below is what keeps this list honest against the enum, since the framework never
 /// parses Rust.
-pub const KINDS: &[&str] = &["set-snapshot", 
+pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", 
     "create-mesh",
     "delete-mesh",
     "create-primitive",
@@ -163,9 +164,12 @@ pub fn apply_semio_mesh_mutation(snapshot: &mut SemioMeshSnapshot, mutation: &Se
 /// need a mutation's own computed inverse) can still reach the inverse law that
 /// [`apply_semio_mesh_mutation`] alone cannot. Same shape as `🧰️kit`'s `inverse_semio_kit_mutation`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse_semio_mesh_mutation(mutation: &SemioMeshMutation, base: &SemioMeshSnapshot) -> Vec<SemioMeshMutation> {
+pub fn inverse_semio_mesh_mutation(mutation: &SemioMeshMutation, base: &SemioMeshSnapshot) -> Result<Vec<SemioMeshMutation>, semio_framework_value::ValueError> {
+    Ok({
     use protocol::Mutation;
-    <SemioMeshMutation as Mutation<SemioMeshSnapshot>>::inverse(mutation, base)
+    <SemioMeshMutation as Mutation<SemioMeshSnapshot>>::inverse(mutation, base)?
+
+    })
 }
 
 /// 📥️ Decodes this facet's own externally-tagged (`{"<VariantName>": {<snake_case payload>}}`)
@@ -175,7 +179,7 @@ pub fn inverse_semio_mesh_mutation(mutation: &SemioMeshMutation, base: &SemioMes
 /// vector is the only way the adapter can exercise that kind without restating every coordinate.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_mesh_mutation_json(text: &str) -> Result<SemioMeshMutation, String> {
-    pack::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Apply
 
@@ -186,7 +190,8 @@ pub fn decode_semio_mesh_mutation_json(text: &str) -> Result<SemioMeshMutation, 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn print_semio_mesh_mutation(m: &SemioMeshMutation) -> String {
     match m {
-        SemioMeshMutation::SetSnapshot(p) => format!("set-snapshot snapshot={}", hex_encode(pack::to_json_string(&p.snapshot).as_bytes())),
+        SemioMeshMutation::PatchSnapshot(payload) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(&payload.patch),
+        SemioMeshMutation::SetSnapshot(p) => format!("set-snapshot snapshot={}", hex_encode(semio_framework_pack_json::to_json_string(&p.snapshot).as_bytes())),
         SemioMeshMutation::CreateMesh(p) => format!("create-mesh mesh={}", enc_mesh(&p.mesh)),
         SemioMeshMutation::DeleteMesh(p) => format!("delete-mesh id={}", enc_str(&p.id)),
         SemioMeshMutation::CreatePrimitive(p) => format!("create-primitive mesh-id={} primitive={}", enc_str(&p.mesh_id), enc_primitive(&p.primitive)),
@@ -217,11 +222,15 @@ fn print_semio_mesh_mutation(m: &SemioMeshMutation) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_semio_mesh_mutation(line: &str) -> Result<SemioMeshMutation, String> {
+    if let Some(source) = line.strip_prefix("patch-snapshot patch=") {
+        let patch = semio_s_artifact_stdio_contract::editing::snapshot_patch_from_hex(source)?;
+        return Ok(SemioMeshMutation::PatchSnapshot(crate::standards::v1::subsets::mesh::schema::mutations::patch_snapshot::PatchSnapshot { patch }));
+    }
     if let Some(payload) = line.strip_prefix("set-snapshot snapshot=") {
         let bytes = hex_decode(payload)?;
         let json = String::from_utf8(bytes).map_err(|error| error.to_string())?;
-        let parsed = pack::parse_json(&json).map_err(|error| error.to_string())?;
-        let snapshot = dsl::FromValue::from_value(pack::json_to_dsl_value(&parsed)).map_err(|error| error.to_string())?;
+        let parsed = semio_framework_pack_json::parse(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
+        let snapshot = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|error| error.to_string())?;
         return Ok(SemioMeshMutation::SetSnapshot(SetSnapshot { snapshot }));
     }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
@@ -272,8 +281,8 @@ fn parse_semio_mesh_mutation(line: &str) -> Result<SemioMeshMutation, String> {
 }
 
 impl OpText for SemioMeshMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_semio_mesh_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_semio_mesh_mutation(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
     fn print_op(&self) -> String {
         print_semio_mesh_mutation(self)
@@ -285,6 +294,7 @@ impl OpText for SemioMeshMutation {
 /// 🏷️ Op tags of `SemioMeshMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
 const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
 const TAG_CREATE_MESH: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "create-mesh");
 const TAG_DELETE_MESH: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "delete-mesh");
 const TAG_CREATE_PRIMITIVE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "create-primitive");
@@ -308,6 +318,7 @@ const TAG_MOVE_VERTEX: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "move-ve
 fn wire_tag(m: &SemioMeshMutation) -> u8 {
     match m {
         SemioMeshMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
+        SemioMeshMutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
         SemioMeshMutation::CreateMesh(_) => TAG_CREATE_MESH,
         SemioMeshMutation::DeleteMesh(_) => TAG_DELETE_MESH,
         SemioMeshMutation::CreatePrimitive(_) => TAG_CREATE_PRIMITIVE,
@@ -345,6 +356,11 @@ fn print_semio_mesh_mutation_args(m: &SemioMeshMutation) -> String {
 /// second independent encoding.
 impl OpBinary for SemioMeshMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        if let Self::PatchSnapshot(payload) = self {
+            let mut out = vec![1, TAG_PATCH_SNAPSHOT];
+            out.extend(protocol::OpBinary::encode_op(&payload.patch)?);
+            return Ok(out);
+        }
         const OP_BINARY_FORMAT: u8 = 1;
         let mut out = vec![OP_BINARY_FORMAT, wire_tag(self)];
         out.extend_from_slice(print_semio_mesh_mutation_args(self).as_bytes());
@@ -357,6 +373,9 @@ impl OpBinary for SemioMeshMutation {
         }
         if bytes[0] != OP_BINARY_FORMAT {
             return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {}", bytes[0]) });
+        }
+        if bytes[1] == TAG_PATCH_SNAPSHOT {
+            return Ok(Self::PatchSnapshot(crate::standards::v1::subsets::mesh::schema::mutations::patch_snapshot::PatchSnapshot { patch: protocol::OpBinary::decode_op(&bytes[2..])? }));
         }
         let tag = bytes[1];
         let keyword = dsl::protocol_record::kind(WIRE_PROTOCOL, u64::from(tag)).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} names no record of 📡️.protocol.semio") })?;
@@ -388,7 +407,7 @@ pub(crate) fn fixture() -> SemioMeshSnapshot {
                 material_id: Some("mat-a".into()),
             }],
         }],
-        materials: vec![SemioMaterial { id: "mat-a".into(), base_color: SemioRgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 }, metallic: 0.0, roughness: 0.5 }],
+        materials: vec![SemioMaterial { id: "mat-a".into(), base_color: SemioRgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 }, metallic: 0.0, roughness: 0.5, ..Default::default() }],
         textures: vec![SemioTexture { id: "tex-a".into(), mime: "image/png".into(), bytes: vec![1, 2, 3] }],
         ..Default::default()
     }
@@ -398,6 +417,7 @@ pub(crate) fn fixture() -> SemioMeshSnapshot {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<SemioMeshMutation> {
     vec![
+        SemioMeshMutation::PatchSnapshot(super::patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         SemioMeshMutation::CreateMesh(create_mesh::CreateMesh { mesh: SemioMesh { id: "mesh-b".into(), primitives: vec![] } }),
         SemioMeshMutation::DeleteMesh(delete_mesh::DeleteMesh { id: "mesh-a".into() }),
         SemioMeshMutation::CreatePrimitive(create_primitive::CreatePrimitive { mesh_id: "mesh-a".into(), primitive: SemioPrimitive { id: "prim-b".into(), ..Default::default() } }),

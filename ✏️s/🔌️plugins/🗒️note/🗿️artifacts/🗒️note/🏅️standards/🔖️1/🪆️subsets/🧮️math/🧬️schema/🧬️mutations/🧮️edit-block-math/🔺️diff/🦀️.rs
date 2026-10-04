@@ -14,7 +14,7 @@ pub fn diff(payload: &EditBlockMath, base: &NoteSnapshot) -> protocol::MutationO
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Block \"{}\" is not a math block.", payload.id), [payload.id.clone()]);
     };
     if tex == &payload.new_tex {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Block \"{}\" math is unchanged.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Block \"{}\" math is unchanged.", payload.id));
     }
     let mut updated = block.clone();
     if let crate::NoteBlockNode::Math { tex, .. } = &mut updated {

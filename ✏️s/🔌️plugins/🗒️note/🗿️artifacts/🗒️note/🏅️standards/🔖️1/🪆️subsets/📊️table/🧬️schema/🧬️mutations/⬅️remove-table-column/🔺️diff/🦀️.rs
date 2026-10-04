@@ -14,7 +14,7 @@ pub fn diff(payload: &RemoveTableColumn, base: &NoteSnapshot) -> protocol::Mutat
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Block \"{}\" is not a table.", payload.id), [payload.id.clone()]);
     };
     if columns.len() <= 1 {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Table \"{}\" already has the minimum of 1 column.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Table \"{}\" already has the minimum of 1 column.", payload.id));
     }
     let mut updated = block.clone();
     if let crate::NoteBlockNode::Table { columns, rows, .. } = &mut updated {

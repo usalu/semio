@@ -5,13 +5,13 @@ use protocol::Inference;
 //#region 🧪️InferenceLaws
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
-    let snapshot = GisMapSnapshot { positions: vec![MapFeature { id: "p1".into(), data: dsl::DslValue::from(serde_json::json!({ "lon": 1.0, "lat": 2.0 })) }], routes: Vec::new(), regions: Vec::new(), ..Default::default() };
-    assert_eq!(GisMapInference::infer(&snapshot), GisMapInference::infer(&snapshot));
+    let snapshot = GisMapSnapshot { positions: vec![MapFeature { id: "p1".into(), data: semio_framework_value::DslValue::from(serde_json::json!({ "lon": 1.0, "lat": 2.0 })) }], routes: Vec::new(), regions: Vec::new(), ..Default::default() };
+    assert_eq!(GisMapInference::infer(&snapshot).expect("valid materialized inference fixture"), GisMapInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
-    assert_eq!(GisMapInference::infer(&GisMapSnapshot::default()), GisMapInference::default());
+    assert_eq!(GisMapInference::infer(&GisMapSnapshot::default()).expect("valid materialized inference fixture"), GisMapInference::default());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -21,13 +21,13 @@ async fn map_create_region_group_work_stabilizes_parent_drawing_value_without_im
     use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::mutations::apply_semio_drawing_mutation;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::mutations::apply_semio_value_mutation;
 
-    let feature = |id: &str, data: serde_json::Value| MapFeature { id: id.into(), data: dsl::DslValue::from(data) };
+    let feature = |id: &str, data: serde_json::Value| MapFeature { id: id.into(), data: semio_framework_value::DslValue::from(data) };
     let snapshot = gis_map_snapshot_with_derived_children(GisMapSnapshot {
         positions: vec![feature("point-a", serde_json::json!({ "id": "point-a", "lon": 7, "lat": 47 }))],
         routes: vec![feature("route-a", serde_json::json!({ "id": "route-a", "points": [[8, 46], [9, 48]] }))],
         ..Default::default()
     });
-    let inferred = GisMapInference::infer(&snapshot);
+    let inferred = GisMapInference::infer(&snapshot).expect("valid materialized inference fixture");
     let work = inferred.create_region_group_work(&snapshot, "11111111111111111111111111111111").expect("typed group work");
     assert_eq!(work.drawing_child.child_id, "gismap-drawing");
     assert_eq!(work.value_child.child_id, "gismap-value");
@@ -75,7 +75,7 @@ async fn map_create_region_group_work_stabilizes_parent_drawing_value_without_im
         }
         assert_eq!(candidate.image, supplied_image, "deriving children must preserve a supplied image");
         let unchanged = candidate.clone();
-        let result = GisMapInference::infer(&candidate).create_region_group_work(&candidate, fixture["jobId"].as_str().unwrap());
+        let result = GisMapInference::infer(&candidate).expect("valid materialized inference fixture").create_region_group_work(&candidate, fixture["jobId"].as_str().unwrap());
         assert_eq!(result.is_ok(), row["accepted"].as_bool().unwrap(), "{}", row["name"]);
         if !row["accepted"].as_bool().unwrap() {
             assert_eq!(result.unwrap_err(), GisMapProposalError::Composition);

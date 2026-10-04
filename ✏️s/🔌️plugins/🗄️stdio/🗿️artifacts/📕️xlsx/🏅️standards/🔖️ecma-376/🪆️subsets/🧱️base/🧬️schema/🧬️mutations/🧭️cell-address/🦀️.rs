@@ -6,6 +6,8 @@ use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 use semio_s_artifact_stdio_zip::opc::{resolve_relationship_target, REL_TYPE_OFFICE_DOCUMENT};
 
 const MAX_SAFE_INTEGER: u64 = 9_007_199_254_740_991;
+pub const XLSX_MAX_ROW: u32 = 1_048_576;
+pub const XLSX_MAX_COLUMN: u32 = 16_383;
 const SPREADSHEETML_NAMESPACES: [&str; 2] = [SML_NS, SML_NS_STRICT];
 const OFFICE_RELATIONSHIP_NAMESPACES: [&str; 2] = [R_NS, R_NS_STRICT];
 
@@ -19,9 +21,63 @@ pub struct XlsxCellAddress {
     pub revision: String,
 }
 
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct XlsxWorksheetAddress {
+    pub part_path: String,
+    pub node_path: Vec<usize>,
+    pub namespace_uri: String,
+    pub local_name: String,
+    pub revision: String,
+}
+
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct XlsxCellVacancyAddress {
+    pub worksheet: XlsxWorksheetAddress,
+    pub row: u32,
+    pub column: u32,
+}
+
 pub struct ResolvedXlsxCellAddress<'a> {
     pub part_index: usize,
     pub node: &'a XmlNode,
+}
+
+pub struct ResolvedXlsxWorksheetAddress<'a> {
+    pub part_index: usize,
+    pub node: &'a XmlNode,
+}
+
+fn validate_coordinates(row: u32, column: u32) -> Result<(), String> {
+    if !(1..=XLSX_MAX_ROW).contains(&row) {
+        return Err(format!("XLSX row {row} is outside 1..={XLSX_MAX_ROW}"));
+    }
+    if column > XLSX_MAX_COLUMN {
+        return Err(format!("XLSX column {column} is outside 0..={XLSX_MAX_COLUMN}"));
+    }
+    Ok(())
+}
+
+fn validate_part_path(path: &str, kind: &str) -> Result<(), String> {
+    if path.is_empty() || path.starts_with('/') || path.ends_with('/') || path.contains("//") || path.contains('\\') || path.split('/').any(|component| component == "." || component == "..") {
+        return Err(format!("XLSX {kind} address partPath is not canonical"));
+    }
+    Ok(())
+}
+
+fn validate_node_path(path: &[usize], kind: &str) -> Result<(), String> {
+    if path.iter().any(|index| *index as u64 > MAX_SAFE_INTEGER) {
+        return Err(format!("XLSX {kind} address nodePath exceeds the cross-language safe integer range"));
+    }
+    Ok(())
+}
+
+fn validate_revision(revision: &str, kind: &str) -> Result<(), String> {
+    if revision.len() != 16 || !revision.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte)) {
+        return Err(format!("XLSX {kind} address revision is invalid"));
+    }
+    Ok(())
 }
 
 fn scoped_node_at_path<'a>(root: &'a XmlNode, path: &[usize]) -> Result<(&'a XmlNode, Vec<(String, String)>), String> {
@@ -168,6 +224,7 @@ fn worksheet_path(snapshot: &XlsxSnapshot, sheet_name: &str) -> Result<String, S
 }
 
 fn cell_path(root: &XmlNode, row: u32, column: u32) -> Result<Vec<usize>, String> {
+    validate_coordinates(row, column)?;
     let reference = format!("{}{}", column_letter(column), row);
     let row_text = row.to_string();
     let root_bindings = namespace_scope(&[], root);
@@ -201,6 +258,56 @@ fn cell_path(root: &XmlNode, row: u32, column: u32) -> Result<Vec<usize>, String
     Err(format!("missing cell {reference}"))
 }
 
+fn sheet_data_path(root: &XmlNode) -> Result<Vec<usize>, String> {
+    let root_bindings = namespace_scope(&[], root);
+    if !element_matches(root, &root_bindings, &SPREADSHEETML_NAMESPACES, "worksheet")? {
+        return Err("worksheet root is not a SpreadsheetML worksheet element".into());
+    }
+    let XmlNode::Element { children, .. } = root else { unreachable!() };
+    for (index, node) in children.iter().enumerate() {
+        let bindings = namespace_scope(&root_bindings, node);
+        if element_matches(node, &bindings, &SPREADSHEETML_NAMESPACES, "sheetData")? {
+            return Ok(vec![index]);
+        }
+    }
+    Err("worksheet has no SpreadsheetML sheetData element".into())
+}
+
+pub fn xlsx_worksheet_address(snapshot: &XlsxSnapshot, sheet_name: &str) -> Result<XlsxWorksheetAddress, String> {
+    let part_path = worksheet_path(snapshot, sheet_name)?;
+    let part = snapshot.xml_part(&part_path).ok_or_else(|| format!("missing worksheet part {part_path}"))?;
+    let root = part.document.root.as_ref().ok_or_else(|| format!("worksheet part {part_path} has no root"))?;
+    let node_path = sheet_data_path(root)?;
+    let (node, bindings) = scoped_node_at_path(root, &node_path)?;
+    let (namespace_uri, local_name) = match node {
+        XmlNode::Element { name, .. } => expanded_element_name(name, &bindings)?,
+        _ => return Err("worksheet address resolved a non-element".into()),
+    };
+    let revision = address_revision(snapshot, root, &node_path)?;
+    Ok(XlsxWorksheetAddress { part_path, node_path, namespace_uri, local_name, revision })
+}
+
+pub fn xlsx_cell_vacancy_address(snapshot: &XlsxSnapshot, sheet_name: &str, row: u32, column: u32) -> Result<XlsxCellVacancyAddress, String> {
+    validate_coordinates(row, column)?;
+    let worksheet = xlsx_worksheet_address(snapshot, sheet_name)?;
+    let part = snapshot.xml_part(&worksheet.part_path).ok_or_else(|| format!("missing worksheet part {}", worksheet.part_path))?;
+    let root = part.document.root.as_ref().ok_or_else(|| format!("worksheet part {} has no root", worksheet.part_path))?;
+    match cell_path(root, row, column) {
+        Ok(_) => return Err(format!("cell {}{} is occupied", column_letter(column), row)),
+        Err(error) if error.starts_with("missing cell ") => {}
+        Err(error) => return Err(error),
+    }
+    Ok(XlsxCellVacancyAddress { worksheet, row, column })
+}
+
+pub fn xlsx_cell_target_revision(snapshot: &XlsxSnapshot, sheet_name: &str, row: u32, column: u32) -> Result<String, String> {
+    match xlsx_cell_address(snapshot, sheet_name, row, column) {
+        Ok(address) => Ok(address.revision),
+        Err(error) if error.starts_with("missing cell ") => xlsx_cell_vacancy_address(snapshot, sheet_name, row, column).map(|address| address.worksheet.revision),
+        Err(error) => Err(error),
+    }
+}
+
 pub fn xlsx_cell_address(snapshot: &XlsxSnapshot, sheet_name: &str, row: u32, column: u32) -> Result<XlsxCellAddress, String> {
     let part_path = worksheet_path(snapshot, sheet_name)?;
     let part = snapshot.xml_part(&part_path).ok_or_else(|| format!("missing worksheet part {part_path}"))?;
@@ -222,19 +329,10 @@ pub fn xlsx_cell_address_at_path(snapshot: &XlsxSnapshot, part_path: &str, node_
 }
 
 pub fn resolve_xlsx_cell_address<'a>(snapshot: &'a XlsxSnapshot, address: &XlsxCellAddress) -> Result<ResolvedXlsxCellAddress<'a>, String> {
-    if address.part_path.is_empty()
-        || address.part_path.starts_with('/')
-        || address.part_path.ends_with('/')
-        || address.part_path.contains("//")
-        || address.part_path.contains('\\')
-        || address.part_path.split('/').any(|component| component == "." || component == "..")
-    {
-        return Err("XLSX cell address partPath is not canonical".into());
-    }
-    if address.node_path.iter().any(|index| *index as u64 > MAX_SAFE_INTEGER) {
-        return Err("XLSX cell address nodePath exceeds the cross-language safe integer range".into());
-    }
-    if address.local_name != "c" || address.namespace_uri.is_empty() || address.revision.len() != 16 || !address.revision.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte)) {
+    validate_part_path(&address.part_path, "cell")?;
+    validate_node_path(&address.node_path, "cell")?;
+    validate_revision(&address.revision, "cell")?;
+    if address.local_name != "c" || address.namespace_uri.is_empty() {
         return Err("XLSX cell address identity is invalid".into());
     }
     let mut parts = snapshot.xml_parts.iter().enumerate().filter(|(_, part)| part.path == address.part_path);
@@ -252,6 +350,54 @@ pub fn resolve_xlsx_cell_address<'a>(snapshot: &'a XlsxSnapshot, address: &XlsxC
         return Err("XLSX cell address is stale".into());
     }
     Ok(ResolvedXlsxCellAddress { part_index, node })
+}
+
+pub fn resolve_xlsx_worksheet_address<'a>(snapshot: &'a XlsxSnapshot, address: &XlsxWorksheetAddress) -> Result<ResolvedXlsxWorksheetAddress<'a>, String> {
+    validate_part_path(&address.part_path, "worksheet")?;
+    validate_node_path(&address.node_path, "worksheet")?;
+    validate_revision(&address.revision, "worksheet")?;
+    if address.local_name != "sheetData" || address.namespace_uri.is_empty() {
+        return Err("XLSX worksheet address identity is invalid".into());
+    }
+    let mut parts = snapshot.xml_parts.iter().enumerate().filter(|(_, part)| part.path == address.part_path);
+    let (part_index, part) = parts.next().ok_or_else(|| format!("missing worksheet part {}", address.part_path))?;
+    if parts.next().is_some() {
+        return Err(format!("duplicate worksheet part {}", address.part_path));
+    }
+    let root = part.document.root.as_ref().ok_or_else(|| format!("worksheet part {} has no root", address.part_path))?;
+    let (node, bindings) = scoped_node_at_path(root, &address.node_path)?;
+    let (namespace_uri, local_name) = match node {
+        XmlNode::Element { name, .. } => expanded_element_name(name, &bindings)?,
+        _ => return Err("worksheet address resolved a non-element".into()),
+    };
+    if namespace_uri != address.namespace_uri || local_name != address.local_name || address_revision(snapshot, root, &address.node_path)? != address.revision {
+        return Err("XLSX worksheet address is stale".into());
+    }
+    Ok(ResolvedXlsxWorksheetAddress { part_index, node })
+}
+
+pub fn resolve_xlsx_cell_vacancy_address<'a>(snapshot: &'a XlsxSnapshot, address: &XlsxCellVacancyAddress) -> Result<ResolvedXlsxWorksheetAddress<'a>, String> {
+    validate_coordinates(address.row, address.column)?;
+    let resolved = resolve_xlsx_worksheet_address(snapshot, &address.worksheet)?;
+    let part = &snapshot.xml_parts[resolved.part_index];
+    let root = part.document.root.as_ref().ok_or_else(|| format!("worksheet part {} has no root", address.worksheet.part_path))?;
+    if cell_path(root, address.row, address.column).is_ok() {
+        return Err(format!("cell {}{} is no longer vacant", column_letter(address.column), address.row));
+    }
+    Ok(resolved)
+}
+
+pub(super) fn addressed_worksheet_mut<'a>(snapshot: &'a mut XlsxSnapshot, address: &XlsxWorksheetAddress) -> Result<&'a mut XmlNode, String> {
+    let part_index = resolve_xlsx_worksheet_address(snapshot, address)?.part_index;
+    let root = snapshot.xml_parts[part_index].document.root.as_mut().ok_or_else(|| format!("worksheet part {} has no root", address.part_path))?;
+    node_mut_at_path(root, &address.node_path).ok_or_else(|| "XLSX worksheet address could not be reopened mutably".into())
+}
+
+pub(super) fn addressed_worksheet_scope(snapshot: &XlsxSnapshot, address: &XlsxWorksheetAddress) -> Result<Vec<(String, String)>, String> {
+    resolve_xlsx_worksheet_address(snapshot, address)?;
+    let part = snapshot.xml_part(&address.part_path).ok_or_else(|| format!("missing worksheet part {}", address.part_path))?;
+    let root = part.document.root.as_ref().ok_or_else(|| format!("worksheet part {} has no root", address.part_path))?;
+    scoped_node_at_path(root, &address.node_path).map(|(_, bindings)| bindings)
 }
 
 pub(super) fn addressed_cell_scope(snapshot: &XlsxSnapshot, address: &XlsxCellAddress) -> Result<Vec<(String, String)>, String> {

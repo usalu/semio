@@ -78,6 +78,13 @@ impl std::fmt::Display for JpgError {
     }
 }
 impl std::error::Error for JpgError {}
+/// 🧭️ Carries the codec's own unsupported/malformed authority into the canonical Value refusal kinds.
+impl From<JpgError> for semio_framework_value::ValueError {
+    fn from(error: JpgError) -> Self {
+        let kind = match &error { JpgError::Unsupported(_) => semio_framework_value::ValueRefusalKind::UnsupportedOwner, JpgError::Malformed(_) => semio_framework_value::ValueRefusalKind::InvalidValue };
+        Self::new(kind, error.to_string())
+    }
+}
 //#endregion Errors
 
 //#region ZigZag

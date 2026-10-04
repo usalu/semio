@@ -7,7 +7,7 @@ use crate::{EquationGraph, EquationSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord)]
 pub struct SetAlgorithm {
     pub algorithm: String,
     pub seed: Option<String>,
@@ -22,7 +22,7 @@ pub(crate) fn set_algorithm_leaves(payload: &SetAlgorithm, graph: &EquationGraph
 }
 
 pub fn handle(payload: &SetAlgorithm, doc: &ArtifactView<'_, EquationSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<EquationMutation, NoConfigMutation>, Fault> {
-    Ok(Emit::mutations(set_algorithm_leaves(payload, &crate::equation_graph(doc.snapshot))))
+    Ok(Emit::mutations(set_algorithm_leaves(payload, &doc.snapshot.graph.clone())))
 }
 
 //#region 🧪️Tests

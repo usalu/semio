@@ -1,5 +1,8 @@
 syntax = "proto3";
 package semio.s.trinity.rewriting.mutation.set_rule_layout_points;
-// set-rule-layout-points / SetRuleLayoutPoints
-message RuleLayoutPlacement { string key = 1; double x = 2; double y = 3; }
+import "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
+import "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🛰️.proto";
+import "🧰️framework/🔨️modules/🌱️value/🧬️schema/🛰️.proto";
+import "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🌱️value/🧬️schema/🛰️.proto";
 message SetRuleLayoutPoints { repeated RuleLayoutPlacement points = 1; repeated string cleared = 2; }
+message RuleLayoutPlacement { string key = 1; semio.framework.value.Binary64Word x = 2; semio.framework.value.Binary64Word y = 3; }

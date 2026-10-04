@@ -8,7 +8,7 @@
 use crate::standards::v1::subsets::any::io::geometry_import::{CadObject, CadPrimitiveSlot};
 use crate::{evaluate_expr, CadPaneId, DisplayItemSpec, Effect, ExprEnv, ExprPathRoot, ExprPathSegment, ExprPathTarget, InteractionSpec};
 
-use protocol::DslValue;
+use semio_framework_value::DslValue;
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_framework_3d::brep::engine::{Brep, BrepKernel};
 use std::collections::HashMap;
@@ -25,7 +25,7 @@ use std::sync::OnceLock;
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct CadEngagementContext(pub HashMap<String, DslValue>);
 
-impl protocol::ToValue for CadEngagementContext {
+impl semio_framework_value::ToValue for CadEngagementContext {
     /// 🔤️ Keys are emitted SORTED: `engagement_session_json` is compared byte-for-byte against its
     /// persisted twin by `snapshot_of` (the checkpoint-transition guard), and a `HashMap`'s
     /// iteration order differs between two encodes of the same context — which rejected every
@@ -37,12 +37,12 @@ impl protocol::ToValue for CadEngagementContext {
     }
 }
 
-impl protocol::FromValue for CadEngagementContext {
-    fn from_value(value: DslValue) -> Result<Self, protocol::ValueError> {
+impl semio_framework_value::FromValue for CadEngagementContext {
+    fn from_value(value: DslValue) -> Result<Self, semio_framework_value::ValueError> {
         match value {
             DslValue::Object(entries) => Ok(Self(entries.into_iter().collect())),
             DslValue::Null => Ok(Self::default()),
-            other => Err(protocol::ValueError::new(format!("expected an object for CadEngagementContext, got {other:?}"))),
+            other => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for CadEngagementContext, got {other:?}"))),
         }
     }
 }
@@ -176,7 +176,7 @@ const RAW_INTERACTION_ASSETS: &[(&str, &str)] = &[
 ];
 
 fn parse_interaction_spec(raw: &str) -> Option<InteractionSpec> {
-    protocol::json::from_json_str(raw).ok()
+    semio_framework_pack_json::from_json_str(raw, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()
 }
 
 /// 📚️ Every asset parsed ONCE per process — the specs are large (the box alone is 63 KiB of
@@ -410,19 +410,19 @@ fn apply_effect(session: &mut CadEngagementScratch, payload: Option<&DslValue>, 
             if let Some(field) = context_target_field(target) {
                 let env = ExprEnv { context: &session.context.0, event: payload };
                 let evaluated = evaluate_expr(value, &env, &empty_vars);
-                session.context.insert(field.to_string(), evaluated);
+                session.context.0.insert(field.to_string(), evaluated);
             }
         }
         Effect::Clear { target } => {
             if let Some(field) = context_target_field(target) {
-                session.context.remove(field);
+                session.context.0.remove(field);
             }
         }
         Effect::Append { target, value } => {
             if let Some(field) = context_target_field(target) {
                 let env = ExprEnv { context: &session.context.0, event: payload };
                 let evaluated = evaluate_expr(value, &env, &empty_vars);
-                let entry = session.context.entry(field.to_string()).or_insert_with(|| DslValue::Array(Vec::new()));
+                let entry = session.context.0.entry(field.to_string()).or_insert_with(|| DslValue::Array(Vec::new()));
                 if let DslValue::Array(array) = entry {
                     array.push(evaluated);
                 } else {

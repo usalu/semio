@@ -1,0 +1,30 @@
+{
+  "schema": "s.flow-extension-brep.geometry.law",
+  "inferenceSchema": "s.flow-extension-brep.geometry",
+  "artifactKind": "s.flow.flow",
+  "request": {
+    "operatorId": "brep.prim3d.box",
+    "inputJson": "{\"width\":{\"$schema\":\"number\",\"value\":2},\"depth\":{\"$schema\":\"number\",\"value\":3},\"height\":{\"$schema\":\"number\",\"value\":4}}",
+    "nodeHash": 7241,
+    "budget": 1,
+    "wallMicros": 1,
+    "dependencyJson": "{\"widgets\":{\"box\":{\"operatorId\":\"brep.prim3d.box\",\"params\":{\"width\":{\"$schema\":\"number\",\"value\":2},\"depth\":{\"$schema\":\"number\",\"value\":3},\"height\":{\"$schema\":\"number\",\"value\":4}}}},\"synapses\":{}}",
+    "operatorVersion": "1"
+  },
+  "expected": {
+    "done": true,
+    "cancellable": false,
+    "phase": "complete",
+    "unitsDone": 1,
+    "unitsTotal": 1
+  },
+  "changedInput": {
+    "inputJson": "{\"width\":{\"$schema\":\"number\",\"value\":5},\"depth\":{\"$schema\":\"number\",\"value\":3},\"height\":{\"$schema\":\"number\",\"value\":4}}"
+  },
+  "changedDependencies": {
+    "dependencyJson": "{\"widgets\":{\"box\":{\"operatorId\":\"brep.prim3d.box\",\"params\":{\"width\":{\"$schema\":\"number\",\"value\":5},\"depth\":{\"$schema\":\"number\",\"value\":3},\"height\":{\"$schema\":\"number\",\"value\":4}}}},\"synapses\":{}}"
+  },
+  "replacement": {"pendingPhases":["retire-invalidated","restart-admission"],"outputJson":"","initialUnits":1},
+  "expectedVolume": 24,
+  "changedVolume": 60
+}

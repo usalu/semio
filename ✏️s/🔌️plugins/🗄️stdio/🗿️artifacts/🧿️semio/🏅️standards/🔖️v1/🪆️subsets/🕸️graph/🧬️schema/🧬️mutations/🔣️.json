@@ -20,6 +20,18 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "PatchSnapshot"
+      ],
+      "properties": {
+        "PatchSnapshot": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/graph/mutation/patch-snapshot/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
         "CreateNode"
       ],
       "properties": {
@@ -145,6 +157,90 @@
       "properties": {
         "DeleteEdge": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/graph/mutation/delete-edge/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DragNodes"
+      ],
+      "properties": {
+        "DragNodes": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/graph/mutation/drag-nodes/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetNodeProperty"
+      ],
+      "properties": {
+        "SetNodeProperty": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/graph/mutation/set-node-property/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ResizeNode"
+      ],
+      "properties": {
+        "ResizeNode": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/graph/mutation/resize-node/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RenameNode"
+      ],
+      "properties": {
+        "RenameNode": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/graph/mutation/rename-node/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetEdgeProperty"
+      ],
+      "properties": {
+        "SetEdgeProperty": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/graph/mutation/set-edge-property/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "AddEdgeProperty"
+      ],
+      "properties": {
+        "AddEdgeProperty": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/graph/mutation/add-edge-property/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveEdgeProperty"
+      ],
+      "properties": {
+        "RemoveEdgeProperty": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/graph/mutation/remove-edge-property/schema.json"
         }
       }
     }

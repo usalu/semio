@@ -6,7 +6,7 @@ async fn fixture_events() -> Vec<DirectoryEvent> {
         events: Vec<DirectoryEvent>,
     }
     let raw = include_str!("../../../../🧫️fixtures/📇️directory/⚡️events.json");
-    crate::os_pack::json::from_json_str::<Fixture>(raw).expect("fixture decodes").events
+    semio_framework_pack_json::from_json_str::<Fixture>(raw, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture decodes").events
 }
 
 #[semio_framework_async_macros::async_test]

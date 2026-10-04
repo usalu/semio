@@ -116,6 +116,50 @@
         "scope": {},
         "retryable": false
       }
+    },
+    {
+      "id": "notice-params",
+      "input": {
+        "origin": "app",
+        "code": "generation3d.gumball.kind-unavailable",
+        "severity": "warning",
+        "message": "widget kind brep.mesh.translate is unavailable",
+        "params": {
+          "kind": "brep.mesh.translate",
+          "operation": "translate"
+        },
+        "retryable": false
+      },
+      "expected": {
+        "origin": "app",
+        "code": "generation3d.gumball.kind-unavailable",
+        "severity": "warning",
+        "message": "widget kind brep.mesh.translate is unavailable",
+        "scope": {},
+        "params": {
+          "kind": "brep.mesh.translate",
+          "operation": "translate"
+        },
+        "retryable": false
+      }
+    },
+    {
+      "id": "empty-params-omitted",
+      "input": {
+        "origin": "app",
+        "code": "app.refused",
+        "severity": "error",
+        "message": "",
+        "params": {}
+      },
+      "expected": {
+        "origin": "app",
+        "code": "app.refused",
+        "severity": "error",
+        "message": "",
+        "scope": {},
+        "retryable": false
+      }
     }
   ]
 }

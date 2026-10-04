@@ -41,7 +41,7 @@ fn reduce(
     match command {
         TrinityRewritingCommand::SetViewport { surface_id, viewport } => crate::editor::rewriting::commands::set_viewport(surface_id, viewport, view),
         TrinityRewritingCommand::SetLodMode { value } => crate::editor::rewriting::commands::set_lod_mode(value, view),
-        _ => Err(Fault::from("rewriting-window-command-route-mismatch")),
+        _ => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "the rewriting window reducer received a command outside its tool roster")),
     }
 }
 
@@ -101,8 +101,11 @@ pub fn build_job(request: ArtifactOwnedToolJobRequest<Owner>) -> Result<Option<s
     if !TOOL_IDS.contains(&request.tool_id.as_str()) {
         return Ok(None);
     }
-    if TrinityRewritingPlayApp::command_id(&request.command) != request.tool_id || extent(&request.command, &request.snapshot, &request.interaction_state) != Some(1) {
-        return Err(Fault::from("rewriting-window-command-mismatch-or-capacity"));
+    if TrinityRewritingPlayApp::command_id(&request.command) != request.tool_id {
+        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "Rewriting command does not match its exact registered tool"));
+    }
+    if extent(&request.command, &request.snapshot, &request.interaction_state) != Some(1) {
+        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("trinity.rewriting.retained-capacity"), "the rewriting command exceeds the capacity of one bounded edit"));
     }
     let work: Box<dyn ArtifactCommandWork<Owner>> = Box::new(BoundedArtifactCommandWork::new(TrinityRewritingPlayApp::command_id(&request.command), reduce, extent));
     let operation = AppOperationContext {

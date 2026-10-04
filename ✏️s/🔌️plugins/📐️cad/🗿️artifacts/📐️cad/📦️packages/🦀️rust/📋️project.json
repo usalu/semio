@@ -8,6 +8,7 @@
     "family:cad"
   ],
   "targets": {
+    "verify-reference-owner-syntax": {"executor":"nx:run-commands","cache":false,"options":{"cwd":"✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust","command":"bun ./📜️script.ts verify reference-owner-syntax","forwardAllArgs":true},"metadata":{"semio":{"workspaceCommand":["verify","cad-reference-owner-syntax"]}}},
     "test-snapshot-sqlite": {"executor":"nx:run-commands","cache":false,"options":{"cwd":"✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite","forwardAllArgs":true},"metadata":{"semio":{"workspaceCommand":["verify","cad-test-snapshot-sqlite"]}}},
     "test-snapshot-sqlite-native": {"executor":"nx:run-commands","cache":false,"options":{"cwd":"✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite native","forwardAllArgs":true},"metadata":{"semio":{"workspaceCommand":["verify","cad-test-snapshot-sqlite-native"]}}},
     "test-snapshot-sqlite-source": {"executor":"nx:run-commands","cache":false,"options":{"cwd":"✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite source","forwardAllArgs":true},"metadata":{"semio":{"workspaceCommand":["verify","cad-test-snapshot-sqlite-source"]}}},

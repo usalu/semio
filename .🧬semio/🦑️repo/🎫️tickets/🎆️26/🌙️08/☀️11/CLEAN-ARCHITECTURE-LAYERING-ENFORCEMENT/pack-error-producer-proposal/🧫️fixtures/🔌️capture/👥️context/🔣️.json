@@ -1,0 +1,97 @@
+{
+  "cases": [
+    {
+      "id": "concurrent-rollback-preserves-published-charge",
+      "maximumBytes": 256,
+      "ownedBefore": 16,
+      "contextBytes": 32,
+      "errorBytes": 64,
+      "actions": [
+        "reserveA",
+        "reserveB",
+        "releaseA",
+        "publishB",
+        "dropCaller",
+        "dropB"
+      ],
+      "expected": {
+        "committed": [
+          112,
+          176,
+          112,
+          112,
+          112,
+          112
+        ],
+        "refusals": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "contextFrees": 1,
+        "errorFrees": 2,
+        "closedCharge": 112
+      }
+    },
+    {
+      "id": "context-capacity-is-admitted-before-provider",
+      "maximumBytes": 128,
+      "ownedBefore": 16,
+      "contextBytes": 80,
+      "errorBytes": 64,
+      "actions": [
+        "reserveA",
+        "reserveB",
+        "dropCaller"
+      ],
+      "expected": {
+        "committed": [
+          96,
+          96,
+          96
+        ],
+        "refusals": [
+          "ownershipLimit",
+          "ownershipLimit",
+          null
+        ],
+        "contextFrees": 1,
+        "errorFrees": 0,
+        "closedCharge": 96
+      }
+    },
+    {
+      "id": "one-admitted-one-refused-unused-cell-rolls-back",
+      "maximumBytes": 192,
+      "ownedBefore": 16,
+      "contextBytes": 32,
+      "errorBytes": 96,
+      "actions": [
+        "reserveA",
+        "reserveB",
+        "releaseA",
+        "dropCaller"
+      ],
+      "expected": {
+        "committed": [
+          144,
+          144,
+          48,
+          48
+        ],
+        "refusals": [
+          null,
+          "ownershipLimit",
+          null,
+          null
+        ],
+        "contextFrees": 1,
+        "errorFrees": 1,
+        "closedCharge": 48
+      }
+    }
+  ]
+}

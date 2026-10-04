@@ -14,16 +14,16 @@ extern crate semio_framework_value_derive as value_derive;
 #[cfg(feature = "component-app-assembly")]
 pub trait ArtifactApps:
     semio_framework_plugin::PluginApp
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::rewriting::TrinityRewritingPlayApp>>>
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<viewer::rewriting::TrinityRewritingViewer>>>
+    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::rewriting::TrinityRewritingPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
+    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<viewer::rewriting::TrinityRewritingViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
 {
 }
 
 #[cfg(feature = "component-app-assembly")]
 impl<PA> ArtifactApps for PA where
     PA: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::rewriting::TrinityRewritingPlayApp>>>
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<viewer::rewriting::TrinityRewritingViewer>>>
+        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::rewriting::TrinityRewritingPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
+        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<viewer::rewriting::TrinityRewritingViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
 {
 }
 
@@ -38,7 +38,7 @@ pub enum TrinityRewritingError {
     /// 🧭️ VCS store/dispatch failure.
     Vcs(vcs::VcsError),
     /// 🧬️ JSON (de)serialization failure.
-    Json(dsl::ValueError),
+    Json(semio_framework_value::ValueError),
     /// 🔤️ Jack query parse/execute failure (the shared `🫀️core` jack-query kernel's own API is not
     /// yet expressed as an owned error type).
     Jack(String),
@@ -81,8 +81,8 @@ impl From<vcs::VcsError> for TrinityRewritingError {
     }
 }
 
-impl From<dsl::ValueError> for TrinityRewritingError {
-    fn from(error: dsl::ValueError) -> Self {
+impl From<semio_framework_value::ValueError> for TrinityRewritingError {
+    fn from(error: semio_framework_value::ValueError) -> Self {
         Self::Json(error)
     }
 }
@@ -93,7 +93,7 @@ impl From<dsl::ValueError> for TrinityRewritingError {
 /// impl for raw Rust tuples (only named `DslRecord`/`DslScalar` types can bind), so `rule_layout`'s
 /// value type is this named record instead, with `From`/`Into` conversions at this crate's own
 /// remaining `(f64, f64)` call sites (tests only — no production logic reads `rule_layout` today).
-#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct LayoutPoint {
     pub x: f64,
@@ -160,60 +160,60 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// declaration tree's `🪆️subsets/✳️any/🦀️.rs` reads these same five `LanguageSpec`s to build
 /// its `NativeCodecs` `LanguagePair`s (see that file's own doc for why it does not delegate to a
 /// sibling `crate::standards::v1::subsets::any::io::io()` the way `🗒️note`/`🖍️draw` do).
-pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
-    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+pub fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
             vec![
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "rewriting.document",
                     extension: Some("rewriting"),
-                    role: dsl::LanguageRole::Document,
+                    role: semio_framework_dsl::LanguageRole::Document,
                     grammar: Some(standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("rewriting.document"),
+                    hooks: semio_framework_dsl::passthrough_hooks("rewriting.document"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "rewriting.op",
                     extension: None,
-                    role: dsl::LanguageRole::Ops,
+                    role: semio_framework_dsl::LanguageRole::Ops,
                     grammar: Some(standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("rewriting.op"),
+                    hooks: semio_framework_dsl::passthrough_hooks("rewriting.op"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "rewriting.diff",
                     extension: None,
-                    role: dsl::LanguageRole::Diff,
+                    role: semio_framework_dsl::LanguageRole::Diff,
                     grammar: Some(standards::v1::subsets::any::schema::diff::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(standards::v1::subsets::any::schema::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
-                    hooks: dsl::passthrough_hooks("rewriting.diff"),
+                    hooks: semio_framework_dsl::passthrough_hooks("rewriting.diff"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "rewriting.pack",
                     extension: None,
-                    role: dsl::LanguageRole::Pack,
+                    role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("rewriting.pack"),
+                    hooks: semio_framework_dsl::passthrough_hooks("rewriting.pack"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "rewriting.spr",
                     extension: None,
-                    role: dsl::LanguageRole::Spr,
+                    role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("rewriting.spr"),
+                    hooks: semio_framework_dsl::passthrough_hooks("rewriting.spr"),
                 },
             ]
         })
@@ -465,40 +465,6 @@ pub mod standards {
                             pub mod text;
                         }
                         #[path = "."]
-                        pub mod drag_working_nodes {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-working/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-working/💾️binary/🦀️.rs"]
-                            pub mod binary;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-working/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-working/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-working/🧪️tests/✋️moves/🦀️.rs"]
-                            mod tests_drags_node_b_of_the_working_graph;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-working/📝️text/🦀️.rs"]
-                            pub mod text;
-                        }
-                        #[path = "."]
-                        pub mod patch_working_nodes {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹️patch-working/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹️patch-working/💾️binary/🦀️.rs"]
-                            pub mod binary;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹️patch-working/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹️patch-working/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹️patch-working/🧪️tests/🩹️renames/🦀️.rs"]
-                            mod tests_renames_node_a_of_the_working_graph;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹️patch-working/📝️text/🦀️.rs"]
-                            pub mod text;
-                        }
-                        #[path = "."]
                         pub mod drag_rule_nodes {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫳️drag-rule/🦀️.rs"]
                             mod component;
@@ -530,57 +496,6 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️set-rule-layout/🧪️tests/📍️places/🦀️.rs"]
                             mod tests_places_one_rule_node_and_clears_one;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️set-rule-layout/📝️text/🦀️.rs"]
-                            pub mod text;
-                        }
-                        #[path = "."]
-                        pub mod delete_working_nodes {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-working/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-working/💾️binary/🦀️.rs"]
-                            pub mod binary;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-working/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-working/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-working/🧪️tests/✂️deletes/🦀️.rs"]
-                            mod tests_deletes_node_a_and_its_edges;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-working/📝️text/🦀️.rs"]
-                            pub mod text;
-                        }
-                        #[path = "."]
-                        pub mod connect_working_ports {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️connect-working/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️connect-working/💾️binary/🦀️.rs"]
-                            pub mod binary;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️connect-working/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️connect-working/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️connect-working/🧪️tests/🔌️connects/🦀️.rs"]
-                            mod tests_connects_c_to_a;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️connect-working/📝️text/🦀️.rs"]
-                            pub mod text;
-                        }
-                        #[path = "."]
-                        pub mod disconnect_working_edges {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪚️disconnect-working/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪚️disconnect-working/💾️binary/🦀️.rs"]
-                            pub mod binary;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪚️disconnect-working/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪚️disconnect-working/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪚️disconnect-working/🧪️tests/🪚️cuts/🦀️.rs"]
-                            mod tests_cuts_edge_b_c;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪚️disconnect-working/📝️text/🦀️.rs"]
                             pub mod text;
                         }
                     }
@@ -667,6 +582,10 @@ pub use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutati
 pub use crate::standards::v1::subsets::any::schema::operations::*;
 pub use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🪆️content/🦀️.rs"]
+pub mod content;
+pub use content::rewriting_fault_notices;
+
 #[path = "."]
 pub mod examples {
     #[path = "."]
@@ -713,13 +632,6 @@ pub mod editor {
         }
 
         #[path = "."]
-        pub mod world {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌍️world/🦀️.rs"]
-            mod component;
-            pub use component::*;
-        }
-
-        #[path = "."]
         pub mod commands {
             // 🕹️ Every command file is self-contained (its own private copy of any shared
             // helpers) and exposes exactly one `pub(crate) fn` matching its directory's verb —
@@ -738,7 +650,7 @@ pub mod editor {
                 mod component;
                 pub(crate) use component::*;
             }
-            pub(crate) use set_lhs_json_leaf::set_lhs_json;
+            pub(crate) use set_lhs_json_leaf::set_lhs;
 
             #[path = "."]
             mod set_rhs_json_leaf {
@@ -746,7 +658,7 @@ pub mod editor {
                 mod component;
                 pub(crate) use component::*;
             }
-            pub(crate) use set_rhs_json_leaf::set_rhs_json;
+            pub(crate) use set_rhs_json_leaf::set_rhs;
 
             #[path = "."]
             mod set_parameter_leaf {
@@ -787,6 +699,14 @@ pub mod editor {
                 pub(crate) use component::*;
             }
             pub(crate) use patch_nodes_leaf::patch_nodes;
+
+            #[path = "."]
+            mod add_working_node_command_leaf {
+                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➕️add-working-node/🦀️.rs"]
+                mod component;
+                pub(crate) use component::*;
+            }
+            pub(crate) use add_working_node_command_leaf::add_working_node_command;
 
             #[path = "."]
             mod set_viewport_leaf {

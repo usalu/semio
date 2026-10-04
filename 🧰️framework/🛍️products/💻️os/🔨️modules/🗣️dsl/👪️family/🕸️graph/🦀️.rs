@@ -5,12 +5,15 @@
 //! (`v1 -- v2 -- v3 -- v1`), sugar for a run of anonymous, unlabeled, same-directed edges sharing
 //! consecutive endpoints.
 //!
-//! Re-exports `dsl_notation`'s edge types so an app grammar's handcrafted parser only needs to
-//! depend on this one family crate, not both.
+//! Canonical Record notation supplies edge identities consumed by the family parser.
 
-pub use crate::os_dsl::notation::{print_edge, EdgeLabel, EdgeLink, EdgeNode, EdgeValue};
+use semio_framework_dsl_record::notation::{EdgeLabel, EdgeLink, EdgeNode, EdgeValue};
 
-use crate::os_dsl::{lex, Limits, TextError, TokenKind};
+use semio_framework_dsl::lex;
+use semio_framework_diagnostic::Limits;
+use semio_framework_diagnostic::TextError;
+use semio_framework_value::ValueRefusalKind;
+use semio_framework_dsl::TokenKind;
 
 //#region 🔖️Chain
 /// ⛓️ A run of nodes joined by uniformly-directed, unlabeled edges: `v1 -- v2 -- v3 -- v1`
@@ -124,12 +127,12 @@ pub async fn parse_chain_text(text: &str) -> Result<ChainValue, TextError> {
 
 // 🚫️async: E1 pure, consumed by `Option::ok_or_else` sync closures in `parse_node` below (as well
 // as directly, per `O1`, elsewhere in this file) — see R9
-fn node_error(message: &str, tokens: &[crate::os_dsl::SpannedToken], pos: usize) -> TextError {
-    let span = tokens.get(pos).or_else(|| tokens.last()).map_or(crate::os_dsl::TextSpan::at(1, 1), |t| t.span);
-    TextError::new(message.to_string(), span)
+fn node_error(message: &str, tokens: &[semio_framework_dsl::SpannedToken], pos: usize) -> TextError {
+    let span = tokens.get(pos).or_else(|| tokens.last()).map_or(semio_framework_diagnostic::TextSpan::at(1, 1), |t| t.span);
+    TextError::new(ValueRefusalKind::InvalidValue, message.to_string(), span)
 }
 
-async fn parse_node(tokens: &[crate::os_dsl::SpannedToken], mut pos: usize) -> Result<(EdgeNode, usize), TextError> {
+async fn parse_node(tokens: &[semio_framework_dsl::SpannedToken], mut pos: usize) -> Result<(EdgeNode, usize), TextError> {
     let id_token = tokens.get(pos).filter(|t| t.kind == TokenKind::Ident).ok_or_else(|| node_error("expected a node identifier", tokens, pos))?;
     let id = id_token.text.as_str().to_string();
     pos += 1;

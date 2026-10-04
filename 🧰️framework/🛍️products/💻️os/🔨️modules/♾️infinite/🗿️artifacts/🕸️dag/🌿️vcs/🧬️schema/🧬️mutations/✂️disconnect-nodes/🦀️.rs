@@ -1,7 +1,7 @@
 use super::super::{dag_index_to_wire, ConnectNodes, DagDelta, DagDiff, DagMutation, DagSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "disconnect-nodes")]
@@ -17,7 +17,8 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for DisconnectNodes {
         }
         protocol::MutationOutcome::new(DagDiff::from(DagDelta { disconnected_edge_ids: Some(vec![self.id.clone()]), ..Default::default() }))
     }
-    fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {
+    fn inverse(&self, base: &DagSnapshot) -> Result<Vec<DagMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         base.edges
             .iter()
             .enumerate()
@@ -26,7 +27,9 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for DisconnectNodes {
                 vec![DagMutation::ConnectNodes(ConnectNodes { id: edge.id.clone(), source: edge.source.clone(), target: edge.target.clone(), route_style: edge.route_style, properties: edge.properties.clone(), index: dag_index_to_wire(index) })]
             })
             .unwrap_or_default()
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Disconnect {}", self.id), &format!("{} trennen", self.id))
     }

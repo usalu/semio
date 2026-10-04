@@ -60,10 +60,10 @@ fn non_empty_canonical_snapshot_round_trips_one_grant_at_a_time() {
     expected.host_snapshot.synapses.push(semio_framework_artifact_flow_flow::SynapseSpec { id: "retained-synapse".into(), from: "retained-neuron".into(), to: "retained-preview".into(), from_port: "out".into(), to_port: String::new() });
     expected.host_snapshot.layout.insert("retained-neuron".into(), semio_framework_artifact_flow_flow::WidgetLayout { x: 12.5, y: -8.25 });
     expected.host_snapshot.layout.insert("retained-preview".into(), semio_framework_artifact_flow_flow::WidgetLayout { x: 36.0, y: -8.25 });
-    let mut values: semio_framework_artifact_playbook_playbook::PlaybookValues = std::collections::HashMap::new();
+    let mut values: semio_framework_artifact_playbook_playbook::PlaybookValues = semio_framework_artifact_playbook_playbook::PlaybookValues::new();
     values.insert(
         "nested".into(),
-        dsl::DslValue::object([("array".to_string(), dsl::DslValue::Array(vec![dsl::DslValue::Bool(true), dsl::DslValue::Null, dsl::DslValue::float(3.5)])), ("text".to_string(), dsl::DslValue::String("retained".to_string()))]),
+        semio_framework_value::DslValue::object([("array".to_string(), semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::Bool(true), semio_framework_value::DslValue::Null, semio_framework_value::DslValue::float(3.5)])), ("text".to_string(), semio_framework_value::DslValue::String("retained".to_string()))]),
     );
     expected.generation = semio_framework_artifact_playbook_playbook::GenerationPlayState {
         generations: vec![semio_framework_artifact_playbook_playbook::FormGeneration { id: "retained-generation".into(), name: "Generation".into(), values }],

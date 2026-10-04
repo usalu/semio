@@ -55,7 +55,7 @@ fn export_widget_display_meta(format: &str) -> (String, String, String) {
 }
 
 /// 📍️ Persisted node position on the canvas.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, crate::os_dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct WidgetLayout {
     pub x: f64,
     pub y: f64,
@@ -151,7 +151,7 @@ pub struct FlowChannelRef {
     pub channel: String,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, crate::os_dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct CameraJson {
     pub x: f64,
     pub y: f64,
@@ -450,7 +450,7 @@ pub fn cluster_io_layout(cluster_id: &str, name: &str, tree: &Tree, synapses: &[
     (inputs, outputs)
 }
 
-fn neural_value_to_dsl_value(value: &NeuralValue) -> crate::os_dsl::DslValue {
+fn neural_value_to_dsl_value(value: &NeuralValue) -> semio_framework_value::DslValue {
     semio_framework_value::ToValue::to_value(value)
 }
 
@@ -638,21 +638,21 @@ pub fn widget_io_ports(widget: &Widget, synapses: &[SynapseSpec], kind_infos: &H
 
 /// 🌉️ `PropertyValue` is `#[serde(untagged)]`, a shape the `ToValue`/`FromValue` derive does not
 /// support, so this hand-walks the `DslValue` tree `Dictionary::to_value` already produces.
-fn property_value_from_dsl(value: crate::os_dsl::DslValue) -> PropertyValue {
+fn property_value_from_dsl(value: semio_framework_value::DslValue) -> PropertyValue {
     match value {
-        crate::os_dsl::DslValue::Null => PropertyValue::Null,
-        crate::os_dsl::DslValue::Bool(b) => PropertyValue::Bool(b),
-        crate::os_dsl::DslValue::Number(n) => PropertyValue::Number(n.as_f64()),
-        crate::os_dsl::DslValue::String(s) => PropertyValue::String(s),
-        crate::os_dsl::DslValue::Array(items) => PropertyValue::Array(items.into_iter().map(property_value_from_dsl).collect()),
-        crate::os_dsl::DslValue::Object(entries) => PropertyValue::Object(entries.into_iter().map(|(key, entry)| (key, property_value_from_dsl(entry))).collect()),
-        crate::os_dsl::DslValue::Bytes(bytes) => PropertyValue::Array(bytes.into_iter().map(|byte| PropertyValue::Number(f64::from(byte))).collect()),
+        semio_framework_value::DslValue::Null => PropertyValue::Null,
+        semio_framework_value::DslValue::Bool(b) => PropertyValue::Bool(b),
+        semio_framework_value::DslValue::Number(n) => PropertyValue::Number(n.as_f64()),
+        semio_framework_value::DslValue::String(s) => PropertyValue::String(s),
+        semio_framework_value::DslValue::Array(items) => PropertyValue::Array(items.into_iter().map(property_value_from_dsl).collect()),
+        semio_framework_value::DslValue::Object(entries) => PropertyValue::Object(entries.into_iter().map(|(key, entry)| (key, property_value_from_dsl(entry))).collect()),
+        semio_framework_value::DslValue::Bytes(bytes) => PropertyValue::Array(bytes.into_iter().map(|byte| PropertyValue::Number(f64::from(byte))).collect()),
     }
 }
 
 fn property_bag_from_dictionary(dict: &Dictionary) -> PropertyBag {
-    match crate::os_dsl::ToValue::to_value(dict) {
-        crate::os_dsl::DslValue::Object(entries) => entries.into_iter().map(|(key, entry)| (key, property_value_from_dsl(entry))).collect(),
+    match semio_framework_value::ToValue::to_value(dict) {
+        semio_framework_value::DslValue::Object(entries) => entries.into_iter().map(|(key, entry)| (key, property_value_from_dsl(entry))).collect(),
         _ => PropertyBag::default(),
     }
 }
@@ -704,7 +704,7 @@ fn widget_properties(widget: &Widget, kind_infos: &HashMap<String, OperatorInfo>
         Widget::Cluster { name, tree, .. } => {
             let mut bag = PropertyBag::new();
             bag.insert("name".into(), PropertyValue::String(name.clone()));
-            bag.insert("clusterTree".into(), PropertyValue::String(crate::os_pack::json::to_json_string(tree)));
+            bag.insert("clusterTree".into(), PropertyValue::String(semio_framework_pack_json::to_json_string(tree)));
             bag
         }
         _ => PropertyBag::new(),
@@ -969,19 +969,19 @@ pub fn preview_content_summary(content: &DagPreviewContent) -> String {
     }
 }
 
-fn preview_tree_collapsed_summary(value: &crate::os_dsl::DslValue) -> String {
+fn preview_tree_collapsed_summary(value: &semio_framework_value::DslValue) -> String {
     match value {
-        crate::os_dsl::DslValue::Object(map) => format!("{{{} keys}}", map.len()),
-        crate::os_dsl::DslValue::Array(arr) => format!("[{} items]", arr.len()),
-        crate::os_dsl::DslValue::String(s) => s.clone(),
-        crate::os_dsl::DslValue::Number(n) => match n {
-            crate::os_dsl::Number::UInt(v) => v.to_string(),
-            crate::os_dsl::Number::Int(v) => v.to_string(),
-            crate::os_dsl::Number::Float(v) => v.to_string(),
+        semio_framework_value::DslValue::Object(map) => format!("{{{} keys}}", map.len()),
+        semio_framework_value::DslValue::Array(arr) => format!("[{} items]", arr.len()),
+        semio_framework_value::DslValue::String(s) => s.clone(),
+        semio_framework_value::DslValue::Number(n) => match n {
+            semio_framework_value::Number::UInt(v) => v.to_string(),
+            semio_framework_value::Number::Int(v) => v.to_string(),
+            semio_framework_value::Number::Float(v) => v.to_string(),
         },
-        crate::os_dsl::DslValue::Bool(b) => b.to_string(),
-        crate::os_dsl::DslValue::Null => "null".into(),
-        crate::os_dsl::DslValue::Bytes(bytes) => format!("[{} bytes]", bytes.len()),
+        semio_framework_value::DslValue::Bool(b) => b.to_string(),
+        semio_framework_value::DslValue::Null => "null".into(),
+        semio_framework_value::DslValue::Bytes(bytes) => format!("[{} bytes]", bytes.len()),
     }
 }
 
@@ -1101,10 +1101,18 @@ pub fn generated_widget_id<'a>(descriptor: &WidgetDescriptor, existing_ids: impl
     (format!("{prefix}_{serial}"), serial)
 }
 
+/// 🧾️ The params an inserted operator records (design §20.9): every declared input's default literal, in declaration
+/// order, read off the operator kind at authoring time — so the record is self-describing and a fold decides an input's
+/// existence and literal type from the snapshot alone, never from a runtime registry. Data inputs without a default stay
+/// absent; an unknown kind records nothing.
+pub fn default_neuron_params_from_info(kind_info: Option<&OperatorInfo>) -> Dictionary {
+    kind_info.map_or_else(Dictionary::new, |info| info.inputs.iter().filter_map(|input| input.default.as_ref().map(|value| (input.name.as_str(), value))).fold(Dictionary::new(), |params, (name, value)| params.insert(name, value.clone())))
+}
+
 pub fn widget_from_descriptor_with_info(descriptor: &WidgetDescriptor, id: String, kind_info: Option<&OperatorInfo>) -> Widget {
     match descriptor {
         WidgetDescriptor::Neuron { neuron_kind, .. } => {
-            Widget::Neuron { id, neuron_kind: neuron_kind.clone(), params: Dictionary::new(), input_ports: default_neuron_input_ports_from_info(&[], kind_info), output_ports: default_neuron_output_ports_from_info(&[], kind_info), preview: true }
+            Widget::Neuron { id, neuron_kind: neuron_kind.clone(), params: default_neuron_params_from_info(kind_info), input_ports: default_neuron_input_ports_from_info(&[], kind_info), output_ports: default_neuron_output_ports_from_info(&[], kind_info), preview: true }
         }
         WidgetDescriptor::InputSlider { label, value, min, max, step, .. } => {
             let (value, min, max, step) = resolve_input_slider_fields(*value, *min, *max, *step);

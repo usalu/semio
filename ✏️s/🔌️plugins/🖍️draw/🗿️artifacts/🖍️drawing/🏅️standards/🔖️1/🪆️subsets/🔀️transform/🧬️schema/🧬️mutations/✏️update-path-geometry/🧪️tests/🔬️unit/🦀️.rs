@@ -13,7 +13,7 @@ fn canonical_geometry_scenario_matches_diff_apply_and_inverse() {
     assert_eq!(*result.diff(), serde_json::from_value::<crate::DrawingDiff>(expected).unwrap());
     assert_eq!(result.diff().apply(&before).unwrap(), after);
     let mut restored = after;
-    for undo in mutation.inverse(&before) { crate::mutations::apply_drawing_mutation(&mut restored, &undo).unwrap(); }
+    for undo in mutation.inverse(&before).expect("valid retained mutation inverse fixture") { crate::mutations::apply_drawing_mutation(&mut restored, &undo).unwrap(); }
     assert_eq!(restored, before);
 }
 
@@ -29,9 +29,9 @@ fn path_geometry_mutation_roundtrip_fixture() {
     let mutation = super::mutation::update_path_geometry(id, after.clone());
     store::os_store::test_support::assert_op_line_round_trip(&mutation);
     store::os_store::test_support::assert_op_text_binary_equivalence(&mutation);
-    let decoded: Vec<PathSegment> = dsl::json::from_json_str(&fixture["after"].to_string()).unwrap();
+    let decoded: Vec<PathSegment> = semio_framework_pack_json::from_json_str(&fixture["after"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(decoded, after);
-    let inverse = mutation.inverse(&document);
+    let inverse = mutation.inverse(&document).expect("valid retained mutation inverse fixture");
     let mut edited = document.clone();
     crate::mutations::apply_drawing_mutation(&mut edited, &mutation).unwrap();
     let DrawingLayerNode::Path(path) = &edited.layers[0] else { panic!("Expected a path") };

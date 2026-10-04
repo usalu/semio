@@ -5,11 +5,11 @@
     "subset": "*"
   },
   "snapshot": {
-    "schema": "owned writer 世界",
+    "schema": "owned writer \u4e16\u754c",
     "id": "writer-id",
     "languageId": "typescript",
-    "uri": "file:///世界/input.ts",
-    "text": "Grüße 🌠\u0000\nconst answer = 42;",
+    "uri": "file:///\u4e16\u754c/input.ts",
+    "text": "Gr\u00fc\u00dfe \ud83c\udf20\u0000\nconst answer = 42;",
     "document": {
       "childId": "document-child",
       "target": {
@@ -22,7 +22,7 @@
       }
     }
   },
-  "editedText": "Independently edited 世界\u0000",
+  "editedText": "Independently edited \u4e16\u754c\u0000",
   "query": "SELECT d.id AS writer_id,d.language_id,c.child_id,c.target_artifact_id,c.target_artifact_kind,c.target_standard,c.target_subset FROM writer_document d JOIN writer_document_child c ON c.document_id=d.rowid",
   "result": {
     "writer_id": "writer-id",
@@ -51,8 +51,28 @@
     }
   ],
   "referenceCases": [
-    {"childId":"","target":{"artifactId":"","dialect":{"artifactKind":"","standard":"","subset":""}}},
-    {"childId":"child!@/ 世界","target":{"artifactId":"id!@/ 世界","dialect":{"artifactKind":"kind!@/ 世界","standard":"std!@/ 世界","subset":"subset!@/ 世界"}}}
+    {
+      "childId": "",
+      "target": {
+        "artifactId": "",
+        "dialect": {
+          "artifactKind": "",
+          "standard": "",
+          "subset": ""
+        }
+      }
+    },
+    {
+      "childId": "child!@/ \u4e16\u754c",
+      "target": {
+        "artifactId": "id!@/ \u4e16\u754c",
+        "dialect": {
+          "artifactKind": "kind!@/ \u4e16\u754c",
+          "standard": "std!@/ \u4e16\u754c",
+          "subset": "subset!@/ \u4e16\u754c"
+        }
+      }
+    }
   ],
   "renumberSql": [
     "UPDATE writer_document SET rowid=-17",
@@ -64,5 +84,6 @@
     "UPDATE writer_document_child SET target_artifact_id='different target'"
   ],
   "limitedRows": 1,
-  "limitedValueBytes": 64
+  "limitedValueBytes": 64,
+  "invalidUtf16CodeUnits": [[55296], [57343]]
 }

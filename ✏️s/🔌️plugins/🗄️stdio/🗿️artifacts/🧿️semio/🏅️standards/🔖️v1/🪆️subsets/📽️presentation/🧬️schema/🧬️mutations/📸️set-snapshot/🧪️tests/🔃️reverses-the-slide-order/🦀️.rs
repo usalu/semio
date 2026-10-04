@@ -18,13 +18,13 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔃️reverses/🎯️outcome/🔣️.json");
 
 fn before() -> SemioPresentationSnapshot {
-    dsl::json::from_json_str(BEFORE).expect("before presentation snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before presentation snapshot decodes")
 }
 fn expected_after() -> SemioPresentationSnapshot {
-    dsl::json::from_json_str(AFTER).expect("after presentation snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after presentation snapshot decodes")
 }
 fn mutation() -> SemioPresentationMutation {
-    dsl::json::from_json_str(MUTATION).expect("set-snapshot mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("set-snapshot mutation decodes")
 }
 fn slide_ids(snapshot: &SemioPresentationSnapshot) -> Vec<&str> {
     snapshot.slides.iter().map(|slide| slide.id.as_str()).collect()
@@ -45,7 +45,7 @@ async fn applies_to_committed_after() {
 async fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = <SemioPresentationMutation as protocol::Mutation<SemioPresentationSnapshot>>::inverse(&mutation, &base);
+    let inverse = <SemioPresentationMutation as protocol::Mutation<SemioPresentationSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     let mut snapshot = base.clone();
     apply_semio_presentation_mutation(&mut snapshot, &mutation);
     for step in &inverse {
@@ -59,7 +59,7 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = <SemioPresentationMutation as protocol::Mutation<SemioPresentationSnapshot>>::diff(&mutation(), &before());
-    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced presentation diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced presentation diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed presentation diff decodes");
     assert_eq!(produced, committed, "semio-presentation/set-snapshot: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -67,7 +67,7 @@ async fn produces_committed_diff() {
 /// 🩹 The committed diff alone carries `before` to `after`, and the declared outcome is `applied`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioPresentationDiff = dsl::json::from_json_str(DIFF).expect("committed presentation diff decodes");
+    let decoded: SemioPresentationDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed presentation diff decodes");
     let produced = <SemioPresentationDiff as protocol::MutationDiff<SemioPresentationSnapshot>>::apply(&decoded, &before()).expect("committed presentation diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "semio-presentation/set-snapshot: committed diff did not carry before to after");
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
@@ -77,7 +77,7 @@ async fn committed_diff_applies_to_after() {
 /// 🔤️ The identity slot survives the diff codec: `slide-diff` leads with its `option-hex` id.
 #[semio_framework_async_macros::async_test]
 async fn diff_codec_round_trips_the_identity_slot() {
-    let decoded: SemioPresentationDiff = dsl::json::from_json_str(DIFF).expect("committed presentation diff decodes");
+    let decoded: SemioPresentationDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed presentation diff decodes");
     let bytes = <SemioPresentationDiff as protocol::DiffCodec>::encode_diff(&decoded).expect("presentation diff encodes");
     let reread = <SemioPresentationDiff as protocol::DiffCodec>::decode_diff(&bytes).expect("presentation diff decodes");
     assert_eq!(reread, decoded, "semio-presentation/set-snapshot: the slide identity slot did not survive the diff codec");

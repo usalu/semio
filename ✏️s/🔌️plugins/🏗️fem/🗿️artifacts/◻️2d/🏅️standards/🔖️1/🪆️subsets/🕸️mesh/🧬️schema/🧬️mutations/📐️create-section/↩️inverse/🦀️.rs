@@ -4,7 +4,10 @@ use crate::standards::v1::subsets::any::schema::mutations::{delete_section, Fem2
 use crate::Fem2dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &CreateSection, _base: &Fem2dSnapshot) -> Vec<Fem2dMutation> {
+pub fn inverse(payload: &CreateSection, _base: &Fem2dSnapshot) -> Result<Vec<Fem2dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![Fem2dMutation::DeleteSection(delete_section::DeleteSection { id: payload.section.id.clone() })]
+
+    })())
 }
 //#endregion 🔖️Inverse

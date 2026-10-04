@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "before": "use old_owner::Value;\nfn retained() {}\n",
+  "authored": "use canonical_owner::Value;\nfn retained() {}\n",
+  "cases": [
+    {
+      "id": "original",
+      "current": "use old_owner::Value;\nfn retained() {}\n",
+      "expected": "use canonical_owner::Value;\nfn retained() {}\n"
+    },
+    {
+      "id": "exact-authored",
+      "current": "use canonical_owner::Value;\nfn retained() {}\n",
+      "expected": "use canonical_owner::Value;\nfn retained() {}\n"
+    },
+    {
+      "id": "foreign-original",
+      "current": "fn concurrent() {}\nuse old_owner::Value;\nfn retained() {}\n",
+      "expected": "fn concurrent() {}\nuse canonical_owner::Value;\nfn retained() {}\n"
+    },
+    {
+      "id": "foreign-authored-requires-admission",
+      "current": "fn concurrent() {}\nuse canonical_owner::Value;\nfn retained() {}\n",
+      "expected": null
+    },
+    {
+      "id": "unrelated-refused",
+      "current": "fn unrelated() {}\n",
+      "expected": null
+    }
+  ]
+}

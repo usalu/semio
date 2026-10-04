@@ -1,0 +1,29 @@
+{
+  "at": "2026-10-03T13:39:35.776Z",
+  "authority": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/framework-import-enforcement/synthetic-neutral-enforcement-source-ready-6.json",
+  "sourceWrites": 4,
+  "after": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "expected": "ea21b4ce4dbadf149a4f06fcc482811b1e8f39b8259e89ea0196272930cc23d9",
+      "actual": "ea21b4ce4dbadf149a4f06fcc482811b1e8f39b8259e89ea0196272930cc23d9"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🟦️.ts",
+      "expected": "b73fa61bc54397fa9a63a39f8f094839219c34ae9898153bac773d993a039f01",
+      "actual": "b73fa61bc54397fa9a63a39f8f094839219c34ae9898153bac773d993a039f01"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🚀️bootstrap/🟨️.cjs",
+      "expected": "3d2f0e75843009f523b69d1554e684dc39c4644f42f970a6423fac115ef9cdf4",
+      "actual": "3d2f0e75843009f523b69d1554e684dc39c4644f42f970a6423fac115ef9cdf4"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🏗️construction/🟨️.cjs",
+      "expected": "24ac800fbf5f78ba7f1cbb5f4bb2a8bdbf2479f635af6c18d2f11533708de7b7",
+      "actual": "24ac800fbf5f78ba7f1cbb5f4bb2a8bdbf2479f635af6c18d2f11533708de7b7"
+    }
+  ],
+  "registeredRuntime": false,
+  "native": false
+}

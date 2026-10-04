@@ -1,0 +1,12 @@
+{
+  "$schema": "../../🧬️schema/🔣️multi-scope-verification/🔣️.json",
+  "note": "🗺️ Scopes of the multi-scope verification law (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): a clean leaf, a parent and the nested child it contains (every test level), and `moving` scopes that plan a move and so exercise the shared incoming-reference scan (exhaustive level only — a single run rescans the repository for incoming references). Each verdict of `verifyTaxonomyScopes` must equal `verifyTaxonomy` of the same scope.",
+  "scopes": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🛣️path",
+    "🧰️framework/🔨️modules/🎠️kernel/🧪️tests",
+    "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/💡️service-operation"
+  ],
+  "moving": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🧪️tests/🔬️paged-ledger"
+  ]
+}

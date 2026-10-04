@@ -21,9 +21,12 @@ impl protocol::MutationKind<BcfSnapshot, BcfMutation> for SetViewpointComponents
     fn diff(&self, base: &BcfSnapshot) -> protocol::MutationOutcome<<BcfMutation as Mutation<BcfSnapshot>>::Diff> {
         agg_diff(&BcfMutation::SetViewpointComponents(self.clone()), base)
     }
-    fn inverse(&self, base: &BcfSnapshot) -> Vec<BcfMutation> {
-        agg_inverse(&BcfMutation::SetViewpointComponents(self.clone()), base)
-    }
+    fn inverse(&self, base: &BcfSnapshot) -> Result<Vec<BcfMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&BcfMutation::SetViewpointComponents(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set viewpoint components", "Blickpunktkomponenten setzen")
     }

@@ -16,3 +16,5 @@ async fn editor_dialect_matches_the_artifact_coordinate() {
 async fn editor_and_viewer_share_one_dialect() {
     semio_framework_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<StepCc4Editor, crate::viewer::step_cc4::StepCc4Viewer>().await;
 }
+
+semio_framework_plugin::history_edit_acceptance_law!("stdio", super::StepCc4Editor, || semio_framework_plugin::App { definition: super::create_step_cc4_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4");

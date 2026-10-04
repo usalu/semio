@@ -7,7 +7,7 @@ pub fn diff(payload: &super::ChangeManifestId, base: &Puzzle2dSnapshot) -> proto
     // 🗂️ `meta.manifestId` lives on the document-root singleton `meta` (not a catalog member
     // addressed by id), so there is no missing-target case — only the no-op check applies.
     if payload.new_manifest_id == base.meta.manifest_id {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Manifest id is unchanged.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Manifest id is unchanged.");
     }
     let mut meta = base.meta.clone();
     meta.manifest_id = payload.new_manifest_id.clone();

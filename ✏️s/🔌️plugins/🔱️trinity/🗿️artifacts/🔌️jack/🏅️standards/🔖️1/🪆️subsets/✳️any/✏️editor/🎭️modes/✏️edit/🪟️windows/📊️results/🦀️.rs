@@ -11,27 +11,27 @@ fn property_value_to_string(value: &PropertyValue) -> String {
         PropertyValue::Number(number) => number.to_string(),
         PropertyValue::Bool(flag) => flag.to_string(),
         PropertyValue::Null => "null".into(),
-        PropertyValue::Array(items) => pack::to_json_string(items),
-        PropertyValue::Object(map) => pack::to_json_string(map),
+        PropertyValue::Array(items) => semio_framework_pack_json::to_json_string(items),
+        PropertyValue::Object(map) => semio_framework_pack_json::to_json_string(map),
     }
 }
 
 fn result_to_table(parsed: &QueryResult) -> (String, String) {
-    let columns: Vec<pack::JsonValue> = parsed.columns.iter().map(|column| pack::json!({ "id": column, "label": column })).collect();
-    let rows: Vec<pack::JsonValue> = parsed
+    let columns: Vec<semio_framework_pack_json::Value> = parsed.columns.iter().map(|column| semio_framework_pack_json::json!({ "id": column, "label": column })).collect();
+    let rows: Vec<semio_framework_pack_json::Value> = parsed
         .rows
         .iter()
         .enumerate()
         .map(|(index, row)| {
-            let mut record = pack::JsonObject::new();
-            record.insert("index", pack::json!(index + 1));
+            let mut record = semio_framework_pack_json::Object::new();
+            record.insert("index", semio_framework_pack_json::json!(index + 1));
             for (column, value) in parsed.columns.iter().zip(row.iter()) {
-                record.insert(column.clone(), pack::json!(property_value_to_string(value)));
+                record.insert(column.clone(), semio_framework_pack_json::json!(property_value_to_string(value)));
             }
-            pack::JsonValue::Object(record)
+            semio_framework_pack_json::Value::Object(record)
         })
         .collect();
-    (pack::to_json_string(&columns), pack::to_json_string(&rows))
+    (semio_framework_pack_json::to_json_string(&columns), semio_framework_pack_json::to_json_string(&rows))
 }
 
 pub(crate) fn render(surface_id: &str, _controller_id: &str, result: Option<&QueryResult>, error: Option<&str>) -> UiAssemblyResult<BuiltNode> {
@@ -42,7 +42,7 @@ pub(crate) fn render(surface_id: &str, _controller_id: &str, result: Option<&Que
     let result = result.unwrap_or(&empty);
     if result.kind == QueryResultKind::Graph {
         if let Some(fixture) = &result.graph_fixture {
-            let (nodes, edges, viewport) = crate::editor::jack::snapshot_to_workflow(fixture);
+            let (nodes, edges, viewport) = crate::editor::jack::snapshot_to_workflow(fixture).map_err(|error|semio_framework_plugin::PluginAssemblyError::new("trinity.child.unavailable",error.into_message()))?;
             return scene_surface(surface_id, SurfaceKind::NodeGraph, &NodeGraphScene::base(nodes, edges, viewport));
         }
     }

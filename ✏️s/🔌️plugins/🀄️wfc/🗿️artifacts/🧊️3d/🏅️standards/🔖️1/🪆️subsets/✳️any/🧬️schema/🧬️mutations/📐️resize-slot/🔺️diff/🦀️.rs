@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ResizeSlot, base: &Wfc3dSnapshot) -> protocol::Muta
     }
     let slot = &base.slots[index];
     if slot.width == payload.width && slot.height == payload.height && slot.depth == payload.depth {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Slot \"{}\" already has that extent.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Slot \"{}\" already has that extent.", payload.id));
     }
     let mut resized = slot.clone();
     resized.width = payload.width;

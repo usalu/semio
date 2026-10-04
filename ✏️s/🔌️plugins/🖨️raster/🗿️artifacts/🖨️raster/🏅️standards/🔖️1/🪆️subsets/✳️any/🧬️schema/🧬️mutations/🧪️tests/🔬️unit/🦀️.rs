@@ -26,7 +26,7 @@ const ABC_ASSET_PNG: &[u8] = &[
 fn round_trip(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> RasterSnapshot {
     let (forward, _messages) = vcs::apply_mutation(snapshot, mutation).expect("valid mutation");
     let mut restored = forward.clone();
-    for back in mutation.inverse(snapshot) {
+    for back in mutation.inverse(snapshot).expect("valid retained mutation inverse fixture") {
         let (next, _messages) = vcs::apply_mutation(&restored, &back).expect("valid inverse mutation");
         // 🧹️ Every displaced projection owns the document's `assets` pool and every adjustment's
         // `params` map, so it retires instead of reaching `RasterOwnedMap`'s fail-closed `Drop`.
@@ -61,6 +61,9 @@ fn every_mutation() -> Vec<RasterMutation> {
         RasterMutation::ChangeLayerPixels(change_layer_pixels::ChangeLayerPixels { layer_id: "l1".into(), expected_image_key: None, content: crate::RasterPixelContent { image_key: None, width: Some(256), height: Some(256) }, transform: None }),
         crate::mutations::paint_stroke::paint_stroke("l1", "pixels", "brush", crate::mutations::paint_stroke::RasterBrush { size: 4.0, hardness: 0.5, opacity: 1.0, color: vec![1.0, 0.0, 0.0, 1.0] }, vec![crate::mutations::paint_stroke::RasterStrokePoint { x: 2.0, y: 2.0 }, crate::mutations::paint_stroke::RasterStrokePoint { x: 9.5, y: 6.0 }]),
         crate::mutations::fill_region::fill_region("l1", "pixels", crate::mutations::fill_region::RasterSeed { x: 3, y: 2 }, 24, [0.0, 0.5, 1.0, 1.0]),
+        crate::mutations::apply_filter::apply_filter("l1", "blur", 2.0),
+        crate::mutations::transform_image::rotate_image("l1", true),
+        crate::mutations::fill_selection::fill_selection("l1", "pixels", [0.0, 0.5, 1.0, 1.0]),
     ]
 }
 
@@ -133,8 +136,8 @@ async fn resize_layer_is_a_graceful_no_op_on_a_group() {
     let mutation = RasterMutation::ResizeLayer(resize_layer::ResizeLayer { layer_id: "g1".into(), new_width: 10, new_height: 10 });
     let outcome = mutation.diff(&snapshot);
     assert_eq!(outcome.diff(), &RasterDiff::default());
-    assert_eq!(outcome.worst_level(), Some(protocol::os_dsl::Severity::Error));
-    assert!(mutation.inverse(&snapshot).is_empty());
+    assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Error));
+    assert!(mutation.inverse(&snapshot).expect("valid retained mutation inverse fixture").is_empty());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -154,21 +157,21 @@ fn representative_raster_document() -> RasterSnapshot {
     let mut assets = RasterOwnedMap::new();
     assets.insert("asset-1".into(), crate::image_asset_child_handle("asset-1", &RasterImageAsset { mime: "image/png".into(), data: b"abc".to_vec() })).expect("bounded fixture operation succeeds");
     let mut params = RasterOwnedMap::new();
-    params.insert("brightness".into(), dsl::DslValue::float(0.06)).expect("bounded fixture operation succeeds");
-    params.insert("label".into(), dsl::DslValue::String("Warm \"Curve\"".to_string())).expect("bounded fixture operation succeeds");
-    params.insert("enabled".into(), dsl::DslValue::Bool(true)).expect("bounded fixture operation succeeds");
-    params.insert("fallback".into(), dsl::DslValue::Null).expect("bounded fixture operation succeeds");
+    params.insert("brightness".into(), semio_framework_value::DslValue::float(0.06)).expect("bounded fixture operation succeeds");
+    params.insert("label".into(), semio_framework_value::DslValue::String("Warm \"Curve\"".to_string())).expect("bounded fixture operation succeeds");
+    params.insert("enabled".into(), semio_framework_value::DslValue::Bool(true)).expect("bounded fixture operation succeeds");
+    params.insert("fallback".into(), semio_framework_value::DslValue::Null).expect("bounded fixture operation succeeds");
     params
         .insert(
             "curves".into(),
-            dsl::DslValue::Array(vec![
-                dsl::DslValue::Array(vec![dsl::DslValue::float(0.0), dsl::DslValue::float(0.0)]),
-                dsl::DslValue::Array(vec![dsl::DslValue::float(0.25), dsl::DslValue::float(0.2)]),
-                dsl::DslValue::Array(vec![dsl::DslValue::float(1.0), dsl::DslValue::float(1.0)]),
+            semio_framework_value::DslValue::Array(vec![
+                semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::float(0.0), semio_framework_value::DslValue::float(0.0)]),
+                semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::float(0.25), semio_framework_value::DslValue::float(0.2)]),
+                semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::float(1.0), semio_framework_value::DslValue::float(1.0)]),
             ]),
         )
         .expect("bounded fixture operation succeeds");
-    params.insert("nested".into(), dsl::DslValue::Object(vec![("inner".to_string(), dsl::DslValue::float(1.5))])).expect("bounded fixture operation succeeds");
+    params.insert("nested".into(), semio_framework_value::DslValue::Object(vec![("inner".to_string(), semio_framework_value::DslValue::float(1.5))])).expect("bounded fixture operation succeeds");
     RasterSnapshot {
         schema: RASTER_DOCUMENT_SCHEMA.into(),
         id: "doc-1".into(),
@@ -316,8 +319,8 @@ async fn create_layer_outcome_obeys_the_policy_matrix() {
 /// is a POPULATED `RasterOwnedMap`, the exact owner whose `Drop` is fail-closed.
 fn adjustment_layer_with_params(id: &str) -> RasterLayerNode {
     let mut params = RasterOwnedMap::new();
-    params.insert("brightness".into(), dsl::DslValue::float(0.12)).expect("first law parameter fits the owned map");
-    params.insert("contrast".into(), dsl::DslValue::float(0.08)).expect("second law parameter fits the owned map");
+    params.insert("brightness".into(), semio_framework_value::DslValue::float(0.12)).expect("first law parameter fits the owned map");
+    params.insert("contrast".into(), semio_framework_value::DslValue::float(0.08)).expect("second law parameter fits the owned map");
     RasterLayerNode::Adjustment { id: id.into(), name: "Brighten".into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "brightnessContrast".into(), params }
 }
 
@@ -381,7 +384,7 @@ fn mutation_json_bridge_applies_and_inverts_a_populated_before_document() {
     before.layers.push(pixel_layer("sketch", "Sketch"));
     before.layers.push(adjustment_layer_with_params("brighten"));
     before.assets.insert("seed".into(), crate::mint_raster_asset_child("seed", &RasterImageAsset { mime: "image/png".into(), data: SEED_ASSET_PNG.to_vec() })).expect("one bridge asset fits the owned map");
-    let before_json = dsl::os_pack::json::to_string(&dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&before)));
+    let before_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&before)));
     crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(before);
     assert!(before_json.contains("\"brightness\""), "the whole-document projection carries the adjustment params: {before_json}");
     assert!(before_json.contains("\"seed\""), "the whole-document projection carries the asset pool: {before_json}");

@@ -4,7 +4,10 @@ use crate::schema::mutations::NoteMutation;
 use crate::NoteSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &ChangeGridSpacing, base: &NoteSnapshot) -> Vec<NoteMutation> {
+pub fn inverse(_payload: &ChangeGridSpacing, base: &NoteSnapshot) -> Result<Vec<NoteMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![NoteMutation::ChangeGridSpacing(ChangeGridSpacing { new_spacing: base.grid_spacing })]
+
+    })())
 }
 //#endregion 🔖️Inverse

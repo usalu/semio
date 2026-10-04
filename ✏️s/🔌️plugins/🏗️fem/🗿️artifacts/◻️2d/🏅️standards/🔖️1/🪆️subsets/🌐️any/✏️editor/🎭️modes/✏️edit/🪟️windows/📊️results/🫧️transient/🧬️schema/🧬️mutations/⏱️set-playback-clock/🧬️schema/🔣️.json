@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/fem/2d/results-window/transient/mutation/set-playback-clock/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/fem/results-window/transient/mutation/set-playback-clock/schema.json",
   "title": "SetPlaybackClock",
   "type": "object",
   "additionalProperties": false,
@@ -8,14 +8,14 @@
   "properties": {
     "clock": {
       "anyOf": [
-        { "$ref": "#/$defs/Fem2dPlaybackClock" },
+        { "$ref": "#/$defs/FemPlaybackClock" },
         { "type": "null" }
       ],
       "x-semio-ui": { "role": "value", "label": { "en": "Playback clock", "de": "Wiedergabetakt" }, "group": "record", "order": 10 }
     }
   },
   "$defs": {
-    "Fem2dPlaybackClock": {
+    "FemPlaybackClock": {
       "type": "object",
       "additionalProperties": false,
       "required": ["phase", "reverse"],

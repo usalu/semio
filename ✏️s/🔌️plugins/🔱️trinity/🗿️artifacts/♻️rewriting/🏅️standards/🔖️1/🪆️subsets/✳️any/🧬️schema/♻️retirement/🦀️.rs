@@ -4,27 +4,22 @@ use crate::standards::v1::subsets::any::schema::mutations::{RewriteRuleMutation,
 use crate::{LayoutPoint, RewritingSnapshot};
 use semio_framework_value::retirement::{OwnedValueRetirementFactory, RetireOwned, RetirementCursor, SharedValueRetirementFactory};
 
-semio_framework_value::artifact_retire_struct!(RewritingSnapshot { before_fixture_json, lhs_json, rhs_json, parameter_bindings, rule_layout });
+semio_framework_value::artifact_retire_struct!(RewritingSnapshot { working_graph, lhs, rhs, parameter_bindings, rule_layout });
 semio_framework_value::artifact_retire_struct!(LayoutPoint { x, y });
 semio_framework_value::artifact_retire_struct!(RuleLayoutPlacement { key, x, y });
 
 impl RetireOwned for RewriteRuleMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
-            Self::EditBeforeFixture(value) => value.new_before_fixture_json.retirement(),
-            Self::EditLhs(value) => value.new_lhs_json.retirement(),
-            Self::EditRhs(value) => value.new_rhs_json.retirement(),
+            Self::EditBeforeFixture(value) => value.new_working_graph.retirement(),
+            Self::EditLhs(value) => value.new_lhs.retirement(),
+            Self::EditRhs(value) => value.new_rhs.retirement(),
             Self::ChangeParameterBinding(value) => (value.key, value.new_value).retirement(),
             Self::RemoveParameterBinding(value) => value.key.retirement(),
             Self::ChangeRuleLayoutPoint(value) => (value.key, value.new_point).retirement(),
             Self::RemoveRuleLayoutPoint(value) => value.key.retirement(),
-            Self::DragWorkingNodes(value) => (value.targets, (value.dx, value.dy)).retirement(),
-            Self::PatchWorkingNodes(value) => (value.targets, (value.field, value.value)).retirement(),
             Self::DragRuleNodes(value) => (value.targets, (value.dx, value.dy)).retirement(),
             Self::SetRuleLayoutPoints(value) => (value.points, value.cleared).retirement(),
-            Self::DeleteWorkingNodes(value) => value.targets.retirement(),
-            Self::ConnectWorkingPorts(value) => (value.source, (value.target, value.kind)).retirement(),
-            Self::DisconnectWorkingEdges(value) => value.targets.retirement(),
         }
     }
 }
@@ -42,3 +37,12 @@ pub fn document_store_owners() -> store::DocumentStoreOwners<RewritingSnapshot, 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️document-retirement/🦀️.rs"]
 mod tests;
+
+use super::{Pattern,Lhs,Rhs,Assignment,ParameterSpec,ParameterKind,Rule};
+semio_framework_value::artifact_retire_struct!(Pattern {left_var,left_kind,edge_var,edge_kind,right_var,right_kind});
+semio_framework_value::artifact_retire_struct!(Lhs {pattern,where_clause});
+semio_framework_value::artifact_retire_struct!(Rhs {create,delete,set,merge,parameters});
+semio_framework_value::artifact_retire_struct!(Assignment {var,prop,value});
+semio_framework_value::artifact_retire_struct!(ParameterSpec {name,kind,default});
+semio_framework_value::artifact_retire_struct!(Rule {name,lhs,rhs});
+semio_framework_value::artifact_retire_leaf!(ParameterKind);

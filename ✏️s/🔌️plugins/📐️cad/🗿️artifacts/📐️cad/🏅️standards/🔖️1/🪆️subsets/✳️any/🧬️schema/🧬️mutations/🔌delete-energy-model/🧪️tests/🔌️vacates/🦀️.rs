@@ -18,13 +18,13 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔌delete-energy-model/🔌️vacates/🎯️outcome/🔣️.json");
 
 fn before() -> CadSnapshot {
-    dsl::json::from_json_str(BEFORE).expect("delete-energy-model/vacates-the-energy-slot: before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-energy-model/vacates-the-energy-slot: before snapshot decodes")
 }
 fn expected_after() -> CadSnapshot {
-    dsl::json::from_json_str(AFTER).expect("delete-energy-model/vacates-the-energy-slot: after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-energy-model/vacates-the-energy-slot: after snapshot decodes")
 }
 fn mutation() -> CadMutation {
-    dsl::json::from_json_str(MUTATION).expect("delete-energy-model/vacates-the-energy-slot: mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-energy-model/vacates-the-energy-slot: mutation decodes")
 }
 fn applied() -> CadSnapshot {
     let base = before();
@@ -51,7 +51,7 @@ async fn clears_the_energy_slot_only() {
 #[semio_framework_async_macros::async_test]
 async fn inverse_reinstalls_the_escrowed_energy_handle() {
     let base = before();
-    let inverse = mutation().inverse(&base);
+    let inverse = mutation().inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "delete-energy-model on an occupied slot inverts to exactly one step");
     match &inverse[0] {
         CadMutation::CreateEnergyModel(step) => {
@@ -71,12 +71,12 @@ async fn inverse_reinstalls_the_escrowed_energy_handle() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: CadSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: CadSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "delete-energy-model/vacates-the-energy-slot: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(mutation()))).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "delete-energy-model/vacates-the-energy-slot: committed mutation JSON is not canonical");
 }
@@ -103,7 +103,7 @@ async fn declared_outcome_holds() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = mutation().diff(&base);
-    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "delete-energy-model/vacates-the-energy-slot: delete-energy-model must touch nothing but `energyModel`, whose vacated arm renders as `null`");
 }
@@ -113,8 +113,8 @@ async fn produces_committed_diff() {
 /// the wire and the untouched ones must be committed as explicit `null`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: crate::diff::CadDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes into the artifact's diff type");
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("committed diff re-encodes");
+    let decoded: crate::diff::CadDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("committed diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "delete-energy-model/vacates-the-energy-slot: committed diff JSON is not canonical");
 }
@@ -134,7 +134,7 @@ async fn committed_diff_applies_to_after() {
     let in_memory = mutation().diff(&base).diff().clone();
     assert_eq!(in_memory.apply(&base).expect("the in-memory diff applies"), expected_after(), "delete-energy-model/vacates-the-energy-slot: the in-memory diff must carry before to after");
 
-    let decoded: crate::diff::CadDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes into the artifact's diff type");
+    let decoded: crate::diff::CadDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
     assert_eq!(decoded, crate::diff::CadDiff::default(), "delete-energy-model/vacates-the-energy-slot: a `null` energyModel is indistinguishable from an untouched one, so the decoded diff is empty");
     assert_eq!(decoded.apply(&base).expect("the decoded diff applies"), base, "delete-energy-model/vacates-the-energy-slot: the JSON-decoded diff is inert — the vacate intent is lost on the wire");
 }

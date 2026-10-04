@@ -15,11 +15,11 @@ fn fixture() -> serde_json::Value {
 }
 
 fn wire(outcome: &CommandAckOutcome) -> serde_json::Value {
-    serde_json::from_str(&crate::os_pack::json::to_json_string(outcome)).expect("outcome json")
+    serde_json::from_str(&semio_framework_pack_json::to_json_string(outcome)).expect("outcome json")
 }
 
 fn code(text: &str) -> CommandRejectionCode {
-    crate::os_pack::json::from_json_str(&serde_json::Value::String(text.to_string()).to_string()).unwrap_or_else(|error| panic!("fixture code {text}: {error}"))
+    semio_framework_pack_json::from_json_str(&serde_json::Value::String(text.to_string()).to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|error| panic!("fixture code {text}: {error}"))
 }
 
 fn detail(value: &serde_json::Value) -> CommandRejectionDetail {
@@ -33,7 +33,7 @@ fn the_code_set_is_the_schema_code_set() {
     let codes: Vec<String> = schema["$defs"]["Code"]["enum"].as_array().expect("code enum").iter().map(|code| code.as_str().expect("code").to_string()).collect();
     for text in &codes {
         let decoded = code(text);
-        assert_eq!(serde_json::Value::String(text.clone()), serde_json::from_str::<serde_json::Value>(&crate::os_pack::json::to_json_string(&decoded)).expect("code json"), "{text} round-trips");
+        assert_eq!(serde_json::Value::String(text.clone()), serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("code json"), "{text} round-trips");
     }
     assert_eq!(codes.len(), 10, "every CommandRejectionCode variant is a schema code");
 }
@@ -45,7 +45,7 @@ fn every_hub_refusal_decodes_once_into_the_fixture_rejection() {
         let name = row["name"].as_str().expect("row name");
         let outcome = CommandAckOutcome::hub_rejected(row["reason"].as_str().expect("reason").to_string(), row["messages"].as_str().expect("messages").as_bytes());
         assert_eq!(wire(&outcome), row["expect"], "{name}");
-        let round: CommandAckOutcome = crate::os_pack::json::from_json_str(&row["expect"].to_string()).unwrap_or_else(|error| panic!("{name}: {error}"));
+        let round: CommandAckOutcome = semio_framework_pack_json::from_json_str(&row["expect"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|error| panic!("{name}: {error}"));
         assert_eq!(round, outcome, "{name} decodes back");
     }
 }
@@ -64,6 +64,6 @@ fn every_local_refusal_is_the_fixture_rejection() {
 #[test]
 fn the_event_wires_its_batch_id_camel_cased() {
     let event = ArtifactEvent::CommandOutcome { batch_id: u64::MAX, outcome: CommandAckOutcome::local_rejected(CommandRejectionCode::LocalBackboneMalformed, "document backbone malformed", CommandRejectionDetail::default()) };
-    let value: serde_json::Value = serde_json::from_str(&crate::os_pack::json::to_json_string(&event)).expect("event json");
+    let value: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&event)).expect("event json");
     assert_eq!(value, serde_json::json!({ "kind": "commandOutcome", "batchId": u64::MAX, "outcome": { "kind": "rejected", "code": "local.backbone-malformed", "reason": "document backbone malformed", "messages": [] } }));
 }

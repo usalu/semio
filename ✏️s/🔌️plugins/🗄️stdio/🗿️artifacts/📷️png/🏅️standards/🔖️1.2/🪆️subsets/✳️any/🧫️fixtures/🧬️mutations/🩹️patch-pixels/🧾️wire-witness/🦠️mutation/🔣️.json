@@ -1,13 +1,14 @@
 {
   "mutation": "patch-pixels",
   "payload": {
-    "index": 4,
-    "removeCount": 4,
-    "pixels": [
-      0,
-      255,
-      0,
-      255
-    ]
+    "revision": "7985741d54001585",
+    "x": 0,
+    "y": 0,
+    "width": 1,
+    "height": 1,
+    "red": 10,
+    "green": 20,
+    "blue": 30,
+    "alpha": 128
   }
 }

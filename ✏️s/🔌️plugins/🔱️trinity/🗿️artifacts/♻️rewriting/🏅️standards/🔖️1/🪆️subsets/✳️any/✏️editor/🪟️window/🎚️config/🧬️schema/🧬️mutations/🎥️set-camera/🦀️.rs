@@ -2,7 +2,7 @@
 
 use super::{RewritingWindowConfig, RewritingWindowConfigMutation};
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[dsl(keyword = "set-camera")]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetCamera {
@@ -19,9 +19,12 @@ impl protocol::MutationKind<RewritingWindowConfig, RewritingWindowConfigMutation
         protocol::MutationOutcome::new(next)
     }
 
-    fn inverse(&self, base: &RewritingWindowConfig) -> Vec<RewritingWindowConfigMutation> {
+    fn inverse(&self, base: &RewritingWindowConfig) -> Result<Vec<RewritingWindowConfigMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![Self { camera: base.camera.clone() }.into()]
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set Window Camera", "Fensterkamera setzen")

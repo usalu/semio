@@ -96,7 +96,7 @@ impl DrawingOwnedRetirement {
         store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes }
     }
 
-    fn advance(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn advance(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -157,7 +157,7 @@ impl DrawingOwnedRetirement {
                         | DrawingLayerFields::Boolean { base, .. }
                         | DrawingLayerFields::Trace { base, .. } => base.take(),
                     }
-                    .ok_or_else(|| "Drawing layer base owner missing".to_string())?;
+                    .ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Drawing layer base owner missing"))?;
                     self.phase = 1;
                     return Ok(Self::spawn(&mut self.active, DrawingRetirementOwner::Base(base)));
                 }
@@ -232,7 +232,7 @@ impl DrawingOwnedRetirement {
                 0 => Ok(Self::release_string(key, &mut self.phase, 1, maximum_items, maximum_bytes)),
                 1 => {
                     self.phase = 2;
-                    Ok(Self::spawn(&mut self.active, DrawingRetirementOwner::Asset(value.take().ok_or_else(|| "Drawing asset owner missing".to_string())?)))
+                    Ok(Self::spawn(&mut self.active, DrawingRetirementOwner::Asset(value.take().ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Drawing asset owner missing"))?)))
                 }
                 _ => {
                     drop(self.owner.take());
@@ -397,14 +397,14 @@ impl DrawingOwnedRetirement {
 }
 
 impl store::ErasedSnapshotRetirement for DrawingOwnedRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if let Some(active) = self.active.as_mut() {
             return match active.close_step(maximum_items.min(1), maximum_bytes)? {
                 store::SnapshotRetirementStep::Complete if active.terminal_is_empty() => {
                     drop(self.active.take());
                     Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
-                store::SnapshotRetirementStep::Complete => Err("Drawing nested retirement reported false terminal".into()),
+                store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Drawing nested retirement reported false terminal")),
                 step => Ok(step),
             };
         }
@@ -436,7 +436,7 @@ struct DrawingSnapshotRootRetirement {
 }
 
 impl store::ErasedSnapshotRetirement for DrawingSnapshotRootRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -446,7 +446,7 @@ impl store::ErasedSnapshotRetirement for DrawingSnapshotRootRetirement {
                     drop(self.retirement.take());
                     Ok(store::SnapshotRetirementStep::Complete)
                 }
-                store::SnapshotRetirementStep::Complete => Err("Drawing snapshot root retirement reported false terminal".into()),
+                store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Drawing snapshot root retirement reported false terminal")),
                 step => Ok(step),
             };
         }
@@ -2033,7 +2033,7 @@ impl DrawingLayerCloneAuthority {
         self.terminal.then(|| self.value.take()).flatten()
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -2050,7 +2050,7 @@ impl DrawingLayerCloneAuthority {
                 drop(self.retirement.take());
                 Ok(store::SnapshotRetirementStep::Complete)
             }
-            store::SnapshotRetirementStep::Complete => Err("Drawing layer clone retirement reported false terminal".into()),
+            store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Drawing layer clone retirement reported false terminal")),
             step => Ok(step),
         }
     }
@@ -2676,14 +2676,14 @@ impl DrawingFillCloneAuthority {
         self.terminal.then(|| self.value.take()).flatten()
     }
 
-    fn close_step(&mut self, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if let Some(retirement) = self.retirement.as_mut() {
             return match store::ErasedSnapshotRetirement::close_step(retirement.as_mut(), 1, maximum_bytes)? {
                 store::SnapshotRetirementStep::Complete if store::ErasedSnapshotRetirement::terminal_is_empty(retirement.as_ref()) => {
                     drop(self.retirement.take());
                     Ok(store::SnapshotRetirementStep::Complete)
                 }
-                store::SnapshotRetirementStep::Complete => Err("Drawing fill clone reported false terminal".into()),
+                store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Drawing fill clone reported false terminal")),
                 step => Ok(step),
             };
         }
@@ -2762,14 +2762,14 @@ impl DrawingStrokeCloneAuthority {
         self.terminal.then(|| self.value.take()).flatten()
     }
 
-    fn close_step(&mut self, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if let Some(retirement) = self.retirement.as_mut() {
             return match store::ErasedSnapshotRetirement::close_step(retirement.as_mut(), 1, maximum_bytes)? {
                 store::SnapshotRetirementStep::Complete if store::ErasedSnapshotRetirement::terminal_is_empty(retirement.as_ref()) => {
                     drop(self.retirement.take());
                     Ok(store::SnapshotRetirementStep::Complete)
                 }
-                store::SnapshotRetirementStep::Complete => Err("Drawing stroke clone reported false terminal".into()),
+                store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Drawing stroke clone reported false terminal")),
                 step => Ok(step),
             };
         }
@@ -2819,13 +2819,13 @@ impl DrawingTextCloneAuthority {
 
     fn take(&mut self) -> Option<String> { self.terminal.then(|| self.value.take()).flatten() }
 
-    fn close_step(&mut self, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if let Some(retirement) = self.retirement.as_mut() {
             return match store::ErasedSnapshotRetirement::close_step(retirement.as_mut(), 1, maximum_bytes)? {
                 store::SnapshotRetirementStep::Complete if store::ErasedSnapshotRetirement::terminal_is_empty(retirement.as_ref()) => {
                     drop(self.retirement.take()); self.terminal = true; Ok(store::SnapshotRetirementStep::Complete)
                 }
-                store::SnapshotRetirementStep::Complete => Err("Text clone reported false terminal".into()),
+                store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Text clone reported false terminal")),
                 step => Ok(step),
             };
         }
@@ -2872,13 +2872,13 @@ impl DrawingSegmentsCloneAuthority {
 
     fn take(&mut self) -> Option<Vec<PathSegment>> { self.terminal.then(|| self.value.take()).flatten() }
 
-    fn close_step(&mut self, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if let Some(retirement) = self.retirement.as_mut() {
             return match store::ErasedSnapshotRetirement::close_step(retirement.as_mut(), 1, maximum_bytes)? {
                 store::SnapshotRetirementStep::Complete if store::ErasedSnapshotRetirement::terminal_is_empty(retirement.as_ref()) => {
                     drop(self.retirement.take()); self.terminal = true; Ok(store::SnapshotRetirementStep::Complete)
                 }
-                store::SnapshotRetirementStep::Complete => Err("Path clone reported false terminal".into()),
+                store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Path clone reported false terminal")),
                 step => Ok(step),
             };
         }
@@ -4463,7 +4463,7 @@ impl DrawingMutationCandidateAuthority {
             let mut fault = None;
             let found = crate::schema::update_layer_in_tree(&mut source.layers, &entry.id, &mut |layer| {
                 if let Some(transform) = entry.patch.transform_json.as_deref() {
-                    match dsl::json::from_json_str::<crate::DrawingTransform>(transform) {
+                    match semio_framework_pack_json::from_json_str::<crate::DrawingTransform>(transform, semio_framework_pack_json::JsonMemberPolicy::Reject) {
                         Ok(transform) => crate::schema::layer_base_mut(layer).transform = transform,
                         Err(_) => fault = Some("drawing-store.selection-transform-json"),
                     }
@@ -5127,51 +5127,51 @@ impl DrawingMutationCandidateAuthority {
         Some(())
     }
 
-    fn pump_rebuild_close(&mut self, source: &mut DrawingSnapshot) -> Result<store::SnapshotRetirementStep, String> {
-        let role = self.rebuild_role.ok_or("Drawing mutation rebuild role missing")?;
-        let target = self.rebuild_target.ok_or("Drawing mutation rebuild target missing")?;
-        let rebuild = self.rebuild.as_mut().ok_or("Drawing mutation rebuild missing")?;
+    fn pump_rebuild_close(&mut self, source: &mut DrawingSnapshot) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
+        let role = self.rebuild_role.ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Drawing mutation rebuild role missing"))?;
+        let target = self.rebuild_target.ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Drawing mutation rebuild target missing"))?;
+        let rebuild = self.rebuild.as_mut().ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Drawing mutation rebuild missing"))?;
         let ready = if self.rebuild_close_phase > 0 {
             true
         } else if role == DrawingContainerRebuildRole::CloseSourceUndo {
-            rebuild.close_forward_step()?
+            rebuild.close_forward_step().map_err(|e|semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,e))?
         } else {
-            rebuild.rollback_step()?
+            rebuild.rollback_step().map_err(|e|semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,e))?
         };
         if !ready {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         match self.rebuild_close_phase {
             0 => {
-                let container = DrawingLayerLocator::container_mut(source, target).ok_or("Drawing mutation rollback container missing")?;
+                let container = DrawingLayerLocator::container_mut(source, target).ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Drawing mutation rollback container missing"))?;
                 if !container.is_empty() {
-                    return Err("Drawing mutation rollback destination was not empty".into());
+                    return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Drawing mutation rollback destination was not empty"));
                 }
-                *container = rebuild.source.take().ok_or("Drawing mutation rollback source missing")?;
+                *container = rebuild.source.take().ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Drawing mutation rollback source missing"))?;
             }
             1 => {
                 if rebuild.pending.is_some() && self.pending_layer.is_some() {
-                    return Err("Drawing mutation rollback pending owner collision".into());
+                    return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Drawing mutation rollback pending owner collision"));
                 }
                 *self.pending_layer = rebuild.pending.take();
             }
             2 => {
                 if self.container_reverse.is_some() {
-                    return Err("Drawing mutation rollback reverse owner collision".into());
+                    return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Drawing mutation rollback reverse owner collision"));
                 }
-                *self.container_reverse = Some(rebuild.reverse.take().ok_or("Drawing mutation rollback reverse owner missing")?);
+                *self.container_reverse = Some(rebuild.reverse.take().ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Drawing mutation rollback reverse owner missing"))?);
             }
             3 => {
                 if self.container_output.is_some() {
-                    return Err("Drawing mutation rollback output owner collision".into());
+                    return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Drawing mutation rollback output owner collision"));
                 }
-                *self.container_output = Some(rebuild.output.take().ok_or("Drawing mutation rollback output owner missing")?);
+                *self.container_output = Some(rebuild.output.take().ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Drawing mutation rollback output owner missing"))?);
             }
             4 => {
                 if rebuild.removed.is_some() {
-                    return Err("Drawing mutation rollback retained an unexpected removed owner".into());
+                    return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Drawing mutation rollback retained an unexpected removed owner"));
                 }
-                rebuild.finish_handoff()?;
+                rebuild.finish_handoff().map_err(|e|semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,e))?;
                 drop(self.rebuild.take());
                 self.rebuild_target = None;
                 self.rebuild_role = None;
@@ -5181,20 +5181,20 @@ impl DrawingMutationCandidateAuthority {
                 }
                 return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
             }
-            _ => return Err("Drawing mutation rollback handoff phase invalid".into()),
+            _ => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Drawing mutation rollback handoff phase invalid")),
         }
         self.rebuild_close_phase += 1;
         Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
     }
 
-    fn close_step(&mut self, mut source: Option<&mut DrawingSnapshot>, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, mut source: Option<&mut DrawingSnapshot>, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if let Some(preflight) = self.preflight_mutation.as_mut() {
             return match preflight.close_step(maximum_bytes) {
                 store::SnapshotRetirementStep::Complete if preflight.terminal_is_empty() => {
                     drop(self.preflight_mutation.take());
                     Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
-                store::SnapshotRetirementStep::Complete => Err("Drawing mutation preflight reported false terminal".into()),
+                store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Drawing mutation preflight reported false terminal")),
                 step => Ok(step),
             };
         }
@@ -5204,18 +5204,18 @@ impl DrawingMutationCandidateAuthority {
                     drop(self.retirement.take());
                     Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
-                store::SnapshotRetirementStep::Complete => Err("Drawing mutation candidate retirement reported false terminal".into()),
+                store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Drawing mutation candidate retirement reported false terminal")),
                 step => Ok(step),
             };
         }
         if let Some(rewrite) = self.duplicate_rewrite.as_mut() {
             return match rewrite.close_step(maximum_bytes) {
                 store::SnapshotRetirementStep::Complete => {
-                    let pages = self.overlay_pages.as_mut().ok_or("Drawing duplicate name arena missing")?;
+                    let pages = self.overlay_pages.as_mut().ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Drawing duplicate name arena missing"))?;
                     if pages.len() >= pages.capacity() {
-                        return Err("Drawing duplicate name arena return saturated".into());
+                        return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Drawing duplicate name arena return saturated"));
                     }
-                    let (id_owner, name_owner) = rewrite.take_owners().ok_or("Drawing duplicate rewrite reported false terminal")?;
+                    let (id_owner, name_owner) = rewrite.take_owners().ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Drawing duplicate rewrite reported false terminal"))?;
                     *self.duplicate_id_owner = Some(id_owner);
                     pages.push(name_owner);
                     drop(self.duplicate_rewrite.take());
@@ -5231,7 +5231,7 @@ impl DrawingMutationCandidateAuthority {
         if !self.overlay.as_ref().is_some_and(|overlay| overlay.committed) {
             if let Some(undo) = self.source_undo {
                 let Some(source) = source else { return Ok(store::SnapshotRetirementStep::Blocked) };
-                self.start_rebuild(source, undo.parent, None, Some(undo.index), DrawingContainerRebuildRole::CloseSourceUndo)?;
+                self.start_rebuild(source, undo.parent, None, Some(undo.index), DrawingContainerRebuildRole::CloseSourceUndo).map_err(|e|semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,e))?;
                 return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
             }
         }
@@ -5242,7 +5242,7 @@ impl DrawingMutationCandidateAuthority {
                     drop(self.layer_clone.take());
                     Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
-                store::SnapshotRetirementStep::Complete => Err("Drawing mutation layer clone reported false terminal".into()),
+                store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Drawing mutation layer clone reported false terminal")),
                 step => Ok(step),
             };
         }
@@ -5252,7 +5252,7 @@ impl DrawingMutationCandidateAuthority {
                     drop(self.fill_clone.take());
                     Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
-                store::SnapshotRetirementStep::Complete => Err("Drawing mutation fill clone reported false terminal".into()),
+                store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Drawing mutation fill clone reported false terminal")),
                 step => Ok(step),
             };
         }
@@ -5262,7 +5262,7 @@ impl DrawingMutationCandidateAuthority {
                     drop(self.text_clone.take());
                     Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
-                store::SnapshotRetirementStep::Complete => Err("Text clone reported false terminal".into()),
+                store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Text clone reported false terminal")),
                 step => Ok(step),
             };
         }
@@ -5272,7 +5272,7 @@ impl DrawingMutationCandidateAuthority {
                     drop(self.segments_clone.take());
                     Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
-                store::SnapshotRetirementStep::Complete => Err("Path clone reported false terminal".into()),
+                store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Path clone reported false terminal")),
                 step => Ok(step),
             };
         }
@@ -5282,7 +5282,7 @@ impl DrawingMutationCandidateAuthority {
                     drop(self.stroke_clone.take());
                     Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
-                store::SnapshotRetirementStep::Complete => Err("Drawing mutation stroke clone reported false terminal".into()),
+                store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Drawing mutation stroke clone reported false terminal")),
                 step => Ok(step),
             };
         }
@@ -5294,7 +5294,7 @@ impl DrawingMutationCandidateAuthority {
             Ok(Some(true)) => {}
             Ok(Some(false)) => return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }),
             Ok(None) => return Ok(store::SnapshotRetirementStep::Blocked),
-            Err(error) => return Err(error.into()),
+            Err(error) => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,error)),
         }
         self.preflight_source = None;
         self.preflight_digest = None;
@@ -5356,24 +5356,20 @@ enum DrawingStoreInitializationPhase {
     ValidateEnvelope,
     ValidateEditId { edit: usize },
     ValidateEditMeta { edit: usize, meta: usize },
-    ValidateEditPair { left: usize, right: usize },
-    HashInitialSchema,
-    HashInitialId,
+    ValidateEdit { index: usize },
     CloneInitialHeader,
     CloneInitialLayer { index: usize },
     CloneInitialAsset { index: usize, cursor: usize },
     MoveInitialOwner,
     SeedHistory { edit: usize, lane: u8, index: usize },
-    FindApplied { position: usize, scan: usize },
+    FoldSupersessions { transition: usize },
+    FindApplied { position: usize },
     ApplyForward { position: usize, edit: usize, mutation: usize },
-    HashInverse { position: usize, edit: usize, mutation: usize },
     PrepareApplied { position: usize, edit: usize, field: u8 },
-    CommitApplied { position: usize },
-    FindRedo { position: usize, scan: usize },
-    HashRedoForward { position: usize, edit: usize, mutation: usize },
-    HashRedoInverse { position: usize, edit: usize, mutation: usize },
+    CommitApplied { position: usize, edit: usize },
+    FindRedo { position: usize },
     PrepareRedo { position: usize, edit: usize },
-    CommitRedo { position: usize },
+    CommitRedo { position: usize, edit: usize },
     BuildCandidate,
     RetireCancelled,
     RetireFault,
@@ -5392,12 +5388,10 @@ struct DrawingStoreInitializationAuthority {
     active: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
     envelope_retirement: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
     owner_catalog: std::mem::ManuallyDrop<Option<store::ArtifactStoreInitializationOwnerCatalog>>,
-    mutation_digest: std::mem::ManuallyDrop<Option<DrawingMutationDigestAuthority>>,
     mutation_candidate: std::mem::ManuallyDrop<Option<DrawingMutationCandidateAuthority>>,
     prepared_history_id: std::mem::ManuallyDrop<Option<String>>,
     prepared_actor: std::mem::ManuallyDrop<Option<String>>,
-    initial_digest: std::mem::ManuallyDrop<Option<store::ArtifactStoreInitializationDigest>>,
-    edit_digest: std::mem::ManuallyDrop<Option<store::ArtifactStoreInitializationDigest>>,
+    edit_index: store::ArtifactStoreInitializationEditIndex,
     /// 🧬️ The paged clone of `envelope.vcs.initial_snapshot` that becomes the runtime's live fold —
     /// the envelope keeps its own initial snapshot, which `print_document_pack` / the cold from-scratch
     /// fold read back (moving it out left every loaded document's `.pack` empty — ticket
@@ -5437,12 +5431,10 @@ impl DrawingStoreInitializationAuthority {
             active: std::mem::ManuallyDrop::new(None),
             envelope_retirement: std::mem::ManuallyDrop::new(None),
             owner_catalog: std::mem::ManuallyDrop::new(owner_catalog),
-            mutation_digest: std::mem::ManuallyDrop::new(None),
             mutation_candidate: std::mem::ManuallyDrop::new(None),
             prepared_history_id: std::mem::ManuallyDrop::new(None),
             prepared_actor: std::mem::ManuallyDrop::new(None),
-            initial_digest: std::mem::ManuallyDrop::new(Some(store::ArtifactStoreInitializationDigest::new(b"drawing.initial"))),
-            edit_digest: std::mem::ManuallyDrop::new(None),
+            edit_index: store::ArtifactStoreInitializationEditIndex::default(),
             initial_clone: std::mem::ManuallyDrop::new(None),
             initial_layer_clone: std::mem::ManuallyDrop::new(None),
             initial_clone_digest: None,
@@ -5470,21 +5462,21 @@ impl DrawingStoreInitializationAuthority {
         self.phase = DrawingStoreInitializationPhase::RetireFault;
     }
 
-    fn pump_active(&mut self) -> Result<bool, String> {
+    fn pump_active(&mut self) -> Result<bool, semio_framework_value::ValueError> {
         let Some(active) = self.active.as_mut() else { return Ok(false) };
         match active.close_step(1, DRAWING_OWNED_FIELD_BYTES)? {
             store::SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes <= DRAWING_OWNED_FIELD_BYTES => Ok(true),
-            store::SnapshotRetirementStep::Pending { .. } => Err("Drawing store initializer retirement exceeded its exact grant".into()),
+            store::SnapshotRetirementStep::Pending { .. } => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Drawing store initializer retirement exceeded its exact grant")),
             store::SnapshotRetirementStep::Blocked => Ok(true),
             store::SnapshotRetirementStep::Complete if active.terminal_is_empty() => {
                 drop(self.active.take());
                 Ok(true)
             }
-            store::SnapshotRetirementStep::Complete => Err("Drawing store initializer retirement reported a false terminal".into()),
+            store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Drawing store initializer retirement reported a false terminal")),
         }
     }
 
-    fn pump_terminal_retirement(&mut self) -> Result<bool, String> {
+    fn pump_terminal_retirement(&mut self) -> Result<bool, semio_framework_value::ValueError> {
         if self.pump_active()? {
             return Ok(false);
         }
@@ -5502,7 +5494,7 @@ impl DrawingStoreInitializationAuthority {
                     drop(self.initial_layer_clone.take());
                     Ok(false)
                 }
-                store::SnapshotRetirementStep::Complete => Err("Drawing initial layer clone reported a false terminal".into()),
+                store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Drawing initial layer clone reported a false terminal")),
                 _ => Ok(false),
             };
         }
@@ -5519,7 +5511,7 @@ impl DrawingStoreInitializationAuthority {
                     drop(self.mutation_candidate.take());
                     Ok(false)
                 }
-                store::SnapshotRetirementStep::Complete => Err("Drawing mutation candidate reported a false terminal".into()),
+                store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Drawing mutation candidate reported a false terminal")),
                 _ => Ok(false),
             };
         }
@@ -5529,21 +5521,11 @@ impl DrawingStoreInitializationAuthority {
                     drop(self.runtime.take());
                     return Ok(false);
                 }
-                store::SnapshotRetirementStep::Complete => return Err("Drawing initialization runtime reported a false terminal".into()),
+                store::SnapshotRetirementStep::Complete => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Drawing initialization runtime reported a false terminal")),
                 _ => return Ok(false),
             }
         }
         drop(self.owner_catalog.take());
-        if let Some(digest) = self.mutation_digest.as_mut() {
-            return match digest.close_step(DRAWING_OWNED_FIELD_BYTES) {
-                store::SnapshotRetirementStep::Complete if digest.terminal_is_empty() => {
-                    drop(self.mutation_digest.take());
-                    Ok(false)
-                }
-                store::SnapshotRetirementStep::Complete => Err("Drawing mutation digest reported a false terminal".into()),
-                _ => Ok(false),
-            };
-        }
         if self.envelope_retirement.is_none() {
             if let Some(envelope) = self.envelope.take() {
                 *self.envelope_retirement = Some(drawing_envelope_decode_owner_bundle().retire_envelope(envelope));
@@ -5556,7 +5538,7 @@ impl DrawingStoreInitializationAuthority {
                     drop(self.envelope_retirement.take());
                     Ok(true)
                 }
-                store::SnapshotRetirementStep::Complete => Err("Drawing initialization envelope retirement reported a false terminal".into()),
+                store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Drawing initialization envelope retirement reported a false terminal")),
                 _ => Ok(false),
             };
         }
@@ -5572,12 +5554,9 @@ impl DrawingStoreInitializationAuthority {
             && self.active.is_none()
             && self.envelope_retirement.is_none()
             && self.owner_catalog.is_none()
-            && self.mutation_digest.is_none()
             && self.mutation_candidate.is_none()
             && self.prepared_history_id.is_none()
             && self.prepared_actor.is_none()
-            && self.initial_digest.is_none()
-            && self.edit_digest.is_none()
             && self.initial_clone.is_none()
             && self.initial_layer_clone.is_none()
     }
@@ -5593,7 +5572,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
             self.phase = DrawingStoreInitializationPhase::RetireCancelled;
         }
         if let Err(error) = self.pump_active() {
-            self.fault = Some(error.into_bytes());
+            self.fault = Some(error.into_message().into_bytes());
             self.phase = DrawingStoreInitializationPhase::RetireFault;
         } else if self.active.is_some() {
             return semio_framework_job::StepOutcome::Yield;
@@ -5624,7 +5603,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
             DrawingStoreInitializationPhase::ValidateEditId { edit } => {
                 let envelope = self.envelope.as_ref().expect("validated Drawing envelope remains retained");
                 let Some(entry) = envelope.vcs.edits.get(edit) else {
-                    self.phase = DrawingStoreInitializationPhase::ValidateEditPair { left: 0, right: 1 };
+                    self.phase = DrawingStoreInitializationPhase::ValidateEdit { index: 0 };
                     return semio_framework_job::StepOutcome::Yield;
                 };
                 if entry.id.is_empty() || entry.id.len() > DRAWING_OWNED_FIELD_BYTES || entry.actor.as_ref().is_some_and(|actor| actor.len() > DRAWING_OWNED_FIELD_BYTES) || entry.started_at.len() > DRAWING_OWNED_FIELD_BYTES {
@@ -5650,31 +5629,13 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
                 cx.consume_fuel(1);
                 semio_framework_job::StepOutcome::Yield
             }
-            DrawingStoreInitializationPhase::ValidateEditPair { left, right } => {
+            DrawingStoreInitializationPhase::ValidateEdit { index } => {
                 let envelope = self.envelope.as_ref().expect("validated Drawing envelope remains retained");
-                if left >= envelope.vcs.edits.len() {
-                    self.phase = DrawingStoreInitializationPhase::HashInitialSchema;
-                } else if right >= envelope.vcs.edits.len() {
-                    self.phase = DrawingStoreInitializationPhase::ValidateEditPair { left: left + 1, right: left + 2 };
-                } else if envelope.vcs.edits[left].id == envelope.vcs.edits[right].id {
-                    self.fail(b"drawing-store.initializer-duplicate-edit");
-                } else {
-                    self.phase = DrawingStoreInitializationPhase::ValidateEditPair { left, right: right + 1 };
+                match self.edit_index.admit(&envelope.vcs.edits, index, usize::MAX) {
+                    store::ArtifactStoreInitializationEditAdmission::Complete => self.phase = DrawingStoreInitializationPhase::CloneInitialHeader,
+                    store::ArtifactStoreInitializationEditAdmission::Admitted => self.phase = DrawingStoreInitializationPhase::ValidateEdit { index: index + 1 },
+                    store::ArtifactStoreInitializationEditAdmission::Oversized | store::ArtifactStoreInitializationEditAdmission::Duplicate => self.fail(b"drawing-store.initializer-duplicate-edit"),
                 }
-                cx.consume_fuel(1);
-                semio_framework_job::StepOutcome::Yield
-            }
-            DrawingStoreInitializationPhase::HashInitialSchema => {
-                let source = &self.envelope.as_ref().expect("Drawing envelope remains retained during initial digest").vcs.initial_snapshot;
-                self.initial_digest.as_mut().expect("Drawing initial digest remains retained").observe(source.schema.as_bytes());
-                self.phase = DrawingStoreInitializationPhase::HashInitialId;
-                cx.consume_fuel(1);
-                semio_framework_job::StepOutcome::Yield
-            }
-            DrawingStoreInitializationPhase::HashInitialId => {
-                let source = &self.envelope.as_ref().expect("Drawing envelope remains retained during initial digest").vcs.initial_snapshot;
-                self.initial_digest.as_mut().expect("Drawing initial digest remains retained").observe(source.id.as_bytes());
-                self.phase = DrawingStoreInitializationPhase::CloneInitialHeader;
                 cx.consume_fuel(1);
                 semio_framework_job::StepOutcome::Yield
             }
@@ -5778,7 +5739,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
                 let envelope = self.envelope.as_ref().expect("Drawing envelope remains retained during initial owner move");
                 self.initial_clone_digest = None;
                 let initial = self.initial_clone.take().expect("Drawing initial clone remains retained until the runtime adopts it");
-                let initial_digest = self.initial_digest.take().expect("Drawing initial digest remains retained").finish();
+                let initial_digest = store::artifact_initial_digest(&initial);
                 let owner_catalog = self.owner_catalog.take().expect("Drawing owner catalog was pre-admitted before initialization");
                 *self.runtime = Some(store::ArtifactStoreInitializationRuntime::new_with_owner_catalog(&envelope.id, &envelope.schema, initial, initial_digest, owner_catalog));
                 self.phase = DrawingStoreInitializationPhase::SeedHistory { edit: 0, lane: 0, index: 0 };
@@ -5788,7 +5749,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
             DrawingStoreInitializationPhase::SeedHistory { edit, lane, index } => {
                 let envelope = self.envelope.as_ref().expect("Drawing envelope remains retained while causal history is seeded");
                 let Some(entry) = envelope.vcs.edits.get(edit) else {
-                    self.phase = DrawingStoreInitializationPhase::FindApplied { position: 0, scan: 0 };
+                    self.phase = DrawingStoreInitializationPhase::FoldSupersessions { transition: 0 };
                     return semio_framework_job::StepOutcome::Yield;
                 };
                 let runtime = self.runtime.as_mut().expect("Drawing runtime remains retained while history is seeded");
@@ -5821,53 +5782,54 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
                 cx.consume_fuel(1);
                 semio_framework_job::StepOutcome::Yield
             }
-            DrawingStoreInitializationPhase::FindApplied { position, scan } => {
+            DrawingStoreInitializationPhase::FoldSupersessions { transition } => {
+                let envelope = self.envelope.as_ref().expect("Drawing envelope remains retained while its supersessions fold");
+                match self.runtime.as_mut().expect("Drawing runtime remains retained while its supersessions fold").fold_supersession_step(envelope, transition) {
+                    Ok(true) => self.phase = DrawingStoreInitializationPhase::FoldSupersessions { transition: transition + 1 },
+                    Ok(false) => self.phase = DrawingStoreInitializationPhase::FindApplied { position: 0 },
+                    Err(error) => {
+                        self.fault = Some(error.into_bytes());
+                        self.phase = DrawingStoreInitializationPhase::RetireFault;
+                    }
+                }
+                cx.consume_fuel(1);
+                semio_framework_job::StepOutcome::Yield
+            }
+            DrawingStoreInitializationPhase::FindApplied { position } => {
                 let Some(id) = self.applied_id(position) else {
                     let checkpoint = self.envelope.as_ref().and_then(|envelope| envelope.cursor.as_ref().and_then(|cursor| cursor.checkpoint_id.clone()).or_else(|| envelope.vcs.checkpoints.last().map(|checkpoint| checkpoint.id.clone())));
                     self.runtime.as_mut().expect("Drawing runtime remains retained").set_current_checkpoint_id(checkpoint);
-                    self.phase = DrawingStoreInitializationPhase::FindRedo { position: 0, scan: 0 };
+                    self.phase = DrawingStoreInitializationPhase::FindRedo { position: 0 };
                     return semio_framework_job::StepOutcome::Yield;
                 };
+                let scan = self.edit_index.position(&id).unwrap_or(usize::MAX);
                 let envelope = self.envelope.as_ref().expect("Drawing envelope remains retained");
                 let Some(edit) = envelope.vcs.edits.get(scan) else {
                     self.fail(b"drawing-store.initializer-applied-edit-missing");
                     return semio_framework_job::StepOutcome::Yield;
                 };
                 if edit.id == id {
-                    let mut digest = store::ArtifactStoreInitializationDigest::new(b"drawing.edit");
-                    digest.observe(edit.id.as_bytes());
-                    digest.observe(&edit.sequence_number.to_be_bytes());
-                    digest.observe(edit.started_at.as_bytes());
-                    *self.edit_digest = Some(digest);
                     self.phase = DrawingStoreInitializationPhase::ApplyForward { position, edit: scan, mutation: 0 };
                 } else {
-                    self.phase = DrawingStoreInitializationPhase::FindApplied { position, scan: scan + 1 };
+                    self.fail(b"drawing-store.initializer-applied-edit-missing");
                 }
                 cx.consume_fuel(1);
                 semio_framework_job::StepOutcome::Yield
             }
             DrawingStoreInitializationPhase::ApplyForward { position, edit, mutation } => {
-                let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("Drawing applied edit remains retained");
-                let Some(operation) = entry.forwards.get(mutation) else {
-                    self.phase = DrawingStoreInitializationPhase::HashInverse { position, edit, mutation: 0 };
+                if self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).is_none_or(|entry| mutation >= entry.forwards.len()) {
+                    self.phase = DrawingStoreInitializationPhase::PrepareApplied { position, edit, field: 0 };
                     return semio_framework_job::StepOutcome::Yield;
+                }
+                let withdrawn = {
+                    let envelope = self.envelope.as_ref().expect("Drawing envelope remains retained while its forwards fold");
+                    envelope.vcs.edits.get(edit).and_then(|entry| self.runtime.as_ref().and_then(|runtime| runtime.effective_forward(entry, mutation, &envelope.schema))).is_none_or(|effective| effective.operation().is_none())
                 };
-                if self.mutation_digest.is_none() {
-                    *self.mutation_digest = Some(DrawingMutationDigestAuthority::new());
+                if withdrawn {
+                    self.phase = DrawingStoreInitializationPhase::ApplyForward { position, edit, mutation: mutation + 1 };
                     cx.consume_fuel(1);
                     return semio_framework_job::StepOutcome::Yield;
                 }
-                let digest_complete = match self.mutation_digest.as_mut().expect("Drawing mutation digest remains retained").step(operation, self.edit_digest.as_mut().expect("Drawing edit digest remains retained"), cx) {
-                    Ok(complete) => complete,
-                    Err(error) => {
-                        self.fail(error.as_bytes());
-                        return semio_framework_job::StepOutcome::Yield;
-                    }
-                };
-                if !digest_complete {
-                    return semio_framework_job::StepOutcome::Yield;
-                }
-                drop(self.mutation_digest.take());
                 if self.mutation_candidate.is_none() {
                     match DrawingMutationCandidateAuthority::try_new(self.operation, self.generation) {
                         Ok(candidate) => *self.mutation_candidate = Some(candidate),
@@ -5880,8 +5842,12 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
                     cx.consume_fuel(1);
                     return semio_framework_job::StepOutcome::Yield;
                 }
+                let envelope = self.envelope.as_ref().expect("Drawing envelope remains retained while its forwards fold");
+                let effective = envelope.vcs.edits.get(edit).and_then(|entry| self.runtime.as_ref().and_then(|runtime| runtime.effective_forward(entry, mutation, &envelope.schema))).expect("Drawing applied forward remains retained");
                 let current = self.runtime.as_mut().and_then(store::ArtifactStoreInitializationRuntime::current_mut).expect("Drawing runtime current snapshot remains retained");
-                let candidate_complete = match self.mutation_candidate.as_mut().expect("Drawing mutation candidate remains retained").step(current, operation, cx) {
+                let stepped = self.mutation_candidate.as_mut().expect("Drawing mutation candidate remains retained").step(current, effective.operation().expect("Drawing effective forward was checked"), cx);
+                drop(effective);
+                let candidate_complete = match stepped {
                     Ok(complete) => complete,
                     Err(error) => {
                         self.fail(error.as_bytes());
@@ -5892,27 +5858,6 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
                     self.mutation_candidate.as_mut().expect("Drawing completed mutation candidate remains retained").take().expect("Drawing mutation overlay terminal commit witness remains exact");
                     drop(self.mutation_candidate.take());
                     self.phase = DrawingStoreInitializationPhase::ApplyForward { position, edit, mutation: mutation + 1 };
-                }
-                semio_framework_job::StepOutcome::Yield
-            }
-            DrawingStoreInitializationPhase::HashInverse { position, edit, mutation } => {
-                let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("Drawing applied edit remains retained");
-                let Some(operation) = entry.inverse.get(mutation) else {
-                    self.phase = DrawingStoreInitializationPhase::PrepareApplied { position, edit, field: 0 };
-                    return semio_framework_job::StepOutcome::Yield;
-                };
-                if self.mutation_digest.is_none() {
-                    *self.mutation_digest = Some(DrawingMutationDigestAuthority::new());
-                    cx.consume_fuel(1);
-                    return semio_framework_job::StepOutcome::Yield;
-                }
-                match self.mutation_digest.as_mut().expect("Drawing inverse digest remains retained").step(operation, self.edit_digest.as_mut().expect("Drawing edit digest remains retained"), cx) {
-                    Ok(true) => {
-                        drop(self.mutation_digest.take());
-                        self.phase = DrawingStoreInitializationPhase::HashInverse { position, edit, mutation: mutation + 1 };
-                    }
-                    Ok(false) => {}
-                    Err(error) => self.fail(error.as_bytes()),
                 }
                 semio_framework_job::StepOutcome::Yield
             }
@@ -5931,107 +5876,62 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
                         } else {
                             cx.consume_fuel(1);
                         }
-                        self.phase = DrawingStoreInitializationPhase::CommitApplied { position };
+                        self.phase = DrawingStoreInitializationPhase::CommitApplied { position, edit };
                     }
                     _ => self.fail(b"drawing-store.initializer-applied-preparation"),
                 }
                 semio_framework_job::StepOutcome::Yield
             }
-            DrawingStoreInitializationPhase::CommitApplied { position } => {
+            DrawingStoreInitializationPhase::CommitApplied { position, edit } => {
                 let id = self.prepared_history_id.take().expect("Drawing applied id was retained in its own preparation grant");
                 let actor = self.prepared_actor.take();
-                let digest = self.edit_digest.take().expect("Drawing applied edit digest remains retained").finish();
+                let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("Drawing applied edit remains retained");
                 let runtime = self.runtime.as_mut().expect("Drawing runtime remains retained");
-                if let Err(error) = runtime.push_applied(id, digest) {
+                if let Err(error) = runtime.push_applied_admitted(id, entry) {
                     self.fault = Some(error.into_bytes());
                     self.phase = DrawingStoreInitializationPhase::RetireFault;
                 } else {
                     runtime.set_local_actor_id(actor);
-                    self.phase = DrawingStoreInitializationPhase::FindApplied { position: position + 1, scan: 0 };
+                    self.phase = DrawingStoreInitializationPhase::FindApplied { position: position + 1 };
                 }
                 cx.consume_fuel(1);
                 semio_framework_job::StepOutcome::Yield
             }
-            DrawingStoreInitializationPhase::FindRedo { position, scan } => {
+            DrawingStoreInitializationPhase::FindRedo { position } => {
                 let Some(id) = self.redo_id(position) else {
+                    self.edit_index.clear();
                     self.phase = DrawingStoreInitializationPhase::BuildCandidate;
                     return semio_framework_job::StepOutcome::Yield;
                 };
+                let scan = self.edit_index.position(&id).unwrap_or(usize::MAX);
                 let envelope = self.envelope.as_ref().expect("Drawing envelope remains retained");
                 let Some(edit) = envelope.vcs.edits.get(scan) else {
                     self.fail(b"drawing-store.initializer-redo-edit-missing");
                     return semio_framework_job::StepOutcome::Yield;
                 };
                 if edit.id == id {
-                    let mut digest = store::ArtifactStoreInitializationDigest::new(b"drawing.edit");
-                    digest.observe(edit.id.as_bytes());
-                    digest.observe(&edit.sequence_number.to_be_bytes());
-                    digest.observe(edit.started_at.as_bytes());
-                    *self.edit_digest = Some(digest);
-                    self.phase = DrawingStoreInitializationPhase::HashRedoForward { position, edit: scan, mutation: 0 };
+                    self.phase = DrawingStoreInitializationPhase::PrepareRedo { position, edit: scan };
                 } else {
-                    self.phase = DrawingStoreInitializationPhase::FindRedo { position, scan: scan + 1 };
+                    self.fail(b"drawing-store.initializer-redo-edit-missing");
                 }
                 cx.consume_fuel(1);
-                semio_framework_job::StepOutcome::Yield
-            }
-            DrawingStoreInitializationPhase::HashRedoForward { position, edit, mutation } => {
-                let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("Drawing redo edit remains retained");
-                let Some(operation) = entry.forwards.get(mutation) else {
-                    self.phase = DrawingStoreInitializationPhase::HashRedoInverse { position, edit, mutation: 0 };
-                    return semio_framework_job::StepOutcome::Yield;
-                };
-                if self.mutation_digest.is_none() {
-                    *self.mutation_digest = Some(DrawingMutationDigestAuthority::new());
-                    cx.consume_fuel(1);
-                    return semio_framework_job::StepOutcome::Yield;
-                }
-                match self.mutation_digest.as_mut().expect("Drawing redo forward digest remains retained").step(operation, self.edit_digest.as_mut().expect("Drawing redo digest remains retained"), cx) {
-                    Ok(true) => {
-                        drop(self.mutation_digest.take());
-                        self.phase = DrawingStoreInitializationPhase::HashRedoForward { position, edit, mutation: mutation + 1 };
-                    }
-                    Ok(false) => {}
-                    Err(error) => self.fail(error.as_bytes()),
-                }
-                semio_framework_job::StepOutcome::Yield
-            }
-            DrawingStoreInitializationPhase::HashRedoInverse { position, edit, mutation } => {
-                let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("Drawing redo edit remains retained");
-                let Some(operation) = entry.inverse.get(mutation) else {
-                    self.phase = DrawingStoreInitializationPhase::PrepareRedo { position, edit };
-                    return semio_framework_job::StepOutcome::Yield;
-                };
-                if self.mutation_digest.is_none() {
-                    *self.mutation_digest = Some(DrawingMutationDigestAuthority::new());
-                    cx.consume_fuel(1);
-                    return semio_framework_job::StepOutcome::Yield;
-                }
-                match self.mutation_digest.as_mut().expect("Drawing redo inverse digest remains retained").step(operation, self.edit_digest.as_mut().expect("Drawing redo digest remains retained"), cx) {
-                    Ok(true) => {
-                        drop(self.mutation_digest.take());
-                        self.phase = DrawingStoreInitializationPhase::HashRedoInverse { position, edit, mutation: mutation + 1 };
-                    }
-                    Ok(false) => {}
-                    Err(error) => self.fail(error.as_bytes()),
-                }
                 semio_framework_job::StepOutcome::Yield
             }
             DrawingStoreInitializationPhase::PrepareRedo { position, edit } => {
                 let id = &self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("Drawing redo edit remains retained").id;
                 *self.prepared_history_id = Some(clone_drawing_string(id).expect("validated Drawing redo id remains admitted"));
-                self.phase = DrawingStoreInitializationPhase::CommitRedo { position };
+                self.phase = DrawingStoreInitializationPhase::CommitRedo { position, edit };
                 cx.consume_fuel(id.len().max(1) as u64);
                 semio_framework_job::StepOutcome::Yield
             }
-            DrawingStoreInitializationPhase::CommitRedo { position } => {
+            DrawingStoreInitializationPhase::CommitRedo { position, edit } => {
                 let id = self.prepared_history_id.take().expect("Drawing redo id was retained in its own preparation grant");
-                let digest = self.edit_digest.take().expect("Drawing redo digest remains retained").finish();
-                if let Err(error) = self.runtime.as_mut().expect("Drawing runtime remains retained").push_redo(id, digest) {
+                let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("Drawing redo edit remains retained");
+                if let Err(error) = self.runtime.as_mut().expect("Drawing runtime remains retained").push_redo_admitted(id, entry) {
                     self.fault = Some(error.into_bytes());
                     self.phase = DrawingStoreInitializationPhase::RetireFault;
                 } else {
-                    self.phase = DrawingStoreInitializationPhase::FindRedo { position: position + 1, scan: 0 };
+                    self.phase = DrawingStoreInitializationPhase::FindRedo { position: position + 1 };
                 }
                 cx.consume_fuel(1);
                 semio_framework_job::StepOutcome::Yield
@@ -6054,8 +5954,6 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
             DrawingStoreInitializationPhase::RetireCancelled | DrawingStoreInitializationPhase::RetireFault => match self.pump_terminal_retirement() {
                 Ok(false) => semio_framework_job::StepOutcome::Yield,
                 Ok(true) => {
-                    *self.initial_digest = None;
-                    *self.edit_digest = None;
                     self.terminal_handoff = true;
                     if self.phase == DrawingStoreInitializationPhase::RetireCancelled {
                         self.phase = DrawingStoreInitializationPhase::Cancelled;
@@ -6068,7 +5966,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
                     }
                 }
                 Err(error) => {
-                    self.fault = Some(error.into_bytes());
+                    self.fault = Some(error.into_message().into_bytes());
                     semio_framework_job::StepOutcome::Yield
                 }
             },
@@ -6104,9 +6002,6 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
         match self.pump_terminal_retirement() {
             Ok(false) => Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }),
             Ok(true) => {
-                *self.initial_digest = None;
-                *self.edit_digest = None;
-                drop(self.mutation_digest.take());
                 drop(self.mutation_candidate.take());
                 self.terminal_handoff = true;
                 Ok(semio_framework_plugin::PluginCloseStep::Complete)
@@ -6120,9 +6015,6 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
             return None;
         }
         let candidate = self.candidate.take()?;
-        *self.initial_digest = None;
-        *self.edit_digest = None;
-        drop(self.mutation_digest.take());
         drop(self.mutation_candidate.take());
         self.terminal_handoff = true;
         Some(candidate)

@@ -38,5 +38,10 @@
     "fff8000000000042"
   ],
   "jsonDepth": 128,
-  "controlledRetirementDepth": 8192
+  "controlledRetirementDepth": 8192,
+  "controlledOutput": {
+    "textUnit": "引用😀\"\\",
+    "repeat": 12000,
+    "refusedBytes": 4096
+  }
 }

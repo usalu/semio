@@ -8,6 +8,6 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::{encode_mesh
 
 pub fn register() {}
 
-pub fn serialize_bytes(snapshot: &GisTerrainSnapshot) -> Result<Vec<u8>, store::TextError> {
-    encode_mesh(&gis_terrain_mesh_from_snapshot(snapshot), SemioMeshFormat::Stl).map_err(|error| store::TextError::new(format!("gisterrain→stl: {error}"), dsl::TextSpan::at(1, 1)))
+pub fn serialize_bytes(snapshot: &GisTerrainSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
+    encode_mesh(&gis_terrain_mesh_from_snapshot(snapshot), SemioMeshFormat::Stl).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("gisterrain→stl: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))
 }

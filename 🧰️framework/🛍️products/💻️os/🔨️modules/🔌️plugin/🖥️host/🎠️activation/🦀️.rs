@@ -1,7 +1,7 @@
 //! 🎠️ Shared native activation handoff for headless and rendered hosts.
 
 use super::shard::executor::{RegistrationAdmission, ShardExecutor};
-use super::{CompiledHandle, GuestRuntime, GuestRuntimes};
+use super::{CompiledHandle, GuestRuntime, GuestRuntimes, PluginHostError};
 use semio_framework::kernel::{ActivationEvent, BrokerCapabilityGrant, Budget, Event};
 use semio_framework_actor::activation::KernelActivationReservation;
 use semio_framework_actor::{ActorId, Kernel};
@@ -26,14 +26,46 @@ pub fn activation_turn_event(app_id: &str) -> Option<Event> {
     activation_event_for_app_id(app_id).map(|reason| Event::Activate { reason })
 }
 
-async fn retire_failed_activation(kernel: &mut Kernel, reservation: KernelActivationReservation, reason: String) -> String {
-    match kernel.abort_activation(reservation).await {
-        Ok(_) => reason,
-        Err(error) => format!("{reason}; kernel activation retirement failed: {:?}", error.reason),
+/// 🚫️ Why an activation installed no actor: the reason in words, and the structured fault when the guest itself was refused
+/// at admission (`PluginHostError::Refused`, e.g. `plugin.channel-mismatch` with its `guest`/`host` params), so every host
+/// tells it as its localized notice instead of the English `code: message` line.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ActivationRefusal {
+    pub reason: String,
+    pub fault: Option<semio_framework::Fault>,
+}
+
+impl ActivationRefusal {
+    /// 🗒️ A refusal the host itself raised (kernel, shard): words only, no guest fault.
+    pub fn host(reason: impl Into<String>) -> Self {
+        Self { reason: reason.into(), fault: None }
+    }
+
+    /// 🤝️ A refusal of instantiation, keeping the guest's admission fault when the runtime refused it.
+    pub fn instantiation(error: PluginHostError) -> Self {
+        let reason = error.to_string();
+        match error {
+            PluginHostError::Refused(fault) => Self { reason, fault: Some(*fault) },
+            _ => Self { reason, fault: None },
+        }
     }
 }
 
-/// 🎟️ Transfers an existing kernel activation into its pinned shard, retiring failures exactly.
+impl std::fmt::Display for ActivationRefusal {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str(&self.reason)
+    }
+}
+
+async fn retire_failed_activation(kernel: &mut Kernel, reservation: KernelActivationReservation, refusal: ActivationRefusal) -> ActivationRefusal {
+    match kernel.abort_activation(reservation).await {
+        Ok(_) => refusal,
+        Err(error) => ActivationRefusal { reason: format!("{}; kernel activation retirement failed: {:?}", refusal.reason, error.reason), fault: refusal.fault },
+    }
+}
+
+/// 🎟️ Transfers an existing kernel activation into its pinned shard, retiring failures exactly; a refusal carries the
+/// guest's admission fault ([`ActivationRefusal`]).
 #[allow(clippy::too_many_arguments)]
 pub async fn install_actor(
     kernel: &mut Kernel,
@@ -43,21 +75,21 @@ pub async fn install_actor(
     compiled: &CompiledHandle,
     caps: &[BrokerCapabilityGrant],
     budget: &Budget,
-) -> Result<ActorId, String> {
+) -> Result<ActorId, ActivationRefusal> {
     if !kernel.reservation_is_current(&reservation) {
-        return Err("kernel activation reservation is not current".into());
+        return Err(ActivationRefusal::host("kernel activation reservation is not current"));
     }
     let actor = reservation.actor();
     if kernel.actor_status(actor).await != Some(&semio_framework_actor::ActorStatus::Activating) {
-        return Err(retire_failed_activation(kernel, reservation, "kernel activation is no longer activating".into()).await);
+        return Err(retire_failed_activation(kernel, reservation, ActivationRefusal::host("kernel activation is no longer activating")).await);
     }
     let Some(shard) = shards.get(reservation.shard().0 as usize) else {
         let reason = format!("kernel assigned shard {} but only {} shards exist", reservation.shard().0, shards.len());
-        return Err(retire_failed_activation(kernel, reservation, reason).await);
+        return Err(retire_failed_activation(kernel, reservation, ActivationRefusal::host(reason)).await);
     };
     let instance = match runtime.instantiate(compiled, actor, caps, budget).await {
         Ok(instance) => instance,
-        Err(error) => return Err(retire_failed_activation(kernel, reservation, error.to_string()).await),
+        Err(error) => return Err(retire_failed_activation(kernel, reservation, ActivationRefusal::instantiation(error)).await),
     };
     let reason = match shard.register(actor, instance).await {
         RegistrationAdmission::Admitted(allocation) => {
@@ -74,7 +106,7 @@ pub async fn install_actor(
         }
         RegistrationAdmission::Stopped => "shard stopped before registration acknowledgement".into(),
     };
-    Err(retire_failed_activation(kernel, reservation, reason).await)
+    Err(retire_failed_activation(kernel, reservation, ActivationRefusal::host(reason)).await)
 }
 
 #[cfg(test)]

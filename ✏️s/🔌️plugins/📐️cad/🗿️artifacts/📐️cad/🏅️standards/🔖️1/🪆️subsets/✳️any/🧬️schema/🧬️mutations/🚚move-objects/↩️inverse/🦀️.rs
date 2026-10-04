@@ -4,7 +4,8 @@ use crate::mutations::{CadMutation, CadObjectOrigin};
 use crate::CadSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &MoveObjects, base: &CadSnapshot) -> Vec<CadMutation> {
+pub fn inverse(payload: &MoveObjects, base: &CadSnapshot) -> Result<Vec<CadMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(scene) = crate::cad_pane_local_scene(base, payload.pane) else {
         return Vec::new();
     };
@@ -18,5 +19,7 @@ pub fn inverse(payload: &MoveObjects, base: &CadSnapshot) -> Vec<CadMutation> {
         return Vec::new();
     }
     vec![CadMutation::MoveObjects(MoveObjects { pane: payload.pane, placements })]
+
+    })())
 }
 //#endregion 🔖️Inverse

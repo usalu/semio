@@ -142,7 +142,7 @@ fn field_patch_validation_fixtures() {
     let id = crate::schema::layer_id(&document.layers[0]);
     for case in cases.as_array().unwrap() {
         let patch = &case["patch"];
-        let value = dsl::json::to_dsl_value(&dsl::json::parse(&patch["value"].to_string()).unwrap());
+        let value = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(&patch["value"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
         let group_document = DrawingSnapshot { layers: vec![crate::schema::create_drawing_group_layer("Group")], ..Default::default() };
         let (target, target_id) = if patch["field"] == "isolation" { (&group_document, crate::schema::layer_id(&group_document.layers[0])) } else { (&document, id) };
         let operation = drawing_op_for_layer_field(target, target_id, patch["field"].as_str().unwrap(), &value);
@@ -163,7 +163,7 @@ fn stroke_fields_preserve_appearance_and_undo() {
     for (field, input) in [("strokeWidth", "3"), ("strokeColor", "#123456"), ("strokeCap", "round"), ("strokeJoin", "bevel"), ("strokeDash", "8")] {
         let value = parse_layer_field_input(field, input);
         let operation = drawing_op_for_layer_field(&document, id, field, &value).unwrap();
-        let inverse = operation.inverse(&document);
+        let inverse = operation.inverse(&document).expect("valid retained mutation inverse fixture");
         let before = document.clone();
         apply_drawing_mutation(&mut document, &operation).unwrap();
         let mut undone = document.clone();
@@ -175,7 +175,7 @@ fn stroke_fields_preserve_appearance_and_undo() {
     assert_eq!(stroke.dash, Some(vec![8.0]));
     let scene = crate::schema::flatten_drawing_document_to_scene_nodes(&document);
     assert_eq!(scene.iter().find_map(|node| node.stroke.as_ref()), Some(stroke));
-    assert_eq!(parse_layer_field_input("name", "123"), dsl::DslValue::String("123".into()));
+    assert_eq!(parse_layer_field_input("name", "123"), semio_framework_value::DslValue::String("123".into()));
 }
 
 #[test]
@@ -187,7 +187,7 @@ fn text_field_edits_preserve_numeric_strings_and_other_facets() {
     for (field, input) in [("textContent", "123"), ("textContent", "Grüße 🌍\nHello"), ("textSize", "36")] {
         let before = document.clone();
         let mutation = drawing_op_for_layer_field(&document, &id, field, &parse_layer_field_input(field, input)).unwrap();
-        let inverse = mutation.inverse(&document);
+        let inverse = mutation.inverse(&document).expect("valid retained mutation inverse fixture");
         apply_drawing_mutation(&mut document, &mutation).unwrap();
         let DrawingLayerNode::Text(text) = &document.layers[0] else { panic!("Expected text") };
         if field == "textContent" { assert_eq!(text.content, input); assert_eq!(text.size, 24.0); }
@@ -208,7 +208,7 @@ fn all_inspector_blend_modes_preserve_other_fields_and_undo() {
     for case in cases.as_array().unwrap().iter().filter(|case| case["patch"]["field"] == "blendMode" && case["accepted"] == true) {
         let mode = case["patch"]["value"].as_str().unwrap();
         let operation = drawing_op_for_layer_field(&original, id, "blendMode", &parse_layer_field_input("blendMode", mode)).unwrap();
-        let inverse = operation.inverse(&original);
+        let inverse = operation.inverse(&original).expect("valid retained mutation inverse fixture");
         let mut document = original.clone();
         apply_drawing_mutation(&mut document, &operation).unwrap();
         let mut expected = original.clone();
@@ -264,7 +264,7 @@ async fn replay_history_edit(base: &DrawingSnapshot, log: &[DrawingMutation], in
     let mut fresh = base.clone();
     for (position, mutation) in log.iter().enumerate() {
         let mutation = if position == index { edited } else { mutation };
-        if !mutation.diff(&fresh).messages().iter().any(|message| matches!(message.level, protocol::Severity::Error | protocol::Severity::Fatal)) {
+        if !mutation.diff(&fresh).messages().iter().any(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)) {
             apply_drawing_mutation(&mut fresh, mutation).expect("the edited log folds");
         }
     }
@@ -292,7 +292,7 @@ async fn every_selection_leaf_edited_in_history_replays_its_downstream() {
     ];
     for (index, edited) in &edits {
         let report = replay_history_edit(&base, &log, *index, edited).await;
-        assert!(!report.blocks_finalize(), "a re-parametrised {} never blocks finalizing: {report:?}", edited.label().resolve(protocol::Terminology::Native, protocol::Locale::En));
+        assert!(!report.blocks_finalize(), "a re-parametrised {} never blocks finalizing: {report:?}", edited.label().resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En));
         assert_eq!(report.outcomes.len(), log.len() - index, "the replay reports the edited leaf and every downstream one");
     }
 }
@@ -311,10 +311,11 @@ async fn a_drag_retargeted_onto_a_missing_layer_blocks_finalizing() {
 /// every layer reference of the four selection leaves takes "Use selection" from the canvas selection domain.
 #[test]
 fn layer_references_read_their_name_and_take_the_canvas_selection() {
-    let base = base_document();
+    let mut base = base_document();
+    crate::schema::layer_base_mut(&mut base.layers[0]).name="Rectangle <Name> & Ü".into();
     let id = crate::schema::layer_id(&base.layers[0]).to_string();
     let names = semio_framework_plugin::app::time_travel::time_travel_entity_names(&semio_framework_value::ToValue::to_value(&base), &[id.as_str()].into_iter().collect());
-    assert_eq!(names.get(&id).map(|label| label.resolve(protocol::Terminology::Native, protocol::Locale::De).to_owned()).as_deref(), Some("Rect"));
+    assert_eq!(names.get(&id).map(|label| label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De).to_owned()).as_deref(), Some("Rectangle <Name> & Ü"));
     fn references(value: &serde_json::Value, into: &mut Vec<serde_json::Value>) {
         match value {
             serde_json::Value::Object(fields) => {

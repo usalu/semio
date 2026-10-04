@@ -151,8 +151,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     }
 
     const cases = loadCorpus();
-    it("loads all 76 corpus fixtures", () => {
-      expect(cases.length).toBe(76);
+    it("loads all 77 corpus fixtures", () => {
+      expect(cases.length).toBe(77);
     });
 
     for (const testCase of cases) {
@@ -306,6 +306,78 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(width.container.querySelector('[role="alert"]')?.textContent).toBe("Must be at most 100");
       expect(intents).not.toHaveBeenCalled();
       expect(actions).not.toHaveBeenCalled();
+      cleanup();
+    });
+
+    /** 💬️ The `row-semantics` case (`rowSemantics`, shared with the wgpu renderer law): a property row's description is
+     * visible and named by its control through `aria-describedby`; a disabled row action stays focusable with
+     * `aria-disabled`, names its reason through `aria-describedby`, shows that same reason as visible text on every
+     * `revealReason.on` trigger and hides it on every `revealReason.off` trigger, and activating it dispatches nothing; an
+     * option row exposes its choice as `aria-selected` and paints the chosen row selected. */
+    it("exposes row descriptions on their controls and keeps disabled row actions focusable with their reason", async () => {
+      const { render, cleanup, fireEvent, act } = await import("@semio-tech/ui-react/test");
+      const { CHROME_CONTROL_TOOLTIP_DELAY_MS } = await import("@semio-tech/ui-react");
+      const intents = vi.fn();
+      const actions = vi.fn();
+      const testCase = cases.find((candidate) => candidate.name === "row-semantics")!;
+      type Reveal = "hover" | "focus" | "press";
+      type Conceal = "leave" | "blur" | "escape";
+      const semantics = (testCase.expect as unknown as { readonly rowSemantics: { readonly describedControls: readonly { readonly description: string }[]; readonly disabledRowActions: readonly { readonly reason: string; readonly revealReason: { readonly on: readonly Reveal[]; readonly off: readonly Conceal[] } }[]; readonly selectedRows: readonly { readonly row: number; readonly selected: boolean }[] } }).rowSemantics;
+      const store = new UiDocumentStore(testCase.snapshot.surface);
+      store.loadSnapshot(testCase.snapshot);
+      const view = render(<UiNodeView store={store} id={testCase.snapshot.root} context={{ store, onAction: actions, onIntent: intents }} />);
+      const describedBy = (element: Element) => (element.getAttribute("aria-describedby") ?? "").split(/\s+/u).filter(Boolean).map((id) => document.getElementById(id)?.textContent ?? "").join(" ");
+      const control = view.container.querySelector<HTMLElement>('[role="slider"]')!;
+      expect(describedBy(control)).toContain(semantics.describedControls[0]!.description);
+      expect(view.container.textContent).toContain(semantics.describedControls[0]!.description);
+      const edit = [...view.container.querySelectorAll<HTMLElement>('[data-slot="action"]')].find((button) => button.getAttribute("aria-disabled") === "true")!;
+      expect([edit.hasAttribute("disabled"), edit.tabIndex >= 0]).toEqual([false, true]);
+      expect(describedBy(edit)).toBe(semantics.disabledRowActions[0]!.reason);
+      edit.focus();
+      expect(document.activeElement).toBe(edit);
+      fireEvent.click(edit);
+      expect(intents).not.toHaveBeenCalled();
+      expect(actions).not.toHaveBeenCalled();
+      act(() => edit.blur());
+      const disabled = semantics.disabledRowActions[0]!;
+      const shown = () => document.querySelector('[data-slot="row-action-reason"][data-revealed]')?.textContent ?? null;
+      const reveal: Record<Reveal, () => Promise<void>> = {
+        hover: async () => {
+          fireEvent.pointerEnter(edit, { pointerType: "mouse" });
+          expect(shown(), "a hover reveals only after the tooltip delay").toBeNull();
+          await act(async () => {
+            await new Promise((resolve) => setTimeout(resolve, CHROME_CONTROL_TOOLTIP_DELAY_MS + 50));
+          });
+        },
+        focus: async () => act(() => edit.focus()),
+        press: async () => {
+          fireEvent.click(edit);
+        },
+      };
+      const conceal: Record<Conceal, () => void> = {
+        leave: () => fireEvent.pointerLeave(edit, { pointerType: "mouse" }),
+        blur: () => act(() => edit.blur()),
+        escape: () => fireEvent.keyDown(edit, { key: "Escape" }),
+      };
+      expect([disabled.revealReason.on.length, disabled.revealReason.off.length]).toEqual([3, 3]);
+      for (const [index, trigger] of disabled.revealReason.on.entries()) {
+        expect(shown(), `hidden before ${trigger}`).toBeNull();
+        await reveal[trigger]();
+        expect(shown(), `${trigger} shows the reason`).toBe(disabled.reason);
+        expect(describedBy(edit), `${trigger} keeps it the description`).toBe(disabled.reason);
+        const off = disabled.revealReason.off[index]!;
+        conceal[off]();
+        expect(shown(), `${off} hides the reason`).toBeNull();
+        expect(describedBy(edit), `${off} keeps it the description`).toBe(disabled.reason);
+      }
+      expect(intents).not.toHaveBeenCalled();
+      expect(actions).not.toHaveBeenCalled();
+      for (const row of semantics.selectedRows) {
+        const record = testCase.snapshot.nodes.find((node) => node.id === row.row)!;
+        const label = (record.component as { readonly label: string }).label;
+        const item = [...view.container.querySelectorAll<HTMLElement>('[role="treeitem"]')].filter((candidate) => candidate.textContent?.includes(label)).at(-1)!;
+        expect([label, item.getAttribute("aria-selected"), item.hasAttribute("data-selected")]).toEqual([label, String(row.selected), row.selected]);
+      }
       cleanup();
     });
   });

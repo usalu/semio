@@ -20,7 +20,7 @@ pub fn diff(payload: &ReplaceSupport, base: &Fem2dSnapshot) -> protocol::Mutatio
         return rejection;
     }
     if *existing == payload.new_support {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Support \"{}\" is already equal to the replacement value.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Support \"{}\" is already equal to the replacement value.", payload.id));
     }
     protocol::MutationOutcome::new(Fem2dDiff { supports: Some(Fem2dSupportsDelta { patched: vec![Fem2dSupportsPatchEntry { id: payload.id.clone(), item: payload.new_support.clone() }], ..Default::default() }), ..Default::default() })
 }

@@ -1,0 +1,40 @@
+{
+  "schema": "stdio.ifc.2x3",
+  "document": {
+    "header": {
+      "fileDescription": [
+        {
+          "kind": "list",
+          "values": [
+            {
+              "kind": "str",
+              "value": "ViewDefinition [COBie]"
+            }
+          ]
+        },
+        {
+          "kind": "str",
+          "value": "2;1"
+        }
+      ],
+      "fileName": [
+        {
+          "kind": "str",
+          "value": "cobie-before.ifc"
+        }
+      ],
+      "fileSchema": [
+        {
+          "kind": "list",
+          "values": [
+            {
+              "kind": "str",
+              "value": "IFC2X3"
+            }
+          ]
+        }
+      ]
+    },
+    "instances": []
+  }
+}

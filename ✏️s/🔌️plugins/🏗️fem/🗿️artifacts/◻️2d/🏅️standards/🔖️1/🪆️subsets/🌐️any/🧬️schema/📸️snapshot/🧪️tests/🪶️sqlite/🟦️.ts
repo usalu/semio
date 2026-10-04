@@ -98,6 +98,7 @@ for(const word of fixture.ieee754Words)test(`fem2d canonical snapshot artifact a
    expect(artifact.parseFem2dArtifact(source)).toEqual(source);
    const delta=diff.parseFem2dNodesDelta({added:source.nodes,removed:[],patched:[]});
    expect(delta.added).toEqual(source.nodes);
+   expect(diff.parseFem2dNodesDelta({added:[],removed:[],patched:source.nodes.map(item=>({id:item.id,item}))}).patched).toEqual(source.nodes.map(item=>({id:item.id,item})));
    expect(await fem2dSnapshotFromSqliteDatabase(await fem2dSnapshotToSqliteDatabase(artifact.parseFem2dArtifact(source)))).toEqual(source);
   }
 });

@@ -1,0 +1,10 @@
+{
+  "literalSchema": "任意\u0000{literal-svg}",
+  "text": "日本𐀀",
+  "repeat": 16384,
+  "wideChildren": 1024,
+  "maxDomainRows": 4,
+  "maxValueBytes": 4096,
+  "cancelAtBytes": 65536,
+  "metadata": { "version": "任意\u0000version", "encoding": "UTF-16", "prologPosition": "18446744073709551615" }
+}

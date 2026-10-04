@@ -14,4 +14,4 @@ pub fn source() -> ExampleSource {
 }
 
 /// 🎬️ Materializes this explicit host-graph example into its composed child cache.
-pub fn snapshot_from_text(text:&str)->Result<crate::FlowSnapshot,store::TextError>{<semio_framework_artifact_flow_flow::FlowHostSnapshot as store::ArtifactDsl>::parse_dsl(text).map(crate::FlowSnapshot::from_host_snapshot)}
+pub fn snapshot_from_text(text:&str)->Result<crate::FlowSnapshot,semio_framework_diagnostic::TextError>{<semio_framework_artifact_flow_flow::FlowHostSnapshot as store::ArtifactDsl>::parse_dsl(text).map(crate::FlowSnapshot::from_host_snapshot)}

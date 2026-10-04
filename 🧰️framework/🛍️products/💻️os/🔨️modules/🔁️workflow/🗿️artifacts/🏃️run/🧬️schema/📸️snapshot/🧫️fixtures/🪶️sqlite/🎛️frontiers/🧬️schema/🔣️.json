@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.workflow.run.sqlite.bounded-frontiers.v1.schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "collectionLength",
+    "maxReadsBetweenControls",
+    "roles",
+    "tableCount",
+    "rootRows",
+    "ordinalIndexBytes"
+  ],
+  "properties": {
+    "contract": {
+      "type": "string",
+      "const": "semio.workflow.run.sqlite.bounded-frontiers.v1"
+    },
+    "collectionLength": {
+      "type": "integer",
+      "const": 769
+    },
+    "maxReadsBetweenControls": {
+      "type": "integer",
+      "const": 256
+    },
+    "roles": {
+      "type": "array",
+      "const": [
+        "directionPartition",
+        "inputMaterialization",
+        "outputMaterialization",
+        "artifactMaterialization"
+      ],
+      "items": {
+        "type": "string"
+      }
+    },
+    "tableCount": {
+      "type": "integer",
+      "const": 7
+    },
+    "rootRows": {
+      "type": "integer",
+      "const": 2
+    },
+    "ordinalIndexBytes": {
+      "type": "integer",
+      "const": 8
+    }
+  }
+}

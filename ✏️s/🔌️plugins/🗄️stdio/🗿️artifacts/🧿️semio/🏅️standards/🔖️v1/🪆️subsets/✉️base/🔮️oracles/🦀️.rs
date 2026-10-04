@@ -10,6 +10,8 @@
 //!
 //! What the carrier can say, and therefore what this module answers:
 //! - `setSnapshot` REPLACES the envelope with its payload, whatever arm either side names;
+//! - `patchSnapshot` applies its one RFC 6901 pointer operation to the envelope as read
+//!   (`semio_repo_test_host::law::patched_snapshot`);
 //! - an `apply<Arm>` wrapper whose arm matches the envelope's `subset` REACHES that arm, and the
 //!   arm's own committed result (produced by that arm's independent implementation, never by this
 //!   repository's Rust) is the answer;
@@ -75,7 +77,7 @@ pub fn envelope_arm(envelope: &Json) -> Option<String> {
     }
 }
 
-/// 🏷️ The adjacently tagged verb of an envelope mutation — `setSnapshot` or an `apply<Arm>` wrapper.
+/// 🏷️ The adjacently tagged verb of an envelope mutation — `setSnapshot`, `patchSnapshot` or an `apply<Arm>` wrapper.
 pub fn mutation_tag(mutation: &Json) -> Option<String> {
     match mutation.get("mutation")? {
         Json::String(tag) => Some(tag.clone()),
@@ -98,7 +100,11 @@ pub fn route(before: &Json, mutation: &Json, arm_result: Option<&Json>) -> Resul
         let snapshot = mutation.get("payload").and_then(|payload| payload.get("snapshot")).ok_or("setSnapshot carries no payload.snapshot")?;
         return Ok(Routed { envelope: snapshot.clone(), refused: Vec::new() });
     }
-    let arm = wrapped_arm(&tag).ok_or_else(|| format!("the envelope mutation tag {tag} names neither setSnapshot nor an apply<Arm> wrapper"))?;
+    if tag == "patchSnapshot" {
+        let patch = mutation.get("payload").and_then(|payload| payload.get("patch")).ok_or("patchSnapshot carries no payload.patch")?;
+        return Ok(Routed { envelope: semio_repo_test_host::law::patched_snapshot(before, patch)?, refused: Vec::new() });
+    }
+    let arm = wrapped_arm(&tag).ok_or_else(|| format!("the envelope mutation tag {tag} names neither setSnapshot, patchSnapshot nor an apply<Arm> wrapper"))?;
     if envelope_arm(before).as_deref() != Some(arm.as_str()) {
         return Ok(Routed { envelope: before.clone(), refused: vec![TARGET_MISSING.to_string()] });
     }

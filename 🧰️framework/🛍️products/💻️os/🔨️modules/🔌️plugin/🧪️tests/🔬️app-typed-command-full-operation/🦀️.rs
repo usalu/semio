@@ -11,22 +11,16 @@ mod typed_command_full_operation_tests {
     }
 
     trait TypedCommandCensusOracle {
-        fn decide(&self, description: &str, coalesce_key: &str, maximum: usize) -> TypedCommandCensusDecision;
+        fn decide(&self, description: &str, maximum: usize) -> TypedCommandCensusDecision;
     }
 
     struct OwnedTypedCommandCensus;
 
     impl TypedCommandCensusOracle for OwnedTypedCommandCensus {
-        fn decide(&self, description: &str, coalesce_key: &str, maximum: usize) -> TypedCommandCensusDecision {
+        fn decide(&self, description: &str, maximum: usize) -> TypedCommandCensusDecision {
             let mut bytes = 0usize;
             let mut accepted = true;
             for _ in description.as_bytes() {
-                accepted &= bytes.checked_add(1).is_some_and(|next| {
-                    bytes = next;
-                    next <= maximum
-                });
-            }
-            for _ in coalesce_key.as_bytes() {
                 accepted &= bytes.checked_add(1).is_some_and(|next| {
                     bytes = next;
                     next <= maximum
@@ -43,9 +37,9 @@ mod typed_command_full_operation_tests {
     struct SerdeJsonTypedCommandCensus;
 
     impl TypedCommandCensusOracle for SerdeJsonTypedCommandCensus {
-        fn decide(&self, description: &str, coalesce_key: &str, maximum: usize) -> TypedCommandCensusDecision {
-            let value = serde_json::json!({ "coalesceKey": coalesce_key, "description": description, "uiScopeFields": 1 });
-            let bytes = value["description"].as_str().expect("oracle description").as_bytes().len() + value["coalesceKey"].as_str().expect("oracle coalesce key").as_bytes().len() + value["uiScopeFields"].as_u64().expect("oracle UI scope") as usize;
+        fn decide(&self, description: &str, maximum: usize) -> TypedCommandCensusDecision {
+            let value = serde_json::json!({ "description": description, "uiScopeFields": 1 });
+            let bytes = value["description"].as_str().expect("oracle description").as_bytes().len() + value["uiScopeFields"].as_u64().expect("oracle UI scope") as usize;
             TypedCommandCensusDecision { bytes, accepted: bytes <= maximum }
         }
     }
@@ -203,7 +197,7 @@ mod typed_command_full_operation_tests {
             self.closing = true;
         }
 
-        fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
             if !self.closing || grant.maximum_items == 0 {
                 return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
             }
@@ -223,7 +217,7 @@ mod typed_command_full_operation_tests {
     }
 
     impl store::ErasedSnapshotRetirement for PublicationPresenceLocalRootRetirement {
-        fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+        fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
             if maximum_items == 0 {
                 return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
             }
@@ -940,7 +934,7 @@ mod typed_command_full_operation_tests {
         assert_eq!(stuck.stage, MountedTypedCommandFullOperationStage::AwaitingAck, "a refused worker step leaves its own operation holding its own terminal fault page");
         let mut pages: Vec<(u64, TypedOperationResultLane, String)> = Vec::new();
         while let Some(page) = app.take_typed_operation_result_page(7) {
-            let code = if page.lane == TypedOperationResultLane::Fault { crate::app::decode_typed_operation_fault_page(page.bytes()).0 .0 } else { String::new() };
+            let code = if page.lane == TypedOperationResultLane::Fault { crate::app::decode_typed_operation_fault_page(page.bytes()).code.0 } else { String::new() };
             let operation = page.token.operation;
             pages.push((operation, page.lane, code));
             if operation == 1 {
@@ -1064,10 +1058,9 @@ mod typed_command_full_operation_tests {
         let oracle = SerdeJsonTypedCommandCensus;
         for case in fixture["cases"].as_array().expect("fixture cases") {
             let description = case["description"].as_str().expect("fixture description");
-            let coalesce_key = case["coalesceKey"].as_str().expect("fixture coalesce key");
             let expected = TypedCommandCensusDecision { bytes: case["expectedBytes"].as_u64().expect("fixture expected bytes") as usize, accepted: case["accepted"].as_bool().expect("fixture acceptance") };
-            assert_eq!(owned.decide(description, coalesce_key, maximum), expected);
-            assert_eq!(oracle.decide(description, coalesce_key, maximum), expected);
+            assert_eq!(owned.decide(description, maximum), expected);
+            assert_eq!(oracle.decide(description, maximum), expected);
         }
     }
 
@@ -1396,7 +1389,7 @@ mod typed_command_full_operation_tests {
 
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️app-typed-command-full-operation/🔣️renderer-result-lanes.json")).expect("neutral result lanes");
         for row in fixture["lanes"].as_array().expect("result lanes") {
-            let lane: TypedOperationResultLane = protocol::json::from_json_str(&serde_json::to_string(&row["name"]).unwrap()).expect("own lane decoder");
+            let lane: TypedOperationResultLane = semio_framework_pack_json::from_json_str(&serde_json::to_string(&row["name"]).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("own lane decoder");
             let page = TypedOperationResultPage::try_new(token, lane, &[0x5a]).expect("declared result lane");
             let bytes = page.renderer_exchange_bytes();
             assert_eq!(bytes[TypedOperationResultPage::RENDERER_PAGE_MAGIC.len() + 25], row["tag"].as_u64().unwrap() as u8);

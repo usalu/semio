@@ -8,5 +8,19 @@
   "unreachableCycle": [
     800,
     801
-  ]
+  ],
+  "controlledRefusals": {
+    "cancellation": "canceled",
+    "rowAdmission": "ownershipLimit",
+    "malformedRecord": "invalidValue"
+  },
+  "controlledTextSource": {
+    "source": "?",
+    "kind": "invalidValue",
+    "span": {
+      "line": 1,
+      "column": 1,
+      "length": 0
+    }
+  }
 }

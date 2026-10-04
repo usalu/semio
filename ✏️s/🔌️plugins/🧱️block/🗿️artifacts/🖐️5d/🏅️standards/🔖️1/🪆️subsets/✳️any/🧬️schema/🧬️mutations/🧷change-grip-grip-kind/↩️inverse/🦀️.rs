@@ -4,10 +4,13 @@ use crate::Block5dSnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::Block5dMutation;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::ChangeGripGripKind, base: &Block5dSnapshot) -> Vec<Block5dMutation> {
+pub fn inverse(payload: &super::ChangeGripGripKind, base: &Block5dSnapshot) -> Result<Vec<Block5dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.grips.iter().find(|item| item.id == payload.id) {
         Some(existing) => vec![super::super::change_grip_grip_kind::change_grip_grip_kind(payload.id.clone(), existing.grip_kind.clone())],
         None => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

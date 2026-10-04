@@ -9,7 +9,7 @@ use crate::editor::space_index::config::{SpaceIndexConfig, SpaceIndexConfigMutat
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "request-delete-artifact")]
 pub struct RequestDeleteArtifact {
     pub id: String,
@@ -17,7 +17,7 @@ pub struct RequestDeleteArtifact {
 
 pub fn handle(payload: &RequestDeleteArtifact, doc: &ArtifactView<'_, SSpaceSnapshot>, _cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
     let row = doc.snapshot.artifacts.iter().find(|row| row.id == payload.id).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("s.space.mutation.target-missing"), format!("artifact `{}` not found", payload.id)))?;
-    Ok(Emit::effect(Effect::OpenDialog { req: semio_framework_plugin::RequestId(128), dialog_id: "deleteArtifact".into(), args: Some(pack::json_to_dsl_value(&pack::json!({ "id": row.id.clone(), "name": row.name.clone() }))) }))
+    Ok(Emit::effect(Effect::OpenDialog { req: semio_framework_plugin::RequestId(128), dialog_id: "deleteArtifact".into(), args: Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "id": row.id.clone(), "name": row.name.clone() }))) }))
 }
 
 //#region 🧪️Tests

@@ -119,7 +119,7 @@ async fn local_interaction_live_pages_wait_exact_ack_and_all_three_roots() {
                 break;
             }
         }
-        let captured: protocol::LocalInteractionCapture = protocol::json::from_json_str(std::str::from_utf8(&output).unwrap()).unwrap();
+        let captured: protocol::LocalInteractionCapture = semio_framework_pack_json::from_json_str(std::str::from_utf8(&output).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         assert_eq!(captured.identity, token.identity);
         assert!(output.len() > 4096);
         assert_eq!(emitted, output.len());
@@ -219,7 +219,7 @@ async fn local_interaction_live_terminates_without_any_store_reclamation() {
         assert!(closed, "the read never reached Closed without Store reclamation at bytes={bytes}");
         assert!(query.terminal_is_empty(), "a published Closed leaves the slot terminal-empty at bytes={bytes}");
         assert!(close_turns <= CLOSE_TURN_BUDGET, "closing spent {close_turns} runnable turns at bytes={bytes}, over the {CLOSE_TURN_BUDGET}-turn budget its three exact root handbacks cost");
-        let decoded: protocol::LocalInteractionCapture = protocol::json::from_json_str(std::str::from_utf8(&capture).unwrap()).unwrap();
+        let decoded: protocol::LocalInteractionCapture = semio_framework_pack_json::from_json_str(std::str::from_utf8(&capture).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         assert!(!decoded.state.selection.is_empty(), "this fixture's capture carries a live selection");
         reclaim_returned_leases(&mut stores, bytes);
         close_stores(&mut stores, bytes);

@@ -8,11 +8,11 @@ async fn patch_document_renames_sets_print_target_and_clears_it() {
     let mut app = layout_app().await;
     dispatch(&mut app, LayoutCommand::PatchDocument(PatchDocument { field: "name".into(), value: "Press sheet".into() })).await;
     dispatch(&mut app, LayoutCommand::PatchDocument(PatchDocument { field: "printTarget".into(), value: "cmyk".into() })).await;
-    dispatch(&mut app, LayoutCommand::PatchDocument(PatchDocument { field: "dataFields".into(), value: "{\"title\":\"A\"}".into() })).await;
+    dispatch(&mut app, LayoutCommand::PatchDocument(PatchDocument { field: "dataFields".into(), value: r#"{"entries":[{"questionId":"title","value":{"kind":"text","value":"A"}}]}"#.into() })).await;
     let snapshot = app.snapshot().expect("projection");
     assert_eq!(snapshot.name, "Press sheet");
     assert_eq!(snapshot.print_target.as_deref(), Some("cmyk"));
-    assert_eq!(snapshot.data_fields_json.as_deref(), Some("{\"title\":\"A\"}"));
+    assert_eq!(snapshot.data_fields,Some(crate::FormDictionary{entries:vec![crate::FormDictionaryEntry{question_id:"title".into(),value:semio_framework_value::DslValue::String("A".into())}]}));
     dispatch(&mut app, LayoutCommand::PatchDocument(PatchDocument { field: "printTarget".into(), value: "  ".into() })).await;
     assert_eq!(app.snapshot().expect("projection").print_target, None);
 }
@@ -108,7 +108,7 @@ async fn patch_frame_applies_a_character_style_to_the_story() {
     let run = &snapshot.stories.iter().find(|story| story.id == "story-1").unwrap().style_runs[0];
     assert_eq!(run.character_style_id.as_deref(), Some("character-1"));
     assert_eq!(run.start, 0);
-    assert_eq!(run.end, snapshot.stories[0].content.len());
+    assert_eq!(run.end, u64::try_from(snapshot.stories[0].content.len()).unwrap());
     dispatch(&mut app, LayoutCommand::PatchFrame(patch_frame::PatchFrame { frame_id: "frame-text-1".into(), page_id: Some("page-1".into()), field: "characterStyle".into(), value: "".into() })).await;
     assert!(app.snapshot().expect("projection").stories[0].style_runs.is_empty());
 }
@@ -124,7 +124,7 @@ async fn patch_frame_limits_a_character_style_to_a_span() {
     let story = snapshot.stories.iter().find(|story| story.id == "story-1").unwrap();
     let run = &story.style_runs[0];
     assert_eq!(run.start, 0);
-    assert_eq!(run.end, story.content.char_indices().nth(5).unwrap().0);
+    assert_eq!(run.end, u64::try_from(story.content.char_indices().nth(5).unwrap().0).unwrap());
     let mut engine = crate::editor::layout::engine::scene::LayoutEngine::new();
     let list = crate::editor::layout::engine::scene::build_display_list_for_page(&mut engine, &snapshot, &snapshot.pages[0], "", &[], None, false);
     let glyphs = &list.text_runs.iter().find(|run| run.object_id == "frame-text-1").expect("story").glyphs;

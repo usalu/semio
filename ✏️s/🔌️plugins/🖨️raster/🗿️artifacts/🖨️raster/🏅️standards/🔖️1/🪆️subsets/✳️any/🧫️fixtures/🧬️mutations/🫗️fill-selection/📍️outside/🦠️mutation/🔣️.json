@@ -1,0 +1,18 @@
+{
+  "color": [
+    1.0,
+    0.0,
+    0.0,
+    1.0
+  ],
+  "layerId": "paint",
+  "mutation": "fillSelection",
+  "selection": [
+    {
+      "coverage": 255,
+      "length": 8,
+      "start": 20
+    }
+  ],
+  "target": "pixels"
+}

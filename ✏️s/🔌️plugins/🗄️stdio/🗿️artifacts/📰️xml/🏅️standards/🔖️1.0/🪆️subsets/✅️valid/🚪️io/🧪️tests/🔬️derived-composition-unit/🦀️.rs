@@ -86,7 +86,7 @@ mod tests {
             <XmlSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|e| e.to_string())
         }
 
-        async fn infer(snapshot: &Self::Snapshot) -> Self::Inference {
+        async fn infer(snapshot: &Self::Snapshot) -> Result<Self::Inference, semio_framework_value::ValueError> {
             use protocol::Inference;
             Self::Inference::infer(snapshot)
         }

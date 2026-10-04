@@ -50,15 +50,24 @@ fn finish(store: &ArtifactStore<DemoSnapshot, DemoMutation>, mut replay: EditRep
 }
 
 /// 📋️ Per-mutation outcomes keyed by identity: what replicas with different edit boundaries must agree on.
-fn outcomes_by_mutation(outcomes: &[protocol::MutationReplayOutcome]) -> BTreeMap<MutationId, (Option<crate::os_dsl::Severity>, Vec<String>, bool, bool)> {
+fn outcomes_by_mutation(outcomes: &[protocol::MutationReplayOutcome]) -> BTreeMap<MutationId, (Option<semio_framework_diagnostic::Severity>, Vec<String>, bool, bool)> {
     outcomes.iter().map(|outcome| (outcome.mutation_id.clone(), (outcome.worst, outcome.messages.iter().map(|message| message.code.0.clone()).collect(), outcome.superseded, outcome.withdrawn))).collect()
 }
 
 /// 📋️ Per-mutation outcomes by applied position and operation index: what two independently authored stores agree on.
-fn outcomes_by_position(store: &ArtifactStore<DemoSnapshot, DemoMutation>, outcomes: &[protocol::MutationReplayOutcome]) -> Vec<(usize, u32, Option<crate::os_dsl::Severity>, Vec<String>, bool, bool)> {
+fn outcomes_by_position(store: &ArtifactStore<DemoSnapshot, DemoMutation>, outcomes: &[protocol::MutationReplayOutcome]) -> Vec<(usize, u32, Option<semio_framework_diagnostic::Severity>, Vec<String>, bool, bool)> {
     outcomes
         .iter()
-        .map(|outcome| (store.applied_edit_ids().iter().position(|id| *id == outcome.edit_id).expect("an outcome names an applied edit"), outcome.op_index, outcome.worst, outcome.messages.iter().map(|message| message.code.0.clone()).collect(), outcome.superseded, outcome.withdrawn))
+        .map(|outcome| {
+            (
+                store.applied_edit_ids().iter().position(|id| *id == outcome.edit_id).expect("an outcome names an applied edit"),
+                outcome.op_index,
+                outcome.worst,
+                outcome.messages.iter().map(|message| message.code.0.clone()).collect(),
+                outcome.superseded,
+                outcome.withdrawn,
+            )
+        })
         .collect()
 }
 //#endregion 🧰️Harness
@@ -87,7 +96,9 @@ async fn supersede_replay_corpus_matches_the_store() {
             .map(|supersession| {
                 let replacement = match &supersession["replacement"] {
                     serde_json::Value::String(withdrawn) if withdrawn == "withdrawn" => protocol::InputReplacement::Withdrawn,
-                    serde_json::Value::Object(input) if input.contains_key("invalid") => protocol::InputReplacement::Input { schema: input["invalid"]["schema"].as_str().expect("invalid schema").into(), payload: hex(input["invalid"]["payloadHex"].as_str().expect("invalid payload")) },
+                    serde_json::Value::Object(input) if input.contains_key("invalid") => {
+                        protocol::InputReplacement::Input { schema: input["invalid"]["schema"].as_str().expect("invalid schema").into(), payload: hex(input["invalid"]["payloadHex"].as_str().expect("invalid payload")) }
+                    }
                     operation => draft(Some(DemoMutation::from_value(operation.clone().into()).expect("replacement decodes"))),
                 };
                 (id_of(supersession["edit"].as_u64().unwrap(), supersession["op"].as_u64().unwrap()), replacement)
@@ -117,7 +128,7 @@ async fn supersede_replay_corpus_matches_the_store() {
             Err(VcsError::Rejected { policy, messages }) => {
                 assert!(report.blocks_finalize(), "{name}: only a blocking report is refused");
                 assert_eq!(policy, crate::os_spr::MergePolicy::Normal);
-                assert!(messages.iter().any(|message| message.level >= crate::os_dsl::Severity::Error));
+                assert!(messages.iter().any(|message| message.level >= semio_framework_diagnostic::Severity::Error));
                 assert_eq!(store.generation(), generation, "{name}: a refused finalize changes nothing");
                 assert!(store.supersessions().is_empty());
             }
@@ -154,7 +165,10 @@ async fn interior_supersede_equals_a_fresh_replay_of_the_edited_log() {
     apply(&mut fresh, vec![add(2)]).await;
     apply(&mut fresh, vec![add(3), add(4)]).await;
     assert_eq!(store.snapshot().expect("edited"), fresh.snapshot().expect("fresh"));
-    assert_eq!(outcomes_by_position(&store, &store.mutation_outcomes().unwrap()).into_iter().map(|(edit, op, worst, codes, _, _)| (edit, op, worst, codes)).collect::<Vec<_>>(), outcomes_by_position(&fresh, &fresh.mutation_outcomes().unwrap()).into_iter().map(|(edit, op, worst, codes, _, _)| (edit, op, worst, codes)).collect::<Vec<_>>());
+    assert_eq!(
+        outcomes_by_position(&store, &store.mutation_outcomes().unwrap()).into_iter().map(|(edit, op, worst, codes, _, _)| (edit, op, worst, codes)).collect::<Vec<_>>(),
+        outcomes_by_position(&fresh, &fresh.mutation_outcomes().unwrap()).into_iter().map(|(edit, op, worst, codes, _, _)| (edit, op, worst, codes)).collect::<Vec<_>>()
+    );
     test_support::assert_document_text_round_trip(&store).await;
     test_support::assert_document_pack_round_trip(&store).await;
     let files = print_document_pack(store.envelope()).await.expect("pack prints");
@@ -178,12 +192,20 @@ async fn check_in_refuses_a_supersession_whose_replay_blocks_under_normal() {
     let files = print_document_pack(store.envelope()).await.expect("pair prints");
     let supersede = |replacement: Option<DemoMutation>, logical: u64| {
         let transition = crate::os_spr::HistoryTransition::Supersede(protocol::TransitionSupersede { scope: None, inputs: vec![protocol::SupersededInput { target: ids[0].clone(), replacement: draft(replacement) }] });
-        crate::os_spr::encode_envelopes(&[crate::os_spr::history_transition_envelope(&transition, &ArtifactId("check-in".into()), &ActorId("editor".into()), vec![ids[0].clone()], HybridLogicalTimestamp { actor: 9, physical_ms: u64::MAX / 2, logical })])
+        crate::os_spr::encode_envelopes(&[crate::os_spr::history_transition_envelope(
+            &transition,
+            &ArtifactId("check-in".into()),
+            &ActorId("editor".into()),
+            vec![ids[0].clone()],
+            HybridLogicalTimestamp { actor: 9, physical_ms: u64::MAX / 2, logical },
+        )])
     };
     let refused = replay_envelopes_onto_pair::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &supersede(None, 0), test_support::plain_document_store_owners::<DemoSnapshot, DemoMutation>).await;
     assert!(matches!(&refused, Err(VcsError::Rejected { policy: crate::os_spr::MergePolicy::Normal, messages }) if messages.iter().any(|message| message.code.0 == "mutation.target-missing")), "{refused:?}");
     assert!(refused.unwrap_err().to_string().contains("rejected by merge policy Normal"));
-    let accepted = replay_envelopes_onto_pair::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &supersede(Some(DemoMutation::RestoreN(RestoreN { n: Some(40) })), 1), test_support::plain_document_store_owners::<DemoSnapshot, DemoMutation>).await.expect("a clean supersession checks in");
+    let accepted = replay_envelopes_onto_pair::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &supersede(Some(DemoMutation::RestoreN(RestoreN { n: Some(40) })), 1), test_support::plain_document_store_owners::<DemoSnapshot, DemoMutation>)
+        .await
+        .expect("a clean supersession checks in");
     let parsed = parse_document_pack::<DemoSnapshot, DemoMutation>(&accepted.pack, &accepted.spr).await.expect("checked-in pair parses");
     assert_eq!(parsed.snapshot.n, Some(41));
     test_support::retire_parsed_document(parsed);
@@ -199,15 +221,19 @@ async fn downstream_warning_error_and_fatal_outcomes_are_reported_per_mutation()
     }
     let ids: Vec<MutationId> = store.mutation_ops().unwrap().into_iter().map(|operation| operation.mutation_id).collect();
     let severity_draft = |operation: SeverityMutation| protocol::InputReplacement::Input { schema: "demo/v1".into(), payload: operation.encode_op().unwrap() };
-    let entries = BTreeMap::from([(ids[0].clone(), severity_draft(SeverityMutation::SetWarningN(SetWarningN { n: 5 }))), (ids[1].clone(), severity_draft(SeverityMutation::SetErrorN(SetErrorN { n: 6 }))), (ids[2].clone(), severity_draft(SeverityMutation::SetFatalN(SetFatalN { n: 7 })))]);
+    let entries = BTreeMap::from([
+        (ids[0].clone(), severity_draft(SeverityMutation::SetWarningN(SetWarningN { n: 5 }))),
+        (ids[1].clone(), severity_draft(SeverityMutation::SetErrorN(SetErrorN { n: 6 }))),
+        (ids[2].clone(), severity_draft(SeverityMutation::SetFatalN(SetFatalN { n: 7 }))),
+    ]);
     let mut replay = store.begin_report_replay(&entries, None).expect("preview replay");
     replay.step(store.replay_edits(), &mut || false).expect("steps");
     let result = replay.finish().expect("finished");
     let report = store.replay_report(&result).expect("report");
-    let levels: Vec<Option<crate::os_dsl::Severity>> = report.outcomes.iter().map(|outcome| outcome.worst).collect();
-    assert_eq!(levels, vec![Some(crate::os_dsl::Severity::Warning), Some(crate::os_dsl::Severity::Error), Some(crate::os_dsl::Severity::Fatal)]);
+    let levels: Vec<Option<semio_framework_diagnostic::Severity>> = report.outcomes.iter().map(|outcome| outcome.worst).collect();
+    assert_eq!(levels, vec![Some(semio_framework_diagnostic::Severity::Warning), Some(semio_framework_diagnostic::Severity::Error), Some(semio_framework_diagnostic::Severity::Fatal)]);
     assert!(report.blocks_finalize());
-    assert_eq!(report.worst, Some(crate::os_dsl::Severity::Fatal));
+    assert_eq!(report.worst, Some(semio_framework_diagnostic::Severity::Fatal));
     drop(result);
     let generation = store.generation();
     let snapshot = store.snapshot().unwrap();
@@ -220,7 +246,7 @@ async fn downstream_warning_error_and_fatal_outcomes_are_reported_per_mutation()
     }
     store.dispatch(ArtifactCommand::Supersede { scope: None, inputs: vec![SupersedeInput { target: ids[0].clone(), replacement: Some(SeverityMutation::SetWarningN(SetWarningN { n: 5 })) }] }).await.expect("a warning never blocks");
     let durable = store.mutation_outcomes().unwrap();
-    assert_eq!(durable[0].worst, Some(crate::os_dsl::Severity::Warning), "the warning persists in history");
+    assert_eq!(durable[0].worst, Some(semio_framework_diagnostic::Severity::Warning), "the warning persists in history");
     assert!(durable[0].superseded);
     assert_eq!(store.snapshot_ref().n, Some(3), "downstream sets still win");
 }
@@ -327,7 +353,8 @@ async fn cancelling_a_report_replay_at_every_step_leaves_the_store_untouched() {
     probe.cancel();
     assert_eq!(total, 4);
     for stop in 0..=total {
-        let (generation, revision, snapshot, applied, transitions, outcomes) = (store.generation(), store.0.content_revision(), store.snapshot().unwrap(), store.applied_edit_ids().to_vec(), store.envelope().transitions.len(), store.mutation_outcomes().unwrap());
+        let (generation, revision, snapshot, applied, transitions, outcomes) =
+            (store.generation(), store.0.content_revision(), store.snapshot().unwrap(), store.applied_edit_ids().to_vec(), store.envelope().transitions.len(), store.mutation_outcomes().unwrap());
         let mut replay = store.begin_report_replay(&entries, None).expect("replay");
         if stop > 0 {
             let mut done = 0;
@@ -552,7 +579,18 @@ async fn a_member_document_with_supersessions_hydrates_to_its_superseded_state()
     let history = crate::os_spr::decode_history(&files.spr, &crate::os_spr::DecodeOptions::default()).await.expect("history decodes");
     let expected = crate::os_io::ArtifactRef { artifact_id: "member-superseded".into(), dialect };
     let (operation, generation) = (semio_framework_job::OperationId(3), semio_framework_job::Generation(5));
-    let mut hydration = RetainedPersistedDocumentHydration::<DemoSnapshot, DemoMutation>::from_pack(files.pack.clone(), history, expected, None, "demo/v1".into(), DemoSnapshot::member_store_owners(), operation, generation, u64::MAX, PersistedDocumentHydrationTarget::Store { generation: 0 });
+    let mut hydration = RetainedPersistedDocumentHydration::<DemoSnapshot, DemoMutation>::from_pack(
+        files.pack.clone(),
+        history,
+        expected,
+        None,
+        "demo/v1".into(),
+        DemoSnapshot::member_store_owners(),
+        operation,
+        generation,
+        u64::MAX,
+        PersistedDocumentHydrationTarget::Store { generation: 0 },
+    );
     let mut sequence = 0;
     let mut member = None;
     for _ in 0..100_000 {
@@ -603,7 +641,7 @@ async fn an_input_breaking_the_supersede_law_folds_as_a_fatal_no_op_at_every_sit
     assert_eq!(store.snapshot_ref().n, Some(1), "both superseded operations fold as no-ops");
     let outcomes = outcomes_by_mutation(&store.mutation_outcomes().expect("durable outcomes"));
     for target in [&ids[1], &ids[2]] {
-        assert_eq!(outcomes[target], (Some(crate::os_dsl::Severity::Fatal), vec!["mutation.invariant".to_string()], true, false));
+        assert_eq!(outcomes[target], (Some(semio_framework_diagnostic::Severity::Fatal), vec!["mutation.invariant".to_string()], true, false));
     }
     assert_eq!(store.state_before(&ids[2], &BTreeMap::new()).expect("state before").n, Some(1));
     assert_eq!(materialize_document_snapshot(store.envelope(), store.applied_edit_ids()).await.expect("materialized").n, Some(1));
@@ -614,10 +652,13 @@ async fn an_input_breaking_the_supersede_law_folds_as_a_fatal_no_op_at_every_sit
     let text = print_document_text(store.envelope()).await.expect("text prints");
     let mirrored = ArtifactStore::new(parse_document_text::<DemoSnapshot, DemoMutation>(&text.dsl, &text.ops).await.expect("the text mirror loads").into_envelope()).await;
     assert_eq!(mirrored.snapshot_ref().n, Some(1));
-    let refused = replay_envelopes_onto_pair::<DemoSnapshot, DemoMutation>(&baseline.pack, &baseline.spr, &crate::os_spr::encode_envelopes(std::slice::from_ref(&garbage)), test_support::plain_document_store_owners::<DemoSnapshot, DemoMutation>).await;
+    let refused =
+        replay_envelopes_onto_pair::<DemoSnapshot, DemoMutation>(&baseline.pack, &baseline.spr, &crate::os_spr::encode_envelopes(std::slice::from_ref(&garbage)), test_support::plain_document_store_owners::<DemoSnapshot, DemoMutation>).await;
     assert!(matches!(&refused, Err(VcsError::Rejected { policy: crate::os_spr::MergePolicy::Normal, messages }) if messages.iter().any(|message| message.code.0 == "mutation.invariant")), "{refused:?}");
     let repair = remote_supersession("garbage", &ids[1], draft(Some(add(5))), 2);
-    let repaired = replay_envelopes_onto_pair::<DemoSnapshot, DemoMutation>(&baseline.pack, &baseline.spr, &crate::os_spr::encode_envelopes(&[garbage, repair]), test_support::plain_document_store_owners::<DemoSnapshot, DemoMutation>).await.expect("a repaired ledger checks in");
+    let repaired = replay_envelopes_onto_pair::<DemoSnapshot, DemoMutation>(&baseline.pack, &baseline.spr, &crate::os_spr::encode_envelopes(&[garbage, repair]), test_support::plain_document_store_owners::<DemoSnapshot, DemoMutation>)
+        .await
+        .expect("a repaired ledger checks in");
     let parsed = parse_document_pack::<DemoSnapshot, DemoMutation>(&repaired.pack, &repaired.spr).await.expect("checked-in pair parses");
     assert_eq!(parsed.snapshot.n, Some(9));
     test_support::retire_parsed_document(parsed);
@@ -633,7 +674,7 @@ async fn oversize_replay_messages_are_bounded_deterministically_everywhere() {
     let bytes = |entry: &[crate::os_spr::MutationMessage], edit_id: &str| entry.iter().fold(edit_id.len(), |total, message| total + message.code.0.len() + message.message.len() + message.target.iter().map(String::len).sum::<usize>());
     let dropped = |entry: &[crate::os_spr::MutationMessage]| -> usize {
         let summary = entry.last().expect("a bounded entry ends with its summary");
-        assert_eq!((summary.code.0.as_str(), summary.level), ("mutation.cascade", crate::os_dsl::Severity::Info));
+        assert_eq!((summary.code.0.as_str(), summary.level), ("mutation.cascade", semio_framework_diagnostic::Severity::Info));
         summary.message.strip_suffix(" more messages").expect("the summary counts what it drops").parse().expect("a count")
     };
     let mut store = demo_store("bounded", None).await;
@@ -656,7 +697,7 @@ async fn oversize_replay_messages_are_bounded_deterministically_everywhere() {
     assert_eq!(store.snapshot_ref().n, None);
     let failed = store.messages_for_edit(&bulk).to_vec();
     assert!(bytes(&failed, &bulk) <= ARTIFACT_EDIT_MESSAGE_ENTRY_BYTES);
-    assert!(failed[..failed.len() - 1].iter().all(|message| message.code.0 == "mutation.target-missing" && message.level == crate::os_dsl::Severity::Error), "the worst messages are the ones kept");
+    assert!(failed[..failed.len() - 1].iter().all(|message| message.code.0 == "mutation.target-missing" && message.level == semio_framework_diagnostic::Severity::Error), "the worst messages are the ones kept");
     let kept = failed.len() - 1;
     assert_eq!(kept + dropped(&failed), OPERATIONS);
     assert_eq!(failed.last().unwrap().op_index, Some(kept as u32), "the summary sits at the first dropped operation");
@@ -679,7 +720,9 @@ async fn check_in_judges_the_folded_ledger_not_its_intermediate_states() {
     let healing = remote_supersession("intermediate", &ids[0], draft(Some(DemoMutation::RestoreN(RestoreN { n: Some(7) }))), 1);
     let refused = replay_envelopes_onto_pair::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &crate::os_spr::encode_envelopes(std::slice::from_ref(&breaking)), test_support::plain_document_store_owners::<DemoSnapshot, DemoMutation>).await;
     assert!(matches!(&refused, Err(VcsError::Rejected { policy: crate::os_spr::MergePolicy::Normal, messages }) if messages.iter().any(|message| message.code.0 == "mutation.target-missing")), "{refused:?}");
-    let healed = replay_envelopes_onto_pair::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &crate::os_spr::encode_envelopes(&[breaking, healing]), test_support::plain_document_store_owners::<DemoSnapshot, DemoMutation>).await.expect("a ledger whose final history is clean checks in");
+    let healed = replay_envelopes_onto_pair::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &crate::os_spr::encode_envelopes(&[breaking, healing]), test_support::plain_document_store_owners::<DemoSnapshot, DemoMutation>)
+        .await
+        .expect("a ledger whose final history is clean checks in");
     let parsed = parse_document_pack::<DemoSnapshot, DemoMutation>(&healed.pack, &healed.spr).await.expect("checked-in pair parses");
     assert_eq!(parsed.snapshot.n, Some(8));
     test_support::retire_parsed_document(parsed);
@@ -705,7 +748,9 @@ async fn interior_revert_store(early_exit: bool) -> ArtifactStore<DemoSnapshot, 
         diff: crate::os_spr::ArtifactDiff { schema: SchemaId("demo/v1".into()), payload: add(1).encode_op().unwrap() },
         inverse: crate::os_spr::InverseMutation { schema: SchemaId("demo/v1".into()), payload: Vec::new() },
         timestamp: HybridLogicalTimestamp { actor: 4, physical_ms: u64::MAX / 2, logical: 0 },
-        transaction: None, verb: None, line: None,
+        transaction: None,
+        verb: None,
+        line: None,
     };
     let report = store.ingest_remote(peer).await.expect("the peer edit ingests");
     assert!(report.accepted);
@@ -803,14 +848,17 @@ async fn a_new_alternative_preserves_the_trunk_it_branched_from() {
     assert_eq!(store.snapshot_ref().n, Some(3), "the trunk keeps the original positions");
     assert_eq!((store.active_line_id(), store.envelope().active_alternative_id.clone()), (trunk.clone(), None));
     assert!(store.supersessions().is_empty(), "the edited alternative's scoped supersession stays on it");
-    assert!(store.envelope().transitions.iter().all(|envelope| {
-        match crate::os_spr::history_transition_from_envelope(envelope).expect("transition").expect("history") {
-            crate::os_spr::HistoryTransition::Checkout { .. } => false,
-            crate::os_spr::HistoryTransition::Branch { alternative_id, .. } => alternative_id != trunk,
-            crate::os_spr::HistoryTransition::Commit(checkpoint) => checkpoint.line_id.as_deref() != Some(trunk.as_str()),
-            _ => true,
-        }
-    }), "a head switch is local, and the log never names the trunk");
+    assert!(
+        store.envelope().transitions.iter().all(|envelope| {
+            match crate::os_spr::history_transition_from_envelope(envelope).expect("transition").expect("history") {
+                crate::os_spr::HistoryTransition::Checkout { .. } => false,
+                crate::os_spr::HistoryTransition::Branch { alternative_id, .. } => alternative_id != trunk,
+                crate::os_spr::HistoryTransition::Commit(checkpoint) => checkpoint.line_id.as_deref() != Some(trunk.as_str()),
+                _ => true,
+            }
+        }),
+        "a head switch is local, and the log never names the trunk"
+    );
     store.dispatch(ArtifactCommand::Supersede { scope: Some(trunk.clone()), inputs: vec![input(&ids[1], Some(add(5)))] }).await.expect("a supersession scoped to the trunk");
     assert_eq!(store.snapshot_ref().n, Some(6));
     store.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: edited.clone() }).await.expect("switch to the edited alternative");
@@ -843,6 +891,37 @@ async fn a_new_alternative_preserves_the_trunk_it_branched_from() {
     assert_eq!(mirrored.snapshot_ref().n, Some(6));
     reloaded.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: edited }).await.expect("a reloaded store switches to the edited alternative");
     assert_eq!(reloaded.snapshot_ref().n, Some(12));
+}
+
+/// 👁️ A replica standing on another alternative at an explicit checkpoint keeps that head through its `.spr` pack
+/// (`REC_VIEWER`, audit W1G-9): the persisted log names the head, the reloaded store stands on the same alternative and
+/// checkpoint with the same projection and supersessions, and the `.ops` text — the shared log, which carries no viewer head
+/// — hydrates to the trunk tip.
+#[semio_framework_async_macros::async_test]
+async fn a_viewer_head_round_trips_through_the_spr_pack() {
+    let mut store = demo_store("viewer", Some(0)).await;
+    apply(&mut store, vec![set(1)]).await;
+    apply(&mut store, vec![add(2)]).await;
+    let ids = operation_ids(&store);
+    store.dispatch(ArtifactCommand::CreateAlternativeWithSupersede { name: "edited".into(), inputs: vec![input(&ids[0], Some(set(10)))] }).await.expect("finalize as a new alternative");
+    apply(&mut store, vec![add(3)]).await;
+    store.dispatch(ArtifactCommand::CommitCheckpoint { message: None, authors: Vec::new() }).await.expect("a checkpoint on the edited alternative");
+    let edited = store.envelope().active_alternative_id.clone().expect("the edited alternative is active");
+    let checkpoint = store.envelope().vcs.alternatives.iter().find(|alternative| alternative.id == edited).and_then(|alternative| alternative.checkpoint_ids.last().cloned()).expect("the edited alternative's newest checkpoint");
+    apply(&mut store, vec![add(4)]).await;
+    assert_eq!(store.snapshot_ref().n, Some(19));
+    store.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: checkpoint.clone() }).await.expect("look at the committed checkpoint");
+    let head = (store.envelope().active_alternative_id.clone(), store.envelope().viewer_checkpoint_id.clone());
+    assert_eq!(head, (Some(edited.clone()), Some(checkpoint.clone())), "the replica stands on the edited alternative at its checkpoint");
+    assert_eq!(store.snapshot_ref().n, Some(15), "an explicit checkpoint hides the uncommitted edit after it");
+    let files = print_document_pack(store.envelope()).await.expect("pair prints");
+    let log = crate::os_spr::decode_history(&files.spr, &crate::os_spr::DecodeOptions::default()).await.expect("spr decodes");
+    assert_eq!((log.viewer_line.clone(), log.viewer_checkpoint.clone()), head, "the persisted log names the viewer head");
+    let reloaded = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr).await.expect("pair parses").into_envelope()).await;
+    assert_eq!((reloaded.envelope().active_alternative_id.clone(), reloaded.envelope().viewer_checkpoint_id.clone()), head, ".spr keeps the viewer head");
+    assert_eq!((reloaded.snapshot_ref().n, reloaded.supersessions()), (Some(15), store.supersessions()), ".spr reloads the viewer's projection");
+    test_support::assert_document_pack_round_trip(&store).await;
+    test_support::assert_document_text_round_trip(&store).await;
 }
 //#endregion 🧪️TrunkLaws
 
@@ -975,9 +1054,12 @@ impl Mutation<DemoSnapshot> for WitnessOp {
         self.0.diff(base)
     }
 
-    fn inverse(&self, base: &DemoSnapshot) -> Vec<Self> {
-        self.0.inverse(base).into_iter().map(Self::live).collect()
-    }
+    fn inverse(&self, base: &DemoSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+    Ok({
+        self.0.inverse(base)?.into_iter().map(Self::live).collect()
+    
+    })
+}
 
     fn retire_cold(mut self) {
         self.1 = false;

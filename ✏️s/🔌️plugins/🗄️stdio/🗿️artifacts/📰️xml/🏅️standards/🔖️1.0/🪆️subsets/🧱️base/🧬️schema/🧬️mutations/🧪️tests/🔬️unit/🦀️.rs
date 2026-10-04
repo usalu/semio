@@ -2,13 +2,13 @@ use super::*;
 use protocol::SemanticMutation;
 #[test]
 fn aggregate_roster_is_exact() {
-    assert_eq!(XmlMutation::kinds().len(), 7, "one kind per XmlMutation variant, SetSnapshot included");
+    assert_eq!(XmlMutation::kinds().len(), 8, "one kind per XmlMutation variant, SetSnapshot and PatchSnapshot included");
 }
 
 #[test]
 fn restore_leaf_layout_and_values_match_neutral_oracle() {
-    fn measure<T: protocol::FromValue + protocol::ToValue>(oracle: &serde_json::Value) -> usize {
-        let expected = protocol::DslValue::from(oracle);
+    fn measure<T: semio_framework_value::FromValue + semio_framework_value::ToValue>(oracle: &serde_json::Value) -> usize {
+        let expected = semio_framework_value::DslValue::from(oracle);
         let mutation = T::from_value(expected.clone()).expect("neutral restore mutation");
         assert_eq!(mutation.to_value(), expected);
         size_of::<T>()

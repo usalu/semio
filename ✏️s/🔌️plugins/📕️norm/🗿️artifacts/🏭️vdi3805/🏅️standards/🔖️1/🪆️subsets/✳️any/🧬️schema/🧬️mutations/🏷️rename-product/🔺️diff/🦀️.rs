@@ -10,7 +10,7 @@ pub fn diff(payload: &RenameProduct, base: &Vdi3805Snapshot) -> protocol::Mutati
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Product \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if product.title == payload.new_title {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Product \"{}\" already has that title.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Product \"{}\" already has that title.", payload.id));
     }
     let mut catalog = base.catalog.clone();
     if let Some(product) = catalog.products.iter_mut().find(|p| p.identity.article_number == payload.id) {

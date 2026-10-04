@@ -17,7 +17,7 @@
     "spreads",
     "pages",
     "printTarget",
-    "dataFieldsJson",
+    "dataFields",
     "backgroundDrawing",
     "referencedModel"
   ],
@@ -161,10 +161,26 @@
       ],
       "x-semio-state": "artifact"
     },
-    "dataFieldsJson": {
+    "dataFields": {
       "anyOf": [
         {
-          "type": "string"
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "dictionary"
+          ],
+          "properties": {
+            "dictionary": {
+              "anyOf": [
+                {
+                  "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/dictionary.json"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
         },
         {
           "type": "null"

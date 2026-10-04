@@ -60,6 +60,7 @@ fn operator_channel(code: &str, label: &str) -> NodeGraphOperatorChannelRecord {
         full_name: label.to_string(),
         operators: Vec::new(),
         value_types: Vec::new(),
+        item_types: Vec::new(),
         default_json: None,
         label: Some(label.to_string()),
         cardinality: "!".into(),

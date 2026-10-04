@@ -69,7 +69,7 @@ export async function provisionNxTools(workspace: string, signal: AbortSignal): 
   }
   const report = process.platform === "linux" ? process.report?.getReport?.() as { header?: { glibcVersionRuntime?: string } } : undefined;
   const libc = process.platform === "linux" ? report?.header?.glibcVersionRuntime ? "gnu" : "musl" : "";
-  const hash = createHash("sha256").update(`${process.platform}\0${process.arch}\0${libc}\0`);
+  const hash = createHash("sha256").update(readFileSync(import.meta.filename)).update(`${process.platform}\0${process.arch}\0${libc}\0`);
   for (const [name, bytes] of files) hash.update(name + "\0").update(bytes).update("\0");
   const digest = hash.digest("hex"), base = join(root, STORE), destination = join(base, digest);
   regularDirectory(base);
@@ -92,7 +92,7 @@ export async function provisionNxTools(workspace: string, signal: AbortSignal): 
   try {
     for (const [name, bytes] of files) { mkdirSync(dirname(join(staging, name)), { recursive: true }); writeFileSync(join(staging, name), bytes); }
     console.log(`Acquiring pinned Nx ${manifest.dependencies.nx} tooling…`);
-    await runBun(["install", "--frozen-lockfile", "--ignore-scripts"], staging, signal);
+    await runBun(["install", "--frozen-lockfile", "--ignore-scripts", "--cache-dir", join(staging, ".bun-cache"), "--backend", "copyfile"], staging, signal);
     signal.throwIfAborted();
     writeFileSync(join(staging, ".semio-nx-tooling.json"), JSON.stringify({ version: 1, digest }));
     installed(staging);

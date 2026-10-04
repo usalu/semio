@@ -1,0 +1,11 @@
+# Independent Canonical Literal Occurrence Provider Audit
+
+Read-only held `canonical-schema-law-owner/intrinsic-occurrences-pairs.json` and refusal-message pair inspection. No new execution.
+
+Candidate changes only dynamic literal DslValue::Object emission from a paid sorted index frontier to a borrowed occurrence iterator, preserving actual order and duplicate keys. Ordinary dynamic helper likewise writes original entries directly. Schema-declared FieldValue::Map controlled branch remains unchanged: paid allocate_vec, per-item checkpoint, omit Absent, controlled lexical sorting with original index tie-break, then recursive typed emission. Thus literal occurrence order does not change schema map canonical sorting. Symbol discovery retains independently sorted symbol table; it does not reorder literal occurrence emission.
+
+The borrowed Object frame still goes through push: physical frame growth charges checked capacity*size, checkpoints before reserve, and returns typed allocation/work refusal. Dynamic traversal still checks declared depth and cancellation per visited node, uses controlled key/value output, and does not recursively consume stack. Removing the sorting frontier reduces scratch allocation but does not remove paid frame or output backing. Existing five intrinsic tests remain untouched in provider pair.
+
+Actual full-law receipt `root-canonical-record-full-law-owner-after-occurrence-repair.log` contains 45/45 passed,77 skipped,1.680 seconds; all five intrinsic laws individually pass. Original current receipt has actual three intrinsic assertion failures, not compiler failure. Refusal-message law adds original saved kind/message projection equality alongside real source pointer identity.
+
+Freshness correction from parent's actual mount receipt: literal provider was mounted in both exact files and produced genuine Native45/45 run e0c33162. The later readback with DynamicItems::Sorted and sorted Object branch at encode115 is a subsequent concurrent source change, not evidence the earlier provider was only held or queued. Historical mounted runtime evidence remains genuine; current changed source needs reconciliation and fresh owning execution. FieldValue::Map sort remains untouched in the planned reconciliation.

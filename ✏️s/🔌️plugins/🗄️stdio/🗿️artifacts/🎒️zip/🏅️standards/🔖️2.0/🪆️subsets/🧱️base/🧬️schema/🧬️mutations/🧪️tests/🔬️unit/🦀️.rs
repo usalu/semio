@@ -15,6 +15,16 @@ async fn logical_mutations_diff_and_codecs_round_trip() {
             next
         });
     }
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🩹️structured/🔣️.json")).unwrap();
+    for case in corpus["cases"].as_array().unwrap() {
+        let patch = <semio_s_artifact_stdio_contract::editing::SnapshotPatch as protocol::OpText>::parse_op(&case["patch"].to_string()).unwrap();
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&patch.print_op()).unwrap(), case["patch"]);
+        let mutation = ZipMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch });
+        let text = mutation.print_op();
+        assert_eq!(text, case["source"].as_str().unwrap(), "{}", case["id"]);
+        assert_eq!(ZipMutation::parse_op(&text).unwrap(), mutation);
+        assert_eq!(ZipMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
+    }
 }
 
 #[semio_framework_async_macros::async_test]

@@ -64,11 +64,7 @@ impl SemanticRecord {
     }
 
     fn dialect_stage(&self) -> Stage {
-        if self.presence & 2 != 0 {
-            Stage::Id(Field::Kind)
-        } else {
-            Stage::Done
-        }
+        if self.presence & 2 != 0 { Stage::Id(Field::Kind) } else { Stage::Done }
     }
 
     pub(super) fn accept_id(&mut self, value: &str, request: &MemberOpenRequest, schema: &str) -> Result<(), MemberOpenDiagnostic> {

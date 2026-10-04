@@ -1,3 +1,5 @@
+import refusalFixture from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧫️fixtures/🔣️.json";
+const canceledKind=refusalFixture.cases.find(item=>item.id==="canceled-projection")!.expectedKind;
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
@@ -40,6 +42,6 @@ test("JPG rejects orphan entities, missing scalar arrays, forged widths and canc
  const database=await jpgSnapshotToSqliteDatabase(fixture as JpgSnapshot);
  for(const sql of ["UPDATE jpg_rgba_pixel SET document_id=99","UPDATE jpg_rgba_pixel SET green=NULL,blue=NULL,alpha=NULL WHERE ordinal=0","UPDATE jpg_rgba_pixel SET green=NULL WHERE ordinal=1","UPDATE jpg_rgba_pixel SET ordinal=2 WHERE id=1","UPDATE jpg_rgba_pixel SET ordinal=0 WHERE id=2","UPDATE jpg_frame_component SET ordinal=0 WHERE id=2","DELETE FROM jpg_quantization_coefficient WHERE id=1","DELETE FROM jpg_huffman_code_length WHERE id=1","UPDATE jpg_quantization_coefficient SET table_id=99 WHERE id=1","INSERT INTO jpg_quantizer VALUES(43,1)","UPDATE jpg_frame_component SET quantizer_id=43 WHERE id=1","UPDATE jpg_document SET re_encode_quality=256","UPDATE jpg_huffman_table SET table_class='unknown'","DELETE FROM jpg_thumbnail"]){const db=Database.deserialize(await exportSqliteDatabase(database));try{db.run("PRAGMA ignore_check_constraints=ON");db.run(sql);await expect(jpgSnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(db.serialize())))).rejects.toThrow();}finally{db.close();}}
  await expect(jpgSnapshotToSqliteDatabase(fixture as JpgSnapshot,{maxRows:1})).rejects.toThrow();await expect(jpgSnapshotFromSqliteDatabase(database,{maxValueBytes:0})).rejects.toThrow();
- const write=new AbortController();await expect(jpgSnapshotToSqliteDatabase({...fixture,width:1000,height:1,pixels:new Array<number>(4000).fill(1)} as JpgSnapshot,{signal:write.signal,onProgress:event=>{if(event.completed>=256)write.abort();}})).rejects.toHaveProperty("name","AbortError");
- const read=new AbortController();await expect(jpgSnapshotFromSqliteDatabase(database,{signal:read.signal,onProgress:()=>read.abort()})).rejects.toHaveProperty("name","AbortError");
+ const write=new AbortController();await expect(jpgSnapshotToSqliteDatabase({...fixture,width:1000,height:1,pixels:new Array<number>(4000).fill(1)} as JpgSnapshot,{signal:write.signal,onProgress:event=>{if(event.completed>=256)write.abort();}})).rejects.toHaveProperty("kind",canceledKind);
+ const read=new AbortController();await expect(jpgSnapshotFromSqliteDatabase(database,{signal:read.signal,onProgress:()=>read.abort()})).rejects.toHaveProperty("kind",canceledKind);
 });

@@ -1,15 +1,12 @@
 //! 🧬️ DAG artifact schema — every field of the artifact with its state class.
 
-use crate::mutations::{delete_node, disconnect_nodes};
-use crate::op::DagMutation;
-use crate::{DagContentChild, DagNodeKind, DagNodePatch, DagPreviewContent, DagSnapshot, IoPortSpec};
+use crate::{DagContentChild, DagMutation, DagNodeKind, DagPreviewContent, DagScene, DagSnapshot, IoPortSpec, SemioGraphMutation};
 use framework_schema::ArtifactSchema;
 use infinite_board_port_directed_dag::{fit_node_size, note_widget_size, preview_widget_size, would_create_cycle};
-use std::collections::BTreeSet;
 use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 //#region 🔖️Artifact
 /// 🧬️ DAG document artifact state.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.dag.dag")]
 pub struct DagArtifact {
@@ -20,9 +17,9 @@ pub struct DagArtifact {
     pub content: DagContentChild,
 }
 
-impl dsl::FromValue for DagArtifact {
-    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
-        <crate::DagSnapshot as dsl::FromValue>::from_value(value).map(Self::from_snapshot)
+impl semio_framework_value::FromValue for DagArtifact {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        <crate::DagSnapshot as semio_framework_value::FromValue>::from_value(value).map(Self::from_snapshot)
     }
 }
 
@@ -52,13 +49,6 @@ impl DagArtifact {
         self.content = snapshot.content;
     }
 
-    /// 📸️ Live nodes/edges off this artifact's `content` child — mirrors `DagSnapshot::nodes`/`edges`.
-    pub fn nodes(&self) -> Vec<DagNodeSpec> {
-        self.to_snapshot().nodes()
-    }
-    pub fn edges(&self) -> Vec<DagHostSnapshotEdge> {
-        self.to_snapshot().edges()
-    }
 }
 //#endregion 🔖️Conversions
 
@@ -130,8 +120,8 @@ pub fn split_endpoint(endpoint: &str) -> (String, String) {
     endpoint.split_once('@').map_or_else(|| (endpoint.to_string(), "out".into()), |(node, port)| (node.to_string(), port.to_string()))
 }
 
-pub fn document_to_workflow(document: &DagSnapshot) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
-    let scene = crate::dag_working_scene(document);
+/// 🧭️ The node-graph records a scene renders as.
+pub fn document_to_workflow(scene: &DagScene) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
     let nodes: Vec<NodeGraphNodeRecord> = scene
         .nodes
         .iter()
@@ -159,8 +149,9 @@ pub fn document_to_workflow(document: &DagSnapshot) -> (Vec<NodeGraphNodeRecord>
     (nodes, edges)
 }
 
-pub fn next_node_id(document: &DagSnapshot) -> String {
-    let max = document.nodes().iter().filter_map(|node| node.id.strip_prefix('n').and_then(|suffix| suffix.parse::<u64>().ok())).max().unwrap_or(0);
+/// 🆔️ The next free `n<k>` node id of a scene.
+pub fn next_node_id(scene: &DagScene) -> String {
+    let max = scene.nodes.iter().filter_map(|node| node.id.strip_prefix('n').and_then(|suffix| suffix.parse::<u64>().ok())).max().unwrap_or(0);
     format!("n{}", max + 1)
 }
 
@@ -197,7 +188,7 @@ pub fn default_node_for_kind(kind: &str, id: &str, x: f64, y: f64) -> DagNodeSpe
             }
         }
         "preview" => {
-            let (width, height) = preview_widget_size(&DagPreviewContent::Scalar { text: String::new() }, &BTreeSet::new());
+            let (width, height) = preview_widget_size(&DagPreviewContent::Scalar { text: String::new() }, &crate::DagExpandedPaths::new());
             DagNodeSpec {
                 id: id.into(),
                 name: "Preview".into(),
@@ -207,7 +198,7 @@ pub fn default_node_for_kind(kind: &str, id: &str, x: f64, y: f64) -> DagNodeSpe
                 y,
                 width,
                 height,
-                kind: DagNodeKind::Preview { content: DagPreviewContent::Scalar { text: String::new() }, expanded: BTreeSet::new(), input: IoPortSpec::named("I", "In", "in", "Input") },
+                kind: DagNodeKind::Preview { content: DagPreviewContent::Scalar { text: String::new() }, expanded: crate::DagExpandedPaths::new(), input: IoPortSpec::named("I", "In", "in", "Input") },
                 ..Default::default()
             }
         }
@@ -233,8 +224,8 @@ pub fn default_node_for_kind(kind: &str, id: &str, x: f64, y: f64) -> DagNodeSpe
 }
 
 /// 🔗️ Builds the `DagHostSnapshotEdge` connecting two ports, or `Err` if it would introduce a cycle.
-pub fn connect_edge(document: &DagSnapshot, source_node_id: &str, source_port_id: &str, target_node_id: &str, target_port_id: &str) -> Result<DagHostSnapshotEdge, DagPlayError> {
-    let edges = document.edges();
+pub fn connect_edge(scene: &DagScene, source_node_id: &str, source_port_id: &str, target_node_id: &str, target_port_id: &str) -> Result<DagHostSnapshotEdge, DagPlayError> {
+    let edges = &scene.edges;
     let existing: Vec<(String, String)> = edges
         .iter()
         .map(|edge| {
@@ -250,46 +241,39 @@ pub fn connect_edge(document: &DagSnapshot, source_node_id: &str, source_port_id
     Ok(DagHostSnapshotEdge { id: edge_id, source: format!("{source_node_id}@{source_port_id}"), target: format!("{target_node_id}@{target_port_id}"), ..Default::default() })
 }
 
-/// 🩹️ Builds the `DagNodePatch` for a `patchDagNodes` field write (name, or a slider param that also
-/// refits the widget size). `raw_value` is the typed `DagCommand::PatchDagNodes.value` field verbatim
-/// (a plain `&str`, not a `serde_json::Value` — the typed command carries the raw UI input string
-/// directly, so numeric fields parse it themselves instead of round-tripping through a JSON value that
-/// would always classify it as a JSON string).
-pub fn node_patch_for_field(node: &DagNodeSpec, field: &str, raw_value: Option<&str>) -> Option<DagNodePatch> {
-    match field {
-        "name" => raw_value.map(|value| DagNodePatch { name: Some(value.into()), ..Default::default() }),
-        "value" | "min" | "max" if matches!(node.kind, DagNodeKind::Slider { .. }) => {
-            let value = raw_value.and_then(|value| value.parse::<f64>().ok())?;
+/// 🩹️ The child leaves of a `patchDagNodes` field write: `name` is one `change-node-label`; a slider's `value`/`min`/`max`
+/// is the ABSOLUTE `set-node-property` of that kind field, plus a `resize-node` when the widget refits to a new size.
+/// `raw_value` is the typed command's UI input string verbatim (numeric fields parse it themselves).
+pub fn node_field_leaves(node: &DagNodeSpec, field: &str, raw_value: &str) -> Vec<SemioGraphMutation> {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::{change_node_label::ChangeNodeLabel, resize_node::ResizeNode, set_node_property::SetNodeProperty};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::GraphNodeId;
+    let id = || GraphNodeId::new(node.id.clone());
+    match (field, &node.kind, raw_value.trim().parse::<f64>().ok().filter(|value| value.is_finite())) {
+        ("name", _, _) if node.name != raw_value => vec![SemioGraphMutation::ChangeNodeLabel(ChangeNodeLabel { id: id(), new_label: raw_value.into() })],
+        ("value" | "min" | "max", DagNodeKind::Slider { value, min, max, .. }, Some(next)) if next != match field { "value" => *value, "min" => *min, _ => *max } => {
             let mut updated = node.clone();
-            if let DagNodeKind::Slider { value: ref mut slider_value, min: ref mut slider_min, max: ref mut slider_max, .. } = updated.kind {
-                match field {
-                    "value" => *slider_value = value,
-                    "min" => *slider_min = value,
-                    _ => *slider_max = value,
-                }
+            if let DagNodeKind::Slider { value, min, max, .. } = &mut updated.kind {
+                *match field { "value" => value, "min" => min, _ => max } = next;
             }
             fit_node_size(&mut updated);
-            Some(DagNodePatch { kind: Some(updated.kind.clone()), width: Some(updated.width), height: Some(updated.height), ..Default::default() })
+            let set = SemioGraphMutation::SetNodeProperty(SetNodeProperty { node_id: id(), key: field.into(), value: crate::semio_value_of(&semio_framework_value::DslValue::float(next)) });
+            let resize = ((updated.width, updated.height) != (node.width, node.height)).then(|| SemioGraphMutation::ResizeNode(ResizeNode { id: id(), width: updated.width, height: updated.height }));
+            std::iter::once(set).chain(resize).collect()
         }
-        _ => None,
+        _ => Vec::new(),
     }
 }
 
-/// 🗑️ Operations removing `node_ids`, for delete-node / delete-selection. Two app-level consumers
-/// (`🎮️commands/➕️add-node::remove_node` and `🎮️commands/🕸️set-algorithm::{delete_selection, node_graph_edit}`)
-/// — takes only `DagSnapshot`, no app-only config type, so per the DocumentHelpers placement rule it
-/// lives here rather than being duplicated per consumer.
-///
-/// 🧺️ Every incident edge is disconnected BEFORE its node is deleted, so each published row is
-/// point-invertible: a retained one-item preparation declares exactly one forward plus one inverse row
-/// (`ArtifactStoreOneItemFootprint::for_one_invertible_item`), while `delete-node` on a connected node
-/// inverts to the node plus one row per severed edge and failed the fold with `batched item candidate
-/// failed its exact fixed fold contract`. `delete-node`'s own cascade stays for non-retained callers.
-pub fn remove_nodes_operations(document: &DagSnapshot, node_ids: &[String]) -> Vec<DagMutation> {
-    let removed: Vec<_> = document.nodes().into_iter().filter(|node| node_ids.contains(&node.id)).map(|node| node.id).collect();
-    let mut operations: Vec<DagMutation> = document.edges().into_iter().filter(|edge| removed.contains(&split_endpoint(&edge.source).0) || removed.contains(&split_endpoint(&edge.target).0)).map(|edge| disconnect_nodes(edge.id)).collect();
-    operations.extend(removed.into_iter().map(delete_node));
-    operations
+/// 🗑️ The child leaves removing `node_ids` from a scene, for remove-node / delete-selection: every incident edge is deleted
+/// BEFORE its node, so each published row is point-invertible (one `delete-edge` undoes as one `create-edge`, an edge-less
+/// `delete-node` as one `create-node`, each at its base index — the undo is byte-exact).
+pub fn remove_nodes_leaves(scene: &DagScene, node_ids: &[String]) -> Vec<SemioGraphMutation> {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::{delete_edge::DeleteEdge, delete_node::DeleteNode};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, GraphNodeId};
+    let removed: Vec<&str> = scene.nodes.iter().filter(|node| node_ids.contains(&node.id)).map(|node| node.id.as_str()).collect();
+    let touches = |edge: &DagHostSnapshotEdge| removed.contains(&split_endpoint(&edge.source).0.as_str()) || removed.contains(&split_endpoint(&edge.target).0.as_str());
+    let edges = scene.edges.iter().filter(|edge| touches(edge)).map(|edge| SemioGraphMutation::DeleteEdge(DeleteEdge { id: GraphEdgeId::new(edge.id.clone()) }));
+    edges.chain(removed.iter().map(|id| SemioGraphMutation::DeleteNode(DeleteNode { id: GraphNodeId::new(*id) }))).collect()
 }
 //#endregion 🔖️DocumentHelpers
 

@@ -1,10 +1,10 @@
 use super::*;
-use protocol::ToValue;
+use semio_framework_value::ToValue;
 use semio_framework::kernel::{Effect, RequestId};
 
 #[test]
 fn request_file_open_survives_wire_effect_round_trip() {
-    let effect = Effect::RequestFileOpen { req: RequestId(121), accept: "application/json,.json".into(), read_as: Some("text".into()), import_action: "importFixture".into(), multiple: false };
+    let effect = Effect::RequestFileOpen { req: RequestId(121), accept: "application/json,.json".into(), read_as: Some("text".into()), import_action: "importFixture".into(), multiple: false, args: None };
     let bytes = store::pack_rt::encode_wire_value(&effect.to_value());
     let decoded = decode_wire_effect(&bytes).expect("RequestFileOpen must survive the browser wire table");
     match decoded {
@@ -70,12 +70,14 @@ fn effect_wire_kind(effect: &Effect) -> &'static str {
 }
 
 fn all_effect_wire_fixtures() -> Vec<Effect> {
-    use semio_framework::kernel::{ArtifactHandle, CapabilityId, CapabilityRequest, ClipboardFragment, IconRenderExportItem, JobPlacement, MessageEndpoint, RequestOutcome, VideoRenderProgram, VideoRenderRun, VideoRenderScene, WindowHandle, WindowKindId};
+    use semio_framework::kernel::{
+        ArtifactHandle, CapabilityId, CapabilityRequest, ClipboardFragment, IconRenderExportItem, JobPlacement, MessageEndpoint, RequestOutcome, VideoRenderProgram, VideoRenderRun, VideoRenderScene, WindowHandle, WindowKindId,
+    };
     use semio_framework::{MediaClass, MediaForm, MediaType};
     let req = RequestId(7);
     let media = MediaType { class: MediaClass::Data, form: MediaForm::Value };
     vec![
-        Effect::OpenWindow { req, kind: WindowKindId("main".into()), params: dsl::DslValue::Null },
+        Effect::OpenWindow { req, kind: WindowKindId("main".into()), params: semio_framework_value::DslValue::Null },
         Effect::CloseWindow { window: WindowHandle(1) },
         Effect::Notify { message: "n".into() },
         Effect::ClipboardWrite { fragment: ClipboardFragment { schema: "s".into(), media_type: media.clone(), dsl_text: "{}".into(), pack_bytes: None, source_app: "a".into(), label: "l".into() } },
@@ -85,9 +87,22 @@ fn all_effect_wire_fixtures() -> Vec<Effect> {
         Effect::OpenExternalUrl { url: "https://example.test".into() },
         Effect::SetPanel { panel_json: "{}".into() },
         Effect::DownloadMediaExport { filename: "a.bin".into(), mime_type: "application/octet-stream".into(), data: "AA==".into(), encoding: None },
-        Effect::IconRenderExport { items: vec![IconRenderExportItem { filename: "i.png".into(), request: dsl::DslValue::Null }] },
-        Effect::VideoRenderExport { filename: "v.mp4".into(), program: VideoRenderProgram { schema: semio_framework::kernel::VIDEO_RENDER_PROGRAM_SCHEMA.into(), width: 32, height: 16, fps: 30, background: [0.0, 0.0, 0.0, 1.0], paths: Vec::new(), images: Vec::new(), scenes: vec![VideoRenderScene::default()], timeline: vec![VideoRenderRun { scene: 0, frames: 1 }] } },
-        Effect::RequestFileOpen { req, accept: "*".into(), read_as: None, import_action: "import".into(), multiple: false },
+        Effect::IconRenderExport { items: vec![IconRenderExportItem { filename: "i.png".into(), request: semio_framework_value::DslValue::Null }] },
+        Effect::VideoRenderExport {
+            filename: "v.mp4".into(),
+            program: VideoRenderProgram {
+                schema: semio_framework::kernel::VIDEO_RENDER_PROGRAM_SCHEMA.into(),
+                width: 32,
+                height: 16,
+                fps: 30,
+                background: [0.0, 0.0, 0.0, 1.0],
+                paths: Vec::new(),
+                images: Vec::new(),
+                scenes: vec![VideoRenderScene::default()],
+                timeline: vec![VideoRenderRun { scene: 0, frames: 1 }],
+            },
+        },
+        Effect::RequestFileOpen { req, accept: "*".into(), read_as: None, import_action: "import".into(), multiple: false, args: None },
         Effect::RequestMediaFrames {
             req,
             accept: "video/*".into(),

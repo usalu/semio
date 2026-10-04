@@ -116,6 +116,8 @@ pub mod set_header_var;
 pub mod set_layer;
 #[path = "🪡set-linetype/🦀️.rs"]
 pub mod set_linetype;
+#[path = "🩹️patch-snapshot/🦀️.rs"]
+pub mod patch_snapshot;
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "🖌️set-style/🦀️.rs"]
@@ -130,6 +132,7 @@ pub mod set_style;
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum DxfMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
+    PatchSnapshot(patch_snapshot::PatchSnapshot),
 
     /// 🏷️ Creates or replaces a `$VAR` header entry.
     SetHeaderVar(set_header_var::SetHeaderVar),
@@ -181,7 +184,7 @@ pub enum DxfMutation {
 /// the framework never parses Rust, so this constant plus `kinds_const_matches_enum_variants` below
 /// is what keeps the manifest honest).
 pub const KINDS: &[&str] = &[
-    "set-snapshot",
+    "set-snapshot", "patch-snapshot",
     "set-header-var",
     "remove-header-var",
     "insert-layer",
@@ -224,6 +227,7 @@ pub fn apply_dxf_mutation(snapshot: &mut DxfSnapshot, mutation: &DxfMutation) ->
 pub(crate) fn agg_diff(this: &DxfMutation, base: &DxfSnapshot) -> protocol::MutationOutcome<DxfDiff> {
     protocol::MutationOutcome::new(match this {
         DxfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff_set_snapshot(base, snapshot),
+        DxfMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<DxfSnapshot, DxfMutation>>::diff(patch, base),
 
         DxfMutation::SetHeaderVar(set_header_var::SetHeaderVar { name, header_var }) => {
             let existed = base.header_vars.iter().any(|v| &v.name == name);
@@ -269,9 +273,11 @@ pub(crate) fn agg_diff(this: &DxfMutation, base: &DxfSnapshot) -> protocol::Muta
 }
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &DxfMutation, base: &DxfSnapshot) -> Vec<DxfMutation> {
+pub(crate) fn agg_inverse(this: &DxfMutation, base: &DxfSnapshot) -> Result<Vec<DxfMutation>, semio_framework_value::ValueError> {
+    Ok({
     match this {
         DxfMutation::SetSnapshot(_) => vec![DxfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
+        DxfMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<DxfSnapshot, DxfMutation>>::inverse(patch, base)?),
 
         DxfMutation::SetHeaderVar(set_header_var::SetHeaderVar { name, .. }) => match base.header_vars.iter().find(|v| &v.name == name) {
             Some(v) => vec![DxfMutation::SetHeaderVar(set_header_var::SetHeaderVar { name: name.clone(), header_var: v.clone() })],
@@ -335,6 +341,8 @@ pub(crate) fn agg_inverse(this: &DxfMutation, base: &DxfSnapshot) -> Vec<DxfMuta
             None => Vec::new(),
         },
     }
+
+    })
 }
 //#endregion 🔖️MutationTrait
 
@@ -347,6 +355,7 @@ pub(crate) fn agg_inverse(this: &DxfMutation, base: &DxfSnapshot) -> Vec<DxfMuta
 fn print_dxf_mutation(m: &DxfMutation) -> String {
     match m {
         DxfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", enc_dxf_snapshot(snapshot)),
+        DxfMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(patch),
 
         DxfMutation::SetHeaderVar(set_header_var::SetHeaderVar { name, header_var }) => format!("set-header-var name={} header-var={}", enc_str(name), enc_header_var(header_var)),
         DxfMutation::RemoveHeaderVar(remove_header_var::RemoveHeaderVar { name }) => format!("remove-header-var name={}", enc_str(name)),
@@ -379,6 +388,7 @@ fn parse_dxf_mutation(line: &str) -> Result<DxfMutation, String> {
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("dxf mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
+        "patch-snapshot" => semio_s_artifact_stdio_contract::editing::snapshot_patch_from_text(line).map(|patch| DxfMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch })),
         "set-snapshot" => Ok(DxfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_dxf_snapshot(arg("snapshot")?)? })),
 
         "set-header-var" => Ok(DxfMutation::SetHeaderVar(set_header_var::SetHeaderVar { name: dec_str(arg("name")?)?, header_var: dec_header_var(arg("header-var")?)? })),
@@ -412,8 +422,8 @@ impl OpText for DxfMutation {
     fn print_op(&self) -> String {
         print_dxf_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_dxf_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_dxf_mutation(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 }
 
@@ -421,6 +431,7 @@ impl OpText for DxfMutation {
 /// 🏷️ Op tags of `DxfMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
 const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
 const TAG_SET_HEADER_VAR: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-header-var");
 const TAG_REMOVE_HEADER_VAR: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-header-var");
 const TAG_INSERT_LAYER: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-layer");
@@ -451,6 +462,7 @@ impl OpBinary for DxfMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             DxfMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
+            DxfMutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
             DxfMutation::SetHeaderVar(_) => TAG_SET_HEADER_VAR,
             DxfMutation::RemoveHeaderVar(_) => TAG_REMOVE_HEADER_VAR,
             DxfMutation::InsertLayer(_) => TAG_INSERT_LAYER,
@@ -472,6 +484,7 @@ impl OpBinary for DxfMutation {
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
             DxfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => enc_dxf_snapshot_bin(snapshot, &mut out),
+            DxfMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => out.extend(protocol::OpBinary::encode_op(patch)?),
             DxfMutation::SetHeaderVar(set_header_var::SetHeaderVar { name, header_var }) => {
                 write_str_lp(&mut out, name);
                 enc_header_var_bin(header_var, &mut out);
@@ -532,6 +545,7 @@ impl OpBinary for DxfMutation {
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
         let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
+            TAG_PATCH_SNAPSHOT => Ok(DxfMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: <semio_s_artifact_stdio_contract::editing::SnapshotPatch as protocol::OpBinary>::decode_op(reader.read_bytes(reader.remaining()).map_err(|e| protocol::ProtocolError::Malformed { what: "patch-snapshot payload", offset: reader.position() as u64, detail: e.to_string() })?)? })),
             TAG_SET_SNAPSHOT => Ok(DxfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_dxf_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))? })),
             TAG_SET_HEADER_VAR => {
                 let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))?;
@@ -626,6 +640,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<DxfMutation> {
     }
 
     vec![
+        DxfMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         DxfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: demo_snapshot_for_set() }),
         DxfMutation::SetHeaderVar(set_header_var::SetHeaderVar { name: "$ACADVER".into(), header_var: DxfHeaderVar { name: "$ACADVER".into(), group_code: 1, value: DxfValue::Str { value: "AC1015".into() }, extra_group_codes: vec![] } }),
         DxfMutation::SetHeaderVar(set_header_var::SetHeaderVar {

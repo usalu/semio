@@ -18,7 +18,7 @@ use crate::En1998Snapshot;
 pub const EN1998_SEISMIC_RC_FRAME_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🏢️seismic-rc-frame/🏢️seismic-rc-frame/🗣️.dsl.semio");
 
 /// 📖️ Parses `.en1998` DSL text into a `En1998Snapshot`.
-pub fn parse_dsl(text: &str) -> Result<En1998Snapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<En1998Snapshot, semio_framework_diagnostic::TextError> {
     <En1998Snapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 

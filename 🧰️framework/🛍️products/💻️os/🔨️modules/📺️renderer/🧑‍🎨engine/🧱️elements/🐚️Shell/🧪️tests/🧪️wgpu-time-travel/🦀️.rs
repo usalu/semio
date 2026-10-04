@@ -10,10 +10,10 @@
 //! history body the guest's REAL producer builds (paged transaction rows, Edit refused with its reason).
 
 use super::*;
-use semio_framework::kernel::{HistoryEntry, HistoryPatch, HistoryTimeTravel, HistoryTimeTravelStage, InvocationResult};
+use semio_framework::kernel::{HistoryEntry, HistoryPatch, HistoryReprojection, HistoryTimeTravel, HistoryTimeTravelStage, InvocationResult};
 use semio_framework::{ActionArgDef, ActionArgOption, ArgPresentation, ArgSchema, DialogDefinition, DomainSelection};
-use semio_framework_plugin::app::time_travel::history_row_window_path;
-use semio_framework_plugin::app::{ui_history_panel, CommandView, HistoryMutationPage, HistoryMutationPages, HistoryView, MutationView, TimeTravelPanel};
+use semio_framework_plugin::app::time_travel::{history_row_window_path, TimeTravelInputRow, TimeTravelList, TimeTravelListItem};
+use semio_framework_plugin::app::{ui_history_panel, CommandView, HistoryMutationPage, HistoryMutationPages, HistoryView, MutationView, TimeTravelEditorPanel, TimeTravelPanel};
 
 //#region 🧰️Harness
 fn corpus() -> Value {
@@ -123,7 +123,7 @@ fn dispatched() -> Vec<String> {
     DISPATCHED.with(|log| log.borrow().clone())
 }
 
-/// 🖌️ Paints `document` in `surface` to completion with the stepped paint every retained body uses, then registers and
+/// 🎨️ Paints `document` in `surface` to completion with the stepped paint every retained body uses, then registers and
 /// publishes its hits, so the surface's accessibility projection is the one the mirror reads; answers the staged input.
 fn paint_retained_body(shell: &mut ShellState, surface: &str, document: &UiDocumentLease, body: Rect) -> InputState<ActionDescriptor> {
     let (mut draw, mut atlas, icons, theme) = (DrawList::default(), FontAtlas::builtin(), IconAtlas::default(), Theme::default());
@@ -690,8 +690,8 @@ fn history_refusals_are_localized_notices_carrying_their_code() {
             assert_eq!(history_refusal_notice(&format!("hub refused batch 4: {code}"), locale), None, "{code}: prose never names a refusal");
             for fault in [format!("{code}: edit-9#0"), format!("handle_action failed: {code}: stale"), format!("app.command.rejected: refused — mutation.clamped: region; {code}: step [t-1]")] {
                 assert_eq!(history_refusal_of_fault(&fault, locale), Some((code, text, severity)), "{fault}");
-                let (message, notice_severity, notice_code) = classify_dispatch_fault_notice(&fault, locale);
-                assert_eq!((message.as_str(), notice_severity, notice_code), (text, severity, Some(code)), "{fault}");
+                let (message, notice_severity, notice_code) = classify_dispatch_fault_notice(&fault, None, Terminology::Native, locale);
+                assert_eq!((message.as_str(), notice_severity, notice_code.as_deref()), (text, severity, Some(code)), "{fault}");
             }
             let status = HistoryTimeTravel { fault: Some(code.to_string()), ..session("editing a mutation") };
             assert_eq!(time_travel_band_lines(&status, Terminology::Native, locale).fault.as_deref(), Some(text), "{code}: the band's fault line");
@@ -719,7 +719,7 @@ fn every_command_rejection_is_told_from_its_codes_in_both_locales() {
     for row in rows {
         let name = row["name"].as_str().expect("name");
         let rejection = row["rejection"].to_string();
-        let store_sync::sync::CommandAckOutcome::Rejected { code, messages, .. } = dsl::os_pack::json::from_json_str::<store_sync::sync::CommandAckOutcome>(&rejection).unwrap_or_else(|error| panic!("{name}: a CommandRejectionV1: {error}")) else {
+        let store_sync::sync::CommandAckOutcome::Rejected { code, messages, .. } = semio_framework_pack_json::from_json_str::<store_sync::sync::CommandAckOutcome>(&rejection, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|error| panic!("{name}: a CommandRejectionV1: {error}")) else {
             panic!("{name}: a rejected outcome")
         };
         codes.insert(row["rejection"]["code"].as_str().expect("code").to_string());
@@ -735,6 +735,35 @@ fn every_command_rejection_is_told_from_its_codes_in_both_locales() {
         }
     }
     assert_eq!(codes.len(), 10, "the corpus covers every closed rejection code: {codes:?}");
+}
+
+/// ⚖️ LAW (the kernel's `🧫️history-notices`, the one copy every shell shows; design §20.12): a history-lane refusal — an open
+/// tool recording, an ended one, a full history with its count, a history step still replaying (`history.replaying`, gap N17) —
+/// reaching the shell as a refused guest dispatch, also behind the bridge's prefix, is a warning notice in both locales carrying
+/// its code, `{n}` from the structured `Fault.params` alone; the ARIA mirror's `shell.notice` names it by the message and
+/// describes it by the code. A dispatch-fault string without the structured refusal behind it is never read for a count.
+#[test]
+fn every_history_lane_refusal_is_a_notice_carrying_its_code() {
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎠️kernel/🧫️fixtures/🧫️history-notices/🔣️.json")).expect("the kernel's history-notices fixture parses");
+    let notices = fixture["notices"].as_array().expect("notices");
+    assert_eq!(notices.iter().map(|notice| notice["code"].as_str().expect("code")).collect::<Vec<_>>(), semio_framework::kernel::HISTORY_NOTICE_LABELS.iter().map(|(code, _, _)| *code).collect::<Vec<_>>(), "the fixture is the kernel's table");
+    for notice in notices {
+        let code = notice["code"].as_str().expect("code");
+        let refused = RefusedGuestFault { fault: semio_framework::Fault::new(semio_framework::FaultOrigin::Module, code.to_string(), "refused").with_param("n", "64"), notices: Vec::new() };
+        for (locale, locale_id, tongue) in [(Locale::En, "en", "en"), (Locale::De, "de", "de")] {
+            let text = notice[tongue].as_str().expect("text").replace("{n}", "64");
+            for fault in [format!("{code}: the edit history holds at most 64 edits and is full"), format!("handle_action failed: {code}: refused")] {
+                assert_eq!(classify_dispatch_fault_notice(&fault, Some(&refused), Terminology::Native, locale), (text.clone(), semio_framework::Severity::Warning, Some(code.to_string())), "{fault}");
+            }
+            let mut shell = session_shell();
+            shell.locale_id = locale_id.into();
+            shell.chrome_build.refused_guest_fault = Some(refused.clone());
+            shell.note_dispatch_fault(&format!("{code}: refused"));
+            let told: Vec<(Option<String>, Option<String>)> = shell.chrome_accessibility_nodes(&[]).into_iter().filter(|node| node.key == TRANSIENT_NOTICE_STATUS_ID).map(|node| (node.label, node.description)).collect();
+            assert_eq!(told, [(Some(text.clone()), Some(code.to_string()))], "{code} ({tongue}): the mirror tells the notice by its message and its code");
+        }
+    }
+    assert_eq!(classify_dispatch_fault_notice("history.full: refused at 64", None, Terminology::Native, Locale::En).2, None, "no count is ever read from a fault message");
 }
 //#endregion 🛑️HistoryRefusals
 
@@ -1044,7 +1073,7 @@ fn staging_splices_axes_and_reads_the_selection_domain() {
     assert_eq!(shell.staged_map_for("main", "move").get("offset"), Some(&serde_json::json!([0.0, 4.0, 5.0])), "the second axis keeps the first");
 }
 
-/// 🧾️ One row of the shared `🛂️manifest/🧫️fixtures/🧫️number-facets` corpus as the facets a staged row carries (absent = none
+/// 🎚️ One row of the shared `🛂️manifest/🧫️fixtures/🧫️number-facets` corpus as the facets a staged row carries (absent = none
 /// or the default).
 fn corpus_number_facets(value: &Value) -> Option<semio_framework::ActionArgNumberFacets> {
     let facets = value.as_object()?;
@@ -1256,7 +1285,7 @@ fn a_chrome_dialog_paints_each_editor_accessibly_and_answers_the_pointer() {
 const HISTORY_BODY_OPERATIONS: u32 = 120;
 const HISTORY_BODY_PROJECTED: u32 = 3;
 
-/// 🧾️ A guest `BuiltNode` flattened, by ownership, into pre-order retained records (parents before children) — the
+/// 🧱️ A guest `BuiltNode` flattened, by ownership, into pre-order retained records (parents before children) — the
 /// records the plugin runtime publishes for it.
 fn built_records(node: ui_contract::BuiltNode, records: &mut Vec<ui_contract::UiNodeRecord>) -> ui_contract::UiNodeId {
     let ui_contract::BuiltNode { key, component, layout, style, activity, disabled, accessibility, bindings, menu, children, .. } = node;
@@ -1275,10 +1304,62 @@ fn drag_mutation(index: u32) -> MutationView {
     MutationView { mutation_id: format!("m-{index}"), position: 0, op_index: index, label: LocalizedLabel::native("Drag selection", "Auswahl ziehen"), worst: None, messages: Vec::new(), superseded: false, withdrawn: false, editable: true, store: None }
 }
 
+/// ⏳️ A running replay: `Begin` is refused (`Illegal`), so every Edit is disabled with its reason.
+fn replaying_panel() -> TimeTravelPanel {
+    TimeTravelPanel {
+        status: session("a running replay"),
+        store: None,
+        stage: semio_framework_time_travel::TimeTravelStage::Replaying,
+        pending_after: None,
+        finalize_refusal: None,
+        review: None,
+        rerun_refusal: None,
+        begin_refusal: Some(semio_framework_time_travel::TimeTravelRefusal::Illegal),
+        next_problem: None,
+        editor: None,
+        outcomes: Default::default(),
+        edited: Default::default(),
+    }
+}
+
+/// 📋️ A session editing `m-1` whose draft holds a full list (`/points`: two items, `minItems` = `maxItems` = 2) and a
+/// two-chip reference list (`/targets`, `minItems` 1, `n1` labelled "Corner"/"Ecke") — the N2 list rows.
+fn list_editor_panel() -> TimeTravelPanel {
+    let row = |pointer: &str, input: ActionArgDef, value: Value, list: Option<TimeTravelList>, item: Option<TimeTravelListItem>| TimeTravelInputRow { pointer: pointer.into(), label: input.label.clone(), input, value: DslValue::from(value), list, item };
+    let point = |index: usize, value: f64| row(&format!("/points/{index}"), ActionArgDef::number("point", LocalizedLabel::native("Point", "Punkt")), serde_json::json!(value), None, Some(TimeTravelListItem { index, removable: false, min: Some(2) }));
+    let targets = ActionArgDef {
+        schema: ArgSchema::Reference { kinds: vec!["node".into()], domain: Some("vortex".into()), granularity: Some("node".into()), many: true, min_items: Some(1), max_items: None, id_type: semio_framework::ReferenceIdType::String },
+        ..ActionArgDef::text("targets", LocalizedLabel::native("Targets", "Ziele"))
+    };
+    TimeTravelPanel {
+        status: session("editing a mutation"),
+        stage: semio_framework_time_travel::TimeTravelStage::Editing,
+        begin_refusal: None,
+        editor: Some(TimeTravelEditorPanel {
+            target: "m-1".into(),
+            label: LocalizedLabel::native("Drag selection", "Auswahl ziehen"),
+            rows: vec![
+                row("/points", ActionArgDef::text("points", LocalizedLabel::native("Points", "Punkte")), Value::Null, Some(TimeTravelList { len: 2, addable: false, max: Some(2) }), None),
+                point(0, 1.0),
+                point(1, 2.0),
+                row("/targets", targets, serde_json::json!(["n1", "n2"]), None, None),
+            ],
+            inputs_refused: None,
+            withdrawn: false,
+            outcome: Vec::new(),
+            refused: None,
+            changed: false,
+            reference_labels: std::collections::BTreeMap::from([("n1".to_string(), LocalizedLabel::native("Corner", "Ecke"))]),
+        }),
+        ..replaying_panel()
+    }
+}
+
 /// 📚️ The history body the guest publishes, built by its REAL producer `ui_history_panel`: one transaction row of
 /// [`HISTORY_BODY_OPERATIONS`] operations ([`HISTORY_BODY_PROJECTED`] projected), the host's window `(offset, rows)` over that
-/// row with the store's page past the projection, and — `refused` — a running replay, during which `Begin` is refused.
-fn history_body(window: Option<(u32, u32)>, refused: bool, locale: Locale, generation: u64) -> UiDocumentLease {
+/// row with the store's page past the projection, the session `panel` when a history edit is open, and the history step
+/// still replaying (`reprojection`).
+fn history_body(window: Option<(u32, u32)>, panel: Option<TimeTravelPanel>, reprojection: Option<HistoryReprojection>, locale: Locale, generation: u64) -> UiDocumentLease {
     let history = HistoryView {
         commands: vec![CommandView {
             seq: 1,
@@ -1287,7 +1368,6 @@ fn history_body(window: Option<(u32, u32)>, refused: bool, locale: Locale, gener
             kind: semio_framework::ActionKind::Mutation,
             timestamp: "2026-10-02T10:00:00Z".into(),
             edit_id: Some("e-1".into()),
-            config_edit_id: None,
             child_edit_ids: Vec::new(),
             transition_id: None,
             author: None,
@@ -1310,21 +1390,7 @@ fn history_body(window: Option<(u32, u32)>, refused: bool, locale: Locale, gener
         pages.insert(1, HistoryMutationPage { from: (paged - HISTORY_BODY_PROJECTED) as usize, rows: (paged..(start + rows).min(HISTORY_BODY_OPERATIONS)).map(drag_mutation).collect() });
         view.tree_windows = vec![semio_framework::TreeWindowRequest { body_key: ui_wgpu::wgpu::FRAMEWORK_HISTORY_BODY_KEY.into(), node_key: history_row_window_path(1), open: Some(true), offset, rows }];
     }
-    let panel = refused.then(|| TimeTravelPanel {
-        status: session("a running replay"),
-        store: None,
-        stage: semio_framework_time_travel::TimeTravelStage::Replaying,
-        pending_after: None,
-        finalize_refusal: None,
-        review: None,
-        rerun_refusal: None,
-        begin_refusal: Some(semio_framework_time_travel::TimeTravelRefusal::Illegal),
-        next_problem: None,
-        editor: None,
-        outcomes: Default::default(),
-        edited: Default::default(),
-    });
-    let built = semio_framework_async::block_on(ui_history_panel(&history, panel.as_ref(), None, &pages, "s.test.history", locale, false, &view)).expect("the guest's history body assembles");
+    let built = semio_framework_async::block_on(ui_history_panel(&history, panel.as_ref(), reprojection.as_ref(), &pages, "s.test.history", locale, false, false, &view)).expect("the guest's history body assembles");
     let mut records = Vec::new();
     let root = built_records(built, &mut records);
     let identity = ui_contract::UiDocumentAssemblyIdentity { generation, revision: ui_contract::UiRevision(generation), root: Some(root), layout_epoch: 0 };
@@ -1336,12 +1402,27 @@ fn history_mirror_node(key: &str) -> Option<ui_contract::AccessibilityProjection
     crate::interpreter::published_accessibility_nodes_for_test(FRAMEWORK_PANEL_TAB_HISTORY_ID).into_iter().find(|node| projected_key_is(&node.key, key))
 }
 
-/// ♿️ The mutation rows the History surface's mirror shows, in reading order.
+/// 📜️ The mutation rows the History surface's mirror shows, in reading order.
 fn history_mirror_mutations() -> Vec<String> {
     crate::interpreter::published_accessibility_nodes_for_test(FRAMEWORK_PANEL_TAB_HISTORY_ID)
         .into_iter()
         .filter_map(|node| node.key.rsplit('/').next().and_then(|key| key.strip_prefix("framework.history.mutation.")).filter(|id| !id.contains("::")).map(str::to_owned))
         .collect()
+}
+
+/// 🛞️ Paints `document` and wheels the History body down over its rows, a few rows a notch, until the mutation row `wanted`
+/// is projected — the person scrolling to a window the tree-window observer asked for.
+fn wheel_history_window_into_view(shell: &mut ShellState, surface: &str, document: &UiDocumentLease, body: Rect, wanted: &str) {
+    let mut input = paint_retained_body(shell, surface, document, body);
+    for _ in 0..256 {
+        if history_mirror_mutations().iter().any(|id| id == wanted) {
+            return;
+        }
+        let (x, y, row_h) = input.hits().iter().find(|hit| hit.kind == HitKind::TreeItem && body.contains(hit.rect.x + 1.0, hit.rect.y + 1.0)).map_or((body.x + body.w * 0.5, body.y + body.h * 0.5, 24.0), |hit| (hit.rect.x + hit.rect.w * 0.5, hit.rect.y + hit.rect.h * 0.5, hit.rect.h));
+        assert!(shell.handle_pointer_wheel(x, y, 0.0, row_h * 3.0, &mut input), "the History body owns the wheel");
+        input = paint_retained_body(shell, surface, document, body);
+    }
+    panic!("`{wanted}` never scrolled into the History body");
 }
 
 /// 🖱️ Activates one History mirror node the way the ARIA mirror's click does; answers what it dispatched.
@@ -1357,16 +1438,17 @@ fn activate_history_mirror_node(shell: &mut ShellState, key: &str) -> Vec<Action
 /// operations announces that it folds open (its window's total) and opens by the mirror's activation; the wgpu tree-window
 /// observer then asks the guest for that row by the SAME window path the guest reads
 /// (`framework.history.commands␟framework.history.entry.1`), and the slice it answers renders past the projected
-/// mutations; a window scrolled to 100 shows exactly operations 100–107. While a replay runs, every Edit is a disabled
-/// button whose name gives the reason ("Edit: Not possible right now" / "Bearbeiten: Derzeit nicht möglich") and activating
-/// it or its row begins nothing; with Begin allowed the same button begins an edit of its mutation.
+/// mutations; a window at 100, wheeled into view (the mirror projects what the body shows), shows exactly operations 100–107.
+/// While a replay runs, every Edit is an
+/// aria-disabled button that tells the reason ("Not possible right now" / "Derzeit nicht möglich", in its name or its
+/// description) and activating it or its row begins nothing; with Begin allowed the same button begins an edit of its mutation.
 #[test]
 fn the_guest_history_body_opens_pages_and_refuses_edit_with_its_reason() {
     let surface = FRAMEWORK_PANEL_TAB_HISTORY_ID;
     let body = Rect::new(0.0, 0.0, 420.0, 640.0);
     let row = "framework.history.entry.1";
     let mut shell = session_shell();
-    let mut documents = vec![history_body(None, false, Locale::En, 1)];
+    let mut documents = vec![history_body(None, None, None, Locale::En, 1)];
     let _ = paint_retained_body(&mut shell, surface, &documents[0], body);
     let closed = history_mirror_node(row).expect("the transaction row is in the mirror");
     assert_eq!(closed.expanded, Some(false), "a closed row of {HISTORY_BODY_OPERATIONS} operations announces it folds open, never a leaf: {closed:?}");
@@ -1381,31 +1463,359 @@ fn the_guest_history_body_opens_pages_and_refuses_edit_with_its_reason() {
     let asked = requests.iter().find(|request| request.body_key == ui_wgpu::wgpu::FRAMEWORK_HISTORY_BODY_KEY && request.node_key == path).cloned().unwrap_or_else(|| panic!("the opened row is asked for by the guest's window path {path:?}: {requests:?}"));
     assert!(asked.open == Some(true) && asked.rows > HISTORY_BODY_PROJECTED, "the request opens the row over more than its projection: {asked:?}");
 
-    documents.push(history_body(Some((asked.offset, asked.rows)), false, Locale::En, 2));
+    documents.push(history_body(Some((asked.offset, asked.rows)), None, None, Locale::En, 2));
     let _ = paint_retained_body(&mut shell, surface, &documents[1], body);
     let shown = history_mirror_mutations();
     assert!(shown.len() > HISTORY_BODY_PROJECTED as usize, "the answered window renders past the projected mutations, paged from the store: {shown:?}");
     assert_eq!(shown, (0..shown.len() as u32).map(|index| format!("m-{index}")).collect::<Vec<_>>(), "in op order from the first");
 
-    for (generation, locale, reason) in [(3, Locale::En, "Edit: Not possible right now"), (4, Locale::De, "Bearbeiten: Derzeit nicht möglich")] {
-        documents.push(history_body(Some((100, 8)), true, locale, generation));
-        let _ = paint_retained_body(&mut shell, surface, documents.last().expect("published"), body);
+    for (generation, locale, edit_word, reason) in [(3, Locale::En, "Edit", "Not possible right now"), (4, Locale::De, "Bearbeiten", "Derzeit nicht möglich")] {
+        documents.push(history_body(Some((100, 8)), Some(replaying_panel()), None, locale, generation));
+        wheel_history_window_into_view(&mut shell, surface, documents.last().expect("published"), body, "m-100");
         assert_eq!(history_mirror_mutations(), (100..108).map(|index| format!("m-{index}")).collect::<Vec<_>>(), "{locale:?}: the scrolled window shows exactly the operations it asked for");
         for index in 100..108 {
             let edit = history_mirror_node(&format!("framework.history.mutation.m-{index}::row-action::0")).unwrap_or_else(|| panic!("{locale:?}: m-{index}'s Edit is in the mirror"));
-            assert!(edit.role == "button" && edit.disabled && !edit.actionable && !edit.focusable, "{locale:?}: a refused Edit is a disabled button: {edit:?}");
-            assert!(edit.label.as_deref().is_some_and(|label| label.starts_with(reason)), "{locale:?}: its name gives the reason: {:?}", edit.label);
+            assert!(edit.role == "button" && edit.disabled && !edit.actionable, "{locale:?}: a refused Edit is an aria-disabled button: {edit:?}");
+            let told = [edit.label.as_deref(), edit.description.as_deref()].into_iter().flatten().collect::<Vec<_>>().join(" · ");
+            assert!(told.contains(edit_word) && told.contains(reason), "{locale:?}: it is named Edit and tells the reason: {told:?}");
         }
         let begun = [activate_history_mirror_node(&mut shell, "framework.history.mutation.m-100::row-action::0"), activate_history_mirror_node(&mut shell, "framework.history.mutation.m-100")].concat();
         assert!(!begun.iter().any(|action| action.action == semio_framework::HISTORY_EDIT_BEGIN_ACTION_ID), "{locale:?}: neither the refused Edit nor its row begins an edit: {begun:?}");
     }
 
-    documents.push(history_body(Some((100, 8)), false, Locale::En, 5));
-    let _ = paint_retained_body(&mut shell, surface, documents.last().expect("published"), body);
+    documents.push(history_body(Some((100, 8)), None, None, Locale::En, 5));
+    wheel_history_window_into_view(&mut shell, surface, documents.last().expect("published"), body, "m-100");
     let edit = history_mirror_node("framework.history.mutation.m-100::row-action::0").expect("m-100's Edit is in the mirror");
     assert!(!edit.disabled && edit.actionable && edit.label.as_deref().is_some_and(|label| label.starts_with("Edit:")), "Begin allowed: Edit is an enabled button: {edit:?}");
     let begun = activate_history_mirror_node(&mut shell, "framework.history.mutation.m-100::row-action::0");
     assert_eq!(begun.iter().map(|action| (action.action.as_str(), args_of(action)["mutationId"].clone())).collect::<Vec<_>>(), [(semio_framework::HISTORY_EDIT_BEGIN_ACTION_ID, serde_json::json!("m-100"))], "and begins an edit of its own mutation");
     close_retained_body(surface, documents);
 }
+
+/// ⚖️ LAW (gap N2 on wgpu, through the guest's REAL producer and the ARIA mirror): a full list's "Add item" is a disabled
+/// button and its row names the count and the ceiling; an item at the floor keeps a disabled "Remove item" whose row names
+/// the floor; a reference list above its floor shows one removable chip per id, named by the entity's label (else its
+/// id), and a chip's activation drafts `historyEditInput{path: "/targets/<i>", edit: "remove"}` — in English and German;
+/// the disabled controls dispatch nothing.
+#[test]
+fn the_guest_editor_offers_list_and_chip_edits_within_their_bounds() {
+    let surface = FRAMEWORK_PANEL_TAB_HISTORY_ID;
+    let body = Rect::new(0.0, 0.0, 420.0, 900.0);
+    let mut shell = session_shell();
+    let mut documents = Vec::new();
+    for (generation, locale, add, count, remove, floor, chips) in [
+        (1, Locale::En, "Add item", "Items: 2 · Maximum 2 items", "Remove item", "Minimum 2 items", ["Remove Corner", "Remove n2"]),
+        (2, Locale::De, "Element hinzufügen", "Elemente: 2 · Höchstens 2 Einträge", "Element entfernen", "Mindestens 2 Einträge", ["Entfernen Ecke", "Entfernen n2"]),
+    ] {
+        documents.push(history_body(None, Some(list_editor_panel()), None, locale, generation));
+        let _ = paint_retained_body(&mut shell, surface, documents.last().expect("published"), body);
+        let node = |key: &str| history_mirror_node(key).unwrap_or_else(|| panic!("{locale:?}: `{key}` is in the mirror"));
+        let add_button = node("framework.history.editor.input.points.add");
+        assert!(add_button.role == "button" && add_button.disabled && add_button.label.as_deref() == Some(add), "{locale:?}: a full list's Add item is disabled: {add_button:?}");
+        assert!(node("framework.history.editor.input.points.row").description.as_deref().is_some_and(|description| description.contains(count)), "{locale:?}: the list row names its count and ceiling");
+        for index in 0..2 {
+            let button = node(&format!("framework.history.editor.input.points.{index}.remove"));
+            assert!(button.disabled && button.label.as_deref() == Some(remove), "{locale:?}: an item at the floor keeps a disabled Remove item: {button:?}");
+            assert_eq!(node(&format!("framework.history.editor.input.points.{index}.remove.row")).description.as_deref(), Some(floor), "{locale:?}: its row names the floor");
+        }
+        for (index, chip) in chips.iter().enumerate() {
+            let button = node(&format!("framework.history.editor.input.targets.chip.{index}"));
+            assert!(button.role == "button" && !button.disabled && button.actionable && button.label.as_deref() == Some(*chip), "{locale:?}: a removable chip named by its entity: {button:?}");
+        }
+        assert!(activate_history_mirror_node(&mut shell, "framework.history.editor.input.points.add").is_empty(), "{locale:?}: the disabled Add item dispatches nothing");
+        let removed = activate_history_mirror_node(&mut shell, "framework.history.editor.input.targets.chip.0");
+        assert_eq!(
+            removed.iter().map(|action| (action.action.as_str(), args_of(action)["path"].clone(), args_of(action)["edit"].clone())).collect::<Vec<_>>(),
+            [(semio_framework::HISTORY_EDIT_INPUT_ACTION_ID, serde_json::json!("/targets/0"), serde_json::json!(semio_framework::HISTORY_EDIT_INPUT_REMOVE))],
+            "{locale:?}: a chip drafts the removal of its own item"
+        );
+    }
+    close_retained_body(surface, documents);
+}
+
+/// ⚖️ LAW (gap N17 + the stepped document load on wgpu, the REAL producer): a history change replaying is the body's
+/// `framework.history.reprojection` section by its `kind` — this replica's own history step ("History step", "Replaying
+/// history: 12 of 400 mutations") and a whole-document load ("Document load", "Loading document: 12 of 400") — with an
+/// enabled Cancel replay that sends `historyEditCancelReplay` without a session generation (the runtime drops the step or
+/// the load with zero trace), and a refused step reads "History step refused: <reason>" with no control, in English and
+/// German.
+#[test]
+fn a_replaying_history_step_or_document_load_shows_its_progress_and_cancels_in_the_mirror() {
+    use semio_framework::kernel::HistoryReprojectionKind as Kind;
+    let surface = FRAMEWORK_PANEL_TAB_HISTORY_ID;
+    let body = Rect::new(0.0, 0.0, 420.0, 640.0);
+    let mut shell = session_shell();
+    let mut documents = Vec::new();
+    let replaying = |kind: Kind| HistoryReprojection { done: 12, total: 400, kind, paused: false, fault: None };
+    let cases = [
+        (Locale::En, Kind::Step, "History step", "Replaying history: 12 of 400 mutations", "Cancel replay"),
+        (Locale::De, Kind::Step, "Verlaufsschritt", "Verlauf wird neu angewendet: 12 von 400 Mutationen", "Neuanwendung abbrechen"),
+        (Locale::En, Kind::Load, "Document load", "Loading document: 12 of 400", "Cancel replay"),
+        (Locale::De, Kind::Load, "Dokument laden", "Dokument wird geladen: 12 von 400", "Neuanwendung abbrechen"),
+    ];
+    for (generation, (locale, kind, title, progress, cancel)) in (1..).zip(cases) {
+        documents.push(history_body(None, None, Some(replaying(kind)), locale, generation));
+        let _ = paint_retained_body(&mut shell, surface, documents.last().expect("published"), body);
+        let node = |key: &str| history_mirror_node(key).unwrap_or_else(|| panic!("{locale:?} {kind:?}: `{key}` is in the mirror"));
+        assert_eq!(node("framework.history.reprojection").label.as_deref(), Some(title), "{locale:?} {kind:?}: the section names what replays");
+        assert_eq!(node("framework.history.reprojection.status").label.as_deref(), Some(progress), "{locale:?} {kind:?}: its progress in words");
+        let button = node("framework.history.reprojection.cancelReplay");
+        assert!(button.role == "button" && button.actionable && !button.disabled && button.label.as_deref() == Some(cancel), "{locale:?} {kind:?}: Cancel replay is an enabled button: {button:?}");
+        let sent = activate_history_mirror_node(&mut shell, "framework.history.reprojection.cancelReplay");
+        assert_eq!(sent.iter().map(|action| (action.action.as_str(), args_of(action).get("generation").cloned())).collect::<Vec<_>>(), [(semio_framework::HISTORY_EDIT_CANCEL_REPLAY_ACTION_ID, None)], "{locale:?} {kind:?}: it cancels, addressing no session");
+    }
+    for (generation, locale, refusal) in [(10, Locale::En, "History step refused: "), (11, Locale::De, "Verlaufsschritt abgelehnt: ")] {
+        documents.push(history_body(None, None, Some(HistoryReprojection { done: 0, total: 0, kind: Kind::Step, paused: false, fault: Some("timeTravel.blocked".into()) }), locale, generation));
+        let _ = paint_retained_body(&mut shell, surface, documents.last().expect("published"), body);
+        let status = history_mirror_node("framework.history.reprojection.status").and_then(|node| node.label).unwrap_or_default();
+        assert!(status.starts_with(refusal) && status.len() > refusal.len(), "{locale:?}: a refused step names its reason: {status:?}");
+        assert!(history_mirror_node("framework.history.reprojection.cancelReplay").is_none(), "{locale:?}: a refused step offers no control");
+    }
+    close_retained_body(surface, documents);
+}
+
+/// ⚖️ LAW (probe readiness, `verify time-travel --renderer wgpu` `scrollHistory`): a panel's retained body registers its whole
+/// content as the scroll region `framework.panel.history.scroll` beneath its row hits, owned by the History surface, so a wheel
+/// over the gap below the last row scrolls the body (React's overflow container) and `dumpChrome` names the region by kind and
+/// owner.
+#[test]
+fn a_panel_body_is_one_scroll_region_under_its_rows() {
+    let surface = FRAMEWORK_PANEL_TAB_HISTORY_ID;
+    let body = Rect::new(0.0, 0.0, 420.0, 640.0);
+    let mut shell = session_shell();
+    let documents = vec![history_body(None, None, None, Locale::En, 1)];
+    let _ = paint_retained_body(&mut shell, surface, &documents[0], body);
+    let mut input = InputState::<ActionDescriptor>::default();
+    shell.register_retained_panel_scroll_region(surface, body, &mut input);
+    shell.register_retained_body_hits(surface, body, &mut input);
+    shell.publish_retained_hit_registry(&mut input);
+    let region = format!("{surface}.scroll");
+    let hits = input.hits().to_vec();
+    let index = hits.iter().position(|hit| hit.control_id.as_deref() == Some(region.as_str())).expect("the panel's scroll region is registered");
+    assert!(hits[index].kind == HitKind::ScrollRegion && hits[index].rect == body, "the whole content rect: {:?}", hits[index]);
+    assert!(hits[index + 1..].iter().any(|hit| hit.kind == HitKind::TreeItem), "its rows register above it");
+    assert_eq!(shell.retained_hit_windows.get(&region).map(|(owner, _)| owner.as_str()), Some(surface), "owned by the History surface");
+    let gap = (body.x + body.w * 0.5, body.y + body.h - 4.0);
+    assert_eq!(input.hit_at(gap.0, gap.1).and_then(|hit| hit.control_id.clone()).as_deref(), Some(region.as_str()), "the gap below the rows is the region");
+    assert!(shell.handle_pointer_wheel(gap.0, gap.1, 0.0, 40.0, &mut input), "a wheel over the gap scrolls the body");
+    close_retained_body(surface, documents);
+}
 //#endregion 📚️HistoryBody
+
+//#region 📡️HistoryReprojectionStatus
+/// 🖌️ Walks the reprojection band's retained step to completion; answers the opportunities it took and the hits it staged.
+fn paint_reprojection_band(shell: &mut ShellState) -> (usize, Vec<HitTarget<ActionDescriptor>>) {
+    let mut cursor = ShellChromeChildCursor::default();
+    let (mut overlay, mut atlas, mut input, theme) = (DrawList::default(), FontAtlas::builtin(), InputState::<ActionDescriptor>::default(), Theme::light());
+    for step in 0..100_000 {
+        if shell.render_history_reprojection_band_step(&mut cursor, &mut overlay, &mut atlas, &mut input, &theme) {
+            return (step, input.staged_hits().to_vec());
+        }
+    }
+    panic!("the reprojection band step never completed");
+}
+
+/// ⚖️ LAW (audit W1E-3 on wgpu, the kernel's one status copy `🎠️kernel/🧫️fixtures/🧫️history-reprojection`, React's
+/// `[data-semio-history-reprojection]`): every fixture case is announced OUTSIDE the History panel by the chrome node
+/// `shell.history.reprojection`, named `<title>: <text>` in English and German — a progress bar over done/total while it replays,
+/// a polite status while paused or refused, never announcing a refusal's raw code — and painted as one bottom band whose lines
+/// read that message with its replay track; with no session open it offers Cancel replay while it replays and Replay again while
+/// a remote change is paused (no generation), nothing for a refusal; stacked above an open session's band, which then owns the
+/// controls; without a reprojection nothing is announced or painted.
+#[test]
+fn every_history_reprojection_is_announced_outside_the_history_panel() {
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎠️kernel/🧫️fixtures/🧫️history-reprojection/🔣️.json")).expect("the shared history-reprojection fixture parses");
+    let theme = Theme::light();
+    let mut shell = session_shell();
+    assert!(shell.history_reprojection_accessibility_node(1).is_none() && paint_reprojection_band(&mut shell).0 == 0, "nothing replays, nothing is announced or painted");
+    let cases = fixture["cases"].as_array().expect("cases");
+    assert!(!cases.is_empty());
+    for case in cases {
+        let name = case["name"].as_str().expect("name");
+        let reprojection: HistoryReprojection = serde_json::from_value(case["reprojection"].clone()).unwrap_or_else(|error| panic!("{name}: a kernel HistoryReprojection: {error}"));
+        let paused = case["paused"].as_bool().expect("paused");
+        let running = !paused && reprojection.total > 0;
+        shell.observe_history_reprojection(Some(&reprojection));
+        for locale in ["en", "de"] {
+            shell.locale_id = locale.into();
+            let message = format!("{}: {}", case["title"][locale].as_str().expect("title"), case["text"][locale].as_str().expect("text"));
+            let (steps, hits) = paint_reprojection_band(&mut shell);
+            let nodes = shell.chrome_accessibility_nodes(&hits);
+            let node = nodes.iter().find(|node| node.key == HISTORY_REPROJECTION_STATUS_ID).unwrap_or_else(|| panic!("{name} {locale}: announced"));
+            assert_eq!(node.label.as_deref(), Some(message.as_str()), "{name} {locale}: named by the kernel's title and status line");
+            assert_eq!(node.live, ui_contract::liveness_name(ui_contract::Liveness::Polite), "{name} {locale}: politely");
+            assert!(node.description.is_none() && case["fault"].as_str().map_or(true, |code| !message.contains(code)), "{name} {locale}: a refusal's raw code is never announced: {node:?}");
+            if running {
+                assert_eq!((node.role.as_str(), node.value_now, node.value_max, node.busy), ("progressbar", Some(f64::from(reprojection.done)), Some(f64::from(reprojection.total)), true), "{name} {locale}: a progress bar while it replays");
+            } else {
+                assert_eq!((node.role.as_str(), node.busy), ("status", false), "{name} {locale}: a status while paused or refused");
+            }
+            let (_, plan) = shell.history_reprojection_band_plan_for(&theme).expect("a band");
+            assert_eq!((plan.lines.iter().map(|line| line.text.as_str()).collect::<Vec<_>>().join(" "), plan.progress.is_some()), (message.clone(), running), "{name} {locale}: its lines read the message, a track while it replays");
+            assert!(steps > CHROME_BAND_FRAME_STEPS, "{name} {locale}: the band paints its frame and its lines");
+            let expected = match (paused, running) {
+                (true, _) => Some(("shell.history.reprojection.rerun", semio_framework::HISTORY_EDIT_RERUN_ACTION_ID)),
+                (false, true) => Some(("shell.history.reprojection.cancel-replay", semio_framework::HISTORY_EDIT_CANCEL_REPLAY_ACTION_ID)),
+                (false, false) => None,
+            };
+            let controls: Vec<(String, String, Option<Value>)> = hits.iter().map(|hit| (hit.control_id.clone().unwrap_or_default(), hit.event.as_ref().map(|event| event.action.clone()).unwrap_or_default(), hit.event.as_ref().and_then(|event| event.args.as_ref()).map(dsl_value_as_json))).collect();
+            assert_eq!(controls, expected.map(|(control, action)| (control.to_string(), action.to_string(), None)).into_iter().collect::<Vec<_>>(), "{name} {locale}: the control a person can use, addressing no session");
+            if let Some((control, _)) = expected {
+                let button = nodes.iter().find(|node| node.key == control).unwrap_or_else(|| panic!("{name} {locale}: {control} is announced"));
+                assert!(button.role == "button" && button.actionable && !button.disabled, "{name} {locale}: an enabled button: {button:?}");
+            }
+        }
+    }
+    shell.locale_id = "en".into();
+    shell.observe_history_reprojection(Some(&HistoryReprojection { done: 3, total: 12, kind: semio_framework::kernel::HistoryReprojectionKind::Step, paused: false, fault: None }));
+    let editing = session("editing a mutation");
+    shell.observe_history_time_travel(Some(&editing));
+    let session_band = shell.time_travel_band_plan_for(&editing, &theme).band;
+    let (_, plan) = shell.history_reprojection_band_plan_for(&theme).expect("still announced");
+    assert!(plan.band.y + plan.band.h <= session_band.y && plan.control.is_none(), "stacked above the session band, which owns the controls: {plan:?} over {session_band:?}");
+    assert!(paint_reprojection_band(&mut shell).1.is_empty(), "no control while a session is open");
+    assert!(shell.chrome_accessibility_nodes(&[]).iter().any(|node| node.key == HISTORY_REPROJECTION_STATUS_ID) && shell.chrome_accessibility_nodes(&[]).iter().any(|node| node.key == TIME_TRAVEL_BAND_STATUS_ID), "both live nodes while a session is open");
+    shell.observe_history_reprojection(None);
+    assert!(shell.history_reprojection_accessibility_node(1).is_none() && paint_reprojection_band(&mut shell).0 == 0, "adopted: nothing announced or painted any more");
+}
+//#endregion 📡️HistoryReprojectionStatus
+
+//#region 🫥️HostWindowBlur
+/// ⚖️ LAW (React's pane `onBlur` when the page loses focus; S3-SPATIAL N9): a host window blur — native `Focused(false)`, the
+/// browser's `host-window-blur` door — arms exactly one `hostEvent{windowId: <active pane>, kind: blur}` on the session's
+/// controller at the shell's next drain, keeps the settle pump owed until then, and nothing more after it.
+#[test]
+fn a_host_window_blur_blurs_the_active_pane_for_its_program_once() {
+    let mut shell = session_shell();
+    assert!(!shell.arm_host_window_blur(), "no blur, nothing armed");
+    note_host_window_blur();
+    assert!(shell.settle_pump_pending(), "a pending blur is work the settle pump owes");
+    assert!(shell.arm_host_window_blur(), "the drain takes the blur");
+    let controller_id = shell.shell_command_controller_id().expect("the session's controller");
+    let armed: Vec<(String, String, Value)> = shell.deferred_actions.iter().filter(|action| action.action == semio_framework::HOST_EVENT_ACTION_ID).map(|action| (action.controller_id.clone(), action.action.clone(), args_of(action))).collect();
+    assert_eq!(armed, [(controller_id, semio_framework::HOST_EVENT_ACTION_ID.to_string(), serde_json::json!({ "windowId": "main", "kind": semio_framework::HOST_EVENT_KIND_BLUR }))], "one blur for the active pane");
+    assert!(!shell.arm_host_window_blur(), "a blur is taken once");
+}
+//#endregion 🫥️HostWindowBlur
+
+//#region 📥️ImportTransfer
+/// 🧾️ A shell whose session app declares `importAbort`, holding one picked import of two files (`a.obj` of two chunks'
+/// worth of payload, `b.obj` of one).
+fn importing_shell() -> (ShellState, u64) {
+    let mut shell = session_shell();
+    shell.session.as_mut().expect("session").app.actions.push(semio_framework::ActionDefinition::new(IMPORT_ABORT_ACTION_ID, LocalizedLabel::native("Abort import", "Import abbrechen"), semio_framework::ActionKind::Mutation, IconName::X));
+    let chunk = semio_framework::kernel::import_payload_chunks("x").len();
+    assert_eq!(chunk, 1, "a tiny file is one chunk");
+    let opened = vec![OpenedFile { name: "a.obj".into(), contents: "a".repeat(400_000) }, OpenedFile { name: "b.obj".into(), contents: "b".into() }];
+    assert!(shell.begin_import_transfer(PickedImport { controller_id: "test.controller".into(), import_action: "importFile".into(), args: None, opened, multiple: true }));
+    let id = shell.import_transfers.front().expect("the import").id;
+    (shell, id)
+}
+
+/// ⚖️ LAW (React's `importOpenedFilesV1` + `documentTransferTasksV1` on wgpu): a picked import is ONE running task in the Task
+/// Manager — its files, lane and owner, a progress bar of the chunks delivered and "Cancel <files>" (en/de) — and keeps the
+/// settle pump owed; a Cancel before any chunk reached the guest drops it with the `import-cancelled` notice and no
+/// `importAbort`, a Cancel after one arms the app's `importAbort {}` exactly once, and "No task is running." returns.
+#[test]
+fn a_picked_import_is_a_cancellable_task_that_frees_a_started_import() {
+    let (mut shell, id) = importing_shell();
+    let transfer = shell.import_transfers.front().expect("the import").clone();
+    assert!(transfer.total > 2 && transfer.delivered == 0 && transfer.file == "a.obj, b.obj", "every file's chunks wait in order: {transfer:?}");
+    assert!(shell.settle_pump_pending(), "a waiting import is work the settle pump owes");
+    let body = serde_json::to_value(shell.build_task_manager_ui()).expect("the Task Manager body serializes");
+    let text = body.to_string();
+    for expected in ["Running tasks", "a.obj, b.obj · Document import · test · Running", &format!("os.task-manager.progress.documentTransfer:{id}"), &format!("os.task-manager.cancel.documentTransfer:{id}"), "Cancel a.obj, b.obj", "cancelImportTransfer"] {
+        assert!(text.contains(expected), "the Task Manager shows {expected:?}: {text}");
+    }
+    shell.locale_id = "de".into();
+    let german = serde_json::to_value(shell.build_task_manager_ui()).expect("serializes").to_string();
+    assert!(german.contains("Laufende Aufgaben") && german.contains("a.obj, b.obj abbrechen") && german.contains("Dokumentimport"), "{german}");
+    shell.locale_id = "en".into();
+
+    assert!(shell.cancel_import_transfer(id));
+    assert!(shell.import_transfers.is_empty() && !shell.deferred_actions.iter().any(|action| action.action == IMPORT_ABORT_ACTION_ID), "nothing reached the guest, nothing to free");
+    let notice = shell.transient_notice().expect("told");
+    assert_eq!((notice.message.as_str(), notice.code.as_deref()), ("Import of “a.obj” cancelled.", Some("shell.documentTransfer.import-cancelled")));
+    assert!(serde_json::to_value(shell.build_task_manager_ui()).expect("serializes").to_string().contains("No task is running."));
+
+    let (mut shell, id) = importing_shell();
+    shell.import_transfers.front_mut().expect("the import").delivered = 1;
+    assert!(shell.cancel_import_transfer(id));
+    let aborts: Vec<(String, Value)> = shell.deferred_actions.iter().filter(|action| action.action == IMPORT_ABORT_ACTION_ID).map(|action| (action.controller_id.clone(), args_of(action))).collect();
+    assert_eq!(aborts, [("test.controller".to_string(), serde_json::json!({}))], "a started import is freed once, without a reason");
+    assert!(!shell.cancel_import_transfer(id), "a cancelled import is gone");
+}
+
+/// ⚖️ LAW (`RequestMediaFrames` host cancel): the frames one decoded video yields — each `frameAction`, then `doneAction` —
+/// are ONE running "Video frames" task in the Task Manager (en/de) that keeps the settle pump owed and dispatches in order; a
+/// Cancel after a frame reached the guest drops the rest (the `doneAction` never fires) and arms the app's `importAbort {}`
+/// once, telling the person by the video's name; an empty answer (no pick) starts nothing.
+#[test]
+fn a_decoded_video_is_a_cancellable_task_that_frees_a_started_stream() {
+    let (mut shell, _) = importing_shell();
+    shell.import_transfers.clear();
+    assert!(!shell.begin_media_frames_transfer("test.controller".into(), Vec::new()), "no pick, no task");
+    let frame = |action: &str, index: usize| ActionDescriptor { controller_id: "test.controller".into(), action: action.into(), args: crate::action_args_json!({ "name": "clip.mp4", "index": index }) };
+    assert!(shell.begin_media_frames_transfer("test.controller".into(), vec![frame("importVideoFramePayload", 0), frame("importVideoFramePayload", 1), frame("importVideoDone", 2)]));
+    let transfer = shell.import_transfers.front().expect("the stream").clone();
+    assert_eq!((transfer.lane, transfer.file.as_str(), transfer.total, transfer.chunks.back().map(|last| last.action.as_str())), (TransferLane::VideoFrames, "clip.mp4", 3, Some("importVideoDone")), "every frame, then done, waits in order: {transfer:?}");
+    assert!(shell.settle_pump_pending(), "a waiting stream is work the settle pump owes");
+    let text = serde_json::to_value(shell.build_task_manager_ui()).expect("serializes").to_string();
+    for expected in ["clip.mp4 · Video frames · test · Running", &format!("os.task-manager.cancel.documentTransfer:{}", transfer.id), "Cancel clip.mp4"] {
+        assert!(text.contains(expected), "the Task Manager shows {expected:?}: {text}");
+    }
+    shell.locale_id = "de".into();
+    assert!(serde_json::to_value(shell.build_task_manager_ui()).expect("serializes").to_string().contains("clip.mp4 · Videobilder · test · Läuft"));
+    shell.locale_id = "en".into();
+    shell.import_transfers.front_mut().expect("the stream").delivered = 1;
+    assert!(shell.cancel_import_transfer(transfer.id));
+    assert!(shell.import_transfers.is_empty() && !shell.deferred_actions.iter().any(|action| action.action == "importVideoDone"), "the rest of the stream is dropped");
+    assert_eq!(shell.deferred_actions.iter().filter(|action| action.action == IMPORT_ABORT_ACTION_ID).count(), 1, "a started stream is freed once");
+    assert_eq!(shell.transient_notice().map(|notice| notice.message.clone()).as_deref(), Some("Import of “clip.mp4” cancelled."));
+}
+//#endregion 📥️ImportTransfer
+
+//#region 🍔️ContextMenuReason
+/// ⚖️ LAW (F7 on wgpu — React's menu focusable-when-disabled, the `RowAction::disabled_because` contract): a disabled
+/// context-menu row carries its producer reason from the spec, stays reachable by the arrow keys (only separators are
+/// skipped; digit ordinals still count enabled rows), paints its reason beside its label, and is projected as a focusable
+/// `menuitem` that is `disabled`, not actionable and described by its reason; Enter and its activation fire nothing and keep
+/// the menu open, while an enabled row stays actionable.
+#[test]
+fn a_disabled_context_menu_row_is_reachable_and_tells_its_reason() {
+    let paste = shell_context_menu_item_from_spec(ui_wgpu::wgpu::ContextMenuItemSpec { id: "menu.paste".into(), label: Some("Paste".into()), action: Some("paste".into()), ..Default::default() }.disabled_because("The clipboard is empty".into()), "ctrl", false);
+    assert_eq!((paste.disabled, paste.reason.as_deref(), paste.painted_label()), (true, Some("The clipboard is empty"), "Paste \u{b7} The clipboard is empty".to_string()));
+    let action = |verb: &str| Some(ActionDescriptor { controller_id: "ctrl".into(), action: verb.into(), args: None });
+    let items = vec![
+        ContextMenuItem { id: "menu.copy".into(), label: "Copy".into(), action: action("copy"), ..Default::default() },
+        ContextMenuItem { id: "menu.rule".into(), separator: true, ..Default::default() },
+        paste,
+        ContextMenuItem { id: "menu.cut".into(), label: "Cut".into(), action: action("cut"), ..Default::default() },
+    ];
+    assert_eq!(context_menu_move_active(&items, &[0], true), vec![2], "the arrow skips the separator and reaches the disabled row");
+    assert_eq!(context_menu_move_active(&items, &[2], true), vec![3]);
+    assert_eq!(context_menu_path_for_ordinal(&items, &[], 2), Some(vec![3]), "ordinals count enabled rows only");
+
+    let mut shell = session_shell();
+    shell.context_menu = Some(ContextMenuState { items: items.clone(), active: vec![2], ..Default::default() });
+    assert!(matches!(shell.context_menu_handle_key(ui_wgpu::wgpu::KeyAction::Enter), ContextMenuKeyOutcome::Ignored), "Enter on a disabled row fires nothing");
+    assert!(shell.context_menu.is_some(), "and keeps the menu open");
+
+    let menu = shell.context_menu.clone().expect("open");
+    let (mut draw, mut atlas, icons, theme) = (DrawList::default(), FontAtlas::builtin(), IconAtlas::default(), Theme::default());
+    let mut input = InputState::<ActionDescriptor>::default();
+    ShellState::render_context_menu_level(&mut draw, &mut atlas, &icons, &mut input, &theme, &menu, &menu.items, &[], 0.0, 0.0, 800.0, 600.0);
+    let hits = input.staged_hits().to_vec();
+    let paste_hit = hits.iter().find(|hit| hit.control_id.as_deref() == Some("menu.paste")).expect("the disabled row is a hit target");
+    assert!(paste_hit.event.is_none(), "that fires nothing");
+    let nodes = shell.chrome_accessibility_nodes(&hits);
+    let node = |key: &str| nodes.iter().find(|node| node.key == key).unwrap_or_else(|| panic!("`{key}` is projected"));
+    let disabled = node("menu.paste");
+    assert_eq!((disabled.role.as_str(), disabled.label.as_deref(), disabled.description.as_deref(), disabled.disabled, disabled.actionable, disabled.focusable), ("menuitem", Some("Paste"), Some("The clipboard is empty"), true, false, true));
+    let enabled = node("menu.copy");
+    assert_eq!((enabled.label.as_deref(), enabled.description.as_deref(), enabled.disabled, enabled.actionable), (Some("Copy"), None, false, true));
+
+    let consumed = semio_framework_async::block_on(shell.handle_shell_hit(paste_hit, &InputState::<ActionDescriptor>::default())).expect("activating a disabled row never errors");
+    assert!(consumed && shell.context_menu.is_some() && shell.deferred_actions.iter().all(|action| action.action != "paste"), "its activation fires nothing and keeps the menu open");
+}
+//#endregion 🍔️ContextMenuReason

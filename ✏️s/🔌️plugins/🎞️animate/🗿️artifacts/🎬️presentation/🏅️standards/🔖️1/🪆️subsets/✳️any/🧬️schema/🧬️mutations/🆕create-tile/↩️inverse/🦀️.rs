@@ -7,7 +7,10 @@ use crate::PresentationSnapshot;
 //#region 🔹Inverse
 /// ↩️ Undo removes the tile this mutation created, addressed by its own id (captured from the
 /// payload itself — a `create` has nothing to look up in pre-state).
-pub fn inverse(payload: &CreateTile, _base: &PresentationSnapshot) -> Vec<PresentationMutation> {
+pub fn inverse(payload: &CreateTile, _base: &PresentationSnapshot) -> Result<Vec<PresentationMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![PresentationMutation::DeleteTile(DeleteTile { id: payload.tile.id.clone() })]
+
+    })())
 }
 //#endregion 🔹Inverse

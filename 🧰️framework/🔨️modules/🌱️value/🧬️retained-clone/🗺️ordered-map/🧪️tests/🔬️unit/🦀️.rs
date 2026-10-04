@@ -174,7 +174,7 @@ fn bounded_lookup_insert_and_duplicate_refusal_match_btree_oracle() {
                     }
                 };
                 map = cursor.take_refused_workspace().expect("duplicate refusal workspace");
-                assert!(error.contains("duplicate"));
+                assert!(error.message.contains("duplicate"));
                 assert_eq!(serde_json::to_value(&map).expect("map after duplicate"), before_json);
                 assert!(cursor.begin_close());
                 while !cursor.terminal_is_empty() {
@@ -219,7 +219,7 @@ fn long_string_comparison_is_byte_paged_and_shape_pinned() {
     let right = RetainedCloneSource::from_owner(right);
     let mut cursor = String::bounded_ord_cursor();
     cursor.compare(changed.borrow(), right.borrow(), grant).expect("comparison initialization");
-    assert!(cursor.compare(replacement.borrow(), right.borrow(), grant).expect_err("changed comparison source must fail").contains("projected path changed"));
+    assert!(cursor.compare(replacement.borrow(), right.borrow(), grant).expect_err("changed comparison source must fail").message.contains("projected path changed"));
 }
 
 #[test]

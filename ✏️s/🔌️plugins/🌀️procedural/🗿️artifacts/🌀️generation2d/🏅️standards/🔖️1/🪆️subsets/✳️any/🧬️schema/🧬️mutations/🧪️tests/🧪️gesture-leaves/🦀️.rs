@@ -19,7 +19,7 @@ fn base() -> Generation2dSnapshot {
     snapshot
 }
 
-fn outcome_codes(mutation: &Generation2dMutation, base: &Generation2dSnapshot) -> Vec<(protocol::Severity, String)> {
+fn outcome_codes(mutation: &Generation2dMutation, base: &Generation2dSnapshot) -> Vec<(semio_framework_diagnostic::Severity, String)> {
     let (delta, messages) = Mutation::diff(mutation, base).into_parts();
     delta.retire_cold();
     messages.into_iter().map(|message| (message.level, message.code.0)).collect()
@@ -28,7 +28,7 @@ fn outcome_codes(mutation: &Generation2dMutation, base: &Generation2dSnapshot) -
 /// ♻️ Applies `mutation` to a copy of `base`, then its inverse, and answers the applied copy; the inverse must restore
 /// `base` exactly.
 fn applied_and_restored(mutation: &Generation2dMutation, base: &Generation2dSnapshot) -> Generation2dSnapshot {
-    let inverse = inverse_generation2d_mutation(base, mutation);
+    let inverse = inverse_generation2d_mutation(base, mutation).expect("valid retained mutation inverse fixture");
     let mut applied = base.clone();
     apply_generation2d_mutation(&mut applied, mutation).expect("the gesture leaf applies to its base");
     let mut restored = applied.clone();
@@ -52,7 +52,9 @@ fn slider(snapshot: &Generation2dSnapshot, id: &str) -> Option<(f64, (f64, f64))
 /// `mutation.invariant`; the inverse restores the base slider whole.
 #[test]
 fn a_slider_value_is_absolute_and_inverts_to_the_whole_base_slider() {
-    use protocol::Severity::{Error, Fatal, Warning};
+    use semio_framework_diagnostic::Severity::Error;
+use semio_framework_diagnostic::Severity::Fatal;
+use semio_framework_diagnostic::Severity::Warning;
     let base = base();
     for (value, range) in [(7.5, (0.0, 10.0)), (42.0, (0.0, 50.0))] {
         let applied = applied_and_restored(&change_slider_value("height", value), &base);
@@ -71,7 +73,9 @@ fn a_slider_value_is_absolute_and_inverts_to_the_whole_base_slider() {
 /// `target-mismatch`, a zero offset `mutation.no-op`, a repeated or empty target list Fatal `mutation.invariant`.
 #[test]
 fn a_node_drag_moves_placed_nodes_relative_to_their_base_position() {
-    use protocol::Severity::{Error, Fatal, Warning};
+    use semio_framework_diagnostic::Severity::Error;
+use semio_framework_diagnostic::Severity::Fatal;
+use semio_framework_diagnostic::Severity::Warning;
     let base = base();
     let applied = applied_and_restored(&move_nodes(vec!["height".into(), "note".into()], 40.0, -12.5), &base);
     assert_eq!(applied.host_snapshot.layout.get("height").map(|layout| (layout.x, layout.y)), Some((50.0, 7.5)));
@@ -84,7 +88,7 @@ fn a_node_drag_moves_placed_nodes_relative_to_their_base_position() {
     assert_eq!(outcome_codes(&move_nodes(vec!["height".into()], 0.0, 0.0), &base), vec![(Warning, "mutation.no-op".into())]);
     assert_eq!(outcome_codes(&move_nodes(vec!["height".into(), "height".into()], 1.0, 1.0), &base), vec![(Fatal, "mutation.invariant".into())]);
     assert_eq!(outcome_codes(&move_nodes(Vec::new(), 1.0, 1.0), &base), vec![(Fatal, "mutation.invariant".into())]);
-    assert!(inverse_generation2d_mutation(&base, &move_nodes(vec!["height".into()], 0.0, 0.0)).is_empty(), "an identity drag owes no inverse");
+    assert!(inverse_generation2d_mutation(&base, &move_nodes(vec!["height".into()], 0.0, 0.0)).expect("valid retained mutation inverse fixture").is_empty(), "an identity drag owes no inverse");
     base.retire_cold();
 }
 
@@ -96,8 +100,8 @@ fn gesture_leaves_label_their_rows_in_english_and_german() {
         (move_nodes(vec!["a".into(), "b".into()], 40.0, -12.5), "Move 2 node(s) by (40, -12.5)", "2 Knoten um (40; -12,5) verschieben"),
     ] {
         let label = <Generation2dMutation as protocol::SemanticMutation<Generation2dSnapshot>>::label(&mutation);
-        assert_eq!(label.resolve(protocol::Terminology::Native, protocol::Locale::En), english);
-        assert_eq!(label.resolve(protocol::Terminology::Native, protocol::Locale::De), german);
+        assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), english);
+        assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), german);
     }
 }
 
@@ -109,7 +113,7 @@ fn every_wire_witness_decodes_and_round_trips_both_codecs() {
         (include_str!("../../../../🧫️fixtures/🧬️mutations/🚚️move-nodes/🧾️wire-witness/🦠️mutation/🔣️.json"), "move-nodes"),
     ];
     for (witness, kind) in witnesses {
-        let mutation: Generation2dMutation = dsl::json::from_json_str(witness).unwrap_or_else(|error| panic!("{kind} witness decodes: {error}"));
+        let mutation: Generation2dMutation = semio_framework_pack_json::from_json_str(witness, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|error| panic!("{kind} witness decodes: {error}"));
         assert_eq!(<Generation2dMutation as protocol::SemanticMutation<Generation2dSnapshot>>::semantics(&mutation).kind, kind);
         let bytes = protocol::OpBinary::encode_op(&mutation).expect("witness encodes");
         assert_eq!(<Generation2dMutation as protocol::OpBinary>::decode_op(&bytes).expect("witness decodes back"), mutation, "{kind} round-trips the binary codec");

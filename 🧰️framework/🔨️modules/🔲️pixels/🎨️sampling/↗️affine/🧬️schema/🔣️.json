@@ -1,0 +1,88 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/pixels/affine-sampling",
+  "title": "Affine Image Sampling Input",
+  "type": "object",
+  "required": [
+    "source",
+    "width",
+    "height",
+    "origin",
+    "transform",
+    "sampling"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "source": {
+      "$ref": "#/definitions/image"
+    },
+    "width": {
+      "$ref": "#/definitions/side"
+    },
+    "height": {
+      "$ref": "#/definitions/side"
+    },
+    "origin": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "$ref": "#/definitions/coordinate"
+      }
+    },
+    "transform": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "$ref": "#/definitions/coordinate"
+      }
+    },
+    "sampling": {
+      "enum": [
+        "nearest",
+        "bilinear",
+        "area",
+        "auto"
+      ]
+    }
+  },
+  "definitions": {
+    "coordinate": {
+      "type": "number",
+      "minimum": -1000000000,
+      "maximum": 1000000000
+    },
+    "side": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 16384
+    },
+    "image": {
+      "type": "object",
+      "required": [
+        "width",
+        "height",
+        "pixels"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "width": {
+          "$ref": "#/definitions/side"
+        },
+        "height": {
+          "$ref": "#/definitions/side"
+        },
+        "pixels": {
+          "type": "array",
+          "maxItems": 67108864,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    }
+  }
+}

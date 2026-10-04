@@ -43,9 +43,8 @@ fn remove_at<T>(items: &mut Vec<T>, index: usize) -> Option<T> {
 /// dropped clause that had a layout point. Clauses of one list are dropped from the highest index down, so every id names the
 /// clause it named in the committed rule; ids that name no clause, and an undecodable rule, drop nothing.
 pub(crate) fn delete_rule_clauses(state: &RewritingSnapshot, node_ids: &[String]) -> Vec<RewriteRuleMutation> {
-    let (Ok(mut lhs), Ok(mut rhs)) = (pack::from_json_str::<schema::Lhs>(&state.lhs_json), pack::from_json_str::<Rhs>(&state.rhs_json)) else {
-        return Vec::new();
-    };
+    let mut lhs=state.lhs.clone();
+    let mut rhs=state.rhs.clone();
     let mut clauses: Vec<(RuleClauseRef, &String)> = node_ids.iter().filter_map(|id| parse_clause_ref(id).map(|clause| (clause, id))).collect();
     clauses.sort_by(|left, right| right.0.cmp(&left.0));
     clauses.dedup_by(|left, right| left.0 == right.0);
@@ -71,6 +70,6 @@ pub(crate) fn delete_rule_clauses(state: &RewritingSnapshot, node_ids: &[String]
         rhs_changed |= dropped && clause != RuleClauseRef::LhsWhere;
         removed.extend((dropped && state.rule_layout.contains_key(id)).then(|| remove_rule_layout_point(id.clone())));
     }
-    let sides = [lhs_changed.then(|| edit_lhs(pack::to_json_string(&lhs))), rhs_changed.then(|| edit_rhs(pack::to_json_string(&rhs)))];
+    let sides = [lhs_changed.then(|| edit_lhs(lhs)), rhs_changed.then(|| edit_rhs(rhs))];
     sides.into_iter().flatten().chain(removed).collect()
 }

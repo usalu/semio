@@ -160,10 +160,11 @@ fn extract_typed_value(children: &[XmlNode], cell_scope: &[(String, String)], na
             Ok(XlsxCellValue::Boolean(v.trim() == "1" || v.trim().eq_ignore_ascii_case("true")))
         }
         Some("e") => Ok(XlsxCellValue::Error(child_text("v")?.unwrap_or_default())),
-        None | Some(_) => match child_text("v")? {
+        None | Some("n") => match child_text("v")? {
             Some(v) => v.trim().parse::<f64>().map(XlsxCellValue::Number).map_err(|_| XlsxError::Malformed(format!("cell in {part}: invalid numeric value {v:?}"))),
             None => Ok(XlsxCellValue::Empty),
         },
+        Some(_) => Ok(XlsxCellValue::InlineString(child_text("v")?.unwrap_or_default())),
     }
 }
 

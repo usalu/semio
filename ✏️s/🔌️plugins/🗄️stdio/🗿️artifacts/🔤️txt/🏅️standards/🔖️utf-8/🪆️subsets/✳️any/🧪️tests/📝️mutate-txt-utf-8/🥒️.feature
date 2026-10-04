@@ -95,6 +95,7 @@ Feature: Apply every typed UTF-8 text-line mutation to a real document
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id | params |
+      | set-snapshot | {"snapshot":{"schema":"stdio.txt","lines":["Natural Open Save","Grüße 🌍"],"trailingNewline":true,"lineEnding":"crLf"}} |
       | set-trailing-newline | {"value": false} |
       | set-line-ending | {"value": "crLf"} |
       | insert-line | {"index": 20, "text": "Eingefügte Randnotiz zu Bauhütte 4.0"} |
@@ -114,6 +115,7 @@ Feature: Apply every typed UTF-8 text-line mutation to a real document
     Then the oracle and the subject agree on the semantic projection of the original document
     Examples:
       | id | params |
+      | set-snapshot | {"snapshot":{"schema":"stdio.txt","lines":["Natural Open Save","Grüße 🌍"],"trailingNewline":true,"lineEnding":"crLf"}} |
       | set-trailing-newline | {"value": false} |
       | set-line-ending | {"value": "crLf"} |
       | insert-line | {"index": 20, "text": "Eingefügte Randnotiz zu Bauhütte 4.0"} |

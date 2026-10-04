@@ -15,7 +15,7 @@ pub fn diff_change_block_field(payload: &ChangeBlockField, base: &FormsSnapshot)
     let existing = step.blocks.iter().find(|block| block.id == payload.block_id).expect("the step holds the question");
     let next = payload.change.applied(existing);
     if &next == existing {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Question \"{}\" already holds that {}.", payload.block_id, payload.change.labels().0));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Question \"{}\" already holds that {}.", payload.block_id, payload.change.labels().0));
     }
     if let Some((code, reason)) = refusal(&next, &payload.change) {
         return protocol::MutationOutcome::fatal(code, reason, vec![payload.block_id.clone()]);
@@ -35,7 +35,7 @@ fn refusal(next: &FormQuestion, change: &BlockField) -> Option<(&'static str, St
         BlockField::Min(_) | BlockField::Max(_) => next.min.zip(next.max).filter(|(min, max)| min > max).map(|(min, max)| ("mutation.invariant", format!("the minimum {min} exceeds the maximum {max}"))),
         BlockField::Step(Some(step)) if !step.is_finite() || *step <= 0.0 => Some(("mutation.invariant", format!("the step {step} is not greater than zero"))),
         BlockField::Default(Some(value)) if !default_fits(&next.kind, value) => Some(("mutation.invariant", format!("a {} question cannot default to that value", next.kind))),
-        BlockField::Params(Some(value)) if !matches!(value, dsl::DslValue::Object(_)) => Some(("mutation.invariant", "parameters are one object".into())),
+        BlockField::Params(Some(value)) if !matches!(value, semio_framework_value::DslValue::Object(_)) => Some(("mutation.invariant", "parameters are one object".into())),
         BlockField::Options(Some(options)) => unique(options.iter().map(|option| option.value.as_str()), "option value"),
         BlockField::Fields(Some(fields)) => unique(fields.iter().map(|field| field.key.as_str()), "vector key"),
         _ => None,
@@ -43,7 +43,7 @@ fn refusal(next: &FormQuestion, change: &BlockField) -> Option<(&'static str, St
 }
 
 /// 🎯️ Whether a question of `kind` can default to `value` (kinds without a typed answer accept any value).
-fn default_fits(kind: &str, value: &dsl::DslValue) -> bool {
+fn default_fits(kind: &str, value: &semio_framework_value::DslValue) -> bool {
     match kind {
         "number" | "slider" => value.as_f64().is_some_and(f64::is_finite),
         "boolean" => value.as_bool().is_some(),

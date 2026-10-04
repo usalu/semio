@@ -1,0 +1,37 @@
+{
+  "at": "2026-10-03T19:17:59.016Z",
+  "results": [
+    {
+      "name": "@semio-tech/puzzle-3d-rs-compute-ownership",
+      "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏛️ownership/🧮️compute",
+      "command": "bun ./📜️script.ts test",
+      "dependsOn": [],
+      "implicitDependencies": [],
+      "nativeRoot": null
+    },
+    {
+      "name": "@semio-tech/framework-plugin-compute-ownership",
+      "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧮️compute",
+      "command": "bun ./📜️script.ts test",
+      "dependsOn": [],
+      "implicitDependencies": [],
+      "nativeRoot": null
+    },
+    {
+      "name": "@semio-tech/framework-plugin-host-fixture-compute-ownership",
+      "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/🏛️ownership/🧮️compute",
+      "command": "bun ./📜️script.ts test",
+      "dependsOn": [],
+      "implicitDependencies": [],
+      "nativeRoot": null
+    },
+    {
+      "name": "@semio-tech/space-plugin-compute-ownership",
+      "root": "🌎️hub/🧩️compositions/🪐️space/🏛️ownership/🧮️compute",
+      "command": "bun ./📜️script.ts test",
+      "dependsOn": [],
+      "implicitDependencies": [],
+      "nativeRoot": null
+    }
+  ]
+}

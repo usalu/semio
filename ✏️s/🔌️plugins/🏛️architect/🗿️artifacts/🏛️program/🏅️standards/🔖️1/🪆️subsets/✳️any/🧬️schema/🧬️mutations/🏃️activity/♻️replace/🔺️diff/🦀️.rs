@@ -13,7 +13,7 @@ pub fn diff(payload: &ReplaceActivity, base: &ProgramSnapshot) -> protocol::Muta
         return protocol::MutationOutcome::error("mutation.target-missing", "No activity exists with this id.", [payload.activity.header.id.0.clone()]);
     };
     if existing == &payload.activity {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This activity already matches the requested value.").at([existing.header.id.0.clone()])]);
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This activity already matches the requested value.").at([existing.header.id.0.clone()])]);
     }
     let patch = existing.diff_patch(&payload.activity).expect("diff_patch always produces a full patch");
     protocol::MutationOutcome::new(ProgramDiff { activities: Some(ProgramActivitiesDelta { patched: vec![ProgramActivitiesPatchEntry { id: payload.activity.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })

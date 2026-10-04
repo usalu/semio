@@ -79,7 +79,7 @@ pub fn register() {
 }
 
 /// 📇️ P2-P3 follow-up fix: `dsl::registry::register_schema_spec` (P2-M3's `FullResolver` insertion
-/// API) — genuinely callable here (`BinarySnapshot` derives `dsl::DslRecord`, `BinaryDiff` derives
+/// API) — genuinely callable here (`BinarySnapshot` derives `semio_framework_dsl_record_derive::DslRecord`, `BinaryDiff` derives
 /// `dsl::DslDiff`, so both `__dsl_spec`/`__dsl_diff_spec` exist), same 2-call shape as
 /// `txt::register_schema_specs` (`🔤️txt/…/🚪️io/🦀️.rs`). Per-mutation-variant specs are
 /// NOT registered here, same as txt — `register_schema_spec` registers one spec under one schema id,
@@ -88,8 +88,8 @@ pub fn register() {
 #[cfg(not(target_arch = "wasm32"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_schema_specs() {
-    semio_framework_plugin::resolve_ready(dsl::registry::register_schema_spec("stdio.binary", crate::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot::__dsl_spec));
-    semio_framework_plugin::resolve_ready(dsl::registry::register_schema_spec("stdio.binary#diff", crate::standards::v_raw::subsets::any::schema::diff::BinaryDiff::__dsl_diff_spec));
+    ::semio_framework_async::poll::resolve_ready(dsl::registry::register_schema_spec("stdio.binary", crate::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot::__dsl_spec));
+    ::semio_framework_async::poll::resolve_ready(dsl::registry::register_schema_spec("stdio.binary#diff", crate::standards::v_raw::subsets::any::schema::diff::BinaryDiff::__dsl_spec));
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -105,55 +105,55 @@ pub fn register_schema_specs() {}
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_pilot_languages() {
     use crate::standards::v_raw::subsets::any::schema;
-    dsl::register_language(dsl::LanguageSpec {
+    semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.binary",
         extension: Some("bin"),
-        role: dsl::LanguageRole::Document,
+        role: semio_framework_dsl::LanguageRole::Document,
         grammar: Some(schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
         protocol: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("stdio.binary"),
+        hooks: semio_framework_dsl::passthrough_hooks("stdio.binary"),
     });
-    dsl::register_language(dsl::LanguageSpec {
+    semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.binary.op",
         extension: None,
-        role: dsl::LanguageRole::Ops,
+        role: semio_framework_dsl::LanguageRole::Ops,
         grammar: Some(schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(schema::mutations::text::COMPONENT_GRAMMAR_PATH),
         protocol: Some(schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("stdio.binary.op"),
+        hooks: semio_framework_dsl::passthrough_hooks("stdio.binary.op"),
     });
-    dsl::register_language(dsl::LanguageSpec {
+    semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.binary.diff",
         extension: None,
-        role: dsl::LanguageRole::Diff,
+        role: semio_framework_dsl::LanguageRole::Diff,
         grammar: Some(schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(schema::diff::text::COMPONENT_GRAMMAR_PATH),
         protocol: None,
         protocol_path: None,
-        hooks: dsl::passthrough_hooks("stdio.binary.diff"),
+        hooks: semio_framework_dsl::passthrough_hooks("stdio.binary.diff"),
     });
-    dsl::register_language(dsl::LanguageSpec {
+    semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.binary.pack",
         extension: None,
-        role: dsl::LanguageRole::Pack,
+        role: semio_framework_dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
         protocol: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("stdio.binary.pack"),
+        hooks: semio_framework_dsl::passthrough_hooks("stdio.binary.pack"),
     });
-    dsl::register_language(dsl::LanguageSpec {
+    semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.binary.spr",
         extension: None,
-        role: dsl::LanguageRole::Spr,
+        role: semio_framework_dsl::LanguageRole::Spr,
         grammar: None,
         grammar_path: None,
         protocol: Some(schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("stdio.binary.spr"),
+        hooks: semio_framework_dsl::passthrough_hooks("stdio.binary.spr"),
     });
 }
 

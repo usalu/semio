@@ -65,14 +65,14 @@ pub mod derived_composition {
 
     impl SubsetValidator for SemioDrawingValidator {
         const DIALECT: Dialect = DIALECT;
-        async fn validate(payload: &IoPayload) -> Vec<dsl::Diagnostic> {
+        async fn validate(payload: &IoPayload) -> Vec<semio_framework_diagnostic::Diagnostic> {
             let decoded = match payload {
                 IoPayload::Binary(bytes) => <SemioDrawingSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
                 IoPayload::Text(text) => <SemioDrawingSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
             };
             match decoded {
                 Some(snapshot) => check_drawing_invariants(&snapshot),
-                None => vec![dsl::Diagnostic::error("stdio.semio_drawing.validate-decode-failed", dsl::TextSpan::at(1, 1), "SemioDrawingValidator: payload did not decode as a SemioDrawingSnapshot".to_string())],
+                None => vec![semio_framework_diagnostic::Diagnostic::error("stdio.semio_drawing.validate-decode-failed", semio_framework_diagnostic::TextSpan::at(1, 1), "SemioDrawingValidator: payload did not decode as a SemioDrawingSnapshot".to_string())],
             }
         }
     }
@@ -80,22 +80,22 @@ pub mod derived_composition {
     /// 🔎️ Real referential-invariant checks over `SemioDrawingSnapshot`'s own collections (no
     /// cross-artifact lookups needed -- both invariants are internal to this subset).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn check_drawing_invariants(snapshot: &SemioDrawingSnapshot) -> Vec<dsl::Diagnostic> {
+    pub fn check_drawing_invariants(snapshot: &SemioDrawingSnapshot) -> Vec<semio_framework_diagnostic::Diagnostic> {
         let mut diagnostics = Vec::new();
 
         let mut seen_layer_ids = std::collections::HashSet::new();
         for layer in &snapshot.layers {
             if !seen_layer_ids.insert(layer.id.clone()) {
-                diagnostics.push(dsl::Diagnostic::error("stdio.semio_drawing.duplicate-layer-id", dsl::TextSpan::at(1, 1), format!("SemioDrawingValidator: duplicate layer id {:?}", layer.id)));
+                diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.semio_drawing.duplicate-layer-id", semio_framework_diagnostic::TextSpan::at(1, 1), format!("SemioDrawingValidator: duplicate layer id {:?}", layer.id)));
             }
         }
 
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-        fn walk(node: &DrawNode, style_names: &std::collections::HashSet<&str>, diagnostics: &mut Vec<dsl::Diagnostic>) {
+        fn walk(node: &DrawNode, style_names: &std::collections::HashSet<&str>, diagnostics: &mut Vec<semio_framework_diagnostic::Diagnostic>) {
             match node {
                 DrawNode::Path { style: Some(name), .. } | DrawNode::Text { style: Some(name), .. } => {
                     if !style_names.contains(name.as_str()) {
-                        diagnostics.push(dsl::Diagnostic::error("stdio.semio_drawing.dangling-style-ref", dsl::TextSpan::at(1, 1), format!("SemioDrawingValidator: node references undefined style {name:?}")));
+                        diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.semio_drawing.dangling-style-ref", semio_framework_diagnostic::TextSpan::at(1, 1), format!("SemioDrawingValidator: node references undefined style {name:?}")));
                     }
                 }
                 DrawNode::Group { children, .. } => {
@@ -216,17 +216,17 @@ pub enum SemioDrawingFormat {
 #[cfg(feature = "conversion-drawing")]
 pub fn encode_drawing(drawing: &crate::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot, format: SemioDrawingFormat) -> Result<Vec<u8>, String> {
     use crate::standards::v1::subsets::drawing::io::export::serializers::artifacts::{dwg::v_ac1024::any::SemioDrawingToDwg, dxf::v_r12::any::SemioDrawingToDxf, pdf::v1_7::any::drawing_to_pdf, png::v1_2::any::SemioDrawingToPng, svg::v1_1::any::SemioDrawingToSvg};
-    use semio_framework_plugin::{resolve_ready, ArtifactSerializer};
+    use semio_framework_plugin::{ ArtifactSerializer};
     match format {
-        SemioDrawingFormat::Svg => resolve_ready(SemioDrawingToSvg::serialize(drawing)).map_err(|e| e.to_string())?.export_utf8(),
-        SemioDrawingFormat::Dxf => Ok(semio_s_artifact_stdio_dxf::schema::snapshot::print_dxf_document(&resolve_ready(SemioDrawingToDxf::serialize(drawing)).map_err(|e| e.to_string())?).into_bytes()),
-        SemioDrawingFormat::Dwg => semio_s_artifact_stdio_dwg::engine::dwg_to_bytes(&resolve_ready(SemioDrawingToDwg::serialize(drawing)).map_err(|e| e.to_string())?.drawing.to_native()?),
+        SemioDrawingFormat::Svg => ::semio_framework_async::poll::resolve_ready(SemioDrawingToSvg::serialize(drawing)).map_err(|e| e.to_string())?.export_utf8(),
+        SemioDrawingFormat::Dxf => Ok(semio_s_artifact_stdio_dxf::schema::snapshot::print_dxf_document(&::semio_framework_async::poll::resolve_ready(SemioDrawingToDxf::serialize(drawing)).map_err(|e| e.to_string())?).into_bytes()),
+        SemioDrawingFormat::Dwg => semio_s_artifact_stdio_dwg::engine::dwg_to_bytes(&::semio_framework_async::poll::resolve_ready(SemioDrawingToDwg::serialize(drawing)).map_err(|e| e.to_string())?.drawing.to_native()?),
         SemioDrawingFormat::Pdf { version } => {
             let mut pdf = drawing_to_pdf(drawing)?;
             pdf.declared_version = version.to_string();
             semio_s_artifact_stdio_pdf::io::encode_pdf(&pdf).map_err(|e| e.to_string())
         }
-        SemioDrawingFormat::Png => semio_s_artifact_stdio_png::io::encode_png(&resolve_ready(SemioDrawingToPng::serialize(drawing)).map_err(|e| e.to_string())?),
+        SemioDrawingFormat::Png => semio_s_artifact_stdio_png::io::encode_png(&::semio_framework_async::poll::resolve_ready(SemioDrawingToPng::serialize(drawing)).map_err(|e| e.to_string())?),
     }
 }
 
@@ -236,13 +236,13 @@ pub fn encode_drawing(drawing: &crate::standards::v1::subsets::drawing::schema::
 #[cfg(feature = "conversion-drawing")]
 pub fn decode_drawing(bytes: &[u8], format: SemioDrawingFormat) -> Result<crate::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot, String> {
     use crate::standards::v1::subsets::drawing::io::import::deserializers::artifacts::{dwg::v_ac1024::any::SemioDrawingFromDwg, dxf::v_r12::any::SemioDrawingFromDxf, pdf::v1_7::any::SemioDrawingFromPdf, svg::v1_1::any::SemioDrawingFromSvg};
-    use semio_framework_plugin::{resolve_ready, ArtifactDeserializer};
+    use semio_framework_plugin::{ ArtifactDeserializer};
     let text = || std::str::from_utf8(bytes).map_err(|e| e.to_string());
     match format {
-        SemioDrawingFormat::Svg => resolve_ready(SemioDrawingFromSvg::deserialize(&semio_s_artifact_stdio_svg::SvgSnapshot::import_utf8(bytes)?)).map_err(|e| e.to_string()),
-        SemioDrawingFormat::Dxf => resolve_ready(SemioDrawingFromDxf::deserialize(&semio_s_artifact_stdio_dxf::schema::snapshot::parse_dxf_document(text()?)?)).map_err(|e| e.to_string()),
-        SemioDrawingFormat::Dwg => resolve_ready(SemioDrawingFromDwg::deserialize(&semio_s_artifact_stdio_dwg::schema::snapshot::decode_dwg(bytes)?)).map_err(|e| e.to_string()),
-        SemioDrawingFormat::Pdf { .. } => resolve_ready(SemioDrawingFromPdf::deserialize(&semio_s_artifact_stdio_pdf::io::decode_pdf(bytes).map_err(|e| e.to_string())?)).map_err(|e| e.to_string()),
+        SemioDrawingFormat::Svg => ::semio_framework_async::poll::resolve_ready(SemioDrawingFromSvg::deserialize(&semio_s_artifact_stdio_svg::SvgSnapshot::import_utf8(bytes)?)).map_err(|e| e.to_string()),
+        SemioDrawingFormat::Dxf => ::semio_framework_async::poll::resolve_ready(SemioDrawingFromDxf::deserialize(&semio_s_artifact_stdio_dxf::schema::snapshot::parse_dxf_document(text()?)?)).map_err(|e| e.to_string()),
+        SemioDrawingFormat::Dwg => ::semio_framework_async::poll::resolve_ready(SemioDrawingFromDwg::deserialize(&semio_s_artifact_stdio_dwg::schema::snapshot::decode_dwg(bytes)?)).map_err(|e| e.to_string()),
+        SemioDrawingFormat::Pdf { .. } => ::semio_framework_async::poll::resolve_ready(SemioDrawingFromPdf::deserialize(&semio_s_artifact_stdio_pdf::io::decode_pdf(bytes).map_err(|e| e.to_string())?)).map_err(|e| e.to_string()),
         SemioDrawingFormat::Png => Err("semio/drawing←png: a raster carries no vector geometry".into()),
     }
 }

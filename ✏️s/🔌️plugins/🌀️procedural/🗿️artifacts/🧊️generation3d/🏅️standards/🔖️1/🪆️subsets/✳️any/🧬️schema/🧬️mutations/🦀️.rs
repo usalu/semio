@@ -302,7 +302,7 @@ pub(crate) fn generation3d_targets_invariant(targets: &[String]) -> Result<(), &
 
 /// 🩹️ The `mutation.partial` warning of the targets a relative leaf skipped, or nothing.
 pub(crate) fn generation3d_partial(skipped: Vec<String>, total: usize, reason: &str) -> Option<protocol::MutationMessage> {
-    (!skipped.is_empty()).then(|| protocol::MutationMessage::warn("mutation.partial", format!("{} of {total} target(s) skipped ({reason}): {}", skipped.len(), skipped.join(", "))).at(skipped))
+    (!skipped.is_empty()).then(|| protocol::MutationMessage::warning("mutation.partial", format!("{} of {total} target(s) skipped ({reason}): {}", skipped.len(), skipped.join(", "))).at(skipped))
 }
 
 /// 🎛️ The neuron kinds one gumball composition addresses: the B-Rep transform, the mesh transform and the mesh
@@ -312,11 +312,11 @@ pub(crate) const GENERATION3D_ROTATE_KINDS: [&str; 3] = ["brep.xform.rotate", "b
 pub(crate) const GENERATION3D_SCALE_KINDS: [&str; 3] = ["brep.xform.scale", "brep.mesh.scale", "brep.mesh.scaleComponents"];
 
 /// 🧮️ The `x`/`y`/`z` of one vector param of a neuron's params in value form, or `fallback` where absent.
-pub(crate) fn generation3d_param_vector(params: &dsl::DslValue, key: &str, fallback: [f64; 3]) -> [f64; 3] {
+pub(crate) fn generation3d_param_vector(params: &semio_framework_value::DslValue, key: &str, fallback: [f64; 3]) -> [f64; 3] {
     let vector = params.get(key);
     let mut axes = fallback;
     for (axis, name) in ["x", "y", "z"].iter().enumerate() {
-        if let Some(value) = vector.and_then(|vector| vector.get(name)).and_then(dsl::DslValue::as_f64) {
+        if let Some(value) = vector.and_then(|vector| vector.get(name)).and_then(semio_framework_value::DslValue::as_f64) {
             axes[axis] = value;
         }
     }
@@ -324,32 +324,32 @@ pub(crate) fn generation3d_param_vector(params: &dsl::DslValue, key: &str, fallb
 }
 
 /// 🔣️ The `value` of one number param of a neuron's params in value form, or `fallback` where absent.
-pub(crate) fn generation3d_param_number(params: &dsl::DslValue, key: &str, fallback: f64) -> f64 {
-    params.get(key).and_then(|entry| entry.get("value")).and_then(dsl::DslValue::as_f64).unwrap_or(fallback)
+pub(crate) fn generation3d_param_number(params: &semio_framework_value::DslValue, key: &str, fallback: f64) -> f64 {
+    params.get(key).and_then(|entry| entry.get("value")).and_then(semio_framework_value::DslValue::as_f64).unwrap_or(fallback)
 }
 
 /// 🧩️ One typed vector literal (`{"$schema": schema, x, y, z}`) a transform operator param holds.
-pub fn generation3d_vector_literal(schema: &str, axes: [f64; 3]) -> dsl::DslValue {
-    dsl::DslValue::object([
-        ("$schema".to_string(), dsl::DslValue::String(schema.into())),
-        ("x".to_string(), dsl::DslValue::float(axes[0])),
-        ("y".to_string(), dsl::DslValue::float(axes[1])),
-        ("z".to_string(), dsl::DslValue::float(axes[2])),
+pub fn generation3d_vector_literal(schema: &str, axes: [f64; 3]) -> semio_framework_value::DslValue {
+    semio_framework_value::DslValue::object([
+        ("$schema".to_string(), semio_framework_value::DslValue::String(schema.into())),
+        ("x".to_string(), semio_framework_value::DslValue::float(axes[0])),
+        ("y".to_string(), semio_framework_value::DslValue::float(axes[1])),
+        ("z".to_string(), semio_framework_value::DslValue::float(axes[2])),
     ])
 }
 
 /// 🔟️ One typed number literal (`{"$schema": "number", value}`) a transform operator param holds.
-pub fn generation3d_number_literal(value: f64) -> dsl::DslValue {
-    dsl::DslValue::object([("$schema".to_string(), dsl::DslValue::String("number".into())), ("value".to_string(), dsl::DslValue::float(value))])
+pub fn generation3d_number_literal(value: f64) -> semio_framework_value::DslValue {
+    semio_framework_value::DslValue::object([("$schema".to_string(), semio_framework_value::DslValue::String("number".into())), ("value".to_string(), semio_framework_value::DslValue::float(value))])
 }
 
 /// 🪡️ `widget` with `entries` merged into its params: the one way a relative transform leaf writes an operator. `None`
 /// when a param value is not a neural value; the patch and the displaced params are retired cold, never dropped.
-pub(crate) fn generation3d_with_params(widget: &semio_framework_artifact_flow_flow::Widget, entries: Vec<(&str, dsl::DslValue)>) -> Option<semio_framework_artifact_flow_flow::Widget> {
+pub(crate) fn generation3d_with_params(widget: &semio_framework_artifact_flow_flow::Widget, entries: Vec<(&str, semio_framework_value::DslValue)>) -> Option<semio_framework_artifact_flow_flow::Widget> {
     use semio_framework_artifact_flow_flow::neural::{ColdRetire, Dictionary, Value};
     let mut patch = Dictionary::new();
     for (key, entry) in entries {
-        match <Value as dsl::FromValue>::from_value(entry) {
+        match <Value as semio_framework_value::FromValue>::from_value(entry) {
             Ok(value) => patch = patch.insert(key, value),
             Err(_) => {
                 patch.retire_cold();
@@ -370,7 +370,7 @@ pub(crate) fn generation3d_with_params(widget: &semio_framework_artifact_flow_fl
 /// `compose` derives from its BASE params, so an edited gesture re-derives the operator on whatever base it replays on.
 /// Missing targets and targets of another kind are skipped (`mutation.partial`); none left is `target-missing` (no
 /// target exists) or `target-mismatch`; an identity gesture is `mutation.no-op`.
-pub(crate) fn generation3d_transform_diff(base: &Generation3dSnapshot, targets: &[String], kinds: &[&str], identity: bool, compose: impl Fn(&dsl::DslValue) -> Option<Vec<(&'static str, dsl::DslValue)>>) -> protocol::MutationOutcome<Generation3dDiff> {
+pub(crate) fn generation3d_transform_diff(base: &Generation3dSnapshot, targets: &[String], kinds: &[&str], identity: bool, compose: impl Fn(&semio_framework_value::DslValue) -> Option<Vec<(&'static str, semio_framework_value::DslValue)>>) -> protocol::MutationOutcome<Generation3dDiff> {
     use crate::standards::v1::subsets::any::schema::diff::{diff_fixture_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
     if let Err(reason) = generation3d_targets_invariant(targets) {
         return protocol::MutationOutcome::fatal("mutation.invariant", reason, targets.to_vec());
@@ -390,7 +390,7 @@ pub(crate) fn generation3d_transform_diff(base: &Generation3dSnapshot, targets: 
             mismatched.push(id.clone());
             continue;
         }
-        let params = dsl::ToValue::to_value(widget).get("params").cloned().unwrap_or(dsl::DslValue::Null);
+        let params = semio_framework_value::ToValue::to_value(widget).get("params").cloned().unwrap_or(semio_framework_value::DslValue::Null);
         match compose(&params).and_then(|entries| generation3d_with_params(widget, entries)) {
             Some(next) => composed.push((index, next)),
             None => mismatched.push(id.clone()),
@@ -408,7 +408,7 @@ pub(crate) fn generation3d_transform_diff(base: &Generation3dSnapshot, targets: 
         for (_, widget) in composed {
             widget.retire_cold();
         }
-        return protocol::MutationOutcome::empty().absorb_messages(messages.into_iter().chain([protocol::MutationMessage::warn("mutation.no-op", "the gesture is the identity transform").at(targets.to_vec())]));
+        return protocol::MutationOutcome::empty().absorb_messages(messages.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "the gesture is the identity transform").at(targets.to_vec())]));
     }
     let widgets = WidgetsDiff { removed: Vec::new(), set: composed };
     let diff = diff_fixture_from_helpers(base, &widgets, &SynapsesDiff::default(), &LayoutDiff::default(), None, None);
@@ -420,13 +420,16 @@ pub(crate) fn generation3d_transform_diff(base: &Generation3dSnapshot, targets: 
 
 /// 🔙️ The exact inverse of one relative gumball leaf: every operator it would compose restored to its BASE widget —
 /// absolute rows, never a negated delta.
-pub(crate) fn generation3d_transform_inverse(base: &Generation3dSnapshot, targets: &[String], kinds: &[&str]) -> Vec<Generation3dMutation> {
+pub(crate) fn generation3d_transform_inverse(base: &Generation3dSnapshot, targets: &[String], kinds: &[&str]) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     targets
         .iter()
         .filter_map(|id| base.host_snapshot.widgets.iter().find(|widget| widget_id(widget) == id))
         .filter(|widget| matches!(widget, semio_framework_artifact_flow_flow::Widget::Neuron { neuron_kind, .. } if kinds.contains(&neuron_kind.as_str())))
         .map(|widget| Generation3dMutation::UpdateWidget(update_widget::UpdateWidget { widget: widget.clone() }))
         .collect()
+
+    })())
 }
 //#endregion 🔖️GestureLeaves
 
@@ -572,7 +575,7 @@ impl Generation3dMutation {
 /// code is never re-typed as an apply error.
 pub fn apply_generation3d_mutation(projection: &mut Generation3dSnapshot, mutation: &Generation3dMutation) -> Result<(), Vec<protocol::MutationMessage>> {
     let (delta, messages) = protocol::Mutation::diff(mutation, &*projection).into_parts();
-    if messages.iter().any(|message| matches!(message.level, protocol::Severity::Error | protocol::Severity::Fatal)) {
+    if messages.iter().any(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)) {
         delta.retire_cold();
         return Err(messages);
     }
@@ -587,8 +590,11 @@ pub fn apply_generation3d_mutation(projection: &mut Generation3dSnapshot, mutati
     }
 }
 
-pub fn inverse_generation3d_mutation(projection: &Generation3dSnapshot, mutation: &Generation3dMutation) -> Vec<Generation3dMutation> {
-    protocol::Mutation::inverse(mutation, projection)
+pub fn inverse_generation3d_mutation(projection: &Generation3dSnapshot, mutation: &Generation3dMutation) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
+    Ok({
+    protocol::Mutation::inverse(mutation, projection)?
+
+    })
 }
 //#endregion 🔖️Apply
 

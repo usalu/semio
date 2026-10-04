@@ -1698,6 +1698,41 @@
         },
         "roughness": {
           "type": "number"
+        },
+        "baseColorTexture": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Owned SemioTexture ID reference."
+        },
+        "metallicRoughnessTexture": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Owned SemioTexture ID reference."
+        },
+        "normalTexture": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Owned SemioTexture ID reference."
+        },
+        "occlusionTexture": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Owned SemioTexture ID reference."
+        },
+        "emissiveTexture": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Owned SemioTexture ID reference."
         }
       }
     },

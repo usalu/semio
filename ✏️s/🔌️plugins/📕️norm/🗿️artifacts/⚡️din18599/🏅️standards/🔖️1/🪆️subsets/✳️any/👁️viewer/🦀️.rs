@@ -40,6 +40,8 @@ impl protocol::OpBinary for Din18599ViewCommand {
 pub struct Din18599Viewer;
 
 impl ArtifactViewer for Din18599Viewer {
+    /// 🪆️ The derived `climateTable` child (`s.stdio.semio@v1/table`) opens through the stdio semio member family.
+    type Members = semio_s_artifact_stdio_semio::SemioMembers;
     type Snapshot = Din18599Snapshot;
     type Mutation = crate::op::Din18599Mutation;
     type Config = NoConfig;
@@ -57,6 +59,14 @@ impl ArtifactViewer for Din18599Viewer {
 
     fn initial_snapshot() -> Din18599Snapshot {
         Din18599Snapshot::default()
+    }
+
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+        crate::din18599_child_restore_projection(snapshot)
+    }
+
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>, semio_framework_value::ValueError> {
+        Ok(crate::genesis_din18599_child_pack(snapshot, slot, child_id))
     }
 
     /// 👁️ Structurally read-only: the sole `Din18599ViewCommand::Noop` variant never carries a config

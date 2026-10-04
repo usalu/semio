@@ -1,0 +1,97 @@
+{
+  "at": "2026-10-03T21:14:04.177Z",
+  "rows": [
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📋️context/🟦️.ts",
+      "before": "import { readFileSync } from \"node:fs\";\nimport { isAbsolute, resolve, join } from \"node:path\";\nimport { validateJsonSchemaSubset } from \"../../🧬️schema/✅️validator/🟦️.ts\";\n\n/** 📋️ Gives an owner its explicitly selected execution and compiler state stores. */\nexport type ProcessOwnerContextV1=Readonly<{version:1;cwd:string;cacheRoot:string;leaseDirectory:string}>;\nconst schema=JSON.parse(readFileSync(new URL(\"./🧬️schema/🔣️.json\",import.meta.url),\"utf8\"));\n\n/** 🔐️ Refuses absent, malformed or other-owner context before changing build state. */\nexport function readProcessOwnerContextV1(environment:Readonly<Record<string,string|undefined>>,cwd:string):ProcessOwnerContextV1{\n  if(!environment.SEMIO_PROCESS_OWNER_CONTEXT)throw Error(\"Explicit process owner context required\");\n  const value=JSON.parse(environment.SEMIO_PROCESS_OWNER_CONTEXT) as ProcessOwnerContextV1;\n  if(validateJsonSchemaSubset(schema,value).length||![value.cwd,value.cacheRoot,value.leaseDirectory].every(isAbsolute)||value.cwd!==resolve(cwd))throw Error(\"Invalid process owner context\");\n  return value;\n}\n\n/** 🗂️ Selects exact safe leaves inside the caller's declared compiler store. */\nexport function processCacheDirectoryV1(context:ProcessOwnerContextV1,...segments:string[]):string{\n  if(!segments.length||segments.some(part=>!/^[A-Za-z0-9_-]+$/u.test(part)))throw Error(\"Invalid process cache identity\");\n  return join(context.cacheRoot,...segments);\n}\n",
+      "inverse": "import { readFileSync } from \"node:fs\";\nimport { isAbsolute, resolve, join } from \"node:path\";\nimport { validateJsonSchemaSubset } from \"../../🧬️schema/✅️validator/🟦️.ts\";\n\n/** 📋️ Gives an owner its explicitly selected execution and compiler state stores. */\nexport type ProcessOwnerContextV1=Readonly<{version:1;cwd:string;cacheRoot:string;leaseDirectory:string}>;\nconst schema=JSON.parse(readFileSync(new URL(\"./🧬️schema/🔣️.json\",import.meta.url),\"utf8\"));\n\n/** 🔐️ Refuses absent, malformed or other-owner context before changing build state. */\nexport function readProcessOwnerContextV1(environment:Readonly<Record<string,string|undefined>>,cwd:string):ProcessOwnerContextV1{\n  if(!environment.SEMIO_PROCESS_OWNER_CONTEXT)throw Error(\"Explicit process owner context required\");\n  const value=JSON.parse(environment.SEMIO_PROCESS_OWNER_CONTEXT) as ProcessOwnerContextV1;\n  if(validateJsonSchemaSubset(schema,value).length||![value.cwd,value.cacheRoot,value.leaseDirectory].every(isAbsolute)||value.cwd!==resolve(cwd))throw Error(\"Invalid process owner context\");\n  return value;\n}\n\n/** 🗂️ Selects exact safe leaves inside the caller's declared compiler store. */\nexport function processCacheDirectoryV1(context:ProcessOwnerContextV1,...segments:string[]):string{\n  if(!segments.length||segments.some(part=>!/^[A-Za-z0-9_-]+$/u.test(part)))throw Error(\"Invalid process cache identity\");\n  return join(context.cacheRoot,...segments);\n}\n",
+      "sha256": "77c864afc439359fedcf4a8219dc901c44432f552437c0be342c23e7b4bea326"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📋️context/🧬️schema/🔣️.json",
+      "before": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"required\": [\n    \"version\",\n    \"cwd\",\n    \"cacheRoot\",\n    \"leaseDirectory\"\n  ],\n  \"properties\": {\n    \"version\": {\n      \"const\": 1\n    },\n    \"cwd\": {\n      \"type\": \"string\",\n      \"minLength\": 1\n    },\n    \"cacheRoot\": {\n      \"type\": \"string\",\n      \"minLength\": 1\n    },\n    \"leaseDirectory\": {\n      \"type\": \"string\",\n      \"minLength\": 1\n    }\n  }\n}\n",
+      "inverse": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"required\": [\n    \"version\",\n    \"cwd\",\n    \"cacheRoot\",\n    \"leaseDirectory\"\n  ],\n  \"properties\": {\n    \"version\": {\n      \"const\": 1\n    },\n    \"cwd\": {\n      \"type\": \"string\",\n      \"minLength\": 1\n    },\n    \"cacheRoot\": {\n      \"type\": \"string\",\n      \"minLength\": 1\n    },\n    \"leaseDirectory\": {\n      \"type\": \"string\",\n      \"minLength\": 1\n    }\n  }\n}\n",
+      "sha256": "9f67d7c1f260fd15c65e4c9bbb264f6091845a5316b2fac3210848f3791e063b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📋️context/🧫️fixtures/🔣️.json",
+      "before": "{\n  \"version\": 1,\n  \"cwd\": \"/owner\",\n  \"cacheRoot\": \"/cache\",\n  \"leaseDirectory\": \"/leases\"\n}\n",
+      "inverse": "{\n  \"version\": 1,\n  \"cwd\": \"/owner\",\n  \"cacheRoot\": \"/cache\",\n  \"leaseDirectory\": \"/leases\"\n}\n",
+      "sha256": "bf7c8556f14fe4d60aadbd36e35eeda0591c659bbe104c2e937308ce49fbda46"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📋️context/🧪️tests/🟦️.ts",
+      "before": "import { test, expect } from \"bun:test\";\nimport { readFileSync } from \"node:fs\";\nimport { resolve } from \"node:path\";\nimport { spawnSync } from \"node:child_process\";\nimport { createRequire } from \"node:module\";\n\ntest(\"Process cache authority is explicit, schema-owned and bound to the current owner\",async()=>{\n  const fixture=JSON.parse(readFileSync(resolve(import.meta.dir,\"../🧫️fixtures/🔣️.json\"),\"utf8\")),schema=JSON.parse(readFileSync(resolve(import.meta.dir,\"../🧬️schema/🔣️.json\"),\"utf8\")),validate=new (createRequire(import.meta.url)(\"ajv\").default)({strict:true}).compile(schema),api=await import(\"../🟦️.ts\");\n  for(const key of [\"cwd\",\"cacheRoot\",\"leaseDirectory\"])fixture[key]=resolve(fixture[key]);\n  const env={SEMIO_PROCESS_OWNER_CONTEXT:JSON.stringify(fixture)};\n  expect(validate(fixture)).toBe(true);expect(api.readProcessOwnerContextV1(env,fixture.cwd)).toEqual(fixture);\n  for(const row of [{...fixture,extra:1},{...fixture,leaseDirectory:\"relative\"},{...fixture,cwd:\"/foreign\"}])expect(()=>api.readProcessOwnerContextV1({SEMIO_PROCESS_OWNER_CONTEXT:JSON.stringify(row)},\"/owner\")).toThrow();\n  expect(()=>api.readProcessOwnerContextV1({},\"/owner\")).toThrow(\"Explicit process owner context required\");\n  expect(()=>api.processCacheDirectoryV1(fixture,\"../foreign\")).toThrow();\n  const child=spawnSync(\"node\",[\"-e\",\"const p=require('node:path'),row=JSON.parse(process.argv[1]);process.stdout.write(p.join(row.cacheRoot,'python','styling'));\",JSON.stringify(fixture)],{encoding:\"utf8\"});expect(child.status).toBe(0);expect(api.processCacheDirectoryV1(fixture,\"python\",\"styling\")).toBe(child.stdout);\n});\n",
+      "inverse": "import { test, expect } from \"bun:test\";\nimport { readFileSync } from \"node:fs\";\nimport { resolve } from \"node:path\";\nimport { spawnSync } from \"node:child_process\";\nimport { createRequire } from \"node:module\";\n\ntest(\"Process cache authority is explicit, schema-owned and bound to the current owner\",async()=>{\n  const fixture=JSON.parse(readFileSync(resolve(import.meta.dir,\"../🧫️fixtures/🔣️.json\"),\"utf8\")),schema=JSON.parse(readFileSync(resolve(import.meta.dir,\"../🧬️schema/🔣️.json\"),\"utf8\")),validate=new (createRequire(import.meta.url)(\"ajv\").default)({strict:true}).compile(schema),api=await import(\"../🟦️.ts\");\n  for(const key of [\"cwd\",\"cacheRoot\",\"leaseDirectory\"])fixture[key]=resolve(fixture[key]);\n  const env={SEMIO_PROCESS_OWNER_CONTEXT:JSON.stringify(fixture)};\n  expect(validate(fixture)).toBe(true);expect(api.readProcessOwnerContextV1(env,fixture.cwd)).toEqual(fixture);\n  for(const row of [{...fixture,extra:1},{...fixture,leaseDirectory:\"relative\"},{...fixture,cwd:\"/foreign\"}])expect(()=>api.readProcessOwnerContextV1({SEMIO_PROCESS_OWNER_CONTEXT:JSON.stringify(row)},\"/owner\")).toThrow();\n  expect(()=>api.readProcessOwnerContextV1({},\"/owner\")).toThrow(\"Explicit process owner context required\");\n  expect(()=>api.processCacheDirectoryV1(fixture,\"../foreign\")).toThrow();\n  const child=spawnSync(\"node\",[\"-e\",\"const p=require('node:path'),row=JSON.parse(process.argv[1]);process.stdout.write(p.join(row.cacheRoot,'python','styling'));\",JSON.stringify(fixture)],{encoding:\"utf8\"});expect(child.status).toBe(0);expect(api.processCacheDirectoryV1(fixture,\"python\",\"styling\")).toBe(child.stdout);\n});\n",
+      "sha256": "4569d17106580c331bd88cf8aaaf218988b858adededa46a5d7b58326ede30d6"
+    }
+  ],
+  "observations": [
+    {
+      "id": "cwd-nul",
+      "field": "cwd",
+      "context": {
+        "version": 1,
+        "cwd": "/owner\u0000child",
+        "cacheRoot": "/cache",
+        "leaseDirectory": "/leases"
+      },
+      "currentSchemaAccepted": true,
+      "currentRuntimeAccepted": true,
+      "currentRuntimeError": null,
+      "node": {
+        "absolute": true,
+        "filesystemRefused": true,
+        "error": {
+          "code": "ERR_INVALID_ARG_VALUE",
+          "message": "The argument 'path' must be a string, Uint8Array, or URL without null bytes. Received '/owner\\x00child'"
+        }
+      }
+    },
+    {
+      "id": "cacheRoot-nul",
+      "field": "cacheRoot",
+      "context": {
+        "version": 1,
+        "cwd": "/owner",
+        "cacheRoot": "/cache\u0000child",
+        "leaseDirectory": "/leases"
+      },
+      "currentSchemaAccepted": true,
+      "currentRuntimeAccepted": true,
+      "currentRuntimeError": null,
+      "node": {
+        "absolute": true,
+        "filesystemRefused": true,
+        "error": {
+          "code": "ERR_INVALID_ARG_VALUE",
+          "message": "The argument 'path' must be a string, Uint8Array, or URL without null bytes. Received '/cache\\x00child'"
+        }
+      }
+    },
+    {
+      "id": "leaseDirectory-nul",
+      "field": "leaseDirectory",
+      "context": {
+        "version": 1,
+        "cwd": "/owner",
+        "cacheRoot": "/cache",
+        "leaseDirectory": "/leases\u0000child"
+      },
+      "currentSchemaAccepted": true,
+      "currentRuntimeAccepted": true,
+      "currentRuntimeError": null,
+      "node": {
+        "absolute": true,
+        "filesystemRefused": true,
+        "error": {
+          "code": "ERR_INVALID_ARG_VALUE",
+          "message": "The argument 'path' must be a string, Uint8Array, or URL without null bytes. Received '/leases\\x00child'"
+        }
+      }
+    }
+  ],
+  "sourceWrites": 0,
+  "nativeExecuted": 0,
+  "scope": "Actual context API and Ajv current schema accept all three absolute NUL fields; actual Node stat refuses invalid paths without any writes; cwd supplied exactly matching its context"
+}

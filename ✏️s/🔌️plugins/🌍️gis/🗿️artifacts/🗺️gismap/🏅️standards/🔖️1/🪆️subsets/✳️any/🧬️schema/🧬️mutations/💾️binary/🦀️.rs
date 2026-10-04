@@ -36,14 +36,14 @@ enum GisMapRetirementOwner {
     Mutation(GisMapMutation),
     MutationFields(GisMapMutationFields),
     Feature(MapFeature),
-    Value(dsl::DslValue),
-    ValueEntry { key: String, value: Option<dsl::DslValue> },
+    Value(semio_framework_value::DslValue),
+    ValueEntry { key: String, value: Option<semio_framework_value::DslValue> },
 }
 
 enum GisMapMutationFields {
     Feature(Option<MapFeature>),
     String(String),
-    Value { id: String, value: Option<dsl::DslValue> },
+    Value { id: String, value: Option<semio_framework_value::DslValue> },
 }
 
 struct GisMapOwnedRetirement {
@@ -131,7 +131,7 @@ impl GisMapOwnedRetirement {
             GisMapRetirementOwner::Feature(value) => match self.phase {
                 0 => Ok(Self::release_string(&mut value.id, &mut self.phase, 1, maximum_items, maximum_bytes)),
                 1 => {
-                    let data = std::mem::replace(&mut value.data, dsl::DslValue::Null);
+                    let data = std::mem::replace(&mut value.data, semio_framework_value::DslValue::Null);
                     self.phase = 2;
                     Ok(Self::spawn(&mut self.active, GisMapRetirementOwner::Value(data)))
                 }
@@ -141,14 +141,14 @@ impl GisMapOwnedRetirement {
                 }
             },
             GisMapRetirementOwner::Value(value) => match value {
-                dsl::DslValue::String(value) => {
+                semio_framework_value::DslValue::String(value) => {
                     if self.phase == 0 {
                         return Ok(Self::release_string(value, &mut self.phase, 1, maximum_items, maximum_bytes));
                     }
                     drop(self.owner.take());
                     Ok(store::SnapshotRetirementStep::Complete)
                 }
-                dsl::DslValue::Bytes(value) => {
+                semio_framework_value::DslValue::Bytes(value) => {
                     if self.phase == 0 {
                         if value.len() > maximum_bytes { return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
                         let bytes = std::mem::take(value);
@@ -160,7 +160,7 @@ impl GisMapOwnedRetirement {
                     drop(self.owner.take());
                     Ok(store::SnapshotRetirementStep::Complete)
                 }
-                dsl::DslValue::Array(values) => {
+                semio_framework_value::DslValue::Array(values) => {
                     if let Some(value) = values.pop() {
                         Ok(Self::spawn(&mut self.active, GisMapRetirementOwner::Value(value)))
                     } else {
@@ -168,7 +168,7 @@ impl GisMapOwnedRetirement {
                         Ok(store::SnapshotRetirementStep::Complete)
                     }
                 }
-                dsl::DslValue::Object(values) => {
+                semio_framework_value::DslValue::Object(values) => {
                     if let Some((key, value)) = values.pop() {
                         Ok(Self::spawn(&mut self.active, GisMapRetirementOwner::ValueEntry { key, value: Some(value) }))
                     } else {
@@ -176,7 +176,7 @@ impl GisMapOwnedRetirement {
                         Ok(store::SnapshotRetirementStep::Complete)
                     }
                 }
-                dsl::DslValue::Null | dsl::DslValue::Bool(_) | dsl::DslValue::Number(_) => {
+                semio_framework_value::DslValue::Null | semio_framework_value::DslValue::Bool(_) | semio_framework_value::DslValue::Number(_) => {
                     drop(self.owner.take());
                     Ok(store::SnapshotRetirementStep::Complete)
                 }
@@ -249,14 +249,14 @@ impl GisMapOwnedRetirement {
 }
 
 impl store::ErasedSnapshotRetirement for GisMapOwnedRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if let Some(active) = self.active.as_mut() {
             return match active.close_step(maximum_items.min(1), maximum_bytes)? {
                 store::SnapshotRetirementStep::Complete if active.terminal_is_empty() => {
                     drop(self.active.take());
                     Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
-                store::SnapshotRetirementStep::Complete => Err("GIS nested retirement reported false terminal".into()),
+                store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "GIS nested retirement reported false terminal")),
                 step => Ok(step),
             };
         }
@@ -288,7 +288,7 @@ struct GisMapSnapshotRootRetirement {
 }
 
 impl store::ErasedSnapshotRetirement for GisMapSnapshotRootRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -298,7 +298,7 @@ impl store::ErasedSnapshotRetirement for GisMapSnapshotRootRetirement {
                     drop(self.retirement.take());
                     Ok(store::SnapshotRetirementStep::Complete)
                 }
-                store::SnapshotRetirementStep::Complete => Err("GIS snapshot root retirement reported false terminal".into()),
+                store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "GIS snapshot root retirement reported false terminal")),
                 step => Ok(step),
             };
         }
@@ -618,7 +618,7 @@ impl GisMapSnapshotCloneAuthority {
     }
 
     fn clone_feature(source: &MapFeature) -> Result<MapFeature, &'static str> {
-        let encoded = dsl::os_pack::json::to_json_string(source).into_bytes();
+        let encoded = semio_framework_pack_json::to_json_string(source).into_bytes();
         if encoded.len() > GIS_MAP_OWNED_FIELD_BYTES {
             return Err("gis-map-store.initializer-feature-too-large");
         }
@@ -652,7 +652,7 @@ impl GisMapSnapshotCloneAuthority {
         Ok(observed)
     }
 
-    fn step(&mut self, source: &GisMapSnapshot, digest: &mut store::ArtifactStoreInitializationDigest, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
+    fn step(&mut self, source: &GisMapSnapshot, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
         let target = self.value.as_mut().ok_or("gis-map-store.initializer-clone-target")?;
         let observed = match self.phase {
             0..=2 => {
@@ -665,13 +665,12 @@ impl GisMapSnapshotCloneAuthority {
                     target.try_reserve_exact(source.len()).map_err(|_| admission)?;
                 }
                 if let Some(feature) = source.get(self.index) {
-                    let encoded = dsl::os_pack::json::to_json_string(feature).into_bytes();
+                    let encoded = semio_framework_pack_json::to_json_string(feature).into_bytes();
                     if encoded.len() > GIS_MAP_OWNED_FIELD_BYTES {
                         return Err("gis-map-store.initializer-feature-too-large");
                     }
                     target.push(Self::clone_feature(feature)?);
                     self.index += 1;
-                    digest.observe(&encoded);
                     cx.consume_fuel(encoded.len().max(1) as u64);
                     return Ok(false);
                 }
@@ -696,7 +695,6 @@ impl GisMapSnapshotCloneAuthority {
                 return Ok(true);
             }
         };
-        digest.observe(observed);
         self.phase = match self.phase {
             8 if source.image.is_none() => 14,
             value => value + 1,
@@ -712,7 +710,7 @@ impl GisMapSnapshotCloneAuthority {
         self.value.take()
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -730,7 +728,7 @@ impl GisMapSnapshotCloneAuthority {
                 drop(self.retirement.take());
                 Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
             }
-            store::SnapshotRetirementStep::Complete => Err("GIS clone retirement reported false terminal".into()),
+            store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "GIS clone retirement reported false terminal")),
             step => Ok(step),
         }
     }
@@ -758,16 +756,14 @@ pub fn gis_map_document_store_owners() -> store::DocumentStoreOwners<GisMapSnaps
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum GisMapStoreInitializationPhase {
     ValidateEnvelope,
-    ValidateEditPair { left: usize, right: usize },
+    ValidateEdit { index: usize },
     CloneInitial,
     SeedHistory { edit: usize, lane: u8, index: usize },
-    FindApplied { position: usize, scan: usize },
+    FoldSupersessions { transition: usize },
+    FindApplied { position: usize },
     ApplyForward { position: usize, edit: usize, mutation: usize },
-    HashInverse { position: usize, edit: usize, mutation: usize },
     CommitApplied { position: usize, edit: usize },
-    FindRedo { position: usize, scan: usize },
-    HashRedoForward { position: usize, edit: usize, mutation: usize },
-    HashRedoInverse { position: usize, edit: usize, mutation: usize },
+    FindRedo { position: usize },
     CommitRedo { position: usize, edit: usize },
     BuildCandidate,
     RetireCancelled,
@@ -786,8 +782,7 @@ struct GisMapStoreInitializationAuthority {
     active: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
     envelope_retirement: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
     clone: std::mem::ManuallyDrop<Option<GisMapSnapshotCloneAuthority>>,
-    initial_digest: std::mem::ManuallyDrop<Option<store::ArtifactStoreInitializationDigest>>,
-    edit_digest: std::mem::ManuallyDrop<Option<store::ArtifactStoreInitializationDigest>>,
+    edit_index: store::ArtifactStoreInitializationEditIndex,
     phase: GisMapStoreInitializationPhase,
     cancel_requested: bool,
     fault: Option<Vec<u8>>,
@@ -805,8 +800,7 @@ impl GisMapStoreInitializationAuthority {
             active: std::mem::ManuallyDrop::new(None),
             envelope_retirement: std::mem::ManuallyDrop::new(None),
             clone: std::mem::ManuallyDrop::new(Some(GisMapSnapshotCloneAuthority::new())),
-            initial_digest: std::mem::ManuallyDrop::new(Some(store::ArtifactStoreInitializationDigest::new(b"gis-map.initial"))),
-            edit_digest: std::mem::ManuallyDrop::new(None),
+            edit_index: store::ArtifactStoreInitializationEditIndex::default(),
             phase: GisMapStoreInitializationPhase::ValidateEnvelope,
             cancel_requested: false,
             fault: None,
@@ -896,8 +890,6 @@ impl GisMapStoreInitializationAuthority {
             && self.active.is_none()
             && self.envelope_retirement.is_none()
             && self.clone.is_none()
-            && self.initial_digest.is_none()
-            && self.edit_digest.is_none()
     }
 }
 
@@ -924,21 +916,17 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<GisMapSnapshot
                 if envelope.schema != crate::GIS_MAP_SCHEMA || envelope.id.is_empty() || envelope.id.len() > GIS_MAP_OWNED_FIELD_BYTES {
                     self.fail(b"gis-map-store.initializer-envelope-invalid");
                 } else {
-                    self.phase = GisMapStoreInitializationPhase::ValidateEditPair { left: 0, right: 1 };
+                    self.phase = GisMapStoreInitializationPhase::ValidateEdit { index: 0 };
                 }
                 cx.consume_fuel(1);
                 semio_framework_job::StepOutcome::Yield
             }
-            GisMapStoreInitializationPhase::ValidateEditPair { left, right } => {
+            GisMapStoreInitializationPhase::ValidateEdit { index } => {
                 let envelope = self.envelope.as_ref().expect("validated GIS envelope remains retained");
-                if left >= envelope.vcs.edits.len() {
-                    self.phase = GisMapStoreInitializationPhase::CloneInitial;
-                } else if right >= envelope.vcs.edits.len() {
-                    self.phase = GisMapStoreInitializationPhase::ValidateEditPair { left: left + 1, right: left + 2 };
-                } else if envelope.vcs.edits[left].id == envelope.vcs.edits[right].id || envelope.vcs.edits[left].id.len() > GIS_MAP_OWNED_FIELD_BYTES {
-                    self.fail(b"gis-map-store.initializer-duplicate-or-hostile-edit");
-                } else {
-                    self.phase = GisMapStoreInitializationPhase::ValidateEditPair { left, right: right + 1 };
+                match self.edit_index.admit(&envelope.vcs.edits, index, GIS_MAP_OWNED_FIELD_BYTES) {
+                    store::ArtifactStoreInitializationEditAdmission::Complete => self.phase = GisMapStoreInitializationPhase::CloneInitial,
+                    store::ArtifactStoreInitializationEditAdmission::Admitted => self.phase = GisMapStoreInitializationPhase::ValidateEdit { index: index + 1 },
+                    store::ArtifactStoreInitializationEditAdmission::Oversized | store::ArtifactStoreInitializationEditAdmission::Duplicate => self.fail(b"gis-map-store.initializer-duplicate-or-hostile-edit"),
                 }
                 cx.consume_fuel(1);
                 semio_framework_job::StepOutcome::Yield
@@ -946,7 +934,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<GisMapSnapshot
             GisMapStoreInitializationPhase::CloneInitial => {
                 let source = &self.envelope.as_ref().expect("GIS envelope remains retained during initial clone").vcs.initial_snapshot;
                 let clone = self.clone.as_mut().expect("GIS initial clone authority remains retained");
-                let complete = match clone.step(source, self.initial_digest.as_mut().expect("GIS initial digest remains retained"), cx) {
+                let complete = match clone.step(source, cx) {
                     Ok(complete) => complete,
                     Err(code) => {
                         self.fail(code.as_bytes());
@@ -956,7 +944,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<GisMapSnapshot
                 if complete {
                     let initial = clone.take_value().expect("GIS initial snapshot was built one semantic item at a time");
                     drop(self.clone.take());
-                    let initial_digest = self.initial_digest.take().expect("GIS initial digest remains retained").finish();
+                    let initial_digest = store::artifact_initial_digest(&initial);
                     let envelope = self.envelope.as_ref().expect("GIS envelope remains retained during runtime construction");
                     *self.runtime = Some(store::ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, initial, initial_digest));
                     self.phase = GisMapStoreInitializationPhase::SeedHistory { edit: 0, lane: 0, index: 0 };
@@ -966,7 +954,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<GisMapSnapshot
             GisMapStoreInitializationPhase::SeedHistory { edit, lane, index } => {
                 let envelope = self.envelope.as_ref().expect("GIS envelope remains retained while causal history is seeded");
                 let Some(entry) = envelope.vcs.edits.get(edit) else {
-                    self.phase = GisMapStoreInitializationPhase::FindApplied { position: 0, scan: 0 };
+                    self.phase = GisMapStoreInitializationPhase::FoldSupersessions { transition: 0 };
                     return semio_framework_job::StepOutcome::Yield;
                 };
                 let runtime = self.runtime.as_mut().expect("GIS runtime remains retained while history is seeded");
@@ -999,160 +987,97 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<GisMapSnapshot
                 cx.consume_fuel(1);
                 semio_framework_job::StepOutcome::Yield
             }
-            GisMapStoreInitializationPhase::FindApplied { position, scan } => {
+            GisMapStoreInitializationPhase::FoldSupersessions { transition } => {
+                let envelope = self.envelope.as_ref().expect("GIS envelope remains retained while its supersessions fold");
+                match self.runtime.as_mut().expect("GIS runtime remains retained while its supersessions fold").fold_supersession_step(envelope, transition) {
+                    Ok(true) => self.phase = GisMapStoreInitializationPhase::FoldSupersessions { transition: transition + 1 },
+                    Ok(false) => self.phase = GisMapStoreInitializationPhase::FindApplied { position: 0 },
+                    Err(error) => {
+                        self.fault = Some(error.into_bytes());
+                        self.phase = GisMapStoreInitializationPhase::RetireFault;
+                    }
+                }
+                cx.consume_fuel(1);
+                semio_framework_job::StepOutcome::Yield
+            }
+            GisMapStoreInitializationPhase::FindApplied { position } => {
                 let Some(id) = self.applied_id(position) else {
                     let checkpoint = self.envelope.as_ref().and_then(|envelope| envelope.cursor.as_ref().and_then(|cursor| cursor.checkpoint_id.clone()).or_else(|| envelope.vcs.checkpoints.last().map(|checkpoint| checkpoint.id.clone())));
                     self.runtime.as_mut().expect("GIS runtime remains retained").set_current_checkpoint_id(checkpoint);
-                    self.phase = GisMapStoreInitializationPhase::FindRedo { position: 0, scan: 0 };
+                    self.phase = GisMapStoreInitializationPhase::FindRedo { position: 0 };
                     return semio_framework_job::StepOutcome::Yield;
                 };
+                let scan = self.edit_index.position(&id).unwrap_or(usize::MAX);
                 let envelope = self.envelope.as_ref().expect("GIS envelope remains retained");
                 let Some(edit) = envelope.vcs.edits.get(scan) else {
                     self.fail(b"gis-map-store.initializer-applied-edit-missing");
                     return semio_framework_job::StepOutcome::Yield;
                 };
                 if edit.id == id {
-                    let mut digest = store::ArtifactStoreInitializationDigest::new(b"gis-map.edit");
-                    digest.observe(edit.id.as_bytes());
-                    digest.observe(&edit.sequence_number.to_be_bytes());
-                    digest.observe(edit.started_at.as_bytes());
-                    *self.edit_digest = Some(digest);
                     self.phase = GisMapStoreInitializationPhase::ApplyForward { position, edit: scan, mutation: 0 };
                 } else {
-                    self.phase = GisMapStoreInitializationPhase::FindApplied { position, scan: scan + 1 };
+                    self.fail(b"gis-map-store.initializer-applied-edit-missing");
                 }
                 cx.consume_fuel(1);
                 semio_framework_job::StepOutcome::Yield
             }
             GisMapStoreInitializationPhase::ApplyForward { position, edit, mutation } => {
-                let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("GIS applied edit remains retained");
-                let Some(operation) = entry.forwards.get(mutation) else {
-                    self.phase = GisMapStoreInitializationPhase::HashInverse { position, edit, mutation: 0 };
-                    return semio_framework_job::StepOutcome::Yield;
-                };
-                let encoded = match operation.encode_op() {
-                    Ok(encoded) if encoded.len() <= GIS_MAP_OWNED_FIELD_BYTES => encoded,
-                    _ => {
-                        self.fail(b"gis-map-store.initializer-forward-encoding");
-                        return semio_framework_job::StepOutcome::Yield;
-                    }
-                };
-                self.edit_digest.as_mut().expect("GIS edit digest remains retained").observe(&encoded);
-                let current = self.runtime.as_mut().and_then(store::ArtifactStoreInitializationRuntime::current_mut).expect("GIS runtime current snapshot remains retained");
-                let (diff, messages) = operation.diff(current).into_parts();
-                if messages.iter().any(|message| message.level == protocol::Severity::Fatal) {
-                    self.fail(b"gis-map-store.initializer-fatal-mutation");
-                    return semio_framework_job::StepOutcome::Yield;
-                }
-                match diff.apply(current) {
-                    Ok(next) => {
-                        let previous = std::mem::replace(current, next);
-                        *self.active = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&GisMapSnapshotRetirementFactory, previous));
+                let envelope = self.envelope.as_ref().expect("GIS envelope remains retained while its forwards fold");
+                let entry = envelope.vcs.edits.get(edit).expect("GIS applied edit remains retained");
+                match self.runtime.as_mut().expect("GIS runtime remains retained while its forwards fold").fold_forward(entry, mutation, &envelope.schema, GIS_MAP_OWNED_FIELD_BYTES) {
+                    Ok(store::ArtifactStoreInitializationForward::Folded { displaced, fuel }) => {
+                        if let Some(previous) = displaced {
+                            *self.active = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&GisMapSnapshotRetirementFactory, previous));
+                        }
                         self.phase = GisMapStoreInitializationPhase::ApplyForward { position, edit, mutation: mutation + 1 };
-                        cx.consume_fuel(encoded.len().max(1) as u64);
+                        cx.consume_fuel(fuel as u64);
                     }
-                    Err(error) => {
-                        self.fault = Some(error.to_string().into_bytes());
-                        self.phase = GisMapStoreInitializationPhase::RetireFault;
-                    }
-                }
-                semio_framework_job::StepOutcome::Yield
-            }
-            GisMapStoreInitializationPhase::HashInverse { position, edit, mutation } => {
-                let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("GIS applied edit remains retained");
-                let Some(operation) = entry.inverse.get(mutation) else {
-                    self.phase = GisMapStoreInitializationPhase::CommitApplied { position, edit };
-                    return semio_framework_job::StepOutcome::Yield;
-                };
-                match operation.encode_op() {
-                    Ok(encoded) if encoded.len() <= GIS_MAP_OWNED_FIELD_BYTES => {
-                        self.edit_digest.as_mut().expect("GIS edit digest remains retained").observe(&encoded);
-                        self.phase = GisMapStoreInitializationPhase::HashInverse { position, edit, mutation: mutation + 1 };
-                        cx.consume_fuel(encoded.len().max(1) as u64);
-                    }
-                    _ => self.fail(b"gis-map-store.initializer-inverse-encoding"),
+                    Ok(store::ArtifactStoreInitializationForward::Exhausted) => self.phase = GisMapStoreInitializationPhase::CommitApplied { position, edit },
+                    Err(_) => self.fail(b"gis-map-store.initializer-forward-encoding"),
                 }
                 semio_framework_job::StepOutcome::Yield
             }
             GisMapStoreInitializationPhase::CommitApplied { position, edit } => {
                 let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("GIS applied edit remains retained");
-                let id = entry.id.clone();
                 let actor = entry.actor.clone();
-                let digest = self.edit_digest.take().expect("GIS applied edit digest remains retained").finish();
                 let runtime = self.runtime.as_mut().expect("GIS runtime remains retained");
-                if let Err(error) = runtime.push_applied(id, digest) {
+                if let Err(error) = runtime.push_applied_edit(entry) {
                     self.fault = Some(error.into_bytes());
                     self.phase = GisMapStoreInitializationPhase::RetireFault;
                 } else {
                     runtime.set_local_actor_id(actor);
-                    self.phase = GisMapStoreInitializationPhase::FindApplied { position: position + 1, scan: 0 };
+                    self.phase = GisMapStoreInitializationPhase::FindApplied { position: position + 1 };
                 }
                 cx.consume_fuel(1);
                 semio_framework_job::StepOutcome::Yield
             }
-            GisMapStoreInitializationPhase::FindRedo { position, scan } => {
+            GisMapStoreInitializationPhase::FindRedo { position } => {
                 let Some(id) = self.redo_id(position) else {
+                    self.edit_index.clear();
                     self.phase = GisMapStoreInitializationPhase::BuildCandidate;
                     return semio_framework_job::StepOutcome::Yield;
                 };
+                let scan = self.edit_index.position(&id).unwrap_or(usize::MAX);
                 let envelope = self.envelope.as_ref().expect("GIS envelope remains retained");
                 let Some(edit) = envelope.vcs.edits.get(scan) else {
                     self.fail(b"gis-map-store.initializer-redo-edit-missing");
                     return semio_framework_job::StepOutcome::Yield;
                 };
                 if edit.id == id {
-                    let mut digest = store::ArtifactStoreInitializationDigest::new(b"gis-map.edit");
-                    digest.observe(edit.id.as_bytes());
-                    digest.observe(&edit.sequence_number.to_be_bytes());
-                    digest.observe(edit.started_at.as_bytes());
-                    *self.edit_digest = Some(digest);
-                    self.phase = GisMapStoreInitializationPhase::HashRedoForward { position, edit: scan, mutation: 0 };
+                    self.phase = GisMapStoreInitializationPhase::CommitRedo { position, edit: scan };
                 } else {
-                    self.phase = GisMapStoreInitializationPhase::FindRedo { position, scan: scan + 1 };
+                    self.fail(b"gis-map-store.initializer-redo-edit-missing");
                 }
                 cx.consume_fuel(1);
                 semio_framework_job::StepOutcome::Yield
             }
-            GisMapStoreInitializationPhase::HashRedoForward { position, edit, mutation } => {
-                let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("GIS redo edit remains retained");
-                let Some(operation) = entry.forwards.get(mutation) else {
-                    self.phase = GisMapStoreInitializationPhase::HashRedoInverse { position, edit, mutation: 0 };
-                    return semio_framework_job::StepOutcome::Yield;
-                };
-                match operation.encode_op() {
-                    Ok(encoded) if encoded.len() <= GIS_MAP_OWNED_FIELD_BYTES => {
-                        self.edit_digest.as_mut().expect("GIS redo digest remains retained").observe(&encoded);
-                        self.phase = GisMapStoreInitializationPhase::HashRedoForward { position, edit, mutation: mutation + 1 };
-                        cx.consume_fuel(encoded.len().max(1) as u64);
-                    }
-                    _ => self.fail(b"gis-map-store.initializer-redo-forward-encoding"),
-                }
-                semio_framework_job::StepOutcome::Yield
-            }
-            GisMapStoreInitializationPhase::HashRedoInverse { position, edit, mutation } => {
-                let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("GIS redo edit remains retained");
-                let Some(operation) = entry.inverse.get(mutation) else {
-                    self.phase = GisMapStoreInitializationPhase::CommitRedo { position, edit };
-                    return semio_framework_job::StepOutcome::Yield;
-                };
-                match operation.encode_op() {
-                    Ok(encoded) if encoded.len() <= GIS_MAP_OWNED_FIELD_BYTES => {
-                        self.edit_digest.as_mut().expect("GIS redo digest remains retained").observe(&encoded);
-                        self.phase = GisMapStoreInitializationPhase::HashRedoInverse { position, edit, mutation: mutation + 1 };
-                        cx.consume_fuel(encoded.len().max(1) as u64);
-                    }
-                    _ => self.fail(b"gis-map-store.initializer-redo-inverse-encoding"),
-                }
-                semio_framework_job::StepOutcome::Yield
-            }
             GisMapStoreInitializationPhase::CommitRedo { position, edit } => {
-                let id = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("GIS redo edit remains retained").id.clone();
-                let digest = self.edit_digest.take().expect("GIS redo digest remains retained").finish();
-                if let Err(error) = self.runtime.as_mut().expect("GIS runtime remains retained").push_redo(id, digest) {
+                let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("GIS redo edit remains retained");
+                if let Err(error) = self.runtime.as_mut().expect("GIS runtime remains retained").push_redo_edit(entry) {
                     self.fault = Some(error.into_bytes());
                     self.phase = GisMapStoreInitializationPhase::RetireFault;
                 } else {
-                    self.phase = GisMapStoreInitializationPhase::FindRedo { position: position + 1, scan: 0 };
+                    self.phase = GisMapStoreInitializationPhase::FindRedo { position: position + 1 };
                 }
                 cx.consume_fuel(1);
                 semio_framework_job::StepOutcome::Yield
@@ -1175,8 +1100,6 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<GisMapSnapshot
             GisMapStoreInitializationPhase::RetireCancelled | GisMapStoreInitializationPhase::RetireFault => match self.pump_terminal_retirement() {
                 Ok(false) => semio_framework_job::StepOutcome::Yield,
                 Ok(true) => {
-                    *self.initial_digest = None;
-                    *self.edit_digest = None;
                     self.terminal_handoff = true;
                     if self.phase == GisMapStoreInitializationPhase::RetireCancelled {
                         self.phase = GisMapStoreInitializationPhase::Cancelled;
@@ -1217,7 +1140,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<GisMapSnapshot
         }
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, protocol::Fault> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, semio_framework_diagnostic::Fault> {
         self.begin_close();
         if maximum_items == 0 || maximum_bytes < GIS_MAP_OWNED_FIELD_BYTES {
             return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
@@ -1225,12 +1148,10 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<GisMapSnapshot
         match self.pump_terminal_retirement() {
             Ok(false) => Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }),
             Ok(true) => {
-                *self.initial_digest = None;
-                *self.edit_digest = None;
                 self.terminal_handoff = true;
                 Ok(semio_framework_plugin::PluginCloseStep::Complete)
             }
-            Err(error) => Err(protocol::Fault::new(protocol::FaultOrigin::Plugin, protocol::FaultCode::new("artifact-store.initializer-close"), format!("GIS Map initializer close failed: {error}"))),
+            Err(error) => Err(semio_framework_diagnostic::Fault::new(semio_framework_diagnostic::FaultOrigin::Plugin, semio_framework_diagnostic::FaultCode::new("artifact-store.initializer-close"), format!("GIS Map initializer close failed: {error}"))),
         }
     }
 
@@ -1239,8 +1160,6 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<GisMapSnapshot
             return None;
         }
         let candidate = self.candidate.take()?;
-        *self.initial_digest = None;
-        *self.edit_digest = None;
         self.terminal_handoff = true;
         Some(candidate)
     }

@@ -1,0 +1,58 @@
+{
+  "contract": "completeCsvLogicalOwner",
+  "encodings": [
+    "binary",
+    "text"
+  ],
+  "snapshots": [
+    {
+      "schema": "csv.owner.雪\u0000",
+      "hasHeader": false,
+      "records": [
+        {
+          "fields": []
+        },
+        {
+          "fields": [
+            {
+              "value": "Grüße,\n\"雪\"\u0000",
+              "quoted": false
+            },
+            {
+              "value": "",
+              "quoted": true
+            }
+          ]
+        },
+        {
+          "fields": [
+            {
+              "value": "",
+              "quoted": false
+            }
+          ]
+        },
+        {
+          "fields": []
+        }
+      ]
+    },
+    {
+      "schema": "",
+      "hasHeader": true,
+      "records": []
+    }
+  ],
+  "policy": {
+    "preserveSchema": true,
+    "preserveHasHeader": true,
+    "preserveQuoted": true,
+    "preserveEmptyRecord": true,
+    "nativeOwner": "declaredLogicalRecord",
+    "naturalFile": "rfc4180"
+  },
+  "edit": {
+    "query": "UPDATE csv_document SET has_header=1",
+    "snapshotIndex": 0
+  }
+}

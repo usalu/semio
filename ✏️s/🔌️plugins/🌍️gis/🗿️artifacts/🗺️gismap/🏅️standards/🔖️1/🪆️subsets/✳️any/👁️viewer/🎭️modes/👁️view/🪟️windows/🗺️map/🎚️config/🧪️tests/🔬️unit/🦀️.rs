@@ -29,7 +29,7 @@ fn set_camera_replaces_the_camera_and_inverts_back_to_the_base() {
     let next = mutation.diff(&base).diff().apply(&base).expect("the camera applies");
     assert_eq!(next.camera, camera());
     let mut restored = next;
-    for inverse in mutation.inverse(&base) {
+    for inverse in mutation.inverse(&base).expect("valid retained mutation inverse fixture") {
         restored = inverse.diff(&restored).diff().apply(&restored).expect("the inverse applies");
     }
     assert_eq!(restored, base, "panning back is exactly the inverse");
@@ -42,7 +42,7 @@ fn re_setting_the_same_camera_is_a_declared_no_op() {
     let outcome = mutation.diff(&base);
     assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.no-op"), "a debounced duplicate must not publish a change");
     assert_eq!(outcome.diff().apply(&base).expect("the whole-record no-op applies"), base, "the no-op keeps the camera instead of resetting the record");
-    assert!(mutation.inverse(&base).is_empty(), "a no-op has no inverse");
+    assert!(mutation.inverse(&base).expect("valid retained mutation inverse fixture").is_empty(), "a no-op has no inverse");
 }
 
 #[test]

@@ -1,0 +1,395 @@
+{
+  "format": 2,
+  "capturedAt": "2026-10-02T20:49:36.540Z",
+  "authority": "Observed independent Value Type production/schema/test additions; author unknown. SourceReady admission is bounded current input authority, not Value runtime verification or original production body preservation",
+  "rows": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🏷️type/🧫️fixtures/🔣️.json",
+      "originalBytes": 8636,
+      "originalSha256": "742d5b515ab0dfeb1ae784b7323f071065f91ecb9d1d52dbb14ab353c62ea891",
+      "originalComplete": "{\n  \"schemaVersion\": 1,\n  \"types\": [\n    {\n      \"id\": \"boolean\",\n      \"type\": {\n        \"kind\": \"boolean\"\n      }\n    },\n    {\n      \"id\": \"integer\",\n      \"type\": {\n        \"kind\": \"integer\"\n      }\n    },\n    {\n      \"id\": \"number\",\n      \"type\": {\n        \"kind\": \"decimal\"\n      }\n    },\n    {\n      \"id\": \"text\",\n      \"type\": {\n        \"kind\": \"text\"\n      }\n    },\n    {\n      \"id\": \"list\",\n      \"type\": {\n        \"kind\": \"list\",\n        \"of\": {\n          \"kind\": \"boolean\"\n        }\n      }\n    },\n    {\n      \"id\": \"point\",\n      \"type\": {\n        \"kind\": \"schema\",\n        \"of\": \"point\"\n      }\n    },\n    {\n      \"id\": \"value\",\n      \"type\": {\n        \"kind\": \"any\"\n      }\n    }\n  ],\n  \"kinds\": [\n    {\n      \"kind\": \"null\"\n    },\n    {\n      \"kind\": \"boolean\"\n    },\n    {\n      \"kind\": \"integer\"\n    },\n    {\n      \"kind\": \"decimal\"\n    },\n    {\n      \"kind\": \"text\"\n    },\n    {\n      \"kind\": \"dictionary\"\n    },\n    {\n      \"kind\": \"dictionary\",\n      \"schema\": \"list\"\n    },\n    {\n      \"kind\": \"dictionary\",\n      \"schema\": \"point\"\n    },\n    {\n      \"kind\": \"dictionary\",\n      \"schema\": \"\"\n    }\n  ],\n  \"cases\": [\n    {\n      \"name\": \"boolean-null-0\",\n      \"type\": 0,\n      \"kind\": 0,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"boolean-boolean-1\",\n      \"type\": 0,\n      \"kind\": 1,\n      \"accepted\": true\n    },\n    {\n      \"name\": \"boolean-integer-2\",\n      \"type\": 0,\n      \"kind\": 2,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"boolean-decimal-3\",\n      \"type\": 0,\n      \"kind\": 3,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"boolean-text-4\",\n      \"type\": 0,\n      \"kind\": 4,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"boolean-dictionary-5\",\n      \"type\": 0,\n      \"kind\": 5,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"boolean-dictionary-6\",\n      \"type\": 0,\n      \"kind\": 6,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"boolean-dictionary-7\",\n      \"type\": 0,\n      \"kind\": 7,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"boolean-dictionary-8\",\n      \"type\": 0,\n      \"kind\": 8,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"integer-null-0\",\n      \"type\": 1,\n      \"kind\": 0,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"integer-boolean-1\",\n      \"type\": 1,\n      \"kind\": 1,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"integer-integer-2\",\n      \"type\": 1,\n      \"kind\": 2,\n      \"accepted\": true\n    },\n    {\n      \"name\": \"integer-decimal-3\",\n      \"type\": 1,\n      \"kind\": 3,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"integer-text-4\",\n      \"type\": 1,\n      \"kind\": 4,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"integer-dictionary-5\",\n      \"type\": 1,\n      \"kind\": 5,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"integer-dictionary-6\",\n      \"type\": 1,\n      \"kind\": 6,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"integer-dictionary-7\",\n      \"type\": 1,\n      \"kind\": 7,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"integer-dictionary-8\",\n      \"type\": 1,\n      \"kind\": 8,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"number-null-0\",\n      \"type\": 2,\n      \"kind\": 0,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"number-boolean-1\",\n      \"type\": 2,\n      \"kind\": 1,\n      \"accepted\": true\n    },\n    {\n      \"name\": \"number-integer-2\",\n      \"type\": 2,\n      \"kind\": 2,\n      \"accepted\": true\n    },\n    {\n      \"name\": \"number-decimal-3\",\n      \"type\": 2,\n      \"kind\": 3,\n      \"accepted\": true\n    },\n    {\n      \"name\": \"number-text-4\",\n      \"type\": 2,\n      \"kind\": 4,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"number-dictionary-5\",\n      \"type\": 2,\n      \"kind\": 5,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"number-dictionary-6\",\n      \"type\": 2,\n      \"kind\": 6,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"number-dictionary-7\",\n      \"type\": 2,\n      \"kind\": 7,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"number-dictionary-8\",\n      \"type\": 2,\n      \"kind\": 8,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"text-null-0\",\n      \"type\": 3,\n      \"kind\": 0,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"text-boolean-1\",\n      \"type\": 3,\n      \"kind\": 1,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"text-integer-2\",\n      \"type\": 3,\n      \"kind\": 2,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"text-decimal-3\",\n      \"type\": 3,\n      \"kind\": 3,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"text-text-4\",\n      \"type\": 3,\n      \"kind\": 4,\n      \"accepted\": true\n    },\n    {\n      \"name\": \"text-dictionary-5\",\n      \"type\": 3,\n      \"kind\": 5,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"text-dictionary-6\",\n      \"type\": 3,\n      \"kind\": 6,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"text-dictionary-7\",\n      \"type\": 3,\n      \"kind\": 7,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"text-dictionary-8\",\n      \"type\": 3,\n      \"kind\": 8,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"list-null-0\",\n      \"type\": 4,\n      \"kind\": 0,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"list-boolean-1\",\n      \"type\": 4,\n      \"kind\": 1,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"list-integer-2\",\n      \"type\": 4,\n      \"kind\": 2,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"list-decimal-3\",\n      \"type\": 4,\n      \"kind\": 3,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"list-text-4\",\n      \"type\": 4,\n      \"kind\": 4,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"list-dictionary-5\",\n      \"type\": 4,\n      \"kind\": 5,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"list-dictionary-6\",\n      \"type\": 4,\n      \"kind\": 6,\n      \"accepted\": true\n    },\n    {\n      \"name\": \"list-dictionary-7\",\n      \"type\": 4,\n      \"kind\": 7,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"list-dictionary-8\",\n      \"type\": 4,\n      \"kind\": 8,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"point-null-0\",\n      \"type\": 5,\n      \"kind\": 0,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"point-boolean-1\",\n      \"type\": 5,\n      \"kind\": 1,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"point-integer-2\",\n      \"type\": 5,\n      \"kind\": 2,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"point-decimal-3\",\n      \"type\": 5,\n      \"kind\": 3,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"point-text-4\",\n      \"type\": 5,\n      \"kind\": 4,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"point-dictionary-5\",\n      \"type\": 5,\n      \"kind\": 5,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"point-dictionary-6\",\n      \"type\": 5,\n      \"kind\": 6,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"point-dictionary-7\",\n      \"type\": 5,\n      \"kind\": 7,\n      \"accepted\": true\n    },\n    {\n      \"name\": \"point-dictionary-8\",\n      \"type\": 5,\n      \"kind\": 8,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"value-null-0\",\n      \"type\": 6,\n      \"kind\": 0,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"value-boolean-1\",\n      \"type\": 6,\n      \"kind\": 1,\n      \"accepted\": true\n    },\n    {\n      \"name\": \"value-integer-2\",\n      \"type\": 6,\n      \"kind\": 2,\n      \"accepted\": true\n    },\n    {\n      \"name\": \"value-decimal-3\",\n      \"type\": 6,\n      \"kind\": 3,\n      \"accepted\": true\n    },\n    {\n      \"name\": \"value-text-4\",\n      \"type\": 6,\n      \"kind\": 4,\n      \"accepted\": true\n    },\n    {\n      \"name\": \"value-dictionary-5\",\n      \"type\": 6,\n      \"kind\": 5,\n      \"accepted\": true\n    },\n    {\n      \"name\": \"value-dictionary-6\",\n      \"type\": 6,\n      \"kind\": 6,\n      \"accepted\": true\n    },\n    {\n      \"name\": \"value-dictionary-7\",\n      \"type\": 6,\n      \"kind\": 7,\n      \"accepted\": true\n    },\n    {\n      \"name\": \"value-dictionary-8\",\n      \"type\": 6,\n      \"kind\": 8,\n      \"accepted\": true\n    }\n  ],\n  \"wire\": [\n    {\n      \"kind\": \"boolean\"\n    },\n    {\n      \"kind\": \"integer\"\n    },\n    {\n      \"kind\": \"decimal\"\n    },\n    {\n      \"kind\": \"text\"\n    },\n    {\n      \"kind\": \"list\",\n      \"of\": {\n        \"kind\": \"boolean\"\n      }\n    },\n    {\n      \"kind\": \"schema\",\n      \"of\": \"point\"\n    },\n    {\n      \"kind\": \"any\"\n    },\n    {\n      \"kind\": \"list\",\n      \"of\": {\n        \"kind\": \"list\",\n        \"of\": {\n          \"kind\": \"text\"\n        }\n      }\n    }\n  ],\n  \"refused\": [\n    null,\n    true,\n    0,\n    \"boolean\",\n    {},\n    [],\n    {\n      \"kind\": \"wrong\"\n    },\n    {\n      \"kind\": \"list\"\n    },\n    {\n      \"kind\": \"schema\"\n    },\n    {\n      \"kind\": \"schema\",\n      \"of\": 0\n    },\n    {\n      \"kind\": \"boolean\",\n      \"of\": \"wrong\"\n    },\n    {\n      \"kind\": \"any\",\n      \"extra\": true\n    },\n    {\n      \"kind\": \"schema\",\n      \"of\": \"point\",\n      \"extra\": true\n    }\n  ]\n}\n",
+      "originalInverseVerified": true,
+      "originalAuthority": "Exact original bytes cryptographically bound to SourceReady1",
+      "currentComplete": "{\n  \"schemaVersion\": 1,\n  \"types\": [\n    {\n      \"id\": \"boolean\",\n      \"type\": {\n        \"kind\": \"boolean\"\n      }\n    },\n    {\n      \"id\": \"integer\",\n      \"type\": {\n        \"kind\": \"integer\"\n      }\n    },\n    {\n      \"id\": \"number\",\n      \"type\": {\n        \"kind\": \"decimal\"\n      }\n    },\n    {\n      \"id\": \"text\",\n      \"type\": {\n        \"kind\": \"text\"\n      }\n    },\n    {\n      \"id\": \"list\",\n      \"type\": {\n        \"kind\": \"list\",\n        \"of\": {\n          \"kind\": \"boolean\"\n        }\n      }\n    },\n    {\n      \"id\": \"point\",\n      \"type\": {\n        \"kind\": \"schema\",\n        \"of\": \"point\"\n      }\n    },\n    {\n      \"id\": \"value\",\n      \"type\": {\n        \"kind\": \"any\"\n      }\n    }\n  ],\n  \"kinds\": [\n    {\n      \"kind\": \"null\"\n    },\n    {\n      \"kind\": \"boolean\"\n    },\n    {\n      \"kind\": \"integer\"\n    },\n    {\n      \"kind\": \"decimal\"\n    },\n    {\n      \"kind\": \"text\"\n    },\n    {\n      \"kind\": \"dictionary\"\n    },\n    {\n      \"kind\": \"dictionary\",\n      \"schema\": \"list\"\n    },\n    {\n      \"kind\": \"dictionary\",\n      \"schema\": \"point\"\n    },\n    {\n      \"kind\": \"dictionary\",\n      \"schema\": \"\"\n    }\n  ],\n  \"cases\": [\n    {\n      \"name\": \"boolean-null-0\",\n      \"type\": 0,\n      \"kind\": 0,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"boolean-boolean-1\",\n      \"type\": 0,\n      \"kind\": 1,\n      \"accepted\": true\n    },\n    {\n      \"name\": \"boolean-integer-2\",\n      \"type\": 0,\n      \"kind\": 2,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"boolean-decimal-3\",\n      \"type\": 0,\n      \"kind\": 3,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"boolean-text-4\",\n      \"type\": 0,\n      \"kind\": 4,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"boolean-dictionary-5\",\n      \"type\": 0,\n      \"kind\": 5,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"boolean-dictionary-6\",\n      \"type\": 0,\n      \"kind\": 6,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"boolean-dictionary-7\",\n      \"type\": 0,\n      \"kind\": 7,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"boolean-dictionary-8\",\n      \"type\": 0,\n      \"kind\": 8,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"integer-null-0\",\n      \"type\": 1,\n      \"kind\": 0,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"integer-boolean-1\",\n      \"type\": 1,\n      \"kind\": 1,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"integer-integer-2\",\n      \"type\": 1,\n      \"kind\": 2,\n      \"accepted\": true\n    },\n    {\n      \"name\": \"integer-decimal-3\",\n      \"type\": 1,\n      \"kind\": 3,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"integer-text-4\",\n      \"type\": 1,\n      \"kind\": 4,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"integer-dictionary-5\",\n      \"type\": 1,\n      \"kind\": 5,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"integer-dictionary-6\",\n      \"type\": 1,\n      \"kind\": 6,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"integer-dictionary-7\",\n      \"type\": 1,\n      \"kind\": 7,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"integer-dictionary-8\",\n      \"type\": 1,\n      \"kind\": 8,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"number-null-0\",\n      \"type\": 2,\n      \"kind\": 0,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"number-boolean-1\",\n      \"type\": 2,\n      \"kind\": 1,\n      \"accepted\": true\n    },\n    {\n      \"name\": \"number-integer-2\",\n      \"type\": 2,\n      \"kind\": 2,\n      \"accepted\": true\n    },\n    {\n      \"name\": \"number-decimal-3\",\n      \"type\": 2,\n      \"kind\": 3,\n      \"accepted\": true\n    },\n    {\n      \"name\": \"number-text-4\",\n      \"type\": 2,\n      \"kind\": 4,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"number-dictionary-5\",\n      \"type\": 2,\n      \"kind\": 5,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"number-dictionary-6\",\n      \"type\": 2,\n      \"kind\": 6,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"number-dictionary-7\",\n      \"type\": 2,\n      \"kind\": 7,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"number-dictionary-8\",\n      \"type\": 2,\n      \"kind\": 8,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"text-null-0\",\n      \"type\": 3,\n      \"kind\": 0,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"text-boolean-1\",\n      \"type\": 3,\n      \"kind\": 1,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"text-integer-2\",\n      \"type\": 3,\n      \"kind\": 2,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"text-decimal-3\",\n      \"type\": 3,\n      \"kind\": 3,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"text-text-4\",\n      \"type\": 3,\n      \"kind\": 4,\n      \"accepted\": true\n    },\n    {\n      \"name\": \"text-dictionary-5\",\n      \"type\": 3,\n      \"kind\": 5,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"text-dictionary-6\",\n      \"type\": 3,\n      \"kind\": 6,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"text-dictionary-7\",\n      \"type\": 3,\n      \"kind\": 7,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"text-dictionary-8\",\n      \"type\": 3,\n      \"kind\": 8,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"list-null-0\",\n      \"type\": 4,\n      \"kind\": 0,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"list-boolean-1\",\n      \"type\": 4,\n      \"kind\": 1,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"list-integer-2\",\n      \"type\": 4,\n      \"kind\": 2,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"list-decimal-3\",\n      \"type\": 4,\n      \"kind\": 3,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"list-text-4\",\n      \"type\": 4,\n      \"kind\": 4,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"list-dictionary-5\",\n      \"type\": 4,\n      \"kind\": 5,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"list-dictionary-6\",\n      \"type\": 4,\n      \"kind\": 6,\n      \"accepted\": true\n    },\n    {\n      \"name\": \"list-dictionary-7\",\n      \"type\": 4,\n      \"kind\": 7,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"list-dictionary-8\",\n      \"type\": 4,\n      \"kind\": 8,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"point-null-0\",\n      \"type\": 5,\n      \"kind\": 0,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"point-boolean-1\",\n      \"type\": 5,\n      \"kind\": 1,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"point-integer-2\",\n      \"type\": 5,\n      \"kind\": 2,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"point-decimal-3\",\n      \"type\": 5,\n      \"kind\": 3,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"point-text-4\",\n      \"type\": 5,\n      \"kind\": 4,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"point-dictionary-5\",\n      \"type\": 5,\n      \"kind\": 5,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"point-dictionary-6\",\n      \"type\": 5,\n      \"kind\": 6,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"point-dictionary-7\",\n      \"type\": 5,\n      \"kind\": 7,\n      \"accepted\": true\n    },\n    {\n      \"name\": \"point-dictionary-8\",\n      \"type\": 5,\n      \"kind\": 8,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"value-null-0\",\n      \"type\": 6,\n      \"kind\": 0,\n      \"accepted\": false\n    },\n    {\n      \"name\": \"value-boolean-1\",\n      \"type\": 6,\n      \"kind\": 1,\n      \"accepted\": true\n    },\n    {\n      \"name\": \"value-integer-2\",\n      \"type\": 6,\n      \"kind\": 2,\n      \"accepted\": true\n    },\n    {\n      \"name\": \"value-decimal-3\",\n      \"type\": 6,\n      \"kind\": 3,\n      \"accepted\": true\n    },\n    {\n      \"name\": \"value-text-4\",\n      \"type\": 6,\n      \"kind\": 4,\n      \"accepted\": true\n    },\n    {\n      \"name\": \"value-dictionary-5\",\n      \"type\": 6,\n      \"kind\": 5,\n      \"accepted\": true\n    },\n    {\n      \"name\": \"value-dictionary-6\",\n      \"type\": 6,\n      \"kind\": 6,\n      \"accepted\": true\n    },\n    {\n      \"name\": \"value-dictionary-7\",\n      \"type\": 6,\n      \"kind\": 7,\n      \"accepted\": true\n    },\n    {\n      \"name\": \"value-dictionary-8\",\n      \"type\": 6,\n      \"kind\": 8,\n      \"accepted\": true\n    }\n  ],\n  \"wire\": [\n    {\n      \"kind\": \"boolean\"\n    },\n    {\n      \"kind\": \"integer\"\n    },\n    {\n      \"kind\": \"decimal\"\n    },\n    {\n      \"kind\": \"text\"\n    },\n    {\n      \"kind\": \"list\",\n      \"of\": {\n        \"kind\": \"boolean\"\n      }\n    },\n    {\n      \"kind\": \"schema\",\n      \"of\": \"point\"\n    },\n    {\n      \"kind\": \"any\"\n    },\n    {\n      \"kind\": \"list\",\n      \"of\": {\n        \"kind\": \"list\",\n        \"of\": {\n          \"kind\": \"text\"\n        }\n      }\n    }\n  ],\n  \"refused\": [\n    null,\n    true,\n    0,\n    \"boolean\",\n    {},\n    [],\n    {\n      \"kind\": \"wrong\"\n    },\n    {\n      \"kind\": \"list\"\n    },\n    {\n      \"kind\": \"schema\"\n    },\n    {\n      \"kind\": \"schema\",\n      \"of\": 0\n    },\n    {\n      \"kind\": \"boolean\",\n      \"of\": \"wrong\"\n    },\n    {\n      \"kind\": \"any\",\n      \"extra\": true\n    },\n    {\n      \"kind\": \"schema\",\n      \"of\": \"point\",\n      \"extra\": true\n    }\n  ],\n  \"nativeControls\": {\n    \"depth\": 300,\n    \"longSchema\": \"引用😀\",\n    \"repeat\": 20000,\n    \"cancelAt\": 256\n  }\n}\n",
+      "currentBytes": 8754,
+      "currentSha256": "6cbc3ef7d27696f18fa610dc94dee75e05438670e8b1225d60e8de00820c073d",
+      "edits": [
+        {
+          "start": 8633,
+          "end": 8633,
+          "from": "",
+          "to": ","
+        },
+        {
+          "start": 8634,
+          "end": 8634,
+          "from": "",
+          "to": "  \"nativeControls\": {\n    \"depth\": 300,\n    \"longSchema\": \"引用😀\",\n    \"repeat\": 20000,\n    \"cancelAt\": 256\n  "
+        },
+        {
+          "start": 8636,
+          "end": 8636,
+          "from": "",
+          "to": "}\n"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🏷️type/🧪️tests/🦀️.rs",
+      "originalBytes": 2326,
+      "originalSha256": "f252bd1d967c2165510f0e81ced7799e60edba52dadca034bba52286bf9c0e48",
+      "originalComplete": "//! 🧪️ Language-neutral type classifications and canonical wire laws.\n\nuse super::{ValueKind, ValueType};\nuse crate::{DslValue, FromValue, ToValue};\n\nfn corpus() -> serde_json::Value {\n    serde_json::from_str(include_str!(\"../🧫️fixtures/🔣️.json\")).unwrap()\n}\n\n#[test]\nfn value_type_all_owned_classifications_match_the_closed_corpus() {\n    let fixture = corpus();\n    for row in fixture[\"cases\"].as_array().unwrap() {\n        let type_row = &fixture[\"types\"][row[\"type\"].as_u64().unwrap() as usize];\n        let value_type = ValueType::from_value(DslValue::from(type_row[\"type\"].clone())).unwrap();\n        let kind = &fixture[\"kinds\"][row[\"kind\"].as_u64().unwrap() as usize];\n        let classification = match kind[\"kind\"].as_str().unwrap() {\n            \"null\" => ValueKind::Null,\n            \"boolean\" => ValueKind::Boolean,\n            \"integer\" => ValueKind::Integer,\n            \"decimal\" => ValueKind::Decimal,\n            \"text\" => ValueKind::Text,\n            \"dictionary\" => ValueKind::Dictionary(kind.get(\"schema\").and_then(serde_json::Value::as_str)),\n            other => panic!(\"unknown kind {other}\"),\n        };\n        assert_eq!(value_type.id(), type_row[\"id\"].as_str().unwrap(), \"{}\", row[\"name\"]);\n        assert_eq!(value_type.matches(classification), row[\"accepted\"].as_bool().unwrap(), \"{}\", row[\"name\"]);\n    }\n}\n\n#[test]\nfn value_type_wire_round_trips_every_original_variant_and_nested_list() {\n    for row in corpus()[\"wire\"].as_array().unwrap() {\n        let subject = ValueType::from_value(DslValue::from(row.clone())).unwrap();\n        let emitted = serde_json::Value::from(subject.to_value());\n        assert_eq!(&emitted, row);\n        assert_eq!(ValueType::from_value(subject.to_value()).unwrap(), subject);\n    }\n}\n\n#[test]\nfn value_type_wire_refuses_closed_hostile_objects_and_duplicate_fields() {\n    for row in corpus()[\"refused\"].as_array().unwrap() {\n        assert!(ValueType::from_value(DslValue::from(row.clone())).is_err(), \"{row}\");\n    }\n    for fields in [\n        vec![(\"kind\".into(), \"boolean\".to_value()), (\"kind\".into(), \"boolean\".to_value())],\n        vec![(\"kind\".into(), \"list\".to_value()), (\"of\".into(), \"boolean\".to_value()), (\"of\".into(), \"boolean\".to_value())],\n    ] {\n        assert!(ValueType::from_value(DslValue::Object(fields)).is_err());\n    }\n}\n",
+      "originalInverseVerified": true,
+      "originalAuthority": "Exact original bytes cryptographically bound to SourceReady1",
+      "currentComplete": "//! 🧪️ Language-neutral type classifications and canonical wire laws.\n\nuse super::{ValueKind, ValueType};\nuse crate::{DslValue, FromValue, ToValue};\n\nfn corpus() -> serde_json::Value {\n    serde_json::from_str(include_str!(\"../🧫️fixtures/🔣️.json\")).unwrap()\n}\n\n#[test]\nfn value_type_all_owned_classifications_match_the_closed_corpus() {\n    let fixture = corpus();\n    for row in fixture[\"cases\"].as_array().unwrap() {\n        let type_row = &fixture[\"types\"][row[\"type\"].as_u64().unwrap() as usize];\n        let value_type = ValueType::from_value(DslValue::from(type_row[\"type\"].clone())).unwrap();\n        let kind = &fixture[\"kinds\"][row[\"kind\"].as_u64().unwrap() as usize];\n        let classification = match kind[\"kind\"].as_str().unwrap() {\n            \"null\" => ValueKind::Null,\n            \"boolean\" => ValueKind::Boolean,\n            \"integer\" => ValueKind::Integer,\n            \"decimal\" => ValueKind::Decimal,\n            \"text\" => ValueKind::Text,\n            \"dictionary\" => ValueKind::Dictionary(kind.get(\"schema\").and_then(serde_json::Value::as_str)),\n            other => panic!(\"unknown kind {other}\"),\n        };\n        assert_eq!(value_type.id(), type_row[\"id\"].as_str().unwrap(), \"{}\", row[\"name\"]);\n        assert_eq!(value_type.matches(classification), row[\"accepted\"].as_bool().unwrap(), \"{}\", row[\"name\"]);\n    }\n}\n\n#[test]\nfn value_type_wire_round_trips_every_original_variant_and_nested_list() {\n    for row in corpus()[\"wire\"].as_array().unwrap() {\n        let subject = ValueType::from_value(DslValue::from(row.clone())).unwrap();\n        let emitted = serde_json::Value::from(subject.to_value());\n        assert_eq!(&emitted, row);\n        assert_eq!(ValueType::from_value(subject.to_value()).unwrap(), subject);\n    }\n}\n\n#[test]\nfn value_type_wire_refuses_closed_hostile_objects_and_duplicate_fields() {\n    for row in corpus()[\"refused\"].as_array().unwrap() {\n        assert!(ValueType::from_value(DslValue::from(row.clone())).is_err(), \"{row}\");\n    }\n    for fields in [vec![(\"kind\".into(), \"boolean\".to_value()), (\"kind\".into(), \"boolean\".to_value())], vec![(\"kind\".into(), \"list\".to_value()), (\"of\".into(), \"boolean\".to_value()), (\"of\".into(), \"boolean\".to_value())]] {\n        assert!(ValueType::from_value(DslValue::Object(fields)).is_err());\n    }\n}\n\n#[test]\nfn controlled_value_type_preserves_the_neutral_wire_without_ordinary_fallback() {\n    for row in corpus()[\"wire\"].as_array().unwrap() {\n        let value = DslValue::from(row.clone());\n        let mut yes = |_| true;\n        let mut control = crate::NativeDecodeControl::new(1 << 20, &mut yes);\n        let actual = ValueType::from_value_controlled(&value, &mut control).unwrap();\n        assert_eq!(serde_json::Value::from(actual.to_value()), *row);\n        assert!(control.owned_bytes() > 0);\n        ValueType::retire_decoded(actual);\n    }\n}\n#[test]\nfn controlled_value_encoding_type_preserves_the_neutral_wire_without_ordinary_fallback() {\n    for row in corpus()[\"wire\"].as_array().unwrap() {\n        let actual = ValueType::from_value(DslValue::from(row.clone())).unwrap();\n        let mut yes = |_| true;\n        let mut control = crate::NativeEncodeControl::new(1 << 20, &mut yes);\n        let emitted = actual.to_value_controlled(&mut control).unwrap();\n        assert_eq!(serde_json::Value::from(emitted), *row);\n        assert!(control.owned_bytes() > 0);\n        ValueType::retire_decoded(actual);\n    }\n}\n\n#[test]\nfn controlled_value_type_input_admits_deep_slots_and_retires_interior_cancellation() {\n    let corpus = corpus();\n    let depth = corpus[\"nativeControls\"][\"depth\"].as_u64().unwrap() as usize;\n    let stop = corpus[\"nativeControls\"][\"cancelAt\"].as_u64().unwrap() as usize;\n    let mut value = DslValue::object([(\"kind\".into(), \"text\".to_value())]);\n    for _ in 0..depth {\n        value = DslValue::object([(\"kind\".into(), \"list\".to_value()), (\"of\".into(), value)])\n    }\n    let value = value.guard_decoded();\n    let mut yes = |_| true;\n    let mut c = crate::NativeDecodeControl::new(1 << 20, &mut yes);\n    let actual = ValueType::from_value_controlled(value.get(), &mut c).unwrap();\n    ValueType::retire_decoded(actual);\n    let bytes = c.owned_bytes();\n    let mut c = crate::NativeDecodeControl::new(bytes, &mut yes);\n    ValueType::retire_decoded(ValueType::from_value_controlled(value.get(), &mut c).unwrap());\n    let mut c = crate::NativeDecodeControl::new(bytes - 1, &mut yes);\n    assert!(ValueType::from_value_controlled(value.get(), &mut c).is_err());\n    let mut hit = false;\n    let mut cancel = |p: crate::native_decoding::NativeDecodeProgress| {\n        if p.total == 0 && p.completed >= stop {\n            hit = true;\n            false\n        } else {\n            true\n        }\n    };\n    let mut c = crate::NativeDecodeControl::new(1 << 20, &mut cancel);\n    assert!(ValueType::from_value_controlled(value.get(), &mut c).is_err());\n    assert!(hit);\n    let mut fields = vec![(\"kind\".into(), \"any\".to_value()), (\"kind\".into(), \"any\".to_value())];\n    assert!(ValueType::from_value_controlled(&DslValue::Object(std::mem::take(&mut fields)), &mut crate::NativeDecodeControl::new(1 << 20, &mut yes)).is_err());\n}\n#[test]\nfn controlled_value_encoding_type_output_admits_deep_slots_and_real_text_cancellation() {\n    let corpus = corpus();\n    let control = &corpus[\"nativeControls\"];\n    let depth = control[\"depth\"].as_u64().unwrap() as usize;\n    let mut value = ValueType::Text;\n    for _ in 0..depth {\n        value = ValueType::List(Box::new(value))\n    }\n    let value = crate::DecodedValue::new(value, ValueType::retire_decoded);\n    let mut yes = |_| true;\n    let mut c = crate::NativeEncodeControl::new(1 << 20, &mut yes);\n    let emitted = value.get().to_value_controlled(&mut c).unwrap().guard_decoded();\n    let bytes = c.owned_bytes();\n    let mut c = crate::NativeEncodeControl::new(bytes, &mut yes);\n    crate::FromValue::retire_decoded(value.get().to_value_controlled(&mut c).unwrap());\n    let mut c = crate::NativeEncodeControl::new(bytes - 1, &mut yes);\n    assert!(value.get().to_value_controlled(&mut c).is_err());\n    let mut decode_yes = |_| true;\n    let mut decode = crate::NativeDecodeControl::new(1 << 20, &mut decode_yes);\n    ValueType::retire_decoded(ValueType::from_value_controlled(emitted.get(), &mut decode).unwrap());\n    let schema = ValueType::Schema(control[\"longSchema\"].as_str().unwrap().repeat(control[\"repeat\"].as_u64().unwrap() as usize));\n    let mut hit = false;\n    let mut cancel = |p: crate::native_encoding::NativeEncodeProgress| {\n        if p.total >= 65536 && p.completed >= 65536 && p.completed < p.total {\n            hit = true;\n            false\n        } else {\n            true\n        }\n    };\n    let mut c = crate::NativeEncodeControl::new(1 << 20, &mut cancel);\n    assert!(schema.to_value_controlled(&mut c).is_err());\n    assert!(hit);\n}\n",
+      "currentBytes": 6862,
+      "currentSha256": "0e294c7f5f22555d9e7e44b469beaece2e6243a3a895c6695996f52b8bd7ad02",
+      "edits": [
+        {
+          "start": 2006,
+          "end": 2015,
+          "from": "\n        ",
+          "to": ""
+        },
+        {
+          "start": 2098,
+          "end": 2099,
+          "from": "\n",
+          "to": ""
+        },
+        {
+          "start": 2100,
+          "end": 2107,
+          "from": "       ",
+          "to": ""
+        },
+        {
+          "start": 2221,
+          "end": 2221,
+          "from": "",
+          "to": "] {\n        assert!(ValueType::from_value(DslValue::Object(fields)).is_err());\n    }\n}\n\n#[test]\nfn controlled_value_type_preserves_the_neutral_wire_without_ordinary_fallback() {\n    for row in corpus()[\"wire\"].as_array().unwrap() {\n        let value = DslValue::from(row.clone());\n        let mut yes = |_| true;\n        let mut control = crate::NativeDecodeControl::new(1 << 20"
+        },
+        {
+          "start": 2222,
+          "end": 2222,
+          "from": "",
+          "to": " &mut yes);"
+        },
+        {
+          "start": 2227,
+          "end": 2227,
+          "from": "",
+          "to": "    let actual = ValueType::from_value_controlled(&value, &mut control).unwrap();\n        assert_eq!(serde_json::Value::from(actual.to_value()), *row);\n        assert!(control.owned_bytes() > 0);\n        ValueType::retire_decoded(actual);\n    }\n}\n#[test"
+        },
+        {
+          "start": 2228,
+          "end": 2228,
+          "from": "",
+          "to": "\nfn"
+        },
+        {
+          "start": 2229,
+          "end": 2229,
+          "from": "",
+          "to": "controlled_value_encoding_type_preserves_the_neutral_wire_without_ordinary_fallback() "
+        },
+        {
+          "start": 2235,
+          "end": 2235,
+          "from": "",
+          "to": "for"
+        },
+        {
+          "start": 2236,
+          "end": 2236,
+          "from": "",
+          "to": "row"
+        },
+        {
+          "start": 2237,
+          "end": 2237,
+          "from": "",
+          "to": "in"
+        },
+        {
+          "start": 2238,
+          "end": 2238,
+          "from": "",
+          "to": "corpus()[\"wire\"].as_array().unwrap()"
+        },
+        {
+          "start": 2239,
+          "end": 2239,
+          "from": "",
+          "to": "{\n        let "
+        },
+        {
+          "start": 2240,
+          "end": 2240,
+          "from": "",
+          "to": "ctual = ValueType::from_value(D"
+        },
+        {
+          "start": 2241,
+          "end": 2241,
+          "from": "",
+          "to": "lValue::from(row.clone())).unwrap();\n        let mut ye"
+        },
+        {
+          "start": 2242,
+          "end": 2242,
+          "from": "",
+          "to": " = |_| tru"
+        },
+        {
+          "start": 2243,
+          "end": 2243,
+          "from": "",
+          "to": ";\n        let mut cont"
+        },
+        {
+          "start": 2244,
+          "end": 2244,
+          "from": "",
+          "to": "ol = cra"
+        },
+        {
+          "start": 2245,
+          "end": 2245,
+          "from": "",
+          "to": "e::NativeEncodeControl::new(1 << 20, &mut yes);\n        let emitted = actual.to_value_controlled(&mut control).unwrap();\n        assert_eq"
+        },
+        {
+          "start": 2247,
+          "end": 2247,
+          "from": "",
+          "to": "serde_json::"
+        },
+        {
+          "start": 2252,
+          "end": 2252,
+          "from": "",
+          "to": "::from(emitted), *row);\n        assert!(control.owned_bytes() > 0);\n        Value"
+        },
+        {
+          "start": 2258,
+          "end": 2258,
+          "from": "",
+          "to": "retire_decoded(actual);\n    }\n}\n\n#[test]\n"
+        },
+        {
+          "start": 2259,
+          "end": 2259,
+          "from": "",
+          "to": "n cont"
+        },
+        {
+          "start": 2261,
+          "end": 2261,
+          "from": "",
+          "to": "lled_value_type_input_ad"
+        },
+        {
+          "start": 2262,
+          "end": 2262,
+          "from": "",
+          "to": "its"
+        },
+        {
+          "start": 2263,
+          "end": 2263,
+          "from": "",
+          "to": "deep_slots_and_retires_interior_cancellation() {\n    let corpus = corpus();\n    let depth = corpus[\"nati"
+        },
+        {
+          "start": 2264,
+          "end": 2264,
+          "from": "",
+          "to": "eControls\"][\"depth\"]."
+        },
+        {
+          "start": 2265,
+          "end": 2265,
+          "from": "",
+          "to": "s_u64().unwrap() as usize;\n    "
+        },
+        {
+          "start": 2266,
+          "end": 2266,
+          "from": "",
+          "to": "et stop = corp"
+        },
+        {
+          "start": 2267,
+          "end": 2267,
+          "from": "",
+          "to": "s[\"nativ"
+        },
+        {
+          "start": 2268,
+          "end": 2268,
+          "from": "",
+          "to": "Controls\"][\"cancelAt\"].as_u64"
+        },
+        {
+          "start": 2269,
+          "end": 2269,
+          "from": "",
+          "to": ").unwrap() as usize;\n    let mut value = "
+        },
+        {
+          "start": 2279,
+          "end": 2279,
+          "from": "",
+          "to": "object([(\"kind\".into(), \"text\".to_value())]);\n    for _ in 0..depth {\n        value = DslValue::object([(\"kind\".into(), \"list\".to_value()), (\"of\".into(), value)])\n    }\n    let value = value.guard_decoded();\n    let mut yes = |_| true;\n    let mut c = crate::NativeDecodeControl::new(1 << 20, &mut yes);\n    let actual = ValueType::from_value_controlled(value.get(), &mut c).unwrap();\n    ValueType::retire_decoded(actual);\n    let bytes = c.owned_bytes();\n    let mut c = crate::NativeDecodeControl::new(bytes, &mut yes);\n    ValueType::retire_decoded(ValueType::from_value_controlled(value.get(), &mut c).unwrap());\n    let mut c = crate::NativeDecodeControl::new(bytes - 1, &mut yes);\n    assert!(ValueType::from_value_controlled(value.get(), &mut c).is_err());\n    let mut hit = false;\n    let mut cancel = |p: crate::native_decoding::NativeDecodeProgress| {\n        if p.total == 0 && p.completed >= stop {\n            hit = true;\n            false\n        } else {\n            true\n        }\n    };\n    let mut c = crate::NativeDecodeControl::new(1 << 20, &mut cancel);\n    assert!(ValueType::from_value_controlled(value.get(), &mut c).is_err());\n    assert!(hit);\n    let mut fields = vec![(\"kind\".into(), \"any\".to_value()), (\"kind\".into(), \"any\".to_value())];\n    assert!(ValueType::from_value_controlled(&DslValue::"
+        },
+        {
+          "start": 2286,
+          "end": 2286,
+          "from": "",
+          "to": "std::mem::take(&mut "
+        },
+        {
+          "start": 2294,
+          "end": 2294,
+          "from": "",
+          "to": ", &mut crate::NativeDecodeControl::new(1 << 20, &mut yes))"
+        },
+        {
+          "start": 2306,
+          "end": 2306,
+          "from": "",
+          "to": "}\n#[test]\nfn"
+        },
+        {
+          "start": 2307,
+          "end": 2307,
+          "from": "",
+          "to": "controlled_value_encoding_type_output_admits_deep_slots_and_real_text_cancellation()"
+        },
+        {
+          "start": 2308,
+          "end": 2308,
+          "from": "",
+          "to": "{\n"
+        },
+        {
+          "start": 2310,
+          "end": 2310,
+          "from": "",
+          "to": "  let corpus = corpus();\n    let control = &corpus[\"nativeControls\"];\n    let depth = control[\"depth\"].as_u64().unwrap() as usize;\n    let mut value = ValueType::Text;\n    for _ in 0..depth {\n        value = ValueType::List(Box::new(value))\n    "
+        },
+        {
+          "start": 2312,
+          "end": 2312,
+          "from": "",
+          "to": "    let value = crate::DecodedValue::new(value, ValueType::retire_decoded);\n    let mut yes = |_| true;\n    let mut c = crate::NativeEncodeControl::new(1 << 20, &mut yes);\n    let emitted = value.get().to_value_controlled(&mut c).unwrap().guard_decoded();\n    let bytes = c.owned_bytes();\n    let mut c = crate::NativeEncodeControl::new(bytes, &mut yes);\n    crate::FromValue::retire_decoded(value.get().to_value_controlled(&mut c).unwrap());\n    let mut c = crate::NativeEncodeControl::new(bytes - 1, &mut yes);\n    assert!(value.get().to_value_controlled(&mut c).is_err());\n    let mut decode_yes = |_| true;\n    let mut decode = crate::NativeDecodeControl::new(1 << 20, &mut decode_yes);\n    ValueType::retire_decoded(ValueType::from_value_controlled(emitted.get(), &mut decode).unwrap());\n    let schema = ValueType::Schema(control[\"longSchema\"].as_str().unwrap().repeat(control[\"repeat\"].as_u64().unwrap() as usize));\n    let mut hit = false;\n    let mut cancel = |p: crate::native_encoding::NativeEncodeProgress| {\n        if p.total >= 65536 && p.completed >= 65536 && p.completed < p.total {\n            hit = true;\n            false\n        "
+        },
+        {
+          "start": 2313,
+          "end": 2313,
+          "from": "",
+          "to": " else {"
+        },
+        {
+          "start": 2314,
+          "end": 2314,
+          "from": "",
+          "to": "            true\n        }\n    };\n    let mut c = crate::NativeEncodeControl::new(1 << 20, &mut cancel);\n    assert!(schema.to_value_controlled(&mut c).is_err());\n    assert!(hit);\n}\n"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🏷️type/🧬️schema/🔣️.json",
+      "originalBytes": 3706,
+      "originalSha256": "e63e8b8a88eb04b2729356fc825a7daf439257a9e3ac1eff19edb70650ec9bb8",
+      "originalComplete": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"$id\": \"https://json.schemas.assets.semio-tech.com/framework/value/type/fixture.json\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"schemaVersion\": {\n      \"const\": 1\n    },\n    \"types\": {\n      \"type\": \"array\",\n      \"minItems\": 7,\n      \"maxItems\": 7,\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"id\": {\n            \"type\": \"string\"\n          },\n          \"type\": {\n            \"$ref\": \"#/$defs/valueType\"\n          }\n        },\n        \"required\": [\n          \"id\",\n          \"type\"\n        ],\n        \"additionalProperties\": false\n      }\n    },\n    \"kinds\": {\n      \"type\": \"array\",\n      \"minItems\": 9,\n      \"maxItems\": 9,\n      \"items\": {\n        \"$ref\": \"#/$defs/valueKind\"\n      }\n    },\n    \"cases\": {\n      \"type\": \"array\",\n      \"minItems\": 63,\n      \"maxItems\": 63,\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"name\": {\n            \"type\": \"string\"\n          },\n          \"type\": {\n            \"type\": \"integer\",\n            \"minimum\": 0,\n            \"maximum\": 6\n          },\n          \"kind\": {\n            \"type\": \"integer\",\n            \"minimum\": 0,\n            \"maximum\": 8\n          },\n          \"accepted\": {\n            \"type\": \"boolean\"\n          }\n        },\n        \"required\": [\n          \"name\",\n          \"type\",\n          \"kind\",\n          \"accepted\"\n        ],\n        \"additionalProperties\": false\n      }\n    },\n    \"wire\": {\n      \"type\": \"array\",\n      \"minItems\": 8,\n      \"items\": {\n        \"$ref\": \"#/$defs/valueType\"\n      }\n    },\n    \"refused\": {\n      \"type\": \"array\",\n      \"minItems\": 10\n    }\n  },\n  \"required\": [\n    \"schemaVersion\",\n    \"types\",\n    \"kinds\",\n    \"cases\",\n    \"wire\",\n    \"refused\"\n  ],\n  \"additionalProperties\": false,\n  \"$defs\": {\n    \"valueType\": {\n      \"oneOf\": [\n        {\n          \"type\": \"object\",\n          \"properties\": {\n            \"kind\": {\n              \"enum\": [\n                \"boolean\",\n                \"integer\",\n                \"decimal\",\n                \"text\",\n                \"any\"\n              ]\n            }\n          },\n          \"required\": [\n            \"kind\"\n          ],\n          \"additionalProperties\": false\n        },\n        {\n          \"type\": \"object\",\n          \"properties\": {\n            \"kind\": {\n              \"const\": \"list\"\n            },\n            \"of\": {\n              \"$ref\": \"#/$defs/valueType\"\n            }\n          },\n          \"required\": [\n            \"kind\",\n            \"of\"\n          ],\n          \"additionalProperties\": false\n        },\n        {\n          \"type\": \"object\",\n          \"properties\": {\n            \"kind\": {\n              \"const\": \"schema\"\n            },\n            \"of\": {\n              \"type\": \"string\"\n            }\n          },\n          \"required\": [\n            \"kind\",\n            \"of\"\n          ],\n          \"additionalProperties\": false\n        }\n      ]\n    },\n    \"valueKind\": {\n      \"oneOf\": [\n        {\n          \"type\": \"object\",\n          \"properties\": {\n            \"kind\": {\n              \"enum\": [\n                \"null\",\n                \"boolean\",\n                \"integer\",\n                \"decimal\",\n                \"text\"\n              ]\n            }\n          },\n          \"required\": [\n            \"kind\"\n          ],\n          \"additionalProperties\": false\n        },\n        {\n          \"type\": \"object\",\n          \"properties\": {\n            \"kind\": {\n              \"const\": \"dictionary\"\n            },\n            \"schema\": {\n              \"type\": \"string\"\n            }\n          },\n          \"required\": [\n            \"kind\"\n          ],\n          \"additionalProperties\": false\n        }\n      ]\n    }\n  }\n}\n",
+      "originalInverseVerified": true,
+      "originalAuthority": "Exact original bytes cryptographically bound to SourceReady1",
+      "currentComplete": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"$id\": \"https://json.schemas.assets.semio-tech.com/framework/value/type/fixture.json\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"schemaVersion\": {\n      \"const\": 1\n    },\n    \"types\": {\n      \"type\": \"array\",\n      \"minItems\": 7,\n      \"maxItems\": 7,\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"id\": {\n            \"type\": \"string\"\n          },\n          \"type\": {\n            \"$ref\": \"#/$defs/valueType\"\n          }\n        },\n        \"required\": [\n          \"id\",\n          \"type\"\n        ],\n        \"additionalProperties\": false\n      }\n    },\n    \"kinds\": {\n      \"type\": \"array\",\n      \"minItems\": 9,\n      \"maxItems\": 9,\n      \"items\": {\n        \"$ref\": \"#/$defs/valueKind\"\n      }\n    },\n    \"cases\": {\n      \"type\": \"array\",\n      \"minItems\": 63,\n      \"maxItems\": 63,\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"name\": {\n            \"type\": \"string\"\n          },\n          \"type\": {\n            \"type\": \"integer\",\n            \"minimum\": 0,\n            \"maximum\": 6\n          },\n          \"kind\": {\n            \"type\": \"integer\",\n            \"minimum\": 0,\n            \"maximum\": 8\n          },\n          \"accepted\": {\n            \"type\": \"boolean\"\n          }\n        },\n        \"required\": [\n          \"name\",\n          \"type\",\n          \"kind\",\n          \"accepted\"\n        ],\n        \"additionalProperties\": false\n      }\n    },\n    \"wire\": {\n      \"type\": \"array\",\n      \"minItems\": 8,\n      \"items\": {\n        \"$ref\": \"#/$defs/valueType\"\n      }\n    },\n    \"refused\": {\n      \"type\": \"array\",\n      \"minItems\": 10\n    },\n    \"nativeControls\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"depth\": {\n          \"const\": 300\n        },\n        \"longSchema\": {\n          \"const\": \"引用😀\"\n        },\n        \"repeat\": {\n          \"const\": 20000\n        },\n        \"cancelAt\": {\n          \"const\": 256\n        }\n      },\n      \"required\": [\n        \"depth\",\n        \"longSchema\",\n        \"repeat\",\n        \"cancelAt\"\n      ],\n      \"additionalProperties\": false\n    }\n  },\n  \"required\": [\n    \"schemaVersion\",\n    \"types\",\n    \"kinds\",\n    \"cases\",\n    \"wire\",\n    \"refused\",\n    \"nativeControls\"\n  ],\n  \"additionalProperties\": false,\n  \"$defs\": {\n    \"valueType\": {\n      \"oneOf\": [\n        {\n          \"type\": \"object\",\n          \"properties\": {\n            \"kind\": {\n              \"enum\": [\n                \"boolean\",\n                \"integer\",\n                \"decimal\",\n                \"text\",\n                \"any\"\n              ]\n            }\n          },\n          \"required\": [\n            \"kind\"\n          ],\n          \"additionalProperties\": false\n        },\n        {\n          \"type\": \"object\",\n          \"properties\": {\n            \"kind\": {\n              \"const\": \"list\"\n            },\n            \"of\": {\n              \"$ref\": \"#/$defs/valueType\"\n            }\n          },\n          \"required\": [\n            \"kind\",\n            \"of\"\n          ],\n          \"additionalProperties\": false\n        },\n        {\n          \"type\": \"object\",\n          \"properties\": {\n            \"kind\": {\n              \"const\": \"schema\"\n            },\n            \"of\": {\n              \"type\": \"string\"\n            }\n          },\n          \"required\": [\n            \"kind\",\n            \"of\"\n          ],\n          \"additionalProperties\": false\n        }\n      ]\n    },\n    \"valueKind\": {\n      \"oneOf\": [\n        {\n          \"type\": \"object\",\n          \"properties\": {\n            \"kind\": {\n              \"enum\": [\n                \"null\",\n                \"boolean\",\n                \"integer\",\n                \"decimal\",\n                \"text\"\n              ]\n            }\n          },\n          \"required\": [\n            \"kind\"\n          ],\n          \"additionalProperties\": false\n        },\n        {\n          \"type\": \"object\",\n          \"properties\": {\n            \"kind\": {\n              \"const\": \"dictionary\"\n            },\n            \"schema\": {\n              \"type\": \"string\"\n            }\n          },\n          \"required\": [\n            \"kind\"\n          ],\n          \"additionalProperties\": false\n        }\n      ]\n    }\n  }\n}\n",
+      "currentBytes": 4186,
+      "currentSha256": "6296fd95912138fe9d7671b22ac59eeebbe5acd15f0c6c6839cc03e8c88be956",
+      "edits": [
+        {
+          "start": 1660,
+          "end": 1660,
+          "from": "",
+          "to": ","
+        },
+        {
+          "start": 1663,
+          "end": 1663,
+          "from": "",
+          "to": "  \"nativeControls\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"depth\": {\n          \"const\": 300\n        "
+        },
+        {
+          "start": 1668,
+          "end": 1668,
+          "from": "",
+          "to": "      "
+        },
+        {
+          "start": 1669,
+          "end": 1669,
+          "from": "",
+          "to": "longSchema\": {\n          \"const\": \"引用😀\"\n        },\n        \""
+        },
+        {
+          "start": 1671,
+          "end": 1671,
+          "from": "",
+          "to": "peat\": {\n          \"const\": 20000\n        },\n        \"cancelAt\": {\n          \"const\": 256\n        }\n      },\n      \"re"
+        },
+        {
+          "start": 1686,
+          "end": 1686,
+          "from": "",
+          "to": "    "
+        },
+        {
+          "start": 1687,
+          "end": 1687,
+          "from": "",
+          "to": "depth\",\n        \"longSchema\",\n        \"repeat\",\n        \"cancelAt\"\n      ],\n      \"additionalPropertie"
+        },
+        {
+          "start": 1688,
+          "end": 1688,
+          "from": "",
+          "to": "\": false\n    }\n  },\n  \"required\": [\n    \"s"
+        },
+        {
+          "start": 1767,
+          "end": 1767,
+          "from": "",
+          "to": ","
+        },
+        {
+          "start": 1770,
+          "end": 1770,
+          "from": "",
+          "to": "  \"nativeControls\"\n  "
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🏷️type/🦀️.rs",
+      "originalBytes": 3940,
+      "originalSha256": "b7c55b65b35982a8633e109df1021171109f6af5384bdde80b2c0a1f03fe2746",
+      "originalInverseVerified": false,
+      "originalAuthority": "Only genuine SourceReady1 original length/SHA retained; original complete production bytes were not captured in this lane, and no exact production inverse is claimed",
+      "currentComplete": "//! 🏷️ Canonical typed value schema and borrowed classification contract.\n\nuse crate::{DslValue, FromValue, ToValue, ValueError};\n\n/// 📐️ One domain-neutral type declaration.\n#[derive(Clone, Debug, Default, PartialEq)]\npub enum ValueType {\n    Boolean,\n    Integer,\n    Decimal,\n    Text,\n    List(Box<ValueType>),\n    Schema(String),\n    #[default]\n    Any,\n}\n\n/// 🔎️ Classification borrowed from a concrete value owner.\n#[derive(Clone, Copy, Debug, PartialEq, Eq)]\npub enum ValueKind<'a> {\n    Null,\n    Boolean,\n    Integer,\n    Decimal,\n    Text,\n    Dictionary(Option<&'a str>),\n}\n\nimpl ValueType {\n    pub fn id(&self) -> String {\n        match self {\n            ValueType::Boolean => \"boolean\".into(),\n            ValueType::Integer => \"integer\".into(),\n            ValueType::Decimal => \"number\".into(),\n            ValueType::Text => \"text\".into(),\n            ValueType::List(_) => \"list\".into(),\n            ValueType::Schema(id) => id.clone(),\n            ValueType::Any => \"value\".into(),\n        }\n    }\n\n    /// 🎯️ Matches an owner-supplied classification without constructing a value carrier.\n    pub fn matches(&self, value: ValueKind<'_>) -> bool {\n        if value == ValueKind::Null {\n            return false;\n        }\n        match self {\n            ValueType::Any => true,\n            ValueType::Boolean => value == ValueKind::Boolean,\n            ValueType::Integer => value == ValueKind::Integer,\n            ValueType::Decimal => matches!(value, ValueKind::Boolean | ValueKind::Integer | ValueKind::Decimal),\n            ValueType::Text => value == ValueKind::Text,\n            ValueType::List(_) => value == ValueKind::Dictionary(Some(\"list\")),\n            ValueType::Schema(schema) => value == ValueKind::Dictionary(Some(schema)),\n        }\n    }\n}\n\nimpl ToValue for ValueType {\n    fn to_value_controlled(&self, control: &mut crate::NativeEncodeControl<'_>) -> Result<DslValue, ValueError> {\n        controlled::encode(self, control)\n    }\n    fn to_value(&self) -> DslValue {\n        match self {\n            ValueType::Boolean => DslValue::object([(\"kind\".to_string(), \"boolean\".to_value())]),\n            ValueType::Integer => DslValue::object([(\"kind\".to_string(), \"integer\".to_value())]),\n            ValueType::Decimal => DslValue::object([(\"kind\".to_string(), \"decimal\".to_value())]),\n            ValueType::Text => DslValue::object([(\"kind\".to_string(), \"text\".to_value())]),\n            ValueType::List(inner) => DslValue::object([(\"kind\".to_string(), \"list\".to_value()), (\"of\".to_string(), inner.to_value())]),\n            ValueType::Schema(id) => DslValue::object([(\"kind\".to_string(), \"schema\".to_value()), (\"of\".to_string(), id.to_value())]),\n            ValueType::Any => DslValue::object([(\"kind\".to_string(), \"any\".to_value())]),\n        }\n    }\n}\n\nimpl FromValue for ValueType {\n    fn from_value_controlled(value: &DslValue, control: &mut crate::NativeDecodeControl<'_>) -> Result<Self, ValueError> {\n        controlled::decode(value, control)\n    }\n    fn retire_decoded(self) {\n        controlled::retire(self)\n    }\n    fn from_value(value: DslValue) -> Result<Self, ValueError> {\n        let DslValue::Object(fields) = &value else {\n            return Err(ValueError::new(\"expected a type object\"));\n        };\n        let kind = value.get(\"kind\").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new(\"kind\"))?;\n        let expected = if matches!(kind.as_str(), \"list\" | \"schema\") { 2 } else { 1 };\n        if fields.len() != expected || fields.iter().any(|(key, _)| key != \"kind\" && key != \"of\") {\n            return Err(ValueError::new(\"invalid type fields\"));\n        }\n        match kind.as_str() {\n            \"boolean\" => Ok(ValueType::Boolean),\n            \"integer\" => Ok(ValueType::Integer),\n            \"decimal\" => Ok(ValueType::Decimal),\n            \"text\" => Ok(ValueType::Text),\n            \"list\" => Ok(ValueType::List(Box::new(value.get(\"of\").cloned().map(ValueType::from_value).transpose()?.ok_or_else(|| ValueError::new(\"of\"))?))),\n            \"schema\" => Ok(ValueType::Schema(value.get(\"of\").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new(\"of\"))?)),\n            \"any\" => Ok(ValueType::Any),\n            other => Err(ValueError::new(format!(\"unknown ValueType kind '{other}'\"))),\n        }\n    }\n}\n\n#[cfg(test)]\n#[path = \"🧪️tests/🦀️.rs\"]\nmod tests;\n\n#[path = \"🛬️controlled/🦀️.rs\"]\nmod controlled;\n",
+      "currentBytes": 4461,
+      "currentSha256": "d4e3962cf6cbe52363f63af9113e4c1295d8587cea59d8ee6687f7843455f8ef",
+      "edits": []
+    }
+  ],
+  "addedInputs": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🏷️type/🛬️controlled/🦀️.rs",
+      "currentComplete": "//! 🏷️ Iterative exact kind/of construction with cumulative native ownership admission.\nuse super::ValueType;\nuse crate::{DecodedValue, DslValue, FromValue, NativeDecodeControl, NativeEncodeControl, ToValue, ValueError};\npub(super) fn retire(mut value: ValueType) {\n    while let ValueType::List(inner) = value {\n        value = *inner\n    }\n}\npub(super) fn decode(value: &DslValue, c: &mut NativeDecodeControl<'_>) -> Result<ValueType, ValueError> {\n    c.scoped_stage(|c| {\n        c.begin_stage(0).map_err(ValueError::new)?;\n        let mut cursor = value;\n        let mut depth = 0usize;\n        let leaf = loop {\n            let fields = cursor.object_controlled(c)?;\n            DslValue::deny_fields_controlled(fields, &[\"kind\", \"of\"], c)?;\n            let kind = DslValue::field_controlled(fields, \"kind\", c)?.ok_or_else(|| ValueError::new(\"missing type kind\"))?;\n            let DslValue::String(kind) = kind else { return Err(ValueError::new(\"type kind must be text\")) };\n            let of = DslValue::field_controlled(fields, \"of\", c)?;\n            c.charge(size_of::<ValueType>()).map_err(ValueError::new)?;\n            c.step().map_err(ValueError::new)?;\n            if kind == \"list\" {\n                cursor = of.ok_or_else(|| ValueError::new(\"missing list child\"))?;\n                depth = depth.checked_add(1).ok_or_else(|| ValueError::new(\"type depth overflow\"))?;\n                continue;\n            }\n            let value = match kind.as_str() {\n                \"boolean\" => ValueType::Boolean,\n                \"integer\" => ValueType::Integer,\n                \"decimal\" => ValueType::Decimal,\n                \"text\" => ValueType::Text,\n                \"any\" => ValueType::Any,\n                \"schema\" => ValueType::Schema(String::from_value_controlled(of.ok_or_else(|| ValueError::new(\"missing type schema\"))?, c)?),\n                _ => return Err(ValueError::new(\"unknown type kind\")),\n            };\n            if kind != \"schema\" && of.is_some() {\n                return Err(ValueError::new(\"scalar type has of field\"));\n            }\n            break value;\n        };\n        let mut output = DecodedValue::new(leaf, retire);\n        for _ in 0..depth {\n            output = DecodedValue::new(ValueType::List(Box::new(output.take())), retire);\n            c.step().map_err(ValueError::new)?;\n        }\n        c.checkpoint().map_err(ValueError::new)?;\n        Ok(output.take())\n    })\n}\npub(super) fn encode(value: &ValueType, c: &mut NativeEncodeControl<'_>) -> Result<DslValue, ValueError> {\n    c.scoped_stage(|c| {\n        c.begin_stage(0).map_err(ValueError::new)?;\n        let mut cursor = value;\n        let mut depth = 0usize;\n        while let ValueType::List(inner) = cursor {\n            depth = depth.checked_add(1).ok_or_else(|| ValueError::new(\"type depth overflow\"))?;\n            cursor = inner;\n            c.step().map_err(ValueError::new)?;\n        }\n        let kind = match cursor {\n            ValueType::Boolean => \"boolean\",\n            ValueType::Integer => \"integer\",\n            ValueType::Decimal => \"decimal\",\n            ValueType::Text => \"text\",\n            ValueType::Any => \"any\",\n            ValueType::Schema(_) => \"schema\",\n            ValueType::List(_) => unreachable!(),\n        };\n        let mut fields = DslValue::object_encoding_controlled(if matches!(cursor, ValueType::Schema(_)) { 2 } else { 1 }, c)?;\n        let tag = kind.to_value_controlled(c)?;\n        DslValue::push_encoding_controlled(fields.get_mut(), \"kind\", tag, c)?;\n        if let ValueType::Schema(schema) = cursor {\n            let schema = schema.to_value_controlled(c)?;\n            DslValue::push_encoding_controlled(fields.get_mut(), \"of\", schema, c)?;\n        }\n        let mut output = DslValue::Object(fields.take()).guard_encoded();\n        for _ in 0..depth {\n            let mut fields = DslValue::object_encoding_controlled(2, c)?;\n            let tag = \"list\".to_value_controlled(c)?;\n            DslValue::push_encoding_controlled(fields.get_mut(), \"kind\", tag, c)?;\n            DslValue::push_encoding_controlled(fields.get_mut(), \"of\", output.take(), c)?;\n            output = DslValue::Object(fields.take()).guard_encoded();\n            c.step().map_err(ValueError::new)?;\n        }\n        c.checkpoint().map_err(ValueError::new)?;\n        Ok(output.take())\n    })\n}\n",
+      "currentBytes": 4335,
+      "currentSha256": "e8eea243f7b839e3a9a8991362f74ac0ff15d72d02fa896758ebc3f3627ba6a8"
+    }
+  ]
+}

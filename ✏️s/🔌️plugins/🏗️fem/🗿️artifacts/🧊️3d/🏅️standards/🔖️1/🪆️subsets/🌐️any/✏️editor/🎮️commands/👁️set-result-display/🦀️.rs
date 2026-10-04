@@ -8,7 +8,7 @@ use crate::Fem3dSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "result-display")]
 pub struct SetResultDisplay {
@@ -50,7 +50,7 @@ pub fn handle_window(payload: &SetResultDisplay, cfg: &ConfigView<'_, NoConfig>,
             next.result_mode_index = payload.mode_index;
         }
     }
-    Ok(Emit { window_config_mutations: vec![results::config::addressed_to(&window_id, next)], ui_scope: crate::editor::fem3d::commands::set_result_animation::playback_dirty_scope(), ..Default::default() })
+    Ok(Emit { window_config_mutations: vec![results::config::addressed_to(&window_id, next)], ui_scope: <crate::editor::fem3d::commands::set_result_animation::Fem3dResultsPlayback as crate::editor::fem3d::commands::set_result_animation::FemPlaybackTransport>::dirty_scope(), ..Default::default() })
 }
 
 #[cfg(test)]

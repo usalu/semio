@@ -5,10 +5,13 @@ use crate::standards::v1::subsets::any::schema::mutations::{replace_synapse, syn
 use crate::Generation2dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &ReplaceSynapse, base: &Generation2dSnapshot) -> Vec<Generation2dMutation> {
+pub fn inverse(payload: &ReplaceSynapse, base: &Generation2dSnapshot) -> Result<Vec<Generation2dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match synapse_index(&base.host_snapshot, &payload.synapse.id) {
         Some(index) => vec![replace_synapse(base.host_snapshot.synapses[index].clone())],
         None => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

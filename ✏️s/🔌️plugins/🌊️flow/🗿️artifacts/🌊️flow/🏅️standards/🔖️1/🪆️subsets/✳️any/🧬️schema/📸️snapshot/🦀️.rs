@@ -14,7 +14,7 @@ use framework_schema::ArtifactSchema;
 /// Distinct from `semio_framework_artifact_flow_flow::FlowHostSnapshot` in `semio-framework-os-flow`, which remains the framework
 /// host/kernel document type. This plugin snapshot converts at the host boundary via
 /// `to_host_snapshot`/`from_host_snapshot`, now bridging through the composed child + working-scene cache.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 #[dsl(extension = "flow")]
 #[artifact_schema(id = "s.flow.flow")]
@@ -73,12 +73,12 @@ impl From<FlowSnapshot> for semio_framework_artifact_flow_flow::FlowHostSnapshot
 impl store::ArtifactDsl for FlowSnapshot {
  const EXTENSION:&'static str="flow";
  fn envelope_id()->&'static str{"flow.flow"}
- fn parse_dsl(text:&str)->Result<Self,store::TextError>{
+ fn parse_dsl(text:&str)->Result<Self,semio_framework_diagnostic::TextError>{
   let body=store::semio_format::split_text_preamble(text).map(|(_,body)|body).unwrap_or(text);
-  let record=dsl::parse(body,&Self::__dsl_spec(),&dsl::ParseOptions{limits:dsl::Limits::default(),mode:dsl::SourceMode::Document})?;Self::__dsl_from_record(&record)
+  let record=semio_framework_dsl_record::parse(body,&Self::__dsl_spec(),&semio_framework_dsl_record::ParseOptions{limits:semio_framework_diagnostic::Limits::default(),mode:semio_framework_dsl_record::SourceMode::Document})?;Self::__dsl_from_record(&record)
  }
  fn print_dsl(&self)->String{
-  let body=dsl::print(&self.__dsl_to_record(),&Self::__dsl_spec(),dsl::JoinMode::Document);
+  let body=semio_framework_dsl_record::print(&self.__dsl_to_record(),&Self::__dsl_spec(),semio_framework_dsl_record::JoinMode::Document);
   let envelope=store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(),store::semio_format::Component::Dsl,1).expect("valid envelope identity");store::semio_format::wrap_text(&envelope,&body)
  }
 }
@@ -87,14 +87,14 @@ impl store::ArtifactPack for FlowSnapshot{
  fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}
  fn encode_pack_with(&self,options:&store::PackEncodeOptions)->Result<Vec<u8>,store::PackError>{
   let body=store::pack_rt::encode_document(&Self::__dsl_spec(),&self.__dsl_to_record(),options)?;
-  let envelope=store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1).map_err(|e|store::PackError::Schema(e.to_string()))?;Ok(store::semio_format::wrap_binary(&envelope,&body))
+  let envelope=store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1).map_err(|e|store::PackError::from(e.into_value_error()))?;Ok(store::semio_format::wrap_binary(&envelope,&body))
  }
  fn decode_pack_with(bytes:&[u8],options:&store::PackDecodeOptions)->Result<Self,store::PackError>{
-  let(envelope,body)=store::semio_format::unwrap_binary(bytes).map_err(|e|store::PackError::Schema(e.to_string()))?;
-  if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1){return Err(store::PackError::Schema("Flow pack identity differs".into()))}
+  let(envelope,body)=store::semio_format::unwrap_binary(bytes).map_err(|e|store::PackError::from(e.into_value_error()))?;
+  if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1){return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "Flow pack identity differs")))}
   let(record,_)=store::pack_rt::decode_document(&body,&Self::__dsl_spec(),options)?;Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
  }
- fn record_spec()->Option<dsl::RecordSpec>{Some(Self::__dsl_spec())}
+ fn record_spec()->Option<semio_framework_dsl_record::RecordSpec>{Some(Self::__dsl_spec())}
 }
 //#endregion 🔹HandcraftedArtifactCodecs
 

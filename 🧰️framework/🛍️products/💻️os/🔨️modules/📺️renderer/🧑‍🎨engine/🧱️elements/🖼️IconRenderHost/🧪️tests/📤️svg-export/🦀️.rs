@@ -43,7 +43,7 @@ fn asset(generation: u64, fixture: &serde_json::Value) -> World3dMeshAsset {
         edge_ids: 0,
         uvs: 0,
         colors: 0,
-    };
+    surface_uvs:[0;4],tangents:0,};
     let token = mesh3d_begin(generation, generation, schema).expect("SVG mesh owner");
     while !mesh3d_allocate_step(token).expect("SVG mesh allocation") {}
     for position in positions {
@@ -70,7 +70,8 @@ fn asset(generation: u64, fixture: &serde_json::Value) -> World3dMeshAsset {
         preserve_vertex_color: false,
         base_color_texture: None,
         texture_sampler: Default::default(),
-    };
+        metallic_roughness_texture:None,normal_texture:None,occlusion_texture:None,emissive_texture:None,additional_texture_samplers:[Default::default();4],
+    normal_scale:[1.0;2],occlusion_strength:1.0,};
     let appearance = World3dMeshAppearance::untextured(vec![World3dPrimitiveMaterial { first_index: 0, index_count: schema.indices, material }]).expect("SVG appearance");
     World3dMeshAsset { mesh, appearance }
 }

@@ -1,9 +1,14 @@
 //! 🗺️ Closed codec and admission fence for one durable parent+drawing+value Store decision.
 
 use super::CursorRevisionAccumulator;
-use crate::os_dsl::{DslField, DslValue, FieldValue, FromValue as ValueFromValue, Shape, ToValue as ValueToValue};
+use semio_framework_dsl_record::DslField;
+use semio_framework_value::DslValue;
+use semio_framework_dsl_record::FieldValue;
+use semio_framework_value::FromValue as ValueFromValue;
+use semio_framework_dsl_record::Shape;
+use semio_framework_value::ToValue as ValueToValue;
 use crate::os_spr::{Edit, HybridLogicalTimestamp, Mutation as StoreMutation};
-use crate::os_store::{pack_rt, ArtifactDsl, ArtifactPack, ArtifactStore, ArtifactStoreOneItemLiveAuthority, ArtifactStoreOneItemPrepared, OwnerRef, PackDecodeOptions, PackEncodeOptions, PackError, PackVerificationLevel, TextError};
+use crate::os_store::{ArtifactDsl, ArtifactPack, ArtifactStore, ArtifactStoreOneItemLiveAuthority, ArtifactStoreOneItemPrepared, OwnerRef, PackDecodeOptions, PackEncodeOptions, PackError, PackVerificationLevel, TextError, pack_rt};
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::sync::Arc;
 
@@ -100,9 +105,9 @@ struct DurableOwnedThreeMemberUnsignedV1 {
     value: DurableOwnedThreeMemberUnsignedMemberV1,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue, crate::os_dsl::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, Eq, ToValue, FromValue, crate::os_dsl::DslArtifact)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
-#[dsl(id = "store.durable-owned-three-member-decision")]
+#[artifact(id = "store.durable-owned-three-member-decision")]
 pub struct DurableOwnedThreeMemberDecisionV1 {
     pub(crate) schema: String,
     pub(crate) anchor: DurableOwnedGroupAnchorV1,
@@ -146,9 +151,9 @@ impl std::fmt::Display for DurableOwnedGroupDecisionError {
 
 impl std::error::Error for DurableOwnedGroupDecisionError {}
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, crate::os_dsl::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, crate::os_dsl::DslArtifact)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
-#[dsl(id = "store.unbound-one-item-outcome")]
+#[artifact(id = "store.unbound-one-item-outcome")]
 struct DurableUnboundOneItemOutcomeV1 {
     schema: String,
     recovery_schema: String,
@@ -157,15 +162,18 @@ struct DurableUnboundOneItemOutcomeV1 {
     base_revision: [u8; 32],
     base_applied_edit_count: u64,
     next_sequence_number: i32,
+    #[dsl(base64)]
     next_clock_canonical_json: Vec<u8>,
     actor: String,
+    #[dsl(base64)]
     edit_without_group_canonical_json: Vec<u8>,
+    #[dsl(base64)]
     post_snapshot_pack: Vec<u8>,
 }
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, crate::os_dsl::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, crate::os_dsl::DslArtifact)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
-#[dsl(id = "store.bound-one-item-outcome")]
+#[artifact(id = "store.bound-one-item-outcome")]
 struct DurableBoundOneItemOutcomeV1 {
     schema: String,
     recovery_schema: String,
@@ -174,10 +182,13 @@ struct DurableBoundOneItemOutcomeV1 {
     base_revision: [u8; 32],
     base_applied_edit_count: u64,
     next_sequence_number: i32,
+    #[dsl(base64)]
     next_clock_canonical_json: Vec<u8>,
     actor: String,
     group_id: String,
+    #[dsl(base64)]
     edit_canonical_json: Vec<u8>,
+    #[dsl(base64)]
     post_snapshot_pack: Vec<u8>,
     edit_digest: [u8; 32],
     post_generation: u64,
@@ -297,7 +308,7 @@ impl DurableOwnedGroupJournalRecordV1 {
         let decision = DurableOwnedThreeMemberDecisionV1::decode_canonical_pack(&canonical_pack)?;
         let parent = DurableBoundOneItemOutcomeV1::decode_canonical_pack(&decision.parent.recovery_pack)?;
         let edit: DslValue = parse_canonical_json_value(&parent.edit_canonical_json)?;
-        let parent_edit_id = edit.get("id").and_then(DslValue::as_str).filter(|identity| !identity.is_empty() && identity.len() <= DURABLE_OWNED_GROUP_ID_MAX_BYTES).ok_or(DurableOwnedGroupDecisionError::InvalidIdentity)?.to_string();
+        let parent_edit_id = edit.get("id").and_then(semio_framework_value::DslValue::as_str).filter(|identity| !identity.is_empty() && identity.len() <= DURABLE_OWNED_GROUP_ID_MAX_BYTES).ok_or(DurableOwnedGroupDecisionError::InvalidIdentity)?.to_string();
         if decision.parent.post_revision == [0; 32] {
             return Err(DurableOwnedGroupDecisionError::InvalidFrontier);
         }
@@ -430,7 +441,7 @@ pub trait DurableOwnedGroupJournalCommitV1: Send {
     fn advance(&mut self, grant: super::ArtifactStoreOneItemGrant) -> Result<DurableOwnedGroupJournalAdvanceV1, String>;
     fn cancel(&mut self);
     fn begin_close(&mut self);
-    fn close_step(&mut self, grant: super::ArtifactStoreOneItemGrant) -> Result<super::SnapshotRetirementStep, String>;
+    fn close_step(&mut self, grant: super::ArtifactStoreOneItemGrant) -> Result<super::SnapshotRetirementStep, semio_framework_value::ValueError>;
     fn terminal_is_empty(&self) -> bool;
 }
 
@@ -706,6 +717,7 @@ where
     }
     store.generation = root.generation;
     store.content_revision = root.content_revision;
+    store.fold_frontier = None;
     store.edit_sequence = root.edit_sequence;
     store.clock = root.clock;
     store.last_projection_cause = root.last_projection_cause;
@@ -1183,7 +1195,7 @@ where
 fn close_assembly_publication<P: Send + Sync + 'static, Mutation>(publication: &mut Option<super::ArtifactStoreBatchPublication<P, Mutation>>, grant: super::ArtifactStoreOneItemGrant) -> Result<bool, DurableOwnedGroupDecisionError> {
     let Some(owner) = publication.as_mut() else { return Ok(true) };
     owner.begin_close();
-    match owner.close_step(super::ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), maximum_bytes: grant.maximum_bytes }).map_err(DurableOwnedGroupDecisionError::Codec)? {
+    match owner.close_step(super::ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), maximum_bytes: grant.maximum_bytes }).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.into_message()))? {
         super::SnapshotRetirementStep::Complete => {
             if !owner.terminal_is_empty() {
                 return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
@@ -1270,10 +1282,7 @@ where
         if let Some(publication) = self.value_publication.as_mut() {
             publication.begin_close();
         }
-        if !matches!(
-            self.phase,
-            DurableOwnedThreeStoreMapAssemblyPhaseV1::ClosingValue | DurableOwnedThreeStoreMapAssemblyPhaseV1::ClosingDrawing | DurableOwnedThreeStoreMapAssemblyPhaseV1::ClosingParent
-        ) {
+        if !matches!(self.phase, DurableOwnedThreeStoreMapAssemblyPhaseV1::ClosingValue | DurableOwnedThreeStoreMapAssemblyPhaseV1::ClosingDrawing | DurableOwnedThreeStoreMapAssemblyPhaseV1::ClosingParent) {
             self.phase = DurableOwnedThreeStoreMapAssemblyPhaseV1::ClosingValue;
         }
     }
@@ -1468,7 +1477,9 @@ where
         fn owner<P, Mutation>(publication: &Option<super::ArtifactStoreBatchPublication<P, Mutation>>) -> String {
             publication.as_ref().map_or_else(
                 || "retired".to_string(),
-                |publication| format!("{:?}/terminal_is_empty={}/admitted={}/staged={}/closing_owner={}", publication.phase(), publication.terminal_is_empty(), publication.admitted_items(), publication.staged_items(), publication.closing_owner_witness()),
+                |publication| {
+                    format!("{:?}/terminal_is_empty={}/admitted={}/staged={}/closing_owner={}", publication.phase(), publication.terminal_is_empty(), publication.admitted_items(), publication.staged_items(), publication.closing_owner_witness())
+                },
             )
         }
         format!(
@@ -1925,7 +1936,7 @@ where
             }
             DurableOwnedThreeStoreCommitPhaseV1::ClosingJournal => {
                 if let Some(journal) = self.journal.as_mut() {
-                    match journal.close_step(super::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: grant.maximum_bytes }).map_err(DurableOwnedGroupDecisionError::Codec)? {
+                    match journal.close_step(super::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: grant.maximum_bytes }).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.into_message()))? {
                         super::SnapshotRetirementStep::Complete => {
                             if !journal.terminal_is_empty() {
                                 return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
@@ -2244,7 +2255,7 @@ impl DurableUnboundOneItemOutcomeV1 {
         if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1) {
             return Err(DurableOwnedGroupDecisionError::InvalidSchema);
         }
-        let file = crate::os_io::resolve_ready(crate::os_pack::format::PackFile::open_manifest(inner.as_slice(), &options.limits, options.verification)).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
+        let file = ::semio_framework_async::poll::resolve_ready(crate::os_pack::format::PackFile::open_manifest(inner.as_slice(), &options.limits, options.verification)).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
         let manifest = file.manifest().ok_or_else(|| DurableOwnedGroupDecisionError::Codec("unbound outcome manifest is absent".into()))?;
         if manifest.uncompressed_body_len > DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64 {
             return Err(DurableOwnedGroupDecisionError::RecoveryPackTooLarge);
@@ -2289,9 +2300,9 @@ impl DurableStorePreparedOutcomeV1 {
             base_revision: authority.base_revision,
             base_applied_edit_count: authority.base_applied_edit_count.try_into().map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?,
             next_sequence_number: authority.next_sequence_number,
-            next_clock_canonical_json: crate::os_pack::json::to_json_string(&authority.next_clock).into_bytes(),
+            next_clock_canonical_json: semio_framework_pack_json::to_json_string(&authority.next_clock).into_bytes(),
             actor: authority.actor.clone(),
-            edit_without_group_canonical_json: crate::os_pack::json::to_json_string(prepared.edit.as_ref()).into_bytes(),
+            edit_without_group_canonical_json: semio_framework_pack_json::to_json_string(prepared.edit.as_ref()).into_bytes(),
             post_snapshot_pack,
         };
         let pack = outcome.encode_pack_with(&PackEncodeOptions::default()).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
@@ -2307,7 +2318,7 @@ impl DurableStorePreparedOutcomeV1 {
             || verified.authority.next_sequence_number != authority.next_sequence_number
             || verified.authority.next_clock != authority.next_clock
             || verified.authority.actor != authority.actor
-            || ValueToValue::to_value(verified.edit.as_ref()) != ValueToValue::to_value(prepared.edit.as_ref())
+            || semio_framework_value::ToValue::to_value(verified.edit.as_ref()) != semio_framework_value::ToValue::to_value(prepared.edit.as_ref())
             || verified.post_snapshot.encode_pack() != prepared.post_snapshot.encode_pack()
         {
             return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
@@ -2387,8 +2398,8 @@ where
 {
     validate_json_budget(bytes)?;
     let json = std::str::from_utf8(bytes).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
-    let value = crate::os_pack::json::from_json_str(json).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
-    if crate::os_pack::json::to_json_string(&value).as_bytes() != bytes {
+    let value = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
+    if semio_framework_pack_json::to_json_string(&value).as_bytes() != bytes {
         return Err(DurableOwnedGroupDecisionError::NonCanonical);
     }
     Ok(value)
@@ -2579,10 +2590,10 @@ where
             base_revision: expected_revision,
             base_applied_edit_count: authority.base_applied_edit_count.try_into().map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?,
             next_sequence_number: authority.next_sequence_number,
-            next_clock_canonical_json: crate::os_pack::json::to_json_string(&authority.next_clock).into_bytes(),
+            next_clock_canonical_json: semio_framework_pack_json::to_json_string(&authority.next_clock).into_bytes(),
             actor: authority.actor.clone(),
             group_id: group_id.into(),
-            edit_canonical_json: crate::os_pack::json::to_json_string(edit.as_ref()).into_bytes(),
+            edit_canonical_json: semio_framework_pack_json::to_json_string(edit.as_ref()).into_bytes(),
             post_snapshot_pack: post_snapshot.encode_pack(),
             edit_digest,
             post_generation,
@@ -2623,7 +2634,7 @@ impl DurableBoundOneItemOutcomeV1 {
         if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1) {
             return Err(DurableOwnedGroupDecisionError::InvalidSchema);
         }
-        let file = crate::os_io::resolve_ready(crate::os_pack::format::PackFile::open_manifest(inner.as_slice(), &options.limits, options.verification)).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
+        let file = ::semio_framework_async::poll::resolve_ready(crate::os_pack::format::PackFile::open_manifest(inner.as_slice(), &options.limits, options.verification)).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
         let manifest = file.manifest().ok_or_else(|| DurableOwnedGroupDecisionError::Codec("bound outcome manifest is absent".into()))?;
         if manifest.uncompressed_body_len > DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64 {
             return Err(DurableOwnedGroupDecisionError::RecoveryPackTooLarge);
@@ -2671,7 +2682,7 @@ impl DurableBoundOneItemOutcomeV1 {
             next_sequence_number: self.next_sequence_number,
             next_clock_canonical_json: self.next_clock_canonical_json.clone(),
             actor: self.actor.clone(),
-            edit_without_group_canonical_json: crate::os_pack::json::to_json_string(&edit).into_bytes(),
+            edit_without_group_canonical_json: semio_framework_pack_json::to_json_string(&edit).into_bytes(),
             post_snapshot_pack: self.post_snapshot_pack.clone(),
         };
         outcome.encode_pack_with(&PackEncodeOptions::default()).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))
@@ -2807,7 +2818,7 @@ where
         || outcome.unbound_pack::<Mutation>().map(|pack| semio_framework_hash::sha256_hex(&pack))? != member.unbound_outcome_sha256
         || CursorRevisionAccumulator::edit_digest(&edit) != outcome.edit_digest
         || accumulator.edit_digest != outcome.edit_digest
-        || crate::os_pack::json::to_json_string(tail).as_bytes() != outcome.edit_canonical_json
+        || semio_framework_pack_json::to_json_string(tail).as_bytes() != outcome.edit_canonical_json
         || store.current.encode_pack() != outcome.post_snapshot_pack
     {
         return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
@@ -2942,7 +2953,7 @@ where
         {
             return Err(DurableOwnedGroupDecisionError::InvalidOwner);
         }
-        let anchor_sha256 = semio_framework_hash::sha256_hex(crate::os_pack::json::to_json_string(&anchor).as_bytes());
+        let anchor_sha256 = semio_framework_hash::sha256_hex(semio_framework_pack_json::to_json_string(&anchor).as_bytes());
         let mut decision = DurableOwnedThreeMemberDecisionV1 { schema: DURABLE_OWNED_GROUP_DECISION_SCHEMA_V1.into(), anchor, anchor_sha256, decision_sha256: String::new(), parent, drawing, value };
         decision.decision_sha256 = semio_framework_hash::sha256_hex(decision.canonical_unsigned_json().as_bytes());
         let parent = self.parent.bind(parent_store, &decision.decision_sha256)?;
@@ -2965,12 +2976,12 @@ impl ArtifactDsl for DurableUnboundOneItemOutcomeV1 {
 
     fn parse_dsl(text: &str) -> Result<Self, TextError> {
         let body = crate::os_store::semio_format::split_text_preamble(text).map(|(_, body)| body).unwrap_or(text);
-        let record = crate::os_dsl::parse(body, &Self::__dsl_spec(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document })?;
+        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
 
     fn print_dsl(&self) -> String {
-        let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
         let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Dsl, 1).expect("valid unbound outcome envelope");
         crate::os_store::semio_format::wrap_text(&envelope, &body)
     }
@@ -2979,20 +2990,20 @@ impl ArtifactDsl for DurableUnboundOneItemOutcomeV1 {
 impl ArtifactPack for DurableUnboundOneItemOutcomeV1 {
     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1).map_err(|error| PackError::Schema(error.to_string()))?;
+        let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1).map_err(|error| PackError::from(error.into_value_error()))?;
         Ok(crate::os_store::semio_format::wrap_binary(&envelope, &inner))
     }
 
     fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
-        let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|error| PackError::Schema(error.to_string()))?;
+        let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|error| PackError::from(error.into_value_error()))?;
         if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1) {
-            return Err(PackError::Schema("unbound outcome pack envelope mismatch".into()));
+            return Err(PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "unbound outcome pack envelope mismatch")));
         }
         let (record, _) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(crate::os_store::text_error_to_pack_error)
     }
 
-    fn record_spec() -> Option<crate::os_dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -3006,12 +3017,12 @@ impl ArtifactDsl for DurableBoundOneItemOutcomeV1 {
 
     fn parse_dsl(text: &str) -> Result<Self, TextError> {
         let body = crate::os_store::semio_format::split_text_preamble(text).map(|(_, body)| body).unwrap_or(text);
-        let record = crate::os_dsl::parse(body, &Self::__dsl_spec(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document })?;
+        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
 
     fn print_dsl(&self) -> String {
-        let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
         let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Dsl, 1).expect("valid bound outcome envelope");
         crate::os_store::semio_format::wrap_text(&envelope, &body)
     }
@@ -3020,20 +3031,20 @@ impl ArtifactDsl for DurableBoundOneItemOutcomeV1 {
 impl ArtifactPack for DurableBoundOneItemOutcomeV1 {
     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1).map_err(|error| PackError::Schema(error.to_string()))?;
+        let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1).map_err(|error| PackError::from(error.into_value_error()))?;
         Ok(crate::os_store::semio_format::wrap_binary(&envelope, &inner))
     }
 
     fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
-        let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|error| PackError::Schema(error.to_string()))?;
+        let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|error| PackError::from(error.into_value_error()))?;
         if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1) {
-            return Err(PackError::Schema("bound outcome pack envelope mismatch".into()));
+            return Err(PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "bound outcome pack envelope mismatch")));
         }
         let (record, _) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(crate::os_store::text_error_to_pack_error)
     }
 
-    fn record_spec() -> Option<crate::os_dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -3112,7 +3123,7 @@ impl DurableOwnedThreeMemberDecisionV1 {
             }
             member.unbound_outcome_sha256.clone_from(&outcome.sha256);
         }
-        let anchor_sha256 = semio_framework_hash::sha256_hex(crate::os_pack::json::to_json_string(&anchor).as_bytes());
+        let anchor_sha256 = semio_framework_hash::sha256_hex(semio_framework_pack_json::to_json_string(&anchor).as_bytes());
         let mut decision = Self { schema: DURABLE_OWNED_GROUP_DECISION_SCHEMA_V1.into(), anchor, anchor_sha256, decision_sha256: String::new(), parent, drawing, value };
         decision.decision_sha256 = semio_framework_hash::sha256_hex(decision.canonical_unsigned_json().as_bytes());
         for (member, prepared) in [(&mut decision.parent, &outcomes.parent), (&mut decision.drawing, &outcomes.drawing), (&mut decision.value, &outcomes.value)] {
@@ -3136,7 +3147,7 @@ impl DurableOwnedThreeMemberDecisionV1 {
                 next_clock_canonical_json: unbound.next_clock_canonical_json,
                 actor: unbound.actor,
                 group_id: decision.decision_sha256.clone(),
-                edit_canonical_json: crate::os_pack::json::to_json_string(&edit).into_bytes(),
+                edit_canonical_json: semio_framework_pack_json::to_json_string(&edit).into_bytes(),
                 post_snapshot_pack: unbound.post_snapshot_pack,
                 edit_digest: CursorRevisionAccumulator::edit_digest(&edit),
                 post_generation: member.post_generation,
@@ -3150,11 +3161,11 @@ impl DurableOwnedThreeMemberDecisionV1 {
     }
 
     pub(crate) fn canonical_json(&self) -> String {
-        crate::os_pack::json::to_json_string(self)
+        semio_framework_pack_json::to_json_string(self)
     }
 
     pub(crate) fn canonical_unsigned_json(&self) -> String {
-        crate::os_pack::json::to_json_string(&DurableOwnedThreeMemberUnsignedV1 {
+        semio_framework_pack_json::to_json_string(&DurableOwnedThreeMemberUnsignedV1 {
             schema: self.schema.clone(),
             anchor: self.anchor.clone(),
             parent: unsigned_member(&self.parent),
@@ -3167,7 +3178,11 @@ impl DurableOwnedThreeMemberDecisionV1 {
         if json.len() > DURABLE_OWNED_GROUP_EVENT_MAX_BYTES {
             return Err(DurableOwnedGroupDecisionError::EventTooLarge);
         }
-        let decision: Self = crate::os_pack::json::from_json_str(json).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
+        let parsed = semio_framework_pack_json::parse(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| match error {
+            semio_framework_pack_json::JsonError::DuplicateMember { .. } => DurableOwnedGroupDecisionError::NonCanonical,
+            other => DurableOwnedGroupDecisionError::Codec(other.to_string()),
+        })?;
+        let decision = <Self as ValueFromValue>::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
         if decision.canonical_json() != json {
             return Err(DurableOwnedGroupDecisionError::NonCanonical);
         }
@@ -3195,7 +3210,7 @@ impl DurableOwnedThreeMemberDecisionV1 {
                 max_total_alloc: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES as u64,
             },
         };
-        let file = crate::os_io::resolve_ready(crate::os_pack::format::PackFile::open_manifest(inner.as_slice(), &options.limits, options.verification)).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
+        let file = ::semio_framework_async::poll::resolve_ready(crate::os_pack::format::PackFile::open_manifest(inner.as_slice(), &options.limits, options.verification)).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
         let manifest = file.manifest().ok_or_else(|| DurableOwnedGroupDecisionError::Codec("durable group manifest is absent".into()))?;
         if manifest.uncompressed_body_len > DURABLE_OWNED_GROUP_EVENT_MAX_BYTES as u64 {
             return Err(DurableOwnedGroupDecisionError::EventTooLarge);
@@ -3250,7 +3265,7 @@ impl DurableOwnedThreeMemberDecisionV1 {
         if unsigned.len() > DURABLE_OWNED_GROUP_STRUCTURAL_MAX_BYTES {
             return Err(DurableOwnedGroupDecisionError::InvalidIdentity);
         }
-        if self.anchor_sha256 != semio_framework_hash::sha256_hex(crate::os_pack::json::to_json_string(&self.anchor).as_bytes()) || self.decision_sha256 != semio_framework_hash::sha256_hex(unsigned.as_bytes()) {
+        if self.anchor_sha256 != semio_framework_hash::sha256_hex(semio_framework_pack_json::to_json_string(&self.anchor).as_bytes()) || self.decision_sha256 != semio_framework_hash::sha256_hex(unsigned.as_bytes()) {
             return Err(DurableOwnedGroupDecisionError::InvalidHash);
         }
         if self.encode_pack().len() > DURABLE_OWNED_GROUP_EVENT_MAX_BYTES {
@@ -3281,11 +3296,11 @@ impl ArtifactDsl for DurableOwnedThreeMemberDecisionV1 {
     }
     fn parse_dsl(text: &str) -> Result<Self, TextError> {
         let body = crate::os_store::semio_format::split_text_preamble(text).map(|(_, body)| body).unwrap_or(text);
-        let record = crate::os_dsl::parse(body, &Self::__dsl_spec(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document })?;
+        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
-        let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
         let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Dsl, 1).expect("valid durable group envelope");
         crate::os_store::semio_format::wrap_text(&envelope, &body)
     }
@@ -3294,18 +3309,18 @@ impl ArtifactDsl for DurableOwnedThreeMemberDecisionV1 {
 impl ArtifactPack for DurableOwnedThreeMemberDecisionV1 {
     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1).map_err(|error| PackError::Schema(error.to_string()))?;
+        let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1).map_err(|error| PackError::from(error.into_value_error()))?;
         Ok(crate::os_store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
-        let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|error| PackError::Schema(error.to_string()))?;
+        let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|error| PackError::from(error.into_value_error()))?;
         if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1) {
-            return Err(PackError::Schema("durable group pack envelope mismatch".into()));
+            return Err(PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "durable group pack envelope mismatch")));
         }
         let (record, _) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(crate::os_store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<crate::os_dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -3317,11 +3332,15 @@ pub fn durable_owned_group_journal_test_record(fixture_json: &str) -> DurableOwn
     let fixture: serde_json::Value = serde_json::from_str(fixture_json).expect("durable group fixture");
     let hex = |value: &str| value.as_bytes().as_chunks::<2>().0.iter().map(|pair| u8::from_str_radix(std::str::from_utf8(pair).expect("fixture hex"), 16).expect("fixture byte")).collect::<Vec<_>>();
     let revision = |value: &str| -> [u8; 32] { hex(value).try_into().expect("fixed fixture revision") };
-    let reference = |value: &serde_json::Value| crate::os_pack::json::from_json_str(&serde_json::to_string(value).expect("fixture reference json")).expect("fixture reference");
+    let reference = |value: &serde_json::Value| semio_framework_pack_json::from_json_str(&serde_json::to_string(value).expect("fixture reference json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture reference");
     let member = |value: &serde_json::Value| DurableOwnedGroupMemberV1 {
         role: value["role"].as_str().expect("fixture role").to_string(),
         reference: reference(&value["reference"]),
-        owner: if value["owner"].is_null() { None } else { Some(crate::os_pack::json::from_json_str(&serde_json::to_string(&value["owner"]).expect("fixture owner json")).expect("fixture owner")) },
+        owner: if value["owner"].is_null() {
+            None
+        } else {
+            Some(semio_framework_pack_json::from_json_str(&serde_json::to_string(&value["owner"]).expect("fixture owner json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture owner"))
+        },
         expected_generation: value["expectedGeneration"].as_u64().expect("fixture generation"),
         expected_revision: revision(value["expectedRevisionHex"].as_str().expect("fixture revision")),
         recovery_schema: value["recoverySchema"].as_str().expect("fixture recovery schema").to_string(),
@@ -3339,7 +3358,7 @@ pub fn durable_owned_group_journal_test_record(fixture_json: &str) -> DurableOwn
     let members = &fixture["members"];
     let outcomes = DurableStorePreparedOutcomesV1 { parent: outcome(&members["parent"]), drawing: outcome(&members["drawing"]), value: outcome(&members["value"]) };
     let decision = DurableOwnedThreeMemberDecisionV1::seal_fixture(
-        crate::os_pack::json::from_json_str(&serde_json::to_string(&fixture["anchor"]).expect("fixture anchor json")).expect("fixture anchor"),
+        semio_framework_pack_json::from_json_str(&serde_json::to_string(&fixture["anchor"]).expect("fixture anchor json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture anchor"),
         member(&members["parent"]),
         member(&members["drawing"]),
         member(&members["value"]),
@@ -3423,7 +3442,7 @@ where
         next_clock_canonical_json: unbound.next_clock_canonical_json,
         actor: unbound.actor,
         group_id: decision_sha256.into(),
-        edit_canonical_json: crate::os_pack::json::to_json_string(&edit).into_bytes(),
+        edit_canonical_json: semio_framework_pack_json::to_json_string(&edit).into_bytes(),
         post_snapshot_pack: unbound.post_snapshot_pack,
         edit_digest: CursorRevisionAccumulator::edit_digest(&edit),
         post_generation: member.post_generation,
@@ -3462,7 +3481,7 @@ where
     let anchor = DurableOwnedGroupAnchorV1 { schema: DURABLE_OWNED_GROUP_ANCHOR_SCHEMA_V1.into(), parent: document.clone(), shape: DURABLE_OWNED_GROUP_SHAPE_V1.into() };
     let mut decision = DurableOwnedThreeMemberDecisionV1 {
         schema: DURABLE_OWNED_GROUP_DECISION_SCHEMA_V1.into(),
-        anchor_sha256: semio_framework_hash::sha256_hex(crate::os_pack::json::to_json_string(&anchor).as_bytes()),
+        anchor_sha256: semio_framework_hash::sha256_hex(semio_framework_pack_json::to_json_string(&anchor).as_bytes()),
         decision_sha256: String::new(),
         parent: durable_group_test_member(PARENT_ROLE, document.clone(), None, &parent_outcome)?,
         drawing: durable_group_test_member(DRAWING_ROLE, drawing_reference.clone(), Some(OwnerRef { parent: document.clone(), slot: DRAWING_ROLE.into(), child_id: drawing_reference.artifact_id }), &drawing_outcome)?,

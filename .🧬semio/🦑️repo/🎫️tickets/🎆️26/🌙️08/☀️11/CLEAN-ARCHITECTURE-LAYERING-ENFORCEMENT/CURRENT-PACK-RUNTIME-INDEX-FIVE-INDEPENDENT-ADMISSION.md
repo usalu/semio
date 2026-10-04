@@ -1,0 +1,5 @@
+Index5 finite composition is independently SourceReady:74 full rows, four changed exact compiled-predecessor pairs,70 byte-exact prior rows, seven immutable predecessor/successor/admission links and three unchanged current fixture/defining contexts. All row hashes/inverses, authored complete Rust grammar and dual-parser Cargo tables agree. Both original whole route objects are unchanged.
+
+The four changed pairs replay forward/inverse exactly from index4 authored bodies, including Root law plannedPredecessor rather than its historical live before. The70 unchanged rows inherit their previously admitted exact replay. Initial collector assumed universal patch representations and refused null creation/noop fields; corrected collector checks changed pairs separately and proves70 unchanged objects exact. No source/authority changed.
+
+Evidence: 🗑️generated/cargo-workspace-general-transfer/independent-index-five-four-row-runtime-source-composition-1.json. Native epoch6 fresh snapshot/provider/metadata admission and actual whole runtime remain required; no live publication is inferred.

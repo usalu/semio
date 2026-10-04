@@ -1,21 +1,27 @@
 #!/usr/bin/env bun
 import { resolveTestLevel } from "../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { runVitestV1, readVitestPolicyV1 } from "../../../🏃️process/🧪️testing/🧪️vitest/🟦️.ts";
-/** ⏳️ `@semio-tech/framework-async` TS package router: `bun ./📜️script.ts info|test|twin`. No web-host
- * implementation exists yet — `WebAsyncScope` (`../../🟦️.ts`) is a documented seam only. What this
- * package DOES test is the `boxed_fixed_slots` budget twin: the Rust-free re-check of
- * `../../🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json`'s `capacity × size_of` arithmetic, the independent
- * half of the law the per-crate Rust guards assert against live `size_of`. */
+/** 🧭️ Runs the async scheduler, fixed-slot, publication, and public API contracts. */
 
 import { BundleScript, ScriptRouter } from "../../../🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { resolve } from "node:path";
+import { runOwnedCommand } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
+
+/** 📏️ Executes the actual closed public API compiler and runtime laws. */
+class ApiContractScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw Error("test-api-contract accepts no arguments");
+    await runOwnedCommand(process.execPath, ["test", resolve(this.root, "../../📏️api/🧪️tests/🟦️.ts")], this.repoRoot, "async:public-api", 30_000);
+  }
+}
 
 class InfoScript extends BundleScript {
   run(): void {
     console.log(
-      "@semio-tech/framework-async: owned-schema mirror + the documented (unimplemented) WebAsyncScope seam. " +
-        "The concrete HostAsyncRuntime lives in Rust only (semio-framework-async, packet R2's tokio-backed " +
-        "implementation). `test` runs the boxed-fixed-slots budget twin over 🧫️fixtures/🧱️boxed-fixed-slots — see 🟦️.ts.",
+      "@semio-tech/framework-async: owned async wire types and host continuation scheduling. " +
+        "test runs scheduler and fixed-slot laws; twin checks the host event loop; " +
+        "test-api-contract verifies the closed public surface.",
     );
   }
 }
@@ -35,6 +41,28 @@ class TwinScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("info", InfoScript).register("test", TestScript).register("twin", TwinScript);
+/** 🔐️ Checks the closed language-neutral publication admission contract with independent oracles. */
+class PublicationContractScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    if (args.length) throw Error("Expected test-publication-contract");
+    const tests = [resolve(this.root, "../../🔐️publication/🧪️tests/🟦️.ts"), resolve(this.root, "../../🔐️publication/🛂️checkpoint/🧪️tests/🟦️.ts")];
+    await runOwnedCommand(process.execPath, [Bun.resolveSync("typescript/bin/tsc", this.root), "--noEmit", "--strict", "--noUncheckedIndexedAccess", "--skipLibCheck", "--allowImportingTsExtensions", "--target", "ES2022", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", ...tests], this.root, "async:publication:strict", 30000);
+    await runOwnedCommand(process.execPath, ["test", ...tests], this.root, "async:publication:contract", 30000);
+  }
+}
+
+import { runBudgetedTestCommand } from "../../../🏃️process/🧪️testing/🎛️execution/🟦️.ts";
+
+/** 🔂️ Verifies immediate one-poll semantics in the owned language-neutral corpus. */
+class SinglePollCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw Error("single-poll-check accepts no arguments");
+    const test = resolve(this.root, "../../🔂️poll/🧪️tests/🟦️.ts");
+    await runBudgetedTestCommand(process.execPath, [Bun.resolveSync("typescript/bin/tsc", this.root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", test], {cwd: this.repoRoot, budgetMs: 30000, throwOnFailure: true});
+    await runBudgetedTestCommand(process.execPath, ["test", test], {cwd: this.repoRoot, budgetMs: 15000, throwOnFailure: true});
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("info", InfoScript).register("test", TestScript).register("twin", TwinScript).register("test-publication-contract", PublicationContractScript).register("single-poll-check", SinglePollCheckScript).register("test-api-contract", ApiContractScript);
 
 await runScriptMain(router, { defaultCommand: "info" });

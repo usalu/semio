@@ -1,0 +1,44 @@
+{
+  "state": "MountedTestAndNeutralPairAfterActualZeroDiagnosticNativeRED",
+  "nativeSelector": "@semio-tech/framework-os-kernel:test-schema-storage-native",
+  "candidateCount": 1,
+  "source": {
+    "target": "@semio-tech/framework-pack-record-rs:test-schema-storage-source",
+    "red": {
+      "selected": 3,
+      "passed": 2,
+      "failed": 1,
+      "expectations": 20
+    },
+    "green": {
+      "selected": 3,
+      "passed": 3,
+      "failed": 0,
+      "expectations": 48
+    }
+  },
+  "baseline": {
+    "nextest": "d9a41866-77fd-4c09-87f2-85259d2bda00",
+    "actualZeroRequests": 46,
+    "priorAssertedZeroRequests": 0
+  },
+  "productionErrorApiChanged": false,
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧫️fixtures/🔑️schema-hash/💰️storage/🔣️.json",
+      "sha256": "785c26ecd184129eb8a89ffd7ea824afa700bfbf0df74c725488af44dc6ae3c6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧬️schema/🔑️schema-hash/💰️storage/🔣️.json",
+      "sha256": "5a45d35ab77afd8179d9fcb8e475dfa538fc8a80740c646f4b810ed05f0152d7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🔬️schema-hash/💰️storage/🟦️.ts",
+      "sha256": "7a569468991adf355ce5a8830070f842ab6e7eaa6fc349d1a224a1d2cebc60aa"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/🧪️tests/🔬️schema-hash/💰️storage/🦀️.rs",
+      "sha256": "edcbda473a15237625ba0cf7d73d5f8c94bbeca6ab1a5cbf7729d09fa0909c88"
+    }
+  ]
+}

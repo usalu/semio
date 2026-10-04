@@ -5,19 +5,16 @@ pub const TEXT_OPCODE: &str = "patch-pixels";
 pub const CODEC: Entry = Entry { opcode: TEXT_OPCODE, print, parse };
 
 pub fn print(value: &PngMutation) -> Option<String> {
-    let PngMutation::PatchPixels(PatchPixelsMutation { index, remove_count, pixels, move_to }) = value else { return None };
-    Some(format!("patch-pixels index={index} remove-count={remove_count} pixels={} move-to={}", hex_encode(pixels), move_to.map_or_else(|| "none".into(), |value| value.to_string())))
+    let PngMutation::PatchPixels(payload) = value else { return None };
+    let json = semio_framework_pack_json::to_json_string(payload);
+    Some(format!("{TEXT_OPCODE} payload={}", json.as_bytes().iter().map(|byte| format!("{byte:02x}")).collect::<String>()))
 }
-pub fn parse(line: &str) -> Result<PngMutation, String> {
-    let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
-    if keyword != TEXT_OPCODE { return Err(format!("expected {TEXT_OPCODE}")); }
-    let args: std::collections::BTreeMap<&str, &str> = rest.split(' ').filter(|part| !part.is_empty()).map(|token| token.split_once('=').ok_or_else(|| format!("bad argument {token}"))).collect::<Result<_, _>>()?;
-    let arg = |key: &str| args.get(key).copied().ok_or_else(|| format!("missing {key}"));
-    let move_to = match arg("move-to")? { "none" => None, value => Some(value.parse::<u64>().map_err(|error| error.to_string())?) };
-    Ok(PngMutation::PatchPixels(PatchPixelsMutation {
-        index: arg("index")?.parse::<u64>().map_err(|error| error.to_string())?,
-        remove_count: arg("remove-count")?.parse::<u64>().map_err(|error| error.to_string())?,
-        pixels: hex_decode(arg("pixels")?)?,
-        move_to,
-    }))
+
+pub fn parse(line: &str) -> Result<PngMutation, semio_framework_diagnostic::TextError> {
+    let (_, encoded) = line.split_once(" payload=").ok_or_else(|| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "missing patch-pixels payload", semio_framework_diagnostic::TextSpan::at(1, 1)))?;
+    if !encoded.len().is_multiple_of(2) { return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "odd payload hexadecimal length", semio_framework_diagnostic::TextSpan::at(1, 1))); }
+    let bytes: Result<Vec<u8>, _> = (0..encoded.len()).step_by(2).map(|index| u8::from_str_radix(&encoded[index..index + 2], 16)).collect();
+    let text = String::from_utf8(bytes.map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), semio_framework_diagnostic::TextSpan::at(1, 1)))?).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
+    let payload = semio_framework_pack_json::from_json_str(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1)))?;
+    Ok(PngMutation::PatchPixels(payload))
 }

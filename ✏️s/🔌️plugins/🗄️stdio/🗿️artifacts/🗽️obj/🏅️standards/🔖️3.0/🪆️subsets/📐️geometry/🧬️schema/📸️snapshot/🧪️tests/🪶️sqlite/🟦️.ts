@@ -1,3 +1,5 @@
+import refusalCorpus from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧫️fixtures/🔣️.json";
+const canceledKind=refusalCorpus.cases.find(c=>c.id==="canceled-projection")!.expectedKind;
 import { binary64,binary32,binary64Value,binary32Value,type Binary64 } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 /** 🧫️ Shared OBJ geometry and membership fixture with independent SQL edits. */
 import { Database } from "bun:sqlite";
@@ -150,10 +152,10 @@ test("OBJ numeric, source-position and aggregate resource constraints apply befo
 test("OBJ counting scans and reconstruction observe cancellation", async () => {
   const controller = new AbortController();
   let events = 0;
-  await expect(objSnapshotToSqliteDatabase({ ...input, unknownStatements: Array.from({ length: 1000 }, (_, lineIndex) => ({ lineIndex: BigInt(lineIndex), raw: "source" })) }, { signal: controller.signal, onProgress: () => { if (++events === 2) controller.abort(); } })).rejects.toMatchObject({ name: "AbortError" });
+  await expect(objSnapshotToSqliteDatabase({ ...input, unknownStatements: Array.from({ length: 1000 }, (_, lineIndex) => ({ lineIndex: BigInt(lineIndex), raw: "source" })) }, { signal: controller.signal, onProgress: () => { if (++events === 2) controller.abort(); } })).rejects.toMatchObject({ kind: canceledKind });
   const database = await objSnapshotToSqliteDatabase(input);
   const reconstruct = new AbortController();
-  await expect(objSnapshotFromSqliteDatabase(database, { signal: reconstruct.signal, onProgress: () => reconstruct.abort() })).rejects.toMatchObject({ name: "AbortError" });
+  await expect(objSnapshotFromSqliteDatabase(database, { signal: reconstruct.signal, onProgress: () => reconstruct.abort() })).rejects.toMatchObject({ kind: canceledKind });
 });
 for(const [index,hex] of ieee.binary64Bits.entries())test(`OBJ scalar word ${hex} survives independent SQLite edits and companion validation`, async () => {
     const bits=BigInt("0x"+hex);
@@ -197,5 +199,5 @@ test("OBJ complete state mismatch and cancellation refuse",async()=>{
   const database=await objSnapshotToSqliteDatabase(input);
   await expect(objSnapshotValidateSqliteSubset({...input,schema:"different"},ieee.sqliteDialect,database)).rejects.toThrow("identity");
   const controller=new AbortController();controller.abort();
-  await expect(objSnapshotValidateSqliteSubset(input,ieee.sqliteDialect,database,{signal:controller.signal})).rejects.toMatchObject({name:"AbortError"});
+  await expect(objSnapshotValidateSqliteSubset(input,ieee.sqliteDialect,database,{signal:controller.signal})).rejects.toMatchObject({kind:canceledKind});
 });

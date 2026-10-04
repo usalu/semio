@@ -98,6 +98,7 @@
       ],
       "kinds": [
         "set-snapshot",
+        "patch-snapshot",
         "set-header-var",
         "remove-header-var"
       ]
@@ -125,6 +126,38 @@
             "operation": "set-snapshot",
             "bridgeVersion": 1,
             "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dxf-r12-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "dxf-crate-r12-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "dxf"
+          ],
+          "invariants": {
+            "local": [
+              "replacement-snapshot-reproduces-exactly-or-reports-no-op"
+            ],
+            "enclosing": [
+              "dxf-r12-reencode-round-trip-agrees-with-reference-reader"
+            ]
+          }
+        },
+        {
+          "id": "patch-snapshot",
+          "capability": "dxf-r12-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#DxfMutation::PatchSnapshot",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "patch-snapshot",
+            "bridgeVersion": 1,
+            "variant": "PatchSnapshot"
           },
           "oracleRequirements": [
             {

@@ -131,7 +131,7 @@ fn inverse_specs(spec: &Json, base: &[u8]) -> Result<Vec<Json>, String> {
     let named = |key: &str| -> Result<String, String> { params.get(key).and_then(|value| match value { Json::String(text) => Some(text.clone()), _ => None }).ok_or_else(|| format!("{kind} requires a string {key:?} parameter")) };
     let one = |value: Json| -> Result<Vec<Json>, String> { Ok(vec![value]) };
     match kind.as_str() {
-        "set-snapshot" => one(json_spec("set-snapshot", json_obj(vec![("snapshot", oracle_snapshot_json(base)?)]))),
+        "set-snapshot" | "patch-snapshot" => one(json_spec("set-snapshot", json_obj(vec![("snapshot", oracle_snapshot_json(base)?)]))),
         "insert-vertex" => one(json_spec("remove-vertex", json_obj(vec![("index", json_num(8449.0))]))),
         "remove-vertex" => one(json_spec("insert-vertex", json_obj(vec![("index", json_num(8448.0)), ("vertex", json_obj(vec![("x", json_num(0.0)), ("y", json_num(-1.0)), ("z", json_num(0.0))]))]))),
         "set-vertex" => one(json_spec("set-vertex", json_obj(vec![("index", json_num(0.0)), ("vertex", json_obj(vec![("x", json_num(0.0)), ("y", json_num(-1.0)), ("z", json_num(0.0))]))]))),
@@ -287,7 +287,7 @@ mod subject {
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let mut snapshot = decode(&mutable_input(ctx)?)?;
         let forward = mutation_of(&ctx.doc_json()?)?;
-        let backward = mutation_inverse(&forward, &snapshot);
+        let backward = mutation_inverse(&forward, &snapshot).expect("valid retained mutation inverse fixture");
         apply_obj_mutation(&mut snapshot, &forward);
         for mutation in &backward {
             apply_obj_mutation(&mut snapshot, mutation);

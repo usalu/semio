@@ -1,7 +1,9 @@
 //! 🧪️ Real Flow payload, codec, structural-diff, and Store inverse laws.
 use super::*;
 use crate::os_spr::{Mutation, MutationLeaf, OpBinary, OpText};
-use crate::os_dsl::{DslValue, FromValue, ToValue};
+use semio_framework_value::DslValue;
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
 
 //#region 🧪️FixtureOwnership
 fn cases() -> serde_json::Value { serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("neutral Flow cases") }
@@ -25,11 +27,11 @@ fn positive(index: usize) -> serde_json::Value {
     payload
 }
 fn third_party_json<T: ToValue>(value: &T) -> serde_json::Value {
-    serde_json::from_str(&crate::os_pack::json::to_json_string(value)).expect("first-party JSON must remain valid RFC 8259")
+    serde_json::from_str(&semio_framework_pack_json::to_json_string(value)).expect("first-party JSON must remain valid RFC 8259")
 }
-fn base() -> FlowHostSnapshot { FlowHostSnapshot::from_value(DslValue::from(&cases()["hostSnapshot"])).expect("Flow host document") }
+fn base() -> FlowHostSnapshot { FlowHostSnapshot::from_value(semio_framework_value::DslValue::from(&cases()["hostSnapshot"])).expect("Flow host document") }
 fn operation(index: usize) -> FlowMutation {
-    FlowMutation::from_value(DslValue::from(&witness(index))).expect("direct Flow operation")
+    FlowMutation::from_value(semio_framework_value::DslValue::from(&witness(index))).expect("direct Flow operation")
 }
 fn retire_diff(diff: FlowDiff) {
     for delta in diff.deltas {
@@ -75,7 +77,7 @@ pub(crate) fn assert_leaf_contract<T>(index: usize, wrap: fn(T) -> FlowMutation,
 where T: MutationLeaf + ToValue + FromValue {
     let cases = cases();
     let payload = positive(index);
-    let leaf = T::from_value(DslValue::from(&payload)).expect("actual leaf payload");
+    let leaf = T::from_value(semio_framework_value::DslValue::from(&payload)).expect("actual leaf payload");
     let mutation = wrap(leaf);
     assert_eq!(third_party_json(&T::DESCRIPTOR), serde_json::from_str::<serde_json::Value>(descriptor).expect("owned descriptor"));
     assert!(T::DESCRIPTOR.validate().is_ok());
@@ -84,18 +86,18 @@ where T: MutationLeaf + ToValue + FromValue {
     assert_codecs(&mutation);
     let mut unknown = payload.clone();
     unknown["unknown"] = serde_json::json!(true);
-    assert!(T::from_value(DslValue::from(&unknown)).is_err());
+    assert!(T::from_value(semio_framework_value::DslValue::from(&unknown)).is_err());
     let mut unknown = third_party_json(&mutation);
     unknown["unknown"] = serde_json::json!(true);
-    assert!(FlowMutation::from_value(DslValue::from(&unknown)).is_err());
+    assert!(FlowMutation::from_value(semio_framework_value::DslValue::from(&unknown)).is_err());
     for field in cases["roster"][index]["required"].as_array().expect("required fields") {
         let mut missing = payload.clone();
         missing.as_object_mut().expect("payload").remove(field.as_str().expect("field"));
-        assert!(T::from_value(DslValue::from(&missing)).is_err());
+        assert!(T::from_value(semio_framework_value::DslValue::from(&missing)).is_err());
     }
     let before = base();
     let mut restored = apply(&before, &mutation);
-    let inverse = mutation.inverse(&before);
+    let inverse = mutation.inverse(&before).expect("valid retained mutation inverse fixture");
     assert!(!inverse.is_empty());
     for inverse in inverse.into_iter().rev() {
         let next = apply(&restored, &inverse);
@@ -128,7 +130,7 @@ fn all_ten_codecs_and_descriptors() {
             let field = if index == 0 || index == 4 { "index" } else { "toIndex" };
             payload[field] = serde_json::from_str(value).expect("JSON number");
             payload["operation"] = cases["roster"][index]["operation"].clone();
-            assert!(FlowMutation::from_value(DslValue::from(&payload)).is_err());
+            assert!(FlowMutation::from_value(semio_framework_value::DslValue::from(&payload)).is_err());
         }
     }
     assert!(FlowMutation::decode_op(&[1, 10]).is_err());
@@ -141,12 +143,12 @@ fn all_ten_codecs_and_descriptors() {
 fn index_codecs_reject_overflow() {
     for index in [0, 2, 4, 6] {
         let mutation = operation(index);
-        let (keyword, mut record) = <FlowMutation as crate::os_dsl::DslVariants>::to_named_record(&mutation);
-        let value = record.fields.values_mut().find(|value| matches!(value, crate::os_dsl::FieldValue::UInt(_))).expect("direct index field");
-        *value = crate::os_dsl::FieldValue::UInt(u64::from(u32::MAX) + 1);
-        assert!(<FlowMutation as crate::os_dsl::DslVariants>::from_named_record(&keyword, &record).is_err());
-        let spec = (<FlowMutation as crate::os_dsl::DslVariants>::variants()[index].1.ordinary)();
-        let text = crate::os_dsl::print(&record, &spec, crate::os_dsl::JoinMode::Inline);
+        let (keyword, mut record) = <FlowMutation as semio_framework_dsl_record::DslVariants>::to_named_record(&mutation);
+        let value = record.fields.values_mut().find(|value| matches!(value, semio_framework_dsl_record::FieldValue::UInt(_))).expect("direct index field");
+        *value = semio_framework_dsl_record::FieldValue::UInt(u64::from(u32::MAX) + 1);
+        assert!(<FlowMutation as semio_framework_dsl_record::DslVariants>::from_named_record(&keyword, &record).is_err());
+        let spec = (<FlowMutation as semio_framework_dsl_record::DslVariants>::variants()[index].1.ordinary)();
+        let text = semio_framework_dsl_record::print(&record, &spec, semio_framework_dsl_record::JoinMode::Inline);
         assert!(FlowMutation::parse_op(&text).is_err());
         let mut bytes = vec![1, u8::try_from(index).expect("ten leaves")];
         bytes.extend(crate::os_pack::encode_record_body(&spec, &record, &crate::os_pack::EncodeOptions::default()).expect("wide UInt body"));
@@ -166,7 +168,7 @@ fn ordered_collection_and_inverse_laws() {
         let after = apply(&before, &mutation);
         assert_eq!(after.widgets.iter().map(|widget| widget.id().as_str()).collect::<Vec<_>>(), expected);
         let mut restored = after;
-        for inverse in mutation.inverse(&before).into_iter().rev() {
+        for inverse in mutation.inverse(&before).expect("valid retained mutation inverse fixture").into_iter().rev() {
             let next = apply(&restored, &inverse);
             retire_mutation(inverse);
             restored.retire_cold();
@@ -183,7 +185,7 @@ fn ordered_collection_and_inverse_laws() {
         let after = apply(&before, &mutation);
         assert_eq!(after.synapses.iter().map(|synapse| synapse.id.as_str()).collect::<Vec<_>>(), expected);
         let mut restored = after;
-        for inverse in mutation.inverse(&before).into_iter().rev() {
+        for inverse in mutation.inverse(&before).expect("valid retained mutation inverse fixture").into_iter().rev() {
             let next = apply(&restored, &inverse);
             retire_mutation(inverse);
             restored.retire_cold();
@@ -224,7 +226,7 @@ fn structural_composition_is_ordered() {
 fn repeated_layout_inverse_uses_store_order() {
     let before = base();
     let mutation = operation(8);
-    let inverse = mutation.inverse(&before);
+    let inverse = mutation.inverse(&before).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 3);
     assert_eq!(third_party_json(&inverse), serde_json::json!([
         {"operation":"changeLayout","entries":[{"id":"a","layout":{"x":1.0,"y":2.0}}]},
@@ -264,15 +266,15 @@ fn typed_rejection_is_atomic() {
         retire_mutation(mutation);
         assert_eq!(third_party_json(&before), original);
     }
-    assert!(FlowMutation::RemoveWidget(RemoveWidget{id:"missing".into()}).inverse(&before).is_empty());
-    assert!(FlowMutation::MoveSynapse(MoveSynapse{id:"missing".into(),to_index:0}).inverse(&before).is_empty());
+    assert!(FlowMutation::RemoveWidget(RemoveWidget{id:"missing".into()}).inverse(&before).expect("valid retained mutation inverse fixture").is_empty());
+    assert!(FlowMutation::MoveSynapse(MoveSynapse{id:"missing".into(),to_index:0}).inverse(&before).expect("valid retained mutation inverse fixture").is_empty());
     before.retire_cold();
 }
 
 #[test]
 fn actual_nested_first_party_shapes() {
     for value in cases()["widgets"].as_array().expect("widget cases") {
-        let widget = Widget::from_value(DslValue::from(value)).expect("actual widget");
+        let widget = Widget::from_value(semio_framework_value::DslValue::from(value)).expect("actual widget");
         assert_eq!(third_party_json(&widget), *value);
         let mutation = FlowMutation::AddWidget(AddWidget{index:0,widget});
         assert_codecs(&mutation);
@@ -281,13 +283,13 @@ fn actual_nested_first_party_shapes() {
     }
     for text in [r#"{"index":0,"widget":{}}"#, r#"{"index":0,"widget":{"kind":"neuron","id":"n"}}"#, r#"{"index":0,"widget":{"kind":"neuron","id":"n","neuronKind":"x","params":{"bad":[]}}}"#] {
         let value: serde_json::Value = serde_json::from_str(text).expect("JSON syntax");
-        assert!(AddWidget::from_value(DslValue::from(&value)).is_err());
+        assert!(AddWidget::from_value(semio_framework_value::DslValue::from(&value)).is_err());
     }
-    let option = ChangeLayout::from_value(DslValue::from(&serde_json::from_str::<serde_json::Value>(r#"{"entries":[{"id":"a"},{"id":"a","layout":null}]}"#).unwrap())).expect("nullable omittable Option");
+    let option = ChangeLayout::from_value(semio_framework_value::DslValue::from(&serde_json::from_str::<serde_json::Value>(r#"{"entries":[{"id":"a"},{"id":"a","layout":null}]}"#).unwrap())).expect("nullable omittable Option");
     assert!(option.entries.iter().all(|entry|entry.layout.is_none()));
     for text in [r#"{"entries":[{"id":"a","layout":{} }]}"#, r#"{"entries":[{"id":"a","unknown":1}]}"#] {
         let value: serde_json::Value = serde_json::from_str(text).unwrap();
-        assert!(ChangeLayout::from_value(DslValue::from(&value)).is_err());
+        assert!(ChangeLayout::from_value(semio_framework_value::DslValue::from(&value)).is_err());
     }
 }
 
@@ -295,7 +297,7 @@ fn actual_nested_first_party_shapes() {
 fn diff_json_contract_matches_third_party_oracle() {
     let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧬️schema/🔺️diff/🧫️fixtures/🔣️.json")).unwrap();
     for row in vectors["valid"].as_array().unwrap() {
-        let diff = FlowDiff::from_value(DslValue::from(&row["value"])).unwrap_or_else(|error| panic!("{}: {error}", row["name"]));
+        let diff = FlowDiff::from_value(semio_framework_value::DslValue::from(&row["value"])).unwrap_or_else(|error| panic!("{}: {error}", row["name"]));
         assert_eq!(third_party_json(&diff), row["value"]);
         let decoded = FlowDiff::from_value(diff.to_value()).unwrap();
         assert_eq!(decoded, diff);
@@ -303,7 +305,7 @@ fn diff_json_contract_matches_third_party_oracle() {
         retire_diff(diff);
     }
     for row in vectors["invalid"].as_array().unwrap() {
-        assert!(FlowDiff::from_value(DslValue::from(&row["value"])).is_err(), "{} (first-party)", row["name"]);
+        assert!(FlowDiff::from_value(semio_framework_value::DslValue::from(&row["value"])).is_err(), "{} (first-party)", row["name"]);
         if matches!(row["name"].as_str(), Some("missing-fragment-fields" | "unknown-fragment-field")) {
             assert!(serde_json::from_value::<FlowCollectionDelta<SynapseSpec>>(row["value"]["deltas"][0]["value"].clone()).is_err(), "{} (serde oracle)", row["name"]);
         }

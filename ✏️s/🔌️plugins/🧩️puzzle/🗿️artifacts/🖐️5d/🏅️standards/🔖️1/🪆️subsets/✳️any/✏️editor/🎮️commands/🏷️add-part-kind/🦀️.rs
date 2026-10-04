@@ -2,7 +2,7 @@
 
 use crate::editor::puzzle5d::commands::add_brush_part::puzzle5d_place_brush_part;
 use crate::editor::puzzle5d::Puzzle5dActionCtx;
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 
 /// 🛍️ Catalogue placement — the shared brush placement, so both aspects land at once.
 pub fn add_part_kind(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {

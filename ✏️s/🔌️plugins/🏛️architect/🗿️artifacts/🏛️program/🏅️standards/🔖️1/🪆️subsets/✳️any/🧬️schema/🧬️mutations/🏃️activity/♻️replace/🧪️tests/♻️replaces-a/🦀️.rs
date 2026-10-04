@@ -19,11 +19,11 @@ const DIFF: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutati
 const OUTCOME: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🏃️activity/♻️replace/♻️replaces-a/🎯️outcome/🔣️.json");
 
 fn before() -> ProgramSnapshot {
-    dsl::json::from_json_str(BEFORE).expect("replace-activity/replaces-activity-a: before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("replace-activity/replaces-activity-a: before snapshot decodes")
 }
 
 fn expected_after() -> ProgramSnapshot {
-    dsl::json::from_json_str(AFTER).expect("replace-activity/replaces-activity-a: after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("replace-activity/replaces-activity-a: after snapshot decodes")
 }
 
 fn mutation() -> ProgramMutation {
@@ -44,7 +44,7 @@ async fn replace_activity_applies_to_committed_after() {
 async fn replace_activity_inverse_restores_before() {
     let base = before();
     let forward = mutation();
-    let mut undo = forward.inverse(&base);
+    let mut undo = forward.inverse(&base).expect("valid retained mutation inverse fixture");
     undo.reverse();
     let mut state = forward.diff(&base).diff().apply(&base).expect("replace-activity/replaces-activity-a: forward diff applies");
     for step in &undo {
@@ -58,8 +58,8 @@ async fn replace_activity_inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn replace_activity_committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: ProgramSnapshot = dsl::json::from_json_str(text).expect("replace-activity/replaces-activity-a: snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("replace-activity/replaces-activity-a: snapshot re-encodes");
+        let decoded: ProgramSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("replace-activity/replaces-activity-a: snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("replace-activity/replaces-activity-a: snapshot re-encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("replace-activity/replaces-activity-a: snapshot reparses");
         assert_eq!(reencoded, original, "replace-activity/replaces-activity-a: committed {side} snapshot JSON is not canonical");
     }
@@ -83,7 +83,7 @@ async fn replace_activity_declared_outcome_holds() {
 /// and which fields the mutation is allowed to touch, not merely that the end state matches.
 #[semio_framework_async_macros::async_test]
 async fn replace_activity_produces_committed_diff() {
-    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(mutation().diff(&before()).diff())).expect("replace-activity/replaces-activity-a: produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(mutation().diff(&before()).diff())).expect("replace-activity/replaces-activity-a: produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("replace-activity/replaces-activity-a: committed diff decodes");
     assert_eq!(produced, committed, "replace-activity/replaces-activity-a: the diff replace-activity builds differs from the committed 🔺️diff/🔣️.json");
 }
@@ -91,8 +91,8 @@ async fn replace_activity_produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to ProgramDiff.
 #[semio_framework_async_macros::async_test]
 async fn replace_activity_committed_diff_is_canonical() {
-    let decoded: ProgramDiff = dsl::json::from_json_str(DIFF).expect("replace-activity/replaces-activity-a: committed diff decodes");
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("replace-activity/replaces-activity-a: committed diff re-encodes");
+    let decoded: ProgramDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("replace-activity/replaces-activity-a: committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("replace-activity/replaces-activity-a: committed diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("replace-activity/replaces-activity-a: committed diff reparses");
     assert_eq!(reencoded, original, "replace-activity/replaces-activity-a: committed diff JSON is not canonical");
 }
@@ -101,7 +101,7 @@ async fn replace_activity_committed_diff_is_canonical() {
 /// after-snapshot — the diff is a complete description of what replace-activity does, not a summary.
 #[semio_framework_async_macros::async_test]
 async fn replace_activity_committed_diff_applies_to_after() {
-    let decoded: ProgramDiff = dsl::json::from_json_str(DIFF).expect("replace-activity/replaces-activity-a: committed diff decodes");
+    let decoded: ProgramDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("replace-activity/replaces-activity-a: committed diff decodes");
     let produced = decoded.apply(&before()).expect("replace-activity/replaces-activity-a: committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "replace-activity/replaces-activity-a: the committed diff did not carry before to after");
 }

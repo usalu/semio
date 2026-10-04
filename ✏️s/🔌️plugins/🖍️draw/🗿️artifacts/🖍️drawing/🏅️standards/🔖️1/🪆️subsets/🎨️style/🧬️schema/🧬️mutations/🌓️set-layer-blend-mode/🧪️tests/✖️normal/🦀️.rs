@@ -51,7 +51,7 @@ async fn canonical_blend_mode_preserves_opacity() {
 async fn inverse_restores_the_previous_blend_mode() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_drawing_mutation(&base, &mutation);
+    let inverse = inverse_drawing_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "set-layer-blend-mode undoes with exactly one counter-set");
     let mut snapshot = base.clone();
     apply_drawing_mutation(&mut snapshot, &mutation).expect("forward applies");
@@ -128,7 +128,7 @@ fn invalid_blend_edits_are_rejected_without_changing_the_document() {
         let mode = case["patch"]["value"].as_str().unwrap();
         let accepted = case["accepted"].as_bool().unwrap();
         let mutation = crate::mutations::set_layer_blend_mode("shape-a".into(), mode.into());
-        let blocked = protocol::Mutation::<DrawingSnapshot>::diff(&mutation, &original).messages().iter().any(|message| matches!(message.level, protocol::Severity::Error | protocol::Severity::Fatal));
+        let blocked = protocol::Mutation::<DrawingSnapshot>::diff(&mutation, &original).messages().iter().any(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal));
         assert_eq!(!blocked, accepted, "{mode}");
         let mut document = original.clone();
         apply_drawing_mutation(&mut document, &mutation).expect("a refused edit folds as a no-op");

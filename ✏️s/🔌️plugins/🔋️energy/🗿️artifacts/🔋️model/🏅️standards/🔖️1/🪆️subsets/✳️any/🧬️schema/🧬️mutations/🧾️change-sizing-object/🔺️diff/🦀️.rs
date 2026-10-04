@@ -11,7 +11,7 @@ pub fn diff(payload: &super::ChangeSizingObjectSizingType, base: &EnergyModelSna
     };
 
     if existing.sizing_type == payload.new_sizing_type {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Sizing object {} already has that sizing type.", payload.id.0));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Sizing object {} already has that sizing type.", payload.id.0));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.sizing_objects.iter_mut().find(|item| item.id == payload.id) {

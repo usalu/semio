@@ -1,7 +1,13 @@
 use super::*;
 
 use crate::standards::v1::subsets::any::schema::precompute_model_tests::context::*;
-use std::time::{Duration, Instant};
+
+/// 🧮️ Primitive work one penetration probe step may cost ([`precompute_work_done`]): a vertex or inset probe is two
+/// queries; a face probe clips every near face and probes the clipped polygon's edges and centroid.
+const PENETRATION_STEP_WORK_CEILING: u64 = 100_000;
+
+/// 🧮️ Primitive work the whole measure of a flush-docked pair of ~1000-triangle parts may cost.
+const PENETRATION_MEASURE_WORK_CEILING: u64 = 100_000_000;
 
 struct TestStepContext {
     cancelled: bool,
@@ -58,7 +64,7 @@ fn shifted(x: f32) -> Pose3d {
 
 #[test]
 fn world_volumes_contain_aabb_respects_oriented_box() {
-    let volumes = vec![WorldVolumeProps { id: "v1".to_string(), origin: [0.0, 0.0, 0.0], orientation: None, scale: Some(dsl::DslValue::Array(vec![dsl::DslValue::float(4.0), dsl::DslValue::float(4.0), dsl::DslValue::float(4.0)])) }];
+    let volumes = vec![WorldVolumeProps { id: "v1".to_string(), origin: [0.0, 0.0, 0.0], orientation: None, scale: Some(semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::float(4.0), semio_framework_value::DslValue::float(4.0), semio_framework_value::DslValue::float(4.0)])) }];
     let min = Point3d::new(-1.0, -1.0, -1.0);
     let max = Point3d::new(1.0, 1.0, 1.0);
     assert!(world_volumes_contain_aabb(&volumes, min, max));
@@ -142,9 +148,9 @@ fn vec3_math_helpers() {
 #[test]
 fn vec3_scale_variants() {
     assert_eq!(vec3_scale([1.0, 2.0, 3.0], &None), [1.0, 2.0, 3.0]);
-    assert_eq!(vec3_scale([1.0, 2.0, 3.0], &Some(dsl::DslValue::float(2.0))), [2.0, 4.0, 6.0]);
-    assert_eq!(vec3_scale([1.0, 2.0, 3.0], &Some(dsl::DslValue::Array(vec![dsl::DslValue::float(2.0), dsl::DslValue::float(3.0), dsl::DslValue::float(4.0)]))), [2.0, 6.0, 12.0]);
-    assert_eq!(vec3_scale([1.0, 2.0, 3.0], &Some(dsl::DslValue::String("bogus".to_string()))), [1.0, 2.0, 3.0]);
+    assert_eq!(vec3_scale([1.0, 2.0, 3.0], &Some(semio_framework_value::DslValue::float(2.0))), [2.0, 4.0, 6.0]);
+    assert_eq!(vec3_scale([1.0, 2.0, 3.0], &Some(semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::float(2.0), semio_framework_value::DslValue::float(3.0), semio_framework_value::DslValue::float(4.0)]))), [2.0, 6.0, 12.0]);
+    assert_eq!(vec3_scale([1.0, 2.0, 3.0], &Some(semio_framework_value::DslValue::String("bogus".to_string()))), [1.0, 2.0, 3.0]);
 }
 
 #[test]
@@ -218,7 +224,7 @@ fn world_bounds_transforms_local_aabb_corners() {
 #[test]
 fn world_volumes_contain_aabb_empty_and_multi_volume() {
     assert!(world_volumes_contain_aabb(&[], Point3d::new(-1.0, -1.0, -1.0), Point3d::new(1.0, 1.0, 1.0)), "no target volumes means unconstrained");
-    let volumes = vec![WorldVolumeProps { id: "far".into(), origin: [100.0, 0.0, 0.0], orientation: None, scale: None }, WorldVolumeProps { id: "near".into(), origin: [0.0, 0.0, 0.0], orientation: None, scale: Some(dsl::DslValue::float(4.0)) }];
+    let volumes = vec![WorldVolumeProps { id: "far".into(), origin: [100.0, 0.0, 0.0], orientation: None, scale: None }, WorldVolumeProps { id: "near".into(), origin: [0.0, 0.0, 0.0], orientation: None, scale: Some(semio_framework_value::DslValue::float(4.0)) }];
     assert!(world_volumes_contain_aabb(&volumes, Point3d::new(-1.0, -1.0, -1.0), Point3d::new(1.0, 1.0, 1.0)), "any single containing volume is enough");
 }
 
@@ -483,6 +489,8 @@ fn spatial_fixed_collections_use_the_credited_pages_and_return_identical_plus_on
     assert!(entries.terminal_owners_empty() && cells.terminal_owners_empty() && oversized.terminal_owners_empty());
 }
 
+/// ⏱️ LAW: every probe step of two overlapping cubes stays inside [`PENETRATION_STEP_WORK_CEILING`] units of primitive work,
+/// and the measure completes within 512 steps.
 #[test]
 fn penetration_steps_stay_within_interaction_watchdog() {
     let body = overlap_body();
@@ -490,9 +498,10 @@ fn penetration_steps_stay_within_interaction_watchdog() {
     let mut state = CollisionPenetrationState::new(0.0);
     let mut context = TestStepContext::unlimited();
     for _ in 0..512 {
-        let started = Instant::now();
+        let before = precompute_work_done();
         let result = state.step(&mut context, &body, &pose, &body, &other);
-        assert!(started.elapsed() < Duration::from_millis(8), "one penetration probe step exceeded the 8 ms interaction ceiling");
+        let work = precompute_work_done() - before;
+        assert!(work <= PENETRATION_STEP_WORK_CEILING, "one penetration probe step cost {work} units of primitive work, over {PENETRATION_STEP_WORK_CEILING}");
         if matches!(result, CollisionStepResult::Complete { .. }) {
             return;
         }
@@ -717,30 +726,28 @@ fn gridded_box(hx: f32, hy: f32, hz: f32, cells: usize) -> CollisionBody {
 }
 
 /// ⏱️ LAW: a fitting pair of ~1000-triangle parts docked face to face (the common fill case: every probe runs) is measured
-/// at depth 0 with every step under the 8 ms interaction ceiling and the whole measure within 250 ms unoptimized. The
-/// best of three cold runs is taken, so concurrent builds cannot fake a regression.
+/// at depth 0 with every probe step inside [`PENETRATION_STEP_WORK_CEILING`] and the whole measure inside
+/// [`PENETRATION_MEASURE_WORK_CEILING`] units of primitive work. The thread's work meter counts the queries, clips and
+/// lookups the measure performs, so the bound holds identically on an idle and a saturated machine.
 #[test]
 fn penetration_of_flush_thousand_triangle_parts_stays_interactive() {
     let body = gridded_box(5.4, 1.5, 0.225, 9);
     let (pose, docked) = (Pose3d::identity(), Pose3d::from_parts(Vec3d::new(10.8, 0.0, 0.0), Rotation3d::identity()));
-    let runs: Vec<(Duration, Duration)> = (0..3)
-        .map(|_| {
-            let mut state = CollisionPenetrationState::new(0.005);
-            let mut context = TestStepContext::unlimited();
-            let (started, mut worst) = (Instant::now(), Duration::ZERO);
-            let depth = loop {
-                let step = Instant::now();
-                let result = state.step(&mut context, &body, &pose, &body, &docked);
-                worst = worst.max(step.elapsed());
-                if let CollisionStepResult::Complete { depth, .. } = result {
-                    break depth;
-                }
-            };
-            assert_eq!(depth, 0.0, "flush docking is contact, not penetration");
-            (worst, started.elapsed())
-        })
-        .collect();
-    let (worst, total) = runs.iter().copied().min_by_key(|(worst, _)| *worst).expect("three runs");
-    assert!(worst < Duration::from_millis(8), "one probe step exceeded the 8 ms interaction ceiling: {worst:?} (runs {runs:?})");
-    assert!(total < Duration::from_millis(250), "a fitting 1k-triangle pair must measure within 250 ms unoptimized: {total:?} (runs {runs:?})");
+    let mut state = CollisionPenetrationState::new(0.005);
+    let mut context = TestStepContext::unlimited();
+    let (started, mut worst, mut steps) = (precompute_work_done(), 0_u64, 0_usize);
+    let depth = loop {
+        let before = precompute_work_done();
+        let result = state.step(&mut context, &body, &pose, &body, &docked);
+        worst = worst.max(precompute_work_done() - before);
+        steps += 1;
+        if let CollisionStepResult::Complete { depth, .. } = result {
+            break depth;
+        }
+    };
+    let total = precompute_work_done() - started;
+    eprintln!("[DEBUG] penetration flush pair: worst step {worst} units, total {total} units over {steps} steps");
+    assert_eq!(depth, 0.0, "flush docking is contact, not penetration");
+    assert!(worst <= PENETRATION_STEP_WORK_CEILING, "one probe step cost {worst} units of primitive work over {steps} steps, over {PENETRATION_STEP_WORK_CEILING}");
+    assert!(total <= PENETRATION_MEASURE_WORK_CEILING, "a fitting 1k-triangle pair cost {total} units over {steps} steps, over {PENETRATION_MEASURE_WORK_CEILING}");
 }

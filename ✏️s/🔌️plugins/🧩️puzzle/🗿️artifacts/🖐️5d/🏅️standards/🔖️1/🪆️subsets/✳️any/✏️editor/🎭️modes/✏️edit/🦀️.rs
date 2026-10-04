@@ -4,6 +4,7 @@
 //! brush/fill utilities live in `☑️options/*`; genuinely per-window chrome lives under that window's
 //! own `☑️options/`.
 
+use semio_framework_pack_json::json;
 use crate::editor::puzzle5d::commands::engagement_submit::PUZZLE5D_ENGAGEMENT_VERBS;
 use crate::editor::puzzle5d::modes::edit::tools::fill;
 use crate::editor::puzzle5d::modes::edit::windows::{board2d, world3d};
@@ -17,7 +18,6 @@ use semio_framework_plugin::WindowEngagement;
 use semio_framework_plugin::WindowEngagementInput;
 use semio_framework_plugin::WindowEngagementStatus;
 use semio_framework_plugin::WindowLayout;
-use dsl::json;
 
 pub const PUZZLE5D_PLAY_MODE_EDIT: &str = "edit";
 
@@ -63,10 +63,10 @@ pub fn puzzle5d_engagement(envelope: &Puzzle5dScene, window: &str, labels: &Puzz
             value: Some(input_value),
             placeholder: Some(PUZZLE5D_ENGAGEMENT_VERBS.join(", ")),
             disabled: None,
-            on_change: Some(puzzle5d_action("engagementInput", Some(json!({ "window": window })))),
-            on_submit: Some(puzzle5d_action("engagementSubmit", Some(json!({ "window": window })))),
-            on_repeat_last: Some(puzzle5d_action("engagementRepeatLast", Some(json!({ "window": window })))),
-            on_abort: Some(fill::abort_action(tool_run).unwrap_or_else(|| puzzle5d_action("engagementAbort", Some(json!({ "window": window }))))),
+            on_change: Some(puzzle5d_action("engagementInput", Some(semio_framework_pack_json::json!({ "window": window })))),
+            on_submit: Some(puzzle5d_action("engagementSubmit", Some(semio_framework_pack_json::json!({ "window": window })))),
+            on_repeat_last: Some(puzzle5d_action("engagementRepeatLast", Some(semio_framework_pack_json::json!({ "window": window })))),
+            on_abort: Some(fill::abort_action(tool_run).unwrap_or_else(|| puzzle5d_action("engagementAbort", Some(semio_framework_pack_json::json!({ "window": window }))))),
         }),
         control: None,
         controls: None,

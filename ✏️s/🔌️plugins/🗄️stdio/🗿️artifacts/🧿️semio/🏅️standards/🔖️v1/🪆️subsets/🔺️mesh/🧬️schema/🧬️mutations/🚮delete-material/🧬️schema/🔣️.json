@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/mesh/mutation/delete-material/schema.json",
   "title": "DeleteMaterial",
+  "x-semio-inverse-rows": { "bounded": 1025 },
   "type": "object",
   "additionalProperties": false,
   "required": [

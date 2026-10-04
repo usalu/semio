@@ -4,8 +4,8 @@ use semio_framework_plugin::{TreeWindowRequest, ViewModel, TREE_WINDOW_PATH_SEPA
 #[test]
 fn intrinsic_bytes_details_use_a_bounded_leaf_and_validate_the_json_octet_domain() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️bytes/🧪️tests/🧬️base64/🧫️fixtures/🔣️.json")).unwrap();
-    let schema = crate::pack::json::from_json_str::<DslValue>(r#"{"type":"array","items":{"type":"integer","minimum":0,"maximum":255}}"#).unwrap();
-    let wrong = crate::pack::json::from_json_str::<DslValue>(r#"{"type":"array","items":{"type":"string"}}"#).unwrap();
+    let schema = semio_framework_pack_json::from_json_str::<DslValue>(r#"{"type":"array","items":{"type":"integer","minimum":0,"maximum":255}}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let wrong = semio_framework_pack_json::from_json_str::<DslValue>(r#"{"type":"array","items":{"type":"string"}}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let bytes: Vec<u8> = serde_json::from_value(row["octets"].clone()).unwrap();
         let value = DslValue::Bytes(bytes.clone());
@@ -17,7 +17,6 @@ fn intrinsic_bytes_details_use_a_bounded_leaf_and_validate_the_json_octet_domain
         assert_eq!(template_candidate_is_valid(&wrong, &wrong, &value, 0), bytes.is_empty());
     }
 }
-
 
 struct LazyPixels {
     count: usize,
@@ -63,27 +62,27 @@ impl ToValue for NativeLazySnapshot {
         panic!("details must not materialize a native snapshot")
     }
 
-    fn value_at_path(&self, path: &[&str]) -> Result<DslValue, crate::kernel::ValueError> {
+    fn value_at_path(&self, path: &[&str]) -> Result<DslValue, semio_framework_value::ValueError> {
         match path {
             ["schema"] => Ok(DslValue::String("stdio.lazy-details-test".into())),
             ["title"] => Ok(DslValue::String("Projected title".into())),
-            _ => Err(crate::kernel::ValueError::new("container reads must use shape/key access")),
+            _ => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "container reads must use shape/key access")),
         }
     }
 
-    fn value_shape_at_path(&self, path: &[&str]) -> Result<ValueShape, crate::kernel::ValueError> {
+    fn value_shape_at_path(&self, path: &[&str]) -> Result<ValueShape, semio_framework_value::ValueError> {
         match path {
             [] => Ok(ValueShape::Object { len: 2 }),
             ["schema"] | ["title"] => Ok(ValueShape::String),
-            _ => Err(crate::kernel::ValueError::new("unknown test path")),
+            _ => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "unknown test path")),
         }
     }
 
-    fn value_key_at_path(&self, path: &[&str], index: usize) -> Result<String, crate::kernel::ValueError> {
+    fn value_key_at_path(&self, path: &[&str], index: usize) -> Result<String, semio_framework_value::ValueError> {
         match (path, index) {
             ([], 0) => Ok("schema".into()),
             ([], 1) => Ok("title".into()),
-            _ => Err(crate::kernel::ValueError::new("unknown test key")),
+            _ => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "unknown test key")),
         }
     }
 }
@@ -111,7 +110,7 @@ fn native_details_use_shape_key_and_scalar_projections_without_materializing_the
 #[test]
 fn lazy_collection_renders_a_bounded_page_without_materializing_every_pixel() {
     let provider = LazyPixels { count: 16_000_000 };
-    let result = render_snapshot_details_provider(&provider, Locale::En, "s.stdio.png@test/*#editor", &TreeWindows::unhosted());
+    let result = render_snapshot_details_provider_revisioned(&provider, semio_framework_ui_contract::UiPublicationRevision(1), Locale::En, "s.stdio.png@test/*#editor", &TreeWindows::unhosted());
     assert!(result.is_ok());
 }
 
@@ -149,7 +148,7 @@ fn lazy_large_object_controls_do_not_scan_unpaged_keys() {
         }
     }
     let provider = LazyObject { key_reads: Cell::new(0) };
-    render_snapshot_details_provider(&provider, Locale::En, "test.lazy-object#editor", &TreeWindows::unhosted()).expect("bounded large object");
+    render_snapshot_details_provider_revisioned(&provider, semio_framework_ui_contract::UiPublicationRevision(1), Locale::En, "test.lazy-object#editor", &TreeWindows::unhosted()).expect("bounded large object");
     assert!(provider.key_reads.get() < 1_024, "visible paging must bound key reads, got {}", provider.key_reads.get());
 }
 
@@ -190,7 +189,7 @@ fn an_exact_chunk_budget_parent_omits_unbindable_derived_insert_controls_without
     assert!(path_is_bindable(&path));
     assert!(!path_is_bindable(&format!("{path}/new")));
     let provider = BoundaryPath { key };
-    let rendered = render_snapshot_details_provider(&provider, Locale::En, "test.boundary-path#editor", &TreeWindows::unhosted()).expect("derived path is safely omitted");
+    let rendered = render_snapshot_details_provider_revisioned(&provider, semio_framework_ui_contract::UiPublicationRevision(1), Locale::En, "test.boundary-path#editor", &TreeWindows::unhosted()).expect("derived path is safely omitted");
     let id = path_id(&[SnapshotDetailPathSegment::Key(provider.key.clone())]);
     assert!(!contains_key(&rendered, &format!("{id}-add-0")));
     assert!(contains_key(&rendered, SOURCE_ID));
@@ -205,15 +204,116 @@ fn find_key<'a>(node: &'a BuiltNode, key: &str) -> Option<&'a BuiltNode> {
 }
 
 #[test]
+fn collection_rows_are_open_windowed_tree_item_descendants_with_edit_controls() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🪟️collection-tree-shape/🔣️.json")).expect("collection tree fixture");
+    let source = serde_json::to_string(&fixture["snapshot"]).expect("third-party snapshot oracle");
+    let schema = serde_json::to_string(&fixture["schema"]).expect("third-party schema oracle");
+    let collection_key = fixture["collectionKey"].as_str().expect("collection key");
+    let expected_values = fixture["expectedValues"].as_array().expect("expected values");
+    let snapshot: DslValue = semio_framework_pack_json::from_json_str(&source, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("native fixture parse");
+    let native_source = super::super::snapshot_edit_source(&snapshot);
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&native_source).expect("third-party native-source oracle"), fixture["snapshot"]);
+    let provider = DslSnapshotDetailsProvider::<NativeLazySnapshot>::from_value_and_schema(snapshot, &schema);
+    let records_path = [SnapshotDetailPathSegment::Key(collection_key.into())];
+    let records_id = path_id(&records_path);
+    let children_id = format!("{records_id}{}", fixture["windowSuffix"].as_str().expect("window suffix"));
+    let node_key = [ROOT_SECTION_ID, children_id.as_str()].join(TREE_WINDOW_PATH_SEPARATOR);
+    let closed_view = ViewModel {
+        tree_windows: vec![TreeWindowRequest { body_key: SNAPSHOT_DETAILS_BODY_KEY.into(), node_key: node_key.clone(), open: Some(false), offset: 0, rows: expected_values.len() as u32 }],
+        tree_viewport_rows: Some(16),
+        ..ViewModel::new(Locale::En, semio_framework_ui_locale::Terminology::Native)
+    };
+    let closed = render_snapshot_details_provider_revisioned(&provider, semio_framework_ui_contract::UiPublicationRevision(1), Locale::En, "test.collection-tree-shape#editor", &TreeWindows::for_body(&closed_view, SNAPSHOT_DETAILS_BODY_KEY)).expect("closed collection render");
+    let closed_records = find_key(&closed, &records_id).expect("closed records item");
+    let semio_framework_ui_contract::Component::TreeItem(closed_props) = &closed_records.component else { panic!("collection must render as a tree item") };
+    assert_eq!(closed_props.default_open, Some(true));
+    assert_eq!(closed_props.window.as_ref().map(|window| window.total), Some(expected_values.len() as u32));
+    assert!(!closed_records.children.iter().any(|child| matches!(child.component, semio_framework_ui_contract::Component::TreeItem(_))), "closed host state must not materialize entry rows");
+
+    let open_view = ViewModel {
+        tree_windows: vec![TreeWindowRequest { body_key: SNAPSHOT_DETAILS_BODY_KEY.into(), node_key, open: Some(true), offset: 0, rows: expected_values.len() as u32 }],
+        tree_viewport_rows: Some(16),
+        ..ViewModel::new(Locale::En, semio_framework_ui_locale::Terminology::Native)
+    };
+    let open = render_snapshot_details_provider_revisioned(&provider, semio_framework_ui_contract::UiPublicationRevision(1), Locale::En, "test.collection-tree-shape#editor", &TreeWindows::for_body(&open_view, SNAPSHOT_DETAILS_BODY_KEY)).expect("open collection render");
+    let records = find_key(&open, &records_id).expect("open records item");
+    let semio_framework_ui_contract::Component::TreeItem(props) = &records.component else { panic!("collection must remain a tree item") };
+    let window = props.window.as_ref().expect("collection tree item window");
+    assert_eq!((window.total, window.offset), (expected_values.len() as u32, 0));
+    assert_eq!(props.default_open, Some(true));
+    assert!(contains_key(records, &format!("{records_id}-add-template")), "typed creation remains independently actionable");
+    assert!(!records.children.iter().any(|child| matches!(child.component, semio_framework_ui_contract::Component::TreeSection(_))), "tree sections may only be direct tree-root children");
+    for (index, expected) in expected_values.iter().enumerate() {
+        let child_path = [SnapshotDetailPathSegment::Key(collection_key.into()), SnapshotDetailPathSegment::Index(index)];
+        let child_id = path_id(&child_path);
+        let child = records.children.iter().find(|child| child.key.as_str() == child_id).expect("materialized entry must be a direct descendant");
+        assert!(matches!(child.component, semio_framework_ui_contract::Component::TreeItem(_)));
+        let value_id = path_id(&[SnapshotDetailPathSegment::Key(collection_key.into()), SnapshotDetailPathSegment::Index(index), SnapshotDetailPathSegment::Key("value".into())]);
+        let value = find_key(child, &value_id).expect("entry value remains reachable");
+        assert!(matches!(value.component, semio_framework_ui_contract::Component::TreeItem(_)));
+        let editor = find_key(value, &format!("{value_id}-text")).expect("entry value remains editable");
+        let semio_framework_ui_contract::Component::Input(editor_props) = &editor.component else { panic!("entry value text input") };
+        assert_eq!(editor_props.value.as_str(), expected.as_str().expect("expected value"));
+        assert!(editor_props.draft_target.as_ref().is_some_and(|target| target.as_str().contains(SET_SNAPSHOT_VALUE_ACTION_ID)));
+    }
+    let rendered_entries = expected_values
+        .iter()
+        .enumerate()
+        .map(|(index, _)| {
+            let entry_id = path_id(&[SnapshotDetailPathSegment::Key(collection_key.into()), SnapshotDetailPathSegment::Index(index)]);
+            let entry = find_key(records, &entry_id).expect("projected entry");
+            let semio_framework_ui_contract::Component::TreeItem(entry_props) = &entry.component else { panic!("projected entry tree item") };
+            let value_id = path_id(&[SnapshotDetailPathSegment::Key(collection_key.into()), SnapshotDetailPathSegment::Index(index), SnapshotDetailPathSegment::Key("value".into())]);
+            let value = find_key(entry, &value_id).expect("projected value");
+            let semio_framework_ui_contract::Component::TreeItem(value_props) = &value.component else { panic!("projected value tree item") };
+            let input = find_key(value, &format!("{value_id}-text")).expect("projected value input");
+            let semio_framework_ui_contract::Component::Input(input_props) = &input.component else { panic!("projected value input component") };
+            let action = input.bindings.iter().find(|binding| binding.trigger == semio_framework_ui_contract::Trigger::Commit).map(|binding| binding.action.name.as_str());
+            serde_json::json!({
+                "key": entry.key.as_str(),
+                "label": entry_props.label.0.as_str(),
+                "defaultOpen": entry_props.default_open,
+                "value": {
+                    "key": value.key.as_str(),
+                    "label": value_props.label.0.as_str(),
+                    "input": {
+                        "key": input.key.as_str(),
+                        "label": input.accessibility.label.as_ref().map(|label| label.0.as_str()),
+                        "value": input_props.value.as_str(),
+                        "action": action,
+                        "draftTargetContains": SET_SNAPSHOT_VALUE_ACTION_ID,
+                    },
+                },
+            })
+        })
+        .collect::<Vec<_>>();
+    let rendered_hierarchy = serde_json::json!({
+        "key": records.key.as_str(),
+        "label": props.label.0.as_str(),
+        "defaultOpen": props.default_open,
+        "window": { "total": window.total, "offset": window.offset },
+        "entries": rendered_entries,
+    });
+    assert_eq!(rendered_hierarchy, fixture["rendererHierarchy"], "the renderer fixture must remain an exact semantic projection of the native hierarchy");
+}
+
+#[test]
 fn table_details_first_paint_keeps_fields_reachable_across_repeated_projection() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️first-paint/🔣️.json")).unwrap();
     let source = serde_json::to_string(&fixture["snapshot"]).unwrap();
     let schema = serde_json::to_string(&fixture["schema"]).unwrap();
-    let snapshot: DslValue = crate::pack::json::from_json_str(&source).unwrap();
+    let snapshot: DslValue = semio_framework_pack_json::from_json_str(&source, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(serde_json::from_str::<serde_json::Value>(&super::super::snapshot_edit_source(&snapshot)).unwrap(), fixture["snapshot"]);
     let provider = DslSnapshotDetailsProvider::<NativeLazySnapshot>::from_value_and_schema(snapshot, &schema);
+    let folded_collection = fixture["foldedPath"][0].as_str().expect("folded collection key");
+    let folded_collection_id = path_id(&[SnapshotDetailPathSegment::Key(folded_collection.into())]);
+    let closed_view = ViewModel {
+        tree_windows: vec![TreeWindowRequest { body_key: SNAPSHOT_DETAILS_BODY_KEY.into(), node_key: [ROOT_SECTION_ID, &format!("{folded_collection_id}-children")].join(TREE_WINDOW_PATH_SEPARATOR), open: Some(false), offset: 0, rows: 16 }],
+        tree_viewport_rows: Some(16),
+        ..ViewModel::new(Locale::En, semio_framework_ui_locale::Terminology::Native)
+    };
     for _ in 0..fixture["repeatCount"].as_u64().unwrap() {
-        let tree = render_snapshot_details_provider(&provider, Locale::En, "test.table-details#editor", &TreeWindows::unhosted()).expect("details first paint");
+        let tree = render_snapshot_details_provider_revisioned(&provider, semio_framework_ui_contract::UiPublicationRevision(1), Locale::En, "test.table-details#editor", &TreeWindows::for_body(&closed_view, SNAPSHOT_DETAILS_BODY_KEY)).expect("details first paint");
         for key in fixture["firstPaintFields"].as_array().unwrap() {
             assert!(contains_key(&tree, &path_id(&[SnapshotDetailPathSegment::Key(key.as_str().unwrap().into())])), "field {key} must remain reachable");
         }
@@ -240,9 +340,13 @@ fn nested_collection_honours_an_explicit_second_page_without_counting_controls_a
     let pixels_path = [SnapshotDetailPathSegment::Key("pixels".into())];
     let pixels_id = path_id(&pixels_path);
     let node_key = [ROOT_SECTION_ID, &format!("{pixels_id}-children")].join(TREE_WINDOW_PATH_SEPARATOR);
-    let view = ViewModel { tree_windows: vec![TreeWindowRequest { body_key: SNAPSHOT_DETAILS_BODY_KEY.into(), node_key, open: Some(true), offset: 100, rows: 3 }], tree_viewport_rows: Some(4), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let view = ViewModel {
+        tree_windows: vec![TreeWindowRequest { body_key: SNAPSHOT_DETAILS_BODY_KEY.into(), node_key, open: Some(true), offset: 100, rows: 3 }],
+        tree_viewport_rows: Some(4),
+        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+    };
     let windows = TreeWindows::for_body(&view, SNAPSHOT_DETAILS_BODY_KEY);
-    let node = render_snapshot_details_provider(&provider, Locale::En, "s.stdio.png@test/*#editor", &windows).expect("nested details page");
+    let node = render_snapshot_details_provider_revisioned(&provider, semio_framework_ui_contract::UiPublicationRevision(1), Locale::En, "s.stdio.png@test/*#editor", &windows).expect("nested details page");
     for index in 100..103 {
         let path = [SnapshotDetailPathSegment::Key("pixels".into()), SnapshotDetailPathSegment::Index(index)];
         assert!(contains_key(&node, &path_id(&path)), "requested logical row {index} is reachable");
@@ -327,7 +431,7 @@ fn derived_schema_controls_render_only_the_requested_pages() {
         ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let windows = TreeWindows::for_body(&view, SNAPSHOT_DETAILS_BODY_KEY);
-    let rendered = render_snapshot_details_provider(&provider, Locale::En, "test.derived-controls#editor", &windows).expect("windowed derived controls");
+    let rendered = render_snapshot_details_provider_revisioned(&provider, semio_framework_ui_contract::UiPublicationRevision(1), Locale::En, "test.derived-controls#editor", &windows).expect("windowed derived controls");
     for index in 100..103 {
         assert!(contains_key(&rendered, &format!("{ROOT_PATH_ID}-variant-{index}")));
     }
@@ -360,10 +464,11 @@ fn numeric_controls_preserve_json_number_kinds_through_the_action_parser() {
         }
     }
     for (number, expected) in [(Number::Float(1.0), DslValue::Number(Number::Float(1.0))), (Number::UInt(u64::MAX), DslValue::Number(Number::UInt(u64::MAX))), (Number::Int(i64::MIN), DslValue::Number(Number::Int(i64::MIN)))] {
-        let rendered = render_snapshot_details_provider(&Numeric(number), Locale::En, "test.number#editor", &TreeWindows::unhosted()).expect("number details");
+        let rendered = render_snapshot_details_provider_revisioned(&Numeric(number), semio_framework_ui_contract::UiPublicationRevision(1), Locale::En, "test.number#editor", &TreeWindows::unhosted()).expect("number details");
         let input = find_key(&rendered, &format!("{ROOT_PATH_ID}-number")).expect("number input");
         let semio_framework_ui_contract::Component::Input(props) = &input.component else { panic!("number editor must remain an exact JSON text input") };
         assert_eq!(props.kind, semio_framework_ui_contract::InputKind::Text);
+        assert!(props.draft_target.as_ref().is_some_and(|target| target.as_str().contains(SET_SNAPSHOT_VALUE_ACTION_ID)));
         let binding = input.bindings.iter().find(|binding| binding.trigger == semio_framework_ui_contract::Trigger::Commit).expect("commit binding");
         let Some(UiValue::Map(arguments)) = &binding.args else { panic!("static arguments") };
         assert!(arguments.iter().any(|(key, value)| key.as_str() == "valueEncoding" && matches!(value, UiValue::Text(value) if value.as_str() == "json")));
@@ -371,6 +476,27 @@ fn numeric_controls_preserve_json_number_kinds_through_the_action_parser() {
         let event = super::super::snapshot_edit_event_from_action(super::super::SET_SNAPSHOT_VALUE_ACTION_ID, Some(&args)).expect("parse").expect("known action");
         assert_eq!(event, super::super::SnapshotEditEvent::SetValue { path: String::new(), value: expected });
     }
+}
+
+#[test]
+fn revisioned_details_inputs_publish_the_exact_committed_document_revision() {
+    struct Text;
+    impl SnapshotDetailsProvider for Text {
+        fn value(&self, path: &[SnapshotDetailPathSegment]) -> Option<SnapshotDetailValue> {
+            path.is_empty().then(|| SnapshotDetailValue::String("value".into()))
+        }
+        fn child_count(&self, _path: &[SnapshotDetailPathSegment]) -> usize {
+            0
+        }
+        fn object_key(&self, _path: &[SnapshotDetailPathSegment], _index: usize) -> Option<String> {
+            None
+        }
+    }
+    let rendered = render_snapshot_details_provider_revisioned(&Text, ui_contract::UiPublicationRevision(u64::MAX), Locale::En, "test.publication#editor", &TreeWindows::unhosted()).expect("revisioned details");
+    let input = find_key(&rendered, &format!("{ROOT_PATH_ID}-text")).expect("text input");
+    let ui_contract::Component::Input(props) = &input.component else { panic!("text details remain an input") };
+    assert_eq!(props.publication_revision, Some(ui_contract::UiPublicationRevision(u64::MAX)));
+    assert_eq!(serde_json::to_value(props.publication_revision).expect("third-party serde oracle"), serde_json::Value::String(u64::MAX.to_string()));
 }
 
 #[test]
@@ -426,10 +552,10 @@ fn schema_templates_create_required_records_in_empty_lists_and_nullable_fields()
             false
         }
     }
-    let provider = TypedRecords { schema: crate::pack::json::from_json_str(schema).expect("schema") };
+    let provider = TypedRecords { schema: semio_framework_pack_json::from_json_str(schema, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("schema") };
     assert_eq!(provider.creation_template(&[SnapshotDetailPathSegment::Key("records".into())], true), Some(DslValue::Object(vec![("fields".into(), DslValue::Array(Vec::new()))])));
     assert_eq!(provider.creation_template(&[SnapshotDetailPathSegment::Key("selection".into())], false), Some(DslValue::Object(vec![("name".into(), DslValue::String("x".into())), ("enabled".into(), DslValue::Bool(false)),])));
-    let rendered = render_snapshot_details_provider(&provider, Locale::En, "test.records#editor", &TreeWindows::unhosted()).expect("schema-aware details");
+    let rendered = render_snapshot_details_provider_revisioned(&provider, semio_framework_ui_contract::UiPublicationRevision(1), Locale::En, "test.records#editor", &TreeWindows::unhosted()).expect("schema-aware details");
     let records_id = path_id(&[SnapshotDetailPathSegment::Key("records".into())]);
     let selection_id = path_id(&[SnapshotDetailPathSegment::Key("selection".into())]);
     assert!(contains_key(&rendered, &format!("{records_id}-add-template")));
@@ -451,7 +577,7 @@ fn schema_templates_reject_invalid_defaults_and_satisfy_min_properties() {
     impl ArtifactDsl for ValidTemplateFixture {
         const EXTENSION: &'static str = "json";
         fn parse_dsl(_text: &str) -> Result<Self, crate::kernel::TextError> {
-            Err(crate::kernel::TextError::new("unused template fixture", crate::kernel::TextSpan::at(1, 1)))
+            Err(crate::kernel::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "unused template fixture", crate::kernel::TextSpan::at(1, 1)))
         }
         fn print_dsl(&self) -> String {
             "null".into()
@@ -499,7 +625,7 @@ fn schema_annotations_localize_fixed_fields_without_translating_user_keys() {
     impl ArtifactDsl for PresentationFixture {
         const EXTENSION: &'static str = "json";
         fn parse_dsl(_text: &str) -> Result<Self, crate::kernel::TextError> {
-            Err(crate::kernel::TextError::new("unused presentation fixture", crate::kernel::TextSpan::at(1, 1)))
+            Err(crate::kernel::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "unused presentation fixture", crate::kernel::TextSpan::at(1, 1)))
         }
         fn print_dsl(&self) -> String {
             "null".into()
@@ -522,7 +648,7 @@ fn schema_annotations_localize_fixed_fields_without_translating_user_keys() {
     assert_eq!(provider.presentation(&[SnapshotDetailPathSegment::Key("windowBits".into())], Locale::De), Some(SnapshotDetailPresentation { label: "Fenstergröße [windowBits]".into(), description: Some("Kompressionsfenster in Bit.".into()) }));
     assert_eq!(provider.presentation(&[SnapshotDetailPathSegment::Key("Projektname".into())], Locale::De), None);
     for (locale, expected_label, expected_description) in [(Locale::En, "Window size [windowBits]", "Compression window in bits."), (Locale::De, "Fenstergröße [windowBits]", "Kompressionsfenster in Bit.")] {
-        let rendered = render_snapshot_details_provider(&provider, locale, "test.presentation#editor", &TreeWindows::unhosted()).expect("localized details");
+        let rendered = render_snapshot_details_provider_revisioned(&provider, semio_framework_ui_contract::UiPublicationRevision(1), locale, "test.presentation#editor", &TreeWindows::unhosted()).expect("localized details");
         let fixed = find_key(&rendered, &path_id(&[SnapshotDetailPathSegment::Key("windowBits".into())])).expect("fixed schema field");
         let semio_framework_ui_contract::Component::TreeItem(props) = &fixed.component else { panic!("schema field tree item") };
         assert_eq!(props.label.0.as_str(), expected_label);
@@ -545,7 +671,7 @@ fn schema_capabilities_hide_impossible_actions_and_offer_missing_optional_fields
     impl ArtifactDsl for CapabilityFixture {
         const EXTENSION: &'static str = "json";
         fn parse_dsl(_text: &str) -> Result<Self, crate::kernel::TextError> {
-            Err(crate::kernel::TextError::new("unused capability fixture", crate::kernel::TextSpan::at(1, 1)))
+            Err(crate::kernel::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "unused capability fixture", crate::kernel::TextSpan::at(1, 1)))
         }
         fn print_dsl(&self) -> String {
             "null".into()
@@ -573,7 +699,7 @@ fn schema_capabilities_hide_impossible_actions_and_offer_missing_optional_fields
         ("custom".into(), DslValue::String("dynamic".into())),
     ]);
     let provider = DslSnapshotDetailsProvider::<CapabilityFixture>::from_value_and_schema(value, schema);
-    let rendered = render_snapshot_details_provider(&provider, Locale::En, "test.capabilities#editor", &TreeWindows::unhosted()).expect("capability details");
+    let rendered = render_snapshot_details_provider_revisioned(&provider, semio_framework_ui_contract::UiPublicationRevision(1), Locale::En, "test.capabilities#editor", &TreeWindows::unhosted()).expect("capability details");
     let schema_id = path_id(&[SnapshotDetailPathSegment::Key("schema".into())]);
     assert!(!contains_key(&rendered, &format!("{schema_id}-text")));
     assert!(!contains_key(&rendered, &format!("{schema_id}-key")));
@@ -599,7 +725,7 @@ fn schema_capabilities_hide_impossible_actions_and_offer_missing_optional_fields
     assert!(arguments.iter().any(|(key, value)| key.as_str() == "path" && matches!(value, UiValue::Text(path) if path.as_str() == "/optionalLabel")));
     assert!(arguments.iter().any(|(key, value)| key.as_str() == "value" && matches!(value, UiValue::Text(value) if value.as_str() == "\"Untitled\"")));
     assert!(arguments.iter().any(|(key, value)| key.as_str() == "valueEncoding" && matches!(value, UiValue::Text(value) if value.as_str() == "json")));
-    let german = render_snapshot_details_provider(&provider, Locale::De, "test.capabilities#editor", &TreeWindows::unhosted()).expect("German capability details");
+    let german = render_snapshot_details_provider_revisioned(&provider, semio_framework_ui_contract::UiPublicationRevision(1), Locale::De, "test.capabilities#editor", &TreeWindows::unhosted()).expect("German capability details");
     let optional = find_key(&german, &format!("{ROOT_PATH_ID}-add-property-0")).expect("German optional property choice");
     let semio_framework_ui_contract::Component::Button(props) = &optional.component else { panic!("optional property choice must be a button") };
     assert_eq!(props.label.0.as_str(), "Hinzufügen Anzeigename [optionalLabel]");
@@ -616,7 +742,7 @@ fn object_min_properties_hides_removal_at_the_boundary() {
     impl ArtifactDsl for MinPropertiesFixture {
         const EXTENSION: &'static str = "json";
         fn parse_dsl(_text: &str) -> Result<Self, crate::kernel::TextError> {
-            Err(crate::kernel::TextError::new("unused min-properties fixture", crate::kernel::TextSpan::at(1, 1)))
+            Err(crate::kernel::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "unused min-properties fixture", crate::kernel::TextSpan::at(1, 1)))
         }
         fn print_dsl(&self) -> String {
             "null".into()
@@ -637,7 +763,7 @@ fn object_min_properties_hides_removal_at_the_boundary() {
     assert!(capabilities.rename);
     assert!(!capabilities.remove);
     assert!(provider.allows_collection_insert(&[]));
-    let rendered = render_snapshot_details_provider(&provider, Locale::En, "test.min-properties#editor", &TreeWindows::unhosted()).expect("min properties details");
+    let rendered = render_snapshot_details_provider_revisioned(&provider, semio_framework_ui_contract::UiPublicationRevision(1), Locale::En, "test.min-properties#editor", &TreeWindows::unhosted()).expect("min properties details");
     assert!(!contains_key(&rendered, &format!("{}-remove", path_id(&path))));
 }
 
@@ -652,7 +778,7 @@ fn tagged_union_details_follow_the_current_native_discriminator() {
     impl ArtifactDsl for TaggedFixture {
         const EXTENSION: &'static str = "json";
         fn parse_dsl(_text: &str) -> Result<Self, crate::kernel::TextError> {
-            Err(crate::kernel::TextError::new("unused tagged fixture", crate::kernel::TextSpan::at(1, 1)))
+            Err(crate::kernel::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "unused tagged fixture", crate::kernel::TextSpan::at(1, 1)))
         }
         fn print_dsl(&self) -> String {
             "null".into()
@@ -702,7 +828,7 @@ fn tagged_union_details_follow_the_current_native_discriminator() {
                     value: DslValue::Object(vec![("kind".into(), DslValue::String("automated".into())), ("value".into(), DslValue::String("queued".into())), ("label".into(), DslValue::String("Keep me".into())),]),
                 }]
             );
-            let rendered = render_snapshot_details_provider(&provider, Locale::De, "test.tagged#editor", &TreeWindows::unhosted()).expect("tagged union details");
+            let rendered = render_snapshot_details_provider_revisioned(&provider, semio_framework_ui_contract::UiPublicationRevision(1), Locale::De, "test.tagged#editor", &TreeWindows::unhosted()).expect("tagged union details");
             let kind_id = path_id(&[SnapshotDetailPathSegment::Key("variant".into()), SnapshotDetailPathSegment::Key("kind".into())]);
             assert!(!contains_key(&rendered, &format!("{kind_id}-text")), "the discriminator is switched only through a complete valid variant");
             assert!(!contains_key(&rendered, &format!("{kind_id}-enum")), "the discriminator has no lossy scalar select");
@@ -721,7 +847,7 @@ fn tagged_union_details_follow_the_current_native_discriminator() {
                     _ => None,
                 })
                 .expect("variant source");
-            assert_eq!(crate::pack::json::from_json_str::<DslValue>(&source).expect("variant JSON"), provider.variants(&variant_path, Locale::De)[0].value);
+            assert_eq!(semio_framework_pack_json::from_json_str::<DslValue>(&source, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("variant JSON"), provider.variants(&variant_path, Locale::De)[0].value);
         }
     }
     let ambiguous = DslValue::Object(vec![("variant".into(), DslValue::Object(vec![("value".into(), DslValue::String("review".into()))]))]);
@@ -740,7 +866,7 @@ fn external_all_of_union_uses_the_registered_document_shape_for_controls_and_var
     impl ArtifactDsl for EnvelopeFixture {
         const EXTENSION: &'static str = "json";
         fn parse_dsl(_text: &str) -> Result<Self, crate::kernel::TextError> {
-            Err(crate::kernel::TextError::new("unused envelope fixture", crate::kernel::TextSpan::at(1, 1)))
+            Err(crate::kernel::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "unused envelope fixture", crate::kernel::TextSpan::at(1, 1)))
         }
         fn print_dsl(&self) -> String {
             "null".into()
@@ -757,9 +883,10 @@ fn external_all_of_union_uses_the_registered_document_shape_for_controls_and_var
             snapshot: semio_framework_schema_registry::FacetLeaves { json_schema: source, ..empty },
             diff: empty,
             mutations: empty,
-        }).expect("schema descriptor publication");
+        })
+        .expect("schema descriptor publication");
     }
-    let value = crate::pack::json::from_json_str(include_str!("../../🧫️fixtures/🔗️external-all-of/⬅️current/🔣️.json")).expect("language-agnostic value fixture");
+    let value = semio_framework_pack_json::from_json_str(include_str!("../../🧫️fixtures/🔗️external-all-of/⬅️current/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-agnostic value fixture");
     let provider = DslSnapshotDetailsProvider::<EnvelopeFixture>::from_value(value);
     let item_path = [SnapshotDetailPathSegment::Key("subset".into()), SnapshotDetailPathSegment::Key("spatial".into()), SnapshotDetailPathSegment::Index(0)];
     let mut id_path = item_path.to_vec();
@@ -780,7 +907,10 @@ fn external_all_of_union_uses_the_registered_document_shape_for_controls_and_var
     let subset_path = [SnapshotDetailPathSegment::Key("subset".into())];
     let variants = provider.variants(&subset_path, Locale::En);
     assert_eq!(variants.len(), 1);
-    assert_eq!(variants[0].value, crate::pack::json::from_json_str::<DslValue>(include_str!("../../🧫️fixtures/🔗️external-all-of/➡️text-variant/🔣️.json")).expect("language-agnostic target fixture"));
+    assert_eq!(
+        variants[0].value,
+        semio_framework_pack_json::from_json_str::<DslValue>(include_str!("../../🧫️fixtures/🔗️external-all-of/➡️text-variant/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-agnostic target fixture")
+    );
     let candidate = serde_json::json!({
         "schema":"test.details-envelope",
         "subset":serde_json::from_str::<serde_json::Value>(&super::super::snapshot_edit_source(&variants[0].value)).expect("variant JSON")
@@ -806,7 +936,7 @@ fn enum_values_render_as_an_accessible_typed_select() {
             path.is_empty().then(|| vec![DslValue::String("draft".into()), DslValue::String("review".into()), DslValue::String("published".into())]).unwrap_or_default()
         }
     }
-    let rendered = render_snapshot_details_provider(&EnumValue, Locale::De, "test.enum#editor", &TreeWindows::unhosted()).expect("enum details");
+    let rendered = render_snapshot_details_provider_revisioned(&EnumValue, semio_framework_ui_contract::UiPublicationRevision(1), Locale::De, "test.enum#editor", &TreeWindows::unhosted()).expect("enum details");
     let select = find_key(&rendered, &format!("{ROOT_PATH_ID}-enum")).expect("enum select");
     let semio_framework_ui_contract::Component::Select(props) = &select.component else { panic!("string enum must use a select") };
     assert_eq!(props.value.as_str(), "review");
@@ -870,7 +1000,7 @@ fn paths_beyond_the_flat_chunk_carrier_open_the_complete_editable_source() {
     let provider = HugeKey("🚀".repeat(40_000));
     let path = pointer(&[SnapshotDetailPathSegment::Key(provider.0.clone())]);
     assert!(path.len() > semio_framework_ui_contract::UI_TEXT_MAX_BYTES * semio_framework_ui_contract::UI_VALUE_MAX_ITEMS);
-    let rendered = render_snapshot_details_provider(&provider, Locale::En, "test.huge-key#editor", &TreeWindows::unhosted()).expect("source fallback");
+    let rendered = render_snapshot_details_provider_revisioned(&provider, semio_framework_ui_contract::UiPublicationRevision(1), Locale::En, "test.huge-key#editor", &TreeWindows::unhosted()).expect("source fallback");
     let fallback = find_key(&rendered, &format!("{}-source-fallback", path_id(&[SnapshotDetailPathSegment::Key(provider.0.clone())]))).expect("editable source fallback");
     let surface = fallback.children.get(0).expect("draft surface");
     let semio_framework_ui_contract::Component::Surface(props) = &surface.component else { panic!("fallback must be a text draft") };
@@ -891,4 +1021,18 @@ fn paths_beyond_the_flat_chunk_carrier_open_the_complete_editable_source() {
     assert_eq!(settings["editAction"], super::super::REPLACE_SNAPSHOT_SOURCE_ACTION_ID);
     assert_eq!(settings["commit"], "explicit");
     assert!(scene.buffer.contains("before"));
+}
+
+#[test]
+fn source_drafts_fill_tree_control_width_for_empty_and_nonempty_documents() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️first-paint/🔣️.json")).unwrap();
+    let law = &fixture["sourceDraftLayout"];
+    for locale in [Locale::En, Locale::De] {
+        for source in law["texts"].as_array().unwrap() {
+            let row = source_row(source.as_str().unwrap().into(), labels(locale), Some(ui_contract::UiPublicationRevision(1))).unwrap();
+            let draft = find_key(&row, "stdio-snapshot-details-source-draft").unwrap();
+            let layout = serde_json::to_value(&draft.layout).unwrap();
+            for key in ["kind", "axis", "grow"] { assert_eq!(layout[key], law[key], "source draft {key}"); }
+        }
+    }
 }

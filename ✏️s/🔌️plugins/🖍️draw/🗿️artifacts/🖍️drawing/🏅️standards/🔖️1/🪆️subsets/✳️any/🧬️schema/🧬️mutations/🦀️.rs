@@ -8,7 +8,7 @@ use crate::schema::{find_drawing_layer, hex_to_rgba, layer_base};
 use crate::{DrawingLayerNode, DrawingSnapshot, FillStyle, StrokeStyle};
 
 //#region 🔖️Mutations
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslEnum, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
@@ -42,19 +42,19 @@ pub use crate::standards::v1::subsets::style::schema::mutations::update_text::mu
 
 //#region 🔖️FieldPatch
 /// ⌨️ Decode inspector input according to its field, preserving numeric-looking text.
-pub fn parse_layer_field_input(field: &str, value: &str) -> dsl::DslValue {
-    let parsed = dsl::json::parse(value).ok().map(|parsed| dsl::json::to_dsl_value(&parsed));
+pub fn parse_layer_field_input(field: &str, value: &str) -> semio_framework_value::DslValue {
+    let parsed = semio_framework_pack_json::parse(value, semio_framework_pack_json::JsonMemberPolicy::Reject).ok().map(|parsed| semio_framework_pack_json::to_dsl_value(&parsed));
     if matches!(field, "textContent" | "name" | "blendMode" | "fillColor" | "fillRule" | "strokeColor" | "strokeCap" | "strokeJoin" | "strokeDash" | "booleanOperation") {
-        if let Some(dsl::DslValue::String(text)) = parsed { return dsl::DslValue::String(text); }
-        return dsl::DslValue::String(value.into());
+        if let Some(semio_framework_value::DslValue::String(text)) = parsed { return semio_framework_value::DslValue::String(text); }
+        return semio_framework_value::DslValue::String(value.into());
     }
-    parsed.unwrap_or_else(|| dsl::DslValue::String(value.into()))
+    parsed.unwrap_or_else(|| semio_framework_value::DslValue::String(value.into()))
 }
 
 /// 🎛️ Generic single-field layer editor bridge (properties panel / bulk patch commands) — maps a
 /// wire `field` name + JSON `value` onto the one semantic mutation that owns that field. Returns
 /// `None` for an unknown field or a field that doesn't apply to `layer`'s kind.
-pub fn drawing_op_for_layer_field(doc: &DrawingSnapshot, layer_id: &str, field: &str, value: &dsl::DslValue) -> Option<DrawingMutation> {
+pub fn drawing_op_for_layer_field(doc: &DrawingSnapshot, layer_id: &str, field: &str, value: &semio_framework_value::DslValue) -> Option<DrawingMutation> {
     let layer = find_drawing_layer(doc, layer_id)?;
     let finite = || value.as_f64().filter(|number| number.is_finite());
     match field {
@@ -144,7 +144,7 @@ pub fn drawing_op_for_layer_field(doc: &DrawingSnapshot, layer_id: &str, field: 
 
 /// 🩹 Applies one field patch directly to `doc` — used by callers that don't need the mutation
 /// value itself (`drawing_op_for_layer_field` is the undoable/command-facing entry point).
-pub fn patch_layer_field(doc: &DrawingSnapshot, layer_id: &str, field: &str, value: &dsl::DslValue) -> protocol::MutationApplyResult<DrawingSnapshot> {
+pub fn patch_layer_field(doc: &DrawingSnapshot, layer_id: &str, field: &str, value: &semio_framework_value::DslValue) -> protocol::MutationApplyResult<DrawingSnapshot> {
     use protocol::{Mutation, MutationDiff};
     match drawing_op_for_layer_field(doc, layer_id, field, value) {
         Some(operation) => operation.diff(doc).diff().apply(doc).map_err(|error| error.under(["layers", layer_id])),
@@ -184,8 +184,11 @@ pub fn apply_drawing_mutation(snapshot: &mut DrawingSnapshot, mutation: &Drawing
 }
 
 /// ↩️ The typed mutation steps that undo `mutation` against `snapshot`.
-pub fn inverse_drawing_mutation(snapshot: &DrawingSnapshot, mutation: &DrawingMutation) -> Vec<DrawingMutation> {
-    <DrawingMutation as protocol::Mutation<DrawingSnapshot>>::inverse(mutation, snapshot)
+pub fn inverse_drawing_mutation(snapshot: &DrawingSnapshot, mutation: &DrawingMutation) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
+    Ok({
+    <DrawingMutation as protocol::Mutation<DrawingSnapshot>>::inverse(mutation, snapshot)?
+
+    })
 }
 //#endregion 🔖️Apply
 
@@ -201,8 +204,8 @@ mod tests;
 /// reads — into real typed values.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn bridge_decode_pair(snapshot_json: &str, mutation_json: &str) -> Result<(DrawingSnapshot, DrawingMutation), String> {
-    let snapshot: DrawingSnapshot = dsl::json::from_json_str(snapshot_json).map_err(|error| format!("the committed drawing snapshot JSON does not decode: {error}"))?;
-    let mutation: DrawingMutation = dsl::json::from_json_str(mutation_json).map_err(|error| format!("the committed drawing mutation JSON does not decode: {error}"))?;
+    let snapshot: DrawingSnapshot = semio_framework_pack_json::from_json_str(snapshot_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("the committed drawing snapshot JSON does not decode: {error}"))?;
+    let mutation: DrawingMutation = semio_framework_pack_json::from_json_str(mutation_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("the committed drawing mutation JSON does not decode: {error}"))?;
     Ok((snapshot, mutation))
 }
 
@@ -223,8 +226,8 @@ fn bridge_step(snapshot: &DrawingSnapshot, mutation: &DrawingMutation) -> Result
 /// that cannot name `protocol::MutationOutcome` can still tell an application from a refusal.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn bridge_render(snapshot: &DrawingSnapshot, messages: &[String]) -> String {
-    let report = dsl::DslValue::object([("snapshot".to_string(), dsl::ToValue::to_value(snapshot)), ("messages".to_string(), dsl::ToValue::to_value(messages))]);
-    dsl::json::to_json_string(&report)
+    let report = semio_framework_value::DslValue::object([("snapshot".to_string(), semio_framework_value::ToValue::to_value(snapshot)), ("messages".to_string(), semio_framework_value::ToValue::to_value(messages))]);
+    semio_framework_pack_json::to_json_string(&report)
 }
 
 /// 🌉️ Applies one committed mutation payload to one committed before-document and answers
@@ -250,7 +253,7 @@ pub fn undo_drawing_mutation_json(snapshot_json: &str, mutation_json: &str) -> R
     use protocol::Mutation;
     let (base, mutation) = bridge_decode_pair(snapshot_json, mutation_json)?;
     let (mut current, mut messages) = bridge_step(&base, &mutation)?;
-    for undo in <DrawingMutation as Mutation<DrawingSnapshot>>::inverse(&mutation, &base) {
+    for undo in <DrawingMutation as Mutation<DrawingSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)? {
         let (next, raised) = bridge_step(&current, &undo)?;
         current = next;
         messages.extend(raised);
@@ -267,8 +270,8 @@ pub fn round_trip_drawing_dsl(text: &str) -> Result<String, String> {
     let parsed = <DrawingSnapshot as ArtifactDsl>::parse_dsl(text).map_err(|error| format!("the committed drawing example does not parse: {error:?}"))?;
     let printed = <DrawingSnapshot as ArtifactDsl>::print_dsl(&parsed);
     let reparsed = <DrawingSnapshot as ArtifactDsl>::parse_dsl(&printed).map_err(|error| format!("the reprinted drawing document does not parse: {error:?}"))?;
-    let report = dsl::DslValue::object([("printed".to_string(), dsl::ToValue::to_value(&printed)), ("snapshot".to_string(), dsl::ToValue::to_value(&parsed)), ("reparsed".to_string(), dsl::ToValue::to_value(&reparsed))]);
-    Ok(dsl::json::to_json_string(&report))
+    let report = semio_framework_value::DslValue::object([("printed".to_string(), semio_framework_value::ToValue::to_value(&printed)), ("snapshot".to_string(), semio_framework_value::ToValue::to_value(&parsed)), ("reparsed".to_string(), semio_framework_value::ToValue::to_value(&reparsed))]);
+    Ok(semio_framework_pack_json::to_json_string(&report))
 }
 //#endregion 🌉️ExternalCodecBridge
 
@@ -411,10 +414,10 @@ pub fn drawing_selection_diff(base: &DrawingSnapshot, targets: &[String], place:
     let partial: Vec<protocol::MutationMessage> = [(missing, "not in this drawing"), (locked, "locked or hidden"), (singular, "placed through a singular transform")]
         .into_iter()
         .filter(|(skipped, _)| !skipped.is_empty())
-        .map(|(skipped, reason)| protocol::MutationMessage::warn("mutation.partial", format!("{} of {} target(s) skipped ({reason}): {}", skipped.len(), targets.len(), skipped.join(", "))).at(skipped))
+        .map(|(skipped, reason)| protocol::MutationMessage::warning("mutation.partial", format!("{} of {} target(s) skipped ({reason}): {}", skipped.len(), targets.len(), skipped.join(", "))).at(skipped))
         .collect();
     if patched.is_empty() {
-        return protocol::MutationOutcome::new(crate::diff::DrawingDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warn("mutation.no-op", "no layer changes its transform").at(targets.to_vec())]));
+        return protocol::MutationOutcome::new(crate::diff::DrawingDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "no layer changes its transform").at(targets.to_vec())]));
     }
     protocol::MutationOutcome::new(crate::diff::diff_set_layer_transforms(patched)).absorb_messages(partial)
 }
@@ -446,8 +449,11 @@ pub fn drawing_scaling_matrix(pivot_x: f64, pivot_y: f64, scale_x: f64, scale_y:
 
 /// ↩️ Exact base-derived inverse of a layer selection transform: `update-layer-transform` back to every BASE transform its
 /// forward outcome patches — absolute setters, never a negated motion that would accumulate float error.
-pub fn drawing_selection_inverse(base: &DrawingSnapshot, outcome: protocol::MutationOutcome<crate::diff::DrawingDiff>) -> Vec<DrawingMutation> {
+pub fn drawing_selection_inverse(base: &DrawingSnapshot, outcome: protocol::MutationOutcome<crate::diff::DrawingDiff>) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     outcome.diff().layers.iter().flat_map(|delta| delta.patched.iter()).filter_map(|entry| find_drawing_layer(base, &entry.id).map(|layer| update_layer_transform(entry.id.clone(), layer_base(layer).transform.clone()))).collect()
+
+    })())
 }
 
 /// 🔢️ A selection label's number, `(en, de)`: two decimals at most, trailing zeros trimmed, a German decimal comma.
@@ -465,18 +471,5 @@ pub fn drawing_label_layers(count: usize) -> (String, String) {
         1 => ("1 layer".to_string(), "1 Ebene".to_string()),
         count => (format!("{count} layers"), format!("{count} Ebenen")),
     }
-}
-/// 🧺️ The most inverse rows `mutation` yields on any base — the retained store's fold declaration, proven from the
-/// mutation alone: a selection transform restores one absolute row per addressed layer, every other leaf is
-/// point-invertible.
-pub fn drawing_inverse_rows(mutation: &DrawingMutation) -> usize {
-    match mutation {
-        DrawingMutation::DragLayers(leaf) => leaf.targets.len(),
-        DrawingMutation::RotateLayers(leaf) => leaf.targets.len(),
-        DrawingMutation::ScaleLayers(leaf) => leaf.targets.len(),
-        DrawingMutation::DragPathPoints(leaf) => crate::standards::v1::subsets::transform::schema::mutations::drag_path_points::mutation::drag_path_points_layers(&leaf.targets).len(),
-        _ => 1,
-    }
-    .max(1)
 }
 //#endregion 🔖️SelectionTransform

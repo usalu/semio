@@ -1,0 +1,5 @@
+Actual workspace joint checkpoint is independently Ready for qualified release: Pack112/112 and Replication264/264,zero skips. Captured compiler/post scopes have retained first-party predecessor/current/owned gaps zero. Rawlog hashes agree. Current74 owned bodies remain exact.
+
+Fresh physical checks observe349/350 Pack inputs exact plus one explicitly qualified later Record decoder body; Replication173/173 are exact and its selected inputs contain no Record decoder path. The later complete pair preserves imports,two public functions and canonical Value heads under clean grammar. No writer or runtime equivalence is claimed. Same whole Pack replay against the current extraction remains separately justified/requested; the earlier112 pass cannot substitute for that changed input. External191+generated2/57 predecessors remain unavailable.
+
+Evidence: 🗑️generated/pack-live-native/workspace-3/independent-actual-workspace-joint-green-later-decoder-checkpoint-1.json. No full-current-zero or broader deletion/consumer runtime inference.

@@ -25,10 +25,13 @@ impl MutationKind<PdfSnapshot, PdfMutation> for ReplaceContent {
         MutationOutcome::new(diff::diff_replace_content(self.index, self.at, self.op.clone()))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         let _ = base;
         base.pages.get(self.index).and_then(|page| page.content.get(self.at)).map(|op| PdfMutation::ReplaceContent(ReplaceContent { index: self.index, at: self.at, op: op.clone() })).into_iter().collect()
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace operator {} on page {}", self.at, self.index), &format!("Operator {} auf Seite {} ersetzen", self.at, self.index))

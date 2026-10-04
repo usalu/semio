@@ -17,7 +17,7 @@ fn set_solve_replaces_and_inverts() {
     let next = SetSolve { assignments: Vec::new(), contradiction: true };
     let produced = <SetSolve as MutationKind<Wfc3dTransient, Wfc3dTransientMutation>>::diff(&next, &base).diff().clone();
     assert!(produced.contradiction && produced.assignments.is_empty());
-    let inverse = <SetSolve as MutationKind<Wfc3dTransient, Wfc3dTransientMutation>>::inverse(&next, &base);
+    let inverse = <SetSolve as MutationKind<Wfc3dTransient, Wfc3dTransientMutation>>::inverse(&next, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![Wfc3dTransientMutation::SetSolve(SetSolve { assignments: base.assignments, contradiction: false })]);
 }
 

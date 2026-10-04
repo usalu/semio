@@ -71,6 +71,7 @@ Feature: Apply every typed semio OBJECT mutation to the real committed crate obj
       | delete-mesh       | {"prepare":[],"mutation":{"DeleteMesh":{}}}                                                                                                                                                                           |
       | create-properties | {"prepare":[{"DeleteProperties":{}}],"mutation":{"CreateProperties":{"child_id":"props-02","target":{"artifactId":"crate-props-metric","dialect":{"artifactKind":"s.stdio.semio","standard":"v1","subset":"value"}}}}} |
       | delete-properties | {"prepare":[],"mutation":{"DeleteProperties":{}}}                                                                                                                                                                     |
+      | patch-snapshot | {"prepare": [], "mutation": {"PatchSnapshot": {"patch": {"operation": "set", "path": "/transform/translation/x", "value": -4.25}}}} |
 
   @id-inverse
   @level-exhaustive
@@ -93,6 +94,7 @@ Feature: Apply every typed semio OBJECT mutation to the real committed crate obj
       | delete-mesh       | {"prepare":[],"mutation":{"DeleteMesh":{}}}                                                                                                                                                                           |
       | create-properties | {"prepare":[{"DeleteProperties":{}}],"mutation":{"CreateProperties":{"child_id":"props-02","target":{"artifactId":"crate-props-metric","dialect":{"artifactKind":"s.stdio.semio","standard":"v1","subset":"value"}}}}} |
       | delete-properties | {"prepare":[],"mutation":{"DeleteProperties":{}}}                                                                                                                                                                     |
+      | patch-snapshot | {"prepare": [], "mutation": {"PatchSnapshot": {"patch": {"operation": "set", "path": "/transform/translation/x", "value": -4.25}}}} |
 
   @id-spec-vector
   @level-exhaustive

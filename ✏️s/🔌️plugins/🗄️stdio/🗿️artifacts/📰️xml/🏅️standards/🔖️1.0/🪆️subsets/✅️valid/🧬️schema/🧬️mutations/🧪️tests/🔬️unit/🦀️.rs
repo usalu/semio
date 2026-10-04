@@ -1,6 +1,42 @@
 use super::*;
 use crate::standards::v1_0::subsets::valid::schema::{CODE_DOCTYPE_MISSING, CODE_ROOT_NAME_MISMATCH};
 
+#[test]
+fn history_text_fixture_preserves_doctype_and_matches_independent_xml_reader() {
+    use quick_xml::{Reader, events::Event};
+    let before = include_str!("../../../../🧫️fixtures/🧬️mutations/✍️set-text/🔤️history/📸️snapshot/⬅️before/🗣️.dsl.semio");
+    let after = include_str!("../../../../🧫️fixtures/🧬️mutations/✍️set-text/🔤️history/📸️snapshot/➡️after/🗣️.dsl.semio");
+    let wire = include_str!("../../../../🧫️fixtures/🧬️mutations/✍️set-text/🔤️history/🦠️mutation/🔣️.json");
+    let mutation: XmlValidMutation = semio_framework_pack_json::from_json_str(wire, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let base = <XmlSnapshot as store::ArtifactDsl>::parse_dsl(before).unwrap();
+    let (next, outcome) = applied(&base, &mutation);
+    assert!(outcome.messages().is_empty());
+    assert_eq!(next, <XmlSnapshot as store::ArtifactDsl>::parse_dsl(after).unwrap());
+    let output = String::from_utf8(next.export_utf8().unwrap()).unwrap();
+    let mut reader = Reader::from_str(&output);
+    let mut text = String::new();
+    let mut doctype = None;
+    let mut depth = 0usize;
+    loop {
+        match reader.read_event().unwrap() {
+            Event::Start(_) => depth += 1,
+            Event::End(_) => depth -= 1,
+            Event::Text(value) if depth > 0 => text.push_str(&value.decode().unwrap()),
+            Event::DocType(value) => doctype = Some(value.decode().unwrap().into_owned()),
+            Event::Eof => break,
+            _ => {}
+        }
+    }
+    assert_eq!(text, "World 文字");
+    assert_eq!(doctype.as_deref(), Some("root"));
+    let mut restored = next;
+    for inverse in crate::mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
+        apply_xml_valid_mutation(&mut restored, &inverse);
+    }
+    assert_eq!(restored, base);
+    println!("[DEBUG] XML history fixture edits Unicode text, retains DOCTYPE, and restores its exact inverse");
+}
+
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn valid_document() -> XmlSnapshot {
     <XmlSnapshot as store::ArtifactDsl>::parse_dsl(
@@ -20,6 +56,7 @@ fn applied(base: &XmlSnapshot, mutation: &XmlValidMutation) -> (XmlSnapshot, pro
 fn kinds_matches_enum_variants_in_declaration_order() {
     let one_per_variant = vec![
         XmlValidMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: XmlSnapshot::default() }),
+        XmlValidMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         XmlValidMutation::DeclareDoctype(declare_doctype::DeclareDoctype { external_id: None }),
         XmlValidMutation::RenameDocumentElement(rename_document_element::RenameDocumentElement { name: "x".into() }),
         XmlValidMutation::SetExternalSubset(set_external_subset::SetExternalSubset { external_id: None }),
@@ -99,7 +136,7 @@ fn declare_entity_inserts_at_the_declared_index_and_inverts_to_the_prior_list() 
         })
         .collect();
     assert_eq!(names, vec!["first", "second", "third"], "position is semantic under §4.2");
-    for step in crate::mutation_inverse(&insertion, &with_two) {
+    for step in crate::mutation_inverse(&insertion, &with_two).expect("valid retained mutation inverse fixture") {
         let (undone, _) = applied(&with_three, &step);
         with_three = undone;
     }
@@ -111,6 +148,7 @@ fn every_kind_round_trips_through_its_own_inverse() {
     let base = valid_document();
     let cases = vec![
         XmlValidMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: <XmlSnapshot as store::ArtifactDsl>::parse_dsl("<!DOCTYPE root>\n<root><child>text</child></root>").expect("parses") }),
+        XmlValidMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         XmlValidMutation::DeclareDoctype(declare_doctype::DeclareDoctype { external_id: Some(XmlExternalId::System { system_id: "plist.dtd".into() }) }),
         XmlValidMutation::RenameDocumentElement(rename_document_element::RenameDocumentElement { name: "propertyList".into() }),
         XmlValidMutation::SetExternalSubset(set_external_subset::SetExternalSubset { external_id: None }),
@@ -122,7 +160,7 @@ fn every_kind_round_trips_through_its_own_inverse() {
     for mutation in cases {
         let (mut next, outcome) = applied(&base, &mutation);
         assert!(!outcome.messages().iter().any(|message| message.code.0 == CODE_REJECTED), "{mutation:?} must apply against the fixture: {:?}", outcome.messages());
-        for step in crate::mutation_inverse(&mutation, &base) {
+        for step in crate::mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
             let (undone, _) = applied(&next, &step);
             next = undone;
         }
@@ -137,7 +175,7 @@ fn set_standalone_is_exact_in_every_declaration_combination() {
         for target in [None, Some(true), Some(false)] {
             let mutation = XmlValidMutation::SetStandalone(set_standalone::SetStandalone { standalone: target });
             let (mut next, _) = applied(&base, &mutation);
-            for step in crate::mutation_inverse(&mutation, &base) {
+            for step in crate::mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
                 let (undone, _) = applied(&next, &step);
                 next = undone;
             }

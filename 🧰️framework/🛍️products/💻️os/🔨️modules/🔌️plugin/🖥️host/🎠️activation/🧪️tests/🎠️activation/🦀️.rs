@@ -88,3 +88,37 @@ async fn artifact_kind_app_ids_reach_the_guest_as_the_declared_activation_event(
         _ => panic!("activation_turn_event must marshal onto the WIT activate event"),
     }
 }
+
+/// 🤝️ LAW (audit F1/F7): a guest the runtime refuses at admission reaches the host as its structured fault, not as words.
+/// `install_actor` returns an [`ActivationRefusal`] carrying the `plugin.channel-mismatch` fault with both channel params
+/// (what every native host hands its notice funnel), retires the kernel reservation and never registers an instance.
+#[semio_framework_async_macros::async_test]
+async fn a_guest_refused_at_admission_reaches_the_host_as_its_fault() {
+    let mock = Arc::new(MockGuestRuntime::new().await);
+    let runtime = Arc::new(GuestRuntimes::Mock(Arc::clone(&mock)));
+    let pool = Arc::new(WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 2)));
+    let mut kernel = Kernel::new(ShardKind::Native, 1, 0, 8).await;
+    let package = PackageId("activation-channel".into());
+    let request = semio_framework_actor::activation::KernelActivationRequest {
+        package: package.clone(),
+        plugin_ordinal: 0,
+        kind: ActorKind::PluginApp { plugin: package.clone(), app_id: "test".into(), instance_id: 1 },
+        lane: Lane::Interactive,
+        window: None,
+        event: ActivationEvent::Manual,
+    };
+    let reservation = kernel.reserve_activation(request).await.unwrap();
+    let actor = reservation.actor();
+    let compiled = mock.compile(&PackageRef { package, hash: PackageHash([0; 32]) }, &[]).await.unwrap();
+    let shards = vec![ShardExecutor::new(Arc::clone(&pool), Arc::clone(&runtime), Vec::new(), OutcomeSink::new()).await];
+    let host = semio_framework_os_kernel::CHANNEL_VERSION;
+    mock.script_instantiate_refusal(semio_framework_os_kernel::os_spr::admit_guest_channel_version(host - 1, host).unwrap_err()).await;
+    let budget = Budget { fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
+    let refusal = install_actor(&mut kernel, &runtime, &shards, reservation, &compiled, &[], &budget).await.expect_err("a refused guest installs no actor");
+    let fault = refusal.fault.expect("the admission fault travels with the refusal");
+    assert_eq!(fault.code.0, semio_framework_os_kernel::os_spr::CHANNEL_MISMATCH_CODE);
+    assert_eq!((fault.param("guest"), fault.param("host")), (Some((host - 1).to_string().as_str()), Some(host.to_string().as_str())));
+    assert_eq!(refusal.reason, fault.describe(), "the words stay the fault's own description");
+    assert!(kernel.transport_key(actor).is_none() && kernel.actor_record(actor).await.is_none(), "the reservation is retired");
+    assert_eq!(mock.drop_admissions.load(std::sync::atomic::Ordering::Acquire), 0, "no instance existed to drop");
+}

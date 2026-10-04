@@ -9,7 +9,7 @@ use protocol::{MutationKind, SemanticDescriptor};
 /// 🌱️ Brings a new [`FormStep`] into existence at an optional FINAL-state `index` (`None` appends).
 /// A duplicate `step.id` is Fatal `mutation.duplicate-id` (an id-keyed entity that already exists
 /// cannot be re-created).
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct CreateStep {
@@ -23,9 +23,12 @@ impl MutationKind<FormsSnapshot, FormMutation> for CreateStep {
     fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
         super::diff::diff_create_step(self, base)
     }
-    fn inverse(&self, base: &FormsSnapshot) -> Vec<FormMutation> {
-        super::inverse::inverse_create_step(self, base)
-    }
+    fn inverse(&self, base: &FormsSnapshot) -> Result<Vec<FormMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse_create_step(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Create step \"{}\"", self.step.title), &format!("Schritt \"{}\" erstellen", self.step.title))
     }

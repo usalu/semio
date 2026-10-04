@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.semio.tech/architecture/record-floor-plan-v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "phase", "owners", "bindingLaws", "requiredProofs"],
+  "properties": {
+    "version": { "const": 1 },
+    "phase": { "const": "read-only-preparation" },
+    "owners": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "taxonomy", "dependsOn", "surface"],
+        "properties": {
+          "id": { "enum": ["value", "diagnostic", "lexical", "json", "record", "derive", "pack-container", "pack-record"] },
+          "taxonomy": { "type": "string", "minLength": 1 },
+          "dependsOn": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+          "surface": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+        }
+      }
+    },
+    "bindingLaws": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "owner", "oracles"],
+        "properties": {
+          "name": { "type": "string", "pattern": "^sqlite_snapshot_native_binding_[a-z_]+$" },
+          "owner": { "enum": ["record", "pack-record", "artifact-child"] },
+          "oracles": { "type": "array", "uniqueItems": true, "items": { "enum": ["Ajv", "BunSQLite", "JSON.parse", "inflateRawSync", "owned-original-control-law"] } }
+        }
+      }
+    },
+    "requiredProofs": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    }
+  }
+}

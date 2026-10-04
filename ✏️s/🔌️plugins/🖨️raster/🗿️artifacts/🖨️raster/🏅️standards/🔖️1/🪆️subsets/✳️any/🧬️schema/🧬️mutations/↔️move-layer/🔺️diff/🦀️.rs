@@ -16,7 +16,7 @@ pub fn diff(payload: &super::MoveLayer, base: &RasterSnapshot) -> protocol::Muta
         RasterLayerNode::Pixel { transform, .. } | RasterLayerNode::Group { transform, .. } | RasterLayerNode::Adjustment { transform, .. } => (transform.x, transform.y),
     };
     if x == payload.new_x && y == payload.new_y {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Layer \"{}\" is already at ({}, {}).", payload.layer_id, payload.new_x, payload.new_y));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Layer \"{}\" is already at ({}, {}).", payload.layer_id, payload.new_x, payload.new_y));
     }
     protocol::MutationOutcome::new(diff_patch_layer(&payload.layer_id, RasterLayerPatch { transform_x: Some(payload.new_x), transform_y: Some(payload.new_y), ..Default::default() }))
 }

@@ -28,8 +28,8 @@ async fn one_gumball_translate_is_one_edit_one_row_and_one_transaction() {
     let row = rows.last().expect("the gesture's row");
     let transaction = row.transaction.as_ref().expect("the row is keyed by its tool transaction");
     assert!(transaction.id.starts_with("tx-") && transaction.tool == "s.lowpoly.lowpoly@1/*#editor#translateSelection", "the gumball tool authored it: {transaction:?}");
-    assert_eq!(row.label.resolve(protocol::Terminology::Native, protocol::Locale::En).to_string(), format!("Move \"{}\" by (0.5, 0, 0)", before.id));
-    assert_eq!(row.label.resolve(protocol::Terminology::Native, protocol::Locale::De).to_string(), format!("\"{}\" um (0,5; 0; 0) verschieben", before.id));
+    assert_eq!(row.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).to_string(), format!("Move \"{}\" by (0.5, 0, 0)", before.id));
+    assert_eq!(row.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De).to_string(), format!("\"{}\" um (0,5; 0; 0) verschieben", before.id));
     act(&mut a, "undo", serde_json::json!({})).await;
     assert_eq!(a.snapshot().expect("projection").objects[0].mesh, before.mesh, "one undo reverts the whole gesture");
 }
@@ -90,7 +90,7 @@ async fn a_gumball_move_edited_in_history_replays_its_downstream() {
 
 /// ⏪️ One `historyEdit*` verb from the Model window; a refused verb fails the law.
 async fn history_edit(app: &mut crate::editor::lowpoly::unit_tests::context::LowpolyApp, verb: &str, args: serde_json::Value) {
-    let args = protocol::DslValue::from(&args);
+    let args = semio_framework_value::DslValue::from(&args);
     let result = app.0.handle_action(verb, Some(&args), &crate::editor::lowpoly::unit_tests::context::action_meta()).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
     assert!(result.output.get("rejected").is_none(), "{verb} was refused: {:?}", result.output);
 }

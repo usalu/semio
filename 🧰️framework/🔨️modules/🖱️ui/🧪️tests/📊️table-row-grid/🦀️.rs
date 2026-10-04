@@ -326,3 +326,25 @@ fn a_tree_row_and_a_table_row_with_one_target_dispatch_identically() {
     let button = projection.iter().find(|node| node.key == format!("table-row::row-action::{disabled}")).expect("the disabled action is announced");
     assert!(button.disabled && !button.actionable && !button.focusable, "a disabled row action is announced disabled and unreachable: {button:?}");
 }
+
+/// ♿️ The closed language-neutral focus corpus preserves explained disabled actions and refuses unexplained ones.
+#[test]
+fn disabled_row_action_focus_matches_its_explanation_corpus() {
+    let cases: Value = serde_json::from_str(include_str!("../../🧫️fixtures/♿️disabled-row-action/🔣️.json")).expect("focus corpus");
+    for case in cases.as_array().expect("cases") {
+        let mut action = serde_json::json!({ "icon": "package-x", "label": case["label"], "verb": "edit", "disabled": case["disabled"] });
+        if let Some(reason) = case["reason"].as_str() {
+            action["reason"] = reason.into();
+        }
+        let component = serde_json::json!({ "type": "tableRow", "cells": [case["label"]], "target": { "scope": "s.space.home@1/*#editor", "version": 1, "args": {}, "activation": "open" }, "rowActions": [action] });
+        let stack = serde_json::json!({ "kind": "stack", "axis": "vertical", "gap": "none", "padding": { "all": "none" }, "align": "stretch", "justify": "start", "wrap": false, "grow": false });
+        let document = serde_json::json!({ "document": { "surface": "row.focus", "revision": 1, "root": 0, "layoutEpoch": 0, "controller": "s.space.home@1/*#editor", "nodes": [{ "id": 0, "key": "table", "component": { "type": "table", "label": case["label"], "columns": [case["label"]], "actionsLabel": case["label"] }, "children": [1], "layout": stack, "style": {}, "activity": "idle", "accessibility": {} }, { "id": 1, "key": "row", "component": component, "children": [], "layout": ui_contract::LayoutSpec::default(), "style": {}, "activity": "idle", "accessibility": {} }] }, "viewport": { "width": 800.0, "height": 600.0 } });
+        let (mut tree, _) = mounted(&document);
+        let projection = accessibility_projection(&tree);
+        let button = projection.iter().find(|node| node.key == "row::row-action::0").expect("projected action");
+        assert_eq!((button.disabled, button.focusable, button.tabbable, button.actionable, button.description.as_deref()), (case["disabled"].as_bool().unwrap(), case["focusable"].as_bool().unwrap(), case["focusable"].as_bool().unwrap(), case["actionable"].as_bool().unwrap(), case["description"].as_str()), "{}", case["id"]);
+        let node = tree.document_node(UiNodeId(1)).expect("row mounted");
+        let commands = EventRouter::new("main").dispatch_accessibility_row_action(&mut tree, node, 0, &AccessibilityUiEvent::Activate);
+        assert_eq!(commands.iter().any(|command| matches!(command, UiCommand::App { .. })), case["actionable"].as_bool().unwrap(), "{}", case["id"]);
+    }
+}

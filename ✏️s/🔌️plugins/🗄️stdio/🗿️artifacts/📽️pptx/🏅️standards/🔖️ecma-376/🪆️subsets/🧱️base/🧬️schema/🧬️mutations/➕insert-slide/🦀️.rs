@@ -8,8 +8,8 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct InsertSlide {
-    pub(crate) index: usize,
-    pub(crate) slide: PptxSlide,
+    pub(crate) vacancy: PptxXmlVacancyAddress,
+    pub(crate) entry: XmlNode,
 }
 
 impl protocol::MutationKind<PptxSnapshot, PptxMutation> for InsertSlide {
@@ -18,14 +18,17 @@ impl protocol::MutationKind<PptxSnapshot, PptxMutation> for InsertSlide {
     fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<<PptxMutation as Mutation<PptxSnapshot>>::Diff> {
         agg_diff(&PptxMutation::InsertSlide(self.clone()), base)
     }
-    fn inverse(&self, base: &PptxSnapshot) -> Vec<PptxMutation> {
-        agg_inverse(&PptxMutation::InsertSlide(self.clone()), base)
-    }
+    fn inverse(&self, base: &PptxSnapshot) -> Result<Vec<PptxMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&PptxMutation::InsertSlide(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert slide", "Folie einfügen")
     }
     fn target(&self) -> Vec<String> {
-        Vec::new()
+        std::iter::once(self.vacancy.container.part_path.clone()).chain(self.vacancy.container.node_path.iter().map(usize::to_string)).chain(std::iter::once(self.vacancy.index.to_string())).collect()
     }
 }
 //#endregion 🔖️Payload

@@ -164,7 +164,7 @@ async fn registry_descriptors_carry_valid_snapshot_state_and_match_field_states(
     let mut walked = 0usize;
     for descriptor in registry.iter() {
         walked += 1;
-        let schema = parse_json(descriptor.snapshot.json_schema).unwrap_or_else(|error| panic!("{}: snapshot json_schema parse: {error}", descriptor.id));
+        let schema = parse_json(descriptor.snapshot.json_schema, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|error| panic!("{}: snapshot json_schema parse: {error}", descriptor.id));
         let title = schema.get("title").and_then(Value::as_str).unwrap_or("");
         assert_eq!(title, expected_snapshot_title(descriptor.id).await, "{}: snapshot title must be XSnapshot for id", descriptor.id);
 
@@ -239,9 +239,9 @@ async fn derived_fields_leave_the_state_class_axis_entirely() {
 #[semio_framework_async_macros::async_test]
 async fn schema_catalog_still_registers_json() {
     let mut catalog = SchemaCatalog::new();
-    catalog.register_json("probe", parse_json(r#"{"type":"object","properties":{"n":{"type":"integer"}}}"#).expect("schema json")).expect("register");
-    catalog.validate("probe", &parse_json(r#"{"n":1}"#).expect("probe json")).expect("validate");
-    assert!(catalog.validate("probe", &parse_json(r#"{"n":1.5}"#).expect("fractional probe json")).is_err());
+    catalog.register_json("probe", parse_json(r#"{"type":"object","properties":{"n":{"type":"integer"}}}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("schema json")).expect("register");
+    catalog.validate("probe", &parse_json(r#"{"n":1}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("probe json")).expect("validate");
+    assert!(catalog.validate("probe", &parse_json(r#"{"n":1.5}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fractional probe json")).is_err());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -259,7 +259,7 @@ async fn owned_validator_preserves_supported_keyword_corpus() {
             }
         }"#;
     let mut owned = SchemaCatalog::new();
-    owned.register_json("probe", parse_json(schema_text).expect("owned schema")).expect("owned compile");
+    owned.register_json("probe", parse_json(schema_text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("owned schema")).expect("owned compile");
     let corpus = [
         (r#"{"n":1}"#, true),
         (r#"{"n":1.0}"#, true),
@@ -278,7 +278,7 @@ async fn owned_validator_preserves_supported_keyword_corpus() {
         (r#"[]"#, false),
     ];
     for (text, expected) in corpus {
-        let owned_value = parse_json(text).expect("owned value");
+        let owned_value = parse_json(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("owned value");
         assert_eq!(owned.validate("probe", &owned_value).is_ok(), expected, "unexpected validator outcome for {text}");
     }
 }
@@ -434,7 +434,7 @@ async fn framework_schema_exports_match_the_modules_json_schema_defs_and_resolve
     register_framework_schema_exports().expect("exact duplicate registration is accepted");
     assert!(scope_schema_exports_registered(FRAMEWORK_SCHEMA_SCOPE));
 
-    let document = parse_json(include_str!("../../🔣️.json")).expect("framework.schema json facet parses");
+    let document = parse_json(include_str!("../../🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("framework.schema json facet parses");
     let defs = document.get("$defs").and_then(Value::as_object).expect("$defs");
     let mut declared: Vec<&str> = defs.iter().map(|(key, _)| key).collect();
     declared.sort_unstable();
@@ -528,7 +528,7 @@ fn pointer_to_owned_path(pointer: &str) -> String {
 
 #[semio_framework_async_macros::async_test]
 async fn owned_validator_agrees_with_the_shared_draft07_vectors() {
-    let vectors = parse_json(DRAFT07_VECTORS).expect("vectors json");
+    let vectors = parse_json(DRAFT07_VECTORS, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("vectors json");
     let cases = vectors.get("cases").and_then(Value::as_array).expect("cases");
     assert!(cases.len() >= 16, "expected the full vector corpus, found {}", cases.len());
     for case in cases {
@@ -556,7 +556,7 @@ async fn owned_validator_agrees_with_the_shared_draft07_vectors() {
 /// `annotationFormats` spelling (the proto-derived ones the strict Ajv oracle registers as annotations) never rejects.
 #[semio_framework_async_macros::async_test]
 async fn owned_format_policy_matches_the_shared_format_lists() {
-    let vectors = parse_json(DRAFT07_VECTORS).expect("vectors json");
+    let vectors = parse_json(DRAFT07_VECTORS, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("vectors json");
     let list = |key: &str| -> Vec<String> { vectors.get(key).and_then(Value::as_array).unwrap_or_else(|| panic!("{key} list")).iter().map(|entry| entry.as_str().expect("format name").to_string()).collect() };
     assert_eq!(list("assertedFormats"), crate::ASSERTED_STRING_FORMATS.map(str::to_string).to_vec());
     for format in list("annotationFormats") {
@@ -658,8 +658,8 @@ fn fragment_validation_uses_only_the_smallest_required_post_edit_frontier() {
             _ => len,
         });
         let candidate = case.get("candidate").map(|value| {
-            let parsed = pack::json::parse(&value.to_string()).expect("candidate JSON");
-            pack::json::to_dsl_value(&parsed)
+            let parsed = semio_framework_pack_json::parse(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("candidate JSON");
+            semio_framework_pack_json::to_dsl_value(&parsed)
         });
         let mut requested = Vec::new();
         let mut shape_requested = Vec::new();
@@ -675,8 +675,8 @@ fn fragment_validation_uses_only_the_smallest_required_post_edit_frontier() {
             });
             requested.push(pointer.clone());
             let value = after.pointer(&pointer).ok_or_else(|| SchemaFragmentContextRefusal::new("post-edit value is absent"))?;
-            let parsed = pack::json::parse(&value.to_string()).map_err(|error| SchemaFragmentContextRefusal::new(error.to_string()))?;
-            Ok(pack::json::to_dsl_value(&parsed))
+            let parsed = semio_framework_pack_json::parse(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| SchemaFragmentContextRefusal::new(error.to_string()))?;
+            Ok(semio_framework_pack_json::to_dsl_value(&parsed))
         }, |frontier| {
             let pointer = frontier.iter().fold(String::new(), |mut pointer, segment| {
                 pointer.push('/');
@@ -728,7 +728,7 @@ async fn entity_kind_catalog_data_validates_through_the_owned_validator_and_matc
         panic!("🏷️entity-kinds/🔣️.json must satisfy framework.schema#/$defs/EntityKindCatalog: {error}");
     }
 
-    let document = parse_json(ENTITY_KIND_CATALOG_JSON).expect("catalog parses");
+    let document = parse_json(ENTITY_KIND_CATALOG_JSON, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("catalog parses");
     let entries = document.as_array().expect("catalog is an array");
     assert_eq!(entries.len(), ENTITY_KINDS.len(), "the generated Rust projection carries every declared entity kind");
     for (entry, kind) in entries.iter().zip(ENTITY_KINDS) {

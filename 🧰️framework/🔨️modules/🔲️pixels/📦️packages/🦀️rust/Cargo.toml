@@ -16,9 +16,14 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-2d = { path = "../../../◻️2d/📦️packages/🦀️rust", default-features = false }
+semio-framework-io-binary-source = { path = "../../../🚪️io/🔢️binary/📥️source/📦️packages/🦀️rust" }
+semio-framework-io-base64 = { path = "../../../🚪️io/🔤️base64/📦️packages/🦀️rust" }
 semio-framework-deflate = { path = "../../../🗜️deflate/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+base64 = "0.22.1"
+percent-encoding = "2.3.2"
 png = "0.17.16"
 serde_json = { workspace = true }
 image = { version = "0.25", default-features = false }

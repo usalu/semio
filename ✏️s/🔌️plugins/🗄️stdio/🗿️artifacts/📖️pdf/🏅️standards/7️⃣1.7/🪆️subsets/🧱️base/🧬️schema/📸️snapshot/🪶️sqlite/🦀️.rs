@@ -1,4 +1,5 @@
 //! 📖️ Explicit PDF 1.7 document, COS, rendering and resource relations.
+use semio_framework_value::{ValueError,ValueRefusalKind};
 use super::*;
 use store::sqlite_snapshot::{self, SqliteDatabase as Db, SqliteRow as RawRow, SqliteValue as V, SqliteSnapshotControl as Control, SqliteSnapshotPhase as Phase, artifact::{Cell as C}};
 use std::collections::{BTreeMap, BTreeSet};
@@ -27,21 +28,21 @@ mod form;
 #[path = "📄️document/🦀️.rs"]
 mod document;
 
-fn integer<T: TryFrom<i64>>(row:Row<'_>, column: usize) -> Result<T, String> { T::try_from(row.integer(column)?).map_err(|_| "PDF integer is outside its declared range".into()) }
-fn boolean(row:Row<'_>, column: usize) -> Result<bool, String> { match row.integer(column)? { 0 => Ok(false), 1 => Ok(true), _ => Err("PDF boolean must be zero or one".into()) } }
-fn optional_integer(row:Row<'_>, column: usize) -> Result<Option<i64>, String> { if row.values.get(column) == Some(&V::Null) { Ok(None) } else { row.integer(column).map(Some) } }
-fn optional_typed_integer<T: TryFrom<i64>>(row:Row<'_>, column: usize) -> Result<Option<T>, String> { if row.values.get(column) == Some(&V::Null) { Ok(None) } else { integer(row, column).map(Some) } }
-fn optional_real(row:Row<'_>, column: usize) -> Result<Option<f64>, String> { if row.is_null(column)? { Ok(None) } else { row.real(column).map(Some) } }
-fn optional_boolean(row:Row<'_>, column: usize) -> Result<Option<bool>, String> { if row.values.get(column) == Some(&V::Null) { Ok(None) } else { boolean(row, column).map(Some) } }
+fn integer<T: TryFrom<i64>>(row:Row<'_>, column: usize) -> Result<T,ValueError> { T::try_from(row.integer(column)?).map_err(|_| ValueError::new(ValueRefusalKind::InvalidValue,"PDF integer is outside its declared range")) }
+fn boolean(row:Row<'_>, column: usize) -> Result<bool,ValueError> { match row.integer(column)? { 0 => Ok(false), 1 => Ok(true), _ => Err(ValueError::new(ValueRefusalKind::InvalidValue,"PDF boolean must be zero or one")) } }
+fn optional_integer(row:Row<'_>, column: usize) -> Result<Option<i64>,ValueError> { if row.values.get(column) == Some(&V::Null) { Ok(None) } else { row.integer(column).map(Some) } }
+fn optional_typed_integer<T: TryFrom<i64>>(row:Row<'_>, column: usize) -> Result<Option<T>,ValueError> { if row.values.get(column) == Some(&V::Null) { Ok(None) } else { integer(row, column).map(Some) } }
+fn optional_real(row:Row<'_>, column: usize) -> Result<Option<f64>,ValueError> { if row.is_null(column)? { Ok(None) } else { row.real(column).map(Some) } }
+fn optional_boolean(row:Row<'_>, column: usize) -> Result<Option<bool>,ValueError> { if row.values.get(column) == Some(&V::Null) { Ok(None) } else { boolean(row, column).map(Some) } }
 fn real_cell(value: Option<f64>) -> C<'static> { value.map_or(C::Null, C::Real) }
 fn integer_cell(value: Option<u32>) -> C<'static> { value.map_or(C::Null, |value| C::Integer(i64::from(value))) }
 fn boolean_cell(value: Option<bool>) -> C<'static> { value.map_or(C::Null, |value| C::Integer(i64::from(value))) }
 fn text_cell(value: &Option<String>) -> C<'_> { value.as_deref().map_or(C::Null, C::Text) }
-fn optional_array<const N: usize>(row:Row<'_>, start: usize) -> Result<Option<[f64; N]>, String> { let mut values = [0.0; N]; let mut present = 0; for (index, value) in values.iter_mut().enumerate() { if let Some(number) = optional_real(row, start + index)? { *value = number; present += 1; } } match present { 0 => Ok(None), count if count == N => Ok(Some(values)), _ => Err("PDF optional array has partially absent components".into()) } }
+fn optional_array<const N: usize>(row:Row<'_>, start: usize) -> Result<Option<[f64; N]>,ValueError> { let mut values = [0.0; N]; let mut present = 0; for (index, value) in values.iter_mut().enumerate() { if let Some(number) = optional_real(row, start + index)? { *value = number; present += 1; } } match present { 0 => Ok(None), count if count == N => Ok(Some(values)), _ => Err(ValueError::new(ValueRefusalKind::InvalidValue,"PDF optional array has partially absent components")) } }
 fn array_cells<const N: usize>(value: &Option<[f64; N]>) -> [C<'static>; N] { value.map_or([C::Null; N], |value| value.map(C::Real)) }
-fn write_sequence(out: &mut Projection<'_, '_>, table: &str, owner: i64, values: &[f64]) -> Result<(), String> { for (ordinal, value) in values.iter().enumerate() { out.insert(table, &[C::Integer(owner), C::Integer(ordinal as i64), C::Real(*value)])?; } Ok(()) }
-fn read_sequence(reader: &mut Reader<'_, '_, '_>, table: &'static str, owner: i64) -> Result<Vec<f64>, String> { let mut values = Vec::new(); for row in reader.children(table, 1, 2, owner)? { let row = reader.take(table, row.rowid, 4)?; values.push(row.real(3)?); } Ok(values) }
-fn null_except(row:Row<'_>, columns: std::ops::Range<usize>, present: &[usize]) -> Result<(), String> { for column in columns { if !present.contains(&column) && !row.is_null(column)? { return Err("PDF variant contains a property belonging to another kind".into()); } } Ok(()) }
+fn write_sequence(out: &mut Projection<'_, '_>, table: &str, owner: i64, values: &[f64]) -> Result<(),ValueError> { for (ordinal, value) in values.iter().enumerate() { out.insert(table, &[C::Integer(owner), C::Integer(ordinal as i64), C::Real(*value)])?; } Ok(()) }
+fn read_sequence(reader: &mut Reader<'_, '_, '_>, table: &'static str, owner: i64) -> Result<Vec<f64>,ValueError> { let mut values = Vec::new(); for row in reader.children(table, 1, 2, owner)? { let row = reader.take(table, row.rowid, 4)?; values.push(row.real(3)?); } Ok(values) }
+fn null_except(row:Row<'_>, columns: std::ops::Range<usize>, present: &[usize]) -> Result<(),ValueError> { for column in columns { if !present.contains(&column) && !row.is_null(column)? { return Err(ValueError::new(ValueRefusalKind::InvalidValue,"PDF variant contains a property belonging to another kind")); } } Ok(()) }
 
 struct Reader<'a, 'c, 'p> {
     db: &'a Db,
@@ -53,26 +54,26 @@ struct Reader<'a, 'c, 'p> {
 }
 
 impl<'a, 'c, 'p> Reader<'a, 'c, 'p> {
-    fn new(db: &'a Db, control: &'c mut Control<'p>) -> Result<Self, String> {
+    fn new(db: &'a Db, control: &'c mut Control<'p>) -> Result<Self,ValueError> {
         control.check_database(db, Phase::ReconstructSnapshot)?;
         let mut reader = Self { db, rows: BTreeMap::new(), groups: BTreeMap::new(), used: BTreeSet::new(), control, total: 0 };
         for table in &db.tables { for row in &table.rows {
-            if row.rowid <= 0 || row.integer(0)? != row.rowid || reader.rows.insert((&table.name, row.rowid), sqlite_snapshot::artifact::FloatRow::new(row,number::columns(&table.name))?).is_some() { return Err("PDF row identity must be positive and unique within its entity table".into()); }
+            if row.rowid <= 0 || row.integer(0)? != row.rowid || reader.rows.insert((&table.name, row.rowid), sqlite_snapshot::artifact::FloatRow::new(row,number::columns(&table.name))?).is_some() { return Err(ValueError::new(ValueRefusalKind::InvalidValue,"PDF row identity must be positive and unique within its entity table")); }
             reader.total += 1;
             if reader.total % 256 == 0 { reader.control.checkpoint(Phase::ReconstructSnapshot, 0, reader.total)?; }
         } }
         Ok(reader)
     }
-    fn take(&mut self, table: &'a str, key: i64, width: usize) -> Result<Row<'a>, String> {
-        let row = self.rows.get(&(table, key)).copied().ok_or_else(|| format!("missing {table} entity {key}"))?;
-        if row.values.len() != width || !self.used.insert((table, key)) { return Err(format!("{table} has an invalid row width, duplicate ownership or containment cycle")); }
+    fn take(&mut self, table: &'a str, key: i64, width: usize) -> Result<Row<'a>,ValueError> {
+        let row = self.rows.get(&(table, key)).copied().ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue,format!("missing {table} entity {key}")))?;
+        if row.values.len() != width || !self.used.insert((table, key)) { return Err(ValueError::new(ValueRefusalKind::InvalidValue,format!("{table} has an invalid row width, duplicate ownership or containment cycle"))); }
         if self.used.len() % 256 == 0 { self.control.checkpoint(Phase::ReconstructSnapshot, self.used.len(), self.total)?; }
         Ok(row)
     }
-    fn children(&mut self, table: &'a str, parent_column: usize, ordinal_column: usize, parent: i64) -> Result<Vec<&'a RawRow>, String> {
+    fn children(&mut self, table: &'a str, parent_column: usize, ordinal_column: usize, parent: i64) -> Result<Vec<&'a RawRow>,ValueError> {
         self.children_with_role(table, parent_column, ordinal_column, parent, None)
     }
-    fn children_with_role(&mut self, table: &'a str, parent_column: usize, ordinal_column: usize, parent: i64, role: Option<(usize, &'a str)>) -> Result<Vec<&'a RawRow>, String> {
+    fn children_with_role(&mut self, table: &'a str, parent_column: usize, ordinal_column: usize, parent: i64, role: Option<(usize, &'a str)>) -> Result<Vec<&'a RawRow>,ValueError> {
         let key = (table, parent_column, ordinal_column, role);
         if !self.groups.contains_key(&key) {
             let mut groups: BTreeMap<i64, Vec<&RawRow>> = BTreeMap::new();
@@ -86,20 +87,20 @@ impl<'a, 'c, 'p> Reader<'a, 'c, 'p> {
                 let mut comparisons = 0; let mut cancelled = None;
                 rows.sort_by_key(|row| { comparisons += 1; if comparisons % 1024 == 0 && cancelled.is_none() { cancelled = self.control.checkpoint(Phase::ReconstructSnapshot, self.used.len(), self.total).err(); } row.integer(ordinal_column).unwrap_or(i64::MIN) });
                 if let Some(error) = cancelled { return Err(error); }
-                for (ordinal, row) in rows.iter().enumerate() { if row.integer(ordinal_column)? != ordinal as i64 { return Err(format!("{table} order must be contiguous and unique")); } }
+                for (ordinal, row) in rows.iter().enumerate() { if row.integer(ordinal_column)? != ordinal as i64 { return Err(ValueError::new(ValueRefusalKind::InvalidValue,format!("{table} order must be contiguous and unique"))); } }
             }
             self.groups.insert(key, groups);
         }
         Ok(self.groups.get_mut(&key).unwrap().remove(&parent).unwrap_or_default())
     }
-    fn copy_text(&mut self,value:&str)->Result<String,String>{sqlite_snapshot::artifact::Reconstruction::new(self.control)?.text(value)}
-    fn copy_blob(&mut self,value:&[u8])->Result<Vec<u8>,String>{sqlite_snapshot::artifact::Reconstruction::new(self.control)?.blob(value)}
-    fn text(&mut self,row:Row<'_>,column:usize)->Result<String,String>{self.copy_text(row.text(column)?)}
-    fn optional_text(&mut self,row:Row<'_>,column:usize)->Result<Option<String>,String>{row.optional_text(column)?.map(|value|self.copy_text(value)).transpose()}
-    fn blob(&mut self,row:Row<'_>,column:usize)->Result<Vec<u8>,String>{self.copy_blob(row.blob(column)?)}
+    fn copy_text(&mut self,value:&str)->Result<String,ValueError>{sqlite_snapshot::artifact::Reconstruction::new(self.control)?.text(value)}
+    fn copy_blob(&mut self,value:&[u8])->Result<Vec<u8>,ValueError>{sqlite_snapshot::artifact::Reconstruction::new(self.control)?.blob(value)}
+    fn text(&mut self,row:Row<'_>,column:usize)->Result<String,ValueError>{self.copy_text(row.text(column)?)}
+    fn optional_text(&mut self,row:Row<'_>,column:usize)->Result<Option<String>,ValueError>{row.optional_text(column)?.map(|value|self.copy_text(value)).transpose()}
+    fn blob(&mut self,row:Row<'_>,column:usize)->Result<Vec<u8>,ValueError>{self.copy_blob(row.blob(column)?)}
     fn has(&self, table: &str, key: i64) -> bool { self.rows.contains_key(&(table, key)) }
-    fn finish(self) -> Result<(), String> {
-        if self.used.len() != self.total { return Err("PDF database contains orphaned or mismatched semantic entities".into()); }
+    fn finish(self) -> Result<(),ValueError> {
+        if self.used.len() != self.total { return Err(ValueError::new(ValueRefusalKind::InvalidValue,"PDF database contains orphaned or mismatched semantic entities")); }
         self.control.checkpoint(Phase::ReconstructSnapshot, self.total, self.total)
     }
 }
@@ -107,7 +108,8 @@ impl<'a, 'c, 'p> Reader<'a, 'c, 'p> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use store::{FromValue,ArtifactSqliteSnapshot};
+    use store::ArtifactSqliteSnapshot;
+    use semio_framework_value::FromValue;
     fn fixture()->PdfSnapshot { PdfSnapshot::from_value(serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()).unwrap() }
     fn domain_schema()->String{include_str!("🗄️.sql").into()}
 
@@ -191,7 +193,7 @@ mod tests {
         for encoding in[sqlite_snapshot::SnapshotEncoding::Binary,sqlite_snapshot::SnapshotEncoding::Text]{
             let tight=sqlite_snapshot::SqliteDatabaseLimits{max_rows:plan["refusedRows"].as_u64().unwrap()as usize,..limits};
             let mut metadata=false;let mut observe=|event:sqlite_snapshot::SqliteSnapshotProgress|{metadata|=event.phase==Phase::EncodeNative&&event.total==32;true};
-            let Err(error)=snapshot.encode_sqlite_snapshot_native(encoding,&mut Control::new(&mut observe,tight))else{panic!("all authored COS entities and relationships require row admission for {encoding:?}")};assert!(error.contains("row"),"{error}");assert!(!metadata,"row refusal precedes native metadata ownership");
+            let Err(error)=snapshot.encode_sqlite_snapshot_native(encoding,&mut Control::new(&mut observe,tight))else{panic!("all authored COS entities and relationships require row admission for {encoding:?}")};assert!(error.message.contains("row"),"{error}");assert!(!metadata,"row refusal precedes native metadata ownership");
             let mut interior=false;let mut metadata=false;let mut cancel=|event:sqlite_snapshot::SqliteSnapshotProgress|{metadata|=event.phase==Phase::EncodeNative&&event.total==32;if event.phase==Phase::EncodeNative&&event.total==0&&event.completed==plan["cancelAt"].as_u64().unwrap()as usize{interior=true;false}else{true}};assert!(snapshot.encode_sqlite_snapshot_native(encoding,&mut Control::new(&mut cancel,limits)).is_err());assert!(interior);assert!(!metadata,"forecast cancellation precedes native metadata ownership");
             let exact=sqlite_snapshot::SqliteDatabaseLimits{max_rows:plan["totalRows"].as_u64().unwrap()as usize,..limits};assert!(snapshot.encode_sqlite_snapshot_native(encoding,&mut Control::new(&mut |_|true,exact)).is_ok());
         }

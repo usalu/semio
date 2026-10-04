@@ -37,7 +37,7 @@ fn an_edit_ladder_applies_and_inverts() {
     let mut projection = base.clone();
     let mut inverses: Vec<Vec<Wfc2dMutation>> = Vec::new();
     for mutation in &ladder {
-        inverses.push(crate::mutations::inverse_wfc2d_mutation(&projection, mutation));
+        inverses.push(crate::mutations::inverse_wfc2d_mutation(&projection, mutation).expect("valid retained mutation inverse fixture"));
         apply_wfc2d_mutation(&mut projection, mutation).expect("ladder step applies");
     }
     assert_ne!(projection, base);

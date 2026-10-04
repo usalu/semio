@@ -21,7 +21,10 @@ use crate::policy::{AgentPrincipal, ApprovalCoordinator, ApprovalGate, ApprovalR
 use crate::schema::{InvocationReport, InvocationStatus, PreparedActionReport, RevisionStamp};
 use crate::workspace::ArtifactChannels;
 use semio_framework_dispatch_macros::dyn_enum;
-use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
+use semio_framework_value::DslValue;
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
+use semio_framework_value::ValueError;
 use serde::{Deserialize, Serialize};
 #[cfg(test)]
 use std::collections::BTreeMap;
@@ -32,7 +35,7 @@ use std::sync::{Arc, Mutex};
 /// `From<&DslValue>`/`From<&serde_json::Value>` impls — shared by every field in this file typed
 /// `serde_json::Value`.
 fn json_value_to_dsl(value: &serde_json::Value) -> DslValue {
-    DslValue::from(value)
+    semio_framework_value::DslValue::from(value)
 }
 
 /// 🌉️ See [`json_value_to_dsl`] — the `FromValue` direction, infallible.
@@ -48,7 +51,7 @@ fn dsl_to_json_value(value: DslValue) -> Result<serde_json::Value, ValueError> {
 /// `children` is the composing guest's owned-child share of the same gesture (`AppFrame::Emit.child_ops`, the guest's
 /// `ChildEmit` wire pack) — carried from `Emit` to `TransactionPrepare` byte for byte, never decoded here; empty when the
 /// gesture touches no owned child. The shell route's deferred plan never produces it.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 pub struct PreparedOps {
     pub document: Vec<Vec<u8>>,
     pub config: Vec<Vec<u8>>,
@@ -95,16 +98,16 @@ pub enum MutationOrigin {
 pub enum AppCommand {
     ReadHistory,
     PureCommand { capability_id: String, input: serde_json::Value },
-    TransactionPrepare { txn_id: String, ops: PreparedOps, label: String, origin: MutationOrigin },
+    TransactionPrepare { txn_id: String, ops: PreparedOps, origin: MutationOrigin },
     TransactionCommit { txn_id: String },
     TransactionRollback { txn_id: String },
     TransactionUndo { group_id: String },
     TransactionRedo { group_id: String },
     Infer(InferCommand),
     /// 📤️ Export one artifact through the owning app's own media OUT port — `document`/`document_spr`
-    /// are the artifact's real pack bytes, loaded into the guest before the port is read. Mirrors the
-    /// `LoadDocument` → `MediaOut` pair `🏃️run`'s workflow executor already drives; this port adds no
-    /// export-specific wire of its own.
+    /// are the artifact's real pack bytes, loaded into the guest through the stepped archive load before
+    /// the port is read. Mirrors the archive load → `MediaOut` sequence `🏃️run`'s workflow executor
+    /// drives; this port adds no export-specific wire of its own.
     ExportMedia { port: String, document: Vec<u8>, document_spr: Vec<u8> },
     /// 🆕️ Read the guest's own freshly-opened (genesis) document — how a plugin-typed artifact is
     /// created without this host ever knowing that plugin's schema.
@@ -167,9 +170,10 @@ impl PartialEq for InferenceCancel {
 
 /// 🧭️ One phase of activating a plugin session and reading its document — `SessionActivationPhaseV1`
 /// in `🏠️workspace/🧬️schema`. The session's component is resolved, read, content-hashed, loaded or
-/// compiled, its guest opened, then its document is read. Every job that activates a session
-/// (`inference_run`'s artifact binding, `artifact_create`) reports these, and a session that already
-/// passed a phase skips it rather than reporting it again.
+/// compiled, its guest opened, a bound hub document loaded into it (the stepped archive load, whose
+/// polled `completed / total` is this phase's fraction), then its document is read. Every job that
+/// activates a session (`inference_run`'s artifact binding, `artifact_create`) reports these, and a
+/// session that already passed a phase skips it rather than reporting it again.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ActivationPhase {
     ResolvingComponent,
@@ -178,11 +182,12 @@ pub enum ActivationPhase {
     LoadingCompiledCode,
     CompilingComponent,
     OpeningGuest,
+    LoadingDocument,
     ReadingDocument,
 }
 
 impl ActivationPhase {
-    pub const ALL: [ActivationPhase; 7] = [Self::ResolvingComponent, Self::ReadingComponent, Self::HashingComponent, Self::LoadingCompiledCode, Self::CompilingComponent, Self::OpeningGuest, Self::ReadingDocument];
+    pub const ALL: [ActivationPhase; 8] = [Self::ResolvingComponent, Self::ReadingComponent, Self::HashingComponent, Self::LoadingCompiledCode, Self::CompilingComponent, Self::OpeningGuest, Self::LoadingDocument, Self::ReadingDocument];
 
     /// 🪪️ The schema's kebab-case id.
     pub fn id(self) -> &'static str {
@@ -193,6 +198,7 @@ impl ActivationPhase {
             Self::LoadingCompiledCode => "loading-compiled-code",
             Self::CompilingComponent => "compiling-component",
             Self::OpeningGuest => "opening-guest",
+            Self::LoadingDocument => "loading-document",
             Self::ReadingDocument => "reading-document",
         }
     }
@@ -446,7 +452,7 @@ pub fn declared_effective_input(capability: &crate::catalog::CapabilityDefinitio
     if definitions.is_empty() {
         return serde_json::Value::Object(given);
     }
-    let effective = semio_framework::manifest::effective_action_args(&definitions, &DslValue::from(&serde_json::Value::Object(given.clone())), None);
+    let effective = semio_framework::manifest::effective_action_args(&definitions, &semio_framework_value::DslValue::from(&serde_json::Value::Object(given.clone())), None);
     for (key, value) in effective.as_object().unwrap_or_default() {
         if !given.contains_key(key) {
             given.insert(key.clone(), serde_json::Value::from(value.clone()));
@@ -712,7 +718,7 @@ impl ArtifactChannel for MockArtifactChannel {
 //#region 🔖️InternalRecords
 /// 🎫️ The `prep_` handle payload — everything `invoke`/`transaction.begin` need to resume a prepared
 /// action without re-running prepare/preview.
-#[derive(Clone, Debug, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 struct PreparedActionRecord {
     capability_id: String,
     #[value(serialize_with = "json_value_to_dsl", deserialize_with = "dsl_to_json_value")]
@@ -725,7 +731,7 @@ struct PreparedActionRecord {
 
 /// 🎫️ The `txn_` (saga) handle payload — an ordered list of already-prepared members bound together
 /// by `transaction.begin`.
-#[derive(Clone, Debug, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 struct SagaMember {
     prepared_handle: String,
     capability_id: String,
@@ -733,7 +739,7 @@ struct SagaMember {
     ops: PreparedOps,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 struct SagaRecord {
     members: Vec<SagaMember>,
 }
@@ -759,7 +765,7 @@ pub struct HubInferenceApprovalUndoMemberV1 {
     pub document_id: String,
     pub idempotency_key: String,
     #[serde(with="crate::inference::dsl_json")]
-    pub payload:semio_framework_os_kernel::DslValue,
+    pub payload:semio_framework_value::DslValue,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -818,7 +824,7 @@ pub struct InvokeRequest {
     pub approval_handle: Option<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct SagaMemberResult {
@@ -827,7 +833,7 @@ pub struct SagaMemberResult {
     pub edit_id: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct SagaReport {
@@ -836,7 +842,7 @@ pub struct SagaReport {
     pub undo_token: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct UndoRedoReport {
@@ -964,14 +970,14 @@ impl ActionAdapter {
         hub_origin: &str,
         scope: &semio_framework_os_kernel::os_directory::DocumentScope,
         route: &str,
-        handle:&semio_framework_os_kernel::DslValue,
+        handle:&semio_framework_value::DslValue,
         now_ms: u64,
     ) -> Result<String, GatewayError> {
         semio_framework_os_kernel::os_directory::client::document_http::CompiledDocumentHttpPortV1::validate_payload(handle,16*1024).map_err(|_|GatewayError::new(GatewayErrorCode::InputInvalid,"invalid owner history value"))?;
-        if hub_origin.is_empty() || hub_origin.len()>2048 || !crate::inference::is_hub_inference_route(route) || !matches!(handle,semio_framework_os_kernel::DslValue::Object(_)) || semio_framework_os_kernel::os_pack::json::to_json_string(handle).len()>16*1024 {
+        if hub_origin.is_empty() || hub_origin.len()>2048 || !crate::inference::is_hub_inference_route(route) || !matches!(handle,semio_framework_value::DslValue::Object(_)) || semio_framework_pack_json::to_json_string(handle).len()>16*1024 {
             return Err(GatewayError::new(GatewayErrorCode::InputInvalid,"invalid durable owner history locator"));
         }
-        let identity=format!("semio.mcp.owner-history/v1\0{}\0{}\0{}\0{}\0{}\0{}",session.0,hub_origin,route,scope.space_id,scope.document_id,semio_framework_os_kernel::os_pack::json::to_json_string(handle));
+        let identity=format!("semio.mcp.owner-history/v1\0{}\0{}\0{}\0{}\0{}\0{}",session.0,hub_origin,route,scope.space_id,scope.document_id,semio_framework_pack_json::to_json_string(handle));
         let idempotency_key=framework_hash::hash_bytes(identity.as_bytes())[..32].to_owned();
         let member=UndoMember::HubInferenceApproval(HubInferenceApprovalUndoMemberV1 {hub_origin:hub_origin.into(),route:route.into(),space_id:scope.space_id.clone(),document_id:scope.document_id.clone(),idempotency_key,payload:handle.clone()});
         let payload = serde_json::to_value(UndoRecord { members: vec![member] }).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, error.to_string()))?;
@@ -1023,11 +1029,11 @@ impl ActionAdapter {
     /// occupying transaction (if genuinely a different in-flight caller) has no reason to clear on our
     /// retrying with the same id. Any OTHER mapped error (e.g. `REVISION_CONFLICT` from a concurrent
     /// generation bump) bubbles immediately, no retry.
-    fn transaction_prepare_with_retry(&self, instance: u32, ops: PreparedOps, label: &str, origin: MutationOrigin, now_ms: u64) -> Result<String, GatewayError> {
+    fn transaction_prepare_with_retry(&self, instance: u32, ops: PreparedOps, origin: MutationOrigin, now_ms: u64) -> Result<String, GatewayError> {
         let mut last_error = None;
         for _ in 0..INSTANCE_BUSY_MAX_ATTEMPTS {
             let txn_id = mint_id(HandleKind::Transaction, now_ms);
-            match self.exchange_one(instance, AppCommand::TransactionPrepare { txn_id: txn_id.clone(), ops: ops.clone(), label: label.to_string(), origin: origin.clone() }) {
+            match self.exchange_one(instance, AppCommand::TransactionPrepare { txn_id: txn_id.clone(), ops: ops.clone(), origin: origin.clone() }) {
                 Ok(AppFrame::TransactionPrepared { txn_id }) => return Ok(txn_id),
                 Ok(other) => return Err(GatewayError::new(GatewayErrorCode::Internal, format!("unexpected frame from TransactionPrepare: {other:?}"))),
                 Err(error) if error.code == GatewayErrorCode::PreconditionFailed => last_error = Some(error),
@@ -1284,7 +1290,7 @@ impl ActionAdapter {
 
         let effects_writes: Vec<String> = capability.effects.writes.iter().map(|selector| selector.0.clone()).collect();
         let origin = MutationOrigin::Agent { principal: principal.id.clone(), invocation_id: invocation_id.clone() };
-        let commit_result = match self.transaction_prepare_with_retry(record.instance, record.ops.clone(), &format!("agent invoke {}", record.capability_id), origin, now_ms) {
+        let commit_result = match self.transaction_prepare_with_retry(record.instance, record.ops.clone(), origin, now_ms) {
             Ok(txn_id) => match self.exchange_one(record.instance, AppCommand::TransactionCommit { txn_id: txn_id.clone() }) {
                 Ok(AppFrame::TransactionCommitted { edit_id, relay: Some(relay), .. }) if !relay.acknowledged => {
                     let _ = self.exchange_one(record.instance, AppCommand::TransactionUndo { group_id: txn_id.clone() });
@@ -1453,7 +1459,7 @@ impl ActionAdapter {
                 continue;
             }
             let origin = MutationOrigin::Agent { principal: principal.id.clone(), invocation_id: format!("{saga_handle}-{index}") };
-            match self.transaction_prepare_with_retry(member.instance, member.ops.clone(), &format!("saga {saga_handle} member {index}"), origin, now_ms) {
+            match self.transaction_prepare_with_retry(member.instance, member.ops.clone(), origin, now_ms) {
                 Ok(txn_id) => prepared_txn_ids.push((index, txn_id)),
                 Err(error) => {
                     for (rollback_index, txn_id) in prepared_txn_ids.iter().rev() {

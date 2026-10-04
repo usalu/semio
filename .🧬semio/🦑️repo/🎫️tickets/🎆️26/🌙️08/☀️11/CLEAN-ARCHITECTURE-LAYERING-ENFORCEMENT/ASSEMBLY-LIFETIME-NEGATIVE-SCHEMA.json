@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "status",
+    "scenarios"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.framework.io.assembly-lifetime-negatives/v1"
+    },
+    "status": {
+      "const": "source-inputs-native-result-pending"
+    },
+    "scenarios": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "client",
+          "clientSha256",
+          "originalCompile",
+          "borrowedCompile",
+          "expectedCode"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "implicit-scope",
+              "escaping-return"
+            ]
+          },
+          "client": {
+            "type": "string"
+          },
+          "clientSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "originalCompile": {
+            "const": "accepted"
+          },
+          "borrowedCompile": {
+            "const": "rejected"
+          },
+          "expectedCode": {
+            "enum": [
+              "E0597",
+              "E0515"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

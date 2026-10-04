@@ -80,6 +80,7 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "contractId",
         "version",
         "shared",
         "manifests",
@@ -87,6 +88,10 @@
         "policy"
       ],
       "properties": {
+        "contractId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
         "$schema": {
           "type": "string"
         },

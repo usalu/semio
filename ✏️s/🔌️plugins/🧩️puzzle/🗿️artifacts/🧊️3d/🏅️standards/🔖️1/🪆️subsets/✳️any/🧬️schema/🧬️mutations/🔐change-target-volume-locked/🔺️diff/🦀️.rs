@@ -10,7 +10,7 @@ pub fn diff(payload: &super::mutation::ChangeTargetVolumeLocked, base: &Puzzle3d
     let mut next = item.clone();
     next.locked = payload.new_locked;
     if next == *item {
-        return protocol::MutationOutcome::new(Puzzle3dDiff::default()).absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "no changes to apply").at(vec![payload.id.clone()])]);
+        return protocol::MutationOutcome::new(Puzzle3dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(vec![payload.id.clone()])]);
     }
     protocol::MutationOutcome::new(Puzzle3dDiff {
         target_volumes: Some(Puzzle3dTargetVolumesDelta { patched: vec![Puzzle3dTargetVolumePatchEntry { id: payload.id.clone(), patch: Puzzle3dTargetVolumePatch { replacement: Some(next) } }], ..Default::default() }),

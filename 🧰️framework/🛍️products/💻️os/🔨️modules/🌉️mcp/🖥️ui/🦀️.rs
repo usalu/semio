@@ -37,7 +37,7 @@ use crate::handles::{mint_id, HandleKind};
 use crate::protocol::{CallToolResult, ContentBlock, InMemoryToolRegistry, Resource, ResourceContent, ResourceTemplate, Tool};
 use crate::schema::{conversation_reply_input_schema, conversation_reply_output_schema, job_cancel_input_schema, job_get_input_schema, job_snapshot_output_schema, ui_focus_input_schema, ui_focus_output_schema, ui_reveal_input_schema, ui_reveal_output_schema};
 use crate::workspace::HeadlessWorkspace;
-use semio_framework_os_kernel::{FromValue, ToValue};
+use semio_framework_value::{FromValue, ToValue};
 use serde::Serialize;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};

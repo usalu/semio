@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "exports": {
+    "version": 1,
+    "facadeExports": ["DslArtifact", "DslDiff", "MutationLeaf", "Mutations"],
+    "registeredDerives": ["CompositeMutation", "DslArtifact", "DslDiff", "MutationLeaf", "Mutations"],
+    "traitOnly": []
+  },
+  "functions": [
+    {
+      "name": "expand_dsl_document",
+      "required": ["parse_nested_meta", "__DSL_ENVELOPE_ID", "__DSL_EXTENSION"],
+      "forbidden": ["record_codegen", "DslField", "__dsl_spec", "__dsl_to_record", "__dsl_from_record"]
+    },
+    {
+      "name": "expand_dsl_diff",
+      "required": ["DiffCodec", "semio_framework_dsl_record", "os_store", "pack_rt", "encode_document", "decode_document", "__dsl_spec", "__dsl_to_record", "__dsl_from_record"],
+      "forbidden": ["record_codegen", "DslField", "__dsl_diff_spec", "__dsl_diff_to_record", "__dsl_diff_from_record"]
+    }
+  ],
+  "retired": ["expand_dsl_record", "expand_dsl_scalar", "expand_dsl_enum", "expand_dsl_ops", "record_codegen", "dsl_variants_codegen"],
+  "valueSymbols": ["DslValue", "FromValue", "ToValue", "ValueError", "ValueRefusalKind"]
+}

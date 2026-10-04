@@ -18,13 +18,13 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-nodes/🔀️moves/🎯️outcome/🔣️.json");
 
 fn before() -> SemioDrawingSnapshot {
-    dsl::json::from_json_str(BEFORE).expect("reorder-nodes before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("reorder-nodes before snapshot decodes")
 }
 fn expected_after() -> SemioDrawingSnapshot {
-    dsl::json::from_json_str(AFTER).expect("reorder-nodes after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("reorder-nodes after snapshot decodes")
 }
 fn mutation() -> SemioDrawingMutation {
-    dsl::json::from_json_str(MUTATION).expect("reorder-nodes mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("reorder-nodes mutation decodes")
 }
 
 /// ▶️ The path node leaves the head and lands at the tail; the other two shift down.
@@ -45,7 +45,7 @@ async fn moves_the_leading_child_past_the_other_two() {
 async fn the_undo_reorder_moves_the_node_back_to_the_head() {
     let base = before();
     let mutation = mutation();
-    let undo = mutation.inverse(&base);
+    let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "reorder-nodes undoes as exactly one reorder-nodes");
     let SemioDrawingMutation::ReorderNodes(back) = &undo[0] else { panic!("reorder-nodes must undo as reorder-nodes") };
     assert_eq!((back.from, back.to), (2, 0), "the undo addresses the landed index and sends it back to the original one");
@@ -60,12 +60,12 @@ async fn the_undo_reorder_moves_the_node_back_to_the_head() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioDrawingSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: SemioDrawingSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "reorder-nodes/moves-the-leading-path-node-to-the-end-of-the-layer-root: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("reorder-nodes mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(mutation()))).expect("reorder-nodes mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("reorder-nodes mutation reparses");
     assert_eq!(reencoded, original, "reorder-nodes/moves-the-leading-path-node-to-the-end-of-the-layer-root: committed mutation JSON is not canonical");
 }
@@ -84,7 +84,7 @@ async fn declared_outcome_holds_as_committed() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "reorder-nodes/moves-the-leading-path-node-to-the-end-of-the-layer-root: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -93,7 +93,7 @@ async fn produces_committed_diff() {
 /// this subset ever writes — stays absent from it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
-    let decoded: SemioDrawingDiff = dsl::json::from_json_str(DIFF).expect("committed reorder-nodes diff decodes");
+    let decoded: SemioDrawingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed reorder-nodes diff decodes");
     assert!(decoded.canvas.is_none(), "no drawing mutation writes the canvas slot");
     let layers = decoded.layers.as_ref().expect("the layers triple must be present");
     assert!(layers.removed.is_empty() && layers.added.is_empty(), "a node-level edit modifies its layer, never removes or re-adds it");
@@ -108,7 +108,7 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
     assert_eq!(children.added[0].index, 2, "at the requested target position");
     assert!(children.modified.is_empty(), "a reorder modifies no sibling in place");
     assert!(decoded.styles.is_none(), "the style table must stay untouched");
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "reorder-nodes/moves-the-leading-path-node-to-the-end-of-the-layer-root: committed diff JSON is not canonical");
 }
@@ -116,7 +116,7 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioDrawingDiff = dsl::json::from_json_str(DIFF).expect("committed reorder-nodes diff decodes");
+    let decoded: SemioDrawingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed reorder-nodes diff decodes");
     let produced = decoded.apply(&before()).expect("committed reorder-nodes diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "reorder-nodes/moves-the-leading-path-node-to-the-end-of-the-layer-root: committed diff did not carry before to after");
 }

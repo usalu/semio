@@ -36,7 +36,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Command
 /// 👁️ The viewer's command channel — deliberately inert.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum)]
 pub enum Wfc3dViewCommand {
     #[dsl(key = "noop")]
     Noop,

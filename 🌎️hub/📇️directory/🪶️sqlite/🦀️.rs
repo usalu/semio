@@ -603,7 +603,7 @@ impl SqliteDirectory {
     fn creation_facts(conn: &Connection, user_id: &str, request_id: &str) -> DirectoryResult<Vec<ArtifactCreationFactV1>> {
         let mut query = conn.prepare("SELECT payload FROM hub_artifact_creation_fact WHERE actor_user_id = ?1 AND request_id = ?2 ORDER BY revision LIMIT 4").map_err(backend)?;
         let rows = query.query_map(rusqlite::params![user_id, request_id], |row| row.get::<_, String>(0)).map_err(backend)?;
-        rows.map(|row| directory::os_pack::json::from_json_str(&row.map_err(backend)?).map_err(backend)).collect()
+        rows.map(|row| semio_framework_pack_json::from_json_str(&row.map_err(backend)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(backend)).collect()
     }
 
     fn creation_authority(conn: &Connection, actor: &ArtifactCreationActorV1, space_id: &str, now_ms: u64) -> DirectoryResult<()> {
@@ -622,7 +622,7 @@ impl SqliteDirectory {
             ArtifactCreationFactBodyV1::Cancelled => "cancelled",
             ArtifactCreationFactBodyV1::Failed => "failed",
         };
-        let payload = directory::os_pack::json::to_json_string(fact);
+        let payload = semio_framework_pack_json::to_json_string(fact);
         if payload.len() > 8 * 1024 * 1024 {
             return Err(DirectoryError::Conflict("artifact creation fact exceeds its bounded envelope".into()));
         }
@@ -1047,7 +1047,7 @@ impl SqliteDirectory {
                     rusqlite::params![scope.space_id, scope.document_id], document_descriptor_row,
                 ).optional().map_err(backend)?.ok_or_else(|| DirectoryError::NotFound("indexed document descriptor".into()))?;
                 let row = crate::directory::document_index_projection_v1(event, &descriptor)?;
-                let payload = directory::os_pack::json::to_json_string(&row);
+                let payload = semio_framework_pack_json::to_json_string(&row);
                 let previous: Option<String> = tx.query_row("SELECT payload FROM hub_document_index WHERE space_id = ?1 AND document_id = ?2", rusqlite::params![scope.space_id, scope.document_id], |row| row.get(0)).optional().map_err(backend)?;
                 if previous.as_ref().is_some_and(|stored| stored != &payload) {
                     return Err(DirectoryError::Conflict("document index is already bound".into()));
@@ -1059,7 +1059,7 @@ impl SqliteDirectory {
                 let descriptor = tx.query_row("SELECT space_id, document_id, artifact_kind, artifact_schema, owner_plugin_id, owner_package_id, owner_version, owner_package_hash, pack_schema_hash, bootstrap_version, bootstrap_head_seq, bootstrap_commit_seq, bootstrap_epoch, bootstrap_snapshot_hash FROM hub_document_descriptor WHERE space_id = ?1 AND document_id = ?2", rusqlite::params![checkpoint.scope.space_id, checkpoint.scope.document_id], document_descriptor_row).optional().map_err(backend)?.ok_or_else(|| DirectoryError::NotFound("checkpoint document descriptor".into()))?;
                 let index_payload: Option<String> =
                     tx.query_row("SELECT payload FROM hub_document_index WHERE space_id = ?1 AND document_id = ?2", rusqlite::params![checkpoint.scope.space_id, checkpoint.scope.document_id], |row| row.get(0)).optional().map_err(backend)?;
-                let index = index_payload.as_deref().map(directory::os_pack::json::from_json_str::<directory::os_directory::DirectoryIndexedDocumentViewV1>).transpose().map_err(backend)?;
+                let index = index_payload.as_deref().map(semio_framework_pack_json::from_json_str::<directory::os_directory::DirectoryIndexedDocumentViewV1>).transpose().map_err(backend)?;
                 crate::directory::validate_checkpoint_index_v1(index.as_ref(), &descriptor, checkpoint)?;
                 let active = tx
                     .query_row("SELECT payload FROM hub_artifact_checkpoint WHERE space_id = ?1 AND document_id = ?2 AND active = 1", rusqlite::params![checkpoint.scope.space_id, checkpoint.scope.document_id], published_checkpoint_row)
@@ -1210,7 +1210,7 @@ impl HubDirectory for SqliteDirectory {
         let mut query = conn.prepare("SELECT a.payload FROM hub_artifact_creation_fact AS a WHERE a.revision = 1 AND NOT EXISTS(SELECT 1 FROM hub_artifact_creation_fact AS t WHERE t.actor_user_id = a.actor_user_id AND t.request_id = a.request_id AND t.phase IN ('committed','cancelled','failed')) AND (a.deadline_ms <= ?1 OR EXISTS(SELECT 1 FROM hub_artifact_creation_fact AS p WHERE p.actor_user_id = a.actor_user_id AND p.request_id = a.request_id AND p.phase = 'prepared')) ORDER BY a.recorded_at_ms, a.actor_user_id, a.request_id LIMIT ?2").map_err(backend)?;
         let rows = query.query_map(rusqlite::params![i64::try_from(now_ms).map_err(backend)?, limit as i64], |row| row.get::<_, String>(0)).map_err(backend)?;
         rows.map(|row| {
-            let fact: ArtifactCreationFactV1 = directory::os_pack::json::from_json_str(&row.map_err(backend)?).map_err(backend)?;
+            let fact: ArtifactCreationFactV1 = semio_framework_pack_json::from_json_str(&row.map_err(backend)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(backend)?;
             let ArtifactCreationFactBodyV1::Accepted { intent } = fact.body else {
                 return Err(DirectoryError::Backend("artifact creation recovery row is not accepted".into()));
             };
@@ -1278,7 +1278,7 @@ impl HubDirectory for SqliteDirectory {
             if events.len() == 2 {
                 tx.execute(
                     "INSERT INTO hub_artifact_authority_journal(event_seq, space_id, document_id, checkpoint_id, payload) VALUES (?1, ?2, ?3, ?4, ?5)",
-                    rusqlite::params![i64::try_from(full.seq).map_err(backend)?, checkpoint.scope.space_id, checkpoint.scope.document_id, checkpoint.checkpoint_id.0.as_slice(), directory::os_pack::json::to_json_string(checkpoint)],
+                    rusqlite::params![i64::try_from(full.seq).map_err(backend)?, checkpoint.scope.space_id, checkpoint.scope.document_id, checkpoint.checkpoint_id.0.as_slice(), semio_framework_pack_json::to_json_string(checkpoint)],
                 )
                 .map_err(backend)?;
             }

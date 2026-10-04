@@ -21,19 +21,19 @@ macro_rules! assert_window_config_codecs {
         let operation: $mutation = $operation;
         let applied = operation.diff(&base).diff().apply(&base).expect("window-config diff applies");
         assert_eq!(applied, next);
-        let restored = operation.inverse(&base).into_iter().fold(applied, |state, inverse| inverse.diff(&state).diff().apply(&state).expect("window-config inverse applies"));
+        let restored = operation.inverse(&base).expect("window-config inverse").into_iter().fold(applied, |state, inverse| inverse.diff(&state).diff().apply(&state).expect("window-config inverse applies"));
         assert_eq!(restored, base);
         assert_eq!(<$state>::parse_dsl(&base.print_dsl()).expect("window-config DSL round-trip"), base);
         assert_eq!(<$state>::decode_pack(&base.encode_pack()).expect("window-config Pack round-trip"), base);
         assert_eq!(<$mutation>::parse_op(&operation.print_op()).expect("window-config text-op round-trip"), operation);
         assert_eq!(<$mutation>::decode_op(&operation.encode_op().expect("window-config binary-op encoding")).expect("window-config binary-op round-trip"), operation);
 
-        let mut hostile_state: serde_json::Value = serde_json::from_str(&dsl::json::to_json_string(&base)).expect("window-config state JSON");
+        let mut hostile_state: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&base)).expect("window-config state JSON");
         hostile_state.as_object_mut().expect("window-config state object").insert("foreign".into(), serde_json::Value::Bool(true));
-        assert!(dsl::json::from_json_str::<$state>(&hostile_state.to_string()).is_err(), "window-config state must reject unknown fields");
-        let mut hostile_mutation: serde_json::Value = serde_json::from_str(&dsl::json::to_json_string(&operation)).expect("window-config mutation JSON");
+        assert!(semio_framework_pack_json::from_json_str::<$state>(&hostile_state.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "window-config state must reject unknown fields");
+        let mut hostile_mutation: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&operation)).expect("window-config mutation JSON");
         hostile_mutation.as_object_mut().expect("window-config mutation object").insert("foreign".into(), serde_json::Value::Bool(true));
-        assert!(dsl::json::from_json_str::<$mutation>(&hostile_mutation.to_string()).is_err(), "window-config mutation must reject unknown fields");
+        assert!(semio_framework_pack_json::from_json_str::<$mutation>(&hostile_mutation.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "window-config mutation must reject unknown fields");
 
         let valid_pack = base.encode_pack();
         let (_, body) = store::semio_format::unwrap_binary(&valid_pack).expect("window-config Pack envelope");
@@ -53,18 +53,18 @@ fn generation2d_window_camera_ownership_matches_neutral_fixture_and_exact_codecs
     use crate::editor::generation2d::modes::generate::windows::preview as generate_preview;
 
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️generation2d-window-camera-ownership/🔣️.json")).expect("neutral Generation2d window fixture");
-    let main_base: flow::config::Generation2dMainWindowConfig = dsl::json::from_json_str(&fixture["baseConfigs"][flow::GENERATION2D_PLAY_WINDOW_MAIN].to_string()).expect("neutral main config");
-    let main_next: flow::config::Generation2dMainWindowConfig = dsl::json::from_json_str(&fixture["expected"]["main-left"].to_string()).expect("neutral main next config");
+    let main_base: flow::config::Generation2dMainWindowConfig = semio_framework_pack_json::from_json_str(&fixture["baseConfigs"][flow::GENERATION2D_PLAY_WINDOW_MAIN].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral main config");
+    let main_next: flow::config::Generation2dMainWindowConfig = semio_framework_pack_json::from_json_str(&fixture["expected"]["main-left"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral main next config");
     let main_mutation = flow::config::Generation2dMainWindowConfigMutation::Snapshot { config: Box::new(main_next.clone()) };
     assert_window_config_codecs!(flow::config::Generation2dMainWindowConfig, flow::config::Generation2dMainWindowConfigMutation, main_base, main_next, main_mutation);
 
-    let edit_base: edit_preview::config::Generation2dEditPreviewWindowConfig = dsl::json::from_json_str(&fixture["baseConfigs"][edit_preview::GENERATION2D_PLAY_WINDOW_PREVIEW].to_string()).expect("neutral edit-preview config");
-    let edit_next: edit_preview::config::Generation2dEditPreviewWindowConfig = dsl::json::from_json_str(&fixture["expected"]["edit-left"].to_string()).expect("neutral edit-preview next config");
+    let edit_base: edit_preview::config::Generation2dEditPreviewWindowConfig = semio_framework_pack_json::from_json_str(&fixture["baseConfigs"][edit_preview::GENERATION2D_PLAY_WINDOW_PREVIEW].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral edit-preview config");
+    let edit_next: edit_preview::config::Generation2dEditPreviewWindowConfig = semio_framework_pack_json::from_json_str(&fixture["expected"]["edit-left"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral edit-preview next config");
     let edit_mutation = edit_preview::config::Generation2dEditPreviewWindowConfigMutation::Snapshot { config: Box::new(edit_next.clone()) };
     assert_window_config_codecs!(edit_preview::config::Generation2dEditPreviewWindowConfig, edit_preview::config::Generation2dEditPreviewWindowConfigMutation, edit_base, edit_next, edit_mutation);
 
-    let generate_base: generate_preview::config::Generation2dGeneratePreviewWindowConfig = dsl::json::from_json_str(&fixture["baseConfigs"][generate_preview::GENERATION2D_PLAY_WINDOW_GENERATE_PREVIEW].to_string()).expect("neutral generate-preview config");
-    let generate_next: generate_preview::config::Generation2dGeneratePreviewWindowConfig = dsl::json::from_json_str(&fixture["expected"]["generate-left"].to_string()).expect("neutral generate-preview next config");
+    let generate_base: generate_preview::config::Generation2dGeneratePreviewWindowConfig = semio_framework_pack_json::from_json_str(&fixture["baseConfigs"][generate_preview::GENERATION2D_PLAY_WINDOW_GENERATE_PREVIEW].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral generate-preview config");
+    let generate_next: generate_preview::config::Generation2dGeneratePreviewWindowConfig = semio_framework_pack_json::from_json_str(&fixture["expected"]["generate-left"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral generate-preview next config");
     let generate_mutation = generate_preview::config::Generation2dGeneratePreviewWindowConfigMutation::Snapshot { config: Box::new(generate_next.clone()) };
     assert_window_config_codecs!(generate_preview::config::Generation2dGeneratePreviewWindowConfig, generate_preview::config::Generation2dGeneratePreviewWindowConfigMutation, generate_base, generate_next, generate_mutation);
 
@@ -258,7 +258,7 @@ fn generation2d_window_camera_ownership_runtime_isolates_routes_renders_and_reop
                     let expected: std::collections::BTreeMap<_, _> = packs.iter().map(|pack| ((pack.window_id.clone(), pack.window_kind_id.clone()), (pack.files.pack.clone(), pack.files.spr.clone()))).collect();
                     let mut reopened = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<Generation2dPlayApp>>(manifest).await);
                     reopened.bind_instance_id(71).await;
-                    reopened.load_document_pack(&document_after).await.map_err(|error| format!("{error:?}"))?;
+                    semio_framework_plugin::artifact_app_laws::load_document(&mut reopened, &document_after).await.map_err(|error| format!("{error:?}"))?;
                     reopened.load_config_pack(&app_after).await.map_err(|error| format!("{error:?}"))?;
                     drop(document_before);
                     drop(app_before);

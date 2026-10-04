@@ -3,58 +3,39 @@
 @comparison-semantic-raster-v1
 @mutations-png-1-2-any
 Feature: Apply every typed PNG 1.2 mutation to a real-world document
-  The input is a real 250 KB, 2334x2560, 8-bit COLORMAP architectural floor plan
-  (rathaus-ahlen-grundriss.png), not a synthetic fixture — it exercises the PLTE/palette decode
-  path, not just RGBA. Walking its chunk chain gives exactly IHDR (colour type 3, bit depth 8,
-  non-interlaced), PLTE (233 entries), eight IDAT chunks and IEND: no tRNS, no gAMA/cHRM/sRGB/pHYs,
-  no tIME, no bKGD, no text chunk, no private chunk. Every scenario copies it into the case work
-  directory before touching it; the committed document is never written to.
+  The real input is a 250 KB, 2334x2560, 8-bit COLORMAP architectural floor plan
+  (rathaus-ahlen-grundriss.png) whose chunk chain is exactly IHDR (colour type 3, bit depth 8,
+  non-interlaced), PLTE (233 entries), eight IDAT chunks and IEND. Every scenario copies its input
+  into the case work directory; the committed documents are never written to.
 
-  Three kinds address an EXISTING text or unknown chunk, and the real document carries neither, so
-  remove-text-chunk, replace-text-chunk and remove-unknown-chunk are exercised on the real document
-  after the reference implementation has inserted their target first — the same arrange step the
-  OOXML conformance cases use for their own removal kinds. Anything else would be a row whose
-  parameters address nothing, which passes without testing anything.
+  `PngSnapshot` is byte-authoritative (`{schema, bytes}`, the file's own octets) and the vocabulary
+  has five kinds: `set-snapshot` installs a whole file, `patch-snapshot` is one RFC 6901 pointer
+  operation on that reading, `change-gamma` sets, inserts or removes the gAMA chunk, `patch-pixels`
+  paints one RGBA8 colour into a rectangle of an 8-bit non-interlaced RGBA document, and
+  `paint-native-samples` carries a completed native-sample paint (`result`) that the subject admits
+  only when it keeps the source profile and every byte outside the IDAT run. The guarded kinds carry
+  the revision of the document they were authored against — 64-bit FNV-1a over the schema text
+  `stdio.png` and then the octets — and a stale one is refused (`mutation.target-mismatch`); every
+  revision below is that of its scenario's own input. The inverse of every kind is a whole
+  `set-snapshot` of the base.
 
-  The oracle applies each mutation independently against the registered `png` reference crate's own
-  Encoder/Decoder API; the subject fully parses the artifact into the typed `PngSnapshot` and
-  re-serializes from it. Both results are read back by the INDEPENDENT `png` decoder. The compared
-  projection is the WHOLE document, not just its raster: geometry and a digest of the decoded RGBA
-  samples (PNG is lossless, so a digest is an exact claim), plus the palette, the five typed
-  ancillary chunks, the timestamp, the background colour, the text chunks by keyword and value, and
-  the private chunks by type and payload digest. tIME and private chunks come from a fixed-grammar
-  walk over §5.3's chunk chain, because `png::Info` models neither.
+  The rows: on the real document, `change-gamma` inserts gAMA 45455 before PLTE, `set-snapshot`
+  installs the committed 2x2 RGBA swatch, and `patch-snapshot` splices a complete, CRC-correct gAMA
+  chunk into the octets right after IHDR. On the committed 4x2 COLORMAP document (palette black, red,
+  green, blue; both rows index 0, 1, 2, 3), `paint-native-samples` paints palette index 3 into the 2x2
+  rectangle at (1, 0), its `result` re-encoding the painted index rows as one IDAT. On the committed
+  2x2 RGBA swatch, `patch-pixels` paints rgba(200, 40, 40, 255) into the pixel at (1, 1).
 
-  Every Examples `params` cell is exactly the leaf's wire payload — its `payload_value()`, camelCase,
-  `Option`s as `null`, no aggregate tag — decoded by the subject through the derive-generated
-  `from_payload_value` and read by the `png` oracle by the same field names; the oracle refuses a
-  member it cannot write (a zTXt/iTXt or compressed text chunk, a non-RGB bKGD) rather than
-  approximating it. `replace-pixels` carries the whole replacement RGBA raster, which for this
-  2334x2560 plan would be 23.9 million numbers in one cell, so it runs in its own outlines on the
-  committed 4x2 COLORMAP document (`shared://🎨️replace-palette-applied/⬅️before.png`) — the same
-  PLTE decode path as the real plan.
+  The oracle performs every kind independently with the registered `png` reference crate's own
+  Encoder/Decoder API, recomputing the revision guard and the paint from their definitions, and
+  never reuses this repository's codec. Both results are read back by the INDEPENDENT `png` decoder;
+  the compared projection is the whole document — geometry, a digest of the decoded RGBA samples,
+  the palette, the five typed ancillary chunks, the timestamp, the background colour, the text chunks
+  and the private chunks.
 
-  ⚠️ Two of the seventeen kinds genuinely cannot reach the bytes, and the case says so rather than
-  letting them pass as though they had:
-    – change-header — IHDR must describe the IDAT that follows it, and both encoders always write
-      colour type 6 / bit depth 8 / interlace 0 because `PngSnapshot.pixels` is a canonical RGBA
-      buffer (`encode_png`'s own 🚫️EncodeScopeNote). `SetHeader` also does not resize `pixels`, so
-      changing width or height would only make the snapshot unencodable. Every field of this kind
-      is model-only.
-    – change-transparency — §11.3.3 forbids tRNS alongside colour types 4 and 6, so at the colour type
-      both encoders write, the chunk can never appear. `encode_png` used to emit it anyway from the
-      snapshot, producing a file the reference decoder rejects outright (`ColorWithBadTrns`); it now
-      omits it, with the source's alpha already resolved into `pixels`.
-  Both are named in the adapter's observability exemption list. Every other kind must move the
-  projection, and the oracle fails the scenario if it does not.
-
-  The snapshot-editing kinds production dispatch offers are measured here too: `set-snapshot`
-  installs this subset's own committed 2x1 RGBA swatch (its `set-snapshot` wire witness), `patch-snapshot`
-  inserts a gAMA chunk through the editor's compact path-addressed patch, and `patch-pixels` repaints the
-  first RGBA pixel in place. The `png` oracle reads the same wire through its own model — a whole
-  snapshot through its member parsers, a top-level member patch, and a byte-range patch that must keep
-  the raster's width*height*4 length, which PNG's image data requires (a length-changing patch is
-  refused on both sides).
+  Every Examples `params` cell is exactly the leaf's wire payload — camelCase, `Option`s as `null`,
+  no aggregate tag — decoded by the subject through the derive-generated `from_payload_value` and
+  read by the `png` oracle by the same field names.
 
   @id-mutate
   @level-exhaustive
@@ -68,23 +49,9 @@ Feature: Apply every typed PNG 1.2 mutation to a real-world document
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id | params |
-      | change-header | {"width":2334,"height":2560,"bitDepth":16,"colorType":"grayscale","interlace":true} |
-      | replace-palette | {"plte":[{"r":255,"g":0,"b":0},{"r":0,"g":255,"b":0},{"r":0,"g":0,"b":255},{"r":255,"g":255,"b":0}]} |
-      | change-transparency | {"trns":null} |
-      | change-gamma | {"gama":45455} |
-      | change-chromaticities | {"chrm":{"whiteX":31270,"whiteY":32900,"redX":64000,"redY":33000,"greenX":30000,"greenY":60000,"blueX":15000,"blueY":6000}} |
-      | change-srgb-intent | {"srgb":"perceptual"} |
-      | change-physical-dims | {"phys":{"ppuX":2835,"ppuY":2835,"unitIsMeter":true}} |
-      | change-timestamp | {"time":{"year":2024,"month":1,"day":2,"hour":3,"minute":4,"second":5}} |
-      | change-background | {"bkgd":{"colorType":"rgb","r":255,"g":255,"b":255}} |
-      | insert-text-chunk | {"index":0,"chunk":{"keyword":"Comment","value":"Wave 7 oracle probe","compressed":false,"kind":"text","languageTag":"","translatedKeyword":""}} |
-      | remove-text-chunk | {"index":0} |
-      | replace-text-chunk | {"index":0,"chunk":{"keyword":"Author","value":"replaces the arranged chunk outright","compressed":false,"kind":"text","languageTag":"","translatedKeyword":""}} |
-      | insert-unknown-chunk | {"index":0,"chunk":{"kind":[119,97,86,101],"data":[119,97,118,101,55,45,112,114,111,98,101]}} |
-      | remove-unknown-chunk | {"index":0} |
-      | set-snapshot | {"snapshot":{"bitDepth":8,"chunkOrder":[{"chunk":"ihdr"},{"chunk":"gama"},{"chunk":"text","index":0},{"chunk":"idat"},{"chunk":"iend"}],"colorType":"rgba","gama":100000,"height":1,"interlace":false,"pixels":[255,0,0,255,0,0,255,255],"schema":"stdio.png","textChunks":[{"compressed":false,"keyword":"Title","kind":"text","languageTag":"","translatedKeyword":"","value":"Two Pixel Swatch"}],"unknownChunks":[],"width":2}} |
-      | patch-snapshot | {"patch":{"edits":[{"path":["gama"],"edit":{"operation":"insert","value":45455}}]}} |
-      | patch-pixels | {"index":0,"removeCount":4,"pixels":[200,40,40,255]} |
+      | change-gamma | {"revision":"41266632732fbc10","gama":45455} |
+      | set-snapshot | {"snapshot":{"schema":"stdio.png","bytes":[137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,0,0,0,2,0,0,0,2,8,6,0,0,0,114,182,13,36,0,0,0,19,73,68,65,84,120,218,99,248,207,192,240,31,12,129,52,8,52,0,0,73,73,9,120,156,81,23,146,0,0,0,0,73,69,78,68,174,66,96,130]}} |
+      | patch-snapshot | {"patch":{"operation":"splice","path":"/bytes","offset":33,"remove":0,"value":[0,0,0,4,103,65,77,65,0,0,177,143,11,252,97,5]}} |
 
   @id-mutate
   @level-exhaustive
@@ -98,7 +65,21 @@ Feature: Apply every typed PNG 1.2 mutation to a real-world document
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id | params |
-      | replace-pixels | {"pixels":[200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255]} |
+      | paint-native-samples | {"revision":"ef81220d6258bcb7","region":{"x":1,"y":0,"width":2,"height":2},"paint":{"profile":"indexed","first":3,"second":0,"third":0,"fourth":0},"result":{"schema":"stdio.png","bytes":[137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,0,0,0,4,0,0,0,2,8,3,0,0,0,72,118,141,81,0,0,0,12,80,76,84,69,0,0,0,255,0,0,0,255,0,0,0,255,155,192,19,220,0,0,0,15,73,68,65,84,120,218,99,96,96,102,102,102,0,17,0,0,91,0,19,131,18,229,83,0,0,0,0,73,69,78,68,174,66,96,130]}} |
+
+  @id-mutate
+  @level-exhaustive
+  @mode-differential
+  Scenario Outline: Apply <id> to a small RGBA document
+    Given the small RGBA input document shared://🟥️rgba8-swatch/🖼️.png
+    When the <id> mutation is applied with its parameters
+      """
+      {"kind": "<id>", "params": <params>}
+      """
+    Then the oracle and the subject agree on the semantic projection
+    Examples:
+      | id | params |
+      | patch-pixels | {"revision":"c8fb16d279c2e54f","x":1,"y":1,"width":1,"height":1,"red":200,"green":40,"blue":40,"alpha":255} |
 
   @id-inverse
   @level-exhaustive
@@ -114,23 +95,9 @@ Feature: Apply every typed PNG 1.2 mutation to a real-world document
     And that projection matches the untouched original document
     Examples:
       | id | params |
-      | change-header | {"width":2334,"height":2560,"bitDepth":16,"colorType":"grayscale","interlace":true} |
-      | replace-palette | {"plte":[{"r":255,"g":0,"b":0},{"r":0,"g":255,"b":0},{"r":0,"g":0,"b":255},{"r":255,"g":255,"b":0}]} |
-      | change-transparency | {"trns":null} |
-      | change-gamma | {"gama":45455} |
-      | change-chromaticities | {"chrm":{"whiteX":31270,"whiteY":32900,"redX":64000,"redY":33000,"greenX":30000,"greenY":60000,"blueX":15000,"blueY":6000}} |
-      | change-srgb-intent | {"srgb":"perceptual"} |
-      | change-physical-dims | {"phys":{"ppuX":2835,"ppuY":2835,"unitIsMeter":true}} |
-      | change-timestamp | {"time":{"year":2024,"month":1,"day":2,"hour":3,"minute":4,"second":5}} |
-      | change-background | {"bkgd":{"colorType":"rgb","r":255,"g":255,"b":255}} |
-      | insert-text-chunk | {"index":0,"chunk":{"keyword":"Comment","value":"Wave 7 oracle probe","compressed":false,"kind":"text","languageTag":"","translatedKeyword":""}} |
-      | remove-text-chunk | {"index":0} |
-      | replace-text-chunk | {"index":0,"chunk":{"keyword":"Author","value":"replaces the arranged chunk outright","compressed":false,"kind":"text","languageTag":"","translatedKeyword":""}} |
-      | insert-unknown-chunk | {"index":0,"chunk":{"kind":[119,97,86,101],"data":[119,97,118,101,55,45,112,114,111,98,101]}} |
-      | remove-unknown-chunk | {"index":0} |
-      | set-snapshot | {"snapshot":{"bitDepth":8,"chunkOrder":[{"chunk":"ihdr"},{"chunk":"gama"},{"chunk":"text","index":0},{"chunk":"idat"},{"chunk":"iend"}],"colorType":"rgba","gama":100000,"height":1,"interlace":false,"pixels":[255,0,0,255,0,0,255,255],"schema":"stdio.png","textChunks":[{"compressed":false,"keyword":"Title","kind":"text","languageTag":"","translatedKeyword":"","value":"Two Pixel Swatch"}],"unknownChunks":[],"width":2}} |
-      | patch-snapshot | {"patch":{"edits":[{"path":["gama"],"edit":{"operation":"insert","value":45455}}]}} |
-      | patch-pixels | {"index":0,"removeCount":4,"pixels":[200,40,40,255]} |
+      | change-gamma | {"revision":"41266632732fbc10","gama":45455} |
+      | set-snapshot | {"snapshot":{"schema":"stdio.png","bytes":[137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,0,0,0,2,0,0,0,2,8,6,0,0,0,114,182,13,36,0,0,0,19,73,68,65,84,120,218,99,248,207,192,240,31,12,129,52,8,52,0,0,73,73,9,120,156,81,23,146,0,0,0,0,73,69,78,68,174,66,96,130]}} |
+      | patch-snapshot | {"patch":{"operation":"splice","path":"/bytes","offset":33,"remove":0,"value":[0,0,0,4,103,65,77,65,0,0,177,143,11,252,97,5]}} |
 
   @id-inverse
   @level-exhaustive
@@ -146,13 +113,29 @@ Feature: Apply every typed PNG 1.2 mutation to a real-world document
     And that projection matches the untouched original document
     Examples:
       | id | params |
-      | replace-pixels | {"pixels":[200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255,200,40,40,255]} |
+      | paint-native-samples | {"revision":"ef81220d6258bcb7","region":{"x":1,"y":0,"width":2,"height":2},"paint":{"profile":"indexed","first":3,"second":0,"third":0,"fourth":0},"result":{"schema":"stdio.png","bytes":[137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,0,0,0,4,0,0,0,2,8,3,0,0,0,72,118,141,81,0,0,0,12,80,76,84,69,0,0,0,255,0,0,0,255,0,0,0,255,155,192,19,220,0,0,0,15,73,68,65,84,120,218,99,96,96,102,102,102,0,17,0,0,91,0,19,131,18,229,83,0,0,0,0,73,69,78,68,174,66,96,130]}} |
+
+  @id-inverse
+  @level-exhaustive
+  @mode-property
+  Scenario Outline: Undoing <id> restores a small RGBA document
+    Given the small RGBA input document shared://🟥️rgba8-swatch/🖼️.png
+    When the <id> mutation is applied with its parameters
+      """
+      {"kind": "<id>", "params": <params>}
+      """
+    And the mutation's own algebraic inverse is applied next
+    Then the oracle and the subject agree on the semantic projection
+    And that projection matches the untouched original document
+    Examples:
+      | id | params |
+      | patch-pixels | {"revision":"c8fb16d279c2e54f","x":1,"y":1,"width":1,"height":1,"red":200,"green":40,"blue":40,"alpha":255} |
 
   @id-identity-round-trip
   @level-long
   @mode-round-trip
-  Scenario: Decode and re-encode the real document without passing bytes through
+  Scenario: Decode and re-encode the real document, reproducing it exactly
     Given the real input document shared://🏛️rathaus-ahlen-grundriss/🖼️.png
     When the document is decoded, printed to the text codec, reparsed and re-encoded
-    Then the output is not a byte-for-byte copy of the input
+    Then the output reproduces the input byte for byte
     And the oracle and the subject agree on the semantic projection

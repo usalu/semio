@@ -24,9 +24,9 @@ impl AsyncPackSource for RecordingSource {
     async fn read_at(&self, offset: u64, len: usize) -> Result<Vec<u8>, PackError> {
         self.read_count.fetch_add(1, Ordering::SeqCst);
         let start = offset as usize;
-        let end = start.checked_add(len).ok_or(PackError::LimitExceeded("test read overflow"))?;
+        let end = start.checked_add(len).ok_or(PackError::Refusal(semio_framework_pack_error::PackRefusal::LimitExceeded{kind:ValueRefusalKind::OwnershipLimit,limit:"test read overflow"}))?;
         if end > self.data.len() {
-            return Err(PackError::Truncated(offset + len as u64));
+            return Err(PackError::Refusal(semio_framework_pack_error::PackRefusal::Truncated(offset + len as u64)));
         }
         Ok(self.data[start..end].to_vec())
     }

@@ -88,8 +88,8 @@ fn neutral_window_schema_round_trips_match_the_serde_json_oracle() {
         assert!(!case.id.is_empty());
         let config: NoteCompositeWindowConfig = serde_json::from_value(case.config.clone()).expect("independent config oracle");
         let transient: NoteCompositeWindowTransient = serde_json::from_value(case.transient.clone()).expect("independent transient oracle");
-        assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&config)).expect("config JSON"), case.config);
-        assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&transient)).expect("transient JSON"), case.transient);
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&config)).expect("config JSON"), case.config);
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&transient)).expect("transient JSON"), case.transient);
         store::os_store::test_support::assert_dsl_pack_equivalence(&config);
         store::os_store::test_support::assert_dsl_pack_equivalence(&transient);
         store::os_store::test_support::assert_op_text_binary_equivalence(&NoteCompositeWindowConfigMutation::Snapshot { config });

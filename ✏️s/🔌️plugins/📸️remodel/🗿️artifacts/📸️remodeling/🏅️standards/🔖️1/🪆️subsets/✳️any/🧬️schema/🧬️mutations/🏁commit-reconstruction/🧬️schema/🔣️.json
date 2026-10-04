@@ -37,13 +37,14 @@
           "de": "Vom Lauf erzeugte dünne Punktwolke."
         },
         "group": "result",
-        "order": 10
+        "order": 10,
+        "widget": "hidden"
       }
     },
     "trajectory": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/Trajectory"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/CameraTrajectory"
         },
         {
           "type": "null"
@@ -60,11 +61,19 @@
           "de": "Vom Lauf rekonstruierte Kameraposen."
         },
         "group": "result",
-        "order": 20
+        "order": 20,
+        "widget": "hidden"
       }
     },
     "mesh": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/RemodelingMesh",
+      "anyOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/RemodelingMesh"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-ui": {
         "role": "value",
         "label": {
@@ -76,7 +85,8 @@
           "de": "Rekonstruiertes Mesh; leer behält das gespeicherte Mesh."
         },
         "group": "result",
-        "order": 30
+        "order": 30,
+        "widget": "hidden"
       }
     },
     "geo": {
@@ -99,13 +109,14 @@
           "de": "Vom Lauf erzeugte DOM-, DGM- und Orthofoto-Raster."
         },
         "group": "result",
-        "order": 40
+        "order": 40,
+        "widget": "hidden"
       }
     },
     "qc": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/QcReport"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/QcReportSnapshot"
         },
         {
           "type": "null"
@@ -122,13 +133,47 @@
           "de": "Vom Rekonstruktionslauf berechnet; wird nicht von Hand bearbeitet."
         },
         "group": "result",
-        "order": 50
+        "order": 50,
+        "widget": "hidden"
       }
     },
     "assets": {
-      "type": "object",
-      "additionalProperties": {
-        "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/ImageAsset"
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "contentId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "value",
+        "label": {
+          "en": "Image assets",
+          "de": "Bildressourcen"
+        },
+        "description": {
+          "en": "The images the reconstruction derived, by id.",
+          "de": "Die von der Rekonstruktion abgeleiteten Bilder, nach Kennung."
+        },
+        "group": "result",
+        "order": 60
       }
     }
   }

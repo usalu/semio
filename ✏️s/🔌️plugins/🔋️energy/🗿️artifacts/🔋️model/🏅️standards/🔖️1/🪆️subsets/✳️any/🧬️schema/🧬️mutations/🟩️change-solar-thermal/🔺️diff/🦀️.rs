@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeSolarThermalSystemCollectorArea, base: &Energ
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Solar thermal system {}: collector area (m²) must be a positive finite value, got {}.", payload.id.0, payload.new_collector_area_m2), [payload.id.0.to_string()]);
     }
     if existing.collector_area_m2 == payload.new_collector_area_m2 {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Solar thermal system {} already carries this collector area (m²): {}.", payload.id.0, payload.new_collector_area_m2));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Solar thermal system {} already carries this collector area (m²): {}.", payload.id.0, payload.new_collector_area_m2));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.solar_thermal_systems.iter_mut().find(|item| item.id == payload.id) {

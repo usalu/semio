@@ -5,7 +5,7 @@
 //! 🔖 `IoFidelity::Lossy`: the same projection as csv — there is no xlsx import.
 use crate::standards::v1::subsets::any::io::export::serializers::artifacts::csv::v_rfc4180::any::question_grid;
 use crate::FormsSnapshot;
-use semio_framework::io::io_mechanism::Serializer;
+use semio_framework::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{Dialect, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
 use semio_s_artifact_stdio_xlsx::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook};
@@ -18,7 +18,7 @@ pub struct FormsIntoXlsx;
 impl Serializer<FormsSnapshot> for FormsIntoXlsx {
     const INTO: Dialect = XLSX_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &FormsSnapshot) -> IoResult<IoPayload> {
+    async fn serialize(from: &FormsSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
         let cells = question_grid(from)
             .into_iter()
             .enumerate()

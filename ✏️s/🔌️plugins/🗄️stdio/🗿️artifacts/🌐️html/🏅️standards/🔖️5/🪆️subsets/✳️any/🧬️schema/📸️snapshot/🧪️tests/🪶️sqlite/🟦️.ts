@@ -81,8 +81,11 @@ test("HTML bounds and cancellation apply to both typed semantic directions", asy
   }
   const value: HtmlSnapshot = { schema: "large.html", root: { kind: "element", name: "div", attributes: Array.from({ length: 1000 }, (_, index) => ({ name: "a" + index, value: "text" })), children: [] } };
   const controller = new AbortController();let events = 0;
-  await expect(htmlSnapshotToSqliteDatabase(value, { signal: controller.signal, onProgress: () => { if (++events === 2) controller.abort(); } })).rejects.toMatchObject({ name: "AbortError" });
+  await expect(htmlSnapshotToSqliteDatabase(value, { signal: controller.signal, onProgress: () => { if (++events === 2) controller.abort(); } })).rejects.toMatchObject({ name: "ValueError", kind: "canceled" });
   const restore = new AbortController();
-  await expect(htmlSnapshotFromSqliteDatabase(database, { signal: restore.signal, onProgress: () => restore.abort() })).rejects.toMatchObject({ name: "AbortError" });
+  await expect(htmlSnapshotFromSqliteDatabase(database, { signal: restore.signal, onProgress: () => restore.abort() })).rejects.toMatchObject({ name: "ValueError", kind: "canceled" });
 });
 
+
+import "./🚦️cohort/🟦️.ts";
+import "./🧹️lifecycle/🟦️.ts";

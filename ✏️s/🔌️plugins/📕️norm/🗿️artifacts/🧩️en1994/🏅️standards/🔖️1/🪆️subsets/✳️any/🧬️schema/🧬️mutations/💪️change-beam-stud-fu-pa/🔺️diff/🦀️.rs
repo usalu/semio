@@ -10,7 +10,7 @@ pub fn diff(payload: &ChangeBeamStudFUPa, base: &En1994Snapshot) -> protocol::Mu
         return protocol::MutationOutcome::error("mutation.target-missing", "beam missing", [payload.index.to_string()]);
     };
     if beam.studs.f_u_pa == payload.new_f_u_pa {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "unchanged");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "unchanged");
     }
     let mut beams = base.beams.clone();
     beams[payload.index].studs.f_u_pa = payload.new_f_u_pa;

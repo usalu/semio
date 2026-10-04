@@ -13,7 +13,7 @@ fn inverse_restores_inactive_and_active_alternatives() {
         let before = SpaceHistorySnapshot { alternatives: vec![alternative("a"), alternative("b")], active_alternative_id: Some(active.into()), ..Default::default() };
         let mutation = RemoveSpaceAlternative { alternative_id: "b".into() };
         let post = mutation.diff(&before).diff().apply(&before).expect("remove applies");
-        let mut inverse = mutation.inverse(&before);
+        let mut inverse = mutation.inverse(&before).expect("valid retained mutation inverse fixture");
         inverse.reverse();
         let restored = inverse.into_iter().fold(post, |current, step| step.diff(&current).diff().apply(&current).expect("inverse applies"));
         assert_eq!(restored, before, "active {active}");

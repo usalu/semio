@@ -78,6 +78,7 @@ Feature: Apply every typed AVI 1.0 mutation to a real-world video container
       | remove-stream | {"index":0} |
       | set-stream-header | {"streamIndex":0,"strh":{"fccType":"vids","fccHandler":"MJPG","flags":0,"priority":100,"language":0,"initialFrames":0,"scale":1,"rate":30,"start":0,"length":45,"suggestedBufferSize":21828,"quality":-1,"sampleSize":0,"rcFrameLeft":0,"rcFrameTop":0,"rcFrameRight":480,"rcFrameBottom":432,"rcFrameWidth":16,"strhExtra":[]}} |
       | set-stream-format | {"streamIndex":0,"strf":{"format":"raw","data":[222,173,190,239]}} |
+      | patch-snapshot | {"patch": {"operation": "set", "path": "/mainHeader/suggestedBufferSize", "value": 2097152}} |
 
   @id-inverse
   @level-exhaustive
@@ -97,6 +98,7 @@ Feature: Apply every typed AVI 1.0 mutation to a real-world video container
       | remove-stream | {"index":0} |
       | set-stream-header | {"streamIndex":0,"strh":{"fccType":"vids","fccHandler":"MJPG","flags":0,"priority":100,"language":0,"initialFrames":0,"scale":1,"rate":30,"start":0,"length":45,"suggestedBufferSize":21828,"quality":-1,"sampleSize":0,"rcFrameLeft":0,"rcFrameTop":0,"rcFrameRight":480,"rcFrameBottom":432,"rcFrameWidth":16,"strhExtra":[]}} |
       | set-stream-format | {"streamIndex":0,"strf":{"format":"raw","data":[222,173,190,239]}} |
+      | patch-snapshot | {"patch": {"operation": "set", "path": "/mainHeader/suggestedBufferSize", "value": 2097152}} |
 
   @id-identity-round-trip
   @level-long

@@ -1,0 +1,7 @@
+# SPR Concrete Inverse Replay
+
+The retained OS artifact-kind compiler RED51753 established two E0599 errors in CounterDiff test assertions. Current CounterDiff.inverse returns Self. Exactly two `.expect("valid retained mutation inverse fixture")` calls were removed after retaining complete before/authored/inverse pairs; all workloads and assertions otherwise remain byte identical.
+
+The identical registered `@semio-tech/framework-os-kernel:test-artifact-kind --skip-nx-cache` replay91951 exited0 in41.8s. It built and discovered the library, then selected and completed the original `os_io::tests::artifact_kind_id_follows_owner_neutral_corpus`:1passed,0failed,1255 other library laws filtered by this unchanged registered owner route. This is one-law owner runtime proof, not whole OS runtime proof.
+
+[Full exact source pair](spr-concrete-inverse-inputs/mounted.json), [runtime stdout](🗑️generated/current-native-worker/spr-concrete-inverse-native-1-os-artifacts/exact-cargo-laws-xrh8TT/00/law-0.stdout), [compiler post proof](🗑️generated/current-native-worker/spr-concrete-inverse-native-1-os-compiler-post-1.json). One freshly emitted compiler unit contains619 local checks: pre0/current0/owned0 gaps. The older full source inventory is historical context; fresh manifests and actual prior compiler origins were retained separately. Foreign native processes/caches were preserved. This SPR source fence is released; the binding cohort starts a distinct epoch.

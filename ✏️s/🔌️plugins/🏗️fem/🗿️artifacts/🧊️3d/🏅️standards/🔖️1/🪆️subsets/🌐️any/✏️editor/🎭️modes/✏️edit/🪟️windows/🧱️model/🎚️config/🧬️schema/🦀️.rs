@@ -2,7 +2,7 @@
 
 /// 🧭️ Which handles the transform gumball of ONE model window draws — view state, toggled from the
 /// Transform utility's options rail (`setTransformGumballFlag`), never a document field.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslRecord, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslRecord, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Fem3dGumballConfig {
     pub move_axes: bool,
@@ -12,9 +12,10 @@ pub struct Fem3dGumballConfig {
     pub scale_uniform: bool,
 }
 
-#[derive(Clone, Debug, PartialEq, dsl::DslArtifact, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_os_kernel::DslArtifact, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
-#[dsl(id = "fem.3d.modelwindowconfig", layout = "lines")]
+#[dsl(layout = "lines")]
+#[artifact(id = "fem.3d.modelwindowconfig")]
 pub struct Fem3dModelWindowConfig {
     #[dsl(block)]
     pub camera: crate::Viewport3dOrbit,

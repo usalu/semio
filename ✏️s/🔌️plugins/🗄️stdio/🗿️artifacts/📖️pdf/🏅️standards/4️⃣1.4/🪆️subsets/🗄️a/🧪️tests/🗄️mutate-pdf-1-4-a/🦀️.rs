@@ -142,7 +142,7 @@ mod subject {
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let base = decode_pdf(&mutable_input(ctx)?).map_err(|error| error.to_string())?;
         let mutation = mutation_from_spec(&ctx.doc_json()?)?;
-        let inverse = mutation_inverse(&mutation, &base);
+        let inverse = mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
         let mut snapshot = base.clone();
         if !apply_a_conformance_mutation(&mut snapshot, &mutation).messages().is_empty() {
             return Err("Forward mutation refused".into());

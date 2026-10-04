@@ -125,16 +125,16 @@ fn subject_paths_use_stable_ids_and_survive_reorder() {
     let path = remedy.target.path.clone();
     let required = remedy.required.value;
 
-    let mut tree = dsl::ToValue::to_value(&doc);
+    let mut tree = semio_framework_value::ToValue::to_value(&doc);
     let extra = crate::CompositeBeam {
         id: "beam-FRONT".into(),
         ..crate::CompositeBeam::default_placeholder()
     };
-    insert_value_at_path(&mut tree, "beams", 0, Some(dsl::ToValue::to_value(&extra))).expect("insert");
-    let mut reordered: En1994Snapshot = dsl::FromValue::from_value(tree.clone()).expect("from tree");
+    insert_value_at_path(&mut tree, "beams", 0, Some(semio_framework_value::ToValue::to_value(&extra))).expect("insert");
+    let mut reordered: En1994Snapshot = semio_framework_value::FromValue::from_value(tree.clone()).expect("from tree");
     assert_eq!(reordered.beams[1].id, "beam-B1");
-    set_value_at_path(&mut tree, &path, dsl::DslValue::uint(required as u64)).expect("set via id path after reorder");
-    reordered = dsl::FromValue::from_value(tree.clone()).expect("decode");
+    set_value_at_path(&mut tree, &path, semio_framework_value::DslValue::uint(required as u64)).expect("set via id path after reorder");
+    reordered = semio_framework_value::FromValue::from_value(tree.clone()).expect("decode");
     assert_eq!(reordered.beams.iter().find(|b| b.id == "beam-B1").unwrap().studs.total_count, required as u32);
     remove_value_at_path(&mut tree, "beams[id=beam-FRONT]", 0).expect("remove");
     let _ = get_value_at_path(&tree, "beams[id=beam-B1].studs.totalCount").expect("resolve id path");
@@ -152,9 +152,9 @@ fn heavier_section_oneof_remedy_writes_designation() {
     let one = fail.remedies.iter().find(|r| matches!(r.bound, RemedyBound::OneOf) && r.applicable).expect("oneof");
     assert!(one.target.path.ends_with("steel.designation"), "{}", one.target.path);
     assert!(!one.options.is_empty());
-    let mut tree = dsl::ToValue::to_value(&doc);
-    set_value_at_path(&mut tree, &one.target.path, dsl::DslValue::String(one.options[0].clone())).expect("write designation");
-    let next: En1994Snapshot = dsl::FromValue::from_value(tree).expect("decode");
+    let mut tree = semio_framework_value::ToValue::to_value(&doc);
+    set_value_at_path(&mut tree, &one.target.path, semio_framework_value::DslValue::String(one.options[0].clone())).expect("write designation");
+    let next: En1994Snapshot = semio_framework_value::FromValue::from_value(tree).expect("decode");
     assert_eq!(SteelSection::normalize_designation(&next.beams[0].steel.designation), SteelSection::normalize_designation(&one.options[0]));
     let after = evaluate(&next);
     let again = after.checks.iter().find(|c| c.id == fail.id).unwrap();
@@ -211,9 +211,9 @@ fn bridge_girder_ltb_and_crack_remedy0_clear() {
         let fail = report.checks.iter().find(|c| c.id == id).unwrap_or_else(|| panic!("missing {id}"));
         assert_eq!(fail.status, CheckStatus::Fail, "{id} should start Fail");
         assert!(!fail.remedies.is_empty(), "{id} needs a remedy");
-        let mut tree = dsl::ToValue::to_value(&doc);
+        let mut tree = semio_framework_value::ToValue::to_value(&doc);
         apply_remedy_edit(&report, id, 0, 0, &mut tree).unwrap_or_else(|e| panic!("{id} apply: {e:?}"));
-        let fixed: En1994Snapshot = dsl::FromValue::from_value(tree).expect("decode after remedy");
+        let fixed: En1994Snapshot = semio_framework_value::FromValue::from_value(tree).expect("decode after remedy");
         let after = evaluate(&fixed);
         let again = after.checks.iter().find(|c| c.id == id).unwrap_or_else(|| panic!("missing after {id}"));
         assert_ne!(again.status, CheckStatus::Fail, "{id} remedy[0] left Fail u={}", again.utilization);
@@ -222,22 +222,22 @@ fn bridge_girder_ltb_and_crack_remedy0_clear() {
 
 #[test]
 fn every_default_leaf_has_en_de_field_meta() {
-    fn walk(value: &dsl::DslValue, path: &str, leaves: &mut Vec<String>) {
+    fn walk(value: &semio_framework_value::DslValue, path: &str, leaves: &mut Vec<String>) {
         match value {
-            dsl::DslValue::Object(map) => {
+            semio_framework_value::DslValue::Object(map) => {
                 for (k, v) in map.iter() {
                     let next = if path.is_empty() { k.clone() } else { format!("{path}.{k}") };
                     walk(v, &next, leaves);
                 }
             }
-            dsl::DslValue::Array(items) => {
+            semio_framework_value::DslValue::Array(items) => {
                 for (i, item) in items.iter().enumerate() {
                     let id = match item {
-                        dsl::DslValue::Object(map) => map
+                        semio_framework_value::DslValue::Object(map) => map
                             .iter()
                             .find(|(k, _)| k == "id")
                             .and_then(|(_, v)| match v {
-                                dsl::DslValue::String(s) => Some(s.as_str()),
+                                semio_framework_value::DslValue::String(s) => Some(s.as_str()),
                                 _ => None,
                             }),
                         _ => None,
@@ -256,7 +256,7 @@ fn every_default_leaf_has_en_de_field_meta() {
     }
     let doc = En1994Snapshot::default();
     let mut leaves = Vec::new();
-    walk(&dsl::ToValue::to_value(&doc), "", &mut leaves);
+    walk(&semio_framework_value::ToValue::to_value(&doc), "", &mut leaves);
     assert!(!leaves.is_empty());
     for path in &leaves {
         let meta = en1994_field_meta(path).unwrap_or_else(|| panic!("missing meta for {path}"));
@@ -364,22 +364,22 @@ fn every_editable_leaf_affects_at_least_one_check() {
         matches!(leaf_name(path), "id" | "name" | "title" | "label" | "labelEn" | "labelDe")
     }
 
-    fn walk(value: &dsl::DslValue, path: &str, leaves: &mut Vec<(String, dsl::DslValue)>) {
+    fn walk(value: &semio_framework_value::DslValue, path: &str, leaves: &mut Vec<(String, semio_framework_value::DslValue)>) {
         match value {
-            dsl::DslValue::Object(map) => {
+            semio_framework_value::DslValue::Object(map) => {
                 for (k, v) in map.iter() {
                     let next = if path.is_empty() { k.clone() } else { format!("{path}.{k}") };
                     walk(v, &next, leaves);
                 }
             }
-            dsl::DslValue::Array(items) => {
+            semio_framework_value::DslValue::Array(items) => {
                 for (i, item) in items.iter().enumerate() {
                     let id = match item {
-                        dsl::DslValue::Object(map) => map
+                        semio_framework_value::DslValue::Object(map) => map
                             .iter()
                             .find(|(k, _)| k == "id")
                             .and_then(|(_, v)| match v {
-                                dsl::DslValue::String(s) => Some(s.clone()),
+                                semio_framework_value::DslValue::String(s) => Some(s.clone()),
                                 _ => None,
                             }),
                         _ => None,
@@ -396,36 +396,36 @@ fn every_editable_leaf_affects_at_least_one_check() {
         }
     }
 
-    fn candidates(original: &dsl::DslValue, path: &str) -> Vec<dsl::DslValue> {
+    fn candidates(original: &semio_framework_value::DslValue, path: &str) -> Vec<semio_framework_value::DslValue> {
         match original {
-            dsl::DslValue::Number(n) => {
+            semio_framework_value::DslValue::Number(n) => {
                 let v = n.as_f64();
                 let leaf = leaf_name(path);
                 if leaf.starts_with("delta") || leaf.ends_with("KPa") {
                     let base = if v.abs() < 1.0 { 50e6 } else { v };
-                    return vec![dsl::DslValue::float(base * 3.0), dsl::DslValue::float(base * 0.1)];
+                    return vec![semio_framework_value::DslValue::float(base * 3.0), semio_framework_value::DslValue::float(base * 0.1)];
                 }
                 let base = if v.abs() < 1e-12 { 1.0 } else { v };
                 vec![
                     if n.is_integer() {
-                        dsl::DslValue::uint((base * 3.0).max(1.0).round() as u64)
+                        semio_framework_value::DslValue::uint((base * 3.0).max(1.0).round() as u64)
                     } else {
-                        dsl::DslValue::float(base * 3.0)
+                        semio_framework_value::DslValue::float(base * 3.0)
                     },
                     if n.is_integer() {
-                        dsl::DslValue::uint((base * 0.25).max(1.0).round() as u64)
+                        semio_framework_value::DslValue::uint((base * 0.25).max(1.0).round() as u64)
                     } else {
-                        dsl::DslValue::float(base * 0.25)
+                        semio_framework_value::DslValue::float(base * 0.25)
                     },
                 ]
             }
-            dsl::DslValue::Bool(v) => vec![dsl::DslValue::Bool(!*v)],
-            dsl::DslValue::String(s) => {
+            semio_framework_value::DslValue::Bool(v) => vec![semio_framework_value::DslValue::Bool(!*v)],
+            semio_framework_value::DslValue::String(s) => {
                 if leaf_name(path) == "annex" {
                     return ["En", "De"]
                         .into_iter()
                         .filter(|c| *c != s.as_str())
-                        .map(|c| dsl::DslValue::String((*c).into()))
+                        .map(|c| semio_framework_value::DslValue::String((*c).into()))
                         .collect();
                 }
                 let meta = en1994_field_meta(path);
@@ -434,18 +434,18 @@ fn every_editable_leaf_affects_at_least_one_check() {
                         .iter()
                         .map(|c| c.value)
                         .filter(|c| *c != s.as_str())
-                        .map(|c| dsl::DslValue::String(c.to_string()))
+                        .map(|c| semio_framework_value::DslValue::String(c.to_string()))
                         .collect()
                 } else if leaf_name(path) == "category" {
                     ["A", "B", "C", "E", "self_steel", "finishes", "flm3"]
                         .into_iter()
                         .filter(|c| *c != s.as_str())
-                        .map(|c| dsl::DslValue::String(c.into()))
+                        .map(|c| semio_framework_value::DslValue::String(c.into()))
                         .collect()
                 } else if s == "HEB300" || s.starts_with("HEB") {
-                    vec![dsl::DslValue::String("HEB400".into()), dsl::DslValue::String("CUSTOM-PLATE".into())]
+                    vec![semio_framework_value::DslValue::String("HEB400".into()), semio_framework_value::DslValue::String("CUSTOM-PLATE".into())]
                 } else if s == "CUSTOM-PLATE" {
-                    vec![dsl::DslValue::String("HEB300".into())]
+                    vec![semio_framework_value::DslValue::String("HEB300".into())]
                 } else {
                     Vec::new()
                 }
@@ -529,7 +529,7 @@ fn every_editable_leaf_affects_at_least_one_check() {
     for (label, base, pred) in scopes {
         let base_sig = norm_sig(&evaluate(&base));
         let mut leaves = Vec::new();
-        walk(&dsl::ToValue::to_value(&base), "", &mut leaves);
+        walk(&semio_framework_value::ToValue::to_value(&base), "", &mut leaves);
         let scoped: Vec<_> = leaves.into_iter().filter(|(p, _)| pred(p)).collect();
         assert!(!scoped.is_empty(), "{label}: expected scoped leaves");
         for (path, original) in scoped {
@@ -538,11 +538,11 @@ fn every_editable_leaf_affects_at_least_one_check() {
                 if mutated == original {
                     continue;
                 }
-                let mut trial_tree = dsl::ToValue::to_value(&base);
+                let mut trial_tree = semio_framework_value::ToValue::to_value(&base);
                 if set_value_at_path(&mut trial_tree, &path, mutated).is_err() {
                     continue;
                 }
-                let Ok(trial): Result<En1994Snapshot, _> = dsl::FromValue::from_value(trial_tree) else {
+                let Ok(trial): Result<En1994Snapshot, _> = semio_framework_value::FromValue::from_value(trial_tree) else {
                     continue;
                 };
                 if norm_sig(&evaluate(&trial)) != base_sig {
@@ -578,7 +578,7 @@ fn every_editable_leaf_affects_at_least_one_check() {
         let base = En1994Snapshot::default();
         let base_sig = norm_sig(&evaluate(&base));
         let mut leaves = Vec::new();
-        walk(&dsl::ToValue::to_value(&base), "", &mut leaves);
+        walk(&semio_framework_value::ToValue::to_value(&base), "", &mut leaves);
         for (path, original) in leaves {
             if !(path.contains("columns[") && matches!(leaf_name(&path), "mKNm" | "nKN" | "kind" | "wallThicknessM" | "outerSizeM" | "steelFYPa" | "concreteFCkPa" | "bucklingCurve")) {
                 continue;
@@ -586,9 +586,9 @@ fn every_editable_leaf_affects_at_least_one_check() {
             let mut changed = false;
             for mutated in candidates(&original, &path) {
                 if mutated == original { continue; }
-                let mut trial_tree = dsl::ToValue::to_value(&base);
+                let mut trial_tree = semio_framework_value::ToValue::to_value(&base);
                 if set_value_at_path(&mut trial_tree, &path, mutated).is_err() { continue; }
-                let Ok(trial): Result<En1994Snapshot, _> = dsl::FromValue::from_value(trial_tree) else { continue; };
+                let Ok(trial): Result<En1994Snapshot, _> = semio_framework_value::FromValue::from_value(trial_tree) else { continue; };
                 if norm_sig(&evaluate(&trial)) != base_sig {
                     changed = true;
                     break;

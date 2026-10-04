@@ -1,3 +1,17 @@
 CREATE TABLE gis_terrain_document (id INTEGER PRIMARY KEY);
-CREATE TABLE gis_terrain_parameters (id INTEGER PRIMARY KEY REFERENCES gis_terrain_document(id), exaggeration REAL, imported_features_json TEXT NOT NULL, exaggeration_ieee754_bits INTEGER NOT NULL, exaggeration_numeric_class TEXT NOT NULL CHECK(exaggeration_numeric_class IN ('finite','positiveInfinity','negativeInfinity','nan')));
+CREATE TABLE gis_terrain_parameters (id INTEGER PRIMARY KEY REFERENCES gis_terrain_document(id), exaggeration REAL, exaggeration_ieee754_bits INTEGER NOT NULL, exaggeration_numeric_class TEXT NOT NULL CHECK(exaggeration_numeric_class IN ('finite','positiveInfinity','negativeInfinity','nan')));
 CREATE TABLE gis_terrain_mesh_child (id INTEGER PRIMARY KEY REFERENCES gis_terrain_document(id), child_id TEXT NOT NULL, artifact_id TEXT NOT NULL, artifact_kind TEXT NOT NULL, standard TEXT NOT NULL, subset TEXT NOT NULL);
+CREATE TABLE gis_terrain_imported_map (id INTEGER PRIMARY KEY REFERENCES gis_terrain_document(id));
+CREATE TABLE gis_terrain_value (id INTEGER PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN ('null','boolean','unsigned','signed','float','text','bytes','array','object')));
+CREATE TABLE gis_terrain_position (id INTEGER PRIMARY KEY, map_id INTEGER NOT NULL REFERENCES gis_terrain_imported_map(id), ordinal INTEGER NOT NULL, value_id INTEGER NOT NULL REFERENCES gis_terrain_value(id));
+CREATE TABLE gis_terrain_route (id INTEGER PRIMARY KEY, map_id INTEGER NOT NULL REFERENCES gis_terrain_imported_map(id), ordinal INTEGER NOT NULL, value_id INTEGER NOT NULL REFERENCES gis_terrain_value(id));
+CREATE TABLE gis_terrain_region (id INTEGER PRIMARY KEY, map_id INTEGER NOT NULL REFERENCES gis_terrain_imported_map(id), ordinal INTEGER NOT NULL, value_id INTEGER NOT NULL REFERENCES gis_terrain_value(id));
+CREATE TABLE gis_terrain_property (id INTEGER PRIMARY KEY, map_id INTEGER NOT NULL REFERENCES gis_terrain_imported_map(id), ordinal INTEGER NOT NULL, name TEXT NOT NULL CHECK(name NOT IN ('positions','routes','regions')), value_id INTEGER NOT NULL REFERENCES gis_terrain_value(id));
+CREATE TABLE gis_terrain_boolean (id INTEGER PRIMARY KEY REFERENCES gis_terrain_value(id), value INTEGER NOT NULL CHECK(value IN (0,1)));
+CREATE TABLE gis_terrain_unsigned (id INTEGER PRIMARY KEY REFERENCES gis_terrain_value(id), value TEXT NOT NULL);
+CREATE TABLE gis_terrain_signed (id INTEGER PRIMARY KEY REFERENCES gis_terrain_value(id), value INTEGER NOT NULL);
+CREATE TABLE gis_terrain_float (id INTEGER PRIMARY KEY REFERENCES gis_terrain_value(id), value REAL, value_ieee754_bits INTEGER NOT NULL, value_numeric_class TEXT NOT NULL CHECK(value_numeric_class IN ('finite','positiveInfinity','negativeInfinity','nan')));
+CREATE TABLE gis_terrain_text (id INTEGER PRIMARY KEY REFERENCES gis_terrain_value(id), value TEXT NOT NULL);
+CREATE TABLE gis_terrain_bytes (id INTEGER PRIMARY KEY REFERENCES gis_terrain_value(id), value BLOB NOT NULL);
+CREATE TABLE gis_terrain_array (id INTEGER PRIMARY KEY, parent_id INTEGER NOT NULL REFERENCES gis_terrain_value(id), ordinal INTEGER NOT NULL, value_id INTEGER NOT NULL REFERENCES gis_terrain_value(id));
+CREATE TABLE gis_terrain_member (id INTEGER PRIMARY KEY, parent_id INTEGER NOT NULL REFERENCES gis_terrain_value(id), ordinal INTEGER NOT NULL, name TEXT NOT NULL, value_id INTEGER NOT NULL REFERENCES gis_terrain_value(id));

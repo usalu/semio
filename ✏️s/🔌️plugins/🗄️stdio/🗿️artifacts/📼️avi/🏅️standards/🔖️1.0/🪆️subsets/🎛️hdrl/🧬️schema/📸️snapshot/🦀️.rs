@@ -24,7 +24,7 @@ pub const STDIO_AVI_DOCUMENT_SCHEMA: &str = "stdio.avi";
 
 //#region 🔖️MainHeader
 /// 🏷️ `avih` — MainAVIHeader, all 14 DWORDs typed (56 bytes). <https://learn.microsoft.com/🪟️windows/win32/directshow/avimainheader>
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct AviMainHeader {
     pub micro_sec_per_frame: u32,
@@ -48,7 +48,7 @@ pub struct AviMainHeader {
 /// the trailing `rcFrame` rectangle is NOT: real encoders (ffmpeg's own AVI-1.0 muxer included)
 /// still write the classic pre-Win32 form with `rcFrame` as 4 16-bit `SHORT`s (56 bytes total), not
 /// only the modern 4 `LONG`s form (64 bytes) most docs describe. <https://learn.microsoft.com/🪟️windows/win32/directshow/avistreamheader>
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct AviStreamHeader {
     pub fcc_type: String,
@@ -116,7 +116,7 @@ fn default_rc_frame_width() -> u8 {
 
 //#region 🔖️StreamFormat
 /// 🎨️ `strf`, discriminated by the owning stream's `fccType`.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslEnum)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned, semio_framework_dsl_record_derive::DslEnum)]
 #[value(tag = "format", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum AviStreamFormat {
     /// 🖼️ `BITMAPINFOHEADER` (40 bytes; `vids`). <https://learn.microsoft.com/🪟️windows/win32/api/wingdi/ns-wingdi-bitmapinfoheader>
@@ -139,17 +139,17 @@ pub enum AviStreamFormat {
     Raw { data: Vec<u8> },
 }
 
-impl dsl::DslField for AviStreamFormat{
-    fn to_value_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::FieldValue,String>{control.step()?;let mut statements=control.allocate_vec(1)?;statements.push(<Self as dsl::DslVariants>::to_named_record_controlled(self,control)?);Ok(dsl::FieldValue::Statements(statements))}
+impl semio_framework_dsl_record::DslField for AviStreamFormat{
+    fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,semio_framework_value::ValueError>{control.step()?;let mut statements=control.allocate_vec(1)?;statements.push(<Self as semio_framework_dsl_record::DslVariants>::to_named_record_controlled(self,control)?);Ok(semio_framework_dsl_record::FieldValue::Statements(statements))}
 
-    fn from_value_controlled(value:&dsl::FieldValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{
+    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{
         control.step()?;
-        match value{dsl::FieldValue::Statements(values)if values.len()==1=>{let(keyword,record)=&values[0];<Self as dsl::DslVariants>::from_named_record_controlled(keyword,record,control).map_err(|error|error.message)},_=>Err("AVI stream format requires exactly one typed choice".into())}
+        match value{semio_framework_dsl_record::FieldValue::Statements(values)if values.len()==1=>{let(keyword,record)=&values[0];<Self as semio_framework_dsl_record::DslVariants>::from_named_record_controlled(keyword,record,control)},_=>Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"AVI stream format requires exactly one typed choice"))}
     }
-    fn shape()->dsl::Shape{dsl::Shape::Statements(<Self as dsl::DslVariants>::variants())}
-    fn shape_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::Shape,String>{<Self as dsl::DslVariants>::variants_controlled(control).map(dsl::Shape::Statements)}
-    fn to_value(&self)->dsl::FieldValue{dsl::FieldValue::Statements(vec![<Self as dsl::DslVariants>::to_named_record(self)])}
-    fn from_value(value:&dsl::FieldValue)->Result<Self,String>{match value{dsl::FieldValue::Statements(values)if values.len()==1=>{let(keyword,record)=&values[0];<Self as dsl::DslVariants>::from_named_record(keyword,record).map_err(|error|error.message)},_=>Err("AVI stream format requires exactly one typed choice".into())}}
+    fn shape()->semio_framework_dsl_record::Shape{semio_framework_dsl_record::Shape::Statements(<Self as semio_framework_dsl_record::DslVariants>::variants())}
+    fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{<Self as semio_framework_dsl_record::DslVariants>::variants_controlled(control).map(semio_framework_dsl_record::Shape::Statements)}
+    fn to_value(&self)->semio_framework_dsl_record::FieldValue{semio_framework_dsl_record::FieldValue::Statements(vec![<Self as semio_framework_dsl_record::DslVariants>::to_named_record(self)])}
+    fn from_value(value:&semio_framework_dsl_record::FieldValue)->Result<Self,String>{match value{semio_framework_dsl_record::FieldValue::Statements(values)if values.len()==1=>{let(keyword,record)=&values[0];<Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword,record).map_err(|error|error.message)},_=>Err("AVI stream format requires exactly one typed choice".into())}}
 }
 
 impl Default for AviStreamFormat {
@@ -163,7 +163,7 @@ impl Default for AviStreamFormat {
 /// 🎞️ One `movi` chunk belonging to this stream — fourcc (e.g. `"00dc"`), payload bytes, and
 /// whether `idx1` (or the no-`idx1` fallback, per spec: absent index ⇒ every scanned chunk is
 /// treated as a sync point) marks it a keyframe.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct AviChunk {
     pub fourcc: String,
@@ -172,7 +172,7 @@ pub struct AviChunk {
     pub keyframe: bool,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct AviStream {
     pub strh: AviStreamHeader,
@@ -192,7 +192,7 @@ pub struct AviStream {
 /// 📦️ Typed-raw retention for a top-level RIFF child this codec doesn't otherwise type (any
 /// entry inside `AVI `'s body besides `hdrl`/`movi`/`idx1`) — verbatim fourcc + payload, replayed
 /// at the same relative position (after `idx1`) on encode.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct RiffChunk {
     pub fourcc: String,
@@ -202,7 +202,7 @@ pub struct RiffChunk {
 //#endregion 🔖️RawChunk
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(lines)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.avi")]
@@ -248,17 +248,17 @@ impl store::ArtifactDsl for AviSnapshot {
         STDIO_AVI_DOCUMENT_SCHEMA
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let record=dsl::parse(body,&Self::__dsl_spec(),&dsl::ParseOptions{limits:dsl::Limits{max_bytes:272*1024*1024,..dsl::Limits::default()},mode:dsl::SourceMode::Document})?;
+        let record=semio_framework_dsl_record::parse(body,&Self::__dsl_spec(),&semio_framework_dsl_record::ParseOptions{limits:semio_framework_diagnostic::Limits{max_bytes:272*1024*1024,..semio_framework_diagnostic::Limits::default()},mode:semio_framework_dsl_record::SourceMode::Document})?;
         Self::__dsl_from_record(&record)
     }
 
     fn print_dsl(&self) -> String {
-        let body=dsl::print(&self.__dsl_to_record(),&Self::__dsl_spec(),dsl::JoinMode::Document);
+        let body=semio_framework_dsl_record::print(&self.__dsl_to_record(),&Self::__dsl_spec(),semio_framework_dsl_record::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -268,20 +268,20 @@ impl store::ArtifactPack for AviSnapshot {
     fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let raw=store::pack_rt::encode_document(&Self::__dsl_spec(),&self.__dsl_to_record(),options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let(record,_report)=store::pack_rt::decode_document(&inner,&Self::__dsl_spec(),options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
 
-    fn record_spec()->Option<dsl::RecordSpec>{Some(Self::__dsl_spec())}
+    fn record_spec()->Option<semio_framework_dsl_record::RecordSpec>{Some(Self::__dsl_spec())}
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 

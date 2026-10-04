@@ -1,0 +1,19 @@
+{
+  "fields": ["schema", "opc", "xmlParts"],
+  "combinations": [
+    [false, false, false],
+    [true, false, false],
+    [false, true, false],
+    [true, true, false],
+    [false, false, true],
+    [true, false, true],
+    [false, true, true],
+    [true, true, true]
+  ],
+  "firstSchema": "s.stdio.pptx.ecma-376.first",
+  "secondSchema": "s.stdio.pptx.ecma-376.second",
+  "firstMedia": [0, 128, 255],
+  "secondMedia": [255, 0, 127],
+  "malformedField": "xmlParts",
+  "malformedValue": "an XML part collection requires typed parts"
+}

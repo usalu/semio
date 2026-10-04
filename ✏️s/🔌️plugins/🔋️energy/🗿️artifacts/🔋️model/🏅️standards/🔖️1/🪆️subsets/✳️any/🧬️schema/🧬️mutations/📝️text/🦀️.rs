@@ -13,11 +13,11 @@ pub use crate::mutations::EnergyModelMutation;
 
 //#region 🔖️HandcraftedOpCodecs
 impl protocol::OpText for EnergyModelMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        dsl::variants_text::parse_op(line)
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        semio_framework_dsl_record::variants_text::parse_op(line)
     }
     fn print_op(&self) -> String {
-        dsl::variants_text::print_op(self)
+        semio_framework_dsl_record::variants_text::print_op(self)
     }
 }
 

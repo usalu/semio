@@ -122,96 +122,13 @@
           }
         },
         "blendMode": {
-          "enum": [
-            "normal",
-            "multiply",
-            "screen",
-            "overlay",
-            "darken",
-            "lighten",
-            "colorDodge",
-            "colorBurn",
-            "hardLight",
-            "softLight",
-            "difference",
-            "exclusion",
-            "hue",
-            "saturation",
-            "color",
-            "luminosity"
-          ],
+          "type": "string",
           "x-semio-ui": {
-            "widget": "select",
+            "widget": "text",
             "role": "value",
             "label": {
               "en": "Blend mode",
               "de": "Füllmethode"
-            },
-            "options": {
-              "normal": {
-                "en": "Normal",
-                "de": "Normal"
-              },
-              "multiply": {
-                "en": "Multiply",
-                "de": "Multiplizieren"
-              },
-              "screen": {
-                "en": "Screen",
-                "de": "Negativ multiplizieren"
-              },
-              "overlay": {
-                "en": "Overlay",
-                "de": "Ineinanderkopieren"
-              },
-              "darken": {
-                "en": "Darken",
-                "de": "Abdunkeln"
-              },
-              "lighten": {
-                "en": "Lighten",
-                "de": "Aufhellen"
-              },
-              "colorDodge": {
-                "en": "Color dodge",
-                "de": "Farbig abwedeln"
-              },
-              "colorBurn": {
-                "en": "Color burn",
-                "de": "Farbig nachbelichten"
-              },
-              "hardLight": {
-                "en": "Hard light",
-                "de": "Hartes Licht"
-              },
-              "softLight": {
-                "en": "Soft light",
-                "de": "Weiches Licht"
-              },
-              "difference": {
-                "en": "Difference",
-                "de": "Differenz"
-              },
-              "exclusion": {
-                "en": "Exclusion",
-                "de": "Ausschluss"
-              },
-              "hue": {
-                "en": "Hue",
-                "de": "Farbton"
-              },
-              "saturation": {
-                "en": "Saturation",
-                "de": "Sättigung"
-              },
-              "color": {
-                "en": "Color",
-                "de": "Farbe"
-              },
-              "luminosity": {
-                "en": "Luminosity",
-                "de": "Luminanz"
-              }
             },
             "group": "appearance",
             "order": 30

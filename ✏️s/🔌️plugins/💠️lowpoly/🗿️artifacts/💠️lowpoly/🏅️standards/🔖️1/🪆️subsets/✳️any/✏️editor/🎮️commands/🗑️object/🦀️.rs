@@ -18,7 +18,7 @@ use serde::{Deserialize, Serialize};
 pub mod delete_selection {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "delete-selection")]
     pub struct DeleteSelection {}
@@ -65,7 +65,7 @@ pub mod delete_selection {
 pub mod duplicate_object {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "duplicate-object")]
     pub struct DuplicateObject {
@@ -85,7 +85,7 @@ pub mod duplicate_object {
         let id = format!("obj-{serial}");
         let mut transform = source.transform.clone();
         transform.position[0] += 1.0;
-        let copy = LowpolyObject {
+        let copy = LowpolyObject { mesh_state:None,
             id: id.clone(),
             name: format!("{} copy", source.name),
             transform,

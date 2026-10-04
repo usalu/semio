@@ -3,24 +3,69 @@
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/run-text-fidelity-fixture/schema.json",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "partPath", "cases"],
+  "required": [
+    "schema",
+    "partPath",
+    "cases"
+  ],
   "properties": {
-    "schema": { "const": "semio.stdio.docx.run-text-fidelity.v1" },
-    "partPath": { "type": "string", "minLength": 1 },
+    "schema": {
+      "const": "semio.stdio.docx.run-text-fidelity.v1"
+    },
+    "partPath": {
+      "type": "string",
+      "minLength": 1
+    },
     "cases": {
       "type": "array",
-      "minItems": 2,
+      "minItems": 3,
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "targetPath", "xml", "replacement", "textElementCount", "preservedLocalNames"],
+        "required": [
+          "id",
+          "targetPath",
+          "xml",
+          "replacement",
+          "textElementCount",
+          "preservedLocalNames",
+          "originalText"
+        ],
         "properties": {
-          "id": { "type": "string", "minLength": 1 },
-          "targetPath": { "type": "array", "minItems": 1, "items": { "type": "integer", "minimum": 0 } },
-          "xml": { "type": "string", "minLength": 1 },
-          "replacement": { "type": "string" },
-          "textElementCount": { "type": "integer", "minimum": 1 },
-          "preservedLocalNames": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true }
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "targetPath": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "xml": {
+            "type": "string",
+            "minLength": 1
+          },
+          "replacement": {
+            "type": "string"
+          },
+          "textElementCount": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "preservedLocalNames": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true
+          },
+          "originalText": {
+            "type": "string"
+          }
         }
       }
     }

@@ -4,7 +4,10 @@ use super::ChangeInspectionLevel;
 use crate::En1990Mutation;
 use crate::En1990Snapshot;
 
-pub fn inverse(mutation: &ChangeInspectionLevel, base: &En1990Snapshot) -> Vec<En1990Mutation> {
+pub fn inverse(mutation: &ChangeInspectionLevel, base: &En1990Snapshot) -> Result<Vec<En1990Mutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let _ = mutation;
     vec![En1990Mutation::ChangeInspectionLevel(ChangeInspectionLevel { new_inspection_level: base.inspection_level.clone() })]
+
+    })())
 }

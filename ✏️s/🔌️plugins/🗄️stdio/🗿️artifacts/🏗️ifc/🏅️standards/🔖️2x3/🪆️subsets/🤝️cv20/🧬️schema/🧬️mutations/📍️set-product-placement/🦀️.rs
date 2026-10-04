@@ -18,9 +18,12 @@ impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3Cv20Mutation> for SetProductPl
     fn diff(&self, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<<Ifc2x3Cv20Mutation as Mutation<Ifc2x3Snapshot>>::Diff> {
         agg_diff(&Ifc2x3Cv20Mutation::SetProductPlacement(self.clone()), base)
     }
-    fn inverse(&self, base: &Ifc2x3Snapshot) -> Vec<Ifc2x3Cv20Mutation> {
-        agg_inverse(&Ifc2x3Cv20Mutation::SetProductPlacement(self.clone()), base)
-    }
+    fn inverse(&self, base: &Ifc2x3Snapshot) -> Result<Vec<Ifc2x3Cv20Mutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&Ifc2x3Cv20Mutation::SetProductPlacement(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set product placement", "Produktplatzierung setzen")
     }

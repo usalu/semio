@@ -34,6 +34,7 @@ name = "native_codecs"
 path = "../../📇️native-codecs/🧪️tests/📇️native-codecs/🦀️.rs"
 
 [dependencies]
+semio-framework-async = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-artifact-vcs-vcs = { workspace = true }
 semio-framework-ui-contract.workspace = true

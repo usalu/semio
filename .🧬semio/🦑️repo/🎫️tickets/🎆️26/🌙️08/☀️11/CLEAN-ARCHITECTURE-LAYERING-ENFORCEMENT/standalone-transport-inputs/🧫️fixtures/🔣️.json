@@ -1,0 +1,22 @@
+{
+  "cases": [
+    {"name":"empty-help","args":[],"result":"help"},
+    {"name":"explicit-help","args":["--help"],"result":"help"},
+    {"name":"pack","args":["--transport-credit","1048576","--input-credit","1048576","--timeout-ms","30000","inspect","file.spk"],"result":"run","credit":1048576,"inputCredit":1048576,"timeoutMs":30000,"command":["inspect","file.spk"]},
+    {"name":"spr-reversed-options","args":["--timeout-ms","1","--input-credit","0","--transport-credit","0","verify","file.spr","--level=full"],"result":"run","credit":0,"inputCredit":0,"timeoutMs":1,"command":["verify","file.spr","--level=full"]},
+    {"name":"portable-boundary","args":["--transport-credit","4294967295","--input-credit","4294967295","--timeout-ms","4294967295","hash","file.spk"],"result":"run","credit":4294967295,"inputCredit":4294967295,"timeoutMs":4294967295,"command":["hash","file.spk"]},
+    {"name":"stdin-cancellation-command-option","args":["--transport-credit","1048576","--input-credit","1048576","--timeout-ms","30000","inspect","file.spk","--cancel-stdin"],"result":"run","credit":1048576,"inputCredit":1048576,"timeoutMs":30000,"command":["inspect","file.spk","--cancel-stdin"]},
+    {"name":"no-credit","args":["inspect","file.spk"],"result":"refusal","refusal":"MissingCredit"},
+    {"name":"no-input-credit","args":["--transport-credit","1","--timeout-ms","1","inspect"],"result":"refusal","refusal":"MissingInput"},
+    {"name":"no-timeout","args":["--transport-credit","1","--input-credit","1","inspect"],"result":"refusal","refusal":"MissingTimeout"},
+    {"name":"negative-input-credit","args":["--input-credit","-1","hash"],"result":"refusal","refusal":"InvalidInput"},
+    {"name":"duplicate-input-credit","args":["--input-credit","1","--input-credit","2","hash"],"result":"refusal","refusal":"DuplicateInput"},
+    {"name":"negative-credit","args":["--transport-credit","-1","--timeout-ms","1","hash"],"result":"refusal","refusal":"InvalidCredit"},
+    {"name":"overflow-credit","args":["--transport-credit","4294967296","--timeout-ms","1","hash"],"result":"refusal","refusal":"InvalidCredit"},
+    {"name":"zero-timeout","args":["--transport-credit","1","--timeout-ms","0","hash"],"result":"refusal","refusal":"InvalidTimeout"},
+    {"name":"noncanonical-timeout","args":["--transport-credit","1","--timeout-ms","01","hash"],"result":"refusal","refusal":"InvalidTimeout"},
+    {"name":"duplicate-credit","args":["--transport-credit","1","--transport-credit","2","--timeout-ms","1","hash"],"result":"refusal","refusal":"DuplicateCredit"},
+    {"name":"duplicate-timeout","args":["--timeout-ms","1","--timeout-ms","2","--transport-credit","1","hash"],"result":"refusal","refusal":"DuplicateTimeout"},
+    {"name":"no-command","args":["--transport-credit","1","--input-credit","1","--timeout-ms","1"],"result":"refusal","refusal":"MissingCommand"}
+  ]
+}

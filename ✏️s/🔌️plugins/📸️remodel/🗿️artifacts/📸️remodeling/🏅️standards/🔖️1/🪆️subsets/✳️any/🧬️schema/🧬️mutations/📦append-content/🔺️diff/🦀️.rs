@@ -36,7 +36,7 @@ pub fn diff(payload: &super::AppendContent, base: &RemodelingSnapshot) -> protoc
         return protocol::MutationOutcome::error("mutation.target-mismatch", "An appended leaf differs from the leaf already stored at its index.", target);
     }
     if overlap == payload.chunks.len() {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Content \"{}\" already stores these leaves.", payload.content_id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Content \"{}\" already stores these leaves.", payload.content_id));
     }
     let stored_bytes: usize = stored[..first + overlap].iter().filter_map(|chunk| remodeling_durable_chunk(chunk)).map(|bytes| bytes.len()).sum();
     let total_chunks = first + payload.chunks.len();

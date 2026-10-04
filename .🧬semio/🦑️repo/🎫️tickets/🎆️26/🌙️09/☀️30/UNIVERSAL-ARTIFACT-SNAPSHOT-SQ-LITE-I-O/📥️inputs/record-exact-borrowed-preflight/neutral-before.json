@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "csv": [
+    {
+      "schema": "csv.owner.雪\u0000",
+      "hasHeader": false,
+      "records": [
+        [],
+        [
+          {
+            "value": "Grüße,\n\"雪\"\u0000",
+            "quoted": false
+          },
+          {
+            "value": "",
+            "quoted": true
+          }
+        ],
+        [
+          {
+            "value": "",
+            "quoted": false
+          }
+        ],
+        []
+      ]
+    },
+    {
+      "schema": "",
+      "hasHeader": true,
+      "records": []
+    }
+  ],
+  "tsv": [
+    {
+      "schema": "tsv.owner.雪\u0000",
+      "records": [],
+      "trailingNewline": false,
+      "lineEnding": "crlf"
+    },
+    {
+      "schema": "stdio.tsv",
+      "records": [
+        [],
+        [
+          ""
+        ],
+        []
+      ],
+      "trailingNewline": true,
+      "lineEnding": "lf"
+    },
+    {
+      "schema": "",
+      "records": [
+        [
+          "Grüße\u0000雪",
+          "literal\tfield",
+          "literal\r\nfield"
+        ],
+        []
+      ],
+      "trailingNewline": false,
+      "lineEnding": "crlf"
+    },
+    {
+      "schema": "",
+      "records": [],
+      "trailingNewline": true,
+      "lineEnding": "crlf"
+    }
+  ],
+  "longText": {
+    "text": "Grüße雪\u0000",
+    "repeat": 20000
+  },
+  "distinctSymbols": {
+    "prefix": "symbol.雪.",
+    "count": 257,
+    "repeat": 2
+  }
+}

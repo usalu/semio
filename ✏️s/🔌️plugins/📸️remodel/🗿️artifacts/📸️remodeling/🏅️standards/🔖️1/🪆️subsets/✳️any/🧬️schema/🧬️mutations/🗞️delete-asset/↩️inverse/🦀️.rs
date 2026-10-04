@@ -7,10 +7,13 @@ use crate::mutations::RemodelingMutation;
 use crate::{remodeling_asset, RemodelingSnapshot};
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::DeleteAsset, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
+pub fn inverse(payload: &super::DeleteAsset, base: &RemodelingSnapshot) -> Result<Vec<RemodelingMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match remodeling_asset(base, &payload.key) {
         Some(old) => vec![crate::mutations::create_asset::create_asset(payload.key.clone(), old)],
         None => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

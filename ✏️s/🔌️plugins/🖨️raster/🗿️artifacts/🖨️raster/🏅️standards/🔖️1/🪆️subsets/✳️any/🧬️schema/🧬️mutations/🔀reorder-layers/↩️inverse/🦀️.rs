@@ -6,10 +6,13 @@ use crate::standards::v1::subsets::any::schema::locate_layer;
 use crate::RasterSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::ReorderLayers, base: &RasterSnapshot) -> Vec<RasterMutation> {
+pub fn inverse(payload: &super::ReorderLayers, base: &RasterSnapshot) -> Result<Vec<RasterMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match locate_layer(&base.layers, &payload.layer_id) {
         Some((parent_id, index)) => vec![RasterMutation::ReorderLayers(super::ReorderLayers { layer_id: payload.layer_id.clone(), parent_id, index })],
         None => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

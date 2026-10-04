@@ -3,7 +3,7 @@ use crate::{RasterLayerMask, RasterLayerNode, RasterLayerPatch, RasterMaskConten
 use crate::diff::{diff_patch_layer, RasterDiff};
 use crate::standards::v1::subsets::any::schema::find_layer;
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct ChangeLayerMask {
@@ -12,16 +12,16 @@ pub struct ChangeLayerMask {
     pub mask: Option<RasterLayerMask>,
 }
 
-pub fn validate(payload: &ChangeLayerMask, base: &RasterSnapshot) -> Result<(), &'static str> {
-    let Some(RasterLayerNode::Pixel { mask, .. } | RasterLayerNode::Group { mask, .. }) = find_layer(&base.layers, &payload.layer_id) else { return Err("mutation.target-missing"); };
-    if mask != &payload.expected { return Err("mutation.target-mismatch"); }
+pub fn validate(payload: &ChangeLayerMask, base: &RasterSnapshot) -> Result<(), protocol::OutcomeCode> {
+    let Some(RasterLayerNode::Pixel { mask, .. } | RasterLayerNode::Group { mask, .. }) = find_layer(&base.layers, &payload.layer_id) else { return Err(protocol::OutcomeCode::TargetMissing); };
+    if mask != &payload.expected { return Err(protocol::OutcomeCode::TargetMismatch); }
     if let Some(mask) = &payload.mask {
         if let Some(key) = &mask.image_key {
-            if key.is_empty() || !base.assets.contains_key(key) { return Err("mutation.target-missing"); }
+            if key.is_empty() || !base.assets.contains_key(key) { return Err(protocol::OutcomeCode::TargetMissing); }
         }
-        if [mask.width, mask.height].iter().flatten().any(|&n| n == 0 || n > 16384) || mask.width.zip(mask.height).is_some_and(|(w, h)| u64::from(w) * u64::from(h) > 16_777_216) { return Err("mutation.invariant"); }
+        if [mask.width, mask.height].iter().flatten().any(|&n| n == 0 || n > 16384) || mask.width.zip(mask.height).is_some_and(|(w, h)| u64::from(w) * u64::from(h) > 16_777_216) { return Err(protocol::OutcomeCode::Invariant); }
         let t = &mask.transform;
-        semio_framework_pixels::compositing::inverse(t.as_affine()).map_err(|_| "mutation.invariant")?;
+        semio_framework_pixels::compositing::inverse(t.as_affine()).map_err(|_| protocol::OutcomeCode::Invariant)?;
     }
     Ok(())
 }
@@ -34,10 +34,13 @@ impl protocol::MutationKind<RasterSnapshot, RasterMutation> for ChangeLayerMask 
         protocol::MutationOutcome::new(diff_patch_layer(&self.layer_id, RasterLayerPatch { mask_content: Some(RasterMaskContent { mask: self.mask.clone() }), ..Default::default() }))
     }
 
-    fn inverse(&self, base: &RasterSnapshot) -> Vec<RasterMutation> {
+    fn inverse(&self, base: &RasterSnapshot) -> Result<Vec<RasterMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         let Some(RasterLayerNode::Pixel { mask, .. } | RasterLayerNode::Group { mask, .. }) = find_layer(&base.layers, &self.layer_id) else { return Vec::new(); };
         vec![RasterMutation::ChangeLayerMask(Self { layer_id: self.layer_id.clone(), expected: self.mask.clone(), mask: mask.clone() })]
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Change layer mask", "Ebenenmaske ändern") }
     fn target(&self) -> Vec<String> { vec![self.layer_id.clone()] }

@@ -2,7 +2,7 @@
 
 use super::{BitmapTransient, BitmapTransientMutation};
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[dsl(keyword = "set-solve")]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
@@ -18,9 +18,12 @@ impl protocol::MutationKind<BitmapTransient, BitmapTransientMutation> for SetSol
     fn diff(&self, _base: &BitmapTransient) -> protocol::MutationOutcome<BitmapTransient> {
         protocol::MutationOutcome::new(BitmapTransient { output_pixels: self.output_pixels.clone(), contradiction: self.contradiction, output_width: self.output_width, output_height: self.output_height })
     }
-    fn inverse(&self, base: &BitmapTransient) -> Vec<BitmapTransientMutation> {
+    fn inverse(&self, base: &BitmapTransient) -> Result<Vec<BitmapTransientMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![Self { output_pixels: base.output_pixels.clone(), contradiction: base.contradiction, output_width: base.output_width, output_height: base.output_height }.into()]
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set Solve", "Lösung setzen")
     }

@@ -5,17 +5,17 @@ use crate::RewritingSnapshot;
 
 //#region 🔖️Mutation
 /// 🔍️ `edit-lhs` payload.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "edit-lhs")]
 pub struct EditLhs {
-    pub new_lhs_json: String,
+    pub new_lhs: crate::standards::v1::subsets::any::schema::Lhs,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn edit_lhs(new_lhs_json: String) -> RewriteRuleMutation {
-    RewriteRuleMutation::EditLhs(EditLhs { new_lhs_json })
+pub fn edit_lhs(new_lhs: crate::standards::v1::subsets::any::schema::Lhs) -> RewriteRuleMutation {
+    RewriteRuleMutation::EditLhs(EditLhs { new_lhs })
 }
 
 impl protocol::MutationKind<RewritingSnapshot, RewriteRuleMutation> for EditLhs {
@@ -24,9 +24,12 @@ impl protocol::MutationKind<RewritingSnapshot, RewriteRuleMutation> for EditLhs 
     fn diff(&self, base: &RewritingSnapshot) -> protocol::MutationOutcome<RewritingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RewritingSnapshot) -> Vec<RewriteRuleMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &RewritingSnapshot) -> Result<Vec<RewriteRuleMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Edit lhs", "Linke Regelseite bearbeiten")
     }

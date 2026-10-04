@@ -1,7 +1,7 @@
 //! 🏗️ Playbook play app — the builder window: the drag/drop Blockly-like form authoring surface.
 
 use crate::editor::playbook::config::PlaybookConfig;
-use crate::{PlaybookSnapshot, PLAYBOOK_BUILTIN_KINDS};
+use crate::{PlaybookSpec, PLAYBOOK_BUILTIN_KINDS};
 use semio_framework::parse_contributions;
 use semio_framework_plugin::BlockPaletteEntry;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -74,9 +74,8 @@ fn build_palette(config: &PlaybookConfig) -> Vec<BlockPaletteEntry> {
 /// `InteractionView` (a known SDK gap — matches `forms`'/`note`'s render-surface precedent), so this
 /// block-list surface's own selected-card highlight (`render_playbook_builder`'s `selected_id`) can no
 /// longer be driven from live framework selection — it always renders with none highlighted now.
-pub fn render(spec: &PlaybookSnapshot, config: &PlaybookConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let kernel = spec.as_kernel();
-    semio_framework_plugin::scene_surface(PLAYBOOK_PLAY_SURFACE_BUILDER, semio_framework_ui_contract::SurfaceKind::BlockList, &crate::playbook::build_playbook_list_scene(&kernel, &build_palette(config), None))
+pub fn render(spec: &PlaybookSpec, config: &PlaybookConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    semio_framework_plugin::scene_surface(PLAYBOOK_PLAY_SURFACE_BUILDER, semio_framework_ui_contract::SurfaceKind::BlockList, &crate::playbook::build_playbook_list_scene(spec, &build_palette(config), None))
 }
 //#endregion 🔖️Render
 

@@ -15,7 +15,7 @@ pub fn diff(payload: &ReorderTiles, base: &PresentationSnapshot) -> protocol::Mu
     let item = tiles.remove(from);
     let to = payload.to_index.min(tiles.len());
     if to == from {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Tile \"{}\" is already at index {to}.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Tile \"{}\" is already at index {to}.", payload.id));
     }
     tiles.insert(to, item);
     protocol::MutationOutcome::new(crate::diff::diff_set_presentation(&source, &tiles))

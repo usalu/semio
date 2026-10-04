@@ -1,0 +1,237 @@
+{
+  "sourceOnly": true,
+  "providers": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "traitImpl": [
+        "GltfSnapshot"
+      ],
+      "route": false,
+      "decode": true,
+      "encode": true,
+      "preflight": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📸️snapshot/📦️pack/🦀️.rs",
+      "traitImpl": [],
+      "route": true,
+      "decode": false,
+      "encode": false,
+      "preflight": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "traitImpl": [
+        "LasSnapshot"
+      ],
+      "route": false,
+      "decode": true,
+      "encode": true,
+      "preflight": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🧬️schema/📸️snapshot/📦️pack/🦀️.rs",
+      "traitImpl": [],
+      "route": true,
+      "decode": false,
+      "encode": false,
+      "preflight": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "traitImpl": [],
+      "route": true,
+      "decode": false,
+      "encode": false,
+      "preflight": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "traitImpl": [
+        "BinarySnapshot"
+      ],
+      "route": false,
+      "decode": true,
+      "encode": true,
+      "preflight": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+      "traitImpl": [],
+      "route": true,
+      "decode": false,
+      "encode": false,
+      "preflight": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "traitImpl": [
+        "StepSnapshot"
+      ],
+      "route": false,
+      "decode": true,
+      "encode": true,
+      "preflight": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "traitImpl": [],
+      "route": true,
+      "decode": false,
+      "encode": false,
+      "preflight": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "traitImpl": [
+        "DeflateSnapshot"
+      ],
+      "route": false,
+      "decode": true,
+      "encode": true,
+      "preflight": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+      "traitImpl": [],
+      "route": true,
+      "decode": false,
+      "encode": false,
+      "preflight": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "traitImpl": [
+        "SvgSnapshot"
+      ],
+      "route": false,
+      "decode": true,
+      "encode": true,
+      "preflight": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "traitImpl": [],
+      "route": true,
+      "decode": false,
+      "encode": false,
+      "preflight": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "traitImpl": [
+        "BmpSnapshot"
+      ],
+      "route": false,
+      "decode": true,
+      "encode": true,
+      "preflight": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+      "traitImpl": [],
+      "route": true,
+      "decode": false,
+      "encode": false,
+      "preflight": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "traitImpl": [
+        "Ifc2x3Snapshot"
+      ],
+      "route": false,
+      "decode": true,
+      "encode": true,
+      "preflight": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "traitImpl": [],
+      "route": true,
+      "decode": false,
+      "encode": false,
+      "preflight": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "traitImpl": [
+        "IfcSnapshot"
+      ],
+      "route": false,
+      "decode": true,
+      "encode": true,
+      "preflight": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "traitImpl": [],
+      "route": true,
+      "decode": false,
+      "encode": false,
+      "preflight": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🛂️capability/🦀️.rs",
+      "traitImpl": [
+        "Process3dSnapshot"
+      ],
+      "route": false,
+      "decode": true,
+      "encode": true,
+      "preflight": true
+    }
+  ],
+  "factories": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🦀️.rs",
+      "line": 71,
+      "text": "ArtifactCodec::bare::<GltfSnapshot, GltfMutation>(STDIO_GLTF_DOCUMENT_SCHEMA)"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🦀️.rs",
+      "line": 90,
+      "text": "ArtifactCodec::bare::<GltfSnapshot, GltfMutation>(...))`."
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🦀️.rs",
+      "line": 41,
+      "text": "ArtifactCodec::bare::<LasSnapshot, LasMutation>(STDIO_LAS_DOCUMENT_SCHEMA)"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🦀️.rs",
+      "line": 58,
+      "text": "ArtifactCodec::bare::<LasSnapshot, LasMutation>(...))`."
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🦀️.rs",
+      "line": 43,
+      "text": "ArtifactCodec::bare::<StepSnapshot, StepMutation>(STDIO_STEP_DOCUMENT_SCHEMA)"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🦀️.rs",
+      "line": 63,
+      "text": "ArtifactCodec::bare::<StepSnapshot, StepMutation>(...))`."
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/🦀️.rs",
+      "line": 307,
+      "text": "ArtifactCodec::bare::<Ifc2x3Snapshot, crate::standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation>(crate::standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA))"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+      "line": 273,
+      "text": "ArtifactCodec::bare::<IfcSnapshot, IfcMutation>(STDIO_IFC_DOCUMENT_SCHEMA)).expect(\"static Stdio registration must be available and conflict-free\")"
+    }
+  ],
+  "process3dParentComposition": {
+    "sourceOnly": true,
+    "missingRegistrationIdentified": false,
+    "composition": "🌎️hub/🧩️compositions/🏭️process/🦀️.rs:30",
+    "declaration": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🦀️.rs:1089",
+    "factory": "OS Plugin DocumentCodecSpec::of:3542",
+    "assembly": "OS Plugin builder:786 → Framework IO:1943",
+    "runtimeInitializationVerified": false,
+    "report": "📓️process3d-parent-composition-native-registration-readback.md"
+  }
+}

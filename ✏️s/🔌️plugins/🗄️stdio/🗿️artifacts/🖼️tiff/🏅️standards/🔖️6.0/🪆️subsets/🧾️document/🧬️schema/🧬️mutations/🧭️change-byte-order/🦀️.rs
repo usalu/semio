@@ -26,13 +26,16 @@ impl protocol::MutationKind<TiffSnapshot, TiffMutation> for ChangeByteOrderMutat
         let Self { byte_order } = self;
         protocol::MutationOutcome::new(contribute(base, *byte_order))
     }
-    fn inverse(&self, base: &TiffSnapshot) -> Vec<TiffMutation> {
+    fn inverse(&self, base: &TiffSnapshot) -> Result<Vec<TiffMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         let outcome = <Self as protocol::MutationKind<TiffSnapshot, TiffMutation>>::diff(self, base);
         if <TiffDiff as protocol::DiffAlgebra<TiffSnapshot>>::is_empty(outcome.diff()) {
             return Vec::new();
         }
         vec![TiffMutation::ChangeByteOrder(ChangeByteOrderMutation { byte_order: base.byte_order })]
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Change byte order", "Bytereihenfolge ändern")
     }
@@ -47,7 +50,7 @@ pub fn contribute(base: &TiffSnapshot, byte_order: TiffByteOrder) -> TiffDiff {
 
 #[cfg(test)]
 pub(crate) fn test_case() -> TiffMutation {
-    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🧭️change-byte-order/🎯️direct/🦠️mutation/🔣️.json")).expect("committed change-byte-order payload")
+    semio_framework_pack_json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🧭️change-byte-order/🎯️direct/🦠️mutation/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-byte-order payload")
 }
 #[cfg(test)]
 #[path = "🧪️tests/🎯️direct/🦀️.rs"]

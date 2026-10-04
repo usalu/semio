@@ -1,0 +1,475 @@
+{
+  "snapshot": {
+    "schema": "private schema\u0000",
+    "id": "!@/",
+    "title": "",
+    "layers": [
+      {
+        "kind": "shape",
+        "id": "",
+        "name": "名字\u0000",
+        "visible": false,
+        "locked": true,
+        "opacity": 0.5,
+        "blendMode": "custom blend",
+        "transform": {
+          "x": 1,
+          "y": 2,
+          "scaleX": 3,
+          "scaleY": 4,
+          "shear": 5,
+          "rotation": 6
+        },
+        "attributes": {
+          "fillRule": "nonzero",
+          "fill": {
+            "kind": "solid",
+            "color": [
+              1,
+              2,
+              3,
+              4
+            ]
+          },
+          "stroke": {
+            "color": [
+              5,
+              6,
+              7,
+              8
+            ],
+            "width": 9,
+            "cap": "square",
+            "join": "bevel",
+            "dash": []
+          }
+        },
+        "shapeKind": "all independent shapes",
+        "rect": {
+          "x": 1,
+          "y": 2,
+          "width": 3,
+          "height": 4
+        },
+        "ellipse": {
+          "cx": 5,
+          "cy": 6,
+          "rx": 7,
+          "ry": 8
+        },
+        "circle": {
+          "cx": 9,
+          "cy": 10,
+          "r": 11
+        },
+        "line": {
+          "x1": 12,
+          "y1": 13,
+          "x2": 14,
+          "y2": 15
+        },
+        "polygon": {
+          "points": [
+            [
+              16,
+              17
+            ],
+            [
+              18,
+              19
+            ]
+          ]
+        }
+      },
+      {
+        "kind": "path",
+        "id": "",
+        "name": "名字\u0000",
+        "visible": false,
+        "locked": true,
+        "opacity": 0.5,
+        "blendMode": "custom blend",
+        "transform": {
+          "x": 1,
+          "y": 2,
+          "scaleX": 3,
+          "scaleY": 4,
+          "shear": 5,
+          "rotation": 6
+        },
+        "attributes": {
+          "fillRule": "evenodd",
+          "fill": {
+            "kind": "linearGradient",
+            "x1": 1,
+            "y1": 2,
+            "x2": 3,
+            "y2": 4,
+            "stops": [
+              {
+                "offset": 5,
+                "color": [
+                  6,
+                  7,
+                  8,
+                  9
+                ]
+              },
+              {
+                "offset": 10,
+                "color": [
+                  11,
+                  12,
+                  13,
+                  14
+                ]
+              }
+            ]
+          }
+        },
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              1,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              3,
+              4
+            ]
+          },
+          {
+            "kind": "quad",
+            "ctrl": [
+              5,
+              6
+            ],
+            "to": [
+              7,
+              8
+            ]
+          },
+          {
+            "kind": "cubic",
+            "ctrl1": [
+              9,
+              10
+            ],
+            "ctrl2": [
+              11,
+              12
+            ],
+            "to": [
+              13,
+              14
+            ]
+          },
+          {
+            "kind": "arc",
+            "rx": 15,
+            "ry": 16,
+            "rotation": 17,
+            "largeArc": true,
+            "sweep": false,
+            "to": [
+              18,
+              19
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ]
+      },
+      {
+        "kind": "text",
+        "id": "",
+        "name": "名字\u0000",
+        "visible": false,
+        "locked": true,
+        "opacity": 0.5,
+        "blendMode": "custom blend",
+        "transform": {
+          "x": 1,
+          "y": 2,
+          "scaleX": 3,
+          "scaleY": 4,
+          "shear": 5,
+          "rotation": 6
+        },
+        "attributes": {
+          "fillRule": "nonzero",
+          "fill": {
+            "kind": "radialGradient",
+            "cx": 1,
+            "cy": 2,
+            "r": 3,
+            "stops": []
+          }
+        },
+        "x": 1,
+        "y": 2,
+        "content": "Ω\n\u0000text",
+        "size": 3
+      },
+      {
+        "kind": "image",
+        "id": "",
+        "name": "名字\u0000",
+        "visible": false,
+        "locked": true,
+        "opacity": 0.5,
+        "blendMode": "custom blend",
+        "transform": {
+          "x": 1,
+          "y": 2,
+          "scaleX": 3,
+          "scaleY": 4,
+          "shear": 5,
+          "rotation": 6
+        },
+        "attributes": {
+          "fillRule": "nonzero",
+          "fill": {
+            "kind": "solid",
+            "color": [
+              1,
+              2,
+              3,
+              4
+            ]
+          },
+          "stroke": {
+            "color": [
+              5,
+              6,
+              7,
+              8
+            ],
+            "width": 9,
+            "cap": "square",
+            "join": "bevel",
+            "dash": []
+          }
+        },
+        "imageKey": "unresolved-image-key",
+        "width": 4,
+        "height": 5
+      },
+      {
+        "kind": "group",
+        "id": "",
+        "name": "名字\u0000",
+        "visible": false,
+        "locked": true,
+        "opacity": 0.5,
+        "blendMode": "custom blend",
+        "transform": {
+          "x": 1,
+          "y": 2,
+          "scaleX": 3,
+          "scaleY": 4,
+          "shear": 5,
+          "rotation": 6
+        },
+        "attributes": {
+          "fillRule": "nonzero",
+          "fill": {
+            "kind": "solid",
+            "color": [
+              1,
+              2,
+              3,
+              4
+            ]
+          },
+          "stroke": {
+            "color": [
+              5,
+              6,
+              7,
+              8
+            ],
+            "width": 9,
+            "cap": "square",
+            "join": "bevel",
+            "dash": []
+          }
+        },
+        "isolation": true,
+        "children": [
+          {
+            "kind": "group",
+            "id": "",
+            "name": "名字\u0000",
+            "visible": false,
+            "locked": true,
+            "opacity": 0.5,
+            "blendMode": "custom blend",
+            "transform": {
+              "x": 1,
+              "y": 2,
+              "scaleX": 3,
+              "scaleY": 4,
+              "shear": 5,
+              "rotation": 6
+            },
+            "attributes": {
+              "fillRule": "nonzero",
+              "fill": {
+                "kind": "solid",
+                "color": [
+                  1,
+                  2,
+                  3,
+                  4
+                ]
+              },
+              "stroke": {
+                "color": [
+                  5,
+                  6,
+                  7,
+                  8
+                ],
+                "width": 9,
+                "cap": "square",
+                "join": "bevel",
+                "dash": []
+              }
+            },
+            "isolation": false,
+            "children": []
+          }
+        ]
+      },
+      {
+        "kind": "boolean",
+        "id": "",
+        "name": "名字\u0000",
+        "visible": false,
+        "locked": true,
+        "opacity": 0.5,
+        "blendMode": "custom blend",
+        "transform": {
+          "x": 1,
+          "y": 2,
+          "scaleX": 3,
+          "scaleY": 4,
+          "shear": 5,
+          "rotation": 6
+        },
+        "attributes": {
+          "fillRule": "nonzero",
+          "fill": {
+            "kind": "solid",
+            "color": [
+              1,
+              2,
+              3,
+              4
+            ]
+          },
+          "stroke": {
+            "color": [
+              5,
+              6,
+              7,
+              8
+            ],
+            "width": 9,
+            "cap": "square",
+            "join": "bevel",
+            "dash": []
+          }
+        },
+        "operation": "custom op",
+        "children": [
+          "",
+          "!@/",
+          ""
+        ]
+      },
+      {
+        "kind": "trace",
+        "id": "",
+        "name": "名字\u0000",
+        "visible": false,
+        "locked": true,
+        "opacity": 0.5,
+        "blendMode": "custom blend",
+        "transform": {
+          "x": 1,
+          "y": 2,
+          "scaleX": 3,
+          "scaleY": 4,
+          "shear": 5,
+          "rotation": 6
+        },
+        "attributes": {
+          "fillRule": "nonzero",
+          "fill": {
+            "kind": "solid",
+            "color": [
+              1,
+              2,
+              3,
+              4
+            ]
+          },
+          "stroke": {
+            "color": [
+              5,
+              6,
+              7,
+              8
+            ],
+            "width": 9,
+            "cap": "square",
+            "join": "bevel",
+            "dash": []
+          }
+        },
+        "sourceKey": "unresolved-source",
+        "params": {
+          "threshold": 6,
+          "simplifyEpsilon": 7
+        }
+      }
+    ],
+    "assets": {
+      "": {
+        "mime": "private/mime",
+        "data": "intrinsic string\u0000not base64",
+        "width": 4294967295,
+        "height": 0
+      },
+      "!@/": {
+        "mime": "",
+        "data": ""
+      }
+    },
+    "artboard": {
+      "width": 8,
+      "height": 9
+    }
+  },
+  "assetKeyOrder": ["", "😀"],
+  "depth": 256,
+  "intrinsicBytes": 100000,
+  "cancelAfter": 65536,
+  "ieeeWords": [
+    "0000000000000000",
+    "8000000000000000",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff0000000000001",
+    "7ff8000000000001",
+    "fff8000000000001",
+    "0000000000000001"
+  ]
+}

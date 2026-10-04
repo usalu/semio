@@ -12,7 +12,7 @@ use protocol::{MutationKind, SemanticDescriptor};
 /// 🔁️ Replaces `tiles` with `new_tiles` wholesale (an empty `new_tiles` is the "clear tiles"
 /// gesture — no separate `clear-tiles` verb is needed since `replace`'s own inverse already
 /// restores whatever was cleared). Diff/inverse delegate to the sibling `🔺️diff`/`↩️inverse` leaves.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "replace-tiles")]
@@ -28,9 +28,12 @@ impl MutationKind<PresentationSnapshot, PresentationMutation> for ReplaceTiles {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &PresentationSnapshot) -> Vec<PresentationMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &PresentationSnapshot) -> Result<Vec<PresentationMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace tiles with {} tiles", self.new_tiles.len()), &format!("Kacheln durch {} Kacheln ersetzen", self.new_tiles.len()))

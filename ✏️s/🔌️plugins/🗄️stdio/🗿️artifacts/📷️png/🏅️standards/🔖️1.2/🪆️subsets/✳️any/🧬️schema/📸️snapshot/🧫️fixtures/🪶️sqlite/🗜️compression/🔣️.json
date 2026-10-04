@@ -1,0 +1,19 @@
+{
+  "role": "exactDynamicHuffmanRecipe",
+  "pattern": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "repeat": 1000,
+  "length": 7000,
+  "level": 6,
+  "blockKind": 2,
+  "cmf": 120,
+  "flg": 156,
+  "adler": 2651542025
+}

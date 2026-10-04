@@ -17,7 +17,7 @@ fn fill_rule_fixture_applies_and_inverts_through_all_owned_codecs() {
     let committed:DrawingDiff=serde_json::from_str(DIFF).unwrap();
     assert_eq!(committed.apply(&before).unwrap(),after);
     let mut restored=after;
-    let inverse=mutation.inverse(&before);
+    let inverse=mutation.inverse(&before).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(),1);
     for step in inverse {crate::mutations::apply_drawing_mutation(&mut restored,&step).unwrap();}
     assert_eq!(restored,before);
@@ -34,5 +34,5 @@ fn unchanged_and_missing_fill_rule_targets_do_not_mutate() {
     assert_eq!(result.diff().apply(&before).unwrap(),before);
     let missing=crate::mutations::set_layer_fill_rule("missing".into(),FillRule::Nonzero);
     assert!(!missing.diff(&before).messages().is_empty());
-    assert!(missing.inverse(&before).is_empty());
+    assert!(missing.inverse(&before).expect("valid retained mutation inverse fixture").is_empty());
 }

@@ -1,0 +1,23 @@
+{
+  "name": "@semio-tech/framework-os-flow-compute-ownership",
+  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "sharedGlobals",
+        "{projectRoot}/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️testing/📍️consumer/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖍️drawing/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🏛️ownership/🧮️compute",
+        "command": "bun ./📜️script.ts test"
+      }
+    }
+  }
+}

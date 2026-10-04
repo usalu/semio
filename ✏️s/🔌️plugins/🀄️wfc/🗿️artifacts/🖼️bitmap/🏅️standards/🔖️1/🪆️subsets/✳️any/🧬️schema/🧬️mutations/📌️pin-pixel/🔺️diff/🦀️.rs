@@ -14,7 +14,7 @@ pub fn diff(payload: &super::PinPixel, base: &BitmapSnapshot) -> protocol::Mutat
     }
     let pin = BitmapPinnedPixel { x: payload.x, y: payload.y, color: payload.color };
     match pin_index(base, payload.x, payload.y) {
-        Some(at) if base.pinned[at] == pin => protocol::MutationOutcome::empty().warn("mutation.no-op", format!("({}, {}) is already pinned to colour {}.", payload.x, payload.y, payload.color)),
+        Some(at) if base.pinned[at] == pin => protocol::MutationOutcome::empty().warning("mutation.no-op", format!("({}, {}) is already pinned to colour {}.", payload.x, payload.y, payload.color)),
         Some(at) => protocol::MutationOutcome::new(BitmapDiff { pinned_upserted: vec![(at, pin)], ..Default::default() }),
         None => protocol::MutationOutcome::new(BitmapDiff { pinned_upserted: vec![(ordered_pin_index(&base.pinned, payload.x, payload.y), pin)], ..Default::default() }),
     }

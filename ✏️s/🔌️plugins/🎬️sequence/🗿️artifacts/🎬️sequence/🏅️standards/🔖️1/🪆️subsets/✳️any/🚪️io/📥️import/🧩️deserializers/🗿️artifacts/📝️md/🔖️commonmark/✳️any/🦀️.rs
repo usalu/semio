@@ -4,6 +4,7 @@ use crate::{SequenceHostSnapshot, SequenceSnapshot};
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
+use semio_framework_value::{ValueError, ValueRefusalKind};
 use semio_s_artifact_stdio_md::schema::snapshot::MdBlock;
 use semio_s_artifact_stdio_md::MdSnapshot;
 
@@ -16,14 +17,14 @@ impl Deserializer<SequenceSnapshot> for MdIntoSequence {
     const FIDELITY: IoFidelity = IoFidelity::Canonical;
     async fn deserialize(payload: &IoPayload) -> IoResult<SequenceSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
-            return Err(IoError { message: "MdIntoSequence: expected a binary md payload".to_string(), diagnostics: Vec::new() });
+            return Err(IoError::from_value_error(ValueError::new(ValueRefusalKind::InvalidValue, "MdIntoSequence: expected a binary md payload".to_string())));
         };
-        let md = <MdSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| IoError { message: format!("MdIntoSequence: md decode failed: {error}"), diagnostics: Vec::new() })?;
+        let md = <MdSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| IoError::from_value_error(match error.into_value_error() { Ok(error) => error.under("MdIntoSequence"), Err(error) => ValueError::new(ValueRefusalKind::InvariantViolated, format!("MdIntoSequence: in-memory decode reported a transport failure: {error}")) }))?;
         let literal = match md.blocks.as_slice() {
             [MdBlock::CodeBlock { info: Some(info), literal }] if info == "json" => literal,
-            _ => return Err(IoError { message: "MdIntoSequence: expected one json code block".into(), diagnostics: Vec::new() }),
+            _ => return Err(IoError::from_value_error(ValueError::new(ValueRefusalKind::InvalidValue, "MdIntoSequence: expected one json code block"))),
         };
-        let fixture: SequenceHostSnapshot = dsl::os_pack::json::from_json_str(literal).map_err(|error| IoError { message: format!("MdIntoSequence: {error}"), diagnostics: Vec::new() })?;
+        let fixture: SequenceHostSnapshot = semio_framework_pack_json::from_json_str(literal, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| IoError::from_value_error(error.under("MdIntoSequence")))?;
         Ok(IoOutcome::clean(SequenceSnapshot::from_host_snapshot(fixture)))
     }
 }

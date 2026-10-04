@@ -1,2 +1,0 @@
-# 🪚️ Relative disconnect-working-edges / DisconnectWorkingEdges payload.
-input DisconnectWorkingEdgesInput { targets: [String!]! }

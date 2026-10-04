@@ -883,7 +883,7 @@ Successor S3-W1G, coordinator `⚪b7db773a…`. Focus (rule 29): owed verificati
 2. N17 (P1, `📓️s3-gap.md`): `dry_run` and `reprojection_replay` replay the whole applied history synchronously → resumable
    jobs with progress + cancel (§16.6), API for S3-W2A, law with ≥ 200 mutations.
 
-### The `.ops` text carries the viewer head (fixes the two blocked laws)
+### The `.ops` text carries the viewer head (11:50; REVERTED 19:00, see "PER-VIEWER laws — corrected fix")
 
 Decision: the text pair (`.dsl` + `.ops`) is a full persisted form ("replaces the JSON envelope as the canonical persisted
 form", and the `.ops` mirror of a pack/spr pair), so it carries this replica's head exactly like `.spr`'s `REC_VIEWER`
@@ -941,6 +941,571 @@ form", and the `.ops` mirror of a pack/spr pair), so it carries this replica's h
   10-02 03:53): the new 64-byte slot accounting exceeds the durable group's `max_total_alloc = 162 000`
   (`🏪️store/🧩️composition/🗄️durable-group/🦀️.rs:2240,2344`). Not a W1-G change.
 
+### Resume 18:40 (usage cut ~13:05, machine reboot ~17:00)
+
+- Re-read: every Session-3 edit is intact (store regions, `.ops` viewer line, vcs `HistoryReplaying`, history twin, the three
+  deferred laws, the plugin reload law `a_long_history_reloads_one_operation_per_initializer_step`). No half-finished edit:
+  the 19-anchor store script applied atomically at 12:00 and `adopt_state` drops a waiting reprojection (12:40).
+- Still in the tree on purpose until the bisect below has run: env-guarded `[DEBUG]` probes (`SEMIO_DEBUG_STORE_UNITS=1`,
+  silent otherwise) in `begin_typed_apply_batch`, at the top of `advance_apply_batch`, in
+  `take_returned_snapshot_read_retirement` and `ArtifactStore::maintenance_retirements_step`. Remove them after the run.
+- 18:42 `cargo check -p semio-framework-os-kernel --lib`: **Finished, 0 errors**.
+
+### PER-VIEWER laws — corrected fix (19:00)
+
+The 11:50 `.ops` `viewer` line contradicted the closed PER-VIEWER-ALTERNATIVE-HEAD design. Its laws
+`document_text_round_trips_with_an_active_alternative_and_a_quoted_description` and
+`reload_replays_the_event_log_into_the_same_positions` pin "the ops text is the shared log and hydrates to the trunk".
+Both failed with the viewer line. So:
+
+- The `viewer` line is **reverted** in both twins (store `OpsHeaderLine`/`print_ops_log`/`replay_ops`; history
+  `parse_ops_text`/`print_ops_text`, whose doc now says the text is the shared log). The history law is now
+  `ops_text_is_the_shared_log_without_the_viewer_head`: a viewed log prints the trunk-tip text, and the text parses back to
+  the trunk tip.
+- The real defect was the oracle. `test_support::assert_document_text_round_trip` (`🏪️store/🦀️.rs`) compared the whole
+  envelope even for a store viewing an alternative. It now asserts:
+  - every edit (`id`, forwards, metadata) and every transition survives the text round trip;
+  - the text hydrates to the canonical trunk tip;
+  - full envelope + live snapshot equality holds when the store itself is on the trunk tip.
+- `reprojection_progress()` now reports `done` 0 when an edit or another change made the waiting replay restart (it showed
+  the stale replay's count until the next turn).
+- The N17 law harness `settle`s displaced owners between commands, as a runtime maintenance turn does. `CountedOp` names
+  its author (`author_id`) so one store holds another actor's edits, and it delegates `may_emit_foreign_steps`.
+
+| When | Command | Result |
+|---|---|---|
+| 18:42 | `cargo check -p semio-framework-os-kernel --lib` | Finished, 0 errors |
+| 19:00 | kernel lib tests (private target) `-- tool_transaction_tests deferred_reprojection_tests supersede_replay_tests dispatch_group_stamps_one_tool_transaction os_spr::history::tests` | **92 passed, 0 failed**. Includes `finished_replays_commit_atomically…` and `scoped_supersessions_follow_their_alternative…` (formerly blocked), the 3 N17 local-step laws, the 4 deferred-remote laws, the 8 §15 laws, `ops_text_is_the_shared_log…` and `fold_falls_back…` |
+| 19:02 | per-test runner `os_store:: os_vcs:: os_spr::` | **820 ok / 16 FAIL**. All 16 are `durable_group` (peer pack materialization budget, R-2). Both PER-VIEWER text laws pass |
+
+### Reload: linear edit validation in the retained initializer (19:35, `🔌️plugin/🦀️.rs` region of `BoundedStoreInitializationAuthority`)
+
+`ValidateEditPair { left, right }` checked edit-id uniqueness pairwise, one O(1) step per pair: N²/2 steps per reload, which
+is 28 680 for 240 edits and about 50 M for 10 000 (the paged ledger admits that). It is replaced by `ValidateEdit { index }`.
+Each step bounds the id length and inserts it into `edit_ids` (a duplicate fails as before). That is N steps, and the set
+is released once the phase completes. The refusal code is unchanged. Covered by the reload law and the archive-load laws
+(WRITTEN, verification waits for TREE GREEN).
+
+19:55: `FindApplied { position, scan }` and `FindRedo { position, scan }` also scanned the edit list from 0 for every
+position, a second N² term. The validation pass now builds `edit_index: HashMap<String, usize>`, so `FindApplied { position }`
+and `FindRedo { position }` find their edit in one step, and the map is released before `BuildCandidate`.
+
+**Progress for S3-W2A** (asked directly, design `📓️api-stepped-document-load.md` §2.2):
+- `ArtifactStoreInitializationAuthority::progress(&self) -> (u64, u64)` (default `(0, 0)`) gives (operations folded,
+  operations to fold).
+- On `BoundedStoreInitializationAuthority` it returns `(folded, fold_total)`: `fold_total` is the forwards of the applied
+  edits, fixed at `CloneInitial`; `folded` counts every applied forward step.
+- `ArtifactStoreInitializationJob::progress()` is `pub(crate)` and forwards to the authority.
+
+The reload law (moved by S3-W2A to `🔌️plugin/🧪️tests/🧪️bounded-reload/🦀️.rs`, mounted in `app`) now also asserts:
+- progress is monotonic and ends at `(240, 240)`;
+- the step count is a constant per edit (< 16 · 240).
+
+### O(document) publication regression (S3-PUZZLE, coordinator 12:50)
+
+Baseline (ticket 26/09/02 wave B54, 09-13): translate and delete publish in **store=17** units on both Concrete Forest (1
+object) and Nakagin (180 objects). Now: 22 vs 1590 (delete 23 vs 1630). Reading of the store side so far: every
+`advance_apply_batch` phase (prepare 2 / fold 1 / item close 1 / cursor 1 / preflight 1 / publish 1) and the batch close are
+O(1) units per admitted item, and `fold_batch_item` is O(item). The store units therefore scale either with the number of
+items the batch admits (the tool emitting O(document) mutations) or with plugin-side units counted as `store` in
+`publish_mounted_typed_operation_run` (interaction-write units, inline interaction verbs, early returns while
+`reclaim_document_snapshot_read_returns` has not drained). The instrumented run decides which.
+
+**Leading hypothesis (06:50, reading; NOT yet measured).** Commit `6f33e313da9` (09-15, ticket 26/09/13
+INTERACTIVE-TOOLS-VISIBLE-PROCESS) landed after the B54 baseline (09-13). It added the gate
+`if Artifact(_) && !self.reclaim_document_snapshot_read_returns(PUBLICATION_SNAPSHOT_READ_RECLAIM_STEPS)? { return Ok(()) }` to
+`🔌️plugin/🦀️.rs` `publish_mounted_typed_operation_unit`, in front of EVERY artifact publication unit.
+
+Why that gate would scale with the document:
+- Every one-item publication reads its base through a `SnapshotRead` of the live root. After `Publishing` replaces `current`,
+  that returned read is the last owner of the pre-edit root, and puzzle 3d's `apply` produces a whole new root.
+- So the gate has to retire the entire previous document before the ladder may advance. It does so through the bounded
+  value retirement (`ReturnedSnapshotReadRetirement` → `initial_snapshot_retirement_factory`), and every unit that returns
+  early is counted as `store`.
+- That is O(document) units per mutation: a small document pays about +5 (22 vs 17), Nakagin pays about +1570.
+
+What the gate is for: it bounds a multi-item batch to the staged root plus one base, which was the 816-op fill OOM. A
+one-item publication does not need it on its critical path.
+
+Root fix to apply once confirmed (plugin region of S3-W2A, typed-operation publication; store side unchanged): drain
+returned reads only down to a constant allowance. Either:
+- before an item ≥ 2 of the same batch takes its next base (`ArtifactStoreBatchPublication` would expose
+  `takes_next_base()`), or
+- whenever more than one returned root is outstanding.
+
+The rest retires in the maintenance rotation. Memory stays bounded by a constant number of roots, and the ladder becomes
+size-independent again.
+
+Probes for the confirming run (env `SEMIO_DEBUG_STORE_UNITS=1`, puzzle 3d `one_mutation_publishes…` / `b54_measures…` with
+`--nocapture`):
+- `store-batch begin/advance` (store ladder units);
+- `store-read-return` (returned read taken);
+- `store-read-return unique root retiring/retired` (a whole pre-edit root retired through the gate);
+- `store-displaced-step`.
+
+Confirmation shape: many `store` census units between `unique root retiring` and `retired`, while `store-batch advance`
+stays at about 17.
+
+Blocked at 06:33: the `✏️s` workspace does not compile (`semio-s-artifact-stdio-zip`/`-gltf`, peer DSL/`ValueError`
+change), so puzzle 3d cannot be built.
+
+### Resume 10-03 05:50 (cut ~21:00; coordinator: TREE GREEN core)
+
+- Re-read: every edit intact. In the store: deferred/local-step regions, `assert_document_text_round_trip`,
+  `reprojection_progress` restart, the 4 env-guarded `[DEBUG]` probes. In the plugin initializer: `ValidateEdit`,
+  `edit_index`, `progress`, `fold_total`; 0 `ValidateEditPair` left. No interrupted edit.
+- The three N17 local-step laws were already green at 19:00 (92/92). Nothing is owed on them except the plugin-side
+  reload law.
+
+### Browser host accepts a multi-turn cold-pair `loading` (coordinator 06:36, `📓️api-stepped-document-load.md` §8 (1))
+
+- `🏪️store/👷️worker/🟦️.ts`: `transferColdPair` settles the LAST page through the new exported `settleColdPairLoading(first,
+  status, cursor, poll, release, limit = COLD_PAIR_LOADING_TURN_LIMIT = 1 << 20)`.
+  - While the guest answers `loading` (its whole-document archive load still folding), the host polls empty turns.
+  - Every `loading` must name exactly the last page of this transfer, otherwise "invalid loading receipt".
+  - A UI patch on a loading turn throws, as on page turns.
+  - Every answer the host moves past is wiped.
+  - Cancelling is `assertCurrent` throwing inside a poll; the guest then restores the previous document.
+  - Only then does the host require `applied`; anything else throws with the status diagnostic.
+- Law `👷️worker/🧪️tests/🧪️cold-pair-loading/🟦️.ts`, registered in the worker's vitest block, covers:
+  - the language-agnostic corpus `👷️worker/🧫️fixtures/🧫️cold-pair-loading/🔣️.json` (7 cases: at once, across turns, then
+    fault, other page, other transfer, cancelled, past the limit), checked against
+    `👷️worker/🧬️schema/🔣️cold-pair-loading/🔣️.json` with Ajv;
+  - a fast-check property (200 runs): n loading turns then applied/fault give n polls and n releases.
+- 06:39 os TS `bun ./📜️script.ts test 🏪️store/👷️worker`: **17 pass, 0 fail**.
+- 06:40 `tsc -p 🧪️s3-w1g-typecheck-cold-pair-loading.tsconfig.json` (worker + law, 1090 files): **0 errors**.
+- S3-W2A told directly (guest contract: last-page cursor, no UI patch before `applied`). S3-W2C owns the wgpu equivalent.
+
 ### Status
 
-In progress: plugin suite, FU4 hub bin laws, replication lib, §15 end-to-end proof.
+In progress: O(document) bisect, plugin reload law + archive laws, FU4 hub bin, replication lib.
+- 06:33: the `✏️s` workspace is red from peers. `semio-s-artifact-stdio-zip`/`-gltf` fail with `ValueError`/`MutationLeaf`
+  errors (DSL extraction), so the puzzle 3d build for the bisect cannot link.
+- 06:36: `semio-framework-os-kernel` is red again from a peer. `🚪️io/🦀️.rs:2406…` fails with `IoError` having no field
+  `message` (IoError reshape), which blocks the plugin lib-test build.
+
+### Session 3 summary (10-03 06:55)
+
+**Verified (ran, saw pass):**
+
+| Check | Result |
+|---|---|
+| Kernel lib laws (§15 ×8, deferred-remote ×4, N17 local-step ×3, supersede-replay incl. both PER-VIEWER laws, history twin) | 92/92 |
+| Kernel per-test `os_store:: os_vcs:: os_spr::` | 820 ok / 16 FAIL, all peer `durable_group` (R-2) |
+| Plugin lib per-test, 10-02 12:30, before the initializer change | 943 ok / 16 FAIL. §15 2/2 ok; FAILs are peers or S3-W2A in flight |
+| TS store oracles | 7/7 |
+| TS replication | 20/21 (R-1 peer fixture); FU4 twins ok |
+| TS os worker | 17/17, incl. the new cold-pair-loading law |
+| TS React refusal / band | 39/39 |
+| tsc worker + law | 0 errors |
+| `cargo check -p semio-framework-os-kernel --lib`, 10-02 18:42 | green |
+
+**Written, not yet verified** (a peer break blocks each one):
+- plugin initializer: linear `ValidateEdit` + `edit_index` lookups + `progress()`;
+- reload law `🧪️bounded-reload` (moved there by S3-W2A, now also asserts progress and linear steps);
+- the O(document) bisect run (probes in place);
+- FU4 hub bin laws;
+- replication lib.
+
+**Blockers right now:**
+- kernel red: `🚪️io/🦀️.rs:2406` `IoError` has no field `message` (peer IoError reshape);
+- `✏️s` workspace red: `semio-s-artifact-stdio-zip`/`-gltf` `ValueError`/`MutationLeaf` (peer DSL extraction);
+- replication lib-test: `🧾️wire/🧪️tests/🔬️unit/🦀️.rs:434` `artifact_inference_catalog_len` missing (peer).
+
+**Open (mine):**
+- run the bisect and apply the root fix (hypothesis above, plugin region, coordinate with S3-W2A);
+- remove the `[DEBUG]` probes (4 store sites + 2 in `ReturnedSnapshotReadRetirement`) right after that run;
+- rerun the plugin suite (reload law, archive laws, initializer);
+- FU4 hub bin; replication lib;
+- the ring-stride prefix fold at replay start (≤ ⌈N/16⌉ edits for N > 256, see `📓️api-deferred-history-replays.md` §4).
+
+**Routed:**
+- R-1 replication fixture `trailing-flags-invalid` (flags `04` → `08`);
+- R-2 pack materialization budget (`durable_group` ×16);
+- S3-W2A runtime adoption of N17 (`📓️api-deferred-history-replays.md` §3);
+- S3-W2C wgpu cold-pair `loading`.
+
+**06:46 update.** S3-W2A applied the root fix in its region (`🔌️plugin/🦀️.rs` ≈31605). The new constant is
+`PUBLICATION_RETURNED_ROOT_ALLOWANCE = 1`, and the reclaim gate now drains only when
+`returned_snapshot_read_count() > PUBLICATION_RETURNED_ROOT_ALLOWANCE`:
+- a one-item publication no longer retires the whole pre-edit root on its ladder (the maintenance rotation retires it);
+- a multi-item batch drains before item 2, which keeps the 816-op fill OOM bound.
+
+Reviewed: memory stays bounded by a constant number of roots (staged + base + ≤ 2 returned + the one retiring in the pump).
+Expected: translate/delete back to store ≈ 17 on both sizes, since the small document's +5 was the same gate.
+
+Confirming run still owed: the puzzle 3d `one_mutation_publishes…` and `b54_measures…` with `SEMIO_DEBUG_STORE_UNITS=1`,
+plus the fill memory law. It is blocked because the kernel is still red at 06:46 (`🚪️io/🦀️.rs:2415` `IoError.message`, peer).
+
+**Coordinator actions:** none for W1-G (no descriptor, launch or schema regeneration; no new verbs). The central launch.json
+regeneration should keep the `test-store-oracles` row (session 2).
+
+**07:00 update.**
+- S3-W2A put the guest cold-pair multi-turn `Loading` on disk (`⚛️reactor/🔄️turn/🦀️.rs` `step_cold_pair_document_load`,
+  `⚛️reactor/📥️cold-pair/🦀️.rs`). Every loading answer carries the last-page cursor, there is no patch before `applied`, and
+  a guest-side cancel answers Fault `cold-pair.load-cancelled`. That matches `settleColdPairLoading`.
+- Told S3-W2A: a host-side cancel sends nothing, so the guest must cancel a stale load when it sees a page with a newer
+  `transfer_generation` or when the instance closes.
+- Kernel still red at 07:00: 1 error, `🧬️semio/🦀️.rs:4` unresolved `crate::os_dsl::ValueRefusalKind` (peer DSL extraction).
+  The publication-gate measurement waits for TREE GREEN.
+
+**10:50 update (after a usage cut at ~07:05).**
+- The browser host now resends cold pages on backpressure. S3-W2A's stale-load fix answers `Backpressure(older owner's
+  cursor)` to the first page of a new transfer while the old load is cancelled, and the host used to fail that transfer
+  ("invalid page receipt").
+- `🏪️store/👷️worker/🟦️.ts`: every page goes through the new exported `retryColdPairBackpressure`.
+  - A same-lifetime backpressure releases the answer, gives the guest one empty turn and sends a fresh copy of the page.
+  - A foreign lifetime is refused, bounded by `COLD_PAIR_LOADING_TURN_LIMIT`.
+  - Page bytes are zeroed per attempt.
+- Corpus and schema `cold-pair-loading` gain a `backpressure` section (5 cases); the law adds a fast-check property.
+- os TS `test 🏪️store/👷️worker`: **18 pass, 0 fail**. tsc worker + law: **0 errors**.
+- S3-W2A reports the guest side (`Loading`, cancel, supersede, checkpoint restore over the archive load) compiles, plugin
+  `--lib` native + wasm32 at 10:55. The publication-gate measurement still needs puzzle 3d to build.
+
+### Audit majors, 10-03 (from `📓️audit-s3-core.md` §2)
+
+**W1G-1. Probes removed.** All six `SEMIO_DEBUG_STORE_UNITS` sites are deleted (4 in the store ladder, 2 in
+`ReturnedSnapshotReadRetirement`); `grep SEMIO_DEBUG_STORE_UNITS` finds 0. The bisect plan is in "O(document) publication
+regression" above. Its run (`one_mutation_publishes…`, `b54_measures…` and the 816-op fill law on puzzle 3d, streamed
+ticks for W2A-5) still waits for `✏️s` to build (stdio peer).
+
+**W1G-3. O(change) per mutation (§20.14).** Done in `🏪️store/🦀️.rs`, `🌿️vcs/🦀️.rs` and the durable-group adoption.
+- *Lookups.*
+  - `ArtifactHistoryLedger` has a seek hint (`find_near`, `find_near_position`, O(1) forward `get`).
+  - 26 store lookups use it.
+  - `HistoryPageIter` has an O(1) `nth`, and `HistoryPageStack::iter_from` seeks to a position, so `cloned_from` and
+    `skip` no longer walk the prefix.
+- *Accessors for the runtime (W2A-1).* All are O(that edit):
+  - `applied_edit_mutations(position)`;
+  - `applied_edit_outcomes(position)`;
+  - `applied_edit_position(edit_id)` (searched from the tail, so O(rows read) for the newest rows).
+  - `mutation_ops`/`mutation_outcomes` are now linear loops over these.
+- *No fold on the tail.* `fold_frontier` holds the greatest event key of the log while the live cursor is the proven fold
+  of that log.
+  - It is set at the end of every full adoption (`adopt_reprojection`).
+  - It is cleared by every primitive that changes the log or the cursor: edit insert, transition insert, the
+    applied/redo/checkpoint/supersession replacements, reload, durable-group adoption, and the start of every reproject.
+  - `Apply` and a transaction's opening append whose edit sorts after the frontier (at the line's tip, no step waiting)
+    skip `reproject()`. They apply exactly the fold's rule instead: keep only the redo entries the edit's actor did not
+    author (`adopt_folded_tail`).
+  - `AppendTransaction` ticks skip `reproject()` while the fold is live: an amend changes no fold input.
+- *Mirrors.* `StackMirrorDirt` holds the first applied/redo position whose id changed. It is set by
+  `replace_applied/redo_edit_ids_retained` (shared prefix), `push_applied_edit_id`, reload (`ALL`) and group/origin
+  restamps (`restamp_applied_tail`).
+  - `sync_cursor` rewrites only that suffix in place. It used to clone both stacks and retire the old cursor each bump,
+    which was O(E) owners queued per mutation.
+  - `reconcile_stack` starts from it instead of SHA-256 hashing every id.
+- *Prefix ring.* Pruning no longer recomputes `forward_prefix_digests` over the whole history.
+  - `prefix_ring_dirty_from` is set by applied replacement, replay start and a regrown tail record.
+  - Pruning evicts entries past it in O(ring).
+  - `retain_prefix_snapshots` prunes before it admits.
+  - Readers still verify digests.
+- *Test-build oracle (`assert_mirrors_are_live`, histories ≤ 256).* Every bump checks:
+  - the persisted cursor equals the live stacks;
+  - each revision record equals a from-scratch rebuild (first stale index reported);
+  - the content revision equals the rebuilt one;
+  - a claimed frontier equals `fold_envelope_history`.
+
+  The oracle found two pre-existing staleness cases:
+  - `stamp_tail_group_id`/`stamp_tail_origin` change the tail edit after its record was computed. Fixed with
+    `restamp_applied_tail`.
+  - One law renumbered a live store's edits. It now renumbers a pack round-trip copy.
+- *Law* `🧪️tests/⚡️hot-path` + corpus `🧫️fixtures/⚡️hot-path` + schema `🧬️schema/⚡️hot-path`, with a test-only
+  `hot_path_census` (folds, prefix digests, mirrored ids, rebuilt records). Measured windows:
+  - 1000 Applies after 1000 edits: 0 folds, 0 digests, 1000/1000 mirrored/rebuilt;
+  - 400 ticks + commit after 2000 edits: 0/0/1/401;
+  - 3 ticks + commit + 200 Applies after 2000 edits: 0/0/201/204.
+- *Not O(change) yet:* undo/redo/checkout/supersede still fold the log once per step. They are history steps, not
+  mutations, and a long replay is already deferred (N17). The batched publication ladder never folded and still clears
+  the frontier, so the first dispatch after a batched edit folds once.
+
+**Verification 11:2x–11:4x** (gated, `target-nde-s3-w1g`):
+- `cargo check -p semio-framework-os-kernel --lib`: 0 errors. A transient red at ~11:20 was my in-flight wave, completed
+  at once.
+- Kernel lib, all tests: **1254 ok / 2 FAIL**. Both failures are peers':
+  - `outbound_announcement…exactly_once` asserts `steps >= 22`, but S3-CLOSURE's coalesce removal cut the fixture to 14
+    steps (`🧪️tests/📤️outbound-announcement/🦀️.rs` ≈144);
+  - `sqlite_snapshot…native_input_retained_materialization…` panics at
+    `📜️space-history/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:62`, where the native sqlite work is uncommitted
+    peer churn.
+- `retained_clone_tests` overflow the default 2 MiB test stack (pre-existing, not mine). With `RUST_MIN_STACK=256MiB`
+  they pass 11/11.
+- `close_test_store`'s hang guard went from 65 536 to 2²⁴ steps, because a 2000-edit store needs more single-item close
+  steps.
+
+## Session 4 — 2026-10-04
+
+Successor S4-STORE (Opus), coordinator `⚪487b04ad…`. Brief: `📓️s4-resume.md` §7 S3-W1G, §4 D7/D8/D10/D22. Scratch output:
+`🗑️generated/s4-store/`.
+
+### Repair (rule 34, 02:1x)
+
+- `git diff HEAD --stat` over `🏪️store`, `📡️spr/📜️history`, `🌿️vcs`: 150 files, all staged; the only unstaged file is the
+  peer's `📜️space-history/…/🧪️tests/🪶️sqlite/🟦️.ts` (Codex sqlite work, 02:01). Files newer than the session-3 tail are peer
+  waves (value/DSL extraction 23:25, sqlite/child owner 00:27–01:30); no half-finished W1G edit found (checked by compiling, below).
+- `SEMIO_DEBUG_STORE_UNITS`: 0 sites in store/spr/vcs/plugin (W1G-1 probes stay deleted).
+- `cargo check -p semio-framework-os-kernel --lib` (shared target, 02:19–02:21): **0 errors** (587 warnings, peer files).
+
+### W1G-10 host cold-pair wait: wall deadline + backoff (02:30–02:45, `🏪️store/👷️worker/🟦️.ts`)
+
+- `COLD_PAIR_LOADING_TURN_LIMIT` is replaced by `ColdPairWaitPolicy { deadlineMs, maximumTurns, eagerTurns, backoffMs,
+  maximumBackoffMs, now, sleep }` and `COLD_PAIR_WAIT_POLICY` (5 min wall, turn cap `1<<20` as the secondary bound,
+  4096 eager turns ≈ 20 s of continuous folding, then 1 → 64 ms exponential backoff). `coldPairWaitDelay(policy, turn)` is the
+  closed form; `coldPairWaitTurn` refuses at the cap or the deadline and never sleeps past the deadline.
+  `settleColdPairLoading` and `retryColdPairBackpressure` take the policy instead of a turn limit; errors name the bound
+  (`still loading after 300000 ms (n turns)` / `… after n turns`, `cold page still refused after … attempts`).
+- Corpus `👷️worker/🧫️fixtures/🧫️cold-pair-loading/🔣️.json`: `limit` → `policy`, per-case `policy` overrides and fake-clock
+  `turnMs`, every expectation pins `sleeps`; new cases `backoff-after-the-eager-turns`, `loading-past-the-wall-deadline`,
+  `backoff-never-sleeps-past-the-deadline`, `resends-back-off-after-the-eager-turns`, `refused-past-the-wall-deadline` (17 cases).
+  Schema `👷️worker/🧬️schema/🔣️cold-pair-loading/🔣️.json` updated (Ajv strict).
+- Law `👷️worker/🧪️tests/🧪️cold-pair-loading/🟦️.ts`: fake clock; new fast-check property (200 runs) — the pauses follow the
+  closed-form schedule and a stuck guest is refused within one turn of the wall deadline.
+- Verified: os TS `bun ./📜️script.ts test 🏪️store/👷️worker` **19 passed, 0 failed** (was 18; +1 property); `tsc -p
+  🧪️s3-w1g-typecheck-cold-pair-loading.tsconfig.json` **0 errors**.
+
+### D7 hold (coordinator relay 02:50)
+
+S4-PUZZLE found the publication unit census (`🔌️plugin/🦀️.rs` region `📊️PublicationUnitCensus`) used process-wide atomics, so
+the session-3 "22 vs 1590" may be contamination from parallel laws; the census is now thread_local and PUZZLE re-measures once
+puzzle 3d compiles. No D7 root fix until those numbers arrive.
+
+### Verification and store fixes (02:2x–03:15)
+
+**Full kernel lib** (`RUST_MIN_STACK=268435456 CARGO_INCREMENTAL=0 CARGO_TARGET_DIR=…/target-nde-s4-store cargo test -p
+semio-framework-os-kernel --lib`, compiled 02:2x before the edits below): **1190 passed / 7 failed** — all 7 are peers':
+`os_dsl … controlled_refusal` (refusal text `value.refused field`), `os_pack … schema_storage_tests::schema_hash…`,
+`durable_group ×2` (canonical hash / unbound bytes changed by the value refactor, R-2), `sqlite_snapshot_space_history…preflight`
+and `native_encoding_tests::sqlite…` (Codex sqlite work), `interaction_state_pack_matches_first_party_value_and_json_oracle`
+(pack bytes of the value refactor). Log: `🗑️generated/s4-store/kernel-lib-all-1.txt`.
+
+**W1G-7** (`🏪️store/🦀️.rs` region `🔖️DeferredReprojection`): `adopt_pending`'s projection-failure arm now takes the remote
+transitions back out of the log (`extract_if`) and hands them to `refuse_local_step`, so a refused local step leaves its remote
+transitions waiting (they were dropped). `defer_local_step`'s synchronous adoption sets `last_projection_cause = Replay` like
+`step_reprojection`.
+
+**W1G-8** (one identity rule): `advance_apply_batch` stamps `stamp_primary_operation_identity` on the staged edit before its
+revision digest (`PreflightingCommit`, not amending, not opening a transaction) and on the open edit when a batch closes its
+transaction; a one-mutation batched gesture is now named after its edit like `Apply` and `CommitTransaction`, so a remote
+replica's one-forward edit resolves transitions naming it. Unit laws updated: `artifact_store_batch_publication_of_one_mutation…`
+(one-item id = edit id; a two-item gesture keeps `#0/#1`), `…stamped_publication…` (unstamped one-item = edit id).
+
+**W1G-9**: law `supersede_replay_tests::a_viewer_head_round_trips_through_the_spr_pack` (alternative + explicit checkpoint
+survive `.spr` `REC_VIEWER`, reload shows the same projection/supersessions, `.ops` hydrates to the trunk tip);
+`test_support::assert_document_pack_round_trip` now asserts the parsed pack's viewer head and compares pack vs text only on the
+trunk tip.
+
+**W1G-5** (three §15 scenarios, `🧪️tests/🧪️tool-transaction/🦀️.rs`):
+- `an_abort_restores_the_redo_stack_and_the_cursor_on_both_routes` (command + batched): redo stack, persisted cursor, order,
+  projection, revision restored; redo/undo step as before. It found a trace: an abort left the open's local actor in place
+  (batched authority actor ≠ `Apply` actor → `NothingToRedo`). Fix: `OpenToolTransaction.previous_actor` (set on both open
+  routes), restored by `abort_open_transaction`.
+- `remote_edits_that_landed_under_an_open_transaction_survive_its_abort` (later + earlier clock; equals a replica of the shared
+  log, nothing announced, persisted forms agree, live = replay).
+- `a_transaction_streaming_while_a_local_step_waits_never_starves_it`: was a real starvation (every tick restarted the waiting
+  replay). Fix: `continue_pending_replay_across_append` (command `append_transaction` and the batched amend publish) re-keys a
+  waiting replay started against the pre-tick revision and `EditReplay::absorb_tail_growth` counts the appended ops (the grown
+  tail edit is read by id; cached ids reset; the convergence probe, whose head predates the tick, is dropped).
+
+Verified 03:12: `cargo test -p semio-framework-os-kernel --lib -- tool_transaction_tests deferred_reprojection_tests
+supersede_replay_tests dispatch_group_stamps_one_tool_transaction os_spr::history::tests artifact_store_batch_publication
+artifact_store_stamped_publication hot_path_tests` **103 passed, 0 failed** (`kernel-filters-3.txt`).
+Rule 39 check 03:15: `cargo check -p semio-framework-os-kernel --lib` RED from a peer only — `🧰️framework/🔨️modules/🚪️io/🦀️.rs`
+2089/2095/2719/2736 E0308 (`IoOutcome<(Cow<[u8]>, ArchiveChildren)>` vs tuple, mtime 03:10); reported to `main`.
+
+### Owed runs, continued (03:15–03:25)
+
+- os TS `bun ./📜️script.ts test-store-oracles`: **7 pass, 0 fail** (3708 expects).
+- `cargo test -p semio-framework-replication --lib`: **264 passed, 0 failed**.
+- Replication TS (`SEMIO_VITEST_POLICY=repositoryVitestPolicyV1(cwd) SEMIO_TEST_BUDGET_MS=400000 bun ./📜️script.ts test
+  --reporter=verbose`): first **20/21** (R-1), then **21/21** after the fix below.
+- **R-1 closed**: `🔗️causal/🧫️fixtures/🧮️document-backbone-batch-v1/🔣️.json` case `trailing-flags-invalid` used flags `04`, which
+  is the `line` flag the per-viewer wave added (bit 2), so the TS decoder read a line and answered `truncated`; the first invalid
+  flag is `08`. (The Rust twin accepts any `Malformed` for a malformed row; tightening it to the reason showed the Rust varint
+  errors use another vocabulary — `Pack(Malformed{varint…})` — so it stays as it was; noted for a separate twin-alignment task.)
+
+### D22 — O(change) undo/redo, stepped replay prefix (03:20–04:15, `🏪️store/🦀️.rs`)
+
+**Tail steps without folding the log.** `install_transitions` first asks `tail_step(envelope)`: a single locally authored
+`Revert`/`Reinstate` changes nothing but the applied tail when the fold is live (`fold_is_live`, not detached, line tip, no
+open transaction), the transition sorts after every event, and it names exactly the operations of the applied tail (undo) or
+of the redo top a tail step just moved there with nothing happening since (redo: `tail_step_generation == generation`), authored
+by the edit's own actor — then the fold rule moves exactly that edit between the stacks. `adopt_tail_step` adopts it without
+`fold_live_log`: undo projects through the tail snapshot or `live_prefix_state` (nearest pruned ring entry or genesis folded
+forward, recording the ring on its stride with digests chained from the base's digest — no whole-history hashing), redo folds
+the edit's effective forwards onto the head and keeps the head as the tail snapshot; the edit's inverse and messages stand
+(their base is unchanged). New primitives `pop_applied_edit_id`, `push_redo_edit_id`, `pop_redo_edit_id` keep
+`StackMirrorDirt`/`prefix_ring_dirty_from` exact. Retirement order matters (first run caught it: a redo that replaced the head
+before installing the tail snapshot left an aliased root in an exact retirement → store close stuck): undo replaces the head then
+clears the cache; redo installs the cache then replaces the head. The test-build oracle `assert_mirrors_are_live` (≤ 256 edits)
+re-checks every tail step against the full fold; `assert_prefix_entry_is_live` (test builds) re-checks every ring entry the
+digest-free readers trust.
+
+**Stepped replay prefix** (`📓️api-deferred-history-replays.md` §4, the "ring-stride prefix fold"): `EditReplay::new_after_prefix`
+starts from the live base nearest before `from` (`live_base`: head, tail snapshot, pruned ring entry, genesis) and folds the
+rest of the prefix itself inside `step` — under the same deadline and recording the ring — so `report_replay` (finalize dry run,
+reprojection, deferred steps, `begin_report_replay`) no longer folds up to a stride and hashes the whole history synchronously
+before its first budget. The convergence probe uses the pruned ring directly (no `forward_prefix_digests`); a tail-only removal
+(`adopt_reprojection`) projects through `live_prefix_state` and `admit_prefix_snapshots` (`prefix_projection` deleted;
+`retain_prefix_snapshots` split into digest + `admit_prefix_snapshots`). Every caller's `from` lies at or before the first
+position where the replayed order or inputs leave the live history (`replay_window`), so the live prefix is the replayed one.
+`forward_prefix_digests` now composes `forward_prefix_genesis` + `forward_prefix_step` (same digests).
+
+**Law** `⚡️hot-path` corpus vector `undo-redo-stream` (schema kinds `undo`/`redo`): 50 undos + 50 redos after 2000 edits —
+**folds 0, digested 1875** (one ring seeding: the second undo folds from the genesis past the tail snapshot, recording 15 stride
+snapshots; every later undo folds ≤ one stride from the ring and hashes nothing), mirrored 100, rebuilt 100; the law also checks
+live = replay at the end.
+
+**Peer-change test pins** (CLOSURE-4 made batch over-declaration refuse with the typed `VcsError::TooLarge`): updated
+`artifact_store_batch_fold_refuses_a_one_work_item_declaration…` (`TooLarge { rows: 2, capacity: 1 }`) and
+`artifact_store_batch_commit_refuses_an_under_declared_multi_item_gesture…` (`TooLarge { rows: 6, capacity: 3 }`).
+
+Still O(history) per interior step: `fold_live_log` (any transition other than a tail step), `replay_window`'s
+`superseded_positions`, and the digest of `retain_prefix_snapshots` at replay adoption (one pass per adopted replay, which is
+itself O(suffix)).
+- Verified 04:27 (`kernel-lib-all-4.txt`): full kernel lib **1197 passed / 7 failed**, all 7 peers' (dsl refusal text; channel
+  `document_identity_wire…v20_fixture` 20 vs 21 = S4-BUMP's channel bump; durable_group ×2; sqlite ×2; interaction-state pack).
+  The hot-path law (incl. `undo-redo-stream`) and the two `TooLarge` pins pass. 06:45–07:03 (after the cut): `cargo check -p
+  semio-framework-os-kernel --lib` native **0 errors** and `--target wasm32-wasip2` **0 errors**.
+
+### Resume 06:45 (cut 04:15–06:45) and `[DEBUG]` removal
+
+- The stepped-prefix patch had already landed at 04:12 (kernel check green, full lib 04:27 above); nothing was half-written.
+- `[DEBUG]` removed from my trees: `🌿️vcs/🧪️tests/🔬️unit/🦀️.rs` (2 `eprintln!`), `🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs`
+  (1 `println!`), `📡️spr/🎮️command/🧪️tests/🗣️verb-vocabulary/🟦️.ts` (3 summary lines keep their text without the prefix),
+  `🏪️store/🧷️assembly/⏳️lifetime/🧫️fixtures/🧑️client/{explicit-release,valid-order}/🦀️.rs` (fixture output; the law matches the
+  substring after the prefix). Left on purpose (active Codex sqlite work, 01:28–02:01 today, not mine):
+  `🏪️store/📜️space-history/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/{🦀️.rs:118,429, 🟦️.ts:43,81,97,121}` — coordinator: the owner removes them.
+
+### W1G-2 / W1G-4 — one retained-initializer mechanism (07:00–08:30)
+
+**Finding.** The 8 plugin-owned store initializers (writer, gismap, jack, generation2d, generation3d, process3d, drawing,
+raster) folded the ORIGINAL forwards: a superseded or withdrawn operation reloaded with its old input through the plugin's own
+initializer (design §3.1 "effective forwards everywhere" — the archive load / persisted replacement path of those apps). The
+`ValidateEditPair` copies themselves were already gone (shared `ArtifactStoreInitializationEditIndex::admit`, coverage gate
+names updated, 10-03 ~11:57).
+
+**Store (`🏪️store/🦀️.rs`, initializer runtime):** `ArtifactStoreInitializationRuntime::fold_supersession_step(envelope,
+transition)` — one transition per job step, `(hlc, id)` order checked, `Supersede` inputs scoped to the document or this
+replica's line become effective (later wins), a target no operation carries matches nothing (the store's first full fold refuses
+such a log, as before W1G); `effective_forward(edit, index, schema)` — the effective input for initializers that apply ops
+themselves; `fold_forward(edit, index, schema, max_bytes)` — keep-and-record fold of the effective input
+(`ArtifactStoreInitializationForward::{Exhausted, Folded{displaced, fuel}}`); `ArtifactStoreInitializationEditIndex::retire_step`
+(bounded index release).
+
+**Framework initializer (`🔌️plugin/🦀️.rs` `BoundedStoreInitializationAuthority`):** phases CloneInitial → SeedHistory →
+FoldSupersessions{transition} (stepped; the whole-log `fold_envelope_history` single step is gone, W1G-4) → CountApplied{position}
+(the O(history) `applied_operation_count` sum is gone, W1G-4) → FindApplied → ApplyForward (`fold_forward`) → CommitApplied
+(`push_applied_edit`: the store's CANONICAL revision record) → FindRedo → CommitRedo (`push_redo_edit`) → ReleaseEditIndex (64 per
+step, W1G-4) → BuildCandidate; the canonical initial digest (`semio_framework_hash::hash(encode_pack)`), so a retained reload names
+the same content revision as a whole load. HashInverse/HashRedo phases and `edit_digest` deleted.
+
+**8 plugin initializers** (script `🧪️s4-store-plugin-initializer-supersessions.py`, idempotent, `--check`): each gets
+`FoldSupersessions{transition}` after seeding; writer/gismap/jack apply through `fold_forward` (no more refusal of a reload on a
+Fatal-outcome op — keep-and-record like every fold site); generation2d/generation3d/process3d keep their in-place appliers fed with
+`effective_forward(...).operation()` (withdrawn/faulted → skipped); drawing/raster keep their stepped candidates fed with the
+effective input (withdrawn skips the candidate). Their per-op digest scheme is unchanged (local identity only).
+
+**Laws:** `🔌️plugin/🧪️tests/🧪️bounded-reload` — the law op now delegates `may_emit_foreign_steps` (it supersedes; the law had
+never run green: "plans foreign steps"), and asserts `reloaded.content_revision_now() == whole.content_revision_now()` (a store
+loaded in one piece from the same pair). `🧾️document-archive-load-legs` row labels follow the leaves (`Set count to 1`, …; the
+law predated §20.6). Generic reload-after-supersede law for every plugin → S4-AGNOSTIC adds it to `history-edit-acceptance`
+(`acceptance_scenario`: reload the overwrite/alternative through `acceptance_reloaded` = the app's own initializer, head == fresh fold).
+
+**Checks:** `cargo check -p semio-framework-os-kernel -p semio-framework-plugin --lib` (07:55–08:00) **0 errors**; plugin
+`--target wasm32-wasip2` (07:10) **0 errors**; batched 8-crate `--lib` native (08:16–08:29): writer, jack, drawing, raster **0
+errors**; generation2d (5), generation3d (9), gismap (62) red ONLY from the peer value refactor (`os_dsl::DslValue/ToValue/
+FromValue` private, `close_step`/`from_value` signatures) — my arms not reached by type check; process3d not reached (dep
+`stdio-ifc` `🚦️native/🦀️.rs:78,81,142,145` TextError vs ValueError). Plugin `--lib` reload/archive laws ran once at 07:49 (5 pass /
+3 fail → fixed above); re-run OWED (rule 43 checks only).
+
+### Time-travel routing (coordinator 08:15)
+
+(a) `ValidationFailed("…displaced-owner fixed retirement authority is saturated")` in 3 plugin time-travel laws: the store drained
+displaced owners only in runtime maintenance turns, and a burst of changes without turns (600 Applies driven directly, ~3 owners
+each) fills the fixed 1024 queue. Fix: `bump()` → `relieve_displaced_pressure()` retires ≤ `DISPLACED_RELIEF_STEPS` (16) one-item
+steps of 4 KiB while the queue is under pressure (≥ 256), O(change), a blocked owner stops it; no capacity constant raised. Laws
+OWED (rule 43). (b) `a_history_edit_is_its_own_row…` pack reload `revertible` true: the archive load's adopted candidate takes the
+local actor from the tail applied edit (every initializer always did; the old `reset` path kept the live actor) — routed to
+S4-RUNTIME: carry the replaced store's `local_actor_id()` into the adopted candidate.
+
+### os-host wasip2 red (coordinator 11:35, rule 39)
+
+`🖥️host/🦀️.rs` (crate `semio-framework-os`, wasm-only paths): the two `ArtifactEnvelopeOwners` literals lacked `viewer_checkpoint_id`
+and `fold_event_log` lacked its `ViewerHead` — callers of the session-3 per-viewer change. Fixed (+ `🖥️host/🧪️tests/🔬️host-unit`);
+repo-wide grep finds no other literal or caller. `cargo check -p semio-framework-os --lib --target wasm32-wasip2` (11:42–12:03)
+**0 errors**; native re-check failed only on infra (a swept build dir, disk 2.8 GiB) — OWED.
+
+### F3 — canonical revision in every retained initializer (12:20–13:05, audit `📓️audit-s4-core.md` F3)
+
+- Store: `artifact_initial_digest(&P)` / `artifact_initial_digest_of_pack` — ONE genesis identity for every load path (whole load
+  sites + framework initializer + all 8 plugins); `push_applied_admitted(id, edit)` / `push_redo_admitted(id, edit)` beside
+  `push_applied_edit` / `push_redo_edit` (canonical effective record, for callers that copied the id under their own grant); the raw
+  `push_applied(id, digest)` / `push_redo` are now private (no plugin can name a non-canonical record again).
+- 8 plugin initializers (script `🧪️s4-store-plugin-initializer-revision.py`, idempotent, `--check` = pending none): the
+  `HashInverse`/`HashRedoForward`/`HashRedoInverse` phases, the `edit_digest`/`initial_digest` fields and their domain digests are
+  deleted; commits use the canonical records; the genesis identity is `artifact_initial_digest`. Per family:
+  - writer, gismap, jack: clone steppers lose their digest parameter (jack's per-phase observe block deleted);
+  - generation2d, generation3d, process3d: copy steppers lose the digest, the `*_observe_*` helper families (≈ 250 / 270 / 120
+    lines) and the three tests that only proved those helpers deterministic are deleted;
+  - drawing: `HashInitialSchema`/`HashInitialId` deleted, `CommitApplied`/`CommitRedo` carry their edit and use the admitted-id
+    pushes (the arena-copied ids stay), the mutation digest prelude of `ApplyForward` deleted (`DrawingMutationDigestAuthority`
+    stays: the preflight path uses it);
+  - raster: `RasterMutationDigestAuthority` (only the initializer used it) deleted, the snapshot and layer clone steppers lose
+    their digest (the candidate authority's two throwaway digests go too), unit tests updated.
+- Gates: root `📜️script.ts` envelope gates pinned `…Phase::ValidateEditPair` (stale since 10-03, so `verify interactivity tool-jobs`
+  could not pass) → `…Phase::ValidateEdit { index }` + `self.edit_index.admit(&envelope.vcs.edits, index,` (writer, jack ×2,
+  gismap, raster, drawing); the raster digest-authority pin dropped there and in the `🔬️tool-job-coverage` fixture.
+- Law: the framework `bounded-reload` law asserts reloaded revision == whole-load revision; the per-plugin equivalent rides the
+  G12 reload extension (S4-AGNOSTIC: compare `reloaded.store.content_revision_now()` with the source's).
+- **OWED (rule 44 cargo freeze):** `cargo check -p semio-framework-os-kernel -p semio-framework-plugin --lib` (+ wasip2), the batched
+  8-crate check native + wasip2, `bun nx run workspace:verify -- interactivity tool-jobs`; tests per rule 43.
+- **process3d typed retirement fault (coordinator, folded into F3):** in `💾️binary/🦀️.rs` region `🔖️RetainedConstruction`, the
+  inherent `Process3dSnapshotCopyCursor::close_step` now returns `Result<_, semio_framework_value::ValueError>`. In
+  `🔖️RetainedStoreInitialization`, its only caller `pump_terminal_retirement` and `pump_active` now return `Result<bool, ValueError>`
+  (writer's pattern): the `map_err(ValueError::into_message)` hops are gone, and each String refusal (false terminal ×6, exceeded
+  grant, disposer fault) is `ValueError::new(ValueRefusalKind::InvariantViolated, …)`. The 3 call sites (step prologue, the
+  `RetireCancelled|RetireFault` arm, `close_step`'s `Fault`) take `into_message()`. Proof so far: a parse check only
+  (`rustfmt --edition 2024 --emit stdout` < file, exit 0). The crate check is OWED (rule 44; process3d is also still blocked by
+  stdio-ifc).
+- **Region release (14:xx):** F3 has released the 8 plugin initializer regions and the framework initializer region, and
+  `main` has been told.
+
+### W1G-6: language-agnostic N17 corpus, third-party twin, fast-check (14:xx)
+
+- **Corpus** `🏪️store/🧫️fixtures/🧫️deferred-reprojection/🔣️.json` (12 cases, 22 steps) and **schema**
+  `🏪️store/🧬️schema/🔣️deferred-reprojection/🔣️.json`. Each case authors a history (runs of local or other edits) and defers local and
+  remote replays by a budget (`null` means undeferred). Each step is one of undo, redo, finalize, finalize as an alternative, trunk
+  switch or remote supersession, with an optional interrupt after k turns (discard, cancel, or an edit that lands on the history
+  from before the step). Each step expects R (the replay total), `waits`, `turns`, `refused`, the state, applied edits and
+  supersessions.
+- **Stepping contract, taken from the code** (`EditReplay::step` asks the deadline after every operation; `turn_ends` is
+  `replayed >= operations`; closing an edit folds nothing; dispatch and ingest each fold the first turn, see
+  `defer_local_step` / `admit_remote_transitions`): a step waits iff R >= B, needs floor(R/B) turns after its dispatch, and
+  floor(R'/B)+1 turns once restarted by a cancel or an edit. Edge cases the corpus pins:
+  - R == B still waits one closing turn.
+  - R == B-1 adopts inside the dispatch.
+  - Multi-operation edits close without spending budget.
+  - A tail undo needs no replay.
+  - Every case changes position 0 or the live head, so no retained prefix can shorten R and the numbers are exact.
+- **TS twin** `🏪️store/🧪️tests/🧪️deferred-reprojection/🟦️.ts`:
+  - Ajv validates the corpus.
+  - An independent history model folds every step with fast-json-patch and steps it with the store's rule.
+  - A coverage law checks the corpus has waiting, short, exact-budget, one-under, multi-op, discard, cancel, edit, refused,
+    every command kind, remote and undeferred steps.
+  - fast-check: over random histories and budgets, the stepped replay ends at the one-shot fold, its turns sum to R, each turn
+    folds at most B, and there are floor(R/B) turns after the dispatch.
+  - fast-check: every corpus case adopts the same history under any budget.
+  - It is registered in the os TS `test-store-oracles` (`📦️packages/🟦️typescript/📜️script.ts` list + `📋️project.json` inputs).
+- **Rust corpus law, staged and not saved** (rules 43/44: test code cannot be checked while cargo is frozen):
+  - Script `🧪️s4-store-deferred-reprojection-corpus-law.py` is idempotent; `--check` reports `pending: inverse, law`.
+  - It inserts `every_deferred_reprojection_corpus_case_waits_turns_and_adopts_as_the_corpus_says` into region
+    `🧪️DeferredLocalStepLaws`. The law uses CountedOp authors `local`/`other`, defers both replay kinds, asserts that the view is
+    unchanged while waiting, `progress.total == R`, the exact turns, `Rejected { Normal }`, and `assert_live_equals_replay`.
+  - It also normalizes the codemod-mangled `CountedOp::inverse` body.
+  - The resulting file parses (`rustfmt --emit stdout` on stdin, exit 0).
+  - OWED: run the script, then `cargo test -p semio-framework-os --lib every_deferred_reprojection_corpus_case`.
+- Verified:
+  - `bun test ./🏪️store/🧪️tests/🧪️deferred-reprojection/🟦️.ts`: **5 pass, 0 fail** (1836 expects).
+  - Negative control: the stepping rule changed to `replayed > cap` gives **3 fail, 2 pass**, as expected.
+  - os TS `bun ./📜️script.ts test-store-oracles`: **12 pass, 0 fail** (5268 expects; was 7).
+  - `tsc -p 🧪️s4-store-typecheck-deferred-reprojection.tsconfig.json` (781 files, both twins listed): **0 errors**.

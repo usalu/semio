@@ -3,20 +3,92 @@
   "$id": "semio.framework.table.editable-text-cell.v1",
   "title": "Table Editable Text Cell",
   "type": "object",
-  "required": ["kind", "value", "action"],
+  "required": [
+    "kind",
+    "value",
+    "action"
+  ],
   "properties": {
-    "kind": { "const": "editableText" },
-    "value": { "type": "string" },
+    "kind": {
+      "const": "editableText"
+    },
+    "value": {
+      "type": "string"
+    },
     "action": {
       "type": "object",
-      "required": ["controllerId", "action"],
+      "required": [
+        "controllerId",
+        "action"
+      ],
       "properties": {
-        "controllerId": { "type": "string", "minLength": 1 },
-        "action": { "type": "string", "minLength": 1 },
-        "args": { "type": "object", "additionalProperties": true }
+        "controllerId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "action": {
+          "type": "string",
+          "minLength": 1
+        },
+        "args": {
+          "type": "object",
+          "additionalProperties": true
+        }
       },
       "additionalProperties": false
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "$defs": {
+    "acknowledgements": {
+      "type": "object",
+      "required": [
+        "initial",
+        "first",
+        "latest",
+        "remote",
+        "unsubmitted",
+        "commandsAfterEnterAndBlur",
+        "commandsAfterNextBlur",
+        "draftAfterFirstEcho",
+        "conflictAfterFirstEcho",
+        "dirtyAfterFinalEcho"
+      ],
+      "properties": {
+        "initial": {
+          "type": "string"
+        },
+        "first": {
+          "type": "string"
+        },
+        "latest": {
+          "type": "string"
+        },
+        "remote": {
+          "type": "string"
+        },
+        "unsubmitted": {
+          "type": "string"
+        },
+        "draftAfterFirstEcho": {
+          "type": "string"
+        },
+        "commandsAfterEnterAndBlur": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "commandsAfterNextBlur": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "conflictAfterFirstEcho": {
+          "type": "boolean"
+        },
+        "dirtyAfterFinalEcho": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
 }

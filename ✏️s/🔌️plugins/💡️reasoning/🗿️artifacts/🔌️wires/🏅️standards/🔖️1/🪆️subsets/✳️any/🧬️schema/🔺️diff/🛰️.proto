@@ -1,11 +1,3 @@
 syntax = "proto3";
 package semio.s.reasoning.wires.diff;
-import "🧰️framework/🔨️modules/🌱️value/🧬️schema/🛰️.proto";
-import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
-import "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
-message WiresDiff {
-  semio.s.reasoning.wires.artifact.WiresArtifact artifact = 1;
-  semio.framework.value.DslValue wires_fixture = 2;
-  semio.os.store.ArtifactChild content = 3;
-  semio.framework.value.DslValue meta = 4;
-}
+message WiresDiff {}

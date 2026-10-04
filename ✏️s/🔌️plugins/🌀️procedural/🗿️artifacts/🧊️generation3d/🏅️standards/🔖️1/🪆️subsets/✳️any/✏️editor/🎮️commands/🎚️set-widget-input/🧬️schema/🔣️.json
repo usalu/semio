@@ -28,9 +28,276 @@
         "z"
       ]
     },
-    "gesture": {
-      "type": "string"
+    "operation": {
+      "enum": [
+        "set",
+        "add",
+        "remove",
+        "move"
+      ]
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1023
+    },
+    "destination": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 599999
+    },
+    "facet": {
+      "enum": [
+        "port",
+        "variableName",
+        "variableSchema",
+        "exportFormat",
+        "meshSource"
+      ]
+    },
+    "path": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      }
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "required": [
+          "facet"
+        ],
+        "properties": {
+          "facet": {
+            "enum": [
+              "variableName",
+              "variableSchema",
+              "exportFormat"
+            ]
+          }
+        }
+      },
+      "then": {
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "component"
+              ]
+            },
+            {
+              "required": [
+                "index"
+              ]
+            },
+            {
+              "required": [
+                "destination"
+              ]
+            },
+            {
+              "required": [
+                "operation"
+              ]
+            },
+            {
+              "required": [
+                "path"
+              ]
+            }
+          ]
+        },
+        "properties": {
+          "value": {
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "\\S"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "facet"
+        ],
+        "properties": {
+          "facet": {
+            "const": "variableName"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "channel": {
+            "const": "name"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "facet"
+        ],
+        "properties": {
+          "facet": {
+            "const": "variableSchema"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "channel": {
+            "const": "schema"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "facet"
+        ],
+        "properties": {
+          "facet": {
+            "const": "exportFormat"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "channel": {
+            "const": "format"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "facet"
+        ],
+        "properties": {
+          "facet": {
+            "const": "meshSource"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "channel": {
+            "enum": [
+              "text",
+              "data"
+            ]
+          },
+          "path": {
+            "items": [
+              {
+                "enum": [
+                  "vertices",
+                  "faces",
+                  "attributes",
+                  "materials",
+                  "textures"
+                ]
+              }
+            ],
+            "additionalItems": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          }
+        },
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "component"
+              ]
+            },
+            {
+              "required": [
+                "index"
+              ]
+            }
+          ]
+        }
+      },
+      "else": {
+        "not": {
+          "required": [
+            "path"
+          ]
+        },
+        "properties": {
+          "destination": {
+            "maximum": 1023
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "facet",
+          "operation",
+          "path"
+        ],
+        "properties": {
+          "facet": {
+            "const": "meshSource"
+          },
+          "operation": {
+            "const": "add"
+          },
+          "path": {
+            "minItems": 2,
+            "maxItems": 2,
+            "items": [
+              {
+                "const": "attributes"
+              },
+              {}
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "value": {
+            "anyOf": [
+              {
+                "enum": [
+                  "uv",
+                  "normal",
+                  "color",
+                  "number",
+                  "text",
+                  "boolean",
+                  "vector"
+                ]
+              },
+              {
+                "pattern": "^(number|text|boolean|vector)/(vertex|face|edge|corner)$"
+              },
+              {
+                "pattern": "^material/.{1,128}$"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
 }
-

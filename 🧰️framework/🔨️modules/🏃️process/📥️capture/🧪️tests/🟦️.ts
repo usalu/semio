@@ -49,7 +49,7 @@ for (const row of fixture.cases) test(`owned process capture matches independent
   const started = Date.now();
   const options = { cwd: root, env: process.env, budgetMs: row.budgetMs, maxOutputBytes: row.maximumBytes, stdoutPath: join(root, "stdout"), stderrPath: join(root, "stderr"), cancelled: () => row.cancelAfterMs !== null && Date.now() - started >= row.cancelAfterMs };
   const result = await captureOwnedProcess(row.id === "spawn-error" ? join(root, "absent-process") : "node", ["-e", row.source], options);
-  expect(result.reason).toBe(independent.reason);
+  expect<string>(result.reason).toBe(independent.reason);
   if (row.id !== "spawn-error") expect(result.status).toBe(independent.status);
   if (row.stdout !== null) expect(result.stdout).toBe(independent.stdout);
   if (row.stderr !== null) expect(result.stderr).toBe(independent.stderr);

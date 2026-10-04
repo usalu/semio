@@ -1,0 +1,140 @@
+{
+ "preparation": [
+  {
+   "source": "group full affine",
+   "phase": "fresh",
+   "offset": 0
+  },
+  {
+   "source": "group full affine",
+   "phase": "layers",
+   "offset": 0
+  },
+  {
+   "source": "group full affine",
+   "phase": "paint",
+   "offset": 0
+  },
+  {
+   "source": "group full affine",
+   "phase": "references",
+   "offset": 0
+  },
+  {
+   "source": "group full affine",
+   "phase": "validation",
+   "offset": 0
+  },
+  {
+   "source": "group full affine",
+   "phase": "cycles",
+   "offset": 0
+  },
+  {
+   "source": "group full affine",
+   "phase": "complete",
+   "offset": 0
+  },
+  {
+   "source": "authored path",
+   "phase": "geometry",
+   "offset": 2
+  },
+  {
+   "source": "shared asset geometry",
+   "phase": "assets",
+   "offset": 8
+  },
+  {
+   "source": "boolean preserves operands",
+   "phase": "references",
+   "offset": 2
+  },
+  {
+   "source": "group full affine",
+   "phase": "failure",
+   "maxDepth": 1,
+   "offset": 0
+  },
+  {
+   "source": "authored path",
+   "phase": "failure",
+   "maxSegments": 1,
+   "offset": 0
+  },
+  {
+   "source": "group full affine",
+   "phase": "cancelled",
+   "offset": 8
+  }
+ ],
+ "vector": [
+  {
+   "source": "actual traced geometry is a Boolean operand",
+   "phase": "fresh",
+   "offset": 0
+  },
+  {
+   "source": "actual traced geometry is a Boolean operand",
+   "phase": "preparing",
+   "offset": 0
+  },
+  {
+   "source": "actual traced geometry is a Boolean operand",
+   "phase": "tracing",
+   "offset": 0
+  },
+  {
+   "source": "actual traced geometry is a Boolean operand",
+   "phase": "algorithms",
+   "offset": 0
+  },
+  {
+   "source": "actual traced geometry is a Boolean operand",
+   "phase": "complete",
+   "offset": 0
+  },
+  {
+   "source": "actual traced geometry is a Boolean operand",
+   "phase": "preparing",
+   "checkpoint": "closing",
+   "offset": 1
+  },
+  {
+   "source": "actual traced geometry is a Boolean operand",
+   "phase": "tracing",
+   "checkpoint": "closing",
+   "offset": 1
+  },
+  {
+   "source": "actual traced geometry is a Boolean operand",
+   "phase": "algorithms",
+   "checkpoint": "closing",
+   "offset": 1
+  },
+  {
+   "source": "actual traced geometry is a Boolean operand",
+   "phase": "failure",
+   "maxWork": 1,
+   "offset": 0
+  },
+  {
+   "source": "actual traced geometry is a Boolean operand",
+   "phase": "failure",
+   "maxEdges": 1,
+   "offset": 0
+  },
+  {
+   "source": "group full affine",
+   "phase": "complete",
+   "offset": 0
+  },
+  {
+   "source": "actual traced geometry is a Boolean operand",
+   "phase": "cancelled",
+   "offset": 8
+  }
+ ],
+ "minimumPreparationWork": 12,
+ "minimumVectorWork": 3
+}

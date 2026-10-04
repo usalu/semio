@@ -8,7 +8,7 @@ use protocol::SemanticMutation;
 fn direct_owner_descriptors_and_catalog_correspond() {
     let mutation_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
     let catalog_source = std::fs::read_to_string(mutation_root.join("../../🔮️oracles/🔣️.json")).expect("language-neutral oracle catalog");
-    let catalog: pack::json::Value = pack::json::parse(&catalog_source).expect("language-neutral oracle catalog must be valid JSON");
+    let catalog: semio_framework_pack_json::Value = semio_framework_pack_json::parse(&catalog_source, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-neutral oracle catalog must be valid JSON");
     let catalog_kinds: Vec<String> = catalog["mutationCatalogs"][0]["kinds"].as_array().expect("catalog kinds").iter().map(|kind| kind.as_str().expect("catalog kind is a string").to_string()).collect();
     let descriptors = EnergyModelMutation::kinds();
     assert_eq!(descriptors.len(), KINDS.len());
@@ -19,9 +19,9 @@ fn direct_owner_descriptors_and_catalog_correspond() {
         let owner = mutation_root.join(directory);
         let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
         let descriptor_source = std::fs::read_to_string(owner.join("🔣️.json")).expect("direct language-neutral descriptor");
-        let descriptor: pack::json::Value = pack::json::parse(&descriptor_source).expect("direct descriptor must be valid JSON");
+        let descriptor: semio_framework_pack_json::Value = semio_framework_pack_json::parse(&descriptor_source, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("direct descriptor must be valid JSON");
         let payload_schema_source = std::fs::read_to_string(owner.join("🧬️schema/🔣️.json")).expect("direct payload schema");
-        let payload_schema: pack::json::Value = pack::json::parse(&payload_schema_source).expect("direct payload schema must be valid JSON");
+        let payload_schema: semio_framework_pack_json::Value = semio_framework_pack_json::parse(&payload_schema_source, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("direct payload schema must be valid JSON");
         assert!(source.contains("protocol::MutationKind"), "{kind} owns no MutationKind impl");
         assert!(!source.contains(concat!("::", "mutation::")));
         assert_eq!(descriptor["semanticKind"].as_str(), Some(*kind));

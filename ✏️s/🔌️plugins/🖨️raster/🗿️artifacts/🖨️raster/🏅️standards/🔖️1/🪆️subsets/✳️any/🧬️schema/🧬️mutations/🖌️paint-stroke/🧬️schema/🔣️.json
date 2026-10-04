@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/raster/raster/mutation/paint-stroke/schema.json",
   "title": "PaintStroke",
+  "x-semio-inverse-rows": { "bounded": 3 },
   "description": "One brush or eraser stroke on a layer's pixels or on its mask, stated as its intent: the layer, the target, the tool, the brush and the points in the target image's pixels, in drawing order. Every application rasterizes it afresh on its base and files the painted image as a new content-addressed asset; a stroke that changes no pixel is `mutation.no-op`, a missing layer or image is `mutation.target-missing`, a locked layer, a layer without pixels or a mask target without a mask is `mutation.target-mismatch`.",
   "x-semio-invariant": [
     {

@@ -4,7 +4,10 @@ use crate::mutations::SourcingMutation;
 use crate::CurationSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::CreateCuratedItem, _base: &CurationSnapshot) -> Vec<SourcingMutation> {
+pub fn inverse(payload: &super::CreateCuratedItem, _base: &CurationSnapshot) -> Result<Vec<SourcingMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![crate::mutations::delete_curated_item::delete_curated_item(payload.item.object_id.clone())]
+
+    })())
 }
 //#endregion 🔖️Inverse

@@ -1,4 +1,4 @@
-//! Diff for `insert-accidental-cases`.
+//! 🔺️ Diff for `insert-accidental-cases`.
 use super::InsertAccidentalCases;
 use crate::artifact_schema::diff::En1991AccidentalCasesList;
 use crate::{En1991Diff, En1991Snapshot};

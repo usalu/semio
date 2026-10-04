@@ -706,6 +706,10 @@ fn apply(model: &mut Model, kind: &str, params: &Json) -> Result<(), String> {
             *model = model_from_json(params.get("snapshot").ok_or("set-snapshot requires a snapshot field")?)?;
             Ok(())
         }
+        "patch-snapshot" => {
+            *model = model_from_json(&semio_repo_test_host::law::patched_snapshot(&model_to_json(model), params.get("patch").ok_or("patch-snapshot requires a patch field")?)?)?;
+            Ok(())
+        }
         "insert-vertex" => {
             let index = usize_field(params, "index")?.min(model.vertices.len());
             model.vertices.insert(index, parse_vertex(params.get("vertex").ok_or("insert-vertex requires a vertex field")?)?);

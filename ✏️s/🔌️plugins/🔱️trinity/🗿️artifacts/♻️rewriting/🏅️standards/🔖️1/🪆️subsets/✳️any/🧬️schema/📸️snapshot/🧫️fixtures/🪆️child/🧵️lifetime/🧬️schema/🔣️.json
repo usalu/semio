@@ -1,0 +1,150 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/trinity/rewriting/full-child-frame-lifetime.json",
+  "title": "Rewriting Full Child Frame Lifetime",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractId",
+    "slot",
+    "target",
+    "publications",
+    "nextLiteral",
+    "retainedTailBytes",
+    "borrowedCaptureAllocationBytes",
+    "closeGrants",
+    "refusals",
+    "intrinsicKinds",
+    "intrinsicValues",
+    "childId"
+  ],
+  "properties": {
+    "contractId": {
+      "const": "rewriting-full-child-frame-lifetime"
+    },
+    "slot": {
+      "const": "workingGraph"
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactId",
+        "dialect"
+      ],
+      "properties": {
+        "artifactId": {
+          "type": "string"
+        },
+        "dialect": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "artifactKind",
+            "standard",
+            "subset"
+          ],
+          "properties": {
+            "artifactKind": {
+              "const": "s.stdio.semio"
+            },
+            "standard": {
+              "const": "v1"
+            },
+            "subset": {
+              "const": "graph"
+            }
+          }
+        }
+      }
+    },
+    "publications": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "parentGeneration",
+          "parentRevision",
+          "childRevision"
+        ],
+        "properties": {
+          "parentGeneration": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "parentRevision": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "childRevision": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      }
+    },
+    "nextLiteral": {
+      "type": "string"
+    },
+    "retainedTailBytes": {
+      "const": 65536
+    },
+    "borrowedCaptureAllocationBytes": {
+      "const": 0
+    },
+    "closeGrants": {
+      "const": [
+        0,
+        1
+      ]
+    },
+    "refusals": {
+      "const": [
+        "wrongParent",
+        "missingSlot",
+        "missingTarget",
+        "wrongDialect"
+      ]
+    },
+    "intrinsicKinds": {
+      "const": [
+        "bool",
+        "bytes",
+        "float",
+        "int",
+        "list",
+        "map",
+        "null",
+        "ref",
+        "str"
+      ]
+    },
+    "intrinsicValues": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "value"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "value": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/rewriting/typed-graph-child.json#/$defs/SemioValue"
+          }
+        }
+      }
+    },
+    "childId": {
+      "const": "logical !@/\u0000引用😀"
+    }
+  }
+}

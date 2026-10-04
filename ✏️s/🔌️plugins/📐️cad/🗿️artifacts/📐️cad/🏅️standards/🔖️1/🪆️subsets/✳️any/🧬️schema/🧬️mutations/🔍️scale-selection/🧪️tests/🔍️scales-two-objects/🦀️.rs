@@ -3,7 +3,10 @@
 use crate::mutations::{scale_objects::inverse::CAD_IDENTITY_SCALE, scale_selection::ScaleSelection, CadMutation};
 use crate::sample_scene_fixture::{materialized_objects, materialized_shape_scene, sample_object};
 use crate::CadPaneId;
-use protocol::{Mutation, MutationDiff, SemanticMutation, Severity};
+use protocol::Mutation;
+use protocol::MutationDiff;
+use protocol::SemanticMutation;
+use semio_framework_diagnostic::Severity;
 
 fn base() -> crate::CadSnapshot {
     materialized_shape_scene(vec![sample_object("object-a", [0.0, 0.0, 0.0]), sample_object("object-b", [4.0, 0.0, 0.0])])
@@ -33,7 +36,7 @@ async fn multiplies_every_addressed_scale() {
 async fn inverse_restores_the_exact_base() {
     let base = base();
     let mutation = scale(&["object-a", "object-b"], [3.0, 3.0, 3.0]);
-    let inverse = mutation.inverse(&base);
+    let inverse = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1);
     let mut snapshot = mutation.diff(&base).diff().apply(&base).expect("scale applies");
     for step in &inverse {
@@ -59,6 +62,6 @@ async fn refuses_by_the_outcome_vocabulary() {
 #[test]
 fn labels_the_row_from_its_factors() {
     let label = scale(&["object-a", "object-b"], [2.0, 2.0, 0.5]).label();
-    assert_eq!(label.resolve(protocol::Terminology::Native, protocol::Locale::En), "Scale 2 objects by (2, 2, 0.5)");
-    assert_eq!(label.resolve(protocol::Terminology::Native, protocol::Locale::De), "2 Objekte um (2; 2; 0,5) skalieren");
+    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Scale 2 objects by (2, 2, 0.5)");
+    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "2 Objekte um (2; 2; 0,5) skalieren");
 }

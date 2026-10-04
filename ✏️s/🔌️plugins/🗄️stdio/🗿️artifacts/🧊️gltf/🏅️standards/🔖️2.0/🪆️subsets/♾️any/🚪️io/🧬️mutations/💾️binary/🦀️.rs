@@ -14,7 +14,7 @@ fn malformed(offset: u64, detail: impl Into<String>) -> protocol::ProtocolError 
 
 impl protocol::OpBinary for GltfMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let payload = pack::to_json_string(self).into_bytes();
+        let payload = semio_framework_pack_json::to_json_string(self).into_bytes();
         if payload.len() > GLTF_MUTATION_MAX_PAYLOAD_BYTES {
             return Err(protocol::ProtocolError::LimitExceeded("GLTF mutation payload"));
         }
@@ -45,6 +45,6 @@ impl protocol::OpBinary for GltfMutation {
             return Err(malformed((bytes.len() - reader.remaining()) as u64, "trailing bytes"));
         }
         let text = std::str::from_utf8(payload).map_err(|error| malformed(2, error.to_string()))?;
-        pack::from_json_str(text).map_err(|error| malformed(2, error.to_string()))
+        semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| malformed(2, error.to_string()))
     }
 }

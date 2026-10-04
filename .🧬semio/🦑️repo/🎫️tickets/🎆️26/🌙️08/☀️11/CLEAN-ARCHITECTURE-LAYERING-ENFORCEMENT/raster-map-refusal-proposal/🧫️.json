@@ -1,0 +1,34 @@
+[
+  {
+    "id": "duplicate",
+    "operation": "duplicate",
+    "key": "same",
+    "value": 22,
+    "expectedKind": "invalidValue",
+    "reason": "raster-map.duplicate-key"
+  },
+  {
+    "id": "full-owner",
+    "operation": "full",
+    "key": "last",
+    "value": 22,
+    "expectedKind": "ownershipLimit",
+    "reason": "raster-map.item-capacity"
+  },
+  {
+    "id": "missing-page",
+    "operation": "unadmitted",
+    "key": "last",
+    "value": 22,
+    "expectedKind": "invariantViolated",
+    "reason": "raster-map.page-not-admitted"
+  },
+  {
+    "id": "backing-ceiling",
+    "operation": "backing",
+    "key": "last",
+    "value": 22,
+    "expectedKind": "ownershipLimit",
+    "reason": "raster-map.page-capacity"
+  }
+]

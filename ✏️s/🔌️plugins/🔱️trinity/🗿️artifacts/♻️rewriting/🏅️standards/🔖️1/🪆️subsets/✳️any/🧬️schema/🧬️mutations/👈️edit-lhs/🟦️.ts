@@ -1,4 +1,3 @@
-/** 🔍️ Direct rewriting `edit-lhs` payload mirror of `EditLhs`. */
-export interface EditLhs {
-  newLhsJson: string;
-}
+/** 📝️ Typed document replacement owns its complete semantic payload. */
+import type {Lhs} from "../../🟦️.ts";
+export interface EditLhs{newLhs:Lhs}

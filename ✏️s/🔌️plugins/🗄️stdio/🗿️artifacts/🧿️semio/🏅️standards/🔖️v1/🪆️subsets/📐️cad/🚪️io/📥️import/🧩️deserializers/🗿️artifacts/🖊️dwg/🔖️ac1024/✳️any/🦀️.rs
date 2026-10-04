@@ -43,9 +43,9 @@ impl ArtifactDeserializer for SemioCadFromDwg {
 
     async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         if from.version.is_empty() {
-            return Err(store::PackError::Schema("dwg→semio/cad: missing AC10xx version sentinel — not a real DWG file".into()));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "dwg→semio/cad: missing AC10xx version sentinel — not a real DWG file")));
         }
-        let drawing = from.drawing.to_native().map_err(store::PackError::Schema)?;
+        let drawing = from.drawing.to_native().map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))?;
         let layers = drawing.layers.iter().map(|layer| CadLayer { name: layer.name.clone(), color_index: i32::from(layer.color), line_type: "CONTINUOUS".into(), visible: true }).collect();
         let entities = drawing
             .entities

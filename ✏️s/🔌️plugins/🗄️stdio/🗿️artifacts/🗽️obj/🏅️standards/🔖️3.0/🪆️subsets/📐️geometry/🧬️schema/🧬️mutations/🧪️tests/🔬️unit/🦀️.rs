@@ -25,7 +25,7 @@ async fn inverse_law() {
     for m in demo_mutation_cases() {
         let mut forward = base.clone();
         apply_obj_mutation(&mut forward, &m);
-        for inv in m.inverse(&base) {
+        for inv in m.inverse(&base).expect("valid retained mutation inverse fixture") {
             apply_obj_mutation(&mut forward, &inv);
         }
         assert_eq!(forward, base, "mutation-level inverse round trip failed for {m:?}");
@@ -212,6 +212,7 @@ async fn kinds_cover_every_variant() {
     fn kind_of(mutation: &ObjMutation) -> &'static str {
         match mutation {
             ObjMutation::SetSnapshot(_) => "set-snapshot",
+            ObjMutation::PatchSnapshot(_) => "patch-snapshot",
             ObjMutation::InsertVertex(_) => "insert-vertex",
             ObjMutation::RemoveVertex(_) => "remove-vertex",
             ObjMutation::SetVertex(_) => "set-vertex",
@@ -240,7 +241,7 @@ async fn kinds_cover_every_variant() {
     let mut declared: Vec<&str> = KINDS.to_vec();
     declared.sort_unstable();
     assert_eq!(exercised, declared, "KINDS must name exactly the variants demo_mutation_cases() exercises");
-    assert_eq!(KINDS.len(), 21, "obj-3-0-any declares 21 ObjMutation variants");
+    assert_eq!(KINDS.len(), 22, "obj-3-0-any declares 22 ObjMutation variants");
 }
 //#endregion 🔖️KindsCoverageLaw
 
@@ -273,7 +274,7 @@ fn banded_snapshot() -> ObjSnapshot {
 fn remove_face_inverts_through_the_membership_it_disturbed() {
     let base = banded_snapshot();
     let removal = ObjMutation::RemoveFace(remove_face::RemoveFace { index: 1 });
-    let undo = removal.inverse(&base);
+    let undo = removal.inverse(&base).expect("valid retained mutation inverse fixture");
     assert!(matches!(undo.first(), Some(ObjMutation::InsertFace(insert_face::InsertFace { index: 1, .. }))), "the row itself comes back first, at its own position: {undo:?}");
     assert!(undo.iter().any(|step| matches!(step, ObjMutation::SetGroup(set_group::SetGroup { name, faces }) if name == "front" && faces == &vec![0, 1])), "the removed face's own band must be re-declared: {undo:?}");
     assert!(undo.iter().any(|step| matches!(step, ObjMutation::SetGroup(set_group::SetGroup { name, faces }) if name == "back" && faces == &vec![2])), "so must the band the removal shifted: {undo:?}");
@@ -303,7 +304,7 @@ fn remove_group_inverts_back_to_its_own_position() {
     apply_obj_mutation(&mut naive, &ObjMutation::SetGroup(set_group::SetGroup { name: "front".into(), faces: vec![0, 1] }));
     assert_eq!(naive.groups.iter().map(|group| group.name.as_str()).collect::<Vec<_>>(), vec!["back", "front"], "a lone SetGroup appends — this is the position loss the sequenced inverse repairs");
 
-    for step in removal.inverse(&base) {
+    for step in removal.inverse(&base).expect("valid retained mutation inverse fixture") {
         apply_obj_mutation(&mut restored, &step);
     }
     assert_eq!(restored, base, "the sequenced inverse must restore both the membership and the order");
@@ -318,7 +319,7 @@ fn remove_object_inverts_back_to_its_own_position() {
     let mut restored = base.clone();
     apply_obj_mutation(&mut restored, &removal);
     assert_eq!(restored.objects.len(), 1, "the removal has to move the document");
-    for step in removal.inverse(&base) {
+    for step in removal.inverse(&base).expect("valid retained mutation inverse fixture") {
         apply_obj_mutation(&mut restored, &step);
     }
     assert_eq!(restored, base, "the sequenced inverse must restore both the membership and the order");

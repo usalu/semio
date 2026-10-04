@@ -49,5 +49,5 @@ export const proceduralGeneration3dDiffTextGuardConstant = <T extends string | n
 //#endregion 🚪️Parsers
 
 export function parseGeneration3dDiffText(value: unknown, at = "$"): Generation3dDiffText {
-  return proceduralGeneration3dDiffTextGuardObject(value, `${at}`);
+  return proceduralGeneration3dDiffTextGuardString(value, `${at}`);
 }

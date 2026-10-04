@@ -14,6 +14,10 @@ extern crate semio_framework_schema as framework_schema;
 use protocol::{Identified, Patchable};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 
+#[path="🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🕸️mesh/🦀️.rs"]
+pub mod managed_mesh;
+pub use managed_mesh::{LowpolyMeshState,LowpolyMeshVertex,LowpolyMeshHalfedge,LowpolyMeshFace,LowpolyMeshAttribute,LowpolyMeshMaterial,LowpolyMeshTexture,LowpolyMeshAttributeDomain,LowpolyMeshAttributeSemantic,LowpolyMeshAttributeInterpolation};
+
 //#region 🔖️Pixels
 pub use crate::schema::mutations::LowpolyMutation;
 
@@ -44,7 +48,7 @@ pub fn empty_paint_pixels() -> Vec<u8> {
 //#endregion 🔖️Pixels
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct LowpolyTransform {
     #[dsl(coord)]
@@ -60,7 +64,7 @@ impl Default for LowpolyTransform {
 }
 
 /// 🖌️ One paint layer of an object: compositing metadata plus its persisted RGBA pixel buffer.
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct LowpolyPaintLayer {
     pub name: String,
@@ -79,13 +83,13 @@ pub struct LowpolyPaintLayer {
 /// ticket 26/08/29/LOWPOLY-END-TO-END-COMMANDS-IO-AND-MUTATIONS). Same shape as raster's
 /// `asset_data_base64`.
 pub mod bytes_base64 {
-    pub fn to_value(bytes: &Vec<u8>) -> dsl::DslValue {
-        dsl::DslValue::String(base64_codec::base64_standard_encode(bytes))
+    pub fn to_value(bytes: &Vec<u8>) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::String(base64_codec::base64_standard_encode(bytes))
     }
 
-    pub fn from_value(value: dsl::DslValue) -> Result<Vec<u8>, dsl::ValueError> {
-        let dsl::DslValue::String(encoded) = value else { return Err(dsl::ValueError::new("expected a base64 string")) };
-        base64_codec::base64_standard_decode(encoded.as_bytes()).map_err(|error| dsl::ValueError::new(error.to_string()))
+    pub fn from_value(value: semio_framework_value::DslValue) -> Result<Vec<u8>, semio_framework_value::ValueError> {
+        let semio_framework_value::DslValue::String(encoded) = value else { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected a base64 string")) };
+        base64_codec::base64_standard_decode(encoded.as_bytes()).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()))
     }
 }
 
@@ -125,7 +129,17 @@ pub fn mesh_child_handle(object_id: &str, mesh_json: &str) -> store::ArtifactChi
     store::ArtifactChild::new(child_id, target)
 }
 
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+/// 🕸️ Managed geometry identity hashes the complete typed word and occurrence owner.
+pub fn managed_mesh_child_handle(object_id: &str, state: &LowpolyMeshState) -> store::ArtifactChild<SemioMeshSnapshot> {
+    let value=managed_mesh::json::state_value(state);
+    let bytes=store::pack_rt::encode_wire_value(&value);
+    semio_framework_value::FromValue::retire_decoded(value);
+    let child_id=store::content_id("mesh",&bytes);
+    let dialect=store::os_io::ArtifactDialect{artifact_kind:"s.stdio.semio".into(),standard:"v1".into(),subset:"mesh".into()};
+    store::ArtifactChild::new(child_id,store::os_io::ArtifactRef{artifact_id:format!("{object_id}-mesh"),dialect})
+}
+
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct LowpolyObject {
     pub id: String,
@@ -139,6 +153,9 @@ pub struct LowpolyObject {
     /// 🧱️ Persisted mesh source text, preserved independently of the child identity.
     #[value(default)]
     pub mesh_content: String,
+    /// 🕸️ The complete managed kernel state is independent of literal source text.
+    #[value(with="managed_mesh::json")]
+    pub mesh_state: Option<LowpolyMeshState>,
 }
 
 impl Identified<String> for LowpolyObject {
@@ -205,6 +222,8 @@ pub struct LowpolyObjectPatch {
     /// 🕸️ New `LowpolyObject::mesh_content`, set together with `mesh`.
     #[value(default)]
     pub mesh_content: Option<String>,
+    #[value(default,with="managed_mesh::json::patch")]
+    pub mesh_state: Option<Option<LowpolyMeshState>>,
 }
 
 impl Patchable<LowpolyObjectPatch> for LowpolyObject {
@@ -223,14 +242,9 @@ impl Patchable<LowpolyObjectPatch> for LowpolyObject {
         }
         if let Some(value) = &patch.mesh_content {
             self.mesh_content = value.clone();
-            // 🕸️ `mesh` and `mesh_content` are set together, and the double-`Option` `mesh` slot cannot
-            // say "cleared" on the wire (`Some(None)` and `None` both print as `null` — the repo-wide
-            // Option-null gap): an explicit EMPTY content is the one unambiguous "no mesh" a
-            // delete-mesh patch carries, so it clears the handle too (2026-09-18).
-            if value.is_empty() && patch.mesh.is_none() {
-                self.mesh = None;
-            }
+
         }
+        if let Some(value)=&patch.mesh_state { self.mesh_state=value.clone(); }
     }
 
     fn diff_patch(&self, other: &Self) -> Option<LowpolyObjectPatch> {
@@ -240,6 +254,7 @@ impl Patchable<LowpolyObjectPatch> for LowpolyObject {
             transform: (self.transform != other.transform).then(|| other.transform.clone()),
             mesh: (self.mesh != other.mesh).then(|| other.mesh.clone()),
             mesh_content: (self.mesh_content != other.mesh_content).then(|| other.mesh_content.clone()),
+            mesh_state: (self.mesh_state != other.mesh_state).then(|| other.mesh_state.clone()),
         };
         (patch != LowpolyObjectPatch::default()).then_some(patch)
     }
@@ -413,60 +428,60 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
 /// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring the
 /// `OnceLock`-backed `io_registry::entries()` convention.
-fn pilot_languages() -> &'static [dsl::LanguageSpec] {
-    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
             vec![
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "lowpoly.document",
                     extension: Some("lowpoly"),
-                    role: dsl::LanguageRole::Document,
+                    role: semio_framework_dsl::LanguageRole::Document,
                     grammar: Some(document_dsl::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(document_dsl::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("lowpoly.document"),
+                    hooks: semio_framework_dsl::passthrough_hooks("lowpoly.document"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "lowpoly.op",
                     extension: None,
-                    role: dsl::LanguageRole::Ops,
+                    role: semio_framework_dsl::LanguageRole::Ops,
                     grammar: Some(op::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(op::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("lowpoly.op"),
+                    hooks: semio_framework_dsl::passthrough_hooks("lowpoly.op"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "lowpoly.diff",
                     extension: None,
-                    role: dsl::LanguageRole::Diff,
+                    role: semio_framework_dsl::LanguageRole::Diff,
                     grammar: Some(diff::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
-                    hooks: dsl::passthrough_hooks("lowpoly.diff"),
+                    hooks: semio_framework_dsl::passthrough_hooks("lowpoly.diff"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "lowpoly.pack",
                     extension: None,
-                    role: dsl::LanguageRole::Pack,
+                    role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("lowpoly.pack"),
+                    hooks: semio_framework_dsl::passthrough_hooks("lowpoly.pack"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "lowpoly.spr",
                     extension: None,
-                    role: dsl::LanguageRole::Spr,
+                    role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("lowpoly.spr"),
+                    hooks: semio_framework_dsl::passthrough_hooks("lowpoly.spr"),
                 },
             ]
         })

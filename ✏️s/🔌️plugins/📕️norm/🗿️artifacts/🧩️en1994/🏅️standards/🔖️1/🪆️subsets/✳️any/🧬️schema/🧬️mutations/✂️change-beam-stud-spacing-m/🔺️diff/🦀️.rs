@@ -10,7 +10,7 @@ pub fn diff(payload: &ChangeBeamStudSpacingM, base: &En1994Snapshot) -> protocol
         return protocol::MutationOutcome::error("mutation.target-missing", "beam missing", [payload.index.to_string()]);
     };
     if (beam.studs.spacing_m - payload.new_spacing_m).abs() < f64::EPSILON {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "unchanged");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "unchanged");
     }
     let mut beams = base.beams.clone();
     beams[payload.index].studs.spacing_m = payload.new_spacing_m;

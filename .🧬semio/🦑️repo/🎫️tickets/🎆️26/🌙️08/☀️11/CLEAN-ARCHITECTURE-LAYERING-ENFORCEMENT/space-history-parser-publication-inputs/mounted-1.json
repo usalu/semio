@@ -1,0 +1,16 @@
+{
+  "at": "2026-10-03T12:07:25.224Z",
+  "reviewed": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/space-history-parser-publication-inputs/reviewed-before-1.json",
+  "mutations": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts",
+      "beforeHash": "5b9f5848bf3100a45cf1f5a5468948f01e190c8b487578c3bda102de481f6301",
+      "currentHash": "681b4fb4b0fe8c36f677b95e71abee7d200a726bf7ce0047e6076bb13cc06b92",
+      "authoredHash": "681b4fb4b0fe8c36f677b95e71abee7d200a726bf7ce0047e6076bb13cc06b92",
+      "exact": true
+    }
+  ],
+  "sourceWrites": true,
+  "rustWrites": false,
+  "registeredExecutionPending": true
+}

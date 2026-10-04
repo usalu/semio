@@ -1,5 +1,7 @@
 {
-  "$schema": "../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json#/$defs/Outputs",
+  "contractId": "semio-s-artifact-trinity-jack-graph-catalog",
+  "policy": {"excludedInputPaths":[],"genericEmojiIdentities":[]},
   "version": 1,
   "inputAreas": [
     "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack"

@@ -915,8 +915,8 @@ impl Fem2dVisualJob {
 }
 //#endregion 🧵️MountedVisualJob
 
-fn vector_layer(id: &str, origin: (f64, f64), vector: [f64; 2], color: &str) -> dsl::json::Value {
-    dsl::json!({
+fn vector_layer(id: &str, origin: (f64, f64), vector: [f64; 2], color: &str) -> semio_framework_pack_json::Value {
+    semio_framework_pack_json::json!({
         "kind": "polyline",
         "id": id,
         "points": [[origin.0, origin.1], [origin.0 + vector[0], origin.1 - vector[1]]],
@@ -925,7 +925,7 @@ fn vector_layer(id: &str, origin: (f64, f64), vector: [f64; 2], color: &str) -> 
 }
 
 /// 👁️ Deterministic live overlays for mesh, assembly and iterative solve progress.
-pub fn fem2d_live_visual_layers(doc: &Fem2dSnapshot, visual: &Fem2dLiveVisual) -> Vec<dsl::json::Value> {
+pub fn fem2d_live_visual_layers(doc: &Fem2dSnapshot, visual: &Fem2dLiveVisual) -> Vec<semio_framework_pack_json::Value> {
     let mut layers = Vec::new();
     let mut regions: Vec<_> = doc.regions.iter().collect();
     regions.sort_by(|a, b| a.id.cmp(&b.id));
@@ -942,7 +942,7 @@ pub fn fem2d_live_visual_layers(doc: &Fem2dSnapshot, visual: &Fem2dLiveVisual) -
         if let Some(first) = points.first().copied() {
             points.push(first);
         }
-        layers.push(dsl::json!({ "kind": "polyline", "id": format!("region-quality-{}-{}", quality.id(), region.id), "points": points, "color": quality.color() }));
+        layers.push(semio_framework_pack_json::json!({ "kind": "polyline", "id": format!("region-quality-{}-{}", quality.id(), region.id), "points": points, "color": quality.color() }));
     }
     let mut assembling = visual.assembling_element_ids.clone();
     assembling.sort();
@@ -952,7 +952,7 @@ pub fn fem2d_live_visual_layers(doc: &Fem2dSnapshot, visual: &Fem2dLiveVisual) -
         let (Some(a), Some(b)) = (find_node_2d(&doc.nodes, start), find_node_2d(&doc.nodes, end)) else { continue };
         let (x0, y0) = screen_2d(a.x, a.y);
         let (x1, y1) = screen_2d(b.x, b.y);
-        layers.push(dsl::json!({ "kind": "line", "id": format!("assembling-{id}"), "x0": x0, "y0": y0, "x1": x1, "y1": y1, "color": "#a855f7" }));
+        layers.push(semio_framework_pack_json::json!({ "kind": "line", "id": format!("assembling-{id}"), "x0": x0, "y0": y0, "x1": x1, "y1": y1, "color": "#a855f7" }));
     }
     let mut fields = visual.fields.clone();
     fields.sort_by(|a, b| a.node_id.cmp(&b.node_id));
@@ -969,7 +969,7 @@ pub fn fem2d_live_visual_layers(doc: &Fem2dSnapshot, visual: &Fem2dLiveVisual) -
     } else {
         "unconverged"
     };
-    layers.push(dsl::json!({ "id": format!("solve-status-{status}"), "transform": [1.0, 0.0, 0.0, 1.0, 10.0, 18.0], "text": { "content": status, "size": 11.0 } }));
+    layers.push(semio_framework_pack_json::json!({ "id": format!("solve-status-{status}"), "transform": [1.0, 0.0, 0.0, 1.0, 10.0, 18.0], "text": { "content": status, "size": 11.0 } }));
     layers
 }
 //#endregion 👁️LiveVisualLanguage
@@ -1018,24 +1018,24 @@ pub(crate) fn fem2d_model_extent(doc: &Fem2dSnapshot) -> f64 {
 
 /// 🖼️ Nodes/members/supports as Canvas2d layers — shared by this window (bright colors) and the results
 /// window's faint undeformed backdrop (a single muted color for every layer kind).
-pub(crate) fn fem2d_structure_layers(doc: &Fem2dSnapshot, node_color: &str, line_color: &str, support_color: &str) -> Vec<dsl::json::Value> {
+pub(crate) fn fem2d_structure_layers(doc: &Fem2dSnapshot, node_color: &str, line_color: &str, support_color: &str) -> Vec<semio_framework_pack_json::Value> {
     let mut layers = Vec::new();
     for node in &doc.nodes {
         let (sx, sy) = screen_2d(node.x, node.y);
-        layers.push(dsl::json!({ "kind": "circle", "id": format!("node-{}", node.id), "x": sx - 4.0, "y": sy - 4.0, "width": 8.0, "height": 8.0, "color": node_color }));
+        layers.push(semio_framework_pack_json::json!({ "kind": "circle", "id": format!("node-{}", node.id), "x": sx - 4.0, "y": sy - 4.0, "width": 8.0, "height": 8.0, "color": node_color }));
     }
     for element in &doc.elements {
         let (start, end) = fem2d_element_endpoints(element);
         if let (Some(n1), Some(n2)) = (find_node_2d(&doc.nodes, start), find_node_2d(&doc.nodes, end)) {
             let (x0, y0) = screen_2d(n1.x, n1.y);
             let (x1, y1) = screen_2d(n2.x, n2.y);
-            layers.push(dsl::json!({ "kind": "line", "id": format!("el-{}", element_id(element)), "x0": x0, "y0": y0, "x1": x1, "y1": y1, "color": line_color }));
+            layers.push(semio_framework_pack_json::json!({ "kind": "line", "id": format!("el-{}", element_id(element)), "x0": x0, "y0": y0, "x1": x1, "y1": y1, "color": line_color }));
         }
     }
     for support in &doc.supports {
         if let Some(node) = find_node_2d(&doc.nodes, &support.node_id) {
             let (sx, sy) = screen_2d(node.x, node.y);
-            layers.push(dsl::json!({ "kind": "circle", "id": format!("support-{}", support.id), "x": sx - 5.0, "y": sy - 5.0, "width": 10.0, "height": 10.0, "color": support_color }));
+            layers.push(semio_framework_pack_json::json!({ "kind": "circle", "id": format!("support-{}", support.id), "x": sx - 5.0, "y": sy - 5.0, "width": 10.0, "height": 10.0, "color": support_color }));
         }
     }
     for case in &doc.load_cases {
@@ -1081,25 +1081,25 @@ const HOVER_STROKE_WIDTH_2D: f64 = 2.5;
 
 /// 🎯️ A bounds-shaped emphasis ring around a point glyph — `selected` drives the Canvas2d host's own
 /// selected-bounds treatment (`📐️Canvas2dHost/🟦️.tsx`'s `drawBoundsLayer`).
-fn emphasis_ring_layer(id: &str, center: (f64, f64), radius: f64, color: &str, selected: bool) -> dsl::json::Value {
-    dsl::json!({ "kind": "circle", "id": id, "x": center.0 - radius, "y": center.1 - radius, "width": radius * 2.0, "height": radius * 2.0, "color": color, "selected": selected })
+fn emphasis_ring_layer(id: &str, center: (f64, f64), radius: f64, color: &str, selected: bool) -> semio_framework_pack_json::Value {
+    semio_framework_pack_json::json!({ "kind": "circle", "id": id, "x": center.0 - radius, "y": center.1 - radius, "width": radius * 2.0, "height": radius * 2.0, "color": color, "selected": selected })
 }
 
 /// 🎯️ A stroked emphasis path over a member axis, a region outline or a load arrow — a `segments`
 /// layer because only that shape honours an explicit `stroke.width`.
-fn emphasis_path_layer(id: &str, points: &[(f64, f64)], close: bool, color: &str, width: f64) -> dsl::json::Value {
+fn emphasis_path_layer(id: &str, points: &[(f64, f64)], close: bool, color: &str, width: f64) -> semio_framework_pack_json::Value {
     let (r, g, b) = crate::app_surface::hex_to_rgb01(color);
     let mut segments = Vec::with_capacity(points.len() + 1);
     for (index, &(x, y)) in points.iter().enumerate() {
-        segments.push(if index == 0 { dsl::json!({ "kind": "move", "to": [x, y] }) } else { dsl::json!({ "kind": "line", "to": [x, y] }) });
+        segments.push(if index == 0 { semio_framework_pack_json::json!({ "kind": "move", "to": [x, y] }) } else { semio_framework_pack_json::json!({ "kind": "line", "to": [x, y] }) });
     }
     if close {
-        segments.push(dsl::json!({ "kind": "close" }));
+        segments.push(semio_framework_pack_json::json!({ "kind": "close" }));
     }
-    dsl::json!({ "id": id, "transform": [1.0, 0.0, 0.0, 1.0, 0.0, 0.0], "segments": segments, "stroke": { "color": [r, g, b, 1.0], "width": width } })
+    semio_framework_pack_json::json!({ "id": id, "transform": [1.0, 0.0, 0.0, 1.0, 0.0, 0.0], "segments": segments, "stroke": { "color": [r, g, b, 1.0], "width": width } })
 }
 
-fn emphasis_layers_for(doc: &Fem2dSnapshot, ids: &[String], prefix: &str, color: &str, width: f64, selected: bool) -> Vec<dsl::json::Value> {
+fn emphasis_layers_for(doc: &Fem2dSnapshot, ids: &[String], prefix: &str, color: &str, width: f64, selected: bool) -> Vec<semio_framework_pack_json::Value> {
     let mut layers = Vec::new();
     for id in ids {
         if let Some(node) = find_node_2d(&doc.nodes, id) {
@@ -1137,7 +1137,7 @@ fn emphasis_layers_for(doc: &Fem2dSnapshot, ids: &[String], prefix: &str, color:
 
 /// 🕹️ The selected/hovered emphasis overlay for one interaction snapshot — hovered first, selected on
 /// top, every layer id stable (`sel-node-n1`, `hov-el-e3`, …) so a host can diff frames.
-pub(crate) fn fem2d_highlight_layers(doc: &Fem2dSnapshot, interaction: &crate::editor::fem2d::interaction::Fem2dInteractionSnapshot) -> Vec<dsl::json::Value> {
+pub(crate) fn fem2d_highlight_layers(doc: &Fem2dSnapshot, interaction: &crate::editor::fem2d::interaction::Fem2dInteractionSnapshot) -> Vec<semio_framework_pack_json::Value> {
     let mut layers = emphasis_layers_for(doc, &interaction.hovered_ids, "hov", HOVER_COLOR_2D, HOVER_STROKE_WIDTH_2D, false);
     layers.extend(emphasis_layers_for(doc, &interaction.selected_ids, "sel", SELECTION_COLOR_2D, SELECTION_STROKE_WIDTH_2D, true));
     layers
@@ -1146,7 +1146,7 @@ pub(crate) fn fem2d_highlight_layers(doc: &Fem2dSnapshot, interaction: &crate::e
 /// 🖼️ [`fem2d_structure_layers`] plus the interaction emphasis overlay — the entry point both windows
 /// render through; the bare twin stays for the viewer app and the story fixtures, which have no
 /// interaction state at all.
-pub(crate) fn fem2d_structure_layers_with(doc: &Fem2dSnapshot, node_color: &str, line_color: &str, support_color: &str, interaction: &crate::editor::fem2d::interaction::Fem2dInteractionSnapshot) -> Vec<dsl::json::Value> {
+pub(crate) fn fem2d_structure_layers_with(doc: &Fem2dSnapshot, node_color: &str, line_color: &str, support_color: &str, interaction: &crate::editor::fem2d::interaction::Fem2dInteractionSnapshot) -> Vec<semio_framework_pack_json::Value> {
     let mut layers = fem2d_structure_layers(doc, node_color, line_color, support_color);
     layers.extend(fem2d_highlight_layers(doc, interaction));
     layers
@@ -1193,7 +1193,7 @@ pub(crate) fn fem2d_region_mesh_triangles(doc: &Fem2dSnapshot) -> Vec<Fem2dRegio
 
 /// 🖼️ Every element's deformed-shape polyline (pink), given a node-id-keyed displacement map and a
 /// display scale — shared by the static, modal, and buckling results renders.
-pub(crate) fn fem2d_deformed_shape_layers(doc: &Fem2dSnapshot, disp_map: &HashMap<String, [f64; 6]>, deform_scale: f64) -> Vec<dsl::json::Value> {
+pub(crate) fn fem2d_deformed_shape_layers(doc: &Fem2dSnapshot, disp_map: &HashMap<String, [f64; 6]>, deform_scale: f64) -> Vec<semio_framework_pack_json::Value> {
     let mut layers = Vec::new();
     for element in &doc.elements {
         let (start, end) = fem2d_element_endpoints(element);
@@ -1206,7 +1206,7 @@ pub(crate) fn fem2d_deformed_shape_layers(doc: &Fem2dSnapshot, disp_map: &HashMa
         let dy0 = -d1[Dof::Ty.index()] * deform_scale * SCALE_2D;
         let dx1 = d2[Dof::Tx.index()] * deform_scale * SCALE_2D;
         let dy1 = -d2[Dof::Ty.index()] * deform_scale * SCALE_2D;
-        layers.push(dsl::json!({
+        layers.push(semio_framework_pack_json::json!({
             "kind": "polyline",
             "id": format!("deformed-{}", element_id(element)),
             "points": [[x0 + dx0, y0 + dy0], [x1 + dx1, y1 + dy1]],
@@ -1222,14 +1222,14 @@ pub fn render(doc: &Fem2dSnapshot, camera: &Viewport2d) -> semio_framework_plugi
     let mut layers = fem2d_structure_layers(doc, "#38bdf8", "#94a3b8", "#f97316");
     for (tri_index, (_, tri)) in fem2d_region_triangles(doc).iter().enumerate() {
         let [(x0, y0), (x1, y1), (x2, y2)] = *tri;
-        layers.push(dsl::json!({
+        layers.push(semio_framework_pack_json::json!({
             "kind": "polyline",
             "id": format!("mesh-edge-{tri_index}"),
             "points": [[x0, y0], [x1, y1], [x1, y1], [x2, y2], [x2, y2], [x0, y0]],
             "color": MESH_EDGE_COLOR,
         }));
     }
-    let layers_json = dsl::json::to_string(&dsl::json::Value::Array(layers));
+    let layers_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(layers));
     crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() })
 }
 

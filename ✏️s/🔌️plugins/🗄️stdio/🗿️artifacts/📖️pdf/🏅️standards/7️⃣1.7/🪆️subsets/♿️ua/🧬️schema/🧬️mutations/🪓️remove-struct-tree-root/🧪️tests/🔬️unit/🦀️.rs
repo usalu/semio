@@ -11,5 +11,5 @@ fn changes_the_owned_catalog_axis_and_plans_its_inverse() {
     let outcome = <RemoveStructTreeRoot as MutationKind<PdfSnapshot, PdfUaMutation>>::diff(&mutation, &base);
     let next = outcome.diff().apply(&base).unwrap();
     assert!(support::catalog_entry(&next, "StructTreeRoot").is_none());
-    assert_eq!(<RemoveStructTreeRoot as MutationKind<PdfSnapshot, PdfUaMutation>>::inverse(&mutation, &base), vec![PdfUaMutation::SetStructTreeRoot(SetStructTreeRoot {})]);
+    assert_eq!(<RemoveStructTreeRoot as MutationKind<PdfSnapshot, PdfUaMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture"), vec![PdfUaMutation::SetStructTreeRoot(SetStructTreeRoot {})]);
 }

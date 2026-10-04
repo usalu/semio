@@ -1,6 +1,7 @@
 //! 🧬️ DocxMutation — document mutation dispatch. Every variant's `diff()` is handcrafted (never
 //! apply-and-capture) and every variant's `inverse()` is handcrafted, key/index-aware.
 
+use semio_framework_value::{ValueError,ValueRefusalKind};
 use crate::schema::diff::{
     dec_block, dec_bool, dec_str, dec_style, dec_xml_node, dec_xml_node_bin, decode_option, enc_block, enc_bool, enc_list, enc_str, enc_style, enc_xml_node, enc_xml_node_bin, encode_option, hex_decode, hex_encode, parse_usize, split_top_level,
     strip_brackets,
@@ -52,7 +53,7 @@ pub mod set_run_text;
 pub mod xml_address;
 pub use xml_address::{
     docx_block_run_address, docx_top_level_block_address, docx_top_level_block_count, docx_top_level_run_at, docx_top_level_run_count, docx_xml_address, docx_xml_subtree_revision, resolve_docx_xml_address, DocxEditableRun, DocxXmlAddress,
-    ResolvedDocxXmlAddress,
+    ResolvedDocxXmlAddress, docx_top_level_text_targets, DocxEditableText, DocxTextTargetKind, docx_run_formatting, DocxRunFormatting,
 };
 #[path = "🧩️replace-xml-node/🦀️.rs"]
 pub mod replace_xml_node;
@@ -72,6 +73,8 @@ pub mod replace_xml_node;
 /// reusing `DocxDiff`'s `pub(crate)` grammar primitives (`hex_encode`/`enc_block`/`enc_style`/
 /// `split_top_level`/...).
 //#region 🔖️Leaves
+#[path = "🩹️patch-snapshot/🦀️.rs"]
+pub mod patch_snapshot;
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "🌳️set-style-based-on/🦀️.rs"]
@@ -87,6 +90,7 @@ pub mod set_style_name;
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum DocxMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
+    PatchSnapshot(patch_snapshot::PatchSnapshot),
     /// ➕️ Inserts `block` at `path` (`path.index` = insertion index, FINAL state).
     InsertBlock(insert_block::InsertBlock),
     /// ➖️ Removes the block at `path` (`path.index` = BASE-state index).
@@ -131,7 +135,7 @@ pub enum DocxMutation {
 /// variant (via `demo_mutation_cases()`, which already carries one instance per variant in this
 /// same order).
 pub const KINDS: &[&str] = &[
-    "set-snapshot",
+    "set-snapshot", "patch-snapshot",
     "insert-block",
     "remove-block",
     "set-block-content",
@@ -197,13 +201,15 @@ fn block_insert_slot(nodes: &[XmlNode], ordinal: usize) -> Option<usize> {
     Some(nodes.iter().rposition(|node| matches!(node, XmlNode::Element { name, .. } if name == "w:p" || name == "w:tbl")).map_or(0, |index| index + 1))
 }
 
-fn main_body_mut(snapshot: &mut DocxSnapshot) -> Option<&mut Vec<XmlNode>> {
+fn edit_main_body(snapshot: &mut DocxSnapshot, edit: impl FnOnce(&mut Vec<XmlNode>) -> Option<()>) -> Option<()> {
     let main_path = crate::standards::v_ecma_376::subsets::base::io::import::deserializers::main_document_path(&snapshot.opc).ok()?;
-    let document = &mut snapshot.xml_part_mut(&main_path)?.document;
+    let part = snapshot.xml_part_mut(&main_path)?;
+    let mut document = part.materialize_document_exact().ok()?;
     let root = document.root.as_mut()?;
     let children = element_children_mut(root, "w:document")?;
     let body_index = nth_element_index(children, "w:body", 0)?;
-    element_children_mut(&mut children[body_index], "w:body")
+    edit(element_children_mut(&mut children[body_index], "w:body")?)?;
+    part.replace_document(document).ok()
 }
 
 fn nested_blocks_mut<'a>(blocks: &'a mut Vec<XmlNode>, segments: &[DocxPathSegment]) -> Option<&'a mut Vec<XmlNode>> {
@@ -217,14 +223,17 @@ fn nested_blocks_mut<'a>(blocks: &'a mut Vec<XmlNode>, segments: &[DocxPathSegme
     nested_blocks_mut(cell_children, rest)
 }
 
-fn styles_root_mut(snapshot: &mut DocxSnapshot) -> Option<&mut Vec<XmlNode>> {
+fn edit_styles_root(snapshot: &mut DocxSnapshot, edit: impl FnOnce(&mut Vec<XmlNode>) -> Option<()>) -> Option<()> {
     let main_path = crate::standards::v_ecma_376::subsets::base::io::import::deserializers::main_document_path(&snapshot.opc).ok()?;
     let styles_path = snapshot
         .opc
         .resolve_relationship(&main_path, crate::standards::v_ecma_376::subsets::base::io::REL_TYPE_STYLES)
         .or_else(|| snapshot.opc.resolve_relationship(&main_path, crate::standards::v_ecma_376::subsets::base::io::STRICT_REL_TYPE_STYLES))?;
-    let root = snapshot.xml_part_mut(&styles_path)?.document.root.as_mut()?;
-    element_children_mut(root, "w:styles")
+    let part = snapshot.xml_part_mut(&styles_path)?;
+    let mut document = part.materialize_document_exact().ok()?;
+    let root = document.root.as_mut()?;
+    edit(element_children_mut(root, "w:styles")?)?;
+    part.replace_document(document).ok()
 }
 
 fn style_index(nodes: &[XmlNode], id: &str) -> Option<usize> {
@@ -253,19 +262,29 @@ fn apply_to_snapshot(base: &DocxSnapshot, mutation: &DocxMutation) -> Option<Doc
     }
     match mutation {
         DocxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => return Some(snapshot.clone()),
+        DocxMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => return semio_s_artifact_stdio_contract::editing::apply_snapshot_patch_checked(base, patch, DocxSnapshot::validate_authority).ok(),
         DocxMutation::InsertBlock(insert_block::InsertBlock { path, block }) => {
-            let blocks = nested_blocks_mut(main_body_mut(&mut next)?, &path.segments)?;
-            let index = block_insert_slot(blocks, path.index)?;
-            blocks.insert(index, crate::standards::v_ecma_376::subsets::base::io::export::serializers::block_to_xml(block));
+            edit_main_body(&mut next, |body| {
+                let blocks = nested_blocks_mut(body, &path.segments)?;
+                let index = block_insert_slot(blocks, path.index)?;
+                blocks.insert(index, crate::standards::v_ecma_376::subsets::base::io::export::serializers::block_to_xml(block));
+                Some(())
+            })?;
         }
         DocxMutation::RemoveBlock(remove_block::RemoveBlock { path }) => {
-            let blocks = nested_blocks_mut(main_body_mut(&mut next)?, &path.segments)?;
-            blocks.remove(block_slot(blocks, path.index)?);
+            edit_main_body(&mut next, |body| {
+                let blocks = nested_blocks_mut(body, &path.segments)?;
+                blocks.remove(block_slot(blocks, path.index)?);
+                Some(())
+            })?;
         }
         DocxMutation::SetBlockContent(set_block_content::SetBlockContent { path, block }) => {
-            let blocks = nested_blocks_mut(main_body_mut(&mut next)?, &path.segments)?;
-            let index = block_slot(blocks, path.index)?;
-            blocks[index] = crate::standards::v_ecma_376::subsets::base::io::export::serializers::block_to_xml(block);
+            edit_main_body(&mut next, |body| {
+                let blocks = nested_blocks_mut(body, &path.segments)?;
+                let index = block_slot(blocks, path.index)?;
+                blocks[index] = crate::standards::v_ecma_376::subsets::base::io::export::serializers::block_to_xml(block);
+                Some(())
+            })?;
         }
         DocxMutation::SetRunText(_)
         | DocxMutation::ReplaceXmlNode(_)
@@ -276,54 +295,62 @@ fn apply_to_snapshot(base: &DocxSnapshot, mutation: &DocxMutation) -> Option<Doc
         | DocxMutation::InsertXmlNode(_)
         | DocxMutation::RemoveXmlNode(_) => unreachable!(),
         DocxMutation::InsertStyle(insert_style::InsertStyle { style }) => {
-            let styles = styles_root_mut(&mut next)?;
-            if style_index(styles, &style.id).is_some() {
-                return None;
-            }
-            styles.push(crate::standards::v_ecma_376::subsets::base::io::export::serializers::style_to_xml(style));
+            edit_styles_root(&mut next, |styles| {
+                if style_index(styles, &style.id).is_some() {
+                    return None;
+                }
+                styles.push(crate::standards::v_ecma_376::subsets::base::io::export::serializers::style_to_xml(style));
+                Some(())
+            })?;
         }
         DocxMutation::RemoveStyle(remove_style::RemoveStyle { id }) => {
-            let styles = styles_root_mut(&mut next)?;
-            styles.remove(style_index(styles, id)?);
+            edit_styles_root(&mut next, |styles| {
+                styles.remove(style_index(styles, id)?);
+                Some(())
+            })?;
         }
         DocxMutation::SetStyleName(set_style_name::SetStyleName { id, name }) => {
-            let styles = styles_root_mut(&mut next)?;
-            let index = style_index(styles, id)?;
-            let children = element_children_mut(&mut styles[index], "w:style")?;
-            children.retain(|node| !matches!(node, XmlNode::Element { name, .. } if name == "w:name"));
-            children.insert(0, XmlNode::Element { name: "w:name".into(), attrs: vec![XmlAttr { name: "w:val".into(), value: name.clone() }], children: Vec::new() });
+            edit_styles_root(&mut next, |styles| {
+                let index = style_index(styles, id)?;
+                let children = element_children_mut(&mut styles[index], "w:style")?;
+                children.retain(|node| !matches!(node, XmlNode::Element { name, .. } if name == "w:name"));
+                children.insert(0, XmlNode::Element { name: "w:name".into(), attrs: vec![XmlAttr { name: "w:val".into(), value: name.clone() }], children: Vec::new() });
+                Some(())
+            })?;
         }
         DocxMutation::SetStyleBasedOn(set_style_based_on::SetStyleBasedOn { id, based_on }) => {
-            let styles = styles_root_mut(&mut next)?;
-            let index = style_index(styles, id)?;
-            let children = element_children_mut(&mut styles[index], "w:style")?;
-            children.retain(|node| !matches!(node, XmlNode::Element { name, .. } if name == "w:basedOn"));
-            if let Some(based_on) = based_on {
-                children.push(XmlNode::Element { name: "w:basedOn".into(), attrs: vec![XmlAttr { name: "w:val".into(), value: based_on.clone() }], children: Vec::new() });
-            }
+            edit_styles_root(&mut next, |styles| {
+                let index = style_index(styles, id)?;
+                let children = element_children_mut(&mut styles[index], "w:style")?;
+                children.retain(|node| !matches!(node, XmlNode::Element { name, .. } if name == "w:basedOn"));
+                if let Some(based_on) = based_on {
+                    children.push(XmlNode::Element { name: "w:basedOn".into(), attrs: vec![XmlAttr { name: "w:val".into(), value: based_on.clone() }], children: Vec::new() });
+                }
+                Some(())
+            })?;
         }
         DocxMutation::SetPart(set_part::SetPart { path, content_type, bytes }) => {
             let path = path.trim_start_matches('/').to_string();
             if docx_part_is_xml(&path, content_type) {
                 let text = std::str::from_utf8(bytes).ok()?;
                 let document = xml_document_from_text(text).ok()?;
-                next.opc.content_types.set_override(&path, content_type);
+                next.opc.content_types.set_override(&path, content_type).ok()?;
                 if let Some(part) = next.xml_part_mut(&path) {
                     part.content_type.clone_from(content_type);
-                    part.document = document;
+                    part.replace_document(document).ok()?;
                 } else {
-                    next.xml_parts.push(DocxXmlPart { path, content_type: content_type.clone(), document });
-                    next.xml_parts.sort_by(|left, right| left.path.cmp(&right.path));
+                    next.xml_parts.try_push(DocxXmlPart::try_from_document(path, content_type.clone(), document).ok()?).ok()?;
+                    next.xml_parts.sort_unstable_by(|left, right| left.path.cmp(&right.path));
                 }
             } else {
-                next.opc.set_part(&path, content_type, bytes.clone());
+                next.opc.set_part(&path, content_type, bytes.clone()).ok()?;
             }
         }
         DocxMutation::RemovePart(remove_part::RemovePart { path }) => {
             let path = path.trim_start_matches('/');
             let before = next.xml_parts.len() + next.opc.parts.len();
             next.xml_parts.retain(|part| part.path != path);
-            next.opc.parts.retain(|part| part.path != path);
+            next.opc.edit_package(|package| package.parts.retain(|part| part.path != path)).ok()?;
             (before != next.xml_parts.len() + next.opc.parts.len()).then_some(())?;
         }
     }
@@ -345,7 +372,7 @@ fn part_diff(address: &DocxXmlAddress, leaf: XmlNodeDiff) -> DocxDiff {
     DocxDiff { opc: None, xml_parts: Some(NamedTripleDiff { modified: vec![NamedModified { key: address.part_path.clone(), diff: DocxXmlPartDiff { content_type: None, document: Some(document) } }], ..Default::default() }) }
 }
 
-fn replacement_plan(snapshot: &DocxSnapshot, address: &DocxXmlAddress, replacement: XmlNode) -> Result<PreparedDocxXmlMutation, String> {
+fn replacement_plan(snapshot: &DocxSnapshot, address: &DocxXmlAddress, replacement: XmlNode) -> Result<PreparedDocxXmlMutation, ValueError> {
     let resolved = resolve_docx_xml_address(snapshot, address)?;
     xml_address::validate_replacement_identity(&resolved, &replacement)?;
     let previous = resolved.node.clone();
@@ -356,11 +383,11 @@ fn replacement_plan(snapshot: &DocxSnapshot, address: &DocxXmlAddress, replaceme
     Ok(PreparedDocxXmlMutation { diff, inverse: DocxMutation::ReplaceXmlNode(replace_xml_node::ReplaceXmlNode { address: inverse_address, node: previous }), changed, address: address.clone(), replacement })
 }
 
-fn child_insert_plan(snapshot: &DocxSnapshot, parent: &DocxXmlAddress, index: usize, node: XmlNode) -> Result<PreparedDocxXmlMutation, String> {
+fn child_insert_plan(snapshot: &DocxSnapshot, parent: &DocxXmlAddress, index: usize, node: XmlNode) -> Result<PreparedDocxXmlMutation, ValueError> {
     let resolved = resolve_docx_xml_address(snapshot, parent)?;
-    let XmlNode::Element { children, .. } = resolved.node else { return Err("insert-xml-node parent is not an element".into()) };
+    let XmlNode::Element { children, .. } = &resolved.node else { return Err(ValueError::new(ValueRefusalKind::InvalidValue,"insert-xml-node parent is not an element")) };
     if index > children.len() {
-        return Err(format!("XML child insertion index {index} exceeds {} children", children.len()));
+        return Err(ValueError::new(ValueRefusalKind::InvalidValue,format!("XML child insertion index {index} exceeds {} children", children.len())));
     }
     let expected_name = xml_address::child_identity(&resolved, &node)?;
     let revision = docx_xml_subtree_revision(&node);
@@ -372,17 +399,17 @@ fn child_insert_plan(snapshot: &DocxSnapshot, parent: &DocxXmlAddress, index: us
     Ok(PreparedDocxXmlMutation { diff, inverse: DocxMutation::RemoveXmlNode(remove_xml_node::RemoveXmlNode { parent: inverse_parent, index, expected_name, revision }), changed: true, address: parent.clone(), replacement })
 }
 
-fn child_remove_plan(snapshot: &DocxSnapshot, parent: &DocxXmlAddress, index: usize, expected_name: &str, revision: &str) -> Result<PreparedDocxXmlMutation, String> {
+fn child_remove_plan(snapshot: &DocxSnapshot, parent: &DocxXmlAddress, index: usize, expected_name: &str, revision: &str) -> Result<PreparedDocxXmlMutation, ValueError> {
     let resolved = resolve_docx_xml_address(snapshot, parent)?;
-    let XmlNode::Element { children, .. } = resolved.node else { return Err("remove-xml-node parent is not an element".into()) };
-    let previous = children.get(index).ok_or_else(|| format!("XML child removal index {index} exceeds {} children", children.len()))?.clone();
+    let XmlNode::Element { children, .. } = &resolved.node else { return Err(ValueError::new(ValueRefusalKind::InvalidValue,"remove-xml-node parent is not an element")) };
+    let previous = children.get(index).ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue,format!("XML child removal index {index} exceeds {} children", children.len())))?.clone();
     let actual_name = xml_address::child_identity(&resolved, &previous)?;
     if actual_name != expected_name {
-        return Err(format!("XML child removal expected {expected_name} but resolved {actual_name}"));
+        return Err(ValueError::new(ValueRefusalKind::InvalidValue,format!("XML child removal expected {expected_name} but resolved {actual_name}")));
     }
     let actual_revision = docx_xml_subtree_revision(&previous);
     if actual_revision != revision {
-        return Err(format!("XML child removal revision changed from {revision} to {actual_revision}"));
+        return Err(ValueError::new(ValueRefusalKind::InvalidValue,format!("XML child removal revision changed from {revision} to {actual_revision}")));
     }
     let mut replacement = resolved.node.clone();
     let XmlNode::Element { children, .. } = &mut replacement else { unreachable!() };
@@ -393,7 +420,7 @@ fn child_remove_plan(snapshot: &DocxSnapshot, parent: &DocxXmlAddress, index: us
 }
 
 /// 🧩️ Validates one addressed edit and prepares its compact target-part diff and exact inverse.
-pub fn prepare_addressed_xml_mutation(snapshot: &DocxSnapshot, mutation: &DocxMutation) -> Result<PreparedDocxXmlMutation, String> {
+pub fn prepare_addressed_xml_mutation(snapshot: &DocxSnapshot, mutation: &DocxMutation) -> Result<PreparedDocxXmlMutation, ValueError> {
     match mutation {
         DocxMutation::SetRunText(set_run_text::SetRunText { address, text }) => {
             let resolved = resolve_docx_xml_address(snapshot, address)?;
@@ -421,12 +448,12 @@ pub fn prepare_addressed_xml_mutation(snapshot: &DocxSnapshot, mutation: &DocxMu
         }
         DocxMutation::InsertXmlNode(insert_xml_node::InsertXmlNode { parent, index, node }) => child_insert_plan(snapshot, parent, *index, node.clone()),
         DocxMutation::RemoveXmlNode(remove_xml_node::RemoveXmlNode { parent, index, expected_name, revision }) => child_remove_plan(snapshot, parent, *index, expected_name, revision),
-        _ => Err("mutation is not an addressed canonical XML edit".into()),
+        _ => Err(ValueError::new(ValueRefusalKind::InvalidValue,"mutation is not an addressed canonical XML edit")),
     }
 }
 
 /// ▶️ Applies one revision-bound canonical XML edit without cloning or projecting unrelated parts.
-pub fn apply_addressed_xml_mutation_in_place(snapshot: &mut DocxSnapshot, mutation: &DocxMutation) -> Result<PreparedDocxXmlMutation, String> {
+pub fn apply_addressed_xml_mutation_in_place(snapshot: &mut DocxSnapshot, mutation: &DocxMutation) -> Result<PreparedDocxXmlMutation, ValueError> {
     let prepared = prepare_addressed_xml_mutation(snapshot, mutation)?;
     if prepared.changed {
         xml_address::replace_addressed_node(snapshot, &prepared.address, prepared.replacement.clone())?;
@@ -435,10 +462,13 @@ pub fn apply_addressed_xml_mutation_in_place(snapshot: &mut DocxSnapshot, mutati
 }
 
 pub(crate) fn agg_diff(this: &DocxMutation, base: &DocxSnapshot) -> protocol::MutationOutcome<DocxDiff> {
+    if let DocxMutation::PatchSnapshot(patch) = this {
+        return <patch_snapshot::PatchSnapshot as protocol::MutationKind<DocxSnapshot, DocxMutation>>::diff(patch, base);
+    }
     if is_addressed_xml_mutation(this) {
         return match prepare_addressed_xml_mutation(base, this) {
             Ok(prepared) => protocol::MutationOutcome::new(prepared.diff),
-            Err(message) => protocol::MutationOutcome::error("mutation.target-mismatch", message, mutation_target(this)),
+            Err(message) => protocol::MutationOutcome::error("mutation.target-mismatch", message.into_message(), mutation_target(this)),
         };
     }
     protocol::MutationOutcome::new(apply_to_snapshot(base, this).map_or_else(DocxDiff::default, |next| diff_set_snapshot(base, &next)))
@@ -459,11 +489,14 @@ fn mutation_target(mutation: &DocxMutation) -> Vec<String> {
     address.map_or_else(Vec::new, |address| std::iter::once(address.part_path.clone()).chain(address.node_path.iter().map(usize::to_string)).collect())
 }
 
-pub(crate) fn agg_inverse(this: &DocxMutation, base: &DocxSnapshot) -> Vec<DocxMutation> {
-    if is_addressed_xml_mutation(this) {
-        return prepare_addressed_xml_mutation(base, this).map(|prepared| vec![prepared.inverse]).unwrap_or_default();
+pub(crate) fn agg_inverse(this: &DocxMutation, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, semio_framework_value::ValueError> {
+    if let DocxMutation::PatchSnapshot(patch) = this {
+        return <patch_snapshot::PatchSnapshot as protocol::MutationKind<DocxSnapshot, DocxMutation>>::inverse(patch, base);
     }
-    vec![DocxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })]
+    if is_addressed_xml_mutation(this) {
+        return prepare_addressed_xml_mutation(base, this).map(|prepared| vec![prepared.inverse]);
+    }
+    Ok(vec![DocxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })])
 }
 //#endregion 🔖️MutationTrait
 
@@ -502,23 +535,23 @@ fn dec_list_segments(s: &str) -> Result<Vec<DocxPathSegment>, String> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_docx_snapshot(snapshot: &DocxSnapshot) -> String {
-    hex_encode(dsl::json::to_json_string(snapshot).as_bytes())
+    hex_encode(semio_framework_pack_json::to_json_string(snapshot).as_bytes())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_docx_snapshot(value: &str) -> Result<DocxSnapshot, String> {
     let bytes = hex_decode(value)?;
     let text = std::str::from_utf8(&bytes).map_err(|error| error.to_string())?;
-    dsl::json::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 
 fn enc_xml_address(address: &DocxXmlAddress) -> String {
-    hex_encode(dsl::json::to_json_string(address).as_bytes())
+    hex_encode(semio_framework_pack_json::to_json_string(address).as_bytes())
 }
 
 fn dec_xml_address(value: &str) -> Result<DocxXmlAddress, String> {
     let bytes = hex_decode(value)?;
     let text = std::str::from_utf8(&bytes).map_err(|error| error.to_string())?;
-    dsl::json::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 
 fn dec_string_list(value: &str) -> Result<Vec<String>, String> {
@@ -529,6 +562,7 @@ fn dec_string_list(value: &str) -> Result<Vec<String>, String> {
 fn print_docx_mutation(m: &DocxMutation) -> String {
     match m {
         DocxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", enc_docx_snapshot(snapshot)),
+        DocxMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(patch),
         DocxMutation::InsertBlock(insert_block::InsertBlock { path, block }) => format!("insert-block path={} block={}", enc_block_path(path), enc_block(block)),
         DocxMutation::RemoveBlock(remove_block::RemoveBlock { path }) => format!("remove-block path={}", enc_block_path(path)),
         DocxMutation::SetBlockContent(set_block_content::SetBlockContent { path, block }) => format!("set-block-content path={} block={}", enc_block_path(path), enc_block(block)),
@@ -565,6 +599,7 @@ fn parse_docx_mutation(line: &str) -> Result<DocxMutation, String> {
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("docx mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
+        "patch-snapshot" => semio_s_artifact_stdio_contract::editing::snapshot_patch_from_text(line).map(|patch| DocxMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch })),
         "set-snapshot" => Ok(DocxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_docx_snapshot(arg("snapshot")?)? })),
         "insert-block" => Ok(DocxMutation::InsertBlock(insert_block::InsertBlock { path: dec_block_path(arg("path")?)?, block: dec_block(arg("block")?)? })),
         "remove-block" => Ok(DocxMutation::RemoveBlock(remove_block::RemoveBlock { path: dec_block_path(arg("path")?)? })),
@@ -595,8 +630,8 @@ impl OpText for DocxMutation {
     fn print_op(&self) -> String {
         print_docx_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_docx_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_docx_mutation(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 }
 
@@ -665,13 +700,13 @@ fn dec_xml_address_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxXmlAddr
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_docx_snapshot_bin(snapshot: &DocxSnapshot, out: &mut Vec<u8>) {
-    write_bytes_lp(out, dsl::json::to_json_string(snapshot).as_bytes());
+    write_bytes_lp(out, semio_framework_pack_json::to_json_string(snapshot).as_bytes());
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_docx_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxSnapshot, String> {
     let bytes = read_bytes_lp(reader)?;
     let text = std::str::from_utf8(&bytes).map_err(|error| error.to_string())?;
-    dsl::json::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 //#endregion 🔖️OpBinaryCodec
 
@@ -679,6 +714,7 @@ fn dec_docx_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxSnaps
 /// 🏷️ Op tags of `DocxMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
 const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
 const TAG_INSERT_BLOCK: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-block");
 const TAG_REMOVE_BLOCK: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-block");
 const TAG_SET_BLOCK_CONTENT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-block-content");
@@ -707,6 +743,7 @@ impl OpBinary for DocxMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             DocxMutation::SetSnapshot(set_snapshot::SetSnapshot { .. }) => TAG_SET_SNAPSHOT,
+            DocxMutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
             DocxMutation::InsertBlock(insert_block::InsertBlock { .. }) => TAG_INSERT_BLOCK,
             DocxMutation::RemoveBlock(remove_block::RemoveBlock { .. }) => TAG_REMOVE_BLOCK,
             DocxMutation::SetBlockContent(set_block_content::SetBlockContent { .. }) => TAG_SET_BLOCK_CONTENT,
@@ -728,6 +765,7 @@ impl OpBinary for DocxMutation {
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
             DocxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => enc_docx_snapshot_bin(snapshot, &mut out),
+            DocxMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => out.extend(protocol::OpBinary::encode_op(patch)?),
             DocxMutation::InsertBlock(insert_block::InsertBlock { path, block }) => {
                 enc_block_path_bin(path, &mut out);
                 enc_block_bin(block, &mut out);
@@ -810,6 +848,7 @@ impl OpBinary for DocxMutation {
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
         let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
+            TAG_PATCH_SNAPSHOT => Ok(DocxMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: <semio_s_artifact_stdio_contract::editing::SnapshotPatch as protocol::OpBinary>::decode_op(reader.read_bytes(reader.remaining()).map_err(|e| protocol::ProtocolError::Malformed { what: "patch-snapshot payload", offset: reader.position() as u64, detail: e.to_string() })?)? })),
             TAG_SET_SNAPSHOT => {
                 let snapshot = dec_docx_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
                 Ok(DocxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
@@ -987,13 +1026,14 @@ pub(crate) fn demo_mutation_cases() -> Vec<DocxMutation> {
     let paragraph_address = docx_top_level_block_address(&base, 0).expect("demo paragraph address");
     let table_address = docx_top_level_block_address(&base, 1).expect("demo table address");
     let resolved_run = resolve_docx_xml_address(&base, &address).expect("demo run");
-    let XmlNode::Element { children: run_children, .. } = resolved_run.node else { panic!("demo run element") };
+    let XmlNode::Element { children: ref run_children, .. } = resolved_run.node else { panic!("demo run element") };
     let inserted = XmlNode::Comment { text: "inserted".into() };
     let removed = run_children.first().expect("demo run child").clone();
     let removed_name = xml_address::child_identity(&resolved_run, &removed).expect("demo child identity");
     let removed_revision = docx_xml_subtree_revision(&removed);
     vec![
         DocxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: sweep_b() }),
+        DocxMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         DocxMutation::InsertBlock(insert_block::InsertBlock { path: DocxBlockPath { segments: vec![], index: 1 }, block: DocxBlock::paragraph("x") }),
         DocxMutation::RemoveBlock(remove_block::RemoveBlock { path: DocxBlockPath { segments: vec![], index: 0 } }),
         DocxMutation::SetBlockContent(set_block_content::SetBlockContent { path: DocxBlockPath { segments: vec![], index: 0 }, block: DocxBlock::paragraph("y") }),

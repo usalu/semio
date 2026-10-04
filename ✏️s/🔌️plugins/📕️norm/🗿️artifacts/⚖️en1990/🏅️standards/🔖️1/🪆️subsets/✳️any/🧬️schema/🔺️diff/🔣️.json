@@ -4,12 +4,11 @@
   "title": "En1990Diff",
   "type": "object",
   "additionalProperties": false,
-  "required": [],
   "properties": {
-    "gK": {
+    "annex": {
       "anyOf": [
         {
-          "type": "number"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/properties/annex"
         },
         {
           "type": "null"
@@ -17,22 +16,32 @@
       ],
       "x-semio-state": "artifact"
     },
-    "qK": {
+    "projectId": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/properties/projectId"
         },
         {
           "type": "null"
         }
       ],
-      "x-semio-state": "artifact",
-      "x-semio-child-kind": "s.stdio.semio"
+      "x-semio-state": "artifact"
     },
-    "resistanceKn": {
+    "structureKind": {
       "anyOf": [
         {
-          "type": "number"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/properties/structureKind"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "altitudeM": {
+      "anyOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/properties/altitudeM"
         },
         {
           "type": "null"
@@ -43,9 +52,7 @@
     "consequenceClass": {
       "anyOf": [
         {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 255
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/properties/consequenceClass"
         },
         {
           "type": "null"
@@ -53,14 +60,10 @@
       ],
       "x-semio-state": "artifact"
     },
-    "annex": {
+    "reliabilityClass": {
       "anyOf": [
         {
-          "type": "string",
-          "enum": [
-            "En",
-            "De"
-          ]
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/properties/reliabilityClass"
         },
         {
           "type": "null"
@@ -68,10 +71,153 @@
       ],
       "x-semio-state": "artifact"
     },
-    "seismicAEdKn": {
+    "designWorkingLifeCategory": {
       "anyOf": [
         {
-          "type": "number"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/properties/designWorkingLifeCategory"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "designWorkingLifeYears": {
+      "anyOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/properties/designWorkingLifeYears"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "referencePeriodYears": {
+      "anyOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/properties/referencePeriodYears"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "supervisionLevel": {
+      "anyOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/properties/supervisionLevel"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "inspectionLevel": {
+      "anyOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/properties/inspectionLevel"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "kFiDeclared": {
+      "anyOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/properties/kFiDeclared"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "betaComputed": {
+      "anyOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/properties/betaComputed"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "permanents": {
+      "anyOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/properties/permanents"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "variables": {
+      "anyOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/properties/variables"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "accidentals": {
+      "anyOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/properties/accidentals"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "seismics": {
+      "anyOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/properties/seismics"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "members": {
+      "anyOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/properties/members"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "bridgeSls": {
+      "anyOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/properties/bridgeSls"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "effects": {
+      "anyOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/properties/effects"
         },
         {
           "type": "null"

@@ -1,0 +1,25 @@
+{
+  "at": "2026-10-03T19:13:52.934Z",
+  "results": [
+    {
+      "name": "@semio-tech/puzzle-3d-rs-compute-ownership",
+      "code": 1,
+      "missingOwnFileRefused": true
+    },
+    {
+      "name": "@semio-tech/framework-plugin-compute-ownership",
+      "code": 1,
+      "missingOwnFileRefused": true
+    },
+    {
+      "name": "@semio-tech/framework-plugin-host-fixture-compute-ownership",
+      "code": 1,
+      "missingOwnFileRefused": true
+    },
+    {
+      "name": "@semio-tech/space-plugin-compute-ownership",
+      "code": 1,
+      "missingOwnFileRefused": true
+    }
+  ]
+}

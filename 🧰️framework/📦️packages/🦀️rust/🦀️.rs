@@ -25,12 +25,7 @@ pub use semio_framework_os_kernel::{compose_thunk, io_run_thunk, io_sniff_thunk}
 #[path = "../../🔨️modules/🌉️abi/🦀️.rs"]
 pub mod abi;
 
-// 🧬️ ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM W1-A task 1: the io vocabulary
-// (`StandardId`/`SubsetId`/`Dialect`/`ArtifactDialect`/`ArtifactKindId`/`ArtifactRef`) is mounted
-// ONCE, in the os-kernel crate (`io_schema` there) — re-exported here rather than remounted, so
-// this crate never compiles a second copy of the vocabulary or registry source.
-// Native artifact assembly and every public I/O facade share the kernel-owned registry.
-pub use semio_framework_os_kernel::io_schema;
+pub use semio_framework_io_schema as io_schema;
 pub use semio_framework_os_kernel::sqlite_snapshot;
 
 #[path = "../../🔨️modules/🖥️platform/🦀️.rs"]
@@ -58,8 +53,19 @@ pub use action_bus::{
     ActionBus, ErasedToolJob, ToolCancellationPolicy, ToolDispatchError, ToolExecutionContract, ToolExecutionShape, ToolFactoryKey, ToolFreshnessPolicy, ToolJobDispatch, ToolJobFactory, ToolJobFactoryError, ToolOperationSpec,
     ToolPayload, ToolRegistrationError, ToolWireAdmission,
 };
-pub use dsl::{dsl_value, DslValue};
-pub use dsl::{Diagnostic, Fault, FaultCause, FaultCode, FaultFrom, FaultOrigin, FaultScope, Severity, TextError, TextSpan};
+pub use semio_framework_value::{dsl_value,DslValue};
+pub use semio_framework_diagnostic::Diagnostic;
+pub use semio_framework_diagnostic::Fault;
+pub use semio_framework_diagnostic::FaultCause;
+pub use semio_framework_diagnostic::FaultCode;
+pub use semio_framework_diagnostic::FaultFrom;
+pub use semio_framework_diagnostic::FaultOrigin;
+pub use semio_framework_diagnostic::FaultParams;
+pub use semio_framework_diagnostic::is_fault_param_name;
+pub use semio_framework_diagnostic::FaultScope;
+pub use semio_framework_diagnostic::Severity;
+pub use semio_framework_diagnostic::TextError;
+pub use semio_framework_diagnostic::TextSpan;
 
 // 🛂️ The declarative component model (layout/utilities/UiNode) lives in `ui_wgpu` now — re-import
 // honestly (not a re-export) wherever this crate's manifest/kernel types need it; see `pub mod manifest`.
@@ -68,7 +74,7 @@ pub use dsl::{Diagnostic, Fault, FaultCause, FaultCode, FaultFrom, FaultOrigin, 
 // as brep tessellation) — no longer part of this framework module's own re-export surface.
 pub use semio_framework_mesh_engine::{
     mesh_box, mesh_cone, mesh_cylinder, mesh_from_glb, mesh_from_indexed, mesh_from_indexed_with_face_groups, mesh_from_kind, mesh_from_obj, mesh_from_stl, mesh_ico_sphere, mesh_plane, mesh_to_glb, mesh_to_obj, mesh_to_stl, mesh_torus,
-    mesh_uv_sphere, GlbExporter, GlbImporter, IoError, MeshData, MeshExporter, MeshImporter, ObjExporter, ObjImporter, StlExporter, StlImporter,
+    mesh_uv_sphere, GlbExporter, GlbImporter, IoError, MeshAttribute, MeshAttributeDomain, MeshAttributeSemantic, MeshAttributeInterpolation, MeshTexture, MeshMetadataCursor, PolygonMeshSource, parse_polygon_mesh_source, validate_polygon_mesh_attributes, validate_mesh_surface_assets, validate_mesh_attribute, MeshData, MeshExporter, MeshImporter, ObjExporter, ObjImporter, StlExporter, StlImporter,
 };
 // 🚪️ DWG codec (`dwg_to_bytes`/`dwg_from_bytes`/`mesh_to_dwg_drawing`/…) DELETED (ticket 26/08/12/
 // DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave DEDUP): `🔺️mesh/🦀️.rs`
@@ -105,7 +111,7 @@ pub use io::{
     register_subset_validator,
     register_subset_validators,
     resolve as io_resolve,
-    resolve_ready,
+    
     set_io_fallback_dispatcher,
     subset_validator_entry_of,
     wire_artifact_compose,

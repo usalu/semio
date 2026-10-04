@@ -58,25 +58,25 @@ fn preview_partition_matches_language_neutral_json_oracle() {
 fn block3d_world_preview_codecs_and_inverse_match_neutral_vectors() {
     let oracle: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔀️codec/🔣️.json")).unwrap();
     for row in oracle["cases"].as_array().unwrap() {
-        let before: Block3dWorldWindowTransient = dsl::json::from_json_str(&row["before"].to_string()).unwrap();
-        let expected: Block3dWorldWindowTransient = dsl::json::from_json_str(&row["after"].to_string()).unwrap();
+        let before: Block3dWorldWindowTransient = semio_framework_pack_json::from_json_str(&row["before"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let expected: Block3dWorldWindowTransient = semio_framework_pack_json::from_json_str(&row["after"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let operation: Block3dWorldWindowTransientMutation = SetBrushPreview { preview: expected.brush_preview.clone() }.into();
         let outcome = operation.diff(&before);
         assert!(outcome.messages().is_empty());
         let applied = outcome.diff().apply(&before).unwrap();
         assert_eq!(applied, expected);
-        let encoded: serde_json::Value = serde_json::from_str(&dsl::json::to_json_string(&applied)).unwrap();
+        let encoded: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&applied)).unwrap();
         assert_eq!(encoded, row["after"]);
         assert_eq!(Block3dWorldWindowTransient::parse_dsl(&applied.print_dsl()).unwrap(), applied);
         let packed = applied.encode_pack_with(&Default::default()).unwrap();
         assert_eq!(Block3dWorldWindowTransient::decode_pack_with(&packed, &Default::default()).unwrap(), applied);
-        let operation_wire = dsl::json::to_json_string(&operation);
+        let operation_wire = semio_framework_pack_json::to_json_string(&operation);
         let independent: serde_json::Value = serde_json::from_str(&operation_wire).unwrap();
-        assert_eq!(dsl::json::from_json_str::<Block3dWorldWindowTransientMutation>(&serde_json::to_string(&independent).unwrap()).unwrap(), operation);
+        assert_eq!(semio_framework_pack_json::from_json_str::<Block3dWorldWindowTransientMutation>(&serde_json::to_string(&independent).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(), operation);
         assert_eq!(Block3dWorldWindowTransientMutation::parse_op(&operation.print_op()).unwrap(), operation);
         assert_eq!(Block3dWorldWindowTransientMutation::decode_op(&operation.encode_op().unwrap()).unwrap(), operation);
         let mut restored = applied;
-        for inverse in operation.inverse(&before) {
+        for inverse in operation.inverse(&before).expect("valid retained mutation inverse fixture") {
             restored = inverse.diff(&restored).diff().apply(&restored).unwrap();
         }
         assert_eq!(restored, before);

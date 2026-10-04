@@ -202,6 +202,7 @@ pub fn layout_run_definition(run_job: JobKindId) -> ToolRunDefinition {
         revalidate_job: None,
         settings: ToolRunSettingsReads::default(),
         windows: Vec::new(),
+        member: None,
     }
 }
 //#endregion 🔖️Vocabulary

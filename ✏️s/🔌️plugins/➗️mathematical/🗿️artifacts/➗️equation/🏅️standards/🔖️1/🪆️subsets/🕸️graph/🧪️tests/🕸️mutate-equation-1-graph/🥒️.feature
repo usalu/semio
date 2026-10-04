@@ -14,11 +14,8 @@ Feature: Apply every typed s.mathematical.equation graph mutation to its committ
   fixtures — the adapter reads the committed files through `include_str!` — so the plan pins none of
   their digests and a Python reference cannot read them at all.
 
-  What distinguishes this subset is a mismatch between what it declares and what it persists, and
-  this case exists partly to make that mismatch visible. The snapshot no longer holds the `graph`
-  collection this vocabulary addresses: ticket UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM replaced it with a
-  composed `notation` child no fixture can resolve. The consequence is that NONE of this subset's ten
-  declared kinds addresses a collection a committed fixture can resolve. Seven of them —
+  The snapshot holds the `graph` collection this vocabulary addresses INLINE (model (a), design §20.15),
+  so forward vectors are authorable; the committed ones still pin the branches below. Seven of them —
   `create-node`, `delete-node`, `delete-nodes`, `change-node-label`, `move-node`, `connect-nodes`,
   `disconnect-nodes` — carry REJECTION vectors whose declared outcome is `mutation.target-missing` or
   `mutation.duplicate-id` with the offending address in `path`. Three more —

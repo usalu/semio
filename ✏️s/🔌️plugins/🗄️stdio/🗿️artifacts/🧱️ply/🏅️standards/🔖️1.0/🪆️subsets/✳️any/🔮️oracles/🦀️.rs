@@ -425,6 +425,9 @@ mod oracles {
             "set-snapshot" => {
                 ply = ply_from_json(params.get("snapshot").ok_or("set-snapshot requires a snapshot field")?)?;
             }
+            "patch-snapshot" => {
+                ply = ply_from_json(&semio_repo_test_host::law::patched_snapshot(&snapshot_wire(input)?, params.get("patch").ok_or("patch-snapshot requires a patch field")?)?)?;
+            }
             "set-format" => {
                 ply.header.encoding = encoding_from_str(&params.str("format"))?;
             }

@@ -1,0 +1,7 @@
+# Generated Cache Space Reclamation
+
+At16:37UTC authoritative filesystem capacity showed13GiBfree after earlier worker observation250MiBfree. Root measured84inactive `nx-root*` directories under this ticket's generated folder, totaling21565MiB. All are recreatable Nx graph/tool outputs; the current live Root graph directory is `nx-root-procedure-puzzle5d-actual-project-controlled-native-followup` and is excluded. Root's33GiBwarm Cargo cache, all foreign agent caches, assertion logs, input fixtures, reports and hand-authored scripts remain outside this cleanup.
+
+Before deletion each selected directory is checked against the current live process environments, confined to the ticket-generated root, and required to have the `nx-root` prefix. Any live reference causes preservation. This maintenance does not imply ticket/goal completion or remove the complete generated folder. Reclamation results remain pending until the command finishes.
+
+The cleanup command finished successfully:83inactive generated Root graph caches removed, `nx-root-snapshots` preserved because a live process reference was observed. The explicitly excluded live current graph directory and all Cargo caches were retained. Filesystem readback at16:43UTC now shows49GiBfree; this observed capacity also reflects other concurrent filesystem activity and is not claimed as an exact isolated cleanup delta. Logs, reports and authored inputs remain intact.

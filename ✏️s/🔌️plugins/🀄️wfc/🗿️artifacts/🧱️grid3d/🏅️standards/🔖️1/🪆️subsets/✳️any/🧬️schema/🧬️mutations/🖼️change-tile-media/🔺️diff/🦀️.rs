@@ -9,7 +9,7 @@ pub fn diff(payload: &super::ChangeTileMedia, base: &Grid3dSnapshot) -> protocol
         return protocol::MutationOutcome::error("mutation.target-missing", format!("No tile with id \"{}\" exists.", payload.tile_id), [payload.tile_id.clone()]);
     };
     if base.tiles[index].media == payload.media {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Tile \"{}\" already carries that media.", payload.tile_id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Tile \"{}\" already carries that media.", payload.tile_id));
     }
     let mut tile = base.tiles[index].clone();
     tile.media = payload.media.clone();

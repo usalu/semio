@@ -18,9 +18,12 @@ impl protocol::MutationKind<SemioMeshSnapshot, SemioMeshMutation> for SetPrimiti
     fn diff(&self, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<<SemioMeshMutation as protocol::Mutation<SemioMeshSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioMeshSnapshot) -> Vec<SemioMeshMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &SemioMeshSnapshot) -> Result<Vec<SemioMeshMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set primitive \"{}\" material in mesh \"{}\"", self.primitive_id, self.mesh_id), &format!("Material von Primitiv \"{}\" in Netz \"{}\" setzen", self.primitive_id, self.mesh_id))
     }

@@ -1,0 +1,35 @@
+{
+  "name": "@semio-tech/framework-dsl-record-derive-rs",
+  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive",
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/**/*"
+    ]
+  },
+  "targets": {
+    "test-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "default"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-ownership"
+      }
+    },
+    "test-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "default"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-native"
+      }
+    }
+  }
+}

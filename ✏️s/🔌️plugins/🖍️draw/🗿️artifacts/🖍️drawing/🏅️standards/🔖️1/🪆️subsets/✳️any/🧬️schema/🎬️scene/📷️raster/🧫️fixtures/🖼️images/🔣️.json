@@ -1,0 +1,1445 @@
+[
+  {
+    "name": "scene image: identity",
+    "input": {
+      "width": 1,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "tolerance": 0.01,
+      "maxPixels": 1024,
+      "nodes": [
+        {
+          "id": "image",
+          "groups": [],
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "pixels",
+            "image": {
+              "width": 1,
+              "height": 1,
+              "pixels": [
+                255,
+                0,
+                0,
+                255
+              ]
+            }
+          }
+        }
+      ],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      255,
+      0,
+      0,
+      255
+    ]
+  },
+  {
+    "name": "scene image: half pixel translation",
+    "input": {
+      "width": 2,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "tolerance": 0.01,
+      "maxPixels": 1024,
+      "nodes": [
+        {
+          "id": "image",
+          "groups": [],
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0.5,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "pixels",
+            "image": {
+              "width": 1,
+              "height": 1,
+              "pixels": [
+                255,
+                0,
+                0,
+                255
+              ]
+            }
+          }
+        }
+      ],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      255,
+      0,
+      0,
+      128,
+      255,
+      0,
+      0,
+      128
+    ]
+  },
+  {
+    "name": "scene image: quarter area reduction",
+    "input": {
+      "width": 1,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "tolerance": 0.01,
+      "maxPixels": 1024,
+      "nodes": [
+        {
+          "id": "image",
+          "groups": [],
+          "transform": [
+            0.5,
+            0,
+            0,
+            0.5,
+            0,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "pixels",
+            "image": {
+              "width": 1,
+              "height": 1,
+              "pixels": [
+                255,
+                0,
+                0,
+                255
+              ]
+            }
+          }
+        }
+      ],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      255,
+      0,
+      0,
+      64
+    ]
+  },
+  {
+    "name": "scene image: premultiplied bilinear avoids transparent red fringe",
+    "input": {
+      "width": 4,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "tolerance": 0.01,
+      "maxPixels": 1024,
+      "nodes": [
+        {
+          "id": "image",
+          "groups": [],
+          "transform": [
+            2,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "pixels",
+            "image": {
+              "width": 2,
+              "height": 1,
+              "pixels": [
+                255,
+                0,
+                0,
+                0,
+                0,
+                0,
+                255,
+                255
+              ]
+            }
+          }
+        }
+      ],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      255,
+      64,
+      0,
+      0,
+      255,
+      191,
+      0,
+      0,
+      255,
+      255
+    ]
+  },
+  {
+    "name": "scene image: two pixel area mean",
+    "input": {
+      "width": 1,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "tolerance": 0.01,
+      "maxPixels": 1024,
+      "nodes": [
+        {
+          "id": "image",
+          "groups": [],
+          "transform": [
+            0.5,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "pixels",
+            "image": {
+              "width": 2,
+              "height": 1,
+              "pixels": [
+                255,
+                0,
+                0,
+                255,
+                0,
+                0,
+                255,
+                255
+              ]
+            }
+          }
+        }
+      ],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      128,
+      0,
+      128,
+      255
+    ]
+  },
+  {
+    "name": "scene image: odd reduction avoids center alias",
+    "input": {
+      "width": 1,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "tolerance": 0.01,
+      "maxPixels": 1024,
+      "nodes": [
+        {
+          "id": "image",
+          "groups": [],
+          "transform": [
+            0.3333333333333333,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "pixels",
+            "image": {
+              "width": 3,
+              "height": 1,
+              "pixels": [
+                255,
+                255,
+                255,
+                255,
+                0,
+                0,
+                0,
+                255,
+                255,
+                255,
+                255,
+                255
+              ]
+            }
+          }
+        }
+      ],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      170,
+      170,
+      170,
+      255
+    ]
+  },
+  {
+    "name": "scene image: anisotropic area reduction",
+    "input": {
+      "width": 1,
+      "height": 2,
+      "origin": [
+        0,
+        0
+      ],
+      "tolerance": 0.01,
+      "maxPixels": 1024,
+      "nodes": [
+        {
+          "id": "image",
+          "groups": [],
+          "transform": [
+            0.3333333333333333,
+            0,
+            0,
+            2,
+            0,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "pixels",
+            "image": {
+              "width": 3,
+              "height": 1,
+              "pixels": [
+                255,
+                255,
+                255,
+                255,
+                0,
+                0,
+                0,
+                255,
+                255,
+                255,
+                255,
+                255
+              ]
+            }
+          }
+        }
+      ],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      170,
+      170,
+      170,
+      255,
+      170,
+      170,
+      170,
+      255
+    ]
+  },
+  {
+    "name": "scene image: area weights premultiplied alpha",
+    "input": {
+      "width": 1,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "tolerance": 0.01,
+      "maxPixels": 1024,
+      "nodes": [
+        {
+          "id": "image",
+          "groups": [],
+          "transform": [
+            0.3333333333333333,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "pixels",
+            "image": {
+              "width": 3,
+              "height": 1,
+              "pixels": [
+                255,
+                255,
+                255,
+                0,
+                0,
+                0,
+                0,
+                255,
+                255,
+                255,
+                255,
+                128
+              ]
+            }
+          }
+        }
+      ],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      85,
+      85,
+      85,
+      128
+    ]
+  },
+  {
+    "name": "scene image: fractional partial image edge",
+    "input": {
+      "width": 2,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "tolerance": 0.01,
+      "maxPixels": 1024,
+      "nodes": [
+        {
+          "id": "image",
+          "groups": [],
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0.75,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "pixels",
+            "image": {
+              "width": 1,
+              "height": 1,
+              "pixels": [
+                255,
+                0,
+                0,
+                255
+              ]
+            }
+          }
+        }
+      ],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      255,
+      0,
+      0,
+      64,
+      255,
+      0,
+      0,
+      191
+    ]
+  },
+  {
+    "name": "scene image: rotated diamond edge coverage",
+    "input": {
+      "width": 2,
+      "height": 2,
+      "origin": [
+        0,
+        0
+      ],
+      "tolerance": 0.01,
+      "maxPixels": 1024,
+      "nodes": [
+        {
+          "id": "image",
+          "groups": [],
+          "transform": [
+            1,
+            1,
+            -1,
+            1,
+            1,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "pixels",
+            "image": {
+              "width": 1,
+              "height": 1,
+              "pixels": [
+                255,
+                0,
+                0,
+                255
+              ]
+            }
+          }
+        }
+      ],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      255,
+      0,
+      0,
+      128,
+      255,
+      0,
+      0,
+      128,
+      255,
+      0,
+      0,
+      128,
+      255,
+      0,
+      0,
+      128
+    ]
+  },
+  {
+    "name": "scene image: sheared edge coverage",
+    "input": {
+      "width": 2,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "tolerance": 0.01,
+      "maxPixels": 1024,
+      "nodes": [
+        {
+          "id": "image",
+          "groups": [],
+          "transform": [
+            1,
+            0,
+            1,
+            1,
+            0,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "pixels",
+            "image": {
+              "width": 1,
+              "height": 1,
+              "pixels": [
+                255,
+                0,
+                0,
+                255
+              ]
+            }
+          }
+        }
+      ],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      255,
+      0,
+      0,
+      128,
+      255,
+      0,
+      0,
+      128
+    ]
+  },
+  {
+    "name": "scene image: reflection",
+    "input": {
+      "width": 2,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "tolerance": 0.01,
+      "maxPixels": 1024,
+      "nodes": [
+        {
+          "id": "image",
+          "groups": [],
+          "transform": [
+            -1,
+            0,
+            0,
+            1,
+            2,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "pixels",
+            "image": {
+              "width": 2,
+              "height": 1,
+              "pixels": [
+                255,
+                0,
+                0,
+                255,
+                0,
+                0,
+                255,
+                255
+              ]
+            }
+          }
+        }
+      ],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      0,
+      0,
+      255,
+      255,
+      255,
+      0,
+      0,
+      255
+    ]
+  },
+  {
+    "name": "scene image: fractional canvas origin",
+    "input": {
+      "width": 1,
+      "height": 1,
+      "origin": [
+        0.25,
+        0.5
+      ],
+      "tolerance": 0.01,
+      "maxPixels": 1024,
+      "nodes": [
+        {
+          "id": "image",
+          "groups": [],
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0.25,
+            0.5
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "pixels",
+            "image": {
+              "width": 1,
+              "height": 1,
+              "pixels": [
+                255,
+                0,
+                0,
+                255
+              ]
+            }
+          }
+        }
+      ],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      255,
+      0,
+      0,
+      255
+    ]
+  },
+  {
+    "name": "scene image: singular transform",
+    "input": {
+      "width": 1,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "tolerance": 0.01,
+      "maxPixels": 1024,
+      "nodes": [
+        {
+          "id": "image",
+          "groups": [],
+          "transform": [
+            0,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "pixels",
+            "image": {
+              "width": 1,
+              "height": 1,
+              "pixels": [
+                255,
+                0,
+                0,
+                255
+              ]
+            }
+          }
+        }
+      ],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "scene image: offscreen",
+    "input": {
+      "width": 1,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "tolerance": 0.01,
+      "maxPixels": 1024,
+      "nodes": [
+        {
+          "id": "image",
+          "groups": [],
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            8,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "pixels",
+            "image": {
+              "width": 1,
+              "height": 1,
+              "pixels": [
+                255,
+                0,
+                0,
+                255
+              ]
+            }
+          }
+        }
+      ],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "scene image: transparent source",
+    "input": {
+      "width": 1,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "tolerance": 0.01,
+      "maxPixels": 1024,
+      "nodes": [
+        {
+          "id": "image",
+          "groups": [],
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "pixels",
+            "image": {
+              "width": 1,
+              "height": 1,
+              "pixels": [
+                0,
+                255,
+                0,
+                0
+              ]
+            }
+          }
+        }
+      ],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "scene image: nine pixel area mean",
+    "input": {
+      "width": 1,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "tolerance": 0.01,
+      "maxPixels": 1024,
+      "nodes": [
+        {
+          "id": "image",
+          "groups": [],
+          "transform": [
+            0.3333333333333333,
+            0,
+            0,
+            0.3333333333333333,
+            0,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "pixels",
+            "image": {
+              "width": 3,
+              "height": 3,
+              "pixels": [
+                0,
+                0,
+                0,
+                255,
+                0,
+                0,
+                0,
+                255,
+                0,
+                0,
+                0,
+                255,
+                0,
+                0,
+                0,
+                255,
+                255,
+                255,
+                255,
+                255,
+                0,
+                0,
+                0,
+                255,
+                0,
+                0,
+                0,
+                255,
+                0,
+                0,
+                0,
+                255,
+                0,
+                0,
+                0,
+                255
+              ]
+            }
+          }
+        }
+      ],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      28,
+      28,
+      28,
+      255
+    ]
+  },
+  {
+    "name": "scene image: bilinear enlargement",
+    "input": {
+      "width": 4,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "tolerance": 0.01,
+      "maxPixels": 1024,
+      "nodes": [
+        {
+          "id": "image",
+          "groups": [],
+          "transform": [
+            2,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "pixels",
+            "image": {
+              "width": 2,
+              "height": 1,
+              "pixels": [
+                255,
+                0,
+                0,
+                255,
+                0,
+                0,
+                255,
+                255
+              ]
+            }
+          }
+        }
+      ],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      255,
+      0,
+      0,
+      255,
+      191,
+      0,
+      64,
+      255,
+      64,
+      0,
+      191,
+      255,
+      0,
+      0,
+      255,
+      255
+    ]
+  },
+  {
+    "name": "scene image: bilinear clamps image edges",
+    "input": {
+      "width": 3,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "tolerance": 0.01,
+      "maxPixels": 1024,
+      "nodes": [
+        {
+          "id": "image",
+          "groups": [],
+          "transform": [
+            3,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "pixels",
+            "image": {
+              "width": 1,
+              "height": 1,
+              "pixels": [
+                255,
+                0,
+                0,
+                255
+              ]
+            }
+          }
+        }
+      ],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      255,
+      0,
+      0,
+      255,
+      255,
+      0,
+      0,
+      255,
+      255,
+      0,
+      0,
+      255
+    ]
+  },
+  {
+    "name": "scene image: shifted viewport samples correct source pixel",
+    "input": {
+      "width": 1,
+      "height": 1,
+      "origin": [
+        1,
+        0
+      ],
+      "tolerance": 0.01,
+      "maxPixels": 1024,
+      "nodes": [
+        {
+          "id": "image",
+          "groups": [],
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "pixels",
+            "image": {
+              "width": 2,
+              "height": 1,
+              "pixels": [
+                255,
+                0,
+                0,
+                255,
+                0,
+                0,
+                255,
+                255
+              ]
+            }
+          }
+        }
+      ],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      0,
+      0,
+      255,
+      255
+    ]
+  },
+  {
+    "name": "scene image: isolated filtered overlap applies group opacity once",
+    "input": {
+      "width": 2,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "tolerance": 0.01,
+      "maxPixels": 6,
+      "nodes": [
+        {
+          "id": "a",
+          "groups": [
+            {
+              "id": "group",
+              "opacity": 0.5,
+              "blendMode": "normal"
+            }
+          ],
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0.5,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "pixels",
+            "image": {
+              "width": 1,
+              "height": 1,
+              "pixels": [
+                255,
+                0,
+                0,
+                255
+              ]
+            }
+          }
+        },
+        {
+          "id": "b",
+          "groups": [
+            {
+              "id": "group",
+              "opacity": 0.5,
+              "blendMode": "normal"
+            }
+          ],
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0.5,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "pixels",
+            "image": {
+              "width": 1,
+              "height": 1,
+              "pixels": [
+                255,
+                0,
+                0,
+                255
+              ]
+            }
+          }
+        }
+      ],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      255,
+      0,
+      0,
+      96,
+      255,
+      0,
+      0,
+      96
+    ]
+  },
+  {
+    "name": "scene image: premultiplied sampling precedes layer opacity",
+    "input": {
+      "width": 4,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "tolerance": 0.01,
+      "maxPixels": 6,
+      "nodes": [
+        {
+          "id": "image",
+          "groups": [],
+          "transform": [
+            2,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "opacity": 0.5,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "pixels",
+            "image": {
+              "width": 2,
+              "height": 1,
+              "pixels": [
+                255,
+                0,
+                0,
+                0,
+                0,
+                0,
+                255,
+                255
+              ]
+            }
+          }
+        }
+      ],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      255,
+      32,
+      0,
+      0,
+      255,
+      96,
+      0,
+      0,
+      255,
+      128
+    ]
+  },
+  {
+    "name": "scene image: oblique reduction with unit determinant uses area",
+    "input": {
+      "width": 5,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "tolerance": 0.01,
+      "maxPixels": 8,
+      "nodes": [
+        {
+          "id": "image",
+          "groups": [],
+          "transform": [
+            1,
+            0,
+            2,
+            1,
+            0,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "pixels",
+            "image": {
+              "width": 3,
+              "height": 1,
+              "pixels": [
+                255,
+                255,
+                255,
+                255,
+                0,
+                0,
+                0,
+                255,
+                255,
+                255,
+                255,
+                255
+              ]
+            }
+          }
+        }
+      ],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      255,
+      255,
+      255,
+      64,
+      170,
+      170,
+      170,
+      191,
+      128,
+      128,
+      128,
+      255,
+      170,
+      170,
+      170,
+      191,
+      255,
+      255,
+      255,
+      64
+    ]
+  }
+]

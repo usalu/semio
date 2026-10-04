@@ -6,7 +6,7 @@ use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 
 //#region 🔖️Value
 /// 🩺 One referential-integrity finding — a small, owned, `ToValue`/`FromValue` projection of
-/// `dsl::Diagnostic` (whose own `FaultCode`/`Severity`/`TextSpan`/`ExpectedSet` machinery is built
+/// `semio_framework_diagnostic::Diagnostic` (whose own `FaultCode`/`Severity`/`TextSpan`/`ExpectedSet` machinery is built
 /// for parser diagnostics, not for a cache `Value`; this leaf only needs the two fields that
 /// actually carry validation content).
 /// 🔀️ No longer dual-derives `serde`: `store::InferredField::Value` used to bound on `Serialize +
@@ -65,7 +65,7 @@ impl store::InferredField<SemioBrepSnapshot> for BrepValidationReport {
             shells: Vec<crate::standards::v1::subsets::brep::schema::snapshot::BrepShell>,
             solids: Vec<crate::standards::v1::subsets::brep::schema::snapshot::BrepSolid>,
         }
-        pack::to_json_string(&DepInput { vertices: snapshot.vertices.clone(), edges: snapshot.edges.clone(), loops: snapshot.loops.clone(), faces: snapshot.faces.clone(), shells: snapshot.shells.clone(), solids: snapshot.solids.clone() })
+        semio_framework_pack_json::to_json_string(&DepInput { vertices: snapshot.vertices.clone(), edges: snapshot.edges.clone(), loops: snapshot.loops.clone(), faces: snapshot.faces.clone(), shells: snapshot.shells.clone(), solids: snapshot.solids.clone() })
             .into_bytes()
     }
 

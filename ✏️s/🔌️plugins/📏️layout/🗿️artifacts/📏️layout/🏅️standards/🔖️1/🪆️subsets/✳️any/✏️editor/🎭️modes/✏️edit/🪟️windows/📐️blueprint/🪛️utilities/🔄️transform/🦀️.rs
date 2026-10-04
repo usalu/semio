@@ -255,19 +255,13 @@ impl machine::Host<transform_tool::TransformTool> for TransformToolHost {
     }
 }
 
-/// ⏰️ The host clock a transform-tool event runs on: the host's wall time, so a transaction id minted at an upsert is
-/// unique per admission AND per moment.
-pub fn layout_transform_tool_clock() -> protocol::HybridLogicalTimestamp {
-    protocol::HybridLogicalTimestamp { actor: 0, physical_ms: semio_framework_job::default_now_ms().unwrap_or(0), logical: 0 }
-}
-
 /// 🧷️ One provisional entry of a persisted transform-tool transaction, its mutation in value form so the window
 /// transient retires it like any other value.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct LayoutTransformToolEntry {
     pub key: String,
-    pub mutation: dsl::DslValue,
+    pub mutation: semio_framework_value::DslValue,
 }
 
 /// 💾️ A Blueprint window's in-flight transform-tool gesture, persisted in its window transient between dispatches —
@@ -308,7 +302,7 @@ impl LayoutTransformTool {
     pub fn resume(state: &LayoutTransformToolState) -> Result<Self, ToolRefusal> {
         let definition = <transform_tool::TransformTool as machine::Machine>::definition();
         let persisted = machine::PersistedSnapshot { version: 1, fingerprint: definition.fingerprint, states: state.states.clone(), history: Vec::new(), done: false };
-        let entries = state.entries.iter().map(|entry| Ok((entry.key.clone(), dsl::FromValue::from_value(entry.mutation.clone()).map_err(|_| ToolRefusal::Closed)?))).collect::<Result<Vec<(String, LayoutMutation)>, ToolRefusal>>()?;
+        let entries = state.entries.iter().map(|entry| Ok((entry.key.clone(), semio_framework_value::FromValue::from_value(entry.mutation.clone()).map_err(|_| ToolRefusal::Closed)?))).collect::<Result<Vec<(String, LayoutMutation)>, ToolRefusal>>()?;
         let stream = entries.iter().find(|(key, _)| key == LAYOUT_TRANSFORM_TOOL_LEAF_KEY).and_then(|(_, leaf)| LayoutFrameRecord::from_leaf(leaf));
         let snapshot = machine::restore::<transform_tool::TransformTool, machine::NoMigrations>(&persisted, TransformToolContext { stream }, &[]).map_err(|_| ToolRefusal::Closed)?;
         let runner = ToolMachineRunner::resume(format!("{LAYOUT_EDITOR_APP_ID}#{}", state.verb), protocol::ActorId(state.authoring_seed.clone()), TransformToolContext::default(), snapshot, Some(ToolTransaction::resume(state.transaction.clone(), entries)), TransformToolHost)?;
@@ -322,7 +316,7 @@ impl LayoutTransformTool {
 
     /// 📨️ Runs one event on the host clock.
     pub fn send(&mut self, event: transform_tool::Event) -> Result<ToolStep<LayoutMutation>, ToolRefusal> {
-        self.runner.send(event, layout_transform_tool_clock())
+        self.runner.send(event, semio_framework_tool_machine::authoring_clock(0))
     }
 
     /// 🧯️ Host abort: the open transaction vanishes with zero trace and the tool rests.
@@ -340,7 +334,7 @@ impl LayoutTransformTool {
             authoring_seed: self.authoring_seed,
             base_revision: self.base_revision,
             transaction: transaction.reference().clone(),
-            entries: transaction.entries().iter().map(|(key, mutation)| LayoutTransformToolEntry { key: key.clone(), mutation: dsl::ToValue::to_value(mutation) }).collect(),
+            entries: transaction.entries().iter().map(|(key, mutation)| LayoutTransformToolEntry { key: key.clone(), mutation: semio_framework_value::ToValue::to_value(mutation) }).collect(),
         })
     }
 }
@@ -411,7 +405,7 @@ pub fn layout_transform_dispatch(verb: &str, phase: LayoutTransformPhase, record
 /// to `document` — a preview only this window sees, never history.
 pub fn layout_transform_tool_preview(document: &LayoutSnapshot, state: &LayoutTransformToolState) -> LayoutSnapshot {
     use protocol::{Mutation, MutationDiff};
-    state.entries.iter().filter_map(|entry| dsl::FromValue::from_value(entry.mutation.clone()).ok()).fold(document.clone(), |preview, mutation: LayoutMutation| mutation.diff(&preview).diff().apply(&preview).unwrap_or(preview))
+    state.entries.iter().filter_map(|entry| semio_framework_value::FromValue::from_value(entry.mutation.clone()).ok()).fold(document.clone(), |preview, mutation: LayoutMutation| mutation.diff(&preview).diff().apply(&preview).unwrap_or(preview))
 }
 //#endregion 🛠️TransformTool
 

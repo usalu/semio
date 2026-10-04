@@ -1,0 +1,37 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "childId",
+    "artifactId",
+    "dialect"
+  ],
+  "properties": {
+    "childId": {
+      "const": "logical-child\u0000世界"
+    },
+    "artifactId": {
+      "const": "addressed-artifact\u0000Ä"
+    },
+    "dialect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactKind",
+        "standard",
+        "subset"
+      ],
+      "properties": {
+        "artifactKind": {
+          "const": "s.stdio.semio"
+        },
+        "standard": {
+          "const": "v1"
+        },
+        "subset": {
+          "const": "kit"
+        }
+      }
+    }
+  }
+}

@@ -14,7 +14,7 @@ use crate::standards::v1::subsets::any::schema::mutations::text::SHomeMutation;
 use crate::SHomeSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultOrigin};
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "bind-space-file")]
 pub struct BindSpaceFile {
     pub space_id: String,
@@ -33,7 +33,7 @@ pub fn validate(payload: &BindSpaceFile) -> Result<(), Fault> {
     if payload.file_path.trim().is_empty() || payload.file_path.chars().any(char::is_control) {
         return Err(Fault::new(FaultOrigin::App, "s.home.bind-space-file.path-invalid", "the file path is empty or carries control characters"));
     }
-    semio_framework_plugin::resolve_ready(crate::resolve_studio_document(&payload.space_id))
+    ::semio_framework_async::poll::resolve_ready(crate::resolve_studio_document(&payload.space_id))
         .map(|_| ())
         .ok_or_else(|| Fault::new(FaultOrigin::App, "s.home.bind-space-file.unknown-studio", format!("no local studio {} exists", payload.space_id)))
 }
@@ -45,13 +45,13 @@ pub fn commit(payload: &BindSpaceFile, doc: &ArtifactView<'_, SHomeSnapshot>) ->
     let refused = |error: semio_framework_os::VcsError| Fault::new(FaultOrigin::App, "s.home.bind-space-file.io-failed", format!("binding {} to {} failed: {error:?}", payload.space_id, payload.file_path));
     let uri = format!("file://{}", payload.file_path);
     let port = semio_framework_os::open_file_space_backbone(&payload.file_path).map_err(refused)?;
-    let mut document = semio_framework_plugin::resolve_ready(crate::resolve_studio_document(&payload.space_id)).ok_or_else(|| Fault::new(FaultOrigin::App, "s.home.bind-space-file.unknown-studio", format!("no local studio {} exists", payload.space_id)))?;
-    document.backbone = Some(semio_framework_plugin::resolve_ready(document_backbone_ref(&uri)));
+    let mut document = ::semio_framework_async::poll::resolve_ready(crate::resolve_studio_document(&payload.space_id)).ok_or_else(|| Fault::new(FaultOrigin::App, "s.home.bind-space-file.unknown-studio", format!("no local studio {} exists", payload.space_id)))?;
+    document.backbone = Some(::semio_framework_async::poll::resolve_ready(document_backbone_ref(&uri)));
     port.write(&uri, &encode_backbone_payload(&document).map_err(refused)?).map_err(refused)?;
-    semio_framework_plugin::resolve_ready(crate::register_studio_port(&payload.space_id, port));
-    semio_framework_os::host::admit_os_space_document(document, &semio_framework_plugin::resolve_ready(crate::catalog_port())).map_err(refused)?;
-    let draft_port = semio_framework_plugin::resolve_ready(crate::draft_backbone_port());
-    semio_framework_plugin::resolve_ready(crate::ephemeral_draft_catalog()).discard_draft(&draft_port, &payload.space_id);
+    ::semio_framework_async::poll::resolve_ready(crate::register_studio_port(&payload.space_id, port));
+    semio_framework_os::host::admit_os_space_document(document, &::semio_framework_async::poll::resolve_ready(crate::catalog_port())).map_err(refused)?;
+    let draft_port = ::semio_framework_async::poll::resolve_ready(crate::draft_backbone_port());
+    ::semio_framework_async::poll::resolve_ready(crate::ephemeral_draft_catalog()).discard_draft(&draft_port, &payload.space_id);
     Ok(Emit::mutations(vec![crate::standards::v1::subsets::any::schema::mutations::change_catalog_generation(doc.snapshot.catalog_generation + 1)]))
 }
 

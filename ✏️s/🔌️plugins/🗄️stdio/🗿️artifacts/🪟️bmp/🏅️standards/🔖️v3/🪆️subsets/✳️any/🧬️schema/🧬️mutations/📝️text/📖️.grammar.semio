@@ -1,42 +1,13 @@
-# Direct identities: set-snapshot, change-header-fields, insert-palette-entry, remove-palette-entry, replace-palette-entry, replace-pixel-data
+# Direct identities: set-snapshot, patch-snapshot, paint-indexed-region, paint-direct-region
 dialect grammar
 grammar stdio.bmp.mutations
 start op
 
 comment none
 
-op = set-snapshot | change-header-fields | insert-palette-entry | remove-palette-entry | replace-palette-entry | replace-pixel-data
+op = set-snapshot | patch-snapshot | paint-indexed-region | paint-direct-region
 
+patch-snapshot = "patch-snapshot" "patch" "=" hex
 set-snapshot = "set-snapshot" "snapshot" "=" hex
-
-text-value = IDENT | TEXT
-row-order-value = "bottom-up" | "top-down"
-
-
-snapshot-fields = schema-field header-size-field width-field height-field row-order-field planes-field bits-per-pixel-field compression-field image-size-field x-ppm-field y-ppm-field colors-used-field colors-important-field snapshot-pixels-field snapshot-palette-field
-schema-field = "schema" "=" text-value
-header-size-field = "header-size" "=" INT
-width-field = "width" "=" INT
-height-field = "height" "=" INT
-row-order-field = "row-order" "=" row-order-value
-planes-field = "planes" "=" INT
-bits-per-pixel-field = "bits-per-pixel" "=" INT
-compression-field = "compression" "=" INT
-image-size-field = "image-size" "=" INT
-x-ppm-field = "x-pixels-per-meter" "=" INT
-y-ppm-field = "y-pixels-per-meter" "=" INT
-colors-used-field = "colors-used" "=" INT
-colors-important-field = "colors-important" "=" INT
-snapshot-pixels-field = "pixels" "=" text-value
-snapshot-palette-field = "palette" "{" "[" palette-entry* "]" "}"
-palette-entry = "b" "=" INT "g" "=" INT "r" "=" INT "reserved" "=" INT
-
-change-header-fields = "change-header-fields" header-size-field? width-field? height-field? row-order-field? planes-field? bits-per-pixel-field? compression-field? image-size-field? x-ppm-field? y-ppm-field? colors-used-field? colors-important-field?
-
-insert-palette-entry = "insert-palette-entry" "index" "=" INT "entry" "{" palette-entry "}"
-
-remove-palette-entry = "remove-palette-entry" "index" "=" INT
-
-replace-palette-entry = "replace-palette-entry" "index" "=" INT "entry" "{" palette-entry "}"
-
-replace-pixel-data = "replace-pixel-data" "pixels" "=" text-value
+paint-indexed-region = "paint-indexed-region" "payload" "=" hex
+paint-direct-region = "paint-direct-region" "payload" "=" hex

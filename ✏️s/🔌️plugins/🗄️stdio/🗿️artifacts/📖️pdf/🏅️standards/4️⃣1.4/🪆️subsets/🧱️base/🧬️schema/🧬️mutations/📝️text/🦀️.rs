@@ -10,7 +10,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 //#region 🔖️Registry
 type Printer = fn(&PdfMutation) -> Option<String>;
-type Parser = fn(&str) -> Result<PdfMutation, String>;
+type Parser = fn(&str) -> Result<PdfMutation, semio_framework_diagnostic::TextError>;
 pub const REGISTRY: &[(&str, Printer, Parser)] = &[
     (super::insert_page::text::OPCODE, super::insert_page::text::print, super::insert_page::text::parse),
     (super::remove_page::text::OPCODE, super::remove_page::text::print, super::remove_page::text::parse),
@@ -37,13 +37,10 @@ impl OpText for PdfMutation {
         REGISTRY.iter().find_map(|(opcode, print, _)| print(self).map(|payload| format!("{opcode} payload={payload}"))).expect("Every mutation has one direct text owner")
     }
 
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let parse = || -> Result<Self, String> {
-            let (opcode, payload) = line.split_once(" payload=").ok_or("Expected opcode and payload")?;
-            let (_, _, parser) = REGISTRY.iter().find(|(identity, _, _)| *identity == opcode).ok_or("Unknown PDF 1.4 mutation opcode")?;
-            parser(payload)
-        };
-        parse().map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        let (opcode, payload) = line.split_once(" payload=").ok_or_else(|| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "Expected opcode and payload", semio_framework_diagnostic::TextSpan::at(1, 1)))?;
+        let (_, _, parser) = REGISTRY.iter().find(|(identity, _, _)| *identity == opcode).ok_or_else(|| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "Unknown PDF 1.4 mutation opcode", semio_framework_diagnostic::TextSpan::at(1, 1)))?;
+        parser(payload)
     }
 }
 //#endregion 🔖️Framing

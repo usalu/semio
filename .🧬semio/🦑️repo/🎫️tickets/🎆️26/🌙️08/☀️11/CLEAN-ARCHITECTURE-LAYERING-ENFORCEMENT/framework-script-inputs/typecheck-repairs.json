@@ -1,0 +1,120 @@
+{
+  "repairs": [
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/◻️2d/🛤️path/🖊️stroke/🧪️tests/🟦️.ts",
+      "before": " return {contours:[{points:row.points as Vec2[],closed:row.closed}],transform:[1,0,0,1,0,0],tolerance:.0001,style:{width:row.width,cap:row.cap as StrokeOutlineInput[\"style\"][\"cap\"],join:row.join as StrokeOutlineInput[\"style\"][\"join\"],miterLimit:row.miterLimit,dash:row.dash,dashOffset:row.dashOffset}};",
+      "after": " const points=row.points.map((point):Vec2=>{const [x,y]=point;if(point.length!==2||typeof x!==\"number\"||typeof y!==\"number\")throw Error(\"Invalid stroke fixture point\");return [x,y];});\n return {contours:[{points,closed:row.closed}],transform:[1,0,0,1,0,0],tolerance:.0001,style:{width:row.width,cap:row.cap as StrokeOutlineInput[\"style\"][\"cap\"],join:row.join as StrokeOutlineInput[\"style\"][\"join\"],miterLimit:row.miterLimit,dash:row.dash,dashOffset:row.dashOffset}};"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📥️capture/🧪️tests/🟦️.ts",
+      "before": "  expect(result.reason).toBe(independent.reason);",
+      "after": "  expect<string>(result.reason).toBe(independent.reason);"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🧪️tests/🟦️.ts",
+      "before": "  expect(TEST_LEVELS).toEqual(Object.keys(fixture.levels));",
+      "after": "  expect<readonly string[]>(TEST_LEVELS).toEqual(Object.keys(fixture.levels));"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🧪️tests/🟦️.ts",
+      "before": "      expect({ ...selected, budgetMs: api.testLevelBudgetMs(), rank: api.testLevelRank(), coverage: process.env.SEMIO_COVERAGE ?? null }).toEqual(row.expected);",
+      "after": "      expect<unknown>({ ...selected, budgetMs: api.testLevelBudgetMs(), rank: api.testLevelRank(), coverage: process.env.SEMIO_COVERAGE ?? null }).toEqual(row.expected);"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🧪️tests/🟦️.ts",
+      "before": "      expect(selected.level).toBe(level);",
+      "after": "      expect<string>(selected.level).toBe(level);"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels/✍️editing/🧪️tests/🟦️.ts",
+      "before": "  for (const row of fixtures.strokeBounds) expect(strokeBounds(row.points as PixelPoint[], row.size, row.width, row.height)).toEqual(row.expected);",
+      "after": "  for (const row of fixtures.strokeBounds) {\n    const points=row.points.map((point):PixelPoint=>{const [x,y]=point;if(point.length!==2||typeof x!==\"number\"||typeof y!==\"number\")throw Error(\"Invalid pixel fixture point\");return [x,y];});\n    expect(strokeBounds(points, row.size, row.width, row.height)).toEqual(row.expected);\n  }"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels/📷️png/📥️decode/🧪️tests/🟦️.ts",
+      "before": "  if(job){expect(()=>job.result()).toThrow();expect(()=>job!.advance(1)).toThrow();}",
+      "after": "  if(job){const rejected=job;expect(()=>rejected.result()).toThrow();expect(()=>rejected.advance(1)).toThrow();}"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🛡️verification/🧪️tests/🎭️color-primitives/🟦️.ts",
+      "before": "import colorString from \"color-string\";",
+      "after": "import { colorOracle as colorString } from \"../⚖️color-oracle/🟦️.ts\";"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🛡️verification/🧪️tests/📏️relative-sizing/🟦️.ts",
+      "before": "        element.className = className;",
+      "after": "        element.setAttribute(\"class\", className);"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🛡️verification/🧪️tests/🟦️.ts",
+      "before": "import colorString from \"color-string\";",
+      "after": "import { colorOracle as colorString } from \"./⚖️color-oracle/🟦️.ts\";"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🛡️verification/🧪️tests/🟦️.ts",
+      "before": "    const files = row.files as Record<string, string>;",
+      "after": "    const files: Record<string, string> = {};\n    for (const [path, text] of Object.entries(row.files)) {\n      if (typeof text !== \"string\") throw Error(\"Invalid styling fixture source: \" + path);\n      files[path] = text;\n    }"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/🚚️node-graph-scene-lanes/🟦️.test.ts",
+      "before": "  expect(NODE_GRAPH_SCENE_LANES).toEqual(fixture.lanes);",
+      "after": "  expect<unknown>(NODE_GRAPH_SCENE_LANES).toEqual(fixture.lanes);"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🧪️tests/🟦️.ts",
+      "before": "      if (row.accepted) expect(parseAssetDeliveryDeclarationV1(row.value), row.id).toEqual(row.value);",
+      "after": "      if (row.accepted) expect<unknown>(parseAssetDeliveryDeclarationV1(row.value), row.id).toEqual(row.value);"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖼️assets/🥽️mesh/🧪️tests/🧩️suite/🟦️.ts",
+      "before": "    expect(JSON.parse(Buffer.from(node.stdout).toString())).toEqual(fixture.transport.map(row => ({ valid: row.valid, output: row.output })));",
+      "after": "    expect(JSON.parse(Buffer.from(node.stdout).toString())).toEqual(fixture.transport.map((row: { valid: boolean; output: string | null }) => ({ valid: row.valid, output: row.output })));"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/✅️validator/🧪️tests/🧩️shape/🟦️.ts",
+      "before": "      expect(result).toBe(value);",
+      "after": "      expect<unknown>(result).toBe(value);"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/📄️source/🔗️closure/🧪️tests/🟦️.ts",
+      "before": "type Api = { schemaReferenceClosure(request: unknown, control: ReturnType<typeof control>): Promise<Closure> };",
+      "after": "type Api = { schemaReferenceClosure(request: unknown, authority: ReturnType<typeof control>): Promise<Closure> };"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/🧪️tests/🧱️neutrality/🟦️.ts",
+      "before": "    expect({ decisions, entries }, row.id).toEqual(row.expected);",
+      "after": "    expect<unknown>({ decisions, entries }, row.id).toEqual(row.expected);"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🧭️routing/🧪️tests/🟦️.ts",
+      "before": "  const result = await build({ stdin: { contents: source, resolveDir: process.cwd(), sourcefile: \"routing-product-refusal.ts\" }, bundle: true, platform: \"node\", format: \"esm\", write: false, logLevel: \"silent\", plugins: [{ name: \"refuse-specific-products\", setup(builder) { builder.onLoad({ filter: /./ }, (args) => { if (args.path.replaceAll(\"\\\\\", \"/\").includes(\"/🧰️framework/🛍️products/\")) throw Error(`general routing loads specific product ${args.path}`); }); } }] });",
+      "after": "  const result = await build({ stdin: { contents: source, resolveDir: process.cwd(), sourcefile: \"routing-product-refusal.ts\" }, bundle: true, platform: \"node\", format: \"esm\", write: false, logLevel: \"silent\", plugins: [{ name: \"refuse-specific-products\", setup(builder) { builder.onLoad({ filter: /./ }, (args) => { if (args.path.replaceAll(\"\\\\\", \"/\").includes(\"/🧰️framework/🛍️products/\")) throw Error(`general routing loads specific product ${args.path}`); return undefined; }); } }] });"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🧬️schema/🔗️reference/🧪️tests/🟦️.ts",
+      "before": "  try{for(const value of fixture.references){expect(admit(value)).toBe(true);const actual=parseArtifactRef(value);expect(actual).toEqual(value);sql.run(\"DELETE FROM reference\");sql.run(\"INSERT INTO reference VALUES(?,?,?,?)\",actual.artifactId,actual.dialect.artifactKind,actual.dialect.standard,actual.dialect.subset);expect(sql.query(\"SELECT artifact_id AS artifactId,artifact_kind AS artifactKind,standard,subset FROM reference\").get()).toEqual({artifactId:value.artifactId,...value.dialect});}",
+      "after": "  try{for(const value of fixture.references){expect(admit(value)).toBe(true);const actual=parseArtifactRef(value);expect(actual).toEqual(value);sql.run(\"DELETE FROM reference\");sql.run(\"INSERT INTO reference VALUES(?,?,?,?)\",[actual.artifactId,actual.dialect.artifactKind,actual.dialect.standard,actual.dialect.subset]);expect(sql.query(\"SELECT artifact_id AS artifactId,artifact_kind AS artifactKind,standard,subset FROM reference\").get()).toEqual({artifactId:value.artifactId,...value.dialect});}"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🧩️suite/🟦️.ts",
+      "before": "          tile: { plugin: tileProxyVitePlugin(sandbox, { kind: \"tile-proxy\", route: \"/tiles\", cache: \"tiles\", upstream: \"https://example.invalid/{z}/{x}/{y}.png\" }, \"bundle\")[1]!, expected: { \"tiles/0/0/0.png\": fixture.payload } },",
+      "after": "          tile: { plugin: tileProxyVitePlugin(sandbox, { kind: \"tile-proxy\", route: \"/tiles\", cache: \"tiles\", upstream: \"https://example.invalid/{z}/{x}/{y}.png\", userAgent: \"Fixture/1\" }, \"bundle\")[1]!, expected: { \"tiles/0/0/0.png\": fixture.payload } },"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/📄️source/🔗️closure/🧪️tests/🟦️.ts",
+      "before": "const control = () => ({ limits: { ...limits }, cancelled: () => false, progress: (_: unknown) => {}, yield: async () => { await new Promise<void>(resolve => setTimeout(resolve, 0)); } });",
+      "after": "const control = () => ({ limits: { ...limits }, cancelled: () => false, progress: (_: import(\"../🟦️.ts\").SchemaReferenceProgress) => {}, yield: async () => { await new Promise<void>(resolve => setTimeout(resolve, 0)); } });"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/📄️source/🔗️closure/🧪️tests/🟦️.ts",
+      "before": "  await owner.schemaReferenceClosure(request, { ...control(), progress: value => { observed.push({ ...value as Record<string, number> }); } });",
+      "after": "  await owner.schemaReferenceClosure(request, { ...control(), progress: value => { observed.push({ ...value }); } });"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🧩️suite/🟦️.ts",
+      "before": "      put(resolve(sandbox, \".🧬semio/🗺️map/tiles/0/0/0.png\"), fixture.payload);",
+      "after": "      put(resolve(sandbox, \"tiles/0/0/0.png\"), fixture.payload);"
+    }
+  ],
+  "newOracle": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🛡️verification/🧪️tests/⚖️color-oracle/🟦️.ts"
+}

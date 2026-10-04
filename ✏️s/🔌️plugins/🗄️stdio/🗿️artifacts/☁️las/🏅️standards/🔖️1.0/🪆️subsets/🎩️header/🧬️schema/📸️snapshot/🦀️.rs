@@ -103,7 +103,7 @@ impl Default for LasHeader {
 /// 📦 One Variable Length Record — `data` is retained byte-verbatim (VLR content is registered
 /// per `(user_id, record_id)` by third parties and is proprietary/unmodeled by spec, the
 /// recipe's typed raw-retention exception, same shape as `PngChunk`/`GifAppExtension`).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct LasVlr {
     pub user_id: String,

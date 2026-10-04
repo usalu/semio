@@ -33,8 +33,8 @@ pub fn definition() -> WindowKindDefinition {
 /// to field names a live peer ticket may still be refactoring.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn entity_count(document: &SemioKitSnapshot) -> usize {
-    let dsl::DslValue::Object(fields) = dsl::ToValue::to_value(document) else { return 1 };
-    fields.into_iter().filter_map(|(_, value)| if let dsl::DslValue::Array(items) = value { Some(items.len()) } else { None }).max().unwrap_or(0).clamp(1, 6)
+    let semio_framework_value::DslValue::Object(fields) = semio_framework_value::ToValue::to_value(document) else { return 1 };
+    fields.into_iter().filter_map(|(_, value)| if let semio_framework_value::DslValue::Array(items) = value { Some(items.len()) } else { None }).max().unwrap_or(0).clamp(1, 6)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

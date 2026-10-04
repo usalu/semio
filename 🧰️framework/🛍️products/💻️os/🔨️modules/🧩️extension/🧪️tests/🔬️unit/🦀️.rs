@@ -3,17 +3,17 @@ use super::*;
 #[test]
 fn authored_installation_directory_survives_the_wire_codec() {
     let bytes = include_bytes!("../../🧪️installation.json");
-    let owned = crate::os_pack::json::parse_bytes(bytes).unwrap();
+    let owned = semio_framework_pack_json::parse_bytes(bytes, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let oracle: serde_json::Value = serde_json::from_slice(bytes).unwrap();
     let manifest = ExtensionPackageManifest::from_json(owned.get("manifest").unwrap()).unwrap();
     let serialized = manifest.to_json();
-    assert_eq!(serialized.get("extensionId").and_then(crate::os_pack::json::Value::as_str), oracle["manifest"]["extensionId"].as_str());
-    assert_eq!(serialized.get("directoryName").and_then(crate::os_pack::json::Value::as_str), oracle["manifest"]["directoryName"].as_str());
+    assert_eq!(serialized.get("extensionId").and_then(semio_framework_pack_json::Value::as_str), oracle["manifest"]["extensionId"].as_str());
+    assert_eq!(serialized.get("directoryName").and_then(semio_framework_pack_json::Value::as_str), oracle["manifest"]["directoryName"].as_str());
     assert_ne!(serialized.get("extensionId"), serialized.get("directoryName"));
 }
 
 async fn sample_manifest() -> ExtensionPackageManifest {
-    use crate::os_pack::json::{object, Value};
+    use semio_framework_pack_json::{object, Value};
     ExtensionPackageManifest {
         extension_id: "flow.math".into(),
         directory_name: "🧮️flow-math".into(),
@@ -48,7 +48,7 @@ async fn extends_matches_primary_dependency_rejects_mismatch_and_missing_depende
 
 #[semio_framework_async_macros::async_test]
 async fn dependencies_default_absent_on_the_wire() {
-    use crate::os_pack::json::{object, Value};
+    use semio_framework_pack_json::{object, Value};
     let bare = object([
         ("extensionId".to_string(), Value::from("flow.math")),
         ("directoryName".to_string(), Value::from("🧮️flow-math")),
@@ -66,7 +66,7 @@ async fn dependencies_default_absent_on_the_wire() {
 
 #[semio_framework_async_macros::async_test]
 async fn package_plugin_dependency_round_trips_as_a_plain_string_pair() {
-    use crate::os_pack::json::{object, Value};
+    use semio_framework_pack_json::{object, Value};
     let dependency = PackagePluginDependency { plugin_id: "cad".into(), version: "=1.0.0".into() };
     let json = dependency.to_json();
     assert_eq!(json, object([("pluginId".to_string(), Value::from("cad")), ("version".to_string(), Value::from("=1.0.0"))]));
@@ -76,7 +76,7 @@ async fn package_plugin_dependency_round_trips_as_a_plain_string_pair() {
 
 #[semio_framework_async_macros::async_test]
 async fn package_plugin_dependency_refuses_every_range() {
-    use crate::os_pack::json::{object, Value};
+    use semio_framework_pack_json::{object, Value};
     for range in ["*", "^1.0.0", "~1.0.0", ">=1.0.0", "1.0.0", "=1.0", "=1.x.0"] {
         let json = object([("pluginId".to_string(), Value::from("cad")), ("version".to_string(), Value::from(range))]);
         assert!(PackagePluginDependency::from_json(&json).is_err(), "{range:?} must be refused");

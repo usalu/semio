@@ -6,7 +6,6 @@
 //! `<lane> publication is retiring a rejected authority`, so the host saw
 //! `typed-operation failed: …` on every turn of the drain and `invokeExtension` never completed.
 
-use semio_framework_2d::compute::EngineHandles;
 use super::{
     ArtifactApp, ArtifactMutationOutcome, ArtifactView, ConfigView, DraftView, InteractionView, PendingArtifactStorePublication, PendingArtifactStorePublicationRetirement, UiAssemblyResult, WindowConfigMutation, WindowConfigOwner,
     WindowConfigOwnerRegistry, WindowTransientMutation, WindowTransientOwner, WindowTransientOwnerBundle, WindowTransientOwnerRegistry,
@@ -19,6 +18,7 @@ use crate::publication_fixture::{ChangePublicationPresence, ChangePublicationTra
 use crate::store;
 use crate::test_app_mutation_fixture::{ChangeTestConfigSelection, SetCount, TestConfig, TestConfigMutation, TestMutation, TestSnapshot};
 use semio_framework::{Fault, ViewModel, ViewWindowInstance};
+use semio_framework_2d::compute::EngineHandles;
 use std::sync::Arc;
 
 const RETIREMENT_AUTHORITY_FIXTURE_JSON: &str = include_str!("../../🧫️fixtures/♻️publication-retirement-authority/🔣️.json");
@@ -51,7 +51,7 @@ impl semio_framework_value::retirement::RetireOwned for PublicationPresenceMutat
 }
 
 fn presence_footprint(_: &PublicationPresenceMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-    Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: size_of::<PublicationPresenceMutation>() })
+    Ok(store::ArtifactStoreOneItemFootprint::for_ephemeral_item(size_of::<PublicationPresenceMutation>()))
 }
 
 fn presence_transfer(mutation: PublicationPresenceMutation) -> PublicationPresence {
@@ -69,7 +69,7 @@ fn presence_preparation_factory() -> Arc<dyn store::ArtifactEphemeralOneItemPrep
 }
 
 fn transient_footprint(_: &PublicationTransientMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-    Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: size_of::<PublicationTransientMutation>() })
+    Ok(store::ArtifactStoreOneItemFootprint::for_ephemeral_item(size_of::<PublicationTransientMutation>()))
 }
 
 fn transient_transfer(mutation: PublicationTransientMutation) -> PublicationTransient {
@@ -92,7 +92,7 @@ fn transient_preparation_factory() -> Arc<dyn store::ArtifactEphemeralOneItemPre
 struct FixtureRootRetirement<T>(Option<Arc<T>>);
 
 impl<T: Send + Sync + 'static> store::ErasedSnapshotRetirement for FixtureRootRetirement<T> {
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -131,7 +131,7 @@ impl crate::app::ArtifactOwnedDisposer<store::PresenceStore<PublicationPresence,
             return Ok(crate::app::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(active) = self.0.as_mut() {
-            return active.close_step(1, maximum_bytes).map_err(Fault::from).map(|step| match step {
+            return active.close_step(1, maximum_bytes).map_err(|error| Fault::new(semio_framework::FaultOrigin::Framework, error.kind.as_str(), error.into_message())).map(|step| match step {
                 store::SnapshotRetirementStep::Pending { released_items, released_bytes } => crate::app::PluginCloseStep::Pending { released_items, released_bytes },
                 store::SnapshotRetirementStep::Blocked => crate::app::PluginCloseStep::Blocked { reason: "presence fixture retains captured readers" },
                 store::SnapshotRetirementStep::Complete => crate::app::PluginCloseStep::Complete,
@@ -378,7 +378,11 @@ fn retire_accepted(pending: &mut PendingArtifactStorePublication<RetirementApp>,
 }
 
 fn retirement_view() -> ViewModel {
-    ViewModel { window_id: Some("publication-retirement-window-left".into()), window_instances: vec![ViewWindowInstance { id: "publication-retirement-window-left".into(), window_kind_id: RETIREMENT_WINDOW_KIND.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
+    ViewModel {
+        window_id: Some("publication-retirement-window-left".into()),
+        window_instances: vec![ViewWindowInstance { id: "publication-retirement-window-left".into(), window_kind_id: RETIREMENT_WINDOW_KIND.into() }],
+        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+    }
 }
 
 fn document_mutation(value: i32) -> TestMutation {
@@ -422,7 +426,17 @@ async fn every_publication_lane_retires_a_rejected_authority_without_faulting_ea
             "config" => {
                 let publication = app
                     .config_store
-                    .begin_apply_batch(operation, app.config_store.generation_now(), app.config_store.content_revision_now(), "fixture".into(), vec![config_mutation("first")], None, store::HistoryLane::Document, app.config_one_item_factory.as_ref(), None)
+                    .begin_apply_batch(
+                        operation,
+                        app.config_store.generation_now(),
+                        app.config_store.content_revision_now(),
+                        "fixture".into(),
+                        vec![config_mutation("first")],
+                        None,
+                        store::HistoryLane::Document,
+                        app.config_one_item_factory.as_ref(),
+                        None,
+                    )
                     .unwrap_or_else(|rejected| panic!("config publication admitted: {}", rejected.into_owners().0));
                 app.config_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![config_mutation("superseding")], description: None, transaction: None }).await.expect("superseding config write");
                 let mut publication = publication;
@@ -432,7 +446,17 @@ async fn every_publication_lane_retires_a_rejected_authority_without_faulting_ea
             "draft" => {
                 let publication = app
                     .draft_store
-                    .begin_apply_batch(operation, app.draft_store.generation_now(), app.draft_store.content_revision_now(), "fixture".into(), vec![config_mutation("first")], None, store::HistoryLane::Document, app.draft_one_item_factory.as_ref(), None)
+                    .begin_apply_batch(
+                        operation,
+                        app.draft_store.generation_now(),
+                        app.draft_store.content_revision_now(),
+                        "fixture".into(),
+                        vec![config_mutation("first")],
+                        None,
+                        store::HistoryLane::Document,
+                        app.draft_one_item_factory.as_ref(),
+                        None,
+                    )
                     .unwrap_or_else(|rejected| panic!("draft publication admitted: {}", rejected.into_owners().0));
                 app.draft_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![config_mutation("superseding")], description: None, transaction: None }).await.expect("superseding draft write");
                 let mut publication = publication;
@@ -469,8 +493,8 @@ async fn every_publication_lane_retires_a_rejected_authority_without_faulting_ea
             }
             "windowConfig" => {
                 let mutation = |value: &str| WindowConfigMutation::of::<RetirementWindowConfigOwner>("publication-retirement-window-left", config_mutation(value));
-                let mut publication = app.window_config_store.begin(operation, "fixture".into(), &window_config_authority, mutation("first"), None).expect("window config publication admitted");
-                let mut superseding = app.window_config_store.begin(operation, "fixture".into(), &window_config_authority, mutation("superseding"), None).expect("superseding window config publication admitted");
+                let mut publication = app.window_config_store.begin(operation, "fixture".into(), &window_config_authority, mutation("first")).expect("window config publication admitted");
+                let mut superseding = app.window_config_store.begin(operation, "fixture".into(), &window_config_authority, mutation("superseding")).expect("superseding window config publication admitted");
                 for _ in 0..4_096 {
                     if matches!(app.window_config_store.advance(superseding.as_mut(), grant).expect("superseding window config advances"), store::ArtifactStoreOneItemAdvance::Published(_)) {
                         assert!(superseding.acknowledge());

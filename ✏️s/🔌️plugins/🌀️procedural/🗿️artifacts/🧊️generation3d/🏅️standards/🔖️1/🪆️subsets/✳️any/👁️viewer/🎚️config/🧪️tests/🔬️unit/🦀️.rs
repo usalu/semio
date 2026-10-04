@@ -4,7 +4,7 @@ use protocol::Mutation;
 /// 🔁️ Every leaf must round-trip: `diff` forward, `inverse` back, landing exactly on the base.
 fn config_round_trip(base: &Generation3dViewConfig, operation: &Generation3dViewConfigMutation) -> Generation3dViewConfig {
     let forward = operation.diff(base).into_parts().0;
-    let backwards = operation.inverse(base);
+    let backwards = operation.inverse(base).expect("valid retained mutation inverse fixture");
     assert!(!backwards.is_empty(), "every viewer config leaf must declare a real inverse");
     let mut restored = forward.clone();
     for back in &backwards {

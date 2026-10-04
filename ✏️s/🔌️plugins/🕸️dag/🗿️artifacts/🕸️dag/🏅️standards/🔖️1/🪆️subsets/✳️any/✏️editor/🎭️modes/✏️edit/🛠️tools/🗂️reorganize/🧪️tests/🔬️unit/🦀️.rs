@@ -2,7 +2,9 @@ use super::*;
 use crate::editor::dag::config::DagConfig;
 use crate::editor::dag::unit_tests::context::{new_app_with_registry, DagApp};
 use crate::editor::dag::DagPlayApp;
+use crate::{DagScene, SemioGraphMutation};
 use crate::{DagHostSnapshotEdge, DagNodeSpec};
+use crate::editor::dag::unit_tests::context::live_scene;
 use semio_framework_graph_layout_run::testing::{layout_run_close, layout_run_drive, layout_run_longest_path_layers};
 use semio_framework_graph_layout_run::{LayoutRunJob, LayoutRunReason};
 use semio_framework_job::INTERACTIVE_LANE_FUEL;
@@ -35,14 +37,14 @@ fn number(value: &Value) -> f64 {
     value.as_f64().expect("fixture number")
 }
 
-fn demo() -> (DagSnapshot, DagLayoutGraph) {
-    let document = crate::default_snapshot();
-    let layout = layout_graph(&document, &layered_targets(&document, &DagConfig::default()).expect("layered targets"));
-    (document, layout)
+fn demo() -> (DagScene, DagLayoutGraph) {
+    let scene = crate::examples::demo::scene();
+    let layout = layout_graph(&scene, &layered_targets(&scene, &DagConfig::default()).expect("layered targets"));
+    (scene, layout)
 }
 
-fn node_positions(document: &DagSnapshot) -> BTreeMap<String, (f64, f64)> {
-    document.nodes().into_iter().map(|node| (node.id, (node.x, node.y))).collect()
+fn node_positions(app: &DagApp) -> BTreeMap<String, (f64, f64)> {
+    ::semio_framework_async::poll::resolve_ready(live_scene(app)).nodes.into_iter().map(|node| (node.id, (node.x, node.y))).collect()
 }
 
 /// ⏯️ The tool declares exactly the shared layout run with the anchor-only layered physics, stands in the edit mode,
@@ -54,7 +56,7 @@ fn reorganize_tool_declares_the_shared_layout_run_definition() {
     let definition = definition();
     assert_eq!((definition.id.as_str(), definition.icon_id.as_str()), (tool["id"].as_str().expect("id"), tool["iconId"].as_str().expect("icon")));
     let run = definition.run.as_ref().expect("reorganize declares run");
-    assert_eq!(run, &layout_run_definition(JobKindId::new(LAYOUT_RUN_JOB)));
+    assert_eq!(run, &semio_framework_tool_run::ToolRunDefinition { member: Some(LAYOUT_RUN_MEMBER.into()), ..layout_run_definition(JobKindId::new(LAYOUT_RUN_JOB)) }, "a child-target run over the content member");
     let json = serde_json::to_value(run).expect("run serializes");
     for key in ["mutating", "rebase", "reconfigure", "trace", "runJob"] {
         assert_eq!(json[key], tool[key], "{key}");
@@ -82,7 +84,7 @@ fn dag_document_maps_to_the_language_neutral_layout_graph() {
     let mapping = &fixture["mapping"];
     let nodes = mapping["nodes"].as_array().expect("nodes").iter().map(|node| DagNodeSpec { id: node["id"].as_str().expect("id").into(), x: number(&node["x"]), y: number(&node["y"]), width: number(&node["width"]), height: number(&node["height"]), ..DagNodeSpec::default() }).collect();
     let edges = mapping["edges"].as_array().expect("edges").iter().map(|edge| DagHostSnapshotEdge { id: edge["id"].as_str().expect("id").into(), source: edge["source"].as_str().expect("source").into(), target: edge["target"].as_str().expect("target").into(), ..DagHostSnapshotEdge::default() }).collect();
-    let document = DagSnapshot { schema: crate::default_snapshot().schema, content: crate::dag_content_child_with_owner(nodes, edges) };
+    let document = DagScene { nodes, edges };
     let targets = mapping["targets"].as_object().expect("targets").iter().map(|(id, point)| (id.clone(), LayoutRunPoint::new(number(&point["x"]), number(&point["y"])))).collect();
     let layout = layout_graph(&document, &targets);
     let expected = &mapping["expected"];
@@ -121,10 +123,10 @@ fn reorganize_run_over_the_demo_example_lands_on_the_layered_layout() {
     assert_eq!(recording.ops.len() as u64, law["movedNodes"].as_u64().expect("moved"), "finalize publishes exactly one op per moved node");
     let mut expected_entities = std::collections::BTreeSet::new();
     for bytes in &recording.ops {
-        let DagMutation::MoveNode(payload) = protocol::OpBinary::decode_op(bytes).expect("move op decodes") else { panic!("only move-node ops are provisional") };
-        let index = layout.node_ids.iter().position(|id| *id == payload.id).expect("moved node is laid out");
-        assert_eq!((payload.x, payload.y), (positions[index].x, positions[index].y), "the op carries the final position");
-        expected_entities.insert(layout_run_entity(&payload.id));
+        let SemioGraphMutation::MoveNode(payload) = protocol::OpBinary::decode_op(bytes).expect("move op decodes") else { panic!("only graph move-node ops are provisional") };
+        let index = layout.node_ids.iter().position(|id| *id == payload.id.value).expect("moved node is laid out");
+        assert_eq!((payload.new_position.x, payload.new_position.y), (positions[index].x, positions[index].y), "the op carries the final position");
+        expected_entities.insert(layout_run_entity(&payload.id.value));
     }
     assert_eq!(recording.entity_set(), expected_entities, "the provisional entity set is the moved nodes");
     let mut verdicts: BTreeMap<&str, u64> = BTreeMap::new();
@@ -142,12 +144,11 @@ fn reorganize_run_over_the_demo_example_lands_on_the_layered_layout() {
 #[test]
 fn reorganize_lands_on_columns_ordered_by_the_petgraph_longest_path_layers() {
     let tolerance = number(&fixture()["run"]["layeredToleranceWorld"]);
-    let demo = crate::default_snapshot();
-    let mirrored = demo.nodes().into_iter().map(|node| DagNodeSpec { x: -node.x, ..node }).collect();
-    let document = DagSnapshot { schema: demo.schema.clone(), content: crate::dag_content_child_with_owner(mirrored, demo.edges()) };
+    let demo = crate::examples::demo::scene();
+    let document = DagScene { nodes: demo.nodes.iter().cloned().map(|node| DagNodeSpec { x: -node.x, ..node }).collect(), edges: demo.edges.clone() };
     let layout = layout_graph(&document, &layered_targets(&document, &DagConfig::default()).expect("layered targets"));
     let index: BTreeMap<&str, u32> = layout.node_ids.iter().enumerate().map(|(at, id)| (id.as_str(), at as u32)).collect();
-    let directed: Vec<(u32, u32)> = document.edges().iter().filter_map(|edge| Some((*index.get(crate::schema::split_endpoint(&edge.source).0.as_str())?, *index.get(crate::schema::split_endpoint(&edge.target).0.as_str())?))).filter(|(source, target)| source != target).collect();
+    let directed: Vec<(u32, u32)> = document.edges.iter().filter_map(|edge| Some((*index.get(crate::schema::split_endpoint(&edge.source).0.as_str())?, *index.get(crate::schema::split_endpoint(&edge.target).0.as_str())?))).filter(|(source, target)| source != target).collect();
     let layers = layout_run_longest_path_layers(layout.graph.nodes.len(), &directed).expect("the demo is acyclic");
     let committed: Vec<f64> = layout.graph.nodes.iter().map(|node| node.origin.expect("placed").x).collect();
     assert!(directed.iter().any(|(source, target)| committed[*target as usize] < committed[*source as usize] - tolerance), "the mirrored committed layout points edges against the layer axis");
@@ -195,7 +196,7 @@ fn reorganize_step_stays_below_the_interactive_ceiling_on_the_demo_example() {
 
 fn tool_run_action(app: &mut DagApp, action: &str, entries: &[(&str, DslValue)]) -> DslValue {
     let args = DslValue::Object(entries.iter().map(|(key, value)| ((*key).to_string(), value.clone())).collect());
-    semio_framework::io::resolve_ready(app.handle_action(action, Some(&args), &meta("local"))).unwrap_or_else(|fault| panic!("{action}: {fault:?}")).output
+    ::semio_framework_async::poll::resolve_ready(app.handle_action(action, Some(&args), &meta("local"))).unwrap_or_else(|fault| panic!("{action}: {fault:?}")).output
 }
 
 fn run_state(app: &DagApp) -> Option<&'static str> {
@@ -209,26 +210,26 @@ fn pump_until(app: &mut DagApp, what: &str, done: impl Fn(&DagApp) -> bool) {
             return;
         }
         PluginApp::maintenance_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).unwrap_or_else(|fault| panic!("{what}: maintenance faulted: {fault:?}"));
-        semio_framework::io::resolve_ready(app.advance_typed_operation_publication()).unwrap_or_else(|fault| panic!("{what}: driver turn faulted: {fault:?}"));
+        ::semio_framework_async::poll::resolve_ready(app.advance_typed_operation_publication()).unwrap_or_else(|fault| panic!("{what}: driver turn faulted: {fault:?}"));
         if let Some(page) = app.take_typed_operation_result_page(1) {
             assert_ne!(page.lane, semio_framework_plugin::app::TypedOperationResultLane::Fault, "{what}: typed operation faulted: {}", String::from_utf8_lossy(page.bytes()));
             app.acknowledge_typed_operation_result(page.token).expect("acknowledge result page");
         }
         let _ = app.take_typed_operation_effect();
         let _ = app.take_typed_operation_event();
-        let _ = semio_framework::io::resolve_ready(app.take_typed_operation_completion()).expect("completion");
+        let _ = ::semio_framework_async::poll::resolve_ready(app.take_typed_operation_completion()).expect("completion");
         let _ = app.take_typed_operation_ui_scope();
     }
     panic!("{what} never settled; state {:?}", run_state(app));
 }
 
 fn history_len(app: &mut DagApp) -> usize {
-    semio_framework::io::resolve_ready(app.history_snapshot()).expect("history").upserts.len()
+    ::semio_framework_async::poll::resolve_ready(app.history_snapshot()).expect("history").upserts.len()
 }
 
 fn demo_app() -> DagApp {
-    let mut app = semio_framework::io::resolve_ready(new_app_with_registry());
-    semio_framework::io::resolve_ready(app.bind_instance_id(meta("local").instance_id));
+    let mut app = ::semio_framework_async::poll::resolve_ready(new_app_with_registry());
+    ::semio_framework_async::poll::resolve_ready(app.bind_instance_id(meta("local").instance_id));
     app
 }
 
@@ -246,21 +247,21 @@ fn run_arguments() -> [(&'static str, DslValue); 2] {
 fn reorganize_start_complete_finalize_is_one_undo_entry() {
     let law = &fixture()["lifecycle"];
     let mut app = demo_app();
-    let before = node_positions(&app.snapshot().expect("snapshot"));
+    let before = node_positions(&app);
     let history = history_len(&mut app);
     start(&mut app);
     pump_until(&mut app, "reorganize completes", |app| run_state(app) == Some("complete"));
-    assert_eq!(node_positions(&app.snapshot().expect("snapshot")), before, "a complete run has committed nothing");
+    assert_eq!(node_positions(&app), before, "a complete run has committed nothing");
     assert_eq!(history_len(&mut app), history);
     assert!(app.tool_run_trace_delta(None).is_some_and(|delta| !delta.is_empty()), "the run published trace pages");
     assert_eq!(tool_run_action(&mut app, semio_framework_plugin::TOOL_RUN_FINALIZE_ACTION_ID, &run_arguments()).get("toolRun").and_then(DslValue::as_str), Some("beginFinalize"));
     pump_until(&mut app, "reorganize finalizes", |app| run_state(app) == Some("finalized"));
-    let after = node_positions(&app.snapshot().expect("snapshot"));
+    let after = node_positions(&app);
     assert_eq!(after.keys().collect::<Vec<_>>(), before.keys().collect::<Vec<_>>());
     assert_ne!(after, before, "finalize published the layered positions");
     assert_eq!((history_len(&mut app) - history) as u64, law["historyEntriesAdded"].as_u64().expect("entries"));
-    semio_framework::io::resolve_ready(semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app, "undo", meta("local").instance_id));
-    assert_eq!(node_positions(&app.snapshot().expect("snapshot")), before, "one undo restores every committed position");
+    ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app, "undo", meta("local").instance_id));
+    assert_eq!(node_positions(&app), before, "one undo restores every committed position");
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
 }
 
@@ -269,14 +270,14 @@ fn reorganize_start_complete_finalize_is_one_undo_entry() {
 fn aborting_a_reorganize_run_leaves_the_document_byte_identical() {
     let law = &fixture()["lifecycle"];
     let mut app = demo_app();
-    let pack = semio_framework::io::resolve_ready(app.document_pack()).expect("pack");
+    let pack = ::semio_framework_async::poll::resolve_ready(app.document_pack()).expect("pack");
     let history = history_len(&mut app);
     start(&mut app);
     let iterations = law["abortAfterIterations"].as_u64().expect("iterations");
     pump_until(&mut app, "provisional moves exist", |app| app.tool_run_presence().is_some_and(|presence| presence.completed >= iterations));
     assert_eq!(tool_run_action(&mut app, semio_framework_plugin::TOOL_RUN_ABORT_ACTION_ID, &run_arguments()).get("toolRun").and_then(DslValue::as_str), Some("closeJob"));
     pump_until(&mut app, "abort settles", |app| run_state(app) == Some("aborted"));
-    let after = semio_framework::io::resolve_ready(app.document_pack()).expect("pack");
+    let after = ::semio_framework_async::poll::resolve_ready(app.document_pack()).expect("pack");
     assert_eq!((after.pack, after.spr), (pack.pack, pack.spr), "abort leaves the document byte-identical");
     assert_eq!(history_len(&mut app), history);
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);

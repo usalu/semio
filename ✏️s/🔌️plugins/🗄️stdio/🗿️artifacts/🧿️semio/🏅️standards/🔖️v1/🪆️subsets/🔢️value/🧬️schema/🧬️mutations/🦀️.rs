@@ -77,6 +77,8 @@ pub mod set_node;
 /// `DslField` impl, same structural reason `SemioValueTreeDiff`'s own doc comment cites — reusing
 /// `SemioValueTreeDiff`'s `pub(crate)` grammar primitives.
 //#region 🔖️Leaves
+#[path = "🩹️patch-snapshot/🦀️.rs"]
+pub mod patch_snapshot;
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "🔁set-value/🦀️.rs"]
@@ -90,6 +92,7 @@ pub mod set_value;
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioValueMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
+    PatchSnapshot(patch_snapshot::PatchSnapshot),
     /// 🔁️ Replaces the whole node found at `path` (root, if empty) with `value`, regardless of
     /// its previous kind.
     SetValue(set_value::SetValue),
@@ -111,7 +114,7 @@ pub enum SemioValueMutation {
 /// 🏷️ Kebab-case spelling of every `SemioValueMutation` variant, in declaration order — the
 /// vocabulary the `semio-v1-value` mutation catalog (`../../🔣️oracle.json`) declares and
 /// `🔢️mutate-semio-value`'s exhaustive test case measures itself against.
-pub const KINDS: &[&str] = &["set-snapshot", "set-value", "set-map-entry", "remove-map-entry", "insert-list-item", "remove-list-item", "set-node", "remove-node"];
+pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "set-value", "set-map-entry", "remove-map-entry", "insert-list-item", "remove-list-item", "set-node", "remove-node"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️DiffAtPath
@@ -155,8 +158,11 @@ pub fn apply_semio_value_mutation(snapshot: &mut SemioValueSnapshot, mutation: &
 /// `kit`/`object`/`text`/`table`, and the same thin-wrapper remedy `kit` adopted. Used by
 /// `🔢️mutate-semio-value`'s `inverse-*` scenarios.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse_semio_value_mutation(mutation: &SemioValueMutation, base: &SemioValueSnapshot) -> Vec<SemioValueMutation> {
-    <SemioValueMutation as Mutation<SemioValueSnapshot>>::inverse(mutation, base)
+pub fn inverse_semio_value_mutation(mutation: &SemioValueMutation, base: &SemioValueSnapshot) -> Result<Vec<SemioValueMutation>, semio_framework_value::ValueError> {
+    Ok({
+    <SemioValueMutation as Mutation<SemioValueSnapshot>>::inverse(mutation, base)?
+
+    })
 }
 //#endregion 🔖️Apply
 
@@ -165,6 +171,7 @@ pub fn inverse_semio_value_mutation(mutation: &SemioValueMutation, base: &SemioV
 pub(crate) fn agg_diff(this: &SemioValueMutation, base: &SemioValueSnapshot) -> protocol::MutationOutcome<SemioValueTreeDiff> {
     protocol::MutationOutcome::new(match this {
         SemioValueMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff_set_snapshot(base, snapshot),
+        SemioValueMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<SemioValueSnapshot, SemioValueMutation>>::diff(patch, base),
 
         SemioValueMutation::SetValue(set_value::SetValue { path, value }) => match resolve(&base.root, path) {
             Some(old) if old != value => diff_at_path(path, Some(SemioValueDiff::Replace { value: value.clone() })),
@@ -229,9 +236,11 @@ pub(crate) fn agg_diff(this: &SemioValueMutation, base: &SemioValueSnapshot) -> 
 /// recover the exact undo. `Vec::new()` where there is nothing to restore (the target was already
 /// absent), matching the convention every other migrated subset's `agg_inverse` uses.
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &SemioValueMutation, base: &SemioValueSnapshot) -> Vec<SemioValueMutation> {
+pub(crate) fn agg_inverse(this: &SemioValueMutation, base: &SemioValueSnapshot) -> Result<Vec<SemioValueMutation>, semio_framework_value::ValueError> {
+    Ok({
     match this {
         SemioValueMutation::SetSnapshot(set_snapshot::SetSnapshot { .. }) => vec![SemioValueMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
+        SemioValueMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<SemioValueSnapshot, SemioValueMutation>>::inverse(patch, base)?),
 
         SemioValueMutation::SetValue(set_value::SetValue { path, .. }) => match resolve(&base.root, path) {
             Some(old) => vec![SemioValueMutation::SetValue(set_value::SetValue { path: path.clone(), value: old.clone() })],
@@ -289,6 +298,8 @@ pub(crate) fn agg_inverse(this: &SemioValueMutation, base: &SemioValueSnapshot) 
             None => Vec::new(),
         },
     }
+
+    })
 }
 //#endregion 🔖️MutationTrait
 
@@ -338,6 +349,7 @@ fn dec_semio_snapshot(s: &str) -> Result<SemioValueSnapshot, String> {
 fn print_value_mutation(m: &SemioValueMutation) -> String {
     match m {
         SemioValueMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", enc_semio_snapshot(snapshot)),
+        SemioValueMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(patch),
         SemioValueMutation::SetValue(set_value::SetValue { path, value }) => format!("set-value path={} value={}", enc_path(path), enc_semio_value(value)),
         SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path, key, value }) => {
             format!("set-map-entry path={} key={} value={}", enc_path(path), enc_str(key), enc_semio_value(value))
@@ -353,12 +365,17 @@ fn print_value_mutation(m: &SemioValueMutation) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_value_mutation(line: &str) -> Result<SemioValueMutation, String> {
+    if let Some(source) = line.strip_prefix("patch-snapshot patch=") {
+        let patch = semio_s_artifact_stdio_contract::editing::snapshot_patch_from_hex(source)?;
+        return Ok(SemioValueMutation::PatchSnapshot(crate::standards::v1::subsets::value::schema::mutations::patch_snapshot::PatchSnapshot { patch }));
+    }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
     let args: std::collections::BTreeMap<&str, &str> =
         rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("semio value mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("semio value mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
+        "patch-snapshot" => semio_s_artifact_stdio_contract::editing::snapshot_patch_from_text(line).map(|patch| SemioValueMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch })),
         "set-snapshot" => Ok(SemioValueMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_semio_snapshot(arg("snapshot")?)? })),
         "set-value" => Ok(SemioValueMutation::SetValue(set_value::SetValue { path: dec_path(arg("path")?)?, value: dec_semio_value(arg("value")?)? })),
         "set-map-entry" => Ok(SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path: dec_path(arg("path")?)?, key: dec_str(arg("key")?)?, value: dec_semio_value(arg("value")?)? })),
@@ -375,8 +392,8 @@ impl OpText for SemioValueMutation {
     fn print_op(&self) -> String {
         print_value_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_value_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_value_mutation(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 }
 
@@ -445,6 +462,7 @@ fn dec_semio_value_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<Se
 /// 🏷️ Op tags of `SemioValueMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
 const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
 const TAG_SET_VALUE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-value");
 const TAG_SET_MAP_ENTRY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-map-entry");
 const TAG_REMOVE_MAP_ENTRY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-map-entry");
@@ -465,6 +483,7 @@ impl protocol::OpBinary for SemioValueMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             SemioValueMutation::SetSnapshot(set_snapshot::SetSnapshot { .. }) => TAG_SET_SNAPSHOT,
+            SemioValueMutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
             SemioValueMutation::SetValue(set_value::SetValue { .. }) => TAG_SET_VALUE,
             SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { .. }) => TAG_SET_MAP_ENTRY,
             SemioValueMutation::RemoveMapEntry(remove_map_entry::RemoveMapEntry { .. }) => TAG_REMOVE_MAP_ENTRY,
@@ -476,6 +495,7 @@ impl protocol::OpBinary for SemioValueMutation {
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
             SemioValueMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => enc_semio_value_snapshot_bin(snapshot, &mut out),
+            SemioValueMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => out.extend(protocol::OpBinary::encode_op(patch)?),
             SemioValueMutation::SetValue(set_value::SetValue { path, value }) => {
                 enc_semio_path_bin(path, &mut out);
                 enc_semio_value_bin(value, &mut out);
@@ -515,6 +535,7 @@ impl protocol::OpBinary for SemioValueMutation {
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
         let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
+            TAG_PATCH_SNAPSHOT => Ok(SemioValueMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: <semio_s_artifact_stdio_contract::editing::SnapshotPatch as protocol::OpBinary>::decode_op(reader.read_bytes(reader.remaining()).map_err(|e| protocol::ProtocolError::Malformed { what: "patch-snapshot payload", offset: reader.position() as u64, detail: e.to_string() })?)? })),
             TAG_SET_SNAPSHOT => {
                 let snapshot = dec_semio_value_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
                 Ok(SemioValueMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
@@ -597,6 +618,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioValueMutation> {
 
     let mixed_path = vec![SemioValuePathSegment::Key { key: "outer".into() }, SemioValuePathSegment::Index { index: 2 }, SemioValuePathSegment::Key { key: "inner".into() }];
     vec![
+        SemioValueMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         SemioValueMutation::SetSnapshot(set_snapshot::SetSnapshot {
             snapshot: snap(mapv(vec![("a", intv("1")), ("b", listv(vec![strv("x"), SemioValue::Null, SemioValue::Bool { value: true }]))]), vec![node("n1", SemioValue::Bytes { value: vec![1, 2, 3] })]),
         }),

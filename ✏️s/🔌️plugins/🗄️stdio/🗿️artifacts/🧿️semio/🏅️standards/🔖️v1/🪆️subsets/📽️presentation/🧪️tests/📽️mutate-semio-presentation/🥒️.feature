@@ -101,6 +101,7 @@ Feature: Apply every typed semio PRESENTATION mutation to a real conference deck
       | insert-layout | 📐️insert-layout |
       | remove-layout | 🗑️remove-layout |
       | set-layout-master | 🔗️set-layout-master |
+      | patch-snapshot | 🩹️patch-snapshot |
 
   @id-no-mutation-baseline-mutate
   @level-exhaustive
@@ -137,6 +138,7 @@ Feature: Apply every typed semio PRESENTATION mutation to a real conference deck
       | insert-layout | 📐️insert-layout |
       | remove-layout | 🗑️remove-layout |
       | set-layout-master | 🔗️set-layout-master |
+      | patch-snapshot | 🩹️patch-snapshot |
 
   @id-no-mutation-baseline-inverse
   @level-exhaustive

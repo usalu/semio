@@ -6,10 +6,11 @@
 //! record, so the body is declared once here as [`selectable_kind_group`] and the board pane's
 //! `◻️2d/☑️options/🎯️select` calls it with its own group id.
 
+use semio_framework_pack_json::json;
 use crate::editor::puzzle5d::config::Puzzle5dRuntime;
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
 use crate::editor::puzzle5d::{puzzle5d_action, PUZZLE5D_PLAY_CONTROLLER_ID};
-use dsl::json;
+
 use semio_framework_plugin::WindowMeasure;
 
 /// 🎯️ `puzzle5d-play-world-select` — parts / grips / fasteners for the world pane.
@@ -40,7 +41,7 @@ pub fn selectable_kind_group(runtime: &Puzzle5dRuntime, labels: &Puzzle5dLabels,
                 label: Some(labels.parts.into()),
                 pressed: runtime.selectable_kinds.parts,
                 text: None,
-                on_change: puzzle5d_action("setSelectableKind", Some(json!({ "kind": "parts" }))),
+                on_change: puzzle5d_action("setSelectableKind", Some(semio_framework_pack_json::json!({ "kind": "parts" }))),
             },
             WindowMeasure::Toggle {
                 id: format!("{group_id}-grips"),
@@ -48,7 +49,7 @@ pub fn selectable_kind_group(runtime: &Puzzle5dRuntime, labels: &Puzzle5dLabels,
                 label: Some(labels.grips.into()),
                 pressed: runtime.selectable_kinds.grips,
                 text: None,
-                on_change: puzzle5d_action("setSelectableKind", Some(json!({ "kind": "grips" }))),
+                on_change: puzzle5d_action("setSelectableKind", Some(semio_framework_pack_json::json!({ "kind": "grips" }))),
             },
             WindowMeasure::Toggle {
                 id: format!("{group_id}-fasteners"),
@@ -56,7 +57,7 @@ pub fn selectable_kind_group(runtime: &Puzzle5dRuntime, labels: &Puzzle5dLabels,
                 label: Some(labels.fasteners.into()),
                 pressed: runtime.selectable_kinds.fasteners,
                 text: None,
-                on_change: puzzle5d_action("setSelectableKind", Some(json!({ "kind": "fasteners" }))),
+                on_change: puzzle5d_action("setSelectableKind", Some(semio_framework_pack_json::json!({ "kind": "fasteners" }))),
             },
         ],
     }

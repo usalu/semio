@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "cause": "std::str::Utf8Error",
+  "condition": "Rejected UTF-8 Byte Sequence",
+  "kind": "InvalidValue",
+  "projection": "PackRefusal From ValueError",
+  "message": "Original Decoder Display",
+  "payload": "Caller Owned",
+  "ownedErrorPolicy": "Separate Contract",
+  "messageClassification": false
+}

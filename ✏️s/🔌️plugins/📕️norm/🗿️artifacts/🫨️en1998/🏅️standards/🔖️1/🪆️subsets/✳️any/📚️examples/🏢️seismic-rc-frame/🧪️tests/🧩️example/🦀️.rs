@@ -10,7 +10,7 @@ async fn inference_determinism_law() {
     use crate::En1998Snapshot;
     use protocol::Inference;
     let snapshot = En1998Snapshot::default();
-    assert_eq!(En1998Inference::infer(&snapshot), En1998Inference::infer(&snapshot));
+    assert_eq!(En1998Inference::infer(&snapshot).expect("valid materialized inference fixture"), En1998Inference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -18,7 +18,7 @@ async fn inference_default_law() {
     use crate::artifact_schema::inferences::En1998Inference;
     use crate::En1998Snapshot;
     use protocol::Inference;
-    assert_eq!(En1998Inference::infer(&En1998Snapshot::default()), En1998Inference::default());
+    assert_eq!(En1998Inference::infer(&En1998Snapshot::default()).expect("valid materialized inference fixture"), En1998Inference::default());
 }
 
 /// 🖼️ Every en1998 example asset (what the picker, the descriptor and `setActiveExample` load) decodes to exactly its

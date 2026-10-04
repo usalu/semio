@@ -13,7 +13,7 @@ fn shooting_shot_field_values_match_the_json_oracle() {
             assert!(mutation.is_none(), "invalid dimension must reject without truncation");
         } else {
             let (next, _) = store::apply_mutation(&base, &mutation.expect("valid input")).expect("apply shot field");
-            let json: serde_json::Value = serde_json::from_str(&dsl::os_pack::to_json_string(&next)).expect("independent snapshot oracle");
+            let json: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&next)).expect("independent snapshot oracle");
             assert_eq!(json["shots"][0][field], vector["expected"]);
         }
     }

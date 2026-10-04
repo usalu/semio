@@ -9,8 +9,8 @@ use semio_framework_plugin::PluginApp;
 /// never loops it back into the same app instance, so `app.snapshot()`/subsequent `render()` never
 /// reflected it — this assertion could never have passed as originally written, on ANY content.
 /// Fixed the same way writer's own `app_with_jack()` and cad's `two_instances_converge_…` tests
-/// already do: call `PluginApp::load_document_pack` directly, the same technique a real host uses
-/// when it receives the effect.
+/// already do: load the effect's pair through the stepped archive load (`artifact_app_laws::load_document`), the path a
+/// real host takes when it receives the effect.
 #[semio_framework_async_macros::async_test]
 async fn renders_document_tree() {
     let mut app = note_app().await;
@@ -26,7 +26,7 @@ async fn renders_document_tree() {
             .expect("seed store for the semio example");
         store::print_document_pack(seed.envelope()).await.expect("print semio example document pack")
     };
-    app.load_document_pack(&files).await.expect("load semio example");
+    semio_framework_plugin::artifact_app_laws::load_document(&mut app, &files).await.expect("load semio example");
     let json = render_body(&mut app, BODY_ARTIFACT).await;
     assert!(json.contains("\"type\":\"tree\""));
     assert!(json.contains("Welcome"));

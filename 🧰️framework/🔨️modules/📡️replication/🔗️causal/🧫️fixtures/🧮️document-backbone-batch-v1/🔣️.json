@@ -149,7 +149,7 @@
     },
     {
       "id": "trailing-flags-invalid",
-      "rawHex": "01016d01640161000000017301aa016902bbcc03040504",
+      "rawHex": "01016d01640161000000017301aa016902bbcc03040508",
       "limits": { "maximumBytes": 262144, "maximumEnvelopes": 8192, "maximumDependenciesPerEnvelope": 8192, "maximumTotalDependencies": 8192, "maximumTargetSegmentsPerEnvelope": 8192, "maximumTotalTargetSegments": 8192, "maximumIdentifierBytes": 256, "maximumSchemaBytes": 256, "maximumPayloadBytes": 262144 },
       "expect": { "outcome": "malformed", "reason": "trailing-flags" }
     },

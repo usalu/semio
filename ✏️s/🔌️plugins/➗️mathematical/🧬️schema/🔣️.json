@@ -26,8 +26,8 @@
         },
         "routes": {
           "type": "array",
-          "minItems": 6,
-          "maxItems": 6,
+          "minItems": 8,
+          "maxItems": 8,
           "uniqueItems": true,
           "items": {
             "type": "object",
@@ -44,13 +44,16 @@
                   "setDirected",
                   "nodeGraphEdit",
                   "nodeGraphViewport",
-                  "setPoints"
+                  "setPoints",
+                  "setActiveExample",
+                  "addNode"
                 ]
               },
               "lane": {
                 "enum": [
                   "Artifact",
-                  "WindowConfig"
+                  "WindowConfig",
+                  "HostOnly"
                 ]
               }
             }

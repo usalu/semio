@@ -1,5 +1,5 @@
 use crate::SchemaError;
-use pack::json::{parse as parse_json, Number, Object, Value};
+use semio_framework_pack_json::{parse as parse_json, Number, Object, Value};
 use semio_framework_value::DslValue;
 use std::collections::HashMap;
 use std::fmt;
@@ -176,7 +176,7 @@ impl OwnedJsonSchemaValidator {
 
     /// 📊 Cross-document compilation with cooperative cancellation and deterministic node progress.
     pub fn compile_with_documents_and_control(schema_json: &str, documents: &[&str], control: &ValidationControl) -> Result<(Self, ValidationProgress), SchemaError> {
-        let schema = parse_json(schema_json).map_err(|error| SchemaError::Validation(format!("invalid schema JSON: {error}")))?;
+        let schema = parse_json(schema_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| SchemaError::Validation(format!("invalid schema JSON: {error}")))?;
         let documents = index_documents(documents)?;
         let mut traversal = Traversal::new(control);
         validate_schema_node(Scope { base: &schema, documents: &documents, patterns: &HashMap::new() }, &schema, "$", &mut traversal)?;
@@ -200,7 +200,7 @@ impl OwnedJsonSchemaValidator {
 
     /// 📊 Validates with cooperative cancellation and a bounded node traversal.
     pub fn validate_json_with_control(&self, value_json: &str, control: &ValidationControl) -> Result<ValidationProgress, SchemaError> {
-        let value = parse_json(value_json).map_err(|error| SchemaError::Validation(format!("invalid instance JSON: {error}")))?;
+        let value = parse_json(value_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| SchemaError::Validation(format!("invalid instance JSON: {error}")))?;
         let mut traversal = Traversal::new(control);
         validate_value(Scope { base: &self.schema, documents: &self.documents, patterns: &self.patterns }, &self.schema, &value, "$", &mut traversal)?;
         Ok(traversal.progress())
@@ -306,7 +306,7 @@ struct Scope<'a> {
 fn index_documents(documents: &[&str]) -> Result<HashMap<String, Value>, SchemaError> {
     let mut indexed = HashMap::new();
     for body in documents {
-        let document = parse_json(body).map_err(|error| SchemaError::Validation(format!("invalid sibling schema JSON: {error}")))?;
+        let document = parse_json(body, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| SchemaError::Validation(format!("invalid sibling schema JSON: {error}")))?;
         let id = document.get("$id").and_then(Value::as_str).ok_or_else(|| SchemaError::Validation("sibling schema document requires an `$id`".to_string()))?.to_string();
         if indexed.insert(id.clone(), document).is_some() {
             return Err(SchemaError::Validation(format!("duplicate sibling schema `$id` {id}")));
@@ -687,7 +687,7 @@ where
                 format!("the discriminated union requires its tag value: {}", refusal.reason),
             )
         })?;
-        let discriminator = pack::json::from_dsl_value(&discriminator);
+        let discriminator = semio_framework_pack_json::from_dsl_value(&discriminator);
         let matching = branch_objects
             .iter()
             .enumerate()
@@ -800,7 +800,7 @@ fn validate_fragment_candidate(
             "candidate is rejected by a false schema",
         )),
         FragmentSchemaCursor::Node { scope, schema } => {
-            let candidate = pack::json::from_dsl_value(candidate);
+            let candidate = semio_framework_pack_json::from_dsl_value(candidate);
             validate_value(scope, schema, &candidate, &fragment_path(path), traversal).map_err(|error| fragment_error(error, path))
         }
     }

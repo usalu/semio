@@ -69,9 +69,12 @@ impl crate::mutation::Mutation<i64> for CausalAddOp {
     fn diff(&self, _base: &i64) -> crate::mutation::MutationOutcome<CausalAddDiff> {
         crate::mutation::MutationOutcome::new(CausalAddDiff { delta: self.delta })
     }
-    fn inverse(&self, _base: &i64) -> Vec<Self> {
+    fn inverse(&self, _base: &i64) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![CausalAddOp { delta: -self.delta }]
-    }
+    
+    })())
+}
 }
 /// 🎯️ Hand-written (no `os_dsl::DslOps` derive in this dependency-free fixture): `format
 /// u8 (=1) | delta i64 LE`.
@@ -441,7 +444,6 @@ fn mutation_envelope_from_edit_derives_one_envelope_per_forward_op_using_explici
             },
         ],
         description: None, verb: None, line: None,
-        coalesce_key: None,
         sequence_number: 1,
         started_at: "2026-07-27T00:00:00Z".into(),
         finished_at: None,
@@ -477,7 +479,6 @@ fn mutation_envelope_from_edit_falls_back_to_op_trait_and_structural_defaults_wi
         inverse: vec![],
         mutation_meta: vec![],
         description: None, verb: None, line: None,
-        coalesce_key: None,
         sequence_number: 0,
         started_at: "2026-07-27T00:00:00Z".into(),
         finished_at: None,
@@ -503,7 +504,6 @@ fn mutation_envelope_from_edit_propagates_an_encode_failure() {
         inverse: vec![],
         mutation_meta: vec![],
         description: None, verb: None, line: None,
-        coalesce_key: None,
         sequence_number: 0,
         started_at: "2026-07-27T00:00:00Z".into(),
         finished_at: None,

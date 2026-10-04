@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeHumidistatDehumidifyingThrottleRange, base: &
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("A dehumidifying throttle range must be a positive finite number, got {}.", payload.new_dehumidifying_throttle_range), [payload.id.0.to_string()]);
     }
     if existing.dehumidifying_throttle_range == payload.new_dehumidifying_throttle_range {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Humidistat {} already has that dehumidifying throttle range.", payload.id.0));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Humidistat {} already has that dehumidifying throttle range.", payload.id.0));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.humidistats.iter_mut().find(|item| item.id == payload.id) {

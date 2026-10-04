@@ -85,7 +85,7 @@ async fn export_solids_as_step_round_trips_through_real_semio_brep_bridge() {
         assert!((mesh_max[axis] - brep_max[axis]).abs() < 1e-6, "semio/mesh vs reimported semio/brep bounding-box MAX mismatch on axis {axis}: mesh {} vs brep {}", mesh_max[axis], brep_max[axis]);
     }
 
-    let gltf = semio_framework_plugin::resolve_ready(SemioMeshToGltf::serialize(&mesh_snapshot)).expect("real semio/mesh -> gltf codec must succeed on a real tessellated box");
+    let gltf = ::semio_framework_async::poll::resolve_ready(SemioMeshToGltf::serialize(&mesh_snapshot)).expect("real semio/mesh -> gltf codec must succeed on a real tessellated box");
     assert_eq!(gltf.document.meshes.len(), 1, "expected exactly one gltf mesh for one solid");
     assert_eq!(gltf.buffers.len(), 1, "expected one packed geometry buffer");
     let position_accessor = gltf.document.accessors.first().expect("POSITION accessor must exist");

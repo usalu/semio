@@ -13,8 +13,8 @@ async fn inference_determinism_law() {
 
     let text = include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
     let snapshot = <LayoutSnapshot as store::ArtifactDsl>::parse_dsl(text).expect("demo asset parses as a layout snapshot");
-    let inference = LayoutInference::infer(&snapshot);
-    assert_eq!(inference, LayoutInference::infer(&snapshot));
+    let inference = LayoutInference::infer(&snapshot).expect("valid materialized inference fixture");
+    assert_eq!(inference, LayoutInference::infer(&snapshot).expect("valid materialized inference fixture"));
 
     let expected_nodes = (snapshot.parent_pages.len() + snapshot.spreads.len() + snapshot.pages.len()) as u32;
     assert_eq!(inference.topology.node_count, expected_nodes);

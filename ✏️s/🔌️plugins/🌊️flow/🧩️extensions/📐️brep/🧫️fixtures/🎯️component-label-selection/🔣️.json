@@ -1,0 +1,73 @@
+{
+  "schema": "brep.component-label-selection/v1",
+  "box": {
+    "width": 2,
+    "depth": 3,
+    "height": 4,
+    "edgeLength": 2,
+    "faceArea": 6
+  },
+  "ports": {
+    "inputs": [
+      "brep",
+      "edgeLabels",
+      "faceLabels"
+    ],
+    "outputs": [
+      "selectedEdges",
+      "selectedFaces"
+    ]
+  },
+  "invalidSelectors": [
+    "null",
+    "{}",
+    "[1]",
+    "[\"0\"]",
+    "[\"01\"]",
+    "[\"+1\"]",
+    "[\"18446744073709551616\"]",
+    "[\"1\",null]"
+  ],
+  "missingLabel": "18446744073709551615",
+  "exactLabels": [
+    "9007199254740993",
+    "18446744073709551615"
+  ],
+  "sourceScopes": {
+    "parameter": "sourceHandle",
+    "output": "sourceIndex",
+    "cases": [
+      {
+        "name": "current source",
+        "order": [
+          "selected",
+          "other"
+        ],
+        "index": 0
+      },
+      {
+        "name": "reordered source",
+        "order": [
+          "other",
+          "selected"
+        ],
+        "index": 1
+      },
+      {
+        "name": "removed source",
+        "order": [
+          "other"
+        ],
+        "error": true
+      },
+      {
+        "name": "ambiguous source",
+        "order": [
+          "selected",
+          "selected"
+        ],
+        "error": true
+      }
+    ]
+  }
+}

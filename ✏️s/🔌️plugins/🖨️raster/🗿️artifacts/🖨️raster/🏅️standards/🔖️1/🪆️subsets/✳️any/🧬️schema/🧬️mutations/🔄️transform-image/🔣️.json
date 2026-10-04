@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️transform-image",
+  "semanticKind": "transform-image",
+  "displayName": "Transform Image",
+  "emoji": "🔄️",
+  "aggregateVariant": "TransformImage",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "transform-image",
+  "binaryTag": 20,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

@@ -76,7 +76,7 @@ fn instance_close_event_matches_the_shared_first_party_fixture_and_serde_structu
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧫️fixtures/🔣️.json")).expect("shared actor lifecycle fixture");
     let mut independent = fixture["vectors"].as_array().expect("lifecycle vectors").iter().find(|row| row["value"]["kind"] == "close").expect("close vector")["value"].clone();
     independent.as_object_mut().expect("close value object").remove("kind");
-    let first_party: serde_json::Value = serde_json::from_str(&dsl::os_pack::json::to_json_string(&fixture_instance_close_request())).expect("first-party close JSON");
+    let first_party: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&fixture_instance_close_request())).expect("first-party close JSON");
     assert_eq!(first_party, independent);
     let event = fixture_instance_close_event();
     let serde_wire = serde_json::to_vec(&event).expect("serde event JSON");

@@ -3,7 +3,7 @@ use super::*;
 #[test]
 fn question_drop_indices_match_shared_final_orders() {
     let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️drop.json")).unwrap();
-    let definition: crate::schema::definition::FormsDefinition = dsl::json::from_json_str(&vectors["definition"].to_string()).unwrap();
+    let definition: crate::schema::definition::FormsDefinition = semio_framework_pack_json::from_json_str(&vectors["definition"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for case in vectors["cases"].as_array().unwrap() {
         let input = &case["input"];
         let result = question_insert_index(&definition, input["stepId"].as_str().unwrap(), input["targetId"].as_str().unwrap(), input["position"].as_str().unwrap(), input["movingId"].as_str());
@@ -25,7 +25,7 @@ fn move_commands_apply_the_requested_sibling_order() {
     use semio_framework_plugin::{ArtifactView, ConfigView, HistoryView};
     use protocol::Mutation;
     let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️drop.json")).unwrap();
-    let definition: crate::schema::definition::FormsDefinition = dsl::json::from_json_str(&vectors["definition"].to_string()).unwrap();
+    let definition: crate::schema::definition::FormsDefinition = semio_framework_pack_json::from_json_str(&vectors["definition"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let history = HistoryView::empty();
     let config = FormsConfig::default();
     for case in vectors["cases"].as_array().unwrap() {
@@ -49,12 +49,12 @@ fn question_placement_matches_shared_events() {
     let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for case in vectors["cases"].as_array().unwrap() {
         let input = &case["input"];
-        let definition: crate::schema::definition::FormsDefinition = dsl::json::from_json_str(&input["definition"].to_string()).unwrap();
-        let question: crate::FormQuestion = dsl::json::from_json_str(&input["question"].to_string()).unwrap();
+        let definition: crate::schema::definition::FormsDefinition = semio_framework_pack_json::from_json_str(&input["definition"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let question: crate::FormQuestion = semio_framework_pack_json::from_json_str(&input["question"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let result = create_question_event(&definition, question, input["stepId"].as_str(), input["newStepId"].as_str().unwrap());
         if let Some(error) = case["error"].as_str() { assert_eq!(result.unwrap_err(), error, "{}", case["name"]); }
         else {
-            let expected: crate::FormMutation = dsl::json::from_json_str(&case["event"].to_string()).unwrap();
+            let expected: crate::FormMutation = semio_framework_pack_json::from_json_str(&case["event"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
             assert_eq!(result.unwrap(), expected, "{}", case["name"]);
             let mut snapshot = crate::forms_snapshot_with_state(crate::FORMS_DOCUMENT_SCHEMA.into(), "placement".into(), "1".into(), None, &definition.steps);
             expected.diff(&snapshot).apply_to(&mut snapshot);

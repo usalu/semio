@@ -60,6 +60,7 @@ mod tests {
                 command_grammar: resolve_kernel_future(semio_framework::CommandGrammar::empty()),
                 io: semio_framework::AppIo::default(),
                 tutorials: Vec::new(),
+                fault_notices: Vec::new(),
             }],
             capabilities: vec![],
             topic_contributions: vec![],
@@ -123,6 +124,7 @@ mod tests {
             command_grammar: resolve_kernel_future(semio_framework::CommandGrammar::empty()),
             io: semio_framework::AppIo::default(),
             tutorials: Vec::new(),
+            fault_notices: Vec::new(),
         };
         let note_app = AppDefinition {
             id: "note-play".into(),
@@ -170,6 +172,7 @@ mod tests {
             command_grammar: resolve_kernel_future(semio_framework::CommandGrammar::empty()),
             io: semio_framework::AppIo::default(),
             tutorials: Vec::new(),
+            fault_notices: Vec::new(),
         };
         host.load_plugin(LoadedProgram {
             plugin_id: "draw".into(),
@@ -266,6 +269,7 @@ mod tests {
             command_grammar: resolve_kernel_future(semio_framework::CommandGrammar::empty()),
             io: semio_framework::AppIo::default(),
             tutorials: Vec::new(),
+            fault_notices: Vec::new(),
         };
         host.load_plugin(LoadedProgram {
             plugin_id: "draw".into(),
@@ -436,6 +440,7 @@ mod tests {
                 .with_ports(ports),
             ),
             tutorials: Vec::new(),
+            fault_notices: Vec::new(),
         }
     }
 
@@ -461,7 +466,8 @@ mod tests {
 
     /// 🧮️ The complete history position (applied, redo, checkpoint, alternative) the event log of `edits` + `transitions` folds to.
     fn workflow_history<'a>(document_id: &str, edits: impl IntoIterator<Item = &'a store::Edit<workflow::WorkflowMutation>>, transitions: &[protocol::MutationEnvelope], conflicts: &[protocol::Conflict]) -> protocol::HistoryFold {
-        store::fold_event_log::<workflow::WorkflowSnapshot, workflow::WorkflowMutation>(document_id, &edits.into_iter().collect::<Vec<_>>(), transitions, conflicts).expect("event log folds")
+        let head = protocol::ViewerHead::canonical_trunk(&protocol::ArtifactId(document_id.to_string()));
+        store::fold_event_log::<workflow::WorkflowSnapshot, workflow::WorkflowMutation>(document_id, &edits.into_iter().collect::<Vec<_>>(), transitions, conflicts, &head).expect("event log folds")
     }
 
     /// 🧮️ [`workflow_history`] of one host backbone document.
@@ -476,7 +482,7 @@ mod tests {
         let mut document = store.document();
         let edit_id = document_history(&document).applied.last().expect("one applied edit").clone();
         let edit = document.vcs.edits.iter().find(|edit| edit.id == edit_id).expect("applied edit is persisted");
-        let messages = vec![protocol::MutationMessage::warn("mutation.clamped", "durable host outcome").at(["parameters", "0"]).at_op(0)];
+        let messages = vec![protocol::MutationMessage::warning("mutation.clamped", "durable host outcome").at(["parameters", "0"]).at_op(0)];
         document.edit_messages = vec![protocol::EditMessages { edit_id: edit_id.clone(), messages: messages.clone() }];
         let kind = protocol::ConflictKind::Degraded { edit_ids: vec![edit_id] };
         let timestamp = edit.mutation_meta.first().expect("operation metadata").timestamp;
@@ -612,7 +618,7 @@ mod tests {
         assert!(converged_a.graph.nodes.iter().all(|node| node.id != node_b_id), "node b must stay removed");
         assert!(converged_a.graph.edges.iter().all(|edge| edge.target_node_id != target_node_id), "the edge wired to the deleted node must be dropped, not dangling");
         assert!(
-            conflicts_a.iter().any(|conflict| conflict.code == dsl::FaultCode::new("workflow/edge-orphaned") && conflict.level == dsl::Severity::Warning && conflict.target == vec!["edge-race".to_string()]),
+            conflicts_a.iter().any(|conflict| conflict.code == semio_framework_diagnostic::FaultCode::new("workflow/edge-orphaned") && conflict.level == semio_framework_diagnostic::Severity::Warning && conflict.target == vec!["edge-race".to_string()]),
             "dropping the dangling edge must surface a Warning-level conflict targeting the dropped edge"
         );
         assert_eq!(conflicts_a, conflicts_b, "both peers must report the same reconciliation conflicts");

@@ -175,10 +175,10 @@ fn trailing_garbage_is_an_error() {
 #[test]
 fn math_grammar_parses_under_dsl_grammar() {
     let source = include_str!("../../📖️.grammar.semio");
-    let parsed = crate::os_dsl::grammar::parse_grammar(source).expect("📖️.grammar.semio must parse under dsl_grammar's own parser");
+    let parsed = semio_framework_dsl::grammar::parse_grammar(source).expect("📖️.grammar.semio must parse under dsl_grammar's own parser");
     assert_eq!(parsed.id, "math");
     assert_eq!(parsed.start, "formula");
-    let printed = crate::os_dsl::grammar::print_grammar(&parsed);
-    let reparsed = crate::os_dsl::grammar::parse_grammar(&printed).expect("canonical print of 📖️.grammar.semio must reparse");
+    let printed = semio_framework_dsl::grammar::print_grammar(&parsed);
+    let reparsed = semio_framework_dsl::grammar::parse_grammar(&printed).expect("canonical print of 📖️.grammar.semio must reparse");
     assert_eq!(reparsed, parsed);
 }

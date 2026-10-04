@@ -1,5 +1,0 @@
-{
-  "mutation": "setNodeRoot",
-  "nodeId": "node-leaf",
-  "newRoot": false
-}

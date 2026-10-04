@@ -5,7 +5,7 @@ async fn repeated_feature_patches_match_the_neutral_serde_oracle() {
     let cases: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️unit/🔣️.json")).expect("patch composition fixture");
     for case in cases.as_array().expect("fixture cases") {
         let id = case["id"].as_str().expect("case identity");
-        let base = GisMapSnapshot { regions: vec![MapFeature { id: id.into(), data: dsl::DslValue::from(&case["initial"]) }], ..Default::default() };
+        let base = GisMapSnapshot { regions: vec![MapFeature { id: id.into(), data: semio_framework_value::DslValue::from(&case["initial"]) }], ..Default::default() };
         let mut diff = GisMapDiff::default();
         let mut oracle = case["initial"].clone();
         for patch in case["patches"].as_array().expect("patch sequence") {
@@ -13,19 +13,19 @@ async fn repeated_feature_patches_match_the_neutral_serde_oracle() {
                 oracle = data.clone();
             }
             diff.absorb(GisMapDiff {
-                regions: Some(GisMapFeaturesDelta { patched: vec![GisMapFeaturePatchEntry { id: id.into(), patch: crate::MapFeaturePatch { data: patch.get("data").map(dsl::DslValue::from) } }], ..Default::default() }),
+                regions: Some(GisMapFeaturesDelta { patched: vec![GisMapFeaturePatchEntry { id: id.into(), patch: crate::MapFeaturePatch { data: patch.get("data").map(semio_framework_value::DslValue::from) } }], ..Default::default() }),
                 ..Default::default()
             });
         }
         assert_eq!(oracle, case["expected"], "{id}: independent replacement oracle");
         let snapshot = diff.apply(&base).expect("composed patch applies");
-        assert_eq!(snapshot.regions[0].data, dsl::DslValue::from(&oracle), "{id}: composed payload");
+        assert_eq!(snapshot.regions[0].data, semio_framework_value::DslValue::from(&oracle), "{id}: composed payload");
         assert_eq!(diff.regions.expect("region delta").patched.len(), 1, "{id}: one patch per feature");
     }
 }
 
 fn feature(id: &str) -> MapFeature {
-    MapFeature { id: id.into(), data: dsl::DslValue::String(id.into()) }
+    MapFeature { id: id.into(), data: semio_framework_value::DslValue::String(id.into()) }
 }
 
 #[semio_framework_async_macros::async_test]

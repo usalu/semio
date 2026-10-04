@@ -1,5 +1,7 @@
 {
-  "$schema": "../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json#/$defs/Outputs",
+  "contractId": "semio-s-artifact-reasoning-wires-graph-catalog",
+  "policy": {"excludedInputPaths":[],"genericEmojiIdentities":[]},
   "version": 1,
   "inputAreas": [
     "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires"

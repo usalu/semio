@@ -37,7 +37,7 @@ fn rectangle_region_doc() -> Fem2dSnapshot {
 fn round_trip(snapshot: &Fem2dSnapshot, operation: &Fem2dMutation) -> Fem2dSnapshot {
     let forward = vcs::apply_mutation(snapshot, operation).expect("valid mutation").0;
     let mut restored = forward.clone();
-    for back in operation.inverse(snapshot) {
+    for back in operation.inverse(snapshot).expect("valid retained mutation inverse fixture") {
         restored = vcs::apply_mutation(&restored, &back).expect("valid inverse mutation").0;
     }
     assert_eq!(&restored, snapshot, "inverse() must restore the pre-mutation document");
@@ -185,9 +185,9 @@ async fn combination_replace_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn missing_target_inverse_and_diff_are_no_ops() {
     let base = Fem2dSnapshot::default();
-    assert!(Fem2dMutation::DeleteNode(delete_node::DeleteNode { id: "ghost".into() }).inverse(&base).is_empty());
-    assert!(Fem2dMutation::ReplaceMaterial(replace_material::ReplaceMaterial { id: "ghost".into(), new_material: FemMaterial { id: "ghost".into(), name: "x".into(), e: 1.0, nu: 0.3, rho: 1.0 } }).inverse(&base).is_empty());
-    assert!(Fem2dMutation::RemoveLoad(remove_load::RemoveLoad { case_id: "ghost".into(), load_id: "ghost".into() }).inverse(&base).is_empty());
+    assert!(Fem2dMutation::DeleteNode(delete_node::DeleteNode { id: "ghost".into() }).inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
+    assert!(Fem2dMutation::ReplaceMaterial(replace_material::ReplaceMaterial { id: "ghost".into(), new_material: FemMaterial { id: "ghost".into(), name: "x".into(), e: 1.0, nu: 0.3, rho: 1.0 } }).inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
+    assert!(Fem2dMutation::RemoveLoad(remove_load::RemoveLoad { case_id: "ghost".into(), load_id: "ghost".into() }).inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
     assert_eq!(*Fem2dMutation::AddLoad(add_load::AddLoad { case_id: "ghost".into(), load: Box::new(FemLoad::Nodal { id: "l1".into(), node_id: "n1".into(), dof: FemDof::Ty, value: 1.0 }) }).diff(&base).diff(), Fem2dDiff::default());
 }
 // #endregion 🔖️OpRoundTrip
@@ -319,7 +319,7 @@ async fn create_node_duplicate_id_is_fatal() {
     let existing_id = base.nodes.first().unwrap().id.clone();
     let outcome = Fem2dMutation::CreateNode(create_node::CreateNode { node: FemNode { id: existing_id, x: 0.0, y: 0.0 } }).diff(&base);
     protocol::os_spr::protocol_laws::assert_fatal_never_applies(&outcome).await;
-    assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+    assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -397,7 +397,7 @@ async fn replace_combination_missing_target_is_error() {
 
 //#region 🛡️GuardLaws
 /// 🧾️ The refusal a guard raised, as `(code, level, target)` — every assertion below reads it.
-fn refusal(base: &Fem2dSnapshot, mutation: &Fem2dMutation) -> (String, protocol::Severity, Vec<String>) {
+fn refusal(base: &Fem2dSnapshot, mutation: &Fem2dMutation) -> (String, semio_framework_diagnostic::Severity, Vec<String>) {
     let outcome = mutation.diff(base);
     assert_eq!(outcome.diff(), &Fem2dDiff::default(), "a refusing diff builder must carry the empty diff, never a half-built delta");
     let messages = outcome.messages();
@@ -412,7 +412,7 @@ async fn replace_material_rename_is_target_mismatch() {
     let renamed = FemMaterial { id: "steel_v2".into(), name: "Steel S355".into(), e: 210e9, nu: 0.3, rho: 7850.0 };
     let (code, level, target) = refusal(&base, &Fem2dMutation::ReplaceMaterial(replace_material::ReplaceMaterial { id: "steel".into(), new_material: renamed }));
     assert_eq!(code, "mutation.target-mismatch");
-    assert_eq!(level, protocol::Severity::Error, "a rename through a replace contradicts the target it selects — the state-dependent Error");
+    assert_eq!(level, semio_framework_diagnostic::Severity::Error, "a rename through a replace contradicts the target it selects — the state-dependent Error");
     assert_eq!(target, vec!["steel".to_string(), "steel_v2".to_string()], "the diagnostic addresses the selected id first and the impostor second");
 }
 
@@ -422,7 +422,7 @@ async fn delete_material_still_referenced_is_error() {
     let base = simply_supported_beam_doc();
     let (code, level, target) = refusal(&base, &Fem2dMutation::DeleteMaterial(delete_material::DeleteMaterial { id: "steel".into() }));
     assert_eq!(code, "mutation.target-referenced");
-    assert_eq!(level, protocol::Severity::Error, "another base may well have no referrers, so this is an Error, not a Fatal");
+    assert_eq!(level, semio_framework_diagnostic::Severity::Error, "another base may well have no referrers, so this is an Error, not a Fatal");
     assert_eq!(target, vec!["steel".to_string(), "e1".to_string()], "the target comes first, then every referrer");
 }
 
@@ -443,7 +443,7 @@ async fn create_material_implausible_poisson_is_fatal() {
     let implausible = FemMaterial { id: "rubber".into(), name: "Rubber".into(), e: 1e7, nu: 0.5, rho: 1100.0 };
     let (code, level, target) = refusal(&base, &Fem2dMutation::CreateMaterial(create_material::CreateMaterial { material: implausible }));
     assert_eq!(code, "mutation.invariant");
-    assert_eq!(level, protocol::Severity::Fatal, "an inadmissible property is wrong on every base, so no merge policy may absorb it");
+    assert_eq!(level, semio_framework_diagnostic::Severity::Fatal, "an inadmissible property is wrong on every base, so no merge policy may absorb it");
     assert_eq!(target, vec!["rubber".to_string()]);
 }
 
@@ -454,7 +454,7 @@ async fn create_section_zero_area_is_fatal() {
     let implausible = FemSection { id: "void".into(), name: "Void".into(), area: 0.0, iy: 1e-5 };
     let (code, level, _) = refusal(&base, &Fem2dMutation::CreateSection(create_section::CreateSection { section: implausible }));
     assert_eq!(code, "mutation.invariant");
-    assert_eq!(level, protocol::Severity::Fatal);
+    assert_eq!(level, semio_framework_diagnostic::Severity::Fatal);
 }
 
 /// 🕳️ A hole must be cut FROM the outline, not float beside it.
@@ -465,7 +465,7 @@ async fn create_region_hole_outside_outline_is_fatal() {
         FemRegion { id: "r2".into(), name: "Loose hole".into(), outline: vec![[0.0, 0.0], [4.0, 0.0], [4.0, 2.0], [0.0, 2.0]], holes: vec![vec![[9.0, 9.0], [10.0, 9.0], [10.0, 10.0]]], thickness: 0.02, material_id: "steel".into(), mesh_size: 0.5 };
     let (code, level, target) = refusal(&base, &Fem2dMutation::CreateRegion(create_region::CreateRegion { region: loose }));
     assert_eq!(code, "mutation.invariant");
-    assert_eq!(level, protocol::Severity::Fatal);
+    assert_eq!(level, semio_framework_diagnostic::Severity::Fatal);
     assert_eq!(target, vec!["r2".to_string()]);
 }
 
@@ -485,7 +485,7 @@ async fn update_analysis_settings_zero_modes_is_fatal() {
     let settings = FemAnalysisSettings { modal_count: 0, buckling_count: 3, deformation_scale: 50.0 };
     let (code, level, target) = refusal(&base, &Fem2dMutation::UpdateAnalysisSettings(update_analysis_settings::UpdateAnalysisSettings { settings }));
     assert_eq!(code, "mutation.invariant");
-    assert_eq!(level, protocol::Severity::Fatal);
+    assert_eq!(level, semio_framework_diagnostic::Severity::Fatal);
     assert!(target.is_empty(), "the analysis facet has no id to address, got {target:?}");
 }
 
@@ -509,7 +509,7 @@ async fn replace_element_dangling_section_is_error() {
     let dangling = FemElement::Beam { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "ghost".into() };
     let (code, level, target) = refusal(&base, &Fem2dMutation::ReplaceElement(replace_element::ReplaceElement { id: "e1".into(), new_element: Box::new(dangling) }));
     assert_eq!(code, "mutation.target-missing");
-    assert_eq!(level, protocol::Severity::Error);
+    assert_eq!(level, semio_framework_diagnostic::Severity::Error);
     assert_eq!(target, vec!["ghost".to_string()]);
 }
 
@@ -519,7 +519,7 @@ async fn replace_node_rename_is_target_mismatch() {
     let base = simply_supported_beam_doc();
     let (code, level, target) = refusal(&base, &Fem2dMutation::ReplaceNode(replace_node::ReplaceNode { id: "n2".into(), new_node: FemNode { id: "n2_b".into(), x: 6.0, y: 0.0 } }));
     assert_eq!(code, "mutation.target-mismatch");
-    assert_eq!(level, protocol::Severity::Error);
+    assert_eq!(level, semio_framework_diagnostic::Severity::Error);
     assert_eq!(target, vec!["n2".to_string(), "n2_b".to_string()]);
 }
 
@@ -529,7 +529,7 @@ async fn replace_load_rename_is_target_mismatch() {
     let renamed = FemLoad::MemberUdl { id: "l1_b".into(), element_id: "e1".into(), wx: 0.0, wy: -10000.0 };
     let (code, level, target) = refusal(&base, &Fem2dMutation::ReplaceLoad(replace_load::ReplaceLoad { case_id: "dead".into(), load_id: "l1".into(), new_load: Box::new(renamed) }));
     assert_eq!(code, "mutation.target-mismatch");
-    assert_eq!(level, protocol::Severity::Error);
+    assert_eq!(level, semio_framework_diagnostic::Severity::Error);
     assert_eq!(target, vec!["l1".to_string(), "l1_b".to_string()]);
 }
 
@@ -559,7 +559,7 @@ async fn replace_combination_self_reference_is_refused() {
     let cyclic = FemCombination { id: "uls".into(), name: "ULS".into(), terms: vec![FemCombinationTerm { case_id: "dead".into(), factor: 1.35 }, FemCombinationTerm { case_id: "uls".into(), factor: 1.0 }] };
     let (code, level, target) = refusal(&base, &Fem2dMutation::ReplaceCombination(replace_combination::ReplaceCombination { id: "uls".into(), new_combination: cyclic }));
     assert_eq!(code, "mutation.invariant", "a combination weighting itself is a payload cycle, not a missing target");
-    assert_eq!(level, protocol::Severity::Fatal);
+    assert_eq!(level, semio_framework_diagnostic::Severity::Fatal);
     assert_eq!(target, vec!["uls".to_string()]);
 }
 
@@ -572,7 +572,7 @@ async fn create_combination_self_reference_is_refused() {
     let cyclic = FemCombination { id: "sls".into(), name: "SLS".into(), terms: vec![FemCombinationTerm { case_id: "sls".into(), factor: 1.0 }] };
     let (code, level, target) = refusal(&base, &Fem2dMutation::CreateCombination(create_combination::CreateCombination { combination: cyclic }));
     assert_eq!(code, "mutation.invariant", "a brand-new combination may not weight itself either");
-    assert_eq!(level, protocol::Severity::Fatal);
+    assert_eq!(level, semio_framework_diagnostic::Severity::Fatal);
     assert_eq!(target, vec!["sls".to_string()]);
 }
 
@@ -583,7 +583,7 @@ async fn replace_load_non_finite_magnitude_is_fatal() {
     let poisoned = FemLoad::MemberUdl { id: "l1".into(), element_id: "e1".into(), wx: 0.0, wy: f64::NAN };
     let (code, level, target) = refusal(&base, &Fem2dMutation::ReplaceLoad(replace_load::ReplaceLoad { case_id: "dead".into(), load_id: "l1".into(), new_load: Box::new(poisoned) }));
     assert_eq!(code, "mutation.invariant");
-    assert_eq!(level, protocol::Severity::Fatal);
+    assert_eq!(level, semio_framework_diagnostic::Severity::Fatal);
     assert_eq!(target, vec!["l1".to_string()]);
 }
 
@@ -595,7 +595,7 @@ async fn replace_combination_non_finite_factor_is_fatal() {
     let poisoned = FemCombination { id: "uls".into(), name: "ULS".into(), terms: vec![FemCombinationTerm { case_id: "dead".into(), factor: f64::INFINITY }] };
     let (code, level, target) = refusal(&base, &Fem2dMutation::ReplaceCombination(replace_combination::ReplaceCombination { id: "uls".into(), new_combination: poisoned }));
     assert_eq!(code, "mutation.invariant");
-    assert_eq!(level, protocol::Severity::Fatal);
+    assert_eq!(level, semio_framework_diagnostic::Severity::Fatal);
     assert_eq!(target, vec!["uls".to_string()]);
 }
 
@@ -605,7 +605,7 @@ async fn change_load_case_name_unchanged_is_a_warned_no_op() {
     let base = simply_supported_beam_doc();
     let outcome = Fem2dMutation::ChangeLoadCaseName(change_load_case_name::ChangeLoadCaseName { case_id: "dead".into(), new_name: "dead".into() }).diff(&base);
     assert_eq!(outcome.diff(), &Fem2dDiff::default());
-    assert_eq!(outcome.worst_level(), Some(protocol::Severity::Warning));
+    assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Warning));
     assert_eq!(outcome.messages()[0].code.0, "mutation.no-op");
 }
 //#endregion 🛡️GuardLaws

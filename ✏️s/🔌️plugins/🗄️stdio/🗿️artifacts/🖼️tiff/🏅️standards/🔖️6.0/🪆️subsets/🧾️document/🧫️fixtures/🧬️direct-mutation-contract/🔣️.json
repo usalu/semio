@@ -16,8 +16,7 @@
         "🔗️.graphql",
         "🛰️.proto",
         "📝️text/🦀️.rs",
-        "💾️binary/🦀️.rs",
-        "🧪️test/🔣️s.json"
+        "💾️binary/🦀️.rs"
       ]
     },
     {
@@ -34,8 +33,7 @@
         "🔗️.graphql",
         "🛰️.proto",
         "📝️text/🦀️.rs",
-        "💾️binary/🦀️.rs",
-        "🧪️test/🔣️s.json"
+        "💾️binary/🦀️.rs"
       ]
     },
     {
@@ -52,8 +50,7 @@
         "🔗️.graphql",
         "🛰️.proto",
         "📝️text/🦀️.rs",
-        "💾️binary/🦀️.rs",
-        "🧪️test/🔣️s.json"
+        "💾️binary/🦀️.rs"
       ]
     },
     {
@@ -70,8 +67,7 @@
         "🔗️.graphql",
         "🛰️.proto",
         "📝️text/🦀️.rs",
-        "💾️binary/🦀️.rs",
-        "🧪️test/🔣️s.json"
+        "💾️binary/🦀️.rs"
       ]
     },
     {
@@ -88,15 +84,14 @@
         "🔗️.graphql",
         "🛰️.proto",
         "📝️text/🦀️.rs",
-        "💾️binary/🦀️.rs",
-        "🧪️test/🔣️s.json"
+        "💾️binary/🦀️.rs"
       ]
     },
     {
-      "kind": "replace-pixels",
-      "variant": "ReplacePixels",
-      "directory": "🔲️replace-pixels",
-      "textOpcode": "replace-pixels",
+      "kind": "paint-region",
+      "variant": "PaintRegion",
+      "directory": "🎨️paint-region",
+      "textOpcode": "paint-region",
       "binaryTag": 7,
       "requiredFiles": [
         "🦀️.rs",
@@ -106,8 +101,38 @@
         "🔗️.graphql",
         "🛰️.proto",
         "📝️text/🦀️.rs",
-        "💾️binary/🦀️.rs",
-        "🧪️test/🔣️s.json"
+        "💾️binary/🦀️.rs"
+      ]
+    },
+    {
+      "kind": "set-snapshot",
+      "variant": "SetSnapshot",
+      "directory": "📸️set-snapshot",
+      "textOpcode": "set-snapshot",
+      "binaryTag": 8,
+      "requiredFiles": [
+        "🦀️.rs",
+        "🔣️.json",
+        "🧬️schema/🔣️.json",
+        "🟦️.ts",
+        "🔗️.graphql",
+        "🛰️.proto",
+        "📝️text/🦀️.rs",
+        "💾️binary/🦀️.rs"
+      ]
+    },
+    {
+      "kind": "patch-snapshot",
+      "variant": "PatchSnapshot",
+      "directory": "🩹️patch-snapshot",
+      "textOpcode": "patch-snapshot",
+      "binaryTag": 9,
+      "requiredFiles": [
+        "🦀️.rs",
+        "🔣️.json",
+        "🧬️schema/🔣️.json",
+        "📝️text/🦀️.rs",
+        "💾️binary/🦀️.rs"
       ]
     }
   ]

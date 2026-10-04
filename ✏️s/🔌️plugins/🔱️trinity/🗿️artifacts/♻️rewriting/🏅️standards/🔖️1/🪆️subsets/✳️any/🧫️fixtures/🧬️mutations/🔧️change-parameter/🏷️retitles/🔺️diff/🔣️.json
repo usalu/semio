@@ -1,7 +1,7 @@
 {
-  "beforeFixtureJson": null,
-  "lhsJson": null,
-  "rhsJson": null,
+  "workingGraph": null,
+  "lhs": null,
+  "rhs": null,
   "parameterBindings": {
     "entries": [
       {
@@ -9,7 +9,10 @@
         "precondition": "any",
         "operation": {
           "kind": "set",
-          "value": "Capsule Tower"
+          "value": {
+            "kind": "string",
+            "value": "Capsule Tower"
+          }
         }
       }
     ]

@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 105,
+      "maxItems": 105,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "path",
+          "start",
+          "end",
+          "source",
+          "sourceHash",
+          "head",
+          "parentType",
+          "context",
+          "category",
+          "kind",
+          "action"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 104
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "start": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "end": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sourceHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "head": {
+            "enum": [
+              "PackRefusal::LimitExceeded",
+              "PackRefusal::RetainedMalformed",
+              "PackRefusal::Malformed",
+              "PackRefusal::Schema"
+            ]
+          },
+          "parentType": {
+            "enum": [
+              "call_expression",
+              "struct_expression"
+            ]
+          },
+          "context": {
+            "type": "string",
+            "minLength": 1
+          },
+          "category": {
+            "enum": [
+              "grammar",
+              "lifecycle",
+              "owned-allocation",
+              "allocator",
+              "configured-work",
+              "split",
+              "borrowed-cause"
+            ]
+          },
+          "kind": {
+            "enum": [
+              "InvalidValue",
+              "InvariantViolated",
+              "OwnershipLimit",
+              "AllocationFailed",
+              "WorkLimit",
+              null
+            ]
+          },
+          "action": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

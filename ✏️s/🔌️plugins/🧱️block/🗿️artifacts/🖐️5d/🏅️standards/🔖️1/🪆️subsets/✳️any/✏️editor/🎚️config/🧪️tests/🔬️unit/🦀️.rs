@@ -8,7 +8,7 @@ async fn config_operation_backwards_restores_the_pre_operation_snapshot() {
     let operation = Block5dConfigMutation::Snapshot { config: base.clone() };
     let next = operation.diff(&base).into_parts().0;
     assert_eq!(next, base);
-    let inverse = operation.inverse(&base);
+    let inverse = operation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![Block5dConfigMutation::Snapshot { config: base.clone() }]);
     assert_eq!(inverse[0].diff(&next).into_parts().0, base);
 }

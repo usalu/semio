@@ -1,33 +1,33 @@
 {
-  "accidentals": null,
-  "altitudeM": null,
   "annex": null,
-  "betaComputed": null,
-  "bridgeSls": null,
+  "projectId": null,
+  "structureKind": null,
+  "altitudeM": null,
   "consequenceClass": null,
+  "reliabilityClass": null,
   "designWorkingLifeCategory": null,
   "designWorkingLifeYears": null,
-  "effects": null,
+  "referencePeriodYears": null,
+  "supervisionLevel": null,
   "inspectionLevel": null,
   "kFiDeclared": null,
-  "members": null,
+  "betaComputed": null,
   "permanents": [
     {
-      "gk": 95000.0,
       "id": "G-sup",
-      "kind": "g_sup"
+      "kind": "g_sup",
+      "gk": 95000.0
     },
     {
-      "gk": 20000.0,
       "id": "G-inf",
-      "kind": "g_inf"
+      "kind": "g_inf",
+      "gk": 20000.0
     }
   ],
-  "projectId": null,
-  "referencePeriodYears": null,
-  "reliabilityClass": null,
+  "variables": null,
+  "accidentals": null,
   "seismics": null,
-  "structureKind": null,
-  "supervisionLevel": null,
-  "variables": null
+  "members": null,
+  "bridgeSls": null,
+  "effects": null
 }

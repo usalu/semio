@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "GLTF",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🦀️.rs",
+      "fn": "serialize_gltf_document",
+      "returnType": "String",
+      "preserved": [
+        "snapshot.document.clone()",
+        "document.buffers.iter_mut().enumerate()",
+        "encode_data_uri(\"application/octet-stream\", bytes)",
+        "to_json_string_pretty(&document)"
+      ]
+    },
+    {
+      "name": "GLTF controlled",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🦀️.rs",
+      "fn": "serialize_gltf_document_owned_controlled",
+      "returnType": "Result<String, semio_framework_value::ValueError>",
+      "preserved": [
+        "control.checkpoint()?",
+        "encode_data_uri_controlled(\"application/octet-stream\", bytes, control)?",
+        "to_json_string_controlled(&snapshot.document, control)?"
+      ]
+    },
+    {
+      "name": "IFC",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🦀️.rs",
+      "fn": "encode_ifc2x3",
+      "returnType": "Result<String, String>",
+      "preserved": [
+        "validate_ifc2x3_snapshot(snapshot)?",
+        "Part21WriteOptions",
+        "write_part21_with(&snapshot.document, options, snapshot.edm_preamble.as_ref())"
+      ]
+    },
+    {
+      "name": "XML",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+      "fn": "export_text",
+      "returnType": "Result<String, String>",
+      "preserved": [
+        "xml_document_to_text_checked(&self.doc)"
+      ]
+    },
+    {
+      "name": "SVG",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+      "fn": "export_text",
+      "returnType": "Result<String, String>",
+      "preserved": [
+        "self.validate_natural()?",
+        "xml_document_to_text_checked(&self.doc)"
+      ]
+    },
+    {
+      "name": "Drawing SVG",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/🦀️.rs",
+      "fn": "write_drawing_svg",
+      "returnType": "Result<String, String>",
+      "preserved": [
+        "resolve_ready(SemioDrawingToSvg::serialize(drawing))",
+        "export_text()"
+      ]
+    }
+  ]
+}

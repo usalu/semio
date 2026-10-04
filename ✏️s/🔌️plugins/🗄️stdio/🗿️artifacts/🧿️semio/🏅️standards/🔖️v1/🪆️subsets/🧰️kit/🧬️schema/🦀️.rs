@@ -38,12 +38,12 @@ impl Default for SemioKitArtifact {
 
 //#region 🔖️ValueCodec
 /// 🔀️ Encodes composite child and link fields through their first-party value contracts.
-impl dsl::ToValue for SemioKitArtifact {
-    fn to_value(&self) -> dsl::DslValue {
+impl semio_framework_value::ToValue for SemioKitArtifact {
+    fn to_value(&self) -> semio_framework_value::DslValue {
         let mut entries = vec![
-            ("schema".to_string(), dsl::ToValue::to_value(&self.schema)),
-            ("types".to_string(), dsl::ToValue::to_value(&self.types)),
-            ("designs".to_string(), dsl::ToValue::to_value(&self.designs)),
+            ("schema".to_string(), semio_framework_value::ToValue::to_value(&self.schema)),
+            ("types".to_string(), semio_framework_value::ToValue::to_value(&self.types)),
+            ("designs".to_string(), semio_framework_value::ToValue::to_value(&self.designs)),
             ("objects".to_string(), semio_framework_value::ToValue::to_value(&self.objects)),
             ("models".to_string(), semio_framework_value::ToValue::to_value(&self.models)),
             ("representations".to_string(), semio_framework_value::ToValue::to_value(&self.representations)),
@@ -51,18 +51,18 @@ impl dsl::ToValue for SemioKitArtifact {
         if let Some(properties) = &self.properties {
             entries.push(("properties".to_string(), semio_framework_value::ToValue::to_value(properties)));
         }
-        dsl::DslValue::object(entries)
+        semio_framework_value::DslValue::object(entries)
     }
 }
-impl dsl::FromValue for SemioKitArtifact {
-    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
-        let entries = dsl::DslValue::into_object(value)?;
+impl semio_framework_value::FromValue for SemioKitArtifact {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        let entries = semio_framework_value::DslValue::into_object(value)?;
         let get = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
-        let field = |key: &str| get(key).ok_or_else(|| dsl::ValueError::new(format!("missing field `{key}`")));
+        let field = |key: &str| get(key).ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("missing field `{key}`")));
         Ok(Self {
-            schema: dsl::FromValue::from_value(field("schema")?)?,
-            types: get("types").map(dsl::FromValue::from_value).transpose()?.unwrap_or_default(),
-            designs: get("designs").map(dsl::FromValue::from_value).transpose()?.unwrap_or_default(),
+            schema: semio_framework_value::FromValue::from_value(field("schema")?)?,
+            types: get("types").map(semio_framework_value::FromValue::from_value).transpose()?.unwrap_or_default(),
+            designs: get("designs").map(semio_framework_value::FromValue::from_value).transpose()?.unwrap_or_default(),
             objects: get("objects").map(semio_framework_value::FromValue::from_value).transpose()?.unwrap_or_default(),
             models: get("models").map(semio_framework_value::FromValue::from_value).transpose()?.unwrap_or_default(),
             properties: get("properties").map(semio_framework_value::FromValue::from_value).transpose()?,
@@ -168,7 +168,7 @@ pub mod derived_construction {
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(Self::from_snapshot(<SemioKitSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
@@ -182,7 +182,7 @@ pub mod derived_construction {
             self.snapshot = <SemioKitDiff as protocol::MutationDiff<SemioKitSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
             Ok(self.snapshot)
         }
     }
@@ -241,14 +241,14 @@ pub mod derived_analysis {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.kit.text", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.kit.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <SemioKitSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.kit.binary", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.kit.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }

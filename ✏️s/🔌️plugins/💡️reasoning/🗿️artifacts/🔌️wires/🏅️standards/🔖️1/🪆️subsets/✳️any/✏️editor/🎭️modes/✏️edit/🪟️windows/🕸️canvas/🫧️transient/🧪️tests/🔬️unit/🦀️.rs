@@ -13,25 +13,9 @@ async fn wires_pointer_move_uses_only_the_captured_canvas_and_publishes_document
     app.bind_instance_id(1).await;
     let view = ViewModel { window_instances: ["left", "right"].into_iter().map(|id| ViewWindowInstance { id: id.into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }).collect(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let result: Result<(), String> = async {
-        let mut seed = crate::empty_wires_snapshot();
-        seed.content = crate::wires_content_child_with_owner(vec![dsl::DslValue::from(&vectors["initialNode"])], Vec::new());
-        let envelope = store::create_document_envelope::<crate::WiresSnapshot, crate::WiresMutation>(crate::MINDMAP_WIRES_SCHEMA, "reasoning-wires", seed, None);
-        let files = store::print_document_pack(&envelope).await;
-        let mut retirement = store::retire_document_envelope(
-            envelope,
-            std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<crate::WiresSnapshot>::default()),
-            std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<crate::WiresMutation>::default()),
-        );
-        for _ in 0..100_000 {
-            if matches!(retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| format!("{error:?}"))?, store::SnapshotRetirementStep::Complete) {
-                break;
-            }
-        }
-        if !retirement.terminal_is_empty() {
-            return Err("seed envelope did not finish bounded retirement".into());
-        }
-        let files = files.map_err(|error| format!("{error:?}"))?;
-        app.load_document_pack(&files).await.map_err(|error| format!("{error:?}"))?;
+        let initial = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(&vectors["initialNode"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("{error:?}"))?;
+        crate::editor::wires::unit_tests::context::load_graph_fixture(&mut app, vec![initial], Vec::new()).await.map_err(|error| format!("{error:?}"))?;
+        let declared_content = app.snapshot().map_err(|error| format!("{error:?}"))?.content.clone();
         let config = app.config_pack().await.map_err(|error| format!("{error:?}"))?;
         for row in vectors["steps"].as_array().ok_or("missing gesture steps")? {
             let x = row["x"].as_f64().ok_or("missing x")?;
@@ -45,12 +29,12 @@ async fn wires_pointer_move_uses_only_the_captured_canvas_and_publishes_document
             let window = view.for_window_instance(row["window"].as_str().ok_or("missing window")?).ok_or("unknown window")?;
             app.dispatch_typed(command, &ActionMeta { view_state: Some(window), ..artifact_app_laws::meta("gesture") }).await.map_err(|error| format!("{error:?}"))?;
             let receipt = artifact_app_laws::settle_registered_typed_operation(&mut app, 1).await.map_err(|error| format!("{error:?}"))?;
-            let document_publication = receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact);
-            if document_publication != row["documentPublication"].as_bool().ok_or("missing document publication")? {
+            let child_publication = receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Child);
+            if receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact) || child_publication != row["childPublication"].as_bool().ok_or("missing child publication")? {
                 return Err(format!("gesture publication lanes disagree with neutral fixture: {} {:?}", row["command"], receipt.lanes));
             }
-            let snapshot = app.snapshot().map_err(|error| format!("{error:?}"))?;
-            let node = crate::standards::v1::subsets::any::schema::inferences::find_board_node(&snapshot, vectors["node"].as_str().ok_or("missing node")?).ok_or("created node is absent")?;
+            let board = crate::editor::wires::unit_tests::context::board(&app);
+            let node = crate::schema::board_node(&board, vectors["node"].as_str().ok_or("missing node")?).ok_or("created node is absent")?;
             let (actual_x, actual_y) = crate::schema::node_position(&node);
             if serde_json::json!([actual_x, actual_y]) != row["position"] {
                 return Err(format!("gesture position disagrees with neutral fixture: ({actual_x}, {actual_y}) != {}", row["position"]));
@@ -83,16 +67,14 @@ async fn wires_pointer_move_uses_only_the_captured_canvas_and_publishes_document
             }
         }
         let released = app.snapshot().map_err(|error| format!("{error:?}"))?;
-        let released_scene = released.content.require_local_owner::<crate::WiresWorkingScene>().map_err(|error| error.to_string())?;
-        let first_party_handle = crate::wires_content_child_handle(&released_scene.nodes, &released_scene.edges);
-        if released.content.child_id != first_party_handle.child_id || released.content.target != first_party_handle.target {
-            return Err("bounded release writer disagrees with the first-party graph content handle".into());
+        if released.content != declared_content {
+            return Err("released child mutation changed the declared graph member identity".into());
         }
         let admitted = app.handle_action("undo", None, &ActionMeta { view_state: view.for_window_instance("left"), ..artifact_app_laws::meta("gesture-undo") }).await.map_err(|error| format!("{error:?}"))?;
         semio_framework_plugin::app::settle_framework_reserved_admission(&mut app, admitted).await.map_err(|error| format!("{error:?}"))?;
         artifact_app_laws::settle_registered_typed_operation(&mut app, 1).await.map_err(|error| format!("{error:?}"))?;
-        let undone = app.snapshot().map_err(|error| format!("{error:?}"))?;
-        let node = crate::standards::v1::subsets::any::schema::inferences::find_board_node(&undone, vectors["node"].as_str().ok_or("missing node")?).ok_or("undone node is absent")?;
+        let board = crate::editor::wires::unit_tests::context::board(&app);
+        let node = crate::schema::board_node(&board, vectors["node"].as_str().ok_or("missing node")?).ok_or("undone node is absent")?;
         if crate::schema::node_position(&node) != (0.0, 0.0) {
             return Err("one undo did not reverse the entire released drag".into());
         }
@@ -158,25 +140,14 @@ async fn wires_pointer_move_document_replacement_clears_only_successful_reload_p
     let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "left".into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let left = view.for_window_instance("left").unwrap();
     let result: Result<(), String> = async {
-        let mut seed = crate::empty_wires_snapshot();
-        seed.content = crate::wires_content_child_with_owner(vec![dsl::DslValue::from(&vectors["initialNode"])], Vec::new());
-        let envelope = store::create_document_envelope::<crate::WiresSnapshot, crate::WiresMutation>(crate::MINDMAP_WIRES_SCHEMA, "reasoning-wires", seed, None);
-        let pack = store::print_document_pack(&envelope).await.map_err(|error| format!("{error:?}"))?;
-        let text = store::print_document_text(&envelope).await.map_err(|error| format!("{error:?}"))?;
-        app.load_document_pack(&pack).await.map_err(|error| format!("{error:?}"))?;
-        let mut retirement = store::retire_document_envelope(
-            envelope,
-            std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<crate::WiresSnapshot>::default()),
-            std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<crate::WiresMutation>::default()),
-        );
-        for _ in 0..100_000 {
-            if matches!(retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| format!("{error:?}"))?, store::SnapshotRetirementStep::Complete) {
-                break;
-            }
-        }
-        if !retirement.terminal_is_empty() {
-            return Err("reload seed envelope did not retire".into());
-        }
+        let initial = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(&vectors["initialNode"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("{error:?}"))?;
+        crate::editor::wires::unit_tests::context::load_graph_fixture(&mut app, vec![initial.clone()], Vec::new()).await.map_err(|error| format!("{error:?}"))?;
+        let snapshot = app.snapshot().map_err(|error| format!("{error:?}"))?.clone();
+        let mut envelope = store::create_document_envelope::<crate::WiresSnapshot, crate::WiresMutation>(crate::MINDMAP_WIRES_SCHEMA, "reasoning-wires", snapshot, None);
+        envelope.dialect = Some(crate::WIRES_DIALECT.into());
+        let mut malformed = store::print_document_pack(&envelope).await.map_err(|error| format!("{error:?}"))?;
+        crate::editor::wires::unit_tests::context::retire_envelope(envelope);
+        malformed.pack.truncate(4);
         app.dispatch_typed(
             WiresCommand::NodeGraphViewport(NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: 12.0, y: -4.0, zoom: 2.0 } }),
             &ActionMeta { view_state: Some(left.clone()), ..artifact_app_laws::meta("reload-camera") },
@@ -187,10 +158,10 @@ async fn wires_pointer_move_document_replacement_clears_only_successful_reload_p
         let config_generation = app.window_config_generation(&left).await.map_err(|error| format!("{error:?}"))?.ok_or("window config generation absent")?;
         dispatch_gesture(&mut app, WiresCommand::CanvasPointerDown(CanvasPointerDown { id: Some("node-1".into()), x: 10.0, y: 20.0 }), &left).await?;
         dispatch_gesture(&mut app, WiresCommand::CanvasPointerMove(CanvasPointerMove { x: 16.0, y: 28.0, samples: Vec::new() }), &left).await?;
-        app.load_document_pack(&pack).await.map_err(|error| format!("{error:?}"))?;
+        crate::editor::wires::unit_tests::context::load_graph_fixture(&mut app, vec![initial.clone()], Vec::new()).await.map_err(|error| format!("{error:?}"))?;
         let cleared = app.window_transient_snapshot(&left).map_err(|error| format!("{error:?}"))?.ok_or("cleared transient absent")?;
         if cleared.get::<WiresCanvasTransientOwner>() != Some(&WiresCanvasTransient::default()) {
-            return Err("identical pack reload preserved an old drag preview".into());
+            return Err("identical archive reload preserved an old drag preview".into());
         }
         let reloaded_scene = scene(&mut app, &left).await?;
         if (reloaded_scene.camera_x, reloaded_scene.camera_y, reloaded_scene.zoom) != (12.0, -4.0, 2.0) || app.window_config_generation(&left).await.map_err(|error| format!("{error:?}"))? != Some(config_generation) {
@@ -200,9 +171,7 @@ async fn wires_pointer_move_document_replacement_clears_only_successful_reload_p
         dispatch_gesture(&mut app, WiresCommand::CanvasPointerMove(CanvasPointerMove { x: 7.0, y: 9.0, samples: Vec::new() }), &left).await?;
         let preview = app.window_transient_snapshot(&left).map_err(|error| format!("{error:?}"))?.and_then(|snapshot| snapshot.get::<WiresCanvasTransientOwner>().cloned()).ok_or("active preview absent")?;
         let preview_generation = app.window_transient_generation(&left).map_err(|error| format!("{error:?}"))?.ok_or("preview generation absent")?;
-        let mut malformed = pack.clone();
-        malformed.pack.truncate(4);
-        if app.load_document_pack(&malformed).await.is_ok() {
+        if semio_framework_plugin::artifact_app_laws::load_document(&mut app, &malformed).await.is_ok() {
             return Err("malformed pack unexpectedly replaced the document".into());
         }
         let preserved = app.window_transient_snapshot(&left).map_err(|error| format!("{error:?}"))?.ok_or("preserved transient absent")?;
@@ -212,10 +181,10 @@ async fn wires_pointer_move_document_replacement_clears_only_successful_reload_p
         {
             return Err("rejected pack changed preview or camera ownership".into());
         }
-        app.load_document_text(&text).await.map_err(|error| format!("{error:?}"))?;
-        let cleared = app.window_transient_snapshot(&left).map_err(|error| format!("{error:?}"))?.ok_or("text-cleared transient absent")?;
+        crate::editor::wires::unit_tests::context::load_graph_fixture(&mut app, vec![initial], Vec::new()).await.map_err(|error| format!("{error:?}"))?;
+        let cleared = app.window_transient_snapshot(&left).map_err(|error| format!("{error:?}"))?.ok_or("re-cleared transient absent")?;
         if cleared.get::<WiresCanvasTransientOwner>() != Some(&WiresCanvasTransient::default()) || app.window_config_generation(&left).await.map_err(|error| format!("{error:?}"))? != Some(config_generation) {
-            return Err("text reload did not clear the preview while preserving the camera".into());
+            return Err("a reload after a rejected one did not clear the preview while preserving the camera".into());
         }
         Ok(())
     }
@@ -241,24 +210,8 @@ async fn wires_pointer_move_pending_release_cancels_and_retires_with_small_or_ze
     let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "left".into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let left = view.for_window_instance("left").unwrap();
     let result: Result<(), String> = async {
-        let mut seed = crate::empty_wires_snapshot();
-        seed.content = crate::wires_content_child_with_owner(vec![dsl::DslValue::from(&vectors["initialNode"])], Vec::new());
-        let envelope = store::create_document_envelope::<crate::WiresSnapshot, crate::WiresMutation>(crate::MINDMAP_WIRES_SCHEMA, "reasoning-wires", seed, None);
-        let pack = store::print_document_pack(&envelope).await.map_err(|error| format!("{error:?}"))?;
-        app.load_document_pack(&pack).await.map_err(|error| format!("{error:?}"))?;
-        let mut retirement = store::retire_document_envelope(
-            envelope,
-            std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<crate::WiresSnapshot>::default()),
-            std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<crate::WiresMutation>::default()),
-        );
-        for _ in 0..100_000 {
-            if matches!(retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| format!("{error:?}"))?, store::SnapshotRetirementStep::Complete) {
-                break;
-            }
-        }
-        if !retirement.terminal_is_empty() {
-            return Err("cancellation seed envelope did not retire".into());
-        }
+        let initial = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(&vectors["initialNode"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("{error:?}"))?;
+        crate::editor::wires::unit_tests::context::load_graph_fixture(&mut app, vec![initial], Vec::new()).await.map_err(|error| format!("{error:?}"))?;
         for command in [WiresCommand::CanvasPointerDown(CanvasPointerDown { id: Some("node-1".into()), x: 0.0, y: 0.0 }), WiresCommand::CanvasPointerMove(CanvasPointerMove { x: 11.0, y: 13.0, samples: Vec::new() })] {
             app.dispatch_typed(command, &ActionMeta { view_state: Some(left.clone()), ..artifact_app_laws::meta("cancel-release") }).await.map_err(|error| format!("{error:?}"))?;
             artifact_app_laws::settle_registered_typed_operation(&mut app, 1).await.map_err(|error| format!("{error:?}"))?;
@@ -310,7 +263,7 @@ async fn window_transient_drag_op_text_round_trip() {
 async fn window_transient_backwards_restores_the_same_field_from_base() {
     let base = WiresCanvasTransient { drag_node_id: Some("node-1".into()), drag_last_x: 1.0, drag_last_y: 2.0, ..Default::default() };
     let forward = WiresCanvasTransientMutation::SetDrag(SetDrag { node_id: Some("node-2".into()), start_x: 3.0, start_y: 4.0, last_x: 5.0, last_y: 6.0, zoom: 2.0 });
-    let inverse = forward.inverse(&base);
+    let inverse = forward.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![WiresCanvasTransientMutation::SetDrag(SetDrag { node_id: base.drag_node_id.clone(), start_x: base.drag_start_x, start_y: base.drag_start_y, last_x: base.drag_last_x, last_y: base.drag_last_y, zoom: base.drag_zoom })]);
     assert_eq!(forward.diff(&base).diff().clone(), WiresCanvasTransient { drag_node_id: Some("node-2".into()), drag_start_x: 3.0, drag_start_y: 4.0, drag_last_x: 5.0, drag_last_y: 6.0, drag_zoom: 2.0 });
 }
@@ -391,24 +344,8 @@ async fn wires_batched_move_lands_on_its_last_sample_and_a_cancel_moves_nothing(
     let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "left".into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let left = view.for_window_instance("left").unwrap();
     let result: Result<(), String> = async {
-        let mut seed = crate::empty_wires_snapshot();
-        seed.content = crate::wires_content_child_with_owner(vec![dsl::DslValue::from(&vectors["initialNode"])], Vec::new());
-        let envelope = store::create_document_envelope::<crate::WiresSnapshot, crate::WiresMutation>(crate::MINDMAP_WIRES_SCHEMA, "reasoning-wires", seed, None);
-        let pack = store::print_document_pack(&envelope).await.map_err(|error| format!("{error:?}"))?;
-        app.load_document_pack(&pack).await.map_err(|error| format!("{error:?}"))?;
-        let mut retirement = store::retire_document_envelope(
-            envelope,
-            std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<crate::WiresSnapshot>::default()),
-            std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<crate::WiresMutation>::default()),
-        );
-        for _ in 0..100_000 {
-            if matches!(retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| format!("{error:?}"))?, store::SnapshotRetirementStep::Complete) {
-                break;
-            }
-        }
-        if !retirement.terminal_is_empty() {
-            return Err("seed envelope did not retire".into());
-        }
+        let initial = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(&vectors["initialNode"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("{error:?}"))?;
+        crate::editor::wires::unit_tests::context::load_graph_fixture(&mut app, vec![initial], Vec::new()).await.map_err(|error| format!("{error:?}"))?;
 
         // 🧵️ Three separate moves ...
         gesture(&mut app, WiresCommand::CanvasPointerDown(CanvasPointerDown { id: Some("node-1".into()), x: 10.0, y: 20.0 }), &left).await?;
@@ -427,8 +364,8 @@ async fn wires_batched_move_lands_on_its_last_sample_and_a_cancel_moves_nothing(
         if preview(&mut app, &left)? != WiresCanvasTransient::default() {
             return Err("a cancelled release left a drag preview behind".into());
         }
-        let snapshot = app.snapshot().map_err(|error| format!("{error:?}"))?;
-        let node = crate::standards::v1::subsets::any::schema::inferences::find_board_node(&snapshot, "node-1").ok_or("node absent")?;
+        let board = crate::editor::wires::unit_tests::context::board(&app);
+        let node = crate::schema::board_node(&board, "node-1").ok_or("node absent")?;
         if crate::schema::node_position(&node) != (0.0, 0.0) {
             return Err(format!("a cancelled release moved the node: {:?}", crate::schema::node_position(&node)));
         }
@@ -450,6 +387,21 @@ async fn wires_batched_move_lands_on_its_last_sample_and_a_cancel_moves_nothing(
         if preview(&mut app, &left)? != WiresCanvasTransient::default() {
             return Err("the second cancel left a drag preview behind".into());
         }
+        let rows_before = semio_framework_plugin::app::node_drag_history::node_drag_transaction_rows(&app.history_snapshot().await.map_err(|error| format!("{error:?}"))?).len();
+        gesture(&mut app, WiresCommand::CanvasPointerDown(CanvasPointerDown { id: Some("node-1".into()), x: 10.0, y: 20.0 }), &left).await?;
+        gesture(&mut app, WiresCommand::CanvasPointerMove(CanvasPointerMove { x: 16.0, y: 28.0, samples: Vec::new() }), &left).await?;
+        let zoom = preview(&mut app, &left)?.drag_zoom;
+        gesture(&mut app, WiresCommand::CanvasPointerUp(CanvasPointerUp { cancelled: false }), &left).await?;
+        let history = app.history_snapshot().await.map_err(|error| format!("{error:?}"))?;
+        let released = semio_framework_plugin::app::node_drag_history::node_drag_transaction_rows(&history);
+        if released.len() != rows_before + 1 || !released.iter().any(|row| !row.op_lines.is_empty() && row.op_lines.iter().all(|line| line.starts_with("dragNodes")) && row.mutations.iter().all(|mutation| mutation.store.as_deref().is_some_and(|store| store.starts_with("content/")))) {
+            return Err(format!("a released drag is not ONE child-lane dragNodes transaction: {rows_before} -> {released:?}"));
+        }
+        let board = crate::editor::wires::unit_tests::context::board(&app);
+        let node = crate::schema::board_node(&board, "node-1").ok_or("node absent")?;
+        if crate::schema::node_position(&node) != (6.0 / zoom, 8.0 / zoom) {
+            return Err(format!("a released drag did not move the node by its offset: {:?}", crate::schema::node_position(&node)));
+        }
         Ok(())
     }
     .await;
@@ -460,26 +412,23 @@ async fn wires_batched_move_lands_on_its_last_sample_and_a_cancel_moves_nothing(
     result.expect("Wires batched move and cancelled release");
 }
 
-/// 🧵️ LAW: a legacy one-per-event wire (no `samples`, no `cancelled`) decodes as one sample at
-/// `(x, y)` and a real release.
+/// 🧵️ LAW: the pointer wire is the batched one — `samples` and `cancelled` are required, a wire without them is refused, the
+/// newest sample wins over the trailing `x`/`y`, and a NaN sample is refused by the retained extent.
 #[semio_framework_async_macros::async_test]
-async fn wires_pointer_wire_defaults_samples_and_cancelled() {
+async fn wires_pointer_wire_requires_samples_and_cancelled() {
     use crate::editor::wires::commands::{canvas_pointer_move::CanvasPointerMove, canvas_pointer_up::CanvasPointerUp};
-    use dsl::FromValue;
-    let f = dsl::DslValue::float;
-    let moved = CanvasPointerMove::from_value(dsl::DslValue::Object(vec![("x".into(), f(5.0)), ("y".into(), f(6.0))])).expect("legacy move decodes");
-    assert!(moved.samples.is_empty());
-    assert_eq!(moved.samples_or_last(), vec![[5.0, 6.0]], "an absent `samples` is the single (x, y)");
-    assert_eq!(moved.last_sample(), [5.0, 6.0]);
-    assert!(moved.is_finite());
-    let pair = |x: f64, y: f64| dsl::DslValue::Array(vec![f(x), f(y)]);
-    let batched = CanvasPointerMove::from_value(dsl::DslValue::Object(vec![("x".into(), f(3.0)), ("y".into(), f(4.0)), ("samples".into(), dsl::DslValue::Array(vec![pair(1.0, 1.5), pair(3.0, 4.0)]))])).expect("batched move decodes");
-    assert_eq!(moved.last_sample(), [5.0, 6.0]);
+    use semio_framework_value::FromValue;
+    let f = semio_framework_value::DslValue::float;
+    assert!(CanvasPointerMove::from_value(semio_framework_value::DslValue::Object(vec![("x".into(), f(5.0)), ("y".into(), f(6.0))])).is_err(), "a move without samples is refused");
+    assert!(CanvasPointerUp::from_value(semio_framework_value::DslValue::Object(Vec::new())).is_err(), "a release without cancelled is refused");
+    let pair = |x: f64, y: f64| semio_framework_value::DslValue::Array(vec![f(x), f(y)]);
+    let batched = CanvasPointerMove::from_value(semio_framework_value::DslValue::Object(vec![("x".into(), f(3.0)), ("y".into(), f(4.0)), ("samples".into(), semio_framework_value::DslValue::Array(vec![pair(1.0, 1.5), pair(3.0, 4.0)]))])).expect("batched move decodes");
     assert_eq!(batched.samples, vec![[1.0, 1.5], [3.0, 4.0]]);
     assert_eq!(batched.last_sample(), [3.0, 4.0]);
+    assert!(batched.is_finite());
     let non_finite = CanvasPointerMove { x: 1.0, y: 1.0, samples: vec![[f64::NAN, 0.0]] };
     assert!(!non_finite.is_finite(), "a NaN sample is refused by the retained extent");
-    let released = CanvasPointerUp::from_value(dsl::DslValue::Object(Vec::new())).expect("legacy release decodes");
-    assert!(!released.cancelled, "an absent `cancelled` is a real release");
+    let released = CanvasPointerUp::from_value(semio_framework_value::DslValue::Object(vec![("cancelled".into(), semio_framework_value::DslValue::Bool(false))])).expect("an explicit release decodes");
+    assert!(!released.cancelled);
 }
 //#endregion 🧵️BatchedSamplesAndCancel

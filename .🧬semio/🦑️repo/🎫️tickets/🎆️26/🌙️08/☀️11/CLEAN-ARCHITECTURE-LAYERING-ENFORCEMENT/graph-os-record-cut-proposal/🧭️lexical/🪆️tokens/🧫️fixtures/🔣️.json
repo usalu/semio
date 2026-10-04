@@ -1,0 +1,95 @@
+{
+  "schema": "semio.record.canonical-token-paths/v1",
+  "cases": [
+    {
+      "id": "ordinary",
+      "source": "fn f(){dsl::DslValue::Object(Vec::new());}",
+      "expected": "fn f(){semio_framework_value::DslValue::Object(Vec::new());}"
+    },
+    {
+      "id": "nested-vector",
+      "source": "fn f(){dsl::DslValue::Object(vec![dsl::DslValue::Array(vec![dsl::DslValue::Bool(true)])]);}",
+      "expected": "fn f(){semio_framework_value::DslValue::Object(vec![semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::Bool(true)])]);}"
+    },
+    {
+      "id": "assert-macro",
+      "source": "fn f(){assert_eq!(dsl::DslValue::Bool(true),dsl::DslValue::Bool(false));}",
+      "expected": "fn f(){assert_eq!(semio_framework_value::DslValue::Bool(true),semio_framework_value::DslValue::Bool(false));}"
+    },
+    {
+      "id": "nested-tuple",
+      "source": "fn f(){vec![(dsl::DslValue::Bool(true),vec![dsl::DslValue::Array(Vec::new())])];}",
+      "expected": "fn f(){vec![(semio_framework_value::DslValue::Bool(true),vec![semio_framework_value::DslValue::Array(Vec::new())])];}"
+    },
+    {
+      "id": "record-macro",
+      "source": "fn f(){m!(dsl::RecordSpec,dsl::Shape::Bool);}",
+      "expected": "fn f(){m!(semio_framework_dsl_record::RecordSpec,semio_framework_dsl_record::Shape::Bool);}"
+    },
+    {
+      "id": "renamed-owner",
+      "source": "use semio_framework_os_kernel as product;fn f(){m!(product::DslValue::Bool(true));}",
+      "expected": "use semio_framework_os_kernel as product;fn f(){m!(semio_framework_value::DslValue::Bool(true));}"
+    },
+    {
+      "id": "shadowed-owner",
+      "source": "mod dsl{pub struct DslValue;}fn f(){m!(dsl::DslValue);}",
+      "expected": "mod dsl{pub struct DslValue;}fn f(){m!(dsl::DslValue);}"
+    },
+    {
+      "id": "literal",
+      "source": "fn f(){format!(\"dsl::DslValue {}\",dsl::DslValue::Bool(true));}",
+      "expected": "fn f(){format!(\"dsl::DslValue {}\",semio_framework_value::DslValue::Bool(true));}"
+    },
+    {
+      "id": "comment",
+      "source": "fn f(){m!(/*dsl::DslValue*/dsl::DslValue::Bool(true));}",
+      "expected": "fn f(){m!(/*dsl::DslValue*/semio_framework_value::DslValue::Bool(true));}"
+    },
+    {
+      "id": "macro-definition",
+      "source": "macro_rules! x{()=>{dsl::ToValue::to_value(dsl::DslValue::Bool(true))};}",
+      "expected": "macro_rules! x{()=>{semio_framework_value::ToValue::to_value(semio_framework_value::DslValue::Bool(true))};}"
+    },
+    {
+      "id": "interpolation",
+      "source": "fn f(){quote!(#dsl::DslValue);}",
+      "expected": "fn f(){quote!(#dsl::DslValue);}"
+    },
+    {
+      "id": "metavariable",
+      "source": "macro_rules! x{($dsl:ident)=>{$dsl::DslValue};}",
+      "expected": "macro_rules! x{($dsl:ident)=>{$dsl::DslValue};}"
+    },
+    {
+      "id": "absolute-owner",
+      "source": "fn f(){m!(::dsl::DslValue::Bool(true));}",
+      "expected": "fn f(){m!(semio_framework_value::DslValue::Bool(true));}"
+    },
+    {
+      "id": "product-symbol",
+      "source": "fn f(){m!(dsl::DslArtifact,dsl::DiffCodec);}",
+      "expected": "fn f(){m!(dsl::DslArtifact,dsl::DiffCodec);}"
+    },
+    {
+      "id": "already-canonical",
+      "source": "fn f(){m!(semio_framework_value::DslValue::Bool(true));}",
+      "expected": "fn f(){m!(semio_framework_value::DslValue::Bool(true));}"
+    },
+    {
+      "id": "repeated-implementation",
+      "source": "macro_rules! m{($($generic:ident),*)=>{$(impl dsl::DslField for $generic {})*};}",
+      "expected": "macro_rules! m{($($generic:ident),*)=>{$(impl semio_framework_dsl_record::DslField for $generic {})*};}"
+    },
+    {
+      "id": "repeated-bound",
+      "source": "macro_rules! m{($($generic:ident),*)=>{$(fn f<$generic:dsl::DslField>(){dsl::DslField::retire_decoded(x);})*};}",
+      "expected": "macro_rules! m{($($generic:ident),*)=>{$(fn f<$generic:semio_framework_dsl_record::DslField>(){semio_framework_dsl_record::DslField::retire_decoded(x);})*};}"
+    },
+    {
+      "id": "extern-owner-in-macro",
+      "source": "extern crate semio_framework_os_kernel as dsl_core; fn f(){assert_eq!(dsl_core::ToValue::to_value(&x),dsl_core::DslValue::Null);}",
+      "expected": "extern crate semio_framework_os_kernel as dsl_core; fn f(){assert_eq!(semio_framework_value::ToValue::to_value(&x),semio_framework_value::DslValue::Null);}"
+    }
+  ]
+}

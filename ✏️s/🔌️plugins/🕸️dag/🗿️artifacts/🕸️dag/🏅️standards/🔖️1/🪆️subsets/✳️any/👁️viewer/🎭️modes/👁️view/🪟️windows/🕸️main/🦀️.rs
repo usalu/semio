@@ -6,7 +6,7 @@
 //! (`ViewEmit`).
 
 use crate::schema::document_to_workflow;
-use crate::DagSnapshot;
+use crate::DagScene;
 use semio_framework_plugin::scene_surface;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -48,11 +48,11 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// 👁️ Pure `DagSnapshot -> UiAssemblyResult<BuiltNode>` read: default camera (a viewer has no persisted per-session
+/// 👁️ Pure `DagScene -> UiAssemblyResult<BuiltNode>` read of the composed `content` child: default camera (a viewer has no persisted per-session
 /// camera — `Config = NoConfig`), `editable: Some(false)` — the one bit that distinguishes this from
 /// the editor's own main-window render.
-pub fn render(document: &DagSnapshot) -> UiAssemblyResult<BuiltNode> {
-    let (nodes, edges) = document_to_workflow(document);
+pub fn render(scene: &DagScene) -> UiAssemblyResult<BuiltNode> {
+    let (nodes, edges) = document_to_workflow(scene);
     let viewport = Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 };
     scene_surface(DAG_VIEW_SURFACE_MAIN, semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::NodeGraph, &NodeGraphScene { editable: Some(false), ..NodeGraphScene::base(nodes, edges, viewport) })
 }

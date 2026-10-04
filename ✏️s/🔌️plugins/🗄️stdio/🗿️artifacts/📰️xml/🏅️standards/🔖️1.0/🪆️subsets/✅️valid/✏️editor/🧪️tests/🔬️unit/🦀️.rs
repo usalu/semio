@@ -3,9 +3,9 @@ use super::*;
 #[test]
 fn set_node_requires_a_complete_address_and_allows_an_explicit_empty_text_node() {
     assert!(xml_valid_command_from_action(XML_VALID_KIT_ACTION_ID, None).is_err());
-    let missing_value = dsl::DslValue::object([("nodeId".into(), dsl::DslValue::String("0".into()))]);
+    let missing_value = semio_framework_value::DslValue::object([("nodeId".into(), semio_framework_value::DslValue::String("0".into()))]);
     assert!(xml_valid_command_from_action(XML_VALID_KIT_ACTION_ID, Some(&missing_value)).is_err());
-    let args = dsl::DslValue::object([("nodeId".into(), dsl::DslValue::String("0".into())), ("revision".into(), dsl::DslValue::String("revision".into())), ("value".into(), dsl::DslValue::String(String::new()))]);
+    let args = semio_framework_value::DslValue::object([("nodeId".into(), semio_framework_value::DslValue::String("0".into())), ("revision".into(), semio_framework_value::DslValue::String("revision".into())), ("value".into(), semio_framework_value::DslValue::String(String::new()))]);
     assert!(matches!(xml_valid_command_from_action(XML_VALID_KIT_ACTION_ID, Some(&args)), Ok(XmlValidEditorCommand::SetNode { value, .. }) if value.is_empty()));
 }
 
@@ -100,7 +100,7 @@ async fn the_curated_example_carries_visible_content() {
 #[semio_framework_async_macros::async_test]
 async fn the_shell_action_pair_resolves_into_the_typed_command() {
     for key in ["exampleId", "example_id", "id", "value"] {
-        let args = dsl::DslValue::object([(key.to_string(), dsl::DslValue::String("demo".into()))]);
+        let args = semio_framework_value::DslValue::object([(key.to_string(), semio_framework_value::DslValue::String("demo".into()))]);
         assert_eq!(xml_valid_command_from_action(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, Some(&args)).expect("declared verb"), XmlValidEditorCommand::SetActiveExample { example_id: "demo".into() });
     }
     assert!(xml_valid_command_from_action("noSuchVerb", None).is_err());
@@ -116,7 +116,7 @@ async fn kit_fixture_holding(document: &XmlSnapshot) -> KitFixtureApp {
     use semio_framework_plugin::PluginApp;
     let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<XmlValidEditor>, _>(async { semio_framework_plugin::App { definition: create_xml_valid_editor(), examples: Vec::new() } }).await;
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(document, STDIO_XML_DOCUMENT_SCHEMA) else { panic!("the example switch hands the host one whole document") };
-    app.load_document_pack(&store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.expect("the host loads the example document");
+    semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.expect("the host loads the example document");
     app
 }
 
@@ -125,7 +125,7 @@ async fn kit_fixture_holding(document: &XmlSnapshot) -> KitFixtureApp {
 async fn dispatch_settled(app: &mut KitFixtureApp, action: &str, args: &[(&str, &str)]) -> Result<(), Fault> {
     use semio_framework_plugin::PluginApp;
     let meta = semio_framework_plugin::artifact_app_laws::meta("local");
-    let args = dsl::DslValue::object(args.iter().map(|(key, value)| ((*key).to_string(), dsl::DslValue::String((*value).to_string()))).collect::<Vec<_>>());
+    let args = semio_framework_value::DslValue::object(args.iter().map(|(key, value)| ((*key).to_string(), semio_framework_value::DslValue::String((*value).to_string()))).collect::<Vec<_>>());
     app.handle_action(action, Some(&args), &meta).await?;
     semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id).await.map(|_| ())
 }

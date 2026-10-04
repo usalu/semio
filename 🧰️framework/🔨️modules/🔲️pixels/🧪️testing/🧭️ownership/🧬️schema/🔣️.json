@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "strictRoots",
+    "testRoots",
+    "inputs"
+  ],
+  "properties": {
+    "schema": {
+      "const": "pixels.task-ownership.v1"
+    },
+    "strictRoots": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^🧰️framework/🔨️modules/(?!(?:[^/]+/)*(?:\\.\\.|🛍️products)(?:/|$)).+"
+      }
+    },
+    "testRoots": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^🧰️framework/🔨️modules/(?!(?:[^/]+/)*(?:\\.\\.|🛍️products)(?:/|$)).+"
+      }
+    },
+    "inputs": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "anyOf": [
+          {
+            "enum": [
+              "default",
+              "^default"
+            ]
+          },
+          {
+            "type": "string",
+            "pattern": "^\\{workspaceRoot\\}/🧰️framework/🔨️modules/(?!(?:[^/]+/)*(?:\\.\\.|🛍️products)(?:/|$)).+"
+          }
+        ]
+      }
+    }
+  }
+}

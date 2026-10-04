@@ -5,7 +5,7 @@
 
 use crate::editor::svg_any::modes::edit;
 use crate::editor::svg_any::modes::edit::windows::main;
-use crate::standards::v1_1::subsets::base::schema::mutations::{set_snapshot as snapshot_edit_set_snapshot,
+use crate::standards::v1_1::subsets::base::schema::mutations::{patch_snapshot, set_snapshot as snapshot_edit_set_snapshot,
     InsertElementMutation, InsertElementPayload, RemoveElementMutation, RemoveElementPayload, SetAttributeMutation, SetAttributePayload, SetDeclarationMutation, SetDeclarationPayload, SetDoctypeMutation, SetDoctypePayload, SetElementNameMutation,
     SetElementNamePayload, SvgMutation,
 };
@@ -60,11 +60,11 @@ impl protocol::OpBinary for SvgAnyEditCommand {
     const TOOL_JOB_IDS: &'static [&'static str] = STDIO_SVG_DOCUMENT_SCHEMA_COMMAND_TOOL_IDS;
 
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(pack::to_json_string(self).into_bytes())
+        Ok(semio_framework_pack_json::to_json_string(self).into_bytes())
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "svg_any-edit-command", offset: 0, detail: error.to_string() })?;
-        pack::from_json_str(text).map_err(|error| protocol::ProtocolError::Malformed { what: "svg_any-edit-command", offset: 0, detail: error.to_string() })
+        semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Malformed { what: "svg_any-edit-command", offset: 0, detail: error.to_string() })
     }
 }
 //#endregion 🔖️Command
@@ -90,7 +90,7 @@ fn svgAnyEditor_command_id(command: &SvgAnyEditCommand) -> &'static str {
     if let SvgAnyEditCommand::EditSnapshot { event } = command { return event.action_id(); }
     match command { SvgAnyEditCommand::SetActiveExample { .. } => semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, _ => "other" }
 }
-fn svgAnyEditor_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<SvgAnyEditCommand, Fault> {
+fn svgAnyEditor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<SvgAnyEditCommand, Fault> {
     if editing::is_snapshot_edit_action(action) { return editing::snapshot_edit_event_from_action(action, args).and_then(|event| event.map(|event| SvgAnyEditCommand::EditSnapshot { event }).ok_or_else(|| Fault::from(format!("action '{action}' is not a snapshot edit")))); }
     match action {
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(SvgAnyEditCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
@@ -151,6 +151,22 @@ impl ArtifactEditor for SvgAnyEditor {
     const DIALECT: Dialect = SVG_ANY_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_SVG_DOCUMENT_SCHEMA;
 
+    fn natural_file_codec() -> Option<semio_framework_plugin::NaturalFileCodec> {
+        Some(semio_framework_plugin::NaturalFileCodec { format_kind: "s.stdio.svg@1.1", extension: ".svg", media_type: "image/svg+xml", binary: false })
+    }
+
+    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
+        snapshot.export_utf8().map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error))
+    }
+
+    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
+        SvgSnapshot::import_utf8(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error))
+    }
+
+    fn whole_document_operation(snapshot: Self::Snapshot) -> Option<Self::Mutation> {
+        Some(SvgMutation::SetSnapshot(snapshot_edit_set_snapshot::SetSnapshot { snapshot }))
+    }
+
     semio_s_artifact_stdio_contract::snapshot_editing_bounded_first_step_tool_proofs! {
         owner: EditorApp<SvgAnyEditor>,
         owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/✏️editor/🦀️.rs",
@@ -180,7 +196,7 @@ impl ArtifactEditor for SvgAnyEditor {
         Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, STDIO_SVG_DOCUMENT_SCHEMA, operation, generation))
     }
     fn command_id(command: &Self::Command) -> &'static str { svgAnyEditor_command_id(command) }
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> { svgAnyEditor_command_from_action(action, args) }
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> { svgAnyEditor_command_from_action(action, args) }
 
     fn initial_snapshot() -> Self::Snapshot {
         SvgSnapshot::default()
@@ -233,7 +249,7 @@ impl ArtifactEditor for SvgAnyEditor {
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
-            editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details(doc.snapshot, view_state.locale, "s.stdio.svg@1.1/*#editor", &semio_framework_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
+            editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details(doc, view_state.locale, "s.stdio.svg@1.1/*#editor", &semio_framework_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -246,7 +262,7 @@ impl editing::SnapshotEditingEditor for SvgAnyEditor {
         match command { SvgAnyEditCommand::EditSnapshot { event } => Some(event), _ => None }
     }
     fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| SvgMutation::SetSnapshot(snapshot_edit_set_snapshot::SetSnapshot { snapshot: snapshot }))
+        editing::snapshot_edit_patch(event, snapshot, |patch| SvgMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| SvgMutation::SetSnapshot(snapshot_edit_set_snapshot::SetSnapshot { snapshot: snapshot })))
     }
 }
 

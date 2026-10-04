@@ -18,23 +18,31 @@ coalesce key; they supply only the ABSOLUTE leaf of the value.
 
 ## 2. Runtime (plugin runtime: `🔌️plugin/🛠️tool-machine/🦀️.rs`, glue in `🔌️plugin/🦀️.rs`; landed)
 
-Since W3-T2-TEXT's typing runs the instance runtime is `ToolMachineRuntime<P, M>` (`VcsArtifactApp.tool_machines`:
-`scrubs: ScrubLedger<M>` + `typing: TypingLedger<M>`, one shared overlay); the scrub path is unchanged:
+The instance runtime is `ToolMachineRuntime<P, M, C, CM>` (`VcsArtifactApp.tool_machines`): `presses:
+ScrubLedger<PressLeaf<M, CM>>` + `typing: TypingLedger<M>`, with the document, app-config and per-window window-config overlays.
+Since CLOSURE-3 (2026-10-03) every lane of a press is ONE ledger's leaves — `PressLeaf::{Member, Child, Config, WindowConfig}` —
+so one ledger step decides the document leaves, the owned children's shares and both config lanes together:
 
 - `dispatch_action` → `admit_tool_dispatch` reads the scrub arguments with `ScrubPhase::parse(gesture, commit, abort)`:
   `Abort` never reaches the app; `Tick`/`Commit` run your verb normally and tag its operation (`ToolTag::Scrub`).
-- At the one point the operation's completion becomes its publication (`settle_tool_operation`), a tagged emit's
-  `artifact_mutations` are moved into the window's `ScrubLedger<A::Mutation>` (tool `<appId>#<verb>`, actor = dispatch actor, base = the operation's
-  canonical document revision): a tick publishes nothing (render seams overlay committed ⊕ provisional leaves, so the
-  control and every derived view follow the value); the release publishes ONE edit via the `Emit::commit_transaction`
-  shape (every op stamped with the minted `TransactionRef`, `coalesce_key`/`description` cleared). Other emit lanes
-  (config, effects, events, UI scope) pass through per tick.
+- At the one point the operation's completion becomes its publication (`settle_tool_operation` → `settle_press`; the
+  host-configuration branch of `dispatch_action` calls the same `settle_press`), every press lane of the emit
+  (`artifact_mutations`, `child_emits`, `config_mutations`, `window_config_mutations`) moves into the window's press (tool
+  `<appId>#<verb>`, actor = dispatch actor, base = the operation's canonical document revision, or the live content
+  revision for a host-configuration verb): a tick publishes nothing (render seams overlay committed ⊕ provisional leaves, so
+  the control and every derived view follow the value); the release hands every lane back from the ONE committed step — the
+  document lanes stamped with the press's `TransactionRef` (one transaction for the press's own and its children's leaves),
+  the config lanes as ONE config edit. Other emit lanes (effects, events, UI scope) pass through per tick.
+- Transactional: `ScrubLedger::send` (Rust + TS twin) leaves the ledger exactly as it was when the scrub refuses an input, and
+  there is no other fallible step between hold and release, so a refusal keeps the press, its overlays and its held config
+  until a retry or a host abort decides. The scrub chart is total (law `the_scrub_ledger_never_refuses_and_late_inputs_change_nothing`:
+  every order of up to four inputs across two presses, two tools, two revisions, empty ticks, releases and aborts — 137 560
+  sends — answers a step, never a refusal; TS fast-check twin), so a release always decides its press.
 - Host aborts leave zero trace: `abort` argument (React/wgpu blur, unmount), a time-travel freeze (`frozen`), a window
   leaving the roster (`retired`), another press/tool in the window (`captureLost`), a moved document (`baseMoved`: the
   press reopens on the new revision; the leaves are absolute).
-- `child_emits` of a scrub dispatch are NOT captured (they pass through as today). A composed-child scrub (flow F6)
-  extends the same seam with a child leaf variant — coordinate with W3-T2-CONTROLS instead of inventing a parallel
-  machine.
+- `child_emits` of a scrub dispatch ride the press as `PressLeaf::Child` (design §12): the release publishes them in the
+  press's one transaction.
 
 ## 3. Framework API (`🧰️framework/🔨️modules/🛠️tool-machine`, crate `semio-framework-tool-machine`)
 
@@ -100,15 +108,18 @@ A press is not only a document gesture: a verb answering a tick with `config_mut
 `window_config_mutations` (window config) gets the same treatment, so a config slider, a viewer camera stream or a playback
 scrub needs no coalesce key and no amend:
 
-- tick: the emit's config lanes leave the emit and are held per window as the press's provisional config (each tick replaces
-  the previous one — absolute values); every render seam reads `config_overlay_or(committed)` /
+- tick: the emit's config lanes leave the emit and ride the window's press as `PressLeaf::Config` / `PressLeaf::WindowConfig`
+  (each tick replaces the previous one — absolute values; `WindowConfigMutation` is `Clone` through its erased value);
+  every render seam reads `config_overlay_or(committed)` /
   `window_config_overlay_or(committed window snapshot)` (overlays folded with `fold_leaf`, retired through the config store /
   `WindowConfigOwnerRegistry::retire_preview`, never dropped plainly);
-- release: the release's own config lanes publish as ONE config edit (coalesce key cleared); a late release (or tick) of the
-  press the window already closed stays silent;
+- release: the release's own config lanes publish as ONE config edit from the very step that commits the document leaves
+  (never without it, never dropped by a refusal); a late release (or tick) of the press the window already closed stays
+  silent on every lane;
 - abort (`blur`, `captureLost`, `frozen`, `retired`, another press in the window): the held lanes leave with zero trace;
 - host-configuration verbs (`ArtifactApp::host_configuration_mutation`) ride the same press;
-- config edits are never history rows (L4). Law: energy `a_config_press_is_one_config_edit_a_cancel_is_none_and_neither_is_a_history_row`.
+- config edits are never history rows (L4). Laws: energy `a_config_press_is_one_config_edit_a_cancel_is_none_and_neither_is_a_history_row`;
+  runtime `every_lane_of_a_press_rides_one_ledger_step` (`🔌️plugin/🧪️tests/🧪️scrub`).
 
 Hosts: send `{value…, gesture, commit}` exactly as for a document control (React lane / wgpu presses); a camera whose host already
 dispatches once per settled gesture needs nothing more.

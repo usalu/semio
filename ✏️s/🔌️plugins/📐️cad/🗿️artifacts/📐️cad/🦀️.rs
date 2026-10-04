@@ -15,7 +15,7 @@ extern crate semio_framework_schema as framework_schema;
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
-use std::collections::BTreeMap;
+pub use crate::schema::CadReferenceIndex;
 
 //#region 🔖️Domain
 pub const CAD_DOCUMENT_SCHEMA: &str = "cad.scene";
@@ -31,7 +31,7 @@ pub const CAD_PLAY_DOCUMENT_SCHEMA: &str = "cad.document";
 /// never sees a viewer file importing through an `::editor::` path just to read this constant.
 pub const CAD_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.cad.cad", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "kebab-case")]
 pub enum CadPaneId {
     Shape,
@@ -250,7 +250,7 @@ pub(crate) fn cad_pane_rematerialized_child(scene: &CadWorkingScene, pane: CadPa
         return None;
     }
     let next = std::sync::Arc::new(cad_scene_with_pane_objects(scene, pane, objects));
-    let content_json = protocol::json::to_json_string(&standards::v1::subsets::any::io::geometry_import::semio_model_snapshot_from_objects(cad_scene_pane_objects(&next, pane)));
+    let content_json = semio_framework_pack_json::to_json_string(&standards::v1::subsets::any::io::geometry_import::semio_model_snapshot_from_objects(cad_scene_pane_objects(&next, pane)));
     Some(cad_model_child_handle(pane, &content_json).with_local_owner(next))
 }
 
@@ -265,7 +265,7 @@ pub(crate) fn cad_pane_child_diff_slot(diff: &mut CadDiff, pane: CadPaneId, chil
 }
 //#endregion 🔖️WorkingScene
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct CadReference {
     pub id: String,
@@ -309,7 +309,7 @@ pub type CadReferenceList = Vec<CadReference>;
 /// field-for-field between this and the real `WorldProjectionConfig` around the shared projection
 /// helpers. See https://en.wikipedia.org/wiki/Axonometric_projection and
 /// https://en.wikipedia.org/wiki/Oblique_projection.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct CadProjectionDsl {
     pub kind: String,
@@ -351,7 +351,7 @@ impl Default for CadProjectionDsl {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct CadCamera {
     #[value(default = "default_camera_position")]
@@ -391,7 +391,7 @@ fn one_f64() -> f64 {
     1.0
 }
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct CadNode {
     pub id: String,
@@ -430,7 +430,7 @@ pub fn empty_cad_snapshot() -> CadSnapshot {
         energy_model: None,
         structure_classic_model: None,
         drawings: Vec::new(),
-        references_by_model_definition_id: BTreeMap::new(),
+        references_by_model_definition_id: CadReferenceIndex::new(),
         nodes: Vec::new(),
     }
 }
@@ -474,60 +474,60 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// `🗒️note`'s own `pilot_languages()` convention (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
 /// M1/W1b). Relocated from `⚙️engine/🦀️.rs` alongside `declaration()` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE) — `declaration()`'s only caller, kept private.
-fn pilot_languages() -> &'static [dsl::LanguageSpec] {
-    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
             vec![
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "cad.document",
                     extension: Some("cad"),
-                    role: dsl::LanguageRole::Document,
+                    role: semio_framework_dsl::LanguageRole::Document,
                     grammar: Some(document_dsl::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(document_dsl::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("cad.document"),
+                    hooks: semio_framework_dsl::passthrough_hooks("cad.document"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "cad.op",
                     extension: None,
-                    role: dsl::LanguageRole::Ops,
+                    role: semio_framework_dsl::LanguageRole::Ops,
                     grammar: Some(op::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(op::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("cad.op"),
+                    hooks: semio_framework_dsl::passthrough_hooks("cad.op"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "cad.diff",
                     extension: None,
-                    role: dsl::LanguageRole::Diff,
+                    role: semio_framework_dsl::LanguageRole::Diff,
                     grammar: Some(diff::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
-                    hooks: dsl::passthrough_hooks("cad.diff"),
+                    hooks: semio_framework_dsl::passthrough_hooks("cad.diff"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "cad.pack",
                     extension: None,
-                    role: dsl::LanguageRole::Pack,
+                    role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("cad.pack"),
+                    hooks: semio_framework_dsl::passthrough_hooks("cad.pack"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "cad.spr",
                     extension: None,
-                    role: dsl::LanguageRole::Spr,
+                    role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("cad.spr"),
+                    hooks: semio_framework_dsl::passthrough_hooks("cad.spr"),
                 },
             ]
         })

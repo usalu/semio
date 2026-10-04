@@ -8,7 +8,7 @@ use protocol::{MutationKind, SemanticDescriptor};
 
 //#region 🔖️Mutation
 /// 📝️ Sets a step's `description` scalar (a `None` clears it).
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct ChangeStepDescription {
@@ -21,9 +21,12 @@ impl MutationKind<FormsSnapshot, FormMutation> for ChangeStepDescription {
     fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &FormsSnapshot) -> Vec<FormMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &FormsSnapshot) -> Result<Vec<FormMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change step \"{}\" description", self.id), &format!("Beschreibung von Schritt \"{}\" ändern", self.id))
     }

@@ -1,14 +1,15 @@
-/** 🧬️ Transparent BmpMutation union. */
-import type { ChangeHeaderFieldsMutation } from './📐️change-header-fields/🟦️.ts';
-import type { InsertPaletteEntryMutation } from './📥️insert-palette-entry/🟦️.ts';
-import type { RemovePaletteEntryMutation } from './📤️remove-palette-entry/🟦️.ts';
-import type { ReplacePaletteEntryMutation } from './🎨️replace-palette-entry/🟦️.ts';
-import type { ReplacePixelDataMutation } from './🔲️replace-pixel-data/🟦️.ts';
-import type { SetSnapshot } from './📸️set-snapshot/🟦️.ts';
+import type { BmpSnapshot } from '../📸️snapshot/🟦️.ts';
+
+export interface BmpRegionAddress {
+  revision: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 export type BmpMutation =
-  | { readonly mutation: 'set-snapshot'; readonly payload: SetSnapshot }
-  | { readonly mutation: 'change-header-fields'; readonly payload: ChangeHeaderFieldsMutation }
-  | { readonly mutation: 'insert-palette-entry'; readonly payload: InsertPaletteEntryMutation }
-  | { readonly mutation: 'remove-palette-entry'; readonly payload: RemovePaletteEntryMutation }
-  | { readonly mutation: 'replace-palette-entry'; readonly payload: ReplacePaletteEntryMutation }
-  | { readonly mutation: 'replace-pixel-data'; readonly payload: ReplacePixelDataMutation };
+  | { readonly mutation: 'set-snapshot'; readonly payload: { readonly snapshot: BmpSnapshot } }
+  | { readonly mutation: 'patch-snapshot'; readonly payload: { readonly patch: unknown } }
+  | { readonly mutation: 'paint-indexed-region'; readonly payload: BmpRegionAddress & { readonly paletteIndex: number } }
+  | { readonly mutation: 'paint-direct-region'; readonly payload: BmpRegionAddress & { readonly red: number; readonly green: number; readonly blue: number; readonly alpha: number } };

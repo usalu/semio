@@ -1,0 +1,165 @@
+{
+  "guards": [
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/💰️frontiers/🟦️.ts",
+      "current": true,
+      "hashes": true,
+      "inverse": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/💰️operation/🟦️.ts",
+      "current": true,
+      "hashes": true,
+      "inverse": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/🧪️tests/💰️frontiers/🟦️.ts",
+      "current": true,
+      "hashes": true,
+      "inverse": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/🧪️tests/💰️operation/🟦️.ts",
+      "current": true,
+      "hashes": true,
+      "inverse": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧫️fixtures/💰️frontiers/🔣️.json",
+      "current": true,
+      "hashes": true,
+      "inverse": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧬️schema/💰️frontiers/🔣️.json",
+      "current": true,
+      "hashes": true,
+      "inverse": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/🧫️fixtures/💰️frontiers/🔣️.json",
+      "current": true,
+      "hashes": true,
+      "inverse": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/🧬️schema/💰️frontiers/🔣️.json",
+      "current": true,
+      "hashes": true,
+      "inverse": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧫️fixtures/💰️operation/🔣️.json",
+      "current": true,
+      "hashes": true,
+      "inverse": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧬️schema/💰️operation/🔣️.json",
+      "current": true,
+      "hashes": true,
+      "inverse": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/🧫️fixtures/💰️operation/🔣️.json",
+      "current": true,
+      "hashes": true,
+      "inverse": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/🧬️schema/💰️operation/🔣️.json",
+      "current": true,
+      "hashes": true,
+      "inverse": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧫️fixtures/🔎️frontiers/🔣️.json",
+      "current": true,
+      "hashes": true,
+      "inverse": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧬️schema/🔎️frontiers/🔣️.json",
+      "current": true,
+      "hashes": true,
+      "inverse": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/📦️packages/🟦️typescript/📜️script.ts",
+      "current": true,
+      "hashes": true,
+      "inverse": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/📜️script.ts",
+      "current": true,
+      "hashes": true,
+      "inverse": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/📋️project.json",
+      "current": true,
+      "hashes": true,
+      "inverse": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/package.json",
+      "current": true,
+      "hashes": true,
+      "inverse": true
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "current": false,
+      "hashes": true,
+      "inverse": true
+    }
+  ],
+  "laws": [
+    {
+      "name": "cooperative frontier corpus is closed and independently preserves TIFF relational scalars",
+      "originalExact": true,
+      "transferredExact": true
+    },
+    {
+      "name": "complete TIFF ASCII preflight cancels within its first scalar measurement",
+      "originalExact": true,
+      "transferredExact": true
+    },
+    {
+      "name": "complete TIFF physical import cancels inside its actual schema token scan",
+      "originalExact": true,
+      "transferredExact": true
+    },
+    {
+      "name": "complete TIFF import cancels within shared relational row validation",
+      "originalExact": true,
+      "transferredExact": true
+    },
+    {
+      "name": "complete TIFF export cancels within physical corpus tree grouping",
+      "originalExact": true,
+      "transferredExact": true
+    },
+    {
+      "name": "complete TIFF import retains prior debt and honors exact and minus-one cumulative grants",
+      "originalExact": true,
+      "transferredExact": true
+    },
+    {
+      "name": "complete TIFF export retains prior debt and captures declarative options before mutation",
+      "originalExact": true,
+      "transferredExact": true
+    },
+    {
+      "name": "complete TIFF export cancels inside the second physical tree grouping pass",
+      "originalExact": true,
+      "transferredExact": true
+    },
+    {
+      "name": "actual TIFF pixels projector and physical file share one complete operation grant",
+      "originalExact": true,
+      "transferredExact": true
+    }
+  ]
+}

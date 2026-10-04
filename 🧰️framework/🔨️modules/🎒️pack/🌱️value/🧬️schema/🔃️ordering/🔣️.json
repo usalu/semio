@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "fieldMap",
+    "literalObject"
+  ],
+  "properties": {
+    "format": {
+      "const": 1
+    },
+    "fieldMap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "unsorted",
+        "canonical"
+      ],
+      "properties": {
+        "unsorted": {
+          "$ref": "#/$defs/map"
+        },
+        "canonical": {
+          "$ref": "#/$defs/map"
+        }
+      }
+    },
+    "literalObject": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/literal"
+      }
+    }
+  },
+  "$defs": {
+    "map": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "entries"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "entries": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/$defs/leaf"
+            }
+          }
+        }
+      }
+    },
+    "leaf": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "value"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "literal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "value"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

@@ -12,7 +12,7 @@ use crate::GisMapSnapshot;
 pub const REUSE_MAP_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
 /// 📖️ Parses `.gismap` DSL text into a `GisMapSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<GisMapSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<GisMapSnapshot, semio_framework_diagnostic::TextError> {
     <GisMapSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 

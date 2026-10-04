@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeZoneEquipmentPriority, base: &EnergyModelSnap
         return protocol::MutationOutcome::fatal("mutation.invariant", "An equipment priority must be at least one.".to_string(), [payload.id.0.to_string()]);
     }
     if existing.priority == payload.new_priority {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Zone equipment {} already has that priority.", payload.id.0));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Zone equipment {} already has that priority.", payload.id.0));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.zone_equipment.iter_mut().find(|item| item.id == payload.id) {

@@ -18,13 +18,13 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧱change-material-roughness/🧱️lowers/🎯️outcome/🔣️.json");
 
 fn before() -> SemioMeshSnapshot {
-    dsl::json::from_json_str(BEFORE).expect("change-material-roughness before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("change-material-roughness before snapshot decodes")
 }
 fn expected_after() -> SemioMeshSnapshot {
-    dsl::json::from_json_str(AFTER).expect("change-material-roughness after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("change-material-roughness after snapshot decodes")
 }
 fn mutation() -> SemioMeshMutation {
-    dsl::json::from_json_str(MUTATION).expect("change-material-roughness mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("change-material-roughness mutation decodes")
 }
 
 /// ▶️ Only the roughness factor moves; metallic and the base color stay.
@@ -43,7 +43,7 @@ async fn lowers_roughness_without_touching_metallic() {
 async fn the_undo_change_material_roughness_restores_the_original_factor() {
     let base = before();
     let mutation = mutation();
-    let undo = mutation.inverse(&base);
+    let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "change-material-roughness undoes as exactly one change-material-roughness");
     let SemioMeshMutation::ChangeMaterialRoughness(restore) = &undo[0] else { panic!("change-material-roughness must undo as itself") };
     assert_eq!(restore.new_roughness, base.materials[0].roughness, "the undo must recapture BASE's own roughness factor");
@@ -58,12 +58,12 @@ async fn the_undo_change_material_roughness_restores_the_original_factor() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioMeshSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: SemioMeshSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "change-material-roughness/lowers-the-roughness-factor-to-a-quarter: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("change-material-roughness mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(mutation()))).expect("change-material-roughness mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-material-roughness mutation reparses");
     assert_eq!(reencoded, original, "change-material-roughness/lowers-the-roughness-factor-to-a-quarter: committed mutation JSON is not canonical");
 }
@@ -82,7 +82,7 @@ async fn declared_outcome_holds_as_committed() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioMeshMutation as Mutation<SemioMeshSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-material-roughness/lowers-the-roughness-factor-to-a-quarter: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -91,13 +91,13 @@ async fn produces_committed_diff() {
 /// allowed to touch appears in it at all.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
-    let decoded: SemioMeshDiff = dsl::json::from_json_str(DIFF).expect("committed change-material-roughness diff decodes");
+    let decoded: SemioMeshDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-material-roughness diff decodes");
     let materials = decoded.materials.as_ref().expect("change-material-roughness must write the materials triple");
     let mdiff = &materials.modified[0].diff;
     assert_eq!(mdiff.roughness, Some(0.25), "the roughness factor must be written");
     assert!(mdiff.metallic.is_none() && mdiff.base_color.is_none(), "the sibling factor and the color must stay unwritten");
     assert!(decoded.meshes.is_none() && decoded.textures.is_none(), "no mesh or texture slot may appear in the diff");
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-material-roughness/lowers-the-roughness-factor-to-a-quarter: committed diff JSON is not canonical");
 }
@@ -105,7 +105,7 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioMeshDiff = dsl::json::from_json_str(DIFF).expect("committed change-material-roughness diff decodes");
+    let decoded: SemioMeshDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-material-roughness diff decodes");
     let produced = decoded.apply(&before()).expect("committed change-material-roughness diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-material-roughness/lowers-the-roughness-factor-to-a-quarter: committed diff did not carry before to after");
 }

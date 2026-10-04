@@ -15,7 +15,7 @@ pub fn diff(payload: &UpdateAnalysisSettings, base: &Fem2dSnapshot) -> protocol:
         return rejection;
     }
     if payload.settings == base.analysis {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Analysis settings are unchanged.".to_string());
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Analysis settings are unchanged.".to_string());
     }
     protocol::MutationOutcome::new(Fem2dDiff { analysis: Some(payload.settings.clone()), ..Default::default() })
 }

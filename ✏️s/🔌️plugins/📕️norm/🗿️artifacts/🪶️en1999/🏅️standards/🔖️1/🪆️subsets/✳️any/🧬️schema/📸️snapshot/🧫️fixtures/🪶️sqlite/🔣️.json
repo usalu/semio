@@ -39,7 +39,7 @@
         "sectionId": "missing section reference",
         "materialId": "missing alloy reference",
         "length": 9.9,
-        "support": "authored support",
+        "support": "continuous",
         "bucklingLengthY": 10.1,
         "bucklingLengthZ": 11.2,
         "bucklingLengthT": 12.3,

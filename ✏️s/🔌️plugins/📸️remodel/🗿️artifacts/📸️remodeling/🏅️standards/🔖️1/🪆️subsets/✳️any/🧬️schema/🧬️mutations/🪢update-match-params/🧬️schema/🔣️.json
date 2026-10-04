@@ -25,5 +25,14 @@
         "order": 10
       }
     }
-  }
+  },
+  "x-semio-invariant": [
+    {
+      "id": "unit-ratio-test",
+      "description": {
+        "en": "The match ratio test is finite and lies in (0, 1].",
+        "de": "Der Verhältnistest des Abgleichs ist endlich und liegt in (0, 1]."
+      }
+    }
+  ]
 }

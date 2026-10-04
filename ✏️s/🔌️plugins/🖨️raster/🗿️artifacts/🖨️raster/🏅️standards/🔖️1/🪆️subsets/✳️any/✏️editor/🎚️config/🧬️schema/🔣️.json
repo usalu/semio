@@ -11,7 +11,8 @@
     "brushColor",
     "brushHardness",
     "paintTarget",
-    "maskValue"
+    "maskValue",
+    "fillTolerance"
   ],
   "properties": {
     "brushSize": {
@@ -52,6 +53,12 @@
       "x-semio-state": "config"
     },
     "maskValue": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255,
+      "x-semio-state": "config"
+    },
+    "fillTolerance": {
       "type": "integer",
       "minimum": 0,
       "maximum": 255,

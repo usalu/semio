@@ -5,7 +5,7 @@ use protocol::{Mutation, MutationDiff, OpBinary, OpText};
 fn fem3d_window_config_results_matches_neutral_fixture_and_codecs() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️schema/🧫️fixtures/🪪️document-contract/🔣️.json")).expect("FEM window fixture");
     for candidate in fixture["valid"].as_array().expect("neutral valid cases") {
-        let base: Fem3dResultsWindowConfig = dsl::json::from_json_str(&candidate.to_string()).expect("neutral FEM window config");
+        let base: Fem3dResultsWindowConfig = semio_framework_pack_json::from_json_str(&candidate.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral FEM window config");
         let mutation = Fem3dResultsWindowConfigMutation::Snapshot { config: Box::new(base.clone()) };
         let after = mutation.diff(&base).diff().apply(&base).expect("FEM window diff");
         assert_eq!(after, base);
@@ -34,7 +34,7 @@ fn fem3d_window_config_results_matches_neutral_fixture_and_codecs() {
             "bad-waveform" => candidate["animation"]["waveform"] = serde_json::json!("square"),
             _ => panic!("unknown neutral invalid case {kind}"),
         }
-        if dsl::json::from_json_str::<Fem3dResultsWindowConfig>(&candidate.to_string()).is_ok() {
+        if semio_framework_pack_json::from_json_str::<Fem3dResultsWindowConfig>(&candidate.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).is_ok() {
             admitted_invalid.push(kind);
         }
     }

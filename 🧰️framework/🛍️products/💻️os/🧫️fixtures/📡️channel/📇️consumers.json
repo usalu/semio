@@ -11,6 +11,11 @@
       "occurrences": 1
     },
     {
+      "path": "🧫️fixtures/⚖️scale/🦀️.rs",
+      "occurrences": 1,
+      "guest": true
+    },
+    {
       "path": "🔨️modules/📇️directory/🧬️schema/🟦️.ts",
       "occurrences": 1
     },
@@ -53,8 +58,8 @@
       "path": "🔨️modules/🔌️plugin/📇️registry/🧫️fixtures/🧬️catalog-publication/🔣️.json",
       "occurrences": 3,
       "hostileValues": [
-        19,
-        21
+        20,
+        22
       ]
     },
     {
@@ -118,9 +123,26 @@
       "arbitrary": true
     },
     {
+      "path": "🔨️modules/📡️spr/🧵️channel/🧬️fixtures/🪪️document-identity-wire/🔣️.json",
+      "occurrences": 1
+    },
+    {
+      "path": "🔨️modules/📡️spr/🧵️channel/🧬️fixtures/🎬️media-export-wire/🔣️.json",
+      "occurrences": 1
+    },
+    {
+      "path": "🔨️modules/📡️spr/🧵️channel/🧬️fixtures/🎬️media-export-wire/🧬️schema/🔣️.json",
+      "occurrences": 1
+    },
+    {
       "path": "🔨️modules/📡️spr/🧵️channel/🧪️tests/🔬️unit/🦀️.rs",
       "occurrences": 1,
       "arbitrary": true
+    },
+    {
+      "path": "🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/🔣️.json",
+      "occurrences": 1,
+      "derived": "the host fixture component's describe output (its `🛂️.descriptor.semio` twin is re-derived with it)"
     }
   ]
 }

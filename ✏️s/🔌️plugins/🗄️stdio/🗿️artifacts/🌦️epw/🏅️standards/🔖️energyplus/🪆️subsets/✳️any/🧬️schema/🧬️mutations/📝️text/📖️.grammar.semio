@@ -5,6 +5,7 @@ root = mutation
 ; args are lowercase hex (see ../🔺️diff/📝️text/📖️.grammar.semio for the shared
 ; `hexstr`/`record`/`location`/`data-periods` encodings).
 mutation = "set-snapshot" SP "snapshot=" hexsnapshot
+         / "patch-snapshot" SP "patch=" hexstr
          / "set-location" SP "location=" hexbrackets
          / "set-design-conditions" SP "value=" hexstr
          / "set-typical-extreme-periods" SP "value=" hexstr

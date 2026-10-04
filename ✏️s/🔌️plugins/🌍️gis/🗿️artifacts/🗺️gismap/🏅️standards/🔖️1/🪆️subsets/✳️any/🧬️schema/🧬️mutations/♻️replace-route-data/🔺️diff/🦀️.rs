@@ -13,7 +13,7 @@ pub fn diff(payload: &ReplaceRouteData, base: &GisMapSnapshot) -> protocol::Muta
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Route \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if existing.data == payload.new_data {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Route \"{}\" data is already identical to the requested replacement.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Route \"{}\" data is already identical to the requested replacement.", payload.id));
     }
     protocol::MutationOutcome::new(GisMapDiff {
         routes: Some(GisMapFeaturesDelta { patched: vec![GisMapFeaturePatchEntry { id: payload.id.clone(), patch: MapFeaturePatch { data: Some(payload.new_data.clone()) } }], ..Default::default() }),

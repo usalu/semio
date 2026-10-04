@@ -6,13 +6,10 @@ artifactMark: 'semio imperative.imperative.dsl v1' ;
 document: artifactMark field* ;
 field: 'schema' '=' TEXT
      | 'flow' '=' childHandle
-     | 'text' '=' childHandle
-     | 'path' '=' VALUE
-     | 'seed' '=' VALUE ;
+     | 'text' '=' childHandle ;
 childHandle: 'child_id' '=' TEXT 'target' '=' TEXT ;
 
 // 📐 Framework dialect-primitive terminals.
-VALUE: TEXT ;
 TEXT: BARE | QUOTED ;
 fragment BARE: ~[ \t\r\n="{}[\],]+ ;
 fragment QUOTED: '"' ( '\\' . | ~["\\] )* '"' ;

@@ -13,7 +13,7 @@ pub fn diff(payload: &ReplaceOperationalRequirement, base: &ProgramSnapshot) -> 
         return protocol::MutationOutcome::error("mutation.target-missing", "No operational requirement exists with this id.", [payload.operational_requirement.header.id.0.clone()]);
     };
     if existing == &payload.operational_requirement {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This operational requirement already matches the requested value.").at([existing.header.id.0.clone()])]);
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This operational requirement already matches the requested value.").at([existing.header.id.0.clone()])]);
     }
     let patch = existing.diff_patch(&payload.operational_requirement).expect("diff_patch always produces a full patch");
     protocol::MutationOutcome::new(ProgramDiff { operations: Some(ProgramOperationsDelta { patched: vec![ProgramOperationsPatchEntry { id: payload.operational_requirement.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })

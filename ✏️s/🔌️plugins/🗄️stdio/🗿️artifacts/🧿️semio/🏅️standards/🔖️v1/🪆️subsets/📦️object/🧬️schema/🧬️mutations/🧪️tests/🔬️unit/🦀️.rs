@@ -19,7 +19,7 @@ fn ref_of(subset: &str, id: &str) -> store::os_io::ArtifactRef {
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn round_trip(base: &SemioObjectSnapshot, operation: &SemioObjectMutation) -> SemioObjectSnapshot {
     let forward = operation.diff(base).diff().apply(base).expect("apply must succeed for a well-formed fixture");
-    let backwards = operation.inverse(base);
+    let backwards = operation.inverse(base).expect("valid retained mutation inverse fixture");
     let mut restored = forward.clone();
     for back in &backwards {
         restored = back.diff(&restored).diff().apply(&restored).expect("apply must succeed for a well-formed fixture");
@@ -67,7 +67,7 @@ async fn delete_brep_of_an_absent_slot_has_an_empty_inverse() {
     let mut base = fixture();
     base.brep = None;
     let delete = SemioObjectMutation::DeleteBrep(delete_brep::DeleteBrep {});
-    assert!(delete.inverse(&base).is_empty(), "deleting an already-absent slot has nothing to undo");
+    assert!(delete.inverse(&base).expect("valid retained mutation inverse fixture").is_empty(), "deleting an already-absent slot has nothing to undo");
     assert_eq!(delete.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "deleting an absent slot is a no-op");
 }
 
@@ -78,7 +78,7 @@ async fn create_brep_rejects_an_occupied_slot_without_displacing_its_child() {
     let create = SemioObjectMutation::CreateBrep(create_brep::CreateBrep { child_id: "brand-new".into(), target: ref_of("brep", "brand-new") });
     let outcome = create.diff(&base);
     assert_eq!(outcome.messages()[0].code.0.as_str(), "mutation.duplicate-id");
-    assert!(create.inverse(&base).is_empty(), "rejected duplicate creation has no inverse effect");
+    assert!(create.inverse(&base).expect("valid retained mutation inverse fixture").is_empty(), "rejected duplicate creation has no inverse effect");
     assert_eq!(outcome.diff().apply(&base).expect("rejected create has no diff"), base);
 }
 

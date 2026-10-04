@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "invalid-encoding",
+      "authority": "syntax",
+      "operation": "encoding",
+      "expectedKind": "invalidValue"
+    },
+    {
+      "id": "invalid-schema",
+      "authority": "syntax",
+      "operation": "schema",
+      "expectedKind": "invalidValue"
+    },
+    {
+      "id": "invalid-nan",
+      "authority": "syntax",
+      "operation": "nan",
+      "expectedKind": "invalidValue"
+    },
+    {
+      "id": "canceled-pages",
+      "authority": "callback",
+      "operation": "pages",
+      "expectedKind": "canceled"
+    },
+    {
+      "id": "canceled-projection",
+      "authority": "callback",
+      "operation": "projection",
+      "expectedKind": "canceled"
+    },
+    {
+      "id": "value-limit",
+      "authority": "ownership",
+      "operation": "value",
+      "expectedKind": "ownershipLimit"
+    },
+    {
+      "id": "schema-limit",
+      "authority": "ownership",
+      "operation": "schemaBytes",
+      "expectedKind": "ownershipLimit"
+    },
+    {
+      "id": "file-limit",
+      "authority": "ownership",
+      "operation": "file",
+      "expectedKind": "ownershipLimit"
+    },
+    {
+      "id": "allocation-limit",
+      "authority": "ownership",
+      "operation": "allocation",
+      "expectedKind": "ownershipLimit"
+    },
+    {
+      "id": "row-limit",
+      "authority": "work",
+      "operation": "rows",
+      "expectedKind": "workLimit"
+    },
+    {
+      "id": "column-limit",
+      "authority": "work",
+      "operation": "columns",
+      "expectedKind": "workLimit"
+    },
+    {
+      "id": "table-limit",
+      "authority": "work",
+      "operation": "tables",
+      "expectedKind": "workLimit"
+    },
+    {
+      "id": "page-limit",
+      "authority": "work",
+      "operation": "pageCount",
+      "expectedKind": "workLimit"
+    }
+  ]
+}
+

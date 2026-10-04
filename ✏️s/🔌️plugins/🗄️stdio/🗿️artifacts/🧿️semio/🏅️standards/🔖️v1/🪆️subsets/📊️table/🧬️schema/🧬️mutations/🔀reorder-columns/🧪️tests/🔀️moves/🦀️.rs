@@ -18,13 +18,13 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-columns/🔀️moves/🎯️outcome/🔣️.json");
 
 fn before() -> SemioTableSnapshot {
-    dsl::json::from_json_str(BEFORE).expect("reorder-columns before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("reorder-columns before snapshot decodes")
 }
 fn expected_after() -> SemioTableSnapshot {
-    dsl::json::from_json_str(AFTER).expect("reorder-columns after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("reorder-columns after snapshot decodes")
 }
 fn reorder_columns() -> SemioTableMutation {
-    dsl::json::from_json_str(MUTATION).expect("reorder-columns mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("reorder-columns mutation decodes")
 }
 
 /// ▶️ `area` jumps from last to first, and every row's third cell makes the identical jump.
@@ -47,7 +47,7 @@ async fn moves_the_area_column_and_replays_the_move_on_every_row() {
 async fn the_undo_reorder_returns_the_column_to_its_base_index() {
     let base = before();
     let mutation = reorder_columns();
-    let undo = mutation.inverse(&base);
+    let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(
         undo,
         vec![SemioTableMutation::ReorderColumns(crate::standards::v1::subsets::table::schema::mutations::reorder_columns::ReorderColumns { name: "area".to_string(), to_index: 2 })],
@@ -64,12 +64,12 @@ async fn the_undo_reorder_returns_the_column_to_its_base_index() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioTableSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: SemioTableSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "reorder-columns/moves-the-area-column-to-the-front-and-realigns-every-row: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(reorder_columns()))).expect("reorder-columns mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(reorder_columns()))).expect("reorder-columns mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("reorder-columns mutation reparses");
     assert_eq!(reencoded, original, "reorder-columns/moves-the-area-column-to-the-front-and-realigns-every-row: committed mutation JSON is not canonical");
 }
@@ -90,7 +90,7 @@ async fn declared_outcome_holds_without_a_no_op_warning() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioTableMutation as Mutation<SemioTableSnapshot>>::diff(&reorder_columns(), &base);
-    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "reorder-columns/moves-the-area-column-to-the-front-and-realigns-every-row: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -98,10 +98,10 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff is canonical and carries the permuted columns AND the permuted cells.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_carries_both_slots() {
-    let decoded: SemioTableDiff = dsl::json::from_json_str(DIFF).expect("committed reorder-columns diff decodes");
+    let decoded: SemioTableDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed reorder-columns diff decodes");
     assert_eq!(decoded.columns.as_ref().map(|list| list.values[0].name.clone()), Some("area".to_string()), "the diff's own column list must already be permuted");
     assert!(decoded.rows.is_some(), "reorder-columns must ALSO rebuild the row list — the cell realignment is part of the same diff");
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "reorder-columns/moves-the-area-column-to-the-front-and-realigns-every-row: committed diff JSON is not canonical");
 }
@@ -109,7 +109,7 @@ async fn committed_diff_is_canonical_and_carries_both_slots() {
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioTableDiff = dsl::json::from_json_str(DIFF).expect("committed reorder-columns diff decodes");
+    let decoded: SemioTableDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed reorder-columns diff decodes");
     let produced = decoded.apply(&before()).expect("committed reorder-columns diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "reorder-columns/moves-the-area-column-to-the-front-and-realigns-every-row: committed diff did not carry before to after");
 }

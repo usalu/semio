@@ -22,7 +22,7 @@ pub const REMODELING_VIDEO_ACCEPT: &str = "video/mp4,video/quicktime,video/webm,
 //#region 🔖️ExportQcReport
 //#endregion 🔖️ExportQcReport
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "import-video")]
 pub struct ImportVideo {}
 

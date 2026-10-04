@@ -158,12 +158,6 @@ impl machine::Host<cad_transform_tool::CadTransformTool> for CadTransformToolHos
     }
 }
 
-/// ⏰️ The host clock a transform-tool event runs on, so a transaction id minted at an upsert is unique per admission
-/// AND per moment.
-pub fn cad_transform_tool_clock() -> protocol::HybridLogicalTimestamp {
-    protocol::HybridLogicalTimestamp { actor: 0, physical_ms: semio_framework_job::default_now_ms().unwrap_or(0), logical: 0 }
-}
-
 /// 🧮️ What the tool yields for `entries` on `base`, keyed and in order: each transform's leaf per touched pane, then
 /// each prepared leaf — every one folded onto a running state, so a later entry sees the earlier ones. A leaf whose
 /// outcome is a no-op, an Error or a Fatal on that state is not yielded: the tool never commits an edit it knows fails.
@@ -177,7 +171,7 @@ pub fn cad_tool_yields(base: &CadSnapshot, entries: &[CadToolEntry]) -> Vec<(Str
         };
         for (key, leaf) in leaves {
             let outcome = <CadMutation as protocol::Mutation<CadSnapshot>>::diff(&leaf, &state);
-            if outcome.messages().iter().any(|message| message.level >= protocol::Severity::Error || message.code.0 == "mutation.no-op") {
+            if outcome.messages().iter().any(|message| message.level >= semio_framework_diagnostic::Severity::Error || message.code.0 == "mutation.no-op") {
                 continue;
             }
             let Ok(next) = protocol::MutationDiff::apply(outcome.diff(), &state) else { continue };
@@ -193,7 +187,7 @@ pub fn cad_tool_yields(base: &CadSnapshot, entries: &[CadToolEntry]) -> Vec<(Str
 /// or lands: a stranger id, an identity motion or an empty request leaves zero trace.
 pub fn cad_transform_tool_commit(verb: &str, authoring_seed: &str, base: &CadSnapshot, entries: Vec<CadToolEntry>) -> Option<(protocol::TransactionRef, Vec<CadMutation>)> {
     let mut runner = ToolMachineRunner::<cad_transform_tool::CadTransformTool, CadTransformToolHost>::start(format!("{CAD_EDITOR_APP_ID}#{verb}"), protocol::ActorId(authoring_seed.to_string()), CadTransformToolContext, CadTransformToolHost).ok()?;
-    match runner.send(cad_transform_tool::Event::Records(CadToolRequest { base: Arc::new(base.clone()), entries }), cad_transform_tool_clock()).ok()? {
+    match runner.send(cad_transform_tool::Event::Records(CadToolRequest { base: Arc::new(base.clone()), entries }), semio_framework_tool_machine::authoring_clock(0)).ok()? {
         ToolStep::Committed(transaction, mutations) => Some((transaction, mutations)),
         ToolStep::Idle | ToolStep::Open | ToolStep::Aborted(..) | ToolStep::Empty(_) => None,
     }

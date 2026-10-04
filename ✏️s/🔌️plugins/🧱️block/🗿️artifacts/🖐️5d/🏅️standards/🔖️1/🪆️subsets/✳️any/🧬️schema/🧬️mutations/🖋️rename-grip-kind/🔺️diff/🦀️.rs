@@ -10,7 +10,7 @@ pub fn diff(payload: &super::RenameGripKind, base: &Block5dSnapshot) -> protocol
     };
     let replacement = Block5dGripKind { name: payload.new_name.clone(), ..existing.clone() };
     if replacement == *existing {
-        return protocol::MutationOutcome::new(Block5dDiff::default()).absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "no changes to apply").at(vec![payload.id.clone()])]);
+        return protocol::MutationOutcome::new(Block5dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(vec![payload.id.clone()])]);
     }
     protocol::MutationOutcome::new(Block5dDiff {
         grip_kinds: Some(Block5dGripKindsDelta { patched: vec![Block5dGripKindsPatchEntry { id: payload.id.clone(), patch: Block5dGripKindsPatch { replacement: Some(replacement) } }], ..Default::default() }),

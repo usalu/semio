@@ -7,7 +7,6 @@
 use super::bounds::compute_fem2d_bounds;
 use crate::Fem2dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a fem2d snapshot. One field per named inference under
@@ -21,8 +20,11 @@ pub struct Fem2dInference {
 }
 
 impl protocol::Inference<Fem2dSnapshot> for Fem2dInference {
-    fn infer(snapshot: &Fem2dSnapshot) -> Self {
+    fn infer(snapshot: &Fem2dSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { bounds: compute_fem2d_bounds(snapshot) }
+    
+        })
     }
 }
 
@@ -38,16 +40,6 @@ impl protocol::InferenceSpec<Fem2dSnapshot> for Fem2dInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 💡️ `bounds` is a whole-snapshot scalar (see `📦bounds/🦀️.rs`), so the default
-/// `ArtifactInferrer::infer_cached` passthrough (plain `infer`, no `InferenceCache`/`InferenceSession`
-/// involvement) is exactly right — nothing here benefits from per-entity incremental caching.
-impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::Fem2dBuilder {
-    type Snapshot = Fem2dSnapshot;
-    type Inference = Fem2dInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.fem.fem2d.inference`'s facet leaves into the OS-wide inference catalog — call

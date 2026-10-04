@@ -17,9 +17,12 @@ impl protocol::MutationKind<Mp3Snapshot, Mp3Mutation> for SetSnapshot {
     fn diff(&self, base: &Mp3Snapshot) -> protocol::MutationOutcome<<Mp3Mutation as Mutation<Mp3Snapshot>>::Diff> {
         agg_diff(&Mp3Mutation::SetSnapshot(self.clone()), base)
     }
-    fn inverse(&self, base: &Mp3Snapshot) -> Vec<Mp3Mutation> {
-        agg_inverse(&Mp3Mutation::SetSnapshot(self.clone()), base)
-    }
+    fn inverse(&self, base: &Mp3Snapshot) -> Result<Vec<Mp3Mutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&Mp3Mutation::SetSnapshot(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set snapshot", "Momentaufnahme setzen")
     }

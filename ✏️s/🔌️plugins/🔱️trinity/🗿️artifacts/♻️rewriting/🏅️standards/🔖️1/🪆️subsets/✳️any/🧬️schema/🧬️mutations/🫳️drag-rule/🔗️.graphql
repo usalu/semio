@@ -1,2 +1,2 @@
-# 🫳️ Relative drag-rule-nodes / DragRuleNodes payload.
-input DragRuleNodesInput { targets: [String!]!, dx: Float!, dy: Float! }
+# 🧬️ DragRuleNodesInput owns its declared typed payload.
+input DragRuleNodesInput { targets: [String!]! dx: Binary64WordInput! dy: Binary64WordInput! }

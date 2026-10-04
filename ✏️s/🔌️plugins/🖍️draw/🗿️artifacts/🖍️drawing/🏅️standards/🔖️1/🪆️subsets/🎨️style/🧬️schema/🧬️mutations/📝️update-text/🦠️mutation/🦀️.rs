@@ -1,6 +1,6 @@
 //! 📝️ Atomic text content and size edits with preserved layer identity.
 use crate::{DrawingSnapshot, DrawingMutation};
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
@@ -17,7 +17,10 @@ pub fn update_text(layer_id: String, content: String, size: f64) -> DrawingMutat
 impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for UpdateText {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "text", kind: "update-text", record: "UpdatedText" };
     fn diff(&self, base: &DrawingSnapshot) -> protocol::MutationOutcome<crate::diff::DrawingDiff> { super::diff::diff(self, base) }
-    fn inverse(&self, base: &DrawingSnapshot) -> Vec<DrawingMutation> { super::inverse::inverse(self, base) }
+    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
+    Ok({ super::inverse::inverse(self, base)? 
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Edit text", "Text bearbeiten") }
     fn target(&self) -> Vec<String> { vec![self.layer_id.clone()] }
 }

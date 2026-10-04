@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "error",
+          "transport"
+        ],
+        "properties": {
+          "path": {
+            "enum": [
+              "🧰️framework/🔨️modules/📡️replication/⚙️codec/🦀️.rs",
+              "🧰️framework/🔨️modules/📡️replication/🔢️scalar/🦀️.rs",
+              "🧰️framework/🔨️modules/📡️replication/⚙️codec/🧪️tests/🔬️unit/🦀️.rs",
+              "🧰️framework/🔨️modules/🎒️pack/🌱️value/🦀️.rs",
+              "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🦀️.rs",
+              "🧰️framework/🔨️modules/🎒️pack/🌱️value/🏭️schema/🦀️.rs",
+              "🧰️framework/🔨️modules/🎒️pack/🌱️value/🔎️scalar-witness/🦀️.rs",
+              "🧰️framework/🔨️modules/🎒️pack/📐️format/🛫️encoding/🦀️.rs"
+            ]
+          },
+          "error": {
+            "const": "PackRefusal"
+          },
+          "transport": {
+            "const": false
+          }
+        }
+      }
+    }
+  }
+}

@@ -17,7 +17,7 @@ pub fn diff(payload: &ResizeSourceFrame, base: &PresentationSnapshot) -> protoco
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Source frame width/height must be positive, got ({}, {}).", frame.width, frame.height), ["source".to_string(), "frame".to_string()]);
     }
     if source.frame == payload.new_frame {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Source frame is already unchanged.".to_string());
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Source frame is already unchanged.".to_string());
     }
     source.frame = payload.new_frame.clone();
     protocol::MutationOutcome::new(crate::diff::diff_set_presentation(&source, &tiles))

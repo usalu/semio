@@ -1,11 +1,6 @@
 (* ebnf mathematical.equation.mutations *)
-(* Below: ISO-14977-style mirror of the normative 📖️.grammar.semio (same production
-   names, kebab-case -> "space case"). This facet's .semio defines no header/body/payload
-   envelope (`start line`); the two lines above are preserved verbatim from the prior
-   identity fix for traceability but are not referenced below. *)
-document = header, body ;
-header = 'schema', space, 'mathematical.equation.mutations', newline ;
-
+(* ISO-14977 mirror of the normative 📖️.grammar.semio (same production names, kebab-case -> "space case"): one
+   `keyword key=value ...` line per EquationMutation variant, exactly what `print_op` writes. *)
 line = change graph directed
      | update graph algorithm
      | replace graph
@@ -19,30 +14,39 @@ line = change graph directed
      | replace points
      | insert point
      | remove point
-     | move point ;
-change graph directed = 'change-graph-directed', space, boolean ;
-update graph algorithm = 'update-graph-algorithm', space, text, space, [ text ] ;
-replace graph = 'replace-graph', space, block ;
-create node = 'create-node', space, id, space, text, space, number, space, number ;
-delete node = 'delete-node', space, id ;
-delete nodes = 'delete-nodes', space, block ;
-change node label = 'change-node-label', space, id, space, text ;
-move node = 'move-node', space, id, space, number, space, number ;
-connect nodes = 'connect-nodes', space, id, space, text, space, text ;
-disconnect nodes = 'disconnect-nodes', space, id ;
-replace points = 'replace-points', space, block ;
-insert point = 'insert-point', space, number, space, number, space, number ;
-remove point = 'remove-point', space, number ;
-move point = 'move-point', space, number, space, number, space, number ;
-id = octet, { octet } ;
+     | move points
+     | change coefficient
+     | move nodes
+     | set node positions
+     | set point positions ;
+change graph directed = 'change-graph-directed', space, 'new-directed=', boolean ;
+update graph algorithm = 'update-graph-algorithm', space, 'new-algorithm=', quoted, space, 'new-algorithm-seed=', optional quoted ;
+replace graph = 'replace-graph', space, 'graph=', quoted ;
+create node = 'create-node', space, 'id=', quoted, space, 'label=', quoted, space, 'x=', number, space, 'y=', number, [ space, 'index=', count ] ;
+delete node = 'delete-node', space, 'id=', quoted ;
+delete nodes = 'delete-nodes', space, 'ids=', quoted ;
+change node label = 'change-node-label', space, 'id=', quoted, space, 'new-label=', quoted ;
+move node = 'move-node', space, 'id=', quoted, space, 'x=', number, space, 'y=', number ;
+connect nodes = 'connect-nodes', space, 'id=', quoted, space, 'source=', quoted, space, 'target=', quoted, [ space, 'index=', count ] ;
+disconnect nodes = 'disconnect-nodes', space, 'id=', quoted ;
+replace points = 'replace-points', space, 'points=', points ;
+insert point = 'insert-point', space, 'index=', count, space, 'x=', number, space, 'y=', number ;
+remove point = 'remove-point', space, 'index=', count ;
+move points = 'move-points', space, 'indices=', quoted, space, 'dx=', number, space, 'dy=', number ;
+change coefficient = 'change-coefficient', space, 'label=', count, space, 'numer=', quoted, space, 'denom=', quoted ;
+move nodes = 'move-nodes', space, 'ids=', quoted, space, 'dx=', number, space, 'dy=', number ;
+set node positions = 'set-node-positions', space, 'positions=', quoted ;
+set point positions = 'set-point-positions', space, 'positions=', quoted ;
+quoted = '"', { escaped | octet - '"' }, '"' ;
+escaped = '\\', ( '\\' | '"' ) ;
+optional quoted = quoted | '-' ;
 number = octet, { octet } ;
-text = octet, { octet } ;
-boolean = 'true'
-     | 'false' ;
-block = '{', newline, octet, { octet }, '}' ;
+count = digit, { digit } ;
+boolean = 'true' | 'false' ;
+points = '[', [ pair, { ';', pair } ], ']' ;
+pair = number, ',', number ;
 
-(* Framework dialect-primitive terminals, given one concrete definition each for a
-   self-contained mirror (not defined in the .semio itself — ticket-reported deviation). *)
-newline = [ '\r' ], '\n' ;
+(* Framework dialect-primitive terminals. *)
+digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' ;
 octet = ? any single raw byte ? ;
 space = ' ' ;

@@ -1,0 +1,23 @@
+{
+  "$schema": "../../🧬️schema/🔣️framework-notices/🔣️.json",
+  "note": "📢️ The notices of the framework-owned refusal codes apps raise (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING design §20.12): a command the surface does not offer, malformed command input, a command that needs a selection, an unavailable kind, a target still in use, a command routed to another tool, a target that is gone or no longer fits the change, a gesture larger than the store records at once (`mutation.too-large`, design §20.5), and a window transient addressed without a window, to a closed window or to a window of another kind (`window-transient.*`, audit K3). The Rust kernel (`FRAMEWORK_FAULT_NOTICE_LABELS`) and its TypeScript twin carry exactly these rows in this order.",
+  "notices": [
+    { "code": "app.command.unsupported", "en": "This action is not available here.", "de": "Diese Aktion ist hier nicht verfügbar." },
+    { "code": "app.command.invalid", "en": "This action is not valid.", "de": "Diese Aktion ist ungültig." },
+    { "code": "app.command.invalid-args", "en": "The action's input is not valid.", "de": "Die Eingabe der Aktion ist ungültig." },
+    { "code": "app.command.invalid-payload", "en": "The action's data is not valid.", "de": "Die Daten der Aktion sind ungültig." },
+    { "code": "app.command.targets-required", "en": "Select at least one item first.", "de": "Zuerst mindestens ein Element auswählen." },
+    { "code": "app.command.kind-unavailable", "en": "This kind of item is not available.", "de": "Diese Art von Element ist nicht verfügbar." },
+    { "code": "app.command.target-in-use", "en": "The item is still in use.", "de": "Das Element wird noch verwendet." },
+    { "code": "app.command.tool-mismatch", "en": "This action does not belong to the active tool.", "de": "Diese Aktion gehört nicht zum aktiven Werkzeug." },
+    { "code": "mutation.target-missing", "en": "The target no longer exists.", "de": "Das Ziel existiert nicht mehr." },
+    { "code": "mutation.target-mismatch", "en": "The change does not fit the target's current state.", "de": "Die Änderung passt nicht zum aktuellen Zustand des Ziels." },
+    { "code": "mutation.too-large", "en": "This change is too large to record at once — split it into smaller steps.", "de": "Diese Änderung ist zu groß, um sie auf einmal aufzuzeichnen — in kleinere Schritte aufteilen." },
+    { "code": "plugin.media.schema-mismatch", "en": "This input is a {found} document, but only {expected} documents can be loaded here.", "de": "Diese Eingabe ist ein {found}-Dokument, hier lassen sich aber nur {expected}-Dokumente laden." },
+    { "code": "plugin.channel-mismatch", "en": "This plugin was built for app channel {guest}, but this app speaks app channel {host} — rebuild the plugin.", "de": "Dieses Plugin wurde für App-Kanal {guest} gebaut, diese App spricht aber App-Kanal {host} — Plugin neu bauen." },
+    { "code": "history-filter.unknown", "en": "This history filter is not known — choose one the history panel offers.", "de": "Dieser Verlaufsfilter ist unbekannt — einen im Verlaufsbereich angebotenen wählen." },
+    { "code": "window-transient.window-required", "en": "This needs an open window — focus a window first.", "de": "Dafür wird ein offenes Fenster benötigt — zuerst ein Fenster fokussieren." },
+    { "code": "window-transient.window-stale", "en": "The window is no longer open.", "de": "Das Fenster ist nicht mehr geöffnet." },
+    { "code": "window-transient.kind-unknown", "en": "This window cannot hold this state — use a window of the matching kind.", "de": "Dieses Fenster kann diesen Zustand nicht halten — ein Fenster der passenden Art verwenden." }
+  ]
+}

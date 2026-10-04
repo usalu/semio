@@ -58,15 +58,15 @@ pub mod io {
     use super::*;
 
     pub fn catalogue_to_json(catalogue: &crate::part_1::Catalogue) -> Result<String, NormError> {
-        Ok(pack::json::to_string_pretty(&pack::json::from_dsl_value(&dsl::ToValue::to_value(catalogue))))
+        Ok(semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(catalogue))))
     }
 
     pub fn catalogue_from_json(json: &str) -> Result<crate::part_1::Catalogue, NormError> {
-        pack::json::from_json_str(json).map_err(|e| NormError::InvalidValue { field: "catalogue".into(), reason: e.to_string() })
+        semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| NormError::InvalidValue { field: "catalogue".into(), reason: e.to_string() })
     }
 
     pub fn dictionary_to_json(dictionary: &crate::part_4::Dictionary) -> Result<String, NormError> {
-        Ok(pack::json::to_string_pretty(&pack::json::from_dsl_value(&dsl::ToValue::to_value(dictionary))))
+        Ok(semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(dictionary))))
     }
 }
 

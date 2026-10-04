@@ -61,9 +61,10 @@
       "document": "nakagin",
       "seed": 1,
       "requested": 100,
-      "turns": 771,
-      "budgetUs": 2000,
-      "coldRuns": 5
+      "turns": 1,
+      "budgetWork": 1000,
+      "stepWorkCeiling": 100000,
+      "appendOpsCeiling": 4096
     }
   },
   "cases": [

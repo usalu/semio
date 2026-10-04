@@ -1,6 +1,6 @@
 //! 🧪️ Strict semantic-key and delimiter laws for owned Store schema cursors.
 
-use super::tests::{drive_owned_schema, owned_schema_test_cursor, OWNED_SCHEMA_TEST_FIELDS};
+use super::tests::{OWNED_SCHEMA_TEST_FIELDS, drive_owned_schema, owned_schema_test_cursor};
 use super::*;
 
 //#region 🧪️Fixture

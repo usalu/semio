@@ -1,9 +1,14 @@
 {
   "$schema": "../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
+  "contractId": "rewriting-graph-catalog",
   "version": 1,
   "inputAreas": [
     "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting"
   ],
+  "policy": {
+    "excludedInputPaths": [],
+    "genericEmojiIdentities": []
+  },
   "shared": {
     "rustRegistry": "📇️registry/🦀️.rs",
     "typescriptIndex": "🟦️.ts",

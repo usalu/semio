@@ -12,5 +12,5 @@ fn detaches_and_can_restore_the_font_program() {
     let next = outcome.diff().apply(&base).unwrap();
     let descriptor = support::font_descriptors(&next)[0];
     assert!(support::font_program(&next, descriptor).is_none());
-    assert_eq!(<RemoveFontFile as MutationKind<PdfSnapshot, PdfEMutation>>::inverse(&mutation, &base).len(), 1);
+    assert_eq!(<RemoveFontFile as MutationKind<PdfSnapshot, PdfEMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").len(), 1);
 }

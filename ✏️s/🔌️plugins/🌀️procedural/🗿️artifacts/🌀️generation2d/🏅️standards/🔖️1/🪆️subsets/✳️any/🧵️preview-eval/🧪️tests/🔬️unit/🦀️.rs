@@ -69,7 +69,7 @@ fn a_hop_carries_the_window_id_and_kind_it_was_addressed_to() {
     assert_eq!(action, text(&hops["tickAction"]));
     let args = args.expect("an addressed hop carries args");
     for (key, value) in hops["args"].as_array().unwrap().iter().map(text).zip(["preview-1", "generation2d-preview"]) {
-        assert_eq!(args.get(key).and_then(dsl::DslValue::as_str), Some(value), "{key}");
+        assert_eq!(args.get(key).and_then(semio_framework_value::DslValue::as_str), Some(value), "{key}");
     }
 }
 
@@ -169,7 +169,7 @@ fn replay_latch_steps(sessions: &mut Sessions, windows: &[(String, &'static str,
             "inFlight" => session.note_window_extensions_in_flight(window, step["count"].as_u64().unwrap() as usize),
             "settle" => {
                 let output = Dictionary::new().insert("sum", NeuralValue::Atom(Atom::Integer(3)));
-                resolve_eval(&FlowEvalResolve { window_id: window.into(), window_kind_id: "generation2d-preview".into(), node_hash: 1, output_json: dsl::json::to_json_string(&output), ok: true, ..Default::default() }, session);
+                resolve_eval(&FlowEvalResolve { window_id: window.into(), window_kind_id: "generation2d-preview".into(), node_hash: 1, output_json: semio_framework_pack_json::to_json_string(&output), ok: true, ..Default::default() }, session);
                 output.retire_cold();
             }
             "abort" => {
@@ -264,8 +264,8 @@ fn every_run_effects_row_starts_finalizes_or_leaves_the_run() {
         for effect in &effects {
             let Effect::DispatchAction { action, args: Some(args), .. } = effect else { continue };
             match action.as_str() {
-                TOOL_RUN_START_ACTION_ID => assert_eq!(args.get(TOOL_RUN_ARG_TOOL_ID).and_then(dsl::DslValue::as_str), Some(PREVIEW_EVAL_TOOL_ID), "{id}: start names the tool"),
-                _ => assert_eq!(args.get(TOOL_RUN_ARG_RUN_ID).and_then(dsl::DslValue::as_str), run.as_ref().map(|run| run.identity.id.run.to_string()).as_deref(), "{id}: finalize names the run"),
+                TOOL_RUN_START_ACTION_ID => assert_eq!(args.get(TOOL_RUN_ARG_TOOL_ID).and_then(semio_framework_value::DslValue::as_str), Some(PREVIEW_EVAL_TOOL_ID), "{id}: start names the tool"),
+                _ => assert_eq!(args.get(TOOL_RUN_ARG_RUN_ID).and_then(semio_framework_value::DslValue::as_str), run.as_ref().map(|run| run.identity.id.run.to_string()).as_deref(), "{id}: finalize names the run"),
             }
         }
         sessions.retire();

@@ -37,12 +37,15 @@ impl MutationKind<PdfSnapshot, PdfX1Mutation> for SetPageSize {
         MutationOutcome::new(PdfDiff { pages: Some(PdfPagesDiff { modified: vec![PdfPageModified { index: 0, diff: PdfPageDiff { width: Some(self.width), height: Some(self.height), text: None } }], ..Default::default() }) })
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfX1Mutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfX1Mutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         if !self.valid(base) {
             return Vec::new();
         }
         vec![PdfX1Mutation::SetPageSize(SetPageSize { width: base.pages[0].width, height: base.pages[0].height })]
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set page size", "Seitengröße setzen")

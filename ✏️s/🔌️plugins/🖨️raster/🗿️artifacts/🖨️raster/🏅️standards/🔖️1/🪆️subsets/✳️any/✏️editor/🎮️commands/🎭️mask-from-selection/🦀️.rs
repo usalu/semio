@@ -8,7 +8,7 @@ use semio_framework_plugin::{ArtifactView, ConfigView, EditorApp, Emit, Fault};
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "mask-from-selection")]
 pub struct MaskFromSelection {
     pub layer_id: String,
@@ -94,7 +94,7 @@ impl ArtifactCommandWork<EditorApp<RasterPlayApp>> for MaskFromSelectionWork {
     fn extent(&self,command:&RasterCommand,_snapshot:&RasterSnapshot,_interaction:&protocol::InteractionState,_context:Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<RasterPlayApp>>>) -> Option<usize> {
         matches!(command,RasterCommand::MaskFromSelection(_)).then_some(1)
     }
-    fn step(&mut self,input:&ArtifactCommandInputs<'_,EditorApp<RasterPlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<RasterPlayApp>>,Fault> {
+    fn step(&mut self,input:&ArtifactCommandInputs<'_,EditorApp<RasterPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<RasterPlayApp>>,Fault> {
         if self.complete { return Err(Fault::from("raster.mask-work-complete")); }
         let RasterCommand::MaskFromSelection(command)=input.command else { return Err(Fault::from("raster.mask-work-mismatch")); };
         if let Some(encoder)=self.encoding.as_mut() {

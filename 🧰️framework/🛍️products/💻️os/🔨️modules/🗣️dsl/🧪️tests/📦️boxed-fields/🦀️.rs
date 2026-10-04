@@ -8,7 +8,7 @@ struct BoxedFieldRecord {
     count: u32,
 }
 
-#[derive(Clone, Debug, PartialEq, DslOps)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
 enum BoxedFieldOperation {
     #[dsl(key = "replace")]
     Replace {
@@ -17,7 +17,7 @@ enum BoxedFieldOperation {
     },
 }
 
-#[derive(Clone, Debug, PartialEq, DslOps)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
 enum InlineFieldOperation {
     #[dsl(key = "replace")]
     Replace {

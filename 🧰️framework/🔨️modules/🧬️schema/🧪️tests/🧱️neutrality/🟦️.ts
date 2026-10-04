@@ -159,7 +159,7 @@ test("portable composition state and three catalogs match independent Node and A
       entries = result.entries;
       decisions.push({ actor: actorId, accepted: result.accepted });
     }
-    expect({ decisions, entries }, row.id).toEqual(row.expected);
+    expect<unknown>({ decisions, entries }, row.id).toEqual(row.expected);
     expect(oracle.concurrentSchedules[index], row.id).toEqual({ id: row.id, ...row.expected });
   }
   expect(corpus.catalogContract.nativeProof).toBe("pending");

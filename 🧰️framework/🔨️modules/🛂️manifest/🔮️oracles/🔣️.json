@@ -1,0 +1,32 @@
+{
+  "$schema": "../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🔮️ This owner's contribution to the repository test platform: the third-party references its own laws judge against.",
+  "oracles": [
+    {
+      "id": "manifest-number-facets-decimal-js",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "decimal.js",
+      "version": "10.6.0",
+      "engine": {
+        "family": "decimal-js",
+        "implementation": "decimal.js Decimal",
+        "version": "10.6.0"
+      },
+      "capabilities": [
+        "manifest.number-facets"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://mikemcl.github.io/decimal.js",
+      "rationale": "The independent decimal oracle of `🧪️tests/🧪️number-facets` (staged-argument number facets) over `🧫️fixtures/🧫️number-facets`: it recomputes every refusal's bound in display units (`value × displayFactor` to twelve significant digits) beside the shown unit."
+    }
+  ],
+  "noOracleDecisions": []
+}

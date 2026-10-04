@@ -4,7 +4,7 @@ mod tests {
     /// `fem2d_document_text_round_trips_through_the_store`.
     #[test]
     fn fem2d_store_type_alias_constructs_from_an_empty_envelope() {
-        let mut store = semio_framework_plugin::resolve_ready(crate::standards::v1::subsets::any::schema::mutations::Fem2dStore::new(store::create_document_envelope(
+        let mut store = ::semio_framework_async::poll::resolve_ready(crate::standards::v1::subsets::any::schema::mutations::Fem2dStore::new(store::create_document_envelope(
             crate::FEM_2D_SCHEMA,
             "fem2d",
             crate::standards::v1::subsets::any::schema::empty_fem2d_snapshot(),

@@ -90,3 +90,40 @@ test("Framework intrinsic owner preserves unsigned words, NaN identity and dupli
  let deep:unknown={kind:"null"};for(let i=0;i<fixture.deepLevels;i++)deep={kind:"array",items:[deep]};let restored=parser(deep) as {kind:string;items?:unknown[]};for(let i=0;i<fixture.deepLevels;i++)restored=restored.items![0] as typeof restored;expect(restored.kind).toBe("null");
  expect(()=>parser({kind:"signed",value:9223372036854775808n})).toThrow();const cycle:{kind:"array";items:unknown[]}={kind:"array",items:[]};cycle.items.push(cycle);expect(()=>parser(cycle)).toThrow();
 });
+
+import Ajv from "ajv";
+import requestContract from "../../🧫️fixtures/🪶️sqlite/💰️backing/🔬️requests/🔣️.json";
+import requestContractSchema from "../../🧫️fixtures/🪶️sqlite/💰️backing/🔬️requests/🧬️schema/🔣️.json";
+test("Forms concrete ownership contract retains all literal IEEE words and independently queryable domains",async()=>{
+ const validate=new Ajv({strict:true}).compile(requestContractSchema);expect(validate(requestContract),JSON.stringify(validate.errors)).toBe(true);
+ expect(fixture.values.filter(value=>value.kind==="float").map(value=>value.bits)).toEqual(requestContract.ieeeWords);
+ const{to,from}=codec(),owner=specimen(),database:SqliteDatabase=await to(owner);expect(Object.keys(owner)).toEqual(requestContract.fieldOrder);expect(database.tables).toHaveLength(requestContract.tableCount);
+ for(const phase of requestContract.phases){await expect(phase==="projectSnapshot"?to(owner,{maxAllocationBytes:requestContract.zeroOwnershipBytes}):from(database,{maxAllocationBytes:requestContract.zeroOwnershipBytes})).rejects.toHaveProperty("kind",requestContract.refusalKind);}
+ const oracle=Database.deserialize(await exportSqliteDatabase(database));try{
+  const words=(oracle.query("SELECT printf('%016llx',value_ieee754_bits) AS bits FROM forms_float ORDER BY id").all()as{bits:string}[]).map(value=>value.bits);expect([...new Set(words)]).toEqual(requestContract.ieeeWords);
+  expect((oracle.query("SELECT DISTINCT kind FROM forms_value ORDER BY kind").all()as{kind:string}[]).map(value=>value.kind)).toEqual([...requestContract.intrinsicKinds].sort());
+  expect((oracle.query("SELECT DISTINCT kind FROM forms_condition ORDER BY kind").all()as{kind:string}[]).map(value=>value.kind)).toEqual([...requestContract.conditionKinds].sort());
+  expect(oracle.query("PRAGMA foreign_key_check").all()).toEqual([]);
+  for(const word of requestContract.ieeeWords){const buffer=Buffer.alloc(8);buffer.writeBigUInt64BE(BigInt("0x"+word));const view=new DataView(buffer.buffer,buffer.byteOffset,8);expect(view.getBigUint64(0,false)).toBe(BigInt("0x"+word));const value=view.getFloat64(0,false);if(!Number.isNaN(value)){const out=Buffer.alloc(8);out.writeDoubleBE(value);expect(out.toString("hex")).toBe(word);}}
+  expect(await from(await importSqliteDatabase(oracle.serialize()))).toEqual(owner);
+ }finally{oracle.close();}
+});
+
+import preflightContract from "../../🧫️fixtures/🪶️sqlite/📏️preflight/🔣️.json";
+import whitespaceContract from "../../🧫️fixtures/🪶️sqlite/📏️preflight/🔤️whitespace/🔣️.json";
+import whitespaceContractSchema from "../../🧫️fixtures/🪶️sqlite/📏️preflight/🔤️whitespace/🧬️schema/🔣️.json";
+test("Forms borrowed whitespace kind completes bounded UTF-8 census before semantic refusal",()=>{
+ const validate=new Ajv({strict:true}).compile(whitespaceContractSchema);expect(validate(whitespaceContract),JSON.stringify(validate.errors)).toBe(true);
+ const kind=whitespaceContract.kindUnit.repeat(whitespaceContract.repeat),bytes=Buffer.byteLength(kind,"utf8");expect(bytes).toBe(whitespaceContract.utf8Bytes);expect(new TextEncoder().encode(kind).length).toBe(bytes);expect(Array.from(kind)).toHaveLength(whitespaceContract.unicodeScalars);expect(kind.trim()).toBe("");expect((kind+"x").trim()).toBe("x");
+ const oracle=new Database(":memory:");try{oracle.exec("CREATE TABLE borrowed_kind(kind TEXT NOT NULL)");oracle.run("INSERT INTO borrowed_kind VALUES(?)",[kind]);expect(oracle.query("SELECT length(CAST(kind AS BLOB)) AS bytes,length(kind) AS scalars FROM borrowed_kind").get()).toEqual({bytes,scalars:whitespaceContract.unicodeScalars});expect(oracle.query("SELECT kind FROM borrowed_kind").get()).toEqual({kind});}finally{oracle.close();}
+ expect(whitespaceContract.cancelAfterBytes).toBeGreaterThan(0);expect(whitespaceContract.cancelAfterBytes).toBeLessThan(bytes);expect(whitespaceContract.ownedScanBytes).toBe(0);expect(whitespaceContract.encodings).toEqual(["binary","text"]);
+});
+import preflightContractSchema from "../../🧫️fixtures/🪶️sqlite/📏️preflight/🧬️schema/🔣️.json";
+test("Forms borrowed preflight distinguishes prospective wire ceilings from paid scratch ownership",async()=>{
+ const validate=new Ajv({strict:true}).compile(preflightContractSchema);expect(validate(preflightContract),JSON.stringify(validate.errors)).toBe(true);
+ const contract=preflightContract as {literalUtf8Bytes:number;copiedOwnerFields:boolean;forecastCeilings:string[];ownedAllowance:string;scratchOwnership:string;encodings:string[];tableCount:number;censusAuthority:string;literalGrowthRequestDelta:number};
+ const literal=fixture.unicodeText.repeat(fixture.unicodeRepeat),bytes=Buffer.byteLength(literal,"utf8");expect(bytes).toBe(contract.literalUtf8Bytes);expect(new TextEncoder().encode(literal).byteLength).toBe(bytes);
+ const oracle=new Database(":memory:");try{oracle.exec("CREATE TABLE borrowed_literal(title TEXT NOT NULL)");oracle.run("INSERT INTO borrowed_literal VALUES(?)",[literal]);expect(oracle.query("SELECT length(CAST(title AS BLOB)) AS bytes FROM borrowed_literal").get()).toEqual({bytes});expect(oracle.query("SELECT title FROM borrowed_literal").get()).toEqual({title:literal});}finally{oracle.close();}
+ const owner=specimen();owner.title=literal;const database:SqliteDatabase=await codec().to(owner);expect(database.tables).toHaveLength(contract.tableCount);const physical=Database.deserialize(await exportSqliteDatabase(database));try{expect(physical.query("SELECT length(CAST(title AS BLOB)) AS bytes FROM forms_document").get()).toEqual({bytes});const union=database.tables.map(table=>'SELECT COUNT(*) AS n FROM "'+table.name+'"').join(" UNION ALL ");expect(physical.query("SELECT SUM(n) AS rows FROM ("+union+")").get()).toEqual({rows:database.tables.reduce((count,table)=>count+table.rows.length,0)});expect(physical.query("PRAGMA foreign_key_check").all()).toEqual([]);}finally{physical.close();}expect(contract.censusAuthority).toBe("allStoredRows");expect(contract.literalGrowthRequestDelta).toBe(0);
+ expect(contract.copiedOwnerFields).toBe(false);expect(contract.forecastCeilings).not.toContain(contract.ownedAllowance);expect(contract.scratchOwnership).toBe("paidFrontiersOnly");expect(contract.encodings).toEqual(["binary","text"]);
+});

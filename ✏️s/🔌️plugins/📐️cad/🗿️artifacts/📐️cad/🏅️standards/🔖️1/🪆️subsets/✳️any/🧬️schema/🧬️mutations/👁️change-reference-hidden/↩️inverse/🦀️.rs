@@ -4,11 +4,14 @@ use crate::mutations::CadMutation;
 use crate::CadSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &ChangeReferenceHidden, base: &CadSnapshot) -> Vec<CadMutation> {
+pub fn inverse(payload: &ChangeReferenceHidden, base: &CadSnapshot) -> Result<Vec<CadMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     base.references_by_model_definition_id
         .get(&payload.model_definition_id)
         .and_then(|references| references.iter().find(|reference| reference.id == payload.reference_id))
         .map(|reference| vec![CadMutation::ChangeReferenceHidden(ChangeReferenceHidden { model_definition_id: payload.model_definition_id.clone(), reference_id: payload.reference_id.clone(), new_hidden: reference.hidden })])
         .unwrap_or_default()
+
+    })())
 }
 //#endregion 🔖️Inverse

@@ -64,7 +64,7 @@ impl ArtifactSerializer for SemioMeshToPly {
     const INTO: Dialect = INTO_DIALECT;
 
     async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        let (has_normals, has_uvs, has_colors) = check_uniform_presence(&from.meshes).map_err(|e| store::PackError::Schema(format!("SemioMeshToPly: {e}")))?;
+        let (has_normals, has_uvs, has_colors) = check_uniform_presence(&from.meshes).map_err(|e| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("SemioMeshToPly: {e}"))))?;
 
         let mut properties = vec![PlyProperty::Scalar { name: "x".into(), kind: PlyScalarType::Float }, PlyProperty::Scalar { name: "y".into(), kind: PlyScalarType::Float }, PlyProperty::Scalar { name: "z".into(), kind: PlyScalarType::Float }];
         if has_normals {
@@ -89,29 +89,29 @@ impl ArtifactSerializer for SemioMeshToPly {
         for mesh in &from.meshes {
             for prim in &mesh.primitives {
                 if !matches!(prim.topology, SemioTopology::Triangles | SemioTopology::Points) {
-                    return Err(store::PackError::Schema(format!("SemioMeshToPly: primitive {:?} has topology {:?}; this codec only exports Triangles/Points", prim.id, prim.topology)));
+                    return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, format!("SemioMeshToPly: primitive {:?} has topology {:?}; this codec only exports Triangles/Points", prim.id, prim.topology))));
                 }
                 if prim.positions.is_empty() {
-                    return Err(store::PackError::Schema(format!("SemioMeshToPly: primitive {:?} has no positions", prim.id)));
+                    return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("SemioMeshToPly: primitive {:?} has no positions", prim.id))));
                 }
                 let base = vertex_rows.len() as u32;
                 for (i, p) in prim.positions.iter().enumerate() {
                     let mut values = vec![PlyValue::Float(p.x as f32), PlyValue::Float(p.y as f32), PlyValue::Float(p.z as f32)];
                     if has_normals {
-                        let n = prim.normals.get(i).ok_or_else(|| store::PackError::Schema(format!("SemioMeshToPly: primitive {:?} missing normal at index {i}", prim.id)))?;
+                        let n = prim.normals.get(i).ok_or_else(|| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("SemioMeshToPly: primitive {:?} missing normal at index {i}", prim.id))))?;
                         values.push(PlyValue::Float(n.x as f32));
                         values.push(PlyValue::Float(n.y as f32));
                         values.push(PlyValue::Float(n.z as f32));
                     }
                     if has_colors {
-                        let c = prim.colors.get(i).ok_or_else(|| store::PackError::Schema(format!("SemioMeshToPly: primitive {:?} missing color at index {i}", prim.id)))?;
+                        let c = prim.colors.get(i).ok_or_else(|| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("SemioMeshToPly: primitive {:?} missing color at index {i}", prim.id))))?;
                         values.push(PlyValue::UChar(clamp_u8(c.r)));
                         values.push(PlyValue::UChar(clamp_u8(c.g)));
                         values.push(PlyValue::UChar(clamp_u8(c.b)));
                         values.push(PlyValue::UChar(clamp_u8(c.a)));
                     }
                     if has_uvs {
-                        let uv = prim.uvs.get(i).ok_or_else(|| store::PackError::Schema(format!("SemioMeshToPly: primitive {:?} missing uv at index {i}", prim.id)))?;
+                        let uv = prim.uvs.get(i).ok_or_else(|| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("SemioMeshToPly: primitive {:?} missing uv at index {i}", prim.id))))?;
                         values.push(PlyValue::Float(uv.u as f32));
                         values.push(PlyValue::Float(uv.v as f32));
                     }
@@ -121,12 +121,12 @@ impl ArtifactSerializer for SemioMeshToPly {
                 if prim.topology == SemioTopology::Triangles {
                     let corner_indices: Vec<u32> = if !prim.indices.is_empty() {
                         if prim.indices.len() % 3 != 0 {
-                            return Err(store::PackError::Schema(format!("SemioMeshToPly: primitive {:?} indices length {} is not a multiple of 3", prim.id, prim.indices.len())));
+                            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("SemioMeshToPly: primitive {:?} indices length {} is not a multiple of 3", prim.id, prim.indices.len()))));
                         }
                         prim.indices.clone()
                     } else {
                         if prim.positions.len() % 3 != 0 {
-                            return Err(store::PackError::Schema(format!("SemioMeshToPly: non-indexed primitive {:?} has {} positions, not a multiple of 3", prim.id, prim.positions.len())));
+                            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("SemioMeshToPly: non-indexed primitive {:?} has {} positions, not a multiple of 3", prim.id, prim.positions.len()))));
                         }
                         (0..prim.positions.len() as u32).collect()
                     };
@@ -138,10 +138,10 @@ impl ArtifactSerializer for SemioMeshToPly {
             }
         }
 
-        let vertex_count = u64::try_from(vertex_rows.len()).map_err(|_| store::PackError::Schema("SemioMeshToPly: vertex count exceeds u64".into()))?;
+        let vertex_count = u64::try_from(vertex_rows.len()).map_err(|_| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "SemioMeshToPly: vertex count exceeds u64")))?;
         let mut elements = vec![PlyElement { name: "vertex".into(), count: vertex_count, properties, rows: vertex_rows }];
         if !face_rows.is_empty() {
-            let face_count = u64::try_from(face_rows.len()).map_err(|_| store::PackError::Schema("SemioMeshToPly: face count exceeds u64".into()))?;
+            let face_count = u64::try_from(face_rows.len()).map_err(|_| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "SemioMeshToPly: face count exceeds u64")))?;
             elements.push(PlyElement { name: "face".into(), count: face_count, properties: vec![PlyProperty::List { name: "vertex_indices".into(), count_kind: PlyScalarType::UChar, value_kind: PlyScalarType::Int }], rows: face_rows });
         }
 

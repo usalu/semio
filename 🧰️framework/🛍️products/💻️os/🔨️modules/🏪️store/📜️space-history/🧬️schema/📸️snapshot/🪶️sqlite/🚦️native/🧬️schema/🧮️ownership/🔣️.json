@@ -1,0 +1,209 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.os.space-history.sqlite.native-ownership/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "nativeLaw",
+    "encodings",
+    "zeroPhysical",
+    "cumulative",
+    "rowRefusal",
+    "cancellation",
+    "output"
+  ],
+  "properties": {
+    "schema": {
+      "const": "space-history.sqlite.native-ownership/v1"
+    },
+    "nativeLaw": {
+      "const": "sqlite_snapshot_framework_space_history_native_input_retained_materialization_uses_same_caller_ledger"
+    },
+    "encodings": {
+      "const": [
+        "binary",
+        "text"
+      ]
+    },
+    "zeroPhysical": {
+      "const": {
+        "maximumBytes": 0,
+        "expectedKind": "ownershipLimit",
+        "expectedCharge": 0
+      }
+    },
+    "cumulative": {
+      "const": {
+        "ceilingNumerator": 3,
+        "ceilingDenominator": 2,
+        "expectedKind": "ownershipLimit",
+        "ledgers": "positiveEqual"
+      }
+    },
+    "rowRefusal": {
+      "const": {
+        "maximumRows": 0,
+        "expectedKind": "ownershipLimit",
+        "ledgers": "positiveEqual"
+      }
+    },
+    "cancellation": {
+      "const": {
+        "minimumCompleted": 65536,
+        "expectedKind": "canceled",
+        "ledgers": "positiveEqual"
+      }
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "nativeLaw",
+        "encodings",
+        "phase",
+        "requestAccounting",
+        "ledger",
+        "source",
+        "zeroPhysical",
+        "cumulative",
+        "cancellation",
+        "literal",
+        "appendRequests",
+        "retirement"
+      ],
+      "properties": {
+        "schema": {
+          "const": "space-history.sqlite.native-output/v1"
+        },
+        "nativeLaw": {
+          "const": "sqlite_snapshot_framework_space_history_native_output_full_requests_and_cumulative_owner_are_admitted"
+        },
+        "encodings": {
+          "const": [
+            "binary",
+            "text"
+          ]
+        },
+        "phase": {
+          "const": "encodeNative"
+        },
+        "requestAccounting": {
+          "const": "fullAllocatorRequests"
+        },
+        "ledger": {
+          "const": "sameCallerAllocation"
+        },
+        "source": {
+          "const": "completeUnchangedOwner"
+        },
+        "zeroPhysical": {
+          "const": {
+            "maximumBytes": 0,
+            "expectedKind": "ownershipLimit",
+            "expectedCharge": 0
+          }
+        },
+        "cumulative": {
+          "const": {
+            "ceilingNumerator": 3,
+            "ceilingDenominator": 2,
+            "expectedKind": "ownershipLimit"
+          }
+        },
+        "cancellation": {
+          "const": {
+            "minimumCompleted": 65536,
+            "expectedKind": "canceled",
+            "retainedDebit": "positiveNoRefund"
+          }
+        },
+        "literal": {
+          "const": {
+            "unit": "日本𐀀",
+            "repeat": 32768,
+            "utf8Bytes": 327680
+          }
+        },
+        "appendRequests": {
+          "const": {
+            "schema": "native.output.append-requests/v1",
+            "fragments": [
+              "",
+              "語",
+              "x",
+              "",
+              "\u0000é!"
+            ],
+            "utf8Bytes": 8,
+            "fullReplacementRequests": [
+              3,
+              4,
+              8
+            ],
+            "replacementDebit": 15,
+            "reusedCapacity": 16,
+            "reusedRequestBytes": 0,
+            "refusal": "ownershipLimit",
+            "allocationRefusal": "allocationFailed",
+            "retirement": "noRefund"
+          }
+        },
+        "retirement": {
+          "const": {
+            "schema": "history.native.temporary-retirement/v1",
+            "sourceCorpus": "intrinsic-media-wire-v1",
+            "nativeLaw": "sqlite_snapshot_framework_space_history_native_temporary_retirement_requests_no_backing_for_every_intrinsic_kind",
+            "kinds": [
+              "null",
+              "bool",
+              "uint",
+              "int",
+              "float",
+              "string",
+              "bytes",
+              "array",
+              "object"
+            ],
+            "containers": [
+              "empty",
+              "orderedDuplicateMembers",
+              "deepArray",
+              "deepObject",
+              "longBranch"
+            ],
+            "depth": 256,
+            "longBranch": {
+              "unit": "é語🧾",
+              "repeat": 14564,
+              "utf8Bytes": 131076
+            },
+            "requestBytes": 0,
+            "releasedBytes": "completeBorrowedCapacityCensus",
+            "cleanup": "mandatoryAfterCancellation",
+            "temporaryLinks": "reuseVacatedOwnedSlots",
+            "recursiveDropFallback": false,
+            "partial": {
+              "schema": "history.native.partial-retirement/v1",
+              "grants": [
+                0,
+                1,
+                3,
+                255,
+                256,
+                "complete"
+              ],
+              "work": "oneDestructiveTransitionPerUnit",
+              "requests": 0,
+              "released": "completeBorrowedCapacityCensus",
+              "zeroGrant": "retainsEveryOwnedCapacity",
+              "drop": "mandatoryCompleteReleaseAfterCancellation",
+              "nativeLaw": "sqlite_snapshot_framework_space_history_native_temporary_retirement_partial_grants_and_drop_release_every_owned_capacity"
+            }
+          }
+        }
+      }
+    }
+  }
+}

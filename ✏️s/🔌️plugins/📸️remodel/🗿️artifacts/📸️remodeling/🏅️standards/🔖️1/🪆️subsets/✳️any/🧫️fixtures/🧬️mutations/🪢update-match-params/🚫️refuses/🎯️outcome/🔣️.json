@@ -1,5 +1,6 @@
 {
   "status": "rejected",
   "code": "mutation.invariant",
+  "invariant": "unit-ratio-test",
   "path": []
 }

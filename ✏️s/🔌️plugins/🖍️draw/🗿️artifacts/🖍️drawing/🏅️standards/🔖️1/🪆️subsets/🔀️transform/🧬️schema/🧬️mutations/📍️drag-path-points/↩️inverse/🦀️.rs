@@ -3,7 +3,8 @@ use crate::mutations::{update_path_geometry, DrawingMutation};
 use crate::{DrawingLayerNode, DrawingSnapshot};
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::mutation::DragPathPoints, base: &DrawingSnapshot) -> Vec<DrawingMutation> {
+pub fn inverse(payload: &super::mutation::DragPathPoints, base: &DrawingSnapshot) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     super::diff::diff(payload, base)
         .diff()
         .layers
@@ -14,5 +15,7 @@ pub fn inverse(payload: &super::mutation::DragPathPoints, base: &DrawingSnapshot
             _ => None,
         })
         .collect()
+
+    })())
 }
 //#endregion 🔖️Inverse

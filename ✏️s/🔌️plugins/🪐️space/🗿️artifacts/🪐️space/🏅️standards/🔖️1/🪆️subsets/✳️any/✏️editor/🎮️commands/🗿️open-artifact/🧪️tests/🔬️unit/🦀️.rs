@@ -11,7 +11,7 @@ async fn open_artifact_relays_with_document_and_space_ids() {
     match &result.requested_effects[0] {
         Effect::ReplayShellCommand { action_id, args } => {
             assert_eq!(action_id, "os.open-artifact");
-            let args = pack::json_from_dsl_value(&args.clone().unwrap());
+            let args = semio_framework_pack_json::from_dsl_value(&args.clone().unwrap());
             assert_eq!(args.get("documentId").and_then(|v| v.as_str()), Some(id.as_str()));
             assert_eq!(args.get("schema").and_then(|v| v.as_str()), Some("s.draw.draw"));
             assert!(args.get("role").is_none(), "role is omitted so the shell resolves OpeningPreferences");

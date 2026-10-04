@@ -2,7 +2,7 @@ use super::super::{AddInput, BindInput, WorkflowDiff, WorkflowMutation, Workflow
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "remove-input")]
@@ -18,14 +18,17 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for RemoveInput 
     fn diff(&self, _base: &WorkflowSnapshot) -> protocol::MutationOutcome<WorkflowDiff> {
         protocol::MutationOutcome::new(WorkflowDiff::RemoveInput { input_id: self.input_id.clone() })
     }
-    fn inverse(&self, base: &WorkflowSnapshot) -> Vec<WorkflowMutation> {
+    fn inverse(&self, base: &WorkflowSnapshot) -> Result<Vec<WorkflowMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         {
             let Some(input) = base.inputs.iter().find(|input| input.id == self.input_id) else { return Vec::new() };
             let mut ops: Vec<WorkflowMutation> = base.input_bindings.iter().filter(|binding| binding.input_id == self.input_id).map(|binding| WorkflowMutation::BindInput(BindInput { binding: binding.clone() })).collect();
             ops.push(WorkflowMutation::AddInput(AddInput { input: input.clone() }));
             ops
         }
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove workflow input {}", self.input_id), &format!("Arbeitsablaufeingabe {} entfernen", self.input_id))
     }

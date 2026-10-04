@@ -3,7 +3,7 @@
 use crate::document::{
     AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef,
 };
-use crate::snapshot::{ColdFormedSheet, AluminiumShell, AluminiumConnection, AluminiumMaterial, AluminiumMember, AluminiumSection, FatigueDetail, FireScenario};
+use crate::snapshot::{ColdFormedSheet, AluminiumShell, AluminiumConnection, AluminiumMaterial, AluminiumMember, AluminiumSection, FatigueDetail, FireScenario, SupportCondition};
 use crate::En1999Snapshot;
 use framework_schema::ArtifactSchema;
 
@@ -121,7 +121,7 @@ pub mod derived_construction {
     #[derive(Clone, Debug, Default)]
     pub struct En1999BuilderConstruction {
         snapshot: En1999Snapshot,
-        diagnostics: Vec<dsl::Diagnostic>,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
     }
 
     impl ArtifactBuilder for En1999BuilderConstruction {
@@ -134,7 +134,7 @@ pub mod derived_construction {
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(Self::from_snapshot(<En1999Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
@@ -144,7 +144,7 @@ pub mod derived_construction {
             let outcome = <En1999Mutation as protocol::Mutation<En1999Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("build.apply", dsl::TextSpan::at(1, 1), error.to_string())),
+                Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
@@ -153,7 +153,7 @@ pub mod derived_construction {
             self.snapshot = snapshot;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -195,14 +195,14 @@ pub mod derived_analysis {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <En1999Snapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }
@@ -344,12 +344,11 @@ pub mod part_en1990 {
         pub m_z_ed: f64,
     }
 
-    fn span_factor(support: &str) -> (f64, f64) {
-        // (moment coeff for wL², shear coeff for wL)
+    fn span_factor(support: SupportCondition) -> (f64, f64) {
         match support {
-            "cantilever" => (0.5, 1.0),
-            "continuous" => (1.0 / 12.0, 0.5),
-            _ => (1.0 / 8.0, 0.5), // simplySupported
+            SupportCondition::Cantilever => (0.5, 1.0),
+            SupportCondition::Continuous => (1.0 / 12.0, 0.5),
+            SupportCondition::SimplySupported => (1.0 / 8.0, 0.5),
         }
     }
 
@@ -357,13 +356,13 @@ pub mod part_en1990 {
         let l = member.length.max(1e-6);
         let w = a.g_k_line + a.q_k_line;
         if a.source == "udl" {
-            let (km, kv) = span_factor(&member.support);
+            let (km, kv) = span_factor(member.support);
             (a.n_k, a.v_y_k, w * l * kv + a.v_z_k, w * l * l * km + a.m_y_k, a.m_z_k)
         } else {
-            let (km_p, kv_p) = match member.support.as_str() {
-                "cantilever" => (1.0, 1.0),
-                "continuous" => (1.0 / 8.0, 0.5),
-                _ => (1.0 / 4.0, 0.5),
+            let (km_p, kv_p) = match member.support {
+                SupportCondition::Cantilever => (1.0, 1.0),
+                SupportCondition::Continuous => (1.0 / 8.0, 0.5),
+                SupportCondition::SimplySupported => (1.0 / 4.0, 0.5),
             };
             (a.n_k, a.v_y_k, w * kv_p + a.v_z_k, w * l * km_p + a.m_y_k, a.m_z_k)
         }
@@ -537,7 +536,7 @@ pub mod part_en1990 {
             section_id: String::new(),
             material_id: conn.material_id.clone(),
             length: 1.0,
-            support: "simplySupported".into(),
+            support: SupportCondition::SimplySupported,
             buckling_length_y: 1.0,
             buckling_length_z: 1.0,
             buckling_length_t: 1.0,
@@ -556,7 +555,7 @@ pub mod part_en1990 {
             section_id: String::new(),
             material_id: conn.material_id.clone(),
             length: 1.0,
-            support: "simplySupported".into(),
+            support: SupportCondition::SimplySupported,
             buckling_length_y: 1.0,
             buckling_length_z: 1.0,
             buckling_length_t: 1.0,
@@ -575,7 +574,7 @@ pub mod part_en1990 {
             section_id: String::new(),
             material_id: sheet.material_id.clone(),
             length: sheet.span.max(1e-6),
-            support: "simplySupported".into(),
+            support: SupportCondition::SimplySupported,
             buckling_length_y: sheet.span.max(1e-6),
             buckling_length_z: sheet.span.max(1e-6),
             buckling_length_t: sheet.span.max(1e-6),
@@ -594,7 +593,7 @@ pub mod part_en1990 {
             section_id: String::new(),
             material_id: shell.material_id.clone(),
             length: shell.length.max(1e-6),
-            support: "simplySupported".into(),
+            support: SupportCondition::SimplySupported,
             buckling_length_y: shell.length.max(1e-6),
             buckling_length_z: shell.length.max(1e-6),
             buckling_length_t: shell.length.max(1e-6),
@@ -613,7 +612,7 @@ pub mod part_en1990 {
             section_id: String::new(),
             material_id: sheet.material_id.clone(),
             length: sheet.span.max(1e-6),
-            support: "simplySupported".into(),
+            support: SupportCondition::SimplySupported,
             buckling_length_y: sheet.span.max(1e-6),
             buckling_length_z: sheet.span.max(1e-6),
             buckling_length_t: sheet.span.max(1e-6),
@@ -632,7 +631,7 @@ pub mod part_en1990 {
             section_id: String::new(),
             material_id: shell.material_id.clone(),
             length: shell.length.max(1e-6),
-            support: "simplySupported".into(),
+            support: SupportCondition::SimplySupported,
             buckling_length_y: shell.length.max(1e-6),
             buckling_length_z: shell.length.max(1e-6),
             buckling_length_t: shell.length.max(1e-6),
@@ -1032,7 +1031,7 @@ fn actions_digest(actions: &[crate::snapshot::MemberAction]) -> String {
 fn member_support_digest(member: &crate::snapshot::AluminiumMember) -> String {
     format!(
         "support={sup};c1={c1:.4};LcrY={ly:.4};LcrZ={lz:.4};LcrT={lt:.4};Llt={llt:.4};restrained={r}",
-        sup=member.support, c1=member.c1, ly=member.buckling_length_y, lz=member.buckling_length_z,
+        sup=member.support.code(), c1=member.c1, ly=member.buckling_length_y, lz=member.buckling_length_z,
         lt=member.buckling_length_t, llt=member.ltb_length, r=member.restrained_ltb
     )
 }
@@ -1170,10 +1169,10 @@ pub fn check_member(
     let path_m = format!("members[id={}].actions[id={}].mYK", member.id, action_id);
     let path_mz = format!("members[id={}].actions[id={}].mZK", member.id, action_id);
     let path_vy = format!("members[id={}].actions[id={}].vYK", member.id, action_id);
-    let k_sup = match member.support.as_str() {
-        "continuous" => 0.7,
-        "cantilever" => 2.0,
-        _ => 1.0,
+    let k_sup = match member.support {
+        SupportCondition::Continuous => 0.7,
+        SupportCondition::Cantilever => 2.0,
+        SupportCondition::SimplySupported => 1.0,
     };
     let l_cr_y = k_sup * if member.buckling_length_y > 0.0 { member.buckling_length_y } else { member.length };
     let l_cr_z = k_sup * if member.buckling_length_z > 0.0 { member.buckling_length_z } else { member.length };

@@ -1932,7 +1932,7 @@ pub mod forms_bridge {
                 description: None,
                 required: None,
                 placeholder: None,
-                default: Some(crate::os_dsl::DslValue::float(*value)),
+                default: Some(semio_framework_value::DslValue::float(*value)),
                 min: Some(*min),
                 max: Some(*max),
                 step: Some(*step),
@@ -2001,7 +2001,7 @@ pub mod forms_bridge {
                     description: None,
                     required: None,
                     placeholder: None,
-                    default: Some(crate::os_dsl::DslValue::String(name.clone())),
+                    default: Some(semio_framework_value::DslValue::String(name.clone())),
                     min: None,
                     max: None,
                     step: None,
@@ -2046,8 +2046,8 @@ pub mod forms_bridge {
         }
     }
 
-    pub fn apply_generation_values_to_host_snapshot(fixture_json: &str, values: &crate::os_pack::json::Object) -> String {
-        let Ok(mut root) = crate::os_pack::json::parse(fixture_json) else {
+    pub fn apply_generation_values_to_host_snapshot(fixture_json: &str, values: &semio_framework_pack_json::Object) -> String {
+        let Ok(mut root) = semio_framework_pack_json::parse(fixture_json, semio_framework_pack_json::JsonMemberPolicy::Reject) else {
             return fixture_json.to_string();
         };
         let Some(widgets) = root.get_mut("widgets").and_then(|entry| entry.as_array_mut()) else {
@@ -2068,28 +2068,28 @@ pub mod forms_bridge {
             match patch_kind {
                 Some(WidgetPatchKind::InputSlider) => {
                     if let Some(number) = value.as_f64() {
-                        object.insert("value", crate::os_pack::json::Value::Number(number.into()));
+                        object.insert("value", semio_framework_pack_json::Value::Number(number.into()));
                     }
                 }
                 Some(WidgetPatchKind::InputNote) => {
                     if let Some(text) = value.as_str() {
-                        object.insert("text", crate::os_pack::json::Value::String(text.to_string()));
+                        object.insert("text", semio_framework_pack_json::Value::String(text.to_string()));
                     }
                 }
                 Some(WidgetPatchKind::InputImage) => {
                     if let Some(src) = value.as_str() {
-                        object.insert("src", crate::os_pack::json::Value::String(src.to_string()));
+                        object.insert("src", semio_framework_pack_json::Value::String(src.to_string()));
                     }
                 }
                 Some(WidgetPatchKind::Variable) => {
                     if let Some(text) = value.as_str() {
-                        object.insert("name", crate::os_pack::json::Value::String(text.to_string()));
+                        object.insert("name", semio_framework_pack_json::Value::String(text.to_string()));
                     }
                 }
                 None => {}
             }
         }
-        crate::os_pack::json::to_string(&root)
+        semio_framework_pack_json::to_string(&root)
     }
 }
 // #endregion 🔖️FormsBridge

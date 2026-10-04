@@ -16,14 +16,14 @@ impl protocol::MutationKind<JobTestSnapshot, JobTestOp> for AddValue {
     fn diff(&self, _: &JobTestSnapshot) -> protocol::MutationOutcome<JobTestDiff> {
         protocol::MutationOutcome::new(JobTestDiff { deltas: vec![self.delta] })
     }
-    fn inverse(&self, _: &JobTestSnapshot) -> Vec<JobTestOp> {
-        match self.delta.checked_neg() {
+    fn inverse(&self, _: &JobTestSnapshot) -> Result<Vec<JobTestOp>, semio_framework_value::ValueError> {
+        Ok((|| match self.delta.checked_neg() {
             Some(delta) => vec![JobTestOp::AddValue(Self { delta })],
             None => vec![JobTestOp::AddValue(Self { delta: 1 }), JobTestOp::AddValue(Self { delta: i32::MAX })],
-        }
+        })())
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Add {} to value", self.delta), &format!("{} zu Wert hinzufügen", self.delta))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add {} to value", self.delta), &format!("{} zu Wert hinzufügen", self.delta))
     }
 }
 
@@ -32,7 +32,7 @@ impl protocol::CompositeMutationKind<JobTestSnapshot, JobTestOp> for AddValue {
     fn plan(&self, _: &JobTestSnapshot, planner: &mut protocol::Planner<JobTestSnapshot, JobTestOp>) -> Result<(), protocol::PlanError> {
         planner.call(JobTestOp::AddValue(self.clone()))
     }
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         <Self as protocol::MutationKind<JobTestSnapshot, JobTestOp>>::label(self)
     }
 }

@@ -6,7 +6,8 @@ use crate::EnergyModelSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ A refused or no-op forward step has nothing to undo, so it answers with no steps at all.
-pub fn inverse(payload: &super::CreateHumidistat, base: &EnergyModelSnapshot) -> Vec<EnergyModelMutation> {
+pub fn inverse(payload: &super::CreateHumidistat, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     if (base.model.humidistats.iter().any(|item| item.id == payload.id))
         || (!base.model.zones.iter().any(|zone| zone.id == payload.zone_id))
         || (!(base.model.schedules.constants.iter().any(|schedule| schedule.id == payload.humidifying_setpoint_schedule_id)
@@ -25,5 +26,7 @@ pub fn inverse(payload: &super::CreateHumidistat, base: &EnergyModelSnapshot) ->
         return Vec::new();
     }
     vec![vocabulary::delete_humidistat(payload.id)]
+
+    })())
 }
 //#endregion 🔖️Inverse

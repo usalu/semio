@@ -429,7 +429,9 @@ impl PortDirectedGraph {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_node_attributes(&mut self, node: NodeId, attrs: PropertyBag) {
         if let Some(bag) = self.storage.node_attrs_mut(node) {
-            bag.extend(attrs);
+            for (key,value) in attrs {
+                if let Some(previous)=bag.insert(key,value){<PropertyValue as semio_framework_value::FromValue>::retire_decoded(previous);}
+            }
         }
     }
 
@@ -441,7 +443,9 @@ impl PortDirectedGraph {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_edge_attributes(&mut self, edge: EdgeId, attrs: PropertyBag) {
         if let Some(bag) = self.storage.edge_attrs_mut(edge) {
-            bag.extend(attrs);
+            for (key,value) in attrs {
+                if let Some(previous)=bag.insert(key,value){<PropertyValue as semio_framework_value::FromValue>::retire_decoded(previous);}
+            }
         }
     }
 

@@ -23,10 +23,13 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetPageMode {
         MutationOutcome::new(diff::diff_set_page_mode(base, self.mode.clone()))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         let _ = base;
         vec![PdfMutation::SetPageMode(SetPageMode { mode: base.page_mode.clone() })]
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set page-mode", "Seitenmodus setzen")

@@ -135,7 +135,7 @@ pub const NOTE_DOCUMENT_SCHEMA: &str = "note.document";
 
 /// 🎥️ Camera pose — persisted by the exact composite-window configuration owner, never in
 /// `NoteSnapshot` or app-wide configuration, so two open canvases retain independent poses.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct NoteCamera {
@@ -160,7 +160,7 @@ pub fn default_zoom() -> f64 {
     1.0
 }
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslEnum)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum NoteBlockNode {
     #[value(rename = "text", rename_all = "camelCase")]
@@ -279,7 +279,7 @@ pub enum NoteBlockNode {
 //#region 🔖️ComposedTypes
 /// 🕸️ Snapshot-owned text child record. The handle preserves composition identity while the bounded
 /// paragraph records are durable authority that survives reopen and worker migration.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct NoteTextChild {
     pub handle: store::ArtifactChild<SemioTextSnapshot>,
@@ -368,7 +368,7 @@ pub fn note_text_child_record(block_id: &str, paragraphs: &[NoteTextParagraph]) 
 }
 //#endregion 🔖️TextChildren
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "r")]
@@ -389,7 +389,7 @@ pub struct NoteTextRun {
     pub link: Option<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "p")]
@@ -401,13 +401,13 @@ pub fn default_true() -> bool {
     true
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct NoteTableCell {
     #[dsl(positional)]
     pub content: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct NoteImageAsset {
@@ -443,43 +443,43 @@ pub const INK_CANVAS_DOCUMENT_SCHEMA: &str = "ink.document";
 /// the surface's bare `paragraphs` (ticket 26/09/17/NOTE-PLUGIN-END-TO-END — the note schema tag and the
 /// nested child record left the canvas empty).
 pub fn note_canvas_document_json(document: &NoteSnapshot, camera: &NoteCamera) -> String {
-    let mut value = dsl::ToValue::to_value(document);
-    if let dsl::DslValue::Object(entries) = &mut value {
+    let mut value = semio_framework_value::ToValue::to_value(document);
+    if let semio_framework_value::DslValue::Object(entries) = &mut value {
         for (key, field) in entries.iter_mut() {
             match key.as_str() {
-                "schema" => *field = dsl::DslValue::String(INK_CANVAS_DOCUMENT_SCHEMA.into()),
+                "schema" => *field = semio_framework_value::DslValue::String(INK_CANVAS_DOCUMENT_SCHEMA.into()),
                 "blocks" => ink_wire_blocks_from_note(field),
                 _ => {}
             }
         }
-        entries.push(("camera".into(), dsl::ToValue::to_value(camera)));
+        entries.push(("camera".into(), semio_framework_value::ToValue::to_value(camera)));
     }
-    dsl::os_pack::json_to_string(&dsl::os_pack::json_from_dsl_value(&value))
+    semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&value))
 }
 
-fn entry<'a>(entries: &'a [(String, dsl::DslValue)], key: &str) -> Option<&'a dsl::DslValue> {
+fn entry<'a>(entries: &'a [(String, semio_framework_value::DslValue)], key: &str) -> Option<&'a semio_framework_value::DslValue> {
     entries.iter().find(|(name, _)| name == key).map(|(_, value)| value)
 }
 
-fn is_kind(entries: &[(String, dsl::DslValue)], kind: &str) -> bool {
-    matches!(entry(entries, "kind"), Some(dsl::DslValue::String(value)) if value == kind)
+fn is_kind(entries: &[(String, semio_framework_value::DslValue)], kind: &str) -> bool {
+    matches!(entry(entries, "kind"), Some(semio_framework_value::DslValue::String(value)) if value == kind)
 }
 
-fn ink_wire_blocks_from_note(blocks: &mut dsl::DslValue) {
-    let dsl::DslValue::Array(items) = blocks else { return };
+fn ink_wire_blocks_from_note(blocks: &mut semio_framework_value::DslValue) {
+    let semio_framework_value::DslValue::Array(items) = blocks else { return };
     for item in items {
-        let dsl::DslValue::Object(entries) = item else { continue };
-        if let Some(dsl::DslValue::String(id)) = entry(entries, "id").cloned() {
-            entries.push(("interactionId".into(), dsl::DslValue::String(format!("note-play-block:{id}"))));
+        let semio_framework_value::DslValue::Object(entries) = item else { continue };
+        if let Some(semio_framework_value::DslValue::String(id)) = entry(entries, "id").cloned() {
+            entries.push(("interactionId".into(), semio_framework_value::DslValue::String(format!("note-play-block:{id}"))));
         }
         if is_kind(entries, "text") {
             if let Some(index) = entries.iter().position(|(name, _)| name == "content") {
                 let (_, content) = entries.remove(index);
                 let paragraphs = match content {
-                    dsl::DslValue::Object(record) => record.into_iter().find(|(name, _)| name == "paragraphs").map(|(_, value)| value),
+                    semio_framework_value::DslValue::Object(record) => record.into_iter().find(|(name, _)| name == "paragraphs").map(|(_, value)| value),
                     _ => None,
                 };
-                entries.push(("paragraphs".into(), paragraphs.unwrap_or(dsl::DslValue::Array(Vec::new()))));
+                entries.push(("paragraphs".into(), paragraphs.unwrap_or(semio_framework_value::DslValue::Array(Vec::new()))));
             }
         } else if is_kind(entries, "group") {
             if let Some((_, children)) = entries.iter_mut().find(|(name, _)| name == "children") {
@@ -492,23 +492,23 @@ fn ink_wire_blocks_from_note(blocks: &mut dsl::DslValue) {
 /// 🖋️ Inverse of [`note_canvas_document_json`] for one ink-canvas block: a text block's bare
 /// `paragraphs` become the composed [`NoteTextChild`] record (content-addressed by block id, so an
 /// unchanged block keeps its handle); group children recurse.
-pub fn note_block_value_from_ink_wire(block: &mut dsl::DslValue) -> Result<(), String> {
-    let dsl::DslValue::Object(entries) = block else { return Err("ink block is not a record".into()) };
+pub fn note_block_value_from_ink_wire(block: &mut semio_framework_value::DslValue) -> Result<(), String> {
+    let semio_framework_value::DslValue::Object(entries) = block else { return Err("ink block is not a record".into()) };
     if let Some(index) = entries.iter().position(|(name, _)| name == "interactionId") {
         entries.remove(index);
     }
     if is_kind(entries, "text") && entry(entries, "content").is_none() {
         let id = match entry(entries, "id") {
-            Some(dsl::DslValue::String(id)) => id.clone(),
+            Some(semio_framework_value::DslValue::String(id)) => id.clone(),
             _ => return Err("ink text block has no id".into()),
         };
         let paragraphs = match entries.iter().position(|(name, _)| name == "paragraphs") {
-            Some(index) => <Vec<NoteTextParagraph> as dsl::FromValue>::from_value(entries.remove(index).1).map_err(|error| error.to_string())?,
+            Some(index) => <Vec<NoteTextParagraph> as semio_framework_value::FromValue>::from_value(entries.remove(index).1).map_err(|error| error.to_string())?,
             None => Vec::new(),
         };
-        entries.push(("content".into(), dsl::ToValue::to_value(&note_text_child_record(&id, &paragraphs))));
+        entries.push(("content".into(), semio_framework_value::ToValue::to_value(&note_text_child_record(&id, &paragraphs))));
     } else if is_kind(entries, "group") {
-        if let Some((_, dsl::DslValue::Array(children))) = entries.iter_mut().find(|(name, _)| name == "children") {
+        if let Some((_, semio_framework_value::DslValue::Array(children))) = entries.iter_mut().find(|(name, _)| name == "children") {
             for child in children {
                 note_block_value_from_ink_wire(child)?;
             }

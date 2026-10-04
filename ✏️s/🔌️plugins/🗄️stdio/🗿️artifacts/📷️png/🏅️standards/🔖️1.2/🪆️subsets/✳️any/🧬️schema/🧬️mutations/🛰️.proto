@@ -1,20 +1,10 @@
 syntax = "proto3";
-package stdio.png.mutation;
-import "📐️change-header/🛰️.proto";
-import "🎨️replace-palette/🛰️.proto";
-import "👁️change-transparency/🛰️.proto";
-import "🌗️change-gamma/🛰️.proto";
-import "🌈️change-chromaticities/🛰️.proto";
-import "🖌️change-srgb-intent/🛰️.proto";
-import "📏️change-physical-dims/🛰️.proto";
-import "🕰️change-timestamp/🛰️.proto";
-import "🖼️change-background/🛰️.proto";
-import "📥️insert-text-chunk/🛰️.proto";
-import "🗑️remove-text-chunk/🛰️.proto";
-import "✏️replace-text-chunk/🛰️.proto";
-import "🔲️replace-pixels/🛰️.proto";
-import "🩹️patch-pixels/🛰️.proto";
-import "📦️insert-unknown-chunk/🛰️.proto";
-import "📤️remove-unknown-chunk/🛰️.proto";
-import "📸️set-snapshot/🛰️.proto";
-message PngMutation { oneof mutation { ChangeHeaderMutation change_header = 2; ReplacePaletteMutation replace_palette = 3; ChangeTransparencyMutation change_transparency = 4; ChangeGammaMutation change_gamma = 5; ChangeChromaticitiesMutation change_chromaticities = 6; ChangeSrgbIntentMutation change_srgb_intent = 7; ChangePhysicalDimsMutation change_physical_dims = 8; ChangeTimestampMutation change_timestamp = 9; ChangeBackgroundMutation change_background = 10; InsertTextChunkMutation insert_text_chunk = 11; RemoveTextChunkMutation remove_text_chunk = 12; ReplaceTextChunkMutation replace_text_chunk = 13; ReplacePixelsMutation replace_pixels = 14; InsertUnknownChunkMutation insert_unknown_chunk = 15; RemoveUnknownChunkMutation remove_unknown_chunk = 16; SetSnapshot set_snapshot = 17; PatchPixelsMutation patch_pixels = 18; } }
+package semio.s_stdio_png.mutation;
+message ChangeGammaMutation { string revision = 1; optional uint32 gama = 2; }
+message PatchPixelsMutation { string revision = 1; uint32 x = 2; uint32 y = 3; uint32 width = 4; uint32 height = 5; uint32 red = 6; uint32 green = 7; uint32 blue = 8; uint32 alpha = 9; }
+enum PngNativeProfile { PNG_NATIVE_PROFILE_INDEXED = 0; PNG_NATIVE_PROFILE_GRAYSCALE = 1; PNG_NATIVE_PROFILE_GRAYSCALE_ALPHA = 2; PNG_NATIVE_PROFILE_RGB = 3; PNG_NATIVE_PROFILE_RGBA = 4; }
+message PngNativeRegion { uint32 x = 1; uint32 y = 2; uint32 width = 3; uint32 height = 4; }
+message PngNativePaint { PngNativeProfile profile = 1; uint32 first = 2; uint32 second = 3; uint32 third = 4; uint32 fourth = 5; }
+message PngSnapshot { string schema = 1; bytes bytes = 2; }
+message PaintNativeSamplesMutation { string revision = 1; PngNativeRegion region = 2; PngNativePaint paint = 3; PngSnapshot result = 4; }
+message PngMutation { string mutation = 1; bytes payload = 2; }

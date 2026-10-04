@@ -25,16 +25,16 @@ const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutat
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌱create-step/🧪️rejects/🎯️outcome/🔣️.json");
 
 fn mutation() -> FormMutation {
-    dsl::os_pack::json::from_json_str(MUTATION).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 fn expected_after() -> FormsSnapshot {
-    dsl::os_pack::json::from_json_str(AFTER).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 
 /// 🌱 The committed `⬅️before`, with its composed children resolved to a scene holding exactly the
 /// step the committed payload tries to create.
 fn before() -> FormsSnapshot {
-    let mut snapshot: FormsSnapshot = dsl::os_pack::json::from_json_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: FormsSnapshot = semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes");
     let FormMutation::CreateStep(payload) = mutation() else {
         panic!("rejects-a-duplicate-step-id's committed mutation must be a create-step");
     };
@@ -63,7 +63,7 @@ async fn a_colliding_step_id_is_a_fatal_duplicate_id() {
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.duplicate-id", "an id collision is reported as duplicate-id");
-    assert_eq!(messages[0].level, protocol::Severity::Fatal, "duplicate-id is Fatal — no merge policy may absorb it");
+    assert_eq!(messages[0].level, semio_framework_diagnostic::Severity::Fatal, "duplicate-id is Fatal — no merge policy may absorb it");
     assert_eq!(messages[0].target, vec!["step-basics".to_string()], "the diagnostic addresses the colliding step id, and nothing else");
     let semantics = <FormMutation as protocol::SemanticMutation<FormsSnapshot>>::semantics(&mutation());
     assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("create", "step", "create-step", "CreatedStep"), "the fixture must be bound to create-step's own descriptor");
@@ -74,7 +74,7 @@ async fn a_colliding_step_id_is_a_fatal_duplicate_id() {
 /// the opposite of dag's `create-node`, whose inverse deletes the requested id regardless.
 #[semio_framework_async_macros::async_test]
 async fn inverse_has_nothing_to_undo() {
-    let inverse = inverse_form_mutation(&before(), &mutation());
+    let inverse = inverse_form_mutation(&before(), &mutation()).expect("valid retained mutation inverse fixture");
     assert!(inverse.is_empty(), "create-step/rejects-a-duplicate-step-id: a refused create must have no inverse steps, got {inverse:?}");
 }
 
@@ -84,12 +84,12 @@ async fn inverse_has_nothing_to_undo() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: FormsSnapshot = dsl::os_pack::json::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: FormsSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "create-step/rejects-a-duplicate-step-id: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&mutation())).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "create-step/rejects-a-duplicate-step-id: committed mutation JSON is not canonical");
 }

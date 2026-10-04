@@ -44,7 +44,7 @@ fn every_mutation() -> Vec<SourcingMutation> {
 fn round_trip(base: &CurationSnapshot, mutation: &SourcingMutation) -> CurationSnapshot {
     let (forward, _messages) = vcs::apply_mutation(base, mutation).expect("valid mutation");
     let mut restored = forward.clone();
-    for back in mutation.inverse(base) {
+    for back in mutation.inverse(base).expect("valid retained mutation inverse fixture") {
         let (next, _messages) = vcs::apply_mutation(&restored, &back).expect("valid inverse mutation");
         restored = next;
     }
@@ -129,7 +129,7 @@ async fn create_curated_item_duplicate_id_is_fatal_and_never_applies() {
     let base = sample_snapshot();
     let mutation = SourcingMutation::CreateCuratedItem(CreateCuratedItem { item: CuratedItem { object_id: "beam-glulam-gl24h".into(), count: 1 } });
     let outcome = mutation.diff(&base);
-    assert_eq!(outcome.worst_level(), Some(protocol::os_dsl::Severity::Fatal));
+    assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal));
     protocol::os_spr::protocol_laws::assert_fatal_never_applies(&outcome).await;
 }
 

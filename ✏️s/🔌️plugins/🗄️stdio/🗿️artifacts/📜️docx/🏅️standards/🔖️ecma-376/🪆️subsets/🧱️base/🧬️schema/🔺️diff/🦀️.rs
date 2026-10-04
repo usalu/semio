@@ -17,7 +17,7 @@
 
 #[cfg(test)]
 use crate::schema::snapshot::DocxDocument;
-use crate::schema::snapshot::{DocxBlock, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow, DocxXmlPart};
+use crate::schema::snapshot::{DocxBlock, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow, DocxXmlPart, DocxXmlParts};
 use crate::DocxSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
@@ -27,6 +27,7 @@ use semio_s_artifact_stdio_xml::schema::diff::{XmlChildrenDiff, XmlDiff};
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
 use semio_s_artifact_stdio_xml::{XmlSnapshot, STDIO_XML_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_zip::opc::{OpcContentTypes, OpcPackage, OpcPart, OpcRelationship, OpcTargetMode};
+use semio_s_artifact_stdio_zip::opc::retained::RetainedOpcPackage;
 use std::collections::BTreeMap;
 
 //#region 🔖️GenericCollectionTriples
@@ -688,11 +689,11 @@ fn absorb_rel_list_diff(a: DocxOpcRelListDiff, b: DocxOpcRelListDiff) -> DocxOpc
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_relationships(old: &BTreeMap<String, Vec<OpcRelationship>>, new: &BTreeMap<String, Vec<OpcRelationship>>) -> Option<DocxOpcRelationshipsDiff> {
+fn diff_relationships(old: &semio_s_artifact_stdio_zip::opc::OpcRelationshipOwners, new: &semio_s_artifact_stdio_zip::opc::OpcRelationshipOwners) -> Option<DocxOpcRelationshipsDiff> {
     let mut removed = Vec::new();
     let mut modified = Vec::new();
-    for (owner, list) in old {
-        match new.get(owner) {
+    for (owner, list) in old.groups() {
+        match new.relationships(owner) {
             None => removed.push(owner.clone()),
             Some(nlist) => {
                 if let Some(d) = diff_rel_list(list, nlist) {
@@ -702,26 +703,23 @@ fn diff_relationships(old: &BTreeMap<String, Vec<OpcRelationship>>, new: &BTreeM
         }
     }
     let mut added = Vec::new();
-    for (owner, list) in new {
-        if !old.contains_key(owner) {
+    for (owner, list) in new.groups() {
+        if old.relationships(owner).is_none() {
             added.push((owner.clone(), list.clone()));
         }
     }
     if removed.is_empty() && modified.is_empty() && added.is_empty() {
         None
     } else {
-        // 🗺️ Relationships live in an owner-keyed `BTreeMap` whose order IS its key order, so this
-        // triple's `order` is empty by construction rather than by omission — `apply_relationships`
-        // inserts by key and never reads one.
         Some(DocxOpcRelationshipsDiff { removed, modified, added, order: Vec::new() })
     }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn apply_relationships(rels: &mut BTreeMap<String, Vec<OpcRelationship>>, diff: &DocxOpcRelationshipsDiff) -> MutationApplyResult<()> {
+fn apply_relationships(rels: &mut semio_s_artifact_stdio_zip::opc::OpcRelationshipOwners, diff: &DocxOpcRelationshipsDiff) -> MutationApplyResult<()> {
     let mut added = std::collections::HashSet::new();
     for owner in &diff.removed {
-        if !rels.contains_key(owner) {
+        if rels.relationships(owner).is_none() {
             return Err(MutationApplyError::new("mutation.apply.missing-target", "relationship owner does not exist").at(vec!["removed".to_string(), owner.clone()]));
         }
         if !added.insert(owner) {
@@ -729,7 +727,7 @@ fn apply_relationships(rels: &mut BTreeMap<String, Vec<OpcRelationship>>, diff: 
         }
     }
     for modified in &diff.modified {
-        if !rels.contains_key(&modified.key) {
+        if rels.relationships(&modified.key).is_none() {
             return Err(MutationApplyError::new("mutation.apply.missing-target", "relationship owner does not exist").at(vec!["modified".to_string(), modified.key.clone()]));
         }
         if diff.removed.contains(&modified.key) {
@@ -737,35 +735,35 @@ fn apply_relationships(rels: &mut BTreeMap<String, Vec<OpcRelationship>>, diff: 
         }
     }
     for (owner, _) in &diff.added {
-        if rels.contains_key(owner) || !added.insert(owner) {
+        if rels.relationships(owner).is_some() || !added.insert(owner) {
             return Err(MutationApplyError::new("mutation.apply.duplicate-target", "relationship owner already exists").at(vec!["added".to_string(), owner.clone()]));
         }
     }
     for owner in &diff.removed {
-        rels.remove(owner);
+        rels.remove_owner(owner);
     }
     for m in &diff.modified {
-        let list = rels.get_mut(&m.key).ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "relationship owner does not exist").at(vec!["modified".to_string(), m.key.clone()]))?;
+        let list = rels.relationships_mut(&m.key).ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "relationship owner does not exist").at(vec!["modified".to_string(), m.key.clone()]))?;
         apply_rel_list(list, &m.diff).map_err(|error| error.under(vec!["modified".to_string(), m.key.clone()]))?;
     }
     for (owner, list) in &diff.added {
-        rels.insert(owner.clone(), list.clone());
+        rels.replace_owner(owner.clone(), list.clone());
     }
     Ok(())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn inverse_relationships(base: &BTreeMap<String, Vec<OpcRelationship>>, diff: &DocxOpcRelationshipsDiff) -> DocxOpcRelationshipsDiff {
+fn inverse_relationships(base: &semio_s_artifact_stdio_zip::opc::OpcRelationshipOwners, diff: &DocxOpcRelationshipsDiff) -> DocxOpcRelationshipsDiff {
     let removed: Vec<String> = diff.added.iter().map(|(owner, _)| owner.clone()).collect();
     let mut modified = Vec::new();
     for m in &diff.modified {
-        if let Some(list) = base.get(&m.key) {
+        if let Some(list) = base.relationships(&m.key) {
             modified.push(NamedModified { key: m.key.clone(), diff: inverse_rel_list(list, &m.diff) });
         }
     }
     let mut added = Vec::new();
     for owner in &diff.removed {
-        if let Some(list) = base.get(owner) {
+        if let Some(list) = base.relationships(owner) {
             added.push((owner.clone(), list.clone()));
         }
     }
@@ -870,8 +868,11 @@ fn absorb_opc_diff(a: DocxOpcDiff, b: DocxOpcDiff) -> DocxOpcDiff {
 
 //#region 🔖️XmlPartDiffLogic
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn xml_snapshot(document: &semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument) -> XmlSnapshot {
-    XmlSnapshot { schema: STDIO_XML_DOCUMENT_SCHEMA.into(), doc: document.clone() }
+fn xml_snapshot(document: &semio_s_artifact_stdio_xml::schema::snapshot::retained::RetainedXmlDocument) -> XmlSnapshot {
+    XmlSnapshot {
+        schema: STDIO_XML_DOCUMENT_SCHEMA.into(),
+        doc: document.materialize_exact().expect("valid retained DOCX XML authority materializes for diff"),
+    }
 }
 
 fn diff_xml_part(base: &DocxXmlPart, other: &DocxXmlPart) -> Option<DocxXmlPartDiff> {
@@ -885,7 +886,8 @@ fn apply_xml_part(part: &mut DocxXmlPart, diff: &DocxXmlPartDiff) -> MutationApp
         part.content_type.clone_from(content_type);
     }
     if let Some(document) = &diff.document {
-        part.document = document.apply(&xml_snapshot(&part.document))?.doc;
+        let next = document.apply(&xml_snapshot(&part.document))?.doc;
+        part.replace_document(next).map_err(|error| MutationApplyError::new("mutation.apply.ownership", error.into_message()).at(["document"]))?;
     }
     Ok(())
 }
@@ -908,6 +910,102 @@ fn absorb_xml_part(mut first: DocxXmlPartDiff, second: DocxXmlPartDiff) -> DocxX
     };
     first
 }
+
+fn between_xml_parts(base: &DocxXmlParts, other: &DocxXmlParts) -> Option<DocxXmlPartsDiff> {
+    let mut removed = Vec::new();
+    let mut modified = Vec::new();
+    for item in base {
+        match other.iter().find(|candidate| candidate.path == item.path) {
+            None => removed.push(item.path.clone()),
+            Some(candidate) if candidate != item => {
+                if let Some(diff) = diff_xml_part(item, candidate) {
+                    modified.push(NamedModified { key: item.path.clone(), diff });
+                }
+            }
+            Some(_) => {}
+        }
+    }
+    let added: Vec<_> = other.iter().filter(|item| !base.iter().any(|candidate| candidate.path == item.path)).cloned().collect();
+    let base_keys: Vec<_> = base.iter().map(|item| item.path.clone()).collect();
+    let other_keys: Vec<_> = other.iter().map(|item| item.path.clone()).collect();
+    let added_keys: Vec<_> = added.iter().map(|item| item.path.clone()).collect();
+    let order = if default_named_order(&base_keys, &removed, &added_keys) == other_keys { Vec::new() } else { other_keys };
+    if removed.is_empty() && modified.is_empty() && added.is_empty() && order.is_empty() {
+        None
+    } else {
+        Some(NamedTripleDiff { removed, modified, added, order })
+    }
+}
+
+fn reorder_xml_parts(items: &mut DocxXmlParts, order: &[String]) -> MutationApplyResult<()> {
+    if order.is_empty() {
+        return Ok(());
+    }
+    if order.len() != items.len() {
+        return Err(MutationApplyError::new("mutation.apply.invalid-order", "named ordering does not cover the resulting collection").at(["order"]));
+    }
+    for (target, key) in order.iter().enumerate() {
+        let position = items
+            .iter()
+            .enumerate()
+            .skip(target)
+            .find_map(|(position, item)| (item.path == *key).then_some(position))
+            .ok_or_else(|| MutationApplyError::new("mutation.apply.invalid-order", "named ordering names an item the collection does not carry").at(["order"]))?;
+        items.swap(target, position);
+    }
+    Ok(())
+}
+
+fn apply_xml_parts(items: &mut DocxXmlParts, diff: &DocxXmlPartsDiff) -> MutationApplyResult<()> {
+    for (index, key) in diff.removed.iter().enumerate() {
+        if !items.iter().any(|item| item.path == *key) {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "named removal target does not exist").at(["removed"]));
+        }
+        if diff.removed[..index].contains(key) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named removal target is repeated").at(["removed"]));
+        }
+    }
+    for (index, modified) in diff.modified.iter().enumerate() {
+        if !items.iter().any(|item| item.path == modified.key) {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "named modification target does not exist").at(["modified"]));
+        }
+        if diff.removed.contains(&modified.key) {
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "named modification targets a removed item").at(["modified"]));
+        }
+        if diff.modified[..index].iter().any(|candidate| candidate.key == modified.key) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named modification target is repeated").at(["modified"]));
+        }
+    }
+    for (index, added) in diff.added.iter().enumerate() {
+        if items.iter().any(|item| item.path == added.path) || diff.added[..index].iter().any(|candidate| candidate.path == added.path) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named addition target already exists").at(["added"]));
+        }
+    }
+    items.retain(|item| !diff.removed.contains(&item.path));
+    for modified in &diff.modified {
+        let item = items.iter_mut().find(|item| item.path == modified.key).expect("validated XML modification target");
+        apply_xml_part(item, &modified.diff).map_err(|error| error.under(["modified"]))?;
+    }
+    for item in &diff.added {
+        items.try_push(item.clone()).map_err(|error| MutationApplyError::new("mutation.apply.ownership", error.to_string()).at(["added"]))?;
+    }
+    reorder_xml_parts(items, &diff.order)
+}
+
+fn inverse_xml_parts(base: &DocxXmlParts, diff: &DocxXmlPartsDiff) -> DocxXmlPartsDiff {
+    let removed = diff.added.iter().map(|item| item.path.clone()).collect::<Vec<_>>();
+    let modified = diff
+        .modified
+        .iter()
+        .filter_map(|change| base.iter().find(|item| item.path == change.key).map(|item| NamedModified { key: change.key.clone(), diff: inverse_xml_part(item, &change.diff) }))
+        .collect();
+    let added = diff.removed.iter().filter_map(|key| base.iter().find(|item| item.path == *key).cloned()).collect::<Vec<_>>();
+    let base_keys = base.iter().map(|item| item.path.clone()).collect::<Vec<_>>();
+    let other_keys = if diff.order.is_empty() { default_named_order(&base_keys, &diff.removed, &removed) } else { diff.order.clone() };
+    let added_keys = added.iter().map(|item| item.path.clone()).collect::<Vec<_>>();
+    let order = if default_named_order(&other_keys, &removed, &added_keys) == base_keys { Vec::new() } else { base_keys };
+    NamedTripleDiff { removed, modified, added, order }
+}
 //#endregion 🔖️XmlPartDiffLogic
 
 //#region 🔖️Apply
@@ -915,10 +1013,12 @@ impl MutationDiff<DocxSnapshot> for DocxDiff {
     fn apply(&self, base: &DocxSnapshot) -> MutationApplyResult<DocxSnapshot> {
         let mut next = base.clone();
         if let Some(diff) = &self.opc {
-            apply_opc_diff(&mut next.opc, diff).map_err(|error| error.under(["opc"]))?;
+            let mut opc = next.opc.materialize_package_exact().map_err(|error| MutationApplyError::new("mutation.apply.ownership", error.to_string()).under(["opc"]))?;
+            apply_opc_diff(&mut opc, diff).map_err(|error| error.under(["opc"]))?;
+            next.opc = RetainedOpcPackage::try_from_package(opc).map_err(|error| MutationApplyError::new("mutation.apply.ownership", error.to_string()).under(["opc"]))?;
         }
         if let Some(diff) = &self.xml_parts {
-            apply_named(&mut next.xml_parts, diff, |part| part.path.clone(), apply_xml_part).map_err(|error| error.under(["xmlParts"]))?;
+            apply_xml_parts(&mut next.xml_parts, diff).map_err(|error| error.under(["xmlParts"]))?;
         }
         next.validate_authority().and_then(|()| next.project_document().map(|_| ())).map_err(|error| MutationApplyError::new("mutation.apply.invalid-snapshot", error.to_string()))?;
         Ok(next)
@@ -950,11 +1050,19 @@ impl MutationDiff<DocxSnapshot> for DocxDiff {
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<DocxSnapshot> for DocxDiff {
     fn inverse(&self, base: &DocxSnapshot) -> Self {
-        DocxDiff { opc: self.opc.as_ref().map(|diff| inverse_opc_diff(&base.opc, diff)), xml_parts: self.xml_parts.as_ref().map(|diff| inverse_named(&base.xml_parts, diff, |part| part.path.clone(), inverse_xml_part)) }
+        DocxDiff {
+            opc: self.opc.as_ref().map(|diff| {
+                let opc = base.opc.materialize_package_exact().expect("a valid retained DOCX OPC authority materializes for inverse diff");
+                inverse_opc_diff(&opc, diff)
+            }),
+            xml_parts: self.xml_parts.as_ref().map(|diff| inverse_xml_parts(&base.xml_parts, diff)),
+        }
     }
 
     fn between(base: &DocxSnapshot, other: &DocxSnapshot) -> Self {
-        DocxDiff { opc: diff_opc(&base.opc, &other.opc), xml_parts: between_named(&base.xml_parts, &other.xml_parts, |part| part.path.clone(), diff_xml_part) }
+        let base_opc = base.opc.materialize_package_exact().expect("a valid retained DOCX OPC authority materializes for diff");
+        let other_opc = other.opc.materialize_package_exact().expect("a valid retained DOCX OPC authority materializes for diff");
+        DocxDiff { opc: diff_opc(&base_opc, &other_opc), xml_parts: between_xml_parts(&base.xml_parts, &other.xml_parts) }
     }
 
     fn is_empty(&self) -> bool {
@@ -1498,23 +1606,23 @@ pub(crate) fn dec_style_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxSt
 //#region 🔖️TopLevel
 impl protocol::DiffCodec for DocxDiff {
     fn print_diff(&self) -> String {
-        dsl::json::to_json_string(self)
+        semio_framework_pack_json::to_json_string(self)
     }
 
-    fn parse_diff(text: &str) -> Result<Self, store::TextError> {
-        dsl::json::from_json_str(text).map_err(|error| store::TextError::new(error.to_string(), dsl::TextSpan::at(1, 1)))
+    fn parse_diff(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut bytes = vec![store::pack_rt::OP_BINARY_FORMAT];
-        bytes.extend_from_slice(dsl::json::to_json_string(self).as_bytes());
+        bytes.extend_from_slice(semio_framework_pack_json::to_json_string(self).as_bytes());
         Ok(bytes)
     }
 
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let payload = bytes.get(1..).ok_or_else(|| protocol::ProtocolError::Malformed { what: "docx diff", offset: 0, detail: "missing format byte".into() })?;
         let text = std::str::from_utf8(payload).map_err(|error| protocol::ProtocolError::Malformed { what: "docx diff", offset: 1, detail: error.to_string() })?;
-        dsl::json::from_json_str(text).map_err(|error| protocol::ProtocolError::Malformed { what: "docx diff", offset: 1, detail: error.to_string() })
+        semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Malformed { what: "docx diff", offset: 1, detail: error.to_string() })
     }
 }
 //#endregion 🔖️TopLevel

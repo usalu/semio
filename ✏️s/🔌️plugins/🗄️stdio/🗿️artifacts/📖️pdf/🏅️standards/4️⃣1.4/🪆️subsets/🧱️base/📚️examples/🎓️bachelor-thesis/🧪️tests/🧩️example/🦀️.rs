@@ -160,7 +160,7 @@ async fn lossless_structural_flow_law_bachelor_thesis_snapshot_mutation_diff_io_
 
     let mut mutation_dirty = original.clone();
     apply_pdf_mutation(&mut mutation_dirty, &restored_mutation);
-    for inverse_mutation in restored_mutation.inverse(&original) {
+    for inverse_mutation in restored_mutation.inverse(&original).expect("valid retained mutation inverse fixture") {
         let inverse_mutation_frame = inverse_mutation.encode_op().expect("encode inverse mutation");
         let restored_inverse_mutation = PdfMutation::decode_op(&inverse_mutation_frame).expect("decode inverse mutation");
         apply_pdf_mutation(&mut mutation_dirty, &restored_inverse_mutation);
@@ -234,14 +234,14 @@ async fn analyzer_to_builder_round_trip_reproduces_equivalent_pages() {
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
     let snapshot = decode_pdf(FIXTURE_BYTES).expect("decode real fixture");
-    assert_eq!(Pdf17Inference::infer(&snapshot), Pdf17Inference::infer(&snapshot));
+    assert_eq!(Pdf17Inference::infer(&snapshot).expect("valid materialized inference fixture"), Pdf17Inference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
 /// 🧪️ (e) `infer(&PdfSnapshot::default())` matches `Pdf17Inference::default()` — the hand-written
 /// `Default` impl (`💡️inferences/🦀️.rs`) must stay in lockstep with `infer` itself.
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
-    assert_eq!(Pdf17Inference::infer(&PdfSnapshot::default()), Pdf17Inference::default());
+    assert_eq!(Pdf17Inference::infer(&PdfSnapshot::default()).expect("valid materialized inference fixture"), Pdf17Inference::default());
 }
 
 /// 🧪️ `outline` on the real fixture matches the independently-verified page count/text volume
@@ -249,7 +249,7 @@ async fn inference_default_law() {
 #[semio_framework_async_macros::async_test]
 async fn outline_matches_real_fixture_page_count() {
     let snapshot = decode_pdf(FIXTURE_BYTES).expect("decode real fixture");
-    let inferred = Pdf17Inference::infer(&snapshot);
+    let inferred = Pdf17Inference::infer(&snapshot).expect("valid materialized inference fixture");
     assert_eq!(inferred.outline.page_count, 65);
     assert_eq!(inferred.outline.title, snapshot.info.title);
 }

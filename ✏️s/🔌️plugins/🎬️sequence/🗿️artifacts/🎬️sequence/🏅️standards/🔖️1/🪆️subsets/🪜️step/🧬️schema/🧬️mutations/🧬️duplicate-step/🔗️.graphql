@@ -1,7 +1,0 @@
-# 🧬 duplicate-step direct payload.
-input DuplicateStepInput {
-  sourceId: String!
-  newId: String!
-  x: Float!
-  y: Float!
-}

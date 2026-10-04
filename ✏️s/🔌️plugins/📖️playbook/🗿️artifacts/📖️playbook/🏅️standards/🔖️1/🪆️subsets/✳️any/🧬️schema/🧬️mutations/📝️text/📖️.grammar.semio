@@ -3,25 +3,8 @@ grammar playbook.mutations
 extension playbook
 start line
 
-line = add-step / remove-step / move-step / add-block / remove-block / move-block / replace-block / update-step / change-title
+line = change-title
 
-add-step = "add-step" SP step-block [SP "index" "=" number]
-remove-step = "remove-step" SP step-id
-move-step = "move-step" SP step-id SP "index" "=" number
-add-block = "add-block" SP step-id SP block-block [SP "index" "=" number]
-remove-block = "remove-block" SP step-id SP block-id
-move-block = "move-block" SP block-id SP from-step-id SP to-step-id SP "index" "=" number
-replace-block = "replace-block" SP step-id SP block-block
-update-step = "update-step" SP step-id SP "title" "=" text [SP "description" "=" text]
 change-title = "change-title" [SP "new-title" "=" text]
 
-step-block = "{" NL step-fields "}"
-block-block = "{" NL block-fields "}"
-step-fields = OCTET+
-block-fields = OCTET+
-step-id = IDENT
-from-step-id = IDENT
-to-step-id = IDENT
-block-id = IDENT
-number = OCTET+
 text = OCTET+

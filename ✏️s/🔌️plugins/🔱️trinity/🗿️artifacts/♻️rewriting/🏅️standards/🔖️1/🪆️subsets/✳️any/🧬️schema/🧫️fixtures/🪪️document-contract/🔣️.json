@@ -1,20 +1,57 @@
 {
   "validBindings": [
-    null,
-    true,
-    1.25,
-    "label",
-    [
-      null,
-      false,
-      2
-    ],
     {
-      "nested": [
+      "kind": "null"
+    },
+    {
+      "kind": "bool",
+      "value": true
+    },
+    {
+      "kind": "number",
+      "value": {
+        "bits": "3ff4000000000000"
+      }
+    },
+    {
+      "kind": "string",
+      "value": "label"
+    },
+    {
+      "kind": "array",
+      "values": [
         {
-          "value": null
+          "kind": "null"
+        },
+        {
+          "kind": "bool",
+          "value": false
+        },
+        {
+          "kind": "number",
+          "value": {
+            "bits": "4000000000000000"
+          }
         }
       ]
+    },
+    {
+      "kind": "object",
+      "values": {
+        "nested": {
+          "kind": "array",
+          "values": [
+            {
+              "kind": "object",
+              "values": {
+                "value": {
+                  "kind": "null"
+                }
+              }
+            }
+          ]
+        }
+      }
     }
   ],
   "invalidDocuments": [

@@ -11,8 +11,8 @@ pub fn export_stdio_kinds() -> &'static [&'static str] {
 }
 
 /// 📖️ Parses `.en1990` DSL bytes into a snapshot.
-pub fn en1990_from_dsl_bytes(bytes: &[u8]) -> Result<En1990Snapshot, store::TextError> {
-    let text = std::str::from_utf8(bytes).map_err(|error| store::TextError::new(error.to_string(), dsl::TextSpan::at(1, 1)))?;
+pub fn en1990_from_dsl_bytes(bytes: &[u8]) -> Result<En1990Snapshot, semio_framework_diagnostic::TextError> {
+    let text = std::str::from_utf8(bytes).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
     crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(text)
 }
 

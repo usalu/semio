@@ -106,13 +106,16 @@ pub(crate) fn class_diff(base: &StepSnapshot, edit: &ClassEdit) -> protocol::Mut
 /// whole-snapshot restore where it does not — `remove-shape-representation` against a real
 /// representation puts back a state CC1 forbids, so no in-class verb can express it.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn class_inverse(base: &StepSnapshot, edit: &ClassEdit) -> Vec<StepCc1Mutation> {
+pub(crate) fn class_inverse(base: &StepSnapshot, edit: &ClassEdit) -> Result<Vec<StepCc1Mutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match ladder::invert_class_edit_restoring(&base.to_part21_document(), CLASS, MAX_RUNG, edit) {
         Some(ClassEdit::FileSchema { schemas }) => vec![StepCc1Mutation::SetFileSchema(set_file_schema::SetFileSchema { schemas })],
         Some(ClassEdit::ProductIdentity { identity }) => vec![StepCc1Mutation::SetProductIdentity(set_product_identity::SetProductIdentity { identity })],
         Some(ClassEdit::Representation { id, row: None }) => vec![StepCc1Mutation::RemoveShapeRepresentation(remove_shape_representation::RemoveShapeRepresentation { id })],
         _ => vec![StepCc1Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
     }
+
+    })())
 }
 //#endregion 🔖️ClassEdit
 

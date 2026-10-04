@@ -172,7 +172,7 @@ mod subject {
         let spec = ctx.doc_json()?;
         let mut snapshot = decode(&input)?;
         let mutation = mutation_from_spec(&spec)?;
-        let inverse = mutation_inverse(&mutation, &snapshot);
+        let inverse = mutation_inverse(&mutation, &snapshot).expect("valid retained mutation inverse fixture");
         apply_txt_mutation(&mut snapshot, &mutation);
         for step in inverse {
             apply_txt_mutation(&mut snapshot, &step);

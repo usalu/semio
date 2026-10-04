@@ -1,0 +1,149 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "name": "direct await",
+      "source": "async function main(){await owned();}",
+      "expression": "owned()",
+      "expectedRole": "awaited",
+      "expectedKind": "FunctionDeclaration",
+      "completesBeforeReturn": true,
+      "rejects": false
+    },
+    {
+      "name": "dropped promise",
+      "source": "async function main(){owned();}",
+      "expression": "owned()",
+      "expectedRole": "requires-owned-await-decision",
+      "expectedKind": "FunctionDeclaration",
+      "completesBeforeReturn": false,
+      "rejects": false
+    },
+    {
+      "name": "consumed global aggregation",
+      "source": "async function main(){await Promise.all([owned()]);}",
+      "expression": "owned()",
+      "expectedRole": "aggregated-promise",
+      "expectedKind": "FunctionDeclaration",
+      "completesBeforeReturn": true,
+      "rejects": false
+    },
+    {
+      "name": "discarded global aggregation",
+      "source": "async function main(){Promise.all([owned()]);}",
+      "expression": "owned()",
+      "expectedRole": "requires-owned-await-decision",
+      "expectedKind": "FunctionDeclaration",
+      "completesBeforeReturn": false,
+      "rejects": false
+    },
+    {
+      "name": "shadowed aggregation",
+      "source": "async function main(){const Promise={all:(values:unknown[])=>values};await Promise.all([owned()]);}",
+      "expression": "owned()",
+      "expectedRole": "requires-owned-await-decision",
+      "expectedKind": "FunctionDeclaration",
+      "completesBeforeReturn": false,
+      "rejects": false
+    },
+    {
+      "name": "Bun owned rejection matcher",
+      "source": "import {expect} from \"bun:test\";async function main(){await expect(owned()).rejects.toThrow();}",
+      "expression": "owned()",
+      "expectedRole": "awaited-owned-matcher",
+      "expectedKind": "FunctionDeclaration",
+      "completesBeforeReturn": true,
+      "rejects": true
+    },
+    {
+      "name": "shadowed rejection matcher",
+      "source": "async function main(){function expect(_:unknown){return {rejects:{toThrow:()=>{}}};}await expect(owned()).rejects.toThrow();}",
+      "expression": "owned()",
+      "expectedRole": "requires-owned-await-decision",
+      "expectedKind": "FunctionDeclaration",
+      "completesBeforeReturn": false,
+      "rejects": true
+    },
+    {
+      "name": "immediate bound promise",
+      "source": "async function main(){const pending=owned();await pending;}",
+      "expression": "owned()",
+      "expectedRole": "immediately-awaited-binding",
+      "expectedKind": "FunctionDeclaration",
+      "completesBeforeReturn": true,
+      "rejects": false
+    },
+    {
+      "name": "discarded bound promise",
+      "source": "async function main(){const pending=owned();void pending;}",
+      "expression": "owned()",
+      "expectedRole": "requires-owned-await-decision",
+      "expectedKind": "FunctionDeclaration",
+      "completesBeforeReturn": false,
+      "rejects": false
+    },
+    {
+      "name": "forwarded return promise",
+      "source": "async function main(){function forward(){return owned();}await forward();}",
+      "expression": "owned()",
+      "expectedRole": "returned-promise",
+      "expectedKind": "FunctionDeclaration",
+      "completesBeforeReturn": true,
+      "rejects": false
+    },
+    {
+      "name": "constructor-owned inherited run",
+      "source": "async function main(){class Base{async run(){await owned();}}class Derived extends Base{}await new Derived().run();}",
+      "expression": "new Derived().run()",
+      "expectedRole": "awaited",
+      "expectedKind": "MethodDeclaration",
+      "completesBeforeReturn": true,
+      "rejects": false
+    },
+    {
+      "name": "owned override run",
+      "source": "async function main(){class Base{async run(){await owned();}}class Derived extends Base{async run(){await super.run();}}await new Derived().run();}",
+      "expression": "new Derived().run()",
+      "expectedRole": "awaited",
+      "expectedKind": "MethodDeclaration",
+      "completesBeforeReturn": true,
+      "rejects": false
+    },
+    {
+      "name": "typed injectable promise callback",
+      "source": "async function main(){async function invoke(run:()=>Promise<void>=owned){await run();}await invoke();}",
+      "expression": "run()",
+      "expectedRole": "awaited",
+      "expectedKind": "FunctionType",
+      "completesBeforeReturn": true,
+      "rejects": false
+    },
+    {
+      "name": "consumed native promise adoption",
+      "source": "async function main(){await Promise.resolve(owned());}",
+      "expression": "owned()",
+      "expectedRole": "adopted-promise",
+      "expectedKind": "FunctionDeclaration",
+      "completesBeforeReturn": true,
+      "rejects": false
+    },
+    {
+      "name": "discarded native promise adoption",
+      "source": "async function main(){Promise.resolve(owned());}",
+      "expression": "owned()",
+      "expectedRole": "requires-owned-await-decision",
+      "expectedKind": "FunctionDeclaration",
+      "completesBeforeReturn": false,
+      "rejects": false
+    },
+    {
+      "name": "shadowed promise adoption",
+      "source": "async function main(){const Promise={resolve:(_:unknown)=>0};await Promise.resolve(owned());}",
+      "expression": "owned()",
+      "expectedRole": "requires-owned-await-decision",
+      "expectedKind": "FunctionDeclaration",
+      "completesBeforeReturn": false,
+      "rejects": false
+    }
+  ]
+}

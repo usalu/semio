@@ -34,6 +34,34 @@
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       }
+    },
+    "test-private-reader": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun 📜️script.ts test-private-reader",
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": true
+      }
+    },
+    "test-native-drawing-reader": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun 📜️script.ts test-native-drawing-reader",
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": true
+      }
+    },
+    "test-type-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles",
+        "command": "bun ./📜️script.ts test-type-ownership"
+      }
     }
   }
 }

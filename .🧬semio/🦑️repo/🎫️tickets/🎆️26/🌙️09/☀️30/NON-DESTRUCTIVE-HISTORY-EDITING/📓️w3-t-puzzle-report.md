@@ -360,3 +360,242 @@ Successor S3-PUZZLE. Paths are relative to `P3`/`P5` as above unless written in 
   - 3d highlight: `Puzzle3dInteractionSnapshot.referenced` (from `InteractionView::draft_references`), `Puzzle3dInstanceResidency::refresh(…, referenced)` stamps `"highlighted": true` on exactly the referenced instance records (fingerprinted, so open/close of a draft republishes only those records through the delta lane); both hosts already paint the `highlighted` instance row.
   - 5d `puzzle5d_entity_label` (part = volume label → flat text → kind; grip `<part> · <grip kind>`; fastener `<part> → <part>`) + `entity_label`; world instances carry `highlighted`, the board scene's `highlighted_ids_json` = `Puzzle5dInteractionSnapshot::referenced_json()` (was a constant `[]`).
   - Laws: 3d `history_edit_reference_chips_name_entities_as_the_outliner_does`, `a_history_edit_draft_highlights_exactly_the_objects_it_references` (app level: drag → `historyEditBegin` → world highlights the target → `historyEditExit` clears); 5d `history_edit_reference_chips_name_entities_as_the_outliner_does`, `world_instances_highlight_the_parts_a_history_draft_references`, `board_paints_the_live_selection_hover_and_history_draft_references`.
+
+### S3.5 Resume after the usage cut (~13:05) and the machine reboot (~17:00) — 18:40
+
+- Every S3 edit is on disk and was swept into the 17:04 auto-commit (`git status` clean for `✏️s/🔌️plugins/🧩️puzzle`): the 7 braced example DSLs, the three `🧪️every-example` laws and their mounts, the two time-travel corpus laws on `dsl::json::parse`, the two 3d test-premise fixes, the G7 description removal, and the complete N3 change set for 3d and 5d (including the 5d world + board highlight assertions that were the last edit before the cut). Nothing was half-written.
+- `🛂️manifest/🦀️.rs` now names `semio_framework_schema_registry` (peer schema split, 14:21); cold rebuild of `semio-framework-plugin` started 18:41 to see whether the split is green.
+- 19:17 the root-workspace kernel checked green once, but the `✏️s` workspace kernel is red (278 errors: `🚪️io` `dsl::Diagnostic`, `📡️spr/🧵️channel` `crate::Fault*`, store/vcs) — the Codex peer's `semio_framework_dsl` extraction; the coordinator owns the "TREE GREEN" signal, so no more polling from this WP.
+- **N3 correction — React did not paint the guest highlight.** `World3dHost` overwrote the record's `highlighted` with its own catalog-kind hover (`{ ...instance, highlighted: chrome.highlighted }`), so a draft-referenced 3d object or 5d part would have highlighted on wgpu only. New pure `worldInstanceHighlighted(hostHighlighted, instance)` (`📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx`) ORs the two and is used at the instance mesh; the `WorldInstanceRecord.highlighted` doc names both sources. wgpu already reads the record flag (`♾️infinite/🌍️world` `highlighted_instance_ids`). Law in `🧪️tests/🔬️engine-contract/🟦️.ts` ("paints the guest-stamped highlight …"), imported straight from the host module (the renderer barrels are untouched).
+  - `cd 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript && bun ./📜️script.ts test long ../../../../🧪️tests/🔬️engine-contract/🟦️.ts --run "--testNamePattern=guest-stamped highlight|resolves mesh style by priority"` → **2 passed**, 696 skipped (19:37).
+- `an_id_only_announcement_this_guest_cannot_serve_asks_for_the_bytes` (S3.3): the puzzle 3d session registry is process-global and both `check_out` and `check_in` use `try_lock()` plus a process byte cap (`PUZZLE3D_SESSION_PROCESS_BYTES`); under the 900-test parallel run a contended or capped check-in drops the standing re-upload set, so the second announcement looks new. Expected to pass alone — to be re-run in isolation once the tree is green.
+- **Resume item "multi-object rotate preview/commit pivot parity" — React marker half (routed to S2-SPATIAL in S2.4, never picked up).** `World3dHost` previewed vortex markers and attraction ends of a gumball turn by orbiting them about the gumball pivot, while the instances (and the committed `rotate-selection`/`scale-selection`, and the wgpu preview since S2.2) turn each object about its OWN origin; a scale did not move markers at all. Now:
+  - `worldGumballOwnerPoses(instances)` (drag-start origin + orientation per instance) and `gumballPreviewOwnedWorldPoint/Direction(owner, …)`: translate adds the offset, a turn rotates about the owner's origin, a scale stretches along the owner's local axes (`R·diag(s)·R⁻¹` about the origin; directions renormalized) — the exact counterpart of `applyGumballLivePreviewDeltaToPose`.
+  - `worldVorticesWithGumballPreview`/`worldAttractionsWithGumballPreview` take the owner map (the component memoizes it from `instances`); the pivot-orbit helpers `gumballPreviewWorldPoint`/`gumballPreviewWorldDirection` are deleted together with their re-exports in `🎯️targets/⚛️react/🟦️.tsx` (no other user).
+  - Law (`🔬️engine-contract`): "previews a multi-object turn and scale of markers about each owner's origin, where the selection leaves land them" (two owners, one turned 90°; a marker of a third, unselected object stays the same object; attraction ends follow; local-axis scale of a point and a direction). The existing translate assertion moved to the owned helper.
+  - **Run blocked (19:41):** a peer's 19:38 edit of `🧬️schema/🧫️fixtures/🧬️vendor-annotation-vocabulary/🔣️.json` makes every strict-Ajv suite fail at load (`strictRequired` on `#/not/anyOf/0` `bounded`); reported to the coordinator. The highlight law passed at 19:37, before that edit.
+  - Re-run after the peer's 19:44 fixture fix: `bun ./📜️script.ts test long ../../../../🧪️tests/🔬️engine-contract/🟦️.ts --run "--testNamePattern=guest-stamped highlight|resolves mesh style by priority|multi-object turn and scale of markers|gumball rotate handles commit rotateSelection|gumball transform preview"` → **5 passed**, 0 failed (19:45).
+- Typecheck of the two TS files: `bunx tsc -p T/🧪️s3-puzzle-typecheck-world3d.tsconfig.json` (19:44; World3dHost + `🔬️engine-contract`, extends the React renderer tsconfig) → 14 errors, **none in `World3dHost` or in any line this WP touched**; all pre-existing peer ones: `🏪️store/👷️worker` (3776, 3842) and `🏪️store/🔄️sync/…/🔬️backbone-parity` (77) `HistoryOpMeta.line` missing, `🧪️tests/🔌️plugin-runtime` 1883 + `🏛️ShellHost` 6835 `loadAppDocumentPack`, `🐚️Shell` 1112 `idleInstalledServiceStatusV1`, `🔬️engine-contract` 4788–4865 UI `Component` literals. The package target `bun ./📜️script.ts typecheck` (renderer react, which does not include the engine tests) reports only the first 6 of those.
+
+### S3.6 Resume — TREE GREEN (10-03 05:50)
+
+- The interrupted edit (owner-pose map typing in `worldGumballOwnerPoses`) was complete on disk (explicit `Map` loop) and its laws passed at 19:45. All puzzle-side S3 edits re-verified present.
+- Overnight peer sweep: both selection time-travel laws now decode through `semio_framework_pack_json::parse(…, JsonMemberPolicy::Reject)` (the extracted framework JSON reader) — same correctly-rounded parse, kept.
+- 05:48 a peer's half-written `🗄️stdio/🗿️artifacts/📼️avi/📦️packages/🦀️rust/Cargo.toml` (only a `[dev-dependencies]` section) broke `✏️s` workspace loading for ~2 min; restored by its owner at 05:50.
+- 05:50: full puzzle 3d featured suite started (cold).
+- 05:50–06:38: the 3d run never got a rustc slot — it sat in cargo's `prebuild_lock_exclusive` (sampled) behind a fleet of ~12 peer cargos on the shared build-dir, was killed (137) in a peer's lock-cycle break at 06:38; relaunched 06:42 at low load and failed in 40 s: the kernel is red again (`🚪️io/🦀️.rs:2406ff` `IoError` has no field `message` / no `From<String>`, `🏪️store/…/🪶️sqlite/🦀️.rs:64`, `🏪️store/🦀️.rs:10917` — a peer's `IoError` reshaping in progress). Waiting for the tree; no polling beyond one cheap check per ~20 min.
+- 07:04 the `✏️s` kernel checked green once; the session was cut by the usage limit ~07:15 before the 3d suite produced a result.
+- 10:45 resume: the owner-pose typing edit is complete (`worldGumballOwnerPoses` explicit `Map` loop, `World3dHost/🟦️.tsx:3080`); no edit is half-written. `python3 T/🧪️s3-puzzle-brace-record-lists.py --check <7 example DSLs>` → **0 bare record lists in all 7** (the migrated data is intact). Waiting for the coordinator's TREE GREEN (stdio ply/dxf/pdf sqlite migration in flight).
+
+### S3.7 Open items and coordinator actions (current)
+
+**Owed runs (blocked only by the tree; run in this order, one gated cargo at a time, `--manifest-path ✏️s/Cargo.toml`, tests with `CARGO_INCREMENTAL=0 CARGO_TARGET_DIR=…/⚡️cache/cargo/target-nde-s3-puzzle`):**
+1. `cargo test -p semio-s-artifact-puzzle-3d --features component-app-assembly --lib` — every-example law (3d already 4/4 on 10-02), N3 3d laws, both corpus laws, the two re-premised tests, G7 example-switch asserts.
+2. `cargo test -p semio-s-artifact-puzzle-5d --features component-app-assembly --lib` — **never run** (audit Z2): every-example law over 3 examples incl. capsule-dream's 11 648 nested grips, N3 5d laws, S2.5 items 3 + 5.
+3. `cargo test -p semio-s-artifact-puzzle-2d --features component-app-assembly --lib -- every_registered_example dsl_asset_parses` — **never run** (Z2).
+4. `cargo check -p semio-s-artifact-puzzle-5d --features component-app-assembly --target wasm32-wasip2 --lib` (S2.5 item 1, both editors in wasm; the native 3d test build already shows no `unexpected cfg serde`).
+5. `cargo test -p semio-framework-os-infinite --lib -- world_gumball` (root workspace, S2.5 item 6).
+6. Isolated re-runs of the 3d wall-clock laws and `an_id_only_announcement_this_guest_cannot_serve_asks_for_the_bytes`.
+
+**Coordinator actions:** re-describe + re-activate puzzle (examples now load; descriptor still lists the deleted `transformBegin`/`transformEnd` and lacks the 7 selection leaf kinds); central `schema generate` (`🔣️selection-time-travel` schemas, changed 3d leaf descriptions); GATES may drop the obsolete `#![allow(unexpected_cfgs)]` in shooting `🎮️commands/🧭️gumball/🦀️.rs:10` and `🌎️hub/🧩️compositions/🖍️draw/📦️packages/🦀️rust/🦀️.rs:13` once the wasm check is clean.
+
+**Blockers / owners:** `one_mutation_publishes_in_a_bounded_size_independent_number_of_host_turns` (store units 22 → 1590 with document size) — S3-W1G. Every other S3.3 red is fixed in source or classified (load / test isolation).
+
+## Session 4 — 2026-10-04
+
+Successor S4-PUZZLE (Opus executor, coordinator `⚪487b04ad…`), inherits S3-PUZZLE (this report) and S3-W2D (`📓️w2-d-report.md`, pointer there).
+Scratch: `🗑️generated/s4-puzzle/`. Paths: `P2`/`P3`/`P5` = `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/{◻️2d,🧊️3d,🖐️5d}/🏅️standards/🔖️1/🪆️subsets/✳️any`,
+`ED` = `P2/✏️editor`, `BOARD` = `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board`.
+
+### S4.0 Status (updated at every milestone)
+
+- 02:10 started. Rule 34: `git diff HEAD --stat -- ✏️s/🔌️plugins/🧩️puzzle` = 847 files (mostly peer waves: value/DSL extraction, `warn`→`warning`,
+  ownership compute package). S4-INFRA owns the three sqlite owners (`P2|P3|P5/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs`, ValueError conversion scripts in
+  `🗑️generated/s4-infra/`) and the generated 3d example; this WP does not touch them. INFRA's own featured check of 2d+3d+5d was running at 02:08.
+- 02:20–02:33 non-cargo owed runs, all green (table S4.2). `x-semio-ui` completion for puzzle 2d edge geometry (S4.3).
+- 02:40 fixed `for_leaf` E0283 in all three editors (`ArtifactStoreOneItemFootprint::for_leaf::<Puzzle{2,3,5}dPlaySnapshot, _>`; every
+  puzzle aggregate implements both `Mutation<Value>` and `Mutation<…PlaySnapshot>`). INFRA's 02:25–02:28 editor edits (`json` imports,
+  `close_step` → `ValueError`, geometry test `DslValue`) verified present, no duplicates.
+- 02:55 **puzzle 3d featured lib compiles natively** (0 errors, 99 warnings). 2d + 5d blocked by peer `semio-s-artifact-stdio-semio` (25 errors,
+  graph `♻️restore-node`/`🔁restore-edge` leaves half-added). 03:01/03:08 3d test build blocked by peer edits in `semio-framework-plugin`
+  (`⏪️time-travel/🦀️.rs:3870/3901` `Label: From<&String>`, `🦀️.rs:32203` `for_gesture`, `🦀️.rs:24470` `VcsError::TooLarge`).
+
+### S4.1 D7 — the publication census was process-wide (02:50)
+
+`one_mutation_publishes_in_a_bounded_size_independent_number_of_host_turns` compares `TypedOperationUnitCensus` deltas taken around one
+dispatch. The census was seven process-wide `AtomicU64`s (`🔌️plugin/🦀️.rs` region `📊️PublicationUnitCensus`; its only readers are the puzzle
+3d/5d test harnesses). In a ~900-test parallel run every concurrently driven fixture app adds its units to the delta, so S3's
+"22 vs 1590 store units" is not attributable to the measured dispatch. Fix (region-scoped, compile-atomic): the counters are a
+`thread_local!` `[Cell<u64>; 7]`; every `record_typed_operation_unit` call sits in `advance_typed_operation_publication_unit`, i.e. on the
+host-turn thread that the reading belongs to. Re-measure owed (law alone + in-suite) once the plugin crate compiles again.
+
+### S4.2 Non-cargo owed runs (02:20–02:33)
+
+| Command (cwd repo root unless noted) | Result |
+|---|---|
+| `bun ./📜️script.ts schema mutation-inputs --under ✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/{◻️2d,🧊️3d,🖐️5d}` (cwd `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test`; repo-relative path — an absolute path silently matches 0 leaves) | 2d 103/103 inputs of 36 leaves, 3d 92/92 of 38, 5d 99/99 of 39; **0 findings** each (2d re-run after S4.3: same) |
+| `… schema mutation-payloads --under …` | 2d 115/115 payloads (10 negative), 36/36 witnessed; 3d 58/58 (4), 38/38; 5d 69/69 (4), 39/39; **0 findings** |
+| `python3 ED/🧪️tests/🧪️select-tool-history/🐍️.py` | **PASS** 4 scenarios, 12 head nodes agree |
+| `python3 ED/🧪️tests/🧪️history-edit-runtime/🐍️.py` | **PASS** 5 scenarios, 20 head nodes agree |
+| React (`⚛️react/📦️packages/🟦️typescript`) `bun ./📜️script.ts test long ../../../../🧪️tests/🔬️engine-contract/🟦️.ts --run "--testNamePattern=guest-stamped highlight\|resolves mesh style by priority\|multi-object turn and scale of markers\|gumball rotate handles commit rotateSelection\|gumball transform preview"` | **5 passed**, 695 skipped |
+| React `bun ./📜️script.ts test long engine-contract -t "puzzle 2d\|board 2d\|live mirror\|hover out of the board"` | **41 passed**, 659 skipped |
+| React `bun ./📜️script.ts test long board-event-coalescing float32-decimal` | **29 passed** (2 files) |
+
+### S4.3 Puzzle 2d leaf inputs — complete `x-semio-ui`
+
+Audit of every number input of the 36 puzzle 2d leaves (widget, en/de label, unit, step/precision, soft/hard bounds, snaps/snapSource): the
+selection leaves were already complete (drag `dx`/`dy` steppers snapping to `gridFactor`; rotate pivot steppers + `angle` dial rad→deg with
+quarter-turn detents; scale pivot steppers + `factor` log slider 0.1–10, detents 0.25/0.5/1/2/4, hard `exclusiveMinimum: 0`). Gaps fixed:
+- `connect-handles` and `replace-edge-geometry` carried the semio connection geometry as unit-less 0.1 steppers. They are the same
+  `gap/shift/rise` (metres) and `rotation/turn/tilt` (degrees — 5d `📐️geometry` applies `to_radians()`; puzzle 3d `connect-vortices` already
+  declares them so) that the 2d example loader passes straight into the 3d attraction. Now: lengths `unit: m`, step 0.01, precision 3;
+  angles `widget: dial`, `unit: deg`, step 1, precision 1, soft ±180, detents −180/−90/0/90/180. Labels unchanged (2d's `Wendung` avoids two
+  `Drehung`s). Script: `🧪️s4-puzzle-edge-geometry-ui.py` (idempotent, `--check` → 0 pending).
+- `scale-selection.factor` German description said "vom Drehpunkt" while the pivot is labelled "Bezugspunkt" → "vom Bezugspunkt aus".
+- Deliberately unchanged: region/node sizes keep no hard minimum because the leaves only refuse non-finite values (a schema stricter
+  than the fold would reject witnessed payloads).
+
+### S4.4 Editor peer fallout (03:10–03:26) and the native milestone
+
+INFRA's wasip2 closure check listed the remaining 2d/5d reds, all in `✏️editor/**` (this WP):
+- `dsl::json` / `dsl::os_pack::json` are gone from the kernel (`dsl` = `extern crate semio_framework_os_kernel as dsl`). Script
+  `🧪️s4-puzzle-pack-json-sweep.py` moved 119 files of puzzle 2d + 5d (editor, viewer-free lib code AND every leaf/editor test) onto
+  `semio_framework_pack_json`, mirroring the peer conversion of puzzle 3d: `from_json_str(x)` → `from_json_str(x, JsonMemberPolicy::Reject)`
+  (inserted before the call's matching parenthesis, turbofish kept), other functions renamed, doc references renamed; sqlite owners
+  (INFRA) skipped; idempotent (`--check` → 0 pending).
+- `MediaPayload::Intrinsic { schema, value }` (new variant): the 2d and 5d `kit:in` import jobs now take it explicitly — the typed
+  value is encoded to the JSON text their cursorized decoder already reads (`semio_framework_pack_json::to_json_string(&value)`); no wildcard.
+- 5d completion-rejection retirement stepped over `Emit.description`, which §20.6 deleted: the step is removed.
+- 5d transform re-exported `puzzle3d_transform_tool_clock`, which the CLOSURE-5 sweep replaced in 3d by
+  `semio_framework_tool_machine::authoring_clock(0)`: the re-export is deleted and the three 5d commit sites call `authoring_clock(0)`.
+- 5d precompute `ToolRunJobRequest { children, member_ops }` (S4-WIRES-MATH's child-target change) was fixed by its owner before my check.
+
+**03:26 milestone:** `cargo check --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-puzzle-3d -p semio-s-artifact-puzzle-2d -p semio-s-artifact-puzzle-5d --lib
+--features …3d/component-app-assembly,…2d/component-app-assembly,…5d/component-app-assembly --keep-going` → **exit 0, 0 errors** (warnings 3d 99, 2d 22,
+5d 17). `main` notified. (`semio-s-plugin-puzzle` no longer exists: the component crate is `semio-hub-puzzle` in `🌎️hub/Cargo.toml`.)
+- **03:46 wasm32-wasip2 green:** `cargo check --manifest-path 🌎️hub/Cargo.toml --target wasm32-wasip2 -p semio-hub-puzzle` → exit 0 (3d/2d/5d libs, 14m41s).
+  `main` notified (activation input). 03:52 coordinator ACTIVATION FREEZE (rule 40) on puzzle/framework/stdio/hub edits.
+
+### S4.5 `an_id_only_announcement_this_guest_cannot_serve_asks_for_the_bytes` — test isolation (source, 02:55)
+
+Root cause: every 3d fixture app bound instance id `1` (`app()` → `bind_instance_id(1)`), and the puzzle 3d session registry is a
+process-global slot row keyed by instance id (`✏️editor/🦀️.rs` region `🎟️SessionRegistry`). Under the ~900-test parallel run concurrent laws
+adopted, evicted and re-keyed (different parent document ids → `retire`) each other's slot between this law's two dispatches; the standing
+mesh re-upload set lives in that slot's collision session, so the second announcement looked new. In addition `check_out`/`check_in` used
+`try_lock()`, so a contended registry silently dropped the state — a production behaviour issue, not only a test one: the session carries
+behaviour (the B32 storm guard), not just speed.
+- Production: `puzzle3d_session_check_out`/`_check_in` WAIT for the registry lock (poison-tolerant); the critical section is a slot move.
+  `retire` = new `vacate` (empty slot, bump generation) + the page-run upload sweep.
+- Tests: `next_fixture_instance_id()` (process-unique `AtomicU32`) replaces `FIXTURE_INSTANCE_ID`; `Puzzle3dApp.instance_id` is the bound id
+  and the result-page receiver; `Drop for Puzzle3dApp` calls the new `#[cfg(test)] puzzle3d_session_release(id)` (vacates its slots without
+  the process-wide upload sweep, so one law's drop never sweeps a concurrent law's open upload).
+- Follow-up (production, needs the framework): an instance close does not release its slot (the owner built by
+  `build_instance_operation_owner` does not know its instance id); bounded by 64 slots + LRU + 96 MiB, but a closed document's caches linger.
+
+### S4.6 Wall-clock laws → deterministic work-meter laws (source, 03:40–03:52)
+
+All six 3d laws that asserted `Instant` elapsed times (the 4 named in S3.3 plus `penetration_steps_stay_within_interaction_watchdog`,
+`empty_fill_transition_stays_below_watchdog_ceiling`, `adversarial_broad_phase_fill_is_end_to_end_resumable_below_eight_ms`) now assert counts:
+- New `#[cfg(test)]` thread-local **precompute work meter** (`⏳️precompute/📐️geometry/🦀️.rs` region `🧮️WorkMeter`: `precompute_work(units)` — a
+  no-op outside test builds —, `precompute_work_done()`, `precompute_work_clock()`). Charged at the primitive costs: each surface-distance and
+  each containment query (`probe`), every near face clipped (`step_face`), every spatial-index lookup including the `nth(member_cursor)` walk
+  (`step_query`, which therefore exposes the cursor's O(cursor) iteration honestly), index mutation steps, every mesh vertex + triangle ingested
+  (`collision_body_from_buffers`), every brush loop unit / placed-object scan / placed-entry AABB test / candidate listed, every fill
+  builder transition.
+- Job laws (brush suggestions, fill run) drive the REAL jobs with `precompute_work_clock` as the job clock and a `budgetWork`-unit slice, so the
+  jobs' own deadline checks slice deterministically, and assert the worst step ≤ `stepWorkCeiling` (fixture keys; the old `budgetUs`/`runs`/
+  `coldRuns` and the replay clocks are deleted). Fill (b) asserts ops per appending tick ≤ `appendOpsCeiling`, each folding onto the overlay.
+- Penetration and fill-builder laws bound per-step and total work by named constants.
+- Maintenance law: a unit is bounded by its grant, not the clock — `MaintenanceStageGrants` (replaces the wall-time `MaintenanceStageBudget`)
+  audits every `maintenance_step` `Pending { released_items, released_bytes }` against `(1, RUNTIME_LIVE_CLEANUP_BYTES_PER_STEP)` per stage over
+  both flagship documents; one round (deterministic).
+- Root gate `📜️script.ts` `interactivityPuzzleFillRunJobFailures` now pins `budgetWork === 1000`, `0 < stepWorkCeiling ≤ 100 000`,
+  `appendOpsCeiling > 0`, `turns ≥ 1` instead of `budgetUs === 2000`/`turns ≥ 771`; its self-test fixture
+  (`🧪️tests/🔬️interactivity-puzzle-fill-run-job/🟦️.ts`) follows, plus a new `loosened-step-ceiling` case:
+  `bun ./📜️script.ts verify puzzle-fill-policy-self-tests` (cwd `✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript`) → **checks=73**, pass.
+- Ceilings are provisional (100 000 per step); the first run prints `[DEBUG]` counts, then the fixtures/constants are pinned to the measured
+  maxima with headroom and the `[DEBUG]` lines removed (after the freeze).
+- Remaining wall-clock asserts in the 3d unit file (`PUZZLE3D_INTERACTIVE_STEP_CEILING` at the openVortexSuggestions / acceptSuggestion /
+  setActiveExample worst-turn laws) are next.
+- Noted, not mine: the real fill fixture's `delivery.candidates` is 2500 while the root gate demands ≥ 5000 (pre-existing).
+
+### S4.7 Resume after the usage cut (~04:15 → 06:45)
+
+- Rule 34 re-check: every S4 edit is on disk (thread-local census region, session `vacate`/`puzzle3d_session_release`, unique fixture instance
+  ids, `MaintenanceStageGrants`, work meter + the converted brush/fill/penetration laws and fixtures, root gate + self-test). Nothing
+  half-written: the maintenance conversion had completed before the cut.
+- 04:04 the first 3d TEST build after the meter edits showed 38 errors, all peer-sweep leftovers in three 3d TEST files the lib sweep had not
+  reached (bare `json::` of the deleted `use dsl::json`, one-argument `parse`/`from_json_str`, `protocol::{Terminology, Locale}` no longer
+  re-exported). Script `🧪️s4-puzzle-3d-test-pack-json.py` (idempotent, `--check` → 0) converted them: `semio_framework_pack_json::`,
+  `JsonMemberPolicy::Reject`, `semio_framework_ui_locale::{Terminology, Locale}`.
+- `check-3` (04:14 → 04:27, libs, featured, 2d+3d+5d) → exit 0, 0 errors: the meter/session/census edits keep the native closure green.
+
+### S4.8 Queued items after the freeze (06:50–07:05, source)
+
+- **Z4 (audit-s3-tools, routed via S4-TOOLS-A):** new 3d law `the_world3d_local_gumball_cases_land_as_their_guest_edits` (`✏️editor/🧪️tests/🔬️unit`,
+  region `🔖️Gumball`) replays the four `live: false` cases of `🌐️World3dHost/🧫️fixtures/🛠️gumball-live-protocol.json` against the real app: each
+  host dispatch with its exact wire args (`ids` swapped for the fixture object) must publish exactly the case's `guest.edits` history rows
+  and move the object by `guest.offset` (absent `guest` = 0 edits, no motion; the no-target case dispatches nothing). Asserts 4 cases.
+- **Fault notices (S4-GATES scoped mode):** the 3d fill tool's anonymous faults are named refusals — `puzzle3d.fill.scene-unavailable`
+  (document builds no engine scene) and `puzzle3d.fill.provisional-unreadable` (finalize revalidation cannot decode the provisional ops);
+  every puzzle editor now implements `ArtifactApp::fault_notices()` with a literal `(code, LocalizedLabel::native(en, de))` table
+  (3d: those two + `puzzle3d.action.flag-value-required`; 2d/5d: their `…action.flag-value-required`).
+  `bun ./📜️script.ts schema fault-notices --census` → puzzle row **codes 5, labelled 5, declared 5**, missing/unresolved 0 (was 3/0/0 with 3
+  missing); the remaining puzzle findings are 311 repo-wide anonymous faults (out of the scoped mode) + 1 `faultNoticeDescriptor` (the
+  committed descriptor predates the notices → describe, coordinator).
+
+### S4.9 Closure rule `footprint-default` (coordinator routing from S4-GATES, 07:20) and runs
+
+- The hand `impl Mutation<Value>` / `impl Mutation<…PlaySnapshot>` bridges of all three aggregates (`🧬️schema/🧬️mutations/🦀️.rs`) forwarded
+  descriptors and input schemas but not `inverse_rows`, so they fell back to the trait default 1 (rotate-selection declares 65 per target) — an
+  under-declared fold footprint for `ArtifactStoreOneItemFootprint::for_leaf`. All 6 bridges now forward `Mutation::<…Snapshot>::inverse_rows`.
+  `bun ./📜️script.ts verify history-closure --json` (root) → census `footprint-default 0`, `footprint-hand 0`, `coalesce-key 0`; `bracket-verb 11`
+  remain, the 2 puzzle ones being the stale committed descriptor `🌎️hub/🧩️compositions/🧩️puzzle/🔣️.json` (`transformBegin`/`transformEnd`) → describe.
+- `cargo test -p semio-framework-os-infinite --lib -- world_gumball directed_normal` (root, private target) → **62 passed, 0 failed** (07:59).
+- 3d test build: 07:05 and 06:45 runs SIGKILLed by the coordinator deadlock breaker (`coord/deadlock-breaker.txt` 07:30:58 "killed 27653 age 1538s
+  cpu 1.12s" — my cargo sat behind peer locks); 07:31 retry hit a pruned shared-build-dir fingerprint; 07:42 retry stopped on PEER reds in two
+  regular dependencies of puzzle 3d: stdio-stl `📸️snapshot/📦️pack/🦀️.rs:30,35` (`ValueError` not imported; edited 07:16) and stdio-ply
+  `📸️snapshot/🪶️sqlite/🦀️.rs:111,112` (`Result<_, ValueError>` expected) — reported to `main`.
+
+### S4.10 OWED (rule 43: no puzzle `cargo test` until "TESTS RESUMED"; run after the describe wave + activation)
+
+Every command from `/Users/ueli/Documents/semio`, gated by rule 42 (`until [ "$(pgrep -x cargo | wc -l | tr -d ' ')" -lt 8 ] && [ "$(pgrep -x rustc | wc -l | tr -d ' ')" -lt 14 ]; do sleep 30; done`),
+prefix `CARGO_INCREMENTAL=0 CARGO_TARGET_DIR=/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/target-nde-s4-puzzle`, output to `T/🗑️generated/s4-puzzle/<name>.txt`:
+1. `cargo test --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-puzzle-3d --features component-app-assembly --lib --message-format=short` — full 3d suite incl.
+   every-example, N3 laws, the session-isolation fix (`an_id_only_announcement_this_guest_cannot_serve_asks_for_the_bytes` in-suite), the work-meter
+   laws (read their `[DEBUG]` counts, pin `stepWorkCeiling`/`*_WORK_CEILING` to measured maxima + headroom, delete the `[DEBUG]` lines), Z4
+   `the_world3d_local_gumball_cases_land_as_their_guest_edits`, `every_maintenance_unit_stays_inside_the_interactive_step_budget`.
+2. **D7 re-measure** (thread-local census): `… -p semio-s-artifact-puzzle-3d --features component-app-assembly --lib --message-format=short -- one_mutation_publishes_in_a_bounded_size_independent_number_of_host_turns b54_measures_the_turns_and_units_one_mutation_costs_per_document_size --nocapture --test-threads=1`
+   then the same filter inside the full parallel run (1.) — compare `translate_census.store` small vs Nakagin; numbers to `main` for S4-STORE/S4-RUNTIME.
+3. `… -p semio-s-artifact-puzzle-5d --features component-app-assembly --lib --message-format=short` (never run; audit Z2), then the W2D filter
+   `-- a_board_gesture_drag board_node_delete apply_board_events language_neutral_fixtures`.
+4. `RUST_MIN_STACK=67108864 … -p semio-s-artifact-puzzle-2d --features component-app-assembly --lib --message-format=short` (full), then filters
+   `-- every_registered_example dsl_asset_parses`, `-- select_tool` (machine + transactions + corpus incl. `select_tool_history` and the Use-selection
+   click), `-- history_edit_runtime_tests`, and the two fill laws alone: `-- board_fill_job_large_host_has_no_step_at_or_above_eight_ms fill_run_job_drive_step_stays_below_the_interactive_ceiling_for_nakagin`.
+5. `cargo test -p semio-framework-os-renderer-wgpu --lib -- board2d` (root; W2D's wgpu board laws; RUST_MIN_STACK=67108864).
+
+### S4.11 Resume 11:35 (cut ~08:55)
+
+- 08:37–08:49 featured native check (`check-4`) after the 07:2x edits: 3d + 5d green (warnings 102/18), **2d red only in its sqlite owner**
+  (`🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs:171,177–179`, E0282/E0283: the four `native.scoped_stage(|native|{…; Ok(())})` closures in `native_rows` left
+  the closure's error type to inference once `?` converts). INFRA's 08:56 census showed the same 4 errors (no puzzle `close_step` error remained).
+  The coordinator handed the fix to this WP: each closure now states `->Result<(),semio_framework_value::ValueError>` (the 5d owner's form).
+- Inherited from the 07:2x waves and still part of this check: the `inverse_rows` bridges (S4.9) and the fault-notice tables (S4.8).
+- 11:40 first re-check SIGKILLed by the deadlock breaker (12:06:17, my cargo sat 25 min in a lock cycle); re-run once:
+  **`cargo check --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-puzzle-3d -p semio-s-artifact-puzzle-2d -p semio-s-artifact-puzzle-5d --lib --features …3d/component-app-assembly,…2d/component-app-assembly,…5d/component-app-assembly --keep-going`
+  → exit 0, 0 errors** (12:16 → 12:36; warnings 3d 102, 2d 34, 5d 18).
+- **`cargo check --manifest-path 🌎️hub/Cargo.toml --target wasm32-wasip2 -p semio-hub-puzzle` → exit 0, 0 errors** (12:43 → 12:49; the 12:36 try failed
+  writing a fingerprint the disk guard had pruned, re-run green).
+- 12:49 `main` notified **"COMPOSITION GREEN puzzle"** (rule 44: my last cargo until the coordinator's describe + activation).
+
+### S4.12 Coordinator actions (current)
+
+1. `describe` + activation of puzzle (design §21.4, coordinator-owned): picks up the fault-notice tables (gate `faultNoticeDescriptor` 1 →
+   0), drops the stale `transformBegin`/`transformEnd` bracket verbs from `🌎️hub/🧩️compositions/🧩️puzzle/🔣️.json` (`verify history-closure`
+   bracket-verb −2), the 7 selection leaf kinds, the `BoardSession.setHighlightedIdsJson` binding and the Nakagin 2d manifest registration
+   (W2D S3.5). No channel bump from this WP.
+2. Central `schema generate` (§3.1): 2d edge geometry `x-semio-ui` (connect-handles, replace-edge-geometry), scale-selection de description,
+   3d `🔣️selection-time-travel`, 2d `editor/select-tool-history`.
+3. After "TESTS RESUMED": the OWED list S4.10 (3d/5d/2d suites, D7 re-measure with numbers to S4-STORE/S4-RUNTIME, wgpu board2d).
+4. Production follow-up (framework, not this WP): an artifact-instance close should release its puzzle 3d session slot — the instance
+   operation owner does not know its instance id today (S4.5).

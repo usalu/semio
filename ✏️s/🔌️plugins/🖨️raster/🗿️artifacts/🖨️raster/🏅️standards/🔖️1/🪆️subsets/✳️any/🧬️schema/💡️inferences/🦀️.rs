@@ -6,7 +6,6 @@
 
 use crate::RasterSnapshot;
 use schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::topology::compute_raster_topology;
 //#region 🔖️Inference
@@ -16,7 +15,7 @@ use super::topology::compute_raster_topology;
 /// value), so `topology` here is a real pre-order traversal of that structural nesting:
 /// `topoOrder`/`depth`/`nodeCount` plus `cycleFree`, which is always `true` — a Rust `Vec<Self>`
 /// embedded by value cannot express a structural cycle.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.raster.raster.inference")]
 pub struct RasterInference {
@@ -25,8 +24,11 @@ pub struct RasterInference {
 }
 
 impl protocol::Inference<RasterSnapshot> for RasterInference {
-    fn infer(snapshot: &RasterSnapshot) -> Self {
+    fn infer(snapshot: &RasterSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { topology: compute_raster_topology(snapshot) }
+    
+        })
     }
 }
 
@@ -34,7 +36,9 @@ impl protocol::Inference<RasterSnapshot> for RasterInference {
 /// `RasterSnapshot::default()`'s `layers` field ever stops being empty.
 impl Default for RasterInference {
     fn default() -> Self {
-        <Self as protocol::Inference<RasterSnapshot>>::infer(&RasterSnapshot::default())
+        let snapshot = &RasterSnapshot::default();
+
+        Self { topology: compute_raster_topology(snapshot) }
     }
 }
 
@@ -50,13 +54,6 @@ impl protocol::InferenceSpec<RasterSnapshot> for RasterInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::RasterBuilder {
-    type Snapshot = RasterSnapshot;
-    type Inference = RasterInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.raster.raster.inference`'s facet leaves into the OS-wide inference catalog —

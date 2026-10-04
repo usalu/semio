@@ -34,6 +34,8 @@ export interface RasterConfig {
   brushHardness: number;
   paintTarget:"pixels"|"mask";
   maskValue:number;
+  /** 🪣️ The bucket's colour tolerance (0..255). */
+  fillTolerance:number;
   pixelSelection?:RasterPixelSelection;
   /** @state config */
   compositeViewport?: RasterConfigViewportSize;
@@ -101,6 +103,7 @@ export function parseRasterConfig(value: unknown, at = "$"): RasterConfig {
     brushHardness: rasterRasterConfigGuardNumber(row["brushHardness"], `${at}.brushHardness`, {minimum:0,maximum:1}),
     paintTarget:rasterRasterConfigGuardMember(row["paintTarget"],`${at}.paintTarget`,["pixels","mask"]),
     maskValue:rasterRasterConfigGuardInteger(row["maskValue"],`${at}.maskValue`,{minimum:0,maximum:255}),
+    fillTolerance:rasterRasterConfigGuardInteger(row["fillTolerance"],`${at}.fillTolerance`,{minimum:0,maximum:255}),
     compositeViewport: row["compositeViewport"] === undefined ? undefined : parseRasterConfigViewportSize(row["compositeViewport"], `${at}.compositeViewport`),
     camera: parseRasterCamera(row["camera"], `${at}.camera`),
   };

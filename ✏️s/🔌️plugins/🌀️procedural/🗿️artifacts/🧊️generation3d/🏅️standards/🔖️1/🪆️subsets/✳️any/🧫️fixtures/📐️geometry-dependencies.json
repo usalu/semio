@@ -1,0 +1,7 @@
+{
+  "neuronId": "add",
+  "expected": {
+    "widgets": { "add": { "operatorId": "math.add", "params": {} }, "slider": { "number": 3.0 } },
+    "synapses": { "s1": { "id": "s1", "from": "slider", "to": "add", "fromPort": "number", "toPort": "a" } }
+  }
+}

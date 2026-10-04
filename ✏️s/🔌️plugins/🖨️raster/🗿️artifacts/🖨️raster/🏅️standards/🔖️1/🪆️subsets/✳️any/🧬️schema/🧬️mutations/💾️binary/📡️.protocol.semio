@@ -49,3 +49,9 @@ record paint-stroke tag=17
 field payload bytes
 record fill-region tag=18
 field payload bytes
+record apply-filter tag=19
+field payload bytes
+record transform-image tag=20
+field payload bytes
+record fill-selection tag=21
+field payload bytes

@@ -40,7 +40,7 @@ async fn a_two_slice_migrate_job_decodes_then_dispatches_to_the_registered_migra
             assert_eq!(progress, format!("{from}->{to}").into_bytes());
         }
         JobStep::Failed(bytes) => {
-            let fault = dsl::decode_fault_bytes(&bytes);
+            let fault = semio_framework_diagnostic::decode_fault_bytes(&bytes);
             panic!("slice 1 must be Running(Some(coordinates)), not fail: {} {}", fault.code.0, fault.message);
         }
         JobStep::Done(_) => panic!("slice 1 must not finish in one tick"),
@@ -49,7 +49,7 @@ async fn a_two_slice_migrate_job_decodes_then_dispatches_to_the_registered_migra
     match step_job(400, FULL_GRANT).await {
         JobStep::Done(bytes) => assert_eq!(bytes, vec![1, 2, 3, 0xAB]),
         JobStep::Failed(bytes) => {
-            let fault = dsl::decode_fault_bytes(&bytes);
+            let fault = semio_framework_diagnostic::decode_fault_bytes(&bytes);
             panic!("slice 2 must dispatch to the registered migration, not fail: {} {}", fault.code.0, fault.message);
         }
         JobStep::Running(_) => panic!("slice 2 must finish Done, the native migration call is atomic"),
@@ -95,7 +95,7 @@ async fn migrate_job_reports_a_named_fault_when_no_migration_is_registered() {
     step_job(403, FULL_GRANT).await;
     match step_job(403, FULL_GRANT).await {
         JobStep::Failed(bytes) => {
-            let fault = dsl::decode_fault_bytes(&bytes);
+            let fault = semio_framework_diagnostic::decode_fault_bytes(&bytes);
             assert_eq!(fault.code.0, "job.migrate");
         }
         _ => panic!("a migration nobody registered must fail on slice 2, not succeed"),
@@ -107,7 +107,7 @@ async fn migrate_job_reports_a_named_decode_fault_on_garbage_input() {
     start_job(404, JOB_KIND_MIGRATE, b"not json").await;
     match step_job(404, FULL_GRANT).await {
         JobStep::Failed(bytes) => {
-            let fault = dsl::decode_fault_bytes(&bytes);
+            let fault = semio_framework_diagnostic::decode_fault_bytes(&bytes);
             assert_eq!(fault.code.0, "job.migrate.decode");
         }
         _ => panic!("garbage migrate input must fail on slice 1"),

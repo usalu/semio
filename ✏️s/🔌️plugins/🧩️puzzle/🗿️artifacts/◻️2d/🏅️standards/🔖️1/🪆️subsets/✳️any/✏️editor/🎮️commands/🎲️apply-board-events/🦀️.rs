@@ -153,7 +153,7 @@ pub fn apply_board_events_from_json(events_json: &str, envelope: &mut Puzzle2dSc
             }
             "brushCandidates" => {
                 if let Some(candidates) = payload.get("candidates").and_then(|value| value.as_array()) {
-                    envelope.runtime.brush_candidates = candidates.iter().map(dsl::DslValue::from).collect();
+                    envelope.runtime.brush_candidates = candidates.iter().map(semio_framework_value::DslValue::from).collect();
                 }
                 if let Some(source) = payload.get("sourceHandleId").and_then(|value| value.as_str()) {
                     envelope.runtime.brush_candidate_source_handle_id = source.to_string();

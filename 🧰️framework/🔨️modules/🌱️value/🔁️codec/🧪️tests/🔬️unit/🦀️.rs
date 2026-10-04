@@ -62,7 +62,7 @@ fn vec_round_trips_and_reports_index_on_error() {
     let encoded = values.to_value();
     assert_eq!(Vec::<i64>::from_value(encoded), Ok(values));
     let bad = DslValue::Array(vec![DslValue::int(1), DslValue::Bool(true)]);
-    assert_eq!(Vec::<i64>::from_value(bad), Err(ValueError::new("1.expected a number, found Bool(true)")));
+    assert_eq!(Vec::<i64>::from_value(bad), Err(ValueError::new(crate::ValueRefusalKind::InvalidValue, "1.expected a number, found Bool(true)")));
 }
 
 #[test]
@@ -82,7 +82,7 @@ fn tuple_round_trips_as_two_element_array_like_serde_json() {
     assert_eq!(encoded, DslValue::Array(vec![DslValue::String("a".to_string()), DslValue::Array(vec![DslValue::String("b".to_string()), DslValue::String("c".to_string())])]));
     assert_eq!(<(String, Vec<String>)>::from_value(encoded), Ok(pair));
     let bad = DslValue::Array(vec![DslValue::int(1)]);
-    assert_eq!(<(i64, i64)>::from_value(bad), Err(ValueError::new("expected a 2-element array, found Array([Number(Int(1))])")));
+    assert_eq!(<(i64, i64)>::from_value(bad), Err(ValueError::new(crate::ValueRefusalKind::InvalidValue, "expected a 2-element array, found Array([Number(Int(1))])")));
 }
 
 #[test]
@@ -93,10 +93,10 @@ fn fixed_size_array_round_trips_and_rejects_wrong_length() {
     assert_eq!(<[f64; 3]>::from_value(encoded), Ok(values));
 
     let too_short = DslValue::Array(vec![DslValue::float(1.0), DslValue::float(2.0)]);
-    assert_eq!(<[f64; 3]>::from_value(too_short), Err(ValueError::new("expected an array of length 3, found 2")));
+    assert_eq!(<[f64; 3]>::from_value(too_short), Err(ValueError::new(crate::ValueRefusalKind::InvalidValue, "expected an array of length 3, found 2")));
 
     let too_long = DslValue::Array(vec![DslValue::float(1.0), DslValue::float(2.0), DslValue::float(3.0), DslValue::float(4.0)]);
-    assert_eq!(<[f64; 3]>::from_value(too_long), Err(ValueError::new("expected an array of length 3, found 4")));
+    assert_eq!(<[f64; 3]>::from_value(too_long), Err(ValueError::new(crate::ValueRefusalKind::InvalidValue, "expected an array of length 3, found 4")));
 }
 
 #[test]

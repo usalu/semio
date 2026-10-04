@@ -6,19 +6,14 @@
 //! `serializer_entry_of` erasure, not here) to embed the geometry buffer as a `data:` uri on
 //! actual JSON emission (buffers left with `uri: None` here, per that function's own contract).
 //!
-//! 🔖 Documented lossiness (mirrors the deserializer's list): `SemioMaterial`'s scalar-only PBR
-//! fields produce a material with no texture references (`base_color_texture` etc. always `None`);
-//! `SemioTexture`s are emitted as `images`/`textures` entries but nothing in this schema
-//! (materials have no texture indices) ever references them by index -- still real, valid gltf,
-//! just unreferenced, exactly mirroring what the deserializer harvests independently of material
-//! texture refs. `SemioMeshSnapshot` has no scene graph, so the file gets one default scene holding one
-//! untransformed node per mesh — the minimum a viewer needs to show anything. `POSITION` accessors
-//! carry the `min`/`max` bounds the specification requires.
+//! 🎨️ All five owned material texture IDs resolve to emitted glTF textures and image payloads.
+//! Sampler settings, alternate UV sets, normal scale, occlusion strength and scene hierarchy
+//! remain outside the owned Semio mesh material contract.
 
 use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot, SemioTopology};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 use semio_s_artifact_stdio_gltf::engine::{encode_data_uri, GltfAccessorType, GltfComponentType};
-use semio_s_artifact_stdio_gltf::schema::snapshot::{GltfAccessor, GltfAlphaMode, GltfBuffer, GltfBufferView, GltfDocument, GltfImage, GltfMaterial, GltfMesh, GltfNode, GltfPbrMetallicRoughness, GltfPrimitive, GltfScene, GltfSourceForm, GltfTexture};
+use semio_s_artifact_stdio_gltf::schema::snapshot::{GltfAccessor, GltfAlphaMode, GltfBuffer, GltfBufferView, GltfDocument, GltfImage, GltfMaterial, GltfMesh, GltfNode, GltfPbrMetallicRoughness, GltfPrimitive, GltfScene, GltfSourceForm, GltfTexture, GltfTextureInfo, GltfNormalTextureInfo, GltfOcclusionTextureInfo};
 use semio_s_artifact_stdio_gltf::GltfSnapshot;
 use semio_s_artifact_stdio_gltf::STDIO_GLTF_DOCUMENT_SCHEMA;
 use std::collections::HashMap;
@@ -86,16 +81,16 @@ impl ArtifactSerializer for SemioMeshToGltf {
             let mut gprims = Vec::with_capacity(mesh.primitives.len());
             for prim in &mesh.primitives {
                 if prim.positions.is_empty() {
-                    return Err(store::PackError::Schema(format!("SemioMeshToGltf: primitive {:?} has no positions; gltf POSITION is mandatory", prim.id)));
+                    return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("SemioMeshToGltf: primitive {:?} has no positions; gltf POSITION is mandatory", prim.id))));
                 }
                 if !prim.normals.is_empty() && prim.normals.len() != prim.positions.len() {
-                    return Err(store::PackError::Schema(format!("SemioMeshToGltf: primitive {:?} normals length {} != positions length {}", prim.id, prim.normals.len(), prim.positions.len())));
+                    return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("SemioMeshToGltf: primitive {:?} normals length {} != positions length {}", prim.id, prim.normals.len(), prim.positions.len()))));
                 }
                 if !prim.uvs.is_empty() && prim.uvs.len() != prim.positions.len() {
-                    return Err(store::PackError::Schema(format!("SemioMeshToGltf: primitive {:?} uvs length {} != positions length {}", prim.id, prim.uvs.len(), prim.positions.len())));
+                    return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("SemioMeshToGltf: primitive {:?} uvs length {} != positions length {}", prim.id, prim.uvs.len(), prim.positions.len()))));
                 }
                 if !prim.colors.is_empty() && prim.colors.len() != prim.positions.len() {
-                    return Err(store::PackError::Schema(format!("SemioMeshToGltf: primitive {:?} colors length {} != positions length {}", prim.id, prim.colors.len(), prim.positions.len())));
+                    return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("SemioMeshToGltf: primitive {:?} colors length {} != positions length {}", prim.id, prim.colors.len(), prim.positions.len()))));
                 }
 
                 let mut attributes = Vec::new();
@@ -131,7 +126,7 @@ impl ArtifactSerializer for SemioMeshToGltf {
 
                 let material = match &prim.material_id {
                     Some(id) => {
-                        let idx = material_index_of.get(id.as_str()).copied().ok_or_else(|| store::PackError::Schema(format!("SemioMeshToGltf: primitive {:?} references unknown material {id:?}", prim.id)))?;
+                        let idx = material_index_of.get(id.as_str()).copied().ok_or_else(|| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("SemioMeshToGltf: primitive {:?} references unknown material {id:?}", prim.id))))?;
                         Some(idx)
                     }
                     None => None,
@@ -142,31 +137,38 @@ impl ArtifactSerializer for SemioMeshToGltf {
             gltf_meshes.push(GltfMesh { primitives: gprims, weights: Vec::new(), name: Some(mesh.id.clone()), extensions: None, extras: None });
         }
 
+        let mut texture_indices = HashMap::new();
+        for (index, texture) in from.textures.iter().enumerate() {
+            if texture_indices.insert(texture.id.as_str(), index).is_some() { return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "SemioMeshToGltf: duplicate texture ID"))); }
+        }
+        let texture_index = |id: &Option<String>| -> Result<Option<usize>, store::PackError> {
+            id.as_deref().map(|id| texture_indices.get(id).copied().ok_or_else(|| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("SemioMeshToGltf: unknown material texture {id:?}"))))).transpose()
+        };
         let gltf_materials: Vec<GltfMaterial> = from
             .materials
             .iter()
-            .map(|m| GltfMaterial {
+            .map(|m| Ok(GltfMaterial {
                 name: Some(m.id.clone()),
                 pbr_metallic_roughness: Some(GltfPbrMetallicRoughness {
                     base_color_factor: [m.base_color.r as f64, m.base_color.g as f64, m.base_color.b as f64, m.base_color.a as f64],
-                    base_color_texture: None,
+                    base_color_texture: texture_index(&m.base_color_texture)?.map(|index| GltfTextureInfo { index, tex_coord: 0, extensions: None, extras: None }),
                     metallic_factor: m.metallic as f64,
                     roughness_factor: m.roughness as f64,
-                    metallic_roughness_texture: None,
+                    metallic_roughness_texture: texture_index(&m.metallic_roughness_texture)?.map(|index| GltfTextureInfo { index, tex_coord: 0, extensions: None, extras: None }),
                     extensions: None,
                     extras: None,
                 }),
-                normal_texture: None,
-                occlusion_texture: None,
-                emissive_texture: None,
+                normal_texture: texture_index(&m.normal_texture)?.map(|index| GltfNormalTextureInfo { index, tex_coord: 0, scale: 1.0, extensions: None, extras: None }),
+                occlusion_texture: texture_index(&m.occlusion_texture)?.map(|index| GltfOcclusionTextureInfo { index, tex_coord: 0, strength: 1.0, extensions: None, extras: None }),
+                emissive_texture: texture_index(&m.emissive_texture)?.map(|index| GltfTextureInfo { index, tex_coord: 0, extensions: None, extras: None }),
                 emissive_factor: [0.0, 0.0, 0.0],
                 alpha_mode: GltfAlphaMode::Opaque,
                 alpha_cutoff: 0.5,
                 double_sided: false,
                 extensions: None,
                 extras: None,
-            })
-            .collect();
+            }))
+            .collect::<Result<_, store::PackError>>()?;
 
         let mut gltf_images = Vec::with_capacity(from.textures.len());
         let mut gltf_textures = Vec::with_capacity(from.textures.len());

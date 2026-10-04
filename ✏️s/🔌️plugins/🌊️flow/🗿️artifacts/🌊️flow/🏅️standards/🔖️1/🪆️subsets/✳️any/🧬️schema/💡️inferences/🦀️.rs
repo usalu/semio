@@ -6,7 +6,6 @@
 
 use crate::FlowSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::topology::compute_flow_topology;
 //#region 🔖️Inference
@@ -21,12 +20,11 @@ pub struct FlowInference {
 }
 
 impl protocol::Inference<FlowSnapshot> for FlowInference {
-    fn infer(snapshot: &FlowSnapshot) -> Self {
+    fn infer(snapshot: &FlowSnapshot) -> Result<Self, semio_framework_value::ValueError> {
         let fixture = snapshot.to_host_snapshot();
         let topology = compute_flow_topology(&fixture.widgets, &fixture.synapses);
-        // 🧹️ The projection owns a layout `OrderedMap` root that refuses a bare drop.
         fixture.retire_cold();
-        Self { topology }
+        Ok(Self { topology })
     }
 }
 
@@ -37,7 +35,13 @@ impl protocol::Inference<FlowSnapshot> for FlowInference {
 /// `📡️spr/🎮️command/🦀️.rs`.
 impl Default for FlowInference {
     fn default() -> Self {
-        <Self as protocol::Inference<FlowSnapshot>>::infer(&FlowSnapshot::default())
+        let snapshot = &FlowSnapshot::default();
+
+        let fixture = snapshot.to_host_snapshot();
+        let topology = compute_flow_topology(&fixture.widgets, &fixture.synapses);
+        // 🧹️ The projection owns a layout `OrderedMap` root that refuses a bare drop.
+        fixture.retire_cold();
+        Self { topology }
     }
 }
 
@@ -53,13 +57,6 @@ impl protocol::InferenceSpec<FlowSnapshot> for FlowInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::FlowBuilder {
-    type Snapshot = FlowSnapshot;
-    type Inference = FlowInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.flow.flow.inference`'s facet leaves into the OS-wide inference catalog — call

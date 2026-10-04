@@ -105,8 +105,11 @@ pub fn apply_wfc2d_mutation(projection: &mut Wfc2dSnapshot, mutation: &Wfc2dMuta
 }
 
 /// ↩️ Computes a mutation's inverse against a projection — generic over every variant.
-pub fn inverse_wfc2d_mutation(projection: &Wfc2dSnapshot, mutation: &Wfc2dMutation) -> Vec<Wfc2dMutation> {
-    mutation.inverse(projection)
+pub fn inverse_wfc2d_mutation(projection: &Wfc2dSnapshot, mutation: &Wfc2dMutation) -> Result<Vec<Wfc2dMutation>, semio_framework_value::ValueError> {
+    Ok({
+    mutation.inverse(projection)?
+
+    })
 }
 
 //#region 🌉️TestBridge

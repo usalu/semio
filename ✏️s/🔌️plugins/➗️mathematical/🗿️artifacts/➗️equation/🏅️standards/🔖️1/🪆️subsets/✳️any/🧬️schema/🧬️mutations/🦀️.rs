@@ -20,17 +20,17 @@ use crate::{EquationDiff, EquationSnapshot};
 // interim (not-yet-serde-free) state. No `#[value(tag = …)]`: this enum is externally-tagged (the
 // derive's default representation when `tag` is absent), matching the committed
 // `🦠️mutation/🔣️.json` fixtures' `{"VariantName": {...}}` shape one-for-one.
-use semio_framework_os_kernel::ToValue;
+use semio_framework_value::ToValue;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
-// 🪆️ The 15 mutation leaf modules no longer live under this catalog's own `super::` (this
+// 🪆️ The 18 mutation leaf modules no longer live under this catalog's own `super::` (this
 // `✳️any` subset owns none of them post-split) — each now sits under its real owning subset
 // (ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION).
 // This catalog stays in `✳️any` (the closed enum every subset's manifest is measured against) and
 // reaches every leaf by its new absolute path.
 use crate::standards::v1::subsets::{
     equation::schema::mutations::change_coefficient,
-    geometry::schema::mutations::{insert_point, move_point, remove_point, replace_points},
+    geometry::schema::mutations::{insert_point, move_points, remove_point, replace_points, set_point_positions},
     graph::schema::mutations::{change_graph_directed, change_node_label, connect_nodes, create_node, delete_node, delete_nodes, disconnect_nodes, move_node, move_nodes, replace_graph, set_node_positions, update_graph_algorithm},
 };
 
@@ -51,12 +51,13 @@ pub enum EquationMutation {
     ReplacePoints(replace_points::ReplacePoints),
     InsertPoint(insert_point::InsertPoint),
     RemovePoint(remove_point::RemovePoint),
-    MovePoint(move_point::MovePoint),
+    MovePoints(move_points::MovePoints),
     // 🚚 Wave M3a (26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS): first
     // mutation over the new `equation` field — see `🎚️change/`.
     ChangeCoefficient(change_coefficient::ChangeCoefficient),
     MoveNodes(move_nodes::MoveNodes),
     SetNodePositions(set_node_positions::SetNodePositions),
+    SetPointPositions(set_point_positions::SetPointPositions),
 }
 //#endregion 🔖️Mutations
 
@@ -64,6 +65,10 @@ pub enum EquationMutation {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️node-drag-history/🦀️.rs"]
+mod node_drag_history_tests;
 //#endregion 🧪️Tests
 
 //#region 🔖️Kinds
@@ -85,10 +90,11 @@ pub const KINDS: &[&str] = &[
     "replace-points",
     "insert-point",
     "remove-point",
-    "move-point",
+    "move-points",
     "change-coefficient",
     "move-nodes",
     "set-node-positions",
+    "set-point-positions",
 ];
 //#endregion 🔖️Kinds
 
@@ -110,32 +116,32 @@ pub const KINDS: &[&str] = &[
 ///
 /// @see ../../🔣️oracle.json — the catalog and the recorded no-oracle decision.
 pub fn equation_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
-    let decode_snapshot = |text: &str| -> Result<EquationSnapshot, String> { pack::json::from_json_str::<EquationSnapshot>(text).map_err(|error| error.to_string()) };
+    let decode_snapshot = |text: &str| -> Result<EquationSnapshot, String> { semio_framework_pack_json::from_json_str::<EquationSnapshot>(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string()) };
     let base = decode_snapshot(base_json)?;
     let expected = decode_snapshot(after_json)?;
-    let mutation: EquationMutation = pack::json::from_json_str(mutation_json).map_err(|error| error.to_string())?;
+    let mutation: EquationMutation = semio_framework_pack_json::from_json_str(mutation_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
     let mut applied = base.clone();
     let forward = <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(&mutation, &base).apply_to(&mut applied);
-    let inverse = <EquationMutation as protocol::Mutation<EquationSnapshot>>::inverse(&mutation, &base);
+    let inverse = <EquationMutation as protocol::Mutation<EquationSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?;
     let mut undone = applied.clone();
     let mut inverse_messages = Vec::new();
     for step in &inverse {
         let outcome = <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(step, &undone).apply_to(&mut undone);
         inverse_messages.extend(outcome.messages().iter().cloned());
     }
-    let messages_json = pack::json::from_dsl_value(&forward.messages().to_vec().to_value());
-    let inverse_messages_json = pack::json::from_dsl_value(&inverse_messages.to_value());
-    let report = pack::json::object([
-        ("base".to_string(), pack::json::from_dsl_value(&base.to_value())),
-        ("expectedSnapshot".to_string(), pack::json::from_dsl_value(&expected.to_value())),
-        ("snapshot".to_string(), pack::json::from_dsl_value(&applied.to_value())),
-        ("diff".to_string(), pack::json::from_dsl_value(&forward.diff().to_value())),
+    let messages_json = semio_framework_pack_json::from_dsl_value(&forward.messages().to_vec().to_value());
+    let inverse_messages_json = semio_framework_pack_json::from_dsl_value(&inverse_messages.to_value());
+    let report = semio_framework_pack_json::object([
+        ("base".to_string(), semio_framework_pack_json::from_dsl_value(&base.to_value())),
+        ("expectedSnapshot".to_string(), semio_framework_pack_json::from_dsl_value(&expected.to_value())),
+        ("snapshot".to_string(), semio_framework_pack_json::from_dsl_value(&applied.to_value())),
+        ("diff".to_string(), semio_framework_pack_json::from_dsl_value(&forward.diff().to_value())),
         ("messages".to_string(), messages_json),
-        ("inverseSteps".to_string(), pack::json::from_dsl_value(&inverse.to_value())),
-        ("inverseSnapshot".to_string(), pack::json::from_dsl_value(&undone.to_value())),
+        ("inverseSteps".to_string(), semio_framework_pack_json::from_dsl_value(&inverse.to_value())),
+        ("inverseSnapshot".to_string(), semio_framework_pack_json::from_dsl_value(&undone.to_value())),
         ("inverseMessages".to_string(), inverse_messages_json),
     ]);
-    Ok(pack::json::to_string(&report))
+    Ok(semio_framework_pack_json::to_string(&report))
 }
 //#endregion 🌉️TestBridge
 

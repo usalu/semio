@@ -1,0 +1,9 @@
+{
+  "pairs": [
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "[\"semio_table_document\",\"semio_table_column\",\"semio_table_row\",\"semio_table_cell\"].includes(table.name)",
+      "after": "[\"semio_table_document\",\"semio_table_column\",\"semio_table_row\",\"semio_table_cell\"].includes(table.name.toLowerCase())"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+/** 🪪️ All captured source authority fields belong to one publication. */
+export interface SceneIdentity{readonly instance:number;readonly base:string;readonly generation:string;readonly revision:readonly number[];}
+function u64(value:string):boolean{if(typeof value!=="string"||value.length<1||value.length>20||value.length>1&&value[0]==="0")return false;for(let at=0;at<value.length;at++){const code=value.charCodeAt(at);if(code<48||code>57)return false;}return value.length<20||value<="18446744073709551615";}
+function valid(value:SceneIdentity):boolean{if(!Number.isInteger(value.instance)||value.instance<1||value.instance>4294967295||!u64(value.base)||!u64(value.generation)||!Array.isArray(value.revision)||value.revision.length!==32)return false;for(let at=0;at<32;at++){const byte=value.revision[at]!;if(!Number.isInteger(byte)||byte<0||byte>255)return false;}return true;}
+/** 🔐️ Never adopt another instance, generation, counter or content hash. */
+export function sceneIdentityMatches(captured:SceneIdentity,live:SceneIdentity):boolean{return valid(captured)&&valid(live)&&captured.instance===live.instance&&captured.base===live.base&&captured.generation===live.generation&&captured.revision.every((byte,index)=>byte===live.revision[index]);}

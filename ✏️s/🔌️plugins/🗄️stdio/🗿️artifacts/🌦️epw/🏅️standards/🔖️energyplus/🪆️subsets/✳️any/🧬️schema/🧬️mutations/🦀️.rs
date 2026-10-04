@@ -35,6 +35,8 @@ pub mod set_record_field;
 /// `EpwSnapshot`/`EpwLocation`/`EpwDataPeriods`, none of which implement `dsl::DslField`; wiring
 /// that up is out of this ticket's scope, matching csv's/gif's own documented hand-roll rationale).
 //#region 🔖️Leaves
+#[path = "🩹️patch-snapshot/🦀️.rs"]
+pub mod patch_snapshot;
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "📆set-typical-extreme-periods/🦀️.rs"]
@@ -49,6 +51,7 @@ pub mod set_typical_extreme_periods;
 #[mutations(snapshot = EpwSnapshot, diff = EpwDiff, schema = "EpwMutation")]
 pub enum EpwMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
+    PatchSnapshot(patch_snapshot::PatchSnapshot),
     /// 📍️ Replaces the LOCATION header line.
     SetLocation(set_location::SetLocation),
     /// 🌡️ Replaces the DESIGN CONDITIONS header line (retained verbatim).
@@ -78,7 +81,7 @@ pub enum EpwMutation {
 /// mutation catalog `epw-energyplus-any` (`../../🔣️oracle.json`) is measured against
 /// this exact list. `kinds_match_enum_and_catalog` proves it never drifts from either side.
 pub const KINDS: &[&str] = &[
-    "set-snapshot",
+    "set-snapshot", "patch-snapshot",
     "set-location",
     "set-design-conditions",
     "set-typical-extreme-periods",
@@ -115,6 +118,7 @@ pub fn apply_epw_mutation(snapshot: &mut EpwSnapshot, mutation: &EpwMutation) ->
 pub(crate) fn agg_diff(this: &EpwMutation, base: &EpwSnapshot) -> protocol::MutationOutcome<EpwDiff> {
     protocol::MutationOutcome::new(match this {
         EpwMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff_set_snapshot(base, snapshot),
+        EpwMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<EpwSnapshot, EpwMutation>>::diff(patch, base),
         EpwMutation::SetLocation(set_location::SetLocation { location }) => EpwDiff { location: Some(location.clone()), ..EpwDiff::default() },
         EpwMutation::SetDesignConditions(set_design_conditions::SetDesignConditions { value }) => EpwDiff { design_conditions: Some(value.clone()), ..EpwDiff::default() },
         EpwMutation::SetTypicalExtremePeriods(set_typical_extreme_periods::SetTypicalExtremePeriods { value }) => EpwDiff { typical_extreme_periods: Some(value.clone()), ..EpwDiff::default() },
@@ -136,9 +140,11 @@ pub(crate) fn agg_diff(this: &EpwMutation, base: &EpwSnapshot) -> protocol::Muta
 }
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &EpwMutation, base: &EpwSnapshot) -> Vec<EpwMutation> {
+pub(crate) fn agg_inverse(this: &EpwMutation, base: &EpwSnapshot) -> Result<Vec<EpwMutation>, semio_framework_value::ValueError> {
+    Ok({
     match this {
         EpwMutation::SetSnapshot(_) => vec![EpwMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
+        EpwMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<EpwSnapshot, EpwMutation>>::inverse(patch, base)?),
         EpwMutation::SetLocation(_) => vec![EpwMutation::SetLocation(set_location::SetLocation { location: base.location.clone() })],
         EpwMutation::SetDesignConditions(_) => vec![EpwMutation::SetDesignConditions(set_design_conditions::SetDesignConditions { value: base.design_conditions.clone() })],
         EpwMutation::SetTypicalExtremePeriods(_) => vec![EpwMutation::SetTypicalExtremePeriods(set_typical_extreme_periods::SetTypicalExtremePeriods { value: base.typical_extreme_periods.clone() })],
@@ -157,6 +163,8 @@ pub(crate) fn agg_inverse(this: &EpwMutation, base: &EpwSnapshot) -> Vec<EpwMuta
             None => Vec::new(),
         },
     }
+
+    })
 }
 //#endregion 🔖️MutationTrait
 
@@ -205,6 +213,7 @@ fn dec_epw_snapshot(s: &str) -> Result<EpwSnapshot, String> {
 fn print_epw_mutation(m: &EpwMutation) -> String {
     match m {
         EpwMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", enc_epw_snapshot(snapshot)),
+        EpwMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(patch),
         EpwMutation::SetLocation(set_location::SetLocation { location }) => format!("set-location location={}", enc_location(location)),
         EpwMutation::SetDesignConditions(set_design_conditions::SetDesignConditions { value }) => format!("set-design-conditions value={}", enc_str(value)),
         EpwMutation::SetTypicalExtremePeriods(set_typical_extreme_periods::SetTypicalExtremePeriods { value }) => format!("set-typical-extreme-periods value={}", enc_str(value)),
@@ -225,6 +234,7 @@ fn parse_epw_mutation(line: &str) -> Result<EpwMutation, String> {
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("epw mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
+        "patch-snapshot" => semio_s_artifact_stdio_contract::editing::snapshot_patch_from_text(line).map(|patch| EpwMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch })),
         "set-snapshot" => Ok(EpwMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_epw_snapshot(arg("snapshot")?)? })),
         "set-location" => Ok(EpwMutation::SetLocation(set_location::SetLocation { location: dec_location(arg("location")?)? })),
         "set-design-conditions" => Ok(EpwMutation::SetDesignConditions(set_design_conditions::SetDesignConditions { value: dec_str(arg("value")?)? })),
@@ -245,8 +255,8 @@ impl OpText for EpwMutation {
     fn print_op(&self) -> String {
         print_epw_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_epw_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_epw_mutation(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 }
 

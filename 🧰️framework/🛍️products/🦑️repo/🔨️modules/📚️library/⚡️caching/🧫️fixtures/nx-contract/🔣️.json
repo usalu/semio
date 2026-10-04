@@ -335,6 +335,7 @@
     ]
   },
   "generators": [
+    "flow-graph-catalog",
     "graph-catalog",
     "plugin-registry",
     "repo-entity-kinds",
@@ -358,6 +359,11 @@
     ]
   },
   "entrypoints": [
+    {
+      "project": "@semio-tech/flow-plugin",
+      "target": "component-dev",
+      "prerequisite": "@semio-tech/flow-plugin:graph-generate"
+    },
     {
       "project": "@semio-tech/repo-coordinator",
       "target": "dev",

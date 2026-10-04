@@ -24,9 +24,7 @@ impl ParameterKindLabel for schema::ParameterSpec {
 }
 
 pub(crate) fn render(state: &RewritingSnapshot, labels: &TrinityRewritingLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let Ok(rhs) = pack::from_json_str::<Rhs>(&state.rhs_json) else {
-        return semio_framework_plugin::built_text_node(Label::data("Invalid RHS")).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("trinity.parameters.invalid", "the fixed invalid-RHS label exceeds its UI bound"));
-    };
+    let rhs = &state.rhs;
     let mut children = semio_framework_plugin::UiFixedList::<semio_framework_plugin::BuiltNode>::default();
     for param in &rhs.parameters {
         let value = state.parameter_bindings.get(&param.name).cloned().unwrap_or_else(|| param.default.clone());

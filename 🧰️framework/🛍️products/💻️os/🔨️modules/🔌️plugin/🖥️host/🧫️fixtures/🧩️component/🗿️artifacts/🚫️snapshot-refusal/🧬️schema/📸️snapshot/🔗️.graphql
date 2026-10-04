@@ -1,0 +1,3 @@
+"""🚫️ Full signed i32 refusal witness."""
+type SnapshotRefusal { value: Int! }
+input SnapshotRefusalInput { value: Int! }

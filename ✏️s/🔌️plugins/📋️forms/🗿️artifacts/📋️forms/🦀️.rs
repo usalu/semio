@@ -43,37 +43,37 @@ pub type FormsResultsChild = store::ArtifactChild<SemioTableSnapshot>;
 //#endregion 🔖️ChildTypes
 
 //#region 🔖️Converters
-/// 🌉 `dsl::DslValue` (used by `default`/`params`) <-> `SemioValue` — real, bidirectional, bytes included. `Ref` is never
+/// 🌉 `semio_framework_value::DslValue` (used by `default`/`params`) <-> `SemioValue` — real, bidirectional, bytes included. `Ref` is never
 /// produced by `semio_value_from_dsl` (DslValue has no graph-reference primitive), so `dsl_from_semio_value` degrades it to
 /// `Null` — a documented gap only reachable if a foreign composer ever wrote a `Ref` value into this plugin's own
 /// `structure` child, never by this plugin's own round trip.
-fn semio_value_from_dsl(value: &dsl::DslValue) -> SemioValue {
+fn semio_value_from_dsl(value: &semio_framework_value::DslValue) -> SemioValue {
     match value {
-        dsl::DslValue::Null => SemioValue::Null,
-        dsl::DslValue::Bool(v) => SemioValue::Bool { value: *v },
-        dsl::DslValue::Number(n) => match n {
-            dsl::Number::UInt(v) => SemioValue::Int { lexeme: v.to_string() },
-            dsl::Number::Int(v) => SemioValue::Int { lexeme: v.to_string() },
-            dsl::Number::Float(v) if v.fract() == 0.0 && v.abs() < 1e15 => SemioValue::Int { lexeme: format!("{}", *v as i64) },
-            dsl::Number::Float(v) => SemioValue::Float { lexeme: format!("{v}") },
+        semio_framework_value::DslValue::Null => SemioValue::Null,
+        semio_framework_value::DslValue::Bool(v) => SemioValue::Bool { value: *v },
+        semio_framework_value::DslValue::Number(n) => match n {
+            semio_framework_value::Number::UInt(v) => SemioValue::Int { lexeme: v.to_string() },
+            semio_framework_value::Number::Int(v) => SemioValue::Int { lexeme: v.to_string() },
+            semio_framework_value::Number::Float(v) if v.fract() == 0.0 && v.abs() < 1e15 => SemioValue::Int { lexeme: format!("{}", *v as i64) },
+            semio_framework_value::Number::Float(v) => SemioValue::Float { lexeme: format!("{v}") },
         },
-        dsl::DslValue::String(s) => SemioValue::Str { value: s.clone() },
-        dsl::DslValue::Bytes(bytes) => SemioValue::Bytes { value: bytes.clone() },
-        dsl::DslValue::Array(items) => SemioValue::List { items: items.iter().map(semio_value_from_dsl).collect() },
-        dsl::DslValue::Object(entries) => SemioValue::Map { entries: entries.iter().map(|(k, v)| SemioValueEntry { key: k.clone(), value: semio_value_from_dsl(v) }).collect() },
+        semio_framework_value::DslValue::String(s) => SemioValue::Str { value: s.clone() },
+        semio_framework_value::DslValue::Bytes(bytes) => SemioValue::Bytes { value: bytes.clone() },
+        semio_framework_value::DslValue::Array(items) => SemioValue::List { items: items.iter().map(semio_value_from_dsl).collect() },
+        semio_framework_value::DslValue::Object(entries) => SemioValue::Map { entries: entries.iter().map(|(k, v)| SemioValueEntry { key: k.clone(), value: semio_value_from_dsl(v) }).collect() },
     }
 }
-fn dsl_from_semio_value(value: &SemioValue) -> dsl::DslValue {
+fn dsl_from_semio_value(value: &SemioValue) -> semio_framework_value::DslValue {
     match value {
-        SemioValue::Null => dsl::DslValue::Null,
-        SemioValue::Bool { value } => dsl::DslValue::Bool(*value),
-        SemioValue::Int { lexeme } => dsl::DslValue::int(lexeme.parse().unwrap_or(0)),
-        SemioValue::Float { lexeme } => dsl::DslValue::float(lexeme.parse().unwrap_or(0.0)),
-        SemioValue::Str { value } => dsl::DslValue::String(value.clone()),
-        SemioValue::List { items } => dsl::DslValue::Array(items.iter().map(dsl_from_semio_value).collect()),
-        SemioValue::Map { entries } => dsl::DslValue::Object(entries.iter().map(|entry| (entry.key.clone(), dsl_from_semio_value(&entry.value))).collect()),
-        SemioValue::Bytes { value } => dsl::DslValue::Bytes(value.clone()),
-        SemioValue::Ref { .. } => dsl::DslValue::Null,
+        SemioValue::Null => semio_framework_value::DslValue::Null,
+        SemioValue::Bool { value } => semio_framework_value::DslValue::Bool(*value),
+        SemioValue::Int { lexeme } => semio_framework_value::DslValue::int(lexeme.parse().unwrap_or(0)),
+        SemioValue::Float { lexeme } => semio_framework_value::DslValue::float(lexeme.parse().unwrap_or(0.0)),
+        SemioValue::Str { value } => semio_framework_value::DslValue::String(value.clone()),
+        SemioValue::List { items } => semio_framework_value::DslValue::Array(items.iter().map(dsl_from_semio_value).collect()),
+        SemioValue::Map { entries } => semio_framework_value::DslValue::Object(entries.iter().map(|entry| (entry.key.clone(), dsl_from_semio_value(&entry.value))).collect()),
+        SemioValue::Bytes { value } => semio_framework_value::DslValue::Bytes(value.clone()),
+        SemioValue::Ref { .. } => semio_framework_value::DslValue::Null,
     }
 }
 
@@ -127,7 +127,7 @@ fn semio_value_from_expr(expr: &FormExpr) -> SemioValue {
 fn expr_from_semio_value(value: &SemioValue) -> Option<FormExpr> {
     let kind = semio_str(semio_value_map_get(value, "kind"))?;
     match kind.as_str() {
-        "const" => Some(FormExpr::Const { value: semio_value_map_get(value, "value").map_or(dsl::DslValue::Null, dsl_from_semio_value) }),
+        "const" => Some(FormExpr::Const { value: semio_value_map_get(value, "value").map_or(semio_framework_value::DslValue::Null, dsl_from_semio_value) }),
         "var" => Some(FormExpr::Var { name: semio_str(semio_value_map_get(value, "name")).unwrap_or_default() }),
         "eq" => {
             let left = expr_from_semio_value(semio_value_map_get(value, "left")?)?;
@@ -323,7 +323,7 @@ pub fn forms_results_from_responses(responses: &[schema::response::FormsResponse
 pub fn forms_results_child(responses: &[schema::response::FormsResponse]) -> FormsResultsChild {
     use std::hash::{Hash, Hasher};
     let mut digest = std::collections::hash_map::DefaultHasher::new();
-    dsl::os_pack::json::to_json_string(&responses.to_vec()).hash(&mut digest);
+    semio_framework_pack_json::to_json_string(&responses.to_vec()).hash(&mut digest);
     let id = format!("forms-table-{:016x}", digest.finish());
     store::ArtifactChild::new(id.clone(), store::os_io::ArtifactRef { artifact_id: id, dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() } })
 }
@@ -331,7 +331,7 @@ pub fn forms_results_child(responses: &[schema::response::FormsResponse]) -> For
 
 //#region 🔖️DurableDefinition
 fn forms_scene_id(steps: &[FormStep]) -> String {
-    let content_json = dsl::os_pack::json::to_json_string(&steps.to_vec());
+    let content_json = semio_framework_pack_json::to_json_string(&steps.to_vec());
     store::content_id("forms-scene", content_json.as_bytes())
 }
 

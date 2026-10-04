@@ -164,5 +164,15 @@
     }
   ],
   "printTarget": null,
-  "dataFieldsJson": "{\"client\":\"acme\"}"
+  "dataFields": {
+    "entries": [
+      {
+        "questionId": "client",
+        "value": {
+          "kind": "text",
+          "value": "acme"
+        }
+      }
+    ]
+  }
 }

@@ -13,7 +13,7 @@ pub enum PublicationTransientMutation {
 }
 
 impl protocol::OpText for PublicationTransientMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         Ok(<ChangePublicationTransient as protocol::OpText>::parse_op(line)?.into())
     }
 

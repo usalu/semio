@@ -16,7 +16,7 @@ pub struct UiComponentCopyProgress {
 }
 
 fn error(reason: &'static str) -> PagedListAllocationError {
-    PagedListAllocationError { allocated_bytes: 0, reason }
+    PagedListAllocationError { allocated_bytes: 0, kind: PagedListRefusalKind::InvariantViolated, reason }
 }
 fn done() -> UiComponentCopyProgress {
     UiComponentCopyProgress { complete: true, progressed: true, ..Default::default() }
@@ -27,8 +27,8 @@ fn progress(bytes: usize) -> UiComponentCopyProgress {
 fn split(path: &mut [usize]) -> Result<(&mut usize, &mut [usize]), PagedListAllocationError> {
     path.split_first_mut().ok_or_else(|| error("typed copy exceeds schema depth"))
 }
-fn read_path(path: &[usize]) -> Result<(usize, &[usize]), &'static str> {
-    path.split_first().map(|(index, rest)| (*index, rest)).ok_or("typed copy exceeds schema depth")
+fn read_path(path: &[usize]) -> Result<(usize, &[usize]), PagedListError> {
+    path.split_first().map(|(index, rest)| (*index, rest)).ok_or(PagedListError { kind: PagedListRefusalKind::InvariantViolated, reason: "typed copy exceeds schema depth" })
 }
 const fn maximum(depths: &[usize]) -> usize {
     let mut result = 0;
@@ -45,7 +45,7 @@ const fn maximum(depths: &[usize]) -> usize {
 trait TypedCopy: Sized {
     const DEPTH: usize = 0;
     fn empty_like(&self) -> Self;
-    fn allocation(&self, candidate: &Self, path: &[usize]) -> Result<usize, &'static str>;
+    fn allocation(&self, candidate: &Self, path: &[usize]) -> Result<usize, PagedListError>;
     fn copy_one(&self, candidate: &mut Self, path: &mut [usize], byte_candidate: &mut Vec<u8>, allocation: usize, work: usize) -> Result<UiComponentCopyProgress, PagedListAllocationError>;
 }
 
@@ -70,7 +70,7 @@ macro_rules! typed_fields {
         impl TypedCopy for $type {
             const DEPTH: usize = 1;
             fn empty_like(&self) -> Self { Self {} }
-            fn allocation(&self, _: &Self, path: &[usize]) -> Result<usize, &'static str> { read_path(path)?; Ok(0) }
+            fn allocation(&self, _: &Self, path: &[usize]) -> Result<usize, PagedListError> { read_path(path)?; Ok(0) }
             fn copy_one(&self, _: &mut Self, path: &mut [usize], _: &mut Vec<u8>, _: usize, _: usize) -> Result<UiComponentCopyProgress, PagedListAllocationError> { split(path)?; Ok(done()) }
         }
     };
@@ -78,7 +78,7 @@ macro_rules! typed_fields {
         impl TypedCopy for $type {
             const DEPTH: usize = 1 + maximum(&[$(<$field_type as TypedCopy>::DEPTH),*]);
             fn empty_like(&self) -> Self { Self { $($field: self.$field.empty_like()),* } }
-            fn allocation(&self, candidate: &Self, path: &[usize]) -> Result<usize, &'static str> {
+            fn allocation(&self, candidate: &Self, path: &[usize]) -> Result<usize, PagedListError> {
                 let (index, path) = read_path(path)?;
                 match index { $($index => self.$field.allocation(&candidate.$field, path),)* _ => Ok(0) }
             }
@@ -96,7 +96,7 @@ macro_rules! scalar {
     ($($type:ty),* $(,)?) => {$(
         impl TypedCopy for $type {
             fn empty_like(&self) -> Self { *self }
-            fn allocation(&self, _: &Self, _: &[usize]) -> Result<usize, &'static str> { Ok(0) }
+            fn allocation(&self, _: &Self, _: &[usize]) -> Result<usize, PagedListError> { Ok(0) }
             fn copy_one(&self, candidate: &mut Self, _: &mut [usize], _: &mut Vec<u8>, _: usize, work: usize) -> Result<UiComponentCopyProgress, PagedListAllocationError> {
                 if work < size_of::<Self>() { return Ok(Default::default()); }
                 *candidate = *self;
@@ -105,13 +105,13 @@ macro_rules! scalar {
         }
     )*};
 }
-scalar!(bool, u16, u32, u64, f64, UiNodeId, UiRevision, Activity, TransitionHint, StyleSpec, Trigger, ContainerRole, InputKind, ToggleAppearance, SliderAppearance, UiNumberScale, TreePresentation, TreeWindowRowExtent, RowActionPlacement, SurfaceKind, Liveness, GridTrack, SpaceToken, Align, Justify, EdgeSpace, Axis, Anchor, ScrollAxes, Sizing);
+scalar!(bool, u16, u32, u64, f64, UiNodeId, UiRevision, UiPublicationRevision, Activity, TransitionHint, StyleSpec, Trigger, ContainerRole, InputKind, ToggleAppearance, SliderAppearance, UiNumberScale, TreePresentation, TreeWindowRowExtent, RowActionPlacement, SurfaceKind, Liveness, GridTrack, SpaceToken, Align, Justify, EdgeSpace, Axis, Anchor, ScrollAxes, Sizing);
 
 impl TypedCopy for UiText {
     fn empty_like(&self) -> Self {
         Self::default()
     }
-    fn allocation(&self, _: &Self, _: &[usize]) -> Result<usize, &'static str> {
+    fn allocation(&self, _: &Self, _: &[usize]) -> Result<usize, PagedListError> {
         Ok(0)
     }
     fn copy_one(&self, candidate: &mut Self, _: &mut [usize], _: &mut Vec<u8>, _: usize, work: usize) -> Result<UiComponentCopyProgress, PagedListAllocationError> {
@@ -127,7 +127,7 @@ impl TypedCopy for UiFixedBytes {
     fn empty_like(&self) -> Self {
         Self { bytes: Box::default(), len: 0 }
     }
-    fn allocation(&self, candidate: &Self, _: &[usize]) -> Result<usize, &'static str> {
+    fn allocation(&self, candidate: &Self, _: &[usize]) -> Result<usize, PagedListError> {
         Ok(if self.is_empty() || !candidate.bytes.is_empty() { 0 } else { UI_FIXED_BYTES })
     }
     fn copy_one(&self, candidate: &mut Self, _: &mut [usize], byte_candidate: &mut Vec<u8>, allocation: usize, work: usize) -> Result<UiComponentCopyProgress, PagedListAllocationError> {
@@ -173,7 +173,7 @@ fn reserve_byte_candidate(candidate: &mut Vec<u8>, grant: usize, allocate: impl 
     let allocated = allocate(candidate, UI_FIXED_BYTES);
     let actual = candidate.capacity();
     if allocated.is_err() || actual > grant || actual != UI_FIXED_BYTES {
-        return Err(PagedListAllocationError { allocated_bytes: actual, reason: "component byte candidate capacity differs from exact admission" });
+        return Err(PagedListAllocationError { allocated_bytes: actual, kind: if allocated.is_err() { PagedListRefusalKind::AllocationFailed } else { PagedListRefusalKind::InvariantViolated }, reason: "component byte candidate capacity differs from exact admission" });
     }
     Ok(UiComponentCopyProgress { allocated_bytes: actual, ..progress(0) })
 }
@@ -183,7 +183,7 @@ impl TypedCopy for UiValue {
     fn empty_like(&self) -> Self {
         Self::Null
     }
-    fn allocation(&self, _: &Self, _: &[usize]) -> Result<usize, &'static str> {
+    fn allocation(&self, _: &Self, _: &[usize]) -> Result<usize, PagedListError> {
         Ok(0)
     }
     fn copy_one(&self, candidate: &mut Self, path: &mut [usize], byte_candidate: &mut Vec<u8>, _: usize, work: usize) -> Result<UiComponentCopyProgress, PagedListAllocationError> {
@@ -229,7 +229,7 @@ impl TypedCopy for UiMap {
     fn empty_like(&self) -> Self {
         Self::default()
     }
-    fn allocation(&self, _: &Self, _: &[usize]) -> Result<usize, &'static str> {
+    fn allocation(&self, _: &Self, _: &[usize]) -> Result<usize, PagedListError> {
         Ok(0)
     }
     fn copy_one(&self, candidate: &mut Self, _: &mut [usize], _: &mut Vec<u8>, _: usize, work: usize) -> Result<UiComponentCopyProgress, PagedListAllocationError> {
@@ -251,7 +251,7 @@ impl<T: TypedCopy> TypedCopy for Option<T> {
     fn empty_like(&self) -> Self {
         None
     }
-    fn allocation(&self, candidate: &Self, path: &[usize]) -> Result<usize, &'static str> {
+    fn allocation(&self, candidate: &Self, path: &[usize]) -> Result<usize, PagedListError> {
         let (_, path) = read_path(path)?;
         match (self, candidate) {
             (Some(source), Some(target)) => source.allocation(target, path),
@@ -280,7 +280,7 @@ impl<A: TypedCopy, B: TypedCopy> TypedCopy for (A, B) {
     fn empty_like(&self) -> Self {
         (self.0.empty_like(), self.1.empty_like())
     }
-    fn allocation(&self, candidate: &Self, path: &[usize]) -> Result<usize, &'static str> {
+    fn allocation(&self, candidate: &Self, path: &[usize]) -> Result<usize, PagedListError> {
         let (index, path) = read_path(path)?;
         match index {
             0 => self.0.allocation(&candidate.0, path),
@@ -303,7 +303,7 @@ impl<T: TypedCopy, const N: usize> TypedCopy for UiFixedList<T, N> {
     fn empty_like(&self) -> Self {
         Self::default()
     }
-    fn allocation(&self, candidate: &Self, path: &[usize]) -> Result<usize, &'static str> {
+    fn allocation(&self, candidate: &Self, path: &[usize]) -> Result<usize, PagedListError> {
         let (index, path) = read_path(path)?;
         let Some(source) = self.get(index) else {
             return Ok(0);
@@ -327,7 +327,7 @@ impl<T: TypedCopy, const N: usize> TypedCopy for UiFixedList<T, N> {
                 return Ok(Default::default());
             }
             let mut empty = Some(source.empty_like());
-            let step = candidate.try_place_reserved(&mut empty, work).map_err(error)?;
+            let step = candidate.try_place_reserved(&mut empty, work).map_err(|refusal| PagedListAllocationError { allocated_bytes: 0, kind: refusal.kind, reason: refusal.reason })?;
             if empty.is_some() {
                 return Err(error("typed copy reserved placement rejected its exact empty owner"));
             }
@@ -348,7 +348,7 @@ impl<T: TypedCopy> TypedCopy for UiFixedMap<T> {
     fn empty_like(&self) -> Self {
         Self { entries: UiFixedList::default() }
     }
-    fn allocation(&self, candidate: &Self, path: &[usize]) -> Result<usize, &'static str> {
+    fn allocation(&self, candidate: &Self, path: &[usize]) -> Result<usize, PagedListError> {
         self.entries.allocation(&candidate.entries, path)
     }
     fn copy_one(&self, candidate: &mut Self, path: &mut [usize], byte_candidate: &mut Vec<u8>, allocation: usize, work: usize) -> Result<UiComponentCopyProgress, PagedListAllocationError> {
@@ -359,7 +359,7 @@ impl<T: TypedCopy> TypedCopy for UiFixedMap<T> {
 macro_rules! wrapper {
     ($($type:ty),*) => {$(impl TypedCopy for $type {
         fn empty_like(&self) -> Self { Self(self.0.empty_like()) }
-        fn allocation(&self, candidate: &Self, path: &[usize]) -> Result<usize, &'static str> { self.0.allocation(&candidate.0, path) }
+        fn allocation(&self, candidate: &Self, path: &[usize]) -> Result<usize, PagedListError> { self.0.allocation(&candidate.0, path) }
         fn copy_one(&self, candidate: &mut Self, path: &mut [usize], byte_candidate: &mut Vec<u8>, allocation: usize, work: usize) -> Result<UiComponentCopyProgress, PagedListAllocationError> { self.0.copy_one(&mut candidate.0, path, byte_candidate, allocation, work) }
     })*};
 }
@@ -372,8 +372,8 @@ macro_rules! variants {
         impl TypedCopy for $type {
             const DEPTH: usize = maximum(&[$(<$props as TypedCopy>::DEPTH),*]);
             fn empty_like(&self) -> Self { match self { $(Self::$variant(source) => Self::$variant(source.empty_like()),)* } }
-            fn allocation(&self, candidate: &Self, path: &[usize]) -> Result<usize, &'static str> {
-                match (self, candidate) { $((Self::$variant(source), Self::$variant(target)) => source.allocation(target, path),)* _ => Err("typed copy candidate variant differs") }
+            fn allocation(&self, candidate: &Self, path: &[usize]) -> Result<usize, PagedListError> {
+                match (self, candidate) { $((Self::$variant(source), Self::$variant(target)) => source.allocation(target, path),)* _ => Err(PagedListError { kind: PagedListRefusalKind::InvariantViolated, reason: "typed copy candidate variant differs" }) }
             }
             fn copy_one(&self, candidate: &mut Self, path: &mut [usize], byte_candidate: &mut Vec<u8>, allocation: usize, work: usize) -> Result<UiComponentCopyProgress, PagedListAllocationError> {
                 match (self, candidate) { $((Self::$variant(source), Self::$variant(target)) => source.copy_one(target, path, byte_candidate, allocation, work),)* _ => Err(error("typed copy candidate variant differs")) }
@@ -441,9 +441,9 @@ impl UiComponentCopy {
             self.owned.candidate.as_ref()
         }
     }
-    pub fn next_allocation_bytes(&self) -> Result<usize, &'static str> {
+    pub fn next_allocation_bytes(&self) -> Result<usize, PagedListError> {
         if self.closing {
-            return Err("component copy is closing");
+            return Err(PagedListError { kind: PagedListRefusalKind::InvariantViolated, reason: "component copy is closing" });
         }
         if self.owned.byte_candidate.capacity() != 0 {
             return Ok(0);
@@ -455,7 +455,7 @@ impl UiComponentCopy {
     }
     /// 🎟️ Admits only the next backing allocation; no initialized payload bytes share this turn.
     pub fn reserve_next(&mut self, allocation: usize) -> Result<UiComponentCopyProgress, PagedListAllocationError> {
-        let requested = self.next_allocation_bytes().map_err(error)?;
+        let requested = self.next_allocation_bytes().map_err(|refusal| PagedListAllocationError { allocated_bytes: 0, kind: refusal.kind, reason: refusal.reason })?;
         if requested == 0 || allocation < requested {
             return Ok(Default::default());
         }

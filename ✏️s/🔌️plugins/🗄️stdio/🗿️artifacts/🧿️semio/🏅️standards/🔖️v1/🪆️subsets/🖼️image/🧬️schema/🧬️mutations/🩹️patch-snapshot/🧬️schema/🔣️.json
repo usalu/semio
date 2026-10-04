@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/image/mutation/patch-snapshot/schema.json",
+  "title": "PatchSnapshot",
+  "x-semio-inverse-rows": { "bounded": 128 },
+  "description": "🩹️ One path-scoped SemioImageMutation snapshot edit (design §20.3 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "patch"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "patchSnapshot",
+      "description": "Aggregate discriminator spliced in by SemioImageMutation; absent when the payload stands alone."
+    },
+    "patch": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/registry/schema.json#/$defs/SnapshotPatch",
+      "x-semio-ui": {
+        "label": {
+          "en": "Snapshot edit",
+          "de": "Änderung der Momentaufnahme"
+        },
+        "description": {
+          "en": "One path-scoped edit of the snapshot; its value is typed by the snapshot schema at the path.",
+          "de": "Eine pfadbezogene Änderung der Momentaufnahme; ihr Wert ist durch das Schema der Momentaufnahme am Pfad typisiert."
+        }
+      }
+    }
+  },
+  "$defs": {
+    "Snapshot": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/image/snapshot.json",
+      "description": "The snapshot document the path addresses; its sub-schema at the path types the edited value."
+    }
+  }
+}

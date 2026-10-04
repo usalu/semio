@@ -19,9 +19,12 @@ impl crate::os_spr::MutationKind<SpaceHistorySnapshot, SpaceHistoryMutation> for
     fn diff(&self, _base: &SpaceHistorySnapshot) -> crate::os_spr::MutationOutcome<SpaceHistoryDiff> {
         crate::os_spr::MutationOutcome::new(SpaceHistoryDiff { add_checkpoint: Some(self.checkpoint.clone()), ..Default::default() })
     }
-    fn inverse(&self, _base: &SpaceHistorySnapshot) -> Vec<SpaceHistoryMutation> {
+    fn inverse(&self, _base: &SpaceHistorySnapshot) -> Result<Vec<SpaceHistoryMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![SpaceHistoryMutation::RemoveSpaceCheckpoint(RemoveSpaceCheckpoint { checkpoint_id: self.checkpoint.id.clone() })]
-    }
+    
+    })())
+}
     fn label(&self) -> crate::LocalizedLabel {
         crate::LocalizedLabel::native(&format!("Commit space checkpoint {}", self.checkpoint.id), &format!("Space-Sicherungspunkt {} festschreiben", self.checkpoint.id))
     }

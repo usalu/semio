@@ -20,7 +20,7 @@ pub fn diff(payload: &super::SetRuleLayoutPoints, base: &RewritingSnapshot) -> p
         layout.absorb(MapDelta::remove(key.clone()));
     }
     if layout.is_empty() {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "every rule node already sits where the payload places it");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "every rule node already sits where the payload places it");
     }
     protocol::MutationOutcome::new(RewritingDiff { rule_layout: Some(layout), ..Default::default() })
 }

@@ -11,7 +11,7 @@ pub fn diff(payload: &ChangeBarLayerDiameter, base: &En1992Snapshot) -> protocol
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Layer {} not found.", payload.layer_id), Vec::<String>::new());
     };
     if (layer.diameter - payload.new_diameter).abs() < f64::EPSILON {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Value unchanged.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Value unchanged.");
     }
     layer.diameter = payload.new_diameter;
     protocol::MutationOutcome::new(En1992Diff { members: Some(En1992MemberList { values: members }), ..Default::default() })

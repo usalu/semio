@@ -5,10 +5,13 @@ use super::ChangeProductConfiguration;
 use crate::{Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &ChangeProductConfiguration, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
+pub fn inverse(payload: &ChangeProductConfiguration, base: &Vdi3805Snapshot) -> Result<Vec<Vdi3805Mutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(product) = base.catalog.products.iter().find(|p| p.identity.article_number == payload.id) else {
         return Vec::new();
     };
     vec![Vdi3805Mutation::ChangeProductConfiguration(ChangeProductConfiguration { id: payload.id.clone(), new_configuration: product.configuration.clone() })]
+
+    })())
 }
 //#endregion 🔖️Inverse

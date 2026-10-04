@@ -1,5 +1,6 @@
 use super::*;
-use dsl::{FromValue, ToValue};
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
 
 fn subject() -> SubjectRef {
     SubjectRef::new("member-B12", "members[0].vEd", LocalizedCopy::new("Member B12", "Bauteil B12"))
@@ -138,8 +139,8 @@ async fn fail_requires_remedy_invariant() {
 #[semio_framework_async_macros::async_test]
 async fn localized_copy_resolves_en_and_de() {
     let copy = LocalizedCopy::new("Pass", "Bestanden");
-    assert_eq!(copy.resolve(&protocol::Locale::En), "Pass");
-    assert_eq!(copy.resolve(&protocol::Locale::De), "Bestanden");
+    assert_eq!(copy.resolve(&semio_framework_ui_locale::Locale::En), "Pass");
+    assert_eq!(copy.resolve(&semio_framework_ui_locale::Locale::De), "Bestanden");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -204,9 +205,10 @@ async fn table_lookup_linear_interpolates() {
     assert!((table_lookup_linear(&table, 5.0) - 1.5).abs() < 1e-9);
 }
 
-#[derive(Clone, Debug, Default, PartialEq, dsl::DslArtifact, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, dsl::DslArtifact, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[dsl(id = "norm.demo", extension = "demo-norm", layout = "lines")]
+#[dsl(layout = "lines")]
+#[artifact(id = "norm.demo", extension = "demo-norm")]
 struct DemoDocument {
     value: f64,
 }

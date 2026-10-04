@@ -23,3 +23,5 @@ record remove-row tag=4
 field payload bytes
 record set-cell tag=5
 field payload bytes
+record patch-snapshot tag=6
+field payload bytes

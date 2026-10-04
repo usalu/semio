@@ -1,7 +1,7 @@
 //! 📝️ Imperative play app — the script window: the compiled, read-only textual form of the document.
 
 use crate::editor::procedure::engine::ImperativeHost;
-use crate::ProcedureSnapshot;
+use crate::ProcedureScene;
 use semio_framework_plugin::app::{TextView, TextWindowKit, WindowKit};
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -36,8 +36,8 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &ProcedureSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let host = ImperativeHost::from_snapshot(document.clone());
+pub fn render(scene: &ProcedureScene) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let host = ImperativeHost::from_scene(scene);
     TextWindowKit::render(&TextView { text: host.compile_text(), language: Some("imperative".into()) })
 }
 //#endregion 🔖️Render

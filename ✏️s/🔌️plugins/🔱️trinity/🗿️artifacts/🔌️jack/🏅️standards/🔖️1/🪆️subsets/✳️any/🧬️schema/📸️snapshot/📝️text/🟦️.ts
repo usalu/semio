@@ -49,5 +49,5 @@ export const trinityJackSnapshotTextGuardConstant = <T extends string | number |
 //#endregion 🚪️Parsers
 
 export function parseJackSnapshotText(value: unknown, at = "$"): JackSnapshotText {
-  return trinityJackSnapshotTextGuardObject(value, `${at}`);
+  return trinityJackSnapshotTextGuardString(value, `${at}`);
 }

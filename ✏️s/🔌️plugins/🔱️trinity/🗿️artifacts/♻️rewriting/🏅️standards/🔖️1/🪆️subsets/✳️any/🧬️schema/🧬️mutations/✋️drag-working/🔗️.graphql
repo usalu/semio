@@ -1,2 +1,0 @@
-# ✋️ Relative drag-working-nodes / DragWorkingNodes payload.
-input DragWorkingNodesInput { targets: [String!]!, dx: Float!, dy: Float! }

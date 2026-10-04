@@ -1,3 +1,5 @@
+import refusalCorpus from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧫️fixtures/🔣️.json";
+const canceledKind=refusalCorpus.cases.find(c=>c.id==="canceled-projection")!.expectedKind;
 /** 🧫️ Shared XML semantic corpus with independent typed SQL queries and edits. */
 import { Database } from "bun:sqlite";
 import { expect, test } from "bun:test";
@@ -61,7 +63,7 @@ test("XML shared typed graph preserves independent document identities and SQL o
 
 test("XML multiple empty-document ownership has genuine known-workload cancellation",async()=>{
  const snapshots=Array.from({length:graph.documents},(_,ordinal)=>({schema:String(ordinal),doc:{prolog:[],epilog:[]}}));
- for(const phase of ["projectSnapshot","reconstructSnapshot"]as const){const controller=new AbortController();let reached=false;const options={signal:controller.signal,onProgress:(event:{phase:string;completed:number;total:number})=>{if(event.phase===phase&&event.total===graph.documents&&event.completed===graph.cancelAt){reached=true;controller.abort();}}};const database=await xmlDocumentsToSqliteDatabase(snapshots);const operation=phase==="projectSnapshot"?xmlDocumentsToSqliteDatabase(snapshots,options):xmlDocumentsFromSqliteDatabase(database,options);await expect(operation).rejects.toHaveProperty("name","AbortError");expect(reached).toBe(true);}
+ for(const phase of ["projectSnapshot","reconstructSnapshot"]as const){const controller=new AbortController();let reached=false;const options={signal:controller.signal,onProgress:(event:{phase:string;completed:number;total:number})=>{if(event.phase===phase&&event.total===graph.documents&&event.completed===graph.cancelAt){reached=true;controller.abort();}}};const database=await xmlDocumentsToSqliteDatabase(snapshots);const operation=phase==="projectSnapshot"?xmlDocumentsToSqliteDatabase(snapshots,options):xmlDocumentsFromSqliteDatabase(database,options);await expect(operation).rejects.toHaveProperty("kind",canceledKind);expect(reached).toBe(true);}
 });
 
 test("XML neutral owned long Unicode fields agree with independent SQLite", async () => {
@@ -161,9 +163,9 @@ test("XML projection and reconstruction obey aggregate bounds and cancellation",
   const controller = new AbortController();
   const many: XmlSnapshot = { schema: "large.xml", doc: { root: { kind: "element", name: "root", attrs: Array.from({ length: 1000 }, (_, index) => ({ name: "attribute" + index, value: "text" })), children: [] }, prolog: [], epilog: [] } };
   let events = 0;
-  await expect(xmlSnapshotToSqliteDatabase(many, { signal: controller.signal, onProgress: () => { if (++events === 2) controller.abort(); } })).rejects.toMatchObject({ name: "AbortError" });
+  await expect(xmlSnapshotToSqliteDatabase(many, { signal: controller.signal, onProgress: () => { if (++events === 2) controller.abort(); } })).rejects.toMatchObject({ kind: canceledKind });
   const reconstruct = new AbortController();
-  await expect(xmlSnapshotFromSqliteDatabase(database, { signal: reconstruct.signal, onProgress: () => reconstruct.abort() })).rejects.toMatchObject({ name: "AbortError" });
+  await expect(xmlSnapshotFromSqliteDatabase(database, { signal: reconstruct.signal, onProgress: () => reconstruct.abort() })).rejects.toMatchObject({ kind: canceledKind });
   let root: XmlNode = { kind: "text", text: "leaf" };
   for (let depth = 0; depth < 2000; depth++) root = { kind: "element", name: "n", attrs: [], children: [root] };
   const deep = await xmlSnapshotFromSqliteDatabase(await xmlSnapshotToSqliteDatabase({ schema: "deep.xml", doc: { root, prolog: [], epilog: [] } }));

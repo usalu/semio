@@ -10,7 +10,6 @@
 
 use crate::CurationSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::entries::compute_curation_entries;
 
@@ -19,7 +18,7 @@ pub use super::entries::CurationEntries;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a curation snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `entries`, backed by the `🗃️entries/` slug dir).
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.sourcing.curation.inference")]
 pub struct CurationInference {
@@ -28,8 +27,11 @@ pub struct CurationInference {
 }
 
 impl protocol::Inference<CurationSnapshot> for CurationInference {
-    fn infer(snapshot: &CurationSnapshot) -> Self {
+    fn infer(snapshot: &CurationSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { entries: compute_curation_entries(snapshot) }
+    
+        })
     }
 }
 
@@ -39,7 +41,9 @@ impl protocol::Inference<CurationSnapshot> for CurationInference {
 /// `📡️spr/🎮️command/🦀️.rs`.
 impl Default for CurationInference {
     fn default() -> Self {
-        <Self as protocol::Inference<CurationSnapshot>>::infer(&CurationSnapshot::default())
+        let snapshot = &CurationSnapshot::default();
+
+        Self { entries: compute_curation_entries(snapshot) }
     }
 }
 
@@ -56,22 +60,6 @@ impl protocol::InferenceSpec<CurationSnapshot> for CurationInference {
 }
 //#endregion 🔖️Inference
 
-//#region 🔖️ArtifactInferrer
-/// 🧭️ Trivial zero-sized marker — NOT `semio_framework_plugin::app::SnapshotBuilder<CurationSnapshot,
-/// SourcingMutation>` (the `Construction` type alias `🧬️schema/🦀️component.rs` now uses). Targeting
-/// `SnapshotBuilder` directly is a genuine orphan-rule violation (E0117): it is a foreign,
-/// non-`#[fundamental]` generic struct, so `impl ArtifactInferrer for SnapshotBuilder<Local, Local>`
-/// is illegal regardless of the type parameters being local (confirmed by compiling it — see
-/// `📓️w4-sourcing-report.md` `## recipeGaps`, matching `📓️w4-sequence-report.md`'s identical
-/// finding). `ArtifactInferrer::infer` takes `&Self::Snapshot`, never `&self`, so the impl target is
-/// a pure type-level anchor with zero live callers repo-wide — a local marker struct is sufficient.
-pub struct CurationInferrer;
-impl ArtifactInferrer for CurationInferrer {
-    type Snapshot = CurationSnapshot;
-    type Inference = CurationInference;
-}
-//#endregion 🔖️ArtifactInferrer
-
 //#region 🔖️PuzzleCatalogFragment
 /// 🌉️ Maps this app's stock (its `"catalogue.kinds"`-shaped rows) into the `s/plugin/puzzle` 3d catalog
 /// shape (`objectKinds`/`vortexKinds`/`cableKinds`/`attractionKinds`/`kindCompatibility` — see
@@ -79,27 +67,27 @@ impl ArtifactInferrer for CurationInferrer {
 /// seam puzzle imports through its `Kit×Type` `kit:in` media port. Sourcing's `ObjectKind` carries no
 /// `GeometryRecipe::Glb` rows carry the same `/mesh/…` routes as puzzle 3d and cad; procedural recipes
 /// leave `meshUrl` null. Sourcing has no vortex templates, so `vortices` stays empty.
-pub fn sourcing_catalog_fragment(document: &CurationSnapshot) -> dsl::DslValue {
-    let object_kinds: Vec<dsl::DslValue> = crate::stock_of(document)
+pub fn sourcing_catalog_fragment(document: &CurationSnapshot) -> semio_framework_value::DslValue {
+    let object_kinds: Vec<semio_framework_value::DslValue> = crate::stock_of(document)
         .iter()
         .map(|kind| {
-            let mesh_url = crate::schema::geometry_mesh_url(&kind.geometry).map(|url| dsl::DslValue::String(url.to_string())).unwrap_or(dsl::DslValue::Null);
-            dsl::DslValue::object([
-                ("id".to_string(), dsl::DslValue::String(kind.id.clone())),
-                ("name".to_string(), dsl::DslValue::String(kind.name.clone())),
-                ("label".to_string(), dsl::DslValue::String(kind.name.clone())),
+            let mesh_url = crate::schema::geometry_mesh_url(&kind.geometry).map(|url| semio_framework_value::DslValue::String(url.to_string())).unwrap_or(semio_framework_value::DslValue::Null);
+            semio_framework_value::DslValue::object([
+                ("id".to_string(), semio_framework_value::DslValue::String(kind.id.clone())),
+                ("name".to_string(), semio_framework_value::DslValue::String(kind.name.clone())),
+                ("label".to_string(), semio_framework_value::DslValue::String(kind.name.clone())),
                 ("meshUrl".to_string(), mesh_url),
-                ("vortices".to_string(), dsl::DslValue::Array(Vec::new())),
+                ("vortices".to_string(), semio_framework_value::DslValue::Array(Vec::new())),
             ])
         })
         .collect();
-    dsl::DslValue::object([
-        ("schema".to_string(), dsl::DslValue::String("manifest".to_string())),
-        ("objectKinds".to_string(), dsl::DslValue::Array(object_kinds)),
-        ("vortexKinds".to_string(), dsl::DslValue::Array(Vec::new())),
-        ("cableKinds".to_string(), dsl::DslValue::Array(Vec::new())),
-        ("attractionKinds".to_string(), dsl::DslValue::Array(Vec::new())),
-        ("kindCompatibility".to_string(), dsl::DslValue::Array(Vec::new())),
+    semio_framework_value::DslValue::object([
+        ("schema".to_string(), semio_framework_value::DslValue::String("manifest".to_string())),
+        ("objectKinds".to_string(), semio_framework_value::DslValue::Array(object_kinds)),
+        ("vortexKinds".to_string(), semio_framework_value::DslValue::Array(Vec::new())),
+        ("cableKinds".to_string(), semio_framework_value::DslValue::Array(Vec::new())),
+        ("attractionKinds".to_string(), semio_framework_value::DslValue::Array(Vec::new())),
+        ("kindCompatibility".to_string(), semio_framework_value::DslValue::Array(Vec::new())),
     ])
 }
 //#endregion 🔖️PuzzleCatalogFragment

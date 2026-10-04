@@ -50,7 +50,7 @@
     "reordered": null
   },
   "printTarget": null,
-  "dataFieldsJson": null,
   "backgroundDrawing": null,
-  "referencedModel": null
+  "referencedModel": null,
+  "dataFields": null
 }

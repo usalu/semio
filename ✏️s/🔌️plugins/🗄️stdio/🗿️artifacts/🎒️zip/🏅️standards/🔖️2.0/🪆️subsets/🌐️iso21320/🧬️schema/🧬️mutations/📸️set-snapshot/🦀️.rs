@@ -18,9 +18,12 @@ impl protocol::MutationKind<ZipSnapshot, ZipIso21320Mutation> for SetSnapshot {
     fn diff(&self, base: &ZipSnapshot) -> protocol::MutationOutcome<<ZipIso21320Mutation as protocol::Mutation<ZipSnapshot>>::Diff> {
         agg_diff(&ZipIso21320Mutation::SetSnapshot(self.clone()), base)
     }
-    fn inverse(&self, base: &ZipSnapshot) -> Vec<ZipIso21320Mutation> {
-        agg_inverse(&ZipIso21320Mutation::SetSnapshot(self.clone()), base)
-    }
+    fn inverse(&self, base: &ZipSnapshot) -> Result<Vec<ZipIso21320Mutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&ZipIso21320Mutation::SetSnapshot(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set snapshot", "Momentaufnahme setzen")
     }

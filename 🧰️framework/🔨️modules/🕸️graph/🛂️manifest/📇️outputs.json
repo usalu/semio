@@ -1,5 +1,6 @@
 {
-  "$schema": "./🧬️schema/🔣️.json",
+  "$schema": "./🧬️schema/🔣️.json#/$defs/Outputs",
+  "contractId": "graph-catalog",
   "version": 1,
   "shared": {
     "rustRegistry": "📇️registry/🦀️.rs",

@@ -4,7 +4,8 @@ use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
 use crate::Puzzle3dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::mutation::ReplaceObjectVortex, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
+pub fn inverse(payload: &super::mutation::ReplaceObjectVortex, base: &Puzzle3dSnapshot) -> Result<Vec<Puzzle3dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(object) = base.objects.iter().find(|entry| entry.id == payload.object_id) else {
         return Vec::new();
     };
@@ -12,5 +13,7 @@ pub fn inverse(payload: &super::mutation::ReplaceObjectVortex, base: &Puzzle3dSn
         return Vec::new();
     };
     vec![crate::standards::v1::subsets::any::schema::mutations::replace_object_vortex::mutation::replace_object_vortex(payload.object_id.clone(), payload.vortex_id.clone(), vortex.clone())]
+
+    })())
 }
 //#endregion 🔖️Inverse

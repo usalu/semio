@@ -88,5 +88,7 @@ export function testInitialChildIdentityFixture(): void {
   const native = readFileSync(new URL("./🦀️.rs", testSourceUrl.href), "utf8");
   assert(native.includes("scope: &DocumentScope") && native.includes("parent: &ArtifactRef") && native.includes("child: &ArtifactDialect") && native.includes("scope.document_id != parent.artifact_id"), "native initial identity must use agreeing typed document coordinates");
   assert(native.includes('b"semio.initial-child.v1\\0"') && native.includes("INITIAL_CHILD_FIELD_BYTES: usize = 256") && native.includes("INITIAL_CHILD_ORDINAL_LIMIT: u32 = 64"));
-  assert(native.includes('include_str!("🧫️fixtures/🔣️.json")') && native.includes("blake3::hash(&wire)"), "native identity must consume the neutral corpus and independent hash oracle");
+  assert(native.includes('#[path = "🧪️tests/🔬️unit/🦀️.rs"]') && native.includes("mod tests;"), "native identity must mount its actual owning tests");
+  const nativeTests = readFileSync(new URL("./🧪️tests/🔬️unit/🦀️.rs", testSourceUrl.href), "utf8");
+  assert(nativeTests.includes('include_str!("../../🧫️fixtures/🔣️.json")') && nativeTests.includes("blake3::hash(&wire)"), "native identity must consume the neutral corpus and independent hash oracle");
 }

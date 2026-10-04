@@ -18,9 +18,11 @@
 use semio_repo_test_host::Json;
 
 //#region 🔖️Axes
-/// 🧭️ IFD 0's Baseline axes as the third-party reader sees them. `None` is an absent tag.
+/// 🧭️ IFD 0's Baseline axes as the third-party reader sees them. `None` is an absent tag; `tags` is IFD 0's entry
+/// order, which names the field a `patch-snapshot` pointer `/ifds/0/entries/{i}` addresses.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Axes {
+    pub tags: Vec<u32>,
     pub ifd_count: usize,
     pub raster: bool,
     pub compression: Option<Vec<u32>>,
@@ -51,7 +53,22 @@ pub fn read_axes(input: &[u8]) -> Result<Axes, String> {
         decoder.next_image().map_err(|error| format!("tiff reader: {error}"))?;
         ifd_count += 1;
     }
-    Ok(Axes { ifd_count, raster, compression, photometric, bits_per_sample, tile_width, tile_length, strip_offsets })
+    Ok(Axes { tags: ifd0_tags(input)?, ifd_count, raster, compression, photometric, bits_per_sample, tile_width, tile_length, strip_offsets })
+}
+
+/// 🏷️ IFD 0's tags in entry order, read straight off TIFF 6.0 Section 2: the byte-order mark, the IFD offset at byte 4,
+/// the entry count, then one 12-byte entry per field whose first two bytes are its tag.
+#[cfg(feature = "oracles")]
+fn ifd0_tags(input: &[u8]) -> Result<Vec<u32>, String> {
+    let little = match input.get(..2) {
+        Some(b"II") => true,
+        Some(b"MM") => false,
+        _ => return Err("tiff header carries no byte-order mark".to_string()),
+    };
+    let u16_at = |at: usize| input.get(at..at + 2).map(|bytes| if little { u16::from_le_bytes([bytes[0], bytes[1]]) } else { u16::from_be_bytes([bytes[0], bytes[1]]) });
+    let offset = input.get(4..8).map(|bytes| if little { u32::from_le_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]) } else { u32::from_be_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]) }).ok_or("tiff header is truncated")? as usize;
+    let count = u16_at(offset).ok_or("IFD 0 is truncated")? as usize;
+    (0..count).map(|entry| u16_at(offset + 2 + entry * 12).map(u32::from).ok_or_else(|| "IFD 0 entry is truncated".to_string())).collect()
 }
 
 /// 🚫️ Without the `oracles` feature the registered reader is not linked.
@@ -84,7 +101,8 @@ fn snapshot_axes(snapshot: &Json) -> Axes {
     };
     let dimension = |id: u32| tag(id).and_then(|values| values.first().copied()).unwrap_or(0) as usize;
     let raster = dimension(256) > 0 && dimension(257) > 0 && snapshot.array("pixels").len() == dimension(256) * dimension(257) * 4;
-    Axes { ifd_count: ifds.len(), raster, compression: tag(259), photometric: tag(262), bits_per_sample: tag(258), tile_width: tag(322), tile_length: tag(323), strip_offsets: tag(273) }
+    let tags = entries.iter().map(|entry| match entry.get("tag") { Some(Json::Number(value)) => *value as u32, _ => 0 }).collect();
+    Axes { tags, ifd_count: ifds.len(), raster, compression: tag(259), photometric: tag(262), bits_per_sample: tag(258), tile_width: tag(322), tile_length: tag(323), strip_offsets: tag(273) }
 }
 
 /// 🦠️ Applies one kind to the axes as TIFF 6.0 defines the field it names: a set writes the field, a removal
@@ -94,6 +112,25 @@ pub fn apply(axes: &Axes, kind: &str, params: &Json) -> Result<Axes, String> {
     let mut next = axes.clone();
     match kind {
         "set-snapshot" => next = snapshot_axes(params.get("snapshot").ok_or("set-snapshot carries no snapshot")?),
+        "patch-snapshot" => {
+            let patch = params.get("patch").ok_or("patch-snapshot carries no patch")?;
+            let path = patch.str("path");
+            let segments: Vec<&str> = path.split('/').skip(1).collect();
+            let tag = match (patch.str("operation").as_str(), segments.as_slice()) {
+                ("set", ["ifds", "0", "entries", entry, "values", "value"]) => entry.parse::<usize>().ok().and_then(|entry| axes.tags.get(entry).copied()),
+                _ => None,
+            };
+            let values = Some(numbers(&Json::Object(vec![("value".to_string(), patch.get("value").cloned().unwrap_or(Json::Null))]), "value"));
+            match tag {
+                Some(259) => next.compression = values,
+                Some(262) => next.photometric = values,
+                Some(258) => next.bits_per_sample = values,
+                Some(322) => next.tile_width = values,
+                Some(323) => next.tile_length = values,
+                Some(273) => next.strip_offsets = values,
+                _ => return Err(format!("patch-snapshot {path} addresses no TIFF 6.0 Baseline axis")),
+            }
+        }
         "set-compression" => next.compression = Some(vec![number(params, "compression")?]),
         "set-photometric-interpretation" => next.photometric = Some(vec![number(params, "photometric")?]),
         "set-bits-per-sample" => next.bits_per_sample = Some(numbers(params, "bits")),

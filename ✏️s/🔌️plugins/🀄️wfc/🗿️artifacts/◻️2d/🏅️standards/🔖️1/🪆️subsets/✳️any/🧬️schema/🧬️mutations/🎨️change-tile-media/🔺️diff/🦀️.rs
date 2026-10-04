@@ -9,7 +9,7 @@ pub fn diff(payload: &super::ChangeTileMedia, base: &Wfc2dSnapshot) -> protocol:
     };
     let tile = &base.tiles[index];
     if tile.media == payload.media {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Tile \"{}\" already carries that media.", payload.tile_id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Tile \"{}\" already carries that media.", payload.tile_id));
     }
     let repainted = crate::schema::snapshot::Wfc2dTile { media: payload.media.clone(), ..tile.clone() };
     protocol::MutationOutcome::new(Wfc2dDiff { tiles_upserted: vec![(index, repainted)], ..Default::default() })

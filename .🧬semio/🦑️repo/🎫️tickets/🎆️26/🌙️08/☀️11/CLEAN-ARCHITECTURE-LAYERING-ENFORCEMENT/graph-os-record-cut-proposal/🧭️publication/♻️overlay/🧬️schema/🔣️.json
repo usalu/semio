@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["cases"],
+  "properties": {
+    "cases": {
+      "type": "array", "minItems": 3, "maxItems": 3,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "before", "authored", "current", "expected"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "before": {"type": "string"},
+          "authored": {"type": "string"},
+          "current": {"type": "string"},
+          "expected": {"type": ["string", "null"]}
+        }
+      }
+    }
+  }
+}

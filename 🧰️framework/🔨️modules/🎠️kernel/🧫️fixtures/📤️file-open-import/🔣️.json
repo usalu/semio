@@ -12,7 +12,10 @@
           "req": 131,
           "params": {
             "accept": ".stl,.obj,.ply,.gltf,.dwg,.json,.txt",
-            "readAs": { "tag": "some", "val": "dataUrl" },
+            "readAs": {
+              "tag": "some",
+              "val": "dataUrl"
+            },
             "importAction": "importDocument",
             "multiple": false
           }
@@ -90,7 +93,9 @@
           "req": 111,
           "params": {
             "accept": "application/json,.json",
-            "readAs": { "tag": "none" },
+            "readAs": {
+              "tag": "none"
+            },
             "importAction": "importFixture",
             "multiple": true
           }
@@ -126,6 +131,48 @@
         }
       },
       "warns": false
+    },
+    {
+      "id": "request-file-open-retained-target-args",
+      "why": "A texture picker carries the source target through the same host import invocation.",
+      "effect": {
+        "tag": "request-file-open",
+        "val": {
+          "req": 131,
+          "params": {
+            "accept": ".stl,.obj,.ply,.gltf,.dwg,.json,.txt",
+            "readAs": {
+              "tag": "some",
+              "val": "dataUrl"
+            },
+            "importAction": "importDocument",
+            "multiple": false,
+            "args": {
+              "tag": "some",
+              "val": [
+                7,
+                8,
+                9
+              ]
+            }
+          }
+        }
+      },
+      "friendly": {
+        "requestFileOpen": {
+          "req": 131,
+          "accept": ".stl,.obj,.ply,.gltf,.dwg,.json,.txt",
+          "readAs": "dataUrl",
+          "importAction": "importDocument",
+          "multiple": false,
+          "args": [
+            7,
+            8,
+            9
+          ]
+        }
+      },
+      "warns": false
     }
   ],
   "chunkCases": [
@@ -133,39 +180,72 @@
       "id": "empty-pick-is-still-one-chunk",
       "why": "A picked empty file is a real pick. One chunk of zero bytes, never zero chunks, or the guest is never told the run happened.",
       "payload": "",
-      "chunks": [""]
+      "chunks": [
+        ""
+      ]
     },
     {
       "id": "one-ascii-stl-triangle",
       "why": "The probe's own file, well under the ceiling: exactly one chunk whose envelope names itself 0 of 1.",
       "payload": "solid probe\nfacet normal 0 0 1\nendsolid probe\n",
-      "chunks": ["solid probe\nfacet normal 0 0 1\nendsolid probe\n"]
+      "chunks": [
+        "solid probe\nfacet normal 0 0 1\nendsolid probe\n"
+      ]
     },
     {
       "id": "exactly-the-chunk-extent",
       "why": "A payload of exactly `importChunkBytes` ASCII characters is ONE chunk — the bound is inclusive.",
-      "payloadRepeat": { "character": "a", "count": 32768 },
-      "chunkLengths": [32768]
+      "payloadRepeat": {
+        "character": "a",
+        "count": 32768
+      },
+      "chunkLengths": [
+        32768
+      ]
     },
     {
       "id": "one-byte-past-the-chunk-extent",
       "why": "One character more is two chunks, the second carrying exactly one character.",
-      "payloadRepeat": { "character": "a", "count": 32769 },
-      "chunkLengths": [32768, 1]
+      "payloadRepeat": {
+        "character": "a",
+        "count": 32769
+      },
+      "chunkLengths": [
+        32768,
+        1
+      ]
     },
     {
       "id": "multibyte-never-splits-a-code-point",
       "why": "`ō` is 2 UTF-8 bytes and 1 UTF-16 unit. Counted in code units the page would overrun the guest's byte cap; counted in bytes the last character that no longer fits starts the next page, and no page ever ends mid-code-point. 16 385 of them are 32 770 bytes, so the first page holds 16 384 and the second holds 1.",
-      "payloadRepeat": { "character": "ō", "count": 16385 },
-      "chunkLengths": [16384, 1],
-      "chunkByteLengths": [32768, 2]
+      "payloadRepeat": {
+        "character": "ō",
+        "count": 16385
+      },
+      "chunkLengths": [
+        16384,
+        1
+      ],
+      "chunkByteLengths": [
+        32768,
+        2
+      ]
     },
     {
       "id": "four-byte-code-point-boundary",
       "why": "An emoji is 4 UTF-8 bytes and 2 UTF-16 units — the case a UTF-16 slice overruns by 2×. 8 193 of them are 32 772 bytes: 8 192 fit the first page exactly, the last starts the second.",
-      "payloadRepeat": { "character": "🧊", "count": 8193 },
-      "chunkLengths": [8192, 1],
-      "chunkByteLengths": [32768, 4]
+      "payloadRepeat": {
+        "character": "🧊",
+        "count": 8193
+      },
+      "chunkLengths": [
+        8192,
+        1
+      ],
+      "chunkByteLengths": [
+        32768,
+        4
+      ]
     }
   ],
   "argumentCases": [
@@ -173,7 +253,11 @@
       "id": "single-file-single-chunk",
       "why": "The shape every small pick takes, and the only one `generation3d`'s session-free `importDocument` entry point admits. `chunk`/`chunkCount` are INTEGERS: the guest decodes them as `u32` and `FromValue`'s unsigned arm refuses a float, which is how an integer widened on a lossy JSON hop kills the whole dispatch.",
       "name": "probe-triangle.stl",
-      "chunk": { "payload": "solid probe\n", "chunk": 0, "chunkCount": 1 },
+      "chunk": {
+        "payload": "solid probe\n",
+        "chunk": 0,
+        "chunkCount": 1
+      },
       "fanOut": null,
       "arguments": {
         "payload": "solid probe\n",
@@ -186,7 +270,11 @@
       "id": "single-file-second-chunk-of-three",
       "why": "A chunked run names its own position. The guest's staging refuses a gap rather than resuming into bytes nobody can account for, so the position is the contract, not a hint.",
       "name": "nakagin.json",
-      "chunk": { "payload": "…", "chunk": 1, "chunkCount": 3 },
+      "chunk": {
+        "payload": "…",
+        "chunk": 1,
+        "chunkCount": 3
+      },
       "fanOut": null,
       "arguments": {
         "payload": "…",
@@ -199,8 +287,15 @@
       "id": "multi-file-pick-adds-the-fan-out",
       "why": "`index`/`total` are added ONLY when the picker was opened with `multiple`, so a single-file pick's args are byte-for-byte the pre-fan-out shape.",
       "name": "b.stl",
-      "chunk": { "payload": "solid b\n", "chunk": 0, "chunkCount": 1 },
-      "fanOut": { "index": 1, "total": 2 },
+      "chunk": {
+        "payload": "solid b\n",
+        "chunk": 0,
+        "chunkCount": 1
+      },
+      "fanOut": {
+        "index": 1,
+        "total": 2
+      },
       "arguments": {
         "payload": "solid b\n",
         "name": "b.stl",
@@ -559,5 +654,10 @@
       ],
       "openRunsAfter": 0
     }
-  ]
+  ],
+  "targetArguments": {
+    "widgetId": "source",
+    "channel": "text",
+    "textureId": "image"
+  }
 }

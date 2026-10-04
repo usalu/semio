@@ -1,5 +1,7 @@
 syntax = "proto3";
 package semio.s.trinity.rewriting.mutation.change_rule_layout_point;
-// change-rule-layout-point / ChangeRuleLayoutPoint
-message ChangeRuleLayoutPointValue { double x = 1; double y = 2; }
-message ChangeRuleLayoutPoint { string key = 1; ChangeRuleLayoutPointValue new_point = 2; }
+import "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
+import "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🛰️.proto";
+import "🧰️framework/🔨️modules/🌱️value/🧬️schema/🛰️.proto";
+import "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🌱️value/🧬️schema/🛰️.proto";
+message ChangeRuleLayoutPoint { string key = 1; semio.s.trinity.rewriting.artifact.LayoutPoint new_point = 2; }

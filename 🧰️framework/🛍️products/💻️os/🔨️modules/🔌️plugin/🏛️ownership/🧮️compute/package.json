@@ -1,0 +1,11 @@
+{
+  "name": "@semio-tech/framework-plugin-compute-ownership",
+  "private": true,
+  "type": "module",
+  "nx": {
+    "includedScripts": []
+  },
+  "scripts": {
+    "test": "nx run @semio-tech/framework-plugin-compute-ownership:test"
+  }
+}

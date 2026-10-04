@@ -1,19 +1,10 @@
 {
-  "schema":"stdio.tiff",
-  "byteOrder":"bigEndian",
-  "documentPixels":[0,255,64,128],
-  "directoryPixels":[9,8,0,255],
-  "ascii":"Grüße\u0000🌠",
-  "unsignedValues":[0,4294967295],
-  "signedValues":[-2147483648,2147483647],
-  "float32Bits":["00000000","80000000","00000001","7f800000","ff800000","7fc00011","7f800007"],
-  "float64Bits":["0000000000000000","8000000000000000","0000000000000001","7ff0000000000000","fff0000000000000","7ff8000000000011","7ff0000000000007"],
-  "sqliteDialect":{"artifactKind":"s.stdio.tiff","standard":"6.0","subset":"baseline"},
-  "invalidSqliteDialects":[{"artifactKind":"s.stdio.png","standard":"6.0","subset":"baseline"},{"artifactKind":"s.stdio.tiff","standard":"5.0","subset":"baseline"},{"artifactKind":"s.stdio.tiff","standard":"6.0","subset":"unknown"}],
-  "editedAscii":"SQLite TIFF 🌠",
-  "baselineCases":[
-    {"width":1,"height":1,"compression":1,"photometric":2,"bits":[8,8,8,8],"strip":true,"tile":false},
-    {"width":0,"height":2,"compression":7,"photometric":4,"bits":[16],"strip":false,"tile":true},
-    {"width":1,"height":1,"compression":32773,"photometric":3,"bits":[1,4,8],"strip":false,"tile":false}
-  ]
+  "schema": "stdio.tiff",
+  "byteOrder": "bigEndian",
+  "asciiBytes": [71, 114, 195, 188, 195, 159, 101, 0],
+  "editedAsciiBytes": [83, 81, 76, 105, 116, 101, 0],
+  "primaryChunks": [[0, 255], [64, 128]],
+  "secondaryChunks": [[9, 8, 0, 255]],
+  "float32Bits": ["00000000", "80000000", "00000001", "7f800000", "ff800000", "7fc00011", "7f800007"],
+  "float64Bits": ["0000000000000000", "8000000000000000", "0000000000000001", "7ff0000000000000", "fff0000000000000", "7ff8000000000011", "7ff0000000000007"]
 }

@@ -30,7 +30,7 @@ impl ArtifactDeserializer for SemioImageFromGif {
 
     async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         if from.frames.is_empty() {
-            return Err(store::PackError::Schema("gif→semio/image: at least one frame is required".into()));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "gif→semio/image: at least one frame is required")));
         }
         let frames = from.frames.iter().map(|f| SemioImageFrame { delay_ms: (f.delay_cs as u32) * 10, rgba8: f.rgba(from.gct.as_ref()) }).collect();
         let mut metadata: Vec<SemioImageMetadataEntry> = from.comments.iter().map(|c| SemioImageMetadataEntry { key: "comment".into(), value: c.clone() }).collect();

@@ -24,6 +24,7 @@ name = "sequence-runtime"
 path = "../../🧪️tests/🎬️sequence-runtime/🦀️.rs"
 
 [dev-dependencies]
+semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-artifact-playbook-playbook.workspace = true
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws"] }
 semio-s-spatial-kernel-semio-session = { workspace = true }
@@ -45,7 +46,7 @@ semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"]
 semio-s-artifact-stdio-semio = { workspace = true }
 
 semio-s-artifact-procedural-generation3d = { workspace = true, features = ["component-app-assembly"] }
-semio-s-plugin-flow-extension-brep = { workspace = true, default-features = false }
+semio-s-plugin-flow-extension-brep = { workspace = true, default-features = false, features = ["component-guest"] }
 semio-s-plugin-flow-extension-math = { workspace = true, default-features = false }
 semio-framework = { workspace = true }
 semio-framework-job = { workspace = true }
@@ -72,4 +73,6 @@ name = "generation3d-app-laws"
 path = "../../🧪️tests/🧊️generation3d/🦀️.rs"
 
 [dependencies]
+semio-framework-async = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }

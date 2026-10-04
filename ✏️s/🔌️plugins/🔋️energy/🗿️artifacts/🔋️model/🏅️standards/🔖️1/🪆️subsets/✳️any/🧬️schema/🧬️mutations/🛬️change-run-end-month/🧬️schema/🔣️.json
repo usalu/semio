@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-run-end-month/schema.json",
+  "title": "ChangeRunEndMonth",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "newEndMonth"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeRunEndMonth"
+    },
+    "newEndMonth": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 12,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "End month",
+          "de": "Endmonat"
+        },
+        "step": 1,
+        "precision": 0,
+        "softMin": 1,
+        "softMax": 12,
+        "group": "calendar",
+        "order": 30
+      }
+    }
+  }
+}

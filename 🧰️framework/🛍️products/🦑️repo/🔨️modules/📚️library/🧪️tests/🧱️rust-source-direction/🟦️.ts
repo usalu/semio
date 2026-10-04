@@ -1,3 +1,4 @@
+import { inspectRustCompileReferences, type RustCompileReference } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 import { expect, test } from "bun:test";
 import { lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
@@ -5,13 +6,13 @@ import Ajv from "ajv/dist/2020.js";
 import { parse as parseToml } from "@iarna/toml";
 import glob from "fast-glob";
 import { normalize as oracleNormalize, join as oracleJoin, dirname as oracleDirname, isAbsolute as oracleAbsolute } from "pathe";
-import { rustSourceDirectionEdges, rustSourceReferences, rustSourceTargets, rustSourceTargetProblem, type RustSourceReference, type RustSourceOwnership, type RustSourceDirectionEdge, type RustSourceInputNode, type RustSourceInputProblem } from "../../🕸️dependencies/🧭️direction/🦀️source/🟦️.ts";
+import { rustSourceDirectionEdges, rustSourceTargets, rustSourceTargetProblem, type RustSourceOwnership, type RustSourceDirectionEdge, type RustSourceInputNode, type RustSourceInputProblem } from "../../🕸️dependencies/🧭️direction/🦀️source/🟦️.ts";
 import type { DependencyDirectionRule } from "../../🕸️dependencies/🧭️direction/🟦️.ts";
 import { inspectRustModuleGraph, inspectRustModuleGraphFacts, rustModuleScopeProof } from "../../🔍️discovery/🟦️.ts";
 import { inspectRustSourceDirection, inspectRustSourceInputs, type RustSourceInputFailure } from "../../🕸️dependencies/🧭️direction/🦀️source/🏃️execution/🟦️.ts";
 
 const library = resolve(import.meta.dir, "../.."), read = (path: string): any => JSON.parse(readFileSync(join(library, path), "utf8"));
-const fixture = read("🧫️fixtures/🧱️rust-source-direction/🔣️.json") as { cases: readonly { id: string; source: string; references: readonly RustSourceReference[] }[]; rules: readonly DependencyDirectionRule[]; directions: readonly { id: string; from: string; source: string; edges: readonly RustSourceDirectionEdge[] }[]; mounts: readonly { id: string; files: Readonly<Record<string, string>>; sourcePath: string; targets: readonly string[] }[]; unsupported: readonly { id: string; source: string }[] };
+const fixture = read("🧫️fixtures/🧱️rust-source-direction/🔣️.json") as { cases: readonly { id: string; source: string; references: readonly RustCompileReference[] }[]; rules: readonly DependencyDirectionRule[]; directions: readonly { id: string; from: string; source: string; edges: readonly RustSourceDirectionEdge[] }[]; mounts: readonly { id: string; files: Readonly<Record<string, string>>; sourcePath: string; targets: readonly string[] }[]; unsupported: readonly { id: string; source: string }[] };
 const targets = read("🧫️fixtures/🧱️rust-source-direction/🔣️.json").targets as readonly { id: string; target: string; directory?: true; inventory: readonly RustSourceInputNode[]; sources: readonly string[]; problem: RustSourceInputProblem | null }[];
 function participationProjection(graph: ReturnType<typeof inspectRustModuleGraph>) {
   return graph.participations.map((row) => !("context" in row) ? { target: row.target, state: row.state, reason: row.reason } : { target: row.target, crateRoot: row.context.crateRoot, manifestPath: row.context.manifestPath, modulePath: row.context.modulePath, sourceScope: row.context.sourceScope, mount: row.context.mount.kind, state: row.state, reason: row.state === "denied" ? row.reason : null }).sort((a, b) => Buffer.from(JSON.stringify(a)).compare(Buffer.from(JSON.stringify(b))));
@@ -124,7 +125,7 @@ test("physical input census refuses linked, missing, unscanned and mistyped auth
 
 test("portable native path forms cannot escape the authored workspace", () => {
   for (const row of read("🧫️fixtures/🧱️rust-source-direction/🔣️.json").escapes as readonly { id: string; from: string; source: string }[]) {
-    const refs = rustSourceReferences(row.source), path = refs[0]!.path;
+    const refs = inspectRustCompileReferences(row.source), path = refs[0]!.path;
     expect(oracleAbsolute(path) || oracleNormalize(oracleJoin(oracleDirname(row.from), path)).startsWith("../"), row.id).toBe(true);
     expect(() => rustSourceDirectionEdges(row.from, refs, fixture.rules), row.id).toThrow("escapes");
   }
@@ -170,12 +171,12 @@ const dependencies = (cwd: string): readonly string[] => {
 test("portable compile-time paths preserve exact literal identity and ignore lexical decoys", () => {
   const validate = new Ajv({ strict: true }).compile(read("🧬️schema/🧱️rust-source-direction/🔣️.json"));
   expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-  for (const row of fixture.cases) expect(rustSourceReferences(row.source), row.id).toEqual(row.references);
+  for (const row of fixture.cases) expect(inspectRustCompileReferences(row.source), row.id).toEqual(row.references);
 });
 
 test("inline reference metadata preserves its closed portable scope contract", () => {
   const corpus = read("🧫️fixtures/🧱️rust-source-direction/🔣️.json"), validate = new Ajv({ strict: true }).compile(read("🧬️schema/🧱️rust-source-direction/🔣️.json"));
-  const rows = corpus.referenceRejections as readonly { id: string; reference: RustSourceReference; invalidSchema: boolean; ownership?: RustSourceOwnership }[];
+  const rows = corpus.referenceRejections as readonly { id: string; reference: RustCompileReference; invalidSchema: boolean; ownership?: RustSourceOwnership }[];
   expect(new Set(rows.map((row) => row.id)).size).toBe(rows.length);
   for (const row of rows) {
     expect(validate({ ...corpus, cases: [{ id: row.id, source: "source", references: [row.reference] }] }), row.id).toBe(!row.invalidSchema);
@@ -197,14 +198,14 @@ test("explicit inline anchors prove physical bases without granting orphan Cargo
       for (const [path, source] of Object.entries(row.files)) { mkdirSync(dirname(join(cwd, path)), { recursive: true }); writeFileSync(join(cwd, path), source); }
       const { stdout, stderr, status } = await nativeCommand(["rustc", "--crate-name", "inline_oracle", "--crate-type", "lib", "--emit=dep-info=dependencies.d", row.root], cwd);
       expect(status, `${row.id}: ${stdout}${stderr}`).toBe(0);
-      const nativeInputs = dependencies(cwd).map(oracleNormalize), refs = rustSourceReferences(row.files[row.source]!);
+      const nativeInputs = dependencies(cwd).map(oracleNormalize), refs = inspectRustCompileReferences(row.files[row.source]!);
       const targets = rustSourceDirectionEdges(row.source, refs, rules).map((edge) => edge.to);
       expect([...new Set(targets)].sort(), row.id).toEqual([...row.targets].sort());
       expect(row.targets.filter((path) => path.endsWith(".rs") || path.endsWith(".txt")).every((path) => nativeInputs.includes(path)), row.id).toBe(true);
       expect(await inspectRustSourceInputs(cwd, rustSourceTargets(row.source, refs), new Set(Object.keys(row.files)))).toEqual([]);
-      expect(() => rustSourceTargets(row.source, rustSourceReferences('include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/fixture.txt"));'))).toThrow("manifest provenance");
+      expect(() => rustSourceTargets(row.source, inspectRustCompileReferences('include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/fixture.txt"));'))).toThrow("manifest provenance");
     }
-    for (const row of corpus.inlineRejections as readonly { id: string; from: string; source: string; error: string }[]) expect(() => rustSourceTargets(row.from, rustSourceReferences(row.source)), row.id).toThrow(row.error);
+    for (const row of corpus.inlineRejections as readonly { id: string; from: string; source: string; error: string }[]) expect(() => rustSourceTargets(row.from, inspectRustCompileReferences(row.source)), row.id).toThrow(row.error);
   } finally { rmSync(root, { recursive: true, force: true }); }
 }, 45_000);
 
@@ -228,7 +229,7 @@ test("authored traversal visits physical prefixes before resolving parent naviga
         expect(code, errors).toBe(0);
         expect(actual.replaceAll("\r\n", "\n"), row.id).toBe(row.stdout!);
       }
-      const targets = rustSourceTargets(row.root, rustSourceReferences(row.files[row.root]!));
+      const targets = rustSourceTargets(row.root, inspectRustCompileReferences(row.files[row.root]!));
       const failures = await inspectRustSourceInputs(cwd, targets, new Set(Object.keys(row.files)));
       expect([...new Map(failures.map((failure) => [JSON.stringify(failure), failure])).values()], row.id).toEqual([...row.failures]);
     }
@@ -264,9 +265,9 @@ test("rustc independently confirms literal inputs, nested module mounts and envi
       const { stdout, stderr, status } = await nativeCommand(["rustc", "--crate-name", "boundary_oracle", "--crate-type", "lib", "--test", "--emit=dep-info=dependencies.d", "source.rs"], cwd, { ...process.env, CARGO_MANIFEST_DIR: cwd });
       expect(status, `${row.id}: ${stdout}${stderr}`).toBe(0);
       const actual = dependencies(cwd);
-      const compileReferences = new Map(Object.entries(row.files).filter(([path]) => path.endsWith(".rs")).map(([path, source]) => [path, rustSourceReferences(source)]));
+      const compileReferences = new Map(Object.entries(row.files).filter(([path]) => path.endsWith(".rs")).map(([path, source]) => [path, inspectRustCompileReferences(source)]));
       const graph = inspectRustModuleGraph(Object.keys(row.files), (path) => row.files[path], { compileReferences });
-      const refs = rustSourceReferences(row.files[row.sourcePath]!);
+      const refs = inspectRustCompileReferences(row.files[row.sourcePath]!);
       const rules: DependencyDirectionRule[] = [{ name: "all-inputs", severity: "error", from: { path: [".*"] }, to: { path: [".*"] } }];
       const edges = rustSourceDirectionEdges(row.sourcePath, refs, rules, { contexts: graph.contexts.get(row.sourcePath) });
       const targets = edges.filter((edge) => row.targets.includes(edge.to)).map((edge) => edge.to);
@@ -282,7 +283,7 @@ test("finite local macro inputs retain native expansion provenance and runtime b
   if (!output) throw new Error("Rust macro oracle requires caller-owned output");
   mkdirSync(output, { recursive: true });
   const root = realpathSync(mkdtempSync(join(output, "rust-macro-inputs-"))), corpus = read("🧫️fixtures/🧱️rust-source-direction/🔣️.json");
-  const rows = corpus.macroScopes as readonly { id: string; root: string; files: Readonly<Record<string, string>>; references: readonly RustSourceReference[]; stdout: string; nativeTests?: readonly string[] }[];
+  const rows = corpus.macroScopes as readonly { id: string; root: string; files: Readonly<Record<string, string>>; references: readonly RustCompileReference[]; stdout: string; nativeTests?: readonly string[] }[];
   const schema = read("🧬️schema/🧱️rust-source-direction/🔣️.json"), validate = new Ajv({ strict: true }).compile(schema);
   expect(validate(corpus), JSON.stringify(validate.errors)).toBe(true);
   expect(new Set(rows.map((row) => row.id)).size).toBe(rows.length);
@@ -310,7 +311,7 @@ test("finite local macro inputs retain native expansion provenance and runtime b
     for (const name of nativeTests) expect(lawRun.stdout).toContain("test " + name + " ... ok");
     const nativeInputs = dependencies(root).map(oracleNormalize), expectedInputs: string[] = ["macro-host.rs"];
     for (const row of rows) {
-      const references = rustSourceReferences(row.files[row.root]!);
+      const references = inspectRustCompileReferences(row.files[row.root]!);
       expect(references, row.id).toEqual(row.references);
       const resolved = rustSourceTargets(row.root, references), expected = references.map((ref) => oracleNormalize(oracleJoin(oracleDirname(row.root), ref.path)));
       expect(resolved.map((target) => target.to), row.id).toEqual(expected);
@@ -331,7 +332,7 @@ test("finite local macro inputs retain native expansion provenance and runtime b
         for (const [path, source] of Object.entries(row.files ?? {})) { mkdirSync(dirname(join(cwd, path)), { recursive: true }); writeFileSync(join(cwd, path), source); }
         const native = await nativeCommand(["rustc", "--crate-name", "macro_refusal", "--emit=dep-info=dependencies.d", "general/source.rs"], cwd);
         expect(native.status === 0, row.id + ": " + native.stdout + native.stderr).toBe(row.native);
-        expect(() => rustSourceReferences(row.source), row.id).toThrow("Unsupported Rust compile");
+        expect(() => inspectRustCompileReferences(row.source), row.id).toThrow("Unsupported Rust compile");
       }
     }));
     for (const worker of workers) if (worker.status === "rejected") throw worker.reason;
@@ -347,9 +348,9 @@ for (const row of read("🧫️fixtures/🧱️rust-source-direction/🔣️.jso
   expect(validate(read("🧫️fixtures/🧱️rust-source-direction/🔣️.json")), JSON.stringify(validate.errors)).toBe(true);
   try {
     writeLayerOracle(root, row.files);
-    if (row.problem) expect(() => rustSourceReferences(row.files[row.source]!)).toThrow("Unsupported Rust compile");
+    if (row.problem) expect(() => inspectRustCompileReferences(row.files[row.source]!)).toThrow("Unsupported Rust compile");
     else {
-      const refs = rustSourceReferences(row.files[row.source]!);
+      const refs = inspectRustCompileReferences(row.files[row.source]!);
       expect(refs).toHaveLength(2);
       expect(refs.every((ref) => JSON.stringify(ref.expansion?.scope) === JSON.stringify(row.scope))).toBe(true);
     }
@@ -372,7 +373,7 @@ test("compiler marker origins require captured aliases, wildcard exports and inc
     for (const row of rows) {
       const cwd = join(root, row.id);
       writeLayerOracle(cwd, row.files);
-      const refs = rustSourceReferences(row.files[row.source]!);
+      const refs = inspectRustCompileReferences(row.files[row.source]!);
       expect(refs.filter(ref => ref.expansion)).toHaveLength(2);
       const report = await inspectRustSourceDirection(cwd);
       expect(report.violations, row.id).toEqual([]);
@@ -443,7 +444,7 @@ test("finite macro scopes require every live manifest and incoming module origin
         if (row.id !== "physically-delete-parent-mount") expect(runtimeOut).toContain("sealed-input sealed-input");
         const live = Object.keys(row.files).filter((path) => !row.remove?.includes(path));
         const sources = new Map(live.map((path) => [path, readFileSync(join(cwd, path), "utf8")]));
-        const refs = new Map(live.filter((path) => path.endsWith(".rs")).map((path) => { try { return [path, rustSourceReferences(sources.get(path)!)] as const; } catch { return [path, []] as const; } }));
+        const refs = new Map(live.filter((path) => path.endsWith(".rs")).map((path) => { try { return [path, inspectRustCompileReferences(sources.get(path)!)] as const; } catch { return [path, []] as const; } }));
         const graph = inspectRustModuleGraph(live, (path) => sources.get(path), { strictManifests: true, compileReferences: refs });
         const facts = inspectRustModuleGraphFacts(sources.get(row.source)!);
         expect(facts.scopes.length, row.id).toBeGreaterThan(0);
@@ -520,18 +521,18 @@ test("module graph authority requires every exact physical source read", async (
 
 test("framework source and test paths cannot depend on implementation files", () => {
   for (const row of fixture.directions) {
-    const refs = rustSourceReferences(row.source);
+    const refs = inspectRustCompileReferences(row.source);
     expect(rustSourceDirectionEdges(row.from, refs, fixture.rules), row.id).toEqual(row.edges);
     const targets = refs.map((ref) => oracleNormalize(oracleJoin(oracleDirname(row.from), ref.path)));
     expect(row.edges.every((edge) => targets.includes(edge.to)), row.id).toBe(true);
   }
-  expect(() => rustSourceDirectionEdges("general/tests/source.rs", rustSourceReferences('include!("../../../outside.rs");'), fixture.rules)).toThrow("escapes");
+  expect(() => rustSourceDirectionEdges("general/tests/source.rs", inspectRustCompileReferences('include!("../../../outside.rs");'), fixture.rules)).toThrow("escapes");
 });
 
 test("unsupported compile expressions fail closed", () => {
-  for (const row of fixture.unsupported) expect(() => rustSourceReferences(row.source), row.id).toThrow("Unsupported Rust compile");
-  const refs = rustSourceReferences('include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../specific/fixture.txt"));');
+  for (const row of fixture.unsupported) expect(() => inspectRustCompileReferences(row.source), row.id).toThrow("Unsupported Rust compile");
+  const refs = inspectRustCompileReferences('include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../specific/fixture.txt"));');
   expect(() => rustSourceDirectionEdges("general/source.rs", refs, fixture.rules)).toThrow("manifest provenance");
   expect(rustSourceDirectionEdges("general/source.rs", refs, fixture.rules, { manifestPaths: ["general/Cargo.toml"] })).toEqual([{ rule: "framework-no-implementation", from: "general/source.rs", to: "specific/fixture.txt", kind: "include_str", line: 1 }]);
-  expect(rustSourceDirectionEdges("general/source.rs", rustSourceReferences('include!(concat!(env!("OUT_DIR"), "/generated.rs"));'), fixture.rules)).toEqual([]);
+  expect(rustSourceDirectionEdges("general/source.rs", inspectRustCompileReferences('include!(concat!(env!("OUT_DIR"), "/generated.rs"));'), fixture.rules)).toEqual([]);
 });

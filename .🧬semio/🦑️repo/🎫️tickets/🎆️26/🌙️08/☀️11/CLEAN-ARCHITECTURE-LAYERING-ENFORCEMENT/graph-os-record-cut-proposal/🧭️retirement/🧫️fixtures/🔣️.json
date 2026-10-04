@@ -1,0 +1,1 @@
+{"version":1,"cases":[{"id":"ordinary-signed-identity","suffix":"🦀️.rs","functions":["parse_dsl_value","print_dsl_value"]},{"id":"controlled-signed-identity","suffix":"🛬️decoding/🦀️.rs","functions":["dynamic"]},{"id":"controlled-field-key-and-signed-identity","suffix":"🛫️encoding/🦀️.rs","functions":["field_key","fields","intrinsic"]}]}

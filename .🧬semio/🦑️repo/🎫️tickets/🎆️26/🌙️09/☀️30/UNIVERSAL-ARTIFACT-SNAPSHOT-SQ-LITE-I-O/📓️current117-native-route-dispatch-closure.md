@@ -1,0 +1,13 @@
+# Current 117 Native Route Dispatch Closure
+
+Fresh read-only joins of the retained primary-source membership rows to current manifests and script delegates resolve all117 rows to96 unique Native project executions. No Native, Cargo, Nx, Source or build command was executed. This is finite dispatch readiness, not full-field or runtime completion.
+
+`🗑️generated/current117-native-route-dispatch-closure.json` preserves every owner row, exact snapshot root, manifest command, script SHA, owning selector, explicit feature override/fallback, whole route and local authored SQLite Rust law filenames. Each alias/standard/subset owner remains linked to its project execution; an execution is not credited multiple times merely because it serves multiple published rows.
+
+The machine queue contains three sequential run-many groups:92 literal `test-snapshot-sqlite-native` projects; three Office `test-snapshot-sqlite --args=native` projects; one Note `verify-sqlite-snapshot-native` project. Use Root's existing isolated ticket artifact/Cargo/Nx environment. Framework seven persisted authorities, fixture Count, compiled component3, authenticated Hub lease1 and Rewriting scenario46 are separate selections.
+
+Canonical artifact Rust delegate `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts:18–24,74–82` passes authored feature flags and selects `--lib sqlite_snapshot_ --no-fail-fast`. A declared `snapshotSqliteTestFeatures: []` overrides whole-module `testFeatures`, rather than inheriting them. Note's actual script:14 selects its fully qualified `sqlite_snapshot_note_` module prefix through the same native runner. Whole-module routes are separately recorded and use ordinary authored testFeatures; their counts cannot be inferred from SQLite-prefix cohorts. IFC222 is therefore not an expected count for its SQLite-only queue row.
+
+No missing registered Native owner row was found. Local law filenames are locators, not proof that a particular subset has independent full-owner coverage: nested common includes and feature selection remain owning runtime responsibilities. Current receipts and prospective counts must come from Root's results, not this registry closure.
+
+Local subtree lookup finds no SQLite Rust leaf under PDF1.4/PDF1.7 and DXF r12/header snapshot roots; their shared project routes remain present. These inherited/alias rows require actual owning include/coverage qualification, not a missing-provider verdict. Execution ownerRows retain full snapshot-root identity because repeated owner type names alone cannot distinguish standard/subset rows.

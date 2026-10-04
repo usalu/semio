@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.framework.launch.primary-generator.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "taxonomy",
+    "generatorContract",
+    "target",
+    "implementation",
+    "seed",
+    "output",
+    "name",
+    "group",
+    "order"
+  ],
+  "properties": {
+    "taxonomy": {
+      "type": "string",
+      "minLength": 1
+    },
+    "generatorContract": {
+      "type": "string",
+      "minLength": 1
+    },
+    "target": {
+      "type": "string",
+      "minLength": 1
+    },
+    "implementation": {
+      "type": "string",
+      "minLength": 1
+    },
+    "seed": {
+      "type": "string",
+      "minLength": 1
+    },
+    "output": {
+      "type": "string",
+      "minLength": 1
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "group": {
+      "type": "string",
+      "minLength": 1
+    },
+    "order": {
+      "type": "number"
+    }
+  }
+}

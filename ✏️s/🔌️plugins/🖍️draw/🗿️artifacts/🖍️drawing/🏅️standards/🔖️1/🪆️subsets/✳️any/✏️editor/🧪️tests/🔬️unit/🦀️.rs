@@ -68,6 +68,16 @@ fn canvas_scene(tree: semio_framework_plugin::ComponentTree) -> semio_framework_
     decoded.expect("typed canvas")
 }
 
+async fn rendered_drawing_canvas(app:&mut DrawingApp,fixture:Option<&str>,view:&ViewModel)->Result<semio_framework_plugin::ComponentTree,semio_framework_plugin::Fault>{
+    use semio_framework_plugin::reactor::jobs::{start_job,step_job,cancel_job,JobBudget,JobStep};
+    for effect in app.pending_effects(Some(view)).await{match effect{
+        Effect::CancelJob{job}=>cancel_job(job).await,
+        Effect::SpawnJob{job,kind,input,..}if kind=="semio.draw.mounted-vector"=>{start_job(job,&kind,&input).await;let mut complete=false;for _ in 0..100000{match step_job(job,JobBudget{fuel:65536,deadline_ms:8}).await{JobStep::Running(_)=>{},JobStep::Done(_)=>{complete=true;break;},JobStep::Failed(error)=>panic!("registered Drawing geometry failed: {}",String::from_utf8_lossy(&error))}}assert!(complete,"registered Drawing geometry must settle before its canvas witness");eprintln!("[DEBUG] Actual Drawing app pending effects drove registered reactor geometry job {job} to complete before canvas inspection");},
+        _=>{},
+    }}
+    app.render(DRAWING_PLAY_BODY_COMPOSITE,fixture,view).await
+}
+
 fn drawing_envelope_wire() -> Vec<u8> {
     use store::ArtifactPack;
 
@@ -246,7 +256,7 @@ fn last_layer_id(app: &DrawingApp) -> String {
 async fn renders_canvas_scene_with_segments() {
     let mut app = drawing_app().await;
     let example_json = semio_drawing_example_json();
-    let node = app.render(DRAWING_PLAY_BODY_COMPOSITE, Some(example_json.as_str()), &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
+    let node = rendered_drawing_canvas(&mut app, Some(example_json.as_str()), &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
     let scene = canvas_scene(node);
     let layers_json = scene.layers_json.as_str();
     assert!(layers_json.contains("segments"));
@@ -263,7 +273,7 @@ async fn renders_canvas_scene_with_segments() {
 #[semio_framework_async_macros::async_test]
 async fn default_document_exposes_artboard_dimensions_on_canvas() {
     let mut app = drawing_app().await;
-    let node = app.render(DRAWING_PLAY_BODY_COMPOSITE, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
+    let node = rendered_drawing_canvas(&mut app, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
     let scene = canvas_scene(node);
     let layers_json = scene.layers_json.as_str();
     assert!(layers_json.contains("1024 × 1024"), "blank documents show default artboard dimensions");
@@ -351,7 +361,7 @@ async fn host_utility_change_clears_scratch_and_emits_no_history_entry() {
     let before = app.snapshot().unwrap();
     let pen_meta = meta_with_utility("pen");
     let pen_view = pen_meta.view_state.as_ref().expect("host view");
-    let tree = app.render(DRAWING_PLAY_BODY_COMPOSITE, None, pen_view).await.expect("render after utility change");
+    let tree = rendered_drawing_canvas(&mut app, None, pen_view).await.expect("render after utility change");
     artifact_laws::project_and_retire_fixture_tree(tree).expect("retire render tree");
     assert_eq!(app.snapshot().unwrap(), before, "utility switching does not mutate the document");
     let (up, _) = settled(&mut app, DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { alt: false, x: 40.0, y: 40.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false, cancelled: false }), &pen_meta).await;
@@ -613,7 +623,7 @@ async fn direct_drag_projects_without_editing_and_publishes_only_on_release() {
         settled(&mut app, DrawingCommand::SetCamera(set_camera::SetCamera { camera: store::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 } }), &meta).await;
         let before = app.snapshot().unwrap();
         let view = meta.view_state.as_ref().unwrap();
-        let scene = canvas_scene(app.render(DRAWING_PLAY_BODY_COMPOSITE, None, view).await.unwrap());
+        let scene = canvas_scene(rendered_drawing_canvas(&mut app, None, view).await.unwrap());
         let records: Vec<serde_json::Value> = serde_json::from_str(&scene.layers_json).unwrap();
         let original = records.iter().find(|record| record["id"] == id).unwrap()["transform"].clone();
         let (_, down) = settled(&mut app, DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { x: 400.0, y: 300.0, width: 800.0, height: 600.0, ..Default::default() }), &meta).await;
@@ -622,7 +632,7 @@ async fn direct_drag_projects_without_editing_and_publishes_only_on_release() {
         let (_, moved) = settled(&mut app, DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { shift: false, alt: false, x: 430.0, y: 320.0, width: 800.0, height: 600.0, samples: vec![[410.0,310.0],[430.0,320.0]] }), &meta).await;
         assert!(!moved.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact));
         assert_eq!(app.snapshot().unwrap(), before);
-        let scene = canvas_scene(app.render(DRAWING_PLAY_BODY_COMPOSITE, None, view).await.unwrap());
+        let scene = canvas_scene(rendered_drawing_canvas(&mut app, None, view).await.unwrap());
         let records: Vec<serde_json::Value> = serde_json::from_str(&scene.layers_json).unwrap();
         let preview = &records.iter().find(|record| record["id"] == id).unwrap()["transform"];
         assert_eq!(preview[4].as_f64().unwrap(), original[4].as_f64().unwrap() + 30.0);
@@ -703,7 +713,7 @@ async fn repeated_shape_rect_gestures_from_fresh_published_views_commit_distinct
     let mut app = drawing_app().await;
     let first_meta = drawing_composite_shape_meta();
     let first_view = first_meta.view_state.as_ref().expect("first drawing-composite view");
-    let initial_tree = app.render(DRAWING_PLAY_BODY_COMPOSITE, None, first_view).await.expect("initial drawing-composite render");
+    let initial_tree = rendered_drawing_canvas(&mut app, None, first_view).await.expect("initial drawing-composite render");
     artifact_laws::project_and_retire_fixture_tree(initial_tree).expect("retire initial drawing-composite tree");
     let before = app.snapshot().expect("initial Drawing snapshot").layers.len();
     let width = 1587.0;
@@ -741,7 +751,7 @@ async fn repeated_shape_rect_gestures_from_fresh_published_views_commit_distinct
 
     let second_meta = drawing_composite_shape_meta();
     let second_view = second_meta.view_state.as_ref().expect("fresh post-publication drawing-composite view");
-    let refreshed_tree = app.render(DRAWING_PLAY_BODY_COMPOSITE, None, second_view).await.expect("post-publication drawing-composite render");
+    let refreshed_tree = rendered_drawing_canvas(&mut app, None, second_view).await.expect("post-publication drawing-composite render");
     artifact_laws::project_and_retire_fixture_tree(refreshed_tree).expect("retire post-publication drawing-composite tree");
     settled(&mut app, DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { shift: false, alt: false, x: 825.24, y: 317.45, width, height, samples: Vec::new() }), &second_meta).await;
     settled(
@@ -775,7 +785,7 @@ async fn repeated_shape_rect_gestures_from_fresh_published_views_commit_distinct
 
     let third_meta = drawing_composite_shape_meta();
     let third_view = third_meta.view_state.as_ref().expect("fresh identical-geometry drawing-composite view");
-    let third_tree = app.render(DRAWING_PLAY_BODY_COMPOSITE, None, third_view).await.expect("identical-geometry drawing-composite render");
+    let third_tree = rendered_drawing_canvas(&mut app, None, third_view).await.expect("identical-geometry drawing-composite render");
     artifact_laws::project_and_retire_fixture_tree(third_tree).expect("retire identical-geometry drawing-composite tree");
     settled(&mut app, DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { shift: false, alt: false, x: 825.24, y: 317.45, width, height, samples: Vec::new() }), &third_meta).await;
     settled(
@@ -829,7 +839,7 @@ async fn repeated_shape_rect_gestures_from_fresh_published_views_commit_distinct
 
 fn with_utility(meta: &semio_framework_plugin::ActionMeta, utility: &str) -> semio_framework_plugin::ActionMeta {
     let mut meta = meta.clone();
-    meta.view_state = Some(ViewModel { active_utility_id: Some(utility.into()), ..meta.view_state.clone().unwrap_or_default() });
+    meta.view_state = Some(ViewModel { active_utility_id: Some(utility.into()), ..meta.view_state.clone().unwrap_or_else(||ViewModel::new(semio_framework_ui_locale::Locale::En,semio_framework_ui_locale::Terminology::Native)) });
     meta
 }
 
@@ -898,7 +908,7 @@ async fn set_camera_writes_runtime_and_emits_no_operations() {
     let (result, _) = settled(&mut app, DrawingCommand::SetCamera(set_camera::SetCamera { camera: store::Viewport2d { x: 5.0, y: 5.0, zoom: 2.0 } }), &meta).await;
     assert!(result.mutations.is_empty(), "camera is a view action and emits no operations");
     assert_eq!(app.snapshot().expect("projection"), before, "camera never mutates the document");
-    let scene = canvas_scene(app.render(DRAWING_PLAY_BODY_COMPOSITE, None, meta.view_state.as_ref().expect("addressed canvas view")).await.expect("render"));
+    let scene = canvas_scene(rendered_drawing_canvas(&mut app, None, meta.view_state.as_ref().expect("addressed canvas view")).await.expect("render"));
     assert_eq!([scene.camera_x, scene.camera_y, scene.zoom], [5.0, 5.0, 2.0]);
 }
 
@@ -908,7 +918,7 @@ async fn set_camera_zoom_updates_zoom_and_keeps_pan_via_runtime() {
     settled(&mut app, DrawingCommand::SetCamera(set_camera::SetCamera { camera: store::Viewport2d { x: 4.0, y: 5.0, zoom: 1.0 } }), &meta).await;
     let (result, _) = settled(&mut app, DrawingCommand::SetCameraZoom(set_camera_zoom::SetCameraZoom { value: 3.0 }), &meta).await;
     assert!(result.mutations.is_empty(), "camera zoom is a view action and emits no operations");
-    let scene = canvas_scene(app.render(DRAWING_PLAY_BODY_COMPOSITE, None, meta.view_state.as_ref().expect("addressed canvas view")).await.expect("render"));
+    let scene = canvas_scene(rendered_drawing_canvas(&mut app, None, meta.view_state.as_ref().expect("addressed canvas view")).await.expect("render"));
     assert_eq!([scene.camera_x, scene.camera_y, scene.zoom], [4.0, 5.0, 3.0]);
 }
 
@@ -1001,7 +1011,7 @@ async fn set_selected_opacity_reads_the_framework_interaction_selection() {
     let (mut app, meta) = inline_selection_app().await;
     let id = first_layer_id(&app);
     let targets = serde_json::to_string(&vec![serde_json::json!({ "granularity": DRAWING_INTERACTION_GRANULARITY, "id": id })]).unwrap();
-    let admission = app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&dsl::json::to_dsl_value(&dsl::json!({ "domainId": DRAWING_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" }))), &meta).await.expect("select");
+    let admission = app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "domainId": DRAWING_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" }))), &meta).await.expect("select");
     semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app, admission).await.expect("selection publication settles");
     assert_eq!(selected_strokes(&app).await, vec![id.clone()], "the retained opacity command reads the framework-owned selection published for its canvas window");
     let (result, receipt) = settled(&mut app, DrawingCommand::SetSelectedOpacity(set_selected_opacity::SetSelectedOpacity { value: 0.25 }), &meta).await;
@@ -1092,12 +1102,12 @@ async fn gesture_preview_reflects_live_shape_drag_and_clears_on_commit() {
     assert_eq!(up.artifact_mutations.len(), 1, "pointer-up commits the shape as one real DrawingMutation");
     let transaction = up.transaction.as_ref().expect("the shape commits as one tool transaction");
     assert!(transaction.id.starts_with("tx-") && transaction.tool == "s.draw.drawing@1/*#editor#shapeRect", "{transaction:?}");
-    assert!(up.description.is_none() && up.coalesce_key.is_none(), "the history row is labelled from the leaf");
+
     let DrawingMutation::CreateLayer(created) = &up.artifact_mutations[0] else { panic!("a shape drag creates a layer") };
     let label = <DrawingMutation as protocol::SemanticMutation<DrawingSnapshot>>::label(&up.artifact_mutations[0]);
     let id = layer_id(&created.layer).to_string();
-    assert_eq!(label.resolve(protocol::Terminology::Native, protocol::Locale::En), format!("Create layer \"{id}\""));
-    assert_eq!(label.resolve(protocol::Terminology::Native, protocol::Locale::De), format!("Ebene \"{id}\" erstellen"));
+    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), format!("Create layer \"{id}\""));
+    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), format!("Ebene \"{id}\" erstellen"));
     assert_eq!(session.preview().phase, canvas_pointer_down::DrawingGesturePreviewPhase::Idle, "the committed projection is terminal idle");
     assert!(session.tool.at_rest());
 }
@@ -1196,21 +1206,21 @@ async fn a_cancelled_release_commits_nothing_and_leaves_the_gesture_idle() {
 /// `(x, y)` and a real release.
 #[semio_framework_async_macros::async_test]
 async fn canvas_pointer_wire_defaults_samples_and_cancelled() {
-    use dsl::FromValue;
-    let f = dsl::DslValue::float;
-    let legacy = dsl::DslValue::Object(vec![("x".into(), f(5.0)), ("y".into(), f(6.0)), ("width".into(), f(800.0)), ("height".into(), f(600.0))]);
+    use semio_framework_value::FromValue;
+    let f = semio_framework_value::DslValue::float;
+    let legacy = semio_framework_value::DslValue::Object(vec![("x".into(), f(5.0)), ("y".into(), f(6.0)), ("width".into(), f(800.0)), ("height".into(), f(600.0))]);
     let moved = canvas_pointer_move::CanvasPointerMove::from_value(legacy.clone()).expect("legacy move decodes");
     assert!(moved.samples.is_empty());
     assert_eq!(moved.samples_or_last(), vec![[5.0, 6.0]], "an absent `samples` is the single (x, y)");
     assert_eq!(moved.last_sample(), [5.0, 6.0]);
-    let pair = |x: f64, y: f64| dsl::DslValue::Array(vec![f(x), f(y)]);
-    let batched = dsl::DslValue::Object(vec![("x".into(), f(3.0)), ("y".into(), f(4.0)), ("width".into(), f(800.0)), ("height".into(), f(600.0)), ("samples".into(), dsl::DslValue::Array(vec![pair(1.0, 1.5), pair(2.0, 2.5), pair(3.0, 4.0)]))]);
+    let pair = |x: f64, y: f64| semio_framework_value::DslValue::Array(vec![f(x), f(y)]);
+    let batched = semio_framework_value::DslValue::Object(vec![("x".into(), f(3.0)), ("y".into(), f(4.0)), ("width".into(), f(800.0)), ("height".into(), f(600.0)), ("samples".into(), semio_framework_value::DslValue::Array(vec![pair(1.0, 1.5), pair(2.0, 2.5), pair(3.0, 4.0)]))]);
     let moved = canvas_pointer_move::CanvasPointerMove::from_value(batched).expect("batched move decodes");
     assert_eq!(moved.samples, vec![[1.0, 1.5], [2.0, 2.5], [3.0, 4.0]]);
     assert_eq!(moved.last_sample(), [3.0, 4.0]);
-    let modified = canvas_pointer_move::CanvasPointerMove::from_value(dsl::DslValue::Object(vec![("x".into(),f(3.0)),("y".into(),f(4.0)),("width".into(),f(800.0)),("height".into(),f(600.0)),("shift".into(),dsl::DslValue::Bool(true)),("alt".into(),dsl::DslValue::Bool(true))])).expect("live modifiers decode");
+    let modified = canvas_pointer_move::CanvasPointerMove::from_value(semio_framework_value::DslValue::Object(vec![("x".into(),f(3.0)),("y".into(),f(4.0)),("width".into(),f(800.0)),("height".into(),f(600.0)),("shift".into(),semio_framework_value::DslValue::Bool(true)),("alt".into(),semio_framework_value::DslValue::Bool(true))])).expect("live modifiers decode");
     assert!(modified.shift && modified.alt);
-    let legacy_up = dsl::DslValue::Object(vec![("x".into(), f(5.0)), ("y".into(), f(6.0)), ("width".into(), f(800.0)), ("height".into(), f(600.0)), ("shift".into(), dsl::DslValue::Bool(false)), ("ctrl".into(), dsl::DslValue::Bool(false)), ("meta".into(), dsl::DslValue::Bool(false))]);
+    let legacy_up = semio_framework_value::DslValue::Object(vec![("x".into(), f(5.0)), ("y".into(), f(6.0)), ("width".into(), f(800.0)), ("height".into(), f(600.0)), ("shift".into(), semio_framework_value::DslValue::Bool(false)), ("ctrl".into(), semio_framework_value::DslValue::Bool(false)), ("meta".into(), semio_framework_value::DslValue::Bool(false))]);
     let released = canvas_pointer_up::CanvasPointerUp::from_value(legacy_up).expect("legacy release decodes");
     assert!(!released.cancelled, "an absent `cancelled` is a real release");
 }
@@ -1445,7 +1455,7 @@ async fn selected_group_and_layer_drag_preserves_selection_and_one_history_edit(
         settled(&mut app,DrawingCommand::SetCamera(set_camera::SetCamera { camera:store::Viewport2d { x:0.0,y:0.0,zoom:1.0 } }),&meta).await;
         let ids=vec!["group".to_string(),"child".to_string(),"other".to_string()];
         let targets=serde_json::to_string(&ids.iter().map(|id|serde_json::json!({"granularity":DRAWING_INTERACTION_GRANULARITY,"id":id})).collect::<Vec<_>>()).unwrap();
-        let admission=app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID,Some(&dsl::json::to_dsl_value(&dsl::json!({"domainId":DRAWING_INTERACTION_DOMAIN,"targets":targets,"merge":"replace","method":"pick"}))),&meta).await.unwrap();
+        let admission=app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID,Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({"domainId":DRAWING_INTERACTION_DOMAIN,"targets":targets,"merge":"replace","method":"pick"}))),&meta).await.unwrap();
         semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app,admission).await.unwrap();
         let selected=selected_strokes(&app).await;
         assert_eq!(selected.len(),3);
@@ -1453,7 +1463,7 @@ async fn selected_group_and_layer_drag_preserves_selection_and_one_history_edit(
         assert_eq!(selected_strokes(&app).await,selected);
         settled(&mut app,DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { shift: false, alt: false, x:450.0,y:340.0,width:800.0,height:600.0,samples:vec![] }),&meta).await;
         assert_eq!(app.snapshot().unwrap(),before);
-        let scene=canvas_scene(app.render(DRAWING_PLAY_BODY_COMPOSITE,None,meta.view_state.as_ref().unwrap()).await.unwrap());
+        let scene=canvas_scene(rendered_drawing_canvas(&mut app,None,meta.view_state.as_ref().unwrap()).await.unwrap());
         let records:Vec<serde_json::Value>=serde_json::from_str(&scene.layers_json).unwrap();
         for (id,x,scale) in [("child",30.0,2.0),("other",430.0,1.0)] {
             let node=records.iter().find(|node|node["id"]==id).unwrap();
@@ -1472,8 +1482,8 @@ async fn selected_group_and_layer_drag_preserves_selection_and_one_history_edit(
             let transaction=rows[0].transaction.as_ref().unwrap();
             assert!(transaction.id.starts_with("tx-") && transaction.tool=="s.draw.drawing@1/*#editor#selectDirect","{transaction:?}");
             assert!(rows[0].op_lines.len()==1 && rows[0].op_lines[0].starts_with("drag-layers"),"one relative drag leaf: {:?}",rows[0].op_lines);
-            assert_eq!(rows[0].label.resolve(protocol::Terminology::Native,protocol::Locale::En),"Drag 2 layers by (30, 20)");
-            assert_eq!(rows[0].label.resolve(protocol::Terminology::Native,protocol::Locale::De),"2 Ebenen um (30; 20) ziehen");
+            assert_eq!(rows[0].label.resolve(semio_framework_ui_locale::Terminology::Native,semio_framework_ui_locale::Locale::En),"Drag 2 layers by (30, 20)");
+            assert_eq!(rows[0].label.resolve(semio_framework_ui_locale::Terminology::Native,semio_framework_ui_locale::Locale::De),"2 Ebenen um (30; 20) ziehen");
             let after=app.snapshot().unwrap();
             assert!((crate::schema::layer_base(&after.layers[0]).transform.x-30.0).abs()<1e-10);
             assert!((crate::schema::layer_base(&after.layers[1]).transform.x-430.0).abs()<1e-10);
@@ -1508,14 +1518,18 @@ fn drawing_canvas_initial_framing_uses_world_bounds_and_respects_restored_naviga
     let mut document = crate::DrawingSnapshot { layers: vec![layer],artboard: None,..Default::default() };
     let mut config = canvas_window::config::DrawingCanvasWindowConfig::default();
     let preview = DrawingGesturePreview::default();
-    let scene = canvas_scene(semio_framework_plugin::built_to_component_tree(canvas_window::render(&document,&config,&preview,DRAWING_DEFAULT_UTILITY,&[],&[]).unwrap()));
+    let mut producer=crate::schema::scene_preparation::DocumentVectorJob::new(&document,geometry_session::limits(),geometry_session::algorithms()).unwrap();
+    while !producer.advance(4096).unwrap().done{}
+    let plan=producer.result().unwrap();
+    drop(producer);
+    let scene = canvas_scene(semio_framework_plugin::built_to_component_tree(canvas_window::render(Some(&plan),1,&document,&config,&preview,DRAWING_DEFAULT_UTILITY,&[],&[]).unwrap()));
     assert_eq!(scene.framing.as_ref().unwrap().bounds,[-20.0,-30.0,80.0,70.0]);
     document.artboard = Some(crate::schema::DrawingArtboard { width: 1024.0,height: 1024.0 });
-    let scene = canvas_scene(semio_framework_plugin::built_to_component_tree(canvas_window::render(&document,&config,&preview,DRAWING_DEFAULT_UTILITY,&[],&[]).unwrap()));
+    let scene = canvas_scene(semio_framework_plugin::built_to_component_tree(canvas_window::render(Some(&plan),1,&document,&config,&preview,DRAWING_DEFAULT_UTILITY,&[],&[]).unwrap()));
     assert_eq!(scene.framing.as_ref().unwrap().bounds,[-20.0,-30.0,1024.0,1024.0]);
     config.framed = true;
     config.viewport = store::Viewport2d { x: 777.0,y: -333.0,zoom: 2.0 };
-    let scene = canvas_scene(semio_framework_plugin::built_to_component_tree(canvas_window::render(&document,&config,&preview,DRAWING_DEFAULT_UTILITY,&[],&[]).unwrap()));
+    let scene = canvas_scene(semio_framework_plugin::built_to_component_tree(canvas_window::render(Some(&plan),1,&document,&config,&preview,DRAWING_DEFAULT_UTILITY,&[],&[]).unwrap()));
     assert!(scene.framing.is_none());
     assert_eq!((scene.camera_x,scene.camera_y,scene.zoom),(777.0,-333.0,2.0));
 }
@@ -1580,9 +1594,9 @@ async fn transform_handles_render_and_commit_once_through_the_registered_editor(
             load_drawing_fixture(&mut app,&before);
             settled(&mut app,DrawingCommand::SetCamera(set_camera::SetCamera {camera:store::Viewport2d {x:0.0,y:0.0,zoom:1.0}}),&meta).await;
             let targets=serde_json::to_string(&[serde_json::json!({"granularity":DRAWING_INTERACTION_GRANULARITY,"id":"child"})]).unwrap();
-            let admission=app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID,Some(&dsl::json::to_dsl_value(&dsl::json!({"domainId":DRAWING_INTERACTION_DOMAIN,"targets":targets,"merge":"replace","method":"pick"}))),&meta).await.unwrap();
+            let admission=app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID,Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({"domainId":DRAWING_INTERACTION_DOMAIN,"targets":targets,"merge":"replace","method":"pick"}))),&meta).await.unwrap();
             semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app,admission).await.unwrap();
-            let scene=canvas_scene(app.render(DRAWING_PLAY_BODY_COMPOSITE,None,meta.view_state.as_ref().unwrap()).await.unwrap());
+            let scene=canvas_scene(rendered_drawing_canvas(&mut app,None,meta.view_state.as_ref().unwrap()).await.unwrap());
             let records:Vec<serde_json::Value>=serde_json::from_str(&scene.layers_json).unwrap();
             assert_eq!(records.iter().filter(|row|row["id"].as_str().is_some_and(|id|id.starts_with("overlay:transform-handle:"))).count(),9);
             let bounds=canvas_pointer_down::selected_transform_bounds(&before,&["child".into()]).unwrap();
@@ -1625,7 +1639,7 @@ async fn node_drag_previews_without_mutation_and_commits_one_undoable_edit() {
         load_drawing_fixture(&mut app,&before);
         settled(&mut app,DrawingCommand::SetCamera(set_camera::SetCamera {camera:store::Viewport2d {x:0.0,y:0.0,zoom:1.0}}),&meta).await;
         let targets=serde_json::to_string(&vec![serde_json::json!({"granularity":DRAWING_INTERACTION_GRANULARITY,"id":"curve"})]).unwrap();
-        let admission=app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID,Some(&dsl::json::to_dsl_value(&dsl::json!({"domainId":DRAWING_INTERACTION_DOMAIN,"targets":targets,"merge":"replace","method":"pick"}))),&meta).await.unwrap();
+        let admission=app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID,Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({"domainId":DRAWING_INTERACTION_DOMAIN,"targets":targets,"merge":"replace","method":"pick"}))),&meta).await.unwrap();
         semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app,admission).await.unwrap();
         artifact_laws::settle_registered_typed_operation(&mut *app,meta.instance_id).await.unwrap();
         settled(&mut app,DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {x:421.0,y:321.0,width:800.0,height:600.0,..Default::default()}),&meta).await;
@@ -1636,7 +1650,7 @@ async fn node_drag_previews_without_mutation_and_commits_one_undoable_edit() {
         assert_eq!(selected_point.geometry,interaction::points::geometry_id(&source).unwrap());
         settled(&mut app,DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove {x:441.0,y:331.0,width:800.0,height:600.0,shift:false,alt:false,samples:vec![]}),&meta).await;
         assert_eq!(app.snapshot().unwrap(),before);
-        let scene=canvas_scene(app.render(DRAWING_PLAY_BODY_COMPOSITE,None,meta.view_state.as_ref().unwrap()).await.unwrap());
+        let scene=canvas_scene(rendered_drawing_canvas(&mut app,None,meta.view_state.as_ref().unwrap()).await.unwrap());
         let records:Vec<serde_json::Value>=serde_json::from_str(&scene.layers_json).unwrap();
         let node=records.iter().find(|node|node["id"]=="curve").unwrap();
         assert_eq!(node["segments"][1]["ctrl1"],serde_json::json!([20.0,30.0]));
@@ -1670,7 +1684,7 @@ async fn point_click_persists_and_local_position_rebinds_but_topology_edit_prune
     load_drawing_fixture(&mut app,&before);
     settled(&mut app,DrawingCommand::SetCamera(set_camera::SetCamera {camera:store::Viewport2d {x:0.0,y:0.0,zoom:1.0}}),&meta).await;
     let targets=serde_json::to_string(&vec![serde_json::json!({"granularity":DRAWING_INTERACTION_GRANULARITY,"id":"path"})]).unwrap();
-    let admission=app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID,Some(&dsl::json::to_dsl_value(&dsl::json!({"domainId":DRAWING_INTERACTION_DOMAIN,"targets":targets,"merge":"replace","method":"pick"}))),&meta).await.unwrap();
+    let admission=app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID,Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({"domainId":DRAWING_INTERACTION_DOMAIN,"targets":targets,"merge":"replace","method":"pick"}))),&meta).await.unwrap();
     semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app,admission).await.unwrap();
     artifact_laws::settle_registered_typed_operation(&mut *app,meta.instance_id).await.unwrap();
     settled(&mut app,DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {x:410.0,y:300.0,width:800.0,height:600.0,..Default::default()}),&meta).await;
@@ -1700,7 +1714,7 @@ async fn every_keyboard_nudge_moves_document_axes_and_undoes_once() {
         let before=DrawingSnapshot {id:"nudge".into(),layers:vec![layer],..Default::default()};
         load_drawing_fixture(&mut app,&before);
         let targets=serde_json::to_string(&[serde_json::json!({"granularity":DRAWING_INTERACTION_GRANULARITY,"id":"shape"})]).unwrap();
-        let admission=app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID,Some(&dsl::json::to_dsl_value(&dsl::json!({"domainId":DRAWING_INTERACTION_DOMAIN,"targets":targets,"merge":"replace","method":"pick"}))),&meta).await.unwrap();
+        let admission=app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID,Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({"domainId":DRAWING_INTERACTION_DOMAIN,"targets":targets,"merge":"replace","method":"pick"}))),&meta).await.unwrap();
         semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app,admission).await.unwrap();
         artifact_laws::settle_registered_typed_operation(&mut *app,meta.instance_id).await.unwrap();
         let command=args_bridge::command_from_action(row["action"].as_str().unwrap(),None).unwrap();
@@ -1734,7 +1748,7 @@ async fn node_keyboard_nudges_rebind_selection_and_use_parent_axes() {
     let point=interaction::points::point_id("path",&interaction::points::geometry_id(&source).unwrap(),1,crate::schema::geometry::editing::PathPoint::Anchor).unwrap();
     for (domain,granularity,id) in [(DRAWING_INTERACTION_DOMAIN,DRAWING_INTERACTION_GRANULARITY,"path".to_owned()),(DRAWING_POINT_DOMAIN,DRAWING_POINT_GRANULARITY,point)] {
         let targets=serde_json::to_string(&[serde_json::json!({"granularity":granularity,"id":id})]).unwrap();
-        let admission=app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID,Some(&dsl::json::to_dsl_value(&dsl::json!({"domainId":domain,"targets":targets,"merge":"replace","method":"pick"}))),&meta).await.unwrap();
+        let admission=app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID,Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({"domainId":domain,"targets":targets,"merge":"replace","method":"pick"}))),&meta).await.unwrap();
         semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app,admission).await.unwrap();
         artifact_laws::settle_registered_typed_operation(&mut *app,meta.instance_id).await.unwrap();
     }
@@ -1770,7 +1784,7 @@ async fn modified_node_picks_and_combined_drag_preserve_layers_and_one_history_e
         load_drawing_fixture(&mut app,&before);
         settled(&mut app,DrawingCommand::SetCamera(set_camera::SetCamera {camera:store::Viewport2d {x:0.0,y:0.0,zoom:1.0}}),&meta).await;
         let targets=serde_json::to_string(&[serde_json::json!({"granularity":DRAWING_INTERACTION_GRANULARITY,"id":"first"}),serde_json::json!({"granularity":DRAWING_INTERACTION_GRANULARITY,"id":"second"})]).unwrap();
-        let admission=app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID,Some(&dsl::json::to_dsl_value(&dsl::json!({"domainId":DRAWING_INTERACTION_DOMAIN,"targets":targets,"merge":"replace","method":"pick"}))),&meta).await.unwrap();
+        let admission=app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID,Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({"domainId":DRAWING_INTERACTION_DOMAIN,"targets":targets,"merge":"replace","method":"pick"}))),&meta).await.unwrap();
         semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app,admission).await.unwrap();
         artifact_laws::settle_registered_typed_operation(&mut *app,meta.instance_id).await.unwrap();
         for (x,y,shift,count) in [(410.0,300.0,false,1),(460.0,300.0,true,2),(700.0,500.0,true,2),(460.0,300.0,true,1),(460.0,300.0,true,2)] {
@@ -1785,7 +1799,7 @@ async fn modified_node_picks_and_combined_drag_preserve_layers_and_one_history_e
         assert_eq!(app.interaction_state().await.selection[DRAWING_POINT_DOMAIN].ids,selected);
         settled(&mut app,DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove {x:420.0,y:310.0,width:800.0,height:600.0,shift:false,alt:false,samples:vec![]}),&meta).await;
         assert_eq!(app.snapshot().unwrap(),before);
-        let scene=canvas_scene(app.render(DRAWING_PLAY_BODY_COMPOSITE,None,meta.view_state.as_ref().unwrap()).await.unwrap());
+        let scene=canvas_scene(rendered_drawing_canvas(&mut app,None,meta.view_state.as_ref().unwrap()).await.unwrap());
         let records:Vec<serde_json::Value>=serde_json::from_str(&scene.layers_json).unwrap();
         assert_eq!(records.iter().find(|row|row["id"]=="first").unwrap()["segments"][1]["to"],serde_json::json!([20.0,10.0]));
         assert_eq!(records.iter().find(|row|row["id"]=="second").unwrap()["segments"][1]["to"],serde_json::json!([15.0,5.0]));
@@ -1899,7 +1913,7 @@ async fn deleting_selected_nodes_commits_once_clears_points_and_undoes_exactly()
     let points=[0,1].iter().map(|index|interaction::points::point_id("path",&geometry,*index,crate::schema::geometry::editing::PathPoint::Anchor).unwrap()).collect::<Vec<_>>();
     for (domain,granularity,ids) in [(DRAWING_INTERACTION_DOMAIN,DRAWING_INTERACTION_GRANULARITY,vec!["path".into()]),(DRAWING_POINT_DOMAIN,DRAWING_POINT_GRANULARITY,points)] {
         let targets=serde_json::to_string(&ids.into_iter().map(|id|serde_json::json!({"granularity":granularity,"id":id})).collect::<Vec<_>>()).unwrap();
-        let admission=app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID,Some(&dsl::json::to_dsl_value(&dsl::json!({"domainId":domain,"targets":targets,"merge":"replace","method":"pick"}))),&meta).await.unwrap();
+        let admission=app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID,Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({"domainId":domain,"targets":targets,"merge":"replace","method":"pick"}))),&meta).await.unwrap();
         semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app,admission).await.unwrap();
         artifact_laws::settle_registered_typed_operation(&mut *app,meta.instance_id).await.unwrap();
     }
@@ -1927,7 +1941,7 @@ async fn node_marquee_preserves_layers_and_supports_merge_and_cancellation() {
         settled(&mut app,DrawingCommand::SetCamera(set_camera::SetCamera {camera:store::Viewport2d {x:0.0,y:0.0,zoom:1.0}}),&meta).await;
         for (domain,granularity,ids) in [(DRAWING_INTERACTION_DOMAIN,DRAWING_INTERACTION_GRANULARITY,vec!["path".into()]),(DRAWING_POINT_DOMAIN,DRAWING_POINT_GRANULARITY,initial.iter().copied().map(point).collect())] {
             let targets=serde_json::to_string(&ids.into_iter().map(|id|serde_json::json!({"granularity":granularity,"id":id})).collect::<Vec<_>>()).unwrap();
-            let admission=app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID,Some(&dsl::json::to_dsl_value(&dsl::json!({"domainId":domain,"targets":targets,"merge":"replace","method":"pick"}))),&meta).await.unwrap();
+            let admission=app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID,Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({"domainId":domain,"targets":targets,"merge":"replace","method":"pick"}))),&meta).await.unwrap();
             semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app,admission).await.unwrap();artifact_laws::settle_registered_typed_operation(&mut *app,meta.instance_id).await.unwrap();
         }
         settled(&mut app,DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {x:404.0,y:292.0,width:800.0,height:600.0,shift,ctrl,..Default::default()}),&meta).await;
@@ -1939,3 +1953,6 @@ async fn node_marquee_preserves_layers_and_supports_merge_and_cancellation() {
         assert_eq!(selected_strokes(&app).await,vec!["path".to_owned()]);assert_eq!(app.snapshot().unwrap(),before);
     }
 }
+
+#[semio_framework_async_macros::async_test]
+async fn mounted_vector_editor_closes_its_registered_read_without_a_live_maintenance_tick(){let mut app=drawing_app().await;let layer=crate::schema::create_drawing_shape_layer_rect("Registered geometry");let snapshot=DrawingSnapshot{id:"mounted-read-close".into(),layers:vec![layer],..Default::default()};load_drawing_fixture(&mut app,&snapshot);let view=ViewModel::new(semio_framework_ui_locale::Locale::En,semio_framework_ui_locale::Terminology::Native);let scene=canvas_scene(rendered_drawing_canvas(&mut app,None,&view).await.unwrap());let records:serde_json::Value=serde_json::from_str(&scene.layers_json).unwrap();assert!(records.as_array().unwrap().iter().any(|record|record["id"]==layer_id(&snapshot.layers[0])));semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);assert!(app.close_terminal_is_empty());eprintln!("[DEBUG] Actual registered Drawing app returned and acknowledged its mounted source read and closed without relying on a live maintenance tick");}

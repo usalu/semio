@@ -10,7 +10,7 @@ async fn copy_invite_link_relays_share_link() {
     match &result.requested_effects[0] {
         Effect::ReplayShellCommand { action_id, args } => {
             assert_eq!(action_id, "os.directory.share-link");
-            let args = pack::json_from_dsl_value(&args.clone().unwrap());
+            let args = semio_framework_pack_json::from_dsl_value(&args.clone().unwrap());
             assert_eq!(args.get("role").and_then(|v| v.as_str()), Some("spectator"));
             // 🔢️ `DslValue`'s numeric lane round-trips through f64 (confirmed empirically: a JSON
             // `u64` comes back as `3600.0`, not `3600`) — `serde_json::Number::as_u64()` only

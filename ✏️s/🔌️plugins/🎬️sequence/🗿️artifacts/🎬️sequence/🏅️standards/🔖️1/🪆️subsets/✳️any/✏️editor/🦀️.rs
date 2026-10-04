@@ -23,8 +23,7 @@ use crate::editor::sequence::modes::edit::windows::script::transient::SequenceSc
 use crate::editor::sequence::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::editor::sequence::terminology::sequence_play_labels;
 use crate::mutations::SequenceMutation;
-use crate::op::sequence_snapshot_mutations;
-use crate::{default_snapshot, SequenceCamera, SequenceEdge, SequenceHostSnapshot, SequenceSnapshot, SequenceStep, SequenceWorkingScene, SlotRef, StepParams, SEQUENCE_DOCUMENT_SCHEMA};
+use crate::{SequenceCamera, SequenceEdge, SequenceHostSnapshot, SequenceSnapshot, SequenceStep, SequenceWorkingScene, SlotRef, StepParams, SEQUENCE_DOCUMENT_SCHEMA};
 use dag::{would_create_cycle, DagHost, DagLayoutOptions};
 use graph::manifest::PropertyBag;
 use imperative_engine::{compile_to_text as imperative_compile_to_text, imperative_catalogue_json, imperative_module_registry, Executor, Path, RunResult, Step};
@@ -72,9 +71,9 @@ use semio_framework_plugin::SelectionMethod;
 use semio_framework_plugin::SelectionMode;
 use semio_framework_plugin::SelectionSpec;
 use semio_framework_plugin::TopologyNode;
-use dsl::os_pack::json;
-use dsl::os_pack::json::Value;
-use semio_framework_tool_machine::{node_drag_commit, NodeGraphEditRow};
+use semio_framework_pack_json::{self as json, json};
+use semio_framework_pack_json::Value;
+use semio_framework_tool_machine::{node_drag_emit, NodeDragEmit, NodeGraphEditRow};
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use semio_framework_2d::compute::EngineHandles;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::{self as semio_flow_mutations, SemioFlowMutation};
@@ -93,7 +92,7 @@ pub const SEQUENCE_PLAY_APP_ID: &str = "s.sequence.sequence@1/*#editor";
 /// (`🧊️process3d` lost its whole editor to exactly this).
 pub fn reset_sequence_document_effect(document: &SequenceSnapshot) -> semio_framework_plugin::Effect {
     let pack = crate::standards::v1::subsets::any::io::snapshot_pack(document);
-    let spr = semio_framework_plugin::resolve_ready(store::empty_document_spr(SEQUENCE_PLAY_APP_ID, SEQUENCE_DOCUMENT_SCHEMA));
+    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr(SEQUENCE_PLAY_APP_ID, SEQUENCE_DOCUMENT_SCHEMA));
     semio_framework_plugin::Effect::LoadDocument { pack, spr }
 }
 pub use catalogue_panel::SEQUENCE_PLAY_BODY_CATALOGUE;
@@ -184,14 +183,6 @@ pub fn sequence_io() -> AppIo {
         import_formats: Vec::new(),
         artifact: semio_framework::ArtifactPresentation { id: "computation.sequence".into(), name: "Sequence".into(), dimension: "graph".into(), component_kind: "sequence".into() },
     }
-}
-
-/// 🎯️ Pure next-available step id for `import_media("steps:in", ...)` — mirrors `SequenceHost::next_step_id`
-/// but never mutates a host's serial counter (there is no live `SequenceHost` in a pure
-/// `ArtifactApp::import_media` call): derives the next id purely from the snapshot's own existing
-/// `step-N`/`edge-N` ids, exactly like `SequenceHost::from_snapshot`'s own initial-serial derivation.
-pub fn next_available_step_id(snapshot: &SequenceSnapshot) -> String {
-    format!("step-{}", max_serial_in_snapshot(&snapshot.to_host_snapshot()).max(100) + 1)
 }
 
 /// 🧸️ Resolves the document's exact published content child through its captured member-store view.
@@ -309,67 +300,6 @@ pub fn sequence_child_emit_from_host_mutation(doc: &ArtifactView<'_, SequenceSna
 }
 //#endregion 🔖️ChildIntentLeaves
 
-fn sequence_scene_after_mutations(mut scene: SequenceWorkingScene, mutations: Vec<SequenceMutation>) -> SequenceWorkingScene {
-    for mutation in mutations {
-        match mutation {
-            SequenceMutation::CreateStep(value) => {
-                if !scene.steps.iter().any(|step| step.id == value.step.id) {
-                    scene.steps.push(value.step);
-                }
-            }
-            SequenceMutation::DeleteStep(value) => {
-                scene.steps.retain(|step| step.id != value.id);
-                scene.edges.retain(|edge| edge.from != value.id && edge.to != value.id);
-            }
-            SequenceMutation::MoveStep(value) => {
-                if let Some(step) = scene.steps.iter_mut().find(|step| step.id == value.id) {
-                    step.x = value.x;
-                    step.y = value.y;
-                }
-            }
-            SequenceMutation::EditStepParams(value) => {
-                if let Some(step) = scene.steps.iter_mut().find(|step| step.id == value.id) {
-                    step.params = value.params;
-                }
-            }
-            SequenceMutation::ChangeStepCollapsed(value) => {
-                if let Some(step) = scene.steps.iter_mut().find(|step| step.id == value.id) {
-                    step.collapsed = value.collapsed;
-                }
-            }
-            SequenceMutation::ConnectSteps(value) => {
-                if !scene.edges.iter().any(|edge| edge.id == value.id) {
-                    scene.edges.push(SequenceEdge { id: value.id, from: value.from, to: value.to });
-                }
-            }
-            SequenceMutation::DisconnectSteps(value) => scene.edges.retain(|edge| edge.id != value.id),
-            SequenceMutation::DuplicateStep(value) => {
-                if !scene.steps.iter().any(|step| step.id == value.new_id) {
-                    if let Some(mut step) = scene.steps.iter().find(|step| step.id == value.source_id).cloned() {
-                        step.id = value.new_id;
-                        step.x = value.x;
-                        step.y = value.y;
-                        scene.steps.push(step);
-                    }
-                }
-            }
-        }
-    }
-    scene
-}
-
-fn sequence_artifact_emit_to_child(snapshot: &SequenceSnapshot, scene: &SequenceWorkingScene, mut emit: Emit<SequenceMutation, NoConfigMutation>) -> Result<Emit<SequenceMutation, NoConfigMutation>, Fault> {
-    if !emit.config_mutations.is_empty() || !emit.draft_mutations.is_empty() || !emit.child_emits.is_empty() {
-        return Err(Fault::from("sequence-child-publication-input-lane"));
-    }
-    let mutations = std::mem::take(&mut emit.artifact_mutations);
-    if mutations.is_empty() {
-        return Ok(emit);
-    }
-    let target = ColdOwner::new(sequence_scene_after_mutations(scene.clone(), mutations));
-    emit.child_emits = sequence_child_leaves_emit(snapshot, &sequence_scene_leaves(scene, &target)).child_emits;
-    Ok(emit)
-}
 //#endregion 🔖️Io
 
 //#region 🔖️Camera
@@ -445,7 +375,7 @@ const FLOW_INPUT_PORT: &str = "prev";
 const FLOW_OUTPUT_PORT: &str = "next";
 
 fn property_bag_from_dictionary(dict: &Dictionary) -> PropertyBag {
-    dsl::FromValue::from_value(dsl::ToValue::to_value(dict)).unwrap_or_default()
+    semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(dict)).unwrap_or_default()
 }
 
 /// 🧭️ `pub` — reused by other app taxonomy nodes (panels/commands: control-flow nesting, catalogue slots).
@@ -587,25 +517,15 @@ impl neural_engine::ColdRetire for SequenceHost {
     }
 }
 
-/// 🧊️ The canonical seed snapshot owns the two demo steps' `StepParams` dictionaries, so it is the
-/// FINAL owner of two non-empty pair roots — a bare `&default_snapshot()` temporary dies inside this
-/// very expression and trips `Dictionary::drop`'s fail-closed law
-/// ("final Dictionary ownership must be explicitly retired or owned by a cold boundary").
-/// The seed is therefore built inside a cold boundary that retires it once the host has copied it.
+/// 🧊️ The canonical genesis content, moved into the host (its `StepParams` dictionaries are then owned by the host's own
+/// cold boundary, [`SequenceHost`]'s `ColdRetire`).
 impl Default for SequenceHost {
     fn default() -> Self {
-        let seed = neural_engine::ColdOwner::new(default_snapshot());
-        Self::from_snapshot(&seed)
+        Self::from_host_snapshot(crate::snapshot::schema::default_host_snapshot())
     }
 }
 
 impl SequenceHost {
-    /// 🌊️ Builds a live host from a persisted composed-child snapshot — reads the real steps/edges
-    /// off the working-scene cache via `to_host_snapshot()` (see `SequenceHostSnapshot`'s doc comment).
-    pub fn from_snapshot(snapshot: &SequenceSnapshot) -> Self {
-        Self::from_host_snapshot(snapshot.to_host_snapshot())
-    }
-
     /// 🌊️ Builds a live host directly from a plain snapshot (the WASM bridge's `loadFixtureJson`/
     /// `SequenceHost::load_json` entry point).
     pub fn from_host_snapshot(host_snapshot: SequenceHostSnapshot) -> Self {
@@ -632,7 +552,7 @@ impl SequenceHost {
     }
 
     pub fn load_json(json: &str) -> Result<Self, SequenceCoreError> {
-        let snapshot: SequenceHostSnapshot = dsl::os_pack::from_json_str(json).map_err(|error| SequenceCoreError::Json(error.to_string()))?;
+        let snapshot: SequenceHostSnapshot = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| SequenceCoreError::Json(error.to_string()))?;
         if snapshot.schema != "sequence.sequence" {
             return Err(SequenceCoreError::UnsupportedSchema(snapshot.schema));
         }
@@ -640,7 +560,7 @@ impl SequenceHost {
     }
 
     pub fn to_json(&self) -> Result<String, SequenceCoreError> {
-        Ok(dsl::os_pack::to_json_string(&self.snapshot))
+        Ok(semio_framework_pack_json::to_json_string(&self.snapshot))
     }
 
     pub fn catalogue_json(&self) -> String {
@@ -738,7 +658,7 @@ impl SequenceHost {
     }
 
     pub fn set_step_params_json(&mut self, id: &str, json: &str) -> Result<(), SequenceCoreError> {
-        let params: StepParams = dsl::os_pack::from_json_str(json).map_err(|error| SequenceCoreError::Json(error.to_string()))?;
+        let params: StepParams = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| SequenceCoreError::Json(error.to_string()))?;
         let Some(step) = self.snapshot.steps.iter_mut().find(|step| step.id == id) else {
             return Err(SequenceCoreError::UnknownStep(id.into()));
         };
@@ -826,7 +746,7 @@ impl SequenceHost {
     }
 
     pub fn build_path_json(&self) -> Result<String, SequenceCoreError> {
-        Ok(dsl::os_pack::to_json_string(&self.build_path()))
+        Ok(semio_framework_pack_json::to_json_string(&self.build_path()))
     }
 
     fn build_path_for_slot(&self, slot: Option<&SlotRef>) -> Path {
@@ -1006,14 +926,6 @@ impl SequenceHost {
 //#endregion 🔖️Host
 
 //#region 🔖️HostHelpers
-/// 🧰️ Builds a {@link SequenceHost} seeded from a projection so a command can mutate it (with all the
-/// host's cycle/slot/layout logic) and then diff the result into typed operations. More than one
-/// consumer across the taxonomy tree (commands, windows), so it lives here rather than in a single
-/// caller's file.
-pub fn host_from_snapshot(snapshot: &SequenceSnapshot) -> SequenceHost {
-    SequenceHost::from_snapshot(snapshot)
-}
-
 /// 🧸️ Builds a host from an already resolved typed host snapshot projection.
 pub fn host_from_host_snapshot(host_snapshot: &SequenceHostSnapshot) -> SequenceHost {
     SequenceHost::from_host_snapshot(host_snapshot.clone())
@@ -1031,13 +943,6 @@ pub fn retire_run_result_cold(result: RunResult) {
     }
 }
 
-/// 🔀️ Runs a host mutation seeded from `snapshot` and diffs the result into typed operations — a free
-/// function (not a method) since `SequencePlayApp` is a unit struct with nothing to borrow.
-pub fn ops_from_host_mutation(snapshot: &SequenceSnapshot, mutate: impl FnOnce(&mut SequenceHost)) -> Vec<SequenceMutation> {
-    let mut host = host_from_snapshot(snapshot);
-    mutate(&mut host);
-    sequence_snapshot_mutations(&snapshot.to_host_snapshot(), &host.snapshot)
-}
 //#endregion 🔖️HostHelpers
 
 //#region 🔖️Commands
@@ -1072,180 +977,9 @@ semio_framework_plugin::app_commands! {
 }
 //#endregion 🔖️Commands
 
-//#region 📬️ArtifactStorePreparation
+//#region 📏️RetainedCaps
 const SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS: usize = 256;
 const SEQUENCE_STORE_MAXIMUM_BYTES: usize = 65_536;
-
-struct SequenceArtifactStorePreparationFactory;
-
-struct SequenceArtifactStorePreparation {
-    base: Option<store::SnapshotRead<SequenceSnapshot>>,
-    mutation: Option<SequenceMutation>,
-    description: Option<String>,
-    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
-    prepared: Option<store::ArtifactStoreOneItemPrepared<SequenceSnapshot, SequenceMutation>>,
-    checkpoint: store::ArtifactStoreOneItemCheckpoint,
-    cancelled: bool,
-    closing: bool,
-}
-
-struct SequenceBoundedByteCounter {
-    written: usize,
-    maximum_bytes: usize,
-}
-
-impl SequenceBoundedByteCounter {
-    fn add(&mut self, bytes: usize) -> Result<(), String> {
-        let next = self.written.checked_add(bytes).ok_or("Sequence retained byte count overflow")?;
-        if next > self.maximum_bytes {
-            return Err("Sequence retained value exceeds its byte cap".into());
-        }
-        self.written = next;
-        Ok(())
-    }
-    fn object(&mut self, fields: &[(&str, &dyn SequenceRetainedJson)]) -> Result<(), String> {
-        self.add(2)?;
-        for (index, (key, value)) in fields.iter().enumerate() {
-            self.add(usize::from(index > 0) + 1)?;
-            key.measure(self)?;
-            value.measure(self)?;
-        }
-        Ok(())
-    }
-}
-
-trait SequenceRetainedJson {
-    fn measure(&self, counter: &mut SequenceBoundedByteCounter) -> Result<(), String>;
-}
-
-impl<T: SequenceRetainedJson + ?Sized> SequenceRetainedJson for &T {
-    fn measure(&self, counter: &mut SequenceBoundedByteCounter) -> Result<(), String> {
-        (*self).measure(counter)
-    }
-}
-
-impl SequenceRetainedJson for str {
-    fn measure(&self, counter: &mut SequenceBoundedByteCounter) -> Result<(), String> {
-        counter.add(2)?;
-        for byte in self.bytes() {
-            counter.add(match byte {
-                b'"' | b'\\' | 8 | 12 | b'\n' | b'\r' | b'\t' => 2,
-                0..=31 => 6,
-                _ => 1,
-            })?;
-        }
-        Ok(())
-    }
-}
-
-impl SequenceRetainedJson for String {
-    fn measure(&self, counter: &mut SequenceBoundedByteCounter) -> Result<(), String> {
-        self.as_str().measure(counter)
-    }
-}
-
-impl SequenceRetainedJson for bool {
-    fn measure(&self, counter: &mut SequenceBoundedByteCounter) -> Result<(), String> {
-        counter.add(if *self { 4 } else { 5 })
-    }
-}
-
-impl SequenceRetainedJson for f64 {
-    fn measure(&self, counter: &mut SequenceBoundedByteCounter) -> Result<(), String> {
-        counter.add(dsl::os_pack::to_json_string(self).len())
-    }
-}
-
-impl<T: SequenceRetainedJson> SequenceRetainedJson for Option<T> {
-    fn measure(&self, counter: &mut SequenceBoundedByteCounter) -> Result<(), String> {
-        match self {
-            Some(value) => value.measure(counter),
-            None => counter.add(4),
-        }
-    }
-}
-
-impl<T: SequenceRetainedJson> SequenceRetainedJson for Vec<T> {
-    fn measure(&self, counter: &mut SequenceBoundedByteCounter) -> Result<(), String> {
-        counter.add(2)?;
-        for (index, value) in self.iter().enumerate() {
-            counter.add(usize::from(index > 0))?;
-            value.measure(counter)?;
-        }
-        Ok(())
-    }
-}
-
-impl<A: SequenceRetainedJson, B: SequenceRetainedJson> SequenceRetainedJson for (A, B) {
-    fn measure(&self, counter: &mut SequenceBoundedByteCounter) -> Result<(), String> {
-        counter.add(3)?;
-        self.0.measure(counter)?;
-        self.1.measure(counter)
-    }
-}
-
-impl SequenceRetainedJson for Dictionary {
-    fn measure(&self, counter: &mut SequenceBoundedByteCounter) -> Result<(), String> {
-        counter.add(2)?;
-        for (index, (key, value)) in self.iter().enumerate() {
-            counter.add(usize::from(index > 0) + 1)?;
-            key.measure(counter)?;
-            value.measure(counter)?;
-        }
-        Ok(())
-    }
-}
-
-impl SequenceRetainedJson for NeuralValue {
-    fn measure(&self, counter: &mut SequenceBoundedByteCounter) -> Result<(), String> {
-        match self {
-            Self::Dictionary(value) => value.measure(counter),
-            Self::Atom(neural_engine::Atom::String(value)) => value.measure(counter),
-            Self::Atom(value) => counter.add(dsl::os_pack::to_json_string(value).len()),
-        }
-    }
-}
-
-impl SequenceRetainedJson for StepParams {
-    fn measure(&self, counter: &mut SequenceBoundedByteCounter) -> Result<(), String> {
-        self.0.measure(counter)
-    }
-}
-
-macro_rules! sequence_json_record {
-    ($ty:path, $($key:literal => $field:ident),+ $(,)?) => {
-        impl SequenceRetainedJson for $ty {
-            fn measure(&self, counter: &mut SequenceBoundedByteCounter) -> Result<(), String> {
-                counter.object(&[$(($key, &self.$field)),+])
-            }
-        }
-    };
-}
-
-sequence_json_record!(SequenceStep, "id" => id, "kind" => kind, "params" => params, "x" => x, "y" => y, "slot" => slot, "collapsed" => collapsed);
-sequence_json_record!(SequenceEdge, "id" => id, "from" => from, "to" => to);
-sequence_json_record!(SlotRef, "owner" => owner, "name" => name);
-sequence_json_record!(SequenceCamera, "x" => x, "y" => y, "zoom" => zoom);
-impl SequenceRetainedJson for SequenceMutation {
-    fn measure(&self, counter: &mut SequenceBoundedByteCounter) -> Result<(), String> {
-        match self {
-            Self::CreateStep(payload) => counter.object(&[("mutation", &"createStep"), ("step", &payload.step)]),
-            Self::DeleteStep(payload) => counter.object(&[("mutation", &"deleteStep"), ("id", &payload.id)]),
-            Self::MoveStep(payload) => counter.object(&[("mutation", &"moveStep"), ("id", &payload.id), ("x", &payload.x), ("y", &payload.y)]),
-            Self::EditStepParams(payload) => counter.object(&[("mutation", &"editStepParams"), ("id", &payload.id), ("params", &payload.params)]),
-            Self::ChangeStepCollapsed(payload) => counter.object(&[("mutation", &"changeStepCollapsed"), ("id", &payload.id), ("collapsed", &payload.collapsed)]),
-            Self::ConnectSteps(payload) => counter.object(&[("mutation", &"connectSteps"), ("id", &payload.id), ("from", &payload.from), ("to", &payload.to)]),
-            Self::DisconnectSteps(payload) => counter.object(&[("mutation", &"disconnectSteps"), ("id", &payload.id)]),
-            Self::DuplicateStep(payload) => counter.object(&[("mutation", &"duplicateStep"), ("sourceId", &payload.source_id), ("newId", &payload.new_id), ("x", &payload.x), ("y", &payload.y)]),
-        }
-    }
-}
-
-fn sequence_bounded_serialized_bytes<T: SequenceRetainedJson>(value: &T, maximum_bytes: usize) -> Result<usize, String> {
-    let mut counter = SequenceBoundedByteCounter { written: 0, maximum_bytes };
-    value.measure(&mut counter)?;
-    Ok(counter.written)
-}
 
 fn sequence_bounded_child_emit_bytes(child_emits: &[ChildEmit], maximum_bytes: usize) -> Result<usize, String> {
     let mut retained_bytes = 0usize;
@@ -1269,236 +1003,7 @@ fn sequence_bounded_child_emit_bytes(child_emits: &[ChildEmit], maximum_bytes: u
     }
     Ok(retained_bytes)
 }
-
-fn admit_sequence_artifact_mutation(mutation: &SequenceMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-    if matches!(mutation, SequenceMutation::DuplicateStep(_)) {
-        return Err("Sequence retained Store authority does not admit the unregistered duplicate-step mutation".into());
-    }
-    let retained_bytes = sequence_bounded_serialized_bytes(mutation, SEQUENCE_RETAINED_RAW_BYTES)?;
-    Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes })
-}
-
-fn sequence_delete_inverse(scene: &SequenceWorkingScene) -> Vec<SequenceMutation> {
-    let mut inverse = Vec::with_capacity(scene.steps.len().saturating_mul(2).saturating_add(scene.edges.len()));
-    for step in &scene.steps {
-        inverse.push(SequenceMutation::DeleteStep(crate::mutations::DeleteStep { id: step.id.clone() }));
-    }
-    for step in &scene.steps {
-        inverse.push(SequenceMutation::CreateStep(crate::mutations::CreateStep { step: step.clone() }));
-    }
-    for edge in &scene.edges {
-        inverse.push(SequenceMutation::ConnectSteps(crate::mutations::ConnectSteps { id: edge.id.clone(), from: edge.from.clone(), to: edge.to.clone() }));
-    }
-    inverse.reverse();
-    inverse
-}
-
-fn prepare_sequence_artifact(base: &SequenceSnapshot, mutation: SequenceMutation) -> Result<(SequenceSnapshot, Vec<SequenceMutation>, SequenceMutation), String> {
-    admit_sequence_artifact_mutation(&mutation)?;
-    let owner = base.content.local_owner::<SequenceWorkingScene>().ok_or_else(|| "Sequence artifact base has no exact child-owned scene".to_string())?;
-    if owner.steps.len() > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS || owner.edges.len() > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS {
-        return Err("Sequence artifact base exceeds its fixed scene-item cap".into());
-    }
-    sequence_bounded_serialized_bytes(&(&owner.steps, &owner.edges), SEQUENCE_STORE_MAXIMUM_BYTES)?;
-    let mut scene = owner.as_ref().clone();
-    let inverse = match &mutation {
-        SequenceMutation::CreateStep(payload) => {
-            if scene.steps.len() == SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS || scene.steps.iter().any(|step| step.id == payload.step.id) {
-                return Err("Sequence create-step rejected duplicate or capped identity".into());
-            }
-            scene.steps.push(payload.step.clone());
-            vec![SequenceMutation::DeleteStep(crate::mutations::DeleteStep { id: payload.step.id.clone() })]
-        }
-        SequenceMutation::DeleteStep(payload) => {
-            if !scene.steps.iter().any(|step| step.id == payload.id) {
-                return Err(format!("Sequence delete-step target {:?} is missing", payload.id));
-            }
-            let inverse = sequence_delete_inverse(&scene);
-            scene.steps.retain(|step| step.id != payload.id);
-            scene.edges.retain(|edge| edge.from != payload.id && edge.to != payload.id);
-            inverse
-        }
-        SequenceMutation::MoveStep(payload) => {
-            if !payload.x.is_finite() || !payload.y.is_finite() {
-                return Err("Sequence move-step position must be finite".into());
-            }
-            let step = scene.steps.iter_mut().find(|step| step.id == payload.id).ok_or_else(|| format!("Sequence move-step target {:?} is missing", payload.id))?;
-            if step.x == payload.x && step.y == payload.y {
-                return Err("Sequence move-step is a no-op".into());
-            }
-            let inverse = SequenceMutation::MoveStep(crate::mutations::MoveStep { id: payload.id.clone(), x: step.x, y: step.y });
-            step.x = payload.x;
-            step.y = payload.y;
-            vec![inverse]
-        }
-        SequenceMutation::EditStepParams(payload) => {
-            let step = scene.steps.iter_mut().find(|step| step.id == payload.id).ok_or_else(|| format!("Sequence edit-step-params target {:?} is missing", payload.id))?;
-            if step.params == payload.params {
-                return Err("Sequence edit-step-params is a no-op".into());
-            }
-            let inverse = SequenceMutation::EditStepParams(crate::mutations::EditStepParams { id: payload.id.clone(), params: step.params.clone() });
-            step.params = payload.params.clone();
-            vec![inverse]
-        }
-        SequenceMutation::ChangeStepCollapsed(payload) => {
-            let step = scene.steps.iter_mut().find(|step| step.id == payload.id).ok_or_else(|| format!("Sequence change-step-collapsed target {:?} is missing", payload.id))?;
-            if step.collapsed == payload.collapsed {
-                return Err("Sequence change-step-collapsed is a no-op".into());
-            }
-            let inverse = SequenceMutation::ChangeStepCollapsed(crate::mutations::ChangeStepCollapsed { id: payload.id.clone(), collapsed: step.collapsed });
-            step.collapsed = payload.collapsed;
-            vec![inverse]
-        }
-        SequenceMutation::ConnectSteps(payload) => {
-            if payload.from == payload.to
-                || !scene.steps.iter().any(|step| step.id == payload.from)
-                || !scene.steps.iter().any(|step| step.id == payload.to)
-                || scene.edges.len() == SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS
-                || scene.edges.iter().any(|edge| edge.id == payload.id || edge.from == payload.from && edge.to == payload.to)
-            {
-                return Err("Sequence connect-steps rejected invalid endpoints, duplicate, or capped edge".into());
-            }
-            scene.edges.push(SequenceEdge { id: payload.id.clone(), from: payload.from.clone(), to: payload.to.clone() });
-            vec![SequenceMutation::DisconnectSteps(crate::mutations::DisconnectSteps { id: payload.id.clone() })]
-        }
-        SequenceMutation::DisconnectSteps(payload) => {
-            let edge = scene.edges.iter().find(|edge| edge.id == payload.id).cloned().ok_or_else(|| format!("Sequence disconnect-steps target {:?} is missing", payload.id))?;
-            scene.edges.retain(|entry| entry.id != payload.id);
-            vec![SequenceMutation::ConnectSteps(crate::mutations::ConnectSteps { id: edge.id, from: edge.from, to: edge.to })]
-        }
-        SequenceMutation::DuplicateStep(_) => return Err("Sequence duplicate-step has no retained route authority".into()),
-    };
-    sequence_bounded_serialized_bytes(&inverse, SEQUENCE_STORE_MAXIMUM_BYTES)?;
-    sequence_bounded_serialized_bytes(&(&scene.steps, &scene.edges), SEQUENCE_STORE_MAXIMUM_BYTES)?;
-    let content = crate::sequence_content_child_with_owner(scene.steps, scene.edges);
-    let post = SequenceSnapshot { schema: base.schema.clone(), content };
-    Ok((post, inverse, mutation))
-}
-
-fn sequence_artifact_store_edit(forward: SequenceMutation, inverse: Vec<SequenceMutation>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<SequenceMutation> {
-    let id = format!("sequence-artifact-retained-{}", authority.next_sequence_number());
-    protocol::Edit { line: authority.line_id().map(str::to_owned),
-        id: id.clone(),
-        actor: Some(authority.actor().to_string()),
-        forwards: vec![forward],
-        inverse,
-        mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
-            dependencies: Vec::new(),
-            base_version: authority.base_applied_edit_count() as u64,
-            author_id: Some(protocol::ActorId(authority.actor().to_string())),
-            timestamp: authority.next_clock(),
-            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-            payload_hash: None,
-            semantic_kind: None,
-            label: None,
-            group_id: None,
-            origin: Default::default(),
-            transaction: None,
-        }],
-        description, verb: None,
-        coalesce_key: None,
-        sequence_number: authority.next_sequence_number(),
-        started_at: String::new(),
-        finished_at: None,
-    }
-}
-
-impl store::ArtifactStoreOneItemPreparationFactory<SequenceSnapshot, SequenceMutation> for SequenceArtifactStorePreparationFactory {
-    fn preflight(&self, mutation: &SequenceMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
-            return Err("Sequence artifact preparation rejected its lane or description envelope".into());
-        }
-        admit_sequence_artifact_mutation(mutation)
-    }
-
-    fn begin(
-        &self,
-        request: store::ArtifactStoreOneItemPreparationRequest<SequenceSnapshot, SequenceMutation>,
-    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<SequenceSnapshot, SequenceMutation>>, store::ArtifactStoreOneItemPreparationRequest<SequenceSnapshot, SequenceMutation>> {
-        if request.lane != store::HistoryLane::Document
-            || request.operation != request.authority.operation()
-            || request.generation != request.authority.generation()
-            || request.base_revision != request.authority.base_revision()
-            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
-        {
-            return Err(request);
-        }
-        Ok(Box::new(SequenceArtifactStorePreparation {
-            base: Some(request.base),
-            mutation: Some(request.mutation),
-            description: request.description,
-            authority: Some(request.authority),
-            prepared: None,
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
-            cancelled: false,
-            closing: false,
-        }))
-    }
-}
-
-impl store::ArtifactStoreOneItemPreparation<SequenceSnapshot, SequenceMutation> for SequenceArtifactStorePreparation {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        if !grant.permits_one() || self.cancelled {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
-        }
-        if self.prepared.is_some() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
-        }
-        let base = self.base.as_ref().ok_or_else(|| "Sequence artifact preparation lost its exact base root".to_string())?;
-        let mutation = self.mutation.take().ok_or_else(|| "Sequence artifact preparation lost its mutation owner".to_string())?;
-        let (post, inverse, forward) = prepare_sequence_artifact(base.get(), mutation)?;
-        let authority = self.authority.as_ref().ok_or_else(|| "Sequence artifact preparation lost its Store authority".to_string())?;
-        let prepared = authority.prepare_one_item(sequence_artifact_store_edit(forward, inverse, self.description.take(), authority), std::sync::Arc::new(post))?;
-        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
-        self.prepared = Some(prepared);
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
-    }
-
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
-        self.checkpoint
-    }
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<SequenceSnapshot, SequenceMutation>> {
-        self.prepared.as_ref()
-    }
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<SequenceSnapshot, SequenceMutation>> {
-        self.prepared.take()
-    }
-    fn cancel(&mut self) {
-        self.cancelled = true;
-    }
-    fn begin_close(&mut self) {
-        self.closing = true;
-    }
-
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
-        if !self.closing || grant.maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(base) = self.base.take() {
-            if !base.return_to_registry() {
-                return Err("Sequence artifact preparation could not return its exact base root".into());
-            }
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(authority) = self.authority.as_ref() {
-            if grant.maximum_bytes < authority.actor().len() {
-                return Ok(store::SnapshotRetirementStep::Blocked);
-            }
-            self.authority = None;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        Ok(store::SnapshotRetirementStep::Complete)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
-    }
-}
-//#endregion 📬️ArtifactStorePreparation
+//#endregion 📏️RetainedCaps
 
 
 //#region 🧵️RetainedArtifactRoutes
@@ -1559,8 +1064,13 @@ fn sequence_retained_default_slot(kind: &str) -> &'static str {
     }
 }
 
-fn sequence_retained_create_step(scene: &SequenceWorkingScene, kind: String, x: f64, y: f64, slot: Option<SlotRef>) -> SequenceMutation {
-    SequenceMutation::CreateStep(crate::mutations::CreateStep { step: SequenceStep { id: sequence_retained_next_id(scene, "step"), kind, params: StepParams::new(), x, y, slot, collapsed: false } })
+fn sequence_retained_create_step(scene: &SequenceWorkingScene, kind: String, x: f64, y: f64, slot: Option<SlotRef>) -> SequenceStep {
+    SequenceStep { id: sequence_retained_next_id(scene, "step"), kind, params: StepParams::new(), x, y, slot, collapsed: false }
+}
+
+fn sequence_retained_remove(target: &mut SequenceWorkingScene, ids: &[String]) {
+    target.steps.retain(|step| !ids.contains(&step.id));
+    target.edges.retain(|edge| !ids.contains(&edge.from) && !ids.contains(&edge.to));
 }
 
 fn sequence_retained_delete_ids(scene: &SequenceWorkingScene, roots: impl IntoIterator<Item = String>) -> Vec<String> {
@@ -1585,69 +1095,61 @@ fn sequence_retained_artifact_emit(command: &SequenceCommand, snapshot: &Sequenc
         return Err(Fault::from("sequence-retained-scene-capacity"));
     }
     let mut discarded_params = None;
-    let mutations = match command {
-        SequenceCommand::AddStep(payload) => vec![sequence_retained_create_step(scene, payload.kind.clone(), payload.x, payload.y, None)],
-        SequenceCommand::AddStepToSlot(payload) => vec![sequence_retained_create_step(scene, payload.kind.clone(), payload.x, payload.y, Some(SlotRef { owner: payload.owner.clone(), name: payload.slot_name.clone() }))],
+    let mut target = scene.clone();
+    match command {
+        SequenceCommand::AddStep(payload) => target.steps.push(sequence_retained_create_step(scene, payload.kind.clone(), payload.x, payload.y, None)),
+        SequenceCommand::AddStepToSlot(payload) => target.steps.push(sequence_retained_create_step(scene, payload.kind.clone(), payload.x, payload.y, Some(SlotRef { owner: payload.owner.clone(), name: payload.slot_name.clone() }))),
         SequenceCommand::AddStepDropped(payload) => {
             let slot = payload.picked_step_id.as_ref().and_then(|owner_id| {
                 scene.steps.iter().find(|step| step.id == *owner_id && sequence_retained_is_control(&step.kind) && !step.collapsed).map(|owner| SlotRef { owner: owner_id.clone(), name: sequence_retained_default_slot(&owner.kind).into() })
             });
-            vec![sequence_retained_create_step(scene, payload.kind.clone(), payload.x, payload.y, slot)]
+            target.steps.push(sequence_retained_create_step(scene, payload.kind.clone(), payload.x, payload.y, slot));
         }
-        SequenceCommand::RemoveStep(payload) => sequence_retained_delete_ids(scene, [payload.id.clone()]).into_iter().map(|id| SequenceMutation::DeleteStep(crate::mutations::DeleteStep { id })).collect(),
+        SequenceCommand::RemoveStep(payload) => sequence_retained_remove(&mut target, &sequence_retained_delete_ids(scene, [payload.id.clone()])),
         SequenceCommand::DeleteSelection(_) => {
             let selected = interaction.selection.get(SEQUENCE_INTERACTION_STEPS).map(|selection| selection.ids.clone()).unwrap_or_default();
             if selected.len() > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS {
                 return Err(Fault::from("sequence-retained-selection-capacity"));
             }
-            sequence_retained_delete_ids(scene, selected).into_iter().map(|id| SequenceMutation::DeleteStep(crate::mutations::DeleteStep { id })).collect()
+            sequence_retained_remove(&mut target, &sequence_retained_delete_ids(scene, selected));
         }
-        SequenceCommand::MoveStep(payload) => scene
-            .steps
-            .iter()
-            .find(|step| step.id == payload.node_id)
-            .filter(|step| step.x != payload.x || step.y != payload.y)
-            .map(|_| vec![SequenceMutation::MoveStep(crate::mutations::MoveStep { id: payload.node_id.clone(), x: payload.x, y: payload.y })])
-            .unwrap_or_default(),
-        SequenceCommand::SetStepParams(payload) => {
-            let params = dsl::os_pack::from_json_str::<StepParams>(&payload.params_json).ok();
-            match (scene.steps.iter().find(|step| step.id == payload.id), params) {
-                (Some(step), Some(params)) if step.params != params => vec![SequenceMutation::EditStepParams(crate::mutations::EditStepParams { id: payload.id.clone(), params })],
-                (_, Some(mut params)) => {
-                    discarded_params = Some(std::mem::take(&mut params.0));
-                    Vec::new()
-                }
-                (_, None) => Vec::new(),
+        SequenceCommand::MoveStep(payload) => {
+            if let Some(step) = target.steps.iter_mut().find(|step| step.id == payload.node_id) {
+                step.x = payload.x;
+                step.y = payload.y;
             }
         }
-        SequenceCommand::SetStepCollapsed(payload) => scene
-            .steps
-            .iter()
-            .find(|step| step.id == payload.id && sequence_retained_is_control(&step.kind))
-            .map(|step| vec![SequenceMutation::ChangeStepCollapsed(crate::mutations::ChangeStepCollapsed { id: payload.id.clone(), collapsed: !step.collapsed })])
-            .unwrap_or_default(),
-        SequenceCommand::DisconnectSteps(payload) => {
-            scene.edges.iter().filter(|edge| edge.from == payload.from_id && edge.to == payload.to_id).map(|edge| SequenceMutation::DisconnectSteps(crate::mutations::DisconnectSteps { id: edge.id.clone() })).collect()
+        SequenceCommand::SetStepParams(payload) => {
+            let params = semio_framework_pack_json::from_json_str::<StepParams>(&payload.params_json, semio_framework_pack_json::JsonMemberPolicy::Reject).ok();
+            match (target.steps.iter_mut().find(|step| step.id == payload.id), params) {
+                (Some(step), Some(params)) if step.params != params => step.params = params,
+                (_, Some(mut params)) => discarded_params = Some(std::mem::take(&mut params.0)),
+                (_, None) => {}
+            }
         }
+        SequenceCommand::SetStepCollapsed(payload) => {
+            if let Some(step) = target.steps.iter_mut().find(|step| step.id == payload.id && sequence_retained_is_control(&step.kind)) {
+                step.collapsed = !step.collapsed;
+            }
+        }
+        SequenceCommand::DisconnectSteps(payload) => target.edges.retain(|edge| edge.from != payload.from_id || edge.to != payload.to_id),
         SequenceCommand::ConnectSteps(payload) => {
             let from = scene.steps.iter().find(|step| step.id == payload.source_node_id);
             let to = scene.steps.iter().find(|step| step.id == payload.target_node_id);
             let same_slot = from.zip(to).is_some_and(|(from, to)| from.slot.as_ref().map(|slot| (&slot.owner, &slot.name)) == to.slot.as_ref().map(|slot| (&slot.owner, &slot.name)));
             let existing: Vec<(String, String)> = scene.edges.iter().map(|edge| (edge.from.clone(), edge.to.clone())).collect();
-            if payload.source_node_id == payload.target_node_id || !same_slot || would_create_cycle(&existing, &payload.source_node_id, &payload.target_node_id) || scene.edges.iter().any(|edge| edge.from == payload.source_node_id) {
-                Vec::new()
-            } else {
-                let mut result: Vec<SequenceMutation> = scene.edges.iter().filter(|edge| edge.to == payload.target_node_id).map(|edge| SequenceMutation::DisconnectSteps(crate::mutations::DisconnectSteps { id: edge.id.clone() })).collect();
-                result.push(SequenceMutation::ConnectSteps(crate::mutations::ConnectSteps { id: sequence_retained_next_id(scene, "edge"), from: payload.source_node_id.clone(), to: payload.target_node_id.clone() }));
-                result
+            if payload.source_node_id != payload.target_node_id && same_slot && !would_create_cycle(&existing, &payload.source_node_id, &payload.target_node_id) && !scene.edges.iter().any(|edge| edge.from == payload.source_node_id) {
+                target.edges.retain(|edge| edge.to != payload.target_node_id);
+                target.edges.push(SequenceEdge { id: sequence_retained_next_id(scene, "edge"), from: payload.source_node_id.clone(), to: payload.target_node_id.clone() });
             }
         }
         _ => return Err(Fault::from("sequence-retained-artifact-route-mismatch")),
-    };
-    if mutations.len() > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS {
+    }
+    let leaves = sequence_scene_leaves(scene, &target);
+    if leaves.len() > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS {
         return Err(Fault::from("sequence-retained-artifact-output-capacity"));
     }
-    Ok((sequence_artifact_emit_to_child(snapshot, scene, Emit::mutations(mutations))?, discarded_params))
+    Ok((sequence_child_leaves_emit(snapshot, &leaves), discarded_params))
 }
 
 #[derive(Default)]
@@ -1739,6 +1241,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
     fn step(
         &mut self,
         input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<SequencePlayApp>>,
+    _cx: &mut semio_framework_job::StepContext<'_>,
     ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<SequencePlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, history: _history, interaction, hover: _hover, context, operation: _operation } = *input;
         use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
@@ -1883,7 +1386,7 @@ const SEQUENCE_PERSISTENT_PUBLICATION_CONTRACTS: &[semio_framework_plugin::Artif
 
 enum SequencePersistentAdvance {
     Progress(&'static str, &'static [u8]),
-    Complete(Emit<SequenceMutation, NoConfigMutation>),
+    Complete(Vec<SemioFlowMutation>),
     CompleteRun(String),
 }
 
@@ -1894,7 +1397,7 @@ struct SequenceReorganizeState {
     edge: usize,
     emit: usize,
     depths: Vec<usize>,
-    mutations: Vec<SequenceMutation>,
+    moves: Vec<(usize, f64, f64)>,
 }
 
 impl SequenceReorganizeState {
@@ -1930,21 +1433,26 @@ impl SequenceReorganizeState {
             let secondary = self.depths[..index].iter().filter(|depth| **depth == self.depths[index]).count() as f64 * 160.0;
             let (x, y) = if config.orientation == "topBottom" { (secondary, primary) } else { (primary, secondary) };
             if step.x != x || step.y != y {
-                self.mutations.push(SequenceMutation::MoveStep(crate::mutations::MoveStep { id: step.id.clone(), x, y }));
+                self.moves.push((index, x, y));
             }
             self.emit += 1;
             return Ok(SequencePersistentAdvance::Progress("sequence-reorganize-publish-plan", b"{\"en\":\"Planning node position\",\"de\":\"Knotenposition wird geplant\"}"));
         }
-        let mutations = std::mem::take(&mut self.mutations);
-        Ok(SequencePersistentAdvance::Complete(Emit::mutations(mutations)))
+        let mut target = scene.clone();
+        for (index, x, y) in self.moves.drain(..) {
+            let step = &mut target.steps[index];
+            step.x = x;
+            step.y = y;
+        }
+        Ok(SequencePersistentAdvance::Complete(sequence_scene_leaves(scene, &target)))
     }
 
     fn release_one(&mut self) -> bool {
-        self.depths.pop().is_some() || self.mutations.pop().is_some()
+        self.depths.pop().is_some() || self.moves.pop().is_some()
     }
 
     fn empty(&self) -> bool {
-        self.depths.is_empty() && self.mutations.is_empty()
+        self.depths.is_empty() && self.moves.is_empty()
     }
 }
 
@@ -1955,10 +1463,6 @@ enum SequenceNodeGraphStage {
     Apply,
     DeleteDiscover,
     DeleteApply,
-    DeleteSteps,
-    UpsertSteps,
-    DeleteEdges,
-    UpsertEdges,
     Complete,
 }
 
@@ -1974,25 +1478,21 @@ struct SequenceNodeGraphState {
     delete_current: Option<String>,
     delete_scan: usize,
     delete_discovered: Vec<String>,
-    cursor: usize,
-    deleted: Vec<String>,
-    recreated: Vec<String>,
-    mutations: Vec<SequenceMutation>,
     discarded_steps: VecDeque<SequenceStep>,
     retirement: ValueRetirement,
 }
 
 impl SequenceNodeGraphState {
-    /// ✋️ A batch that moved steps is a drag: its leaves commit as ONE composed-child tool transaction through the ONE
-    /// node-drag machine of `🛠️tool-machine` (design §12, §13.3), minted from the admission's authoring seed; a view without
-    /// command authority publishes them plainly.
-    fn drag_transaction(&mut self, mut emit: Emit<SequenceMutation, NoConfigMutation>, authoring_seed: &str) -> Emit<SequenceMutation, NoConfigMutation> {
-        let Some(gesture) = self.gesture.take().filter(|_| !authoring_seed.is_empty()) else { return emit };
-        let clock = protocol::HybridLogicalTimestamp { actor: 0, physical_ms: semio_framework_job::default_now_ms().unwrap_or(0), logical: 0 };
-        let leaves = std::mem::take(&mut emit.artifact_mutations);
-        match node_drag_commit(format!("{SEQUENCE_PLAY_APP_ID}#{}", node_graph_edit::NODE_GRAPH_EDIT_VERB), protocol::ActorId(authoring_seed.to_string()), &gesture, leaves, clock) {
-            Some((transaction, leaves)) => Emit { transaction: Some(transaction), artifact_mutations: leaves, ..emit },
-            None => emit,
+    /// ✋️ Publishes the batch's child leaves (design §12, §13.3): a batch that moved steps is a drag, committed as ONE
+    /// composed-child tool transaction through the ONE node-drag machine of `🛠️tool-machine` from the admission's authoring
+    /// seed (a view without command authority publishes the leaves plainly); every other batch is one child edit.
+    fn publish(&mut self, snapshot: &SequenceSnapshot, leaves: Vec<SemioFlowMutation>, authoring_seed: &str) -> Emit<SequenceMutation, NoConfigMutation> {
+        match self.gesture.take() {
+            Some(gesture) => match node_drag_emit(SEQUENCE_PLAY_APP_ID, node_graph_edit::NODE_GRAPH_EDIT_VERB, authoring_seed, &gesture, leaves) {
+                NodeDragEmit::Nothing => Emit::default(),
+                drag => Emit { ui_scope: semio_framework::kernel::UiDirtyScope::Full, ..Emit::node_drag_child::<SemioFlowSnapshot, _>(drag, "content", &snapshot.content.child_id) },
+            },
+            None => sequence_child_leaves_emit(snapshot, &leaves),
         }
     }
 
@@ -2005,7 +1505,7 @@ impl SequenceNodeGraphState {
                 if payload.operations_json.len() > SEQUENCE_RETAINED_RAW_BYTES {
                     return Err(Fault::from("sequence-node-graph-bytes"));
                 }
-                let Ok(Value::Array(operations)) = json::parse(&payload.operations_json) else {
+                let Ok(Value::Array(operations)) = json::parse(&payload.operations_json, semio_framework_pack_json::JsonMemberPolicy::Reject) else {
                     return Err(Fault::from("sequence-node-graph-json"));
                 };
                 self.operations = operations.iter().map(|row| node_graph_edit::sequence_node_graph_row(&json::to_dsl_value(row))).collect::<Result<_, _>>()?;
@@ -2095,99 +1595,17 @@ impl SequenceNodeGraphState {
                 Ok(SequencePersistentAdvance::Progress("sequence-node-graph-selection-complete", "{\"en\":\"Completed selected graph removal\",\"de\":\"Ausgewählte Graphentfernung wurde abgeschlossen\"}".as_bytes()))
             }
             SequenceNodeGraphStage::Apply => {
-                self.stage = SequenceNodeGraphStage::DeleteSteps;
-                self.cursor = 0;
-                self.advance(command, scene)
-            }
-            SequenceNodeGraphStage::DeleteSteps => {
-                let base = self.base.as_ref().ok_or_else(|| Fault::from("sequence-node-graph-base"))?;
-                let target = self.target.as_ref().ok_or_else(|| Fault::from("sequence-node-graph-target"))?;
-                if self.cursor < base.steps.len() {
-                    let step = &base.steps[self.cursor];
-                    if !target.steps.iter().any(|entry| entry.id == step.id) {
-                        self.deleted.push(step.id.clone());
-                        self.mutations.push(SequenceMutation::DeleteStep(crate::mutations::DeleteStep { id: step.id.clone() }));
-                    }
-                    self.cursor += 1;
-                    return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-delete-step", b"{\"en\":\"Diffing removed step\",\"de\":\"Entfernter Schritt wird verglichen\"}"));
-                }
-                self.stage = SequenceNodeGraphStage::UpsertSteps;
-                self.cursor = 0;
-                self.advance(command, scene)
-            }
-            SequenceNodeGraphStage::UpsertSteps => {
-                let base = self.base.as_ref().ok_or_else(|| Fault::from("sequence-node-graph-base"))?;
-                let target = self.target.as_ref().ok_or_else(|| Fault::from("sequence-node-graph-target"))?;
-                if self.cursor < target.steps.len() {
-                    let step = &target.steps[self.cursor];
-                    match base.steps.iter().find(|entry| entry.id == step.id) {
-                        None => self.mutations.push(SequenceMutation::CreateStep(crate::mutations::CreateStep { step: step.clone() })),
-                        Some(old) if old.kind != step.kind || old.slot != step.slot => {
-                            self.recreated.push(step.id.clone());
-                            self.mutations.push(SequenceMutation::DeleteStep(crate::mutations::DeleteStep { id: step.id.clone() }));
-                            self.mutations.push(SequenceMutation::CreateStep(crate::mutations::CreateStep { step: step.clone() }));
-                        }
-                        Some(old) => {
-                            if old.x != step.x || old.y != step.y {
-                                self.mutations.push(SequenceMutation::MoveStep(crate::mutations::MoveStep { id: step.id.clone(), x: step.x, y: step.y }));
-                            }
-                            if old.params != step.params {
-                                self.mutations.push(SequenceMutation::EditStepParams(crate::mutations::EditStepParams { id: step.id.clone(), params: step.params.clone() }));
-                            }
-                            if old.collapsed != step.collapsed {
-                                self.mutations.push(SequenceMutation::ChangeStepCollapsed(crate::mutations::ChangeStepCollapsed { id: step.id.clone(), collapsed: step.collapsed }));
-                            }
-                        }
-                    }
-                    self.cursor += 1;
-                    return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-upsert-step", "{\"en\":\"Diffing changed step\",\"de\":\"Geänderter Schritt wird verglichen\"}".as_bytes()));
-                }
-                self.stage = SequenceNodeGraphStage::DeleteEdges;
-                self.cursor = 0;
-                self.advance(command, scene)
-            }
-            SequenceNodeGraphStage::DeleteEdges => {
-                let base = self.base.as_ref().ok_or_else(|| Fault::from("sequence-node-graph-base"))?;
-                let target = self.target.as_ref().ok_or_else(|| Fault::from("sequence-node-graph-target"))?;
-                if self.cursor < base.edges.len() {
-                    let edge = &base.edges[self.cursor];
-                    if !self.deleted.iter().any(|id| id == &edge.from || id == &edge.to) && !self.recreated.iter().any(|id| id == &edge.from || id == &edge.to) && !target.edges.iter().any(|entry| entry.id == edge.id) {
-                        self.mutations.push(SequenceMutation::DisconnectSteps(crate::mutations::DisconnectSteps { id: edge.id.clone() }));
-                    }
-                    self.cursor += 1;
-                    return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-delete-edge", b"{\"en\":\"Diffing removed edge\",\"de\":\"Entfernte Kante wird verglichen\"}"));
-                }
-                self.stage = SequenceNodeGraphStage::UpsertEdges;
-                self.cursor = 0;
-                self.advance(command, scene)
-            }
-            SequenceNodeGraphStage::UpsertEdges => {
-                let base = self.base.as_ref().ok_or_else(|| Fault::from("sequence-node-graph-base"))?;
-                let target = self.target.as_ref().ok_or_else(|| Fault::from("sequence-node-graph-target"))?;
-                if self.cursor < target.edges.len() {
-                    let edge = &target.edges[self.cursor];
-                    let endpoint_recreated = self.recreated.iter().any(|id| id == &edge.from || id == &edge.to);
-                    match base.edges.iter().find(|entry| entry.id == edge.id) {
-                        None => self.mutations.push(SequenceMutation::ConnectSteps(crate::mutations::ConnectSteps { id: edge.id.clone(), from: edge.from.clone(), to: edge.to.clone() })),
-                        Some(_) if endpoint_recreated => self.mutations.push(SequenceMutation::ConnectSteps(crate::mutations::ConnectSteps { id: edge.id.clone(), from: edge.from.clone(), to: edge.to.clone() })),
-                        Some(old) if old.from != edge.from || old.to != edge.to => {
-                            self.mutations.push(SequenceMutation::DisconnectSteps(crate::mutations::DisconnectSteps { id: old.id.clone() }));
-                            self.mutations.push(SequenceMutation::ConnectSteps(crate::mutations::ConnectSteps { id: edge.id.clone(), from: edge.from.clone(), to: edge.to.clone() }));
-                        }
-                        Some(_) => {}
-                    }
-                    self.cursor += 1;
-                    return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-upsert-edge", "{\"en\":\"Diffing changed edge\",\"de\":\"Geänderte Kante wird verglichen\"}".as_bytes()));
-                }
                 self.stage = SequenceNodeGraphStage::Complete;
                 self.advance(command, scene)
             }
             SequenceNodeGraphStage::Complete => {
-                if self.mutations.len() > SEQUENCE_PERSISTENT_MAXIMUM_UNITS {
+                let base = self.base.as_ref().ok_or_else(|| Fault::from("sequence-node-graph-base"))?;
+                let target = self.target.as_ref().ok_or_else(|| Fault::from("sequence-node-graph-target"))?;
+                let leaves = sequence_scene_leaves(base, target);
+                if leaves.len() > SEQUENCE_PERSISTENT_MAXIMUM_UNITS {
                     return Err(Fault::from("sequence-node-graph-output-items"));
                 }
-                sequence_bounded_serialized_bytes(&self.mutations, SEQUENCE_STORE_MAXIMUM_BYTES).map_err(|_| Fault::from("sequence-node-graph-output-bytes"))?;
-                Ok(SequencePersistentAdvance::Complete(Emit::mutations(std::mem::take(&mut self.mutations))))
+                Ok(SequencePersistentAdvance::Complete(leaves))
             }
         }
     }
@@ -2205,22 +1623,12 @@ impl SequenceNodeGraphState {
             || self.delete_frontier.pop_front().is_some()
             || self.delete_current.take().is_some()
             || self.delete_discovered.pop().is_some()
-            || self.deleted.pop().is_some()
-            || self.recreated.pop().is_some()
         {
             return SequencePersistentRelease::Progress(0);
         }
         let step = self.discarded_steps.pop_front().or_else(|| self.base.as_mut().and_then(|scene| scene.steps.pop())).or_else(|| self.target.as_mut().and_then(|scene| scene.steps.pop()));
         if let Some(SequenceStep { mut params, .. }) = step {
             self.retirement.push_dictionary(std::mem::take(&mut params.0));
-            return SequencePersistentRelease::Progress(0);
-        }
-        if let Some(mutation) = self.mutations.pop() {
-            match mutation {
-                SequenceMutation::CreateStep(mut value) => self.retirement.push_dictionary(std::mem::take(&mut value.step.params.0)),
-                SequenceMutation::EditStepParams(mut value) => self.retirement.push_dictionary(std::mem::take(&mut value.params.0)),
-                SequenceMutation::DeleteStep(_) | SequenceMutation::MoveStep(_) | SequenceMutation::ChangeStepCollapsed(_) | SequenceMutation::ConnectSteps(_) | SequenceMutation::DisconnectSteps(_) | SequenceMutation::DuplicateStep(_) => {}
-            }
             return SequencePersistentRelease::Progress(0);
         }
         if self.base.as_mut().is_some_and(|scene| scene.edges.pop().is_some()) || self.target.as_mut().is_some_and(|scene| scene.edges.pop().is_some()) {
@@ -2237,9 +1645,6 @@ impl SequenceNodeGraphState {
             && self.delete_frontier.is_empty()
             && self.delete_current.is_none()
             && self.delete_discovered.is_empty()
-            && self.deleted.is_empty()
-            && self.recreated.is_empty()
-            && self.mutations.is_empty()
             && self.discarded_steps.is_empty()
             && self.retirement.terminal_is_empty()
             && self.base.is_none()
@@ -2442,7 +1847,7 @@ impl SequenceRunState {
         }
         let Some(frame) = self.frames.last_mut() else {
             let result = RunResult { scope: self.scope.clone(), effects: self.effects.clone() };
-            let json = dsl::os_pack::to_json_string(&result);
+            let json = semio_framework_pack_json::to_json_string(&result);
             if json.len() > SEQUENCE_STORE_MAXIMUM_BYTES {
                 return Err(Fault::from("sequence-run-result-capacity"));
             }
@@ -2686,6 +2091,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
     fn step(
         &mut self,
         input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<SequencePlayApp>>,
+    _cx: &mut semio_framework_job::StepContext<'_>,
     ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<SequencePlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, history: _history, interaction: _interaction, hover: _hover, context, operation } = *input;
         use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
@@ -2708,15 +2114,14 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
                     Ok(ArtifactCommandWorkStep::Progress { stage, preview })
                 }
             }
-            SequencePersistentAdvance::Complete(emit) => {
+            SequencePersistentAdvance::Complete(leaves) => {
                 if self.replay_target.is_some() {
                     return Err(Fault::from("sequence-persistent-replay-overrun"));
                 }
                 let emit = match &mut self.workspace {
-                    SequencePersistentWorkspace::NodeGraph(state) => state.drag_transaction(emit, &operation.authoring_seed),
-                    _ => emit,
+                    SequencePersistentWorkspace::NodeGraph(state) => state.publish(snapshot, leaves, &operation.authoring_seed),
+                    _ => sequence_child_leaves_emit(snapshot, &leaves),
                 };
-                let emit = sequence_artifact_emit_to_child(snapshot, scene, emit)?;
                 let exact_child = emit.child_emits.first().is_none_or(|child| child.slot == "content" && child.child_id == snapshot.content.child_id);
                 let exact_lane = emit.config_mutations.is_empty() && emit.draft_mutations.is_empty() && emit.artifact_mutations.is_empty() && emit.child_emits.len() <= 1 && exact_child;
                 if !exact_lane {
@@ -2906,6 +2311,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
     fn step(
         &mut self,
         input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<SequencePlayApp>>,
+    _cx: &mut semio_framework_job::StepContext<'_>,
     ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<SequencePlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot: _snapshot, config: _config, history: _history, interaction: _interaction, hover: _hover, context, operation: _operation } = *input;
         use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
@@ -3118,6 +2524,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
     fn step(
         &mut self,
         input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<SequencePlayApp>>,
+    _cx: &mut semio_framework_job::StepContext<'_>,
     ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<SequencePlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, .. } = *input;
         use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
@@ -3264,12 +2671,18 @@ const SEQUENCE_IMPORT_PORT: &str = "steps:in";
 /// builds its emit EXCLUSIVELY from the resumable job — `A::import_media` is never reached on a
 /// mounted app — so while this returned the trait default `None` every `steps:in` delivery died
 /// `interactive-job.missing-reserved-builder` although the synchronous importer below was correct
-/// (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP, media §8, S10-E). Two bounded steps: decode
-/// the payload into the composed Flow child's exact replacement, then publish it through the
-/// completion authority.
+/// (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP, media §8, S10-E). Original admitted media
+/// remains owned through native parsing/projection, typed binding and the same composed child
+/// publication. Every source candidate drains through its existing retirement authority.
 struct SequenceImportJob {
     port: String,
-    media_json: Option<String>,
+    media: Option<MediaPayload>,
+    parser: Option<semio_framework_pack_json::JsonParseCursor>,
+    projection: Option<semio_framework_pack_json::JsonValueProjection>,
+    decode_receipt: Option<semio_framework_value::native_decoding::NativeDecodeContinuation>,
+    input: Option<neural_engine::retirement::RetainedDictionaryInput>,
+    params: Option<StepParams>,
+    retirement: Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
     snapshot: Option<std::sync::Arc<SequenceSnapshot>>,
     children: Option<semio_framework_plugin::app::ChildContentView>,
     emit: Option<Emit<SequenceMutation, NoConfigMutation>>,
@@ -3298,15 +2711,16 @@ fn sequence_job_fault(cx: &mut semio_framework_job::StepContext<'_>, detail: &st
     semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: sequence_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, bounded) })
 }
 
+/// 📦️ Takes the original parameter value into its canonical dictionary shape.
+fn sequence_import_parameter_value(value: semio_framework_value::DslValue) -> semio_framework_value::DslValue {
+    if matches!(value, semio_framework_value::DslValue::Object(_)) { value } else { semio_framework_value::DslValue::Object(vec![("value".into(), value)]) }
+}
+
 impl SequenceImportJob {
     fn new(request: semio_framework_plugin::ArtifactReservedToolJobRequest<semio_framework_plugin::EditorApp<SequencePlayApp>>, port: String, media: Media) -> Self {
-        let media_json = match media.payload {
-            MediaPayload::Structured { json, .. } => Some(json),
-            MediaPayload::Binary { .. } => None,
-        };
         Self {
             port,
-            media_json,
+            media: Some(media.payload), parser: None, projection: None, decode_receipt: None, input: None, params: None, retirement: None,
             snapshot: Some(request.snapshot),
             children: Some(request.children),
             emit: None,
@@ -3322,16 +2736,49 @@ impl SequenceImportJob {
         if self.port != SEQUENCE_IMPORT_PORT {
             return Some(sequence_job_fault(cx, "sequence import only implements steps:in"));
         }
-        let Some(media_json) = self.media_json.as_ref() else {
-            return Some(sequence_job_fault(cx, "sequence steps:in importer only accepts a Structured (JSON) payload"));
-        };
-        let Ok(value) = json::parse(media_json) else {
-            return Some(sequence_job_fault(cx, "sequence steps:in payload is not valid json"));
-        };
-        let params_value = if value.as_object().is_some() { value } else { json!({ "value": value }) };
-        let Ok(params) = dsl::os_pack::from_json_str::<StepParams>(&params_value.to_string()) else {
-            return Some(sequence_job_fault(cx, "sequence steps:in payload is not a step parameter record"));
-        };
+        if self.params.is_none() {
+            if self.input.is_none() && self.parser.is_none() && self.projection.is_none() {
+                match self.media.as_mut() {
+                    Some(MediaPayload::Intrinsic { value, .. }) => {
+                        let value = std::mem::replace(value, semio_framework_value::DslValue::Null);
+                        self.input = Some(neural_engine::retirement::RetainedDictionaryInput::new(sequence_import_parameter_value(value)));
+                    },
+                    Some(MediaPayload::Structured { .. }) => self.parser = Some(semio_framework_pack_json::JsonParseCursor::new(semio_framework_pack_json::JsonMemberPolicy::Reject)),
+                    Some(MediaPayload::Binary { .. }) | None => return Some(sequence_job_fault(cx, "sequence steps:in requires an intrinsic or structured parameter value")),
+                }
+                cx.consume_fuel(1);
+            }
+            while !cx.should_yield() {
+                if cx.is_cancelled() { return Some(semio_framework_job::StepOutcome::Cancelled); }
+                if let Some(input) = self.input.as_mut() {
+                    cx.set_stage(input.progress().2);
+                    match input.step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
+                        Ok(Some(dictionary)) => { self.params = Some(StepParams(dictionary)); cx.consume_fuel(1); break; },
+                        Ok(None) => {},
+                        Err(error) if error.kind == semio_framework_value::ValueRefusalKind::Canceled => return Some(semio_framework_job::StepOutcome::Cancelled), Err(error) => return Some(sequence_job_fault(cx, &error.message)),
+                    }
+                } else {
+                    let result = {
+                        let mut accept = |_| !cx.is_cancelled();
+                        let control = match self.decode_receipt.take() { Some(receipt) => semio_framework_value::NativeDecodeControl::resume(receipt, &mut accept), None => Ok(semio_framework_value::NativeDecodeControl::new(SEQUENCE_STORE_MAXIMUM_BYTES, &mut accept)) };
+                        match control {
+                            Ok(mut control) => {
+                                let result = if let Some(projection) = self.projection.as_mut() { projection.step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, &mut control) }
+                                else if let (Some(parser), Some(MediaPayload::Structured { json, .. })) = (self.parser.as_mut(), self.media.as_ref()) {
+                                    match parser.step(json, 1, &mut control) { Ok(Some(value)) => { self.projection = Some(semio_framework_pack_json::JsonValueProjection::new(value)); Ok(None) }, Ok(None) => Ok(None), Err(semio_framework_pack_json::JsonError::Native(error)) => Err(error), Err(error) => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string())) }
+                                } else { Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "sequence import source disappeared")) };
+                                match control.pause() { Ok(receipt) => { self.decode_receipt = Some(receipt); result }, Err(error) => Err(error) }
+                            },
+                            Err(error) => Err(error),
+                        }
+                    };
+                    match result { Ok(Some(value)) => self.input = Some(neural_engine::retirement::RetainedDictionaryInput::new(sequence_import_parameter_value(value))), Ok(None) => {}, Err(error) if error.kind == semio_framework_value::ValueRefusalKind::Canceled => return Some(semio_framework_job::StepOutcome::Cancelled), Err(error) => return Some(sequence_job_fault(cx, &error.message)) }
+                    cx.set_stage(if self.projection.is_some() { "sequence-import-project" } else { "sequence-import-parse" });
+                }
+                cx.consume_fuel(1);
+            }
+            return Some(semio_framework_job::StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: sequence_job_payload(cx, semio_framework_job::JobPayloadStream::CheckpointState, &[0]), applied_progress: 0 }));
+        }
         let (Some(snapshot), Some(children)) = (self.snapshot.as_ref(), self.children.as_ref()) else {
             return Some(sequence_job_fault(cx, "sequence import lost its snapshot authority"));
         };
@@ -3341,7 +2788,7 @@ impl SequenceImportJob {
         let id = format!("step-{}", max_serial_in_snapshot(&live).max(100) + 1);
         let x = live.steps.iter().map(|step| step.x).fold(0.0_f64, f64::max) + if live.steps.is_empty() { 0.0 } else { 280.0 };
         let base = ColdOwner::new(SequenceWorkingScene { steps: live.steps.clone(), edges: live.edges.clone() });
-        live.steps.push(SequenceStep { id, kind: "computation.import".into(), params, x, y: 0.0, slot: None, collapsed: false });
+        live.steps.push(SequenceStep { id, kind: "computation.import".into(), params: self.params.take().expect("retained parameter binding completed"), x, y: 0.0, slot: None, collapsed: false });
         let next = ColdOwner::new(SequenceWorkingScene { steps: live.steps.clone(), edges: live.edges.clone() });
         self.emit = Some(sequence_child_leaves_emit(snapshot.as_ref(), &sequence_scene_leaves(&base, &next)));
         self.children = None;
@@ -3355,6 +2802,7 @@ impl semio_framework_job::InteractiveJob for SequenceImportJob {
         if cx.is_cancelled() {
             return semio_framework_job::StepOutcome::Cancelled;
         }
+        if cx.should_yield() { return semio_framework_job::StepOutcome::Yield; }
         if self.pending_completion_rejection.is_some() {
             return sequence_job_fault(cx, "sequence import completion remains rejected");
         }
@@ -3415,7 +2863,7 @@ impl semio_framework_job::InteractiveJob for SequenceImportJob {
 impl semio_framework_plugin::ArtifactReservedJob for SequenceImportJob {
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
         self.closing = true;
-        if maximum_items == 0 {
+        if maximum_items == 0 || maximum_bytes == 0 {
             return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(rejected) = self.pending_completion_rejection.as_mut() {
@@ -3437,11 +2885,36 @@ impl semio_framework_plugin::ArtifactReservedJob for SequenceImportJob {
         if self.children.take().is_some() {
             return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
         }
-        if self.media_json.take().is_some() {
+        if let Some(input) = self.input.as_mut() {
+            input.cancel();
+            let step = input.close_step(maximum_items, maximum_bytes);
+            if input.terminal_is_empty() { self.input = None; }
+            return Ok(match step { ValueRetirementStep::Pending { released_items, released_bytes } => semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes }, ValueRetirementStep::Complete => semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }, ValueRetirementStep::Blocked => semio_framework_plugin::PluginCloseStep::Blocked { reason: "sequence parameter input retirement is blocked" } });
+        }
+        if let Some(close) = self.retirement.as_mut() {
+            let step = close.close_step(maximum_items, maximum_bytes).map_err(|error| Fault::from(error.message))?;
+            if close.terminal_is_empty() { self.retirement = None; }
+            return Ok(match step { store::SnapshotRetirementStep::Pending { released_items, released_bytes } => semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes }, store::SnapshotRetirementStep::Complete => semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }, store::SnapshotRetirementStep::Blocked => semio_framework_plugin::PluginCloseStep::Blocked { reason: "sequence media source retirement is blocked" } });
+        }
+        if let Some(mut params) = self.params.take() {
+            self.retirement = Some(semio_framework_value::retirement::owned_retirement(std::mem::take(&mut params.0)));
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(media) = self.media.take() {
+            self.retirement = Some(match media { MediaPayload::Intrinsic { schema, value } => semio_framework_value::retirement::owned_retirement((schema, value)), MediaPayload::Structured { schema, json } => semio_framework_value::retirement::owned_retirement((schema, json)), MediaPayload::Binary { format_kind, blob_hash } => semio_framework_value::retirement::owned_retirement((format_kind, blob_hash)) });
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(parser) = self.parser.take() {
+            self.retirement = Some(semio_framework_value::retirement::owned_retirement(parser));
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(projection) = self.projection.take() {
+            self.retirement = Some(semio_framework_value::retirement::owned_retirement(projection));
+            self.decode_receipt = None;
             return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if !self.port.is_empty() || self.port.capacity() > 0 {
-            self.port = String::new();
+            self.retirement = Some(semio_framework_value::retirement::owned_retirement(std::mem::take(&mut self.port)));
             return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if self.snapshot.as_ref().is_some_and(|snapshot| std::sync::Arc::strong_count(snapshot) == 1) {
@@ -3463,7 +2936,7 @@ impl semio_framework_plugin::ArtifactReservedJob for SequenceImportJob {
         self.closing
             && self.port.is_empty()
             && self.port.capacity() == 0
-            && self.media_json.is_none()
+            && self.media.is_none() && self.parser.is_none() && self.projection.is_none() && self.input.is_none() && self.params.is_none() && self.retirement.is_none()
             && self.children.is_none()
             && self.snapshot.is_none()
             && self.emit.is_none()
@@ -3577,13 +3050,12 @@ impl ArtifactEditor for SequencePlayApp {
     }
 
     /// 🌱️ The derivable `content` member — see `crate::genesis_sequence_child_pack`.
-    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {
+ Ok((||{
         crate::genesis_sequence_child_pack(snapshot, slot, child_id)
-    }
-
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(std::sync::Arc::new(SequenceArtifactStorePreparationFactory))
-    }
+    
+})())
+}
 
     fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
         Some(semio_framework_plugin::no_config_store_owners())
@@ -3691,7 +3163,7 @@ impl ArtifactEditor for SequencePlayApp {
             || (persistent_route && !persistent_admitted)
             || (example_route && !sequence_retained_example_command_admitted(&request.command))
         {
-            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("sequence.retained.tool-mismatch"), "Sequence command does not match its exact retained route or payload envelope"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "Sequence command does not match its exact retained route or payload envelope"));
         }
         let tool_id = request.command.command_id();
         let operation_context = semio_framework_plugin::AppOperationContext {
@@ -3759,9 +3231,9 @@ impl ArtifactEditor for SequencePlayApp {
         let MediaPayload::Structured { json, .. } = &media.payload else {
             return Err(MediaError::Payload(port.to_string(), "steps:in importer only accepts a Structured (JSON) payload".into()));
         };
-        let value = json::parse(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+        let value = json::parse(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
         let params_value = if value.as_object().is_some() { value } else { json!({ "value": value }) };
-        let params: StepParams = dsl::os_pack::from_json_str(&params_value.to_string()).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+        let params: StepParams = semio_framework_pack_json::from_json_str(&params_value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
         let mut live = sequence_host_snapshot_from_children(doc.snapshot, &doc.children).map_err(|error| MediaError::Payload(port.to_string(), format!("{error:?}")))?;
         let id = format!("step-{}", max_serial_in_snapshot(&live).max(100) + 1);
         let x = live.steps.iter().map(|step| step.x).fold(0.0_f64, f64::max) + if live.steps.is_empty() { 0.0 } else { 280.0 };
@@ -3782,10 +3254,10 @@ impl ArtifactEditor for SequencePlayApp {
     /// refuses EVERY id (`app.command.unsupported`) — without this bridge no Actions-pane row, no
     /// palette drop and no graph gesture ever reached `handle`. Key aliases mirror the shells' own
     /// vocabularies (`value`/`id`, `nodeId`, `sourceNodeId`) rather than adding shell-side shims.
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<SequenceCommand, Fault> {
-        let text_arg = |keys: &[&str]| keys.iter().find_map(|key| args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_str).map(str::to_string));
-        let number_arg = |keys: &[&str]| keys.iter().find_map(|key| args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_f64)).unwrap_or_default();
-        let json_arg = |key: &str, fallback: &str| args.and_then(|value| value.get(key)).map_or_else(|| fallback.to_string(), dsl::json::to_json_string);
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<SequenceCommand, Fault> {
+        let text_arg = |keys: &[&str]| keys.iter().find_map(|key| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_str).map(str::to_string));
+        let number_arg = |keys: &[&str]| keys.iter().find_map(|key| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_f64)).unwrap_or_default();
+        let json_arg = |key: &str, fallback: &str| args.and_then(|value| value.get(key)).map_or_else(|| fallback.to_string(), json::to_json_string);
         match action {
             "addStep" => Ok(SequenceCommand::AddStep(add_step::AddStep { kind: text_arg(&["kind", "value"]).unwrap_or_else(|| "computation.import".into()), x: number_arg(&["x"]), y: number_arg(&["y"]) })),
             "addStepToSlot" => Ok(SequenceCommand::AddStepToSlot(add_step_to_slot::AddStepToSlot {
@@ -3847,14 +3319,17 @@ impl ArtifactEditor for SequencePlayApp {
     /// granularity, parented to its control-flow slot owner (`SlotRef.owner`) when nested inside a
     /// `then`/`else`/`body` slot, or as a root otherwise — mirrors the document panel's own nesting
     /// (`build_step_tree_item`) so a deleted step's id auto-prunes out of the live selection.
-    fn interaction_topology(doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> InteractionTopology {
+    fn interaction_topology(doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<InteractionTopology, semio_framework_value::ValueError> {
+ Ok((||{
         let ordered = sequence_working_scene_from_children(doc.snapshot, &doc.children)
             .map(|scene| scene.steps.iter().map(|step| TopologyNode { id: step.id.clone(), granularity: "step".into(), parent: step.slot.as_ref().map(|slot| slot.owner.clone()) }).collect())
             .unwrap_or_default();
         let mut domains = BTreeMap::new();
         domains.insert(SEQUENCE_INTERACTION_STEPS.to_string(), DomainTopology { ordered });
         InteractionTopology { domains }
-    }
+    
+})())
+}
 
     fn render(body_key: &str, doc: &ArtifactView<'_, SequenceSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let live = sequence_host_snapshot_from_children(doc.snapshot, &doc.children)
@@ -3907,8 +3382,7 @@ impl ArtifactEditor for SequencePlayApp {
     }
 
     fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
-        let is_de = view_state.locale == semio_framework_ui_locale::Locale::De;
-        sequence_context_menu_items(registry, is_de, request.surface.as_ref(), &[])
+        sequence_context_menu_items(registry, view_state, request.surface.as_ref(), &[])
     }
 }
 
@@ -3920,12 +3394,13 @@ impl ArtifactEditor for SequencePlayApp {
 /// itself. Factored out of `ArtifactApp::context_menu` (which carries no `InteractionView` — ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) so a test can exercise the selection-dependent
 /// rows directly with a real `selected` slice, matching `space`'s own precedent.
-fn sequence_context_menu_items(registry: &AppActionRegistry, is_de: bool, surface: Option<&semio_framework_plugin::ContextMenuSurfaceTarget>, selected: &[String]) -> Vec<ContextMenuItemSpec> {
+fn sequence_context_menu_items(registry: &AppActionRegistry, view_state: &semio_framework_plugin::ViewModel, surface: Option<&semio_framework_plugin::ContextMenuSurfaceTarget>, selected: &[String]) -> Vec<ContextMenuItemSpec> {
     use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
+    let is_de = view_state.locale == semio_framework_ui_locale::Locale::De;
 
     let (nodes, edges) = selection_domains_from_surface(surface, selected, &[]);
 
-    let mut menu = Menu::of(registry).action("run").action("stop").action("addStep").group("transform", |m| m.action("reorganize"));
+    let mut menu = Menu::of(registry, view_state).action("run").action("stop").action("addStep").group("transform", |m| m.action("reorganize"));
 
     if nodes.len() == 1 {
         let id = nodes[0].clone();
@@ -3941,10 +3416,7 @@ fn sequence_context_menu_items(registry: &AppActionRegistry, is_de: bool, surfac
         });
     }
 
-    if let Some(spec) = node_graph_delete_selection_spec("Delete selection", is_de, &nodes, &edges, NodeGraphDeleteDispatch::Direct) {
-        menu = menu.item(spec);
-    }
-    menu.build()
+    menu.item(node_graph_delete_selection_spec(semio_framework_plugin::delete_selection().resolve(view_state.terminology, view_state.locale), view_state, &nodes, &edges, NodeGraphDeleteDispatch::Direct)).build()
 }
 //#endregion 🔖️SequencePlayApp
 
@@ -4095,8 +3567,3 @@ pub fn create_sequence_app() -> AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 pub(crate) mod unit_tests;
 //#endregion 🧪️UnitTests
-
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️retained-json-contract/🦀️.rs"]
-mod retained_json_contract;

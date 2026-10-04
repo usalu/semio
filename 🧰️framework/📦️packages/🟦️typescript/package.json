@@ -9,7 +9,17 @@
     ".": "./🟦️.ts"
   },
   "scripts": {
-    "test": "bun nx run @semio-tech/framework:test"
+    "test": "bun nx run @semio-tech/framework:test",
+    "test-artifact-reference": "nx run @semio-tech/framework:test-artifact-reference",
+    "test-script-boundary": "nx run @semio-tech/framework:test-script-boundary"
+  },
+  "devDependencies": {
+    "@types/d3-scale": "4.0.9",
+    "color-string": "1.9.1",
+    "d3-scale": "4.0.2",
+    "decimal.js": "10.6.0",
+    "fast-check": "3.23.2",
+    "xstate": "^5.32.5"
   },
   "license": "LGPL-3.0-or-later",
   "repository": {

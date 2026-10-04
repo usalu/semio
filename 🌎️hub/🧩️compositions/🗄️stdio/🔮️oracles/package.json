@@ -1,0 +1,17 @@
+{
+  "name": "@semio-tech/hub-stdio-test-oracle",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test-drawing-reader": "bun nx run @semio-tech/hub-stdio-test-oracle:test-drawing-reader",
+    "test-composition": "bun nx run @semio-tech/hub-stdio-test-oracle:test-composition",
+    "test-native-oracles": "bun nx run @semio-tech/hub-stdio-test-oracle:test-native-oracles",
+    "test-private-reader": "bun nx run @semio-tech/hub-stdio-test-oracle:test-private-reader",
+    "test-native-drawing-reader": "bun nx run @semio-tech/hub-stdio-test-oracle:test-native-drawing-reader",
+    "test-type-ownership": "bun nx run @semio-tech/hub-stdio-test-oracle:test-type-ownership"
+  },
+  "nx": {
+    "includedScripts": []
+  }
+}

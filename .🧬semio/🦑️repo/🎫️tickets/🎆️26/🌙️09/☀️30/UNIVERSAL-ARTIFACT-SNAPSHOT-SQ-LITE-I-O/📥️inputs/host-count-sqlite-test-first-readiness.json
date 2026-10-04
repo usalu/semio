@@ -1,0 +1,38 @@
+{
+  "owner": "fixture.neutral-host-fixture.counter@1/*",
+  "snapshot": "Snapshot { count: i32 }",
+  "semantic_fields": [
+    "count"
+  ],
+  "unchanged_related_owners": {
+    "Mutation": "empty enum",
+    "Diff": "empty identity struct"
+  },
+  "neutral_counts": [
+    -2147483648,
+    -1,
+    0,
+    1,
+    2147483647
+  ],
+  "hand_sql_proposal": "CREATE TABLE fixture_counter (id INTEGER PRIMARY KEY CHECK (id = 1), count INTEGER NOT NULL CHECK (count BETWEEN -2147483648 AND 2147483647));",
+  "refused_structural_cases": [
+    "missing row",
+    "two rows",
+    "id not 1",
+    "non-integer count",
+    "count below i32 minimum",
+    "count above i32 maximum",
+    "wrong table/column schema",
+    "unexpected table"
+  ],
+  "existing_compiled_all_eight_injection_seam": false,
+  "native_test_seam": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-declarations-fixture/⚠️refusal/🦀️.rs",
+  "pending_gates": [
+    "independent AJV + Bun SQLite neutral owner corpus",
+    "actual owner Native provider and erased native codec law",
+    "unchanged WASIp2 producer build",
+    "Owned + Wasmtime actual SQLite calls",
+    "real workspace lease route public IO"
+  ]
+}

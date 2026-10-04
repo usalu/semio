@@ -16,7 +16,7 @@ fn extension_inputs_match_the_independent_json_oracle() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🪟️view-context/🧫️fixtures/🧩️extension-input/🔣️.json")).expect("extension input vectors");
     for row in fixture["cases"].as_array().expect("cases") {
         let input = &row["context"];
-        let view: ViewModel = dsl::os_pack::json::from_json_str(&input.to_string()).expect("owned context decoder");
+        let view: ViewModel = semio_framework_pack_json::from_json_str(&input.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("owned context decoder");
         let oracle: ViewModel = serde_json::from_value(input.clone()).expect("independent context decoder");
         assert_eq!(view, oracle);
         assert_eq!(view.extension_input_json.as_deref(), input["extensionInputJson"].as_str());
@@ -82,7 +82,7 @@ fn row_json(valid: &serde_json::Value, row: &InvalidRow) -> String {
 #[semio_framework_async_macros::async_test]
 async fn the_resolved_context_decodes_in_the_guest() {
     let fixture = fixture();
-    let view: ViewModel = dsl::os_pack::json::from_json_str(&fixture.valid.to_string()).expect("a resolved host context decodes");
+    let view: ViewModel = semio_framework_pack_json::from_json_str(&fixture.valid.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("a resolved host context decodes");
     assert_eq!(view.locale, Locale::De);
     assert_eq!(view.terminology, Terminology::Reuse);
     assert_eq!(view.window_instances.len(), 2);
@@ -96,7 +96,7 @@ async fn an_unresolved_context_names_the_field_it_lost() {
     assert!(!fixture.guest_decode.is_empty(), "the fixture must pin at least one guest-side rejection");
     for expected in &fixture.guest_decode {
         let row = fixture.invalid.iter().find(|candidate| candidate.name == expected.name).unwrap_or_else(|| panic!("guestDecode row {} must also be an `invalid` row the host admission rejects", expected.name));
-        let error = dsl::os_pack::json::from_json_str::<ViewModel>(&row_json(&fixture.valid, row)).err().unwrap_or_else(|| panic!("{} must not decode in the guest", expected.name));
+        let error = semio_framework_pack_json::from_json_str::<ViewModel>(&row_json(&fixture.valid, row), semio_framework_pack_json::JsonMemberPolicy::Reject).err().unwrap_or_else(|| panic!("{} must not decode in the guest", expected.name));
         assert_eq!(error.to_string(), expected.fault, "{}", expected.name);
     }
 }
@@ -110,7 +110,7 @@ async fn a_smuggled_contributions_field_reaches_no_guest_reader() {
     let fixture = fixture();
     let row = fixture.invalid.iter().find(|candidate| candidate.name == "contributions-in-view-state").expect("the fixture must pin a contributions row");
     assert_eq!(row.set.keys().collect::<Vec<_>>(), vec!["contributionsJson"], "the row must set exactly the refused field");
-    let view: ViewModel = dsl::os_pack::json::from_json_str(&row_json(&fixture.valid, row)).expect("an unknown field is ignored, never routed");
+    let view: ViewModel = semio_framework_pack_json::from_json_str(&row_json(&fixture.valid, row), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("an unknown field is ignored, never routed");
     let reprojected = serde_json::to_string(&view).expect("the guest projection encodes");
     assert!(!reprojected.contains("contributionsJson"), "no guest reader may re-emit contributions from a view context: {reprojected}");
 }
@@ -125,6 +125,6 @@ async fn the_panel_capacity_row_is_the_only_long_field() {
     let repeat = row.repeat.as_ref().expect("the capacity row is stated, never inlined");
     assert_eq!(repeat.field, "panelJson");
     assert_eq!(repeat.count, VIEW_CONTEXT_LONG_STRING_CHARS + 1, "the refused row is exactly one character past the schema bound");
-    let view: ViewModel = dsl::os_pack::json::from_json_str(&row_json(&fixture.valid, row)).expect("the guest decodes what the host admission refuses");
+    let view: ViewModel = semio_framework_pack_json::from_json_str(&row_json(&fixture.valid, row), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the guest decodes what the host admission refuses");
     assert_eq!(view.panel_json.map(|json| json.chars().count()), Some(repeat.count));
 }

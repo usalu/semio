@@ -7,7 +7,8 @@ use crate::mutations::PixelRun;
 use crate::{LowpolyMutation, LowpolySnapshot};
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &EditPaintLayer, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {
+pub fn inverse(payload: &EditPaintLayer, base: &LowpolySnapshot) -> Result<Vec<LowpolyMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let pixels = crate::schema::layer_pixels_at(base, &payload.object_id, payload.layer_index);
     let inverse_runs = payload
         .runs
@@ -32,5 +33,7 @@ pub fn inverse(payload: &EditPaintLayer, base: &LowpolySnapshot) -> Vec<LowpolyM
         })
         .collect();
     vec![LowpolyMutation::EditPaintLayer(EditPaintLayer { object_id: payload.object_id.clone(), layer_index: payload.layer_index, runs: inverse_runs })]
+
+    })())
 }
 //#endregion 🔖️Inverse

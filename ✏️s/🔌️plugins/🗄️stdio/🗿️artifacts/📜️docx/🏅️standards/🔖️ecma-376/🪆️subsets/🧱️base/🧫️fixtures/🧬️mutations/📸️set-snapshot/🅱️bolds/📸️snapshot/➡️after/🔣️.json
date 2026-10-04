@@ -4,20 +4,20 @@
     "parts": [],
     "contentTypes": {
       "defaults": [
-        [
-          "rels",
-          "application/vnd.openxmlformats-package.relationships+xml"
-        ],
-        [
-          "xml",
-          "application/xml"
-        ]
+        {
+          "name": "rels",
+          "contentType": "application/vnd.openxmlformats-package.relationships+xml"
+        },
+        {
+          "name": "xml",
+          "contentType": "application/xml"
+        }
       ],
       "overrides": [
-        [
-          "/word/document.xml",
-          "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"
-        ]
+        {
+          "name": "/word/document.xml",
+          "contentType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"
+        }
       ]
     },
     "relationships": {
@@ -37,99 +37,141 @@
       "path": "word/document.xml",
       "contentType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml",
       "document": {
-        "root": {
-          "kind": "element",
-          "name": "w:document",
-          "attrs": [
-            {
-              "name": "xmlns:w",
-              "value": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+        "nodes": [
+          {
+            "nextSibling": 2,
+            "value": {
+              "kind": "element",
+              "name": "w:rPr",
+              "first_attribute": 1,
+              "attribute_count": 0,
+              "first_child": null
             }
-          ],
-          "children": [
-            {
+          },
+          {
+            "nextSibling": null,
+            "value": {
+              "kind": "text",
+              "text": "Nakagin "
+            }
+          },
+          {
+            "nextSibling": null,
+            "value": {
+              "kind": "element",
+              "name": "w:t",
+              "first_attribute": 1,
+              "attribute_count": 1,
+              "first_child": 1
+            }
+          },
+          {
+            "nextSibling": 8,
+            "value": {
+              "kind": "element",
+              "name": "w:r",
+              "first_attribute": 1,
+              "attribute_count": 0,
+              "first_child": 0
+            }
+          },
+          {
+            "nextSibling": null,
+            "value": {
+              "kind": "element",
+              "name": "w:b",
+              "first_attribute": 2,
+              "attribute_count": 0,
+              "first_child": null
+            }
+          },
+          {
+            "nextSibling": 7,
+            "value": {
+              "kind": "element",
+              "name": "w:rPr",
+              "first_attribute": 2,
+              "attribute_count": 0,
+              "first_child": 4
+            }
+          },
+          {
+            "nextSibling": null,
+            "value": {
+              "kind": "text",
+              "text": "Capsule Tower"
+            }
+          },
+          {
+            "nextSibling": null,
+            "value": {
+              "kind": "element",
+              "name": "w:t",
+              "first_attribute": 2,
+              "attribute_count": 1,
+              "first_child": 6
+            }
+          },
+          {
+            "nextSibling": null,
+            "value": {
+              "kind": "element",
+              "name": "w:r",
+              "first_attribute": 2,
+              "attribute_count": 0,
+              "first_child": 5
+            }
+          },
+          {
+            "nextSibling": null,
+            "value": {
+              "kind": "element",
+              "name": "w:p",
+              "first_attribute": 1,
+              "attribute_count": 0,
+              "first_child": 3
+            }
+          },
+          {
+            "nextSibling": null,
+            "value": {
               "kind": "element",
               "name": "w:body",
-              "attrs": [],
-              "children": [
-                {
-                  "kind": "element",
-                  "name": "w:p",
-                  "attrs": [],
-                  "children": [
-                    {
-                      "kind": "element",
-                      "name": "w:r",
-                      "attrs": [],
-                      "children": [
-                        {
-                          "kind": "element",
-                          "name": "w:rPr",
-                          "attrs": [],
-                          "children": []
-                        },
-                        {
-                          "kind": "element",
-                          "name": "w:t",
-                          "attrs": [
-                            {
-                              "name": "xml:space",
-                              "value": "preserve"
-                            }
-                          ],
-                          "children": [
-                            {
-                              "kind": "text",
-                              "text": "Nakagin "
-                            }
-                          ]
-                        }
-                      ]
-                    },
-                    {
-                      "kind": "element",
-                      "name": "w:r",
-                      "attrs": [],
-                      "children": [
-                        {
-                          "kind": "element",
-                          "name": "w:rPr",
-                          "attrs": [],
-                          "children": [
-                            {
-                              "kind": "element",
-                              "name": "w:b",
-                              "attrs": [],
-                              "children": []
-                            }
-                          ]
-                        },
-                        {
-                          "kind": "element",
-                          "name": "w:t",
-                          "attrs": [
-                            {
-                              "name": "xml:space",
-                              "value": "preserve"
-                            }
-                          ],
-                          "children": [
-                            {
-                              "kind": "text",
-                              "text": "Capsule Tower"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
+              "first_attribute": 1,
+              "attribute_count": 0,
+              "first_child": 9
             }
-          ]
-        },
+          },
+          {
+            "nextSibling": null,
+            "value": {
+              "kind": "element",
+              "name": "w:document",
+              "first_attribute": 0,
+              "attribute_count": 1,
+              "first_child": 10
+            }
+          }
+        ],
+        "attributes": [
+          {
+            "name": "xmlns:w",
+            "value": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+          },
+          {
+            "name": "xml:space",
+            "value": "preserve"
+          },
+          {
+            "name": "xml:space",
+            "value": "preserve"
+          }
+        ],
         "prolog": [],
-        "epilog": []
+        "epilog": [],
+        "root": 11,
+        "doctype": null,
+        "declaration": null
       }
     }
   ]

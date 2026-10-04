@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Bundled TrueType Resource",
+    "mime": "font/ttf",
+    "resource": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🪉️supplement/⚖️medium/🔤️outline.ttf",
+    "bytes": 5396
+  },
+  {
+    "name": "Bundled OpenType Resource",
+    "mime": "font/otf",
+    "resource": "🧰️framework/🔨️modules/📚️compiler/🌍️world/🔤️fonts/⌨️LibertinusMono-Regular.otf",
+    "bytes": 59264
+  }
+]

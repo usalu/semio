@@ -1,0 +1,110 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/io/binary-source",
+  "title": "Bounded Encoded Binary Source",
+  "definitions": {
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mime",
+        "data",
+        "minBytes",
+        "maxBytes",
+        "maxSourceBytes",
+        "maxWork"
+      ],
+      "properties": {
+        "mime": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9!#$&^_.+~-]+/[A-Za-z0-9!#$&^_.+~-]+$"
+        },
+        "data": {
+          "type": "string",
+          "maxLength": 268439552
+        },
+        "minBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 67108864
+        },
+        "maxBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 67108864
+        },
+        "maxSourceBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 268439552
+        },
+        "maxWork": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000000
+        }
+      }
+    },
+    "progress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "phase",
+        "sourceCompleted",
+        "sourceTotal",
+        "bytes",
+        "totalBytes",
+        "work",
+        "done"
+      ],
+      "properties": {
+        "phase": {
+          "enum": [
+            "header",
+            "validate",
+            "decode",
+            "complete"
+          ]
+        },
+        "sourceCompleted": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sourceTotal": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 67108864
+        },
+        "totalBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 67108864
+        },
+        "work": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000000
+        },
+        "done": {
+          "type": "boolean"
+        }
+      }
+    },
+    "result": {
+      "type": "array",
+      "maxItems": 67108864,
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    }
+  },
+  "$ref": "#/definitions/input"
+}

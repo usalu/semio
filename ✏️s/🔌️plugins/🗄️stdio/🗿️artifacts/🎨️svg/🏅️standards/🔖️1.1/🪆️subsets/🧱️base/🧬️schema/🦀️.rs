@@ -361,7 +361,7 @@ pub mod derived_construction {
     #[derive(Clone, Debug, Default)]
     pub struct SvgBuilderConstruction {
         snapshot: SvgSnapshot,
-        diagnostics: Vec<dsl::Diagnostic>,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
         elements: ElementBuilder,
         view_box: Option<ViewBox>,
         width: Option<String>,
@@ -470,7 +470,7 @@ pub mod derived_construction {
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new(), elements: ElementBuilder::new(), view_box: None, width: None, height: None, xmlns: None }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(Self::from_snapshot(<SvgSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
@@ -487,7 +487,7 @@ pub mod derived_construction {
         /// 🏗️ Lowers any pending typed constructor calls into `snapshot.doc`'s root `<svg>` children
         /// before returning -- this is what lets `SvgBuilderConstruction::empty().set_view_box(...).add_rect(...)`
         /// produce a complete, valid SVG 1.1 document purely from typed calls.
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
             let mut snapshot = self.snapshot;
             let mut diagnostics = self.diagnostics;
             let pending = self.elements.build();
@@ -514,7 +514,7 @@ pub mod derived_construction {
                 }
             }
             if let Err(error) = semio_s_artifact_stdio_xml::schema::snapshot::validate_xml_document_boundaries(&snapshot.doc) {
-                diagnostics.push(dsl::Diagnostic::error("stdio.svg.boundary", dsl::TextSpan::at(1, 1), error));
+                diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.svg.boundary", semio_framework_diagnostic::TextSpan::at(1, 1), error));
             }
             if diagnostics.is_empty() {
                 Ok(snapshot)
@@ -587,14 +587,14 @@ pub mod derived_analysis {
                                     Ok(typed) => parts.typed = Some(typed),
                                     Err(err) => {
                                         confidence = IoConfidence::Low;
-                                        diagnostics.push(dsl::Diagnostic::error("stdio.analyze.typed", dsl::TextSpan::at(1, 1), err));
+                                        diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.typed", semio_framework_diagnostic::TextSpan::at(1, 1), err));
                                     }
                                 }
                                 parts.snapshot = Some(snapshot);
                             }
                             Err(err) => {
                                 confidence = IoConfidence::Low;
-                                diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
+                                diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                             }
                         }
                     }
@@ -607,7 +607,7 @@ pub mod derived_analysis {
                         }
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }

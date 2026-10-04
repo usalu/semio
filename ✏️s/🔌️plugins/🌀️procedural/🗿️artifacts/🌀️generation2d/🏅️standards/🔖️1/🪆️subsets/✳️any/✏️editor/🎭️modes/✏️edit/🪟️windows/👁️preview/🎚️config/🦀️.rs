@@ -10,13 +10,13 @@ impl Default for Generation2dEditPreviewWindowConfig {
 impl store::ArtifactDsl for Generation2dEditPreviewWindowConfig {
     const EXTENSION: &'static str = "generation2deditpreviewwindowcfg";
     fn envelope_id() -> &'static str { Self::__DSL_ENVELOPE_ID }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = store::semio_format::split_text_preamble(text).map_or(text, |(_, body)| body);
-        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid Generation2d edit-preview envelope");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -25,21 +25,21 @@ impl store::ArtifactDsl for Generation2dEditPreviewWindowConfig {
 impl store::ArtifactPack for Generation2dEditPreviewWindowConfig {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let body = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::from(error.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &body))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, body) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::Schema(error.to_string()))?;
-        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) { return Err(store::PackError::Schema("Generation2d edit-preview pack envelope mismatch".into())); }
+        let (envelope, body) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::from(error.into_value_error()))?;
+        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) { return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "Generation2d edit-preview pack envelope mismatch"))); }
         let (record, _) = store::pack_rt::decode_document(&body, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> { Some(Self::__dsl_spec()) }
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> { Some(Self::__dsl_spec()) }
 }
 
 store::impl_whole_record_config!(Generation2dEditPreviewWindowConfig);
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 #[value(tag = "kind", rename_all = "kebab-case", rename_all_fields = "camelCase", deny_unknown_fields)]
 pub enum Generation2dEditPreviewWindowConfigMutation {
     #[dsl(key = "snapshot")]
@@ -47,19 +47,19 @@ pub enum Generation2dEditPreviewWindowConfigMutation {
 }
 
 impl protocol::OpText for Generation2dEditPreviewWindowConfigMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        for (keyword, spec_fn) in &<Self as dsl::DslVariants>::variants() {
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        for (keyword, spec_fn) in &<Self as semio_framework_dsl_record::DslVariants>::variants() {
             if line == keyword || line.starts_with(&format!("{keyword} ")) {
-                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = semio_framework_dsl_record::parse(line, &(spec_fn.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?;
+                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown Generation2d edit-preview mutation '{line}'")))
+        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown Generation2d edit-preview mutation '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
     }
     fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let spec = <Self as dsl::DslVariants>::variants().iter().find(|(key, _)| key == &keyword).map(|(_, spec)| (spec.ordinary)()).expect("Generation2d edit-preview mutation variant");
-        dsl::print(&record, &spec, dsl::JoinMode::Inline)
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let spec = <Self as semio_framework_dsl_record::DslVariants>::variants().iter().find(|(key, _)| key == &keyword).map(|(_, spec)| (spec.ordinary)()).expect("Generation2d edit-preview mutation variant");
+        semio_framework_dsl_record::print(&record, &spec, semio_framework_dsl_record::JoinMode::Inline)
     }
 }
 
@@ -88,7 +88,10 @@ impl protocol::Mutation<Generation2dEditPreviewWindowConfig> for Generation2dEdi
     }];
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { &Self::DESCRIPTORS[0] }
     fn diff(&self, _base: &Generation2dEditPreviewWindowConfig) -> protocol::MutationOutcome<Self::Diff> { match self { Self::Snapshot { config } => protocol::MutationOutcome::new(config.as_ref().clone()) } }
-    fn inverse(&self, base: &Generation2dEditPreviewWindowConfig) -> Vec<Self> { vec![Self::Snapshot { config: Box::new(base.clone()) }] }
+    fn inverse(&self, base: &Generation2dEditPreviewWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+    Ok((|| { vec![Self::Snapshot { config: Box::new(base.clone()) }] 
+    })())
+}
 }
 
 pub struct Generation2dEditPreviewWindowConfigOwner;

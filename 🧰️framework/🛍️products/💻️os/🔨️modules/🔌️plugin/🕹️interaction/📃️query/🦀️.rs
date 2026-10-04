@@ -35,7 +35,7 @@ pub(crate) trait LocalInteractionQueryCapture {
     fn completed_bytes(&self) -> u64;
     fn cancel(&mut self);
     fn begin_close(&mut self);
-    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String>;
+    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError>;
     fn terminal_is_empty(&self) -> bool;
 }
 
@@ -58,7 +58,7 @@ impl LocalInteractionQueryCapture for LocalInteractionCaptureCursor {
     fn begin_close(&mut self) {
         self.begin_close();
     }
-    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         self.close_step(grant)
     }
     fn terminal_is_empty(&self) -> bool {
@@ -175,7 +175,7 @@ impl<C: LocalInteractionQueryCapture> LocalInteractionQuery<C> {
         self.capture.cancel();
     }
 
-    pub(crate) fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String> {
+    pub(crate) fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if self.terminal_is_empty() {
             return Ok(SnapshotRetirementStep::Complete);
         }

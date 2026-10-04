@@ -25,11 +25,11 @@ async fn missing_set_page_payload_is_rejected() {
 
 #[semio_framework_async_macros::async_test]
 async fn explicit_nonzero_page_payload_is_preserved() {
-    let args = dsl::DslValue::Object(vec![
-        ("page".into(), dsl::DslValue::float(3.0)),
-        ("item".into(), dsl::DslValue::float(0.0)),
-        ("revision".into(), dsl::DslValue::String("0123456789abcdef".into())),
-        ("text".into(), dsl::DslValue::String("replacement".into())),
+    let args = semio_framework_value::DslValue::Object(vec![
+        ("page".into(), semio_framework_value::DslValue::float(3.0)),
+        ("item".into(), semio_framework_value::DslValue::float(0.0)),
+        ("revision".into(), semio_framework_value::DslValue::String("0123456789abcdef".into())),
+        ("text".into(), semio_framework_value::DslValue::String("replacement".into())),
     ]);
     let command = <Pdf17VtEditor as ArtifactEditor>::command_from_action("set-page", Some(&args)).expect("typed payload");
     assert!(matches!(command, semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(Pdf17VtEditorCommand::SetPage { page: 3, item: 0, revision, text }) if revision == "0123456789abcdef" && text == "replacement"));

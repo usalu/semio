@@ -392,10 +392,23 @@ class OwnedInstanceCheckScript extends BundleScript {
   }
 }
 
+class CountComponentCheckScript extends BundleScript {
+  async run(segments:string[]):Promise<void>{
+    if(segments.length)throw Error("count-component-check has an exact three-law contract");
+    if(!process.env.SEMIO_TEST_ARTIFACT_DIR)throw Error("count-component-check requires the task artifact root");
+    await runRepositoryExactCargoLaws({cwd:this.repoRoot,lawBudgetMs:300000,groups:[{package:"semio-framework-plugin-host",target:{kind:"lib"},laws:[
+      "component::owned_instance_open_tests::count_component_tests::count_component_full_i32_both_native_encodings_use_real_wasm_and_independent_sqlite",
+      "component::owned_instance_open_tests::count_component_tests::count_component_cancellation_occurs_during_real_export_and_import_interpretation",
+      "component::owned_instance_open_tests::count_component_tests::count_component_selected_compiled_refusal_owners_preserve_all_eight_causes_and_full_nul_diagnostics",
+    ]}],progress:event=>console.log(`count-component ${event.stage} ${event.law??""}`)});
+  }
+}
+
 const router = new ScriptRouter(import.meta.dir)
   .register("check", CheckScript)
   .register("test", TestScript)
   .register("owned-instance-check", OwnedInstanceCheckScript)
+  .register("count-component-check", CountComponentCheckScript)
   .register("sqlite-observation-check", SqliteObservationCheckScript)
   .register("service-operation-conversion-check", ServiceOperationConversionCheckScript)
   .register("lifecycle-check", LifecycleCheckScript)

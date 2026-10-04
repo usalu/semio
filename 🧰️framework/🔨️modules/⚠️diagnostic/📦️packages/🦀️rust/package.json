@@ -1,0 +1,13 @@
+{
+  "name": "@semio-tech/framework-diagnostic-rs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test-native": "bun nx run @semio-tech/framework-diagnostic-rs:test-native"
+  },
+  "bundleKind": "library",
+  "nx": {
+    "includedScripts": []
+  }
+}

@@ -7,7 +7,10 @@ pub mod derived_composition {
     use crate::standards::v_rfc8259::subsets::base::schema::snapshot::JsonSnapshot;
     use crate::standards::v_rfc8259::subsets::base::schema::JsonComposer as JsonAnyComposer;
     use crate::standards::v_rfc8259::subsets::geojson::schema::check_geojson_conformance;
-    use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
+    use semio_framework_diagnostic::Diagnostic;
+use semio_framework_diagnostic::FaultCode;
+use semio_framework_diagnostic::Severity;
+use semio_framework_diagnostic::TextSpan;
     use semio_framework_plugin::{ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator};
 
     const DIALECT_GEOJSON: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("geojson") };
@@ -58,7 +61,7 @@ pub mod derived_composition {
                     span: TextSpan::at(1, 1),
                     message: format!("the geojson payload is not a JsonSnapshot: {error}"),
                     expected: None,
-                    scope: dsl::FaultScope::default(),
+                    scope: semio_framework_diagnostic::FaultScope::default(),
                 }],
             }
         }

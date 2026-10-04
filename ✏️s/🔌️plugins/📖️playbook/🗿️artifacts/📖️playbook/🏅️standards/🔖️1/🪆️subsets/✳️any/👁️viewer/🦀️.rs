@@ -70,6 +70,21 @@ impl semio_framework_plugin::ArtifactViewer for PlaybookViewer {
         crate::empty_playbook_snapshot()
     }
 
+    /// 📣️ The localized notices of the composed reads this viewer refuses with (design §20.12).
+    fn fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
+        crate::playbook_fault_notices()
+    }
+
+    /// 🪆️ The one `flow` member a loaded parent restores — see `crate::playbook_child_restore_projection`.
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+        crate::playbook_child_restore_projection(snapshot)
+    }
+
+    /// 🌱️ The `flow` member's genesis, answered from this plugin's own catalogue — see `crate::genesis_playbook_child_pack`.
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>, semio_framework_value::ValueError> {
+        Ok(crate::genesis_playbook_child_pack(snapshot, slot, child_id))
+    }
+
     /// 👁️ Structurally read-only: the sole `PlaybookViewCommand::Noop` variant never carries a config
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty
     /// scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only action (e.g.
@@ -87,7 +102,10 @@ impl semio_framework_plugin::ArtifactViewer for PlaybookViewer {
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
-            steps::PLAYBOOK_VIEW_BODY_STEPS => Ok(semio_framework_plugin::built_to_component_tree(steps::render(doc.snapshot, &semio_framework_plugin::TreeWindows::for_body(view_state, steps::PLAYBOOK_VIEW_BODY_STEPS))?)),
+            steps::PLAYBOOK_VIEW_BODY_STEPS => {
+                let spec = crate::playbook_composed_spec(doc.snapshot, &doc.children).map_err(|fault| semio_framework_plugin::PluginAssemblyError::new(fault.code.0, fault.message))?;
+                Ok(semio_framework_plugin::built_to_component_tree(steps::render(&spec, &semio_framework_plugin::TreeWindows::for_body(view_state, steps::PLAYBOOK_VIEW_BODY_STEPS))?))
+            }
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }

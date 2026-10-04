@@ -1,0 +1,5 @@
+syntax = "proto3";
+package semio.s.forms.forms.dictionary;
+import "🧰️framework/🔨️modules/🌱️value/🧬️schema/🛰️.proto";
+message FormDictionaryEntry { string question_id = 1; semio.framework.value.DslValue value = 2; }
+message FormDictionary { repeated FormDictionaryEntry entries = 1; }

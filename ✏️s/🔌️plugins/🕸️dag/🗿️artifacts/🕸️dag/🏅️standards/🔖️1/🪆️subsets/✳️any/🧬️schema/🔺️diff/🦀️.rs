@@ -3,8 +3,7 @@
 //! Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`: `nodes: Option<DagNodesDelta>` /
 //! `edges: Option<DagEdgesDelta>` / `set_nodes` / `set_edges` are all gone — the composed child is
 //! opaque (a parent's diff never embeds a child diff, per `📓️design-full-plan.md` §1's CHILD/LINK
-//! split), so every triad now diffs by minting a whole new `content` handle
-//! (`diff_replace_content`, see `🔺️diff/📝️text`) rather than building a structured delta. Single
+//! split); content edits are child-lane leaves (design §20.15), so the parent diff only ever swaps the handle. Single
 //! `Option<DagContentChild>` — the slot is never absent, only ever replaced, matching writer's
 //! `document`/flow's `content` field shape, not lowpoly's optional-slot `Option<Option<_>>`.
 //!
@@ -15,14 +14,14 @@
 //! `DagEdgePatchEntry`/`DagNodeSpecList`/`DagHostSnapshotEdgeList` are all dead with it — confirmed zero
 //! remaining references after this pass.
 
-use crate::{DagContentChild, DagHostSnapshotEdge, DagNodeSpec, DagSnapshot};
+use crate::{DagContentChild, DagSnapshot};
 use crate::schema::DagArtifact;
 use protocol::MutationDiff;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the DAG artifact.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, ArtifactSchema)]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.dag.dag")]
 pub struct DagDiff {
@@ -35,19 +34,19 @@ pub struct DagDiff {
     pub content: Option<DagContentChild>,
 }
 
-impl dsl::FromValue for DagDiff {
-    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+impl semio_framework_value::FromValue for DagDiff {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         let mut schema = None;
         let mut content = None;
-        for (key, value) in dsl::DslValue::into_object(value)? {
+        for (key, value) in semio_framework_value::DslValue::into_object(value)? {
             match key.as_str() {
-                "schema" if schema.is_none() => schema = Some(dsl::FromValue::from_value(value)?),
-                "content" if content.is_none() => content = Some(dsl::FromValue::from_value(value)?),
-                _ => return Err(dsl::ValueError::new(format!("unknown or duplicate Dag field {key}"))),
+                "schema" if schema.is_none() => schema = Some(semio_framework_value::FromValue::from_value(value)?),
+                "content" if content.is_none() => content = Some(semio_framework_value::FromValue::from_value(value)?),
+                _ => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown or duplicate Dag field {key}"))),
             }
         }
         let result = Self { schema, content };
-        result.validate().map_err(dsl::ValueError::new)?;
+        result.validate().map_err(|message| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message))?;
         Ok(result)
     }
 }
@@ -65,22 +64,13 @@ impl DagDiff {
 //#endregion 🔖️Diff
 
 //#region 🔖️DeltaHelpers
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase", default)]
 pub struct DagStringList {
     pub values: Vec<String>,
 }
 //#endregion 🔖️DeltaHelpers
 
-//#region 🔖️ReplaceContent
-/// 🏗️ Every mutation triad's `🔺️diff` builder goes through this: read the current scene off `base`
-/// via `crate::dag_working_scene`, apply its own specific semantics to a clone of
-/// that scene, then mint+cache a whole new content handle here — the "mint+cache whole handle, never
-/// apply-then-capture" pattern flow's `diff_replace_content`/writer's `diff_set_text` established.
-pub fn diff_replace_content(nodes: Vec<DagNodeSpec>, edges: Vec<DagHostSnapshotEdge>) -> DagDiff {
-    DagDiff { content: Some(crate::dag_content_child_with_owner(nodes, edges)), ..Default::default() }
-}
-//#endregion 🔖️ReplaceContent
 
 //#region 🔖️Apply
 impl DagDiff {

@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/mutation/drag-selection3d/schema.json",
   "title": "DragSelection3d",
+  "x-semio-inverse-rows": { "perTarget": { "targets": 2 } },
   "description": "The `drag-selection3d` mutation record — a relative drag of parts and target volumes in the world by one offset; internally tagged `\"mutation\": \"dragSelection3d\"`, the one branch the aggregate `../🔣️.json` union carries for this kind.",
   "type": "object",
   "additionalProperties": false,

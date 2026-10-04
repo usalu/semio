@@ -20,7 +20,7 @@ pub fn diff(payload: &ReplaceNode, base: &Fem3dSnapshot) -> protocol::MutationOu
         return invariant(breach, vec![payload.id.clone()]);
     }
     if *existing == payload.new_node {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Node \"{}\" already has that value.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Node \"{}\" already has that value.", payload.id));
     }
     protocol::MutationOutcome::new(Fem3dDiff { nodes: Some(Fem3dNodesDelta { patched: vec![Fem3dNodesPatchEntry { id: payload.id.clone(), item: payload.new_node.clone() }], ..Default::default() }), ..Default::default() })
 }

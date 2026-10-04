@@ -89,7 +89,7 @@ fn widget_params(widget: &Widget) -> Vec<SemioFlowParam> {
     match widget {
         Widget::Neuron { neuron_kind, params, input_ports, output_ports, preview, .. } => vec![
             p("neuronKind", neuron_kind.clone()),
-            p("params", flow::os_pack::json::to_json_string(params)),
+            p("params", semio_framework_pack_json::to_json_string(params)),
             p("inputPorts", serde_json::to_string(input_ports).unwrap_or_default()),
             p("outputPorts", serde_json::to_string(output_ports).unwrap_or_default()),
             p("preview", preview.to_string()),
@@ -98,10 +98,10 @@ fn widget_params(widget: &Widget) -> Vec<SemioFlowParam> {
         Widget::InputNote { text, .. } => vec![p("text", text.clone())],
         Widget::InputImage { src, .. } => vec![p("src", src.clone())],
         Widget::Variable { name, schema, .. } => vec![p("name", name.clone()), p("schema", schema.clone())],
-        Widget::OutputPreview { preview, expanded, .. } => vec![p("preview", flow::os_pack::json::to_json_string(preview)), p("expanded", flow::os_pack::json::to_json_string(expanded))],
+        Widget::OutputPreview { preview, expanded, .. } => vec![p("preview", semio_framework_pack_json::to_json_string(preview)), p("expanded", semio_framework_pack_json::to_json_string(expanded))],
         Widget::OutputAction { action, .. } => vec![p("action", action.clone())],
         Widget::OutputExport { format, .. } => vec![p("format", format.clone())],
-        Widget::Cluster { name, tree, flow: nested, .. } => vec![p("name", name.clone()), p("tree", flow::os_pack::json::to_json_string(tree)), p("flow", flow::os_pack::json::to_json_string(nested))],
+        Widget::Cluster { name, tree, flow: nested, .. } => vec![p("name", name.clone()), p("tree", semio_framework_pack_json::to_json_string(tree)), p("flow", semio_framework_pack_json::to_json_string(nested))],
     }
 }
 
@@ -116,7 +116,7 @@ pub(crate) fn widget_from_node(node: &SemioFlowNode) -> Widget {
         "neuron" => Widget::Neuron {
             id,
             neuron_kind: get("neuronKind"),
-            params: flow::os_pack::json::from_json_str(&get("params")).unwrap_or_default(),
+            params: semio_framework_pack_json::from_json_str(&get("params"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_default(),
             input_ports: serde_json::from_str(&get("inputPorts")).unwrap_or_default(),
             output_ports: serde_json::from_str(&get("outputPorts")).unwrap_or_default(),
             preview: get("preview").parse().unwrap_or(true),
@@ -125,10 +125,10 @@ pub(crate) fn widget_from_node(node: &SemioFlowNode) -> Widget {
         "inputNote" => Widget::InputNote { id, text: get("text") },
         "inputImage" => Widget::InputImage { id, src: get("src") },
         "variable" => Widget::Variable { id, name: get("name"), schema: get("schema") },
-        "outputPreview" => Widget::OutputPreview { id, preview: flow::os_pack::json::from_json_str(&get("preview")).unwrap_or_default(), expanded: flow::os_pack::json::from_json_str(&get("expanded")).unwrap_or_default() },
+        "outputPreview" => Widget::OutputPreview { id, preview: semio_framework_pack_json::from_json_str(&get("preview"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_default(), expanded: semio_framework_pack_json::from_json_str(&get("expanded"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_default() },
         "outputAction" => Widget::OutputAction { id, action: get("action") },
         "outputExport" => Widget::OutputExport { id, format: get("format") },
-        "cluster" => Widget::Cluster { id, name: get("name"), tree: flow::os_pack::json::from_json_str(&get("tree")).unwrap_or_default(), flow: flow::os_pack::json::from_json_str(&get("flow")).unwrap_or_default() },
+        "cluster" => Widget::Cluster { id, name: get("name"), tree: semio_framework_pack_json::from_json_str(&get("tree"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_default(), flow: semio_framework_pack_json::from_json_str(&get("flow"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_default() },
         other => Widget::InputNote { id, text: format!("[unknown widget kind {other:?}]") },
     }
 }
@@ -248,10 +248,10 @@ pub fn flow_content_child_handle_bounded(widgets: &[Widget], synapses: &[Synapse
 fn flow_content_digest(widgets: &[Widget], synapses: &[SynapseSpec], layout: &flow::OrderedMap<WidgetLayout>, maximum_bytes: usize) -> Result<[u8; 32], String> {
     let mut writer = FlowContentHashWriter { hasher: semio_framework_hash::Sha256::new(), written: 0, maximum_bytes };
     writer.hasher.update(FLOW_CONTENT_ID_DOMAIN);
-    let value = dsl::DslValue::object([
-        ("widgets".to_string(), dsl::DslValue::Array(widgets.iter().map(dsl::ToValue::to_value).collect())),
-        ("synapses".to_string(), dsl::DslValue::Array(synapses.iter().map(dsl::ToValue::to_value).collect())),
-        ("layout".to_string(), dsl::ToValue::to_value(layout)),
+    let value = semio_framework_value::DslValue::object([
+        ("widgets".to_string(), semio_framework_value::DslValue::Array(widgets.iter().map(semio_framework_value::ToValue::to_value).collect())),
+        ("synapses".to_string(), semio_framework_value::DslValue::Array(synapses.iter().map(semio_framework_value::ToValue::to_value).collect())),
+        ("layout".to_string(), semio_framework_value::ToValue::to_value(layout)),
     ]);
     let json: serde_json::Value = value.into();
     serde_json::to_writer(&mut writer, &json).map_err(|error| error.to_string())?;
@@ -461,138 +461,6 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
-                        pub mod text;
-                        #[path = "."]
-                        pub mod create_widget {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️create-widget/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️create-widget/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️create-widget/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️create-widget/🧪️tests/🚫️rejects/🦀️.rs"]
-                            mod tests_rejects_a_duplicate_widget_id;
-                        }
-                        #[path = "."]
-                        pub mod delete_widget {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-widget/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-widget/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-widget/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-widget/🧪️tests/🚫️rejects/🦀️.rs"]
-                            mod tests_rejects_deleting_a_missing_widget;
-                        }
-                        #[path = "."]
-                        pub mod reorder_widgets {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️reorder-widgets/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️reorder-widgets/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️reorder-widgets/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️reorder-widgets/🧪️tests/🗜️clamps/🦀️.rs"]
-                            mod tests_clamps_an_out_of_range_index_onto_the_last_slot;
-                        }
-                        #[path = "."]
-                        pub mod replace_widget {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️replace-widget/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️replace-widget/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️replace-widget/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️replace-widget/🧪️tests/🟰️replaces/🦀️.rs"]
-                            mod tests_replaces_a_note_with_an_identical_note;
-                        }
-                        #[path = "."]
-                        pub mod connect_widgets {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️connect-widgets/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️connect-widgets/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️connect-widgets/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️connect-widgets/🧪️tests/🚫️refuses/🦀️.rs"]
-                            mod tests_refuses_a_parallel_synapse_as_a_no_op;
-                        }
-                        #[path = "."]
-                        pub mod disconnect_widgets {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-widgets/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-widgets/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-widgets/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-widgets/🧪️tests/🚫️rejects/🦀️.rs"]
-                            mod tests_rejects_disconnecting_a_missing_synapse;
-                        }
-                        #[path = "."]
-                        pub mod reorder_synapses {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-synapses/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-synapses/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-synapses/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-synapses/🧪️tests/🟰️keeps/🦀️.rs"]
-                            mod tests_keeps_the_leading_synapse_at_index_zero;
-                        }
-                        #[path = "."]
-                        pub mod update_synapse_endpoints {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️update-synapse-endpoints/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️update-synapse-endpoints/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️update-synapse-endpoints/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️update-synapse-endpoints/🧪️tests/🟰️re/🦀️.rs"]
-                            mod tests_re_declares_the_same_endpoints;
-                        }
-                        #[path = "."]
-                        pub mod move_widgets {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move-widgets/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move-widgets/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move-widgets/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move-widgets/🧪️tests/🟰️re/🦀️.rs"]
-                            mod tests_re_applies_the_current_layout_to_both_widgets;
-                        }
-                        // 🌉️ COMPOSITE — owns 🦠️mutation + 🧩️plan only (no 🔺️diff/↩️inverse: both fold from the plan).
-                        #[path = "."]
-                        pub mod duplicate_widget {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👯️duplicate-widget/🦀️.rs"]
-                            pub mod mutation;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👯️duplicate-widget/🧩️plan/🦀️.rs"]
-                            pub mod plan;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👯️duplicate-widget/🧪️tests/🚫️rejects/🦀️.rs"]
-                            mod tests_rejects_duplicating_onto_a_taken_id;
-                        }
                     }
                 }
                 #[path = "."]
@@ -679,15 +547,8 @@ pub mod schema {
 pub mod io {
     pub use super::standards::v1::subsets::any::io::*;
 }
-pub mod op {
-    pub use crate::standards::v1::subsets::any::schema::mutations::text::*;
-    pub use crate::standards::v1::subsets::any::schema::mutations::FlowMutation;
-}
 pub mod document_dsl {
     pub use crate::standards::v1::subsets::any::schema::snapshot::text::*;
-}
-pub mod spr {
-    pub use crate::standards::v1::subsets::any::schema::mutations::binary::*;
 }
 pub mod pack {
     pub use crate::standards::v1::subsets::any::schema::snapshot::binary::*;

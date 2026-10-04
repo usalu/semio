@@ -32,7 +32,7 @@ fn corpus() -> Value {
 }
 
 fn leaf(value: &Value) -> Puzzle2dMutation {
-    dsl::json::from_json_str(&value.to_string()).unwrap_or_else(|error| panic!("corpus leaf {value} decodes: {error:?}"))
+    semio_framework_pack_json::from_json_str(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|error| panic!("corpus leaf {value} decodes: {error:?}"))
 }
 
 fn ids(value: &Value) -> Vec<String> {
@@ -55,7 +55,7 @@ fn focused_view() -> ViewModel {
 /// ⏪️ One reserved verb from the focused overview; a refusal fails the law with its reason.
 fn history_edit(app: &mut Puzzle2dApp, verb: &str, args: Value, what: &str) {
     let meta = ActionMeta { view_state: Some(focused_view()), ..meta("local") };
-    let result = block_on(app.handle_action(verb, Some(&dsl::DslValue::from(&args)), &meta)).unwrap_or_else(|fault| panic!("{what}: {verb}: {fault:?}"));
+    let result = block_on(app.handle_action(verb, Some(&semio_framework_value::DslValue::from(&args)), &meta)).unwrap_or_else(|fault| panic!("{what}: {verb}: {fault:?}"));
     assert!(result.output.get("rejected").is_none(), "{what}: {verb} was refused: {:?}", result.output);
 }
 
@@ -87,7 +87,7 @@ fn edits(app: &mut Puzzle2dApp) -> Vec<HistoryEntry> {
 fn history_edit_labels(app: &mut Puzzle2dApp) -> Vec<(String, String)> {
     let mut rows: Vec<HistoryEntry> = block_on(app.history_snapshot()).expect("history").upserts.into_iter().filter(|entry| entry.transition_id.is_some()).collect();
     rows.sort_by_key(|entry| std::cmp::Reverse(entry.seq));
-    rows.iter().map(|row| (row.label.resolve(protocol::Terminology::Native, protocol::Locale::En).to_string(), row.label.resolve(protocol::Terminology::Native, protocol::Locale::De).to_string())).collect()
+    rows.iter().map(|row| (row.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).to_string(), row.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De).to_string())).collect()
 }
 
 /// 🌲️ The node keyed `key` in a projected tree.
@@ -99,7 +99,7 @@ fn find_node<'a>(node: &'a Value, key: &str) -> Option<&'a Value> {
 }
 
 /// 📜️ The history body as the focused overview renders it in `locale`.
-fn history_body(app: &mut Puzzle2dApp, locale: protocol::Locale) -> Value {
+fn history_body(app: &mut Puzzle2dApp, locale: semio_framework_ui_locale::Locale) -> Value {
     serde_json::from_str(&render_body_with_view(app, FRAMEWORK_HISTORY_BODY_KEY, &ViewModel { locale, ..focused_view() })).expect("history body")
 }
 
@@ -119,8 +119,8 @@ fn history_lane(app: &mut Puzzle2dApp, verb: &str, what: &str) {
 fn reload(app: &mut Puzzle2dApp, form: &str, what: &str) {
     let mut reloaded = app_with_registry();
     match form {
-        "text" => block_on(reloaded.load_document_text(&block_on(app.document_text()).expect("document text"))).unwrap_or_else(|fault| panic!("{what}: text reload: {fault:?}")),
-        _ => block_on(reloaded.load_document_pack(&block_on(app.document_pack()).expect("document pack"))).unwrap_or_else(|fault| panic!("{what}: pack reload: {fault:?}")),
+        "text" => block_on(semio_framework_plugin::app::artifact_app_laws::load_document_text(&mut reloaded, &block_on(app.document_text()).expect("document text"))).unwrap_or_else(|fault| panic!("{what}: text reload: {fault:?}")),
+        _ => block_on(semio_framework_plugin::app::artifact_app_laws::load_document(&mut reloaded, &block_on(app.document_pack()).expect("document pack"))).unwrap_or_else(|fault| panic!("{what}: pack reload: {fault:?}")),
     }
     let mut previous = std::mem::replace(app, reloaded);
     close_app(&mut previous);
@@ -256,13 +256,13 @@ fn check(app: &mut Puzzle2dApp, corpus: &Value, scenario: &Value, seed: usize, e
     }
     if let Some(name) = expect["alternative"].as_str() {
         let active = block_on(app.history_snapshot()).expect("history").active_alternative_id.unwrap_or_else(|| panic!("{what}: an alternative is active"));
-        let body = history_body(app, protocol::Locale::En);
+        let body = history_body(app, semio_framework_ui_locale::Locale::En);
         let row = find_node(&body, &format!("framework.history.alternative.{active}")).unwrap_or_else(|| panic!("{what}: the active alternative's row: {body}"));
         assert!(row.to_string().contains(name) && row.to_string().contains("Current"), "{what}: {name} is the current alternative: {row}");
     }
     if let Some(words) = expect.get("words") {
         let key = format!("framework.history.entry.{}", rows[words["row"].as_u64().expect("words row") as usize].seq);
-        for (locale, word) in [(protocol::Locale::En, &words["en"]), (protocol::Locale::De, &words["de"])] {
+        for (locale, word) in [(semio_framework_ui_locale::Locale::En, &words["en"]), (semio_framework_ui_locale::Locale::De, &words["de"])] {
             let body = history_body(app, locale);
             let row = find_node(&body, &key).unwrap_or_else(|| panic!("{what}: the history body shows {key}: {body}"));
             assert!(row.to_string().contains(word.as_str().expect("word")), "{what} {locale:?}: {key} names its outcome in words: {row}");
@@ -356,8 +356,8 @@ fn relay(from: &mut MemoryBackbone, into: &mut MemoryBackbone, to: &mut Puzzle2d
 }
 
 /// ⚖️ LAW (design §16.6, G9): a remote history change whose replay exceeds one turn's budget
-/// (`TIME_TRAVEL_REMOTE_REPLAY_OPERATIONS`) waits while the replica shows the history before it. Meanwhile:
-/// - Its progress rides the history wire (`remoteReplay`).
+/// (`TIME_TRAVEL_REPLAY_OPERATIONS`) waits while the replica shows the history before it. Meanwhile:
+/// - Its progress rides the history wire (`reprojection`, kind `remote`).
 /// - Cancel replay pauses it, and driver turns leave it alone.
 /// - Replay again resumes it, and the adoption equals the author's head.
 #[test]
@@ -382,25 +382,93 @@ fn a_long_remote_history_change_replays_over_turns_pauses_and_resumes_on_the_boa
         run(&mut local, seed, &step, "the local history edit");
     }
     relay(&mut local_probe, &mut remote_probe, &mut remote);
-    let waiting = block_on(remote.history_snapshot()).expect("history").remote_replay.expect("the remote history change waits for its replay");
-    assert!(waiting.total > 0 && waiting.done < waiting.total && !waiting.paused && waiting.fault.is_none(), "{waiting:?}");
+    let waiting = block_on(remote.history_snapshot()).expect("history").reprojection.expect("the remote history change waits for its replay");
+    assert!(waiting.total > 0 && waiting.done < waiting.total && !waiting.paused && waiting.kind == semio_framework::kernel::HistoryReprojectionKind::Remote && waiting.fault.is_none(), "{waiting:?}");
     assert_eq!(fixture_of(&remote), before, "the replica shows the history before the change");
     let meta = ActionMeta { view_state: Some(focused_view()), ..semio_framework_plugin::artifact_app_laws::meta("remote") };
-    let cancelled = block_on(remote.handle_action("historyEditCancelReplay", Some(&dsl::DslValue::from(&json!({}))), &meta)).expect("cancel");
+    let cancelled = block_on(remote.handle_action("historyEditCancelReplay", Some(&semio_framework_value::DslValue::from(&json!({}))), &meta)).expect("cancel");
     assert!(cancelled.output.get("rejected").is_none(), "{:?}", cancelled.output);
-    assert!(remote.time_travel_ledger().remote_replay_paused(), "cancel pauses the remote replay");
+    assert!(remote.time_travel_ledger().reprojection_paused(), "cancel pauses the remote replay");
     for _ in 0..4 {
         block_on(remote.advance_typed_operation_publication()).expect("driver turn");
     }
     assert_eq!(fixture_of(&remote), before, "paused, the change is not adopted");
-    assert_eq!(block_on(remote.history_snapshot()).expect("history").remote_replay.map(|replay| replay.paused), Some(true), "the wire says paused");
-    let resumed = block_on(remote.handle_action("historyEditRerun", Some(&dsl::DslValue::from(&json!({}))), &meta)).expect("rerun");
+    assert_eq!(block_on(remote.history_snapshot()).expect("history").reprojection.map(|replay| replay.paused), Some(true), "the wire says paused");
+    let resumed = block_on(remote.handle_action("historyEditRerun", Some(&semio_framework_value::DslValue::from(&json!({}))), &meta)).expect("rerun");
     assert!(resumed.output.get("rejected").is_none(), "{:?}", resumed.output);
-    pump(&mut remote, "the remote change is adopted", |app| block_on(app.history_snapshot()).expect("history").remote_replay.is_none());
+    pump(&mut remote, "the remote change is adopted", |app| block_on(app.history_snapshot()).expect("history").reprojection.is_none());
     assert_eq!(fixture_nodes(&fixture_of(&remote)), fixture_nodes(&fixture_of(&local)), "the adoption equals the author's head");
     block_on(local.detach_backbone()).expect("local releases its backbone");
     block_on(remote.detach_backbone()).expect("remote releases its backbone");
     close_app(&mut local);
     close_app(&mut remote);
+}
+/// 🧮️ The board's head and history as a history step may change them: the painted nodes, the active alternative and the
+/// history rows.
+fn board_trace(app: &mut Puzzle2dApp) -> (Vec<Value>, Option<String>, usize) {
+    let patch = block_on(app.history_snapshot()).expect("history");
+    (fixture_nodes(&fixture_of(app)).to_vec(), patch.active_alternative_id, patch.upserts.len())
+}
+
+/// ⚖️ LAW (gap N17): switching to an alternative whose 360 drags are not applied is a local history step, which the
+/// runtime replays over driver turns.
+/// - The switch answers at once. The board, the active alternative and the history rows stay as they were.
+/// - The wire carries `reprojection.kind = step`.
+/// - Each turn replays at most `TIME_TRAVEL_REPLAY_OPERATIONS`.
+/// - Meanwhile undo answers `history.replaying` and history editing is busy.
+/// - The adoption shows the alternative's head and records the switch row.
+/// - Cancel replay drops the step with zero trace.
+#[test]
+fn switching_to_a_long_alternative_replays_over_turns_and_cancel_leaves_zero_trace() {
+    let corpus = corpus();
+    for cancel in [true, false] {
+        let mut app = seeded_app(&corpus["board"]);
+        let seed = edits(&mut app).len();
+        run(&mut app, seed, &json!({ "translate": { "select": ["left"], "dx": 1.0, "dy": 0.0, "step": 10.0 } }), "trunk drag");
+        let trunk = block_on(app.history_snapshot()).expect("history").active_alternative_id.expect("the trunk line has an id");
+        dispatch(&mut app, "createAlternative", Some(&json!({ "name": "Long" })), None).expect("a new alternative");
+        let long = block_on(app.history_snapshot()).expect("history").active_alternative_id.expect("the new alternative is current");
+        assert_ne!(long, trunk);
+        for _ in 0..3 {
+            block_on(app.ingest_operations_text(&long_drags(&["mid"], 120))).expect("a long edit on the alternative");
+        }
+        let long_nodes = fixture_nodes(&fixture_of(&app)).to_vec();
+        dispatch(&mut app, "switchAlternative", Some(&json!({ "alternativeId": trunk })), None).expect("back to the trunk");
+        pump(&mut app, "the trunk is shown", |app| !app.time_travel_ledger().has_pending_work() && block_on(app.history_snapshot()).expect("history").reprojection.is_none());
+        let before = board_trace(&mut app);
+        assert_eq!(before.1.as_deref(), Some(trunk.as_str()));
+        dispatch(&mut app, "switchAlternative", Some(&json!({ "alternativeId": long })), None).expect("the switch answers at once");
+        let waiting = block_on(app.history_snapshot()).expect("history").reprojection.expect("the switch waits for its replay");
+        assert!(waiting.kind == semio_framework::kernel::HistoryReprojectionKind::Step && waiting.total >= 360 && waiting.fault.is_none(), "{waiting:?}");
+        assert_eq!(board_trace(&mut app), before, "nothing of the switch shows before its adoption");
+        assert_eq!(dispatch(&mut app, "undo", None, None).err().map(|fault| fault.code.0), Some("history.replaying".to_string()), "a further history step waits");
+        let first = edits(&mut app)[seed].mutations[0].mutation_id.clone();
+        let meta = ActionMeta { view_state: Some(focused_view()), ..meta("local") };
+        let busy = block_on(app.handle_action("historyEditBegin", Some(&semio_framework_value::DslValue::from(&json!({ "mutationId": first }))), &meta)).expect("begin answers");
+        assert_eq!(busy.output.get("rejected").and_then(semio_framework_value::DslValue::as_str), Some("timeTravel.busy"), "history editing waits for the step");
+        if cancel {
+            history_edit(&mut app, "historyEditCancelReplay", json!({}), "cancel the switch");
+            for _ in 0..4 {
+                block_on(app.advance_typed_operation_publication()).expect("driver turn");
+            }
+            assert_eq!(board_trace(&mut app), before, "a cancelled switch leaves zero trace");
+        } else {
+            let mut turns = 0;
+            while block_on(app.history_snapshot()).expect("history").reprojection.is_some_and(|replay| replay.kind == semio_framework::kernel::HistoryReprojectionKind::Step) {
+                let done = block_on(app.history_snapshot()).expect("history").reprojection.map_or(0, |replay| replay.done);
+                block_on(app.advance_typed_operation_publication()).expect("driver turn");
+                while app.take_typed_operation_ui_progress().is_some() {}
+                if let Some(after) = block_on(app.history_snapshot()).expect("history").reprojection.map(|replay| replay.done) {
+                    assert!(after.saturating_sub(done) as usize <= semio_framework_plugin::app::time_travel::TIME_TRAVEL_REPLAY_OPERATIONS, "one turn replays at most one budget: {done} → {after}");
+                }
+                turns += 1;
+                assert!(turns < 64, "the switch is adopted");
+            }
+            assert!(turns >= 2, "360 drags span several turns ({turns})");
+            let (nodes, active, rows) = board_trace(&mut app);
+            assert_eq!((nodes, active.as_deref(), rows), (long_nodes, Some(long.as_str()), before.2 + 1), "the adoption shows the alternative and records the switch row");
+        }
+        close_app(&mut app);
+    }
 }
 //#endregion ⏪️Laws

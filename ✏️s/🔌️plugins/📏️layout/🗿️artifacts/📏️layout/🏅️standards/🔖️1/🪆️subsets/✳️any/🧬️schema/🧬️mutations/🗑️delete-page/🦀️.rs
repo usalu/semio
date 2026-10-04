@@ -21,9 +21,12 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for DeletePage {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_delete_page(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
-        inverse_delete_page(self, base)
-    }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok({
+        inverse_delete_page(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete page \"{}\"", self.id), &format!("Seite \"{}\" löschen", self.id))
     }
@@ -43,10 +46,13 @@ pub fn diff_delete_page(payload: &DeletePage, base: &LayoutSnapshot) -> protocol
 //#endregion 🗑️DeletePage
 
 //#region 🗑️DeletePage
-pub fn inverse_delete_page(payload: &DeletePage, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_delete_page(payload: &DeletePage, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.pages.iter().position(|page| page.id == payload.id) {
         Some(index) => vec![LayoutMutation::CreatePage(create_page::CreatePage { page: base.pages[index].clone(), index: Some(index) })],
         None => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🗑️DeletePage

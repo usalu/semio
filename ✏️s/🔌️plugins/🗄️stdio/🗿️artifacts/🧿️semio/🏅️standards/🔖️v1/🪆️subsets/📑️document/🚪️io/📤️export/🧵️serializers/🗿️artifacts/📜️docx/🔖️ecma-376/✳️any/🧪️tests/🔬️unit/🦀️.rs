@@ -17,7 +17,7 @@ fn sample_semio() -> SemioDocumentSnapshot {
 
 #[semio_framework_async_macros::async_test]
 async fn maps_heading_paragraph_and_table() {
-    let docx = semio_framework_plugin::resolve_ready(SemioDocumentToDocx::serialize(&sample_semio())).expect("serialize").project_document().expect("project");
+    let docx = ::semio_framework_async::poll::resolve_ready(SemioDocumentToDocx::serialize(&sample_semio())).expect("serialize").project_document().expect("project");
     assert_eq!(docx.styles.len(), 1);
     assert_eq!(docx.body.len(), 3);
     assert!(matches!(&docx.body[0], DocxBlock::Paragraph(p) if p.style.as_deref() == Some("Heading1") && p.runs[0].bold));
@@ -38,7 +38,7 @@ async fn list_and_quote_flatten_image_and_pagebreak_drop() {
             DocBlock::PageBreak,
         ],
     };
-    let docx = semio_framework_plugin::resolve_ready(SemioDocumentToDocx::serialize(&snap)).expect("serialize").project_document().expect("project");
+    let docx = ::semio_framework_async::poll::resolve_ready(SemioDocumentToDocx::serialize(&snap)).expect("serialize").project_document().expect("project");
     // list item + quote paragraph + image-alt paragraph = 3 blocks; PageBreak drops entirely.
     assert_eq!(docx.body.len(), 3);
     assert!(matches!(&docx.body[2], DocxBlock::Paragraph(p) if p.runs[0].text == "alt text"));

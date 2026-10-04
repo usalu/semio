@@ -2,7 +2,7 @@
 use crate::schema::mutations::XmlMutation;
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
-pub const BINARY_TAGS: &[(&str, u32)] = &[("set-declaration", 1), ("set-doctype", 2), ("insert-element", 3), ("remove-element", 4), ("set-attribute", 5), ("set-text", 6), ("set-snapshot", 7)];
+pub const BINARY_TAGS: &[(&str, u32)] = &[("set-declaration", 1), ("set-doctype", 2), ("insert-element", 3), ("remove-element", 4), ("set-attribute", 5), ("set-text", 6), ("set-snapshot", 7), ("patch-snapshot", 8)];
 //#region 🏷️WireTags
 /// 🏷️ `XmlMutation`'s wire protocol: its `record <kind> tag=<n>` lines are the only source of the op tags.
 const WIRE_PROTOCOL: &str = COMPONENT_PROTOCOL_SEMIO;

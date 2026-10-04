@@ -591,7 +591,8 @@
         "🔀️reorder": "reorder-morph-target-attributes"
       },
       "📸️snapshot": {
-        "📸️set": "set-snapshot"
+        "📸️set": "set-snapshot",
+        "🩹️patch": "patch-snapshot"
       }
     }
   },

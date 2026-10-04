@@ -1,9 +1,0 @@
-dialect grammar
-grammar wires.mutations
-extension wires
-start document
-
-document = header body
-header = "schema" SP "reasoning.wires.mutations" NL
-body = payload NL?
-payload = OCTET+

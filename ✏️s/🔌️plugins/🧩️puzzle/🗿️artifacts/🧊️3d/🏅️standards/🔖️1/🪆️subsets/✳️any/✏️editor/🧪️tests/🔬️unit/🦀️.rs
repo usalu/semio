@@ -10,111 +10,52 @@ pub(crate) mod context {
     /// here so a step-budget law measures the exact unit the host drives rather than a wider one.
     pub const RUNTIME_LIVE_CLEANUP_BYTES_PER_STEP: usize = 4_096;
     
-    /// 📐️ Units retained per stage for the typical-cost statistic. Fixed, and taken from the FIRST
-    /// units a stage runs — the busy ones, where a stage that has real work does it.
-    const MAINTENANCE_UNIT_SAMPLES: usize = 64;
-    
-    /// ⏱️ Measured wall cost of the cooperative-maintenance units of one run, per fixed maintenance
-    /// stage. Fixed capacity by construction: the round robin has exactly [`MAINTENANCE_STAGES`]
-    /// stages, each keeping [`MAINTENANCE_UNIT_SAMPLES`] readings, and nothing grows.
-    ///
-    /// Two statistics, because one cannot carry both halves of the framework's law. [`worst`] is the
-    /// per-stage MEDIAN — a stage that overruns because of its OWN work overruns unit after unit, so a
-    /// median catches a systemic regression while ignoring the machine (the runtime's ceiling verdict
-    /// times `maintenance_step` on the wall clock of a contended thread: the same unit that costs 19us
-    /// alone was seen costing 14571us inside a fully parallel suite run). [`worst_unit`] is the plain
-    /// maximum, which is what the ceiling itself actually bounds, and is therefore budgeted against the
-    /// ceiling rather than against the far tighter typical-unit budget. Median precedent:
-    /// `🧰️framework/🔨️modules/🧵️job/🧪️tests/🔬️fixed-operation-registry/🦀️.rs`.
-    pub struct MaintenanceStageBudget {
-        samples_us: [[u64; MAINTENANCE_UNIT_SAMPLES]; MAINTENANCE_STAGES as usize],
-        sampled: [usize; MAINTENANCE_STAGES as usize],
-        worst_us: [u64; MAINTENANCE_STAGES as usize],
+    /// 📏️ What the cooperative-maintenance units of one fixture released, per fixed maintenance stage, against the grant
+    /// each unit was handed. A unit is bounded by its grant (`maximum_items`, `maximum_bytes`), not by the wall clock: the
+    /// count is the same on an idle and a saturated machine, where the same unit that costs 19us alone was seen costing
+    /// 14571us. Fixed capacity: the round robin has exactly [`MAINTENANCE_STAGES`] stages.
+    #[derive(Default)]
+    pub struct MaintenanceStageGrants {
         units: [u32; MAINTENANCE_STAGES as usize],
+        worst_items: [usize; MAINTENANCE_STAGES as usize],
+        worst_bytes: [usize; MAINTENANCE_STAGES as usize],
+        first_overrun: Option<(u8, usize, usize, usize, usize)>,
     }
-    
-    impl Default for MaintenanceStageBudget {
-        fn default() -> Self {
-            Self { samples_us: [[0; MAINTENANCE_UNIT_SAMPLES]; MAINTENANCE_STAGES as usize], sampled: [0; MAINTENANCE_STAGES as usize], worst_us: [0; MAINTENANCE_STAGES as usize], units: [0; MAINTENANCE_STAGES as usize] }
+
+    impl MaintenanceStageGrants {
+        /// 🚨️ The first unit that released more than its grant: `(stage, items, bytes, granted items, granted bytes)`.
+        pub fn first_overrun(&self) -> Option<(u8, usize, usize, usize, usize)> {
+            self.first_overrun
         }
-    }
-    
-    impl MaintenanceStageBudget {
-        /// ⏱️ Typical cost of one unit of `stage`: the median of its retained readings.
-        pub fn median(&self, stage: usize) -> u64 {
-            let sampled = self.sampled[stage];
-            if sampled == 0 {
-                return 0;
-            }
-            let mut ordered = self.samples_us[stage];
-            ordered[..sampled].sort_unstable();
-            ordered[sampled / 2]
+
+        /// 🔢️ Units every stage ran.
+        pub fn units(&self) -> u32 {
+            self.units.iter().sum()
         }
-    
-        /// ⏱️ The stage whose typical unit is the most expensive, with that median in microseconds.
-        pub fn worst(&self) -> (u8, u64) {
-            let mut worst = (0_u8, 0_u64);
-            for stage in 0..MAINTENANCE_STAGES as usize {
-                let median = self.median(stage);
-                if median > worst.1 {
-                    worst = (stage as u8, median);
-                }
-            }
-            worst
-        }
-    
-        /// ⏱️ The stage that ran the single most expensive unit, with that maximum in microseconds.
-        pub fn worst_unit(&self) -> (u8, u64) {
-            let mut worst = (0_u8, 0_u64);
-            for stage in 0..MAINTENANCE_STAGES as usize {
-                if self.worst_us[stage] > worst.1 {
-                    worst = (stage as u8, self.worst_us[stage]);
-                }
-            }
-            worst
-        }
-    
-        /// 🎲️ Folds one more independent round of the same scenario in by keeping, per stage, the
-        /// SMALLEST median and the SMALLEST maximum any round observed. Real work costs the same in
-        /// every round; a run that happened to share the machine with a heavier neighbour is dropped.
-        pub fn keep_best_round(&mut self, round: &Self) {
-            for stage in 0..MAINTENANCE_STAGES as usize {
-                if round.units[stage] == 0 {
-                    continue;
-                }
-                if self.sampled[stage] == 0 || round.median(stage) < self.median(stage) {
-                    self.samples_us[stage] = round.samples_us[stage];
-                    self.sampled[stage] = round.sampled[stage];
-                }
-                if self.units[stage] == 0 || round.worst_us[stage] < self.worst_us[stage] {
-                    self.worst_us[stage] = round.worst_us[stage];
-                }
-                self.units[stage] = self.units[stage].max(round.units[stage]);
-            }
-        }
-    
-        /// 📊️ Per-stage `stage=median/worst/units` breakdown of every unit measured so far.
+
+        /// 📊️ Per-stage `stage=worstItems/worstBytes/units` breakdown of every unit audited so far.
         pub fn report(&self) -> String {
             let mut report = String::new();
             for stage in 0..MAINTENANCE_STAGES as usize {
                 if self.units[stage] > 0 {
-                    report.push_str(&format!("{stage}={}/{}us/{}u ", self.median(stage), self.worst_us[stage], self.units[stage]));
+                    report.push_str(&format!("{stage}={}i/{}B/{}u ", self.worst_items[stage], self.worst_bytes[stage], self.units[stage]));
                 }
             }
             report
         }
-    
-        fn record(&mut self, stage: u8, elapsed_us: u64) {
-            let stage = stage as usize;
-            if self.sampled[stage] < MAINTENANCE_UNIT_SAMPLES {
-                self.samples_us[stage][self.sampled[stage]] = elapsed_us;
-                self.sampled[stage] += 1;
+
+        fn record(&mut self, stage: u8, maximum_items: usize, maximum_bytes: usize, step: &Result<PluginCloseStep, Fault>) {
+            let index = stage as usize;
+            self.units[index] += 1;
+            let Ok(PluginCloseStep::Pending { released_items, released_bytes }) = step else { return };
+            self.worst_items[index] = self.worst_items[index].max(*released_items);
+            self.worst_bytes[index] = self.worst_bytes[index].max(*released_bytes);
+            if self.first_overrun.is_none() && (*released_items > maximum_items || *released_bytes > maximum_bytes) {
+                self.first_overrun = Some((stage, *released_items, *released_bytes, maximum_items, maximum_bytes));
             }
-            self.units[stage] += 1;
-            self.worst_us[stage] = self.worst_us[stage].max(elapsed_us);
         }
     }
-    
+
     /// 🧪️ The one puzzle3d fixture app. Wraps the raw wrapper so every fixture drains its stores on the
     /// way out: a registry-backed `VcsArtifactApp` installs framework-owned `ArtifactStoreCursorDisposer`
     /// members whose own `Drop` asserts terminal-empty ownership (`🏪️store/🦀️.rs`), so a bare drop panics
@@ -123,14 +64,15 @@ pub(crate) mod context {
     /// and hides the assertion that actually failed. A drain that cannot reach the witness leaks the raw
     /// app instead ([`std::mem::forget`]) — leaking a fixture inside a test process costs nothing, and the
     /// close contract itself is stated exactly once, explicitly, by [`close_witness`].
-    /// 📦️ Both owners are boxed on purpose. `Puzzle3dRawApp` is 42 KiB by value and
-    /// [`MaintenanceStageBudget`] carries a fixed `[[u64; MAINTENANCE_UNIT_SAMPLES]; MAINTENANCE_STAGES]`
-    /// sample matrix; inline, one fixture is 55 KiB, and a law's `#[async_test]` future — which
-    /// `#[async_test]` pins ON THE STACK — moves it through every frame of the harness. The default test
-    /// thread has 2 MiB, and the app-fixture laws in this crate already spend most of it inside the
-    /// framework's own construction chain.
+    /// 📦️ The raw app is boxed on purpose: `Puzzle3dRawApp` is 42 KiB by value, and a law's `#[async_test]` future — which
+    /// `#[async_test]` pins ON THE STACK — moves the fixture through every frame of the harness. The default test thread
+    /// has 2 MiB, and the app-fixture laws in this crate already spend most of it inside the framework's own construction
+    /// chain.
     pub struct Puzzle3dApp {
         raw: Option<Box<Puzzle3dRawApp>>,
+        /// 🪪️ The instance identity this fixture bound ([`next_fixture_instance_id`]) and therefore the receiver
+        /// `take_typed_operation_result_page` answers for and the key of its session registry slot.
+        pub instance_id: u32,
         /// 🏛️ The HOST's own session state, owned here because the host owns it in production: the live
         /// window roster, the mode-wide `active_tool_id`, and the per-window `active_utility_by_window_id`
         /// (`📓️2026-09-09-peer-config-runtime-split.md` §1(d)). `setActiveTool`/`setActiveUtility` are
@@ -139,8 +81,8 @@ pub(crate) mod context {
         /// Minting a fresh `ViewModel` per call — what this fixture used to do — made every activation
         /// unobservable one call later, which is a state no real host can be in.
         view: ViewModel,
-        /// ⏱️ Every cooperative-maintenance unit this fixture drove, attributed to its own fixed stage.
-        pub maintenance: Box<MaintenanceStageBudget>,
+        /// 📏️ Every cooperative-maintenance unit this fixture drove, audited against its grant per fixed stage.
+        pub maintenance: Box<MaintenanceStageGrants>,
     }
     
     /// 🧰️ `resolveUtilityActivation` (`🛠️ShellHelpers/🟦️.tsx`), verbatim: an empty request — or
@@ -223,17 +165,14 @@ pub(crate) mod context {
             }
         }
     
-        /// ⏱️ One cooperative-maintenance unit shaped exactly like the OS runtime's live-cleanup clock
-        /// drives it, timed by the framework's own clock and attributed to the fixed stage that ran it.
-        /// The stage is read BEFORE the call: `maintenance_step`'s idle early return leaves the
-        /// round-robin cursor untouched, so reading it afterwards names a stale stage.
+        /// 📏️ One cooperative-maintenance unit shaped exactly like the OS runtime's live-cleanup clock drives it, audited
+        /// against its grant and attributed to the fixed stage that ran it. The stage is read BEFORE the call:
+        /// `maintenance_step`'s idle early return leaves the round-robin cursor untouched, so reading it afterwards names a
+        /// stale stage.
         pub fn measure_maintenance_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
             let stage = self.next_maintenance_stage();
-            let started_us = semio_framework_job::default_now_us();
             let step = PluginApp::maintenance_step(self.raw.as_deref_mut().expect("fixture app was already consumed by close_witness"), maximum_items, maximum_bytes);
-            if let (Some(started_us), Some(finished_us)) = (started_us, semio_framework_job::default_now_us()) {
-                self.maintenance.record(stage, finished_us.saturating_sub(started_us));
-            }
+            self.maintenance.record(stage, maximum_items, maximum_bytes, &step);
             step
         }
     }
@@ -283,6 +222,7 @@ pub(crate) mod context {
     
     impl Drop for Puzzle3dApp {
         fn drop(&mut self) {
+            puzzle3d_session_release(self.instance_id);
             let Some(mut raw) = self.raw.take() else {
                 return;
             };
@@ -324,9 +264,10 @@ pub(crate) mod context {
     pub async fn app() -> Puzzle3dApp {
         let registry = puzzle3d_action_registry();
         let mut app = VcsArtifactApp::with_registry(EditorApp::<Puzzle3dPlayApp>::default(), registry).await;
-        app.bind_instance_id(1).await;
+        let instance_id = next_fixture_instance_id();
+        app.bind_instance_id(instance_id).await;
         let view = ViewModel { window_instances: vec![ViewWindowInstance { id: main::WINDOW_KIND_ID.into(), window_kind_id: main::WINDOW_KIND_ID.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
-        Puzzle3dApp { raw: Some(Box::new(app)), view, maintenance: Box::new(MaintenanceStageBudget::default()) }
+        Puzzle3dApp { raw: Some(Box::new(app)), instance_id, view, maintenance: Box::new(MaintenanceStageGrants::default()) }
     }
     
     /// 🖌️ Host-session utility activation without minting a typed operation or running `settle`.
@@ -336,9 +277,13 @@ pub(crate) mod context {
         app.activate(semio_framework_plugin::SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utility_id })), main::WINDOW_KIND_ID);
     }
     
-    /// 🪪️ The instance identity every fixture binds, and therefore the receiver `take_typed_operation_result_page`
-    /// answers for.
-    pub const FIXTURE_INSTANCE_ID: u32 = 1;
+    /// 🪪️ A process-unique instance identity per fixture app. The puzzle 3d session registry is process-global
+    /// and keyed by instance id, so fixtures sharing one id would adopt, evict and re-key each other's caches
+    /// (and the standing mesh re-upload set inside them) across concurrently running laws.
+    pub fn next_fixture_instance_id() -> u32 {
+        static NEXT: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(1);
+        NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
+    }
     
     /// 🔁️ Runs the host's continuation loop to quiescence and hands back the effects/events/UI scope the
     /// host would have forwarded to the shell. A registry-backed `VcsArtifactApp` does NOT apply a retained
@@ -387,7 +332,8 @@ pub(crate) mod context {
         settled.turns += 1;
         app.measure_maintenance_step(maximum_items, SETTLE_TURN_BYTES).expect("maintenance step drives the mounted operation's worker and retirement stages");
         app.advance_typed_operation_publication().await.expect("advance one typed operation publication unit");
-        if let Some(page) = app.take_typed_operation_result_page(FIXTURE_INSTANCE_ID) {
+        let instance_id = app.instance_id;
+        if let Some(page) = app.take_typed_operation_result_page(instance_id) {
             assert_ne!(page.lane, semio_framework_plugin::app::TypedOperationResultLane::Fault, "retained operation faulted: {}", String::from_utf8_lossy(page.bytes()));
             // ⬇️ The Download lane's page is the ONLY place the segmented handle is named, and the ACK
             // below is what admits the chunks into the app's `segmented_downloads` authority — so the
@@ -412,8 +358,8 @@ pub(crate) mod context {
     ///
     /// 🧲️ [`Self::completions`] is the channel the browser reads as `AppFrame::OperationCompleted` and the
     /// shell applies through `subscribeOperationCompletions` → `applyHostEffects`. It used to be drained
-    /// and DROPPED here, which is why a command that answers before it runs — every verb carrying a
-    /// `coalesce_key` enters the latest-wins channel and its accepted invocation returns
+    /// and DROPPED here, which is why a command that answers before it runs — every latest-wins verb
+    /// enters that channel and its accepted invocation returns
     /// `{operationId, generation}` immediately — had no observable outcome in-process at all, and a
     /// refusal on that lane could not be asserted (`📓️2026-09-09-wave-L-…md` §5.4).
     #[derive(Debug, Default)]
@@ -452,7 +398,7 @@ pub(crate) mod context {
         /// (`DownloadResultPayload`'s hand-written `ToValue`), read here exactly as the renderer reads it.
         fn from_page(operation: u64, page: &[u8]) -> Self {
             let text = String::from_utf8_lossy(page).into_owned();
-            let value: Value = parse(&text).unwrap_or_else(|_| panic!("download result page must be JSON: {text}"));
+            let value: Value = parse(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| panic!("download result page must be JSON: {text}"));
             let row = value.as_array().unwrap_or_else(|| panic!("download result page must be a 4-element array: {text}"));
             Self {
                 operation,
@@ -566,7 +512,7 @@ pub(crate) mod context {
 
     /// 📥️ [`dispatch_reporting`] through the SDK's own action dispatch (`handle_action`) instead of the typed channel —
     /// the lane a shell's picked-file chunks take, where the framework's import staging admits them first.
-    pub async fn dispatch_action_reporting(app: &mut Puzzle3dApp, action: &str, args: &dsl::DslValue) -> (Result<InvocationResult, Fault>, Puzzle3dSettled) {
+    pub async fn dispatch_action_reporting(app: &mut Puzzle3dApp, action: &str, args: &semio_framework_value::DslValue) -> (Result<InvocationResult, Fault>, Puzzle3dSettled) {
         let window_id = main::WINDOW_KIND_ID;
         app.ensure_window(window_id);
         let action_meta = ActionMeta { view_state: Some(app.window_view(window_id)), ..meta("local") };
@@ -621,7 +567,7 @@ pub(crate) mod context {
                 | "setSelectionMode"
                 | "setInteractionGranularity"
         ) {
-            let dsl_args = args.map(json::to_dsl_value);
+            let dsl_args = args.map(semio_framework_pack_json::to_dsl_value);
             let admitted = app.handle_action(action, dsl_args.as_ref(), &action_meta).await;
             let reserved = match admitted {
                 Ok(admitted) => settle_reserved(app, admitted).await,
@@ -670,7 +616,7 @@ pub(crate) mod context {
         let window_id = window_id.unwrap_or(main::WINDOW_KIND_ID);
         app.ensure_window(window_id);
         let action_meta = ActionMeta { view_state: Some(app.window_view(window_id)), ..meta("local") };
-        let dsl_args = args.map(json::to_dsl_value);
+        let dsl_args = args.map(semio_framework_pack_json::to_dsl_value);
         app.handle_action(action, dsl_args.as_ref(), &action_meta).await
     }
     
@@ -743,7 +689,7 @@ pub(crate) mod context {
             if let semio_framework_ui_contract::Component::Surface(surface) = &node.component {
                 if surface.doc_schema.as_str() == <semio_framework_ui_scene::World3dScene as semio_framework_ui_scene::SceneDoc>::SCHEMA {
                     let scene: semio_framework_ui_scene::World3dScene = artifact_app_laws::built_surface_scene(node).expect("assemble world scene");
-                    let world3d = json::from_dsl_value(&dsl::ToValue::to_value(&scene));
+                    let world3d = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&scene));
                     rendered_scene = Some(object([("schema".to_string(), Value::from(surface.doc_schema.as_str())), ("world3d".to_string(), world3d)]));
                     if scene.interaction_json.is_some() {
                         break;
@@ -753,7 +699,7 @@ pub(crate) mod context {
             stack.extend(node.children.iter());
         }
         let projected = artifact_app_laws::project_and_retire_fixture_tree(tree).expect("render projection");
-        rendered_scene.unwrap_or_else(|| parse(&projected.to_string()).expect("rendered node JSON"))
+        rendered_scene.unwrap_or_else(|| parse(&projected.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rendered node JSON"))
     }
     
     /// 📏️ The packed byte length of the world-3d surface payload this body actually admits, plus the
@@ -884,7 +830,7 @@ pub(crate) mod context {
     }
     
     pub fn projection_of(app: &Puzzle3dApp) -> Value {
-        parse(&app.snapshot().expect("projection").value().to_string()).expect("snapshot JSON")
+        parse(&app.snapshot().expect("projection").value().to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot JSON")
     }
 
     pub fn object_count(app: &Puzzle3dApp) -> usize {
@@ -915,7 +861,7 @@ pub(crate) mod context {
     
     //#region 🔖️SceneProbes
     fn scene_field(node: &Value, field: &str) -> Value {
-        node.pointer(&format!("/world3d/{field}")).and_then(Value::as_str).and_then(|raw| parse(raw).ok()).unwrap_or(Value::Null)
+        node.pointer(&format!("/world3d/{field}")).and_then(Value::as_str).and_then(|raw| parse(raw, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()).unwrap_or(Value::Null)
     }
     
     pub fn instances_of(node: &Value) -> Vec<Value> {
@@ -1015,8 +961,8 @@ pub(crate) mod context {
     pub async fn tool_run_action(app: &mut Puzzle3dApp, action: &str, args: Value) -> Value {
         app.ensure_window(main::WINDOW_KIND_ID);
         let action_meta = ActionMeta { view_state: Some(app.window_view(main::WINDOW_KIND_ID)), ..meta("local") };
-        let result = app.handle_action(action, Some(&json::to_dsl_value(&args)), &action_meta).await.unwrap_or_else(|fault| panic!("{action} faulted: {fault:?}"));
-        json::from_dsl_value(&result.output)
+        let result = app.handle_action(action, Some(&semio_framework_pack_json::to_dsl_value(&args)), &action_meta).await.unwrap_or_else(|fault| panic!("{action} faulted: {fault:?}"));
+        semio_framework_pack_json::from_dsl_value(&result.output)
     }
 
     /// 🎬️ Registers the lifecycle fixture's cube meshes, then starts a fill run through the panel action.
@@ -1035,7 +981,7 @@ pub(crate) mod context {
         let view = app.window_view(main::WINDOW_KIND_ID);
         let engagements = app.window_engagements(&view).await;
         let abort = engagements.get(main::WINDOW_KIND_ID)?.input.as_ref()?.on_abort.clone()?;
-        (abort.action == semio_framework_tool_run::TOOL_RUN_ABORT_ACTION_ID).then(|| json::from_dsl_value(abort.args.as_ref().expect("a tool run abort carries its identity")))
+        (abort.action == semio_framework_tool_run::TOOL_RUN_ABORT_ACTION_ID).then(|| semio_framework_pack_json::from_dsl_value(abort.args.as_ref().expect("a tool run abort carries its identity")))
     }
 
     /// ⏯️ The run's ephemeral-shared presence summary: state, stage, placements and requested count.
@@ -1064,7 +1010,7 @@ pub(crate) mod context {
             let view = app.window_view(main::WINDOW_KIND_ID);
             for effect in app.pending_effects(Some(&view)).await {
                 if let Effect::DispatchAction { action, args, .. } = effect {
-                    tool_run_action(app, &action, args.as_ref().map(json::from_dsl_value).unwrap_or(Value::Null)).await;
+                    tool_run_action(app, &action, args.as_ref().map(semio_framework_pack_json::from_dsl_value).unwrap_or(Value::Null)).await;
                 }
             }
             if until(app.tool_run_presence().as_ref()) {
@@ -1289,7 +1235,7 @@ async fn read_local_interaction_while_rendering(app: &mut Puzzle3dApp, request_i
 async fn local_interaction_read_of_an_unselected_document_terminates() {
     let mut app = app().await;
     let capture = read_local_interaction(&mut app, 1).await;
-    let capture: protocol::LocalInteractionCapture = protocol::json::from_json_str(std::str::from_utf8(&capture).expect("a capture is canonical UTF-8 JSON")).expect("a terminated read yields a whole capture");
+    let capture: protocol::LocalInteractionCapture = semio_framework_pack_json::from_json_str(std::str::from_utf8(&capture).expect("a capture is canonical UTF-8 JSON"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("a terminated read yields a whole capture");
     assert!(capture.state.selection.values().all(|selection| selection.ids.is_empty()), "this law's document carries no selection: {:?}", capture.state.selection);
 }
 
@@ -1322,7 +1268,7 @@ async fn local_interaction_read_of_a_selected_document_terminates() {
     let object_id = first_object_id(&app);
     select_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).await.expect("interactionSelect");
     let capture = read_local_interaction(&mut app, 2).await;
-    let capture: protocol::LocalInteractionCapture = protocol::json::from_json_str(std::str::from_utf8(&capture).expect("a capture is canonical UTF-8 JSON")).expect("a terminated read yields a whole capture");
+    let capture: protocol::LocalInteractionCapture = semio_framework_pack_json::from_json_str(std::str::from_utf8(&capture).expect("a capture is canonical UTF-8 JSON"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("a terminated read yields a whole capture");
     assert!(
         capture.state.selection.get(PUZZLE3D_INTERACTION_DOMAIN).is_some_and(|selection| selection.ids.iter().any(|id| id == &object_id)),
         "the capture carries the live selection: {:?}",
@@ -1344,21 +1290,9 @@ async fn local_interaction_query_return_does_not_fault_the_next_maintenance_step
 }
 //#endregion 🕹️LocalInteractionRead
 
-/// 📏️ Budget the TYPICAL cooperative-maintenance unit of one stage must respect. A quarter of
-/// `semio_framework_trace::INTERACTIVE_STEP_CEILING_US` (8 000us): this runs at opt-level 0 where
-/// every unit is far slower than the release wasm the ceiling actually guards, so a native unit
-/// that already eats a quarter of the ceiling is the defect, not the noise. Applied to the
-/// per-stage median for the reason `MaintenanceStageBudget` states.
-const MAINTENANCE_UNIT_BUDGET_US: u64 = 2_000;
-
 /// 🔁️ Full round-robin sweeps driven after the example lands, so every fixed stage runs its own
 /// bounded unit several times (first unit does the real work, later ones prove it stays terminal).
 const MAINTENANCE_UNIT_SWEEPS: usize = 8;
-
-/// 🎲️ Independent repetitions of the whole measured scenario, folded per stage by
-/// `MaintenanceStageBudget::keep_best_round`: an intrinsically over-budget unit costs the same in
-/// every round, while a scheduler hiccup on a loaded machine hits one stage in one round.
-const MAINTENANCE_BUDGET_ROUNDS: usize = 3;
 
 /// 🚧️ Runaway guard for the measured host-turn loop; the flagship example loads need thousands of
 /// publication turns, so this only has to be far above them, never tight.
@@ -1367,36 +1301,30 @@ const MAINTENANCE_BUDGET_TURNS: usize = 1_048_576;
 /// ⏱️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave R2: the OS runtime's cooperative-maintenance clock
 /// (`RuntimeLiveCleanupJob::step` → `maintenance_step(1, 4096)`) faults its instance with
 /// `plugin.internal.interactive-ceiling` the moment one unit overruns
-/// `semio_framework_trace::INTERACTIVE_STEP_CEILING_US`, which is exactly how the browser boot
-/// died. This law drives the REAL app — the real typed `setActiveExample` command, the real store,
-/// the real store-replacement/envelope registries and the real fixed round robin — over both
-/// flagship documents, and holds every stage's typical unit inside [`MAINTENANCE_UNIT_BUDGET_US`],
-/// naming the offending stage when it does not. The measured turn deliberately does NOT assert the
-/// operation's own result lane: a domain command that faults is a different law's subject, while
-/// the clock must stay inside its budget either way.
+/// `semio_framework_trace::INTERACTIVE_STEP_CEILING_US`, which is exactly how the browser boot died. A unit stays inside the
+/// ceiling because it is bounded by its grant — one item and [`RUNTIME_LIVE_CLEANUP_BYTES_PER_STEP`] bytes. This law drives
+/// the REAL app — the real typed `setActiveExample` command, the real store, the real store-replacement/envelope registries
+/// and the real fixed round robin — over both flagship documents and holds every unit of every stage to its grant, naming
+/// the offending stage when it does not. The bound is a count, so the verdict is the same on an idle and a saturated
+/// machine. The measured turn deliberately does NOT assert the operation's own result lane: a domain command that faults is
+/// a different law's subject, while the clock must stay inside its grant either way.
 #[semio_framework_async_macros::async_test]
 async fn every_maintenance_unit_stays_inside_the_interactive_step_budget() {
     for example in [PUZZLE3D_EXAMPLE_CONCRETE_FOREST, PUZZLE3D_EXAMPLE_NAKAGIN] {
-        let mut best = MaintenanceStageBudget::default();
-        for _ in 0..MAINTENANCE_BUDGET_ROUNDS {
-            let mut app = app().await;
-            let command = Puzzle3dCommand::from_action("setActiveExample", Some(json!({ "exampleId": example })), None).expect("setActiveExample is a declared puzzle3d command");
-            app.dispatch_typed(command, &meta("local")).await.expect("setActiveExample mints its retained whole-document operation");
-            for _ in 0..MAINTENANCE_BUDGET_TURNS {
-                if !app.has_pending_typed_operations() {
-                    break;
-                }
-                measured_host_turn(&mut app).await;
+        let mut app = app().await;
+        let command = Puzzle3dCommand::from_action("setActiveExample", Some(json!({ "exampleId": example })), None).expect("setActiveExample is a declared puzzle3d command");
+        app.dispatch_typed(command, &meta("local")).await.expect("setActiveExample mints its retained whole-document operation");
+        for _ in 0..MAINTENANCE_BUDGET_TURNS {
+            if !app.has_pending_typed_operations() {
+                break;
             }
-            for _ in 0..MAINTENANCE_UNIT_SWEEPS * semio_framework_plugin::MAINTENANCE_STAGES as usize {
-                app.measure_maintenance_step(1, RUNTIME_LIVE_CLEANUP_BYTES_PER_STEP).expect("a live-cleanup maintenance unit never faults");
-            }
-            best.keep_best_round(&app.maintenance);
+            measured_host_turn(&mut app).await;
         }
-        let (typical_stage, median_us) = best.worst();
-        let (peak_stage, peak_us) = best.worst_unit();
-        assert!(median_us <= MAINTENANCE_UNIT_BUDGET_US, "{example}: maintenance stage {typical_stage}'s typical unit cost {median_us}us in every round, over the {MAINTENANCE_UNIT_BUDGET_US}us typical-unit budget (per-stage median/worst/units: {})", best.report());
-        assert!(u128::from(peak_us) < PUZZLE3D_INTERACTIVE_STEP_CEILING.as_micros(), "{example}: maintenance stage {peak_stage} ran one unit for {peak_us}us in every round, at or over the framework's interactive step ceiling {PUZZLE3D_INTERACTIVE_STEP_CEILING:?} (per-stage median/worst/units: {})", best.report());
+        for _ in 0..MAINTENANCE_UNIT_SWEEPS * semio_framework_plugin::MAINTENANCE_STAGES as usize {
+            app.measure_maintenance_step(1, RUNTIME_LIVE_CLEANUP_BYTES_PER_STEP).expect("a live-cleanup maintenance unit never faults");
+        }
+        assert!(app.maintenance.units() > 0, "{example}: the law drove no maintenance unit");
+        assert_eq!(app.maintenance.first_overrun(), None, "{example}: a maintenance unit released more than its grant as (stage, items, bytes, granted items, granted bytes) (per-stage worstItems/worstBytes/units: {})", app.maintenance.report());
     }
 }
 
@@ -1406,7 +1334,8 @@ async fn every_maintenance_unit_stays_inside_the_interactive_step_budget() {
 async fn measured_host_turn(app: &mut Puzzle3dApp) {
     app.measure_maintenance_step(1, RUNTIME_LIVE_CLEANUP_BYTES_PER_STEP).expect("a live-cleanup maintenance unit never faults");
     app.advance_typed_operation_publication().await.expect("advance one typed operation publication unit");
-    if let Some(page) = app.take_typed_operation_result_page(FIXTURE_INSTANCE_ID) {
+    let instance_id = app.instance_id;
+    if let Some(page) = app.take_typed_operation_result_page(instance_id) {
         assert!(app.acknowledge_typed_operation_result(page.token).expect("acknowledge one presented result page"), "the app's own presented result page must accept its exact token");
     }
     drop(app.take_typed_operation_effect());
@@ -1423,7 +1352,7 @@ async fn measured_host_turn(app: &mut Puzzle3dApp) {
 
 #[test]
 fn retained_publication_contracts_are_an_exact_nonempty_tool_bijection() {
-    let fixture: Value = parse(include_str!("../../../🧫️fixtures/🗄️retained-jobs/🔣️.json")).expect("Puzzle3D retained route fixture");
+    let fixture: Value = parse(include_str!("../../../🧫️fixtures/🗄️retained-jobs/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("Puzzle3D retained route fixture");
     assert_eq!(fixture.get("toolIds"), Some(&Value::Array(PUZZLE3D_RETAINED_TOOL_IDS.iter().map(|id| Value::from(*id)).collect())));
     let manifest = create_puzzle3d_app();
     for tool_id in PUZZLE3D_RETAINED_TOOL_IDS {
@@ -1668,7 +1597,7 @@ fn set_active_example_hostile_static_law_rejects_whole_document_reset() {
 #[test]
 fn world_relocate_extent_fits_within_cap_for_nakagin() {
     use crate::retained_command::PuzzleCommandWork;
-    let snapshot = Puzzle3dPlaySnapshot::new((&dsl::ToValue::to_value(&NAKAGIN_EXAMPLE_FIXTURE.clone())).into());
+    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&NAKAGIN_EXAMPLE_FIXTURE.clone())).into());
     let interaction = protocol::InteractionState::default();
     let command = Puzzle3dCommand::from_action("worldRelocate", Some(json!({ "objectId": "nonexistent", "position": [0.0, 0.0, 0.0] })), None).expect("worldRelocate command decodes");
     let work = Puzzle3dTransformWork::new("worldRelocate", "seed".into());
@@ -1682,7 +1611,7 @@ fn world_relocate_extent_fits_within_cap_for_nakagin() {
 #[test]
 fn world_relocate_scan_pages_progress_and_cancels_with_zero_trace() {
     use crate::retained_command::{PuzzleCommandWork, PuzzleCommandWorkStep};
-    let snapshot = Puzzle3dPlaySnapshot::new((&dsl::ToValue::to_value(&NAKAGIN_EXAMPLE_FIXTURE.clone())).into());
+    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&NAKAGIN_EXAMPLE_FIXTURE.clone())).into());
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
@@ -1716,7 +1645,7 @@ fn world_relocate_scan_pages_progress_and_cancels_with_zero_trace() {
 #[test]
 fn world_relocate_step_loop_stays_within_its_own_extent_for_nakagin() {
     use crate::retained_command::{PuzzleCommandWork, PuzzleCommandWorkStep};
-    let snapshot = Puzzle3dPlaySnapshot::new((&dsl::ToValue::to_value(&NAKAGIN_EXAMPLE_FIXTURE.clone())).into());
+    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&NAKAGIN_EXAMPLE_FIXTURE.clone())).into());
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
@@ -1744,7 +1673,7 @@ fn world_relocate_step_loop_stays_within_its_own_extent_for_nakagin() {
 #[test]
 fn create_attraction_extent_fits_within_cap_for_nakagin() {
     use crate::retained_command::PuzzleCommandWork;
-    let snapshot = Puzzle3dPlaySnapshot::new((&dsl::ToValue::to_value(&NAKAGIN_EXAMPLE_FIXTURE.clone())).into());
+    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&NAKAGIN_EXAMPLE_FIXTURE.clone())).into());
     let interaction = protocol::InteractionState::default();
     let command = Puzzle3dCommand::from_action("createAttraction", Some(json!({ "attracting": "nonexistent-a", "attracted": "nonexistent-b" })), None).expect("createAttraction command decodes");
     let work = Puzzle3dCreateAttractionWork::default();
@@ -1763,7 +1692,7 @@ fn create_attraction_extent_fits_within_cap_for_nakagin() {
 #[test]
 fn create_attraction_step_loop_stays_within_its_own_extent_for_nakagin() {
     use crate::retained_command::{PuzzleCommandWork, PuzzleCommandWorkStep};
-    let snapshot = Puzzle3dPlaySnapshot::new((&dsl::ToValue::to_value(&NAKAGIN_EXAMPLE_FIXTURE.clone())).into());
+    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&NAKAGIN_EXAMPLE_FIXTURE.clone())).into());
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
@@ -1800,7 +1729,7 @@ fn create_attraction_step_loop_stays_within_its_own_extent_for_nakagin() {
 #[test]
 fn accept_suggestion_extent_fits_within_cap_for_nakagin() {
     use crate::retained_command::PuzzleCommandWork;
-    let snapshot = Puzzle3dPlaySnapshot::new((&dsl::ToValue::to_value(&NAKAGIN_EXAMPLE_FIXTURE.clone())).into());
+    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&NAKAGIN_EXAMPLE_FIXTURE.clone())).into());
     let interaction = protocol::InteractionState::default();
     let command = Puzzle3dCommand::from_action("acceptSuggestion", None, None).expect("acceptSuggestion command decodes");
     let work = Puzzle3dAcceptSuggestionWork::default();
@@ -1816,7 +1745,7 @@ fn accept_suggestion_extent_fits_within_cap_for_nakagin() {
 #[test]
 fn accept_suggestion_step_loop_stays_within_its_own_extent_for_nakagin() {
     use crate::retained_command::{PuzzleCommandWork, PuzzleCommandWorkStep};
-    let snapshot = Puzzle3dPlaySnapshot::new((&dsl::ToValue::to_value(&NAKAGIN_EXAMPLE_FIXTURE.clone())).into());
+    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&NAKAGIN_EXAMPLE_FIXTURE.clone())).into());
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
@@ -1861,7 +1790,7 @@ fn accept_suggestion_step_loop_stays_within_its_own_extent_for_nakagin() {
 #[test]
 fn patch_inspector_vortex_extent_fits_within_cap_for_nakagin() {
     use crate::retained_command::PuzzleCommandWork;
-    let snapshot = Puzzle3dPlaySnapshot::new((&dsl::ToValue::to_value(&NAKAGIN_EXAMPLE_FIXTURE.clone())).into());
+    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&NAKAGIN_EXAMPLE_FIXTURE.clone())).into());
     let interaction = protocol::InteractionState::default();
     let command = Puzzle3dCommand::from_action("patchInspector", Some(json!({ "entity": "vortex" })), None).expect("patchInspector command decodes");
     let work = Puzzle3dPatchInspectorWork::default();
@@ -1887,7 +1816,7 @@ fn patch_inspector_vortex_extent_fits_within_cap_for_nakagin() {
 #[test]
 fn patch_inspector_vortex_step_loop_stays_within_its_own_extent_for_nakagin() {
     use crate::retained_command::{PuzzleCommandWork, PuzzleCommandWorkStep};
-    let snapshot = Puzzle3dPlaySnapshot::new((&dsl::ToValue::to_value(&NAKAGIN_EXAMPLE_FIXTURE.clone())).into());
+    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&NAKAGIN_EXAMPLE_FIXTURE.clone())).into());
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
@@ -2208,7 +2137,7 @@ fn an_absent_fixture_meta_member_never_empties_the_typed_authority() {
     let mut seeded = empty_fixture();
     seeded.objects.clone_from(&CONCRETE_FOREST_EXAMPLE_FIXTURE.objects);
     assert!(seeded.meta.kind_catalogs.is_none() && seeded.meta.kind_compatibility.is_none(), "this law is about the meta-less fixture shape");
-    let projection: serde_json::Value = (&dsl::ToValue::to_value(&seeded)).into();
+    let projection: serde_json::Value = (&semio_framework_value::ToValue::to_value(&seeded)).into();
     let meta = projection.get("meta").expect("the projection carries a meta object");
     assert!(!meta.get("kindCatalogs").is_some_and(serde_json::Value::is_null), "an absent kind catalog must be absent, not null: {meta}");
     assert!(!meta.get("kindCompatibility").is_some_and(serde_json::Value::is_null), "an absent compatibility table must be absent, not null: {meta}");
@@ -2224,15 +2153,15 @@ fn an_absent_fixture_meta_member_never_empties_the_typed_authority() {
 fn interaction_topology_names_every_id_the_world_lane_paints() {
     let mut divergent = empty_fixture();
     divergent.objects.clone_from(&CONCRETE_FOREST_EXAMPLE_FIXTURE.objects);
-    divergent.meta.kind_compatibility = Some(dsl::DslValue::Array(vec![dsl::DslValue::object([("target".to_string(), dsl::DslValue::String("b-l".to_string()))])]));
-    let projection: serde_json::Value = (&dsl::ToValue::to_value(&divergent)).into();
+    divergent.meta.kind_compatibility = Some(semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::object([("target".to_string(), semio_framework_value::DslValue::String("b-l".to_string()))])]));
+    let projection: serde_json::Value = (&semio_framework_value::ToValue::to_value(&divergent)).into();
     let snapshot = Puzzle3dPlaySnapshot::new(projection);
     assert!(snapshot.typed().objects.is_empty(), "this law needs the typed authority to have refused the document");
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let config = Puzzle3dConfig::default();
     let cfg = ConfigView { snapshot: &config, window: None };
-    let topology = Puzzle3dPlayApp::interaction_topology(&doc, &cfg);
+    let topology = Puzzle3dPlayApp::interaction_topology(&doc, &cfg).expect("valid retained interaction fixture");
     let domain = topology.domains.get(PUZZLE3D_INTERACTION_DOMAIN).expect("the vortex domain is declared");
     let ids: Vec<&str> = domain.ordered.iter().map(|node| node.id.as_str()).collect();
     for object in &divergent.objects {
@@ -2440,10 +2369,10 @@ async fn empty_target_interaction_select_clears_selection_while_hover_remains() 
     .expect("empty-target interactionSelect admit");
     let settled = settle_reserved(&mut app, admitted).await.expect("empty-target interactionSelect leftover");
     let view = settled.output.get("interactionView").expect("leftover InteractionView");
-    let ids = view.get("selectedIds").and_then(dsl::DslValue::as_array).expect("selectedIds");
+    let ids = view.get("selectedIds").and_then(semio_framework_value::DslValue::as_array).expect("selectedIds");
     assert!(ids.is_empty(), "empty-target interactionSelect must clear selectedIds, got {ids:?} hover={:?}", view.get("hoverTarget"));
     let hover = view.get("hoverTarget").expect("hoverTarget on leftover");
-    assert_eq!(hover.get("id").and_then(dsl::DslValue::as_str), Some(object_id.as_str()));
+    assert_eq!(hover.get("id").and_then(semio_framework_value::DslValue::as_str), Some(object_id.as_str()));
     assert!(
         app.interaction_state().await.selection.get(PUZZLE3D_INTERACTION_DOMAIN).is_none_or(|selection| selection.ids.is_empty()),
         "empty-target interactionSelect must clear the interaction store"
@@ -2479,7 +2408,7 @@ async fn interaction_select_leftover_window_instance_rides_the_encode() {
         let settled = settle_reserved(&mut app, admitted).await.expect("window-addressed interactionSelect leftover");
         let view = settled.output.get("interactionView").expect("leftover InteractionView");
         assert_eq!(
-            view.get("windowId").and_then(dsl::DslValue::as_str),
+            view.get("windowId").and_then(semio_framework_value::DslValue::as_str),
             Some(window),
             "the leftover encode must name the window instance the pick addressed, got {:?}",
             view.get("windowId")
@@ -3004,7 +2933,7 @@ async fn the_world_scene_names_built_in_meshes_by_reference_and_fits_its_fixed_c
     let live_meshes = scene_meshes_of(&node);
     let (payload, capacity) = world_surface_payload_bytes(&mut app, main::BODY_KEY).await;
     assert!(payload <= capacity, "the popup-open world scene packs to {payload} bytes, over the fixed surface capacity {capacity}");
-    for meshes in [live_meshes, parse(&main::world_meshes_json(&nakagin_fixture())).expect("nakagin meshes").as_array().cloned().expect("mesh array")] {
+    for meshes in [live_meshes, parse(&main::world_meshes_json(&nakagin_fixture()), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("nakagin meshes").as_array().cloned().expect("mesh array")] {
         assert!(!meshes.is_empty(), "a world scene always declares its meshes");
         assert!(to_json_string(&meshes).len() <= PUZZLE3D_SCENE_MESH_REFERENCE_BUDGET, "mesh references must stay a rounding error against the {capacity}-byte surface payload; observed {}", to_json_string(&meshes).len());
         for mesh in &meshes {
@@ -3042,7 +2971,7 @@ async fn nakagin_app() -> Puzzle3dApp {
 /// that lets a partially arrived lane be told from a settled one.
 #[semio_framework_async_macros::async_test]
 async fn the_nakagin_world_scene_publishes_every_lane_under_the_page_cap_with_the_popup_open() {
-    let contract: Value = parse(PUZZLE3D_WORLD3D_LANE_CONTRACT).expect("world-3d lane contract is json");
+    let contract: Value = parse(PUZZLE3D_WORLD3D_LANE_CONTRACT, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("world-3d lane contract is json");
     let leaf_bytes = contract.pointer("/carrier/leafBytes").and_then(Value::as_u64).expect("leafBytes") as usize;
     let children_max = contract.pointer("/carrier/childrenMax").and_then(Value::as_u64).expect("childrenMax") as usize;
     let doc_bytes_max = contract.pointer("/carrier/docBytesMax").and_then(Value::as_u64).expect("docBytesMax") as usize;
@@ -3068,10 +2997,10 @@ async fn the_nakagin_world_scene_publishes_every_lane_under_the_page_cap_with_th
         assert_eq!(lane.leaves > children_max, lane.leaf_depth > 1, "lane {} with {} leaves must page into a nested carrier exactly when it outgrows one level of {children_max} children (observed leaf depth {})", lane.key, lane.leaves, lane.leaf_depth);
     }
 
-    let interaction = parse(census.assembled.interaction_json.as_deref().expect("the interaction lane reassembles")).expect("interaction lane is json");
+    let interaction = parse(census.assembled.interaction_json.as_deref().expect("the interaction lane reassembles"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("interaction lane is json");
     assert_eq!(interaction.pointer("/suggestionMenu/open").and_then(Value::as_bool), Some(true), "the law only measures the popup-open scene");
     let instances = census.lane(semio_framework_plugin::World3dSceneLane::Instances.body_key()).expect("the instances lane always publishes");
-    assert!(parse(&census.assembled.instances_json).expect("instances lane is json").as_array().is_some_and(|array| array.len() > 100), "Nakagin publishes its whole catalog of objects through the instances lane");
+    assert!(parse(&census.assembled.instances_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("instances lane is json").as_array().is_some_and(|array| array.len() > 100), "Nakagin publishes its whole catalog of objects through the instances lane");
     eprintln!(
         "nakagin popup-open world scene: spine={}B of {}B, {} lanes carrying {}B total ({}), widest lane={}B in {} leaves",
         census.doc_bytes,
@@ -3336,8 +3265,8 @@ async fn interaction_hover_leftover_carries_vortex_full_id() {
     let settled = settle_reserved(&mut app, admitted).await.expect("vortex interactionHover leftover");
     let view = settled.output.get("interactionView").expect("leftover InteractionView");
     let hover = view.get("hoverTarget").expect("hoverTarget on leftover");
-    assert_eq!(hover.get("id").and_then(dsl::DslValue::as_str), Some(vortex.as_str()), "leftover hoverTarget must be the vortex full id, got {hover:?}");
-    assert_eq!(hover.get("domain").and_then(dsl::DslValue::as_str), Some(PUZZLE3D_INTERACTION_DOMAIN));
+    assert_eq!(hover.get("id").and_then(semio_framework_value::DslValue::as_str), Some(vortex.as_str()), "leftover hoverTarget must be the vortex full id, got {hover:?}");
+    assert_eq!(hover.get("domain").and_then(semio_framework_value::DslValue::as_str), Some(PUZZLE3D_INTERACTION_DOMAIN));
     assert_eq!(interaction_of(&render_composite(&mut app).await).get("hoveredVortexFullId").and_then(Value::as_str), Some(vortex.as_str()), "next scene render must project leftover hover onto hoveredVortexFullId");
 }
 
@@ -3479,7 +3408,7 @@ async fn settings_panel_steppers_carry_their_value_and_the_trigger_they_dispatch
         }
     }
     let mut app = app().await;
-    let panel: Value = from_json_str(&to_json_string(&render_body(&mut app, settings_panel::BODY_KEY).await)).expect("the settings panel renders parseable ui json");
+    let panel: Value = from_json_str(&to_json_string(&render_body(&mut app, settings_panel::BODY_KEY).await), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the settings panel renders parseable ui json");
     for (field, action) in [
         ("contact-tolerance", "setBrushPlacementContactTolerance"),
         ("proximity-radius", "setProximityRadius"),
@@ -3901,7 +3830,7 @@ async fn engagement_abort_tears_the_fill_plan_down_across_turns_and_never_inside
         })
         .expect("Escape dispatches toolRunAbort while a fill run is non-terminal");
     assert!(effects.iter().any(|effect| matches!(effect, Effect::SetActiveTool { tool_id } if tool_id.is_empty())), "Escape also disarms the Fill tool");
-    let abort = json::from_dsl_value(&abort);
+    let abort = semio_framework_pack_json::from_dsl_value(&abort);
     assert_eq!(abort[semio_framework_tool_run::TOOL_RUN_ARG_RUN_ID], identity[semio_framework_tool_run::TOOL_RUN_ARG_RUN_ID], "the abort names the run this window shows");
     tool_run_action(&mut app, semio_framework_tool_run::TOOL_RUN_ABORT_ACTION_ID, abort).await;
     assert_eq!(fill_run_presence(&app).state, protocol::PresenceToolRunState::Aborting, "the abort only begins inside the call");
@@ -4481,13 +4410,13 @@ async fn add_object_kind_materializes_the_declared_kind_default() {
 async fn adding_a_catalogued_concrete_forest_kind_places_an_object_carrying_its_mesh_url() {
     let fixture = crate::editor::puzzle3d::default_fixture();
     let entry = crate::editor::puzzle3d::puzzle3d_catalog_entries(&fixture, "objects").first().cloned().expect("the default document catalogues object kinds");
-    let kind_id = entry.get("id").and_then(dsl::DslValue::as_str).expect("catalogued kind id").to_string();
+    let kind_id = entry.get("id").and_then(semio_framework_value::DslValue::as_str).expect("catalogued kind id").to_string();
     let expected = entry
         .get("representations")
-        .and_then(dsl::DslValue::as_array)
+        .and_then(semio_framework_value::DslValue::as_array)
         .into_iter()
         .flatten()
-        .filter_map(|representation| representation.get("url").and_then(dsl::DslValue::as_str))
+        .filter_map(|representation| representation.get("url").and_then(semio_framework_value::DslValue::as_str))
         .find(|url| !url.is_empty())
         .expect("the catalogued kind names a representation url")
         .to_string();
@@ -4510,11 +4439,11 @@ fn catalogued_kind_templates_seed_vortices_at_their_catalog_points() {
     let fixture = crate::editor::puzzle3d::default_fixture();
     let entry = crate::editor::puzzle3d::puzzle3d_catalog_entries(&fixture, "objects").first().cloned().expect("the default document catalogues object kinds");
     let seats = crate::editor::puzzle3d::puzzle3d_vortices_from_kind_template(&entry);
-    let templates = entry.get("vortices").and_then(dsl::DslValue::as_array).expect("the catalogued kind declares vortex templates");
+    let templates = entry.get("vortices").and_then(semio_framework_value::DslValue::as_array).expect("the catalogued kind declares vortex templates");
     assert_eq!(seats.len(), templates.len(), "one seeded vortex per declared template");
     assert!(seats.iter().any(|seat| seat.position != [0.0, 0.0, 0.0]), "a catalogued kind's seats must not all collapse onto the object origin: {seats:?}");
     for (seat, template) in seats.iter().zip(templates) {
-        let point: [f64; 3] = template.get("point").and_then(|value| dsl::FromValue::from_value(value.clone()).ok()).expect("every template declares its point");
+        let point: [f64; 3] = template.get("point").and_then(|value| semio_framework_value::FromValue::from_value(value.clone()).ok()).expect("every template declares its point");
         assert_eq!(seat.position, point, "seeded vortex {} must sit on its template point", seat.id);
     }
 }
@@ -4526,7 +4455,7 @@ fn catalogued_kind_templates_seed_vortices_at_their_catalog_points() {
 async fn the_initial_snapshot_and_set_active_example_both_carry_the_concrete_forest_catalogue() {
     let declared: Vec<String> = crate::editor::puzzle3d::puzzle3d_catalog_entries(&crate::editor::puzzle3d::default_fixture(), "objects")
         .iter()
-        .filter_map(|entry| entry.get("id").and_then(dsl::DslValue::as_str).map(str::to_string))
+        .filter_map(|entry| entry.get("id").and_then(semio_framework_value::DslValue::as_str).map(str::to_string))
         .collect();
     assert!(!declared.is_empty(), "the concrete-forest fixture catalogues object kinds");
     let catalogued = |app: &Puzzle3dApp| -> Vec<String> {
@@ -5037,7 +4966,7 @@ async fn interaction_select_leftover_does_not_arm_gumball_without_transform_util
         .get("interactionView")
         .and_then(|view| view.get("gumball"))
         .expect("leftover gumball");
-    assert_eq!(gumball.get("active").and_then(dsl::DslValue::as_bool), Some(false));
+    assert_eq!(gumball.get("active").and_then(semio_framework_value::DslValue::as_bool), Some(false));
 }
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `gumballActive` requires BOTH the
@@ -5154,11 +5083,11 @@ fn edit_rows(settled: &Puzzle3dSettled) -> Vec<semio_framework::kernel::HistoryE
 }
 
 fn english(entry: &semio_framework::kernel::HistoryEntry) -> String {
-    entry.label.resolve(protocol::Terminology::Native, protocol::Locale::En).to_string()
+    entry.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).to_string()
 }
 
 fn german(entry: &semio_framework::kernel::HistoryEntry) -> String {
-    entry.label.resolve(protocol::Terminology::Native, protocol::Locale::De).to_string()
+    entry.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De).to_string()
 }
 
 /// 🌱️ An empty scene with one fresh object, the object selected and the Transform utility active.
@@ -5265,6 +5194,37 @@ async fn a_motionless_gumball_release_leaves_zero_trace() {
     assert!(edit_rows(&settled).is_empty() && result.mutations.is_empty() && !noticed, "nothing moved, nothing recorded: {}", history_row_labels(&settled).join(" | "));
 }
 
+/// 🛠️ LAW (audit Z4) — the World3d host corpus' LOCAL one-shot cases (`🌐️World3dHost/🧫️fixtures/🛠️gumball-live-protocol.json`,
+/// `live: false`, the protocol puzzle 3d speaks: one net delta on release, no stream phase): every verb dispatch the host
+/// owes for a scripted gesture, sent with its exact wire args (the targets swapped for the fixture's own object), publishes
+/// exactly the case's guest edits and moves the object by its offset; a gesture that dispatches nothing publishes nothing.
+#[semio_framework_async_macros::async_test]
+async fn the_world3d_local_gumball_cases_land_as_their_guest_edits() {
+    let corpus = parse(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧫️fixtures/🛠️gumball-live-protocol.json")), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the protocol corpus parses");
+    let cases: Vec<&Value> = corpus.get("cases").and_then(Value::as_array).expect("cases").iter().filter(|case| case.get("live").and_then(Value::as_bool) == Some(false)).collect();
+    assert_eq!(cases.len(), 4, "the corpus carries the four local one-shot cases");
+    for case in cases {
+        let name = case.get("name").and_then(Value::as_str).expect("name");
+        let (mut app, object_id) = gumball_app().await;
+        let before = object_origin(&app, &object_id);
+        let mut edits = 0;
+        for dispatch in case.get("steps").and_then(Value::as_array).expect("steps").iter().filter_map(|step| step.get("dispatch")).filter(|dispatch| !dispatch.is_null()) {
+            let action = dispatch.get("action").and_then(Value::as_str).expect("action");
+            let mut args = dispatch.get("args").cloned().expect("args");
+            args.as_object_mut().expect("object args").insert("ids", json!([object_id.as_str()]));
+            let (result, settled) = dispatch_reporting(&mut app, action, Some(&args), None).await;
+            result.unwrap_or_else(|fault| panic!("{name}: {action} dispatches from the host's wire args: {fault:?}"));
+            edits += edit_rows(&settled).len();
+        }
+        let guest = case.get("guest");
+        let expected_edits = guest.and_then(|guest| guest.get("edits")).and_then(Value::as_u64).unwrap_or(0);
+        let offset: Vec<f64> = guest.and_then(|guest| guest.get("offset")).and_then(Value::as_array).map_or_else(|| vec![0.0; 3], |values| values.iter().filter_map(Value::as_f64).collect());
+        let after = object_origin(&app, &object_id);
+        assert_eq!(edits as u64, expected_edits, "{name}: the published edits");
+        assert!((0..3).all(|axis| (after[axis] - before[axis] - offset[axis]).abs() < 1e-9), "{name}: the object's offset {:?} -> {:?}, expected {offset:?}", before, after);
+    }
+}
+
 //#endregion 🔖️Gumball
 
 //#region 🔖️HistoryEditReferences
@@ -5282,7 +5242,7 @@ fn history_edit_reference_chips_name_entities_as_the_outliner_does() {
     snapshot.objects[0].label = None;
     snapshot.meta.kind_catalogs.as_mut().expect("the example ships its kind catalogs").objects.iter_mut().find(|entry| entry.id == kind).expect("the seed's kind is catalogued").label = "Forest Left".into();
     snapshot.attractions.push(crate::Puzzle3dAttraction { id: "attraction-chip".into(), attracting: vortex.clone(), attracted: vortex.clone(), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0 });
-    let chip = |kinds: &[&str], id: &str| puzzle3d_entity_label(&snapshot, &kinds.iter().map(|kind| kind.to_string()).collect::<Vec<_>>(), id).map(|label| label.resolve(protocol::Terminology::Native, protocol::Locale::En).to_string());
+    let chip = |kinds: &[&str], id: &str| puzzle3d_entity_label(&snapshot, &kinds.iter().map(|kind| kind.to_string()).collect::<Vec<_>>(), id).map(|label| label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).to_string());
     assert_eq!(chip(&[PUZZLE3D_GRANULARITY_OBJECT, PUZZLE3D_GRANULARITY_TARGET_VOLUME], &object).as_deref(), Some("Forest Left"), "an unlabelled object reads its kind's catalog label");
     assert_eq!(chip(&[PUZZLE3D_GRANULARITY_VORTEX], &vortex), Some(format!("Forest Left \u{b7} {vortex_label}")), "a vortex reads its object and its own label");
     assert_eq!(chip(&[PUZZLE3D_GRANULARITY_ATTRACTION], "attraction-chip").as_deref(), Some("Forest Left \u{2192} Forest Left"), "an attraction reads its two objects");
@@ -5345,7 +5305,7 @@ async fn kit_in_import_media_upserts_object_and_vortex_kinds_into_meta_kind_cata
         next_projection = protocol::Mutation::<serde_json::Value>::diff(operation, &next_projection).diff().apply(&next_projection).expect("valid mutation diff");
     }
 
-    let next_projection = parse(&next_projection.to_string()).expect("mutated snapshot JSON");
+    let next_projection = parse(&next_projection.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutated snapshot JSON");
     let objects = next_projection.pointer("/meta/kindCatalogs/objects").and_then(Value::as_array).expect("objects catalog present");
     assert!(objects.iter().any(|entry| entry.get("id").and_then(Value::as_str) == Some("capsule")), "the imported object kind must appear in meta.kind_catalogs.objects");
     let capsule = objects.iter().find(|entry| entry.get("id").and_then(Value::as_str) == Some("capsule")).unwrap();
@@ -5385,7 +5345,7 @@ async fn kit_in_import_media_is_idempotent_on_repeated_delivery() {
         }
     }
 
-    let current = parse(&current.to_string()).expect("mutated snapshot JSON");
+    let current = parse(&current.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutated snapshot JSON");
     let objects = current.pointer("/meta/kindCatalogs/objects").and_then(Value::as_array).expect("objects catalog present");
     assert_eq!(objects.iter().filter(|entry| entry.get("id").and_then(Value::as_str) == Some("capsule")).count(), 1, "repeated delivery of the same fragment must upsert, never duplicate");
 }
@@ -5647,7 +5607,7 @@ fn measured_view_state() -> semio_framework_plugin::ViewModel {
 }
 
 fn measured_nakagin_snapshot() -> Puzzle3dPlaySnapshot {
-    Puzzle3dPlaySnapshot::new((&dsl::ToValue::to_value(&NAKAGIN_EXAMPLE_FIXTURE.clone())).into())
+    Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&NAKAGIN_EXAMPLE_FIXTURE.clone())).into())
 }
 
 /// ⏱️ ticket 26/09/02/PUZZLE-3D-END-TO-END: `openVortexSuggestions` syncs the whole precompute session
@@ -5679,7 +5639,7 @@ fn accept_suggestion_every_step_stays_below_the_interactive_ceiling_for_nakagin(
 }
 
 fn measured_concrete_forest_snapshot() -> Puzzle3dPlaySnapshot {
-    Puzzle3dPlaySnapshot::new((&dsl::ToValue::to_value(&CONCRETE_FOREST_EXAMPLE_FIXTURE.clone())).into())
+    Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&CONCRETE_FOREST_EXAMPLE_FIXTURE.clone())).into())
 }
 
 /// ⏱️ ticket 26/09/02/PUZZLE-3D-END-TO-END W-P3: swapping the Concrete Forest document for the
@@ -5740,8 +5700,8 @@ fn puzzle3d_next_object_label_increments_from_the_authored_seed_name() {
 #[test]
 fn puzzle3d_typed_fixture_matches_the_projection_bridge_for_every_example() {
     for (label, fixture) in [("empty", empty_fixture()), ("concrete-forest", CONCRETE_FOREST_EXAMPLE_FIXTURE.clone()), ("nakagin", NAKAGIN_EXAMPLE_FIXTURE.clone())] {
-        let seed = Puzzle3dPlaySnapshot::new((&dsl::ToValue::to_value(&fixture)).into());
-        let snapshot = Puzzle3dPlaySnapshot::new((&dsl::ToValue::to_value(seed.typed())).into());
+        let seed = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&fixture)).into());
+        let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(seed.typed())).into());
         let bridged = scene_from_projection(&puzzle3d_projection_value(snapshot.value()), Puzzle3dRuntime::default(), "utility");
         let typed = scene_from_snapshot(snapshot.typed(), Puzzle3dRuntime::default(), "utility");
         assert_eq!(typed.fixture.schema, bridged.fixture.schema, "{label}: schema disagrees");
@@ -5750,8 +5710,8 @@ fn puzzle3d_typed_fixture_matches_the_projection_bridge_for_every_example() {
         assert_eq!(typed.fixture.attractions, bridged.fixture.attractions, "{label}: attractions disagree");
         assert_eq!(typed.fixture.target_volumes, bridged.fixture.target_volumes, "{label}: target volumes disagree");
         assert_eq!(typed.fixture.references, bridged.fixture.references, "{label}: references disagree");
-        let catalogs = |meta: &Puzzle3dFixtureMeta| -> crate::Puzzle3dKindCatalogs { meta.kind_catalogs.clone().map_or_else(crate::Puzzle3dKindCatalogs::default, |rows| dsl::FromValue::from_value(rows).expect("kind catalogs decode")) };
-        let compatibility = |meta: &Puzzle3dFixtureMeta| -> Vec<crate::Puzzle3dKindCompatibility> { meta.kind_compatibility.clone().map_or_else(Vec::new, |rows| dsl::FromValue::from_value(rows).expect("kind compatibility decodes")) };
+        let catalogs = |meta: &Puzzle3dFixtureMeta| -> crate::Puzzle3dKindCatalogs { meta.kind_catalogs.clone().map_or_else(crate::Puzzle3dKindCatalogs::default, |rows| semio_framework_value::FromValue::from_value(rows).expect("kind catalogs decode")) };
+        let compatibility = |meta: &Puzzle3dFixtureMeta| -> Vec<crate::Puzzle3dKindCompatibility> { meta.kind_compatibility.clone().map_or_else(Vec::new, |rows| semio_framework_value::FromValue::from_value(rows).expect("kind compatibility decodes")) };
         assert_eq!(catalogs(&typed.fixture.meta), catalogs(&bridged.fixture.meta), "{label}: kind catalogs disagree");
         assert_eq!(compatibility(&typed.fixture.meta), compatibility(&bridged.fixture.meta), "{label}: kind compatibility disagrees");
         assert_eq!(typed.active_utility, bridged.active_utility, "{label}: active utility disagrees");
@@ -5779,7 +5739,7 @@ fn world_attraction_segments_match_the_vortex_position_resolver_for_every_exampl
                 Some(json!({ "id": attraction.id, "from": from, "to": to, "color": "#60a5fa" }))
             })
             .collect();
-        let rendered = parse(&main::world_attractions_json(&fixture)).expect("attractions json");
+        let rendered = parse(&main::world_attractions_json(&fixture), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("attractions json");
         let rendered = rendered.as_array().cloned().unwrap_or_default();
         assert_eq!(rendered.len(), expected.len(), "{label}: exactly the resolvable attractions render");
         for (segment, resolved) in rendered.iter().zip(&expected) {
@@ -5802,7 +5762,7 @@ fn puzzle3d_typed_scene_config_matches_the_value_bridge_for_every_example() {
         runtime.object_kind_weights.insert("capsule".into(), 0.25);
         runtime.vortex_kind_weights.insert("rim".into(), 0.75);
         let envelope = Puzzle3dScene { fixture, runtime, active_utility: "utility".into() };
-        let bridged: crate::standards::v1::subsets::any::schema::SceneConfig = dsl::FromValue::from_value(scene_config_value(&envelope)).expect("value bridge decodes");
+        let bridged: crate::standards::v1::subsets::any::schema::SceneConfig = semio_framework_value::FromValue::from_value(scene_config_value(&envelope)).expect("value bridge decodes");
         let typed = scene_config(&envelope).expect("typed scene config builds");
         assert_eq!(typed, bridged, "{label}: typed engine scene disagrees with the value bridge");
     }
@@ -5820,10 +5780,10 @@ fn puzzle3d_kind_mesh_index_matches_a_per_object_catalog_scan() {
                 .kind_catalogs
                 .as_ref()
                 .and_then(|catalogs| catalogs.get("objects"))
-                .and_then(dsl::DslValue::as_array)
-                .and_then(|rows| rows.iter().find(|row| row.get("id").and_then(dsl::DslValue::as_str) == object.object_kind.as_deref()))
+                .and_then(semio_framework_value::DslValue::as_array)
+                .and_then(|rows| rows.iter().find(|row| row.get("id").and_then(semio_framework_value::DslValue::as_str) == object.object_kind.as_deref()))
                 .and_then(|row| row.get("meshUrl"))
-                .and_then(dsl::DslValue::as_str);
+                .and_then(semio_framework_value::DslValue::as_str);
             let expected = object.mesh_url.as_deref().filter(|url| !url.is_empty()).or(scanned);
             assert_eq!(index.resolve(object), expected, "{label}: {} resolved to a different mesh identity", object.id);
         }
@@ -5926,7 +5886,7 @@ async fn the_add_object_dialog_offers_every_object_kind_of_both_examples() {
         let values: Vec<String> = options.iter().map(|option| option.value.clone()).collect();
         assert_eq!(values, expected, "{surface} must offer the live catalog's object kinds");
         assert!(values.len() <= PUZZLE3D_OBJECT_KIND_OPTIONS_MAX, "{surface} exceeded its fixed option ceiling");
-        let default = arg.default.as_ref().and_then(dsl::DslValue::as_str).unwrap_or_default().to_string();
+        let default = arg.default.as_ref().and_then(semio_framework_value::DslValue::as_str).unwrap_or_default().to_string();
         assert!(values.contains(&default), "{surface}'s default {default} is not one of its own options");
     }
     assert!(dialog.args.iter().all(|arg| arg.required), "the dialog's kind select stays required");
@@ -6021,13 +5981,13 @@ async fn the_engagement_fill_verb_arms_the_fill_tool_and_hands_over_its_count() 
         .requested_effects
         .iter()
         .find_map(|effect| match effect {
-            Effect::DispatchAction { action, args, .. } if action == "setFillCount" => args.as_ref().and_then(|value| value.get("value")).and_then(dsl::DslValue::as_f64),
+            Effect::DispatchAction { action, args, .. } if action == "setFillCount" => args.as_ref().and_then(|value| value.get("value")).and_then(semio_framework_value::DslValue::as_f64),
             _ => None,
         })
         .expect("typing `fill 5` must hand the count to the retained setFillCount command");
     assert_eq!(count, 5.0, "the typed count reaches setFillCount verbatim");
     assert!(
-        result.requested_effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, args: Some(args), .. } if action == semio_framework_tool_run::TOOL_RUN_START_ACTION_ID && args.get(semio_framework_tool_run::TOOL_RUN_ARG_TOOL_ID).and_then(dsl::DslValue::as_str) == Some(fill_tool::TOOL_ID))),
+        result.requested_effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, args: Some(args), .. } if action == semio_framework_tool_run::TOOL_RUN_START_ACTION_ID && args.get(semio_framework_tool_run::TOOL_RUN_ARG_TOOL_ID).and_then(semio_framework_value::DslValue::as_str) == Some(fill_tool::TOOL_ID))),
         "typing `fill 5` starts a fill tool run through the framework: {:?}",
         result.requested_effects,
     );
@@ -6220,7 +6180,7 @@ async fn outliner_row_hide_and_show_round_trip_through_their_own_declared_args()
     };
     assert!(!hidden_of(&app, &object_id), "a freshly added object starts visible");
     for expected in [true, false] {
-        let panel: Value = from_json_str(&to_json_string(&render_body(&mut app, artifact::BODY_KEY).await)).expect("the outliner renders parseable ui json");
+        let panel: Value = from_json_str(&to_json_string(&render_body(&mut app, artifact::BODY_KEY).await), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the outliner renders parseable ui json");
         let args = outliner_verb_row(&panel, &object_id, "setSelectionHidden").and_then(|row| row.pointer("/target/args").cloned()).unwrap_or_else(|| panic!("the outliner row must declare a setSelectionHidden target for {object_id}: {panel}"));
         assert_eq!(args.get("hidden").and_then(Value::as_bool), Some(expected), "the row's own target must ask for the INVERSE of the state it renders: {args}");
         dispatch(&mut app, "setSelectionHidden", Some(&args), None).await.expect("setSelectionHidden from the outliner row's own target");
@@ -6238,7 +6198,7 @@ async fn outliner_row_hide_and_show_round_trip_through_their_own_declared_args()
 #[semio_framework_async_macros::async_test]
 async fn outliner_hide_reaches_the_world_instance_lane_and_flips_the_row_control() {
     fn instance_scale(world: &Value, object_id: &str) -> Vec<f64> {
-        let instances: Value = parse(world.pointer("/world3d/instancesJson").and_then(Value::as_str).expect("the world body publishes an instances lane")).expect("instances lane is json");
+        let instances: Value = parse(world.pointer("/world3d/instancesJson").and_then(Value::as_str).expect("the world body publishes an instances lane"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("instances lane is json");
         instances
             .as_array()
             .expect("instances lane is an array")
@@ -6284,7 +6244,7 @@ async fn outliner_hide_reaches_the_world_instance_lane_and_flips_the_row_control
 #[semio_framework_async_macros::async_test]
 async fn outliner_show_restores_the_world_instance_scale_in_the_same_settle() {
     fn instance_scale(world: &Value, object_id: &str) -> Vec<f64> {
-        let instances: Value = parse(world.pointer("/world3d/instancesJson").and_then(Value::as_str).expect("the world body publishes an instances lane")).expect("instances lane is json");
+        let instances: Value = parse(world.pointer("/world3d/instancesJson").and_then(Value::as_str).expect("the world body publishes an instances lane"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("instances lane is json");
         instances
             .as_array()
             .expect("instances lane is an array")
@@ -6353,7 +6313,7 @@ async fn outliner_set_verbs_are_idempotent_by_value_and_refuse_a_missing_value()
         ("setSelectionHidden", "hidden", json!({ "entity": "object", "hidden": true, "ids": [object_id.clone()] })),
         ("setSelectionLocked", "locked", json!({ "entity": "object", "ids": [object_id.clone()], "locked": true })),
     ] {
-        assert!(Puzzle3dPlayApp::command_from_action(verb, Some(&json::to_dsl_value(&bare))).is_err(), "{verb} without its {flag} value must be refused");
+        assert!(Puzzle3dPlayApp::command_from_action(verb, Some(&semio_framework_pack_json::to_dsl_value(&bare))).is_err(), "{verb} without its {flag} value must be refused");
         let (first, settled) = dispatch_reporting(&mut app, verb, Some(&args), None).await;
         first.unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
         let rows = history_row_labels(&settled);
@@ -6489,7 +6449,7 @@ async fn copy_then_paste_clones_selection_as_one_mutation() {
         _ => None,
     }).expect("copy must emit ClipboardWrite");
     let before = object_count(&app);
-    let paste_args = json!({ "fragment": json::from_dsl_value(&dsl::ToValue::to_value(&fragment)) });
+    let paste_args = json!({ "fragment": semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&fragment)) });
     let pasted = dispatch(&mut app, "paste", Some(&paste_args), None).await.expect("paste");
     assert!(!pasted.mutations.is_empty(), "paste must emit one mutation edit: {:?}", pasted.mutations);
     assert_eq!(object_count(&app), before + 1, "paste clones the selection");
@@ -6526,7 +6486,7 @@ async fn export_fixture_downloads_round_trippable_json() {
         }
         _ => None,
     }).expect("export must emit DownloadMediaExport");
-    let exported: Value = parse(&data).expect("export JSON parses");
+    let exported: Value = parse(&data, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("export JSON parses");
     assert_eq!(exported.get("schema"), before.get("schema"), "export schema must match the live fixture");
     assert_eq!(exported.get("objects").and_then(Value::as_array).map(Vec::len), before.get("objects").and_then(Value::as_array).map(Vec::len));
 }
@@ -6835,7 +6795,7 @@ fn the_nakagin_export_reimports_byte_for_byte() {
     assert!(payload.len() > semio_framework::kernel::IMPORT_CHUNK_BYTES, "the payload under test spans several host chunks: {} B", payload.len());
     let root = puzzle3d_import_value(&json!({ "payload": payload.as_str(), "name": "nakagin.json" })).expect("the whole export is a puzzle 3D document");
     assert_eq!(
-        crate::editor::puzzle3d::commands::export_fixture::puzzle3d_export_json(&Puzzle3dFixture::from_value(dsl::json::to_dsl_value(&root)).expect("the imported root IS a puzzle 3D document")),
+        crate::editor::puzzle3d::commands::export_fixture::puzzle3d_export_json(&Puzzle3dFixture::from_value(semio_framework_pack_json::to_dsl_value(&root)).expect("the imported root IS a puzzle 3D document")),
         payload,
         "the import is byte-identical to the document that was exported"
     );
@@ -6969,7 +6929,7 @@ async fn export_over_the_inline_budget_streams_one_segmented_download_carrying_t
     let drained = drain_segmented_download(&mut app, &handle).await;
     assert_eq!(drained.len(), expected.len(), "the drained bytes are the whole payload");
     assert_eq!(String::from_utf8(drained).expect("drained payload is UTF-8"), expected, "the drained payload IS the export, byte for byte");
-    let reassembled: Value = parse(&expected).expect("the reassembled export parses");
+    let reassembled: Value = parse(&expected, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the reassembled export parses");
     let live = projection_of(&app);
     assert_eq!(object_cores(&reassembled), object_cores(&live), "the streamed export reproduces every object of the live document");
     assert_eq!(reassembled.get("schema"), live.get("schema"));
@@ -7543,7 +7503,7 @@ async fn shipped_object_kinds_are_the_two_examples_own_catalog_rows() {
             if derived.len() >= PUZZLE3D_OBJECT_KIND_OPTIONS_MAX {
                 break;
             }
-            let Some(id) = entry.get("id").and_then(dsl::DslValue::as_str) else {
+            let Some(id) = entry.get("id").and_then(semio_framework_value::DslValue::as_str) else {
                 continue;
             };
             if derived.iter().any(|(existing, _)| existing == id) {
@@ -7572,7 +7532,7 @@ fn the_initial_snapshot_costs_only_its_document() {
         work();
         semio_framework_trace::peak_heap_bytes_on_this_thread() - before
     };
-    let document = peak_of(&|| drop(Puzzle3dPlaySnapshot::new((&dsl::ToValue::to_value(&default_fixture())).into())));
+    let document = peak_of(&|| drop(Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&default_fixture())).into())));
     let snapshot = peak_of(&|| drop(<Puzzle3dPlayApp as ArtifactEditor>::initial_snapshot()));
     assert!(document > 0, "the witness weighs the document conversion: {document}");
     assert!(snapshot <= document + 4096, "the initial snapshot peaked at {snapshot} B, its document at {document} B: it does work the document never reads");

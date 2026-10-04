@@ -1,0 +1,7 @@
+{
+  "amount": 1.0,
+  "filter": "blur",
+  "layerId": "paint",
+  "mutation": "applyFilter",
+  "selection": null
+}

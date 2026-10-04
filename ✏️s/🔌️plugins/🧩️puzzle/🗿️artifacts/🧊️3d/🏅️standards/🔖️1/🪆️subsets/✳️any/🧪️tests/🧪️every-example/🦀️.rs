@@ -17,7 +17,7 @@ fn every_registered_example_builds_its_document() {
         let ExampleSourceBody::Deferred { source: authored, .. } = source.body() else { panic!("{} is a deferred DSL example", source.id()) };
         let text = std::str::from_utf8(authored).unwrap_or_else(|error| panic!("{} is UTF-8: {error}", source.id()));
         let parsed = parse_dsl(text).unwrap_or_else(|error| panic!("{} example DSL parses: {error}", source.id()));
-        let built: Puzzle3dSnapshot = dsl::json::from_json_str(&source.document_json()).unwrap_or_else(|error| panic!("{} document decodes: {error:?}", source.id()));
+        let built: Puzzle3dSnapshot = semio_framework_pack_json::from_json_str(&source.document_json(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|error| panic!("{} document decodes: {error:?}", source.id()));
         assert!(built == parsed, "{} document equals its authored DSL", source.id());
         semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&built);
         semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&built);

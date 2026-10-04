@@ -27,3 +27,5 @@ record set-shape-text tag=6
 field payload bytes
 record set-shape-position tag=7
 field payload bytes
+record patch-snapshot tag=8
+field payload bytes

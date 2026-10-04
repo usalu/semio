@@ -23,9 +23,12 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveTrailerEntry {
         MutationOutcome::new(diff::diff_graph_edit(base, diff::diff_remove_trailer_entry(base, &self.key)))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         base.trailer.iter().find(|entry| entry.key == self.key).map(|entry| PdfMutation::SetTrailerEntry(SetTrailerEntry { key: self.key.clone(), value: entry.value.clone() })).into_iter().collect()
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove trailer entry {}", self.key), &format!("Trailer-Eintrag {} entfernen", self.key))

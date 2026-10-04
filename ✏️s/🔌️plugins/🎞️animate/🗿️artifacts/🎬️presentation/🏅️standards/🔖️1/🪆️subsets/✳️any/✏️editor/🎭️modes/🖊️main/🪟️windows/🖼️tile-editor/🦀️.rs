@@ -74,7 +74,7 @@ fn deck_to_canvas_layers(deck: &PresentationSnapshot) -> String {
         let (x, y, width, height) = frame_to_canvas(&tile.crop, SCALE);
         layers.push(TileCanvasLayer { id: tile.id.clone(), kind: "tile".into(), name: tile.name.clone(), x, y, width, height, data_url: None });
     }
-    dsl::os_pack::json::to_json_string(&layers)
+    semio_framework_pack_json::to_json_string(&layers)
 }
 //#endregion 🔖️CanvasLayers
 

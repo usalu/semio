@@ -1,8 +1,13 @@
+import intrinsicCorpus from "../../../../🎒️pack/🌱️value/🧫️fixtures/🎞️intrinsic-media/🔣️.json";
 import { test, expect } from "bun:test";
 import { Database } from "bun:sqlite";
 import Ajv from "ajv/dist/2020";
 import fixture from "../../🧫️fixtures/🛬️controlled/🔣️.json";
 import schema from "../../🧬️schema/🛬️controlled/🔣️.json";
+import Ajv7 from "ajv";
+import borrowedKeys from "../../🧫️fixtures/🛬️controlled/🔗️borrowed-keys.json";
+import borrowedKeySchema from "../../🧬️schema/🛬️controlled/🔗️borrowed-keys.json";
+import { ValueError } from "../../../⚠️refusal/🟦️.ts";
 
 test("controlled native constructor neutral corpus independently validates and preserves ordered values",()=>{
   expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);
@@ -107,4 +112,54 @@ test("scalar owner-named defaults retain independent SQLite JSON value semantics
       expect(oracle).toEqual(row.expected);
     }
   } finally { database.close(); }
+});
+
+test("borrowed long-key corpus retains literal UTF-8 membership through independent SQLite", () => {
+  expect(new Ajv7({strict:true}).compile(borrowedKeySchema)(borrowedKeys)).toBe(true);
+  expect(borrowedKeys.expectedKind).toBe(new ValueError("canceled","owned cancellation").kind);
+  const key=borrowedKeys.unit.repeat(borrowedKeys.repeat),bytes=new TextEncoder().encode(key);
+  expect(bytes.length).toBe(140000);
+  expect(bytes.length).toBeGreaterThan(borrowedKeys.maximumOwnedBytes);
+  const database=new Database(":memory:");
+  try {
+    database.run("CREATE TABLE entry(ordinal INTEGER PRIMARY KEY,key TEXT NOT NULL)");
+    for(const row of borrowedKeys.cases){
+      database.run("DELETE FROM entry");
+      for(let i=0;i<row.entries;i++)database.query("INSERT INTO entry VALUES(?,?)").run(i,key);
+      expect(database.query("SELECT count(*) AS total,count(DISTINCT key) AS kinds FROM entry").get()).toEqual({total:row.entries,kinds:1});
+      expect((database.query("SELECT key,length(CAST(key AS BLOB)) AS bytes FROM entry ORDER BY ordinal").all()as{key:string;bytes:number}[])).toEqual(Array.from({length:row.entries},()=>({key,bytes:bytes.length})));
+    }
+  } finally { database.close(); }
+});
+
+
+test("borrowed object index has explicit full-key scratch and ordered identity authority", () => {
+  type Index={storage:string;requests:string;probes:string;cases:{id:string;keys:string[];unique:boolean}[];wide:{prefix:string;count:number;duplicateOrdinal:number}};
+  const index=(borrowedKeys as unknown as {indexAuthority?:Index}).indexAuthority;
+  expect(index,"closed neutral exact borrowed-key storage facet").toBeDefined();
+  if(!index)throw Error("borrowed-key index authority is absent");
+  expect(index.storage).toBe("indexedOwnedSlots");expect(index.requests).toBe("fullConcreteReplacement");expect(index.probes).toBe("boundedFullUtf8Equality");
+  expect(new Ajv7({strict:true}).compile(borrowedKeySchema)(borrowedKeys)).toBe(true);
+  const database=new Database(":memory:");
+  try {
+    database.run("CREATE TABLE member(ordinal INTEGER PRIMARY KEY,key TEXT NOT NULL COLLATE BINARY)");
+    const cases=[...index.cases,{id:"wide",keys:Array.from({length:index.wide.count},(_,i)=>index.wide.prefix+i),unique:true}];
+    cases.push({id:"distantDuplicate",keys:[...cases.at(-1)!.keys,cases.at(-1)!.keys[index.wide.duplicateOrdinal]!],unique:false});
+    for(const row of cases){database.run("DELETE FROM member");for(const[ordinal,key]of row.keys.entries())database.query("INSERT INTO member VALUES(?,?)").run(ordinal,key);
+      const oracle=database.query("SELECT count(*)=count(DISTINCT key) AS unique_keys FROM member").get()as{unique_keys:number};expect(Boolean(oracle.unique_keys),row.id).toBe(row.unique);
+      expect(database.query("SELECT ordinal,key,hex(CAST(key AS BLOB)) AS word FROM member ORDER BY ordinal").all()).toEqual(row.keys.map((key,ordinal)=>({ordinal,key,word:Buffer.from(key).toString("hex").toUpperCase()})));
+    }
+  }finally{database.close();}
+});
+
+
+test("canonical intrinsic retirement declares complete actual owner release without new backing",()=>{
+ const contract=(borrowedKeys as unknown as {canonicalRetirement?:unknown}).canonicalRetirement;
+ expect(contract,"canonical all-nine retirement contract").toEqual({requestBytes:0,releasedBytes:"completeBorrowedCapacityCensus",sourceCorpus:"intrinsic-media-wire-v1",depth:256,longBranch:{unit:"文🌠",repeat:20000,utf8Bytes:140000}});
+ expect(new Ajv7({strict:true}).compile(borrowedKeySchema)(borrowedKeys)).toBe(true);
+ expect(intrinsicCorpus.contract).toBe((contract as {sourceCorpus:string}).sourceCorpus);
+ const validate=new Ajv7({strict:true}).compile(borrowedKeySchema);expect(validate({...borrowedKeys,canonicalRetirement:{...borrowedKeys.canonicalRetirement,requestBytes:1}})).toBe(false);expect(validate({...borrowedKeys,canonicalRetirement:{...borrowedKeys.canonicalRetirement,opaqueOwner:true}})).toBe(false);
+ const word=new DataView(new ArrayBuffer(8));word.setBigUint64(0,0xfff800000000002an);expect(Number.isNaN(word.getFloat64(0))).toBe(true);expect(word.getBigUint64(0)).toBe(0xfff800000000002an);
+ expect(Buffer.byteLength("文🌠".repeat(20000))).toBe(140000);
+ const database=new Database(":memory:");try{database.run("CREATE TABLE intrinsic(ordinal INTEGER PRIMARY KEY,kind TEXT NOT NULL)");const kinds:string[]=[];type Node={kind:string;value?:unknown};const visit=(value:Node)=>{kinds.push(value.kind);if(value.kind==="array")for(const child of value.value as Node[])visit(child);if(value.kind==="object")for(const member of value.value as {key:string;value:Node}[])visit(member.value);};visit(intrinsicCorpus.value as Node);for(const[i,kind]of kinds.entries())database.query("INSERT INTO intrinsic VALUES(?,?)").run(i,kind);expect(database.query("SELECT kind FROM intrinsic ORDER BY ordinal").all()).toEqual(kinds.map(kind=>({kind})));expect(database.query("SELECT DISTINCT kind FROM intrinsic ORDER BY kind").all()).toEqual(["array","bool","bytes","float","int","null","object","string","uint"].map(kind=>({kind})));expect(database.query("SELECT count(DISTINCT kind) AS count FROM intrinsic").get()).toEqual({count:9});}finally{database.close();}
 });

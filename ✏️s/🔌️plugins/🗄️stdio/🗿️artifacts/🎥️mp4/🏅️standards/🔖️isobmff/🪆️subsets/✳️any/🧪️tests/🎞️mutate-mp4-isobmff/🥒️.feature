@@ -91,7 +91,7 @@ Feature: Apply every typed ISO-BMFF mutation to a real-world video
       | insert-sample | {"trackIndex":0,"index":10,"sample":{"data":[0,0,0,4,101,1,2,3],"duration":512,"ctsOffset":0,"sync":false}} |
       | remove-sample | {"trackIndex":0,"index":10} |
       | set-sample-sync | {"trackIndex":0,"index":27,"sync":false} |
-      | patch-snapshot | {"patch":{"edits":[{"path":["tracks","0","samples","5","sync"],"edit":{"operation":"set","value":true}},{"path":["tracks","0","samples","27","sync"],"edit":{"operation":"set","value":false}}]}} |
+      | patch-snapshot | {"patch":{"operation":"set","path":"/tracks/0/samples/5/sync","value":true}} |
 
   @id-inverse
   @level-exhaustive
@@ -115,7 +115,7 @@ Feature: Apply every typed ISO-BMFF mutation to a real-world video
       | insert-sample | {"trackIndex":0,"index":10,"sample":{"data":[0,0,0,4,101,1,2,3],"duration":512,"ctsOffset":0,"sync":false}} |
       | remove-sample | {"trackIndex":0,"index":10} |
       | set-sample-sync | {"trackIndex":0,"index":27,"sync":false} |
-      | patch-snapshot | {"patch":{"edits":[{"path":["tracks","0","samples","5","sync"],"edit":{"operation":"set","value":true}},{"path":["tracks","0","samples","27","sync"],"edit":{"operation":"set","value":false}}]}} |
+      | patch-snapshot | {"patch":{"operation":"set","path":"/tracks/0/samples/5/sync","value":true}} |
 
   @id-identity-round-trip
   @level-long

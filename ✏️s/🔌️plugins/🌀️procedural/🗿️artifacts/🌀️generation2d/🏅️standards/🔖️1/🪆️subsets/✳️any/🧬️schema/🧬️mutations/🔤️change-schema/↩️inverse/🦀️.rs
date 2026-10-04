@@ -4,6 +4,9 @@
 use crate::standards::v1::subsets::any::schema::mutations::{change_schema, Generation2dMutation};
 use crate::Generation2dSnapshot;
 
-pub fn inverse(_payload: &super::ChangeSchema, base: &Generation2dSnapshot) -> Vec<Generation2dMutation> {
+pub fn inverse(_payload: &super::ChangeSchema, base: &Generation2dSnapshot) -> Result<Vec<Generation2dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![change_schema(base.host_snapshot.schema.clone())]
+
+    })())
 }

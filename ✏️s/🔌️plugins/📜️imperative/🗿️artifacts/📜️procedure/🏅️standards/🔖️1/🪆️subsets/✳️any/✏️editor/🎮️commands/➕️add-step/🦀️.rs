@@ -1,70 +1,24 @@
-//! 🔧️ 🔧️ Imperative play app commands command — `add-step`.
+//! 🔧️ Procedure command `add-step`: a new step of `kind` in the root scope at `index` (absent appends), published as the
+//! composed `flow` child's leaves (design §20.15).
 
 use crate::editor::procedure::config::{ImperativeConfig, ImperativeConfigMutation};
-use crate::mutations::{create_step, ProcedureMutation};
-use crate::{Dictionary, PathRef, ProcedureSnapshot, Step};
+use crate::schema::operations::{insert_step, next_step_id};
+use crate::mutations::ProcedureMutation;
+use crate::{Dictionary, ProcedureSnapshot, Step};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
-use std::collections::BTreeMap;
 
-//#region 🔖️Helpers
-/// 🆔️ Allocates a fresh `step-N` id one past the highest suffix used anywhere in the document
-/// (including nested `control.*` bodies), deterministically from pre-state — no mutable counter.
-/// Reads through the `flow` working scene (`ProcedureSnapshot` no longer carries `path` inline —
-/// ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`).
-fn next_step_id(document: &ProcedureSnapshot) -> String {
-    fn max_suffix(steps: &[Step]) -> u64 {
-        steps.iter().fold(0, |acc, step| {
-            let own = step.id.strip_prefix("step-").and_then(|rest| rest.parse::<u64>().ok()).unwrap_or(0);
-            let nested = step.bodies.values().map(|path| max_suffix(&path.steps)).max().unwrap_or(0);
-            acc.max(own).max(nested)
-        })
-    }
-    let path = crate::procedure_working_scene(document).path;
-    format!("step-{}", max_suffix(&path.steps) + 1)
-}
-
-//#endregion 🔖️Helpers
-
-//#region 🔖️AddStep
-//#endregion 🔖️AddStep
-
-//#region 🔖️AddStepAt
-//#endregion 🔖️AddStepAt
-
-//#region 🔖️RemoveStep
-//#endregion 🔖️RemoveStep
-
-//#region 🔖️RemoveStepAt
-//#endregion 🔖️RemoveStepAt
-
-//#region 🔖️MoveStep
-//#endregion 🔖️MoveStep
-
-//#region 🔖️MoveStepAt
-//#endregion 🔖️MoveStepAt
-
-//#region 🔖️SetStepParams
-//#endregion 🔖️SetStepParams
-
-//#region 🔖️SetStepParamsAt
-//#endregion 🔖️SetStepParamsAt
-
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "add-step")]
 pub struct AddStep {
     pub kind: String,
     pub index: Option<usize>,
 }
 
-// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: no auto-select of the new step
-// anymore — selection is the framework-owned `steps` interaction domain, reachable only through the
-// injected `interactionSelect` verb, not an ordinary command's `config_mutations`.
+/// ➕️ One flow-child edit inserting the step and chaining it into the root scope.
 pub fn handle(payload: &AddStep, doc: &ArtifactView<'_, ProcedureSnapshot>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ProcedureMutation, ImperativeConfigMutation>, Fault> {
-    let document = doc.snapshot;
-    let id = next_step_id(document);
-    let step = Step { id, kind: payload.kind.clone(), params: Dictionary::new(), bodies: BTreeMap::new() };
-    // 🪆️ `create-step` is append-only (no index field, matching `apply_steps_delta`'s `added`
-    // handling, which already ignored the old `CollectionMutation::Add`'s index the same way).
-    Ok(Emit::mutations(vec![create_step(PathRef::default(), step)]))
+    crate::procedure_edit_emit(doc, |path| {
+        let step = Step { id: next_step_id(path), kind: payload.kind.clone(), params: Dictionary::new(), bodies: Default::default() };
+        insert_step(path, &Default::default(), payload.index, step);
+    })
 }

@@ -13,7 +13,7 @@ fn kinds_matches_every_variant_and_both_catalogs() {
     let from_variants: std::collections::BTreeSet<&str> = demo_mutation_cases().iter().map(DwgMutation::kind).collect();
     let from_kinds: std::collections::BTreeSet<&str> = KINDS.iter().copied().collect();
     assert_eq!(from_variants, from_kinds, "KINDS must equal every DwgMutation variant's kind()");
-    assert_eq!(KINDS.len(), 2, "KINDS must list exactly the declared 2 kinds");
+    assert_eq!(KINDS.len(), 3, "KINDS must list exactly the declared 3 kinds");
     for manifest in [include_str!("../../../../🔮️oracles/🔣️.json"), include_str!("../../../../../../../4️⃣ac1018/🪆️subsets/✳️any/🔮️oracles/🔣️.json")] {
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "a committed DWG catalog is missing kind {kind:?}");
@@ -28,7 +28,7 @@ async fn logical_mutations_obey_diff_and_inverse_laws() {
         let mut applied = base.clone();
         let diff = apply_dwg_mutation(&mut applied, &mutation);
         assert_eq!(diff.diff().apply(&base).expect("diff must apply to base"), applied);
-        for inverse in mutation.inverse(&base) {
+        for inverse in mutation.inverse(&base).expect("valid retained mutation inverse fixture") {
             apply_dwg_mutation(&mut applied, &inverse);
         }
         assert_eq!(applied, base);

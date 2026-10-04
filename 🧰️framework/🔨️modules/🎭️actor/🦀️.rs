@@ -3741,12 +3741,12 @@ fn actor_shard_map_to_value(map: &BTreeMap<ActorId, ShardId>) -> ::protocol::val
 }
 fn actor_shard_map_from_value(value: ::protocol::value::DslValue) -> Result<BTreeMap<ActorId, ShardId>, ::protocol::value::ValueError> {
     let ::protocol::value::DslValue::Object(entries) = value else {
-        return Err(::protocol::value::ValueError::new("expected object"));
+        return Err(::protocol::value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected object"));
     };
     entries
         .into_iter()
         .map(|(key, value)| {
-            let id: u64 = key.parse().map_err(|_| ::protocol::value::ValueError::new(format!("invalid ActorId key `{key}`")))?;
+            let id: u64 = key.parse().map_err(|_| ::protocol::value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("invalid ActorId key `{key}`")))?;
             let shard: ShardId = ::protocol::value::FromValue::from_value(value).map_err(|error: ::protocol::value::ValueError| error.under(&key))?;
             Ok((ActorId(id), shard))
         })
@@ -3760,12 +3760,12 @@ fn shard_actor_map_to_value(map: &BTreeMap<ShardId, ActorId>) -> ::protocol::val
 }
 fn shard_actor_map_from_value(value: ::protocol::value::DslValue) -> Result<BTreeMap<ShardId, ActorId>, ::protocol::value::ValueError> {
     let ::protocol::value::DslValue::Object(entries) = value else {
-        return Err(::protocol::value::ValueError::new("expected object"));
+        return Err(::protocol::value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected object"));
     };
     entries
         .into_iter()
         .map(|(key, value)| {
-            let id: u16 = key.parse().map_err(|_| ::protocol::value::ValueError::new(format!("invalid ShardId key `{key}`")))?;
+            let id: u16 = key.parse().map_err(|_| ::protocol::value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("invalid ShardId key `{key}`")))?;
             let actor: ActorId = ::protocol::value::FromValue::from_value(value).map_err(|error: ::protocol::value::ValueError| error.under(&key))?;
             Ok((ShardId(id), actor))
         })

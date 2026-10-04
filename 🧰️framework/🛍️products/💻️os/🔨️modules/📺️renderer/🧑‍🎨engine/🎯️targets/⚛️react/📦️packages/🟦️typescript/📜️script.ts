@@ -38,6 +38,24 @@ class TestScript extends BundleScript {
   }
 }
 
+/** 🧾️ Executes the exact-u64 completion and causal publication interleaving laws. */
+class CausalInputPublicationCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length !== 0) throw new Error("causal-input-publication-check accepts no arguments");
+    process.env.SEMIO_TEST_LEVEL = "long";
+    await runVitest(this.root, ["../../../../🧪️tests/⌨️causal-input-publication/🟦️.ts", "--silent=false", "--reporter=verbose"], "../../🧪️tests/🎚️config/🟦️.ts");
+  }
+}
+
+/** 🎬️ Executes exact owner/Store/target/action admission and mounted Table/Tree recovery laws. */
+class RowActionAdmissionCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length !== 0) throw new Error("row-action-admission-check accepts no arguments");
+    process.env.SEMIO_TEST_LEVEL = "long";
+    await runVitest(this.root, ["../../../../🧪️tests/🎬️row-action-admission/🟦️.tsx", "--silent=false", "--reporter=verbose"], "../../🧪️tests/🎚️config/🟦️.ts");
+  }
+}
+
 /** 📍 Executes exact document-scope and newly-created session handoff laws. */
 class DocumentOpeningScopeCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -991,6 +1009,8 @@ const router = new ScriptRouter(fileURLToPath(new URL(".", import.meta.url)))
   .register("test", TestScript)
   .register("lint", LintScript)
   .register("typecheck", TypecheckScript)
+  .register("causal-input-publication-check", CausalInputPublicationCheckScript)
+  .register("row-action-admission-check", RowActionAdmissionCheckScript)
   .register("tutorial-interaction-check", TutorialInteractionCheckScript)
   .register("flow-browser-runtime-check", FlowBrowserRuntimeCheckScript)
   .register("artifact-creation-progress-check", ArtifactCreationProgressCheckScript)

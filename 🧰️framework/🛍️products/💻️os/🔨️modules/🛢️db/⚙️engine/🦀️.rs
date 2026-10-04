@@ -9895,12 +9895,12 @@ impl ArtifactHandle {
         admission: store::durable_group::DurableOwnedMapRecoveryAdmissionV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>,
     ) -> db_artifact::ArtifactDurableGroupRecoveryOwnerV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
     where
-        ParentP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
-        ParentMutation: store::Mutation<ParentP> + Clone + store::ToValue + store::FromValue + Send + 'static,
-        DrawingP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
-        DrawingMutation: store::Mutation<DrawingP> + Clone + store::ToValue + store::FromValue + Send + 'static,
-        ValueP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
-        ValueMutation: store::Mutation<ValueP> + Clone + store::ToValue + store::FromValue + Send + 'static,
+        ParentP: store::ArtifactPack + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + 'static,
+        ParentMutation: store::Mutation<ParentP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + 'static,
+        DrawingP: store::ArtifactPack + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + 'static,
+        DrawingMutation: store::Mutation<DrawingP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + 'static,
+        ValueP: store::ArtifactPack + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + 'static,
+        ValueMutation: store::Mutation<ValueP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + 'static,
     {
         self.authority.durable_group_recovery_retained(db_ids::ArtifactId(self.document.0.clone()), admission)
     }
@@ -9910,12 +9910,12 @@ impl ArtifactHandle {
         owner: &mut db_artifact::ArtifactDurableGroupRecoveryOwnerV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>,
     ) -> Result<(), DbError>
     where
-        ParentP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
-        ParentMutation: store::Mutation<ParentP> + Clone + store::ToValue + store::FromValue + Send + 'static,
-        DrawingP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
-        DrawingMutation: store::Mutation<DrawingP> + Clone + store::ToValue + store::FromValue + Send + 'static,
-        ValueP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
-        ValueMutation: store::Mutation<ValueP> + Clone + store::ToValue + store::FromValue + Send + 'static,
+        ParentP: store::ArtifactPack + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + 'static,
+        ParentMutation: store::Mutation<ParentP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + 'static,
+        DrawingP: store::ArtifactPack + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + 'static,
+        DrawingMutation: store::Mutation<DrawingP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + 'static,
+        ValueP: store::ArtifactPack + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + 'static,
+        ValueMutation: store::Mutation<ValueP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + 'static,
     {
         self.authority.resume_durable_group_recovery(owner)
     }

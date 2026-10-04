@@ -6,8 +6,9 @@
 //! control also names the FIELD it changes (`{field, value}`), because the host merges a control's own
 //! scalar under the single key `value` — a slider has one binding and no other way to say what moved.
 
-use crate::editor::fem3d::modes::edit::windows::results::config::{Fem3dLoopMode, Fem3dResultsWindowConfig, Fem3dWaveform, ANIMATION_PHASE_STEP, ANIMATION_SPEED_MAXIMUM, ANIMATION_SPEED_MINIMUM};
-use crate::editor::fem3d::modes::edit::windows::results::transient::Fem3dPlaybackClock;
+use crate::app_surface::{ANIMATION_PHASE_STEP, ANIMATION_SPEED_MAXIMUM, ANIMATION_SPEED_MINIMUM};
+use crate::editor::fem3d::modes::edit::windows::results::config::Fem3dResultsWindowConfig;
+use crate::editor::fem3d::modes::edit::windows::results::transient::FemPlaybackClock;
 use crate::editor::fem3d::terminology::Fem3dLabels;
 use crate::editor::fem3d::{fem3d_action, ui_label};
 use crate::Fem3dSnapshot;
@@ -168,7 +169,7 @@ fn result_sources(doc: &Fem3dSnapshot) -> Vec<(String, String)> {
 /// focus for live readouts — a panel projection binds to the focused window, and nothing else can read
 /// another window's configuration. `clock` is that window's running playback clock, so the phase
 /// slider follows the animation while it plays and rests where it paused.
-pub fn render(doc: &Fem3dSnapshot, window: Option<&Fem3dResultsWindowConfig>, clock: Option<&Fem3dPlaybackClock>, window_id: &str, labels: &Fem3dLabels) -> UiAssemblyResult<BuiltNode> {
+pub fn render(doc: &Fem3dSnapshot, window: Option<&Fem3dResultsWindowConfig>, clock: Option<&FemPlaybackClock>, window_id: &str, labels: &Fem3dLabels) -> UiAssemblyResult<BuiltNode> {
     let live = window.is_some();
     let window = crate::editor::fem3d::modes::edit::windows::results::config::effective(window.unwrap_or(&Fem3dResultsWindowConfig::default()), clock);
     let animation = &window.animation;
@@ -181,15 +182,8 @@ pub fn render(doc: &Fem3dSnapshot, window: Option<&Fem3dResultsWindowConfig>, cl
         ("once".to_owned(), labels.once.as_str().to_owned()),
     ];
     let waveforms = [("ramp".to_owned(), labels.ramp.as_str().to_owned()), ("sine".to_owned(), labels.sine.as_str().to_owned())];
-    let loop_value = match animation.loop_mode {
-        Fem3dLoopMode::Loop => "loop",
-        Fem3dLoopMode::PingPong => "pingPong",
-        Fem3dLoopMode::Once => "once",
-    };
-    let waveform_value = match animation.waveform {
-        Fem3dWaveform::Ramp => "ramp",
-        Fem3dWaveform::Sine => "sine",
-    };
+    let loop_value = animation.loop_mode.key();
+    let waveform_value = animation.waveform.key();
     let transport = ui::row()
         .try_id("fem3d-play-results.transport.controls")
         .map_err(|_| error("ui.row.id"))?

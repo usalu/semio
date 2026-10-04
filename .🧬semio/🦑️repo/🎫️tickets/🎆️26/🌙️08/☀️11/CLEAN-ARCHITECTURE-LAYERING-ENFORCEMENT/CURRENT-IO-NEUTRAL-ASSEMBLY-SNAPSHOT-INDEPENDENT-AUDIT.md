@@ -1,0 +1,28 @@
+# Independent IO Neutral Assembly Snapshot Audit
+
+Stage2 is unpublished and not publication Ready. Both package.workspace paths resolve absent framework Cargo. Capability law has a mid-file inner doc, unbraced Unicode witness escapes and invalid second include path escapes. TreeSitter no-error observations do not establish Rust escape/doc-context validity. Native stages3/4 reportedly correct these precise boundaries; independent stage4 review remains pending.
+
+Reviewed capability exposes owned General IO/Sqlite/Diagnostic/Value interfaces and standard Cow/TypeId/function pointers, with no observed OS/external bounds. The two capability laws share the assembly-owned fixture. Full staged frames remain source-ready-2.json; independent lexical grammar observations are independent-stage-two-physical-law-grammar-1.json under generated/io-neutral-owner-stage. No source writes or compiler execution.
+
+Stage4 independent twelve-row hash/inverse/span closure and eight physical mount/include checks pass. Both workspaces resolve actual Root Cargo; both capability includes resolve the shared staged fixture hash. Literal Unicode and outer-doc corrections close stage2 defects. Full proof: independent-stage-four-source-conservation-1.json. Still unpublished/mountReadyfalse/uncompiled; required-before-mount obligations retained.
+
+Stage8 seventeen-row full hash/inverse/span conservation closes; all nine captured original lifetime source/schema/fixture/provider frames remain actual-current exact. Six aggregate public error variants and Display delegation are retained; lock, preflight and mutation orders remain Store locks→IO four locks, snapshot→composer→subset→format→Store preflight, composer→subset→format→Store→snapshot publication. Borrowed neutral guards/prepared/pending tokens couple assembly and mutable guard lifetimes. Original four lifetime workloads are retained, unexecuted here.
+
+New public token boundary requires admission before mount: commit_io_registry_assembly mutates three neutral registries and returns a droppable PreparedSnapshotPublication. Product aggregate completes snapshot publication correctly; an independent neutral caller can discard pending and omit the fourth publication. Existing four Store lifetime cases do not cover this new behavior. Preserve an atomic neutral publication contract or explicitly test/admit the chosen public scope. Full observations/source/inverses: independent-stage-eight-aggregate-conservation-1.json. Stage8 remains unpublished/uncompiled/mountReadyfalse.
+
+Stage10 closes eighteen staged full pairs and nine original lifetime frames. Droppable pending API removed: a complete neutral commit uses a generic FnOnce() returning unit between neutral metadata and snapshot publication; OS passes only its preflighted two registry commits. No product/external types enter this callback contract; mutation order remains exact. Public helper error-precedence qualification remains: native snapshot capability extraction now occurs before assembly barrier acquisition, reversing original refusal precedence when both capability and barrier fail. Preserve acquisition order or explicitly admit the semantic change before mount. Full source proof: independent-stage-ten-complete-neutral-commit-conservation-1.json. Unpublished/uncompiled/mountReadyfalse remains accurate.
+
+
+Stage 11 independently restores shared assembly acquisition before capability extraction in both native snapshot/document codec helpers. Transaction error precedence is conserved. The full changed row and scoped ordering observations are retained in `🗑️generated/io-neutral-owner-stage/independent-stage-eleven-error-precedence-1.json`. This remains unpublished and uncompiled; mountReady is false.
+
+
+Stage 11 public callback frontier remains notReady: generic FnOnce executes after composer/subset/format mutations and before snapshot mutation. Caller unwind can leave that partial ordering when guards drop; poisoning is not an admitted rollback guarantee. Existing four Store lifetime cases do not cover this new public arbitrary callback scope. Closed panic, cancellation and prepared/guard escape cases need independent runtime/native observations before publication. Full current staged row: `🗑️generated/io-neutral-owner-stage/independent-stage-eleven-public-callback-frontier-1.json`.
+
+
+Stage 13 removes the arbitrary callback in exactly two changed rows and uses one complete neutral four-registry commit after product Store commits under retained six guards. The public callback hole is structurally closed; publication order changed and equivalence is not inferred. New atomic observer/refusal/cancellation and four lifetime proofs remain required before mount. Full pair: `🗑️generated/io-neutral-owner-stage/independent-stage-thirteen-no-callback-frontier-1.json`.
+
+
+Stage 15 closes 19 authored forward/inverse pairs, three closed publication cases across both orders, six owned/SQLite vectors, and four original lifetime client hashes. Staged observer uses the actual barrier but six atomic witness slots, not six actual registry maps. Native observer, actual integration and four lifetime compiler proofs remain unexecuted; mount not Ready. Full frames: `🗑️generated/io-neutral-owner-stage/independent-stage-fifteen-source-oracle-law-conservation-1.json`.
+
+
+Original lifetime harness conservation is independently token-checked: two callback bodies exact; the four-case callback differs only by one added canonical-barrier hash guard. Every original assertion/body token is conserved after removing that sole added assertion. Full TS parser observation: `independent-stage-fifteen-lifetime-assertion-conservation-2.json`. All four client bodies remain exact and compiler execution is pending.

@@ -4,143 +4,22 @@
   "title": "SetShapeText",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "mutation",
-    "slideIndex",
-    "shapeIndex",
-    "textFrame"
-  ],
+  "required": ["mutation", "address", "text"],
   "properties": {
-    "mutation": {
-      "const": "setShapeText",
-      "description": "Aggregate discriminator spliced in by PptxMutation; absent when the payload stands alone."
-    },
-    "slideIndex": {
-      "type": "integer",
-      "minimum": 0,
+    "mutation": { "const": "setShapeText" },
+    "address": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pptx/ecma-376/base/xml-address.json#/$defs/PptxShapeAddress",
       "x-semio-ui": {
-        "widget": "stepper",
-        "label": {
-          "en": "Slide Index",
-          "de": "Folienindex"
-        },
-        "description": {
-          "en": "Zero-based position of the slide in the deck.",
-          "de": "Nullbasierte Position der Folie im Foliensatz."
-        },
-        "precision": 0,
-        "group": "target",
-        "order": 10
+        "label": { "en": "Shape", "de": "Form" },
+        "description": { "en": "Revision-bound text shape to edit.", "de": "Revisionsgebundene zu bearbeitende Textform." }
       }
     },
-    "shapeIndex": {
-      "type": "integer",
-      "minimum": 0,
+    "text": {
+      "type": "string",
       "x-semio-ui": {
-        "widget": "stepper",
-        "label": {
-          "en": "Shape Index",
-          "de": "Formindex"
-        },
-        "description": {
-          "en": "Zero-based position of the shape on its slide.",
-          "de": "Nullbasierte Position der Form auf ihrer Folie."
-        },
-        "precision": 0,
-        "group": "target",
-        "order": 20
-      }
-    },
-    "textFrame": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/PptxParagraph"
-      },
-      "x-semio-ui": {
-        "label": {
-          "en": "Text body",
-          "de": "Textkörper"
-        },
-        "description": {
-          "en": "Paragraphs of the shape's text body.",
-          "de": "Absätze des Textkörpers der Form."
-        }
-      }
-    }
-  },
-  "$defs": {
-    "PptxParagraph": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "runs": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/PptxRun"
-          },
-          "x-semio-ui": {
-            "label": {
-              "en": "Text runs",
-              "de": "Textläufe"
-            }
-          }
-        }
-      }
-    },
-    "PptxRun": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "text"
-      ],
-      "properties": {
-        "text": {
-          "type": "string"
-        },
-        "bold": {
-          "type": "boolean",
-          "x-semio-ui": {
-            "widget": "toggle",
-            "label": {
-              "en": "Bold",
-              "de": "Fett"
-            }
-          }
-        },
-        "italic": {
-          "type": "boolean",
-          "x-semio-ui": {
-            "widget": "toggle",
-            "label": {
-              "en": "Italic",
-              "de": "Kursiv"
-            }
-          }
-        },
-        "fontSize": {
-          "anyOf": [
-            {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 4294967295
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "x-semio-ui": {
-            "widget": "stepper",
-            "label": {
-              "en": "Font size",
-              "de": "Schriftgröße"
-            },
-            "description": {
-              "en": "Whole points; written as DrawingML `sz` in hundredths of a point.",
-              "de": "Ganze Punkt; geschrieben als DrawingML `sz` in Hundertstel Punkt."
-            },
-            "unit": "pt"
-          }
-        }
+        "widget": "text",
+        "label": { "en": "Shape text", "de": "Formtext" },
+        "description": { "en": "Replacement text for the addressed DrawingML text run.", "de": "Ersatztext für den adressierten DrawingML-Textlauf." }
       }
     }
   }

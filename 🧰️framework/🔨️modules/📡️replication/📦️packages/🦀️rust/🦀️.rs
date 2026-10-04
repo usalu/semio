@@ -24,11 +24,7 @@ pub mod codec {
 #[path = "../../🚰️source/🦀️.rs"]
 pub mod source;
 
-#[path = "../../../⚠️diagnostic/🦀️.rs"]
-pub mod diagnostic;
-
-#[path = "../../../⚠️diagnostic/📍️span/🦀️.rs"]
-pub mod span;
+use semio_framework_diagnostic::*;
 
 pub use semio_framework_value as value;
 pub use semio_framework_value::dsl_value;
@@ -56,6 +52,9 @@ pub mod conflict;
 
 #[path = ""]
 pub mod wire {
+
+    #[path = "../../📡️wire/🎮️command/📥️ingress/🦀️.rs"]
+    pub mod command_ingress;
     #[path = "../../🧾️wire/🦀️.rs"]
     mod codec;
     pub use codec::*;
@@ -90,14 +89,18 @@ pub use crate::causal::*;
 pub use crate::causal::{FrontierComparison as RuntimeFrontierComparison, FrontierSummary as RuntimeFrontierSummary};
 pub use crate::codec::*;
 pub use crate::conflict::*;
-pub use crate::diagnostic::*;
 pub use crate::format::*;
 pub use crate::mutation::*;
 pub use crate::scalar::*;
 pub use crate::source::*;
-pub use crate::span::*;
 pub use crate::value::*;
 pub use crate::wire::*;
 
 #[path = "../../🧬️retirement/🦀️.rs"]
 mod retirement_integration;
+
+pub use wire::command_ingress::{
+    FixedCommandPage, CommandPageSet, PagedCommand, PagedCommandReader, CommandEnvelope, CommandBatch, CommandEnvelopeSet, RejectedCommandBuild, RejectedCommandBuildRegistry, CommandBatchProgress, CommandBatchDriver, CommandDriverRegistry, CommandPageCursor, CommandIngressStatus, COMMAND_PAGE_MAXIMUM_BYTES, COMMAND_MAXIMUM_BYTES, COMMAND_MAXIMUM_PAGES, COMMAND_BATCH_MAXIMUM_ITEMS, INVOCATION_RESULT_PACK_MAXIMUM_BYTES
+};
+
+pub use semio_framework_pack_error::PackRefusal;

@@ -31,7 +31,7 @@ use super::resize_tile_crop;
 /// generic whole-collection `Tiles(...)`/`SetSource`/`SetTiles`/whole-document-replacement
 /// vocabulary — whole-document replacement is not expressible as an in-history mutation at all
 /// (goes through `ArtifactStore::reset`, an app-level concern outside this enum).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslEnum, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
 #[mutations(snapshot = PresentationSnapshot, diff = PresentationDiff, schema = "animate.presentation")]
 pub enum PresentationMutation {
     ResizeSourceFrame(resize_source_frame::ResizeSourceFrame),
@@ -68,16 +68,19 @@ pub fn apply_presentation_mutation(snapshot: &PresentationSnapshot, mutation: &P
 }
 
 /// ↩️ Computes `mutation`'s inverse mutations against `snapshot` (pre-state).
-pub fn inverse_presentation_mutation(snapshot: &PresentationSnapshot, mutation: &PresentationMutation) -> Vec<PresentationMutation> {
-    mutation.inverse(snapshot)
+pub fn inverse_presentation_mutation(snapshot: &PresentationSnapshot, mutation: &PresentationMutation) -> Result<Vec<PresentationMutation>, semio_framework_value::ValueError> {
+    Ok({
+    mutation.inverse(snapshot)?
+
+    })
 }
 
 /// 📥️ Decodes one mutation of leaf `kind` (the descriptor `semanticKind`) from its leaf wire payload — the leaf's
 /// `payload_value()`, exactly what the leaf schema describes and what the `🧭️mutate-presentation-1` case's `Examples`
 /// `params` cells carry — through the derive-generated `Mutation::from_payload_value`. No per-kind mapping.
 pub fn decode_presentation_mutation_json(kind: &str, text: &str) -> Result<PresentationMutation, String> {
-    let json = dsl::os_pack::json::parse(text).map_err(|error| error.to_string())?;
-    PresentationMutation::from_payload_value(kind, dsl::os_pack::json::to_dsl_value(&json)).map_err(|error| error.to_string())
+    let json = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
+    PresentationMutation::from_payload_value(kind, semio_framework_pack_json::to_dsl_value(&json)).map_err(|error| error.to_string())
 }
 
 /// ⚖️ The SEMANTIC PROJECTION this subset is compared through — `(schema, source, tiles)` read back
@@ -89,9 +92,9 @@ pub fn decode_presentation_mutation_json(kind: &str, text: &str) -> Result<Prese
 /// standard library does not promise. `animation` carries no content at all today.
 pub fn encode_presentation_projection_json(snapshot: &PresentationSnapshot) -> String {
     let (source, tiles) = crate::presentation_working_scene(snapshot);
-    let source_json = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&source));
-    let tiles_json = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&tiles));
-    let value = dsl::os_pack::json::object([("schema".to_string(), dsl::os_pack::json::Value::from(snapshot.schema.clone())), ("source".to_string(), source_json), ("tiles".to_string(), tiles_json)]);
-    dsl::os_pack::json::to_string(&value)
+    let source_json = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&source));
+    let tiles_json = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&tiles));
+    let value = semio_framework_pack_json::object([("schema".to_string(), semio_framework_pack_json::Value::from(snapshot.schema.clone())), ("source".to_string(), source_json), ("tiles".to_string(), tiles_json)]);
+    semio_framework_pack_json::to_string(&value)
 }
 //#endregion 🔖️Apply

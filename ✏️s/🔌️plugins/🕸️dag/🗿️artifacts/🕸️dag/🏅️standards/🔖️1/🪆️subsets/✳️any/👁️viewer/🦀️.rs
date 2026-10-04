@@ -53,7 +53,7 @@ impl ArtifactViewer for DagViewer {
     /// 🧩️ The same member roster the editor declares — see `DagPlayApp`'s `Members`.
     type Members = semio_s_artifact_stdio_semio::SemioMembers;
     type Snapshot = DagSnapshot;
-    type Mutation = crate::op::DagMutation;
+    type Mutation = crate::DagMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
@@ -69,9 +69,12 @@ impl ArtifactViewer for DagViewer {
     }
     const DOCUMENT_SCHEMA: &'static str = DAG_DOCUMENT_SCHEMA;
 
-    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {
+ Ok((||{
         crate::genesis_dag_child_pack(snapshot, slot, child_id)
-    }
+    
+})())
+}
 
     fn initial_snapshot() -> DagSnapshot {
         default_snapshot()
@@ -94,7 +97,7 @@ impl ArtifactViewer for DagViewer {
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
+            main::BODY_KEY => main::render(&crate::dag_scene(doc).map_err(|error| semio_framework_plugin::PluginAssemblyError::new("dag.child-content", format!("{error:?}")))?).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }

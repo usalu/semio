@@ -11,7 +11,7 @@ pub struct TxtIntoFem2d;
 
 /// 🏗 Parses UTF-8 DSL text into this subset snapshot — also used by the zip container leaf.
 pub fn from_dsl_text(text: &str) -> Result<Fem2dSnapshot, IoError> {
-    <Fem2dSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| IoError { message: error.to_string(), diagnostics: Vec::new() })
+    <Fem2dSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string())))
 }
 
 impl Deserializer<Fem2dSnapshot> for TxtIntoFem2d {

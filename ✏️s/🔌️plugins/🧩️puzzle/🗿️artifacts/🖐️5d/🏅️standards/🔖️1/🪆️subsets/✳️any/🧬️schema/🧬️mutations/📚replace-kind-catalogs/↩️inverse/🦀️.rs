@@ -6,8 +6,11 @@ use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &super::ReplaceKindCatalogs, base: &Puzzle5dSnapshot) -> Vec<Puzzle5dMutation> {
+pub fn inverse(_payload: &super::ReplaceKindCatalogs, base: &Puzzle5dSnapshot) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let restored = kind_catalogs_of(&base.kind_catalogs, &base.kind_catalogs_extra);
     vec![crate::standards::v1::subsets::any::schema::mutations::replace_kind_catalogs::replace_kind_catalogs(restored)]
+
+    })())
 }
 //#endregion 🔖️Inverse

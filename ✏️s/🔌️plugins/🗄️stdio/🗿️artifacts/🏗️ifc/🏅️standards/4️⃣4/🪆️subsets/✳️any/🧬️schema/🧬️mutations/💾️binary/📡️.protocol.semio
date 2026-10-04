@@ -31,3 +31,5 @@ record insert-entity-arg tag=9
 field payload bytes
 record remove-entity-arg tag=10
 field payload bytes
+record patch-snapshot tag=11
+field payload bytes

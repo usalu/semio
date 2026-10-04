@@ -9,7 +9,7 @@ pub fn diff(payload: &ChangeSceneSunIntensity, base: &ShootingSnapshot) -> proto
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Sun intensity must be a non-negative finite number, got {}.", payload.new_intensity), Vec::<String>::new());
     }
     if base.scene.sun.intensity == payload.new_intensity {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Sun intensity is already {}.", payload.new_intensity));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Sun intensity is already {}.", payload.new_intensity));
     }
     let mut scene = base.scene.clone();
     scene.sun.intensity = payload.new_intensity;

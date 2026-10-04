@@ -17,9 +17,12 @@ impl protocol::MutationKind<JpgSnapshot, JpgBaselineMutation> for RemoveFrameCom
     fn diff(&self, base: &JpgSnapshot) -> protocol::MutationOutcome<<JpgBaselineMutation as Mutation<JpgSnapshot>>::Diff> {
         agg_diff(&JpgBaselineMutation::RemoveFrameComponent(self.clone()), base)
     }
-    fn inverse(&self, base: &JpgSnapshot) -> Vec<JpgBaselineMutation> {
-        agg_inverse(&JpgBaselineMutation::RemoveFrameComponent(self.clone()), base)
-    }
+    fn inverse(&self, base: &JpgSnapshot) -> Result<Vec<JpgBaselineMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&JpgBaselineMutation::RemoveFrameComponent(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove frame component", "Frame-Komponente entfernen")
     }

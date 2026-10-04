@@ -9,7 +9,6 @@
 
 use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::bounds::compute_ifc2x3_bounds;
 //#region 🔖️Inference
@@ -24,8 +23,11 @@ pub struct Ifc2x3Inference {
 }
 
 impl protocol::Inference<Ifc2x3Snapshot> for Ifc2x3Inference {
-    fn infer(snapshot: &Ifc2x3Snapshot) -> Self {
+    fn infer(snapshot: &Ifc2x3Snapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { bounds: compute_ifc2x3_bounds(snapshot) }
+    
+        })
     }
 }
 
@@ -33,7 +35,9 @@ impl protocol::Inference<Ifc2x3Snapshot> for Ifc2x3Inference {
 /// `Ifc2x3Snapshot::default()`'s `document` ever stops being empty.
 impl Default for Ifc2x3Inference {
     fn default() -> Self {
-        <Self as protocol::Inference<Ifc2x3Snapshot>>::infer(&Ifc2x3Snapshot::default())
+        let snapshot = &Ifc2x3Snapshot::default();
+
+        Self { bounds: compute_ifc2x3_bounds(snapshot) }
     }
 }
 
@@ -49,18 +53,6 @@ impl protocol::InferenceSpec<Ifc2x3Snapshot> for Ifc2x3Inference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 💡️ No `InferredField`s here — `bounds` is a single min/max fold over every
-/// `IFCCARTESIANPOINT` instance in `document.instances`, already O(n) in total instance count
-/// with no honest per-entity incremental decomposition (a merkle dep-chain over this flat
-/// instance list costs more than the fold it would cache) — the default `infer_cached`
-/// passthrough is exact.
-impl ArtifactInferrer for crate::standards::v2x3::subsets::base::schema::Ifc2x3Builder {
-    type Snapshot = Ifc2x3Snapshot;
-    type Inference = Ifc2x3Inference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.ifc.2x3.inference`'s facet leaves into the OS-wide inference catalog —

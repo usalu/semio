@@ -5,18 +5,14 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 //!
-//! ⚠️ Why this leaf pins the NO-OP branch: `EquationSnapshot` keeps its graph and its point
-//! cloud in three co-derived composed CHILDREN (`notation`/`results`/`computed`,
-//! `🔖️WorkingScene`), and every state-changing equation diff re-mints all three through
-//! `equation_children_from_state`, which attaches the live `(graph, geometry)` pair as the
-//! handle's LOCAL OWNER — an in-process value no committed JSON can carry into an `➡️after`. A committed snapshot therefore decodes to an UNRESOLVED handle and
-//! `equation_scene` fails soft to a graph whose `algorithm` is `""` and whose `algorithm_seed`
-//! is `None` — exactly the pair this committed payload restates, taking the verb's own
-//! `mutation.no-op` guard.
+//! ⚠️ Model (a) (design §20.15): the committed snapshot carries its graph and its point cloud INLINE as parent-owned
+//! fields, every leaf decides from them, and the `notation`/`results`/`computed` handles are the content addresses of their
+//! derivation (`crate::equation_children`), kept exact by the fixture writer law. This vector pins the outcome its
+//! `🎯️outcome` declares on that committed state.
 
 use crate::standards::v1::subsets::graph::schema::mutations::update_graph_algorithm::UpdateGraphAlgorithm;
-use crate::{equation_graph, EquationDiff, EquationMutation, EquationSnapshot};
-use semio_framework_os_kernel::ToValue;
+use crate::{EquationDiff, EquationMutation, EquationSnapshot};
+use semio_framework_value::ToValue;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮️update-graph/🧪️restates/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮️update-graph/🧪️restates/📸️snapshot/➡️after/🔣️.json");
@@ -25,13 +21,13 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧮️update-graph/🧪️restates/🎯️outcome/🔣️.json");
 
 fn before() -> EquationSnapshot {
-    pack::from_json_str(BEFORE).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> EquationSnapshot {
-    pack::from_json_str(AFTER).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> EquationMutation {
-    pack::from_json_str(MUTATION).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 fn produced() -> protocol::MutationOutcome<EquationDiff> {
     <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(&mutation(), &before())
@@ -42,7 +38,7 @@ fn produced() -> protocol::MutationOutcome<EquationDiff> {
 #[semio_framework_async_macros::async_test]
 async fn applies_to_committed_after() {
     let base = before();
-    let graph = equation_graph(&base);
+    let graph = base.graph.clone();
     assert_eq!((graph.algorithm.as_str(), graph.algorithm_seed.as_deref()), ("", None), "restates-the-unset-algorithm-and-its-absent-seed's base scene must carry the unset algorithm pair this payload restates");
     let applied = <EquationDiff as protocol::MutationDiff<EquationSnapshot>>::apply(produced().diff(), &base).expect("an empty diff still applies cleanly");
     assert_eq!(applied, expected_after(), "update-graph-algorithm/restates-the-unset-algorithm-and-its-absent-seed: applied state differs from committed after-snapshot");
@@ -54,7 +50,7 @@ async fn applies_to_committed_after() {
 #[semio_framework_async_macros::async_test]
 async fn inverse_restores_before() {
     let base = before();
-    let inverse = <EquationMutation as protocol::Mutation<EquationSnapshot>>::inverse(&mutation(), &base);
+    let inverse = <EquationMutation as protocol::Mutation<EquationSnapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![EquationMutation::UpdateGraphAlgorithm(UpdateGraphAlgorithm { new_algorithm: String::new(), new_algorithm_seed: None })], "update-graph-algorithm inverts to BASE's own (algorithm, seed) pair, got {inverse:?}");
     let mut snapshot = <EquationDiff as protocol::MutationDiff<EquationSnapshot>>::apply(produced().diff(), &base).expect("forward applies");
     for step in &inverse {
@@ -69,41 +65,41 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: EquationSnapshot = pack::from_json_str(text).expect("snapshot decodes");
-        let reencoded = pack::json_from_dsl_value(&decoded.to_value());
-        let original = pack::parse_json(text).expect("snapshot reparses");
-        assert!(pack::json::value_eq_ignoring_object_order(&reencoded, &original), "update-graph-algorithm/restates-the-unset-algorithm-and-its-absent-seed: committed {label} JSON is not canonical ({reencoded:?} vs {original:?})");
+        let decoded: EquationSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = semio_framework_pack_json::from_dsl_value(&decoded.to_value());
+        let original = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot reparses");
+        assert!(semio_framework_pack_json::value_eq_ignoring_object_order(&reencoded, &original), "update-graph-algorithm/restates-the-unset-algorithm-and-its-absent-seed: committed {label} JSON is not canonical ({reencoded:?} vs {original:?})");
     }
-    let reencoded = pack::json_from_dsl_value(&(mutation()).to_value());
-    let original = pack::parse_json(MUTATION).expect("mutation reparses");
-    assert!(pack::json::value_eq_ignoring_object_order(&reencoded, &original), "update-graph-algorithm/restates-the-unset-algorithm-and-its-absent-seed: committed mutation JSON is not canonical ({reencoded:?} vs {original:?})");
+    let reencoded = semio_framework_pack_json::from_dsl_value(&(mutation()).to_value());
+    let original = semio_framework_pack_json::parse(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation reparses");
+    assert!(semio_framework_pack_json::value_eq_ignoring_object_order(&reencoded, &original), "update-graph-algorithm/restates-the-unset-algorithm-and-its-absent-seed: committed mutation JSON is not canonical ({reencoded:?} vs {original:?})");
     assert!(original.pointer("/UpdateGraphAlgorithm/newAlgorithmSeed").expect("the payload commits its seed slot").is_null(), "an absent seed is committed as an explicit null, never omitted");
 }
 
 /// 🎯️ The declared outcome — `no-op`, with one `mutation.no-op` warning — is what the builder emits.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
-    let outcome = pack::parse_json(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(pack::JsonValue::as_str), Some("no-op"), "update-graph-algorithm/restates-the-unset-algorithm-and-its-absent-seed declares a no-op outcome");
+    let outcome = semio_framework_pack_json::parse(OUTCOME, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
+    assert_eq!(outcome.get("status").and_then(semio_framework_pack_json::Value::as_str), Some("no-op"), "update-graph-algorithm/restates-the-unset-algorithm-and-its-absent-seed declares a no-op outcome");
     let emitted = produced();
     let messages = emitted.messages();
     assert_eq!(messages.len(), 1, "exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.no-op", "restating the current algorithm pair is reported as no-op");
-    assert_eq!(messages[0].level, protocol::Severity::Warning, "a no-op is a Warning — never a refusal, it just changes nothing");
-    let declared = outcome.get("messages").and_then(pack::JsonValue::as_array).expect("the declared outcome carries its warning");
-    assert_eq!(declared[0].get("code").and_then(pack::JsonValue::as_str), Some(messages[0].code.0.as_str()), "the declared code must match the emitted one");
+    assert_eq!(messages[0].level, semio_framework_diagnostic::Severity::Warning, "a no-op is a Warning — never a refusal, it just changes nothing");
+    let declared = outcome.get("messages").and_then(semio_framework_pack_json::Value::as_array).expect("the declared outcome carries its warning");
+    assert_eq!(declared[0].get("code").and_then(semio_framework_pack_json::Value::as_str), Some(messages[0].code.0.as_str()), "the declared code must match the emitted one");
 }
 
-/// 🔺️ A no-op emits the artifact's `Default` diff — all four artifact slots `null` — proving the guard
-/// fires before `equation_children_from_state` is ever reached.
+/// 🔺️ A no-op emits the artifact's `Default` diff — every slot `null` — proving the guard fires before
+/// `crate::equation_state_diff` is ever reached.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = produced();
     assert_eq!(outcome.diff(), &EquationDiff::default(), "a no-op update-graph-algorithm must carry the empty diff, never a re-minted child triple");
-    let produced_value = pack::json_from_dsl_value(&(outcome.diff()).to_value());
-    let committed = pack::parse_json(DIFF).expect("committed diff decodes");
+    let produced_value = semio_framework_pack_json::from_dsl_value(&(outcome.diff()).to_value());
+    let committed = semio_framework_pack_json::parse(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert!(
-        pack::json::value_eq_ignoring_object_order(&produced_value, &committed),
+        semio_framework_pack_json::value_eq_ignoring_object_order(&produced_value, &committed),
         "update-graph-algorithm/restates-the-unset-algorithm-and-its-absent-seed: produced diff differs from the committed 🔺️diff/🔣️.json ({produced_value:?} vs {committed:?})"
     );
 }
@@ -111,16 +107,16 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff is canonical and decodes to `EquationDiff`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: EquationDiff = pack::from_json_str(DIFF).expect("committed diff decodes");
-    let reencoded = pack::json_from_dsl_value(&decoded.to_value());
-    let original = pack::parse_json(DIFF).expect("committed diff reparses");
-    assert!(pack::json::value_eq_ignoring_object_order(&reencoded, &original), "update-graph-algorithm/restates-the-unset-algorithm-and-its-absent-seed: committed diff JSON is not canonical ({reencoded:?} vs {original:?})");
+    let decoded: EquationDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let reencoded = semio_framework_pack_json::from_dsl_value(&decoded.to_value());
+    let original = semio_framework_pack_json::parse(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff reparses");
+    assert!(semio_framework_pack_json::value_eq_ignoring_object_order(&reencoded, &original), "update-graph-algorithm/restates-the-unset-algorithm-and-its-absent-seed: committed diff JSON is not canonical ({reencoded:?} vs {original:?})");
 }
 
 /// 🩹 Applying the committed (empty) diff to `before` yields the committed `after` unchanged.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: EquationDiff = pack::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: EquationDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let produced_snapshot = <EquationDiff as protocol::MutationDiff<EquationSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced_snapshot, expected_after(), "update-graph-algorithm/restates-the-unset-algorithm-and-its-absent-seed: committed diff did not carry before to after");
 }

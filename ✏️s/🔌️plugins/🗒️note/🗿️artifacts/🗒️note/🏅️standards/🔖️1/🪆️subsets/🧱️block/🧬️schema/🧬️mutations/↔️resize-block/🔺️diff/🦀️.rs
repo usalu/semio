@@ -15,7 +15,7 @@ pub fn diff(payload: &ResizeBlock, base: &NoteSnapshot) -> protocol::MutationOut
     }
     let (_, _, width, height) = crate::schema::block_bounds(block);
     if width == payload.new_width && height == payload.new_height {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Block \"{}\" already has size ({}, {}).", payload.id, payload.new_width, payload.new_height));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Block \"{}\" already has size ({}, {}).", payload.id, payload.new_width, payload.new_height));
     }
     let mut updated = block.clone();
     match &mut updated {

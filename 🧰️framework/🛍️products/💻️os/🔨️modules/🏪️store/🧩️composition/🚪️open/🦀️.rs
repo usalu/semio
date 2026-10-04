@@ -83,7 +83,7 @@ pub enum MemberOpenInputStep {
 pub trait MemberOpenOperation {
     type Member;
     fn step(&mut self, cx: &mut StepContext<'_>) -> MemberOpenStep<Self::Member>;
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String>;
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError>;
     fn terminal_is_empty(&self) -> bool;
 }
 
@@ -167,7 +167,7 @@ impl MemberOpenRequest {
             Some(MemberOpenDiagnostic::Expired)
         } else if !reference(self.expected()) {
             Some(MemberOpenDiagnostic::Identity)
-        } else if self.owner().is_some_and(|owner| owner.child_id != self.expected().artifact_id || !reference(&owner.parent) || !text(&owner.slot) || !text(&owner.child_id)) {
+        } else if self.owner().is_some_and(|owner| !reference(&owner.parent) || !text(&owner.slot) || !text(&owner.child_id)) {
             Some(MemberOpenDiagnostic::Owner)
         } else {
             None
@@ -272,7 +272,7 @@ impl MemberOpenRequest {
         Ok(copied)
     }
 
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if self.detached {
             return Ok(SnapshotRetirementStep::Complete);
         }
@@ -305,8 +305,10 @@ impl MemberOpenRequest {
                     self.closing_identity.take();
                     Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
-                SnapshotRetirementStep::Complete => Err("member request identity returned false terminal".into()),
-                SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > 1 || released_bytes > maximum_bytes => Err("member request identity exceeded its close grant".into()),
+                SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "member request identity returned false terminal")),
+                SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > 1 || released_bytes > maximum_bytes => {
+                    Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "member request identity exceeded its close grant"))
+                }
                 step => Ok(step),
             };
         }
@@ -325,7 +327,7 @@ impl MemberOpenRequest {
 }
 
 impl ErasedSnapshotRetirement for MemberOpenRequest {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         MemberOpenRequest::close_step(self, maximum_items, maximum_bytes)
     }
     fn terminal_is_empty(&self) -> bool {
@@ -349,16 +351,9 @@ semio_framework_value::artifact_retire_struct!(crate::os_spr::HistoryComposition
 semio_framework_value::artifact_retire_struct!(crate::os_spr::HistoryTransitionRecord { id, actor, hlt, dependencies, observed, payload });
 semio_framework_value::artifact_retire_struct!(crate::os_spr::history::HistoryConflict { id, kind, status, actors, hlt, edit_ids, envelopes, messages });
 semio_framework_value::artifact_retire_struct!(crate::os_spr::history::HistoryMessage { level, code, message, target, op_index });
-semio_framework_value::artifact_retire_struct!(crate::os_spr::HistoryEdit { id, actor, line, started_at, finished_at, coalesce_key, description, verb, ops, inverse, meta, lane });
+semio_framework_value::artifact_retire_struct!(crate::os_spr::HistoryEdit { id, actor, line, started_at, finished_at, description, verb, ops, inverse, meta, lane });
 semio_framework_value::artifact_retire_struct!(crate::os_spr::OpPayload { text, binary });
 semio_framework_value::artifact_retire_struct!(crate::os_spr::HistoryOpMeta { op_id, dependencies, base_version, author_id, hlt, undo_policy, payload_hash, group_id, origin, messages, transaction });
-
-
-
-
-
-
-
 
 pub(super) struct MemberStoreOpenRetained<P, M>
 where
@@ -466,7 +461,7 @@ where
     P: Clone + super::ToValue + super::FromValue + Send + 'static,
     M: Clone + super::ToValue + super::FromValue + super::Mutation<P> + Send + 'static,
 {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if self.terminal {
             return Ok(SnapshotRetirementStep::Complete);
         }
@@ -480,8 +475,10 @@ where
                     self.active.take();
                     Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
-                SnapshotRetirementStep::Complete => Err("member-open nested owner reported false terminal".into()),
-                SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > 1 || released_bytes > maximum_bytes => Err("member-open nested owner exceeded its close grant".into()),
+                SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "member-open nested owner reported false terminal")),
+                SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > 1 || released_bytes > maximum_bytes => {
+                    Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "member-open nested owner exceeded its close grant"))
+                }
                 step => Ok(step),
             };
         }
@@ -492,8 +489,10 @@ where
                     self.runtime.take();
                     Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
-                SnapshotRetirementStep::Complete => Err("member-open initialization reported false terminal".into()),
-                SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > 1 || released_bytes > maximum_bytes => Err("member-open initialization exceeded its close grant".into()),
+                SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "member-open initialization reported false terminal")),
+                SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > 1 || released_bytes > maximum_bytes => {
+                    Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "member-open initialization exceeded its close grant"))
+                }
                 step => Ok(step),
             };
         }
@@ -519,15 +518,17 @@ where
                     self.request.take();
                     Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
-                SnapshotRetirementStep::Complete => Err("member-open request reported false terminal".into()),
+                SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "member-open request reported false terminal")),
                 step => Ok(step),
             };
         }
         let disposer = &mut self.owners.as_mut().expect("original owner bundle remains until rejection is terminal").store_disposer;
         match disposer.close_uninstalled_step(1)? {
             SnapshotRetirementStep::Complete if disposer.uninstalled_terminal_is_empty() => {}
-            SnapshotRetirementStep::Complete => return Err("member-open uninstalled disposer reported false terminal".into()),
-            SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > 1 || released_bytes != 0 => return Err("member-open uninstalled disposer exceeded its close grant".into()),
+            SnapshotRetirementStep::Complete => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "member-open uninstalled disposer reported false terminal")),
+            SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > 1 || released_bytes != 0 => {
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "member-open uninstalled disposer exceeded its close grant"));
+            }
             step => return Ok(step),
         }
         self.owners.take();

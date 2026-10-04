@@ -1,6 +1,7 @@
 //! 🧪️ Shared winding corpus reaches owned snapshots, scene projection and SVG.
 use super::*;
-use dsl::{FromValue,ToValue};
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
 use store::ArtifactPack;
 #[test]
 fn authored_fill_rules_survive_pack_and_reach_paint_picking_and_export() {

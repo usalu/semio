@@ -68,13 +68,13 @@ fn local_studio_tombstones_are_exact_point_invertible_events() {
     let retired = retire.diff(&base).diff().clone();
     assert_eq!(retired.retired_local_studio_ids, vec!["studio-a".to_string(), "studio-b".to_string()]);
     assert!(retired.is_local_studio_retired("studio-a") && !base.is_local_studio_retired("studio-a"));
-    let inverse = retire.inverse(&base);
+    let inverse = retire.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![HomeConfigMutation::RestoreLocalStudio { space_id: "studio-a".into() }]);
     assert_eq!(inverse[0].diff(&retired).diff(), &base);
     let again = retire.diff(&retired);
     assert_eq!(again.diff(), &retired);
     assert!(again.messages().iter().any(|message| format!("{message:?}").contains("mutation.no-op")));
-    assert_eq!(retire.inverse(&retired), vec![retire.clone()], "the inverse of a no-op retirement changes nothing");
+    assert_eq!(retire.inverse(&retired).expect("valid retained mutation inverse fixture"), vec![retire.clone()], "the inverse of a no-op retirement changes nothing");
     for mutation in [retire, HomeConfigMutation::RestoreLocalStudio { space_id: "studio-b".into() }] {
         let bytes = protocol::OpBinary::encode_op(&mutation).expect("op binary encodes");
         assert_eq!(<HomeConfigMutation as protocol::OpBinary>::decode_op(&bytes).expect("op binary decodes"), mutation);

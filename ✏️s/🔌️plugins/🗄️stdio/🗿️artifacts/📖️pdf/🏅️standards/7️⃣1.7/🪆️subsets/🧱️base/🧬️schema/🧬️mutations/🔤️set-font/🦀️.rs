@@ -23,10 +23,13 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetFont {
         MutationOutcome::new(diff::diff_set_font(base, self.font.clone()))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         let _ = base;
         match base.fonts.iter().find(|item| item.id == self.font.id) { Some(previous) => vec![PdfMutation::SetFont(SetFont { font: previous.clone() })], None => vec![PdfMutation::RemoveFont(super::remove_font::RemoveFont { id: self.font.id.clone() })] }
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set font {}", self.font.id), &format!("Schrift {} setzen", self.font.id))

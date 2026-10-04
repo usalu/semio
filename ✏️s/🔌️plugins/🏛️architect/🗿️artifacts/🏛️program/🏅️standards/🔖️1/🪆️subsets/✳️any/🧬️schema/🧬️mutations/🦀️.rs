@@ -29,7 +29,7 @@ use crate::ProgramSnapshot;
 //#region 🔖️ProgramMutation
 /// 🧩️ Every variant wraps exactly one `protocol::MutationKind<ProgramSnapshot, ProgramMutation>`
 /// payload struct declared in the corresponding triad leaf's `🦠️mutation/🦀️.rs`.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::Mutations)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
@@ -609,28 +609,31 @@ pub fn apply_program_mutation_outcome(snapshot: &mut ProgramSnapshot, mutation: 
 /// returns. Reachable from outside this crate, which `protocol::Mutation` itself is not — the
 /// `protocol` extern-crate alias is private to `🦀️.rs`.
 // 🚫️async: E1 pure computation over an in-memory snapshot, consumed from a synchronous external test host — see R9
-pub fn inverse_program_mutation_steps(mutation: &ProgramMutation, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
-    <ProgramMutation as protocol::Mutation<ProgramSnapshot>>::inverse(mutation, base)
+pub fn inverse_program_mutation_steps(mutation: &ProgramMutation, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
+    Ok({
+    <ProgramMutation as protocol::Mutation<ProgramSnapshot>>::inverse(mutation, base)?
+
+    })
 }
 
 /// 📥️ Decodes the internally-tagged (`{"mutation": "<camelCaseVariant>", …}`) projection the
 /// committed `<slug>/🧪️tests/<fixture>/🦠️mutation/🔣️.json` vectors carry.
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
 pub fn decode_program_mutation_json(text: &str) -> Result<ProgramMutation, String> {
-    dsl::json::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 
 /// 📥️ Decodes a committed `📸️snapshot/{⬅️before,➡️after}/🔣️.json` vector.
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
 pub fn decode_program_snapshot_json(text: &str) -> Result<ProgramSnapshot, String> {
-    dsl::json::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 
 /// 📤️ The snapshot as the same canonical JSON the committed vectors are written in — the
 /// projection an external test host compares through.
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
 pub fn encode_program_snapshot_json(snapshot: &ProgramSnapshot) -> String {
-    dsl::json::to_json_string(snapshot)
+    semio_framework_pack_json::to_json_string(snapshot)
 }
 //#endregion 🔖️Kinds
 

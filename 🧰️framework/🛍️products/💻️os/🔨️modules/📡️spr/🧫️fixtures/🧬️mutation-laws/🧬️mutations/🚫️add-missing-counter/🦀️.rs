@@ -17,9 +17,12 @@ impl MutationKind<i64, CounterMutation> for AddMissingCounter {
     fn diff(&self, _base: &i64) -> MutationOutcome<CounterDiff> {
         MutationOutcome::error("mutation.target-missing", "target absent", ["thing"])
     }
-    fn inverse(&self, _base: &i64) -> Vec<CounterMutation> {
+    fn inverse(&self, _base: &i64) -> Result<Vec<CounterMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         Vec::new()
-    }
+    
+    })())
+}
     fn label(&self) -> crate::LocalizedLabel {
         crate::LocalizedLabel::native("Add to missing counter", "Zum fehlenden Zähler addieren")
     }
@@ -31,11 +34,11 @@ impl OpText for AddMissingCounter {
     fn print_op(&self) -> String {
         "add-missing-counter".into()
     }
-    fn parse_op(line: &str) -> Result<Self, crate::os_dsl::TextError> {
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         if line == "add-missing-counter" {
             Ok(Self {})
         } else {
-            Err(crate::os_dsl::TextError::new("expected add-missing-counter", crate::os_dsl::TextSpan::at(1, 1)))
+            Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected add-missing-counter", semio_framework_diagnostic::TextSpan::at(1, 1)))
         }
     }
 }

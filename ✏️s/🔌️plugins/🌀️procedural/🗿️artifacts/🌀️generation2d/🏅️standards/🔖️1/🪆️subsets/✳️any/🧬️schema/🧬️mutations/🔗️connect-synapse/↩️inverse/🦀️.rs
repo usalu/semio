@@ -4,6 +4,9 @@
 use crate::standards::v1::subsets::any::schema::mutations::{disconnect_synapse, Generation2dMutation};
 use crate::Generation2dSnapshot;
 
-pub fn inverse(payload: &super::ConnectSynapse, _base: &Generation2dSnapshot) -> Vec<Generation2dMutation> {
+pub fn inverse(payload: &super::ConnectSynapse, _base: &Generation2dSnapshot) -> Result<Vec<Generation2dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![disconnect_synapse(payload.synapse.id.clone())]
+
+    })())
 }

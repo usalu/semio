@@ -105,7 +105,7 @@ impl<O: RetainedTypedPackOwner> RetainedTypedPackSession<O> {
         let decoded = super::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES as u64;
         let limits = || mounted::PackLimits { max_file_len: decoded, max_segment_len: decoded, max_symbols: maximum_symbols, max_depth: self.maximum_depth, max_items: self.maximum_items as u64, max_total_alloc: decoded };
         let maximum_source_allocation_bytes = super::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES.checked_mul(4).ok_or("mounted-pack.source-allocation-credits")?;
-        *self.source = Some(mounted::RetainedPackSourceCursor::try_new(pages, canonical, maximum_source_allocation_bytes)?);
+        *self.source = Some(mounted::RetainedPackSourceCursor::try_new(pages, canonical, maximum_source_allocation_bytes).map_err(|fault| fault.reason)?);
         *self.anchor = Some(mounted::RetainedPackAnchorCursor::new());
         *self.segment = Some(mounted::RetainedPackSegmentCursor::try_new(limits(), super::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES).map_err(|_| "mounted-pack.segment-preflight")?);
         *self.catalog = Some(
@@ -158,7 +158,7 @@ impl<O: RetainedTypedPackOwner> RetainedTypedPackSession<O> {
         }
         let len = self.page_len;
         let source = self.source.as_mut().ok_or("mounted-pack.source-owner")?;
-        source.preflight_page(len)?;
+        source.preflight_page(len).map_err(|fault| fault.reason)?;
         let page = mounted::RetainedPackPage::try_from_array(std::mem::replace(&mut self.page, [0; mounted::RETAINED_PACK_PAGE_BYTES]), len).map_err(|_| "mounted-pack.page-owner")?;
         self.page_len = 0;
         if let Err(page) = source.admit_page(page) {
@@ -174,7 +174,7 @@ impl<O: RetainedTypedPackOwner> RetainedTypedPackSession<O> {
             return Err("mounted-pack.exact-byte-seal");
         }
         self.flush_page()?;
-        self.source.as_mut().ok_or("mounted-pack.source-owner")?.seal()?;
+        self.source.as_mut().ok_or("mounted-pack.source-owner")?.seal().map_err(|fault| fault.reason)?;
         self.phase = RetainedTypedPackPhase::Drive;
         Ok(())
     }
@@ -229,7 +229,7 @@ impl<O: RetainedTypedPackOwner> RetainedTypedPackSession<O> {
             }
         }
         if !self.source_complete && self.segment.as_ref().expect("mounted segment retained").preflight().is_ok() {
-            if let Some(event) = self.source.as_mut().ok_or("mounted-pack.source-owner")?.grant()? {
+            if let Some(event) = self.source.as_mut().ok_or("mounted-pack.source-owner")?.grant().map_err(|fault| fault.reason)? {
                 self.source_complete = matches!(event, mounted::RetainedPackSourceEvent::Complete { .. });
                 self.anchor.as_mut().expect("mounted anchor retained").grant(Some(event)).map_err(|_| "mounted-pack.anchor-malformed")?;
                 self.segment.as_mut().expect("mounted segment retained").admit(event).map_err(|_| "mounted-pack.segment-handback")?;
@@ -279,7 +279,7 @@ impl<O: RetainedTypedPackOwner> RetainedTypedPackSession<O> {
     pub fn next_retained_allocation_bytes(&mut self) -> Result<Option<usize>, &'static str> {
         let requested = match self.phase {
             RetainedTypedPackPhase::Ingress => match self.source.as_ref() {
-                Some(source) if !source.has_reserved_page() => Some(source.next_allocation_bytes()?),
+                Some(source) if !source.has_reserved_page() => Some(source.next_allocation_bytes().map_err(|fault| fault.reason)?),
                 _ => None,
             },
             RetainedTypedPackPhase::Drive => match self.segment.as_ref().ok_or("mounted-pack.segment-owner")?.next_allocation_bytes() {
@@ -300,7 +300,7 @@ impl<O: RetainedTypedPackOwner> RetainedTypedPackSession<O> {
     /// 🧱️ Reserves at most `maximum_bytes` of the pending allocation.
     pub fn reserve_retained_allocation(&mut self, maximum_bytes: usize) -> Result<mounted::RetainedPackSourceAllocationStep, mounted::RetainedPackSourceAllocationError> {
         let remaining = super::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES.saturating_sub(self.retained_allocated_bytes());
-        let fault = |reason: &'static str| mounted::RetainedPackSourceAllocationError { allocated_bytes: 0, reason };
+        let fault = |reason: &'static str| mounted::RetainedPackSourceAllocationError { allocated_bytes: 0, fault: mounted::RetainedPackSourceFault::refusal(semio_framework_value::ValueRefusalKind::InvariantViolated, reason) };
         match self.phase {
             RetainedTypedPackPhase::Ingress => self.source.as_mut().ok_or(fault("mounted-pack.source-owner"))?.reserve_page(maximum_bytes.min(remaining)),
             RetainedTypedPackPhase::Drive => {
@@ -309,18 +309,18 @@ impl<O: RetainedTypedPackOwner> RetainedTypedPackSession<O> {
                     return segment.reserve_allocation(maximum_bytes.min(remaining));
                 }
                 let value = self.value.as_mut().ok_or(fault("mounted-pack.value-owner"))?;
-                if value.next_allocation_bytes().map_err(|_| fault("mounted-pack.value-allocation"))?.is_some() {
+                if value.next_allocation_bytes().map_err(|error| mounted::RetainedPackSourceAllocationError { allocated_bytes: 0, fault: mounted::RetainedPackSourceFault::refusal(error.kind(), "mounted-pack.value-allocation") })?.is_some() {
                     return value
                         .reserve_allocation(maximum_bytes.min(remaining))
                         .map(|step| mounted::RetainedPackSourceAllocationStep { progressed: step.progressed, allocated_bytes: step.allocated_bytes })
-                        .map_err(|error| mounted::RetainedPackSourceAllocationError { allocated_bytes: error.allocated_bytes, reason: "mounted-pack.value-allocation" });
+                        .map_err(|error| mounted::RetainedPackSourceAllocationError { allocated_bytes: error.allocated_bytes, fault: mounted::RetainedPackSourceFault::allocation(error.fault.kind(), "mounted-pack.value-allocation", error.allocated_bytes) });
                 }
                 self.catalog
                     .as_mut()
                     .ok_or(fault("mounted-pack.catalog-owner"))?
                     .reserve_allocation(maximum_bytes.min(remaining))
                     .map(|step| mounted::RetainedPackSourceAllocationStep { progressed: step.progressed, allocated_bytes: step.allocated_bytes })
-                    .map_err(|error| mounted::RetainedPackSourceAllocationError { allocated_bytes: error.allocated_bytes, reason: error.fault.code })
+                    .map_err(|error| mounted::RetainedPackSourceAllocationError { allocated_bytes: error.allocated_bytes, fault: mounted::RetainedPackSourceFault::allocation(error.fault.kind(), error.fault.code, error.allocated_bytes) })
             }
             _ => Ok(mounted::RetainedPackSourceAllocationStep::default()),
         }
@@ -341,7 +341,7 @@ impl<O: RetainedTypedPackOwner> RetainedTypedPackSession<O> {
     }
 
     /// 🧹️ Releases one owner per grant, typed owner first, source last.
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<RetainedTypedPackCloseStep, &'static str> {
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<RetainedTypedPackCloseStep, semio_framework_value::ValueError> {
         let one = RetainedTypedPackCloseStep::Pending { released_items: 1, released_bytes: 0 };
         let retained = |step: mounted::RetainedPackCloseStep| match step {
             mounted::RetainedPackCloseStep::Pending { released_items, released_bytes } => Some(RetainedTypedPackCloseStep::Pending { released_items, released_bytes }),
@@ -369,14 +369,23 @@ impl<O: RetainedTypedPackOwner> RetainedTypedPackSession<O> {
             return Ok(one);
         }
         if let Some(value) = self.value.as_mut() {
-            if let Some(step) = retained(value.close_step(1, maximum_bytes)?) {
+            if let Some(step) = retained(value.close_step(1, maximum_bytes).map_err(crate::os_pack::PackRefusal::into_value_error)?) {
                 return Ok(step);
             }
             drop(self.value.take());
             return Ok(one);
         }
         if let Some(catalog) = self.catalog.as_mut() {
-            if let Some(step) = retained(catalog.close_step(1, maximum_bytes)?) {
+            if let Some(step) = retained(catalog.close_step(1, maximum_bytes).map_err(|error| {
+                semio_framework_value::ValueError::new(
+                    match error.kind {
+                        semio_framework_value::list::PagedListRefusalKind::OwnershipLimit => semio_framework_value::ValueRefusalKind::OwnershipLimit,
+                        semio_framework_value::list::PagedListRefusalKind::AllocationFailed => semio_framework_value::ValueRefusalKind::AllocationFailed,
+                        semio_framework_value::list::PagedListRefusalKind::InvariantViolated => semio_framework_value::ValueRefusalKind::InvariantViolated,
+                    },
+                    error.reason,
+                )
+            })?) {
                 return Ok(step);
             }
             drop(self.catalog.take());
@@ -395,7 +404,16 @@ impl<O: RetainedTypedPackOwner> RetainedTypedPackSession<O> {
             return Ok(one);
         }
         if let Some(source) = self.source.as_mut() {
-            if let Some(step) = retained(source.close_step(1, maximum_bytes)?) {
+            if let Some(step) = retained(source.close_step(1, maximum_bytes).map_err(|error| {
+                semio_framework_value::ValueError::new(
+                    match error.kind {
+                        semio_framework_value::list::PagedListRefusalKind::OwnershipLimit => semio_framework_value::ValueRefusalKind::OwnershipLimit,
+                        semio_framework_value::list::PagedListRefusalKind::AllocationFailed => semio_framework_value::ValueRefusalKind::AllocationFailed,
+                        semio_framework_value::list::PagedListRefusalKind::InvariantViolated => semio_framework_value::ValueRefusalKind::InvariantViolated,
+                    },
+                    error.reason,
+                )
+            })?) {
                 return Ok(step);
             }
             drop(self.source.take());

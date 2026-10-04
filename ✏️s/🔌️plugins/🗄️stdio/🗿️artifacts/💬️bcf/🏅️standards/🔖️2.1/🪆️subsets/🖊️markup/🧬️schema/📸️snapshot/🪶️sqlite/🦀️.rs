@@ -3,29 +3,83 @@ use super::*;
 use std::collections::BTreeMap;
 use semio_framework_os_kernel::{sqlite_snapshot::{artifact::{NativeEncodingBound,Cell,Projection,FloatColumn,FloatRow,insert_key_ieee754,reconstruct_text,reconstruct_blob},validate_sqlite_database_schema,SnapshotEncoding,SqliteDatabase,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase},ArtifactSqliteSnapshot};
 
+fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
+fn work(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::WorkLimit,message)}
+
 type Entities<'a>=BTreeMap<i64,&'a SqliteRow>;
 const CAMERA_FLOATS:&[FloatColumn]=&[FloatColumn::Binary64(2),FloatColumn::Binary64(3),FloatColumn::Binary64(4),FloatColumn::Binary64(5),FloatColumn::Binary64(6),FloatColumn::Binary64(7),FloatColumn::Binary64(8),FloatColumn::Binary64(9),FloatColumn::Binary64(10)];
 const PARAMETER_FLOATS:&[FloatColumn]=&[FloatColumn::Binary64(1)];
-fn checkpoint(control:&mut SqliteSnapshotControl<'_>,position:usize,total:usize)->Result<(),String>{if position%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,position,total)?;}Ok(())}
-fn entities<'a>(database:&'a SqliteDatabase,table:&str,columns:usize,control:&mut SqliteSnapshotControl<'_>)->Result<Entities<'a>,String>{let rows=&database.table(table)?.rows;let mut result=BTreeMap::new();for(position,row)in rows.iter().enumerate(){checkpoint(control,position,rows.len())?;if row.values.len()!=columns||row.rowid<=0||row.integer(0)?!=row.rowid||result.insert(row.rowid,row).is_some(){return Err(format!("{table} requires unique positive aliased identities and exact columns"));}}Ok(result)}
-fn same_owner(rows:&Entities<'_>,parents:&Entities<'_>,control:&mut SqliteSnapshotControl<'_>)->Result<(),String>{for(position,&id)in rows.keys().enumerate(){checkpoint(control,position,rows.len())?;if !parents.contains_key(&id){return Err("BCF one-to-one entity has an unknown owner".into());}}Ok(())}
-fn groups<'a>(rows:&Entities<'a>,parents:&Entities<'_>,control:&mut SqliteSnapshotControl<'_>)->Result<BTreeMap<i64,Vec<&'a SqliteRow>>,String>{let mut result=BTreeMap::<i64,Vec<&SqliteRow>>::new();for(position,&row)in rows.values().enumerate(){checkpoint(control,position,rows.len())?;let owner=row.integer(1)?;if !parents.contains_key(&owner){return Err("BCF ordered entity has an unknown owner".into());}result.entry(owner).or_default().push(row);}for(group,rows)in result.values_mut().enumerate(){checkpoint(control,group,0)?;let mut slots=vec![None;rows.len()];for(position,&row)in rows.iter().enumerate(){checkpoint(control,position,rows.len())?;let ordinal=usize::try_from(row.integer(2)?).map_err(|error|error.to_string())?;if slots.get_mut(ordinal).ok_or("BCF ordinals must be dense")?.replace(row).is_some(){return Err("BCF ordinals must be unique".into());}}let mut ordered=Vec::new();for(position,row)in slots.into_iter().enumerate(){checkpoint(control,position,rows.len())?;ordered.push(row.ok_or("BCF ordinals must be dense")?);}*rows=ordered;}Ok(result)}
-fn write_strings(out:&mut Projection<'_,'_>,table:&str,owner:i64,strings:&[String])->Result<(),String>{for(ordinal,value)in strings.iter().enumerate(){out.insert(table,&[Cell::Integer(owner),Cell::Integer(i64::try_from(ordinal).map_err(|error|error.to_string())?),Cell::Text(value)])?;}Ok(())}
-fn read_strings(rows:Option<&Vec<&SqliteRow>>,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<String>,String>{let mut strings=Vec::new();for row in rows.into_iter().flatten(){checkpoint(control,strings.len(),0)?;strings.push(reconstruct_text(control,row.text(3)?)?);}Ok(strings)}
-fn boolean(row:&SqliteRow,column:usize)->Result<bool,String>{match row.integer(column)?{0=>Ok(false),1=>Ok(true),_=>Err("BCF visibility must be boolean".into())}}
-fn point(row:FloatRow<'_>,column:usize)->Result<BcfPoint3,String>{Ok(BcfPoint3{x:row.real(column)?,y:row.real(column+1)?,z:row.real(column+2)?})}
+fn checkpoint(control:&mut SqliteSnapshotControl<'_>,position:usize,total:usize)->Result<(),ValueError>{if position%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,position,total)?;}Ok(())}
+fn entities<'a>(database:&'a SqliteDatabase,table:&str,columns:usize,control:&mut SqliteSnapshotControl<'_>)->Result<Entities<'a>,ValueError>{let rows=&database.table(table)?.rows;let mut result=BTreeMap::new();for(position,row)in rows.iter().enumerate(){checkpoint(control,position,rows.len())?;if row.values.len()!=columns||row.rowid<=0||row.integer(0)?!=row.rowid||result.insert(row.rowid,row).is_some(){return Err(invalid(format!("{table} requires unique positive aliased identities and exact columns")));}}Ok(result)}
+fn same_owner(rows:&Entities<'_>,parents:&Entities<'_>,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{for(position,&id)in rows.keys().enumerate(){checkpoint(control,position,rows.len())?;if !parents.contains_key(&id){return Err(invalid("BCF one-to-one entity has an unknown owner"));}}Ok(())}
+fn groups<'a>(rows:&Entities<'a>,parents:&Entities<'_>,control:&mut SqliteSnapshotControl<'_>)->Result<BTreeMap<i64,Vec<&'a SqliteRow>>,ValueError>{let mut result=BTreeMap::<i64,Vec<&SqliteRow>>::new();for(position,&row)in rows.values().enumerate(){checkpoint(control,position,rows.len())?;let owner=row.integer(1)?;if !parents.contains_key(&owner){return Err(invalid("BCF ordered entity has an unknown owner"));}result.entry(owner).or_default().push(row);}for(group,rows)in result.values_mut().enumerate(){checkpoint(control,group,0)?;let mut slots=vec![None;rows.len()];for(position,&row)in rows.iter().enumerate(){checkpoint(control,position,rows.len())?;let ordinal=usize::try_from(row.integer(2)?).map_err(|error|invalid(error.to_string()))?;if slots.get_mut(ordinal).ok_or_else(||invalid("BCF ordinals must be dense"))?.replace(row).is_some(){return Err(invalid("BCF ordinals must be unique"));}}let mut ordered=Vec::new();for(position,row)in slots.into_iter().enumerate(){checkpoint(control,position,rows.len())?;ordered.push(row.ok_or_else(||invalid("BCF ordinals must be dense"))?);}*rows=ordered;}Ok(result)}
+fn write_strings(out:&mut Projection<'_,'_>,table:&str,owner:i64,strings:&[String])->Result<(),ValueError>{for(ordinal,value)in strings.iter().enumerate(){out.insert(table,&[Cell::Integer(owner),Cell::Integer(i64::try_from(ordinal).map_err(|error|work(error.to_string()))?),Cell::Text(value)])?;}Ok(())}
+fn read_strings(rows:Option<&Vec<&SqliteRow>>,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<String>,ValueError>{let mut strings=Vec::new();for row in rows.into_iter().flatten(){checkpoint(control,strings.len(),0)?;strings.push(reconstruct_text(control,row.text(3)?)?);}Ok(strings)}
+fn boolean(row:&SqliteRow,column:usize)->Result<bool,ValueError>{match row.integer(column)?{0=>Ok(false),1=>Ok(true),_=>Err(invalid("BCF visibility must be boolean"))}}
+fn point(row:FloatRow<'_>,column:usize)->Result<BcfPoint3,ValueError>{Ok(BcfPoint3{x:row.real(column)?,y:row.real(column+1)?,z:row.real(column+2)?})}
+
+struct NativeAdmission<'a,'b> { control: &'a mut SqliteSnapshotControl<'b>, phase: SqliteSnapshotPhase, bytes: usize, rows: usize, items: usize }
+impl NativeAdmission<'_,'_> {
+ fn add(&mut self,bytes:usize,rows:usize)->Result<(),ValueError> {
+  self.bytes=self.bytes.checked_add(bytes).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"BCF native semantic byte count overflow"))?;
+  self.rows=self.rows.checked_add(rows).ok_or_else(||work("BCF native semantic row count overflow"))?;
+  self.control.check_value_bytes(self.bytes)?;
+  self.control.check_rows(self.rows)?;
+  self.items=self.items.checked_add(1).ok_or_else(||work("BCF native semantic work count overflow"))?;
+  if self.items.is_multiple_of(256) { self.control.checkpoint(self.phase,self.items,0)?; }
+  Ok(())
+ }
+}
+
+fn admit_native(snapshot:&BcfSnapshot,phase:SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError> {
+ control.checkpoint(phase,0,0)?;
+ let mut admission=NativeAdmission{control,phase,bytes:0,rows:0,items:0};
+ admission.add(snapshot.schema.len(),1)?;
+ admission.add(snapshot.version.len(),0)?;
+ for topic in &snapshot.topics {
+  admission.add(0,1)?;
+  for text in [&topic.guid,&topic.title,&topic.description,&topic.status,&topic.priority,&topic.creation_date,&topic.creation_author] { admission.add(text.len(),0)?; }
+  for label in &topic.labels { admission.add(label.len(),1)?; }
+  for comment in &topic.comments {
+   admission.add(0,1)?;
+   for text in [&comment.guid,&comment.date,&comment.author,&comment.text] { admission.add(text.len(),0)?; }
+   if let Some(reference)=&comment.viewpoint_ref { admission.add(reference.len(),0)?; }
+  }
+  for view in &topic.viewpoints {
+   admission.add(view.guid.len(),1)?;
+   if view.camera.is_some() { admission.add(1+10*std::mem::size_of::<f64>(),2)?; }
+   if let Some(components)=&view.components {
+    admission.add(1,1)?;
+    for value in &components.selection { admission.add(value.len(),1)?; }
+    for value in &components.visibility.exceptions { admission.add(value.len(),1)?; }
+    for coloring in &components.coloring {
+     admission.add(coloring.color.len(),1)?;
+     for value in &coloring.components { admission.add(value.len(),1)?; }
+    }
+   }
+   if let Some(image)=&view.snapshot { admission.add(image.len(),1)?; }
+  }
+ }
+ for part in &snapshot.parts { admission.add(part.name.len(),1)?; admission.add(part.data.len(),0)?; }
+ admission.control.checkpoint(phase,admission.items,admission.items)
+}
 
 impl ArtifactSqliteSnapshot for BcfSnapshot{
- fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,String>{store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),Self::__dsl_from_record_controlled,control)}
+ fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
+  let snapshot=store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record,native|Self::__dsl_from_record_controlled(record,native),control)?;
+  admit_native(&snapshot,SqliteSnapshotPhase::DecodeNative,control)?;
+  Ok(snapshot)
+ }
  const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,String>{
-  control.checkpoint(SqliteSnapshotPhase::EncodeNative,0,0)?;let add=|count:usize,size:usize|count.checked_add(size).ok_or("Native semantic row count overflow");let mut rows=add(add(1,self.topics.len())?,self.parts.len())?;control.check_rows(rows)?;for(index,topic)in self.topics.iter().enumerate(){for size in[topic.labels.len(),topic.comments.len(),topic.viewpoints.len()]{rows=add(rows,size)?}control.check_rows(rows)?;for(index,viewpoint)in topic.viewpoints.iter().enumerate(){if viewpoint.camera.is_some(){rows=add(rows,2)?}rows=add(rows,usize::from(viewpoint.snapshot.is_some()))?;if let Some(components)=&viewpoint.components{for size in[1,components.selection.len(),components.visibility.exceptions.len(),components.coloring.len()]{rows=add(rows,size)?}control.check_rows(rows)?;for(index,color)in components.coloring.iter().enumerate(){rows=add(rows,color.components.len())?;control.check_rows(rows)?;if(index+1)%256==0{control.checkpoint(SqliteSnapshotPhase::EncodeNative,index+1,components.coloring.len())?}}}control.check_rows(rows)?;if(index+1)%256==0{control.checkpoint(SqliteSnapshotPhase::EncodeNative,index+1,topic.viewpoints.len())?}}if(index+1)%256==0{control.checkpoint(SqliteSnapshotPhase::EncodeNative,index+1,self.topics.len())?}}
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,ValueError>{
+  admit_native(self,SqliteSnapshotPhase::EncodeNative,control)?;
   store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control)
  }
 
- fn preflight_sqlite_snapshot_encoding(&self, _encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), String> {
+ fn preflight_sqlite_snapshot_encoding(&self, _encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(),ValueError> {
+  admit_native(self,SqliteSnapshotPhase::EncodeNative,control)?;
   let mut bound = NativeEncodingBound::new(control)?;
-  let scalar = 2 * std::mem::size_of::<dsl::FieldValue>() + 64;
+  let scalar = 2 * std::mem::size_of::<semio_framework_dsl_record::FieldValue>() + 64;
   bound.add(32768)?;
   for text in [&self.schema, &self.version] { bound.repeated(text.len(), 24)?; }
   for topic in &self.topics {
@@ -58,24 +112,24 @@ impl ArtifactSqliteSnapshot for BcfSnapshot{
   bound.finish()
  }
 
- fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,String>{
+ fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{
   let mut out=Projection::new(Self::SQLITE_SCHEMA,control)?;out.insert("bcf_document",&[Cell::Text(&self.schema),Cell::Text(&self.version)])?;
-  for(ordinal,topic)in self.topics.iter().enumerate(){let id=out.insert("bcf_topic",&[Cell::Integer(1),Cell::Integer(i64::try_from(ordinal).map_err(|error|error.to_string())?),Cell::Text(&topic.guid),Cell::Text(&topic.title),Cell::Text(&topic.description),Cell::Text(&topic.status),Cell::Text(&topic.priority),Cell::Text(&topic.creation_date),Cell::Text(&topic.creation_author)])?;write_strings(&mut out,"bcf_topic_label",id,&topic.labels)?;
-   for(ordinal,comment)in topic.comments.iter().enumerate(){out.insert("bcf_comment",&[Cell::Integer(id),Cell::Integer(i64::try_from(ordinal).map_err(|error|error.to_string())?),Cell::Text(&comment.guid),Cell::Text(&comment.date),Cell::Text(&comment.author),Cell::Text(&comment.text),comment.viewpoint_ref.as_deref().map_or(Cell::Null,Cell::Text)])?;}
-   for(ordinal,view)in topic.viewpoints.iter().enumerate(){let view_id=out.insert("bcf_viewpoint",&[Cell::Integer(id),Cell::Integer(i64::try_from(ordinal).map_err(|error|error.to_string())?),Cell::Text(&view.guid)])?;
+  for(ordinal,topic)in self.topics.iter().enumerate(){let id=out.insert("bcf_topic",&[Cell::Integer(1),Cell::Integer(i64::try_from(ordinal).map_err(|error|work(error.to_string()))?),Cell::Text(&topic.guid),Cell::Text(&topic.title),Cell::Text(&topic.description),Cell::Text(&topic.status),Cell::Text(&topic.priority),Cell::Text(&topic.creation_date),Cell::Text(&topic.creation_author)])?;write_strings(&mut out,"bcf_topic_label",id,&topic.labels)?;
+   for(ordinal,comment)in topic.comments.iter().enumerate(){out.insert("bcf_comment",&[Cell::Integer(id),Cell::Integer(i64::try_from(ordinal).map_err(|error|work(error.to_string()))?),Cell::Text(&comment.guid),Cell::Text(&comment.date),Cell::Text(&comment.author),Cell::Text(&comment.text),comment.viewpoint_ref.as_deref().map_or(Cell::Null,Cell::Text)])?;}
+   for(ordinal,view)in topic.viewpoints.iter().enumerate(){let view_id=out.insert("bcf_viewpoint",&[Cell::Integer(id),Cell::Integer(i64::try_from(ordinal).map_err(|error|work(error.to_string()))?),Cell::Text(&view.guid)])?;
     if let Some(camera)=&view.camera{let(kind,p,d,u,parameter,table)=match camera{BcfCamera::Perspective{view_point,direction,up_vector,field_of_view}=>("perspective",view_point,direction,up_vector,*field_of_view,"bcf_perspective_camera"),BcfCamera::Orthogonal{view_point,direction,up_vector,view_to_world_scale}=>("orthogonal",view_point,direction,up_vector,*view_to_world_scale,"bcf_orthogonal_camera")};insert_key_ieee754(&mut out,"bcf_camera",view_id,&[Cell::Text(kind),Cell::Real(p.x),Cell::Real(p.y),Cell::Real(p.z),Cell::Real(d.x),Cell::Real(d.y),Cell::Real(d.z),Cell::Real(u.x),Cell::Real(u.y),Cell::Real(u.z)],CAMERA_FLOATS)?;insert_key_ieee754(&mut out,table,view_id,&[Cell::Real(parameter)],PARAMETER_FLOATS)?;}
-    if let Some(components)=&view.components{out.insert_key("bcf_components",view_id,&[Cell::Integer(i64::from(components.visibility.default_visibility))])?;write_strings(&mut out,"bcf_selection",view_id,&components.selection)?;write_strings(&mut out,"bcf_visibility_exception",view_id,&components.visibility.exceptions)?;for(ordinal,coloring)in components.coloring.iter().enumerate(){let color_id=out.insert("bcf_coloring",&[Cell::Integer(view_id),Cell::Integer(i64::try_from(ordinal).map_err(|error|error.to_string())?),Cell::Text(&coloring.color)])?;write_strings(&mut out,"bcf_coloring_component",color_id,&coloring.components)?;}}
+    if let Some(components)=&view.components{out.insert_key("bcf_components",view_id,&[Cell::Integer(i64::from(components.visibility.default_visibility))])?;write_strings(&mut out,"bcf_selection",view_id,&components.selection)?;write_strings(&mut out,"bcf_visibility_exception",view_id,&components.visibility.exceptions)?;for(ordinal,coloring)in components.coloring.iter().enumerate(){let color_id=out.insert("bcf_coloring",&[Cell::Integer(view_id),Cell::Integer(i64::try_from(ordinal).map_err(|error|work(error.to_string()))?),Cell::Text(&coloring.color)])?;write_strings(&mut out,"bcf_coloring_component",color_id,&coloring.components)?;}}
     if let Some(image)=&view.snapshot{out.insert_key("bcf_snapshot_image",view_id,&[Cell::Blob(image)])?;}
    }
   }
-  for(ordinal,part)in self.parts.iter().enumerate(){out.insert("bcf_raw_part",&[Cell::Integer(1),Cell::Integer(i64::try_from(ordinal).map_err(|error|error.to_string())?),Cell::Text(&part.name),Cell::Blob(&part.data)])?;}out.finish()
+  for(ordinal,part)in self.parts.iter().enumerate(){out.insert("bcf_raw_part",&[Cell::Integer(1),Cell::Integer(i64::try_from(ordinal).map_err(|error|work(error.to_string()))?),Cell::Text(&part.name),Cell::Blob(&part.data)])?;}out.finish()
  }
- fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,String>{
-  validate_sqlite_database_schema(database,Self::SQLITE_SCHEMA,control.limits()).map_err(|error|error.to_string())?;control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;
-  let documents=entities(database,"bcf_document",3,control)?;if documents.len()!=1||!documents.contains_key(&1){return Err("BCF requires document identity one".into());}let topic_entities=entities(database,"bcf_topic",10,control)?;let topics_order=groups(&topic_entities,&documents,control)?;let labels=groups(&entities(database,"bcf_topic_label",4,control)?,&topic_entities,control)?;let comments=groups(&entities(database,"bcf_comment",8,control)?,&topic_entities,control)?;let view_entities=entities(database,"bcf_viewpoint",4,control)?;let views=groups(&view_entities,&topic_entities,control)?;
+ fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
+  validate_sqlite_database_schema(database,Self::SQLITE_SCHEMA,control.limits())?;control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;
+  let documents=entities(database,"bcf_document",3,control)?;if documents.len()!=1||!documents.contains_key(&1){return Err(invalid("BCF requires document identity one"));}let topic_entities=entities(database,"bcf_topic",10,control)?;let topics_order=groups(&topic_entities,&documents,control)?;let labels=groups(&entities(database,"bcf_topic_label",4,control)?,&topic_entities,control)?;let comments=groups(&entities(database,"bcf_comment",8,control)?,&topic_entities,control)?;let view_entities=entities(database,"bcf_viewpoint",4,control)?;let views=groups(&view_entities,&topic_entities,control)?;
   let cameras=entities(database,"bcf_camera",29,control)?;same_owner(&cameras,&view_entities,control)?;let perspectives=entities(database,"bcf_perspective_camera",4,control)?;same_owner(&perspectives,&cameras,control)?;let orthogonals=entities(database,"bcf_orthogonal_camera",4,control)?;same_owner(&orthogonals,&cameras,control)?;let component_entities=entities(database,"bcf_components",2,control)?;same_owner(&component_entities,&view_entities,control)?;let selections=groups(&entities(database,"bcf_selection",4,control)?,&component_entities,control)?;let exceptions=groups(&entities(database,"bcf_visibility_exception",4,control)?,&component_entities,control)?;let coloring_entities=entities(database,"bcf_coloring",4,control)?;let colorings=groups(&coloring_entities,&component_entities,control)?;let colored=groups(&entities(database,"bcf_coloring_component",4,control)?,&coloring_entities,control)?;let images=entities(database,"bcf_snapshot_image",2,control)?;same_owner(&images,&view_entities,control)?;let parts_order=groups(&entities(database,"bcf_raw_part",5,control)?,&documents,control)?;
   let mut topics=Vec::new();for row in topics_order.get(&1).into_iter().flatten(){checkpoint(control,topics.len(),0)?;let mut topic_comments=Vec::new();for comment in comments.get(&row.rowid).into_iter().flatten(){checkpoint(control,topic_comments.len(),0)?;topic_comments.push(BcfComment{guid:reconstruct_text(control,comment.text(3)?)?,date:reconstruct_text(control,comment.text(4)?)?,author:reconstruct_text(control,comment.text(5)?)?,text:reconstruct_text(control,comment.text(6)?)?,viewpoint_ref:comment.optional_text(7)?.map(|text|reconstruct_text(control,text)).transpose()?});}
-   let mut viewpoints=Vec::new();for view in views.get(&row.rowid).into_iter().flatten(){checkpoint(control,viewpoints.len(),0)?;let camera=if let Some(camera)=cameras.get(&view.rowid){let camera=FloatRow::new(camera,CAMERA_FLOATS)?;let view_point=point(camera,2)?;let direction=point(camera,5)?;let up_vector=point(camera,8)?;Some(match camera.text(1)?{"perspective"=>{if orthogonals.contains_key(&view.rowid){return Err("BCF camera has conflicting choice parameters".into());}let parameter=FloatRow::new(perspectives.get(&view.rowid).ok_or("BCF perspective camera is missing its parameter")?,PARAMETER_FLOATS)?;BcfCamera::Perspective{view_point,direction,up_vector,field_of_view:parameter.real(1)?}},"orthogonal"=>{if perspectives.contains_key(&view.rowid){return Err("BCF camera has conflicting choice parameters".into());}let parameter=FloatRow::new(orthogonals.get(&view.rowid).ok_or("BCF orthogonal camera is missing its parameter")?,PARAMETER_FLOATS)?;BcfCamera::Orthogonal{view_point,direction,up_vector,view_to_world_scale:parameter.real(1)?}},_=>return Err("BCF camera kind is unknown".into())})}else{None};
+   let mut viewpoints=Vec::new();for view in views.get(&row.rowid).into_iter().flatten(){checkpoint(control,viewpoints.len(),0)?;let camera=if let Some(camera)=cameras.get(&view.rowid){let camera=FloatRow::new(camera,CAMERA_FLOATS)?;let view_point=point(camera,2)?;let direction=point(camera,5)?;let up_vector=point(camera,8)?;Some(match camera.text(1)?{"perspective"=>{if orthogonals.contains_key(&view.rowid){return Err(invalid("BCF camera has conflicting choice parameters"));}let parameter=FloatRow::new(perspectives.get(&view.rowid).ok_or_else(||invalid("BCF perspective camera is missing its parameter"))?,PARAMETER_FLOATS)?;BcfCamera::Perspective{view_point,direction,up_vector,field_of_view:parameter.real(1)?}},"orthogonal"=>{if perspectives.contains_key(&view.rowid){return Err(invalid("BCF camera has conflicting choice parameters"));}let parameter=FloatRow::new(orthogonals.get(&view.rowid).ok_or_else(||invalid("BCF orthogonal camera is missing its parameter"))?,PARAMETER_FLOATS)?;BcfCamera::Orthogonal{view_point,direction,up_vector,view_to_world_scale:parameter.real(1)?}},_=>return Err(invalid("BCF camera kind is unknown"))})}else{None};
     let components=if let Some(component)=component_entities.get(&view.rowid){let mut coloring=Vec::new();for color in colorings.get(&view.rowid).into_iter().flatten(){checkpoint(control,coloring.len(),0)?;coloring.push(BcfColoring{color:reconstruct_text(control,color.text(3)?)?,components:read_strings(colored.get(&color.rowid),control)?});}Some(BcfComponents{selection:read_strings(selections.get(&view.rowid),control)?,visibility:BcfVisibility{default_visibility:boolean(component,1)?,exceptions:read_strings(exceptions.get(&view.rowid),control)?},coloring})}else{None};let snapshot=images.get(&view.rowid).map(|image|reconstruct_blob(control,image.blob(1)?)).transpose()?;viewpoints.push(BcfViewpoint{guid:reconstruct_text(control,view.text(3)?)?,camera,components,snapshot});
    }
    topics.push(BcfTopic{guid:reconstruct_text(control,row.text(3)?)?,title:reconstruct_text(control,row.text(4)?)?,description:reconstruct_text(control,row.text(5)?)?,status:reconstruct_text(control,row.text(6)?)?,priority:reconstruct_text(control,row.text(7)?)?,labels:read_strings(labels.get(&row.rowid),control)?,creation_date:reconstruct_text(control,row.text(8)?)?,creation_author:reconstruct_text(control,row.text(9)?)?,comments:topic_comments,viewpoints});

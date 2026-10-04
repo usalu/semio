@@ -17,9 +17,9 @@ impl Deserializer<NoteSnapshot> for PdfIntoNote {
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
     async fn deserialize(payload: &IoPayload) -> IoResult<NoteSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
-            return Err(IoError { message: "PdfIntoNote: expected a binary pdf payload".to_string(), diagnostics: Vec::new() });
+            return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "PdfIntoNote: expected a binary pdf payload".to_string())));
         };
-        let pdf = decode_pdf(bytes).map_err(|error| IoError { message: format!("PdfIntoNote: decode failed: {error}"), diagnostics: Vec::new() })?;
+        let pdf = decode_pdf(bytes).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("PdfIntoNote: decode failed: {error}"))))?;
         let mut ids = NoteIdOwner::new(format!("pdf-import:{}", bytes.len()), 0);
         let mut snap = empty_note_snapshot();
         snap.id = create_note_id(&mut ids, "pdf-import");

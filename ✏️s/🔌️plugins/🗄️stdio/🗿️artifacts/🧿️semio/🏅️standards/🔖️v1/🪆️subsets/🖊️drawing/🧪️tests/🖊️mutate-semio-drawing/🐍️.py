@@ -38,7 +38,7 @@ from __future__ import annotations
 import json
 import struct
 
-from semio_repo_test import Adapter, Context, Outcome, digest
+from semio_repo_test import Adapter, Context, Outcome, digest, patched_snapshot, snapshot_patch_inverse
 
 # endregion 🔖️Imports
 
@@ -717,6 +717,7 @@ def pack_bytes(document: dict) -> bytes:
 # region 🔖️Mutations
 VERBS = {
     "CreateLayer": "create-layer",
+    "PatchSnapshot": "patch-snapshot",
     "DeleteLayer": "delete-layer",
     "CreateNode": "create-node",
     "DeleteNode": "delete-node",
@@ -751,7 +752,7 @@ def verb_of(mutation: dict) -> tuple:
     carries the verb's `snake_case` arguments."""
     keys = list(mutation.keys())
     if len(keys) != 1 or keys[0] not in VERBS:
-        raise AssertionError("%r is not one of this subset's seventeen declared verbs" % (keys,))
+        raise AssertionError("%r is not one of this subset's eighteen declared verbs" % (keys,))
     return keys[0], mutation[keys[0]]
 
 
@@ -843,6 +844,8 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
     verb, argument = verb_of(mutation)
     kind = VERBS[verb]
     result = clone(document)
+    if kind == "patch-snapshot":
+        return patched_snapshot(document, argument["patch"])
     if kind == "create-layer":
         index = argument["index"]
         if index < 0 or index > len(result["layers"]):
@@ -976,6 +979,8 @@ def inverse_mutation(document: dict, mutation: dict) -> list:
     to disturb, so the restoration is exact rather than merely structural."""
     verb, argument = verb_of(mutation)
     kind = VERBS[verb]
+    if kind == "patch-snapshot":
+        return [{"PatchSnapshot": {"patch": snapshot_patch_inverse(document, argument["patch"])}}]
     if kind == "create-layer":
         return [{"DeleteLayer": {"id": argument["layer"]["id"]}}]
     if kind == "delete-layer":

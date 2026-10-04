@@ -15,7 +15,7 @@ pub(crate) mod context {
     /// 🧬️ A wrapper carrying the real registry so kind discipline (View-emits-operations rejection) runs.
     pub async fn app_with_registry() -> NormApp {
         let mut app = new_app_with_registry::<EditorApp<En1995PlayApp>>(en1995_manifest_for_tests).await;
-        semio_framework::io::resolve_ready(app.bind_instance_id(meta("local").instance_id));
+        ::semio_framework_async::poll::resolve_ready(app.bind_instance_id(meta("local").instance_id));
         app
     }
 
@@ -250,7 +250,7 @@ async fn report_out_exports_the_computed_check_report() {
     let mut app = context::app_with_registry().await;
     let mut host = NormHost::<En1995Family>::from_artifact(app.snapshot().expect("projection"));
     host.evaluate();
-    let media = semio_framework_plugin::resolve_ready(PluginApp::export_media(&mut app, "report:out")).expect("export report:out");
+    let media = ::semio_framework_async::poll::resolve_ready(PluginApp::export_media(&mut app, "report:out")).expect("export report:out");
     let semio_framework_plugin::MediaPayload::Structured { schema, json } = media.payload else { panic!("expected a structured payload") };
     assert_eq!(schema, crate::app_surface::artifact_kind_id(VARIANT));
     let value: serde_json::Value = serde_json::from_str(&json).expect("report json parses");
@@ -259,3 +259,5 @@ async fn report_out_exports_the_computed_check_report() {
     context::close(&mut app);
 }
 //#endregion 🔖️Behavior
+
+semio_framework_plugin::history_edit_acceptance_law!("norm", super::En1995PlayApp, || semio_framework_plugin::App { definition: super::create_en1995_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");

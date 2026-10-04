@@ -17,9 +17,12 @@ impl protocol::MutationKind<DocxSnapshot, DocxStrictMutation> for SetConformance
     fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<<DocxStrictMutation as Mutation<DocxSnapshot>>::Diff> {
         agg_diff(&DocxStrictMutation::SetConformanceAttribute(self.clone()), base)
     }
-    fn inverse(&self, base: &DocxSnapshot) -> Vec<DocxStrictMutation> {
-        agg_inverse(&DocxStrictMutation::SetConformanceAttribute(self.clone()), base)
-    }
+    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxStrictMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&DocxStrictMutation::SetConformanceAttribute(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set conformance attribute", "Konformitätsattribut setzen")
     }

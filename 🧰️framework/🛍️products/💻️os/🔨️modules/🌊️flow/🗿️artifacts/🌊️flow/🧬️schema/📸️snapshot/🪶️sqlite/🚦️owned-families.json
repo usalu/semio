@@ -1,0 +1,123 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "families",
+    "keys",
+    "orderedKeys",
+    "limits",
+    "refusals",
+    "recordFields"
+  ],
+  "properties": {
+    "families": {
+      "const": [
+        "orderedMap",
+        "orderedSet",
+        "tree",
+        "neuron",
+        "synapse"
+      ]
+    },
+    "keys": {
+      "const": [
+        "z",
+        "\u0000",
+        "",
+        "😀",
+        "a"
+      ]
+    },
+    "orderedKeys": {
+      "const": [
+        "",
+        "\u0000",
+        "a",
+        "z",
+        "😀"
+      ]
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "successBytes",
+        "refusedBytes",
+        "interiorBytes",
+        "repeat",
+        "recursiveDepth"
+      ],
+      "properties": {
+        "successBytes": {
+          "const": 16777216
+        },
+        "refusedBytes": {
+          "const": 0
+        },
+        "interiorBytes": {
+          "const": 65536
+        },
+        "repeat": {
+          "const": 20000
+        },
+        "recursiveDepth": {
+          "const": 300
+        }
+      }
+    },
+    "refusals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ownership",
+        "cancel",
+        "depth"
+      ],
+      "properties": {
+        "ownership": {
+          "const": "OwnershipLimit"
+        },
+        "cancel": {
+          "const": "Canceled"
+        },
+        "depth": {
+          "const": "DepthLimit"
+        }
+      }
+    },
+    "recordFields": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tree",
+        "neuron",
+        "synapse"
+      ],
+      "properties": {
+        "tree": {
+          "const": [
+            "neurons",
+            "synapses"
+          ]
+        },
+        "neuron": {
+          "const": [
+            "id",
+            "kind",
+            "params",
+            "tree"
+          ]
+        },
+        "synapse": {
+          "const": [
+            "id",
+            "from",
+            "to",
+            "fromPort",
+            "toPort"
+          ]
+        }
+      }
+    }
+  }
+}

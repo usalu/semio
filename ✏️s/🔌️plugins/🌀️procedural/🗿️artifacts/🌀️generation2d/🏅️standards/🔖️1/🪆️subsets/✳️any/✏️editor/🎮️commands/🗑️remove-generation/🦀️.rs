@@ -8,13 +8,13 @@ use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "remove-generation")]
 pub struct RemoveGeneration {
     pub id: String,
 }
 
 pub fn handle(payload: &RemoveGeneration, doc: &ArtifactView<'_, Generation2dSnapshot>, cfg: &ConfigView<'_, Generation2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation>, Fault> {
-    let args = dsl::DslValue::object([("id".into(), dsl::DslValue::String(payload.id.clone()))]);
+    let args = semio_framework_value::DslValue::object([("id".into(), semio_framework_value::DslValue::String(payload.id.clone()))]);
     Ok(handle_generation("removeGeneration", Some(&args), doc, cfg).emit)
 }

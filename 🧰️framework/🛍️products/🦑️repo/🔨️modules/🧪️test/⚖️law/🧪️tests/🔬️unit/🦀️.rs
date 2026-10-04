@@ -111,3 +111,18 @@ fn witness_params_must_be_the_emitted_wire_member_for_member() {
     assert!(params_are_wire("replace-byte-range", &object(vec![("offset", Json::Number(6.0)), ("removeLen", Json::Number(5.0))]), r#"{"offset":6,"remove_len":5}"#).unwrap_err().contains("removeLen"));
     assert!(params_are_wire("replace-byte-range", &params, r#"{"offset":6,"remove_len":5,"insert":[]}"#).unwrap_err().contains("insert"), "a member the row omits is a shorthand, not the wire");
 }
+
+#[test]
+fn a_patch_snapshot_row_is_its_one_pointer_operation_on_the_reference_reading() {
+    let snapshot = parse_json(r#"{"name":"a","list":[1,2,3],"meta":{"x":1,"y/z":2},"text":"Grüße"}"#).unwrap();
+    let patched = |patch: &str| patched_snapshot(&snapshot, &parse_json(patch).unwrap()).map(|document| document.to_string());
+    assert_eq!(patched(r#"{"operation":"set","path":"/name","value":"b"}"#).unwrap(), r#"{"name":"b","list":[1,2,3],"meta":{"x":1,"y/z":2},"text":"Grüße"}"#);
+    assert_eq!(patched(r#"{"operation":"insert","path":"/meta/w","value":0,"index":0}"#).unwrap(), r#"{"name":"a","list":[1,2,3],"meta":{"w":0,"x":1,"y/z":2},"text":"Grüße"}"#);
+    assert_eq!(patched(r#"{"operation":"remove","path":"/meta/y~1z"}"#).unwrap(), r#"{"name":"a","list":[1,2,3],"meta":{"x":1},"text":"Grüße"}"#);
+    assert_eq!(patched(r#"{"operation":"move","from":"/list/0","path":"/list/-"}"#).unwrap(), r#"{"name":"a","list":[2,3,1],"meta":{"x":1,"y/z":2},"text":"Grüße"}"#);
+    assert_eq!(patched(r#"{"operation":"rename","path":"/meta/x","key":"v"}"#).unwrap(), r#"{"name":"a","list":[1,2,3],"meta":{"v":1,"y/z":2},"text":"Grüße"}"#);
+    assert_eq!(patched(r#"{"operation":"splice","path":"/list","offset":1,"remove":1,"value":[7,8]}"#).unwrap(), r#"{"name":"a","list":[1,7,8,3],"meta":{"x":1,"y/z":2},"text":"Grüße"}"#);
+    assert_eq!(patched(r#"{"operation":"splice","path":"/text","offset":4,"remove":2,"value":"ss"}"#).unwrap(), r#"{"name":"a","list":[1,2,3],"meta":{"x":1,"y/z":2},"text":"Grüsse"}"#);
+    assert!(patched(r#"{"operation":"splice","path":"/text","offset":3,"remove":1,"value":""}"#).is_err(), "a text splice must address character boundaries");
+    assert!(patched(r#"{"operation":"set","path":"/missing/0","value":1}"#).is_err());
+}

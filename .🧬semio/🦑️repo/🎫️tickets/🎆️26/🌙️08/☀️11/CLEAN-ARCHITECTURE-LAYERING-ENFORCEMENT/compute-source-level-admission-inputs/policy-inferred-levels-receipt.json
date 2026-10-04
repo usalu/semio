@@ -1,0 +1,14 @@
+{
+  "projects": [
+    "@semio-tech/compute-ownership-runner"
+  ],
+  "levels": [
+    "quick",
+    "long",
+    "exhaustive"
+  ],
+  "pass": 9,
+  "fail": 0,
+  "stdoutCallbacks": 18,
+  "stderrCallbacks": 2
+}

@@ -31,33 +31,33 @@ pub fn direction_token(direction: WfcDirection2d) -> &'static str {
     }
 }
 
-pub fn direction_from_token(token: &str) -> Result<WfcDirection2d, store::TextError> {
+pub fn direction_from_token(token: &str) -> Result<WfcDirection2d, semio_framework_diagnostic::TextError> {
     match token {
         "LEFT" => Ok(WfcDirection2d::Left),
         "RIGHT" => Ok(WfcDirection2d::Right),
         "TOP" => Ok(WfcDirection2d::Top),
         "BOTTOM" => Ok(WfcDirection2d::Bottom),
-        other => Err(store::TextError::new(format!("unknown grid2d direction '{other}'"), store::TextSpan::at(1, 1))),
+        other => Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown grid2d direction '{other}'"), semio_framework_diagnostic::TextSpan::at(1, 1))),
     }
 }
 //#endregion 🔖️Direction
 
 //#region 🔖️DslMirror
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 pub struct WfcTile2dDsl {
     pub id: String,
     pub label: Option<String>,
     pub weight: f64,
-    pub media: dsl::DslValue,
+    pub media: semio_framework_value::DslValue,
 }
 
 impl Default for WfcTile2dDsl {
     fn default() -> Self {
-        Self { id: String::new(), label: None, weight: 1.0, media: dsl::DslValue::Null }
+        Self { id: String::new(), label: None, weight: 1.0, media: semio_framework_value::DslValue::Null }
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 pub struct WfcAdjacencyRule2dDsl {
     pub id: String,
     pub tile_a_id: String,
@@ -66,14 +66,14 @@ pub struct WfcAdjacencyRule2dDsl {
     pub allowed: bool,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 pub struct WfcPinnedCell2dDsl {
     pub x: u32,
     pub y: u32,
     pub tile_id: String,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 pub struct WfcCell2dDsl {
     pub x: u32,
     pub y: u32,
@@ -85,10 +85,10 @@ pub fn tile_to_dsl(tile: &WfcTile2d) -> WfcTile2dDsl {
     WfcTile2dDsl { id: tile.id.clone(), label: tile.label.clone(), weight: tile.weight, media: semio_framework_value::ToValue::to_value(&tile.media) }
 }
 
-pub fn tile_from_dsl(tile: WfcTile2dDsl) -> Result<WfcTile2d, store::TextError> {
+pub fn tile_from_dsl(tile: WfcTile2dDsl) -> Result<WfcTile2d, semio_framework_diagnostic::TextError> {
     let media: WfcTileMedia2d = match tile.media {
-        dsl::DslValue::Null => WfcTileMedia2d::default(),
-        other => semio_framework_value::FromValue::from_value(other).map_err(|error| store::TextError::new(format!("invalid tile media: {error}"), store::TextSpan::at(1, 1)))?,
+        semio_framework_value::DslValue::Null => WfcTileMedia2d::default(),
+        other => semio_framework_value::FromValue::from_value(other).map_err(|error| semio_framework_diagnostic::TextError::new(error.kind, format!("invalid tile media: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?,
     };
     Ok(WfcTile2d { id: tile.id, label: tile.label, weight: tile.weight, media })
 }
@@ -97,7 +97,7 @@ pub fn rule_to_dsl(rule: &WfcAdjacencyRule2d) -> WfcAdjacencyRule2dDsl {
     WfcAdjacencyRule2dDsl { id: rule.id.clone(), tile_a_id: rule.tile_a_id.clone(), tile_b_id: rule.tile_b_id.clone(), direction: direction_token(rule.direction).to_string(), allowed: rule.allowed }
 }
 
-pub fn rule_from_dsl(rule: WfcAdjacencyRule2dDsl) -> Result<WfcAdjacencyRule2d, store::TextError> {
+pub fn rule_from_dsl(rule: WfcAdjacencyRule2dDsl) -> Result<WfcAdjacencyRule2d, semio_framework_diagnostic::TextError> {
     Ok(WfcAdjacencyRule2d { id: rule.id, tile_a_id: rule.tile_a_id, tile_b_id: rule.tile_b_id, direction: direction_from_token(&rule.direction)?, allowed: rule.allowed })
 }
 
@@ -117,7 +117,7 @@ pub fn cell_from_dsl(cell: &WfcCell2dDsl) -> WfcCell2d {
     WfcCell2d { x: cell.x, y: cell.y }
 }
 
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(id = "wfc.grid2d", layout = "lines")]
 struct Grid2dSnapshotDsl {
     schema: String,
@@ -164,7 +164,7 @@ impl store::ArtifactDsl for Grid2dSnapshotDsl {
     fn envelope_id() -> &'static str {
         "wfc.grid2d"
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -172,11 +172,11 @@ impl store::ArtifactDsl for Grid2dSnapshotDsl {
         if body.trim().is_empty() {
             return Ok(Self::default());
         }
-        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -185,21 +185,21 @@ impl store::ArtifactDsl for Grid2dSnapshotDsl {
 impl store::ArtifactPack for Grid2dSnapshotDsl {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::from(error.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         if bytes.is_empty() {
             return Ok(Self::default());
         }
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::from(error.into_value_error()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -221,7 +221,7 @@ fn grid2d_document_to_dsl(document: &Grid2dSnapshot) -> Grid2dSnapshotDsl {
     }
 }
 
-fn grid2d_document_from_dsl(parsed: Grid2dSnapshotDsl) -> Result<Grid2dSnapshot, store::TextError> {
+fn grid2d_document_from_dsl(parsed: Grid2dSnapshotDsl) -> Result<Grid2dSnapshot, semio_framework_diagnostic::TextError> {
     Ok(Grid2dSnapshot {
         schema: parsed.schema,
         seed: parsed.seed,
@@ -244,7 +244,7 @@ impl store::ArtifactDsl for Grid2dSnapshot {
         "wfc.grid2d"
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         grid2d_document_from_dsl(<Grid2dSnapshotDsl as store::ArtifactDsl>::parse_dsl(text)?)
     }
 
@@ -264,14 +264,14 @@ impl store::ArtifactPack for Grid2dSnapshot {
         grid2d_document_from_dsl(parsed).map_err(store::text_error_to_pack_error)
     }
 
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         <Grid2dSnapshotDsl as store::ArtifactPack>::record_spec()
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 /// 📖️ Parses `.wfcgrid2d` DSL text into a `Grid2dSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<Grid2dSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<Grid2dSnapshot, semio_framework_diagnostic::TextError> {
     <Grid2dSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 

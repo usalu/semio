@@ -15,7 +15,7 @@
 //! type, one owning facet.
 
 use schemars::{schema_for, JsonSchema};
-use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
+use semio_framework_value::{DslValue, FromValue, ToValue, ValueError};
 use serde::{Deserialize, Serialize};
 
 pub use crate::errors::{GatewayError, GatewayErrorCode};

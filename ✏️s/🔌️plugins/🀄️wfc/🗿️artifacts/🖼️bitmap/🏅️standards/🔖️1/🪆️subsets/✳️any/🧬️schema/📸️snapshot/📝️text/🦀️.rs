@@ -21,7 +21,7 @@ pub const BITMAP_EXAMPLE_FLOWERS_TEXT: &str = include_str!("../../../📚️exam
 //#endregion 🔖️Examples
 
 //#region 🔖️DslMirror
-#[derive(Clone, Debug, Default, PartialEq, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 pub struct BitmapColorDsl {
     pub r: u32,
     pub g: u32,
@@ -29,7 +29,7 @@ pub struct BitmapColorDsl {
     pub a: u32,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 pub struct BitmapPinnedPixelDsl {
     pub x: u32,
     pub y: u32,
@@ -52,7 +52,7 @@ pub fn pin_from_dsl(pin: &BitmapPinnedPixelDsl) -> BitmapPinnedPixel {
     BitmapPinnedPixel { x: pin.x, y: pin.y, color: pin.color }
 }
 
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(id = "wfc.bitmap", layout = "lines")]
 struct BitmapSnapshotDsl {
     schema: String,
@@ -89,7 +89,7 @@ impl store::ArtifactDsl for BitmapSnapshotDsl {
     fn envelope_id() -> &'static str {
         "wfc.bitmap"
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -97,11 +97,11 @@ impl store::ArtifactDsl for BitmapSnapshotDsl {
         if body.trim().is_empty() {
             return Ok(Self::default());
         }
-        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -110,21 +110,21 @@ impl store::ArtifactDsl for BitmapSnapshotDsl {
 impl store::ArtifactPack for BitmapSnapshotDsl {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::from(error.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         if bytes.is_empty() {
             return Ok(Self::default());
         }
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::from(error.into_value_error()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -159,44 +159,47 @@ fn bitmap_document_from_dsl(parsed: BitmapSnapshotDsl) -> BitmapSnapshot {
     }
 }
 
+/// 📍️ Positions a native refusal at the document origin while keeping its refusal kind.
+
+
 /// 🛬️ Moves the authored bitmap grammar into persisted fields under one native ownership control.
-pub(crate) fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<BitmapSnapshot,String>{
+pub(crate) fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<BitmapSnapshot,semio_framework_value::ValueError>{
     let maximum_rows=control.limits().max_rows;
-    store::decode_sqlite_snapshot_record_native(payload,<BitmapSnapshot as store::ArtifactDsl>::envelope_id(),BitmapSnapshotDsl::__dsl_spec_producer(),|record,native|{
+    let snapshot=store::decode_sqlite_snapshot_record_native(payload,<BitmapSnapshot as store::ArtifactDsl>::envelope_id(),BitmapSnapshotDsl::__dsl_spec_producer(),|record,native|{
         let parsed=BitmapSnapshotDsl::__dsl_from_record_controlled(record,native)?;
-        let entities=parsed.palette.len().checked_add(parsed.pinned.len()).ok_or_else(||dsl::__rt::field_error("bitmap native entity count overflow"))?;
-        if entities.checked_add(4).is_none_or(|rows|rows>maximum_rows){return Err(dsl::__rt::field_error("bitmap native entity count exceeds caller limit"));}
+        let entities=parsed.palette.len().checked_add(parsed.pinned.len()).ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("bitmap native entity count overflow").to_string()))?;
+        if entities.checked_add(4).is_none_or(|rows|rows>maximum_rows){return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("bitmap native entity count exceeds caller limit").to_string()));}
         native.scoped_stage(|native|{
-            native.begin_stage(entities).map_err(dsl::__rt::field_error)?;
-            let mut palette=native.allocate_vec::<BitmapColor>(parsed.palette.len()).map_err(dsl::__rt::field_error)?;
-            let mut pinned=native.allocate_vec::<BitmapPinnedPixel>(parsed.pinned.len()).map_err(dsl::__rt::field_error)?;
-            for color in parsed.palette{palette.push(BitmapColor{r:color.r,g:color.g,b:color.b,a:color.a});native.step().map_err(dsl::__rt::field_error)?;}
-            for pin in parsed.pinned{pinned.push(BitmapPinnedPixel{x:pin.x,y:pin.y,color:pin.color});native.step().map_err(dsl::__rt::field_error)?;}
-            native.checkpoint().map_err(dsl::__rt::field_error)?;
+            native.begin_stage(entities)?;
+            let mut palette=native.allocate_vec::<BitmapColor>(parsed.palette.len())?;
+            let mut pinned=native.allocate_vec::<BitmapPinnedPixel>(parsed.pinned.len())?;
+            for color in parsed.palette{palette.push(BitmapColor{r:color.r,g:color.g,b:color.b,a:color.a});native.step()?;}
+            for pin in parsed.pinned{pinned.push(BitmapPinnedPixel{x:pin.x,y:pin.y,color:pin.color});native.step()?;}
+            native.checkpoint()?;
             Ok(BitmapSnapshot{schema:parsed.schema,seed:parsed.seed,input:BitmapInput{width:parsed.input_width,height:parsed.input_height,palette,pixels:parsed.input_pixels},output:BitmapOutputSpec{width:parsed.output_width,height:parsed.output_height,periodic:parsed.output_periodic},model:BitmapOverlappingModel{pattern_size:parsed.pattern_size,symmetry:parsed.symmetry,periodic_input:parsed.periodic_input,ground:parsed.ground},pinned})
         })
-    },control)
+    },control)?;snapshot.admit_sqlite_values(control,store::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative)?;Ok(snapshot)
 }
 
 /// 🛫️ Admits every owned bitmap native field before its canonical record and physical output.
-pub(crate) fn encode_sqlite_snapshot_native(document:&BitmapSnapshot,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,String>{
-    let rows=4usize.checked_add(document.input.palette.len()).and_then(|n|n.checked_add(document.pinned.len())).ok_or("bitmap native entity count overflow")?;
-    control.check_rows(rows)?;
+pub(crate) fn encode_sqlite_snapshot_native(document:&BitmapSnapshot,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,semio_framework_value::ValueError>{
+    let rows=4usize.checked_add(document.input.palette.len()).and_then(|n|n.checked_add(document.pinned.len())).ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"bitmap native entity count overflow"))?;
+    control.check_rows(rows)?;document.admit_sqlite_values(control,store::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative)?;
     store::encode_sqlite_snapshot_record_native(encoding,<BitmapSnapshot as store::ArtifactDsl>::envelope_id(),BitmapSnapshotDsl::__dsl_spec_producer(),|native|{
-        let schema=native.copy_text(&document.schema).map_err(dsl::__rt::field_error)?;
-        let input_pixels=native.copy_text(&document.input.pixels).map_err(dsl::__rt::field_error)?;
-        let palette=native.scoped_stage(|native|->Result<Vec<BitmapColorDsl>,String>{
+        let schema=native.copy_text(&document.schema)?;
+        let input_pixels=native.copy_text(&document.input.pixels)?;
+        let palette=native.scoped_stage(|native|->Result<Vec<BitmapColorDsl>,semio_framework_value::ValueError>{
             native.begin_stage(document.input.palette.len())?;
             let mut values=native.allocate_vec::<BitmapColorDsl>(document.input.palette.len())?;
             for color in &document.input.palette{values.push(BitmapColorDsl{r:color.r,g:color.g,b:color.b,a:color.a});native.step()?;}
             native.checkpoint()?;Ok(values)
-        }).map_err(dsl::__rt::field_error)?;
-        let pinned=native.scoped_stage(|native|->Result<Vec<BitmapPinnedPixelDsl>,String>{
+        })?;
+        let pinned=native.scoped_stage(|native|->Result<Vec<BitmapPinnedPixelDsl>,semio_framework_value::ValueError>{
             native.begin_stage(document.pinned.len())?;
             let mut values=native.allocate_vec::<BitmapPinnedPixelDsl>(document.pinned.len())?;
             for pin in &document.pinned{values.push(BitmapPinnedPixelDsl{x:pin.x,y:pin.y,color:pin.color});native.step()?;}
             native.checkpoint()?;Ok(values)
-        }).map_err(dsl::__rt::field_error)?;
+        })?;
         BitmapSnapshotDsl{schema,seed:document.seed,input_width:document.input.width,input_height:document.input.height,input_pixels,output_width:document.output.width,output_height:document.output.height,output_periodic:document.output.periodic,pattern_size:document.model.pattern_size,symmetry:document.model.symmetry,periodic_input:document.model.periodic_input,ground:document.model.ground,palette,pinned}.__dsl_to_record_controlled(native)
     },control)
 }
@@ -207,7 +210,7 @@ impl store::ArtifactDsl for BitmapSnapshot {
         "wfc.bitmap"
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         Ok(bitmap_document_from_dsl(<BitmapSnapshotDsl as store::ArtifactDsl>::parse_dsl(text)?))
     }
 
@@ -226,14 +229,14 @@ impl store::ArtifactPack for BitmapSnapshot {
         Ok(bitmap_document_from_dsl(<BitmapSnapshotDsl as store::ArtifactPack>::decode_pack_with(bytes, options)?))
     }
 
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         <BitmapSnapshotDsl as store::ArtifactPack>::record_spec()
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 /// 📖️ Parses `.wfcbitmap` DSL text into a `BitmapSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<BitmapSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<BitmapSnapshot, semio_framework_diagnostic::TextError> {
     <BitmapSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 

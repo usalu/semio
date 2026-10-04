@@ -6,7 +6,7 @@
 
 use crate::registers::AdjacencyKind;
 use crate::{EntityId, ProgramSnapshot};
-use dsl::DslValue as Value;
+use semio_framework_value::DslValue as Value;
 
 //#region 🔖️Labels
 pub fn element_label(program: &ProgramSnapshot, id: &EntityId) -> String {
@@ -22,8 +22,8 @@ pub fn adjacency_kind_label(kind: &AdjacencyKind) -> &'static str {
     }
 }
 
-pub fn entity_to_json<T: dsl::ToValue>(entity: &T) -> Value {
-    dsl::ToValue::to_value(entity)
+pub fn entity_to_json<T: semio_framework_value::ToValue>(entity: &T) -> Value {
+    semio_framework_value::ToValue::to_value(entity)
 }
 
 pub fn entity_id_from_json(value: &Value) -> Option<String> {

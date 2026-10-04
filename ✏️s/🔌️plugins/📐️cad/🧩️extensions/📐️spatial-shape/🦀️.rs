@@ -6,7 +6,7 @@
 //! `semio_framework_os_kernel::DslValue` end to end (ticket
 //! `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`'s `TopicContribution` seam).
 
-use pack::json;
+use semio_framework_pack_json as json;
 use semio_framework::DslValue;
 use semio_framework_plugin::{ExecutionMode, ExtensionBundle};
 

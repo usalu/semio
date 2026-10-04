@@ -2,7 +2,7 @@
 //! plugin's process-wide flow extension registry, the one source of every extension operator the catalogue
 //! lists and every evaluation resolves.
 
-use crate::{op::FlowMutation, FlowSnapshot};
+use crate::{FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -10,7 +10,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// 🧩️ One page of the shell's contributions pack — the flow twin of generation2d's row. The shell pushes
 /// the pack whole as page 0 of 1 over the pack-encoded command ingress (bounded by `COMMAND_MAXIMUM_BYTES`);
 /// `page`/`page_count` keep the registry's page-run addressing so a multi-page run assembles the same closure.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "set-contributions")]
 pub struct SetContributions {
     pub json: String,

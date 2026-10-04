@@ -54,6 +54,8 @@ describe("schema oracle (ajv)", () => {
     expect(lifecycleValidate({ ...law, matrix: law.matrix.slice(1) })).toBe(false);
     expect(lifecycleValidate({ ...law, definition: { ...law.definition, reasons: [{ ...law.definition.reasons[0], code: 65280 }] } })).toBe(false);
     expect(lifecycleValidate({ ...law, limits: { ...law.limits, stepRingCapacity: 12 } })).toBe(false);
+    expect(lifecycleValidate({ ...law, definition: { ...law.definition, member: "content" } })).toBe(true);
+    expect(lifecycleValidate({ ...law, definition: { ...law.definition, member: "" } })).toBe(false);
     const pageValidate = validator("ToolRunTracePage");
     const page = pagesFixture.pages[0].page;
     expect(pageValidate(page)).toBe(true);
@@ -139,6 +141,7 @@ describe("lifecycle law", () => {
       stepArgsMax: M.TOOL_RUN_STEP_ARGS_MAX,
       countersMax: M.TOOL_RUN_COUNTERS_MAX,
       provisionalOpsMax: M.TOOL_RUN_PROVISIONAL_OPS_MAX,
+      memberOpsMax: M.TOOL_RUN_MEMBER_OPS_MAX,
       traceResidentRecords: M.TOOL_RUN_TRACE_RESIDENT_RECORDS,
       tracePageOpsMax: M.TOOL_RUN_TRACE_PAGE_OPS_MAX,
       tracePageBytesMax: M.TOOL_RUN_TRACE_PAGE_BYTES_MAX,

@@ -23,7 +23,7 @@ import {
   type Canvas2dGumballMeta,
   type Canvas2dGumballTransformPayload,
   type Canvas2dGumballView,
-} from "../../🟦️GumballOverlay.tsx";
+} from "../../🧭️gumball/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 //#region 🧫️Corpus

@@ -22,10 +22,10 @@ impl Deserializer<WriterSnapshot> for DocxIntoWriter {
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
     async fn deserialize(payload: &IoPayload) -> IoResult<WriterSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
-            return Err(IoError { message: "DocxIntoWriter: expected a binary payload".to_string(), diagnostics: Vec::new() });
+            return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "DocxIntoWriter: expected a binary payload".to_string())));
         };
-        let docx = <DocxSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| IoError { message: format!("DocxIntoWriter: {error}"), diagnostics: Vec::new() })?;
-        let document = docx.project_document().map_err(|error| IoError { message: format!("DocxIntoWriter: {error}"), diagnostics: Vec::new() })?;
+        let docx = <DocxSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("DocxIntoWriter: {error}"))))?;
+        let document = docx.project_document().map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("DocxIntoWriter: {error}"))))?;
         let text = document
             .body
             .iter()

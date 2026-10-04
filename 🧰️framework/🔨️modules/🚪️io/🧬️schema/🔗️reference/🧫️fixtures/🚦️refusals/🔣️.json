@@ -1,0 +1,22 @@
+{
+  "identity": {
+    "artifactId": "",
+    "artifactKind": "kind!@/\u0000λ",
+    "standard": "",
+    "subset": "*"
+  },
+  "cases": [
+    {
+      "id": "initial-cancel",
+      "kind": "canceled"
+    },
+    {
+      "id": "metadata-admission",
+      "kind": "ownershipLimit"
+    },
+    {
+      "id": "wrong-field-shape",
+      "kind": "invalidValue"
+    }
+  ]
+}

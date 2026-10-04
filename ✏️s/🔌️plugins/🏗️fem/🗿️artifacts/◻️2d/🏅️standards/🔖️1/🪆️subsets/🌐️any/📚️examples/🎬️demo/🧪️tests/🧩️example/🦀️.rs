@@ -12,7 +12,7 @@ fn inference_determinism_law() {
 
     let text = include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
     let snapshot = crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(text).expect("example dsl parses");
-    assert_eq!(Fem2dInference::infer(&snapshot), Fem2dInference::infer(&snapshot));
+    assert_eq!(Fem2dInference::infer(&snapshot).expect("valid materialized inference fixture"), Fem2dInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
 #[test]
@@ -21,6 +21,6 @@ fn inference_default_law() {
     use crate::Fem2dSnapshot;
     use protocol::Inference;
 
-    assert_eq!(Fem2dInference::infer(&Fem2dSnapshot::default()), Fem2dInference::default());
+    assert_eq!(Fem2dInference::infer(&Fem2dSnapshot::default()).expect("valid materialized inference fixture"), Fem2dInference::default());
 }
 //#endregion 🧪️InferenceLaws

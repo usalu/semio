@@ -56,7 +56,7 @@ pub mod derived_composition {
     /// directly unit-testable against a typed `SemioModelSnapshot` (not just through the `IoPayload`
     /// wire boundary).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn semio_model_referential_diagnostics(snapshot: &SemioModelSnapshot) -> Vec<dsl::Diagnostic> {
+    pub fn semio_model_referential_diagnostics(snapshot: &SemioModelSnapshot) -> Vec<semio_framework_diagnostic::Diagnostic> {
         let spatial_ids: HashSet<&str> = snapshot.spatial.iter().map(|n| n.id.as_str()).collect();
         let element_ids: HashSet<&str> = snapshot.elements.iter().map(|e| e.id.as_str()).collect();
         let mut diagnostics = Vec::new();
@@ -64,9 +64,9 @@ pub mod derived_composition {
         for node in &snapshot.spatial {
             if let Some(parent) = &node.parent_id {
                 if parent == &node.id {
-                    diagnostics.push(dsl::Diagnostic::error("stdio.semio_model.validate-self-parent", dsl::TextSpan::at(1, 1), format!("spatial node {:?} is its own parent", node.id)));
+                    diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.semio_model.validate-self-parent", semio_framework_diagnostic::TextSpan::at(1, 1), format!("spatial node {:?} is its own parent", node.id)));
                 } else if !spatial_ids.contains(parent.as_str()) {
-                    diagnostics.push(dsl::Diagnostic::error("stdio.semio_model.validate-dangling-parent", dsl::TextSpan::at(1, 1), format!("spatial node {:?} references missing parent {:?}", node.id, parent)));
+                    diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.semio_model.validate-dangling-parent", semio_framework_diagnostic::TextSpan::at(1, 1), format!("spatial node {:?} references missing parent {:?}", node.id, parent)));
                 }
             }
         }
@@ -74,7 +74,7 @@ pub mod derived_composition {
         for element in &snapshot.elements {
             if let Some(spatial_id) = &element.spatial_id {
                 if !spatial_ids.contains(spatial_id.as_str()) {
-                    diagnostics.push(dsl::Diagnostic::error("stdio.semio_model.validate-dangling-spatial-ref", dsl::TextSpan::at(1, 1), format!("element {:?} references missing spatial node {:?}", element.id, spatial_id)));
+                    diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.semio_model.validate-dangling-spatial-ref", semio_framework_diagnostic::TextSpan::at(1, 1), format!("element {:?} references missing spatial node {:?}", element.id, spatial_id)));
                 }
             }
         }
@@ -82,10 +82,10 @@ pub mod derived_composition {
         for relation in &snapshot.relations {
             let endpoint_known = |id: &str| element_ids.contains(id) || spatial_ids.contains(id);
             if !endpoint_known(&relation.from) {
-                diagnostics.push(dsl::Diagnostic::error("stdio.semio_model.validate-dangling-relation-from", dsl::TextSpan::at(1, 1), format!("relation {:?} references missing from-id {:?}", relation.id, relation.from)));
+                diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.semio_model.validate-dangling-relation-from", semio_framework_diagnostic::TextSpan::at(1, 1), format!("relation {:?} references missing from-id {:?}", relation.id, relation.from)));
             }
             if !endpoint_known(&relation.to) {
-                diagnostics.push(dsl::Diagnostic::error("stdio.semio_model.validate-dangling-relation-to", dsl::TextSpan::at(1, 1), format!("relation {:?} references missing to-id {:?}", relation.id, relation.to)));
+                diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.semio_model.validate-dangling-relation-to", semio_framework_diagnostic::TextSpan::at(1, 1), format!("relation {:?} references missing to-id {:?}", relation.id, relation.to)));
             }
         }
 
@@ -94,14 +94,14 @@ pub mod derived_composition {
 
     impl SubsetValidator for SemioModelValidator {
         const DIALECT: Dialect = DIALECT;
-        async fn validate(payload: &IoPayload) -> Vec<dsl::Diagnostic> {
+        async fn validate(payload: &IoPayload) -> Vec<semio_framework_diagnostic::Diagnostic> {
             let decoded = match payload {
                 IoPayload::Binary(bytes) => <SemioModelSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
                 IoPayload::Text(text) => <SemioModelSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
             };
             match decoded {
                 Some(snapshot) => semio_model_referential_diagnostics(&snapshot),
-                None => vec![dsl::Diagnostic::error("stdio.semio_model.validate-decode-failed", dsl::TextSpan::at(1, 1), "SemioModelValidator: payload did not decode as a SemioModelSnapshot".to_string())],
+                None => vec![semio_framework_diagnostic::Diagnostic::error("stdio.semio_model.validate-decode-failed", semio_framework_diagnostic::TextSpan::at(1, 1), "SemioModelValidator: payload did not decode as a SemioModelSnapshot".to_string())],
             }
         }
     }

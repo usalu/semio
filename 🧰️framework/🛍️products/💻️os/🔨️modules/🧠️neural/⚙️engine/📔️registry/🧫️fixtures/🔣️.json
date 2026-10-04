@@ -37,5 +37,7 @@
   "implementationSchemas": ["sample"],
   "payload": "dynamic 🌊",
   "grants": [1, 64, 4096],
-  "expected": { "dropsBeforeRetirement": 0, "dropsAfterRetirement": 1 }
+  "expected": { "dropsBeforeRetirement": 0, "dropsAfterRetirement": 1 },
+  "executionOwner": { "sameReaderSameIdentity": true, "distinctOwnerDifferentIdentity": true, "retirementGrantBytes": 3 },
+  "physicalShell": { "allocations": 2, "releasedBeforeGrant": 0, "zeroGrantFrozen": true, "undersizedGrantFrozen": true, "releasedBytesEqualAllocatorBytes": true }
 }

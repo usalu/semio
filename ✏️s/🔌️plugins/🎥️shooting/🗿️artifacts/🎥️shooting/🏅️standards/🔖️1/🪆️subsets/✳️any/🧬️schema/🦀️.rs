@@ -1,8 +1,8 @@
 //! 🧬️ Shooting artifact schema — every field of the artifact with its state class.
 
 use crate::{ShootingEmblemChild, ShootingSnapshot};
-use dsl::json;
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::json;
+use semio_framework_pack_json::Value;
 use schema::ArtifactSchema;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
@@ -109,7 +109,7 @@ pub fn default_snapshot() -> ShootingSnapshot {
 /// for this migration) — derives the JSON from the DSL fixture rather than keeping a second, redundant
 /// JSON copy of it on disk.
 pub fn default_snapshot_json() -> String {
-    json::to_json_string(&default_snapshot())
+    semio_framework_pack_json::to_json_string(&default_snapshot())
 }
 
 /// 📸️ The active shot — falls back to the first shot when `active_shot_id` names nothing (an empty
@@ -256,7 +256,7 @@ fn shooting_drawing_to_svg_text(drawing: &SemioDrawingSnapshot) -> Result<String
         dialect: semio_framework_plugin::Dialect { artifact_kind: "s.stdio.semio", standard: semio_framework_plugin::StandardId("v1"), subset: semio_framework_plugin::SubsetId("drawing") },
         payload: semio_framework_plugin::IoPayload::Binary(<SemioDrawingSnapshot as store::ArtifactPack>::encode_pack(drawing)),
     };
-    let composed = semio_framework_plugin::resolve_ready(semio_framework_plugin::io_dispatch(&key, std::slice::from_ref(&source))).map_err(|error| error.message)?;
+    let composed = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::io_dispatch(&key, std::slice::from_ref(&source))).map_err(|error| error.message)?;
     let bytes = match composed.payload {
         semio_framework_plugin::IoPayload::Binary(bytes) => bytes,
         semio_framework_plugin::IoPayload::Text(_) => return Err("s.stdio.semio/v1/drawing -> s.stdio.svg dispatch returned Text, expected Binary (ArtifactPack)".into()),
@@ -277,8 +277,8 @@ pub fn shooting_scene_svg(snapshot: &ShootingSnapshot) -> Result<(String, u32, u
 
 /// 🌉️ `shooting_scene_svg` over an already-deserialized document `Value`.
 pub fn shooting_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
-    let dsl_value: dsl::DslValue = json::to_dsl_value(value);
-    let snapshot: ShootingSnapshot = dsl::FromValue::from_value(dsl_value).map_err(|error| error.to_string())?;
+    let dsl_value: semio_framework_value::DslValue = semio_framework_pack_json::to_dsl_value(value);
+    let snapshot: ShootingSnapshot = semio_framework_value::FromValue::from_value(dsl_value).map_err(|error| error.to_string())?;
     shooting_scene_svg(&snapshot)
 }
 
@@ -373,7 +373,7 @@ pub mod derived_construction {
     #[derive(Clone, Debug, Default)]
     pub struct ShootingBuilderConstruction {
         snapshot: ShootingSnapshot,
-        diagnostics: Vec<dsl::Diagnostic>,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
     }
 
     impl ArtifactBuilder for ShootingBuilderConstruction {
@@ -386,7 +386,7 @@ pub mod derived_construction {
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(Self::from_snapshot(<ShootingSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
@@ -396,7 +396,7 @@ pub mod derived_construction {
             let outcome = <ShootingMutation as protocol::Mutation<ShootingSnapshot>>::diff(&mutation, &self.snapshot);
             match protocol::MutationDiff::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("build.apply", dsl::TextSpan::at(1, 1), error.to_string())),
+                Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
@@ -405,7 +405,7 @@ pub mod derived_construction {
             self.snapshot = snapshot;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -447,14 +447,14 @@ pub mod derived_analysis {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <ShootingSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }

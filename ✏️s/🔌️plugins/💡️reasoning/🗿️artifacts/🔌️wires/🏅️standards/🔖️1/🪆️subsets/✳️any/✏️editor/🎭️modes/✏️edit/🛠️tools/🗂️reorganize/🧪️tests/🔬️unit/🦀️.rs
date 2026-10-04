@@ -21,8 +21,11 @@ fn identity() -> ToolRunIdentity {
     ToolRunIdentity::new(ToolRunId { app_instance_id: 1, run: 1 }, [0; 32])
 }
 
-fn metabolism() -> WiresSnapshot {
-    crate::schema::metabolism_wires_example_snapshot().expect("metabolism example")
+fn metabolism() -> DslValue {
+    let snapshot = crate::schema::metabolism_wires_example_snapshot().expect("metabolism example");
+    let pack = crate::genesis_wires_child_pack(&snapshot, crate::WIRES_CONTENT_SLOT, &snapshot.content.child_id).expect("declared metabolism child");
+    let content = <crate::SemioGraphSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("full metabolism graph child");
+    crate::wires_composed(&snapshot, &content).board
 }
 
 fn verdict_id(verdict: ToolRunVerdict) -> &'static str {
@@ -35,11 +38,11 @@ fn verdict_id(verdict: ToolRunVerdict) -> &'static str {
 }
 
 fn dsl(value: &Value) -> DslValue {
-    dsl::os_pack::json::from_json_str::<DslValue>(&value.to_string()).expect("fixture value converts")
+    semio_framework_pack_json::from_json_str::<DslValue>(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture value converts")
 }
 
-fn node_positions(document: &WiresSnapshot) -> BTreeMap<String, (f64, f64)> {
-    fixture_nodes(&crate::wires_working_board(document)).iter().map(|node| (crate::schema::entity_id(node, "id").expect("node id").to_string(), node_position(node))).collect()
+fn node_positions(app: &WiresApp) -> BTreeMap<String, (f64, f64)> {
+    fixture_nodes(&crate::editor::wires::unit_tests::context::board(app)).iter().map(|node| (crate::schema::entity_id(node, "id").expect("node id").to_string(), node_position(node))).collect()
 }
 
 /// ⏯️ The tool declares exactly the shared layout run, stands in the edit mode, injects the framework actions, and
@@ -51,7 +54,7 @@ fn reorganize_tool_declares_the_shared_layout_run_definition() {
     let definition = definition();
     assert_eq!((definition.id.as_str(), definition.icon_id.as_str()), (tool["id"].as_str().expect("id"), tool["iconId"].as_str().expect("icon")));
     let run = definition.run.as_ref().expect("reorganize declares run");
-    assert_eq!(run, &layout_run_definition(JobKindId::new(LAYOUT_RUN_JOB)));
+    assert_eq!(run, &semio_framework_tool_run::ToolRunDefinition { member: Some(crate::WIRES_CONTENT_SLOT.into()), ..layout_run_definition(JobKindId::new(LAYOUT_RUN_JOB)) });
     let json = serde_json::to_value(run).expect("run serializes");
     for key in ["mutating", "rebase", "reconfigure", "trace", "runJob"] {
         assert_eq!(json[key], tool[key], "{key}");
@@ -77,8 +80,8 @@ fn wires_board_maps_to_the_language_neutral_layout_graph() {
     let mapping = &fixture["mapping"];
     let nodes = mapping["nodes"].as_array().expect("nodes").iter().map(dsl).collect();
     let edges = mapping["edges"].as_array().expect("edges").iter().map(dsl).collect();
-    let snapshot = WiresSnapshot { content: crate::wires_content_child_with_owner(nodes, edges), ..crate::empty_wires_snapshot() };
-    let layout = layout_graph(&snapshot);
+    let board = DslValue::Object(vec![("nodes".into(), DslValue::Array(nodes)), ("edges".into(), DslValue::Array(edges))]);
+    let layout = layout_graph(&board);
     let expected = &mapping["expected"];
     let expected_nodes = expected["nodes"].as_array().expect("expected nodes");
     assert_eq!(layout.node_ids, expected_nodes.iter().map(|node| node["id"].as_str().expect("id").to_string()).collect::<Vec<_>>());
@@ -114,13 +117,14 @@ fn reorganize_run_over_the_metabolism_example_matches_the_fixture() {
     assert_eq!(serde_json::to_value(&prefix).expect("prefix"), law["verdictPrefix"]);
     let moved = law["movedNodes"].as_u64().expect("moved") as usize;
     assert_eq!(recording.ops.len(), moved, "finalize publishes exactly one op per moved node");
-    let ops: Vec<WiresMutation> = recording.ops.iter().map(|bytes| protocol::OpBinary::decode_op(bytes).expect("move op decodes")).collect();
+    let ops: Vec<crate::SemioGraphMutation> = recording.ops.iter().map(|bytes| protocol::OpBinary::decode_op(bytes).expect("move op decodes")).collect();
     let mut expected_entities = BTreeSet::new();
     for op in &ops {
-        let WiresMutation::MoveNode(payload) = op else { panic!("only move-node ops are provisional: {op:?}") };
-        let index = layout.node_ids.iter().position(|id| *id == payload.node_id).expect("moved node is laid out");
-        assert_eq!((payload.new_x, payload.new_y), (positions[index].x, positions[index].y), "the op carries the final position");
-        expected_entities.insert(layout_run_entity(&payload.node_id));
+        let crate::SemioGraphMutation::MoveNode(payload) = op else { panic!("only move-node ops are provisional: {op:?}") };
+        let (id, new_position) = (&payload.id, &payload.new_position);
+        let index = layout.node_ids.iter().position(|node_id| *node_id == id.value).expect("moved node is laid out");
+        assert_eq!((new_position.x, new_position.y), (positions[index].x, positions[index].y), "the op carries the final position");
+        expected_entities.insert(layout_run_entity(&id.value));
     }
     assert_eq!(recording.entity_set(), expected_entities, "the provisional entity set is the moved nodes");
     let mut verdicts: BTreeMap<&str, u64> = BTreeMap::new();
@@ -179,7 +183,7 @@ fn reorganize_step_stays_below_the_interactive_ceiling_on_the_metabolism_example
 
 fn tool_run_action(app: &mut WiresApp, action: &str, entries: &[(&str, DslValue)]) -> DslValue {
     let args = DslValue::Object(entries.iter().map(|(key, value)| ((*key).to_string(), value.clone())).collect());
-    semio_framework::io::resolve_ready(app.handle_action(action, Some(&args), &meta("local"))).unwrap_or_else(|fault| panic!("{action}: {fault:?}")).output
+    ::semio_framework_async::poll::resolve_ready(app.handle_action(action, Some(&args), &meta("local"))).unwrap_or_else(|fault| panic!("{action}: {fault:?}")).output
 }
 
 fn run_state(app: &WiresApp) -> Option<&'static str> {
@@ -193,21 +197,21 @@ fn pump_until(app: &mut WiresApp, what: &str, done: impl Fn(&WiresApp) -> bool) 
             return;
         }
         PluginApp::maintenance_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).unwrap_or_else(|fault| panic!("{what}: maintenance faulted: {fault:?}"));
-        semio_framework::io::resolve_ready(app.advance_typed_operation_publication()).unwrap_or_else(|fault| panic!("{what}: driver turn faulted: {fault:?}"));
+        ::semio_framework_async::poll::resolve_ready(app.advance_typed_operation_publication()).unwrap_or_else(|fault| panic!("{what}: driver turn faulted: {fault:?}"));
         if let Some(page) = app.take_typed_operation_result_page(1) {
             assert_ne!(page.lane, semio_framework_plugin::app::TypedOperationResultLane::Fault, "{what}: typed operation faulted: {}", String::from_utf8_lossy(page.bytes()));
             app.acknowledge_typed_operation_result(page.token).expect("acknowledge result page");
         }
         let _ = app.take_typed_operation_effect();
         let _ = app.take_typed_operation_event();
-        let _ = semio_framework::io::resolve_ready(app.take_typed_operation_completion()).expect("completion");
+        let _ = ::semio_framework_async::poll::resolve_ready(app.take_typed_operation_completion()).expect("completion");
         let _ = app.take_typed_operation_ui_scope();
     }
     panic!("{what} never settled; state {:?}", run_state(app));
 }
 
 fn history_len(app: &mut WiresApp) -> usize {
-    semio_framework::io::resolve_ready(app.history_snapshot()).expect("history").upserts.len()
+    ::semio_framework_async::poll::resolve_ready(app.history_snapshot()).expect("history").upserts.len()
 }
 
 fn start(app: &mut WiresApp) {
@@ -223,22 +227,22 @@ fn run_arguments() -> [(&'static str, DslValue); 2] {
 #[test]
 fn reorganize_start_complete_finalize_is_one_undo_entry() {
     let law = &fixture()["lifecycle"];
-    let mut app = semio_framework::io::resolve_ready(metabolism_app());
-    let before = node_positions(&app.snapshot().expect("snapshot"));
+    let mut app = ::semio_framework_async::poll::resolve_ready(metabolism_app());
+    let before = node_positions(&app);
     let history = history_len(&mut app);
     start(&mut app);
     pump_until(&mut app, "reorganize completes", |app| run_state(app) == Some("complete"));
-    assert_eq!(node_positions(&app.snapshot().expect("snapshot")), before, "a complete run has committed nothing");
+    assert_eq!(node_positions(&app), before, "a complete run has committed nothing");
     assert_eq!(history_len(&mut app), history);
     assert!(app.tool_run_trace_delta(None).is_some_and(|delta| !delta.is_empty()), "the run published trace pages");
     assert_eq!(tool_run_action(&mut app, semio_framework_plugin::TOOL_RUN_FINALIZE_ACTION_ID, &run_arguments()).get("toolRun").and_then(DslValue::as_str), Some("beginFinalize"));
     pump_until(&mut app, "reorganize finalizes", |app| run_state(app) == Some("finalized"));
-    let after = node_positions(&app.snapshot().expect("snapshot"));
+    let after = node_positions(&app);
     assert_eq!(after.len(), before.len());
     assert!(after.iter().all(|(id, position)| before.get(id) != Some(position)), "every metabolism node moved: {before:?} → {after:?}");
     assert_eq!((history_len(&mut app) - history) as u64, law["historyEntriesAdded"].as_u64().expect("entries"));
-    semio_framework::io::resolve_ready(semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app, "undo", meta("local").instance_id));
-    assert_eq!(node_positions(&app.snapshot().expect("snapshot")), before, "one undo restores every committed position");
+    ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app, "undo", meta("local").instance_id));
+    assert_eq!(node_positions(&app), before, "one undo restores every committed position");
     close(app);
 }
 
@@ -246,16 +250,63 @@ fn reorganize_start_complete_finalize_is_one_undo_entry() {
 #[test]
 fn aborting_a_reorganize_run_leaves_the_document_byte_identical() {
     let law = &fixture()["lifecycle"];
-    let mut app = semio_framework::io::resolve_ready(metabolism_app());
-    let pack = semio_framework::io::resolve_ready(app.document_pack()).expect("pack");
+    let mut app = ::semio_framework_async::poll::resolve_ready(metabolism_app());
+    let pack = ::semio_framework_async::poll::resolve_ready(app.document_pack()).expect("pack");
     let history = history_len(&mut app);
     start(&mut app);
     let iterations = law["abortAfterIterations"].as_u64().expect("iterations");
     pump_until(&mut app, "provisional moves exist", |app| app.tool_run_presence().is_some_and(|presence| presence.completed >= iterations));
     assert_eq!(tool_run_action(&mut app, semio_framework_plugin::TOOL_RUN_ABORT_ACTION_ID, &run_arguments()).get("toolRun").and_then(DslValue::as_str), Some("closeJob"));
     pump_until(&mut app, "abort settles", |app| run_state(app) == Some("aborted"));
-    let after = semio_framework::io::resolve_ready(app.document_pack()).expect("pack");
+    let after = ::semio_framework_async::poll::resolve_ready(app.document_pack()).expect("pack");
     assert_eq!((after.pack, after.spr), (pack.pack, pack.spr), "abort leaves the document byte-identical");
     assert_eq!(history_len(&mut app), history);
+    close(app);
+}
+
+#[test]
+fn debug_reorganize_undo_settles() {
+    let mut app = ::semio_framework_async::poll::resolve_ready(metabolism_app());
+    start(&mut app);
+    pump_until(&mut app, "reorganize completes", |app| run_state(app) == Some("complete"));
+    tool_run_action(&mut app, semio_framework_plugin::TOOL_RUN_FINALIZE_ACTION_ID, &run_arguments());
+    pump_until(&mut app, "reorganize finalizes", |app| run_state(app) == Some("finalized"));
+    eprintln!("[DEBUG] finalized pending={}", app.has_pending_typed_operations());
+    for turn in 0..2000 {
+        if !app.has_pending_typed_operations() {
+            eprintln!("[DEBUG] finalize settled at turn {turn}");
+            break;
+        }
+        PluginApp::maintenance_step(&mut *app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("[DEBUG] maintenance");
+        ::semio_framework_async::poll::resolve_ready(app.advance_typed_operation_publication()).expect("[DEBUG] advance");
+        if let Some(page) = app.take_typed_operation_result_page(1) {
+            eprintln!("[DEBUG] finalize page {:?}", page.lane);
+            app.acknowledge_typed_operation_result(page.token).expect("[DEBUG] ack");
+        }
+        while let Some(effect) = app.take_typed_operation_effect() {
+            eprintln!("[DEBUG] finalize effect {effect:?}");
+        }
+        let _ = ::semio_framework_async::poll::resolve_ready(app.take_typed_operation_completion()).expect("[DEBUG] completion");
+    }
+    eprintln!("[DEBUG] before undo pending={} presence={:?}", app.has_pending_typed_operations(), app.tool_run_presence().map(|presence| presence.state.wire_name()));
+    let admitted = ::semio_framework_async::poll::resolve_ready(app.handle_action("undo", None, &meta("local")));
+    eprintln!("[DEBUG] undo admitted {:?}", admitted.as_ref().map(|result| result.output.clone()));
+    for turn in 0..4000 {
+        if !app.has_pending_typed_operations() {
+            eprintln!("[DEBUG] undo settled at turn {turn}");
+            break;
+        }
+        PluginApp::maintenance_step(&mut *app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("[DEBUG] maintenance");
+        ::semio_framework_async::poll::resolve_ready(app.advance_typed_operation_publication()).expect("[DEBUG] advance");
+        while let Some(page) = app.take_typed_operation_result_page(1) {
+            eprintln!("[DEBUG] undo page {:?} {}", page.lane, String::from_utf8_lossy(page.bytes()).chars().take(300).collect::<String>());
+            app.acknowledge_typed_operation_result(page.token).expect("[DEBUG] ack");
+        }
+        while let Some(effect) = app.take_typed_operation_effect() {
+            eprintln!("[DEBUG] undo effect {effect:?}");
+        }
+        let _ = ::semio_framework_async::poll::resolve_ready(app.take_typed_operation_completion()).expect("[DEBUG] completion");
+    }
+    eprintln!("[DEBUG] after undo pending={}", app.has_pending_typed_operations());
     close(app);
 }

@@ -10,7 +10,7 @@ fn oversized_state(nodes: usize) -> RewritingSnapshot {
         .map(|index| Node { id: format!("node-{index}"), kind: "Piece".into(), name: format!("Piece {index}"), x: index as f64, y: 0.0, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports: Vec::new() })
         .collect();
     let fixture = JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "oversized".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes, edges: Vec::new() }, None);
-    RewritingSnapshot { before_fixture_json: fixture.to_json().expect("the oversized before-fixture serializes"), ..Default::default() }
+    RewritingSnapshot { working_graph: fixture, ..Default::default() }
 }
 
 /// 🪟️ The panel body exactly as the host reads it, for the host-known windows in `requests`.

@@ -28,7 +28,7 @@ fn eval_result_seeds_the_node_cache_and_owes_the_run_one_hop() {
     session.begin_window_tick("procedural-preview-test");
     session.note_window_tick_outcome("procedural-preview-test", semio_s_artifact_procedural_generation3d::preview_eval::tick_is_unfinished(false, 1));
     session.note_window_extensions_in_flight("procedural-preview-test", 1);
-    let emit = handle(&FlowEvalResolve { window_id: "procedural-preview-test".into(), window_kind_id: semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into(), node_hash, output_json: dsl::json::to_json_string(&output), extension_id: String::new(), ok: true, fault_code: String::new(), fault_message: String::new() }, &doc, &cfg, &mut session).expect("flowEvalResolve");
+    let emit = handle(&FlowEvalResolve { window_id: "procedural-preview-test".into(), window_kind_id: semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into(), node_hash, output_json: semio_framework_pack_json::to_json_string(&output), extension_id: String::new(), ok: true, fault_code: String::new(), fault_message: String::new() }, &doc, &cfg, &mut session).expect("flowEvalResolve");
     let cached = cache.get(node_hash).expect("the seeded node must be readable from the shared neural cache");
     assert_eq!(cached, output, "the extension output must round-trip through the shared neural cache");
     cached.retire_cold();

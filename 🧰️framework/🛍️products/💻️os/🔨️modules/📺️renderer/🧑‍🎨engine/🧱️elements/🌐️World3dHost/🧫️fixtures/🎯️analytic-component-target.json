@@ -1,0 +1,92 @@
+{
+  "instances": [
+    {
+      "id": "box@geometry#0",
+      "interactionId": "box@geometry#0",
+      "meshId": "box-mesh",
+      "componentSource": {
+        "handle": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "id": "box-mesh",
+      "data": {
+        "positions": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0
+        ],
+        "normals": [],
+        "indices": [
+          0,
+          1,
+          2
+        ],
+        "edgeIds": [
+          0,
+          0,
+          1
+        ],
+        "componentReferences": {
+          "edge": [
+            "1",
+            "9007199254740993"
+          ],
+          "face": [
+            "18446744073709551615"
+          ]
+        }
+      }
+    }
+  ],
+  "cases": [
+    {
+      "mode": "edge",
+      "group": 1,
+      "target": "box@geometry#0.edge.1~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~9007199254740993~bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    {
+      "mode": "face",
+      "group": 0,
+      "target": "box@geometry#0.face.0~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~18446744073709551615~bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    }
+  ],
+  "invalid": [
+    {
+      "mode": "vertex",
+      "group": 0
+    },
+    {
+      "mode": "edge",
+      "group": 2
+    },
+    {
+      "mode": "edge",
+      "group": -1
+    }
+  ],
+  "invalidSources": [
+    {
+      "handle": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n",
+      "revision": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    {
+      "handle": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\n"
+    }
+  ],
+  "invalidLabels": [
+    "9007199254740993\n",
+    "0",
+    "18446744073709551616"
+  ]
+}

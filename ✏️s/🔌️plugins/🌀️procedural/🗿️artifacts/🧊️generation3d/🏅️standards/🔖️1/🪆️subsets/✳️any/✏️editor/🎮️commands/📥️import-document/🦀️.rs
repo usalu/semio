@@ -47,11 +47,16 @@ pub const GENERATION3D_IMPORT_TOTAL_BYTES: usize = crate::editor::generation3d::
 pub const GENERATION3D_IMPORT_CAPACITY_CODE: &str = "generation3d-import-capacity";
 //#endregion 📏️Bounds
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "import-document")]
+#[value(rename_all = "camelCase")]
 pub struct ImportDocument {
     pub name: String,
     pub payload: String,
+    pub widget_id: Option<String>,
+    pub channel: Option<String>,
+    pub texture_id: Option<String>,
+
 }
 
 fn import_fault(code: &str, message: impl Into<String>) -> Fault {
@@ -70,7 +75,16 @@ pub fn admit_payload(payload: &str) -> Result<(), Fault> {
 /// 📥️ Admits the whole payload and replaces the document with what it holds.
 pub fn emit(payload: &ImportDocument, doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
     admit_payload(&payload.payload)?;
-    apply_complete_payload(&payload.name, &payload.payload, doc, cfg)
+    match (&payload.widget_id, &payload.channel, &payload.texture_id) {
+        (None, None, None) => apply_complete_payload(&payload.name, &payload.payload, doc, cfg),
+        (Some(widget), Some(channel), Some(texture)) => {
+            let (id, channel, text) = super::set_widget_input::mesh_source_text(&doc.snapshot.host_snapshot, widget, channel).map_err(Fault::from)?;
+            let edited = super::set_widget_input::import_mesh_texture(&text, texture, &payload.payload).map_err(Fault::from)?;
+            let artifact_mutations = if edited == text { Vec::new() } else { vec![crate::standards::v1::subsets::any::schema::mutations::change_widget_input::change_widget_input(&id, &channel, crate::standards::v1::subsets::any::schema::mutations::change_widget_input::WidgetInputValue::Text(edited))] };
+            Ok(Emit { artifact_mutations, ..Default::default() })
+        }
+        _ => Err(Fault::from("Choose a complete texture target")),
+    }
 }
 
 /// 📥️ Decodes one whole payload and replaces the document with what it holds.

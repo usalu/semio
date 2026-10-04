@@ -251,7 +251,7 @@ mod tests;
 /// from that adapter and the bridge belongs here rather than there.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_iso16757_mutation_json(text: &str) -> Result<Iso16757Mutation, String> {
-    pack::json::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 
 /// ▶️ Applies one mutation to `base`, returning the resulting document together with every
@@ -270,8 +270,11 @@ pub fn apply_iso16757_mutation(base: &Iso16757Snapshot, mutation: &Iso16757Mutat
 /// `📇️mutate-iso16757-1`'s `inverse-<kind>` scenarios assert, exposed under a name the test adapter can
 /// reach without naming `protocol::Mutation`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse_iso16757_mutation(mutation: &Iso16757Mutation, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
-    <Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::inverse(mutation, base)
+pub fn inverse_iso16757_mutation(mutation: &Iso16757Mutation, base: &Iso16757Snapshot) -> Result<Vec<Iso16757Mutation>, semio_framework_value::ValueError> {
+    Ok({
+    <Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::inverse(mutation, base)?
+
+    })
 }
 //#endregion 🌉️ExternalCodecBridge
 

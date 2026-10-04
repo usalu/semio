@@ -284,6 +284,10 @@ export type BrowserFrameHostAppearance = { readonly kind: "host-appearance"; rea
  * (`hidden`, design §13.2 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING) so the keystrokes of its last idle bound are never lost. */
 export type BrowserFrameHostPageHidden = { readonly kind: "host-page-hidden"; readonly lifecycle: number };
 
+/** 🫥️ The page's `window` lost the system focus (the person switched applications or windows): the Worker ends every open
+ * text-editor typing run (`blur`) and blurs the focused pane for its program (`hostEvent{kind: blur}`), React's pane `onBlur`. */
+export type BrowserFrameHostWindowBlur = { readonly kind: "host-window-blur"; readonly lifecycle: number };
+
 /** 🛰️ The local supervisor's agent-bridge offer as the page last read it (`🔗️AgentBridge/🛰️offer`), `null` once no
  * gateway offers one. The Worker owns no page and dials nothing it discovered itself: the page reads the offer, the
  * Worker hands it to the renderer's `semioWgpuSetAgentBridgeConfig`, and the bridge socket goes through the page door. */
@@ -331,7 +335,7 @@ export type BrowserFrameHostIoResult = { readonly kind: "host-io-result"; readon
 
 export type BrowserFrameImageDecodeResult = { readonly kind: "image-decode-result"; readonly lifecycle: number; readonly requestId: number; readonly bitmap: ImageBitmap | null; readonly detail?: string };
 
-export type BrowserFrameUiMessage = BrowserMediaRelease | BrowserMediaCommand | BrowserFrameWorkerBoot | BrowserFrameWorkerBatch | BrowserFrameWorkerIntrospect | InteractiveJobUiMessage | BrowserFrameShardPort | BrowserFrameHostIoResult | BrowserFrameImageDecodeResult | BrowserFrameHostAppearance | BrowserFrameHostStorage | BrowserFrameHostAgentBridge | BrowserFrameHostIntroductionPolicy | BrowserFrameHostPageHidden | { readonly kind: "close"; readonly lifecycle: number };
+export type BrowserFrameUiMessage = BrowserMediaRelease | BrowserMediaCommand | BrowserFrameWorkerBoot | BrowserFrameWorkerBatch | BrowserFrameWorkerIntrospect | InteractiveJobUiMessage | BrowserFrameShardPort | BrowserFrameHostIoResult | BrowserFrameImageDecodeResult | BrowserFrameHostAppearance | BrowserFrameHostStorage | BrowserFrameHostAgentBridge | BrowserFrameHostIntroductionPolicy | BrowserFrameHostPageHidden | BrowserFrameHostWindowBlur | { readonly kind: "close"; readonly lifecycle: number };
 
 /** 🧵️ The frame Worker's own step ledger, as the UI isolate sees it. The Worker prices its steps
  * against `WORKER_STEP_BUDGET_MS` with the same executing-span law the UI isolate uses for its turns
@@ -739,6 +743,17 @@ export class BrowserFrameTransport {
       this.worker.postMessage({ kind: "host-page-hidden", lifecycle: this.lifecycle });
     } catch {
       /* a Worker that cannot take the hidden page is already failing on its own channel */
+    }
+  }
+
+  /** 🫥️ Tells the Worker the page's `window` lost focus. Posted at once, never batched, fire-and-forget like
+   * {@link setHostPageHidden}. */
+  setHostWindowBlur(): void {
+    if (this.status === "faulted" || this.status === "closed") return;
+    try {
+      this.worker.postMessage({ kind: "host-window-blur", lifecycle: this.lifecycle });
+    } catch {
+      /* a Worker that cannot take the window blur is already failing on its own channel */
     }
   }
 

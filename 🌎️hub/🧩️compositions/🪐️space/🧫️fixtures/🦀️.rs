@@ -5,9 +5,9 @@ use std::sync::OnceLock;
 fn decode<S: store::ArtifactDsl + semio_framework_value::ToValue + semio_framework_value::FromValue>(format: SpaceFixtureFormat, text: &str) -> Result<String, String> {
     let snapshot = match format {
         SpaceFixtureFormat::Dsl => <S as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())?,
-        SpaceFixtureFormat::Json => store::os_pack::json::from_json_str::<S>(text).map_err(|error| error.to_string())?,
+        SpaceFixtureFormat::Json => semio_framework_pack_json::from_json_str::<S>(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?,
     };
-    Ok(store::os_pack::json::to_json_string(&snapshot))
+    Ok(semio_framework_pack_json::to_json_string(&snapshot))
 }
 
 /// 📚️ Selects the unique original example declarations for this actual composition.

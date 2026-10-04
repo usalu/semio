@@ -13,7 +13,7 @@
 //! registered refusal in this subset's `🚪️io/🦀️.rs` `geometry_import` module.
 
 use crate::Fem2dSnapshot;
-use semio_framework::io::io_mechanism::Serializer;
+use semio_framework::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{ArtifactSerializer, StandardId, SubsetId};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::stl::v_ascii::any::SemioMeshToStl;
@@ -25,7 +25,7 @@ pub const STL_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.stl", standar
 /// 🔺️ The extruded region mesh as real ASCII `.stl` text.
 pub fn stl_text(from: &Fem2dSnapshot) -> Result<String, IoError> {
     let mesh = crate::fem2d_engine::meshing::build_semio_mesh_snapshot(from);
-    let stl = semio_framework_plugin::resolve_ready(SemioMeshToStl::serialize(&mesh)).map_err(|error| IoError { message: format!("fem2d→stl: {error}"), diagnostics: Vec::new() })?;
+    let stl = ::semio_framework_async::poll::resolve_ready(SemioMeshToStl::serialize(&mesh)).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("fem2d→stl: {error}"))))?;
     Ok(encode_stl_ascii(&stl))
 }
 
@@ -35,7 +35,7 @@ pub struct Fem2dIntoStl;
 impl Serializer<Fem2dSnapshot> for Fem2dIntoStl {
     const INTO: Dialect = STL_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &Fem2dSnapshot) -> IoResult<IoPayload> {
+    async fn serialize(from: &Fem2dSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
         Ok(IoOutcome::clean(IoPayload::Text(stl_text(from)?)))
     }
 }

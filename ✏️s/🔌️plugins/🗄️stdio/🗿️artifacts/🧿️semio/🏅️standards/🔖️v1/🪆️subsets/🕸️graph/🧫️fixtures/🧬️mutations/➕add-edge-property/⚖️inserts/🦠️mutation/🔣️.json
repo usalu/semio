@@ -1,0 +1,15 @@
+{
+  "AddEdgeProperty": {
+    "edge_id": {
+      "value": "e1"
+    },
+    "index": 0,
+    "property": {
+      "key": "weight",
+      "value": {
+        "kind": "float",
+        "lexeme": "0.5"
+      }
+    }
+  }
+}

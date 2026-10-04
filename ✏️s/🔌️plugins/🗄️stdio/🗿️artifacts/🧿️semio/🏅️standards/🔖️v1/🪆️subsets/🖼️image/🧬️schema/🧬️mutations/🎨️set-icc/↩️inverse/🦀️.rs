@@ -5,6 +5,9 @@ use crate::standards::v1::subsets::image::schema::mutations::set_icc;
 
 /// ↩️ Inverse of set-icc.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(base: &SemioImageSnapshot, icc: Option<Vec<u8>>) -> Vec<SemioImageMutation> {
-    <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&SemioImageMutation::SetIcc(set_icc::SetIcc { icc }), base)
+pub fn inverse(base: &SemioImageSnapshot, icc: Option<Vec<u8>>) -> Result<Vec<SemioImageMutation>, semio_framework_value::ValueError> {
+    Ok({
+    <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&SemioImageMutation::SetIcc(set_icc::SetIcc { icc }), base)?
+
+    })
 }

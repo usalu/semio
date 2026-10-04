@@ -1,0 +1,14 @@
+{
+  "project": "@semio-tech/framework-pack-rs",
+  "sourceTarget": "test-absolute-varint-source",
+  "nativeTarget": "test-absolute-varint-native",
+  "nativeCandidateCount": 1,
+  "law": "pack_absolute_unsigned_varint_complete_boundaries",
+  "source": {
+    "selected": 2,
+    "passed": 2,
+    "expectations": 211
+  },
+  "native": "pending Root sole lane",
+  "corpusCases": 34
+}

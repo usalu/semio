@@ -6,7 +6,7 @@ use crate::RemodelingSnapshot;
 //#region 🔖️Diff
 pub fn diff(payload: &super::ReplaceSparse, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
     if payload.sparse == base.results.sparse {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Sparse results already have this value.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Sparse results already have this value.");
     }
     let mut results = base.results.clone();
     results.sparse = payload.sparse.clone();

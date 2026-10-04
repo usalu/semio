@@ -23,10 +23,13 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetMarkInfo {
         MutationOutcome::new(diff::diff_set_mark_info(base, self.info.clone()))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         let _ = base;
         vec![PdfMutation::SetMarkInfo(SetMarkInfo { info: base.mark_info.clone() })]
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set mark-info", "Markierungsinfo setzen")

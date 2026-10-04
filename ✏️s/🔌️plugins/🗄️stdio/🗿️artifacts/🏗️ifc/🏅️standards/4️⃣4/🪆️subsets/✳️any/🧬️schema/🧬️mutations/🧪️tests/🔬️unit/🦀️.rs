@@ -75,7 +75,7 @@ fn inverse_law() {
     for m in variants {
         let mut snap = base.clone();
         apply_ifc_mutation(&mut snap, &m);
-        for inv in m.inverse(&base) {
+        for inv in m.inverse(&base).expect("valid retained mutation inverse fixture") {
             apply_ifc_mutation(&mut snap, &inv);
         }
         assert_eq!(snap, base, "mutation-level inverse must restore base for {m:?}");
@@ -183,8 +183,8 @@ fn between_roundtrip_law() {
 //#region 🔖️codec_retention_law
 #[test]
 fn codec_retention_law() {
-    let text = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️2x3/🪆️subsets/🧱️base/📚️examples/🎬️demo/🖼️assets/🧪️example/🏗️.ifc")).expect("read committed IFC fixture");
-    let decoded = <IfcSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse fixture");
+    let document = semio_s_artifact_stdio_contract::part21::parse_part21(crate::examples::ifc4_demo::EXCHANGE_TEXT).expect("parse external IFC4 fixture");
+    let decoded = crate::schema::snapshot::from_part21_document(crate::STDIO_IFC_DOCUMENT_SCHEMA, &document);
     let reencoded = store::ArtifactDsl::print_dsl(&decoded);
     let redecoded = <IfcSnapshot as store::ArtifactDsl>::parse_dsl(&reencoded).expect("re-decode fixture");
     assert_eq!(decoded.header, redecoded.header);
@@ -288,6 +288,7 @@ fn op_text_binary_roundtrip_law() {
     let base = base_snapshot();
     let mutations = vec![
         IfcMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
+        IfcMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         IfcMutation::SetFileDescription(set_file_description::SetFileDescription { values: vec![IfcValue::String("new desc".into())] }),
         IfcMutation::SetFileName(set_file_name::SetFileName { values: vec![IfcValue::Aggregate(vec![IfcValue::String("a".into()), IfcValue::Unset])] }),
         IfcMutation::SetFileSchema(set_file_schema::SetFileSchema { values: vec![] }),
@@ -337,6 +338,7 @@ fn kinds_const_matches_enum_variants_in_declaration_order() {
     let base = base_snapshot();
     let one_per_variant = vec![
         IfcMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
+        IfcMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         IfcMutation::SetFileDescription(set_file_description::SetFileDescription { values: vec![IfcValue::String("d".into())] }),
         IfcMutation::SetFileName(set_file_name::SetFileName { values: vec![IfcValue::String("n".into())] }),
         IfcMutation::SetFileSchema(set_file_schema::SetFileSchema { values: vec![IfcValue::Aggregate(vec![IfcValue::String("IFC4".into())])] }),

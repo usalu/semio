@@ -94,8 +94,11 @@ pub fn apply_wfc3d_mutation(projection: &mut Wfc3dSnapshot, mutation: &Wfc3dMuta
 }
 
 /// ↩️ Computes a mutation's inverse against a projection — generic over every variant.
-pub fn inverse_wfc3d_mutation(projection: &Wfc3dSnapshot, mutation: &Wfc3dMutation) -> Vec<Wfc3dMutation> {
-    mutation.inverse(projection)
+pub fn inverse_wfc3d_mutation(projection: &Wfc3dSnapshot, mutation: &Wfc3dMutation) -> Result<Vec<Wfc3dMutation>, semio_framework_value::ValueError> {
+    Ok({
+    mutation.inverse(projection)?
+
+    })
 }
 
 //#region 🌉️TestBridge
@@ -110,8 +113,8 @@ pub fn wfc3d_mutation_report_json(base_json: &str, mutation_json: &str, after_js
 /// 🔁️ Decodes one snapshot through this subset's production JSON codec and re-encodes it — the subject half of the
 /// case's `identity-round-trip` scenario.
 pub fn wfc3d_snapshot_json_round_trip(text: &str) -> Result<String, String> {
-    let snapshot: Wfc3dSnapshot = dsl::json::from_json_str(text).map_err(|error| error.to_string())?;
-    Ok(dsl::json::to_json_string(&snapshot))
+    let snapshot: Wfc3dSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
+    Ok(semio_framework_pack_json::to_json_string(&snapshot))
 }
 //#endregion 🌉️TestBridge
 

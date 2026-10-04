@@ -7,7 +7,6 @@
 
 use crate::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::duration::compute_semio_audio_duration;
 //#region 🔖️Inference
@@ -22,8 +21,11 @@ pub struct SemioAudioInference {
 }
 
 impl protocol::Inference<SemioAudioSnapshot> for SemioAudioInference {
-    fn infer(snapshot: &SemioAudioSnapshot) -> Self {
+    fn infer(snapshot: &SemioAudioSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { duration: compute_semio_audio_duration(snapshot) }
+    
+        })
     }
 }
 
@@ -31,7 +33,9 @@ impl protocol::Inference<SemioAudioSnapshot> for SemioAudioInference {
 /// `SemioAudioSnapshot::default()`'s `channels`/`sampleRate` ever stop being empty/zero.
 impl Default for SemioAudioInference {
     fn default() -> Self {
-        <Self as protocol::Inference<SemioAudioSnapshot>>::infer(&SemioAudioSnapshot::default())
+        let snapshot = &SemioAudioSnapshot::default();
+
+        Self { duration: compute_semio_audio_duration(snapshot) }
     }
 }
 
@@ -47,17 +51,6 @@ impl protocol::InferenceSpec<SemioAudioSnapshot> for SemioAudioInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 💡️ No `InferredField`s here — `duration` is a single max-length fold over `channels`, already
-/// O(n) in total sample count with no honest per-entity incremental decomposition (a merkle
-/// dep-chain over one flat `Vec<SemioAudioChannel>` costs more than the fold it would cache) — the
-/// default `infer_cached` passthrough is exact.
-impl ArtifactInferrer for crate::standards::v1::subsets::audio::schema::SemioAudioBuilder {
-    type Snapshot = SemioAudioSnapshot;
-    type Inference = SemioAudioInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.semio.audio.inference`'s facet leaves into the OS-wide inference catalog

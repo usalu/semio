@@ -1,5 +1,5 @@
 /** 🎨️ Platform canvas painting for typed scene geometry and authored appearance. */
-import { pathSegmentsToSvgD, drawingTextLines, DRAWING_TEXT_LINE_HEIGHT, type PathSegment } from "../../../../../../../../🔨️modules/◻️2d/🟦️.ts";
+import { pathSegmentsToSvgD, drawingTextLines, DRAWING_TEXT_LINE_HEIGHT, constantGradientColor, type PathSegment } from "../../../../../../../../🔨️modules/◻️2d/🟦️.ts";
 
 type CanvasGradientStop = { readonly offset?: number; readonly color?: readonly number[] };
 
@@ -67,6 +67,11 @@ function blendModeToComposite(mode: string | undefined): GlobalCompositeOperatio
 /** 🪣️ Resolves a fill record into a canvas paint — solid color or gradient (linear/radial, in local layer coordinates). */
 function fillStyleToPaint(ctx: CanvasRenderingContext2D, fill: CanvasSceneNode["fill"], opacity: number): string | CanvasGradient | null {
   if (!fill) return null;
+  if (fill.kind === "linearGradient" || fill.kind === "radialGradient") {
+    const degenerate = fill.kind === "linearGradient" ? (fill.x1 ?? 0) === (fill.x2 ?? 0) && (fill.y1 ?? 0) === (fill.y2 ?? 0) : (fill.r ?? 0) <= 0;
+    const constant = constantGradientColor(fill.stops ?? [], degenerate);
+    if (constant) return rgbaToCss(constant, opacity);
+  }
   if (fill.kind === "linearGradient" && fill.stops?.length) {
     const gradient = ctx.createLinearGradient(fill.x1 ?? 0, fill.y1 ?? 0, fill.x2 ?? 0, fill.y2 ?? 0);
     for (const stop of fill.stops) gradient.addColorStop(Math.min(1, Math.max(0, stop.offset ?? 0)), rgbaToCss(stop.color, opacity));

@@ -18,7 +18,7 @@ pub fn diff(payload: &super::ChangeHumidistatDehumidifyingSetpointSchedule, base
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Schedule {} is not defined by this model.", payload.new_dehumidifying_setpoint_schedule_id.0), [payload.new_dehumidifying_setpoint_schedule_id.0.to_string()]);
     }
     if existing.dehumidifying_setpoint_schedule_id == payload.new_dehumidifying_setpoint_schedule_id {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Humidistat {} already has that dehumidifying setpoint schedule.", payload.id.0));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Humidistat {} already has that dehumidifying setpoint schedule.", payload.id.0));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.humidistats.iter_mut().find(|item| item.id == payload.id) {

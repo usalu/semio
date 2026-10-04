@@ -20,7 +20,7 @@ mod browser {
                 Ok(neural_engine::ValueRetirementStep::Blocked) => "{\"phase\":\"blocked\",\"items\":0,\"bytes\":0}".into(),
                 Ok(neural_engine::ValueRetirementStep::Complete) => "{\"phase\":\"complete\",\"items\":0,\"bytes\":0}".into(),
                 Ok(neural_engine::ValueRetirementStep::Pending { released_items,released_bytes }) => format!("{{\"phase\":\"pending\",\"items\":{released_items},\"bytes\":{released_bytes}}}"),
-                Err(error) => semio_framework_os_flow::os_pack::json::to_string(&semio_framework_os_flow::os_pack::json::object([("error".into(),semio_framework_os_flow::os_pack::json::Value::String(error))])),
+                Err(error) => semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("error".into(),semio_framework_pack_json::Value::String(error))])),
             }
         }
     }

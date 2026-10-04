@@ -23,7 +23,7 @@ pub fn orientation_from_config(value: &str) -> DagLayoutOrientation {
 pub mod reorganize {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "reorganize")]
     pub struct Reorganize {}
 
@@ -41,7 +41,7 @@ pub mod reorganize {
 pub mod set_orientation {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "set-orientation")]
     pub struct SetOrientation {
         pub value: String,

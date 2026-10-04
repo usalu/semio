@@ -1,0 +1,499 @@
+{
+  "schemaVersion": 1,
+  "types": [
+    {
+      "id": "boolean",
+      "type": {
+        "kind": "boolean"
+      }
+    },
+    {
+      "id": "integer",
+      "type": {
+        "kind": "integer"
+      }
+    },
+    {
+      "id": "number",
+      "type": {
+        "kind": "decimal"
+      }
+    },
+    {
+      "id": "text",
+      "type": {
+        "kind": "text"
+      }
+    },
+    {
+      "id": "list",
+      "type": {
+        "kind": "list",
+        "of": {
+          "kind": "boolean"
+        }
+      }
+    },
+    {
+      "id": "point",
+      "type": {
+        "kind": "schema",
+        "of": "point"
+      }
+    },
+    {
+      "id": "value",
+      "type": {
+        "kind": "any"
+      }
+    }
+  ],
+  "graphValues": [
+    null,
+    false,
+    true,
+    1.5,
+    2,
+    "text",
+    [],
+    {},
+    {
+      "$schema": "foreign"
+    }
+  ],
+  "graphCases": [
+    {
+      "name": "boolean-graph-0",
+      "type": 0,
+      "value": 0,
+      "accepted": false
+    },
+    {
+      "name": "boolean-graph-1",
+      "type": 0,
+      "value": 1,
+      "accepted": true
+    },
+    {
+      "name": "boolean-graph-2",
+      "type": 0,
+      "value": 2,
+      "accepted": true
+    },
+    {
+      "name": "boolean-graph-3",
+      "type": 0,
+      "value": 3,
+      "accepted": false
+    },
+    {
+      "name": "boolean-graph-4",
+      "type": 0,
+      "value": 4,
+      "accepted": false
+    },
+    {
+      "name": "boolean-graph-5",
+      "type": 0,
+      "value": 5,
+      "accepted": false
+    },
+    {
+      "name": "boolean-graph-6",
+      "type": 0,
+      "value": 6,
+      "accepted": false
+    },
+    {
+      "name": "boolean-graph-7",
+      "type": 0,
+      "value": 7,
+      "accepted": false
+    },
+    {
+      "name": "boolean-graph-8",
+      "type": 0,
+      "value": 8,
+      "accepted": false
+    },
+    {
+      "name": "integer-graph-0",
+      "type": 1,
+      "value": 0,
+      "accepted": false
+    },
+    {
+      "name": "integer-graph-1",
+      "type": 1,
+      "value": 1,
+      "accepted": false
+    },
+    {
+      "name": "integer-graph-2",
+      "type": 1,
+      "value": 2,
+      "accepted": false
+    },
+    {
+      "name": "integer-graph-3",
+      "type": 1,
+      "value": 3,
+      "accepted": false
+    },
+    {
+      "name": "integer-graph-4",
+      "type": 1,
+      "value": 4,
+      "accepted": false
+    },
+    {
+      "name": "integer-graph-5",
+      "type": 1,
+      "value": 5,
+      "accepted": false
+    },
+    {
+      "name": "integer-graph-6",
+      "type": 1,
+      "value": 6,
+      "accepted": false
+    },
+    {
+      "name": "integer-graph-7",
+      "type": 1,
+      "value": 7,
+      "accepted": false
+    },
+    {
+      "name": "integer-graph-8",
+      "type": 1,
+      "value": 8,
+      "accepted": false
+    },
+    {
+      "name": "number-graph-0",
+      "type": 2,
+      "value": 0,
+      "accepted": false
+    },
+    {
+      "name": "number-graph-1",
+      "type": 2,
+      "value": 1,
+      "accepted": true
+    },
+    {
+      "name": "number-graph-2",
+      "type": 2,
+      "value": 2,
+      "accepted": true
+    },
+    {
+      "name": "number-graph-3",
+      "type": 2,
+      "value": 3,
+      "accepted": true
+    },
+    {
+      "name": "number-graph-4",
+      "type": 2,
+      "value": 4,
+      "accepted": true
+    },
+    {
+      "name": "number-graph-5",
+      "type": 2,
+      "value": 5,
+      "accepted": false
+    },
+    {
+      "name": "number-graph-6",
+      "type": 2,
+      "value": 6,
+      "accepted": false
+    },
+    {
+      "name": "number-graph-7",
+      "type": 2,
+      "value": 7,
+      "accepted": false
+    },
+    {
+      "name": "number-graph-8",
+      "type": 2,
+      "value": 8,
+      "accepted": false
+    },
+    {
+      "name": "text-graph-0",
+      "type": 3,
+      "value": 0,
+      "accepted": false
+    },
+    {
+      "name": "text-graph-1",
+      "type": 3,
+      "value": 1,
+      "accepted": false
+    },
+    {
+      "name": "text-graph-2",
+      "type": 3,
+      "value": 2,
+      "accepted": false
+    },
+    {
+      "name": "text-graph-3",
+      "type": 3,
+      "value": 3,
+      "accepted": false
+    },
+    {
+      "name": "text-graph-4",
+      "type": 3,
+      "value": 4,
+      "accepted": false
+    },
+    {
+      "name": "text-graph-5",
+      "type": 3,
+      "value": 5,
+      "accepted": true
+    },
+    {
+      "name": "text-graph-6",
+      "type": 3,
+      "value": 6,
+      "accepted": false
+    },
+    {
+      "name": "text-graph-7",
+      "type": 3,
+      "value": 7,
+      "accepted": false
+    },
+    {
+      "name": "text-graph-8",
+      "type": 3,
+      "value": 8,
+      "accepted": false
+    },
+    {
+      "name": "list-graph-0",
+      "type": 4,
+      "value": 0,
+      "accepted": false
+    },
+    {
+      "name": "list-graph-1",
+      "type": 4,
+      "value": 1,
+      "accepted": false
+    },
+    {
+      "name": "list-graph-2",
+      "type": 4,
+      "value": 2,
+      "accepted": false
+    },
+    {
+      "name": "list-graph-3",
+      "type": 4,
+      "value": 3,
+      "accepted": false
+    },
+    {
+      "name": "list-graph-4",
+      "type": 4,
+      "value": 4,
+      "accepted": false
+    },
+    {
+      "name": "list-graph-5",
+      "type": 4,
+      "value": 5,
+      "accepted": false
+    },
+    {
+      "name": "list-graph-6",
+      "type": 4,
+      "value": 6,
+      "accepted": false
+    },
+    {
+      "name": "list-graph-7",
+      "type": 4,
+      "value": 7,
+      "accepted": false
+    },
+    {
+      "name": "list-graph-8",
+      "type": 4,
+      "value": 8,
+      "accepted": false
+    },
+    {
+      "name": "point-graph-0",
+      "type": 5,
+      "value": 0,
+      "accepted": false
+    },
+    {
+      "name": "point-graph-1",
+      "type": 5,
+      "value": 1,
+      "accepted": false
+    },
+    {
+      "name": "point-graph-2",
+      "type": 5,
+      "value": 2,
+      "accepted": false
+    },
+    {
+      "name": "point-graph-3",
+      "type": 5,
+      "value": 3,
+      "accepted": false
+    },
+    {
+      "name": "point-graph-4",
+      "type": 5,
+      "value": 4,
+      "accepted": false
+    },
+    {
+      "name": "point-graph-5",
+      "type": 5,
+      "value": 5,
+      "accepted": false
+    },
+    {
+      "name": "point-graph-6",
+      "type": 5,
+      "value": 6,
+      "accepted": false
+    },
+    {
+      "name": "point-graph-7",
+      "type": 5,
+      "value": 7,
+      "accepted": true
+    },
+    {
+      "name": "point-graph-8",
+      "type": 5,
+      "value": 8,
+      "accepted": true
+    },
+    {
+      "name": "value-graph-0",
+      "type": 6,
+      "value": 0,
+      "accepted": true
+    },
+    {
+      "name": "value-graph-1",
+      "type": 6,
+      "value": 1,
+      "accepted": true
+    },
+    {
+      "name": "value-graph-2",
+      "type": 6,
+      "value": 2,
+      "accepted": true
+    },
+    {
+      "name": "value-graph-3",
+      "type": 6,
+      "value": 3,
+      "accepted": true
+    },
+    {
+      "name": "value-graph-4",
+      "type": 6,
+      "value": 4,
+      "accepted": true
+    },
+    {
+      "name": "value-graph-5",
+      "type": 6,
+      "value": 5,
+      "accepted": true
+    },
+    {
+      "name": "value-graph-6",
+      "type": 6,
+      "value": 6,
+      "accepted": true
+    },
+    {
+      "name": "value-graph-7",
+      "type": 6,
+      "value": 7,
+      "accepted": true
+    },
+    {
+      "name": "value-graph-8",
+      "type": 6,
+      "value": 8,
+      "accepted": true
+    }
+  ],
+  "controlledProperties": [
+    {
+      "input": "bool",
+      "expected": {
+        "kind": "boolean"
+      }
+    },
+    {
+      "input": "int",
+      "expected": {
+        "kind": "integer"
+      }
+    },
+    {
+      "input": "float",
+      "expected": {
+        "kind": "decimal"
+      }
+    },
+    {
+      "input": "string",
+      "expected": {
+        "kind": "text"
+      }
+    },
+    {
+      "input": "object",
+      "expected": {
+        "kind": "any"
+      }
+    },
+    {
+      "input": "schema\u0000!@/引用",
+      "expected": {
+        "kind": "schema",
+        "of": "schema\u0000!@/引用"
+      }
+    },
+    {
+      "input": {
+        "schema": ""
+      },
+      "expected": {
+        "kind": "schema",
+        "of": ""
+      }
+    }
+  ],
+  "controlledWork": {
+    "depth": 300,
+    "schemaUnit": "型😀",
+    "expressionUnit": "expr\u0000引用😀",
+    "repeat": 20000,
+    "cancelAt": 256
+  }
+}

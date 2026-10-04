@@ -322,11 +322,11 @@ const FLOW_COPY_CLOSE_STALL_BOUND: usize = 64;
 /// 🛑️ Counts consecutive close steps that freed nothing and moved nothing, and refuses past
 /// [`FLOW_COPY_CLOSE_STALL_BOUND`] with a named fault instead of handing its caller another
 /// `Blocked` to spin on.
-fn account(stalled: &mut usize, step: SnapshotRetirementStep, owner: &str) -> Result<SnapshotRetirementStep, String> {
+fn account(stalled: &mut usize, step: SnapshotRetirementStep, owner: &str) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
     if matches!(step, SnapshotRetirementStep::Blocked | SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }) {
         *stalled += 1;
         if *stalled > FLOW_COPY_CLOSE_STALL_BOUND {
-            return Err(format!("{owner} made no progress at its published close demand"));
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,format!("{owner} made no progress at its published close demand")));
         }
         return Ok(step);
     }
@@ -436,13 +436,13 @@ impl<R: Send + Sync + 'static, T: Copy> CopyCursor<R, T> {
     /// not at all, and the caller's page is charged only what fits in it. A step that frees nothing
     /// and moves nothing is counted and refused at [`FLOW_COPY_CLOSE_STALL_BOUND`]
     /// (ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END).
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         use SnapshotRetirementStep as Step;
         if self.terminal_is_empty() { return Ok(Step::Complete); }
         let state = &mut *self.owned;
         if !state.closing || maximum_items == 0 || maximum_bytes == 0 { return Ok(Step::Blocked); }
         if !state.retirement.terminal_is_empty() {
-            let demand = state.retirement.next_close_byte_demand().map_err(str::to_owned)?;
+            let demand = state.retirement.next_close_byte_demand().map_err(|message|semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,message))?;
             let step = state.retirement.close_page(1, maximum_bytes.max(demand))?;
             let step = state.allocation.charge_release(step, maximum_bytes);
             return account(&mut state.stalled_steps, step, "selected Flow copy frontier");
@@ -455,10 +455,10 @@ impl<R: Send + Sync + 'static, T: Copy> CopyCursor<R, T> {
             let step = active.close_step(1, granted)?;
             let terminal = active.terminal_is_empty();
             if matches!(step, Step::Pending { released_items, released_bytes } if released_items > 1 || released_bytes > granted) {
-                return Err("selected Flow root retirement exceeded its grant".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"selected Flow root retirement exceeded its grant"));
             }
             if matches!(step, Step::Complete) {
-                if !terminal { return Err("selected Flow root retirement is not terminal".into()); }
+                if !terminal { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"selected Flow root retirement is not terminal")); }
                 state.active_root_retirement = None;
                 state.stalled_steps = 0;
                 return Ok(Step::Pending { released_items: 1, released_bytes: 0 });
@@ -497,7 +497,7 @@ macro_rules! selected_cursor {
             pub fn complete(&self) -> bool { self.cursor.complete() }
             pub fn take(&mut self) -> Option<$value> { self.cursor.take() }
             pub fn begin_close(&mut self) { self.cursor.begin_close(); }
-            pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> { self.cursor.close_step(maximum_items, maximum_bytes) }
+            pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> { self.cursor.close_step(maximum_items, maximum_bytes) }
             pub fn terminal_is_empty(&self) -> bool { self.cursor.terminal_is_empty() }
         }
     };

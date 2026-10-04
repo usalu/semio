@@ -11,7 +11,7 @@ pub fn diff(payload: &super::RotateObject, base: &SemioObjectSnapshot) -> protoc
         return protocol::MutationOutcome::fatal("mutation.invariant", "Object rotation has a non-finite component.".to_string(), ["transform".to_string()]);
     }
     if base.transform.rotation == r {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Object is already at this rotation.".to_string());
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Object is already at this rotation.".to_string());
     }
     let mut transform = base.transform;
     transform.rotation = r;

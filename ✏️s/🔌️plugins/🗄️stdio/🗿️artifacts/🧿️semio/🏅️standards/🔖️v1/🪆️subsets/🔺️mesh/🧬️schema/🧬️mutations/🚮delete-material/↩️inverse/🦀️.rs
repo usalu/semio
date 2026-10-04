@@ -5,7 +5,8 @@ use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 
 //#region 🔖️Inverse
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(payload: &super::DeleteMaterial, base: &SemioMeshSnapshot) -> Vec<SemioMeshMutation> {
+pub fn inverse(payload: &super::DeleteMaterial, base: &SemioMeshSnapshot) -> Result<Vec<SemioMeshMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(pos) = base.materials.iter().position(|m| m.id == payload.id) else {
         return Vec::new();
     };
@@ -14,5 +15,7 @@ pub fn inverse(payload: &super::DeleteMaterial, base: &SemioMeshSnapshot) -> Vec
     steps.push(SemioMeshMutation::CreateMaterial(create_material::CreateMaterial { material: base.materials[pos].clone() }));
     steps.extend(tail.into_iter().map(|m| SemioMeshMutation::CreateMaterial(create_material::CreateMaterial { material: m })));
     steps
+
+    })())
 }
 //#endregion 🔖️Inverse

@@ -10,9 +10,10 @@ use std::collections::BTreeMap;
 /// record-backed `ArtifactDsl`/`ArtifactPack` below are written against; `id`/`extension` are stated
 /// explicitly so the derived `__DSL_ENVELOPE_ID`/`__DSL_EXTENSION` reproduce the envelope identity
 /// the three panes already shared.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact)]
 #[value(rename_all = "camelCase")]
-#[dsl(id = "s.puzzle.puzzle2d.windowconfig", extension = "puzzle2dwindowcfg", layout = "lines")]
+#[dsl(layout = "lines")]
+#[artifact(id = "s.puzzle.puzzle2d.windowconfig", extension = "puzzle2dwindowcfg")]
 pub struct Puzzle2dWindowConfig {
     pub camera_x: f64,
     pub camera_y: f64,
@@ -86,9 +87,12 @@ impl protocol::Mutation<Puzzle2dWindowConfig> for Puzzle2dWindowConfigMutation {
             Self::Snapshot { config } => protocol::MutationOutcome::new(config.clone()),
         }
     }
-    fn inverse(&self, base: &Puzzle2dWindowConfig) -> Vec<Self> {
+    fn inverse(&self, base: &Puzzle2dWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![Self::Snapshot { config: base.clone() }]
-    }
+    
+    })())
+}
 }
 
 macro_rules! json_store {
@@ -98,11 +102,11 @@ macro_rules! json_store {
             fn envelope_id() -> &'static str {
                 $envelope
             }
-            fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-                dsl::json::from_json_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+            fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+                semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1)))
             }
             fn print_dsl(&self) -> String {
-                dsl::json::to_json_string(self)
+                semio_framework_pack_json::to_json_string(self)
             }
         }
         impl store::ArtifactPack for $state {
@@ -110,8 +114,8 @@ macro_rules! json_store {
                 semio_framework_value::ToValue::to_value(self).encode_pack_with(options)
             }
             fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-                let value = dsl::DslValue::decode_pack_with(bytes, options)?;
-                semio_framework_value::FromValue::from_value(value).map_err(|error| store::PackError::Schema(error.to_string()))
+                let value = semio_framework_value::DslValue::decode_pack_with(bytes, options)?;
+                semio_framework_value::FromValue::from_value(value).map_err(|error| store::PackError::from(error))
             }
         }
     };
@@ -124,13 +128,13 @@ impl store::ArtifactDsl for Puzzle2dWindowConfig {
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = store::semio_format::split_text_preamble(text).map_or(text, |(_, body)| body);
-        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid Puzzle 2D window envelope");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -142,18 +146,18 @@ impl store::ArtifactDsl for Puzzle2dWindowConfig {
 impl store::ArtifactPack for Puzzle2dWindowConfig {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let body = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::from(error.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &body))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, body) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        let (envelope, body) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::from(error.into_value_error()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _) = store::pack_rt::decode_document(&body, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -162,10 +166,10 @@ store::impl_whole_record_config!(Puzzle2dWindowConfig);
 
 impl protocol::OpText for Puzzle2dWindowConfigMutation {
     fn print_op(&self) -> String {
-        dsl::json::to_json_string(self)
+        semio_framework_pack_json::to_json_string(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        dsl::json::from_json_str(line).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        semio_framework_pack_json::from_json_str(line, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 }
 impl protocol::OpBinary for Puzzle2dWindowConfigMutation {
@@ -173,8 +177,8 @@ impl protocol::OpBinary for Puzzle2dWindowConfigMutation {
         Ok(protocol::OpText::print_op(self).into_bytes())
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))?;
-        dsl::json::from_json_str(text).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
+        let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(semio_framework_value::ValueError::from(error))))?;
+        semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(error)))
     }
 }
 
@@ -183,7 +187,7 @@ impl protocol::OpBinary for Puzzle2dWindowConfigMutation {
 pub struct Puzzle2dWindowTransient {
     pub engagement_input: String,
     pub brush_candidate_index: usize,
-    pub brush_candidates: Vec<dsl::DslValue>,
+    pub brush_candidates: Vec<semio_framework_value::DslValue>,
     pub brush_candidate_source_handle_id: String,
     /// 💡️ The one-shot handle-suggestions popup this exact window has open — per-gesture scratch,
     /// never a persisted option, and never shared with a sibling pane.
@@ -226,9 +230,12 @@ impl protocol::Mutation<Puzzle2dWindowTransient> for Puzzle2dWindowTransientMuta
             Self::Snapshot { transient } => protocol::MutationOutcome::new(transient.clone()),
         }
     }
-    fn inverse(&self, base: &Puzzle2dWindowTransient) -> Vec<Self> {
+    fn inverse(&self, base: &Puzzle2dWindowTransient) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![Self::Snapshot { transient: base.clone() }]
-    }
+    
+    })())
+}
 }
 
 impl protocol::MutationDiff<Puzzle2dWindowTransient> for Puzzle2dWindowTransient {
@@ -265,30 +272,30 @@ fn puzzle2d_window_transient_retained_bytes(transient: &Puzzle2dWindowTransient)
         charge(&mut bytes, menu.window_id.capacity())?;
         charge(&mut bytes, menu.handle_id.capacity())?;
     }
-    charge(&mut bytes, transient.brush_candidates.capacity().checked_mul(std::mem::size_of::<dsl::DslValue>())?)?;
-    let select_tool = transient.select_tool.as_ref().map(dsl::ToValue::to_value);
+    charge(&mut bytes, transient.brush_candidates.capacity().checked_mul(std::mem::size_of::<semio_framework_value::DslValue>())?)?;
+    let select_tool = transient.select_tool.as_ref().map(semio_framework_value::ToValue::to_value);
     let mut pending = Vec::new();
     pending.try_reserve(transient.brush_candidates.len() + 1).ok()?;
     pending.extend(transient.brush_candidates.iter());
     pending.extend(select_tool.iter());
     while let Some(value) = pending.pop() {
         match value {
-            dsl::DslValue::String(value) => charge(&mut bytes, value.capacity())?,
-            dsl::DslValue::Bytes(value) => charge(&mut bytes, value.capacity())?,
-            dsl::DslValue::Array(values) => {
-                charge(&mut bytes, values.capacity().checked_mul(std::mem::size_of::<dsl::DslValue>())?)?;
+            semio_framework_value::DslValue::String(value) => charge(&mut bytes, value.capacity())?,
+            semio_framework_value::DslValue::Bytes(value) => charge(&mut bytes, value.capacity())?,
+            semio_framework_value::DslValue::Array(values) => {
+                charge(&mut bytes, values.capacity().checked_mul(std::mem::size_of::<semio_framework_value::DslValue>())?)?;
                 pending.try_reserve(values.len()).ok()?;
                 pending.extend(values);
             }
-            dsl::DslValue::Object(entries) => {
-                charge(&mut bytes, entries.capacity().checked_mul(std::mem::size_of::<(String, dsl::DslValue)>())?)?;
+            semio_framework_value::DslValue::Object(entries) => {
+                charge(&mut bytes, entries.capacity().checked_mul(std::mem::size_of::<(String, semio_framework_value::DslValue)>())?)?;
                 pending.try_reserve(entries.len()).ok()?;
                 for (key, value) in entries {
                     charge(&mut bytes, key.capacity())?;
                     pending.push(value);
                 }
             }
-            dsl::DslValue::Null | dsl::DslValue::Bool(_) | dsl::DslValue::Number(_) => {}
+            semio_framework_value::DslValue::Null | semio_framework_value::DslValue::Bool(_) | semio_framework_value::DslValue::Number(_) => {}
         }
     }
     Some(bytes)
@@ -297,7 +304,7 @@ fn puzzle2d_window_transient_retained_bytes(transient: &Puzzle2dWindowTransient)
 fn puzzle2d_window_transient_preflight(mutation: &Puzzle2dWindowTransientMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
     let Puzzle2dWindowTransientMutation::Snapshot { transient } = mutation;
     let retained_bytes = puzzle2d_window_transient_retained_bytes(transient).ok_or_else(|| "Puzzle 2D window transient exceeds its exact retained publication envelope".to_string())?;
-    Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes })
+    Ok(store::ArtifactStoreOneItemFootprint::for_ephemeral_item(retained_bytes))
 }
 
 fn puzzle2d_window_transient_transfer(mutation: Puzzle2dWindowTransientMutation) -> Puzzle2dWindowTransient {
@@ -309,10 +316,10 @@ fn puzzle2d_window_transient_transfer(mutation: Puzzle2dWindowTransientMutation)
 json_store!(Puzzle2dWindowTransient, "puzzle2dwindowtransient", "s.puzzle.puzzle2d.windowtransient");
 impl protocol::OpText for Puzzle2dWindowTransientMutation {
     fn print_op(&self) -> String {
-        dsl::json::to_json_string(self)
+        semio_framework_pack_json::to_json_string(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        dsl::json::from_json_str(line).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        semio_framework_pack_json::from_json_str(line, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 }
 impl protocol::OpBinary for Puzzle2dWindowTransientMutation {
@@ -320,8 +327,8 @@ impl protocol::OpBinary for Puzzle2dWindowTransientMutation {
         Ok(protocol::OpText::print_op(self).into_bytes())
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))?;
-        dsl::json::from_json_str(text).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
+        let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(semio_framework_value::ValueError::from(error))))?;
+        semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(error)))
     }
 }
 

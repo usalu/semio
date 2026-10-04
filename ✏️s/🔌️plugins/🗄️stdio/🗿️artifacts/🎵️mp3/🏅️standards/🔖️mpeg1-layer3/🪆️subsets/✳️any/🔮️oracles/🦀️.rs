@@ -43,7 +43,7 @@ use semio_repo_test_host::Json;
 /// `kinds_match_the_catalog_and_the_vocabulary` below reads the committed manifest, vocabulary and
 /// feature as text and fails if any of them drift apart. The check that a kind exists as a real
 /// enum variant is the production-side test's, and only it can make that claim.
-pub const KINDS: [&str; 4] = ["set-snapshot", "set-id3v2", "set-frames", "set-id3v1"];
+pub const KINDS: [&str; 5] = ["set-snapshot", "patch-snapshot", "set-id3v2", "set-frames", "set-id3v1"];
 //#endregion 🔖️Kinds
 
 //#region 🔖️Layers
@@ -495,6 +495,13 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
             let snapshot = params.get("snapshot").ok_or_else(|| "set-snapshot carries no snapshot".to_string())?;
             regions = layers::Regions { v2: id3v2_region(snapshot.get("id3v2"))?, audio: audio_region(snapshot.get("frames"))?, v1: id3v1_region(snapshot.get("id3v1"))? };
         }
+        "patch-snapshot" => {
+            let patch = params.get("patch").ok_or_else(|| "patch-snapshot carries no patch".to_string())?;
+            if patch.str("operation") != "set" || patch.str("path") != "/id3v2" {
+                return Err("the MP3 oracle scenario admits only a set at /id3v2".to_string());
+            }
+            regions.v2 = id3v2_region(patch.get("value"))?;
+        }
         "" => return Err("mutation spec carries no `kind`".to_string()),
         other => return Err(format!("mutation kind {other:?} has no oracle implementation ({} input byte(s))", input.len())),
     }
@@ -521,6 +528,14 @@ pub fn oracle_apply_mutation_inverse(base: &[u8], spec: &Json, mutated: &[u8]) -
         "set-frames" => restored.audio = original.audio,
         "set-id3v1" => restored.v1 = original.v1,
         "set-snapshot" => restored = original,
+        "patch-snapshot" => {
+            let params = spec.get("params").cloned().unwrap_or(Json::Null);
+            let patch = params.get("patch").ok_or_else(|| "patch-snapshot carries no patch".to_string())?;
+            if patch.str("operation") != "set" || patch.str("path") != "/id3v2" {
+                return Err("the MP3 oracle scenario admits only a set at /id3v2".to_string());
+            }
+            restored.v2 = original.v2;
+        }
         other => return Err(format!("mutation kind {other:?} has no oracle inverse")),
     }
     Ok(layers::join(&restored))

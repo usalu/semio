@@ -1,0 +1,725 @@
+[
+  {
+    "name": "single pixel",
+    "input": {
+      "width": 1,
+      "height": 1,
+      "mask": [
+        255
+      ],
+      "threshold": 0.5,
+      "simplifyEpsilon": 0,
+      "maxPixels": 16777216,
+      "maxEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "foreground": [
+        1
+      ],
+      "contours": 1
+    }
+  },
+  {
+    "name": "blank result",
+    "input": {
+      "width": 2,
+      "height": 2,
+      "mask": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "threshold": 0.5,
+      "simplifyEpsilon": 0,
+      "maxPixels": 16777216,
+      "maxEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "foreground": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "contours": 0
+    }
+  },
+  {
+    "name": "filled rectangle",
+    "input": {
+      "width": 3,
+      "height": 2,
+      "mask": [
+        255,
+        255,
+        255,
+        255,
+        255,
+        255
+      ],
+      "threshold": 0.5,
+      "simplifyEpsilon": 0,
+      "maxPixels": 16777216,
+      "maxEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "foreground": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "contours": 1
+    }
+  },
+  {
+    "name": "offset rectangle",
+    "input": {
+      "width": 4,
+      "height": 4,
+      "mask": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        255,
+        255,
+        0,
+        0,
+        255,
+        255,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "threshold": 0.5,
+      "simplifyEpsilon": 0,
+      "maxPixels": 16777216,
+      "maxEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "foreground": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "contours": 1
+    }
+  },
+  {
+    "name": "hole",
+    "input": {
+      "width": 3,
+      "height": 3,
+      "mask": [
+        255,
+        255,
+        255,
+        255,
+        0,
+        255,
+        255,
+        255,
+        255
+      ],
+      "threshold": 0.5,
+      "simplifyEpsilon": 0,
+      "maxPixels": 16777216,
+      "maxEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "foreground": [
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+        1
+      ],
+      "contours": 2
+    }
+  },
+  {
+    "name": "two disjoint pixels",
+    "input": {
+      "width": 3,
+      "height": 1,
+      "mask": [
+        255,
+        0,
+        255
+      ],
+      "threshold": 0.5,
+      "simplifyEpsilon": 0,
+      "maxPixels": 16777216,
+      "maxEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "foreground": [
+        1,
+        0,
+        1
+      ],
+      "contours": 2
+    }
+  },
+  {
+    "name": "diagonal components",
+    "input": {
+      "width": 2,
+      "height": 2,
+      "mask": [
+        255,
+        0,
+        0,
+        255
+      ],
+      "threshold": 0.5,
+      "simplifyEpsilon": 0,
+      "maxPixels": 16777216,
+      "maxEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "foreground": [
+        1,
+        0,
+        0,
+        1
+      ],
+      "contours": 2
+    }
+  },
+  {
+    "name": "connected concave pixels",
+    "input": {
+      "width": 3,
+      "height": 3,
+      "mask": [
+        255,
+        255,
+        0,
+        255,
+        255,
+        255,
+        0,
+        255,
+        255
+      ],
+      "threshold": 0.5,
+      "simplifyEpsilon": 0,
+      "maxPixels": 16777216,
+      "maxEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "foreground": [
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1
+      ],
+      "contours": 1
+    }
+  },
+  {
+    "name": "zero threshold includes zero bytes",
+    "input": {
+      "width": 4,
+      "height": 1,
+      "mask": [
+        0,
+        127,
+        128,
+        255
+      ],
+      "threshold": 0,
+      "simplifyEpsilon": 0,
+      "maxPixels": 16777216,
+      "maxEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "foreground": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "contours": 1
+    }
+  },
+  {
+    "name": "inclusive rounded threshold",
+    "input": {
+      "width": 4,
+      "height": 1,
+      "mask": [
+        0,
+        127,
+        128,
+        255
+      ],
+      "threshold": 0.5,
+      "simplifyEpsilon": 0,
+      "maxPixels": 16777216,
+      "maxEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "foreground": [
+        0,
+        0,
+        1,
+        1
+      ],
+      "contours": 1
+    }
+  },
+  {
+    "name": "unit threshold",
+    "input": {
+      "width": 4,
+      "height": 1,
+      "mask": [
+        0,
+        127,
+        128,
+        255
+      ],
+      "threshold": 1,
+      "simplifyEpsilon": 0,
+      "maxPixels": 16777216,
+      "maxEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "foreground": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "contours": 1
+    }
+  },
+  {
+    "name": "nested island",
+    "input": {
+      "width": 5,
+      "height": 5,
+      "mask": [
+        255,
+        255,
+        255,
+        255,
+        255,
+        255,
+        0,
+        0,
+        0,
+        255,
+        255,
+        0,
+        255,
+        0,
+        255,
+        255,
+        0,
+        0,
+        0,
+        255,
+        255,
+        255,
+        255,
+        255,
+        255
+      ],
+      "threshold": 0.5,
+      "simplifyEpsilon": 0,
+      "maxPixels": 16777216,
+      "maxEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "foreground": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        1,
+        0,
+        1,
+        1,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "contours": 3
+    }
+  },
+  {
+    "name": "collinear compression",
+    "input": {
+      "width": 6,
+      "height": 1,
+      "mask": [
+        255,
+        255,
+        255,
+        255,
+        255,
+        255
+      ],
+      "threshold": 0.5,
+      "simplifyEpsilon": 0.5,
+      "maxPixels": 16777216,
+      "maxEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "foreground": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "contours": 1
+    }
+  },
+  {
+    "name": "staircase simplification",
+    "input": {
+      "width": 4,
+      "height": 4,
+      "mask": [
+        255,
+        0,
+        0,
+        0,
+        255,
+        255,
+        0,
+        0,
+        255,
+        255,
+        255,
+        0,
+        255,
+        255,
+        255,
+        255
+      ],
+      "threshold": 0.5,
+      "simplifyEpsilon": 0.75,
+      "maxPixels": 16777216,
+      "maxEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "foreground": [
+        1,
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+        1
+      ],
+      "contours": 1
+    }
+  },
+  {
+    "name": "large tolerance preserves hole",
+    "input": {
+      "width": 3,
+      "height": 3,
+      "mask": [
+        255,
+        255,
+        255,
+        255,
+        0,
+        255,
+        255,
+        255,
+        255
+      ],
+      "threshold": 0.5,
+      "simplifyEpsilon": 8192,
+      "maxPixels": 16777216,
+      "maxEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "foreground": [
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+        1
+      ],
+      "contours": 2
+    }
+  },
+  {
+    "name": "large tolerance preserves single pixel",
+    "input": {
+      "width": 1,
+      "height": 1,
+      "mask": [
+        255
+      ],
+      "threshold": 0.5,
+      "simplifyEpsilon": 8192,
+      "maxPixels": 16777216,
+      "maxEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "foreground": [
+        1
+      ],
+      "contours": 1
+    }
+  },
+  {
+    "name": "alternating checker",
+    "input": {
+      "width": 4,
+      "height": 4,
+      "mask": [
+        255,
+        0,
+        255,
+        0,
+        0,
+        255,
+        0,
+        255,
+        255,
+        0,
+        255,
+        0,
+        0,
+        255,
+        0,
+        255
+      ],
+      "threshold": 0.5,
+      "simplifyEpsilon": 2,
+      "maxPixels": 16777216,
+      "maxEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "foreground": [
+        1,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        1,
+        1,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        1
+      ],
+      "contours": 8
+    }
+  },
+  {
+    "name": "accepted simplification preserves bitmap",
+    "input": {
+      "width": 3,
+      "height": 3,
+      "mask": [
+        255,
+        255,
+        0,
+        255,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "threshold": 0.5,
+      "simplifyEpsilon": 0.55,
+      "maxPixels": 16777216,
+      "maxEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "foreground": [
+        1,
+        1,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "contours": 1,
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            1
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            0,
+            2
+          ]
+        },
+        {
+          "kind": "close"
+        }
+      ]
+    }
+  },
+  {
+    "name": "hole touches exterior at a corner",
+    "input": {
+      "width": 3,
+      "height": 3,
+      "mask": [
+        255,
+        255,
+        255,
+        255,
+        0,
+        255,
+        255,
+        255,
+        0
+      ],
+      "threshold": 0.5,
+      "simplifyEpsilon": 0,
+      "maxPixels": 16777216,
+      "maxEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "foreground": [
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+        0
+      ],
+      "contours": 2
+    }
+  }
+]

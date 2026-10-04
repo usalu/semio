@@ -25,16 +25,16 @@ const DIFF: &str = include_str!("../../🧫️fixtures/🪪️tightens-the-autho
 const OUTCOME: &str = include_str!("../../🧫️fixtures/🪪️tightens-the-authority-to-vigilant/🎯️outcome/🔣️.json");
 
 fn before() -> MergePolicySetting {
-    dsl::os_pack::json::from_json_str(BEFORE).expect("before merge-policy setting decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before merge-policy setting decodes")
 }
 fn expected_after() -> MergePolicySetting {
-    dsl::os_pack::json::from_json_str(AFTER).expect("after merge-policy setting decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after merge-policy setting decodes")
 }
 fn mutation() -> MergePolicyConfigMutation {
-    dsl::os_pack::json::from_json_str(MUTATION).expect("change-merge-policy mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("change-merge-policy mutation decodes")
 }
-fn json_value<T: dsl::ToValue>(value: &T) -> serde_json::Value {
-    serde_json::from_str(&dsl::os_pack::json::to_json_string(value)).expect("canonical JSON parses in the independent serde_json oracle")
+fn json_value<T: semio_framework_value::ToValue>(value: &T) -> serde_json::Value {
+    serde_json::from_str(&semio_framework_pack_json::to_json_string(value)).expect("canonical JSON parses in the independent serde_json oracle")
 }
 
 /// ▶️ Tightening to `Vigilant` replaces the whole setting record; the authority now quarantines
@@ -46,7 +46,7 @@ fn tightens_the_active_policy() {
     let applied = protocol::MutationDiff::apply(outcome.diff(), &base).expect("change-merge-policy applies to its committed before-setting");
     assert_eq!(applied, expected_after(), "change-merge-policy/tightens-the-authority-to-vigilant: the tightened setting differs from the committed after-snapshot");
     assert_eq!(applied.policy, protocol::MergePolicy::Vigilant, "change-merge-policy/tightens-the-authority-to-vigilant: the payload's policy must land verbatim on the setting");
-    assert!(applied.policy.rejects(protocol::Severity::Warning), "change-merge-policy/tightens-the-authority-to-vigilant: Vigilant is the only policy that quarantines a Warning");
+    assert!(applied.policy.rejects(semio_framework_diagnostic::Severity::Warning), "change-merge-policy/tightens-the-authority-to-vigilant: Vigilant is the only policy that quarantines a Warning");
 }
 
 /// ↩️ The inverse reads BASE's policy — never the diff — so undoing hands the authority back to
@@ -54,7 +54,7 @@ fn tightens_the_active_policy() {
 #[test]
 fn restoring_the_prior_policy_restores_before() {
     let base = before();
-    let inverse = <MergePolicyConfigMutation as protocol::Mutation<MergePolicySetting>>::inverse(&mutation(), &base);
+    let inverse = <MergePolicyConfigMutation as protocol::Mutation<MergePolicySetting>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "change-merge-policy/tightens-the-authority-to-vigilant: exactly one undo step");
     let MergePolicyConfigMutation::ChangeMergePolicy(undo) = &inverse[0];
     assert_eq!(undo.policy, protocol::MergePolicy::Normal, "change-merge-policy/tightens-the-authority-to-vigilant: the undo must carry BASE's own prior policy");
@@ -72,7 +72,7 @@ fn restoring_the_prior_policy_restores_before() {
 #[test]
 fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: MergePolicySetting = dsl::os_pack::json::from_json_str(text).expect("merge-policy setting decodes");
+        let decoded: MergePolicySetting = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("merge-policy setting decodes");
         let reencoded = json_value(&decoded);
         let original: serde_json::Value = serde_json::from_str(text).expect("merge-policy setting reparses");
         assert_eq!(reencoded, original, "change-merge-policy/tightens-the-authority-to-vigilant: committed {label} setting JSON is not canonical");
@@ -106,7 +106,7 @@ fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `MergePolicySetting` and re-encodes unchanged.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: MergePolicySetting = dsl::os_pack::json::from_json_str(DIFF).expect("committed change-merge-policy diff decodes");
+    let decoded: MergePolicySetting = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-merge-policy diff decodes");
     assert_eq!(decoded.policy, protocol::MergePolicy::Vigilant, "change-merge-policy/tightens-the-authority-to-vigilant: the committed diff must carry the tightened policy");
     let reencoded = json_value(&decoded);
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
@@ -117,7 +117,7 @@ fn committed_diff_is_canonical() {
 /// `apply` ignores `base` outright, the diff IS the after-setting.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: MergePolicySetting = dsl::os_pack::json::from_json_str(DIFF).expect("committed change-merge-policy diff decodes");
+    let decoded: MergePolicySetting = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-merge-policy diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("committed diff applies to the before-setting");
     assert_eq!(produced, expected_after(), "change-merge-policy/tightens-the-authority-to-vigilant: committed diff did not carry before to after");
 }

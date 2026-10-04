@@ -12,7 +12,7 @@ pub fn diff(payload: &RenameObject, base: &LowpolySnapshot) -> protocol::Mutatio
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Object \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if existing.name == payload.new_name {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Object \"{}\" is already named \"{}\".", payload.id, payload.new_name));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Object \"{}\" is already named \"{}\".", payload.id, payload.new_name));
     }
     protocol::MutationOutcome::new(diff_objects_patch(payload.id.clone(), LowpolyObjectPatch { name: Some(payload.new_name.clone()), ..LowpolyObjectPatch::default() }))
 }

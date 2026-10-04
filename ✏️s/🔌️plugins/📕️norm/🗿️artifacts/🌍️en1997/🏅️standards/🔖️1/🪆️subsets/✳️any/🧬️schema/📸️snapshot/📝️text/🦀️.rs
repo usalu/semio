@@ -14,7 +14,7 @@ use crate::En1997Snapshot;
 pub const EN1997_DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
 /// 📖️ Parses `.en1997` DSL text into a `En1997Snapshot`.
-pub fn parse_dsl(text: &str) -> Result<En1997Snapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<En1997Snapshot, semio_framework_diagnostic::TextError> {
     <En1997Snapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 

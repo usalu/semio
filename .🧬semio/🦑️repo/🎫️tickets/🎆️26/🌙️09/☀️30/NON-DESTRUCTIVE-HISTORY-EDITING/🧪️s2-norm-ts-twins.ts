@@ -134,8 +134,18 @@ class Uses {
 const group = (type: string): string => (/[|&]/u.test(type) ? `(${type})` : type);
 const literal = (values: readonly unknown[], uses: Uses): Shape => ({ type: values.map((value) => JSON.stringify(value)).join(" | "), read: `${uses.wire("normWireLiteral")}(${values.map((value) => JSON.stringify(value)).join(", ")})` });
 
+/** 📍️ The node a JSON Pointer names inside `schema` (RFC 6901 unescaping). */
+const pointed = (schema: Schema, pointer: string): Schema => pointer.split("/").slice(1).reduce<Schema>((node, step) => node[step.replace(/~1/gu, "/").replace(/~0/gu, "~")], schema);
+/** 🧭️ A copy of `node` whose local `$ref`s name their owner `id`, so the node can be shaped from another module. */
+const absolutize = (node: Schema, id: string): Schema => JSON.parse(JSON.stringify(node), (key, value) => (key === "$ref" && typeof value === "string" && value.startsWith("#") ? id + value : value));
+
 const reference = (ref: string, module: Module, uses: Uses, self: Module): Shape => {
   const [id, pointer] = ref.split("#") as [string, string | undefined];
+  if (pointer && !/^\/(?:\$defs|definitions)\/[^/]+$/u.test(pointer)) {
+    const owner = id === "" ? module : modules.get(id);
+    if (!owner) throw new Error(`${relative(REPO, module.json)}: unresolved property pointer ${ref}`);
+    return shape(absolutize(pointed(owner.schema, pointer), owner.schema.$id as string), self, uses, ref);
+  }
   const key = pointer?.replace(/^\/(?:\$defs|definitions)\//u, "");
   if (id === "") {
     const name = module.names.get(key!);

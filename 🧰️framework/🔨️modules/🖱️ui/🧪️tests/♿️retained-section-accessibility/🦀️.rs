@@ -11,7 +11,7 @@ fn fixture() -> serde_json::Value {
 
 fn mounted_disclosure(fixture: &serde_json::Value) -> UiTree {
     let section = &fixture["section"];
-    let records = [
+    mounted([
         serde_json::json!({
             "id": 0,
             "key": section["id"],
@@ -32,7 +32,11 @@ fn mounted_disclosure(fixture: &serde_json::Value) -> UiTree {
             "accessibility": { "label": section["childLabel"] },
             "bindings": [{ "trigger": "activate", "action": { "scope": "fixture", "name": "activateChild", "version": 1 } }]
         }),
-    ];
+    ])
+}
+
+/// 🌳️ Mounts `records` (record 0 the root) as one retained document.
+fn mounted<const N: usize>(records: [serde_json::Value; N]) -> UiTree {
     let header = UiDocumentLeaseHeader { generation: 1, surface: SurfaceId::try_from("fixture").expect("surface id"), revision: UiRevision(1), root: UiNodeId(0), layout_epoch: 0, node_count: records.len() };
     let mut document = UiDocumentTree::new(header).expect("document header");
     for record in records {
@@ -50,6 +54,27 @@ fn mounted_disclosure(fixture: &serde_json::Value) -> UiTree {
         }
     }
     panic!("disclosure document did not reconcile");
+}
+
+/// 🪟️ LAW (N1 parity with React's `TreeDataWindow`): a tree item whose window declares rows not streamed yet (`total > 0`,
+/// no children) is a closed disclosure — announced collapsed and opened by the retained toggle, so the host's paging request
+/// can fire — while an item with neither children nor a window is a leaf the toggle refuses.
+#[test]
+fn a_tree_item_with_unstreamed_window_rows_is_a_closed_disclosure() {
+    let stack = serde_json::json!({ "kind": "stack", "axis": "vertical", "gap": "none", "padding": { "all": "none" }, "align": "stretch", "justify": "start", "grow": false, "wrap": false });
+    let mut tree = mounted([
+        serde_json::json!({ "id": 0, "key": "history", "component": { "type": "tree" }, "layout": stack, "style": {}, "activity": "idle", "accessibility": {}, "children": [1] }),
+        serde_json::json!({ "id": 1, "key": "commands", "component": { "type": "treeSection", "label": "Commands", "defaultOpen": true }, "layout": stack, "style": {}, "activity": "idle", "accessibility": {}, "children": [2, 3] }),
+        serde_json::json!({ "id": 2, "key": "entry.7", "component": { "type": "treeItem", "label": "Move", "window": { "total": 3, "offset": 0, "rowExtent": "standard" } }, "layout": stack, "style": {}, "activity": "idle", "accessibility": { "label": "Move" } }),
+        serde_json::json!({ "id": 3, "key": "entry.8", "component": { "type": "treeItem", "label": "Rotate" }, "layout": stack, "style": {}, "activity": "idle", "accessibility": { "label": "Rotate" } }),
+    ]);
+    let (windowed, leaf) = (tree.document_node(UiNodeId(2)).expect("entry.7 is mounted"), tree.document_node(UiNodeId(3)).expect("entry.8 is mounted"));
+    let expanded = |tree: &UiTree, key: &str| accessibility_projection(tree).into_iter().find(|node| node.key == key).unwrap_or_else(|| panic!("{key} is projected")).expanded;
+    assert_eq!((tree.disclosure_open(windowed), expanded(&tree, "entry.7")), (Some(false), Some(false)), "unstreamed window rows make a closed disclosure");
+    assert_eq!((tree.disclosure_open(leaf), expanded(&tree, "entry.8")), (None, None), "a leaf is no disclosure");
+    assert_eq!(tree.toggle_disclosure(leaf), None, "the toggle refuses a leaf");
+    assert_eq!(tree.toggle_disclosure(windowed), Some(true), "the toggle opens it, so the host requests its rows");
+    assert_eq!(expanded(&tree, "entry.7"), Some(true));
 }
 
 #[test]

@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "scenario",
+          "ownedBefore",
+          "contextBytes",
+          "errorBytes",
+          "maximumBytes",
+          "expected"
+        ],
+        "properties": {
+          "scenario": {
+            "enum": [
+              "pending",
+              "after",
+              "reserved"
+            ]
+          },
+          "ownedBefore": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "contextBytes": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "errorBytes": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "maximumBytes": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "afterAttempt",
+              "afterSuccess",
+              "afterUnused",
+              "afterFinal",
+              "allocatorCalls",
+              "errorFrees"
+            ],
+            "properties": {
+              "kind": {
+                "enum": [
+                  "ownershipLimit",
+                  "panic"
+                ]
+              },
+              "afterAttempt": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "afterSuccess": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "afterUnused": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "afterFinal": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "allocatorCalls": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "errorFrees": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -68,7 +68,7 @@ impl ArtifactViewer for TrinityJackViewer {
     }
     const DOCUMENT_SCHEMA: &'static str = TRINITY_GRAPH_SCHEMA;
 
-    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {
         crate::genesis_jack_child_pack(snapshot, slot, child_id)
     }
 
@@ -99,7 +99,10 @@ impl ArtifactViewer for TrinityJackViewer {
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
-            graph::BODY_KEY => graph::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
+            graph::BODY_KEY => {
+                let content = crate::jack_content_from_children(doc.snapshot, &doc.children).map_err(|fault| semio_framework_plugin::PluginAssemblyError::new("trinity.jack.content", fault.message))?;
+                graph::render(doc.snapshot, &content).map(semio_framework_plugin::built_to_component_tree)
+            }
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }

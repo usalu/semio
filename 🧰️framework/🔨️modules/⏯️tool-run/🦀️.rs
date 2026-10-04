@@ -5,9 +5,15 @@
 //! Pure: no async, no store. Schema of record: `🧬️schema/🔣️.json`. Contract:
 //! `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️13/INTERACTIVE-TOOLS-VISIBLE-PROCESS/📋️tool-run-contract.md` §2, §3.1, §3.2.
 
-use dsl::os_dsl::schema::{FieldSpec, FieldValue, RecordLayout, RecordSpec, RecordValue, Shape};
+use semio_framework_dsl_record::FieldSpec;
+use semio_framework_dsl_record::FieldValue;
+use semio_framework_dsl_record::RecordLayout;
+use semio_framework_dsl_record::RecordSpec;
+use semio_framework_dsl_record::RecordValue;
+use semio_framework_dsl_record::Shape;
 use dsl::os_pack::{decode_record_body_exact, encode_record_body, DecodeOptions, EncodeOptions};
-use dsl::{FromValue, ToValue};
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::sync::OnceLock;
@@ -23,6 +29,9 @@ pub const TOOL_RUN_STEP_ARGS_MAX: usize = 4;
 pub const TOOL_RUN_COUNTERS_MAX: usize = 8;
 /// 🧱️ Provisional document ops one run may hold (§2.8).
 pub const TOOL_RUN_PROVISIONAL_OPS_MAX: u32 = 65_536;
+/// 🪆️ Provisional member ops one member-target run may hold: its finalize publishes them as ONE composed-child group in a
+/// single turn, so this ceiling bounds that turn (design §20.14).
+pub const TOOL_RUN_MEMBER_OPS_MAX: u32 = 4_096;
 /// 🗄️ Trace records a run keeps resident (§3.2).
 pub const TOOL_RUN_TRACE_RESIDENT_RECORDS: usize = 1_048_576;
 /// 📄️ Ops one trace page carries.
@@ -100,7 +109,7 @@ pub struct ToolRunFreshness {
 
 //#region 🔖️Lifecycle
 /// 🚦️ Lifecycle state of a non-empty ledger slot; "no run" is the absence of a slot.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum ToolRunState {
@@ -433,7 +442,7 @@ pub struct ToolRunTransition {
 
 /// 🛣️ What a run occupies on its document instance for its local actor (§2.2 invariant 5): every mutating run shares
 /// the one mutating lane, and a read-only run owns the lane of its tool on its window instance.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ToolRunLane {
@@ -521,7 +530,7 @@ impl ToolRunMachine {
 
 //#region 🔖️Progress
 /// 🚥️ Verdict of one traced attempt; colours are framework semantic tokens.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum ToolRunVerdict {
@@ -562,7 +571,7 @@ impl ToolRunVerdict {
 }
 
 /// 🪧️ Severity of one step-log entry.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum ToolRunStepKind {
@@ -826,12 +835,12 @@ pub struct ToolRunTraceDelta {
 
 impl ToolRunTraceDelta {
     pub fn encode(&self) -> Result<Vec<u8>, ToolRunCodecError> {
-        let mut record = RecordValue::default();
-        record.fields.insert(1, FieldValue::Record(identity_record(&self.identity)));
-        record.fields.insert(2, FieldValue::Bool(self.clear));
-        record.fields.insert(3, FieldValue::UInt(u64::from(self.next)));
+        let mut record = semio_framework_dsl_record::RecordValue::default();
+        record.fields.insert(1, semio_framework_dsl_record::FieldValue::Record(identity_record(&self.identity)));
+        record.fields.insert(2, semio_framework_dsl_record::FieldValue::Bool(self.clear));
+        record.fields.insert(3, semio_framework_dsl_record::FieldValue::UInt(u64::from(self.next)));
         if !self.pages.is_empty() {
-            record.fields.insert(4, FieldValue::List(self.pages.iter().map(|page| page.encode().map(FieldValue::Bytes64)).collect::<Result<_, _>>()?));
+            record.fields.insert(4, semio_framework_dsl_record::FieldValue::List(self.pages.iter().map(|page| page.encode().map(semio_framework_dsl_record::FieldValue::Bytes64)).collect::<Result<_, _>>()?));
         }
         encode_body(delta_spec(), &record)
     }
@@ -844,7 +853,7 @@ impl ToolRunTraceDelta {
 }
 
 /// 🧭️ Echoed by a renderer in its window instance view state; `page` is the next page it expects.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ToolRunTraceCursor {
@@ -1081,29 +1090,29 @@ pub struct ToolRunTick {
 impl ToolRunTick {
     /// 🧳️ Pack record body; rejects ticks over `TOOL_RUN_TICK_BYTES_MAX`.
     pub fn encode(&self) -> Result<Vec<u8>, ToolRunCodecError> {
-        let mut record = RecordValue::default();
-        record.fields.insert(1, FieldValue::Record(identity_record(&self.identity)));
-        record.fields.insert(2, FieldValue::UInt(self.sequence));
+        let mut record = semio_framework_dsl_record::RecordValue::default();
+        record.fields.insert(1, semio_framework_dsl_record::FieldValue::Record(identity_record(&self.identity)));
+        record.fields.insert(2, semio_framework_dsl_record::FieldValue::UInt(self.sequence));
         if let Some(progress) = &self.progress {
-            record.fields.insert(3, FieldValue::Record(progress_record(progress)?));
+            record.fields.insert(3, semio_framework_dsl_record::FieldValue::Record(progress_record(progress)?));
         }
         if !self.steps.is_empty() {
-            record.fields.insert(4, FieldValue::List(self.steps.iter().map(|step| step_record(step).map(FieldValue::Record)).collect::<Result<_, _>>()?));
+            record.fields.insert(4, semio_framework_dsl_record::FieldValue::List(self.steps.iter().map(|step| step_record(step).map(semio_framework_dsl_record::FieldValue::Record)).collect::<Result<_, _>>()?));
         }
         if !self.trace.is_empty() {
-            record.fields.insert(5, FieldValue::List(self.trace.iter().map(|page| page.encode().map(FieldValue::Bytes64)).collect::<Result<_, _>>()?));
+            record.fields.insert(5, semio_framework_dsl_record::FieldValue::List(self.trace.iter().map(|page| page.encode().map(semio_framework_dsl_record::FieldValue::Bytes64)).collect::<Result<_, _>>()?));
         }
         if !self.append_ops.is_empty() {
-            record.fields.insert(6, FieldValue::List(self.append_ops.iter().map(|op| FieldValue::Bytes64(op.clone())).collect()));
+            record.fields.insert(6, semio_framework_dsl_record::FieldValue::List(self.append_ops.iter().map(|op| semio_framework_dsl_record::FieldValue::Bytes64(op.clone())).collect()));
         }
         if !self.append_entities.is_empty() {
-            record.fields.insert(7, FieldValue::Bytes64(self.append_entities.iter().flat_map(|entity| entity.to_le_bytes()).collect()));
+            record.fields.insert(7, semio_framework_dsl_record::FieldValue::Bytes64(self.append_entities.iter().flat_map(|entity| entity.to_le_bytes()).collect()));
         }
         if let Some(retract_to) = self.retract_to {
-            record.fields.insert(8, FieldValue::UInt(u64::from(retract_to)));
+            record.fields.insert(8, semio_framework_dsl_record::FieldValue::UInt(u64::from(retract_to)));
         }
         if let Some(payload) = &self.payload {
-            record.fields.insert(9, FieldValue::Bytes64(payload.clone()));
+            record.fields.insert(9, semio_framework_dsl_record::FieldValue::Bytes64(payload.clone()));
         }
         let bytes = encode_body(tick_spec(), &record)?;
         if bytes.len() > TOOL_RUN_TICK_BYTES_MAX {
@@ -1118,8 +1127,8 @@ impl ToolRunTick {
         }
         let record = decode_body(tick_spec(), bytes)?;
         let progress = match record.get(3) {
-            None | Some(FieldValue::Absent) => None,
-            Some(FieldValue::Record(progress)) => Some(progress_from_record(progress)?),
+            None | Some(semio_framework_dsl_record::FieldValue::Absent) => None,
+            Some(semio_framework_dsl_record::FieldValue::Record(progress)) => Some(progress_from_record(progress)?),
             Some(_) => return Err(ToolRunCodecError::Malformed("progress")),
         };
         let steps = list(&record, 4)?.iter().map(|item| step_from_record(item_record(item)?)).collect::<Result<_, _>>()?;
@@ -1128,8 +1137,8 @@ impl ToolRunTick {
         let append_entities = u64_column(bytes_field(&record, 7)?, "appendEntities")?;
         let retract_to = optional_uint(&record, 8)?.map(|value| narrow(value, "retractTo")).transpose()?;
         let payload = match record.get(9) {
-            None | Some(FieldValue::Absent) => None,
-            Some(FieldValue::Bytes64(payload)) => Some(payload.clone()),
+            None | Some(semio_framework_dsl_record::FieldValue::Absent) => None,
+            Some(semio_framework_dsl_record::FieldValue::Bytes64(payload)) => Some(payload.clone()),
             Some(_) => return Err(ToolRunCodecError::Malformed("payload")),
         };
         Ok(Self { identity: identity_from_field(&record, 1)?, sequence: uint(&record, 2)?, progress, steps, trace, append_ops, append_entities, retract_to, payload })
@@ -1365,11 +1374,11 @@ impl std::fmt::Display for ToolRunCodecError {
 impl std::error::Error for ToolRunCodecError {}
 
 fn field(id: u16, key: &str, shape: Shape) -> FieldSpec {
-    FieldSpec::new(id, key, shape)
+    semio_framework_dsl_record::FieldSpec::new(id, key, shape)
 }
 
 fn spec(fields: Vec<FieldSpec>) -> RecordSpec {
-    RecordSpec::new(None, RecordLayout::Inline, fields)
+    semio_framework_dsl_record::RecordSpec::new(None, semio_framework_dsl_record::RecordLayout::Inline, fields)
 }
 
 fn identity_spec_owned() -> RecordSpec {
@@ -1395,19 +1404,19 @@ fn progress_spec_owned() -> RecordSpec {
     ])
 }
 
-fn identity_spec_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<RecordSpec,String>{control.scoped_stage(|control|{control.begin_stage(4)?;let mut fields=control.allocate_vec(4)?;for(id,key,shape)in[(1,"appInstanceId",Shape::UInt),(2,"run",Shape::UInt),(3,"generation",Shape::UInt),(4,"baseRevision",Shape::Bytes64)]{fields.push(dsl::schema::producer::field(id,key,shape,control)?);control.step()?;}dsl::schema::producer::record(None,RecordLayout::Inline,fields,control)})}
-fn step_spec_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<RecordSpec,String>{control.scoped_stage(|control|{control.begin_stage(7)?;let mut fields=control.allocate_vec(7)?;for(id,key,shape,optional)in[(1,"sequence",Shape::UInt,false),(2,"kind",Shape::UInt,false),(3,"stage",Shape::UInt,false),(4,"reason",Shape::UInt,false),(5,"subject",Shape::UInt,true),(6,"repeat",Shape::UInt,false),(7,"args",Shape::Bytes64,true)]{let mut field=dsl::schema::producer::field(id,key,shape,control)?;field.optional=optional;fields.push(field);control.step()?;}dsl::schema::producer::record(None,RecordLayout::Inline,fields,control)})}
-fn progress_spec_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<RecordSpec,String>{control.scoped_stage(|control|{control.begin_stage(10)?;let mut fields=control.allocate_vec(10)?;let steps=Shape::List(dsl::schema::producer::boxed(Shape::Record(step_spec_producer()),control)?);for(id,key,shape,optional)in[(1,"identity",Shape::Record(identity_spec_producer()),false),(2,"sequence",Shape::UInt,false),(3,"state",Shape::UInt,false),(4,"stage",Shape::UInt,false),(5,"completed",Shape::UInt,false),(6,"total",Shape::UInt,true),(7,"counters",Shape::Bytes64,true),(8,"unitsPerSecond",Shape::Float,false),(9,"conflicts",Shape::UInt,false),(10,"steps",steps,true)]{let mut field=dsl::schema::producer::field(id,key,shape,control)?;field.optional=optional;fields.push(field);control.step()?;}dsl::schema::producer::record(None,RecordLayout::Inline,fields,control)})}
-fn identity_spec_producer()->dsl::RecordSpecProducer{dsl::RecordSpecProducer{ordinary:identity_spec_owned,decoding:|control|identity_spec_controlled(control),encoding:|control|identity_spec_controlled(control)}}
-fn step_spec_producer()->dsl::RecordSpecProducer{dsl::RecordSpecProducer{ordinary:step_spec_owned,decoding:|control|step_spec_controlled(control),encoding:|control|step_spec_controlled(control)}}
-fn progress_spec_producer()->dsl::RecordSpecProducer{dsl::RecordSpecProducer{ordinary:progress_spec_owned,decoding:|control|progress_spec_controlled(control),encoding:|control|progress_spec_controlled(control)}}
+fn identity_spec_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<RecordSpec,semio_framework_value::ValueError>{control.scoped_stage(|control|{control.begin_stage(4)?;let mut fields=control.allocate_vec(4)?;for(id,key,shape)in[(1,"appInstanceId",semio_framework_dsl_record::Shape::UInt),(2,"run",semio_framework_dsl_record::Shape::UInt),(3,"generation",semio_framework_dsl_record::Shape::UInt),(4,"baseRevision",semio_framework_dsl_record::Shape::Bytes64)]{fields.push(semio_framework_dsl_record::producer::field(id,key,shape,control)?);control.step()?;}semio_framework_dsl_record::producer::record(None,semio_framework_dsl_record::RecordLayout::Inline,fields,control)})}
+fn step_spec_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<RecordSpec,semio_framework_value::ValueError>{control.scoped_stage(|control|{control.begin_stage(7)?;let mut fields=control.allocate_vec(7)?;for(id,key,shape,optional)in[(1,"sequence",semio_framework_dsl_record::Shape::UInt,false),(2,"kind",semio_framework_dsl_record::Shape::UInt,false),(3,"stage",semio_framework_dsl_record::Shape::UInt,false),(4,"reason",semio_framework_dsl_record::Shape::UInt,false),(5,"subject",semio_framework_dsl_record::Shape::UInt,true),(6,"repeat",semio_framework_dsl_record::Shape::UInt,false),(7,"args",semio_framework_dsl_record::Shape::Bytes64,true)]{let mut field=semio_framework_dsl_record::producer::field(id,key,shape,control)?;field.optional=optional;fields.push(field);control.step()?;}semio_framework_dsl_record::producer::record(None,semio_framework_dsl_record::RecordLayout::Inline,fields,control)})}
+fn progress_spec_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<RecordSpec,semio_framework_value::ValueError>{control.scoped_stage(|control|{control.begin_stage(10)?;let mut fields=control.allocate_vec(10)?;let steps=semio_framework_dsl_record::Shape::List(semio_framework_dsl_record::producer::boxed(semio_framework_dsl_record::Shape::Record(step_spec_producer()),control)?);for(id,key,shape,optional)in[(1,"identity",semio_framework_dsl_record::Shape::Record(identity_spec_producer()),false),(2,"sequence",semio_framework_dsl_record::Shape::UInt,false),(3,"state",semio_framework_dsl_record::Shape::UInt,false),(4,"stage",semio_framework_dsl_record::Shape::UInt,false),(5,"completed",semio_framework_dsl_record::Shape::UInt,false),(6,"total",semio_framework_dsl_record::Shape::UInt,true),(7,"counters",semio_framework_dsl_record::Shape::Bytes64,true),(8,"unitsPerSecond",semio_framework_dsl_record::Shape::Float,false),(9,"conflicts",semio_framework_dsl_record::Shape::UInt,false),(10,"steps",steps,true)]{let mut field=semio_framework_dsl_record::producer::field(id,key,shape,control)?;field.optional=optional;fields.push(field);control.step()?;}semio_framework_dsl_record::producer::record(None,semio_framework_dsl_record::RecordLayout::Inline,fields,control)})}
+fn identity_spec_producer()->semio_framework_dsl_record::RecordSpecProducer{semio_framework_dsl_record::RecordSpecProducer{ordinary:identity_spec_owned,decoding:|control|identity_spec_controlled(control),encoding:|control|identity_spec_controlled(control)}}
+fn step_spec_producer()->semio_framework_dsl_record::RecordSpecProducer{semio_framework_dsl_record::RecordSpecProducer{ordinary:step_spec_owned,decoding:|control|step_spec_controlled(control),encoding:|control|step_spec_controlled(control)}}
+fn progress_spec_producer()->semio_framework_dsl_record::RecordSpecProducer{semio_framework_dsl_record::RecordSpecProducer{ordinary:progress_spec_owned,decoding:|control|progress_spec_controlled(control),encoding:|control|progress_spec_controlled(control)}}
 
 fn page_spec() -> &'static RecordSpec {
     static SPEC: OnceLock<RecordSpec> = OnceLock::new();
     SPEC.get_or_init(|| {
         let mut fields = vec![field(1, "identity", Shape::Record(identity_spec_producer())), field(2, "page", Shape::UInt)];
         for (id, key) in [(3, "opKinds"), (4, "keys"), (5, "verdicts"), (6, "reasons"), (7, "subjectKinds"), (8, "meshes"), (9, "shapes"), (10, "entities"), (11, "floats")] {
-            fields.push(field(id, key, Shape::Bytes64).optional());
+            fields.push(field(id, key, semio_framework_dsl_record::Shape::Bytes64).optional());
         }
         spec(fields)
     })
@@ -1444,11 +1453,11 @@ fn decode_body(spec: &RecordSpec, bytes: &[u8]) -> Result<RecordValue, ToolRunCo
 }
 
 fn identity_record(identity: &ToolRunIdentity) -> RecordValue {
-    let mut record = RecordValue::default();
-    record.fields.insert(1, FieldValue::UInt(u64::from(identity.id.app_instance_id)));
-    record.fields.insert(2, FieldValue::UInt(identity.id.run));
-    record.fields.insert(3, FieldValue::UInt(u64::from(identity.generation)));
-    record.fields.insert(4, FieldValue::Bytes64(identity.base_revision.to_vec()));
+    let mut record = semio_framework_dsl_record::RecordValue::default();
+    record.fields.insert(1, semio_framework_dsl_record::FieldValue::UInt(u64::from(identity.id.app_instance_id)));
+    record.fields.insert(2, semio_framework_dsl_record::FieldValue::UInt(identity.id.run));
+    record.fields.insert(3, semio_framework_dsl_record::FieldValue::UInt(u64::from(identity.generation)));
+    record.fields.insert(4, semio_framework_dsl_record::FieldValue::Bytes64(identity.base_revision.to_vec()));
     record
 }
 
@@ -1459,7 +1468,7 @@ fn identity_from_record(record: &RecordValue) -> Result<ToolRunIdentity, ToolRun
 
 fn identity_from_field(record: &RecordValue, id: u16) -> Result<ToolRunIdentity, ToolRunCodecError> {
     match record.get(id) {
-        Some(FieldValue::Record(identity)) => identity_from_record(identity),
+        Some(semio_framework_dsl_record::FieldValue::Record(identity)) => identity_from_record(identity),
         _ => Err(ToolRunCodecError::Malformed("identity")),
     }
 }
@@ -1471,15 +1480,15 @@ fn step_record(step: &ToolRunStep) -> Result<RecordValue, ToolRunCodecError> {
     if step.repeat == 0 {
         return Err(ToolRunCodecError::Malformed("repeat"));
     }
-    let mut record = RecordValue::default();
-    record.fields.insert(1, FieldValue::UInt(step.sequence));
-    record.fields.insert(2, FieldValue::UInt(u64::from(step.kind.ordinal())));
-    record.fields.insert(3, FieldValue::UInt(u64::from(step.stage)));
-    record.fields.insert(4, FieldValue::UInt(u64::from(step.reason)));
+    let mut record = semio_framework_dsl_record::RecordValue::default();
+    record.fields.insert(1, semio_framework_dsl_record::FieldValue::UInt(step.sequence));
+    record.fields.insert(2, semio_framework_dsl_record::FieldValue::UInt(u64::from(step.kind.ordinal())));
+    record.fields.insert(3, semio_framework_dsl_record::FieldValue::UInt(u64::from(step.stage)));
+    record.fields.insert(4, semio_framework_dsl_record::FieldValue::UInt(u64::from(step.reason)));
     if let Some(subject) = step.subject {
-        record.fields.insert(5, FieldValue::UInt(subject));
+        record.fields.insert(5, semio_framework_dsl_record::FieldValue::UInt(subject));
     }
-    record.fields.insert(6, FieldValue::UInt(u64::from(step.repeat)));
+    record.fields.insert(6, semio_framework_dsl_record::FieldValue::UInt(u64::from(step.repeat)));
     if !step.args.is_empty() {
         let mut args = Vec::with_capacity(9 * step.args.len());
         for arg in &step.args {
@@ -1494,7 +1503,7 @@ fn step_record(step: &ToolRunStep) -> Result<RecordValue, ToolRunCodecError> {
                 }
             }
         }
-        record.fields.insert(7, FieldValue::Bytes64(args));
+        record.fields.insert(7, semio_framework_dsl_record::FieldValue::Bytes64(args));
     }
     Ok(record)
 }
@@ -1532,22 +1541,22 @@ fn progress_record(progress: &ToolRunProgress) -> Result<RecordValue, ToolRunCod
     if progress.counters.len() > TOOL_RUN_COUNTERS_MAX {
         return Err(ToolRunCodecError::Limit("counters"));
     }
-    let mut record = RecordValue::default();
-    record.fields.insert(1, FieldValue::Record(identity_record(&progress.identity)));
-    record.fields.insert(2, FieldValue::UInt(progress.sequence));
-    record.fields.insert(3, FieldValue::UInt(u64::from(progress.state.ordinal())));
-    record.fields.insert(4, FieldValue::UInt(u64::from(progress.stage)));
-    record.fields.insert(5, FieldValue::UInt(progress.completed));
+    let mut record = semio_framework_dsl_record::RecordValue::default();
+    record.fields.insert(1, semio_framework_dsl_record::FieldValue::Record(identity_record(&progress.identity)));
+    record.fields.insert(2, semio_framework_dsl_record::FieldValue::UInt(progress.sequence));
+    record.fields.insert(3, semio_framework_dsl_record::FieldValue::UInt(u64::from(progress.state.ordinal())));
+    record.fields.insert(4, semio_framework_dsl_record::FieldValue::UInt(u64::from(progress.stage)));
+    record.fields.insert(5, semio_framework_dsl_record::FieldValue::UInt(progress.completed));
     if let Some(total) = progress.total {
-        record.fields.insert(6, FieldValue::UInt(total));
+        record.fields.insert(6, semio_framework_dsl_record::FieldValue::UInt(total));
     }
     if !progress.counters.is_empty() {
-        record.fields.insert(7, FieldValue::Bytes64(progress.counters.iter().flat_map(|counter| counter.counter.to_le_bytes().into_iter().chain(counter.value.to_le_bytes())).collect()));
+        record.fields.insert(7, semio_framework_dsl_record::FieldValue::Bytes64(progress.counters.iter().flat_map(|counter| counter.counter.to_le_bytes().into_iter().chain(counter.value.to_le_bytes())).collect()));
     }
-    record.fields.insert(8, FieldValue::Float(f64::from(progress.units_per_second)));
-    record.fields.insert(9, FieldValue::UInt(u64::from(progress.conflicts)));
+    record.fields.insert(8, semio_framework_dsl_record::FieldValue::Float(f64::from(progress.units_per_second)));
+    record.fields.insert(9, semio_framework_dsl_record::FieldValue::UInt(u64::from(progress.conflicts)));
     if !progress.steps.is_empty() {
-        record.fields.insert(10, FieldValue::List(progress.steps.iter().map(|step| step_record(step).map(FieldValue::Record)).collect::<Result<_, _>>()?));
+        record.fields.insert(10, semio_framework_dsl_record::FieldValue::List(progress.steps.iter().map(|step| step_record(step).map(semio_framework_dsl_record::FieldValue::Record)).collect::<Result<_, _>>()?));
     }
     Ok(record)
 }
@@ -1561,7 +1570,7 @@ fn progress_from_record(record: &RecordValue) -> Result<ToolRunProgress, ToolRun
     let counters = counters.iter().map(|[c0, c1, value @ ..]| ToolRunCounter { counter: u16::from_le_bytes([*c0, *c1]), value: u64::from_le_bytes(*value) }).collect();
     let steps = list(record, 10)?.iter().map(|item| step_from_record(item_record(item)?)).collect::<Result<Vec<_>, _>>()?;
     let units_per_second = match record.get(8) {
-        Some(FieldValue::Float(value)) => *value as f32,
+        Some(semio_framework_dsl_record::FieldValue::Float(value)) => *value as f32,
         _ => return Err(ToolRunCodecError::Malformed("unitsPerSecond")),
     };
     Ok(ToolRunProgress {
@@ -1615,12 +1624,12 @@ fn page_record(page: &ToolRunTracePage) -> Result<RecordValue, ToolRunCodecError
             ToolRunTraceOp::Clear => kinds.push(2),
         }
     }
-    let mut record = RecordValue::default();
-    record.fields.insert(1, FieldValue::Record(identity_record(&page.identity)));
-    record.fields.insert(2, FieldValue::UInt(u64::from(page.page)));
+    let mut record = semio_framework_dsl_record::RecordValue::default();
+    record.fields.insert(1, semio_framework_dsl_record::FieldValue::Record(identity_record(&page.identity)));
+    record.fields.insert(2, semio_framework_dsl_record::FieldValue::UInt(u64::from(page.page)));
     for (id, column) in (3u16..).zip(columns) {
         if !column.is_empty() {
-            record.fields.insert(id, FieldValue::Bytes64(column));
+            record.fields.insert(id, semio_framework_dsl_record::FieldValue::Bytes64(column));
         }
     }
     Ok(record)
@@ -1692,45 +1701,45 @@ fn uint(record: &RecordValue, id: u16) -> Result<u64, ToolRunCodecError> {
 
 fn optional_uint(record: &RecordValue, id: u16) -> Result<Option<u64>, ToolRunCodecError> {
     match record.get(id) {
-        None | Some(FieldValue::Absent) => Ok(None),
-        Some(FieldValue::UInt(value)) => Ok(Some(*value)),
+        None | Some(semio_framework_dsl_record::FieldValue::Absent) => Ok(None),
+        Some(semio_framework_dsl_record::FieldValue::UInt(value)) => Ok(Some(*value)),
         Some(_) => Err(ToolRunCodecError::Malformed("unsigned field")),
     }
 }
 
 fn boolean(record: &RecordValue, id: u16) -> Result<bool, ToolRunCodecError> {
     match record.get(id) {
-        Some(FieldValue::Bool(value)) => Ok(*value),
+        Some(semio_framework_dsl_record::FieldValue::Bool(value)) => Ok(*value),
         _ => Err(ToolRunCodecError::Malformed("boolean field")),
     }
 }
 
 fn bytes_field(record: &RecordValue, id: u16) -> Result<&[u8], ToolRunCodecError> {
     match record.get(id) {
-        None | Some(FieldValue::Absent) => Ok(&[]),
-        Some(FieldValue::Bytes64(bytes)) => Ok(bytes),
+        None | Some(semio_framework_dsl_record::FieldValue::Absent) => Ok(&[]),
+        Some(semio_framework_dsl_record::FieldValue::Bytes64(bytes)) => Ok(bytes),
         Some(_) => Err(ToolRunCodecError::Malformed("bytes field")),
     }
 }
 
 fn list(record: &RecordValue, id: u16) -> Result<&[FieldValue], ToolRunCodecError> {
     match record.get(id) {
-        None | Some(FieldValue::Absent) => Ok(&[]),
-        Some(FieldValue::List(items)) => Ok(items),
+        None | Some(semio_framework_dsl_record::FieldValue::Absent) => Ok(&[]),
+        Some(semio_framework_dsl_record::FieldValue::List(items)) => Ok(items),
         Some(_) => Err(ToolRunCodecError::Malformed("list field")),
     }
 }
 
 fn item_bytes(item: &FieldValue) -> Result<&[u8], ToolRunCodecError> {
     match item {
-        FieldValue::Bytes64(bytes) => Ok(bytes),
+        semio_framework_dsl_record::FieldValue::Bytes64(bytes) => Ok(bytes),
         _ => Err(ToolRunCodecError::Malformed("bytes item")),
     }
 }
 
 fn item_record(item: &FieldValue) -> Result<&RecordValue, ToolRunCodecError> {
     match item {
-        FieldValue::Record(record) => Ok(record),
+        semio_framework_dsl_record::FieldValue::Record(record) => Ok(record),
         _ => Err(ToolRunCodecError::Malformed("record item")),
     }
 }
@@ -1766,7 +1775,7 @@ fn f32_column(bytes: &[u8]) -> Result<Vec<f32>, ToolRunCodecError> {
 
 //#region 🔖️Definition
 /// 🧵️ Id of a job kind registered in the artifact tool factory registry.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(transparent)]
 #[value(transparent)]
 pub struct JobKindId(pub String);
@@ -1782,7 +1791,7 @@ impl JobKindId {
 }
 
 /// 🔄️ How a mutating run reacts to head changes (§2.7.5).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum ToolRunRebasePolicy {
@@ -1792,7 +1801,7 @@ pub enum ToolRunRebasePolicy {
 }
 
 /// 🎚️ How a run reacts to settings changes (§3.3).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum ToolRunReconfigurePolicy {
@@ -1801,7 +1810,7 @@ pub enum ToolRunReconfigurePolicy {
 }
 
 /// 🫥️ Trace subject kind a run emits.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum ToolRunTraceKind {
@@ -1812,7 +1821,7 @@ pub enum ToolRunTraceKind {
 }
 
 /// 🪜️ One algorithm stage.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ToolRunStageDefinition {
@@ -1821,7 +1830,7 @@ pub struct ToolRunStageDefinition {
 }
 
 /// 🔟️ One progress counter.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ToolRunCounterDefinition {
@@ -1830,7 +1839,7 @@ pub struct ToolRunCounterDefinition {
 }
 
 /// 🗯️ One reason code with its verdict and EN/DE template (`{0}`..`{3}` take step arguments).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ToolRunReasonDefinition {
@@ -1844,7 +1853,7 @@ pub struct ToolRunReasonDefinition {
 /// window kind id, into that kind's window config documents. `settingsChanged` fires only when a value
 /// behind one of them changes; an empty declaration reads no settings, so no settings publication ever
 /// reconfigures the run.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ToolRunSettingsReads {
@@ -1877,16 +1886,16 @@ pub fn tool_run_pointer_tokens(pointer: &str) -> Option<Vec<String>> {
 }
 
 /// 📍️ The value an RFC 6901 JSON Pointer names inside `document`; `None` when it is malformed or names nothing.
-pub fn tool_run_pointer_value<'a>(document: &'a dsl::DslValue, pointer: &str) -> Option<&'a dsl::DslValue> {
+pub fn tool_run_pointer_value<'a>(document: &'a semio_framework_value::DslValue, pointer: &str) -> Option<&'a semio_framework_value::DslValue> {
     tool_run_pointer_tokens(pointer)?.iter().try_fold(document, |value, token| match value {
-        dsl::DslValue::Object(fields) => fields.iter().find(|(key, _)| key == token).map(|(_, value)| value),
-        dsl::DslValue::Array(items) => (token.bytes().all(|byte| byte.is_ascii_digit()) && (token == "0" || !token.starts_with('0'))).then(|| token.parse::<usize>().ok()).flatten().and_then(|index| items.get(index)),
+        semio_framework_value::DslValue::Object(fields) => fields.iter().find(|(key, _)| key == token).map(|(_, value)| value),
+        semio_framework_value::DslValue::Array(items) => (token.bytes().all(|byte| byte.is_ascii_digit()) && (token == "0" || !token.starts_with('0'))).then(|| token.parse::<usize>().ok()).flatten().and_then(|index| items.get(index)),
         _ => None,
     })
 }
 
 /// 📜️ Static run declaration attached to tool and utility definitions (§2.4).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ToolRunDefinition {
@@ -1909,6 +1918,12 @@ pub struct ToolRunDefinition {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub windows: Vec<String>,
+    /// 🧩️ The composed-child slot whose owned member store a mutating run edits (design §12, §20.15): its provisional ops are
+    /// that member's ops, the renderers read them composed over the live children, and finalize publishes one member edit.
+    /// Absent: the document's own store.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub member: Option<String>,
 }
 
 /// 🚫️ Why a `ToolRunDefinition` violates the contract.
@@ -1923,6 +1938,8 @@ pub enum ToolRunDefinitionError {
     DuplicateReasonCode(u16),
     ReservedReasonCode(u16),
     InvalidSettingsPointer(String),
+    EmptyMember,
+    ReadOnlyMember,
 }
 
 impl std::fmt::Display for ToolRunDefinitionError {
@@ -1937,6 +1954,8 @@ impl std::fmt::Display for ToolRunDefinitionError {
             Self::DuplicateReasonCode(code) => write!(formatter, "toolRun.definition.duplicateReasonCode: {code}"),
             Self::ReservedReasonCode(code) => write!(formatter, "toolRun.definition.reservedReasonCode: {code}"),
             Self::InvalidSettingsPointer(pointer) => write!(formatter, "toolRun.definition.invalidSettingsPointer: {pointer}"),
+            Self::EmptyMember => formatter.write_str("toolRun.definition.emptyMember"),
+            Self::ReadOnlyMember => formatter.write_str("toolRun.definition.readOnlyMember"),
         }
     }
 }
@@ -1944,7 +1963,8 @@ impl std::fmt::Display for ToolRunDefinitionError {
 impl std::error::Error for ToolRunDefinitionError {}
 
 impl ToolRunDefinition {
-    /// ✅️ Checks stage, counter and reason tables against the contract limits.
+    /// ✅️ Checks stage, counter and reason tables against the contract limits, and that a member target names a slot of a
+    /// mutating run.
     pub fn validate(&self) -> Result<(), ToolRunDefinitionError> {
         if self.stages.is_empty() {
             return Err(ToolRunDefinitionError::NoStages);
@@ -1979,7 +1999,11 @@ impl ToolRunDefinition {
         if let Some(pointer) = self.settings.pointers().find(|pointer| tool_run_pointer_tokens(pointer).is_none()) {
             return Err(ToolRunDefinitionError::InvalidSettingsPointer(pointer.to_string()));
         }
-        Ok(())
+        match self.member.as_deref() {
+            Some("") => Err(ToolRunDefinitionError::EmptyMember),
+            Some(_) if !self.mutating => Err(ToolRunDefinitionError::ReadOnlyMember),
+            _ => Ok(()),
+        }
     }
 
     pub fn stage(&self, index: u16) -> Option<&ToolRunStageDefinition> {

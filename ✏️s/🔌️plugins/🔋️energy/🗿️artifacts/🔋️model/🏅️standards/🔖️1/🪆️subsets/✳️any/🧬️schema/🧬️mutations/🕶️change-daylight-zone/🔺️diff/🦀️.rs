@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeDaylightZoneGlareLimit, base: &EnergyModelSna
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("A glare limit must be a positive finite number, got {}.", payload.new_glare_limit), [payload.id.0.to_string()]);
     }
     if existing.glare_limit == payload.new_glare_limit {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Daylight zone {} already has that glare limit.", payload.id.0));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Daylight zone {} already has that glare limit.", payload.id.0));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.daylight_zones.iter_mut().find(|item| item.id == payload.id) {

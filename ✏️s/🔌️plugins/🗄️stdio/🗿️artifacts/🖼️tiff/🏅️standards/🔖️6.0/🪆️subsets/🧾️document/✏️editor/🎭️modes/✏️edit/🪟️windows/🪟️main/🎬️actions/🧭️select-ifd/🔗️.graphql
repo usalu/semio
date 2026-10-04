@@ -1,0 +1,3 @@
+input SelectIfdAction {
+  ifdIndex: Int!
+}

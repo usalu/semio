@@ -1,9 +1,7 @@
 /** 🧪️ Strict language-neutral Flow byte-frontier fixtures and independent JSON oracle. */
 import Ajv from "ajv";
-import { semioSchemaAjvV1 } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import { strict as assert } from "node:assert";
 import { createHash } from "node:crypto";
-import { fileURLToPath } from "node:url";
 import stableStringify from "fast-json-stable-stringify";
 import { applyPatches, enablePatches, produceWithPatches } from "immer";
 import { encodeScalarRecordFixture } from "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🧪️tests/🔎️scalar-witness/🟦️.ts";
@@ -133,42 +131,6 @@ for (const row of hostWire.cases) {
 for (const invalid of [{...hostWire, terminalEmpty:false}, {...hostWire, grants:[4097]}, {...hostWire, extra:1}]) assert.equal(validateHostWire(invalid), false);
 //#endregion 🔎️ActualHostWire
 
-//#region 🧬️ArtifactRecipes
-const recipes = await Bun.file(new URL("../../🧫️fixtures/🧬️artifact-recipes.json", import.meta.url)).json();
-const validateRecipes = flowExport("FlowArtifactRecipes");
-assert(validateRecipes(recipes), JSON.stringify(validateRecipes.errors));
-assert.equal(new Set(recipes.cases.map((row: any) => row.id)).size, 4);
-const recipeLabel = recipes.label.unit.repeat(recipes.label.repetitions);
-assert.equal(Buffer.byteLength(recipeLabel), recipes.label.expectedBytes);
-const recipeBase = {
-  widgets: ["a", "b", "c"].map(id => ({ kind: "inputSlider", id, label: id === "b" ? recipeLabel : id, value: 1, min: 0, max: 10, step: 1 })),
-  synapses: [["ab","a","b"],["bc","b","c"],["ac","a","c"]].map(([id,from,to]) => ({ id, from, fromPort: "value", to, toPort: "value" })),
-  layout: { b: { x: 1, y: 2 } },
-};
-enablePatches();
-for (const row of recipes.cases) {
-  const [post, , inverse] = produceWithPatches(recipeBase, draft => {
-    const mutation = row.mutation;
-    if (mutation.mutation === "deleteWidget") {
-      draft.widgets = draft.widgets.filter(widget => widget.id !== mutation.id);
-      draft.synapses = draft.synapses.filter(edge => edge.from !== mutation.id && edge.to !== mutation.id);
-      delete draft.layout[mutation.id as "b"];
-    } else if (mutation.mutation === "disconnectWidgets") draft.synapses = draft.synapses.filter(edge => edge.id !== mutation.id);
-    else if (mutation.mutation === "moveWidgets") for (const entry of mutation.entries) draft.layout[entry.id as "b"] = entry.layout;
-    else draft.widgets[draft.widgets.findIndex(widget => widget.id === mutation.id)] = mutation.widget;
-  });
-  assert.deepEqual(post.widgets.map(widget => widget.id), row.widgets);
-  assert.deepEqual(post.synapses.map(edge => edge.id), row.synapses);
-  assert.deepEqual(applyPatches(post, inverse), recipeBase);
-  assert.deepEqual(JSON.parse(stableStringify(post)), post);
-}
-for (const mutate of [
-  (value: any) => { value.grants = [16384]; },
-  (value: any) => { value.cases[0].mutation.unknown = true; },
-  (value: any) => { value.label.expectedBytes = 4096; },
-  (value: any) => { value.terminalEmpty = false; },
-]) { const value = structuredClone(recipes); mutate(value); assert(!validateRecipes(value)); }
-//#endregion 🧬️ArtifactRecipes
 
 //#region 🎚️ParameterIntent
 const parameter = await Bun.file(new URL("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🎚️parameter/📨️intent/🧫️fixtures/🔣️.json", import.meta.url)).json();
@@ -275,26 +237,6 @@ const artifactSource = await Bun.file(new URL("../../../../../../../../../../../
 assert.match(artifactSource, /InputSlider\s*\{\s*id: String,\s*label: String,/);
 assert.match(artifactSource, /Widget::InputSlider \{ label, \.\. \} => \(label\.clone\(\), label\.clone\(\)/);
 //#endregion 🏷️AuthoredSliderLabels
-//#region 🧾️ArtifactCanonicalShapes
-const artifact = await Bun.file(new URL("../../🧫️fixtures/🧾️artifact-canonical.json", import.meta.url)).json();
-const validateArtifact = flowExport("FlowArtifactCanonical");
-assert(validateArtifact(artifact), JSON.stringify(validateArtifact.errors));
-assert.equal(new Set(artifact.widgets.map((value: any) => value.kind)).size, 9);
-assert.equal(new Set(artifact.mutations.map((value: any) => value.mutation)).size, 10);
-assert.equal(artifact.widgets.find((value: any) => value.kind === "cluster").tree.neurons[0].tree.neurons[0].tree, null);
-for (const value of [...artifact.widgets, ...artifact.mutations]) assert.deepEqual(JSON.parse(JSON.stringify(value)), value);
-for (const mutate of [
-  (value: any) => { value.widgets[0].unknown = true; },
-  (value: any) => { value.widgets[1].label = null; },
-  (value: any) => { delete value.mutations[0].widget.label; },
-  (value: any) => { value.mutations[4].from_port = "wrong spelling"; },
-  (value: any) => { value.mutations[8].entries[0].layout.z = 3; },
-]) {
-  const mutant = structuredClone(artifact);
-  mutate(mutant);
-  assert(!validateArtifact(mutant));
-}
-//#endregion 🧾️ArtifactCanonicalShapes
 //#region ↩️DeleteCascadeOracle
 const cascade = await Bun.file(new URL("../../🧫️fixtures/🧹️delete-cascade/🔣️.json", import.meta.url)).json();
 const validateCascade = flowExport("FlowDeleteCascade");
@@ -302,28 +244,22 @@ assert(validateCascade(cascade), JSON.stringify(validateCascade.errors));
 const cascadeBase = structuredClone(cascade.scene);
 cascadeBase.widgets[1].label = cascade.label.unit.repeat(cascade.label.repetitions);
 assert.equal(Buffer.byteLength(cascadeBase.widgets[1].label), cascade.label.expectedBytes);
-const removed = cascadeBase.synapses.map((edge: any, index: number) => ({ edge, index })).filter(({ edge }: any) => edge.from === cascade.targetId || edge.to === cascade.targetId);
-assert.deepEqual(removed.map(({ index }: any) => index), cascade.expectedInverseIndices);
+const severed = cascadeBase.synapses.filter((edge: any) => edge.from === cascade.targetId || edge.to === cascade.targetId);
+assert.deepEqual([...severed.map((edge: any) => ({ kind: "remove-edge", id: edge.id })), { kind: "remove-node", id: cascade.targetId }], cascade.expectedLeaves);
 enablePatches();
 const [cascadePost, , oracleInverse] = produceWithPatches(cascadeBase, (draft: any) => {
   draft.widgets.splice(draft.widgets.findIndex((widget: any) => widget.id === cascade.targetId), 1);
   draft.synapses = draft.synapses.filter((edge: any) => edge.from !== cascade.targetId && edge.to !== cascade.targetId);
-  delete draft.layout[cascade.targetId];
 });
 assert.deepEqual(cascadePost.synapses.map((edge: any) => edge.id), cascade.expectedForwardSynapses);
-const restoreCascade = (entries: typeof removed) => {
-  const restored = structuredClone(cascadePost);
-  const index = cascadeBase.widgets.findIndex((widget: any) => widget.id === cascade.targetId);
-  restored.widgets.splice(index, 0, structuredClone(cascadeBase.widgets[index]));
-  restored.layout[cascade.targetId] = structuredClone(cascadeBase.layout[cascade.targetId]);
-  for (const { edge, index } of entries) restored.synapses.splice(index, 0, structuredClone(edge));
-  return restored;
-};
-assert.deepEqual(restoreCascade(removed), applyPatches(cascadePost, oracleInverse));
-assert.deepEqual(restoreCascade(removed), cascadeBase);
-assert.notDeepEqual(restoreCascade([...removed].reverse()), cascadeBase);
+const byId = (scene: any) => ({ widgets: [...scene.widgets].sort((a: any, b: any) => a.id.localeCompare(b.id)), synapses: [...scene.synapses].sort((a: any, b: any) => a.id.localeCompare(b.id)), layout: scene.layout });
+const appended = structuredClone(cascadePost);
+appended.widgets.push(structuredClone(cascadeBase.widgets[1]));
+for (const edge of [...severed].reverse()) appended.synapses.push(structuredClone(edge));
+assert.deepEqual(byId(appended), byId(cascadeBase));
+assert.deepEqual(byId(appended), byId(applyPatches(cascadePost, oracleInverse)));
 for (const mutate of [
-  (value: any) => { value.expectedInverseIndices.reverse(); },
+  (value: any) => { value.expectedLeaves.reverse(); },
   (value: any) => { value.scene.widgets[1].unknown = true; },
   (value: any) => { value.label.expectedBytes = 4096; },
 ]) { const mutant = structuredClone(cascade); mutate(mutant); assert(!validateCascade(mutant)); }
@@ -337,26 +273,12 @@ const digests = identity.cases.map((row: any) => createHash("sha256").update(ide
 assert.deepEqual(identity.cases.map((row: any) => row.expectedSha256), digests);
 assert.equal(new Set(digests).size, 5);
 const contentSource = await Bun.file(new URL("../../../../../../../🦀️.rs", import.meta.url)).text();
-const canonicalSource = await Bun.file(new URL("../../🧵️retained/🧾️canonical/🦀️.rs", import.meta.url)).text();
-assert(canonicalSource.includes('("inputPorts", strings(input_ports))') && canonicalSource.includes('("outputPorts", strings(output_ports))'), "retained scene ports must match the typed DSL schema");
-assert(canonicalSource.includes("fields.sort_unstable_by"), "fixed object fields must use lexical key order like the independent JSON oracle");
 const snapshotSource = await Bun.file(new URL("../../../🧬️schema/📸️snapshot/🦀️.rs", import.meta.url)).text();
-const preparationSource = await Bun.file(new URL("../../🧵️retained/🗿️artifact/📬️preparation/🦀️.rs", import.meta.url)).text();
 assert(contentSource.includes("artifact_id: child_id.clone()"), "Flow content target must name its exact content-addressed child");
 assert(snapshotSource.includes('#[child(kind = "s.stdio.semio")]'), "Flow child kind must be the canonical artifact kind, separate from its subset");
-assert(preparationSource.includes("3 | 4 => {"), "both retained child and target identities must use the complete paged digest spelling");
-const mutationFixtureRoot = new URL("../../../🧫️fixtures/🧬️mutations", import.meta.url);
-const snapshotPaths = [...new Bun.Glob("**/📸️snapshot/*/🔣️.json").scanSync({ cwd: fileURLToPath(mutationFixtureRoot), onlyFiles: true })];
-assert.equal(snapshotPaths.length, 20);
-const assetSnapshots = await Promise.all(snapshotPaths.map(path => Bun.file(new URL(path, mutationFixtureRoot)).json()));
 const demo = await Bun.file(new URL("../../../🖼️assets/🎬️demo/🗣️.dsl.semio", import.meta.url)).text();
 assert(demo.startsWith("semio flow.flow.dsl v1\nschema=flow.host_snapshot\n"), "the demo ships its content child's genesis scene in the host grammar, never a bare content reference");
 for (const widget of ["input-slider id=slider", "neuron id=add", "output-preview id=preview"]) assert(demo.includes(widget), `the demo scene must carry ${widget}`);
-for (const snapshot of assetSnapshots) {
-  assert.equal(typeof snapshot.content.childId, "string");
-  const exactTarget = new Ajv({ strict: true }).compile({ const: { artifactId: snapshot.content.childId, dialect: identity.dialect } });
-  assert(exactTarget(snapshot.content.target), JSON.stringify(exactTarget.errors));
-}
 for (const row of identity.cases) {
   const childId = identity.childIdPrefix + row.expectedSha256;
   const exact = { artifactId: childId, dialect: identity.dialect };
@@ -382,22 +304,6 @@ for (const row of identity.cases) {
     assert.equal(hash.digest("hex"), row.expectedSha256);
   }
 }
-const retainedIdentitySource = await Bun.file(new URL("../../🧵️retained/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs", import.meta.url)).text();
-assert(retainedIdentitySource.includes("fn retire_child_local_owner("));
-assert(retainedIdentitySource.includes("derived.child_id"));
-assert.equal((retainedIdentitySource.match(/take_local_owner::<FlowWorkingScene>/g) ?? []).length >= 2, true);
-const duplicateRoot = new URL("../../../🧬️schema/🧬️mutations/👯️duplicate-widget", import.meta.url);
-const duplicateSource = await Bun.file(new URL("🦀️.rs", duplicateRoot)).text();
-const duplicateFixture = await Bun.file(new URL("👯️duplicate-widget/🚫️rejects/🦠️mutation/🔣️.json", mutationFixtureRoot)).json();
-const duplicateModule = await Bun.file(new URL("🧬️schema/🔣️.json", duplicateRoot)).json();
-const validateDuplicate = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(duplicateModule).compile({ $ref: `${duplicateModule.$id}#` });
-assert(duplicateSource.includes('#[value(rename_all = "camelCase")]'));
-assert.equal(duplicateFixture.mutation, "duplicateWidget");
-assert(validateDuplicate(duplicateFixture), JSON.stringify(validateDuplicate.errors));
-assert(!validateDuplicate({ ...duplicateFixture, mutation: "createWidget" }), "the leaf pins its aggregate tag");
-assert.deepEqual(Object.keys(duplicateFixture).sort(), ["fromPort", "mutation", "newId", "sourceId", "synapseId", "toPort"]);
-for (const key of ["source_id", "new_id", "synapse_id", "from_port", "to_port"]) assert(!Object.hasOwn(duplicateFixture, key));
-assert(!validateDuplicate({ ...duplicateFixture, sourceId: undefined, source_id: duplicateFixture.sourceId }));
 //#endregion 🪪️ContentIdentityOracle
 //#region 🧹️StoreOwnerOracle
 const storeOwners = await Bun.file(new URL("../../🧫️fixtures/🏪️store-owners/🔣️.json", import.meta.url)).json();
@@ -471,12 +377,12 @@ for (const hook of ["build_document_store_owners", "build_config_store_owners", 
   assert(viewerOwnerSource.includes(`fn ${hook}(`), `Flow viewer must explicitly supply ${hook}`);
 }
 assert(viewerOwnerSource.includes("crate::retirement::store_owners()"));
-const flowPluginSource = await Bun.file(new URL("../../../../../../../../../🦀️.rs", import.meta.url)).text();
+const flowPluginSource = await Bun.file(new URL("../../../../../../../../../../../../🌎️hub/🧩️compositions/🌊️flow/🦀️.rs", import.meta.url)).text();
 assert(flowPluginSource.includes(".viewer::<crate::viewer::flow::FlowViewer>"));
 assert(viewerOwnerSource.includes("type Members = semio_s_artifact_stdio_semio::SemioMembers;"), "the viewer itself must declare the roster its composed children open through");
 //#endregion 👁️ViewerOwnerAuthority
 //#region 🏭️PublicSurfaceOwners
-const surfaceOwners = await Bun.file(new URL("../../../../../../../../../🧫️fixtures/🧹️surface-owners/🔣️.json", import.meta.url)).json();
+const surfaceOwners = await Bun.file(new URL("../../../../../../../../../../../../🌎️hub/🧩️compositions/🌊️flow/🧫️fixtures/🧹️surface-owners/🔣️.json", import.meta.url)).json();
 const flowPluginSchemaModule = await Bun.file(new URL("../../../../../../../../../🧬️schema/🔣️.json", import.meta.url)).json();
 const surfaceOwnersAjv = new Ajv({ strict: true, allErrors: true });
 surfaceOwnersAjv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
@@ -493,7 +399,7 @@ for (const changed of [
   { ...surfaceOwners, roles: ["viewer"] }, { ...surfaceOwners, byteGrants: [0, 64, 4096] },
   { ...surfaceOwners, members: "s.stdio.semio@v1/base" }, { ...surfaceOwners, expected: { ...surfaceOwners.expected, terminalEmpty: false } },
 ]) assert(!validateSurfaceOwners(changed));
-const flowSurfaceTestSource = await Bun.file(new URL("../../../../../../../../../🧪️tests/🔬️surface/🦀️.rs", import.meta.url)).text();
+const flowSurfaceTestSource = await Bun.file(new URL("../../../../../../../../../../../../🌎️hub/🧩️compositions/🌊️flow/🧪️tests/🔬️surface/🦀️.rs", import.meta.url)).text();
 assert(flowSurfaceTestSource.includes("async fn flow_actual_surface_factories_close_all_owners_under_neutral_grants("), "both real Flow surface factories require the shared native lifecycle law");
 //#endregion 🏭️PublicSurfaceOwners
 

@@ -9,7 +9,7 @@ use crate::ProgramSnapshot;
 /// `mutation.no-op` (empty diff) covers the only degenerate case: the value is unchanged.
 pub fn diff(payload: &ReplaceMeta, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     if base.meta == payload.new_meta {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "Document metadata already matches the requested value.").at([base.meta.document_id.clone()])]);
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "Document metadata already matches the requested value.").at([base.meta.document_id.clone()])]);
     }
     protocol::MutationOutcome::new(ProgramDiff { meta: Some(payload.new_meta.clone()), ..Default::default() })
 }

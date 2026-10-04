@@ -1,21 +1,5 @@
-/** 🎬️ Sequence mutation union assembled from direct payload owners. */
-import type { CreateStep } from "../../../🪜️step/🧬️schema/🧬️mutations/🌱️create-step/🟦️";
-import type { DeleteStep } from "../../../🪜️step/🧬️schema/🧬️mutations/🗑️delete-step/🟦️";
-import type { MoveStep } from "../../../🪜️step/🧬️schema/🧬️mutations/📍️move-step/🟦️";
-import type { EditStepParams } from "../../../🪜️step/🧬️schema/🧬️mutations/🔧️edit-step-params/🟦️";
-import type { ChangeStepCollapsed } from "../../../🪜️step/🧬️schema/🧬️mutations/🗂️change-step-collapsed/🟦️";
-import type { ConnectSteps } from "../../../🔗️dependency/🧬️schema/🧬️mutations/🔗️connect/🟦️";
-import type { DisconnectSteps } from "../../../🔗️dependency/🧬️schema/🧬️mutations/✂️disconnect/🟦️";
-import type { DuplicateStep } from "../../../🪜️step/🧬️schema/🧬️mutations/🧬️duplicate-step/🟦️";
+/** 🎬️ Sequence parent mutation union — empty: content edits are child-lane leaves of the composed `content` flow child. */
 
 //#region 🧬️Aggregate
-export type SequenceMutation =
-  | ({ mutation: "createStep" } & CreateStep)
-  | ({ mutation: "deleteStep" } & DeleteStep)
-  | ({ mutation: "moveStep" } & MoveStep)
-  | ({ mutation: "editStepParams" } & EditStepParams)
-  | ({ mutation: "changeStepCollapsed" } & ChangeStepCollapsed)
-  | ({ mutation: "connectSteps" } & ConnectSteps)
-  | ({ mutation: "disconnectSteps" } & DisconnectSteps)
-  | ({ mutation: "duplicateStep" } & DuplicateStep);
+export type SequenceMutation = never;
 //#endregion 🧬️Aggregate

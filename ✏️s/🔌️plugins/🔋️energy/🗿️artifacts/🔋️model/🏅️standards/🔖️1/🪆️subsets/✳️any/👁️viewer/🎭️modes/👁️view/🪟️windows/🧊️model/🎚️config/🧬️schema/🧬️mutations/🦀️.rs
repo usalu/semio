@@ -5,7 +5,7 @@ use super::{EnergyModelViewerCameraPose, EnergyModelViewerWindowConfig};
 mod set_camera;
 pub use set_camera::SetCamera;
 
-#[derive(Clone, Copy, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslOps, dsl::Mutations)]
+#[derive(Clone, Copy, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "kind", rename_all = "kebab-case")]
 #[mutations(snapshot = EnergyModelViewerWindowConfig, diff = EnergyModelViewerWindowConfig, schema = "energy.model3dviewerwindowconfig")]
@@ -15,11 +15,11 @@ pub enum EnergyModelViewerWindowConfigMutation {
 }
 
 impl protocol::OpText for EnergyModelViewerWindowConfigMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        dsl::variants_text::parse_op(line)
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        semio_framework_dsl_record::variants_text::parse_op(line)
     }
     fn print_op(&self) -> String {
-        dsl::variants_text::print_op(self)
+        semio_framework_dsl_record::variants_text::print_op(self)
     }
 }
 

@@ -20,7 +20,7 @@ pub fn diff(payload: &super::UpdateCameraCalibration, base: &RemodelingSnapshot)
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Camera calibration \"{}\" has non-finite intrinsics or distortion.", payload.camera.id), [payload.camera.id.clone()]);
     }
     if existing == &payload.camera {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Camera calibration \"{}\" is already up to date.", payload.camera.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Camera calibration \"{}\" is already up to date.", payload.camera.id));
     }
     let mut calibration = base.calibration.clone();
     if let Some(existing) = calibration.cameras.iter_mut().find(|camera| camera.id == payload.camera.id) {

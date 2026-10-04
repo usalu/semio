@@ -25,7 +25,7 @@ pub use set_vector_style::SetVectorStyle;
 //#endregion 🧬️Leaves
 
 //#region 🧬️Aggregate
-#[derive(Clone, Debug, PartialEq, dsl::Mutations, dsl::DslOps, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, dsl::Mutations, semio_framework_dsl_record_derive::DslEnum, ToValue, FromValue)]
 #[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[mutations(snapshot = MapWindowConfig, diff = MapWindowConfigDiff, schema = "gis.mapwindowcfg")]
 pub enum MapWindowConfigMutation {

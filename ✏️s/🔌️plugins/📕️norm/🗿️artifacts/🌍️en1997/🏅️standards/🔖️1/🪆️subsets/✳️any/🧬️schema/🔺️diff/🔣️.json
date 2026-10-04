@@ -6,88 +6,212 @@
   "additionalProperties": false,
   "properties": {
     "artifact": {
-      "type": [
-        "object",
-        "null"
-      ]
+      "anyOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/artifact.json"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
     },
     "structureId": {
-      "type": [
-        "string",
-        "null"
-      ]
+      "anyOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/properties/structureId"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
     },
     "geotechnicalCategory": {
-      "type": [
-        "integer",
-        "null"
-      ]
+      "anyOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/properties/geotechnicalCategory"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
     },
     "designSituation": {
-      "type": [
-        "string",
-        "null"
-      ]
+      "anyOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/properties/designSituation"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
     },
     "designApproach": {
-      "type": [
-        "string",
-        "null"
-      ]
+      "anyOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/properties/designApproach"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
     },
     "annex": {
-      "type": [
-        "string",
-        "null"
-      ]
+      "anyOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/properties/annex"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
     },
     "groundwaterLevel": {
-      "type": [
-        "number",
-        "null"
-      ]
+      "anyOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/properties/groundwaterLevel"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
     },
     "investigationDepth": {
-      "type": [
-        "number",
-        "null"
-      ]
+      "anyOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/properties/investigationDepth"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
     },
     "layers": {
-      "type": [
-        "object",
-        "null"
-      ]
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "values"
+          ],
+          "properties": {
+            "values": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/properties/layers"
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
     },
     "footings": {
-      "type": [
-        "object",
-        "null"
-      ]
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "values"
+          ],
+          "properties": {
+            "values": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/properties/footings"
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
     },
     "piles": {
-      "type": [
-        "object",
-        "null"
-      ]
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "values"
+          ],
+          "properties": {
+            "values": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/properties/piles"
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
     },
     "retainingWalls": {
-      "type": [
-        "object",
-        "null"
-      ]
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "values"
+          ],
+          "properties": {
+            "values": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/properties/retainingWalls"
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
     },
     "slopes": {
-      "type": [
-        "object",
-        "null"
-      ]
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "values"
+          ],
+          "properties": {
+            "values": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/properties/slopes"
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
     },
     "upliftCases": {
-      "type": [
-        "object",
-        "null"
-      ]
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "values"
+          ],
+          "properties": {
+            "values": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/properties/upliftCases"
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
     }
   }
 }

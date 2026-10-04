@@ -4,9 +4,12 @@ use crate::mutations::GisTerrainMutation;
 use crate::GisTerrainSnapshot;
 
 //#region 🔹Inverse
-/// ↩️ Undo restores `base.imported_features_json` — captured from pre-state, never from the
+/// ↩️ Undo restores `base.imported_map` — captured from pre-state, never from the
 /// applied diff.
-pub fn inverse(_payload: &ChangeImportedFeatures, base: &GisTerrainSnapshot) -> Vec<GisTerrainMutation> {
-    vec![GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures { new_imported_features_json: base.imported_features_json.clone() })]
+pub fn inverse(_payload: &ChangeImportedFeatures, base: &GisTerrainSnapshot) -> Result<Vec<GisTerrainMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
+    vec![GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures { new_imported_map: base.imported_map.clone() })]
+
+    })())
 }
 //#endregion 🔹Inverse

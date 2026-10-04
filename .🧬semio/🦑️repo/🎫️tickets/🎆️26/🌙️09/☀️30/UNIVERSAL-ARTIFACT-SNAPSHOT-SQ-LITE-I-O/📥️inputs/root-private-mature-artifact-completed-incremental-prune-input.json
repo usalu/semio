@@ -1,0 +1,101 @@
+{
+  "scope": "Ticket-private mature completed artifact incremental caches only; binary/library/build/input/receipt/source retained; no shared framework or working directories",
+  "paths": [
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_deflate-1yye25wxskmr6/s-hmvwyj3xw0-17x9cww-3fdnxema5cpuyypdvgcm50q72",
+      "parent": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_deflate-1yye25wxskmr6",
+      "mtimeNs": 1791084723318695331,
+      "bytes": 69272355
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_trinity_jack-1rw2nqkfk49ut/s-hmvwz4q6k4-0i9xjlg-2zntm4vr6mqqv8nluyc6buzip",
+      "parent": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_trinity_jack-1rw2nqkfk49ut",
+      "mtimeNs": 1791084765095434416,
+      "bytes": 129838996
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_png-2h7193jh0atqt/s-hmvwyx8y9v-1jg5adb-2e27rvj3fo280aik1ihqh3rsy",
+      "parent": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_png-2h7193jh0atqt",
+      "mtimeNs": 1791084748334307655,
+      "bytes": 77254273
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_pdf-0kh5lpdga9460/s-hmvwymhohx-1bo57yn-euc8g101smpnpiwvl04v0h2wy",
+      "parent": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_pdf-0kh5lpdga9460",
+      "mtimeNs": 1791084770907455406,
+      "bytes": 673733583
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_md-3om557d61c6pk/s-hmvwylkmmv-0zx2goe-5freaeo2wvt7908fvrocxr7g8",
+      "parent": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_md-3om557d61c6pk",
+      "mtimeNs": 1791084731350795948,
+      "bytes": 98191702
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_xml-052c2tfwnorpd/s-hmvwyll5u9-1wbmlun-9tda0xed38whvde2efttz9gzn",
+      "parent": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_xml-052c2tfwnorpd",
+      "mtimeNs": 1791084737034432642,
+      "bytes": 127842389
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_csv-0xnymyzpshf3q/s-hmvwylmjkd-0w9vcxr-4dbqju42yhxq39fquwlcrhy87",
+      "parent": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_csv-0xnymyzpshf3q",
+      "mtimeNs": 1791084729286566808,
+      "bytes": 69542660
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_binary-0jk7a1hlrmpbb/s-hmvwyfv3ve-1mk5lwh-6l24mvq39m6ic7oqv4eyoe993",
+      "parent": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_binary-0jk7a1hlrmpbb",
+      "mtimeNs": 1791084716428911883,
+      "bytes": 56485620
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_contract-3opulb2bto8v5/s-hmvwyd6m34-0hu0ewl-4x4fgnwv33uoabsy0yxc574jx",
+      "parent": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_contract-3opulb2bto8v5",
+      "mtimeNs": 1791084712162140979,
+      "bytes": 81396165
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_semio-2mdcw8u92tpne/s-hmvwygh1fu-0edlhwq-8cvm9pu31fi15fepkp6037h02",
+      "parent": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_semio-2mdcw8u92tpne",
+      "mtimeNs": 1791084791681656894,
+      "bytes": 1695574345
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_txt-2aeyx25rwlfiy/s-hmvwyj3qkz-0bbw8si-0q7y04sfv7xgna0l4zmqn44fn",
+      "parent": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_txt-2aeyx25rwlfiy",
+      "mtimeNs": 1791084722957566971,
+      "bytes": 61810493
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_docx-00cdyfsjh3x7q/s-hmvwyyqpvv-1tnwvk9-e59yb97zu5h4uawyhypbzqxks",
+      "parent": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_docx-00cdyfsjh3x7q",
+      "mtimeNs": 1791084760323469450,
+      "bytes": 161425689
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_json-2mbur8xjdzl8w/s-hmvwylktq5-1p5h69k-2i0dk2kjlydad47rwyc68wyu2",
+      "parent": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_json-2mbur8xjdzl8w",
+      "mtimeNs": 1791084735339382065,
+      "bytes": 111321191
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_svg-3pddkmq90h5hr/s-hmvwyreu4i-1imbweh-d8918ex4pvxb9pnpvdstbuarl",
+      "parent": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_svg-3pddkmq90h5hr",
+      "mtimeNs": 1791084745686458167,
+      "bytes": 135540620
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_zip-2y8qam0j3sl5p/s-hmvwyr2h8u-0elcjpp-243vjr9taz82pjcd7einjmyu7",
+      "parent": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_zip-2y8qam0j3sl5p",
+      "mtimeNs": 1791084745831200911,
+      "bytes": 118413250
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_trinity_rewriting-15apneqsbhg49/s-hmvwz87142-159o2rx-docqlcu1limlgytas3rdr5ugf",
+      "parent": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_trinity_rewriting-15apneqsbhg49",
+      "mtimeNs": 1791084771525888190,
+      "bytes": 108680399
+    }
+  ]
+}

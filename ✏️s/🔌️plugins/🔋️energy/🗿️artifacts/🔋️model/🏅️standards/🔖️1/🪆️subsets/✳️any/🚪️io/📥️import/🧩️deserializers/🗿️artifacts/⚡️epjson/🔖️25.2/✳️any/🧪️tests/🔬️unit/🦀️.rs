@@ -3,9 +3,9 @@ use crate::io::export::serializers::artifacts::epjson::v25_2::any::encode_model;
 
 fn round_trip(case: &str) -> (String, String) {
     let model = crate::bestest::model(case).expect("bestest case");
-    let first = pack::json::to_string_pretty(&encode_model(&model));
-    let imported = decode_model(&pack::json::parse(&first).expect("parse")).expect("decode");
-    let second = pack::json::to_string_pretty(&encode_model(&imported.model));
+    let first = semio_framework_pack_json::to_string_pretty(&encode_model(&model));
+    let imported = decode_model(&semio_framework_pack_json::parse(&first, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("parse")).expect("decode");
+    let second = semio_framework_pack_json::to_string_pretty(&encode_model(&imported.model));
     (first, second)
 }
 

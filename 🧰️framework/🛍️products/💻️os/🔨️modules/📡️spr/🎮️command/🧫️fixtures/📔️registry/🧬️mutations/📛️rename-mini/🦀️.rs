@@ -19,9 +19,12 @@ impl MutationKind<MiniDoc, MiniMutation> for RenameMini {
     fn diff(&self, _base: &MiniDoc) -> MutationOutcome<MiniDiff> {
         MutationOutcome::new(MiniDiff { name: Some(self.new_name.clone()) })
     }
-    fn inverse(&self, base: &MiniDoc) -> Vec<MiniMutation> {
+    fn inverse(&self, base: &MiniDoc) -> Result<Vec<MiniMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![Self { new_name: base.name.clone() }.into()]
-    }
+    
+    })())
+}
     fn label(&self) -> crate::LocalizedLabel {
         crate::LocalizedLabel::native(&format!("Rename mini to \"{}\"", self.new_name), &format!("Mini in \"{}\" umbenennen", self.new_name))
     }

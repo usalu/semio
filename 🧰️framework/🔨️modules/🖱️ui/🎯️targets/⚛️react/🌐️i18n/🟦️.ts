@@ -654,6 +654,8 @@ export const uiChromeTranslationBundles = {
         },
         host: {
           emptyScene: { label: { normal: "Keine Szene", beginner: "Keine Szene" } },
+          inputDraftConflict: { label: { normal: "Diese Änderung konnte nicht übernommen werden. Dein Entwurf bleibt erhalten. Verwirf ihn oder drücke Escape, um den aktuellen Wert zu verwenden.", beginner: "Diese Änderung konnte nicht übernommen werden. Dein Entwurf bleibt erhalten. Verwirf ihn oder drücke Escape, um den aktuellen Wert zu verwenden." } },
+          inputDraftDiscard: { label: { normal: "Entwurf verwerfen", beginner: "Entwurf verwerfen" } },
           tableRowRange: { label: { normal: "Zeilen {{from}}–{{to}} von {{total}}", beginner: "Zeilen {{from}} bis {{to}} von {{total}}" } },
           preview: { label: { normal: "Vorschau", beginner: "Vorschau" } },
           sourceAvailable: { label: { normal: "Quelle verfügbar", beginner: "Quelle verfügbar" } },
@@ -959,7 +961,6 @@ export const uiChromeTranslationBundles = {
             blocked: { label: { normal: "Fehler müssen vor dem Abschließen behoben oder zurückgezogen werden", beginner: "Fehler müssen vor dem Abschließen behoben oder zurückgezogen werden" } },
             ready: { label: { normal: "Bereit zum Abschließen", beginner: "Bereit zum Abschließen" } },
           },
-          fault: { label: { normal: "Neuanwendung fehlgeschlagen ({{code}})", beginner: "Die Neuanwendung ist fehlgeschlagen ({{code}})" } },
           accepted: { label: { normal: "Übernommene Änderungen: {{count}}", beginner: "Übernommene Änderungen: {{count}}" } },
           accept: { label: { normal: "Entwurf übernehmen", beginner: "Entwurf übernehmen und spätere Mutationen neu anwenden" } },
           discard: { label: { normal: "Entwurf verwerfen", beginner: "Entwurf verwerfen" } },
@@ -1676,6 +1677,8 @@ export const uiChromeTranslationBundles = {
         },
         host: {
           emptyScene: { label: { normal: "No scene", beginner: "No scene" } },
+          inputDraftConflict: { label: { normal: "This edit could not be applied. Your draft is preserved. Discard it or press Escape to use the current value.", beginner: "This edit could not be applied. Your draft is preserved. Discard it or press Escape to use the current value." } },
+          inputDraftDiscard: { label: { normal: "Discard draft", beginner: "Discard draft" } },
           tableRowRange: { label: { normal: "Rows {{from}}–{{to}} of {{total}}", beginner: "Rows {{from}} to {{to}} of {{total}}" } },
           preview: { label: { normal: "Preview", beginner: "Preview" } },
           sourceAvailable: { label: { normal: "Source available", beginner: "Source available" } },
@@ -1981,7 +1984,6 @@ export const uiChromeTranslationBundles = {
             blocked: { label: { normal: "Errors must be fixed or withdrawn before finalizing", beginner: "Errors must be fixed or withdrawn before finalizing" } },
             ready: { label: { normal: "Ready to finalize", beginner: "Ready to finalize" } },
           },
-          fault: { label: { normal: "Replay failed ({{code}})", beginner: "The replay failed ({{code}})" } },
           accepted: { label: { normal: "Accepted changes: {{count}}", beginner: "Accepted changes: {{count}}" } },
           accept: { label: { normal: "Accept draft", beginner: "Accept the draft and replay later mutations" } },
           discard: { label: { normal: "Discard draft", beginner: "Discard draft" } },

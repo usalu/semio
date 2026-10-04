@@ -20,9 +20,12 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for RenameLayout {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_rename_layout(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
-        inverse_rename_layout(self, base)
-    }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok({
+        inverse_rename_layout(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename document to \"{}\"", self.new_name), &format!("Dokument in \"{}\" umbenennen", self.new_name))
     }
@@ -32,14 +35,17 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for RenameLayout {
 //#region ✏️RenameLayout
 pub fn diff_rename_layout(payload: &RenameLayout, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     if base.name == payload.new_name {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Layout already has that name.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Layout already has that name.");
     }
     protocol::MutationOutcome::new(LayoutDiff { name: Some(payload.new_name.clone()), ..Default::default() })
 }
 //#endregion ✏️RenameLayout
 
 //#region ✏️RenameLayout
-pub fn inverse_rename_layout(_payload: &RenameLayout, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_rename_layout(_payload: &RenameLayout, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![LayoutMutation::RenameLayout(RenameLayout { new_name: base.name.clone() })]
+
+    })())
 }
 //#endregion ✏️RenameLayout

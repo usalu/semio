@@ -19,9 +19,12 @@ impl protocol::MutationKind<MdSnapshot, MdMutation> for SetInlines {
     fn diff(&self, base: &MdSnapshot) -> protocol::MutationOutcome<<MdMutation as Mutation<MdSnapshot>>::Diff> {
         agg_diff(&MdMutation::SetInlines(self.clone()), base)
     }
-    fn inverse(&self, base: &MdSnapshot) -> Vec<MdMutation> {
-        agg_inverse(&MdMutation::SetInlines(self.clone()), base)
-    }
+    fn inverse(&self, base: &MdSnapshot) -> Result<Vec<MdMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&MdMutation::SetInlines(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set inlines", "Inline-Elemente setzen")
     }

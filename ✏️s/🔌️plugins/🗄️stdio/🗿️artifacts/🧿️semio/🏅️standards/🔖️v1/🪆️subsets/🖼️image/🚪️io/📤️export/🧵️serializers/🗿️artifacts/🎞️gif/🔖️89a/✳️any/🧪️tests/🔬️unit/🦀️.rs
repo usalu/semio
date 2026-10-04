@@ -18,7 +18,7 @@ fn sample_semio() -> SemioImageSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn quantizes_and_real_byte_round_trips_through_gif_codec() {
     let semio = sample_semio();
-    let gif = semio_framework_plugin::resolve_ready(SemioImageToGif::serialize(&semio)).expect("serialize");
+    let gif = ::semio_framework_async::poll::resolve_ready(SemioImageToGif::serialize(&semio)).expect("serialize");
     assert_eq!(gif.frames.len(), 1);
     assert_eq!(gif.frames[0].indices.len(), 2);
     assert_eq!(gif.loop_count, Some(0));
@@ -41,5 +41,5 @@ async fn errors_past_256_distinct_colors() {
         rgba.extend_from_slice(&[(i % 256) as u8, ((i / 2) % 256) as u8, ((i / 3) % 256) as u8, 255]);
     }
     let semio = SemioImageSnapshot { width: 257, height: 1, frames: vec![SemioImageFrame { delay_ms: 0, rgba8: rgba }], ..SemioImageSnapshot::default() };
-    assert!(semio_framework_plugin::resolve_ready(SemioImageToGif::serialize(&semio)).is_err());
+    assert!(::semio_framework_async::poll::resolve_ready(SemioImageToGif::serialize(&semio)).is_err());
 }

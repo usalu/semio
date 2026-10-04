@@ -74,7 +74,7 @@ mod window_kits_tests {
     #[semio_framework_async_macros::async_test]
     async fn editable_variants_declare_exactly_their_frozen_command_id() {
         let cases: [(&str, WindowKindDefinition); 6] = [
-            ("replace-text", TextWindowKit::editable_window_kind()),
+            ("textEdit", TextWindowKit::editable_window_kind()),
             ("set-cell", TableWindowKit::editable_window_kind()),
             ("set-node", TreeWindowKit::editable_window_kind()),
             ("set-pixel-region", ImageWindowKit::editable_window_kind()),
@@ -95,7 +95,13 @@ mod window_kits_tests {
     #[semio_framework_async_macros::async_test]
     async fn text_kit_renders_an_editable_window_as_an_explicit_draft() {
         for (locale, apply, discard) in [(Locale::En, "Apply", "Discard"), (Locale::De, "Anwenden", "Verwerfen")] {
-            let view = TextEditView { surface_id: TextWindowKit::KIND_ID.into(), text: "hello world".into(), language: Some("markdown".into()), revision: Some("r1".into()) };
+            let view = TextEditView {
+                surface_id: TextWindowKit::KIND_ID.into(),
+                text: "hello world".into(),
+                language: Some("markdown".into()),
+                revision: Some("r1".into()),
+                publication_revision: semio_framework_ui_contract::UiPublicationRevision(u64::MAX),
+            };
             let node = TextWindowKit::render_editable(&view, locale).expect("bounded fixture");
             let Component::Surface(props) = node.component else { panic!("expected Surface") };
             let mut scene: semio_framework_ui_scene::TextEditorScene = semio_framework_ui_scene::decode(&props).expect("text editor scene");
@@ -104,14 +110,18 @@ mod window_kits_tests {
             }
             assert_eq!((scene.buffer.as_str(), scene.language.as_deref()), ("hello world", Some("markdown")));
             let settings: serde_json::Value = serde_json::from_str(scene.settings_json.as_deref().expect("draft settings")).expect("settings json");
-            assert_eq!((settings["readOnly"].as_bool(), settings["commit"].as_str(), settings["editAction"].as_str(), settings["editArgument"].as_str()), (Some(false), Some("explicit"), Some(TextWindowKit::EDIT_ACTION_ID), Some(TextWindowKit::TEXT_ARGUMENT)));
+            assert_eq!(
+                (settings["readOnly"].as_bool(), settings["commit"].as_str(), settings["editAction"].as_str(), settings["editArgument"].as_str()),
+                (Some(false), Some("explicit"), Some(TextWindowKit::EDIT_ACTION_ID), Some(TextWindowKit::TEXT_ARGUMENT))
+            );
             assert_eq!(settings["editArguments"], serde_json::json!({ "revision": "r1" }));
+            assert_eq!(settings["publicationRevision"], u64::MAX.to_string());
             assert_eq!((settings["applyLabel"].as_str(), settings["discardLabel"].as_str()), (Some(apply), Some(discard)), "{locale:?}");
-            for key in ["conflictLabel", "applyingLabel", "cancelLabel", "failedLabel"] {
+            for key in ["conflictLabel", "applyingLabel", "cancelLabel", "failedLabel", "syntaxErrorLabel", "validationErrorLabel", "pathLabel", "lineLabel", "columnLabel"] {
                 assert!(settings[key].as_str().is_some_and(|label| !label.is_empty()), "{key} in {locale:?}");
             }
         }
-        let view = TextEditView { surface_id: "s".into(), text: String::new(), language: None, revision: None };
+        let view = TextEditView { surface_id: "s".into(), text: String::new(), language: None, revision: None, publication_revision: semio_framework_ui_contract::UiPublicationRevision(7) };
         let node = TextWindowKit::render_editable(&view, Locale::En).expect("bounded fixture");
         let Component::Surface(props) = node.component else { panic!("expected Surface") };
         let mut scene: semio_framework_ui_scene::TextEditorScene = semio_framework_ui_scene::decode(&props).expect("text editor scene");
@@ -120,6 +130,7 @@ mod window_kits_tests {
         }
         let settings: serde_json::Value = serde_json::from_str(scene.settings_json.as_deref().expect("draft settings")).expect("settings json");
         assert!(settings.get("editArguments").is_none(), "no revision, no arguments");
+        assert_eq!(settings["publicationRevision"], "7");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -242,7 +253,10 @@ mod window_kits_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn table_kit_render_rows_serves_exactly_the_hosts_window_on_the_shared_ledger() {
-        let view = ViewModel { tree_windows: vec![TreeWindowRequest { body_key: "body".to_string(), node_key: TableWindowKit::KIND_ID.to_string(), open: Some(true), offset: 200, rows: 20 }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+        let view = ViewModel {
+            tree_windows: vec![TreeWindowRequest { body_key: "body".to_string(), node_key: TableWindowKit::KIND_ID.to_string(), open: Some(true), offset: 200, rows: 20 }],
+            ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        };
         let windows = TreeWindows::for_body(&view, "body");
         let node = table_fixture(&windows, 500);
         let Component::Table(props) = &node.component else { panic!("expected Table") };
@@ -254,7 +268,11 @@ mod window_kits_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn table_kit_windowed_editable_rows_materialize_only_the_requested_slice() {
-        let view = ViewModel { tree_windows: vec![TreeWindowRequest { body_key: "body".to_string(), node_key: TableWindowKit::KIND_ID.to_string(), open: Some(true), offset: 200, rows: 3 }], locale: Locale::En, ..ViewModel::new(Locale::En, semio_framework_ui_locale::Terminology::Native) };
+        let view = ViewModel {
+            tree_windows: vec![TreeWindowRequest { body_key: "body".to_string(), node_key: TableWindowKit::KIND_ID.to_string(), open: Some(true), offset: 200, rows: 3 }],
+            locale: Locale::En,
+            ..ViewModel::new(Locale::En, semio_framework_ui_locale::Terminology::Native)
+        };
         let windows = TreeWindows::for_body(&view, "body");
         let node = TableWindowKit::render_indexed_rows(&windows, "Values", &["Value"], None, 500, |row| {
             let mut args = UiMapBuilder::try_new().expect("arguments");
@@ -266,7 +284,14 @@ mod window_kits_tests {
             remove_args.try_insert("revision".into(), UiValue::Text(UiText::try_from_str("0123456789abcdef").unwrap())).expect("revision");
             let remove = row_action("trash-2", "Remove row", "remove-row", RowActionPlacement::Row)?;
             let target = row_target("s.stdio.csv@rfc4180/*#editor", Some(UiValue::Map(remove_args.finish())), None)?;
-            editable_table_window_row(&format!("row-{row}"), "s.stdio.csv@rfc4180/*#editor", Locale::En, [WindowedEditableTableCell::new(format!("value-{row}"), "Value", "set-cell", UiValue::Map(args.finish()))], [remove], Some(target))
+            editable_table_window_row(
+                &format!("row-{row}"),
+                "s.stdio.csv@rfc4180/*#editor",
+                Locale::En,
+                [WindowedEditableTableCell::new(format!("value-{row}"), "Value", "set-cell", UiValue::Map(args.finish())).publication_revision(semio_framework_ui_contract::UiPublicationRevision(11))],
+                [remove],
+                Some(target),
+            )
         })
         .expect("windowed editable table");
         let Component::Table(props) = &node.component else { panic!("expected table") };
@@ -289,6 +314,33 @@ mod window_kits_tests {
         let Some(UiValue::Map(arguments)) = &binding.args else { panic!("remove address is a map") };
         assert!(matches!(arguments.iter().find_map(|(key,value)|(key.as_str()=="row").then_some(value)), Some(UiValue::Number(value)) if value == 200.0));
         assert!(matches!(arguments.iter().find_map(|(key,value)|(key.as_str()=="revision").then_some(value)), Some(UiValue::Text(value)) if value.as_str() == "0123456789abcdef"));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn table_cell_draft_target_tracks_semantic_address_without_revision() {
+        fn target(controller_id: &str, row_key: &str, column: usize, action_id: &str, revision: &str) -> UiText {
+            let mut args = UiMapBuilder::try_new().expect("arguments");
+            args.try_insert("revision".into(), UiValue::Text(UiText::try_from_str(revision).expect("revision"))).expect("revision argument");
+            let row = editable_table_window_row_at(
+                row_key,
+                controller_id,
+                Locale::En,
+                column,
+                [WindowedEditableTableCell::new("draft", "Value", action_id, UiValue::Map(args.finish())).publication_revision(semio_framework_ui_contract::UiPublicationRevision(11))],
+                Vec::new(),
+                None,
+            )
+            .expect("editable row");
+            let Component::Input(props) = &row.children[0].component else { panic!("editable input") };
+            props.draft_target.clone().expect("semantic draft target")
+        }
+
+        let first = target("s.stdio.csv@rfc4180/*#editor", "row-7", 3, "set-cell", "revision-a");
+        assert_eq!(first, target("s.stdio.csv@rfc4180/*#editor", "row-7", 3, "set-cell", "revision-b"));
+        assert_ne!(first, target("s.stdio.csv@rfc4180/*#editor", "row-8", 3, "set-cell", "revision-a"));
+        assert_ne!(first, target("s.stdio.csv@rfc4180/*#editor", "row-7", 4, "set-cell", "revision-a"));
+        assert_ne!(first, target("s.stdio.csv@rfc4180/*#editor", "row-7", 3, "replace-cell", "revision-a"));
+        assert_ne!(first, target("s.stdio.tsv@ietf/*#editor", "row-7", 3, "set-cell", "revision-a"));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -326,7 +378,7 @@ mod window_kits_tests {
                         let mut args = UiMapBuilder::try_new().expect("arguments");
                         args.try_insert("row".into(), UiValue::Number(row as f64)).expect("row");
                         args.try_insert("column".into(), UiValue::Number(column as f64)).expect("column");
-                        Ok(WindowedEditableTableCell::new(format!("r{row}c{column}"), format!("Column {}", column + 1), "set-cell", UiValue::Map(args.finish())))
+                        Ok(WindowedEditableTableCell::new(format!("r{row}c{column}"), format!("Column {}", column + 1), "set-cell", UiValue::Map(args.finish())).publication_revision(semio_framework_ui_contract::UiPublicationRevision(11)))
                     })
                     .collect::<UiAssemblyResult<Vec<_>>>()?;
                 editable_table_window_row_at(&format!("row-{row}"), "s.stdio.csv@rfc4180/*#editor", Locale::En, offset, cells, Vec::new(), None)
@@ -376,7 +428,10 @@ mod window_kits_tests {
     }
 
     fn requested(rows: u32) -> ViewModel {
-        ViewModel { tree_windows: vec![TreeWindowRequest { body_key: "body".to_string(), node_key: TableWindowKit::KIND_ID.to_string(), open: Some(true), offset: 0, rows }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
+        ViewModel {
+            tree_windows: vec![TreeWindowRequest { body_key: "body".to_string(), node_key: TableWindowKit::KIND_ID.to_string(), open: Some(true), offset: 0, rows }],
+            ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        }
     }
 
     #[semio_framework_async_macros::async_test]
@@ -426,7 +481,8 @@ mod window_kits_tests {
             let id = format!("{index:0id_length$}");
             let mut args = UiMapBuilder::try_new().ok_or_else(|| ui_assembly_error("fixture.args"))?;
             args.push(argument.clone(), UiValue::Text(UiText::try_from_str(&id).ok_or_else(|| ui_assembly_error("fixture.arg"))?)).map_err(|_| ui_assembly_error("fixture.arg"))?;
-            let row_actions = actions.iter().map(|action| row_action(action["icon"].as_str().expect("icon"), action["label"].as_str().expect("label"), action["verb"].as_str().expect("verb"), RowActionPlacement::Row)).collect::<UiAssemblyResult<Vec<_>>>()?;
+            let row_actions =
+                actions.iter().map(|action| row_action(action["icon"].as_str().expect("icon"), action["label"].as_str().expect("label"), action["verb"].as_str().expect("verb"), RowActionPlacement::Row)).collect::<UiAssemblyResult<Vec<_>>>()?;
             let target = row_target(&controller, Some(UiValue::Map(args.finish())), row["activation"].as_str())?;
             table_window_row(&format!("{}{id}", text(&row["keyPrefix"])), &cells.iter().map(String::as_str).collect::<Vec<_>>(), row_actions, Some(target))
         };
@@ -496,6 +552,20 @@ mod window_kits_tests {
         let node = ImageWindowKit::render(&view).expect("bounded fixture");
         let Component::Image(image) = node.component else { panic!("expected Image") };
         assert_eq!(image.src.as_str(), "data:image/png;base64,QUJD");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn image_kit_renders_the_neutral_localized_unavailable_witness_without_unmounting() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🪟️window-kits/🖼️image/🧫️fixtures/🚫️unavailable/🔣️.json")).expect("language-neutral fixture");
+        for (locale, key) in [(Locale::En, "en"), (Locale::De, "de")] {
+            let node = ImageWindowKit::render_unavailable(locale).expect("unavailable preview remains a renderable image window");
+            assert_eq!(node.key.as_str(), fixture["windowKey"].as_str().unwrap());
+            assert_eq!(node.children.len(), 1);
+            let unavailable = &node.children[0];
+            assert_eq!(unavailable.key.as_str(), fixture["unavailableNodeKey"].as_str().unwrap());
+            let Component::Text(text) = &unavailable.component else { panic!("unavailable preview is explicit text") };
+            assert_eq!(text.value.0.as_str(), fixture["labels"][key].as_str().unwrap());
+        }
     }
 
     /// 🖼️ A composite larger than one `UiText` renders through pages instead of refusing the window.
@@ -577,7 +647,8 @@ mod window_kits_tests {
                 Some(arguments) => EditableDocumentPage::with_arguments(page_index, item_index, text, serde_json::from_value(arguments.clone()).expect("typed static arguments")),
                 None => EditableDocumentPage::new(page_index, item_index, text),
             };
-            let node = DocumentWindowKit::render_editable_windowed(&EditableDocumentView { pages: vec![page] }, &TreeWindows::unhosted(), locale).expect("editable document");
+            let node = DocumentWindowKit::render_editable_windowed(&EditableDocumentView { pages: vec![page], publication_revision: semio_framework_ui_contract::UiPublicationRevision(18_364_758_544_493_064_720) }, &TreeWindows::unhosted(), locale)
+                .expect("editable document");
             let surface = first_surface(&node).expect("prefilled draft surface");
             let Component::Surface(props) = &surface.component else { unreachable!() };
             let mut scene: semio_framework_ui_scene::TextEditorScene = semio_framework_ui_scene::decode(props).expect("text scene");
@@ -590,6 +661,7 @@ mod window_kits_tests {
             assert_eq!(settings["editAction"], "set-page");
             assert_eq!(settings["editArgument"], "text");
             assert_eq!(settings["commit"], "explicit");
+            assert_eq!(settings["publicationRevision"], "18364758544493064720");
             match case.get("staticArguments") {
                 Some(arguments) => assert_eq!(&settings["editArguments"], arguments),
                 None => {
@@ -612,7 +684,10 @@ mod window_kits_tests {
         let case = &fixture["cases"][2];
         let source = case["text"].as_str().unwrap().repeat(case["repeat"].as_u64().unwrap() as usize);
         let view = DocumentView { pages: (0..500).map(|index| DocumentPage { text: index.to_string() }).collect() };
-        let state = ViewModel { tree_windows: vec![TreeWindowRequest { body_key: "body".into(), node_key: DocumentWindowKit::KIND_ID.into(), open: Some(true), offset: 400, rows: 10 }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+        let state = ViewModel {
+            tree_windows: vec![TreeWindowRequest { body_key: "body".into(), node_key: DocumentWindowKit::KIND_ID.into(), open: Some(true), offset: 400, rows: 10 }],
+            ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+        };
         let node = DocumentWindowKit::render_windowed(&view, &TreeWindows::for_body(&state, "body")).expect("large document page range");
         let Component::TreeSection(props) = &node.component else { panic!("windowed pages") };
         assert_eq!(props.window.map(|window| (window.total, window.offset)), Some((500, 400)));

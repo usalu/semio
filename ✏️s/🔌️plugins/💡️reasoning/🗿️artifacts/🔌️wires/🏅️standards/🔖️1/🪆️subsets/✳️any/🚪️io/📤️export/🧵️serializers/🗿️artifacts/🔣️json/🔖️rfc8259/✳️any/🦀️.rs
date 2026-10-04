@@ -3,7 +3,7 @@
 //! `Deserializer`: emits `WiresSnapshot`'s own canonical JSON shape verbatim, so `IoFidelity::Exact`.
 
 use crate::WiresSnapshot;
-use semio_framework::io::io_mechanism::Serializer;
+use semio_framework::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{Dialect, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
 
@@ -14,9 +14,9 @@ pub struct WiresIntoJson;
 impl Serializer<WiresSnapshot> for WiresIntoJson {
     const INTO: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn serialize(from: &WiresSnapshot) -> IoResult<IoPayload> {
-        let value = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(from));
-        let text = dsl::os_pack::json::to_string_pretty(&value);
+    async fn serialize(from: &WiresSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+        let value = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(from));
+        let text = semio_framework_pack_json::to_string_pretty(&value);
         Ok(IoOutcome::clean(IoPayload::Text(text)))
     }
 }

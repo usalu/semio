@@ -6,15 +6,14 @@
 //! `AppIo`, this app's typed media surface. `default_snapshot()` stayed at `🧬️schema` (pure, no app
 //! type in its signature, and still needed by the artifact's own mutation/diff tests).
 
-use crate::{Dictionary, Path, PathRef, ProcedureSnapshot, Registry, Step};
+use crate::{Dictionary, Path, PathRef, ProcedureScene, Registry, Step};
 use imperative_engine::{compile_to_text, imperative_catalogue_json, imperative_module_registry, Executor, RunResult};
 
 //#region ⚠️ Errors
 /// 🚨️ Imperative core's fallible operations.
 #[derive(Debug)]
 pub enum ImperativeCoreError {
-    Json(dsl::ValueError),
-    UnsupportedSchema(String),
+    Json(semio_framework_value::ValueError),
     MissingOwner,
     MissingSlot,
     UnknownOwnerStep(String),
@@ -25,7 +24,6 @@ impl std::fmt::Display for ImperativeCoreError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Json(error) => write!(formatter, "{error}"),
-            Self::UnsupportedSchema(schema) => write!(formatter, "unsupported schema: {schema}"),
             Self::MissingOwner => formatter.write_str("missing owner"),
             Self::MissingSlot => formatter.write_str("missing slot"),
             Self::UnknownOwnerStep(step) => write!(formatter, "unknown owner step: {step}"),
@@ -43,8 +41,8 @@ impl std::error::Error for ImperativeCoreError {
     }
 }
 
-impl From<dsl::ValueError> for ImperativeCoreError {
-    fn from(error: dsl::ValueError) -> Self {
+impl From<semio_framework_value::ValueError> for ImperativeCoreError {
+    fn from(error: semio_framework_value::ValueError) -> Self {
         Self::Json(error)
     }
 }
@@ -76,15 +74,9 @@ pub fn imperative_io() -> semio_framework_plugin::AppIo {
 //#endregion 🔖️Io
 
 //#region 🔖️Host
-/// 🎛️ Native imperative path host. `path`/`seed` are the LIVE working representation this host
-/// mutates directly (matches `📓️wave4-reports/flow-report.md`'s working-scene pattern); `document`
-/// is kept in sync via [`Self::sync_document`] after every mutating call so its `flow`/`text`
-/// composed-child handles always reflect the current `path`/`seed` (ticket
-/// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` — `ProcedureSnapshot` no longer carries `path`/
-/// `seed` inline). `document` stays `pub` for API parity with the pre-migration shape; `path`/`seed`
-/// are the ones every method here actually reads/writes.
+/// 🎛️ Native imperative program host over the composed scene (design §20.15): the program and seed it runs and edits
+/// are the scene's own copies, never a document's local owner.
 pub struct ImperativeHost {
-    pub document: ProcedureSnapshot,
     path: Path,
     seed: std::collections::BTreeMap<String, neural_engine::Value>,
     registry: Registry,
@@ -93,41 +85,31 @@ pub struct ImperativeHost {
 
 impl Default for ImperativeHost {
     fn default() -> Self {
-        Self::from_snapshot(crate::schema::default_snapshot())
+        Self::from_scene(&ProcedureScene::default())
+    }
+}
+
+/// 🧊️ The host is the cold boundary of its seed's neural values (steps retire their own params on drop).
+impl Drop for ImperativeHost {
+    fn drop(&mut self) {
+        neural_engine::ColdRetire::retire_cold(std::mem::take(&mut self.seed));
     }
 }
 
 impl ImperativeHost {
-    /// 🌱 Reads the live `path`/`seed` off `document`'s working scene (the cache, keyed by the
-    /// snapshot's own `flow`/`text` handles — see `ProcedureWorkingScene`'s doc comment for the
-    /// staleness gap this inherits in a fresh process with an unseeded cache).
-    pub fn from_snapshot(document: ProcedureSnapshot) -> Self {
+    /// 🌱 A host over a copy of the scene's program and seed.
+    pub fn from_scene(scene: &ProcedureScene) -> Self {
         crate::standards::v1::subsets::any::io::bootstrap_imperative_runtime();
-        let scene = crate::procedure_working_scene(&document);
-        Self { document, path: scene.path, seed: scene.seed, registry: imperative_module_registry(), next_serial: 100 }
+        Self { path: scene.path.clone(), seed: scene.seed.clone(), registry: imperative_module_registry(), next_serial: 100 }
     }
 
-    pub fn load_json(json: &str) -> Result<Self, ImperativeCoreError> {
-        let document: ProcedureSnapshot = dsl::os_pack::json::from_json_str(json)?;
-        if document.schema != "procedure.document" {
-            return Err(ImperativeCoreError::UnsupportedSchema(document.schema));
-        }
-        Ok(Self::from_snapshot(document))
-    }
-
-    pub fn to_json(&self) -> Result<String, ImperativeCoreError> {
-        Ok(dsl::os_pack::json::to_json_string(&self.document))
+    /// 🕸️ The program this host holds.
+    pub fn path(&self) -> &Path {
+        &self.path
     }
 
     pub fn catalogue_json(&self) -> String {
         imperative_catalogue_json(&self.registry)
-    }
-
-    /// 🔄 Re-mints `document.flow` from the live `path` (mint+cache, never persisted elsewhere) —
-    /// called after every mutating method so `document` never drifts from `path`. `seed` never
-    /// changes through this host's own methods, so `document.text` is left as-is.
-    fn sync_document(&mut self) {
-        self.document.flow = crate::procedure_flow_child_with_owner(&self.path);
     }
 
     fn resolve_path_mut<'a>(&'a mut self, path_ref: &PathRef) -> Result<&'a mut Path, ImperativeCoreError> {
@@ -151,7 +133,6 @@ impl ImperativeHost {
         let path = self.resolve_path_mut(path_ref)?;
         let insert_at = index.unwrap_or(path.steps.len()).min(path.steps.len());
         path.steps.insert(insert_at, step);
-        self.sync_document();
         Ok(id)
     }
 
@@ -166,11 +147,7 @@ impl ImperativeHost {
         };
         let before = path.steps.len();
         path.steps.retain(|step| step.id != id);
-        let changed = path.steps.len() != before;
-        if changed {
-            self.sync_document();
-        }
-        changed
+        path.steps.len() != before
     }
 
     pub fn move_step(&mut self, id: &str, new_index: usize) -> bool {
@@ -188,7 +165,6 @@ impl ImperativeHost {
         let step = path.steps.remove(current);
         let insert_at = new_index.min(path.steps.len());
         path.steps.insert(insert_at, step);
-        self.sync_document();
         true
     }
 
@@ -197,7 +173,7 @@ impl ImperativeHost {
     }
 
     pub fn set_step_params_at(&mut self, path_ref: &PathRef, id: &str, json: &str) -> Result<(), ImperativeCoreError> {
-        let params: Dictionary = dsl::os_pack::json::from_json_str(json)?;
+        let params: Dictionary = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject)?;
         let path = self.resolve_path_mut(path_ref)?;
         let Some(step) = path.steps.iter_mut().find(|step| step.id == id) else {
             return Err(ImperativeCoreError::UnknownStep(id.into()));
@@ -205,7 +181,6 @@ impl ImperativeHost {
         // 🧊️ Retire the DISPLACED dictionary rather than dropping it in place — see `Step`'s own
         // cold-boundary note in `imperative_engine`.
         neural_engine::ColdRetire::retire_cold(std::mem::replace(&mut step.params, params));
-        self.sync_document();
         Ok(())
     }
 

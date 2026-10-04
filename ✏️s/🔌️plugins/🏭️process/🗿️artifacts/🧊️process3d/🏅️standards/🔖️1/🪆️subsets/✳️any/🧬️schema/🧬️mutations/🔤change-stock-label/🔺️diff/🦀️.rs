@@ -8,7 +8,7 @@ use crate::Process3dSnapshot;
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeStockLabel, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
     if base.stock_label == payload.new_label {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Stock is already labeled \"{}\".", payload.new_label));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Stock is already labeled \"{}\".", payload.new_label));
     }
     protocol::MutationOutcome::new(Process3dDiff { stock_label: Some(payload.new_label.clone()), ..Default::default() })
 }

@@ -5,7 +5,8 @@ use super::mutation::ReplaceBlock;
 use crate::{forms_steps, FormMutation, FormsSnapshot};
 
 //#region 🔖️Inverse
-pub fn inverse_replace_block(payload: &ReplaceBlock, base: &FormsSnapshot) -> Vec<FormMutation> {
+pub fn inverse_replace_block(payload: &ReplaceBlock, base: &FormsSnapshot) -> Result<Vec<FormMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let steps = forms_steps(base);
     let Some(step) = steps.iter().find(|step| step.id == payload.step_id) else {
         return Vec::new();
@@ -14,5 +15,7 @@ pub fn inverse_replace_block(payload: &ReplaceBlock, base: &FormsSnapshot) -> Ve
         Some(original) => vec![FormMutation::ReplaceBlock(ReplaceBlock { step_id: payload.step_id.clone(), block: original.clone() })],
         None => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

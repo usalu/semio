@@ -123,10 +123,10 @@ impl crate::value::ToValue for PayloadHash {
 impl crate::value::FromValue for PayloadHash {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::Array(items) = value else {
-            return Err(crate::value::ValueError::new(format!("expected an array for PayloadHash, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an array for PayloadHash, found {value:?}")));
         };
         if items.len() != 32 {
-            return Err(crate::value::ValueError::new(format!("expected exactly 32 bytes for PayloadHash, found {}", items.len())));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected exactly 32 bytes for PayloadHash, found {}", items.len())));
         }
         let mut bytes = [0u8; 32];
         for (index, item) in items.into_iter().enumerate() {
@@ -214,7 +214,7 @@ impl crate::value::ToValue for HybridLogicalTimestamp {
 impl crate::value::FromValue for HybridLogicalTimestamp {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(format!("expected an object for HybridLogicalTimestamp, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for HybridLogicalTimestamp, found {value:?}")));
         };
         let mut actor = None;
         let mut physical_ms = None;
@@ -228,9 +228,9 @@ impl crate::value::FromValue for HybridLogicalTimestamp {
             }
         }
         Ok(HybridLogicalTimestamp {
-            actor: actor.ok_or_else(|| crate::value::ValueError::new("HybridLogicalTimestamp missing actor"))?,
-            physical_ms: physical_ms.ok_or_else(|| crate::value::ValueError::new("HybridLogicalTimestamp missing physical_ms"))?,
-            logical: logical.ok_or_else(|| crate::value::ValueError::new("HybridLogicalTimestamp missing logical"))?,
+            actor: actor.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "HybridLogicalTimestamp missing actor"))?,
+            physical_ms: physical_ms.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "HybridLogicalTimestamp missing physical_ms"))?,
+            logical: logical.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "HybridLogicalTimestamp missing logical"))?,
         })
     }
 }

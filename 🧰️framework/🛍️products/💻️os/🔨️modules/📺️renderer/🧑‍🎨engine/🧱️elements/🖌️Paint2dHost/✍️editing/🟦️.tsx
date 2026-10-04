@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState, type PointerEvent, type WheelEven
 import { GestureRecognizer } from "@semio-tech/framework";
 import { canvasPinchCamera, type CanvasCamera } from "../../📐️Canvas2dHost/🟦️.tsx";
 import { useTranslation } from "@semio-tech/ui-react";
-import { combineSelections, floodSelection, selectPixels, validateExtent, type PixelImage, type PixelOperation, type PixelPoint, type SelectionMerge } from "../../../../../../../../🔨️modules/🔲️pixels/✍️editing/🟦️.ts";
+import { combineSelections, floodSelection, selectPixels, validateExtent, type PixelImage, type PixelPoint, type SelectionMerge } from "../../../../../../../../🔨️modules/🔲️pixels/✍️editing/🟦️.ts";
 import { editSelection, layerPoint, pixelLayers, maskLayers, pixelGestureRevision, selectionBounds, selectionSpans, restoreSelection, type PixelLayer } from "./🟦️.ts";
 
 const labels = {
@@ -27,6 +27,10 @@ const ranges:Record<Exclude<Filter,"invert"|"grayscale">,readonly [number,number
 };
 const control = "rounded border border-border bg-background px-2 py-1 text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-40";
 const toolList:Tool[] = ["layers","hand","brush","eraser","rectangle","ellipse","lasso","wand","bucket","eyedropper"];
+/** 🌊️ How many new samples a stroke gathers before it streams them as one `paintStroke{phase:"stream"}` tick — the wgpu
+ * host's `RASTER_STROKE_STREAM_BATCH` (`🗺️surface/🎨️paint/✍️gesture`). */
+const STROKE_STREAM_BATCH=16;
+let strokePress=0;
 
 async function decodeLayer(layer:PixelLayer,assetsJson:string,signal:AbortSignal):Promise<PixelImage> {
   validateExtent(layer.width,layer.height);
@@ -49,8 +53,8 @@ async function decodeLayer(layer:PixelLayer,assetsJson:string,signal:AbortSignal
   } finally { bitmap.close(); }
 }
 
-export function PixelEditingOverlay({documentJson,assetsJson,assetExtentsJson,selectionJson,pixelSelectionJson,activeUtility,brushSize,brushOpacity,brushColor,brushHardness,paintTarget:target,maskValue,camera,container,dispatch,onWheel,onCameraChange}:{
-  documentJson:string;assetsJson:string;assetExtentsJson:string;selectionJson:string;pixelSelectionJson?:string;activeUtility:string;brushSize:number;brushOpacity:number;brushColor:string;brushHardness:number;paintTarget:"pixels"|"mask";maskValue:number;
+export function PixelEditingOverlay({documentJson,assetsJson,assetExtentsJson,selectionJson,pixelSelectionJson,activeUtility,brushSize,brushOpacity,brushColor,brushHardness,paintTarget:target,maskValue,fillTolerance,camera,container,dispatch,onWheel,onCameraChange}:{
+  documentJson:string;assetsJson:string;assetExtentsJson:string;selectionJson:string;pixelSelectionJson?:string;activeUtility:string;brushSize:number;brushOpacity:number;brushColor:string;brushHardness:number;paintTarget:"pixels"|"mask";maskValue:number;fillTolerance:number;
   camera:RefObject<{x:number;y:number;zoom:number}>;container:RefObject<HTMLDivElement|null>;
   onCameraChange:(camera:CanvasCamera)=>void;
   dispatch:(action:string,args?:Record<string,unknown>)=>void|Promise<unknown>;onWheel:(event:WheelEvent<HTMLDivElement>)=>void;
@@ -65,7 +69,7 @@ export function PixelEditingOverlay({documentJson,assetsJson,assetExtentsJson,se
   const color=brushColor,hardness=brushHardness;
   const setColor=(value:string)=>dispatch("setBrushColor",{value});
   const setHardness=(value:number)=>dispatch("setBrushHardness",{value});
-  const [tolerance,setTolerance]=useState(24);
+  const setTolerance=(value:number)=>dispatch("setFillTolerance",{value});
   const [merge,setMerge]=useState<SelectionMerge>("replace");
   const [coverage,setCoverage]=useState<{key:string;mask:Uint8Array}>();
   const [restoreProgress,setRestoreProgress]=useState<number|null>(null);
@@ -83,6 +87,7 @@ export function PixelEditingOverlay({documentJson,assetsJson,assetExtentsJson,se
   const working=useRef(false),submitted=useRef(false),mounted=useRef(true);
   const [pending,setPending]=useState(false);
   const points=useRef<PixelPoint[]>([]);
+  const streamed=useRef<{gesture:string;sent:number;layerId:string;tool:Tool}|null>(null);
   const pointer=useRef<number|null>(null);
   const overlay=useRef<HTMLCanvasElement>(null);
   const epoch=useRef(0);
@@ -119,9 +124,13 @@ export function PixelEditingOverlay({documentJson,assetsJson,assetExtentsJson,se
     else if(activeUtility==="paintEraser") setTool("eraser");
     else setTool("layers");
   },[activeUtility]);
+  const abandonStream=()=>{
+    const open=streamed.current;streamed.current=null;
+    if(open&&open.sent>0)void dispatch("paintStroke",{layerId:open.layerId,tool:open.tool,xs:[],ys:[],phase:"abort",reason:"captureLost",gesture:open.gesture});
+  };
   useEffect(()=>{
     epoch.current++;
-    abort.current?.abort();working.current=false;
+    abort.current?.abort();working.current=false;abandonStream();
     setProgress(null);setGesture([]);points.current=[];pointer.current=null;
     if(active) {setWidth(active.width);setHeight(active.height);}
   },[gestureRevision,active?.id,active?.width,active?.height,target,activeUtility,pixelSelectionJson]);
@@ -188,7 +197,7 @@ export function PixelEditingOverlay({documentJson,assetsJson,assetExtentsJson,se
     }
   },[active,maskCanvas,gesture,tool,color,target,maskValue,brushSize,brushOpacity,viewportVersion,camera.current?.x,camera.current?.y,camera.current?.zoom]);
 
-  const cancel=()=>{epoch.current++;abort.current?.abort();working.current=false;points.current=[];pointer.current=null;setGesture([]);setProgress(null);};
+  const cancel=()=>{epoch.current++;abort.current?.abort();working.current=false;abandonStream();points.current=[];pointer.current=null;setGesture([]);setProgress(null);};
   const run=async(work:(signal:AbortSignal)=>Promise<void>)=>{
     if(!active?.visible || !selectionReady || working.current || submitted.current) return;
     working.current=true;
@@ -210,13 +219,6 @@ export function PixelEditingOverlay({documentJson,assetsJson,assetExtentsJson,se
     } catch(cause) {if(mounted.current)setError(cause instanceof Error?cause.message:String(cause));}
     finally {submitted.current=false;if(mounted.current)setPending(false);}
   };
-  const submit=async(operation:PixelOperation|Record<string,unknown>,selection:Uint8Array|null,signal:AbortSignal)=>{
-    if(!active||active.locked) return;
-    const payload={layerId:active.id,...(target==="mask"?{expectedMask:active.maskRevision}:{expectedImageKey:active.imageKey}),operation:JSON.stringify(operation),selection:await selectionSpans(selection??undefined,{signal,onProgress:p=>setProgress(p.completed/p.total)})};
-    if(JSON.stringify(payload).length>60000) throw new Error("The edit exceeds the command budget; use a shorter stroke or simpler selection");
-    if(signal.aborted) return;
-    await dispatchEdit(target==="mask"?"editMask":"editPixels",payload);
-  };
   const publishSelection=async(mask:Uint8Array,signal:AbortSignal)=>{
     if(!active)return;
     const spans=await selectionSpans(mask,{signal,onProgress:p=>setProgress(p.completed/p.total)});
@@ -237,7 +239,10 @@ export function PixelEditingOverlay({documentJson,assetsJson,assetExtentsJson,se
     if(signal.aborted)return;
     await dispatchEdit("maskFromSelection",payload);
   });};
-  const apply=(operation:PixelOperation,selection:Uint8Array|null=mask??null)=>{if(active?.locked)return;void run(signal=>submit(operation,selection,signal));};
+  const transformImage=(operation:"rotateClockwise"|"rotateCounterclockwise"|"resize",size:{width:number;height:number}|null=null)=>{if(!active||active.locked)return;const layerId=active.id;void run(()=>dispatchEdit("transformImage",{layerId,operation,x:0,y:0,width:size?.width??0,height:size?.height??0,bilinear:size!==null}));};
+  const cropImage=()=>{void run(async signal=>{if(!active||active.locked||!mask)return;const layerId=active.id;const bounds=await selectionBounds(mask,active.width,{signal,onProgress:p=>setProgress(p.completed/p.total)});if(bounds&&!signal.aborted)await dispatchEdit("transformImage",{layerId,operation:"crop",...bounds,bilinear:false});});};
+  const fillSelection=()=>{if(!active||active.locked)return;const layerId=active.id;void run(()=>dispatchEdit("fillSelection",{layerId}));};
+  const filterImage=(filter:string,amount=0)=>{if(!active||active.locked)return;const layerId=active.id;void run(()=>dispatchEdit("applyFilter",{layerId,filter,amount}));};
   const localPoint=(event:PointerEvent<HTMLDivElement>):PixelPoint=>{
     const host=container.current,view=camera.current;
     if(!host || !view || !active) throw new Error("No active image");
@@ -251,11 +256,11 @@ export function PixelEditingOverlay({documentJson,assetsJson,assetExtentsJson,se
   const pick=async(point:PixelPoint,signal:AbortSignal)=>{
     if(!active) return;
     const x=Math.floor(point[0]),y=Math.floor(point[1]);
-    if(tool==="bucket") {if(!signal.aborted&&!active.locked&&x>=0&&y>=0&&x<active.width&&y<active.height)await dispatchEdit("fillRegion",{layerId:active.id,x:point[0],y:point[1],tolerance});return;}
+    if(tool==="bucket") {if(!signal.aborted&&!active.locked&&x>=0&&y>=0&&x<active.width&&y<active.height)await dispatchEdit("fillRegion",{layerId:active.id,x:point[0],y:point[1]});return;}
     const image=await decodeLayer(active,assetsJson,signal);
     if(x<0 || y<0 || x>=image.width || y>=image.height) return;
     if(tool==="eyedropper") {setColor("#"+[...image.pixels.slice((y*image.width+x)*4,(y*image.width+x)*4+3)].map(v=>v.toString(16).padStart(2,"0")).join(""));return;}
-    const selected=await floodSelection(image,x,y,tolerance,{signal,onProgress:p=>setProgress(0.5*p.completed/p.total)});
+    const selected=await floodSelection(image,x,y,fillTolerance,{signal,onProgress:p=>setProgress(0.5*p.completed/p.total)});
     if(!signal.aborted) await select(selected,signal);
   };
   const down=(event:PointerEvent<HTMLDivElement>)=>{
@@ -270,6 +275,7 @@ export function PixelEditingOverlay({documentJson,assetsJson,assetExtentsJson,se
     pointer.current=event.pointerId;
     try {
       const point=localPoint(event);points.current=[point];setGesture([point]);
+      if(tool==="brush"||tool==="eraser")streamed.current={gesture:`paint:${Date.now()}:${++strokePress}`,sent:0,layerId:active.id,tool};
       if(["wand","bucket","eyedropper"].includes(tool)) {pointer.current=null;setGesture([]);void run(signal=>pick(point,signal));}
     } catch(cause) {setError(String(cause));cancel();}
   };
@@ -295,6 +301,11 @@ export function PixelEditingOverlay({documentJson,assetsJson,assetExtentsJson,se
       if(Math.hypot(point[0]-last[0],point[1]-last[1])<0.5) return;
       if(points.current.length>=2048) {setError("Stroke limit reached; release to apply");return;}
       points.current.push(point);setGesture([...points.current]);
+      const open=streamed.current;
+      if(open&&points.current.length-open.sent>=STROKE_STREAM_BATCH){
+        const batch=points.current.slice(open.sent);open.sent=points.current.length;
+        void dispatch("paintStroke",{layerId:open.layerId,tool:open.tool,xs:batch.map(point=>point[0]),ys:batch.map(point=>point[1]),phase:"stream",gesture:open.gesture});
+      }
     } catch(cause) {setError(String(cause));cancel();}
   };
   const up=(event:PointerEvent<HTMLDivElement>)=>{
@@ -303,13 +314,21 @@ export function PixelEditingOverlay({documentJson,assetsJson,assetExtentsJson,se
     if(pointer.current!==event.pointerId || !active) return;
     const path=points.current;
     try {if(path.length<2048) path.push(localPoint(event));} catch(cause) {setError(String(cause));cancel();return;}
+    const open=streamed.current;streamed.current=null;
     points.current=[];pointer.current=null;setGesture([]);
     if(event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
     if(!path.length) return;
     const start=path[0]!,end=path[path.length-1]!;
+    if(tool==="brush"||tool==="eraser") {
+      const rest=open&&open.sent>0?path.slice(open.sent):path;
+      const payload={layerId:open?.layerId??active.id,tool,xs:rest.map(point=>point[0]),ys:rest.map(point=>point[1]),...(open&&open.sent>0?{phase:"commit",gesture:open.gesture}:{})};
+      let ran=false;
+      void run(async signal=>{ran=true;if(!signal.aborted&&!active.locked)await dispatchEdit("paintStroke",payload);});
+      if(!ran&&open&&open.sent>0)void dispatch("paintStroke",{layerId:open.layerId,tool:open.tool,xs:[],ys:[],phase:"abort",reason:"captureLost",gesture:open.gesture});
+      return;
+    }
     void run(async signal=>{
-      if(tool==="brush"||tool==="eraser") {if(!signal.aborted&&!active.locked)await dispatchEdit("paintStroke",{layerId:active.id,tool,xs:path.map(point=>point[0]),ys:path.map(point=>point[1])});}
-      else if(tool==="rectangle" || tool==="ellipse" || tool==="lasso") {
+      if(tool==="rectangle" || tool==="ellipse" || tool==="lasso") {
         if(signal.aborted) return;
         const shape=tool==="lasso"?{kind:"polygon" as const,points:path}:{kind:tool,x:start[0],y:start[1],width:end[0]-start[0],height:end[1]-start[1]};
         if(tool==="lasso" && path.length<3) return;
@@ -335,7 +354,7 @@ export function PixelEditingOverlay({documentJson,assetsJson,assetExtentsJson,se
         if(event.key==="Escape"){event.preventDefault();if(working.current||pointer.current!==null)cancel();else clearSelection();}
         if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==="a"&&active){event.preventDefault();event.stopPropagation();changeSelection("all");}
         if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==="d"){event.preventDefault();event.stopPropagation();clearSelection();}
-        if(target==="pixels"&&(event.key==="Delete"||event.key==="Backspace")){event.preventDefault();event.stopPropagation();apply({kind:"clear"});}
+        if(target==="pixels"&&(event.key==="Delete"||event.key==="Backspace")){event.preventDefault();event.stopPropagation();filterImage("clear");}
       }}/>}
     <section aria-label={text.tools} className="absolute left-2 top-2 z-40 max-h-[calc(100%-1rem)] max-w-[calc(100%-1rem)] overflow-auto rounded border border-border bg-background/95 p-2 text-foreground shadow-lg" style={{width:collapsed?"auto":"18rem"}}>
       <button type="button" className={control+" w-full text-left"} aria-expanded={!collapsed} onClick={()=>setCollapsed(!collapsed)}>{text.tools} {collapsed?"+":"−"}</button>
@@ -351,7 +370,7 @@ export function PixelEditingOverlay({documentJson,assetsJson,assetExtentsJson,se
         </div>
         <label className="text-xs">{text.opacity} {Math.round(brushOpacity*100)}%<input className="w-full" type="range" min={0} max={1} step={0.01} value={brushOpacity} onChange={e=>dispatch("setBrushOpacity",{value:Number(e.target.value)})}/></label>
         <label className="text-xs">{text.hardness}<input className="w-full" type="range" min={0} max={1} step={0.01} value={hardness} onChange={e=>setHardness(Number(e.target.value))}/></label>
-        {["wand","bucket"].includes(tool)&&<label className="text-xs">{text.tolerance}<input className={control+" w-full"} type="number" min={0} max={255} value={tolerance} onChange={e=>{if(e.target.validity.valid)setTolerance(Number(e.target.value));}}/></label>}
+        {["wand","bucket"].includes(tool)&&<label className="text-xs">{text.tolerance}<input className={control+" w-full"} type="number" min={0} max={255} value={fillTolerance} onChange={e=>{if(e.target.validity.valid&&e.target.value)setTolerance(Number(e.target.value));}}/></label>}
         <label className="text-xs">{text.selection}<select className={control+" w-full"} value={merge} onChange={e=>setMerge(e.target.value as SelectionMerge)}>{(["replace","add","subtract","intersect"] as const).map(value=><option key={value} value={value}>{text[value]}</option>)}</select></label>
         <div className="flex flex-wrap gap-1">
           <button className={control} disabled={!ready} onClick={()=>changeSelection("all")}>{text.all}</button>
@@ -359,19 +378,19 @@ export function PixelEditingOverlay({documentJson,assetsJson,assetExtentsJson,se
           {target==="pixels"&&<button className={control} disabled={!editable||!mask} onClick={createMask}>{text.maskFromSelection}</button>}
           <button className={control} disabled={!ready} onClick={()=>changeSelection("invert")}>{text.invertSelection}</button>
         </div>
-        {target==="mask"&&<button className={control} disabled={!editable} onClick={()=>apply({kind:"alphaFill",alpha:maskValue,opacity:brushOpacity})}>{text.fillMask}</button>}
+        {target==="mask"&&<button className={control} disabled={!editable} onClick={fillSelection}>{text.fillMask}</button>}
         {target==="pixels"&&<details><summary className="cursor-pointer text-xs">{text.more}</summary><div className="mt-2 flex flex-col gap-2">
           <label className="text-xs">{text.adjustment}<select className={control+" w-full"} value={filter} onChange={e=>{const next=e.target.value as Filter;setFilter(next);setAmount(next in ranges?ranges[next as keyof typeof ranges][3]:0);}}>
             {(["invert","grayscale",...Object.keys(ranges)] as Filter[]).map(value=><option key={value} value={value}>{text[value]}</option>)}
           </select></label>
           {filter in ranges&&<label className="text-xs">{text.value}<input className={control+" w-full"} type="number" min={ranges[filter as keyof typeof ranges][0]} max={ranges[filter as keyof typeof ranges][1]} step={ranges[filter as keyof typeof ranges][2]} value={amount} onChange={e=>setAmount(Number(e.target.value))}/></label>}
-          <button className={control} disabled={!editable} onClick={()=>apply((filter==="invert"||filter==="grayscale")?{kind:filter}:{kind:filter,value:amount})}>{text.apply}</button>
-          <div className="grid grid-cols-2 gap-1">{(["flipHorizontal","flipVertical","rotateClockwise","rotateCounterclockwise"] as const).map(kind=><button key={kind} className={control} disabled={!editable} onClick={()=>apply({kind},null)}>{text[kind]}</button>)}</div>
+          <button className={control} disabled={!editable} onClick={()=>filterImage(filter,filter in ranges?amount:0)}>{text.apply}</button>
+          <div className="grid grid-cols-2 gap-1">{(["flipHorizontal","flipVertical","rotateClockwise","rotateCounterclockwise"] as const).map(kind=><button key={kind} className={control} disabled={!editable} onClick={()=>kind==="flipHorizontal"||kind==="flipVertical"?filterImage(kind):transformImage(kind)}>{text[kind]}</button>)}</div>
           <div className="grid grid-cols-2 gap-1"><label className="text-xs">{text.width}<input className={control+" w-full"} type="number" min={1} max={16384} value={width} onChange={e=>setWidth(Number(e.target.value))}/></label>
             <label className="text-xs">{text.height}<input className={control+" w-full"} type="number" min={1} max={16384} value={height} onChange={e=>setHeight(Number(e.target.value))}/></label></div>
-          <button className={control} disabled={!editable} onClick={()=>apply({kind:"resize",width,height,sampling:"bilinear"},null)}>{text.resize}</button>
-          <button className={control} disabled={!editable||!mask} onClick={()=>{void run(async signal=>{if(!active||!mask)return;const bounds=await selectionBounds(mask,active.width,{signal,onProgress:p=>setProgress(p.completed/p.total)});if(bounds)await submit({kind:"crop",...bounds},null,signal);});}}>{text.crop}</button>
-          <button className={control} disabled={!editable} onClick={()=>apply({kind:"clear"})}>{text.clear}</button>
+          <button className={control} disabled={!editable} onClick={()=>transformImage("resize",{width,height})}>{text.resize}</button>
+          <button className={control} disabled={!editable||!mask} onClick={cropImage}>{text.crop}</button>
+          <button className={control} disabled={!editable} onClick={()=>filterImage("clear")}>{text.clear}</button>
         </div></details>}
         <p className="text-xs text-muted-foreground">{text.navigation}</p>
         {active&&<output className="text-xs">{active.width} × {active.height} {text.pixels}</output>}

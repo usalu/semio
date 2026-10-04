@@ -28,7 +28,7 @@ pub fn diff(payload: &ReplaceLoad, base: &Fem2dSnapshot) -> protocol::MutationOu
         return rejection;
     }
     if *held == *payload.new_load {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Load \"{}\" in case \"{}\" is already equal to the replacement value.", payload.load_id, payload.case_id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Load \"{}\" in case \"{}\" is already equal to the replacement value.", payload.load_id, payload.case_id));
     }
     let mut item = existing.clone();
     for slot in &mut item.loads {

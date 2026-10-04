@@ -5,7 +5,8 @@
 use crate::mutations::{create_rule, create_tile, pin_cell, Grid2dMutation};
 use crate::schema::snapshot::Grid2dSnapshot;
 
-pub fn inverse(payload: &super::DeleteTile, base: &Grid2dSnapshot) -> Vec<Grid2dMutation> {
+pub fn inverse(payload: &super::DeleteTile, base: &Grid2dSnapshot) -> Result<Vec<Grid2dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(tile) = base.tiles.iter().find(|tile| tile.id == payload.id) else {
         return Vec::new();
     };
@@ -13,4 +14,6 @@ pub fn inverse(payload: &super::DeleteTile, base: &Grid2dSnapshot) -> Vec<Grid2d
     restore.extend(base.rules.iter().filter(|rule| rule.tile_a_id == payload.id || rule.tile_b_id == payload.id).map(|rule| create_rule(rule.clone())));
     restore.extend(base.pinned.iter().filter(|cell| cell.tile_id == payload.id).map(|cell| pin_cell(cell.x, cell.y, cell.tile_id.clone())));
     restore
+
+    })())
 }

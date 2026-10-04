@@ -1,0 +1,444 @@
+{
+  "at": "2026-10-03T20:53:46.671Z",
+  "rows": [
+    {
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/📜️script.ts",
+      "before": "#!/usr/bin/env bun\nimport { GenerateScript as GraphGenerateScript, OwnerGraphWireCheckScript } from \"../../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts\";\n/** 📦️ writer writer Rust artifact package router. */\nimport { runArtifactRustPackageMain } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts\";\nimport { BundleScript, ScriptRouter } from \"../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts\";\nimport { runScriptMain } from \"../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts\";\nimport { runCmd, runCargo, runVitest } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts\";\nimport { existsSync, readFileSync, readdirSync } from \"node:fs\";\nimport { dirname, extname, join, relative, resolve } from \"node:path\";\n\n/** 🧪️ Executes the contracts owned by this component. */\nclass OwnedVerifyScript extends BundleScript {\n  async run(segments: string[]): Promise<void> {\nif (segments[0] === \"writer-window-state\") {\n      const { testWriterWindowStateOracle } = await import(\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧪️tests/🔬️window-state/🟦️.ts\");\n      testWriterWindowStateOracle();\n      if (segments[1] === \"native\") {\n        const { runCargo } = await import(\"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts\");\n        await runCargo([\"test\", \"--manifest-path\", \"Cargo.toml\", \"--lib\", \"writer_window_state_\", \"--\", \"--nocapture\"], join(this.repoRoot, \"✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust\"));\n      }\n      return;\n    }\n    throw new Error('Unknown owned verification '+segments.join(' '));\n  }\n}\n\nawait runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-writer-writer\", { snapshotSqliteTests: [\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"], commands: { \"graph-generate\":GraphGenerateScript,\"graph-wire-check\":OwnerGraphWireCheckScript, verify: OwnedVerifyScript } });\n",
+      "inverse": "#!/usr/bin/env bun\nimport { GenerateScript as GraphGenerateScript, OwnerGraphWireCheckScript } from \"../../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts\";\n/** 📦️ writer writer Rust artifact package router. */\nimport { runArtifactRustPackageMain } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts\";\nimport { BundleScript, ScriptRouter } from \"../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts\";\nimport { runScriptMain } from \"../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts\";\nimport { runCmd, runCargo, runVitest } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts\";\nimport { existsSync, readFileSync, readdirSync } from \"node:fs\";\nimport { dirname, extname, join, relative, resolve } from \"node:path\";\n\n/** 🧪️ Executes the contracts owned by this component. */\nclass OwnedVerifyScript extends BundleScript {\n  async run(segments: string[]): Promise<void> {\nif (segments[0] === \"writer-window-state\") {\n      const { testWriterWindowStateOracle } = await import(\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧪️tests/🔬️window-state/🟦️.ts\");\n      testWriterWindowStateOracle();\n      if (segments[1] === \"native\") {\n        const { runCargo } = await import(\"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts\");\n        await runCargo([\"test\", \"--manifest-path\", \"Cargo.toml\", \"--lib\", \"writer_window_state_\", \"--\", \"--nocapture\"], join(this.repoRoot, \"✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust\"));\n      }\n      return;\n    }\n    throw new Error('Unknown owned verification '+segments.join(' '));\n  }\n}\n\nawait runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-writer-writer\", { snapshotSqliteTests: [\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"], commands: { \"graph-generate\":GraphGenerateScript,\"graph-wire-check\":OwnerGraphWireCheckScript, verify: OwnedVerifyScript } });\n",
+      "sha256": "a387a94a233c476761e6497473ba1e5ab106d07b4129e110a90c244d5f9a6e0d"
+    },
+    {
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🛂️manifest/📇️outputs.json",
+      "before": "{\n  \"$schema\": \"../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json\",\n  \"version\": 1,\n  \"inputAreas\": [\n    \"✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer\"\n  ],\n  \"policy\": {\n    \"excludedInputPaths\": [],\n    \"genericEmojiIdentities\": [\"📁️\", \"📂️\", \"📄️\"]\n  },\n  \"shared\": {\n    \"rustRegistry\": \"📇️registry/🦀️.rs\",\n    \"typescriptIndex\": \"🟦️.ts\",\n    \"typescriptTypes\": \"🔠️types/🟦️.ts\"\n  },\n  \"manifests\": [\n    {\n      \"id\": \"writer-languages\",\n      \"rust\": \"🗣️writer-languages/🦀️.rs\",\n      \"typescript\": \"🗣️writer-languages/🟦️.ts\"\n    }\n  ]\n}\n",
+      "inverse": "{\n  \"$schema\": \"../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json\",\n  \"version\": 1,\n  \"inputAreas\": [\n    \"✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer\"\n  ],\n  \"policy\": {\n    \"excludedInputPaths\": [],\n    \"genericEmojiIdentities\": [\"📁️\", \"📂️\", \"📄️\"]\n  },\n  \"shared\": {\n    \"rustRegistry\": \"📇️registry/🦀️.rs\",\n    \"typescriptIndex\": \"🟦️.ts\",\n    \"typescriptTypes\": \"🔠️types/🟦️.ts\"\n  },\n  \"manifests\": [\n    {\n      \"id\": \"writer-languages\",\n      \"rust\": \"🗣️writer-languages/🦀️.rs\",\n      \"typescript\": \"🗣️writer-languages/🟦️.ts\"\n    }\n  ]\n}\n",
+      "sha256": "9962af7194e240687875f39baa861f810e86f080a56055107ade17a1693354f8"
+    },
+    {
+      "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust/📜️script.ts",
+      "before": "#!/usr/bin/env bun\nimport { GenerateScript as GraphGenerateScript, OwnerGraphWireCheckScript } from \"../../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts\";\n/** 📦️ reasoning wires Rust artifact package router. */\nimport { runArtifactRustPackageMain } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts\";\nimport { runCmd, runCargo, runVitest } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts\";\nimport { BundleScript, ScriptRouter } from \"../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts\";\nimport { runScriptMain } from \"../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts\";\nimport { existsSync, readFileSync, readdirSync } from \"node:fs\";\nimport { dirname, extname, join, relative, resolve } from \"node:path\";\n\n/** 🧪️ Executes the contracts owned by this component. */\nclass OwnedVerifyScript extends BundleScript {\n  async run(segments: string[]): Promise<void> {\nif (segments[0] === \"wires-document-contract\") {\n      const { testWiresDocumentContractOracle } = await import(\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts\");\n      testWiresDocumentContractOracle();\n      if (segments[1] === \"oracle\") return;\n      const { runCargo } = await import(\"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts\");\n      await runCargo([\"test\", \"--manifest-path\", \"Cargo.toml\", \"--lib\", \"committed_diff\", \"--\", \"--nocapture\"], join(this.repoRoot, \"✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust\"));\n      return;\n    }\nif (segments[0] === \"wires-window-transient\") {\n      const { runCargo } = await import(\"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts\");\n      await runCargo([\"test\", \"--manifest-path\", \"Cargo.toml\", \"--lib\", \"window_transient\", \"--\", \"--nocapture\"], join(this.repoRoot, \"✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust\"));\n      return;\n    }\n    throw new Error('Unknown owned verification '+segments.join(' '));\n  }\n}\nawait runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-reasoning-wires\", { snapshotSqliteTests: [\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"], commands: { \"graph-generate\":GraphGenerateScript,\"graph-wire-check\":OwnerGraphWireCheckScript, verify: OwnedVerifyScript } });\n",
+      "inverse": "#!/usr/bin/env bun\nimport { GenerateScript as GraphGenerateScript, OwnerGraphWireCheckScript } from \"../../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts\";\n/** 📦️ reasoning wires Rust artifact package router. */\nimport { runArtifactRustPackageMain } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts\";\nimport { runCmd, runCargo, runVitest } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts\";\nimport { BundleScript, ScriptRouter } from \"../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts\";\nimport { runScriptMain } from \"../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts\";\nimport { existsSync, readFileSync, readdirSync } from \"node:fs\";\nimport { dirname, extname, join, relative, resolve } from \"node:path\";\n\n/** 🧪️ Executes the contracts owned by this component. */\nclass OwnedVerifyScript extends BundleScript {\n  async run(segments: string[]): Promise<void> {\nif (segments[0] === \"wires-document-contract\") {\n      const { testWiresDocumentContractOracle } = await import(\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts\");\n      testWiresDocumentContractOracle();\n      if (segments[1] === \"oracle\") return;\n      const { runCargo } = await import(\"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts\");\n      await runCargo([\"test\", \"--manifest-path\", \"Cargo.toml\", \"--lib\", \"committed_diff\", \"--\", \"--nocapture\"], join(this.repoRoot, \"✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust\"));\n      return;\n    }\nif (segments[0] === \"wires-window-transient\") {\n      const { runCargo } = await import(\"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts\");\n      await runCargo([\"test\", \"--manifest-path\", \"Cargo.toml\", \"--lib\", \"window_transient\", \"--\", \"--nocapture\"], join(this.repoRoot, \"✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust\"));\n      return;\n    }\n    throw new Error('Unknown owned verification '+segments.join(' '));\n  }\n}\nawait runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-reasoning-wires\", { snapshotSqliteTests: [\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"], commands: { \"graph-generate\":GraphGenerateScript,\"graph-wire-check\":OwnerGraphWireCheckScript, verify: OwnedVerifyScript } });\n",
+      "sha256": "eaebe01986c538d9a43b97e2351a1b451be07986ba8c38dcdb1bcf28feb1b48e"
+    },
+    {
+      "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🛂️manifest/📇️outputs.json",
+      "before": "{\n  \"$schema\": \"../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json\",\n  \"version\": 1,\n  \"inputAreas\": [\n    \"✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires\"\n  ],\n  \"shared\": {\n    \"rustRegistry\": \"📇️registry/🦀️.rs\",\n    \"typescriptIndex\": \"🟦️.ts\",\n    \"typescriptTypes\": \"🔠️types/🟦️.ts\"\n  },\n  \"manifests\": [\n    {\n      \"id\": \"wires\",\n      \"rust\": \"🧠️wires/🦀️.rs\",\n      \"typescript\": \"🧠️wires/🟦️.ts\"\n    }\n  ]\n}\n",
+      "inverse": "{\n  \"$schema\": \"../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json\",\n  \"version\": 1,\n  \"inputAreas\": [\n    \"✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires\"\n  ],\n  \"shared\": {\n    \"rustRegistry\": \"📇️registry/🦀️.rs\",\n    \"typescriptIndex\": \"🟦️.ts\",\n    \"typescriptTypes\": \"🔠️types/🟦️.ts\"\n  },\n  \"manifests\": [\n    {\n      \"id\": \"wires\",\n      \"rust\": \"🧠️wires/🦀️.rs\",\n      \"typescript\": \"🧠️wires/🟦️.ts\"\n    }\n  ]\n}\n",
+      "sha256": "7622ddb1c03c04b42fad778140c9b9bd287e0973faee1c9223ffbc6b05bc13d9"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust/📜️script.ts",
+      "before": "#!/usr/bin/env bun\nimport { GenerateScript as GraphGenerateScript, OwnerGraphWireCheckScript } from \"../../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts\";\n/** 📦️ trinity-rewriting Rust artifact package router. */\nimport { runArtifactRustPackageMain } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts\";\nimport { runCmd, runCargo, runVitest } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts\";\nimport { BundleScript, ScriptRouter } from \"../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts\";\nimport { runScriptMain } from \"../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts\";\nimport { existsSync, readFileSync, readdirSync } from \"node:fs\";\nimport { dirname, extname, join, relative, resolve } from \"node:path\";\n\n/** 🧪️ Executes the contracts owned by this component. */\nclass OwnedVerifyScript extends BundleScript {\n  async run(segments: string[]): Promise<void> {\nif (segments[0] === \"rewriting-document-contract\") {\n      const { testRewritingDocumentContractOracle } = await import(\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts\");\n      testRewritingDocumentContractOracle();\n      return;\n    }\nif (segments[0] === \"rewriting-map-ownership\") {\n      const { testRewritingMapOwnershipOracle } = await import(\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧪️tests/🗂️map-ownership/🟦️.ts\");\n      testRewritingMapOwnershipOracle();\n      if (segments[1] === \"oracle\") return;\n      const { runCargo } = await import(\"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts\");\n      for (const filter of [\"rewriting_map_ownership\", \"committed_diff\"]) await runCargo([\"test\", \"--manifest-path\", \"Cargo.toml\", \"--lib\", filter, \"--\", \"--nocapture\"], join(this.repoRoot, \"✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust\"));\n      return;\n    }\nif (segments[0] === \"rewriting-window-config\") {\n      const { testRewritingDocumentRetirementOracle } = await import(\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/♻️retirement/🧪️tests/🔬️document-retirement/🟦️.ts\");\n      testRewritingDocumentRetirementOracle();\n      const { testRewritingWindowConfigOracle } = await import(\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🎚️config/🧪️tests/🔬️window-config-ownership/🟦️.ts\");\n      testRewritingWindowConfigOracle();\n      if (segments[1] === \"oracle\") return;\n      const { runCargo } = await import(\"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts\");\n      await runCargo([\"test\", \"--manifest-path\", \"Cargo.toml\", \"--features\", \"component-app-assembly\", \"--lib\", \"rewriting_window_config\", \"--\", \"--nocapture\"], join(this.repoRoot, \"✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust\"));\n      return;\n    }\n    throw new Error('Unknown owned verification '+segments.join(' '));\n  }\n}\nawait runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-trinity-rewriting\", { snapshotSqliteTestFeatures: [\"component-app-assembly\"], snapshotSqliteTests: [\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/📋️contract/🟦️.ts\", \"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"], commands: { \"graph-generate\":GraphGenerateScript,\"graph-wire-check\":OwnerGraphWireCheckScript, verify: OwnedVerifyScript } });\n",
+      "inverse": "#!/usr/bin/env bun\nimport { GenerateScript as GraphGenerateScript, OwnerGraphWireCheckScript } from \"../../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts\";\n/** 📦️ trinity-rewriting Rust artifact package router. */\nimport { runArtifactRustPackageMain } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts\";\nimport { runCmd, runCargo, runVitest } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts\";\nimport { BundleScript, ScriptRouter } from \"../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts\";\nimport { runScriptMain } from \"../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts\";\nimport { existsSync, readFileSync, readdirSync } from \"node:fs\";\nimport { dirname, extname, join, relative, resolve } from \"node:path\";\n\n/** 🧪️ Executes the contracts owned by this component. */\nclass OwnedVerifyScript extends BundleScript {\n  async run(segments: string[]): Promise<void> {\nif (segments[0] === \"rewriting-document-contract\") {\n      const { testRewritingDocumentContractOracle } = await import(\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts\");\n      testRewritingDocumentContractOracle();\n      return;\n    }\nif (segments[0] === \"rewriting-map-ownership\") {\n      const { testRewritingMapOwnershipOracle } = await import(\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧪️tests/🗂️map-ownership/🟦️.ts\");\n      testRewritingMapOwnershipOracle();\n      if (segments[1] === \"oracle\") return;\n      const { runCargo } = await import(\"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts\");\n      for (const filter of [\"rewriting_map_ownership\", \"committed_diff\"]) await runCargo([\"test\", \"--manifest-path\", \"Cargo.toml\", \"--lib\", filter, \"--\", \"--nocapture\"], join(this.repoRoot, \"✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust\"));\n      return;\n    }\nif (segments[0] === \"rewriting-window-config\") {\n      const { testRewritingDocumentRetirementOracle } = await import(\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/♻️retirement/🧪️tests/🔬️document-retirement/🟦️.ts\");\n      testRewritingDocumentRetirementOracle();\n      const { testRewritingWindowConfigOracle } = await import(\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🎚️config/🧪️tests/🔬️window-config-ownership/🟦️.ts\");\n      testRewritingWindowConfigOracle();\n      if (segments[1] === \"oracle\") return;\n      const { runCargo } = await import(\"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts\");\n      await runCargo([\"test\", \"--manifest-path\", \"Cargo.toml\", \"--features\", \"component-app-assembly\", \"--lib\", \"rewriting_window_config\", \"--\", \"--nocapture\"], join(this.repoRoot, \"✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust\"));\n      return;\n    }\n    throw new Error('Unknown owned verification '+segments.join(' '));\n  }\n}\nawait runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-trinity-rewriting\", { snapshotSqliteTestFeatures: [\"component-app-assembly\"], snapshotSqliteTests: [\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/📋️contract/🟦️.ts\", \"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"], commands: { \"graph-generate\":GraphGenerateScript,\"graph-wire-check\":OwnerGraphWireCheckScript, verify: OwnedVerifyScript } });\n",
+      "sha256": "1b8d65c758626e63dc75555ef33f5ec451337f7683d123beaa2bcc96fc9d2d00"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🛂️manifest/📇️outputs.json",
+      "before": "{\n  \"$schema\": \"../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json\",\n  \"contractId\": \"rewriting-graph-catalog\",\n  \"version\": 1,\n  \"inputAreas\": [\n    \"✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting\"\n  ],\n  \"policy\": {\n    \"excludedInputPaths\": [],\n    \"genericEmojiIdentities\": []\n  },\n  \"shared\": {\n    \"rustRegistry\": \"📇️registry/🦀️.rs\",\n    \"typescriptIndex\": \"🟦️.ts\",\n    \"typescriptTypes\": \"🔠️types/🟦️.ts\"\n  },\n  \"manifests\": [\n    {\n      \"id\": \"rewrite-lhs\",\n      \"rust\": \"🫲️rewrite-lhs/🦀️.rs\",\n      \"typescript\": \"🫲️rewrite-lhs/🟦️.ts\"\n    }\n  ]\n}\n",
+      "inverse": "{\n  \"$schema\": \"../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json\",\n  \"contractId\": \"rewriting-graph-catalog\",\n  \"version\": 1,\n  \"inputAreas\": [\n    \"✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting\"\n  ],\n  \"policy\": {\n    \"excludedInputPaths\": [],\n    \"genericEmojiIdentities\": []\n  },\n  \"shared\": {\n    \"rustRegistry\": \"📇️registry/🦀️.rs\",\n    \"typescriptIndex\": \"🟦️.ts\",\n    \"typescriptTypes\": \"🔠️types/🟦️.ts\"\n  },\n  \"manifests\": [\n    {\n      \"id\": \"rewrite-lhs\",\n      \"rust\": \"🫲️rewrite-lhs/🦀️.rs\",\n      \"typescript\": \"🫲️rewrite-lhs/🟦️.ts\"\n    }\n  ]\n}\n",
+      "sha256": "94172bf28696be63fec6102f02e4f0aa90be0c32dc3fe660a0eb1a5383acb4a1"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust/📜️script.ts",
+      "before": "#!/usr/bin/env bun\nimport { GenerateScript as GraphGenerateScript, OwnerGraphWireCheckScript } from \"../../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts\";\n/** 📦️ trinity-jack Rust artifact package router. */\nimport { runArtifactRustPackageMain } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts\";\nimport { runCmd, runCargo, runVitest } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts\";\nimport { BundleScript, ScriptRouter } from \"../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts\";\nimport { runScriptMain } from \"../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts\";\nimport { existsSync, readFileSync, readdirSync } from \"node:fs\";\nimport { dirname, extname, join, relative, resolve } from \"node:path\";\n\n/** 🧪️ Executes the contracts owned by this component. */\nclass OwnedVerifyScript extends BundleScript {\n  async run(segments: string[]): Promise<void> {\nif (segments[0] === \"jack-document-contract\") {\n      const { testJackDocumentContract } = await import(\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts\");\n      testJackDocumentContract();\n      return;\n    }\nif (segments[0] === \"jack-query-ownership\") {\n      const { runCargo } = await import(\"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts\");\n      const { testResumableQueryOracle } = await import(\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️executor/🧪️tests/🪜️resumable-query/🟦️.ts\");\n      testResumableQueryOracle();\n      if (segments[1] === \"oracle\") return;\n      await runCargo([\"test\", \"--manifest-path\", \"Cargo.toml\", \"--features\", \"component-app-assembly\", \"--lib\", \"query_ownership\", \"--\", \"--nocapture\"], join(this.repoRoot, \"✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust\"));\n      return;\n    }\n    throw new Error('Unknown owned verification '+segments.join(' '));\n  }\n}\nawait runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-trinity-jack\", { snapshotSqliteTestFeatures: [\"component-app-assembly\"], snapshotSqliteTests: [\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"], commands: { \"graph-generate\":GraphGenerateScript,\"graph-wire-check\":OwnerGraphWireCheckScript, verify: OwnedVerifyScript } });\n\n",
+      "inverse": "#!/usr/bin/env bun\nimport { GenerateScript as GraphGenerateScript, OwnerGraphWireCheckScript } from \"../../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts\";\n/** 📦️ trinity-jack Rust artifact package router. */\nimport { runArtifactRustPackageMain } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts\";\nimport { runCmd, runCargo, runVitest } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts\";\nimport { BundleScript, ScriptRouter } from \"../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts\";\nimport { runScriptMain } from \"../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts\";\nimport { existsSync, readFileSync, readdirSync } from \"node:fs\";\nimport { dirname, extname, join, relative, resolve } from \"node:path\";\n\n/** 🧪️ Executes the contracts owned by this component. */\nclass OwnedVerifyScript extends BundleScript {\n  async run(segments: string[]): Promise<void> {\nif (segments[0] === \"jack-document-contract\") {\n      const { testJackDocumentContract } = await import(\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts\");\n      testJackDocumentContract();\n      return;\n    }\nif (segments[0] === \"jack-query-ownership\") {\n      const { runCargo } = await import(\"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts\");\n      const { testResumableQueryOracle } = await import(\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️executor/🧪️tests/🪜️resumable-query/🟦️.ts\");\n      testResumableQueryOracle();\n      if (segments[1] === \"oracle\") return;\n      await runCargo([\"test\", \"--manifest-path\", \"Cargo.toml\", \"--features\", \"component-app-assembly\", \"--lib\", \"query_ownership\", \"--\", \"--nocapture\"], join(this.repoRoot, \"✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust\"));\n      return;\n    }\n    throw new Error('Unknown owned verification '+segments.join(' '));\n  }\n}\nawait runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-trinity-jack\", { snapshotSqliteTestFeatures: [\"component-app-assembly\"], snapshotSqliteTests: [\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"], commands: { \"graph-generate\":GraphGenerateScript,\"graph-wire-check\":OwnerGraphWireCheckScript, verify: OwnedVerifyScript } });\n\n",
+      "sha256": "01ed5a720a33399fc1f1fb01c6b472f7d5ccfe963283ce7130fd2792d2051d6e"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🛂️manifest/📇️outputs.json",
+      "before": "{\n  \"$schema\": \"../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json\",\n  \"version\": 1,\n  \"inputAreas\": [\n    \"✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack\"\n  ],\n  \"shared\": {\n    \"rustRegistry\": \"📇️registry/🦀️.rs\",\n    \"typescriptIndex\": \"🟦️.ts\",\n    \"typescriptTypes\": \"🔠️types/🟦️.ts\"\n  },\n  \"manifests\": [\n    {\n      \"id\": \"nakagin\",\n      \"rust\": \"🏢️nakagin/🦀️.rs\",\n      \"typescript\": \"🏢️nakagin/🟦️.ts\"\n    }\n  ]\n}\n",
+      "inverse": "{\n  \"$schema\": \"../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json\",\n  \"version\": 1,\n  \"inputAreas\": [\n    \"✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack\"\n  ],\n  \"shared\": {\n    \"rustRegistry\": \"📇️registry/🦀️.rs\",\n    \"typescriptIndex\": \"🟦️.ts\",\n    \"typescriptTypes\": \"🔠️types/🟦️.ts\"\n  },\n  \"manifests\": [\n    {\n      \"id\": \"nakagin\",\n      \"rust\": \"🏢️nakagin/🦀️.rs\",\n      \"typescript\": \"🏢️nakagin/🟦️.ts\"\n    }\n  ]\n}\n",
+      "sha256": "48ac5be31be0a362dff614b1cb72707e469e216ed8fb36a3dbeb27084992a724"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust/📜️script.ts",
+      "before": "#!/usr/bin/env bun\nimport { GenerateScript as GraphGenerateScript, OwnerGraphWireCheckScript } from \"../../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts\";\n/** 📦️ puzzle-2d Rust artifact package router. */\nimport { runArtifactRustPackageMain } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts\";\nimport { BundleScript } from \"../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts\";\nimport { runRepositoryCommand } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts\";\nimport { resolve } from \"node:path\";\n\n/** 🔍️ Checks this owner and its independent consumer through the public facade. */\nclass OwnedVerifyScript extends BundleScript {\n  async run(segments:string[]):Promise<void>{\n    if(segments.length!==1||segments[0]!==\"snapshot-sqlite-source\")throw new Error(\"Unknown Puzzle 2D verification \"+segments.join(\" \"));\n    const snapshot=resolve(this.root,\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot\");\n    await runRepositoryCommand(process.execPath,[resolve(this.repoRoot,\"node_modules/typescript/bin/tsc\"),\"--noEmit\",\"--strict\",\"--target\",\"ESNext\",\"--module\",\"ESNext\",\"--moduleResolution\",\"bundler\",\"--allowImportingTsExtensions\",\"--resolveJsonModule\",\"--skipLibCheck\",resolve(snapshot,\"🟦️.ts\"),resolve(snapshot,\"🧪️tests/🪶️sqlite/🟦️.ts\")],this.repoRoot,\"puzzle2d-snapshot-sqlite-public-types\");\n  }\n}\nawait runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-puzzle-2d\", {snapshotSqliteTestFeatures:[\"component-app-assembly\"],commands:{\"graph-generate\":GraphGenerateScript,\"graph-wire-check\":OwnerGraphWireCheckScript,verify:OwnedVerifyScript},snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});\n",
+      "inverse": "#!/usr/bin/env bun\nimport { GenerateScript as GraphGenerateScript, OwnerGraphWireCheckScript } from \"../../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts\";\n/** 📦️ puzzle-2d Rust artifact package router. */\nimport { runArtifactRustPackageMain } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts\";\nimport { BundleScript } from \"../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts\";\nimport { runRepositoryCommand } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts\";\nimport { resolve } from \"node:path\";\n\n/** 🔍️ Checks this owner and its independent consumer through the public facade. */\nclass OwnedVerifyScript extends BundleScript {\n  async run(segments:string[]):Promise<void>{\n    if(segments.length!==1||segments[0]!==\"snapshot-sqlite-source\")throw new Error(\"Unknown Puzzle 2D verification \"+segments.join(\" \"));\n    const snapshot=resolve(this.root,\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot\");\n    await runRepositoryCommand(process.execPath,[resolve(this.repoRoot,\"node_modules/typescript/bin/tsc\"),\"--noEmit\",\"--strict\",\"--target\",\"ESNext\",\"--module\",\"ESNext\",\"--moduleResolution\",\"bundler\",\"--allowImportingTsExtensions\",\"--resolveJsonModule\",\"--skipLibCheck\",resolve(snapshot,\"🟦️.ts\"),resolve(snapshot,\"🧪️tests/🪶️sqlite/🟦️.ts\")],this.repoRoot,\"puzzle2d-snapshot-sqlite-public-types\");\n  }\n}\nawait runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-puzzle-2d\", {snapshotSqliteTestFeatures:[\"component-app-assembly\"],commands:{\"graph-generate\":GraphGenerateScript,\"graph-wire-check\":OwnerGraphWireCheckScript,verify:OwnedVerifyScript},snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});\n",
+      "sha256": "fe35a7593324fcbd247c04d1866d85aa8ce75d1d915ccd4c101bfbe3e681761e"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🛂️manifest/📇️outputs.json",
+      "before": "{\n  \"$schema\": \"../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json\",\n  \"version\": 1,\n  \"inputAreas\": [\n    \"✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d\"\n  ],\n  \"policy\": {\n    \"excludedInputPaths\": [],\n    \"genericEmojiIdentities\": [\"📁️\", \"📂️\", \"📄️\"]\n  },\n  \"shared\": {\n    \"rustRegistry\": \"📇️registry/🦀️.rs\",\n    \"typescriptIndex\": \"🟦️.ts\",\n    \"typescriptTypes\": \"🔠️types/🟦️.ts\"\n  },\n  \"manifests\": [\n    {\n      \"id\": \"nakagin\",\n      \"rust\": \"🏢️nakagin/🦀️.rs\",\n      \"typescript\": \"🏢️nakagin/🟦️.ts\"\n    },\n    {\n      \"id\": \"puzzle2d-default\",\n      \"rust\": \"◻️puzzle2d-default/🦀️.rs\",\n      \"typescript\": \"◻️puzzle2d-default/🟦️.ts\"\n    }\n  ]\n}\n",
+      "inverse": "{\n  \"$schema\": \"../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json\",\n  \"version\": 1,\n  \"inputAreas\": [\n    \"✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d\"\n  ],\n  \"policy\": {\n    \"excludedInputPaths\": [],\n    \"genericEmojiIdentities\": [\"📁️\", \"📂️\", \"📄️\"]\n  },\n  \"shared\": {\n    \"rustRegistry\": \"📇️registry/🦀️.rs\",\n    \"typescriptIndex\": \"🟦️.ts\",\n    \"typescriptTypes\": \"🔠️types/🟦️.ts\"\n  },\n  \"manifests\": [\n    {\n      \"id\": \"nakagin\",\n      \"rust\": \"🏢️nakagin/🦀️.rs\",\n      \"typescript\": \"🏢️nakagin/🟦️.ts\"\n    },\n    {\n      \"id\": \"puzzle2d-default\",\n      \"rust\": \"◻️puzzle2d-default/🦀️.rs\",\n      \"typescript\": \"◻️puzzle2d-default/🟦️.ts\"\n    }\n  ]\n}\n",
+      "sha256": "9df9dc4e9a9c58ed5d7c8d1704861ca0fd8a0bda14f1456288aac7de19bbc44a"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/📦️packages/🦀️rust/📜️script.ts",
+      "before": "#!/usr/bin/env bun\nimport { GenerateScript as GraphGenerateScript, OwnerGraphWireCheckScript } from \"../../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts\";\n/** 📦️ draw drawing Rust artifact package router. */\nimport { runArtifactRustPackageMain } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts\";\nimport { BundleScript, ScriptRouter } from \"../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts\";\nimport { runScriptMain } from \"../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts\";\nimport { runCmd, runCargo, runVitest } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts\";\nimport { existsSync, readFileSync, readdirSync } from \"node:fs\";\nimport { dirname, extname, join, relative, resolve } from \"node:path\";\n\n/** 🧪️ Executes the contracts owned by this component. */\nclass OwnedVerifyScript extends BundleScript {\n  async run(segments: string[]): Promise<void> {\nif (segments[0] === \"drawing-canvas-window-ownership\") {\n      const configRoot = join(this.repoRoot, \"✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️canvas/🎚️config\");\n      const transientRoot = join(this.repoRoot, \"✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️canvas/🫧️transient\");\n      const presenceRoot = join(this.repoRoot, \"✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence\");\n      const oracle = join(configRoot, \"🧪️tests/🔬️window/🟦️.ts\");\n      const { testDrawingCanvasWindowOwnershipOracle } = await import(oracle);\n      testDrawingCanvasWindowOwnershipOracle();\n      runCmd(\"bun\", [join(this.repoRoot, \"node_modules/typescript/bin/tsc\"), \"--noEmit\", \"--strict\", \"--target\", \"ESNext\", \"--module\", \"ESNext\", \"--moduleResolution\", \"bundler\", \"--resolveJsonModule\", \"--allowImportingTsExtensions\", \"--esModuleInterop\", \"--skipLibCheck\", join(configRoot, \"🧬️schema/🟦️.ts\"), join(transientRoot, \"🧬️schema/🟦️.ts\"), join(presenceRoot, \"🧬️schema/🟦️.ts\"), oracle], { cwd: this.repoRoot });\n      if (segments[1] === \"native\") {\n        const { runCargo } = await import(\"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts\");\n        await runCargo([\"test\", \"--manifest-path\", \"Cargo.toml\", \"-p\", \"semio-s-artifact-draw-drawing\", \"--lib\", \"drawing_canvas_window_ownership_\", \"--\", \"--nocapture\"], this.repoRoot);\n      }\n      return;\n    }\n    throw new Error('Unknown owned verification '+segments.join(' '));\n  }\n}\n\nawait runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-draw-drawing\", { commands: { \"graph-generate\":GraphGenerateScript,\"graph-wire-check\":OwnerGraphWireCheckScript, verify: OwnedVerifyScript }, snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"] });\n",
+      "inverse": "#!/usr/bin/env bun\nimport { GenerateScript as GraphGenerateScript, OwnerGraphWireCheckScript } from \"../../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts\";\n/** 📦️ draw drawing Rust artifact package router. */\nimport { runArtifactRustPackageMain } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts\";\nimport { BundleScript, ScriptRouter } from \"../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts\";\nimport { runScriptMain } from \"../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts\";\nimport { runCmd, runCargo, runVitest } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts\";\nimport { existsSync, readFileSync, readdirSync } from \"node:fs\";\nimport { dirname, extname, join, relative, resolve } from \"node:path\";\n\n/** 🧪️ Executes the contracts owned by this component. */\nclass OwnedVerifyScript extends BundleScript {\n  async run(segments: string[]): Promise<void> {\nif (segments[0] === \"drawing-canvas-window-ownership\") {\n      const configRoot = join(this.repoRoot, \"✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️canvas/🎚️config\");\n      const transientRoot = join(this.repoRoot, \"✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️canvas/🫧️transient\");\n      const presenceRoot = join(this.repoRoot, \"✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence\");\n      const oracle = join(configRoot, \"🧪️tests/🔬️window/🟦️.ts\");\n      const { testDrawingCanvasWindowOwnershipOracle } = await import(oracle);\n      testDrawingCanvasWindowOwnershipOracle();\n      runCmd(\"bun\", [join(this.repoRoot, \"node_modules/typescript/bin/tsc\"), \"--noEmit\", \"--strict\", \"--target\", \"ESNext\", \"--module\", \"ESNext\", \"--moduleResolution\", \"bundler\", \"--resolveJsonModule\", \"--allowImportingTsExtensions\", \"--esModuleInterop\", \"--skipLibCheck\", join(configRoot, \"🧬️schema/🟦️.ts\"), join(transientRoot, \"🧬️schema/🟦️.ts\"), join(presenceRoot, \"🧬️schema/🟦️.ts\"), oracle], { cwd: this.repoRoot });\n      if (segments[1] === \"native\") {\n        const { runCargo } = await import(\"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts\");\n        await runCargo([\"test\", \"--manifest-path\", \"Cargo.toml\", \"-p\", \"semio-s-artifact-draw-drawing\", \"--lib\", \"drawing_canvas_window_ownership_\", \"--\", \"--nocapture\"], this.repoRoot);\n      }\n      return;\n    }\n    throw new Error('Unknown owned verification '+segments.join(' '));\n  }\n}\n\nawait runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-draw-drawing\", { commands: { \"graph-generate\":GraphGenerateScript,\"graph-wire-check\":OwnerGraphWireCheckScript, verify: OwnedVerifyScript }, snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"] });\n",
+      "sha256": "73b203a0c46a427c9a3d64e7dcae0f6f5ee245e106d56615d06f49f547ddda73"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🛂️manifest/📇️outputs.json",
+      "before": "{\n  \"$schema\": \"../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json\",\n  \"version\": 1,\n  \"inputAreas\": [\n    \"✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing\"\n  ],\n  \"shared\": {\n    \"rustRegistry\": \"📇️registry/🦀️.rs\",\n    \"typescriptIndex\": \"🟦️.ts\",\n    \"typescriptTypes\": \"🔠️types/🟦️.ts\"\n  },\n  \"manifests\": [\n    {\n      \"id\": \"drawing-layers\",\n      \"rust\": \"🖌️drawing-layers/🦀️.rs\",\n      \"typescript\": \"🖌️drawing-layers/🟦️.ts\"\n    }\n  ],\n  \"policy\": {\n    \"excludedInputPaths\": [],\n    \"genericEmojiIdentities\": [\n      \"📁️\",\n      \"📂️\",\n      \"📄️\"\n    ]\n  },\n  \"contractId\": \"draw-drawing-graph\"\n}\n",
+      "inverse": "{\n  \"$schema\": \"../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json\",\n  \"version\": 1,\n  \"inputAreas\": [\n    \"✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing\"\n  ],\n  \"shared\": {\n    \"rustRegistry\": \"📇️registry/🦀️.rs\",\n    \"typescriptIndex\": \"🟦️.ts\",\n    \"typescriptTypes\": \"🔠️types/🟦️.ts\"\n  },\n  \"manifests\": [\n    {\n      \"id\": \"drawing-layers\",\n      \"rust\": \"🖌️drawing-layers/🦀️.rs\",\n      \"typescript\": \"🖌️drawing-layers/🟦️.ts\"\n    }\n  ],\n  \"policy\": {\n    \"excludedInputPaths\": [],\n    \"genericEmojiIdentities\": [\n      \"📁️\",\n      \"📂️\",\n      \"📄️\"\n    ]\n  },\n  \"contractId\": \"draw-drawing-graph\"\n}\n",
+      "sha256": "110ebb4d81611711cbaf849f950f1aa384a7bb8b63fa969cf919084554d61914"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust/📜️script.ts",
+      "before": "#!/usr/bin/env bun\nimport { GenerateScript as GraphGenerateScript, OwnerGraphWireCheckScript } from \"../../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts\";\n/** 📦️ puzzle-5d Rust artifact package router. */\nimport { runArtifactRustPackageMain } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts\";\nimport { runCmd } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts\";\nimport { BundleScript } from \"../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts\";\nimport { readdirSync } from \"node:fs\";\nimport { resolve } from \"node:path\";\n\n/** 🛂️ Verify the exact canonical provider through every published owning Source consumer. */\nclass OwnedVerifyScript extends BundleScript {\n  run(args: string[]): void {\n    if (args.length !== 1 || args[0] !== \"snapshot-sqlite-source\") throw new Error(\"verify snapshot-sqlite-source\");\n    const roots: string[] = [];\n    const visit = (dir: string): void => {\n      for (const item of readdirSync(dir, { withFileTypes: true })) {\n        const path = resolve(dir, item.name);\n        if (item.isDirectory()) visit(path);\n        else if (item.name.endsWith(\".ts\")) roots.push(path);\n      }\n    };\n    visit(resolve(this.root, \"../../🏅️standards/🔖️1/🪆️subsets/✳️any\"));\n    runCmd(\"bun\", [resolve(this.repoRoot, \"node_modules/typescript/bin/tsc\"), \"--noEmit\", \"--strict\", \"--target\", \"ESNext\", \"--module\", \"ESNext\", \"--moduleResolution\", \"bundler\", \"--allowImportingTsExtensions\", \"--resolveJsonModule\", \"--esModuleInterop\", \"--skipLibCheck\", ...roots], { cwd: this.repoRoot });\n  }\n}\nawait runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-puzzle-5d\", {commands:{\"graph-generate\":GraphGenerateScript,\"graph-wire-check\":OwnerGraphWireCheckScript,verify:OwnedVerifyScript},snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});\n",
+      "inverse": "#!/usr/bin/env bun\nimport { GenerateScript as GraphGenerateScript, OwnerGraphWireCheckScript } from \"../../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts\";\n/** 📦️ puzzle-5d Rust artifact package router. */\nimport { runArtifactRustPackageMain } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts\";\nimport { runCmd } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts\";\nimport { BundleScript } from \"../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts\";\nimport { readdirSync } from \"node:fs\";\nimport { resolve } from \"node:path\";\n\n/** 🛂️ Verify the exact canonical provider through every published owning Source consumer. */\nclass OwnedVerifyScript extends BundleScript {\n  run(args: string[]): void {\n    if (args.length !== 1 || args[0] !== \"snapshot-sqlite-source\") throw new Error(\"verify snapshot-sqlite-source\");\n    const roots: string[] = [];\n    const visit = (dir: string): void => {\n      for (const item of readdirSync(dir, { withFileTypes: true })) {\n        const path = resolve(dir, item.name);\n        if (item.isDirectory()) visit(path);\n        else if (item.name.endsWith(\".ts\")) roots.push(path);\n      }\n    };\n    visit(resolve(this.root, \"../../🏅️standards/🔖️1/🪆️subsets/✳️any\"));\n    runCmd(\"bun\", [resolve(this.repoRoot, \"node_modules/typescript/bin/tsc\"), \"--noEmit\", \"--strict\", \"--target\", \"ESNext\", \"--module\", \"ESNext\", \"--moduleResolution\", \"bundler\", \"--allowImportingTsExtensions\", \"--resolveJsonModule\", \"--esModuleInterop\", \"--skipLibCheck\", ...roots], { cwd: this.repoRoot });\n  }\n}\nawait runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-puzzle-5d\", {commands:{\"graph-generate\":GraphGenerateScript,\"graph-wire-check\":OwnerGraphWireCheckScript,verify:OwnedVerifyScript},snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});\n",
+      "sha256": "770ca9030cf0de44a3e52cbc4fde279e204479102f431f0ae23956436011fc8b"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🛂️manifest/📇️outputs.json",
+      "before": "{\n  \"$schema\": \"../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json\",\n  \"version\": 1,\n  \"inputAreas\": [\n    \"✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d\"\n  ],\n  \"policy\": {\n    \"excludedInputPaths\": [],\n    \"genericEmojiIdentities\": []\n  },\n  \"shared\": {\n    \"rustRegistry\": \"📇️registry/🦀️.rs\",\n    \"typescriptIndex\": \"🟦️.ts\",\n    \"typescriptTypes\": \"🔠️types/🟦️.ts\"\n  },\n  \"manifests\": [\n    {\n      \"id\": \"puzzle5d-default\",\n      \"rust\": \"🖐️puzzle5d-default/🦀️.rs\",\n      \"typescript\": \"🖐️puzzle5d-default/🟦️.ts\"\n    }\n  ]\n}\n",
+      "inverse": "{\n  \"$schema\": \"../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json\",\n  \"version\": 1,\n  \"inputAreas\": [\n    \"✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d\"\n  ],\n  \"policy\": {\n    \"excludedInputPaths\": [],\n    \"genericEmojiIdentities\": []\n  },\n  \"shared\": {\n    \"rustRegistry\": \"📇️registry/🦀️.rs\",\n    \"typescriptIndex\": \"🟦️.ts\",\n    \"typescriptTypes\": \"🔠️types/🟦️.ts\"\n  },\n  \"manifests\": [\n    {\n      \"id\": \"puzzle5d-default\",\n      \"rust\": \"🖐️puzzle5d-default/🦀️.rs\",\n      \"typescript\": \"🖐️puzzle5d-default/🟦️.ts\"\n    }\n  ]\n}\n",
+      "sha256": "bed47e958144889d584e97df7daa793aa6f04c47681d09921cebe48611121df9"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/📜️script.ts",
+      "before": "#!/usr/bin/env bun\nimport { GenerateScript as GraphGenerateScript, OwnerGraphWireCheckScript } from \"../../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts\";\n/** 📦️ puzzle-3d Rust artifact package router. */\nimport { runArtifactRustPackageMain } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts\";\n\nimport { runCmd } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts\";\nimport { BundleScript } from \"../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts\";\nimport { readdirSync } from \"node:fs\";\nimport { resolve } from \"node:path\";\n\n/** 🛂️ Verify the exact canonical provider through every published owning Source consumer. */\nclass OwnedVerifyScript extends BundleScript {\n  run(args: string[]): void {\n    if (args.length !== 1 || args[0] !== \"snapshot-sqlite-source\") throw new Error(\"verify snapshot-sqlite-source\");\n    const roots: string[] = [];\n    const visit = (dir: string): void => {\n      for (const item of readdirSync(dir, { withFileTypes: true })) {\n        const path = resolve(dir, item.name);\n        if (item.isDirectory() && path !== resolve(this.root,\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests\")) visit(path);\n        else if (item.name.endsWith(\".ts\")) roots.push(path);\n      }\n    };\n    visit(resolve(this.root, \"../../🏅️standards/🔖️1/🪆️subsets/✳️any\"));\n    runCmd(\"bun\", [resolve(this.repoRoot, \"node_modules/typescript/bin/tsc\"), \"--noEmit\", \"--strict\", \"--target\", \"ESNext\", \"--module\", \"ESNext\", \"--moduleResolution\", \"bundler\", \"--allowImportingTsExtensions\", \"--resolveJsonModule\", \"--esModuleInterop\", \"--skipLibCheck\", ...roots], { cwd: this.repoRoot });\n  }\n}\n\n/**\n * 🧵️ Every app-driving test in this crate polls one `VcsArtifactApp` dispatch/render future, whose\n * unoptimized state machine plus the retained tool-job poll chain under it outgrows libtest's default\n * 2 MiB per-test thread stack and aborts the binary with `fatal runtime error: stack overflow` before\n * any suite summary is reachable. Raised here — the one permanent script this package owns — so `nx\n * test`, `bun ./📜️script.ts test` and the launch.json entries that call them all inherit it on every\n * platform without a per-developer environment step. A value already present in the environment wins.\n */\nprocess.env.RUST_MIN_STACK ??= \"134217728\";\n\n/**\n * 🎛️ The whole `editor` tree is `#[cfg(feature = \"component-app-assembly\")]` (crate root `🦀️.rs:14-21`),\n * so a default-feature `cargo test` compiles 286 of this crate's 577 tests and runs not one of the\n * `editor::puzzle3d` app tests — which is how a harness that could not construct its own app survived\n * a whole wave (📓️2026-09-09-wave-X-test-suite.md §6). Declared here so `nx test`, `bun ./📜️script.ts\n * test` and the launch.json entries that call them all measure the same suite.\n */\nawait runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-puzzle-3d\", { testFeatures: [\"component-app-assembly\"],commands:{\"graph-generate\":GraphGenerateScript,\"graph-wire-check\":OwnerGraphWireCheckScript,verify:OwnedVerifyScript},snapshotSqliteTestFeatures:[],snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"] });\n",
+      "inverse": "#!/usr/bin/env bun\nimport { GenerateScript as GraphGenerateScript, OwnerGraphWireCheckScript } from \"../../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts\";\n/** 📦️ puzzle-3d Rust artifact package router. */\nimport { runArtifactRustPackageMain } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts\";\n\nimport { runCmd } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts\";\nimport { BundleScript } from \"../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts\";\nimport { readdirSync } from \"node:fs\";\nimport { resolve } from \"node:path\";\n\n/** 🛂️ Verify the exact canonical provider through every published owning Source consumer. */\nclass OwnedVerifyScript extends BundleScript {\n  run(args: string[]): void {\n    if (args.length !== 1 || args[0] !== \"snapshot-sqlite-source\") throw new Error(\"verify snapshot-sqlite-source\");\n    const roots: string[] = [];\n    const visit = (dir: string): void => {\n      for (const item of readdirSync(dir, { withFileTypes: true })) {\n        const path = resolve(dir, item.name);\n        if (item.isDirectory() && path !== resolve(this.root,\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests\")) visit(path);\n        else if (item.name.endsWith(\".ts\")) roots.push(path);\n      }\n    };\n    visit(resolve(this.root, \"../../🏅️standards/🔖️1/🪆️subsets/✳️any\"));\n    runCmd(\"bun\", [resolve(this.repoRoot, \"node_modules/typescript/bin/tsc\"), \"--noEmit\", \"--strict\", \"--target\", \"ESNext\", \"--module\", \"ESNext\", \"--moduleResolution\", \"bundler\", \"--allowImportingTsExtensions\", \"--resolveJsonModule\", \"--esModuleInterop\", \"--skipLibCheck\", ...roots], { cwd: this.repoRoot });\n  }\n}\n\n/**\n * 🧵️ Every app-driving test in this crate polls one `VcsArtifactApp` dispatch/render future, whose\n * unoptimized state machine plus the retained tool-job poll chain under it outgrows libtest's default\n * 2 MiB per-test thread stack and aborts the binary with `fatal runtime error: stack overflow` before\n * any suite summary is reachable. Raised here — the one permanent script this package owns — so `nx\n * test`, `bun ./📜️script.ts test` and the launch.json entries that call them all inherit it on every\n * platform without a per-developer environment step. A value already present in the environment wins.\n */\nprocess.env.RUST_MIN_STACK ??= \"134217728\";\n\n/**\n * 🎛️ The whole `editor` tree is `#[cfg(feature = \"component-app-assembly\")]` (crate root `🦀️.rs:14-21`),\n * so a default-feature `cargo test` compiles 286 of this crate's 577 tests and runs not one of the\n * `editor::puzzle3d` app tests — which is how a harness that could not construct its own app survived\n * a whole wave (📓️2026-09-09-wave-X-test-suite.md §6). Declared here so `nx test`, `bun ./📜️script.ts\n * test` and the launch.json entries that call them all measure the same suite.\n */\nawait runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-puzzle-3d\", { testFeatures: [\"component-app-assembly\"],commands:{\"graph-generate\":GraphGenerateScript,\"graph-wire-check\":OwnerGraphWireCheckScript,verify:OwnedVerifyScript},snapshotSqliteTestFeatures:[],snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"] });\n",
+      "sha256": "b4e81d22315d2a95da1219412fd061cf0d6f42f834713d9e6bdf4e64d845f2b9"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🛂️manifest/📇️outputs.json",
+      "before": "{\n  \"$schema\": \"../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json\",\n  \"version\": 1,\n  \"inputAreas\": [\n    \"✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d\"\n  ],\n  \"policy\": {\n    \"excludedInputPaths\": [],\n    \"genericEmojiIdentities\": []\n  },\n  \"shared\": {\n    \"rustRegistry\": \"📇️registry/🦀️.rs\",\n    \"typescriptIndex\": \"🟦️.ts\",\n    \"typescriptTypes\": \"🔠️types/🟦️.ts\"\n  },\n  \"manifests\": [\n    {\n      \"id\": \"puzzle3d-default\",\n      \"rust\": \"🧊️puzzle3d-default/🦀️.rs\",\n      \"typescript\": \"🧊️puzzle3d-default/🟦️.ts\"\n    }\n  ]\n}\n",
+      "inverse": "{\n  \"$schema\": \"../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json\",\n  \"version\": 1,\n  \"inputAreas\": [\n    \"✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d\"\n  ],\n  \"policy\": {\n    \"excludedInputPaths\": [],\n    \"genericEmojiIdentities\": []\n  },\n  \"shared\": {\n    \"rustRegistry\": \"📇️registry/🦀️.rs\",\n    \"typescriptIndex\": \"🟦️.ts\",\n    \"typescriptTypes\": \"🔠️types/🟦️.ts\"\n  },\n  \"manifests\": [\n    {\n      \"id\": \"puzzle3d-default\",\n      \"rust\": \"🧊️puzzle3d-default/🦀️.rs\",\n      \"typescript\": \"🧊️puzzle3d-default/🟦️.ts\"\n    }\n  ]\n}\n",
+      "sha256": "2c235b3c1c5cf2a60a5924f142fc61215a8a17439508794b429f0378534bad69"
+    }
+  ],
+  "observations": [
+    {
+      "script": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/📜️script.ts",
+      "catalogPath": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🛂️manifest/📇️outputs.json",
+      "identity": "semio-s-artifact-writer-writer",
+      "missingRequired": [
+        "contractId"
+      ],
+      "runtimeAccepted": false,
+      "error": "Error: cannot read the graph output catalog: graph output catalog has missing or unknown fields",
+      "oracleAccepted": false,
+      "oracleErrors": [
+        {
+          "instancePath": "",
+          "schemaPath": "graph#/$defs/Outputs/required",
+          "keyword": "required",
+          "params": {
+            "missingProperty": "contractId"
+          },
+          "message": "must have required property 'contractId'"
+        }
+      ],
+      "existingPolicy": {
+        "excludedInputPaths": [],
+        "genericEmojiIdentities": [
+          "📁️",
+          "📂️",
+          "📄️"
+        ]
+      },
+      "preservedFields": [
+        "inputAreas",
+        "shared",
+        "manifests"
+      ],
+      "proposedOwnedAdditions": {
+        "contractId": "semio-s-artifact-writer-writer",
+        "policy": {
+          "excludedInputPaths": [],
+          "genericEmojiIdentities": [
+            "📁️",
+            "📂️",
+            "📄️"
+          ]
+        }
+      }
+    },
+    {
+      "script": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust/📜️script.ts",
+      "catalogPath": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🛂️manifest/📇️outputs.json",
+      "identity": "semio-s-artifact-reasoning-wires",
+      "missingRequired": [
+        "contractId",
+        "policy"
+      ],
+      "runtimeAccepted": false,
+      "error": "Error: cannot read the graph output catalog: graph output catalog has missing or unknown fields",
+      "oracleAccepted": false,
+      "oracleErrors": [
+        {
+          "instancePath": "",
+          "schemaPath": "graph#/$defs/Outputs/required",
+          "keyword": "required",
+          "params": {
+            "missingProperty": "contractId"
+          },
+          "message": "must have required property 'contractId'"
+        },
+        {
+          "instancePath": "",
+          "schemaPath": "graph#/$defs/Outputs/required",
+          "keyword": "required",
+          "params": {
+            "missingProperty": "policy"
+          },
+          "message": "must have required property 'policy'"
+        }
+      ],
+      "existingPolicy": null,
+      "preservedFields": [
+        "inputAreas",
+        "shared",
+        "manifests"
+      ],
+      "proposedOwnedAdditions": {
+        "contractId": "semio-s-artifact-reasoning-wires",
+        "policy": {
+          "excludedInputPaths": [],
+          "genericEmojiIdentities": [
+            "📁️",
+            "📂️",
+            "📄️"
+          ]
+        }
+      }
+    },
+    {
+      "script": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust/📜️script.ts",
+      "catalogPath": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🛂️manifest/📇️outputs.json",
+      "identity": "semio-s-artifact-trinity-rewriting",
+      "missingRequired": [],
+      "runtimeAccepted": true,
+      "error": null,
+      "oracleAccepted": true,
+      "oracleErrors": null,
+      "existingPolicy": {
+        "excludedInputPaths": [],
+        "genericEmojiIdentities": []
+      },
+      "preservedFields": [
+        "inputAreas",
+        "shared",
+        "manifests"
+      ],
+      "proposedOwnedAdditions": {
+        "contractId": "semio-s-artifact-trinity-rewriting",
+        "policy": {
+          "excludedInputPaths": [],
+          "genericEmojiIdentities": [
+            "📁️",
+            "📂️",
+            "📄️"
+          ]
+        }
+      }
+    },
+    {
+      "script": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust/📜️script.ts",
+      "catalogPath": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🛂️manifest/📇️outputs.json",
+      "identity": "semio-s-artifact-trinity-jack",
+      "missingRequired": [
+        "contractId",
+        "policy"
+      ],
+      "runtimeAccepted": false,
+      "error": "Error: cannot read the graph output catalog: graph output catalog has missing or unknown fields",
+      "oracleAccepted": false,
+      "oracleErrors": [
+        {
+          "instancePath": "",
+          "schemaPath": "graph#/$defs/Outputs/required",
+          "keyword": "required",
+          "params": {
+            "missingProperty": "contractId"
+          },
+          "message": "must have required property 'contractId'"
+        },
+        {
+          "instancePath": "",
+          "schemaPath": "graph#/$defs/Outputs/required",
+          "keyword": "required",
+          "params": {
+            "missingProperty": "policy"
+          },
+          "message": "must have required property 'policy'"
+        }
+      ],
+      "existingPolicy": null,
+      "preservedFields": [
+        "inputAreas",
+        "shared",
+        "manifests"
+      ],
+      "proposedOwnedAdditions": {
+        "contractId": "semio-s-artifact-trinity-jack",
+        "policy": {
+          "excludedInputPaths": [],
+          "genericEmojiIdentities": [
+            "📁️",
+            "📂️",
+            "📄️"
+          ]
+        }
+      }
+    },
+    {
+      "script": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust/📜️script.ts",
+      "catalogPath": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🛂️manifest/📇️outputs.json",
+      "identity": "semio-s-artifact-puzzle-2d",
+      "missingRequired": [
+        "contractId"
+      ],
+      "runtimeAccepted": false,
+      "error": "Error: cannot read the graph output catalog: graph output catalog has missing or unknown fields",
+      "oracleAccepted": false,
+      "oracleErrors": [
+        {
+          "instancePath": "",
+          "schemaPath": "graph#/$defs/Outputs/required",
+          "keyword": "required",
+          "params": {
+            "missingProperty": "contractId"
+          },
+          "message": "must have required property 'contractId'"
+        }
+      ],
+      "existingPolicy": {
+        "excludedInputPaths": [],
+        "genericEmojiIdentities": [
+          "📁️",
+          "📂️",
+          "📄️"
+        ]
+      },
+      "preservedFields": [
+        "inputAreas",
+        "shared",
+        "manifests"
+      ],
+      "proposedOwnedAdditions": {
+        "contractId": "semio-s-artifact-puzzle-2d",
+        "policy": {
+          "excludedInputPaths": [],
+          "genericEmojiIdentities": [
+            "📁️",
+            "📂️",
+            "📄️"
+          ]
+        }
+      }
+    },
+    {
+      "script": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/📦️packages/🦀️rust/📜️script.ts",
+      "catalogPath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🛂️manifest/📇️outputs.json",
+      "identity": "semio-s-artifact-draw-drawing",
+      "missingRequired": [],
+      "runtimeAccepted": true,
+      "error": null,
+      "oracleAccepted": true,
+      "oracleErrors": null,
+      "existingPolicy": {
+        "excludedInputPaths": [],
+        "genericEmojiIdentities": [
+          "📁️",
+          "📂️",
+          "📄️"
+        ]
+      },
+      "preservedFields": [
+        "inputAreas",
+        "shared",
+        "manifests"
+      ],
+      "proposedOwnedAdditions": {
+        "contractId": "semio-s-artifact-draw-drawing",
+        "policy": {
+          "excludedInputPaths": [],
+          "genericEmojiIdentities": [
+            "📁️",
+            "📂️",
+            "📄️"
+          ]
+        }
+      }
+    },
+    {
+      "script": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust/📜️script.ts",
+      "catalogPath": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🛂️manifest/📇️outputs.json",
+      "identity": "semio-s-artifact-puzzle-5d",
+      "missingRequired": [
+        "contractId"
+      ],
+      "runtimeAccepted": false,
+      "error": "Error: cannot read the graph output catalog: graph output catalog has missing or unknown fields",
+      "oracleAccepted": false,
+      "oracleErrors": [
+        {
+          "instancePath": "",
+          "schemaPath": "graph#/$defs/Outputs/required",
+          "keyword": "required",
+          "params": {
+            "missingProperty": "contractId"
+          },
+          "message": "must have required property 'contractId'"
+        }
+      ],
+      "existingPolicy": {
+        "excludedInputPaths": [],
+        "genericEmojiIdentities": []
+      },
+      "preservedFields": [
+        "inputAreas",
+        "shared",
+        "manifests"
+      ],
+      "proposedOwnedAdditions": {
+        "contractId": "semio-s-artifact-puzzle-5d",
+        "policy": {
+          "excludedInputPaths": [],
+          "genericEmojiIdentities": [
+            "📁️",
+            "📂️",
+            "📄️"
+          ]
+        }
+      }
+    },
+    {
+      "script": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/📜️script.ts",
+      "catalogPath": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🛂️manifest/📇️outputs.json",
+      "identity": "semio-s-artifact-puzzle-3d",
+      "missingRequired": [
+        "contractId"
+      ],
+      "runtimeAccepted": false,
+      "error": "Error: cannot read the graph output catalog: graph output catalog has missing or unknown fields",
+      "oracleAccepted": false,
+      "oracleErrors": [
+        {
+          "instancePath": "",
+          "schemaPath": "graph#/$defs/Outputs/required",
+          "keyword": "required",
+          "params": {
+            "missingProperty": "contractId"
+          },
+          "message": "must have required property 'contractId'"
+        }
+      ],
+      "existingPolicy": {
+        "excludedInputPaths": [],
+        "genericEmojiIdentities": []
+      },
+      "preservedFields": [
+        "inputAreas",
+        "shared",
+        "manifests"
+      ],
+      "proposedOwnedAdditions": {
+        "contractId": "semio-s-artifact-puzzle-3d",
+        "policy": {
+          "excludedInputPaths": [],
+          "genericEmojiIdentities": [
+            "📁️",
+            "📂️",
+            "📄️"
+          ]
+        }
+      }
+    }
+  ],
+  "sourceWrites": 0,
+  "nativeExecuted": 0,
+  "scope": "All actual imported GraphGenerateScript declarations; caller paths resolved exactly as GenerateScript; proposed additions require owner review"
+}

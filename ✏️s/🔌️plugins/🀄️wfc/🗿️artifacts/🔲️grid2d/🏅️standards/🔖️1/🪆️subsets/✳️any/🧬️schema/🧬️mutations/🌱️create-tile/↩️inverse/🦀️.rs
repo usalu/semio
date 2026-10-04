@@ -4,9 +4,12 @@
 use crate::mutations::{delete_tile, Grid2dMutation};
 use crate::schema::snapshot::Grid2dSnapshot;
 
-pub fn inverse(payload: &super::CreateTile, base: &Grid2dSnapshot) -> Vec<Grid2dMutation> {
+pub fn inverse(payload: &super::CreateTile, base: &Grid2dSnapshot) -> Result<Vec<Grid2dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     if base.tiles.iter().any(|tile| tile.id == payload.tile.id) {
         return Vec::new();
     }
     vec![delete_tile(payload.tile.id.clone())]
+
+    })())
 }

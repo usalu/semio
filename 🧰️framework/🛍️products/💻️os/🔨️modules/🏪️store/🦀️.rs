@@ -19,17 +19,17 @@
 
 #[path = "♻️retirement/🦀️.rs"]
 mod retirement_integration;
-pub use semio_framework_value::{ErasedSnapshotRetirement, SnapshotRetirementStep, SnapshotRetirementFactory, ArtifactOwnedValueRetirementFactory};
+pub use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory, SnapshotRetirementStep};
 
-#[path = "🧬️snapshot-clone/🦀️.rs"]
-pub(crate) mod snapshot_clone_preparation;
 #[cfg(test)]
 #[path = "🧪️tests/🧬️retained-clone/🦀️.rs"]
 mod retained_clone_tests;
+#[path = "🧬️snapshot-clone/🦀️.rs"]
+pub(crate) mod snapshot_clone_preparation;
 
 #[path = "🫧️ephemeral/📢️publication/🔁️transfer/🦀️.rs"]
 mod ephemeral_transfer;
-pub use ephemeral_transfer::{ArtifactEphemeralTransferPreparationFactory, ARTIFACT_EPHEMERAL_TRANSFER_MAXIMUM_INLINE_BYTES};
+pub use ephemeral_transfer::{ARTIFACT_EPHEMERAL_TRANSFER_MAXIMUM_INLINE_BYTES, ArtifactEphemeralTransferPreparationFactory};
 
 #[path = "🫧️ephemeral/📢️publication/🧩️preparation/🦀️.rs"]
 mod ephemeral_preparation;
@@ -40,20 +40,18 @@ mod initial_child_identity;
 
 #[path = "🧩️composition/🌳️closure/🦀️.rs"]
 mod owned_document_closure;
-pub use owned_document_closure::{OwnedDocumentClosure, OwnedDocumentClosureDiagnostic, OwnedDocumentClosureProgress, OwnedDocumentClosureSource, OwnedDocumentClosureStep, OWNED_DOCUMENT_MAXIMUM_MEMBERS};
+pub use owned_document_closure::{OWNED_DOCUMENT_MAXIMUM_MEMBERS, OwnedDocumentClosure, OwnedDocumentClosureDiagnostic, OwnedDocumentClosureProgress, OwnedDocumentClosureSource, OwnedDocumentClosureStep};
 
 #[path = "🧩️composition/🚪️open/🦀️.rs"]
 pub mod member_open;
 pub use member_open::{
-    InitialMemberStoreOpen, MemberOpenAdmissionError, MemberOpenDeclaration, MemberOpenDiagnostic, MemberOpenFrame, MemberOpenInputStep, MemberOpenOperation, MemberOpenPhase, MemberOpenProgress, MemberOpenRequest, MemberOpenStep,
-    MemberSnapshotOpenOperation, MemberSnapshotOpenStep, PackMemberSnapshotOpen, UnsupportedMemberFactoryOpen, UnsupportedMemberSnapshotOpen, MEMBER_OPEN_IDENTITY_BYTES,
+    InitialMemberStoreOpen, MEMBER_OPEN_IDENTITY_BYTES, MemberOpenAdmissionError, MemberOpenDeclaration, MemberOpenDiagnostic, MemberOpenFrame, MemberOpenInputStep, MemberOpenOperation, MemberOpenPhase, MemberOpenProgress, MemberOpenRequest,
+    MemberOpenStep, MemberSnapshotOpenOperation, MemberSnapshotOpenStep, PackMemberSnapshotOpen, UnsupportedMemberFactoryOpen, UnsupportedMemberSnapshotOpen,
 };
 
 #[path = "🧾️document/📜️history/💧️hydration/🦀️.rs"]
 mod persisted_document_hydration;
-pub use persisted_document_hydration::{
-    PersistedDocumentHydrationOutput, PersistedDocumentHydrationProgress, PersistedDocumentHydrationStep, PersistedDocumentHydrationTarget, RetainedPersistedDocumentHydration,
-};
+pub use persisted_document_hydration::{PersistedDocumentHydrationOutput, PersistedDocumentHydrationProgress, PersistedDocumentHydrationStep, PersistedDocumentHydrationTarget, RetainedPersistedDocumentHydration};
 
 #[path = "🧾️document/📥️mounted-pack/🦀️.rs"]
 mod mounted_pack_session;
@@ -74,7 +72,12 @@ pub mod durable_group;
 // this crate even when the derive is exercised in-crate.
 // extern crate self removed after merge
 
-use crate::os_dsl::{DslOps, DslRecord, DslValue, FromValue, ToValue, ValueError};
+use semio_framework_dsl_record_derive::DslEnum;
+use semio_framework_dsl_record_derive::DslRecord;
+use semio_framework_value::DslValue;
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
+use semio_framework_value::ValueError;
 use crate::os_spr::{ActorId, ArtifactId, HybridLogicalTimestamp, MutationId, SchemaId, UndoPolicy};
 use crate::os_spr::{DiffRegions, Edit, Mutation, MutationDiff, MutationMeta, OpBinary, OpText, TouchedPaths};
 use serde::{Deserialize, Serialize};
@@ -83,6 +86,39 @@ use std::marker::PhantomData;
 use std::sync::{Arc, Mutex, MutexGuard};
 
 //#region 🧬️OpaqueSnapshotRead
+
+/// 🌱️ Immutable projection derived by one Store from its own event history or a provisional operation.
+pub struct ArtifactDerivedSnapshot<P> {
+    owner: Arc<P>,
+    registry: Arc<SnapshotReadLeaseRegistry>,
+    generation: u64,
+    revision: [u8; 32],
+}
+
+impl<P> ArtifactDerivedSnapshot<P> {
+    /// 👁️ Borrows the complete typed projection without transferring its derivation authority.
+    pub fn snapshot(&self) -> &P {
+        self.owner.as_ref()
+    }
+
+    /// 🪞️ Borrows the immutable alias used by renderer seams.
+    pub fn snapshot_owner(&self) -> &Arc<P> {
+        &self.owner
+    }
+
+    /// ♻️ Transfers the projection alias to the caller's registered bounded retirement.
+    pub fn into_snapshot_owner(self) -> Arc<P> {
+        self.owner
+    }
+}
+
+/// ⏪️ Store-owned history replay whose input edits and projection origin cannot be supplied by the caller.
+pub struct ArtifactDerivedReplay<P, Mu: self::Mutation<P>> {
+    replay: EditReplay<P, Mu>,
+    registry: Arc<SnapshotReadLeaseRegistry>,
+    generation: u64,
+    revision: [u8; 32],
+}
 const SNAPSHOT_READ_LEASE_CAPACITY: usize = 1_024;
 
 #[cfg(test)]
@@ -103,6 +139,26 @@ struct SnapshotReadLeaseRegistryState {
     free_len: usize,
     next_generation: u64,
     cleanup_cursor: usize,
+}
+
+#[derive(Debug)]
+enum SnapshotReadLeaseRefusal {
+    Busy,
+    Poisoned,
+    OwnerTypeChanged,
+}
+
+impl SnapshotReadLeaseRefusal {
+    fn into_value_error(self) -> semio_framework_value::ValueError {
+        semio_framework_value::ValueError::new(
+            semio_framework_value::ValueRefusalKind::InvariantViolated,
+            match self {
+                Self::Busy => "snapshot read lease registry is busy",
+                Self::Poisoned => "snapshot read lease registry is poisoned",
+                Self::OwnerTypeChanged => "snapshot read lease owner type changed inside its exact registry",
+            },
+        )
+    }
 }
 
 struct SnapshotReadLeaseRegistry {
@@ -262,11 +318,11 @@ impl SnapshotReadLeaseRegistry {
         true
     }
 
-    fn try_take_one_returned<T: Send + Sync + 'static>(&self) -> Result<Option<Arc<T>>, String> {
+    fn try_take_one_returned<T: Send + Sync + 'static>(&self) -> Result<Option<Arc<T>>, SnapshotReadLeaseRefusal> {
         let mut state = match self.state.try_lock() {
             Ok(state) => state,
-            Err(std::sync::TryLockError::WouldBlock) => return Err("snapshot read lease registry is busy".into()),
-            Err(std::sync::TryLockError::Poisoned(_)) => return Err("snapshot read lease registry is poisoned".into()),
+            Err(std::sync::TryLockError::WouldBlock) => return Err(SnapshotReadLeaseRefusal::Busy),
+            Err(std::sync::TryLockError::Poisoned(_)) => return Err(SnapshotReadLeaseRefusal::Poisoned),
         };
         let start = state.cleanup_cursor;
         let Some(index) = (0..=state.occupied.len()).find_map(|offset| {
@@ -278,7 +334,9 @@ impl SnapshotReadLeaseRegistry {
                 occupied &= (1u64 << (start % 64)) - 1;
             }
             (occupied != 0).then(|| word_index * 64 + occupied.trailing_zeros() as usize)
-        }) else { return Ok(None) };
+        }) else {
+            return Ok(None);
+        };
         state.cleanup_cursor = (index + 1) % SNAPSHOT_READ_LEASE_CAPACITY;
         let mask = 1 << (index % 64);
         if state.occupied[index / 64] & mask == 0 {
@@ -289,7 +347,7 @@ impl SnapshotReadLeaseRegistry {
             return Ok(None);
         }
         if !slot.owner.is::<T>() {
-            return Err("snapshot read lease owner type changed inside its exact registry".into());
+            return Err(SnapshotReadLeaseRefusal::OwnerTypeChanged);
         }
         let slot = unsafe { state.slots[index].assume_init_read() };
         state.occupied[index / 64] &= !mask;
@@ -305,10 +363,7 @@ impl Drop for SnapshotReadLeaseRegistry {
     fn drop(&mut self) {
         let state = self.state.get_mut().unwrap_or_else(|poisoned| poisoned.into_inner());
         assert!(std::thread::panicking() || state.free_len == SNAPSHOT_READ_LEASE_CAPACITY, "snapshot read lease registry reached Drop before every exact owner was returned and retired: {} of {SNAPSHOT_READ_LEASE_CAPACITY}", state.free_len);
-        assert!(
-            std::thread::panicking() || self.returned.load(std::sync::atomic::Ordering::Acquire) == 0,
-            "snapshot read lease registry reached Drop with returned owners outside the bounded retirement pump"
-        );
+        assert!(std::thread::panicking() || self.returned.load(std::sync::atomic::Ordering::Acquire) == 0, "snapshot read lease registry reached Drop with returned owners outside the bounded retirement pump");
     }
 }
 
@@ -380,6 +435,17 @@ impl<T: ?Sized> SnapshotRead<T> {
     /// therefore fails closed.
     pub fn commit_authority_matches(&self, generation: u64, revision: [u8; 32]) -> bool {
         self.lease.as_ref().is_some_and(|lease| lease.registry.authority_matches(generation, revision))
+    }
+
+    /// 🧬️ Borrows this exact leased root through a retained-clone source whose alias remains
+    /// tied to the same store read registry until the domain closes its cursor.
+    pub fn retained_clone_source(&self) -> semio_framework_value::retained_clone::RetainedCloneSource<T>
+    where
+        T: Sized + Send + Sync + 'static,
+    {
+        let owner = Arc::clone(self.owner.as_ref().expect("live snapshot read owner is present"));
+        let authority = Arc::clone(&self.lease.as_ref().expect("live snapshot read lease is present").registry);
+        semio_framework_value::retained_clone::RetainedCloneSource::from_authority(owner, authority)
     }
 
     /// 🧹 Returns this lease to its exact registry while the registry retains the snapshot
@@ -471,7 +537,6 @@ impl<T: ?Sized> std::ops::Deref for SnapshotReadRef<'_, T> {
     }
 }
 
-
 /// 🧹️ Spends one caller turn's admitted BYTE grant on a retained owner instead of taking a single
 /// `close_step` from it. The retirement protocol admits at most ONE structural owner and
 /// `maximum_bytes` BYTES per turn, and the owners under a store disposer or a batched item
@@ -481,7 +546,7 @@ impl<T: ?Sized> std::ops::Deref for SnapshotReadRef<'_, T> {
 /// structural release (that is the one-item half of the grant), and a step that reports no progress
 /// is charged one unit, so the loop is bounded by `maximum_bytes` even against an owner that never
 /// advances.
-fn spend_close_byte_grant(maximum_bytes: usize, mut step_once: impl FnMut(usize) -> Result<SnapshotRetirementStep, String>) -> Result<(SnapshotRetirementStep, usize), String> {
+fn spend_close_byte_grant(maximum_bytes: usize, mut step_once: impl FnMut(usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError>) -> Result<(SnapshotRetirementStep, usize), semio_framework_value::ValueError> {
     let mut remaining = maximum_bytes;
     let mut released = 0usize;
     loop {
@@ -535,7 +600,7 @@ impl ArtifactStoreSupersessionRetirement {
 }
 
 impl ErasedSnapshotRetirement for ArtifactStoreSupersessionRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -573,7 +638,7 @@ impl ArtifactStoreStringRetirement {
 }
 
 impl ErasedSnapshotRetirement for ArtifactStoreStringRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -613,7 +678,7 @@ impl ArtifactStoreStringVectorRetirement {
 }
 
 impl ErasedSnapshotRetirement for ArtifactStoreStringVectorRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -621,7 +686,7 @@ impl ErasedSnapshotRetirement for ArtifactStoreStringVectorRetirement {
             return match active.close_step(maximum_items, maximum_bytes)? {
                 SnapshotRetirementStep::Complete => {
                     if !active.terminal_is_empty() {
-                        return Err("artifact store string-vector child reported Complete without terminal ownership".into());
+                        return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact store string-vector child reported Complete without terminal ownership"));
                     }
                     drop(self.active.take());
                     Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
@@ -662,7 +727,7 @@ impl ArtifactStoreRevisionAccumulatorRetirement {
 }
 
 impl ErasedSnapshotRetirement for ArtifactStoreRevisionAccumulatorRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -670,7 +735,7 @@ impl ErasedSnapshotRetirement for ArtifactStoreRevisionAccumulatorRetirement {
             return match active.close_step(maximum_items, maximum_bytes)? {
                 SnapshotRetirementStep::Complete => {
                     if !active.terminal_is_empty() {
-                        return Err("artifact store revision child reported Complete without terminal ownership".into());
+                        return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact store revision child reported Complete without terminal ownership"));
                     }
                     drop(self.active.take());
                     Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
@@ -710,7 +775,7 @@ impl ArtifactStoreCursorRetirement {
 }
 
 impl ErasedSnapshotRetirement for ArtifactStoreCursorRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -718,7 +783,7 @@ impl ErasedSnapshotRetirement for ArtifactStoreCursorRetirement {
             return match active.close_step(maximum_items, maximum_bytes)? {
                 SnapshotRetirementStep::Complete => {
                     if !active.terminal_is_empty() {
-                        return Err("artifact cursor string child reported Complete without terminal ownership".into());
+                        return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact cursor string child reported Complete without terminal ownership"));
                     }
                     drop(self.active.take());
                     Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
@@ -752,7 +817,7 @@ struct ArtifactStoreEditRetirement {
 }
 
 struct ArtifactStoreEditRetirementState {
-    strings: [Option<String>; 8],
+    strings: [Option<String>; 7],
     mutation_meta: Vec<MutationMeta>,
     active_meta: Option<ArtifactStoreMutationMetaRetirement>,
     active_bytes: Option<Vec<u8>>,
@@ -805,15 +870,15 @@ impl ArtifactStoreEditRetirement {
         if !edit.forwards.is_empty() || !edit.inverse.is_empty() {
             return Err(edit);
         }
-        let Edit { id, actor, line, forwards, inverse, mutation_meta, description, verb, coalesce_key, sequence_number: _, started_at, finished_at } = edit;
+        let Edit { id, actor, line, forwards, inverse, mutation_meta, description, verb, sequence_number: _, started_at, finished_at } = edit;
         drop(forwards);
         drop(inverse);
-        Ok(Self { state: std::mem::ManuallyDrop::new(Some(ArtifactStoreEditRetirementState { strings: [Some(id), actor, description, verb, coalesce_key, Some(started_at), finished_at, line], mutation_meta, active_meta: None, active_bytes: None })) })
+        Ok(Self { state: std::mem::ManuallyDrop::new(Some(ArtifactStoreEditRetirementState { strings: [Some(id), actor, description, verb, Some(started_at), finished_at, line], mutation_meta, active_meta: None, active_bytes: None })) })
     }
 }
 
 impl ErasedSnapshotRetirement for ArtifactStoreEditRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -836,7 +901,7 @@ impl ErasedSnapshotRetirement for ArtifactStoreEditRetirement {
                 return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
             }
             if !meta.terminal_is_empty() {
-                return Err("artifact store mutation metadata retirement lost terminal ownership".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact store mutation metadata retirement lost terminal ownership"));
             }
             drop(state.active_meta.take());
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
@@ -907,7 +972,7 @@ impl ArtifactStoreHistoryMetadataRetirement {
 }
 
 impl ErasedSnapshotRetirement for ArtifactStoreHistoryMetadataRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -982,7 +1047,7 @@ impl ArtifactStoreMessageLedgerRetirement {
 }
 
 impl ErasedSnapshotRetirement for ArtifactStoreMessageLedgerRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -1048,7 +1113,7 @@ impl ArtifactStoreConflictRetirement {
 }
 
 impl ErasedSnapshotRetirement for ArtifactStoreConflictRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -1161,18 +1226,18 @@ impl ArtifactStoreMutationDagRetirement {
 }
 
 impl ErasedSnapshotRetirement for ArtifactStoreMutationDagRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(active) = self.active.as_mut() {
             return match active.close_step(maximum_items, maximum_bytes)? {
                 SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= maximum_items && released_bytes <= maximum_bytes => Ok(SnapshotRetirementStep::Pending { released_items, released_bytes }),
-                SnapshotRetirementStep::Pending { .. } => Err("mutation dag nested owner exceeded its exact close grant".into()),
+                SnapshotRetirementStep::Pending { .. } => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "mutation dag nested owner exceeded its exact close grant")),
                 SnapshotRetirementStep::Blocked => Ok(SnapshotRetirementStep::Blocked),
                 SnapshotRetirementStep::Complete => {
                     if !active.terminal_is_empty() {
-                        return Err("mutation dag nested owner reported Complete without its terminal witness".into());
+                        return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "mutation dag nested owner reported Complete without its terminal witness"));
                     }
                     drop(self.active.take());
                     Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
@@ -1188,7 +1253,7 @@ impl ErasedSnapshotRetirement for ArtifactStoreMutationDagRetirement {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if !dag.terminal_is_empty() {
-            return Err("mutation dag lost an exact owner before terminal retirement".into());
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "mutation dag lost an exact owner before terminal retirement"));
         }
         drop(self.dag.take());
         Ok(SnapshotRetirementStep::Complete)
@@ -1284,18 +1349,18 @@ impl<Mutation> ArtifactStoreDecodedEditRetirement<Mutation> {
 }
 
 impl<Mutation: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreDecodedEditRetirement<Mutation> {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(active) = self.active.as_mut() {
             return match active.close_step(maximum_items, maximum_bytes)? {
                 SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= maximum_items && released_bytes <= maximum_bytes => Ok(SnapshotRetirementStep::Pending { released_items, released_bytes }),
-                SnapshotRetirementStep::Pending { .. } => Err("decoded edit nested owner exceeded its exact close grant".into()),
+                SnapshotRetirementStep::Pending { .. } => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "decoded edit nested owner exceeded its exact close grant")),
                 SnapshotRetirementStep::Blocked => Ok(SnapshotRetirementStep::Blocked),
                 SnapshotRetirementStep::Complete => {
                     if !active.terminal_is_empty() {
-                        return Err("decoded edit nested owner completed without a terminal witness".into());
+                        return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "decoded edit nested owner completed without a terminal witness"));
                     }
                     drop(self.active.take());
                     Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
@@ -1312,7 +1377,7 @@ impl<Mutation: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreDecoded
         let edit = self.edit.take().expect("decoded edit retirement retains its exact owner");
         let retirement = ArtifactStoreEditRetirement::new(edit).map_err(|edit| {
             *self.edit = Some(edit);
-            "decoded edit structural retirement found a live mutation owner".to_string()
+            semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "decoded edit structural retirement found a live mutation owner")
         })?;
         *self.active = Some(Box::new(retirement));
         Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
@@ -1340,18 +1405,18 @@ where
     P: Send + 'static,
     Mutation: Send + 'static,
 {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(active) = self.active.as_mut() {
             return match active.close_step(maximum_items, maximum_bytes)? {
                 SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= maximum_items && released_bytes <= maximum_bytes => Ok(SnapshotRetirementStep::Pending { released_items, released_bytes }),
-                SnapshotRetirementStep::Pending { .. } => Err("VCS retirement nested owner exceeded its exact close grant".into()),
+                SnapshotRetirementStep::Pending { .. } => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "VCS retirement nested owner exceeded its exact close grant")),
                 SnapshotRetirementStep::Blocked => Ok(SnapshotRetirementStep::Blocked),
                 SnapshotRetirementStep::Complete => {
                     if !active.terminal_is_empty() {
-                        return Err("VCS retirement nested owner reported Complete without its terminal witness".into());
+                        return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "VCS retirement nested owner reported Complete without its terminal witness"));
                     }
                     drop(self.active.take());
                     Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
@@ -1384,7 +1449,7 @@ where
                             if let Err(edit) = vcs.edits.try_push(edit) {
                                 *self.active = Some(Box::new(ArtifactStoreDecodedEditRetirement::new(edit, self.mutation_factory.clone())));
                             }
-                            return Err("VCS retirement edit retained a domain mutation outside its exact mutation phase".into());
+                            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "VCS retirement edit retained a domain mutation outside its exact mutation phase"));
                         }
                     }
                 }
@@ -1413,7 +1478,7 @@ where
             }
             ArtifactStoreVcsRetirementPhase::InitialSnapshot => {
                 if !(vcs.edits.is_empty() && vcs.changes.is_empty() && vcs.checkpoints.is_empty() && vcs.alternatives.is_empty()) {
-                    return Err("VCS retirement reached snapshot handoff with live history owners".into());
+                    return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "VCS retirement reached snapshot handoff with live history owners"));
                 }
                 let ArtifactVcs { initial_snapshot, edits, changes, checkpoints, alternatives } = self.vcs.take().expect("VCS retirement retains its exact owner");
                 assert!(edits.is_empty() && changes.is_empty() && checkpoints.is_empty() && alternatives.is_empty(), "VCS retirement snapshot handoff requires an empty history shell");
@@ -1509,18 +1574,18 @@ where
     /// `Pending { 0, 0 }` for those steps made a truthful ladder indistinguishable from a livelocked
     /// one and spent the runtime's structural close credit inside a single displaced envelope
     /// (26/09/09/PROCEDURAL-3D-END-TO-END: no generation3d instance could ever reach `Retired`).
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(active) = self.active.as_mut() {
             return match active.close_step(maximum_items, maximum_bytes)? {
                 SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= maximum_items && released_bytes <= maximum_bytes => Ok(SnapshotRetirementStep::Pending { released_items, released_bytes }),
-                SnapshotRetirementStep::Pending { .. } => Err("displaced envelope nested owner exceeded its exact close grant".into()),
+                SnapshotRetirementStep::Pending { .. } => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "displaced envelope nested owner exceeded its exact close grant")),
                 SnapshotRetirementStep::Blocked => Ok(SnapshotRetirementStep::Blocked),
                 SnapshotRetirementStep::Complete => {
                     if !active.terminal_is_empty() {
-                        return Err("displaced envelope nested owner reported Complete without its terminal-empty witness".into());
+                        return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "displaced envelope nested owner reported Complete without its terminal-empty witness"));
                     }
                     drop(self.active.take());
                     Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
@@ -1553,7 +1618,7 @@ where
                             if let Err(edit) = envelope.vcs.edits.try_push(edit) {
                                 *self.active = Some(Box::new(ArtifactStoreDecodedEditRetirement::new(edit, self.mutation_factory.clone())));
                             }
-                            return Err("displaced envelope edit retained a domain mutation outside its exact mutation phase".into());
+                            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "displaced envelope edit retained a domain mutation outside its exact mutation phase"));
                         }
                     }
                 }
@@ -1635,10 +1700,11 @@ where
                         && envelope.vcs.alternatives.is_empty()
                 });
                 if !structural_shell_is_empty {
-                    return Err("displaced envelope reached initial snapshot handoff without an exact terminal structural shell".into());
+                    return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "displaced envelope reached initial snapshot handoff without an exact terminal structural shell"));
                 }
                 let envelope = self.envelope.take().expect("displaced envelope authority remains present");
-                let ArtifactEnvelopeOwners { schema, id, vcs, backbone, active_alternative_id, cursor, dialect, migrated_from, owner, lanes, viewer_checkpoint_id, edit_messages, conflicts, transitions, history_shape: _, open_transaction: _ } = envelope.into_owners();
+                let ArtifactEnvelopeOwners { schema, id, vcs, backbone, active_alternative_id, cursor, dialect, migrated_from, owner, lanes, viewer_checkpoint_id, edit_messages, conflicts, transitions, history_shape: _, open_transaction: _ } =
+                    envelope.into_owners();
                 let ArtifactVcs { initial_snapshot, edits, changes, checkpoints, alternatives } = vcs;
                 assert!(
                     schema.is_empty()
@@ -1653,7 +1719,7 @@ where
                         && viewer_checkpoint_id.is_none()
                         && edit_messages.is_empty()
                         && conflicts.is_empty()
-                && transitions.is_empty()
+                        && transitions.is_empty()
                         && transitions.is_empty()
                         && edits.is_empty()
                         && changes.is_empty()
@@ -1689,12 +1755,10 @@ impl<P, Mutation> Drop for ArtifactStoreEnvelopeRetirement<P, Mutation> {
     }
 }
 
-
 pub struct SnapshotRetirementRejected {
     pub snapshot: ErasedSnapshotRead,
     pub reason: String,
 }
-
 
 struct ReturnedSnapshotReadRetirement<P: Send + Sync + 'static> {
     alias: std::mem::ManuallyDrop<Option<Arc<P>>>,
@@ -1709,7 +1773,7 @@ impl<P: Send + Sync + 'static> ReturnedSnapshotReadRetirement<P> {
 }
 
 impl<P: Send + Sync + 'static> ErasedSnapshotRetirement for ReturnedSnapshotReadRetirement<P> {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -1719,7 +1783,7 @@ impl<P: Send + Sync + 'static> ErasedSnapshotRetirement for ReturnedSnapshotRead
                     drop(self.unique.take());
                     Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
-                SnapshotRetirementStep::Complete => Err("returned snapshot read unique owner reported Complete without terminal-empty authority".into()),
+                SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "returned snapshot read unique owner reported Complete without terminal-empty authority")),
                 step => Ok(step),
             };
         }
@@ -1757,7 +1821,7 @@ fn advance_returned_snapshot_read<P: Send + Sync + 'static>(
     factory: &Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,
     maximum_items: usize,
     maximum_bytes: usize,
-) -> Result<SnapshotRetirementStep, String> {
+) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
     if maximum_items == 0 {
         return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
     }
@@ -1767,8 +1831,10 @@ fn advance_returned_snapshot_read<P: Send + Sync + 'static>(
                 drop(active.take());
                 Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
             }
-            SnapshotRetirementStep::Complete => Err("returned transient read completed without its exact empty witness".into()),
-            SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > 1 || released_bytes > maximum_bytes => Err("returned transient read exceeded its exact grant".into()),
+            SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "returned transient read completed without its exact empty witness")),
+            SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > 1 || released_bytes > maximum_bytes => {
+                Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "returned transient read exceeded its exact grant"))
+            }
             step => Ok(step),
         };
     }
@@ -1781,13 +1847,15 @@ fn advance_returned_snapshot_read<P: Send + Sync + 'static>(
             Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
         }
         Ok(None) => Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }),
-        Err(reason) if reason == "snapshot read lease registry is busy" => Ok(SnapshotRetirementStep::Blocked),
-        Err(reason) => Err(reason),
+        Err(SnapshotReadLeaseRefusal::Busy) => Ok(SnapshotRetirementStep::Blocked),
+        Err(reason) => Err(reason.into_value_error()),
     }
 }
 
 const ARTIFACT_STORE_DISPLACED_RETIREMENT_CAPACITY: usize = 1_024;
 const ARTIFACT_STORE_DISPLACED_RESERVATION_CAPACITY: usize = 8;
+/// 🌡️ One-item retirement steps a change spends on the displaced queue while it is under pressure (`relieve_displaced_pressure`).
+const DISPLACED_RELIEF_STEPS: usize = 16;
 /// 🌡️ Displaced-owner occupancy at which a store reports maintenance PRESSURE — a quarter of the
 /// fixed queue. Every commit displaces its envelope, current snapshot and dag (three owners, more
 /// with a tail undo entry) and the round-robin maintenance pump drains ONE owner step per visit, so
@@ -1810,19 +1878,11 @@ struct ArtifactStoreDisplacedOwnerReservation {
 
 impl ArtifactStoreDisplacedRetirements {
     fn new() -> Self {
-        Self {
-            owners: std::mem::ManuallyDrop::new(VecDeque::with_capacity(ARTIFACT_STORE_DISPLACED_RETIREMENT_CAPACITY)),
-            owner_reservations: [None; ARTIFACT_STORE_DISPLACED_RESERVATION_CAPACITY],
-            owner_generation: 0,
-        }
+        Self { owners: std::mem::ManuallyDrop::new(VecDeque::with_capacity(ARTIFACT_STORE_DISPLACED_RETIREMENT_CAPACITY)), owner_reservations: [None; ARTIFACT_STORE_DISPLACED_RESERVATION_CAPACITY], owner_generation: 0 }
     }
 
     fn reserve(&self, count: usize) -> Result<(), VcsError> {
-        let occupied = self
-            .owners
-            .len()
-            .checked_add(self.owner_reservations.iter().flatten().map(|(_, count)| *count).sum::<usize>())
-            .ok_or_else(|| VcsError::ValidationFailed("artifact store displaced-owner occupancy overflowed".into()))?;
+        let occupied = self.owners.len().checked_add(self.owner_reservations.iter().flatten().map(|(_, count)| *count).sum::<usize>()).ok_or_else(|| VcsError::ValidationFailed("artifact store displaced-owner occupancy overflowed".into()))?;
         if count > ARTIFACT_STORE_DISPLACED_RETIREMENT_CAPACITY.saturating_sub(occupied) {
             return Err(VcsError::ValidationFailed("artifact store displaced-owner fixed retirement authority is saturated".into()));
         }
@@ -1872,7 +1932,7 @@ impl ArtifactStoreDisplacedRetirements {
         self.owners.push_back(owner);
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -1881,11 +1941,11 @@ impl ArtifactStoreDisplacedRetirements {
         };
         match owner.close_step(maximum_items, maximum_bytes)? {
             SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= maximum_items && released_bytes <= maximum_bytes => Ok(SnapshotRetirementStep::Pending { released_items, released_bytes }),
-            SnapshotRetirementStep::Pending { .. } => Err("artifact store displaced owner exceeded its exact item or byte grant".into()),
+            SnapshotRetirementStep::Pending { .. } => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact store displaced owner exceeded its exact item or byte grant")),
             SnapshotRetirementStep::Blocked => Ok(SnapshotRetirementStep::Blocked),
             SnapshotRetirementStep::Complete => {
                 if !owner.terminal_is_empty() {
-                    return Err("artifact store displaced owner reported Complete without its exact terminal-empty witness".into());
+                    return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact store displaced owner reported Complete without its exact terminal-empty witness"));
                 }
                 let owner = self.owners.pop_front().expect("validated displaced owner remains present");
                 drop(owner);
@@ -1938,7 +1998,7 @@ where
     P: Clone + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
     Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
-    pub fn maintenance_retirements_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    pub fn maintenance_retirements_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         self.store.maintenance_retirements_step(maximum_items, maximum_bytes)
     }
 
@@ -2028,9 +2088,9 @@ where
     P: Clone + ToValue + FromValue,
     Mutation: Clone + ToValue + FromValue + self::Mutation<P>,
 {
-    fn close_step(&mut self, store: &mut ArtifactStoreCloseView<'_, P, Mutation>, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String>;
+    fn close_step(&mut self, store: &mut ArtifactStoreCloseView<'_, P, Mutation>, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError>;
     fn terminal_is_empty(&self, store: &ArtifactStore<P, Mutation>) -> bool;
-    fn close_uninstalled_step(&mut self, maximum_items: usize) -> Result<SnapshotRetirementStep, String>;
+    fn close_uninstalled_step(&mut self, maximum_items: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError>;
     fn uninstalled_terminal_is_empty(&self) -> bool;
 
     /// 🔭️ Which owner family this disposer is currently draining. `close_step` answers only
@@ -2099,7 +2159,7 @@ where
     P: Clone + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
     Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
-    fn close_step(&mut self, store: &mut ArtifactStoreCloseView<'_, P, Mutation>, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, store: &mut ArtifactStoreCloseView<'_, P, Mutation>, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         self.started = true;
         if maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
@@ -2111,17 +2171,24 @@ where
             }
         }
         let active = self.active.as_mut().expect("installed artifact store cursor child");
-        let (step, released) = spend_close_byte_grant(maximum_bytes, |remaining| active.close_step(maximum_items.min(1), remaining))?;
+        let (step, released) = spend_close_byte_grant(maximum_bytes, |remaining| {
+            if remaining < maximum_bytes && active.next_close_byte_demand() > remaining {
+                return Ok(SnapshotRetirementStep::Blocked);
+            }
+            active.close_step(maximum_items.min(1), remaining)
+        })?;
         match step {
-            SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes.saturating_add(released) <= maximum_bytes => Ok(SnapshotRetirementStep::Pending { released_items, released_bytes: released_bytes + released }),
-            SnapshotRetirementStep::Pending { .. } => Err("artifact store cursor child exceeded its exact close grant".into()),
+            SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes.saturating_add(released) <= maximum_bytes => {
+                Ok(SnapshotRetirementStep::Pending { released_items, released_bytes: released_bytes + released })
+            }
+            SnapshotRetirementStep::Pending { .. } => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact store cursor child exceeded its exact close grant")),
             SnapshotRetirementStep::Blocked if released > 0 => Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: released }),
             SnapshotRetirementStep::Blocked => Ok(SnapshotRetirementStep::Blocked),
             SnapshotRetirementStep::Complete if active.terminal_is_empty() => {
                 drop(self.active.take());
                 Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: released })
             }
-            SnapshotRetirementStep::Complete => Err("artifact store cursor child reported Complete without terminal-empty authority".into()),
+            SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact store cursor child reported Complete without terminal-empty authority")),
         }
     }
 
@@ -2129,9 +2196,9 @@ where
         self.phase == ArtifactStoreCursorDisposerPhase::Complete && self.active.is_none() && store.owned_roots_terminal_is_empty()
     }
 
-    fn close_uninstalled_step(&mut self, maximum_items: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_uninstalled_step(&mut self, maximum_items: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if self.started || self.active.is_some() {
-            return Err("installed store disposer cannot retire as uninstalled".into());
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "installed store disposer cannot retire as uninstalled"));
         }
         if maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
@@ -2158,22 +2225,24 @@ where
     /// or advances the phase when a lane is drained. Installing an owner reports no progress of its
     /// own: the caller's turn goes straight on to draining it, because a turn spent only moving an
     /// owner into the cursor bought a 200-mutation gesture 600 idle turns of its close budget.
-    fn take_next_owner(&mut self, store: &mut ArtifactStoreCloseView<'_, P, Mutation>, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn take_next_owner(&mut self, store: &mut ArtifactStoreCloseView<'_, P, Mutation>, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         match &mut self.phase {
-            ArtifactStoreCursorDisposerPhase::ReturnedReads => match store.take_returned_snapshot_read_retirement().map_err(|error| error.to_string())? {
-                Some(owner) => Ok(Self::retain(&mut self.active, Some(owner))),
-                None if !store.snapshot_read_leases_terminal_is_empty() => Ok(SnapshotRetirementStep::Blocked),
-                None => {
-                    self.phase = ArtifactStoreCursorDisposerPhase::Displaced;
-                    Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+            ArtifactStoreCursorDisposerPhase::ReturnedReads => {
+                match store.take_returned_snapshot_read_retirement().map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, error.to_string()))? {
+                    Some(owner) => Ok(Self::retain(&mut self.active, Some(owner))),
+                    None if !store.snapshot_read_leases_terminal_is_empty() => Ok(SnapshotRetirementStep::Blocked),
+                    None => {
+                        self.phase = ArtifactStoreCursorDisposerPhase::Displaced;
+                        Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+                    }
                 }
-            },
+            }
             ArtifactStoreCursorDisposerPhase::Displaced => match store.maintenance_retirements_step(1, maximum_bytes)? {
                 SnapshotRetirementStep::Complete if store.maintenance_retirements_terminal_is_empty() => {
                     self.phase = ArtifactStoreCursorDisposerPhase::HistoryMutations(store.history_edit_count().checked_sub(1));
                     Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
-                SnapshotRetirementStep::Complete => Err("artifact store displaced authority reported a false terminal".into()),
+                SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact store displaced authority reported a false terminal")),
                 step => Ok(step),
             },
             ArtifactStoreCursorDisposerPhase::HistoryMutations(edit_index) => {
@@ -2181,7 +2250,7 @@ where
                     self.phase = ArtifactStoreCursorDisposerPhase::HistoryEdits;
                     return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
                 };
-                match store.take_history_mutation_at(index).map_err(|error| error.to_string())? {
+                match store.take_history_mutation_at(index).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, error.to_string()))? {
                     Some(owner) => Ok(Self::retain(&mut self.active, Some(owner))),
                     None => {
                         *edit_index = index.checked_sub(1);
@@ -2189,7 +2258,7 @@ where
                     }
                 }
             }
-            ArtifactStoreCursorDisposerPhase::HistoryEdits => match store.take_last_history_edit_retirement().map_err(|error| error.to_string())? {
+            ArtifactStoreCursorDisposerPhase::HistoryEdits => match store.take_last_history_edit_retirement().map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, error.to_string()))? {
                 Some(owner) => Ok(Self::retain(&mut self.active, Some(owner))),
                 None => {
                     self.phase = ArtifactStoreCursorDisposerPhase::HistoryMetadata(0);
@@ -2271,21 +2340,21 @@ where
                     Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
             },
-            ArtifactStoreCursorDisposerPhase::PrefixSnapshots => match store.take_prefix_snapshot_retirement().map_err(|error| error.to_string())? {
+            ArtifactStoreCursorDisposerPhase::PrefixSnapshots => match store.take_prefix_snapshot_retirement().map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, error.to_string()))? {
                 Some(owner) => Ok(Self::retain(&mut self.active, Some(owner))),
                 None => {
                     self.phase = ArtifactStoreCursorDisposerPhase::TailSnapshot;
                     Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
             },
-            ArtifactStoreCursorDisposerPhase::TailSnapshot => match store.take_tail_snapshot_retirement().map_err(|error| error.to_string())? {
+            ArtifactStoreCursorDisposerPhase::TailSnapshot => match store.take_tail_snapshot_retirement().map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, error.to_string()))? {
                 ArtifactStoreSnapshotRootClose::Retirement(owner) => Ok(Self::retain(&mut self.active, Some(owner))),
                 ArtifactStoreSnapshotRootClose::Empty | ArtifactStoreSnapshotRootClose::ReleasedShared => {
                     self.phase = ArtifactStoreCursorDisposerPhase::CurrentSnapshot;
                     Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
             },
-            ArtifactStoreCursorDisposerPhase::CurrentSnapshot => match store.take_current_snapshot_retirement().map_err(|error| error.to_string())? {
+            ArtifactStoreCursorDisposerPhase::CurrentSnapshot => match store.take_current_snapshot_retirement().map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, error.to_string()))? {
                 Some(owner) => Ok(Self::retain(&mut self.active, Some(owner))),
                 None => {
                     self.phase = ArtifactStoreCursorDisposerPhase::Backbone;
@@ -2310,8 +2379,8 @@ where
                 self.phase = ArtifactStoreCursorDisposerPhase::Envelope;
                 Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
             }
-            ArtifactStoreCursorDisposerPhase::Structural => Err("artifact store cursor reached an unowned structural authority".into()),
-            ArtifactStoreCursorDisposerPhase::Envelope => match store.take_final_envelope_retirement().map_err(|error| error.to_string())? {
+            ArtifactStoreCursorDisposerPhase::Structural => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact store cursor reached an unowned structural authority")),
+            ArtifactStoreCursorDisposerPhase::Envelope => match store.take_final_envelope_retirement().map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, error.to_string()))? {
                 Some(owner) => Ok(Self::retain(&mut self.active, Some(owner))),
                 None => {
                     self.phase = ArtifactStoreCursorDisposerPhase::Complete;
@@ -2329,10 +2398,7 @@ impl<P, Mutation> Drop for ArtifactStoreCursorDisposer<P, Mutation> {
     /// failing caller into a whole-process kill and hides every later diagnosis. Same guard the
     /// other retirement roots carry (`OrderedMap::drop`, `FlowRetirement`, `RootRetirement`).
     fn drop(&mut self) {
-        assert!(
-            std::thread::panicking() || (self.phase == ArtifactStoreCursorDisposerPhase::Complete && self.active.is_none()),
-            "artifact store cursor disposer reached Drop before terminal-empty ownership"
-        );
+        assert!(std::thread::panicking() || (self.phase == ArtifactStoreCursorDisposerPhase::Complete && self.active.is_none()), "artifact store cursor disposer reached Drop before terminal-empty ownership");
     }
 }
 
@@ -2396,7 +2462,7 @@ where
         P: Send + 'static,
         Mutation: Send + 'static,
     {
-        match self.store_disposer.close_uninstalled_step(1)? {
+        match self.store_disposer.close_uninstalled_step(1).map_err(semio_framework_value::ValueError::into_message)? {
             SnapshotRetirementStep::Complete if self.store_disposer.uninstalled_terminal_is_empty() => Ok(self.retire_envelope(envelope)),
             SnapshotRetirementStep::Complete => Err("uninstalled document store disposer reported false terminal".into()),
             _ => Err("uninstalled document store disposer did not close in one step".into()),
@@ -2425,7 +2491,7 @@ where
         self.initial_snapshot_retirement.retire_owned(snapshot)
     }
 
-    pub fn close_uninstalled_owners_step(&mut self, maximum_items: usize) -> Result<SnapshotRetirementStep, String> {
+    pub fn close_uninstalled_owners_step(&mut self, maximum_items: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         self.store_disposer.close_uninstalled_step(maximum_items)
     }
 
@@ -2448,9 +2514,9 @@ where
 // `Author`/`Change`/`Checkpoint`/`Alternative`/`VcsError`/etc through this crate, never through
 // `vcs` directly (see the crate doc comment above).
 pub use crate::os_vcs::{
-    apply_collection_mutation, apply_mutation, collection_diff_from_mutation, content_addressed_checkpoint_id, content_addressed_checkpoint_id_with_pending_change, content_addressed_entity_id, edit_scoped_id, inverse_collection_mutation,
-    mint_alternative_id, mint_change_id, mint_edit_id, mint_mutation_id, Alternative, ArtifactHistoryKey, ArtifactHistoryLedger, ArtifactHistoryReservation, ArtifactVcs, Author, Change, Checkpoint, CollectionDiff, CollectionMutation, Identified,
-    ItemPatch, Patchable, VcsError,
+    Alternative, ArtifactHistoryKey, ArtifactHistoryLedger, ArtifactHistoryReservation, ArtifactVcs, Author, Change, Checkpoint, CollectionDiff, CollectionMutation, Identified, ItemPatch, Patchable, VcsError, apply_collection_mutation,
+    apply_mutation, collection_diff_from_mutation, content_addressed_checkpoint_id, content_addressed_checkpoint_id_with_pending_change, content_addressed_entity_id, edit_scoped_id, inverse_collection_mutation, mint_alternative_id, mint_change_id,
+    mint_edit_id, mint_mutation_id,
 };
 
 //#region 🔖️ArtifactAssembly
@@ -2491,7 +2557,7 @@ pub fn begin_artifact_assembly() -> Result<ArtifactAssemblyTransaction, Artifact
 /// consumer (`🖥️host/🦀️.rs`'s `BackboneDocument`, `🔌️plugin/🦀️.rs`'s `backbone_ref()`) requires
 /// `ArtifactBackboneRef: Serialize`, and no test in this crate uses `serde_json` as a differential
 /// oracle on it — confirmed by repo-wide grep before removing the derive.
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct ArtifactBackboneRef {
     pub uri: String,
@@ -2513,7 +2579,7 @@ pub async fn document_backbone_ref(uri: &str) -> ArtifactBackboneRef {
 /// `📓️os-kernel-serde-final.md`). Production already routes through `ToValue`/`FromValue`; this
 /// wave's own test fixtures (`serde_json::from_value` oracle comparisons below) still need the
 /// derive, hence `cfg_attr(test, …)` rather than deleting it outright.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -2677,7 +2743,7 @@ impl Drop for ArtifactCursor {
 /// that must survive reload but must never be what a document editor's undo reverts — not a
 /// hover/selection special case baked into this crate. See ticket
 /// `26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM/📋️master.md` decision 1.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub enum HistoryLane {
     #[default]
@@ -2802,7 +2868,7 @@ impl<P: ToValue, Mutation: ToValue> ToValue for ArtifactEnvelopeRead<'_, P, Muta
         }
         entries.push(("editMessages".to_string(), self.edit_messages.to_value()));
         entries.push(("conflicts".to_string(), self.conflicts.to_value()));
-        DslValue::Object(entries)
+        semio_framework_value::DslValue::Object(entries)
     }
 }
 
@@ -2877,7 +2943,8 @@ impl<P, Mutation> ArtifactEnvelope<P, Mutation> {
     where
         Mutation: self::Mutation<P>,
     {
-        let ArtifactEnvelopeOwners { schema, id, vcs, backbone, active_alternative_id, cursor, dialect, migrated_from, owner, lanes, viewer_checkpoint_id, mut edit_messages, conflicts, transitions, history_shape: _, open_transaction: _ } = self.into_owners();
+        let ArtifactEnvelopeOwners { schema, id, vcs, backbone, active_alternative_id, cursor, dialect, migrated_from, owner, lanes, viewer_checkpoint_id, mut edit_messages, conflicts, transitions, history_shape: _, open_transaction: _ } =
+            self.into_owners();
         let ArtifactVcs { initial_snapshot, mut edits, mut changes, mut checkpoints, mut alternatives } = vcs;
         while let Some(edit) = edits.pop() {
             retire_scratch_edits::<P, Mutation>([edit]);
@@ -2913,7 +2980,8 @@ impl<P, Mutation> ArtifactEnvelope<P, Mutation> {
         {
             return Err(self);
         }
-        let ArtifactEnvelopeOwners { schema, id, vcs, backbone, active_alternative_id, cursor, dialect, migrated_from, owner, lanes, viewer_checkpoint_id, edit_messages, conflicts, transitions, history_shape: _, open_transaction: _ } = self.into_owners();
+        let ArtifactEnvelopeOwners { schema, id, vcs, backbone, active_alternative_id, cursor, dialect, migrated_from, owner, lanes, viewer_checkpoint_id, edit_messages, conflicts, transitions, history_shape: _, open_transaction: _ } =
+            self.into_owners();
         let ArtifactVcs { initial_snapshot, edits, changes, checkpoints, alternatives } = vcs;
         drop((schema, id, edits, changes, checkpoints, alternatives, backbone, active_alternative_id, cursor, dialect, migrated_from, owner, lanes, viewer_checkpoint_id, edit_messages, conflicts, transitions));
         Ok(initial_snapshot)
@@ -2957,7 +3025,7 @@ impl<P, Mutation> Drop for ArtifactEnvelope<P, Mutation> {
 /// live tip) which checkpoint. `migrated_at` follows this crate's existing `Checkpoint.timestamp`/
 /// `Edit.started_at` convention (a caller-supplied string stamped via `now_iso()`, see below) — no
 /// new clock abstraction introduced for this one field.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct MigrationProvenance {
     pub document_id: String,
@@ -2967,7 +3035,7 @@ pub struct MigrationProvenance {
     pub migrated_at: String,
 }
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum ArtifactCommand<Mutation> {
     /// ▶️ Records `mutations` as one edit; `transaction` names the committed tool transaction that authored them, stamped
@@ -2998,14 +3066,6 @@ pub enum ArtifactCommand<Mutation> {
         #[value(default, skip_serializing_if = "Option::is_none")]
         transaction: Option<protocol::TransactionRef>,
     },
-    /// 🛤️ `AmendLast`'s lane-tagged twin — see `ApplyInLane`'s doc for why this is an
-    /// additive new variant rather than a field on `AmendLast`.
-    AmendLastInLane {
-        mutations: Vec<Mutation>,
-        coalesce_key: Option<String>,
-        #[value(default)]
-        lane: HistoryLane,
-    },
     /// 🛤️ Explicit lane-scoped undo: mirrors plain `Undo`'s selective (own-author) semantics
     /// but searches `applied_edit_ids` for the nearest local entry whose `HistoryLane` is exactly
     /// `lane`, instead of `HistoryLane::Document`. Lets a caller walk a non-`Document` lane on
@@ -3034,11 +3094,6 @@ pub enum ArtifactCommand<Mutation> {
     CheckoutCheckpoint {
         #[value(rename = "checkpointId")]
         checkpoint_id: String,
-    },
-    AmendLast {
-        mutations: Vec<Mutation>,
-        /// 🪢️ Matches the last uncommitted edit's `coalesce_key` to absorb into it instead of creating a new edit.
-        coalesce_key: Option<String>,
     },
     /// 🕸️ Feeds a remote MutationEnvelope through the causal DAG into the edit timeline.
     IngestRemote {
@@ -3095,12 +3150,14 @@ pub enum ArtifactCommand<Mutation> {
     },
 }
 
-/// 🎞️ The tool transaction a store holds open ([`ArtifactCommand::AppendTransaction`]): its ref and the one edit its
-/// appends grow, kept at the tail of the local applied history until its commit announces it or its abort removes it.
+/// 🎞️ The tool transaction a store holds open ([`ArtifactCommand::AppendTransaction`]): its ref, the one edit its
+/// appends grow — kept at the tail of the local applied history until its commit announces it or its abort removes it — and
+/// the local actor of before its first append, which an abort gives back (zero trace).
 #[derive(Clone, Debug, PartialEq)]
 pub struct OpenToolTransaction {
     pub transaction: protocol::TransactionRef,
     pub edit_id: String,
+    pub previous_actor: Option<String>,
 }
 
 /// 🐢️ A history change this store admitted but has not adopted yet (design §16.6): the remote `transitions` it admitted
@@ -3135,15 +3192,57 @@ struct PendingLocalStep {
     finalizing: bool,
 }
 
+/// ⚡️ A local undo or redo that changes nothing but the applied tail ([`ArtifactStore::tail_step`]).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum TailStep {
+    Undo,
+    Redo,
+}
+
 /// ⏩️ Where one advance of a deferred reprojection left it.
 enum ReprojectionAdvance {
     Pending(ReplayProgress),
     Adopted(Vec<crate::os_spr::EditMessages>),
 }
 
+/// ⏱️ How far one turn of a deferred reprojection replays (design §7: ≤ 4 ms slices): until the turn's wall deadline on
+/// `now_us` — `wall_us` after the turn began, or the runtime's own turn deadline ([`ArtifactStore::step_reprojection`]) —
+/// and at most `operations` operations, whichever comes first; every turn replays at least one operation. `now_us` is the
+/// job clock ([`semio_framework_job::default_now_us`]); laws inject their own.
+#[derive(Clone, Copy, Debug)]
+pub struct ReplayTurnBudget {
+    pub wall_us: u64,
+    pub operations: usize,
+    pub now_us: fn() -> Option<u64>,
+}
+
+impl ReplayTurnBudget {
+    /// 🕓️ `wall_us` of the job clock per turn, with `operations` as the secondary cap.
+    pub fn wall(wall_us: u64, operations: usize) -> Self {
+        Self { wall_us, operations, now_us: semio_framework_job::default_now_us }
+    }
+
+    /// 🔢️ `operations` per turn and no wall limit: what a law that counts operations replays with.
+    pub fn operations(operations: usize) -> Self {
+        Self { wall_us: u64::MAX, operations, now_us: semio_framework_job::default_now_us }
+    }
+
+    /// ⌛️ The turn's deadline on `now_us`: the runtime's `deadline_us`, else `wall_us` from now (now when the clock cannot
+    /// be read); `None` without a wall limit.
+    fn turn_deadline(&self, deadline_us: Option<u64>) -> Option<u64> {
+        deadline_us.or_else(|| (self.wall_us != u64::MAX).then(|| (self.now_us)().map_or(0, |now| now.saturating_add(self.wall_us))))
+    }
+
+    /// 🛎️ Whether a turn that replayed `replayed` operations ends: its cap is reached or its deadline passed on `now_us`
+    /// (an unreadable clock ends it).
+    fn turn_ends(&self, replayed: usize, deadline_us: Option<u64>) -> bool {
+        replayed >= self.operations || deadline_us.is_some_and(|deadline| (self.now_us)().is_none_or(|now| now >= deadline))
+    }
+}
+
 /// ✏️ One input of [`ArtifactCommand::Supersede`]: the superseded operation and the replacement it folds as from now
 /// on (`None` withdraws it).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct SupersedeInput<Mutation> {
     pub target: MutationId,
@@ -3155,7 +3254,7 @@ impl<Mutation> ArtifactCommand<Mutation> {
     /// 🔮️ Names the projection-invalidating transition this command performs, if it has one.
     pub async fn projection_cause(&self) -> Option<ArtifactProjectionCause> {
         match self {
-            Self::Apply { .. } | Self::ApplyInLane { .. } | Self::AmendLast { .. } | Self::AmendLastInLane { .. } => Some(ArtifactProjectionCause::Apply),
+            Self::Apply { .. } | Self::ApplyInLane { .. } => Some(ArtifactProjectionCause::Apply),
             Self::IngestRemote { .. } => Some(ArtifactProjectionCause::RemoteIngest),
             Self::Undo | Self::UndoWithPolicy { .. } | Self::UndoInLane { .. } => Some(ArtifactProjectionCause::Undo),
             Self::Redo | Self::RedoInLane { .. } => Some(ArtifactProjectionCause::Redo),
@@ -3190,8 +3289,6 @@ impl<Mutation> ArtifactCommand<Mutation> {
             Self::CreateAlternativeWithSupersede { .. } => &[Commit, Branch, Supersede],
             Self::Apply { .. }
             | Self::ApplyInLane { .. }
-            | Self::AmendLast { .. }
-            | Self::AmendLastInLane { .. }
             | Self::IngestRemote { .. }
             | Self::PruneDrafts
             | Self::SetMergePolicy { .. }
@@ -3385,24 +3482,35 @@ impl<S> PartialEq for ArtifactChild<S> {
 /// round-tripping only `child_id`/`target`.
 impl<S> ToValue for ArtifactChild<S> {
     fn to_value(&self) -> DslValue {
-        DslValue::object([("childId".to_string(), ToValue::to_value(&self.child_id)), ("target".to_string(), ToValue::to_value(&self.target))])
+        semio_framework_value::DslValue::object([("childId".to_string(), semio_framework_value::ToValue::to_value(&self.child_id)), ("target".to_string(), semio_framework_value::ToValue::to_value(&self.target))])
     }
-    fn to_value_controlled(&self,control:&mut protocol::value::NativeEncodeControl<'_>)->Result<DslValue,ValueError>{
-        control.scoped_depth(64,|control|control.scoped_stage(|control|{
-            control.begin_stage(2).map_err(ValueError::new)?;
-            let mut fields=protocol::value::DecodedValue::new(control.allocate_vec::<(String,DslValue)>(2).map_err(ValueError::new)?,|fields:Vec<(String,DslValue)>|{for(_,value)in fields{<DslValue as FromValue>::retire_decoded(value);}});
-            let key=control.copy_text("childId").map_err(ValueError::new)?;let child_id=ToValue::to_value_controlled(&self.child_id,control).map_err(|error|error.under("childId"))?;fields.get_mut().push((key,child_id));control.step().map_err(ValueError::new)?;
-            let key=control.copy_text("target").map_err(ValueError::new)?;let target=ToValue::to_value_controlled(&self.target,control).map_err(|error|error.under("target"))?;fields.get_mut().push((key,target));control.step().map_err(ValueError::new)?;
-            Ok(DslValue::Object(fields.take()))
-        }))
+    fn to_value_controlled(&self, control: &mut protocol::value::NativeEncodeControl<'_>) -> Result<DslValue, ValueError> {
+        control.scoped_depth(64, |control| {
+            control.scoped_stage(|control| {
+                control.begin_stage(2)?;
+                let mut fields = protocol::value::DecodedValue::new(control.allocate_vec::<(String, DslValue)>(2)?, |fields: Vec<(String, DslValue)>| {
+                    for (_, value) in fields {
+                        <DslValue as FromValue>::retire_decoded(value);
+                    }
+                });
+                let key = control.copy_text("childId")?;
+                let child_id = semio_framework_value::ToValue::to_value_controlled(&self.child_id, control).map_err(|error| error.under("childId"))?;
+                fields.get_mut().push((key, child_id));
+                control.step()?;
+                let key = control.copy_text("target")?;
+                let target = semio_framework_value::ToValue::to_value_controlled(&self.target, control).map_err(|error| error.under("target"))?;
+                fields.get_mut().push((key, target));
+                control.step()?;
+                Ok(semio_framework_value::DslValue::Object(fields.take()))
+            })
+        })
     }
-
 }
 
 impl<S> FromValue for ArtifactChild<S> {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
-        let DslValue::Object(fields) = value else {
-            return Err(ValueError::new(format!("expected an object for ArtifactChild, found {value:?}")));
+        let semio_framework_value::DslValue::Object(fields) = value else {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for ArtifactChild, found {value:?}")));
         };
         let mut child_id = None;
         let mut target = None;
@@ -3410,35 +3518,47 @@ impl<S> FromValue for ArtifactChild<S> {
             match key.as_str() {
                 "childId" => child_id = Some(String::from_value(entry).map_err(|e| e.under("childId"))?),
                 "target" => target = Some(crate::os_io::ArtifactRef::from_value(entry).map_err(|e| e.under("target"))?),
-                _ => return Err(ValueError::new(format!("ArtifactChild has unknown field {key}"))),
+                _ => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("ArtifactChild has unknown field {key}"))),
             }
         }
-        Ok(ArtifactChild { child_id: child_id.ok_or_else(|| ValueError::new("ArtifactChild missing childId"))?, target: target.ok_or_else(|| ValueError::new("ArtifactChild missing target"))?, local_owner: None, _snapshot: PhantomData })
+        Ok(ArtifactChild {
+            child_id: child_id.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "ArtifactChild missing childId"))?,
+            target: target.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "ArtifactChild missing target"))?,
+            local_owner: None,
+            _snapshot: PhantomData,
+        })
     }
-    fn from_value_controlled(value:&DslValue,control:&mut protocol::value::NativeDecodeControl<'_>)->Result<Self,ValueError>{
-        let DslValue::Object(fields)=value else{return Err(ValueError::new("expected an object for ArtifactChild"))};
-        control.scoped_depth(64,|control|control.scoped_stage(|control|{
-            control.begin_stage(fields.len()).map_err(ValueError::new)?;
-            let mut child_id=None;let mut target=None;
-            for(key,entry)in fields{
-                match key.as_str(){
-                    "childId"=>child_id=Some(String::from_value_controlled(entry,control).map_err(|error|error.under("childId"))?),
-                    "target"=>target=Some(crate::os_io::ArtifactRef::from_value_controlled(entry,control).map_err(|error|error.under("target"))?),
-                    _=>return Err(ValueError::new("ArtifactChild has an unknown field")),
+    fn from_value_controlled(value: &DslValue, control: &mut protocol::value::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
+        let semio_framework_value::DslValue::Object(fields) = value else { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected an object for ArtifactChild")) };
+        control.scoped_depth(64, |control| {
+            control.scoped_stage(|control| {
+                control.begin_stage(fields.len())?;
+                let mut child_id = None;
+                let mut target = None;
+                for (key, entry) in fields {
+                    match key.as_str() {
+                        "childId" => child_id = Some(String::from_value_controlled(entry, control).map_err(|error| error.under("childId"))?),
+                        "target" => target = Some(crate::os_io::ArtifactRef::from_value_controlled(entry, control).map_err(|error| error.under("target"))?),
+                        _ => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "ArtifactChild has an unknown field")),
+                    }
+                    control.step()?;
                 }
-                control.step().map_err(ValueError::new)?;
-            }
-            control.checkpoint().map_err(ValueError::new)?;
-            Ok(Self{child_id:child_id.ok_or_else(||ValueError::new("ArtifactChild missing childId"))?,target:target.ok_or_else(||ValueError::new("ArtifactChild missing target"))?,local_owner:None,_snapshot:PhantomData})
-        }))
+                control.checkpoint()?;
+                Ok(Self {
+                    child_id: child_id.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "ArtifactChild missing childId"))?,
+                    target: target.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "ArtifactChild missing target"))?,
+                    local_owner: None,
+                    _snapshot: PhantomData,
+                })
+            })
+        })
     }
-
 }
 
 /// 🪪️ Type-erased projection of one `ArtifactChild<S>` field, dropping the compile-time-only
 /// `S` phantom so `ArtifactRefs::child_refs` can return a single homogeneous `Vec` across however
 /// many differently-`S`-typed child slots a snapshot declares.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct ChildRef {
     pub slot: String,
@@ -3519,13 +3639,10 @@ impl<'a> ChildRestoreProjection<'a> {
 
     /// 🪪️ Checks one member against the actual loaded parent, without treating it as a full batch.
     pub fn admits_member(&self, slot: &str, expected: &crate::os_io::ArtifactRef) -> bool {
-        self.rows[..self.length].iter().flatten().any(|(name, fields)| {
-            *name == slot
-                && fields.artifact_id == expected.artifact_id
-                && fields.artifact_kind == expected.dialect.artifact_kind
-                && fields.standard == expected.dialect.standard
-                && fields.subset == expected.dialect.subset
-        })
+        self.rows[..self.length]
+            .iter()
+            .flatten()
+            .any(|(name, fields)| *name == slot && fields.artifact_id == expected.artifact_id && fields.artifact_kind == expected.dialect.artifact_kind && fields.standard == expected.dialect.standard && fields.subset == expected.dialect.subset)
     }
 
     /// ⚖️ Admits exactly one unordered complete set: no omission, substitution or duplicate.
@@ -3564,13 +3681,11 @@ impl<'a> semio_framework_schema_composition::ChildRefVisitor<'a> for ChildRestor
             return Err(Self::Error::ReferenceLimit);
         }
         let spec = self.slots.iter().find(|spec| spec.name == slot).ok_or(Self::Error::InvalidSlot)?;
-        if fields.artifact_kind != spec.kind
-            || [fields.child_id, fields.artifact_id, fields.artifact_kind, fields.standard, fields.subset].iter().any(|field| field.is_empty() || field.len() > CHILD_RESTORE_MAXIMUM_FIELD_BYTES)
-        {
+        if fields.artifact_kind != spec.kind || [fields.child_id, fields.artifact_id, fields.artifact_kind, fields.standard, fields.subset].iter().any(|field| field.is_empty() || field.len() > CHILD_RESTORE_MAXIMUM_FIELD_BYTES) {
             return Err(Self::Error::InvalidReference);
         }
         for (name, prior) in self.rows[..self.length].iter().flatten() {
-            if prior.child_id == fields.child_id {
+            if prior.child_id == fields.child_id || prior.artifact_id == fields.artifact_id {
                 return Err(Self::Error::DuplicateChild);
             }
             if *name == slot && !spec.many {
@@ -3770,9 +3885,6 @@ where
     P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<Mutation> + Send + 'static,
     Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
-    if owner.is_some_and(|owner| owner.child_id != expected.artifact_id) {
-        return Err(VcsError::Deserialize("member owner child identity does not match requested artifact".into()));
-    }
     let (pack, spr) = decode_document_pack_bytes(envelope_pack).await?;
     let history = crate::os_spr::decode_history(&spr, &crate::os_spr::DecodeOptions::default()).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
     validate_member_history_identity(&history, schema, expected, owner)?;
@@ -3788,7 +3900,7 @@ fn validate_member_history_identity(history: &crate::os_spr::HistoryLog, schema:
     let persisted_owner = history.composition.as_ref().and_then(|composition| composition.owner.as_ref());
     let owner_matches = match (persisted_owner, owner) {
         (None, None) => true,
-        (Some((parent, slot, child_id)), Some(owner)) => slot == &owner.slot && child_id == &owner.child_id && child_id == &expected.artifact_id && crate::os_io::ArtifactRef::parse_uri(parent).is_ok_and(|parent| parent == owner.parent),
+        (Some((parent, slot, child_id)), Some(owner)) => slot == &owner.slot && child_id == &owner.child_id && crate::os_io::ArtifactRef::parse_uri(parent).is_ok_and(|parent| parent == owner.parent),
         _ => false,
     };
     if history.doc_id != expected.artifact_id || history.schema != schema || !dialect_matches || !owner_matches {
@@ -3805,247 +3917,362 @@ fn validate_member_history_identity(history: &crate::os_spr::HistoryLog, schema:
 /// type here as an ordinary `Shape::Record`. Targets use the canonical literal
 /// `crate::os_io::ArtifactRef` record so each owned reference component remains independent.
 // 🚫️async: E4 fn-pointer slot — value stored in `Shape::Record(fn() -> RecordSpec)`
-fn artifact_child_spec() -> crate::os_dsl::RecordSpec {
-    crate::os_dsl::RecordSpec::new(None, crate::os_dsl::RecordLayout::Inline, vec![crate::os_dsl::FieldSpec::new(0, "child_id", crate::os_dsl::Shape::Text), crate::os_dsl::FieldSpec::new(1, "target", <crate::os_io::ArtifactRef as crate::os_dsl::DslField>::shape())])
+fn artifact_child_spec() -> semio_framework_dsl_record::RecordSpec {
+    semio_framework_dsl_record::RecordSpec::new(
+        None,
+        semio_framework_dsl_record::RecordLayout::Inline,
+        vec![semio_framework_dsl_record::FieldSpec::new(0, "child_id", semio_framework_dsl_record::Shape::Text), semio_framework_dsl_record::FieldSpec::new(1, "target", <crate::os_io::ArtifactRef as semio_framework_dsl_record::DslField>::shape())],
+    )
 }
 
-fn artifact_child_spec_controlled<C:crate::os_dsl::NativeSchemaControl>(control:&mut C)->Result<crate::os_dsl::RecordSpec,String>{
-    control.scoped_stage(|control|{
-        control.begin_stage(2)?;let mut fields=control.allocate_vec::<crate::os_dsl::FieldSpec>(2)?;
-        fields.push(crate::os_dsl::schema::producer::field(0,"child_id",crate::os_dsl::Shape::Text,control)?);control.step()?;
-        let target=<crate::os_io::ArtifactRef as crate::os_dsl::DslField>::shape_controlled(control)?;
-        fields.push(crate::os_dsl::schema::producer::field(1,"target",target,control)?);control.step()?;
-        crate::os_dsl::schema::producer::record(None,crate::os_dsl::RecordLayout::Inline,fields,control)
+fn artifact_child_spec_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::RecordSpec, semio_framework_value::ValueError> {
+    control.scoped_stage(|control| {
+        control.begin_stage(2)?;
+        let mut fields = control.allocate_vec::<semio_framework_dsl_record::FieldSpec>(2)?;
+        fields.push(semio_framework_dsl_record::producer::field(0, "child_id", semio_framework_dsl_record::Shape::Text, control)?);
+        control.step()?;
+        let target = <crate::os_io::ArtifactRef as semio_framework_dsl_record::DslField>::shape_controlled(control)?;
+        fields.push(semio_framework_dsl_record::producer::field(1, "target", target, control)?);
+        control.step()?;
+        semio_framework_dsl_record::producer::record(None, semio_framework_dsl_record::RecordLayout::Inline, fields, control)
     })
 }
 
-fn artifact_child_spec_producer()->crate::os_dsl::RecordSpecProducer{
-    crate::os_dsl::RecordSpecProducer{ordinary:artifact_child_spec,decoding:|control|artifact_child_spec_controlled(control),encoding:|control|artifact_child_spec_controlled(control)}
+fn artifact_child_spec_producer() -> semio_framework_dsl_record::RecordSpecProducer {
+    semio_framework_dsl_record::RecordSpecProducer { ordinary: artifact_child_spec, decoding: |control| artifact_child_spec_controlled(control), encoding: |control| artifact_child_spec_controlled(control) }
 }
 
 // 🚫️async: E1 pure — record conversion with no suspension point, consumed by the sync
 // `DslField::to_value` impl below. See R9.
-fn artifact_child_to_record<S>(child: &ArtifactChild<S>) -> crate::os_dsl::RecordValue {
-    let mut record = crate::os_dsl::RecordValue::default();
-    record.fields.insert(0, crate::os_dsl::FieldValue::Text(child.child_id.clone()));
-    record.fields.insert(1, <crate::os_io::ArtifactRef as crate::os_dsl::DslField>::to_value(&child.target));
+fn artifact_child_to_record<S>(child: &ArtifactChild<S>) -> semio_framework_dsl_record::RecordValue {
+    let mut record = semio_framework_dsl_record::RecordValue::default();
+    record.fields.insert(0, semio_framework_dsl_record::FieldValue::Text(child.child_id.clone()));
+    record.fields.insert(1, <crate::os_io::ArtifactRef as semio_framework_dsl_record::DslField>::to_value(&child.target));
     record
 }
 
 // 🚫️async: E1 pure — same sync consumer as `artifact_child_to_record`. See R9.
 /// 🧱️ Constructs the persisted child identity and literal target without a local owner.
-fn artifact_child_from_record<S>(record: &crate::os_dsl::RecordValue) -> Result<ArtifactChild<S>, String> {
-    if record.fields.len()!=2||record.fields.keys().any(|id|*id>1){return Err("artifact child requires its two literal fields".into());}
+fn artifact_child_from_record<S>(record: &semio_framework_dsl_record::RecordValue) -> Result<ArtifactChild<S>, String> {
+    if record.fields.len() != 2 || record.fields.keys().any(|id| *id > 1) {
+        return Err("artifact child requires its two literal fields".into());
+    }
     let child_id = match record.get(0) {
-        Some(crate::os_dsl::FieldValue::Text(s)) => s.clone(),
+        Some(semio_framework_dsl_record::FieldValue::Text(s)) => s.clone(),
         other => return Err(format!("expected child_id, found {other:?}")),
     };
-    let target=<crate::os_io::ArtifactRef as crate::os_dsl::DslField>::from_value(record.get(1).ok_or("missing artifact child target")?)?;
+    let target = <crate::os_io::ArtifactRef as semio_framework_dsl_record::DslField>::from_value(record.get(1).ok_or("missing artifact child target")?)?;
     Ok(ArtifactChild { child_id, target, local_owner: None, _snapshot: PhantomData })
 }
 
-impl<S> crate::os_dsl::DslField for ArtifactChild<S> {
+impl<S> semio_framework_dsl_record::DslField for ArtifactChild<S> {
     /// 🚫️async: E4 — see `DslField::shape`'s tag on the trait.
-    fn shape() -> crate::os_dsl::Shape {
-        crate::os_dsl::Shape::Record(artifact_child_spec_producer())
+    fn shape() -> semio_framework_dsl_record::Shape {
+        semio_framework_dsl_record::Shape::Record(artifact_child_spec_producer())
     }
-    fn shape_controlled<C:crate::os_dsl::NativeSchemaControl>(control:&mut C)->Result<crate::os_dsl::Shape,String>{control.checkpoint()?;Ok(crate::os_dsl::Shape::Record(artifact_child_spec_producer()))}
-    fn to_value(&self) -> crate::os_dsl::FieldValue {
-        crate::os_dsl::FieldValue::Record(artifact_child_to_record(self))
+    fn shape_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, semio_framework_value::ValueError> {
+        control.checkpoint()?;
+        Ok(semio_framework_dsl_record::Shape::Record(artifact_child_spec_producer()))
     }
-    fn to_value_controlled(&self,control:&mut crate::os_dsl::NativeEncodeControl<'_>)->Result<crate::os_dsl::FieldValue,String>{
-        <Self as crate::os_dsl::DslField>::to_record_controlled(self,control).map(crate::os_dsl::FieldValue::Record)
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
+        semio_framework_dsl_record::FieldValue::Record(artifact_child_to_record(self))
     }
-    fn to_record_controlled(&self,control:&mut crate::os_dsl::NativeEncodeControl<'_>)->Result<crate::os_dsl::RecordValue,String>{
-        control.scoped_depth(64,|control|control.scoped_stage(|control|{
-            control.begin_stage(2)?;let mut record=crate::os_dsl::native_encoding::EncodedRecord::new(2,control)?;
-            record.insert(0,crate::os_dsl::FieldValue::Text(control.copy_text(&self.child_id)?));control.step()?;
-            record.insert(1,<crate::os_io::ArtifactRef as crate::os_dsl::DslField>::to_value_controlled(&self.target,control)?);control.step()?;
-            Ok(record.take())
-        }))
+    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::FieldValue, semio_framework_value::ValueError> {
+        <Self as semio_framework_dsl_record::DslField>::to_record_controlled(self, control).map(semio_framework_dsl_record::FieldValue::Record)
     }
-
-    fn from_value(value: &crate::os_dsl::FieldValue) -> Result<Self, String> {
-        match value {
-            crate::os_dsl::FieldValue::Record(record) => artifact_child_from_record(record),
-            other => Err(format!("expected Record, found {other:?}")),
-        }
-    }    fn from_value_controlled(value:&crate::os_dsl::FieldValue,control:&mut crate::os_dsl::NativeDecodeControl<'_>)->Result<Self,String>{
-        let crate::os_dsl::FieldValue::Record(record)=value else{return Err("expected artifact child Record".into());};
-        Self::from_record_controlled(record,control)
-    }
-    fn from_record_controlled(record:&crate::os_dsl::RecordValue,control:&mut crate::os_dsl::NativeDecodeControl<'_>)->Result<Self,String>{
-        control.scoped_stage(|control|{
-            control.begin_stage(2)?;
-            if record.fields.len()!=2||record.fields.keys().any(|id|*id>1){return Err("artifact child requires its two literal fields".into());}
-            let Some(crate::os_dsl::FieldValue::Text(child_id))=record.get(0) else{return Err("expected artifact child identity Text".into());};
-            let target=record.get(1).ok_or("missing artifact child target")?;
-            let child_id=control.copy_text(child_id)?;control.step()?;
-            let target=<crate::os_io::ArtifactRef as crate::os_dsl::DslField>::from_value_controlled(target,control)?;control.step()?;
-            Ok(Self{child_id,target,local_owner:None,_snapshot:PhantomData})
+    fn to_record_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::RecordValue, semio_framework_value::ValueError> {
+        control.scoped_depth(64, |control| {
+            control.scoped_stage(|control| {
+                control.begin_stage(2)?;
+                let mut record = semio_framework_dsl_record::native_encoding::EncodedRecord::new(2, control)?;
+                record.insert(0, semio_framework_dsl_record::FieldValue::Text(control.copy_text(&self.child_id)?))?;
+                control.step()?;
+                record.insert(1, <crate::os_io::ArtifactRef as semio_framework_dsl_record::DslField>::to_value_controlled(&self.target, control)?)?;
+                control.step()?;
+                Ok(record.take())
+            })
         })
     }
 
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
+        match value {
+            semio_framework_dsl_record::FieldValue::Record(record) => artifact_child_from_record(record),
+            other => Err(format!("expected Record, found {other:?}")),
+        }
+    }
+    fn from_value_controlled(value: &semio_framework_dsl_record::FieldValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
+        let semio_framework_dsl_record::FieldValue::Record(record) = value else {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected artifact child Record"));
+        };
+        Self::from_record_controlled(record, control)
+    }
+    fn from_record_controlled(record: &semio_framework_dsl_record::RecordValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
+        control.scoped_stage(|control| {
+            control.begin_stage(2)?;
+            if record.fields.len() != 2 || record.fields.keys().any(|id| *id > 1) {
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "artifact child requires its two literal fields"));
+            }
+            let Some(semio_framework_dsl_record::FieldValue::Text(child_id)) = record.get(0) else {
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected artifact child identity Text"));
+            };
+            let target = record.get(1).ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "missing artifact child target"))?;
+            let child_id = control.copy_text(child_id)?;
+            control.step()?;
+            let target = <crate::os_io::ArtifactRef as semio_framework_dsl_record::DslField>::from_value_controlled(target, control)?;
+            control.step()?;
+            Ok(Self { child_id, target, local_owner: None, _snapshot: PhantomData })
+        })
+    }
 }
 
 // 🚫️async: E4 fn-pointer slot — value stored in `Shape::Record(fn() -> RecordSpec)`
-fn owner_ref_spec() -> crate::os_dsl::RecordSpec {
-    crate::os_dsl::RecordSpec::new(
+fn owner_ref_spec() -> semio_framework_dsl_record::RecordSpec {
+    semio_framework_dsl_record::RecordSpec::new(
         None,
-        crate::os_dsl::RecordLayout::Inline,
-        vec![crate::os_dsl::FieldSpec::new(0, "parent", crate::os_dsl::Shape::Text), crate::os_dsl::FieldSpec::new(1, "slot", crate::os_dsl::Shape::Text), crate::os_dsl::FieldSpec::new(2, "child_id", crate::os_dsl::Shape::Text)],
+        semio_framework_dsl_record::RecordLayout::Inline,
+        vec![semio_framework_dsl_record::FieldSpec::new(0, "parent", semio_framework_dsl_record::Shape::Text), semio_framework_dsl_record::FieldSpec::new(1, "slot", semio_framework_dsl_record::Shape::Text), semio_framework_dsl_record::FieldSpec::new(2, "child_id", semio_framework_dsl_record::Shape::Text)],
     )
 }
 
-fn owner_ref_spec_controlled<C:crate::os_dsl::NativeSchemaControl>(control:&mut C)->Result<crate::os_dsl::RecordSpec,String>{
-    control.scoped_stage(|control|{control.begin_stage(3)?;let mut fields=control.allocate_vec(3)?;
-        for(id,key)in[(0,"parent"),(1,"slot"),(2,"child_id")]{fields.push(crate::os_dsl::schema::producer::field(id,key,crate::os_dsl::Shape::Text,control)?);control.step()?;}
-        crate::os_dsl::schema::producer::record(None,crate::os_dsl::RecordLayout::Inline,fields,control)
+fn owner_ref_spec_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::RecordSpec, semio_framework_value::ValueError> {
+    control.scoped_stage(|control| {
+        control.begin_stage(3)?;
+        let mut fields = control.allocate_vec(3)?;
+        for (id, key) in [(0, "parent"), (1, "slot"), (2, "child_id")] {
+            fields.push(semio_framework_dsl_record::producer::field(id, key, semio_framework_dsl_record::Shape::Text, control)?);
+            control.step()?;
+        }
+        semio_framework_dsl_record::producer::record(None, semio_framework_dsl_record::RecordLayout::Inline, fields, control)
     })
 }
-fn owner_ref_spec_producer()->crate::os_dsl::RecordSpecProducer{crate::os_dsl::RecordSpecProducer{ordinary:owner_ref_spec,decoding:|control|owner_ref_spec_controlled(control),encoding:|control|owner_ref_spec_controlled(control)}}
+fn owner_ref_spec_producer() -> semio_framework_dsl_record::RecordSpecProducer {
+    semio_framework_dsl_record::RecordSpecProducer { ordinary: owner_ref_spec, decoding: |control| owner_ref_spec_controlled(control), encoding: |control| owner_ref_spec_controlled(control) }
+}
 
-fn owner_ref_to_record(owner: &OwnerRef) -> crate::os_dsl::RecordValue {
-    let mut record = crate::os_dsl::RecordValue::default();
-    record.fields.insert(0, crate::os_dsl::FieldValue::Text(owner.parent.to_uri()));
-    record.fields.insert(1, crate::os_dsl::FieldValue::Text(owner.slot.clone()));
-    record.fields.insert(2, crate::os_dsl::FieldValue::Text(owner.child_id.clone()));
+fn owner_ref_to_record(owner: &OwnerRef) -> semio_framework_dsl_record::RecordValue {
+    let mut record = semio_framework_dsl_record::RecordValue::default();
+    record.fields.insert(0, semio_framework_dsl_record::FieldValue::Text(owner.parent.to_uri()));
+    record.fields.insert(1, semio_framework_dsl_record::FieldValue::Text(owner.slot.clone()));
+    record.fields.insert(2, semio_framework_dsl_record::FieldValue::Text(owner.child_id.clone()));
     record
 }
 
-fn owner_ref_from_record(record: &crate::os_dsl::RecordValue) -> Result<OwnerRef, String> {
+fn owner_ref_from_record(record: &semio_framework_dsl_record::RecordValue) -> Result<OwnerRef, String> {
     let parent = match record.get(0) {
-        Some(crate::os_dsl::FieldValue::Text(s)) => crate::os_io::ArtifactRef::parse_uri(s)?,
+        Some(semio_framework_dsl_record::FieldValue::Text(s)) => crate::os_io::ArtifactRef::parse_uri(s)?,
         other => return Err(format!("expected parent, found {other:?}")),
     };
     let slot = match record.get(1) {
-        Some(crate::os_dsl::FieldValue::Text(s)) => s.clone(),
+        Some(semio_framework_dsl_record::FieldValue::Text(s)) => s.clone(),
         other => return Err(format!("expected slot, found {other:?}")),
     };
     let child_id = match record.get(2) {
-        Some(crate::os_dsl::FieldValue::Text(s)) => s.clone(),
+        Some(semio_framework_dsl_record::FieldValue::Text(s)) => s.clone(),
         other => return Err(format!("expected child_id, found {other:?}")),
     };
     Ok(OwnerRef { parent, slot, child_id })
 }
 
-impl crate::os_dsl::DslField for OwnerRef {
+impl semio_framework_dsl_record::DslField for OwnerRef {
     /// 🚫️async: E4 — see `DslField::shape`'s tag on the trait.
-    fn shape() -> crate::os_dsl::Shape {
-        crate::os_dsl::Shape::Record(owner_ref_spec_producer())
+    fn shape() -> semio_framework_dsl_record::Shape {
+        semio_framework_dsl_record::Shape::Record(owner_ref_spec_producer())
     }
-    fn shape_controlled<C:crate::os_dsl::NativeSchemaControl>(control:&mut C)->Result<crate::os_dsl::Shape,String>{control.checkpoint()?;Ok(crate::os_dsl::Shape::Record(owner_ref_spec_producer()))}
-    fn to_value(&self) -> crate::os_dsl::FieldValue {
-        crate::os_dsl::FieldValue::Record(owner_ref_to_record(self))
+    fn shape_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, semio_framework_value::ValueError> {
+        control.checkpoint()?;
+        Ok(semio_framework_dsl_record::Shape::Record(owner_ref_spec_producer()))
     }
-    fn from_value(value: &crate::os_dsl::FieldValue) -> Result<Self, String> {
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
+        semio_framework_dsl_record::FieldValue::Record(owner_ref_to_record(self))
+    }
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
         match value {
-            crate::os_dsl::FieldValue::Record(record) => owner_ref_from_record(record),
+            semio_framework_dsl_record::FieldValue::Record(record) => owner_ref_from_record(record),
             other => Err(format!("expected Record, found {other:?}")),
         }
     }
 }
 
 // 🚫️async: E4 fn-pointer slot — value stored in `Shape::Record(fn() -> RecordSpec)`
-fn link_pin_spec() -> crate::os_dsl::RecordSpec {
-    crate::os_dsl::RecordSpec::new(
+fn link_pin_spec() -> semio_framework_dsl_record::RecordSpec {
+    semio_framework_dsl_record::RecordSpec::new(
         None,
-        crate::os_dsl::RecordLayout::Inline,
+        semio_framework_dsl_record::RecordLayout::Inline,
         vec![
-            crate::os_dsl::FieldSpec::new(0, "kind", crate::os_dsl::Shape::Enum(vec![("head".to_string(), 0), ("checkpoint".to_string(), 1), ("snapshot".to_string(), 2)])),
-            crate::os_dsl::FieldSpec::new(1, "checkpoint_id", crate::os_dsl::Shape::Text).optional(),
-            crate::os_dsl::FieldSpec::new(2, "blob_hash", crate::os_dsl::Shape::Text).optional(),
-            crate::os_dsl::FieldSpec::new(3, "blob_size", crate::os_dsl::Shape::UInt).optional(),
-            crate::os_dsl::FieldSpec::new(4, "blob_media_type", crate::os_dsl::Shape::Text).optional(),
+            semio_framework_dsl_record::FieldSpec::new(0, "kind", semio_framework_dsl_record::Shape::Enum(vec![("head".to_string(), 0), ("checkpoint".to_string(), 1), ("snapshot".to_string(), 2)])),
+            semio_framework_dsl_record::FieldSpec::new(1, "checkpoint_id", semio_framework_dsl_record::Shape::Text).optional(),
+            semio_framework_dsl_record::FieldSpec::new(2, "blob_hash", semio_framework_dsl_record::Shape::Text).optional(),
+            semio_framework_dsl_record::FieldSpec::new(3, "blob_size", semio_framework_dsl_record::Shape::UInt).optional(),
+            semio_framework_dsl_record::FieldSpec::new(4, "blob_media_type", semio_framework_dsl_record::Shape::Text).optional(),
         ],
     )
 }
 
-fn link_pin_spec_controlled<C:crate::os_dsl::NativeSchemaControl>(control:&mut C)->Result<crate::os_dsl::RecordSpec,String>{
-    control.scoped_stage(|control|{control.begin_stage(5)?;let mut fields=control.allocate_vec(5)?;let mut labels=control.allocate_vec(3)?;
-        for(key,id)in[("head",0),("checkpoint",1),("snapshot",2)]{labels.push((control.copy_text(key)?,id));}
-        fields.push(crate::os_dsl::schema::producer::field(0,"kind",crate::os_dsl::Shape::Enum(labels),control)?);control.step()?;
-        for(id,key,shape)in[(1,"checkpoint_id",crate::os_dsl::Shape::Text),(2,"blob_hash",crate::os_dsl::Shape::Text),(3,"blob_size",crate::os_dsl::Shape::UInt),(4,"blob_media_type",crate::os_dsl::Shape::Text)]{fields.push(crate::os_dsl::schema::producer::field(id,key,shape,control)?.optional());control.step()?;}
-        crate::os_dsl::schema::producer::record(None,crate::os_dsl::RecordLayout::Inline,fields,control)
+fn link_pin_spec_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::RecordSpec, semio_framework_value::ValueError> {
+    control.scoped_stage(|control| {
+        control.begin_stage(5)?;
+        let mut fields = control.allocate_vec(5)?;
+        let mut labels = control.allocate_vec(3)?;
+        for (key, id) in [("head", 0), ("checkpoint", 1), ("snapshot", 2)] {
+            labels.push((control.copy_text(key)?, id));
+        }
+        fields.push(semio_framework_dsl_record::producer::field(0, "kind", semio_framework_dsl_record::Shape::Enum(labels), control)?);
+        control.step()?;
+        for (id, key, shape) in [(1, "checkpoint_id", semio_framework_dsl_record::Shape::Text), (2, "blob_hash", semio_framework_dsl_record::Shape::Text), (3, "blob_size", semio_framework_dsl_record::Shape::UInt), (4, "blob_media_type", semio_framework_dsl_record::Shape::Text)] {
+            fields.push(semio_framework_dsl_record::producer::field(id, key, shape, control)?.optional());
+            control.step()?;
+        }
+        semio_framework_dsl_record::producer::record(None, semio_framework_dsl_record::RecordLayout::Inline, fields, control)
     })
 }
-fn link_pin_spec_producer()->crate::os_dsl::RecordSpecProducer{crate::os_dsl::RecordSpecProducer{ordinary:link_pin_spec,decoding:|control|link_pin_spec_controlled(control),encoding:|control|link_pin_spec_controlled(control)}}
+fn link_pin_spec_producer() -> semio_framework_dsl_record::RecordSpecProducer {
+    semio_framework_dsl_record::RecordSpecProducer { ordinary: link_pin_spec, decoding: |control| link_pin_spec_controlled(control), encoding: |control| link_pin_spec_controlled(control) }
+}
 
-fn link_pin_to_record(pin: &LinkPin) -> crate::os_dsl::RecordValue {
-    let mut record = crate::os_dsl::RecordValue::default();
+fn link_pin_to_record(pin: &LinkPin) -> semio_framework_dsl_record::RecordValue {
+    let mut record = semio_framework_dsl_record::RecordValue::default();
     match pin {
         LinkPin::Head => {
-            record.fields.insert(0, crate::os_dsl::FieldValue::Enum(0));
+            record.fields.insert(0, semio_framework_dsl_record::FieldValue::Enum(0));
         }
         LinkPin::Checkpoint { id } => {
-            record.fields.insert(0, crate::os_dsl::FieldValue::Enum(1));
-            record.fields.insert(1, crate::os_dsl::FieldValue::Text(id.clone()));
+            record.fields.insert(0, semio_framework_dsl_record::FieldValue::Enum(1));
+            record.fields.insert(1, semio_framework_dsl_record::FieldValue::Text(id.clone()));
         }
         LinkPin::Snapshot { blob } => {
-            record.fields.insert(0, crate::os_dsl::FieldValue::Enum(2));
-            record.fields.insert(2, crate::os_dsl::FieldValue::Text(blob.hash.clone()));
-            record.fields.insert(3, crate::os_dsl::FieldValue::UInt(blob.size));
-            record.fields.insert(4, crate::os_dsl::FieldValue::Text(blob.media_type.clone()));
+            record.fields.insert(0, semio_framework_dsl_record::FieldValue::Enum(2));
+            record.fields.insert(2, semio_framework_dsl_record::FieldValue::Text(blob.hash.clone()));
+            record.fields.insert(3, semio_framework_dsl_record::FieldValue::UInt(blob.size));
+            record.fields.insert(4, semio_framework_dsl_record::FieldValue::Text(blob.media_type.clone()));
         }
     }
     record
 }
 
-fn link_pin_to_record_controlled(pin:&LinkPin,control:&mut crate::os_dsl::NativeEncodeControl<'_>)->Result<crate::os_dsl::RecordValue,String>{
-    use crate::os_dsl::{FieldValue as V,native_encoding::EncodedRecord};
-    control.scoped_depth(64,|control|control.scoped_stage(|control|{
-        let count=match pin{LinkPin::Head=>1,LinkPin::Checkpoint{..}=>2,LinkPin::Snapshot{..}=>4};control.begin_stage(count)?;let mut output=EncodedRecord::new(count,control)?;
-        let ordinal=match pin{LinkPin::Head=>0,LinkPin::Checkpoint{..}=>1,LinkPin::Snapshot{..}=>2};output.insert(0,V::Enum(ordinal));control.step()?;
-        match pin{LinkPin::Head=>{},LinkPin::Checkpoint{id}=>{output.insert(1,V::Text(control.copy_text(id)?));control.step()?;},LinkPin::Snapshot{blob}=>{output.insert(2,V::Text(control.copy_text(&blob.hash)?));control.step()?;output.insert(3,V::UInt(blob.size));control.step()?;output.insert(4,V::Text(control.copy_text(&blob.media_type)?));control.step()?;}}
-        Ok(output.take())
-    }))
+fn link_pin_to_record_controlled(pin: &LinkPin, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::RecordValue, semio_framework_value::ValueError> {
+    use semio_framework_dsl_record::FieldValue as V;
+use semio_framework_dsl_record::native_encoding::EncodedRecord;
+    control.scoped_depth(64, |control| {
+        control.scoped_stage(|control| {
+            let count = match pin {
+                LinkPin::Head => 1,
+                LinkPin::Checkpoint { .. } => 2,
+                LinkPin::Snapshot { .. } => 4,
+            };
+            control.begin_stage(count)?;
+            let mut output = semio_framework_dsl_record::native_encoding::EncodedRecord::new(count, control)?;
+            let ordinal = match pin {
+                LinkPin::Head => 0,
+                LinkPin::Checkpoint { .. } => 1,
+                LinkPin::Snapshot { .. } => 2,
+            };
+            output.insert(0, semio_framework_dsl_record::FieldValue::Enum(ordinal))?;
+            control.step()?;
+            match pin {
+                LinkPin::Head => {}
+                LinkPin::Checkpoint { id } => {
+                    output.insert(1, semio_framework_dsl_record::FieldValue::Text(control.copy_text(id)?))?;
+                    control.step()?;
+                }
+                LinkPin::Snapshot { blob } => {
+                    output.insert(2, semio_framework_dsl_record::FieldValue::Text(control.copy_text(&blob.hash)?))?;
+                    control.step()?;
+                    output.insert(3, semio_framework_dsl_record::FieldValue::UInt(blob.size))?;
+                    control.step()?;
+                    output.insert(4, semio_framework_dsl_record::FieldValue::Text(control.copy_text(&blob.media_type)?))?;
+                    control.step()?;
+                }
+            }
+            Ok(output.take())
+        })
+    })
 }
 
-fn validate_link_pin_record(record:&crate::os_dsl::RecordValue)->Result<u32,String>{
-    let Some(crate::os_dsl::FieldValue::Enum(ordinal))=record.get(0)else{return Err("expected link pin kind Enum".into());};
-    let fields:&[u16]=match ordinal{0=>&[0],1=>&[0,1],2=>&[0,2,3,4],_=>return Err("unknown link pin kind ordinal".into())};
-    if record.fields.keys().any(|id|*id>4)||fields.iter().any(|id|matches!(record.get(*id),None|Some(crate::os_dsl::FieldValue::Absent)))||record.fields.iter().any(|(id,value)|!matches!(value,crate::os_dsl::FieldValue::Absent)&&!fields.contains(id)){return Err("link pin fields differ from its declared branch".into());}
+fn validate_link_pin_record(record: &semio_framework_dsl_record::RecordValue) -> Result<u32, String> {
+    let Some(semio_framework_dsl_record::FieldValue::Enum(ordinal)) = record.get(0) else {
+        return Err("expected link pin kind Enum".into());
+    };
+    let fields: &[u16] = match ordinal {
+        0 => &[0],
+        1 => &[0, 1],
+        2 => &[0, 2, 3, 4],
+        _ => return Err("unknown link pin kind ordinal".into()),
+    };
+    if record.fields.keys().any(|id| *id > 4)
+        || fields.iter().any(|id| matches!(record.get(*id), None | Some(semio_framework_dsl_record::FieldValue::Absent)))
+        || record.fields.iter().any(|(id, value)| !matches!(value, semio_framework_dsl_record::FieldValue::Absent) && !fields.contains(id))
+    {
+        return Err("link pin fields differ from its declared branch".into());
+    }
     Ok(*ordinal)
 }
-fn link_pin_from_record_controlled(record:&crate::os_dsl::RecordValue,control:&mut crate::os_dsl::NativeDecodeControl<'_>)->Result<LinkPin,String>{
-    control.scoped_stage(|control|{
-        control.checkpoint()?;let ordinal=validate_link_pin_record(record)?;control.begin_stage(match ordinal{0=>1,1=>2,2=>4,_=>unreachable!()})?;control.step()?;
-        let text=|id|match record.get(id){Some(crate::os_dsl::FieldValue::Text(value))=>Ok(value.as_str()),_=>Err("link pin field must be Text".to_string())};
-        match ordinal{
-            0=>Ok(LinkPin::Head),
-            1=>{let id=control.copy_text(text(1)?)?;control.step()?;Ok(LinkPin::Checkpoint{id})},
-            2=>{let hash=text(2)?;let media_type=text(4)?;let Some(crate::os_dsl::FieldValue::UInt(size))=record.get(3)else{return Err("link pin blob size must be UInt".into());};let hash=control.copy_text(hash)?;control.step()?;let size=*size;control.step()?;let media_type=control.copy_text(media_type)?;control.step()?;Ok(LinkPin::Snapshot{blob:BlobRef{hash,size,media_type}})},
-            _=>unreachable!(),
+fn link_pin_from_record_controlled(record: &semio_framework_dsl_record::RecordValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<LinkPin, semio_framework_value::ValueError> {
+    control.scoped_stage(|control| {
+        control.checkpoint()?;
+        let ordinal = validate_link_pin_record(record).map_err(|message| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message))?;
+        control.begin_stage(match ordinal {
+            0 => 1,
+            1 => 2,
+            2 => 4,
+            _ => unreachable!(),
+        })?;
+        control.step()?;
+        let text = |id| match record.get(id) {
+            Some(semio_framework_dsl_record::FieldValue::Text(value)) => Ok(value.as_str()),
+            _ => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "link pin field must be Text")),
+        };
+        match ordinal {
+            0 => Ok(LinkPin::Head),
+            1 => {
+                let id = control.copy_text(text(1)?)?;
+                control.step()?;
+                Ok(LinkPin::Checkpoint { id })
+            }
+            2 => {
+                let hash = text(2)?;
+                let media_type = text(4)?;
+                let Some(semio_framework_dsl_record::FieldValue::UInt(size)) = record.get(3) else {
+                    return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "link pin blob size must be UInt"));
+                };
+                let hash = control.copy_text(hash)?;
+                control.step()?;
+                let size = *size;
+                control.step()?;
+                let media_type = control.copy_text(media_type)?;
+                control.step()?;
+                Ok(LinkPin::Snapshot { blob: BlobRef { hash, size, media_type } })
+            }
+            _ => unreachable!(),
         }
     })
 }
 
-fn link_pin_from_record(record: &crate::os_dsl::RecordValue) -> Result<LinkPin, String> {
+fn link_pin_from_record(record: &semio_framework_dsl_record::RecordValue) -> Result<LinkPin, String> {
     validate_link_pin_record(record)?;
     let ordinal = match record.get(0) {
-        Some(crate::os_dsl::FieldValue::Enum(n)) => *n,
+        Some(semio_framework_dsl_record::FieldValue::Enum(n)) => *n,
         other => return Err(format!("expected kind, found {other:?}")),
     };
     match ordinal {
         0 => Ok(LinkPin::Head),
         1 => {
             let id = match record.get(1) {
-                Some(crate::os_dsl::FieldValue::Text(s)) => s.clone(),
+                Some(semio_framework_dsl_record::FieldValue::Text(s)) => s.clone(),
                 other => return Err(format!("expected checkpoint_id, found {other:?}")),
             };
             Ok(LinkPin::Checkpoint { id })
         }
         2 => {
             let hash = match record.get(2) {
-                Some(crate::os_dsl::FieldValue::Text(s)) => s.clone(),
+                Some(semio_framework_dsl_record::FieldValue::Text(s)) => s.clone(),
                 other => return Err(format!("expected blob_hash, found {other:?}")),
             };
             let size = match record.get(3) {
-                Some(crate::os_dsl::FieldValue::UInt(n)) => *n,
+                Some(semio_framework_dsl_record::FieldValue::UInt(n)) => *n,
                 other => return Err(format!("expected blob_size, found {other:?}")),
             };
             let media_type = match record.get(4) {
-                Some(crate::os_dsl::FieldValue::Text(s)) => s.clone(),
+                Some(semio_framework_dsl_record::FieldValue::Text(s)) => s.clone(),
                 other => return Err(format!("expected blob_media_type, found {other:?}")),
             };
             Ok(LinkPin::Snapshot { blob: BlobRef { hash, size, media_type } })
@@ -4054,112 +4281,170 @@ fn link_pin_from_record(record: &crate::os_dsl::RecordValue) -> Result<LinkPin, 
     }
 }
 
-impl crate::os_dsl::DslField for LinkPin {
+impl semio_framework_dsl_record::DslField for LinkPin {
     /// 🚫️async: E4 — see `DslField::shape`'s tag on the trait.
-    fn shape() -> crate::os_dsl::Shape {
-        crate::os_dsl::Shape::Record(link_pin_spec_producer())
+    fn shape() -> semio_framework_dsl_record::Shape {
+        semio_framework_dsl_record::Shape::Record(link_pin_spec_producer())
     }
-    fn shape_controlled<C:crate::os_dsl::NativeSchemaControl>(control:&mut C)->Result<crate::os_dsl::Shape,String>{control.checkpoint()?;Ok(crate::os_dsl::Shape::Record(link_pin_spec_producer()))}
-    fn to_value(&self) -> crate::os_dsl::FieldValue {
-        crate::os_dsl::FieldValue::Record(link_pin_to_record(self))
+    fn shape_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, semio_framework_value::ValueError> {
+        control.checkpoint()?;
+        Ok(semio_framework_dsl_record::Shape::Record(link_pin_spec_producer()))
     }
-    fn to_value_controlled(&self,control:&mut crate::os_dsl::NativeEncodeControl<'_>)->Result<crate::os_dsl::FieldValue,String>{link_pin_to_record_controlled(self,control).map(crate::os_dsl::FieldValue::Record)}
-    fn to_record_controlled(&self,control:&mut crate::os_dsl::NativeEncodeControl<'_>)->Result<crate::os_dsl::RecordValue,String>{link_pin_to_record_controlled(self,control)}
-    fn from_value(value: &crate::os_dsl::FieldValue) -> Result<Self, String> {
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
+        semio_framework_dsl_record::FieldValue::Record(link_pin_to_record(self))
+    }
+    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::FieldValue, semio_framework_value::ValueError> {
+        link_pin_to_record_controlled(self, control).map(semio_framework_dsl_record::FieldValue::Record)
+    }
+    fn to_record_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::RecordValue, semio_framework_value::ValueError> {
+        link_pin_to_record_controlled(self, control)
+    }
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
         match value {
-            crate::os_dsl::FieldValue::Record(record) => link_pin_from_record(record),
+            semio_framework_dsl_record::FieldValue::Record(record) => link_pin_from_record(record),
             other => Err(format!("expected Record, found {other:?}")),
         }
     }
-    fn from_value_controlled(value:&crate::os_dsl::FieldValue,control:&mut crate::os_dsl::NativeDecodeControl<'_>)->Result<Self,String>{let crate::os_dsl::FieldValue::Record(record)=value else{return Err("expected link pin Record".into());};link_pin_from_record_controlled(record,control)}
-    fn from_record_controlled(record:&crate::os_dsl::RecordValue,control:&mut crate::os_dsl::NativeDecodeControl<'_>)->Result<Self,String>{link_pin_from_record_controlled(record,control)}
-
+    fn from_value_controlled(value: &semio_framework_dsl_record::FieldValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
+        let semio_framework_dsl_record::FieldValue::Record(record) = value else {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected link pin Record"));
+        };
+        link_pin_from_record_controlled(record, control)
+    }
+    fn from_record_controlled(record: &semio_framework_dsl_record::RecordValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
+        link_pin_from_record_controlled(record, control)
+    }
 }
 
 // 🚫️async: E4 fn-pointer slot — value stored in `Shape::Record(fn() -> RecordSpec)`
-fn artifact_link_spec() -> crate::os_dsl::RecordSpec {
-    crate::os_dsl::RecordSpec::new(
+fn artifact_link_spec() -> semio_framework_dsl_record::RecordSpec {
+    semio_framework_dsl_record::RecordSpec::new(
         None,
-        crate::os_dsl::RecordLayout::Inline,
-        vec![crate::os_dsl::FieldSpec::new(0, "target", <crate::os_io::ArtifactRef as crate::os_dsl::DslField>::shape()), crate::os_dsl::FieldSpec::new(1, "pin", crate::os_dsl::Shape::Record(link_pin_spec_producer())), crate::os_dsl::FieldSpec::new(2, "role", crate::os_dsl::Shape::Text)],
+        semio_framework_dsl_record::RecordLayout::Inline,
+        vec![
+            semio_framework_dsl_record::FieldSpec::new(0, "target", <crate::os_io::ArtifactRef as semio_framework_dsl_record::DslField>::shape()),
+            semio_framework_dsl_record::FieldSpec::new(1, "pin", semio_framework_dsl_record::Shape::Record(link_pin_spec_producer())),
+            semio_framework_dsl_record::FieldSpec::new(2, "role", semio_framework_dsl_record::Shape::Text),
+        ],
     )
 }
 
-fn artifact_link_spec_controlled<C:crate::os_dsl::NativeSchemaControl>(control:&mut C)->Result<crate::os_dsl::RecordSpec,String>{
-    control.scoped_stage(|control|{control.begin_stage(3)?;let mut fields=control.allocate_vec(3)?;
-        let target=<crate::os_io::ArtifactRef as crate::os_dsl::DslField>::shape_controlled(control)?;
-        for(id,key,shape)in[(0,"target",target),(1,"pin",crate::os_dsl::Shape::Record(link_pin_spec_producer())),(2,"role",crate::os_dsl::Shape::Text)]{fields.push(crate::os_dsl::schema::producer::field(id,key,shape,control)?);control.step()?;}
-        crate::os_dsl::schema::producer::record(None,crate::os_dsl::RecordLayout::Inline,fields,control)
+fn artifact_link_spec_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::RecordSpec, semio_framework_value::ValueError> {
+    control.scoped_stage(|control| {
+        control.begin_stage(3)?;
+        let mut fields = control.allocate_vec(3)?;
+        let target = <crate::os_io::ArtifactRef as semio_framework_dsl_record::DslField>::shape_controlled(control)?;
+        for (id, key, shape) in [(0, "target", target), (1, "pin", semio_framework_dsl_record::Shape::Record(link_pin_spec_producer())), (2, "role", semio_framework_dsl_record::Shape::Text)] {
+            fields.push(semio_framework_dsl_record::producer::field(id, key, shape, control)?);
+            control.step()?;
+        }
+        semio_framework_dsl_record::producer::record(None, semio_framework_dsl_record::RecordLayout::Inline, fields, control)
     })
 }
-fn artifact_link_spec_producer()->crate::os_dsl::RecordSpecProducer{crate::os_dsl::RecordSpecProducer{ordinary:artifact_link_spec,decoding:|control|artifact_link_spec_controlled(control),encoding:|control|artifact_link_spec_controlled(control)}}
+fn artifact_link_spec_producer() -> semio_framework_dsl_record::RecordSpecProducer {
+    semio_framework_dsl_record::RecordSpecProducer { ordinary: artifact_link_spec, decoding: |control| artifact_link_spec_controlled(control), encoding: |control| artifact_link_spec_controlled(control) }
+}
 
-fn artifact_link_to_record(link: &ArtifactLink) -> crate::os_dsl::RecordValue {
-    let mut record = crate::os_dsl::RecordValue::default();
-    record.fields.insert(0, <crate::os_io::ArtifactRef as crate::os_dsl::DslField>::to_value(&link.target));
-    record.fields.insert(1, crate::os_dsl::FieldValue::Record(link_pin_to_record(&link.pin)));
-    record.fields.insert(2, crate::os_dsl::FieldValue::Text(link.role.clone()));
+fn artifact_link_to_record(link: &ArtifactLink) -> semio_framework_dsl_record::RecordValue {
+    let mut record = semio_framework_dsl_record::RecordValue::default();
+    record.fields.insert(0, <crate::os_io::ArtifactRef as semio_framework_dsl_record::DslField>::to_value(&link.target));
+    record.fields.insert(1, semio_framework_dsl_record::FieldValue::Record(link_pin_to_record(&link.pin)));
+    record.fields.insert(2, semio_framework_dsl_record::FieldValue::Text(link.role.clone()));
     record
 }
 
-fn artifact_link_to_record_controlled(link:&ArtifactLink,control:&mut crate::os_dsl::NativeEncodeControl<'_>)->Result<crate::os_dsl::RecordValue,String>{
-    use crate::os_dsl::{DslField,FieldValue as V,native_encoding::EncodedRecord};
-    control.scoped_depth(64,|control|control.scoped_stage(|control|{
-        control.begin_stage(3)?;let mut output=EncodedRecord::new(3,control)?;
-        output.insert(0,<crate::os_io::ArtifactRef as DslField>::to_value_controlled(&link.target,control)?);control.step()?;
-        output.insert(1,V::Record(link_pin_to_record_controlled(&link.pin,control)?));control.step()?;
-        output.insert(2,V::Text(control.copy_text(&link.role)?));control.step()?;
-        Ok(output.take())
-    }))
+fn artifact_link_to_record_controlled(link: &ArtifactLink, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::RecordValue, semio_framework_value::ValueError> {
+    use semio_framework_dsl_record::DslField;
+use semio_framework_dsl_record::FieldValue as V;
+use semio_framework_dsl_record::native_encoding::EncodedRecord;
+    control.scoped_depth(64, |control| {
+        control.scoped_stage(|control| {
+            control.begin_stage(3)?;
+            let mut output = semio_framework_dsl_record::native_encoding::EncodedRecord::new(3, control)?;
+            output.insert(0, <crate::os_io::ArtifactRef as DslField>::to_value_controlled(&link.target, control)?)?;
+            control.step()?;
+            output.insert(1, semio_framework_dsl_record::FieldValue::Record(link_pin_to_record_controlled(&link.pin, control)?))?;
+            control.step()?;
+            output.insert(2, semio_framework_dsl_record::FieldValue::Text(control.copy_text(&link.role)?))?;
+            control.step()?;
+            Ok(output.take())
+        })
+    })
 }
 
-fn artifact_link_from_record(record: &crate::os_dsl::RecordValue) -> Result<ArtifactLink, String> {
-    if record.fields.len()!=3||record.fields.keys().any(|id|*id>2){return Err("artifact link requires its three declared fields".into());}
-    let target=<crate::os_io::ArtifactRef as crate::os_dsl::DslField>::from_value(record.get(0).ok_or("artifact link requires target")?)?;
+fn artifact_link_from_record(record: &semio_framework_dsl_record::RecordValue) -> Result<ArtifactLink, String> {
+    if record.fields.len() != 3 || record.fields.keys().any(|id| *id > 2) {
+        return Err("artifact link requires its three declared fields".into());
+    }
+    let target = <crate::os_io::ArtifactRef as semio_framework_dsl_record::DslField>::from_value(record.get(0).ok_or("artifact link requires target")?)?;
     let pin = match record.get(1) {
-        Some(crate::os_dsl::FieldValue::Record(record)) => link_pin_from_record(record)?,
+        Some(semio_framework_dsl_record::FieldValue::Record(record)) => link_pin_from_record(record)?,
         other => return Err(format!("expected pin, found {other:?}")),
     };
     let role = match record.get(2) {
-        Some(crate::os_dsl::FieldValue::Text(s)) => s.clone(),
+        Some(semio_framework_dsl_record::FieldValue::Text(s)) => s.clone(),
         other => return Err(format!("expected role, found {other:?}")),
     };
     Ok(ArtifactLink { target, pin, role })
 }
 
-fn artifact_link_from_record_controlled(record:&crate::os_dsl::RecordValue,control:&mut crate::os_dsl::NativeDecodeControl<'_>)->Result<ArtifactLink,String>{
-    control.scoped_stage(|control|{
-        control.begin_stage(3)?;if record.fields.len()!=3||record.fields.keys().any(|id|*id>2){return Err("artifact link requires its three declared fields".into());}
-        let target=record.get(0).ok_or("artifact link requires target")?;
-        let Some(crate::os_dsl::FieldValue::Record(pin))=record.get(1)else{return Err("artifact link pin must be Record".into());};
-        let Some(crate::os_dsl::FieldValue::Text(role))=record.get(2)else{return Err("artifact link role must be Text".into());};
-        validate_link_pin_record(pin)?;
-        let target=<crate::os_io::ArtifactRef as crate::os_dsl::DslField>::from_value_controlled(target,control)?;control.step()?;
-        let pin=link_pin_from_record_controlled(pin,control)?;control.step()?;let role=control.copy_text(role)?;control.step()?;
-        Ok(ArtifactLink{target,pin,role})
+fn artifact_link_from_record_controlled(record: &semio_framework_dsl_record::RecordValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactLink, semio_framework_value::ValueError> {
+    control.scoped_stage(|control| {
+        control.begin_stage(3)?;
+        if record.fields.len() != 3 || record.fields.keys().any(|id| *id > 2) {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "artifact link requires its three declared fields"));
+        }
+        let target = record.get(0).ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "artifact link requires target"))?;
+        let Some(semio_framework_dsl_record::FieldValue::Record(pin)) = record.get(1) else {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "artifact link pin must be Record"));
+        };
+        let Some(semio_framework_dsl_record::FieldValue::Text(role)) = record.get(2) else {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "artifact link role must be Text"));
+        };
+        validate_link_pin_record(pin).map_err(|message| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message))?;
+        let target = <crate::os_io::ArtifactRef as semio_framework_dsl_record::DslField>::from_value_controlled(target, control)?;
+        control.step()?;
+        let pin = link_pin_from_record_controlled(pin, control)?;
+        control.step()?;
+        let role = control.copy_text(role)?;
+        control.step()?;
+        Ok(ArtifactLink { target, pin, role })
     })
 }
 
-impl crate::os_dsl::DslField for ArtifactLink {
+impl semio_framework_dsl_record::DslField for ArtifactLink {
     /// 🚫️async: E4 — see `DslField::shape`'s tag on the trait.
-    fn shape() -> crate::os_dsl::Shape {
-        crate::os_dsl::Shape::Record(artifact_link_spec_producer())
+    fn shape() -> semio_framework_dsl_record::Shape {
+        semio_framework_dsl_record::Shape::Record(artifact_link_spec_producer())
     }
-    fn shape_controlled<C:crate::os_dsl::NativeSchemaControl>(control:&mut C)->Result<crate::os_dsl::Shape,String>{control.checkpoint()?;Ok(crate::os_dsl::Shape::Record(artifact_link_spec_producer()))}
-    fn to_value(&self) -> crate::os_dsl::FieldValue {
-        crate::os_dsl::FieldValue::Record(artifact_link_to_record(self))
+    fn shape_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, semio_framework_value::ValueError> {
+        control.checkpoint()?;
+        Ok(semio_framework_dsl_record::Shape::Record(artifact_link_spec_producer()))
     }
-    fn to_value_controlled(&self,control:&mut crate::os_dsl::NativeEncodeControl<'_>)->Result<crate::os_dsl::FieldValue,String>{artifact_link_to_record_controlled(self,control).map(crate::os_dsl::FieldValue::Record)}
-    fn to_record_controlled(&self,control:&mut crate::os_dsl::NativeEncodeControl<'_>)->Result<crate::os_dsl::RecordValue,String>{artifact_link_to_record_controlled(self,control)}
-    fn from_value(value: &crate::os_dsl::FieldValue) -> Result<Self, String> {
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
+        semio_framework_dsl_record::FieldValue::Record(artifact_link_to_record(self))
+    }
+    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::FieldValue, semio_framework_value::ValueError> {
+        artifact_link_to_record_controlled(self, control).map(semio_framework_dsl_record::FieldValue::Record)
+    }
+    fn to_record_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::RecordValue, semio_framework_value::ValueError> {
+        artifact_link_to_record_controlled(self, control)
+    }
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
         match value {
-            crate::os_dsl::FieldValue::Record(record) => artifact_link_from_record(record),
+            semio_framework_dsl_record::FieldValue::Record(record) => artifact_link_from_record(record),
             other => Err(format!("expected Record, found {other:?}")),
         }
     }
-    fn from_value_controlled(value:&crate::os_dsl::FieldValue,control:&mut crate::os_dsl::NativeDecodeControl<'_>)->Result<Self,String>{let crate::os_dsl::FieldValue::Record(record)=value else{return Err("expected artifact link Record".into());};artifact_link_from_record_controlled(record,control)}
-    fn from_record_controlled(record:&crate::os_dsl::RecordValue,control:&mut crate::os_dsl::NativeDecodeControl<'_>)->Result<Self,String>{artifact_link_from_record_controlled(record,control)}
-
+    fn from_value_controlled(value: &semio_framework_dsl_record::FieldValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
+        let semio_framework_dsl_record::FieldValue::Record(record) = value else {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected artifact link Record"));
+        };
+        artifact_link_from_record_controlled(record, control)
+    }
+    fn from_record_controlled(record: &semio_framework_dsl_record::RecordValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
+        artifact_link_from_record_controlled(record, control)
+    }
 }
 //#endregion 🔖️CompositionDsl
 //#endregion 🔖️Composition
@@ -4175,7 +4460,7 @@ pub struct CommandReceipt {
     pub edit_ids: Vec<String>,
     pub generation: u64,
     pub messages: Vec<crate::os_spr::EditMessages>,
-    pub worst: Option<crate::os_dsl::Severity>,
+    pub worst: Option<semio_framework_diagnostic::Severity>,
 }
 
 //#region 🔮️Projection
@@ -4317,7 +4602,7 @@ pub type DraftStore<P, Mutation> = ArtifactStore<P, Mutation>;
 /// 🌉️ Carries serde alongside `ToValue`/`FromValue`: `TypedOperationResultPage::try_serialize`
 /// (`🔌️plugin/🦀️.rs`) is bound on `serde::Serialize`, and both fields are `u64`, so the derives add
 /// no bound fan-out. `rename_all` is mirrored so the two encodings emit the same keys.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue, serde::Serialize, serde::Deserialize)]
 #[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 pub struct LaneItemReceipt {
@@ -4372,7 +4657,7 @@ pub trait ArtifactEphemeralOneItemPreparation<P, Mutation>: Send {
     fn take_prepared(&mut self) -> Option<ArtifactEphemeralOneItemPrepared<P>>;
     fn cancel(&mut self);
     fn begin_close(&mut self);
-    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String>;
+    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError>;
     fn terminal_is_empty(&self) -> bool;
 }
 
@@ -4483,7 +4768,7 @@ impl<P, Mutation> ArtifactEphemeralOneItemPublication<P, Mutation> {
         }
     }
 
-    pub fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String>
+    pub fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError>
     where
         P: Send + Sync + 'static,
     {
@@ -4494,7 +4779,7 @@ impl<P, Mutation> ArtifactEphemeralOneItemPublication<P, Mutation> {
                 return Ok(step);
             }
             if !owner.terminal_is_empty() {
-                return Err("ephemeral one-item preparation reported complete without terminal emptiness".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "ephemeral one-item preparation reported complete without terminal emptiness"));
             }
             self.retained_checkpoint = self.progress();
             self.preparation = None;
@@ -4512,7 +4797,7 @@ impl<P, Mutation> ArtifactEphemeralOneItemPublication<P, Mutation> {
                 return Ok(step);
             }
             if !owner.terminal_is_empty() {
-                return Err("ephemeral displaced-root retirement reported complete without terminal emptiness".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "ephemeral displaced-root retirement reported complete without terminal emptiness"));
             }
             self.displaced_root_retirement = None;
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
@@ -4894,7 +5179,7 @@ impl<P: Send + Sync + 'static> PresencePeersPublication<P> {
         Ok(PresencePeersCommit { base_root: self.base_root.take().expect("peer candidate retains its exact immutable base"), root: candidate, retirement, factory: self.factory.clone() })
     }
 
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -4904,7 +5189,7 @@ impl<P: Send + Sync + 'static> PresencePeersPublication<P> {
                 return Ok(step);
             }
             if !active.terminal_is_empty() {
-                return Err("presence peer publication cleanup reported Complete without its terminal-empty witness".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "presence peer publication cleanup reported Complete without its terminal-empty witness"));
             }
             drop(self.active.take());
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
@@ -4943,7 +5228,10 @@ impl<P: Send + Sync + 'static> PresencePeersPublication<P> {
 impl<P> Drop for PresencePeersPublication<P> {
     fn drop(&mut self) {
         if !std::thread::panicking() {
-            assert!(std::thread::panicking() || (self.base_root.is_none() && self.candidate.is_none() && self.created.len == 0 && self.retired.len == 0 && self.active.is_none()), "incomplete presence peer publication reached Drop without bounded disposal");
+            assert!(
+                std::thread::panicking() || (self.base_root.is_none() && self.candidate.is_none() && self.created.len == 0 && self.retired.len == 0 && self.active.is_none()),
+                "incomplete presence peer publication reached Drop without bounded disposal"
+            );
         }
     }
 }
@@ -4962,18 +5250,18 @@ impl<P: Send + Sync + 'static> PresencePeersRetirement<P> {
         }
     }
 
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(active) = self.active.as_mut() {
             return match active.close_step(maximum_items, maximum_bytes)? {
                 step @ SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= maximum_items && released_bytes <= maximum_bytes => Ok(step),
-                SnapshotRetirementStep::Pending { .. } => Err("presence peer snapshot disposer exceeded its exact item or byte grant".into()),
+                SnapshotRetirementStep::Pending { .. } => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "presence peer snapshot disposer exceeded its exact item or byte grant")),
                 SnapshotRetirementStep::Blocked => Ok(SnapshotRetirementStep::Blocked),
                 SnapshotRetirementStep::Complete => {
                     if !active.terminal_is_empty() {
-                        return Err("presence peer snapshot disposer reported Complete without its terminal-empty witness".into());
+                        return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "presence peer snapshot disposer reported Complete without its terminal-empty witness"));
                     }
                     drop(self.active.take());
                     Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
@@ -4989,7 +5277,7 @@ impl<P: Send + Sync + 'static> PresencePeersRetirement<P> {
                 entry.actor.pop();
                 return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: bytes });
             }
-            let snapshot = entry.presence.take().ok_or_else(|| "presence peer retirement entry lost its exact snapshot authority".to_string())?;
+            let snapshot = entry.presence.take().ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "presence peer retirement entry lost its exact snapshot authority"))?;
             *self.active = Some(self.factory.retire(snapshot));
             let entry = self.entry.take().expect("empty presence peer retirement entry");
             drop(entry);
@@ -5040,7 +5328,10 @@ impl<P: Send + Sync + 'static> PresencePeersRetirement<P> {
 impl<P> Drop for PresencePeersRetirement<P> {
     fn drop(&mut self) {
         if !std::thread::panicking() {
-            assert!(std::thread::panicking() || (self.root.is_none() && self.owned_root.is_none() && self.retired.len == 0 && self.waiting.is_none() && self.entry.is_none() && self.active.is_none()), "incomplete presence-peer retirement reached Drop without bounded disposal");
+            assert!(
+                std::thread::panicking() || (self.root.is_none() && self.owned_root.is_none() && self.retired.len == 0 && self.waiting.is_none() && self.entry.is_none() && self.active.is_none()),
+                "incomplete presence-peer retirement reached Drop without bounded disposal"
+            );
         }
     }
 }
@@ -5099,7 +5390,7 @@ impl<P: Clone, Mutation: self::Mutation<P>> PresenceStore<P, Mutation> {
         Ok(())
     }
 
-    pub fn maintenance_local_reads_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String>
+    pub fn maintenance_local_reads_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError>
     where
         P: Send + Sync + 'static,
     {
@@ -5224,16 +5515,14 @@ impl<P: Clone, Mutation: self::Mutation<P>> PresenceStore<P, Mutation> {
             return Ok(ArtifactStoreOneItemAdvance::Blocked);
         }
         match publication.phase {
-            ArtifactStoreOneItemPublicationPhase::Preparing => {
-                match publication.advance_preparation(grant)? {
-                    ArtifactStoreOneItemPreparationStep::Progress(checkpoint) => Ok(ArtifactStoreOneItemAdvance::Progress(checkpoint)),
-                    ArtifactStoreOneItemPreparationStep::Prepared(checkpoint) => {
-                        publication.phase = ArtifactStoreOneItemPublicationPhase::PreparingCursor;
-                        Ok(ArtifactStoreOneItemAdvance::Progress(checkpoint))
-                    }
-                    ArtifactStoreOneItemPreparationStep::Blocked => Ok(ArtifactStoreOneItemAdvance::Blocked),
+            ArtifactStoreOneItemPublicationPhase::Preparing => match publication.advance_preparation(grant)? {
+                ArtifactStoreOneItemPreparationStep::Progress(checkpoint) => Ok(ArtifactStoreOneItemAdvance::Progress(checkpoint)),
+                ArtifactStoreOneItemPreparationStep::Prepared(checkpoint) => {
+                    publication.phase = ArtifactStoreOneItemPublicationPhase::PreparingCursor;
+                    Ok(ArtifactStoreOneItemAdvance::Progress(checkpoint))
                 }
-            }
+                ArtifactStoreOneItemPreparationStep::Blocked => Ok(ArtifactStoreOneItemAdvance::Blocked),
+            },
             ArtifactStoreOneItemPublicationPhase::PreparingCursor => {
                 if publication.preparation.as_ref().and_then(|owner| owner.prepared()).is_none() {
                     return Err("presence prepared root is absent".into());
@@ -5421,7 +5710,7 @@ impl<P: Clone, Mutation: self::Mutation<P>> TransientStore<P, Mutation> {
     }
 
     /// 🧹️ Advances one returned read through its exact owned-value retirement authority.
-    pub fn maintenance_returned_reads_step(&mut self, factory: &Arc<dyn ArtifactOwnedValueRetirementFactory<P>>, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String>
+    pub fn maintenance_returned_reads_step(&mut self, factory: &Arc<dyn ArtifactOwnedValueRetirementFactory<P>>, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError>
     where
         P: Send + Sync + 'static,
     {
@@ -5582,16 +5871,14 @@ impl<P: Clone, Mutation: self::Mutation<P>> TransientStore<P, Mutation> {
             return Ok(ArtifactStoreOneItemAdvance::Blocked);
         }
         match publication.phase {
-            ArtifactStoreOneItemPublicationPhase::Preparing => {
-                match publication.advance_preparation(grant)? {
-                    ArtifactStoreOneItemPreparationStep::Progress(checkpoint) => Ok(ArtifactStoreOneItemAdvance::Progress(checkpoint)),
-                    ArtifactStoreOneItemPreparationStep::Prepared(checkpoint) => {
-                        publication.phase = ArtifactStoreOneItemPublicationPhase::PreparingCursor;
-                        Ok(ArtifactStoreOneItemAdvance::Progress(checkpoint))
-                    }
-                    ArtifactStoreOneItemPreparationStep::Blocked => Ok(ArtifactStoreOneItemAdvance::Blocked),
+            ArtifactStoreOneItemPublicationPhase::Preparing => match publication.advance_preparation(grant)? {
+                ArtifactStoreOneItemPreparationStep::Progress(checkpoint) => Ok(ArtifactStoreOneItemAdvance::Progress(checkpoint)),
+                ArtifactStoreOneItemPreparationStep::Prepared(checkpoint) => {
+                    publication.phase = ArtifactStoreOneItemPublicationPhase::PreparingCursor;
+                    Ok(ArtifactStoreOneItemAdvance::Progress(checkpoint))
                 }
-            }
+                ArtifactStoreOneItemPreparationStep::Blocked => Ok(ArtifactStoreOneItemAdvance::Blocked),
+            },
             ArtifactStoreOneItemPublicationPhase::PreparingCursor => {
                 if publication.preparation.as_ref().and_then(|owner| owner.prepared()).is_none() {
                     return Err("transient prepared root is absent".into());
@@ -5707,13 +5994,19 @@ impl<P> TransientStoreRetirement<P> {
 }
 
 impl<P: Send + Sync + 'static> TransientStoreRetirement<P> {
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(reads) = self.reads.as_ref() {
             if self.active_returned.is_some() || reads.has_returned() {
-                return advance_returned_snapshot_read(reads, &mut self.active_returned, self.factory.as_ref().ok_or_else(|| "transient retirement lost its owned factory".to_string())?, 1, maximum_bytes);
+                return advance_returned_snapshot_read(
+                    reads,
+                    &mut self.active_returned,
+                    self.factory.as_ref().ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "transient retirement lost its owned factory"))?,
+                    1,
+                    maximum_bytes,
+                );
             }
         }
         if let Some(active) = self.active_root.as_mut() {
@@ -5722,13 +6015,18 @@ impl<P: Send + Sync + 'static> TransientStoreRetirement<P> {
                     drop(self.active_root.take());
                     Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
-                SnapshotRetirementStep::Complete => Err("transient root completed without its exact empty witness".into()),
-                SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > 1 || released_bytes > maximum_bytes => Err("transient root exceeded its exact grant".into()),
+                SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "transient root completed without its exact empty witness")),
+                SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > 1 || released_bytes > maximum_bytes => {
+                    Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "transient root exceeded its exact grant"))
+                }
                 step => Ok(step),
             };
         }
         if let Some(root) = self.root.take() {
-            *self.active_root = Some(Box::new(ReturnedSnapshotReadRetirement::new(root, self.factory.as_ref().ok_or_else(|| "transient retirement lost its owned factory".to_string())?.clone())));
+            *self.active_root = Some(Box::new(ReturnedSnapshotReadRetirement::new(
+                root,
+                self.factory.as_ref().ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "transient retirement lost its owned factory"))?.clone(),
+            )));
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if self.reads.as_ref().is_some_and(|reads| !reads.terminal_is_empty()) {
@@ -5836,7 +6134,8 @@ impl<S: Clone, Mutation: self::Mutation<S>> InteractionStore<S, Mutation> {
 /// 📍️ 1-based line/column position inside DSL or op-log source text. Lives in `dsl_core`
 /// (the token-native DSL engine's foundation crate, which sits below `vcs`); re-exported here so
 /// every existing `crate::os_store::TextSpan`/`crate::os_store::TextError` import across the workspace keeps compiling.
-pub use crate::os_dsl::{TextError, TextSpan};
+pub use semio_framework_diagnostic::TextError;
+pub use semio_framework_diagnostic::TextSpan;
 
 /// 📜️ Handcrafted textual representation of a document snapshot, implemented once per
 /// technology next to its `Snapshot` type. LAW: `P::parse_dsl(&snapshot.print_dsl())` recovers
@@ -5868,23 +6167,29 @@ pub use crate::os_semio as semio_format;
 /// a `Pack`-prefixed name (not a plain re-export — `dsl_derive`'s emitted `ArtifactPack` impl and
 /// every downstream caller spell them `crate::os_store::PackEncodeOptions`/`crate::os_store::PackDecodeOptions`/
 /// `crate::os_store::PackVerificationLevel`, so there is exactly one spelling repo-wide).
-pub use crate::os_pack::{DecodeOptions as PackDecodeOptions, EncodeOptions as PackEncodeOptions, PackError, VerificationLevel as PackVerificationLevel};
+pub use crate::os_pack::{DecodeOptions as PackDecodeOptions, EncodeOptions as PackEncodeOptions, PackError, PackRefusal, VerificationLevel as PackVerificationLevel};
 
 /// 🧵️ Thin runtime bridge to `crate::os_pack::{encode_document, decode_document}`, resolved as
 /// `::crate::os_store::pack_rt::...` by `dsl_derive`'s generated `ArtifactPack` impl (app crates depend on
 /// `vcs`, never on `pack` directly — same seam `::crate::os_dsl::RecordSpec`/`RecordValue` already use). Also
 /// hosts the schema-less `DslValue` bridge behind `impl ArtifactPack for DslValue` below.
 pub mod pack_rt {
-    use super::{PackDecodeOptions, PackEncodeOptions, PackError};
-    use crate::os_dsl::{DslValue, FieldSpec, FieldValue, Number, RecordLayout, RecordSpec, RecordValue, Shape};
+    use super::{PackDecodeOptions, PackEncodeOptions, PackError, PackRefusal};
+    use semio_framework_value::DslValue;
+use semio_framework_dsl_record::FieldSpec;
+use semio_framework_dsl_record::FieldValue;
+use semio_framework_value::Number;
+use semio_framework_dsl_record::RecordLayout;
+use semio_framework_dsl_record::RecordSpec;
+use semio_framework_dsl_record::RecordValue;
+use semio_framework_dsl_record::Shape;
     use std::collections::HashMap;
 
     pub use crate::os_pack::{RetainedValueContainer, RetainedValueCursor, RetainedValueRole, RetainedValueToken};
     pub use pack::{
-        RetainedPackAnchorCursor, RetainedPackCatalog, RetainedPackCatalogAllocationError, RetainedPackCatalogAllocationStep, RetainedPackCatalogCursor, RetainedPackCatalogEvent, RetainedPackCatalogFault,
-        RetainedPackCatalogProgress, RetainedPackCloseStep, RetainedPackPage, RetainedPackSegmentCursor, RetainedPackSegmentEvent,
-        RetainedPackSourceAllocationError, RetainedPackSourceAllocationStep, RetainedPackSourceCursor, RetainedPackSourceEvent, RetainedPackSourceProgress, MAGIC, RETAINED_PACK_MAXIMUM_PAGES,
-        RETAINED_PACK_PAGE_BYTES,
+        MAGIC, RETAINED_PACK_MAXIMUM_PAGES, RETAINED_PACK_PAGE_BYTES, RetainedPackAnchorCursor, RetainedPackCatalog, RetainedPackCatalogAllocationError, RetainedPackCatalogAllocationStep, RetainedPackCatalogCursor, RetainedPackCatalogEvent,
+        RetainedPackCatalogFault, RetainedPackCatalogProgress, RetainedPackCloseStep, RetainedPackPage, RetainedPackSegmentCursor, RetainedPackSegmentEvent, RetainedPackSourceAllocationError, RetainedPackSourceAllocationStep,
+        RetainedPackSourceCursor, RetainedPackSourceEvent, RetainedPackSourceProgress,
     };
 
     /// 🚪️ Forwards to `crate::os_pack::encode_document`.
@@ -5893,8 +6198,8 @@ pub mod pack_rt {
     }
 
     /// 🛫️ Emits complete Pack documents under the caller's cumulative ownership control.
-    pub fn encode_document_controlled(spec:&RecordSpec,record:&RecordValue,options:&PackEncodeOptions,control:&mut crate::os_dsl::NativeEncodeControl<'_>)->Result<Vec<u8>,PackError>{
-        crate::os_pack::encode_document_controlled(spec,record,options,control)
+    pub fn encode_document_controlled(spec: &RecordSpec, record: &RecordValue, options: &PackEncodeOptions, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<Vec<u8>, PackRefusal> {
+        crate::os_pack::encode_document_controlled(spec, record, options, control)
     }
 
     /// 🚪️ Forwards to `crate::os_pack::decode_document`.
@@ -5902,8 +6207,8 @@ pub mod pack_rt {
         crate::os_pack::decode_document(bytes, spec, options)
     }
     /// 🛬️ Keeps complete physical Pack reading and typed reconstruction on one caller control.
-    pub fn decode_document_controlled(bytes:&[u8],spec:&RecordSpec,options:&PackDecodeOptions,control:&mut crate::os_dsl::NativeDecodeControl<'_>)->Result<(RecordValue,crate::os_pack::DecodeReport),PackError>{
-        crate::os_pack::decode_document_controlled(bytes,spec,options,control)
+    pub fn decode_document_controlled(bytes: &[u8], spec: &RecordSpec, options: &PackDecodeOptions, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<(RecordValue, crate::os_pack::DecodeReport), PackRefusal> {
+        crate::os_pack::decode_document_controlled(bytes, spec, options, control)
     }
 
     /// 🎯️ P6: container-less record body helpers for handcrafted OpBinary impls.
@@ -5914,8 +6219,8 @@ pub mod pack_rt {
         crate::os_pack::decode_record_body(bytes, spec, options)
     }
     /// 🛬️ Keeps terminal Pack parsing and typed construction under one ownership control.
-    pub fn decode_record_body_exact_controlled(bytes:&[u8],spec:&RecordSpec,options:&PackDecodeOptions,control:&mut crate::os_dsl::NativeDecodeControl<'_>)->Result<RecordValue,PackError>{
-        crate::os_pack::decode_record_body_exact_controlled(bytes,spec,options,control)
+    pub fn decode_record_body_exact_controlled(bytes: &[u8], spec: &RecordSpec, options: &PackDecodeOptions, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<RecordValue, PackRefusal> {
+        crate::os_pack::decode_record_body_exact_controlled(bytes, spec, options, control)
     }
     pub fn write_varint_u64(out: &mut Vec<u8>, value: u64) {
         crate::os_pack::write_varint_u64(out, value);
@@ -5931,13 +6236,13 @@ pub mod pack_rt {
     const VALUE_BRIDGE_FIELD_ID: u16 = 1;
 
     fn value_bridge_spec() -> RecordSpec {
-        RecordSpec::new(None, RecordLayout::Lines, vec![FieldSpec::new(VALUE_BRIDGE_FIELD_ID, "value", Shape::Value)])
+        semio_framework_dsl_record::RecordSpec::new(None, semio_framework_dsl_record::RecordLayout::Lines, vec![semio_framework_dsl_record::FieldSpec::new(VALUE_BRIDGE_FIELD_ID, "value", semio_framework_dsl_record::Shape::Value)])
     }
 
     /// 🌱️ Encodes an arbitrary `DslValue` as a complete pack file.
     pub fn encode_pack_value(value: &DslValue) -> Vec<u8> {
-        let mut fields = HashMap::new();
-        fields.insert(VALUE_BRIDGE_FIELD_ID, FieldValue::Value(value.clone()));
+        let mut fields = semio_framework_dsl_record::RecordFields::default();
+        fields.insert(VALUE_BRIDGE_FIELD_ID, semio_framework_dsl_record::FieldValue::Value(value.clone()));
         let record = RecordValue { fields };
         encode_document(&value_bridge_spec(), &record, &PackEncodeOptions::default()).expect("value bridge encode is infallible for a well-formed DslValue")
     }
@@ -5946,27 +6251,37 @@ pub mod pack_rt {
     pub fn decode_pack_value(bytes: &[u8]) -> Result<DslValue, PackError> {
         let (record, _report) = decode_document(bytes, &value_bridge_spec(), &PackDecodeOptions::default())?;
         match record.get(VALUE_BRIDGE_FIELD_ID) {
-            Some(FieldValue::Value(dsl_value)) => Ok(dsl_value.clone()),
-            _ => Ok(DslValue::Null),
+            Some(semio_framework_dsl_record::FieldValue::Value(dsl_value)) => Ok(dsl_value.clone()),
+            _ => Ok(semio_framework_value::DslValue::Null),
         }
     }
 
     /// 🪶️ Container-less twin of `encode_pack_value` for per-message wire payloads.
     pub fn encode_wire_value(value: &DslValue) -> Vec<u8> {
-        let mut fields = HashMap::new();
-        fields.insert(VALUE_BRIDGE_FIELD_ID, FieldValue::Value(value.clone()));
+        let mut fields = semio_framework_dsl_record::RecordFields::default();
+        fields.insert(VALUE_BRIDGE_FIELD_ID, semio_framework_dsl_record::FieldValue::Value(value.clone()));
         let record = RecordValue { fields };
         crate::os_pack::encode_record_body(&value_bridge_spec(), &record, &PackEncodeOptions::default()).expect("wire value encode is infallible for a well-formed DslValue")
     }
 
     /// 🪶️ Inverse of `encode_wire_value`.
-    pub fn decode_wire_value(bytes: &[u8]) -> Result<DslValue, PackError> {
+    pub fn decode_wire_value(bytes: &[u8]) -> Result<DslValue, PackRefusal> {
         decode_wire_value_with_options(bytes, &PackDecodeOptions::default())
     }
 
     /// 🛡️ Decodes one exact wire value using caller-owned limits without a second tree clone.
-    pub fn decode_wire_value_with_options(bytes: &[u8], options: &PackDecodeOptions) -> Result<DslValue, PackError> {
+    pub fn decode_wire_value_with_options(bytes: &[u8], options: &PackDecodeOptions) -> Result<DslValue, PackRefusal> {
         crate::os_pack::decode_value_record_body_exact(bytes, VALUE_BRIDGE_FIELD_ID, &options.limits)
+    }
+
+    /// 🎞️ Encodes the borrowed intrinsic owner under the caller's cumulative output control.
+    pub fn encode_wire_value_controlled(value:&DslValue,options:&PackEncodeOptions,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<Vec<u8>,PackRefusal>{
+        crate::os_pack::encode_value_record_body_controlled(VALUE_BRIDGE_FIELD_ID,value,options,control)
+    }
+
+    /// 🎞️ Materializes the full terminal intrinsic owner under the caller's decode control.
+    pub fn decode_wire_value_controlled(bytes:&[u8],options:&PackDecodeOptions,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<DslValue,PackRefusal>{
+        crate::os_pack::decode_value_record_body_exact_controlled(bytes,VALUE_BRIDGE_FIELD_ID,options,control)
     }
 
     /// 🧩️ Compose-only bridge — external technology; converts through `DslValue` without JSON on the wire.
@@ -5992,8 +6307,8 @@ pub mod pack_rt {
 
     /// 📥️ Inverse of [`pack_value_to_base64`].
     pub fn pack_value_from_base64(encoded: &str) -> Result<Vec<u8>, PackError> {
-        let payload = encoded.strip_prefix(PACK_B64_PREFIX).ok_or(PackError::Malformed { what: "pack base64", offset: 0, detail: "missing pk: prefix".into() })?;
-        semio_framework_io_base64::base64_standard_decode(payload).map_err(|error| PackError::Malformed { what: "pack base64", offset: 0, detail: error.to_string() })
+        let payload = encoded.strip_prefix(PACK_B64_PREFIX).ok_or(PackError::Refusal(pack::PackRefusal::Malformed { kind: semio_framework_value::ValueRefusalKind::InvalidValue, what: "pack base64", offset: 0, detail: "missing pk: prefix".into() }))?;
+        semio_framework_io_base64::base64_standard_decode(payload).map_err(|error| PackError::Refusal(pack::PackRefusal::Malformed { kind: semio_framework_value::ValueRefusalKind::InvalidValue, what: "pack base64", offset: 0, detail: error.to_string() }))
     }
 
     /// 🎬️ Decodes a component-scene `*Json` field when it carries [`pack_value_to_base64`] bytes.
@@ -6001,7 +6316,7 @@ pub mod pack_rt {
         if encoded.starts_with(PACK_B64_PREFIX) {
             decode_pack_value(&pack_value_from_base64(encoded)?)
         } else {
-            Ok(json_value_to_dsl(&serde_json::from_str(encoded).map_err(|error| PackError::Malformed { what: "scene field", offset: 0, detail: error.to_string() })?))
+            Ok(json_value_to_dsl(&serde_json::from_str(encoded).map_err(|error| PackError::Refusal(pack::PackRefusal::Malformed { kind: semio_framework_value::ValueRefusalKind::InvalidValue, what: "scene field", offset: 0, detail: error.to_string() }))?))
         }
     }
 
@@ -6023,7 +6338,7 @@ pub mod pack_rt {
 
     // 🚫️async: E1 pure recursive transform, consumed by json_values_equal's `==` (external PartialEq) — see R9
     fn json_value_to_dsl(value: &serde_json::Value) -> DslValue {
-        DslValue::from(value)
+        semio_framework_value::DslValue::from(value)
     }
 
     // 🚫️async: E1 pure recursive transform, consumed by json_values_equal's `==` (external PartialEq) — see R9
@@ -6046,15 +6361,15 @@ pub mod pack_rt {
     // 🚫️async: E1 pure recursive transform, consumed by json_values_equal's `==` (external PartialEq) — see R9
     pub fn renormalize_whole_number_floats(value: DslValue) -> DslValue {
         match value {
-            DslValue::Number(Number::Float(n)) if n.fract() == 0.0 && n.is_finite() && n.abs() < (1u64 << 53) as f64 => {
+            semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(n)) if n.fract() == 0.0 && n.is_finite() && n.abs() < (1u64 << 53) as f64 => {
                 if n >= 0.0 {
-                    DslValue::Number(Number::UInt(n as u64))
+                    semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(n as u64))
                 } else {
-                    DslValue::Number(Number::Int(n as i64))
+                    semio_framework_value::DslValue::Number(semio_framework_value::Number::Int(n as i64))
                 }
             }
-            DslValue::Array(items) => DslValue::Array(items.into_iter().map(renormalize_whole_number_floats).collect()),
-            DslValue::Object(entries) => DslValue::Object(entries.into_iter().map(|(k, v)| (k, renormalize_whole_number_floats(v))).collect()),
+            semio_framework_value::DslValue::Array(items) => semio_framework_value::DslValue::Array(items.into_iter().map(renormalize_whole_number_floats).collect()),
+            semio_framework_value::DslValue::Object(entries) => semio_framework_value::DslValue::Object(entries.into_iter().map(|(k, v)| (k, renormalize_whole_number_floats(v))).collect()),
             other => other,
         }
     }
@@ -6064,15 +6379,16 @@ pub mod pack_rt {
 /// cursors and wire constants: batch `decode_document`, `decode_record_body`, `RecordValue`, and
 /// their allocation-oriented options are absent from this module's type-level reachability graph.
 pub mod mounted_pack_rt {
-    pub use crate::os_dsl::{DslField, DslValue, FieldValue, RecordLayout, RecordSpec, RecordSpecProducer, RecordValue, Shape};
     pub use super::mounted_pack_session::{RetainedTypedPackCloseStep, RetainedTypedPackOwner, RetainedTypedPackSession};
+    use semio_framework_dsl_record::{DslField,FieldValue,RecordLayout,RecordSpec,RecordSpecProducer,RecordValue,Shape};
+use semio_framework_value::DslValue;
     pub use crate::os_pack::{PackLimits, RetainedRecordBodyCursor, RetainedRecordBodyToken, RetainedValueContainer, RetainedValueCursor, RetainedValueRole, RetainedValueToken};
     pub use pack::{
-        RetainedPackAnchorCursor, RetainedPackCatalog, RetainedPackCatalogAllocationError, RetainedPackCatalogAllocationStep, RetainedPackCatalogCursor, RetainedPackCatalogEvent, RetainedPackCatalogFault,
-        RetainedPackCatalogProgress, RetainedPackCloseStep, RetainedPackPage, RetainedPackSegmentCursor, RetainedPackSegmentEvent,
-        RetainedPackSourceAllocationError, RetainedPackSourceAllocationStep, RetainedPackSourceCursor, RetainedPackSourceEvent, RetainedPackSourceProgress, MAGIC, RETAINED_PACK_MAXIMUM_PAGES,
-        RETAINED_PACK_PAGE_BYTES,
+        MAGIC, RETAINED_PACK_MAXIMUM_PAGES, RETAINED_PACK_PAGE_BYTES, RetainedPackAnchorCursor, RetainedPackCatalog, RetainedPackCatalogAllocationError, RetainedPackCatalogAllocationStep, RetainedPackCatalogCursor, RetainedPackCatalogEvent,
+        RetainedPackCatalogFault, RetainedPackCatalogProgress, RetainedPackCloseStep, RetainedPackPage, RetainedPackSegmentCursor, RetainedPackSegmentEvent, RetainedPackSourceAllocationError, RetainedPackSourceAllocationStep,
+        RetainedPackSourceCursor, RetainedPackSourceEvent, RetainedPackSourceProgress,
     };
+    pub use pack::format::RetainedPackSourceFault;
 }
 
 //#region 🧬️OwnedSchemaDecode
@@ -7263,7 +7579,6 @@ const ARTIFACT_OWNED_SPR_EDIT_FIELDS: &[OwnedSchemaFieldSpec] = &[
     OwnedSchemaFieldSpec { id: 4, key: "inverse", required: true },
     OwnedSchemaFieldSpec { id: 5, key: "mutationMeta", required: false },
     OwnedSchemaFieldSpec { id: 6, key: "description", required: false },
-    OwnedSchemaFieldSpec { id: 7, key: "coalesceKey", required: false },
     OwnedSchemaFieldSpec { id: 8, key: "sequenceNumber", required: true },
     OwnedSchemaFieldSpec { id: 9, key: "startedAt", required: true },
     OwnedSchemaFieldSpec { id: 10, key: "finishedAt", required: false },
@@ -7552,7 +7867,7 @@ where
     cursor: OwnedSchemaNestedRecordCursor,
     pending: Option<(OwnedSchemaToken, bool)>,
     active: std::mem::ManuallyDrop<Option<ArtifactOwnedSprEditActive<P, Mutation>>>,
-    strings: [std::mem::ManuallyDrop<Option<String>>; 8],
+    strings: [std::mem::ManuallyDrop<Option<String>>; 7],
     forwards: std::mem::ManuallyDrop<Option<Vec<Mutation>>>,
     inverse: std::mem::ManuallyDrop<Option<Vec<Mutation>>>,
     sequence_number: Option<i32>,
@@ -7600,7 +7915,7 @@ impl<P: Send + 'static, Mutation: Send + 'static> ArtifactOwnedSprEditAuthority<
     /// `Some(step)` when the field needed no owner at all.
     fn begin_edit_field(&mut self, field_id: u16, token: OwnedSchemaToken, terminal: bool, source: &OwnedSchemaRecordCursor) -> Result<Option<ArtifactEnvelopeFieldDecodeStep>, OwnedSchemaDecodeDiagnostic> {
         if Self::string_index(field_id).is_some() {
-            if token.kind == OwnedSchemaTokenKind::Null && matches!(field_id, 2 | 6 | 7 | 10 | 11 | 12) {
+            if token.kind == OwnedSchemaTokenKind::Null && matches!(field_id, 2 | 6 | 10 | 11 | 12) {
                 return Ok(Some(ArtifactEnvelopeFieldDecodeStep::TokenComplete));
             }
             if !terminal {
@@ -7681,11 +7996,10 @@ impl<P: Send + 'static, Mutation: Send + 'static> ArtifactOwnedSprEditAuthority<
             1 => Some(0),
             2 => Some(1),
             6 => Some(2),
-            7 => Some(3),
-            9 => Some(4),
-            10 => Some(5),
-            11 => Some(6),
-            12 => Some(7),
+            9 => Some(3),
+            10 => Some(4),
+            11 => Some(5),
+            12 => Some(6),
             _ => None,
         }
     }
@@ -7694,10 +8008,21 @@ impl<P: Send + 'static, Mutation: Send + 'static> ArtifactOwnedSprEditAuthority<
         let id = self.strings[0].take().ok_or_else(|| self.diagnostic("artifact-spr.edit-id-missing", 0))?;
         let forwards = self.forwards.take().ok_or_else(|| self.diagnostic("artifact-spr.edit-forwards-missing", 0))?;
         let inverse = self.inverse.take().ok_or_else(|| self.diagnostic("artifact-spr.edit-inverse-missing", 0))?;
-        let started_at = self.strings[4].take().ok_or_else(|| self.diagnostic("artifact-spr.edit-started-at-missing", 0))?;
+        let started_at = self.strings[3].take().ok_or_else(|| self.diagnostic("artifact-spr.edit-started-at-missing", 0))?;
         let sequence_number = self.sequence_number.ok_or_else(|| self.diagnostic("artifact-spr.edit-sequence-missing", 0))?;
-        *self.value =
-            Some(Edit { id, actor: self.strings[1].take(), line: self.strings[7].take(), forwards, inverse, mutation_meta: Vec::new(), description: self.strings[2].take(), verb: self.strings[6].take(), coalesce_key: self.strings[3].take(), sequence_number, started_at, finished_at: self.strings[5].take() });
+        *self.value = Some(Edit {
+            id,
+            actor: self.strings[1].take(),
+            line: self.strings[6].take(),
+            forwards,
+            inverse,
+            mutation_meta: Vec::new(),
+            description: self.strings[2].take(),
+            verb: self.strings[5].take(),
+            sequence_number,
+            started_at,
+            finished_at: self.strings[4].take(),
+        });
         Ok(())
     }
 }
@@ -7898,7 +8223,7 @@ impl<T: FromValue + Send + 'static> ArtifactOwnedHistoryEntryAuthority<T> for Ar
             return Ok(ArtifactEnvelopeFieldDecodeStep::TokenComplete);
         }
         let text = std::str::from_utf8(&self.raw[..self.raw_len]).map_err(|_| self.diagnostic("artifact-envelope.history-entry-decode", token.start))?;
-        let value = crate::os_pack::json::from_json_str(text).map_err(|_| self.diagnostic("artifact-envelope.history-entry-decode", token.start))?;
+        let value = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| self.diagnostic("artifact-envelope.history-entry-decode", token.start))?;
         *self.value = Some(value);
         self.raw_len = 0;
         Ok(ArtifactEnvelopeFieldDecodeStep::FieldComplete)
@@ -8215,14 +8540,14 @@ where
     P: Send,
     Mutation: Send,
 {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         let Some(owner) = self.owner.as_mut() else { return Ok(SnapshotRetirementStep::Complete) };
         if !owner.terminal_is_empty() {
             return match owner.close_step(maximum_items, maximum_bytes) {
                 Ok(SnapshotRetirementStep::Complete) if owner.terminal_is_empty() => Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }),
-                Ok(SnapshotRetirementStep::Complete) => Err("returned artifact envelope field decoder reported Complete without terminal ownership".into()),
+                Ok(SnapshotRetirementStep::Complete) => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "returned artifact envelope field decoder reported Complete without terminal ownership")),
                 Ok(step) => Ok(step),
-                Err(_) => Err("returned artifact envelope field decoder faulted while closing".into()),
+                Err(_) => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "returned artifact envelope field decoder faulted while closing")),
             };
         }
         let owner = self.owner.take().expect("terminal returned field decoder remains present");
@@ -8249,12 +8574,7 @@ where
     /// ↩️ Detaches and bounded-closes one exact returned decoder on the caller thread so a
     /// worker [`release_step`] can pass its `ticket_reclaimed` gate without waiting for the app's
     /// next maintenance visit (ticket 26/09/09/PROCEDURAL-3D-END-TO-END `env-20`).
-    pub fn reclaim_returned_ticket_now(
-        &self,
-        ticket: ArtifactEnvelopeFieldDecoderTicket,
-        maximum_items: usize,
-        maximum_bytes: usize,
-    ) -> Result<(), ArtifactEnvelopeFieldDecoderRegistryFault> {
+    pub fn reclaim_returned_ticket_now(&self, ticket: ArtifactEnvelopeFieldDecoderTicket, maximum_items: usize, maximum_bytes: usize) -> Result<(), ArtifactEnvelopeFieldDecoderRegistryFault> {
         if self.ticket_reclaimed(ticket) {
             return Ok(());
         }
@@ -8951,11 +9271,7 @@ where
     }
 
     fn record_released_field_bytes(&mut self, released_bytes: usize) -> Result<(), OwnedSchemaDecodeDiagnostic> {
-        let released_field_bytes = self
-            .released_field_bytes
-            .checked_add(released_bytes)
-            .filter(|total| *total <= self.maximum_retained_field_close_bytes)
-            .ok_or_else(|| Self::diagnostic("artifact-envelope.decode-close-byte-ledger-overflow"))?;
+        let released_field_bytes = self.released_field_bytes.checked_add(released_bytes).filter(|total| *total <= self.maximum_retained_field_close_bytes).ok_or_else(|| Self::diagnostic("artifact-envelope.decode-close-byte-ledger-overflow"))?;
         self.released_field_bytes = released_field_bytes;
         Ok(())
     }
@@ -9128,9 +9444,7 @@ where
 
     pub fn next_close_byte_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic> {
         if let Some(fields) = self.fields.as_ref() {
-            let demand = fields
-                .with_owner(|owner| if owner.terminal_is_empty() { Ok(0) } else { owner.next_close_byte_demand() })
-                .map_err(|_| Self::diagnostic("artifact-envelope.decode-field-lease-invalid"))?;
+            let demand = fields.with_owner(|owner| if owner.terminal_is_empty() { Ok(0) } else { owner.next_close_byte_demand() }).map_err(|_| Self::diagnostic("artifact-envelope.decode-field-lease-invalid"))?;
             return self.checked_field_close_byte_demand(demand?);
         }
         Ok(usize::from(self.record.is_some()) * ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)
@@ -9330,11 +9644,7 @@ where
             ArtifactEnvelopeDecodeState::ReleaseFault(diagnostic) | ArtifactEnvelopeDecodeState::Fault(diagnostic) => ArtifactEnvelopeDecodeState::Fault(diagnostic),
             _ => ArtifactEnvelopeDecodeState::Cancelled,
         };
-        if ArtifactEnvelopeDecodeAuthority::terminal_is_empty(self) {
-            semio_framework_job::InteractiveJobCloseStep::Complete
-        } else {
-            semio_framework_job::InteractiveJobCloseStep::Blocked
-        }
+        if ArtifactEnvelopeDecodeAuthority::terminal_is_empty(self) { semio_framework_job::InteractiveJobCloseStep::Complete } else { semio_framework_job::InteractiveJobCloseStep::Blocked }
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -9377,17 +9687,17 @@ where
     /// 🧱️ A retained decode page is a GRANULE: it is released whole or not at all, so a turn
     /// that cannot pay a full page buys nothing. The empty record husk still completes under
     /// any grant — its last page has already been paid for.
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(fields) = self.fields.as_mut() {
             let demand = match fields.with_owner(|owner| if owner.terminal_is_empty() { Ok(0) } else { owner.next_close_byte_demand() }) {
                 Ok(Ok(demand)) if demand <= self.maximum_field_close_byte_demand => demand,
-                Ok(Ok(_)) => return Err("artifact envelope rejected field close demand exceeded its admitted maximum".into()),
-                Ok(Err(_)) => return Err("artifact envelope rejected field owner faulted while reporting close demand".into()),
+                Ok(Ok(_)) => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact envelope rejected field close demand exceeded its admitted maximum")),
+                Ok(Err(_)) => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact envelope rejected field owner faulted while reporting close demand")),
                 Err(ArtifactEnvelopeFieldDecoderRegistryFault::Contended) => return Ok(SnapshotRetirementStep::Blocked),
-                Err(_) => return Err("artifact envelope rejected field lease is invalid".into()),
+                Err(_) => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact envelope rejected field lease is invalid")),
             };
             if maximum_bytes < demand {
                 return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
@@ -9399,24 +9709,25 @@ where
                         .released_field_bytes
                         .checked_add(released_bytes)
                         .filter(|total| *total <= self.maximum_retained_field_close_bytes)
-                        .ok_or_else(|| "artifact envelope rejected field close ledger exceeded its admitted aggregate")?;
+                        .ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact envelope rejected field close ledger exceeded its admitted aggregate"))?;
                     return Ok(SnapshotRetirementStep::Pending { released_items, released_bytes });
                 }
-                Ok(Ok(SnapshotRetirementStep::Pending { .. })) => return Err("artifact envelope rejected field owner exceeded its close grant".into()),
+                Ok(Ok(SnapshotRetirementStep::Pending { .. })) => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact envelope rejected field owner exceeded its close grant")),
                 Ok(Ok(step)) => step,
-                Ok(Err(_)) => return Err("artifact envelope rejected field owner faulted while closing".into()),
+                Ok(Err(_)) => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact envelope rejected field owner faulted while closing")),
                 Err(ArtifactEnvelopeFieldDecoderRegistryFault::Contended) => return Ok(SnapshotRetirementStep::Blocked),
-                Err(_) => return Err("artifact envelope rejected field lease is invalid".into()),
+                Err(_) => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact envelope rejected field lease is invalid")),
             };
             if !matches!(step, SnapshotRetirementStep::Complete) {
                 return Ok(step);
             }
-            let terminal = fields.with_owner(|owner| owner.terminal_is_empty()).map_err(|_| "artifact envelope rejected field lease became invalid")?;
+            let terminal =
+                fields.with_owner(|owner| owner.terminal_is_empty()).map_err(|_| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact envelope rejected field lease became invalid"))?;
             if !terminal {
-                return Err("artifact envelope rejected field owner reported a false terminal".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact envelope rejected field owner reported a false terminal"));
             }
             if !fields.return_now() {
-                return Err("artifact envelope rejected field owner was returned twice".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact envelope rejected field owner was returned twice"));
             }
             drop(self.fields.take());
             self.field_returned = true;
@@ -9449,7 +9760,10 @@ where
 impl<P, Mutation> Drop for ArtifactEnvelopeDecodeRejected<P, Mutation> {
     fn drop(&mut self) {
         let _ = self.diagnostic;
-        assert!(std::thread::panicking() || (self.record.is_none() && self.fields.is_none() && self.field_returned && self.field_registry.ticket_reclaimed(self.field_ticket)), "artifact envelope decode rejection reached Drop before every exact page owner was cursor-retired");
+        assert!(
+            std::thread::panicking() || (self.record.is_none() && self.fields.is_none() && self.field_returned && self.field_registry.ticket_reclaimed(self.field_ticket)),
+            "artifact envelope decode rejection reached Drop before every exact page owner was cursor-retired"
+        );
     }
 }
 
@@ -9472,17 +9786,17 @@ where
     P: Send,
     Mutation: Send,
 {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(fields) = self.fields.as_mut() {
-            let step = fields.close_step(maximum_items.min(1), maximum_bytes).map_err(|diagnostic| diagnostic.code.to_string())?;
+            let step = fields.close_step(maximum_items.min(1), maximum_bytes).map_err(|diagnostic| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, diagnostic.code))?;
             if step != SnapshotRetirementStep::Complete {
                 return Ok(step);
             }
             if !fields.terminal_is_empty() {
-                return Err("unadmitted envelope field decoder reported Complete without terminal-empty authority".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "unadmitted envelope field decoder reported Complete without terminal-empty authority"));
             }
             drop(self.fields.take());
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
@@ -9496,7 +9810,7 @@ where
                 return Ok(step);
             }
             if !record.terminal_is_empty() {
-                return Err("unadmitted envelope record reported Complete without terminal-empty pages".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "unadmitted envelope record reported Complete without terminal-empty pages"));
             }
             let record = self.record.take().expect("terminal unadmitted envelope record remains present");
             drop(record);
@@ -9555,7 +9869,7 @@ pub trait ArtifactEnvelopeCompletedRecordTarget<P, Mutation> {
 /// 🎁️ Exact completed envelope owner retained by the app until one consumer takes it or close retires it.
 pub trait ArtifactEnvelopeCompletedRecord<P, Mutation>: Send {
     fn try_publish_to(&mut self, target: &mut dyn ArtifactEnvelopeCompletedRecordTarget<P, Mutation>) -> bool;
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String>;
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError>;
     fn terminal_is_empty(&self) -> bool;
 }
 
@@ -9591,7 +9905,7 @@ where
         }
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -9606,7 +9920,7 @@ where
                 drop(self.retirement.take());
                 Ok(SnapshotRetirementStep::Complete)
             }
-            SnapshotRetirementStep::Complete => Err("completed envelope retirement reported Complete without its terminal-empty witness".into()),
+            SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "completed envelope retirement reported Complete without its terminal-empty witness")),
             step => Ok(step),
         }
     }
@@ -9638,7 +9952,10 @@ struct ArtifactEnvelopeCompletedRecordRegistryState<P, Mutation> {
 
 impl<P, Mutation> Drop for ArtifactEnvelopeCompletedRecordRegistryState<P, Mutation> {
     fn drop(&mut self) {
-        assert!(std::thread::panicking() || (self.live == 0 && self.occupied == 0 && self.closing == 0 && self.slots.iter().all(|slot| slot.owner.is_none())), "completed envelope registry reached Drop before every exact record owner was consumed or cursor-retired");
+        assert!(
+            std::thread::panicking() || (self.live == 0 && self.occupied == 0 && self.closing == 0 && self.slots.iter().all(|slot| slot.owner.is_none())),
+            "completed envelope registry reached Drop before every exact record owner was consumed or cursor-retired"
+        );
     }
 }
 
@@ -9936,120 +10253,120 @@ impl<P: Send + 'static, Mutation: Send + 'static> ArtifactEnvelopeFreshVcsAuthor
             return Err(Self::diagnostic("artifact-envelope.fresh-vcs-field"));
         };
         return match &mut active {
-                ArtifactEnvelopeFreshVcsActive::Snapshot { reservation, publishing } => {
-                    let Some(snapshot) = self.snapshot.as_mut() else {
+            ArtifactEnvelopeFreshVcsActive::Snapshot { reservation, publishing } => {
+                let Some(snapshot) = self.snapshot.as_mut() else {
+                    self.active = Some(active);
+                    return Err(Self::diagnostic("artifact-envelope.fresh-vcs-snapshot-owner"));
+                };
+                let step = if *publishing { snapshot.publish_reserved(&mut self.snapshot_target, *reservation, cx) } else { snapshot.accept_token(token, _terminal, source, cx) };
+                let publishing_now = *publishing;
+                match step {
+                    Ok(ArtifactEnvelopeFieldDecodeStep::Pending) => {
                         self.active = Some(active);
-                        return Err(Self::diagnostic("artifact-envelope.fresh-vcs-snapshot-owner"));
-                    };
-                    let step = if *publishing { snapshot.publish_reserved(&mut self.snapshot_target, *reservation, cx) } else { snapshot.accept_token(token, _terminal, source, cx) };
-                    let publishing_now = *publishing;
-                    match step {
-                        Ok(ArtifactEnvelopeFieldDecodeStep::Pending) => {
-                            self.active = Some(active);
-                            Ok(ArtifactEnvelopeFieldDecodeStep::Pending)
-                        }
-                        Ok(ArtifactEnvelopeFieldDecodeStep::TokenComplete) if publishing_now => Ok(ArtifactEnvelopeFieldDecodeStep::TokenComplete),
-                        Ok(ArtifactEnvelopeFieldDecodeStep::TokenComplete) => {
-                            self.active = Some(active);
-                            Ok(ArtifactEnvelopeFieldDecodeStep::TokenComplete)
-                        }
-                        Ok(ArtifactEnvelopeFieldDecodeStep::FieldComplete) if publishing_now => Ok(ArtifactEnvelopeFieldDecodeStep::TokenComplete),
-                        Ok(ArtifactEnvelopeFieldDecodeStep::FieldComplete) => {
-                            *publishing = true;
-                            self.active = Some(active);
-                            Ok(ArtifactEnvelopeFieldDecodeStep::Pending)
-                        }
-                        Ok(ArtifactEnvelopeFieldDecodeStep::RecordComplete) => {
-                            self.active = Some(active);
-                            Err(Self::diagnostic("artifact-envelope.snapshot-published-record"))
-                        }
-                        Err(diagnostic) => {
-                            self.active = Some(active);
-                            Err(diagnostic)
-                        }
+                        Ok(ArtifactEnvelopeFieldDecodeStep::Pending)
+                    }
+                    Ok(ArtifactEnvelopeFieldDecodeStep::TokenComplete) if publishing_now => Ok(ArtifactEnvelopeFieldDecodeStep::TokenComplete),
+                    Ok(ArtifactEnvelopeFieldDecodeStep::TokenComplete) => {
+                        self.active = Some(active);
+                        Ok(ArtifactEnvelopeFieldDecodeStep::TokenComplete)
+                    }
+                    Ok(ArtifactEnvelopeFieldDecodeStep::FieldComplete) if publishing_now => Ok(ArtifactEnvelopeFieldDecodeStep::TokenComplete),
+                    Ok(ArtifactEnvelopeFieldDecodeStep::FieldComplete) => {
+                        *publishing = true;
+                        self.active = Some(active);
+                        Ok(ArtifactEnvelopeFieldDecodeStep::Pending)
+                    }
+                    Ok(ArtifactEnvelopeFieldDecodeStep::RecordComplete) => {
+                        self.active = Some(active);
+                        Err(Self::diagnostic("artifact-envelope.snapshot-published-record"))
+                    }
+                    Err(diagnostic) => {
+                        self.active = Some(active);
+                        Err(diagnostic)
                     }
                 }
-                ArtifactEnvelopeFreshVcsActive::Edits(authority) => match authority.accept(token, _terminal, source, cx) {
-                    Ok(ArtifactEnvelopeFieldDecodeStep::FieldComplete) => match authority.take_values() {
-                        Some(values) => {
-                            self.edits = Some(values);
-                            Ok(ArtifactEnvelopeFieldDecodeStep::TokenComplete)
-                        }
-                        None => {
-                            self.active = Some(active);
-                            Err(Self::diagnostic("artifact-envelope.vcs-history-not-taken"))
-                        }
-                    },
-                    Ok(step) => {
-                        self.active = Some(active);
-                        Ok(step)
+            }
+            ArtifactEnvelopeFreshVcsActive::Edits(authority) => match authority.accept(token, _terminal, source, cx) {
+                Ok(ArtifactEnvelopeFieldDecodeStep::FieldComplete) => match authority.take_values() {
+                    Some(values) => {
+                        self.edits = Some(values);
+                        Ok(ArtifactEnvelopeFieldDecodeStep::TokenComplete)
                     }
-                    Err(diagnostic) => {
+                    None => {
                         self.active = Some(active);
-                        Err(diagnostic)
+                        Err(Self::diagnostic("artifact-envelope.vcs-history-not-taken"))
                     }
                 },
-                ArtifactEnvelopeFreshVcsActive::Changes(authority) => match authority.accept(token, _terminal, source, cx) {
-                    Ok(ArtifactEnvelopeFieldDecodeStep::FieldComplete) => match authority.take_values() {
-                        Some(values) => {
-                            self.changes = Some(values);
-                            Ok(ArtifactEnvelopeFieldDecodeStep::TokenComplete)
-                        }
-                        None => {
-                            self.active = Some(active);
-                            Err(Self::diagnostic("artifact-envelope.vcs-history-not-taken"))
-                        }
-                    },
-                    Ok(step) => {
-                        self.active = Some(active);
-                        Ok(step)
+                Ok(step) => {
+                    self.active = Some(active);
+                    Ok(step)
+                }
+                Err(diagnostic) => {
+                    self.active = Some(active);
+                    Err(diagnostic)
+                }
+            },
+            ArtifactEnvelopeFreshVcsActive::Changes(authority) => match authority.accept(token, _terminal, source, cx) {
+                Ok(ArtifactEnvelopeFieldDecodeStep::FieldComplete) => match authority.take_values() {
+                    Some(values) => {
+                        self.changes = Some(values);
+                        Ok(ArtifactEnvelopeFieldDecodeStep::TokenComplete)
                     }
-                    Err(diagnostic) => {
+                    None => {
                         self.active = Some(active);
-                        Err(diagnostic)
-                    }
-                },
-                ArtifactEnvelopeFreshVcsActive::Checkpoints(authority) => match authority.accept(token, _terminal, source, cx) {
-                    Ok(ArtifactEnvelopeFieldDecodeStep::FieldComplete) => match authority.take_values() {
-                        Some(values) => {
-                            self.checkpoints = Some(values);
-                            Ok(ArtifactEnvelopeFieldDecodeStep::TokenComplete)
-                        }
-                        None => {
-                            self.active = Some(active);
-                            Err(Self::diagnostic("artifact-envelope.vcs-history-not-taken"))
-                        }
-                    },
-                    Ok(step) => {
-                        self.active = Some(active);
-                        Ok(step)
-                    }
-                    Err(diagnostic) => {
-                        self.active = Some(active);
-                        Err(diagnostic)
+                        Err(Self::diagnostic("artifact-envelope.vcs-history-not-taken"))
                     }
                 },
-                ArtifactEnvelopeFreshVcsActive::Alternatives(authority) => match authority.accept(token, _terminal, source, cx) {
-                    Ok(ArtifactEnvelopeFieldDecodeStep::FieldComplete) => match authority.take_values() {
-                        Some(values) => {
-                            self.alternatives = Some(values);
-                            Ok(ArtifactEnvelopeFieldDecodeStep::TokenComplete)
-                        }
-                        None => {
-                            self.active = Some(active);
-                            Err(Self::diagnostic("artifact-envelope.vcs-history-not-taken"))
-                        }
-                    },
-                    Ok(step) => {
-                        self.active = Some(active);
-                        Ok(step)
+                Ok(step) => {
+                    self.active = Some(active);
+                    Ok(step)
+                }
+                Err(diagnostic) => {
+                    self.active = Some(active);
+                    Err(diagnostic)
+                }
+            },
+            ArtifactEnvelopeFreshVcsActive::Checkpoints(authority) => match authority.accept(token, _terminal, source, cx) {
+                Ok(ArtifactEnvelopeFieldDecodeStep::FieldComplete) => match authority.take_values() {
+                    Some(values) => {
+                        self.checkpoints = Some(values);
+                        Ok(ArtifactEnvelopeFieldDecodeStep::TokenComplete)
                     }
-                    Err(diagnostic) => {
+                    None => {
                         self.active = Some(active);
-                        Err(diagnostic)
+                        Err(Self::diagnostic("artifact-envelope.vcs-history-not-taken"))
                     }
                 },
-            };
+                Ok(step) => {
+                    self.active = Some(active);
+                    Ok(step)
+                }
+                Err(diagnostic) => {
+                    self.active = Some(active);
+                    Err(diagnostic)
+                }
+            },
+            ArtifactEnvelopeFreshVcsActive::Alternatives(authority) => match authority.accept(token, _terminal, source, cx) {
+                Ok(ArtifactEnvelopeFieldDecodeStep::FieldComplete) => match authority.take_values() {
+                    Some(values) => {
+                        self.alternatives = Some(values);
+                        Ok(ArtifactEnvelopeFieldDecodeStep::TokenComplete)
+                    }
+                    None => {
+                        self.active = Some(active);
+                        Err(Self::diagnostic("artifact-envelope.vcs-history-not-taken"))
+                    }
+                },
+                Ok(step) => {
+                    self.active = Some(active);
+                    Ok(step)
+                }
+                Err(diagnostic) => {
+                    self.active = Some(active);
+                    Err(diagnostic)
+                }
+            },
+        };
     }
 
     /// 🌱️ Installs the exact owner for one vcs field the moment its own nested cursor attributes a
@@ -10217,7 +10534,6 @@ impl<P: Send + 'static, Mutation: Send + 'static> ArtifactEnvelopeVcsFieldAuthor
         }
         outcome
     }
-
 
     fn publish_reserved(
         &mut self,
@@ -10449,9 +10765,7 @@ impl<P: Send + 'static, Mutation: Send + 'static> ArtifactEnvelopeFreshFieldDeco
                 let reservation = self.target.reserve_field(field_id)?;
                 match self.catalog.begin_vcs(self.operation, self.generation, OwnedSchemaPath::field("vcs").unwrap_or(OwnedSchemaPath::ROOT)) {
                     Ok(authority) => {
-                        if authority.maximum_close_byte_demand() > self.maximum_vcs_close_byte_demand
-                            || authority.maximum_retained_close_bytes() > self.maximum_retained_vcs_close_bytes
-                        {
+                        if authority.maximum_close_byte_demand() > self.maximum_vcs_close_byte_demand || authority.maximum_retained_close_bytes() > self.maximum_retained_vcs_close_bytes {
                             self.active = Some(ArtifactEnvelopeFreshRecordActive::Vcs { reservation, authority, publishing: false });
                             return Err(Self::diagnostic("vcs", "artifact-envelope.vcs-close-capacity-contract"));
                         }
@@ -10596,8 +10910,8 @@ impl<P: Send + 'static, Mutation: Send + 'static> ArtifactEnvelopeFieldDecoder<P
                 transitions: Vec::new(),
                 history_shape: crate::os_spr::HistoryShape::Document,
                 open_transaction: None,
-        viewer_checkpoint_id: None,
-    });
+                viewer_checkpoint_id: None,
+            });
             self.pending_completed = Some(Box::new(ArtifactEnvelopeCompletedRecordOwner::new(envelope, Arc::clone(&self.initial_snapshot_factory), Arc::clone(&self.mutation_factory))));
         }
         let owner = self.pending_completed.take().expect("fresh completed owner remains retained");
@@ -10631,11 +10945,7 @@ impl<P: Send + 'static, Mutation: Send + 'static> ArtifactEnvelopeFieldDecoder<P
         if self.target.vcs.is_some() {
             return Ok(0);
         }
-        self.schema
-            .as_ref()
-            .map_or(0, String::len)
-            .checked_add(self.id.as_ref().map_or(0, String::len))
-            .ok_or_else(|| Self::diagnostic("$", "artifact-envelope.close-byte-demand-overflow"))
+        self.schema.as_ref().map_or(0, String::len).checked_add(self.id.as_ref().map_or(0, String::len)).ok_or_else(|| Self::diagnostic("$", "artifact-envelope.close-byte-demand-overflow"))
     }
 
     fn maximum_close_byte_demand(&self) -> usize {
@@ -10754,6 +11064,9 @@ pub fn reject_whole_buffer_artifact_envelope_ingress<P, Mutation>(_input: &str) 
 /// `dsl_derive`'s generated impl calls through `::crate::os_store::pack_rt`); the plain names are provided
 /// defaults over `Pack{Encode,Decode}Options::default()`.
 pub trait ArtifactPack: Sized {
+    /// 📣️ The actual native factory may declare one exact zero-touch registry coordinate.
+    fn native_snapshot_registration() -> Option<(crate::os_io::Dialect, ArtifactCodec)> { None }
+
     /// 🪶️ Optional relational snapshot capability declared by this snapshot owner.
     fn sqlite_snapshot_codec() -> Option<ArtifactSqliteSnapshotCodec> {
         None
@@ -10780,7 +11093,7 @@ pub trait ArtifactPack: Sized {
     /// "schema-agnostic" everywhere this is consumed). `#[derive(crate::os_dsl::DslArtifact)]` overrides this
     /// with the real generated `__dsl_spec()`, giving every derive-based app kind (the overwhelming
     /// majority) a genuine structural fingerprint with zero manual per-app wiring.
-    fn record_spec() -> Option<crate::os_dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         None
     }
 }
@@ -10839,17 +11152,8 @@ impl ArtifactPack for DslValue {
     }
 }
 
-/// 🔀️ The closest `PackError` variant to "a text-format failure surfaced through a pack-facing
-/// API" (e.g. `dsl_derive`'s generated `decode_pack_with`, whose `__dsl_from_record` step returns
-/// `TextError`). A free function, not `impl From<TextError> for PackError`: both types are
-/// re-exports of foreign crates (`dsl_core`/`pack_core`) through `vcs`, so a blanket `From` impl
-/// here would violate the orphan rule — neither type is actually local to this crate.
-// 🚫️async: E1 pure conversion, passed BY NAME into `.map_err(text_error_to_pack_error)` across
-// `dsl_derive`'s generated `decode_pack_with` impls — `.map_err`'s closure argument cannot itself
-// be async, and there is no suspension point here to justify one — see R9.
-pub fn text_error_to_pack_error(error: TextError) -> PackError {
-    PackError::Schema(error.to_string())
-}
+/// 📍️ Retains the actual positioned Text refusal at the artifact Pack boundary.
+pub fn text_error_to_pack_error(error:TextError)->PackError{PackError::from(error)}
 //#endregion 🔖️Pack
 
 //#region 🔖️OpRt
@@ -10881,39 +11185,46 @@ mod sqlite_snapshot_retirement;
 mod sqlite_snapshot_native_decoding;
 pub use sqlite_snapshot_native_decoding::decode_sqlite_snapshot_record_native;
 
-#[path="📦️codec/🪶️snapshot-capability/🛫️native-encoding/🦀️.rs"]
+#[path = "📦️codec/🪶️snapshot-capability/🛫️native-encoding/🦀️.rs"]
 mod sqlite_snapshot_native_encoding;
 pub use sqlite_snapshot_native_encoding::encode_sqlite_snapshot_record_native;
 
 /// 🪶️ A snapshot's handwritten relational model, independently interpretable through SQLite.
 pub trait ArtifactSqliteSnapshot: Sized {
     const SQLITE_SCHEMA: &'static str;
-    fn to_sqlite_database(&self, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<crate::sqlite_snapshot::SqliteDatabase, String>;
-    fn from_sqlite_database(database: &crate::sqlite_snapshot::SqliteDatabase, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, String>;
+    fn to_sqlite_database(&self, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<crate::sqlite_snapshot::SqliteDatabase, ValueError>;
+    fn from_sqlite_database(database: &crate::sqlite_snapshot::SqliteDatabase, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, ValueError>;
 
     /// ♻️ Retires a snapshot through its declared owner after an erased conversion.
-    fn retire_sqlite_snapshot(self) { drop(self); }
+    fn retire_sqlite_snapshot(self) {
+        drop(self);
+    }
 
     /// 🛬️ Materializes native snapshot fields under the caller's limits and cancellation control.
-    fn decode_sqlite_snapshot_native(_payload: &crate::io_schema::IoPayload, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, String> {
+    fn decode_sqlite_snapshot_native(_payload: &crate::io_schema::IoPayload, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
         control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative, 0, 1)?;
-        Err("snapshot owner has no controlled native decoding implementation".into())
+        Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "snapshot owner has no controlled native decoding implementation"))
     }
 
     /// 🛫️ Emits native state through an owner-declared bounded and cancellable encoder.
-    fn encode_sqlite_snapshot_native(&self,_encoding:crate::sqlite_snapshot::SnapshotEncoding,control:&mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<crate::io_schema::IoPayload,String>{control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative,0,1)?;Err("snapshot owner has no controlled native encoding implementation".into())}
+    fn encode_sqlite_snapshot_native(&self, _encoding: crate::sqlite_snapshot::SnapshotEncoding, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<crate::io_schema::IoPayload, ValueError> {
+        control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative, 0, 1)?;
+        Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "snapshot owner has no controlled native encoding implementation"))
+    }
 
     /// 🚧️ Checks the owner's native encoding expansion before printing or packing any fields.
-    fn preflight_sqlite_snapshot_encoding(&self, _encoding: crate::sqlite_snapshot::SnapshotEncoding, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<(), String> {
+    fn preflight_sqlite_snapshot_encoding(&self, _encoding: crate::sqlite_snapshot::SnapshotEncoding, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<(), ValueError> {
         control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative, 0, 1)?;
-        Err("snapshot owner has no bounded native encoding preflight".into())
+        Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "snapshot owner has no bounded native encoding preflight"))
     }
 
     /// 🛡️ Validates the exact owned subset without lowering fields into a native wire format.
     fn validate_sqlite_snapshot_subset(&self, dialect: &crate::io_schema::ArtifactDialect, _database: &crate::sqlite_snapshot::SqliteDatabase, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> crate::io_schema::IoResult<()> {
-        control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot, 0, 0)?;
-        if dialect.subset == "*" { return Ok(crate::io_schema::IoOutcome::clean(())); }
-        Err(format!("owned snapshot subset {} has no semantic validator", dialect.to_coordinate()).into())
+        control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot, 0, 0).map_err(crate::io_schema::IoError::from_value_error)?;
+        if dialect.subset == "*" {
+            return Ok(crate::io_schema::IoOutcome::clean(()));
+        }
+        Err(crate::io_schema::IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, format!("owned snapshot subset {} has no semantic validator", dialect.to_coordinate()))))
     }
 
     /// 🪶️ Builds the relational codec only when the snapshot actually implements it.
@@ -10921,22 +11232,33 @@ pub trait ArtifactSqliteSnapshot: Sized {
     where
         Self: ArtifactDsl + ArtifactPack + 'static,
     {
-        fn export_snapshot_impl<P: ArtifactDsl + ArtifactPack + ArtifactSqliteSnapshot>(_schema: &str, dialect: &crate::io_schema::ArtifactDialect, payload: &crate::io_schema::IoPayload, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> crate::io_schema::IoResult<crate::sqlite_snapshot::SqliteDatabase> {
-            control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative, 0, 1)?;
-            let snapshot = sqlite_snapshot_retirement::OwnedSqliteSnapshot::new(P::decode_sqlite_snapshot_native(payload, control)?);
-            control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative, 1, 1)?;
-            let database = snapshot.to_sqlite_database(control)?;
-            control.check_database(&database, crate::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot)?;
+        fn export_snapshot_impl<P: ArtifactDsl + ArtifactPack + ArtifactSqliteSnapshot>(
+            _schema: &str,
+            dialect: &crate::io_schema::ArtifactDialect,
+            payload: &crate::io_schema::IoPayload,
+            control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>,
+        ) -> crate::io_schema::IoResult<crate::sqlite_snapshot::SqliteDatabase> {
+            control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative, 0, 1).map_err(crate::io_schema::IoError::from_value_error)?;
+            let snapshot = sqlite_snapshot_retirement::OwnedSqliteSnapshot::new(P::decode_sqlite_snapshot_native(payload, control).map_err(crate::io_schema::IoError::from_value_error)?);
+            control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative, 1, 1).map_err(crate::io_schema::IoError::from_value_error)?;
+            let database = snapshot.to_sqlite_database(control).map_err(crate::io_schema::IoError::from_value_error)?;
+            control.check_database(&database, crate::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot).map_err(crate::io_schema::IoError::from_value_error)?;
             let validation = validate_owned_sqlite_snapshot_subset(&*snapshot, dialect, &database, control)?;
             Ok(crate::io_schema::IoOutcome { value: database, diagnostics: validation.diagnostics })
         }
 
-        fn import_snapshot_impl<P: ArtifactDsl + ArtifactPack + ArtifactSqliteSnapshot>(_schema: &str, dialect: &crate::io_schema::ArtifactDialect, database: crate::sqlite_snapshot::SqliteDatabase, encoding: crate::sqlite_snapshot::SnapshotEncoding, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> crate::io_schema::IoResult<crate::io_schema::IoPayload> {
-            let snapshot = sqlite_snapshot_retirement::OwnedSqliteSnapshot::new(P::from_sqlite_database(&database, control)?);
+        fn import_snapshot_impl<P: ArtifactDsl + ArtifactPack + ArtifactSqliteSnapshot>(
+            _schema: &str,
+            dialect: &crate::io_schema::ArtifactDialect,
+            database: crate::sqlite_snapshot::SqliteDatabase,
+            encoding: crate::sqlite_snapshot::SnapshotEncoding,
+            control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>,
+        ) -> crate::io_schema::IoResult<crate::io_schema::IoPayload> {
+            let snapshot = sqlite_snapshot_retirement::OwnedSqliteSnapshot::new(P::from_sqlite_database(&database, control).map_err(crate::io_schema::IoError::from_value_error)?);
             let validation = validate_owned_sqlite_snapshot_subset(&*snapshot, dialect, &database, control)?;
-            control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative, 0, 1)?;
-            let payload = snapshot.encode_sqlite_snapshot_native(encoding, control)?;
-            control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative, 1, 1)?;
+            control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative, 0, 1).map_err(crate::io_schema::IoError::from_value_error)?;
+            let payload = snapshot.encode_sqlite_snapshot_native(encoding, control).map_err(crate::io_schema::IoError::from_value_error)?;
+            control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative, 1, 1).map_err(crate::io_schema::IoError::from_value_error)?;
             Ok(crate::io_schema::IoOutcome { value: payload, diagnostics: validation.diagnostics })
         }
 
@@ -10945,10 +11267,15 @@ pub trait ArtifactSqliteSnapshot: Sized {
 }
 
 /// 🛡️ Applies the owner's semantic policy and preserves warnings while refusing errors.
-pub fn validate_owned_sqlite_snapshot_subset<P: ArtifactSqliteSnapshot>(snapshot: &P, dialect: &crate::io_schema::ArtifactDialect, database: &crate::sqlite_snapshot::SqliteDatabase, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> crate::io_schema::IoResult<()> {
+pub fn validate_owned_sqlite_snapshot_subset<P: ArtifactSqliteSnapshot>(
+    snapshot: &P,
+    dialect: &crate::io_schema::ArtifactDialect,
+    database: &crate::sqlite_snapshot::SqliteDatabase,
+    control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>,
+) -> crate::io_schema::IoResult<()> {
     let outcome = snapshot.validate_sqlite_snapshot_subset(dialect, database, control)?;
-    if outcome.diagnostics.iter().any(|diagnostic| matches!(diagnostic.severity, crate::os_dsl::Severity::Error | crate::os_dsl::Severity::Fatal)) {
-        return Err(crate::io_schema::IoError { message: format!("owned snapshot violates subset {}", dialect.to_coordinate()), diagnostics: outcome.diagnostics });
+    if outcome.diagnostics.iter().any(|diagnostic| matches!(diagnostic.severity, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)) {
+        return Err(crate::io_schema::IoError { cause: semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("owned snapshot violates subset {}", dialect.to_coordinate())), diagnostics: outcome.diagnostics });
     }
     Ok(outcome)
 }
@@ -10959,7 +11286,8 @@ pub struct ArtifactSqliteSnapshotCodec {
     pub schema: std::borrow::Cow<'static, str>,
     pub snapshot_type: Option<std::any::TypeId>,
     pub export: fn(&str, &crate::io_schema::ArtifactDialect, &crate::io_schema::IoPayload, &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> crate::io_schema::IoResult<crate::sqlite_snapshot::SqliteDatabase>,
-    pub import: fn(&str, &crate::io_schema::ArtifactDialect, crate::sqlite_snapshot::SqliteDatabase, crate::sqlite_snapshot::SnapshotEncoding, &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> crate::io_schema::IoResult<crate::io_schema::IoPayload>,
+    pub import:
+        fn(&str, &crate::io_schema::ArtifactDialect, crate::sqlite_snapshot::SqliteDatabase, crate::sqlite_snapshot::SnapshotEncoding, &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> crate::io_schema::IoResult<crate::io_schema::IoPayload>,
 }
 
 impl ArtifactSqliteSnapshotCodec {
@@ -11038,7 +11366,7 @@ impl<T> BoundedArtifactValueRetirement<T> {
 }
 
 impl<T: Send + 'static> ErasedSnapshotRetirement for BoundedArtifactValueRetirement<T> {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 || maximum_bytes == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -11128,7 +11456,7 @@ where
                 break;
             }
             Err(error) => {
-                closed = Err(VcsError::ValidationFailed(error));
+                closed = Err(VcsError::ValidationFailed(error.into_message()));
                 break;
             }
         }
@@ -11155,11 +11483,7 @@ where
         && store.durable_group_root.is_none();
     std::mem::forget(store);
     closed?;
-    if drop_ready {
-        Ok(())
-    } else {
-        Err(VcsError::ValidationFailed("artifact codec store close left a live shallow-shell owner".into()))
-    }
+    if drop_ready { Ok(()) } else { Err(VcsError::ValidationFailed("artifact codec store close left a live shallow-shell owner".into())) }
 }
 
 /// 📜️ Folds an [`crate::os_spr::encode_envelopes`] ledger stream onto one authoritative pair through
@@ -11399,7 +11723,6 @@ impl ArtifactCodec {
                 print_edit_lines(&edit).await
             })
         }
-
 
         Self {
             schema: schema.into(),
@@ -11743,9 +12066,10 @@ pub async fn migrate_document(from: &crate::os_io::ArtifactDialect, to: &crate::
 }
 
 /// 🧷️ All writable store registries held before an artifact assembly can publish anything.
-pub struct ArtifactAssemblyStoreRegistryGuards {
+pub struct ArtifactAssemblyStoreRegistryGuards<'assembly> {
     document_codecs: std::sync::RwLockWriteGuard<'static, BTreeMap<String, ArtifactCodec>>,
     dialect_migrations: std::sync::RwLockWriteGuard<'static, BTreeMap<(crate::os_io::ArtifactDialect, crate::os_io::ArtifactDialect), DialectMigration>>,
+    _assembly: &'assembly ArtifactAssemblyTransaction,
 }
 
 /// 🚫️ A staged store registry assembly cannot be preflighted or committed.
@@ -11768,21 +12092,21 @@ impl std::error::Error for ArtifactAssemblyStoreRegistryError {}
 
 /// 🧷️ Acquires every store registry write lock before an assembly validates or mutates state.
 #[must_use]
-pub fn acquire_artifact_assembly_store_registry_guards(_assembly: &ArtifactAssemblyTransaction) -> Result<ArtifactAssemblyStoreRegistryGuards, ArtifactAssemblyStoreRegistryError> {
+pub fn acquire_artifact_assembly_store_registry_guards<'assembly>(assembly: &'assembly ArtifactAssemblyTransaction) -> Result<ArtifactAssemblyStoreRegistryGuards<'assembly>, ArtifactAssemblyStoreRegistryError> {
     let document_codecs = document_codec_registry().write().map_err(|_| ArtifactAssemblyStoreRegistryError::DocumentCodec(DocumentCodecRegistryError::Unavailable))?;
     let dialect_migrations = dialect_migration_registry().write().map_err(|_| ArtifactAssemblyStoreRegistryError::DialectMigration(DialectMigrationRegistryError::Unavailable))?;
-    Ok(ArtifactAssemblyStoreRegistryGuards { document_codecs, dialect_migrations })
+    Ok(ArtifactAssemblyStoreRegistryGuards { document_codecs, dialect_migrations, _assembly: assembly })
 }
 
 /// 🔬️ Verifies all staged store rows while every affected write lock is already held.
 #[must_use]
-pub fn preflight_artifact_assembly_store_registry_guards(guards: &ArtifactAssemblyStoreRegistryGuards, document_codecs: &[ArtifactCodec], dialect_migrations: &[DialectMigration]) -> Result<(), ArtifactAssemblyStoreRegistryError> {
+pub fn preflight_artifact_assembly_store_registry_guards(guards: &ArtifactAssemblyStoreRegistryGuards<'_>, document_codecs: &[ArtifactCodec], dialect_migrations: &[DialectMigration]) -> Result<(), ArtifactAssemblyStoreRegistryError> {
     validate_document_codecs(&guards.document_codecs, document_codecs).map_err(ArtifactAssemblyStoreRegistryError::DocumentCodec)?;
     validate_dialect_migrations(&guards.dialect_migrations, dialect_migrations).map_err(ArtifactAssemblyStoreRegistryError::DialectMigration)
 }
 
 /// 📌️ Publishes rows proven safe by `preflight_artifact_assembly_store_registry_guards`.
-pub fn commit_artifact_assembly_store_registry_guards(guards: &mut ArtifactAssemblyStoreRegistryGuards, document_codecs: Vec<ArtifactCodec>, dialect_migrations: Vec<DialectMigration>) {
+pub fn commit_artifact_assembly_store_registry_guards(guards: &mut ArtifactAssemblyStoreRegistryGuards<'_>, document_codecs: Vec<ArtifactCodec>, dialect_migrations: Vec<DialectMigration>) {
     for codec in document_codecs {
         guards.document_codecs.entry(codec.schema.clone()).or_insert(codec);
     }
@@ -11960,7 +12284,7 @@ where
     let mut snapshot = ReplayProjection::<P, Mutation>::new(envelope.vcs.initial_snapshot.clone());
     for edit_id in applied_edit_ids {
         let edit_id = edit_id.as_ref();
-        let edit = envelope.vcs.edits.iter().find(|entry| entry.id == edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.to_string()))?;
+        let edit = envelope.vcs.edits.find_near(|entry| entry.id == edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.to_string()))?;
         fold_effective_edit(&mut snapshot, edit, &envelope.schema, &supersessions, usize::MAX);
     }
     Ok(snapshot.into_inner())
@@ -12033,9 +12357,10 @@ where
 /// (`forwards.len() > 1`): `ingest_remote` reconstructs one local single-forward `Edit` per WIRE op,
 /// so giving op 0 the parent edit's bare id would make that receiver's one-forward edit share its
 /// id with the author's N-forward edit. Multi-op ops keep their content-hash ids.
-/// Called from every fresh-edit constructor (`apply_command`, `amend_command`'s fresh branch); an
-/// `AmendLast` extension always appends beyond index 0 of an already multi-op edit, so it never
-/// qualifies. See
+/// The ONE identity rule of every route an edit becomes final on (audit W1G-8): `apply_command`,
+/// `commit_open_transaction`, and the retained batched publication (`advance_apply_batch` stamps the
+/// staged edit before its revision digest, and the open edit when a batch closes its transaction); a
+/// streamed transaction tick always appends beyond index 0 of its open edit, so it never qualifies. See
 /// `checkpoint_after_ingesting_a_remote_edit_stays_valid_once_the_sender_s_own_checkpoint_snapshot_arrives`
 /// > for the regression this fixes.
 fn stamp_primary_operation_identity<Mutation>(edit: &mut Edit<Mutation>) {
@@ -12108,7 +12433,7 @@ impl<P, Mutation: self::Mutation<P>> ParsedDocumentText<P, Mutation> {
 /// 🖋️ One `by=[...]` list entry on a `commit` line: id then name, both positional
 /// (bare-preferred, quoted only when needed — e.g. a name containing a space), then the optional
 /// avatar — every field the transition's content-addressed id covers.
-#[derive(Clone, Debug, PartialEq, DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 struct OpsAuthor {
     #[dsl(positional)]
     id: String,
@@ -12130,7 +12455,7 @@ impl From<OpsAuthor> for Author {
 }
 
 /// 📌️ One `pins=[...]` entry on a `repin` line: child artifact uri, then its checkpoint.
-#[derive(Clone, Debug, PartialEq, DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 struct OpsPin {
     #[dsl(positional)]
     child: String,
@@ -12140,7 +12465,7 @@ struct OpsPin {
 
 /// ✏️ One `inputs=[...]` entry on a `supersede` line: the superseded operation, then its
 /// replacement — `schema` plus the base64 `OpBinary` `payload`, or neither for a withdrawal.
-#[derive(Clone, Debug, PartialEq, DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 struct OpsSupersededInput {
     #[dsl(positional)]
     target: String,
@@ -12179,7 +12504,7 @@ impl TryFrom<OpsSupersededInput> for crate::os_spr::SupersededInput {
 /// a plain `key=value` attribute that is simply OMITTED when absent (no more `-` placeholder
 /// sentinel); `operations`/`after`/`by`/`pins` are real DSL lists (`by=[ u1 "Ueli Saluz" ]`), not
 /// comma-joined, percent-escaped strings.
-#[derive(Clone, Debug, PartialEq, DslOps)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
 enum OpsHeaderLine {
     Doc {
         #[dsl(positional)]
@@ -12193,7 +12518,6 @@ enum OpsHeaderLine {
         started: String,
         actor: Option<String>,
         finished: Option<String>,
-        key: Option<String>,
         description: Option<String>,
         verb: Option<String>,
         line: Vec<String>,
@@ -12287,14 +12611,13 @@ enum OpsHeaderLine {
     Message { edit: String, data: String },
     /// ⚔️ One first-class conflict, including its content-addressed identity and lifecycle.
     Conflict { data: String },
-    /// 👁 This replica's head, persisted local-only like `.spr`'s `REC_VIEWER`: the alternative it views (`line`, absent =
-    /// the trunk) and an explicit checkpoint (absent = that line's tip). No `viewer` line is the canonical trunk tip.
-    Viewer { line: Option<String>, checkpoint: Option<String> },
 }
 
 /// 🌿️ A text record explicitly carries zero trunk/unknown or one authored branch identity.
 fn ops_line_provenance(mut lines: Vec<String>) -> Result<Option<String>, TextError> {
-    if lines.len() > 1 { return Err(crate::os_dsl::__rt::field_error("history line admits zero or one identity")); }
+    if lines.len() > 1 {
+        return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("history line admits zero or one identity").to_string(),semio_framework_diagnostic::TextSpan::at(1,1)));
+    }
     Ok(lines.pop())
 }
 
@@ -12302,21 +12625,21 @@ fn ops_line_provenance(mut lines: Vec<String>) -> Result<Option<String>, TextErr
 /// 🎞️ Handcrafted OpText (P6).
 impl OpText for OpsHeaderLine {
     fn parse_op(line: &str) -> Result<Self, TextError> {
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = crate::os_dsl::parse(line, &(spec_fn.ordinary)(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
-                return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = semio_framework_dsl_record::parse(line, &(spec_fn.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?;
+                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown operation line '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
     }
     fn print_op(&self) -> String {
-        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        crate::os_dsl::print(&record, &(spec_fn.ordinary)(), crate::os_dsl::JoinMode::Inline)
+        semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline)
     }
 }
 
@@ -12324,8 +12647,8 @@ impl OpText for OpsHeaderLine {
 impl OpBinary for OpsHeaderLine {
     fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
         let spec = (variants[ordinal].1.ordinary)();
         let body = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
@@ -12343,13 +12666,13 @@ impl OpBinary for OpsHeaderLine {
             return Err(crate::os_spr::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
         }
         let ordinal = reader.read_varint_u64()?;
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
         let spec = (spec_fn.ordinary)();
         let body = &bytes[reader.position()..];
         let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
         let record_offset = reader.position() as u64;
-        <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
+        <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
     }
 }
 //#endregion 🔖️OpCodec
@@ -12371,7 +12694,6 @@ pub async fn print_edit_lines<Mutation: OpText>(edit: &Edit<Mutation>) -> Result
         started: edit.started_at.clone(),
         actor: edit.actor.clone(),
         finished: edit.finished_at.clone(),
-        key: edit.coalesce_key.clone(),
         description: edit.description.clone(),
         verb: edit.verb.clone(),
         line: edit.line.iter().cloned().collect(),
@@ -12398,7 +12720,7 @@ pub async fn print_edit_lines<Mutation: OpText>(edit: &Edit<Mutation>) -> Result
     out.push_str(&OpsHeaderLine::Inverse { edit: edit.id.clone(), ops: inverse }.print_op());
     out.push('\n');
     for (index, meta) in edit.mutation_meta.iter().enumerate() {
-        let data = crate::os_pack::json::to_json_string(&MutationMeta { semantic_kind: None, label: None, ..meta.clone() });
+        let data = semio_framework_pack_json::to_json_string(&MutationMeta { semantic_kind: None, label: None, ..meta.clone() });
         out.push_str(&OpsHeaderLine::Metadata { edit: edit.id.clone(), index: index as u32, data }.print_op());
         out.push('\n');
     }
@@ -12632,11 +12954,6 @@ where
     let mut ops = String::new();
     ops.push_str(&OpsHeaderLine::Doc { id: envelope.id.clone(), schema: envelope.schema.clone() }.print_op());
     ops.push('\n');
-    let line = envelope.active_alternative_id.clone().filter(|line| line != &crate::os_spr::trunk_alternative_id(&ArtifactId(envelope.id.clone())));
-    if line.is_some() || envelope.viewer_checkpoint_id.is_some() {
-        ops.push_str(&OpsHeaderLine::Viewer { line, checkpoint: envelope.viewer_checkpoint_id.clone() }.print_op());
-        ops.push('\n');
-    }
     for edit in envelope.vcs.edits.iter().filter(|edit| envelope.holds_committed_edit(&edit.id)) {
         ops.push_str(&print_edit_lines(edit).await?);
     }
@@ -12649,13 +12966,13 @@ where
             return Err(VcsError::ValidationFailed(format!("message ledger references unknown edit {}", entry.edit_id)));
         }
         for message in &entry.messages {
-            let data = crate::os_pack::json::to_json_string(message);
+            let data = semio_framework_pack_json::to_json_string(message);
             ops.push_str(&OpsHeaderLine::Message { edit: entry.edit_id.clone(), data }.print_op());
             ops.push('\n');
         }
     }
     for conflict in &envelope.conflicts {
-        let data = crate::os_pack::json::to_json_string(conflict);
+        let data = semio_framework_pack_json::to_json_string(conflict);
         ops.push_str(&OpsHeaderLine::Conflict { data }.print_op());
         ops.push('\n');
     }
@@ -12708,8 +13025,8 @@ fn history_message_from_mutation_message(message: &crate::os_spr::MutationMessag
 
 // 🚫️async: E1 pure field-copy, consumed only through `Iterator::map` fn-item arguments — see R9.
 fn mutation_message_from_history_message(message: crate::os_spr::history::HistoryMessage) -> Result<crate::os_spr::MutationMessage, String> {
-    let level = crate::os_dsl::Severity::from_u8(message.level).ok_or_else(|| format!("unknown mutation message severity {}", message.level))?;
-    Ok(crate::os_spr::MutationMessage { level, code: crate::os_dsl::FaultCode(message.code), message: message.message, target: message.target, op_index: message.op_index })
+    let level = semio_framework_diagnostic::Severity::from_u8(message.level).ok_or_else(|| format!("unknown mutation message severity {}", message.level))?;
+    Ok(crate::os_spr::MutationMessage { level, code: semio_framework_diagnostic::FaultCode(message.code), message: message.message, target: message.target, op_index: message.op_index })
 }
 
 // 🚫️async: E1 pure field-copy, consumed only through `Iterator::map` fn-item arguments — see R9.
@@ -12759,7 +13076,7 @@ fn mutation_meta_from_history_op_meta(meta: crate::os_spr::HistoryOpMeta) -> Res
 
 /// ⚖️ Persistence admits exactly the frozen outcome vocabulary ([`protocol::OUTCOME_CODES`] plus the
 /// `mutation.apply.<detail>` family), each code at the one level it fixes.
-async fn expected_mutation_message_level(code: &str) -> Option<crate::os_dsl::Severity> {
+async fn expected_mutation_message_level(code: &str) -> Option<semio_framework_diagnostic::Severity> {
     protocol::outcome_code_level(code)
 }
 
@@ -12917,7 +13234,7 @@ async fn validate_durable_history<P, Mutation>(envelope: &ArtifactEnvelope<P, Mu
         if !message_edit_ids.insert(entry.edit_id.as_str()) || !edit_ids.contains(entry.edit_id.as_str()) {
             return Err(VcsError::ValidationFailed(format!("history has an invalid message ledger for edit {}", entry.edit_id)));
         }
-        let operation_count = envelope.vcs.edits.iter().find(|edit| edit.id == entry.edit_id).map(|edit| edit.forwards.len()).ok_or_else(|| VcsError::ValidationFailed(format!("history has an invalid message ledger for edit {}", entry.edit_id)))?;
+        let operation_count = envelope.vcs.edits.find_near(|edit| edit.id == entry.edit_id).map(|edit| edit.forwards.len()).ok_or_else(|| VcsError::ValidationFailed(format!("history has an invalid message ledger for edit {}", entry.edit_id)))?;
         let mut any_malformed = false;
         for message in &entry.messages {
             if validate_persisted_message(message, Some(operation_count)).await.is_err() {
@@ -13052,8 +13369,9 @@ async fn history_edit_from_edit<Mutation: OpBinary>(edit: &Edit<Mutation>, messa
         actor: edit.actor.clone(),
         started_at: edit.started_at.clone(),
         finished_at: edit.finished_at.clone(),
-        coalesce_key: edit.coalesce_key.clone(),
-        description: edit.description.clone(), verb: edit.verb.clone(), line: edit.line.clone(),
+        description: edit.description.clone(),
+        verb: edit.verb.clone(),
+        line: edit.line.clone(),
         ops: history_op_payloads(&edit.forwards).await?,
         inverse: history_op_payloads(&edit.inverse).await?,
         meta: if edit.mutation_meta.is_empty() {
@@ -13066,7 +13384,7 @@ async fn history_edit_from_edit<Mutation: OpBinary>(edit: &Edit<Mutation>, messa
             Some(edit.mutation_meta.iter().enumerate().map(|(index, meta)| history_op_meta_from_operation_meta(meta, messages.iter().filter(move |message| message.op_index == Some(index as u32)).map(history_message_from_mutation_message))).collect())
         },
         lane: lane.filter(|lane| !matches!(lane, HistoryLane::Document)).map(|lane| match lane.to_value() {
-            crate::os_dsl::DslValue::String(name) => name,
+            semio_framework_value::DslValue::String(name) => name,
             other => unreachable!("a HistoryLane always encodes as its own camelCase word, got {other:?}"),
         }),
     })
@@ -13155,10 +13473,8 @@ pub async fn stamp_document_spr_identity(spr: &[u8], doc_id: &str, schema: &str,
     let mut log = crate::os_spr::decode_history(spr, &crate::os_spr::DecodeOptions::default()).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
     log.doc_id = doc_id.to_string();
     log.schema = schema.to_string();
-    log.composition = Some(crate::os_spr::HistoryComposition {
-        owner: owner.map(|owner| (owner.parent.to_uri(), owner.slot.clone(), owner.child_id.clone())),
-        dialect: Some((dialect.artifact_kind.clone(), dialect.standard.clone(), dialect.subset.clone())),
-    });
+    log.composition =
+        Some(crate::os_spr::HistoryComposition { owner: owner.map(|owner| (owner.parent.to_uri(), owner.slot.clone(), owner.child_id.clone())), dialect: Some((dialect.artifact_kind.clone(), dialect.standard.clone(), dialect.subset.clone())) });
     let options = crate::os_spr::EncodeOptions { write_backwards_section: true, ..crate::os_spr::EncodeOptions::default() };
     crate::os_spr::encode_history(&log, &options).await.map_err(|error| VcsError::Serialize(error.to_string()))
 }
@@ -13169,11 +13485,11 @@ pub async fn stamp_document_spr_identity(spr: &[u8], doc_id: &str, schema: &str,
 /// `encode_document_pack_bytes` framing `MemberFactory::open` and archive member admission accept.
 /// Minted from bytes alone, never through a live `ArtifactStore`, so a caller completing a closure
 /// (`VcsArtifactApp`'s derivable-child genesis) owes no bounded close protocol for it.
-pub async fn genesis_member_envelope_pack(schema: &str, dialect: &crate::os_io::ArtifactDialect, owner: &OwnerRef, initial_pack: &[u8]) -> Result<Vec<u8>, VcsError> {
+pub async fn genesis_member_envelope_pack(schema: &str, expected: &crate::os_io::ArtifactRef, owner: &OwnerRef, initial_pack: &[u8]) -> Result<Vec<u8>, VcsError> {
     if initial_pack.is_empty() {
         return Err(VcsError::Deserialize(format!("child genesis for {} carries an empty initial pack", owner.child_id)));
     }
-    let spr = stamp_document_spr_identity(&empty_document_spr(&owner.child_id, schema).await, &owner.child_id, schema, dialect, Some(owner)).await?;
+    let spr = stamp_document_spr_identity(&empty_document_spr(&expected.artifact_id, schema).await, &expected.artifact_id, schema, &expected.dialect, Some(owner)).await?;
     Ok(encode_document_pack_bytes(initial_pack, &spr).await)
 }
 
@@ -13234,7 +13550,7 @@ where
         if !envelope.vcs.edits.iter().any(|edit| edit.id == entry.edit_id) {
             return Err(VcsError::ValidationFailed(format!("message ledger references unknown edit {}", entry.edit_id)));
         }
-        let operation_count = envelope.vcs.edits.iter().find(|edit| edit.id == entry.edit_id).map(|edit| edit.forwards.len()).ok_or_else(|| VcsError::ValidationFailed(format!("message ledger references unknown edit {}", entry.edit_id)))?;
+        let operation_count = envelope.vcs.edits.find_near(|edit| edit.id == entry.edit_id).map(|edit| edit.forwards.len()).ok_or_else(|| VcsError::ValidationFailed(format!("message ledger references unknown edit {}", entry.edit_id)))?;
         if entry.messages.is_empty() {
             return Err(VcsError::ValidationFailed(format!("message ledger for edit {} is empty", entry.edit_id)));
         }
@@ -13273,7 +13589,7 @@ where
     P: Clone + ArtifactPack,
     Mutation: OpText + OpBinary + self::Mutation<P>,
 {
-    let log = crate::os_spr::decode_history(spr, &crate::os_spr::DecodeOptions::default()).await.map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))?;
+    let log = crate::os_spr::decode_history(spr, &crate::os_spr::DecodeOptions::default()).await.map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), TextSpan::at(1, 1)))?;
     parse_decoded_document_spr(pack, log).await
 }
 
@@ -13289,13 +13605,13 @@ where
     P: Clone + ArtifactPack,
     Mutation: OpText + OpBinary + self::Mutation<P>,
 {
-    let initial_snapshot = P::decode_pack(pack).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))?;
+    let initial_snapshot = P::decode_pack(pack).map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), TextSpan::at(1, 1)))?;
 
     async fn decode_op<P, Mutation: OpText + OpBinary + self::Mutation<P>>(payload: &crate::os_spr::OpPayload) -> Result<Mutation, TextError> {
         match (&payload.binary, &payload.text) {
-            (Some(bytes), _) => Mutation::decode_op(bytes).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1))),
+            (Some(bytes), _) => Mutation::decode_op(bytes).map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), TextSpan::at(1, 1))),
             (None, Some(text)) => Mutation::parse_op(text),
-            (None, None) => Err(TextError::new("op payload carries neither binary nor text".to_string(), TextSpan::at(1, 1))),
+            (None, None) => Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "op payload carries neither binary nor text".to_string(), TextSpan::at(1, 1))),
         }
     }
 
@@ -13314,16 +13630,17 @@ where
     for (index, history_edit) in log.edits.into_iter().enumerate() {
         let edit_id = history_edit.id.clone();
         if let Some(lane) = &history_edit.lane {
-            let lane = HistoryLane::from_value(crate::os_dsl::DslValue::String(lane.clone())).map_err(|error| TextError::new(format!("history edit {edit_id} names an unknown lane: {error}"), TextSpan::at(1, 1)))?;
+            let lane = HistoryLane::from_value(semio_framework_value::DslValue::String(lane.clone()))
+                .map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("history edit {edit_id} names an unknown lane: {error}"), TextSpan::at(1, 1)))?;
             if !lane.is_document().await {
                 lanes.insert(edit_id.clone(), lane);
             }
         }
         let forwards = decode_ops::<P, Mutation>(&history_edit.ops).await?;
         let inverse = decode_ops::<P, Mutation>(&history_edit.inverse).await?;
-        let metas = history_edit.meta.ok_or_else(|| TextError::new(format!("history edit {edit_id} has no authoritative operation metadata"), TextSpan::at(1, 1)))?;
+        let metas = history_edit.meta.ok_or_else(|| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("history edit {edit_id} has no authoritative operation metadata"), TextSpan::at(1, 1)))?;
         if metas.len() != forwards.len() {
-            return Err(TextError::new(format!("history edit {edit_id} has {} metadata entries for {} forward operations", metas.len(), forwards.len()), TextSpan::at(1, 1)));
+            return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("history edit {edit_id} has {} metadata entries for {} forward operations", metas.len(), forwards.len()), TextSpan::at(1, 1)));
         }
         let mut durable_messages = Vec::new();
         let mutation_meta = metas
@@ -13334,7 +13651,7 @@ where
                 Ok(meta)
             })
             .collect::<Result<Vec<_>, String>>()
-            .map_err(|error| TextError::new(error, TextSpan::at(1, 1)))?;
+            .map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, TextSpan::at(1, 1)))?;
         if !durable_messages.is_empty() {
             edit_messages.push(crate::os_spr::EditMessages { edit_id: edit_id.clone(), messages: durable_messages });
         }
@@ -13344,8 +13661,9 @@ where
             forwards,
             inverse,
             mutation_meta,
-            description: history_edit.description, verb: history_edit.verb, line: history_edit.line,
-            coalesce_key: history_edit.coalesce_key,
+            description: history_edit.description,
+            verb: history_edit.verb,
+            line: history_edit.line,
             sequence_number: index as i32 + 1,
             started_at: history_edit.started_at,
             finished_at: history_edit.finished_at,
@@ -13356,9 +13674,9 @@ where
 
     let mut conflicts = Vec::with_capacity(log.conflicts.len());
     for conflict in std::mem::take(&mut log.conflicts) {
-        conflicts.push(conflict_from_history_conflict(conflict).map_err(|error| TextError::new(error, TextSpan::at(1, 1)))?);
+        conflicts.push(conflict_from_history_conflict(conflict).map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, TextSpan::at(1, 1)))?);
     }
-    let edits = ArtifactHistoryLedger::try_from_preflighted(edits).map_err(|_| TextError::new("history edit capacity exceeded".to_string(), TextSpan::at(1, 1)))?;
+    let edits = ArtifactHistoryLedger::try_from_preflighted(edits).map_err(|_| TextError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit, "history edit capacity exceeded".to_string(), TextSpan::at(1, 1)))?;
     let mut transitions: Vec<crate::os_spr::MutationEnvelope> = log.transitions.iter().map(|record| record.to_envelope(&log.doc_id)).collect();
     transitions.sort_by(|left, right| (left.timestamp.cmp_key(), left.mutation_id.0.as_str()).cmp(&(right.timestamp.cmp_key(), right.mutation_id.0.as_str())));
     let mut envelope = ArtifactEnvelope::from_owners(ArtifactEnvelopeOwners {
@@ -13383,7 +13701,7 @@ where
     envelope.active_alternative_id = log.viewer_line.clone().filter(|line| line != &trunk);
     envelope.viewer_checkpoint_id = log.viewer_checkpoint.clone();
     let composed = match &log.composition {
-        Some(composition) => apply_history_composition(&mut envelope, composition).await.map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1))),
+        Some(composition) => apply_history_composition(&mut envelope, composition).await.map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), TextSpan::at(1, 1))),
         None => Ok(()),
     };
     match composed {
@@ -13428,7 +13746,6 @@ where
     let mut message_order = Vec::new();
     let mut conflicts = Vec::new();
     let mut saw_doc = false;
-    let mut viewer: Option<(Option<String>, Option<String>)> = None;
 
     struct PendingEdit {
         id: String,
@@ -13436,7 +13753,6 @@ where
         actor: Option<String>,
         started_at: String,
         finished_at: Option<String>,
-        coalesce_key: Option<String>,
         description: Option<String>,
         verb: Option<String>,
         line: Option<String>,
@@ -13455,8 +13771,9 @@ where
             forwards,
             inverse: Vec::new(),
             mutation_meta: Vec::new(),
-            description: header.description, verb: header.verb, line: header.line,
-            coalesce_key: header.coalesce_key,
+            description: header.description,
+            verb: header.verb,
+            line: header.line,
             sequence_number: header.sequence_number,
             started_at: header.started_at,
             finished_at: header.finished_at,
@@ -13471,129 +13788,156 @@ where
             continue;
         }
         if raw_line.starts_with("  ") && pending_edit.is_some() {
-            let operation = Mutation::parse_op(trimmed).map_err(|error| TextError::new(error.message, TextSpan::at(line_no, error.span.column)))?;
+            let operation = Mutation::parse_op(trimmed).map_err(|error| TextError { span: TextSpan::at(line_no, error.span.column), ..error })?;
             pending_forwards.push(operation);
             continue;
         }
         flush_pending_edit(&mut pending_edit, &mut pending_forwards, &mut edits)?;
-        let line = OpsHeaderLine::parse_op(trimmed).map_err(|error| TextError::new(error.message, TextSpan::at(line_no, error.span.column)))?;
+        let line = OpsHeaderLine::parse_op(trimmed).map_err(|error| TextError { span: TextSpan::at(line_no, error.span.column), ..error })?;
         match line {
             OpsHeaderLine::Doc { id: doc_id, schema: doc_schema } => {
                 if saw_doc {
-                    return Err(TextError::new("ops text repeats its document header".to_string(), TextSpan::at(line_no, 1)));
+                    return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "ops text repeats its document header".to_string(), TextSpan::at(line_no, 1)));
                 }
                 saw_doc = true;
                 schema = doc_schema;
                 id = doc_id;
             }
-            OpsHeaderLine::Edit { id: edit_id, sequence, started, actor, finished, key, description, verb, line } => {
+            OpsHeaderLine::Edit { id: edit_id, sequence, started, actor, finished, description, verb, line } => {
                 if edits.iter().any(|edit| edit.id == edit_id) || pending_edit.as_ref().is_some_and(|edit| edit.id == edit_id) {
-                    return Err(TextError::new(format!("ops text repeats edit {edit_id}"), TextSpan::at(line_no, 1)));
+                    return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("ops text repeats edit {edit_id}"), TextSpan::at(line_no, 1)));
                 }
-                pending_edit = Some(PendingEdit { id: edit_id, sequence_number: sequence, actor, started_at: started, finished_at: finished, coalesce_key: key, description, verb, line: ops_line_provenance(line)? });
+                pending_edit = Some(PendingEdit { id: edit_id, sequence_number: sequence, actor, started_at: started, finished_at: finished, description, verb, line: ops_line_provenance(line)? });
                 pending_forwards = Vec::new();
             }
             OpsHeaderLine::Revert { id: transition_id, actor, clock, after, operations } => {
-                transitions.push(transition_from_ops_line(&id, transition_id, actor, &clock, after, crate::os_spr::HistoryTransition::Revert { mutation_ids: mutation_ids(operations) }).map_err(|error| TextError::new(error, TextSpan::at(line_no, 1)))?);
+                transitions.push(
+                    transition_from_ops_line(&id, transition_id, actor, &clock, after, crate::os_spr::HistoryTransition::Revert { mutation_ids: mutation_ids(operations) })
+                        .map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, TextSpan::at(line_no, 1)))?,
+                );
             }
             OpsHeaderLine::Reinstate { id: transition_id, actor, clock, after, operations } => {
-                transitions.push(transition_from_ops_line(&id, transition_id, actor, &clock, after, crate::os_spr::HistoryTransition::Reinstate { mutation_ids: mutation_ids(operations) }).map_err(|error| TextError::new(error, TextSpan::at(line_no, 1)))?);
+                transitions.push(
+                    transition_from_ops_line(&id, transition_id, actor, &clock, after, crate::os_spr::HistoryTransition::Reinstate { mutation_ids: mutation_ids(operations) })
+                        .map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, TextSpan::at(line_no, 1)))?,
+                );
             }
             OpsHeaderLine::Commit { id: transition_id, actor, clock, after, checkpoint, parent, change, operations, description, saved, by, message, at, line } => {
                 let authors = by.into_iter().map(|author| crate::os_spr::TransitionAuthor { id: author.id, name: author.name, avatar: author.avatar }).collect();
-                let checkpoint = crate::os_spr::TransitionCheckpoint { checkpoint_id: checkpoint, parent_id: parent, change_id: change, mutation_ids: mutation_ids(operations), description, saved_at: saved, authors, message, timestamp: at, line_id: ops_line_provenance(line)? };
-                transitions.push(transition_from_ops_line(&id, transition_id, actor, &clock, after, crate::os_spr::HistoryTransition::Commit(checkpoint)).map_err(|error| TextError::new(error, TextSpan::at(line_no, 1)))?);
+                let checkpoint = crate::os_spr::TransitionCheckpoint {
+                    checkpoint_id: checkpoint,
+                    parent_id: parent,
+                    change_id: change,
+                    mutation_ids: mutation_ids(operations),
+                    description,
+                    saved_at: saved,
+                    authors,
+                    message,
+                    timestamp: at,
+                    line_id: ops_line_provenance(line)?,
+                };
+                transitions.push(
+                    transition_from_ops_line(&id, transition_id, actor, &clock, after, crate::os_spr::HistoryTransition::Commit(checkpoint))
+                        .map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, TextSpan::at(line_no, 1)))?,
+                );
             }
             OpsHeaderLine::Branch { id: transition_id, actor, clock, after, alternative, name, checkpoint } => {
-                transitions.push(transition_from_ops_line(&id, transition_id, actor, &clock, after, crate::os_spr::HistoryTransition::Branch { alternative_id: alternative, name, checkpoint_id: checkpoint }).map_err(|error| TextError::new(error, TextSpan::at(line_no, 1)))?);
+                transitions.push(
+                    transition_from_ops_line(&id, transition_id, actor, &clock, after, crate::os_spr::HistoryTransition::Branch { alternative_id: alternative, name, checkpoint_id: checkpoint })
+                        .map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, TextSpan::at(line_no, 1)))?,
+                );
             }
             OpsHeaderLine::Checkout { id: transition_id, actor, clock, after, checkpoint, alternative } => {
-                transitions.push(transition_from_ops_line(&id, transition_id, actor, &clock, after, crate::os_spr::HistoryTransition::Checkout { checkpoint_id: checkpoint, alternative_id: alternative }).map_err(|error| TextError::new(error, TextSpan::at(line_no, 1)))?);
+                transitions.push(
+                    transition_from_ops_line(&id, transition_id, actor, &clock, after, crate::os_spr::HistoryTransition::Checkout { checkpoint_id: checkpoint, alternative_id: alternative })
+                        .map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, TextSpan::at(line_no, 1)))?,
+                );
             }
             OpsHeaderLine::Repin { id: transition_id, actor, clock, after, checkpoint, pinned, pins } => {
                 let pins = pins.into_iter().map(|pin| crate::os_spr::TransitionPin { child_uri: pin.child, checkpoint_id: pin.checkpoint }).collect();
-                transitions.push(transition_from_ops_line(&id, transition_id, actor, &clock, after, crate::os_spr::HistoryTransition::Repin { checkpoint_id: checkpoint, pinned_checkpoint_id: pinned, pins }).map_err(|error| TextError::new(error, TextSpan::at(line_no, 1)))?);
+                transitions.push(
+                    transition_from_ops_line(&id, transition_id, actor, &clock, after, crate::os_spr::HistoryTransition::Repin { checkpoint_id: checkpoint, pinned_checkpoint_id: pinned, pins })
+                        .map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, TextSpan::at(line_no, 1)))?,
+                );
             }
             OpsHeaderLine::Supersede { id: transition_id, actor, clock, after, scope, inputs, observed } => {
-                let inputs = inputs.into_iter().map(crate::os_spr::SupersededInput::try_from).collect::<Result<Vec<_>, _>>().map_err(|error| TextError::new(error, TextSpan::at(line_no, 1)))?;
+                let inputs = inputs.into_iter().map(crate::os_spr::SupersededInput::try_from).collect::<Result<Vec<_>, _>>().map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, TextSpan::at(line_no, 1)))?;
                 let supersede = crate::os_spr::TransitionSupersede { scope, inputs };
-                supersede.validate().map_err(|error| TextError::new(error.to_string(), TextSpan::at(line_no, 1)))?;
-                let mut envelope = transition_from_ops_line(&id, transition_id, actor, &clock, after, crate::os_spr::HistoryTransition::Supersede(supersede)).map_err(|error| TextError::new(error, TextSpan::at(line_no, 1)))?;
+                supersede.validate().map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), TextSpan::at(line_no, 1)))?;
+                let mut envelope = transition_from_ops_line(&id, transition_id, actor, &clock, after, crate::os_spr::HistoryTransition::Supersede(supersede))
+                    .map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, TextSpan::at(line_no, 1)))?;
                 envelope.observed = observed.map(MutationId);
                 transitions.push(envelope);
             }
             OpsHeaderLine::Inverse { edit, ops } => {
                 let mut inverse = Vec::with_capacity(ops.len());
                 for operation in &ops {
-                    inverse.push(Mutation::parse_op(operation).map_err(|error| TextError::new(error.message, TextSpan::at(line_no, error.span.column)))?);
+                    inverse.push(Mutation::parse_op(operation).map_err(|error| TextError { span: TextSpan::at(line_no, error.span.column), ..error })?);
                 }
                 if inverse_by_edit.insert(edit.clone(), inverse).is_some() {
-                    return Err(TextError::new(format!("ops text repeats inverse record for edit {edit}"), TextSpan::at(line_no, 1)));
+                    return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("ops text repeats inverse record for edit {edit}"), TextSpan::at(line_no, 1)));
                 }
             }
             OpsHeaderLine::Metadata { edit, index, data } => {
-                let metadata = crate::os_pack::json::from_json_str(&data).map_err(|error| TextError::new(format!("invalid metadata record for edit {edit}: {error}"), TextSpan::at(line_no, 1)))?;
+                let metadata = semio_framework_pack_json::from_json_str(&data, semio_framework_pack_json::JsonMemberPolicy::Reject)
+                    .map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("invalid metadata record for edit {edit}: {error}"), TextSpan::at(line_no, 1)))?;
                 if metadata_by_edit.entry(edit.clone()).or_default().insert(index, metadata).is_some() {
-                    return Err(TextError::new(format!("ops text repeats metadata index {index} for edit {edit}"), TextSpan::at(line_no, 1)));
+                    return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("ops text repeats metadata index {index} for edit {edit}"), TextSpan::at(line_no, 1)));
                 }
             }
             OpsHeaderLine::Message { edit, data } => {
-                let message = crate::os_pack::json::from_json_str(&data).map_err(|error| TextError::new(format!("invalid message record for edit {edit}: {error}"), TextSpan::at(line_no, 1)))?;
+                let message = semio_framework_pack_json::from_json_str(&data, semio_framework_pack_json::JsonMemberPolicy::Reject)
+                    .map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("invalid message record for edit {edit}: {error}"), TextSpan::at(line_no, 1)))?;
                 if !messages_by_edit.contains_key(&edit) {
                     message_order.push(edit.clone());
                 }
                 messages_by_edit.entry(edit).or_default().push(message);
             }
             OpsHeaderLine::Conflict { data } => {
-                let conflict = crate::os_pack::json::from_json_str(&data).map_err(|error| TextError::new(format!("invalid conflict record: {error}"), TextSpan::at(line_no, 1)))?;
+                let conflict = semio_framework_pack_json::from_json_str(&data, semio_framework_pack_json::JsonMemberPolicy::Reject)
+                    .map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("invalid conflict record: {error}"), TextSpan::at(line_no, 1)))?;
                 conflicts.push(conflict);
-            }
-            OpsHeaderLine::Viewer { line, checkpoint } => {
-                if viewer.replace((line, checkpoint)).is_some() {
-                    return Err(TextError::new("ops text repeats its viewer head".to_string(), TextSpan::at(line_no, 1)));
-                }
             }
         }
     }
     flush_pending_edit(&mut pending_edit, &mut pending_forwards, &mut edits)?;
     if !saw_doc {
-        return Err(TextError::new("ops text has no document header".to_string(), TextSpan::at(1, 1)));
+        return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "ops text has no document header".to_string(), TextSpan::at(1, 1)));
     }
     for edit in &mut edits {
-        edit.inverse = inverse_by_edit.remove(&edit.id).ok_or_else(|| TextError::new(format!("ops text has no inverse record for edit {}", edit.id), TextSpan::at(1, 1)))?;
-        let metadata = metadata_by_edit.remove(&edit.id).ok_or_else(|| TextError::new(format!("ops text has no metadata records for edit {}", edit.id), TextSpan::at(1, 1)))?;
+        edit.inverse = inverse_by_edit.remove(&edit.id).ok_or_else(|| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("ops text has no inverse record for edit {}", edit.id), TextSpan::at(1, 1)))?;
+        let metadata = metadata_by_edit.remove(&edit.id).ok_or_else(|| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("ops text has no metadata records for edit {}", edit.id), TextSpan::at(1, 1)))?;
         if metadata.len() != edit.forwards.len() || (0..edit.forwards.len() as u32).any(|index| !metadata.contains_key(&index)) {
-            return Err(TextError::new(format!("ops text metadata does not exactly cover edit {}", edit.id), TextSpan::at(1, 1)));
+            return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("ops text metadata does not exactly cover edit {}", edit.id), TextSpan::at(1, 1)));
         }
-        edit.mutation_meta =
-            (0..edit.forwards.len() as u32).map(|index| metadata.get(&index).cloned().ok_or_else(|| TextError::new(format!("ops text metadata is missing index {index} for edit {}", edit.id), TextSpan::at(1, 1)))).collect::<Result<Vec<_>, _>>()?;
+        edit.mutation_meta = (0..edit.forwards.len() as u32)
+            .map(|index| metadata.get(&index).cloned().ok_or_else(|| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("ops text metadata is missing index {index} for edit {}", edit.id), TextSpan::at(1, 1))))
+            .collect::<Result<Vec<_>, _>>()?;
         stamp_edit_semantics::<P, Mutation>(edit, &schema);
     }
     if let Some(edit) = inverse_by_edit.keys().next() {
-        return Err(TextError::new(format!("ops text has an inverse for unknown edit {edit}"), TextSpan::at(1, 1)));
+        return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("ops text has an inverse for unknown edit {edit}"), TextSpan::at(1, 1)));
     }
     if let Some(edit) = metadata_by_edit.keys().next() {
-        return Err(TextError::new(format!("ops text has metadata for unknown edit {edit}"), TextSpan::at(1, 1)));
+        return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("ops text has metadata for unknown edit {edit}"), TextSpan::at(1, 1)));
     }
     let mut edit_messages = Vec::new();
     for edit_id in message_order {
-        let messages = messages_by_edit.remove(&edit_id).ok_or_else(|| TextError::new(format!("ops text lost message ownership for edit {edit_id}"), TextSpan::at(1, 1)))?;
-        let edit = edits.iter().find(|edit| edit.id == edit_id).ok_or_else(|| TextError::new(format!("ops text has messages for unknown edit {edit_id}"), TextSpan::at(1, 1)))?;
+        let messages = messages_by_edit.remove(&edit_id).ok_or_else(|| TextError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, format!("ops text lost message ownership for edit {edit_id}"), TextSpan::at(1, 1)))?;
+        let edit = edits.iter().find(|edit| edit.id == edit_id).ok_or_else(|| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("ops text has messages for unknown edit {edit_id}"), TextSpan::at(1, 1)))?;
         for message in &messages {
-            validate_persisted_message(message, Some(edit.forwards.len())).await.map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))?;
+            validate_persisted_message(message, Some(edit.forwards.len())).await.map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), TextSpan::at(1, 1)))?;
         }
         edit_messages.push(crate::os_spr::EditMessages { edit_id, messages });
     }
-    let edits = ArtifactHistoryLedger::try_from_preflighted(edits).map_err(|_| TextError::new("ops edit capacity exceeded".to_string(), TextSpan::at(1, 1)))?;
+    let edits = ArtifactHistoryLedger::try_from_preflighted(edits).map_err(|_| TextError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit, "ops edit capacity exceeded".to_string(), TextSpan::at(1, 1)))?;
     transitions.sort_by(|left, right| (left.timestamp.cmp_key(), left.mutation_id.0.as_str()).cmp(&(right.timestamp.cmp_key(), right.mutation_id.0.as_str())));
-    let trunk = crate::os_spr::trunk_alternative_id(&ArtifactId(id.clone()));
-    let (viewer_line, viewer_checkpoint) = viewer.unwrap_or_default();
     let envelope = ArtifactEnvelope::from_owners(ArtifactEnvelopeOwners {
         schema,
         id,
         vcs: ArtifactVcs { initial_snapshot, edits, changes: ArtifactHistoryLedger::new(), checkpoints: ArtifactHistoryLedger::new(), alternatives: ArtifactHistoryLedger::new() },
         backbone: None,
-        active_alternative_id: viewer_line.filter(|line| line != &trunk),
+        active_alternative_id: None,
         cursor: None,
         dialect: None,
         migrated_from: None,
@@ -13604,7 +13948,7 @@ where
         transitions,
         history_shape: crate::os_spr::HistoryShape::Document,
         open_transaction: None,
-        viewer_checkpoint_id: viewer_checkpoint,
+        viewer_checkpoint_id: None,
     });
     settle_parsed_envelope(envelope).await
 }
@@ -13632,7 +13976,7 @@ where
         Ok(snapshot) => Ok(ParsedDocumentText { envelope, snapshot }),
         Err(error) => {
             discard_parsed_envelope(envelope);
-            Err(TextError::new(error.to_string(), TextSpan::at(1, 1)))
+            Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), TextSpan::at(1, 1)))
         }
     }
 }
@@ -13680,28 +14024,28 @@ mod operation_envelope_serde {
     /// 🧵️ `ToValue` twin of the former `serialize` — identical byte framing, wire shape is
     /// `DslValue::Array` of `DslValue::Number` (one per byte), matching `Vec<u8>`'s own
     /// `ToValue` codec exactly (so this is equivalent to `ToValue::to_value(&bytes)`).
-    pub fn to_value(envelope: &crate::os_spr::MutationEnvelope) -> crate::os_dsl::DslValue {
+    pub fn to_value(envelope: &crate::os_spr::MutationEnvelope) -> semio_framework_value::DslValue {
         let mut bytes = Vec::new();
         crate::os_spr::encode_envelope(envelope, &mut bytes);
-        crate::os_dsl::ToValue::to_value(&bytes)
+        semio_framework_value::ToValue::to_value(&bytes)
     }
 
     /// 🧵️ `FromValue` twin of `to_value` above.
-    pub fn from_value(value: crate::os_dsl::DslValue) -> Result<crate::os_spr::MutationEnvelope, crate::os_dsl::ValueError> {
-        let bytes: Vec<u8> = crate::os_dsl::FromValue::from_value(value)?;
+    pub fn from_value(value: semio_framework_value::DslValue) -> Result<crate::os_spr::MutationEnvelope, semio_framework_value::ValueError> {
+        let bytes: Vec<u8> = semio_framework_value::FromValue::from_value(value)?;
         let mut pos = 0;
-        crate::os_spr::decode_envelope(&bytes, &mut pos).map_err(|error| crate::os_dsl::ValueError::new(error.to_string()))
+        crate::os_spr::decode_envelope(&bytes, &mut pos).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()))
     }
 }
 
 /// 🕹️ One structural `ArtifactCommand` line — `apply`/`undo`/`redo`/`commit-checkpoint`/
-/// `create-alternative`/`switch-alternative`/`checkout`/`amend` — the command-level twin of
-/// `OpsHeaderLine`, re-derived on the same `dsl_schema` grammar engine. `Apply`/`Amend` carry no
+/// `create-alternative`/`switch-alternative`/`checkout` — the command-level twin of
+/// `OpsHeaderLine`, re-derived on the same `dsl_schema` grammar engine. `Apply` carries no
 /// operations here (those follow as 2-space-indented `Op::print_op` lines, exactly like
 /// `print_edit_lines`); `Undo`'s `policy` is `None` for the plain `undo` command and `Some(token)`
 /// for `UndoWithPolicy` (token = kebab of the `UndoPolicy` variant name), optionally followed by an
 /// indented nested command block for `semantic-undo`/`compensating-action`.
-#[derive(Clone, Debug, PartialEq, DslOps)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
 enum CommandHeaderLine {
     /// ▶️ `transaction`/`tool` are the [`protocol::TransactionRef`] halves, present together or not at all.
     Apply {
@@ -13728,9 +14072,6 @@ enum CommandHeaderLine {
         #[dsl(positional)]
         id: String,
     },
-    Amend {
-        key: Option<String>,
-    },
     PruneDrafts,
     /// 🛤️ Text twin of `ArtifactCommand::ApplyInLane` — `lane` is a kebab token
     /// (`history_lane_to_token`/`parse_history_lane_token`), matching `Undo.policy`'s convention.
@@ -13739,10 +14080,6 @@ enum CommandHeaderLine {
         lane: String,
         transaction: Option<String>,
         tool: Option<String>,
-    },
-    AmendInLane {
-        key: Option<String>,
-        lane: String,
     },
     UndoInLane {
         lane: String,
@@ -13790,7 +14127,7 @@ enum CommandHeaderLine {
 
 /// ✏️ One 2-space-indented input line under a `supersede` command: `replace <target>` followed by the replacement's
 /// 4-space-indented `print_op` line, or `withdraw <target>`.
-#[derive(Clone, Debug, PartialEq, DslOps)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
 enum SupersedeInputLine {
     Replace {
         #[dsl(positional)]
@@ -13804,21 +14141,21 @@ enum SupersedeInputLine {
 
 impl OpText for SupersedeInputLine {
     fn parse_op(line: &str) -> Result<Self, TextError> {
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = crate::os_dsl::parse(line, &(spec_fn.ordinary)(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
-                return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = semio_framework_dsl_record::parse(line, &(spec_fn.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?;
+                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(crate::os_dsl::__rt::field_error(format!("unknown supersede input line '{line}'")))
+        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown supersede input line '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
     }
     fn print_op(&self) -> String {
-        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        crate::os_dsl::print(&record, &(spec_fn.ordinary)(), crate::os_dsl::JoinMode::Inline)
+        semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline)
     }
 }
 
@@ -13864,7 +14201,7 @@ fn parse_supersede_input_lines<Op: OpText>(lines: &[&str], inputs: &mut Vec<Supe
     for raw in lines {
         if let Some(operation) = raw.strip_prefix("    ") {
             if !awaiting_replacement {
-                return Err(crate::os_dsl::__rt::field_error(format!("replacement operation without a replace line: {raw:?}")));
+                return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("replacement operation without a replace line: {raw:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)));
             }
             let input = inputs.last_mut().expect("a replace line precedes its replacement");
             input.replacement = Some(Op::parse_op(operation.trim())?);
@@ -13872,10 +14209,10 @@ fn parse_supersede_input_lines<Op: OpText>(lines: &[&str], inputs: &mut Vec<Supe
             continue;
         }
         if awaiting_replacement {
-            return Err(crate::os_dsl::__rt::field_error("a replace line needs its 4-space-indented replacement operation"));
+            return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("a replace line needs its 4-space-indented replacement operation").to_string(),semio_framework_diagnostic::TextSpan::at(1,1)));
         }
         let Some(line) = raw.strip_prefix("  ") else {
-            return Err(crate::os_dsl::__rt::field_error(format!("expected a 2-space-indented supersede input line, got: {raw:?}")));
+            return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("expected a 2-space-indented supersede input line, got: {raw:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)));
         };
         match SupersedeInputLine::parse_op(line.trim())? {
             SupersedeInputLine::Replace { target } => {
@@ -13886,10 +14223,10 @@ fn parse_supersede_input_lines<Op: OpText>(lines: &[&str], inputs: &mut Vec<Supe
         }
     }
     if awaiting_replacement {
-        return Err(crate::os_dsl::__rt::field_error("a replace line needs its 4-space-indented replacement operation"));
+        return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("a replace line needs its 4-space-indented replacement operation").to_string(),semio_framework_diagnostic::TextSpan::at(1,1)));
     }
     if inputs.is_empty() {
-        return Err(crate::os_dsl::__rt::field_error("supersede requires at least one input line"));
+        return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("supersede requires at least one input line").to_string(),semio_framework_diagnostic::TextSpan::at(1,1)));
     }
     Ok(())
 }
@@ -13947,21 +14284,21 @@ fn read_supersede_input<Op: OpBinary>(reader: &mut crate::os_pack::ByteReader<'_
 /// 🎞️ Handcrafted OpText (P6).
 impl OpText for CommandHeaderLine {
     fn parse_op(line: &str) -> Result<Self, TextError> {
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = crate::os_dsl::parse(line, &(spec_fn.ordinary)(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
-                return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = semio_framework_dsl_record::parse(line, &(spec_fn.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?;
+                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown operation line '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
     }
     fn print_op(&self) -> String {
-        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        crate::os_dsl::print(&record, &(spec_fn.ordinary)(), crate::os_dsl::JoinMode::Inline)
+        semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline)
     }
 }
 
@@ -13969,8 +14306,8 @@ impl OpText for CommandHeaderLine {
 impl OpBinary for CommandHeaderLine {
     fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
         let spec = (variants[ordinal].1.ordinary)();
         let body = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
@@ -13988,13 +14325,13 @@ impl OpBinary for CommandHeaderLine {
             return Err(crate::os_spr::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
         }
         let ordinal = reader.read_varint_u64()?;
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
         let spec = (spec_fn.ordinary)();
         let body = &bytes[reader.position()..];
         let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
         let record_offset = reader.position() as u64;
-        <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
+        <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
     }
 }
 //#endregion 🔖️OpCodec
@@ -14014,7 +14351,7 @@ async fn parse_undo_policy_token(token: &str) -> Result<UndoPolicy, TextError> {
         "transform-against-concurrent" => Ok(UndoPolicy::TransformAgainstConcurrent),
         "semantic-undo" => Ok(UndoPolicy::SemanticUndo),
         "compensating-action" => Ok(UndoPolicy::CompensatingAction),
-        other => Err(crate::os_dsl::__rt::field_error(format!("unknown undo policy token {other:?}"))),
+        other => Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown undo policy token {other:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1))),
     }
 }
 
@@ -14037,7 +14374,7 @@ fn undo_policy_from_ordinal(ordinal: u8) -> Result<UndoPolicy, crate::os_spr::Pr
     }
 }
 
-/// 🛤️ `HistoryLane`'s text token — the `ApplyInLane`/`AmendInLane`/`UndoInLane`/
+/// 🛤️ `HistoryLane`'s text token — the `ApplyInLane`/`UndoInLane`/
 /// `RedoInLane` command lines' `lane=...` value, mirroring `undo_policy_to_token`'s convention.
 async fn history_lane_to_token(lane: HistoryLane) -> &'static str {
     match lane {
@@ -14050,7 +14387,7 @@ async fn parse_history_lane_token(token: &str) -> Result<HistoryLane, TextError>
     match token {
         "document" => Ok(HistoryLane::Document),
         "interaction" => Ok(HistoryLane::Interaction),
-        other => Err(crate::os_dsl::__rt::field_error(format!("unknown history lane token {other:?}"))),
+        other => Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown history lane token {other:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1))),
     }
 }
 
@@ -14085,7 +14422,7 @@ async fn parse_merge_policy_token(token: &str) -> Result<crate::os_spr::MergePol
         "laissez-faire" => Ok(crate::os_spr::MergePolicy::LaissezFaire),
         "normal" => Ok(crate::os_spr::MergePolicy::Normal),
         "vigilant" => Ok(crate::os_spr::MergePolicy::Vigilant),
-        other => Err(crate::os_dsl::__rt::field_error(format!("unknown merge policy token {other:?}"))),
+        other => Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown merge policy token {other:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1))),
     }
 }
 
@@ -14102,7 +14439,7 @@ async fn parse_conflict_resolution_token(token: &str) -> Result<crate::os_spr::C
     match token {
         "accept" => Ok(crate::os_spr::ConflictResolution::Accept),
         "discard" => Ok(crate::os_spr::ConflictResolution::Discard),
-        other => Err(crate::os_dsl::__rt::field_error(format!("unknown conflict resolution token {other:?}"))),
+        other => Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown conflict resolution token {other:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1))),
     }
 }
 
@@ -14146,7 +14483,7 @@ async fn parse_indented_ops<P, Op: OpText + self::Mutation<P>>(body_lines: &[&st
     for raw in body_lines {
         let parsed = match raw.starts_with("  ") {
             true => Op::parse_op(raw.trim()),
-            false => Err(crate::os_dsl::__rt::field_error(format!("expected a 2-space-indented op line, got: {raw:?}"))),
+            false => Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("expected a 2-space-indented op line, got: {raw:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1))),
         };
         match parsed {
             Ok(operation) => mutations.push(operation),
@@ -14166,7 +14503,7 @@ async fn dedent_command_lines(lines: &[&str]) -> Result<String, TextError> {
     let mut out = String::new();
     for raw in lines {
         if !raw.starts_with("  ") {
-            return Err(crate::os_dsl::__rt::field_error(format!("expected a 2-space-indented nested command line, got: {raw:?}")));
+            return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("expected a 2-space-indented nested command line, got: {raw:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)));
         }
         out.push_str(&raw[2..]);
         out.push('\n');
@@ -14175,7 +14512,7 @@ async fn dedent_command_lines(lines: &[&str]) -> Result<String, TextError> {
 }
 
 /// 📤️ Prints a `ArtifactCommand` as its one-line-per-structural-field header, plus any
-/// 2-space-indented operation lines (`Apply`/`AmendLast`) or a further-indented nested command
+/// 2-space-indented operation lines (`Apply`) or a further-indented nested command
 /// block (`UndoWithPolicy`'s `semantic_command`) — the maximum-token-efficient textual twin of
 /// `encode_command`. `Author::avatar` is never printed, mirroring `OpsAuthor`'s `by=[...]` law.
 pub async fn print_command<Op: OpText>(command: &ArtifactCommand<Op>) -> Result<String, VcsError> {
@@ -14224,19 +14561,9 @@ pub async fn print_command<Op: OpText>(command: &ArtifactCommand<Op>) -> Result<
             out.push_str(&CommandHeaderLine::Checkout { id: checkpoint_id.clone() }.print_op());
             out.push('\n');
         }
-        ArtifactCommand::AmendLast { mutations, coalesce_key } => {
-            out.push_str(&CommandHeaderLine::Amend { key: coalesce_key.clone() }.print_op());
-            out.push('\n');
-            print_indented_ops(&mut out, mutations).await?;
-        }
         ArtifactCommand::ApplyInLane { mutations, description, lane, transaction } => {
             let (transaction, tool) = transaction_text(transaction.as_ref());
             out.push_str(&CommandHeaderLine::ApplyInLane { description: description.clone(), lane: history_lane_to_token(*lane).await.to_string(), transaction, tool }.print_op());
-            out.push('\n');
-            print_indented_ops(&mut out, mutations).await?;
-        }
-        ArtifactCommand::AmendLastInLane { mutations, coalesce_key, lane } => {
-            out.push_str(&CommandHeaderLine::AmendInLane { key: coalesce_key.clone(), lane: history_lane_to_token(*lane).await.to_string() }.print_op());
             out.push('\n');
             print_indented_ops(&mut out, mutations).await?;
         }
@@ -14305,8 +14632,8 @@ pub async fn parse_command<P, Op: OpText + self::Mutation<P>>(text: &str) -> Res
         body_start = index + 1;
         break;
     }
-    let (header_line_no, header_text) = header.ok_or_else(|| crate::os_dsl::__rt::field_error("empty command text"))?;
-    let header_line = CommandHeaderLine::parse_op(header_text).map_err(|error| TextError::new(error.message, TextSpan::at(header_line_no, error.span.column)))?;
+    let (header_line_no, header_text) = header.ok_or_else(|| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("empty command text").to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))?;
+    let header_line = CommandHeaderLine::parse_op(header_text).map_err(|error| TextError { span: TextSpan::at(header_line_no, error.span.column), ..error })?;
     let body_lines: Vec<&str> = all_lines[body_start..].iter().filter(|line| !line.trim().is_empty() && !line.trim().starts_with('#')).copied().collect();
 
     match header_line {
@@ -14314,7 +14641,7 @@ pub async fn parse_command<P, Op: OpText + self::Mutation<P>>(text: &str) -> Res
             let transaction = transaction_from_text(transaction, tool)?;
             let mutations = parse_indented_ops::<P, Op>(&body_lines).await?;
             if mutations.is_empty() {
-                return Err(crate::os_dsl::__rt::field_error("apply requires at least one operation line"));
+                return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("apply requires at least one operation line").to_string(),semio_framework_diagnostic::TextSpan::at(1,1)));
             }
             Ok(ArtifactCommand::Apply { mutations, description, transaction })
         }
@@ -14334,30 +14661,15 @@ pub async fn parse_command<P, Op: OpText + self::Mutation<P>>(text: &str) -> Res
         CommandHeaderLine::CreateAlternative { name } => Ok(ArtifactCommand::CreateAlternative { name }),
         CommandHeaderLine::SwitchAlternative { id } => Ok(ArtifactCommand::SwitchAlternative { alternative_id: id }),
         CommandHeaderLine::Checkout { id } => Ok(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: id }),
-        CommandHeaderLine::Amend { key } => {
-            let mutations = parse_indented_ops::<P, Op>(&body_lines).await?;
-            if mutations.is_empty() {
-                return Err(crate::os_dsl::__rt::field_error("amend requires at least one operation line"));
-            }
-            Ok(ArtifactCommand::AmendLast { mutations, coalesce_key: key })
-        }
         CommandHeaderLine::PruneDrafts => Ok(ArtifactCommand::PruneDrafts),
         CommandHeaderLine::ApplyInLane { description, lane, transaction, tool } => {
             let transaction = transaction_from_text(transaction, tool)?;
             let lane = parse_history_lane_token(&lane).await?;
             let mutations = parse_indented_ops::<P, Op>(&body_lines).await?;
             if mutations.is_empty() {
-                return Err(crate::os_dsl::__rt::field_error("apply-in-lane requires at least one operation line"));
+                return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("apply-in-lane requires at least one operation line").to_string(),semio_framework_diagnostic::TextSpan::at(1,1)));
             }
             Ok(ArtifactCommand::ApplyInLane { mutations, description, lane, transaction })
-        }
-        CommandHeaderLine::AmendInLane { key, lane } => {
-            let lane = parse_history_lane_token(&lane).await?;
-            let mutations = parse_indented_ops::<P, Op>(&body_lines).await?;
-            if mutations.is_empty() {
-                return Err(crate::os_dsl::__rt::field_error("amend-in-lane requires at least one operation line"));
-            }
-            Ok(ArtifactCommand::AmendLastInLane { mutations, coalesce_key: key, lane })
         }
         CommandHeaderLine::UndoInLane { lane } => Ok(ArtifactCommand::UndoInLane { lane: parse_history_lane_token(&lane).await? }),
         CommandHeaderLine::RedoInLane { lane } => Ok(ArtifactCommand::RedoInLane { lane: parse_history_lane_token(&lane).await? }),
@@ -14368,7 +14680,7 @@ pub async fn parse_command<P, Op: OpText + self::Mutation<P>>(text: &str) -> Res
         CommandHeaderLine::AppendTransaction { transaction, tool } => {
             let mutations = parse_indented_ops::<P, Op>(&body_lines).await?;
             if mutations.is_empty() {
-                return Err(crate::os_dsl::__rt::field_error("append-transaction requires at least one operation line"));
+                return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("append-transaction requires at least one operation line").to_string(),semio_framework_diagnostic::TextSpan::at(1,1)));
             }
             Ok(ArtifactCommand::AppendTransaction { mutations, transaction: protocol::TransactionRef { id: transaction, tool } })
         }
@@ -14390,7 +14702,7 @@ fn transaction_from_text(transaction: Option<String>, tool: Option<String>) -> R
     match (transaction, tool) {
         (Some(id), Some(tool)) => Ok(Some(protocol::TransactionRef { id, tool })),
         (None, None) => Ok(None),
-        _ => Err(crate::os_dsl::__rt::field_error("a transaction needs both its id and its tool")),
+        _ => Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("a transaction needs both its id and its tool").to_string(),semio_framework_diagnostic::TextSpan::at(1,1))),
     }
 }
 
@@ -14478,7 +14790,9 @@ impl std::fmt::Display for CommandDecodeError {
     }
 }
 
-impl std::error::Error for CommandDecodeError {}
+impl std::error::Error for CommandDecodeError {
+    fn source(&self)->Option<&(dyn std::error::Error+'static)>{match self{Self::Layout(error)|Self::Operation{error,..}=>Some(error)}}
+}
 
 impl From<crate::os_spr::ProtocolError> for CommandDecodeError {
     fn from(error: crate::os_spr::ProtocolError) -> Self {
@@ -14492,7 +14806,11 @@ impl From<crate::os_pack::PackError> for CommandDecodeError {
     }
 }
 
-protocol::fault_from_error!(CommandDecodeError, crate::os_dsl::FaultOrigin::Module, "module.store.command");
+impl From<pack::PackRefusal> for CommandDecodeError {
+    fn from(error:pack::PackRefusal)->Self{Self::Layout(error.into())}
+}
+
+semio_framework_diagnostic::fault_from_error!(CommandDecodeError, semio_framework_diagnostic::FaultOrigin::Module, "module.store.command");
 
 /// 🧊️ Retires operations nobody will apply through their technology's cold disposal.
 fn retire_operations<P, Op: self::Mutation<P>>(operations: impl IntoIterator<Item = Op>) {
@@ -14504,9 +14822,7 @@ fn retire_operations<P, Op: self::Mutation<P>>(operations: impl IntoIterator<Ite
 /// 🪦️ Retires every operation a command owns — its operation list, its supersede replacements, its nested command.
 fn retire_command<P, Op: self::Mutation<P>>(command: ArtifactCommand<Op>) {
     match command {
-        ArtifactCommand::Apply { mutations, .. } | ArtifactCommand::ApplyInLane { mutations, .. } | ArtifactCommand::AmendLast { mutations, .. } | ArtifactCommand::AmendLastInLane { mutations, .. } | ArtifactCommand::AppendTransaction { mutations, .. } => {
-            retire_operations::<P, Op>(mutations)
-        }
+        ArtifactCommand::Apply { mutations, .. } | ArtifactCommand::ApplyInLane { mutations, .. } | ArtifactCommand::AppendTransaction { mutations, .. } => retire_operations::<P, Op>(mutations),
         ArtifactCommand::Supersede { inputs, .. } | ArtifactCommand::CreateAlternativeWithSupersede { inputs, .. } => retire_supersede_inputs::<P, Op>(inputs),
         ArtifactCommand::UndoWithPolicy { semantic_command: Some(nested), .. } => retire_command::<P, Op>(*nested),
         ArtifactCommand::UndoWithPolicy { semantic_command: None, .. }
@@ -14534,8 +14850,7 @@ fn retire_command<P, Op: self::Mutation<P>>(command: ArtifactCommand<Op>) {
 /// other crate's already-`OpBinary` type" as a `crate::os_dsl::DslField` shape. This hand-written impl is the
 /// one place `ArtifactCommand`'s binary layout is still spelled out by hand — everywhere else in the
 /// workspace, encoding is derive-generated. Byte layout matches the convention exactly: `format u8
-/// (=1, see `COMMAND_BINARY_FORMAT`) | variant ordinal varint (`ArtifactCommand` declaration order,
-/// numerically identical to the old hand-rolled tag byte for these 9 variants since LEB128 varints
+/// (=1, see `COMMAND_BINARY_FORMAT`) | fixed variant ordinal varint (one stable number per variant; LEB128 varints
 /// under 128 are single bytes) | body`. The binary twin of `print_command`/`parse_command`. LAW:
 /// `ArtifactCommand::decode_command(&command.encode_command()?) == Ok(command)`. Not an `OpBinary`: decoding needs the
 /// operations' projection `P` to retire what a refused command decoded, which the P-agnostic `OpBinary` cannot name.
@@ -14589,14 +14904,6 @@ impl<Op: OpBinary> ArtifactCommand<Op> {
                 crate::os_pack::write_varint_u64(&mut out, 7);
                 write_command_str(&mut out, checkpoint_id);
             }
-            ArtifactCommand::AmendLast { mutations, coalesce_key } => {
-                crate::os_pack::write_varint_u64(&mut out, 8);
-                out.push(if coalesce_key.is_some() { 0b01 } else { 0 });
-                if let Some(key) = coalesce_key {
-                    write_command_str(&mut out, key);
-                }
-                write_command_ops(&mut out, mutations)?;
-            }
             ArtifactCommand::IngestRemote { envelope } => {
                 crate::os_pack::write_varint_u64(&mut out, 9);
                 let mut bytes = Vec::new();
@@ -14612,15 +14919,6 @@ impl<Op: OpBinary> ArtifactCommand<Op> {
                     write_command_str(&mut out, text);
                 }
                 write_command_transaction(&mut out, transaction.as_ref());
-                out.push(history_lane_ordinal(*lane));
-                write_command_ops(&mut out, mutations)?;
-            }
-            ArtifactCommand::AmendLastInLane { mutations, coalesce_key, lane } => {
-                crate::os_pack::write_varint_u64(&mut out, 12);
-                out.push(if coalesce_key.is_some() { 0b01 } else { 0 });
-                if let Some(key) = coalesce_key {
-                    write_command_str(&mut out, key);
-                }
                 out.push(history_lane_ordinal(*lane));
                 write_command_ops(&mut out, mutations)?;
             }
@@ -14735,12 +15033,6 @@ impl<Op: OpBinary> ArtifactCommand<Op> {
             5 => Ok(ArtifactCommand::CreateAlternative { name: read_command_str(reader)? }),
             6 => Ok(ArtifactCommand::SwitchAlternative { alternative_id: read_command_str(reader)? }),
             7 => Ok(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: read_command_str(reader)? }),
-            8 => {
-                let presence = reader.read_u8()?;
-                let coalesce_key = if presence & 0b01 != 0 { Some(read_command_str(reader)?) } else { None };
-                let mutations = read_command_ops::<P, Op>(reader)?;
-                Ok(ArtifactCommand::AmendLast { mutations, coalesce_key })
-            }
             9 => {
                 let len = reader.read_varint_u64()?;
                 let bytes = reader.read_bytes(len as usize)?;
@@ -14756,13 +15048,6 @@ impl<Op: OpBinary> ArtifactCommand<Op> {
                 let lane = history_lane_from_ordinal(reader.read_u8()?)?;
                 let mutations = read_command_ops::<P, Op>(reader)?;
                 Ok(ArtifactCommand::ApplyInLane { mutations, description, lane, transaction })
-            }
-            12 => {
-                let presence = reader.read_u8()?;
-                let coalesce_key = if presence & 0b01 != 0 { Some(read_command_str(reader)?) } else { None };
-                let lane = history_lane_from_ordinal(reader.read_u8()?)?;
-                let mutations = read_command_ops::<P, Op>(reader)?;
-                Ok(ArtifactCommand::AmendLastInLane { mutations, coalesce_key, lane })
             }
             13 => Ok(ArtifactCommand::UndoInLane { lane: history_lane_from_ordinal(reader.read_u8()?)? }),
             14 => Ok(ArtifactCommand::RedoInLane { lane: history_lane_from_ordinal(reader.read_u8()?)? }),
@@ -14800,7 +15085,7 @@ impl<Op: OpBinary> ArtifactCommand<Op> {
 //#region 🔖️History
 //#region 🔖️History
 /// 📜️ One row of a checkpoint history/ancestor graph.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct HistoryColumn {
     pub checkpoint_id: String,
@@ -14923,6 +15208,54 @@ struct CursorRevisionAccumulator {
     applied_tail_chains: Option<([u8; 32], EditDigestChains)>,
 }
 
+/// 📍️ The first applied and redo positions whose ids changed since [`ArtifactStore::bump`] last mirrored both stacks into the
+/// persisted cursor and the revision records — what keeps both mirrors O(change) per mutation. `usize::MAX` is clean.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct StackMirrorDirt {
+    applied: usize,
+    redo: usize,
+}
+
+impl StackMirrorDirt {
+    const CLEAN: Self = Self { applied: usize::MAX, redo: usize::MAX };
+    const ALL: Self = Self { applied: 0, redo: 0 };
+}
+
+/// 🧮️ Test-only census of whole-history work on the mutation path: full folds of the event log, edits hashed for prefix
+/// digests, ids mirrored into the persisted cursor and revision records rebuilt — what the O(change) laws count.
+#[cfg(test)]
+pub(crate) mod hot_path_census {
+    thread_local! {
+        static CENSUS: std::cell::Cell<HotPathCensus> = const { std::cell::Cell::new(HotPathCensus { folds: 0, digested: 0, mirrored: 0, rebuilt: 0 }) };
+    }
+
+    /// 📊️ Counts since the thread's last [`take`].
+    #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+    pub struct HotPathCensus {
+        pub folds: usize,
+        pub digested: usize,
+        pub mirrored: usize,
+        pub rebuilt: usize,
+    }
+
+    pub(crate) fn count(update: impl FnOnce(&mut HotPathCensus)) {
+        CENSUS.with(|census| {
+            let mut next = census.get();
+            update(&mut next);
+            census.set(next);
+        });
+    }
+
+    /// 🧾️ The counts so far, resetting them.
+    pub fn take() -> HotPathCensus {
+        CENSUS.with(|census| census.replace(HotPathCensus::default()))
+    }
+}
+
+/// 🔬️ Histories up to this many applied edits re-derive every incremental mirror from scratch after each test-build bump.
+#[cfg(test)]
+const MIRROR_ORACLE_HISTORY: usize = 256;
+
 /// 🔗️ Running per-list digests of a coalesced edit's operations: what lets an amend extend its edit's revision identity by
 /// the operations it appended instead of re-encoding the whole run (a typing run amends one edit per key).
 #[derive(Clone, Copy, Default)]
@@ -14943,19 +15276,30 @@ impl EditDigestChains {
             return None;
         }
         for operation in &edit.forwards[self.forwards..] {
-            self.forwards_digest = CursorRevisionAccumulator::hash_record(b"edit-forward", &[&self.forwards_digest, crate::os_pack::json::to_json_string(operation).as_bytes()]);
+            self.forwards_digest = CursorRevisionAccumulator::hash_record(b"edit-forward", &[&self.forwards_digest, semio_framework_pack_json::to_json_string(operation).as_bytes()]);
         }
         for operation in &edit.inverse[self.inverse..] {
-            self.inverse_digest = CursorRevisionAccumulator::hash_record(b"edit-inverse", &[&self.inverse_digest, crate::os_pack::json::to_json_string(operation).as_bytes()]);
+            self.inverse_digest = CursorRevisionAccumulator::hash_record(b"edit-inverse", &[&self.inverse_digest, semio_framework_pack_json::to_json_string(operation).as_bytes()]);
         }
         for meta in &edit.mutation_meta[self.meta..] {
-            self.meta_digest = CursorRevisionAccumulator::hash_record(b"edit-meta", &[&self.meta_digest, crate::os_pack::json::to_json_string(meta).as_bytes()]);
+            self.meta_digest = CursorRevisionAccumulator::hash_record(b"edit-meta", &[&self.meta_digest, semio_framework_pack_json::to_json_string(meta).as_bytes()]);
         }
         self.forwards = edit.forwards.len();
         self.inverse = edit.inverse.len();
         self.meta = edit.mutation_meta.len();
         Some(self)
     }
+}
+
+/// 🌱️ The identity digest of a document's genesis every load path names its content revision from — a whole load, a retained
+/// initializer of any app — so one history reloaded either way names one revision (design §3.7).
+pub fn artifact_initial_digest<P: ArtifactPack>(initial: &P) -> [u8; 32] {
+    artifact_initial_digest_of_pack(&initial.encode_pack())
+}
+
+/// 🌱️ [`artifact_initial_digest`] of a genesis already encoded as its pack.
+pub fn artifact_initial_digest_of_pack(pack: &[u8]) -> [u8; 32] {
+    *semio_framework_hash::hash(pack).as_bytes()
 }
 
 /// 🧮️ Domain-neutral incremental digest for retained store initialization. A
@@ -14991,6 +15335,67 @@ impl ArtifactStoreInitializationDigest {
     }
 }
 
+/// 🗂️ The edit ids of an envelope a retained initializer validates, admitted one edit per job step ([`Self::admit`]) and
+/// found in O(1) ([`Self::position`]): the one mechanism that keeps every store initializer's duplicate check and its
+/// applied and redo lookups linear in the history.
+#[derive(Debug, Default)]
+pub struct ArtifactStoreInitializationEditIndex {
+    positions: HashMap<String, usize>,
+}
+
+/// 🪜️ What admitting one edit to an [`ArtifactStoreInitializationEditIndex`] found.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ArtifactStoreInitializationEditAdmission {
+    Admitted,
+    Complete,
+    Oversized,
+    Duplicate,
+}
+
+impl ArtifactStoreInitializationEditIndex {
+    /// ➕️ Admits the edit at `position` of `edits`: `Complete` once no edit is left, `Oversized` when its id is longer than
+    /// `max_id_bytes`, `Duplicate` when it repeats an admitted edit's id.
+    pub fn admit<Mutation>(&mut self, edits: &ArtifactHistoryLedger<Edit<Mutation>>, position: usize, max_id_bytes: usize) -> ArtifactStoreInitializationEditAdmission {
+        match edits.get(position) {
+            None => ArtifactStoreInitializationEditAdmission::Complete,
+            Some(edit) if edit.id.len() > max_id_bytes => ArtifactStoreInitializationEditAdmission::Oversized,
+            Some(edit) if self.positions.insert(edit.id.clone(), position).is_some() => ArtifactStoreInitializationEditAdmission::Duplicate,
+            Some(_) => ArtifactStoreInitializationEditAdmission::Admitted,
+        }
+    }
+
+    /// 🔎️ The ledger position of the admitted edit `edit_id`.
+    pub fn position(&self, edit_id: &str) -> Option<usize> {
+        self.positions.get(edit_id).copied()
+    }
+
+    /// 🧹️ Forgets every admitted id once the applied and redo lookups are done.
+    pub fn clear(&mut self) {
+        self.positions = HashMap::new();
+    }
+
+    /// 🧹️ Forgets at most `maximum` admitted ids once the applied and redo lookups are done — one bounded slice per job
+    /// step, never the whole index at once — and answers whether none is left (its table released).
+    pub fn retire_step(&mut self, maximum: usize) -> bool {
+        self.positions.extract_if(|_, _| true).take(maximum).for_each(drop);
+        if !self.positions.is_empty() {
+            return false;
+        }
+        self.positions = HashMap::new();
+        true
+    }
+}
+
+/// ▶️ What folding one forward of an applied edit left ([`ArtifactStoreInitializationRuntime::fold_forward`]).
+pub enum ArtifactStoreInitializationForward<P> {
+    /// 🏁️ The edit has no forward at that index.
+    Exhausted,
+    /// ⏭️ The forward's effective input folded with keep-and-record semantics: `displaced` is the projection it replaced
+    /// (`None` when it folded as a no-op — withdrawn, faulted or refused), which the caller retires through its own factory;
+    /// `fuel` is the operation's encoded size (1 without an operation).
+    Folded { displaced: Option<P>, fuel: usize },
+}
+
 impl CursorRevisionAccumulator {
     fn hash_record(domain: &[u8], parts: &[&[u8]]) -> [u8; 32] {
         let mut digest = semio_framework_hash::Sha256::new();
@@ -15019,7 +15424,7 @@ impl CursorRevisionAccumulator {
     /// 🔏️ [`Self::edit_digest`], continuing `known` chains when the edit only grew since they were taken (an amend).
     fn edit_digest_extending<Mutation: ToValue>(edit: &Edit<Mutation>, known: Option<EditDigestChains>) -> ([u8; 32], Option<EditDigestChains>) {
         if edit.forwards.len() <= 1 {
-            let encoded = crate::os_pack::json::to_json_string(edit).into_bytes();
+            let encoded = semio_framework_pack_json::to_json_string(edit).into_bytes();
             return (Self::hash_record(b"edit", &[edit.id.as_bytes(), &encoded]), None);
         }
         let chains = known.and_then(|chains| chains.extended(edit)).unwrap_or_else(|| EditDigestChains::default().extended(edit).expect("empty chains extend every edit"));
@@ -15032,8 +15437,6 @@ impl CursorRevisionAccumulator {
                 edit.actor.as_deref().unwrap_or_default().as_bytes(),
                 &tag(edit.description.as_ref()),
                 edit.description.as_deref().unwrap_or_default().as_bytes(),
-                &tag(edit.coalesce_key.as_ref()),
-                edit.coalesce_key.as_deref().unwrap_or_default().as_bytes(),
                 &edit.sequence_number.to_be_bytes(),
                 edit.started_at.as_bytes(),
                 &tag(edit.finished_at.as_ref()),
@@ -15065,8 +15468,10 @@ impl CursorRevisionAccumulator {
         }
     }
 
-    /// 🧮️ `dirty_from` names the first position a replay rewrote (effective input, inverse or messages): records from
-    /// there on are rebuilt even where the ids still match.
+    /// 🧮️ Rebuilds the records of `ids` from the first position whose id changed (`dirty`, [`StackMirrorDirt`]) and keeps
+    /// the common prefix untouched; a tail edit that only grew (an amend) regrows its one record. `dirty_from` names the
+    /// first position a replay rewrote (effective input, inverse or messages): records from there on are rebuilt even where
+    /// the ids still match. Answers the position of a regrown tail record.
     #[allow(clippy::too_many_arguments)]
     fn reconcile_stack<P, Mutation: ToValue + self::Mutation<P>>(
         records: &mut crate::os_vcs::HistoryPageStack<CursorRevisionRecord>,
@@ -15076,12 +15481,10 @@ impl CursorRevisionAccumulator {
         identity_digest: [u8; 32],
         tail_chains: &mut Option<([u8; 32], EditDigestChains)>,
         supersessions: &EffectiveSupersessions,
+        dirty: usize,
         dirty_from: Option<usize>,
-    ) -> Vec<String> {
-        let mut common = 0;
-        while common < records.len().min(ids.len()) && records[common].id_digest == Self::hash_record(b"edit-id", &[ids[common].as_bytes()]) {
-            common += 1;
-        }
+    ) -> Option<usize> {
+        let mut common = records.len().min(ids.len()).min(dirty);
         if let Some(dirty_from) = dirty_from {
             common = common.min(dirty_from);
             if common < records.len() {
@@ -15094,7 +15497,7 @@ impl CursorRevisionAccumulator {
         let mut regrown = None;
         if common == ids.len() && common != 0 {
             let id = &ids[common - 1];
-            let edit = edits.iter().find(|edit| edit.id == *id).expect("validated cursor edit exists");
+            let edit = edits.find_near(|edit| edit.id == *id).expect("validated cursor edit exists");
             let known = tail_chains.filter(|(id_digest, _)| *id_digest == records[common - 1].id_digest).map(|(_, chains)| chains);
             let (edit_digest, chains) = Self::edit_digest_extending(edit, known);
             let edit_digest = Self::effective_edit_digest::<P, Mutation>(edit, edit_digest, supersessions);
@@ -15105,12 +15508,15 @@ impl CursorRevisionAccumulator {
                 regrown = Some(edit_digest);
             }
         }
-        for id in ids.iter().skip(common) {
+        let regrown_at = regrown.is_some().then_some(common);
+        #[cfg(test)]
+        hot_path_census::count(|census| census.rebuilt += ids.len() - common);
+        for id in ids.iter_from(common) {
             let id_digest = Self::hash_record(b"edit-id", &[id.as_bytes()]);
             let edit_digest = match regrown.take() {
                 Some(edit_digest) => edit_digest,
                 None => {
-                    let edit = edits.iter().find(|edit| edit.id == *id).expect("validated cursor edit exists");
+                    let edit = edits.find_near(|edit| edit.id == *id).expect("validated cursor edit exists");
                     let (edit_digest, chains) = Self::edit_digest_extending(edit, None);
                     *tail_chains = chains.map(|chains| (id_digest, chains));
                     Self::effective_edit_digest::<P, Mutation>(edit, edit_digest, supersessions)
@@ -15120,13 +15526,23 @@ impl CursorRevisionAccumulator {
             let prefix_digest = Self::hash_record(domain, &[&previous, &edit_digest]);
             records.push(CursorRevisionRecord { id_digest, edit_digest, prefix_digest });
         }
-        Vec::new()
+        regrown_at
     }
 
-    fn reconcile<P, Mutation: ToValue + self::Mutation<P>>(&mut self, applied_ids: &crate::os_vcs::HistoryPageStack<String>, redo_ids: &crate::os_vcs::HistoryPageStack<String>, edits: &ArtifactHistoryLedger<Edit<Mutation>>, supersessions: &EffectiveSupersessions, dirty_from: Option<usize>) -> (Vec<String>, Vec<String>) {
-        let applied = Self::reconcile_stack::<P, Mutation>(&mut self.applied, applied_ids, edits, b"applied", self.identity_digest, &mut self.applied_tail_chains, supersessions, dirty_from);
-        let redo = Self::reconcile_stack::<P, Mutation>(&mut self.redo, redo_ids, edits, b"redo", self.identity_digest, &mut None, supersessions, dirty_from.map(|_| 0));
-        (applied, redo)
+    /// 🧮️ Reconciles both cursor stacks ([`Self::reconcile_stack`]); a replay rewrite rebuilds the whole redo stack. Answers
+    /// the position of a regrown applied tail record.
+    fn reconcile<P, Mutation: ToValue + self::Mutation<P>>(
+        &mut self,
+        applied_ids: &crate::os_vcs::HistoryPageStack<String>,
+        redo_ids: &crate::os_vcs::HistoryPageStack<String>,
+        edits: &ArtifactHistoryLedger<Edit<Mutation>>,
+        supersessions: &EffectiveSupersessions,
+        dirty: StackMirrorDirt,
+        dirty_from: Option<usize>,
+    ) -> Option<usize> {
+        let regrown = Self::reconcile_stack::<P, Mutation>(&mut self.applied, applied_ids, edits, b"applied", self.identity_digest, &mut self.applied_tail_chains, supersessions, dirty.applied, dirty_from);
+        Self::reconcile_stack::<P, Mutation>(&mut self.redo, redo_ids, edits, b"redo", self.identity_digest, &mut None, supersessions, dirty.redo, dirty_from.map(|_| 0));
+        regrown
     }
 
     fn revision(&self, checkpoint_id: Option<&str>) -> [u8; 32] {
@@ -15248,6 +15664,63 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
         &self.supersessions
     }
 
+    /// 🪞️ Folds transition `transition` of `envelope`'s log — one per job step, in the log's `(hlc, id)` order, a later
+    /// supersession of an operation replacing an earlier one — into the effective supersessions: every input of a
+    /// `Supersede` scoped to the document or to this replica's line ([`crate::os_spr::fold_history_for`]'s rule). A target no
+    /// operation carries matches nothing here; the store's first full fold refuses that history as every fold site does.
+    /// Answers whether another transition follows.
+    pub fn fold_supersession_step<Mutation>(&mut self, envelope: &ArtifactEnvelopeOwners<P, Mutation>, transition: usize) -> Result<bool, String> {
+        let Some(event) = envelope.transitions.get(transition) else { return Ok(false) };
+        if let Some(previous) = transition.checked_sub(1).and_then(|previous| envelope.transitions.get(previous)) {
+            if (previous.timestamp.cmp_key(), previous.mutation_id.0.as_str()) >= (event.timestamp.cmp_key(), event.mutation_id.0.as_str()) {
+                return Err("artifact store history transitions are not in (hlc, id) order".into());
+            }
+        }
+        let Some(crate::os_spr::HistoryTransition::Supersede(supersede)) = crate::os_spr::history_transition_from_envelope(event).map_err(|error| error.to_string())? else {
+            return Ok(true);
+        };
+        let trunk = crate::os_spr::trunk_alternative_id(&ArtifactId(envelope.id.clone()));
+        let line = envelope.active_alternative_id.as_deref().filter(|line| *line != trunk.as_str()).unwrap_or(trunk.as_str());
+        if supersede.scope.as_deref().is_some_and(|scope| scope != line) {
+            return Ok(true);
+        }
+        for input in supersede.inputs {
+            self.supersessions.insert(input.target, protocol::EffectiveSupersession { transition_id: event.mutation_id.0.clone(), actor: event.actor.0.clone(), timestamp: event.timestamp, scope: supersede.scope.clone(), replacement: input.replacement });
+        }
+        Ok(true)
+    }
+
+    /// 🎭️ The effective input of forward `index` of the applied `edit` under the folded supersessions ([`effective_operation`],
+    /// the same operation id every seeding step names), for an initializer that applies operations itself: `operation()` is
+    /// `None` for a withdrawn or faulted input; `None` when the edit has no forward at `index`.
+    pub fn effective_forward<'a, Mutation>(&self, edit: &'a Edit<Mutation>, index: usize, schema: &str) -> Option<EffectiveOperation<'a, P, Mutation>>
+    where
+        Mutation: self::Mutation<P> + OpBinary,
+    {
+        let original = edit.forwards.get(index)?;
+        let mutation_id = edit.mutation_meta.get(index).and_then(|meta| meta.mutation_id.clone()).or_else(|| original.mutation_id()).unwrap_or_else(|| MutationId(format!("{}#{index}", edit.id)));
+        Some(effective_operation::<P, Mutation>(original, index as u32, mutation_id, schema, &self.supersessions))
+    }
+
+    /// ▶️ Folds forward `index` of the applied `edit` onto the current projection through its effective input
+    /// ([`effective_operation`] under the folded supersessions, keep-and-record [`fold_operation`] — a withdrawn, faulted
+    /// or refused operation folds as a no-op exactly as every other fold site folds it). Refuses an operation whose encoding
+    /// fails or exceeds `maximum_bytes`.
+    pub fn fold_forward<Mutation>(&mut self, edit: &Edit<Mutation>, index: usize, schema: &str, maximum_bytes: usize) -> Result<ArtifactStoreInitializationForward<P>, &'static str>
+    where
+        Mutation: self::Mutation<P> + OpBinary,
+    {
+        let Some(effective) = self.effective_forward(edit, index, schema) else { return Ok(ArtifactStoreInitializationForward::Exhausted) };
+        let Some(operation) = effective.operation() else { return Ok(ArtifactStoreInitializationForward::Folded { displaced: None, fuel: 1 }) };
+        let fuel = match operation.encode_op() {
+            Ok(encoded) if encoded.len() <= maximum_bytes => encoded.len().max(1),
+            _ => return Err("artifact store initialization forward encoding exceeds its page"),
+        };
+        let current = self.current.as_mut().ok_or("artifact store initialization lost its current projection")?;
+        let (next, _) = fold_operation::<P, Mutation>(current, operation, index as u32);
+        Ok(ArtifactStoreInitializationForward::Folded { displaced: next.map(|next| std::mem::replace(current, next)), fuel })
+    }
+
     fn push_revision_record(records: &mut crate::os_vcs::HistoryPageStack<CursorRevisionRecord>, identity_digest: [u8; 32], domain: &[u8], id: &str, edit_digest: [u8; 32]) -> Result<(), String> {
         if !records.admits_one() {
             return Err("artifact store revision ledger is saturated".into());
@@ -15258,7 +15731,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
         Ok(())
     }
 
-    pub fn push_applied(&mut self, id: String, edit_digest: [u8; 32]) -> Result<(), String> {
+    fn push_applied(&mut self, id: String, edit_digest: [u8; 32]) -> Result<(), String> {
         if !self.applied_edit_ids.admits_one() || !self.cursor_applied_edit_ids.admits_one() || !self.revision.applied.admits_one() {
             return Err("artifact store applied ledger is saturated".into());
         }
@@ -15269,12 +15742,19 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
         Ok(())
     }
 
+    /// 🔏️ Pushes the applied `edit` with the store's canonical revision record — its digest extended by the folded
+    /// supersessions of its operations (design §3.7) — so a retained reload names the revision a whole load names.
     pub fn push_applied_edit<Mutation: ToValue + self::Mutation<P>>(&mut self, edit: &Edit<Mutation>) -> Result<(), String> {
-        let digest = CursorRevisionAccumulator::effective_edit_digest::<P, Mutation>(edit, CursorRevisionAccumulator::edit_digest(edit), &self.supersessions);
-        self.push_applied(edit.id.clone(), digest)
+        self.push_applied_admitted(edit.id.clone(), edit)
     }
 
-    pub fn push_redo(&mut self, id: String, edit_digest: [u8; 32]) -> Result<(), String> {
+    /// 🔏️ [`Self::push_applied_edit`] under `id`, `edit`'s id the caller already copied under its own grant.
+    pub fn push_applied_admitted<Mutation: ToValue + self::Mutation<P>>(&mut self, id: String, edit: &Edit<Mutation>) -> Result<(), String> {
+        let digest = CursorRevisionAccumulator::effective_edit_digest::<P, Mutation>(edit, CursorRevisionAccumulator::edit_digest(edit), &self.supersessions);
+        self.push_applied(id, digest)
+    }
+
+    fn push_redo(&mut self, id: String, edit_digest: [u8; 32]) -> Result<(), String> {
         if !self.redo_edit_ids.admits_one() || !self.cursor_redo_edit_ids.admits_one() || !self.revision.redo.admits_one() {
             return Err("artifact store redo ledger is saturated".into());
         }
@@ -15285,9 +15765,15 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
         Ok(())
     }
 
+    /// 🔏️ Pushes the redo `edit` with the store's canonical revision record ([`Self::push_applied_edit`]).
     pub fn push_redo_edit<Mutation: ToValue + self::Mutation<P>>(&mut self, edit: &Edit<Mutation>) -> Result<(), String> {
+        self.push_redo_admitted(edit.id.clone(), edit)
+    }
+
+    /// 🔏️ [`Self::push_redo_edit`] under `id`, `edit`'s id the caller already copied under its own grant.
+    pub fn push_redo_admitted<Mutation: ToValue + self::Mutation<P>>(&mut self, id: String, edit: &Edit<Mutation>) -> Result<(), String> {
         let digest = CursorRevisionAccumulator::effective_edit_digest::<P, Mutation>(edit, CursorRevisionAccumulator::edit_digest(edit), &self.supersessions);
-        self.push_redo(edit.id.clone(), digest)
+        self.push_redo(id, digest)
     }
 
     /// 🌱️ Seeds operation `id` of history entry `entry_id` into the causal owner. An edit a replica folded from a peer is
@@ -15323,7 +15809,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
     /// 🧹️ Retires one exact rejected initialization owner. The current snapshot is
     /// always handed to the domain catalog; history identities and the causal graph then advance
     /// one retained child at a time before the shell can become terminal.
-    pub fn close_step(&mut self, current_factory: &dyn ArtifactOwnedValueRetirementFactory<P>, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    pub fn close_step(&mut self, current_factory: &dyn ArtifactOwnedValueRetirementFactory<P>, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if self.taken {
             return Ok(SnapshotRetirementStep::Complete);
         }
@@ -15333,13 +15819,13 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
         if let Some(active) = self.close_active.as_mut() {
             return match active.close_step(maximum_items.min(1), maximum_bytes)? {
                 SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes <= maximum_bytes => Ok(SnapshotRetirementStep::Pending { released_items, released_bytes }),
-                SnapshotRetirementStep::Pending { .. } => Err("artifact store initialization child exceeded its exact close grant".into()),
+                SnapshotRetirementStep::Pending { .. } => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact store initialization child exceeded its exact close grant")),
                 SnapshotRetirementStep::Blocked => Ok(SnapshotRetirementStep::Blocked),
                 SnapshotRetirementStep::Complete if active.terminal_is_empty() => {
                     drop(self.close_active.take());
                     Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
-                SnapshotRetirementStep::Complete => Err("artifact store initialization child reported Complete without terminal-empty ownership".into()),
+                SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact store initialization child reported Complete without terminal-empty ownership")),
             };
         }
         match self.close_phase {
@@ -15440,7 +15926,9 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
     }
 
     #[allow(clippy::type_complexity)]
-    fn into_parts(mut self) -> (P, crate::os_vcs::HistoryPageStack<String>, crate::os_vcs::HistoryPageStack<String>, ArtifactCursor, Option<String>, crate::os_spr::MutationDag, i32, HybridLogicalTimestamp, [u8; 32], CursorRevisionAccumulator, EffectiveSupersessions) {
+    fn into_parts(
+        mut self,
+    ) -> (P, crate::os_vcs::HistoryPageStack<String>, crate::os_vcs::HistoryPageStack<String>, ArtifactCursor, Option<String>, crate::os_spr::MutationDag, i32, HybridLogicalTimestamp, [u8; 32], CursorRevisionAccumulator, EffectiveSupersessions) {
         assert!(self.close_phase == 0 && self.close_active.is_none(), "a closing initialization runtime cannot be adopted");
         let current = self.current.take().expect("validated initialization owns its current snapshot");
         let applied = unsafe { std::mem::ManuallyDrop::take(&mut self.applied_edit_ids) };
@@ -15849,7 +16337,7 @@ impl Eq for ArtifactEditMessageLedger {}
 
 impl ToValue for ArtifactEditMessageLedger {
     fn to_value(&self) -> DslValue {
-        DslValue::Array(self.iter().map(ToValue::to_value).collect())
+        semio_framework_value::DslValue::Array(self.iter().map(semio_framework_value::ToValue::to_value).collect())
     }
 }
 
@@ -15860,18 +16348,18 @@ impl ArtifactEditMessageLedgerRejected {
 }
 
 impl ErasedSnapshotRetirement for ArtifactEditMessageLedgerRejected {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(active) = self.active.as_mut() {
             return match active.close_step(maximum_items, maximum_bytes)? {
                 SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= maximum_items && released_bytes <= maximum_bytes => Ok(SnapshotRetirementStep::Pending { released_items, released_bytes }),
-                SnapshotRetirementStep::Pending { .. } => Err("rejected artifact edit-message owner exceeded its exact close grant".into()),
+                SnapshotRetirementStep::Pending { .. } => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "rejected artifact edit-message owner exceeded its exact close grant")),
                 SnapshotRetirementStep::Blocked => Ok(SnapshotRetirementStep::Blocked),
                 SnapshotRetirementStep::Complete => {
                     if !active.terminal_is_empty() {
-                        return Err("rejected artifact edit-message owner reported Complete without its terminal witness".into());
+                        return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "rejected artifact edit-message owner reported Complete without its terminal witness"));
                     }
                     drop(self.active.take());
                     Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
@@ -15910,9 +16398,9 @@ impl Drop for ArtifactEditMessageLedger {
 #[path = "🧵️canonical-edit/🦀️.rs"]
 mod canonical_edit;
 pub use canonical_edit::{
-    ArtifactCanonicalJson, ArtifactCanonicalJsonArray, ArtifactCanonicalJsonCursor, ArtifactCanonicalJsonEncodeError, ArtifactCanonicalJsonNode, ArtifactCanonicalJsonObject, ArtifactCanonicalJsonReader, ArtifactCanonicalJsonValue,
-    ArtifactCanonicalValue, ArtifactCanonicalValueAdmission, ArtifactCanonicalValueCheckpoint, ArtifactCanonicalValueCloseStep, ArtifactCanonicalValueGrant, ArtifactCanonicalValueLimits, ArtifactCanonicalValueStep,
-    ArtifactStoreOneItemSealCheckpoint, ArtifactStoreOneItemSealer, ARTIFACT_CANONICAL_JSON_CHUNK_BYTES, ARTIFACT_CANONICAL_JSON_DEPTH,
+    ARTIFACT_CANONICAL_JSON_CHUNK_BYTES, ARTIFACT_CANONICAL_JSON_DEPTH, ArtifactCanonicalJson, ArtifactCanonicalJsonArray, ArtifactCanonicalJsonCursor, ArtifactCanonicalJsonEncodeError, ArtifactCanonicalJsonNode, ArtifactCanonicalJsonObject,
+    ArtifactCanonicalJsonReader, ArtifactCanonicalJsonValue, ArtifactCanonicalValue, ArtifactCanonicalValueAdmission, ArtifactCanonicalValueCheckpoint, ArtifactCanonicalValueCloseStep, ArtifactCanonicalValueGrant, ArtifactCanonicalValueLimits,
+    ArtifactCanonicalValueStep, ArtifactStoreOneItemSealCheckpoint, ArtifactStoreOneItemSealer,
 };
 
 pub const ARTIFACT_STORE_ONE_ITEM_MAXIMUM_WORK_ITEMS: usize = 65_536;
@@ -15930,10 +16418,10 @@ pub const ARTIFACT_STORE_ONE_ITEM_ID_BYTES: usize = 256;
 /// mutation therefore costs **2**, not 1 — declaring 1 fail-closes EVERY single-mutation durable
 /// gesture with `batched item candidate failed its exact fixed fold contract` and every multi-item
 /// one with `batched prepared candidate failed its exact fixed commit contract`. Never write the
-/// number at a call site: declare through [`ArtifactStoreOneItemFootprint::for_one_invertible_item`]
-/// or [`ArtifactStoreOneItemFootprint::for_one_item`]
-/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+/// number at a call site: a durable lane declares through [`ArtifactStoreOneItemFootprint::for_leaf`], whose inverse rows
+/// the leaf payload schema declares (`x-semio-inverse-rows`, design §20.5), and an ephemeral lane through
+/// [`ArtifactStoreOneItemFootprint::for_ephemeral_item`] (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct ArtifactStoreOneItemFootprint {
     pub work_items: usize,
@@ -15949,16 +16437,27 @@ impl ArtifactStoreOneItemFootprint {
         self.work_items != 0 && self.work_items <= ARTIFACT_STORE_ONE_ITEM_MAXIMUM_WORK_ITEMS && self.retained_bytes <= ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES
     }
 
-    /// 🧺️ The ONE declaration a durable lane whose mutations are point-invertible makes — one
-    /// forward row and one inverse row. The store's own batched fixtures declare exactly this.
-    pub fn for_one_invertible_item(retained_bytes: usize) -> Self {
-        Self { work_items: ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS, retained_bytes }
+    /// 🧺️ The ONE declaration a durable lane makes for `mutation`: its forward row plus the inverse rows its leaf payload
+    /// schema declares — the upper bound the lane can prove from the mutation alone, since `preflight` never sees the base.
+    pub fn for_leaf<P, M: Mutation<P>>(mutation: &M, retained_bytes: usize) -> Self {
+        Self { work_items: mutation.inverse_rows().saturating_add(1), retained_bytes }
     }
 
-    /// 🧺️ The same declaration for a mutation whose `inverse` yields more than one row — the upper
-    /// bound the lane can prove from the mutation alone, since `preflight` never sees the base.
-    pub fn for_one_item(inverse_rows: usize, retained_bytes: usize) -> Self {
-        Self { work_items: inverse_rows.saturating_add(1), retained_bytes }
+    /// 🐘️ The rows a whole durable gesture declares — every mutation's [`Self::for_leaf`] rows merged — refused as
+    /// [`VcsError::TooLarge`] (`mutation.too-large`, a framework notice) above [`ARTIFACT_STORE_ONE_ITEM_MAXIMUM_WORK_ITEMS`],
+    /// before any preparation, so the runtime tells the person instead of the batch admission failing closed.
+    pub fn for_gesture<P, M: Mutation<P>>(mutations: &[M]) -> Result<Self, VcsError> {
+        let rows = mutations.iter().fold(0usize, |rows, mutation| rows.saturating_add(Self::for_leaf::<P, M>(mutation, 0).work_items));
+        if rows > ARTIFACT_STORE_ONE_ITEM_MAXIMUM_WORK_ITEMS {
+            return Err(VcsError::TooLarge { rows, capacity: ARTIFACT_STORE_ONE_ITEM_MAXIMUM_WORK_ITEMS });
+        }
+        Ok(Self { work_items: rows, retained_bytes: 0 })
+    }
+
+    /// 🫧️ The declaration of one ephemeral (presence, transient, window-transient) item: its single forward row, which no
+    /// inverse ever accompanies.
+    pub fn for_ephemeral_item(retained_bytes: usize) -> Self {
+        Self { work_items: 1, retained_bytes }
     }
 
     /// ➕️ Folds one more admitted item into the gesture-wide declaration a batched publication is
@@ -15970,7 +16469,7 @@ impl ArtifactStoreOneItemFootprint {
 
 /// 🎟️ One scheduler grant. A preparation owner must consume at most one semantic unit even
 /// when both limits are larger than one.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct ArtifactStoreOneItemGrant {
     pub maximum_items: usize,
@@ -15984,7 +16483,7 @@ impl ArtifactStoreOneItemGrant {
 }
 
 /// 📍 Fixed-width replay checkpoint emitted after every accepted preparation unit.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct ArtifactStoreOneItemCheckpoint {
     pub cursor: u32,
@@ -16074,7 +16573,9 @@ impl ArtifactStoreOneItemLiveAuthority {
     }
 
     /// 🌿️ The immutable authored branch of this Store publication.
-    pub fn line_id(&self) -> Option<&str> { self.line.as_deref() }
+    pub fn line_id(&self) -> Option<&str> {
+        self.line.as_deref()
+    }
 
     pub fn group_id(&self) -> Option<&str> {
         self.group_id.as_deref()
@@ -16085,6 +16586,40 @@ impl ArtifactStoreOneItemLiveAuthority {
     /// instead of rewriting it to the store's `<edit-id>#<position>` form.
     pub fn stamped_edit_id(&self) -> Option<&str> {
         self.stamped_edit_id.as_deref()
+    }
+
+    /// 🧾️ The ONE semantic edit a one-item preparation publishes: `forward` with its `inverse` rows, minted entirely from
+    /// this authority (identity, actor, line, group, sequence, clock, base version) so no domain hand-builds an edit or
+    /// invents a field the Store validates. It carries no hand-written description (design §20.6): the fold stamps semantic
+    /// kind, label and transaction, and history labels the row from the leaf.
+    pub fn next_edit<Mutation>(&self, forward: Mutation, inverse: Vec<Mutation>) -> Edit<Mutation> {
+        let id = self.edit_id();
+        Edit {
+            line: self.line.clone(),
+            mutation_meta: vec![MutationMeta {
+                mutation_id: Some(MutationId(format!("{id}#0"))),
+                dependencies: Vec::new(),
+                base_version: self.base_applied_edit_count as u64,
+                author_id: Some(ActorId(self.actor.clone())),
+                timestamp: self.next_clock,
+                undo_policy: UndoPolicy::ExactBaseOnly,
+                payload_hash: None,
+                semantic_kind: None,
+                label: None,
+                group_id: self.group_id.clone(),
+                origin: Default::default(),
+                transaction: None,
+            }],
+            id,
+            actor: Some(self.actor.clone()),
+            forwards: vec![forward],
+            inverse,
+            description: None,
+            verb: None,
+            sequence_number: self.next_sequence_number,
+            started_at: String::new(),
+            finished_at: None,
+        }
     }
 
     /// 🧹️ Transfers the authority Arc and its final actor/group strings into byte-bounded retirement.
@@ -16213,7 +16748,7 @@ pub trait ArtifactStoreOneItemPreparation<P, Mutation>: Send {
     fn take_prepared(&mut self) -> Option<ArtifactStoreOneItemPrepared<P, Mutation>>;
     fn cancel(&mut self);
     fn begin_close(&mut self);
-    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String>;
+    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError>;
     fn terminal_is_empty(&self) -> bool;
 }
 
@@ -16417,7 +16952,7 @@ pub trait ErasedMemberStoreOneItemPublication: Send {
     fn retry(&mut self) -> bool;
     fn acknowledge(&mut self) -> bool;
     fn begin_close(&mut self);
-    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String>;
+    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError>;
     fn terminal_is_empty(&self) -> bool;
 }
 
@@ -16457,7 +16992,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ErasedMemberStoreOneIte
         self.publication.begin_close();
     }
 
-    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if self.group_history.is_some() || self.group_displaced.is_some() {
             return Ok(SnapshotRetirementStep::Blocked);
         }
@@ -16480,14 +17015,17 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ErasedMemberStoreOneIte
 
 impl<P, Mutation> Drop for MemberStoreOneItemPublication<P, Mutation> {
     fn drop(&mut self) {
-        assert!(std::thread::panicking() || (self.member.is_none() && self.publication.terminal_is_empty() && self.group_history.is_none() && self.group_displaced.is_none()), "member publication reached Drop before exact member, reservation, and candidate retirement");
+        assert!(
+            std::thread::panicking() || (self.member.is_none() && self.publication.terminal_is_empty() && self.group_history.is_none() && self.group_displaced.is_none()),
+            "member publication reached Drop before exact member, reservation, and candidate retirement"
+        );
     }
 }
 //#endregion 🧩️MemberOneItemPublication
 
 /// 🔄 Persistent store-side operation phases. Publication and ACK are distinct turns; close
 /// remains observable until the domain owner proves exact terminal emptiness.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub enum ArtifactStoreOneItemPublicationPhase {
     Preparing,
@@ -16550,14 +17088,14 @@ impl<P, Mutation> ArtifactStoreBatchStage<P, Mutation> {
         ArtifactStoreOneItemCheckpoint { cursor: self.folded as u32, completed_items: self.completed_items, completed_bytes: self.completed_bytes, digest: self.digest }
     }
 
-    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if let Some(owner) = self.retiring.as_mut() {
             let step = owner.close_step(grant.maximum_items.min(1), grant.maximum_bytes)?;
             if step != SnapshotRetirementStep::Complete {
                 return Ok(step);
             }
             if !owner.terminal_is_empty() {
-                return Err("staged batch owner retirement reported complete without terminal emptiness".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "staged batch owner retirement reported complete without terminal emptiness"));
             }
             self.retiring = None;
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
@@ -16566,7 +17104,7 @@ impl<P, Mutation> ArtifactStoreBatchStage<P, Mutation> {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(value) = self.edit.inverse.pop().or_else(|| self.edit.forwards.pop()) {
-            let factory = self.mutation_retirement.as_ref().ok_or_else(|| "staged batch edit lacks its exact mutation retirement authority".to_string())?;
+            let factory = self.mutation_retirement.as_ref().ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "staged batch edit lacks its exact mutation retirement authority"))?;
             self.retiring = Some(factory.retire_owned(value));
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -16574,7 +17112,7 @@ impl<P, Mutation> ArtifactStoreBatchStage<P, Mutation> {
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(post) = self.post.take() {
-            let factory = self.snapshot_retirement.as_ref().ok_or_else(|| "staged batch root lacks its exact snapshot retirement authority".to_string())?;
+            let factory = self.snapshot_retirement.as_ref().ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "staged batch root lacks its exact snapshot retirement authority"))?;
             self.retiring = Some(factory.retire(post));
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -16586,7 +17124,7 @@ impl<P, Mutation> ArtifactStoreBatchStage<P, Mutation> {
                 return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: released });
             }
         }
-        for value in [&mut self.edit.actor, &mut self.edit.line, &mut self.edit.description, &mut self.edit.verb, &mut self.edit.coalesce_key, &mut self.edit.finished_at, &mut self.local_actor] {
+        for value in [&mut self.edit.actor, &mut self.edit.line, &mut self.edit.description, &mut self.edit.verb, &mut self.edit.finished_at, &mut self.local_actor] {
             if let Some(taken) = value.take() {
                 return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: taken.len() });
             }
@@ -16611,7 +17149,6 @@ impl<P, Mutation> ArtifactStoreBatchStage<P, Mutation> {
             && self.edit.line.is_none()
             && self.edit.description.is_none()
             && self.edit.verb.is_none()
-            && self.edit.coalesce_key.is_none()
             && self.edit.finished_at.is_none()
             && self.local_actor.is_none()
             && self.mutation_retirement.is_none()
@@ -16644,7 +17181,6 @@ pub struct ArtifactStoreBatchPublication<P, Mutation> {
     close_started: bool,
     fault: Option<String>,
     phase: ArtifactStoreOneItemPublicationPhase,
-    coalesce_key: Option<String>,
     verb: Option<String>,
     transaction: Option<protocol::TransactionRef>,
     outbound: bool,
@@ -16660,12 +17196,6 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
 
     pub fn phase(&self) -> ArtifactStoreOneItemPublicationPhase {
         self.phase
-    }
-
-    /// 🎥️ Latest-wins undo key for this batched gesture. When it matches the tail uncommitted
-    /// document edit, commit amends that edit (one undo step) instead of minting a ledger slot.
-    pub fn set_coalesce_key(&mut self, key: Option<String>) {
-        self.coalesce_key = key.filter(|value| !value.is_empty());
     }
 
     /// 🏷️ The id of the action or command this gesture publishes for, stamped on the gesture's new edit (an amend keeps
@@ -16717,7 +17247,9 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
 
     /// 📍️ Gesture-wide progress survives folding, publication, acknowledgement, and owner retirement.
     pub fn progress(&self) -> ArtifactStoreOneItemCheckpoint {
-        if self.close_started { return self.retained_checkpoint; }
+        if self.close_started {
+            return self.retained_checkpoint;
+        }
         let staged = self.stage.as_ref().map_or(self.retained_checkpoint, |stage| stage.checkpoint());
         let item = if self.item_closing { ArtifactStoreOneItemCheckpoint::default() } else { self.preparation.as_ref().map_or_else(ArtifactStoreOneItemCheckpoint::default, |owner| owner.checkpoint()) };
         ArtifactStoreOneItemCheckpoint {
@@ -16765,7 +17297,7 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
         }
     }
 
-    pub fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String>
+    pub fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError>
     where
         P: Send + Sync + 'static,
     {
@@ -16776,7 +17308,7 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
                 return Ok(step);
             }
             if !owner.terminal_is_empty() {
-                return Err("one-item preparation reported complete without terminal emptiness".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "one-item preparation reported complete without terminal emptiness"));
             }
             self.preparation = None;
             self.item_closing = false;
@@ -16788,7 +17320,7 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
                 return Ok(step);
             }
             if !source.terminal_is_empty() {
-                return Err("batch source reported complete without terminal emptiness".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "batch source reported complete without terminal emptiness"));
             }
             self.source = None;
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
@@ -16799,7 +17331,7 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
                 return Ok(step);
             }
             if !stage.terminal_is_empty() {
-                return Err("staged batch edit reported complete without terminal emptiness".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "staged batch edit reported complete without terminal emptiness"));
             }
             self.stage = None;
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
@@ -16807,7 +17339,7 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
         if grant.maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
-        if self.coalesce_key.take().is_some() || self.verb.take().is_some() {
+        if self.verb.take().is_some() {
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if self.receipt.take().is_some() {
@@ -16815,8 +17347,12 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
         }
         if let Some(owner) = self.authority_retirement.as_mut() {
             let step = owner.close_step(1, grant.maximum_bytes)?;
-            if step != SnapshotRetirementStep::Complete { return Ok(step); }
-            if !owner.terminal_is_empty() { return Err("batch authority reported complete without terminal emptiness".into()); }
+            if step != SnapshotRetirementStep::Complete {
+                return Ok(step);
+            }
+            if !owner.terminal_is_empty() {
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "batch authority reported complete without terminal emptiness"));
+            }
             self.authority_retirement = None;
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -16838,7 +17374,15 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.phase == ArtifactStoreOneItemPublicationPhase::Complete && self.preparation.is_none() && self.source.is_none() && self.stage.is_none() && self.authority.is_none() && self.authority_retirement.is_none() && self.receipt.is_none() && self.fault.is_none() && self.coalesce_key.is_none() && self.verb.is_none()
+        self.phase == ArtifactStoreOneItemPublicationPhase::Complete
+            && self.preparation.is_none()
+            && self.source.is_none()
+            && self.stage.is_none()
+            && self.authority.is_none()
+            && self.authority_retirement.is_none()
+            && self.receipt.is_none()
+            && self.fault.is_none()
+            && self.verb.is_none()
     }
 
     /// 🔬️ The first owner `close_step` would try to retire, in its exact drain order, plus whether
@@ -16855,8 +17399,6 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
             "source"
         } else if self.stage.is_some() {
             "stage"
-        } else if self.coalesce_key.is_some() {
-            "coalesce-key"
         } else if self.verb.is_some() {
             "verb"
         } else if self.receipt.is_some() {
@@ -16876,6 +17418,20 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
 impl<P, Mutation> Drop for ArtifactStoreBatchPublication<P, Mutation> {
     fn drop(&mut self) {
         assert!(std::thread::panicking() || (self.terminal_is_empty()), "batched artifact-store publication reached Drop without its exact terminal-empty witness");
+    }
+}
+
+impl<P, Mutation> ErasedSnapshotRetirement for ArtifactStoreBatchPublication<P, Mutation>
+where
+    P: Send + Sync + 'static,
+    Mutation: Send + 'static,
+{
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
+        ArtifactStoreBatchPublication::close_step(self, ArtifactStoreOneItemGrant { maximum_items, maximum_bytes })
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        ArtifactStoreBatchPublication::terminal_is_empty(self)
     }
 }
 //#endregion 📬️OneItemPublication
@@ -16899,7 +17455,7 @@ where
     /// must save/restore it themselves via {@link current_checkpoint_id}/{@link set_current_checkpoint_id}.
     current_checkpoint_id: std::mem::ManuallyDrop<Option<String>>,
     /// 🖋️ Identity of the local actor driving this store. Set from each local `Apply`/
-    /// `AmendLast`'s operation author; compared against `Edit.actor` so undo never touches foreign
+    /// `Apply`'s operation author; compared against `Edit.actor` so undo never touches foreign
     /// edits. Not part of the wire envelope — callers that reconstruct the store per call must
     /// save/restore it via {@link local_actor_id}/{@link set_local_actor_id}.
     local_actor_id: std::mem::ManuallyDrop<Option<String>>,
@@ -16922,14 +17478,14 @@ where
     /// `forwards` operation in `applied_edit_ids` order — i.e. exactly what a full
     /// {@link materialize_document_snapshot} replay computes BEFORE its single final
     /// {@link Mutation::reconcile} call. Kept in lock-step by every mutating command below instead of
-    /// replaying on every read, so `snapshot()`/`Apply`/`AmendLast` are O(new work) instead of
+    /// replaying on every read, so `snapshot()`/`Apply`/`AppendTransaction` are O(new work) instead of
     /// O(total history). Cold-path commands (checkout/switch/set_state, which reassign
     /// `applied_edit_ids` wholesale rather than appending) fall back to a full raw-fold recompute —
     /// see `fold_current`. Differential ground truth: `test_support::assert_live_equals_replay`.
     current: std::mem::ManuallyDrop<Arc<P>>,
     current_detached: bool,
     /// 🪢️ `(edit_id, snapshot right before that edit's forwards were first applied)` for
-    /// whichever edit is CURRENTLY the tail of `applied_edit_ids` — refreshed by `Apply`/`AmendLast`
+    /// whichever edit is CURRENTLY the tail of `applied_edit_ids` — refreshed by `Apply`/`AppendTransaction`
     /// (fresh-edit branch)/`Redo`, left untouched by further amends to the same edit (so it always
     /// points at the state before the edit as a whole, not before its latest increment). Powers an
     /// O(1) `Undo` of exactly this edit; any other undo (not the cached tail, or `None`) falls back
@@ -16946,6 +17502,18 @@ where
     /// 📍️ The first applied position whose revision record a replay rewrote (effective input, inverse or messages);
     /// the next {@link bump} rebuilds the cursor revision from there.
     revision_dirty_from: Option<usize>,
+    /// 🪞️ The first applied and redo positions whose ids changed since {@link bump} last mirrored them ([`StackMirrorDirt`]).
+    mirror_dirt: StackMirrorDirt,
+    /// ✂️ The first applied position whose id, forwards or effective input changed since the prefix ring was last pruned: every
+    /// ring entry past it is stale ({@link prune_prefix_ring}).
+    prefix_ring_dirty_from: usize,
+    /// 🧭️ The greatest `(hlc)` event key of the log while the live cursor — applied, redo, checkpoint, alternative and
+    /// supersessions — is exactly that log's fold at this replica's head; `None` until the next full fold proves it again. What
+    /// lets a local edit sorting after every event join the fold as its tail without folding the log ({@link folded_tail}).
+    fold_frontier: Option<(u64, u64, u64)>,
+    /// ⚡️ The generation right after an undo or redo took the tail path ({@link tail_step}): while it still is the
+    /// generation, nothing happened since, so the redo top is the edit that path moved and redoing it is a tail step again.
+    tail_step_generation: Option<u64>,
     /// 🟰️ Snapshot equality that lets a Report replay stop where it meets the previous projection
     /// ({@link enable_convergence_early_exit}).
     snapshot_equality: Option<fn(&P, &P) -> bool>,
@@ -16961,7 +17529,7 @@ where
     one_item_preparation_factory: std::mem::ManuallyDrop<Option<Arc<dyn ArtifactStoreOneItemPreparationFactory<P, Mutation>>>>,
     one_item_wire_preparation_factory: std::mem::ManuallyDrop<Option<Arc<dyn MemberStoreOneItemWirePreparationFactory<P, Mutation>>>>,
     /// 📨️ Transient handoff from whichever `dispatch_inner` arm actually produced messages
-    /// this call (`apply_command`/`amend_command`/`ingest_remote`/`resolve_conflict`) to `dispatch`,
+    /// this call (`apply_command`/`ingest_remote`/`resolve_conflict`) to `dispatch`,
     /// which drains it into the returned `CommandReceipt`. Reset at the top of every `dispatch`
     /// call; every other arm leaves it at its `Default`. Not part of the wire envelope.
     /// 🪆️ Member-addressed backbone messages this store pumped off its own transport but does
@@ -16974,10 +17542,10 @@ where
     /// amend keeps the verb of the edit it extends). Set by the dispatching runtime via
     /// {@link set_authoring_verb}; not part of the wire envelope.
     authoring_verb: Option<String>,
-    /// 🐢️ Operations one turn of a deferred remote reprojection replays; `None` replays inside the ingest.
-    replay_budget: Option<usize>,
-    /// ⏱️ Operations one turn of a deferred local history step replays; `None` replays inside the dispatch.
-    local_replay_budget: Option<usize>,
+    /// 🐢️ How far one turn of a deferred remote reprojection replays; `None` replays inside the ingest.
+    replay_budget: Option<ReplayTurnBudget>,
+    /// ⏱️ How far one turn of a deferred local history step replays; `None` replays inside the dispatch.
+    local_replay_budget: Option<ReplayTurnBudget>,
     /// 🐢️ The history change admitted but not adopted yet ([`Self::step_reprojection`]).
     pending_reprojection: Option<PendingReprojection<P, Mutation>>,
     pending_report: std::mem::ManuallyDrop<PendingCommandReport>,
@@ -17003,7 +17571,7 @@ struct PendingCommandReport {
     /// names only the newly-landed edits.
     edit_ids: Option<Vec<String>>,
     messages: Vec<crate::os_spr::EditMessages>,
-    worst: Option<crate::os_dsl::Severity>,
+    worst: Option<semio_framework_diagnostic::Severity>,
     /// 📤️ Every event this command authored (edit operations, history transitions), in authoring
     /// order — announced outbound as one `BackboneMessage::Mutations` batch when the command ends.
     outbound: Vec<crate::os_spr::MutationEnvelope>,
@@ -17021,7 +17589,7 @@ impl ArtifactStorePendingReportRetirement {
 }
 
 impl ErasedSnapshotRetirement for ArtifactStorePendingReportRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -17029,7 +17597,7 @@ impl ErasedSnapshotRetirement for ArtifactStorePendingReportRetirement {
             return match active.close_step(maximum_items, maximum_bytes)? {
                 SnapshotRetirementStep::Complete => {
                     if !active.terminal_is_empty() {
-                        return Err("artifact store pending-report child reported Complete without terminal ownership".into());
+                        return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact store pending-report child reported Complete without terminal ownership"));
                     }
                     drop(self.active.take());
                     Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
@@ -17068,14 +17636,6 @@ impl Drop for ArtifactStorePendingReportRetirement {
     }
 }
 
-
-
-
-
-
-
-
-
 /// 🖋️ Derives an edit's authoring actor from its per-operation metadata (the author of its
 /// first operation), so a local edit records who produced it for later `UndoPolicy` classification.
 async fn edit_actor_from_meta(mutation_meta: &[MutationMeta]) -> Option<String> {
@@ -17098,12 +17658,7 @@ async fn validate_composition_pins(pins: &[crate::os_vcs::CompositionPin]) -> Re
 }
 
 /// 🎚️ Atomically adopts a retained config runtime after typed Pack and history validation.
-pub fn config_store_from_initialized_runtime_with_owners<P, Mutation>(
-    mut envelope: ArtifactEnvelope<P, Mutation>,
-    runtime: ArtifactStoreInitializationRuntime<P>,
-    generation: u64,
-    owners: DocumentStoreOwners<P, Mutation>,
-) -> ConfigStore<P, Mutation>
+pub fn config_store_from_initialized_runtime_with_owners<P, Mutation>(mut envelope: ArtifactEnvelope<P, Mutation>, runtime: ArtifactStoreInitializationRuntime<P>, generation: u64, owners: DocumentStoreOwners<P, Mutation>) -> ConfigStore<P, Mutation>
 where
     P: Clone + ToValue + FromValue,
     Mutation: Clone + ToValue + FromValue + self::Mutation<P>,
@@ -17140,6 +17695,10 @@ where
         supersessions: std::mem::ManuallyDrop::new(supersessions),
         prefix_ring: std::mem::ManuallyDrop::new(Vec::with_capacity(PREFIX_SNAPSHOT_RING_CAPACITY)),
         revision_dirty_from: None,
+        mirror_dirt: StackMirrorDirt::CLEAN,
+        prefix_ring_dirty_from: usize::MAX,
+        fold_frontier: None,
+        tail_step_generation: None,
         snapshot_equality: None,
         snapshot_retirement_factory: std::mem::ManuallyDrop::new(Some(owners.snapshot_retirement)),
         initial_snapshot_retirement_factory: std::mem::ManuallyDrop::new(Some(owners.initial_snapshot_retirement)),
@@ -17245,7 +17804,7 @@ where
         envelope.active_alternative_id = alternative;
         validate_history_lanes(envelope, &loaded_applied_edit_ids, &loaded_redo_edit_ids).await?;
         let current = Self::fold_history(envelope, &loaded_applied_edit_ids, &supersessions).await?;
-        let initial_digest = *semio_framework_hash::hash(&envelope.vcs.initial_snapshot.encode_pack()).as_bytes();
+        let initial_digest = artifact_initial_digest(&envelope.vcs.initial_snapshot);
         let catalog = ArtifactStoreInitializationOwnerCatalog::try_new().map_err(|reason| VcsError::ValidationFailed(reason.into()))?;
         let ArtifactStoreInitializationOwnerCatalog { mut applied_edit_ids, mut redo_edit_ids, mut cursor_applied_edit_ids, mut cursor_redo_edit_ids, applied_revision, redo_revision } = catalog;
         cursor_applied_edit_ids.extend(loaded_applied_edit_ids.iter().cloned());
@@ -17255,11 +17814,13 @@ where
         envelope.cursor = Some(ArtifactCursor::new(cursor_applied_edit_ids, cursor_redo_edit_ids, current_checkpoint_id.clone()));
         let identity_digest = CursorRevisionAccumulator::hash_record(b"initial", &[envelope.id.as_bytes(), envelope.schema.as_bytes(), &initial_digest]);
         let mut revision_accumulator = CursorRevisionAccumulator { identity_digest, applied: applied_revision, redo: redo_revision, applied_tail_chains: None };
-        let (retired_applied, retired_redo) = revision_accumulator.reconcile::<P, Mutation>(&applied_edit_ids, &redo_edit_ids, &envelope.vcs.edits, &supersessions, None);
-        assert!(retired_applied.is_empty() && retired_redo.is_empty(), "new revision accumulator unexpectedly displaced an owner during construction");
+        revision_accumulator.reconcile::<P, Mutation>(&applied_edit_ids, &redo_edit_ids, &envelope.vcs.edits, &supersessions, StackMirrorDirt::ALL, None);
         let content_revision = revision_accumulator.revision(current_checkpoint_id.as_deref());
-        let local_actor_id = applied_edit_ids.last().and_then(|edit_id| envelope.vcs.edits.iter().find(|edit| edit.id == *edit_id)).and_then(|edit| edit.actor.clone());
+        let local_actor_id = applied_edit_ids.last().and_then(|edit_id| envelope.vcs.edits.find_near(|edit| edit.id == *edit_id)).and_then(|edit| edit.actor.clone());
         let (dag, edit_sequence, clock, rejected_seed_identities) = Self::seed_runtime_state(envelope, fresh_replica_clock().actor)?;
+        if let Some((dialect, codec)) = P::native_snapshot_registration() {
+            crate::os_io::register_native_snapshot_codec(dialect, codec).map_err(|error| VcsError::ValidationFailed(error.to_string()))?;
+        }
         let mut displaced_retirements = ArtifactStoreDisplacedRetirements::new();
         if !rejected_seed_identities.is_empty() {
             displaced_retirements.push_reserved(Box::new(ArtifactStoreStringVectorRetirement::new(rejected_seed_identities)));
@@ -17302,6 +17863,10 @@ where
             supersessions: std::mem::ManuallyDrop::new(supersessions),
             prefix_ring: std::mem::ManuallyDrop::new(Vec::with_capacity(PREFIX_SNAPSHOT_RING_CAPACITY)),
             revision_dirty_from: None,
+            mirror_dirt: StackMirrorDirt::CLEAN,
+            prefix_ring_dirty_from: usize::MAX,
+            fold_frontier: None,
+            tail_step_generation: None,
             snapshot_equality: None,
             pending_report: std::mem::ManuallyDrop::new(PendingCommandReport::default()),
             durable_group_root: std::mem::ManuallyDrop::new(None),
@@ -17446,7 +18011,7 @@ where
     }
 
     /// 🖋️ Sets the local actor id (see {@link local_actor_id}). Called automatically from each
-    /// local `Apply`/`AmendLast`; callers that reconstruct the store per dispatch restore it here.
+    /// local `Apply`/`AppendTransaction`; callers that reconstruct the store per dispatch restore it here.
     pub fn set_local_actor_id(&mut self, actor_id: Option<String>) -> Result<(), VcsError> {
         self.ensure_durable_group_idle()?;
         self.replace_local_actor_retained(actor_id)
@@ -17469,7 +18034,7 @@ where
     }
 
     /// 🔧️ The most recently created/amended edit's `(forwards, inverse, per-operation meta)`.
-    /// Used right after `dispatch(Apply{..})`/`AmendLast` to build a `KernelMutation`/`InvocationResult`
+    /// Used right after `dispatch(Apply{..})`/`AppendTransaction` to build a `KernelMutation`/`InvocationResult`
     /// with a true inverse from the just-recorded `Edit.inverse`.
     pub fn edit_mutations(&self) -> Option<(&[Mutation], &[Mutation], &[MutationMeta])> {
         self.envelope.vcs.edits.last().map(|edit| (edit.forwards.as_slice(), edit.inverse.as_slice(), edit.mutation_meta.as_slice()))
@@ -17516,7 +18081,7 @@ where
         let current = Self::fold_history(envelope, &applied_edit_ids, &supersessions).await?;
         let applied_edit_ids = ArtifactStoreInitializationOwnerCatalog::retain_id_capacity(applied_edit_ids);
         let redo_edit_ids = ArtifactStoreInitializationOwnerCatalog::retain_id_capacity(redo_edit_ids);
-        let initial_digest = *semio_framework_hash::hash(&envelope.vcs.initial_snapshot.encode_pack()).as_bytes();
+        let initial_digest = artifact_initial_digest(&envelope.vcs.initial_snapshot);
         let revision_accumulator = CursorRevisionAccumulator::new(envelope, initial_digest);
         let runtime_slots = usize::from(self.backbone.is_some())
             + Self::string_owner_slots(&self.current_checkpoint_id)
@@ -17550,6 +18115,8 @@ where
         }
         self.push_revision_replacement_reserved(revision_accumulator);
         drop(self.pending_reprojection.take());
+        self.mirror_dirt = StackMirrorDirt::ALL;
+        self.fold_frontier = None;
         self.bump()?;
         Ok(())
     }
@@ -17595,18 +18162,91 @@ where
         self.durable_group_read_root().map_or(self.current.as_ref(), |root| root.current.as_ref().expect("unadopted durable group root retains its current snapshot").as_ref())
     }
 
-    /// 🪞️ An erased read of `alias`, a snapshot this store derived but never published (a history edit's preview),
-    /// leased through the same registry as [`Self::snapshot_read`] so a composing parent's content view can show it in
-    /// this member's place under the same retirement discipline.
-    pub fn snapshot_read_erased_of(&self, alias: Arc<P>) -> Result<ErasedSnapshotRead, VcsError>
+    /// 🌱️ Captures the current Store projection as the base of a provisional member fold.
+    pub fn derived_snapshot_head(&self) -> ArtifactDerivedSnapshot<P> {
+        self.seal_derived_snapshot(self.snapshot_owner())
+    }
+
+    fn seal_derived_snapshot(&self, owner: Arc<P>) -> ArtifactDerivedSnapshot<P> {
+        ArtifactDerivedSnapshot { owner, registry: Arc::clone(&self.snapshot_read_leases), generation: self.generation(), revision: self.content_revision() }
+    }
+
+    fn admit_derived_source(&self, registry: &Arc<SnapshotReadLeaseRegistry>, generation: u64, revision: [u8; 32]) -> Result<(), VcsError> {
+        if !Arc::ptr_eq(registry, &self.snapshot_read_leases) || generation != self.generation() || revision != self.content_revision() {
+            return Err(VcsError::ValidationFailed("derived snapshot belongs to another Store or event frontier".into()));
+        }
+        Ok(())
+    }
+
+    /// 🪞️ Issues a member read only from this Store's genuine derived projection capability.
+    pub fn snapshot_read_derived(&self, source: &ArtifactDerivedSnapshot<P>) -> Result<ErasedSnapshotRead, VcsError>
     where
         P: Sync,
     {
-        if !self.snapshot_read_leases.publish_authority(self.generation(), self.content_revision()) {
+        self.admit_derived_source(&source.registry, source.generation, source.revision)?;
+        if !self.snapshot_read_leases.publish_authority(source.generation, source.revision) {
             return Err(VcsError::ValidationFailed("snapshot read commit authority is busy or exhausted".into()));
         }
-        let lease = self.snapshot_read_leases.try_issue(alias.clone()).map_err(|_| VcsError::ValidationFailed("snapshot read lease registry is busy, saturated, or exhausted".into()))?;
+        let alias = Arc::clone(&source.owner);
+        let lease = self.snapshot_read_leases.try_issue(Arc::clone(&alias)).map_err(|_| VcsError::ValidationFailed("snapshot read lease registry is busy, saturated, or exhausted".into()))?;
         Ok(ErasedSnapshotRead::new(alias, lease))
+    }
+
+    /// 🧩️ Derives a provisional member projection through this Store's own operation vocabulary and merge policy.
+    pub fn derive_provisional_snapshot(&self, source: &ArtifactDerivedSnapshot<P>, op: &Mutation) -> Result<Option<ArtifactDerivedSnapshot<P>>, VcsError> {
+        self.admit_derived_source(&source.registry, source.generation, source.revision)?;
+        let outcome = <Mutation as self::Mutation<P>>::diff(op, source.snapshot());
+        let applicable = outcome.is_applicable(protocol::MergePolicy::default());
+        let (diff, _) = outcome.into_parts();
+        let next = applicable.then(|| <<Mutation as self::Mutation<P>>::Diff as self::MutationDiff<P>>::apply(&diff, source.snapshot()).ok()).flatten();
+        <<Mutation as self::Mutation<P>>::Diff as self::MutationDiff<P>>::retire_cold(diff);
+        Ok(next.map(|owner| self.seal_derived_snapshot(Arc::new(owner))))
+    }
+
+    /// 🎞️ Derives a history-edit preview base from this Store's actual history and accepted draft inputs.
+    pub fn derived_snapshot_before(&mut self, target: &MutationId, drafts: &BTreeMap<MutationId, protocol::InputReplacement>) -> Result<ArtifactDerivedSnapshot<P>, VcsError> {
+        let owner = self.state_before(target, drafts)?;
+        Ok(self.seal_derived_snapshot(owner))
+    }
+
+    /// ✏️ Derives one history preview input with the replay's keep-and-record application rule.
+    pub fn derive_history_snapshot(&self, source: &ArtifactDerivedSnapshot<P>, op: &Mutation) -> Result<(Option<ArtifactDerivedSnapshot<P>>, Vec<protocol::MutationMessage>), VcsError> {
+        self.admit_derived_source(&source.registry, source.generation, source.revision)?;
+        let (diff, mut messages) = <Mutation as self::Mutation<P>>::diff(op, source.snapshot()).into_parts();
+        let applied = <<Mutation as self::Mutation<P>>::Diff as self::MutationDiff<P>>::apply(&diff, source.snapshot());
+        <<Mutation as self::Mutation<P>>::Diff as self::MutationDiff<P>>::retire_cold(diff);
+        let next = match applied {
+            Ok(owner) => Some(self.seal_derived_snapshot(Arc::new(owner))),
+            Err(error) => {
+                messages.push(protocol::MutationMessage::fatal(error.code, error.message).at(error.target));
+                None
+            }
+        };
+        Ok((next, messages))
+    }
+
+    /// ⏪️ Starts a sealed replay of this Store's genuine event history.
+    pub fn begin_derived_report_replay(&self, drafts: &BTreeMap<MutationId, protocol::InputReplacement>, from: Option<&MutationId>) -> Result<ArtifactDerivedReplay<P, Mutation>, VcsError> {
+        Ok(ArtifactDerivedReplay { replay: self.begin_report_replay(drafts, from)?, registry: Arc::clone(&self.snapshot_read_leases), generation: self.generation(), revision: self.content_revision() })
+    }
+
+    /// ⏭️ Steps a sealed history replay against this Store's actual edit ledger.
+    pub fn step_derived_report_replay(&self, replay: &mut ArtifactDerivedReplay<P, Mutation>, deadline: &mut dyn FnMut() -> bool) -> Result<ReplayStep, VcsError> {
+        self.admit_derived_source(&replay.registry, replay.generation, replay.revision)?;
+        replay.replay.step(self.replay_edits(), deadline)
+    }
+
+    /// 🏁️ Returns a finished replay and its genuine complete projection for preview and subsequent publication.
+    pub fn finish_derived_report_replay(&self, owner: &mut Option<ArtifactDerivedReplay<P, Mutation>>) -> Result<(EditReplayResult<P, Mutation>, Option<ArtifactDerivedSnapshot<P>>), VcsError> {
+        let replay = owner.as_ref().ok_or_else(|| VcsError::ValidationFailed("derived replay owner is absent".into()))?;
+        self.admit_derived_source(&replay.registry, replay.generation, replay.revision)?;
+        if !replay.replay.is_finished() {
+            return Err(VcsError::ValidationFailed("derived replay has not finished".into()));
+        }
+        let replay = owner.take().expect("admitted finished derived replay owner is present");
+        let result = replay.replay.finish().expect("admitted finished replay completes without another fallible operation");
+        let head = result.state().map(|owner| self.seal_derived_snapshot(Arc::clone(owner)));
+        Ok((result, head))
     }
 
     /// 🧵️ Immutable O(1) snapshot capability for worker and composition boundaries.
@@ -17768,7 +18408,9 @@ where
     }
 
     fn pending_report_owner_slots(value: &PendingCommandReport) -> usize {
-        usize::from(value.edit_ids.as_ref().is_some_and(|ids| !ids.is_empty() || ids.capacity() != 0) || !value.messages.is_empty() || value.messages.capacity() != 0 || value.worst.is_some() || !value.outbound.is_empty() || value.outbound.capacity() != 0)
+        usize::from(
+            value.edit_ids.as_ref().is_some_and(|ids| !ids.is_empty() || ids.capacity() != 0) || !value.messages.is_empty() || value.messages.capacity() != 0 || value.worst.is_some() || !value.outbound.is_empty() || value.outbound.capacity() != 0,
+        )
     }
 
     fn take_string_vector_replacement(target: &mut std::mem::ManuallyDrop<crate::os_vcs::HistoryPageStack<String>>, next: crate::os_vcs::HistoryPageStack<String>) -> Option<Box<dyn ErasedSnapshotRetirement>> {
@@ -17799,18 +18441,34 @@ where
         }
     }
 
+    /// 🔁️ Replaces the applied stack. From the first position whose id changed, the persisted cursor and the revision
+    /// records are stale ([`StackMirrorDirt`]), the prefix ring too, and the live cursor is no longer a proven fold.
     fn replace_applied_edit_ids_retained(&mut self, next: Vec<String>) -> Result<(), VcsError> {
+        let common = shared_prefix_len(&self.applied_edit_ids, &next);
+        let changed = common != self.applied_edit_ids.len() || common != next.len();
         let next = ArtifactStoreInitializationOwnerCatalog::retain_id_capacity(next);
         self.displaced_retirements.reserve(Self::string_vector_owner_slots(&self.applied_edit_ids))?;
+        if changed {
+            self.mirror_dirt.applied = self.mirror_dirt.applied.min(common);
+            self.prefix_ring_dirty_from = self.prefix_ring_dirty_from.min(common);
+            self.fold_frontier = None;
+        }
         if let Some(owner) = Self::take_string_vector_replacement(&mut self.applied_edit_ids, next) {
             self.displaced_retirements.push_reserved(owner);
         }
         Ok(())
     }
 
+    /// 🔂️ Replaces the redo stack; its mirrors are stale from the first position whose id changed.
     fn replace_redo_edit_ids_retained(&mut self, next: Vec<String>) -> Result<(), VcsError> {
+        let common = shared_prefix_len(&self.redo_edit_ids, &next);
+        let changed = common != self.redo_edit_ids.len() || common != next.len();
         let next = ArtifactStoreInitializationOwnerCatalog::retain_id_capacity(next);
         self.displaced_retirements.reserve(Self::string_vector_owner_slots(&self.redo_edit_ids))?;
+        if changed {
+            self.mirror_dirt.redo = self.mirror_dirt.redo.min(common);
+            self.fold_frontier = None;
+        }
         if let Some(owner) = Self::take_string_vector_replacement(&mut self.redo_edit_ids, next) {
             self.displaced_retirements.push_reserved(owner);
         }
@@ -17819,6 +18477,9 @@ where
 
     fn replace_current_checkpoint_retained(&mut self, next: Option<String>) -> Result<(), VcsError> {
         self.displaced_retirements.reserve(Self::string_owner_slots(&self.current_checkpoint_id))?;
+        if next != *self.current_checkpoint_id {
+            self.fold_frontier = None;
+        }
         if let Some(owner) = Self::take_string_replacement(&mut self.current_checkpoint_id, next) {
             self.displaced_retirements.push_reserved(owner);
         }
@@ -17876,6 +18537,7 @@ where
 
     fn insert_reserved_edit_history(&mut self, mut reservation: ArtifactStoreHistoryCommitReservation, edit: Edit<Mutation>) -> Result<ArtifactHistoryKey, VcsError> {
         let factory = (*self.mutation_retirement_factory).clone().expect("edit history admission validated its exact mutation retirement factory");
+        self.fold_frontier = None;
         match self.envelope.vcs.edits.insert_reserved(reservation.history, edit) {
             Ok(key) => {
                 self.displaced_retirements.release_owner_slots(reservation.rejected_owner)?;
@@ -17994,9 +18656,25 @@ where
         Ok(())
     }
 
-
-    pub fn maintenance_retirements_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    pub fn maintenance_retirements_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         self.displaced_retirements.close_step(maximum_items, maximum_bytes)
+    }
+
+    /// 🚚️ Transfers an interrupted publication to this Store's bounded maintenance queue before
+    /// its driver leaves scope. The queue retains the exact preparation and clone cursor owners;
+    /// subsequent maintenance turns cancel unpublished work and retire every owner under grants.
+    pub fn handoff_batch_publication_close(&mut self, publication: &mut Option<ArtifactStoreBatchPublication<P, Mutation>>) -> Result<bool, VcsError>
+    where
+        P: Sync,
+    {
+        if publication.is_none() {
+            return Ok(false);
+        }
+        self.displaced_retirements.reserve(1)?;
+        let mut owner = publication.take().expect("validated publication close handoff remains present");
+        owner.begin_close();
+        self.displaced_retirements.push_reserved(Box::new(owner));
+        Ok(true)
     }
 
     pub fn maintenance_retirements_terminal_is_empty(&self) -> bool {
@@ -18021,19 +18699,19 @@ where
     }
 
     /// 🧹️ Advances the exact store disposer under the caller's retirement grant.
-    pub fn close_owned_store_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    pub fn close_owned_store_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if self.owned_disposer_terminal {
             return Ok(SnapshotRetirementStep::Complete);
         }
         let Some(mut disposer) = self.owned_disposer.take() else {
-            return Err("artifact store has no owner-supplied bounded disposer".into());
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact store has no owner-supplied bounded disposer"));
         };
         let step = disposer.close_step(&mut ArtifactStoreCloseView { store: self }, maximum_items, maximum_bytes);
         match step {
             Ok(SnapshotRetirementStep::Complete) => {
                 if !disposer.terminal_is_empty(self) {
                     *self.owned_disposer = Some(disposer);
-                    return Err("artifact store disposer reported Complete without its exact terminal-empty witness".into());
+                    return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact store disposer reported Complete without its exact terminal-empty witness"));
                 }
                 self.owned_disposer_terminal = true;
                 drop(disposer);
@@ -18053,7 +18731,7 @@ where
 
     /// 🧹️ Advances owned-store disposal without requiring this store to be a composed
     /// [`SpaceMember`]. Local lanes use the same exact disposer authority.
-    pub fn close_owned_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    pub fn close_owned_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         self.close_owned_store_step(maximum_items, maximum_bytes)
     }
 
@@ -18087,7 +18765,7 @@ where
             return Err(VcsError::ValidationFailed("returned snapshot read requires its exact owned-snapshot retirement factory".into()));
         };
         for _ in 0..=SNAPSHOT_READ_LEASE_CAPACITY {
-            if let Some(owner) = self.snapshot_read_leases.try_take_one_returned::<P>().map_err(VcsError::ValidationFailed)? {
+            if let Some(owner) = self.snapshot_read_leases.try_take_one_returned::<P>().map_err(|error| VcsError::ValidationFailed(error.into_value_error().into_message()))? {
                 return Ok(Some(Box::new(ReturnedSnapshotReadRetirement::new(owner, factory.clone())) as Box<dyn ErasedSnapshotRetirement>));
             }
             if !self.snapshot_read_leases.has_returned() {
@@ -18309,7 +18987,13 @@ where
                 && self.envelope.vcs.alternatives.is_empty()
                 && self.envelope.edit_messages.is_empty()
                 && self.envelope.lanes.is_empty());
-        let runtime_shell_is_empty = self.backbone.is_none() && self.member_inbox.is_empty() && self.pending_report.edit_ids.is_none() && self.pending_report.messages.is_empty() && self.pending_report.outbound.is_empty() && self.supersessions.is_empty() && self.prefix_ring.is_empty();
+        let runtime_shell_is_empty = self.backbone.is_none()
+            && self.member_inbox.is_empty()
+            && self.pending_report.edit_ids.is_none()
+            && self.pending_report.messages.is_empty()
+            && self.pending_report.outbound.is_empty()
+            && self.supersessions.is_empty()
+            && self.prefix_ring.is_empty();
         envelope_shell_is_empty && runtime_shell_is_empty && self.durable_group_root.is_none() && self.dag.terminal_is_empty() && self.displaced_retirements.terminal_is_empty()
     }
 
@@ -18325,7 +19009,8 @@ where
         };
         self.envelope_detached = true;
         let envelope = unsafe { std::mem::ManuallyDrop::take(&mut self.envelope) };
-        let ArtifactEnvelopeOwners { schema, id, vcs, backbone, active_alternative_id, cursor, dialect, migrated_from, owner, lanes, viewer_checkpoint_id, edit_messages, conflicts, transitions, history_shape: _, open_transaction: _ } = envelope.into_owners();
+        let ArtifactEnvelopeOwners { schema, id, vcs, backbone, active_alternative_id, cursor, dialect, migrated_from, owner, lanes, viewer_checkpoint_id, edit_messages, conflicts, transitions, history_shape: _, open_transaction: _ } =
+            envelope.into_owners();
         let ArtifactVcs { initial_snapshot, edits, changes, checkpoints, alternatives } = vcs;
         assert!(
             schema.is_empty()
@@ -18371,7 +19056,13 @@ where
     }
 
     pub fn owned_roots_terminal_is_empty(&self) -> bool {
-        self.current_detached && self.envelope_detached && self.durable_group_root.is_none() && self.tail_undo_cache.is_none() && self.prefix_ring.is_empty() && self.snapshot_read_leases_terminal_is_empty() && self.close_structural_owners_terminal_is_empty()
+        self.current_detached
+            && self.envelope_detached
+            && self.durable_group_root.is_none()
+            && self.tail_undo_cache.is_none()
+            && self.prefix_ring.is_empty()
+            && self.snapshot_read_leases_terminal_is_empty()
+            && self.close_structural_owners_terminal_is_empty()
     }
 
     /// 🔂️ Full raw fold of `initial_snapshot` over every `forwards` op in `applied_edit_ids`
@@ -18405,7 +19096,15 @@ where
     /// `Undo` already relies on (id drops out of `applied_edit_ids`, the `Edit` record stays put).
     /// The loop itself is the [`EditReplay`] stepper in `Merge(policy)` mode, driven to completion here; every operation
     /// reads its effective input under `supersessions`.
-    fn replay_suffix_partitioned(base: Arc<P>, order: &[String], k: usize, edits: &impl ReplayEdits<Mutation>, schema: &str, supersessions: &EffectiveSupersessions, policy: crate::os_spr::MergePolicy) -> Result<EditReplayResult<P, Mutation>, VcsError> {
+    fn replay_suffix_partitioned(
+        base: Arc<P>,
+        order: &[String],
+        k: usize,
+        edits: &impl ReplayEdits<Mutation>,
+        schema: &str,
+        supersessions: &EffectiveSupersessions,
+        policy: crate::os_spr::MergePolicy,
+    ) -> Result<EditReplayResult<P, Mutation>, VcsError> {
         let mut replay = EditReplay::new(ReplayMode::Merge(policy), base, order.to_vec(), k, schema, supersessions.clone(), edits)?;
         replay.step(edits, &mut || false)?;
         replay.finish()
@@ -18468,7 +19167,6 @@ where
         }
         Ok(())
     }
-
 
     /// 🎯️ MEDIUM-3: oldest-first eviction of RESOLVED (`Accepted`/`Discarded`) conflicts once the
     /// total exceeds [`Self::RESOLVED_CONFLICT_CAP`] — `Open` conflicts are never touched. See the
@@ -18540,23 +19238,31 @@ where
     }
 
     /// 🧾️ Every applied operation in applied order: its identity, owning edit and applied position, operation index,
-    /// recorded forward, metadata, tool transaction and effective supersession.
+    /// recorded forward, metadata, tool transaction and effective supersession — O(applied operations).
     pub fn mutation_ops(&self) -> Result<Vec<AppliedMutation<'_, Mutation>>, VcsError> {
         let mut operations = Vec::new();
-        for (position, edit_id) in self.applied_edit_ids.iter().enumerate() {
-            let edit = self.envelope.vcs.edits.iter().find(|edit| edit.id == *edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
-            for (index, (mutation_id, operation)) in crate::os_spr::mutation_ids_for_edit::<P, Mutation>(edit).into_iter().zip(edit.forwards.iter()).enumerate() {
-                let meta = edit.mutation_meta.get(index);
-                let supersession = self.supersessions.get(&mutation_id);
-                let effective = match supersession {
-                    None => operation.descriptor(),
-                    Some(_) => {
-                        let effective = effective_operation::<P, Mutation>(operation, index as u32, mutation_id.clone(), &self.envelope.schema, &self.supersessions);
-                        effective.operation().unwrap_or(operation).descriptor()
-                    }
-                };
-                operations.push(AppliedMutation { mutation_id, edit_id: edit.id.as_str(), position, op_index: index as u32, operation, meta, transaction: meta.and_then(|meta| meta.transaction.as_ref()), supersession, effective });
-            }
+        for position in 0..self.applied_edit_ids.len() {
+            operations.extend(self.applied_edit_mutations(position)?);
+        }
+        Ok(operations)
+    }
+
+    /// 🧾️ The operations of the applied edit at `position` — what one history row reads, O(that edit) (amortized O(1)
+    /// for the edit lookup when rows are read in applied order).
+    pub fn applied_edit_mutations(&self, position: usize) -> Result<Vec<AppliedMutation<'_, Mutation>>, VcsError> {
+        let edit = self.applied_edit(position)?;
+        let mut operations = Vec::with_capacity(edit.forwards.len());
+        for (index, (mutation_id, operation)) in crate::os_spr::mutation_ids_for_edit::<P, Mutation>(edit).into_iter().zip(edit.forwards.iter()).enumerate() {
+            let meta = edit.mutation_meta.get(index);
+            let supersession = self.supersessions.get(&mutation_id);
+            let effective = match supersession {
+                None => operation.descriptor(),
+                Some(_) => {
+                    let effective = effective_operation::<P, Mutation>(operation, index as u32, mutation_id.clone(), &self.envelope.schema, &self.supersessions);
+                    effective.operation().unwrap_or(operation).descriptor()
+                }
+            };
+            operations.push(AppliedMutation { mutation_id, edit_id: edit.id.as_str(), position, op_index: index as u32, operation, meta, transaction: meta.and_then(|meta| meta.transaction.as_ref()), supersession, effective });
         }
         Ok(operations)
     }
@@ -18570,13 +19276,30 @@ where
     /// 🗄️ The durable outcomes of `applied_edit_ids[from..]`.
     fn durable_outcomes(&self, from: usize) -> Result<Vec<protocol::MutationReplayOutcome>, VcsError> {
         let mut outcomes = Vec::new();
-        for edit_id in self.applied_edit_ids.iter().skip(from.min(self.applied_edit_ids.len())) {
-            let edit = self.envelope.vcs.edits.iter().find(|edit| edit.id == *edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
-            let messages = self.messages_for_edit(edit_id);
-            for (index, mutation_id) in crate::os_spr::mutation_ids_for_edit::<P, Mutation>(edit).into_iter().enumerate() {
-                let operation_messages: Vec<crate::os_spr::MutationMessage> = messages.iter().filter(|message| message.op_index == Some(index as u32)).cloned().collect();
+        for position in from.min(self.applied_edit_ids.len())..self.applied_edit_ids.len() {
+            outcomes.extend(self.applied_edit_outcomes(position)?);
+        }
+        Ok(outcomes)
+    }
+
+    /// 🗄️ The durable outcomes of the applied edit at `position` — what one history row reads, O(that edit and its
+    /// messages).
+    pub fn applied_edit_outcomes(&self, position: usize) -> Result<Vec<protocol::MutationReplayOutcome>, VcsError> {
+        let edit = self.applied_edit(position)?;
+        let messages = self.messages_for_edit(&edit.id);
+        let mut by_operation: Vec<Vec<crate::os_spr::MutationMessage>> = vec![Vec::new(); edit.forwards.len()];
+        for message in messages {
+            if let Some(slot) = message.op_index.and_then(|index| by_operation.get_mut(index as usize)) {
+                slot.push(message.clone());
+            }
+        }
+        Ok(crate::os_spr::mutation_ids_for_edit::<P, Mutation>(edit)
+            .into_iter()
+            .zip(by_operation)
+            .enumerate()
+            .map(|(index, (mutation_id, operation_messages))| {
                 let supersession = self.supersessions.get(&mutation_id);
-                outcomes.push(protocol::MutationReplayOutcome {
+                protocol::MutationReplayOutcome {
                     worst: crate::os_spr::worst_level(&operation_messages),
                     messages: operation_messages,
                     superseded: supersession.is_some(),
@@ -18584,16 +19307,27 @@ where
                     mutation_id,
                     edit_id: edit.id.clone(),
                     op_index: index as u32,
-                });
-            }
-        }
-        Ok(outcomes)
+                }
+            })
+            .collect())
+    }
+
+    /// 🔎️ The applied position of `edit_id`, searched from the applied tail: O(rows below it), so reading the newest history
+    /// rows costs O(rows read), whatever the history length.
+    pub fn applied_edit_position(&self, edit_id: &str) -> Option<usize> {
+        self.applied_edit_ids.iter().rposition(|applied| applied == edit_id)
+    }
+
+    /// 📖️ The applied edit at `position`.
+    fn applied_edit(&self, position: usize) -> Result<&Edit<Mutation>, VcsError> {
+        let edit_id = self.applied_edit_ids.get(position).ok_or_else(|| VcsError::ValidationFailed(format!("no applied edit at position {position}")))?;
+        self.envelope.vcs.edits.find_near(|edit| edit.id == *edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))
     }
 
     /// 📍️ The applied position of the edit owning `mutation_id` and the operation's index within it.
     fn locate_mutation(&self, mutation_id: &MutationId) -> Result<(usize, usize), VcsError> {
-        for (position, edit_id) in self.applied_edit_ids.iter().enumerate() {
-            let edit = self.envelope.vcs.edits.iter().find(|edit| edit.id == *edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
+        for position in 0..self.applied_edit_ids.len() {
+            let edit = self.applied_edit(position)?;
             if let Some(index) = crate::os_spr::mutation_ids_for_edit::<P, Mutation>(edit).iter().position(|known| known == mutation_id) {
                 return Ok((position, index));
             }
@@ -18624,7 +19358,7 @@ where
             retire_shared_projection::<P, Mutation>(base);
             return Err(error);
         }
-        let Some(edit) = self.envelope.vcs.edits.iter().find(|edit| edit.id == applied[position]) else {
+        let Some(edit) = self.envelope.vcs.edits.find_near(|edit| edit.id == applied[position]) else {
             retire_shared_projection::<P, Mutation>(base);
             return Err(VcsError::UnknownEdit(applied[position].clone()));
         };
@@ -18675,7 +19409,7 @@ where
     /// 🌀️ The unawaited future borrows `command`, which is then moved into `dispatch_inner`
     /// below — awaited immediately instead of deferred to avoid a move-while-borrowed (E0505).
     ///
-    /// Undo/redo shrink `applied_edit_ids`; Apply/AmendLast append past `before`; a merge that
+    /// Undo/redo shrink `applied_edit_ids`; Apply/AppendTransaction append past `before`; a merge that
     /// rebased mid-history overrides this tail-diff guess via `pending_report.edit_ids`.
     pub async fn dispatch(&mut self, command: ArtifactCommand<Mutation>) -> Result<CommandReceipt, VcsError>
     where
@@ -18778,9 +19512,6 @@ where
         let Some(factory) = factory else {
             return Err(ArtifactStoreBatchAdmissionRejected { reason: "batched publication requires an explicit app-owned ArtifactStoreOneItemPreparationFactory".into(), mutations, description });
         };
-        if std::env::var_os("SEMIO_DEBUG_STORE_UNITS").is_some() {
-            eprintln!("[DEBUG] store-batch begin store={} lane={lane:?} items={} transaction={}", self.envelope.id, mutations.len(), transaction.is_some());
-        }
         let mut inputs = mutations;
         inputs.reverse();
         let source = ArtifactStoreBatchSourceOf { authority: Some(Arc::clone(factory)), inputs, description, marker: PhantomData };
@@ -18944,7 +19675,6 @@ where
             close_started: false,
             fault: None,
             phase: ArtifactStoreOneItemPublicationPhase::Preparing,
-            coalesce_key: None,
             verb: None,
             transaction,
             outbound,
@@ -18970,23 +19700,10 @@ where
         Ok(SnapshotRead::new(owner, lease))
     }
 
-    /// 🎥️ The edit a batch appends to instead of minting a ledger slot: the open edit of the tool transaction it carries,
-    /// else the tail uncommitted document edit its coalesce key matches, as `amend_command` does.
-    fn batch_amend_target(&self, key: Option<&str>, transaction: Option<&protocol::TransactionRef>) -> Option<String> {
-        if let Some(transaction) = transaction {
-            return self.envelope.open_transaction.as_ref().filter(|open| open.transaction.id == transaction.id && self.applied_edit_ids.last() == Some(&open.edit_id)).map(|open| open.edit_id.clone());
-        }
-        let key = key.filter(|value| !value.is_empty())?;
-        let last = self.applied_edit_ids.last()?;
-        let edit = self.envelope.vcs.edits.iter().find(|edit| edit.id == *last)?;
-        if edit.coalesce_key.as_deref() != Some(key) {
-            return None;
-        }
-        let committed = self.envelope.vcs.changes.iter().any(|change| change.edit_ids.iter().any(|id| id == last));
-        if committed {
-            return None;
-        }
-        Some(last.clone())
+    /// 🎥️ The edit a batch appends to instead of minting a ledger slot: the open edit of the tool transaction it carries
+    /// (design §15). Outside a transaction every batch is its own edit.
+    fn batch_amend_target(&self, transaction: Option<&protocol::TransactionRef>) -> Option<String> {
+        self.envelope.open_transaction.as_ref().filter(|open| transaction.is_some_and(|transaction| open.transaction.id == transaction.id) && self.applied_edit_ids.last() == Some(&open.edit_id)).map(|open| open.edit_id.clone())
     }
 
     /// ⏭️ Advances at most one preparation, fold, cursor, preflight, or atomic move-publication
@@ -18997,9 +19714,6 @@ where
         P: Sync,
     {
         self.ensure_durable_group_idle()?;
-        if std::env::var_os("SEMIO_DEBUG_STORE_UNITS").is_some() {
-            eprintln!("[DEBUG] store-batch advance store={} phase={:?} admitted={} preparing={} closing={}", self.envelope.id, publication.phase, publication.admitted_items, publication.preparation.is_some(), publication.item_closing);
-        }
         if publication.phase == ArtifactStoreOneItemPublicationPhase::Complete {
             return Ok(ArtifactStoreOneItemAdvance::Complete);
         }
@@ -19027,7 +19741,7 @@ where
             ArtifactStoreOneItemPublicationPhase::Preparing => {
                 if publication.item_closing {
                     let owner = publication.preparation.as_mut().ok_or_else(|| VcsError::ValidationFailed("staged batch item lost its retained preparation owner before retirement".into()))?;
-                    let step = Self::spend_item_close_grant(owner.as_mut(), item_grant).map_err(VcsError::ValidationFailed)?;
+                    let step = Self::spend_item_close_grant(owner.as_mut(), item_grant).map_err(|error| VcsError::ValidationFailed(error.into_message()))?;
                     if step != SnapshotRetirementStep::Complete {
                         return Ok(ArtifactStoreOneItemAdvance::Progress(publication.progress()));
                     }
@@ -19097,22 +19811,24 @@ where
                     || stage.next_clock != authority.next_clock
                     || meta.author_id.as_ref().map(|actor| actor.0.as_str()) != Some(authority.actor.as_str())
                     || meta.timestamp != authority.next_clock
-                    || stage.edit.inverse.len().saturating_add(stage.edit.forwards.len()) > publication.footprint.work_items
                     || stage.post.is_none()
                     || (self.backbone.is_some() && !publication.outbound)
                 {
                     return Err(VcsError::ValidationFailed("batched prepared candidate failed its exact fixed commit contract".into()));
                 }
-                let amending = self.batch_amend_target(publication.coalesce_key.as_deref(), publication.transaction.as_ref()).is_some();
-                if !amending
-                    && (!self.applied_edit_ids.admits_one()
-                        || !self.revision_accumulator.applied.admits_one()
-                        || self.envelope.cursor.as_ref().is_none_or(|cursor| !cursor.applied_edit_ids.admits_one()))
-                {
+                let rows = stage.edit.inverse.len().saturating_add(stage.edit.forwards.len());
+                if rows > publication.footprint.work_items {
+                    return Err(VcsError::TooLarge { rows, capacity: publication.footprint.work_items });
+                }
+                let amending = self.batch_amend_target(publication.transaction.as_ref()).is_some();
+                if !amending && (!self.applied_edit_ids.admits_one() || !self.revision_accumulator.applied.admits_one() || self.envelope.cursor.as_ref().is_none_or(|cursor| !cursor.applied_edit_ids.admits_one())) {
                     return Err(VcsError::HistoryFull { capacity: self.applied_edit_ids.len() });
                 }
                 if self.generation == u64::MAX {
                     return Err(VcsError::ValidationFailed("batched store generation is exhausted".into()));
+                }
+                if !amending && !publication.transaction_open {
+                    stamp_primary_operation_identity(&mut stage.edit);
                 }
                 stage.digest = CursorRevisionAccumulator::edit_digest(&stage.edit);
                 self.displaced_retirements.reserve(12)?;
@@ -19123,11 +19839,13 @@ where
                 Ok(ArtifactStoreOneItemAdvance::Progress(publication.progress()))
             }
             ArtifactStoreOneItemPublicationPhase::Publishing => {
-                if let Some(edit_id) = self.batch_amend_target(publication.coalesce_key.as_deref(), publication.transaction.as_ref()) {
+                if let Some(edit_id) = self.batch_amend_target(publication.transaction.as_ref()) {
                     let stage = publication.take_stage().ok_or_else(|| VcsError::ValidationFailed("batched publication lost its staged edit at atomic transfer".into()))?;
                     let ArtifactStoreBatchStage { edit, post, next_clock, local_actor, .. } = *stage;
                     let post = post.ok_or_else(|| VcsError::ValidationFailed("batched publication lost its staged post root at atomic transfer".into()))?;
                     let generation_before = self.generation;
+                    let revision_before = self.content_revision;
+                    let appended = edit.forwards.len();
                     let closes = publication.transaction.is_some() && !publication.transaction_open;
                     if let Some(existing) = self.envelope.vcs.edits.iter_mut().find(|candidate| candidate.id == edit_id) {
                         publication.announce_from = if closes { 0 } else { existing.forwards.len() };
@@ -19135,9 +19853,12 @@ where
                         existing.inverse.extend(edit.inverse);
                         existing.mutation_meta.extend(edit.mutation_meta);
                         existing.finished_at = if closes { Some(now_iso()) } else { edit.finished_at };
+                        if closes {
+                            stamp_primary_operation_identity(existing);
+                        }
                         publication.announce_items = existing.forwards.len() - publication.announce_from;
                     } else {
-                        return Err(VcsError::ValidationFailed("batched amend lost its coalesced tail edit".into()));
+                        return Err(VcsError::ValidationFailed("batched transaction append lost its open edit".into()));
                     }
                     if closes {
                         self.envelope.open_transaction = None;
@@ -19150,6 +19871,7 @@ where
                     self.replace_current_retained(post)?;
                     self.clock = next_clock;
                     self.bump()?;
+                    self.continue_pending_replay_across_append(revision_before, &edit_id, appended);
                     self.last_projection_cause = Some(ArtifactProjectionCause::Apply);
                     let receipt = LaneItemReceipt { generation_before, generation_after: self.generation };
                     publication.expected_generation = self.generation;
@@ -19174,6 +19896,7 @@ where
                     self.displaced_retirements.push_reserved(Box::new(ArtifactStoreStringVectorRetirement::new(retired_cursor_redo)));
                 }
                 self.replace_pending_report_retained(PendingCommandReport::default())?;
+                let previous_actor = (*self.local_actor_id).clone();
                 self.replace_local_actor_retained(local_actor)?;
                 self.replace_tail_undo_cache_retained(Some((tail_edit_id, pre_snapshot)))?;
                 self.applied_edit_ids.push(applied_edit_id);
@@ -19184,7 +19907,7 @@ where
                 let edit_id_digest = CursorRevisionAccumulator::hash_record(b"edit-id", &[edit.id.as_bytes()]);
                 let previous = self.revision_accumulator.applied.last().map_or(self.revision_accumulator.identity_digest, |record| record.prefix_digest);
                 let prefix_digest = CursorRevisionAccumulator::hash_record(b"applied", &[&previous, &digest]);
-                let opened = publication.transaction.clone().filter(|_| publication.transaction_open).map(|transaction| OpenToolTransaction { transaction, edit_id: edit.id.clone() });
+                let opened = publication.transaction.clone().filter(|_| publication.transaction_open).map(|transaction| OpenToolTransaction { transaction, edit_id: edit.id.clone(), previous_actor });
                 self.insert_reserved_edit_history(reservation, *edit)?;
                 if opened.is_some() {
                     publication.outbound = false;
@@ -19235,7 +19958,7 @@ where
     /// pass over a wire the preparation's own declared footprint (`work_items = bytes + 3`) pays
     /// for exactly once, so no publication larger than its caller's spare turns could ever reach
     /// `Publishing`.
-    fn spend_item_close_grant(owner: &mut dyn ArtifactStoreOneItemPreparation<P, Mutation>, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String> {
+    fn spend_item_close_grant(owner: &mut dyn ArtifactStoreOneItemPreparation<P, Mutation>, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         let (step, released) = spend_close_byte_grant(grant.maximum_bytes, |remaining| owner.close_step(ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items, maximum_bytes: remaining }))?;
         Ok(match step {
             SnapshotRetirementStep::Blocked if released > 0 => SnapshotRetirementStep::Pending { released_items: 0, released_bytes: released },
@@ -19269,9 +19992,12 @@ where
             || candidate.edit.actor.as_deref() != Some(authority.actor.as_str())
             || candidate.local_actor.as_deref() != Some(authority.actor.as_str())
             || candidate.next_clock != authority.next_clock
-            || candidate.edit.inverse.len().saturating_add(candidate.edit.forwards.len()) > publication.footprint.work_items
         {
             return Err(VcsError::ValidationFailed("batched item candidate failed its exact fixed fold contract".into()));
+        }
+        let rows = candidate.edit.inverse.len().saturating_add(candidate.edit.forwards.len());
+        if rows > publication.footprint.work_items {
+            return Err(VcsError::TooLarge { rows, capacity: publication.footprint.work_items });
         }
         if publication.stage.is_none() {
             let mut staged = Box::new(Self::empty_batch_stage(&authority));
@@ -19300,7 +20026,6 @@ where
             stage.tail_edit_id = identity;
             stage.edit.actor = edit.actor.take();
             stage.edit.description = edit.description.take();
-            stage.edit.coalesce_key = publication.coalesce_key.clone();
             stage.edit.verb = publication.verb.clone();
             stage.edit.started_at = std::mem::take(&mut edit.started_at);
             stage.local_actor = local_actor;
@@ -19351,14 +20076,15 @@ where
     /// first fold reserves the gesture's exact admitted capacity.
     fn empty_batch_stage(authority: &Arc<ArtifactStoreOneItemLiveAuthority>) -> ArtifactStoreBatchStage<P, Mutation> {
         ArtifactStoreBatchStage {
-            edit: Box::new(Edit { line: None,
+            edit: Box::new(Edit {
+                line: None,
                 id: String::new(),
                 actor: None,
                 forwards: Vec::new(),
                 inverse: Vec::new(),
                 mutation_meta: Vec::new(),
-                description: None, verb: None,
-                coalesce_key: None,
+                description: None,
+                verb: None,
                 sequence_number: authority.next_sequence_number,
                 started_at: String::new(),
                 finished_at: None,
@@ -19403,7 +20129,7 @@ where
     //#region 🔖️EventSourcedHistory
     /// 🪪️ The wire operations `edit_id` owns — the replica-neutral identity transitions name.
     fn edit_mutation_ids(&self, edit_id: &str) -> Result<Vec<MutationId>, VcsError> {
-        let edit = self.envelope.vcs.edits.iter().find(|edit| edit.id == edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.to_string()))?;
+        let edit = self.envelope.vcs.edits.find_near(|edit| edit.id == edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.to_string()))?;
         Ok(crate::os_spr::mutation_ids_for_edit::<P, Mutation>(edit))
     }
 
@@ -19507,7 +20233,7 @@ where
         }
         drop(pending.replay.take());
         self.pending_reprojection = Some(pending);
-        match self.advance_reprojection().await? {
+        match self.advance_reprojection(None).await? {
             Some(ReprojectionAdvance::Adopted(replayed)) => Ok(replayed),
             Some(ReprojectionAdvance::Pending(_)) | None => Ok(Vec::new()),
         }
@@ -19571,6 +20297,7 @@ where
 
     /// 📎️ Records `envelope` in the transition log at its `(hlc, id)` position.
     fn insert_transition(&mut self, envelope: crate::os_spr::MutationEnvelope) {
+        self.fold_frontier = None;
         let key = envelope.timestamp.cmp_key();
         let position = self.envelope.transitions.partition_point(|known| (known.timestamp.cmp_key(), known.mutation_id.0.as_str()) < (key, envelope.mutation_id.0.as_str()));
         self.envelope.transitions.insert(position, envelope);
@@ -19605,6 +20332,12 @@ where
         if let Err(error) = self.admit_history_shape(&envelopes) {
             drop(replayed);
             return Err(error);
+        }
+        if let (None, [envelope]) = (&replayed, envelopes.as_slice()) {
+            if let Some(step) = self.tail_step(envelope) {
+                let envelope = envelopes.into_iter().next().expect("one tail-step envelope");
+                return self.adopt_tail_step(step, envelope, clock);
+            }
         }
         let envelopes = match replayed {
             Some(_) => envelopes,
@@ -19644,9 +20377,197 @@ where
 
     /// ♻️ [`Self::reproject`]'s body, which never suspends: for the history steps that must not.
     fn reproject_now(&mut self) -> Result<Vec<crate::os_spr::EditMessages>, VcsError> {
-        let fold = fold_envelope_history(&self.envelope)?;
+        self.fold_frontier = None;
+        let fold = self.fold_live_log()?;
         let replay = self.reprojection_replay(&fold)?;
         self.adopt_reprojection(fold, replay)
+    }
+
+    /// 🧮️ The full fold of the event log at this replica's head ([`fold_envelope_history`]) — O(history), so never on the
+    /// path of a local edit that joins the fold as its tail ([`Self::folded_tail`]).
+    fn fold_live_log(&self) -> Result<crate::os_spr::HistoryFold, VcsError> {
+        #[cfg(test)]
+        hot_path_census::count(|census| census.folds += 1);
+        fold_envelope_history(&self.envelope)
+    }
+
+    /// 🧭️ The greatest `(hlc)` key of every event in the log: the transitions are kept in key order, the edits are not.
+    fn event_frontier(&self) -> (u64, u64, u64) {
+        let transitions = self.envelope.transitions.last().map(|transition| transition.timestamp.cmp_key());
+        self.envelope.vcs.edits.iter().map(|edit| edit_timestamp(edit).cmp_key()).chain(transitions).max().unwrap_or_default()
+    }
+
+    /// 🪝️ `edit`'s `(hlc)` key when appending it — a fresh local edit tagged to this replica's line — makes the log's fold exactly
+    /// the live cursor with `edit` applied last ([`crate::os_spr::fold_history_for`]): the live cursor is the proven fold of the
+    /// log ([`Self::fold_frontier`]), `edit` sorts after every event, no history step waits and the head is its line's tip, where
+    /// every uncommitted edit of the line is visible.
+    fn folded_tail(&self, edit: &Edit<Mutation>) -> Option<(u64, u64, u64)> {
+        let key = edit_timestamp(edit).cmp_key();
+        let tail = self.fold_frontier.is_some_and(|frontier| key > frontier) && self.pending_reprojection.is_none() && self.envelope.viewer_checkpoint_id.is_none() && edit.line == self.envelope.active_alternative_id;
+        tail.then_some(key)
+    }
+
+    /// 🧷️ Adopts a local edit already appended as the fold's tail ([`Self::folded_tail`]) without folding the log: the fold
+    /// keeps exactly the redo entries `actor` did not author and changes nothing else.
+    fn adopt_folded_tail(&mut self, actor: Option<&str>, key: (u64, u64, u64)) -> Result<(), VcsError> {
+        let kept: Vec<String> = self.redo_edit_ids.iter().filter(|redo| self.envelope.vcs.edits.find_near(|edit| edit.id == **redo).and_then(|edit| edit.actor.as_deref()) != actor).cloned().collect();
+        if kept.len() != self.redo_edit_ids.len() {
+            self.replace_redo_edit_ids_retained(kept)?;
+        }
+        self.fold_frontier = Some(key);
+        Ok(())
+    }
+
+    /// ⚡️ The tail step `envelope` — one locally authored `Revert` or `Reinstate` — makes when it changes nothing but the
+    /// applied tail: the live cursor is the proven fold of the log ([`Self::fold_is_live`]) at this replica's line tip, the
+    /// transition sorts after every event, and it names exactly the operations of the applied tail edit (`Undo`) or of the redo
+    /// top a tail step just moved there with nothing happening since (`Redo`), authored by that edit's own actor. The fold then
+    /// moves exactly that edit between the stacks (`crate::os_spr::fold_history_for`): a `Revert` pushes it onto the redo
+    /// stack, a `Reinstate` takes it back at its own HLC position, which is the tail (design §20.14, D22).
+    fn tail_step(&self, envelope: &crate::os_spr::MutationEnvelope) -> Option<TailStep> {
+        let frontier = self.fold_frontier.filter(|_| self.fold_is_live() && !self.current_detached && self.envelope.viewer_checkpoint_id.is_none() && self.envelope.open_transaction.is_none())?;
+        if envelope.timestamp.cmp_key() <= frontier {
+            return None;
+        }
+        let (step, mutation_ids, edit_id) = match crate::os_spr::history_transition_from_envelope(envelope).ok()?? {
+            crate::os_spr::HistoryTransition::Revert { mutation_ids } if self.redo_edit_ids.admits_one() => (TailStep::Undo, mutation_ids, self.applied_edit_ids.last()?),
+            crate::os_spr::HistoryTransition::Reinstate { mutation_ids } if self.tail_step_generation == Some(self.generation) && self.applied_edit_ids.admits_one() => (TailStep::Redo, mutation_ids, self.redo_edit_ids.last()?),
+            _ => return None,
+        };
+        let edit = self.envelope.vcs.edits.find_near(|edit| edit.id == *edit_id)?;
+        let owned: HashSet<MutationId> = crate::os_spr::mutation_ids_for_edit::<P, Mutation>(edit).into_iter().collect();
+        let exact = mutation_ids.len() == owned.len() && mutation_ids.iter().all(|mutation_id| owned.contains(mutation_id));
+        (exact && edit.actor.as_deref().is_none_or(|actor| actor == envelope.actor.0)).then_some(step)
+    }
+
+    /// ⚡️ Adopts a tail step ([`Self::tail_step`]) without folding the log: projects through the tail snapshot or the nearest
+    /// retained prefix folded forward (undo), or the edit's effective forwards folded onto the head (redo), records `envelope`,
+    /// moves the edit between the stacks and keeps the prefixes it folded through. The edit's inverse and messages stand — its
+    /// base is the projection it was last replayed on — and the announcement leaves in this dispatch's outbound batch.
+    fn adopt_tail_step(&mut self, step: TailStep, envelope: crate::os_spr::MutationEnvelope, clock: HybridLogicalTimestamp) -> Result<(), VcsError> {
+        let key = envelope.timestamp.cmp_key();
+        let (projection, tail, recorded) = match step {
+            TailStep::Undo => {
+                let (base, recorded) = self.live_prefix_state(self.applied_edit_ids.len() - 1)?;
+                (base, None, recorded)
+            }
+            TailStep::Redo => {
+                let edit_id = self.redo_edit_ids.last().expect("a redo tail step names the redo top").clone();
+                let edit = self.envelope.vcs.edits.find_near(|edit| edit.id == edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
+                let pre = Arc::clone(&*self.current);
+                let mut next = Arc::clone(&pre);
+                fold_effective_edit(&mut next, edit, &self.envelope.schema, &self.supersessions, usize::MAX);
+                (next, Some((edit_id, pre)), Vec::new())
+            }
+        };
+        if let Err(error) = self.displaced_retirements.reserve(REPROJECTION_OWNER_SLOTS + 2 * recorded.len()) {
+            retire_shared_projection::<P, Mutation>(projection);
+            if let Some((_, snapshot)) = tail {
+                retire_shared_projection::<P, Mutation>(snapshot);
+            }
+            for (_, _, snapshot) in recorded {
+                retire_shared_projection::<P, Mutation>(snapshot);
+            }
+            return Err(error);
+        }
+        match step {
+            TailStep::Undo => {
+                self.replace_current_retained(projection)?;
+                self.replace_tail_undo_cache_retained(tail)?;
+                let edit_id = self.pop_applied_edit_id().expect("an undo tail step pops the applied tail");
+                self.push_redo_edit_id(edit_id);
+            }
+            TailStep::Redo => {
+                self.replace_tail_undo_cache_retained(tail)?;
+                self.replace_current_retained(projection)?;
+                let edit_id = self.pop_redo_edit_id().expect("a redo tail step pops the redo top");
+                self.push_applied_edit_id(edit_id);
+            }
+        }
+        self.admit_prefix_snapshots(recorded)?;
+        self.insert_transition(envelope.clone());
+        self.fold_frontier = Some(key);
+        self.dag.seed_applied(envelope.mutation_id.clone()).map_err(|error| VcsError::ValidationFailed(error.to_string()))?;
+        self.clock = clock;
+        self.pending_report.outbound.push(envelope);
+        self.bump()?;
+        self.tail_step_generation = Some(self.generation);
+        Ok(())
+    }
+
+    /// 🔭️ The projection after the first `length` live applied edits: the head, the tail snapshot, or the nearest retained
+    /// prefix — exact, since every bump evicts each entry past the first changed position ([`Self::prune_prefix_ring`]) — or
+    /// the genesis, folded forward over the live order (one stride at most once the ring holds the prefix). Answers the
+    /// prefixes it folded through on the ring's stride with their forwards-only digests, chained from the base's digest
+    /// instead of hashing the whole history.
+    fn live_prefix_state(&self, length: usize) -> Result<(Arc<P>, Vec<(usize, Option<[u8; 32]>, Arc<P>)>), VcsError> {
+        let applied = self.applied_edit_ids.len();
+        if !self.current_detached && length == applied {
+            return Ok((Arc::clone(&*self.current), Vec::new()));
+        }
+        if let Some((_, snapshot)) = self.tail_undo_cache.as_ref().filter(|(edit_id, _)| length + 1 == applied && self.applied_edit_ids.last() == Some(edit_id)) {
+            return Ok((Arc::clone(snapshot), Vec::new()));
+        }
+        let (start, mut digest, mut running) = match self.prefix_ring.iter().rev().find(|entry| entry.length <= length) {
+            Some(entry) => {
+                #[cfg(test)]
+                self.assert_prefix_entry_is_live(entry);
+                (entry.length, entry.digest, Arc::clone(&entry.snapshot))
+            }
+            None => (0, forward_prefix_genesis(self.revision_accumulator.identity_digest), Arc::new(self.envelope.vcs.initial_snapshot.clone())),
+        };
+        let stride = Self::prefix_stride(applied);
+        let last_recorded = length.saturating_sub(1) / stride * stride;
+        let mut recorded = Vec::new();
+        for (offset, edit_id) in self.applied_edit_ids.iter_from(start).take(length - start).enumerate() {
+            let Some(edit) = self.envelope.vcs.edits.find_near(|edit| edit.id == *edit_id) else {
+                retire_shared_projection::<P, Mutation>(running);
+                for (_, _, snapshot) in recorded {
+                    retire_shared_projection::<P, Mutation>(snapshot);
+                }
+                return Err(VcsError::UnknownEdit(edit_id.clone()));
+            };
+            fold_effective_edit(&mut running, edit, &self.envelope.schema, &self.supersessions, usize::MAX);
+            let reached = start + offset + 1;
+            if reached <= last_recorded {
+                digest = forward_prefix_step::<P, Mutation>(&digest, edit, &self.supersessions);
+                if reached % stride == 0 {
+                    recorded.push((reached, Some(digest), Arc::clone(&running)));
+                }
+            }
+        }
+        Ok((running, recorded))
+    }
+
+    /// 🧱️ Where a replay of the live order from `length` starts: the head, the tail snapshot, or the nearest retained prefix
+    /// at or before `length` (exact: [`Self::prune_prefix_ring`]), else the genesis; the replay folds the rest of the prefix
+    /// itself ([`EditReplay::new_after_prefix`]).
+    fn live_base(&self, length: usize) -> (usize, Arc<P>) {
+        let applied = self.applied_edit_ids.len();
+        if !self.current_detached && length == applied {
+            return (applied, Arc::clone(&*self.current));
+        }
+        if let Some((_, snapshot)) = self.tail_undo_cache.as_ref().filter(|(edit_id, _)| applied > 0 && length + 1 >= applied && self.applied_edit_ids.last() == Some(edit_id)) {
+            return (applied - 1, Arc::clone(snapshot));
+        }
+        match self.prefix_ring.iter().rev().find(|entry| entry.length <= length) {
+            Some(entry) => {
+                #[cfg(test)]
+                self.assert_prefix_entry_is_live(entry);
+                (entry.length, Arc::clone(&entry.snapshot))
+            }
+            None => (0, Arc::new(self.envelope.vcs.initial_snapshot.clone())),
+        }
+    }
+
+    /// 🔬️ Test-build oracle of [`Self::live_prefix_state`]'s trust in the pruned ring: `entry` names the live prefix of its
+    /// length (checked outside the hot-path census).
+    #[cfg(test)]
+    fn assert_prefix_entry_is_live(&self, entry: &PrefixSnapshot<P>) {
+        let saved = hot_path_census::take();
+        let digests = forward_prefix_digests::<P, Mutation, _, _>(self.revision_accumulator.identity_digest, self.applied_edit_ids.iter().take(entry.length), &self.envelope.vcs.edits, &self.supersessions).expect("the live prefix digests");
+        hot_path_census::count(|census| *census = saved);
+        assert_eq!(digests.last(), Some(&entry.digest), "a pruned prefix ring holds only entries of the live prefix (length {})", entry.length);
     }
 
     /// 🩺️ The Report replay `fold` needs: none when its applied order and effective inputs are live or it only drops applied
@@ -19670,7 +20591,8 @@ where
     /// of a supersession whose replay was computed before it was authored (a dry run, or a time-travel session). A replay of
     /// another order or other effective inputs is dropped and the log is replayed as usual.
     fn reproject_replayed(&mut self, result: EditReplayResult<P, Mutation>) -> Result<Vec<crate::os_spr::EditMessages>, VcsError> {
-        let fold = fold_envelope_history(&self.envelope)?;
+        self.fold_frontier = None;
+        let fold = self.fold_live_log()?;
         if fold.applied != result.order || !same_effective_inputs(&fold.supersessions, &result.supersessions) {
             drop(result);
             let replay = self.reprojection_replay(&fold)?;
@@ -19684,14 +20606,14 @@ where
     /// is adopted unless [`Self::preflight_reprojection`] admits all of it.
     fn adopt_reprojection(&mut self, fold: crate::os_spr::HistoryFold, replay: Option<EditReplayResult<P, Mutation>>) -> Result<Vec<crate::os_spr::EditMessages>, VcsError> {
         let prefix = match &replay {
-            None if fold.applied != *self.applied_edit_ids => Some(self.prefix_projection(&fold.applied)?),
+            None if fold.applied != *self.applied_edit_ids => Some(self.live_prefix_state(fold.applied.len())?),
             _ => None,
         };
         let recorded = prefix.as_ref().map_or(0, |(_, recorded)| recorded.len()) + replay.as_ref().map_or(0, |result| result.recorded.len());
         if let Err(error) = self.preflight_reprojection(&fold, replay.as_ref(), recorded) {
             if let Some((current, recorded)) = prefix {
                 retire_shared_projection::<P, Mutation>(current);
-                for (_, snapshot) in recorded {
+                for (_, _, snapshot) in recorded {
                     retire_shared_projection::<P, Mutation>(snapshot);
                 }
             }
@@ -19705,23 +20627,14 @@ where
                 self.replace_current_retained(current)?;
                 self.replace_tail_undo_cache_retained(None)?;
                 self.replace_applied_edit_ids_retained(applied)?;
-                self.retain_prefix_snapshots(recorded)?;
+                self.admit_prefix_snapshots(recorded)?;
                 Vec::new()
             }
             (None, None) => Vec::new(),
         };
         self.adopt_history_positions(redo, checkpoint, alternative)?;
+        self.fold_frontier = Some(self.event_frontier());
         Ok(replayed)
-    }
-
-    /// ⤵️ The projection after `applied`, a strict prefix of the live applied history: the tail snapshot when exactly the
-    /// tail edit left, otherwise the nearest retained prefix folded forward, with the prefix projections it folded
-    /// through. Reads only; every returned projection is an owner the caller adopts or retires.
-    fn prefix_projection(&self, applied: &[String]) -> Result<(Arc<P>, Vec<(usize, Arc<P>)>), VcsError> {
-        if let Some((_, snapshot)) = self.tail_undo_cache.as_ref().filter(|(edit_id, _)| applied.len() + 1 == self.applied_edit_ids.len() && self.applied_edit_ids.last() == Some(edit_id)) {
-            return Ok((Arc::clone(snapshot), Vec::new()));
-        }
-        self.prefix_state_recorded(applied, applied.len(), &self.supersessions, Self::prefix_stride(applied.len()))
     }
 
     /// 🛫️ Refuses a reprojection before it adopts anything: `fold`'s new history facts fit their ledgers and their pins
@@ -19760,6 +20673,7 @@ where
         let replayed = self.adopt_report_replay(result, tail)?;
         self.replace_applied_edit_ids_retained(applied)?;
         self.replace_supersessions_retained(supersessions)?;
+        self.prefix_ring_dirty_from = self.prefix_ring_dirty_from.min(from);
         self.retain_prefix_snapshots(recorded)?;
         self.revision_dirty_from = Some(self.revision_dirty_from.map_or(from, |dirty| dirty.min(from)));
         self.last_projection_cause = Some(ArtifactProjectionCause::Replay);
@@ -19790,20 +20704,13 @@ where
         Ok((from, horizon))
     }
 
-    /// 📽️ A Report replay of `applied[from..]` under `supersessions`, starting from the retained projection nearest
-    /// before `from`. With snapshot equality enabled and the live order unchanged it may converge onto the live
+    /// 📽️ A Report replay of `applied[from..]` under `supersessions`, starting from the live projection nearest before
+    /// `from` ([`Self::live_base`]; every caller's `from` lies at or before the first position where `applied` or
+    /// `supersessions` leave the live history, so the live prefix is the replayed one). With snapshot equality enabled and the live order unchanged it may converge onto the live
     /// projection from prefix length `horizon` on.
     fn report_replay(&self, applied: &[String], from: usize, supersessions: EffectiveSupersessions, horizon: Option<usize>, stride: usize) -> Result<EditReplay<P, Mutation>, VcsError> {
-        let (base, prefixes) = self.prefix_state_recorded(applied, from, &supersessions, stride)?;
-        let replay = match EditReplay::new(ReplayMode::Report, base, applied.to_vec(), from, &self.envelope.schema, supersessions, &self.envelope.vcs.edits) {
-            Ok(replay) => replay.with_base(self.generation, self.content_revision).recording(stride, prefixes),
-            Err(error) => {
-                for (_, prefix) in prefixes {
-                    retire_shared_projection::<P, Mutation>(prefix);
-                }
-                return Err(error);
-            }
-        };
+        let (start, base) = self.live_base(from);
+        let replay = EditReplay::new_after_prefix(ReplayMode::Report, start, base, applied.to_vec(), from, &self.envelope.schema, supersessions, &self.envelope.vcs.edits)?.with_base(self.generation, self.content_revision).recording(stride, Vec::new());
         let convergence = match (horizon, self.snapshot_equality) {
             (Some(horizon), Some(equal)) if self.applied_edit_ids.eq_slice(applied) => Some(self.convergence_checkpoints(horizon, equal)?),
             _ => None,
@@ -19811,13 +20718,21 @@ where
         Ok(replay.with_convergence(convergence))
     }
 
-    /// 🚩️ The live projection's retained states from prefix length `horizon` on — ring entries whose digest still names
-    /// the live prefix, the tail snapshot and the head — as a convergence probe. Every state is an alias of a root this
+    /// 🚩️ The live projection's retained states from prefix length `horizon` on — the pruned ring's entries (exact:
+    /// [`Self::prune_prefix_ring`]), the tail snapshot and the head — as a convergence probe. Every state is an alias of a root this
     /// store keeps, so the probe never owns a last reference.
     fn convergence_checkpoints(&self, horizon: usize, equal: fn(&P, &P) -> bool) -> Result<ReplayConvergence<P>, VcsError> {
         let length = self.applied_edit_ids.len();
-        let digests = forward_prefix_digests::<P, Mutation, _, _>(self.revision_accumulator.identity_digest, &*self.applied_edit_ids, &self.envelope.vcs.edits, &self.supersessions)?;
-        let mut checkpoints: Vec<(usize, Arc<P>)> = self.prefix_ring.iter().filter(|entry| entry.length >= horizon && entry.length < length && digests.get(entry.length) == Some(&entry.digest)).map(|entry| (entry.length, Arc::clone(&entry.snapshot))).collect();
+        let mut checkpoints: Vec<(usize, Arc<P>)> = self
+            .prefix_ring
+            .iter()
+            .filter(|entry| entry.length >= horizon && entry.length < length)
+            .map(|entry| {
+                #[cfg(test)]
+                self.assert_prefix_entry_is_live(entry);
+                (entry.length, Arc::clone(&entry.snapshot))
+            })
+            .collect();
         if let Some((edit_id, snapshot)) = self.tail_undo_cache.as_ref() {
             if length > horizon && self.applied_edit_ids.last() == Some(edit_id) && !checkpoints.iter().any(|(known, _)| *known == length - 1) {
                 checkpoints.push((length - 1, Arc::clone(snapshot)));
@@ -19891,6 +20806,7 @@ where
             return Ok(());
         }
         self.displaced_retirements.reserve(usize::from(!self.supersessions.is_empty()))?;
+        self.fold_frontier = None;
         let previous = std::mem::replace(&mut *self.supersessions, next);
         if !previous.is_empty() {
             self.displaced_retirements.push_reserved(Box::new(ArtifactStoreSupersessionRetirement::new(previous)));
@@ -19914,29 +20830,49 @@ where
     /// stride, evicting whatever a stale digest or a coarser stride no longer justifies. Without a snapshot retirement
     /// factory nothing is retained; a refused admission retires every offered projection.
     fn retain_prefix_snapshots(&mut self, snapshots: Vec<(usize, Arc<P>)>) -> Result<(), VcsError> {
+        if snapshots.is_empty() || (*self.snapshot_retirement_factory).is_none() {
+            for (_, snapshot) in snapshots {
+                retire_shared_projection::<P, Mutation>(snapshot);
+            }
+            return Ok(());
+        }
+        match forward_prefix_digests::<P, Mutation, _, _>(self.revision_accumulator.identity_digest, &*self.applied_edit_ids, &self.envelope.vcs.edits, &self.supersessions) {
+            Ok(digests) => self.admit_prefix_snapshots(snapshots.into_iter().map(|(length, snapshot)| (length, digests.get(length).copied(), snapshot)).collect()),
+            Err(error) => {
+                for (_, snapshot) in snapshots {
+                    retire_shared_projection::<P, Mutation>(snapshot);
+                }
+                Err(error)
+            }
+        }
+    }
+
+    /// 🗃️ Admits prefix projections `(length, digest, projection)` of the live applied history whose forwards-only digests
+    /// the caller already holds ([`Self::retain_prefix_snapshots`], [`Self::live_prefix_state`]); one without a digest, off
+    /// the stride, or offered without a snapshot retirement factory retires at once.
+    fn admit_prefix_snapshots(&mut self, snapshots: Vec<(usize, Option<[u8; 32]>, Arc<P>)>) -> Result<(), VcsError> {
         if snapshots.is_empty() {
             return Ok(());
         }
-        let admitted = match (*self.snapshot_retirement_factory).clone() {
-            Some(factory) => self
-                .displaced_retirements
-                .reserve(2 * snapshots.len())
-                .and_then(|()| forward_prefix_digests::<P, Mutation, _, _>(self.revision_accumulator.identity_digest, &*self.applied_edit_ids, &self.envelope.vcs.edits, &self.supersessions))
-                .map(|digests| Some((factory, digests))),
-            None => Ok(None),
+        let admitted = match self.prune_prefix_ring() {
+            Err(error) => Err(error),
+            Ok(()) => match (*self.snapshot_retirement_factory).clone() {
+                Some(factory) => self.displaced_retirements.reserve(2 * snapshots.len()).map(|()| Some(factory)),
+                None => Ok(None),
+            },
         };
-        let (factory, digests) = match admitted {
-            Ok(Some(admitted)) => admitted,
+        let factory = match admitted {
+            Ok(Some(factory)) => factory,
             refused => {
-                for (_, snapshot) in snapshots {
+                for (_, _, snapshot) in snapshots {
                     retire_shared_projection::<P, Mutation>(snapshot);
                 }
                 return refused.map(|_| ());
             }
         };
         let stride = Self::prefix_stride(self.applied_edit_ids.len());
-        for (length, snapshot) in snapshots {
-            let Some(digest) = digests.get(length).copied().filter(|_| length != 0 && length % stride == 0) else {
+        for (length, digest, snapshot) in snapshots {
+            let Some(digest) = digest.filter(|_| length != 0 && length % stride == 0) else {
                 retire_shared_projection::<P, Mutation>(snapshot);
                 continue;
             };
@@ -19966,20 +20902,19 @@ where
         }
     }
 
-    /// 🪓️ Evicts every ring entry whose digest no longer names the live effective prefix.
+    /// 🪓️ Evicts every ring entry past [`Self::prefix_ring_dirty_from`] — the first applied position whose id, forwards or
+    /// effective input changed since the last prune — in O(ring); every reader still checks an entry's digest before folding
+    /// from it.
     fn prune_prefix_ring(&mut self) -> Result<(), VcsError> {
-        if self.prefix_ring.is_empty() {
+        let dirty = std::mem::replace(&mut self.prefix_ring_dirty_from, usize::MAX);
+        let stale = self.prefix_ring.len() - self.prefix_ring.partition_point(|entry| entry.length <= dirty);
+        if stale == 0 {
             return Ok(());
         }
-        let digests = forward_prefix_digests::<P, Mutation, _, _>(self.revision_accumulator.identity_digest, &*self.applied_edit_ids, &self.envelope.vcs.edits, &self.supersessions)?;
-        let stale: Vec<usize> = self.prefix_ring.iter().enumerate().filter(|(_, entry)| digests.get(entry.length) != Some(&entry.digest)).map(|(position, _)| position).collect();
-        if stale.is_empty() {
-            return Ok(());
-        }
-        self.displaced_retirements.reserve(stale.len())?;
+        self.displaced_retirements.reserve(stale)?;
         let factory = (*self.snapshot_retirement_factory).clone().ok_or_else(|| VcsError::ValidationFailed("artifact store prefix ring eviction requires its exact snapshot retirement factory".into()))?;
-        for position in stale.into_iter().rev() {
-            self.evict_prefix_snapshot_reserved(position, &factory);
+        for _ in 0..stale {
+            self.evict_prefix_snapshot_reserved(self.prefix_ring.len() - 1, &factory);
         }
         Ok(())
     }
@@ -20019,9 +20954,13 @@ where
             for pin in &checkpoint.pins {
                 pins.push(crate::os_vcs::CompositionPin { child_ref: crate::os_io::ArtifactRef::parse_uri(&pin.child_uri).map_err(VcsError::Deserialize)?, checkpoint_id: pin.checkpoint_id.clone() });
             }
-            let known_position = self.envelope.vcs.checkpoints.iter().position(|known| known.id == checkpoint.id).or_else(|| {
-                self.envelope.vcs.checkpoints.iter().position(|known| known.parent_id == checkpoint.parent_id && known.change_ids == checkpoint.change_ids && !fold.checkpoints.iter().any(|folded| folded.id == known.id))
-            });
+            let known_position = self
+                .envelope
+                .vcs
+                .checkpoints
+                .iter()
+                .position(|known| known.id == checkpoint.id)
+                .or_else(|| self.envelope.vcs.checkpoints.iter().position(|known| known.parent_id == checkpoint.parent_id && known.change_ids == checkpoint.change_ids && !fold.checkpoints.iter().any(|folded| folded.id == known.id)));
             let Some(position) = known_position else {
                 fresh.push((checkpoint, pins));
                 continue;
@@ -20043,7 +20982,15 @@ where
             let reservation = self.reserve_checkpoint_history_slot()?;
             self.insert_reserved_checkpoint_history(
                 reservation,
-                Checkpoint { id: checkpoint.id.clone(), change_ids: checkpoint.change_ids.clone(), parent_id: checkpoint.parent_id.clone(), authors, message: checkpoint.message.clone(), timestamp: checkpoint.timestamp.clone(), composition_pins: pins },
+                Checkpoint {
+                    id: checkpoint.id.clone(),
+                    change_ids: checkpoint.change_ids.clone(),
+                    parent_id: checkpoint.parent_id.clone(),
+                    authors,
+                    message: checkpoint.message.clone(),
+                    timestamp: checkpoint.timestamp.clone(),
+                    composition_pins: pins,
+                },
             )?;
         }
         let stale_alternative = |known: &Alternative| !fold.alternatives.iter().any(|alternative| alternative.id == known.id);
@@ -20132,8 +21079,6 @@ where
             ArtifactCommand::CheckoutCheckpoint { checkpoint_id } => self.checkout_local_checkpoint(checkpoint_id).await,
             ArtifactCommand::Apply { mutations, description, transaction } => self.apply_command(mutations, description, HistoryLane::Document, transaction).await,
             ArtifactCommand::ApplyInLane { mutations, description, lane, transaction } => self.apply_command(mutations, description, lane, transaction).await,
-            ArtifactCommand::AmendLast { mutations, coalesce_key } => self.amend_command(mutations, coalesce_key, HistoryLane::Document).await,
-            ArtifactCommand::AmendLastInLane { mutations, coalesce_key, lane } => self.amend_command(mutations, coalesce_key, lane).await,
             ArtifactCommand::IngestRemote { envelope } => {
                 let report = self.ingest_remote(envelope).await?;
                 self.absorb_merge_report(&report);
@@ -20158,7 +21103,7 @@ where
     }
 
     //#region 🔖️ToolTransactions
-    /// 🪡️ `AppendTransaction`: the first append opens one edit stamped with the ref — no description, no coalesce key — and
+    /// 🪡️ `AppendTransaction`: the first append opens one edit stamped with the ref — no description — and
     /// every later one folds its operations onto the projection and appends them to that edit, every operation stamped with
     /// the ref. The open edit is always the applied tail ([`Self::ingest_remote`] lifts it over remote edits), and neither
     /// the shared log nor a persisted form holds it before its commit, so an abort leaves no trace anywhere.
@@ -20169,6 +21114,7 @@ where
         let Some(open) = self.envelope.open_transaction.clone() else {
             return self.open_transaction_edit(mutations, transaction).await;
         };
+        let before = self.content_revision;
         let pre_snapshot = Arc::clone(&*self.current);
         let (forwards, inverse, mutation_meta, post, mut messages) = self.replay_mutations(&pre_snapshot, mutations, Some(&transaction)).await?;
         let edit = self.envelope.vcs.edits.iter_mut().find(|edit| edit.id == open.edit_id).ok_or_else(|| VcsError::UnknownEdit(open.edit_id.clone()))?;
@@ -20176,13 +21122,30 @@ where
         for message in messages.iter_mut() {
             message.op_index = message.op_index.map(|index| index + offset);
         }
+        let appended = forwards.len();
         edit.forwards.extend(forwards);
         edit.inverse.extend(inverse);
         edit.mutation_meta.extend(mutation_meta);
         self.record_edit_messages(&open.edit_id, messages)?;
         self.replace_current_retained(Arc::new(post))?;
-        self.reproject().await?;
-        self.bump()
+        if !self.fold_is_live() {
+            self.reproject().await?;
+        }
+        self.bump()?;
+        self.continue_pending_replay_across_append(before, &open.edit_id, appended);
+        Ok(())
+    }
+
+    /// 🧵️ A tick appended to the open transaction's edit — the applied tail — changes nothing a waiting replay already
+    /// replayed and nothing it reads by id before the tail: the waiting replay started against the revision `before` the tick
+    /// keeps running against the grown edit instead of restarting, so a tool streaming every turn never starves a waiting
+    /// history step (audit W1G-5). A replay started against any other revision restarts as before.
+    fn continue_pending_replay_across_append(&mut self, before: [u8; 32], edit_id: &str, appended: usize) {
+        let revision = self.content_revision;
+        if let Some((started, replay)) = self.pending_reprojection.as_mut().and_then(|pending| pending.replay.as_mut()).filter(|(started, _)| *started == before) {
+            *started = revision;
+            replay.absorb_tail_growth(edit_id, appended);
+        }
     }
 
     /// 🪁️ The first append of a tool transaction: one fresh edit at the applied tail holding its operations, open and
@@ -20192,19 +21155,37 @@ where
         let pre_snapshot = Arc::clone(&*self.current);
         let (forwards, inverse, mutation_meta, post, messages) = self.replay_mutations(&pre_snapshot, mutations, Some(&transaction)).await?;
         let actor = edit_actor_from_meta(&mutation_meta).await;
+        let previous_actor = (*self.local_actor_id).clone();
         self.replace_local_actor_retained(actor.clone())?;
         self.edit_sequence += 1;
-        let forwards_fingerprint = crate::os_pack::json::to_json_string(&forwards).into_bytes();
+        let forwards_fingerprint = semio_framework_pack_json::to_json_string(&forwards).into_bytes();
         let reservation = self.reserve_edit_history_slot()?;
         let edit_id = mint_edit_id(self.clock.actor, self.edit_sequence, &forwards_fingerprint).await;
-        let edit = Edit { id: edit_id.clone(), actor, forwards, inverse, mutation_meta, description: None, verb: self.authoring_verb.clone(), line: self.envelope.active_alternative_id.clone(), coalesce_key: None, sequence_number: self.edit_sequence, started_at, finished_at: None };
+        let edit = Edit {
+            id: edit_id.clone(),
+            actor,
+            forwards,
+            inverse,
+            mutation_meta,
+            description: None,
+            verb: self.authoring_verb.clone(),
+            line: self.envelope.active_alternative_id.clone(),
+            sequence_number: self.edit_sequence,
+            started_at,
+            finished_at: None,
+        };
+        let tail = self.folded_tail(&edit);
+        let actor = edit.actor.clone();
         self.insert_reserved_edit_history(reservation, edit)?;
         self.record_edit_messages(&edit_id, messages)?;
         self.replace_tail_undo_cache_retained(Some((edit_id.clone(), pre_snapshot)))?;
-        self.applied_edit_ids.push(edit_id.clone());
+        self.push_applied_edit_id(edit_id.clone());
         self.replace_current_retained(Arc::new(post))?;
-        self.envelope.open_transaction = Some(OpenToolTransaction { transaction, edit_id });
-        self.reproject().await?;
+        self.envelope.open_transaction = Some(OpenToolTransaction { transaction, edit_id, previous_actor });
+        match tail {
+            Some(key) => self.adopt_folded_tail(actor.as_deref(), key)?,
+            None => drop(self.reproject().await?),
+        }
         self.bump()
     }
 
@@ -20216,7 +21197,7 @@ where
         let edit = self.envelope.vcs.edits.iter_mut().find(|edit| edit.id == open.edit_id).ok_or_else(|| VcsError::UnknownEdit(open.edit_id.clone()))?;
         edit.finished_at = Some(now_iso());
         stamp_primary_operation_identity(edit);
-        let edit = self.envelope.vcs.edits.iter().find(|edit| edit.id == open.edit_id).ok_or_else(|| VcsError::UnknownEdit(open.edit_id.clone()))?;
+        let edit = self.envelope.vcs.edits.find_near(|edit| edit.id == open.edit_id).ok_or_else(|| VcsError::UnknownEdit(open.edit_id.clone()))?;
         let operations = self.operation_envelopes(edit)?;
         self.envelope.open_transaction = None;
         self.announce_operations(operations)?;
@@ -20234,6 +21215,7 @@ where
         }
         retire_scratch_edits::<P, Mutation>(removed);
         self.replace_edit_messages(&open.edit_id, Vec::new())?;
+        self.replace_local_actor_retained(open.previous_actor)?;
         self.envelope.open_transaction = None;
         self.reproject_now()?;
         self.bump()
@@ -20292,25 +21274,25 @@ where
 
     //#region 🔖️DeferredReprojection
     /// 🐢️ Steps the Report replay a remote history change needs — a supersession, undo or redo another replica authored —
-    /// in budgets of at most `operations` per turn ([`Self::step_reprojection`], also every [`Self::tick`]) instead of inside
-    /// the ingest that admitted it, so a long downstream replay never freezes this replica. Until the change is adopted the
-    /// replica shows the history before it, and the adoption is exactly the one an ingest without a budget makes. `None`
-    /// replays inside the ingest.
-    pub fn defer_remote_replays(&mut self, operations: Option<usize>) {
-        self.replay_budget = operations.filter(|operations| *operations > 0);
+    /// one `budget` per turn ([`ReplayTurnBudget`]: a wall deadline first, an operation cap second;
+    /// [`Self::step_reprojection`], also every [`Self::tick`]) instead of inside the ingest that admitted it, so a long
+    /// downstream replay never freezes this replica. Until the change is adopted the replica shows the history before it,
+    /// and the adoption is exactly the one an ingest without a budget makes. `None` replays inside the ingest.
+    pub fn defer_remote_replays(&mut self, budget: Option<ReplayTurnBudget>) {
+        self.replay_budget = budget.filter(|budget| budget.operations > 0 && budget.wall_us > 0);
     }
 
     /// 🐌️ Steps the Report replay a local history step needs — an interior undo or redo, a checkout or alternative switch
-    /// away from the applied tail, a supersession (finalize) authored without a finished replay (design §16.6) — in budgets
-    /// of at most `operations` per turn instead of inside its dispatch, which replays the first budget and answers. Until
+    /// away from the applied tail, a supersession (finalize) authored without a finished replay (design §16.6) — one
+    /// `budget` per turn ([`ReplayTurnBudget`]) instead of inside its dispatch, which replays the first turn and answers. Until
     /// the step is adopted ([`Self::step_reprojection`], also every [`Self::tick`]) the replica shows the history before it,
     /// nothing of the step is recorded or announced, every further history step is refused
     /// ([`VcsError::HistoryReplaying`]) and [`Self::discard_local_step`] drops it with zero trace; edits and remote changes
     /// meanwhile restart its replay. The adoption is exactly the one an undeferred dispatch makes, a supersession whose
     /// report blocks finalizing included (refused with `Rejected { policy: Normal }`). Steps that need no replay adopt
     /// inside their dispatch. `None` replays inside the dispatch.
-    pub fn defer_local_replays(&mut self, operations: Option<usize>) {
-        self.local_replay_budget = operations.filter(|operations| *operations > 0);
+    pub fn defer_local_replays(&mut self, budget: Option<ReplayTurnBudget>) {
+        self.local_replay_budget = budget.filter(|budget| budget.operations > 0 && budget.wall_us > 0);
     }
 
     /// ⏳️ Whether a local history step still replays ([`Self::defer_local_replays`]).
@@ -20334,9 +21316,9 @@ where
     }
 
     /// 📶️ The progress of the deferred reprojection — a remote change, a local step or both (`done` 0 until its replay
-    /// starts), `None` when nothing waits.
+    /// starts, and again once an edit or another change made its replay restart), `None` when nothing waits.
     pub fn reprojection_progress(&self) -> Option<ReplayProgress> {
-        self.pending_reprojection.as_ref().map(|pending| pending.replay.as_ref().map_or_else(ReplayProgress::default, |(_, replay)| replay.progress()))
+        self.pending_reprojection.as_ref().map(|pending| pending.replay.as_ref().filter(|(revision, _)| *revision == self.content_revision).map_or_else(ReplayProgress::default, |(_, replay)| replay.progress()))
     }
 
     /// ✋️ Drops the running replay of the deferred reprojection: the store is untouched, the change stays admitted (a
@@ -20346,10 +21328,11 @@ where
         self.pending_reprojection.as_mut().and_then(|pending| pending.replay.take()).is_some()
     }
 
-    /// ⏭️ Advances the deferred reprojection by one budget of operations and adopts it once its replay finished, announcing
-    /// a local step's transitions. Answers its progress while it still waits, `None` once nothing waits.
-    pub async fn step_reprojection(&mut self) -> Result<Option<ReplayProgress>, VcsError> {
-        match self.advance_reprojection().await? {
+    /// ⏭️ Advances the deferred reprojection by one turn — until `deadline_us` on the budget's clock when the runtime names
+    /// its turn deadline, else one [`ReplayTurnBudget`] — and adopts it once its replay finished, announcing a local step's
+    /// transitions. Answers its progress while it still waits, `None` once nothing waits.
+    pub async fn step_reprojection(&mut self, deadline_us: Option<u64>) -> Result<Option<ReplayProgress>, VcsError> {
+        match self.advance_reprojection(deadline_us).await? {
             Some(ReprojectionAdvance::Pending(progress)) => Ok(Some(progress)),
             Some(ReprojectionAdvance::Adopted(_)) => {
                 self.bump()?;
@@ -20383,17 +21366,21 @@ where
         pending.local = Some(step);
         self.pending_reprojection = Some(pending);
         self.clock = clock;
-        match self.advance_reprojection().await? {
-            Some(ReprojectionAdvance::Adopted(_)) => self.bump().map(|()| None),
+        match self.advance_reprojection(None).await? {
+            Some(ReprojectionAdvance::Adopted(_)) => {
+                self.bump()?;
+                self.last_projection_cause = Some(ArtifactProjectionCause::Replay);
+                Ok(None)
+            }
             Some(ReprojectionAdvance::Pending(_)) | None => Ok(None),
         }
     }
 
-    /// 🧮️ One budget of the deferred reprojection: (re)starts its Report replay when the history it started from changed,
-    /// steps it, and adopts the change with the finished replay; a change that needs no replay is adopted at once. A
-    /// refused adoption drops the change — a refused local step only, its remote transitions wait again — and answers the
-    /// refusal.
-    async fn advance_reprojection(&mut self) -> Result<Option<ReprojectionAdvance>, VcsError> {
+    /// 🧮️ One turn of the deferred reprojection (until `deadline_us`, else one [`ReplayTurnBudget`]): (re)starts its Report
+    /// replay when the history it started from changed, steps it, and adopts the change with the finished replay; a change
+    /// that needs no replay is adopted at once. A refused adoption drops the change — a refused local step only, its remote
+    /// transitions wait again — and answers the refusal.
+    async fn advance_reprojection(&mut self, deadline_us: Option<u64>) -> Result<Option<ReprojectionAdvance>, VcsError> {
         let Some(mut pending) = self.pending_reprojection.take() else {
             return Ok(None);
         };
@@ -20415,12 +21402,13 @@ where
                 }
             }
         }
-        let budget = pending.local.as_ref().and(self.local_replay_budget).or(self.replay_budget).unwrap_or(usize::MAX);
+        let budget = pending.local.as_ref().and(self.local_replay_budget).or(self.replay_budget).unwrap_or(ReplayTurnBudget::operations(usize::MAX));
+        let deadline = budget.turn_deadline(deadline_us);
         let (_, replay) = pending.replay.as_mut().expect("a started deferred replay");
-        let mut left = budget;
+        let mut replayed = 0usize;
         let step = replay.step(&self.envelope.vcs.edits, &mut || {
-            left = left.saturating_sub(1);
-            left == 0
+            replayed += 1;
+            budget.turn_ends(replayed, deadline)
         });
         match step {
             Ok(ReplayStep::Pending(progress)) => {
@@ -20484,13 +21472,14 @@ where
             self.refuse_local_step(PendingReprojection { transitions, local: Some(local), replay: None });
             return Err(VcsError::Rejected { policy: crate::os_spr::MergePolicy::Normal, messages });
         }
-        let PendingLocalStep { envelopes, head, .. } = local;
+        let PendingLocalStep { envelopes, head, finalizing } = local;
         let saved = self.viewer_head_now();
-        let admitted: Vec<MutationId> = transitions.iter().chain(envelopes.iter()).map(|envelope| envelope.mutation_id.clone()).collect();
+        let remote: Vec<MutationId> = transitions.iter().map(|envelope| envelope.mutation_id.clone()).collect();
+        let authored: Vec<MutationId> = envelopes.iter().map(|envelope| envelope.mutation_id.clone()).collect();
         for envelope in transitions.into_iter().chain(envelopes.iter().cloned()) {
             self.insert_transition(envelope);
         }
-        (self.envelope.active_alternative_id, self.envelope.viewer_checkpoint_id) = head;
+        (self.envelope.active_alternative_id, self.envelope.viewer_checkpoint_id) = head.clone();
         let projected = match replayed {
             Some(result) => self.reproject_replayed(result),
             None => self.reproject().await,
@@ -20498,8 +21487,10 @@ where
         let replayed = match projected {
             Ok(replayed) => replayed,
             Err(error) => {
-                self.envelope.transitions.retain(|known| !admitted.contains(&known.mutation_id));
+                let waiting: Vec<crate::os_spr::MutationEnvelope> = self.envelope.transitions.extract_if(.., |known| remote.contains(&known.mutation_id)).collect();
+                self.envelope.transitions.retain(|known| !authored.contains(&known.mutation_id));
                 (self.envelope.active_alternative_id, self.envelope.viewer_checkpoint_id) = saved;
+                self.refuse_local_step(PendingReprojection { transitions: waiting, local: Some(PendingLocalStep { envelopes, head, finalizing }), replay: None });
                 return Err(error);
             }
         };
@@ -20722,7 +21713,7 @@ where
         let mut applied: HashMap<MutationId, &Mutation> = HashMap::new();
         let mut failure = None;
         for edit_id in self.applied_edit_ids.iter() {
-            match self.envelope.vcs.edits.iter().find(|edit| edit.id == *edit_id) {
+            match self.envelope.vcs.edits.find_near(|edit| edit.id == *edit_id) {
                 Some(edit) => applied.extend(crate::os_spr::mutation_ids_for_edit::<P, Mutation>(edit).into_iter().zip(edit.forwards.iter())),
                 None => {
                     failure = Some(VcsError::UnknownEdit(edit_id.clone()));
@@ -20799,7 +21790,6 @@ where
         self.supersede_inputs(typed)
     }
 
-
     /// 📮️ Hands a supersession's replay messages to the dispatch receipt, grouped by edit.
     fn record_replay_report(&mut self, report: &protocol::ReplayReport) {
         let mut grouped: Vec<crate::os_spr::EditMessages> = Vec::new();
@@ -20827,7 +21817,7 @@ where
 
     //#region 🔖️HistoryLane
     /// 🛤️ The lane `edit_id` was recorded under. Absence from `envelope.lanes` means
-    /// `Document` by construction — `apply_command`/`amend_command` below only ever insert a map
+    /// `Document` by construction — `apply_command` below only ever inserts a map
     /// entry for a NON-`Document` lane, so an ordinary document edit (and every edit that predates
     /// this field) never gets one. `HistoryLane` is `Copy`, so this returns by value like
     /// `edit_is_local` returns `bool`.
@@ -20965,7 +21955,8 @@ where
         let mut dependencies = mutation_ids.clone();
         dependencies.extend(parent_id.as_deref().and_then(|parent_id| self.checkpoint_origin(parent_id)));
         let authors = authors.into_iter().map(|author| crate::os_spr::TransitionAuthor { id: author.id, name: author.name, avatar: author.avatar }).collect();
-        let checkpoint = crate::os_spr::TransitionCheckpoint { checkpoint_id: checkpoint_id.clone(), parent_id, change_id, mutation_ids, description: message.clone(), saved_at, authors, message, timestamp, line_id: self.envelope.active_alternative_id.clone() };
+        let checkpoint =
+            crate::os_spr::TransitionCheckpoint { checkpoint_id: checkpoint_id.clone(), parent_id, change_id, mutation_ids, description: message.clone(), saved_at, authors, message, timestamp, line_id: self.envelope.active_alternative_id.clone() };
         Ok((crate::os_spr::HistoryTransition::Commit(checkpoint), dependencies, checkpoint_id))
     }
 
@@ -20990,7 +21981,7 @@ where
         let actor = edit_actor_from_meta(&mutation_meta).await;
         self.replace_local_actor_retained(actor.clone())?;
         self.edit_sequence += 1;
-        let forwards_fingerprint = crate::os_pack::json::to_json_string(&forwards).into_bytes();
+        let forwards_fingerprint = semio_framework_pack_json::to_json_string(&forwards).into_bytes();
         let reservation = self.reserve_edit_history_slot()?;
         let mut edit = Edit {
             id: mint_edit_id(self.clock.actor, self.edit_sequence, &forwards_fingerprint).await,
@@ -21001,7 +21992,6 @@ where
             description,
             verb: self.authoring_verb.clone(),
             line: self.envelope.active_alternative_id.clone(),
-            coalesce_key: None,
             sequence_number: self.edit_sequence,
             started_at,
             finished_at: Some(now_iso()),
@@ -21009,86 +21999,29 @@ where
         stamp_primary_operation_identity(&mut edit);
         let edit_id = edit.id.clone();
         let operations = self.operation_envelopes(&edit)?;
+        let tail = self.folded_tail(&edit);
+        let actor = edit.actor.clone();
         self.insert_reserved_edit_history(reservation, edit)?;
         if !lane.is_document().await {
             self.envelope.lanes.insert(edit_id.clone(), lane);
         }
         self.record_edit_messages(&edit_id, messages)?;
         self.replace_tail_undo_cache_retained(Some((edit_id.clone(), pre_snapshot)))?;
-        self.applied_edit_ids.push(edit_id);
+        self.push_applied_edit_id(edit_id);
         self.replace_current_retained(Arc::new(post))?;
         self.announce_operations(operations)?;
-        self.reproject().await?;
+        match tail {
+            Some(key) => self.adopt_folded_tail(actor.as_deref(), key)?,
+            None => drop(self.reproject().await?),
+        }
         self.bump()?;
         Ok(())
     }
 
-    /// 🛤️ Shared body of `AmendLast`/`AmendLastInLane`: identical edit-recording logic to
-    /// the pre-lane `AmendLast` arm. Only the FRESH-edit branch can tag a lane — an edit absorbed
-    /// into an already-coalescing target keeps whatever lane it was first created under (amending
-    /// never changes an edit's lane after the fact).
-    ///
-    /// ⚡️ `current` already reflects this edit's existing forwards (it was folded in when
-    /// the edit was created or last amended), so it's always the correct base for the NEW
-    /// operations — O(1) instead of the old cache-validity dance.
-    async fn amend_command(&mut self, mutations: Vec<Mutation>, coalesce_key: Option<String>, lane: HistoryLane) -> Result<(), VcsError> {
-        if mutations.is_empty() {
-            return Err(VcsError::EmptyApply);
-        }
-        let uncommitted = uncommitted_edit_ids(&self.envelope, &*self.applied_edit_ids).await;
-        let amend_target =
-            self.applied_edit_ids.last().cloned().filter(|last_id| coalesce_key.is_some() && uncommitted.contains(last_id) && self.envelope.vcs.edits.iter().find(|edit| edit.id == *last_id).is_some_and(|edit| edit.coalesce_key == coalesce_key));
-        if let Some(edit_id) = amend_target {
-            let pre_snapshot = Arc::clone(&*self.current);
-            let transaction = self.envelope.vcs.edits.iter().find(|edit| edit.id == edit_id).and_then(|edit| edit.mutation_meta.first()).and_then(|meta| meta.transaction.clone());
-            let (new_forwards, new_inverse, new_mutation_meta, post, messages) = self.replay_mutations(&pre_snapshot, mutations, transaction.as_ref()).await?;
-            let mut announced_from = 0;
-            if let Some(edit) = self.envelope.vcs.edits.iter_mut().find(|edit| edit.id == edit_id) {
-                announced_from = edit.forwards.len();
-                edit.forwards.extend(new_forwards);
-                edit.inverse.extend(new_inverse);
-                edit.mutation_meta.extend(new_mutation_meta);
-                edit.finished_at = Some(now_iso());
-            }
-            let edit = self.envelope.vcs.edits.iter().find(|edit| edit.id == edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
-            let operations = self.operation_envelopes_since(edit, announced_from)?;
-            self.record_edit_messages(&edit_id, messages)?;
-            self.replace_current_retained(Arc::new(post))?;
-            self.announce_operations(operations)?;
-            self.reproject().await?;
-            self.bump()?;
-            Ok(())
-        } else {
-            let started_at = now_iso();
-            let pre_snapshot = Arc::clone(&*self.current);
-            let (forwards, inverse, mutation_meta, post, messages) = self.replay_mutations(&pre_snapshot, mutations, None).await?;
-            let actor = edit_actor_from_meta(&mutation_meta).await;
-            self.replace_local_actor_retained(actor.clone())?;
-            self.edit_sequence += 1;
-            let forwards_fingerprint = crate::os_pack::json::to_json_string(&forwards).into_bytes();
-            let edit_id = mint_edit_id(self.clock.actor, self.edit_sequence, &forwards_fingerprint).await;
-            let reservation = self.reserve_edit_history_slot()?;
-            let mut edit = Edit { id: edit_id.clone(), actor, forwards, inverse, mutation_meta, description: None, verb: self.authoring_verb.clone(), line: self.envelope.active_alternative_id.clone(), coalesce_key, sequence_number: self.edit_sequence, started_at, finished_at: Some(now_iso()) };
-            stamp_primary_operation_identity(&mut edit);
-            let operations = self.operation_envelopes(&edit)?;
-            self.insert_reserved_edit_history(reservation, edit)?;
-            if !lane.is_document().await {
-                self.envelope.lanes.insert(edit_id.clone(), lane);
-            }
-            self.record_edit_messages(&edit_id, messages)?;
-            self.replace_tail_undo_cache_retained(Some((edit_id.clone(), pre_snapshot)))?;
-            self.applied_edit_ids.push(edit_id);
-            self.replace_current_retained(Arc::new(post))?;
-            self.announce_operations(operations)?;
-            self.reproject().await?;
-            self.bump()?;
-            Ok(())
-        }
-    }
     //#endregion 🔖️HistoryLane
 
     /// 📨️ Records `edit_id`'s replay messages into the durable ledger and `pending_report`, shared
-    /// by `apply_command`/`amend_command` — every local dispatch's own `DispatchReport`-shaped tail.
+    /// by `apply_command` and the transaction appends — every local dispatch's own `DispatchReport`-shaped tail.
     fn record_edit_messages(&mut self, edit_id: &str, messages: Vec<crate::os_spr::MutationMessage>) -> Result<(), VcsError> {
         if messages.is_empty() {
             return Ok(());
@@ -21143,7 +22076,7 @@ where
 
     /// 🔂️ Replays `operations` over `pre_snapshot`, returning forwards, reversed-inverse,
     /// per-operation metadata, the resulting snapshot, and every `crate::os_spr::MutationMessage`
-    /// the replay raised. Shared by `Apply` and `AmendLast`. This IS the artifact engine —
+    /// the replay raised. Shared by `Apply` and `AppendTransaction`. This IS the artifact engine —
     /// `crate::os_engine::ArtifactEngine` never existed as a live trait (see
     /// `.claude/plans/the-mutations-are-extremely-compiled-pumpkin.md`), so `Mutation::diff`/
     /// `inverse` are called directly here on purpose, not as a placeholder for a future indirection.
@@ -21172,9 +22105,22 @@ where
         let mut inverse = Vec::new();
         let mut mutation_meta = Vec::with_capacity(mutations.len());
         let mut messages = Vec::new();
-        for (op_index, mutation) in mutations.into_iter().enumerate() {
+        let mut pending = mutations.into_iter().enumerate();
+        while let Some((op_index, mutation)) = pending.next() {
             let encoded = mutation.encode_op().map_err(|error| VcsError::ValidationFailed(error.to_string()))?;
-            let mut back = mutation.inverse(&snapshot);
+            let mut back = match mutation.inverse(&snapshot) {
+                Ok(back) => back,
+                Err(cause) => {
+                    <Mutation as self::Mutation<P>>::retire_cold(mutation);
+                    retire_scratch_operations::<P, Mutation>(forwards);
+                    retire_scratch_operations::<P, Mutation>(inverse);
+                    for (_, pending) in pending {
+                        <Mutation as self::Mutation<P>>::retire_cold(pending);
+                    }
+                    retire_replayed_projection::<P, Mutation>(snapshot);
+                    return Err(VcsError::InverseRefused(cause));
+                }
+            };
             back.reverse();
             inverse.extend(back);
             let timestamp = match mutation.timestamp() {
@@ -21225,7 +22171,7 @@ where
 
     /// 🕹️ Parses `command_text` via [`parse_command`] and dispatches it — the op-line
     /// textual entry point (op-efficient one-line-per-structural-field commands, indented op
-    /// lines for `Apply`/`AmendLast`).
+    /// lines for `Apply`/`AppendTransaction`).
     pub async fn dispatch_text(&mut self, command_text: &str) -> Result<CommandReceipt, VcsError>
     where
         Mutation: OpText,
@@ -21254,7 +22200,7 @@ where
 
     pub fn snapshot_json(&self) -> Result<String, VcsError> {
         let snapshot = self.snapshot()?;
-        Ok(crate::os_pack::json::to_json_string(&snapshot))
+        Ok(semio_framework_pack_json::to_json_string(&snapshot))
     }
 
     /// 📦️ Serializes the full document envelope (snapshot + VCS history) as JSON over the
@@ -21267,7 +22213,7 @@ where
         Mutation: ToValue,
     {
         let read = self.envelope.capture_read().map_err(|e| VcsError::Serialize(e.to_string()))?;
-        Ok(crate::os_pack::json::to_json_string(&read))
+        Ok(semio_framework_pack_json::to_json_string(&read))
     }
 
     /// 🔗️ Attaches a backbone channel: ingests whatever events the other end already queued,
@@ -21436,7 +22382,7 @@ where
         self.ensure_durable_group_idle()?;
         let pumped = self.pump().await?;
         let pending = self.pending_reprojection.is_some();
-        let progress = self.step_reprojection().await?;
+        let progress = self.step_reprojection(None).await?;
         Ok(pumped || (pending && progress.is_none()))
     }
 
@@ -21580,7 +22526,7 @@ where
                 Ok(mut edit) => {
                     edit.actor = Some(ready_envelope.actor.0.clone());
                     stamp_edit_semantics::<P, Mutation>(&mut edit, &self.envelope.schema);
-                    match self.envelope.vcs.edits.iter().find(|existing| existing.id == edit.id) {
+                    match self.envelope.vcs.edits.find_near(|existing| existing.id == edit.id) {
                         Some(existing) => {
                             let verdict = self.assert_equivalent_remote_envelope(existing, &ready_envelope).map(|()| None);
                             retire_scratch_edits::<P, Mutation>([edit]);
@@ -21627,7 +22573,7 @@ where
         let edit_hlc = |edit: &Edit<Mutation>| edit.mutation_meta.first().map_or_else(|| HybridLogicalTimestamp { actor: 0, physical_ms: 0, logical: 0 }, |meta| meta.timestamp);
         batch.sort_by_key(|edit| edit_hlc(edit).cmp_key());
         let batch_keys: Vec<(u64, u64, u64)> = batch.iter().map(|edit| edit_hlc(edit).cmp_key()).collect();
-        let known_hlc = |edit_id: &str, edits: &ArtifactHistoryLedger<Edit<Mutation>>| edits.iter().find(|edit| edit.id == *edit_id).map(edit_hlc);
+        let known_hlc = |edit_id: &str, edits: &ArtifactHistoryLedger<Edit<Mutation>>| edits.find_near(|edit| edit.id == *edit_id).map(edit_hlc);
         let min_batch_key = batch_keys[0];
         let mut lo = 0usize;
         let mut hi = self.applied_edit_ids.len();
@@ -21690,7 +22636,7 @@ where
         let mut degraded_ids: Vec<String> = Vec::new();
         for id in &committed_ids {
             let is_degraded = match replayed.iter().find(|entry| &entry.edit_id == id) {
-                Some(entry) => crate::os_spr::worst_level(&entry.messages).is_some_and(|level| level >= crate::os_dsl::Severity::Warning),
+                Some(entry) => crate::os_spr::worst_level(&entry.messages).is_some_and(|level| level >= semio_framework_diagnostic::Severity::Warning),
                 None => false,
             };
             if is_degraded {
@@ -21857,8 +22803,6 @@ where
         left.mutation_id == right.mutation_id && left.document_id == right.document_id && left.diff.schema == right.diff.schema && left.diff.payload == right.diff.payload
     }
 
-
-
     fn take_candidate_envelope(&mut self) -> ArtifactEnvelope<P, Mutation> {
         assert!(!self.envelope_detached, "resolution candidate envelope authority was already detached");
         self.envelope_detached = true;
@@ -21870,7 +22814,6 @@ where
         self.current_detached = true;
         unsafe { std::mem::ManuallyDrop::take(&mut self.current) }
     }
-
 
     /// ⚖️ Resolves an `Open` `crate::os_spr::Conflict` by id (`26/08/16/MUTATION-OUTCOMES-
     /// MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C6). `Quarantined`+`Accept` admits the conflict's
@@ -22076,8 +23019,8 @@ where
 
     /// 📤️ Announces exactly the `items` operations ONE outbound batched publication appended at
     /// position `from` of the tail applied edit, through the command outbound queue that
-    /// `flush_outbound` drains. A coalesced gesture AMENDS the tail edit the previous gesture already
-    /// announced; announcing the whole edit re-sent every earlier, already Accepted operation and the
+    /// `flush_outbound` drains. A closing transaction append extends the open edit whose earlier ticks were
+    /// already announced; announcing the whole edit re-sent every earlier, already Accepted operation and the
     /// hub refused the batch as a replay (ticket 26/09/23 C10 09:4x: `[edit-A#0, edit-B#0]` on the
     /// second keystroke of a hub writer).
     async fn flush_apply_outbound(&mut self, from: usize, items: usize) -> Result<(), VcsError> {
@@ -22085,7 +23028,7 @@ where
             return Ok(());
         }
         let tail = self.applied_edit_ids.last().ok_or_else(|| VcsError::ValidationFailed("outbound batched publication has no applied tail edit".into()))?;
-        let edit = self.envelope.vcs.edits.iter().find(|edit| edit.id == *tail).ok_or_else(|| VcsError::UnknownEdit(tail.clone()))?;
+        let edit = self.envelope.vcs.edits.find_near(|edit| edit.id == *tail).ok_or_else(|| VcsError::UnknownEdit(tail.clone()))?;
         if edit.forwards.len() != from.saturating_add(items) {
             return Err(VcsError::ValidationFailed("outbound batched publication no longer names the tail edit it appended to".into()));
         }
@@ -22097,34 +23040,135 @@ where
     /// 🖋️ Whether `edit_id` was authored by the local actor. Unauthored (legacy) edits count
     /// as local; every other actor is foreign and must not be undone by this store.
     fn edit_is_local(&self, edit_id: &str) -> bool {
-        self.envelope.vcs.edits.iter().find(|edit| edit.id == edit_id).is_some_and(|edit| edit.actor.is_none() || edit.actor.as_deref() == self.local_actor_id.as_deref())
+        self.envelope.vcs.edits.find_near(|edit| edit.id == edit_id).is_some_and(|edit| edit.actor.is_none() || edit.actor.as_deref() == self.local_actor_id.as_deref())
     }
 
     /// 🎯️ Mirrors `applied_edit_ids`/`redo_edit_ids`/`current_checkpoint_id` into
     /// `envelope.cursor` — the single choke point that keeps the persisted cursor in sync with
     /// live undo/redo state. Called from every `bump()`, so every mutating command re-syncs it.
-    fn sync_cursor(&mut self) {
-        let next = Some(ArtifactCursor::new((*self.applied_edit_ids).clone(), (*self.redo_edit_ids).clone(), (*self.current_checkpoint_id).clone()));
-        if let Some(previous) = std::mem::replace(&mut self.envelope.cursor, next) {
-            self.displaced_retirements.push_reserved(Box::new(ArtifactStoreCursorRetirement::new(previous)));
+    /// Only the suffixes `dirt` names are rewritten ([`StackMirrorDirt`]); a missing cursor, or one whose group root is
+    /// staged, is replaced whole.
+    fn sync_cursor(&mut self, dirt: StackMirrorDirt) {
+        if self.envelope.cursor.as_ref().is_none_or(|cursor| cursor.group_visibility().is_some()) {
+            let next = Some(ArtifactCursor::new((*self.applied_edit_ids).clone(), (*self.redo_edit_ids).clone(), (*self.current_checkpoint_id).clone()));
+            if let Some(previous) = std::mem::replace(&mut self.envelope.cursor, next) {
+                self.displaced_retirements.push_reserved(Box::new(ArtifactStoreCursorRetirement::new(previous)));
+            }
+            return;
         }
+        let cursor = self.envelope.cursor.as_mut().expect("a mirrored cursor remains present");
+        let applied = mirror_id_suffix(&mut cursor.applied_edit_ids, &self.applied_edit_ids, dirt.applied);
+        let redo = mirror_id_suffix(&mut cursor.redo_edit_ids, &self.redo_edit_ids, dirt.redo);
+        let checkpoint = if cursor.checkpoint_id != *self.current_checkpoint_id { std::mem::replace(&mut cursor.checkpoint_id, (*self.current_checkpoint_id).clone()) } else { None };
+        for displaced in [applied, redo].into_iter().flatten() {
+            self.displaced_retirements.push_reserved(Box::new(ArtifactStoreStringVectorRetirement::new(displaced)));
+        }
+        if let Some(previous) = checkpoint {
+            self.displaced_retirements.push_reserved(Box::new(ArtifactStoreStringRetirement::new(previous)));
+        }
+    }
+
+    /// 🖍️ The applied tail edit's recorded content changed outside a mutation (a group or origin stamp): the next
+    /// {@link bump} rebuilds its revision record.
+    fn restamp_applied_tail(&mut self) {
+        self.mirror_dirt.applied = self.mirror_dirt.applied.min(self.applied_edit_ids.len().saturating_sub(1));
+    }
+
+    /// ➕️ Pushes `edit_id` onto the applied stack; its mirrors are stale from the new tail on.
+    fn push_applied_edit_id(&mut self, edit_id: String) {
+        self.mirror_dirt.applied = self.mirror_dirt.applied.min(self.applied_edit_ids.len());
+        self.applied_edit_ids.push(edit_id);
+    }
+
+    /// ➖️ Pops the applied tail; its mirrors and the prefix ring are stale past the new length.
+    fn pop_applied_edit_id(&mut self) -> Option<String> {
+        let edit_id = self.applied_edit_ids.pop()?;
+        let length = self.applied_edit_ids.len();
+        self.mirror_dirt.applied = self.mirror_dirt.applied.min(length);
+        self.prefix_ring_dirty_from = self.prefix_ring_dirty_from.min(length);
+        Some(edit_id)
+    }
+
+    /// ➕️ Pushes `edit_id` onto the redo stack; its mirrors are stale from the new top on.
+    fn push_redo_edit_id(&mut self, edit_id: String) {
+        self.mirror_dirt.redo = self.mirror_dirt.redo.min(self.redo_edit_ids.len());
+        self.redo_edit_ids.push(edit_id);
+    }
+
+    /// ➖️ Pops the redo top; its mirrors are stale past the new length.
+    fn pop_redo_edit_id(&mut self) -> Option<String> {
+        let edit_id = self.redo_edit_ids.pop()?;
+        self.mirror_dirt.redo = self.mirror_dirt.redo.min(self.redo_edit_ids.len());
+        Some(edit_id)
+    }
+
+    /// 🧭️ Whether the live cursor is the proven fold of the log as it stands ([`Self::fold_frontier`]) with no history step
+    /// waiting.
+    fn fold_is_live(&self) -> bool {
+        self.fold_frontier.is_some() && self.pending_reprojection.is_none()
     }
 
     fn bump(&mut self) -> Result<(), VcsError> {
         let next_generation = self.generation.checked_add(1).ok_or_else(|| VcsError::ValidationFailed("artifact store generation counter is exhausted".into()))?;
-        self.displaced_retirements.reserve(2 + usize::from(self.envelope.cursor.is_some()))?;
+        self.displaced_retirements.reserve(3)?;
         self.generation = next_generation;
-        self.sync_cursor();
-        let (applied_retired, redo_retired) = self.revision_accumulator.reconcile::<P, Mutation>(&self.applied_edit_ids, &self.redo_edit_ids, &self.envelope.vcs.edits, &self.supersessions, self.revision_dirty_from.take());
-        if !applied_retired.is_empty() || applied_retired.capacity() != 0 {
-            self.displaced_retirements.push_reserved(Box::new(ArtifactStoreStringVectorRetirement::new(applied_retired)));
-        }
-        if !redo_retired.is_empty() || redo_retired.capacity() != 0 {
-            self.displaced_retirements.push_reserved(Box::new(ArtifactStoreStringVectorRetirement::new(redo_retired)));
-        }
+        let dirt = std::mem::replace(&mut self.mirror_dirt, StackMirrorDirt::CLEAN);
+        self.sync_cursor(dirt);
+        let regrown = self.revision_accumulator.reconcile::<P, Mutation>(&self.applied_edit_ids, &self.redo_edit_ids, &self.envelope.vcs.edits, &self.supersessions, dirt, self.revision_dirty_from.take());
         self.content_revision = self.revision_accumulator.revision(self.current_checkpoint_id.as_deref());
         assert!(self.snapshot_read_leases.publish_authority(self.generation, self.content_revision), "single-owner store bump must advance its snapshot commit authority");
-        self.prune_prefix_ring()
+        #[cfg(test)]
+        self.assert_mirrors_are_live();
+        if let Some(position) = regrown {
+            self.prefix_ring_dirty_from = self.prefix_ring_dirty_from.min(position);
+        }
+        self.prune_prefix_ring()?;
+        self.relieve_displaced_pressure()
+    }
+
+    /// 🌡️ Retires displaced owners within this change's own bounded grant while the queue is under pressure
+    /// ([`ARTIFACT_STORE_DISPLACED_PRESSURE_OCCUPANCY`]): every bump retires at most [`DISPLACED_RELIEF_STEPS`] one-item steps
+    /// of [`ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES`] — more than any single change displaces — so a burst of changes without
+    /// maintenance turns (a long ingest, a test or tool driving the store directly) keeps the queue below its fixed authority,
+    /// at O(change) cost, while the runtime's maintenance rotation still drains the rest. A blocked owner (an outstanding
+    /// read) stops the relief.
+    fn relieve_displaced_pressure(&mut self) -> Result<(), VcsError> {
+        for _ in 0..DISPLACED_RELIEF_STEPS {
+            if !self.displaced_retirements.under_pressure() {
+                break;
+            }
+            match self.displaced_retirements.close_step(1, ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| VcsError::ValidationFailed(error.into_message()))? {
+                SnapshotRetirementStep::Blocked | SnapshotRetirementStep::Complete => break,
+                SnapshotRetirementStep::Pending { .. } => {}
+            }
+        }
+        Ok(())
+    }
+
+    /// 🔬️ Test-build oracle of every incremental mirror on short histories ([`MIRROR_ORACLE_HISTORY`]): the persisted cursor
+    /// equals the live stacks, the content revision equals a revision rebuilt from scratch, and a claimed fold frontier is
+    /// the fold of the log.
+    #[cfg(test)]
+    fn assert_mirrors_are_live(&self) {
+        if self.applied_edit_ids.len() > MIRROR_ORACLE_HISTORY {
+            return;
+        }
+        let cursor = self.envelope.cursor.as_ref().expect("a bumped store holds its cursor");
+        assert!(cursor.applied_edit_ids == *self.applied_edit_ids && cursor.redo_edit_ids == *self.redo_edit_ids && cursor.checkpoint_id == *self.current_checkpoint_id, "the persisted cursor mirrors the live stacks");
+        let mut rebuilt = CursorRevisionAccumulator { identity_digest: self.revision_accumulator.identity_digest, applied: crate::os_vcs::HistoryPageStack::new(), redo: crate::os_vcs::HistoryPageStack::new(), applied_tail_chains: None };
+        rebuilt.reconcile::<P, Mutation>(&self.applied_edit_ids, &self.redo_edit_ids, &self.envelope.vcs.edits, &self.supersessions, StackMirrorDirt::ALL, None);
+        for (stack, live, scratch) in [("applied", &self.revision_accumulator.applied, &rebuilt.applied), ("redo", &self.revision_accumulator.redo, &rebuilt.redo)] {
+            let stale = live.iter().zip(scratch.iter()).position(|(live, scratch)| live.id_digest != scratch.id_digest || live.edit_digest != scratch.edit_digest);
+            assert!(stale.is_none() && live.len() == scratch.len(), "the incremental {stack} revision records equal records rebuilt from scratch: first stale record {stale:?}, {} live vs {} rebuilt", live.len(), scratch.len());
+        }
+        assert_eq!(rebuilt.revision(self.current_checkpoint_id.as_deref()), self.content_revision, "the incremental content revision equals one rebuilt from scratch");
+        if self.fold_is_live() {
+            let fold = fold_envelope_history(&self.envelope).expect("a proven fold refolds");
+            assert!(
+                fold.applied == *self.applied_edit_ids && fold.redo == *self.redo_edit_ids && fold.checkpoint == *self.current_checkpoint_id && fold.alternative == self.envelope.active_alternative_id && fold.supersessions == *self.supersessions,
+                "a claimed fold frontier is the fold of the log"
+            );
+        }
     }
 }
 
@@ -22139,7 +23183,6 @@ where
         let equal: fn(&P, &P) -> bool = |left, right| left == right;
         self.snapshot_equality = Some(equal);
     }
-
 }
 
 /// 🏁️ How a finished replay's drafts are authored: overwrite them in every alternative and checkpoint containing the
@@ -22300,8 +23343,9 @@ pub async fn edit_from_operation_envelope<Mutation: OpBinary>(envelope: &crate::
             origin: Default::default(),
             transaction: envelope.transaction.clone(),
         }],
-        description: None, verb: envelope.verb.clone(), line: envelope.line.clone(),
-        coalesce_key: None,
+        description: None,
+        verb: envelope.verb.clone(),
+        line: envelope.line.clone(),
         sequence_number: 0,
         started_at: String::new(),
         finished_at: None,
@@ -22555,7 +23599,7 @@ where
         if !seen.insert(edit_id.to_string()) {
             return Err(VcsError::ValidationFailed(format!("history repeats applied edit {edit_id}")));
         }
-        let edit = envelope.vcs.edits.iter().find(|entry| entry.id == edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.to_string()))?;
+        let edit = envelope.vcs.edits.find_near(|entry| entry.id == edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.to_string()))?;
         fold_effective_edit(&mut snapshot, edit, &envelope.schema, supersessions, usize::MAX);
     }
     Ok(snapshot.into_inner())
@@ -22636,7 +23680,8 @@ where
         Ok(Some(replacement)) => effective.replacement = Some(replacement),
         Ok(None) => effective.withdrawn = true,
         Err(reason) => {
-            let mut fault = crate::os_spr::MutationMessage::fatal("mutation.invariant", format!("supersession {} of {} {reason}; the operation folds as a no-op", supersession.transition_id, effective.mutation_id.0)).at([effective.mutation_id.0.clone()]);
+            let mut fault =
+                crate::os_spr::MutationMessage::fatal("mutation.invariant", format!("supersession {} of {} {reason}; the operation folds as a no-op", supersession.transition_id, effective.mutation_id.0)).at([effective.mutation_id.0.clone()]);
             fault.op_index = Some(op_index);
             effective.fault = Some(fault);
         }
@@ -22764,7 +23809,16 @@ where
 /// 📼️ Folds `applied[from..to]` onto `base` under `supersessions` with keep-and-record semantics, handing out the
 /// projection after every prefix length below `to` that is a multiple of `stride` (aliases of the running state, no
 /// copies). A failure retires the running state and everything recorded.
-fn fold_recorded<P, Mutation>(base: Arc<P>, applied: &[String], from: usize, to: usize, edits: &ArtifactHistoryLedger<Edit<Mutation>>, schema: &str, supersessions: &EffectiveSupersessions, stride: usize) -> Result<(Arc<P>, Vec<(usize, Arc<P>)>), VcsError>
+fn fold_recorded<P, Mutation>(
+    base: Arc<P>,
+    applied: &[String],
+    from: usize,
+    to: usize,
+    edits: &ArtifactHistoryLedger<Edit<Mutation>>,
+    schema: &str,
+    supersessions: &EffectiveSupersessions,
+    stride: usize,
+) -> Result<(Arc<P>, Vec<(usize, Arc<P>)>), VcsError>
 where
     Mutation: self::Mutation<P> + OpBinary,
 {
@@ -22772,7 +23826,7 @@ where
     let mut recorded: Vec<(usize, Arc<P>)> = Vec::new();
     let mut failure = None;
     for (offset, edit_id) in applied[from..to].iter().enumerate() {
-        let Some(edit) = edits.iter().find(|edit| edit.id == *edit_id) else {
+        let Some(edit) = edits.find_near(|edit| edit.id == *edit_id) else {
             failure = Some(VcsError::UnknownEdit(edit_id.clone()));
             break;
         };
@@ -22829,6 +23883,24 @@ where
     digest
 }
 
+/// 🤝️ How many leading ids `live` and `next` share.
+fn shared_prefix_len(live: &crate::os_vcs::HistoryPageStack<String>, next: &[String]) -> usize {
+    live.iter().zip(next).take_while(|(live, next)| live == next).count()
+}
+
+/// 🪞️ Rewrites `mirror` from position `dirty` on to `live`'s suffix ([`StackMirrorDirt`]); answers the ids it displaced.
+fn mirror_id_suffix(mirror: &mut crate::os_vcs::HistoryPageStack<String>, live: &crate::os_vcs::HistoryPageStack<String>, dirty: usize) -> Option<Vec<String>> {
+    let keep = dirty.min(live.len()).min(mirror.len());
+    let mut displaced = Vec::new();
+    while mirror.len() > keep {
+        displaced.push(mirror.pop().expect("a mirrored id remains present"));
+    }
+    #[cfg(test)]
+    hot_path_census::count(|census| census.mirrored += live.len() - keep);
+    mirror.extend(live.iter_from(keep).cloned());
+    (!displaced.is_empty()).then_some(displaced)
+}
+
 /// 🧭️ Forwards-only effective prefix digests of `applied`: entry `i` names the projection after the first `i` edits by
 /// their ids, forward counts and effective supersessions — never the inverses, metadata or messages a replay rewrites.
 fn forward_prefix_digests<P, Mutation, I, S>(identity: [u8; 32], applied: I, edits: &ArtifactHistoryLedger<Edit<Mutation>>, supersessions: &EffectiveSupersessions) -> Result<Vec<[u8; 32]>, VcsError>
@@ -22837,17 +23909,32 @@ where
     I: IntoIterator<Item = S>,
     S: AsRef<str>,
 {
-    let mut digest = CursorRevisionAccumulator::hash_record(b"forward-prefix", &[&identity]);
+    let mut digest = forward_prefix_genesis(identity);
     let mut digests = Vec::new();
     digests.push(digest);
     for edit_id in applied {
         let edit_id = edit_id.as_ref();
-        let edit = edits.iter().find(|edit| edit.id == edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.to_string()))?;
-        let superseded = edit_supersession_digest::<P, Mutation>(edit, supersessions).unwrap_or([0; 32]);
-        digest = CursorRevisionAccumulator::hash_record(b"forward-prefix", &[&digest, edit_id.as_bytes(), &(edit.forwards.len() as u64).to_be_bytes(), &superseded]);
+        let edit = edits.find_near(|edit| edit.id == edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.to_string()))?;
+        digest = forward_prefix_step::<P, Mutation>(&digest, edit, supersessions);
         digests.push(digest);
     }
     Ok(digests)
+}
+
+/// 🧭️ The forwards-only digest of the empty prefix of a document of `identity` ([`forward_prefix_digests`]).
+fn forward_prefix_genesis(identity: [u8; 32]) -> [u8; 32] {
+    CursorRevisionAccumulator::hash_record(b"forward-prefix", &[&identity])
+}
+
+/// 🧭️ The forwards-only prefix digest after `edit`, given the digest of the prefix before it ([`forward_prefix_digests`]).
+fn forward_prefix_step<P, Mutation>(previous: &[u8; 32], edit: &Edit<Mutation>, supersessions: &EffectiveSupersessions) -> [u8; 32]
+where
+    Mutation: self::Mutation<P>,
+{
+    #[cfg(test)]
+    hot_path_census::count(|census| census.digested += 1);
+    let superseded = edit_supersession_digest::<P, Mutation>(edit, supersessions).unwrap_or([0; 32]);
+    CursorRevisionAccumulator::hash_record(b"forward-prefix", &[previous, edit.id.as_bytes(), &(edit.forwards.len() as u64).to_be_bytes(), &superseded])
 }
 
 /// 🧮️ The applied positions of every edit owning an operation whose effective supersession differs between `previous`
@@ -22856,13 +23943,18 @@ fn superseded_positions<P, Mutation>(applied: &[String], edits: &ArtifactHistory
 where
     Mutation: self::Mutation<P>,
 {
-    let changed: HashSet<&MutationId> = previous.iter().filter(|(target, supersession)| next.get(*target) != Some(*supersession)).map(|(target, _)| target).chain(next.iter().filter(|(target, supersession)| previous.get(*target) != Some(*supersession)).map(|(target, _)| target)).collect();
+    let changed: HashSet<&MutationId> = previous
+        .iter()
+        .filter(|(target, supersession)| next.get(*target) != Some(*supersession))
+        .map(|(target, _)| target)
+        .chain(next.iter().filter(|(target, supersession)| previous.get(*target) != Some(*supersession)).map(|(target, _)| target))
+        .collect();
     if changed.is_empty() {
         return Ok(Vec::new());
     }
     let mut positions = Vec::new();
     for (position, edit_id) in applied.iter().enumerate() {
-        let edit = edits.iter().find(|edit| edit.id == *edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
+        let edit = edits.find_near(|edit| edit.id == *edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
         if crate::os_spr::mutation_ids_for_edit::<P, Mutation>(edit).iter().any(|mutation_id| changed.contains(mutation_id)) {
             positions.push(position);
         }
@@ -22906,7 +23998,7 @@ impl<Mutation> ReplayEdits<Mutation> for HashMap<String, Edit<Mutation>> {
 
 impl<Mutation> ReplayEdits<Mutation> for ArtifactHistoryLedger<Edit<Mutation>> {
     fn replay_edit(&self, edit_id: &str) -> Option<&Edit<Mutation>> {
-        self.iter().find(|edit| edit.id == edit_id)
+        self.find_near(|edit| edit.id == edit_id)
     }
 }
 
@@ -22946,6 +24038,7 @@ where
     mode: ReplayMode,
     order: Vec<String>,
     from: usize,
+    prefix_until: usize,
     cursor: usize,
     operation: usize,
     edit_ids: Option<Vec<MutationId>>,
@@ -22982,6 +24075,7 @@ where
             mode,
             order,
             from,
+            prefix_until: from,
             cursor: from,
             operation: 0,
             edit_ids: None,
@@ -23018,13 +24112,43 @@ where
         Ok(replay)
     }
 
+    /// 🐣️ [`Self::new`] starting from `base`, the projection after `order[..base_length]` for a `base_length <= from`: the
+    /// replay first folds `order[base_length..from]` plainly — stepped under the same deadline as its suffix and recording the
+    /// prefix ring on the way — and then replays `order[from..]` as [`Self::new`] does, so no synchronous fold precedes it.
+    #[allow(clippy::too_many_arguments)]
+    pub fn new_after_prefix(mode: ReplayMode, base_length: usize, base: Arc<P>, order: Vec<String>, from: usize, schema: &str, supersessions: EffectiveSupersessions, edits: &impl ReplayEdits<Mutation>) -> Result<Self, VcsError> {
+        let mut replay = Self::new(mode, base, order, from, schema, supersessions, edits)?;
+        if base_length > from {
+            return Err(VcsError::ValidationFailed(format!("edit replay base after {base_length} edits lies past its start {from}")));
+        }
+        replay.cursor = base_length;
+        Ok(replay)
+    }
+
     fn with_convergence(mut self, convergence: Option<ReplayConvergence<P>>) -> Self {
+        self.replace_convergence(convergence);
+        self
+    }
+
+    fn replace_convergence(&mut self, convergence: Option<ReplayConvergence<P>>) {
         if let Some(previous) = std::mem::replace(&mut self.convergence, convergence) {
             for (_, checkpoint) in previous.checkpoints {
                 retire_shared_projection::<P, Mutation>(checkpoint);
             }
         }
-        self
+    }
+
+    /// 🧵️ Takes `appended` operations a tick appended to `edit_id` into the total when that edit is the unreplayed tail of
+    /// this replay's order (the grown edit is read by id when the replay gets there), and forgets the convergence probe,
+    /// whose previous head predates the tick.
+    fn absorb_tail_growth(&mut self, edit_id: &str, appended: usize) {
+        if self.cursor < self.order.len() && self.order.last().is_some_and(|tail| tail == edit_id) {
+            self.progress.total = self.progress.total.saturating_add(u32::try_from(appended).unwrap_or(u32::MAX));
+            if self.cursor + 1 == self.order.len() {
+                self.edit_ids = None;
+            }
+        }
+        self.replace_convergence(None);
     }
 
     /// 🎙️ Keeps the projection after every replayed prefix whose length is a multiple of `stride`, for the prefix ring —
@@ -23079,6 +24203,16 @@ where
                 break;
             };
             let edit = edits.replay_edit(edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
+            if self.cursor < self.prefix_until {
+                let state = self.state.as_mut().ok_or_else(|| VcsError::ValidationFailed("edit replay lost its running projection".into()))?;
+                fold_effective_edit(state, edit, &self.schema, &self.supersessions, usize::MAX);
+                self.cursor += 1;
+                self.record();
+                if deadline() {
+                    return Ok(ReplayStep::Pending(self.progress));
+                }
+                continue;
+            }
             let edit_ids = match self.edit_ids.take() {
                 Some(edit_ids) => edit_ids,
                 None => crate::os_spr::mutation_ids_for_edit::<P, Mutation>(edit),
@@ -23114,7 +24248,7 @@ where
                 ReplayMode::Report => self.state.as_ref(),
             }
             .ok_or_else(|| VcsError::ValidationFailed("edit replay lost its running projection".into()))?;
-            let mut back = operation.inverse(base);
+            let mut back = operation.inverse(base).map_err(VcsError::InverseRefused)?;
             back.reverse();
             let next = match self.mode {
                 ReplayMode::Report => {
@@ -23430,7 +24564,7 @@ const REPROJECTION_OWNER_SLOTS: usize = 10 + PREFIX_SNAPSHOT_RING_CAPACITY;
 /// cannot implement `crate::os_dsl::DslField` without a dependency cycle — the derive can only lower fields
 /// shaped from types it can see. `#[dsl(base64)]` marks each `Vec<u8>` field `Shape::Bytes64`
 /// (otherwise a bare `Vec<u8>` lowers to a `List<UInt>`, one DSL list element per byte).
-#[derive(Clone, Debug, PartialEq, DslOps)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
 pub enum BackboneMessage {
     /// 🧬️ The document's initial snapshot pack — its identity, never its current state. A
     /// replica announces it before its event log; an empty persistence end adopts it as the genesis
@@ -23468,21 +24602,21 @@ pub enum BackboneMessage {
 /// 🎞️ Handcrafted OpText (P6).
 impl OpText for BackboneMessage {
     fn parse_op(line: &str) -> Result<Self, TextError> {
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = crate::os_dsl::parse(line, &(spec_fn.ordinary)(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
-                return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = semio_framework_dsl_record::parse(line, &(spec_fn.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?;
+                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown operation line '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
     }
     fn print_op(&self) -> String {
-        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        crate::os_dsl::print(&record, &(spec_fn.ordinary)(), crate::os_dsl::JoinMode::Inline)
+        semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline)
     }
 }
 
@@ -23974,7 +25108,7 @@ impl ArtifactStoreBackboneRetirement {
 }
 
 impl ErasedSnapshotRetirement for ArtifactStoreBackboneRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -24191,14 +25325,14 @@ pub trait SpaceMember {
     fn begin_one_item_wire_publication(&self, request: MemberStoreOneItemWireRequest) -> Result<Box<dyn ErasedMemberStoreOneItemPublication>, ArtifactStoreBatchAdmissionRejected<MemberStoreOneItemWire>>;
     fn advance_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemAdvance, String>;
     fn prepare_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String>;
-    fn abort_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String>;
+    fn abort_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError>;
     /// 🧵️ The live typed snapshot behind an opaque immutable ownership boundary.
     fn snapshot_read_erased_now(&self) -> Result<ErasedSnapshotRead, String>;
     async fn snapshot_read_erased(&self) -> Result<ErasedSnapshotRead, String>;
     fn retire_snapshot_read_erased(&mut self, snapshot: ErasedSnapshotRead) -> Result<Box<dyn ErasedSnapshotRetirement>, SnapshotRetirementRejected>;
     fn take_returned_snapshot_read_retirement(&mut self) -> Result<Option<Box<dyn ErasedSnapshotRetirement>>, String>;
     fn snapshot_read_leases_terminal_is_empty(&self) -> bool;
-    fn close_owned_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String>;
+    fn close_owned_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError>;
     fn close_owned_terminal_is_empty(&self) -> bool;
     /// 🧬️ Fixed-size, restart-stable identity for the member's current history cursor.
     /// Implementations must not serialize or clone the materialized snapshot to answer this read.
@@ -24235,7 +25369,7 @@ pub trait SpaceMember {
     /// snapshot read error, or an op that fails to even decode) short-circuits the remaining ops,
     /// itself reported as one `mutation.invariant` `Fatal` message. Never applies anything — the
     /// live store is untouched no matter what this returns. `CompositionCoordinator` phase 1 unions
-    /// this across every member, computes ONE worst `crate::os_dsl::Severity`, and consults
+    /// this across every member, computes ONE worst `semio_framework_diagnostic::Severity`, and consults
     /// `merge_policy()` to decide accept/reject for the whole group.
     ///
     /// 🎯️ B2 `CompositionCoordinator` seam (`UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`, `🔖️CompositionCoordinator`
@@ -24440,13 +25574,16 @@ where
         }
     }
 
-    fn abort_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String> {
-        let publication = publication.as_any_mut().downcast_mut::<MemberStoreOneItemPublication<P, Mutation>>().ok_or_else(|| "member group abort concrete owner type does not match".to_string())?;
+    fn abort_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
+        let publication = publication
+            .as_any_mut()
+            .downcast_mut::<MemberStoreOneItemPublication<P, Mutation>>()
+            .ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "member group abort concrete owner type does not match"))?;
         if publication.terminal_is_empty() {
             return Ok(SnapshotRetirementStep::Complete);
         }
         if !publication.member.as_ref().is_some_and(|member| Arc::ptr_eq(member, &self.snapshot_read_leases)) {
-            return Err("member group abort belongs to a different exact store authority".into());
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "member group abort belongs to a different exact store authority"));
         }
         publication.publication.begin_close();
         if grant.maximum_items == 0 {
@@ -24456,13 +25593,13 @@ where
             let ArtifactStoreHistoryCommitReservation { history, rejected_owner } = reservation;
             if let Err(history) = self.envelope.vcs.edits.cancel_reservation(history) {
                 publication.group_history = Some(ArtifactStoreHistoryCommitReservation { history, rejected_owner });
-                return Err("member group abort lost its exact history reservation".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "member group abort lost its exact history reservation"));
             }
-            self.displaced_retirements.release_owner_slots(rejected_owner).map_err(|error| error.to_string())?;
+            self.displaced_retirements.release_owner_slots(rejected_owner).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, error.to_string()))?;
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(reservation) = publication.group_displaced.take() {
-            self.displaced_retirements.release_owner_slots(reservation).map_err(|error| error.to_string())?;
+            self.displaced_retirements.release_owner_slots(reservation).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, error.to_string()))?;
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         publication.close_step(ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), maximum_bytes: grant.maximum_bytes })
@@ -24498,7 +25635,7 @@ where
         ArtifactStore::snapshot_read_leases_terminal_is_empty(self)
     }
 
-    fn close_owned_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_owned_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         self.close_owned_store_step(maximum_items, maximum_bytes)
     }
 
@@ -24556,7 +25693,7 @@ where
             if !self.edit_is_local(edit_id) {
                 continue;
             }
-            if let Some(timestamp) = envelope.vcs.edits.iter().find(|edit| edit.id == *edit_id).and_then(|edit| edit.mutation_meta.last()).map(|meta| meta.timestamp) {
+            if let Some(timestamp) = envelope.vcs.edits.find_near(|edit| edit.id == *edit_id).and_then(|edit| edit.mutation_meta.last()).map(|meta| meta.timestamp) {
                 return Some(timestamp);
             }
         }
@@ -24569,7 +25706,7 @@ where
             if !self.edit_is_local(edit_id) {
                 continue;
             }
-            if let Some(timestamp) = envelope.vcs.edits.iter().find(|edit| edit.id == *edit_id).and_then(|edit| edit.mutation_meta.last()).map(|meta| meta.timestamp) {
+            if let Some(timestamp) = envelope.vcs.edits.find_near(|edit| edit.id == *edit_id).and_then(|edit| edit.mutation_meta.last()).map(|meta| meta.timestamp) {
                 return Some(timestamp);
             }
         }
@@ -24648,7 +25785,7 @@ where
 
     async fn tail_group_id(&self) -> Option<String> {
         let edit_id = self.applied_edit_ids().last()?;
-        self.envelope().vcs.edits.iter().find(|edit| edit.id == *edit_id)?.mutation_meta.last()?.group_id.clone()
+        self.envelope().vcs.edits.find_near(|edit| edit.id == *edit_id)?.mutation_meta.last()?.group_id.clone()
     }
 
     async fn tail_edit_id(&self) -> Option<String> {
@@ -24657,7 +25794,7 @@ where
 
     async fn redo_tail(&self) -> Option<(String, Option<String>)> {
         let edit_id = self.redo_edit_ids().last()?.clone();
-        let group_id = self.envelope().vcs.edits.iter().find(|edit| edit.id == edit_id).and_then(|edit| edit.mutation_meta.last()).and_then(|meta| meta.group_id.clone());
+        let group_id = self.envelope().vcs.edits.find_near(|edit| edit.id == edit_id).and_then(|edit| edit.mutation_meta.last()).and_then(|meta| meta.group_id.clone());
         Some((edit_id, group_id))
     }
 
@@ -24667,6 +25804,7 @@ where
         for meta in edit.mutation_meta.iter_mut() {
             meta.group_id = Some(group_id.to_string());
         }
+        self.restamp_applied_tail();
         Ok(())
     }
 
@@ -24676,6 +25814,7 @@ where
         for meta in edit.mutation_meta.iter_mut() {
             meta.origin = origin.clone();
         }
+        self.restamp_applied_tail();
         Ok(())
     }
 
@@ -24787,7 +25926,7 @@ impl SpaceMember for NoMembers {
         match *self {}
     }
 
-    fn abort_one_item_publication(&mut self, _publication: &mut dyn ErasedMemberStoreOneItemPublication, _grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String> {
+    fn abort_one_item_publication(&mut self, _publication: &mut dyn ErasedMemberStoreOneItemPublication, _grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         match *self {}
     }
 
@@ -24811,7 +25950,7 @@ impl SpaceMember for NoMembers {
         match *self {}
     }
 
-    fn close_owned_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_owned_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         match *self {}
     }
 
@@ -24998,7 +26137,7 @@ macro_rules! space_members {
                 }
             }
 
-            fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<$crate::os_store::SnapshotRetirementStep, String> {
+            fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<$crate::os_store::SnapshotRetirementStep, ::semio_framework_value::ValueError> {
                 match self { $(Self::$variant(open) => $crate::os_store::MemberOpenOperation::close_step(open.as_mut(), maximum_items, maximum_bytes)),+ }
             }
 
@@ -25035,7 +26174,7 @@ macro_rules! space_members {
             fn prepare_one_item_publication(&mut self, publication: &mut dyn $crate::os_store::ErasedMemberStoreOneItemPublication, grant: $crate::os_store::ArtifactStoreOneItemGrant) -> Result<$crate::os_store::ArtifactStoreOneItemPreparationStep, String> {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::prepare_one_item_publication(m.as_mut(), publication, grant)),+ }
             }
-            fn abort_one_item_publication(&mut self, publication: &mut dyn $crate::os_store::ErasedMemberStoreOneItemPublication, grant: $crate::os_store::ArtifactStoreOneItemGrant) -> Result<$crate::os_store::SnapshotRetirementStep, String> {
+            fn abort_one_item_publication(&mut self, publication: &mut dyn $crate::os_store::ErasedMemberStoreOneItemPublication, grant: $crate::os_store::ArtifactStoreOneItemGrant) -> Result<$crate::os_store::SnapshotRetirementStep, ::semio_framework_value::ValueError> {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::abort_one_item_publication(m.as_mut(), publication, grant)),+ }
             }
             fn snapshot_read_erased_now(&self) -> Result<$crate::os_store::ErasedSnapshotRead, String> {
@@ -25053,7 +26192,7 @@ macro_rules! space_members {
             fn snapshot_read_leases_terminal_is_empty(&self) -> bool {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::snapshot_read_leases_terminal_is_empty(m.as_ref())),+ }
             }
-            fn close_owned_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<$crate::os_store::SnapshotRetirementStep, String> {
+            fn close_owned_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<$crate::os_store::SnapshotRetirementStep, ::semio_framework_value::ValueError> {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::close_owned_step(m.as_mut(), maximum_items, maximum_bytes)),+ }
             }
             fn close_owned_terminal_is_empty(&self) -> bool {
@@ -25197,7 +26336,7 @@ macro_rules! space_members {
 /// 🔮️ serde stays TEST-ONLY: feeds `SpaceHistoryMutation`'s own `cfg_attr(test)` oracle
 /// derive transitively (`CommitSpaceCheckpoint` → `SpaceCheckpoint` → this type). Production never
 /// serializes through serde, so this never reaches a shipped plugin component.
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -25212,7 +26351,7 @@ pub struct SpaceMemberPin {
 
 /// 🗄️ A space-wide checkpoint: one pin per registered member, so checking it out (or an
 /// alternative built on top of it) fans out deterministically to every member's own VCS.
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct SpaceCheckpoint {
     pub id: String,
@@ -25225,7 +26364,7 @@ pub struct SpaceCheckpoint {
 }
 
 /// 🔮️ serde stays TEST-ONLY — see `SpaceMemberPin`'s docstring above.
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -25242,11 +26381,14 @@ pub struct SpaceAlternative {
 /// `.spr` extension (`SpaceHistorySnapshot::EXTENSION`, `"space-history"`) is unchanged.
 pub const S_SPACE_HISTORY_SCHEMA: &str = "os.space.history";
 
+#[path = "📜️space-history/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"]
+pub mod space_history_sqlite;
+
 /// 🗄️ Snapshot of the `S_SPACE_HISTORY_SCHEMA` (`"os.space.history"`) meta-document: itself
 /// an ordinary `ArtifactVcs` document kind (dogfooded — no bespoke transport), holding the
 /// space-level checkpoint/alternative graph that `SpaceHost` composes on top of every registered
 /// member's own history.
-#[derive(Clone, Debug, Default, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct SpaceHistorySnapshot {
     pub checkpoints: Vec<SpaceCheckpoint>,
@@ -25265,7 +26407,7 @@ pub struct SpaceHistorySnapshot {
 mod space_history_mutations;
 pub use space_history_mutations::{CommitSpaceCheckpoint, CreateSpaceAlternative, RemoveSpaceAlternative, RemoveSpaceCheckpoint, RestoreActiveSpaceAlternative, SpaceHistoryMutation, SwitchSpaceAlternative};
 
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct SpaceHistoryDiff {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -25375,10 +26517,10 @@ use pack_rt::renormalize_whole_number_floats;
 
 impl OpText for SpaceHistoryMutation {
     fn print_op(&self) -> String {
-        crate::os_pack::json::to_json_string(self)
+        semio_framework_pack_json::to_json_string(self)
     }
     fn parse_op(line: &str) -> Result<Self, TextError> {
-        crate::os_pack::json::from_json_str(line).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))
+        semio_framework_pack_json::from_json_str(line, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| TextError::new(error.kind, error.message, TextSpan::at(1, 1)))
     }
 }
 impl OpBinary for SpaceHistoryMutation {
@@ -25394,20 +26536,23 @@ impl OpBinary for SpaceHistoryMutation {
 impl ArtifactDsl for SpaceHistorySnapshot {
     const EXTENSION: &'static str = "space-history";
     fn parse_dsl(text: &str) -> Result<Self, TextError> {
-        crate::os_pack::json::from_json_str(text).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))
+        semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| TextError::new(error.kind, error.message, TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
-        crate::os_pack::json::to_json_string(self)
+        semio_framework_pack_json::to_json_string(self)
     }
 }
 impl ArtifactPack for SpaceHistorySnapshot {
+    fn sqlite_snapshot_codec() -> Option<ArtifactSqliteSnapshotCodec> {
+        Some(<Self as ArtifactSqliteSnapshot>::sqlite_codec())
+    }
     fn encode_pack_with(&self, _options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         let value = semio_framework_value::ToValue::to_value(self);
         Ok(pack_rt::encode_pack_value(&value))
     }
     fn decode_pack_with(bytes: &[u8], _options: &PackDecodeOptions) -> Result<Self, PackError> {
         let value = pack_rt::decode_pack_value(bytes)?;
-        semio_framework_value::FromValue::from_value(renormalize_whole_number_floats(value)).map_err(|error| PackError::Schema(error.to_string()))
+        semio_framework_value::FromValue::from_value(renormalize_whole_number_floats(value)).map_err(PackError::from)
     }
 }
 //#endregion SpaceHistoryDocument
@@ -25420,7 +26565,7 @@ impl ArtifactPack for SpaceHistorySnapshot {
 struct SpaceHistoryOwnedRetirement<T>(Option<T>);
 
 impl<T: Send> ErasedSnapshotRetirement for SpaceHistoryOwnedRetirement<T> {
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -25595,7 +26740,7 @@ impl<M: SpaceMember> SpaceHost<M> {
             let checkpoint_id = member.current_checkpoint_id().await.ok_or(VcsError::NoCheckpoint)?;
             pins.push(SpaceMemberPin { document_id: document_id.clone(), checkpoint_id, alternative_id: member.current_alternative_id().await.unwrap_or_default() });
         }
-        let pins_fingerprint = crate::os_pack::json::to_json_string(&pins).into_bytes();
+        let pins_fingerprint = semio_framework_pack_json::to_json_string(&pins).into_bytes();
         let mut space_checkpoint_payload = message.as_bytes().to_vec();
         space_checkpoint_payload.push(0);
         space_checkpoint_payload.extend_from_slice(&pins_fingerprint);
@@ -25685,7 +26830,7 @@ impl<M: SpaceMember> SpaceHost<M> {
 // its CURRENT snapshot with zero side effects, unions the resulting `MutationMessage`s (each
 // prefixed with its originating member's path — `prefix_message_target`) into one set, and rejects
 // the WHOLE group (`reject_if_policy_rejects`, ALL-OR-NOTHING — no member applies anything) if the
-// parent-or-initiator's own `merge_policy()` rejects the union's worst `crate::os_dsl::Severity`
+// parent-or-initiator's own `merge_policy()` rejects the union's worst `semio_framework_diagnostic::Severity`
 // (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C6); a structural failure
 // (unknown ownership, a graph cycle, a missing `ChildStoreFactory`) still rejects immediately,
 // exactly as before. Phase 2 applies in the fixed order child geneses → child edits → parent ops,
@@ -25744,16 +26889,12 @@ pub struct GroupReceipt<M> {
 }
 
 /// 🎛️ Cross-member metadata for one `dispatch_group` call. `description` becomes every
-/// dispatched member's own `ArtifactCommand::Apply.description`. `actor`/`coalesce_key` are
-/// accepted or forward-compat/audit purposes but NOT yet wired into dispatch — object-safe
-/// `SpaceMember` has no `set_local_actor_id`/`AmendLast` seam today (only `ArtifactStore`'s own
-/// inherent API does), so honoring them is deferred to whichever later wave extends that surface;
-/// see `📓️wave1-reports/b2-store-composition-report.md`'s scoping note.
+/// dispatched member's own `ArtifactCommand::Apply.description`; `actor` is recorded for audit but not wired into
+/// dispatch (object-safe `SpaceMember` has no `set_local_actor_id` seam; only `ArtifactStore`'s inherent API does).
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct GroupMeta {
     pub actor: Option<String>,
     pub description: Option<String>,
-    pub coalesce_key: Option<String>,
     /// 🪪️ The group identity every member's tail edit is stamped with when the caller already owns one
     /// (an agent transaction's `txn_id`, so the gateway's `TransactionUndo{group_id}` names this group);
     /// `None` mints the content-addressed invocation id from the parent edit and the child op fingerprints.
@@ -25967,20 +27108,21 @@ impl CompositionGraph {
     /// edges where `artifact_id` is the TARGET (another artifact's own `sync_member` call owns those).
     pub async fn sync_member<P: ArtifactRefs>(&mut self, artifact_id: &str, snapshot: &P) -> Result<(), String> {
         let mut next_owns = HashMap::new();
+        let mut member_ids = HashSet::new();
         for child in snapshot.child_refs().await {
-            if child.child_id != child.target.artifact_id {
-                return Err("composition child reference does not match its target identity".into());
+            if !member_ids.insert(child.child_id) || next_owns.contains_key(&child.target.artifact_id) {
+                return Err("composition parent declares a duplicate member identity or owned target".into());
             }
-            if self.owns.get(&child.child_id).is_some_and(|(parent, _)| parent != artifact_id) {
-                return Err(format!("{} is already owned by another parent", child.child_id));
+            if self.owns.get(&child.target.artifact_id).is_some_and(|(parent, _)| parent != artifact_id) {
+                return Err(format!("{} is already owned by another parent", child.target.artifact_id));
             }
-            if next_owns.get(&child.child_id).is_some_and(|(_, slot)| slot != &child.slot) {
-                return Err(format!("{} appears in multiple owner slots", child.child_id));
+            if next_owns.get(&child.target.artifact_id).is_some_and(|(_, slot)| slot != &child.slot) {
+                return Err(format!("{} appears in multiple owner slots", child.target.artifact_id));
             }
-            if self.would_cycle_owns(artifact_id, &child.child_id).await {
-                return Err(format!("owning {} under {artifact_id} would create a composition cycle", child.child_id));
+            if self.would_cycle_owns(artifact_id, &child.target.artifact_id).await {
+                return Err(format!("owning {} under {artifact_id} would create a composition cycle", child.target.artifact_id));
             }
-            next_owns.insert(child.child_id, (artifact_id.to_string(), child.slot));
+            next_owns.insert(child.target.artifact_id, (artifact_id.to_string(), child.slot));
             semio_framework_async::yield_once().await;
         }
         let mut next_links = HashSet::new();
@@ -26140,7 +27282,7 @@ async fn prefix_message_target(messages: Vec<crate::os_spr::MutationMessage>, me
 
 /// ⚖️ Phase 1's policy gate (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-
 /// CONFLICTS` §C6): folds every already-prefixed message `dispatch_relation_group` collected via
-/// `SpaceMember::preview_wire` into ONE worst `crate::os_dsl::Severity` and consults `policy` — the
+/// `SpaceMember::preview_wire` into ONE worst `semio_framework_diagnostic::Severity` and consults `policy` — the
 /// parent-or-initiator's own `SpaceMember::merge_policy()`, since it is the member driving/owning
 /// this atomic gesture (a policy is authority-local state per §C3, so SOME single member's policy
 /// must govern one shared accept/reject decision; the entry point is the natural, and only
@@ -26342,7 +27484,7 @@ impl TransactionCoordinator {
     /// `ChildStoreFactory` (`VcsError::ValidationFailed` if none) — also structural, also immediate.
     /// Once every member's ops have been previewed and every structural check has passed,
     /// `reject_if_policy_rejects(parent.merge_policy(), &all_messages)` computes ONE worst
-    /// `crate::os_dsl::Severity` across the whole union and consults the parent-or-initiator's own
+    /// `semio_framework_diagnostic::Severity` across the whole union and consults the parent-or-initiator's own
     /// `merge_policy()` (§C6: a `MergePolicy` is authority-local state, so ONE member's policy must
     /// govern the shared group decision — the entry point is the natural choice), returning
     /// `VcsError::Rejected { policy, messages }` on rejection. A reject here is ALL-OR-NOTHING
@@ -26592,20 +27734,20 @@ pub mod test_support {
         S: Clone + ToValue + FromValue,
         M: Mutation<S>,
     {
-        let decode_snapshot = |text: &str| -> Result<S, String> { crate::os_pack::json::from_json_str(text).map_err(|error| error.to_string()) };
+        let decode_snapshot = |text: &str| -> Result<S, String> { semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string()) };
         let base = decode_snapshot(base_json)?;
         let expected = decode_snapshot(after_json)?;
-        let mutation: M = crate::os_pack::json::from_json_str(mutation_json).map_err(|error| error.to_string())?;
+        let mutation: M = semio_framework_pack_json::from_json_str(mutation_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
         let mut applied = base.clone();
         let forward = mutation.diff(&base).apply_to(&mut applied);
-        let inverse = mutation.inverse(&base);
+        let inverse = mutation.inverse(&base).map_err(semio_framework_value::ValueError::into_message)?;
         let mut undone = applied.clone();
         let mut inverse_messages = Vec::new();
         for step in &inverse {
             inverse_messages.extend(step.diff(&undone).apply_to(&mut undone).messages().iter().cloned());
         }
-        let json = |value: DslValue| crate::os_pack::json::from_dsl_value(&value);
-        let report = crate::os_pack::json::object([
+        let json = |value: DslValue| semio_framework_pack_json::from_dsl_value(&value);
+        let report = semio_framework_pack_json::object([
             ("base".to_string(), json(base.to_value())),
             ("expectedSnapshot".to_string(), json(expected.to_value())),
             ("snapshot".to_string(), json(applied.to_value())),
@@ -26615,7 +27757,7 @@ pub mod test_support {
             ("inverseSnapshot".to_string(), json(undone.to_value())),
             ("inverseMessages".to_string(), json(inverse_messages.to_value())),
         ]);
-        Ok(crate::os_pack::json::to_string(&report))
+        Ok(semio_framework_pack_json::to_string(&report))
     }
     //#endregion 🧪️MutationReport
 
@@ -26628,19 +27770,19 @@ pub mod test_support {
         fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
             use serde::ser::{SerializeMap, SerializeSeq};
             match self.0 {
-                DslValue::Null => serializer.serialize_unit(),
-                DslValue::Bool(value) => serializer.serialize_bool(*value),
-                DslValue::Number(value) => serde_json::Value::from(DslValue::Number(*value)).serialize(serializer),
-                DslValue::String(value) => serializer.serialize_str(value),
-                DslValue::Bytes(value)=>serde::Serialize::serialize(value,serializer),
-                DslValue::Array(values) => {
+                semio_framework_value::DslValue::Null => serializer.serialize_unit(),
+                semio_framework_value::DslValue::Bool(value) => serializer.serialize_bool(*value),
+                semio_framework_value::DslValue::Number(value) => serde_json::Value::from(semio_framework_value::DslValue::Number(*value)).serialize(serializer),
+                semio_framework_value::DslValue::String(value) => serializer.serialize_str(value),
+                semio_framework_value::DslValue::Bytes(value) => serde::Serialize::serialize(value, serializer),
+                semio_framework_value::DslValue::Array(values) => {
                     let mut sequence = serializer.serialize_seq(Some(values.len()))?;
                     for value in values {
                         sequence.serialize_element(&SerdeValue(value))?;
                     }
                     sequence.end()
                 }
-                DslValue::Object(values) => {
+                semio_framework_value::DslValue::Object(values) => {
                     let mut map = serializer.serialize_map(Some(values.len()))?;
                     for (key, value) in values {
                         map.serialize_entry(key, &SerdeValue(value))?;
@@ -26699,7 +27841,7 @@ pub mod test_support {
         Mutation: self::Mutation<P>,
     {
         let post = apply_mutation(pre, &operation).expect("test operation diff applies").0;
-        let mut inverse = operation.inverse(pre);
+        let mut inverse = operation.inverse(pre).expect("valid retained mutation inverse fixture");
         inverse.reverse();
         let mut restored = post;
         for back_operation in &inverse {
@@ -26968,9 +28110,11 @@ pub mod test_support {
         assert_eq!(&decoded, command, "command binary round trip diverged from source command");
     }
 
-    /// 📄️ Asserts that printing a store's envelope to text and parsing it back yields the same
-    /// live snapshot the store already holds — the ground truth for {@link print_document_text}/
-    /// {@link parse_document_text} on any technology once it implements `ArtifactDsl` + `OpText`.
+    /// 📄️ Asserts that printing a store's envelope to text and parsing it back keeps its whole shared log — every edit
+    /// and every history transition — and hydrates to the canonical trunk tip (the `.ops` text is the shared log and
+    /// carries no viewer head, ticket 26/10/01 PER-VIEWER-ALTERNATIVE-HEAD); a store on the trunk tip gets back exactly the
+    /// envelope and live snapshot it holds. The ground truth for {@link print_document_text}/{@link parse_document_text}
+    /// on any technology once it implements `ArtifactDsl` + `OpText`.
     pub async fn assert_document_text_round_trip<P, Mutation>(store: &ArtifactStore<P, Mutation>)
     where
         P: Clone + ArtifactDsl + ArtifactPack + PartialEq + std::fmt::Debug + ToValue + FromValue + Send + 'static,
@@ -26979,8 +28123,13 @@ pub mod test_support {
         let live = store.snapshot().expect("store snapshot");
         let files = print_document_text(store.envelope()).await.expect("print document text");
         let parsed: ParsedDocumentText<P, Mutation> = parse_document_text(&files.dsl, &files.ops).await.unwrap_or_else(|error| panic!("parse document text failed: {error}"));
-        assert!(&parsed.envelope == store.envelope(), "document-text round trip lost durable history");
-        assert_eq!(parsed.snapshot, live, "document-text round trip diverged from store snapshot");
+        let shared = parsed.envelope.vcs.edits.iter().map(|edit| (&edit.id, &edit.forwards, &edit.mutation_meta)).eq(store.envelope().vcs.edits.iter().map(|edit| (&edit.id, &edit.forwards, &edit.mutation_meta)));
+        assert!(shared && parsed.envelope.transitions == store.envelope().transitions, "document-text round trip lost shared history");
+        assert!(parsed.envelope.active_alternative_id.is_none() && parsed.envelope.viewer_checkpoint_id.is_none(), "document text hydrates to the canonical trunk tip");
+        if store.envelope().active_alternative_id.is_none() && store.envelope().viewer_checkpoint_id.is_none() {
+            assert!(&parsed.envelope == store.envelope(), "document-text round trip lost durable history");
+            assert_eq!(parsed.snapshot, live, "document-text round trip diverged from store snapshot");
+        }
         retire_parsed_document(parsed);
     }
 
@@ -27059,7 +28208,7 @@ pub mod test_support {
     struct RoundTripValueRetirement<T>(Option<T>);
 
     impl<T: Send> ErasedSnapshotRetirement for RoundTripValueRetirement<T> {
-        fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+        fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
             if maximum_items == 0 {
                 return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
             }
@@ -27083,9 +28232,10 @@ pub mod test_support {
     }
 
     /// 🗄️ Asserts a full pack-based document round trip: mirrors
-    /// `assert_document_text_round_trip` but via `print_document_pack`/`parse_document_pack`, and
-    /// additionally asserts the pack path's parsed snapshot agrees with the text path's — the two
-    /// storage formats must never diverge on the same store.
+    /// `assert_document_text_round_trip` but via `print_document_pack`/`parse_document_pack`. The `.spr` pack persists this
+    /// replica's viewer head (`REC_VIEWER`), so the parsed pack stands on the store's alternative and checkpoint and shows
+    /// its live snapshot; on the trunk tip it also agrees with the text path's snapshot — the two storage formats must never
+    /// diverge on the same store.
     pub async fn assert_document_pack_round_trip<P, Mutation>(store: &ArtifactStore<P, Mutation>)
     where
         P: Clone + ArtifactDsl + ArtifactPack + PartialEq + std::fmt::Debug + ToValue + FromValue + Send + 'static,
@@ -27095,10 +28245,14 @@ pub mod test_support {
         let pack_files = print_document_pack(store.envelope()).await.expect("print document pack");
         let parsed_pack: ParsedDocumentText<P, Mutation> = parse_document_pack(&pack_files.pack, &pack_files.spr).await.unwrap_or_else(|error| panic!("parse document pack failed: {error}"));
         assert_eq!(parsed_pack.snapshot, live, "document-pack round trip diverged from store snapshot");
+        let viewer = (&parsed_pack.envelope.active_alternative_id, &parsed_pack.envelope.viewer_checkpoint_id);
+        assert_eq!(viewer, (&store.envelope().active_alternative_id, &store.envelope().viewer_checkpoint_id), "document-pack round trip lost the viewer head");
 
         let text_files = print_document_text(store.envelope()).await.expect("print document text");
         let parsed_text: ParsedDocumentText<P, Mutation> = parse_document_text(&text_files.dsl, &text_files.ops).await.unwrap_or_else(|error| panic!("parse document text failed: {error}"));
-        assert_eq!(parsed_pack.snapshot, parsed_text.snapshot, "document-pack path diverged from document-text path");
+        if viewer == (&None, &None) {
+            assert_eq!(parsed_pack.snapshot, parsed_text.snapshot, "document-pack path diverged from document-text path");
+        }
         retire_parsed_document(parsed_pack);
         retire_parsed_document(parsed_text);
     }
@@ -27199,7 +28353,7 @@ pub mod test_support {
         async fn parse_native(asset: &ExampleAsset<'_>) -> Result<Self::Snapshot, String>;
         async fn export_native(snapshot: &Self::Snapshot) -> Result<Vec<u8>, String>;
         async fn reimport_native(bytes: &[u8]) -> Result<Self::Snapshot, String>;
-        async fn infer(snapshot: &Self::Snapshot) -> Self::Inference;
+        async fn infer(snapshot: &Self::Snapshot) -> Result<Self::Inference, ValueError>;
         async fn sample_mutations(snapshot: &Self::Snapshot) -> Vec<Self::Mutation>;
         async fn validate_payload(bytes: &[u8]) -> Result<(), Vec<String>>;
         async fn validate_negative(bytes: &[u8]) -> Result<Vec<String>, String>;
@@ -27261,8 +28415,8 @@ pub mod test_support {
             assert_op_text_binary_equivalence(mutation);
         }
 
-        let inference_a = S::infer(&snapshot).await;
-        let inference_b = S::infer(&snapshot).await;
+        let inference_a = S::infer(&snapshot).await.expect("valid materialized subset inference");
+        let inference_b = S::infer(&snapshot).await.expect("valid materialized subset inference");
         assert_inference_determinism(&inference_a, &inference_b).await;
 
         if let Some(first) = mutations.first() {
@@ -27330,7 +28484,7 @@ impl ArtifactPack for protocol::InteractionState {
     }
     fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
         let value = <DslValue as ArtifactPack>::decode_pack_with(bytes, options)?;
-        <Self as FromValue>::from_value(value).map_err(|error: ValueError| PackError::Schema(error.to_string()))
+        <Self as FromValue>::from_value(value).map_err(PackError::from)
     }
 }
 //#endregion 🔖️TestSupport
@@ -27366,10 +28520,58 @@ mod tests;
 /// a composed child (`os/store/child/schema.json`), its owner stamp (`os/store/child/owner/schema.json`), a link
 /// (`os/store/link/schema.json`) and a blob (`os/store/blob/schema.json`), each as its whole-document `schema` export.
 const STORE_SCHEMA_EXPORTS: [semio_framework_schema_registry::ScopeSchemaExports; 4] = [
-    semio_framework_schema_registry::ScopeSchemaExports { scope: "os.store.child", exports: &[semio_framework_schema_registry::SchemaExport { id: "schema", leaves: semio_framework_schema_registry::FacetLeaves { rust: "", typescript: include_str!("🪆️child/🧬️schema/🟦️.ts"), graphql: include_str!("🪆️child/🧬️schema/🔗️.graphql"), json_schema: include_str!("🪆️child/🧬️schema/🔣️.json"), proto: include_str!("🪆️child/🧬️schema/🛰️.proto") } }] },
-    semio_framework_schema_registry::ScopeSchemaExports { scope: "os.store.child.owner", exports: &[semio_framework_schema_registry::SchemaExport { id: "schema", leaves: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🪆️child/🏠️owner/🧬️schema/🦀️.rs"), typescript: include_str!("🪆️child/🏠️owner/🧬️schema/🟦️.ts"), graphql: include_str!("🪆️child/🏠️owner/🧬️schema/🔗️.graphql"), json_schema: include_str!("🪆️child/🏠️owner/🧬️schema/🔣️.json"), proto: include_str!("🪆️child/🏠️owner/🧬️schema/🛰️.proto") } }] },
-    semio_framework_schema_registry::ScopeSchemaExports { scope: "os.store.link", exports: &[semio_framework_schema_registry::SchemaExport { id: "schema", leaves: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🔗️link/🧬️schema/🦀️.rs"), typescript: include_str!("🔗️link/🧬️schema/🟦️.ts"), graphql: include_str!("🔗️link/🧬️schema/🔗️.graphql"), json_schema: include_str!("🔗️link/🧬️schema/🔣️.json"), proto: include_str!("🔗️link/🧬️schema/🛰️.proto") } }] },
-    semio_framework_schema_registry::ScopeSchemaExports { scope: "os.store.blob", exports: &[semio_framework_schema_registry::SchemaExport { id: "schema", leaves: semio_framework_schema_registry::FacetLeaves { rust: include_str!("📦️blob/🧬️schema/🦀️.rs"), typescript: include_str!("📦️blob/🧬️schema/🟦️.ts"), graphql: include_str!("📦️blob/🧬️schema/🔗️.graphql"), json_schema: include_str!("📦️blob/🧬️schema/🔣️.json"), proto: include_str!("📦️blob/🧬️schema/🛰️.proto") } }] },
+    semio_framework_schema_registry::ScopeSchemaExports {
+        scope: "os.store.child",
+        exports: &[semio_framework_schema_registry::SchemaExport {
+            id: "schema",
+            leaves: semio_framework_schema_registry::FacetLeaves {
+                rust: "",
+                typescript: include_str!("🪆️child/🧬️schema/🟦️.ts"),
+                graphql: include_str!("🪆️child/🧬️schema/🔗️.graphql"),
+                json_schema: include_str!("🪆️child/🧬️schema/🔣️.json"),
+                proto: include_str!("🪆️child/🧬️schema/🛰️.proto"),
+            },
+        }],
+    },
+    semio_framework_schema_registry::ScopeSchemaExports {
+        scope: "os.store.child.owner",
+        exports: &[semio_framework_schema_registry::SchemaExport {
+            id: "schema",
+            leaves: semio_framework_schema_registry::FacetLeaves {
+                rust: include_str!("🪆️child/🏠️owner/🧬️schema/🦀️.rs"),
+                typescript: include_str!("🪆️child/🏠️owner/🧬️schema/🟦️.ts"),
+                graphql: include_str!("🪆️child/🏠️owner/🧬️schema/🔗️.graphql"),
+                json_schema: include_str!("🪆️child/🏠️owner/🧬️schema/🔣️.json"),
+                proto: include_str!("🪆️child/🏠️owner/🧬️schema/🛰️.proto"),
+            },
+        }],
+    },
+    semio_framework_schema_registry::ScopeSchemaExports {
+        scope: "os.store.link",
+        exports: &[semio_framework_schema_registry::SchemaExport {
+            id: "schema",
+            leaves: semio_framework_schema_registry::FacetLeaves {
+                rust: include_str!("🔗️link/🧬️schema/🦀️.rs"),
+                typescript: include_str!("🔗️link/🧬️schema/🟦️.ts"),
+                graphql: include_str!("🔗️link/🧬️schema/🔗️.graphql"),
+                json_schema: include_str!("🔗️link/🧬️schema/🔣️.json"),
+                proto: include_str!("🔗️link/🧬️schema/🛰️.proto"),
+            },
+        }],
+    },
+    semio_framework_schema_registry::ScopeSchemaExports {
+        scope: "os.store.blob",
+        exports: &[semio_framework_schema_registry::SchemaExport {
+            id: "schema",
+            leaves: semio_framework_schema_registry::FacetLeaves {
+                rust: include_str!("📦️blob/🧬️schema/🦀️.rs"),
+                typescript: include_str!("📦️blob/🧬️schema/🟦️.ts"),
+                graphql: include_str!("📦️blob/🧬️schema/🔗️.graphql"),
+                json_schema: include_str!("📦️blob/🧬️schema/🔣️.json"),
+                proto: include_str!("📦️blob/🧬️schema/🛰️.proto"),
+            },
+        }],
+    },
 ];
 
 /// 📌️ Registers the store's own document-model schema documents ([`STORE_SCHEMA_EXPORTS`]), so every artifact contract
@@ -27383,3 +28585,7 @@ pub fn register_store_schema_exports() -> Result<(), semio_framework_schema_regi
 #[cfg(test)]
 #[path = "🧪️tests/🧩️schema-composition/🦀️.rs"]
 mod schema_composition_tests;
+
+#[cfg(test)]
+#[path = "📜️space-history/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_snapshot_space_history_baseline;

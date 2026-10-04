@@ -18,7 +18,7 @@ async fn primary_asset_is_the_codec_s_own_output() {
 async fn inference_default_law() {
     use crate::standards::v1::subsets::any::schema::inferences::JackInference;
     use protocol::Inference;
-    assert_eq!(JackInference::infer(&crate::JackSnapshot::default()), JackInference::default());
+    assert_eq!(JackInference::infer(&crate::JackSnapshot::default()).expect("valid materialized inference fixture"), JackInference::default());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -27,5 +27,5 @@ async fn inference_determinism_law() {
     use protocol::Inference;
     let text = include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
     let projection = crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(text).expect("example dsl parses");
-    assert_eq!(JackInference::infer(&projection), JackInference::infer(&projection));
+    assert_eq!(JackInference::infer(&projection).expect("valid materialized inference fixture"), JackInference::infer(&projection).expect("valid materialized inference fixture"));
 }

@@ -13,7 +13,7 @@ use crate::editor::rewriting::window_config;
 use crate::standards::v1::subsets::any::schema::mutations::text::RewriteRuleMutation;
 use crate::standards::v1::subsets::any::schema::{self, ParameterKind, Rhs};
 use crate::{LayoutPoint, RewritingSnapshot, REWRITE_RULE_SCHEMA, TRINITY_REWRITING_DIALECT};
-use semio_framework_graph::manifest::PropertyValue;
+use semio_framework_graph::manifest::{PropertyBag,PropertyValue};
 use semio_framework_plugin::ActionArgDef;
 use semio_framework_plugin::ActionArgOption;
 use semio_framework_plugin::ActionKind;
@@ -94,48 +94,26 @@ pub(crate) const TRINITY_REWRITING_PLAY_WINDOW_JACK: &str = "trinity-rewriting-j
 pub(crate) const TRINITY_REWRITING_PLAY_WINDOW_PARAMETERS: &str = "trinity-rewriting-parameters";
 const TRINITY_REWRITING_PLAY_RULE_NAME: &str = "label-core";
 
-const NAKAGIN_FIXTURE_DSL: &str = include_str!("../../../../../../🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🎬️demo/🗣️.dsl.semio");
-
-const DEFAULT_LHS_JSON: &str = r#"{
-  "pattern": {
-    "leftVar": "a",
-    "leftKind": "Piece",
-    "edgeVar": "r",
-    "edgeKind": "Connection",
-    "rightVar": "b",
-    "rightKind": "Piece"
-  },
-  "whereClause": "a.name = 'b'"
-}"#;
-
-const DEFAULT_RHS_JSON: &str = r#"{
-  "create": [],
-  "delete": [],
-  "set": [{ "var": "a", "prop": "label", "value": "$label" }],
-  "merge": [],
-  "parameters": [{ "name": "label", "kind": "string", "default": "nakagin-core" }]
-}"#;
+const NAKAGIN_CHILD: &str = include_str!("../🧫️fixtures/🪆️child/🏢️initial/🪆️content/🔣️.json");
 
 const TRINITY_LOD_MODE_AUTOMATIC: &str = "automatic";
 //#endregion 🔖️Constants
 
 //#region 🔖️DocumentHelpers
-/// 📦️ JSON text of the bundled Nakagin fixture — `RewritingSnapshot`'s own `_json` fields keep their
-/// JSON contract, so the `.trinity` DSL source is parsed once and re-serialized here.
-fn nakagin_fixture_json() -> String {
-    JackSnapshot::parse_dsl(NAKAGIN_FIXTURE_DSL).expect("bundled nakagin fixture parses").to_json().expect("fixture serializes")
+/// 🪆️ The authored Nakagin asset materializes its actual typed child.
+fn nakagin_fixture() -> JackSnapshot {
+    let child=semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::decode_semio_graph_snapshot_json(NAKAGIN_CHILD).expect("declared complete Nakagin Semio child");
+    let content=store::ArtifactChild::new("nakagin-jack-demo-content".into(),store::os_io::ArtifactRef{artifact_id:"nakagin-jack-demo-content".into(),dialect:store::os_io::ArtifactDialect{artifact_kind:"s.stdio.semio".into(),standard:"v1".into(),subset:"graph".into()}});
+    let mut graph=JackSnapshot{schema:JackSnapshot::SCHEMA.into(),name:"Nakagin Capsule Tower".into(),manifest_id:Some("nakagin".into()),manifest:semio_s_artifact_trinity_jack::Manifest::nakagin_default(),camera:semio_s_artifact_trinity_jack::Camera::default(),content,root_node_id:Some("7dc5b737-3b6b-4068-b315-b7bacc91c2e1".into()),query:semio_s_artifact_trinity_jack::TRINITY_JACK_DEFAULT_QUERY.into()};
+    semio_s_artifact_trinity_jack::materialize_jack_snapshot(&mut graph.content,child);
+    graph
 }
-
-pub(crate) fn default_parameter_bindings(rhs_json: &str) -> BTreeMap<String, PropertyValue> {
-    let Ok(rhs) = pack::from_json_str::<Rhs>(rhs_json) else {
-        return BTreeMap::new();
-    };
+pub(crate) fn default_parameter_bindings(rhs: &Rhs) -> PropertyBag {
     rhs.parameters.iter().map(|param| (param.name.clone(), param.default.clone())).collect()
 }
-
 /// 🔧️ The parameter-binding leaves that carry `before` to `after`: one `change-parameter-binding` per key whose value differs or
 /// is new, one `remove-parameter-binding` per key `after` drops, in key order.
-pub(crate) fn parameter_binding_mutations(before: &BTreeMap<String, PropertyValue>, after: &BTreeMap<String, PropertyValue>) -> Vec<RewriteRuleMutation> {
+pub(crate) fn parameter_binding_mutations(before: &PropertyBag, after: &PropertyBag) -> Vec<RewriteRuleMutation> {
     use crate::standards::v1::subsets::any::schema::mutations::{change_parameter_binding, remove_parameter_binding};
     let changed = after.iter().filter(|(key, value)| before.get(*key) != Some(*value)).map(|(key, value)| change_parameter_binding(key.clone(), value.clone()));
     let removed = before.keys().filter(|key| !after.contains_key(*key)).map(|key| remove_parameter_binding(key.clone()));
@@ -143,17 +121,17 @@ pub(crate) fn parameter_binding_mutations(before: &BTreeMap<String, PropertyValu
 }
 
 pub(crate) fn default_rule_state() -> RewritingSnapshot {
-    let mut state = RewritingSnapshot { before_fixture_json: nakagin_fixture_json(), lhs_json: DEFAULT_LHS_JSON.into(), rhs_json: DEFAULT_RHS_JSON.into(), parameter_bindings: BTreeMap::new(), rule_layout: BTreeMap::new() };
-    state.parameter_bindings = default_parameter_bindings(&state.rhs_json);
-    state
+    let lhs = schema::Lhs { pattern: schema::Pattern { left_var: "a".into(), left_kind: "Piece".into(), edge_var: Some("r".into()), edge_kind: Some("Connection".into()), right_var: Some("b".into()), right_kind: Some("Piece".into()) }, where_clause: Some("a.name = 'b'".into()) };
+    let rhs = Rhs { set: vec![schema::Assignment { var: "a".into(), prop: "label".into(), value: PropertyValue::String("$label".into()) }], parameters: vec![schema::ParameterSpec { name: "label".into(), kind: ParameterKind::String, default: PropertyValue::String("nakagin-core".into()) }], ..Rhs::default() };
+    let parameter_bindings = default_parameter_bindings(&rhs);
+    RewritingSnapshot { working_graph: nakagin_fixture(), lhs, rhs, parameter_bindings, rule_layout: schema::RuleLayout::new() }
 }
-
 /// 🧬️ Whole-document replace is banned from the `Mutation` enum outright (`SetState` — see
 /// `📓️taxonomy.md`'s forbidden vocabulary), so `resetRule` builds a `Effect::LoadDocument`
 /// (outside undo history) instead of an `artifact_mutations` entry.
 pub(crate) fn reset_document_effect(state: &RewritingSnapshot) -> semio_framework_plugin::Effect {
     let pack = <RewritingSnapshot as ArtifactPack>::encode_pack(state);
-    let spr = semio_framework_plugin::resolve_ready(store::empty_document_spr("rewriting", REWRITE_RULE_SCHEMA));
+    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr("rewriting", REWRITE_RULE_SCHEMA));
     semio_framework_plugin::Effect::LoadDocument { pack, spr }
 }
 
@@ -162,8 +140,8 @@ pub(crate) fn rewriting_action(action: &str, args: Option<semio_framework_plugin
 }
 
 /// 🪟️ Binds window chrome through its retained renderer action descriptor.
-pub(crate) fn rewriting_window_action(action: &str, args: Option<pack::JsonValue>) -> semio_framework_plugin::ActionDescriptor {
-    semio_framework_plugin::ActionDescriptor { controller_id: TRINITY_REWRITING_PLAY_CONTROLLER_ID.into(), action: action.into(), args: args.map(|value| pack::json_to_dsl_value(&value)) }
+pub(crate) fn rewriting_window_action(action: &str, args: Option<semio_framework_pack_json::Value>) -> semio_framework_plugin::ActionDescriptor {
+    semio_framework_plugin::ActionDescriptor { controller_id: TRINITY_REWRITING_PLAY_CONTROLLER_ID.into(), action: action.into(), args: args.map(|value| semio_framework_pack_json::to_dsl_value(&value)) }
 }
 
 /// 🏷️ Admits resolved Rewriting text into the semantic UI contract.
@@ -204,58 +182,32 @@ pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framew
     Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
 }
 
-pub(crate) fn parse_fixture_json(json: &str) -> Option<JackSnapshot> {
-    JackSnapshot::from_json(json).ok()
+fn build_rule_from_state(state: &RewritingSnapshot) -> schema::Rule {
+    schema::Rule { name: TRINITY_REWRITING_PLAY_RULE_NAME.into(), lhs: state.lhs.clone(), rhs: state.rhs.clone() }
 }
-
-fn build_rule_from_state(state: &RewritingSnapshot) -> Result<schema::Rule, String> {
-    let lhs: schema::Lhs = pack::from_json_str(&state.lhs_json).map_err(|e| e.to_string())?;
-    let rhs: Rhs = pack::from_json_str(&state.rhs_json).map_err(|e| e.to_string())?;
-    Ok(schema::Rule { name: TRINITY_REWRITING_PLAY_RULE_NAME.into(), lhs, rhs })
-}
-
 pub(crate) fn compiled_jack_query(state: &RewritingSnapshot) -> String {
-    let rule_json = match build_rule_from_state(state) {
-        Ok(rule) => pack::to_json_string(&rule),
-        Err(_) => return String::new(),
-    };
-    let bindings_json = pack::to_json_string(&state.parameter_bindings);
-    schema::rule_query_json(&rule_json, &bindings_json)
-        .ok()
-        .and_then(|json| pack::parse_json(&json).ok())
-        .and_then(|value| value.get("query").and_then(|query| query.as_str()).map(str::to_string))
-        .unwrap_or_else(|| build_rule_from_state(state).map(|rule| schema::build_rule_query(&rule, &state.parameter_bindings)).unwrap_or_default())
+    schema::build_rule_query(&build_rule_from_state(state), &state.parameter_bindings)
 }
-
-fn apply_rewriting_to_fixture(before_json: &str, state: &RewritingSnapshot) -> String {
-    let Ok(mut graph) = semio_s_artifact_trinity_jack::Graph::load_json(before_json) else {
-        return before_json.into();
-    };
-    let Ok(rule) = build_rule_from_state(state) else {
-        return before_json.into();
-    };
-    if schema::apply_rule(&mut graph, &rule, &state.parameter_bindings).is_ok() {
-        graph.host_snapshot_json().unwrap_or_else(|_| before_json.into())
-    } else {
-        before_json.into()
-    }
+/// ♻️ The checked query projection produces a new typed graph without changing the retained source child.
+pub(crate) fn after_fixture(state: &RewritingSnapshot) -> Result<JackSnapshot, String> {
+    let mut graph = semio_s_artifact_trinity_jack::Graph::from_snapshot(state.working_graph.clone()).map_err(|error|error.to_string())?;
+    schema::apply_rule(&mut graph, &build_rule_from_state(state), &state.parameter_bindings).map_err(|error|error.to_string())?;
+    Ok(graph.to_snapshot())
 }
-
-/// ♻️ Pure computation of the rule-applied result graph — reused both by the `After` window's render
-/// and by `ArtifactApp::export_media`'s `"graph:out"` port.
-pub(crate) fn after_fixture_json(state: &RewritingSnapshot) -> String {
-    apply_rewriting_to_fixture(&state.before_fixture_json, state)
+/// 🧾️ The working graph's resolved manifest (embedded, else named by `manifestId`); `None` when it resolves to none.
+pub(crate) fn resolved_working_manifest(state: &RewritingSnapshot) -> Option<semio_s_artifact_trinity_jack::Manifest> {
+    let mut graph = state.working_graph.clone();
+    graph.resolve_manifest().ok().map(|()| graph.manifest.clone())
 }
-
 /// 🧩️ One semantic rule-graph node at its `rule_layout` point, else at its default slot ([`schema::lhs_graph_slots`],
 /// [`schema::rhs_graph_slots`] — the same positions a node drag moves from).
-fn semantic_rule_node(id: &str, kind: &str, name: &str, slots: &[(String, LayoutPoint)], rule_layout: &BTreeMap<String, LayoutPoint>) -> Node {
+fn semantic_rule_node(id: &str, kind: &str, name: &str, slots: &[(String, LayoutPoint)], rule_layout: &schema::RuleLayout) -> Node {
     let default = slots.iter().find(|(slot, _)| slot == id).map_or(LayoutPoint { x: 0.0, y: 0.0 }, |(_, point)| *point);
     let point = rule_layout.get(id).copied().unwrap_or(default);
     Node { id: id.into(), name: name.into(), kind: kind.into(), x: point.x, y: point.y, width: 160.0, height: 56.0, ports: vec![], properties: Default::default() }
 }
 
-fn lhs_semantic_graph_fixture(lhs: &schema::Lhs, rule_layout: &BTreeMap<String, LayoutPoint>) -> JackSnapshot {
+fn lhs_semantic_graph_fixture(lhs: &schema::Lhs, rule_layout: &schema::RuleLayout) -> JackSnapshot {
     let slots = schema::lhs_graph_slots(lhs);
     let mut nodes = vec![semantic_rule_node("lhs-match", "rewriting.match", &format!("{}:{}", lhs.pattern.left_var, lhs.pattern.left_kind), &slots, rule_layout)];
     let mut edges = Vec::new();
@@ -266,7 +218,7 @@ fn lhs_semantic_graph_fixture(lhs: &schema::Lhs, rule_layout: &BTreeMap<String, 
     JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "lhs".into(), Some("nakagin".into()), semio_s_artifact_trinity_jack::Manifest::nakagin_default(), Camera { x: 0.0, y: 0.0, zoom: 1.0 }, JackWorkingScene { nodes: nodes, edges: edges }, None)
 }
 
-fn rhs_semantic_graph_fixture(rhs: &Rhs, rule_layout: &BTreeMap<String, LayoutPoint>) -> JackSnapshot {
+fn rhs_semantic_graph_fixture(rhs: &Rhs, rule_layout: &schema::RuleLayout) -> JackSnapshot {
     let slots = schema::rhs_graph_slots(rhs);
     let node = |id: String, kind: &str, name: String| semantic_rule_node(&id, kind, &name, &slots, rule_layout);
     let mut nodes = Vec::new();
@@ -288,20 +240,12 @@ fn rhs_semantic_graph_fixture(rhs: &Rhs, rule_layout: &BTreeMap<String, LayoutPo
     JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "rhs".into(), Some("nakagin".into()), semio_s_artifact_trinity_jack::Manifest::nakagin_default(), Camera { x: 0.0, y: 0.0, zoom: 1.0 }, JackWorkingScene { nodes: nodes, edges: Vec::new() }, None)
 }
 
-pub(crate) fn lhs_graph_fixture_json(lhs_json: &str, rule_layout: &BTreeMap<String, LayoutPoint>) -> String {
-    let Ok(lhs) = pack::from_json_str::<schema::Lhs>(lhs_json) else {
-        return nakagin_fixture_json();
-    };
-    semio_s_artifact_trinity_jack::Graph::from_snapshot(lhs_semantic_graph_fixture(&lhs, rule_layout)).ok().and_then(|graph| graph.host_snapshot_json().ok()).unwrap_or_else(nakagin_fixture_json)
+pub(crate) fn lhs_graph_fixture(lhs: &schema::Lhs, rule_layout: &schema::RuleLayout) -> JackSnapshot {
+    lhs_semantic_graph_fixture(lhs, rule_layout)
 }
-
-pub(crate) fn rhs_graph_fixture_json(rhs_json: &str, rule_layout: &BTreeMap<String, LayoutPoint>) -> String {
-    let Ok(rhs) = pack::from_json_str::<Rhs>(rhs_json) else {
-        return nakagin_fixture_json();
-    };
-    semio_s_artifact_trinity_jack::Graph::from_snapshot(rhs_semantic_graph_fixture(&rhs, rule_layout)).ok().and_then(|graph| graph.host_snapshot_json().ok()).unwrap_or_else(nakagin_fixture_json)
+pub(crate) fn rhs_graph_fixture(rhs: &Rhs, rule_layout: &schema::RuleLayout) -> JackSnapshot {
+    rhs_semantic_graph_fixture(rhs, rule_layout)
 }
-
 /// 🕹️ Used by `interaction_topology` to hang a var-reference `TopologyNode` off its graph node
 /// (domain "graph" — "AST parents + variable references").
 fn var_from_node_name(name: &str) -> Option<String> {
@@ -319,7 +263,7 @@ fn var_from_node_name(name: &str) -> Option<String> {
 //#region 🔖️Io
 /// 🔌️ Rewriting's typed media I/O surface (`AppDefinition.io`) — the implicit document in/out pair (a
 /// `trinity.rewrite.rule` document) plus a graph in/out pair: `graph:in` loads an incoming
-/// `trinity.graph` as this rule's `before_fixture_json` working graph, and `graph:out` re-emits the
+/// `trinity.graph` as this rule's `working_graph` working graph, and `graph:out` re-emits the
 /// rule-applied result graph.
 pub(crate) fn rewriting_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
@@ -356,21 +300,21 @@ pub(crate) fn rewriting_io() -> semio_framework_plugin::AppIo {
 fn rewriting_lod_json_for_window(cfg: &window_config::RewritingWindowConfig) -> String {
     let mode = cfg.lod_mode.as_str();
     if mode == TRINITY_LOD_MODE_AUTOMATIC {
-        pack::json!({ "automatic": true }).to_string()
+        semio_framework_pack_json::json!({ "automatic": true }).to_string()
     } else {
-        pack::json!({ "automatic": false, "forcedLabel": mode }).to_string()
+        semio_framework_pack_json::json!({ "automatic": false, "forcedLabel": mode }).to_string()
     }
 }
 
 fn trinity_rewriting_lod_measure(window_id: &str, current_mode: &str) -> WindowMeasure {
     let mut items = vec![semio_framework_plugin::MeasureSelectItem { id: TRINITY_LOD_MODE_AUTOMATIC.into(), value: TRINITY_LOD_MODE_AUTOMATIC.into(), label: "Automatic".into() }];
-    let rows: Vec<pack::JsonValue> = pack::parse_json(&semio_s_artifact_trinity_jack::editor::jack::lod::trinity_lod_scale_json()).ok().and_then(|value| value.as_array().map(|values| values.to_vec())).unwrap_or_default();
+    let rows: Vec<semio_framework_pack_json::Value> = semio_framework_pack_json::parse(&semio_s_artifact_trinity_jack::editor::jack::lod::trinity_lod_scale_json(), semio_framework_pack_json::JsonMemberPolicy::Reject).ok().and_then(|value| value.as_array().map(|values| values.to_vec())).unwrap_or_default();
     items.extend(rows.into_iter().filter_map(|row| {
         let id = row.get("id")?.as_str()?.to_string();
         let name = row.get("name").and_then(|value| value.as_str()).unwrap_or(&id).to_string();
         Some(semio_framework_plugin::MeasureSelectItem { id: id.clone(), value: id, label: name })
     }));
-    WindowMeasure::Select { id: format!("{window_id}-lod"), label: Some("LOD".into()), value: current_mode.into(), items, on_change: rewriting_window_action("setLodMode", Some(pack::json!({ "windowId": window_id }))) }
+    WindowMeasure::Select { id: format!("{window_id}-lod"), label: Some("LOD".into()), value: current_mode.into(), items, on_change: rewriting_window_action("setLodMode", Some(semio_framework_pack_json::json!({ "windowId": window_id }))) }
 }
 
 /// 🕹️ `selection`/`hover` are left unset: `ArtifactApp::render` has no `InteractionView` (only
@@ -379,9 +323,8 @@ fn trinity_rewriting_lod_measure(window_id: &str, current_mode: &str) -> WindowM
 /// wrapper's `stamp_and_cache_interaction_ui` post-pass would stamp either. The live node-graph host
 /// reads domain "graph"'s `DomainSelection`/`DomainHover` directly, so the interactive surface stays
 /// correct even though this snapshot doesn't carry it.
-pub(crate) fn render_fixture_graph(surface_id: &str, fixture_json: &str, cfg: &window_config::RewritingWindowConfig, editable: bool) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let fixture = parse_fixture_json(fixture_json).unwrap_or_else(|| JackSnapshot::parse_dsl(NAKAGIN_FIXTURE_DSL).unwrap());
-    let (nodes, edges, fixture_viewport) = semio_s_artifact_trinity_jack::snapshot_to_workflow(&fixture);
+pub(crate) fn render_fixture_graph(surface_id: &str, fixture: &JackSnapshot, cfg: &window_config::RewritingWindowConfig, editable: bool) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let (nodes, edges, fixture_viewport) = semio_s_artifact_trinity_jack::snapshot_to_workflow(fixture).map_err(|error|semio_framework_plugin::PluginAssemblyError::new("trinity.child.unavailable",error.into_message()))?;
     let viewport = cfg.camera.as_ref().map_or(fixture_viewport, |camera| Viewport2d { x: camera.x, y: camera.y, zoom: camera.zoom });
     semio_framework_plugin::scene_surface(
         surface_id,
@@ -397,7 +340,7 @@ pub(crate) fn render_fixture_graph(surface_id: &str, fixture_json: &str, cfg: &w
 /// its JSON-array `operations` shape (rather than a typed sub-enum) — the same
 /// node-graph record rows (`connect`/`disconnect`/`move`/`setSlider`/`insertPort`/`delete`) `commands::node_graph_edit`
 /// already parses, carried as an opaque string field.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 pub enum TrinityRewritingCommand {
     // 🔧️ Document-mutating — dispatched as VCS operations with a true inverse.
     #[dsl(key = "node-graph-edit")]
@@ -428,37 +371,39 @@ pub enum TrinityRewritingCommand {
     Reorganize,
     #[dsl(key = "set-lod-mode")]
     SetLodMode { value: String },
+    #[dsl(key = "add-working-node")]
+    AddWorkingNode { kind: Option<String>, name: Option<String>, x: f64, y: f64 },
 }
 
 //#region 🔖️OpCodec
 impl protocol::OpText for TrinityRewritingCommand {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = semio_framework_dsl_record::parse(line, &(spec_fn.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?;
+                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
+        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown mutation line '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
     }
     fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &(spec_fn.ordinary)(), dsl::JoinMode::Inline)
+        semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline)
     }
 }
 
 /// 🎯️ Handcrafted OpBinary (P6).
 impl protocol::OpBinary for TrinityRewritingCommand {
-    const TOOL_JOB_IDS: &'static [&'static str] = &["nodeGraphViewport", "setLodMode", "addRuleClause", "resetRule", "setActiveExample", "setParameter", "patchNodes", "nodeGraphEdit", "setLhsJson", "setRhsJson", "reorganize"];
+    const TOOL_JOB_IDS: &'static [&'static str] = &["nodeGraphViewport", "setLodMode", "addRuleClause", "resetRule", "setActiveExample", "setParameter", "patchNodes", "nodeGraphEdit", "setLhsJson", "setRhsJson", "reorganize", "addWorkingNode"];
 
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
         let spec = (variants[ordinal].1.ordinary)();
         let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
@@ -476,12 +421,12 @@ impl protocol::OpBinary for TrinityRewritingCommand {
             return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
         }
         let ordinal = reader.read_varint_u64()?;
-        let variants = <Self as dsl::DslVariants>::variants();
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
         let spec = (spec_fn.ordinary)();
         let body = &bytes[reader.position()..];
         let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
+        <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
     }
 }
 
@@ -515,7 +460,7 @@ mod args_bridge {
                 if float.is_finite() && float.fract() == 0.0 { format!("{}", float as i64) } else { format!("{float}") }
             }
             DslValue::Bool(flag) => flag.to_string(),
-            other => dsl::json::to_json_string(other),
+            other => semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(other)),
         })
     }
 
@@ -528,7 +473,7 @@ mod args_bridge {
     fn ids(args: Option<&DslValue>) -> Vec<String> {
         match field(args, &["nodeIds", "node_ids", "ids"]) {
             Some(DslValue::Array(items)) => items.iter().filter_map(|item| item.as_str().map(str::to_string)).collect(),
-            Some(DslValue::String(text)) if text.trim_start().starts_with('[') => pack::from_json_str::<Vec<String>>(text).unwrap_or_default(),
+            Some(DslValue::String(text)) if text.trim_start().starts_with('[') => semio_framework_pack_json::from_json_str::<Vec<String>>(text, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_default(),
             Some(DslValue::String(text)) => text.split(|character: char| character == ',' || character.is_whitespace()).filter(|id| !id.is_empty()).map(str::to_string).collect(),
             _ => Vec::new(),
         }
@@ -557,6 +502,10 @@ mod args_bridge {
             "nodeGraphViewport" => TrinityRewritingCommand::SetViewport { surface_id: text(args, SURFACE), viewport: viewport(action, args)? },
             "reorganize" => TrinityRewritingCommand::Reorganize,
             "setLodMode" => TrinityRewritingCommand::SetLodMode { value: required(action, args, &["value", "mode"])? },
+            "addWorkingNode" => {
+                let coordinate = |key: &str| field(args, &[key]).and_then(DslValue::as_f64).ok_or_else(|| invalid(action, format!("missing numeric {key}")));
+                TrinityRewritingCommand::AddWorkingNode { kind: text(args, &["kind"]), name: text(args, &["name"]), x: coordinate("x")?, y: coordinate("y")? }
+            }
             _ => return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.unsupported"), format!("the trinity rewriting editor has no command for action '{action}'"))),
         })
     }
@@ -566,9 +515,10 @@ mod args_bridge {
 //#region 🧵️RetainedDocumentCommands
 /// 🧾️ Document verbs as bounded first-step tools (ticket 26/09/17/TRINITY-PLUGIN-END-TO-END): the framework
 /// refuses UI dispatch of every command not classified `Migrated`, which left every rule edit dead in the
-/// shell. Each verb publishes granular `RewriteRuleMutation`s on the artifact lane except `resetRule`, a
-/// host-applied `Effect::LoadDocument`.
-const REWRITING_DOCUMENT_TOOL_IDS: &[&str] = &["addRuleClause", "resetRule", "setActiveExample", "setParameter", "patchNodes", "nodeGraphEdit", "setLhsJson", "setRhsJson", "reorganize"];
+/// shell. Each verb publishes granular `RewriteRuleMutation`s on the artifact lane — the working-graph verbs (`patchNodes`,
+/// `addWorkingNode`, a working-canvas `nodeGraphEdit`) ONE edit of the composed `workingGraph` child (design §20.15) — except
+/// `resetRule`, a host-applied `Effect::LoadDocument`.
+const REWRITING_DOCUMENT_TOOL_IDS: &[&str] = &["addRuleClause", "resetRule", "setActiveExample", "setParameter", "patchNodes", "nodeGraphEdit", "setLhsJson", "setRhsJson", "reorganize", "addWorkingNode"];
 const REWRITING_DOCUMENT_PAYLOAD_SCHEMA: &str = "trinity.rewriting.document-command.v1";
 const REWRITING_DOCUMENT_RAW_BYTES: usize = 32_768;
 /// 📬️ One retained rule mutation: `edit-before-fixture` carries the whole working graph JSON (the Nakagin
@@ -587,6 +537,7 @@ fn rewriting_document_extent(command: &TrinityRewritingCommand, _snapshot: &Rewr
         TrinityRewritingCommand::AddRuleClause { kind } => kind.len(),
         TrinityRewritingCommand::SetActiveExample { example_id } => example_id.len(),
         TrinityRewritingCommand::PatchNodes { node_ids, field, value } => node_ids.iter().map(String::len).try_fold(field.len().checked_add(value.len())?, usize::checked_add)?,
+        TrinityRewritingCommand::AddWorkingNode { kind, name, .. } => kind.as_ref().map_or(0, String::len).checked_add(name.as_ref().map_or(0, String::len))?.checked_add(16)?,
         TrinityRewritingCommand::ResetRule | TrinityRewritingCommand::Reorganize => 1,
         _ => return None,
     };
@@ -601,21 +552,23 @@ fn rewriting_document_reduce(
     _history: &semio_framework_plugin::HistoryView,
     interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<TrinityRewritingPlayApp>>>,
+    context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<TrinityRewritingPlayApp>>>,
     operation: &semio_framework_plugin::AppOperationContext,
 ) -> Result<Emit<RewriteRuleMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     use crate::editor::rewriting::commands;
+    let children = || context.map(|context| context.children.as_ref()).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("rewriting.child-refused"), "the retained document command carries no child view"));
     Ok(match command {
-        TrinityRewritingCommand::NodeGraphEdit { surface_id, operations_json } => commands::node_graph_edit(state, surface_id, operations_json, &operation.authoring_seed)?,
-        TrinityRewritingCommand::SetLhsJson { value } => commands::set_lhs_json(state, value),
-        TrinityRewritingCommand::SetRhsJson { value } => commands::set_rhs_json(state, value),
+        TrinityRewritingCommand::NodeGraphEdit { surface_id, operations_json } => commands::node_graph_edit(state, children()?, surface_id, operations_json, &operation.authoring_seed)?,
+        TrinityRewritingCommand::SetLhsJson { value } => commands::set_lhs(state, value)?,
+        TrinityRewritingCommand::SetRhsJson { value } => commands::set_rhs(state, value)?,
         TrinityRewritingCommand::SetParameter { name, value } => commands::set_parameter(state, name, value),
         TrinityRewritingCommand::AddRuleClause { kind } => commands::add_rule_clause_command(state, kind)?,
         TrinityRewritingCommand::ResetRule => commands::reset_rule(state),
         TrinityRewritingCommand::SetActiveExample { example_id } => commands::set_active_example(example_id),
-        TrinityRewritingCommand::PatchNodes { node_ids, field, value } => commands::patch_nodes(state, node_ids, interaction.selection.get("graph").map_or(&[][..], |selection| selection.ids.as_slice()), field, value)?,
+        TrinityRewritingCommand::PatchNodes { node_ids, field, value } => commands::patch_nodes(state, children()?, node_ids, interaction.selection.get("graph").map_or(&[][..], |selection| selection.ids.as_slice()), field, value)?,
         TrinityRewritingCommand::Reorganize => commands::reorganize(state),
-        _ => return Err(Fault::from("rewriting-document-command-route-mismatch")),
+        TrinityRewritingCommand::AddWorkingNode { kind, name, x, y } => commands::add_working_node_command(state, children()?, kind.as_deref(), name.as_deref(), *x, *y)?,
+        _ => return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "the rewriting document reducer received a command outside its tool roster")),
     })
 }
 
@@ -671,19 +624,23 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for RewritingDocumentJo
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "resetRule", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setParameter", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "patchNodes", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "nodeGraphEdit", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "patchNodes", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Child] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "nodeGraphEdit", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Child] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setLhsJson", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setRhsJson", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "reorganize", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "addWorkingNode", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Child] },
     ];
 }
 
 fn rewriting_build_document_tool_job(request: semio_framework_plugin::app::ArtifactOwnedToolJobRequest<EditorApp<TrinityRewritingPlayApp>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
     use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandInputs, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
     let tool_id = TrinityRewritingPlayApp::command_id(&request.command);
-    if tool_id != request.tool_id || rewriting_document_extent(&request.command, &request.snapshot, &request.interaction_state) != Some(1) {
-        return Err(Fault::from("rewriting-document-command-mismatch-or-capacity"));
+    if tool_id != request.tool_id {
+        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "Rewriting command does not match its exact registered tool"));
+    }
+    if rewriting_document_extent(&request.command, &request.snapshot, &request.interaction_state) != Some(1) {
+        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("trinity.rewriting.retained-capacity"), "the rewriting command exceeds the capacity of one bounded edit"));
     }
     let work: Box<dyn ArtifactCommandWork<EditorApp<TrinityRewritingPlayApp>>> = Box::new(BoundedArtifactCommandWork::new(tool_id, rewriting_document_reduce, rewriting_document_extent));
     let operation = semio_framework_plugin::AppOperationContext {
@@ -721,6 +678,8 @@ fn rewriting_build_document_tool_job(request: semio_framework_plugin::app::Artif
 pub struct TrinityRewritingPlayApp;
 
 impl ArtifactEditor for TrinityRewritingPlayApp {
+    /// 🧩️ The roster the composed `s.stdio.semio` `workingGraph` child opens through (design §20.15).
+    type Members = semio_s_artifact_stdio_semio::SemioMembers;
     type Snapshot = RewritingSnapshot;
     type Mutation = RewriteRuleMutation;
     type Config = NoConfig;
@@ -838,6 +797,15 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
         default_rule_state()
     }
 
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>, semio_framework_value::ValueError> {
+        crate::content::genesis_working_child_pack(snapshot, slot, child_id)
+    }
+
+    /// 📢️ The localized notices of the editor's own refusal codes (design §20.12).
+    fn fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
+        crate::content::rewriting_fault_notices()
+    }
+
     fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(rewriting_io())
     }
@@ -848,7 +816,7 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
     // overriding — the `"artifact:in"` media port therefore reports `MediaError::NotImplemented`;
     // there is no import mutation (locked decision).
 
-    /// 🔌️ `"graph:in"` loads an incoming `trinity.graph` pack as this rule's `before_fixture_json`
+    /// 🔌️ `"graph:in"` loads an incoming `trinity.graph` pack as this rule's `working_graph`
     /// working graph — a single targeted field edit, not a whole-document replace.
     fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, RewritingSnapshot>) -> Result<Emit<RewriteRuleMutation, NoConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
@@ -858,9 +826,8 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
                 };
                 let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 let fixture = <JackSnapshot as ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                let fixture_json = fixture.to_json().map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 let _ = doc;
-                Ok(Emit::mutations(vec![schema::mutations::edit_before_fixture(fixture_json)]))
+                Ok(Emit::mutations(vec![schema::mutations::edit_before_fixture(fixture)]))
             }
             _ => Err(MediaError::NotImplemented),
         }
@@ -870,8 +837,8 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
     fn export_media(port: &str, doc: &ArtifactView<'_, RewritingSnapshot>) -> Result<Media, MediaError> {
         match port {
             "graph:out" => {
-                let fixture_json = after_fixture_json(doc.snapshot);
-                let fixture = JackSnapshot::from_json(&fixture_json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                let state = crate::content::composed(doc.snapshot, &doc.children).map_err(|fault| MediaError::Payload(port.to_string(), fault.message))?;
+                let fixture = after_fixture(&state).map_err(|error| MediaError::Payload(port.to_string(), error))?;
                 let bytes = ArtifactPack::encode_pack(&fixture);
                 Ok(Media {
                     media_type: MediaType { class: MediaClass::Graph, form: MediaForm::Trinity },
@@ -902,6 +869,7 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
             TrinityRewritingCommand::SetViewport { .. } => "nodeGraphViewport",
             TrinityRewritingCommand::Reorganize => "reorganize",
             TrinityRewritingCommand::SetLodMode { .. } => "setLodMode",
+            TrinityRewritingCommand::AddWorkingNode { .. } => "addWorkingNode",
         }
     }
 
@@ -916,17 +884,18 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
     ) -> Result<Emit<RewriteRuleMutation, NoConfigMutation, Self::DraftMutation>, Fault> {
         let state = doc.snapshot;
         Ok(match command {
-            TrinityRewritingCommand::NodeGraphEdit { surface_id, operations_json } => crate::editor::rewriting::commands::node_graph_edit(state, surface_id, operations_json, "")?,
-            TrinityRewritingCommand::SetLhsJson { value } => crate::editor::rewriting::commands::set_lhs_json(state, value),
-            TrinityRewritingCommand::SetRhsJson { value } => crate::editor::rewriting::commands::set_rhs_json(state, value),
+            TrinityRewritingCommand::NodeGraphEdit { surface_id, operations_json } => crate::editor::rewriting::commands::node_graph_edit(state, &doc.children, surface_id, operations_json, "")?,
+            TrinityRewritingCommand::SetLhsJson { value } => crate::editor::rewriting::commands::set_lhs(state, value)?,
+            TrinityRewritingCommand::SetRhsJson { value } => crate::editor::rewriting::commands::set_rhs(state, value)?,
             TrinityRewritingCommand::SetParameter { name, value } => crate::editor::rewriting::commands::set_parameter(state, name, value),
             TrinityRewritingCommand::AddRuleClause { kind } => crate::editor::rewriting::commands::add_rule_clause_command(state, kind)?,
             TrinityRewritingCommand::ResetRule => crate::editor::rewriting::commands::reset_rule(state),
             TrinityRewritingCommand::SetActiveExample { example_id } => crate::editor::rewriting::commands::set_active_example(example_id),
-            TrinityRewritingCommand::PatchNodes { node_ids, field, value } => crate::editor::rewriting::commands::patch_nodes(state, node_ids, &interaction.selection("graph").ids, field, value)?,
+            TrinityRewritingCommand::PatchNodes { node_ids, field, value } => crate::editor::rewriting::commands::patch_nodes(state, &doc.children, node_ids, &interaction.selection("graph").ids, field, value)?,
             TrinityRewritingCommand::SetViewport { surface_id, viewport } => crate::editor::rewriting::commands::set_viewport(surface_id, viewport, view_state)?,
             TrinityRewritingCommand::Reorganize => crate::editor::rewriting::commands::reorganize(state),
             TrinityRewritingCommand::SetLodMode { value } => crate::editor::rewriting::commands::set_lod_mode(value, view_state)?,
+            TrinityRewritingCommand::AddWorkingNode { kind, name, x, y } => crate::editor::rewriting::commands::add_working_node_command(state, &doc.children, kind.as_deref(), name.as_deref(), *x, *y)?,
         })
     }
 
@@ -935,14 +904,15 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
         let config = cfg.snapshot;
         let window_config = window_config::current(cfg).cloned().unwrap_or_default();
         let labels = semio_framework_plugin::resolve_labels::<crate::editor::rewriting::terminology::TrinityRewritingLabels>(view_state);
+        let composed = || crate::content::composed(state, &doc.children).map_err(|fault| semio_framework_plugin::PluginAssemblyError::new("trinity.rewriting.working-graph", fault.message));
         let root = match body_key {
-            TRINITY_REWRITING_PLAY_BODY_BEFORE => edit::windows::before::render(state, &window_config),
-            TRINITY_REWRITING_PLAY_BODY_AFTER => edit::windows::after::render(state, &window_config),
+            TRINITY_REWRITING_PLAY_BODY_BEFORE => edit::windows::before::render(&composed()?, &window_config),
+            TRINITY_REWRITING_PLAY_BODY_AFTER => edit::windows::after::render(&composed()?, &window_config),
             TRINITY_REWRITING_PLAY_BODY_LHS => edit::windows::lhs::render(state, &window_config),
             TRINITY_REWRITING_PLAY_BODY_RHS => edit::windows::rhs::render(state, &window_config),
             TRINITY_REWRITING_PLAY_BODY_JACK => edit::windows::jack::render(state, config),
             TRINITY_REWRITING_PLAY_BODY_PARAMETERS => edit::windows::parameters::render(state, labels),
-            TRINITY_REWRITING_PLAY_BODY_ARTIFACT => crate::editor::rewriting::panels::document::render(state, config, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, TRINITY_REWRITING_PLAY_BODY_ARTIFACT)),
+            TRINITY_REWRITING_PLAY_BODY_ARTIFACT => crate::editor::rewriting::panels::document::render(&composed()?, config, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, TRINITY_REWRITING_PLAY_BODY_ARTIFACT)),
             TRINITY_REWRITING_PLAY_BODY_CATALOGUE => crate::editor::rewriting::panels::catalogue::render(labels, &semio_framework_plugin::TreeWindows::for_body(view_state, TRINITY_REWRITING_PLAY_BODY_CATALOGUE)),
             TRINITY_REWRITING_PLAY_BODY_INSPECTION => crate::editor::rewriting::panels::inspection::render(),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("trinity.body.label", "the fixed Trinity body label exceeds its UI bound")),
@@ -959,23 +929,20 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
     fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, RewritingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
-        let is_de = view_state.locale == semio_framework_ui_locale::Locale::De;
         // 🕹️ Selection is framework-owned now (domain "graph") — `context_menu` has no `InteractionView`,
         // so the request's own surface-carried selection groups are the only source; no config fallback.
         let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &[], &[]);
 
-        let mut menu = Menu::of(registry)
+        let menu = Menu::of(registry, view_state)
             .action("addRuleClause")
             .action("setParameter")
             .action("reorganize")
+            .group("create", |m| m.action("addWorkingNode"))
             .group("transform", |m| m.action("patchNodes"))
             .group("history", |m| m.action("resetRule"))
             .group("mode", |m| m.action("setLodMode").action("setActiveExample"))
             .group("tools", |m| m.action("setLhsJson").action("setRhsJson"));
-        if let Some(spec) = node_graph_delete_selection_spec("Delete selection", is_de, &nodes, &edges, NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
-            menu = menu.item(spec);
-        }
-        menu.build()
+        menu.item(node_graph_delete_selection_spec(semio_framework_plugin::delete_selection().resolve(view_state.terminology, view_state.locale), view_state, &nodes, &edges, NodeGraphDeleteDispatch::ViaNodeGraphEdit)).build()
     }
 
     /// 🕹️ Domain "graph" topology: unions three node universes under one "node" granularity —
@@ -985,52 +952,17 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
     /// `lhs-match` via their one edge); (3) the RHS semantic graph (its clause nodes have no inherent
     /// parent order, so they're roots). `MergeMode::Range` is not declared for this domain, so
     /// `ordered`'s sequence need not be a strict pre-order.
-    fn interaction_topology(doc: &ArtifactView<'_, RewritingSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> InteractionTopology {
-        let state = doc.snapshot;
-        let mut ordered = Vec::new();
-
-        if let Some(fixture) = parse_fixture_json(&state.before_fixture_json) {
-            let mut parent_of: BTreeMap<String, String> = BTreeMap::new();
-            for edge in fixture.edges() {
-                let source = semio_s_artifact_trinity_jack::port_node_id(&edge.source).unwrap_or(&edge.source).to_string();
-                let target = semio_s_artifact_trinity_jack::port_node_id(&edge.target).unwrap_or(&edge.target).to_string();
-                parent_of.entry(target).or_insert(source);
-            }
-            for node in fixture.nodes() {
-                ordered.push(TopologyNode { id: node.id.clone(), granularity: "node".into(), parent: parent_of.get(&node.id).cloned() });
-                if let Some(var) = var_from_node_name(&node.name) {
-                    ordered.push(TopologyNode { id: var, granularity: "node".into(), parent: Some(node.id.clone()) });
-                }
-            }
-        }
-        // 🩹️ Reads the semantic rule graphs directly (`lhs_semantic_graph_fixture`/
-        // `rhs_semantic_graph_fixture`), NOT via `lhs_graph_fixture_json`/`rhs_graph_fixture_json`:
-        // those round-trip through `Graph::from_snapshot`, which validates node kinds against the
-        // "nakagin" manifest — the synthetic `rewriting.*` clause kinds fail that validation and the
-        // wrapper silently falls back to the nakagin fixture, which would leave the "graph" domain's
-        // topology missing every `lhs-*`/`rhs-*` id entirely.
-        if let Ok(lhs) = pack::from_json_str::<schema::Lhs>(&state.lhs_json) {
-            let lhs_fixture = lhs_semantic_graph_fixture(&lhs, &state.rule_layout);
-            let mut parent_of: BTreeMap<String, String> = BTreeMap::new();
-            for edge in lhs_fixture.edges() {
-                let source = semio_s_artifact_trinity_jack::port_node_id(&edge.source).unwrap_or(&edge.source).to_string();
-                let target = semio_s_artifact_trinity_jack::port_node_id(&edge.target).unwrap_or(&edge.target).to_string();
-                parent_of.entry(target).or_insert(source);
-            }
-            for node in lhs_fixture.nodes() {
-                ordered.push(TopologyNode { id: node.id.clone(), granularity: "node".into(), parent: parent_of.get(&node.id).cloned() });
-            }
-        }
-        if let Ok(rhs) = pack::from_json_str::<Rhs>(&state.rhs_json) {
-            for node in rhs_semantic_graph_fixture(&rhs, &state.rule_layout).nodes() {
-                ordered.push(TopologyNode { id: node.id.clone(), granularity: "node".into(), parent: None });
-            }
-        }
-
-        let mut domains = BTreeMap::new();
-        domains.insert("graph".to_string(), DomainTopology { ordered });
-        InteractionTopology { domains }
-    }
+    fn interaction_topology(doc: &ArtifactView<'_, RewritingSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<InteractionTopology, semio_framework_value::ValueError> {
+ let composed=crate::content::composed(doc.snapshot,&doc.children).map_err(|fault|semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,fault.message))?;let state=&composed;
+ semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::inferences::topology::compute_topology(&state.working_graph)?;
+ let owner=semio_s_artifact_trinity_jack::jack_content_for_handle(&state.working_graph.content)?;let raw=owner.snapshot();let mut ordered=Vec::new();let mut parent_of=BTreeMap::new();
+ for edge in &raw.edges{parent_of.entry(edge.target.value.clone()).or_insert_with(||edge.source.value.clone());}
+ for node in &raw.nodes{ordered.push(TopologyNode{id:node.id.value.clone(),granularity:"node".into(),parent:parent_of.get(&node.id.value).cloned()});if let Some(var)=var_from_node_name(&node.label){ordered.push(TopologyNode{id:var,granularity:"node".into(),parent:Some(node.id.value.clone())});}}
+ let lhs=lhs_semantic_graph_fixture(&state.lhs,&state.rule_layout);let lhs_owner=semio_s_artifact_trinity_jack::jack_content_for_handle(&lhs.content)?;let lhs_raw=lhs_owner.snapshot();let mut parent_of=BTreeMap::new();for edge in &lhs_raw.edges{parent_of.entry(edge.target.value.clone()).or_insert_with(||edge.source.value.clone());}
+ for node in &lhs_raw.nodes{ordered.push(TopologyNode{id:node.id.value.clone(),granularity:"node".into(),parent:parent_of.get(&node.id.value).cloned()});}
+ let rhs=rhs_semantic_graph_fixture(&state.rhs,&state.rule_layout);let rhs_owner=semio_s_artifact_trinity_jack::jack_content_for_handle(&rhs.content)?;for node in &rhs_owner.snapshot().nodes{ordered.push(TopologyNode{id:node.id.value.clone(),granularity:"node".into(),parent:None});}
+ let mut domains=BTreeMap::new();domains.insert("graph".into(),DomainTopology{ordered});Ok(InteractionTopology{domains})
+ }
 }
 //#endregion 🔖️TrinityRewritingPlayApp
 
@@ -1115,6 +1047,8 @@ pub fn create_rewriting_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setLhsJson", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setRhsJson", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("reorganize", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("addWorkingNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"), ActionKind::Mutation).with_category("create"))
+            .action_interactive_job("addWorkingNode", semio_framework_plugin::InteractiveJobClassification::Migrated)
             // 🕹️ Domain "graph": before/after/lhs/rhs graph nodes plus rule-clause nodes plus variable
             // references, transitive over each node's first incoming connection / variable binding
             // (see `interaction_topology`). Selection/hover, modes and merges are ALL
@@ -1162,6 +1096,12 @@ pub fn create_rewriting_app() -> semio_framework_plugin::AppDefinition {
                 ActionArgDef::text("name", LocalizedLabel::native("Parameter", "Parameter")).required(),
                 ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")).required(),
             ])
+            .action_args("addWorkingNode", vec![
+                ActionArgDef::text("kind", LocalizedLabel::native("Kind (empty: the graph's first node kind)", "Art (leer: erste Knotenart des Graphen)")),
+                ActionArgDef::text("name", LocalizedLabel::native("Name (empty: the new id)", "Name (leer: die neue Id)")),
+                ActionArgDef::number("x", LocalizedLabel::native("X", "X")).required().default_value(&0.0),
+                ActionArgDef::number("y", LocalizedLabel::native("Y", "Y")).required().default_value(&0.0),
+            ])
             .action_args("setLhsJson", vec![ActionArgDef::text("value", LocalizedLabel::native("LHS JSON", "LHS-JSON")).required()])
             .action_args("setRhsJson", vec![ActionArgDef::text("value", LocalizedLabel::native("RHS JSON", "RHS-JSON")).required()])
             .keybinding("mod+z", "undo")
@@ -1177,6 +1117,7 @@ pub fn create_rewriting_app() -> semio_framework_plugin::AppDefinition {
             .action_describe("setLhsJson", LocalizedLabel::native("Replaces the rule's left-hand side, the graph pattern it matches, with the given JSON.", "Ersetzt die linke Seite der Regel, das Graphmuster, das sie erkennt, durch das angegebene JSON."))
             .action_describe("setRhsJson", LocalizedLabel::native("Replaces the rule's right-hand side, what it writes for each match, with the given JSON and resets the parameter bindings to their defaults.", "Ersetzt die rechte Seite der Regel, was sie für jeden Treffer schreibt, durch das angegebene JSON und setzt die Parameterbindungen auf ihre Standardwerte zurück."))
             .action_describe("reorganize", LocalizedLabel::native("Drops every manual node position of the rule graph so it is laid out automatically again.", "Verwirft alle manuellen Knotenpositionen des Regelgraphen, sodass er wieder automatisch angeordnet wird."))
+            .action_describe("addWorkingNode", LocalizedLabel::native("Adds one node to the rule's example graph at x, y, named with the first free id unless a name is given.", "Fügt dem Beispielgraphen der Regel einen Knoten an x, y hinzu, benannt mit der ersten freien Id, sofern kein Name angegeben ist."))
             .action_audience("nodeGraphEdit", semio_framework_plugin::CapabilityAudience::Input)
             .action_audience("nodeGraphViewport", semio_framework_plugin::CapabilityAudience::Chrome)
             .action_destructive("setLhsJson")

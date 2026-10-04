@@ -33,7 +33,7 @@ async fn one_mebibyte_sample_lane_edits_without_generic_value_expansion() {
     register_document_schema();
     let samples = vec![7u8; 1_048_576];
     let snapshot = WavSnapshot { data: WavData::Raw(samples.clone()), ..WavSnapshot::default() };
-    let event = editing::SnapshotEditEvent::SetValue { path: "/fmt/sampleRate".into(), value: dsl::DslValue::Number(dsl::Number::UInt(48_000)) };
+    let event = editing::SnapshotEditEvent::SetValue { path: "/fmt/sampleRate".into(), value: semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(48_000)) };
     assert!(<WavEditor as editing::SnapshotEditingEditor>::snapshot_edit_is_admitted(&event, &snapshot));
     let next = wavEditor_snapshot_edit(&event, &snapshot).expect("metadata edit");
     assert_eq!(next.fmt.sample_rate, 48_000);
@@ -48,7 +48,7 @@ async fn data_kind_edit_publishes_the_requested_variant_and_reopens_natively() {
     snapshot.fmt.byte_rate = snapshot.fmt.sample_rate;
     snapshot.fmt.block_align = 1;
     snapshot.data = WavData::Raw(vec![1, 2]);
-    let event = editing::SnapshotEditEvent::SetValue { path: "/data/kind".into(), value: dsl::DslValue::String("pcm8".into()) };
+    let event = editing::SnapshotEditEvent::SetValue { path: "/data/kind".into(), value: semio_framework_value::DslValue::String("pcm8".into()) };
     let next = wavEditor_snapshot_edit(&event, &snapshot).expect("data discriminator edit");
     assert_eq!(next.data, WavData::Pcm8(vec![1, 2]));
     let emit = <WavEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &snapshot).expect("data discriminator edit emits");
@@ -75,12 +75,12 @@ async fn chunk_layout_and_pad_bytes_are_visible_and_editable_details() {
         ..WavSnapshot::default()
     };
     let provider = WavDetailsProvider::new(&snapshot);
-    assert_eq!(editing::SnapshotDetailsProvider::value(&provider, &[editing::SnapshotDetailPathSegment::Key("dataPadByte".into())],), Some(editing::SnapshotDetailValue::Number(dsl::Number::UInt(0xA5))),);
+    assert_eq!(editing::SnapshotDetailsProvider::value(&provider, &[editing::SnapshotDetailPathSegment::Key("dataPadByte".into())],), Some(editing::SnapshotDetailValue::Number(semio_framework_value::Number::UInt(0xA5))),);
     assert_eq!(
         editing::SnapshotDetailsProvider::value(&provider, &[editing::SnapshotDetailPathSegment::Key("otherChunks".into()), editing::SnapshotDetailPathSegment::Index(0), editing::SnapshotDetailPathSegment::Key("padByte".into()),],),
-        Some(editing::SnapshotDetailValue::Number(dsl::Number::UInt(0x7F))),
+        Some(editing::SnapshotDetailValue::Number(semio_framework_value::Number::UInt(0x7F))),
     );
-    let event = editing::SnapshotEditEvent::SetValue { path: "/dataPadByte".into(), value: dsl::DslValue::Number(dsl::Number::UInt(0x5A)) };
+    let event = editing::SnapshotEditEvent::SetValue { path: "/dataPadByte".into(), value: semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(0x5A)) };
     let emit = <WavEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &snapshot).expect("pad byte edit emits");
     let [mutation] = emit.artifact_mutations.as_slice() else { panic!("pad byte edit must emit one mutation") };
     assert!(matches!(mutation, WavMutation::PatchSnapshot(_)));
@@ -93,7 +93,7 @@ async fn chunk_layout_and_pad_bytes_are_visible_and_editable_details() {
 #[semio_framework_async_macros::async_test]
 async fn sample_edit_set_snapshot_replays_and_inverts_without_losing_siblings() {
     let base = WavSnapshot { data: WavData::Raw(vec![1, 2, 3]), ..WavSnapshot::default() };
-    let event = editing::SnapshotEditEvent::SetValue { path: "/data/value/1".into(), value: dsl::DslValue::Number(dsl::Number::UInt(9)) };
+    let event = editing::SnapshotEditEvent::SetValue { path: "/data/value/1".into(), value: semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(9)) };
     let next = wavEditor_snapshot_edit(&event, &base).expect("sample edit");
     assert_eq!(next.data, WavData::Raw(vec![1, 9, 3]));
     let mutation = set_snapshot::SetSnapshot { snapshot: next.clone() };
@@ -102,7 +102,7 @@ async fn sample_edit_set_snapshot_replays_and_inverts_without_losing_siblings() 
     let mut replayed = base.clone();
     crate::standards::riff_pcm::subsets::any::schema::mutations::apply_wav_mutation(&mut replayed, &decoded);
     assert_eq!(replayed, next);
-    for inverse in <set_snapshot::SetSnapshot as protocol::MutationKind<WavSnapshot, WavMutation>>::inverse(&mutation, &base) {
+    for inverse in <set_snapshot::SetSnapshot as protocol::MutationKind<WavSnapshot, WavMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
         crate::standards::riff_pcm::subsets::any::schema::mutations::apply_wav_mutation(&mut replayed, &inverse);
     }
     assert_eq!(replayed, base);
@@ -114,7 +114,7 @@ async fn large_sample_edit_publishes_cancels_undoes_redoes_and_preserves_metadat
     let sample_count = 2_097_152;
     let edit_index = 1_500_000;
     let snapshot = WavSnapshot { data: WavData::Raw(vec![7; sample_count]), ..WavSnapshot::default() };
-    let event = editing::SnapshotEditEvent::SetValue { path: format!("/data/value/{edit_index}"), value: dsl::DslValue::Number(dsl::Number::UInt(9)) };
+    let event = editing::SnapshotEditEvent::SetValue { path: format!("/data/value/{edit_index}"), value: semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(9)) };
     let started = std::time::Instant::now();
     let emit = <WavEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &snapshot).expect("sample edit emits");
     assert!(started.elapsed() < std::time::Duration::from_secs(2), "one sample edit of a {sample_count}-sample document took {:?}", started.elapsed());
@@ -197,10 +197,10 @@ async fn large_sample_edit_publishes_cancels_undoes_redoes_and_preserves_metadat
     assert_eq!(samples.len(), sample_count);
     assert_eq!(samples[edit_index], 9);
 
-    let fmt_event = editing::SnapshotEditEvent::SetValue { path: "/fmt/sampleRate".into(), value: dsl::DslValue::Number(dsl::Number::UInt(48_000)) };
+    let fmt_event = editing::SnapshotEditEvent::SetValue { path: "/fmt/sampleRate".into(), value: semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(48_000)) };
     let fmt_emit = <WavEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&fmt_event, store.snapshot_ref()).expect("metadata edit emits");
     let [fmt_mutation] = fmt_emit.artifact_mutations.as_slice() else { panic!("metadata edit must emit one mutation") };
-    assert!(matches!(fmt_mutation, WavMutation::SetFmt(_)));
+    assert!(matches!(fmt_mutation, WavMutation::PatchSnapshot(_)), "one format field publishes as its path-scoped patch");
     let mut metadata_publication = store
         .begin_apply_batch(
             semio_framework_job::OperationId(3),
@@ -254,4 +254,69 @@ async fn large_sample_edit_publishes_cancels_undoes_redoes_and_preserves_metadat
         }
     }
     assert!(semio_framework_plugin::ArtifactOwnedDisposer::terminal_is_empty(&disposer, &store));
+}
+
+semio_framework_plugin::history_edit_acceptance_law!("stdio", super::WavEditor, || semio_framework_plugin::App { definition: super::create_wav_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any");
+
+#[semio_framework_async_macros::async_test]
+async fn natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history() {
+    use semio_framework_plugin::plugin_app_close_prelude::{MediaArtifact, MediaArtifactDescriptor};
+    use semio_framework_plugin::{artifact_app_laws, EditorApp, MediaWireFormat, PluginApp, NATURAL_FILE_PORT};
+    let source = crate::standards::riff_pcm::subsets::any::io::try_encode_wav(&WavSnapshot {
+        fmt: crate::standards::riff_pcm::subsets::any::schema::snapshot::WavFmt { channels: 1, sample_rate: 8_000, byte_rate: 16_000, block_align: 2, bits_per_sample: 16, ..Default::default() },
+        data: WavData::Pcm16(vec![0, 1_024, -1_024, 0]),
+        ..WavSnapshot::default()
+    })
+    .expect("neutral natural WAV fixture encodes");
+    let codec = <WavEditor as ArtifactEditor>::natural_file_codec().expect("paired natural codec");
+    assert_eq!((codec.format_kind, codec.extension, codec.media_type, codec.binary), ("s.stdio.wav@riff-pcm", ".wav", "audio/wav", true));
+    let artifact = MediaArtifact {
+        descriptor: MediaArtifactDescriptor {
+            edge_id: None,
+            port_id: Some(NATURAL_FILE_PORT.into()),
+            kind_id: Some(codec.format_kind.into()),
+            media_type: None,
+            wire: MediaWireFormat::Binary { format_kind: codec.format_kind.into() },
+            blob_hash: None,
+        },
+        data: source,
+    };
+    let initial = <WavEditor as ArtifactEditor>::initial_snapshot();
+    let mut app = artifact_app_laws::new_registered_app::<EditorApp<WavEditor>, _>(async { semio_framework_plugin::App { definition: create_wav_editor(), examples: Vec::new() } }).await;
+    let mut outside = artifact.clone();
+    outside.data.push(0x7f);
+    app.consume_media(NATURAL_FILE_PORT, artifact).await.expect("registered natural import");
+    artifact_app_laws::settle_registered_typed_operation(&mut app, 1).await.expect("natural import publishes");
+    let opened = app.snapshot().expect("opened snapshot").clone();
+    let refused = match app.consume_media(NATURAL_FILE_PORT, outside).await {
+        Err(_) => true,
+        Ok(_) => artifact_app_laws::settle_registered_typed_operation(&mut app, 1).await.is_err(),
+    };
+    assert!(refused);
+    assert_eq!(app.snapshot().expect("refused WAV preserves the owner"), opened);
+    let saved = app.produce_media(NATURAL_FILE_PORT).await.expect("registered natural save");
+    assert_eq!(saved.descriptor.port_id.as_deref(), Some(NATURAL_FILE_PORT));
+    assert_eq!(saved.descriptor.kind_id.as_deref(), Some(codec.format_kind));
+    let oracle = semio_s_artifact_stdio_wav_test_oracle::standards::v_riff_pcm::subsets::any::oracle_identity_round_trip(&saved.data).expect("riff independently reopens and writes the WAV export");
+    let observed = semio_s_artifact_stdio_wav_test_oracle::standards::v_riff_pcm::subsets::any::project_wav_mutation(&saved.data).expect("project WAV export");
+    let expected = semio_s_artifact_stdio_wav_test_oracle::standards::v_riff_pcm::subsets::any::project_wav_mutation(&oracle).expect("project independent WAV output");
+    assert_eq!(observed, expected);
+    let mut reopened = artifact_app_laws::new_registered_app::<EditorApp<WavEditor>, _>(async { semio_framework_plugin::App { definition: create_wav_editor(), examples: Vec::new() } }).await;
+    reopened.bind_instance_id(2).await;
+    reopened.consume_media(NATURAL_FILE_PORT, saved).await.expect("fresh owner imports exported bytes");
+    artifact_app_laws::settle_registered_typed_operation(&mut reopened, 2).await.expect("fresh owner import publishes");
+    let reopened_snapshot = reopened.snapshot().expect("reopened snapshot").clone();
+    assert_eq!(reopened_snapshot, opened);
+    artifact_app_laws::settle_history_verb(&mut app, "undo", 1).await;
+    assert_eq!(app.snapshot().expect("source undo snapshot"), initial);
+    assert_eq!(reopened.snapshot().expect("reopened snapshot remains isolated"), reopened_snapshot);
+    artifact_app_laws::settle_history_verb(&mut app, "redo", 1).await;
+    assert_eq!(app.snapshot().expect("source redo snapshot"), opened);
+    artifact_app_laws::settle_history_verb(&mut reopened, "undo", 2).await;
+    assert_eq!(reopened.snapshot().expect("reopened undo snapshot"), initial);
+    assert_eq!(app.snapshot().expect("source remains isolated"), opened);
+    artifact_app_laws::settle_history_verb(&mut reopened, "redo", 2).await;
+    assert_eq!(reopened.snapshot().expect("reopened redo snapshot"), reopened_snapshot);
+    artifact_app_laws::close_registered_fixture_app(&mut reopened);
+    artifact_app_laws::close_registered_fixture_app(&mut app);
 }

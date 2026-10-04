@@ -10,7 +10,9 @@
 //! 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING; dependency-hash design
 //! from the closed ticket 26/04/17/OPTIMIZE-FLATTEN-DESIGN-WITH-MERKLE-HASH-CACHE).
 
-use crate::os_dsl::{DslValue, FromValue, ToValue};
+use semio_framework_value::DslValue;
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
 use std::collections::{BTreeMap, HashMap, VecDeque};
 
 //#region 🔖️DepHash
@@ -245,12 +247,12 @@ impl InferenceSession {
 
 //#region 🔖️Driver
 fn encode<T: ToValue>(value: &T) -> Vec<u8> {
-    crate::os_pack::json::to_json_string(value).into_bytes()
+    semio_framework_pack_json::to_json_string(value).into_bytes()
 }
 
 fn decode<T: FromValue>(bytes: &[u8]) -> T {
     let text = std::str::from_utf8(bytes).expect("inference cache bytes are always UTF-8 JSON text produced by `encode`");
-    crate::os_pack::json::from_json_str(text).expect("cached inference bytes must decode as the field's own Value type")
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("cached inference bytes must decode as the field's own Value type")
 }
 
 /// 🗺️ `BTreeMap<K, V>` has no generic [`ToValue`]/[`FromValue`] impl (the codec only covers
@@ -259,20 +261,20 @@ fn decode<T: FromValue>(bytes: &[u8]) -> T {
 /// the session's whole-result gate cache (below) hand-rolls the wire shape as a `[[key, value],
 /// …]` pair array instead — the same shape `serde_json` would give a `Vec<(K, V)>`.
 fn encode_map<K: ToValue, V: ToValue>(map: &BTreeMap<K, V>) -> Vec<u8> {
-    let pairs = DslValue::Array(map.iter().map(|(key, value)| DslValue::Array(vec![key.to_value(), value.to_value()])).collect());
-    crate::os_pack::json::to_json_string(&pairs).into_bytes()
+    let pairs = semio_framework_value::DslValue::Array(map.iter().map(|(key, value)| semio_framework_value::DslValue::Array(vec![key.to_value(), value.to_value()])).collect());
+    semio_framework_pack_json::to_json_string(&pairs).into_bytes()
 }
 
 fn decode_map<K: Ord + FromValue, V: FromValue>(bytes: &[u8]) -> BTreeMap<K, V> {
     let text = std::str::from_utf8(bytes).expect("inference cache bytes are always UTF-8 JSON text produced by `encode_map`");
-    let parsed: DslValue = crate::os_pack::json::from_json_str(text).expect("cached inference session bytes must decode as a key/value pair array");
-    let DslValue::Array(items) = parsed else {
+    let parsed: DslValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("cached inference session bytes must decode as a key/value pair array");
+    let semio_framework_value::DslValue::Array(items) = parsed else {
         panic!("cached inference session bytes must decode as a key/value pair array");
     };
     items
         .into_iter()
         .map(|item| {
-            let DslValue::Array(pair) = item else {
+            let semio_framework_value::DslValue::Array(pair) = item else {
                 panic!("cached inference session entry must be a 2-element [key, value] pair");
             };
             let mut iter = pair.into_iter();

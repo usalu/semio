@@ -1,0 +1,31 @@
+{
+  "schema": "stdio.png.native-paint-controlled-fixture",
+  "source": "../🧬️canonical-source/rgba8-multi-idat-private.png",
+  "operation": {
+    "region": {"x": 1, "y": 0, "width": 1, "height": 1},
+    "paint": {"profile": "rgba", "samples": [9, 8, 7, 6]},
+    "maximumOwnedBytes": 1048576
+  },
+  "workProtocol": {
+    "fuelPerStep": 1,
+    "resumablePhases": ["decode", "paint", "filter", "encode", "assemble"],
+    "cancellationPhases": ["decode", "encode"],
+    "replayCodecPasses": 0
+  },
+  "closeProtocol": {
+    "probeMaximumItems": 1,
+    "probeMaximumBytes": 1,
+    "completionMaximumItems": 4096,
+    "completionMaximumBytes": 1048576
+  },
+  "retention": {
+    "chunkOrder": ["IHDR", "prIV", "tEXt", "IDAT", "IDAT", "IEND"],
+    "prefixChunkOrder": ["IHDR", "prIV", "tEXt"],
+    "suffixChunkOrder": ["IEND"],
+    "idatCount": 2
+  },
+  "interruptionWitnesses": [
+    {"phase": "decode", "minimumCompleted": 1},
+    {"phase": "encode", "minimumCompleted": 1}
+  ]
+}

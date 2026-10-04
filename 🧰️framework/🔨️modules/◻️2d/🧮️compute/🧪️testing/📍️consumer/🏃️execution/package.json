@@ -1,0 +1,11 @@
+{
+  "name": "@semio-tech/compute-ownership-runner",
+  "private": true,
+  "type": "module",
+  "nx": {
+    "includedScripts": []
+  },
+  "scripts": {
+    "test": "nx run @semio-tech/compute-ownership-runner:test"
+  }
+}

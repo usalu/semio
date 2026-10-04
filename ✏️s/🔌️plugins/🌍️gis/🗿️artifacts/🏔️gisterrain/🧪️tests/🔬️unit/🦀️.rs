@@ -4,7 +4,7 @@ use super::*;
 async fn the_terrain_snapshot_defaults_to_a_flat_unimported_terrain() {
     let document = GisTerrainSnapshot::default();
     assert_eq!(document.exaggeration, 0.0);
-    assert!(document.imported_features_json.is_empty());
+    assert!(document.imported_map.is_none());
 }
 
 #[semio_framework_async_macros::async_test]

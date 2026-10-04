@@ -1,13 +1,13 @@
 /** 🎯️ Document membership and structural order for selection, independent of rendered panels. */
 import type { DomainTopology, TopologyNode } from "../../../../../../../../../../../🧰️framework/🔨️modules/🕹️interaction/🟦️.ts";
 
-import type { PathSegment } from "../../🧬️schema/🟦️.ts";
+import type { PathGeometrySegment } from "../../🧬️schema/🟦️.ts";
 import { geometryId,pointId,pointSlots } from "./🎯️points/🟦️.ts";
 
 export interface DrawingInteractionLayer {
   readonly kind: string;
   readonly base: { readonly id: string; readonly visible?: boolean; readonly locked?: boolean };
-  readonly segments?: readonly PathSegment[];
+  readonly segments?: readonly PathGeometrySegment[];
   readonly children?: readonly DrawingInteractionLayer[] | readonly string[];
 }
 

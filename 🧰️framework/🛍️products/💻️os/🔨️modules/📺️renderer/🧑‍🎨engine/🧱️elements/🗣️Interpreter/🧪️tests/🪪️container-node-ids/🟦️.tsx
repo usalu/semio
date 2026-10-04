@@ -149,7 +149,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       case "treeSection":
         return { ...base, component: { type: "treeSection", label: spec.key, defaultOpen: true, headerToolbar: null, window: null } };
       case "treeItem":
-        return { ...base, component: { type: "treeItem", label: spec.key, description: null, icon: null, defaultOpen: true, draggable: null, dragData: null, dimmed: null, window: null, granularity: null, rowActions: [], target: null } };
+        return { ...base, component: { type: "treeItem", label: spec.key, description: null, icon: null, defaultOpen: true, draggable: null, dragData: null, dimmed: null, selected: null, window: null, granularity: null, rowActions: [], target: null } };
       case "surface":
         return { ...base, component: { type: "surface", kind: "node-graph", docSchema: "flow.graph@1", doc: { bytes: [] }, bindings: [] } };
       default:

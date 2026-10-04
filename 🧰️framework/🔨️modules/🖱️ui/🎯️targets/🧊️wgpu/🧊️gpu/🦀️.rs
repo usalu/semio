@@ -654,7 +654,7 @@ impl GpuContext {
             #[cfg(test)]
             PreparedRenderUpload::Raster { key, pixels, width, height } => {
                 let identity = RasterContentIdentity::test_pixels(*width, *height, pixels).ok_or_else(|| "raster test identity overflowed".to_string())?;
-                if !self.raster_store.prepare_admission_step(key, *width, *height, identity, candidate).map_err(str::to_owned)? {
+                if !self.raster_store.prepare_admission_step(key, *width, *height,1, identity, candidate).map_err(str::to_owned)? {
                     return Ok(false);
                 }
                 self.ensure_raster_texture_step(key, RasterUploadPixels::Contiguous(pixels), *width, *height, candidate, expected).map_err(str::to_owned)?
@@ -663,14 +663,14 @@ impl GpuContext {
                 if pixels.frame_generation() != packet.preview_generation() {
                     return Err("prepared raster producer generation is stale".into());
                 }
-                if !self.raster_store.prepare_admission_step(key, pixels.width(), pixels.height(), pixels.content_identity(), candidate).map_err(str::to_owned)? {
+                if !self.raster_store.prepare_admission_step(key, pixels.width(), pixels.height(),1, pixels.content_identity(), candidate).map_err(str::to_owned)? {
                     return Ok(false);
                 }
                 self.ensure_raster_texture_step(key, RasterUploadPixels::Pages(pixels), pixels.width(), pixels.height(), candidate, expected).map_err(str::to_owned)?
             }
             PreparedRenderUpload::SceneRaster { key, lease } => {
                 let descriptor = lease.identity().descriptor();
-                if !self.raster_store.prepare_admission_step(key, descriptor.width, descriptor.height, lease.identity().content(), candidate).map_err(str::to_owned)? {
+                if !self.raster_store.prepare_admission_step(key, descriptor.width, descriptor.height,crate::wgpu::draw::RasterUploadPixels::Scene(lease).mip_levels(descriptor.width,descriptor.height), lease.identity().content(), candidate).map_err(str::to_owned)? {
                     return Ok(false);
                 }
                 self.ensure_raster_texture_step(key, RasterUploadPixels::Scene(lease), descriptor.width, descriptor.height, candidate, expected).map_err(str::to_owned)?
@@ -1078,8 +1078,8 @@ impl GpuContext {
         self.dpr
     }
 
-    pub fn reserve_engine_texture(&mut self, key: &str, width: u32, height: u32, identity: RasterContentIdentity, candidate: RasterTextureWitness, expected: RasterTextureWitness) -> Result<RasterTextureAdmission, String> {
-        self.raster_store.reserve_engine_texture(key, width, height, identity, candidate, expected).map_err(str::to_owned)
+    pub fn reserve_engine_texture(&mut self, key: &str, width: u32, height: u32,mip_levels:u32, identity: RasterContentIdentity, candidate: RasterTextureWitness, expected: RasterTextureWitness) -> Result<RasterTextureAdmission, String> {
+        self.raster_store.reserve_engine_texture(key, width, height,mip_levels, identity, candidate, expected).map_err(str::to_owned)
     }
 
     pub fn begin_raster_ownership(&mut self, witness: RasterTextureWitness) -> Result<(), String> {
@@ -1095,7 +1095,7 @@ impl GpuContext {
     }
 
     pub fn prepare_raster_admission_step(&mut self, key: &str, width: u32, height: u32, identity: RasterContentIdentity, witness: RasterTextureWitness) -> Result<bool, String> {
-        self.raster_store.prepare_admission_step(key, width, height, identity, witness).map_err(str::to_owned)
+        self.raster_store.prepare_admission_step(key, width, height,1, identity, witness).map_err(str::to_owned)
     }
 
     pub fn raster_content_is_reusable(&self, key: &str, identity: RasterContentIdentity, candidate: RasterTextureWitness, expected: RasterTextureWitness) -> Result<bool, String> {

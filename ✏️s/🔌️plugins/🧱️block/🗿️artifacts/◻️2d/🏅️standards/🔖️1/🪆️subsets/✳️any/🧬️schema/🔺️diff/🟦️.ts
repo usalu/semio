@@ -1,3 +1,5 @@
+import type {BlockKindIdentity,Block2dPresentation,Block2dHandleKind,Block2dHandleTemplate,BlockCompatibilityRule,BlockAttribute,BlockAuthor,BlockCamera2d,BlockMeta,Block2dArtifact} from "../🟦️.ts";
+import * as model from "../🟦️.ts";
 /** 🧬️ Block2d diff schema — sparse field delta. */
 
 export interface Block2dDiff {
@@ -25,23 +27,14 @@ export interface Block2dDiff {
   meta?: BlockMeta;
 }
 
-export interface BlockKindIdentity { [key: string]: unknown; }
 
-export interface Block2dPresentation { [key: string]: unknown; }
 
-export interface Block2dHandleKind { [key: string]: unknown; }
 
-export interface Block2dHandleTemplate { [key: string]: unknown; }
 
-export interface BlockCompatibilityRule { [key: string]: unknown; }
 
-export interface BlockAttribute { [key: string]: unknown; }
 
-export interface BlockAuthor { [key: string]: unknown; }
 
-export interface BlockCamera2d { [key: string]: unknown; }
 
-export interface BlockMeta { [key: string]: unknown; }
 
 export interface Block2dStringList {
   values: string[];
@@ -115,7 +108,6 @@ export interface Block2dAttributesPatch {
   replacement?: BlockAttribute;
 }
 
-export interface Block2dArtifact { [key: string]: unknown; }
 
 //#region 🚪️Parsers
 /** 🚪️ Refusal of one instance position, the shape every `parse<Export>` below rejects with. */
@@ -202,3 +194,15 @@ export function parseBlock2dAttributesPatchEntry(value: unknown, at = "$"): Bloc
     patch: parseBlock2dAttributesPatch(row["patch"], `${at}.patch`),
   };
 }
+
+/** 🧩️ Admit the canonical literal replacement record. */
+export function parseBlock2dHandleKindsPatch(value:unknown,at="$"):Block2dHandleKindsPatch{const row=blockBlock2dDiffGuardObject(value,at);return{...(row.replacement===undefined?{}:{replacement:model.parseBlock2dHandleKind(row.replacement)})}}
+
+/** 🧩️ Admit the canonical literal replacement record. */
+export function parseBlock2dHandlesPatch(value:unknown,at="$"):Block2dHandlesPatch{const row=blockBlock2dDiffGuardObject(value,at);return{...(row.replacement===undefined?{}:{replacement:model.parseBlock2dHandleTemplate(row.replacement)})}}
+
+/** 🧩️ Admit the canonical literal replacement record. */
+export function parseBlock2dCompatibilityPatch(value:unknown,at="$"):Block2dCompatibilityPatch{const row=blockBlock2dDiffGuardObject(value,at);return{...(row.replacement===undefined?{}:{replacement:model.parseBlockCompatibilityRule(row.replacement)})}}
+
+/** 🧩️ Admit the canonical literal replacement record. */
+export function parseBlock2dAttributesPatch(value:unknown,at="$"):Block2dAttributesPatch{const row=blockBlock2dDiffGuardObject(value,at);return{...(row.replacement===undefined?{}:{replacement:model.parseBlockAttribute(row.replacement)})}}

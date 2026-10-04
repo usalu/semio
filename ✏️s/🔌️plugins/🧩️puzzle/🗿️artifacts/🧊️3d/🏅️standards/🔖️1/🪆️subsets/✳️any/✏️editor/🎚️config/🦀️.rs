@@ -82,7 +82,7 @@ fn default_active_example_id() -> String {
 /// 🎥️ Session-only per-window viewport camera — never a document field (see `setCamera`'s
 /// `ActionKind::View`): orbiting one window instance must never move a sibling's camera and must
 /// never create a VCS edit.
-#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle3dCamera {
     #[value(default)]
@@ -114,7 +114,7 @@ pub fn puzzle3d_camera_distance(camera: &Puzzle3dCamera) -> f64 {
 //#endregion 🔖️Camera
 
 //#region 🔖️Selection
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle3dSelectableKinds {
     #[value(default = "default_true")]
@@ -298,12 +298,12 @@ impl Default for Puzzle3dConfig {
 impl store::ArtifactDsl for Puzzle3dConfig {
     const EXTENSION: &'static str = "puzzle3dcfg";
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        dsl::json::from_json_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
-        dsl::json::to_string_pretty(&dsl::json::from_dsl_value(&dsl::ToValue::to_value(self)))
+        semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(self)))
     }
 }
 
@@ -313,8 +313,8 @@ impl store::ArtifactPack for Puzzle3dConfig {
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let value = dsl::DslValue::decode_pack_with(bytes, options)?;
-        semio_framework_value::FromValue::from_value(value).map_err(|error| store::PackError::Schema(error.to_string()))
+        let value = semio_framework_value::DslValue::decode_pack_with(bytes, options)?;
+        semio_framework_value::FromValue::from_value(value).map_err(|error| store::PackError::from(error))
     }
 }
 
@@ -354,19 +354,22 @@ impl protocol::Mutation<Puzzle3dConfig> for Puzzle3dConfigMutation {
         }
         protocol::MutationOutcome::new(next)
     }
-    fn inverse(&self, base: &Puzzle3dConfig) -> Vec<Self> { vec![Self::Snapshot { config: base.clone() }] }
+    fn inverse(&self, base: &Puzzle3dConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+    Ok((|| { vec![Self::Snapshot { config: base.clone() }] 
+    })())
+}
 }
 
 impl protocol::OpBinary for Puzzle3dConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> { Ok(dsl::json::to_json_string(self).into_bytes()) }
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> { Ok(semio_framework_pack_json::to_json_string(self).into_bytes()) }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))?;
-        dsl::json::from_json_str(text).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
+        let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(semio_framework_value::ValueError::from(error))))?;
+        semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(error)))
     }
 }
 impl protocol::OpText for Puzzle3dConfigMutation {
-    fn print_op(&self) -> String { dsl::json::to_json_string(self) }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> { dsl::json::from_json_str(line).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1))) }
+    fn print_op(&self) -> String { semio_framework_pack_json::to_json_string(self) }
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> { semio_framework_pack_json::from_json_str(line, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1))) }
 }
 //#endregion 🔖️ConfigMutation
 

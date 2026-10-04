@@ -1,32 +1,10 @@
 syntax = "proto3";
 package semio.s.trinity.jack.mutation;
 
-import "google/protobuf/struct.proto";
-
-message JackMutationEntityRef { string entity = 1; string id = 2; }
-message JackMutationPort { string id = 1; string kind = 2; string direction = 3; map<string, google.protobuf.Value> properties = 4; }
-message JackMutationNode { string id = 1; string kind = 2; string name = 3; double x = 4; double y = 5; double width = 6; double height = 7; map<string, google.protobuf.Value> properties = 8; repeated JackMutationPort ports = 9; }
-message JackMutationEdge { string id = 1; string kind = 2; string source = 3; string target = 4; map<string, google.protobuf.Value> properties = 5; }
-message ChangeDataProperty { JackMutationEntityRef entity = 1; string key = 2; google.protobuf.Value new_value = 3; }
-message CreateEdge { JackMutationEdge edge = 1; }
-message CreateNode { JackMutationNode node = 1; }
-message DeleteEdge { string id = 1; }
-message DeleteNode { string id = 1; }
-message MoveNode { string id = 1; double x = 2; double y = 3; }
-message RemoveDataProperty { JackMutationEntityRef entity = 1; string key = 2; }
-message RenameNode { string id = 1; string new_name = 2; }
 message SetQuery { string value = 1; }
 
 message JackMutation {
   oneof mutation {
-    CreateNode create_node = 1;
-    DeleteNode delete_node = 2;
-    CreateEdge create_edge = 3;
-    DeleteEdge delete_edge = 4;
-    RenameNode rename_node = 5;
-    MoveNode move_node = 6;
-    ChangeDataProperty change_data_property = 7;
-    RemoveDataProperty remove_data_property = 8;
-    SetQuery set_query = 9;
+    SetQuery set_query = 1;
   }
 }

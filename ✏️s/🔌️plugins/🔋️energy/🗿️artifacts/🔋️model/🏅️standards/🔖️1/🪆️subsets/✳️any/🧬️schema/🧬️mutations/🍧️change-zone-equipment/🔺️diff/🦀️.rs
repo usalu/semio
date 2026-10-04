@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeZoneEquipmentCoolingCapacity, base: &EnergyMo
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("A cooling capacity must be a non-negative finite number, got {}.", payload.new_cooling_capacity_w), [payload.id.0.to_string()]);
     }
     if existing.cooling_capacity_w == payload.new_cooling_capacity_w {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Zone equipment {} already has that cooling capacity.", payload.id.0));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Zone equipment {} already has that cooling capacity.", payload.id.0));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.zone_equipment.iter_mut().find(|item| item.id == payload.id) {

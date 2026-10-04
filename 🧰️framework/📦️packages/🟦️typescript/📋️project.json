@@ -8,6 +8,22 @@
     ]
   },
   "targets": {
+    "test-artifact-reference": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": ["{projectRoot}/**/*", "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🧬️schema/**/*", "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/**/*"],
+      "options": { "command": "bun ./📜️script.ts test-artifact-reference", "cwd": "{projectRoot}" }
+    },
+    "test-script-boundary": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": ["{projectRoot}/**/*", "{workspaceRoot}/🧰️framework/📏️script-boundary/**/*", "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/**/*"],
+      "options": { "command": "bun ./📜️script.ts test-script-boundary", "cwd": "{projectRoot}" }
+    },
     "test": {
       "executor": "nx:run-commands",
       "dependsOn": [],

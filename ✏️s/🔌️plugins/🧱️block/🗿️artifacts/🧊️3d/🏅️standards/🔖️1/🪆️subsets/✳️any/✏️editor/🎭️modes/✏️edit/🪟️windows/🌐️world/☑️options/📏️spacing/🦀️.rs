@@ -17,6 +17,6 @@ pub fn measure(config: &Block3dConfig, window_id: &str, labels: &Block3dLabels) 
         loading: None,
         waiting: None,
         disabled: None,
-        on_change: crate::editor::block3d::block3d_window_action("setWindowSpacing", Some(dsl::DslValue::object([("windowId".to_string(), dsl::DslValue::String(window_id.to_string()))]))),
+        on_change: crate::editor::block3d::block3d_window_action("setWindowSpacing", Some(semio_framework_value::DslValue::object([("windowId".to_string(), semio_framework_value::DslValue::String(window_id.to_string()))]))),
     }
 }

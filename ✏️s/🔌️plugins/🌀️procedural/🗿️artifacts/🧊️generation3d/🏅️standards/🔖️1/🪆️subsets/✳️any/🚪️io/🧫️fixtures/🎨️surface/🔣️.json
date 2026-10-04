@@ -1,0 +1,2482 @@
+{
+  "schema": "generation3d.mesh-surface.v1",
+  "documentContinuation": {
+    "budgets": [
+      1,
+      8,
+      256
+    ],
+    "firstStep": "progress",
+    "cancelPhases": [
+      "parse",
+      "project",
+      "physical",
+      "base64",
+      "diff",
+      "retirement"
+    ],
+    "downloads": 1,
+    "canceledDownloads": 0,
+    "canceledMutations": 0,
+    "sourceReleases": 1,
+    "envelope": {
+      "text": "Mesh 😀 \\ \" Label\n",
+      "textRepeats": 64,
+      "binaryLength": 257,
+      "retirementBytes": 3,
+      "invalidUtf8": [
+        [
+          255
+        ],
+        [
+          192,
+          128
+        ],
+        [
+          240,
+          159
+        ]
+      ]
+    },
+    "capacity": {
+      "wireBytes": 16384,
+      "sourceAllocationBytes": 1048576,
+      "ownershipSourceMultiples": 32,
+      "downloadBytes": 33554432,
+      "largeTextRepeats": 2048,
+      "overOwnershipBytes": 1
+    },
+    "importAdditionalGroups": 9
+  },
+  "gltfExport": {
+    "prepared": {
+      "positions": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        1,
+        0
+      ],
+      "indices": [
+        0,
+        1,
+        2,
+        0,
+        2,
+        3
+      ],
+      "attributes": {
+        "normal": {
+          "domain": "vertex",
+          "semantic": "normal",
+          "interpolation": "linear",
+          "values": [
+            [
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ]
+        },
+        "uv0": {
+          "domain": "vertex",
+          "semantic": "uv",
+          "interpolation": "linear",
+          "values": [
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              0
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              0,
+              1
+            ]
+          ]
+        },
+        "uv63": {
+          "domain": "vertex",
+          "semantic": "uv",
+          "interpolation": "linear",
+          "values": [
+            [
+              0.25,
+              0.25
+            ],
+            [
+              0.75,
+              0.25
+            ],
+            [
+              0.75,
+              0.75
+            ],
+            [
+              0.25,
+              0.75
+            ]
+          ]
+        },
+        "color0": {
+          "domain": "vertex",
+          "semantic": "color",
+          "interpolation": "linear",
+          "values": [
+            [
+              1,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0,
+              1
+            ],
+            [
+              0,
+              0,
+              1,
+              1
+            ],
+            [
+              1,
+              1,
+              1,
+              1
+            ]
+          ]
+        },
+        "color1": {
+          "domain": "face",
+          "semantic": "color",
+          "interpolation": "constant",
+          "values": [
+            [
+              0.25,
+              0.5,
+              0.75,
+              1
+            ],
+            [
+              0.75,
+              0.5,
+              0.25,
+              0.5
+            ]
+          ]
+        },
+        "tangent": {
+          "domain": "corner",
+          "semantic": "custom",
+          "interpolation": "linear",
+          "values": [
+            [
+              1,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0,
+              -1
+            ]
+          ],
+          "indices": [
+            0,
+            0,
+            0,
+            1,
+            1,
+            1
+          ]
+        },
+        "temperature": {
+          "domain": "corner",
+          "semantic": "custom",
+          "interpolation": "linear",
+          "values": [
+            0.25,
+            0.75
+          ],
+          "indices": [
+            0,
+            0,
+            0,
+            1,
+            1,
+            1
+          ]
+        },
+        "label": {
+          "domain": "face",
+          "semantic": "custom",
+          "interpolation": "constant",
+          "values": [
+            "front",
+            "back"
+          ]
+        },
+        "material": {
+          "domain": "face",
+          "semantic": "material",
+          "interpolation": "constant",
+          "values": [
+            "paint",
+            "paint"
+          ]
+        },
+        "selected": {
+          "domain": "corner",
+          "semantic": "custom",
+          "interpolation": "nearest",
+          "values": [
+            true,
+            false
+          ],
+          "indices": [
+            0,
+            0,
+            0,
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "materials": {
+        "paint": {
+          "baseColor": [
+            0.75,
+            0.5,
+            0.25,
+            0.5
+          ],
+          "metallic": 0.25,
+          "roughness": 0.75,
+          "emissive": [
+            0.125,
+            0.25,
+            0.5
+          ],
+          "alphaMode": "MASK",
+          "alphaCutoff": 0.25,
+          "doubleSided": true,
+          "normalScale": [
+            0.5,
+            0.5
+          ],
+          "occlusionStrength": 0.25,
+          "baseColorTexture": "image",
+          "metallicRoughnessTexture": "image",
+          "normalTexture": "image",
+          "occlusionTexture": "image",
+          "emissiveTexture": "image",
+          "textureCoordinates": {
+            "baseColorTexture": 0,
+            "metallicRoughnessTexture": 63,
+            "normalTexture": 63,
+            "occlusionTexture": 0,
+            "emissiveTexture": 63
+          },
+          "textureSamplers": {
+            "baseColorTexture": {
+              "wrapS": 10497,
+              "wrapT": 33071,
+              "magFilter": 9728,
+              "minFilter": 9729
+            },
+            "metallicRoughnessTexture": {
+              "wrapS": 33648,
+              "wrapT": 10497,
+              "magFilter": 9729,
+              "minFilter": 9987
+            },
+            "normalTexture": {
+              "wrapS": 33071,
+              "wrapT": 33071,
+              "magFilter": 9729,
+              "minFilter": 9985
+            },
+            "occlusionTexture": {
+              "wrapS": 10497,
+              "wrapT": 10497,
+              "magFilter": 9728,
+              "minFilter": 9984
+            },
+            "emissiveTexture": {
+              "wrapS": 33071,
+              "wrapT": 33648,
+              "magFilter": 9729,
+              "minFilter": 9986
+            }
+          }
+        }
+      },
+      "textures": {
+        "image": {
+          "mime": "image/png",
+          "bytes": [
+            137,
+            80,
+            78,
+            71
+          ]
+        }
+      },
+      "faceIds": [
+        0,
+        1
+      ],
+      "edgePositions": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        1,
+        0
+      ],
+      "edgeIds": [
+        1,
+        0
+      ],
+      "vertexIds": [
+        3,
+        2,
+        1,
+        0
+      ]
+    },
+    "expanded": {
+      "POSITION": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        1,
+        0
+      ],
+      "TEXCOORD_0": [
+        0,
+        0,
+        1,
+        0,
+        1,
+        1,
+        0,
+        0,
+        1,
+        1,
+        0,
+        1
+      ],
+      "TEXCOORD_63": [
+        0.25,
+        0.25,
+        0.75,
+        0.25,
+        0.75,
+        0.75,
+        0.25,
+        0.25,
+        0.75,
+        0.75,
+        0.25,
+        0.75
+      ],
+      "COLOR_0": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        0,
+        1,
+        1,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "COLOR_1": [
+        0.25,
+        0.5,
+        0.75,
+        1,
+        0.25,
+        0.5,
+        0.75,
+        1,
+        0.25,
+        0.5,
+        0.75,
+        1,
+        0.75,
+        0.5,
+        0.25,
+        0.5,
+        0.75,
+        0.5,
+        0.25,
+        0.5,
+        0.75,
+        0.5,
+        0.25,
+        0.5
+      ],
+      "TANGENT": [
+        1,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        1,
+        0,
+        1,
+        0,
+        -1,
+        0,
+        1,
+        0,
+        -1,
+        0,
+        1,
+        0,
+        -1
+      ],
+      "_temperature": [
+        0.25,
+        0.25,
+        0.25,
+        0.75,
+        0.75,
+        0.75
+      ]
+    },
+    "seamOnlyAttributes": [
+      "normal",
+      "uv0",
+      "uv63",
+      "color0",
+      "tangent",
+      "material"
+    ],
+    "refusals": [
+      {
+        "path": [
+          "materials",
+          "paint",
+          "textureCoordinates",
+          "normalTexture"
+        ],
+        "value": 64,
+        "message": "UV selection"
+      },
+      {
+        "path": [
+          "attributes",
+          "uv63"
+        ],
+        "remove": true,
+        "message": "missing UV"
+      },
+      {
+        "path": [
+          "materials",
+          "paint",
+          "textureSamplers",
+          "normalTexture",
+          "minFilter"
+        ],
+        "value": 3,
+        "message": "sampler"
+      },
+      {
+        "path": [
+          "attributes",
+          "tangent",
+          "values"
+        ],
+        "value": [
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ],
+        "message": "tangent"
+      },
+      {
+        "path": [
+          "materials",
+          "paint",
+          "normalScale"
+        ],
+        "value": [
+          0.5,
+          0.25
+        ],
+        "message": "anisotropic"
+      },
+      {
+        "path": [
+          "attributes",
+          "uv00"
+        ],
+        "value": {
+          "domain": "vertex",
+          "semantic": "uv",
+          "interpolation": "linear",
+          "values": [
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              0
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              0,
+              1
+            ]
+          ]
+        },
+        "message": "colliding"
+      },
+      {
+        "path": [
+          "materials",
+          "paint",
+          "alphaMode"
+        ],
+        "value": "OTHER",
+        "message": "alpha mode"
+      }
+    ],
+    "componentReferences": {
+      "face": [
+        "outer-face",
+        "inner-face"
+      ],
+      "edge": [
+        "lower-edge",
+        "upper-edge"
+      ],
+      "vertex": [
+        "first",
+        "second",
+        "third",
+        "fourth"
+      ]
+    },
+    "encoding": {
+      "maximumBytes": 64000000,
+      "base64ChunkBytes": 4095,
+      "cancel": true,
+      "cumulativeOwnership": true,
+      "metadataStressLength": 131073
+    },
+    "edgeAttribute": {
+      "domain": "edge",
+      "semantic": "custom",
+      "interpolation": "nearest",
+      "values": [
+        "upper-edge-value",
+        "lower-edge-value"
+      ],
+      "indices": [
+        1,
+        0
+      ]
+    },
+    "attributeStreams": {
+      "uv0": "TEXCOORD_0",
+      "uv63": "TEXCOORD_63",
+      "color0": "COLOR_0",
+      "color1": "COLOR_1",
+      "tangent": "TANGENT",
+      "temperature": "_temperature",
+      "normal": "NORMAL"
+    },
+    "materialIdentity": {
+      "id": "paint",
+      "part": 0,
+      "duplicateParts": [
+        0,
+        1
+      ]
+    },
+    "edgeUvAttribute": {
+      "domain": "edge",
+      "semantic": "uv",
+      "interpolation": "linear",
+      "values": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "indices": [
+        1,
+        0
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "Vertex Surface Channels",
+      "prepared": {
+        "positions": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0
+        ],
+        "indices": [
+          0,
+          1,
+          2
+        ],
+        "normals": [
+          0,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          1
+        ],
+        "uvs": [
+          0,
+          0,
+          1,
+          0,
+          0,
+          1
+        ],
+        "colors": [
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "polygon": {
+        "vertices": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ],
+        "faces": [
+          [
+            0,
+            1,
+            2
+          ]
+        ],
+        "attributes": {
+          "normal": {
+            "domain": "vertex",
+            "semantic": "normal",
+            "interpolation": "linear",
+            "values": [
+              [
+                0,
+                0,
+                1
+              ],
+              [
+                0,
+                0,
+                1
+              ],
+              [
+                0,
+                0,
+                1
+              ]
+            ]
+          },
+          "uv": {
+            "domain": "vertex",
+            "semantic": "uv",
+            "interpolation": "linear",
+            "values": [
+              [
+                0,
+                0
+              ],
+              [
+                1,
+                0
+              ],
+              [
+                0,
+                1
+              ]
+            ]
+          },
+          "color": {
+            "domain": "vertex",
+            "semantic": "color",
+            "interpolation": "linear",
+            "values": [
+              [
+                1,
+                0,
+                0,
+                1
+              ],
+              [
+                0,
+                1,
+                0,
+                1
+              ],
+              [
+                0,
+                0,
+                1,
+                1
+              ]
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "Owned Material Texture And Custom Channels",
+      "prepared": {
+        "positions": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0
+        ],
+        "indices": [
+          0,
+          1,
+          2
+        ],
+        "attributes": {
+          "material": {
+            "domain": "face",
+            "semantic": "material",
+            "interpolation": "constant",
+            "values": [
+              "red"
+            ]
+          },
+          "uv2": {
+            "domain": "corner",
+            "semantic": "uv",
+            "interpolation": "linear",
+            "values": [
+              [
+                0,
+                0
+              ],
+              [
+                0.5,
+                0
+              ],
+              [
+                0,
+                0.5
+              ]
+            ]
+          },
+          "weight": {
+            "domain": "vertex",
+            "semantic": "custom",
+            "interpolation": "linear",
+            "values": [
+              0,
+              0.5,
+              1
+            ]
+          },
+          "owner": {
+            "domain": "face",
+            "semantic": "custom",
+            "interpolation": "constant",
+            "values": [
+              {
+                "id": "face-owner"
+              }
+            ]
+          }
+        },
+        "materials": {
+          "red": {
+            "baseColor": [
+              1,
+              0,
+              0,
+              1
+            ],
+            "metallic": 0.25,
+            "roughness": 0.5,
+            "baseColorTexture": "surface"
+          }
+        },
+        "textures": {
+          "surface": {
+            "mime": "image/png",
+            "bytes": [
+              137,
+              80,
+              78,
+              71
+            ]
+          }
+        }
+      },
+      "polygon": {
+        "vertices": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ],
+        "faces": [
+          [
+            0,
+            1,
+            2
+          ]
+        ],
+        "attributes": {
+          "material": {
+            "domain": "face",
+            "semantic": "material",
+            "interpolation": "constant",
+            "values": [
+              "red"
+            ]
+          },
+          "uv2": {
+            "domain": "corner",
+            "semantic": "uv",
+            "interpolation": "linear",
+            "values": [
+              [
+                0,
+                0
+              ],
+              [
+                0.5,
+                0
+              ],
+              [
+                0,
+                0.5
+              ]
+            ]
+          },
+          "weight": {
+            "domain": "vertex",
+            "semantic": "custom",
+            "interpolation": "linear",
+            "values": [
+              0,
+              0.5,
+              1
+            ]
+          },
+          "owner": {
+            "domain": "face",
+            "semantic": "custom",
+            "interpolation": "constant",
+            "values": [
+              {
+                "id": "face-owner"
+              }
+            ]
+          }
+        },
+        "materials": {
+          "red": {
+            "baseColor": [
+              1,
+              0,
+              0,
+              1
+            ],
+            "metallic": 0.25,
+            "roughness": 0.5,
+            "baseColorTexture": "surface"
+          }
+        },
+        "textures": {
+          "surface": {
+            "mime": "image/png",
+            "bytes": [
+              137,
+              80,
+              78,
+              71
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "refusals": [
+    {
+      "id": "Misaligned Normals",
+      "field": "normals",
+      "value": [
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "id": "Misaligned UVs",
+      "field": "uvs",
+      "value": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "Misaligned Colors",
+      "field": "colors",
+      "value": [
+        1,
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "id": "Invalid Indices",
+      "field": "indices",
+      "value": [
+        0,
+        1,
+        3
+      ]
+    }
+  ],
+  "formatCapabilities": {
+    "gltf": [
+      "normal",
+      "uv",
+      "color",
+      "material",
+      "texture"
+    ],
+    "obj": [
+      "normal",
+      "uv"
+    ],
+    "ply": [
+      "normal",
+      "uv",
+      "color"
+    ],
+    "stl": [],
+    "las": [
+      "color"
+    ],
+    "dwg": [],
+    "txt": [
+      "normal",
+      "uv",
+      "color",
+      "material",
+      "texture",
+      "custom"
+    ]
+  },
+  "diagnostics": [
+    {
+      "case": 0,
+      "format": "gltf",
+      "codes": []
+    },
+    {
+      "case": 0,
+      "format": "stl",
+      "codes": [
+        "normal",
+        "uv",
+        "color"
+      ]
+    },
+    {
+      "case": 0,
+      "format": "obj",
+      "codes": [
+        "color"
+      ]
+    },
+    {
+      "case": 1,
+      "format": "gltf",
+      "codes": []
+    },
+    {
+      "case": 1,
+      "format": "ply",
+      "codes": [
+        "material",
+        "texture",
+        "custom"
+      ]
+    },
+    {
+      "case": 1,
+      "format": "txt",
+      "codes": []
+    }
+  ],
+  "diagnosticDetails": [
+    {
+      "id": "Multiple UV Sets",
+      "parts": [
+        1
+      ],
+      "extraAttributes": {
+        "uv3": {
+          "domain": "corner",
+          "semantic": "uv",
+          "interpolation": "linear",
+          "values": [
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              0
+            ],
+            [
+              0,
+              1
+            ]
+          ]
+        }
+      },
+      "format": "gltf",
+      "codes": []
+    },
+    {
+      "id": "Additional Material Properties",
+      "parts": [
+        1
+      ],
+      "extraMaterial": {
+        "emissive": [
+          1,
+          0,
+          0
+        ],
+        "doubleSided": true
+      },
+      "format": "gltf",
+      "codes": []
+    },
+    {
+      "id": "Surface Grouping",
+      "parts": [
+        0,
+        0
+      ],
+      "format": "stl",
+      "codes": [
+        "normal",
+        "uv",
+        "color",
+        "part-grouping"
+      ]
+    },
+    {
+      "id": "Point Cloud Connectivity",
+      "parts": [
+        0
+      ],
+      "format": "las",
+      "codes": [
+        "normal",
+        "uv",
+        "topology"
+      ]
+    },
+    {
+      "id": "PLY Color Quantization",
+      "parts": [
+        0
+      ],
+      "colors": [
+        0.5,
+        0.2,
+        0.1,
+        1,
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "format": "ply",
+      "codes": [
+        "color-precision"
+      ]
+    },
+    {
+      "id": "LAS Quantization And Transparency",
+      "parts": [
+        0
+      ],
+      "positions": [
+        0.00015,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "colors": [
+        0.5,
+        0,
+        0,
+        0.5,
+        0,
+        1,
+        0,
+        1,
+        0,
+        0,
+        1,
+        1
+      ],
+      "format": "las",
+      "codes": [
+        "normal",
+        "uv",
+        "topology",
+        "color-precision",
+        "color-alpha",
+        "coordinate-precision"
+      ]
+    }
+  ],
+  "materialDefaults": [
+    {
+      "id": "Owning PBR Defaults",
+      "source": {},
+      "expected": {
+        "baseColor": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "metallic": 1,
+        "roughness": 1
+      }
+    },
+    {
+      "id": "Partial Authored Material",
+      "source": {
+        "baseColor": [
+          0.25,
+          0.5,
+          0.75,
+          1
+        ],
+        "metallic": 0.2
+      },
+      "expected": {
+        "baseColor": [
+          0.25,
+          0.5,
+          0.75,
+          1
+        ],
+        "metallic": 0.2,
+        "roughness": 1
+      }
+    }
+  ],
+  "exportScope": {
+    "host": {
+      "widgets": [
+        {
+          "id": "hidden",
+          "type": "neuron",
+          "preview": false,
+          "neuronKind": "brep.mesh.construct",
+          "params": {},
+          "inputPorts": [],
+          "outputPorts": []
+        },
+        {
+          "id": "shown",
+          "type": "neuron",
+          "preview": true,
+          "neuronKind": "brep.mesh.construct",
+          "params": {},
+          "inputPorts": [],
+          "outputPorts": []
+        },
+        {
+          "id": "output",
+          "type": "outputExport",
+          "format": "gltf"
+        }
+      ],
+      "synapses": [
+        {
+          "id": "wire",
+          "from": "hidden",
+          "fromPort": "meshOut",
+          "to": "output",
+          "toPort": ""
+        }
+      ]
+    },
+    "cases": [
+      {
+        "request": {
+          "format": "gltf",
+          "widgetId": "output"
+        },
+        "channels": [
+          [
+            "hidden",
+            "meshOut"
+          ]
+        ]
+      },
+      {
+        "request": {
+          "format": "stl"
+        },
+        "channels": [
+          [
+            "shown",
+            null
+          ]
+        ]
+      }
+    ],
+    "refusals": [
+      "missing",
+      "shown"
+    ]
+  },
+  "mergeSurface": {
+    "cases": [
+      {
+        "parts": [
+          1,
+          1
+        ],
+        "vertices": 6,
+        "faces": 2,
+        "materials": [
+          "part-0-red",
+          "part-1-red"
+        ],
+        "textures": [
+          "part-0-surface",
+          "part-1-surface"
+        ]
+      }
+    ],
+    "refusals": [
+      [
+        0,
+        1
+      ]
+    ]
+  },
+  "faceChannels": [
+    {
+      "id": "Indexed Face Channels Split Shared Vertices",
+      "prepared": {
+        "positions": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          0
+        ],
+        "indices": [
+          0,
+          1,
+          2,
+          0,
+          2,
+          3
+        ],
+        "attributes": {
+          "normal": {
+            "domain": "face",
+            "semantic": "normal",
+            "interpolation": "constant",
+            "values": [
+              [
+                0,
+                0,
+                1
+              ],
+              [
+                0,
+                0,
+                -1
+              ]
+            ]
+          },
+          "uv": {
+            "domain": "face",
+            "semantic": "uv",
+            "interpolation": "constant",
+            "values": [
+              [
+                0.25,
+                0.5
+              ],
+              [
+                0.75,
+                1
+              ]
+            ]
+          },
+          "color": {
+            "domain": "face",
+            "semantic": "color",
+            "interpolation": "constant",
+            "values": [
+              [
+                1,
+                0,
+                0,
+                0.5
+              ],
+              [
+                0,
+                0,
+                1,
+                1
+              ]
+            ],
+            "indices": [
+              1,
+              0
+            ]
+          }
+        }
+      },
+      "expanded": {
+        "positions": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          0
+        ],
+        "indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "normals": [
+          [
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            0,
+            -1
+          ],
+          [
+            0,
+            0,
+            -1
+          ],
+          [
+            0,
+            0,
+            -1
+          ]
+        ],
+        "uvs": [
+          [
+            0.25,
+            0.5
+          ],
+          [
+            0.25,
+            0.5
+          ],
+          [
+            0.25,
+            0.5
+          ],
+          [
+            0.75,
+            1
+          ],
+          [
+            0.75,
+            1
+          ],
+          [
+            0.75,
+            1
+          ]
+        ],
+        "colors": [
+          [
+            0,
+            0,
+            1,
+            1
+          ],
+          [
+            0,
+            0,
+            1,
+            1
+          ],
+          [
+            0,
+            0,
+            1,
+            1
+          ],
+          [
+            1,
+            0,
+            0,
+            0.5
+          ],
+          [
+            1,
+            0,
+            0,
+            0.5
+          ],
+          [
+            1,
+            0,
+            0,
+            0.5
+          ]
+        ],
+        "area": 1
+      }
+    }
+  ],
+  "gltfAccessors": {
+    "cases": [
+      {
+        "id": "normalized-signed-normals-and-unsigned-uv-color",
+        "document": {
+          "asset": {
+            "version": "2.0"
+          },
+          "extensionsUsed": [
+            "KHR_mesh_quantization"
+          ],
+          "extensionsRequired": [
+            "KHR_mesh_quantization"
+          ],
+          "buffers": [
+            {
+              "uri": "data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAAAAgAAAAAB/AAAAAH8AAAD//wCAAED//wAA/wAAgAD/AP8AAP9AAAABAAIA",
+              "byteLength": 78
+            }
+          ],
+          "bufferViews": [
+            {
+              "buffer": 0,
+              "byteOffset": 0,
+              "byteLength": 36
+            },
+            {
+              "buffer": 0,
+              "byteOffset": 36,
+              "byteLength": 12,
+              "byteStride": 4
+            },
+            {
+              "buffer": 0,
+              "byteOffset": 48,
+              "byteLength": 12
+            },
+            {
+              "buffer": 0,
+              "byteOffset": 60,
+              "byteLength": 12
+            },
+            {
+              "buffer": 0,
+              "byteOffset": 72,
+              "byteLength": 6
+            }
+          ],
+          "accessors": [
+            {
+              "bufferView": 0,
+              "componentType": 5126,
+              "count": 3,
+              "type": "VEC3",
+              "normalized": false,
+              "min": [
+                0,
+                0,
+                0
+              ],
+              "max": [
+                1,
+                1,
+                0
+              ]
+            },
+            {
+              "bufferView": 1,
+              "componentType": 5120,
+              "count": 3,
+              "type": "VEC3",
+              "normalized": true
+            },
+            {
+              "bufferView": 2,
+              "componentType": 5123,
+              "count": 3,
+              "type": "VEC2",
+              "normalized": true
+            },
+            {
+              "bufferView": 3,
+              "componentType": 5121,
+              "count": 3,
+              "type": "VEC4",
+              "normalized": true
+            },
+            {
+              "bufferView": 4,
+              "componentType": 5123,
+              "count": 3,
+              "type": "SCALAR",
+              "normalized": false
+            }
+          ],
+          "meshes": [
+            {
+              "primitives": [
+                {
+                  "attributes": {
+                    "POSITION": 0,
+                    "NORMAL": 1,
+                    "TEXCOORD_0": 2,
+                    "COLOR_0": 3
+                  },
+                  "indices": 4
+                }
+              ]
+            }
+          ]
+        },
+        "expected": {
+          "normals": [
+            [
+              -1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ],
+          "uvs": [
+            [
+              0,
+              1
+            ],
+            [
+              0.5000076295109483,
+              0.2500038147554742
+            ],
+            [
+              1,
+              0
+            ]
+          ],
+          "colors": [
+            [
+              1,
+              0,
+              0,
+              0.5019607843137255
+            ],
+            [
+              0,
+              1,
+              0,
+              1
+            ],
+            [
+              0,
+              0,
+              1,
+              0.25098039215686274
+            ]
+          ],
+          "indices": [
+            0,
+            1,
+            2
+          ]
+        }
+      }
+    ],
+    "refusals": [
+      {
+        "id": "normal-width",
+        "accessor": 1,
+        "field": "type",
+        "value": "VEC2"
+      },
+      {
+        "id": "uv-width",
+        "accessor": 2,
+        "field": "type",
+        "value": "SCALAR"
+      },
+      {
+        "id": "normal-count",
+        "accessor": 1,
+        "field": "count",
+        "value": 2
+      },
+      {
+        "id": "color-count",
+        "accessor": 3,
+        "field": "count",
+        "value": 2
+      },
+      {
+        "id": "normalized-indices",
+        "accessor": 4,
+        "field": "normalized",
+        "value": true
+      }
+    ]
+  },
+  "gltfSurfaceAuthoring": {
+    "cases": [
+      {
+        "id": "uv1-tangent-custom-authored-material",
+        "document": {
+          "asset": {
+            "version": "2.0"
+          },
+          "extensionsUsed": [
+            "KHR_mesh_quantization"
+          ],
+          "extensionsRequired": [
+            "KHR_mesh_quantization"
+          ],
+          "buffers": [
+            {
+              "uri": "data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAAAAgAAAAAB/AAAAAH8AAAD//wCAAED//wAA/wAAgAD/AP8AAP9AAAABAAIAAAD/////AAD/////AAAAAIA/AAAAAAAAAAAAAIA/AACAPwAAAAAAAAAAAACAvwAAgD8AAAAAAAAAAAAAgD8AACBBAACgQQAA8EE=",
+              "byteLength": 152
+            }
+          ],
+          "bufferViews": [
+            {
+              "buffer": 0,
+              "byteOffset": 0,
+              "byteLength": 36
+            },
+            {
+              "buffer": 0,
+              "byteOffset": 36,
+              "byteLength": 12,
+              "byteStride": 4
+            },
+            {
+              "buffer": 0,
+              "byteOffset": 48,
+              "byteLength": 12
+            },
+            {
+              "buffer": 0,
+              "byteOffset": 60,
+              "byteLength": 12
+            },
+            {
+              "buffer": 0,
+              "byteOffset": 72,
+              "byteLength": 6
+            },
+            {
+              "buffer": 0,
+              "byteOffset": 80,
+              "byteLength": 12
+            },
+            {
+              "buffer": 0,
+              "byteOffset": 92,
+              "byteLength": 48
+            },
+            {
+              "buffer": 0,
+              "byteOffset": 140,
+              "byteLength": 12
+            }
+          ],
+          "accessors": [
+            {
+              "bufferView": 0,
+              "componentType": 5126,
+              "count": 3,
+              "type": "VEC3",
+              "normalized": false,
+              "min": [
+                0,
+                0,
+                0
+              ],
+              "max": [
+                1,
+                1,
+                0
+              ]
+            },
+            {
+              "bufferView": 1,
+              "componentType": 5120,
+              "count": 3,
+              "type": "VEC3",
+              "normalized": true
+            },
+            {
+              "bufferView": 2,
+              "componentType": 5123,
+              "count": 3,
+              "type": "VEC2",
+              "normalized": true
+            },
+            {
+              "bufferView": 3,
+              "componentType": 5121,
+              "count": 3,
+              "type": "VEC4",
+              "normalized": true
+            },
+            {
+              "bufferView": 4,
+              "componentType": 5123,
+              "count": 3,
+              "type": "SCALAR",
+              "normalized": false
+            },
+            {
+              "bufferView": 5,
+              "componentType": 5123,
+              "count": 3,
+              "type": "VEC2",
+              "normalized": true
+            },
+            {
+              "bufferView": 6,
+              "componentType": 5126,
+              "count": 3,
+              "type": "VEC4"
+            },
+            {
+              "bufferView": 7,
+              "componentType": 5126,
+              "count": 3,
+              "type": "SCALAR"
+            }
+          ],
+          "meshes": [
+            {
+              "primitives": [
+                {
+                  "attributes": {
+                    "POSITION": 0,
+                    "NORMAL": 1,
+                    "TEXCOORD_0": 2,
+                    "COLOR_0": 3,
+                    "TEXCOORD_1": 5,
+                    "TANGENT": 6,
+                    "_TEMPERATURE": 7
+                  },
+                  "indices": 4,
+                  "material": 0
+                }
+              ]
+            }
+          ],
+          "materials": [
+            {
+              "pbrMetallicRoughness": {
+                "baseColorFactor": [
+                  0.8,
+                  0.4,
+                  0.2,
+                  0.6
+                ],
+                "metallicFactor": 0.25,
+                "roughnessFactor": 0.75,
+                "baseColorTexture": {
+                  "index": 0,
+                  "texCoord": 1
+                },
+                "metallicRoughnessTexture": {
+                  "index": 0
+                }
+              },
+              "normalTexture": {
+                "index": 0,
+                "texCoord": 1,
+                "scale": 0.5
+              },
+              "occlusionTexture": {
+                "index": 0,
+                "texCoord": 1,
+                "strength": 0.25
+              },
+              "emissiveTexture": {
+                "index": 0
+              },
+              "emissiveFactor": [
+                0.1,
+                0.2,
+                0.3
+              ],
+              "alphaMode": "MASK",
+              "alphaCutoff": 0.4,
+              "doubleSided": true
+            }
+          ],
+          "images": [
+            {
+              "uri": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP43+DwHwAHAAK/K9fH4gAAAABJRU5ErkJggg==",
+              "mimeType": "image/png"
+            }
+          ],
+          "samplers": [
+            {
+              "magFilter": 9728,
+              "minFilter": 9729,
+              "wrapS": 33071,
+              "wrapT": 33648
+            }
+          ],
+          "textures": [
+            {
+              "source": 0,
+              "sampler": 0
+            }
+          ]
+        },
+        "expected": {
+          "attributes": {
+            "uv1": {
+              "domain": "vertex",
+              "semantic": "uv",
+              "interpolation": "linear",
+              "values": [
+                [
+                  1,
+                  1
+                ],
+                [
+                  0,
+                  1
+                ],
+                [
+                  1,
+                  0
+                ]
+              ]
+            },
+            "tangent": {
+              "domain": "vertex",
+              "semantic": "custom",
+              "interpolation": "linear",
+              "values": [
+                [
+                  1,
+                  0,
+                  0,
+                  1
+                ],
+                [
+                  1,
+                  0,
+                  0,
+                  -1
+                ],
+                [
+                  1,
+                  0,
+                  0,
+                  1
+                ]
+              ]
+            },
+            "_TEMPERATURE": {
+              "domain": "vertex",
+              "semantic": "custom",
+              "interpolation": "linear",
+              "values": [
+                10,
+                20,
+                30
+              ]
+            }
+          },
+          "material": {
+            "emissive": [
+              0.1,
+              0.2,
+              0.3
+            ],
+            "alphaMode": "MASK",
+            "alphaCutoff": 0.4,
+            "doubleSided": true,
+            "normalScale": [
+              0.5,
+              0.5
+            ],
+            "occlusionStrength": 0.25,
+            "textureCoordinates": {
+              "baseColorTexture": 1,
+              "metallicRoughnessTexture": 0,
+              "normalTexture": 1,
+              "occlusionTexture": 1,
+              "emissiveTexture": 0
+            },
+            "textureSamplers": {
+              "baseColorTexture": {
+                "magFilter": 9728,
+                "minFilter": 9729,
+                "wrapS": 33071,
+                "wrapT": 33648
+              },
+              "metallicRoughnessTexture": {
+                "magFilter": 9728,
+                "minFilter": 9729,
+                "wrapS": 33071,
+                "wrapT": 33648
+              },
+              "normalTexture": {
+                "magFilter": 9728,
+                "minFilter": 9729,
+                "wrapS": 33071,
+                "wrapT": 33648
+              },
+              "occlusionTexture": {
+                "magFilter": 9728,
+                "minFilter": 9729,
+                "wrapS": 33071,
+                "wrapT": 33648
+              },
+              "emissiveTexture": {
+                "magFilter": 9728,
+                "minFilter": 9729,
+                "wrapS": 33071,
+                "wrapT": 33648
+              }
+            }
+          }
+        }
+      },
+      {
+        "id": "uv1-without-authored-tangent",
+        "document": {
+          "asset": {
+            "version": "2.0"
+          },
+          "extensionsUsed": [
+            "KHR_mesh_quantization"
+          ],
+          "extensionsRequired": [
+            "KHR_mesh_quantization"
+          ],
+          "buffers": [
+            {
+              "uri": "data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAAAAgAAAAAB/AAAAAH8AAAD//wCAAED//wAA/wAAgAD/AP8AAP9AAAABAAIAAAD/////AAD/////AAAAAIA/AAAAAAAAAAAAAIA/AACAPwAAAAAAAAAAAACAvwAAgD8AAAAAAAAAAAAAgD8AACBBAACgQQAA8EE=",
+              "byteLength": 152
+            }
+          ],
+          "bufferViews": [
+            {
+              "buffer": 0,
+              "byteOffset": 0,
+              "byteLength": 36
+            },
+            {
+              "buffer": 0,
+              "byteOffset": 36,
+              "byteLength": 12,
+              "byteStride": 4
+            },
+            {
+              "buffer": 0,
+              "byteOffset": 48,
+              "byteLength": 12
+            },
+            {
+              "buffer": 0,
+              "byteOffset": 60,
+              "byteLength": 12
+            },
+            {
+              "buffer": 0,
+              "byteOffset": 72,
+              "byteLength": 6
+            },
+            {
+              "buffer": 0,
+              "byteOffset": 80,
+              "byteLength": 12
+            },
+            {
+              "buffer": 0,
+              "byteOffset": 92,
+              "byteLength": 48
+            },
+            {
+              "buffer": 0,
+              "byteOffset": 140,
+              "byteLength": 12
+            }
+          ],
+          "accessors": [
+            {
+              "bufferView": 0,
+              "componentType": 5126,
+              "count": 3,
+              "type": "VEC3",
+              "normalized": false,
+              "min": [
+                0,
+                0,
+                0
+              ],
+              "max": [
+                1,
+                1,
+                0
+              ]
+            },
+            {
+              "bufferView": 1,
+              "componentType": 5120,
+              "count": 3,
+              "type": "VEC3",
+              "normalized": true
+            },
+            {
+              "bufferView": 2,
+              "componentType": 5123,
+              "count": 3,
+              "type": "VEC2",
+              "normalized": true
+            },
+            {
+              "bufferView": 3,
+              "componentType": 5121,
+              "count": 3,
+              "type": "VEC4",
+              "normalized": true
+            },
+            {
+              "bufferView": 4,
+              "componentType": 5123,
+              "count": 3,
+              "type": "SCALAR",
+              "normalized": false
+            },
+            {
+              "bufferView": 5,
+              "componentType": 5123,
+              "count": 3,
+              "type": "VEC2",
+              "normalized": true
+            },
+            {
+              "bufferView": 6,
+              "componentType": 5126,
+              "count": 3,
+              "type": "VEC4"
+            },
+            {
+              "bufferView": 7,
+              "componentType": 5126,
+              "count": 3,
+              "type": "SCALAR"
+            }
+          ],
+          "meshes": [
+            {
+              "primitives": [
+                {
+                  "attributes": {
+                    "POSITION": 0,
+                    "NORMAL": 1,
+                    "TEXCOORD_0": 2,
+                    "COLOR_0": 3,
+                    "TEXCOORD_1": 5,
+                    "_TEMPERATURE": 7
+                  },
+                  "indices": 4,
+                  "material": 0
+                }
+              ]
+            }
+          ],
+          "materials": [
+            {
+              "pbrMetallicRoughness": {
+                "baseColorFactor": [
+                  0.8,
+                  0.4,
+                  0.2,
+                  0.6
+                ],
+                "metallicFactor": 0.25,
+                "roughnessFactor": 0.75,
+                "baseColorTexture": {
+                  "index": 0,
+                  "texCoord": 1
+                },
+                "metallicRoughnessTexture": {
+                  "index": 0
+                }
+              },
+              "normalTexture": {
+                "index": 0,
+                "texCoord": 1,
+                "scale": 0.5
+              },
+              "occlusionTexture": {
+                "index": 0,
+                "texCoord": 1,
+                "strength": 0.25
+              },
+              "emissiveTexture": {
+                "index": 0
+              },
+              "emissiveFactor": [
+                0.1,
+                0.2,
+                0.3
+              ],
+              "alphaMode": "MASK",
+              "alphaCutoff": 0.4,
+              "doubleSided": true
+            }
+          ],
+          "images": [
+            {
+              "uri": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP43+DwHwAHAAK/K9fH4gAAAABJRU5ErkJggg==",
+              "mimeType": "image/png"
+            }
+          ],
+          "samplers": [
+            {
+              "magFilter": 9728,
+              "minFilter": 9729,
+              "wrapS": 33071,
+              "wrapT": 33648
+            }
+          ],
+          "textures": [
+            {
+              "source": 0,
+              "sampler": 0
+            }
+          ]
+        },
+        "expected": {
+          "attributes": {
+            "uv1": {
+              "domain": "vertex",
+              "semantic": "uv",
+              "interpolation": "linear",
+              "values": [
+                [
+                  1,
+                  1
+                ],
+                [
+                  0,
+                  1
+                ],
+                [
+                  1,
+                  0
+                ]
+              ]
+            },
+            "_TEMPERATURE": {
+              "domain": "vertex",
+              "semantic": "custom",
+              "interpolation": "linear",
+              "values": [
+                10,
+                20,
+                30
+              ]
+            }
+          },
+          "material": {
+            "emissive": [
+              0.1,
+              0.2,
+              0.3
+            ],
+            "alphaMode": "MASK",
+            "alphaCutoff": 0.4,
+            "doubleSided": true,
+            "normalScale": [
+              0.5,
+              -0.5
+            ],
+            "occlusionStrength": 0.25,
+            "textureCoordinates": {
+              "baseColorTexture": 1,
+              "metallicRoughnessTexture": 0,
+              "normalTexture": 1,
+              "occlusionTexture": 1,
+              "emissiveTexture": 0
+            },
+            "textureSamplers": {
+              "baseColorTexture": {
+                "magFilter": 9728,
+                "minFilter": 9729,
+                "wrapS": 33071,
+                "wrapT": 33648
+              },
+              "metallicRoughnessTexture": {
+                "magFilter": 9728,
+                "minFilter": 9729,
+                "wrapS": 33071,
+                "wrapT": 33648
+              },
+              "normalTexture": {
+                "magFilter": 9728,
+                "minFilter": 9729,
+                "wrapS": 33071,
+                "wrapT": 33648
+              },
+              "occlusionTexture": {
+                "magFilter": 9728,
+                "minFilter": 9729,
+                "wrapS": 33071,
+                "wrapT": 33648
+              },
+              "emissiveTexture": {
+                "magFilter": 9728,
+                "minFilter": 9729,
+                "wrapS": 33071,
+                "wrapT": 33648
+              }
+            }
+          }
+        }
+      }
+    ],
+    "refusals": [
+      {
+        "id": "unknown-uv-binding",
+        "materialField": "normalTexture",
+        "field": "texCoord",
+        "value": 2
+      },
+      {
+        "id": "normal-scale-not-finite",
+        "materialField": "normalTexture",
+        "field": "scale",
+        "value": "invalid"
+      },
+      {
+        "id": "occlusion-strength-outside-domain",
+        "materialField": "occlusionTexture",
+        "field": "strength",
+        "value": 1.5
+      }
+    ]
+  }
+}

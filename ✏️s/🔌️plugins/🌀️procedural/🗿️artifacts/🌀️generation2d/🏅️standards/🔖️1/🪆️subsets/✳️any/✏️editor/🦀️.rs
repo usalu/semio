@@ -412,7 +412,7 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dSession
         generation2d_bounded_extent(command, snapshot, interaction)
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation2dPlayApp>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation2dPlayApp>>, Fault> {
         if self.consumed {
             return Err(Fault::from("generation2d-session-command-work-repeated"));
         }
@@ -458,7 +458,7 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dFlowEva
         generation2d_preview_target(kind).and_then(|_| generation2d_bounded_extent(command, snapshot, interaction))
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation2dPlayApp>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation2dPlayApp>>, Fault> {
         if self.consumed {
             return Err(Fault::from("generation2d-flow-eval-work-repeated"));
         }
@@ -482,13 +482,13 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dFlowEva
 /// 🪞️ The document a derived view evaluates while a continuous tool transaction is open (design §13, F-7): the committed
 /// snapshot with every open press's and typing run's provisional leaves (the framework's, as of admission) folded in —
 /// `None` while nothing is open, so the committed snapshot is read as is. The overlay is retired cold, never dropped.
-fn generation2d_provisional_snapshot(committed: &Generation2dSnapshot, provisional: &[dsl::DslValue]) -> Option<Generation2dSnapshot> {
+fn generation2d_provisional_snapshot(committed: &Generation2dSnapshot, provisional: &[semio_framework_value::DslValue]) -> Option<Generation2dSnapshot> {
     if provisional.is_empty() {
         return None;
     }
     let mut overlay = committed.clone();
     for value in provisional {
-        if let Ok(leaf) = <Generation2dMutation as dsl::FromValue>::from_value(value.clone()) {
+        if let Ok(leaf) = <Generation2dMutation as semio_framework_value::FromValue>::from_value(value.clone()) {
             generation2d_fold_provisional(&mut overlay, leaf);
         }
     }
@@ -569,7 +569,7 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dGenerat
         GENERATION2D_RETAINED_CAPACITY.rows_for_items(snapshot.host_snapshot.widgets.len().checked_add(2)?)
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation2dPlayApp>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation2dPlayApp>>, Fault> {
         if self.consumed {
             return Err(Fault::from("generation2d-generation-command-work-repeated"));
         }
@@ -716,7 +716,7 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dContrib
         generation2d_bounded_extent(command, snapshot, interaction)
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation2dPlayApp>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation2dPlayApp>>, Fault> {
         if self.consumed {
             return Err(Fault::from("generation2d-contributions-work-repeated"));
         }
@@ -851,36 +851,6 @@ impl Generation2dContributionsJobFactoryProofs {
 //#endregion 🧩️ContributionsRoute
 
 //#region 📬️ArtifactStorePreparation
-/// 🧬️ Builds one `protocol::Edit<M>` for either lane's `advance()` — the two lanes differ only in `M`
-/// and their id prefix, so this one generic helper replaces two copies of the same literal.
-fn generation2d_next_edit<M>(prefix: &str, forward: M, inverse: Vec<M>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<M> {
-    let id = format!("{prefix}-{}", authority.next_sequence_number());
-    protocol::Edit { line: authority.line_id().map(str::to_owned),
-        id: id.clone(),
-        actor: Some(authority.actor().to_string()),
-        forwards: vec![forward],
-        inverse,
-        mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
-            dependencies: Vec::new(),
-            base_version: authority.base_applied_edit_count() as u64,
-            author_id: Some(protocol::ActorId(authority.actor().to_string())),
-            timestamp: authority.next_clock(),
-            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-            payload_hash: None,
-            semantic_kind: None,
-            label: None,
-            group_id: None,
-            origin: Default::default(),
-            transaction: None,
-        }],
-        description, verb: None,
-        coalesce_key: None,
-        sequence_number: authority.next_sequence_number(),
-        started_at: String::new(),
-        finished_at: None,
-    }
-}
 
 const GENERATION2D_ARTIFACT_STORE_MAXIMUM_BYTES: usize = 262_144;
 
@@ -888,29 +858,19 @@ fn generation2d_artifact_mutation_retained_bytes(mutation: &Generation2dMutation
     ::protocol::OpBinary::encode_op(mutation).map(|bytes| bytes.len()).map_err(|_| "generation2d-artifact-mutation-encode-failed".to_string())
 }
 
-/// 🧺️ The ONE fold-contract footprint BOTH durable lanes declare, straight off the route capacity:
-/// one forward row plus the one row `Mutation::inverse` yields. `ArtifactStore::fold_batch_item`
-/// sizes the staged inverse vector as `footprint.work_items - admitted_items`
-/// (`🧰️framework/…/🏪️store/🦀️.rs`), so a `work_items: 1` footprint leaves ZERO inverse capacity and
-/// refuses every undoable mutation. Every `Generation2dMutation` inverse is a `Vec` of length 0 or 1
-/// (`🧬️mutations/*/↩️inverse/🦀️.rs`), so this is exact, not a margin.
-fn generation2d_one_item_footprint(retained_bytes: usize) -> store::ArtifactStoreOneItemFootprint {
-    GENERATION2D_RETAINED_CAPACITY.one_item_footprint(retained_bytes)
-}
-
 fn admit_generation2d_artifact_mutation(mutation: &Generation2dMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
     let retained_bytes = generation2d_artifact_mutation_retained_bytes(mutation)?;
     if retained_bytes > GENERATION2D_ARTIFACT_STORE_MAXIMUM_BYTES {
         return Err("generation2d-artifact-mutation-envelope".into());
     }
-    Ok(generation2d_one_item_footprint(retained_bytes))
+    Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))
 }
 
 /// 🧬️ Raises the mutation's delta, applies it and CLOSES the delta — a `Generation2dDiff` owns the
 /// projections it displaces, so the intermediate delta is retired rather than dropped.
 fn prepare_generation2d_artifact(base: &Generation2dSnapshot, mutation: Generation2dMutation) -> Result<(Generation2dSnapshot, Vec<Generation2dMutation>, Generation2dMutation), String> {
     admit_generation2d_artifact_mutation(&mutation)?;
-    let inverse = protocol::Mutation::inverse(&mutation, base);
+    let inverse = protocol::Mutation::inverse(&mutation, base).map_err(semio_framework_value::ValueError::into_message)?;
     let diff = protocol::Mutation::diff(&mutation, base).into_parts().0;
     let applied = protocol::MutationDiff::apply(&diff, base);
     diff.retire_cold();
@@ -980,7 +940,7 @@ impl store::ArtifactStoreOneItemPreparation<Generation2dSnapshot, Generation2dMu
         let mutation = self.mutation.take().ok_or_else(|| "generation2d-artifact-mutation-owner-missing".to_string())?;
         let (post, inverse, forward) = prepare_generation2d_artifact(base.get(), mutation)?;
         let authority = self.authority.as_ref().ok_or_else(|| "generation2d-artifact-authority-missing".to_string())?;
-        let edit = generation2d_next_edit("generation2d-artifact-retained", forward, inverse, self.description.take(), authority);
+        let edit = authority.next_edit(forward, inverse);
         let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
         self.prepared = Some(prepared);
@@ -1007,7 +967,7 @@ impl store::ArtifactStoreOneItemPreparation<Generation2dSnapshot, Generation2dMu
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -1023,7 +983,7 @@ impl store::ArtifactStoreOneItemPreparation<Generation2dSnapshot, Generation2dMu
         }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
-                return Err("generation2d-artifact-base-retirement-rejected".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "generation2d-artifact-base-retirement-rejected"));
             }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -1067,7 +1027,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<Generation2dConfig, Generatio
         if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > 64) {
             return Err("generation2d-config-lane-or-description-envelope".into());
         }
-        Ok(generation2d_one_item_footprint(generation2d_config_publication_bytes(mutation)?))
+        Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, generation2d_config_publication_bytes(mutation)?))
     }
 
     fn begin(
@@ -1135,32 +1095,7 @@ impl store::ArtifactStoreOneItemPreparation<Generation2dConfig, Generation2dConf
             return Err("generation2d-config-post-text-envelope".into());
         }
         let authority = self.authority.as_ref().ok_or_else(|| "generation2d-config-authority-missing".to_string())?;
-        let id = format!("generation2d-config-{}", authority.next_sequence_number());
-        let edit = protocol::Edit { line: authority.line_id().map(str::to_owned),
-            id: id.clone(),
-            actor: Some(authority.actor().to_string()),
-            forwards: vec![mutation.clone()],
-            inverse: vec![inverse],
-            mutation_meta: vec![protocol::MutationMeta {
-                mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
-                dependencies: Vec::new(),
-                base_version: authority.base_applied_edit_count() as u64,
-                author_id: Some(protocol::ActorId(authority.actor().to_string())),
-                timestamp: authority.next_clock(),
-                undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-                payload_hash: None,
-                semantic_kind: None,
-                label: None,
-                group_id: None,
-                origin: Default::default(),
-                transaction: None,
-            }],
-            description: self.description.clone(), verb: None,
-            coalesce_key: None,
-            sequence_number: authority.next_sequence_number(),
-            started_at: String::new(),
-            finished_at: None,
-        };
+        let edit = authority.next_edit(mutation.clone(), vec![inverse]);
         let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(next))?;
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: GENERATION2D_CONFIG_PUBLICATION_MAXIMUM_BYTES as u64, digest: prepared.edit_digest() };
         self.prepared = Some(prepared);
@@ -1183,7 +1118,7 @@ impl store::ArtifactStoreOneItemPreparation<Generation2dConfig, Generation2dConf
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || grant.maximum_items == 0 || grant.maximum_bytes < GENERATION2D_CONFIG_PUBLICATION_MAXIMUM_BYTES {
             return Ok(store::SnapshotRetirementStep::Blocked);
         }
@@ -1192,7 +1127,7 @@ impl store::ArtifactStoreOneItemPreparation<Generation2dConfig, Generation2dConf
         }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
-                return Err("generation2d-config-base-retirement-rejected".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "generation2d-config-base-retirement-rejected"));
             }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -1227,6 +1162,9 @@ const GENERATION2D_IMPORT_PORT: &str = "params:in";
 struct Generation2dImportJob {
     port: String,
     media_json: Option<String>,
+    media_intrinsic: Option<semio_framework_value::DslValue>,
+    media_retirement: Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
+    media_position: usize,
     snapshot: Option<std::sync::Arc<Generation2dSnapshot>>,
     mutations: Vec<Generation2dMutation>,
     decoded: bool,
@@ -1254,21 +1192,41 @@ fn generation2d_job_fault(cx: &mut StepContext<'_>, detail: &str) -> StepOutcome
 
 impl Generation2dImportJob {
     fn new(request: ArtifactReservedToolJobRequest<EditorApp<Generation2dPlayApp>>, port: String, media: semio_framework_plugin::Media) -> Self {
-        let media_json = match media.payload {
-            semio_framework_plugin::MediaPayload::Structured { json, .. } => Some(json),
-            semio_framework_plugin::MediaPayload::Binary { .. } => None,
+        let (media_json, media_intrinsic) = match media.payload {
+            semio_framework_plugin::MediaPayload::Structured { json, .. } => (Some(json), None),
+            semio_framework_plugin::MediaPayload::Binary { .. } => (None, None),
+            semio_framework_plugin::MediaPayload::Intrinsic { value, .. } => (None, Some(value)),
         };
-        Self { port, media_json, snapshot: Some(request.snapshot), mutations: Vec::new(), decoded: false, completed: false, closing: false, completion: Some(request.completion), pending_completion_rejection: None }
+        Self { port, media_json, media_intrinsic, media_retirement: None, media_position: 0, snapshot: Some(request.snapshot), mutations: Vec::new(), decoded: false, completed: false, closing: false, completion: Some(request.completion), pending_completion_rejection: None }
+    }
+
+    fn numeric_row(snapshot: &Generation2dSnapshot, key: &str, number: f64) -> Option<Generation2dMutation> {
+        let semio_framework_artifact_flow_flow::Widget::InputSlider { id, label, min, max, step, .. } = snapshot.host_snapshot.widgets.iter().find(|widget| crate::widget_id(widget) == key)? else { return None };
+        Some(crate::standards::v1::subsets::any::schema::mutations::text::replace_widget(semio_framework_artifact_flow_flow::Widget::InputSlider { id: id.clone(), label: label.clone(), value: number, min: *min, max: *max, step: *step }))
     }
 
     fn decode(&mut self, cx: &mut StepContext<'_>) -> Option<StepOutcome> {
         if self.port != GENERATION2D_IMPORT_PORT {
             return Some(generation2d_job_fault(cx, "generation2d import only implements params:in"));
         }
+        if let Some(source) = self.media_intrinsic.as_ref() {
+            let Some(object) = source.as_object() else { return Some(generation2d_job_fault(cx, "generation2d params:in intrinsic payload must be an object")) };
+            let Some(snapshot) = self.snapshot.as_ref() else { return Some(generation2d_job_fault(cx, "generation2d import lost its snapshot authority")) };
+            if let Some((key, value)) = object.get(self.media_position) {
+                if let Some(mutation) = value.as_f64().and_then(|number| Self::numeric_row(snapshot, key, number)) { self.mutations.push(mutation); }
+                self.media_position += 1;
+                cx.consume_fuel(1);
+            }
+            if self.media_position < object.len() {
+                return Some(StepOutcome::CheckpointReady(Checkpoint { state: generation2d_job_payload(cx, JobPayloadStream::CheckpointState, &[1]), applied_progress: self.media_position as u64 }));
+            }
+            self.decoded = true;
+            return None;
+        }
         let Some(media_json) = self.media_json.as_ref() else {
             return Some(generation2d_job_fault(cx, "generation2d params:in requires a structured payload"));
         };
-        let Ok(parsed) = dsl::json::parse(media_json) else {
+        let Ok(parsed) = semio_framework_pack_json::parse(media_json, semio_framework_pack_json::JsonMemberPolicy::Reject) else {
             return Some(generation2d_job_fault(cx, "generation2d params:in payload is not valid json"));
         };
         let Some(object) = parsed.as_object() else {
@@ -1280,15 +1238,7 @@ impl Generation2dImportJob {
         let mut rows = Vec::new();
         for (widget_id_key, value) in object.iter() {
             let Some(number) = value.as_f64() else { continue };
-            let Some(semio_framework_artifact_flow_flow::Widget::InputSlider { id, label, min, max, step, .. }) = snapshot.host_snapshot.widgets.iter().find(|widget| crate::widget_id(widget) == widget_id_key) else { continue };
-            rows.push(crate::standards::v1::subsets::any::schema::mutations::text::replace_widget(semio_framework_artifact_flow_flow::Widget::InputSlider {
-                id: id.clone(),
-                label: label.clone(),
-                value: number,
-                min: *min,
-                max: *max,
-                step: *step,
-            }));
+            if let Some(mutation) = Self::numeric_row(snapshot, widget_id_key, number) { rows.push(mutation); }
         }
         self.mutations = rows;
         self.decoded = true;
@@ -1301,6 +1251,7 @@ impl InteractiveJob for Generation2dImportJob {
         if cx.is_cancelled() {
             return StepOutcome::Cancelled;
         }
+        if cx.should_yield() { return StepOutcome::Yield; }
         if self.pending_completion_rejection.is_some() {
             return generation2d_job_fault(cx, "generation2d import completion remains rejected");
         }
@@ -1310,7 +1261,7 @@ impl InteractiveJob for Generation2dImportJob {
                 return outcome;
             }
             cx.consume_fuel(1);
-            return StepOutcome::CheckpointReady(Checkpoint { state: generation2d_job_payload(cx, JobPayloadStream::CheckpointState, &[1]), applied_progress: 1 });
+            return StepOutcome::CheckpointReady(Checkpoint { state: generation2d_job_payload(cx, JobPayloadStream::CheckpointState, &[1]), applied_progress: self.media_position.max(1) as u64 });
         }
         cx.set_stage("generation2d-import-publish");
         if !self.completed {
@@ -1372,6 +1323,19 @@ impl ArtifactReservedJob for Generation2dImportJob {
             self.mutations = Vec::new();
             return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
         }
+        if let Some(value) = self.media_intrinsic.take() {
+            self.media_position = 0;
+            self.media_retirement = Some(semio_framework_value::retirement::owned_retirement(value));
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if let Some(retirement) = self.media_retirement.as_mut() {
+            return Ok(match retirement.close_step(maximum_items, _maximum_bytes).map_err(|error| Fault::from(error.to_string()))? {
+                semio_framework_value::SnapshotRetirementStep::Pending { released_items, released_bytes } => semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes },
+                semio_framework_value::SnapshotRetirementStep::Blocked => semio_framework_plugin::PluginCloseStep::Blocked { reason: "generation2d intrinsic import source retirement is paused" },
+                semio_framework_value::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => { self.media_retirement = None; semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 } },
+                semio_framework_value::SnapshotRetirementStep::Complete => semio_framework_plugin::PluginCloseStep::Blocked { reason: "generation2d intrinsic import source is not terminal-empty" },
+            });
+        }
         if self.media_json.take().is_some() {
             return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -1399,6 +1363,9 @@ impl ArtifactReservedJob for Generation2dImportJob {
             && self.port.is_empty()
             && self.port.capacity() == 0
             && self.media_json.is_none()
+            && self.media_intrinsic.is_none()
+            && self.media_retirement.is_none()
+            && self.media_position == 0
             && self.snapshot.is_none()
             && self.mutations.is_empty()
             && self.mutations.capacity() == 0
@@ -1421,7 +1388,7 @@ pub struct Generation2dPlayApp;
 /// identity camera, because `ActionDefinition::new("nodeGraphViewport", …)` declares no args and every
 /// declared action must bridge from its own id under the shell's staged args alone. A present but malformed
 /// one still faults: a camera the graph cannot express is never silently replaced by one it can.
-fn parse_flow_viewport(args: &dsl::DslValue) -> Result<semio_framework_os_kernel::Viewport2d, Fault> {
+fn parse_flow_viewport(args: &semio_framework_value::DslValue) -> Result<semio_framework_os_kernel::Viewport2d, Fault> {
     let Some(value) = args.get("viewport").cloned() else { return Ok(semio_framework_os_kernel::Viewport2d::default()) };
     semio_framework_value::FromValue::from_value(value).map_err(|error| Fault::from(format!("invalid nodeGraphViewport viewport: {error}")))
 }
@@ -1431,12 +1398,19 @@ impl ArtifactEditor for Generation2dPlayApp {
     fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
         vec![crate::examples::demo::source()]
     }
+    /// 📢️ The localized notices of the editor's own refusal codes (design §20.12): the preview evaluation's and the document-level
+    /// ones.
+    fn fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
+        static NOTICES: std::sync::LazyLock<Vec<(&'static str, semio_framework_ui_locale::LocalizedLabel)>> = std::sync::LazyLock::new(|| crate::preview_eval::preview_eval_fault_notices().iter().chain(crate::generation2d_document_fault_notices()).cloned().collect());
+        NOTICES.as_slice()
+    }
+
     /// 🧩️ The loaded-parent child projection every archive load and maintenance swap asks for before a
     /// decoded document may replace the store. `Generation2dSnapshot` declares no child slot, so the
     /// projection is honestly empty; without it every replacement faulted with `editor did not declare
     /// a loaded-parent child projection`.
     fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
-        store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("generation2d.child-projection"), error.to_string()))
+        store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new(crate::GENERATION2D_CHILD_PROJECTION), error.to_string()))
     }
 
     /// 🛍️ Publishes the whole registered flow operator catalogue once per app instance on the reserved
@@ -1589,7 +1563,7 @@ impl ArtifactEditor for Generation2dPlayApp {
             return Ok(None);
         }
         if request.command.command_id() != request.tool_id {
-            return Err(Fault::from("generation2d-command-tool-mismatch"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "the generation 2d command does not match its exact registered tool"));
         }
         let tool_id = request.command.command_id();
         let contributions = GENERATION2D_CONTRIBUTIONS_TOOL_IDS.contains(&tool_id);
@@ -1639,7 +1613,7 @@ impl ArtifactEditor for Generation2dPlayApp {
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
-        Some(semio_framework::io::resolve_ready(generation2d_io()))
+        Some(::semio_framework_async::poll::resolve_ready(generation2d_io()))
     }
 
     fn command_id(command: &Generation2dCommand) -> &'static str {
@@ -1649,8 +1623,8 @@ impl ArtifactEditor for Generation2dPlayApp {
     /// 🎯️ Maps host action id + JSON args onto `Generation2dCommand` — preserved verbatim from the
     /// pre-migration hand-rolled dispatch so React/wgpu callers that still speak the stringly
     /// `{action,args}` wire (rather than `OpBinary` bytes) keep working unchanged.
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
-        let args = args.cloned().unwrap_or(dsl::DslValue::Null);
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
+        let args = args.cloned().unwrap_or(semio_framework_value::DslValue::Null);
         let str_arg = |keys: &[&str]| -> Option<String> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_str()).map(str::to_string)) };
         let f64_arg = |keys: &[&str]| -> Option<f64> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_f64())) };
         let u64_arg = |keys: &[&str]| -> Option<u64> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_u64().or_else(|| value.as_f64().map(|number| number as u64)))) };
@@ -1659,11 +1633,11 @@ impl ArtifactEditor for Generation2dPlayApp {
         let pointer_samples = || {
             let parsed = args
                 .get("samples")
-                .and_then(dsl::DslValue::as_array)
+                .and_then(semio_framework_value::DslValue::as_array)
                 .map(|items| items.iter().filter_map(|item| { let pair = item.as_array()?; Some([pair.first()?.as_f64()?, pair.get(1)?.as_f64()?]) }).collect::<Vec<[f64; 2]>>())
                 .unwrap_or_default();
             if parsed.is_empty() {
-                match (args.get("x").and_then(dsl::DslValue::as_f64), args.get("y").and_then(dsl::DslValue::as_f64)) {
+                match (args.get("x").and_then(semio_framework_value::DslValue::as_f64), args.get("y").and_then(semio_framework_value::DslValue::as_f64)) {
                     (Some(x), Some(y)) => vec![[x, y]],
                     _ => Vec::new(),
                 }
@@ -1671,11 +1645,11 @@ impl ArtifactEditor for Generation2dPlayApp {
                 parsed
             }
         };
-        let pointer_cancelled = || args.get("cancelled").and_then(dsl::DslValue::as_bool).unwrap_or(false);
+        let pointer_cancelled = || args.get("cancelled").and_then(semio_framework_value::DslValue::as_bool).unwrap_or(false);
         match action {
             "nodeGraphEdit" => {
                 semio_framework_tool_machine::node_graph_edit_rows(&args).map_err(Fault::from)?;
-                Ok(Generation2dCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: args.get("operations").map(dsl::json::to_json_string).unwrap_or_else(|| "[]".into()) }))
+                Ok(Generation2dCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: args.get("operations").map(semio_framework_pack_json::to_json_string).unwrap_or_else(|| "[]".into()) }))
             }
             "moveMediaNode" => Ok(Generation2dCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: str_arg(&["nodeId", "node_id", "id"]).unwrap_or_default(), x: f64_arg(&["x"]).unwrap_or(0.0), y: f64_arg(&["y"]).unwrap_or(0.0) })),
             "addWidget" => Ok(Generation2dCommand::AddWidget(add_widget::AddWidget { kind: str_arg(&["kind"]).unwrap_or_else(|| "inputSlider".into()), neuron_kind: str_arg(&["neuronKind", "neuron_kind"]), format: str_arg(&["format"]), action: str_arg(&["action"]), x: f64_arg(&["x"]), y: f64_arg(&["y"]) })),
@@ -1691,7 +1665,7 @@ impl ArtifactEditor for Generation2dPlayApp {
             "removeGeneration" => Ok(Generation2dCommand::RemoveGeneration(remove_generation::RemoveGeneration { id: str_arg(&["id"]).unwrap_or_default() })),
             "renameGeneration" => Ok(Generation2dCommand::RenameGeneration(rename_generation::RenameGeneration { id: str_arg(&["id"]).unwrap_or_default(), name: str_arg(&["name"]).unwrap_or_default() })),
             "updateGenerationValues" => {
-                let value = args.get("value").map_or(dsl::DslValue::Null, |entry| entry.clone());
+                let value = args.get("value").map_or(semio_framework_value::DslValue::Null, |entry| entry.clone());
                 Ok(Generation2dCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues {
                     generation_id: str_arg(&["generationId", "generation_id"]),
                     question_id: str_arg(&["questionId", "question_id"]).unwrap_or_default(),
@@ -1718,7 +1692,7 @@ impl ArtifactEditor for Generation2dPlayApp {
                 node_hash: u64_arg(&["nodeHash", "node_hash"]).unwrap_or_default(),
                 output_json: str_arg(&["outputJson", "output_json"]).unwrap_or_default(),
                 extension_id: str_arg(&["extensionId", "extension_id"]).unwrap_or_default(),
-                ok: args.get("ok").and_then(dsl::DslValue::as_bool).unwrap_or(false),
+                ok: args.get("ok").and_then(semio_framework_value::DslValue::as_bool).unwrap_or(false),
                 fault_code: str_arg(&["faultCode", "fault_code"]).unwrap_or_default(),
                 fault_message: str_arg(&["faultMessage", "fault_message"]).unwrap_or_default(),
             })),
@@ -1756,7 +1730,8 @@ impl ArtifactEditor for Generation2dPlayApp {
     /// parented to its owning cluster's widget id — the DAG-parent-links transitive-hover source: hovering
     /// a Cluster's own tree item transitively covers every widget nested inside it). Synapses become
     /// "edge" targets, parented to nothing (edges are leaves, not containers).
-    fn interaction_topology(doc: &ArtifactView<'_, Generation2dSnapshot>, _cfg: &ConfigView<'_, Generation2dConfig>) -> InteractionTopology {
+    fn interaction_topology(doc: &ArtifactView<'_, Generation2dSnapshot>, _cfg: &ConfigView<'_, Generation2dConfig>) -> Result<InteractionTopology, semio_framework_value::ValueError> {
+ Ok((||{
         fn walk_neuron(neuron: &semio_framework_artifact_flow_flow::neural::Neuron, parent: String, ordered: &mut Vec<TopologyNode>) {
             ordered.push(TopologyNode { id: neuron.id.clone(), granularity: "node".into(), parent: Some(parent) });
             if let Some(tree) = &neuron.tree {
@@ -1782,7 +1757,9 @@ impl ArtifactEditor for Generation2dPlayApp {
         let mut domains = std::collections::BTreeMap::new();
         domains.insert("graph".to_string(), DomainTopology { ordered });
         InteractionTopology { domains }
-    }
+    
+})())
+}
 
     /// ⏯️ Starts, finalizes or wakes the `previewEval` run for the attached preview windows
     /// ([`crate::preview_eval::preview_eval_run_effects`]), and owes every window whose target moved
@@ -1898,7 +1875,7 @@ impl ArtifactEditor for Generation2dPlayApp {
         let semio_framework_plugin::MediaPayload::Structured { json, .. } = &media.payload else {
             return Err(semio_framework_plugin::MediaError::Payload(port.to_string(), "params:in expects a Structured JSON object payload".into()));
         };
-        let parsed = dsl::json::parse(json).map_err(|error| semio_framework_plugin::MediaError::Payload(port.to_string(), error.to_string()))?;
+        let parsed = semio_framework_pack_json::parse(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_plugin::MediaError::Payload(port.to_string(), error.to_string()))?;
         let Some(object) = parsed.as_object() else {
             return Err(semio_framework_plugin::MediaError::Payload(port.to_string(), "params:in payload must be a JSON object".into()));
         };
@@ -1934,17 +1911,13 @@ impl Generation2dPlayApp {
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
         let labels = semio_framework_plugin::resolve_labels::<Generation2dLabels>(view_state);
-        let is_de = view_state.locale == semio_framework_ui_locale::Locale::De;
         let (selected_nodes, selected_edges) = marks.graph_selection_domains(&doc.snapshot.host_snapshot);
         let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected_nodes, &selected_edges);
-        let mut menu = Menu::of(registry).action("addWidget").action("reorganize").action("generate");
+        let mut menu = Menu::of(registry, view_state).action("addWidget").action("reorganize").action("generate");
         menu = menu.group("mode", |m| m.action("setShowMode"));
         menu = menu.group("create", |m| m.action("addGeneration"));
         menu = menu.group("methods", |m| m.action("selectGeneration"));
-        if let Some(spec) = node_graph_delete_selection_spec(labels.delete_selection.as_str(), is_de, &nodes, &edges, NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
-            menu = menu.item(spec);
-        }
-        menu.build()
+        menu.item(node_graph_delete_selection_spec(labels.delete_selection.as_str(), view_state, &nodes, &edges, NodeGraphDeleteDispatch::ViaNodeGraphEdit)).build()
     }
 }
 
@@ -2090,7 +2063,7 @@ pub fn create_generation2d_app() -> semio_framework_plugin::AppDefinition {
         .keybinding("mod+z", "undo")
         .keybinding("mod+shift+z", "redo")
         .config(Generation2dPlayApp::config_spec())
-        .io(semio_framework::io::resolve_ready(generation2d_io()))
+        .io(::semio_framework_async::poll::resolve_ready(generation2d_io()))
         // 🚧️ SDK GAP (contract §2.4): `EditorBuilder`/`.editor::<E>(def: AppDefinition)` take a bare
         // `AppDefinition`, not the old `App { definition, examples }` — there is no `.example(...)`/
         // `.workflow(...)` on this builder, so the old `"default"` app-level example registration and

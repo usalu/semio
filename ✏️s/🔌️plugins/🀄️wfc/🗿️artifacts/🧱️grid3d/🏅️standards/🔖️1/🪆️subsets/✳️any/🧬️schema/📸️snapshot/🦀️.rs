@@ -19,7 +19,7 @@ pub const WFC_GRID3D_DOCUMENT_SCHEMA: &str = "s.wfc.grid3d";
 //#region 🔖️Color
 /// 🎨️ Straight-alpha RGBA, every channel `0..=255`. Values outside that range are clamped by every
 /// reader rather than refused, so a hand-authored document never fails to render.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Grid3dColor {
     pub r: u32,
@@ -33,7 +33,7 @@ pub struct Grid3dColor {
 /// 🔺️ Inline triangle geometry in the TILE-SPACE unit box `0..1` on every axis — the renderer scales
 /// it into whatever box the cell it lands in actually occupies, so one tile mesh serves every cell
 /// size on a non-uniform grid. `positions` is xyz triples, `indices` is triangle corners.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Grid3dMesh {
     #[value(default)]
@@ -47,7 +47,7 @@ pub struct Grid3dMesh {
 /// 🗿️ A tile's 3D media: either geometry authored INLINE in this document, or a handle to a composed
 /// `s.stdio.semio@v1/mesh` child the host hydrates. A handle whose child is not hydrated renders as
 /// a unit-box placeholder rather than failing the surface (the raster/remodel "fail soft" rule).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslEnum)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum Grid3dTileMedia {
     Mesh { mesh: Grid3dMesh },
@@ -63,29 +63,29 @@ impl Default for Grid3dTileMedia {
 /// 🌉️ Hand `dsl::DslField` impl — `Grid3dTileMedia` is a `DslEnum` (`DslVariants` only) and
 /// `Grid3dTile::media` is a REQUIRED, never-optional field that must stay a bare `Grid3dTileMedia`
 /// (`s.process.process3d`'s `MeasureRecipe` precedent).
-impl dsl::DslField for Grid3dTileMedia {
-    fn shape() -> dsl::Shape {
-        dsl::Shape::Statements(<Grid3dTileMedia as dsl::DslVariants>::variants())
+impl semio_framework_dsl_record::DslField for Grid3dTileMedia {
+    fn shape() -> semio_framework_dsl_record::Shape {
+        semio_framework_dsl_record::Shape::Statements(<Grid3dTileMedia as semio_framework_dsl_record::DslVariants>::variants())
     }
-    fn to_value(&self) -> dsl::FieldValue {
-        dsl::FieldValue::Statements(vec![<Grid3dTileMedia as dsl::DslVariants>::to_named_record(self)])
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
+        semio_framework_dsl_record::FieldValue::Statements(vec![<Grid3dTileMedia as semio_framework_dsl_record::DslVariants>::to_named_record(self)])
     }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
         match value {
-            dsl::FieldValue::Statements(items) if items.len() == 1 => <Grid3dTileMedia as dsl::DslVariants>::from_named_record(&items[0].0, &items[0].1).map_err(|error| error.message),
+            semio_framework_dsl_record::FieldValue::Statements(items) if items.len() == 1 => <Grid3dTileMedia as semio_framework_dsl_record::DslVariants>::from_named_record(&items[0].0, &items[0].1).map_err(|error| error.message),
             other => Err(format!("expected exactly 1 tagged tile media value, found {other:?}")),
         }
     }
-fn shape_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::Shape,String>{Ok(dsl::Shape::Statements(<Self as dsl::DslVariants>::variants_controlled(control)?))}
-fn from_value_controlled(value:&dsl::FieldValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{match value{dsl::FieldValue::Statements(items)if items.len()==1=><Self as dsl::DslVariants>::from_named_record_controlled(&items[0].0,&items[0].1,control).map_err(|e|e.message),_=>Err("grid3d expected exactly one tagged media record".into())}}
-fn to_value_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::FieldValue,String>{dsl::native_encoding::project_statements(std::slice::from_ref(self),control)}
-fn retire_decoded(self){<Self as dsl::DslVariants>::retire_decoded_variant(self)}
+fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{Ok(semio_framework_dsl_record::Shape::Statements(<Self as semio_framework_dsl_record::DslVariants>::variants_controlled(control)?))}
+fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{match value{semio_framework_dsl_record::FieldValue::Statements(items)if items.len()==1=><Self as semio_framework_dsl_record::DslVariants>::from_named_record_controlled(&items[0].0,&items[0].1,control),_=>Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"grid3d expected exactly one tagged media record"))}}
+fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,semio_framework_value::ValueError>{semio_framework_dsl_record::native_encoding::project_statements(std::slice::from_ref(self),control)}
+fn retire_decoded(self){<Self as semio_framework_dsl_record::DslVariants>::retire_decoded_variant(self)}
 
 }
 
 /// 🗿️ One placeable tile — the WFC pattern universe of this document. `weight` is the selection
 /// bias the solver samples with; every mutation refuses a non-positive or non-finite weight.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Grid3dTile {
     pub id: String,
@@ -105,7 +105,7 @@ pub struct Grid3dTile {
 /// accepts only `camelCase`/`kebab-case`/`lowercase`/`snake_case` there and silently ignores any
 /// other spelling, which would leave the wire on `Left`/`Right` while every schema leaf declares
 /// `LEFT`/`RIGHT` (measured on the sibling `s.wfc.grid2d`, ticket 26/09/18/EXTRACT-WFC-PLUGIN).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, ToValue, FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar)]
 pub enum Grid3dDirection {
     #[value(rename = "LEFT")]
     Left,
@@ -164,7 +164,7 @@ impl Grid3dDirection {
 }
 
 /// 📏️ Which per-axis size array a `change-cell-sizes` mutation addresses.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, ToValue, FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum Grid3dAxis {
     #[default]
@@ -205,7 +205,7 @@ impl Grid3dAxis {
 /// stencil's declared inverse, `A` in the opposite direction of `B`); `allowed = false` DENIES the
 /// pair outright, and a deny always wins over any allow. A tile pair no rule mentions for a
 /// direction is NOT allowed — the rule set is a closed allow-list, never a deny-list.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Grid3dRule {
     pub id: String,
@@ -219,7 +219,7 @@ pub struct Grid3dRule {
 //#region 🔖️Cells
 /// 📌️ A hard pre-assignment the solver must respect — a domain restriction feeding the solve, never
 /// overwritten by it.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Grid3dPinnedCell {
     pub x: u32,
@@ -230,7 +230,7 @@ pub struct Grid3dPinnedCell {
 
 /// 🚫️ A cell excluded from the topology entirely — it gets no arcs and is never assigned, which is
 /// how a non-box shape is carved out of the regular grid.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Grid3dCell {
     pub x: u32,
@@ -240,7 +240,7 @@ pub struct Grid3dCell {
 //#endregion 🔖️Cells
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[dsl(id = "wfc.grid3d", layout = "lines")]
 #[artifact_schema(id = "s.wfc.grid3d")]
@@ -324,7 +324,7 @@ impl store::ArtifactDsl for Grid3dSnapshot {
     fn envelope_id() -> &'static str {
         "wfc.grid3d"
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -332,11 +332,11 @@ impl store::ArtifactDsl for Grid3dSnapshot {
         if body.trim().is_empty() {
             return Ok(Self::default());
         }
-        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -346,21 +346,21 @@ impl store::ArtifactPack for Grid3dSnapshot {
  fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::from(error.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         if bytes.is_empty() {
             return Ok(Self::default());
         }
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::from(error.into_value_error()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }

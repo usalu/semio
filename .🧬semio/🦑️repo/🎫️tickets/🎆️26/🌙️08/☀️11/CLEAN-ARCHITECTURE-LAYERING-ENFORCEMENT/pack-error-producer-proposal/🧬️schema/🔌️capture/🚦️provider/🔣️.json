@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "outcome",
+          "maximumBytes",
+          "ownedBefore",
+          "requestedBytes",
+          "allocatedBytes",
+          "category",
+          "retry",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "outcome": {
+            "enum": [
+              "success",
+              "error"
+            ]
+          },
+          "maximumBytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "ownedBefore": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "requestedBytes": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "allocatedBytes": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "category": {
+            "enum": [
+              "nativeIo",
+              "httpRequest",
+              "httpBody"
+            ]
+          },
+          "retry": {
+            "enum": [
+              "never",
+              "transient"
+            ]
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "operationCalls",
+              "committedAfter",
+              "sourcePresent",
+              "freeCount"
+            ],
+            "properties": {
+              "kind": {
+                "enum": [
+                  null,
+                  "ownershipLimit"
+                ]
+              },
+              "operationCalls": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "committedAfter": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "sourcePresent": {
+                "type": "boolean"
+              },
+              "freeCount": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

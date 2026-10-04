@@ -18,7 +18,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 use crate::schema::snapshot::{Wfc2dRule, Wfc2dSlot, Wfc2dSlotEdge, Wfc2dSnapshot, Wfc2dTile, Wfc2dTileMedia, WFC_2D_DOCUMENT_SCHEMA};
 
 //#region 🔖️DslMirror
-#[derive(Clone, Debug, Default, PartialEq, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 pub struct Wfc2dSlotDsl {
     pub id: String,
     pub x: f64,
@@ -29,7 +29,7 @@ pub struct Wfc2dSlotDsl {
     pub pinned_tile_id: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 pub struct Wfc2dSlotEdgeDsl {
     pub id: String,
     pub from_slot_id: String,
@@ -37,21 +37,21 @@ pub struct Wfc2dSlotEdgeDsl {
     pub relation: String,
 }
 
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 pub struct Wfc2dTileDsl {
     pub id: String,
     pub label: Option<String>,
     pub weight: f64,
-    pub media: dsl::DslValue,
+    pub media: semio_framework_value::DslValue,
 }
 
 impl Default for Wfc2dTileDsl {
     fn default() -> Self {
-        Self { id: String::new(), label: None, weight: 1.0, media: dsl::DslValue::Null }
+        Self { id: String::new(), label: None, weight: 1.0, media: semio_framework_value::DslValue::Null }
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 pub struct Wfc2dRuleDsl {
     pub id: String,
     pub tile_a_id: String,
@@ -83,10 +83,10 @@ pub fn tile_to_dsl(tile: &Wfc2dTile) -> Wfc2dTileDsl {
     Wfc2dTileDsl { id: tile.id.clone(), label: tile.label.clone(), weight: tile.weight, media: semio_framework_value::ToValue::to_value(&tile.media) }
 }
 
-pub fn tile_from_dsl(tile: Wfc2dTileDsl) -> Result<Wfc2dTile, store::TextError> {
+pub fn tile_from_dsl(tile: Wfc2dTileDsl) -> Result<Wfc2dTile, semio_framework_diagnostic::TextError> {
     let media: Wfc2dTileMedia = match tile.media {
-        dsl::DslValue::Null => Wfc2dTileMedia::default(),
-        other => semio_framework_value::FromValue::from_value(other).map_err(|error| store::TextError::new(format!("invalid tile media: {error}"), store::TextSpan::at(1, 1)))?,
+        semio_framework_value::DslValue::Null => Wfc2dTileMedia::default(),
+        other => semio_framework_value::FromValue::from_value(other).map_err(|error| semio_framework_diagnostic::TextError::new(error.kind, format!("invalid tile media: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?,
     };
     Ok(Wfc2dTile { id: tile.id, label: tile.label, weight: tile.weight, media })
 }
@@ -99,7 +99,7 @@ pub fn rule_from_dsl(rule: Wfc2dRuleDsl) -> Wfc2dRule {
     Wfc2dRule { id: rule.id, tile_a_id: rule.tile_a_id, tile_b_id: rule.tile_b_id, relation: rule.relation, allowed: rule.allowed }
 }
 
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(id = "wfc.wfc2d", layout = "lines")]
 struct Wfc2dSnapshotDsl {
     schema: String,
@@ -129,7 +129,7 @@ impl store::ArtifactDsl for Wfc2dSnapshotDsl {
     fn envelope_id() -> &'static str {
         "wfc.wfc2d"
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -137,11 +137,11 @@ impl store::ArtifactDsl for Wfc2dSnapshotDsl {
         if body.trim().is_empty() {
             return Ok(Self::default());
         }
-        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -150,21 +150,21 @@ impl store::ArtifactDsl for Wfc2dSnapshotDsl {
 impl store::ArtifactPack for Wfc2dSnapshotDsl {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::from(error.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         if bytes.is_empty() {
             return Ok(Self::default());
         }
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::from(error.into_value_error()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -180,7 +180,7 @@ fn wfc2d_document_to_dsl(document: &Wfc2dSnapshot) -> Wfc2dSnapshotDsl {
     }
 }
 
-fn wfc2d_document_from_dsl(parsed: Wfc2dSnapshotDsl) -> Result<Wfc2dSnapshot, store::TextError> {
+fn wfc2d_document_from_dsl(parsed: Wfc2dSnapshotDsl) -> Result<Wfc2dSnapshot, semio_framework_diagnostic::TextError> {
     Ok(Wfc2dSnapshot {
         schema: parsed.schema,
         seed: parsed.seed,
@@ -197,7 +197,7 @@ impl store::ArtifactDsl for Wfc2dSnapshot {
         "wfc.wfc2d"
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         wfc2d_document_from_dsl(<Wfc2dSnapshotDsl as store::ArtifactDsl>::parse_dsl(text)?)
     }
 
@@ -217,14 +217,14 @@ impl store::ArtifactPack for Wfc2dSnapshot {
         wfc2d_document_from_dsl(parsed).map_err(store::text_error_to_pack_error)
     }
 
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         <Wfc2dSnapshotDsl as store::ArtifactPack>::record_spec()
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 /// 📖️ Parses `.wfc2d` DSL text into a `Wfc2dSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<Wfc2dSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<Wfc2dSnapshot, semio_framework_diagnostic::TextError> {
     <Wfc2dSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 

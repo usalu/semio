@@ -30,16 +30,16 @@
       ],
       "properties": {
         "x": {
-          "type": "number",
-          "format": "double"
+          "format": "double",
+          "$ref": "#/$defs/Binary64Transport"
         },
         "y": {
-          "type": "number",
-          "format": "double"
+          "format": "double",
+          "$ref": "#/$defs/Binary64Transport"
         },
         "zoom": {
-          "type": "number",
-          "format": "double"
+          "format": "double",
+          "$ref": "#/$defs/Binary64Transport"
         }
       }
     },
@@ -53,12 +53,12 @@
       ],
       "properties": {
         "x": {
-          "type": "number",
-          "format": "double"
+          "format": "double",
+          "$ref": "#/$defs/Binary64Transport"
         },
         "y": {
-          "type": "number",
-          "format": "double"
+          "format": "double",
+          "$ref": "#/$defs/Binary64Transport"
         }
       }
     },
@@ -273,7 +273,6 @@
               }
             },
             "value": {
-              "type": "number",
               "x-semio-ui": {
                 "widget": "stepper",
                 "role": "value",
@@ -285,10 +284,10 @@
                 "precision": 3,
                 "group": "value",
                 "order": 30
-              }
+              },
+              "$ref": "#/$defs/Binary64Transport"
             },
             "min": {
-              "type": "number",
               "x-semio-ui": {
                 "widget": "stepper",
                 "role": "value",
@@ -300,10 +299,10 @@
                 "precision": 3,
                 "group": "range",
                 "order": 40
-              }
+              },
+              "$ref": "#/$defs/Binary64Transport"
             },
             "max": {
-              "type": "number",
               "x-semio-ui": {
                 "widget": "stepper",
                 "role": "value",
@@ -315,10 +314,10 @@
                 "precision": 3,
                 "group": "range",
                 "order": 50
-              }
+              },
+              "$ref": "#/$defs/Binary64Transport"
             },
             "step": {
-              "type": "number",
               "x-semio-ui": {
                 "widget": "stepper",
                 "role": "value",
@@ -330,7 +329,8 @@
                 "precision": 3,
                 "group": "range",
                 "order": 60
-              }
+              },
+              "$ref": "#/$defs/Binary64Transport"
             }
           },
           "x-semio-ui": {
@@ -1207,7 +1207,6 @@
               }
             },
             "min": {
-              "type": "number",
               "x-semio-ui": {
                 "widget": "stepper",
                 "role": "value",
@@ -1219,10 +1218,10 @@
                 "precision": 3,
                 "group": "range",
                 "order": 20
-              }
+              },
+              "$ref": "#/$defs/Binary64Transport"
             },
             "max": {
-              "type": "number",
               "x-semio-ui": {
                 "widget": "stepper",
                 "role": "value",
@@ -1234,10 +1233,10 @@
                 "precision": 3,
                 "group": "range",
                 "order": 30
-              }
+              },
+              "$ref": "#/$defs/Binary64Transport"
             },
             "step": {
-              "type": "number",
               "x-semio-ui": {
                 "widget": "stepper",
                 "role": "value",
@@ -1249,10 +1248,10 @@
                 "precision": 3,
                 "group": "range",
                 "order": 40
-              }
+              },
+              "$ref": "#/$defs/Binary64Transport"
             },
             "value": {
-              "type": "number",
               "x-semio-ui": {
                 "widget": "stepper",
                 "role": "value",
@@ -1264,7 +1263,8 @@
                 "precision": 3,
                 "group": "value",
                 "order": 50
-              }
+              },
+              "$ref": "#/$defs/Binary64Transport"
             }
           },
           "x-semio-ui": {
@@ -1548,6 +1548,29 @@
           }
         }
       }
+    },
+    "Binary64Word": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bits"
+      ],
+      "properties": {
+        "bits": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{16}$"
+        }
+      }
+    },
+    "Binary64Transport": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Binary64Word"
+        },
+        {
+          "type": "number"
+        }
+      ]
     }
   }
 }

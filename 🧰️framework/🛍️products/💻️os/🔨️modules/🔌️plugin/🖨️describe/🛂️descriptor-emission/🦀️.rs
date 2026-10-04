@@ -108,7 +108,7 @@ impl actor_bindings::semio::framework::ui::HostSurface for DescribeHostState {
 /// exist as refusals rather than as omissions.
 #[cfg(test)]
 fn describe_must_be_pure(name: &str) -> Vec<u8> {
-    dsl::encode_fault_bytes(&dsl::Fault::new(dsl::FaultOrigin::Os, dsl::FaultCode::new("describe.impure"), format!("host-async {name} is not available during describe() — the descriptor contract requires describe() to be pure")))
+    semio_framework_diagnostic::encode_fault_bytes(&semio_framework_diagnostic::Fault::new(semio_framework_diagnostic::FaultOrigin::Os, semio_framework_diagnostic::FaultCode::new("describe.impure"), format!("host-async {name} is not available during describe() — the descriptor contract requires describe() to be pure")))
 }
 
 /// 🚪️ `emit`/`emit-patch`, the fire-and-forget doors. Dropped with a loud stderr line rather than
@@ -534,7 +534,7 @@ pub async fn describe_component(wasm_path: &Path, core_wasm_path: &Path, out_dir
 
     let final_value = semio_framework_value::ToValue::to_value(&descriptor);
     let final_bytes = store::pack_rt::encode_wire_value(&final_value);
-    let final_json = store::json::to_string_pretty(&store::json::from_dsl_value(&final_value));
+    let final_json = semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&final_value));
 
     if descriptor.manifest.plugin_id == ASSEMBLY_FAILED_PLUGIN_ID {
         return Err(DescribeError(format!("refusing to write a placeholder descriptor for {}: plugin assembly failed — {}", wasm_path.display(), descriptor.manifest.label)));

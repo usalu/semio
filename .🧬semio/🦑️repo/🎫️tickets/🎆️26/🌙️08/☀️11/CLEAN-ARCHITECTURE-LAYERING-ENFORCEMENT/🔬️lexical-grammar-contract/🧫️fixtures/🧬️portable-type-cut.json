@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "name": "independent named-reference resolution validates explicit fragment selection and missing-reference refusals",
+  "destination": "🧰️framework/🔨️modules/🗣️dsl/🧪️tests/🧱️ownership/🟦️.ts",
+  "source": "test(\"independent named-reference resolution validates explicit fragment selection and missing-reference refusals\", () => {\n  const rows = JSON.parse(readFileSync(resolve(owner, \"🧫️fixtures/🧩️selection/🔣️.json\"), \"utf8\")) as readonly Readonly<{ id: string; uses: readonly string[]; selectedFragments: readonly string[]; expectedMissing: readonly string[] }>[];\n  const schema = JSON.parse(readFileSync(resolve(owner, \"🧬️schema/🧩️selection/🔣️.json\"), \"utf8\")), validate = new Ajv({ strict: true }).compile(schema);\n  expect(validate(rows)).toBe(true);\n  for (const row of rows) {\n    const definitions = Object.fromEntries(row.selectedFragments.map(id => [id, { type: \"object\" }])), missing: string[] = [];\n    for (const id of row.uses) {\n      try {\n        new Ajv({ strict: true }).compile({ $ref: `#/$defs/${encodeURIComponent(id.replaceAll(\"~\", \"~0\").replaceAll(\"/\", \"~1\"))}`, $defs: definitions });\n      } catch (error) {\n        expect(String(error), `${row.id}:${id}`).toContain(\"can't resolve reference\");\n        missing.push(id);\n      }\n    }\n    expect(missing, row.id).toEqual(row.expectedMissing);\n  }\n  expect(validate([{ ...rows[0], implicitDefaults: true }])).toBe(false);\n  expect(validate([{ ...rows[1], selectedFragments: [\"terms\", \"terms\"] }])).toBe(false);\n  const absent = { ...rows[0] } as Record<string, unknown>;\n  delete absent.selectedFragments;\n  expect(validate([absent])).toBe(false);\n});",
+  "beforeSha256": "63b71a58a329901cb29994c1f70a8e2d532dc824af766e2cba46330fb40fe1de",
+  "afterSha256": "874938036a0321ed73c6f70e653f11c3eabfa4b0c016778af514138601552bb0",
+  "operation": {
+    "from": "expectedMissing: readonly string[]",
+    "to": "expectedMissing: string[]"
+  }
+}

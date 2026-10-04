@@ -5,6 +5,9 @@
 use crate::ProgramMutation;
 use crate::ProgramSnapshot;
 
-pub fn inverse(_payload: &super::RenameProject, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+pub fn inverse(_payload: &super::RenameProject, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![ProgramMutation::RenameProject(super::RenameProject { new_code: base.project.code.clone() })]
+
+    })())
 }

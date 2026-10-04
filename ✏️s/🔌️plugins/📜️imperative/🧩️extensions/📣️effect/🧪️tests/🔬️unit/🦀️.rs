@@ -16,7 +16,7 @@ async fn bundle_contributes_core_module_for_imperative_play() {
 async fn catalogue_json_includes_input_channels() {
     let registry = neural_engine::ColdOwner::new(module_registry());
     let raw = catalogue_json(&registry);
-    let parsed = pack::json::parse(&raw).expect("catalogue json");
+    let parsed = semio_framework_pack_json::parse(&raw, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("catalogue json");
     let items = parsed.get("sections").and_then(JsonValue::as_array).and_then(|sections| sections.first()).and_then(|section| section.get("items")).and_then(JsonValue::as_array).expect("catalogue items");
     let message = items.iter().find(|item| item.get("kind").and_then(JsonValue::as_str) == Some("log.print")).and_then(|item| item.get("inputs")).and_then(JsonValue::as_array).and_then(|inputs| inputs.first()).expect("log.print inputs");
     assert_eq!(message.get("name").and_then(JsonValue::as_str), Some("message"));

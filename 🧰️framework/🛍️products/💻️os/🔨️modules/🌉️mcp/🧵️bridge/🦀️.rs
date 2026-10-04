@@ -19,7 +19,7 @@
 
 use crate::errors::{GatewayError, GatewayErrorCode};
 use semio_framework_async::{Job, Lane, ProcessKind, WorkerPool, WorkerPoolConfig, WorkerSubmitErrorKind};
-use semio_framework_os_kernel::{FromValue, ToValue};
+use semio_framework_value::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};

@@ -2572,6 +2572,295 @@
           }
         }
       }
+    },
+    "GesturePhaseWord": {
+      "description": "A streamed gesture verb's `phase` argument; absent = one-shot.",
+      "enum": [
+        "stream",
+        "commit",
+        "abort"
+      ]
+    },
+    "GesturePhase": {
+      "description": "Where one dispatch of a streamed window gesture (a gumball drag, a paint stroke) sits: a one-shot, a stream tick into the window's open transaction, the commit that ends it, or a host abort with its reason (absent `reason` = `tool`).",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "once",
+                "stream",
+                "commit"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "reason"
+          ],
+          "properties": {
+            "kind": {
+              "const": "abort"
+            },
+            "reason": {
+              "$ref": "#/$defs/ToolAbortReason"
+            }
+          }
+        }
+      ]
+    },
+    "GestureDriveTicks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "integer"
+      }
+    },
+    "GestureDriveGesture": {
+      "description": "The law's counting tool's persisted open gesture: its verb, the base revision it started on and its ticks so far; `corrupt` marks one its `resume` refuses.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "verb",
+        "base",
+        "ticks"
+      ],
+      "properties": {
+        "verb": {
+          "type": "string",
+          "minLength": 1
+        },
+        "base": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ticks": {
+          "$ref": "#/$defs/GestureDriveTicks"
+        },
+        "corrupt": {
+          "const": true
+        }
+      }
+    },
+    "GestureDriveDispatch": {
+      "description": "One dispatch of a streamed gesture verb: the verb, its wire `phase`/`reason` arguments, the tick (`null` = none) and the document's current base revision.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "verb",
+        "tick",
+        "base"
+      ],
+      "properties": {
+        "verb": {
+          "type": "string",
+          "minLength": 1
+        },
+        "phase": {
+          "$ref": "#/$defs/GesturePhaseWord"
+        },
+        "reason": {
+          "$ref": "#/$defs/ToolAbortReason"
+        },
+        "tick": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "integer"
+            }
+          ]
+        },
+        "base": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "GestureDriveOutcome": {
+      "description": "What one dispatch did: the reason the drive aborted the window's open gesture with, the ticks it committed as ONE transaction, the window's next persisted gesture (`unchanged`, `cleared` or the gesture) and the refusal that faulted the dispatch. A refused dispatch publishes nothing, aborts nothing and leaves the persisted gesture unchanged.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "aborted",
+        "committed",
+        "next",
+        "refused"
+      ],
+      "properties": {
+        "aborted": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/ToolAbortReason"
+            }
+          ]
+        },
+        "committed": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/GestureDriveTicks"
+            }
+          ]
+        },
+        "next": {
+          "oneOf": [
+            {
+              "enum": [
+                "unchanged",
+                "cleared"
+              ]
+            },
+            {
+              "$ref": "#/$defs/GestureDriveGesture"
+            }
+          ]
+        },
+        "refused": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/ToolRefusal"
+            }
+          ]
+        }
+      }
+    },
+    "GestureDriveLawFixture": {
+      "title": "GestureDriveLawFixture",
+      "description": "Language-agnostic laws of the shared streamed-gesture runner (`drive_gesture` / `driveGesture`, `🧫️fixtures/🧫️gesture-drive-law`), authored by an independent model of a counting tool: the phase argument table and one row per dispatch from the window's persisted gesture.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "note",
+        "tool",
+        "phases",
+        "rows"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.framework.tool-machine.gesture-drive-law.v1"
+        },
+        "note": {
+          "type": "string"
+        },
+        "tool": {
+          "description": "The counting tool: `start` refuses `refuseStartVerb`, `resume` refuses a `corrupt` gesture, `send` refuses a negative tick; a stream tick accumulates (the gesture is open while it has ticks), a one-shot or commit folds its tick in and commits the ticks, an abort clears them.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "refuseStartVerb",
+            "startRefusal",
+            "resumeRefusal",
+            "sendRefusal"
+          ],
+          "properties": {
+            "refuseStartVerb": {
+              "type": "string",
+              "minLength": 1
+            },
+            "startRefusal": {
+              "$ref": "#/$defs/ToolRefusal"
+            },
+            "resumeRefusal": {
+              "$ref": "#/$defs/ToolRefusal"
+            },
+            "sendRefusal": {
+              "$ref": "#/$defs/ToolRefusal"
+            }
+          }
+        },
+        "phases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "args",
+              "phase"
+            ],
+            "properties": {
+              "args": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "phase": {
+                    "type": "string"
+                  },
+                  "reason": {
+                    "type": "string"
+                  }
+                }
+              },
+              "phase": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/$defs/GesturePhase"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "rows": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "persisted",
+              "dispatch",
+              "expected"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "persisted": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/$defs/GestureDriveGesture"
+                  }
+                ]
+              },
+              "dispatch": {
+                "$ref": "#/$defs/GestureDriveDispatch"
+              },
+              "expected": {
+                "$ref": "#/$defs/GestureDriveOutcome"
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

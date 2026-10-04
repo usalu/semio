@@ -187,7 +187,7 @@ mod subject {
             }
             effect_holds(&format!("inverse-{kind}"), &plan.str("effect"), &base, &current)?;
             let mutated = projection(&current)?;
-            for step in inverse_sourcing_mutation_steps(&mutation, &base) {
+            for step in inverse_sourcing_mutation_steps(&mutation, &base).expect("valid retained mutation inverse fixture") {
                 let undone = apply_sourcing_mutation_reporting(&mut current, &step);
                 if !undone.is_empty() {
                     return Err(format!("inverse-{kind}: an inverse step was rejected: {undone:?}"));
@@ -286,7 +286,7 @@ pub fn adapter() -> Adapter {
         let mut built = built;
         for kind in KINDS {
             built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind));
-            built = built.subject(&format!("inverse-{kind}"), subject::inverse(kind));
+            built = built.subject(&format!("inverse-{kind}"), subject::inverse(kind).expect("valid retained mutation inverse fixture"));
             built = built.subject(&format!("spec-vector-{kind}"), subject::spec_vector(kind));
         }
         return built.subject("identity-round-trip", subject::round_trip);

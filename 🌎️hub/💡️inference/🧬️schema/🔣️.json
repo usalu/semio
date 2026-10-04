@@ -566,7 +566,7 @@
       "type": "object",
       "additionalProperties": false,
       "required": ["appChannelVersion"],
-      "properties": { "appChannelVersion": { "const": 20 } }
+      "properties": { "appChannelVersion": { "const": 21 } }
     },
 
     "GisMapFrozenPackageV1": {

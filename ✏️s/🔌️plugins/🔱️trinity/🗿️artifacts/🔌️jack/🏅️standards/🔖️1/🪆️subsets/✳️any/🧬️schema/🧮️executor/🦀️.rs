@@ -1,9 +1,7 @@
 //! 🧮️ Trinity jack query executor.
 #![allow(dead_code)]
 
-use crate::apply_trinity_graph_mutations;
-use crate::standards::v1::subsets::any::schema::mutations::{change_data_property, create_edge, create_node, delete_node, move_node, rename_node, set_query, TrinityGraphMutation};
-use crate::{port_key, Edge, EntityRef, Graph, JackSnapshot, Node, Port, PortDirection, PropertyBag, PropertyValue};
+use crate::{Edge, EntityRef, Graph, Node, PropertyValue};
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::ast::{Clause, Expr, Pattern, Query, QueryResult, ReturnItem};
@@ -16,18 +14,37 @@ pub struct Binding {
     pub edges: BTreeMap<String, String>,
 }
 
+/// 🧮️ One effect a query applies to its working graph. A run publishes its effects as graph leaves of the document's
+/// composed `content` child (`crate::graph_leaves`), never as parent-lane leaves (design §20.15).
+#[derive(Clone, Debug, PartialEq)]
+pub enum GraphEffect {
+    CreateNode(Node),
+    DeleteNode(String),
+    CreateEdge(Edge),
+    DeleteEdge(String),
+    RenameNode { id: String, name: String },
+    MoveNode { id: String, x: f64, y: f64 },
+    SetProperty { entity: EntityRef, key: String, value: PropertyValue },
+    RemoveProperty { entity: EntityRef, key: String },
+}
+
 #[path = "🪜️execution/🦀️.rs"]
 mod execution;
 pub use execution::{QueryExecution, QueryExecutionPreparation, QueryPreparationStep};
 pub(crate) use execution::QUERY_OUTPUT_MAXIMUM_BYTES;
+use execution::{emit_create_operations_from_graph, emit_set_operation_from_graph};
 
-/// ▶️ Execute a jack query against a graph and emit CQRS operations for mutations.
-pub fn execute(graph: &Graph, query: &Query) -> Result<(QueryResult, Vec<TrinityGraphMutation>), String> {
-    let mut snapshot = graph.to_snapshot();
+/// ▶️ Executes a jack query against a graph and returns the effects its mutating clauses apply.
+pub fn execute(graph: &Graph, query: &Query) -> Result<(QueryResult, Vec<GraphEffect>), String> {
     let mut view = graph.clone();
     let mut bindings: Vec<Binding> = vec![Binding::default()];
     let mut return_items: Option<Vec<ReturnItem>> = None;
-    let mut operations = Vec::new();
+    let mut effects = Vec::new();
+    let apply = |view: &mut Graph, batch: Vec<GraphEffect>, effects: &mut Vec<GraphEffect>| -> Result<(), String> {
+        crate::apply_graph_effects(view, &batch).map_err(|e| e.to_string())?;
+        effects.extend(batch);
+        Ok(())
+    };
     for clause in &query.clauses {
         match clause {
             Clause::Match(patterns) => {
@@ -40,18 +57,13 @@ pub fn execute(graph: &Graph, query: &Query) -> Result<(QueryResult, Vec<Trinity
                 return_items = Some(items.clone());
             }
             Clause::Create(pattern) => {
-                let batch = emit_create_operations(&snapshot, pattern)?;
-                operations.extend(batch.iter().cloned());
-                snapshot = apply_trinity_graph_mutations(snapshot, &batch).map_err(|e| e.to_string())?;
-                view = Graph::from_snapshot(snapshot.clone()).map_err(|e| e.to_string())?;
+                let batch = emit_create_operations_from_graph(&view, pattern).map_err(|e| e.into_message())?;
+                apply(&mut view, batch, &mut effects)?;
             }
             Clause::Delete(vars) => {
                 for var in vars {
                     if let Some(id) = bindings.first().and_then(|b| b.nodes.get(var).cloned()) {
-                        let operation = delete_node(id);
-                        operations.push(operation.clone());
-                        snapshot = apply_trinity_graph_mutations(snapshot, std::slice::from_ref(&operation)).map_err(|e| e.to_string())?;
-                        view = Graph::from_snapshot(snapshot.clone()).map_err(|e| e.to_string())?;
+                        apply(&mut view, vec![GraphEffect::DeleteNode(id)], &mut effects)?;
                     }
                 }
             }
@@ -59,45 +71,37 @@ pub fn execute(graph: &Graph, query: &Query) -> Result<(QueryResult, Vec<Trinity
                 let b = bindings.first().cloned().unwrap_or_default();
                 for item in items {
                     if let Some(node_id) = b.nodes.get(&item.var) {
-                        let operation = emit_set_operation(&snapshot, node_id, &item.prop, item.value.clone())?;
-                        operations.push(operation.clone());
-                        snapshot = apply_trinity_graph_mutations(snapshot, std::slice::from_ref(&operation)).map_err(|e| e.to_string())?;
-                        view = Graph::from_snapshot(snapshot.clone()).map_err(|e| e.to_string())?;
+                        let effect = emit_set_operation_from_graph(&view, node_id, &item.prop, item.value.clone()).map_err(|e| e.into_message())?;
+                        apply(&mut view, vec![effect], &mut effects)?;
                     }
                 }
             }
             Clause::Merge(pattern) => {
-                let existing = match_patterns(&view, std::slice::from_ref(pattern))?;
-                if existing.is_empty() {
-                    let batch = emit_create_operations(&snapshot, pattern)?;
-                    operations.extend(batch.iter().cloned());
-                    snapshot = apply_trinity_graph_mutations(snapshot, &batch).map_err(|e| e.to_string())?;
-                    view = Graph::from_snapshot(snapshot.clone()).map_err(|e| e.to_string())?;
+                if match_patterns(&view, std::slice::from_ref(pattern))?.is_empty() {
+                    let batch = emit_create_operations_from_graph(&view, pattern).map_err(|e| e.into_message())?;
+                    apply(&mut view, batch, &mut effects)?;
                 }
             }
         }
     }
     if let Some(items) = return_items {
-        return Ok((build_return(&view, &bindings, &items), operations));
+        return Ok((build_return(&view, &bindings, &items), effects));
     }
-    Ok((QueryResult::table(vec![], vec![]), operations))
+    Ok((QueryResult::table(vec![], vec![]), effects))
 }
 
-/// ▶️ Parse and execute jack in one step.
+/// ▶️ Parses and executes jack in one step, applying its effects to `graph`.
 pub fn run(graph: &mut Graph, source: &str) -> Result<QueryResult, String> {
     let query = parse(source)?;
-    let (result, operations) = execute(graph, &query)?;
-    if !operations.is_empty() {
-        let fixture = apply_trinity_graph_mutations(graph.to_snapshot(), &operations).map_err(|e| e.to_string())?;
-        *graph = Graph::from_snapshot(fixture).map_err(|e| e.to_string())?;
-    }
+    let (result, effects) = execute(graph, &query)?;
+    crate::apply_graph_effects(graph, &effects).map_err(|e| e.to_string())?;
     Ok(result)
 }
 
-/// ▶️ Execute jack and return JSON result.
+/// ▶️ Executes jack and returns the JSON result.
 pub fn run_json(graph: &mut Graph, source: &str) -> Result<String, String> {
     let result = run(graph, source)?;
-    Ok(pack::to_json_string(&result))
+    Ok(semio_framework_pack_json::to_json_string(&result))
 }
 
 fn match_patterns(graph: &Graph, patterns: &[Pattern]) -> Result<Vec<Binding>, String> {
@@ -247,61 +251,6 @@ fn build_return(graph: &Graph, bindings: &[Binding], items: &[ReturnItem]) -> Qu
     QueryResult::table(columns, rows)
 }
 
-fn emit_set_operation(snapshot: &JackSnapshot, node_id: &str, prop: &str, value: PropertyValue) -> Result<TrinityGraphMutation, String> {
-    let scene = crate::jack_working_scene(snapshot);
-    let node = scene.nodes.iter().find(|node| node.id == node_id).ok_or_else(|| format!("node {node_id} not found"))?;
-    match prop {
-        "name" => {
-            let PropertyValue::String(name) = value else {
-                return Err(format!("node {node_id}.name expects string value"));
-            };
-            Ok(rename_node(node_id.to_string(), name))
-        }
-        "x" => {
-            let x = value.as_f64().ok_or_else(|| format!("node {node_id}.x expects number value"))?;
-            Ok(move_node(node_id.to_string(), x, node.y))
-        }
-        "y" => {
-            let y = value.as_f64().ok_or_else(|| format!("node {node_id}.y expects number value"))?;
-            Ok(move_node(node_id.to_string(), node.x, y))
-        }
-        _ => Ok(change_data_property(EntityRef::Node(node_id.to_string()), prop.to_string(), value)),
-    }
-}
-
-fn emit_create_operations(snapshot: &JackSnapshot, pattern: &Pattern) -> Result<Vec<TrinityGraphMutation>, String> {
-    let scene = crate::jack_working_scene(snapshot);
-    let left = pattern.nodes.first().ok_or_else(|| "empty create pattern".to_string())?;
-    let left_id = format!("{}-{}", left.var, scene.nodes.len());
-    let mut operations = Vec::new();
-    let mut left_ports = Vec::new();
-    if pattern.edge.is_some() {
-        left_ports.push(Port { id: "out".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() });
-    }
-    operations.push(create_node(Node { id: left_id.clone(), kind: left.kind.clone(), name: left.var.clone(), x: scene.nodes.len() as f64 * 120.0, y: 0.0, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports: left_ports }));
-    if let Some(edge_pat) = &pattern.edge {
-        let right_id = format!("{}-{}", edge_pat.right.var, scene.nodes.len() + 1);
-        operations.push(create_node(Node {
-            id: right_id.clone(),
-            kind: edge_pat.right.kind.clone(),
-            name: edge_pat.right.var.clone(),
-            x: (scene.nodes.len() + 1) as f64 * 120.0,
-            y: 80.0,
-            width: 80.0,
-            height: 40.0,
-            properties: PropertyBag::new(),
-            ports: vec![Port { id: "in".into(), kind: "Connector".into(), direction: PortDirection::In, properties: PropertyBag::new() }],
-        }));
-        operations.push(create_edge(Edge {
-            id: format!("e-{}", scene.edges.len()),
-            kind: edge_pat.kind.clone().unwrap_or_else(|| "Connection".into()),
-            source: port_key(&left_id, "out"),
-            target: port_key(&right_id, "in"),
-            properties: PropertyBag::new(),
-        }));
-    }
-    Ok(operations)
-}
 // #endregion 🔖️Executor
 // #region 🔖️Tests
 #[cfg(test)]

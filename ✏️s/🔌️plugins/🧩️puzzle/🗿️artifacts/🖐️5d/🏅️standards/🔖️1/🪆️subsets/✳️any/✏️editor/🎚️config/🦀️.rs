@@ -74,7 +74,7 @@ fn default_voxel_dims() -> [u32; 3] {
 //#endregion 🔖️Defaults
 
 //#region 🔖️Cameras
-#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dCamera2d {
     #[value(default)]
@@ -85,7 +85,7 @@ pub struct Puzzle5dCamera2d {
     pub zoom: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dCamera3d {
     #[value(default)]
@@ -127,7 +127,7 @@ pub const PUZZLE5D_CAMERA3D_DEFAULT_DISTANCE: f64 = 13.856_406_460_551_018;
 //#region 🔖️Selection
 /// 🎯️ Which entity kinds a pick in either pane may even reach — the 5d twin of
 /// `Puzzle3dSelectableKinds`, in this artifact's part/grip/fastener vocabulary.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dSelectableKinds {
     #[value(default = "default_true")]
@@ -290,12 +290,12 @@ impl Default for Puzzle5dConfig {
 impl store::ArtifactDsl for Puzzle5dConfig {
     const EXTENSION: &'static str = "puzzle5dcfg";
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        dsl::json::from_json_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
-        dsl::json::to_string_pretty(&dsl::json::from_dsl_value(&dsl::ToValue::to_value(self)))
+        semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(self)))
     }
 }
 
@@ -305,8 +305,8 @@ impl store::ArtifactPack for Puzzle5dConfig {
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let value = dsl::DslValue::decode_pack_with(bytes, options)?;
-        semio_framework_value::FromValue::from_value(value).map_err(|error| store::PackError::Schema(error.to_string()))
+        let value = semio_framework_value::DslValue::decode_pack_with(bytes, options)?;
+        semio_framework_value::FromValue::from_value(value).map_err(|error| store::PackError::from(error))
     }
 }
 
@@ -357,27 +357,30 @@ impl protocol::Mutation<Puzzle5dConfig> for Puzzle5dConfigMutation {
         protocol::MutationOutcome::new(next)
     }
 
-    fn inverse(&self, base: &Puzzle5dConfig) -> Vec<Self> {
+    fn inverse(&self, base: &Puzzle5dConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![Puzzle5dConfigMutation::Snapshot { config: base.clone() }]
-    }
+    
+    })())
+}
 }
 
 impl protocol::OpBinary for Puzzle5dConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(dsl::json::to_json_string(self).into_bytes())
+        Ok(semio_framework_pack_json::to_json_string(self).into_bytes())
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))?;
-        dsl::json::from_json_str(text).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
+        let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(semio_framework_value::ValueError::from(error))))?;
+        semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(error)))
     }
 }
 
 impl protocol::OpText for Puzzle5dConfigMutation {
     fn print_op(&self) -> String {
-        dsl::json::to_json_string(self)
+        semio_framework_pack_json::to_json_string(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        dsl::json::from_json_str(line).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        semio_framework_pack_json::from_json_str(line, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 }
 //#endregion 🔖️ConfigMutation

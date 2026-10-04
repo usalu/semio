@@ -1,0 +1,9 @@
+{
+  "name": "@semio-tech/framework-deflate-rs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bundleKind": "library",
+  "scripts": {"test-ownership": "bun nx run @semio-tech/framework-deflate-rs:test-ownership", "test-native": "bun nx run @semio-tech/framework-deflate-rs:test-native"},
+  "nx": {"includedScripts": []}
+}

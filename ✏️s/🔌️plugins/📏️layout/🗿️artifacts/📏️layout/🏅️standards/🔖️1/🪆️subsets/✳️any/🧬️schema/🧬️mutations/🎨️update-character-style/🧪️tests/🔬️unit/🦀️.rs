@@ -12,6 +12,6 @@ fn update_character_style_sets_italic_and_inverse_restores_it() {
     let style = &next.character_styles[0];
     assert_eq!(style.italic, Some(true));
     assert_eq!(style.font_size, Some(14.0));
-    let restored = mutation.inverse(&created)[0].diff(&next).diff().apply(&next).expect("inverse applies");
+    let restored = mutation.inverse(&created).expect("valid retained mutation inverse fixture")[0].diff(&next).diff().apply(&next).expect("inverse applies");
     assert_eq!(restored.character_styles[0].italic, None);
 }

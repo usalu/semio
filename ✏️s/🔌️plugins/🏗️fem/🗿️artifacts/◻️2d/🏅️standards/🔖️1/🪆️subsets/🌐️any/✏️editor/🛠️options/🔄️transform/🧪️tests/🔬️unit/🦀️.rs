@@ -1,4 +1,5 @@
 use super::*;
+use crate::editor::fem2d::interaction::gumball::set_gumball_flag;
 use semio_framework_plugin::ViewModel;
 
 #[test]

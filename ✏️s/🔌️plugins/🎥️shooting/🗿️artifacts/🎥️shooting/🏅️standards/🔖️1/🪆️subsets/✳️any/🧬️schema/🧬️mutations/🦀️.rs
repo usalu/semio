@@ -107,8 +107,11 @@ pub fn apply_shooting_mutation(snapshot: &ShootingSnapshot, mutation: &ShootingM
 }
 
 /// ↩️ Computes `mutation`'s inverse mutations against `snapshot` (pre-state).
-pub fn inverse_shooting_mutation(snapshot: &ShootingSnapshot, mutation: &ShootingMutation) -> Vec<ShootingMutation> {
-    <ShootingMutation as protocol::Mutation<ShootingSnapshot>>::inverse(mutation, snapshot)
+pub fn inverse_shooting_mutation(snapshot: &ShootingSnapshot, mutation: &ShootingMutation) -> Result<Vec<ShootingMutation>, semio_framework_value::ValueError> {
+    Ok({
+    <ShootingMutation as protocol::Mutation<ShootingSnapshot>>::inverse(mutation, snapshot)?
+
+    })
 }
 //#endregion 🔖️Apply
 
@@ -118,17 +121,17 @@ pub fn inverse_shooting_mutation(snapshot: &ShootingSnapshot, mutation: &Shootin
 /// per-kind leaf fixture under `<kind>/🧪️tests/*/🦠️mutation/🔣️.json` already is — into a real
 /// [`ShootingMutation`], via this crate's own `dsl::os_pack::json` parser/bridge (no `serde_json`).
 pub fn decode_shooting_mutation_json(text: &str) -> Result<ShootingMutation, String> {
-    let json_value = dsl::os_pack::json::parse(text).map_err(|error| error.to_string())?;
-    let dsl_value = dsl::os_pack::json::to_dsl_value(&json_value);
-    dsl::FromValue::from_value(dsl_value).map_err(|error| error.to_string())
+    let json_value = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
+    let dsl_value = semio_framework_pack_json::to_dsl_value(&json_value);
+    semio_framework_value::FromValue::from_value(dsl_value).map_err(|error| error.to_string())
 }
 
 /// 📥️ Decodes a committed snapshot document — the `📸️snapshot/⬅️before/🔣️.json` every leaf
 /// fixture of this vocabulary shares — into a real [`ShootingSnapshot`].
 pub fn decode_shooting_snapshot_json(text: &str) -> Result<ShootingSnapshot, String> {
-    let json_value = dsl::os_pack::json::parse(text).map_err(|error| error.to_string())?;
-    let dsl_value = dsl::os_pack::json::to_dsl_value(&json_value);
-    dsl::FromValue::from_value(dsl_value).map_err(|error| error.to_string())
+    let json_value = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
+    let dsl_value = semio_framework_pack_json::to_dsl_value(&json_value);
+    semio_framework_value::FromValue::from_value(dsl_value).map_err(|error| error.to_string())
 }
 
 /// ⚖️ The SEMANTIC PROJECTION this subset is compared through. It belongs to the subset rather than
@@ -137,11 +140,11 @@ pub fn decode_shooting_snapshot_json(text: &str) -> Result<ShootingSnapshot, Str
 /// because it is a content address for an `s.stdio.semio.image` child that no kind of this
 /// vocabulary addresses.
 pub fn encode_shooting_projection_json(snapshot: &ShootingSnapshot) -> String {
-    let assets = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&snapshot.assets));
-    let saved_cameras = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&snapshot.saved_cameras));
-    let scene = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&snapshot.scene));
-    let shots = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&snapshot.shots));
-    dsl::json!({
+    let assets = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&snapshot.assets));
+    let saved_cameras = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&snapshot.saved_cameras));
+    let scene = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&snapshot.scene));
+    let shots = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&snapshot.shots));
+    semio_framework_pack_json::json!({
         "schema": snapshot.schema.as_str(),
         "assets": assets,
         "savedCameras": saved_cameras,

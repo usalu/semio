@@ -111,7 +111,7 @@ pub enum XmlDtdDeclaration {
 /// third-party file byte for byte, and the declaration was the one place the writer normalized).
 /// `Double` is the default spelling, so a declaration that never names a quote is the one every
 /// generator in this tree emits and every committed fixture already carries.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, value_derive::ToValue, value_derive::FromValue, value_derive::RetainedClone, value_derive::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub enum XmlQuote {
     #[default]
@@ -883,10 +883,10 @@ impl store::ArtifactDsl for XmlSnapshot {
         "stdio.xml"
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         match store::semio_format::split_text_preamble(text) {
-            Ok((_, body)) => crate::schema::mutation_support::decode_snapshot(body.trim()).map_err(|e| store::TextError::new(format!("xml state parse: {e}"), dsl::TextSpan::at(1, 1))),
-            Err(_) => Self::import_utf8(text.as_bytes()).map_err(|e| store::TextError::new(format!("xml parse: {e}"), dsl::TextSpan::at(1, 1))),
+            Ok((_, body)) => crate::schema::mutation_support::decode_snapshot(body.trim()).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("xml state parse: {e}"), semio_framework_diagnostic::TextSpan::at(1, 1))),
+            Err(_) => Self::import_utf8(text.as_bytes()).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("xml parse: {e}"), semio_framework_diagnostic::TextSpan::at(1, 1))),
         }
     }
     fn print_dsl(&self) -> String {
@@ -914,21 +914,21 @@ impl store::ArtifactPack for XmlSnapshot {
         let _ = options;
         let mut raw = vec![1];
         crate::schema::mutation_support::encode_snapshot_binary(self, &mut raw);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let _ = options;
         let mut reader = store::ByteReader::new(&inner);
-        let version = reader.read_u8().map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let version = reader.read_u8().map_err(|e| store::PackError::from(e))?;
         if version != 1 {
-            return Err(store::PackError::Schema(format!("unsupported xml snapshot state version {version}")));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, format!("unsupported xml snapshot state version {version}"))));
         }
-        crate::schema::mutation_support::decode_snapshot_binary(&mut reader).map_err(store::PackError::Schema)
+        crate::schema::mutation_support::decode_snapshot_binary(&mut reader).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
@@ -955,6 +955,9 @@ mod tests;
 #[path="🧭️position/🦀️.rs"]
 mod position;
 
+#[path="🧬️retained/🦀️.rs"]
+pub mod retained;
+
 /// 🧩️ Typed XML components for enclosing owned native documents.
-pub use native_encoding::{XmlNativeEmission,emit_xml_native_document,emit_xml_native_node};
-pub use native_decoding::{XmlNativeInput,read_xml_native_document,read_xml_native_node};
+pub use native_encoding::{XmlNativeEmission,emit_xml_native_document,emit_xml_native_node,emit_xml_native_snapshot_fields};
+pub use native_decoding::{XmlNativeInput,read_xml_native_document,read_xml_native_node,read_xml_native_snapshot_fields};

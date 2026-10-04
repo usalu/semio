@@ -1,0 +1,787 @@
+{
+  "validPng": [
+    {
+      "id": "grayscale8-background",
+      "chunks": [
+        {
+          "tag": "IHDR",
+          "dataHex": "00000001000000010800000000"
+        },
+        {
+          "tag": "bKGD",
+          "dataHex": "0080"
+        },
+        {
+          "tag": "IDAT",
+          "dataHex": "789c6368000000820081"
+        },
+        {
+          "tag": "IEND",
+          "dataHex": ""
+        }
+      ],
+      "pixels": [
+        128,
+        128,
+        128,
+        255
+      ],
+      "background": [
+        128,
+        128,
+        128
+      ]
+    },
+    {
+      "id": "indexed-background",
+      "chunks": [
+        {
+          "tag": "IHDR",
+          "dataHex": "00000001000000010803000000"
+        },
+        {
+          "tag": "PLTE",
+          "dataHex": "1180ff010203"
+        },
+        {
+          "tag": "bKGD",
+          "dataHex": "00"
+        },
+        {
+          "tag": "IDAT",
+          "dataHex": "789c6360040000030002"
+        },
+        {
+          "tag": "IEND",
+          "dataHex": ""
+        }
+      ],
+      "pixels": [
+        1,
+        2,
+        3,
+        255
+      ],
+      "background": [
+        17,
+        128,
+        255
+      ]
+    },
+    {
+      "id": "rgb16-background",
+      "chunks": [
+        {
+          "tag": "IHDR",
+          "dataHex": "00000001000000011002000000"
+        },
+        {
+          "tag": "bKGD",
+          "dataHex": "ffff80000101"
+        },
+        {
+          "tag": "IDAT",
+          "dataHex": "789c63f8ffbf81819111000cff0281"
+        },
+        {
+          "tag": "IEND",
+          "dataHex": ""
+        }
+      ],
+      "pixels": [
+        255,
+        128,
+        1,
+        255
+      ],
+      "background": [
+        255,
+        128,
+        1
+      ]
+    },
+    {
+      "id": "latin1-and-itext",
+      "chunks": [
+        {
+          "tag": "IHDR",
+          "dataHex": "00000001000000010806000000"
+        },
+        {
+          "tag": "tEXt",
+          "dataHex": "436166e900e963686f"
+        },
+        {
+          "tag": "zTXt",
+          "dataHex": "436166e90000789c7b999c910f0006100224"
+        },
+        {
+          "tag": "iTXt",
+          "dataHex": "436166e90000006465004772c3bcc39f6500e4b896e7958c20f09f8ca0"
+        },
+        {
+          "tag": "IDAT",
+          "dataHex": "789c63606462fe0f0001140106"
+        },
+        {
+          "tag": "IEND",
+          "dataHex": ""
+        }
+      ],
+      "pixels": [
+        1,
+        2,
+        3,
+        255
+      ],
+      "background": null
+    }
+  ],
+  "invalidPng": [
+    {
+      "id": "ihdr-not-first",
+      "chunks": [
+        {
+          "tag": "IDAT",
+          "dataHex": "789c63606462fe0f0001140106"
+        },
+        {
+          "tag": "IHDR",
+          "dataHex": "00000001000000010806000000"
+        },
+        {
+          "tag": "IEND",
+          "dataHex": ""
+        }
+      ]
+    },
+    {
+      "id": "duplicate-ihdr",
+      "chunks": [
+        {
+          "tag": "IHDR",
+          "dataHex": "00000001000000010806000000"
+        },
+        {
+          "tag": "IHDR",
+          "dataHex": "00000001000000010806000000"
+        },
+        {
+          "tag": "IDAT",
+          "dataHex": "789c63606462fe0f0001140106"
+        },
+        {
+          "tag": "IEND",
+          "dataHex": ""
+        }
+      ]
+    },
+    {
+      "id": "duplicate-gamma",
+      "chunks": [
+        {
+          "tag": "IHDR",
+          "dataHex": "00000001000000010806000000"
+        },
+        {
+          "tag": "gAMA",
+          "dataHex": "0000b18f"
+        },
+        {
+          "tag": "gAMA",
+          "dataHex": "0000b18f"
+        },
+        {
+          "tag": "IDAT",
+          "dataHex": "789c63606462fe0f0001140106"
+        },
+        {
+          "tag": "IEND",
+          "dataHex": ""
+        }
+      ]
+    },
+    {
+      "id": "nonempty-iend",
+      "chunks": [
+        {
+          "tag": "IHDR",
+          "dataHex": "00000001000000010806000000"
+        },
+        {
+          "tag": "IDAT",
+          "dataHex": "789c63606462fe0f0001140106"
+        },
+        {
+          "tag": "IEND",
+          "dataHex": "01"
+        }
+      ]
+    },
+    {
+      "id": "early-iend",
+      "chunks": [
+        {
+          "tag": "IHDR",
+          "dataHex": "00000001000000010806000000"
+        },
+        {
+          "tag": "IEND",
+          "dataHex": ""
+        },
+        {
+          "tag": "IDAT",
+          "dataHex": "789c63606462fe0f0001140106"
+        }
+      ]
+    },
+    {
+      "id": "unknown-critical",
+      "chunks": [
+        {
+          "tag": "IHDR",
+          "dataHex": "00000001000000010806000000"
+        },
+        {
+          "tag": "ABCD",
+          "dataHex": ""
+        },
+        {
+          "tag": "IDAT",
+          "dataHex": "789c63606462fe0f0001140106"
+        },
+        {
+          "tag": "IEND",
+          "dataHex": ""
+        }
+      ]
+    },
+    {
+      "id": "reserved-chunk-bit",
+      "chunks": [
+        {
+          "tag": "IHDR",
+          "dataHex": "00000001000000010806000000"
+        },
+        {
+          "tag": "abcd",
+          "dataHex": ""
+        },
+        {
+          "tag": "IDAT",
+          "dataHex": "789c63606462fe0f0001140106"
+        },
+        {
+          "tag": "IEND",
+          "dataHex": ""
+        }
+      ]
+    },
+    {
+      "id": "ztext-compression-method",
+      "chunks": [
+        {
+          "tag": "IHDR",
+          "dataHex": "00000001000000010806000000"
+        },
+        {
+          "tag": "zTXt",
+          "dataHex": "4b0001789c7b999c910f0006100224"
+        },
+        {
+          "tag": "IDAT",
+          "dataHex": "789c63606462fe0f0001140106"
+        },
+        {
+          "tag": "IEND",
+          "dataHex": ""
+        }
+      ]
+    },
+    {
+      "id": "itext-compression-flag",
+      "chunks": [
+        {
+          "tag": "IHDR",
+          "dataHex": "00000001000000010806000000"
+        },
+        {
+          "tag": "iTXt",
+          "dataHex": "4b000200000041"
+        },
+        {
+          "tag": "IDAT",
+          "dataHex": "789c63606462fe0f0001140106"
+        },
+        {
+          "tag": "IEND",
+          "dataHex": ""
+        }
+      ]
+    },
+    {
+      "id": "itext-compression-method",
+      "chunks": [
+        {
+          "tag": "IHDR",
+          "dataHex": "00000001000000010806000000"
+        },
+        {
+          "tag": "iTXt",
+          "dataHex": "4b000001000041"
+        },
+        {
+          "tag": "IDAT",
+          "dataHex": "789c63606462fe0f0001140106"
+        },
+        {
+          "tag": "IEND",
+          "dataHex": ""
+        }
+      ]
+    },
+    {
+      "id": "itext-invalid-utf8",
+      "chunks": [
+        {
+          "tag": "IHDR",
+          "dataHex": "00000001000000010806000000"
+        },
+        {
+          "tag": "iTXt",
+          "dataHex": "4b0000000000e9"
+        },
+        {
+          "tag": "IDAT",
+          "dataHex": "789c63606462fe0f0001140106"
+        },
+        {
+          "tag": "IEND",
+          "dataHex": ""
+        }
+      ]
+    },
+    {
+      "id": "itext-language-not-ascii",
+      "chunks": [
+        {
+          "tag": "IHDR",
+          "dataHex": "00000001000000010806000000"
+        },
+        {
+          "tag": "iTXt",
+          "dataHex": "4b000000e9000041"
+        },
+        {
+          "tag": "IDAT",
+          "dataHex": "789c63606462fe0f0001140106"
+        },
+        {
+          "tag": "IEND",
+          "dataHex": ""
+        }
+      ]
+    },
+    {
+      "id": "crc-mismatch",
+      "chunks": [
+        {
+          "tag": "IHDR",
+          "dataHex": "00000001000000010806000000"
+        },
+        {
+          "tag": "IDAT",
+          "dataHex": "789c63606462fe0f0001140106"
+        },
+        {
+          "tag": "IEND",
+          "dataHex": ""
+        }
+      ],
+      "corruptCrc": 0
+    },
+    {
+      "id": "separated-idat",
+      "chunks": [
+        {
+          "tag": "IHDR",
+          "dataHex": "00000001000000010806000000"
+        },
+        {
+          "tag": "IDAT",
+          "dataHex": "789c63606462"
+        },
+        {
+          "tag": "tEXt",
+          "dataHex": "4b0041"
+        },
+        {
+          "tag": "IDAT",
+          "dataHex": "fe0f0001140106"
+        },
+        {
+          "tag": "IEND",
+          "dataHex": ""
+        }
+      ]
+    },
+    {
+      "id": "zero-gamma",
+      "chunks": [
+        {
+          "tag": "IHDR",
+          "dataHex": "00000001000000010806000000"
+        },
+        {
+          "tag": "gAMA",
+          "dataHex": "00000000"
+        },
+        {
+          "tag": "IDAT",
+          "dataHex": "789c63606462fe0f0001140106"
+        },
+        {
+          "tag": "IEND",
+          "dataHex": ""
+        }
+      ]
+    },
+    {
+      "id": "gamma-after-plte",
+      "chunks": [
+        {
+          "tag": "IHDR",
+          "dataHex": "00000001000000010803000000"
+        },
+        {
+          "tag": "PLTE",
+          "dataHex": "ff000000ff00"
+        },
+        {
+          "tag": "gAMA",
+          "dataHex": "0000b18f"
+        },
+        {
+          "tag": "IDAT",
+          "dataHex": "789c6360040000030002"
+        },
+        {
+          "tag": "IEND",
+          "dataHex": ""
+        }
+      ]
+    },
+    {
+      "id": "plte-forbidden-grayscale",
+      "chunks": [
+        {
+          "tag": "IHDR",
+          "dataHex": "00000001000000010800000000"
+        },
+        {
+          "tag": "PLTE",
+          "dataHex": "010203"
+        },
+        {
+          "tag": "IDAT",
+          "dataHex": "789c6368000000820081"
+        },
+        {
+          "tag": "IEND",
+          "dataHex": ""
+        }
+      ]
+    },
+    {
+      "id": "plte-after-idat",
+      "chunks": [
+        {
+          "tag": "IHDR",
+          "dataHex": "00000001000000010806000000"
+        },
+        {
+          "tag": "IDAT",
+          "dataHex": "789c63606462fe0f0001140106"
+        },
+        {
+          "tag": "PLTE",
+          "dataHex": "010203"
+        },
+        {
+          "tag": "IEND",
+          "dataHex": ""
+        }
+      ]
+    },
+    {
+      "id": "indexed-plte-exceeds-bit-depth",
+      "chunks": [
+        {
+          "tag": "IHDR",
+          "dataHex": "00000001000000010103000000"
+        },
+        {
+          "tag": "PLTE",
+          "dataHex": "010203040506070809"
+        },
+        {
+          "tag": "IDAT",
+          "dataHex": "789c6360000000020001"
+        },
+        {
+          "tag": "IEND",
+          "dataHex": ""
+        }
+      ]
+    },
+    {
+      "id": "trns-on-alpha-profile",
+      "chunks": [
+        {
+          "tag": "IHDR",
+          "dataHex": "00000001000000010806000000"
+        },
+        {
+          "tag": "tRNS",
+          "dataHex": "00"
+        },
+        {
+          "tag": "IDAT",
+          "dataHex": "789c63606462fe0f0001140106"
+        },
+        {
+          "tag": "IEND",
+          "dataHex": ""
+        }
+      ]
+    },
+    {
+      "id": "indexed-trns-before-plte",
+      "chunks": [
+        {
+          "tag": "IHDR",
+          "dataHex": "00000001000000010803000000"
+        },
+        {
+          "tag": "tRNS",
+          "dataHex": "ff"
+        },
+        {
+          "tag": "PLTE",
+          "dataHex": "ff0000"
+        },
+        {
+          "tag": "IDAT",
+          "dataHex": "789c6360040000030002"
+        },
+        {
+          "tag": "IEND",
+          "dataHex": ""
+        }
+      ]
+    },
+    {
+      "id": "trns-after-idat",
+      "chunks": [
+        {
+          "tag": "IHDR",
+          "dataHex": "00000001000000010802000000"
+        },
+        {
+          "tag": "IDAT",
+          "dataHex": "789c636064000000070004"
+        },
+        {
+          "tag": "tRNS",
+          "dataHex": "000000000000"
+        },
+        {
+          "tag": "IEND",
+          "dataHex": ""
+        }
+      ]
+    },
+    {
+      "id": "indexed-trns-exceeds-palette",
+      "chunks": [
+        {
+          "tag": "IHDR",
+          "dataHex": "00000001000000010803000000"
+        },
+        {
+          "tag": "PLTE",
+          "dataHex": "ff0000"
+        },
+        {
+          "tag": "tRNS",
+          "dataHex": "ffff"
+        },
+        {
+          "tag": "IDAT",
+          "dataHex": "789c6360040000030002"
+        },
+        {
+          "tag": "IEND",
+          "dataHex": ""
+        }
+      ]
+    },
+    {
+      "id": "indexed-bkgd-before-plte",
+      "chunks": [
+        {
+          "tag": "IHDR",
+          "dataHex": "00000001000000010803000000"
+        },
+        {
+          "tag": "bKGD",
+          "dataHex": "00"
+        },
+        {
+          "tag": "PLTE",
+          "dataHex": "ff0000"
+        },
+        {
+          "tag": "IDAT",
+          "dataHex": "789c6360040000030002"
+        },
+        {
+          "tag": "IEND",
+          "dataHex": ""
+        }
+      ]
+    },
+    {
+      "id": "bkgd-after-idat",
+      "chunks": [
+        {
+          "tag": "IHDR",
+          "dataHex": "00000001000000010806000000"
+        },
+        {
+          "tag": "IDAT",
+          "dataHex": "789c63606462fe0f0001140106"
+        },
+        {
+          "tag": "bKGD",
+          "dataHex": "000000000000"
+        },
+        {
+          "tag": "IEND",
+          "dataHex": ""
+        }
+      ]
+    },
+    {
+      "id": "indexed-bkgd-out-of-range",
+      "chunks": [
+        {
+          "tag": "IHDR",
+          "dataHex": "00000001000000010803000000"
+        },
+        {
+          "tag": "PLTE",
+          "dataHex": "ff0000"
+        },
+        {
+          "tag": "bKGD",
+          "dataHex": "01"
+        },
+        {
+          "tag": "IDAT",
+          "dataHex": "789c6360040000030002"
+        },
+        {
+          "tag": "IEND",
+          "dataHex": ""
+        }
+      ]
+    }
+  ],
+  "text": {
+    "keyword": "Café",
+    "latin1Value": "écho",
+    "language": "de",
+    "translated": "Grüße",
+    "internationalValue": "世界 🌠"
+  },
+  "zlib": {
+    "valid32KiBHex": "78da7b6968dbf7cff576a61beb3abd6d59e626ccc65bbf726a555d9ea9af15235e7feb47ca0da915fe5333db6f71fdb0dfa7559c7c243ce0a16beffdb93a1b7a2bbfbd39de69b98c7d6fbd5ee7d2470b736a57f9ca6e5e31356ae6fd4f6ce26693ea7a048e6d37393287a1f8d6e13f9fcefe52f07a3b55e6bbe7ac3bb1ef2aa7ccfa3d5dfd94089713ffd2a2090e5f93b3c214190f569876d49d375e78617bcecc6b133eb14edbf4755e9a924f6cbccbe7996a2d9f42f55d272f39b8b4631e6ffde30b4a8b9327e9efed0f7dbeba6587f18155f71e6ffb368969facf0efb83de917c76ad974ddde5278aff9efc2b73b2c9d5a8e3f66a2b92bebd9c98a5b9aafaae4b93fc34b6bfab4efd38bf85e3de4ad5dbcae9bc3fd55d9ef5657fff6a9ff27df561fdd2c8de787e910b357c66f366b40555ae4e905ae7d124cd7f52b56ff3cbd1b01a0d2b1a841500fb4ec855",
+    "advertised256InvalidDistanceHex": "081d7b6968dbf7cff576a61beb3abd6d59e626ccc65bbf726a555d9ea9af15235e7feb47ca0da915fe5333db6f71fdb0dfa7559c7c243ce0a16beffdb93a1b7a2bbfbd39de69b98c7d6fbd5ee7d2470b736a57f9ca6e5e31356ae6fd4f6ce26693ea7a048e6d37393287a1f8d6e13f9fcefe52f07a3b55e6bbe7ac3bb1ef2aa7ccfa3d5dfd94089713ffd2a2090e5f93b3c214190f569876d49d375e78617bcecc6b133eb14edbf4755e9a924f6cbccbe7996a2d9f42f55d272f39b8b4631e6ffde30b4a8b9327e9efed0f7dbeba6587f18155f71e6ffb368969facf0efb83de917c76ad974ddde5278aff9efc2b73b2c9d5a8e3f66a2b92bebd9c98a5b9aafaae4b93fc34b6bfab4efd38bf85e3de4ad5dbcae9bc3fd55d9ef5657fff6a9ff27df561fdd2c8de787e910b357c66f366b40555ae4e905ae7d124cd7f52b56ff3cbd1b01a0d2b1a841500fb4ec855",
+    "expectedPayloadHex": "e9313d8efe45db694605ae2eb66a37340333b5f5092a7ad3992f2a5c177fdaf864d81aa84f956987da0af83fbe2a7363c45750e1458ddf9d2cb08d79f6ecc78939a607bd7f2e89a5e2a16c7daa4d1db3a8955a99dff2061736927e8c10c6b734c49c0073dac3fcf2cdfa204aed951cf7499adc5dee79949afb9727ca140a420fa5729040f5636a562101c17835887ecf33a1d0b76c99d690f20596b2f59e66224c5d5f44f3992684f2552f4593a4c1a5889e0d7fe3d022a363922fbd8f55e7ab84b833c0aadee3b6f6920297f9883fc14b590e3e85d335471f9117fb93fa699334d55ac73f26a862f6e9916a29aa7bdd44821f9606fdaacaf8cfb408dea925db23670df92744e68e6bf7f53f64f7abc32f75598d5f0f14d07c0e369e98865279ab601aae48821b0fc9258eb3e9313d8efe45db694605ae2eb66a37340333b5f5092a7ad3992f2a5c177fdaf864d81aa84f956987da0af83fbe2a7363c45750e1458ddf9d2cb08d79f6ecc78939a607bd7f2e89a5e2a16c7daa4d1db3a8955a99dff2061736927e8c10c6b734c49c0073dac3fcf2cdfa204aed951cf7499adc5dee79949afb9727ca140a420fa5729040f5636a562101c17835887ecf33a1d0b76c99d690f20596b2f59e66224c5d5f44f3992684f2552f4593a4c1a5889e0d7fe3d022a363922fbd8f55e7ab84b833c0aadee3b6f6920297f9883fc14b590e3e85d335471f9117fb93fa699334d55ac73f26a862f6e9916a29aa7bdd44821f9606fdaacaf8cfb408dea925db23670df92744e68e6bf7f53f64f7abc32f75598d5f0f14d07c0e369e98865279ab601aae48821b0fc9258eb3e9313d8efe45db694605ae2eb66a37340333b5f5092a7ad3992f2a5c177fdaf864d81aa84f956987da0af83fbe2a7363c45750e1458ddf9d2cb08d79f6ecc78939a607bd7f2e89a5e2a16c7daa4d1db3a8955a99dff2061736927e8c10c6b734c49c0073dac3fcf2cdfa204aed951cf7499adc5dee79949afb9727ca140a420fa5729040f5636a562101c17835887ecf33a1d0b76c99d690f20596b2f59e66224c5d5f44f3992684f2552f4593a4c1a5889e0d7fe3d022a363922fbd8f55e7ab84b833c0aadee3b6f6920297f9883fc14b590e3e85d335471f9117fb93fa699334d55ac73f26a862f6e9916a29aa7bdd44821f9606fdaacaf8cfb408dea925db23670df92744e68e6bf7f53f64f7abc32f75598d5f0f14d07c0e369e98865279ab601aae48821b0fc9258eb3",
+    "valid256Hex": "081d734e4c7b090003e801f4",
+    "smallPayloadHex": "436166e9",
+    "dictionaryHex": "6f776e656420504e472064696374696f6e61727920617574686f7269747920",
+    "dictionaryPayloadHex": "6f776e656420504e472064696374696f6e61727920617574686f72697479206f776e656420504e472064696374696f6e61727920617574686f72697479",
+    "dictionaryStreamHex": "78bbb6be0ba2cba7441a00bed61723",
+    "wrongDictionaryIdHex": "78bb00000000cba7441a00bed61723"
+  },
+  "canonicalProducer": {
+    "method": 8,
+    "windowBits": 7,
+    "dictionaryId": null,
+    "unsupportedWindows": [
+      0,
+      6
+    ],
+    "unsupportedDictionaryId": 123456789
+  },
+  "gammaEdit": {
+    "sourceFixture": "../../../../../../../../🧫️fixtures/🧬️canonical-source/indexed-2bit-duplicate-palette.png",
+    "value": 45455,
+    "rejectedValues": [
+      0
+    ],
+    "expectedChunkOrder": [
+      "IHDR",
+      "gAMA",
+      "PLTE",
+      "tRNS",
+      "bKGD",
+      "IDAT",
+      "IEND"
+    ]
+  },
+  "singletonChunks": [
+    {
+      "tag": "PLTE",
+      "dataHex": "010203040506",
+      "ihdrHex": "00000001000000010806000000"
+    },
+    {
+      "tag": "tRNS",
+      "dataHex": "000100020003",
+      "ihdrHex": "00000001000000010802000000"
+    },
+    {
+      "tag": "gAMA",
+      "dataHex": "0000b18f",
+      "ihdrHex": "00000001000000010806000000"
+    },
+    {
+      "tag": "cHRM",
+      "dataHex": "00007a26000080840000fa00000080e8000075300000ea6000003a9800001770",
+      "ihdrHex": "00000001000000010806000000"
+    },
+    {
+      "tag": "sRGB",
+      "dataHex": "00",
+      "ihdrHex": "00000001000000010806000000"
+    },
+    {
+      "tag": "pHYs",
+      "dataHex": "00000ec400000ec401",
+      "ihdrHex": "00000001000000010806000000"
+    },
+    {
+      "tag": "tIME",
+      "dataHex": "07ea0a030c0000",
+      "ihdrHex": "00000001000000010806000000"
+    },
+    {
+      "tag": "bKGD",
+      "dataHex": "000000000000",
+      "ihdrHex": "00000001000000010806000000"
+    }
+  ]
+}

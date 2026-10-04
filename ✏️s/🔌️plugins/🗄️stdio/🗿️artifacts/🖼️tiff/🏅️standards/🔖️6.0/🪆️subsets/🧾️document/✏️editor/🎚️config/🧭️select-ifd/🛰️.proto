@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.app.stdio.tiff;
+
+message SetSelectedIfd {
+  uint64 selected_ifd = 1;
+}

@@ -148,7 +148,7 @@ use crate::{
     ArtifactDialect, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractiveJobClassification, InteractiveJobClassificationError, MergeMode, SelectionMethod, SelectionMode, SelectionSpec,
     validate_interactive_job_classification,
 };
-use dsl::DslValue;
+use semio_framework_value::DslValue;
 use serde_json::json;
 
 #[semio_framework_async_macros::async_test]
@@ -275,7 +275,7 @@ async fn action_arg_def_json_schema_covers_the_core_shapes() {
 #[semio_framework_async_macros::async_test]
 async fn effective_args_prefer_staged_then_default() {
     let defs = vec![ActionArgDef::text("a", LocalizedLabel::data("A")).default_value(&"da"), ActionArgDef::text("b", LocalizedLabel::data("B")).default_value(&"db"), ActionArgDef::text("c", LocalizedLabel::data("C"))];
-    let staged = dsl::os_pack::json::to_dsl_value(&dsl::json!({ "a": "staged-a" }));
+    let staged = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "a": "staged-a" }));
     let effective = effective_action_args(&defs, &staged, None);
     assert_eq!(effective.get("a"), Some(&DslValue::String("staged-a".into())), "staged wins");
     assert_eq!(effective.get("b"), Some(&DslValue::String("db".into())), "default fills in");
@@ -288,8 +288,8 @@ async fn effective_args_prefer_staged_then_default() {
 #[semio_framework_async_macros::async_test]
 async fn effective_args_preserve_a_seeded_arg_not_declared_as_a_form_field() {
     let defs = vec![ActionArgDef::text("email", LocalizedLabel::data("Email")), ActionArgDef::text("role", LocalizedLabel::data("Role")).default_value(&"author")];
-    let staged = dsl::os_pack::json::to_dsl_value(&dsl::json!({ "email": "user2@semio.dev" }));
-    let seed = dsl::os_pack::json::to_dsl_value(&dsl::json!({ "spaceId": "sp-1" }));
+    let staged = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "email": "user2@semio.dev" }));
+    let seed = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "spaceId": "sp-1" }));
     let effective = effective_action_args(&defs, &staged, Some(&seed));
     assert_eq!(effective.get("spaceId"), Some(&DslValue::String("sp-1".into())), "the seeded, non-declared arg must reach the dispatched descriptor");
     assert_eq!(effective.get("email"), Some(&DslValue::String("user2@semio.dev".into())), "the form's own staged field still resolves");
@@ -301,10 +301,10 @@ async fn effective_args_preserve_a_seeded_arg_not_declared_as_a_form_field() {
 #[semio_framework_async_macros::async_test]
 async fn effective_args_seed_prefills_a_declared_field_until_staged_overrides_it() {
     let defs = vec![ActionArgDef::text("name", LocalizedLabel::data("Name"))];
-    let seed = dsl::os_pack::json::to_dsl_value(&dsl::json!({ "spaceId": "sp-1", "name": "Old Name" }));
-    let untouched = effective_action_args(&defs, &DslValue::Object(Vec::new()), Some(&seed));
+    let seed = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "spaceId": "sp-1", "name": "Old Name" }));
+    let untouched = effective_action_args(&defs, &semio_framework_value::DslValue::Object(Vec::new()), Some(&seed));
     assert_eq!(untouched.get("name"), Some(&DslValue::String("Old Name".into())), "seed pre-fills the declared field");
-    let staged = dsl::os_pack::json::to_dsl_value(&dsl::json!({ "name": "New Name" }));
+    let staged = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "name": "New Name" }));
     let edited = effective_action_args(&defs, &staged, Some(&seed));
     assert_eq!(edited.get("name"), Some(&DslValue::String("New Name".into())), "staged still wins over the seed");
     assert_eq!(edited.get("spaceId"), Some(&DslValue::String("sp-1".into())), "the non-declared seed key survives regardless");
@@ -314,8 +314,8 @@ async fn effective_args_seed_prefills_a_declared_field_until_staged_overrides_it
 /// entire seeded context through wholesale — there is no form field to carry it otherwise.
 #[semio_framework_async_macros::async_test]
 async fn effective_args_pass_seed_through_wholesale_when_no_fields_are_declared() {
-    let seed = dsl::os_pack::json::to_dsl_value(&dsl::json!({ "spaceId": "sp-1", "confirmed": true }));
-    let effective = effective_action_args(&[], &DslValue::Object(Vec::new()), Some(&seed));
+    let seed = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "spaceId": "sp-1", "confirmed": true }));
+    let effective = effective_action_args(&[], &semio_framework_value::DslValue::Object(Vec::new()), Some(&seed));
     assert_eq!(effective.get("spaceId"), Some(&DslValue::String("sp-1".into())));
     assert_eq!(effective.get("confirmed"), Some(&DslValue::Bool(true)));
 }
@@ -336,7 +336,7 @@ async fn unresolved_action_choices_follow_neutral_catalog_contract() {
             };
         }
         let arguments = serde_json::json!({ "kindChoice": row["value"] }).to_string();
-        let effective = dsl::os_pack::json::to_dsl_value(&dsl::os_pack::json::parse(&arguments).unwrap());
+        let effective = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(&arguments, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
         let unresolved = super::unresolved_action_args(&[def], &effective);
         let expected: Vec<String> = if row["unresolved"].as_bool().unwrap() { vec!["kindChoice".into()] } else { Vec::new() };
         assert_eq!(unresolved, expected, "{}", row["id"]);
@@ -347,13 +347,13 @@ async fn unresolved_action_choices_follow_neutral_catalog_contract() {
 async fn missing_required_args_treats_unset_select_as_missing() {
     let defs = vec![ActionArgDef::select("mode", LocalizedLabel::data("Mode"), vec![ActionArgOption::new("x", LocalizedLabel::data("X"))]).required(), ActionArgDef::toggle("flag", LocalizedLabel::data("Flag")).required()];
     // Nothing staged, no defaults: both required ids are missing.
-    let empty = DslValue::Object(Vec::new());
+    let empty = semio_framework_value::DslValue::Object(Vec::new());
     let effective = effective_action_args(&defs, &empty, None);
     let missing = missing_required_args(&defs, &effective);
     assert!(missing.contains(&"mode".to_string()));
     assert!(missing.contains(&"flag".to_string()));
 
-    let effective = dsl::os_pack::json::to_dsl_value(&dsl::json!({ "mode": "", "flag": false }));
+    let effective = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "mode": "", "flag": false }));
     let missing = missing_required_args(&defs, &effective);
     assert_eq!(missing, vec!["mode".to_string()], "empty-string select is unset; false toggle is set");
 }
@@ -415,6 +415,7 @@ pub(super) async fn app_with(actions: Vec<ActionDefinition>, window_actions: Vec
         config: crate::ConfigSpec::empty().await,
         command_grammar: crate::CommandGrammar::empty().await,
         io: crate::AppIo::default(),
+        fault_notices: Vec::new(),
     }
 }
 
@@ -1012,7 +1013,7 @@ async fn tutorial_asset_src_round_trips_tagged_camel_case() {
 
 #[semio_framework_async_macros::async_test]
 async fn tutorial_event_kind_round_trips_tagged_camel_case() {
-    let action = TutorialEventKind::Action { action: "addObjectKind".into(), args: Some(dsl::os_pack::json::to_dsl_value(&dsl::json!({"kindId": "beam"}))) };
+    let action = TutorialEventKind::Action { action: "addObjectKind".into(), args: Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({"kindId": "beam"}))) };
     let json = serde_json::to_string(&action).unwrap();
     assert!(json.contains("\"kind\":\"action\""), "{json}");
     let round: TutorialEventKind = serde_json::from_str(&json).unwrap();
@@ -1049,14 +1050,13 @@ async fn tutorial_ui_change_round_trips_tagged_camel_case() {
 #[semio_framework_async_macros::async_test]
 async fn tutorial_document_event_kind_round_trips_tagged_camel_case() {
     let edit = TutorialDocumentEventKind::Edit {
-        forwards: vec![dsl::os_pack::json::to_dsl_value(&dsl::json!({"op": "translate"}))],
-        backwards: vec![dsl::os_pack::json::to_dsl_value(&dsl::json!({"inverse": true, "op": "translate"}))],
+        forwards: vec![semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({"op": "translate"}))],
+        backwards: vec![semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({"inverse": true, "op": "translate"}))],
         description: Some("Move object".into()),
-        coalesce_key: Some("camera".into()),
     };
     let json = serde_json::to_string(&edit).unwrap();
     assert!(json.contains("\"kind\":\"edit\""), "{json}");
-    assert!(json.contains("\"coalesceKey\":\"camera\""), "field must be camelCase: {json}");
+    assert!(json.contains("\"description\":\"Move object\""), "{json}");
     let round: TutorialDocumentEventKind = serde_json::from_str(&json).unwrap();
     assert_eq!(round, edit);
 
@@ -1208,19 +1208,17 @@ async fn tutorial_slice_forward_and_reverse_cross_document_events() {
         TutorialDocumentEvent {
             at: 100,
             kind: TutorialDocumentEventKind::Edit {
-                forwards: vec![dsl::os_pack::json::to_dsl_value(&dsl::json!({"op": "add", "id": "a"}))],
-                backwards: vec![dsl::os_pack::json::to_dsl_value(&dsl::json!({"op": "remove", "id": "a"}))],
+                forwards: vec![semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({"op": "add", "id": "a"}))],
+                backwards: vec![semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({"op": "remove", "id": "a"}))],
                 description: None,
-                coalesce_key: None,
             },
         },
         TutorialDocumentEvent {
             at: 200,
             kind: TutorialDocumentEventKind::Edit {
-                forwards: vec![dsl::os_pack::json::to_dsl_value(&dsl::json!({"op": "add", "id": "b"}))],
-                backwards: vec![dsl::os_pack::json::to_dsl_value(&dsl::json!({"op": "remove", "id": "b"}))],
+                forwards: vec![semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({"op": "add", "id": "b"}))],
+                backwards: vec![semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({"op": "remove", "id": "b"}))],
                 description: None,
-                coalesce_key: None,
             },
         },
     ];
@@ -1321,19 +1319,19 @@ async fn command_definition_round_trips_camel_case_with_defaults() {
 async fn command_and_action_invocations_round_trip_owner_qualified_addresses() {
     let command = CommandInvocation {
         address: CommandAddress { owner: CommandOwnerAddress::Mode { plugin_id: "flow".into(), app_id: "flow".into(), mode_id: "generate".into() }, command_id: "addGeneration".into() },
-        arguments: [("name".into(), dsl::os_pack::json::to_dsl_value(&dsl::json!("A")))].into_iter().collect(),
+        arguments: [("name".into(), semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!("A")))].into_iter().collect(),
     };
-    let command_json = dsl::os_pack::json::to_json_string(&command);
+    let command_json = semio_framework_pack_json::to_json_string(&command);
     assert_eq!(command_json, r#"{"address":{"owner":{"mode":{"pluginId":"flow","appId":"flow","modeId":"generate"}},"commandId":"addGeneration"},"arguments":{"name":"A"}}"#);
-    assert_eq!(dsl::os_pack::json::from_json_str::<CommandInvocation>(&command_json).unwrap(), command);
+    assert_eq!(semio_framework_pack_json::from_json_str::<CommandInvocation>(&command_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(), command);
 
     let action = ActionInvocation {
         address: ActionAddress { plugin_id: "flow".into(), app_id: "flow".into(), mode_id: "edit".into(), window_kind_id: "main".into(), window_instance_id: "main-1".into(), action_id: "select".into() },
-        arguments: [("id".into(), dsl::os_pack::json::to_dsl_value(&dsl::json!("node-1")))].into_iter().collect(),
+        arguments: [("id".into(), semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!("node-1")))].into_iter().collect(),
     };
-    let action_json = dsl::os_pack::json::to_json_string(&action);
+    let action_json = semio_framework_pack_json::to_json_string(&action);
     assert!(action_json.contains("\"windowInstanceId\":\"main-1\""), "{action_json}");
-    assert_eq!(dsl::os_pack::json::from_json_str::<ActionInvocation>(&action_json).unwrap(), action);
+    assert_eq!(semio_framework_pack_json::from_json_str::<ActionInvocation>(&action_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(), action);
 
     let os = OsDefinition { commands: vec![CommandDefinition::bounded_catalog("toggleFullscreen", LocalizedLabel::data("Toggle Full Screen"), "window", ActionKind::Shell)] };
     assert_eq!(serde_json::from_str::<OsDefinition>(&serde_json::to_string(&os).unwrap()).unwrap(), os);
@@ -1350,7 +1348,7 @@ async fn open_dialog_effect_round_trips_camel_case() {
 
 #[semio_framework_async_macros::async_test]
 async fn dispatch_action_effect_round_trips_camel_case() {
-    let effect = Effect::DispatchAction { req: RequestId(2), action: "advanceReconstruction".into(), args: Some(dsl::os_pack::json::to_dsl_value(&dsl::json!({"jobId": "job-1"}))), delay_ms: 250 };
+    let effect = Effect::DispatchAction { req: RequestId(2), action: "advanceReconstruction".into(), args: Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({"jobId": "job-1"}))), delay_ms: 250 };
     let json = serde_json::to_string(&effect).unwrap();
     assert_eq!(json, r#"{"dispatchAction":{"req":2,"action":"advanceReconstruction","args":{"jobId":"job-1"},"delayMs":250}}"#);
     let round: Effect = serde_json::from_str(&json).unwrap();
@@ -1364,7 +1362,7 @@ async fn dispatch_action_effect_round_trips_camel_case() {
 
 #[semio_framework_async_macros::async_test]
 async fn request_file_open_effect_round_trips_multiple() {
-    let effect = Effect::RequestFileOpen { req: RequestId(4), accept: ".png,.jpg".into(), read_as: Some("dataUrl".into()), import_action: "importFramePayload".into(), multiple: true };
+    let effect = Effect::RequestFileOpen { req: RequestId(4), accept: ".png,.jpg".into(), read_as: Some("dataUrl".into()), import_action: "importFramePayload".into(), multiple: true, args: None };
     let json = serde_json::to_string(&effect).unwrap();
     assert!(json.contains("\"multiple\":true"), "{json}");
     let round: Effect = serde_json::from_str(&json).unwrap();
@@ -1372,7 +1370,7 @@ async fn request_file_open_effect_round_trips_multiple() {
     // `multiple` defaults to false when absent from the wire (older callers/plugins); `req` is
     // not defaulted (mandatory on every completing effect).
     let defaulted: Effect = serde_json::from_str(r#"{"requestFileOpen":{"req":5,"accept":".png","importAction":"importFramePayload"}}"#).unwrap();
-    assert_eq!(defaulted, Effect::RequestFileOpen { req: RequestId(5), accept: ".png".into(), read_as: None, import_action: "importFramePayload".into(), multiple: false });
+    assert_eq!(defaulted, Effect::RequestFileOpen { req: RequestId(5), accept: ".png".into(), read_as: None, import_action: "importFramePayload".into(), multiple: false, args: None });
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1388,7 +1386,7 @@ async fn request_media_frames_effect_round_trips_camel_case() {
         max_long_edge_px: 1600,
         fps_hint: 30.0,
         payload: None,
-        args: Some(dsl::os_pack::json::to_dsl_value(&dsl::json!({"streamId": "s1"}))),
+        args: Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({"streamId": "s1"}))),
     };
     let json = serde_json::to_string(&effect).unwrap();
     assert!(json.contains("\"requestMediaFrames\""), "{json}");
@@ -1487,9 +1485,9 @@ async fn panel_tab_kind_settings_default_apps_id_str() {
 #[semio_framework_async_macros::async_test]
 async fn app_ref_canonical_json_round_trips_as_camel_case() {
     let app_ref = AppRef { plugin_id: "s.cad".into(), app_id: "s.cad.cad@1/*#editor".into() };
-    let json = dsl::os_pack::json::to_json_string(&app_ref);
+    let json = semio_framework_pack_json::to_json_string(&app_ref);
     assert_eq!(json, "{\"pluginId\":\"s.cad\",\"appId\":\"s.cad.cad@1/*#editor\"}");
-    assert_eq!(dsl::os_pack::json::from_json_str::<AppRef>(&json).unwrap(), app_ref);
+    assert_eq!(semio_framework_pack_json::from_json_str::<AppRef>(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(), app_ref);
 }
 //#endregion 🔖️SurfaceTests
 

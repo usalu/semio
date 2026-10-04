@@ -66,42 +66,42 @@ LEAVES = [
          en='Change building north axis to {}°', de='Nordachse des Gebäudes auf {}° ändern',
          schema={"type": "number"}, ui=ui({"en": "North axis", "de": "Nordachse"}, {"en": "Angle from true north to the building's north axis, clockwise.", "de": "Winkel von geografisch Nord zur Nordachse des Gebäudes, im Uhrzeigersinn."}, {"widget": "dial", "unit": "deg", "step": 1, "precision": 1, "softMin": 0, "softMax": 360, "snaps": [0, 90, 180, 270, 360]}, 10, "site"),
          cases=[("✅️sets", "turns the building's north axis", "", "30.0"), ("🟰️same", "keeps an unchanged north axis as a no-op", "model.site.north_axis_deg = 30.0;", "30.0")]),
-    dict(kind="change-ground-temperature-building-surface", dir="🌡️change-ground-temperature", group="ground-month", series="building_surface_c", what="building-surface ground temperature",
+    dict(kind="change-ground-building", dir="🌡️change-ground-building", group="ground-month", series="building_surface_c", what="building-surface ground temperature",
          doc="Sets one month's ground temperature under the building, read by the ground heat transfer solve.",
          en='Change building-surface ground temperature of month {} to {} °C', de='Erdreichtemperatur unter dem Gebäude im Monat {} auf {} °C ändern',
          ui=ui({"en": "Building surface ground temperature", "de": "Erdreichtemperatur unter dem Gebäude"}, {"en": "Monthly value at the building's ground contact.", "de": "Monatswert am Erdreichkontakt des Gebäudes."}, dict(TEMPERATURE), 20, "ground"),
          cases=[("✅️sets", "warms July under the building", "", "7, 21.5"), ("⛔️refuses", "refuses a thirteenth month", "", "13, 20.0")]),
-    dict(kind="change-ground-temperature-shallow", dir="🌱️change-ground-temperature", group="ground-month", series="shallow_c", what="shallow ground temperature",
+    dict(kind="change-ground-shallow", dir="🌱️change-ground-shallow", group="ground-month", series="shallow_c", what="shallow ground temperature",
          doc="Sets one month's shallow ground temperature, read by the ground heat transfer solve.",
          en='Change shallow ground temperature of month {} to {} °C', de='Oberflächennahe Erdreichtemperatur im Monat {} auf {} °C ändern',
          ui=ui({"en": "Shallow ground temperature", "de": "Oberflächennahe Erdreichtemperatur"}, {"en": "Monthly value near the surface.", "de": "Monatswert nahe der Oberfläche."}, dict(TEMPERATURE), 20, "ground"),
          cases=[("✅️sets", "cools January near the surface", "", "1, 2.5"), ("⛔️refuses", "refuses a temperature below absolute zero", "", "1, -300.0")]),
-    dict(kind="change-ground-temperature-deep", dir="⛏️change-ground-temperature", group="ground-deep", what="deep ground temperature",
+    dict(kind="change-ground-deep", dir="⛏️change-ground-deep", group="ground-deep", what="deep ground temperature",
          doc="Sets the deep ground temperature, read by the ground heat transfer solve.",
          en='Change deep ground temperature to {} °C', de='Erdreichtemperatur in der Tiefe auf {} °C ändern',
          ui=ui({"en": "Deep ground temperature", "de": "Erdreichtemperatur in der Tiefe"}, {"en": "Constant over the year.", "de": "Über das Jahr konstant."}, dict(TEMPERATURE), 10, "ground"),
          cases=[("✅️sets", "sets Denver's deep ground temperature", "", "11.0"), ("⛔️refuses", "refuses a temperature below absolute zero", "", "-300.0")]),
-    dict(kind="change-run-period-start-month", dir="🛫️change-run-period-start", group="run", field="start_month", param="new_start_month", wire="newStartMonth", ty="u8", lo=1, hi=12, title="Start month",
+    dict(kind="change-run-start-month", dir="🛫️change-run-start-month", group="run", field="start_month", param="new_start_month", wire="newStartMonth", ty="u8", lo=1, hi=12, title="Start month",
          doc="Sets the month the simulation run period starts in; the period must stay a calendar interval of its year.",
          en='Change run period start month to {}', de='Startmonat des Simulationszeitraums auf {} ändern',
          ui=ui({"en": "Start month", "de": "Startmonat"}, None, {"step": 1, "precision": 0, "softMin": 1, "softMax": 12}, 10, "calendar"),
          cases=[("✅️sets", "starts the run in March", "", "3"), ("⛔️refuses", "refuses a start after the current end", "model.run_period = crate::calendar::RunPeriod { start_month: 1, start_day: 1, end_month: 1, end_day: 31, year: 2026 };", "2")]),
-    dict(kind="change-run-period-start-day", dir="▶️change-run-period-start", group="run", field="start_day", param="new_start_day", wire="newStartDay", ty="u8", lo=1, hi=31, title="Start day",
+    dict(kind="change-run-start-day", dir="▶️change-run-start-day", group="run", field="start_day", param="new_start_day", wire="newStartDay", ty="u8", lo=1, hi=31, title="Start day",
          doc="Sets the day of month the simulation run period starts on; the period must stay a calendar interval of its year.",
          en='Change run period start day to {}', de='Starttag des Simulationszeitraums auf {} ändern',
          ui=ui({"en": "Start day", "de": "Starttag"}, None, {"step": 1, "precision": 0, "softMin": 1, "softMax": 31}, 20, "calendar"),
          cases=[("✅️sets", "starts the run mid-January", "", "15"), ("⛔️refuses", "refuses a start day February does not have", "model.run_period = crate::calendar::RunPeriod { start_month: 2, start_day: 1, end_month: 2, end_day: 28, year: 2026 };", "30")]),
-    dict(kind="change-run-period-end-month", dir="🛬️change-run-period-end", group="run", field="end_month", param="new_end_month", wire="newEndMonth", ty="u8", lo=1, hi=12, title="End month",
+    dict(kind="change-run-end-month", dir="🛬️change-run-end-month", group="run", field="end_month", param="new_end_month", wire="newEndMonth", ty="u8", lo=1, hi=12, title="End month",
          doc="Sets the month the simulation run period ends in; the period must stay a calendar interval of its year.",
          en='Change run period end month to {}', de='Endmonat des Simulationszeitraums auf {} ändern',
          ui=ui({"en": "End month", "de": "Endmonat"}, None, {"step": 1, "precision": 0, "softMin": 1, "softMax": 12}, 30, "calendar"),
          cases=[("✅️sets", "ends the run in July", "", "7"), ("⛔️refuses", "refuses an end month without the current end day", "", "2")]),
-    dict(kind="change-run-period-end-day", dir="⏹️change-run-period-end", group="run", field="end_day", param="new_end_day", wire="newEndDay", ty="u8", lo=1, hi=31, title="End day",
+    dict(kind="change-run-end-day", dir="⏹️change-run-end-day", group="run", field="end_day", param="new_end_day", wire="newEndDay", ty="u8", lo=1, hi=31, title="End day",
          doc="Sets the day of month the simulation run period ends on; the period must stay a calendar interval of its year.",
          en='Change run period end day to {}', de='Endtag des Simulationszeitraums auf {} ändern',
          ui=ui({"en": "End day", "de": "Endtag"}, None, {"step": 1, "precision": 0, "softMin": 1, "softMax": 31}, 40, "calendar"),
          cases=[("✅️sets", "ends the run a day before New Year's Eve", "", "30"), ("⛔️refuses", "refuses an end before the current start", "model.run_period = crate::calendar::RunPeriod { start_month: 3, start_day: 15, end_month: 3, end_day: 31, year: 2026 };", "10")]),
-    dict(kind="change-run-period-year", dir="📅️change-run-period-year", group="run", field="year", param="new_year", wire="newYear", ty="u16", lo=0, hi=65535, title="Year",
+    dict(kind="change-run-year", dir="📅️change-run-year", group="run", field="year", param="new_year", wire="newYear", ty="u16", lo=0, hi=65535, title="Year",
          doc="Sets the calendar year that fixes the run period's weekdays and leap day; the period must stay a calendar interval of that year.",
          en='Change run period year to {}', de='Jahr des Simulationszeitraums auf {} ändern',
          ui=ui({"en": "Year", "de": "Jahr"}, {"en": "Calendar year that fixes the weekdays.", "de": "Kalenderjahr, das die Wochentage festlegt."}, {"step": 1, "precision": 0}, 50, "calendar"),
@@ -252,7 +252,7 @@ use crate::EnergyModelSnapshot;
 //#region 🔖️Diff
 pub fn diff(payload: &super::{leaf["variant"]}, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {{
 {invariant}    if {current(leaf)} == {value} {{
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", {noop_text});
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", {noop_text});
     }}
     let mut model = base.model.clone();
     {current(leaf).replace("base.model", "model")} = {value};
@@ -314,7 +314,7 @@ use crate::EnergyModelSnapshot;
 
 #[allow(unused_variables, unused_mut)]
 fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {{
-    let mut model = crate::model::Model {{ name: "BESTEST 600".into(), ..crate::model::Model::default() }};
+    let mut model = crate::model::Model {{ name: "BESTEST 600".into(), version: "1".into(), ..crate::model::Model::default() }};
 {setup_line}    (snapshot(model), super::{leaf["fn"]}({args}))
 }}
 
@@ -709,14 +709,14 @@ change_site_longitude = _site_leaf("longitude_deg", "newLongitudeDeg", lambda va
 change_site_elevation = _site_leaf("elevation_m", "newElevationM", lambda value: -300.0 <= value < 8900.0)
 change_site_time_zone = _site_leaf("time_zone_hours", "newTimeZoneHours", lambda value: -12.0 <= value <= 14.0)
 change_site_north_axis = _site_leaf("north_axis_deg", "newNorthAxisDeg", math.isfinite)
-change_ground_temperature_building_surface = _ground_leaf("building_surface_c")
-change_ground_temperature_shallow = _ground_leaf("shallow_c")
-change_ground_temperature_deep = _ground_leaf(None)
-change_run_period_start_month = _run_period_leaf("start_month", "newStartMonth", 1, 12)
-change_run_period_start_day = _run_period_leaf("start_day", "newStartDay", 1, 31)
-change_run_period_end_month = _run_period_leaf("end_month", "newEndMonth", 1, 12)
-change_run_period_end_day = _run_period_leaf("end_day", "newEndDay", 1, 31)
-change_run_period_year = _run_period_leaf("year", "newYear", 0, 65535)
+change_ground_building = _ground_leaf("building_surface_c")
+change_ground_shallow = _ground_leaf("shallow_c")
+change_ground_deep = _ground_leaf(None)
+change_run_start_month = _run_period_leaf("start_month", "newStartMonth", 1, 12)
+change_run_start_day = _run_period_leaf("start_day", "newStartDay", 1, 31)
+change_run_end_month = _run_period_leaf("end_month", "newEndMonth", 1, 12)
+change_run_end_day = _run_period_leaf("end_day", "newEndDay", 1, 31)
+change_run_year = _run_period_leaf("year", "newYear", 0, 65535)
 
 
 #: ↩️ The base value each field leaf's undo writes back, as that leaf's own payload.
@@ -726,14 +726,14 @@ FIELD_LEAVES = {
     "change-site-elevation": lambda before, payload: {"newElevationM": before["model"]["site"]["elevation_m"]},
     "change-site-time-zone": lambda before, payload: {"newTimeZoneHours": before["model"]["site"]["time_zone_hours"]},
     "change-site-north-axis": lambda before, payload: {"newNorthAxisDeg": before["model"]["site"]["north_axis_deg"]},
-    "change-ground-temperature-building-surface": lambda before, payload: {"month": payload["month"], "newTemperatureC": before["model"]["ground_temperature"]["building_surface_c"][payload["month"] - 1]},
-    "change-ground-temperature-shallow": lambda before, payload: {"month": payload["month"], "newTemperatureC": before["model"]["ground_temperature"]["shallow_c"][payload["month"] - 1]},
-    "change-ground-temperature-deep": lambda before, payload: {"newTemperatureC": before["model"]["ground_temperature"]["deep_c"]},
-    "change-run-period-start-month": lambda before, payload: {"newStartMonth": before["model"]["run_period"]["start_month"]},
-    "change-run-period-start-day": lambda before, payload: {"newStartDay": before["model"]["run_period"]["start_day"]},
-    "change-run-period-end-month": lambda before, payload: {"newEndMonth": before["model"]["run_period"]["end_month"]},
-    "change-run-period-end-day": lambda before, payload: {"newEndDay": before["model"]["run_period"]["end_day"]},
-    "change-run-period-year": lambda before, payload: {"newYear": before["model"]["run_period"]["year"]},
+    "change-ground-building": lambda before, payload: {"month": payload["month"], "newTemperatureC": before["model"]["ground_temperature"]["building_surface_c"][payload["month"] - 1]},
+    "change-ground-shallow": lambda before, payload: {"month": payload["month"], "newTemperatureC": before["model"]["ground_temperature"]["shallow_c"][payload["month"] - 1]},
+    "change-ground-deep": lambda before, payload: {"newTemperatureC": before["model"]["ground_temperature"]["deep_c"]},
+    "change-run-start-month": lambda before, payload: {"newStartMonth": before["model"]["run_period"]["start_month"]},
+    "change-run-start-day": lambda before, payload: {"newStartDay": before["model"]["run_period"]["start_day"]},
+    "change-run-end-month": lambda before, payload: {"newEndMonth": before["model"]["run_period"]["end_month"]},
+    "change-run-end-day": lambda before, payload: {"newEndDay": before["model"]["run_period"]["end_day"]},
+    "change-run-year": lambda before, payload: {"newYear": before["model"]["run_period"]["year"]},
 }
 
 

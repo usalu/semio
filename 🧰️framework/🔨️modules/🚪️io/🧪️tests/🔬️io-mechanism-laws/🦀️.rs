@@ -26,8 +26,8 @@ mod laws {
 
     #[semio_framework_async_macros::async_test]
     async fn route_is_deterministic() {
-        static AB: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
-        static BC: IoEntry = IoEntry { from: B, into: C, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
+        static AB: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
+        static BC: IoEntry = IoEntry { from: B, into: C, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
 
         let mut order1: EntryMap = BTreeMap::new();
         order1.insert(key(A, B).await, &AB);
@@ -44,10 +44,10 @@ mod laws {
 
     #[semio_framework_async_macros::async_test]
     async fn route_respects_max_hops() {
-        static AB: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
-        static BC: IoEntry = IoEntry { from: B, into: C, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
-        static CD: IoEntry = IoEntry { from: C, into: D, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
-        static DE: IoEntry = IoEntry { from: D, into: E, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
+        static AB: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
+        static BC: IoEntry = IoEntry { from: B, into: C, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
+        static CD: IoEntry = IoEntry { from: C, into: D, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
+        static DE: IoEntry = IoEntry { from: D, into: E, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
         let mut registry: EntryMap = BTreeMap::new();
         registry.insert(key(A, B).await, &AB);
         registry.insert(key(B, C).await, &BC);
@@ -61,9 +61,9 @@ mod laws {
 
     #[semio_framework_async_macros::async_test]
     async fn route_never_cycles() {
-        static AB: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
-        static BA: IoEntry = IoEntry { from: B, into: A, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
-        static BC: IoEntry = IoEntry { from: B, into: C, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
+        static AB: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
+        static BA: IoEntry = IoEntry { from: B, into: A, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
+        static BC: IoEntry = IoEntry { from: B, into: C, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
         let mut registry: EntryMap = BTreeMap::new();
         registry.insert(key(A, B).await, &AB);
         registry.insert(key(B, A).await, &BA);
@@ -75,9 +75,9 @@ mod laws {
 
     #[semio_framework_async_macros::async_test]
     async fn route_prefers_higher_minimum_fidelity() {
-        static DIRECT: IoEntry = IoEntry { from: A, into: C, fidelity: IoFidelity::Lossy, sniff: None, run: passthrough };
-        static AB: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
-        static BC: IoEntry = IoEntry { from: B, into: C, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
+        static DIRECT: IoEntry = IoEntry { from: A, into: C, fidelity: IoFidelity::Lossy, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
+        static AB: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
+        static BC: IoEntry = IoEntry { from: B, into: C, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
         let mut registry: EntryMap = BTreeMap::new();
         registry.insert(key(A, C).await, &DIRECT);
         registry.insert(key(A, B).await, &AB);
@@ -94,8 +94,8 @@ mod laws {
         fn always_high(_: &IoPayload) -> Confidence {
             Confidence::High
         }
-        static CARRIER_ENTRY: IoEntry = IoEntry { from: CARRIER_TEXT, into: A, fidelity: IoFidelity::Exact, sniff: Some(always_high), run: passthrough };
-        static NON_CARRIER_ENTRY: IoEntry = IoEntry { from: B, into: C, fidelity: IoFidelity::Exact, sniff: Some(always_high), run: passthrough };
+        static CARRIER_ENTRY: IoEntry = IoEntry { from: CARRIER_TEXT, into: A, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: Some(always_high), run: passthrough };
+        static NON_CARRIER_ENTRY: IoEntry = IoEntry { from: B, into: C, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: Some(always_high), run: passthrough };
         let mut registry: EntryMap = BTreeMap::new();
         registry.insert(key(CARRIER_TEXT, A).await, &CARRIER_ENTRY);
         registry.insert(key(B, C).await, &NON_CARRIER_ENTRY);
@@ -106,8 +106,8 @@ mod laws {
 
     #[semio_framework_async_macros::async_test]
     async fn duplicate_entry_is_a_typed_error() {
-        static ENTRY_A: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
-        static ENTRY_B: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Lossy, sniff: None, run: passthrough };
+        static ENTRY_A: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
+        static ENTRY_B: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Lossy, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
 
         let mut existing: EntryMap = BTreeMap::new();
         existing.insert(key(A, B).await, &ENTRY_A);
@@ -121,9 +121,9 @@ mod laws {
 
     #[semio_framework_async_macros::async_test]
     async fn registration_is_all_or_nothing() {
-        static ORIGINAL: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
-        static CONFLICTING: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Lossy, sniff: None, run: passthrough };
-        static FRESH: IoEntry = IoEntry { from: D, into: E, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
+        static ORIGINAL: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
+        static CONFLICTING: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Lossy, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
+        static FRESH: IoEntry = IoEntry { from: D, into: E, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run: passthrough };
 
         let mut existing: EntryMap = BTreeMap::new();
         existing.insert(key(A, B).await, &ORIGINAL);
@@ -138,16 +138,16 @@ mod laws {
     // DslValue` (`🏪️store/🦀️.rs`) already gives it the same "schema-agnostic fixture type" role
     // `serde_json::Value`'s own `impl ArtifactPack` used to play, with no serde dependency.
     struct JsonDeserializer;
-    impl Deserializer<dsl::DslValue> for JsonDeserializer {
+    impl Deserializer<semio_framework_value::DslValue> for JsonDeserializer {
         const FROM: Dialect = B;
         const FIDELITY: IoFidelity = IoFidelity::Exact;
-        const CONFORMANCE: Option<fn(&dsl::DslValue) -> Vec<Diagnostic>> = Some(flag_non_object);
+        const CONFORMANCE: Option<fn(&semio_framework_value::DslValue) -> Vec<Diagnostic>> = Some(flag_non_object);
 
-        async fn deserialize(payload: &IoPayload) -> IoResult<dsl::DslValue> {
+        async fn deserialize(payload: &IoPayload) -> IoResult<semio_framework_value::DslValue> {
             let IoPayload::Text(text) = payload else {
-                return Err(IoError { message: "expected text payload".to_string(), diagnostics: Vec::new() });
+                return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"expected text payload")));
             };
-            let value: dsl::DslValue = dsl::os_pack::json::from_json_str(text).map_err(|error| IoError { message: error.to_string(), diagnostics: Vec::new() })?;
+            let value: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(IoError::from_value_error)?;
             Ok(IoOutcome::clean(value))
         }
     }
@@ -155,13 +155,59 @@ mod laws {
     // 🚫️async: E4 fn-pointer slot — assigned directly into `Deserializer::CONFORMANCE`, a plain
     // `Option<fn(&S) -> Vec<Diagnostic>>` const (see that trait's own doc comment for why it
     // cannot be a closure or an `async fn` item).
-    fn flag_non_object(value: &dsl::DslValue) -> Vec<Diagnostic> {
-        if matches!(value, dsl::DslValue::Object(_)) { Vec::new() } else { vec![Diagnostic::error("test.io-mechanism.not-object", dsl::TextSpan::at(0, 0), "value is not a JSON object")] }
+    fn flag_non_object(value: &semio_framework_value::DslValue) -> Vec<Diagnostic> {
+        if matches!(value, semio_framework_value::DslValue::Object(_)) { Vec::new() } else { vec![Diagnostic::error("test.io-mechanism.not-object", semio_framework_diagnostic::TextSpan::at(0, 0), "value is not a JSON object")] }
+    }
+
+    /// 🔁️ Echoes the parent value beside every owned child it received (`slot/childId`, archive order).
+    struct ChildrenEcho;
+    impl Serializer<semio_framework_value::DslValue> for ChildrenEcho {
+        const INTO: Dialect = C;
+        const FIDELITY: IoFidelity = IoFidelity::Exact;
+
+        async fn serialize(from: &semio_framework_value::DslValue, children: &ArchiveChildren) -> IoResult<IoPayload> {
+            let slots: Vec<String> = children.slots().into_iter().map(|(slot, child_id)| format!("{slot}/{child_id}")).collect();
+            Ok(IoOutcome::clean(IoPayload::Text(format!("{from:?}|{}", slots.join(",")))))
+        }
+    }
+
+    /// 🗃️ A carrier of `parent` owning one child at `content`/`child-1`, with `parent_spr` as its parent history.
+    fn composed_carrier(parent: &semio_framework_value::DslValue, parent_spr: Vec<u8>) -> Vec<u8> {
+        let artifact = |id: &str, dialect: Dialect| store::channel::DocumentArchiveArtifactRef { artifact_id: id.into(), artifact_kind: dialect.artifact_kind.into(), standard: dialect.standard.0.into(), subset: dialect.subset.0.into() };
+        let owner = store::channel::DocumentArchiveOwnerRef { parent: artifact("parent", A), slot: "content".into(), child_id: "child-1".into() };
+        let member = store::channel::OwnedDocumentMemberPackEntry { ordinal: 0, reference: artifact("child-1", B), owner, envelope_pack: vec![7] };
+        store::channel::encode_document_archive_bytes(&store::channel::DocumentArchivePack { parent_pack: store::ArtifactPack::encode_pack(parent), parent_spr, members: vec![member] }).expect("the carrier encodes")
+    }
+
+    /// 🪆️ LAW (design §20.15, readers compose on read): a serializer entry run over a composed head carrier receives the parent and
+    /// its owned children; a plain pack reaches it with the empty view; a carrier with parent history or malformed bytes is refused.
+    #[semio_framework_async_macros::async_test]
+    async fn a_composed_head_carrier_hands_its_owned_children_to_the_serializer() {
+        let entry = serializer_entry::<semio_framework_value::DslValue, ChildrenEcho>(A);
+        let parent = semio_framework_value::DslValue::String("parent".into());
+        let text = |outcome: IoResult<IoPayload>| match outcome.expect("the entry runs").value {
+            IoPayload::Text(text) => text,
+            IoPayload::Binary(_) => panic!("the echo serializes text"),
+        };
+        assert_eq!(text((entry.run)(&IoPayload::Binary(composed_carrier(&parent, Vec::new())))), format!("{parent:?}|content/child-1"));
+        assert_eq!(text((entry.run)(&IoPayload::Binary(store::ArtifactPack::encode_pack(&parent)))), format!("{parent:?}|"));
+        assert!((entry.run)(&IoPayload::Binary(composed_carrier(&parent, vec![1]))).is_err(), "a carrier with parent history is not a head carrier");
+        assert!((entry.run)(&IoPayload::Binary(vec![store::channel::DOCUMENT_ARCHIVE_VERSION, 0xff])).is_err(), "a malformed carrier is refused");
+    }
+
+    /// 🧲️ LAW: the constructors declare the native side — a serializer entry exports out of its own dialect, a deserializer entry
+    /// imports into it.
+    #[semio_framework_async_macros::async_test]
+    async fn entry_constructors_declare_their_native_side() {
+        let exporting = serializer_entry::<semio_framework_value::DslValue, ChildrenEcho>(A);
+        assert_eq!((exporting.direction, ArtifactDialect::from(exporting.from), ArtifactDialect::from(exporting.into)), (IoEntryDirection::Export, ArtifactDialect::from(A), ArtifactDialect::from(C)));
+        let importing = deserializer_entry::<semio_framework_value::DslValue, JsonDeserializer>(A);
+        assert_eq!((importing.direction, ArtifactDialect::from(importing.from), ArtifactDialect::from(importing.into)), (IoEntryDirection::Import, ArtifactDialect::from(B), ArtifactDialect::from(A)));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn conformance_runs_after_deserialize() {
-        let entry = deserializer_entry::<dsl::DslValue, JsonDeserializer>(A);
+        let entry = deserializer_entry::<semio_framework_value::DslValue, JsonDeserializer>(A);
 
         let conforming = (entry.run)(&IoPayload::Text("{}".to_string())).expect("an empty object deserializes cleanly");
         assert!(conforming.diagnostics.is_empty(), "an object payload has no conformance diagnostics");

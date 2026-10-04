@@ -1,0 +1,6 @@
+*** Begin Patch
+*** Update File: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs
+@@
+- fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,String>{validate_sqlite_database_schema(database,Self::SQLITE_SCHEMA,control.limits()).map_err(|error|error.to_string())?;control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;let snapshot=reconstruct(database,control)?;control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,1,1)?;Ok(snapshot)}
++ fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,String>{validate_sqlite_database_schema(database,Self::SQLITE_SCHEMA,control.limits()).map_err(|error|error.to_string())?;control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;let mut snapshot=OwnedSnapshot(Some(reconstruct(database,control)?));control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,1,1)?;snapshot.0.take().ok_or_else(||"CommonMark completed snapshot is missing".into())}
+*** End Patch

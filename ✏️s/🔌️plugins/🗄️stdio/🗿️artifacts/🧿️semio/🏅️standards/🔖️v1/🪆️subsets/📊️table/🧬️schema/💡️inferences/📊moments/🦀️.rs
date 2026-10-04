@@ -84,7 +84,7 @@ impl store::InferredField<SemioTableSnapshot> for ColumnMoments {
     /// else (not other columns, not `kind`, which `plan` already gates on) — an unrelated column's
     /// edit must still hit the cache, proven by the incrementality-law test below.
     fn dep_input(snapshot: &SemioTableSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
-        pack::to_json_string(&column_values(snapshot, key)).into_bytes()
+        semio_framework_pack_json::to_json_string(&column_values(snapshot, key)).into_bytes()
     }
 
     fn compute(snapshot: &SemioTableSnapshot, key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {

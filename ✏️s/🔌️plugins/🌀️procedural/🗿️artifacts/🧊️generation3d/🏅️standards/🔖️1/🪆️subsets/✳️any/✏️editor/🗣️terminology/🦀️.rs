@@ -51,6 +51,7 @@ semio_framework_ui_locale::app_labels! {
         catalogue_brep_eval_surf_point: native_en "Surface Point", native_de "Flächenpunkt", reuse_en "Surface Point", reuse_de "Flächenpunkt";
         catalogue_brep_eval_surface_closest_uv: native_en "Surface Closest Uv", native_de "Nächste UV-Koordinaten", reuse_en "Surface Closest Uv", reuse_de "Nächste UV-Koordinaten";
         catalogue_brep_face: native_en "Face", native_de "Fläche", reuse_en "Face", reuse_de "Fläche";
+        catalogue_brep_shell: native_en "Shell", native_de "Schale", reuse_en "Shell", reuse_de "Schale";
         catalogue_brep_geometry: native_en "Geometry", native_de "Geometrie", reuse_en "Geometry", reuse_de "Geometrie";
         catalogue_brep_intersect_curve_curve: native_en "Curve Curve", native_de "Kurve mit Kurve schneiden", reuse_en "Curve Curve", reuse_de "Kurve mit Kurve schneiden";
         catalogue_brep_intersect_curve_surface: native_en "Curve Surface", native_de "Kurve mit Fläche schneiden", reuse_en "Curve Surface", reuse_de "Kurve mit Fläche schneiden";
@@ -76,6 +77,8 @@ semio_framework_ui_locale::app_labels! {
         catalogue_brep_measure_volume: native_en "Volume", native_de "Volumen", reuse_en "Volume", reuse_de "Volumen";
         catalogue_brep_mesh: native_en "Polygon Mesh", native_de "Polygonnetz", reuse_en "Polygon Mesh", reuse_de "Polygonnetz";
         catalogue_brep_mesh_analyze: native_en "Analyze Mesh", native_de "Mesh analysieren", reuse_en "Analyze Mesh", reuse_de "Mesh analysieren";
+        catalogue_brep_mesh_transform: native_en "Transform Mesh", native_de "Mesh transformieren", reuse_en "Transform Mesh", reuse_de "Mesh transformieren";
+        input_name_matrix: native_en "Matrix", native_de "Matrix", reuse_en "Matrix", reuse_de "Matrix";
         catalogue_brep_mesh_box: native_en "Mesh Box", native_de "Mesh-Quader", reuse_en "Mesh Box", reuse_de "Mesh-Quader";
         catalogue_brep_mesh_cone: native_en "Mesh Cone", native_de "Mesh-Kegel", reuse_en "Mesh Cone", reuse_de "Mesh-Kegel";
         catalogue_brep_mesh_construct: native_en "Construct Mesh", native_de "Mesh konstruieren", reuse_en "Construct Mesh", reuse_de "Mesh konstruieren";
@@ -197,6 +200,16 @@ semio_framework_ui_locale::app_labels! {
         input_name_geometry: native_en "Geometry", native_de "Geometrie", reuse_en "Geometry", reuse_de "Geometrie";
         input_name_guide: native_en "Guide", native_de "Führung", reuse_en "Guide", reuse_de "Führung";
         input_name_handle: native_en "Handle", native_de "Referenz", reuse_en "Handle", reuse_de "Referenz";
+        input_name_shell: native_en "Shells", native_de "Schalen", reuse_en "Shells", reuse_de "Schalen";
+        input_name_shell_out: native_en "Shell", native_de "Schale", reuse_en "Shell", reuse_de "Schale";
+        input_name_label: native_en "Topology label", native_de "Topologiekennzeichnung", reuse_en "Topology label", reuse_de "Topologiekennzeichnung";
+        input_name_errors: native_en "Errors", native_de "Fehler", reuse_en "Errors", reuse_de "Fehler";
+        input_name_edge_labels: native_en "Selected edge labels", native_de "Kennzeichnungen ausgewählter Kanten", reuse_en "Selected edge labels", reuse_de "Kennzeichnungen ausgewählter Kanten";
+        input_name_face_labels: native_en "Selected face labels", native_de "Kennzeichnungen ausgewählter Flächen", reuse_en "Selected face labels", reuse_de "Kennzeichnungen ausgewählter Flächen";
+        input_name_selected_edges: native_en "Selected edges", native_de "Ausgewählte Kanten", reuse_en "Selected edges", reuse_de "Ausgewählte Kanten";
+        input_name_selected_faces: native_en "Selected faces", native_de "Ausgewählte Flächen", reuse_en "Selected faces", reuse_de "Ausgewählte Flächen";
+        input_name_source_handle: native_en "Source geometry", native_de "Quellgeometrie", reuse_en "Source geometry", reuse_de "Quellgeometrie";
+        input_name_source_index: native_en "Source index", native_de "Quellindex", reuse_en "Source index", reuse_de "Quellindex";
         input_name_height: native_en "Height", native_de "Höhe", reuse_en "Height", reuse_de "Höhe";
         input_name_index: native_en "Index", native_de "Index", reuse_en "Index", reuse_de "Index";
         input_name_kind: native_en "Kind", native_de "Art", reuse_en "Kind", reuse_de "Art";
@@ -274,6 +287,90 @@ semio_framework_ui_locale::app_labels! {
         widget_group: native_en "Widget", native_de "Element", reuse_en "Widget", reuse_de "Element";
         input_connected: native_en "Connected", native_de "Verbunden", reuse_en "Connected", reuse_de "Verbunden";
         input_connect_hint: native_en "Connect an output", native_de "Ausgang verbinden", reuse_en "Connect an output", reuse_de "Ausgang verbinden";
+        mesh_add_uv: native_en "Add UV attribute", native_de "UV-Attribut hinzufügen", reuse_en "Add UV attribute", reuse_de "UV-Attribut hinzufügen";
+        mesh_add_normal: native_en "Add normal attribute", native_de "Normalenattribut hinzufügen", reuse_en "Add normal attribute", reuse_de "Normalenattribut hinzufügen";
+        mesh_add_color: native_en "Add color attribute", native_de "Farbattribut hinzufügen", reuse_en "Add color attribute", reuse_de "Farbattribut hinzufügen";
+        mesh_add_number: native_en "Add number attribute", native_de "Zahlenattribut hinzufügen", reuse_en "Add number attribute", reuse_de "Zahlenattribut hinzufügen";
+        mesh_add_text: native_en "Add text attribute", native_de "Textattribut hinzufügen", reuse_en "Add text attribute", reuse_de "Textattribut hinzufügen";
+        mesh_add_boolean: native_en "Add boolean attribute", native_de "Wahrheitsattribut hinzufügen", reuse_en "Add boolean attribute", reuse_de "Wahrheitsattribut hinzufügen";
+        mesh_add_vector: native_en "Add vector attribute", native_de "Vektorattribut hinzufügen", reuse_en "Add vector attribute", reuse_de "Vektorattribut hinzufügen";
+        mesh_materials: native_en "Materials", native_de "Materialien", reuse_en "Materials", reuse_de "Materialien";
+        mesh_textures: native_en "Textures", native_de "Texturen", reuse_en "Textures", reuse_de "Texturen";
+        mesh_add_material: native_en "Add material", native_de "Material hinzufügen", reuse_en "Add material", reuse_de "Material hinzufügen";
+        mesh_asset_name: native_en "Asset name", native_de "Assetname", reuse_en "Asset name", reuse_de "Assetname";
+        mesh_base_color: native_en "Base color", native_de "Grundfarbe", reuse_en "Base color", reuse_de "Grundfarbe";
+        mesh_metallic: native_en "Metallic", native_de "Metallisch", reuse_en "Metallic", reuse_de "Metallisch";
+        mesh_roughness: native_en "Roughness", native_de "Rauheit", reuse_en "Roughness", reuse_de "Rauheit";
+        mesh_emissive: native_en "Emissive", native_de "Emission", reuse_en "Emissive", reuse_de "Emission";
+        mesh_normal_scale: native_en "Normal scale", native_de "Normalenskalierung", reuse_en "Normal scale", reuse_de "Normalenskalierung";
+        mesh_occlusion_strength: native_en "Occlusion strength", native_de "Verdeckungsstärke", reuse_en "Occlusion strength", reuse_de "Verdeckungsstärke";
+        mesh_alpha_mode: native_en "Alpha mode", native_de "Alphamodus", reuse_en "Alpha mode", reuse_de "Alphamodus";
+        mesh_alpha_cutoff: native_en "Alpha cutoff", native_de "Alphagrenzwert", reuse_en "Alpha cutoff", reuse_de "Alphagrenzwert";
+        mesh_double_sided: native_en "Double sided", native_de "Doppelseitig", reuse_en "Double sided", reuse_de "Doppelseitig";
+        mesh_base_color_texture: native_en "Base color texture", native_de "Grundfarbtextur", reuse_en "Base color texture", reuse_de "Grundfarbtextur";
+        mesh_metallic_roughness_texture: native_en "Metallic roughness texture", native_de "Metall-Rauheit-Textur", reuse_en "Metallic roughness texture", reuse_de "Metall-Rauheit-Textur";
+        mesh_normal_texture: native_en "Normal texture", native_de "Normalentextur", reuse_en "Normal texture", reuse_de "Normalentextur";
+        mesh_occlusion_texture: native_en "Occlusion texture", native_de "Verdeckungstextur", reuse_en "Occlusion texture", reuse_de "Verdeckungstextur";
+        mesh_emissive_texture: native_en "Emissive texture", native_de "Emissionstextur", reuse_en "Emissive texture", reuse_de "Emissionstextur";
+        mesh_uv_set: native_en "UV set", native_de "UV-Satz", reuse_en "UV set", reuse_de "UV-Satz";
+        mesh_wrap_s: native_en "Wrap S", native_de "S-Wiederholung", reuse_en "Wrap S", reuse_de "S-Wiederholung";
+        mesh_wrap_t: native_en "Wrap T", native_de "T-Wiederholung", reuse_en "Wrap T", reuse_de "T-Wiederholung";
+        mesh_mag_filter: native_en "Magnification filter", native_de "Vergrößerungsfilter", reuse_en "Magnification filter", reuse_de "Vergrößerungsfilter";
+        mesh_min_filter: native_en "Minification filter", native_de "Verkleinerungsfilter", reuse_en "Minification filter", reuse_de "Verkleinerungsfilter";
+        mesh_import_texture: native_en "Import texture", native_de "Textur importieren", reuse_en "Import texture", reuse_de "Textur importieren";
+        mesh_replace_texture: native_en "Replace texture", native_de "Textur ersetzen", reuse_en "Replace texture", reuse_de "Textur ersetzen";
+        mesh_alpha_opaque: native_en "Opaque", native_de "Undurchsichtig", reuse_en "Opaque", reuse_de "Undurchsichtig";
+        mesh_alpha_mask: native_en "Cutout", native_de "Ausschnitt", reuse_en "Cutout", reuse_de "Ausschnitt";
+        mesh_alpha_blend: native_en "Blend", native_de "Mischen", reuse_en "Blend", reuse_de "Mischen";
+        mesh_wrap_clamp: native_en "Clamp to edge", native_de "Am Rand begrenzen", reuse_en "Clamp to edge", reuse_de "Am Rand begrenzen";
+        mesh_wrap_mirror: native_en "Mirrored repeat", native_de "Gespiegelt wiederholen", reuse_en "Mirrored repeat", reuse_de "Gespiegelt wiederholen";
+        mesh_wrap_repeat: native_en "Repeat", native_de "Wiederholen", reuse_en "Repeat", reuse_de "Wiederholen";
+        mesh_filter_nearest: native_en "Nearest pixel", native_de "Nächstes Pixel", reuse_en "Nearest pixel", reuse_de "Nächstes Pixel";
+        mesh_filter_linear: native_en "Smooth pixels", native_de "Pixel glätten", reuse_en "Smooth pixels", reuse_de "Pixel glätten";
+        mesh_filter_nearest_nearest: native_en "Nearest pixels, nearest level", native_de "Nächste Pixel, nächste Stufe", reuse_en "Nearest pixels, nearest level", reuse_de "Nächste Pixel, nächste Stufe";
+        mesh_filter_linear_nearest: native_en "Smooth pixels, nearest level", native_de "Geglättete Pixel, nächste Stufe", reuse_en "Smooth pixels, nearest level", reuse_de "Geglättete Pixel, nächste Stufe";
+        mesh_filter_nearest_linear: native_en "Nearest pixels, smooth levels", native_de "Nächste Pixel, geglättete Stufen", reuse_en "Nearest pixels, smooth levels", reuse_de "Nächste Pixel, geglättete Stufen";
+        mesh_filter_linear_linear: native_en "Smooth pixels and levels", native_de "Pixel und Stufen glätten", reuse_en "Smooth pixels and levels", reuse_de "Pixel und Stufen glätten";
+        mesh_output_area: native_en "Area", native_de "Fläche", reuse_en "Area", reuse_de "Fläche";
+        mesh_output_volume: native_en "Volume", native_de "Volumen", reuse_en "Volume", reuse_de "Volumen";
+        mesh_output_report: native_en "Report", native_de "Bericht", reuse_en "Report", reuse_de "Bericht";
+        mesh_output_topology: native_en "Topology", native_de "Topologie", reuse_en "Topology", reuse_de "Topologie";
+        mesh_output_triangles: native_en "Triangles", native_de "Dreiecke", reuse_en "Triangles", reuse_de "Dreiecke";
+        mesh_output_boundary_edges: native_en "Boundary edges", native_de "Randkanten", reuse_en "Boundary edges", reuse_de "Randkanten";
+        mesh_output_non_manifold_edges: native_en "Non-manifold edges", native_de "Nicht-mannigfaltige Kanten", reuse_en "Non-manifold edges", reuse_de "Nicht-mannigfaltige Kanten";
+        mesh_output_inconsistent_edges: native_en "Inconsistent edges", native_de "Inkonsistente Kanten", reuse_en "Inconsistent edges", reuse_de "Inkonsistente Kanten";
+        mesh_output_degenerate_triangles: native_en "Degenerate triangles", native_de "Entartete Dreiecke", reuse_en "Degenerate triangles", reuse_de "Entartete Dreiecke";
+        mesh_output_minimum: native_en "Minimum point", native_de "Minimalpunkt", reuse_en "Minimum point", reuse_de "Minimalpunkt";
+        mesh_output_maximum: native_en "Maximum point", native_de "Maximalpunkt", reuse_en "Maximum point", reuse_de "Maximalpunkt";
+        mesh_output_center: native_en "Center", native_de "Mittelpunkt", reuse_en "Center", reuse_de "Mittelpunkt";
+        mesh_no_texture: native_en "No texture", native_de "Keine Textur", reuse_en "No texture", reuse_de "Keine Textur";
+        mesh_material_assignment: native_en "Assign material", native_de "Material zuweisen", reuse_en "Assign material", reuse_de "Material zuweisen";
+        mesh_vertex_domain: native_en "Vertex", native_de "Punkt", reuse_en "Vertex", reuse_de "Punkt";
+        mesh_face_domain: native_en "Face", native_de "Fläche", reuse_en "Face", reuse_de "Fläche";
+        mesh_edge_domain: native_en "Edge", native_de "Kante", reuse_en "Edge", reuse_de "Kante";
+        mesh_corner_domain: native_en "Corner", native_de "Ecke", reuse_en "Corner", reuse_de "Ecke";
+        mesh_outputs: native_en "Outputs", native_de "Ausgaben", reuse_en "Outputs", reuse_de "Ausgaben";
+        mesh_output_stale: native_en "Value is stale", native_de "Wert ist veraltet", reuse_en "Value is stale", reuse_de "Wert ist veraltet";
+        mesh_output_error: native_en "Evaluation failed", native_de "Auswertung fehlgeschlagen", reuse_en "Evaluation failed", reuse_de "Auswertung fehlgeschlagen";
+        mesh_source: native_en "Mesh source", native_de "Netzquelle", reuse_en "Mesh source", reuse_de "Netzquelle";
+        mesh_attributes: native_en "Attributes", native_de "Attribute", reuse_en "Attributes", reuse_de "Attribute";
+        mesh_domain: native_en "Domain", native_de "Zuordnung", reuse_en "Domain", reuse_de "Zuordnung";
+        mesh_semantic: native_en "Meaning", native_de "Bedeutung", reuse_en "Meaning", reuse_de "Bedeutung";
+        mesh_interpolation: native_en "Interpolation", native_de "Interpolation", reuse_en "Interpolation", reuse_de "Interpolation";
+        mesh_values: native_en "Values", native_de "Werte", reuse_en "Values", reuse_de "Werte";
+        mesh_indices: native_en "Sample indices", native_de "Abtastindizes", reuse_en "Sample indices", reuse_de "Abtastindizes";
+        mesh_invalid: native_en "Mesh source is invalid", native_de "Netzquelle ist ungültig", reuse_en "Mesh source is invalid", reuse_de "Netzquelle ist ungültig";
+        input_list_item: native_en "Item", native_de "Eintrag", reuse_en "Item", reuse_de "Eintrag";
+        input_variable_name: native_en "Variable name", native_de "Variablenname", reuse_en "Variable name", reuse_de "Variablenname";
+        input_variable_type: native_en "Variable type", native_de "Variablentyp", reuse_en "Variable type", reuse_de "Variablentyp";
+        input_export_format: native_en "Export format", native_de "Exportformat", reuse_en "Export format", reuse_de "Exportformat";
+        input_export_connected: native_en "Export connected geometry", native_de "Verbundene Geometrie exportieren", reuse_en "Export connected geometry", reuse_de "Verbundene Geometrie exportieren";
+        input_export_pending: native_en "Connected geometry is not ready", native_de "Verbundene Geometrie ist noch nicht bereit", reuse_en "Connected geometry is not ready", reuse_de "Verbundene Geometrie ist noch nicht bereit";
+        input_value_unavailable: native_en "Value not available", native_de "Wert nicht verfügbar", reuse_en "Value not available", reuse_de "Wert nicht verfügbar";
+        input_list_add: native_en "Add item", native_de "Eintrag hinzufügen", reuse_en "Add item", reuse_de "Eintrag hinzufügen";
+        input_list_remove: native_en "Remove item", native_de "Eintrag entfernen", reuse_en "Remove item", reuse_de "Eintrag entfernen";
+        input_list_up: native_en "Move item up", native_de "Eintrag nach oben", reuse_en "Move item up", reuse_de "Eintrag nach oben";
+        input_list_down: native_en "Move item down", native_de "Eintrag nach unten", reuse_en "Move item down", reuse_de "Eintrag nach unten";
         input_text_too_long: native_en "Edit large text in the graph source", native_de "Langen Text im Quellknoten bearbeiten", reuse_en "Edit large text in the graph source", reuse_de "Langen Text im Quellknoten bearbeiten";
         generate_hint: native_en "Add a generation to edit input values.", native_de "Erstelle eine Generation, um Eingabewerte zu bearbeiten.", reuse_en "Add a generation to edit input values.", reuse_de "Erstelle eine Generation, um Eingabewerte zu bearbeiten.";
         preview_hint: native_en "(evaluate a generation to preview output)", native_de "(Generation auswerten, um die Ausgabe in der Vorschau zu sehen)", reuse_en "(evaluate a generation to preview output)", reuse_de "(Generation auswerten, um die Ausgabe in der Vorschau zu sehen)";
@@ -350,6 +447,7 @@ pub fn generation3d_catalogue_name<'a>(labels: &'a Generation3dLabels, id: &str,
         "brep.eval.surfPoint" => labels.catalogue_brep_eval_surf_point.as_str(),
         "brep.eval.surfaceClosestUv" => labels.catalogue_brep_eval_surface_closest_uv.as_str(),
         "brep.face" => labels.catalogue_brep_face.as_str(),
+        "brep.shell" => labels.catalogue_brep_shell.as_str(),
         "brep.geometry" => labels.catalogue_brep_geometry.as_str(),
         "brep.intersect.curveCurve" => labels.catalogue_brep_intersect_curve_curve.as_str(),
         "brep.intersect.curveSurface" => labels.catalogue_brep_intersect_curve_surface.as_str(),
@@ -375,6 +473,7 @@ pub fn generation3d_catalogue_name<'a>(labels: &'a Generation3dLabels, id: &str,
         "brep.measure.volume" => labels.catalogue_brep_measure_volume.as_str(),
         "brep.mesh" => labels.catalogue_brep_mesh.as_str(),
         "brep.mesh.analyze" => labels.catalogue_brep_mesh_analyze.as_str(),
+        "brep.mesh.transform" => labels.catalogue_brep_mesh_transform.as_str(),
         "brep.mesh.box" => labels.catalogue_brep_mesh_box.as_str(),
         "brep.mesh.cone" => labels.catalogue_brep_mesh_cone.as_str(),
         "brep.mesh.construct" => labels.catalogue_brep_mesh_construct.as_str(),
@@ -464,6 +563,17 @@ pub fn generation3d_catalogue_name<'a>(labels: &'a Generation3dLabels, id: &str,
 /// 🎛️ Resolves operator input names in the explicitly chosen language.
 pub fn generation3d_input_name<'a>(labels: &'a Generation3dLabels, id: &str, name: &'a str) -> &'a str {
     match id {
+        "area" => labels.mesh_output_area.as_str(),
+        "volume" => labels.mesh_output_volume.as_str(),
+        "report" => labels.mesh_output_report.as_str(),
+        "topology" => labels.mesh_output_topology.as_str(),
+        "triangles" => labels.mesh_output_triangles.as_str(),
+        "boundaryEdges" => labels.mesh_output_boundary_edges.as_str(),
+        "nonManifoldEdges" => labels.mesh_output_non_manifold_edges.as_str(),
+        "inconsistentEdges" => labels.mesh_output_inconsistent_edges.as_str(),
+        "degenerateTriangles" => labels.mesh_output_degenerate_triangles.as_str(),
+        "minimum" => labels.mesh_output_minimum.as_str(),
+        "maximum" => labels.mesh_output_maximum.as_str(),
         "a" => labels.input_name_a.as_str(),
         "b" => labels.input_name_b.as_str(),
         "amount" => labels.input_name_amount.as_str(),
@@ -472,7 +582,7 @@ pub fn generation3d_input_name<'a>(labels: &'a Generation3dLabels, id: &str, nam
         "axisDirection" => labels.input_name_axis_direction.as_str(),
         "axisOrigin" => labels.input_name_axis_origin.as_str(),
         "brep" => labels.input_name_brep.as_str(),
-        "center" => labels.input_name_center.as_str(),
+        "center" => labels.mesh_output_center.as_str(),
         "compound" => labels.input_name_compound.as_str(),
         "controlPoints" => labels.input_name_control_points.as_str(),
         "count" => labels.input_name_count.as_str(),
@@ -503,6 +613,17 @@ pub fn generation3d_input_name<'a>(labels: &'a Generation3dLabels, id: &str, nam
         "geometry" => labels.input_name_geometry.as_str(),
         "guide" => labels.input_name_guide.as_str(),
         "handle" => labels.input_name_handle.as_str(),
+        "handleOut" => labels.input_name_handle.as_str(),
+        "shell" => labels.input_name_shell.as_str(),
+        "shellOut" => labels.input_name_shell_out.as_str(),
+        "label" => labels.input_name_label.as_str(),
+        "errors" => labels.input_name_errors.as_str(),
+        "edgeLabels" => labels.input_name_edge_labels.as_str(),
+        "faceLabels" => labels.input_name_face_labels.as_str(),
+        "selectedEdges" => labels.input_name_selected_edges.as_str(),
+        "selectedFaces" => labels.input_name_selected_faces.as_str(),
+        "sourceHandle" => labels.input_name_source_handle.as_str(),
+        "sourceIndex" => labels.input_name_source_index.as_str(),
         "height" => labels.input_name_height.as_str(),
         "index" => labels.input_name_index.as_str(),
         "kind" => labels.input_name_kind.as_str(),
@@ -557,6 +678,7 @@ pub fn generation3d_input_name<'a>(labels: &'a Generation3dLabels, id: &str, nam
         "value" => labels.input_name_value.as_str(),
         "vector" => labels.input_name_vector.as_str(),
         "vertex" => labels.input_name_vertex.as_str(),
+        "matrix" => labels.input_name_matrix.as_str(),
         "vertices" => labels.input_name_vertices.as_str(),
         "width" => labels.input_name_width.as_str(),
         "wire" => labels.input_name_wire.as_str(),

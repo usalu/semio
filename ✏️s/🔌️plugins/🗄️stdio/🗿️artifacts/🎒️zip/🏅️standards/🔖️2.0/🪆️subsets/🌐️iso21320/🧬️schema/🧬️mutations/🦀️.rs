@@ -153,7 +153,8 @@ pub(crate) fn agg_diff(this: &ZipIso21320Mutation, base: &ZipSnapshot) -> protoc
 /// ↩️ An added member is undone by removing it; which of the two profile methods declared it is
 /// irrelevant to the undo, so both add kinds share one inverse.
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &ZipIso21320Mutation, base: &ZipSnapshot) -> Vec<ZipIso21320Mutation> {
+pub(crate) fn agg_inverse(this: &ZipIso21320Mutation, base: &ZipSnapshot) -> Result<Vec<ZipIso21320Mutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match this {
         ZipIso21320Mutation::SetSnapshot(_) => vec![ZipIso21320Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
         ZipIso21320Mutation::SetArchiveComment(_) => vec![ZipIso21320Mutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment: base.comment.clone(), comment_utf8: base.comment_utf8 })],
@@ -178,6 +179,8 @@ pub(crate) fn agg_inverse(this: &ZipIso21320Mutation, base: &ZipSnapshot) -> Vec
             base.entries.iter().find(|entry| entry.name == *name).map(|entry| vec![ZipIso21320Mutation::SetEntryData(set_entry_data::SetEntryData { name: name.clone(), data: entry.data.clone() })]).unwrap_or_default()
         }
     }
+
+    })())
 }
 //#endregion 🔖️MutationTrait
 

@@ -16,7 +16,7 @@ pub fn diff(payload: &super::RenameElectricalLoadCenter, base: &EnergyModelSnaps
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Another electrical load center is already named \"{}\".", payload.new_name), [payload.id.0.to_string()]);
     }
     if existing.name == payload.new_name {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Electrical load center {} already carries this name: {}.", payload.id.0, payload.new_name));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Electrical load center {} already carries this name: {}.", payload.id.0, payload.new_name));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.electrical_load_centers.iter_mut().find(|item| item.id == payload.id) {

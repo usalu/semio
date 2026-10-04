@@ -447,6 +447,11 @@ mod oracles {
     fn apply(exchange: &mut Exchange, kind: &str, params: &Json) -> Result<(), String> {
         match kind {
             "set-snapshot" => replace_with_snapshot(exchange, params.get("snapshot").ok_or("set-snapshot carries `snapshot`")?),
+            "patch-snapshot" => {
+                let payload = snapshot_payload_of(exchange)?;
+                let patched = semio_repo_test_host::law::patched_snapshot(payload.get("snapshot").ok_or("the reading carries no snapshot")?, params.get("patch").ok_or("patch-snapshot carries `patch`")?)?;
+                replace_with_snapshot(exchange, &patched)
+            }
 
             "set-file-description" => {
                 let values = values_from_wire(params, "values")?;

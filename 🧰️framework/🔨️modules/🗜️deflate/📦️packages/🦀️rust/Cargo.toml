@@ -16,6 +16,9 @@ workspace = true
 [lib]
 path = "🦀️.rs"
 
+[dependencies]
+semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
+
 [dev-dependencies]
 miniz_oxide = "0.8"
 zip = { version = "2.4", default-features = false, features = ["deflate"] }

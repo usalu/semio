@@ -8,7 +8,7 @@ export interface WorkflowPort{id:string;spec:{id:string;label:string;direction:"
 /** 🕸️ Complete persisted app node, including exact geometry words. */
 export interface WorkflowNode{id:string;pluginId:string;appId:string;label:string;yields:string;artifactRef:string;configRef:string;x:Binary64;y:Binary64;width:Binary64;height:Binary64;inputs:WorkflowPort[];outputs:WorkflowPort[]}
 /** 🤝️ Complete persisted edge contract and optional conversion pair. */
-export interface WorkflowContract{kindId:string;mediaType:{class:WorkflowMediaClass;form:WorkflowMediaForm};wire:{kind:"binary";format_kind:string}|{kind:"document";schema:string};conversion:[WorkflowMediaForm,WorkflowMediaForm]|null}
+export interface WorkflowContract{kindId:string;mediaType:{class:WorkflowMediaClass;form:WorkflowMediaForm};wire:{kind:"binary";format_kind:string}|{kind:"document";schema:string}|{kind:"intrinsic";schema:string};conversion:[WorkflowMediaForm,WorkflowMediaForm]|null}
 /** 🔗️ Literal unresolved graph endpoints are persisted independently of entity keys. */
 export interface WorkflowEdge{id:string;sourceNodeId:string;sourcePortId:string;targetNodeId:string;targetPortId:string;contract:WorkflowContract}
 /** 🎚️ Every authored parameter variant with exact optional numeric identities. */

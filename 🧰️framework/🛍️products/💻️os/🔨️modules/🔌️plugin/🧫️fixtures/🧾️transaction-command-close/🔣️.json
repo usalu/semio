@@ -39,7 +39,7 @@
     {
       "id": "zero-bytes",
       "beginClose": true,
-      "command": "coalesced-increment",
+      "command": "streamed-increment",
       "completion": "empty",
       "grant": {
         "items": 1,

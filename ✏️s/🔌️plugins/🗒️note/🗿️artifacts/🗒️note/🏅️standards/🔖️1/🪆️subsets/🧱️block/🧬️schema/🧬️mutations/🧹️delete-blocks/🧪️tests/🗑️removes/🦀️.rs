@@ -17,13 +17,13 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧹️delete-blocks/🗑️removes/🎯️outcome/🔣️.json");
 
 fn before() -> NoteSnapshot {
-    dsl::os_pack::from_json_str(BEFORE).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> NoteSnapshot {
-    dsl::os_pack::from_json_str(AFTER).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> NoteMutation {
-    dsl::os_pack::from_json_str(MUTATION).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 
 /// ▶️ `delete-blocks` emits ONE `removed` list holding every addressed id that actually exists.
@@ -39,7 +39,7 @@ async fn inverse_restores_before() {
     let base = before();
     let forward = mutation();
     let mut snapshot = apply_note_mutation(&base, &forward).expect("delete-blocks applies forward");
-    let mut undo = inverse_note_mutation(&base, &forward);
+    let mut undo = inverse_note_mutation(&base, &forward).expect("valid retained mutation inverse fixture");
     undo.reverse();
     for step in &undo {
         snapshot = apply_note_mutation(&snapshot, step).expect("delete-blocks inverse step applies");
@@ -51,12 +51,12 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: NoteSnapshot = dsl::os_pack::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: NoteSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "delete-blocks/removes-the-ink-and-image-blocks: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&mutation())).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "delete-blocks/removes-the-ink-and-image-blocks: committed mutation JSON is not canonical");
 }
@@ -68,7 +68,7 @@ async fn declared_outcome_holds() {
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
     assert_eq!(status, "applied", "delete-blocks/removes-the-ink-and-image-blocks: this fixture declares an applied outcome");
     let produced = mutation().diff(&before());
-    let blocked = produced.messages().iter().any(|message| matches!(message.level, protocol::Severity::Error | protocol::Severity::Fatal));
+    let blocked = produced.messages().iter().any(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal));
     assert!(!blocked, "delete-blocks/removes-the-ink-and-image-blocks: declared applied but the diff builder rejected it: {:?}", produced.messages());
     apply_note_mutation(&before(), &mutation()).expect("delete-blocks/removes-the-ink-and-image-blocks: declared applied but the diff would not apply");
 }
@@ -80,7 +80,7 @@ async fn declared_outcome_holds() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = <NoteMutation as Mutation<NoteSnapshot>>::diff(&mutation(), &before());
-    let produced = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "delete-blocks/removes-the-ink-and-image-blocks: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -90,8 +90,8 @@ async fn produces_committed_diff() {
 /// every slot `delete-blocks` leaves alone.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: NoteDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("diff re-encodes");
+    let decoded: NoteDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "delete-blocks/removes-the-ink-and-image-blocks: committed diff JSON is not canonical");
 }
@@ -99,7 +99,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed two-id `removed` delta carries `before` to `after` in one apply.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: NoteDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: NoteDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let produced = <NoteDiff as protocol::MutationDiff<NoteSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-blocks/removes-the-ink-and-image-blocks: committed diff did not carry before to after");
 }
@@ -115,5 +115,5 @@ async fn two_non_adjacent_blocks_go_in_one_batch() {
     assert!(find_block(&applied.blocks, "blk-image").is_none(), "blk-image must be gone");
     assert_eq!(applied.blocks.len(), base.blocks.len() - 2, "delete-blocks must shrink the root list by exactly two in ONE operation");
     assert_eq!(find_block_location(&applied.blocks, "blk-table"), Some((None, 1)), "survivors must close up in their original relative order");
-    assert_eq!(inverse_note_mutation(&base, &mutation()).len(), 2, "the inverse must be one create-block per removed id");
+    assert_eq!(inverse_note_mutation(&base, &mutation()).expect("valid retained mutation inverse fixture").len(), 2, "the inverse must be one create-block per removed id");
 }

@@ -6,7 +6,7 @@ import { declaredLaunchNamePrefix } from "../../🚀️launch/🏷️name-prefix
 import { join, relative } from "node:path";
 import type { RegistryCatalogInputView } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { getWorkspaceRoot, registryCatalogInputView, registryExampleCatalog } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { generatePluginRegistry, parseTomlStringArray, readDescriptorJson, tomlBlocksAfterHeader, TAXONOMY, type GeneratePluginRegistryOptions } from "../../🔎️discovery/🟦️.ts";
+import { generatePluginRegistry, parseTomlStringArray, readDescriptorJson, tomlBlocksAfterHeader, TAXONOMY, type GeneratePluginRegistryOptions, type RegistryChannelDiagnosticV1 } from "../../🔎️discovery/🟦️.ts";
 
 
 
@@ -204,4 +204,14 @@ export function generatePlaygroundRegistry(repoRoot = getWorkspaceRoot(), option
   }
   playgrounds.sort((a, b) => a.variant.localeCompare(b.variant));
   return playgrounds;
+}
+
+
+/** 🚀️ Source-only playground rows of withheld plugins: launch rows stay stable while the dev catalog withholds a stale-channel plugin. */
+export function generateWithheldPlaygroundRegistry(repoRoot: string, diagnostics: readonly RegistryChannelDiagnosticV1[], view: RegistryCatalogInputView = registryCatalogInputView(repoRoot, TAXONOMY)): PlaygroundEntry[] {
+  return diagnostics.flatMap(({ pluginId, cratePath }) => {
+    const manifestPath = join(repoRoot, cratePath, "Cargo.toml");
+    const crateAssets = parseAssetsForCrate(manifestPath, repoRoot, view);
+    return parsePlaygroundsForCrate(manifestPath, pluginId, cratePath, repoRoot, view).map((playground) => ({ ...playground, examples: [], assets: crateAssets.filter((asset) => asset.app === undefined || asset.app === playground.app) }));
+  });
 }

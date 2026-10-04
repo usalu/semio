@@ -21,7 +21,7 @@ pub fn diff(payload: &super::MoveVertex, base: &SemioMeshSnapshot) -> protocol::
         );
     };
     if *current == payload.new_point {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Vertex {} of primitive \"{}\" is already at that position.", payload.vertex_index, payload.primitive_id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Vertex {} of primitive \"{}\" is already at that position.", payload.vertex_index, payload.primitive_id));
     }
     if !payload.new_point.x.is_finite() || !payload.new_point.y.is_finite() || !payload.new_point.z.is_finite() {
         return protocol::MutationOutcome::fatal(

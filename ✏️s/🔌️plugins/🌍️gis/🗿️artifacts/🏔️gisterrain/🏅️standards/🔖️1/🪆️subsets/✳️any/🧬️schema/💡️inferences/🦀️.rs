@@ -11,7 +11,7 @@ use super::bounds::{imported_lon_lat_positions, lon_lat_bounds};
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a gisterrain snapshot. Today: the geographic bounding box and
-/// position count of the `map:in` overlay decoded from `imported_features_json` (see
+/// position count of the `map:in` overlay decoded from `imported_map` (see
 /// `📦bounds/🦀️.rs`). A simple whole-snapshot scalar — no `InferredField` caching, the
 /// overlay is small and re-decoding is O(positions).
 #[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, ToValue, FromValue)]
@@ -25,9 +25,12 @@ pub struct GisTerrainInference {
 }
 
 impl protocol::Inference<GisTerrainSnapshot> for GisTerrainInference {
-    fn infer(snapshot: &GisTerrainSnapshot) -> Self {
+    fn infer(snapshot: &GisTerrainSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         let positions = imported_lon_lat_positions(snapshot);
         Self { position_count: positions.len(), bounds: lon_lat_bounds(&positions) }
+    
+        })
     }
 }
 
@@ -39,17 +42,10 @@ impl protocol::InferenceSpec<GisTerrainSnapshot> for GisTerrainInference {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec { id: "s.gis.gisterrain.inference.positionCount", reads: &["importedFeaturesJson"] }, protocol::InferenceFieldSpec { id: "s.gis.gisterrain.inference.bounds", reads: &["importedFeaturesJson"] }]
+        &[protocol::InferenceFieldSpec { id: "s.gis.gisterrain.inference.positionCount", reads: &["importedMap"] }, protocol::InferenceFieldSpec { id: "s.gis.gisterrain.inference.bounds", reads: &["importedMap"] }]
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-impl semio_framework_plugin::ArtifactInferrer for crate::standards::v1::subsets::any::schema::GisterrainBuilder {
-    type Snapshot = GisTerrainSnapshot;
-    type Inference = GisTerrainInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️FixtureText
 /// 🧭️ Relocated from the artifact's `⚙️engine` (ticket
@@ -65,127 +61,21 @@ impl semio_framework_plugin::ArtifactInferrer for crate::standards::v1::subsets:
 /// `crate::schema`'s `🔖️TerrainDescriptor` region — a one-line path
 /// correction, not an engine-dissolution rewrite.
 use crate::schema::{TerrainDescriptorJson, TerrainPositionData, TerrainProjectOrigin};
-/// 📜️ Hand-rolled reader for the `.gisterrain` fixture's `origin`/`position` scenery lines — the
-/// read-only pins/project-origin data rendered alongside the document; the `gisterrain
-/// exaggeration=...` header line those same files start with is instead read by
-/// `GisTerrainSnapshot`'s own derive-generated `ArtifactDsl`, since exaggeration is undoable document
-/// state.
-mod terrain_fixture_text {
-    use super::{TerrainDescriptorJson, TerrainPositionData, TerrainProjectOrigin};
-
-    /// 🔤️ Splits one line into whitespace-separated tokens, treating a `"..."` quoted run (escapes
-    /// `\\`, `\"`, `\n`) as part of the token it's glued to — so `label="Institut de Botanique"`
-    /// lexes as one `label=Institut de Botanique` token even though the value contains spaces.
-    fn line_tokens(line: &str) -> Vec<String> {
-        let mut tokens = Vec::new();
-        let mut chars = line.chars().peekable();
-        while let Some(&c) = chars.peek() {
-            if c.is_whitespace() {
-                chars.next();
-                continue;
-            }
-            let mut token = String::new();
-            while let Some(&c) = chars.peek() {
-                if c.is_whitespace() {
-                    break;
-                }
-                if c == '"' {
-                    chars.next();
-                    while let Some(c) = chars.next() {
-                        if c == '"' {
-                            break;
-                        }
-                        if c == '\\' {
-                            match chars.next() {
-                                Some('n') => token.push('\n'),
-                                Some('"') => token.push('"'),
-                                Some('\\') => token.push('\\'),
-                                Some(other) => {
-                                    token.push('\\');
-                                    token.push(other);
-                                }
-                                None => {}
-                            }
-                        } else {
-                            token.push(c);
-                        }
-                    }
-                } else {
-                    token.push(c);
-                    chars.next();
-                }
-            }
-            tokens.push(token);
-        }
-        tokens
-    }
-
-    fn kv_lookup<'a>(tokens: &'a [String], key: &str) -> Option<&'a str> {
-        tokens.iter().find_map(|token| token.strip_prefix(&format!("{key}=")))
-    }
-
-    fn parse_project_origin(tokens: &[String]) -> Option<TerrainProjectOrigin> {
-        Some(TerrainProjectOrigin { lon: kv_lookup(tokens, "lon")?.parse().ok()?, lat: kv_lookup(tokens, "lat")?.parse().ok()? })
-    }
-
-    fn parse_position(tokens: &[String]) -> Option<TerrainPositionData> {
-        Some(TerrainPositionData {
-            id: kv_lookup(tokens, "id")?.to_string(),
-            lon: kv_lookup(tokens, "lon")?.parse().ok()?,
-            lat: kv_lookup(tokens, "lat")?.parse().ok()?,
-            label: kv_lookup(tokens, "label").map(str::to_string),
-            icon: kv_lookup(tokens, "icon").map(str::to_string),
-        })
-    }
-
-    /// 📥️ Parses every `origin`/`position` line of the fixture text (its `gisterrain exaggeration=...`
-    /// header is parsed separately, see module docs); malformed or missing lines simply contribute
-    /// nothing, so a truncated/empty fixture yields the world origin with no positions rather than an error.
-    pub(super) fn parse_descriptor(text: &str, schema: &str, exaggeration: f64) -> TerrainDescriptorJson {
-        let mut project_origin = TerrainProjectOrigin { lon: 0.0, lat: 0.0 };
-        let mut positions = Vec::new();
-        for line in text.lines() {
-            let tokens = line_tokens(line);
-            match tokens.first().map(String::as_str) {
-                Some("origin") => {
-                    if let Some(origin) = parse_project_origin(&tokens) {
-                        project_origin = origin;
-                    }
-                }
-                Some("position") => {
-                    if let Some(position) = parse_position(&tokens) {
-                        positions.push(position);
-                    }
-                }
-                _ => {}
-            }
-        }
-        TerrainDescriptorJson { schema: schema.to_string(), project_origin, positions, exaggeration }
-    }
+/// 🗺️ Bundled scenery enters through the same explicit JSON map boundary as imported media.
+fn fixture_descriptor(exaggeration:f64)->TerrainDescriptorJson{
+    let map=crate::schema::ImportedMap::from_json(include_str!("../../🖼️assets/🎬️demo/🌍️scenery.json")).expect("handcrafted terrain scenery map");
+    let origin=map.properties.iter().find(|member|member.name=="projectOrigin").map(|member|&member.value);
+    let project_origin=TerrainProjectOrigin{lon:origin.and_then(|value|value.get("lon")).and_then(|value|value.as_f64()).unwrap_or(0.0),lat:origin.and_then(|value|value.get("lat")).and_then(|value|value.as_f64()).unwrap_or(0.0)};
+    TerrainDescriptorJson{schema:crate::GIS_3D_TERRAIN_SCHEMA.into(),project_origin,positions:map_positions(&map),exaggeration}
 }
-
-/// 🔌️ `map:in`'s overlay pin layer (see `GisTerrainSnapshot::imported_features_json`), decoded from
-/// its `{positions:[{id,lon,lat,label?,icon?}]}` descriptor JSON — malformed/empty JSON (including the
-/// default empty string) simply contributes no extra pins.
+/// 📌️ Pin projection requires an identifier; durable map admission remains independent.
+fn map_positions(map:&crate::schema::ImportedMap)->Vec<TerrainPositionData>{
+    map.positions.iter().filter_map(|entry|Some(TerrainPositionData{id:entry.get("id")?.as_str()?.to_string(),lon:entry.get("lon")?.as_f64()?,lat:entry.get("lat")?.as_f64()?,label:entry.get("label").and_then(|value|value.as_str()).map(str::to_string),icon:entry.get("icon").and_then(|value|value.as_str()).map(str::to_string)})).collect()
+}
+/// 🔌️ The optional imported map contributes an independent pin overlay.
 fn imported_positions(document: &GisTerrainSnapshot) -> Vec<TerrainPositionData> {
-    let Ok(value) = serde_json::from_str::<serde_json::Value>(&document.imported_features_json) else {
-        return Vec::new();
-    };
-    let Some(positions) = value.get("positions").and_then(|value| value.as_array()) else {
-        return Vec::new();
-    };
-    positions
-        .iter()
-        .filter_map(|entry| {
-            Some(TerrainPositionData {
-                id: entry.get("id").and_then(|value| value.as_str())?.to_string(),
-                lon: entry.get("lon").and_then(|value| value.as_f64())?,
-                lat: entry.get("lat").and_then(|value| value.as_f64())?,
-                label: entry.get("label").and_then(|value| value.as_str()).map(str::to_string),
-                icon: entry.get("icon").and_then(|value| value.as_str()).map(str::to_string),
-            })
-        })
-        .collect()
+    let Some(map) = &document.imported_map else { return Vec::new(); };
+    map_positions(map)
 }
 
 /// 🏔️ The full rendering descriptor (project origin + fixture pins + `map:in` overlay pins +
@@ -193,7 +83,7 @@ fn imported_positions(document: &GisTerrainSnapshot) -> Vec<TerrainPositionData>
 /// bundled fixture's own `gisterrain exaggeration=...` header only ever seeds it once via
 /// `crate::schema::default_terrain_document`.
 pub fn parse_descriptor(document: &GisTerrainSnapshot) -> TerrainDescriptorJson {
-    let mut descriptor = terrain_fixture_text::parse_descriptor(crate::document_dsl::REUSE_TERRAIN_EXAMPLE_TEXT, crate::GIS_3D_TERRAIN_SCHEMA, document.exaggeration);
+    let mut descriptor = fixture_descriptor(document.exaggeration);
     descriptor.positions.extend(imported_positions(document));
     descriptor
 }

@@ -1,4 +1,4 @@
-use super::super::super::{ArtifactCanonicalJsonCursor, ARTIFACT_CANONICAL_JSON_CHUNK_BYTES};
+use super::super::super::{ARTIFACT_CANONICAL_JSON_CHUNK_BYTES, ArtifactCanonicalJsonCursor};
 use super::{ArtifactCanonicalValueAdmission, ArtifactCanonicalValueCloseStep, ArtifactCanonicalValueGrant, ArtifactCanonicalValueLimits, ArtifactCanonicalValueStep};
 use crate::DslValue;
 use std::sync::Arc;
@@ -41,7 +41,7 @@ fn shared_value_canonical_json_admission_rejects_duplicate_keys_before_exposing_
     let duplicate = entries(&vectors["duplicateEntries"]);
     let key = vectors["largeKey"]["unit"].as_str().unwrap().repeat(vectors["largeKey"]["repeat"].as_u64().unwrap() as usize);
     let long_duplicate = DslValue::Object(vec![(key.clone(), DslValue::Null), (key, DslValue::Bool(true))]);
-    assert_eq!(crate::os_pack::json::to_json_string(&duplicate), vectors["duplicatePackJson"].as_str().unwrap());
+    assert_eq!(semio_framework_pack_json::to_json_string(&duplicate), vectors["duplicatePackJson"].as_str().unwrap());
     for bytes in [1, 7, 256] {
         for value in [duplicate.clone(), DslValue::Array(vec![duplicate.clone()]), long_duplicate.clone()] {
             let source = Arc::new(value);
@@ -176,7 +176,7 @@ impl serde::Serialize for OrderedOracle<'_> {
             DslValue::Number(Number::Int(value)) => serializer.serialize_i64(*value),
             DslValue::Number(Number::Float(value)) => serializer.serialize_f64(*value),
             DslValue::String(value) => serializer.serialize_str(value),
-            DslValue::Bytes(value)=>serde::Serialize::serialize(value,serializer),
+            DslValue::Bytes(value) => serde::Serialize::serialize(value, serializer),
             DslValue::Array(values) => {
                 let mut output = serializer.serialize_seq(Some(values.len()))?;
                 for value in values {
@@ -205,7 +205,7 @@ fn shared_value_canonical_json_matches_neutral_vectors_and_serde_json_at_each_ch
     values.push(DslValue::Object(vec![("z".into(), DslValue::uint(u64::MAX)), ("a".into(), DslValue::float(1.0)), ("m".into(), DslValue::int(i64::MIN))]));
     for source in values {
         let expected = serde_json::to_vec(&OrderedOracle(&source)).unwrap();
-        assert_eq!(expected, crate::os_pack::json::to_json_string(&source).as_bytes());
+        assert_eq!(expected, semio_framework_pack_json::to_json_string(&source).as_bytes());
         for chunk_size in [1, 7, ARTIFACT_CANONICAL_JSON_CHUNK_BYTES] {
             let mut admission = ArtifactCanonicalValueAdmission::new(Arc::new(source.clone()), limits()).unwrap_or_else(|(_, error)| panic!("{error}"));
             for _ in 0..100_000 {

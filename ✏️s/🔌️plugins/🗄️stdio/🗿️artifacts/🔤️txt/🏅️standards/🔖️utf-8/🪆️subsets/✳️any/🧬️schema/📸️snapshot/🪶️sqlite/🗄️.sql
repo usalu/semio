@@ -1,5 +1,5 @@
 CREATE TABLE text_document (
-  id INTEGER PRIMARY KEY CHECK(id = 1),
+  id INTEGER PRIMARY KEY CHECK(id > 0),
   schema TEXT NOT NULL,
   trailing_newline INTEGER NOT NULL CHECK(trailing_newline IN (0, 1)),
   line_ending TEXT NOT NULL CHECK(line_ending IN ('lf', 'crlf'))

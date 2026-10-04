@@ -15,7 +15,7 @@ use crate::Iso16757Snapshot;
 pub const ISO16757_DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
 /// 📖️ Parses `.iso16757` DSL text into a `Document`.
-pub fn parse_dsl(text: &str) -> Result<Iso16757Snapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<Iso16757Snapshot, semio_framework_diagnostic::TextError> {
     <Iso16757Snapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 

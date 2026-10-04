@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "scope": "lane/scenario",
+  "children": [
+    "work",
+    "hosts",
+    "results",
+    "reports"
+  ],
+  "invalidScopes": [
+    "../scenario",
+    "lane/..",
+    "lane/scenario/more",
+    "lane",
+    "lane/",
+    "lane\\escape/scenario",
+    "lane/\u0000"
+  ],
+  "marker": {
+    "testId": "artifact-root-owner::fixture",
+    "cacheKey": "source-v1"
+  }
+}

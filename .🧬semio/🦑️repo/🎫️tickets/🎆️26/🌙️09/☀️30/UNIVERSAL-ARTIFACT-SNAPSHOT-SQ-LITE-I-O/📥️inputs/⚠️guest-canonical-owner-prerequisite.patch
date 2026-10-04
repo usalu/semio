@@ -1,0 +1,106 @@
+*** Begin Patch
+*** Update File: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🛰️declaration-channels-unit/🦀️.rs
+@@
+-use protocol::{FromValue, Mutation, MutationDiff, MutationLeaf, OpBinary, OpText, SemanticMutation, ToValue};
++use semio_framework_value::{FromValue, ToValue};
++use protocol::{Mutation, MutationDiff, MutationLeaf, OpBinary, OpText, SemanticMutation};
+*** Update File: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🧪️tests/🔬️shell-fault-frame/🦀️.rs
+@@
+-    assert_eq!(serde_json::Value::from(protocol::ToValue::to_value(&decoded)), serde_json::Value::from(protocol::ToValue::to_value(&fault)));
++    assert_eq!(serde_json::Value::from(semio_framework_value::ToValue::to_value(&decoded)), serde_json::Value::from(semio_framework_value::ToValue::to_value(&fault)));
+*** Update File: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/🧬️mutations/🔁️set-state/🧪️tests/🧪️set-state/🦀️.rs
+@@
+-    assert_eq!(serde_json::Value::from(protocol::ToValue::to_value(mutation.descriptor())), descriptor);
++    assert_eq!(serde_json::Value::from(semio_framework_value::ToValue::to_value(mutation.descriptor())), descriptor);
+*** Update File: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/📡️contributed-mutation-wire-unit/🦀️.rs
+@@
+-        serde_json::Value::from(protocol::ToValue::to_value(&AddValue::DESCRIPTOR)),
++        serde_json::Value::from(semio_framework_value::ToValue::to_value(&AddValue::DESCRIPTOR)),
+*** Update File: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️time-travel/🦀️.rs
+@@
+-        (example_id == "five").then(|| Ok(semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&protocol::ToValue::to_value(&example)))))
++        (example_id == "five").then(|| Ok(semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&example)))))
+*** Update File: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️bounded-reload/🦀️.rs
+@@
+-impl protocol::ToValue for ReloadCountedOp {
++impl semio_framework_value::ToValue for ReloadCountedOp {
+@@
+-    fn to_value(&self) -> protocol::DslValue {
++    fn to_value(&self) -> semio_framework_value::DslValue {
+@@
+-        protocol::ToValue::to_value(&self.0)
++        semio_framework_value::ToValue::to_value(&self.0)
+@@
+-impl protocol::FromValue for ReloadCountedOp {
++impl semio_framework_value::FromValue for ReloadCountedOp {
+@@
+-    fn from_value(value: protocol::DslValue) -> Result<Self, protocol::ValueError> {
++    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+@@
+-        <TestMutation as protocol::FromValue>::from_value(value).map(Self)
++        <TestMutation as semio_framework_value::FromValue>::from_value(value).map(Self)
+*** Update File: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-owned-media-error/🦀️.rs
+@@
+-        let wire=protocol::ToValue::to_value(&artifact.descriptor);let descriptor=<MediaArtifactDescriptor as protocol::FromValue>::from_value(wire).unwrap();assert_eq!(descriptor.wire,artifact.descriptor.wire);assert_eq!(descriptor.media_type,Some(media_type));assert_eq!(descriptor.port_id.as_deref(),Some(port));
++        let wire=semio_framework_value::ToValue::to_value(&artifact.descriptor);let descriptor=<MediaArtifactDescriptor as semio_framework_value::FromValue>::from_value(wire).unwrap();assert_eq!(descriptor.wire,artifact.descriptor.wire);assert_eq!(descriptor.media_type,Some(media_type));assert_eq!(descriptor.port_id.as_deref(),Some(port));
+@@
+-        let mut deny=|_|false;let mut output=NativeEncodeControl::new(usize::MAX,&mut deny);let error=MediaArtifact::encode_intrinsic(port,media_type,schema,value,&mut output).unwrap_err();assert!(matches!(&error,MediaArtifactError::Value(error) if error.kind==ValueRefusalKind::Canceled));assert!(std::error::Error::source(&error).unwrap().downcast_ref::<protocol::ValueError>().is_some());
++        let mut deny=|_|false;let mut output=NativeEncodeControl::new(usize::MAX,&mut deny);let error=MediaArtifact::encode_intrinsic(port,media_type,schema,value,&mut output).unwrap_err();assert!(matches!(&error,MediaArtifactError::Value(error) if error.kind==ValueRefusalKind::Canceled));assert!(std::error::Error::source(&error).unwrap().downcast_ref::<semio_framework_value::ValueError>().is_some());
+*** Update File: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-declarations-fixture/🦀️.rs
+@@
+-        S: Clone + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + store::ArtifactSqliteSnapshot + 'static,
++        S: Clone + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + store::ArtifactSqliteSnapshot + 'static,
+@@
+-        M: Mutation<S> + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + OpText + OpBinary + 'static,
++        M: Mutation<S> + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + OpText + OpBinary + 'static,
+*** Update File: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🧪️tests/🔗️dependency-contribution-unit/🦀️.rs
+@@
+-    assert_eq!(serde_json::Value::from(protocol::ToValue::to_value(&AddValue::DESCRIPTOR)), serde_json::from_str::<serde_json::Value>(descriptor).expect("owned descriptor JSON"));
++    assert_eq!(serde_json::Value::from(semio_framework_value::ToValue::to_value(&AddValue::DESCRIPTOR)), serde_json::from_str::<serde_json::Value>(descriptor).expect("owned descriptor JSON"));
+*** Update File: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️extension-retirement/🦀️.rs
+@@
+-        let bundle = ExtensionBundle::new(id, id, "1").resource_owner(resource).owned_handler(fixture["capability"].as_str().unwrap()).contributes_topic("metadata", store::DslValue::from(&fixture["metadata"]));
++        let bundle = ExtensionBundle::new(id, id, "1").resource_owner(resource).owned_handler(fixture["capability"].as_str().unwrap()).contributes_topic("metadata", semio_framework_value::DslValue::from(&fixture["metadata"]));
+@@
+-        let first_party = store::DslValue::from(&oracle);
++        let first_party = semio_framework_value::DslValue::from(&oracle);
+@@
+-        let mut bundle = ExtensionBundle::new("drop-boundary", "Drop Boundary", "1").resource_owner(TerminalOnStep { terminal: false, dropped: dropped.clone(), exact_grant: false }).owned_handler("echo").contributes_topic("metadata", store::DslValue::from(&fixture["metadata"]));
++        let mut bundle = ExtensionBundle::new("drop-boundary", "Drop Boundary", "1").resource_owner(TerminalOnStep { terminal: false, dropped: dropped.clone(), exact_grant: false }).owned_handler("echo").contributes_topic("metadata", semio_framework_value::DslValue::from(&fixture["metadata"]));
+@@
+-        let mut cold = ExtensionBundle::new("cold", "Cold", "1").contributes_topic("metadata", store::DslValue::from(&fixture["metadata"]));
++        let mut cold = ExtensionBundle::new("cold", "Cold", "1").contributes_topic("metadata", semio_framework_value::DslValue::from(&fixture["metadata"]));
+*** Update File: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🦀️.rs
+@@
+-        <Self as protocol::FromValue>::from_value(value.into()).map_err(|error| TextError::from_value_error(error, TextSpan::at(1, 1)))
++        <Self as semio_framework_value::FromValue>::from_value(value.into()).map_err(|error| TextError::from_value_error(error, TextSpan::at(1, 1)))
+@@
+-        <Self as protocol::FromValue>::from_value(value.into()).map_err(|error| store::PackError::Schema(error.to_string()))
++        <Self as semio_framework_value::FromValue>::from_value(value.into()).map_err(|error| store::PackError::Schema(error.to_string()))
+@@
+-                <Self as protocol::FromValue>::from_value(value.into()).map_err(|error| TextError::from_value_error(error, TextSpan::at(1, 1)))
++                <Self as semio_framework_value::FromValue>::from_value(value.into()).map_err(|error| TextError::from_value_error(error, TextSpan::at(1, 1)))
+@@
+-                <Self as protocol::FromValue>::from_value(value.into()).map_err(|error| store::PackError::Schema(error.to_string()))
++                <Self as semio_framework_value::FromValue>::from_value(value.into()).map_err(|error| store::PackError::Schema(error.to_string()))
+*** Update File: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/📄️natural-file-lifecycle/🦀️.rs
+@@
+-    let descriptor = serde_json::Value::from(crate::protocol::ToValue::to_value(&descriptor));
++    let descriptor = serde_json::Value::from(semio_framework_value::ToValue::to_value(&descriptor));
+@@
+-    let crate::MediaPayload::Intrinsic { schema, value: crate::dsl::DslValue::Bytes(bytes) } = media.payload else { panic!("natural bytes must remain intrinsic octets") };
++    let crate::MediaPayload::Intrinsic { schema, value: semio_framework_value::DslValue::Bytes(bytes) } = media.payload else { panic!("natural bytes must remain intrinsic octets") };
+*** Update File: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs
+@@
+-                Err(semio_framework_dsl_record::__rt::field_error(format!("unknown operation line '{line}'")))
++                Err(::semio_framework_diagnostic::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown operation line '{line}'"), ::semio_framework_diagnostic::TextSpan::at(1, 1)))
+@@
+-                Err(semio_framework_dsl_record::__rt::field_error(format!("unknown operation line '{line}'")))
++                Err(::semio_framework_diagnostic::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown operation line '{line}'"), ::semio_framework_diagnostic::TextSpan::at(1, 1)))
+@@
+-                Err(semio_framework_dsl_record::__rt::field_error(format!("unknown operation line '{line}'")))
++                Err(::semio_framework_diagnostic::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown operation line '{line}'"), ::semio_framework_diagnostic::TextSpan::at(1, 1)))
+@@
+-                Err(semio_framework_dsl_record::__rt::field_error(format!("unknown operation line '{line}'")))
++                Err(::semio_framework_diagnostic::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown operation line '{line}'"), ::semio_framework_diagnostic::TextSpan::at(1, 1)))
+*** End Patch

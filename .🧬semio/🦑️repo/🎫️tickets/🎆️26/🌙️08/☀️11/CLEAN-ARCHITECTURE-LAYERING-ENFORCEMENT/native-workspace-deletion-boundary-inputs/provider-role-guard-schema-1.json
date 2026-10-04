@@ -1,0 +1,49 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "path",
+    "role",
+    "normal",
+    "dev",
+    "required",
+    "accepted"
+  ],
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "path": {
+      "type": "string"
+    },
+    "role": {
+      "enum": [
+        "normal",
+        "dev",
+        null
+      ]
+    },
+    "normal": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "dev": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "required": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "accepted": {
+      "type": "boolean"
+    }
+  }
+}

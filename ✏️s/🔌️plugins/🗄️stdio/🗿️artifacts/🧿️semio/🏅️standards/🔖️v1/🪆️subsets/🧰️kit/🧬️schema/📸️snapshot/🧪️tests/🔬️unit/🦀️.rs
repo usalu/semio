@@ -15,13 +15,13 @@ async fn minimal_schema_valid_json_defaults_collection_slots() {
     assert!(snapshot.models.is_empty());
     assert!(snapshot.properties.is_none());
     assert!(snapshot.representations.is_empty());
-    let encoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&snapshot)).expect("snapshot reencodes");
+    let encoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&snapshot)).expect("snapshot reencodes");
     assert_eq!(encoded["schema"], minimal["schema"]);
     assert!(encoded.get("properties").is_none());
-    let artifact: crate::standards::v1::subsets::kit::schema::SemioKitArtifact = dsl::json::from_json_str(&minimal_text).expect("schema-valid minimal Kit artifact");
+    let artifact: crate::standards::v1::subsets::kit::schema::SemioKitArtifact = semio_framework_pack_json::from_json_str(&minimal_text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("schema-valid minimal Kit artifact");
     assert!(artifact.types.is_empty() && artifact.designs.is_empty() && artifact.objects.is_empty() && artifact.models.is_empty());
     assert!(artifact.properties.is_none() && artifact.representations.is_empty());
-    let encoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&artifact)).expect("artifact reencodes");
+    let encoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&artifact)).expect("artifact reencodes");
     assert!(encoded.get("properties").is_none());
     assert!(decode_kit_snapshot_json(r#"{"schema":"stdio.semio.kit","properties":null}"#).is_err());
 }

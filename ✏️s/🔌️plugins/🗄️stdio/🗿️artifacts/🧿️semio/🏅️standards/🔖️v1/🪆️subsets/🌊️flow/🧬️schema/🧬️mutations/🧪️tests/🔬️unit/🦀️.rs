@@ -26,7 +26,7 @@ async fn inverse_law() {
 
         let mut round_tripped = base.clone();
         apply_semio_flow_mutation(&mut round_tripped, &mutation);
-        for inverse_mutation in <SemioFlowMutation as Mutation<SemioFlowSnapshot>>::inverse(&mutation, &base) {
+        for inverse_mutation in <SemioFlowMutation as Mutation<SemioFlowSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
             apply_semio_flow_mutation(&mut round_tripped, &inverse_mutation);
         }
         assert_eq!(round_tripped, base, "inverse_law (mutation-level).await failed for {mutation:?}");
@@ -63,7 +63,7 @@ async fn op_text_binary_roundtrip_law() {
 /// parses Rust, so this is what makes the declaration honest.
 #[test]
 fn kinds_match_the_enum_and_the_catalog() {
-    assert_eq!(KINDS.len(), 13, "KINDS must name exactly one entry per declared SemioFlowMutation variant");
+    assert_eq!(KINDS.len(), 14, "KINDS must name exactly one entry per declared SemioFlowMutation variant");
     let mut seen = vec![false; KINDS.len()];
     for mutation in demo_mutation_cases() {
         let keyword = print_flow_mutation(&mutation).split(' ').next().expect("printed op is never empty").to_string();
@@ -87,7 +87,7 @@ async fn insert_then_remove_node_apply_and_inverse() {
     let mut after = base.clone();
     apply_semio_flow_mutation(&mut after, &insert);
     assert_eq!(after.nodes.len(), 3);
-    for inv in Mutation::inverse(&insert, &base) {
+    for inv in Mutation::inverse(&insert, &base).expect("valid retained mutation inverse fixture") {
         apply_semio_flow_mutation(&mut after, &inv);
     }
     assert_eq!(after, base);
@@ -100,7 +100,7 @@ async fn node_param_mutations_apply_and_inverse() {
     let mut after = base.clone();
     apply_semio_flow_mutation(&mut after, &set);
     assert_eq!(param_value_at(&after, "n1", "k"), Some("new"));
-    for inv in Mutation::inverse(&set, &base) {
+    for inv in Mutation::inverse(&set, &base).expect("valid retained mutation inverse fixture") {
         apply_semio_flow_mutation(&mut after, &inv);
     }
     assert_eq!(after, base);
@@ -109,7 +109,7 @@ async fn node_param_mutations_apply_and_inverse() {
     let mut after2 = base.clone();
     apply_semio_flow_mutation(&mut after2, &add);
     assert_eq!(param_value_at(&after2, "n1", "fresh"), Some("added"));
-    for inv in Mutation::inverse(&add, &base) {
+    for inv in Mutation::inverse(&add, &base).expect("valid retained mutation inverse fixture") {
         apply_semio_flow_mutation(&mut after2, &inv);
     }
     assert_eq!(after2, base);
@@ -122,7 +122,7 @@ async fn edge_mutations_apply_and_inverse() {
     let mut after = base.clone();
     apply_semio_flow_mutation(&mut after, &set);
     assert_eq!(edge_at(&after, "e1").unwrap().from.node, "n2");
-    for inv in Mutation::inverse(&set, &base) {
+    for inv in Mutation::inverse(&set, &base).expect("valid retained mutation inverse fixture") {
         apply_semio_flow_mutation(&mut after, &inv);
     }
     assert_eq!(after, base);
@@ -142,19 +142,19 @@ async fn drag_nodes_moves_relative_to_its_base_and_undoes_exactly() {
     assert_eq!((after.nodes[0].position.x, after.nodes[0].position.y), (12.5, -4.0));
     assert_eq!((after.nodes[1].position.x, after.nodes[1].position.y), (22.5, 6.0));
     let mut restored = after.clone();
-    for step in inverse_semio_flow_mutation(&drag, &base) {
+    for step in inverse_semio_flow_mutation(&drag, &base).expect("valid retained mutation inverse fixture") {
         apply_semio_flow_mutation(&mut restored, &step);
     }
     assert_eq!(restored, base, "drag-nodes' undo restores every base position exactly");
     let partial = Mutation::diff(&SemioFlowMutation::DragNodes(drag_nodes::DragNodes { targets: vec!["n1".into(), "ghost".into()], dx: 1.0, dy: 0.0 }), &base);
     assert!(partial.messages().iter().any(|message| message.code.0 == "mutation.partial" && message.target == vec!["ghost".to_string()]), "{:?}", partial.messages());
     let missing = Mutation::diff(&SemioFlowMutation::DragNodes(drag_nodes::DragNodes { targets: vec!["ghost".into()], dx: 1.0, dy: 0.0 }), &base);
-    assert!(missing.messages().iter().any(|message| message.code.0 == "mutation.target-missing" && message.level == protocol::Severity::Error), "{:?}", missing.messages());
+    assert!(missing.messages().iter().any(|message| message.code.0 == "mutation.target-missing" && message.level == semio_framework_diagnostic::Severity::Error), "{:?}", missing.messages());
     let still = Mutation::diff(&SemioFlowMutation::DragNodes(drag_nodes::DragNodes { targets: vec!["n1".into()], dx: 0.0, dy: 0.0 }), &base);
     assert!(still.messages().iter().any(|message| message.code.0 == "mutation.no-op"), "{:?}", still.messages());
     for malformed in [drag_nodes::DragNodes { targets: Vec::new(), dx: 1.0, dy: 0.0 }, drag_nodes::DragNodes { targets: vec!["n1".into(), "n1".into()], dx: 1.0, dy: 0.0 }, drag_nodes::DragNodes { targets: vec!["n1".into()], dx: f64::NAN, dy: 0.0 }] {
         let outcome = Mutation::diff(&SemioFlowMutation::DragNodes(malformed), &base);
-        assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.invariant" && message.level == protocol::Severity::Fatal), "{:?}", outcome.messages());
+        assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.invariant" && message.level == semio_framework_diagnostic::Severity::Fatal), "{:?}", outcome.messages());
     }
 }
 
@@ -162,7 +162,7 @@ async fn drag_nodes_moves_relative_to_its_base_and_undoes_exactly() {
 #[test]
 fn drag_nodes_labels_its_row_from_its_inputs() {
     let label = <SemioFlowMutation as protocol::SemanticMutation<SemioFlowSnapshot>>::label(&SemioFlowMutation::DragNodes(drag_nodes::DragNodes { targets: vec!["n1".into(), "n2".into()], dx: 80.0, dy: 40.5 }));
-    assert_eq!(label.resolve(protocol::Terminology::Native, protocol::Locale::En), "Drag 2 nodes by (80, 40.5)");
-    assert_eq!(label.resolve(protocol::Terminology::Native, protocol::Locale::De), "2 Knoten um (80; 40,5) ziehen");
+    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Drag 2 nodes by (80, 40.5)");
+    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "2 Knoten um (80; 40,5) ziehen");
 }
 //#endregion ✋️DragNodes

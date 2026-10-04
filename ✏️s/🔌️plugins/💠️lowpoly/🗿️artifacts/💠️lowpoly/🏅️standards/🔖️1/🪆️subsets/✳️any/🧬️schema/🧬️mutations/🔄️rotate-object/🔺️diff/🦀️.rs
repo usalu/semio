@@ -15,7 +15,7 @@ pub fn diff(payload: &RotateObject, base: &LowpolySnapshot) -> protocol::Mutatio
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Object \"{}\" rotation must be finite, got {:?}.", payload.id, payload.new_rotation), [payload.id.clone()]);
     }
     if existing.transform.rotation == payload.new_rotation {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Object \"{}\" is already at rotation {:?}.", payload.id, payload.new_rotation));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Object \"{}\" is already at rotation {:?}.", payload.id, payload.new_rotation));
     }
     let transform = LowpolyTransform { rotation: payload.new_rotation, ..existing.transform.clone() };
     protocol::MutationOutcome::new(diff_objects_patch(payload.id.clone(), LowpolyObjectPatch { transform: Some(transform), ..LowpolyObjectPatch::default() }))

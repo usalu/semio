@@ -51,7 +51,7 @@ function contributedChannelConsumersV1(packages: readonly DiscoveredPackage[], v
 function channelVersionCandidateFiles(repoRoot: string, consumers: readonly ChannelVersionConsumerV1[], packages: readonly DiscoveredPackage[], view: RegistryCatalogInputView): readonly string[] {
   const roots = channelVersionCensusRoots(packages, consumers);
   const pathspecs = roots.flatMap(root => CHANNEL_VERSION_CENSUS_EXTENSIONS.map(extension => `:(glob)${root}/**/*.${extension}`));
-  const listed = spawnSync("git", ["-c", "core.quotePath=false", "grep", "-l", "-z", "--untracked", "-E", "appChannelVersion|CHANNEL_VERSION|app_channel_version|6170704368616e6e656c56657273696f6e", "--", ...pathspecs], { cwd: repoRoot, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+  const listed = spawnSync("git", ["-c", "core.quotePath=false", "grep", "-l", "-z", "--untracked", "-E", "appChannelVersion|channelVersion|CHANNEL_VERSION|app_channel_version|6170704368616e6e656c56657273696f6e", "--", ...pathspecs], { cwd: repoRoot, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
   if (listed.status !== 0 && listed.status !== 1) throw Error(`channel-version census: git grep failed (${listed.status}): ${listed.stderr}`);
   const owners = packages.filter(pkg => pkg.lang === "🦀️rust").map(pkg => ({ ownerRel: pkg.ownerRel, manifest: view.readText(pkg.manifestPath) }));
   return listed.stdout.split("\0").filter(path => path.length > 0 && !channelVersionIsDescribeOutputV1(path, owners) && path !== CHANNEL_VERSION_PIN_PATH && !path.startsWith(`${MOD}/🧑‍💻dev/🔖️channel-version/`) && !path.startsWith(`${MOD}/🧑‍💻dev/🧪️tests/🔖️channel-version/`));

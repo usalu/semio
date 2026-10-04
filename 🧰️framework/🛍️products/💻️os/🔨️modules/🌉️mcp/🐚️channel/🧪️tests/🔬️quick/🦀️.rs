@@ -40,7 +40,7 @@ fn every_gateway_to_shell_command_encodes_to_its_shared_fixture() {
     assert_eq!(encode_app_command(&AppCommand::ReadArtifact), fixture("readArtifact"));
     assert_eq!(encode_app_command(&AppCommand::PureCommand { capability_id: "note.note.appendParagraph".to_string(), input: serde_json::json!({ "text": "hello" }) }), fixture("pureCommand"));
     assert_eq!(
-        encode_app_command(&AppCommand::TransactionPrepare { txn_id: "txn_1".to_string(), ops: PreparedOps { document: vec![vec![1, 2, 3]], config: Vec::new(), draft: Vec::new(), children: Vec::new() }, label: "append paragraph".to_string(), origin: agent_origin() }),
+        encode_app_command(&AppCommand::TransactionPrepare { txn_id: "txn_1".to_string(), ops: PreparedOps { document: vec![vec![1, 2, 3]], config: Vec::new(), draft: Vec::new(), children: Vec::new() }, origin: agent_origin() }),
         fixture("transactionPrepare")
     );
     assert_eq!(encode_app_command(&AppCommand::TransactionCommit { txn_id: "txn_1".to_string() }), fixture("transactionCommit"));

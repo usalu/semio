@@ -24,9 +24,12 @@ impl MutationKind<PdfSnapshot, PdfHMutation> for RemoveLaunchAction {
         MutationOutcome::new(support::graph_edit_diff(base, next))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfHMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfHMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         support::action_with(base, "Launch", "F", &self.target).map(|_| PdfHMutation::InsertLaunchAction(InsertLaunchAction { target: self.target.clone() })).into_iter().collect()
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove launch action", "Launch-Aktion entfernen")

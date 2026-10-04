@@ -106,7 +106,7 @@ async fn render_inspection_falls_back_to_the_first_check_for_an_out_of_range_ind
 #[semio_framework_async_macros::async_test]
 async fn byte_properties_render_their_bounded_localized_extent() {
     for (locale, extent) in [(Locale::En, "65537 bytes"), (Locale::De, "65537 Bytes")] {
-        let tree = dsl::DslValue::Bytes(vec![255; 65_537]);
+        let tree = semio_framework_value::DslValue::Bytes(vec![255; 65_537]);
         let root = render_value_editor("payload", &tree, locale, "norm.mock", None, &TreeWindows::unhosted(), 0).expect("byte extent");
         let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root }).expect("projection");
         let projected: serde_json::Value = serde_json::from_str(&json).expect("independent JSON oracle");
@@ -145,8 +145,8 @@ async fn report_table_columns_and_rows_line_up_with_the_check_report() {
 
 #[semio_framework_async_macros::async_test]
 async fn selected_check_index_arg_reads_the_shell_wire_shape() {
-    assert_eq!(selected_check_index_arg(Some(&dsl::DslValue::from(&serde_json::json!({ "index": 3 })))), Some(3));
-    assert_eq!(selected_check_index_arg(Some(&dsl::DslValue::from(&serde_json::json!({})))), None);
+    assert_eq!(selected_check_index_arg(Some(&semio_framework_value::DslValue::from(&serde_json::json!({ "index": 3 })))), Some(3));
+    assert_eq!(selected_check_index_arg(Some(&semio_framework_value::DslValue::from(&serde_json::json!({})))), None);
     assert_eq!(selected_check_index_arg(None), None);
 }
 
@@ -232,17 +232,17 @@ async fn report_and_summary_localize_en_and_de() {
 
 #[test]
 fn path_set_insert_remove_round_trip() {
-    let mut root = dsl::DslValue::object([
-        ("layers".into(), dsl::DslValue::Array(vec![dsl::DslValue::object([("thicknessM".into(), dsl::DslValue::float(0.08))])])),
-        ("name".into(), dsl::DslValue::String("wall".into())),
+    let mut root = semio_framework_value::DslValue::object([
+        ("layers".into(), semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::object([("thicknessM".into(), semio_framework_value::DslValue::float(0.08))])])),
+        ("name".into(), semio_framework_value::DslValue::String("wall".into())),
     ]);
-    set_value_at_path(&mut root, "name", dsl::DslValue::String("north".into())).unwrap();
-    set_value_at_path(&mut root, "layers[0].thicknessM", dsl::DslValue::float(0.12)).unwrap();
-    insert_value_at_path(&mut root, "layers", 1, Some(dsl::DslValue::object([("thicknessM".into(), dsl::DslValue::float(0.05))]))).unwrap();
-    assert_eq!(root.get("layers").and_then(|v| if let dsl::DslValue::Array(items) = v { Some(items.len()) } else { None }), Some(2));
+    set_value_at_path(&mut root, "name", semio_framework_value::DslValue::String("north".into())).unwrap();
+    set_value_at_path(&mut root, "layers[0].thicknessM", semio_framework_value::DslValue::float(0.12)).unwrap();
+    insert_value_at_path(&mut root, "layers", 1, Some(semio_framework_value::DslValue::object([("thicknessM".into(), semio_framework_value::DslValue::float(0.05))]))).unwrap();
+    assert_eq!(root.get("layers").and_then(|v| if let semio_framework_value::DslValue::Array(items) = v { Some(items.len()) } else { None }), Some(2));
     remove_value_at_path(&mut root, "layers", 0).unwrap();
-    assert_eq!(root.get("layers").and_then(|v| if let dsl::DslValue::Array(items) = v { Some(items.len()) } else { None }), Some(1));
-    assert_eq!(root.get("name"), Some(&dsl::DslValue::String("north".into())));
+    assert_eq!(root.get("layers").and_then(|v| if let semio_framework_value::DslValue::Array(items) = v { Some(items.len()) } else { None }), Some(1));
+    assert_eq!(root.get("name"), Some(&semio_framework_value::DslValue::String("north".into())));
 }
 
 #[test]
@@ -303,9 +303,9 @@ fn dispatch_apply_remedy_at_least_flips_failing_check_to_pass() {
     let doc = MockDoc { resistance_kn: 80_000.0, class_name: "C30".into() };
     let before = mock_evaluate(&doc);
     assert_eq!(before.checks[0].status, CheckStatus::Fail);
-    let mut tree = dsl::DslValue::object([
-        ("resistanceKn".into(), dsl::DslValue::float(doc.resistance_kn)),
-        ("className".into(), dsl::DslValue::String(doc.class_name.clone())),
+    let mut tree = semio_framework_value::DslValue::object([
+        ("resistanceKn".into(), semio_framework_value::DslValue::float(doc.resistance_kn)),
+        ("className".into(), semio_framework_value::DslValue::String(doc.class_name.clone())),
     ]);
     apply_remedy_edit(&before, "mock.uls", 0, 0, &mut tree).expect("apply");
     let resistance = tree.get("resistanceKn").and_then(|v| v.as_f64()).expect("resistance");
@@ -320,21 +320,21 @@ fn one_of_remedy_application_writes_selected_option() {
     let report = mock_evaluate(&doc);
     assert!(report.checks[0].remedies.iter().any(|r| matches!(r.bound, crate::document::RemedyBound::OneOf) && r.applicable));
     let one_of_index = report.checks[0].remedies.iter().position(|r| matches!(r.bound, crate::document::RemedyBound::OneOf)).expect("one_of");
-    let mut tree = dsl::DslValue::object([
-        ("resistanceKn".into(), dsl::DslValue::float(doc.resistance_kn)),
-        ("className".into(), dsl::DslValue::String(doc.class_name.clone())),
+    let mut tree = semio_framework_value::DslValue::object([
+        ("resistanceKn".into(), semio_framework_value::DslValue::float(doc.resistance_kn)),
+        ("className".into(), semio_framework_value::DslValue::String(doc.class_name.clone())),
     ]);
     apply_remedy_edit(&report, "mock.uls", one_of_index, 0, &mut tree).expect("one_of");
-    assert_eq!(tree.get("className"), Some(&dsl::DslValue::String("C30".into())));
+    assert_eq!(tree.get("className"), Some(&semio_framework_value::DslValue::String("C30".into())));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn render_document_editor_emits_set_field_and_list_verbs() {
     use semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR;
     const BODY: &str = "norm.mock.inputs";
-    let tree = dsl::DslValue::object([
-        ("resistanceKn".into(), dsl::DslValue::float(10.0)),
-        ("items".into(), dsl::DslValue::Array(vec![dsl::DslValue::float(1.0), dsl::DslValue::float(2.0)])),
+    let tree = semio_framework_value::DslValue::object([
+        ("resistanceKn".into(), semio_framework_value::DslValue::float(10.0)),
+        ("items".into(), semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::float(1.0), semio_framework_value::DslValue::float(2.0)])),
     ]);
     let items_key = format!("norm-inputs-root{TREE_WINDOW_PATH_SEPARATOR}{}", inputs_section_id("items"));
     let view = ViewModel {
@@ -428,33 +428,33 @@ fn parse_path_accepts_index_and_id_selectors() {
             PathSegment::Field("nEd".into()),
         ]
     );
-    assert!(parse_path("members[id=]").unwrap_err().contains("empty"));
-    assert!(parse_path("members[id=a.b]").unwrap_err().contains("must not contain"));
-    assert!(parse_path("members[id=a=b]").unwrap_err().contains("must not contain"));
-    assert!(parse_path("members[foo]").unwrap_err().contains("malformed"));
+    assert!(parse_path("members[id=]").unwrap_err().to_string().contains("empty"));
+    assert!(parse_path("members[id=a.b]").unwrap_err().to_string().contains("must not contain"));
+    assert!(parse_path("members[id=a=b]").unwrap_err().to_string().contains("must not contain"));
+    assert!(parse_path("members[foo]").unwrap_err().to_string().contains("malformed"));
 }
 
 #[test]
 fn set_value_at_path_resolves_id_selectors() {
-    let mut root = dsl::DslValue::object([(
+    let mut root = semio_framework_value::DslValue::object([(
         "members".into(),
-        dsl::DslValue::Array(vec![
-            dsl::DslValue::object([("id".into(), dsl::DslValue::String("A".into())), ("nEd".into(), dsl::DslValue::float(1.0))]),
-            dsl::DslValue::object([("id".into(), dsl::DslValue::String("B1".into())), ("nEd".into(), dsl::DslValue::float(2.0))]),
+        semio_framework_value::DslValue::Array(vec![
+            semio_framework_value::DslValue::object([("id".into(), semio_framework_value::DslValue::String("A".into())), ("nEd".into(), semio_framework_value::DslValue::float(1.0))]),
+            semio_framework_value::DslValue::object([("id".into(), semio_framework_value::DslValue::String("B1".into())), ("nEd".into(), semio_framework_value::DslValue::float(2.0))]),
         ]),
     )]);
-    set_value_at_path(&mut root, "members[id=B1].nEd", dsl::DslValue::float(9.0)).unwrap();
-    assert_eq!(get_value_at_path(&root, "members[id=B1].nEd").unwrap(), &dsl::DslValue::float(9.0));
-    assert_eq!(get_value_at_path(&root, "members[1].nEd").unwrap(), &dsl::DslValue::float(9.0));
-    assert!(get_value_at_path(&root, "members[id=missing].nEd").unwrap_err().contains("unknown"));
-    let mut dup = dsl::DslValue::object([(
+    set_value_at_path(&mut root, "members[id=B1].nEd", semio_framework_value::DslValue::float(9.0)).unwrap();
+    assert_eq!(get_value_at_path(&root, "members[id=B1].nEd").unwrap(), &semio_framework_value::DslValue::float(9.0));
+    assert_eq!(get_value_at_path(&root, "members[1].nEd").unwrap(), &semio_framework_value::DslValue::float(9.0));
+    assert!(get_value_at_path(&root, "members[id=missing].nEd").unwrap_err().to_string().contains("unknown"));
+    let mut dup = semio_framework_value::DslValue::object([(
         "members".into(),
-        dsl::DslValue::Array(vec![
-            dsl::DslValue::object([("id".into(), dsl::DslValue::String("X".into()))]),
-            dsl::DslValue::object([("id".into(), dsl::DslValue::String("X".into()))]),
+        semio_framework_value::DslValue::Array(vec![
+            semio_framework_value::DslValue::object([("id".into(), semio_framework_value::DslValue::String("X".into()))]),
+            semio_framework_value::DslValue::object([("id".into(), semio_framework_value::DslValue::String("X".into()))]),
         ]),
     )]);
-    assert!(set_value_at_path(&mut dup, "members[id=X].nEd", dsl::DslValue::float(1.0)).unwrap_err().contains("duplicate"));
+    assert!(set_value_at_path(&mut dup, "members[id=X].nEd", semio_framework_value::DslValue::float(1.0)).unwrap_err().to_string().contains("duplicate"));
 }
 
 #[test]
@@ -472,17 +472,17 @@ fn apply_remedy_with_id_path_target_flips_failing_check() {
             .build(),
     );
     assert_eq!(report.checks[0].status, CheckStatus::Fail);
-    let mut tree = dsl::DslValue::object([(
+    let mut tree = semio_framework_value::DslValue::object([(
         "members".into(),
-        dsl::DslValue::Array(vec![dsl::DslValue::object([
-            ("id".into(), dsl::DslValue::String("B1".into())),
-            ("resistanceKn".into(), dsl::DslValue::float(80_000.0)),
+        semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::object([
+            ("id".into(), semio_framework_value::DslValue::String("B1".into())),
+            ("resistanceKn".into(), semio_framework_value::DslValue::float(80_000.0)),
         ])]),
     )]);
     apply_remedy_edit(&report, "mock.id", 0, 0, &mut tree).expect("apply");
-    assert_eq!(get_value_at_path(&tree, "members[id=B1].resistanceKn").unwrap(), &dsl::DslValue::float(demand));
+    assert_eq!(get_value_at_path(&tree, "members[id=B1].resistanceKn").unwrap(), &semio_framework_value::DslValue::float(demand));
     remove_value_at_path(&mut tree, "members[id=B1]", 0).unwrap();
-    assert_eq!(tree.get("members").and_then(|v| if let dsl::DslValue::Array(items) = v { Some(items.len()) } else { None }), Some(0));
+    assert_eq!(tree.get("members").and_then(|v| if let semio_framework_value::DslValue::Array(items) = v { Some(items.len()) } else { None }), Some(0));
 }
 
 #[test]
@@ -498,8 +498,8 @@ fn field_meta_wildcard_matches_id_path() {
 
 #[test]
 fn list_element_path_prefers_id_when_present() {
-    let with_id = dsl::DslValue::object([("id".into(), dsl::DslValue::String("B1".into())), ("nEd".into(), dsl::DslValue::float(1.0))]);
-    let without = dsl::DslValue::object([("nEd".into(), dsl::DslValue::float(1.0))]);
+    let with_id = semio_framework_value::DslValue::object([("id".into(), semio_framework_value::DslValue::String("B1".into())), ("nEd".into(), semio_framework_value::DslValue::float(1.0))]);
+    let without = semio_framework_value::DslValue::object([("nEd".into(), semio_framework_value::DslValue::float(1.0))]);
     assert_eq!(list_element_path("members", &with_id, 3), "members[id=B1]");
     assert_eq!(list_element_path("members", &without, 3), "members[3]");
 }
@@ -530,9 +530,9 @@ async fn de_locale_inputs_and_inspection_omit_hardcoded_english_chrome() {
         }
     }
 
-    let tree = dsl::DslValue::object([
-        ("annex".into(), dsl::DslValue::String("de".into())),
-        ("note".into(), dsl::DslValue::Null),
+    let tree = semio_framework_value::DslValue::object([
+        ("annex".into(), semio_framework_value::DslValue::String("de".into())),
+        ("note".into(), semio_framework_value::DslValue::Null),
     ]);
     let inputs = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree {
         root: render_value_editor("", &tree, Locale::De, "norm.mock", Some(field_meta), &TreeWindows::unhosted(), 0).expect("inputs"),
@@ -589,28 +589,28 @@ fn collapsed_deep_document_stays_within_retire_slots() {
     const BODY: &str = "norm.mock.inputs";
     let mut rows = Vec::new();
     for index in 0..120 {
-        rows.push(dsl::DslValue::object([
-            ("id".into(), dsl::DslValue::String(format!("row-{index}"))),
-            ("massKg".into(), dsl::DslValue::float(index as f64)),
-            ("nested".into(), dsl::DslValue::object([
-                ("a".into(), dsl::DslValue::float(1.0)),
-                ("b".into(), dsl::DslValue::float(2.0)),
+        rows.push(semio_framework_value::DslValue::object([
+            ("id".into(), semio_framework_value::DslValue::String(format!("row-{index}"))),
+            ("massKg".into(), semio_framework_value::DslValue::float(index as f64)),
+            ("nested".into(), semio_framework_value::DslValue::object([
+                ("a".into(), semio_framework_value::DslValue::float(1.0)),
+                ("b".into(), semio_framework_value::DslValue::float(2.0)),
             ])),
         ]));
     }
-    let tree = dsl::DslValue::object([
-        ("catalogue".into(), dsl::DslValue::object([
-            ("products".into(), dsl::DslValue::Array(rows)),
+    let tree = semio_framework_value::DslValue::object([
+        ("catalogue".into(), semio_framework_value::DslValue::object([
+            ("products".into(), semio_framework_value::DslValue::Array(rows)),
         ])),
-        ("dictionary".into(), dsl::DslValue::object([
-            ("subjects".into(), dsl::DslValue::Array((0..80).map(|i| dsl::DslValue::object([
-                ("id".into(), dsl::DslValue::String(format!("s-{i}"))),
-                ("name".into(), dsl::DslValue::String("x".into())),
+        ("dictionary".into(), semio_framework_value::DslValue::object([
+            ("subjects".into(), semio_framework_value::DslValue::Array((0..80).map(|i| semio_framework_value::DslValue::object([
+                ("id".into(), semio_framework_value::DslValue::String(format!("s-{i}"))),
+                ("name".into(), semio_framework_value::DslValue::String("x".into())),
             ])).collect())),
         ])),
-        ("geometry".into(), dsl::DslValue::object([
-            ("objects".into(), dsl::DslValue::object((0..90).map(|i| (format!("g-{i}"), dsl::DslValue::object([
-                ("kind".into(), dsl::DslValue::String("box".into())),
+        ("geometry".into(), semio_framework_value::DslValue::object([
+            ("objects".into(), semio_framework_value::DslValue::object((0..90).map(|i| (format!("g-{i}"), semio_framework_value::DslValue::object([
+                ("kind".into(), semio_framework_value::DslValue::String("box".into())),
             ]))).collect::<Vec<_>>())),
         ])),
     ]);
@@ -640,10 +640,10 @@ fn expanding_subtree_materialises_windowed_children_within_slots() {
     const BODY: &str = "norm.mock.inputs";
     let mut map_entries = Vec::new();
     for index in 0..80 {
-        map_entries.push((format!("g-{index}"), dsl::DslValue::object([("kind".into(), dsl::DslValue::String("box".into()))])));
+        map_entries.push((format!("g-{index}"), semio_framework_value::DslValue::object([("kind".into(), semio_framework_value::DslValue::String("box".into()))])));
     }
-    let tree = dsl::DslValue::object([
-        ("geometry".into(), dsl::DslValue::object([("objects".into(), dsl::DslValue::Object(map_entries))])),
+    let tree = semio_framework_value::DslValue::object([
+        ("geometry".into(), semio_framework_value::DslValue::object([("objects".into(), semio_framework_value::DslValue::Object(map_entries))])),
     ]);
     let root_id = inputs_section_id("");
     let geometry_id = inputs_section_id("geometry");

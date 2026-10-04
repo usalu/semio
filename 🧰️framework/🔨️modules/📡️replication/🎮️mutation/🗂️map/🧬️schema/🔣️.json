@@ -56,7 +56,8 @@
                   "kind": {
                     "const": "reject"
                   }
-                }
+                },
+                "type": "object"
               }
             }
           },
@@ -70,7 +71,8 @@
                       "remove"
                     ]
                   }
-                }
+                },
+                "type": "object"
               }
             }
           }

@@ -70,7 +70,8 @@ fn failing_under_reinforced_has_multiple_fails_with_remedies() {
 fn gate_blocking_remedies_clear_fail_status() {
     use crate::app_surface::apply_remedy_edit;
     use crate::document::CheckStatus;
-    use semio_framework_os_kernel::{FromValue, ToValue};
+    use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
 
     const BLOCKING: &[&str] = &[
         "en1992.6.1.flexure.acc.beam-B1",
@@ -103,9 +104,9 @@ fn gate_blocking_remedies_clear_fail_status() {
         let mut cleared = false;
         let mut partials = Vec::new();
         for &remedy_index in &applicables {
-            let mut tree = ToValue::to_value(&snap);
+            let mut tree = semio_framework_value::ToValue::to_value(&snap);
             apply_remedy_edit(&report, id, remedy_index, 0, &mut tree).unwrap_or_else(|e| panic!("{id} remedy[{remedy_index}] apply: {e:?}"));
-            let fixed: En1992Snapshot = FromValue::from_value(tree).expect("decode after remedy");
+            let fixed: En1992Snapshot = semio_framework_value::FromValue::from_value(tree).expect("decode after remedy");
             let after = evaluate(&fixed);
             let updated = after.checks.iter().find(|c| c.id == id).unwrap_or_else(|| panic!("{id} missing after remedy"));
             if !matches!(updated.status, CheckStatus::Fail) {
@@ -120,11 +121,11 @@ fn gate_blocking_remedies_clear_fail_status() {
             ));
         }
         if !cleared && applicables.len() > 1 {
-            let mut tree = ToValue::to_value(&snap);
+            let mut tree = semio_framework_value::ToValue::to_value(&snap);
             for &remedy_index in &applicables {
                 apply_remedy_edit(&report, id, remedy_index, 0, &mut tree).expect("sequential apply");
             }
-            let fixed: En1992Snapshot = FromValue::from_value(tree).expect("decode sequential");
+            let fixed: En1992Snapshot = semio_framework_value::FromValue::from_value(tree).expect("decode sequential");
             let after = evaluate(&fixed);
             let updated = after.checks.iter().find(|c| c.id == id).expect("id after sequential");
             if !matches!(updated.status, CheckStatus::Fail) {
@@ -199,7 +200,7 @@ fn subject_paths_use_id_selectors_and_resolve() {
     use crate::app_surface::{get_value_at_path, parse_path};
     let snap = En1992Snapshot::compliant_office_frame();
     let report = evaluate(&snap);
-    let root = dsl::ToValue::to_value(&snap);
+    let root = semio_framework_value::ToValue::to_value(&snap);
     assert!(!report.checks.is_empty());
     for check in &report.checks {
         let path = &check.subject.path;

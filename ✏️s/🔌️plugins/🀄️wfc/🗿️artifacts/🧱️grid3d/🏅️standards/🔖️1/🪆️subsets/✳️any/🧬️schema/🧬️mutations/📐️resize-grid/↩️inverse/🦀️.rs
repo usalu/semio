@@ -4,7 +4,8 @@
 use crate::mutations::Grid3dMutation;
 use crate::schema::snapshot::*;
 
-pub fn inverse(payload: &super::ResizeGrid, base: &Grid3dSnapshot) -> Vec<Grid3dMutation> {
+pub fn inverse(payload: &super::ResizeGrid, base: &Grid3dSnapshot) -> Result<Vec<Grid3dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let _ = payload;
     vec![
         crate::mutations::resize_grid(base.width, base.height, base.depth),
@@ -12,4 +13,6 @@ pub fn inverse(payload: &super::ResizeGrid, base: &Grid3dSnapshot) -> Vec<Grid3d
         crate::mutations::change_cell_sizes(Grid3dAxis::Y, base.cell_sizes_y.clone()),
         crate::mutations::change_cell_sizes(Grid3dAxis::Z, base.cell_sizes_z.clone()),
     ]
+
+    })())
 }

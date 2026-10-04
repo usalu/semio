@@ -55,7 +55,7 @@ impl Wfc2dSnapshotRetirement {
 }
 
 impl ErasedSnapshotRetirement for Wfc2dSnapshotRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if self.stage >= Wfc2dRetirementStage::ORDER.len() {
             return Ok(SnapshotRetirementStep::Complete);
         }
@@ -125,8 +125,9 @@ pub fn tile_media_png_data_url(media: &Wfc2dTileMedia) -> Option<String> {
         let colour = palette.get(usize::from(index)).copied().unwrap_or_default();
         rgba.extend_from_slice(&[colour.r.min(255) as u8, colour.g.min(255) as u8, colour.b.min(255) as u8, colour.a.min(255) as u8]);
     }
-    let snapshot = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::schema::snapshot::PngSnapshot { width, height, pixels: rgba, ..Default::default() };
-    let bytes = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::encode_png(&snapshot).ok()?;
+    use semio_s_artifact_stdio_png::standards::v1_2::subsets::any::{io::{author_png_projection, PngProjection}, schema::snapshot::{PngChunkMarker, PngColorType}};
+    let raster = PngProjection { width, height, bit_depth: 8, color_type: PngColorType::Rgba, interlace: false, plte: None, trns: None, gama: None, chrm: None, srgb: None, phys: None, time: None, bkgd: None, text_chunks: Vec::new(), pixels: rgba, chunk_order: vec![PngChunkMarker::Ihdr, PngChunkMarker::Idat, PngChunkMarker::Iend], unknown_chunks: Vec::new() };
+    let bytes = author_png_projection(&raster).ok()?;
     Some(format!("data:image/png;base64,{}", base64_codec::base64_standard_encode(bytes)))
 }
 //#endregion 🖼️TileMediaRaster

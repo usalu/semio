@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeCellSizes, base: &Grid3dSnapshot) -> protocol
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Axis {} cell sizes must all be finite and positive.", payload.axis.label()), [payload.axis.label().to_string()]);
     }
     if payload.axis.sizes(base) == &payload.sizes {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Axis {} already carries these cell sizes.", payload.axis.label()));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Axis {} already carries these cell sizes.", payload.axis.label()));
     }
     let sizes = Some(payload.sizes.clone());
     protocol::MutationOutcome::new(match payload.axis {

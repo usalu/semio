@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🦀️.rs",
+      "error": "PackRefusal",
+      "transport": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🔢️scalar/🦀️.rs",
+      "error": "PackRefusal",
+      "transport": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🧪️tests/🔬️unit/🦀️.rs",
+      "error": "PackRefusal",
+      "transport": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🦀️.rs",
+      "error": "PackRefusal",
+      "transport": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🦀️.rs",
+      "error": "PackRefusal",
+      "transport": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🏭️schema/🦀️.rs",
+      "error": "PackRefusal",
+      "transport": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🔎️scalar-witness/🦀️.rs",
+      "error": "PackRefusal",
+      "transport": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/📐️format/🛫️encoding/🦀️.rs",
+      "error": "PackRefusal",
+      "transport": false
+    }
+  ]
+}

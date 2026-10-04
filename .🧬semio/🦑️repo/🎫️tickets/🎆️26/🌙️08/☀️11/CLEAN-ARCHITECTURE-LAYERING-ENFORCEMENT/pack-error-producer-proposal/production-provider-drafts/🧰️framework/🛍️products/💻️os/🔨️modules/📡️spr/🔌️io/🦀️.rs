@@ -1,0 +1,367 @@
+//! 🎞️ Protocol native `.spr` file lifecycle: create/open/resume-append/read-only-open over a real
+//! file (wrapping `crate::os_pack::io::FilePackSource`/`FilePackSink`), `.sprc` sidecar checkpoint bodies,
+//! forward-scan recovery, poll-based live tailing, and physical compaction. Frozen contract:
+//! `.🧬semio/🦑️repo/🎫️tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` (`## protocol_io`).
+//!
+//! Whole crate is native-only (`std::fs`) and gated behind `#[cfg(not(target_arch = "wasm32"))]`
+//! so it still compiles — as an effectively-empty crate — for a `wasm32-unknown-unknown` target
+//! check, mirroring `pack_io`'s pattern exactly.
+
+#[cfg(not(target_arch = "wasm32"))]
+mod native {
+    use std::collections::HashMap;
+    use std::path::{Path, PathBuf};
+
+    use crate::os_pack::{CodecId, PackSource};
+    use crate::os_spr::format::{parse_commit_payload, read_header, recover as recover_records, Blake3Hasher, FrameCursor, RecoveryMode, SprWriter, VerificationLevel, WriteOptions, COMMIT_FRAME_LEN, HEADER_SIZE};
+    use crate::os_spr::history::{decode_history, encode_composition, encode_conflicts, encode_doc, encode_edit, encode_transition, DecodeOptions, HistoryAppender, HistoryEdit, HistoryReader};
+    use crate::os_spr::wire::{DictBuilder, ProtocolError, ProtocolLimits, RecordHasher};
+
+    /// 🚨️ Wraps a `std::io::Error` into the crate-wide `ProtocolError::Io` variant — the
+    /// only place `std::io::Error` is allowed to appear, per the family's no-`std::io::Error`-in-
+    /// public-signatures rule.
+    #[allow(clippy::needless_pass_by_value)] // used as a `map_err` callback, which passes the error by value
+                                             // 🚫️async: R9 pure accessor — only consumers are `Result::map_err`'s sync closure; no
+                                             // suspension point exists in the body either.
+    fn io_err(err: std::io::Error) -> ProtocolError {
+        ProtocolError::Io(err.to_string())
+    }
+
+    //#region 🔖️File
+    /// 📍️ Where a `.spr` file's trusted content currently ends, and the commit-chain state
+    /// at that point — everything a caller needs to keep appending or to report file health.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub struct ResumeState {
+        pub end_offset: u64,
+        pub last_commit_seq: u64,
+        pub chain_hash: [u8; 32],
+    }
+
+    /// 📖️ Re-derives a `ResumeState` from whatever `path` currently contains: runs
+    /// `crate::os_spr::format::recover` (`RecoveryMode::LastCommit`), then reads back either the
+    /// header-only `chain_0` (no commit yet) or the trusted tail's `REC_COMMIT` payload.
+    async fn resume_state_for(path: &Path, limits: &ProtocolLimits) -> Result<ResumeState, ProtocolError> {
+        let source = crate::os_pack::io::FilePackSource::open(path)?;
+        let recovery = recover_records(&source, limits, RecoveryMode::LastCommit).await?;
+        if recovery.last_commit_seq == 0 {
+            let mut header_bytes = [0u8; HEADER_SIZE];
+            source.read_exact_at(0, &mut header_bytes).await?;
+            return Ok(ResumeState { end_offset: recovery.bytes_recovered, last_commit_seq: 0, chain_hash: Blake3Hasher.hash(&header_bytes) });
+        }
+        let mut commit_bytes = vec![0u8; COMMIT_FRAME_LEN as usize];
+        source.read_exact_at(recovery.last_commit_offset, &mut commit_bytes).await?;
+        // `FrameCursor::new` indexes directly into the slice it's given, so the cursor's own
+        // `start_offset` must be 0 here (the local offset within `commit_bytes`), not the file's
+        // absolute `last_commit_offset` — see crate::os_spr::format::FrameCursor::new's doc.
+        let mut cursor = FrameCursor::new(&commit_bytes, 0).await;
+        let frame = cursor.next_frame().await?.ok_or_else(|| ProtocolError::Malformed { what: "resume commit frame", offset: recovery.last_commit_offset, detail: "expected a REC_COMMIT frame at the recovered commit offset".to_string() })?;
+        let commit = parse_commit_payload(frame.payload().await)?;
+        Ok(ResumeState { end_offset: recovery.bytes_recovered, last_commit_seq: commit.commit_seq, chain_hash: commit.chain_hash })
+    }
+
+    /// 📼️ A live `.spr` file handle: either a fresh/resumed write path (`appender` set) or a
+    /// pure inspection handle (`open_read_only`, `appender` unset). One struct for both so
+    /// `resume_state()` reports uniformly regardless of how the handle was opened.
+    pub struct HistoryFile {
+        appender: Option<HistoryAppender<crate::os_pack::io::FilePackSink>>,
+        resume: ResumeState,
+    }
+
+    impl HistoryFile {
+        /// 🆕️ Creates `path` fresh (truncating any existing file) and writes the header plus
+        /// the `REC_DOC` record. No commit has happened yet — `resume_state().last_commit_seq == 0`
+        /// until the caller's first `appender().commit().await`.
+        pub async fn create(path: &Path, doc_id: &str, schema: &str, options: &WriteOptions) -> Result<Self, ProtocolError> {
+            let sink = crate::os_pack::io::FilePackSink::create(path)?;
+            let appender = HistoryAppender::begin(sink, doc_id, schema, options).await?;
+            let source = crate::os_pack::io::FilePackSource::open(path)?;
+            let mut header_bytes = [0u8; HEADER_SIZE];
+            source.read_exact_at(0, &mut header_bytes).await?;
+            let resume = ResumeState { end_offset: source.len().await, last_commit_seq: 0, chain_hash: Blake3Hasher.hash(&header_bytes) };
+            Ok(Self { appender: Some(appender), resume })
+        }
+
+        /// ▶️ Opens an existing `.spr` file to keep appending to it.
+        ///
+        /// 🎯️ Design choice (forced by the crate boundary): `crate::os_spr::format::SprWriter::begin` and
+        /// `crate::os_spr::history::HistoryAppender::begin` are the ONLY public constructors for those
+        /// types, and both unconditionally write a fresh header (`begin`) / fresh header+`REC_DOC`
+        /// (`HistoryAppender::begin`) at the sink's current position — there is no "resume a writer
+        /// mid-stream, preserving its running chain hash / dictionary / commit sequence" entry point
+        /// anywhere in `protocol_format`/`protocol_history`'s frozen public API, and this crate may
+        /// not add one (out of scope: another crate's file). The only correctness-preserving way to
+        /// produce a live `HistoryAppender` that continues coherently from existing content is
+        /// therefore: recover the trusted prefix, fully decode it to a `HistoryLog`, discard the
+        /// physical file (`crate::os_pack::io::FilePackSink::create` truncates), and replay every edit and
+        /// transition back through a freshly-begun appender's own public methods
+        /// (which is what correctly rebuilds its internal dictionary/edit-ordinal bookkeeping) before
+        /// handing it back for further live appends. This is O(file size) on every resume rather than
+        /// O(torn tail) — a real cost worth revisiting if/when `protocol_format`/`protocol_history`
+        /// grow a genuine resume constructor — but it is the only available option that never
+        /// corrupts the file. Caveat: `HistoryLog` (protocol_history's model) has no slot for
+        /// `REC_PROJECTION`/`REC_INDEX`/`REC_SEALED`/`REC_EPHEMERAL` records, so a resume drops any
+        /// of those (this crate deliberately has no `protocol_materialize` dependency to decode
+        /// snapshot bodies with). The op log itself — every edit and transition — is
+        /// fully preserved; only acceleration/snapshot data is lost, which the wider system already
+        /// tolerates gracefully (`crate::os_spr::materialize::resolve_plan` falls back to full replay from
+        /// genesis when a snapshot is missing/corrupt).
+        pub async fn open_append(path: &Path, limits: &ProtocolLimits) -> Result<Self, ProtocolError> {
+            let source = crate::os_pack::io::FilePackSource::open(path)?;
+            let recovery = recover_records(&source, limits, RecoveryMode::LastCommit).await?;
+            let header = read_header(&source).await?;
+            let mut trusted = vec![0u8; recovery.bytes_recovered as usize];
+            source.read_exact_at(0, &mut trusted).await?;
+            drop(source);
+
+            let decode_options = DecodeOptions { verification: VerificationLevel::Standard, limits: limits.clone() };
+            let log = decode_history(&trusted, &decode_options).await?;
+
+            let write_options = WriteOptions { required_flags: header.required_flags, optional_flags: header.optional_flags };
+            let sink = crate::os_pack::io::FilePackSink::create(path)?;
+            let mut appender = HistoryAppender::begin(sink, &log.doc_id, &log.schema, &write_options).await?;
+            for edit in &log.edits {
+                appender.append_edit(edit).await?;
+            }
+            for transition in &log.transitions {
+                appender.append_transition(transition).await?;
+            }
+            if let Some(composition) = &log.composition {
+                appender.append_composition(composition).await?;
+            }
+            if !log.conflicts.is_empty() {
+                appender.append_conflicts(&log.conflicts).await?;
+            }
+            if log.viewer_line.is_some() || log.viewer_checkpoint.is_some() {
+                appender.append_viewer(log.viewer_line.as_deref(), log.viewer_checkpoint.as_deref()).await?;
+            }
+            appender.commit().await?;
+
+            let resume = resume_state_for(path, limits).await?;
+            Ok(Self { appender: Some(appender), resume })
+        }
+
+        /// 👓️ Opens an existing `.spr` file purely for inspection: computes `resume_state()`
+        /// via `crate::os_spr::format::recover` without writing a single byte to `path`. `appender()` must
+        /// never be called on a handle opened this way (see its doc).
+        pub async fn open_read_only(path: &Path, limits: &ProtocolLimits) -> Result<Self, ProtocolError> {
+            let resume = resume_state_for(path, limits).await?;
+            Ok(Self { appender: None, resume })
+        }
+
+        pub async fn resume_state(&self) -> &ResumeState {
+            &self.resume
+        }
+
+        /// ✍️ The live append handle. Panics if called on a handle from `open_read_only` —
+        /// that constructor never builds a write path (see its doc); this mirrors the frozen
+        /// contract's non-`Option` return type while keeping "read only" an honest guarantee (never
+        /// touching the file) rather than a polite suggestion.
+        pub async fn appender(&mut self) -> &mut HistoryAppender<crate::os_pack::io::FilePackSink> {
+            self.appender.as_mut().expect("HistoryFile::appender: this handle was opened via open_read_only and never built a write path")
+        }
+    }
+    //#endregion 🔖️File
+
+    //#region 🔖️Sidecar
+    /// 🧾️ `.sprc` sidecar checkpoint bodies live beside the `.spr` file, named
+    /// `<stem>.<hex8-of-body-hash>.sprc`.
+    pub async fn sidecar_path(protocol_path: &Path, body_hash: &[u8; 32]) -> PathBuf {
+        let stem = protocol_path.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default();
+        let mut hex8 = String::with_capacity(8);
+        for byte in &body_hash[..4] {
+            hex8.push_str(&format!("{byte:02x}"));
+        }
+        protocol_path.with_file_name(format!("{stem}.{hex8}.sprc"))
+    }
+
+    /// 💾️ Writes a complete `.spk` pack file as a sidecar, atomically (`crate::os_pack::io::write_atomic`
+    /// — temp file + fsync + rename, so a reader never observes a torn sidecar).
+    pub async fn write_sidecar(protocol_path: &Path, body_hash: &[u8; 32], pack_bytes: &[u8]) -> Result<(), ProtocolError> {
+        crate::os_pack::io::write_atomic(&sidecar_path(protocol_path, body_hash).await, pack_bytes)?;
+        Ok(())
+    }
+
+    pub async fn read_sidecar(protocol_path: &Path, body_hash: &[u8; 32]) -> Result<Vec<u8>, ProtocolError> {
+        std::fs::read(sidecar_path(protocol_path, body_hash).await).map_err(io_err)
+    }
+    //#endregion 🔖️Sidecar
+
+    //#region 🔖️Recover
+    pub async fn recover_file(path: &Path, limits: &ProtocolLimits, mode: RecoveryMode) -> Result<crate::os_spr::format::RecoveryReport, ProtocolError> {
+        let source = crate::os_pack::io::FilePackSource::open(path)?;
+        recover_records(&source, limits, mode).await
+    }
+    //#endregion 🔖️Recover
+
+    //#region 🔖️Sync
+    /// 🐌️ Poll-based live tailing, runtime-neutral (no tokio dependency in the type itself —
+    /// the caller drives `poll()` from whatever scheduler it likes).
+    pub struct TailFollower {
+        path: PathBuf,
+        /// 🔖️ The ordinal boundary this follower has consumed through: `poll()` returns
+        /// edits starting at this ordinal and advances it past everything it returns. Equals the
+        /// `from_edit_ordinal` given to `open` until the first `poll()` that returns at least one
+        /// edit — a deliberate, documented reading of `last_edit_ordinal` given the contract leaves
+        /// its exact off-by-one semantics unspecified.
+        next_edit_ordinal: u64,
+    }
+
+    impl TailFollower {
+        /// 📖️ Validates `path` looks like a real `.spr` file (header check) up front, so a
+        /// bad path fails fast at `open` rather than on the first `poll`.
+        pub async fn open(path: &Path, from_edit_ordinal: u64) -> Result<Self, ProtocolError> {
+            let source = crate::os_pack::io::FilePackSource::open(path)?;
+            read_header(&source).await?;
+            Ok(Self { path: path.to_path_buf(), next_edit_ordinal: from_edit_ordinal })
+        }
+
+        /// 🔁️ Re-reads the whole file and re-decodes from the start every call.
+        ///
+        /// 🎯️ Design choice: `crate::os_spr::history::HistoryReader::edits()` always begins its own fresh
+        /// `DictReader`/edit-id table at the start of the trusted record stream (`REC_*_DICT` deltas
+        /// are interleaved incrementally through the file, so any single edit's dictrefs can only be
+        /// resolved by walking from the top) — there is no public way to seed an `EditIter` with a
+        /// prior poll's dictionary state. So a correct incremental "just the new tail" decode isn't
+        /// reachable through this crate family's public API; re-scanning from the start on every
+        /// poll is the only option, not merely the simplest one.
+        pub async fn poll(&mut self) -> Result<Vec<HistoryEdit>, ProtocolError> {
+            let bytes = std::fs::read(&self.path).map_err(io_err)?;
+            let reader = HistoryReader::open(&bytes, &DecodeOptions::default()).await?;
+            let mut out = Vec::new();
+            for edit in reader.edits().await.skip(self.next_edit_ordinal as usize) {
+                out.push(edit?);
+            }
+            self.next_edit_ordinal += out.len() as u64;
+            Ok(out)
+        }
+
+        pub async fn last_edit_ordinal(&self) -> u64 {
+            self.next_edit_ordinal
+        }
+    }
+    //#endregion 🔖️Sync
+
+    //#region 🔖️Compact
+    pub struct CompactOptions {
+        pub drop_ephemeral: bool,
+        pub keep_snapshots: KeepSnapshots,
+    }
+
+    pub enum KeepSnapshots {
+        All,
+        LatestPerAlternative,
+        LatestN(u32),
+    }
+
+    /// 🗂️ `REC_COMPACTION` payload layout — this crate's own choice (the contract fixes the
+    /// `REC_COMPACTION` kind byte in `protocol_core` but defines no payload codec for it anywhere in
+    /// the family): `format: u8 (=1), drop_ephemeral: u8 (0/1), keep_snapshots_tag: u8
+    /// (0=All, 1=LatestPerAlternative, 2=LatestN), [latest_n: varint u64 iff tag==2]`.
+    async fn encode_compaction_payload(options: &CompactOptions) -> Vec<u8> {
+        let mut out = crate::os_pack::ByteWriter::new();
+        out.write_u8(1);
+        out.write_u8(options.drop_ephemeral as u8);
+        match options.keep_snapshots {
+            KeepSnapshots::All => out.write_u8(0),
+            KeepSnapshots::LatestPerAlternative => out.write_u8(1),
+            KeepSnapshots::LatestN(n) => {
+                out.write_u8(2);
+                out.write_varint_u64(n as u64);
+            }
+        }
+        out.into_bytes()
+    }
+
+    /// ✂️ Flushes a `REC_STR_DICT` delta record if `dict` grew since `*base` — byte-for-byte
+    /// the same wire format `protocol_history`'s own (private) writer uses, reimplemented here since
+    /// `compact` cannot drive `crate::os_spr::history::encode_history`/`HistoryAppender` as a black box (it
+    /// needs to interleave one extra `REC_COMPACTION` record into the same commit generation, and
+    /// neither type exposes a raw `write_record` passthrough for that).
+    async fn flush_dict(writer: &mut SprWriter<Vec<u8>>, dict: &DictBuilder, base: &mut u32) -> Result<(), ProtocolError> {
+        let len = dict.len();
+        if len > *base {
+            let entries = dict.entries_since(*base);
+            let mut payload = crate::os_pack::ByteWriter::new();
+            payload.write_u8(1);
+            payload.write_varint_u64(*base as u64);
+            payload.write_varint_u64(entries.len() as u64);
+            for entry in entries {
+                payload.write_varint_u64(entry.len() as u64);
+                payload.write_bytes(entry.as_bytes());
+            }
+            writer.write_record(crate::os_spr::REC_STR_DICT, true, &payload.into_bytes(), CodecId(0)).await?;
+            *base = len;
+        }
+        Ok(())
+    }
+
+    /// 🧹️ Atomic rewrite via `crate::os_pack::io::write_atomic` (temp file + fsync + rename — a reader
+    /// never observes a partially-compacted file): decodes the trusted prefix to a `HistoryLog`,
+    /// re-encodes it into a brand-new single-generation `.spr` byte stream carrying one
+    /// `REC_COMPACTION` provenance record, and swaps it in.
+    ///
+    /// 🎯️ `keep_snapshots`/`drop_ephemeral` are accepted and recorded verbatim into the
+    /// `REC_COMPACTION` payload (so a reader can see what policy produced this generation), but have
+    /// no additional filtering effect at this layer today: `HistoryLog` has no `REC_PROJECTION`/
+    /// `REC_INDEX`/`REC_SEALED`/`REC_EPHEMERAL` slot to filter in the first place (see
+    /// `HistoryFile::open_append`'s doc for the same crate-boundary caveat — this crate has no
+    /// `protocol_materialize` dependency to interpret snapshot bodies with).
+    pub async fn compact(path: &Path, options: &CompactOptions, limits: &ProtocolLimits) -> Result<(), ProtocolError> {
+        let source = crate::os_pack::io::FilePackSource::open(path)?;
+        let recovery = recover_records(&source, limits, RecoveryMode::LastCommit).await?;
+        let header = read_header(&source).await?;
+        let mut trusted = vec![0u8; recovery.bytes_recovered as usize];
+        source.read_exact_at(0, &mut trusted).await?;
+        drop(source);
+
+        let decode_options = DecodeOptions { verification: VerificationLevel::Standard, limits: limits.clone() };
+        let log = decode_history(&trusted, &decode_options).await?;
+
+        let write_options = WriteOptions { required_flags: header.required_flags, optional_flags: header.optional_flags };
+        let mut writer = SprWriter::begin(Vec::<u8>::new(), &write_options).await?;
+        let mut dict = DictBuilder::new();
+        let mut dict_base = 0u32;
+
+        let doc_payload = encode_doc(&log.doc_id, &log.schema, &mut dict).await;
+        flush_dict(&mut writer, &dict, &mut dict_base).await?;
+        writer.write_record(crate::os_spr::REC_DOC, true, &doc_payload, CodecId(0)).await?;
+
+        let compaction_payload = encode_compaction_payload(options).await;
+        writer.write_record(crate::os_spr::REC_COMPACTION, true, &compaction_payload, CodecId(0)).await?;
+
+        let ordinals: HashMap<&str, u64> = log.edits.iter().enumerate().map(|(i, e)| (e.id.as_str(), i as u64)).collect();
+        for edit in &log.edits {
+            let payload = encode_edit(edit, &mut dict, |id| ordinals.get(id).copied()).await?;
+            flush_dict(&mut writer, &dict, &mut dict_base).await?;
+            writer.write_record(crate::os_spr::REC_EDIT, true, &payload, CodecId(0)).await?;
+        }
+        for transition in &log.transitions {
+            let payload = encode_transition(transition, &mut dict).await?;
+            flush_dict(&mut writer, &dict, &mut dict_base).await?;
+            writer.write_record(crate::os_spr::REC_TRANSITION, true, &payload, CodecId(0)).await?;
+        }
+        if let Some(composition) = &log.composition {
+            let payload = encode_composition(composition, &mut dict).await?;
+            flush_dict(&mut writer, &dict, &mut dict_base).await?;
+            writer.write_record(crate::os_spr::history::REC_COMPOSITION, false, &payload, CodecId(0)).await?;
+        }
+        if !log.conflicts.is_empty() {
+            let payload = encode_conflicts(&log.conflicts, &mut dict, |id| ordinals.get(id).copied()).await?;
+            flush_dict(&mut writer, &dict, &mut dict_base).await?;
+            writer.write_record(crate::os_spr::history::REC_CONFLICT, false, &payload, CodecId(0)).await?;
+        }
+
+        writer.commit().await?;
+        crate::os_pack::io::write_atomic(path, &writer.into_sink().await)?;
+        Ok(())
+    }
+    //#endregion 🔖️Compact
+
+    //#region 🧪️Tests
+    #[cfg(test)]
+    include!("🧪️tests/🔬️native-unit/🦀️.rs");
+    //#endregion 🧪️Tests
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+pub use native::*;

@@ -1,9 +1,11 @@
 //! 🪜️ Query execution retains one explicit preparation, evaluation, result, or retirement cursor.
 
 use super::*;
-use crate::standards::v1::subsets::any::schema::wire_runtime::{JackMutationRetirementFactory, JackSnapshotCloneAuthority, JackSnapshotCloneStep, JackSnapshotRetirementFactory};
+use semio_framework_value::{ValueError,ValueRefusalKind};
+use crate::standards::v1::subsets::any::schema::wire_runtime::{JackEffectRetirementFactory, JackSnapshotCloneAuthority, JackSnapshotCloneStep, JackSnapshotRetirementFactory};
+use crate::{port_key, JackSnapshot, Port, PortDirection, PropertyBag};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
 use std::collections::{BTreeSet, VecDeque};
-use std::hash::{Hash, Hasher};
 use std::ops::Bound::{Excluded, Unbounded};
 
 const QUERY_ENTITY_MAXIMUM: usize = 16_384;
@@ -11,21 +13,21 @@ pub(crate) const QUERY_OUTPUT_MAXIMUM_BYTES: usize = 1_048_576;
 const QUERY_ENTITY_COLLECTION_MAXIMUM: usize = 128;
 const QUERY_ENTITY_NESTING_MAXIMUM: usize = 16;
 
-fn add_owned_bytes(bytes: &mut usize, additional: usize, maximum: usize) -> Result<(), String> {
-    *bytes = bytes.checked_add(additional).ok_or_else(|| "query entity byte count overflow".to_string())?;
+fn add_owned_bytes(bytes: &mut usize, additional: usize, maximum: usize) -> Result<(), ValueError> {
+    *bytes = bytes.checked_add(additional).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit,"query entity byte count overflow"))?;
     if *bytes > maximum {
-        return Err("query entity exceeds its byte grant".into());
+        return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"query entity exceeds its byte grant"));
     }
     Ok(())
 }
 
-fn property_owned_bytes(value: &PropertyValue, depth: usize, items: &mut usize, bytes: &mut usize, maximum: usize) -> Result<(), String> {
+fn property_owned_bytes(value: &PropertyValue, depth: usize, items: &mut usize, bytes: &mut usize, maximum: usize) -> Result<(), ValueError> {
     if depth > QUERY_ENTITY_NESTING_MAXIMUM {
-        return Err("query entity exceeds its nesting admission".into());
+        return Err(ValueError::new(ValueRefusalKind::WorkLimit,"query entity exceeds its nesting admission"));
     }
-    *items = items.checked_add(1).ok_or_else(|| "query entity item count overflow".to_string())?;
+    *items = items.checked_add(1).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit,"query entity item count overflow"))?;
     if *items > QUERY_ENTITY_COLLECTION_MAXIMUM {
-        return Err("query entity exceeds its collection admission".into());
+        return Err(ValueError::new(ValueRefusalKind::WorkLimit,"query entity exceeds its collection admission"));
     }
     add_owned_bytes(bytes, size_of::<PropertyValue>(), maximum)?;
     match value {
@@ -47,7 +49,7 @@ fn property_owned_bytes(value: &PropertyValue, depth: usize, items: &mut usize, 
     }
 }
 
-fn bag_owned_bytes(values: &PropertyBag, items: &mut usize, bytes: &mut usize, maximum: usize) -> Result<(), String> {
+fn bag_owned_bytes(values: &PropertyBag, items: &mut usize, bytes: &mut usize, maximum: usize) -> Result<(), ValueError> {
     for (key, value) in values {
         add_owned_bytes(bytes, key.len(), maximum)?;
         property_owned_bytes(value, 0, items, bytes, maximum)?;
@@ -55,11 +57,11 @@ fn bag_owned_bytes(values: &PropertyBag, items: &mut usize, bytes: &mut usize, m
     Ok(())
 }
 
-fn node_owned_bytes(node: &Node, maximum: usize) -> Result<usize, String> {
+fn node_owned_bytes(node: &Node, maximum: usize) -> Result<usize, ValueError> {
     let mut bytes = size_of::<Node>();
     let mut items = node.ports.len();
     if items > QUERY_ENTITY_COLLECTION_MAXIMUM {
-        return Err("query node exceeds its port admission".into());
+        return Err(ValueError::new(ValueRefusalKind::WorkLimit,"query node exceeds its port admission"));
     }
     for value in [&node.id, &node.id, &node.kind, &node.name] {
         add_owned_bytes(&mut bytes, value.len(), maximum)?;
@@ -74,7 +76,7 @@ fn node_owned_bytes(node: &Node, maximum: usize) -> Result<usize, String> {
     Ok(bytes)
 }
 
-fn edge_owned_bytes(edge: &Edge, maximum: usize) -> Result<usize, String> {
+fn edge_owned_bytes(edge: &Edge, maximum: usize) -> Result<usize, ValueError> {
     let mut bytes = size_of::<Edge>();
     let mut items = 0;
     for value in [&edge.id, &edge.id, &edge.kind, &edge.source, &edge.target] {
@@ -84,7 +86,30 @@ fn edge_owned_bytes(edge: &Edge, maximum: usize) -> Result<usize, String> {
     Ok(bytes)
 }
 
-fn json_string_bytes(value: &str) -> Result<usize, String> {
+fn content_property_bytes(value:&semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValue,depth:usize,items:&mut usize,bytes:&mut usize,maximum:usize)->Result<(),ValueError>{
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
+    if depth>QUERY_ENTITY_NESTING_MAXIMUM{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"query entity exceeds its nesting admission"))}
+    *items=items.checked_add(1).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"query entity item count overflow"))?;
+    if *items>QUERY_ENTITY_COLLECTION_MAXIMUM{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"query entity exceeds its collection admission"))}
+    add_owned_bytes(bytes,size_of::<PropertyValue>(),maximum)?;
+    match value{SemioValue::Null|SemioValue::Bool{..}|SemioValue::Float{..}=>Ok(()),SemioValue::Str{value}=>add_owned_bytes(bytes,value.len(),maximum),SemioValue::List{items:values}=>{for value in values{content_property_bytes(value,depth+1,items,bytes,maximum)?;}Ok(())},SemioValue::Map{entries}=>{for entry in entries{add_owned_bytes(bytes,entry.key.len(),maximum)?;content_property_bytes(&entry.value,depth+1,items,bytes,maximum)?;}Ok(())},_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"Jack query projection cannot represent this intrinsic Semio value family"))}
+}
+fn content_bag_bytes(values:&[semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValueEntry],items:&mut usize,bytes:&mut usize,maximum:usize)->Result<(),ValueError>{for entry in values{add_owned_bytes(bytes,entry.key.len(),maximum)?;content_property_bytes(&entry.value,0,items,bytes,maximum)?;}Ok(())}
+fn content_node_bytes(node:&semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphNode,maximum:usize)->Result<(),ValueError>{
+    let mut bytes=size_of::<Node>();let mut items=0;
+    if node.ports.len()>QUERY_ENTITY_COLLECTION_MAXIMUM{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"query node exceeds its port admission"))}
+    for value in[&node.id.value,&node.kind,&node.label]{add_owned_bytes(&mut bytes,value.len(),maximum)?;}
+    content_bag_bytes(&node.properties,&mut items,&mut bytes,maximum)?;
+    for port in &node.ports{add_owned_bytes(&mut bytes,size_of::<Port>(),maximum)?;add_owned_bytes(&mut bytes,port.name.len(),maximum)?;add_owned_bytes(&mut bytes,port.category.len(),maximum)?;content_bag_bytes(&port.properties,&mut items,&mut bytes,maximum)?;}Ok(())
+}
+fn content_edge_bytes(edge:&semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphEdge,maximum:usize)->Result<(),ValueError>{
+    let mut bytes=size_of::<Edge>();let mut items=0;
+    for value in[&edge.id.value,&edge.kind,&edge.source.value,&edge.target.value]{add_owned_bytes(&mut bytes,value.len(),maximum)?;}
+    for port in[edge.source_port.as_deref(),edge.target_port.as_deref()].into_iter().flatten(){add_owned_bytes(&mut bytes,port.len().checked_add(1).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"query entity byte count overflow"))?,maximum)?;}
+    content_bag_bytes(&edge.properties,&mut items,&mut bytes,maximum)
+}
+
+fn json_string_bytes(value: &str) -> Result<usize, ValueError> {
     let mut bytes = 2usize;
     for byte in value.bytes() {
         let escaped = match byte {
@@ -92,18 +117,18 @@ fn json_string_bytes(value: &str) -> Result<usize, String> {
             0..=0x1f => 6,
             _ => 1,
         };
-        bytes = bytes.checked_add(escaped).ok_or_else(|| "query JSON string bound overflow".to_string())?;
+        bytes = bytes.checked_add(escaped).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit,"query JSON string bound overflow"))?;
     }
     Ok(bytes)
 }
 
-fn property_json_upper_bound(value: &PropertyValue, depth: usize, items: &mut usize) -> Result<usize, String> {
+fn property_json_upper_bound(value: &PropertyValue, depth: usize, items: &mut usize) -> Result<usize, ValueError> {
     if depth > QUERY_ENTITY_NESTING_MAXIMUM {
-        return Err("query result exceeds its nesting admission".into());
+        return Err(ValueError::new(ValueRefusalKind::WorkLimit,"query result exceeds its nesting admission"));
     }
-    *items = items.checked_add(1).ok_or_else(|| "query result item count overflow".to_string())?;
+    *items = items.checked_add(1).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit,"query result item count overflow"))?;
     if *items > QUERY_ENTITY_COLLECTION_MAXIMUM {
-        return Err("query result exceeds its collection admission".into());
+        return Err(ValueError::new(ValueRefusalKind::WorkLimit,"query result exceeds its collection admission"));
     }
     match value {
         PropertyValue::Null => Ok(4),
@@ -113,7 +138,7 @@ fn property_json_upper_bound(value: &PropertyValue, depth: usize, items: &mut us
         PropertyValue::Array(values) => {
             let mut bytes = 2usize;
             for value in values {
-                bytes = bytes.checked_add(property_json_upper_bound(value, depth + 1, items)?).and_then(|bytes| bytes.checked_add(1)).ok_or_else(|| "query result byte count overflow".to_string())?;
+                bytes = bytes.checked_add(property_json_upper_bound(value, depth + 1, items)?).and_then(|bytes| bytes.checked_add(1)).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit,"query result byte count overflow"))?;
             }
             Ok(bytes)
         }
@@ -121,65 +146,10 @@ fn property_json_upper_bound(value: &PropertyValue, depth: usize, items: &mut us
             let mut bytes = 2usize;
             for (key, value) in values {
                 let value_bytes = property_json_upper_bound(value, depth + 1, items)?;
-                bytes = bytes.checked_add(json_string_bytes(key)?).and_then(|bytes| bytes.checked_add(value_bytes)).and_then(|bytes| bytes.checked_add(2)).ok_or_else(|| "query result byte count overflow".to_string())?;
+                bytes = bytes.checked_add(json_string_bytes(key)?).and_then(|bytes| bytes.checked_add(value_bytes)).and_then(|bytes| bytes.checked_add(2)).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit,"query result byte count overflow"))?;
             }
             Ok(bytes)
         }
-    }
-}
-
-fn hash_property(value: &PropertyValue, hasher: &mut impl Hasher) {
-    std::mem::discriminant(value).hash(hasher);
-    match value {
-        PropertyValue::Bool(value) => value.hash(hasher),
-        PropertyValue::Number(value) => value.to_bits().hash(hasher),
-        PropertyValue::String(value) => value.hash(hasher),
-        PropertyValue::Array(values) => {
-            for value in values {
-                hash_property(value, hasher);
-            }
-        }
-        PropertyValue::Object(values) => {
-            for (key, value) in values {
-                key.hash(hasher);
-                hash_property(value, hasher);
-            }
-        }
-        PropertyValue::Null => {}
-    }
-}
-
-fn hash_node(node: &Node, hasher: &mut impl Hasher) {
-    node.id.hash(hasher);
-    node.kind.hash(hasher);
-    node.name.hash(hasher);
-    node.x.to_bits().hash(hasher);
-    node.y.to_bits().hash(hasher);
-    node.width.to_bits().hash(hasher);
-    node.height.to_bits().hash(hasher);
-    for (key, value) in &node.properties {
-        key.hash(hasher);
-        hash_property(value, hasher);
-    }
-    for port in &node.ports {
-        port.id.hash(hasher);
-        port.kind.hash(hasher);
-        std::mem::discriminant(&port.direction).hash(hasher);
-        for (key, value) in &port.properties {
-            key.hash(hasher);
-            hash_property(value, hasher);
-        }
-    }
-}
-
-fn hash_edge(edge: &Edge, hasher: &mut impl Hasher) {
-    edge.id.hash(hasher);
-    edge.kind.hash(hasher);
-    edge.source.hash(hasher);
-    edge.target.hash(hasher);
-    for (key, value) in &edge.properties {
-        key.hash(hasher);
-        hash_property(value, hasher);
     }
 }
 
@@ -207,9 +177,9 @@ impl QueryExecutionPreparation {
         Self { query: Some(query), metadata: JackSnapshotCloneAuthority::metadata_only(), metadata_retirement: None, graph: None, node: 0, edge: 0, metadata_output_upper_bound: 512, closing: false, terminal: false }
     }
 
-    pub fn step(&mut self, snapshot: &JackSnapshot, maximum_bytes: usize) -> Result<QueryPreparationStep, String> {
+    pub fn step(&mut self, snapshot: &JackSnapshot, scene: &SemioGraphSnapshot, maximum_bytes: usize) -> Result<QueryPreparationStep, ValueError> {
         if self.closing || self.terminal {
-            return Err("query preparation is terminal".into());
+            return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"query preparation is terminal"));
         }
         if self.graph.is_none() {
             match self.metadata.advance(snapshot, maximum_bytes)? {
@@ -219,9 +189,9 @@ impl QueryExecutionPreparation {
                 }
                 JackSnapshotCloneStep::Complete => {}
             }
-            let mut metadata = self.metadata.take_value().ok_or_else(|| "query metadata clone did not transfer its owner".to_string())?;
+            let mut metadata = self.metadata.take_value().ok_or_else(|| ValueError::new(ValueRefusalKind::InvariantViolated,"query metadata clone did not transfer its owner"))?;
             if metadata.schema != JackSnapshot::SCHEMA {
-                let error = format!("query snapshot schema '{}' is invalid", metadata.schema);
+                let error = ValueError::new(ValueRefusalKind::InvalidValue,format!("query snapshot schema '{}' is invalid", metadata.schema));
                 self.metadata_retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackSnapshotRetirementFactory, metadata));
                 return Err(error);
             }
@@ -245,31 +215,30 @@ impl QueryExecutionPreparation {
                     self.metadata_retirement = None;
                     return Ok(QueryPreparationStep::Pending);
                 }
-                store::SnapshotRetirementStep::Complete => return Err("query metadata retirement reported a false terminal".into()),
+                store::SnapshotRetirementStep::Complete => return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"query metadata retirement reported a false terminal")),
                 _ => return Ok(QueryPreparationStep::Pending),
             }
         }
-        let scene = snapshot.content.local_owner::<crate::JackWorkingScene>().ok_or_else(|| "query snapshot content is not materialized".to_string())?;
         if scene.nodes.len() > QUERY_ENTITY_MAXIMUM || scene.edges.len() > QUERY_ENTITY_MAXIMUM {
-            return Err("query snapshot exceeds its entity admission".into());
+            return Err(ValueError::new(ValueRefusalKind::WorkLimit,"query snapshot exceeds its entity admission"));
         }
         if let Some(node) = scene.nodes.get(self.node) {
-            node_owned_bytes(node, maximum_bytes)?;
+            content_node_bytes(node, maximum_bytes)?;
             let graph = self.graph.as_mut().expect("query preparation graph is initialized");
-            if graph.nodes.contains_key(&node.id) {
-                return Err(format!("duplicate node id {}", node.id));
+            if graph.nodes.contains_key(&node.id.value) {
+                return Err(ValueError::new(ValueRefusalKind::InvalidValue,format!("duplicate node id {}", node.id.value)));
             }
-            graph.nodes.insert(node.id.clone(), node.clone());
+            graph.nodes.insert(node.id.value.clone(), crate::jack_node_from_content(node)?);
             self.node += 1;
             return Ok(QueryPreparationStep::Pending);
         }
         if let Some(edge) = scene.edges.get(self.edge) {
-            edge_owned_bytes(edge, maximum_bytes)?;
+            content_edge_bytes(edge, maximum_bytes)?;
             let graph = self.graph.as_mut().expect("query preparation graph is initialized");
-            if graph.edges.contains_key(&edge.id) {
-                return Err(format!("duplicate edge id {}", edge.id));
+            if graph.edges.contains_key(&edge.id.value) {
+                return Err(ValueError::new(ValueRefusalKind::InvalidValue,format!("duplicate edge id {}", edge.id.value)));
             }
-            graph.edges.insert(edge.id.clone(), edge.clone());
+            graph.edges.insert(edge.id.value.clone(), crate::jack_edge_from_content(edge)?);
             self.edge += 1;
             return Ok(QueryPreparationStep::Pending);
         }
@@ -283,14 +252,14 @@ impl QueryExecutionPreparation {
         self.closing = true;
     }
 
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, ValueError> {
         if !self.closing || maximum_items == 0 || maximum_bytes == 0 {
             return Ok(store::SnapshotRetirementStep::Blocked);
         }
         if let Some(retirement) = self.metadata_retirement.as_mut() {
             match retirement.close_step(1, maximum_bytes)? {
                 store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => self.metadata_retirement = None,
-                store::SnapshotRetirementStep::Complete => return Err("query preparation metadata retirement reported a false terminal".into()),
+                store::SnapshotRetirementStep::Complete => return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"query preparation metadata retirement reported a false terminal")),
                 step => return Ok(step),
             }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
@@ -298,17 +267,17 @@ impl QueryExecutionPreparation {
         if !self.metadata.terminal_is_empty() {
             return match self.metadata.close_step(1, maximum_bytes)? {
                 store::SnapshotRetirementStep::Complete if self.metadata.terminal_is_empty() => Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }),
-                store::SnapshotRetirementStep::Complete => Err("query preparation metadata clone reported a false terminal".into()),
+                store::SnapshotRetirementStep::Complete => Err(ValueError::new(ValueRefusalKind::InvariantViolated,"query preparation metadata clone reported a false terminal")),
                 step => Ok(step),
             };
         }
         if let Some(graph) = self.graph.as_mut() {
             if let Some((_, node)) = graph.nodes.pop_first() {
-                self.metadata_retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackMutationRetirementFactory, create_node(node)));
+                self.metadata_retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackEffectRetirementFactory, GraphEffect::CreateNode(node)));
                 return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
             }
             if let Some((_, edge)) = graph.edges.pop_first() {
-                self.metadata_retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackMutationRetirementFactory, create_edge(edge)));
+                self.metadata_retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackEffectRetirementFactory, GraphEffect::CreateEdge(edge)));
                 return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
             }
             self.graph = None;
@@ -342,9 +311,9 @@ impl PatternExecution {
         Self { pattern: 0, bindings: vec![Binding::default()], binding: 0, next: Vec::new(), node: None, edge: None, node_active: false }
     }
 
-    fn step(&mut self, graph: &Graph, patterns: &[Pattern]) -> Result<Option<Vec<Binding>>, String> {
+    fn step(&mut self, graph: &Graph, patterns: &[Pattern]) -> Result<Option<Vec<Binding>>, ValueError> {
         let Some(pattern) = patterns.get(self.pattern) else { return Ok(Some(std::mem::take(&mut self.bindings))) };
-        let left = pattern.nodes.first().ok_or_else(|| "empty pattern".to_string())?;
+        let left = pattern.nodes.first().ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue,"empty pattern"))?;
         let Some(base) = self.bindings.get(self.binding) else {
             self.bindings = std::mem::take(&mut self.next);
             self.binding = 0;
@@ -387,7 +356,7 @@ impl PatternExecution {
                 return Ok(None);
             }
             if self.next.len() >= QUERY_ENTITY_MAXIMUM {
-                return Err("query match rows exceed their admission".into());
+                return Err(ValueError::new(ValueRefusalKind::WorkLimit,"query match rows exceed their admission"));
             }
             let mut binding = base.clone();
             binding.nodes.insert(left.var.clone(), node_id.clone());
@@ -398,7 +367,7 @@ impl PatternExecution {
             self.next.push(binding);
         } else {
             if self.next.len() >= QUERY_ENTITY_MAXIMUM {
-                return Err("query match rows exceed their admission".into());
+                return Err(ValueError::new(ValueRefusalKind::WorkLimit,"query match rows exceed their admission"));
             }
             let mut binding = base.clone();
             binding.nodes.insert(left.var.clone(), node_id.clone());
@@ -410,7 +379,7 @@ impl PatternExecution {
 }
 
 struct DeleteExecution {
-    operation: TrinityGraphMutation,
+    operation: GraphEffect,
     id: String,
     edge: Option<String>,
 }
@@ -440,7 +409,6 @@ struct ReturnExecution {
     root_selected: bool,
     output_bytes: usize,
     metadata_output_upper_bound: usize,
-    hasher: std::collections::hash_map::DefaultHasher,
 }
 
 impl ReturnExecution {
@@ -459,13 +427,12 @@ impl ReturnExecution {
             root_selected: false,
             output_bytes: 256,
             metadata_output_upper_bound,
-            hasher: Default::default(),
         }
     }
-    fn add_output(&mut self, bytes: usize) -> Result<(), String> {
-        self.output_bytes = self.output_bytes.checked_add(bytes).ok_or_else(|| "query result byte count overflow".to_string())?;
+    fn add_output(&mut self, bytes: usize) -> Result<(), ValueError> {
+        self.output_bytes = self.output_bytes.checked_add(bytes).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit,"query result byte count overflow"))?;
         if self.output_bytes > QUERY_OUTPUT_MAXIMUM_BYTES {
-            return Err("query result exceeds its output admission".into());
+            return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"query result exceeds its output admission"));
         }
         Ok(())
     }
@@ -476,7 +443,7 @@ impl ReturnExecution {
             self.binding += 1;
         }
     }
-    fn step(&mut self, graph: &mut Graph, bindings: &[Binding], items: &[ReturnItem]) -> Result<Option<QueryResult>, String> {
+    fn step(&mut self, graph: &mut Graph, bindings: &[Binding], items: &[ReturnItem]) -> Result<Option<QueryResult>, ValueError> {
         match self.phase {
             ReturnPhase::Columns => {
                 if let Some(item) = items.get(self.item) {
@@ -530,7 +497,6 @@ impl ReturnExecution {
                     if let Some(node) = graph.nodes.get(&id) {
                         let bytes = node_owned_bytes(node, 4_096)?;
                         self.add_output(bytes.saturating_mul(6).saturating_add(512))?;
-                        hash_node(node, &mut self.hasher);
                         self.root_selected |= graph.root_node_id.as_deref() == Some(id.as_str());
                         self.nodes.push(node.clone());
                     }
@@ -543,15 +509,10 @@ impl ReturnExecution {
                     if let Some(edge) = graph.edges.get(&id) {
                         let bytes = edge_owned_bytes(edge, 4_096)?;
                         self.add_output(bytes.saturating_mul(6).saturating_add(384))?;
-                        hash_edge(edge, &mut self.hasher);
                         self.edges.push(edge.clone());
                     }
                 } else {
-                    let mut content = crate::jack_content_child_handle(&[], &[]);
-                    let child_id = format!("jack-query-result-{:016x}", self.hasher.finish());
-                    content.child_id = child_id.clone();
-                    content.target.artifact_id = child_id;
-                    content.set_local_owner(std::sync::Arc::new(crate::JackWorkingScene { nodes: std::mem::take(&mut self.nodes), edges: std::mem::take(&mut self.edges) }));
+                    let content = crate::jack_content_child_with_owner(std::mem::take(&mut self.nodes), std::mem::take(&mut self.edges));
                     let mut name = std::mem::take(&mut graph.name);
                     name.push_str(" subgraph");
                     let fixture = JackSnapshot {
@@ -589,7 +550,7 @@ impl ReturnExecution {
                     }
                 }
             }
-            ReturnPhase::Complete => return Err("query return execution already completed".into()),
+            ReturnPhase::Complete => return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"query return execution already completed")),
         }
         Ok(None)
     }
@@ -606,9 +567,9 @@ pub struct QueryExecution {
     bindings: Vec<Binding>,
     return_clause: Option<usize>,
     returning: Option<ReturnExecution>,
-    pending: VecDeque<TrinityGraphMutation>,
+    pending: VecDeque<GraphEffect>,
     deleting: Option<DeleteExecution>,
-    operations: Vec<TrinityGraphMutation>,
+    operations: Vec<GraphEffect>,
     metadata_output_upper_bound: usize,
     pending_clause_advance: bool,
     finished: bool,
@@ -651,21 +612,21 @@ impl QueryExecution {
         self.matching = None;
         self.filtering = None;
     }
-    fn schedule(&mut self, operations: Vec<TrinityGraphMutation>) -> Result<(), String> {
+    fn schedule(&mut self, operations: Vec<GraphEffect>) -> Result<(), ValueError> {
         if self.pending.len().saturating_add(operations.len()).saturating_add(self.operations.len()) > QUERY_ENTITY_MAXIMUM {
-            return Err("query mutations exceed their admission".into());
+            return Err(ValueError::new(ValueRefusalKind::WorkLimit,"query mutations exceed their admission"));
         }
         self.pending.extend(operations);
         self.pending_clause_advance = true;
         Ok(())
     }
-    fn mutation_step(&mut self) -> Result<bool, String> {
+    fn mutation_step(&mut self) -> Result<bool, ValueError> {
         if let Some(retirement) = self.retirement.as_mut() {
             match retirement.close_step(1, 4_096)? {
                 store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => self.retirement = None,
-                store::SnapshotRetirementStep::Complete => return Err("query mutation retirement reported a false terminal".into()),
+                store::SnapshotRetirementStep::Complete => return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"query mutation retirement reported a false terminal")),
                 store::SnapshotRetirementStep::Pending { .. } => return Ok(true),
-                store::SnapshotRetirementStep::Blocked => return Err("query mutation retirement unexpectedly blocked".into()),
+                store::SnapshotRetirementStep::Blocked => return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"query mutation retirement unexpectedly blocked")),
             }
             return Ok(true);
         }
@@ -683,13 +644,13 @@ impl QueryExecution {
                 deleting.edge = Some(edge.clone());
                 if incident {
                     if let Some(removed) = self.graph.edges.remove(&edge) {
-                        self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackMutationRetirementFactory, create_edge(removed)));
+                        self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackEffectRetirementFactory, GraphEffect::CreateEdge(removed)));
                     }
                 }
                 return Ok(true);
             }
             if let Some(removed) = self.graph.nodes.remove(&deleting.id) {
-                self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackMutationRetirementFactory, create_node(removed)));
+                self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackEffectRetirementFactory, GraphEffect::CreateNode(removed)));
             }
             if self.graph.root_node_id.as_deref() == Some(deleting.id.as_str()) {
                 self.graph.root_node_id = None;
@@ -706,96 +667,77 @@ impl QueryExecution {
             return Ok(false);
         };
         let applied = match &operation {
-            TrinityGraphMutation::CreateNode(value) => {
-                if self.graph.nodes.contains_key(&value.node.id) {
-                    Err(format!("node {} already exists", value.node.id))
+            GraphEffect::CreateNode(node) => {
+                if self.graph.nodes.contains_key(&node.id) {
+                    Err(ValueError::new(ValueRefusalKind::InvalidValue,format!("node {} already exists", node.id)))
                 } else {
-                    self.graph.nodes.insert(value.node.id.clone(), value.node.clone());
+                    self.graph.nodes.insert(node.id.clone(), node.clone());
                     Ok(())
                 }
             }
-            TrinityGraphMutation::DeleteNode(value) => {
-                self.deleting = Some(DeleteExecution { id: value.id.clone(), edge: None, operation });
+            GraphEffect::DeleteNode(id) => {
+                self.deleting = Some(DeleteExecution { id: id.clone(), edge: None, operation });
                 return Ok(true);
             }
-            TrinityGraphMutation::CreateEdge(value) => {
-                if self.graph.edges.contains_key(&value.edge.id) {
-                    Err(format!("edge {} already exists", value.edge.id))
+            GraphEffect::CreateEdge(edge) => {
+                if self.graph.edges.contains_key(&edge.id) {
+                    Err(ValueError::new(ValueRefusalKind::InvalidValue,format!("edge {} already exists", edge.id)))
                 } else {
-                    self.graph.edges.insert(value.edge.id.clone(), value.edge.clone());
+                    self.graph.edges.insert(edge.id.clone(), edge.clone());
                     Ok(())
                 }
             }
-            TrinityGraphMutation::DeleteEdge(value) => {
-                if let Some(removed) = self.graph.edges.remove(&value.id) {
-                    self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackMutationRetirementFactory, create_edge(removed)));
+            GraphEffect::DeleteEdge(id) => {
+                if let Some(removed) = self.graph.edges.remove(id) {
+                    self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackEffectRetirementFactory, GraphEffect::CreateEdge(removed)));
                 }
                 Ok(())
             }
-            TrinityGraphMutation::RenameNode(value) => match self.graph.nodes.get_mut(&value.id) {
+            GraphEffect::RenameNode { id, name } => match self.graph.nodes.get_mut(id) {
                 Some(node) => {
-                    let previous = std::mem::replace(&mut node.name, value.new_name.clone());
-                    self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackMutationRetirementFactory, delete_node(previous)));
+                    let previous = std::mem::replace(&mut node.name, name.clone());
+                    self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackEffectRetirementFactory, GraphEffect::DeleteNode(previous)));
                     Ok(())
                 }
-                None => Err(format!("node {} not found", value.id)),
+                None => Err(ValueError::new(ValueRefusalKind::InvalidValue,format!("node {id} not found"))),
             },
-            TrinityGraphMutation::MoveNode(value) => match self.graph.nodes.get_mut(&value.id) {
+            GraphEffect::MoveNode { id, x, y } => match self.graph.nodes.get_mut(id) {
                 Some(node) => {
-                    node.x = value.x;
-                    node.y = value.y;
+                    node.x = *x;
+                    node.y = *y;
                     Ok(())
                 }
-                None => Err(format!("node {} not found", value.id)),
+                None => Err(ValueError::new(ValueRefusalKind::InvalidValue,format!("node {id} not found"))),
             },
-            TrinityGraphMutation::ChangeDataProperty(value) => match &value.entity {
-                EntityRef::Node(id) => match self.graph.nodes.get_mut(id) {
-                    Some(node) => {
-                        let previous = node.properties.insert(value.key.clone(), value.new_value.clone());
-                        if let Some(previous) = previous {
-                            self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackMutationRetirementFactory, change_data_property(EntityRef::Node(String::new()), String::new(), previous)));
+            GraphEffect::SetProperty { entity, key, value } => {
+                let bag = match entity {
+                    EntityRef::Node(id) => self.graph.nodes.get_mut(id).map(|node| &mut node.properties),
+                    EntityRef::Edge(id) => self.graph.edges.get_mut(id).map(|edge| &mut edge.properties),
+                };
+                match bag {
+                    Some(bag) => {
+                        if let Some(previous) = bag.insert(key.clone(), value.clone()) {
+                            self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackEffectRetirementFactory, GraphEffect::SetProperty { entity: EntityRef::Node(String::new()), key: String::new(), value: previous }));
                         }
                         Ok(())
                     }
-                    None => Err(format!("node {id} not found")),
-                },
-                EntityRef::Edge(id) => match self.graph.edges.get_mut(id) {
-                    Some(edge) => {
-                        let previous = edge.properties.insert(value.key.clone(), value.new_value.clone());
-                        if let Some(previous) = previous {
-                            self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackMutationRetirementFactory, change_data_property(EntityRef::Node(String::new()), String::new(), previous)));
+                    None => Err(ValueError::new(ValueRefusalKind::InvalidValue,format!("{entity:?} not found"))),
+                }
+            }
+            GraphEffect::RemoveProperty { entity, key } => {
+                let bag = match entity {
+                    EntityRef::Node(id) => self.graph.nodes.get_mut(id).map(|node| &mut node.properties),
+                    EntityRef::Edge(id) => self.graph.edges.get_mut(id).map(|edge| &mut edge.properties),
+                };
+                match bag {
+                    Some(bag) => {
+                        if let Some(previous) = bag.remove(key) {
+                            self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackEffectRetirementFactory, GraphEffect::SetProperty { entity: EntityRef::Node(String::new()), key: String::new(), value: previous }));
                         }
                         Ok(())
                     }
-                    None => Err(format!("edge {id} not found")),
-                },
-            },
-            TrinityGraphMutation::RemoveDataProperty(value) => match &value.entity {
-                EntityRef::Node(id) => match self.graph.nodes.get_mut(id) {
-                    Some(node) => {
-                        let previous = node.properties.remove(&value.key);
-                        if let Some(previous) = previous {
-                            self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackMutationRetirementFactory, change_data_property(EntityRef::Node(String::new()), String::new(), previous)));
-                        }
-                        Ok(())
-                    }
-                    None => Err(format!("node {id} not found")),
-                },
-                EntityRef::Edge(id) => match self.graph.edges.get_mut(id) {
-                    Some(edge) => {
-                        let previous = edge.properties.remove(&value.key);
-                        if let Some(previous) = previous {
-                            self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackMutationRetirementFactory, change_data_property(EntityRef::Node(String::new()), String::new(), previous)));
-                        }
-                        Ok(())
-                    }
-                    None => Err(format!("edge {id} not found")),
-                },
-            },
-            TrinityGraphMutation::SetQuery(value) => {
-                let previous = std::mem::replace(&mut self.graph.query, value.value.clone());
-                self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackMutationRetirementFactory, set_query(previous)));
-                Ok(())
+                    None => Err(ValueError::new(ValueRefusalKind::InvalidValue,format!("{entity:?} not found"))),
+                }
             }
         };
         if let Err(error) = applied {
@@ -805,9 +747,9 @@ impl QueryExecution {
         self.operations.push(operation);
         Ok(true)
     }
-    pub fn step(&mut self) -> Result<Option<(QueryResult, Vec<TrinityGraphMutation>)>, String> {
+    pub fn step(&mut self) -> Result<Option<(QueryResult, Vec<GraphEffect>)>, ValueError> {
         if self.finished || self.closing {
-            return Err("query execution is terminal".into());
+            return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"query execution is terminal"));
         }
         if self.mutation_step()? {
             return Ok(None);
@@ -817,7 +759,7 @@ impl QueryExecution {
         self.query = Some(query);
         result
     }
-    fn query_step(&mut self, query: &Query) -> Result<Option<(QueryResult, Vec<TrinityGraphMutation>)>, String> {
+    fn query_step(&mut self, query: &Query) -> Result<Option<(QueryResult, Vec<GraphEffect>)>, ValueError> {
         let Some(clause) = query.clauses.get(self.clause) else {
             if self.return_clause.is_none() {
                 self.finished = true;
@@ -868,7 +810,7 @@ impl QueryExecution {
             Clause::Delete(vars) => {
                 if let Some(var) = vars.get(self.item) {
                     if let Some(id) = self.bindings.first().and_then(|binding| binding.nodes.get(var).cloned()) {
-                        self.pending.push_back(delete_node(id));
+                        self.pending.push_back(GraphEffect::DeleteNode(id));
                     }
                     self.item += 1;
                 } else {
@@ -901,38 +843,38 @@ impl QueryExecution {
     pub fn begin_close(&mut self) {
         self.closing = true;
     }
-    fn retire_mutation(&mut self, mutation: TrinityGraphMutation) {
-        self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackMutationRetirementFactory, mutation));
+    fn retire_effect(&mut self, effect: GraphEffect) {
+        self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackEffectRetirementFactory, effect));
     }
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, ValueError> {
         if !self.closing || maximum_items == 0 || maximum_bytes == 0 {
             return Ok(store::SnapshotRetirementStep::Blocked);
         }
         if let Some(retirement) = self.retirement.as_mut() {
             match retirement.close_step(1, maximum_bytes)? {
                 store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => self.retirement = None,
-                store::SnapshotRetirementStep::Complete => return Err("query owner retirement reported a false terminal".into()),
+                store::SnapshotRetirementStep::Complete => return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"query owner retirement reported a false terminal")),
                 step => return Ok(step),
             }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(deleting) = self.deleting.as_mut() {
             if let Some(value) = deleting.edge.take() {
-                self.retire_mutation(delete_node(value));
+                self.retire_effect(GraphEffect::DeleteNode(value));
                 return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
             }
             if !deleting.id.is_empty() {
                 let value = std::mem::take(&mut deleting.id);
-                self.retire_mutation(delete_node(value));
+                self.retire_effect(GraphEffect::DeleteNode(value));
                 return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
             }
         }
         if let Some(deleting) = self.deleting.take() {
-            self.retire_mutation(deleting.operation);
+            self.retire_effect(deleting.operation);
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(mutation) = self.pending.pop_front().or_else(|| self.operations.pop()) {
-            self.retire_mutation(mutation);
+            self.retire_effect(mutation);
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(filtering) = self.filtering.as_mut() {
@@ -948,47 +890,47 @@ impl QueryExecution {
                 return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
             }
             if let Some(value) = matching.node.take().or_else(|| matching.edge.take()) {
-                self.retire_mutation(delete_node(value));
+                self.retire_effect(GraphEffect::DeleteNode(value));
                 return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
             }
             self.matching = None;
         }
         if let Some(returning) = self.returning.as_mut() {
             if let Some(node) = returning.nodes.pop() {
-                self.retire_mutation(create_node(node));
+                self.retire_effect(GraphEffect::CreateNode(node));
                 return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
             }
             if let Some(edge) = returning.edges.pop() {
-                self.retire_mutation(create_edge(edge));
+                self.retire_effect(GraphEffect::CreateEdge(edge));
                 return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
             }
             if let Some(value) = returning.rows.last_mut().and_then(Vec::pop) {
-                self.retire_mutation(change_data_property(EntityRef::Node(String::new()), String::new(), value));
+                self.retire_effect(GraphEffect::SetProperty { entity: EntityRef::Node(String::new()), key: String::new(), value });
                 return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
             }
             if returning.rows.pop().is_some() {
                 return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
             }
             if let Some(value) = returning.columns.pop().or_else(|| returning.node_ids.pop_first()).or_else(|| returning.edge_ids.pop_first()) {
-                self.retire_mutation(delete_node(value));
+                self.retire_effect(GraphEffect::DeleteNode(value));
                 return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
             }
             self.returning = None;
         }
         if let Some(binding) = self.bindings.last_mut() {
             if let Some((key, value)) = binding.nodes.pop_first().or_else(|| binding.edges.pop_first()) {
-                self.retire_mutation(crate::standards::v1::subsets::any::schema::mutations::remove_data_property(EntityRef::Node(value), key));
+                self.retire_effect(GraphEffect::RemoveProperty { entity: EntityRef::Node(value), key });
                 return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
             }
             self.bindings.pop();
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some((_, node)) = self.graph.nodes.pop_first() {
-            self.retire_mutation(create_node(node));
+            self.retire_effect(GraphEffect::CreateNode(node));
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some((_, edge)) = self.graph.edges.pop_first() {
-            self.retire_mutation(create_edge(edge));
+            self.retire_effect(GraphEffect::CreateEdge(edge));
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if !self.metadata_retired {
@@ -1027,31 +969,31 @@ impl QueryExecution {
     }
 }
 
-fn emit_set_operation_from_graph(graph: &Graph, node_id: &str, prop: &str, value: PropertyValue) -> Result<TrinityGraphMutation, String> {
-    let node = graph.nodes.get(node_id).ok_or_else(|| format!("node {node_id} not found"))?;
+pub(super) fn emit_set_operation_from_graph(graph: &Graph, node_id: &str, prop: &str, value: PropertyValue) -> Result<GraphEffect, ValueError> {
+    let node = graph.nodes.get(node_id).ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue,format!("node {node_id} not found")))?;
     match prop {
         "name" => match value {
-            PropertyValue::String(name) => Ok(rename_node(node_id.to_string(), name)),
-            _ => Err(format!("node {node_id}.name expects string value")),
+            PropertyValue::String(name) => Ok(GraphEffect::RenameNode { id: node_id.to_string(), name }),
+            _ => Err(ValueError::new(ValueRefusalKind::InvalidValue,format!("node {node_id}.name expects string value"))),
         },
-        "x" => Ok(move_node(node_id.to_string(), value.as_f64().ok_or_else(|| format!("node {node_id}.x expects number value"))?, node.y)),
-        "y" => Ok(move_node(node_id.to_string(), node.x, value.as_f64().ok_or_else(|| format!("node {node_id}.y expects number value"))?)),
-        _ => Ok(change_data_property(EntityRef::Node(node_id.to_string()), prop.to_string(), value)),
+        "x" => Ok(GraphEffect::MoveNode { id: node_id.to_string(), x: value.as_f64().ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue,format!("node {node_id}.x expects number value")))?, y: node.y }),
+        "y" => Ok(GraphEffect::MoveNode { id: node_id.to_string(), x: node.x, y: value.as_f64().ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue,format!("node {node_id}.y expects number value")))? }),
+        _ => Ok(GraphEffect::SetProperty { entity: EntityRef::Node(node_id.to_string()), key: prop.to_string(), value }),
     }
 }
 
-fn emit_create_operations_from_graph(graph: &Graph, pattern: &Pattern) -> Result<Vec<TrinityGraphMutation>, String> {
-    let left = pattern.nodes.first().ok_or_else(|| "empty create pattern".to_string())?;
+pub(super) fn emit_create_operations_from_graph(graph: &Graph, pattern: &Pattern) -> Result<Vec<GraphEffect>, ValueError> {
+    let left = pattern.nodes.first().ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue,"empty create pattern"))?;
     let left_id = format!("{}-{}", left.var, graph.nodes.len());
     let mut operations = Vec::with_capacity(if pattern.edge.is_some() { 3 } else { 1 });
     let mut left_ports = Vec::new();
     if pattern.edge.is_some() {
         left_ports.push(Port { id: "out".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() });
     }
-    operations.push(create_node(Node { id: left_id.clone(), kind: left.kind.clone(), name: left.var.clone(), x: graph.nodes.len() as f64 * 120.0, y: 0.0, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports: left_ports }));
+    operations.push(GraphEffect::CreateNode(Node { id: left_id.clone(), kind: left.kind.clone(), name: left.var.clone(), x: graph.nodes.len() as f64 * 120.0, y: 0.0, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports: left_ports }));
     if let Some(edge_pattern) = &pattern.edge {
         let right_id = format!("{}-{}", edge_pattern.right.var, graph.nodes.len() + 1);
-        operations.push(create_node(Node {
+        operations.push(GraphEffect::CreateNode(Node {
             id: right_id.clone(),
             kind: edge_pattern.right.kind.clone(),
             name: edge_pattern.right.var.clone(),
@@ -1062,7 +1004,7 @@ fn emit_create_operations_from_graph(graph: &Graph, pattern: &Pattern) -> Result
             properties: PropertyBag::new(),
             ports: vec![Port { id: "in".into(), kind: "Connector".into(), direction: PortDirection::In, properties: PropertyBag::new() }],
         }));
-        operations.push(create_edge(Edge {
+        operations.push(GraphEffect::CreateEdge(Edge {
             id: format!("e-{}", graph.edges.len()),
             kind: edge_pattern.kind.clone().unwrap_or_else(|| "Connection".into()),
             source: port_key(&left_id, "out"),

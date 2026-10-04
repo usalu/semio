@@ -28,13 +28,14 @@ use crate::workspace::remote::percent_encode;
 use crate::workspace::{HeadlessWorkspace, PROBE_SCHEMA};
 use semio_framework_async::OperationContext;
 use semio_framework_os_kernel::os_directory::DocumentScope;
-use semio_framework_os_kernel::{FromValue, ToValue};
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
 use std::sync::Arc;
 
 //#region 🔖️DeclaredInference
 /// 💡️ One declared inference service, wire-shaped 1:1 from `semio_framework::ContributedInferenceMetadata`
 /// — the exact static fields a plugin's own `🔣️.json` carries, never a live guest call.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct DeclaredInference {
@@ -273,7 +274,7 @@ fn no_such_service_error(schema: &str, inference_schema: &str) -> GatewayError {
 /// This facet never mints one itself: no execution route exists to mint FOR yet, and an inert job
 /// handle nobody could ever progress would be its own kind of fabrication. Pinning this shape now
 /// means wiring the two sides together later is additive, not a redesign.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct InferenceJobPayload {
@@ -654,7 +655,7 @@ pub enum InferenceProposalStateV1 {
 }
 
 /// 📨 Neutral submission arguments projected by the installed owner codec.
-#[derive(Clone,Debug,PartialEq,Eq,serde::Serialize,serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all="camelCase",deny_unknown_fields)]
 pub struct HubInferenceSubmitRequestV1 {pub request_id:String,pub service_id:String,pub lifetime_ms:u64}
 impl HubInferenceSubmitRequestV1 {
@@ -663,7 +664,7 @@ impl HubInferenceSubmitRequestV1 {
 }
 
 /// ✅ Neutral proposal admission arguments; the installed owner binds its receipt.
-#[derive(Clone,Debug,PartialEq,Eq,serde::Serialize,serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all="camelCase",deny_unknown_fields)]
 pub struct HubInferenceApprovalRequestV1 {pub job_id:String,pub proposal_hash:String}
 impl HubInferenceApprovalRequestV1 {
@@ -672,27 +673,27 @@ impl HubInferenceApprovalRequestV1 {
 }
 
 /// 📣 Owner-validated job admission projection.
-#[derive(Clone,Debug,PartialEq,Eq,serde::Serialize,serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all="camelCase",deny_unknown_fields)]
 pub struct HubInferenceJobReceiptV1 {pub job_id:String,pub state:InferenceJobStateV1,pub proposal_state:InferenceProposalStateV1,pub proposal_hash:Option<String>,pub cursor:u64,pub expires_at_ms:u64}
 
-#[derive(Clone,Debug,PartialEq,Eq,serde::Serialize,serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all="camelCase",deny_unknown_fields)]
 pub struct HubInferenceEventV1 {pub ordinal:u64,pub kind:String,pub at_ms:u64}
 
-#[derive(Clone,Debug,PartialEq,Eq,serde::Serialize,serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all="camelCase",deny_unknown_fields)]
 pub struct HubInferenceProgressV1 {pub cursor:u64,pub run_epoch:u64,pub completed:u64,pub total:u64,pub at_ms:u64}
 
 /// 📃 Owner-validated lifecycle projection with an opaque presentation payload.
-#[derive(Clone,Debug,PartialEq,serde::Serialize,serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all="camelCase",deny_unknown_fields)]
-pub struct HubInferenceEventPageV1 {pub job_id:String,pub state:InferenceJobStateV1,pub proposal_state:InferenceProposalStateV1,pub cancel_requested:bool,pub stale:bool,pub proposal_hash:Option<String>,#[serde(default,with="dsl_json_optional")]pub preview:Option<semio_framework_os_kernel::DslValue>,pub events:Vec<HubInferenceEventV1>,pub progress:Vec<HubInferenceProgressV1>,pub next_cursor:u64}
+pub struct HubInferenceEventPageV1 {pub job_id:String,pub state:InferenceJobStateV1,pub proposal_state:InferenceProposalStateV1,pub cancel_requested:bool,pub stale:bool,pub proposal_hash:Option<String>,#[serde(default,with="dsl_json_optional")]pub preview:Option<semio_framework_value::DslValue>,pub events:Vec<HubInferenceEventV1>,pub progress:Vec<HubInferenceProgressV1>,pub next_cursor:u64}
 
 /// 🧾 Generic remote commit witness and owner-authored history locator.
-#[derive(Clone,Debug,PartialEq,serde::Serialize,serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all="camelCase",deny_unknown_fields)]
-pub struct HubInferenceApprovalReceiptV1 {pub job_id:String,pub mutation_id:String,pub command_hash:String,pub proposal_hash:String,pub applied:bool,#[serde(with="dsl_json")]pub undo:semio_framework_os_kernel::DslValue}
+pub struct HubInferenceApprovalReceiptV1 {pub job_id:String,pub mutation_id:String,pub command_hash:String,pub proposal_hash:String,pub applied:bool,#[serde(with="dsl_json")]pub undo:semio_framework_value::DslValue}
 
 #[path="🔌️service/🦀️.rs"]
 pub mod service;
@@ -820,12 +821,12 @@ pub async fn read_hub_inference_services<T: InferenceHubTransport>(transport: &T
     Ok(services)
 }
 
-fn remote_payload(value:serde_json::Value)->Result<semio_framework_os_kernel::DslValue,InferenceRouteErrorV1> {
-    semio_framework_os_kernel::os_pack::json::from_json_str(&value.to_string()).map_err(|_|InferenceRouteErrorV1::Invalid)
+fn remote_payload(value:serde_json::Value)->Result<semio_framework_value::DslValue,InferenceRouteErrorV1> {
+    semio_framework_pack_json::from_json_str(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_|InferenceRouteErrorV1::Invalid)
 }
-fn remote_projection<T:serde::de::DeserializeOwned>(value:semio_framework_os_kernel::DslValue)->Result<T,InferenceRouteErrorV1> {
+fn remote_projection<T:serde::de::DeserializeOwned>(value:semio_framework_value::DslValue)->Result<T,InferenceRouteErrorV1> {
     semio_framework_os_kernel::os_directory::client::document_http::CompiledDocumentHttpPortV1::validate_payload(&value,INFERENCE_RESPONSE_MAX_BYTES).map_err(|code|if code==semio_framework_os_kernel::os_directory::client::DocumentHttpPortCodeV1::Bounds {InferenceRouteErrorV1::Bounds}else{InferenceRouteErrorV1::Invalid})?;
-    serde_json::from_str(&semio_framework_os_kernel::os_pack::json::to_json_string(&value)).map_err(|_|InferenceRouteErrorV1::Invalid)
+    serde_json::from_str(&semio_framework_pack_json::to_json_string(&value)).map_err(|_|InferenceRouteErrorV1::Invalid)
 }
 
 /// 📡 Runs one neutral admission through its installed owner declaration and codecs.
@@ -856,7 +857,7 @@ pub async fn approve_hub_inference_job<T:InferenceHubTransport>(transport:&T,con
     remote_projection((protocol.approval)(call_remote_inference_v1(transport,context,origin,scope,route,"approve",&payload).await?,scope,&request.job_id,&request.proposal_hash)?)
 }
 
-pub async fn undo_hub_inference_approval<T:InferenceHubTransport>(transport:&T,context:&OperationContext,origin:&str,scope:&DocumentScope,route:&str,request:&semio_framework_os_kernel::DslValue)->Result<semio_framework_os_kernel::DslValue,InferenceRouteErrorV1> {
+pub async fn undo_hub_inference_approval<T:InferenceHubTransport>(transport:&T,context:&OperationContext,origin:&str,scope:&DocumentScope,route:&str,request:&semio_framework_value::DslValue)->Result<semio_framework_value::DslValue,InferenceRouteErrorV1> {
     let protocol=remote_inference_protocol_v1(route)?;
     (protocol.undo)(call_remote_inference_v1(transport,context,origin,scope,route,"undo",request).await?,request)
 }
@@ -1924,20 +1925,20 @@ mod inference_jobs;
 
 pub(crate) mod dsl_json {
     use serde::{Deserialize,Serialize};
-    pub fn serialize<S:serde::Serializer>(value:&semio_framework_os_kernel::DslValue,serializer:S)->Result<S::Ok,S::Error> {
+    pub fn serialize<S:serde::Serializer>(value:&semio_framework_value::DslValue,serializer:S)->Result<S::Ok,S::Error> {
         semio_framework_os_kernel::os_directory::client::document_http::CompiledDocumentHttpPortV1::validate_payload(value,super::INFERENCE_RESPONSE_MAX_BYTES).map_err(|code|serde::ser::Error::custom(format!("opaque payload rejected: {code:?}")))?;
-        let json:serde_json::Value=serde_json::from_str(&semio_framework_os_kernel::os_pack::json::to_json_string(value)).map_err(serde::ser::Error::custom)?;json.serialize(serializer)
+        let json:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(value)).map_err(serde::ser::Error::custom)?;json.serialize(serializer)
     }
-    pub fn deserialize<'de,D:serde::Deserializer<'de>>(deserializer:D)->Result<semio_framework_os_kernel::DslValue,D::Error> {
-        let json=serde_json::Value::deserialize(deserializer)?;semio_framework_os_kernel::os_pack::json::from_json_str(&json.to_string()).map_err(serde::de::Error::custom)
+    pub fn deserialize<'de,D:serde::Deserializer<'de>>(deserializer:D)->Result<semio_framework_value::DslValue,D::Error> {
+        let json=serde_json::Value::deserialize(deserializer)?;semio_framework_pack_json::from_json_str(&json.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(serde::de::Error::custom)
     }
 }
 mod dsl_json_optional {
     use serde::{Deserialize,Serialize};
-    pub fn serialize<S:serde::Serializer>(value:&Option<semio_framework_os_kernel::DslValue>,serializer:S)->Result<S::Ok,S::Error> {
-        let json=value.as_ref().map(|value|serde_json::from_str::<serde_json::Value>(&semio_framework_os_kernel::os_pack::json::to_json_string(value))).transpose().map_err(serde::ser::Error::custom)?;json.serialize(serializer)
+    pub fn serialize<S:serde::Serializer>(value:&Option<semio_framework_value::DslValue>,serializer:S)->Result<S::Ok,S::Error> {
+        let json=value.as_ref().map(|value|serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(value))).transpose().map_err(serde::ser::Error::custom)?;json.serialize(serializer)
     }
-    pub fn deserialize<'de,D:serde::Deserializer<'de>>(deserializer:D)->Result<Option<semio_framework_os_kernel::DslValue>,D::Error> {
-        Option::<serde_json::Value>::deserialize(deserializer)?.map(|json|semio_framework_os_kernel::os_pack::json::from_json_str(&json.to_string()).map_err(serde::de::Error::custom)).transpose()
+    pub fn deserialize<'de,D:serde::Deserializer<'de>>(deserializer:D)->Result<Option<semio_framework_value::DslValue>,D::Error> {
+        Option::<serde_json::Value>::deserialize(deserializer)?.map(|json|semio_framework_pack_json::from_json_str(&json.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(serde::de::Error::custom)).transpose()
     }
 }

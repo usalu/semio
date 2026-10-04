@@ -1,0 +1,1732 @@
+{
+  "scope": "Current explicitly registered plugin Source snapshot targets; target presence only before actual replay",
+  "created": "2026-10-04 05:23 UTC",
+  "count": 92,
+  "owners": [
+    {
+      "project": "@semio-tech/animate-presentation-rs",
+      "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/architect-program-rs",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        },
+        "metadata": {
+          "semio": {
+            "workspaceCommand": [
+              "verify",
+              "architect-program-test-snapshot-sqlite-source"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/block-2d-rs",
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/block-3d-rs",
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/block-5d-rs",
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/cad-cad-rs",
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "cwd": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        },
+        "metadata": {
+          "semio": {
+            "workspaceCommand": [
+              "verify",
+              "cad-test-snapshot-sqlite-source"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/dag-dag-rs",
+      "path": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "inputs": [
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/📜️script.ts",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/**/*"
+        ],
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        },
+        "metadata": {
+          "semio": {
+            "workspaceCommand": [
+              "verify",
+              "dag-test-snapshot-sqlite-source"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/demonstrator-playground-rs",
+      "path": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "inputs": [
+          "default",
+          "^default",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/📜️script.ts",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*"
+        ],
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/draw-drawing-rs",
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": true,
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🦀️.rs",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*"
+        ],
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/energy-model-rs",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/../../🟦️.ts",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ],
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/fem-2d-rs",
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/fem-3d-rs",
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/flow-flow-rs",
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": true,
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🦀️.rs",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*"
+        ],
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/forms-forms-rs",
+      "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "inputs": [
+          "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/**/*",
+          "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ],
+        "options": {
+          "cwd": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        },
+        "metadata": {
+          "semio": {
+            "workspaceCommand": [
+              "verify",
+              "forms-test-snapshot-sqlite-source"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/gis-gismap-rs",
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        },
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🟦️.ts",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/../../📜️artifact-definition.json",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ]
+      }
+    },
+    {
+      "project": "@semio-tech/gis-gisterrain-rs",
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        },
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🟦️.ts",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/../../📜️artifact-definition.json",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ]
+      }
+    },
+    {
+      "project": "@semio-tech/imperative-procedure-rs",
+      "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": true,
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/../../🟦️.ts",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ],
+        "options": {
+          "cwd": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/layout-layout-rs",
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": true,
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🦀️.rs",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*"
+        ],
+        "options": {
+          "cwd": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/lowpoly-lowpoly-rs",
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "inputs": [
+          "default",
+          "^default",
+          "{workspaceRoot}/✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/**/*",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ],
+        "options": {
+          "cwd": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/mathematical-equation-rs",
+      "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "inputs": [
+          "default",
+          "^default",
+          "{workspaceRoot}/✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/**/*",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ],
+        "options": {
+          "cwd": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/norm-din16798-rs",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🦀️.rs",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ],
+        "options": {
+          "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/norm-din18599-rs",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🦀️.rs",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ],
+        "options": {
+          "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/norm-din4108-rs",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🦀️.rs",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ],
+        "options": {
+          "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/norm-en1990-rs",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        },
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/../../📜️artifact-definition.json",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ]
+      }
+    },
+    {
+      "project": "@semio-tech/norm-en1991-rs",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🦀️.rs",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ],
+        "options": {
+          "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/norm-en1992-rs",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/../../🟦️.ts",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ],
+        "options": {
+          "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/norm-en1993-rs",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/../../🟦️.ts",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ],
+        "options": {
+          "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/norm-en1994-rs",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🦀️.rs",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ],
+        "options": {
+          "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/norm-en1995-rs",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🦀️.rs",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ],
+        "options": {
+          "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/norm-en1996-rs",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🦀️.rs",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ],
+        "options": {
+          "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/norm-en1997-rs",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/../../🟦️.ts",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ],
+        "options": {
+          "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/norm-en1998-rs",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🦀️.rs",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ],
+        "options": {
+          "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/norm-en1999-rs",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/../../🟦️.ts",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ],
+        "options": {
+          "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/norm-iso16757-rs",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/../../🟦️.ts",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ],
+        "options": {
+          "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/norm-vdi3805-rs",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🦀️.rs",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ],
+        "options": {
+          "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/playbook-playbook-rs",
+      "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": true,
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/../../🟦️.ts",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ],
+        "options": {
+          "cwd": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/procedural-generation2d-rs",
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/procedural-generation3d-rs",
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": true,
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🦀️.rs",
+          "{workspaceRoot}/✏️s/🔌️plugins/🌀️procedural/🫀️core/🧬️generation/🪶️sqlite/**/*",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ],
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/process-process3d-rs",
+      "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/puzzle-2d-rs",
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/puzzle-3d-rs",
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/puzzle-5d-rs",
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/raster-raster-rs",
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": true,
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🦀️.rs",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*"
+        ],
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/reasoning-wires-rs",
+      "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "inputs": [
+          "default",
+          "^default",
+          "{workspaceRoot}/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/**/*",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ],
+        "options": {
+          "cwd": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/remodel-remodeling-rs",
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "cwd": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        },
+        "metadata": {
+          "semio": {
+            "workspaceCommand": [
+              "verify",
+              "remodel-remodeling-test-snapshot-sqlite-source"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/sequence-sequence-rs",
+      "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/shooting-shooting-rs",
+      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/sourcing-curation-rs",
+      "path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/space-home-rs",
+      "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        },
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🟦️.ts",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/../../📜️artifact-definition.json",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ]
+      }
+    },
+    {
+      "project": "@semio-tech/space-space-rs",
+      "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        },
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🟦️.ts",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/../../📜️artifact-definition.json",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ]
+      }
+    },
+    {
+      "project": "@semio-tech/stdio-avi-rs",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/stdio-bcf-rs",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        },
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🟦️.ts",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/../../📜️artifact-definition.json",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ]
+      }
+    },
+    {
+      "project": "@semio-tech/stdio-binary-rs",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        },
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🟦️.ts",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/../../📜️artifact-definition.json",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ]
+      }
+    },
+    {
+      "project": "@semio-tech/stdio-bmp-rs",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        },
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🟦️.ts",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/../../📜️artifact-definition.json",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ]
+      }
+    },
+    {
+      "project": "@semio-tech/stdio-csv-rs",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        },
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🟦️.ts",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/../../📜️artifact-definition.json",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ]
+      }
+    },
+    {
+      "project": "@semio-tech/stdio-deflate-rs",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        },
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🟦️.ts",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/../../📜️artifact-definition.json",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ]
+      }
+    },
+    {
+      "project": "@semio-tech/stdio-dwg-rs",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "inputs": [
+          "default",
+          "^production",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*",
+          "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/**/*",
+          "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🟦️.ts",
+          "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🦀️.rs"
+        ],
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/stdio-dxf-rs",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        },
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*"
+        ]
+      }
+    },
+    {
+      "project": "@semio-tech/stdio-epw-rs",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        },
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🟦️.ts",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/../../📜️artifact-definition.json",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ]
+      }
+    },
+    {
+      "project": "@semio-tech/stdio-gif-rs",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        },
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🟦️.ts",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/../../📜️artifact-definition.json",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ]
+      }
+    },
+    {
+      "project": "@semio-tech/stdio-gltf-rs",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        },
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🟦️.ts",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/../../📜️artifact-definition.json",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ]
+      }
+    },
+    {
+      "project": "@semio-tech/stdio-html-rs",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        },
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🟦️.ts",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/../../📜️artifact-definition.json",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ]
+      }
+    },
+    {
+      "project": "@semio-tech/stdio-ifc-rs",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": true,
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🟦️.ts",
+          "{projectRoot}/../../🦀️.rs",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ],
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/stdio-jpg-rs",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        },
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🟦️.ts",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/../../📜️artifact-definition.json",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ]
+      }
+    },
+    {
+      "project": "@semio-tech/stdio-json-rs",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        },
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🟦️.ts",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/../../📜️artifact-definition.json",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ]
+      }
+    },
+    {
+      "project": "@semio-tech/stdio-las-rs",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        },
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🟦️.ts",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/../../📜️artifact-definition.json",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ]
+      }
+    },
+    {
+      "project": "@semio-tech/stdio-md-rs",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        },
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🟦️.ts",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/../../📜️artifact-definition.json",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ]
+      }
+    },
+    {
+      "project": "@semio-tech/stdio-mp3-rs",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        },
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🟦️.ts",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/../../📜️artifact-definition.json",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ]
+      }
+    },
+    {
+      "project": "@semio-tech/stdio-mp4-rs",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/stdio-obj-rs",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/../../🟦️.ts",
+          "{projectRoot}/../../📜️artifact-definition.json",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ],
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/stdio-pdf-rs",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        },
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*"
+        ]
+      }
+    },
+    {
+      "project": "@semio-tech/stdio-ply-rs",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/../../🟦️.ts",
+          "{projectRoot}/../../📜️artifact-definition.json",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ],
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/stdio-png-rs",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        },
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🟦️.ts",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/../../📜️artifact-definition.json",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ]
+      }
+    },
+    {
+      "project": "@semio-tech/stdio-semio-rs",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        },
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🟦️.ts",
+          "{projectRoot}/../../🦀️.rs",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ],
+        "cache": true
+      }
+    },
+    {
+      "project": "@semio-tech/stdio-step-rs",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": true,
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🟦️.ts",
+          "{projectRoot}/../../🦀️.rs",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ],
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/stdio-stl-rs",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/../../🟦️.ts",
+          "{projectRoot}/../../📜️artifact-definition.json",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ],
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/stdio-svg-rs",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        },
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🟦️.ts",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/../../📜️artifact-definition.json",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ]
+      }
+    },
+    {
+      "project": "@semio-tech/stdio-tiff-rs",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        },
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🟦️.ts",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/../../📜️artifact-definition.json",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ]
+      }
+    },
+    {
+      "project": "@semio-tech/stdio-tsv-rs",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        },
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🟦️.ts",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/../../📜️artifact-definition.json",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ]
+      }
+    },
+    {
+      "project": "@semio-tech/stdio-txt-rs",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        },
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🟦️.ts",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/../../📜️artifact-definition.json",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ]
+      }
+    },
+    {
+      "project": "@semio-tech/stdio-wav-rs",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        },
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🟦️.ts",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/../../📜️artifact-definition.json",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ]
+      }
+    },
+    {
+      "project": "@semio-tech/stdio-xml-rs",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        },
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🟦️.ts",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/../../📜️artifact-definition.json",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ]
+      }
+    },
+    {
+      "project": "@semio-tech/stdio-zip-rs",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        },
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🟦️.ts",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/../../📜️artifact-definition.json",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ]
+      }
+    },
+    {
+      "project": "@semio-tech/trinity-jack-rs",
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/trinity-rewriting-rs",
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "inputs": [
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/📜️script.ts",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/**/*"
+        ],
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        },
+        "metadata": {
+          "semio": {
+            "workspaceCommand": [
+              "verify",
+              "trinity-rewriting-test-snapshot-sqlite-source"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/vcs-vcs-rs",
+      "path": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/wfc-2d-rs",
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/wfc-3d-rs",
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/wfc-bitmap-rs",
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/wfc-grid2d-rs",
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/wfc-grid3d-rs",
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        }
+      }
+    },
+    {
+      "project": "@semio-tech/writer-writer-rs",
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/📋️project.json",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": true,
+        "inputs": [
+          "default",
+          "^default",
+          "{workspaceRoot}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/**/*",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ],
+        "options": {
+          "cwd": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+          "forwardAllArgs": true
+        },
+        "dependsOn": [
+          "graph-generate"
+        ]
+      }
+    }
+  ]
+}

@@ -3,13 +3,20 @@
   "projectType": "library",
   "name": "@semio-tech/forms-js",
   "version": "0.1.0",
-  "description": "@semio-tech/forms-js authored owner test infrastructure.",
+  "description": "@semio-tech/forms-js public Forms document and semantic transport package.",
   "type": "module",
   "private": true,
-  "main":"./dist/🟦️.js",
-  "types":"./dist/🟦️.d.ts",
-  "exports":{".":{"types":"./dist/🟦️.d.ts","import":"./dist/🟦️.js"}},
+  "main": "./dist/🟦️.js",
+  "types": "./dist/🟦️.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/🟦️.d.ts",
+      "import": "./dist/🟦️.js"
+    }
+  },
   "scripts": {
+    "build": "bun nx run @semio-tech/forms-js:build",
+    "check": "bun nx run @semio-tech/forms-js:check",
     "test": "bun nx run @semio-tech/forms-js:test"
   },
   "dependencies": {
@@ -24,6 +31,7 @@
     "@semio-tech/cad-js-module-aec-building-structure": "workspace:*"
   },
   "devDependencies": {
+    "fast-check": "3.23.2",
     "typescript": "^5.9.3"
   },
   "author": {

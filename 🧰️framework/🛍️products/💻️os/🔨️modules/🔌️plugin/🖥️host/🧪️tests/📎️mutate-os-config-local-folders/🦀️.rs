@@ -169,7 +169,7 @@ mod subject {
             if current == base {
                 return Err(format!("inverse-{kind}: the forward mutation left the bindings untouched, so restoring it proves nothing"));
             }
-            for step in inverse_local_folders_config_mutation_steps(&mutation, &base) {
+            for step in inverse_local_folders_config_mutation_steps(&mutation, &base).expect("valid retained mutation inverse fixture") {
                 let undone = apply_local_folders_config_mutation_reporting(&mut current, &step);
                 if !undone.is_empty() {
                     return Err(format!("inverse-{kind}: an inverse step was rejected: {undone:?}"));
@@ -200,7 +200,7 @@ mod subject {
         if current != base {
             return Err(disagreement("unbound-detachment-has-no-undo: detaching an unbound document must leave the bindings exactly where it was", &current, &base));
         }
-        let steps = inverse_local_folders_config_mutation_steps(&mutation, &base);
+        let steps = inverse_local_folders_config_mutation_steps(&mutation, &base).expect("valid retained mutation inverse fixture");
         if !steps.is_empty() {
             return Err(format!("unbound-detachment-has-no-undo: the inverse must be empty, but the implementation offered {} step(s)", steps.len()));
         }
@@ -237,7 +237,7 @@ pub fn adapter() -> Adapter {
         built = built.oracle(&format!("mutate-{kind}"), mutate_oracle_for(kind)).oracle(&format!("inverse-{kind}"), inverse_oracle_for(kind));
         #[cfg(feature = "sut")]
         {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind)).subject(&format!("inverse-{kind}"), subject::inverse(kind));
+            built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind)).subject(&format!("inverse-{kind}"), subject::inverse(kind).expect("valid retained mutation inverse fixture"));
         }
     }
     built = built.oracle("unbound-detachment-has-no-undo", unbound_guard_oracle).oracle("local-folders-round-trip", round_trip_oracle);

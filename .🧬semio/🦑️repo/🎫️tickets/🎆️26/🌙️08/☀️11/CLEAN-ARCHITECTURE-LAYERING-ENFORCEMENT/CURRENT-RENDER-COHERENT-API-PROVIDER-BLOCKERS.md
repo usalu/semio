@@ -1,0 +1,11 @@
+# Render Coherent API Provider Blockers
+
+Combined source remains NOT Ready for mounting or product deletion. Current-frame and exact-patch preflights pass; surviving Rust grammar shapes are conserved across 77 trees. The deleted old Canvas root retains its historical ERROR separately.
+
+Two concrete proposed direct NORMAL General→Product edges remain: Editor and Surface both declare semio-framework-os-kernel pointing to the physical OS package. These are actual complete proposed dependency tables, not package-name text guesses. The finite direct-path census retains 58 provider declarations; inherited workspace and target/feature provider closure must still be joined before claiming the whole graph clean.
+
+The public foreign spelling frontier retains 40 observations with full proposed bodies. Canvas renderer backend modules are restricted by pub(super), so their internal pub reexports are not automatically public leakage. The technology-specific Canvas WGPU target explicitly reexports Device, Queue and TextureView; this intentional external identity is separate from the neutral Scene API and must remain bounded to that target. A complete AST visibility/signature review is still pending, including public reexports whose nominal underlying types differ from spelling. No blanket external API defect is inferred from internal pub text.
+
+The authority itself still holds actual Infinite Canvas/Board mount retirement and direct defining-provider consumer edits. The 12 route descriptors cover Canvas, Board and DAG-model at default/quick/long/exhaustive levels; they are proposed routes and do not establish actual workspace registration, literal asset resolution, native execution or GUI consumer closure. Two body-preserving absent ownership schema/fixture taxonomy corrections need their complete consumer/include associations retained at preparation. Original Infinite/direct consumers and remaining General Kernel facets must close before any deletion claim.
+
+Proofs: 🗑️generated/neutral-render-owner/independent-render-coherent-api-provider-frontier-1.json; independent-render-coherent-current-frame-preflight-1.json; independent-render-coherent-patch-grammar-preflight-1.json. Full route/script/schema nominal association review remains open while actual Error post takes priority.

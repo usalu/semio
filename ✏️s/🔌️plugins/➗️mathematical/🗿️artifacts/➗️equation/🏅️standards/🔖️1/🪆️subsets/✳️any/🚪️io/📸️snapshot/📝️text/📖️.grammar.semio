@@ -5,13 +5,24 @@ comment none
 start document
 artifact-mark = "semio" "mathematical.equation.dsl" "v1"
 document = artifact-mark root-field+
-root-field = {"notation" "=" child} | {"results" "=" child} | {"computed" "=" child} | {"equation" "=" expression}
+root-field = {"notation" "=" child} | {"results" "=" child} | {"computed" "=" child} | {"equation" "=" expression} | {"graph" "=" graph} | {"geometry" "=" geometry}
 child = child-field+
 child-field = {"child-id" "=" text} | {"artifact-id" "=" text} | {"artifact-kind" "=" text} | {"standard" "=" text} | {"subset" "=" text}
 expression = expression-field+
-expression-field = {"next-label" "=" INT} | {"nodes" "=" "[" node* "]"}
+expression-field = {"next-label" "=" INT} | {"nodes" "=" "[" {"{" node "}"}* "]"}
 node = node-field+
 node-field = {"label" "=" INT} | {"kind" "=" node-kind} | {"lexeme" "=" text} | {"numer" "=" text} | {"denom" "=" text} | {"name" "=" text} | {"terms" "=" indices} | {"factors" "=" indices} | {"base" "=" INT} | {"exponent" "=" INT}
 node-kind = "integer" | "rational" | "symbol" | "add" | "mul" | "pow"
 indices = "[" INT* "]"
+graph = graph-field+
+graph-field = {"directed" "=" boolean} | {"nodes" "=" "[" {"{" graph-node "}"}* "]"} | {"edges" "=" "[" {"{" graph-edge "}"}* "]"} | {"algorithm" "=" text} | {"algorithm-seed" "=" text}
+graph-node = graph-node-field+
+graph-node-field = {"id" "=" text} | {"label" "=" text} | {"x" "=" number} | {"y" "=" number}
+graph-edge = graph-edge-field+
+graph-edge-field = {"id" "=" text} | {"source" "=" text} | {"target" "=" text}
+geometry = {"points" "=" "[" {"{" point "}"}* "]"}
+point = point-field+
+point-field = {"x" "=" number} | {"y" "=" number}
+boolean = "true" | "false"
+number = INT | FLOAT | IDENT | "-" IDENT
 text = IDENT | TEXT

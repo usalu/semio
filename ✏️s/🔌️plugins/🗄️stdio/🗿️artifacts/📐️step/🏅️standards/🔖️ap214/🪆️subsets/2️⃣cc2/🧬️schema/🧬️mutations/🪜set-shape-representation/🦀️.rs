@@ -22,9 +22,12 @@ impl protocol::MutationKind<StepSnapshot, StepCc2Mutation> for SetShapeRepresent
     fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<<StepCc2Mutation as protocol::Mutation<StepSnapshot>>::Diff> {
         class_diff(base, &ClassEdit::Representation { id: self.id, row: self.representation.clone() })
     }
-    fn inverse(&self, base: &StepSnapshot) -> Vec<StepCc2Mutation> {
-        class_inverse(base, &ClassEdit::Representation { id: self.id, row: self.representation.clone() })
-    }
+    fn inverse(&self, base: &StepSnapshot) -> Result<Vec<StepCc2Mutation>, semio_framework_value::ValueError> {
+    Ok({
+        class_inverse(base, &ClassEdit::Representation { id: self.id, row: self.representation.clone() })?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set shape representation #{}", self.id), &format!("Formrepräsentation #{} setzen", self.id))
     }

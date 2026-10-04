@@ -5,12 +5,10 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 //!
-//! ✅️ This is the ONE equation leaf that gets a fully hand-authored APPLIED case with a real
-//! `🔺️diff`: `change-coefficient` edits `EquationSnapshot.equation`, the plain (non-`#[child]`)
-//! persistent field, and therefore never calls `equation_children_from_state`. Every other verb
-//! in this vocabulary re-mints the `notation`/`results`/`computed` triple, whose `child_id` is a
-//! `DefaultHasher` digest, and so cannot have a hand-authored `➡️after`. Here the composed triple
-//! is byte-identical across `⬅️before` and `➡️after` — an invariant this fixture asserts directly.
+//! ✅️ `change-coefficient` edits `EquationSnapshot.equation`, the plain persistent expression field, and never derives the
+//! `notation`/`results`/`computed` children (they follow `graph`/`geometry` only, `crate::equation_state_diff`): the diff
+//! carries `equation` alone and the composed triple is byte-identical across `⬅️before` and `➡️after` — an invariant this
+//! fixture asserts directly.
 //!
 //! 🌳 The committed equation is `2·x² + 7` with `EquationNodeLabel`s 0..6 and `nextLabel` 7; the
 //! payload retargets the label-2 leading coefficient from the integer `2` to the rational `3/2`.
@@ -18,7 +16,7 @@
 use crate::snapshot::schema::{EquationNodeKind, EquationNodeLabel};
 use crate::standards::v1::subsets::equation::schema::mutations::change_coefficient::ChangeCoefficient;
 use crate::{EquationDiff, EquationMutation, EquationSnapshot};
-use semio_framework_os_kernel::ToValue;
+use semio_framework_value::ToValue;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎚️change/🧪️raises/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎚️change/🧪️raises/📸️snapshot/➡️after/🔣️.json");
@@ -30,13 +28,13 @@ const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutati
 const COEFFICIENT: EquationNodeLabel = EquationNodeLabel(2);
 
 fn before() -> EquationSnapshot {
-    pack::from_json_str(BEFORE).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> EquationSnapshot {
-    pack::from_json_str(AFTER).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> EquationMutation {
-    pack::from_json_str(MUTATION).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 fn produced() -> protocol::MutationOutcome<EquationDiff> {
     <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(&mutation(), &before())
@@ -66,8 +64,8 @@ async fn the_composed_child_triple_is_never_re_minted() {
     let diff = emitted.diff();
     assert!(diff.equation.is_some(), "change-coefficient fills the equation slot");
     assert!(diff.notation.is_none() && diff.results.is_none() && diff.computed.is_none(), "change-coefficient must leave every composed-child slot of the diff empty");
-    let encoded: serde_json::Value = serde_json::from_str(&pack::json::to_json_string(diff)).expect("third-party diff decoder");
-    assert_eq!(encoded.as_object().unwrap().keys().map(String::as_str).collect::<std::collections::BTreeSet<_>>(), std::collections::BTreeSet::from(["notation", "results", "computed", "equation"]));
+    let encoded: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(diff)).expect("third-party diff decoder");
+    assert_eq!(encoded.as_object().unwrap().keys().map(String::as_str).collect::<std::collections::BTreeSet<_>>(), std::collections::BTreeSet::from(["graph", "geometry", "notation", "results", "computed", "equation"]));
 }
 
 /// ↩️ The undo is reconstructed from BASE's own value at that label and collapses back to the
@@ -75,7 +73,7 @@ async fn the_composed_child_triple_is_never_re_minted() {
 #[semio_framework_async_macros::async_test]
 async fn inverse_restores_before() {
     let base = before();
-    let inverse = <EquationMutation as protocol::Mutation<EquationSnapshot>>::inverse(&mutation(), &base);
+    let inverse = <EquationMutation as protocol::Mutation<EquationSnapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![EquationMutation::ChangeCoefficient(ChangeCoefficient { label: COEFFICIENT, numer: "2".to_string(), denom: "1".to_string() })], "change-coefficient inverts to BASE's own numer/denom at the same label, got {inverse:?}");
     let mut snapshot = <EquationDiff as protocol::MutationDiff<EquationSnapshot>>::apply(produced().diff(), &base).expect("forward applies");
     for step in &inverse {
@@ -91,22 +89,22 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: EquationSnapshot = pack::from_json_str(text).expect("snapshot decodes");
-        let reencoded = pack::json_from_dsl_value(&decoded.to_value());
-        let original = pack::parse_json(text).expect("snapshot reparses");
-        assert!(pack::json::value_eq_ignoring_object_order(&reencoded, &original), "change-coefficient/raises-the-leading-coefficient-to-three-halves: committed {label} JSON is not canonical ({reencoded:?} vs {original:?})");
+        let decoded: EquationSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = semio_framework_pack_json::from_dsl_value(&decoded.to_value());
+        let original = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot reparses");
+        assert!(semio_framework_pack_json::value_eq_ignoring_object_order(&reencoded, &original), "change-coefficient/raises-the-leading-coefficient-to-three-halves: committed {label} JSON is not canonical ({reencoded:?} vs {original:?})");
     }
-    let reencoded = pack::json_from_dsl_value(&(mutation()).to_value());
-    let original = pack::parse_json(MUTATION).expect("mutation reparses");
-    assert!(pack::json::value_eq_ignoring_object_order(&reencoded, &original), "change-coefficient/raises-the-leading-coefficient-to-three-halves: committed mutation JSON is not canonical ({reencoded:?} vs {original:?})");
-    assert_eq!(original.pointer("/ChangeCoefficient/label").and_then(pack::JsonValue::as_u64), Some(2), "the label commits as a bare u64, never as a wrapper object");
+    let reencoded = semio_framework_pack_json::from_dsl_value(&(mutation()).to_value());
+    let original = semio_framework_pack_json::parse(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation reparses");
+    assert!(semio_framework_pack_json::value_eq_ignoring_object_order(&reencoded, &original), "change-coefficient/raises-the-leading-coefficient-to-three-halves: committed mutation JSON is not canonical ({reencoded:?} vs {original:?})");
+    assert_eq!(original.pointer("/ChangeCoefficient/label").and_then(semio_framework_pack_json::Value::as_u64), Some(2), "the label commits as a bare u64, never as a wrapper object");
 }
 
 /// 🎯️ The declared outcome is a clean `applied` — a real coefficient change raises no diagnostic.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
-    let outcome = pack::parse_json(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(pack::JsonValue::as_str), Some("applied"), "change-coefficient/raises-the-leading-coefficient-to-three-halves declares an applied outcome");
+    let outcome = semio_framework_pack_json::parse(OUTCOME, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
+    assert_eq!(outcome.get("status").and_then(semio_framework_pack_json::Value::as_str), Some("applied"), "change-coefficient/raises-the-leading-coefficient-to-three-halves declares an applied outcome");
     let emitted = produced();
     assert!(emitted.messages().is_empty(), "a resolvable, non-identical, non-zero-denominator coefficient change is silent, got {:?}", emitted.messages());
     assert!(outcome.get("messages").is_none(), "a clean applied outcome commits no messages array");
@@ -116,27 +114,27 @@ async fn declared_outcome_holds() {
 /// committed one — `equation` replaced whole, everything else `null`.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
-    let produced_value = pack::json_from_dsl_value(&(produced().diff()).to_value());
-    let committed = pack::parse_json(DIFF).expect("committed diff decodes");
-    assert!(pack::json::value_eq_ignoring_object_order(&produced_value, &committed), "change-coefficient/raises-the-leading-coefficient-to-three-halves: produced diff differs from the committed 🔺️diff/🔣️.json ({produced_value:?} vs {committed:?})");
+    let produced_value = semio_framework_pack_json::from_dsl_value(&(produced().diff()).to_value());
+    let committed = semio_framework_pack_json::parse(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    assert!(semio_framework_pack_json::value_eq_ignoring_object_order(&produced_value, &committed), "change-coefficient/raises-the-leading-coefficient-to-three-halves: produced diff differs from the committed 🔺️diff/🔣️.json ({produced_value:?} vs {committed:?})");
 }
 
 /// 🔣️ The committed diff is canonical and decodes to `EquationDiff`, whose owned codec
-/// emits all four artifact slots, including null values.
+/// emits all six artifact slots, including null values.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: EquationDiff = pack::from_json_str(DIFF).expect("committed diff decodes");
-    let reencoded = pack::json_from_dsl_value(&decoded.to_value());
-    let original = pack::parse_json(DIFF).expect("committed diff reparses");
-    assert!(pack::json::value_eq_ignoring_object_order(&reencoded, &original), "change-coefficient/raises-the-leading-coefficient-to-three-halves: committed diff JSON is not canonical ({reencoded:?} vs {original:?})");
-    assert_eq!(original.as_object().expect("the diff is a JSON object").len(), 4, "EquationDiff emits all four artifact slots, `null` for the untouched ones");
+    let decoded: EquationDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let reencoded = semio_framework_pack_json::from_dsl_value(&decoded.to_value());
+    let original = semio_framework_pack_json::parse(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff reparses");
+    assert!(semio_framework_pack_json::value_eq_ignoring_object_order(&reencoded, &original), "change-coefficient/raises-the-leading-coefficient-to-three-halves: committed diff JSON is not canonical ({reencoded:?} vs {original:?})");
+    assert_eq!(original.as_object().expect("the diff is a JSON object").len(), 6, "EquationDiff emits all six artifact slots, `null` for the untouched ones");
 }
 
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after` — the diff is a
 /// complete description of the coefficient change, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: EquationDiff = pack::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: EquationDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let produced_snapshot = <EquationDiff as protocol::MutationDiff<EquationSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced_snapshot, expected_after(), "change-coefficient/raises-the-leading-coefficient-to-three-halves: committed diff did not carry before to after");
 }
@@ -150,7 +148,7 @@ async fn a_non_numeric_target_and_a_zero_denominator_are_refused() {
     let on_the_sum = EquationMutation::ChangeCoefficient(ChangeCoefficient { label: EquationNodeLabel(0), numer: "1".to_string(), denom: "1".to_string() });
     let outcome = <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(&on_the_sum, &base);
     assert_eq!(outcome.messages()[0].code.0, "mutation.target-missing", "label 0 is the Add root — a coefficient change cannot address a non-numeric node");
-    assert_eq!(outcome.messages()[0].level, protocol::Severity::Error, "a non-numeric target is an Error, not a Fatal");
+    assert_eq!(outcome.messages()[0].level, semio_framework_diagnostic::Severity::Error, "a non-numeric target is an Error, not a Fatal");
 
     let absent = EquationMutation::ChangeCoefficient(ChangeCoefficient { label: EquationNodeLabel(999), numer: "1".to_string(), denom: "1".to_string() });
     let outcome = <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(&absent, &base);
@@ -159,7 +157,7 @@ async fn a_non_numeric_target_and_a_zero_denominator_are_refused() {
     let zero_denominator = EquationMutation::ChangeCoefficient(ChangeCoefficient { label: COEFFICIENT, numer: "1".to_string(), denom: "0".to_string() });
     let outcome = <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(&zero_denominator, &base);
     assert_eq!(outcome.messages()[0].code.0, "mutation.invariant", "a zero denominator breaches an invariant rather than missing a target");
-    assert_eq!(outcome.messages()[0].level, protocol::Severity::Fatal, "a zero denominator is Fatal — no merge policy may absorb it");
+    assert_eq!(outcome.messages()[0].level, semio_framework_diagnostic::Severity::Fatal, "a zero denominator is Fatal — no merge policy may absorb it");
     assert_eq!(outcome.diff(), &EquationDiff::default(), "every refused change-coefficient carries the empty diff");
 
     let semantics = <EquationMutation as protocol::SemanticMutation<EquationSnapshot>>::semantics(&mutation());

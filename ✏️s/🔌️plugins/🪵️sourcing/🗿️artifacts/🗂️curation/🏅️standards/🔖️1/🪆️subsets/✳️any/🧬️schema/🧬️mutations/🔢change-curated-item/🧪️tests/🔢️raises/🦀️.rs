@@ -48,7 +48,7 @@ async fn sets_the_final_count_on_the_addressed_row() {
 async fn recounting_to_the_base_value_restores_before() {
     let base = before();
     let mut snapshot = protocol::MutationDiff::apply(built_outcome().diff(), &base).expect("forward change-curated-item-count applies");
-    let inverse = <SourcingMutation as protocol::Mutation<CurationSnapshot>>::inverse(&mutation(), &base);
+    let inverse = <SourcingMutation as protocol::Mutation<CurationSnapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "change-curated-item-count/raises-the-glulam-beam-count-to-20: the inverse of one recount is exactly one recount back");
     for step in &inverse {
         let undo = <SourcingMutation as protocol::Mutation<CurationSnapshot>>::diff(step, &snapshot);

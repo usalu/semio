@@ -7,7 +7,7 @@ import { semanticOwnedInputFileSnapshot } from "../../../🔍️discovery/🟦�
 import { loadTaxonomy, TAXONOMY_RELATIVE_PATH, type LoadedTaxonomy } from "../../🔣️taxonomy/🟦️.ts";
 import { type TaxonomySourceAdmission, taxonomyScopedGitPathspec, sourceAdmissionRepositoryFences, sourceAdmissionAssertRepositoryPath, sourceAdmissionOpaque, sourceAdmissionSafePath, type TaxonomySourceOrigin, type TaxonomySourceIndexEntry, type TaxonomySourceCandidateObservation, SOURCE_ADMISSION_ORIGINS, type TaxonomySourceAdmissionInput, projectTaxonomySourceAdmission, type TaxonomyScopedGitPathspec, sourceAdmissionByteCompare, sourceAdmissionContainingRepository } from "../🟦️.ts";
 import { report, TaxonomyCancellationError, type TaxonomyProgress } from "../../🏃️operation/🟦️.ts";
-import { inScope } from "../../🛣️path/🟦️.ts";
+import { inScope, normalizeRelative } from "../../🛣️path/🟦️.ts";
 import { sha256, lstatOrNull, noFollowDirectoryChain, verifyNoFollowDirectoryChain, UnsafeDirectoryAncestorError } from "../../📁️input/🟦️.ts";
 
 export interface TaxonomySourceInventoryOptions { readonly repoRoot: string; readonly scope?: string; readonly ticketDir?: string; readonly cancelFile?: string; readonly structuralDirectoryNames?: readonly string[]; readonly progress?: (progress: TaxonomyProgress) => void; readonly taxonomyPath?: string }
@@ -19,7 +19,7 @@ export interface TaxonomySourceInventory extends TaxonomySourceAdmission {
   readonly membershipDigest: string;
 }
 
-interface SourceAdmissionPreparedOptions {
+export interface SourceAdmissionPreparedOptions {
   readonly repoRoot: string;
   readonly scope?: string;
   readonly taxonomyPath: string;
@@ -93,6 +93,39 @@ export function sourceAdmissionPrepareOptions(options: TaxonomySourceInventoryOp
   const schema = sourceAdmissionLstat(repoRoot, taxonomyPath);
   if (!schema?.isFile() || schema.isSymbolicLink()) throw new Error("Taxonomy schema is not a no-follow regular file");
   return Object.freeze({ repoRoot, scope: options.scope?.normalize("NFC"), taxonomyPath: join(repoRoot, ...taxonomyPath.split("/")), ticketDir, cancelFile, indexRows, repositoryFences, structuralDirectoryNames: options.structuralDirectoryNames, progress: options.progress });
+}
+
+/** 🗃️ One repository read shared by every scope of a multi-scope run: the repository-wide prepared admission (index rows, fences,
+ * taxonomy path) and its index rows keyed by normalized path in byte order, so a scope's rows are one binary-searched range. */
+export interface SourceAdmissionCapture {
+  readonly prepared: SourceAdmissionPreparedOptions;
+  readonly keyed: readonly { readonly key: string; readonly index: number }[];
+}
+
+/** 📸️ Prepares the repository-wide source admission once (see {@link SourceAdmissionCapture}). */
+export function sourceAdmissionCapture(options: Omit<TaxonomySourceInventoryOptions, "scope">): SourceAdmissionCapture {
+  const prepared = sourceAdmissionPrepareOptions({ ...options, scope: undefined });
+  const keyed = prepared.indexRows.map((row, index) => ({ key: normalizeRelative(row.path), index })).sort((left, right) => sourceAdmissionByteCompare(left.key, right.key) || left.index - right.index);
+  return Object.freeze({ prepared, keyed: Object.freeze(keyed) });
+}
+
+/** 🗺️ The prepared admission of `scope` within a capture: the scope checked exactly as {@link sourceAdmissionPrepareOptions} checks it, and
+ * only the index rows the scope admits (its path and its descendants), in index order. */
+export function sourceAdmissionScopedOptions(capture: SourceAdmissionCapture, scope: string): SourceAdmissionPreparedOptions {
+  sourceAdmissionAssertLexical(scope, "scope", false);
+  sourceAdmissionAssertRepositoryPath(scope, capture.prepared.repositoryFences, "Source admission scope", true);
+  const key = normalizeRelative(scope), keyed = capture.keyed;
+  const lower = (bound: string): number => {
+    let low = 0, high = keyed.length;
+    while (low < high) {
+      const middle = (low + high) >>> 1;
+      if (sourceAdmissionByteCompare(keyed[middle]!.key, bound) < 0) low = middle + 1;
+      else high = middle;
+    }
+    return low;
+  };
+  const indices = [...keyed.slice(lower(key), lower(`${key}\u0000`)), ...keyed.slice(lower(`${key}/`), lower(`${key}0`))].map((row) => row.index).sort((left, right) => left - right);
+  return Object.freeze({ ...capture.prepared, scope: scope.normalize("NFC"), indexRows: Object.freeze(indices.map((index) => capture.prepared.indexRows[index]!)) });
 }
 
 export function sourceAdmissionCheckCancellation(repoRoot: string, cancelFile: string | undefined, repositoryFences: readonly string[]): void {

@@ -1,0 +1,35 @@
+{
+  "basis": "Actual Forms owning zero-assertion XLSX private-controls compile prerequisite; existing canonical Value dependency",
+  "rows": [
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🧩️native/🦀️.rs",
+      "pairs": [
+        [
+          "    NativeDecodeControl, NativeEncodeControl,\n",
+          "",
+          1
+        ],
+        [
+          "use semio_framework_value::{ValueError, ValueRefusalKind};",
+          "use semio_framework_value::{NativeDecodeControl, NativeEncodeControl, ValueError, ValueRefusalKind};",
+          1
+        ]
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🛡️subset/🦀️.rs",
+      "pairs": [
+        [
+          "    NativeEncodeControl,\n",
+          "",
+          1
+        ],
+        [
+          "use semio_framework_value::{ValueError, ValueRefusalKind};",
+          "use semio_framework_value::{NativeEncodeControl, ValueError, ValueRefusalKind};",
+          1
+        ]
+      ]
+    }
+  ]
+}

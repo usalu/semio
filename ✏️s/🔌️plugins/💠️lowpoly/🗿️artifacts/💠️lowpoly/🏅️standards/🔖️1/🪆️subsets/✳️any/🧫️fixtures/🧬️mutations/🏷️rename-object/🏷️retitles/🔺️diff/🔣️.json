@@ -11,7 +11,8 @@
           "meshContent": null,
           "name": "Hull, revised",
           "smoothShading": null,
-          "transform": null
+          "transform": null,
+          "meshState": null
         }
       }
     ],

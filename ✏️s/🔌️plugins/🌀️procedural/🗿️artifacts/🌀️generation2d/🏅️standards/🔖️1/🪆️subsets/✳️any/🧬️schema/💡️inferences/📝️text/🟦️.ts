@@ -49,5 +49,5 @@ export const proceduralGeneration2dInferenceTextGuardConstant = <T extends strin
 //#endregion 🚪️Parsers
 
 export function parseGeneration2dInferenceText(value: unknown, at = "$"): Generation2dInferenceText {
-  return proceduralGeneration2dInferenceTextGuardObject(value, `${at}`);
+  return proceduralGeneration2dInferenceTextGuardString(value, `${at}`);
 }

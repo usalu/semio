@@ -28,7 +28,7 @@ async fn insert_then_remove_node_apply_and_inverse() {
         }
         other => panic!("unexpected node {other:?}"),
     }
-    let inverses = Mutation::inverse(&insert, &base);
+    let inverses = Mutation::inverse(&insert, &base).expect("valid retained mutation inverse fixture");
     let mut restored = after.clone();
     for inv in &inverses {
         apply_html_mutation(&mut restored, inv);
@@ -45,7 +45,7 @@ async fn set_attribute_tristate_apply_and_inverse_round_trip() {
     let after1 = <HtmlDiff as MutationDiff<HtmlSnapshot>>::apply(d1.diff(), &base).unwrap();
     assert_eq!(element_attr(node_at(&after1, &[0, 0]).unwrap(), "width"), Some(&Some("99".to_string())));
     let mut restored1 = after1.clone();
-    for inv in Mutation::inverse(&m1, &base) {
+    for inv in Mutation::inverse(&m1, &base).expect("valid retained mutation inverse fixture") {
         apply_html_mutation(&mut restored1, &inv);
     }
     assert_eq!(write_html_document(&restored1), write_html_document(&base));
@@ -55,7 +55,7 @@ async fn set_attribute_tristate_apply_and_inverse_round_trip() {
     let mut after2 = base.clone();
     apply_html_mutation(&mut after2, &m2);
     assert_eq!(element_attr(node_at(&after2, &[0, 0]).unwrap(), "width"), Some(&None));
-    for inv in Mutation::inverse(&m2, &base) {
+    for inv in Mutation::inverse(&m2, &base).expect("valid retained mutation inverse fixture") {
         apply_html_mutation(&mut after2, &inv);
     }
     assert_eq!(write_html_document(&after2), write_html_document(&base));
@@ -65,7 +65,7 @@ async fn set_attribute_tristate_apply_and_inverse_round_trip() {
     let mut after3 = base.clone();
     apply_html_mutation(&mut after3, &m3);
     assert_eq!(element_attr(node_at(&after3, &[0, 0]).unwrap(), "width"), None);
-    for inv in Mutation::inverse(&m3, &base) {
+    for inv in Mutation::inverse(&m3, &base).expect("valid retained mutation inverse fixture") {
         apply_html_mutation(&mut after3, &inv);
     }
     assert_eq!(write_html_document(&after3), write_html_document(&base));
@@ -75,7 +75,7 @@ async fn set_attribute_tristate_apply_and_inverse_round_trip() {
     let mut after4 = base.clone();
     apply_html_mutation(&mut after4, &m4);
     assert_eq!(element_attr(node_at(&after4, &[0, 0]).unwrap(), "hidden"), Some(&None));
-    for inv in Mutation::inverse(&m4, &base) {
+    for inv in Mutation::inverse(&m4, &base).expect("valid retained mutation inverse fixture") {
         apply_html_mutation(&mut after4, &inv);
     }
     assert_eq!(write_html_document(&after4), write_html_document(&base));
@@ -91,7 +91,7 @@ async fn remove_node_inverse_restores_removed_node() {
         HtmlNode::Element { children, .. } => assert_eq!(children, &vec![HtmlNode::Text { text: "\n".into() }], "removing body's only element leaves just the trailing-newline text node"),
         other => panic!("unexpected node {other:?}"),
     }
-    for inv in Mutation::inverse(&remove, &base) {
+    for inv in Mutation::inverse(&remove, &base).expect("valid retained mutation inverse fixture") {
         apply_html_mutation(&mut after, &inv);
     }
     assert_eq!(write_html_document(&after), write_html_document(&base));
@@ -107,7 +107,7 @@ async fn set_element_name_apply_and_inverse() {
         HtmlNode::Element { name, .. } => assert_eq!(name, "div"),
         other => panic!("unexpected node {other:?}"),
     }
-    for inv in Mutation::inverse(&mutation, &base) {
+    for inv in Mutation::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
         apply_html_mutation(&mut after, &inv);
     }
     assert_eq!(write_html_document(&after), write_html_document(&base));
@@ -188,7 +188,7 @@ async fn inverse_law() {
 
         let mut round_tripped = base.clone();
         apply_html_mutation(&mut round_tripped, &mutation);
-        for inverse_mutation in <HtmlMutation as Mutation<HtmlSnapshot>>::inverse(&mutation, &base) {
+        for inverse_mutation in <HtmlMutation as Mutation<HtmlSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
             apply_html_mutation(&mut round_tripped, &inverse_mutation);
         }
         assert_eq!(round_tripped, base, "inverse_law (mutation-level).await failed for {mutation:?}");

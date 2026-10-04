@@ -11,7 +11,7 @@ pub fn diff(payload: &RenameShot, base: &ShootingSnapshot) -> protocol::Mutation
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Shot \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if existing.label == payload.new_label {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Shot \"{}\" already has label \"{}\".", payload.id, payload.new_label));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Shot \"{}\" already has label \"{}\".", payload.id, payload.new_label));
     }
     protocol::MutationOutcome::new(ShootingDiff {
         shots: Some(ShootingShotsDelta { patched: vec![ShootingShotPatchEntry { id: payload.id.clone(), patch: ShootingShotPatch { label: Some(payload.new_label.clone()), ..Default::default() } }], ..Default::default() }),

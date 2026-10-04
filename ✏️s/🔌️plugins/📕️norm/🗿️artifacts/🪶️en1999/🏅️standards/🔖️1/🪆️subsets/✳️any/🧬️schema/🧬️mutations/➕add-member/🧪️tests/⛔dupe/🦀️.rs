@@ -5,8 +5,8 @@ const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutation
 const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕add-member/⛔dupe/🦠️mutation/🔣️.json");
 const DIFF_ABSENT: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕add-member/⛔dupe/🔺️diff/🚫️.absent");
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕add-member/⛔dupe/🎯️outcome/🔣️.json");
-fn before() -> En1999Snapshot { pack::json::from_json_str(BEFORE).expect("before") }
-fn mutation() -> En1999Mutation { pack::json::from_json_str(MUTATION).expect("mutation") }
+fn before() -> En1999Snapshot { semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before") }
+fn mutation() -> En1999Mutation { semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation") }
 #[test]
 fn mutation_is_the_canonical_wire() {
     let _: En1999Mutation = store::os_store::test_support::assert_wire_witness(MUTATION);
@@ -26,5 +26,5 @@ fn leaves_the_document_untouched() {
     let raised = <En1999Mutation as protocol::Mutation<En1999Snapshot>>::diff(&mutation(), &before());
     let after = <En1999Diff as protocol::MutationDiff<En1999Snapshot>>::apply(raised.diff(), &before()).expect("apply");
     assert_eq!(after, before());
-    assert_eq!(pack::json::from_json_str::<En1999Snapshot>(AFTER).expect("after"), before());
+    assert_eq!(semio_framework_pack_json::from_json_str::<En1999Snapshot>(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after"), before());
 }

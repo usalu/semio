@@ -46,6 +46,19 @@ pub(crate) mod context {
     }
 
     semio_framework_plugin::history_edit_acceptance_law!("playbook", PlaybookPlayApp, playbook_manifest_for_tests, "../..");
+    semio_framework_plugin::composed_reload_law!("playbook", PlaybookPlayApp, playbook_manifest_for_tests, "../..");
+    semio_framework_plugin::composed_child_history_law!("playbook", PlaybookPlayApp, playbook_manifest_for_tests, [("addStep", "{}"), ("addBlock", r#"{"kind":"number"}"#)]);
+
+    /// 🧩️ The LIVE playbook, composed from the parent projection and the `flow` CHILD store — the surface every step/block verb
+    /// publishes on (the parent only carries the child's coordinate, design §20.15).
+    pub async fn live_spec(app: &MountedPlaybookApp) -> crate::PlaybookSpec {
+        use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
+        use store::{ArtifactPack, SpaceMember};
+        let snapshot = app.snapshot().expect("playbook parent projection");
+        let bytes = app.child_store("flow", &snapshot.flow.child_id).await.expect("playbook flow child").document_pack_bytes().await.expect("playbook flow child pack");
+        let content = SemioFlowSnapshot::decode_pack(&bytes).expect("playbook flow child snapshot");
+        crate::PlaybookSpec { schema: snapshot.schema.clone(), id: snapshot.id.clone(), version: snapshot.version.clone(), title: snapshot.title.clone(), steps: crate::steps_from_flow_content(&content).expect("decodable playbook steps") }
+    }
 
     /// 🚚️ Dispatches one typed command, settles its retained operation and applies any `LoadDocument`
     /// effect exactly as the host would; a mounted app's `result.mutations` is always empty.
@@ -56,7 +69,7 @@ pub(crate) mod context {
         for effect in &result.requested_effects {
             if let Effect::LoadDocument { pack, spr } = effect {
                 let files = store::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
-                app.load_document_pack(&files).await.expect("test host applies load-document effect");
+                semio_framework_plugin::artifact_app_laws::load_document(app, &files).await.expect("test host applies load-document effect");
             }
         }
         result
@@ -73,10 +86,9 @@ pub(crate) mod context {
 }
 
 use super::*;
-use crate::editor::playbook::unit_tests::context::{dispatch, playbook_app, playbook_manifest_for_tests};
-use crate::op::AddBlock;
+use crate::editor::playbook::unit_tests::context::{dispatch, live_spec, playbook_app};
 use semio_framework_plugin::artifact_app_laws;
-use semio_framework_plugin::{MediaClass, MediaForm};
+use semio_framework_plugin::{MediaClass, MediaForm, PluginApp};
 
 //#region 🔖️CommandSurface
 /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every row's
@@ -190,23 +202,33 @@ async fn blocks_interaction_domain_is_declared_topology_pick_only_on_the_builder
     assert!(builder_window.interactions.iter().any(|interaction_ref| interaction_ref.as_str() == PLAYBOOK_INTERACTION_BLOCKS), "builder window must reference the blocks interaction domain");
 }
 
-/// 🌳️ `interaction_topology` walks every step and every one of its blocks into a `TopologyNode`, so
+/// 🌳️ `interaction_topology` walks every step and every one of its blocks of the COMPOSED playbook into a `TopologyNode`, so
 /// `validate_state` can prune a deleted step's OR block's id out of a stale selection.
 #[semio_framework_async_macros::async_test]
 async fn interaction_topology_covers_every_step_and_block() {
     let mut app = playbook_app().await;
     dispatch(&mut app, PlaybookCommand::AddStep(add_step::AddStep {})).await;
-    let step_id = app.snapshot().expect("projection").steps()[0].id.clone();
+    let step_id = live_spec(&app).await.steps[1].id.clone();
     dispatch(&mut app, PlaybookCommand::AddBlock(add_block::AddBlock { kind: "text".into(), step_id: Some(step_id.clone()) })).await;
+    let block_id = live_spec(&app).await.steps[1].blocks[0].id.clone();
     let spec = app.snapshot().expect("projection");
-    let block_id = spec.steps().iter().find(|step| step.id == step_id).expect("step present").blocks[0].id.clone();
     let history = semio_framework_plugin::HistoryView::empty();
     let cfg = PlaybookConfig::default();
-    let doc = ArtifactView::new(&spec, &history);
-    let topology = PlaybookPlayApp::interaction_topology(&doc, &ConfigView { snapshot: &cfg, window: None });
+    let doc = ArtifactView::with_children(&spec, &history, app.test_child_content_view());
+    let topology = PlaybookPlayApp::interaction_topology(&doc, &ConfigView { snapshot: &cfg, window: None }).expect("composed interaction topology");
     let blocks = topology.domains.get(PLAYBOOK_INTERACTION_BLOCKS).expect("blocks domain present in topology");
     assert!(blocks.ordered.iter().any(|node| node.id == step_id && node.granularity == PLAYBOOK_INTERACTION_GRANULARITY_STEP && node.parent.is_none()));
     assert!(blocks.ordered.iter().any(|node| node.id == block_id && node.granularity == PLAYBOOK_INTERACTION_GRANULARITY_BLOCK && node.parent.as_deref() == Some(step_id.as_str())));
+}
+
+/// 🚫️ An uncomposed `flow` child is a named fault, never an empty topology read through the handle.
+#[test]
+fn interaction_topology_refuses_an_uncomposed_flow_child() {
+    let spec = crate::empty_playbook_snapshot();
+    let history = semio_framework_plugin::HistoryView::empty();
+    let cfg = PlaybookConfig::default();
+    let error = PlaybookPlayApp::interaction_topology(&ArtifactView::new(&spec, &history), &ConfigView { snapshot: &cfg, window: None }).expect_err("no composed child");
+    assert!(error.to_string().contains("playbook.flow.unavailable"), "{error}");
 }
 //#endregion 🔖️Interaction
 
@@ -237,10 +259,19 @@ async fn set_contributions_boots_because_presence_declares_its_retirement_owners
     artifact_app_laws::settle_registered_typed_operation(&mut *app, artifact_app_laws::meta("local").instance_id).await.expect("setContributions publishes");
 }
 
+/// ↩️ Spelled out over the `flow` child (the law helper's probe is a synchronous closure over the parent projection, which
+/// carries no steps): undo retires the child-lane group, redo reapplies it.
 #[semio_framework_async_macros::async_test]
 async fn undo_redo_round_trip_through_the_wrapper() {
+    use crate::editor::playbook::unit_tests::context::history_verb;
     let mut app = playbook_app().await;
-    artifact_app_laws::assert_undo_redo_round_trip(&mut *app, PlaybookCommand::AddStep(add_step::AddStep {}), |app| app.snapshot().expect("materialize projection").steps().len(), 1, 2).await;
+    assert_eq!(live_spec(&app).await.steps.len(), 1);
+    dispatch(&mut app, PlaybookCommand::AddStep(add_step::AddStep {})).await;
+    assert_eq!(live_spec(&app).await.steps.len(), 2, "addStep must land one step in the flow child");
+    history_verb(&mut app, "undo").await;
+    assert_eq!(live_spec(&app).await.steps.len(), 1, "undo must retire the child-lane group");
+    history_verb(&mut app, "redo").await;
+    assert_eq!(live_spec(&app).await.steps.len(), 2, "redo must reapply the child-lane group");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -250,26 +281,31 @@ async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
     assert!(render(&mut app, "playbook.play.nope").await.contains("Unknown body"));
 }
 
-/// 🧪️ The definitional proof: two independent instances start from the same document, apply
-/// DISJOINT edits (A adds a step, B adds a block to the pre-existing step), and exchanging operations
-/// over a backbone converges both sides onto the same projection — impossible under whole-document
-/// `setDocument` snapshots, where one side's write would clobber the other's. The REGISTERED pair:
-/// playbook publishes tool proofs, so a registry-less instance faults in the
-/// `interactive-job.catalog-authority` proof join before any edit lands.
+/// 🧪️ The definitional proof: two independent registered instances start from the same document, apply DISJOINT child-lane
+/// edits (A adds a step, B adds a block to the genesis step), and exchanging operations over a backbone converges both sides —
+/// measured on the `flow` child, since neither edit touches the parent projection.
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_disjoint_edits_via_backbone() {
-    artifact_app_laws::assert_two_registered_instances_converge_with_members::<EditorApp<PlaybookPlayApp>, semio_s_artifact_stdio_semio::SemioMembers, _, _, _>(
-        "mem://playbook-convergence",
-        || async { playbook_manifest_for_tests() },
-        PlaybookCommand::AddStep(add_step::AddStep {}),
-        PlaybookCommand::AddBlock(add_block::AddBlock { kind: "number".into(), step_id: None }),
-        |app| {
-            let projection = app.snapshot().expect("materialize projection");
-            let steps = projection.steps();
-            (steps.len(), steps[0].blocks.len())
-        },
-    )
-    .await;
+    use semio_framework_plugin::artifact_app_laws::{meta, settle_registered_typed_operation};
+    let mut instance_a = playbook_app().await;
+    let mut instance_b = playbook_app().await;
+    let (backbone_a, backbone_b) = store::MemoryBackbone::pair("mem://playbook-convergence", "mem://playbook-convergence").await;
+    instance_a.attach_backbone(store::Backbones::Memory(backbone_a)).await.expect("attach a");
+    instance_b.attach_backbone(store::Backbones::Memory(backbone_b)).await.expect("attach b");
+    let receiver = meta("actor-a").instance_id;
+    instance_a.dispatch_typed(PlaybookCommand::AddStep(add_step::AddStep {}), &meta("actor-a")).await.expect("a applies its edit");
+    settle_registered_typed_operation(&mut *instance_a, receiver).await.expect("a's edit publishes");
+    instance_b.dispatch_typed(PlaybookCommand::AddBlock(add_block::AddBlock { kind: "number".into(), step_id: None }), &meta("actor-b")).await.expect("b applies its edit");
+    settle_registered_typed_operation(&mut *instance_b, receiver).await.expect("b's edit publishes");
+    instance_a.tick_backbone().await.expect("a folds b's events");
+    instance_b.tick_backbone().await.expect("b folds a's events");
+    let shape = |spec: crate::PlaybookSpec| spec.steps.iter().map(|step| (step.id.clone(), step.blocks.len())).collect::<Vec<_>>();
+    let converged = shape(live_spec(&instance_a).await);
+    assert_eq!(converged, shape(live_spec(&instance_b).await), "both instances must converge on the same composed playbook");
+    assert_eq!(converged.len(), 2);
+    assert_eq!(converged[0].1, 1, "b's block lands in the genesis step on both sides");
+    instance_a.detach_backbone().await.expect("a releases its backbone");
+    instance_b.detach_backbone().await.expect("b releases its backbone");
 }
 //#endregion 🔖️CrossCutting
 
@@ -285,41 +321,22 @@ async fn playbook_io_declares_the_extra_chapters_in_port_and_its_own_kind() {
 
 fn chapter_media(text: &str, title: &str) -> Media {
     let payload = PlaybookChapterPayload { id: "jack".into(), title: title.into(), text: text.into(), language_id: "jack".into() };
-    Media { media_type: semio_framework_plugin::MediaType { class: MediaClass::Text, form: MediaForm::Document }, payload: MediaPayload::Structured { schema: "text.document".into(), json: protocol::json::to_json_string(&payload) } }
+    Media { media_type: semio_framework_plugin::MediaType { class: MediaClass::Text, form: MediaForm::Document }, payload: MediaPayload::Structured { schema: "text.document".into(), json: semio_framework_pack_json::to_json_string(&payload) } }
 }
 
+/// 🎞️ The first import creates the `imported` step WITH its note block as ONE `flow` child edit (node + chain edge); the
+/// reuse branch is the root's `playbook_add_block_leaves` (vectors in the artifact root's tests).
 #[semio_framework_async_macros::async_test]
-async fn import_media_creates_the_imported_step_and_a_note_block() {
-    let spec = crate::empty_playbook_snapshot();
+async fn import_media_creates_the_imported_step_on_the_flow_child() {
+    let app = playbook_app().await;
+    let spec = app.snapshot().expect("projection");
     let history = semio_framework_plugin::HistoryView::empty();
-    let doc_view = ArtifactView::new(&spec, &history);
-    let media = chapter_media("MATCH (a) RETURN a", "Jack Query");
-    let emit = PlaybookPlayApp::import_media("chapters:in", &media, &doc_view).expect("import chapters:in");
-    assert_eq!(emit.artifact_mutations.len(), 2, "creates the imported step, then the note block");
-    assert!(matches!(&emit.artifact_mutations[0], PlaybookMutation::AddStep(payload) if payload.step.id == PLAYBOOK_IMPORTED_STEP_ID));
-    match &emit.artifact_mutations[1] {
-        PlaybookMutation::AddBlock(AddBlock { step_id, block, .. }) => {
-            assert_eq!(step_id, PLAYBOOK_IMPORTED_STEP_ID);
-            assert_eq!(block.kind, "note");
-            assert_eq!(block.label, "Jack Query");
-            assert_eq!(block.text.as_deref(), Some("MATCH (a) RETURN a"));
-        }
-        other => panic!("expected AddBlock, got {other:?}"),
-    }
-}
-
-#[semio_framework_async_macros::async_test]
-async fn import_media_reuses_the_imported_step_on_a_second_import() {
-    let base = crate::empty_playbook_snapshot();
-    let mut steps = base.steps();
-    steps.push(PlaybookStep { id: PLAYBOOK_IMPORTED_STEP_ID.into(), title: "Imported".into(), description: None, blocks: Vec::new() });
-    let spec = crate::playbook_snapshot_with_steps(&base.schema, &base.id, &base.version, base.title.clone(), steps);
-    let history = semio_framework_plugin::HistoryView::empty();
-    let doc_view = ArtifactView::new(&spec, &history);
-    let media = chapter_media("second chapter", "Second");
-    let emit = PlaybookPlayApp::import_media("chapters:in", &media, &doc_view).expect("import chapters:in");
-    assert_eq!(emit.artifact_mutations.len(), 1, "the imported step already exists, only the block is added");
-    assert!(matches!(&emit.artifact_mutations[0], PlaybookMutation::AddBlock(payload) if payload.step_id == PLAYBOOK_IMPORTED_STEP_ID));
+    let emit = PlaybookPlayApp::import_media("chapters:in", &chapter_media("MATCH (a) RETURN a", "Jack Query"), &ArtifactView::with_children(&spec, &history, app.test_child_content_view())).expect("import chapters:in");
+    assert!(emit.artifact_mutations.is_empty(), "an import never writes the parent lane");
+    assert_eq!(emit.child_emits.len(), 1);
+    assert_eq!((emit.child_emits[0].slot.as_str(), emit.child_emits[0].child_id.as_str()), ("flow", spec.flow.child_id.as_str()));
+    assert_eq!(emit.child_emits[0].ops.len(), 2, "one node insert and one chain edge");
+    assert_eq!(emit.child_emits[0].op_schema.0, "node.insert-node");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -330,6 +347,7 @@ async fn import_media_rejects_unknown_ports_and_malformed_payloads() {
     assert!(matches!(PlaybookPlayApp::import_media("nonsense:in", &chapter_media("x", "y"), &doc_view), Err(MediaError::NotImplemented)));
     let bad_media = Media { media_type: semio_framework_plugin::MediaType { class: MediaClass::Text, form: MediaForm::Document }, payload: MediaPayload::Structured { schema: "text.document".into(), json: "not json".into() } };
     assert!(matches!(PlaybookPlayApp::import_media("chapters:in", &bad_media, &doc_view), Err(MediaError::Payload(..))));
+    assert!(matches!(PlaybookPlayApp::import_media("chapters:in", &chapter_media("x", "y"), &doc_view), Err(MediaError::Payload(..))), "an uncomposed flow child refuses the import");
 }
 //#endregion 🔖️PortTests
 
@@ -374,36 +392,45 @@ fn command_from_action_resolves_every_declared_verb() {
     assert!(PlaybookPlayApp::command_from_action("thereIsNoSuchVerb", None).is_err());
 }
 
-/// 🧬️ The example picker's whole-document load. Every part of the recipe is asserted on the built
-/// manifest and the real demo asset, because each one fails at a DIFFERENT boundary at runtime and
-/// none of them is a compile error: an undeclared verb is dropped `undeclared-action` before the app
-/// sees it; a non-`HostOnly` contract claims a store lane this verb never writes; a child slot the
-/// app cannot mint genesis bytes for fails the archive's closure leg and the whole replacement is
-/// refused. `PlaybookSnapshot` owns TWO composed `s.stdio.semio` children, so both must answer.
+/// 🧬️ The example picker's whole-document load: a `HostOnly` retained verb whose demo parent names the ONE composed `flow`
+/// child by a stable id the plugin's own catalogue answers (its genesis pack), so the archive's closure leg admits the load; a
+/// foreign id is never answered. Six structural verbs publish on the `Child` lane only.
 #[test]
-fn set_active_example_is_host_only_and_both_composed_children_mint_genesis_packs() {
+fn set_active_example_is_host_only_and_the_flow_child_mints_its_genesis_pack() {
     use semio_framework_plugin::ArtifactEditor;
     assert!(PLAYBOOK_RETAINED_TOOL_IDS.contains(&"setActiveExample"), "the example verb must be a retained tool or the dispatch gate refuses it");
     let contract = PLAYBOOK_RETAINED_PUBLICATION_CONTRACTS.iter().find(|contract| contract.tool_id == "setActiveExample").expect("setActiveExample has a publication contract");
     assert_eq!(contract.lanes, &[ArtifactToolPublicationLane::HostOnly], "a whole-document load publishes through neither the artifact nor the config store");
+    for verb in ["addStep", "removeStep", "moveStep", "addBlock", "removeBlock", "moveBlock"] {
+        let contract = PLAYBOOK_RETAINED_PUBLICATION_CONTRACTS.iter().find(|contract| contract.tool_id == verb).expect("structural verb contract");
+        assert_eq!(contract.lanes, &[ArtifactToolPublicationLane::Child], "{verb} edits the flow child only (design §20.15)");
+    }
     let definition = create_playbook_play_app();
     let action = definition.actions.iter().find(|action| action.id == "setActiveExample").expect("setActiveExample is declared on the app roster");
     assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated);
     let demo = <PlaybookSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).expect("the demo asset parses as a playbook snapshot");
-    // 🧩️ The two slots hold DIFFERENT child types (`ArtifactChild<SemioDocumentSnapshot>` and
-    // `ArtifactChild<SemioFlowSnapshot>`), so a single array of references to them does not typecheck
-    // and this law could not build at all. The assertion is unchanged — only the two common fields it
-    // reads are projected out before the loop, exactly as the `child_id` loop below already does.
-    for (slot, target_artifact_id, child_id) in [
-        ("document", demo.document.target.artifact_id.as_str(), demo.document.child_id.as_str()),
-        ("flow", demo.flow.target.artifact_id.as_str(), demo.flow.child_id.as_str()),
-    ] {
-        assert_eq!(target_artifact_id, child_id, "slot {slot}'s target must name its own child_id or ChildRestoreProjection refuses the whole load with InvalidReference");
+    assert_eq!(demo.flow.child_id, crate::examples::demo::FLOW_ID);
+    assert_eq!(demo.flow.target.artifact_id, demo.flow.child_id, "the target must name its own child_id or ChildRestoreProjection refuses the whole load");
+    let projection = PlaybookPlayApp::child_restore_projection(&demo).expect("the demo's loaded-parent child projection");
+    assert!(projection.admits_member("flow", &demo.flow.target));
+    let pack = PlaybookPlayApp::genesis_child_pack(&demo, "flow", &demo.flow.child_id).expect("valid genesis owner").expect("the demo flow child mints its genesis pack");
+    let content = <semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("the genesis pack decodes");
+    assert_eq!(crate::steps_from_flow_content(&content).expect("decodable demo steps").len(), 3);
+    assert!(PlaybookPlayApp::genesis_child_pack(&demo, "flow", "not-this-documents-child").expect("valid genesis owner").is_none(), "a foreign child id must not be answered");
+    assert!(PlaybookPlayApp::genesis_child_pack(&demo, "document", &demo.flow.child_id).expect("valid genesis owner").is_none(), "the deleted document slot is never answered");
+}
+
+/// 📣️ Every refusal code this artifact raises has an en and de notice (design §20.12).
+#[test]
+fn every_playbook_refusal_code_has_a_localized_notice() {
+    use semio_framework_plugin::ArtifactEditor;
+    let notices = PlaybookPlayApp::fault_notices();
+    assert_eq!(notices.len(), 7);
+    for (code, label) in notices {
+        assert!(code.starts_with("playbook.") && code.split('.').count() == 3, "{code} is a three-segment playbook code");
+        for locale in [semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Locale::De] {
+            assert!(!label.resolve(semio_framework_ui_locale::Terminology::Native, locale).is_empty(), "{code} has a {locale:?} notice");
+        }
     }
-    for (slot, child_id) in [("document", demo.document.child_id.as_str()), ("flow", demo.flow.child_id.as_str())] {
-        let pack = PlaybookPlayApp::genesis_child_pack(&demo, slot, child_id).unwrap_or_else(|| panic!("slot {slot} mints no genesis pack, so the archive closure leg refuses the load"));
-        assert!(!pack.is_empty(), "slot {slot} minted an empty pack");
-    }
-    assert!(PlaybookPlayApp::genesis_child_pack(&demo, "flow", "not-this-documents-child").is_none(), "a foreign child id must not be answered");
 }
 //#endregion 🧵️RetainedToolCatalog

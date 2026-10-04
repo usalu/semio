@@ -19,7 +19,7 @@ pub fn definition() -> ModeDefinition {
         id: GENERATION2D_PLAY_MODE_GENERATE.into(),
         label: LocalizedLabel::native("Generate", "Generieren"),
         icon_id: "sparkles".into(),
-        tools: vec![semio_framework::io::resolve_ready(ToolRef::new(crate::preview_eval::PREVIEW_EVAL_TOOL_ID))],
+        tools: vec![::semio_framework_async::poll::resolve_ready(ToolRef::new(crate::preview_eval::PREVIEW_EVAL_TOOL_ID))],
         layout_id: Some(GENERATION2D_PLAY_LAYOUT_GENERATE.into()),
         commands: Vec::new(),
     }

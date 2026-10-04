@@ -40,14 +40,17 @@ impl protocol::MutationKind<JsonSnapshot, super::JsonMutation> for RemoveMemberM
         }
     }
 
-    fn inverse(&self, base: &JsonSnapshot) -> Vec<super::JsonMutation> {
+    fn inverse(&self, base: &JsonSnapshot) -> Result<Vec<super::JsonMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         let outcome = <Self as protocol::MutationKind<JsonSnapshot, super::JsonMutation>>::diff(self, base);
         if !outcome.messages().is_empty() || <JsonDiff as protocol::DiffAlgebra<JsonSnapshot>>::is_empty(outcome.diff()) {
             return Vec::new();
         }
         let inverse = <JsonDiff as protocol::DiffAlgebra<JsonSnapshot>>::inverse(outcome.diff(), base);
         vec![super::JsonMutation::RemoveMember(Self::Restore(inverse))]
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove Member", "Eigenschaft entfernen")

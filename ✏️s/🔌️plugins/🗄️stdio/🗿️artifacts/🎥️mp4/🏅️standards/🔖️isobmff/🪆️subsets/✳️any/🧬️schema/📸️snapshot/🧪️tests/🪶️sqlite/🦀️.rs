@@ -12,21 +12,21 @@ fn sqlite_snapshot_mp4_controlled_native_owner_preserves_full_fixture_and_enforc
 }
 #[test]
 fn sqlite_snapshot_mp4_authored_grammar_and_protocol_admit_every_logical_record() {
-    let grammar = dsl::parse_grammar(include_str!("../../📝️text/📖️.grammar.semio")).unwrap();
-    let recognizer = dsl::Recognizer::compile(&grammar);
+    let grammar = semio_framework_dsl::parse_grammar(include_str!("../../📝️text/📖️.grammar.semio")).unwrap();
+    let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
     for snapshot in [fixture(), Mp4Snapshot::default(), crate::standards::isobmff::subsets::any::io::decode_mp4(include_bytes!("../../../../📚️examples/🎬️demo/🖼️assets/🎬️.mp4")).unwrap()] {
         let text = <Mp4Snapshot as store::ArtifactDsl>::print_dsl(&snapshot);
         let (_, body) = store::semio_format::split_text_preamble(&text).unwrap();
         assert!(recognizer.recognize(body).unwrap(), "{body}");
     }
-    let protocol = dsl::parse_protocol(include_str!("../../💾️binary/📡️.protocol.semio")).unwrap();
+    let protocol = semio_framework_dsl::parse_protocol(include_str!("../../💾️binary/📡️.protocol.semio")).unwrap();
     assert_eq!(protocol.schema, "stdio.mp4");
     assert_eq!(protocol.version, 1);
-    assert_eq!(protocol.blocks.iter().filter(|block| matches!(block, dsl::Block::Record { .. })).count(), 15);
+    assert_eq!(protocol.blocks.iter().filter(|block| matches!(block, semio_framework_dsl::Block::Record { .. })).count(), 15);
 }
 use semio_framework_os_kernel::{sqlite_snapshot::{export_sqlite_database,import_sqlite_database,SqliteDatabaseLimits,SqliteSnapshotControl,SqliteValue,SqliteSnapshotPhase},ArtifactSqliteSnapshot};
 fn unsigned(object:&mut serde_json::Value,fields:&[&str]){for field in fields{let value=object[*field].as_str().unwrap().parse::<u64>().unwrap();object[*field]=value.into();}}
-fn fixture()->Mp4Snapshot{let mut value:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap();unsigned(&mut value["movie"],&["creationTime","modificationTime","duration"]);for track in value["tracks"].as_array_mut().unwrap(){unsigned(&mut track["metadata"],&["creationTime","modificationTime","duration","mediaDuration","mediaCreationTime","mediaModificationTime"]);for edit in track["metadata"]["edits"].as_array_mut().unwrap(){unsigned(edit,&["segmentDuration"]);edit["mediaTime"]=edit["mediaTime"].as_str().unwrap().parse::<i64>().unwrap().into();}if !track["codec"]["hevc"].is_null(){unsigned(&mut track["codec"]["hevc"],&["generalConstraintIndicatorFlags"]);}}<Mp4Snapshot as dsl::FromValue>::from_value(dsl::DslValue::from(value)).unwrap()}
+fn fixture()->Mp4Snapshot{let mut value:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap();unsigned(&mut value["movie"],&["creationTime","modificationTime","duration"]);for track in value["tracks"].as_array_mut().unwrap(){unsigned(&mut track["metadata"],&["creationTime","modificationTime","duration","mediaDuration","mediaCreationTime","mediaModificationTime"]);for edit in track["metadata"]["edits"].as_array_mut().unwrap(){unsigned(edit,&["segmentDuration"]);edit["mediaTime"]=edit["mediaTime"].as_str().unwrap().parse::<i64>().unwrap().into();}if !track["codec"]["hevc"].is_null(){unsigned(&mut track["codec"]["hevc"],&["generalConstraintIndicatorFlags"]);}}<Mp4Snapshot as semio_framework_value::FromValue>::from_value(semio_framework_value::DslValue::from(value)).unwrap()}
 fn roundtrip(snapshot:&Mp4Snapshot)->Mp4Snapshot{let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();let bytes=export_sqlite_database(&database,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();Mp4Snapshot::from_sqlite_database(&import_sqlite_database(&bytes,SqliteDatabaseLimits::default(),&mut |_|true).unwrap(),&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap()}
 #[test]
 fn sqlite_snapshot_mp4_full_neutral_widths_configs_optionals_and_codec_formats(){let snapshot=fixture();assert_eq!(roundtrip(&snapshot),snapshot);for format in[Mp4CodecFormat::Avc1,Mp4CodecFormat::Avc3,Mp4CodecFormat::Hvc1,Mp4CodecFormat::Hev1,Mp4CodecFormat::Jpeg,Mp4CodecFormat::Mjpa]{let mut snapshot=snapshot.clone();snapshot.tracks[0].codec.format=format;snapshot.tracks[0].metadata.color.as_mut().unwrap().full_range=None;assert_eq!(roundtrip(&snapshot),snapshot);snapshot.tracks[0].metadata.color.as_mut().unwrap().full_range=Some(true);assert_eq!(roundtrip(&snapshot),snapshot);}let mut empty=Mp4Snapshot::default();empty.schema.clear();empty.ftyp.major_brand.clear();assert_eq!(roundtrip(&empty),empty);}
@@ -50,7 +50,7 @@ fn sqlite_snapshot_mp4_owned_encoding_admits_exact_physical_bounds_and_controls_
   let output=snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();let physical=match &output{store::io_schema::IoPayload::Binary(bytes)=>bytes.len(),store::io_schema::IoPayload::Text(text)=>text.len()};
   assert_eq!(snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_file_bytes:physical,..SqliteDatabaseLimits::default()})).unwrap(),output);
   if encoding==SnapshotEncoding::Binary{assert!(physical<1024);assert!(snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_file_bytes:1024,..SqliteDatabaseLimits::default()})).is_ok());}
-  let mut phases=Vec::new();let error=snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut|event|{phases.push(event.phase);true},SqliteDatabaseLimits{max_file_bytes:physical-1,..SqliteDatabaseLimits::default()})).unwrap_err();assert!(error.contains("limit")||error.contains("bound"),"{error}");assert!(phases.contains(&SqliteSnapshotPhase::EncodeNative));
+  let mut phases=Vec::new();let error=snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut|event|{phases.push(event.phase);true},SqliteDatabaseLimits{max_file_bytes:physical-1,..SqliteDatabaseLimits::default()})).unwrap_err();assert_eq!(error.kind,semio_framework_os_kernel::sqlite_snapshot::ValueRefusalKind::OwnershipLimit);assert!(phases.contains(&SqliteSnapshotPhase::EncodeNative));
   let mut large=snapshot.clone();large.tracks[0].samples[0].data=vec![255;131073];let mut reached=false;assert!(large.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut|event|{if event.phase==SqliteSnapshotPhase::EncodeNative&&event.completed>0{reached=true;false}else{true}},SqliteDatabaseLimits::default())).is_err());assert!(reached);
  }
 }

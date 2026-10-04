@@ -2,6 +2,6 @@
 import type { DeleteWidget } from "../🦠️mutation/🟦️.ts";
 import type { Widget } from "../../🌱️create-widget/🦠️mutation/🟦️.ts";
 
-export function diff(payload: DeleteWidget): { widgets: { removed: string[]; set: Array<[number, Widget]> } } {
+export function diff(payload: DeleteWidget): { widgets: { removed: string[]; set: Array<[bigint, Widget]> } } {
   return { widgets: { removed: [payload.id], set: [] } };
 }

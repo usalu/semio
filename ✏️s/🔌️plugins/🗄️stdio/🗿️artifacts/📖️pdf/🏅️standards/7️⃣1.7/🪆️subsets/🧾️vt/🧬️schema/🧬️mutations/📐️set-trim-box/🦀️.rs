@@ -27,12 +27,15 @@ impl MutationKind<PdfSnapshot, PdfVtMutation> for SetTrimBox {
         MutationOutcome::new(support::graph_edit_diff(base, next))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfVtMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfVtMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         match support::page_objects(base).get(self.page_index).copied().and_then(|page| support::page_box(base, page, "TrimBox")) {
             Some(trim_box) => vec![PdfVtMutation::SetTrimBox(SetTrimBox { page_index: self.page_index, trim_box })],
             None => vec![PdfVtMutation::RemoveTrimBox(RemoveTrimBox { page_index: self.page_index })],
         }
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set PDF/VT trim box on page {}", self.page_index), &format!("PDF/VT-TrimBox auf Seite {} setzen", self.page_index))

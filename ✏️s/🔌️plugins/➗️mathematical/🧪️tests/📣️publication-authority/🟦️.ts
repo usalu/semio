@@ -2,14 +2,14 @@ import { resolve } from "node:path";
 import Ajv from "ajv";
 import { runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
-type Lane = "Artifact" | "WindowConfig";
+type Lane = "Artifact" | "WindowConfig" | "HostOnly";
 type Fixture = { schema: string; owner: "EquationPlayApp"; source: string; routes: { id: string; lane: Lane }[]; laws: Record<string, boolean>; ui: { locales: ["en", "de"]; accessibleLabels: boolean; customizableUi: boolean } };
 
 const exact = (left: string[], right: string[]): boolean => JSON.stringify([...left].sort()) === JSON.stringify([...right].sort()) && new Set(left).size === left.length && new Set(right).size === right.length;
 
 function oracle(fixture: Fixture, source: string): boolean {
   const ids = [...source.match(/EQUATION_TOOL_IDS: &\[&str\] = &\[([^\]]*)\]/s)?.[1]?.matchAll(/"([^"]+)"/g) ?? []].map((match) => match[1]!);
-  const contracts = new Map([...source.matchAll(/ArtifactToolPublicationContract \{ tool_id: "([^"]+)", lanes: &\[ArtifactToolPublicationLane::(Artifact|WindowConfig)\] \}/g)].map((match) => [match[1]!, match[2]! as Lane]));
+  const contracts = new Map([...source.matchAll(/ArtifactToolPublicationContract \{ tool_id: "([^"]+)", lanes: &\[ArtifactToolPublicationLane::(Artifact|WindowConfig|HostOnly)\] \}/g)].map((match) => [match[1]!, match[2]! as Lane]));
   const classifications = [...source.matchAll(/\.action_interactive_job\("([^"]+)", InteractiveJobClassification::Migrated\)/g)].map((match) => match[1]!);
   const expected = fixture.routes.map(({ id }) => id);
   return fixture.schema === "semio.app.publication-authority.v1" && Object.values(fixture.laws).every(Boolean)
@@ -19,14 +19,14 @@ function oracle(fixture: Fixture, source: string): boolean {
     && ["ToolExecutionContract::resumable", "semio_framework_plugin::bounded_first_step_tool_proofs!", "build_artifact_store_one_item_preparation_factory", "register_window_config_owners", "request.operation != request.authority.operation()", "request.generation != request.authority.generation()", "request.base_revision != request.authority.base_revision()", "authority.prepare_one_item", "fn cancel(&mut self)", "fn begin_close(&mut self)", "base.return_to_registry()", "fn terminal_is_empty(&self)", "LocalizedLabel::native", ".default_layout(edit::layout())"].every((anchor) => source.includes(anchor));
 }
 
-/** 📣️ Verifies the Equation app's six literal publication routes and their authority laws. */
+/** 📣️ Verifies the Equation app's eight literal publication routes and their authority laws. */
 export async function verifyMathematicalPublicationAuthority(repoRoot: string, packageRoot: string): Promise<void> {
   const manifest = await Bun.file(resolve(packageRoot, "package.json")).json() as Record<string, unknown>;
   const scripts = manifest.scripts as Record<string, unknown>;
-  const dependencies = manifest.dependencies as Record<string, unknown>;
-  if (typeof manifest.description !== "string" || !manifest.description.includes("Mathematical plugin TS") || manifest.description.includes("CAD plugin")) throw new Error("Mathematical package description is not domain-scoped");
+  const devDependencies = manifest.devDependencies as Record<string, unknown> | undefined;
+  if (manifest.name !== "@semio-tech/mathematical-js" || typeof manifest.description !== "string" || !manifest.description.startsWith("@semio-tech/mathematical-js ")) throw new Error("Mathematical package identity is not domain-scoped");
   if (JSON.stringify(scripts) !== JSON.stringify({ test: "bun nx run @semio-tech/mathematical-js:test" })) throw new Error("Mathematical package scripts do not match its Nx targets");
-  if (JSON.stringify(dependencies) !== JSON.stringify({ ajv: "^8.20.0" })) throw new Error("Mathematical package dependencies are not source-scoped");
+  if (manifest.dependencies !== undefined || devDependencies?.ajv !== "^8.20.0") throw new Error("Mathematical package has runtime dependencies or lacks its Ajv test dependency");
   const plugin = resolve(packageRoot, "../..");
   const authority = resolve(plugin, "🧫️fixtures/📣️publication-authority");
   const fixture = await Bun.file(resolve(authority, "🔣️.json")).json() as Fixture;

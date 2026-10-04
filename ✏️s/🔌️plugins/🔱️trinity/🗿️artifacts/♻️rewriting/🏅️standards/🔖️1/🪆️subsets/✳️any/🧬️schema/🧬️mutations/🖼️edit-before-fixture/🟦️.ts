@@ -1,4 +1,3 @@
-/** 🖼️ Direct rewriting `edit-before-fixture` payload mirror of `EditBeforeFixture`. */
-export interface EditBeforeFixture {
-  newBeforeFixtureJson: string;
-}
+/** 📝️ Typed document replacement owns its complete semantic payload. */
+import type {JackSnapshot} from "../../🟦️.ts";
+export interface EditBeforeFixture{newWorkingGraph:JackSnapshot}

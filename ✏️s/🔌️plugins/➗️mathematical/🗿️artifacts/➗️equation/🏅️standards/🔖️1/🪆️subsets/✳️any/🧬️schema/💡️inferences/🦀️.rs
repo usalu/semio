@@ -7,7 +7,6 @@
 
 use crate::EquationSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 // 🌱️ Additive `ToValue`/`FromValue` — see `🦀️.rs`'s own docstring note on this crate's
 // interim (not-yet-serde-free) state.
 use super::roots::{compute_equation_roots, EquationRoot};
@@ -28,13 +27,18 @@ pub struct EquationInference {
 
 impl Default for EquationInference {
     fn default() -> Self {
-        <Self as protocol::Inference<EquationSnapshot>>::infer(&EquationSnapshot::default())
+        let snapshot = &EquationSnapshot::default();
+
+        Self { topology: compute_equation_topology(&snapshot.graph), roots: compute_equation_roots(snapshot) }
     }
 }
 
 impl protocol::Inference<EquationSnapshot> for EquationInference {
-    fn infer(snapshot: &EquationSnapshot) -> Self {
-        Self { topology: compute_equation_topology(&crate::equation_graph(snapshot)), roots: compute_equation_roots(snapshot) }
+    fn infer(snapshot: &EquationSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
+        Self { topology: compute_equation_topology(&snapshot.graph), roots: compute_equation_roots(snapshot) }
+    
+        })
     }
 }
 
@@ -50,25 +54,6 @@ impl protocol::InferenceSpec<EquationSnapshot> for EquationInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 🌱 Ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM: the old impl target
-/// (`derive_artifact_facets!`-generated `EquationBuilder`, deleted in the same pass) is gone.
-/// `semio_framework_plugin::app::SnapshotBuilder<S, M>` (the recipe's literally-suggested
-/// replacement) does NOT work here — it is a foreign, non-`#[fundamental]` generic struct, so
-/// `impl ArtifactInferrer for SnapshotBuilder<EquationSnapshot, EquationMutation>` is an
-/// orphan-rule violation (E0117) regardless of the type parameters being local (confirmed by
-/// `🎬️sequence`'s identical W4 pass, `📓️w4-sequence-report.md` `## recipeGaps` #1).
-/// `ArtifactInferrer::infer` takes `&Self::Snapshot`, never `&self`, so the impl target is a pure
-/// type-level anchor with zero live callers repo-wide (grepped) — a trivial local zero-sized
-/// marker struct is the real fix.
-pub struct EquationInferrer;
-
-impl ArtifactInferrer for EquationInferrer {
-    type Snapshot = EquationSnapshot;
-    type Inference = EquationInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.mathematical.equation.inference`'s facet leaves into the OS-wide inference

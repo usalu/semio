@@ -17,7 +17,7 @@ impl RetireOwned for workflow::MediaContract {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         let Self { kind_id, media_type, wire, conversion } = self;
         let wire = match wire {
-            semio_framework::MediaWireFormat::Document { schema } => schema,
+            semio_framework::MediaWireFormat::Document { schema } | semio_framework::MediaWireFormat::Intrinsic { schema } => schema,
             semio_framework::MediaWireFormat::Binary { format_kind } => format_kind,
         };
         sequence(vec![kind_id.retirement(), leaf(media_type), wire.retirement(), leaf(conversion)])

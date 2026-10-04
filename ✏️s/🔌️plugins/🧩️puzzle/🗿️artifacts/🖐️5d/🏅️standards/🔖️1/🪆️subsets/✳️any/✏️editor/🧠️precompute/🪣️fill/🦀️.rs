@@ -45,6 +45,8 @@ pub(crate) fn fill_run_job(request: ToolRunJobRequest<'_, EditorApp<Puzzle5dPlay
         port: request.port,
         trace_keys: request.trace_keys,
         entity_marks: request.entity_marks,
+        children: request.children,
+        member_ops: request.member_ops,
     })?
     .ok_or_else(|| Fault::from("puzzle5d-fill-run-planner-missing"))?;
     Ok(Some(Puzzle5dPlannerToolRunJob::new(inner, board)))
@@ -72,7 +74,7 @@ fn puzzle3d_ops(provisional: &[Puzzle5dMutation]) -> Result<Vec<Puzzle3dMutation
 /// 🧊️ One schema target volume as the editor's own document type — the same `serde_json` hop
 /// `editor_part` takes for a part, so the planner bridge reads one shape whichever side minted it.
 fn editor_target_volume(volume: &crate::Puzzle5dTargetVolume) -> Result<crate::editor::puzzle5d::Puzzle5dTargetVolume, Fault> {
-    serde_json::from_value(serde_json::Value::from(&dsl::ToValue::to_value(volume))).map_err(|error| Fault::from(format!("puzzle5d-planner-target-volume: {error}")))
+    serde_json::from_value(serde_json::Value::from(&semio_framework_value::ToValue::to_value(volume))).map_err(|error| Fault::from(format!("puzzle5d-planner-target-volume: {error}")))
 }
 
 /// 📏️ A schema-side `Puzzle5dScale` as the planner's own scale union.

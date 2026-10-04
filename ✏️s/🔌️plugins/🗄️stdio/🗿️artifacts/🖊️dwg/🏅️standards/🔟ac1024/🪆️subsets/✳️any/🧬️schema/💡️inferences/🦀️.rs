@@ -14,7 +14,6 @@
 
 use crate::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::structure::compute_dwg_structure;
 //#region 🔖️Inference
@@ -29,15 +28,20 @@ pub struct DwgInference {
 }
 
 impl protocol::Inference<DwgSnapshot> for DwgInference {
-    fn infer(snapshot: &DwgSnapshot) -> Self {
+    fn infer(snapshot: &DwgSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { structure: compute_dwg_structure(snapshot) }
+    
+        })
     }
 }
 
 /// 🌱 Defined in terms of `infer` so the default follows the logical snapshot model.
 impl Default for DwgInference {
     fn default() -> Self {
-        <Self as protocol::Inference<DwgSnapshot>>::infer(&DwgSnapshot::default())
+        let snapshot = &DwgSnapshot::default();
+
+        Self { structure: compute_dwg_structure(snapshot) }
     }
 }
 
@@ -53,14 +57,6 @@ impl protocol::InferenceSpec<DwgSnapshot> for DwgInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 💡️ `structure` is a whole-snapshot fold over the logical drawing.
-impl ArtifactInferrer for crate::standards::v_ac1024::subsets::any::schema::DwgBuilder {
-    type Snapshot = DwgSnapshot;
-    type Inference = DwgInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.dwg.inference`'s facet leaves into the OS-wide inference catalog —

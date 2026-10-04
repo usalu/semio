@@ -6,7 +6,7 @@ use std::sync::{Barrier, OnceLock};
 fn identity_is_non_secret_and_actor_is_server_subject_derived() {
     let identity = Identity { user_id: "u-amara".to_string(), email: "amara@semio.dev".to_string(), display_name: "Amara".to_string(), hub_base_url: "http://127.0.0.1:8787".to_string(), issued_at_ms: 0 };
     assert_eq!(actor_id(&identity, "sess-1"), "user:u-amara#sess-1");
-    assert!(!crate::os_pack::json::to_json_string(&identity).contains("token"));
+    assert!(!semio_framework_pack_json::to_json_string(&identity).contains("token"));
 }
 
 #[test]

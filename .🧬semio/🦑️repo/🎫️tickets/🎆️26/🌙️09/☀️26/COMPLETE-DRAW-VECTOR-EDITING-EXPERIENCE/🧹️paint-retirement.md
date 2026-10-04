@@ -1,0 +1,17 @@
+# Prepared Paint Ownership for the Complete Draw Editor
+
+## Current Evidence and Requirement
+
+The preceding goal turn was concrete progress: Rust/TypeScript coverage acquired genuine consuming cleanup, eighteen interruption cases and actual successful painted-path fill/stroke handoff. Full pixels TypeScript 91613 passed 386 tests and native 26982 passed 59; full Draw TypeScript 55353 passed 582 with strict and independent PDF/SVG gates. Full Draw native 92563 terminated before Draw compilation on shared PNG value/DSL/controlled Deflate prerequisites. Current PNG sources still contain those calls while changing concurrently. There is no live validation to restart or no-progress condition; meaningful paint/parent composition work remains available.
+
+PreparedFill still owns copied gradient stops behind opaque fields, and whole PathRaster cleanup eagerly drops that owner. This stage introduces real ramp and prepared-paint consuming frontiers in both first-party implementations. Ten schema-first neutral sources cover solid/empty/single/unsorted/coincident/collapsed/radial paint and the 4096-stop limit. Tests validate actual ownership, invalid/partial/terminal grants, immutable source and retained published sample arrays, with independent SVG output. Structural owner/header work does not prove allocator byte admission or bounded constructor/deallocation time. The original full editor goal stays active.
+
+## Composed Frontier and Evidence
+
+Each genuine GradientRamp now has consuming retirement. Native owns a flat Vec of fixed-width GradientStop records (offset f64 plus color [f64;4]), verified from the authoritative Drawing type. It releases that buffer and then its header in two structural units. TypeScript retires each independently copied stop/color owner, then its empty collection and terminal closure. PreparedFill adopts that real child, grants one child unit per own unit, releases the terminal child header on a later step and closes its fixed geometry/header separately. Solid paint takes two units; gradient paint takes four native or four plus copied-stop count TypeScript units.
+
+Initial **85999 exited 1** because the new schema JSON was malformed before tests; that harness issue was repaired before implementation and is not production-defect evidence. Corrected full red **43308 exited 1: 582 passed / one failed**, directly observing the absent PreparedFill.intoRetirement. Logs: `🗑️generated/paint-retirement-ts-red.log`, `🗑️generated/paint-retirement-ts-schema-fixed-red.log`.
+
+Full Draw TypeScript **15498 exited 0**, with strict production roots and enabled independent PDF/SVG gates. Actual stderr records thirty ten-source/grant SVG comparisons through genuine paint/ramp composition, including 4096 copied stops. The test delegates each real child advance at grant one, observes actual private stop objects removed from production arrays, verifies those objects/color arrays are distinct from source, and retains independently published sample arrays through closure. Full counts are recorded below after reading terminal output. Log: `🗑️generated/paint-retirement-full-ts.log`.
+
+Fresh full Draw native validation is tracked in `🗑️generated/paint-retirement-native.log`; it is required for the newly authored native frontiers/laws and remains unverified until terminal. Known shared PNG/Deflate prerequisites from prior terminal 92563 are unchanged; no compatibility reexports or uncontrolled codec substitutions are introduced. The full editor goal stays active.

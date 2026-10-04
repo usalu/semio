@@ -108,7 +108,6 @@ export function testCanonicalEditFixtures(): void {
       Buffer.from(String(edit.id)),
       ...text(edit, "actor"),
       ...text(edit, "description"),
-      ...text(edit, "coalesceKey"),
       sequence,
       Buffer.from(String(edit.startedAt)),
       ...text(edit, "finishedAt"),

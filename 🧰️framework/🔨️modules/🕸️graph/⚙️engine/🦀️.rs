@@ -53,13 +53,13 @@ pub trait Directedness {
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Directed;
 
-impl dsl_core::ToValue for Directed {
-    fn to_value(&self) -> dsl_core::DslValue {
-        dsl_core::DslValue::Null
+impl semio_framework_value::ToValue for Directed {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::Null
     }
 }
-impl dsl_core::FromValue for Directed {
-    fn from_value(_value: dsl_core::DslValue) -> Result<Self, dsl_core::ValueError> {
+impl semio_framework_value::FromValue for Directed {
+    fn from_value(_value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         Ok(Directed)
     }
 }
@@ -73,13 +73,13 @@ impl Directedness for Directed {
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Undirected;
 
-impl dsl_core::ToValue for Undirected {
-    fn to_value(&self) -> dsl_core::DslValue {
-        dsl_core::DslValue::Null
+impl semio_framework_value::ToValue for Undirected {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::Null
     }
 }
-impl dsl_core::FromValue for Undirected {
-    fn from_value(_value: dsl_core::DslValue) -> Result<Self, dsl_core::ValueError> {
+impl semio_framework_value::FromValue for Undirected {
+    fn from_value(_value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         Ok(Undirected)
     }
 }
@@ -118,13 +118,13 @@ pub trait PortModel {
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Normal;
 
-impl dsl_core::ToValue for Normal {
-    fn to_value(&self) -> dsl_core::DslValue {
-        dsl_core::DslValue::Null
+impl semio_framework_value::ToValue for Normal {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::Null
     }
 }
-impl dsl_core::FromValue for Normal {
-    fn from_value(_value: dsl_core::DslValue) -> Result<Self, dsl_core::ValueError> {
+impl semio_framework_value::FromValue for Normal {
+    fn from_value(_value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         Ok(Normal)
     }
 }
@@ -149,13 +149,13 @@ impl PortModel for Normal {
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Ported;
 
-impl dsl_core::ToValue for Ported {
-    fn to_value(&self) -> dsl_core::DslValue {
-        dsl_core::DslValue::Null
+impl semio_framework_value::ToValue for Ported {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::Null
     }
 }
-impl dsl_core::FromValue for Ported {
-    fn from_value(_value: dsl_core::DslValue) -> Result<Self, dsl_core::ValueError> {
+impl semio_framework_value::FromValue for Ported {
+    fn from_value(_value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         Ok(Ported)
     }
 }
@@ -219,7 +219,7 @@ fn unlink_one(map: &mut BTreeMap<NodeId, BTreeMap<NodeId, Vec<EdgeId>>>, u: Node
 // never touched — both live only behind a skipped `PhantomData` field) with the ONE bound the
 // `edges` bridge actually needs: `P::Endpoint` (always `NodeId`/`HandleId` = `u64` in practice).
 #[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]
-#[value(bound = "P::Endpoint: dsl_core::ToValue + dsl_core::FromValue")]
+#[value(bound = "P::Endpoint: semio_framework_value::ToValue + semio_framework_value::FromValue")]
 pub struct Storage<P: PortModel, D: Directedness> {
     #[value(with = "storage_nodes_bridge")]
     nodes: BTreeMap<NodeId, NodeRecord>,
@@ -245,100 +245,96 @@ pub struct Storage<P: PortModel, D: Directedness> {
 /// cannot use the `BTreeMap<String, T>`-only blanket `ToValue`/`FromValue` impl (`🌱️value/🔁️codec`);
 /// stringifies the key the same way `serde_json` itself would for an integer map key.
 mod storage_nodes_bridge {
-    pub fn to_value(map: &std::collections::BTreeMap<super::NodeId, super::NodeRecord>) -> dsl_core::DslValue {
-        dsl_core::DslValue::object(map.iter().map(|(k, v)| (k.to_string(), dsl_core::ToValue::to_value(v))))
+    pub fn to_value(map: &std::collections::BTreeMap<super::NodeId, super::NodeRecord>) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::object(map.iter().map(|(k, v)| (k.to_string(), semio_framework_value::ToValue::to_value(v))))
     }
-    pub fn from_value(value: dsl_core::DslValue) -> Result<std::collections::BTreeMap<super::NodeId, super::NodeRecord>, dsl_core::ValueError> {
-        let dsl_core::DslValue::Object(entries) = value else {
-            return Err(dsl_core::ValueError::new("expected an object for Storage::nodes"));
+    pub fn from_value(value: semio_framework_value::DslValue) -> Result<std::collections::BTreeMap<super::NodeId, super::NodeRecord>, semio_framework_value::ValueError> {
+        let semio_framework_value::DslValue::Object(entries) = value else {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected an object for Storage::nodes"));
         };
         entries
             .into_iter()
             .map(|(k, v)| {
-                let id: super::NodeId = k.parse().map_err(|_| dsl_core::ValueError::new(format!("invalid NodeId key `{k}`")))?;
-                let record = <super::NodeRecord as dsl_core::FromValue>::from_value(v).map_err(|e| e.under(&k))?;
+                let id: super::NodeId = k.parse().map_err(|_| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("invalid NodeId key `{k}`")))?;
+                let record = <super::NodeRecord as semio_framework_value::FromValue>::from_value(v).map_err(|e| e.under(&k))?;
                 Ok((id, record))
             })
             .collect()
     }
-    use crate::dsl_core;
 }
 
 /// 🌉️ `Storage::edges` bridge — generic over `E = P::Endpoint` (always `u64` in practice), same
 /// `u64`-key stringification as `storage_nodes_bridge`.
 mod storage_edges_bridge {
-    pub fn to_value<E: dsl_core::ToValue>(map: &std::collections::BTreeMap<super::EdgeId, super::EdgeRecord<E>>) -> dsl_core::DslValue {
-        dsl_core::DslValue::object(map.iter().map(|(k, v)| (k.to_string(), dsl_core::ToValue::to_value(v))))
+    pub fn to_value<E: semio_framework_value::ToValue>(map: &std::collections::BTreeMap<super::EdgeId, super::EdgeRecord<E>>) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::object(map.iter().map(|(k, v)| (k.to_string(), semio_framework_value::ToValue::to_value(v))))
     }
-    pub fn from_value<E: dsl_core::FromValue>(value: dsl_core::DslValue) -> Result<std::collections::BTreeMap<super::EdgeId, super::EdgeRecord<E>>, dsl_core::ValueError> {
-        let dsl_core::DslValue::Object(entries) = value else {
-            return Err(dsl_core::ValueError::new("expected an object for Storage::edges"));
+    pub fn from_value<E: semio_framework_value::FromValue>(value: semio_framework_value::DslValue) -> Result<std::collections::BTreeMap<super::EdgeId, super::EdgeRecord<E>>, semio_framework_value::ValueError> {
+        let semio_framework_value::DslValue::Object(entries) = value else {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected an object for Storage::edges"));
         };
         entries
             .into_iter()
             .map(|(k, v)| {
-                let id: super::EdgeId = k.parse().map_err(|_| dsl_core::ValueError::new(format!("invalid EdgeId key `{k}`")))?;
-                let record = <super::EdgeRecord<E> as dsl_core::FromValue>::from_value(v).map_err(|e| e.under(&k))?;
+                let id: super::EdgeId = k.parse().map_err(|_| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("invalid EdgeId key `{k}`")))?;
+                let record = <super::EdgeRecord<E> as semio_framework_value::FromValue>::from_value(v).map_err(|e| e.under(&k))?;
                 Ok((id, record))
             })
             .collect()
     }
-    use crate::dsl_core;
 }
 
 /// 🌉️ `Storage::successors`/`predecessors` bridge — `NodeId -> NodeId -> [EdgeId]`, both map levels
 /// `u64`-keyed.
 mod storage_adjacency_bridge {
-    pub fn to_value(map: &std::collections::BTreeMap<super::NodeId, std::collections::BTreeMap<super::NodeId, Vec<super::EdgeId>>>) -> dsl_core::DslValue {
-        dsl_core::DslValue::object(map.iter().map(|(k, inner)| {
-            (k.to_string(), dsl_core::DslValue::object(inner.iter().map(|(k2, v)| (k2.to_string(), dsl_core::ToValue::to_value(v)))))
+    pub fn to_value(map: &std::collections::BTreeMap<super::NodeId, std::collections::BTreeMap<super::NodeId, Vec<super::EdgeId>>>) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::object(map.iter().map(|(k, inner)| {
+            (k.to_string(), semio_framework_value::DslValue::object(inner.iter().map(|(k2, v)| (k2.to_string(), semio_framework_value::ToValue::to_value(v)))))
         }))
     }
-    pub fn from_value(value: dsl_core::DslValue) -> Result<std::collections::BTreeMap<super::NodeId, std::collections::BTreeMap<super::NodeId, Vec<super::EdgeId>>>, dsl_core::ValueError> {
-        let dsl_core::DslValue::Object(entries) = value else {
-            return Err(dsl_core::ValueError::new("expected an object for Storage adjacency"));
+    pub fn from_value(value: semio_framework_value::DslValue) -> Result<std::collections::BTreeMap<super::NodeId, std::collections::BTreeMap<super::NodeId, Vec<super::EdgeId>>>, semio_framework_value::ValueError> {
+        let semio_framework_value::DslValue::Object(entries) = value else {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected an object for Storage adjacency"));
         };
         entries
             .into_iter()
             .map(|(k, inner)| {
-                let node_id: super::NodeId = k.parse().map_err(|_| dsl_core::ValueError::new(format!("invalid NodeId key `{k}`")))?;
-                let dsl_core::DslValue::Object(inner_entries) = inner else {
-                    return Err(dsl_core::ValueError::new("expected an object").under(&k));
+                let node_id: super::NodeId = k.parse().map_err(|_| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("invalid NodeId key `{k}`")))?;
+                let semio_framework_value::DslValue::Object(inner_entries) = inner else {
+                    return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected an object").under(&k));
                 };
                 let inner_map = inner_entries
                     .into_iter()
                     .map(|(k2, v)| {
-                        let node_id2: super::NodeId = k2.parse().map_err(|_| dsl_core::ValueError::new(format!("invalid NodeId key `{k2}`")))?;
-                        let edges = <Vec<super::EdgeId> as dsl_core::FromValue>::from_value(v).map_err(|e| e.under(&k2))?;
+                        let node_id2: super::NodeId = k2.parse().map_err(|_| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("invalid NodeId key `{k2}`")))?;
+                        let edges = <Vec<super::EdgeId> as semio_framework_value::FromValue>::from_value(v).map_err(|e| e.under(&k2))?;
                         Ok((node_id2, edges))
                     })
-                    .collect::<Result<std::collections::BTreeMap<_, _>, dsl_core::ValueError>>()?;
+                    .collect::<Result<std::collections::BTreeMap<_, _>, semio_framework_value::ValueError>>()?;
                 Ok((node_id, inner_map))
             })
             .collect()
     }
-    use crate::dsl_core;
 }
 
 /// 🌉️ `Storage::handle_owner` bridge — `HandleId -> NodeId`, `u64`-keyed.
 mod storage_handle_owner_bridge {
-    pub fn to_value(map: &std::collections::BTreeMap<super::HandleId, super::NodeId>) -> dsl_core::DslValue {
-        dsl_core::DslValue::object(map.iter().map(|(k, v)| (k.to_string(), dsl_core::ToValue::to_value(v))))
+    pub fn to_value(map: &std::collections::BTreeMap<super::HandleId, super::NodeId>) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::object(map.iter().map(|(k, v)| (k.to_string(), semio_framework_value::ToValue::to_value(v))))
     }
-    pub fn from_value(value: dsl_core::DslValue) -> Result<std::collections::BTreeMap<super::HandleId, super::NodeId>, dsl_core::ValueError> {
-        let dsl_core::DslValue::Object(entries) = value else {
-            return Err(dsl_core::ValueError::new("expected an object for Storage::handle_owner"));
+    pub fn from_value(value: semio_framework_value::DslValue) -> Result<std::collections::BTreeMap<super::HandleId, super::NodeId>, semio_framework_value::ValueError> {
+        let semio_framework_value::DslValue::Object(entries) = value else {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected an object for Storage::handle_owner"));
         };
         entries
             .into_iter()
             .map(|(k, v)| {
-                let handle_id: super::HandleId = k.parse().map_err(|_| dsl_core::ValueError::new(format!("invalid HandleId key `{k}`")))?;
-                let node_id = <super::NodeId as dsl_core::FromValue>::from_value(v).map_err(|e| e.under(&k))?;
+                let handle_id: super::HandleId = k.parse().map_err(|_| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("invalid HandleId key `{k}`")))?;
+                let node_id = <super::NodeId as semio_framework_value::FromValue>::from_value(v).map_err(|e| e.under(&k))?;
                 Ok((handle_id, node_id))
             })
             .collect()
     }
-    use crate::dsl_core;
 }
 
 impl<P: PortModel, D: Directedness> Default for Storage<P, D> {
@@ -431,7 +427,13 @@ impl<P: PortModel, D: Directedness> Storage<P, D> {
             self.next_node_id = id + 1;
         }
         match self.nodes.get_mut(&id) {
-            Some(record) => record.attrs.extend(attrs),
+            Some(record) => {
+                for (key, value) in attrs {
+                    if let Some(previous) = record.attrs.insert(key, value) {
+                        <PropertyValue as semio_framework_value::FromValue>::retire_decoded(previous);
+                    }
+                }
+            }
             None => {
                 self.nodes.insert(id, NodeRecord { attrs, handles: Vec::new() });
             }
@@ -490,7 +492,11 @@ impl<P: PortModel, D: Directedness> Storage<P, D> {
         if !P::MULTI_EDGES {
             if let Some(&existing) = self.successors.get(&un).and_then(|m| m.get(&vn)).and_then(|ids| ids.first()) {
                 if let Some(record) = self.edges.get_mut(&existing) {
-                    record.attrs.extend(attrs);
+                    for (key, value) in attrs {
+                        if let Some(previous) = record.attrs.insert(key, value) {
+                            <PropertyValue as semio_framework_value::FromValue>::retire_decoded(previous);
+                        }
+                    }
                 }
                 return existing;
             }
@@ -557,7 +563,7 @@ impl<P: PortModel, D: Directedness> Storage<P, D> {
         self.successors.clear();
         self.predecessors.clear();
         self.handle_owner.clear();
-        self.graph_attrs.clear();
+        <PropertyBag as semio_framework_value::FromValue>::retire_decoded(std::mem::take(&mut self.graph_attrs));
     }
 
     /// 🧹️ Removes every edge but keeps nodes (and their handles) and graph-level attrs.
@@ -624,13 +630,13 @@ pub trait EdgeWeights {
 #[derive(Clone, Copy, Debug, Default)]
 pub struct UnitWeight;
 
-impl dsl_core::ToValue for UnitWeight {
-    fn to_value(&self) -> dsl_core::DslValue {
-        dsl_core::DslValue::Null
+impl semio_framework_value::ToValue for UnitWeight {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::Null
     }
 }
-impl dsl_core::FromValue for UnitWeight {
-    fn from_value(_value: dsl_core::DslValue) -> Result<Self, dsl_core::ValueError> {
+impl semio_framework_value::FromValue for UnitWeight {
+    fn from_value(_value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         Ok(UnitWeight)
     }
 }
@@ -746,23 +752,22 @@ impl<P: PortModel, D: Directedness> EdgeWeights for Storage<P, D> {
 // #region 🔖️Csr
 /// 🌉️ `Csr::node_index` bridge — `BTreeMap<NodeId, usize>` is `u64`-keyed, see `storage_nodes_bridge` above.
 mod csr_node_index_bridge {
-    pub fn to_value(map: &std::collections::BTreeMap<super::NodeId, usize>) -> dsl_core::DslValue {
-        dsl_core::DslValue::object(map.iter().map(|(k, v)| (k.to_string(), dsl_core::ToValue::to_value(v))))
+    pub fn to_value(map: &std::collections::BTreeMap<super::NodeId, usize>) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::object(map.iter().map(|(k, v)| (k.to_string(), semio_framework_value::ToValue::to_value(v))))
     }
-    pub fn from_value(value: dsl_core::DslValue) -> Result<std::collections::BTreeMap<super::NodeId, usize>, dsl_core::ValueError> {
-        let dsl_core::DslValue::Object(entries) = value else {
-            return Err(dsl_core::ValueError::new("expected an object for Csr::node_index"));
+    pub fn from_value(value: semio_framework_value::DslValue) -> Result<std::collections::BTreeMap<super::NodeId, usize>, semio_framework_value::ValueError> {
+        let semio_framework_value::DslValue::Object(entries) = value else {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected an object for Csr::node_index"));
         };
         entries
             .into_iter()
             .map(|(k, v)| {
-                let id: super::NodeId = k.parse().map_err(|_| dsl_core::ValueError::new(format!("invalid NodeId key `{k}`")))?;
-                let index = <usize as dsl_core::FromValue>::from_value(v).map_err(|e| e.under(&k))?;
+                let id: super::NodeId = k.parse().map_err(|_| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("invalid NodeId key `{k}`")))?;
+                let index = <usize as semio_framework_value::FromValue>::from_value(v).map_err(|e| e.under(&k))?;
                 Ok((id, index))
             })
             .collect()
     }
-    use crate::dsl_core;
 }
 
 /// 🧊️ Frozen, index-based CSR adjacency snapshot for hot algorithms; supersedes the ad-hoc `algorithms::Adjacency` for NEW code (that type is left untouched — old call sites keep using it). Node index assignment is `0..n` in sorted `NodeId` order, so two snapshots of the same graph always assign the same indices.
@@ -1619,20 +1624,20 @@ mod tests;
 
 // #region 🔖️PropertyValue
 /// 🧾️ Converts a fixture `userData` value into a typed property bag.
-pub fn property_bag_from_value(value: &dsl_core::DslValue) -> PropertyBag {
-    let dsl_core::DslValue::Object(entries) = value.clone() else {
+pub fn property_bag_from_value(value: &semio_framework_value::DslValue) -> PropertyBag {
+    let semio_framework_value::DslValue::Object(entries) = value.clone() else {
         return PropertyBag::default();
     };
-    entries.into_iter().filter_map(|(k, v)| dsl_core::FromValue::from_value(v).ok().map(|pv| (k, pv))).collect()
+    entries.into_iter().filter_map(|(k, v)| semio_framework_value::FromValue::from_value(v).ok().map(|pv| (k, pv))).collect()
 }
 
 /// 🧾️ Serializes a property bag back to a value for fixture export.
-pub fn property_bag_to_value(bag: &PropertyBag) -> Option<dsl_core::DslValue> {
+pub fn property_bag_to_value(bag: &PropertyBag) -> Option<semio_framework_value::DslValue> {
     if bag.is_empty() {
         None
     } else {
-        let entries: Vec<(String, dsl_core::DslValue)> = bag.iter().map(|(k, v)| (k.clone(), dsl_core::ToValue::to_value(v))).collect();
-        Some(dsl_core::DslValue::Object(entries))
+        let entries: Vec<(String, semio_framework_value::DslValue)> = bag.iter().map(|(k, v)| (k.clone(), semio_framework_value::ToValue::to_value(v))).collect();
+        Some(semio_framework_value::DslValue::Object(entries))
     }
 }
 // #endregion 🔖️PropertyValue
@@ -1645,24 +1650,23 @@ use geometry::Point;
 /// rather than a derive since we cannot add `#[derive(ToValue, FromValue)]` to `Point`'s own
 /// definition. `Node::center`/`Handle` below name this via `#[value(with = "point_bridge")]`.
 mod point_bridge {
-    pub fn to_value(p: &super::Point) -> dsl_core::DslValue {
-        dsl_core::DslValue::object([
-            ("x".to_string(), dsl_core::ToValue::to_value(&p.x)),
-            ("y".to_string(), dsl_core::ToValue::to_value(&p.y)),
+    pub fn to_value(p: &super::Point) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::object([
+            ("x".to_string(), semio_framework_value::ToValue::to_value(&p.x)),
+            ("y".to_string(), semio_framework_value::ToValue::to_value(&p.y)),
         ])
     }
-    pub fn from_value(value: dsl_core::DslValue) -> Result<super::Point, dsl_core::ValueError> {
-        let dsl_core::DslValue::Object(entries) = value else {
-            return Err(dsl_core::ValueError::new("expected an object for Point"));
+    pub fn from_value(value: semio_framework_value::DslValue) -> Result<super::Point, semio_framework_value::ValueError> {
+        let semio_framework_value::DslValue::Object(entries) = value else {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected an object for Point"));
         };
-        let x = entries.iter().find(|(k, _)| k == "x").map(|(_, v)| v.clone()).ok_or_else(|| dsl_core::ValueError::new("missing field `x`"))?;
-        let y = entries.iter().find(|(k, _)| k == "y").map(|(_, v)| v.clone()).ok_or_else(|| dsl_core::ValueError::new("missing field `y`"))?;
+        let x = entries.iter().find(|(k, _)| k == "x").map(|(_, v)| v.clone()).ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "missing field `x`"))?;
+        let y = entries.iter().find(|(k, _)| k == "y").map(|(_, v)| v.clone()).ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "missing field `y`"))?;
         Ok(super::Point {
-            x: <f64 as dsl_core::FromValue>::from_value(x).map_err(|e| e.under("x"))?,
-            y: <f64 as dsl_core::FromValue>::from_value(y).map_err(|e| e.under("y"))?,
+            x: <f64 as semio_framework_value::FromValue>::from_value(x).map_err(|e| e.under("x"))?,
+            y: <f64 as semio_framework_value::FromValue>::from_value(y).map_err(|e| e.under("y"))?,
         })
     }
-    use crate::dsl_core;
 }
 
 /// 🔵️ Circle or axis-aligned rectangle node body.

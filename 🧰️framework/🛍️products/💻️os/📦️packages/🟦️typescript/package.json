@@ -22,8 +22,11 @@
     "test": "bun nx run @semio-tech/framework-os:test"
   },
   "devDependencies": {
+    "dom-accessibility-api": "0.5.16",
+    "fast-check": "3.23.2",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.17"
+    "vitest": "^4.0.17",
+    "xstate": "^5.32.5"
   },
   "license": "LGPL-3.0-or-later",
   "repository": {

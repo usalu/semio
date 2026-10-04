@@ -30,7 +30,7 @@ pub fn config_after_document_load(previous: &Generation3dConfig, flow_camera: &C
 }
 
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "active-example")]
 pub struct SetActiveExample {
     pub example_id: String,

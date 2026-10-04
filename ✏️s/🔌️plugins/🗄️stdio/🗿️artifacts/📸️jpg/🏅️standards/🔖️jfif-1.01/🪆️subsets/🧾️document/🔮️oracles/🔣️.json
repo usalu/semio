@@ -1910,7 +1910,7 @@
       "comparisonProfile": "ordered-json-v1",
       "reproducible": true,
       "family": "jpg-carrier",
-      "notes": "PatchSnapshot{edits:[set /jfifXDensity = 300]} is the editor's compact path-addressed patch: the JFIF APP0 horizontal density changes in place and every other member stays untouched."
+      "notes": "PatchSnapshot{set /jfifXDensity = 300} is the editor's compact path-addressed patch: the JFIF APP0 horizontal density changes in place and every other member stays untouched."
     }
   ],
   "oracleHostPackages": []

@@ -1,0 +1,914 @@
+[
+  {
+    "name": "identity",
+    "input": {
+      "source": {
+        "width": 1,
+        "height": 1,
+        "pixels": [
+          255,
+          0,
+          0,
+          255
+        ]
+      },
+      "width": 1,
+      "height": 1,
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "sampling": "auto",
+      "origin": [
+        0,
+        0
+      ]
+    },
+    "expected": [
+      255,
+      0,
+      0,
+      255
+    ]
+  },
+  {
+    "name": "half pixel translation",
+    "input": {
+      "source": {
+        "width": 1,
+        "height": 1,
+        "pixels": [
+          255,
+          0,
+          0,
+          255
+        ]
+      },
+      "width": 2,
+      "height": 1,
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0.5,
+        0
+      ],
+      "sampling": "auto",
+      "origin": [
+        0,
+        0
+      ]
+    },
+    "expected": [
+      255,
+      0,
+      0,
+      128,
+      255,
+      0,
+      0,
+      128
+    ]
+  },
+  {
+    "name": "quarter area reduction",
+    "input": {
+      "source": {
+        "width": 1,
+        "height": 1,
+        "pixels": [
+          255,
+          0,
+          0,
+          255
+        ]
+      },
+      "width": 1,
+      "height": 1,
+      "transform": [
+        0.5,
+        0,
+        0,
+        0.5,
+        0,
+        0
+      ],
+      "sampling": "auto",
+      "origin": [
+        0,
+        0
+      ]
+    },
+    "expected": [
+      255,
+      0,
+      0,
+      64
+    ]
+  },
+  {
+    "name": "premultiplied bilinear avoids transparent red fringe",
+    "input": {
+      "source": {
+        "width": 2,
+        "height": 1,
+        "pixels": [
+          255,
+          0,
+          0,
+          0,
+          0,
+          0,
+          255,
+          255
+        ]
+      },
+      "width": 4,
+      "height": 1,
+      "transform": [
+        2,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "sampling": "bilinear",
+      "origin": [
+        0,
+        0
+      ]
+    },
+    "expected": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      255,
+      64,
+      0,
+      0,
+      255,
+      191,
+      0,
+      0,
+      255,
+      255
+    ]
+  },
+  {
+    "name": "two pixel area mean",
+    "input": {
+      "source": {
+        "width": 2,
+        "height": 1,
+        "pixels": [
+          255,
+          0,
+          0,
+          255,
+          0,
+          0,
+          255,
+          255
+        ]
+      },
+      "width": 1,
+      "height": 1,
+      "transform": [
+        0.5,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "sampling": "area",
+      "origin": [
+        0,
+        0
+      ]
+    },
+    "expected": [
+      128,
+      0,
+      128,
+      255
+    ]
+  },
+  {
+    "name": "odd reduction avoids center alias",
+    "input": {
+      "source": {
+        "width": 3,
+        "height": 1,
+        "pixels": [
+          255,
+          255,
+          255,
+          255,
+          0,
+          0,
+          0,
+          255,
+          255,
+          255,
+          255,
+          255
+        ]
+      },
+      "width": 1,
+      "height": 1,
+      "transform": [
+        0.3333333333333333,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "sampling": "auto",
+      "origin": [
+        0,
+        0
+      ]
+    },
+    "expected": [
+      170,
+      170,
+      170,
+      255
+    ]
+  },
+  {
+    "name": "anisotropic area reduction",
+    "input": {
+      "source": {
+        "width": 3,
+        "height": 1,
+        "pixels": [
+          255,
+          255,
+          255,
+          255,
+          0,
+          0,
+          0,
+          255,
+          255,
+          255,
+          255,
+          255
+        ]
+      },
+      "width": 1,
+      "height": 2,
+      "transform": [
+        0.3333333333333333,
+        0,
+        0,
+        2,
+        0,
+        0
+      ],
+      "sampling": "auto",
+      "origin": [
+        0,
+        0
+      ]
+    },
+    "expected": [
+      170,
+      170,
+      170,
+      255,
+      170,
+      170,
+      170,
+      255
+    ]
+  },
+  {
+    "name": "area weights premultiplied alpha",
+    "input": {
+      "source": {
+        "width": 3,
+        "height": 1,
+        "pixels": [
+          255,
+          255,
+          255,
+          0,
+          0,
+          0,
+          0,
+          255,
+          255,
+          255,
+          255,
+          128
+        ]
+      },
+      "width": 1,
+      "height": 1,
+      "transform": [
+        0.3333333333333333,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "sampling": "area",
+      "origin": [
+        0,
+        0
+      ]
+    },
+    "expected": [
+      85,
+      85,
+      85,
+      128
+    ]
+  },
+  {
+    "name": "fractional partial image edge",
+    "input": {
+      "source": {
+        "width": 1,
+        "height": 1,
+        "pixels": [
+          255,
+          0,
+          0,
+          255
+        ]
+      },
+      "width": 2,
+      "height": 1,
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0.75,
+        0
+      ],
+      "sampling": "area",
+      "origin": [
+        0,
+        0
+      ]
+    },
+    "expected": [
+      255,
+      0,
+      0,
+      64,
+      255,
+      0,
+      0,
+      191
+    ]
+  },
+  {
+    "name": "rotated diamond edge coverage",
+    "input": {
+      "source": {
+        "width": 1,
+        "height": 1,
+        "pixels": [
+          255,
+          0,
+          0,
+          255
+        ]
+      },
+      "width": 2,
+      "height": 2,
+      "transform": [
+        1,
+        1,
+        -1,
+        1,
+        1,
+        0
+      ],
+      "sampling": "area",
+      "origin": [
+        0,
+        0
+      ]
+    },
+    "expected": [
+      255,
+      0,
+      0,
+      128,
+      255,
+      0,
+      0,
+      128,
+      255,
+      0,
+      0,
+      128,
+      255,
+      0,
+      0,
+      128
+    ]
+  },
+  {
+    "name": "sheared edge coverage",
+    "input": {
+      "source": {
+        "width": 1,
+        "height": 1,
+        "pixels": [
+          255,
+          0,
+          0,
+          255
+        ]
+      },
+      "width": 2,
+      "height": 1,
+      "transform": [
+        1,
+        0,
+        1,
+        1,
+        0,
+        0
+      ],
+      "sampling": "area",
+      "origin": [
+        0,
+        0
+      ]
+    },
+    "expected": [
+      255,
+      0,
+      0,
+      128,
+      255,
+      0,
+      0,
+      128
+    ]
+  },
+  {
+    "name": "reflection",
+    "input": {
+      "source": {
+        "width": 2,
+        "height": 1,
+        "pixels": [
+          255,
+          0,
+          0,
+          255,
+          0,
+          0,
+          255,
+          255
+        ]
+      },
+      "width": 2,
+      "height": 1,
+      "transform": [
+        -1,
+        0,
+        0,
+        1,
+        2,
+        0
+      ],
+      "sampling": "auto",
+      "origin": [
+        0,
+        0
+      ]
+    },
+    "expected": [
+      0,
+      0,
+      255,
+      255,
+      255,
+      0,
+      0,
+      255
+    ]
+  },
+  {
+    "name": "fractional canvas origin",
+    "input": {
+      "source": {
+        "width": 1,
+        "height": 1,
+        "pixels": [
+          255,
+          0,
+          0,
+          255
+        ]
+      },
+      "width": 1,
+      "height": 1,
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0.25,
+        0.5
+      ],
+      "sampling": "auto",
+      "origin": [
+        0.25,
+        0.5
+      ]
+    },
+    "expected": [
+      255,
+      0,
+      0,
+      255
+    ]
+  },
+  {
+    "name": "singular transform",
+    "input": {
+      "source": {
+        "width": 1,
+        "height": 1,
+        "pixels": [
+          255,
+          0,
+          0,
+          255
+        ]
+      },
+      "width": 1,
+      "height": 1,
+      "transform": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "sampling": "auto",
+      "origin": [
+        0,
+        0
+      ]
+    },
+    "expected": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "offscreen",
+    "input": {
+      "source": {
+        "width": 1,
+        "height": 1,
+        "pixels": [
+          255,
+          0,
+          0,
+          255
+        ]
+      },
+      "width": 1,
+      "height": 1,
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        8,
+        0
+      ],
+      "sampling": "auto",
+      "origin": [
+        0,
+        0
+      ]
+    },
+    "expected": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "transparent source",
+    "input": {
+      "source": {
+        "width": 1,
+        "height": 1,
+        "pixels": [
+          0,
+          255,
+          0,
+          0
+        ]
+      },
+      "width": 1,
+      "height": 1,
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "sampling": "auto",
+      "origin": [
+        0,
+        0
+      ]
+    },
+    "expected": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "nine pixel area mean",
+    "input": {
+      "source": {
+        "width": 3,
+        "height": 3,
+        "pixels": [
+          0,
+          0,
+          0,
+          255,
+          0,
+          0,
+          0,
+          255,
+          0,
+          0,
+          0,
+          255,
+          0,
+          0,
+          0,
+          255,
+          255,
+          255,
+          255,
+          255,
+          0,
+          0,
+          0,
+          255,
+          0,
+          0,
+          0,
+          255,
+          0,
+          0,
+          0,
+          255,
+          0,
+          0,
+          0,
+          255
+        ]
+      },
+      "width": 1,
+      "height": 1,
+      "transform": [
+        0.3333333333333333,
+        0,
+        0,
+        0.3333333333333333,
+        0,
+        0
+      ],
+      "sampling": "area",
+      "origin": [
+        0,
+        0
+      ]
+    },
+    "expected": [
+      28,
+      28,
+      28,
+      255
+    ]
+  },
+  {
+    "name": "nearest enlargement",
+    "input": {
+      "source": {
+        "width": 2,
+        "height": 1,
+        "pixels": [
+          255,
+          0,
+          0,
+          255,
+          0,
+          0,
+          255,
+          255
+        ]
+      },
+      "width": 4,
+      "height": 1,
+      "transform": [
+        2,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "sampling": "nearest",
+      "origin": [
+        0,
+        0
+      ]
+    },
+    "expected": [
+      255,
+      0,
+      0,
+      255,
+      255,
+      0,
+      0,
+      255,
+      0,
+      0,
+      255,
+      255,
+      0,
+      0,
+      255,
+      255
+    ]
+  },
+  {
+    "name": "bilinear enlargement",
+    "input": {
+      "source": {
+        "width": 2,
+        "height": 1,
+        "pixels": [
+          255,
+          0,
+          0,
+          255,
+          0,
+          0,
+          255,
+          255
+        ]
+      },
+      "width": 4,
+      "height": 1,
+      "transform": [
+        2,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "sampling": "bilinear",
+      "origin": [
+        0,
+        0
+      ]
+    },
+    "expected": [
+      255,
+      0,
+      0,
+      255,
+      191,
+      0,
+      64,
+      255,
+      64,
+      0,
+      191,
+      255,
+      0,
+      0,
+      255,
+      255
+    ]
+  },
+  {
+    "name": "bilinear clamps image edges",
+    "input": {
+      "source": {
+        "width": 1,
+        "height": 1,
+        "pixels": [
+          255,
+          0,
+          0,
+          255
+        ]
+      },
+      "width": 3,
+      "height": 1,
+      "transform": [
+        3,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "sampling": "bilinear",
+      "origin": [
+        0,
+        0
+      ]
+    },
+    "expected": [
+      255,
+      0,
+      0,
+      255,
+      255,
+      0,
+      0,
+      255,
+      255,
+      0,
+      0,
+      255
+    ]
+  },
+  {
+    "name": "shifted viewport samples correct source pixel",
+    "input": {
+      "source": {
+        "width": 2,
+        "height": 1,
+        "pixels": [
+          255,
+          0,
+          0,
+          255,
+          0,
+          0,
+          255,
+          255
+        ]
+      },
+      "width": 1,
+      "height": 1,
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "sampling": "auto",
+      "origin": [
+        1,
+        0
+      ]
+    },
+    "expected": [
+      0,
+      0,
+      255,
+      255
+    ]
+  }
+]

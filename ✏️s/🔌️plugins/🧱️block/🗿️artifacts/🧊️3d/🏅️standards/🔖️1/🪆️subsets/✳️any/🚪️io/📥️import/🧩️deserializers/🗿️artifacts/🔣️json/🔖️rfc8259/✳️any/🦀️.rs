@@ -1,7 +1,7 @@
 //! 🚪️ block3d ← json — foreign `Deserializer<Block3dSnapshot>` on the framework's `io_mechanism`
 //! channel, the exact inverse of the sibling `📤️export` leaf: `IoFidelity::Exact`.
 
-use crate::{Block3dSnapshot, BLOCK_3D_SCHEMA};
+use crate::Block3dSnapshot;
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Confidence, Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
@@ -12,7 +12,7 @@ use semio_s_artifact_stdio_json::JsonSnapshot;
 pub const JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId::ANY };
 
 /// 🔣️ Parses rfc8259 text into this subset's snapshot — also used by the `🎒️zip` container leaf.
-/// An absent/empty `schema` is filled with `BLOCK_3D_SCHEMA` so a hand-authored json is still accepted.
+/// 📸️ Present schema strings, including the empty string, are retained exactly.
 pub fn from_json_text(text: &str) -> Result<Block3dSnapshot, IoError> {
     let value = parse_json_text(text).map_err(|error| IoError { message: format!("json→block3d: parse failed: {error}"), diagnostics: Vec::new() })?;
     // 🎯️ Through stdio's own first-party `to_pack_value()` bridge, never `to_serde_value()`:
@@ -20,11 +20,8 @@ pub fn from_json_text(text: &str) -> Result<Block3dSnapshot, IoError> {
     // `significand as f64 * 10^exponent`, off by one ULP for any 17-significant-digit literal
     // (`0.42839899821678995` came back as `0.4283989982167899`), which broke this leaf's own
     // `IoFidelity::Exact` claim for every example carrying full-precision geometry.
-    let raw: dsl::DslValue = dsl::json::to_dsl_value(&JsonSnapshot::from_value(value).to_pack_value());
-    let mut snapshot: Block3dSnapshot = dsl::FromValue::from_value(raw).map_err(|error| IoError { message: format!("json→block3d: {error}"), diagnostics: Vec::new() })?;
-    if snapshot.schema.is_empty() {
-        snapshot.schema = BLOCK_3D_SCHEMA.to_string();
-    }
+    let raw: semio_framework_value::DslValue = semio_framework_pack_json::to_dsl_value(&JsonSnapshot::from_value(value).to_pack_value());
+    let snapshot: Block3dSnapshot = semio_framework_value::FromValue::from_value(raw).map_err(|error| IoError { message: format!("json→block3d: {error}"), diagnostics: Vec::new() })?;
     Ok(snapshot)
 }
 

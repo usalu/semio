@@ -28,6 +28,8 @@ default = ["component-guest"]
 component-guest = ["dep:semio-framework-plugin", "dep:semio-framework"]
 
 [dependencies]
+semio-framework-async = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-step.workspace = true
 semio-s-spatial-kernel-semio-session.workspace = true
@@ -41,4 +43,6 @@ semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️
 semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework", optional = true }
 
 [dev-dependencies]
+parry3d = "0.17"
+serde_json.workspace = true
 semio-framework-async-macros = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

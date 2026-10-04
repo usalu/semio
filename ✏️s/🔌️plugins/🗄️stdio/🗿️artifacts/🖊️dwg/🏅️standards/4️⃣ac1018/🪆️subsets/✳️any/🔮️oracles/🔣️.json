@@ -26,6 +26,7 @@
       ],
       "kinds": [
         "set-snapshot",
+        "patch-snapshot",
         "set-version-info"
       ]
     }

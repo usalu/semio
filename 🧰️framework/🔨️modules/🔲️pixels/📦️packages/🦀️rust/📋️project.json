@@ -1,0 +1,22 @@
+{
+  "name": "semio-framework-pixels",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗜️deflate/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🔤️base64/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🔢️binary/📥️source/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🪉️supplement/⚖️medium/🔤️outline.ttf",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/🌍️world/🔤️fonts/⌨️LibertinusMono-Regular.otf"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

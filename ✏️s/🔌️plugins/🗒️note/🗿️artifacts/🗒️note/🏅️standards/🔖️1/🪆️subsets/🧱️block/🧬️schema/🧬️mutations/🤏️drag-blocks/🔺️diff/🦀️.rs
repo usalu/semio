@@ -15,7 +15,7 @@ pub fn diff(payload: &DragBlocks, base: &NoteSnapshot) -> protocol::MutationOutc
         };
         let mut moved = block.clone();
         crate::schema::offset_block_tree(&mut moved, payload.dx, payload.dy);
-        delta.patched.push(crate::schema::diff::NoteBlockPatchEntry { id: id.clone(), patch: crate::schema::diff::NoteBlockPatch { block_json: Some(dsl::os_pack::to_json_string(&moved)) } });
+        delta.patched.push(crate::schema::diff::NoteBlockPatchEntry { id: id.clone(), patch: crate::schema::diff::NoteBlockPatch { block_json: Some(semio_framework_pack_json::to_json_string(&moved)) } });
     }
     if delta.patched.is_empty() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("None of the {} requested block(s) exist.", payload.ids.len()), payload.ids.clone());
@@ -24,7 +24,7 @@ pub fn diff(payload: &DragBlocks, base: &NoteSnapshot) -> protocol::MutationOutc
     if missing.is_empty() {
         outcome
     } else {
-        outcome.absorb_messages([protocol::MutationMessage::warn("mutation.partial", format!("{} of {} requested block(s) did not exist and were skipped.", missing.len(), payload.ids.len())).at(missing)])
+        outcome.absorb_messages([protocol::MutationMessage::warning("mutation.partial", format!("{} of {} requested block(s) did not exist and were skipped.", missing.len(), payload.ids.len())).at(missing)])
     }
 }
 //#endregion 🔖️Diff

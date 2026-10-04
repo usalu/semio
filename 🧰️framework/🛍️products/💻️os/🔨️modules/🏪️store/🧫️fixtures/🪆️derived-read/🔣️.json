@@ -1,0 +1,23 @@
+{
+  "law": "ExactStoreDerivedRead",
+  "initial": {
+    "n": 0
+  },
+  "derived": {
+    "n": 9
+  },
+  "published": {
+    "n": 6
+  },
+  "admission": {
+    "genuine": true,
+    "foreign": false,
+    "stale": false
+  },
+  "origin": [
+    "StoreHead",
+    "StoreTypedMutation",
+    "StoreHistoryLedger"
+  ],
+  "forbiddenInput": "CallerSnapshotAlias"
+}

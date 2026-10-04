@@ -76,7 +76,7 @@ fn sample_gltf() -> GltfSnapshot {
 
 #[semio_framework_async_macros::async_test]
 async fn deserialize_maps_geometry_material_and_topology() {
-    let semio = semio_framework_plugin::resolve_ready(SemioMeshFromGltf::deserialize(&sample_gltf())).expect("deserialize");
+    let semio = ::semio_framework_async::poll::resolve_ready(SemioMeshFromGltf::deserialize(&sample_gltf())).expect("deserialize");
     assert_eq!(semio.meshes.len(), 1);
     let mesh = &semio.meshes[0];
     assert_eq!(mesh.id, "quad");
@@ -99,7 +99,7 @@ async fn deserialize_maps_geometry_material_and_topology() {
 async fn line_loop_mode_is_a_hard_error_not_a_silent_downgrade() {
     let mut gltf = sample_gltf();
     gltf.document.meshes[0].primitives[0].mode = Some(2);
-    let err = semio_framework_plugin::resolve_ready(SemioMeshFromGltf::deserialize(&gltf)).expect_err("LINE_LOOP must error");
+    let err = ::semio_framework_async::poll::resolve_ready(SemioMeshFromGltf::deserialize(&gltf)).expect_err("LINE_LOOP must error");
     assert!(format!("{err:?}").contains("LINE_LOOP"), "got {err:?}");
 }
 
@@ -107,6 +107,6 @@ async fn line_loop_mode_is_a_hard_error_not_a_silent_downgrade() {
 async fn missing_position_attribute_is_a_hard_error() {
     let mut gltf = sample_gltf();
     gltf.document.meshes[0].primitives[0].attributes.retain(|(name, _)| name != "POSITION");
-    let err = semio_framework_plugin::resolve_ready(SemioMeshFromGltf::deserialize(&gltf)).expect_err("missing POSITION must error");
+    let err = ::semio_framework_async::poll::resolve_ready(SemioMeshFromGltf::deserialize(&gltf)).expect_err("missing POSITION must error");
     assert!(format!("{err:?}").contains("POSITION"), "got {err:?}");
 }

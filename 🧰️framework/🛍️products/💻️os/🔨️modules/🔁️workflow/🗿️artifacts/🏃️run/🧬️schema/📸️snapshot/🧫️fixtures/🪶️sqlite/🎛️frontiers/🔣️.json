@@ -1,0 +1,14 @@
+{
+  "contract": "semio.workflow.run.sqlite.bounded-frontiers.v1",
+  "collectionLength": 769,
+  "maxReadsBetweenControls": 256,
+  "roles": [
+    "directionPartition",
+    "inputMaterialization",
+    "outputMaterialization",
+    "artifactMaterialization"
+  ],
+  "tableCount": 7,
+  "rootRows": 2,
+  "ordinalIndexBytes": 8
+}

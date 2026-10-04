@@ -189,7 +189,7 @@ fn outcome() -> serde_json::Value {{
 }}
 
 /// 🗣️ `(level, code, target)` of every message `{kind}` raises on the committed base.
-fn produced_messages() -> Vec<(protocol::Severity, String, Vec<String>)> {{
+fn produced_messages() -> Vec<(semio_framework_diagnostic::Severity, String, Vec<String>)> {{
     let produced = <Puzzle2dMutation as protocol::Mutation<Puzzle2dSnapshot>>::diff(&mutation(), &before());
     produced.messages().iter().map(|message| (message.level, message.code.0.clone(), message.target.clone())).collect()
 }}
@@ -211,12 +211,12 @@ fn committed_json_is_canonical() {{
 
 DECLARED_MESSAGES = '''
 /// 📜️ `(level, code, target)` of every message the committed outcome declares.
-fn declared_messages() -> Vec<(protocol::Severity, String, Vec<String>)> {{
+fn declared_messages() -> Vec<(semio_framework_diagnostic::Severity, String, Vec<String>)> {{
     let level = |text: &str| match text {{
-        "info" => protocol::Severity::Info,
-        "warning" => protocol::Severity::Warning,
-        "error" => protocol::Severity::Error,
-        "fatal" => protocol::Severity::Fatal,
+        "info" => semio_framework_diagnostic::Severity::Info,
+        "warning" => semio_framework_diagnostic::Severity::Warning,
+        "error" => semio_framework_diagnostic::Severity::Error,
+        "fatal" => semio_framework_diagnostic::Severity::Fatal,
         other => panic!("{kind}/{slug}: unknown message level {{other:?}}"),
     }};
     let strings = |value: &serde_json::Value| value.as_array().expect("an array of strings").iter().map(|entry| entry.as_str().expect("a string").to_string()).collect::<Vec<_>>();
@@ -336,14 +336,14 @@ fn the_invariant_is_the_declared_refusal() {{
     assert_eq!(outcome["status"].as_str(), Some("rejected"), "{kind}/{slug} declares a rejected outcome");
     assert_eq!(outcome["code"].as_str(), Some("mutation.invariant"), "{kind}/{slug} declares the invariant refusal");
     let path: Vec<String> = outcome["path"].as_array().expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();
-    assert_eq!(produced_messages(), vec![(protocol::Severity::Fatal, "mutation.invariant".to_string(), path)], "{kind}/{slug}: the refusal differs from the declared one");
+    assert_eq!(produced_messages(), vec![(semio_framework_diagnostic::Severity::Fatal, "mutation.invariant".to_string(), path)], "{kind}/{slug}: the refusal differs from the declared one");
 }}
 
 /// 🌐️ The refusal does not depend on the board: the empty board refuses the same payload the same way.
 #[test]
 fn the_invariant_is_independent_of_the_base() {{
     let produced = <Puzzle2dMutation as protocol::Mutation<Puzzle2dSnapshot>>::diff(&mutation(), &Puzzle2dSnapshot::default());
-    assert_eq!(produced.messages().iter().map(|message| (message.level, message.code.0.as_str())).collect::<Vec<_>>(), vec![(protocol::Severity::Fatal, "mutation.invariant")], "{kind}/{slug}: an invariant is a property of the payload alone");
+    assert_eq!(produced.messages().iter().map(|message| (message.level, message.code.0.as_str())).collect::<Vec<_>>(), vec![(semio_framework_diagnostic::Severity::Fatal, "mutation.invariant")], "{kind}/{slug}: an invariant is a property of the payload alone");
 }}
 '''
 
@@ -368,7 +368,7 @@ fn the_refusal_is_the_declared_one() {{
     let outcome = outcome();
     assert_eq!(outcome["status"].as_str(), Some("rejected"), "{kind}/{slug} declares a rejected outcome");
     let path: Vec<String> = outcome["path"].as_array().expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();
-    assert_eq!(produced_messages(), vec![(protocol::Severity::Error, outcome["code"].as_str().expect("a code").to_string(), path)], "{kind}/{slug}: the refusal differs from the declared one");
+    assert_eq!(produced_messages(), vec![(semio_framework_diagnostic::Severity::Error, outcome["code"].as_str().expect("a code").to_string(), path)], "{kind}/{slug}: the refusal differs from the declared one");
 }}
 
 /// ↩️ Nothing moved, so nothing is undone.

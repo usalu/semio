@@ -1,0 +1,122 @@
+[
+  {
+    "name": "short-stream",
+    "operation": "decompress",
+    "inputHex": "",
+    "maximumBytes": 65536,
+    "maximumOutput": 16,
+    "maximumFile": 65536,
+    "accept": true,
+    "expected": {
+      "kind": "invalidValue"
+    }
+  },
+  {
+    "name": "unsupported-method",
+    "operation": "decompress",
+    "inputHex": "790100000001",
+    "maximumBytes": 65536,
+    "maximumOutput": 16,
+    "maximumFile": 65536,
+    "accept": true,
+    "expected": {
+      "kind": "unsupportedOwner"
+    }
+  },
+  {
+    "name": "bad-header-check",
+    "operation": "decompress",
+    "inputHex": "7802030000000001",
+    "maximumBytes": 65536,
+    "maximumOutput": 16,
+    "maximumFile": 65536,
+    "accept": true,
+    "expected": {
+      "kind": "invalidValue"
+    }
+  },
+  {
+    "name": "dictionary-no-authority",
+    "operation": "decompress",
+    "inputHex": "782000000001",
+    "maximumBytes": 65536,
+    "maximumOutput": 16,
+    "maximumFile": 65536,
+    "accept": true,
+    "expected": {
+      "kind": "unsupportedOwner"
+    }
+  },
+  {
+    "name": "adler-mismatch",
+    "operation": "decompress",
+    "inputHex": "7801030000000002",
+    "maximumBytes": 65536,
+    "maximumOutput": 16,
+    "maximumFile": 65536,
+    "accept": true,
+    "expected": {
+      "kind": "invalidValue"
+    }
+  },
+  {
+    "name": "callback-canceled",
+    "operation": "decompress",
+    "inputHex": "7801030000000001",
+    "maximumBytes": 65536,
+    "maximumOutput": 16,
+    "maximumFile": 65536,
+    "accept": false,
+    "expected": {
+      "kind": "canceled"
+    }
+  },
+  {
+    "name": "owned-window-limit",
+    "operation": "decompress",
+    "inputHex": "7801030000000001",
+    "maximumBytes": 0,
+    "maximumOutput": 16,
+    "maximumFile": 65536,
+    "accept": true,
+    "expected": {
+      "kind": "ownershipLimit"
+    }
+  },
+  {
+    "name": "trailing-physical-byte",
+    "operation": "decompress",
+    "inputHex": "780103000000000001",
+    "maximumBytes": 65536,
+    "maximumOutput": 16,
+    "maximumFile": 65536,
+    "accept": true,
+    "expected": {
+      "kind": "invalidValue"
+    }
+  },
+  {
+    "name": "exact-empty-stream",
+    "operation": "decompress",
+    "inputHex": "7801030000000001",
+    "maximumBytes": 65536,
+    "maximumOutput": 16,
+    "maximumFile": 65536,
+    "accept": true,
+    "expected": {
+      "hex": ""
+    }
+  },
+  {
+    "name": "encode-callback-canceled",
+    "operation": "compress",
+    "inputHex": "",
+    "maximumBytes": 65536,
+    "maximumOutput": 16,
+    "maximumFile": 65536,
+    "accept": false,
+    "expected": {
+      "kind": "canceled"
+    }
+  }
+]

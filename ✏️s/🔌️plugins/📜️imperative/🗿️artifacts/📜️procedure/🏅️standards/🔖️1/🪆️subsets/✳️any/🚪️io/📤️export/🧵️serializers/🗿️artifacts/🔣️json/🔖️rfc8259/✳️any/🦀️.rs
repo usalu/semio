@@ -10,12 +10,12 @@ pub fn register() {}
 /// own fix. Goes through `ProcedureSnapshot`'s own `ToValue` impl and `pack::json`'s
 /// `DslValue`↔`pack::JsonValue` bridge (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
 /// same cross-plugin bridge the `🔱️trinity` batch established), never `serde_json`.
-pub fn serialize(snapshot: &ProcedureSnapshot) -> Result<JsonSnapshot, store::TextError> {
+pub fn serialize(snapshot: &ProcedureSnapshot) -> Result<JsonSnapshot, semio_framework_diagnostic::TextError> {
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-    let value = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(snapshot));
+    let value = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(snapshot));
     Ok(JsonSnapshot::from_value(value))
 }
 
-pub fn serialize_bytes(snapshot: &ProcedureSnapshot) -> Result<Vec<u8>, store::TextError> {
+pub fn serialize_bytes(snapshot: &ProcedureSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
     Ok(write_json_pretty(&serialize(snapshot)?.value).into_bytes())
 }

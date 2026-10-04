@@ -1,7 +1,7 @@
 //! 🔺️ Equation artifact — sparse field-delta diff codec and apply/absorb.
 
 use crate::schema::EquationArtifact;
-use crate::{equation_children_from_state, EquationGeometry, EquationGraph, EquationSnapshot};
+use crate::EquationSnapshot;
 use protocol::MutationDiff;
 
 //#region 📖️SemioGrammar
@@ -18,6 +18,12 @@ impl EquationDiff {
     pub fn apply_to_artifact(&self, artifact: &EquationArtifact) -> protocol::MutationApplyResult<EquationArtifact> {
         Ok({
             let mut next = artifact.clone();
+            if let Some(graph) = &self.graph {
+                next.graph = graph.clone();
+            }
+            if let Some(geometry) = &self.geometry {
+                next.geometry = geometry.clone();
+            }
             if let Some(notation) = &self.notation {
                 next.notation = notation.clone();
             }
@@ -39,6 +45,12 @@ impl MutationDiff<EquationSnapshot> for EquationDiff {
     fn apply(&self, snapshot: &EquationSnapshot) -> protocol::MutationApplyResult<EquationSnapshot> {
         Ok({
             let mut next = snapshot.clone();
+            if let Some(graph) = &self.graph {
+                next.graph = graph.clone();
+            }
+            if let Some(geometry) = &self.geometry {
+                next.geometry = geometry.clone();
+            }
             if let Some(notation) = &self.notation {
                 next.notation = notation.clone();
             }
@@ -55,6 +67,12 @@ impl MutationDiff<EquationSnapshot> for EquationDiff {
         })
     }
     fn absorb(&mut self, other: Self) {
+        if other.graph.is_some() {
+            self.graph = other.graph;
+        }
+        if other.geometry.is_some() {
+            self.geometry = other.geometry;
+        }
         if other.notation.is_some() {
             self.notation = other.notation;
         }
@@ -70,20 +88,6 @@ impl MutationDiff<EquationSnapshot> for EquationDiff {
     }
 }
 //#endregion 🔖️Apply
-
-//#region 🔖️Builders
-/// 🌉 Builds a whole-triple-replace `EquationDiff` from a literal `(graph, geometry)` pair —
-/// mints and caches all three composed children in one call ([`equation_children_from_state`]),
-/// then wraps them as the diff's `notation`/`results`/`computed` slots. Every one of this plugin's
-/// 14 mutation `diff` functions funnels its final result through this helper, since a graph/
-/// geometry-scoped mutation always regenerates all three co-derived children together (text/table/
-/// value are three projections of the SAME `(graph, geometry)` state, not independently-editable
-/// slots).
-pub fn diff_from_state(graph: &EquationGraph, geometry: &EquationGeometry) -> EquationDiff {
-    let (notation, results, computed) = equation_children_from_state(graph, geometry);
-    EquationDiff { notation: Some(notation), results: Some(results), computed: Some(computed), ..Default::default() }
-}
-//#endregion 🔖️Builders
 
 //#region 🧪️Tests
 #[cfg(test)]

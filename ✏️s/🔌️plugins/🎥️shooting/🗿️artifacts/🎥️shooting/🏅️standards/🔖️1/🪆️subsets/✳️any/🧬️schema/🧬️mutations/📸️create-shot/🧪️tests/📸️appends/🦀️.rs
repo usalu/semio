@@ -16,10 +16,10 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️create-shot/📸️appends/🎯️outcome/🔣️.json");
 
 fn before() -> ShootingSnapshot {
-    dsl::os_pack::from_json_str(BEFORE).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> ShootingSnapshot {
-    dsl::os_pack::from_json_str(AFTER).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> ShootingMutation {
     serde_json::from_str(MUTATION).expect("mutation decodes")
@@ -48,7 +48,7 @@ async fn stores_the_new_shot_record_verbatim() {
 async fn inverse_deletes_the_created_shot() {
     let base = before();
     let forward = mutation();
-    let inverse = forward.inverse(&base);
+    let inverse = forward.inverse(&base).expect("valid retained mutation inverse fixture");
     let mut snapshot = apply(&base, &forward);
     for step in &inverse {
         snapshot = apply(&snapshot, step);
@@ -60,8 +60,8 @@ async fn inverse_deletes_the_created_shot() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: ShootingSnapshot = dsl::os_pack::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: ShootingSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "create-shot/appends-shot-macro: committed {label} JSON is not canonical");
     }
@@ -79,7 +79,7 @@ async fn declared_outcome_holds_and_duplicate_shot_id_is_fatal() {
     assert!(mutation().diff(&before()).messages().is_empty(), "create-shot/appends-shot-macro: creating a fresh shot id must raise no diagnostic");
 
     let second = mutation().diff(&expected_after());
-    assert_eq!(second.worst_level(), Some(protocol::Severity::Fatal), "create-shot/appends-shot-macro: re-creating \"shot-macro\" must be Fatal");
+    assert_eq!(second.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal), "create-shot/appends-shot-macro: re-creating \"shot-macro\" must be Fatal");
     assert_eq!(second.messages()[0].code.0, "mutation.duplicate-id", "create-shot/appends-shot-macro: the duplicate guard's frozen code");
     assert_eq!(second.messages()[0].target, vec!["shot-macro".to_string()], "create-shot/appends-shot-macro: the duplicate is reported against the colliding shot id");
     let unchanged = second.into_parts().0.apply(&expected_after()).expect("a Fatal outcome carries the default diff");
@@ -91,7 +91,7 @@ async fn declared_outcome_holds_and_duplicate_shot_id_is_fatal() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = mutation().diff(&before());
-    let produced = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "create-shot/appends-shot-macro: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert_eq!(committed["shots"]["added"][0]["id"], "shot-macro", "create-shot/appends-shot-macro: the new record travels in `shots.added`, by value");
@@ -102,8 +102,8 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to `ShootingDiff` — the committed create-shot delta round-trips through `ShootingDiff` unchanged.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: ShootingDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("diff re-encodes");
+    let decoded: ShootingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "create-shot/appends-shot-macro: committed diff JSON is not canonical");
 }
@@ -111,7 +111,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 Applying the committed diff straight to `before` yields `after` — the `shots.added` entry alone is enough to rebuild the after-snapshot.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: ShootingDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: ShootingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let produced = decoded.apply(&before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-shot/appends-shot-macro: committed diff did not carry before to after");
 }

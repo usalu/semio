@@ -49,5 +49,5 @@ export const gisGisterrainDiffTextGuardConstant = <T extends string | number | b
 //#endregion 🚪️Parsers
 
 export function parseGisTerrainDiffText(value: unknown, at = "$"): GisTerrainDiffText {
-  return gisGisterrainDiffTextGuardObject(value, `${at}`);
+  return gisGisterrainDiffTextGuardString(value, `${at}`);
 }

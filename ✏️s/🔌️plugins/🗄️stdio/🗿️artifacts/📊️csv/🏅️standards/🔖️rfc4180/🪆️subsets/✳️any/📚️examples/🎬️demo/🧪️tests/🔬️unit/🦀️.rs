@@ -45,7 +45,7 @@ impl SubsetRoundtripSpec for CsvAnyRoundtrip {
         Ok(crate::schema::snapshot::decode_csv_with(text, true))
     }
 
-    async fn infer(snapshot: &Self::Snapshot) -> Self::Inference {
+    async fn infer(snapshot: &Self::Snapshot) -> Result<Self::Inference, semio_framework_value::ValueError> {
         CsvInference::infer(snapshot)
     }
 

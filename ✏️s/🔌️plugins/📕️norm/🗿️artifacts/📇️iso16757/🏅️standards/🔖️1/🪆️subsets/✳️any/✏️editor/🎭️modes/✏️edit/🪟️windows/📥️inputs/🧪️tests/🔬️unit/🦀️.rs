@@ -79,10 +79,10 @@ fn full_default_snapshot_inputs_expose_catalogue_sections_within_slots() {
     assert!(expanded_json.contains("setField"), "expanded product leaf must bind setField: {expanded_json}");
     assert!(expanded_json.contains("catalogue.products") && (expanded_json.contains("seriesId") || expanded_json.contains("series_id") || expanded_json.contains("product-cv")), "{expanded_json}");
 
-    let mut tree = dsl::ToValue::to_value(&document);
-    crate::app_surface::set_value_at_path(&mut tree, "catalogue.products[id=product-cv].seriesId", dsl::DslValue::String("series-cv-edited".into())).expect("setField path");
+    let mut tree = semio_framework_value::ToValue::to_value(&document);
+    crate::app_surface::set_value_at_path(&mut tree, "catalogue.products[id=product-cv].seriesId", semio_framework_value::DslValue::String("series-cv-edited".into())).expect("setField path");
     assert_eq!(
         crate::app_surface::get_value_at_path(&tree, "catalogue.products[id=product-cv].seriesId").ok(),
-        Some(&dsl::DslValue::String("series-cv-edited".into()))
+        Some(&semio_framework_value::DslValue::String("series-cv-edited".into()))
     );
 }

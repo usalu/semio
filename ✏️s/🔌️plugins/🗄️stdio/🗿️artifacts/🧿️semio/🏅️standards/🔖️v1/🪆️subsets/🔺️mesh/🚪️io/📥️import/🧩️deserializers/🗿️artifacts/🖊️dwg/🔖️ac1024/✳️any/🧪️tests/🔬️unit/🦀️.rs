@@ -12,7 +12,7 @@ fn sample_dwg() -> DwgSnapshot {
 
 #[semio_framework_async_macros::async_test]
 async fn groups_polyface_mesh_by_layer_name() {
-    let semio = semio_framework_plugin::resolve_ready(SemioMeshFromDwg::deserialize(&sample_dwg())).expect("deserialize");
+    let semio = ::semio_framework_async::poll::resolve_ready(SemioMeshFromDwg::deserialize(&sample_dwg())).expect("deserialize");
     assert_eq!(semio.meshes.len(), 1);
     assert_eq!(semio.meshes[0].id, "walls");
     let prim = &semio.meshes[0].primitives[0];
@@ -24,5 +24,5 @@ async fn groups_polyface_mesh_by_layer_name() {
 #[semio_framework_async_macros::async_test]
 async fn rejects_malformed_payload() {
     let bad = DwgSnapshot { drawing: DwgLogicalDrawing { extmax: vec![0.0], ..Default::default() }, ..DwgSnapshot::default() };
-    assert!(semio_framework_plugin::resolve_ready(SemioMeshFromDwg::deserialize(&bad)).is_err());
+    assert!(::semio_framework_async::poll::resolve_ready(SemioMeshFromDwg::deserialize(&bad)).is_err());
 }

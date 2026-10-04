@@ -1,14 +1,19 @@
-# 🧬️ Rewriting's durable document contract.
-# import DslValue from "🧰️framework/🔨️modules/🌱️value/🧬️schema/🔗️.graphql"
-
-type RewritingArtifact {
-  beforeFixtureJson: String! @state(class: ARTIFACT)
-  lhsJson: String! @state(class: ARTIFACT)
-  rhsJson: String! @state(class: ARTIFACT)
-  parameterBindings: [PropertyValueEntry!]! @state(class: ARTIFACT)
-  ruleLayout: [LayoutPointEntry!]! @state(class: ARTIFACT)
-}
-
-type PropertyValueEntry { key: String!, value: DslValue }
+# ♻️ Persisted Rewriting owns the complete match and ordered mutation program.
+# import JackSnapshot from "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔗️.graphql"
+# import PropertyValue from "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🌱️value/🧬️schema/🔗️.graphql"
+type Pattern { leftVar: String!, leftKind: String!, edgeVar: String, edgeKind: String, rightVar: String, rightKind: String }
+type Lhs { pattern: Pattern!, whereClause: String }
+enum ParameterKind { STRING NUMBER BOOLEAN }
+type ParameterSpec { name: String!, kind: ParameterKind!, default: PropertyValue! }
+type Assignment { var: String!, prop: String!, value: PropertyValue! }
+type Rhs { create: [Pattern!]!, delete: [String!]!, set: [Assignment!]!, merge: [Pattern!]!, parameters: [ParameterSpec!]! }
+type LayoutPoint { xIeee754Bits: String!, yIeee754Bits: String! }
 type LayoutPointEntry { key: String!, value: LayoutPoint! }
-type LayoutPoint { x: Float!, y: Float! }
+type RewritingArtifact { workingGraph: JackSnapshot! @state(class: ARTIFACT), lhs: Lhs! @state(class: ARTIFACT), rhs: Rhs! @state(class: ARTIFACT), parameterBindings: [PropertyValueEntry!]! @state(class: ARTIFACT), ruleLayout: [LayoutPointEntry!]! @state(class: ARTIFACT) }
+
+input PatternInput { leftVar: String! leftKind: String! edgeVar: String edgeKind: String rightVar: String rightKind: String }
+input LhsInput { pattern: PatternInput! whereClause: String }
+input ParameterSpecInput { name: String! kind: ParameterKind! default: PropertyValueInput! }
+input AssignmentInput { var: String! prop: String! value: PropertyValueInput! }
+input RhsInput { create: [PatternInput!]! delete: [String!]! set: [AssignmentInput!]! merge: [PatternInput!]! parameters: [ParameterSpecInput!]! }
+input LayoutPointInput { x: Binary64WordInput! y: Binary64WordInput! }

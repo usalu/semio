@@ -1,9 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 import Ajv from "ajv";
 import Ajv2019 from "ajv/dist/2019";
-import { type MutationFeatureRow, type MutationLeafWrapper, mutationAggregateBranch, mutationFeatureRows, mutationFixtureOutcome, mutationInputPayload, mutationPayloadChecker, mutationVariantWireName, rustMutationAggregates, rustValueEnums } from "../../🧬️schema/📋️orchestration/🟦️.ts";
+import { type MutationFeatureRow, type MutationLeafWrapper, mutationAggregateBranch, mutationFeatureRows, mutationFixtureOutcome, mutationInputPayload, mutationPayloadChecker, mutationPayloadParityReport, mutationVariantWireName, rustMutationAggregates, rustValueEnums } from "../../🧬️schema/📋️orchestration/🟦️.ts";
 
 type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
 type Case = {
@@ -60,6 +61,35 @@ describe("schema-mutation-payload-parity corpus", () => {
       const findings = [...checker.opaque(entry.leaf.$id), ...checker.fixture(aggregate!.layout, wireName, entry.leaf.$id, entry.aggregateSchema?.$id ?? null, entry.fixture, wrapper, mutationFixtureOutcome(entry.outcome ?? null))].map((finding) => `${finding.class}@${finding.pointer}`);
       expect(findings.sort()).toEqual([...entry.findings].sort());
     });
+});
+
+describe("fixture-to-leaf pairing", () => {
+  test("an orphaned fixture stays unmapped instead of borrowing a foreign artifact's aggregate that declares the same variant", () => {
+    const root = mkdtempSync(join(tmpdir(), "semio-payload-scope-"));
+    try {
+      const write = (path: string, body: string): void => {
+        mkdirSync(join(root, path, ".."), { recursive: true });
+        writeFileSync(join(root, path), body);
+      };
+      const donor = "✏️s/🔌️plugins/donor/🗿️artifacts/donor/🧬️schema/🧬️mutations";
+      const orphan = "✏️s/🔌️plugins/orphan/🗿️artifacts/orphan";
+      const aggregate = (name: string, variant: string): string => `#[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue)]\n#[value(tag = "mutation", rename_all = "camelCase")]\n#[mutations(snapshot = S, diff = D, schema = "planted")]\npub enum ${name} {\n    ${variant}(super::leaf::${variant}),\n}\n`;
+      const leaf = (directory: string, variant: string, id: string, wire: string): void => {
+        write(`${directory}/🔣️.json`, JSON.stringify({ aggregateVariant: variant, payloadSchema: "🧬️schema/🔣️.json", semanticKind: id }));
+        write(`${directory}/🧬️schema/🔣️.json`, JSON.stringify({ $id: `https://json.schemas.assets.semio-tech.com/test/${id}/schema.json`, type: "object", additionalProperties: false, required: ["mutation"], properties: { mutation: { const: wire }, id: { type: "string" } } }));
+      };
+      write("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json", "{}");
+      write(`${donor}/🦀️.rs`, aggregate("DonorMutation", "MoveBlock"));
+      leaf(`${donor}/🔀move-block`, "MoveBlock", "donor-move-block", "moveBlock");
+      const fixture = `${orphan}/🧫️fixtures/🧬️mutations/🔀move-block/🧪️rejects/🦠️mutation/🔣️.json`;
+      write(fixture, JSON.stringify({ mutation: "moveBlock", id: "block-1" }));
+      const findings = mutationPayloadParityReport(root).diagnostics.filter((diagnostic) => diagnostic.path === fixture);
+      expect(findings.map((diagnostic) => diagnostic.detail.split(" at ")[0])).toEqual(["unmapped"]);
+      expect(findings.every((diagnostic) => !diagnostic.detail.includes("donor"))).toBe(true);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
 });
 
 describe("wire-form feature rows", () => {

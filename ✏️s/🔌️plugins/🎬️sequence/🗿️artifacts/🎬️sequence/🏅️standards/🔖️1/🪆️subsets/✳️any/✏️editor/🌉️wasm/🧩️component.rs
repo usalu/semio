@@ -25,7 +25,7 @@ impl SequenceDomain for SequenceDomainAdapter {
         use protocol::*;
         match operation {
             SEQUENCE_OPERATION_LOAD_FIXTURE => {
-                let fixture: SequenceHostSnapshot = dsl::os_pack::from_json_str(std::str::from_utf8(payload).map_err(domain_error)?).map_err(domain_error)?;
+                let fixture: SequenceHostSnapshot = semio_framework_pack_json::from_json_str(std::str::from_utf8(payload).map_err(domain_error)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(domain_error)?;
                 self.host.replace_snapshot(fixture).map(|_| Vec::new()).map_err(domain_error)
             }
             SEQUENCE_OPERATION_FIXTURE => {
@@ -59,7 +59,7 @@ impl SequenceDomain for SequenceDomainAdapter {
             SEQUENCE_OPERATION_COMPILED_WIRE => Ok(self.host.compiled_wire_literal().into_bytes()),
             SEQUENCE_OPERATION_RUN => {
                 let result = self.host.run();
-                Ok(dsl::os_pack::to_json_string(&result).into_bytes())
+                Ok(semio_framework_pack_json::to_json_string(&result).into_bytes())
             }
             SEQUENCE_OPERATION_SET_SIZE => self.set_size(payload),
             SEQUENCE_OPERATION_RENDER_FRAME => self.render_frame(),
@@ -69,7 +69,7 @@ impl SequenceDomain for SequenceDomainAdapter {
             SEQUENCE_OPERATION_POINTER_UP => self.pointer_up(payload),
             SEQUENCE_OPERATION_WHEEL => self.wheel(payload),
             SEQUENCE_OPERATION_REORGANIZE => {
-                let options: DagLayoutOptions = dsl::os_pack::from_json_str(std::str::from_utf8(payload).map_err(domain_error)?).map_err(domain_error)?;
+                let options: DagLayoutOptions = semio_framework_pack_json::from_json_str(std::str::from_utf8(payload).map_err(domain_error)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(domain_error)?;
                 self.host.dag.reorganize(&options).map_err(domain_error)?;
                 self.host.sync_from_dag();
                 self.host.layout_expanded_slots();
@@ -90,11 +90,11 @@ impl SequenceDomain for SequenceDomainAdapter {
                 self.host.dag.set_canvas_theme_from_json(json).map_err(domain_error)?;
                 Ok(Vec::new())
             }
-            SEQUENCE_OPERATION_SELECTED_NODES => Ok(dsl::os_pack::to_json_string(&self.host.dag.selected_node_ids()).into_bytes()),
+            SEQUENCE_OPERATION_SELECTED_NODES => Ok(semio_framework_pack_json::to_json_string(&self.host.dag.selected_node_ids()).into_bytes()),
             SEQUENCE_OPERATION_SET_SELECTION => self.set_selection(payload),
             SEQUENCE_OPERATION_LABEL_OVERLAY => self.host.dag.label_overlay_paint_state_json().map(String::into_bytes).map_err(domain_error),
             SEQUENCE_OPERATION_HOVERED_NODE => Ok(self.host.dag.hovered_node_id().unwrap_or_default().into_bytes()),
-            SEQUENCE_OPERATION_PRESELECT_NODES => Ok(dsl::os_pack::json!({
+            SEQUENCE_OPERATION_PRESELECT_NODES => Ok(semio_framework_pack_json::json!({
                 "ids": self.host.dag.preselect_widget_ids(),
                 "removedIds": self.host.dag.preselect_removed_widget_ids(),
             })

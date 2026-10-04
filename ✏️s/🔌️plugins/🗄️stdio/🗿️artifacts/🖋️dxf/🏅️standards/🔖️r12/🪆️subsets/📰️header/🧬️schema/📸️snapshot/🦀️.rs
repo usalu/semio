@@ -1060,19 +1060,19 @@ impl store::ArtifactDsl for DxfSnapshot {
         "stdio.dxf"
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((envelope, rest)) => {
-                if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1) { return Err(store::TextError::new("DXF snapshot text envelope mismatch", dsl::TextSpan::at(1, 1))); }
+                if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1) { return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "DXF snapshot text envelope mismatch", semio_framework_diagnostic::TextSpan::at(1, 1))); }
                 rest
             }
             Err(_) => text,
         };
-        let record = dsl::parse(body, &snapshot_text::spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 272 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Document })?;
+        let record = semio_framework_dsl_record::parse(body, &snapshot_text::spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits { max_bytes: 272 * 1024 * 1024, ..semio_framework_diagnostic::Limits::default() }, mode: semio_framework_dsl_record::SourceMode::Document })?;
         snapshot_text::from_record(&record)
     }
     fn print_dsl(&self) -> String {
-        let body = dsl::print(&snapshot_text::to_record(self), &snapshot_text::spec(), dsl::JoinMode::Document);
+        let body = semio_framework_dsl_record::print(&snapshot_text::to_record(self), &snapshot_text::spec(), semio_framework_dsl_record::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -1086,19 +1086,19 @@ impl store::ArtifactPack for DxfSnapshot {
 
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let raw = store::pack_rt::encode_document(&snapshot_text::spec(), &snapshot_text::to_record(self), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, report) = store::pack_rt::decode_document(&inner, &snapshot_text::spec(), options)?;
-        if report.schema_drift || !report.unknown_field_ids.is_empty() { return Err(store::PackError::Schema("DXF snapshot record schema mismatch".into())); }
+        if report.schema_drift || !report.unknown_field_ids.is_empty() { return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "DXF snapshot record schema mismatch"))); }
         snapshot_text::from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> { Some(snapshot_text::spec()) }
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> { Some(snapshot_text::spec()) }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 

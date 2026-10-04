@@ -163,7 +163,7 @@ fn world_points_json(scene: &RemodelingSnapshot) -> Option<String> {
 /// warm.
 pub fn render(scene: &RemodelingSnapshot) -> UiAssemblyResult<BuiltNode> {
     let mut world_scene = world3d_scene(
-        dsl::json::to_json_string(&dsl::ToValue::to_value(&REMODELING_VIEW_VIEWPORT)),
+        semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&REMODELING_VIEW_VIEWPORT)),
         world_meshes_json(scene),
         world_instances_json(),
         world3d_selection_json("rectangle", &[], None),

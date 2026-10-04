@@ -1139,9 +1139,9 @@ impl protocol::PackSource for WalPageSource<'_> {
     }
 
     async fn read_at(&self, offset: u64, output: &mut [u8]) -> Result<usize, protocol::codec::PackError> {
-        let offset = usize::try_from(offset).map_err(|_| protocol::codec::PackError::Truncated(offset))?;
+        let offset = usize::try_from(offset).map_err(|_| protocol::codec::PackError::Refusal(protocol::codec::PackRefusal::Truncated(offset)))?;
         if offset > self.0.len() {
-            return Err(protocol::codec::PackError::Truncated(offset as u64));
+            return Err(protocol::codec::PackError::Refusal(protocol::codec::PackRefusal::Truncated(offset as u64)));
         }
         let mut base = 0usize;
         let mut written = 0usize;

@@ -8,21 +8,21 @@ use std::collections::BTreeSet;
 
 pub fn register() {}
 
-fn export_error(message: impl Into<String>) -> store::TextError {
-    store::TextError::new(message.into(), dsl::TextSpan::at(1, 1))
+fn export_error(message: impl Into<String>) -> semio_framework_diagnostic::TextError {
+    semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message.into(), semio_framework_diagnostic::TextSpan::at(1, 1))
 }
 
-fn cell_value(value: &dsl::DslValue) -> Result<XlsxCellValue, store::TextError> {
+fn cell_value(value: &semio_framework_value::DslValue) -> Result<XlsxCellValue, semio_framework_diagnostic::TextError> {
     match value {
-        dsl::DslValue::Null => Ok(XlsxCellValue::Empty),
-        dsl::DslValue::Bool(flag) => Ok(XlsxCellValue::Boolean(*flag)),
-        dsl::DslValue::Number(_) => value.as_f64().map(XlsxCellValue::Number).ok_or_else(|| export_error(format!("program->xlsx: number {value:?} is not representable as f64"))),
-        dsl::DslValue::String(text) => Ok(XlsxCellValue::InlineString(text.clone())),
-        dsl::DslValue::Bytes(_) | dsl::DslValue::Array(_) | dsl::DslValue::Object(_) => Ok(XlsxCellValue::InlineString(dsl::json::to_json_string(value))),
+        semio_framework_value::DslValue::Null => Ok(XlsxCellValue::Empty),
+        semio_framework_value::DslValue::Bool(flag) => Ok(XlsxCellValue::Boolean(*flag)),
+        semio_framework_value::DslValue::Number(_) => value.as_f64().map(XlsxCellValue::Number).ok_or_else(|| export_error(format!("program->xlsx: number {value:?} is not representable as f64"))),
+        semio_framework_value::DslValue::String(text) => Ok(XlsxCellValue::InlineString(text.clone())),
+        semio_framework_value::DslValue::Bytes(_) | semio_framework_value::DslValue::Array(_) | semio_framework_value::DslValue::Object(_) => Ok(XlsxCellValue::InlineString(semio_framework_pack_json::to_json_string(value))),
     }
 }
 
-pub fn serialize(snapshot: &ProgramSnapshot) -> Result<XlsxSnapshot, store::TextError> {
+pub fn serialize(snapshot: &ProgramSnapshot) -> Result<XlsxSnapshot, semio_framework_diagnostic::TextError> {
     let tables = crate::io::program_export_tables(snapshot).map_err(export_error)?;
     let mut sheets = Vec::with_capacity(tables.len());
     for table in tables {
@@ -43,11 +43,11 @@ pub fn serialize(snapshot: &ProgramSnapshot) -> Result<XlsxSnapshot, store::Text
     Ok(build_minimal_xlsx(XlsxWorkbook { sheets, shared_strings: Vec::new() }))
 }
 
-pub fn serialize_bytes(snapshot: &ProgramSnapshot) -> Result<Vec<u8>, store::TextError> {
+pub fn serialize_bytes(snapshot: &ProgramSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
     Ok(<XlsxSnapshot as store::ArtifactPack>::encode_pack(&serialize(snapshot)?))
 }
 
-pub fn serialize_raw_bytes(snapshot: &ProgramSnapshot) -> Result<Vec<u8>, store::TextError> {
+pub fn serialize_raw_bytes(snapshot: &ProgramSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
     let workbook = serialize(snapshot)?;
     semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::base::io::export::serializers::encode_xlsx(&workbook).map_err(|error| export_error(format!("program->xlsx: {error}")))
 }

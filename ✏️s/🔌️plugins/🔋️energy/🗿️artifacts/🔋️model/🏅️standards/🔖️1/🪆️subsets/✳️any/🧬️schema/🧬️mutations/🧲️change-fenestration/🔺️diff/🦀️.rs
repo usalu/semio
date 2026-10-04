@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeFenestrationSurface, base: &EnergyModelSnapsh
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Surface {} does not exist.", payload.new_surface_id.0), [payload.id.0.to_string()]);
     }
     if existing.surface_id == payload.new_surface_id {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Fenestration {} already has this host surface.", payload.id.0));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Fenestration {} already has this host surface.", payload.id.0));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.fenestrations.iter_mut().find(|item| item.id == payload.id) {

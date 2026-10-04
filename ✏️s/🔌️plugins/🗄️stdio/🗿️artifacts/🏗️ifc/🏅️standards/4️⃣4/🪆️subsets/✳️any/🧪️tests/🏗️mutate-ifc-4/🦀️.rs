@@ -32,7 +32,7 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
 /// itself, read by `ruststep`.
 fn inverse_spec(kind: &str, input: &[u8]) -> Result<Json, String> {
     let params = match kind {
-        "set-snapshot" => return Ok(Json::Object(vec![("kind".to_string(), Json::String(kind.to_string())), ("params".to_string(), oracle_snapshot_payload(input)?)])),
+        "set-snapshot" | "patch-snapshot" => return Ok(Json::Object(vec![("kind".to_string(), Json::String("set-snapshot".to_string())), ("params".to_string(), oracle_snapshot_payload(input)?)])),
         "set-file-description" => r#"{"kind": "set-file-description", "params": {"values": [{"kind": "aggregate", "value": [{"kind": "string", "value": "ViewDefinition[DesignTransferView]"}]}, {"kind": "string", "value": "2;1"}]}}"#,
         "set-file-name" => r#"{"kind": "set-file-name", "params": {"values": [{"kind": "string", "value": "/dev/null"}, {"kind": "string", "value": "2026-03-20T21:51:27+00:00"}, {"kind": "aggregate", "value": [{"kind": "string", "value": ""}]}, {"kind": "aggregate", "value": [{"kind": "string", "value": ""}]}, {"kind": "string", "value": "IfcOpenShell 0.8.4.post1"}, {"kind": "string", "value": "IfcOpenShell 0.8.4.post1"}, {"kind": "string", "value": "Nobody"}]}}"#,
         "set-file-schema" => r#"{"kind": "set-file-schema", "params": {"values": [{"kind": "aggregate", "value": [{"kind": "string", "value": "IFC4"}]}]}}"#,
@@ -202,7 +202,7 @@ mod subject {
         let operation = operation_of(&ctx.doc_json()?)?;
         let base = decoded(&input)?;
         let mutated = encoded(&input, &applied(base.clone(), std::slice::from_ref(&operation))?)?;
-        outcome(write_part21(&to_part21_document(&applied(decoded(&mutated)?, &mutation_inverse(&operation, &base))?)).into_bytes())
+        outcome(write_part21(&to_part21_document(&applied(decoded(&mutated)?, &mutation_inverse(&operation, &base).expect("valid retained mutation inverse fixture"))?)).into_bytes())
     }
 
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {

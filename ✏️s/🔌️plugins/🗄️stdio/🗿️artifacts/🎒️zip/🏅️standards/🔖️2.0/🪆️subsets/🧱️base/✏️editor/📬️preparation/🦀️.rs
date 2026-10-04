@@ -1,6 +1,6 @@
 //! 📬️ Bounded retained publication for archive text edits.
 
-use crate::schema::mutations::{add_entry, remove_entry, rename_entry, set_archive_comment, set_entry_data, set_snapshot};
+use crate::schema::mutations::{add_entry, patch_snapshot, remove_entry, rename_entry, set_archive_comment, set_entry_data, set_snapshot};
 use crate::schema::snapshot::{ZipCentralHeaderMetadata, ZipEntry, ZipEntryMetadata, ZipExtraField, ZipLocalHeaderMetadata};
 use crate::{ZipMutation, ZipSnapshot};
 use semio_framework_plugin::plugin_app_close_prelude::store as app_store;
@@ -12,16 +12,11 @@ const MAXIMUM_STRUCTURAL_ITEMS: usize = 4_096;
 const MAXIMUM_TEXT_BYTES: usize = u16::MAX as usize;
 
 fn structural_items(snapshot: &ZipSnapshot) -> Option<usize> {
-    snapshot.entries.iter().try_fold(snapshot.entries.len(), |total, entry| {
-        total.checked_add(entry.metadata.local.extra_fields.len())?.checked_add(entry.metadata.central.extra_fields.len())
-    })
+    snapshot.entries.iter().try_fold(snapshot.entries.len(), |total, entry| total.checked_add(entry.metadata.local.extra_fields.len())?.checked_add(entry.metadata.central.extra_fields.len()))
 }
 
 pub(super) fn route(prefix: &'static str) -> Option<NativeEditPreparationRoute<ZipSnapshot, ZipMutation>> {
-    Some(NativeEditPreparationRoute::new(
-        |mutation| matches!(mutation, ZipMutation::RenameEntry(_) | ZipMutation::SetArchiveComment(_)),
-        Arc::new(ZipPreparationFactory { prefix }),
-    ))
+    Some(NativeEditPreparationRoute::new(|mutation| matches!(mutation, ZipMutation::RenameEntry(_) | ZipMutation::SetArchiveComment(_)), Arc::new(ZipPreparationFactory { prefix })))
 }
 
 struct ZipPreparationFactory {
@@ -33,15 +28,11 @@ impl app_store::ArtifactStoreOneItemPreparationFactory<ZipSnapshot, ZipMutation>
         let admitted = lane == app_store::HistoryLane::Document
             && description.is_none_or(|value| value.len() <= app_store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES)
             && match mutation {
-                ZipMutation::RenameEntry(rename_entry::RenameEntry { name, new_name }) => {
-                    !name.is_empty() && name != new_name && name.len() <= MAXIMUM_TEXT_BYTES && !new_name.is_empty() && new_name.len() <= MAXIMUM_TEXT_BYTES
-                }
+                ZipMutation::RenameEntry(rename_entry::RenameEntry { name, new_name }) => !name.is_empty() && name != new_name && name.len() <= MAXIMUM_TEXT_BYTES && !new_name.is_empty() && new_name.len() <= MAXIMUM_TEXT_BYTES,
                 ZipMutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment, .. }) => comment.len() <= MAXIMUM_TEXT_BYTES,
                 _ => false,
             };
-        admitted
-            .then(|| app_store::ArtifactStoreOneItemFootprint::for_one_item(MAXIMUM_STRUCTURAL_ITEMS, app_store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
-            .ok_or_else(|| format!("{}-admission", self.prefix))
+        admitted.then(|| app_store::ArtifactStoreOneItemFootprint::for_leaf(mutation, app_store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES)).ok_or_else(|| format!("{}-admission", self.prefix))
     }
 
     fn begin(
@@ -56,9 +47,7 @@ impl app_store::ArtifactStoreOneItemPreparationFactory<ZipSnapshot, ZipMutation>
             && structural_items(request.base.get()).is_some_and(|items| items <= MAXIMUM_STRUCTURAL_ITEMS)
             && request.base.get().comment.len() <= MAXIMUM_TEXT_BYTES
             && match &request.mutation {
-                ZipMutation::RenameEntry(rename_entry::RenameEntry { name, new_name }) => {
-                    !name.is_empty() && name != new_name && name.len() <= MAXIMUM_TEXT_BYTES && !new_name.is_empty() && new_name.len() <= MAXIMUM_TEXT_BYTES
-                }
+                ZipMutation::RenameEntry(rename_entry::RenameEntry { name, new_name }) => !name.is_empty() && name != new_name && name.len() <= MAXIMUM_TEXT_BYTES && !new_name.is_empty() && new_name.len() <= MAXIMUM_TEXT_BYTES,
                 ZipMutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment, .. }) => comment.len() <= MAXIMUM_TEXT_BYTES,
                 _ => false,
             };
@@ -141,11 +130,8 @@ impl app_store::ArtifactStoreOneItemPreparation<ZipSnapshot, ZipMutation> for Zi
         }
         match self.phase {
             0 => {
-                let bytes = self.inverse_copy.advance(
-                    self.base.as_ref().ok_or_else(|| format!("{}-base-owner", self.prefix))?.get(),
-                    self.mutation.as_ref().ok_or_else(|| format!("{}-mutation-owner", self.prefix))?,
-                    grant.maximum_bytes.min(PAGE_BYTES),
-                )?;
+                let bytes =
+                    self.inverse_copy.advance(self.base.as_ref().ok_or_else(|| format!("{}-base-owner", self.prefix))?.get(), self.mutation.as_ref().ok_or_else(|| format!("{}-mutation-owner", self.prefix))?, grant.maximum_bytes.min(PAGE_BYTES))?;
                 if self.inverse_copy.is_complete() {
                     self.inverse = self.inverse_copy.take();
                     self.phase = 1;
@@ -153,11 +139,8 @@ impl app_store::ArtifactStoreOneItemPreparation<ZipSnapshot, ZipMutation> for Zi
                 Ok(self.progress(bytes))
             }
             1 => {
-                let bytes = self.post_copy.advance(
-                    self.base.as_ref().ok_or_else(|| format!("{}-base-owner", self.prefix))?.get(),
-                    self.mutation.as_ref().ok_or_else(|| format!("{}-mutation-owner", self.prefix))?,
-                    grant.maximum_bytes.min(PAGE_BYTES),
-                )?;
+                let bytes =
+                    self.post_copy.advance(self.base.as_ref().ok_or_else(|| format!("{}-base-owner", self.prefix))?.get(), self.mutation.as_ref().ok_or_else(|| format!("{}-mutation-owner", self.prefix))?, grant.maximum_bytes.min(PAGE_BYTES))?;
                 if self.post_copy.is_complete() {
                     self.phase = 2;
                 }
@@ -165,39 +148,12 @@ impl app_store::ArtifactStoreOneItemPreparation<ZipSnapshot, ZipMutation> for Zi
             }
             2 => {
                 let post = self.post_copy.take().ok_or_else(|| format!("{}-post-copy", self.prefix))?;
-                crate::standards::v2_0::subsets::base::io::validate_zip_snapshot_serialization(&post)
-                    .map_err(|error| format!("{}-post-validation-{error}", self.prefix))?;
+                crate::standards::v2_0::subsets::base::io::validate_zip_snapshot_serialization(&post).map_err(|error| format!("{}-post-validation-{error}", self.prefix))?;
                 let post = Arc::new(post);
                 let mutation = self.mutation.take().ok_or_else(|| format!("{}-mutation-owner", self.prefix))?;
                 let inverse = self.inverse.take().ok_or_else(|| format!("{}-inverse-owner", self.prefix))?;
                 let authority = self.authority.as_ref().ok_or_else(|| format!("{}-authority-owner", self.prefix))?;
-                let sequence = authority.next_sequence_number();
-                let id = format!("{}-{sequence}", self.prefix);
-                let edit = protocol::Edit { line: authority.line_id().map(str::to_owned),
-                    id: id.clone(),
-                    actor: Some(authority.actor().to_string()),
-                    forwards: vec![mutation],
-                    inverse: vec![inverse],
-                    mutation_meta: vec![protocol::MutationMeta {
-                        mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
-                        dependencies: Vec::new(),
-                        base_version: authority.base_applied_edit_count() as u64,
-                        author_id: Some(protocol::ActorId(authority.actor().to_string())),
-                        timestamp: authority.next_clock(),
-                        undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-                        payload_hash: None,
-                        semantic_kind: None,
-                        label: None,
-                        group_id: None,
-                        origin: Default::default(),
-                        transaction: None,
-                    }],
-                    description: self.description.take(), verb: None,
-                    coalesce_key: None,
-                    sequence_number: sequence,
-                    started_at: String::new(),
-                    finished_at: None,
-                };
+                let edit = authority.next_edit(mutation, vec![inverse]);
                 self.sealer = Some(authority.begin_one_item_seal(edit, post, Arc::new(ZipMutationRetirementFactory), Arc::new(ZipSnapshotRetirementFactory)));
                 self.seal_base_checkpoint = Some(self.checkpoint);
                 self.phase = 3;
@@ -230,7 +186,7 @@ impl app_store::ArtifactStoreOneItemPreparation<ZipSnapshot, ZipMutation> for Zi
         self.inverse_copy.begin_close();
         self.post_copy.begin_close();
     }
-    fn close_step(&mut self, grant: app_store::ArtifactStoreOneItemGrant) -> Result<app_store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: app_store::ArtifactStoreOneItemGrant) -> Result<app_store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || !grant.permits_one() {
             return Ok(app_store::SnapshotRetirementStep::Blocked);
         }
@@ -238,7 +194,7 @@ impl app_store::ArtifactStoreOneItemPreparation<ZipSnapshot, ZipMutation> for Zi
             let step = active.close_step(grant.maximum_items.min(1), grant.maximum_bytes)?;
             if step == app_store::SnapshotRetirementStep::Complete {
                 if !active.terminal_is_empty() {
-                    return Err(format!("{}-retirement-witness", self.prefix));
+                    return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, format!("{}-retirement-witness", self.prefix)));
                 }
                 self.external_retirement = None;
                 return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
@@ -249,7 +205,7 @@ impl app_store::ArtifactStoreOneItemPreparation<ZipSnapshot, ZipMutation> for Zi
             let step = sealer.close_step(grant)?;
             if step == app_store::SnapshotRetirementStep::Complete {
                 if !sealer.terminal_is_empty() {
-                    return Err(format!("{}-sealer-witness", self.prefix));
+                    return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, format!("{}-sealer-witness", self.prefix)));
                 }
                 self.sealer = None;
                 return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
@@ -272,7 +228,7 @@ impl app_store::ArtifactStoreOneItemPreparation<ZipSnapshot, ZipMutation> for Zi
         }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
-                return Err(format!("{}-base-return", self.prefix));
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, format!("{}-base-return", self.prefix)));
             }
             return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -323,10 +279,7 @@ impl ZipInverseCopy {
             ZipMutation::SetArchiveComment(_) => {
                 let bytes = self.first.advance(&base.comment, maximum_bytes)?.unwrap_or(0);
                 if self.first.is_complete() {
-                    self.inverse = Some(ZipMutation::SetArchiveComment(set_archive_comment::SetArchiveComment {
-                        comment: self.first.take().ok_or("stdio-zip-base-snapshot-edit-inverse-comment")?,
-                        comment_utf8: base.comment_utf8,
-                    }));
+                    self.inverse = Some(ZipMutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment: self.first.take().ok_or("stdio-zip-base-snapshot-edit-inverse-comment")?, comment_utf8: base.comment_utf8 }));
                     self.complete = true;
                 }
                 Ok(bytes)
@@ -369,7 +322,7 @@ impl ZipInverseCopy {
     fn begin_close(&mut self) {
         self.closing = true;
     }
-    fn close_step(&mut self, grant: app_store::ArtifactStoreOneItemGrant) -> Result<app_store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: app_store::ArtifactStoreOneItemGrant) -> Result<app_store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || !grant.permits_one() {
             return Ok(app_store::SnapshotRetirementStep::Blocked);
         }
@@ -377,7 +330,7 @@ impl ZipInverseCopy {
             let step = retirement.close_step(grant.maximum_items.min(1), grant.maximum_bytes)?;
             if step == app_store::SnapshotRetirementStep::Complete {
                 if !retirement.terminal_is_empty() {
-                    return Err("stdio-zip-base-snapshot-edit-inverse-retirement-witness".into());
+                    return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "stdio-zip-base-snapshot-edit-inverse-retirement-witness"));
                 }
                 self.retirement = None;
                 return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
@@ -552,46 +505,12 @@ impl ZipPostCopy {
         }
     }
 
-    fn copy_metadata(
-        text: &mut RetainedTextCopy,
-        bytes: &mut RetainedBytesCopy,
-        source: &ZipEntryMetadata,
-        target: &mut PartialMetadata,
-        maximum_bytes: usize,
-    ) -> Result<usize, String> {
+    fn copy_metadata(text: &mut RetainedTextCopy, bytes: &mut RetainedBytesCopy, source: &ZipEntryMetadata, target: &mut PartialMetadata, maximum_bytes: usize) -> Result<usize, String> {
         match target.phase {
-            0 => Self::copy_extra_fields(
-                bytes,
-                &source.local.extra_fields,
-                &mut target.local_extra_fields,
-                &mut target.extra_index,
-                &mut target.current_extra_id,
-                &mut target.phase,
-                maximum_bytes,
-            ),
-            1 => Self::copy_optional_bytes(
-                bytes,
-                source.local.unicode_path_legacy_name.as_deref(),
-                &mut target.local_unicode_path_legacy_name,
-                &mut target.phase,
-                maximum_bytes,
-            ),
-            2 => Self::copy_extra_fields(
-                bytes,
-                &source.central.extra_fields,
-                &mut target.central_extra_fields,
-                &mut target.extra_index,
-                &mut target.current_extra_id,
-                &mut target.phase,
-                maximum_bytes,
-            ),
-            3 => Self::copy_optional_bytes(
-                bytes,
-                source.central.unicode_path_legacy_name.as_deref(),
-                &mut target.central_unicode_path_legacy_name,
-                &mut target.phase,
-                maximum_bytes,
-            ),
+            0 => Self::copy_extra_fields(bytes, &source.local.extra_fields, &mut target.local_extra_fields, &mut target.extra_index, &mut target.current_extra_id, &mut target.phase, maximum_bytes),
+            1 => Self::copy_optional_bytes(bytes, source.local.unicode_path_legacy_name.as_deref(), &mut target.local_unicode_path_legacy_name, &mut target.phase, maximum_bytes),
+            2 => Self::copy_extra_fields(bytes, &source.central.extra_fields, &mut target.central_extra_fields, &mut target.extra_index, &mut target.current_extra_id, &mut target.phase, maximum_bytes),
+            3 => Self::copy_optional_bytes(bytes, source.central.unicode_path_legacy_name.as_deref(), &mut target.central_unicode_path_legacy_name, &mut target.phase, maximum_bytes),
             4 => {
                 let copied = text.advance(&source.central.comment, maximum_bytes)?.unwrap_or(0);
                 if text.is_complete() {
@@ -600,13 +519,7 @@ impl ZipPostCopy {
                 }
                 Ok(copied)
             }
-            5 => Self::copy_optional_bytes(
-                bytes,
-                source.central.unicode_comment_legacy.as_deref(),
-                &mut target.central_unicode_comment_legacy,
-                &mut target.phase,
-                maximum_bytes,
-            ),
+            5 => Self::copy_optional_bytes(bytes, source.central.unicode_comment_legacy.as_deref(), &mut target.central_unicode_comment_legacy, &mut target.phase, maximum_bytes),
             6 => {
                 target.phase = 7;
                 Ok(0)
@@ -615,15 +528,7 @@ impl ZipPostCopy {
         }
     }
 
-    fn copy_extra_fields(
-        bytes: &mut RetainedBytesCopy,
-        source: &[ZipExtraField],
-        target_fields: &mut Vec<ZipExtraField>,
-        extra_index: &mut usize,
-        current_extra_id: &mut Option<u16>,
-        phase: &mut u8,
-        maximum_bytes: usize,
-    ) -> Result<usize, String> {
+    fn copy_extra_fields(bytes: &mut RetainedBytesCopy, source: &[ZipExtraField], target_fields: &mut Vec<ZipExtraField>, extra_index: &mut usize, current_extra_id: &mut Option<u16>, phase: &mut u8, maximum_bytes: usize) -> Result<usize, String> {
         if *extra_index == source.len() {
             *extra_index = 0;
             *phase += 1;
@@ -633,22 +538,13 @@ impl ZipPostCopy {
         current_extra_id.get_or_insert(source_field.id);
         let copied = bytes.advance(&source_field.data, maximum_bytes)?.unwrap_or(0);
         if bytes.is_complete() {
-            target_fields.push(ZipExtraField {
-                id: current_extra_id.take().ok_or("stdio-zip-base-snapshot-edit-extra-field-owner")?,
-                data: bytes.take().ok_or("stdio-zip-base-snapshot-edit-extra-data-owner")?,
-            });
+            target_fields.push(ZipExtraField { id: current_extra_id.take().ok_or("stdio-zip-base-snapshot-edit-extra-field-owner")?, data: bytes.take().ok_or("stdio-zip-base-snapshot-edit-extra-data-owner")? });
             *extra_index += 1;
         }
         Ok(copied)
     }
 
-    fn copy_optional_bytes(
-        bytes: &mut RetainedBytesCopy,
-        source: Option<&[u8]>,
-        target_value: &mut Option<Vec<u8>>,
-        phase: &mut u8,
-        maximum_bytes: usize,
-    ) -> Result<usize, String> {
+    fn copy_optional_bytes(bytes: &mut RetainedBytesCopy, source: Option<&[u8]>, target_value: &mut Option<Vec<u8>>, phase: &mut u8, maximum_bytes: usize) -> Result<usize, String> {
         let Some(source) = source else {
             *phase += 1;
             return Ok(0);
@@ -702,7 +598,7 @@ impl ZipPostCopy {
     fn begin_close(&mut self) {
         self.closing = true;
     }
-    fn close_step(&mut self, grant: app_store::ArtifactStoreOneItemGrant) -> Result<app_store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: app_store::ArtifactStoreOneItemGrant) -> Result<app_store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || !grant.permits_one() {
             return Ok(app_store::SnapshotRetirementStep::Blocked);
         }
@@ -710,7 +606,7 @@ impl ZipPostCopy {
             let step = retirement.close_step(grant.maximum_items.min(1), grant.maximum_bytes)?;
             if step == app_store::SnapshotRetirementStep::Complete {
                 if !retirement.terminal_is_empty() {
-                    return Err("stdio-zip-base-snapshot-edit-copy-retirement-witness".into());
+                    return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "stdio-zip-base-snapshot-edit-copy-retirement-witness"));
                 }
                 self.retirement = None;
                 return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
@@ -742,18 +638,9 @@ impl ZipPostCopy {
     }
     fn take_partial_snapshot(&mut self) -> ZipSnapshot {
         if let Some(entry) = self.entry.take() {
-            self.entries.push(ZipEntry {
-                name: entry.name.unwrap_or_default(),
-                data: entry.data.unwrap_or_default(),
-                metadata: Self::finish_metadata(&ZipEntryMetadata::default(), entry.metadata),
-            });
+            self.entries.push(ZipEntry { name: entry.name.unwrap_or_default(), data: entry.data.unwrap_or_default(), metadata: Self::finish_metadata(&ZipEntryMetadata::default(), entry.metadata) });
         }
-        ZipSnapshot {
-            schema: self.schema.take().unwrap_or_default(),
-            entries: std::mem::take(&mut self.entries),
-            comment: self.comment.take().unwrap_or_default(),
-            comment_utf8: self.comment_utf8.take().unwrap_or(true),
-        }
+        ZipSnapshot { schema: self.schema.take().unwrap_or_default(), entries: std::mem::take(&mut self.entries), comment: self.comment.take().unwrap_or_default(), comment_utf8: self.comment_utf8.take().unwrap_or(true) }
     }
 }
 
@@ -781,6 +668,7 @@ enum RetiredOwner {
     ExtraFields(Vec<ZipExtraField>),
     ExtraField(ZipExtraField),
     Mutation(ZipMutation),
+    Patch(semio_s_artifact_stdio_contract::editing::SnapshotPatch),
     String(String),
     Bytes(Vec<u8>),
 }
@@ -874,6 +762,7 @@ impl semio_framework_value::retirement::RetirementCursor for ZipRetirementCursor
                 retire_mutation(&mut self.0, mutation);
                 RetirementStep::Bytes(0)
             }
+            RetiredOwner::Patch(patch) => RetirementStep::Child(semio_framework_value::retirement::RetireOwned::retirement(patch)),
         }
     }
     fn terminal_is_empty(&self) -> bool {
@@ -891,6 +780,7 @@ impl Drop for ZipRetirementCursor {
 fn retire_mutation(stack: &mut Vec<RetiredOwner>, mutation: ZipMutation) {
     match mutation {
         ZipMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => stack.push(RetiredOwner::Snapshot(snapshot)),
+        ZipMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => stack.push(RetiredOwner::Patch(patch)),
         ZipMutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment, .. }) => stack.push(RetiredOwner::String(comment)),
         ZipMutation::AddEntry(add_entry::AddEntry { entry, before }) => {
             if let Some(before) = before {
@@ -941,11 +831,7 @@ impl app_store::ArtifactCanonicalJson for ZipMutation {
             ZipMutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment, comment_utf8 }) => {
                 canonical_object([("comment", canonical_text(comment)), ("commentUtf8", canonical_bool(*comment_utf8)), ("mutation", canonical_static_text("setArchiveComment"))])
             }
-            ZipMutation::RenameEntry(rename_entry::RenameEntry { name, new_name }) => canonical_object([
-                ("mutation", canonical_static_text("renameEntry")),
-                ("name", canonical_text(name)),
-                ("newName", canonical_text(new_name)),
-            ]),
+            ZipMutation::RenameEntry(rename_entry::RenameEntry { name, new_name }) => canonical_object([("mutation", canonical_static_text("renameEntry")), ("name", canonical_text(name)), ("newName", canonical_text(new_name))]),
             _ => return Err("stdio-zip-base-snapshot-edit-canonical-mutation".into()),
         }))
     }
@@ -961,23 +847,13 @@ mod tests {
 
     fn large_snapshot(bytes: usize) -> ZipSnapshot {
         let metadata = ZipEntryMetadata {
-            local: ZipLocalHeaderMetadata {
-                extra_fields: vec![ZipExtraField { id: 0xCAFE, data: (0..8_193).map(|index| (index % 251) as u8).collect() }],
-                ..Default::default()
-            },
-            central: ZipCentralHeaderMetadata {
-                extra_fields: vec![ZipExtraField { id: 0xBEEF, data: (0..8_195).map(|index| (index % 247) as u8).collect() }],
-                comment: "member comment".repeat(257),
-                ..Default::default()
-            },
+            local: ZipLocalHeaderMetadata { extra_fields: vec![ZipExtraField { id: 0xCAFE, data: (0..8_193).map(|index| (index % 251) as u8).collect() }], ..Default::default() },
+            central: ZipCentralHeaderMetadata { extra_fields: vec![ZipExtraField { id: 0xBEEF, data: (0..8_195).map(|index| (index % 247) as u8).collect() }], comment: "member comment".repeat(257), ..Default::default() },
             ..Default::default()
         };
         ZipSnapshot {
             schema: "stdio.zip".into(),
-            entries: vec![
-                ZipEntry { name: "before.bin".into(), data: (0..bytes).map(|index| (index % 251) as u8).collect(), metadata },
-                ZipEntry { name: "sibling.txt".into(), data: b"unchanged".to_vec(), ..Default::default() },
-            ],
+            entries: vec![ZipEntry { name: "before.bin".into(), data: (0..bytes).map(|index| (index % 251) as u8).collect(), metadata }, ZipEntry { name: "sibling.txt".into(), data: b"unchanged".to_vec(), ..Default::default() }],
             comment: "original comment".into(),
             ..Default::default()
         }
@@ -996,7 +872,7 @@ mod tests {
         }
         let copied_inverse = inverse.take().expect("inverse copy owns the exact inverse");
         assert_eq!(copied_inverse, ZipMutation::RenameEntry(rename_entry::RenameEntry { name: replacement.clone(), new_name: "before.bin".into() }));
-        assert_eq!(vec![copied_inverse], <ZipMutation as protocol::Mutation<ZipSnapshot>>::inverse(&mutation, &source));
+        assert_eq!(vec![copied_inverse], <ZipMutation as protocol::Mutation<ZipSnapshot>>::inverse(&mutation, &source).expect("valid retained mutation inverse fixture"));
         inverse.begin_close();
         assert!(inverse.terminal_is_empty());
 
@@ -1054,10 +930,7 @@ mod tests {
         while !inverse.is_complete() {
             assert!(inverse.advance(&source, &mutation, page_bytes).expect("comment inverse copy advances") <= page_bytes);
         }
-        assert_eq!(
-            inverse.take(),
-            Some(ZipMutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment: source.comment.clone(), comment_utf8: source.comment_utf8 }))
-        );
+        assert_eq!(inverse.take(), Some(ZipMutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment: source.comment.clone(), comment_utf8: source.comment_utf8 })));
         inverse.begin_close();
         assert!(inverse.terminal_is_empty());
 

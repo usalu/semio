@@ -1,0 +1,27 @@
+# Count Current Component and Workspace Lease IO Readiness
+
+Read-only source refresh; no build, runtime or tests executed. Earlier guest Native1 and Host Native1 receipts are native typed-conversion laws, not component ABI/live lease evidence. Count5 remains an owning capability gate, not a compiled WASIp2 receipt.
+
+## Exact existing executable routes
+
+`bun nx run @semio-tech/framework-plugin-host-fixture:component-dev` is registered in `.vscode/launch.json:1901`. Actual fixture `📦️packages/🦀️rust/📋️project.json` component-dev selects `bun ./📜️script.ts component-dev`, with dist/component-dev output. Current script22 builds real semio-framework-plugin-host-fixture as cdylib, wasm32-wasip2, wasm-dev, and verifies the component eight-byte header. This is the real component producer, not native check. Package Cargo retains component-guest feature binding and canonical owner dependencies from the earlier readiness audit.
+
+Count owning commands are the same fixture project `test-snapshot-sqlite-source` and `test-snapshot-sqlite-native`; script13 Native selects `--lib sqlite_snapshot_host_count_ --no-fail-fast`. The actual five laws use public bare codec optional capability first. Current Snapshot still lacks an ArtifactSqliteSnapshot mount/opt-in: current fixture-tree matches occur only in tests. The held provider must be mounted only after authentic capability RED, as Root/High plan.
+
+`bun nx run @semio-tech/framework-plugin-host:owned-instance-check` is registered launch1912. Host package script388–391 selects actual owned_instance_open_tests --lib --nocapture. Existing test fixture loader10–13 reads the staged component path; tests compile real Owned runtime and check native codecs/schema hashes. Current selected module contains no SQLite calls. This command is a legitimate real-component setup seam, not an already existing semantic SQLite lease law.
+
+## Production ABI versus test helpers
+
+Fixture package glue14 exports actual assembly via plugin_exports. SQLite tests17–18 and System allocator observer20–24 are cfg(test); they are absent from ordinary component-dev. Likewise the app-declarations eight-kind refusal injection is native test-only and is not automatically selected by this component. Do not treat its helper as a real guest provider rejection.
+
+Actual actor WIT retains eight closed snapshot-rejection kinds and length-bearing message plus packed diagnostics. Native/WIT conversions map InvalidValue, Canceled, OwnershipLimit, AllocationFailed, WorkLimit, DepthLimit, UnsupportedOwner, InvariantViolated explicitly (plugin native conversion, host2890–2894). Host Wasmtime export2736–2744/import2748–2760 invoke generated call_sqlite_export/import and preserve typed rejection message and diagnostics. Owned exports1756/import1761 use the corresponding actual operation interpreter. Runtime enum2930/2936/2942 rejects Mock/Recording SQLite execution. Full diagnostic decode uses actual wire typed pack, never guessed prose kind. Unknown generated ABI discriminants and embedded-NUL strings still require compiled guest execution.
+
+## Actual lease and public IO join
+
+Workspace authority `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs:3209–3239` compiles the resolved component, validates actual pack schema hash, obtains SQLite schema at3221 and publishes actual native snapshot codec plus guest-backed SQLite export/import. `register_hub_document_codec`4943–4948 resolves the execution-target lease plugin component and binds lease artifact.schema, full parent dialect and pack schema hash. `open_hub_document_actor`4964 registers before installing the lease at4974. Exact matching route is required; missing route is typed UnsupportedOwner.
+
+Workspace guest export3156–3171 calls actual GuestRuntime, propagates captured caller progress refusal into cancellation, reconstructs rejected IoError, physically imports returned SQL bytes, checks exact metadata dialect/encoding and preserves success diagnostics. Import3175–3190 attaches metadata, exports the physical SQL file, calls actual guest import, validates encoding, returns full Text/Binary native payload and decoded diagnostics. These operations are the public provider join; direct native plugin helper calls alone do not prove this route.
+
+## Concrete remaining law
+
+No existing selected owned-instance law or workspace SQLite test in the inspected current paths crosses this full real lease route for Count. Required adjacent test-first extension should reuse real component loader/compile/package reference and real execution-target lease registration, then public Snapshot IO: compare complete i32 min/max/zero owner through both actual JSON Text and raw Record Pack native forms; independently parse returned SQLite and assert header/schema/one typed row; reconstruct original owner; preserve success diagnostics. Exercise authentic provider invalid row/schema/range and caller cancel/limits across the compiled guest, asserting exact typed kind, message including NUL where authored, and full diagnostics. Cover remaining provider refusal kinds only through separately explicit test-only provider injection selected into an actual test component, not invented snapshot fields or prose classification. A neutral closed fixture plus independent Bun SQLite/readback must describe these cases and identities. No such complete compiled/live law or all-eight real-component injection seam is established by current source. Build, real-component extension and lease execution remain separately pending.

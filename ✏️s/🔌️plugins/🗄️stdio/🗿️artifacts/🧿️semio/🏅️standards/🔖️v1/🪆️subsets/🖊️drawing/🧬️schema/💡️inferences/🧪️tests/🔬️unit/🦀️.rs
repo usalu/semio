@@ -21,18 +21,18 @@ fn fixture() -> SemioDrawingSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
     let snapshot = fixture();
-    assert_eq!(SemioDrawingInference::infer(&snapshot), SemioDrawingInference::infer(&snapshot));
+    assert_eq!(SemioDrawingInference::infer(&snapshot).expect("valid materialized inference fixture"), SemioDrawingInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
-    assert_eq!(SemioDrawingInference::infer(&SemioDrawingSnapshot::default()), SemioDrawingInference::default());
+    assert_eq!(SemioDrawingInference::infer(&SemioDrawingSnapshot::default()).expect("valid materialized inference fixture"), SemioDrawingInference::default());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn inference_matches_direct_infer_field_call() {
     let snapshot = fixture();
-    let inferred = SemioDrawingInference::infer(&snapshot);
+    let inferred = SemioDrawingInference::infer(&snapshot).expect("valid materialized inference fixture");
     let direct = store::infer_field::<SemioDrawingSnapshot, DrawFlattenedScene>(&snapshot, None);
     for (key, value) in &direct {
         assert_eq!(inferred.flattened_scene.get(key), Some(value), "inference must match infer_field exactly for {key}");

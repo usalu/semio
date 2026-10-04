@@ -4,7 +4,7 @@
 //! presentation->pdf semantic mapping (unchanged behaviour, pre-dates this ticket) — `IoFidelity::Lossy`.
 
 use crate::PresentationSnapshot;
-use semio_framework::io::io_mechanism::Serializer;
+use semio_framework::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
 use semio_s_artifact_stdio_pdf::PdfSnapshot;
@@ -16,9 +16,9 @@ pub struct PresentationIntoPdf;
 impl Serializer<PresentationSnapshot> for PresentationIntoPdf {
     const INTO: Dialect = PDF_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &PresentationSnapshot) -> IoResult<IoPayload> {
-        let json = dsl::json::to_json_string(from);
-        let wire: PdfSnapshot = dsl::json::from_json_str(&json).map_err(|error| IoError { message: format!("PresentationIntoPdf: {error}"), diagnostics: Vec::new() })?;
+    async fn serialize(from: &PresentationSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+        let json = semio_framework_pack_json::to_json_string(from);
+        let wire: PdfSnapshot = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| { let mut cause=error;cause.message=format!("PresentationIntoPdf: {}",cause.message);IoError::from_value_error(cause) })?;
         Ok(IoOutcome::clean(IoPayload::Binary(<PdfSnapshot as store::ArtifactPack>::encode_pack(&wire))))
     }
 }

@@ -17,16 +17,6 @@ mod native {
     use crate::os_spr::history::{decode_history, encode_composition, encode_conflicts, encode_doc, encode_edit, encode_transition, DecodeOptions, HistoryAppender, HistoryEdit, HistoryReader};
     use crate::os_spr::wire::{DictBuilder, ProtocolError, ProtocolLimits, RecordHasher};
 
-    /// 🚨️ Wraps a `std::io::Error` into the crate-wide `ProtocolError::Io` variant — the
-    /// only place `std::io::Error` is allowed to appear, per the family's no-`std::io::Error`-in-
-    /// public-signatures rule.
-    #[allow(clippy::needless_pass_by_value)] // used as a `map_err` callback, which passes the error by value
-                                             // 🚫️async: R9 pure accessor — only consumers are `Result::map_err`'s sync closure; no
-                                             // suspension point exists in the body either.
-    fn io_err(err: std::io::Error) -> ProtocolError {
-        ProtocolError::Io(err.to_string())
-    }
-
     //#region 🔖️File
     /// 📍️ Where a `.spr` file's trusted content currently ends, and the commit-chain state
     /// at that point — everything a caller needs to keep appending or to report file health.
@@ -40,8 +30,8 @@ mod native {
     /// 📖️ Re-derives a `ResumeState` from whatever `path` currently contains: runs
     /// `crate::os_spr::format::recover` (`RecoveryMode::LastCommit`), then reads back either the
     /// header-only `chain_0` (no commit yet) or the trusted tail's `REC_COMMIT` payload.
-    async fn resume_state_for(path: &Path, limits: &ProtocolLimits) -> Result<ResumeState, ProtocolError> {
-        let source = crate::os_pack::io::FilePackSource::open(path)?;
+    async fn resume_state_for(path: &Path, limits: &ProtocolLimits, context: &crate::os_pack::control::CommandContext) -> Result<ResumeState, ProtocolError> {
+        let source = crate::os_pack::io::FilePackSource::open(path, context.transport().clone())?;
         let recovery = recover_records(&source, limits, RecoveryMode::LastCommit).await?;
         if recovery.last_commit_seq == 0 {
             let mut header_bytes = [0u8; HEADER_SIZE];
@@ -65,20 +55,21 @@ mod native {
     pub struct HistoryFile {
         appender: Option<HistoryAppender<crate::os_pack::io::FilePackSink>>,
         resume: ResumeState,
+        context: crate::os_pack::control::CommandContext,
     }
 
     impl HistoryFile {
         /// 🆕️ Creates `path` fresh (truncating any existing file) and writes the header plus
         /// the `REC_DOC` record. No commit has happened yet — `resume_state().last_commit_seq == 0`
         /// until the caller's first `appender().commit().await`.
-        pub async fn create(path: &Path, doc_id: &str, schema: &str, options: &WriteOptions) -> Result<Self, ProtocolError> {
-            let sink = crate::os_pack::io::FilePackSink::create(path)?;
+        pub async fn create(path: &Path, doc_id: &str, schema: &str, options: &WriteOptions, context: &crate::os_pack::control::CommandContext) -> Result<Self, ProtocolError> {
+            let sink = crate::os_pack::io::FilePackSink::create(path, context.transport().clone())?;
             let appender = HistoryAppender::begin(sink, doc_id, schema, options).await?;
-            let source = crate::os_pack::io::FilePackSource::open(path)?;
+            let source = crate::os_pack::io::FilePackSource::open(path, context.transport().clone())?;
             let mut header_bytes = [0u8; HEADER_SIZE];
             source.read_exact_at(0, &mut header_bytes).await?;
             let resume = ResumeState { end_offset: source.len().await, last_commit_seq: 0, chain_hash: Blake3Hasher.hash(&header_bytes) };
-            Ok(Self { appender: Some(appender), resume })
+            Ok(Self { appender: Some(appender), resume, context: context.clone() })
         }
 
         /// ▶️ Opens an existing `.spr` file to keep appending to it.
@@ -105,19 +96,18 @@ mod native {
         /// fully preserved; only acceleration/snapshot data is lost, which the wider system already
         /// tolerates gracefully (`crate::os_spr::materialize::resolve_plan` falls back to full replay from
         /// genesis when a snapshot is missing/corrupt).
-        pub async fn open_append(path: &Path, limits: &ProtocolLimits) -> Result<Self, ProtocolError> {
-            let source = crate::os_pack::io::FilePackSource::open(path)?;
+        pub async fn open_append(path: &Path, limits: &ProtocolLimits, context: &crate::os_pack::control::CommandContext) -> Result<Self, ProtocolError> {
+            let source = crate::os_pack::io::FilePackSource::open(path, context.transport().clone())?;
             let recovery = recover_records(&source, limits, RecoveryMode::LastCommit).await?;
             let header = read_header(&source).await?;
-            let mut trusted = vec![0u8; recovery.bytes_recovered as usize];
-            source.read_exact_at(0, &mut trusted).await?;
+            let trusted = crate::os_pack::control::read_command_source(&source,recovery.bytes_recovered,limits.max_file_len,context).await?;
             drop(source);
 
             let decode_options = DecodeOptions { verification: VerificationLevel::Standard, limits: limits.clone() };
             let log = decode_history(&trusted, &decode_options).await?;
 
             let write_options = WriteOptions { required_flags: header.required_flags, optional_flags: header.optional_flags };
-            let sink = crate::os_pack::io::FilePackSink::create(path)?;
+            let sink = crate::os_pack::io::FilePackSink::create(path, context.transport().clone())?;
             let mut appender = HistoryAppender::begin(sink, &log.doc_id, &log.schema, &write_options).await?;
             for edit in &log.edits {
                 appender.append_edit(edit).await?;
@@ -136,20 +126,25 @@ mod native {
             }
             appender.commit().await?;
 
-            let resume = resume_state_for(path, limits).await?;
-            Ok(Self { appender: Some(appender), resume })
+            let resume = resume_state_for(path, limits, context).await?;
+            Ok(Self { appender: Some(appender), resume, context: context.clone() })
         }
 
         /// 👓️ Opens an existing `.spr` file purely for inspection: computes `resume_state()`
         /// via `crate::os_spr::format::recover` without writing a single byte to `path`. `appender()` must
         /// never be called on a handle opened this way (see its doc).
-        pub async fn open_read_only(path: &Path, limits: &ProtocolLimits) -> Result<Self, ProtocolError> {
-            let resume = resume_state_for(path, limits).await?;
-            Ok(Self { appender: None, resume })
+        pub async fn open_read_only(path: &Path, limits: &ProtocolLimits, context: &crate::os_pack::control::CommandContext) -> Result<Self, ProtocolError> {
+            let resume = resume_state_for(path, limits, context).await?;
+            Ok(Self { appender: None, resume, context: context.clone() })
         }
 
         pub async fn resume_state(&self) -> &ResumeState {
             &self.resume
+        }
+
+        /// 🪪️ The caller-owned transport context every native operation of this handle is admitted under.
+        pub fn transport_context(&self) -> &crate::os_pack::control::CommandContext {
+            &self.context
         }
 
         /// ✍️ The live append handle. Panics if called on a handle from `open_read_only` —
@@ -176,19 +171,19 @@ mod native {
 
     /// 💾️ Writes a complete `.spk` pack file as a sidecar, atomically (`crate::os_pack::io::write_atomic`
     /// — temp file + fsync + rename, so a reader never observes a torn sidecar).
-    pub async fn write_sidecar(protocol_path: &Path, body_hash: &[u8; 32], pack_bytes: &[u8]) -> Result<(), ProtocolError> {
-        crate::os_pack::io::write_atomic(&sidecar_path(protocol_path, body_hash).await, pack_bytes)?;
+    pub async fn write_sidecar(protocol_path: &Path, body_hash: &[u8; 32], pack_bytes: &[u8], context: &crate::os_pack::control::CommandContext) -> Result<(), ProtocolError> {
+        crate::os_pack::io::write_atomic(&sidecar_path(protocol_path, body_hash).await, pack_bytes, context.transport())?;
         Ok(())
     }
 
-    pub async fn read_sidecar(protocol_path: &Path, body_hash: &[u8; 32]) -> Result<Vec<u8>, ProtocolError> {
-        std::fs::read(sidecar_path(protocol_path, body_hash).await).map_err(io_err)
+    pub async fn read_sidecar(protocol_path: &Path, body_hash: &[u8; 32], limits: &ProtocolLimits, context: &crate::os_pack::control::CommandContext) -> Result<crate::os_pack::control::CommandBytes, ProtocolError> {
+        crate::os_pack::control::read_command_file(&sidecar_path(protocol_path, body_hash).await, limits.max_file_len, context).await.map_err(ProtocolError::from)
     }
     //#endregion 🔖️Sidecar
 
     //#region 🔖️Recover
-    pub async fn recover_file(path: &Path, limits: &ProtocolLimits, mode: RecoveryMode) -> Result<crate::os_spr::format::RecoveryReport, ProtocolError> {
-        let source = crate::os_pack::io::FilePackSource::open(path)?;
+    pub async fn recover_file(path: &Path, limits: &ProtocolLimits, mode: RecoveryMode, context: &crate::os_pack::control::CommandContext) -> Result<crate::os_spr::format::RecoveryReport, ProtocolError> {
+        let source = crate::os_pack::io::FilePackSource::open(path, context.transport().clone())?;
         recover_records(&source, limits, mode).await
     }
     //#endregion 🔖️Recover
@@ -204,15 +199,19 @@ mod native {
         /// edit — a deliberate, documented reading of `last_edit_ordinal` given the contract leaves
         /// its exact off-by-one semantics unspecified.
         next_edit_ordinal: u64,
+        limits: ProtocolLimits,
+        context: crate::os_pack::control::CommandContext,
     }
 
     impl TailFollower {
+        /// 🪪️ Retains caller transport and input credit for every later poll.
+        pub fn transport_context(&self)->&crate::os_pack::control::CommandContext{&self.context}
         /// 📖️ Validates `path` looks like a real `.spr` file (header check) up front, so a
         /// bad path fails fast at `open` rather than on the first `poll`.
-        pub async fn open(path: &Path, from_edit_ordinal: u64) -> Result<Self, ProtocolError> {
-            let source = crate::os_pack::io::FilePackSource::open(path)?;
+        pub async fn open(path: &Path, from_edit_ordinal: u64, limits: &ProtocolLimits, context: &crate::os_pack::control::CommandContext) -> Result<Self, ProtocolError> {
+            let source = crate::os_pack::io::FilePackSource::open(path, context.transport().clone())?;
             read_header(&source).await?;
-            Ok(Self { path: path.to_path_buf(), next_edit_ordinal: from_edit_ordinal })
+            Ok(Self { path: path.to_path_buf(), next_edit_ordinal: from_edit_ordinal, limits: limits.clone(), context: context.clone() })
         }
 
         /// 🔁️ Re-reads the whole file and re-decodes from the start every call.
@@ -225,8 +224,8 @@ mod native {
         /// reachable through this crate family's public API; re-scanning from the start on every
         /// poll is the only option, not merely the simplest one.
         pub async fn poll(&mut self) -> Result<Vec<HistoryEdit>, ProtocolError> {
-            let bytes = std::fs::read(&self.path).map_err(io_err)?;
-            let reader = HistoryReader::open(&bytes, &DecodeOptions::default()).await?;
+            let bytes = crate::os_pack::control::read_command_file(&self.path, self.limits.max_file_len, &self.context).await?;
+            let reader = HistoryReader::open(&bytes, &DecodeOptions{verification:VerificationLevel::Standard,limits:self.limits.clone()}).await?;
             let mut out = Vec::new();
             for edit in reader.edits().await.skip(self.next_edit_ordinal as usize) {
                 out.push(edit?);
@@ -306,12 +305,11 @@ mod native {
     /// `REC_INDEX`/`REC_SEALED`/`REC_EPHEMERAL` slot to filter in the first place (see
     /// `HistoryFile::open_append`'s doc for the same crate-boundary caveat — this crate has no
     /// `protocol_materialize` dependency to interpret snapshot bodies with).
-    pub async fn compact(path: &Path, options: &CompactOptions, limits: &ProtocolLimits) -> Result<(), ProtocolError> {
-        let source = crate::os_pack::io::FilePackSource::open(path)?;
+    pub async fn compact(path: &Path, options: &CompactOptions, limits: &ProtocolLimits, context: &crate::os_pack::control::CommandContext) -> Result<(), ProtocolError> {
+        let source = crate::os_pack::io::FilePackSource::open(path, context.transport().clone())?;
         let recovery = recover_records(&source, limits, RecoveryMode::LastCommit).await?;
         let header = read_header(&source).await?;
-        let mut trusted = vec![0u8; recovery.bytes_recovered as usize];
-        source.read_exact_at(0, &mut trusted).await?;
+        let trusted = crate::os_pack::control::read_command_source(&source,recovery.bytes_recovered,limits.max_file_len,context).await?;
         drop(source);
 
         let decode_options = DecodeOptions { verification: VerificationLevel::Standard, limits: limits.clone() };
@@ -352,7 +350,7 @@ mod native {
         }
 
         writer.commit().await?;
-        crate::os_pack::io::write_atomic(path, &writer.into_sink().await)?;
+        crate::os_pack::io::write_atomic(path, &writer.into_sink().await, context.transport())?;
         Ok(())
     }
     //#endregion 🔖️Compact

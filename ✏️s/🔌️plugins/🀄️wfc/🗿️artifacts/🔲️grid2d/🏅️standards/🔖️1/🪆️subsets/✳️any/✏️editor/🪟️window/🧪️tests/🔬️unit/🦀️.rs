@@ -45,7 +45,7 @@ fn a_config_mutation_inverts_to_the_base_it_replaced() {
     let base = Grid2dWindowConfig::default();
     let next = Grid2dWindowConfig { grid_factor: 16.0, ..base.clone() };
     let mutation = Grid2dWindowConfigMutation::Snapshot { config: next };
-    let inverse = protocol::Mutation::inverse(&mutation, &base);
+    let inverse = protocol::Mutation::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![Grid2dWindowConfigMutation::Snapshot { config: base }]);
 }
 

@@ -16,7 +16,7 @@ use crate::En1999Snapshot;
 pub const EN1999_ALUMINIUM_ROOF_PURLIN_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🏠️aluminium-roof-purlin/🏠️aluminium-roof-purlin/🗣️.dsl.semio");
 
 /// 📖️ Parses `.en1999` DSL text into a `En1999Snapshot`.
-pub fn parse_dsl(text: &str) -> Result<En1999Snapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<En1999Snapshot, semio_framework_diagnostic::TextError> {
     <En1999Snapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 

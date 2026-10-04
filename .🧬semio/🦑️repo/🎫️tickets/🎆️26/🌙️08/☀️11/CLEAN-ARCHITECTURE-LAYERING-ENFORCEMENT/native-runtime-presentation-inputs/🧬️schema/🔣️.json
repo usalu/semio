@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["cases"],
+  "additionalProperties": false,
+  "properties": {
+    "cases": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "required": ["name", "selected", "records", "expected"], "additionalProperties": false,
+        "properties": {
+          "name": {"type": "string", "minLength": 1},
+          "selected": {"type": "integer", "minimum": 1},
+          "records": {"type": "array", "items": {"$ref": "#/$defs/record"}},
+          "expected": {"oneOf": [{"$ref": "#/$defs/counts"}, {"type": "object", "required": ["refusal"], "additionalProperties": false, "properties": {"refusal": {"enum": ["AMBIGUOUS_PRESENTATION", "CONFLICTING_ATTEMPT", "MISSING_ATTEMPT"]}}}]}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "record": {
+      "type": "object", "required": ["run", "binary", "law", "index", "attempt", "phase", "status", "duration"], "additionalProperties": false,
+      "properties": {
+        "run": {"type": "string", "minLength": 1}, "binary": {"type": "string", "minLength": 1}, "law": {"type": "string", "minLength": 1},
+        "index": {"type": "integer", "minimum": 1}, "attempt": {"type": "integer", "minimum": 1},
+        "phase": {"enum": ["immediate", "final"]}, "status": {"enum": ["PASS", "FAIL", "TIMEOUT"]},
+        "duration": {"type": "string", "minLength": 1}
+      }
+    },
+    "counts": {
+      "type": "object", "required": ["attempts", "executed", "passed", "failed", "uncompleted"], "additionalProperties": false,
+      "properties": {"attempts": {"type": "integer", "minimum": 0}, "executed": {"type": "integer", "minimum": 0}, "passed": {"type": "integer", "minimum": 0}, "failed": {"type": "integer", "minimum": 0}, "uncompleted": {"type": "integer", "minimum": 0}}
+    }
+  }
+}

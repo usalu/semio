@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["domainRows", "renumberOffset", "unicodeRepeat", "unicodeUnit", "cancelAfter", "wideEmptyItems", "partialDepth", "lateSqlCancellationDepth", "tableRowCounts"],
+  "properties": {
+    "domainRows": {"type":"integer","minimum":1},
+    "renumberOffset": {"type":"integer","minimum":1},
+    "unicodeRepeat": {"type":"integer","minimum":1},
+    "unicodeUnit": {"type":"string","minLength":1},
+    "cancelAfter": {"type":"integer","minimum":1},
+    "wideEmptyItems": {"type":"integer","minimum":1},
+    "partialDepth": {"type":"integer","minimum":1},
+    "lateSqlCancellationDepth": {"type":"integer","minimum":1},
+    "tableRowCounts": {
+      "type":"object",
+      "minProperties":27,
+      "maxProperties":27,
+      "propertyNames":{"enum":["md_document","md_block","md_document_block","md_heading","md_paragraph","md_list","md_list_item","md_list_item_block","md_block_quote","md_quote_block","md_code_block","md_thematic_break","md_html_block","md_inline","md_block_inline","md_text","md_emphasis","md_emphasis_inline","md_strong","md_strong_inline","md_code_span","md_link","md_link_text","md_image","md_soft_break","md_hard_break","md_html_inline"]},
+      "additionalProperties":{"type":"integer","minimum":0}
+    }
+  }
+}

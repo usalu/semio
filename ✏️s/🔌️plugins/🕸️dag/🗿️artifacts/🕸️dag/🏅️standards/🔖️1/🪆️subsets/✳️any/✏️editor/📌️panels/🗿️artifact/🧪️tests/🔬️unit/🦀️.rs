@@ -29,9 +29,8 @@ use semio_framework_plugin::{BuiltNode, Component, TreeWindowRequest, TreeWindow
 const NODES_SECTION: &str = "dag-play-document.nodes";
 const OVERSIZED: usize = 200;
 
-fn oversized_dag_document(count: usize) -> crate::DagSnapshot {
-    let nodes: Vec<crate::DagNodeSpec> = (0..count).map(|index| crate::DagNodeSpec { id: format!("node-{index:03}"), name: format!("Node {index}"), ..crate::DagNodeSpec::default() }).collect();
-    crate::DagSnapshot { content: crate::dag_content_child_with_owner(nodes, Vec::new()), ..crate::DagSnapshot::default() }
+fn oversized_dag_document(count: usize) -> crate::DagScene {
+    crate::DagScene { nodes: (0..count).map(|index| crate::DagNodeSpec { id: format!("node-{index:03}"), name: format!("Node {index}"), ..crate::DagNodeSpec::default() }).collect(), edges: Vec::new() }
 }
 
 fn window_law_request(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> TreeWindowRequest {

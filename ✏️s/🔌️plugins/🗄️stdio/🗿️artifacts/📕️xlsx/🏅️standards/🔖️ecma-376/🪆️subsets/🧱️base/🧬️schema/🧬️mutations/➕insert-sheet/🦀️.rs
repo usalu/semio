@@ -17,9 +17,12 @@ impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for InsertSheet {
     fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<<XlsxMutation as Mutation<XlsxSnapshot>>::Diff> {
         agg_diff(&XlsxMutation::InsertSheet(self.clone()), base)
     }
-    fn inverse(&self, base: &XlsxSnapshot) -> Vec<XlsxMutation> {
-        agg_inverse(&XlsxMutation::InsertSheet(self.clone()), base)
-    }
+    fn inverse(&self, base: &XlsxSnapshot) -> Result<Vec<XlsxMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&XlsxMutation::InsertSheet(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert sheet", "Arbeitsblatt einfügen")
     }

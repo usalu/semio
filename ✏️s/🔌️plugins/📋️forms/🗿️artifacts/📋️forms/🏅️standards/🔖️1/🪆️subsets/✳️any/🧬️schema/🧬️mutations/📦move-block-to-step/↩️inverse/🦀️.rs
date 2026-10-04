@@ -5,7 +5,8 @@ use super::mutation::MoveBlockToStep;
 use crate::{forms_steps, FormMutation, FormsSnapshot};
 
 //#region 🔖️Inverse
-pub fn inverse_move_block_to_step(payload: &MoveBlockToStep, base: &FormsSnapshot) -> Vec<FormMutation> {
+pub fn inverse_move_block_to_step(payload: &MoveBlockToStep, base: &FormsSnapshot) -> Result<Vec<FormMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let steps = forms_steps(base);
     let Some(source_step) = steps.iter().find(|step| step.id == payload.step_id) else {
         return Vec::new();
@@ -14,5 +15,7 @@ pub fn inverse_move_block_to_step(payload: &MoveBlockToStep, base: &FormsSnapsho
         return Vec::new();
     };
     vec![FormMutation::MoveBlockToStep(MoveBlockToStep { step_id: payload.to_step_id.clone(), block_id: payload.block_id.clone(), to_step_id: payload.step_id.clone(), index: original_index })]
+
+    })())
 }
 //#endregion 🔖️Inverse

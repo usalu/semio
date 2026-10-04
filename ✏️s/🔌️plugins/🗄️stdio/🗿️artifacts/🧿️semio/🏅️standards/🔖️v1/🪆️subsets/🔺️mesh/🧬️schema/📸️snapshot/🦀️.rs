@@ -76,6 +76,16 @@ pub struct SemioMaterial {
     pub metallic: f32,
     #[value(default)]
     pub roughness: f32,
+    #[value(default)]
+    pub base_color_texture: Option<String>,
+    #[value(default)]
+    pub metallic_roughness_texture: Option<String>,
+    #[value(default)]
+    pub normal_texture: Option<String>,
+    #[value(default)]
+    pub occlusion_texture: Option<String>,
+    #[value(default)]
+    pub emissive_texture: Option<String>,
 }
 //#endregion 🔖️Material
 
@@ -303,13 +313,13 @@ fn dec_mesh(s: &str) -> Result<SemioMesh, String> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_material(m: &SemioMaterial) -> String {
-    format!("[{},{},{},{}]", enc_str(&m.id), enc_rgba(&m.base_color), native::NativeF32(m.metallic), native::NativeF32(m.roughness))
+    format!("[{},{},{},{},{},{},{},{},{}]", enc_str(&m.id), enc_rgba(&m.base_color), native::NativeF32(m.metallic), native::NativeF32(m.roughness), encode_option(&m.base_color_texture, |v: &String| enc_str(v)), encode_option(&m.metallic_roughness_texture, |v: &String| enc_str(v)), encode_option(&m.normal_texture, |v: &String| enc_str(v)), encode_option(&m.occlusion_texture, |v: &String| enc_str(v)), encode_option(&m.emissive_texture, |v: &String| enc_str(v)))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_material(s: &str) -> Result<SemioMaterial, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
-    let [id, base_color, metallic, roughness] = parts.as_slice() else { return Err(format!("material: expected 4 fields, got {}", parts.len())) };
-    Ok(SemioMaterial { id: dec_str(id)?, base_color: dec_rgba(base_color)?, metallic: parse_f32(metallic)?, roughness: parse_f32(roughness)? })
+    let [id, base_color, metallic, roughness, base_color_texture, metallic_roughness_texture, normal_texture, occlusion_texture, emissive_texture] = parts.as_slice() else { return Err(format!("material: expected 9 fields, got {}", parts.len())) };
+    Ok(SemioMaterial { id: dec_str(id)?, base_color: dec_rgba(base_color)?, metallic: parse_f32(metallic)?, roughness: parse_f32(roughness)?, base_color_texture: decode_option(base_color_texture, dec_str)?, metallic_roughness_texture: decode_option(metallic_roughness_texture, dec_str)?, normal_texture: decode_option(normal_texture, dec_str)?, occlusion_texture: decode_option(occlusion_texture, dec_str)?, emissive_texture: decode_option(emissive_texture, dec_str)? })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_texture(t: &SemioTexture) -> String {
@@ -499,6 +509,9 @@ fn encode_mesh_snapshot_binary(s: &SemioMeshSnapshot) -> Vec<u8> {
         write_rgba(&mut out, &mat.base_color);
         out.extend_from_slice(&mat.metallic.to_le_bytes());
         out.extend_from_slice(&mat.roughness.to_le_bytes());
+        for reference in [&mat.base_color_texture, &mat.metallic_roughness_texture, &mat.normal_texture, &mat.occlusion_texture, &mat.emissive_texture] {
+            match reference { None => out.push(0), Some(id) => { out.push(1); write_str_lp(&mut out, id); } }
+        }
     }
     store::pack_rt::write_varint_u64(&mut out, s.textures.len() as u64);
     for t in &s.textures {
@@ -560,7 +573,12 @@ fn decode_mesh_snapshot_binary(bytes: &[u8]) -> Result<SemioMeshSnapshot, String
         let base_color = read_rgba(&mut reader)?;
         let metallic = read_f32_le(&mut reader)?;
         let roughness = read_f32_le(&mut reader)?;
-        materials.push(SemioMaterial { id, base_color, metallic, roughness });
+        let base_color_texture = match reader.read_u8().map_err(|e| e.to_string())? { 0 => None, 1 => Some(read_str_lp(&mut reader)?), _ => return Err("invalid texture reference presence".into()) };
+        let metallic_roughness_texture = match reader.read_u8().map_err(|e| e.to_string())? { 0 => None, 1 => Some(read_str_lp(&mut reader)?), _ => return Err("invalid texture reference presence".into()) };
+        let normal_texture = match reader.read_u8().map_err(|e| e.to_string())? { 0 => None, 1 => Some(read_str_lp(&mut reader)?), _ => return Err("invalid texture reference presence".into()) };
+        let occlusion_texture = match reader.read_u8().map_err(|e| e.to_string())? { 0 => None, 1 => Some(read_str_lp(&mut reader)?), _ => return Err("invalid texture reference presence".into()) };
+        let emissive_texture = match reader.read_u8().map_err(|e| e.to_string())? { 0 => None, 1 => Some(read_str_lp(&mut reader)?), _ => return Err("invalid texture reference presence".into()) };
+        materials.push(SemioMaterial { id, base_color, metallic, roughness, base_color_texture, metallic_roughness_texture, normal_texture, occlusion_texture, emissive_texture });
     }
     let texture_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut textures = Vec::with_capacity(texture_count as usize);
@@ -583,12 +601,12 @@ impl store::ArtifactDsl for SemioMeshSnapshot {
         STDIO_SEMIOMESH_DOCUMENT_SCHEMA
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        parse_mesh_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_mesh_snapshot_body(body).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
@@ -605,17 +623,17 @@ impl store::ArtifactPack for SemioMeshSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_mesh_snapshot_binary(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let _ = options;
-        decode_mesh_snapshot_binary(&inner).map_err(store::PackError::Schema)
+        decode_mesh_snapshot_binary(&inner).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
@@ -630,7 +648,7 @@ impl store::ArtifactPack for SemioMeshSnapshot {
 /// A thin `pack::to_json_string` wrapper (first-party, over `ToValue`/`DslValue`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_semio_mesh_snapshot_json(snapshot: &SemioMeshSnapshot) -> String {
-    pack::to_json_string(snapshot)
+    semio_framework_pack_json::to_json_string(snapshot)
 }
 
 /// 📥️ The `pack::from_json_str` inverse of [`encode_semio_mesh_snapshot_json`] — decodes the committed
@@ -639,7 +657,7 @@ pub fn encode_semio_mesh_snapshot_json(snapshot: &SemioMeshSnapshot) -> String {
 /// committed fixture instead of re-declaring it as a Rust literal beside it.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_mesh_snapshot_json(text: &str) -> Result<SemioMeshSnapshot, String> {
-    pack::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 //#endregion 🌉️ExternalCodecBridge
 
@@ -666,7 +684,7 @@ pub fn demo_mesh_snapshot() -> SemioMeshSnapshot {
                 material_id: Some("mat-1".into()),
             }],
         }],
-        materials: vec![SemioMaterial { id: "mat-1".into(), base_color: SemioRgba { r: 0.8, g: 0.2, b: 0.2, a: 1.0 }, metallic: 0.1, roughness: 0.6 }],
+        materials: vec![SemioMaterial { id: "mat-1".into(), base_color: SemioRgba { r: 0.8, g: 0.2, b: 0.2, a: 1.0 }, metallic: 0.1, roughness: 0.6, ..Default::default() }],
         textures: vec![SemioTexture { id: "tex-1".into(), mime: "image/png".into(), bytes: vec![0x89, 0x50, 0x4e, 0x47] }],
     }
 }
@@ -678,7 +696,7 @@ pub fn demo_mesh_snapshot() -> SemioMeshSnapshot {
 /// want the mesh-subset-specific names.
 /// 📝 Parse mesh subset DSL text into a `SemioMeshSnapshot`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn parse_mesh_dsl(text: &str) -> Result<SemioMeshSnapshot, store::TextError> {
+pub fn parse_mesh_dsl(text: &str) -> Result<SemioMeshSnapshot, semio_framework_diagnostic::TextError> {
     <SemioMeshSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 

@@ -8,7 +8,7 @@ use crate::CadSnapshot;
 //#region 🔖️Diff
 pub fn diff(_payload: &DeleteStructureClassicModel, base: &CadSnapshot) -> protocol::MutationOutcome<CadDiff> {
     if base.structure_classic_model.is_none() {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Structure-classic-model child is already empty.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Structure-classic-model child is already empty.");
     }
     protocol::MutationOutcome::new(CadDiff { structure_classic_model: Some(None), ..Default::default() })
 }

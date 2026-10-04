@@ -5,7 +5,7 @@
 //! reference keeps compiling unchanged.
 //!
 //! Every field here is plain wasm-safe data (`String`/`f64`/`bool`/`Option`/`Vec`/nested plain
-//! records) — this crate depends on nothing beyond `ui_contract` and `serde`. Two fields could not
+//! records) — scene lanes use first-party value/JSON codecs alongside `ui_contract` and `serde`. Two fields could not
 //! move byte-identical for that reason: [`TableScene::drop_action_json`] (was
 //! `Option<ActionDescriptor>`, a `ui_wgpu`-only type pulling `semio_framework_value::DslValue`/`Label`/`IconName`) and
 //! [`NodeGraphOperatorChannelRecord::default_json`] (was `Option<serde_json::Value>`, which would
@@ -118,7 +118,7 @@ fn value_field(entries: &[(String, DslValue)], key: &str) -> Option<DslValue> {
 }
 
 fn value_required(entries: &[(String, DslValue)], key: &str) -> Result<DslValue, ValueError> {
-    value_field(entries, key).ok_or_else(|| ValueError::new(format!("missing field `{key}`")))
+    value_field(entries, key).ok_or_else(|| ValueError::new(protocol::value::ValueRefusalKind::InvalidValue, format!("missing field `{key}`")))
 }
 
 /// 🌱️ Decodes a required (non-defaulted, non-`Option`) field.
@@ -1057,6 +1057,9 @@ pub struct NodeGraphOperatorChannelRecord {
     /// port-compatibility oracle intersects. Empty is undeclared, which stays connectable.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub value_types: Vec<String>,
+    /// 📃️ Homogeneous collection element schemas, separate from the channel's wire schemas.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub item_types: Vec<String>,
     /// 🕳️ Opaque JSON-encoded default value — was `Option<serde_json::Value>`; this crate depends
     /// on nothing beyond `ui_contract`/`serde`, so the arbitrary-shaped default rides as a JSON
     /// string like every sibling `_json` field on these scene structs already does.
@@ -1103,7 +1106,7 @@ impl FromValue for NodeGraphPortRecord {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let entries = value.into_object()?;
         let get = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
-        let field = |key: &str| get(key).ok_or_else(|| ValueError::new(format!("missing field `{key}`")));
+        let field = |key: &str| get(key).ok_or_else(|| ValueError::new(protocol::value::ValueRefusalKind::InvalidValue, format!("missing field `{key}`")));
         let opt = |key: &str| get(key).map(Option::<String>::from_value).transpose().map(Option::flatten);
         Ok(Self {
             id: String::from_value(field("id")?)?,
@@ -1121,7 +1124,7 @@ impl FromValue for NodeGraphNodeRecord {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let entries = value.into_object()?;
         let get = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
-        let field = |key: &str| get(key).ok_or_else(|| ValueError::new(format!("missing field `{key}`")));
+        let field = |key: &str| get(key).ok_or_else(|| ValueError::new(protocol::value::ValueRefusalKind::InvalidValue, format!("missing field `{key}`")));
         let opt = |key: &str| get(key).map(Option::<String>::from_value).transpose().map(Option::flatten);
         Ok(Self {
             id: String::from_value(field("id")?)?,
@@ -1144,7 +1147,7 @@ impl FromValue for NodeGraphEdgeRecord {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let entries = value.into_object()?;
         let get = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
-        let field = |key: &str| get(key).ok_or_else(|| ValueError::new(format!("missing field `{key}`")));
+        let field = |key: &str| get(key).ok_or_else(|| ValueError::new(protocol::value::ValueRefusalKind::InvalidValue, format!("missing field `{key}`")));
         let opt = |key: &str| get(key).map(Option::<String>::from_value).transpose().map(Option::flatten);
         Ok(Self {
             id: String::from_value(field("id")?)?,
@@ -1161,7 +1164,7 @@ impl FromValue for NodeGraphFindItem {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let entries = value.into_object()?;
         let get = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
-        let field = |key: &str| get(key).ok_or_else(|| ValueError::new(format!("missing field `{key}`")));
+        let field = |key: &str| get(key).ok_or_else(|| ValueError::new(protocol::value::ValueRefusalKind::InvalidValue, format!("missing field `{key}`")));
         Ok(Self {
             id: String::from_value(field("id")?)?,
             label: String::from_value(field("label")?)?,
@@ -1174,7 +1177,7 @@ impl FromValue for NodeGraphOperatorVariadicRecord {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let entries = value.into_object()?;
         let get = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
-        let field = |key: &str| get(key).ok_or_else(|| ValueError::new(format!("missing field `{key}`")));
+        let field = |key: &str| get(key).ok_or_else(|| ValueError::new(protocol::value::ValueRefusalKind::InvalidValue, format!("missing field `{key}`")));
         Ok(Self {
             slot_key: String::from_value(field("slotKey")?)?,
             min: usize::from_value(field("min")?)?,
@@ -1187,7 +1190,7 @@ impl FromValue for NodeGraphOperatorChannelRecord {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let entries = value.into_object()?;
         let get = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
-        let field = |key: &str| get(key).ok_or_else(|| ValueError::new(format!("missing field `{key}`")));
+        let field = |key: &str| get(key).ok_or_else(|| ValueError::new(protocol::value::ValueRefusalKind::InvalidValue, format!("missing field `{key}`")));
         let opt = |key: &str| get(key).map(Option::<String>::from_value).transpose().map(Option::flatten);
         Ok(Self {
             code: String::from_value(field("code")?)?,
@@ -1196,6 +1199,7 @@ impl FromValue for NodeGraphOperatorChannelRecord {
             full_name: String::from_value(field("fullName")?)?,
             operators: get("operators").map(Vec::from_value).transpose()?.unwrap_or_default(),
             value_types: get("valueTypes").map(Vec::from_value).transpose()?.unwrap_or_default(),
+            item_types: get("itemTypes").map(Vec::from_value).transpose()?.unwrap_or_default(),
             default_json: opt("defaultJson")?,
             label: opt("label")?,
             cardinality: get("cardinality").map(String::from_value).transpose()?.unwrap_or_default(),
@@ -1207,7 +1211,7 @@ impl FromValue for NodeGraphOperatorRecord {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let entries = value.into_object()?;
         let get = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
-        let field = |key: &str| get(key).ok_or_else(|| ValueError::new(format!("missing field `{key}`")));
+        let field = |key: &str| get(key).ok_or_else(|| ValueError::new(protocol::value::ValueRefusalKind::InvalidValue, format!("missing field `{key}`")));
         Ok(Self {
             id: String::from_value(field("id")?)?,
             extension: String::from_value(field("extension")?)?,
@@ -1320,6 +1324,7 @@ impl ToValue for NodeGraphOperatorChannelRecord {
         value_push(&mut entries, "fullName", &self.full_name);
         value_push_if_nonempty(&mut entries, "operators", &self.operators);
         value_push_if_nonempty(&mut entries, "valueTypes", &self.value_types);
+        value_push_if_nonempty(&mut entries, "itemTypes", &self.item_types);
         value_push_option(&mut entries, "defaultJson", &self.default_json);
         value_push_option(&mut entries, "label", &self.label);
         value_push(&mut entries, "cardinality", &self.cardinality);
@@ -1377,11 +1382,11 @@ impl FromValue for NodeGraphInteractionDomain {
         let entries = value.into_object()?;
         let fields = ["id", "nodeTargetPrefix", "edgeTargetPrefix", "handleTargetPrefix"];
         if let Some((field, _)) = entries.iter().find(|(field, _)| !fields.contains(&field.as_str())) {
-            return Err(ValueError::new(format!("unknown field `{field}`")));
+            return Err(ValueError::new(protocol::value::ValueRefusalKind::InvalidValue, format!("unknown field `{field}`")));
         }
         for field in fields {
             if entries.iter().filter(|(candidate, _)| candidate == field).count() > 1 {
-                return Err(ValueError::new(format!("duplicate field `{field}`")));
+                return Err(ValueError::new(protocol::value::ValueRefusalKind::InvalidValue, format!("duplicate field `{field}`")));
             }
         }
         let domain = Self {
@@ -1391,7 +1396,7 @@ impl FromValue for NodeGraphInteractionDomain {
             handle_target_prefix: value_decode(&entries, "handleTargetPrefix")?,
         };
         if domain.id.is_empty() || domain.node_target_prefix.is_empty() || domain.edge_target_prefix.is_empty() || domain.handle_target_prefix.is_empty() {
-            return Err(ValueError::new("node graph interaction domain fields must be non-empty"));
+            return Err(ValueError::new(protocol::value::ValueRefusalKind::InvalidValue, "node graph interaction domain fields must be non-empty"));
         }
         Ok(domain)
     }
@@ -1400,6 +1405,8 @@ impl FromValue for NodeGraphInteractionDomain {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NodeGraphScene {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub lanes: Vec<SceneLaneRef>,
     #[serde(default)]
     pub nodes: Vec<NodeGraphNodeRecord>,
     #[serde(default)]
@@ -1453,12 +1460,30 @@ pub struct NodeGraphScene {
 
 impl SceneDoc for NodeGraphScene {
     const SCHEMA: &'static str = "node-graph@1";
+
+    fn split_lanes(&self) -> (Self, Vec<SceneLanePayload>) {
+        let mut spine = self.clone();
+        let mut lanes = Vec::new();
+        let mut refs = Vec::new();
+        for lane in NodeGraphSceneLane::ALL {
+            let Some(payload) = lane.take(&mut spine) else { continue };
+            refs.push(SceneLaneRef { lane: lane.name().into(), bytes: payload.len() as u32, hash: scene_lane_hash(&payload) });
+            lanes.push(SceneLanePayload { key: lane.body_key(), payload });
+        }
+        spine.lanes = refs;
+        (spine, lanes)
+    }
+
+    fn merge_lane(&mut self, key: &str, payload: String) -> bool {
+        NodeGraphSceneLane::from_body_key(key).is_some_and(|lane| lane.put(self, payload))
+    }
 }
 
 impl NodeGraphScene {
     /** 🕸️ Builds a node-graph scene with optional extensions unset. */
     pub fn base(nodes: Vec<NodeGraphNodeRecord>, edges: Vec<NodeGraphEdgeRecord>, viewport: Viewport2d) -> Self {
         Self {
+            lanes: Vec::new(),
             nodes,
             edges,
             viewport: Some(viewport),
@@ -1486,6 +1511,7 @@ impl NodeGraphScene {
 impl ToValue for NodeGraphScene {
     fn to_value(&self) -> DslValue {
         let mut entries = Vec::new();
+        value_push_if_nonempty(&mut entries, "lanes", &self.lanes);
         value_push(&mut entries, "nodes", &self.nodes);
         value_push(&mut entries, "edges", &self.edges);
         value_push_option(&mut entries, "viewport", &self.viewport);
@@ -1514,6 +1540,7 @@ impl FromValue for NodeGraphScene {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let entries = value.into_object()?;
         Ok(Self {
+            lanes: value_decode_default(&entries, "lanes", Vec::new)?,
             nodes: value_decode_default(&entries, "nodes", Vec::new)?,
             edges: value_decode_default(&entries, "edges", Vec::new)?,
             viewport: value_decode_option(&entries, "viewport")?,
@@ -1535,6 +1562,162 @@ impl FromValue for NodeGraphScene {
             presence_peers_json: value_decode_option(&entries, "presencePeersJson")?,
             eval_json: value_decode_option(&entries, "evalJson")?,
         })
+    }
+}
+
+/// 🚚️ Document-sized node graph fields, pinned by the neutral node-graph lane fixture.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum NodeGraphSceneLane {
+    Nodes,
+    Edges,
+    Operators,
+    FindItems,
+    Selection,
+    Highlighted,
+    PreviewOff,
+    Lod,
+    Controls,
+    Clusters,
+    Computing,
+    Status,
+    Capabilities,
+    HostSnapshot,
+    PresencePeers,
+    Eval,
+}
+
+/// 🪧️ Node graph lane names.
+pub const NODE_GRAPH_SCENE_LANE_NAMES: [&str; 16] = [
+    "nodes",
+    "edges",
+    "operators",
+    "findItems",
+    "selection",
+    "highlighted",
+    "previewOff",
+    "lod",
+    "controls",
+    "clusters",
+    "computing",
+    "status",
+    "capabilities",
+    "hostSnapshot",
+    "presencePeers",
+    "eval",
+];
+
+/// 🪧️ Node graph lane fields.
+pub const NODE_GRAPH_SCENE_LANE_FIELDS: [&str; 16] = [
+    "nodes",
+    "edges",
+    "operators",
+    "findItems",
+    "selection",
+    "highlighted",
+    "previewOffJson",
+    "lodJson",
+    "controlsJson",
+    "clustersJson",
+    "computingJson",
+    "statusJson",
+    "capabilitiesJson",
+    "hostSnapshotJson",
+    "presencePeersJson",
+    "evalJson",
+];
+
+/// 🪧️ Node graph lane body keys.
+pub const NODE_GRAPH_SCENE_LANE_BODY_KEYS: [&str; 16] = [
+    "framework.scene.nodeGraph.nodes",
+    "framework.scene.nodeGraph.edges",
+    "framework.scene.nodeGraph.operators",
+    "framework.scene.nodeGraph.findItems",
+    "framework.scene.nodeGraph.selection",
+    "framework.scene.nodeGraph.highlighted",
+    "framework.scene.nodeGraph.previewOff",
+    "framework.scene.nodeGraph.lod",
+    "framework.scene.nodeGraph.controls",
+    "framework.scene.nodeGraph.clusters",
+    "framework.scene.nodeGraph.computing",
+    "framework.scene.nodeGraph.status",
+    "framework.scene.nodeGraph.capabilities",
+    "framework.scene.nodeGraph.hostSnapshot",
+    "framework.scene.nodeGraph.presencePeers",
+    "framework.scene.nodeGraph.eval",
+];
+
+impl NodeGraphSceneLane {
+    /// 📚️ Stable order of node graph payload carriers.
+    pub const ALL: [Self; 16] = [
+        Self::Nodes,
+        Self::Edges,
+        Self::Operators,
+        Self::FindItems,
+        Self::Selection,
+        Self::Highlighted,
+        Self::PreviewOff,
+        Self::Lod,
+        Self::Controls,
+        Self::Clusters,
+        Self::Computing,
+        Self::Status,
+        Self::Capabilities,
+        Self::HostSnapshot,
+        Self::PresencePeers,
+        Self::Eval,
+];
+
+    /// 🏷️ Serialized lane name.
+    pub fn name(self) -> &'static str { NODE_GRAPH_SCENE_LANE_NAMES[self as usize] }
+    /// 🪧️ Serialized scene field.
+    pub fn field(self) -> &'static str { NODE_GRAPH_SCENE_LANE_FIELDS[self as usize] }
+    /// 🔑️ Reserved carrier key.
+    pub fn body_key(self) -> &'static str { NODE_GRAPH_SCENE_LANE_BODY_KEYS[self as usize] }
+    /// 🔎️ Resolves reserved carrier keys.
+    pub fn from_body_key(key: &str) -> Option<Self> { Self::ALL.into_iter().find(|lane| lane.body_key() == key) }
+    /// 📤️ Moves a document-sized payload out of its fixed scene spine.
+    pub fn take(self, scene: &mut NodeGraphScene) -> Option<String> {
+        match self {
+            Self::Nodes => Some(semio_framework_pack_json::to_json_string(&std::mem::take(&mut scene.nodes))),
+            Self::Edges => Some(semio_framework_pack_json::to_json_string(&std::mem::take(&mut scene.edges))),
+            Self::Operators => Some(semio_framework_pack_json::to_json_string(&std::mem::take(&mut scene.operators))),
+            Self::FindItems => Some(semio_framework_pack_json::to_json_string(&std::mem::take(&mut scene.find_items))),
+            Self::Selection => Some(semio_framework_pack_json::to_json_string(&std::mem::take(&mut scene.selection))),
+            Self::Highlighted => Some(semio_framework_pack_json::to_json_string(&std::mem::take(&mut scene.highlighted))),
+            Self::PreviewOff => scene.preview_off_json.take(),
+            Self::Lod => scene.lod_json.take(),
+            Self::Controls => scene.controls_json.take(),
+            Self::Clusters => scene.clusters_json.take(),
+            Self::Computing => scene.computing_json.take(),
+            Self::Status => scene.status_json.take(),
+            Self::Capabilities => scene.capabilities_json.take(),
+            Self::HostSnapshot => scene.host_snapshot_json.take(),
+            Self::PresencePeers => scene.presence_peers_json.take(),
+            Self::Eval => scene.eval_json.take(),
+        }
+    }
+
+    /// 📥️ Restores complete carriers; invalid typed payloads leave the spine unchanged.
+    pub fn put(self, scene: &mut NodeGraphScene, payload: String) -> bool {
+        match self {
+            Self::Nodes => { let Ok(value) = semio_framework_pack_json::from_json_str(&payload, semio_framework_pack_json::JsonMemberPolicy::Reject) else { return false }; scene.nodes = value; },
+            Self::Edges => { let Ok(value) = semio_framework_pack_json::from_json_str(&payload, semio_framework_pack_json::JsonMemberPolicy::Reject) else { return false }; scene.edges = value; },
+            Self::Operators => { let Ok(value) = semio_framework_pack_json::from_json_str(&payload, semio_framework_pack_json::JsonMemberPolicy::Reject) else { return false }; scene.operators = value; },
+            Self::FindItems => { let Ok(value) = semio_framework_pack_json::from_json_str(&payload, semio_framework_pack_json::JsonMemberPolicy::Reject) else { return false }; scene.find_items = value; },
+            Self::Selection => { let Ok(value) = semio_framework_pack_json::from_json_str(&payload, semio_framework_pack_json::JsonMemberPolicy::Reject) else { return false }; scene.selection = value; },
+            Self::Highlighted => { let Ok(value) = semio_framework_pack_json::from_json_str(&payload, semio_framework_pack_json::JsonMemberPolicy::Reject) else { return false }; scene.highlighted = value; },
+            Self::PreviewOff => scene.preview_off_json = Some(payload),
+            Self::Lod => scene.lod_json = Some(payload),
+            Self::Controls => scene.controls_json = Some(payload),
+            Self::Clusters => scene.clusters_json = Some(payload),
+            Self::Computing => scene.computing_json = Some(payload),
+            Self::Status => scene.status_json = Some(payload),
+            Self::Capabilities => scene.capabilities_json = Some(payload),
+            Self::HostSnapshot => scene.host_snapshot_json = Some(payload),
+            Self::PresencePeers => scene.presence_peers_json = Some(payload),
+            Self::Eval => scene.eval_json = Some(payload),
+        }
+        true
     }
 }
 //#endregion 🔖️NodeGraphScene
@@ -1820,6 +2003,8 @@ pub struct Paint2dScene {
     pub brush_hardness: f64,
     pub paint_target:String,
     pub mask_value:u32,
+    /// 🪣️ The session colour tolerance (0..255) every host's bucket and wand floods with.
+    pub fill_tolerance:u32,
     pub view_mode: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub composite_viewport_json: Option<String>,
@@ -1955,6 +2140,7 @@ impl ToValue for Paint2dScene {
         value_push(&mut entries, "brushHardness", &self.brush_hardness);
         value_push(&mut entries,"paintTarget",&self.paint_target);
         value_push(&mut entries,"maskValue",&self.mask_value);
+        value_push(&mut entries, "fillTolerance", &self.fill_tolerance);
         value_push(&mut entries, "viewMode", &self.view_mode);
         value_push_option(&mut entries, "compositeViewportJson", &self.composite_viewport_json);
         value_push_if_nonempty(&mut entries, "lanes", &self.lanes);
@@ -1979,6 +2165,7 @@ impl FromValue for Paint2dScene {
             brush_hardness: value_decode(&entries, "brushHardness")?,
             paint_target:value_decode(&entries,"paintTarget")?,
             mask_value:value_decode(&entries,"maskValue")?,
+            fill_tolerance: value_decode(&entries, "fillTolerance")?,
             view_mode: value_decode(&entries, "viewMode")?,
             composite_viewport_json: value_decode_option(&entries, "compositeViewportJson")?,
             lanes: value_decode_default(&entries, "lanes", Vec::new)?,
@@ -2725,16 +2912,16 @@ impl FromValue for InkCanvasInteractionDomain {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let entries = value.into_object()?;
         if let Some((field, _)) = entries.iter().find(|(field, _)| field != "id" && field != "granularityId") {
-            return Err(ValueError::new(format!("unknown field `{field}`")));
+            return Err(ValueError::new(protocol::value::ValueRefusalKind::InvalidValue, format!("unknown field `{field}`")));
         }
         for field in ["id", "granularityId"] {
             if entries.iter().filter(|(candidate, _)| candidate == field).count() > 1 {
-                return Err(ValueError::new(format!("duplicate field `{field}`")));
+                return Err(ValueError::new(protocol::value::ValueRefusalKind::InvalidValue, format!("duplicate field `{field}`")));
             }
         }
         let domain = Self { id: value_decode(&entries, "id")?, granularity_id: value_decode(&entries, "granularityId")? };
         if domain.id.is_empty() || domain.granularity_id.is_empty() {
-            return Err(ValueError::new("ink canvas interaction domain fields must be non-empty"));
+            return Err(ValueError::new(protocol::value::ValueRefusalKind::InvalidValue, "ink canvas interaction domain fields must be non-empty"));
         }
         Ok(domain)
     }
@@ -2991,6 +3178,6 @@ impl FromValue for crate::Canvas2dFraming {
     fn from_value(value: DslValue) -> Result<Self,ValueError> {
         let entries = value.into_object()?;
         let bounds: Vec<f64> = value_decode(&entries,"bounds")?;
-        Ok(Self { revision: value_decode(&entries,"revision")?,bounds: bounds.try_into().map_err(|_| ValueError::new("canvas framing requires four bounds"))?,padding: value_decode(&entries,"padding")? })
+        Ok(Self { revision: value_decode(&entries,"revision")?,bounds: bounds.try_into().map_err(|_| ValueError::new(protocol::value::ValueRefusalKind::InvalidValue, "canvas framing requires four bounds"))?,padding: value_decode(&entries,"padding")? })
     }
 }

@@ -1,0 +1,14 @@
+{
+  "DragNodes": {
+    "targets": [
+      {
+        "value": "a"
+      },
+      {
+        "value": "b"
+      }
+    ],
+    "dx": 2.5,
+    "dy": -1.5
+  }
+}

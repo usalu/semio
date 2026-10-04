@@ -32,8 +32,8 @@ impl crate::FromValue for DocumentBrowserActorByteLengthV1 {
         let number = value
             .as_f64()
             .filter(|number| number.is_finite() && number.fract() == 0.0 && *number >= 1.0 && *number <= DOCUMENT_BROWSER_ACTOR_MAX_BYTES as f64)
-            .ok_or_else(|| crate::ValueError::new("expected an exact bounded browser actor length"))?;
-        Self::new(number as u64).map_err(|_| crate::ValueError::new("invalid browser actor length"))
+            .ok_or_else(|| crate::ValueError::new(protocol::value::ValueRefusalKind::InvalidValue,"expected an exact bounded browser actor length"))?;
+        Self::new(number as u64).map_err(|_| crate::ValueError::new(protocol::value::ValueRefusalKind::InvalidValue,"invalid browser actor length"))
     }
 }
 

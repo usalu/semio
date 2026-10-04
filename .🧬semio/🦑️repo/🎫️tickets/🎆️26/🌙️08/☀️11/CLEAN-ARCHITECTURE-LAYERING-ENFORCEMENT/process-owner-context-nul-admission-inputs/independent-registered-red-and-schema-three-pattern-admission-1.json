@@ -1,0 +1,235 @@
+{
+  "at": "2026-10-03T21:20:06.175Z",
+  "testRows": [
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📋️context/🧬️schema/🚫️paths/🔣️.json",
+      "after": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"required\": [\n    \"version\",\n    \"cases\"\n  ],\n  \"properties\": {\n    \"version\": {\n      \"const\": 1\n    },\n    \"cases\": {\n      \"type\": \"array\",\n      \"minItems\": 1,\n      \"items\": {\n        \"type\": \"object\",\n        \"additionalProperties\": false,\n        \"required\": [\n          \"id\",\n          \"field\",\n          \"kind\",\n          \"valid\"\n        ],\n        \"properties\": {\n          \"id\": {\n            \"type\": \"string\",\n            \"minLength\": 1\n          },\n          \"field\": {\n            \"enum\": [\n              \"cwd\",\n              \"cacheRoot\",\n              \"leaseDirectory\"\n            ]\n          },\n          \"kind\": {\n            \"enum\": [\n              \"normal\",\n              \"nul-prefix\",\n              \"nul-suffix\",\n              \"relative\"\n            ]\n          },\n          \"valid\": {\n            \"type\": \"boolean\"\n          }\n        }\n      }\n    }\n  }\n}\n",
+      "before": null,
+      "inverse": null,
+      "current": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"required\": [\n    \"version\",\n    \"cases\"\n  ],\n  \"properties\": {\n    \"version\": {\n      \"const\": 1\n    },\n    \"cases\": {\n      \"type\": \"array\",\n      \"minItems\": 1,\n      \"items\": {\n        \"type\": \"object\",\n        \"additionalProperties\": false,\n        \"required\": [\n          \"id\",\n          \"field\",\n          \"kind\",\n          \"valid\"\n        ],\n        \"properties\": {\n          \"id\": {\n            \"type\": \"string\",\n            \"minLength\": 1\n          },\n          \"field\": {\n            \"enum\": [\n              \"cwd\",\n              \"cacheRoot\",\n              \"leaseDirectory\"\n            ]\n          },\n          \"kind\": {\n            \"enum\": [\n              \"normal\",\n              \"nul-prefix\",\n              \"nul-suffix\",\n              \"relative\"\n            ]\n          },\n          \"valid\": {\n            \"type\": \"boolean\"\n          }\n        }\n      }\n    }\n  }\n}\n",
+      "currentHash": "448fc5559dcf269ba122b20b6154b6f7c7c2619f8616836bf4f12ab7b857b459"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📋️context/🧫️fixtures/🚫️paths/🔣️.json",
+      "after": "{\n  \"version\": 1,\n  \"cases\": [\n    {\n      \"id\": \"cwd-normal\",\n      \"field\": \"cwd\",\n      \"kind\": \"normal\",\n      \"valid\": true\n    },\n    {\n      \"id\": \"cwd-nul-prefix\",\n      \"field\": \"cwd\",\n      \"kind\": \"nul-prefix\",\n      \"valid\": false\n    },\n    {\n      \"id\": \"cwd-nul-suffix\",\n      \"field\": \"cwd\",\n      \"kind\": \"nul-suffix\",\n      \"valid\": false\n    },\n    {\n      \"id\": \"cwd-relative\",\n      \"field\": \"cwd\",\n      \"kind\": \"relative\",\n      \"valid\": false\n    },\n    {\n      \"id\": \"cacheRoot-normal\",\n      \"field\": \"cacheRoot\",\n      \"kind\": \"normal\",\n      \"valid\": true\n    },\n    {\n      \"id\": \"cacheRoot-nul-prefix\",\n      \"field\": \"cacheRoot\",\n      \"kind\": \"nul-prefix\",\n      \"valid\": false\n    },\n    {\n      \"id\": \"cacheRoot-nul-suffix\",\n      \"field\": \"cacheRoot\",\n      \"kind\": \"nul-suffix\",\n      \"valid\": false\n    },\n    {\n      \"id\": \"cacheRoot-relative\",\n      \"field\": \"cacheRoot\",\n      \"kind\": \"relative\",\n      \"valid\": false\n    },\n    {\n      \"id\": \"leaseDirectory-normal\",\n      \"field\": \"leaseDirectory\",\n      \"kind\": \"normal\",\n      \"valid\": true\n    },\n    {\n      \"id\": \"leaseDirectory-nul-prefix\",\n      \"field\": \"leaseDirectory\",\n      \"kind\": \"nul-prefix\",\n      \"valid\": false\n    },\n    {\n      \"id\": \"leaseDirectory-nul-suffix\",\n      \"field\": \"leaseDirectory\",\n      \"kind\": \"nul-suffix\",\n      \"valid\": false\n    },\n    {\n      \"id\": \"leaseDirectory-relative\",\n      \"field\": \"leaseDirectory\",\n      \"kind\": \"relative\",\n      \"valid\": false\n    }\n  ]\n}\n",
+      "before": null,
+      "inverse": null,
+      "current": "{\n  \"version\": 1,\n  \"cases\": [\n    {\n      \"id\": \"cwd-normal\",\n      \"field\": \"cwd\",\n      \"kind\": \"normal\",\n      \"valid\": true\n    },\n    {\n      \"id\": \"cwd-nul-prefix\",\n      \"field\": \"cwd\",\n      \"kind\": \"nul-prefix\",\n      \"valid\": false\n    },\n    {\n      \"id\": \"cwd-nul-suffix\",\n      \"field\": \"cwd\",\n      \"kind\": \"nul-suffix\",\n      \"valid\": false\n    },\n    {\n      \"id\": \"cwd-relative\",\n      \"field\": \"cwd\",\n      \"kind\": \"relative\",\n      \"valid\": false\n    },\n    {\n      \"id\": \"cacheRoot-normal\",\n      \"field\": \"cacheRoot\",\n      \"kind\": \"normal\",\n      \"valid\": true\n    },\n    {\n      \"id\": \"cacheRoot-nul-prefix\",\n      \"field\": \"cacheRoot\",\n      \"kind\": \"nul-prefix\",\n      \"valid\": false\n    },\n    {\n      \"id\": \"cacheRoot-nul-suffix\",\n      \"field\": \"cacheRoot\",\n      \"kind\": \"nul-suffix\",\n      \"valid\": false\n    },\n    {\n      \"id\": \"cacheRoot-relative\",\n      \"field\": \"cacheRoot\",\n      \"kind\": \"relative\",\n      \"valid\": false\n    },\n    {\n      \"id\": \"leaseDirectory-normal\",\n      \"field\": \"leaseDirectory\",\n      \"kind\": \"normal\",\n      \"valid\": true\n    },\n    {\n      \"id\": \"leaseDirectory-nul-prefix\",\n      \"field\": \"leaseDirectory\",\n      \"kind\": \"nul-prefix\",\n      \"valid\": false\n    },\n    {\n      \"id\": \"leaseDirectory-nul-suffix\",\n      \"field\": \"leaseDirectory\",\n      \"kind\": \"nul-suffix\",\n      \"valid\": false\n    },\n    {\n      \"id\": \"leaseDirectory-relative\",\n      \"field\": \"leaseDirectory\",\n      \"kind\": \"relative\",\n      \"valid\": false\n    }\n  ]\n}\n",
+      "currentHash": "f74192a9b5d15b4572726fc472b67b137abf5973b42076d8e8e39e8c6b17a88e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📋️context/🧪️tests/🚫️paths/🟦️.ts",
+      "after": "/** 🚫️ Compares explicit process path admission with independent filesystem and schema witnesses. */\nimport {test,expect} from \"bun:test\";\nimport {readFileSync,mkdirSync} from \"node:fs\";\nimport {resolve} from \"node:path\";\nimport Ajv from \"ajv\";\nimport {readProcessOwnerContextV1} from \"../../🟦️.ts\";\nimport {validateJsonSchemaSubset} from \"../../../../🧬️schema/✅️validator/🟦️.ts\";\nimport {runBudgetedTestCommand} from \"../../../🧪️testing/🎛️execution/🟦️.ts\";\nimport {testLevelBudgetMs} from \"../../../🧪️testing/🎚️budget/🟦️.ts\";\ntype Case=Readonly<{id:string;field:\"cwd\"|\"cacheRoot\"|\"leaseDirectory\";kind:\"normal\"|\"nul-prefix\"|\"nul-suffix\"|\"relative\";valid:boolean}>;\ntest(\"Explicit process paths refuse NUL before filesystem access and retain owner binding\",async()=>{\n const corpus=JSON.parse(readFileSync(new URL(\"../../🧫️fixtures/🚫️paths/🔣️.json\",import.meta.url),\"utf8\")) as {version:1;cases:Case[]},corpusSchema=JSON.parse(readFileSync(new URL(\"../../🧬️schema/🚫️paths/🔣️.json\",import.meta.url),\"utf8\"));\n expect(new Ajv({strict:true}).compile(corpusSchema)(corpus)).toBe(true);expect(validateJsonSchemaSubset(corpusSchema,corpus)).toEqual([]);\n const directory=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!directory)throw Error(\"Caller-owned process test output required\");const base=resolve(directory,\"process-context-paths\");mkdirSync(base,{recursive:true});\n const rows=corpus.cases.map(row=>{const context={version:1 as const,cwd:base,cacheRoot:base,leaseDirectory:base},value=context[row.field];context[row.field]=row.kind===\"nul-prefix\"?\"\\0\"+value:row.kind===\"nul-suffix\"?value+\"\\0\":row.kind===\"relative\"?\"relative-owner\":value;let admitted=true;try{readProcessOwnerContextV1({SEMIO_PROCESS_OWNER_CONTEXT:JSON.stringify(context)},context.cwd);}catch{admitted=false;}return {id:row.id,context,admitted,expected:row.valid};});\n const node=Bun.which(\"node\");if(!node)throw Error(\"Independent Node filesystem oracle required\");\n const code=\"const fs=require('node:fs'),p=require('node:path'),rows=JSON.parse(process.argv[1]);console.log(JSON.stringify(rows.map(r=>({id:r.id,valid:['cwd','cacheRoot','leaseDirectory'].every(k=>{if(!p.isAbsolute(r.context[k]))return false;try{fs.statSync(r.context[k]);return true;}catch(e){if(e.code==='ERR_INVALID_ARG_VALUE'||e.code==='ERR_INVALID_ARG_TYPE')return false;throw e;}})}))));\";\n let stdout=\"\";await runBudgetedTestCommand(node,[\"--eval\",code,JSON.stringify(rows)],{cwd:base,env:process.env,budgetMs:testLevelBudgetMs(),throwOnFailure:true,captureStdout:{limitBytes:8192,onChunk:bytes=>{stdout+=Buffer.from(bytes).toString(\"utf8\");}}});\n const oracle=JSON.parse(stdout) as {id:string;valid:boolean}[];expect(oracle).toEqual(rows.map(row=>({id:row.id,valid:row.expected})));\n console.log(\"[DEBUG] process-owner-path-admission \"+JSON.stringify({observed:rows.map(row=>({id:row.id,admitted:row.admitted,expected:row.expected})),oracle}));\n expect(rows.map(row=>({id:row.id,valid:row.admitted}))).toEqual(oracle);\n const context={version:1,cwd:base,cacheRoot:base,leaseDirectory:base};expect(()=>readProcessOwnerContextV1({SEMIO_PROCESS_OWNER_CONTEXT:JSON.stringify(context)},resolve(base,\"foreign\"))).toThrow();\n});\n",
+      "before": null,
+      "inverse": null,
+      "current": "/** 🚫️ Compares explicit process path admission with independent filesystem and schema witnesses. */\nimport {test,expect} from \"bun:test\";\nimport {readFileSync,mkdirSync} from \"node:fs\";\nimport {resolve} from \"node:path\";\nimport Ajv from \"ajv\";\nimport {readProcessOwnerContextV1} from \"../../🟦️.ts\";\nimport {validateJsonSchemaSubset} from \"../../../../🧬️schema/✅️validator/🟦️.ts\";\nimport {runBudgetedTestCommand} from \"../../../🧪️testing/🎛️execution/🟦️.ts\";\nimport {testLevelBudgetMs} from \"../../../🧪️testing/🎚️budget/🟦️.ts\";\ntype Case=Readonly<{id:string;field:\"cwd\"|\"cacheRoot\"|\"leaseDirectory\";kind:\"normal\"|\"nul-prefix\"|\"nul-suffix\"|\"relative\";valid:boolean}>;\ntest(\"Explicit process paths refuse NUL before filesystem access and retain owner binding\",async()=>{\n const corpus=JSON.parse(readFileSync(new URL(\"../../🧫️fixtures/🚫️paths/🔣️.json\",import.meta.url),\"utf8\")) as {version:1;cases:Case[]},corpusSchema=JSON.parse(readFileSync(new URL(\"../../🧬️schema/🚫️paths/🔣️.json\",import.meta.url),\"utf8\"));\n expect(new Ajv({strict:true}).compile(corpusSchema)(corpus)).toBe(true);expect(validateJsonSchemaSubset(corpusSchema,corpus)).toEqual([]);\n const directory=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!directory)throw Error(\"Caller-owned process test output required\");const base=resolve(directory,\"process-context-paths\");mkdirSync(base,{recursive:true});\n const rows=corpus.cases.map(row=>{const context={version:1 as const,cwd:base,cacheRoot:base,leaseDirectory:base},value=context[row.field];context[row.field]=row.kind===\"nul-prefix\"?\"\\0\"+value:row.kind===\"nul-suffix\"?value+\"\\0\":row.kind===\"relative\"?\"relative-owner\":value;let admitted=true;try{readProcessOwnerContextV1({SEMIO_PROCESS_OWNER_CONTEXT:JSON.stringify(context)},context.cwd);}catch{admitted=false;}return {id:row.id,context,admitted,expected:row.valid};});\n const node=Bun.which(\"node\");if(!node)throw Error(\"Independent Node filesystem oracle required\");\n const code=\"const fs=require('node:fs'),p=require('node:path'),rows=JSON.parse(process.argv[1]);console.log(JSON.stringify(rows.map(r=>({id:r.id,valid:['cwd','cacheRoot','leaseDirectory'].every(k=>{if(!p.isAbsolute(r.context[k]))return false;try{fs.statSync(r.context[k]);return true;}catch(e){if(e.code==='ERR_INVALID_ARG_VALUE'||e.code==='ERR_INVALID_ARG_TYPE')return false;throw e;}})}))));\";\n let stdout=\"\";await runBudgetedTestCommand(node,[\"--eval\",code,JSON.stringify(rows)],{cwd:base,env:process.env,budgetMs:testLevelBudgetMs(),throwOnFailure:true,captureStdout:{limitBytes:8192,onChunk:bytes=>{stdout+=Buffer.from(bytes).toString(\"utf8\");}}});\n const oracle=JSON.parse(stdout) as {id:string;valid:boolean}[];expect(oracle).toEqual(rows.map(row=>({id:row.id,valid:row.expected})));\n console.log(\"[DEBUG] process-owner-path-admission \"+JSON.stringify({observed:rows.map(row=>({id:row.id,admitted:row.admitted,expected:row.expected})),oracle}));\n expect(rows.map(row=>({id:row.id,valid:row.admitted}))).toEqual(oracle);\n const context={version:1,cwd:base,cacheRoot:base,leaseDirectory:base};expect(()=>readProcessOwnerContextV1({SEMIO_PROCESS_OWNER_CONTEXT:JSON.stringify(context)},resolve(base,\"foreign\"))).toThrow();\n});\n",
+      "currentHash": "b62045816ce6943c9188bf97814c2e8832f90cb5ba35a2ebe634131307fd01c3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📋️context/🧪️tests/🟦️.ts",
+      "before": "import { test, expect } from \"bun:test\";\nimport { readFileSync } from \"node:fs\";\nimport { resolve } from \"node:path\";\nimport { spawnSync } from \"node:child_process\";\nimport { createRequire } from \"node:module\";\n\ntest(\"Process cache authority is explicit, schema-owned and bound to the current owner\",async()=>{\n  const fixture=JSON.parse(readFileSync(resolve(import.meta.dir,\"../🧫️fixtures/🔣️.json\"),\"utf8\")),schema=JSON.parse(readFileSync(resolve(import.meta.dir,\"../🧬️schema/🔣️.json\"),\"utf8\")),validate=new (createRequire(import.meta.url)(\"ajv\").default)({strict:true}).compile(schema),api=await import(\"../🟦️.ts\");\n  for(const key of [\"cwd\",\"cacheRoot\",\"leaseDirectory\"])fixture[key]=resolve(fixture[key]);\n  const env={SEMIO_PROCESS_OWNER_CONTEXT:JSON.stringify(fixture)};\n  expect(validate(fixture)).toBe(true);expect(api.readProcessOwnerContextV1(env,fixture.cwd)).toEqual(fixture);\n  for(const row of [{...fixture,extra:1},{...fixture,leaseDirectory:\"relative\"},{...fixture,cwd:\"/foreign\"}])expect(()=>api.readProcessOwnerContextV1({SEMIO_PROCESS_OWNER_CONTEXT:JSON.stringify(row)},\"/owner\")).toThrow();\n  expect(()=>api.readProcessOwnerContextV1({},\"/owner\")).toThrow(\"Explicit process owner context required\");\n  expect(()=>api.processCacheDirectoryV1(fixture,\"../foreign\")).toThrow();\n  const child=spawnSync(\"node\",[\"-e\",\"const p=require('node:path'),row=JSON.parse(process.argv[1]);process.stdout.write(p.join(row.cacheRoot,'python','styling'));\",JSON.stringify(fixture)],{encoding:\"utf8\"});expect(child.status).toBe(0);expect(api.processCacheDirectoryV1(fixture,\"python\",\"styling\")).toBe(child.stdout);\n});\n",
+      "after": "import \"./🚫️paths/🟦️.ts\";\nimport { test, expect } from \"bun:test\";\nimport { readFileSync } from \"node:fs\";\nimport { resolve } from \"node:path\";\nimport { spawnSync } from \"node:child_process\";\nimport { createRequire } from \"node:module\";\n\ntest(\"Process cache authority is explicit, schema-owned and bound to the current owner\",async()=>{\n  const fixture=JSON.parse(readFileSync(resolve(import.meta.dir,\"../🧫️fixtures/🔣️.json\"),\"utf8\")),schema=JSON.parse(readFileSync(resolve(import.meta.dir,\"../🧬️schema/🔣️.json\"),\"utf8\")),validate=new (createRequire(import.meta.url)(\"ajv\").default)({strict:true}).compile(schema),api=await import(\"../🟦️.ts\");\n  for(const key of [\"cwd\",\"cacheRoot\",\"leaseDirectory\"])fixture[key]=resolve(fixture[key]);\n  const env={SEMIO_PROCESS_OWNER_CONTEXT:JSON.stringify(fixture)};\n  expect(validate(fixture)).toBe(true);expect(api.readProcessOwnerContextV1(env,fixture.cwd)).toEqual(fixture);\n  for(const row of [{...fixture,extra:1},{...fixture,leaseDirectory:\"relative\"},{...fixture,cwd:\"/foreign\"}])expect(()=>api.readProcessOwnerContextV1({SEMIO_PROCESS_OWNER_CONTEXT:JSON.stringify(row)},\"/owner\")).toThrow();\n  expect(()=>api.readProcessOwnerContextV1({},\"/owner\")).toThrow(\"Explicit process owner context required\");\n  expect(()=>api.processCacheDirectoryV1(fixture,\"../foreign\")).toThrow();\n  const child=spawnSync(\"node\",[\"-e\",\"const p=require('node:path'),row=JSON.parse(process.argv[1]);process.stdout.write(p.join(row.cacheRoot,'python','styling'));\",JSON.stringify(fixture)],{encoding:\"utf8\"});expect(child.status).toBe(0);expect(api.processCacheDirectoryV1(fixture,\"python\",\"styling\")).toBe(child.stdout);\n});\n",
+      "inverse": "import { test, expect } from \"bun:test\";\nimport { readFileSync } from \"node:fs\";\nimport { resolve } from \"node:path\";\nimport { spawnSync } from \"node:child_process\";\nimport { createRequire } from \"node:module\";\n\ntest(\"Process cache authority is explicit, schema-owned and bound to the current owner\",async()=>{\n  const fixture=JSON.parse(readFileSync(resolve(import.meta.dir,\"../🧫️fixtures/🔣️.json\"),\"utf8\")),schema=JSON.parse(readFileSync(resolve(import.meta.dir,\"../🧬️schema/🔣️.json\"),\"utf8\")),validate=new (createRequire(import.meta.url)(\"ajv\").default)({strict:true}).compile(schema),api=await import(\"../🟦️.ts\");\n  for(const key of [\"cwd\",\"cacheRoot\",\"leaseDirectory\"])fixture[key]=resolve(fixture[key]);\n  const env={SEMIO_PROCESS_OWNER_CONTEXT:JSON.stringify(fixture)};\n  expect(validate(fixture)).toBe(true);expect(api.readProcessOwnerContextV1(env,fixture.cwd)).toEqual(fixture);\n  for(const row of [{...fixture,extra:1},{...fixture,leaseDirectory:\"relative\"},{...fixture,cwd:\"/foreign\"}])expect(()=>api.readProcessOwnerContextV1({SEMIO_PROCESS_OWNER_CONTEXT:JSON.stringify(row)},\"/owner\")).toThrow();\n  expect(()=>api.readProcessOwnerContextV1({},\"/owner\")).toThrow(\"Explicit process owner context required\");\n  expect(()=>api.processCacheDirectoryV1(fixture,\"../foreign\")).toThrow();\n  const child=spawnSync(\"node\",[\"-e\",\"const p=require('node:path'),row=JSON.parse(process.argv[1]);process.stdout.write(p.join(row.cacheRoot,'python','styling'));\",JSON.stringify(fixture)],{encoding:\"utf8\"});expect(child.status).toBe(0);expect(api.processCacheDirectoryV1(fixture,\"python\",\"styling\")).toBe(child.stdout);\n});\n",
+      "shaBefore": "4569d17106580c331bd88cf8aaaf218988b858adededa46a5d7b58326ede30d6",
+      "current": "import \"./🚫️paths/🟦️.ts\";\nimport { test, expect } from \"bun:test\";\nimport { readFileSync } from \"node:fs\";\nimport { resolve } from \"node:path\";\nimport { spawnSync } from \"node:child_process\";\nimport { createRequire } from \"node:module\";\n\ntest(\"Process cache authority is explicit, schema-owned and bound to the current owner\",async()=>{\n  const fixture=JSON.parse(readFileSync(resolve(import.meta.dir,\"../🧫️fixtures/🔣️.json\"),\"utf8\")),schema=JSON.parse(readFileSync(resolve(import.meta.dir,\"../🧬️schema/🔣️.json\"),\"utf8\")),validate=new (createRequire(import.meta.url)(\"ajv\").default)({strict:true}).compile(schema),api=await import(\"../🟦️.ts\");\n  for(const key of [\"cwd\",\"cacheRoot\",\"leaseDirectory\"])fixture[key]=resolve(fixture[key]);\n  const env={SEMIO_PROCESS_OWNER_CONTEXT:JSON.stringify(fixture)};\n  expect(validate(fixture)).toBe(true);expect(api.readProcessOwnerContextV1(env,fixture.cwd)).toEqual(fixture);\n  for(const row of [{...fixture,extra:1},{...fixture,leaseDirectory:\"relative\"},{...fixture,cwd:\"/foreign\"}])expect(()=>api.readProcessOwnerContextV1({SEMIO_PROCESS_OWNER_CONTEXT:JSON.stringify(row)},\"/owner\")).toThrow();\n  expect(()=>api.readProcessOwnerContextV1({},\"/owner\")).toThrow(\"Explicit process owner context required\");\n  expect(()=>api.processCacheDirectoryV1(fixture,\"../foreign\")).toThrow();\n  const child=spawnSync(\"node\",[\"-e\",\"const p=require('node:path'),row=JSON.parse(process.argv[1]);process.stdout.write(p.join(row.cacheRoot,'python','styling'));\",JSON.stringify(fixture)],{encoding:\"utf8\"});expect(child.status).toBe(0);expect(api.processCacheDirectoryV1(fixture,\"python\",\"styling\")).toBe(child.stdout);\n});\n",
+      "currentHash": "ceb543ed84e5c75e6a9cd3bbd86dfd2b2775dfeb2e3a4309f41cc52faf93e141"
+    }
+  ],
+  "logs": [
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/process-owner-context-nul/test-first-red-1/nx.log",
+      "body": "$ bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts nx run @semio-tech/framework-process:test-owner-context --skip-nx-cache \"--output-style=stream\"\n\n> nx run @semio-tech/framework-process:test-owner-context\n\n@semio-tech/framework-process: \u001b[0m\u001b[1mbun test \u001b[0m\u001b[2mv1.3.14 (0d9b296a)\u001b[0m\n@semio-tech/framework-process: \u001b[0m\n@semio-tech/framework-process: 🧰️framework/🔨️modules/🏃️process/📋️context/🧪️tests/🟦️.ts:\n@semio-tech/framework-process: [DEBUG] process-owner-path-admission {\"observed\":[{\"id\":\"cwd-normal\",\"admitted\":true,\"expected\":true},{\"id\":\"cwd-nul-prefix\",\"admitted\":false,\"expected\":false},{\"id\":\"cwd-nul-suffix\",\"admitted\":true,\"expected\":false},{\"id\":\"cwd-relative\",\"admitted\":false,\"expected\":false},{\"id\":\"cacheRoot-normal\",\"admitted\":true,\"expected\":true},{\"id\":\"cacheRoot-nul-prefix\",\"admitted\":false,\"expected\":false},{\"id\":\"cacheRoot-nul-suffix\",\"admitted\":true,\"expected\":false},{\"id\":\"cacheRoot-relative\",\"admitted\":false,\"expected\":false},{\"id\":\"leaseDirectory-normal\",\"admitted\":true,\"expected\":true},{\"id\":\"leaseDirectory-nul-prefix\",\"admitted\":false,\"expected\":false},{\"id\":\"leaseDirectory-nul-suffix\",\"admitted\":true,\"expected\":false},{\"id\":\"leaseDirectory-relative\",\"admitted\":false,\"expected\":false}],\"oracle\":[{\"id\":\"cwd-normal\",\"valid\":true},{\"id\":\"cwd-nul-prefix\",\"valid\":false},{\"id\":\"cwd-nul-suffix\",\"valid\":false},{\"id\":\"cwd-relative\",\"valid\":false},{\"id\":\"cacheRoot-normal\",\"valid\":true},{\"id\":\"cacheRoot-nul-prefix\",\"valid\":false},{\"id\":\"cacheRoot-nul-suffix\",\"valid\":false},{\"id\":\"cacheRoot-relative\",\"valid\":false},{\"id\":\"leaseDirectory-normal\",\"valid\":true},{\"id\":\"leaseDirectory-nul-prefix\",\"valid\":false},{\"id\":\"leaseDirectory-nul-suffix\",\"valid\":false},{\"id\":\"leaseDirectory-relative\",\"valid\":false}]}\n@semio-tech/framework-process: \u001b[0m\u001b[1m16 |\u001b[0m  \u001b[0m\u001b[35mconst\u001b[0m node=Bun\u001b[0m\u001b[3m\u001b[1m.which\u001b[0m(\u001b[0m\u001b[32m\"node\"\u001b[0m)\u001b[0m\u001b[2m;\u001b[0m\u001b[0m\u001b[35mif\u001b[0m(!node)\u001b[0m\u001b[35mthrow\u001b[0m Error(\u001b[0m\u001b[32m\"Independent Node filesystem oracle required\"\u001b[0m)\u001b[0m\u001b[2m;\u001b[0m\n@semio-tech/framework-process: \u001b[0m\u001b[1m17 |\u001b[0m  \u001b[0m\u001b[35mconst\u001b[0m code=\u001b[0m\u001b[32m\"const fs=require('node:fs'),p=require('node:path'),rows=JSON.parse(process.argv[1]);console.log(JSON.stringify(rows.map(r=>({id:r.id,valid:['cwd','cacheRoot','leaseDirectory'].every(k=>{if(!p.isAbsolute(r.context[k]))return false;try{fs.statSync(r.context[k]);return true;}catch(e){if(e.code==='ERR_INVALID_ARG_VALUE'||e.code==='ERR_INVALID_ARG_TYPE')return false;throw e;}})}))));\"\u001b[0m\u001b[0m\u001b[2m;\u001b[0m\n@semio-tech/framework-process: \u001b[0m\u001b[1m18 |\u001b[0m  \u001b[0m\u001b[35mlet\u001b[0m stdout=\u001b[0m\u001b[32m\"\"\u001b[0m\u001b[0m\u001b[2m;\u001b[0m\u001b[0m\u001b[35mawait\u001b[0m runBudgetedTestCommand(node,[\u001b[0m\u001b[32m\"--eval\"\u001b[0m,code,JSON\u001b[0m\u001b[3m\u001b[1m.stringify\u001b[0m(rows)],{cwd:base,env:process.env,budgetMs:testLevelBudgetMs(),throwOnFailure:\u001b[0m\u001b[33mtrue\u001b[0m,captureStdout:{limitBytes:\u001b[0m\u001b[33m8192\u001b[0m,onChunk:bytes=>{stdout+=Buffer\u001b[0m\u001b[3m\u001b[1m.from\u001b[0m(bytes)\u001b[0m\u001b[3m\u001b[1m.toString\u001b[0m(\u001b[0m\u001b[32m\"utf8\"\u001b[0m)\u001b[0m\u001b[2m;\u001b[0m}}})\u001b[0m\u001b[2m;\u001b[0m\n@semio-tech/framework-process: \u001b[0m\u001b[1m19 |\u001b[0m  \u001b[0m\u001b[35mconst\u001b[0m oracle=JSON\u001b[0m\u001b[3m\u001b[1m.parse\u001b[0m(stdout) \u001b[0m\u001b[34mas\u001b[0m {id:\u001b[0m\u001b[34mstring\u001b[0m\u001b[0m\u001b[2m;\u001b[0mvalid:\u001b[0m\u001b[34mboolean\u001b[0m}[]\u001b[0m\u001b[2m;\u001b[0mexpect(oracle)\u001b[0m\u001b[3m\u001b[1m.toEqual\u001b[0m(rows\u001b[0m\u001b[3m\u001b[1m.map\u001b[0m(row=>({id:row.id,valid:row.expected})))\u001b[0m\u001b[2m;\u001b[0m\n@semio-tech/framework-process: \u001b[0m\u001b[1m20 |\u001b[0m  console\u001b[0m\u001b[3m\u001b[1m.log\u001b[0m(\u001b[0m\u001b[32m\"[DEBUG] process-owner-path-admission \"\u001b[0m+JSON\u001b[0m\u001b[3m\u001b[1m.stringify\u001b[0m({observed:rows\u001b[0m\u001b[3m\u001b[1m.map\u001b[0m(row=>({id:row.id,admitted:row.admitted,expected:row.expected})),oracle}))\u001b[0m\u001b[2m;\u001b[0m\n@semio-tech/framework-process: \u001b[0m\u001b[1m21 |\u001b[0m  expect(rows\u001b[0m\u001b[3m\u001b[1m.map\u001b[0m(row=>({id:row.id,valid:row.admitted})))\u001b[0m\u001b[3m\u001b[1m.toEqual\u001b[0m(oracle)\u001b[0m\u001b[2m;\u001b[0m\n@semio-tech/framework-process:                                                               \u001b[31m\u001b[1m^\u001b[0m\n@semio-tech/framework-process: \u001b[0m\u001b[31merror\u001b[0m\u001b[2m:\u001b[0m \u001b[1m\u001b[2mexpect(\u001b[0m\u001b[31mreceived\u001b[0m\u001b[2m).\u001b[0mtoEqual\u001b[2m(\u001b[0m\u001b[32mexpected\u001b[0m\u001b[2m)\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m[\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m  {\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m    \"id\": \"cwd-normal\",\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m    \"valid\": true,\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m  },\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m  {\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m    \"id\": \"cwd-nul-prefix\",\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m    \"valid\": false,\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m  },\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m  {\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m    \"id\": \"cwd-nul-suffix\",\u001b[0m\n@semio-tech/framework-process: \u001b[32m- \u001b[0m\u001b[32m    \"valid\": \u001b[0m\u001b[32mfals\u001b[0m\u001b[32me,\u001b[0m\n@semio-tech/framework-process: \u001b[31m+ \u001b[0m\u001b[31m    \"valid\": \u001b[0m\u001b[31mtru\u001b[0m\u001b[31me,\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m  },\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m  {\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m    \"id\": \"cwd-relative\",\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m    \"valid\": false,\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m  },\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m  {\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m    \"id\": \"cacheRoot-normal\",\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m    \"valid\": true,\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m  },\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m  {\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m    \"id\": \"cacheRoot-nul-prefix\",\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m    \"valid\": false,\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m  },\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m  {\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m    \"id\": \"cacheRoot-nul-suffix\",\u001b[0m\n@semio-tech/framework-process: \u001b[32m- \u001b[0m\u001b[32m    \"valid\": \u001b[0m\u001b[32mfals\u001b[0m\u001b[32me,\u001b[0m\n@semio-tech/framework-process: \u001b[31m+ \u001b[0m\u001b[31m    \"valid\": \u001b[0m\u001b[31mtru\u001b[0m\u001b[31me,\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m  },\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m  {\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m    \"id\": \"cacheRoot-relative\",\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m    \"valid\": false,\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m  },\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m  {\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m    \"id\": \"leaseDirectory-normal\",\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m    \"valid\": true,\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m  },\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m  {\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m    \"id\": \"leaseDirectory-nul-prefix\",\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m    \"valid\": false,\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m  },\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m  {\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m    \"id\": \"leaseDirectory-nul-suffix\",\u001b[0m\n@semio-tech/framework-process: \u001b[32m- \u001b[0m\u001b[32m    \"valid\": \u001b[0m\u001b[32mfals\u001b[0m\u001b[32me,\u001b[0m\n@semio-tech/framework-process: \u001b[31m+ \u001b[0m\u001b[31m    \"valid\": \u001b[0m\u001b[31mtru\u001b[0m\u001b[31me,\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m  },\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m  {\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m    \"id\": \"leaseDirectory-relative\",\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m    \"valid\": false,\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m  },\u001b[0m\n@semio-tech/framework-process:   \u001b[0m\u001b[2m]\u001b[0m\n@semio-tech/framework-process: \u001b[32m- Expected  - 3\u001b[0m\n@semio-tech/framework-process: \u001b[31m+ Received  + 3\u001b[0m\n@semio-tech/framework-process: \u001b[0m\n@semio-tech/framework-process: \u001b[0m      \u001b[2mat \u001b[0m\u001b[0m\u001b[2m<anonymous>\u001b[0m\u001b[2m (\u001b[0m\u001b[0m\u001b[36m\u001b[2m/Users/ueli/Documents/semio/\u001b[0m\u001b[36m🧰️framework/🔨️modules/🏃️process/📋️context/🧪️tests/🚫️paths/🟦️.ts\u001b[0m\u001b[2m:\u001b[0m\u001b[33m21\u001b[0m\u001b[2m:\u001b[33m58\u001b[0m\u001b[2m)\u001b[0m\n@semio-tech/framework-process: \u001b[0m\u001b[31m✗\u001b[0m\u001b[0m\u001b[1m Explicit process paths refuse NUL before filesystem access and retain owner binding\u001b[0m \u001b[0m\u001b[2m[\u001b[1m672.03ms\u001b[0m\u001b[2m]\u001b[0m\n@semio-tech/framework-process: \u001b[0m\u001b[32m✓\u001b[0m\u001b[0m\u001b[1m Process cache authority is explicit, schema-owned and bound to the current owner\u001b[0m \u001b[0m\u001b[2m[\u001b[1m641.98ms\u001b[0m\u001b[2m]\u001b[0m\n@semio-tech/framework-process: \u001b[0m\u001b[32m 1 pass\u001b[0m\n@semio-tech/framework-process: \u001b[0m\u001b[31m 1 fail\u001b[0m\n@semio-tech/framework-process:  13 expect() calls\n@semio-tech/framework-process: Ran 2 tests across 1 file. \u001b[0m\u001b[2m[\u001b[1m1468.00ms\u001b[0m\u001b[2m]\u001b[0m\n@semio-tech/framework-process: \u001b[0m\u001b[1m66 |\u001b[0m         accept(\u001b[0m\u001b[33m1\u001b[0m)\u001b[0m\u001b[2m;\u001b[0m\n@semio-tech/framework-process: \u001b[0m\u001b[1m67 |\u001b[0m       })\u001b[0m\u001b[2m;\u001b[0m\n@semio-tech/framework-process: \u001b[0m\u001b[1m68 |\u001b[0m       child\u001b[0m\u001b[3m\u001b[1m.once\u001b[0m(\u001b[0m\u001b[32m\"close\"\u001b[0m, (code) => accept(code ?? \u001b[0m\u001b[33m1\u001b[0m))\u001b[0m\u001b[2m;\u001b[0m\n@semio-tech/framework-process: \u001b[0m\u001b[1m69 |\u001b[0m     })\u001b[0m\u001b[2m;\u001b[0m\n@semio-tech/framework-process: \u001b[0m\u001b[1m70 |\u001b[0m     \u001b[0m\u001b[35mif\u001b[0m (stopped) \u001b[0m\u001b[35mthrow\u001b[0m \u001b[0m\u001b[35mnew\u001b[0m \u001b[0m\u001b[1mError\u001b[0m(\u001b[0m\u001b[32m`\u001b[0m${label}\u001b[0m\u001b[32m stopped: \u001b[0m${stopped}\u001b[0m\u001b[32m`\u001b[0m)\u001b[0m\u001b[2m;\u001b[0m\n@semio-tech/framework-process: \u001b[0m\u001b[1m71 |\u001b[0m     \u001b[0m\u001b[35mif\u001b[0m (status !== \u001b[0m\u001b[33m0\u001b[0m) \u001b[0m\u001b[35mthrow\u001b[0m \u001b[0m\u001b[35mnew\u001b[0m \u001b[0m\u001b[1mError\u001b[0m(\u001b[0m\u001b[32m`\u001b[0m${label}\u001b[0m\u001b[32m failed (\u001b[0m${status}\u001b[0m\u001b[32m)`\u001b[0m)\u001b[0m\u001b[2m;\u001b[0m\n@semio-tech/framework-process:                                      \u001b[31m\u001b[1m^\u001b[0m\n@semio-tech/framework-process: \u001b[0m\u001b[31merror\u001b[0m\u001b[2m:\u001b[0m \u001b[1mprocess:owner-context failed (1)\u001b[0m\n@semio-tech/framework-process: \u001b[0m      \u001b[2mat \u001b[0m\u001b[0m\u001b[1m\u001b[3mrunOwnedCommand\u001b[0m\u001b[2m (\u001b[0m\u001b[0m\u001b[36m\u001b[2m/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/\u001b[0m\u001b[36m🎛️owned-execution/🟦️.ts\u001b[0m\u001b[2m:\u001b[0m\u001b[33m71\u001b[0m\u001b[2m:\u001b[33m33\u001b[0m\u001b[2m)\u001b[0m\n@semio-tech/framework-process: \u001b[0m      \u001b[2mat \u001b[0m\u001b[0m\u001b[1m\u001b[3masync run\u001b[0m\u001b[2m (\u001b[0m\u001b[0m\u001b[36m\u001b[2m/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/\u001b[0m\u001b[36m📜️script.ts\u001b[0m\u001b[2m:\u001b[0m\u001b[33m42\u001b[0m\u001b[2m:\u001b[33m11\u001b[0m\u001b[2m)\u001b[0m\n@semio-tech/framework-process: \u001b[0m      \u001b[2mat \u001b[0m\u001b[0m\u001b[1m\u001b[3masync run\u001b[0m\u001b[2m (\u001b[0m\u001b[0m\u001b[36m\u001b[2m/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/\u001b[0m\u001b[36m🧭️routing/🟦️.ts\u001b[0m\u001b[2m:\u001b[0m\u001b[33m74\u001b[0m\u001b[2m:\u001b[33m19\u001b[0m\u001b[2m)\u001b[0m\n@semio-tech/framework-process: \u001b[0m      \u001b[2mat \u001b[0m\u001b[0m\u001b[1m\u001b[3masync runScriptMain\u001b[0m\u001b[2m (\u001b[0m\u001b[0m\u001b[36m\u001b[2m/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/\u001b[0m\u001b[36m🧭️routing/🚪️entrypoint/🟦️.ts\u001b[0m\u001b[2m:\u001b[0m\u001b[33m15\u001b[0m\u001b[2m:\u001b[33m16\u001b[0m\u001b[2m)\u001b[0m\n@semio-tech/framework-process: \u001b[0m\n@semio-tech/framework-process: \u001b[2mBun v1.3.14 (macOS arm64)\u001b[0m\n\n\n\n NX   Running target test-owner-context for project @semio-tech/framework-process failed\n\nFailed tasks:\n\n- @semio-tech/framework-process:test-owner-context\n\nHint: run the command with --verbose for more details.\n\n  Run duration:      1.6s\n  Cache:             Skipped (--skip-nx-cache)\n  Critical path:     1.6s (1 task)\n  Recoverable time:  <1ms\nerror: script \"nx\" exited with code 1\n",
+      "sha256": "adfa4715efb5078ef5e932a09aeb7ca66a6f36c10654aae0c095bd7dc5ffac41"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/process-owner-context-nul/strict-1/tsc.log",
+      "body": "",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "debug": {
+    "observed": [
+      {
+        "id": "cwd-normal",
+        "admitted": true,
+        "expected": true
+      },
+      {
+        "id": "cwd-nul-prefix",
+        "admitted": false,
+        "expected": false
+      },
+      {
+        "id": "cwd-nul-suffix",
+        "admitted": true,
+        "expected": false
+      },
+      {
+        "id": "cwd-relative",
+        "admitted": false,
+        "expected": false
+      },
+      {
+        "id": "cacheRoot-normal",
+        "admitted": true,
+        "expected": true
+      },
+      {
+        "id": "cacheRoot-nul-prefix",
+        "admitted": false,
+        "expected": false
+      },
+      {
+        "id": "cacheRoot-nul-suffix",
+        "admitted": true,
+        "expected": false
+      },
+      {
+        "id": "cacheRoot-relative",
+        "admitted": false,
+        "expected": false
+      },
+      {
+        "id": "leaseDirectory-normal",
+        "admitted": true,
+        "expected": true
+      },
+      {
+        "id": "leaseDirectory-nul-prefix",
+        "admitted": false,
+        "expected": false
+      },
+      {
+        "id": "leaseDirectory-nul-suffix",
+        "admitted": true,
+        "expected": false
+      },
+      {
+        "id": "leaseDirectory-relative",
+        "admitted": false,
+        "expected": false
+      }
+    ],
+    "oracle": [
+      {
+        "id": "cwd-normal",
+        "valid": true
+      },
+      {
+        "id": "cwd-nul-prefix",
+        "valid": false
+      },
+      {
+        "id": "cwd-nul-suffix",
+        "valid": false
+      },
+      {
+        "id": "cwd-relative",
+        "valid": false
+      },
+      {
+        "id": "cacheRoot-normal",
+        "valid": true
+      },
+      {
+        "id": "cacheRoot-nul-prefix",
+        "valid": false
+      },
+      {
+        "id": "cacheRoot-nul-suffix",
+        "valid": false
+      },
+      {
+        "id": "cacheRoot-relative",
+        "valid": false
+      },
+      {
+        "id": "leaseDirectory-normal",
+        "valid": true
+      },
+      {
+        "id": "leaseDirectory-nul-prefix",
+        "valid": false
+      },
+      {
+        "id": "leaseDirectory-nul-suffix",
+        "valid": false
+      },
+      {
+        "id": "leaseDirectory-relative",
+        "valid": false
+      }
+    ]
+  },
+  "mismatches": [
+    {
+      "id": "cwd-nul-suffix",
+      "admitted": true,
+      "expected": false
+    },
+    {
+      "id": "cacheRoot-nul-suffix",
+      "admitted": true,
+      "expected": false
+    },
+    {
+      "id": "leaseDirectory-nul-suffix",
+      "admitted": true,
+      "expected": false
+    }
+  ],
+  "canonicalSchema": {
+    "path": "🧰️framework/🔨️modules/🏃️process/📋️context/🧬️schema/🔣️.json",
+    "before": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"required\": [\n    \"version\",\n    \"cwd\",\n    \"cacheRoot\",\n    \"leaseDirectory\"\n  ],\n  \"properties\": {\n    \"version\": {\n      \"const\": 1\n    },\n    \"cwd\": {\n      \"type\": \"string\",\n      \"minLength\": 1\n    },\n    \"cacheRoot\": {\n      \"type\": \"string\",\n      \"minLength\": 1\n    },\n    \"leaseDirectory\": {\n      \"type\": \"string\",\n      \"minLength\": 1\n    }\n  }\n}\n",
+    "inverse": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"required\": [\n    \"version\",\n    \"cwd\",\n    \"cacheRoot\",\n    \"leaseDirectory\"\n  ],\n  \"properties\": {\n    \"version\": {\n      \"const\": 1\n    },\n    \"cwd\": {\n      \"type\": \"string\",\n      \"minLength\": 1\n    },\n    \"cacheRoot\": {\n      \"type\": \"string\",\n      \"minLength\": 1\n    },\n    \"leaseDirectory\": {\n      \"type\": \"string\",\n      \"minLength\": 1\n    }\n  }\n}\n",
+    "proposed": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "cwd",
+        "cacheRoot",
+        "leaseDirectory"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "cwd": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^\u0000]*$"
+        },
+        "cacheRoot": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^\u0000]*$"
+        },
+        "leaseDirectory": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^\u0000]*$"
+        }
+      }
+    },
+    "scope": "Exactly three pattern additions; actual schema unchanged"
+  },
+  "originalAPIUnchanged": true,
+  "registeredRed": {
+    "request": 19206,
+    "reportedTerminal": 1,
+    "logConfirmsExpectedFailure": true,
+    "testsPass": 1,
+    "testsFail": 1,
+    "expects": 13
+  },
+  "strict": {
+    "reportedTerminal": 0,
+    "logBytes": 0,
+    "provenance": "Root terminal report; actual log retained"
+  },
+  "readyForThreePatternSchemaPublication": true,
+  "sourceWrites": 0,
+  "nativeExecuted": 0
+}

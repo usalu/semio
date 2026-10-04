@@ -18,9 +18,12 @@ impl protocol::MutationKind<Vdi3805Snapshot, Vdi3805Mutation> for RemoveGeometry
     fn diff(&self, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<<Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &Vdi3805Snapshot) -> Result<Vec<Vdi3805Mutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete geometry \"{}\"", self.id), &format!("Geometrie \"{}\" löschen", self.id))
     }

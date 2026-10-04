@@ -1,4 +1,56 @@
 use super::*;
+
+/// 🪪️ Reads the complete neutral error corpus's authored kind without message classification.
+fn command_canonical_refusal_kind(value:&str)->semio_framework_value::ValueRefusalKind{
+ use semio_framework_value::ValueRefusalKind as K;
+ match value{"InvalidValue"=>K::InvalidValue,"Canceled"=>K::Canceled,"OwnershipLimit"=>K::OwnershipLimit,"AllocationFailed"=>K::AllocationFailed,"WorkLimit"=>K::WorkLimit,"DepthLimit"=>K::DepthLimit,"UnsupportedOwner"=>K::UnsupportedOwner,"InvariantViolated"=>K::InvariantViolated,_=>panic!("unknown authored refusal kind")}
+}
+#[test]
+fn command_decode_canonical_pack_refusal_preserves_all_value_causes(){
+ use semio_framework_value::ValueError;
+ let fixture:serde_json::Value=serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"),"/../../../../🔨️modules/🎒️pack/⚠️error/🧫️fixtures/⚠️refusal/🔣️.json"))).unwrap();
+ for row in fixture["cases"].as_array().unwrap(){
+  let kind=command_canonical_refusal_kind(row["kind"].as_str().unwrap());let mut cause=ValueError::new(kind,row["message"].as_str().unwrap());
+  for part in row["path"].as_array().unwrap(){cause=cause.under(part.as_str().unwrap());}
+  let allocation=cause.message.as_ptr();let refusal=pack::PackRefusal::from(cause);
+  let(command,requested,released)=crate::test_allocation::observe_backing(||CommandDecodeError::from(refusal));
+  assert_eq!((requested,released),(0,0),"typed joins do not allocate or retire copied diagnostics");
+  let CommandDecodeError::Layout(crate::os_spr::ProtocolError::Pack(pack::PackError::Refusal(pack::PackRefusal::ValueRefusal(value))))=&command else{panic!("original typed layout refusal");};
+  assert_eq!(value.kind,kind);assert_eq!(value.message.as_ptr(),allocation);
+  assert_eq!(command.to_string(),format!("command layout: {}",row["display"].as_str().unwrap()));
+  let protocol=std::error::Error::source(&command).unwrap().downcast_ref::<crate::os_spr::ProtocolError>().unwrap();
+  let wrapped=std::error::Error::source(protocol).unwrap().downcast_ref::<pack::PackError>().unwrap();
+  let original=std::error::Error::source(wrapped).unwrap().downcast_ref::<ValueError>().unwrap();assert!(std::ptr::eq(value,original));
+  let reference=serde_json::json!({"kind":row["kind"],"message":row["display"].as_str().unwrap().strip_prefix("schema error: ").unwrap()});
+  assert_eq!(serde_json::json!({"kind":format!("{:?}",value.kind),"message":value.message}),reference);
+ }
+ eprintln!("[DEBUG] Command layout preserves all eight original canonical Pack value causes without allocation");
+}
+#[test]
+fn command_decode_canonical_pack_refusal_retains_actual_reader_and_operation_sources(){
+ let mut reader=pack::ByteReader::new(&[0x80]);let refusal=reader.read_varint_u64().unwrap_err();let kind=refusal.kind();
+ let command=CommandDecodeError::from(refusal);let CommandDecodeError::Layout(crate::os_spr::ProtocolError::Pack(error))=&command else{panic!("actual primitive layout cause");};assert_eq!(error.refusal_kind(),Some(kind));
+ let source=std::error::Error::source(&command).unwrap().downcast_ref::<crate::os_spr::ProtocolError>().unwrap();assert!(std::ptr::eq(source,match &command{CommandDecodeError::Layout(error)=>error,_=>unreachable!()}));
+ let mut reader=pack::ByteReader::new(&[]);let refusal=reader.read_u8().unwrap_err();let operation=CommandDecodeError::Operation{index:7,error:refusal.into()};
+ let CommandDecodeError::Operation{index,error}=&operation else{unreachable!()};assert_eq!(*index,7);assert!(std::ptr::eq(error,std::error::Error::source(&operation).unwrap().downcast_ref::<crate::os_spr::ProtocolError>().unwrap()));
+ eprintln!("[DEBUG] Actual canonical primitive read refusal and indexed operation retain their original command causes");
+}
+#[test]
+fn command_decode_canonical_pack_refusal_preserves_all_positioned_text_causes(){
+ use semio_framework_diagnostic::{TextError,TextSpan};
+ let fixture:serde_json::Value=serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"),"/../../../../🔨️modules/🎒️pack/⚠️error/🧫️fixtures/📍️text-refusal/🔣️.json"))).unwrap();
+ for row in fixture["cases"].as_array().unwrap(){
+  let kind=command_canonical_refusal_kind(row["kind"].as_str().unwrap());let span=TextSpan{line:u32::try_from(row["span"]["line"].as_u64().unwrap()).unwrap(),column:u32::try_from(row["span"]["column"].as_u64().unwrap()).unwrap(),length:u32::try_from(row["span"]["length"].as_u64().unwrap()).unwrap()};
+  let cause=match row["expected"].as_str(){Some(expected)=>TextError::expected(kind,row["message"].as_str().unwrap(),span,expected),None=>TextError::new(kind,row["message"].as_str().unwrap(),span)};
+  let allocation=cause.message.as_ptr();let expected_allocation=cause.expected.as_ref().map(|text|text.as_ptr());
+  let(wrapped,requested,released)=crate::test_allocation::observe_backing(||text_error_to_pack_error(cause));assert_eq!((requested,released),(0,0));
+  let pack::PackError::Refusal(pack::PackRefusal::TextRefusal(value))=&wrapped else{panic!("original positioned text refusal");};
+  assert_eq!(value.kind,kind);assert_eq!(value.span,span);assert_eq!(value.expected.as_deref(),row["expected"].as_str());assert_eq!(value.message.as_ptr(),allocation);assert_eq!(value.expected.as_ref().map(|text|text.as_ptr()),expected_allocation);assert_eq!(wrapped.to_string(),row["display"].as_str().unwrap());
+  assert!(std::ptr::eq(value,std::error::Error::source(&wrapped).unwrap().downcast_ref::<TextError>().unwrap()));
+ }
+ eprintln!("[DEBUG] Store positioned Text-to-Pack join preserves eight kinds, span, expectation and exact original source");
+}
+
 #[cfg(test)]
 #[path = "../../📦️codec/🧵️send/🧪️tests/🧵️send/🦀️.rs"]
 mod native_codec_send_tests;
@@ -23,6 +75,10 @@ mod tool_transaction_tests;
 #[path = "../🧪️deferred-reprojection/🦀️.rs"]
 mod deferred_reprojection_tests;
 
+#[cfg(test)]
+#[path = "../⚡️hot-path/🦀️.rs"]
+mod hot_path_tests;
+
 use super::fixture_mutations::{
     demo::{AddN, DeleteN, DemoMutation, RestoreN, SetN},
     lossy::{LossyMutation, SetN as LossySetN},
@@ -30,8 +86,8 @@ use super::fixture_mutations::{
     timestamped::{SetN as TimestampedSetN, TimestampedMutation},
     validated::{RestoreN as ValidatedRestoreN, SetN as ValidatedSetN, ValidatedMutation},
 };
-use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef};
 use super::snapshot_clone_preparation::{RetainedCloneEdit, RetainedCloneEditCursor, RetainedCloneEditStep, RetainedClonePreparationFactory};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef};
 
 pub(super) fn assert_fixture_descriptor<T: crate::os_spr::MutationLeaf>(descriptor: &str) {
     assert_eq!(serde_json::Value::from(T::DESCRIPTOR.to_value()), serde_json::from_str::<serde_json::Value>(descriptor).unwrap());
@@ -73,7 +129,7 @@ where
     let level = messages.first().map(|message| format!("{:?}", message.level).to_lowercase());
     assert_eq!(level.as_deref(), row["level"].as_str());
     let mut restored = actual;
-    for inverse in mutation.inverse(&before).into_iter().rev() {
+    for inverse in mutation.inverse(&before).expect("valid retained mutation inverse fixture").into_iter().rev() {
         restored = inverse.diff(&restored).diff().apply(&restored).unwrap();
     }
     assert_eq!(restored, before);
@@ -158,7 +214,7 @@ fn direct_store_fixture_absence_inverse_boundary() {
     let mutation = DemoMutation::DeleteN(DeleteN {});
     let deleted = mutation.diff(&before).diff().apply(&before).unwrap();
     assert_eq!(deleted.n, None);
-    assert_eq!(mutation.inverse(&before)[0].diff(&deleted).diff().apply(&deleted).unwrap(), before);
+    assert_eq!(mutation.inverse(&before).expect("valid retained mutation inverse fixture")[0].diff(&deleted).diff().apply(&deleted).unwrap(), before);
 }
 
 #[test]
@@ -475,8 +531,8 @@ fn artifact_store_edit_retirement_is_interruptible_and_terminal_empty_after_deep
         forwards: Vec::new(),
         inverse: Vec::new(),
         mutation_meta: Vec::new(),
-        description: Some("description".repeat(128)), verb: None,
-        coalesce_key: Some("coalesce".repeat(128)),
+        description: Some("description".repeat(128)),
+        verb: None,
         sequence_number: 1,
         started_at: "started".repeat(128),
         finished_at: Some("finished".repeat(128)),
@@ -506,8 +562,8 @@ fn artifact_store_edit_retirement_rejects_and_returns_the_exact_nonempty_mutatio
         forwards: vec![DemoMutation::SetN(SetN { n: 7 })],
         inverse: Vec::new(),
         mutation_meta: Vec::new(),
-        description: None, verb: None,
-        coalesce_key: None,
+        description: None,
+        verb: None,
         sequence_number: 1,
         started_at: "now".into(),
         finished_at: None,
@@ -658,7 +714,7 @@ struct UnitOwnedRetirement {
 }
 
 impl ErasedSnapshotRetirement for UnitOwnedRetirement {
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -1465,7 +1521,7 @@ where
 {
     drop(store.detach_backbone().expect("a closing test store releases its backbone"));
     let mut last = SnapshotRetirementStep::Complete;
-    for _ in 0..65_536 {
+    for _ in 0..1 << 24 {
         if store.close_owned_terminal_is_empty() {
             return;
         }
@@ -1523,7 +1579,7 @@ where
     fn prepare_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {
         SpaceMember::prepare_one_item_publication(&mut self.0, publication, grant)
     }
-    fn abort_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String> {
+    fn abort_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         SpaceMember::abort_one_item_publication(&mut self.0, publication, grant)
     }
     fn snapshot_read_erased_now(&self) -> Result<ErasedSnapshotRead, String> {
@@ -1541,7 +1597,7 @@ where
     fn snapshot_read_leases_terminal_is_empty(&self) -> bool {
         SpaceMember::snapshot_read_leases_terminal_is_empty(&self.0)
     }
-    fn close_owned_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_owned_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         SpaceMember::close_owned_step(&mut self.0, maximum_items, maximum_bytes)
     }
     fn close_owned_terminal_is_empty(&self) -> bool {
@@ -1680,8 +1736,8 @@ fixture_member_factory!(DemoMutation);
 fixture_member_factory!(ValidatedMutation);
 fixture_member_factory!(SeverityMutation);
 
-#[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, crate::os_dsl::DslArtifact, semio_framework_value_derive::RetainedClone, semio_framework_value_derive::RetireOwned)]
-#[dsl(id = "demo.doc", extension = "demo")]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, crate::os_dsl::DslArtifact, semio_framework_value_derive::RetainedClone, semio_framework_value_derive::RetireOwned)]
+#[artifact(id = "demo.doc", extension = "demo")]
 pub(crate) struct DemoSnapshot {
     pub(super) n: Option<i32>,
 }
@@ -1690,6 +1746,10 @@ impl semio_framework_schema_composition::ArtifactCompositionFields for DemoSnaps
     fn visit_child_refs<'a, V: semio_framework_schema_composition::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {
         Ok(())
     }
+}
+
+impl semio_framework_schema_composition::ArtifactChildReadAdmission for DemoSnapshot {
+ fn admit_child_reads<R:semio_framework_schema_composition::ChildReadSource>(&self,source:&mut R)->Result<(),R::Error>{source.step()}
 }
 
 impl Default for DemoSnapshot {
@@ -1703,25 +1763,33 @@ impl Default for DemoSnapshot {
 
 impl crate::os_store::ArtifactSqliteSnapshot for DemoSnapshot {
     const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
-    fn preflight_sqlite_snapshot_encoding(&self, _: crate::sqlite_snapshot::SnapshotEncoding, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<(), String> {
+    fn preflight_sqlite_snapshot_encoding(&self, _: crate::sqlite_snapshot::SnapshotEncoding, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<(), semio_framework_value::ValueError> {
         let mut bound = crate::sqlite_snapshot::artifact::NativeEncodingBound::new(control)?;
         bound.add(4096)?;
         bound.finish()
     }
-    fn to_sqlite_database(&self, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<crate::sqlite_snapshot::SqliteDatabase, String> {
-        use crate::sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteValue, SqliteSnapshotPhase};
+    fn to_sqlite_database(&self, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<crate::sqlite_snapshot::SqliteDatabase, semio_framework_value::ValueError> {
+        use crate::sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteSnapshotPhase, SqliteValue};
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1)?;
-        let mut database = SqliteDatabase::from_schema(Self::SQLITE_SCHEMA).map_err(|error| error.to_string())?;
+        let mut database = SqliteDatabase::from_schema(Self::SQLITE_SCHEMA)?;
         database.table_mut("demo_state")?.rows.push(SqliteRow { rowid: 1, values: vec![SqliteValue::Integer(1), self.n.map(|value| SqliteValue::Integer(i64::from(value))).unwrap_or(SqliteValue::Null)] });
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 1, 1)?;
         Ok(database)
     }
-    fn from_sqlite_database(database: &crate::sqlite_snapshot::SqliteDatabase, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, String> {
-        use crate::sqlite_snapshot::{SqliteValue, SqliteSnapshotPhase};
+    fn from_sqlite_database(database: &crate::sqlite_snapshot::SqliteDatabase, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
+        use crate::sqlite_snapshot::{SqliteSnapshotPhase, SqliteValue};
         control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 0, 1)?;
         let rows = &database.table("demo_state")?.rows;
-        if rows.len() != 1 || rows[0].rowid != 1 || rows[0].integer(0)? != 1 { return Err("demo SQLite snapshot requires one state row".into()); }
-        let snapshot = Self { n: match rows[0].values.get(1) { Some(SqliteValue::Null) => None, Some(SqliteValue::Integer(value)) => Some(i32::try_from(*value).map_err(|error| error.to_string())?), _ => return Err("demo state n must be integer or null".into()) } };
+        if rows.len() != 1 || rows[0].rowid != 1 || rows[0].integer(0)? != 1 {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "demo SQLite snapshot requires one state row"));
+        }
+        let snapshot = Self {
+            n: match rows[0].values.get(1) {
+                Some(SqliteValue::Null) => None,
+                Some(SqliteValue::Integer(value)) => Some(i32::try_from(*value).map_err(|_| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "demo state n exceeds i32"))?),
+                _ => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "demo state n must be integer or null")),
+            },
+        };
         control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 1, 1)?;
         Ok(snapshot)
     }
@@ -1737,12 +1805,12 @@ impl ArtifactDsl for DemoSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let record = crate::os_dsl::parse(body, &Self::__dsl_spec(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document })?;
+        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
         let record = self.__dsl_to_record();
-        let body = crate::os_dsl::print(&record, &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+        let body = semio_framework_dsl_record::print(&record, &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
         let envelope = semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_format::Component::Dsl, 1).expect("valid envelope_id");
         semio_format::wrap_text(&envelope, &body)
     }
@@ -1760,19 +1828,19 @@ impl ArtifactPack for DemoSnapshot {
 
     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_format::Component::Pack, 1).map_err(|e| PackError::Schema(e.to_string()))?;
+        let envelope = semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_format::Component::Pack, 1).map_err(|error| PackError::from(error.into_value_error()))?;
         Ok(semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
         MEMBER_SNAPSHOT_DECODE_COUNT.with(|count| count.set(count.get() + 1));
-        let (envelope, inner) = semio_format::unwrap_binary(bytes).map_err(|e| PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = semio_format::unwrap_binary(bytes).map_err(|error| PackError::from(error.into_value_error()))?;
         if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1) {
-            return Err(PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(text_error_to_pack_error)
     }
-    fn record_spec() -> Option<crate::os_dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -1781,7 +1849,7 @@ impl ArtifactPack for DemoSnapshot {
 struct DemoSnapshotRetirement(Option<Arc<DemoSnapshot>>);
 
 impl ErasedSnapshotRetirement for DemoSnapshotRetirement {
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -1811,7 +1879,7 @@ struct ExactDemoSnapshotRetirement {
 }
 
 impl ErasedSnapshotRetirement for ExactDemoSnapshotRetirement {
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -1856,7 +1924,7 @@ impl SnapshotRetirementFactory<DemoSnapshot> for ExactDemoSnapshotRetirementFact
 struct DemoInitialSnapshotRetirement(Option<DemoSnapshot>);
 
 impl ErasedSnapshotRetirement for DemoInitialSnapshotRetirement {
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -1882,7 +1950,7 @@ impl ArtifactOwnedValueRetirementFactory<DemoSnapshot> for DemoInitialSnapshotRe
 struct DemoMutationRetirement<Mutation>(Option<Mutation>);
 
 impl<Mutation: Send> ErasedSnapshotRetirement for DemoMutationRetirement<Mutation> {
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -2004,14 +2072,15 @@ impl MutationDiff<DemoSnapshot> for LossyDiff {
 
 #[test]
 fn rejected_history_mutation_and_metadata_owners_close_under_one_item_grants() {
-    let edit = Edit { line: None,
+    let edit = Edit {
+        line: None,
         id: "rejected-edit".repeat(32),
         actor: Some("actor".repeat(64)),
         forwards: vec![DemoMutation::SetN(SetN { n: 7 })],
         inverse: vec![DemoMutation::SetN(SetN { n: 3 })],
         mutation_meta: Vec::new(),
-        description: Some("description".repeat(64)), verb: None,
-        coalesce_key: Some("coalesce".repeat(64)),
+        description: Some("description".repeat(64)),
+        verb: None,
         sequence_number: 1,
         started_at: "started".repeat(64),
         finished_at: Some("finished".repeat(64)),
@@ -2029,21 +2098,21 @@ fn rejected_history_mutation_and_metadata_owners_close_under_one_item_grants() {
 /// 🎞️ Handcrafted OpText (P6).
 impl OpText for DemoMutation {
     fn parse_op(line: &str) -> Result<Self, TextError> {
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = crate::os_dsl::parse(line, &(spec_fn.ordinary)(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
-                return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = semio_framework_dsl_record::parse(line, &(spec_fn.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?;
+                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown operation line '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
     }
     fn print_op(&self) -> String {
-        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        crate::os_dsl::print(&record, &(spec_fn.ordinary)(), crate::os_dsl::JoinMode::Inline)
+        semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline)
     }
 }
 
@@ -2051,8 +2120,8 @@ impl OpText for DemoMutation {
 impl OpBinary for DemoMutation {
     fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
         let spec = (variants[ordinal].1.ordinary)();
         let body = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
@@ -2070,13 +2139,13 @@ impl OpBinary for DemoMutation {
             return Err(crate::os_spr::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
         }
         let ordinal = reader.read_varint_u64()?;
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
         let spec = (spec_fn.ordinary)();
         let body = &bytes[reader.position()..];
         let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
         let record_offset = reader.position() as u64;
-        <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
+        <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
     }
 }
 //#endregion 🔖️OpCodec
@@ -2235,7 +2304,7 @@ fn member_open_partial_parse_and_initialization_owners_retire_exactly() {
         counted: bool,
     }
     impl ErasedSnapshotRetirement for Observed {
-        fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, String> {
+        fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
             let step = self.inner.close_step(items, bytes)?;
             if matches!(step, SnapshotRetirementStep::Complete) && !self.counted {
                 assert!(self.inner.terminal_is_empty());
@@ -2276,13 +2345,14 @@ fn member_open_partial_parse_and_initialization_owners_retire_exactly() {
             let history = crate::os_spr::HistoryLog {
                 doc_id: "member-retained".into(),
                 schema: "demo/v1".into(),
-                edits: vec![crate::os_spr::HistoryEdit { line: None,
+                edits: vec![crate::os_spr::HistoryEdit {
+                    line: None,
                     id: "raw-edit".into(),
                     actor: Some("raw-actor".into()),
                     started_at: "started".into(),
                     finished_at: Some("finished".into()),
-                    coalesce_key: Some("key".into()),
-                    description: Some("Grüße-😀".repeat(512)), verb: None,
+                    description: Some("Grüße-😀".repeat(512)),
+                    verb: None,
                     ops: vec![crate::os_spr::OpPayload { text: None, binary: Some(vec![0xff; 129]) }],
                     inverse: Vec::new(),
                     meta: Some(vec![crate::os_spr::HistoryOpMeta {
@@ -2316,14 +2386,15 @@ fn member_open_partial_parse_and_initialization_owners_retire_exactly() {
             let forwards = vec![DemoMutation::decode_op(&encoded).unwrap()];
             let inverse = if stage == "inverse" { vec![DemoMutation::decode_op(&encoded).unwrap()] } else { Vec::new() };
             retained
-                .stage_edit(Edit { line: None,
+                .stage_edit(Edit {
+                    line: None,
                     id: "pending-edit".into(),
                     actor: Some("actor".into()),
                     forwards,
                     inverse,
                     mutation_meta: Vec::new(),
-                    description: Some("retained during malformed next record".into()), verb: None,
-                    coalesce_key: None,
+                    description: Some("retained during malformed next record".into()),
+                    verb: None,
                     sequence_number: 1,
                     started_at: "now".into(),
                     finished_at: None,
@@ -2489,7 +2560,7 @@ impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoMemberW
         }
     }
 
-    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || grant.maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -2499,7 +2570,7 @@ impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoMemberW
                 return Ok(step);
             }
             if !inner.terminal_is_empty() {
-                return Err("member typed owner falsely reported terminal".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "member typed owner falsely reported terminal"));
             }
             self.inner = None;
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
@@ -2751,7 +2822,7 @@ pub(super) struct DemoOneItemPreparationFactory {
 
 impl DemoOneItemPreparationFactory {
     pub(super) fn admissible() -> Self {
-        Self { footprint: ArtifactStoreOneItemFootprint::for_one_invertible_item(512), published_root: Arc::new(Mutex::new(None)), forge_digest: false, stamped_clock: None, stamped_mutation_id: None }
+        Self { footprint: ArtifactStoreOneItemFootprint::for_leaf(&DemoMutation::SetN(SetN { n: 0 }), 512), published_root: Arc::new(Mutex::new(None)), forge_digest: false, stamped_clock: None, stamped_mutation_id: None }
     }
 
     /// 🕰️ A server-derived publication clock, as a durable committer declares it.
@@ -2838,18 +2909,19 @@ impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoOneItem
         let base = self.base.as_ref().ok_or_else(|| "demo preparation lost its base root".to_string())?;
         let mutation = self.mutation.take().ok_or_else(|| "demo preparation lost its mutation".to_string())?;
         let outcome = mutation.diff(base.get());
-        if outcome.worst_level().is_some_and(|level| level >= crate::os_dsl::Severity::Error) {
+        if outcome.worst_level().is_some_and(|level| level >= semio_framework_diagnostic::Severity::Error) {
             return Err("demo retained mutation rejected against its base".into());
         }
         let post_snapshot = Arc::new(outcome.diff().apply(base.get()).map_err(|error| error.to_string())?);
-        let inverse = mutation.inverse(base.get());
+        let inverse = mutation.inverse(base.get()).expect("valid retained mutation inverse fixture");
         let authority = self.authority.as_ref().ok_or_else(|| "demo preparation lost its live Store authority".to_string())?;
         let sequence_number = authority.next_sequence_number;
         let stamped = self.stamped_mutation_id.clone();
         let id = stamped.as_ref().map_or_else(|| format!("retained-one-item-{sequence_number}"), |mutation| mutation.0.clone());
         let mutation_id = stamped.unwrap_or_else(|| MutationId(format!("{id}#0")));
         let forward = mutation;
-        let edit = Edit { line: None,
+        let edit = Edit {
+            line: None,
             id: id.clone(),
             actor: Some(authority.actor.clone()),
             forwards: vec![forward],
@@ -2868,8 +2940,8 @@ impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoOneItem
                 origin: Default::default(),
                 transaction: None,
             }],
-            description: self.description.take(), verb: None,
-            coalesce_key: None,
+            description: self.description.take(),
+            verb: None,
             sequence_number,
             started_at: String::new(),
             finished_at: None,
@@ -2905,7 +2977,7 @@ impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoOneItem
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || grant.maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -2988,7 +3060,7 @@ impl ArtifactEphemeralOneItemPreparation<DemoSnapshot, DemoMutation> for DemoEph
         }
         let request = self.request.take().ok_or_else(|| "ephemeral preparation lost its request".to_string())?;
         let outcome = request.mutation.diff(&request.base);
-        if outcome.worst_level().is_some_and(|level| level >= crate::os_dsl::Severity::Error) {
+        if outcome.worst_level().is_some_and(|level| level >= semio_framework_diagnostic::Severity::Error) {
             return Err("demo ephemeral mutation rejected against its base".into());
         }
         let next_root = Arc::new(outcome.diff().apply(&request.base).map_err(|error| error.to_string())?);
@@ -3018,7 +3090,7 @@ impl ArtifactEphemeralOneItemPreparation<DemoSnapshot, DemoMutation> for DemoEph
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || grant.maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -3053,6 +3125,73 @@ fn close_demo_artifact_store(store: &mut ArtifactStore<DemoSnapshot, DemoMutatio
         }
     }
     panic!("demo artifact store did not reach its exact terminal-empty witness ({})", store.close_owned_phase_witness());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn derived_child_reads_require_the_exact_store_frontier_and_genuine_operation_or_history_fold() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪆️derived-read/🔣️.json")).expect("closed language-neutral origin corpus");
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "derived-source", DemoSnapshot { n: Some(0) }, None)).await;
+    store.install_document_store_owners_exact(demo_closable_store_owners());
+    let mut foreign = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "derived-foreign", DemoSnapshot { n: Some(0) }, None)).await;
+    foreign.install_document_store_owners_exact(demo_closable_store_owners());
+    let base = store.derived_snapshot_head();
+    assert!(Arc::ptr_eq(base.snapshot_owner(), &store.snapshot_owner()));
+    let operation = DemoMutation::SetN(SetN { n: 9 });
+    let derived = store.derive_provisional_snapshot(&base, &operation).expect("genuine source").expect("applicable operation");
+    <DemoMutation as Mutation<DemoSnapshot>>::retire_cold(operation);
+    assert_eq!(derived.snapshot().n, Some(9));
+    assert_eq!(store.snapshot_ref().n, Some(0));
+    assert!(foreign.snapshot_read_derived(&derived).is_err(), "same concrete type and event numbers do not grant another Store authority");
+    let read = store.snapshot_read_derived(&derived).expect("exact Store source");
+    let actual = read.get::<DemoSnapshot>().expect("complete concrete derived projection");
+    assert!(std::ptr::eq(actual, derived.snapshot()));
+    assert_eq!(actual.n, Some(9));
+    let portable: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(derived.snapshot())).expect("own portable JSON output");
+    assert_eq!(portable, fixture["derived"]);
+    assert_eq!(portable, serde_json::to_value(derived.snapshot()).expect("independent complete Serde output"));
+    drop(read);
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 6 })], description: None, transaction: None }).await.expect("actual event publication");
+    assert!(store.snapshot_read_derived(&derived).is_err(), "a prior derived source cannot be relabelled with the new frontier");
+    drive_retirement_terminal(store.retire_snapshot_alias(derived.into_snapshot_owner()).expect("derived alias retirement"));
+    drive_retirement_terminal(store.retire_snapshot_alias(base.into_snapshot_owner()).expect("base alias retirement"));
+    let mut replay = Some(store.begin_derived_report_replay(&BTreeMap::new(), None).expect("genuine history replay"));
+    let owner = replay.as_ref().expect("retained replay") as *const _;
+    let projection = Arc::as_ptr(replay.as_ref().unwrap().replay.state.as_ref().unwrap());
+    let registry = Arc::as_ptr(&replay.as_ref().unwrap().registry);
+    assert!(store.finish_derived_report_replay(&mut replay).is_err(), "unfinished admission retains its actual owner");
+    assert_eq!(owner, replay.as_ref().expect("unfinished replay retained") as *const _);
+    assert_eq!(projection, Arc::as_ptr(replay.as_ref().unwrap().replay.state.as_ref().unwrap()));
+    assert_eq!(registry, Arc::as_ptr(&replay.as_ref().unwrap().registry));
+    assert!(matches!(store.step_derived_report_replay(replay.as_mut().expect("retained replay"), &mut || false).expect("own actual ledger"), ReplayStep::Finished(_)));
+    assert!(foreign.finish_derived_report_replay(&mut replay).is_err(), "foreign finishing cannot consume the source owner");
+    assert_eq!(owner, replay.as_ref().expect("foreign-refused replay retained") as *const _);
+    assert_eq!(registry, Arc::as_ptr(&replay.as_ref().unwrap().registry));
+    assert_eq!(replay.as_ref().unwrap().replay.state.as_ref().unwrap().n, Some(6));
+    let (result, head) = store.finish_derived_report_replay(&mut replay).expect("sealed completed replay");
+    assert!(replay.is_none());
+    let head = head.expect("complete actual history projection");
+    assert_eq!(head.snapshot().n, Some(6));
+    let portable: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(head.snapshot())).expect("own portable history JSON output");
+    assert_eq!(portable, fixture["published"]);
+    assert_eq!(portable, serde_json::to_value(head.snapshot()).expect("independent complete history Serde output"));
+    assert!(Arc::ptr_eq(head.snapshot_owner(), result.state().expect("same replay result")));
+    assert!(foreign.snapshot_read_derived(&head).is_err());
+    drop(result);
+    drive_retirement_terminal(store.retire_snapshot_alias(head.into_snapshot_owner()).expect("replay alias retirement"));
+    let mut stale = Some(store.begin_derived_report_replay(&BTreeMap::new(), None).expect("second actual replay"));
+    let owner = stale.as_ref().expect("retained stale replay") as *const _;
+    let projection = Arc::as_ptr(stale.as_ref().unwrap().replay.state.as_ref().unwrap());
+    let registry = Arc::as_ptr(&stale.as_ref().unwrap().registry);
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 7 })], description: None, transaction: None }).await.expect("new actual frontier");
+    assert!(store.finish_derived_report_replay(&mut stale).is_err(), "stale admission cannot consume the actual replay owner");
+    assert_eq!(owner, stale.as_ref().expect("stale replay retained") as *const _);
+    assert_eq!(projection, Arc::as_ptr(stale.as_ref().unwrap().replay.state.as_ref().unwrap()));
+    assert_eq!(registry, Arc::as_ptr(&stale.as_ref().unwrap().registry));
+    assert_eq!(stale.as_ref().unwrap().replay.state.as_ref().unwrap().n, Some(6));
+    drop(stale);
+    close_demo_artifact_store(&mut store);
+    close_demo_artifact_store(&mut foreign);
+    eprintln!("[DEBUG] Store-derived provisional and history reads retain their genuine complete owners and refuse foreign or stale authority");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -3181,7 +3320,7 @@ impl RetainedCloneEdit<DemoSnapshot, DemoMutation> for DemoRetainedCloneEdit {
         if self.mode == DemoRetainedCloneEditMode::Reject {
             return Err("retained clone fixture rejects before owner transfer".into());
         }
-        Ok(ArtifactStoreOneItemFootprint::for_one_invertible_item(65_536))
+        Ok(ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: 65_536 })
     }
 
     fn begin(&self) -> Self::Cursor {
@@ -3215,11 +3354,11 @@ impl RetainedCloneEditCursor<DemoSnapshot, DemoMutation> for DemoRetainedCloneEd
         }
         let base = base.get();
         let outcome = mutation.diff(base);
-        if outcome.worst_level().is_some_and(|level| level >= crate::os_dsl::Severity::Error) {
+        if outcome.worst_level().is_some_and(|level| level >= semio_framework_diagnostic::Severity::Error) {
             return Err("retained clone fixture mutation rejected against its immutable base".into());
         }
         let next = outcome.diff().apply(base).map_err(|error| error.to_string())?;
-        let inverse = mutation.inverse(base);
+        let inverse = mutation.inverse(base).expect("valid retained mutation inverse fixture");
         if inverse.len() != 1 {
             return Err("retained clone fixture expected one exact inverse row".into());
         }
@@ -3243,7 +3382,7 @@ impl RetainedCloneEditCursor<DemoSnapshot, DemoMutation> for DemoRetainedCloneEd
         started
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Blocked);
         }
@@ -3253,7 +3392,7 @@ impl RetainedCloneEditCursor<DemoSnapshot, DemoMutation> for DemoRetainedCloneEd
                 return Ok(step);
             }
             if !retirement.terminal_is_empty() {
-                return Err("retained clone fixture mutation retirement completed with a live owner".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "retained clone fixture mutation retirement completed with a live owner"));
             }
             self.active_retirement = None;
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
@@ -3276,6 +3415,66 @@ impl RetainedCloneEditCursor<DemoSnapshot, DemoMutation> for DemoRetainedCloneEd
 
 fn retained_clone_preparation_factory(mode: DemoRetainedCloneEditMode) -> Arc<dyn ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> {
     Arc::new(RetainedClonePreparationFactory::new(Arc::new(DemoRetainedCloneEdit { mode }), Arc::new(DemoMutationRetirementFactory), Arc::new(DemoSnapshotRetirementFactory), 64).expect("retained clone preparation fixture factory"))
+}
+
+struct ProbedRetainedClonePreparationFactory {
+    inner: Arc<dyn ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>>,
+    dropped: Arc<std::sync::atomic::AtomicUsize>,
+}
+
+impl ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation> for ProbedRetainedClonePreparationFactory {
+    fn preflight(&self, mutation: &DemoMutation, description: Option<&str>, lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String> {
+        self.inner.preflight(mutation, description, lane)
+    }
+
+    fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<DemoSnapshot, DemoMutation>) -> Result<Box<dyn ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation>>, ArtifactStoreOneItemPreparationRequest<DemoSnapshot, DemoMutation>> {
+        self.inner.begin(request).map(|inner| Box::new(ProbedRetainedClonePreparation { inner, dropped: Arc::clone(&self.dropped) }) as Box<dyn ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation>>)
+    }
+}
+
+struct ProbedRetainedClonePreparation {
+    inner: Box<dyn ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation>>,
+    dropped: Arc<std::sync::atomic::AtomicUsize>,
+}
+
+impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for ProbedRetainedClonePreparation {
+    fn advance(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {
+        self.inner.advance(grant)
+    }
+
+    fn checkpoint(&self) -> ArtifactStoreOneItemCheckpoint {
+        self.inner.checkpoint()
+    }
+
+    fn prepared(&self) -> Option<&ArtifactStoreOneItemPrepared<DemoSnapshot, DemoMutation>> {
+        self.inner.prepared()
+    }
+
+    fn take_prepared(&mut self) -> Option<ArtifactStoreOneItemPrepared<DemoSnapshot, DemoMutation>> {
+        self.inner.take_prepared()
+    }
+
+    fn cancel(&mut self) {
+        self.inner.cancel();
+    }
+
+    fn begin_close(&mut self) {
+        self.inner.begin_close();
+    }
+
+    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
+        self.inner.close_step(grant)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.inner.terminal_is_empty()
+    }
+}
+
+impl Drop for ProbedRetainedClonePreparation {
+    fn drop(&mut self) {
+        self.dropped.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+    }
 }
 
 impl ArtifactCanonicalJson for DemoMutation {
@@ -3311,13 +3510,17 @@ impl semio_framework_schema_composition::ArtifactCompositionFields for RetainedT
     }
 }
 
+impl semio_framework_schema_composition::ArtifactChildReadAdmission for RetainedTextSnapshot {
+ fn admit_child_reads<R:semio_framework_schema_composition::ChildReadSource>(&self,source:&mut R)->Result<(),R::Error>{source.step()}
+}
+
 impl ArtifactPack for RetainedTextSnapshot {
     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
-        <crate::os_dsl::DslValue as ArtifactPack>::encode_pack_with(&self.to_value(), options)
+        <semio_framework_value::DslValue as ArtifactPack>::encode_pack_with(&self.to_value(), options)
     }
 
     fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
-        Self::from_value(<crate::os_dsl::DslValue as ArtifactPack>::decode_pack_with(bytes, options)?).map_err(|error| PackError::Schema(error.to_string()))
+        Self::from_value(<semio_framework_value::DslValue as ArtifactPack>::decode_pack_with(bytes, options)?).map_err(PackError::from)
     }
 }
 
@@ -3365,9 +3568,12 @@ impl crate::os_spr::Mutation<RetainedTextSnapshot> for RetainedTextMutation {
         crate::os_spr::MutationOutcome::new(RetainedTextDiff { text: Some(value.text.clone()) })
     }
 
-    fn inverse(&self, base: &RetainedTextSnapshot) -> Vec<Self> {
+    fn inverse(&self, base: &RetainedTextSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![Self::SetRetainedText(SetRetainedText { text: base.text.clone() })]
-    }
+    
+    })())
+}
 
     fn conflict_target(&self) -> Vec<String> {
         vec!["text".into()]
@@ -3376,7 +3582,7 @@ impl crate::os_spr::Mutation<RetainedTextSnapshot> for RetainedTextMutation {
 
 impl OpText for RetainedTextMutation {
     fn parse_op(line: &str) -> Result<Self, TextError> {
-        serde_json::from_str(line).map_err(|error| crate::os_dsl::__rt::field_error(error.to_string()))
+        serde_json::from_str(line).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(error.to_string()).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
     }
 
     fn print_op(&self) -> String {
@@ -3414,7 +3620,7 @@ impl RetainedCloneEdit<RetainedTextSnapshot, RetainedTextMutation> for RetainedT
     type Cursor = RetainedTextEditCursor;
 
     fn preflight(&self, _mutation: &RetainedTextMutation, _description: Option<&str>, _lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String> {
-        Ok(ArtifactStoreOneItemFootprint::for_one_invertible_item(16_384))
+        Ok(ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: 16_384 })
     }
 
     fn begin(&self) -> Self::Cursor {
@@ -3439,7 +3645,7 @@ impl RetainedCloneEditCursor<RetainedTextSnapshot, RetainedTextMutation> for Ret
         started
     }
 
-    fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         Ok(if self.closing { SnapshotRetirementStep::Complete } else { SnapshotRetirementStep::Blocked })
     }
 
@@ -3597,6 +3803,59 @@ async fn retained_clone_preparation_store_lifecycle_matches_neutral_oracle() {
 }
 
 #[semio_framework_async_macros::async_test]
+async fn interrupted_retained_clone_publication_handoffs_to_store_maintenance() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️snapshot-clone/🧪️fixtures/📦️lifecycle/🔣️.json")).expect("retained clone preparation lifecycle fixture");
+    let row = &fixture["handoff"];
+    let grant = ArtifactStoreOneItemGrant { maximum_items: row["closeGrant"]["maximumItems"].as_u64().expect("handoff maximum items") as usize, maximum_bytes: row["closeGrant"]["maximumBytes"].as_u64().expect("handoff maximum bytes") as usize };
+    let dropped = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let factory: Arc<dyn ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> =
+        Arc::new(ProbedRetainedClonePreparationFactory { inner: retained_clone_preparation_factory(DemoRetainedCloneEditMode::Apply), dropped: Arc::clone(&dropped) });
+    let initial = DemoSnapshot { n: Some(31) };
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "retained-driver-loss", initial.clone(), None)).await;
+    store.install_document_store_owners_exact(demo_closable_store_owners());
+    let mut publication = Some(
+        store
+            .begin_apply_batch(
+                semio_framework_job::OperationId(71),
+                store.generation_now(),
+                store.content_revision_now(),
+                "retained-driver-loss".into(),
+                vec![DemoMutation::SetN(SetN { n: 32 })],
+                Some("interrupted retained clone publication".into()),
+                HistoryLane::Document,
+                Some(&factory),
+                None,
+            )
+            .expect("retained clone publication is admitted"),
+    );
+    assert!(matches!(store.advance_apply_batch(publication.as_mut().expect("live publication driver"), grant), Ok(ArtifactStoreOneItemAdvance::Progress(_))));
+    assert!(store.handoff_batch_publication_close(&mut publication).expect("Store accepts publication close handoff"));
+    assert!(publication.is_none(), "the interrupted driver retains no cursor owner after handoff");
+    assert_eq!(dropped.load(std::sync::atomic::Ordering::SeqCst), 0, "the retained preparation survives driver loss inside Store maintenance");
+    let mut close_turns = 0usize;
+    loop {
+        close_turns += 1;
+        match store.maintenance_retirements_step(grant.maximum_items, grant.maximum_bytes).expect("Store maintenance retires the handed-off publication") {
+            SnapshotRetirementStep::Pending { released_items, released_bytes } => {
+                assert!(released_items <= grant.maximum_items);
+                assert!(released_bytes <= grant.maximum_bytes);
+            }
+            SnapshotRetirementStep::Blocked => {}
+            SnapshotRetirementStep::Complete => break,
+        }
+        assert!(close_turns < 4_096, "Store maintenance reaches terminal emptiness");
+    }
+    let actual = serde_json::json!({
+        "driverOwnsCursor": publication.is_none() && dropped.load(std::sync::atomic::Ordering::SeqCst) == 1,
+        "sourcePreserved": store.snapshot_ref() == &initial && store.applied_edit_ids().is_empty(),
+        "closeRequiresMultipleTurns": close_turns > 1,
+        "terminalEmpty": store.maintenance_retirements_terminal_is_empty(),
+    });
+    assert_eq!(actual, row["expected"], "Store driver-loss handoff matches the language-neutral oracle");
+    close_demo_artifact_store(&mut store);
+}
+
+#[semio_framework_async_macros::async_test]
 async fn retained_clone_preparation_refuses_contiguous_capacity_larger_than_one_store_grant() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️snapshot-clone/🧪️fixtures/📦️lifecycle/🔣️.json")).expect("retained clone preparation lifecycle fixture");
     let grant = ArtifactStoreOneItemGrant { maximum_items: fixture["grant"]["maximumItems"].as_u64().expect("maximum items") as usize, maximum_bytes: fixture["grant"]["maximumBytes"].as_u64().expect("maximum bytes") as usize };
@@ -3611,8 +3870,13 @@ async fn retained_clone_preparation_refuses_contiguous_capacity_larger_than_one_
         Box::new(ArtifactStoreCursorDisposer::<RetainedTextSnapshot, RetainedTextMutation>::new()),
     ));
     let factory: Arc<dyn ArtifactStoreOneItemPreparationFactory<RetainedTextSnapshot, RetainedTextMutation>> = Arc::new(
-        RetainedClonePreparationFactory::new(Arc::new(RetainedTextEdit), Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<RetainedTextMutation>::default()), Arc::new(semio_framework_value::retirement::SharedValueRetirementFactory::<RetainedTextSnapshot>::default()), 64)
-            .expect("retained text preparation factory"),
+        RetainedClonePreparationFactory::new(
+            Arc::new(RetainedTextEdit),
+            Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<RetainedTextMutation>::default()),
+            Arc::new(semio_framework_value::retirement::SharedValueRetirementFactory::<RetainedTextSnapshot>::default()),
+            64,
+        )
+        .expect("retained text preparation factory"),
     );
     let mut publication = store
         .begin_apply_batch(
@@ -3818,7 +4082,8 @@ async fn artifact_store_batch_publication_stages_two_hundred_mutations_into_one_
 }
 
 /// 🧺️ The single-mutation publication is literally the `N = 1` case of the same machine: same
-/// phases, same receipt, one ledger slot.
+/// phases, same receipt, one ledger slot — and the same identity rule as `ArtifactCommand::Apply` (audit W1G-8): its one
+/// mutation is named after its edit, so a remote replica's one-forward edit resolves every transition naming it.
 #[semio_framework_async_macros::async_test]
 async fn artifact_store_batch_publication_of_one_mutation_is_the_single_item_case() {
     let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "batched-single", DemoSnapshot { n: Some(0) }, None)).await;
@@ -3830,8 +4095,15 @@ async fn artifact_store_batch_publication_of_one_mutation_is_the_single_item_cas
     let staged = store.envelope.vcs.edits.last().expect("staged edit");
     assert_eq!(staged.forwards, vec![DemoMutation::SetN(SetN { n: 7 })]);
     assert_eq!(staged.inverse, vec![DemoMutation::RestoreN(RestoreN { n: Some(0) })]);
+    assert_eq!(staged.mutation_meta[0].mutation_id, Some(MutationId(staged.id.clone())), "a one-mutation gesture names its mutation after its edit on the batched route as on every other");
     assert!(publication.acknowledge());
     close_durable_publication(&mut publication);
+    let (mut pair, receipt) = publish_demo_batch(&mut store, 3, vec![DemoMutation::SetN(SetN { n: 8 }), DemoMutation::SetN(SetN { n: 9 })], None).await;
+    receipt.expect("a two-item gesture publishes");
+    let staged = store.envelope.vcs.edits.last().expect("staged two-item edit");
+    assert_eq!(staged.mutation_meta.iter().map(|meta| meta.mutation_id.clone()).collect::<Vec<_>>(), vec![Some(MutationId(format!("{}#0", staged.id))), Some(MutationId(format!("{}#1", staged.id)))], "a genuine multi-mutation gesture keeps its positional ids");
+    assert!(pair.acknowledge());
+    close_durable_publication(&mut pair);
     close_demo_artifact_store(&mut store);
 }
 
@@ -3840,19 +4112,19 @@ async fn artifact_store_batch_publication_of_one_mutation_is_the_single_item_cas
 /// inverse row), so a durable preflight that declares ONE work item for a point-invertible mutation
 /// fail-closes its own single-item gesture inside `fold_batch_item`, with the exact message the
 /// runtime reported; the very same gesture through
-/// [`ArtifactStoreOneItemFootprint::for_one_invertible_item`] publishes and stages both rows. The
+/// [`ArtifactStoreOneItemFootprint::for_leaf`] publishes and stages both rows. The
 /// store's contract is therefore exactly what its own fixtures declare — the `work_items: 1` that ~40
 /// app preflights carried was the defect (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[semio_framework_async_macros::async_test]
 async fn artifact_store_batch_fold_refuses_a_one_work_item_declaration_and_accepts_the_invertible_one() {
-    assert_eq!(ArtifactStoreOneItemFootprint::for_one_invertible_item(512), ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: 512 });
-    assert_eq!(ArtifactStoreOneItemFootprint::for_one_item(3, 512), ArtifactStoreOneItemFootprint { work_items: 4, retained_bytes: 512 });
+    assert_eq!(ArtifactStoreOneItemFootprint::for_leaf(&DemoMutation::SetN(SetN { n: 1 }), 512), ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: 512 });
+    assert_eq!(ArtifactStoreOneItemFootprint::for_ephemeral_item(512), ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: 512 });
 
     let mut under = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "fold-under-declared", DemoSnapshot { n: Some(0) }, None)).await;
     under.install_document_store_owners_exact(demo_closable_store_owners());
     let generation = under.generation_now();
     let (mut publication, receipt) = publish_demo_batch_with(&mut under, 7, vec![DemoMutation::SetN(SetN { n: 9 })], None, DemoOneItemPreparationFactory::under_declared()).await;
-    assert_eq!(receipt.expect_err("a one-work-item declaration cannot carry a point-invertible item"), VcsError::ValidationFailed("batched item candidate failed its exact fixed fold contract".into()));
+    assert_eq!(receipt.expect_err("a one-work-item declaration cannot carry a point-invertible item"), VcsError::TooLarge { rows: 2, capacity: 1 });
     assert_eq!(under.generation_now(), generation, "a refused fold publishes nothing");
     assert_eq!(under.snapshot_ref().n, Some(0));
     assert!(under.applied_edit_ids().is_empty());
@@ -3866,7 +4138,7 @@ async fn artifact_store_batch_fold_refuses_a_one_work_item_declaration_and_accep
     receipt.expect("the invertible declaration carries the same item");
     assert_eq!(exact.snapshot_ref().n, Some(9));
     let staged = exact.envelope.vcs.edits.last().expect("staged edit");
-    assert_eq!(staged.forwards.len() + staged.inverse.len(), ArtifactStoreOneItemFootprint::for_one_invertible_item(0).work_items, "the exact declaration is the rows the item actually folds");
+    assert_eq!(staged.forwards.len() + staged.inverse.len(), ArtifactStoreOneItemFootprint::for_leaf(&DemoMutation::SetN(SetN { n: 0 }), 0).work_items, "the exact declaration is the rows the item actually folds");
     assert!(publication.acknowledge());
     close_durable_publication(&mut publication);
     close_demo_artifact_store(&mut exact);
@@ -3879,7 +4151,7 @@ async fn artifact_store_batch_fold_refuses_a_one_work_item_declaration_and_accep
 /// `batched prepared candidate failed its exact fixed commit contract`, `2N` staged rows against a
 /// declared `N`. The single-item case is the one with zero slack, which is why the boot-time
 /// `setActiveExample` was the first thing to die. Both gates pass exactly when every item declares
-/// through [`ArtifactStoreOneItemFootprint::for_one_invertible_item`]
+/// through [`ArtifactStoreOneItemFootprint::for_leaf`]
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[semio_framework_async_macros::async_test]
 async fn artifact_store_batch_commit_refuses_an_under_declared_multi_item_gesture_and_accepts_the_invertible_one() {
@@ -3893,7 +4165,7 @@ async fn artifact_store_batch_commit_refuses_an_under_declared_multi_item_gestur
     let (mut publication, receipt) = publish_demo_batch_with(&mut under, 9, mutations(), Some("under-declared gesture".into()), DemoOneItemPreparationFactory::under_declared()).await;
     assert_eq!(
         receipt.expect_err("an under-declared multi-item gesture cannot commit its inverse rows"),
-        VcsError::ValidationFailed("batched prepared candidate failed its exact fixed commit contract".into()),
+        VcsError::TooLarge { rows: 6, capacity: 3 },
         "the per-item fold admits every candidate at N >= 2; the gesture-wide commit gate is what refuses"
     );
     assert_eq!(under.generation_now(), generation, "a refused commit publishes nothing");
@@ -3912,7 +4184,7 @@ async fn artifact_store_batch_commit_refuses_an_under_declared_multi_item_gestur
     let staged = exact.envelope.vcs.edits.last().expect("staged gesture edit");
     assert_eq!(staged.forwards.len(), ITEMS);
     assert_eq!(staged.inverse.len(), ITEMS);
-    assert_eq!(staged.forwards.len() + staged.inverse.len(), ArtifactStoreOneItemFootprint::for_one_invertible_item(0).work_items * ITEMS, "the merged invertible declaration is exactly the rows the gesture folds");
+    assert_eq!(staged.forwards.len() + staged.inverse.len(), ArtifactStoreOneItemFootprint::for_leaf(&DemoMutation::SetN(SetN { n: 0 }), 0).work_items * ITEMS, "the merged invertible declaration is exactly the rows the gesture folds");
     assert!(publication.acknowledge());
     close_durable_publication(&mut publication);
     close_demo_artifact_store(&mut exact);
@@ -4152,7 +4424,8 @@ async fn artifact_store_stamped_publication_clock_admits_a_genesis_document_behi
 /// reported as "committed decision does not bind its approval target — mutation-id" and what the
 /// actor frontier reported as `edit-…` where the approval's mutation id was required. So a stamped
 /// publication publishes under the stamped identity, as `Edit.id` AND as the folded item's
-/// `mutation_id`, while every unstamped gesture keeps the store's mint and its `#position` form.
+/// `mutation_id`, while every unstamped gesture keeps the store's content-addressed mint (its one mutation named
+/// after it, audit W1G-8).
 #[semio_framework_async_macros::async_test]
 async fn artifact_store_stamped_publication_carries_its_committed_identity_into_the_published_edit() {
     let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "stamped-identity", DemoSnapshot { n: Some(0) }, None)).await;
@@ -4189,7 +4462,7 @@ async fn artifact_store_stamped_publication_carries_its_committed_identity_into_
     }
     let gestured = store.envelope.vcs.edits.last().expect("one published local edit");
     assert!(gestured.id.starts_with("edit-"), "an unstamped gesture keeps the store's content-addressed mint, got {}", gestured.id);
-    assert_eq!(gestured.mutation_meta.first().expect("local authority metadata").mutation_id.as_ref().map(|mutation| mutation.0.clone()), Some(format!("{}#0", gestured.id)), "an unstamped gesture keeps the `<edit-id>#<position>` form");
+    assert_eq!(gestured.mutation_meta.first().expect("local authority metadata").mutation_id.as_ref().map(|mutation| mutation.0.clone()), Some(gestured.id.clone()), "an unstamped one-mutation gesture names its mutation after its edit");
     assert!(gesture.acknowledge());
     close_durable_publication(&mut gesture);
     close_demo_artifact_store(&mut store);
@@ -4210,7 +4483,7 @@ impl ArtifactEphemeralPreparationTask<DemoSnapshot, DemoMutation> for FaultingEp
     fn begin_close(&mut self) {
         self.closing = true;
     }
-    fn close_step(&mut self, _: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, _: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         assert!(self.closing);
         Ok(SnapshotRetirementStep::Complete)
     }
@@ -4445,7 +4718,7 @@ impl ToValue for GroupReadTriggerSnapshot {
 }
 
 fn group_read_fixture_edit(id: &str) -> Edit<()> {
-    Edit { line: None, id: id.into(), actor: None, forwards: Vec::new(), inverse: Vec::new(), mutation_meta: Vec::new(), description: None, verb: None, coalesce_key: None, sequence_number: 0, started_at: String::new(), finished_at: None }
+    Edit { line: None, id: id.into(), actor: None, forwards: Vec::new(), inverse: Vec::new(), mutation_meta: Vec::new(), description: None, verb: None, sequence_number: 0, started_at: String::new(), finished_at: None }
 }
 
 fn group_read_fixture_envelope(snapshot: GroupReadTriggerSnapshot) -> ArtifactEnvelope<GroupReadTriggerSnapshot, ()> {
@@ -4509,8 +4782,8 @@ fn retained_group_envelope_read_captures_history_and_cursor_before_serializer_co
         if case["decision"] == "aborted" {
             assert!(owner.lock().unwrap().abort());
         }
-        let captured: serde_json::Value = serde_json::from_str(&crate::os_pack::json::to_json_string(&read)).unwrap();
-        let fresh: serde_json::Value = serde_json::from_str(&crate::os_pack::json::to_json_string(&envelope.capture_read().unwrap())).unwrap();
+        let captured: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&read)).unwrap();
+        let fresh: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&envelope.capture_read().unwrap())).unwrap();
         assert_eq!(reads.load(std::sync::atomic::Ordering::SeqCst), 2);
         for (value, selector) in [(&captured, "captured"), (&fresh, "fresh")] {
             let expected = &fixture[case[selector].as_str().unwrap()];
@@ -4550,7 +4823,7 @@ fn retained_group_envelope_read_rejects_foreign_cursor_visibility_before_seriali
     envelope.vcs.edits.stage_group_reserved(reservation, group_read_fixture_edit("foreign"), &history).unwrap();
     envelope.cursor.as_mut().unwrap().stage_group_owned(ArtifactCursorOwners::default(), &cursor).unwrap();
     assert!(envelope.capture_read().is_err());
-    assert!(envelope.capture_read().map(|read| crate::os_pack::json::to_json_string(&read)).is_err());
+    assert!(envelope.capture_read().map(|read| semio_framework_pack_json::to_json_string(&read)).is_err());
     assert_eq!(reads.load(std::sync::atomic::Ordering::SeqCst), 0);
     history_owner.abort();
     cursor_owner.abort();
@@ -4823,7 +5096,9 @@ fn mutation_envelope_at(actor: &str, mutation_id: &str, operation: DemoMutation,
         diff: crate::os_spr::ArtifactDiff { schema: SchemaId("demo/v1".to_string()), payload: operation.encode_op().expect("encode demo mutation") },
         inverse: crate::os_spr::InverseMutation { schema: SchemaId("demo/v1".to_string()), payload: Vec::new() },
         timestamp: hlc,
-        transaction: None, verb: None, line: None,
+        transaction: None,
+        verb: None,
+        line: None,
     }
 }
 
@@ -4859,7 +5134,7 @@ async fn modify_vs_delete_quarantines_under_normal_and_vigilant() {
         let pre_merge_ids = store.applied_edit_ids().to_vec();
         let report = store.ingest_remote(modify).await.expect("a policy rejection is a MergeReport, not an Err");
         assert!(!report.accepted, "{policy:?} must reject an Error-level modify-vs-delete conflict");
-        assert_eq!(report.worst, Some(crate::os_dsl::Severity::Error));
+        assert_eq!(report.worst, Some(semio_framework_diagnostic::Severity::Error));
         assert_eq!(store.snapshot().expect("unchanged snapshot"), pre_merge, "{policy:?}: state stays pre-merge on reject");
         assert_eq!(store.applied_edit_ids(), pre_merge_ids.as_slice(), "{policy:?}: applied_edit_ids stays pre-merge on reject");
         let conflict_id = report.conflict.clone().expect("a reject must raise a conflict");
@@ -4878,7 +5153,7 @@ async fn modify_vs_delete_applies_under_laissez_faire_with_a_degraded_conflict()
     store.ingest_remote(delete).await.expect("delete applies cleanly");
     let report = store.ingest_remote(modify).await.expect("LaissezFaire only rejects Fatal");
     assert!(report.accepted);
-    assert_eq!(report.worst, Some(crate::os_dsl::Severity::Error));
+    assert_eq!(report.worst, Some(semio_framework_diagnostic::Severity::Error));
     assert_eq!(store.snapshot().expect("snapshot").n, None, "the modify's part is absent — LAW 2 (an Error message ⇒ no change to its target)");
     assert!(report.replayed.iter().any(|edit_messages| edit_messages.messages.iter().any(|message| message.code.0 == "mutation.target-missing")), "an Error message must be reported");
     let conflict_id = report.conflict.expect("worst >= Warning must raise a Degraded conflict");
@@ -5180,7 +5455,9 @@ async fn testkit_law_conflict_spr_round_trip_via_real_store() {
 async fn replay_suffix_partitioned_errors_loudly_on_a_ghost_edit_id_instead_of_silently_dropping_it() {
     let edits: HashMap<String, Edit<DemoMutation>> = HashMap::new();
     let order = vec!["ghost-edit".to_string()];
-    let error = super::ArtifactStore::<DemoSnapshot, DemoMutation>::replay_suffix_partitioned(Arc::new(DemoSnapshot { n: Some(0) }), &order, 0, &edits, "demo/v1", &EffectiveSupersessions::new(), crate::os_spr::MergePolicy::Normal).err().expect("a ghost edit id must be a loud, typed VcsError");
+    let error = super::ArtifactStore::<DemoSnapshot, DemoMutation>::replay_suffix_partitioned(Arc::new(DemoSnapshot { n: Some(0) }), &order, 0, &edits, "demo/v1", &EffectiveSupersessions::new(), crate::os_spr::MergePolicy::Normal)
+        .err()
+        .expect("a ghost edit id must be a loud, typed VcsError");
     assert_eq!(error, VcsError::UnknownEdit("ghost-edit".into()));
 }
 
@@ -5661,7 +5938,12 @@ async fn alternatives_switch_restores_checkpoint_chain() {
     let alt_id = store.envelope().vcs.alternatives.last().expect("the branched alternative follows the trunk").id.clone();
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], description: None, transaction: None }).await.expect("apply on branch");
     assert_eq!(store.snapshot().expect("snapshot").n, Some(2));
-    { let trunk = store.trunk_alternative_id(); store.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: trunk }) }.await.expect("back to the trunk");
+    {
+        let trunk = store.trunk_alternative_id();
+        store.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: trunk })
+    }
+    .await
+    .expect("back to the trunk");
     assert_eq!(store.snapshot().expect("snapshot").n, Some(1), "the trunk tip does not show another line's uncommitted edit");
     store.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: alt_id }).await.expect("back to the alternative");
     assert_eq!(store.snapshot().expect("snapshot").n, Some(2), "the alternative tip keeps the edit that was authored on it");
@@ -5681,7 +5963,12 @@ async fn checkout_old_checkpoint_then_commit_creates_a_fork() {
     assert_eq!(store.envelope().transitions.len(), transitions, "a checkout is this viewer's head and authors no shared event");
     assert_eq!(store.current_checkpoint_id().await, Some(c1.as_str()));
     assert_eq!(store.snapshot().expect("snapshot").n, Some(1), "an explicit checkout hides the later trunk commit");
-    { let trunk = store.trunk_alternative_id(); store.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: trunk }) }.await.expect("back to the trunk tip");
+    {
+        let trunk = store.trunk_alternative_id();
+        store.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: trunk })
+    }
+    .await
+    .expect("back to the trunk tip");
     assert_eq!(store.snapshot().expect("snapshot").n, Some(2));
     let children: Vec<&Checkpoint> = store.envelope().vcs.checkpoints.iter().filter(|checkpoint| checkpoint.parent_id.as_deref() == Some(c1.as_str())).collect();
     assert_eq!(children.len(), 1, "looking at an old checkpoint does not fork the trunk");
@@ -5731,12 +6018,22 @@ async fn history_columns_assigns_distinct_lanes_and_pulls_main_only_descendants_
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], description: None, transaction: None }).await.expect("apply");
     store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("a1".into()), authors: Vec::new() }).await.expect("commit a1");
 
-    { let trunk = store.trunk_alternative_id(); store.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: trunk }) }.await.expect("back to the trunk");
+    {
+        let trunk = store.trunk_alternative_id();
+        store.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: trunk })
+    }
+    .await
+    .expect("back to the trunk");
     store.dispatch(ArtifactCommand::CreateAlternative { name: "feature-b".into() }).await.expect("create feature-b");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 3 })], description: None, transaction: None }).await.expect("apply");
     store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("b1".into()), authors: Vec::new() }).await.expect("commit b1");
 
-    { let trunk = store.trunk_alternative_id(); store.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: trunk }) }.await.expect("trunk again");
+    {
+        let trunk = store.trunk_alternative_id();
+        store.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: trunk })
+    }
+    .await
+    .expect("trunk again");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 4 })], description: None, transaction: None }).await.expect("apply");
     store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("main resumed".into()), authors: Vec::new() }).await.expect("commit main resumed");
 
@@ -5788,7 +6085,9 @@ async fn sample_envelope_for_backbone_test() -> crate::os_spr::MutationEnvelope 
         diff: crate::os_spr::ArtifactDiff { schema: SchemaId("demo/v1".to_string()), payload: vec![1, 2, 3] },
         inverse: crate::os_spr::InverseMutation { schema: SchemaId("demo/v1".to_string()), payload: Vec::new() },
         timestamp: HybridLogicalTimestamp { actor: 0, physical_ms: 0, logical: 0 },
-        transaction: None, verb: None, line: None,
+        transaction: None,
+        verb: None,
+        line: None,
     }
 }
 
@@ -5940,14 +6239,15 @@ async fn document_codec_of_round_trips_dsl_and_pack_and_edit_text() {
 
     let document_id = ArtifactId("demo".to_string());
     let schema = SchemaId("test.document-codec-roundtrip/v1".to_string());
-    let edit = Edit { line: None,
+    let edit = Edit {
+        line: None,
         id: "edit-1".into(),
         actor: Some("peer".into()),
         forwards: vec![DemoMutation::SetN(SetN { n: 9 })],
         inverse: vec![DemoMutation::SetN(SetN { n: 4 })],
         mutation_meta: Vec::new(),
-        description: None, verb: None,
-        coalesce_key: None,
+        description: None,
+        verb: None,
         sequence_number: 1,
         started_at: "0".into(),
         finished_at: None,
@@ -6360,91 +6660,43 @@ async fn edit_mutations_exposes_the_latest_edit() {
     assert_eq!(meta.len(), 1);
 }
 
+/// 🪢️ A streamed tool transaction (design §15) grows ONE open edit tick by tick without re-replaying history: after 50 ticks
+/// and the commit the edit carries every forward, inverse and metadata row, and one undo reverts the whole gesture.
 #[semio_framework_async_macros::async_test]
-async fn amend_last_absorbs_into_matching_coalesce_key() {
+async fn a_streamed_transaction_grows_one_edit_over_many_ticks() {
     let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
     let mut store = ArtifactStore::new(envelope).await;
-    store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], coalesce_key: Some("drag".into()) }).await.expect("first amend");
-    store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], coalesce_key: Some("drag".into()) }).await.expect("second amend");
-    assert_eq!(store.envelope().vcs.edits.len(), 1, "coalesced into a single edit");
-    assert_eq!(store.snapshot().expect("snapshot").n, Some(2));
-    store.dispatch(ArtifactCommand::Undo).await.expect("undo");
-    assert_eq!(store.snapshot().expect("snapshot after undo").n, Some(0), "undo restores pre-gesture state in one step");
-}
-
-/// 🪢️ Regression guard for the incremental `AmendLast` path (see `AmendCache`): many sequential
-/// amends into the same coalesced edit — e.g. a long slider drag — must still produce exactly the
-/// same edit (forwards/inverse/mutation_meta length, final snapshot, one-step undo) as the
-/// previous full-replay-every-time implementation, just without re-replaying history each time.
-#[semio_framework_async_macros::async_test]
-async fn amend_last_incremental_path_matches_full_replay_over_many_amends() {
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let transaction = crate::os_spr::TransactionRef { id: "tx-00000000000000d1".into(), tool: "s.demo@1/*#editor#drag".into() };
     for n in 1..=50 {
-        store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN(SetN { n })], coalesce_key: Some("drag".into()) }).await.expect("amend");
+        store.dispatch(ArtifactCommand::AppendTransaction { mutations: vec![DemoMutation::SetN(SetN { n })], transaction: transaction.clone() }).await.expect("tick");
     }
-    assert_eq!(store.envelope().vcs.edits.len(), 1, "still a single coalesced edit");
+    store.dispatch(ArtifactCommand::CommitTransaction { transaction_id: transaction.id.clone() }).await.expect("commit");
+    assert_eq!(store.envelope().vcs.edits.len(), 1, "one gesture is one edit");
     let edit = store.envelope().vcs.edits.last().expect("edit");
-    assert_eq!(edit.forwards.len(), 50);
-    assert_eq!(edit.inverse.len(), 50);
-    assert_eq!(edit.mutation_meta.len(), 50);
+    assert_eq!((edit.forwards.len(), edit.inverse.len(), edit.mutation_meta.len()), (50, 50, 50));
     assert_eq!(store.snapshot().expect("snapshot").n, Some(50));
     store.dispatch(ArtifactCommand::Undo).await.expect("undo");
-    assert_eq!(store.snapshot().expect("snapshot after undo").n, Some(0), "one undo reverts the whole 50-step coalesced gesture");
+    assert_eq!(store.snapshot().expect("snapshot after undo").n, Some(0), "one undo reverts the whole 50-tick gesture");
 }
 
-/// 🔏️ LAW (ticket 26/09/23 C12): a coalesced edit's revision identity is a pure function of the edit. Each amend extends the
+/// 🔏️ LAW (ticket 26/09/23 C12): a streamed edit's revision identity is a pure function of the edit. Each tick extends the
 /// tail's digest chains by only the operations it appended, yet after a long run the live revision equals the revision a
-/// store loaded from the same envelope derives from scratch, and every amend still moves the revision.
+/// store loaded from the same envelope derives from scratch, and every tick still moves the revision.
 #[semio_framework_async_macros::async_test]
-async fn an_amended_edit_revision_is_its_own_from_scratch_digest() {
+async fn a_streamed_edit_revision_is_its_own_from_scratch_digest() {
     let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
     let mut store = ArtifactStore::new(envelope).await;
+    let transaction = crate::os_spr::TransactionRef { id: "tx-00000000000000d2".into(), tool: "s.demo@1/*#editor#type".into() };
     let mut revisions = std::collections::HashSet::new();
     for n in 1..=256 {
-        store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN(SetN { n })], coalesce_key: Some("typing".into()) }).await.expect("amend");
-        assert!(revisions.insert(store.content_revision_now()), "amend {n} moves the revision");
+        store.dispatch(ArtifactCommand::AppendTransaction { mutations: vec![DemoMutation::SetN(SetN { n })], transaction: transaction.clone() }).await.expect("tick");
+        assert!(revisions.insert(store.content_revision_now()), "tick {n} moves the revision");
     }
-    assert_eq!(store.envelope().vcs.edits.len(), 1, "the run is one coalesced edit");
+    store.dispatch(ArtifactCommand::CommitTransaction { transaction_id: transaction.id.clone() }).await.expect("commit");
+    assert_eq!(store.envelope().vcs.edits.len(), 1, "the run is one edit");
     let files = print_document_pack(store.envelope()).await.expect("owned document encode");
     let reloaded = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr).await.expect("owned document decode").envelope).await;
     assert_eq!(reloaded.content_revision_now(), store.content_revision_now(), "the incrementally extended revision equals the from-scratch one");
-}
-
-/// 🪢️ Undo/redo only move edit ids between `applied_edit_ids`/`redo_edit_ids` — they never mutate
-/// an edit's own `forwards`, so a cached post-snapshot keyed by `(edit_id, forwards_len)` stays
-/// valid across an undo immediately followed by a redo of the very same coalesced edit.
-#[semio_framework_async_macros::async_test]
-async fn amend_last_incremental_cache_survives_undo_redo_round_trip() {
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
-    store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], coalesce_key: Some("drag".into()) }).await.expect("first amend");
-    store.dispatch(ArtifactCommand::Undo).await.expect("undo");
-    store.dispatch(ArtifactCommand::Redo).await.expect("redo");
-    store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], coalesce_key: Some("drag".into()) }).await.expect("amend after undo/redo");
-    assert_eq!(store.envelope().vcs.edits.len(), 1, "still coalesced into the original edit");
-    assert_eq!(store.snapshot().expect("snapshot").n, Some(2));
-    store.dispatch(ArtifactCommand::Undo).await.expect("undo again");
-    assert_eq!(store.snapshot().expect("snapshot after undo").n, Some(0));
-}
-
-#[semio_framework_async_macros::async_test]
-async fn amend_last_starts_new_edit_when_coalesce_key_differs() {
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
-    store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], coalesce_key: Some("drag-a".into()) }).await.expect("first drag");
-    store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], coalesce_key: Some("drag-b".into()) }).await.expect("second drag");
-    assert_eq!(store.envelope().vcs.edits.len(), 2, "distinct gestures are separate edits");
-}
-
-#[semio_framework_async_macros::async_test]
-async fn amend_last_does_not_absorb_into_committed_edit() {
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
-    store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], coalesce_key: Some("drag".into()) }).await.expect("amend");
-    store.dispatch(ArtifactCommand::CommitCheckpoint { message: None, authors: Vec::new() }).await.expect("commit");
-    store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], coalesce_key: Some("drag".into()) }).await.expect("amend after commit");
-    assert_eq!(store.envelope().vcs.edits.len(), 2, "committed edits are never amended, even with a matching coalesce key");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -6485,8 +6737,8 @@ async fn test_support_round_trip_helpers_pass_for_demo_operation() {
             origin: Default::default(),
             transaction: None,
         }],
-        description: None, verb: None,
-        coalesce_key: None,
+        description: None,
+        verb: None,
         sequence_number: 1,
         started_at: "2026-07-27T00:00:00Z".into(),
         finished_at: None,
@@ -6509,8 +6761,8 @@ async fn command_envelope_round_trip_panics_on_a_lossy_operation() {
         forwards: vec![LossyMutation::SetN(LossySetN { n: 7 })],
         inverse: vec![],
         mutation_meta: vec![],
-        description: None, verb: None,
-        coalesce_key: None,
+        description: None,
+        verb: None,
         sequence_number: 0,
         started_at: "2026-07-27T00:00:00Z".into(),
         finished_at: None,
@@ -6589,20 +6841,18 @@ async fn parse_document_text_rejects_invalid_op_line_with_span() {
     assert_eq!(error.span.line, 3);
 }
 
-/// 🩺️ Stresses the stateful `current`/`tail_undo_cache` fast paths — multi-op edits, amend
-/// gestures, undo/redo, and a checkpoint (cold-path recompute) all interleaved — against the
+/// 🩺️ Stresses the stateful `current`/`tail_undo_cache` fast paths — multi-op edits, streamed
+/// transactions, undo/redo, and a checkpoint (cold-path recompute) all interleaved — against the
 /// full-replay differential oracle, so any divergence between the incremental paths and a
 /// from-scratch replay fails loudly here rather than surfacing as a silent snapshot bug later.
 ///
 /// Multi-operation edit: current must fold both ops, matching a from-scratch replay.
 ///
-/// Amend gesture: the first `AmendLast` cannot merge into the preceding `Apply`-created edit
-/// (`Apply` never sets a `coalesce_key`, so it can never match), so it starts a NEW edit; the
-/// second `AmendLast` shares that edit's key and merges into it — two edits total, the second
-/// one carrying two coalesced increments (3 then 4).
+/// Streamed gesture: its first tick opens a NEW edit after the `Apply`-created one and its second tick grows that open
+/// edit — two edits total, the second carrying both ticks (3 then 4) once the commit closes it.
 ///
-/// Undo the whole amended edit (O(1) tail-cache path) restores the `Apply`-edit's state, not
-/// the initial snapshot — only the amend gesture's edit is undone here.
+/// Undo the whole streamed edit (O(1) tail-cache path) restores the `Apply`-edit's state, not
+/// the initial snapshot — only the gesture's edit is undone here.
 ///
 /// Checkpoint (cold path through `checkout_checkpoint_internal` is NOT exercised by commit
 /// itself, but a following apply + a second, older undo still must agree with replay).
@@ -6615,11 +6865,13 @@ async fn stateful_current_matches_full_replay_across_interleaved_commands() {
     test_support::assert_live_equals_replay(&store).await;
     assert_eq!(store.snapshot().expect("snapshot").n, Some(2));
 
-    store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN(SetN { n: 3 })], coalesce_key: Some("drag".into()) }).await.expect("amend 1");
-    store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN(SetN { n: 4 })], coalesce_key: Some("drag".into()) }).await.expect("amend 2");
+    let transaction = crate::os_spr::TransactionRef { id: "tx-00000000000000d3".into(), tool: "s.demo@1/*#editor#drag".into() };
+    store.dispatch(ArtifactCommand::AppendTransaction { mutations: vec![DemoMutation::SetN(SetN { n: 3 })], transaction: transaction.clone() }).await.expect("tick 1");
+    store.dispatch(ArtifactCommand::AppendTransaction { mutations: vec![DemoMutation::SetN(SetN { n: 4 })], transaction: transaction.clone() }).await.expect("tick 2");
+    store.dispatch(ArtifactCommand::CommitTransaction { transaction_id: transaction.id }).await.expect("commit");
     test_support::assert_live_equals_replay(&store).await;
     assert_eq!(store.snapshot().expect("snapshot").n, Some(4));
-    assert_eq!(store.envelope().vcs.edits.len(), 2, "the amend gesture started its own edit, not a third");
+    assert_eq!(store.envelope().vcs.edits.len(), 2, "the streamed gesture started its own edit, not a third");
 
     store.dispatch(ArtifactCommand::Undo).await.expect("undo");
     test_support::assert_live_equals_replay(&store).await;
@@ -6644,21 +6896,21 @@ async fn stateful_current_matches_full_replay_across_interleaved_commands() {
 /// 🎞️ Handcrafted OpText (P6).
 impl OpText for TimestampedMutation {
     fn parse_op(line: &str) -> Result<Self, TextError> {
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = crate::os_dsl::parse(line, &(spec_fn.ordinary)(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
-                return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = semio_framework_dsl_record::parse(line, &(spec_fn.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?;
+                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown operation line '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
     }
     fn print_op(&self) -> String {
-        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        crate::os_dsl::print(&record, &(spec_fn.ordinary)(), crate::os_dsl::JoinMode::Inline)
+        semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline)
     }
 }
 
@@ -6666,8 +6918,8 @@ impl OpText for TimestampedMutation {
 impl OpBinary for TimestampedMutation {
     fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
         let spec = (variants[ordinal].1.ordinary)();
         let body = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
@@ -6685,13 +6937,13 @@ impl OpBinary for TimestampedMutation {
             return Err(crate::os_spr::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
         }
         let ordinal = reader.read_varint_u64()?;
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
         let spec = (spec_fn.ordinary)();
         let body = &bytes[reader.position()..];
         let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
         let record_offset = reader.position() as u64;
-        <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
+        <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
     }
 }
 //#endregion 🔖️OpCodec
@@ -6895,21 +7147,21 @@ async fn space_history_op_round_trips() {
 /// 🎞️ Handcrafted OpText (P6).
 impl OpText for SeverityMutation {
     fn parse_op(line: &str) -> Result<Self, TextError> {
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = crate::os_dsl::parse(line, &(spec_fn.ordinary)(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
-                return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = semio_framework_dsl_record::parse(line, &(spec_fn.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?;
+                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown operation line '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
     }
     fn print_op(&self) -> String {
-        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        crate::os_dsl::print(&record, &(spec_fn.ordinary)(), crate::os_dsl::JoinMode::Inline)
+        semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline)
     }
 }
 
@@ -6917,8 +7169,8 @@ impl OpText for SeverityMutation {
 impl OpBinary for SeverityMutation {
     fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
         let spec = (variants[ordinal].1.ordinary)();
         let body = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
@@ -6936,13 +7188,13 @@ impl OpBinary for SeverityMutation {
             return Err(crate::os_spr::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
         }
         let ordinal = reader.read_varint_u64()?;
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
         let spec = (spec_fn.ordinary)();
         let body = &bytes[reader.position()..];
         let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
         let record_offset = reader.position() as u64;
-        <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
+        <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
     }
 }
 
@@ -6966,7 +7218,9 @@ fn severity_mutation_envelope_at(document_id: &str, actor: &str, mutation_id: &s
         diff: crate::os_spr::ArtifactDiff { schema: SchemaId("demo/v1".to_string()), payload: operation.encode_op().expect("encode severity mutation") },
         inverse: crate::os_spr::InverseMutation { schema: SchemaId("demo/v1".to_string()), payload: Vec::new() },
         timestamp,
-        transaction: None, verb: None, line: None,
+        transaction: None,
+        verb: None,
+        line: None,
     }
 }
 
@@ -7038,15 +7292,21 @@ fn ops_log_records_to_json_string_match_serde_json_byte_for_byte() {
     let transaction_meta =
         MutationMeta { origin: crate::os_spr::MutationOrigin::Transaction { initiator: crate::os_spr::ForeignTarget { artifact_id: "artifact-1".into(), artifact_kind: "demo".into(), dialect: Some("v1".into()) } }, ..dense_meta.clone() };
     for meta in [&sparse_meta, &dense_meta, &transaction_meta] {
-        let mine = crate::os_pack::json::to_json_string(meta);
+        let mine = semio_framework_pack_json::to_json_string(meta);
         let theirs = serde_json::to_string(&test_support::SerdeValue(&meta.to_value())).expect("serde_json encodes MutationMeta fields");
         assert_eq!(mine, theirs, "MutationMeta's ToValue/pack::json bridge diverged from serde_json for origin={:?}", meta.origin);
     }
 
-    let sparse_message = crate::os_spr::MutationMessage { level: crate::os_dsl::Severity::Warning, code: crate::os_dsl::FaultCode("mutation.no-op".into()), message: "no-op".into(), target: Vec::new(), op_index: None };
-    let dense_message = crate::os_spr::MutationMessage { level: crate::os_dsl::Severity::Fatal, code: crate::os_dsl::FaultCode("mutation.invariant".into()), message: "n invariant violated".into(), target: vec!["n".into()], op_index: Some(2) };
+    let sparse_message = crate::os_spr::MutationMessage { level: semio_framework_diagnostic::Severity::Warning, code: semio_framework_diagnostic::FaultCode("mutation.no-op".into()), message: "no-op".into(), target: Vec::new(), op_index: None };
+    let dense_message = crate::os_spr::MutationMessage {
+        level: semio_framework_diagnostic::Severity::Fatal,
+        code: semio_framework_diagnostic::FaultCode("mutation.invariant".into()),
+        message: "n invariant violated".into(),
+        target: vec!["n".into()],
+        op_index: Some(2),
+    };
     for message in [&sparse_message, &dense_message] {
-        let mine = crate::os_pack::json::to_json_string(message);
+        let mine = semio_framework_pack_json::to_json_string(message);
         let theirs = serde_json::to_string(&test_support::SerdeValue(&message.to_value())).expect("serde_json encodes MutationMessage fields");
         assert_eq!(mine, theirs, "MutationMessage's ToValue/pack::json bridge diverged from serde_json for op_index={:?}", message.op_index);
     }
@@ -7059,7 +7319,7 @@ fn ops_log_records_to_json_string_match_serde_json_byte_for_byte() {
         actors: vec![ActorId("actor-1".into()), ActorId("actor-2".into())],
         timestamp: HybridLogicalTimestamp::new(9, 300),
     };
-    let mine = crate::os_pack::json::to_json_string(&conflict);
+    let mine = semio_framework_pack_json::to_json_string(&conflict);
     let theirs = serde_json::to_string(&test_support::SerdeValue(&conflict.to_value())).expect("serde_json encodes Conflict fields");
     assert_eq!(mine, theirs, "Conflict's ToValue/pack::json bridge diverged from serde_json");
 }
@@ -7088,10 +7348,12 @@ async fn document_text_preserves_non_contiguous_edit_sequences_and_rejects_inval
     let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "strict-sequence", DemoSnapshot { n: Some(0) }, None)).await;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![SeverityMutation::SetN(SeveritySetN { n: 1 })], description: None, transaction: None }).await.expect("first edit");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![SeverityMutation::SetN(SeveritySetN { n: 2 })], description: None, transaction: None }).await.expect("second edit");
-    store.0.envelope.vcs.edits[0].sequence_number = 4;
-    store.0.envelope.vcs.edits[1].sequence_number = 17;
+    let mut renumbered = owned_test_envelope(&store).await;
+    renumbered.vcs.edits[0].sequence_number = 4;
+    renumbered.vcs.edits[1].sequence_number = 17;
 
-    let files = print_document_text(store.envelope()).await.expect("print strict text");
+    let files = print_document_text(&renumbered).await.expect("print strict text");
+    retire_demo_envelope(renumbered);
     let parsed = parse_document_text::<DemoSnapshot, SeverityMutation>(&files.dsl, &files.ops).await.expect("parse strict text").into_envelope();
     assert_eq!(parsed.vcs.edits.iter().map(|edit| edit.sequence_number).collect::<Vec<_>>(), vec![4, 17]);
     retire_demo_envelope(parsed);
@@ -7159,8 +7421,8 @@ async fn quarantined_accept_is_atomic_when_a_later_envelope_remains_fatal() {
         kind,
         status: crate::os_spr::ConflictStatus::Open,
         messages: vec![crate::os_spr::MutationMessage {
-            level: crate::os_dsl::Severity::Fatal,
-            code: crate::os_dsl::FaultCode("mutation.invariant".to_string()),
+            level: semio_framework_diagnostic::Severity::Fatal,
+            code: semio_framework_diagnostic::FaultCode("mutation.invariant".to_string()),
             message: "n invariant violated".to_string(),
             target: vec!["n".to_string()],
             op_index: Some(0),
@@ -7234,11 +7496,11 @@ async fn preview_wire_reports_the_same_messages_the_real_apply_would_produce_and
     }
     assert_eq!(messages, expected, "preview_wire must report exactly the messages the real diff engine computes");
     assert_eq!(messages.len(), 3, "one message each for warn/error/fatal; the clean op is silent");
-    assert_eq!(messages[0].level, crate::os_dsl::Severity::Warning);
+    assert_eq!(messages[0].level, semio_framework_diagnostic::Severity::Warning);
     assert_eq!(messages[0].op_index, Some(1));
-    assert_eq!(messages[1].level, crate::os_dsl::Severity::Error);
+    assert_eq!(messages[1].level, semio_framework_diagnostic::Severity::Error);
     assert_eq!(messages[1].op_index, Some(2));
-    assert_eq!(messages[2].level, crate::os_dsl::Severity::Fatal);
+    assert_eq!(messages[2].level, semio_framework_diagnostic::Severity::Fatal);
     assert_eq!(messages[2].op_index, Some(3));
 
     assert_eq!(store.envelope(), &before, "preview_wire is a pure dry run: the live store is byte-identical afterward");
@@ -7255,7 +7517,7 @@ async fn preview_wire_reports_a_fatal_message_for_undecodable_op_bytes_and_stops
     let messages = store.preview_wire(&ops).await;
 
     assert_eq!(messages.len(), 1, "the clean op is silent; the malformed op reports one structural message and stops");
-    assert_eq!(messages[0].level, crate::os_dsl::Severity::Fatal);
+    assert_eq!(messages[0].level, semio_framework_diagnostic::Severity::Fatal);
     assert_eq!(messages[0].code.0, "mutation.invariant");
     assert_eq!(messages[0].op_index, Some(1));
 }
@@ -7317,7 +7579,7 @@ async fn spr_round_trip_preserves_state_dependent_error_codes() {
     assert_eq!(codes, ["mutation.target-referenced", "mutation.target-mismatch"]);
 
     for message in &mut store.0.envelope.conflicts.last_mut().expect("the conflict").messages {
-        message.level = crate::os_dsl::Severity::Fatal;
+        message.level = semio_framework_diagnostic::Severity::Fatal;
     }
     let error = print_document_spr(store.envelope()).await.expect_err("a state-dependent code is an Error, never Fatal");
     assert!(matches!(&error, VcsError::ValidationFailed(detail) if detail.contains("malformed mutation message")), "{error:?}");
@@ -7329,10 +7591,16 @@ async fn spr_round_trip_preserves_state_dependent_error_codes() {
 #[semio_framework_async_macros::async_test]
 async fn persisted_messages_admit_exactly_the_outcome_vocabulary() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🧫️outcome-code/🔣️.json")).expect("outcome code fixture parses");
-    let levels = [("info", crate::os_dsl::Severity::Info), ("warning", crate::os_dsl::Severity::Warning), ("error", crate::os_dsl::Severity::Error), ("fatal", crate::os_dsl::Severity::Fatal)];
+    let levels = [("info", semio_framework_diagnostic::Severity::Info), ("warning", semio_framework_diagnostic::Severity::Warning), ("error", semio_framework_diagnostic::Severity::Error), ("fatal", semio_framework_diagnostic::Severity::Fatal)];
     let level_of = |name: &str| levels.iter().find(|(known, _)| *known == name).map(|(_, level)| *level).expect("fixture level");
-    let persisted = |code: &str, level: crate::os_dsl::Severity| crate::os_spr::MutationMessage { level, code: crate::os_dsl::FaultCode::new(code), message: format!("{code} persisted"), target: vec!["node-1".to_string()], op_index: Some(0) };
-    let mut admitted: Vec<(String, crate::os_dsl::Severity)> = fixture["codes"].as_array().expect("codes").iter().map(|row| (row["code"].as_str().expect("code").to_string(), level_of(row["level"].as_str().expect("level")))).collect();
+    let persisted = |code: &str, level: semio_framework_diagnostic::Severity| crate::os_spr::MutationMessage {
+        level,
+        code: semio_framework_diagnostic::FaultCode::new(code),
+        message: format!("{code} persisted"),
+        target: vec!["node-1".to_string()],
+        op_index: Some(0),
+    };
+    let mut admitted: Vec<(String, semio_framework_diagnostic::Severity)> = fixture["codes"].as_array().expect("codes").iter().map(|row| (row["code"].as_str().expect("code").to_string(), level_of(row["level"].as_str().expect("level")))).collect();
     admitted.extend(fixture["apply"]["accepted"].as_array().expect("apply codes").iter().map(|code| (code.as_str().expect("apply code").to_string(), level_of(fixture["apply"]["level"].as_str().expect("apply level")))));
     for (code, level) in &admitted {
         assert_eq!(expected_mutation_message_level(code).await, Some(*level), "{code}");
@@ -7343,7 +7611,7 @@ async fn persisted_messages_admit_exactly_the_outcome_vocabulary() {
     }
     for code in fixture["rejected"].as_array().expect("rejected codes").iter().map(|code| code.as_str().expect("rejected code")) {
         assert_eq!(expected_mutation_message_level(code).await, None, "{code}");
-        assert!(validate_persisted_message(&persisted(code, crate::os_dsl::Severity::Error), Some(1)).await.is_err(), "{code} is refused");
+        assert!(validate_persisted_message(&persisted(code, semio_framework_diagnostic::Severity::Error), Some(1)).await.is_err(), "{code} is refused");
     }
 }
 
@@ -7353,13 +7621,14 @@ async fn spr_parse_rejects_history_without_authoritative_operation_metadata() {
     let history = crate::os_spr::HistoryLog {
         doc_id: "metadata-required".to_string(),
         schema: "demo/v1".to_string(),
-        edits: vec![crate::os_spr::HistoryEdit { line: None,
+        edits: vec![crate::os_spr::HistoryEdit {
+            line: None,
             id: "edit-1".to_string(),
             actor: Some("author".to_string()),
             started_at: String::new(),
             finished_at: None,
-            coalesce_key: None,
-            description: None, verb: None,
+            description: None,
+            verb: None,
             ops: vec![crate::os_spr::OpPayload { text: None, binary: Some(SeverityMutation::SetN(SeveritySetN { n: 1 }).encode_op().expect("encode")) }],
             inverse: Vec::new(),
             meta: None,
@@ -7408,7 +7677,7 @@ async fn ops_header_line_commit_round_trips_including_delimiter_and_quote_charac
 
 #[semio_framework_async_macros::async_test]
 async fn ops_header_line_edit_round_trips_including_a_quoted_description() {
-    let header = OpsHeaderLine::Edit { id: "e1".to_string(), sequence: 42, started: "1".to_string(), actor: None, finished: None, key: None, description: Some("hello \"world\"".to_string()), verb: None, line: Vec::new() };
+    let header = OpsHeaderLine::Edit { id: "e1".to_string(), sequence: 42, started: "1".to_string(), actor: None, finished: None, description: Some("hello \"world\"".to_string()), verb: None, line: Vec::new() };
     let printed = header.print_op();
     assert!(!printed.contains('\n'), "print_op must be one line: {printed:?}");
     assert!(!printed.contains("actor="), "an absent optional field must be omitted: {printed}");
@@ -7554,14 +7823,6 @@ async fn apply_with_no_mutations_is_rejected() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn amend_last_with_no_mutations_is_rejected() {
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
-    let error = store.dispatch(ArtifactCommand::AmendLast { mutations: Vec::new(), coalesce_key: None }).await.unwrap_err();
-    assert_eq!(error, VcsError::EmptyApply);
-}
-
-#[semio_framework_async_macros::async_test]
 async fn undo_with_nothing_applied_is_rejected() {
     let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
     let mut store = ArtifactStore::new(envelope).await;
@@ -7668,10 +7929,8 @@ async fn command_text_binary_equivalence_holds_for_every_document_command_varian
         ArtifactCommand::CreateAlternative { name: "branch".to_string() },
         ArtifactCommand::SwitchAlternative { alternative_id: "alt-1".to_string() },
         ArtifactCommand::CheckoutCheckpoint { checkpoint_id: "ck-1".to_string() },
-        ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN(SetN { n: 3 })], coalesce_key: Some("drag".to_string()) },
         ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN(SetN { n: 9 })], description: Some("select".to_string()), lane: HistoryLane::Interaction, transaction: None },
         ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN(SetN { n: 9 })], description: None, lane: HistoryLane::Document, transaction: None },
-        ArtifactCommand::AmendLastInLane { mutations: vec![DemoMutation::SetN(SetN { n: 4 })], coalesce_key: Some("hover".to_string()), lane: HistoryLane::Interaction },
         ArtifactCommand::UndoInLane { lane: HistoryLane::Interaction },
         ArtifactCommand::RedoInLane { lane: HistoryLane::Interaction },
     ];
@@ -7984,9 +8243,9 @@ async fn pack_value_fixture_corpus() -> Vec<(&'static str, DslValue)> {
 // that cannot themselves be async — see R9/R10 residue shape 1
 fn dsl_value_variant_exact_eq(a: &DslValue, b: &DslValue) -> bool {
     match (a, b) {
-        (DslValue::Number(crate::os_dsl::Number::UInt(x)), DslValue::Number(crate::os_dsl::Number::UInt(y))) => x == y,
-        (DslValue::Number(crate::os_dsl::Number::Int(x)), DslValue::Number(crate::os_dsl::Number::Int(y))) => x == y,
-        (DslValue::Number(crate::os_dsl::Number::Float(x)), DslValue::Number(crate::os_dsl::Number::Float(y))) => x.to_bits() == y.to_bits(),
+        (DslValue::Number(semio_framework_value::Number::UInt(x)), DslValue::Number(semio_framework_value::Number::UInt(y))) => x == y,
+        (DslValue::Number(semio_framework_value::Number::Int(x)), DslValue::Number(semio_framework_value::Number::Int(y))) => x == y,
+        (DslValue::Number(semio_framework_value::Number::Float(x)), DslValue::Number(semio_framework_value::Number::Float(y))) => x.to_bits() == y.to_bits(),
         (DslValue::Number(_), DslValue::Number(_)) => false,
         (DslValue::Array(x), DslValue::Array(y)) => x.len() == y.len() && x.iter().zip(y).all(|(a, b)| dsl_value_variant_exact_eq(a, b)),
         (DslValue::Object(x), DslValue::Object(y)) => x.len() == y.len() && x.iter().all(|(k, v)| y.iter().find(|(ok, _)| ok == k).is_some_and(|(_, ov)| dsl_value_variant_exact_eq(v, ov))),
@@ -8010,7 +8269,7 @@ fn dynamic_integer_fixture_value(node: &serde_json::Value) -> DslValue {
         for (index, byte) in bits.iter_mut().enumerate() {
             *byte = u8::from_str_radix(&text[index * 2..index * 2 + 2], 16).expect("corpus f64LeHex byte");
         }
-        return DslValue::Number(crate::os_dsl::Number::Float(f64::from_le_bytes(bits)));
+        return DslValue::Number(semio_framework_value::Number::Float(f64::from_le_bytes(bits)));
     }
     if let Some(items) = node.get("list").and_then(|v| v.as_array()) {
         return DslValue::Array(items.iter().map(dynamic_integer_fixture_value).collect());
@@ -8102,8 +8361,8 @@ async fn pack_wire_value_preserves_integer_variants_at_u64_i64_boundaries() {
         assert_eq!(pack_rt::encode_wire_value(&decoded), expected, "{id}: re-encoding the decoded value is canonical and idempotent");
     }
 
-    assert!(matches!(pack_rt::decode_wire_value(&dynamic_integer_fixture_bytes("000101110403")).expect("uint 3"), DslValue::Number(crate::os_dsl::Number::UInt(3))));
-    assert!(matches!(pack_rt::decode_wire_value(&pack_rt::encode_wire_value(&DslValue::int(7))).expect("int 7"), DslValue::Number(crate::os_dsl::Number::Int(7))), "a positive Int keeps TAG_INT rather than collapsing onto TAG_UINT");
+    assert!(matches!(pack_rt::decode_wire_value(&dynamic_integer_fixture_bytes("000101110403")).expect("uint 3"), DslValue::Number(semio_framework_value::Number::UInt(3))));
+    assert!(matches!(pack_rt::decode_wire_value(&pack_rt::encode_wire_value(&DslValue::int(7))).expect("int 7"), DslValue::Number(semio_framework_value::Number::Int(7))), "a positive Int keeps TAG_INT rather than collapsing onto TAG_UINT");
     assert_ne!(pack_rt::encode_wire_value(&DslValue::int(7)), pack_rt::encode_wire_value(&DslValue::uint(7)), "Int(7) and UInt(7) are equal under Number::PartialEq but are distinct on the wire");
     let beyond_exact_f64 = 9_007_199_254_740_993u64;
     assert_ne!(beyond_exact_f64 as f64 as u64, beyond_exact_f64, "the f64 widening this law replaced is not injective past 2^53");
@@ -8130,29 +8389,29 @@ async fn pack_wire_value_preserves_integer_variants_at_u64_i64_boundaries() {
 
 impl OpText for ValidatedMutation {
     fn parse_op(line: &str) -> Result<Self, TextError> {
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = crate::os_dsl::parse(line, &(spec_fn.ordinary)(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
-                return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = semio_framework_dsl_record::parse(line, &(spec_fn.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?;
+                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown operation line '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
     }
     fn print_op(&self) -> String {
-        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        crate::os_dsl::print(&record, &(spec_fn.ordinary)(), crate::os_dsl::JoinMode::Inline)
+        semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline)
     }
 }
 
 impl OpBinary for ValidatedMutation {
     fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
         let spec = (variants[ordinal].1.ordinary)();
         let body = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
@@ -8170,13 +8429,13 @@ impl OpBinary for ValidatedMutation {
             return Err(crate::os_spr::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
         }
         let ordinal = reader.read_varint_u64()?;
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
         let spec = (spec_fn.ordinary)();
         let body = &bytes[reader.position()..];
         let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
         let record_offset = reader.position() as u64;
-        <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
+        <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
     }
 }
 
@@ -8216,8 +8475,8 @@ async fn artifact_child_dsl_field_round_trips_via_pack_and_value() {
     let decoded: ArtifactChild<DemoSnapshot> = artifact_child_from_record(&decoded_record).expect("from_record");
     assert_eq!(decoded, child);
 
-    let value = <ArtifactChild<DemoSnapshot> as crate::os_dsl::DslField>::to_value(&child);
-    let via_field = <ArtifactChild<DemoSnapshot> as crate::os_dsl::DslField>::from_value(&value).expect("from_value");
+    let value = <ArtifactChild<DemoSnapshot> as semio_framework_dsl_record::DslField>::to_value(&child);
+    let via_field = <ArtifactChild<DemoSnapshot> as semio_framework_dsl_record::DslField>::from_value(&value).expect("from_value");
     assert_eq!(via_field, child);
 
     assert_eq!(child.to_child_ref("mesh-slot").await, ChildRef { slot: "mesh-slot".into(), child_id: "child-1".into(), target: child.target.clone() });
@@ -8306,8 +8565,8 @@ async fn genesis_member_envelope_pack_opens_as_the_owned_child_without_a_live_st
     let dialect = demo_child_dialect();
     let parent = crate::os_io::ArtifactRef { artifact_id: "genesis-parent".into(), dialect: dialect.clone() };
     let owner = OwnerRef { parent: parent.clone(), slot: "slot".into(), child_id: "genesis-child".into() };
-    let envelope_pack = genesis_member_envelope_pack("demo/v1", &dialect, &owner, &DemoSnapshot { n: Some(5) }.encode_pack()).await.expect("genesis envelope");
     let expected = crate::os_io::ArtifactRef { artifact_id: "genesis-child".into(), dialect: dialect.clone() };
+    let envelope_pack = genesis_member_envelope_pack("demo/v1", &expected, &owner, &DemoSnapshot { n: Some(5) }.encode_pack()).await.expect("genesis envelope");
     let mut opened = open_member_store::<DemoSnapshot, DemoMutation>("demo/v1", &expected, Some(&owner), &envelope_pack).await.expect("open genesis member");
     assert_eq!(opened.envelope().id, "genesis-child");
     assert_eq!(opened.envelope().owner.as_ref(), Some(&owner));
@@ -8317,7 +8576,7 @@ async fn genesis_member_envelope_pack_opens_as_the_owned_child_without_a_live_st
     close_member_dialect_fixture(&mut opened);
     let other = OwnerRef { parent, slot: "other".into(), child_id: "genesis-child".into() };
     assert!(matches!(open_member_store::<DemoSnapshot, DemoMutation>("demo/v1", &expected, Some(&other), &envelope_pack).await, Err(VcsError::Deserialize(_))), "the stamped owner must match the requested one");
-    assert!(matches!(genesis_member_envelope_pack("demo/v1", &dialect, &owner, &[]).await, Err(VcsError::Deserialize(_))), "an empty initial pack is rejected, never substituted");
+    assert!(matches!(genesis_member_envelope_pack("demo/v1", &expected, &owner, &[]).await, Err(VcsError::Deserialize(_))), "an empty initial pack is rejected, never substituted");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -8344,7 +8603,7 @@ async fn member_factory_wrapper_cannot_bypass_exact_create_or_open_owner_catalog
 #[semio_framework_async_macros::async_test]
 async fn member_close_rejects_missing_owner_and_preserves_the_installed_disposer_until_terminal() {
     let mut missing = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "missing-member-owner", DemoSnapshot { n: Some(1) }, None)).await;
-    assert!(matches!(SpaceMember::close_owned_step(&mut missing, 1, 4_096), Err(reason) if reason.contains("no owner-supplied bounded disposer")));
+    assert!(matches!(SpaceMember::close_owned_step(&mut missing, 1, 4_096), Err(reason) if reason.kind == semio_framework_value::ValueRefusalKind::InvariantViolated && reason.message.contains("no owner-supplied bounded disposer")));
 
     missing.install_document_store_owners_exact(DemoSnapshot::member_store_owners());
     missing.closes_on_drop();
@@ -8482,7 +8741,7 @@ async fn member_factory_closed_dialect_parent_projection_matches_neutral_corpus(
         assert_eq!(actual.many, expected["many"].as_bool().unwrap());
     }
     let rows = fixture["projectionCases"].as_array().unwrap();
-    assert_eq!(rows.len(), 15);
+    assert_eq!(rows.len(), 16);
     for row in rows {
         let parent = Parent(row["parent"].as_array().unwrap());
         let projection = ChildRestoreProjection::from_snapshot(&parent);
@@ -8702,7 +8961,7 @@ async fn dispatch_group_validate_all_atomicity_one_bad_member_applies_nothing() 
         Ok(_) => panic!("expected the group dispatch to fail phase-1 validation, but it succeeded"),
         Err(VcsError::Rejected { policy, messages }) => {
             assert_eq!(policy, crate::os_spr::MergePolicy::Normal);
-            assert!(messages.iter().any(|message| message.level == crate::os_dsl::Severity::Fatal));
+            assert!(messages.iter().any(|message| message.level == semio_framework_diagnostic::Severity::Fatal));
         }
         Err(other) => panic!("expected Rejected, got a different VcsError: {other}"),
     }
@@ -9122,7 +9381,17 @@ async fn dispatch_group_stamps_one_tool_transaction_on_parent_and_owned_child() 
         assert!(edit.mutation_meta.iter().all(|meta| meta.transaction.as_ref() == Some(&transaction)), "every {member} operation carries the group's transaction");
         assert!(edit.mutation_meta.iter().all(|meta| meta.group_id.as_deref() == Some(receipt.invocation_id.as_str())), "every {member} operation keeps the group identity");
     }
-    let plain = coordinator.dispatch_group(&parent_ref, &mut parent_store, &mut [(&mut child_store, ChildDispatch { child: child_ref.clone(), ops: vec![DemoMutation::SetN(SetN { n: 4 }).encode_op().expect("encode")], op_schema: SchemaId("demo/v1".into()), labels: Vec::new() })], Vec::new(), Vec::new(), GroupMeta::default()).await.expect("plain dispatch");
+    let plain = coordinator
+        .dispatch_group(
+            &parent_ref,
+            &mut parent_store,
+            &mut [(&mut child_store, ChildDispatch { child: child_ref.clone(), ops: vec![DemoMutation::SetN(SetN { n: 4 }).encode_op().expect("encode")], op_schema: SchemaId("demo/v1".into()), labels: Vec::new() })],
+            Vec::new(),
+            Vec::new(),
+            GroupMeta::default(),
+        )
+        .await
+        .expect("plain dispatch");
     assert_eq!(plain.member_edits.len(), 1);
     assert!(child_store.envelope().vcs.edits.last().expect("child edit").mutation_meta.iter().all(|meta| meta.transaction.is_none()), "a group without a transaction stamps none");
 }
@@ -9167,7 +9436,7 @@ async fn dispatch_group_phase1_rejects_under_normal_when_a_member_yields_an_erro
         Ok(_) => panic!("expected Normal policy to reject an Error-level message, but the dispatch succeeded"),
         Err(VcsError::Rejected { policy, messages }) => {
             assert_eq!(policy, crate::os_spr::MergePolicy::Normal, "the rejection must name the policy that actually rejected it");
-            assert!(messages.iter().any(|message| message.level == crate::os_dsl::Severity::Error), "the rejection must carry the Error message that triggered it");
+            assert!(messages.iter().any(|message| message.level == semio_framework_diagnostic::Severity::Error), "the rejection must carry the Error message that triggered it");
         }
         Err(other) => panic!("expected Rejected, got a different VcsError: {other}"),
     }
@@ -9219,7 +9488,7 @@ async fn dispatch_group_phase1_accepts_the_same_error_scenario_under_laissez_fai
     assert_eq!(receipt.member_edits.len(), 2, "both parent and child got a real edit despite the child's Error message");
     assert_eq!(parent_store.snapshot().expect("parent snapshot").n, Some(1), "the parent's own clean op still applied");
     assert_eq!(child_store.snapshot().expect("child snapshot").n, Some(0), "the child's Error-level op's diff carries no change for its target (LAW 2), even though the group was accepted");
-    assert!(receipt.messages.iter().any(|message| message.code.0 == "mutation.target-missing" && message.level == crate::os_dsl::Severity::Error), "the child's Error message must still be reported, even on acceptance");
+    assert!(receipt.messages.iter().any(|message| message.code.0 == "mutation.target-missing" && message.level == semio_framework_diagnostic::Severity::Error), "the child's Error message must still be reported, even on acceptance");
 }
 
 /// 🧪️ `Vigilant` rejects a plain `Warning` — the strictest of the three policies, and the
@@ -9254,7 +9523,7 @@ async fn dispatch_group_phase1_rejects_under_vigilant_on_a_members_warning() {
         Ok(_) => panic!("expected Vigilant policy to reject a Warning-level message, but the dispatch succeeded"),
         Err(VcsError::Rejected { policy, messages }) => {
             assert_eq!(policy, crate::os_spr::MergePolicy::Vigilant, "the rejection must name the policy that actually rejected it");
-            assert!(messages.iter().any(|message| message.level == crate::os_dsl::Severity::Warning), "the rejection must carry the Warning message that triggered it");
+            assert!(messages.iter().any(|message| message.level == semio_framework_diagnostic::Severity::Warning), "the rejection must carry the Warning message that triggered it");
         }
         Err(other) => panic!("expected Rejected, got a different VcsError: {other}"),
     }
@@ -9294,10 +9563,10 @@ async fn group_receipt_messages_contains_the_union_with_member_path_prefixed_tar
     let receipt = coordinator.dispatch_group(&parent_ref, &mut parent_store, &mut children, parent_ops, Vec::new(), GroupMeta::default()).await.expect("LaissezFaire accepts a Warning-level message");
 
     assert_eq!(receipt.messages.len(), 2, "one Warning from the parent, one from the child");
-    assert_eq!(receipt.messages[0].level, crate::os_dsl::Severity::Warning);
+    assert_eq!(receipt.messages[0].level, semio_framework_diagnostic::Severity::Warning);
     assert_eq!(receipt.messages[0].code.0, "mutation.clamped");
     assert_eq!(receipt.messages[0].target, vec![parent_ref.to_uri()], "the parent's own message is prefixed with the parent's own path, collected before any child's");
-    assert_eq!(receipt.messages[1].level, crate::os_dsl::Severity::Warning);
+    assert_eq!(receipt.messages[1].level, semio_framework_diagnostic::Severity::Warning);
     assert_eq!(receipt.messages[1].code.0, "mutation.clamped");
     assert_eq!(receipt.messages[1].target, vec![child_ref.to_uri()], "the child's message is prefixed with the CHILD's own path, not the parent's");
 }
@@ -9333,7 +9602,7 @@ struct DemandingBufferRetirement {
 }
 
 impl ErasedSnapshotRetirement for DemandingBufferRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         let Some(buffer) = self.buffer.as_ref() else { return Ok(SnapshotRetirementStep::Complete) };
         if maximum_items == 0 || maximum_bytes < buffer.capacity() {
             return Ok(SnapshotRetirementStep::Blocked);
@@ -9359,7 +9628,7 @@ struct NestedErasedDriver {
 }
 
 impl NestedErasedDriver {
-    fn close(&mut self, payload_grant: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close(&mut self, payload_grant: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         let demand = self.inner.next_close_byte_demand();
         let paid = if demand > payload_grant { demand.min(self.allocation_admission) } else { payload_grant };
         self.allocation_admission = self.allocation_admission.saturating_sub(paid.saturating_sub(payload_grant));
@@ -9370,7 +9639,7 @@ impl NestedErasedDriver {
 struct DefaultedDemandRetirement(bool);
 
 impl ErasedSnapshotRetirement for DefaultedDemandRetirement {
-    fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         self.0 = true;
         Ok(SnapshotRetirementStep::Complete)
     }
@@ -9446,8 +9715,6 @@ async fn fresh_replicas_authoring_identical_gestures_never_share_an_edit_or_oper
     assert_eq!(edit_ids.len() as u64, fixture["expect"]["distinctEditIds"].as_u64().expect("distinct edits"));
     assert_eq!(operation_ids.len() as u64, fixture["expect"]["distinctOperationIds"].as_u64().expect("distinct operations"));
 }
-
-
 
 #[path = "../../📦️codec/🪶️snapshot-capability/🧪️tests/🦀️.rs"]
 mod snapshot_capability_tests;

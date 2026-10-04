@@ -110,8 +110,8 @@ fn phase(phase: &str, reason: Option<&str>) -> LayoutCommand {
     LayoutCommand::TranslateSelection(gumball::TranslateSelection { ids: vec!["frame-1".into()], dx: 0.0, dy: 0.0, phase: Some(phase.into()), reason: reason.map(str::to_string) })
 }
 
-fn label(entry: &HistoryEntry, locale: protocol::Locale) -> String {
-    entry.label.resolve(protocol::Terminology::Native, locale).to_string()
+fn label(entry: &HistoryEntry, locale: semio_framework_ui_locale::Locale) -> String {
+    entry.label.resolve(semio_framework_ui_locale::Terminology::Native, locale).to_string()
 }
 
 /// 🧯️ Zero trace: no edit, no row, the document untouched and the window painting the document again.
@@ -143,8 +143,8 @@ async fn one_gumball_drag_is_one_edit_one_row_and_one_transaction() {
     let transaction = rows[0].transaction.as_ref().expect("the row is keyed by its tool transaction");
     assert!(transaction.id.starts_with("tx-") && transaction.tool == "s.layout.layout@1/*#editor#translateSelection", "{transaction:?}");
     assert!(rows[0].op_lines.iter().any(|line| line.contains("DragFrames") && line.contains("frame-1") && line.contains("30")), "the op is the parametric leaf with the net offset: {:?}", rows[0].op_lines);
-    assert_eq!(label(&rows[0], protocol::Locale::En), "Drag 1 frame by (30, -6)");
-    assert_eq!(label(&rows[0], protocol::Locale::De), "1 Rahmen um (30; -6) ziehen");
+    assert_eq!(label(&rows[0], semio_framework_ui_locale::Locale::En), "Drag 1 frame by (30, -6)");
+    assert_eq!(label(&rows[0], semio_framework_ui_locale::Locale::De), "1 Rahmen um (30; -6) ziehen");
     assert_eq!(origin(&app, "frame-1"), (before.0 + 30.0, before.1 - 6.0));
     assert_eq!(painted(&mut app, "frame-1").await, (before.0 + 30.0, before.1 - 6.0), "the window paints the committed document");
     reserved(&mut app, "undo", None).await;
@@ -203,17 +203,17 @@ async fn one_shot_turns_and_scalings_are_one_transaction_each() {
     let rows = edit_rows(&turned);
     assert_eq!(rows.len(), 1);
     assert!(rows[0].transaction.as_ref().is_some_and(|transaction| transaction.tool.ends_with("#rotateSelection")));
-    assert_eq!(label(&rows[0], protocol::Locale::En), "Rotate 1 frame by 90°");
+    assert_eq!(label(&rows[0], semio_framework_ui_locale::Locale::En), "Rotate 1 frame by 90°");
     let scaled = run(&mut app, LayoutCommand::ScaleSelection(scale_selection::ScaleSelection { ids: vec!["frame-1".into()], sx: 2.0, sy: 2.0, phase: None, reason: None })).await;
     let rows = edit_rows(&scaled);
     assert_eq!(rows.len(), 1);
-    assert_eq!(label(&rows[0], protocol::Locale::De), "1 Rahmen um (2; 2) skalieren");
+    assert_eq!(label(&rows[0], semio_framework_ui_locale::Locale::De), "1 Rahmen um (2; 2) skalieren");
     let before = app.0.snapshot().expect("the head before the multi-frame transforms");
     let pair = vec!["frame-1".to_string(), "frame-text-1".to_string()];
     let turned = run(&mut app, LayoutCommand::RotateSelection(rotate_selection::RotateSelection { ids: pair.clone(), angle: std::f64::consts::FRAC_PI_2, phase: None, reason: None })).await;
-    assert_eq!(edit_rows(&turned).iter().map(|row| label(row, protocol::Locale::En)).collect::<Vec<_>>(), vec!["Rotate 2 frames by 90°".to_string()], "a two-frame turn is one row");
+    assert_eq!(edit_rows(&turned).iter().map(|row| label(row, semio_framework_ui_locale::Locale::En)).collect::<Vec<_>>(), vec!["Rotate 2 frames by 90°".to_string()], "a two-frame turn is one row");
     let scaled = run(&mut app, LayoutCommand::ScaleSelection(scale_selection::ScaleSelection { ids: pair, sx: 0.5, sy: 3.0, phase: None, reason: None })).await;
-    assert_eq!(edit_rows(&scaled).iter().map(|row| label(row, protocol::Locale::De)).collect::<Vec<_>>(), vec!["2 Rahmen um (0,5; 3) skalieren".to_string()], "a two-frame scaling is one row");
+    assert_eq!(edit_rows(&scaled).iter().map(|row| label(row, semio_framework_ui_locale::Locale::De)).collect::<Vec<_>>(), vec!["2 Rahmen um (0,5; 3) skalieren".to_string()], "a two-frame scaling is one row");
     assert_ne!(app.0.snapshot().expect("the transformed head"), before);
     reserved(&mut app, "undo", None).await;
     reserved(&mut app, "undo", None).await;
@@ -231,7 +231,7 @@ async fn a_streamed_drag_of_two_frames_is_one_transaction() {
     run(&mut app, tick(4.0, "stream")).await;
     run(&mut app, tick(4.0, "stream")).await;
     let rows = edit_rows(&run(&mut app, tick(2.0, "commit")).await);
-    assert_eq!(rows.iter().map(|row| label(row, protocol::Locale::En)).collect::<Vec<_>>(), vec!["Drag 2 frames by (10, 3)".to_string()], "one gesture, one row, the net leaf");
+    assert_eq!(rows.iter().map(|row| label(row, semio_framework_ui_locale::Locale::En)).collect::<Vec<_>>(), vec!["Drag 2 frames by (10, 3)".to_string()], "one gesture, one row, the net leaf");
     assert!(rows[0].transaction.is_some(), "the row is the gesture's transaction");
     assert_eq!((origin(&app, "frame-1"), origin(&app, "frame-text-1")), ((before.0 .0 + 10.0, before.0 .1 + 3.0), (before.1 .0 + 10.0, before.1 .1 + 3.0)));
     reserved(&mut app, "undo", None).await;

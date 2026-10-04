@@ -158,27 +158,27 @@ fn writer_window_state_retained_publications_isolate_two_windows_and_reload_only
 #[test]
 fn writer_window_state_mutations_are_exact_reversible_and_codec_stable() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
-    let base_config: WriterMainWindowConfig = pack::from_json_str(&fixture["baseConfig"].to_string()).unwrap();
-    let base_transient: WriterMainWindowTransient = pack::from_json_str(&fixture["baseTransient"].to_string()).unwrap();
+    let base_config: WriterMainWindowConfig = semio_framework_pack_json::from_json_str(&fixture["baseConfig"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let base_transient: WriterMainWindowTransient = semio_framework_pack_json::from_json_str(&fixture["baseTransient"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let ids = [fixture["leftWindowId"].as_str().unwrap(), fixture["rightWindowId"].as_str().unwrap()];
     let mut configs = std::collections::BTreeMap::from(ids.map(|id| (id.to_string(), base_config.clone())));
     let mut transients = std::collections::BTreeMap::from(ids.map(|id| (id.to_string(), base_transient.clone())));
     for step in fixture["steps"].as_array().unwrap() {
         let id = step["windowId"].as_str().unwrap();
         if step["lane"] == "config" {
-            let mutation: WriterMainWindowConfigMutation = pack::from_json_str(&step["mutation"].to_string()).unwrap();
+            let mutation: WriterMainWindowConfigMutation = semio_framework_pack_json::from_json_str(&step["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
             let before = configs[id].clone();
             let after = mutation.diff(&before).diff().apply(&before).unwrap();
-            let restored = mutation.inverse(&before).into_iter().fold(after.clone(), |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
+            let restored = mutation.inverse(&before).expect("valid retained mutation inverse fixture").into_iter().fold(after.clone(), |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
             assert_eq!(restored, before);
             assert_eq!(WriterMainWindowConfigMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
             assert_eq!(WriterMainWindowConfigMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
             configs.insert(id.into(), after);
         } else {
-            let mutation: WriterMainWindowTransientMutation = pack::from_json_str(&step["mutation"].to_string()).unwrap();
+            let mutation: WriterMainWindowTransientMutation = semio_framework_pack_json::from_json_str(&step["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
             let before = transients[id].clone();
             let after = mutation.diff(&before).diff().apply(&before).unwrap();
-            let restored = mutation.inverse(&before).into_iter().fold(after.clone(), |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
+            let restored = mutation.inverse(&before).expect("valid retained mutation inverse fixture").into_iter().fold(after.clone(), |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
             assert_eq!(restored, before);
             assert_eq!(WriterMainWindowTransientMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
             assert_eq!(WriterMainWindowTransientMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
@@ -186,11 +186,11 @@ fn writer_window_state_mutations_are_exact_reversible_and_codec_stable() {
         }
     }
     for (id, state) in configs {
-        let expected: WriterMainWindowConfig = pack::from_json_str(&fixture["expectedConfigs"][id].to_string()).unwrap();
+        let expected: WriterMainWindowConfig = semio_framework_pack_json::from_json_str(&fixture["expectedConfigs"][id].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         assert_eq!(state, expected);
     }
     for (id, state) in transients {
-        let expected: WriterMainWindowTransient = pack::from_json_str(&fixture["expectedTransients"][id].to_string()).unwrap();
+        let expected: WriterMainWindowTransient = semio_framework_pack_json::from_json_str(&fixture["expectedTransients"][id].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         assert_eq!(state, expected);
     }
 }

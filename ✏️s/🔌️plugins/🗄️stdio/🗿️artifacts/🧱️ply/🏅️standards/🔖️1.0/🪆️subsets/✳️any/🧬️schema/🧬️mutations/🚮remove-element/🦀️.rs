@@ -17,9 +17,12 @@ impl protocol::MutationKind<PlySnapshot, PlyMutation> for RemoveElement {
     fn diff(&self, base: &PlySnapshot) -> protocol::MutationOutcome<<PlyMutation as Mutation<PlySnapshot>>::Diff> {
         agg_diff(&PlyMutation::RemoveElement(self.clone()), base)
     }
-    fn inverse(&self, base: &PlySnapshot) -> Vec<PlyMutation> {
-        agg_inverse(&PlyMutation::RemoveElement(self.clone()), base)
-    }
+    fn inverse(&self, base: &PlySnapshot) -> Result<Vec<PlyMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&PlyMutation::RemoveElement(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove element", "Element entfernen")
     }

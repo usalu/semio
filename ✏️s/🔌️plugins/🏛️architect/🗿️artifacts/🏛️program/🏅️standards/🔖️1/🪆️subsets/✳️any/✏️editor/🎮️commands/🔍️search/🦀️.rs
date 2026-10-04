@@ -6,10 +6,11 @@ pub mod query {
     use crate::op::ProgramMutation;
     use crate::standards::v1::subsets::any::schema::inferences::{search_plugin, SearchQuery};
     use crate::ProgramSnapshot;
-    use dsl::{FromValue, ToValue};
+    use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "search")]
     pub struct Search {
         pub query: String,
@@ -25,8 +26,8 @@ pub mod query {
         let hits = search_plugin(doc.snapshot, &SearchQuery { keywords: payload.query.split_whitespace().map(str::to_string).collect(), ..SearchQuery::default() }, None, Some(&mut history));
         let mut next = base_config.clone();
         next.search_query = payload.query.clone();
-        next.search_history_json = dsl::json::to_json_string(&history);
-        next.last_result_json = dsl::json::to_string_pretty(&dsl::json::from_dsl_value(&ToValue::to_value(&hits)));
+        next.search_history_json = semio_framework_pack_json::to_json_string(&history);
+        next.last_result_json = semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&hits)));
         Ok(Emit::config(snapshot(next)))
     }
 }

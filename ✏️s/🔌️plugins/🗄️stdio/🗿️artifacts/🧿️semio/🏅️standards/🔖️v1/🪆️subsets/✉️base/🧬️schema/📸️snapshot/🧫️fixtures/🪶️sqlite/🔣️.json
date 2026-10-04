@@ -52,5 +52,42 @@
     "depth": 8192,
     "stackBytes": 65536,
     "schemaBytes": 100000
+  },
+  "controlledRefusals": {
+    "malformedRecord": {
+      "source": "[a]",
+      "kind": "invalidValue"
+    },
+    "cancellation": {
+      "source": "1.25",
+      "kind": "canceled"
+    },
+    "rowAdmission": {
+      "maxRows": 1,
+      "entities": 2,
+      "kind": "ownershipLimit"
+    },
+    "arithmeticOverflow": {
+      "kind": "workLimit"
+    },
+    "nestedValue": {
+      "depth": 65,
+      "kind": "depthLimit"
+    },
+    "projectionRowAdmission": {
+      "maxRows": 1,
+      "kind": "workLimit"
+    }
+  },
+  "nativeAdmission": {
+    "schema": "semio.admission.雪\u0000",
+    "largeSchemaUnit": "雪\u0000",
+    "largeSchemaRepeats": 40000,
+    "repeatedOperations": 2,
+    "refusalKinds": {
+      "backing": "ownershipLimit",
+      "cancellation": "canceled",
+      "afterAllocation": "invalidValue"
+    }
   }
 }

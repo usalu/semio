@@ -11,6 +11,11 @@
 use super::*;
 use neural_engine::Value;
 
+struct BudgetRegistry(flow_extension_sdk::ExtensionEvaluationResources);
+impl BudgetRegistry {fn new(session:&Session)->Self {Self(flow_extension_sdk::ExtensionEvaluationResources::new(module_registry(session)))}}
+impl std::ops::Deref for BudgetRegistry {type Target=neural_engine::SharedRegistry;fn deref(&self)->&Self::Target {self.0.registry()}}
+impl Drop for BudgetRegistry {fn drop(&mut self){use semio_framework_plugin::ExtensionResourceOwner;self.0.begin_close();while !self.0.terminal_is_empty(){self.0.close_step(4096,65536).unwrap();}}}
+
 const EVALUATE_BUDGET_FIXTURE_JSON: &str = include_str!("../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/⏱️evaluate-budget.json");
 
 /// 📇️ The half of the shared fixture this side of the contract reads. Parsed through `pack::json`
@@ -23,20 +28,20 @@ struct SteppedOperator {
 }
 
 fn fixture() -> (String, SteppedOperator) {
-    let fixture = pack::json::parse(EVALUATE_BUDGET_FIXTURE_JSON).expect("evaluate budget fixture");
-    assert_eq!(fixture.get("format").and_then(pack::json::Value::as_str), Some("semio.generation3d.evaluate-budget"));
-    let capability = fixture.get("capability").and_then(pack::json::Value::as_str).expect("capability").to_string();
+    let fixture = semio_framework_pack_json::parse(EVALUATE_BUDGET_FIXTURE_JSON, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("evaluate budget fixture");
+    assert_eq!(fixture.get("format").and_then(semio_framework_pack_json::Value::as_str), Some("semio.generation3d.evaluate-budget"));
+    let capability = fixture.get("capability").and_then(semio_framework_pack_json::Value::as_str).expect("capability").to_string();
     let stepped = fixture.get("steppedOperator").expect("steppedOperator");
     let stepped = SteppedOperator {
-        operator_id: stepped.get("operatorId").and_then(pack::json::Value::as_str).expect("operatorId").to_string(),
-        minimum_round_trips_under_a_tight_budget: stepped.get("minimumRoundTripsUnderATightBudget").and_then(pack::json::Value::as_f64).expect("minimumRoundTrips") as usize,
-        phase_order: stepped.get("phaseOrder").and_then(pack::json::Value::as_array).expect("phaseOrder").iter().filter_map(|value| value.as_str().map(str::to_string)).collect(),
+        operator_id: stepped.get("operatorId").and_then(semio_framework_pack_json::Value::as_str).expect("operatorId").to_string(),
+        minimum_round_trips_under_a_tight_budget: stepped.get("minimumRoundTripsUnderATightBudget").and_then(semio_framework_pack_json::Value::as_f64).expect("minimumRoundTrips") as usize,
+        phase_order: stepped.get("phaseOrder").and_then(semio_framework_pack_json::Value::as_array).expect("phaseOrder").iter().filter_map(|value| value.as_str().map(str::to_string)).collect(),
     };
     (capability, stepped)
 }
 
-fn number_json(value: f64) -> pack::json::Value {
-    pack::json::object([("$schema".to_string(), pack::json::Value::from("number")), ("value".to_string(), pack::json::Value::from(value))])
+fn number_json(value: f64) -> semio_framework_pack_json::Value {
+    semio_framework_pack_json::object([("$schema".to_string(), semio_framework_pack_json::Value::from("number")), ("value".to_string(), semio_framework_pack_json::Value::from(value))])
 }
 
 /// 🧊️ The two operands the law cuts: a bored box — a 4×4×2 block centred on the origin with a
@@ -87,21 +92,21 @@ fn retire_operands(a: neural_engine::ColdOwner<Dictionary>, b: neural_engine::Co
 
 /// 🧾️ The `evaluate` request body for one cut of `a` by `b`, at the given budget.
 fn cut_request_json(a: &Dictionary, b: &Dictionary, node_hash: u64, budget: u64, wall_micros: u64) -> String {
-    let input_json = pack::json::to_string(&pack::json::object([("a".to_string(), geometry_json(a)), ("b".to_string(), geometry_json(b))]));
-    pack::json::to_string(&pack::json::object([
-        ("operatorId".to_string(), pack::json::Value::from("brep.bool.cut")),
-        ("inputJson".to_string(), pack::json::Value::from(input_json)),
-        ("nodeHash".to_string(), pack::json::Value::from(node_hash as i64)),
-        ("budget".to_string(), pack::json::Value::from(budget as i64)),
-        ("wallMicros".to_string(), pack::json::Value::from(wall_micros as i64)),
+    let input_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("a".to_string(), geometry_json(a)), ("b".to_string(), geometry_json(b))]));
+    semio_framework_pack_json::to_string(&semio_framework_pack_json::object([
+        ("operatorId".to_string(), semio_framework_pack_json::Value::from("brep.bool.cut")),
+        ("inputJson".to_string(), semio_framework_pack_json::Value::from(input_json)),
+        ("nodeHash".to_string(), semio_framework_pack_json::Value::from(node_hash as i64)),
+        ("budget".to_string(), semio_framework_pack_json::Value::from(budget as i64)),
+        ("wallMicros".to_string(), semio_framework_pack_json::Value::from(wall_micros as i64)),
     ]))
 }
 
 /// 🧊️ One geometry channel payload as the JSON the operator input carries.
-fn geometry_json(geometry: &Dictionary) -> pack::json::Value {
+fn geometry_json(geometry: &Dictionary) -> semio_framework_pack_json::Value {
     let handle = geometry.get("handle").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str().map(str::to_string)).expect("geometry handle");
     let kind = geometry.get("kind").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str().map(str::to_string)).unwrap_or_else(|| "solid".to_string());
-    pack::json::object([("$schema".to_string(), pack::json::Value::from("geometry")), ("handle".to_string(), pack::json::Value::from(handle)), ("kind".to_string(), pack::json::Value::from(kind))])
+    semio_framework_pack_json::object([("$schema".to_string(), semio_framework_pack_json::Value::from("geometry")), ("handle".to_string(), semio_framework_pack_json::Value::from(handle)), ("kind".to_string(), semio_framework_pack_json::Value::from(kind))])
 }
 
 /// ⚖️ LAW: a set operation driven at a one-microsecond wall allowance answers `done: false` with
@@ -114,7 +119,7 @@ async fn a_long_set_operation_answers_within_the_wall_allowance_and_resumes() {
     let (capability, stepped_operator) = fixture();
     assert_eq!(capability, "evaluate");
     assert_eq!(stepped_operator.operator_id, "brep.bool.cut");
-    let registry = neural_engine::ColdOwner::new(module_registry(geometry_session()));
+    let registry = BudgetRegistry::new(geometry_session());
     let (box_out, cylinder_out) = bored_box_operands(&registry).await;
     let (a, b) = (channel_payload(&box_out, "geometryOut").await, channel_payload(&cylinder_out, "geometryOut").await);
     let node_hash = 0x_bee_f00_u64;
@@ -126,11 +131,11 @@ async fn a_long_set_operation_answers_within_the_wall_allowance_and_resumes() {
     let output_json = loop {
         round_trips += 1;
         assert!(round_trips < 4096, "a budgeted evaluation must terminate; it ran {round_trips} round trips");
-        let envelope = pack::json::parse_bytes(&flow_extension_sdk::evaluate_invoke_json(&registry, request.as_bytes()).expect("evaluate")).expect("envelope json");
-        let done = envelope.get("done").and_then(pack::json::Value::as_bool).expect("done");
-        let phase = envelope.get("phase").and_then(pack::json::Value::as_str).expect("phase").to_string();
-        let units_done = envelope.get("unitsDone").and_then(pack::json::Value::as_f64).expect("unitsDone") as u64;
-        let units_total = envelope.get("unitsTotal").and_then(pack::json::Value::as_f64).expect("unitsTotal") as u64;
+        let envelope = semio_framework_pack_json::parse_bytes(&flow_extension_sdk::evaluate_invoke_json(&registry, request.as_bytes()).expect("evaluate"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("envelope json");
+        let done = envelope.get("done").and_then(semio_framework_pack_json::Value::as_bool).expect("done");
+        let phase = envelope.get("phase").and_then(semio_framework_pack_json::Value::as_str).expect("phase").to_string();
+        let units_done = envelope.get("unitsDone").and_then(semio_framework_pack_json::Value::as_f64).expect("unitsDone") as u64;
+        let units_total = envelope.get("unitsTotal").and_then(semio_framework_pack_json::Value::as_f64).expect("unitsTotal") as u64;
         assert!(units_done >= previous_done, "unitsDone never decreases ({previous_done} -> {units_done} at `{phase}`)");
         assert!(units_done <= units_total, "unitsDone {units_done} may never exceed unitsTotal {units_total} at `{phase}`");
         previous_done = units_done;
@@ -139,11 +144,11 @@ async fn a_long_set_operation_answers_within_the_wall_allowance_and_resumes() {
         }
         if done {
             assert_eq!(phase, "complete", "the terminal phase of a successful evaluation");
-            assert_eq!(envelope.get("cancellable").and_then(pack::json::Value::as_bool), Some(false), "a finished evaluation is not cancellable");
-            break envelope.get("outputJson").and_then(pack::json::Value::as_str).expect("outputJson").to_string();
+            assert_eq!(envelope.get("cancellable").and_then(semio_framework_pack_json::Value::as_bool), Some(false), "a finished evaluation is not cancellable");
+            break envelope.get("outputJson").and_then(semio_framework_pack_json::Value::as_str).expect("outputJson").to_string();
         }
-        assert_eq!(envelope.get("cancellable").and_then(pack::json::Value::as_bool), Some(true), "a working evaluation is cancellable");
-        assert_eq!(envelope.get("outputJson").and_then(pack::json::Value::as_str), Some(""), "a working evaluation publishes no output");
+        assert_eq!(envelope.get("cancellable").and_then(semio_framework_pack_json::Value::as_bool), Some(true), "a working evaluation is cancellable");
+        assert_eq!(envelope.get("outputJson").and_then(semio_framework_pack_json::Value::as_str), Some(""), "a working evaluation publishes no output");
         assert!(stepped_operator.phase_order.contains(&phase), "`{phase}` is one of the fixture's declared phases {:?}", stepped_operator.phase_order);
     };
     assert!(
@@ -151,27 +156,27 @@ async fn a_long_set_operation_answers_within_the_wall_allowance_and_resumes() {
         "a tight budget must cut this evaluation into at least {} round trips; it took {round_trips} (phases {seen_phases:?})",
         stepped_operator.minimum_round_trips_under_a_tight_budget
     );
-    let stepped = pack::json::parse(&output_json).expect("stepped output json");
-    assert_eq!(stepped.get("solid").and_then(|value| value.get("$schema")).and_then(pack::json::Value::as_str), Some("geometry"), "the stepped answer is the operator's own out dictionary: {output_json}");
+    let stepped = semio_framework_pack_json::parse(&output_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("stepped output json");
+    assert_eq!(stepped.get("solid").and_then(|value| value.get("$schema")).and_then(semio_framework_pack_json::Value::as_str), Some("geometry"), "the stepped answer is the operator's own out dictionary: {output_json}");
 
     retire_operands(a, b, box_out, cylinder_out);
 
     // ♾️ The same cut, unbudgeted, over fresh operands in a fresh kernel — the stepped path IS the
     // algorithm, so the two answers must agree on everything but the minted handle id.
     reset_test_kernel().await;
-    let control_registry = neural_engine::ColdOwner::new(module_registry(geometry_session()));
+    let control_registry = BudgetRegistry::new(geometry_session());
     let (box_out, cylinder_out) = bored_box_operands(&control_registry).await;
     let (a, b) = (channel_payload(&box_out, "geometryOut").await, channel_payload(&cylinder_out, "geometryOut").await);
-    let one_shot_json = pack::json::parse_bytes(&flow_extension_sdk::evaluate_invoke_json(&control_registry, cut_request_json(&a, &b, 0, 1_000_000, 3_600_000_000).as_bytes()).expect("evaluate"))
+    let one_shot_json = semio_framework_pack_json::parse_bytes(&flow_extension_sdk::evaluate_invoke_json(&control_registry, cut_request_json(&a, &b, 0, 1_000_000, 3_600_000_000).as_bytes()).expect("evaluate"), semio_framework_pack_json::JsonMemberPolicy::Reject)
         .expect("envelope json")
         .get("outputJson")
-        .and_then(pack::json::Value::as_str)
+        .and_then(semio_framework_pack_json::Value::as_str)
         .expect("outputJson")
         .to_string();
-    let one_shot = pack::json::parse(&one_shot_json).expect("one-shot output json");
+    let one_shot = semio_framework_pack_json::parse(&one_shot_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("one-shot output json");
     assert_eq!(
-        stepped.get("solid").and_then(|value| value.get("kind")).and_then(pack::json::Value::as_str),
-        one_shot.get("solid").and_then(|value| value.get("kind")).and_then(pack::json::Value::as_str),
+        stepped.get("solid").and_then(|value| value.get("kind")).and_then(semio_framework_pack_json::Value::as_str),
+        one_shot.get("solid").and_then(|value| value.get("kind")).and_then(semio_framework_pack_json::Value::as_str),
         "stepped and one-shot answer the same geometry kind"
     );
     assert!(one_shot.get("error").is_none(), "the one-shot control must not have failed: {one_shot_json}");
@@ -184,22 +189,22 @@ async fn a_long_set_operation_answers_within_the_wall_allowance_and_resumes() {
 async fn a_cancel_between_round_trips_retires_the_parked_evaluation() {
     let _serial = test_serial().await;
     reset_test_kernel().await;
-    let registry = neural_engine::ColdOwner::new(module_registry(geometry_session()));
+    let registry = BudgetRegistry::new(geometry_session());
     let (box_out, cylinder_out) = bored_box_operands(&registry).await;
     let (a, b) = (channel_payload(&box_out, "geometryOut").await, channel_payload(&cylinder_out, "geometryOut").await);
     let node_hash = 0x_c0_1d_u64;
     let request = cut_request_json(&a, &b, node_hash, 1, 1);
-    let first = pack::json::parse_bytes(&flow_extension_sdk::evaluate_invoke_json(&registry, request.as_bytes()).expect("evaluate")).expect("envelope json");
-    assert_eq!(first.get("done").and_then(pack::json::Value::as_bool), Some(false), "the first round trip must yield, or there is nothing to cancel");
-    assert!(flow_extension_sdk::evaluation_progress("brep.bool.cut", node_hash).is_some(), "a yielded evaluation is parked under its own node hash");
-    assert!(flow_extension_sdk::cancel_evaluation("brep.bool.cut", node_hash), "the cancel retires exactly that job");
-    assert!(!flow_extension_sdk::cancel_evaluation("brep.bool.cut", node_hash), "a second cancel is a no-op, not a fault");
+    let first = semio_framework_pack_json::parse_bytes(&flow_extension_sdk::evaluate_invoke_json(&registry, request.as_bytes()).expect("evaluate"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("envelope json");
+    assert_eq!(first.get("done").and_then(semio_framework_pack_json::Value::as_bool), Some(false), "the first round trip must yield, or there is nothing to cancel");
+    assert!(flow_extension_sdk::evaluation_progress(&registry,"brep.bool.cut", node_hash).is_some(), "a yielded evaluation is parked under its own node hash");
+    assert!(flow_extension_sdk::cancel_evaluation(&registry,"brep.bool.cut", node_hash), "the cancel retires exactly that job");
+    assert!(!flow_extension_sdk::cancel_evaluation(&registry,"brep.bool.cut", node_hash), "a second cancel is a no-op, not a fault");
     // 🔁 The chain re-emits the identical request; the extension no longer holds the job, so it
     // admits a fresh one — the cancel stopped the WORK, it did not poison the node.
-    let resumed = pack::json::parse_bytes(&flow_extension_sdk::evaluate_invoke_json(&registry, request.as_bytes()).expect("evaluate")).expect("envelope json");
-    assert!(resumed.get("phase").and_then(pack::json::Value::as_str).is_some(), "the resumed round trip still answers an envelope");
-    assert_eq!(flow_extension_sdk::cancel_all_evaluations(), 1, "the whole-registry cancel retires the job the resumed round trip parked");
-    assert_eq!(flow_extension_sdk::cancel_all_evaluations(), 0, "an empty registry retires nothing");
+    let resumed = semio_framework_pack_json::parse_bytes(&flow_extension_sdk::evaluate_invoke_json(&registry, request.as_bytes()).expect("evaluate"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("envelope json");
+    assert!(resumed.get("phase").and_then(semio_framework_pack_json::Value::as_str).is_some(), "the resumed round trip still answers an envelope");
+    assert_eq!(flow_extension_sdk::cancel_all_evaluations(&registry), 1, "the whole-registry cancel retires the job the resumed round trip parked");
+    assert_eq!(flow_extension_sdk::cancel_all_evaluations(&registry), 0, "an empty registry retires nothing");
     retire_operands(a, b, box_out, cylinder_out);
 }
 
@@ -209,19 +214,19 @@ async fn a_cancel_between_round_trips_retires_the_parked_evaluation() {
 async fn an_unbudgeted_operator_completes_in_one_round_trip() {
     let _serial = test_serial().await;
     reset_test_kernel().await;
-    let registry = neural_engine::ColdOwner::new(module_registry(geometry_session()));
-    let input_json = pack::json::to_string(&pack::json::object([("width".to_string(), number_json(1.0)), ("depth".to_string(), number_json(1.0)), ("height".to_string(), number_json(1.0))]));
-    let request = pack::json::to_string(&pack::json::object([
-        ("operatorId".to_string(), pack::json::Value::from("brep.prim3d.box")),
-        ("inputJson".to_string(), pack::json::Value::from(input_json)),
-        ("nodeHash".to_string(), pack::json::Value::from(7_i64)),
-        ("budget".to_string(), pack::json::Value::from(1_i64)),
-        ("wallMicros".to_string(), pack::json::Value::from(1_i64)),
+    let registry = BudgetRegistry::new(geometry_session());
+    let input_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("width".to_string(), number_json(1.0)), ("depth".to_string(), number_json(1.0)), ("height".to_string(), number_json(1.0))]));
+    let request = semio_framework_pack_json::to_string(&semio_framework_pack_json::object([
+        ("operatorId".to_string(), semio_framework_pack_json::Value::from("brep.prim3d.box")),
+        ("inputJson".to_string(), semio_framework_pack_json::Value::from(input_json)),
+        ("nodeHash".to_string(), semio_framework_pack_json::Value::from(7_i64)),
+        ("budget".to_string(), semio_framework_pack_json::Value::from(1_i64)),
+        ("wallMicros".to_string(), semio_framework_pack_json::Value::from(1_i64)),
     ]));
-    let envelope = pack::json::parse_bytes(&flow_extension_sdk::evaluate_invoke_json(&registry, request.as_bytes()).expect("evaluate")).expect("envelope json");
-    assert_eq!(envelope.get("done").and_then(pack::json::Value::as_bool), Some(true), "a primitive answers inside its first round trip whatever the budget");
-    assert_eq!(envelope.get("phase").and_then(pack::json::Value::as_str), Some("complete"));
-    let output = pack::json::parse(envelope.get("outputJson").and_then(pack::json::Value::as_str).expect("outputJson")).expect("output json");
-    assert_eq!(output.get("solid").and_then(|value| value.get("$schema")).and_then(pack::json::Value::as_str), Some("geometry"));
-    assert!(flow_extension_sdk::evaluation_progress("brep.prim3d.box", 7).is_none(), "a one-round-trip evaluation parks nothing");
+    let envelope = semio_framework_pack_json::parse_bytes(&flow_extension_sdk::evaluate_invoke_json(&registry, request.as_bytes()).expect("evaluate"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("envelope json");
+    assert_eq!(envelope.get("done").and_then(semio_framework_pack_json::Value::as_bool), Some(true), "a primitive answers inside its first round trip whatever the budget");
+    assert_eq!(envelope.get("phase").and_then(semio_framework_pack_json::Value::as_str), Some("complete"));
+    let output = semio_framework_pack_json::parse(envelope.get("outputJson").and_then(semio_framework_pack_json::Value::as_str).expect("outputJson"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("output json");
+    assert_eq!(output.get("solid").and_then(|value| value.get("$schema")).and_then(semio_framework_pack_json::Value::as_str), Some("geometry"));
+    assert!(flow_extension_sdk::evaluation_progress(&registry,"brep.prim3d.box", 7).is_none(), "a one-round-trip evaluation parks nothing");
 }

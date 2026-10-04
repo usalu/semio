@@ -8,7 +8,8 @@ use crate::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::Widget;
 
 /// ↩️ The base widget, when it is a slider.
-pub fn inverse(payload: &ChangeSliderValue, base: &Generation3dSnapshot) -> Vec<Generation3dMutation> {
+pub fn inverse(payload: &ChangeSliderValue, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     base.host_snapshot
         .widgets
         .iter()
@@ -16,4 +17,6 @@ pub fn inverse(payload: &ChangeSliderValue, base: &Generation3dSnapshot) -> Vec<
         .map(|widget| Generation3dMutation::UpdateWidget(UpdateWidget { widget: widget.clone() }))
         .into_iter()
         .collect()
+
+    })())
 }

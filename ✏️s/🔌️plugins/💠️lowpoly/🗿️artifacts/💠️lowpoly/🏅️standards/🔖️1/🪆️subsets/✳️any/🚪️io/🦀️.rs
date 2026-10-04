@@ -259,7 +259,7 @@ pub mod io_registry {
 /// (scale → Euler-degree XYZ rotation, the editor's own quaternion convention → translation) on
 /// export.
 pub mod mesh_geometry {
-    use crate::{mesh_child_handle, LowpolyObject, LowpolyPaintLayer, LowpolySnapshot, LowpolyTransform, LOWPOLY_DOCUMENT_SCHEMA};
+    use crate::{managed_mesh_child_handle, LowpolyMeshState, LowpolyObject, LowpolyPaintLayer, LowpolySnapshot, LowpolyTransform, LOWPOLY_DOCUMENT_SCHEMA};
     use semio_framework_3d::mesh::{FaceId, HalfedgeMesh, VertexId};
 
     /// 🧮 Document object ceiling; more imported parts than this are merged into one object.
@@ -273,8 +273,8 @@ pub mod mesh_geometry {
         pub faces: Vec<Vec<u32>>,
     }
 
-    pub fn text_error(message: impl Into<String>) -> store::TextError {
-        store::TextError::new(message.into(), dsl::TextSpan::at(1, 1))
+    pub fn text_error(message: impl Into<String>) -> semio_framework_diagnostic::TextError {
+        semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message.into(), semio_framework_diagnostic::TextSpan::at(1, 1))
     }
 
     /// 🧹 Drops consecutive duplicate indices (incl. wrap-around); `None` when fewer than 3 remain.
@@ -325,7 +325,7 @@ pub mod mesh_geometry {
 
     /// 📥 Builds a lowpoly document (`obj-1`, `obj-2`, … identity transforms) from polygon parts.
     /// Empty parts are skipped; no faces at all is a loud error, never an empty document.
-    pub fn snapshot_from_parts(format: &str, parts: Vec<PolygonPart>) -> Result<LowpolySnapshot, store::TextError> {
+    pub fn snapshot_from_parts(format: &str, parts: Vec<PolygonPart>) -> Result<LowpolySnapshot, semio_framework_diagnostic::TextError> {
         let mut parts: Vec<PolygonPart> = parts.into_iter().filter(|part| !part.faces.is_empty()).collect();
         if parts.is_empty() {
             return Err(text_error(format!("{format}->lowpoly: the file contains no polygon faces to import")));
@@ -339,15 +339,17 @@ pub mod mesh_geometry {
             let id = format!("obj-{}", index + 1);
             let mesh = HalfedgeMesh::from_faces(&part.positions, &part.faces).map_err(|e| text_error(format!("{format}->lowpoly: object '{}' is not a valid polygon mesh: {e:?}", part.name)))?;
             let mesh_content = mesh.to_json().map_err(|e| text_error(format!("{format}->lowpoly: mesh json: {e:?}")))?;
+            let mesh_state = LowpolyMeshState::from_mesh(mesh);
             let name = if part.name.trim().is_empty() { format!("Object {}", index + 1) } else { part.name };
             objects.push(LowpolyObject {
-                mesh: Some(mesh_child_handle(&id, &mesh_content)),
+                mesh: Some(managed_mesh_child_handle(&id, &mesh_state)),
                 id,
                 name,
                 transform: LowpolyTransform::default(),
                 smooth_shading: false,
                 paint_layers: vec![LowpolyPaintLayer::new("Base")],
                 mesh_content,
+                mesh_state: Some(mesh_state),
             });
         }
         Ok(LowpolySnapshot { schema: LOWPOLY_DOCUMENT_SCHEMA.into(), objects })
@@ -384,7 +386,7 @@ pub mod mesh_geometry {
     }
 
     /// 📤 Every object with non-empty `mesh_content`, transformed into world space.
-    pub fn world_parts(format: &str, snapshot: &LowpolySnapshot) -> Result<Vec<WorldPart>, store::TextError> {
+    pub fn world_parts(format: &str, snapshot: &LowpolySnapshot) -> Result<Vec<WorldPart>, semio_framework_diagnostic::TextError> {
         let mut parts = Vec::new();
         for object in &snapshot.objects {
             if object.mesh_content.trim().is_empty() {

@@ -13,7 +13,7 @@ async fn open_artifact_with_relays_the_explicit_choice() {
     match &result.requested_effects[0] {
         Effect::ReplayShellCommand { action_id, args } => {
             assert_eq!(action_id, "os.open-artifact-with");
-            let args = pack::json_from_dsl_value(&args.clone().unwrap());
+            let args = semio_framework_pack_json::from_dsl_value(&args.clone().unwrap());
             assert_eq!(args.get("role").and_then(|v| v.as_str()), Some("viewer"));
             assert_eq!(args.get("pluginId").and_then(|v| v.as_str()), Some("draw"));
             assert_eq!(args.get("appId").and_then(|v| v.as_str()), Some("draw-play"));

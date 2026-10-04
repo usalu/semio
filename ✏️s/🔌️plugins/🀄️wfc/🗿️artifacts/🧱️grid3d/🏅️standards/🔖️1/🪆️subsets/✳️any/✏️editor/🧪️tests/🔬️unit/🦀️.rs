@@ -72,22 +72,22 @@ fn every_command_maps_onto_a_real_mutation_builder() {
 #[test]
 fn every_declared_action_bridges_to_the_command_it_names() {
     let definition = create_grid3d_editor();
-    let staged = |action: &semio_framework_plugin::ActionDefinition| semio_framework::effective_action_args(&action.args, &dsl::DslValue::Object(Vec::new()), None);
-    let arguments: std::collections::BTreeMap<&str, dsl::DslValue> = [
-        ("changeSeed", dsl::json::parse(r#"{"seed":7}"#).map(|value| dsl::json::to_dsl_value(&value))),
-        ("resizeGrid", dsl::json::parse(r#"{"width":2,"height":2,"depth":2}"#).map(|value| dsl::json::to_dsl_value(&value))),
-        ("changeCellSizes", dsl::json::parse(r#"{"axis":"x","sizes":[1.0,2.0]}"#).map(|value| dsl::json::to_dsl_value(&value))),
-        ("createTile", dsl::json::parse(r#"{"id":"air"}"#).map(|value| dsl::json::to_dsl_value(&value))),
-        ("deleteTile", dsl::json::parse(r#"{"id":"air"}"#).map(|value| dsl::json::to_dsl_value(&value))),
-        ("changeTileWeight", dsl::json::parse(r#"{"tileId":"air","weight":2.0}"#).map(|value| dsl::json::to_dsl_value(&value))),
-        ("changeTileColor", dsl::json::parse(r#"{"tileId":"air","r":1,"g":2,"b":3,"a":4}"#).map(|value| dsl::json::to_dsl_value(&value))),
-        ("createRule", dsl::json::parse(r#"{"id":"r","tileAId":"air","tileBId":"wall","direction":"RIGHT","allowed":true}"#).map(|value| dsl::json::to_dsl_value(&value))),
-        ("deleteRule", dsl::json::parse(r#"{"id":"r"}"#).map(|value| dsl::json::to_dsl_value(&value))),
-        ("pinCell", dsl::json::parse(r#"{"x":0,"y":0,"z":0,"tileId":"air"}"#).map(|value| dsl::json::to_dsl_value(&value))),
-        ("unpinCell", dsl::json::parse(r#"{"x":0,"y":0,"z":0}"#).map(|value| dsl::json::to_dsl_value(&value))),
-        ("maskCell", dsl::json::parse(r#"{"x":0,"y":0,"z":0}"#).map(|value| dsl::json::to_dsl_value(&value))),
-        ("unmaskCell", dsl::json::parse(r#"{"x":0,"y":0,"z":0}"#).map(|value| dsl::json::to_dsl_value(&value))),
-        (grid::ACTION_WORLD_SELECT, dsl::json::parse(r#"{"ids":["1:2:3"],"merge":"replace"}"#).map(|value| dsl::json::to_dsl_value(&value))),
+    let staged = |action: &semio_framework_plugin::ActionDefinition| semio_framework::effective_action_args(&action.args, &semio_framework_value::DslValue::Object(Vec::new()), None);
+    let arguments: std::collections::BTreeMap<&str, semio_framework_value::DslValue> = [
+        ("changeSeed", semio_framework_pack_json::parse(r#"{"seed":7}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|value| semio_framework_pack_json::to_dsl_value(&value))),
+        ("resizeGrid", semio_framework_pack_json::parse(r#"{"width":2,"height":2,"depth":2}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|value| semio_framework_pack_json::to_dsl_value(&value))),
+        ("changeCellSizes", semio_framework_pack_json::parse(r#"{"axis":"x","sizes":[1.0,2.0]}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|value| semio_framework_pack_json::to_dsl_value(&value))),
+        ("createTile", semio_framework_pack_json::parse(r#"{"id":"air"}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|value| semio_framework_pack_json::to_dsl_value(&value))),
+        ("deleteTile", semio_framework_pack_json::parse(r#"{"id":"air"}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|value| semio_framework_pack_json::to_dsl_value(&value))),
+        ("changeTileWeight", semio_framework_pack_json::parse(r#"{"tileId":"air","weight":2.0}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|value| semio_framework_pack_json::to_dsl_value(&value))),
+        ("changeTileColor", semio_framework_pack_json::parse(r#"{"tileId":"air","r":1,"g":2,"b":3,"a":4}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|value| semio_framework_pack_json::to_dsl_value(&value))),
+        ("createRule", semio_framework_pack_json::parse(r#"{"id":"r","tileAId":"air","tileBId":"wall","direction":"RIGHT","allowed":true}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|value| semio_framework_pack_json::to_dsl_value(&value))),
+        ("deleteRule", semio_framework_pack_json::parse(r#"{"id":"r"}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|value| semio_framework_pack_json::to_dsl_value(&value))),
+        ("pinCell", semio_framework_pack_json::parse(r#"{"x":0,"y":0,"z":0,"tileId":"air"}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|value| semio_framework_pack_json::to_dsl_value(&value))),
+        ("unpinCell", semio_framework_pack_json::parse(r#"{"x":0,"y":0,"z":0}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|value| semio_framework_pack_json::to_dsl_value(&value))),
+        ("maskCell", semio_framework_pack_json::parse(r#"{"x":0,"y":0,"z":0}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|value| semio_framework_pack_json::to_dsl_value(&value))),
+        ("unmaskCell", semio_framework_pack_json::parse(r#"{"x":0,"y":0,"z":0}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|value| semio_framework_pack_json::to_dsl_value(&value))),
+        (grid::ACTION_WORLD_SELECT, semio_framework_pack_json::parse(r#"{"ids":["1:2:3"],"merge":"replace"}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|value| semio_framework_pack_json::to_dsl_value(&value))),
     ]
     .into_iter()
     .map(|(id, value)| (id, value.expect("argument fixture parses")))
@@ -141,8 +141,8 @@ fn every_declared_action_bridges_to_the_command_it_names() {
 /// resolve through the same reducer arm.
 #[test]
 fn both_pick_lanes_carry_the_same_cell_key() {
-    let world = command_from_action(grid::ACTION_WORLD_SELECT, Some(&dsl::json::parse(r#"{"ids":["2:1:0"],"merge":"replace"}"#).map(|value| dsl::json::to_dsl_value(&value)).expect("args"))).expect("world pick bridges");
-    let direct = command_from_action("pickCell", Some(&dsl::json::parse(r#"{"cellId":"2:1:0"}"#).map(|value| dsl::json::to_dsl_value(&value)).expect("args"))).expect("pick bridges");
+    let world = command_from_action(grid::ACTION_WORLD_SELECT, Some(&semio_framework_pack_json::parse(r#"{"ids":["2:1:0"],"merge":"replace"}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|value| semio_framework_pack_json::to_dsl_value(&value)).expect("args"))).expect("world pick bridges");
+    let direct = command_from_action("pickCell", Some(&semio_framework_pack_json::parse(r#"{"cellId":"2:1:0"}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|value| semio_framework_pack_json::to_dsl_value(&value)).expect("args"))).expect("pick bridges");
     assert_eq!(world, Grid3dEditorCommand::WorldSelect { cell_id: "2:1:0".into() });
     assert_eq!(direct, Grid3dEditorCommand::PickCell { cell_id: "2:1:0".into() });
     assert_eq!(Grid3dEditor::command_id(&world), grid::ACTION_WORLD_SELECT);
@@ -210,3 +210,5 @@ fn the_owned_factory_tool_ids_publication_contracts_and_proofs_are_one_exact_ros
     let proofs: std::collections::BTreeSet<&str> = <Grid3dEditor as semio_framework_plugin::ArtifactEditor>::bounded_first_step_tool_proofs().iter().map(|proof| proof.tool_id()).collect();
     assert_eq!(proofs, tools, "every owned tool carries its owner-local bounded reducer proof");
 }
+
+semio_framework_plugin::history_edit_acceptance_law!("wfc", super::Grid3dEditor, || semio_framework_plugin::App { definition: super::create_grid3d_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");

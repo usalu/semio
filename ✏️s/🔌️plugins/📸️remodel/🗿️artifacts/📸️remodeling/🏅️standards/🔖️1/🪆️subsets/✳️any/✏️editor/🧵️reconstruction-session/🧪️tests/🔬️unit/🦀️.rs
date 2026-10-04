@@ -479,8 +479,8 @@ async fn the_provisional_result_applies_onto_its_base_and_its_inverse_restores_t
     let mut current = (*document).clone();
     for op in &mirror.ops {
         let outcome = <RemodelingMutation as protocol::Mutation<RemodelingSnapshot>>::diff(op, &current);
-        assert!(outcome.messages().iter().all(|message| message.level != protocol::Severity::Error), "every provisional op applies onto the overlay it was planned against: {:?}", outcome.messages());
-        inverses.push(crate::mutations::inverse_remodeling_mutation(&current, op));
+        assert!(outcome.messages().iter().all(|message| message.level != semio_framework_diagnostic::Severity::Error), "every provisional op applies onto the overlay it was planned against: {:?}", outcome.messages());
+        inverses.push(crate::mutations::inverse_remodeling_mutation(&current, op).expect("valid retained mutation inverse fixture"));
         current = crate::mutations::apply_remodeling_mutation(&current, op).expect("provisional op applies");
     }
     assert_ne!(current.results.mesh.source, MeshSource::Placeholder, "the committed result replaces the placeholder mesh");

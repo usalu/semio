@@ -9,7 +9,10 @@ pub struct ChangeMemberServiceClass { pub member_id: String, pub new_value: u8 }
 impl protocol::MutationKind<En1995Snapshot, En1995Mutation> for ChangeMemberServiceClass {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "member-serviceClass", kind: "change-member-service-class", record: "ChangedMemberServiceClass" };
     fn diff(&self, base: &En1995Snapshot) -> protocol::MutationOutcome<<En1995Mutation as protocol::Mutation<En1995Snapshot>>::Diff> { super::diff::diff(self, base) }
-    fn inverse(&self, base: &En1995Snapshot) -> Vec<En1995Mutation> { super::inverse::inverse(self, base) }
+    fn inverse(&self, base: &En1995Snapshot) -> Result<Vec<En1995Mutation>, semio_framework_value::ValueError> {
+    Ok({ super::inverse::inverse(self, base)? 
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Service class of member {}", self.member_id), &format!("Nutzungsklasse von Bauteil {} ändern", self.member_id)) }
     fn target(&self) -> Vec<String> { vec![self.member_id.clone()] }
 }

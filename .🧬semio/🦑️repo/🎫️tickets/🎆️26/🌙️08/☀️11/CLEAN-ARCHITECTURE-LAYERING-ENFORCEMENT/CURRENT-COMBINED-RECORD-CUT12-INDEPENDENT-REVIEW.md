@@ -1,0 +1,17 @@
+# Combined Record cut12 independent review
+
+[Full nine composed surfaces](combined-record-cut12-independent-audit-inputs/full-nine-composed-surfaces-1.json) and [provider authority](combined-record-cut12-independent-audit-inputs/full-provider-direction-authority-1.json) bind the actual proposed bodies and immutable input hashes. This review is bounded source evidence; no source/Cargo/native work occurred.
+
+**Substantive defect:** composed OS DSL root imports `semio_framework_dsl_record::{record}`. The canonical root declares no such export/module. Its producer::record function is nested and does not justify this import. Reconcile the lexical wildcard selection rather than add an owner facade; local closure variables named record must not be promoted into crate imports. Pack was notified.
+
+The other historical nine forwarding surfaces now show private/direct canonical Record/Value identities: Store uses private algebra/derive imports, five families no longer expose generic Edge notation, and General exposes the actual canonical Value identity. OS package entry still publicly forwards protocol::dsl_value; review its remaining consumers and retire the generic umbrella macro forwarding if the clean owner contract requires direct Value. Preserve actual OS grammar/product macro and Pack/protocol semantics.
+
+Independent authored normal-table inspection of 112 mutation manifests/133 declared provider proofs finds zero self-dependencies, zero Value→Record normal dependency and zero Record→Record-derive normal dependency. Value's Record/derive/Diagnostic additions are dev-only. Four direct provider manifest frames are retained. This table review does not prove Cargo feature/target/macro compiler closure.
+
+The combined index retains four unresolved owned conflicts: OS DSL product-macro root and physical OS schema root/decoding/encoding retirement predecessors changed. They must be explicitly reconciled with full current frames before publication; zero planner refusals cannot admit a composed cut with these conflicts.
+
+Conditional/separate derives require actual attribute association and lexical resolution per module/block, including aliases/shadows and inner doc positioning. A direct single-line cfg_attr search over the reconciled rows found no eligible sample; that is not a conditional-derive proof. The next verification must retain closed multiline/separate/renamed/shadowed examples and compare authored attributes/conditions structurally, then use whole native compilation. Do not infer Rust macro resolution from token replacement success.
+
+Family implementation functions retain true product behavior while their generic notation callers import canonical Record::notation. Unused forwarding-only imports must disappear rather than become full private rosters. The final current combined successor needs fresh bounded owner checks, coherent conflict reconciliation and actual registered test-first/native execution before admission.
+
+The actual three-row family companion is independently retained in [full family pairs](combined-record-cut12-independent-audit-inputs/full-family-canonical-law-pairs-1.json): catalog and Graph unit files add only direct canonical notation imports; all original law bodies remain byte-exact. Graph family changes only its public forwarding import to a private canonical import and corrects the ownership docstring. Pack confirms cut12 is explicitly not Ready and is reconciling conflicts/foreign CSV evidence; this report remains historical against exact epoch12.

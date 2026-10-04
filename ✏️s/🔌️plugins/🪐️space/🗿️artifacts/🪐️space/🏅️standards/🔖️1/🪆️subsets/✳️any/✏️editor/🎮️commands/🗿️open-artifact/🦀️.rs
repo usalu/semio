@@ -11,7 +11,7 @@ use crate::editor::space_index::config::{SpaceIndexConfig, SpaceIndexConfigMutat
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "open-artifact")]
 pub struct OpenArtifact {
     pub id: String,
@@ -22,7 +22,7 @@ pub fn handle(payload: &OpenArtifact, doc: &ArtifactView<'_, SSpaceSnapshot>, cf
     let artifact_ref = format!("{}@{}/{}", row.dialect.artifact_kind, row.dialect.standard, row.dialect.subset);
     Ok(Emit::effect(Effect::ReplayShellCommand {
         action_id: "os.open-artifact".into(),
-        args: Some(pack::json_to_dsl_value(&pack::json!({ "artifactRef": artifact_ref, "documentId": row.id.clone(), "spaceId": doc.snapshot.space_id.clone(), "schema": row.schema.clone() }))),
+        args: Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "artifactRef": artifact_ref, "documentId": row.id.clone(), "spaceId": doc.snapshot.space_id.clone(), "schema": row.schema.clone() }))),
     }))
 }
 

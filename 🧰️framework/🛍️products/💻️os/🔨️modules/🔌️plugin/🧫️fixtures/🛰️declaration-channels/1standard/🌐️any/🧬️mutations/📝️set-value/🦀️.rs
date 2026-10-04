@@ -17,11 +17,11 @@ impl protocol::MutationKind<Std1AnySnapshot, Std1AnyMutation> for SetValue {
     fn diff(&self, _base: &Std1AnySnapshot) -> protocol::MutationOutcome<Std1AnyDiff> {
         protocol::MutationOutcome::new(Std1AnyDiff { value: Some(self.value) })
     }
-    fn inverse(&self, base: &Std1AnySnapshot) -> Vec<Std1AnyMutation> {
-        vec![Std1AnyMutation::SetValue(Self { value: base.value })]
+    fn inverse(&self, base: &Std1AnySnapshot) -> Result<Vec<Std1AnyMutation>, semio_framework_value::ValueError> {
+        Ok((|| vec![Std1AnyMutation::SetValue(Self { value: base.value })])())
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set value to {}", self.value), &format!("Wert auf {} setzen", self.value))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set value to {}", self.value), &format!("Wert auf {} setzen", self.value))
     }
     fn target(&self) -> Vec<String> {
         vec!["value".into()]

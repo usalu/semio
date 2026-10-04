@@ -17,10 +17,10 @@ impl SnapshotRetirementFactory<Root> for RootFactory {
     }
 }
 impl ErasedSnapshotRetirement for RootRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 || maximum_bytes == 0 { return Ok(SnapshotRetirementStep::Blocked); }
         if !self.retirement.is_empty() {
-            let demand = self.retirement.next_close_byte_demand().map_err(str::to_owned)?;
+            let demand = self.retirement.next_close_byte_demand().map_err(|message|semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,message))?;
             return self.retirement.close_page(maximum_items, maximum_bytes.max(demand));
         }
         if let Some(root) = self.root.take() {
@@ -34,8 +34,8 @@ impl ErasedSnapshotRetirement for RootRetirement {
     fn next_close_byte_demand(&self) -> usize { ErasedSnapshotRetirement::next_close_byte_demand(&self.retirement) }
 }
 fn source() -> (Arc<Root>, Arc<AtomicUsize>) {
-    let fixture = crate::os_pack::json::parse(include_str!("../../../🧫️fixtures/🔣️.json")).unwrap();
-    let host_snapshot: FlowHostSnapshot = crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(fixture.get("hostSnapshot").unwrap())).unwrap();
+    let fixture = semio_framework_pack_json::parse(include_str!("../../../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let host_snapshot: FlowHostSnapshot = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(fixture.get("hostSnapshot").unwrap())).unwrap();
     let drops = Arc::new(AtomicUsize::new(0));
     (Arc::new(Root { host_snapshot: Some(host_snapshot), drops: drops.clone() }), drops)
 }
@@ -55,14 +55,14 @@ fn close<R: Send + Sync + 'static, T: Copy>(cursor: &mut CopyCursor<R, T>, grant
 //#region 🧪️CanonicalCopy
 #[test]
 fn flow_selected_copy_matches_serde_and_shares_unchanged_ordered_roots() {
-    let vectors = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let vectors = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for grant in [1, 4096] {
-        for case in vectors.get("cases").and_then(crate::os_pack::json::Value::as_array).unwrap() {
+        for case in vectors.get("cases").and_then(semio_framework_pack_json::Value::as_array).unwrap() {
             let (root, drops) = source();
-            let before = crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(root.host_snapshot.as_ref().unwrap()));
+            let before = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(root.host_snapshot.as_ref().unwrap()));
             let source_pointer = Arc::as_ptr(&root);
-            let kind = case.get("kind").and_then(crate::os_pack::json::Value::as_str).unwrap();
-            let index = case.get("index").and_then(crate::os_pack::json::Value::as_u64).unwrap() as usize;
+            let kind = case.get("kind").and_then(semio_framework_pack_json::Value::as_str).unwrap();
+            let index = case.get("index").and_then(semio_framework_pack_json::Value::as_u64).unwrap() as usize;
             macro_rules! run {
                 ($type:ty, $project:expr) => {{
                     let mut cursor = CopyCursor::<Root, $type>::new(root, index, $project, Arc::new(RootFactory), allocation());
@@ -76,8 +76,8 @@ fn flow_selected_copy_matches_serde_and_shares_unchanged_ordered_roots() {
                     }
                     assert!(cursor.complete());
                     let copied = cursor.take().unwrap();
-                    assert_eq!(crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&copied)), *before.pointer(case.get("pointer").and_then(crate::os_pack::json::Value::as_str).unwrap()).unwrap());
-                    assert_eq!(crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(cursor.owned.source.as_ref().unwrap().host_snapshot.as_ref().unwrap())), before);
+                    assert_eq!(semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&copied)), *before.pointer(case.get("pointer").and_then(semio_framework_pack_json::Value::as_str).unwrap()).unwrap());
+                    assert_eq!(semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(cursor.owned.source.as_ref().unwrap().host_snapshot.as_ref().unwrap())), before);
                     copied.retire(&mut cursor.owned.retirement);
                     std::thread::spawn(move || { close(&mut cursor, grant); }).join().unwrap();
                 }};
@@ -90,7 +90,7 @@ fn flow_selected_copy_matches_serde_and_shares_unchanged_ordered_roots() {
                     while !cursor.complete() { assert!(cursor.advance(1, grant).unwrap().unwrap() <= grant); }
                     let copied = cursor.take().unwrap();
                     let original = cursor.cursor.owned.source.as_ref().unwrap().host_snapshot.as_ref().unwrap();
-                    assert_eq!(crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&copied)), before);
+                    assert_eq!(semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&copied)), before);
                     for ((left_key, left), (right_key, right)) in copied.layout.iter().zip(original.layout.iter()) {
                         assert!(std::ptr::eq(left_key, right_key) && std::ptr::eq(left, right));
                     }
@@ -150,7 +150,7 @@ fn flow_selected_copy_rejects_root_retirement_overgrant_and_closes_factory_owner
     impl Drop for Factory { fn drop(&mut self) { self.drops.fetch_add(1, Ordering::SeqCst); } }
     struct Adversary { inner: RootRetirement, overgrant: bool }
     impl ErasedSnapshotRetirement for Adversary {
-        fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, String> {
+        fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
             if self.overgrant { self.overgrant = false; return Ok(SnapshotRetirementStep::Pending { released_items: 2, released_bytes: bytes + 1 }); }
             self.inner.close_step(items, bytes)
         }
@@ -167,7 +167,7 @@ fn flow_selected_copy_rejects_root_retirement_overgrant_and_closes_factory_owner
     let mut cursor = FlowWidgetCopy::new(root, 0, |root, index| root.host_snapshot.as_ref()?.widgets.get(index), Arc::new(Factory { drops: factory_drops.clone() }), allocation());
     cursor.begin_close();
     assert!(matches!(cursor.close_step(1, 1).unwrap(), SnapshotRetirementStep::Pending { .. }));
-    assert!(cursor.close_step(1, 1).unwrap_err().contains("exceeded its grant"));
+    assert!(cursor.close_step(1, 1).unwrap_err().message.contains("exceeded its grant"));
     assert_eq!(root_drops.load(Ordering::SeqCst), 0);
     assert_eq!(factory_drops.load(Ordering::SeqCst), 0);
     close(&mut cursor.cursor, 1);
@@ -227,7 +227,7 @@ fn flow_selected_copy_allocation_admission_is_separate_and_never_reallocates_pay
 fn flow_selected_copy_pays_a_published_close_demand_and_refuses_a_frontier_that_never_progresses() {
     struct Chunky { inner: RootRetirement, owed: usize }
     impl ErasedSnapshotRetirement for Chunky {
-        fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, String> {
+        fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
             if self.owed == 0 { return self.inner.close_step(items, bytes); }
             if bytes < self.owed { return Ok(SnapshotRetirementStep::Blocked); }
             let released_bytes = std::mem::take(&mut self.owed);
@@ -265,7 +265,7 @@ fn flow_selected_copy_pays_a_published_close_demand_and_refuses_a_frontier_that_
 
     struct Stalled;
     impl ErasedSnapshotRetirement for Stalled {
-        fn close_step(&mut self, _: usize, _: usize) -> Result<SnapshotRetirementStep, String> { Ok(SnapshotRetirementStep::Blocked) }
+        fn close_step(&mut self, _: usize, _: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> { Ok(SnapshotRetirementStep::Blocked) }
         fn terminal_is_empty(&self) -> bool { false }
     }
     struct StalledFactory;
@@ -285,7 +285,7 @@ fn flow_selected_copy_pays_a_published_close_demand_and_refuses_a_frontier_that_
             break;
         }
     }
-    assert!(refusal.expect("a retirement that never progresses must be refused").contains("made no progress at its published close demand"));
+    let refusal=refusal.expect("a retirement that never progresses must be refused");assert_eq!(refusal.kind,semio_framework_value::ValueRefusalKind::InvariantViolated);assert!(refusal.message.contains("made no progress at its published close demand"));
     assert!(std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| drop(cursor))).is_err());
     assert_eq!(stalled_drops.load(Ordering::SeqCst), 0);
 }

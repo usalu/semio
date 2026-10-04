@@ -9,7 +9,6 @@
     "id",
     "version",
     "title",
-    "document",
     "flow"
   ],
   "properties": {
@@ -31,11 +30,6 @@
         "null"
       ],
       "x-semio-state": "artifact"
-    },
-    "document": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json",
-      "x-semio-state": "artifact",
-      "x-semio-child-kind": "s.stdio.semio"
     },
     "flow": {
       "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json",

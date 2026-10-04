@@ -372,3 +372,5 @@ fn every_retained_tool_is_a_declared_migrated_action_of_the_built_manifest() {
 fn the_editor_declares_the_artifact_kind_it_edits() {
     assert_eq!(create_wfc3d_editor().artifact_kinds, vec![crate::artifact_kind()]);
 }
+
+semio_framework_plugin::history_edit_acceptance_law!("wfc", super::Wfc3dEditor, || semio_framework_plugin::App { definition: super::create_wfc3d_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");

@@ -482,14 +482,20 @@ fn trusted_descriptor_wire_materialization_matches_neutral_boundaries() {
         options.limits.max_symbols = u32::try_from(limits["maxSymbols"].as_u64().unwrap()).unwrap();
         options.limits.max_depth = u16::try_from(limits["maxDepth"].as_u64().unwrap()).unwrap();
         options.limits.max_items = limits["maxItems"].as_u64().unwrap();
-        options.limits.max_total_alloc = limits["maxTotalAlloc"].as_u64().unwrap();
+        options.limits.max_total_alloc = u64::MAX;
         let decoded = os_store::pack_rt::decode_wire_value_with_options(&bytes, &options);
-        match row["expect"]["outcome"].as_str().unwrap() {
-            "accepted" => assert_eq!(serde_json::to_value(decoded.expect("admitted bounded value")).unwrap(), row["expect"]["value"], "{}", row["id"]),
+        match row["grammar"]["outcome"].as_str().unwrap() {
+            "accepted" => assert_eq!(serde_json::to_value(decoded.expect("admitted bounded value")).unwrap(), row["grammar"]["value"], "{}", row["id"]),
             "limit" => assert!(matches!(decoded, Err(os_store::PackError::LimitExceeded(_))), "{}: {decoded:?}", row["id"]),
             "malformed" => {
                 assert!(matches!(decoded, Err(os_store::PackError::Malformed { .. })), "{}: {decoded:?}", row["id"]);
                 assert!(matches!(os_store::pack_rt::decode_wire_value(&bytes), Err(os_store::PackError::Malformed { .. })), "default wire facade: {}", row["id"]);
+            }
+            "truncated" => {
+                let expected = row["grammar"]["offset"].as_u64().unwrap();
+                assert_eq!(expected, bytes.len() as u64);
+                assert!(matches!(decoded, Err(os_store::PackError::Truncated(offset)) if offset == expected), "{}: {decoded:?}", row["id"]);
+                assert!(matches!(os_store::pack_rt::decode_wire_value(&bytes), Err(os_store::PackError::Truncated(offset)) if offset == expected), "default wire facade: {}", row["id"]);
             }
             outcome => panic!("unknown bounded wire outcome {outcome}"),
         }
@@ -1725,8 +1731,9 @@ enum OwnedTestHash {
     Spins,
 }
 
-/// 🧩️ A real owned-ABI guest, one memory page and the fourteen owned exports: `pack-schema-hash` does what `hash`
-/// says, `genesis` answers the pair `([1, 2, 3], [4, 5])`, every other export answers nothing. Built byte by byte (the
+/// 🧩️ A real owned-ABI guest, one memory page and every owned export: `channel-version` answers the host's app channel
+/// (the owned codec origin admits it first), `pack-schema-hash` does what `hash` says, `genesis` answers the pair
+/// `([1, 2, 3], [4, 5])`, every other export answers nothing. Built byte by byte (the
 /// interpreter's own component framing), so a law runs the production interpreter without a plugin build.
 fn owned_test_guest(hash: OwnedTestHash) -> Vec<u8> {
     fn uleb(mut value: u64, output: &mut Vec<u8>) {
@@ -1761,6 +1768,7 @@ fn owned_test_guest(hash: OwnedTestHash) -> Vec<u8> {
     };
     let hash_output = format!("{{\"Ok\":{}}}", serde_json::to_string(&answer.to_vec()).unwrap()).into_bytes();
     let genesis_output = br#"{"Ok":{"pack":[1,2,3],"spr":[4,5]}}"#.to_vec();
+    let channel_output = directory::os_spr::CHANNEL_VERSION.to_string().into_bytes();
     let returning = |offset: i64, output: &[u8]| {
         let mut body = vec![0x00, 0x42];
         sleb(((output.len() as i64) << 32) | offset, &mut body);
@@ -1774,6 +1782,7 @@ fn owned_test_guest(hash: OwnedTestHash) -> Vec<u8> {
             semio_framework_plugin_host::interpreter::OwnedSemioExport::Allocate => (0u8, vec![0x00, 0x41, 0x00, 0x0b]),
             semio_framework_plugin_host::interpreter::OwnedSemioExport::Deallocate => (1, vec![0x00, 0x0b]),
             semio_framework_plugin_host::interpreter::OwnedSemioExport::Checkpoint | semio_framework_plugin_host::interpreter::OwnedSemioExport::Describe => (2, vec![0x00, 0x42, 0x00, 0x0b]),
+            semio_framework_plugin_host::interpreter::OwnedSemioExport::ChannelVersion => (2, returning(3072, &channel_output)),
             semio_framework_plugin_host::interpreter::OwnedSemioExport::PackSchemaHash => match hash {
                 OwnedTestHash::Answers(_) => (3, returning(1024, &hash_output)),
                 OwnedTestHash::Spins => (3, vec![0x00, 0x03, 0x40, 0x0c, 0x00, 0x0b, 0x42, 0x00, 0x0b]),
@@ -1808,8 +1817,8 @@ fn owned_test_guest(hash: OwnedTestHash) -> Vec<u8> {
         code.extend(body);
     }
     section(10, code, &mut core);
-    let mut data = vec![2];
-    for (offset, output) in [(1024i64, &hash_output), (2048, &genesis_output)] {
+    let mut data = vec![3];
+    for (offset, output) in [(1024i64, &hash_output), (2048, &genesis_output), (3072, &channel_output)] {
         data.extend([0x00, 0x41]);
         sleb(offset, &mut data);
         data.push(0x0b);

@@ -9,10 +9,10 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 impl protocol::OpText for En1991Mutation {
     fn print_op(&self) -> String {
-        pack::json::to_json_string(self)
+        semio_framework_pack_json::to_json_string(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        pack::json::from_json_str(line).map_err(|e| store::TextError::new(e.to_string(), store::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        semio_framework_pack_json::from_json_str(line, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| semio_framework_diagnostic::TextError::from_value_error(e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 }
 

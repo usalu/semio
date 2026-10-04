@@ -6,6 +6,7 @@ use std::collections::{BTreeMap, HashMap};
 
 #[path = "📦️mesh-io/🦀️.rs"]
 mod mesh_io;
+pub use mesh_io::{MeshImportCursor, MeshImportStep};
 
 
 
@@ -27,7 +28,7 @@ use crate::brep::operations::sew::{convert_to_nurbs, defeature, heal_solid, sew_
 use crate::brep::operations::sweep::{extrude_face, helical_sweep, loft_profiles, pipe, revolve_face, sweep_along_path};
 use crate::brep::operations::transform::{copy_solid, transform_face, transform_solid, transform_wire};
 use crate::brep::queries::classification::point_in_solid;
-use crate::brep::queries::mass_properties::{closest_point_on_solid, distance_solid_solid, edge_length, face_area, solid_bounding_box, solid_center_of_mass, solid_surface_area, solid_volume};
+use crate::brep::queries::mass_properties::{closest_point_on_face, closest_point_on_solid, distance_solid_solid, edge_length, face_area, solid_bounding_box, solid_center_of_mass, solid_surface_area, solid_volume};
 use crate::brep::queries::tessellation::{tessellate_face, tessellate_solid, tessellate_wire, TessellationJob};
 use crate::brep::queries::validation::validate_body;
 use crate::brep::representation::arena::{ArenaId, EdgeId, FaceId, SolidId, VertexId};
@@ -63,7 +64,7 @@ pub enum GeometryKind {
     Surface,
 }
 
-/// 🧭️ Opaque content-addressed geometry handle (hex-encoded OS engine key).
+/// 🧭️ Opaque kind-and-label geometry identity within the owning kernel.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, value_derive::ToValue, value_derive::FromValue)]
 #[value(crate = "::protocol::value")]
 #[value(transparent)]
@@ -416,6 +417,7 @@ enum Entity {
 pub struct Brep {
     body: Body,
     live: BTreeMap<String, Entity>,
+    pending_mutations: usize,
 }
 
 /// ⏱️ A retained resumable boolean plus the operation recorder its whole run accumulates into —
@@ -488,7 +490,7 @@ impl Brep {
     /// 🏗️ Empty native kernel session.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new() -> Self {
-        Self { body: Body::new(), live: BTreeMap::new() }
+        Self { body: Body::new(), live: BTreeMap::new(), pending_mutations: 0 }
     }
 }
 
@@ -533,6 +535,12 @@ fn require_finite_scalar(label: &str, value: f64) -> Result<(), BrepError> {
     }
     Err(BrepError::InvalidInput(format!("{label} must be finite, got {value}")))
 }
+/// 📏️ Requires a finite positive size before a selected feature changes the body.
+fn require_positive_size(label: &str, value: f64) -> Result<(), BrepError> {
+    require_finite_scalar(label, value)?;
+    if value > 0.0 { return Ok(()); }
+    Err(BrepError::InvalidInput(format!("{label} must be positive, got {value}")))
+}
 /// 🧭️ Refuses a uniform scale factor that collapses the shape (zero) or is not a number.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn require_scale_factor(label: &str, value: f64) -> Result<(), BrepError> {
@@ -551,10 +559,36 @@ fn map_err(e: &KernelError) -> BrepError {
 
 /// 📦 Converts a tessellation [`MeshTransfer`] into `semio-framework-mesh-engine`'s `MeshData`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn mesh_data_from_mesh_transfer(transfer: &MeshTransfer) -> semio_framework_mesh_engine::MeshData {
+pub fn mesh_data_from_mesh_transfer(transfer: &MeshTransfer) -> Result<semio_framework_mesh_engine::MeshData, BrepError> {
+    if transfer.position.len()%3!=0 || transfer.normal.len()!=transfer.position.len() || transfer.index.len()%3!=0 || transfer.edges.len()%6!=0 || transfer.points.len()%3!=0 || transfer.position.iter().chain(&transfer.normal).chain(&transfer.edges).chain(&transfer.points).any(|value|!value.is_finite()) || transfer.index.iter().any(|index|*index as usize>=transfer.position.len()/3) {return Err(BrepError::InvalidInput("analytic preview buffers are invalid".into()));}
+    fn picks(groups:impl Iterator<Item=(u32,u32,String)>,length:usize,stride:usize)->Result<(Vec<u32>,Vec<String>),BrepError> {
+        let mut next=0usize;let mut ids=Vec::new();let mut labels=Vec::new();
+        for(start,count,label)in groups {
+            let(start,count)=(start as usize,count as usize);
+            let end=start.checked_add(count).ok_or_else(||BrepError::InvalidInput("analytic component range overflow".into()))?;
+            if start!=next || count==0 || start%stride!=0 || count%stride!=0 || end>length || label.is_empty() || label.chars().take(129).count()>128 {return Err(BrepError::InvalidInput("analytic component ranges must have complete aligned coverage and full labels".into()));}
+            ids.extend(std::iter::repeat_n(labels.len() as u32,count/stride));labels.push(label);next=end;
+        }
+        if next!=0 && next!=length {return Err(BrepError::InvalidInput("analytic component ranges have incomplete coverage".into()));}
+        Ok((ids,labels))
+    }
+    let(face_ids,faces)=picks(transfer.face_groups.iter().map(|group|(group.start,group.count,group.entity_id.clone())),transfer.index.len(),3)?;
+    let(edge_ids,edges)=picks(transfer.edge_groups.iter().map(|group|(group.start,group.count,group.entity_id.clone())),transfer.edges.len()/6,1)?;
+    let(vertex_ids,vertices)=picks(transfer.vertex_groups.iter().map(|group|(group.start,group.count,group.entity_id.clone())),transfer.points.len()/3,1)?;
     let mut data = mesh_to_mesh_data(&triangle_mesh_from_transfer(transfer));
     data.edge_positions = transfer.edges.clone();
-    data
+    data.face_ids=face_ids;data.edge_ids=edge_ids;
+    if !faces.is_empty() {data.component_references.insert("face".into(),faces);}
+    if !edges.is_empty() {data.component_references.insert("edge".into(),edges);}
+    if !vertices.is_empty() {
+        data.vertex_ids=vec![u32::MAX;data.positions.len()/3];
+        data.positions.extend_from_slice(&transfer.points);
+        data.normals.resize(data.positions.len(),0.0);
+        data.vertex_ids.extend(vertex_ids);
+        data.component_references.insert("vertex".into(),vertices);
+    }
+    data.validate_component_references().map_err(BrepError::InvalidInput)?;
+    Ok(data)
 }
 
 // #endregion 🧮Convert
@@ -661,6 +695,7 @@ impl Brep {
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️slider-reevaluation-correctness-2026-09-15.md`).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn compact_unreachable(&mut self) {
+        if self.pending_mutations>0 {return;}
         let body = &self.body;
         self.live.retain(|_, entity| label_of_entity(body, entity).is_some());
         let roots = self.live_roots();
@@ -1244,14 +1279,9 @@ impl Brep {
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn fillet_edges_sync(&mut self, shape: &GeometryHandle, edges: &[GeometryHandle], radius: f64) -> Result<GeometryHandle, BrepError> {
+        require_positive_size("fillet radius", radius)?;
         let solid = self.solid_id(shape)?;
-        let mut eids = Vec::new();
-        for e in edges {
-            eids.push(self.edge_id(e)?);
-        }
-        if eids.is_empty() {
-            eids = all_edges(&self.body, solid);
-        }
+        let eids = self.scoped_solid_edges(solid, edges)?;
         let mut rec = OpRecorder::new();
         let out = fillet_edges(&mut self.body, solid, &eids, radius, &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_solid(out))
@@ -1274,25 +1304,40 @@ impl Brep {
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn chamfer_edges_sync(&mut self, shape: &GeometryHandle, edges: &[GeometryHandle], distance: f64) -> Result<GeometryHandle, BrepError> {
+        require_positive_size("chamfer distance", distance)?;
         let solid = self.solid_id(shape)?;
-        let mut eids = Vec::new();
-        for e in edges {
-            eids.push(self.edge_id(e)?);
-        }
-        if eids.is_empty() {
-            eids = all_edges(&self.body, solid);
-        }
+        let eids = self.scoped_solid_edges(solid, edges)?;
         let mut rec = OpRecorder::new();
         let out = chamfer_edges(&mut self.body, solid, &eids, distance, distance, &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_solid(out))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn shell_sync(&mut self, shape: &GeometryHandle, thickness: f64, open_faces: &[GeometryHandle]) -> Result<GeometryHandle, BrepError> {
+        require_positive_size("shell thickness", thickness)?;
         let solid = self.solid_id(shape)?;
-        let open_ids: Vec<_> = open_faces.iter().filter_map(|h| self.face_id(h).ok()).collect();
+        let scope: std::collections::BTreeSet<_> = self.body.solid_faces(solid).into_iter().collect();
+        let mut open_ids = std::collections::BTreeSet::new();
+        for handle in open_faces {
+            let face = self.face_id(handle)?;
+            if !scope.contains(&face) { return Err(BrepError::InvalidInput("Open face is not part of the selected solid".into())); }
+            open_ids.insert(face);
+        }
+        if !open_ids.is_empty() && open_ids.len() == scope.len() { return Err(BrepError::InvalidInput("Keep at least one face when shelling a solid".into())); }
         let mut rec = OpRecorder::new();
-        let out = shell_solid_with_open_faces(&mut self.body, solid, thickness.abs(), &open_ids, &mut rec).map_err(|error| map_err(&error))?;
+        let out = shell_solid_with_open_faces(&mut self.body, solid, thickness, &open_ids.into_iter().collect::<Vec<_>>(), &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_solid(out))
+    }
+    /// 🔒️ Resolves unique selected edges only within the chosen solid's topology.
+    fn scoped_solid_edges(&self, solid: SolidId, edges: &[GeometryHandle]) -> Result<Vec<EdgeId>, BrepError> {
+        if edges.is_empty() { return Err(BrepError::InvalidInput("Select at least one edge".into())); }
+        let scope = all_edges(&self.body, solid);
+        let mut selected = std::collections::BTreeSet::new();
+        for handle in edges {
+            let edge = self.edge_id(handle)?;
+            if scope.binary_search(&edge).is_err() { return Err(BrepError::InvalidInput("Edge is not part of the selected solid".into())); }
+            selected.insert(edge);
+        }
+        Ok(selected.into_iter().collect())
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn draft_sync(&mut self, shape: &GeometryHandle, faces: &[GeometryHandle], pull_direction: EVec3, neutral_point: EVec3, angle: f64) -> Result<GeometryHandle, BrepError> {
@@ -1410,21 +1455,49 @@ impl Brep {
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn volume_sync(&self, shape: &GeometryHandle) -> Result<f64, BrepError> {
-        let solid = self.solid_id(shape)?;
-        solid_volume(&self.body, solid, 1e-4).map_err(|error| map_err(&error))
+        match self.entity(shape)? {
+            Entity::Solid(id) => solid_volume(&self.body, *id, 1e-6).map_err(|error| map_err(&error)),
+            entity @ Entity::Compound(_, _) => {
+                let mut solids: Vec<_> = self.body.reachable_from(&entity_roots(entity)).solids.into_iter().collect();
+                solids.sort_unstable_by_key(|id| id.raw_index());
+                solids.into_iter().try_fold(0.0, |total, id| solid_volume(&self.body, id, 1e-6).map(|value| total + value).map_err(|error| map_err(&error)))
+            }
+            _ => Err(BrepError::InvalidInput("volume requires a solid or compound".into())),
+        }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn area_sync(&self, shape: &GeometryHandle) -> Result<f64, BrepError> {
         match self.entity(shape)? {
             Entity::Solid(id) => solid_surface_area(&self.body, *id, 1e-4).map_err(|error| map_err(&error)),
             Entity::Face(id) => face_area(&self.body, *id, 1e-4).map_err(|error| map_err(&error)),
-            _ => Err(BrepError::InvalidInput("area requires solid or face".into())),
+            Entity::Shell(id)=>self.body.shells.get(*id).ok_or_else(||BrepError::InvalidInput("missing shell".into()))?.faces.iter().try_fold(0.0,|area,face|face_area(&self.body,*face,1e-4).map(|value|area+value).map_err(|error|map_err(&error))),
+            entity @ Entity::Compound(_, _) => {
+                let mut faces: Vec<_> = self.body.reachable_from(&entity_roots(entity)).faces.into_iter().collect();
+                faces.sort_unstable_by_key(|id| id.raw_index());
+                faces.into_iter().try_fold(0.0, |total, id| face_area(&self.body, id, 1e-4).map(|value| total + value).map_err(|error| map_err(&error)))
+            }
+            _ => Err(BrepError::InvalidInput("area requires a face, shell, solid, or compound".into())),
         }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn length_sync(&self, shape: &GeometryHandle) -> Result<f64, BrepError> {
-        let edge = self.edge_id(shape)?;
-        edge_length(&self.body, edge).map_err(|error| map_err(&error))
+        match self.entity(shape)? {
+            Entity::Vertex(_) => Ok(0.0),
+            Entity::Edge(id) => edge_length(&self.body, *id).map_err(|error| map_err(&error)),
+            Entity::Curve(curve, _) => {
+                let (start, end) = curve.domain();
+                if !start.is_finite() || !end.is_finite() { return Err(BrepError::InvalidInput("length requires a bounded curve".into())); }
+                let length = crate::brep::representation::curve::curve_ops::arc_length(curve, start, end, 1e-9);
+                if !length.is_finite() { return Err(BrepError::InvalidInput("curve length is not finite".into())); }
+                Ok(length)
+            }
+            Entity::Surface(_, _) => Err(BrepError::InvalidInput("length requires a curve or topological boundary".into())),
+            entity => {
+                let mut edges: Vec<_> = self.body.reachable_from(&entity_roots(entity)).edges.into_iter().collect();
+                edges.sort_unstable_by_key(|id| id.raw_index());
+                edges.into_iter().try_fold(0.0, |total, id| edge_length(&self.body, id).map(|value| total + value).map_err(|error| map_err(&error)))
+            }
+        }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn center_of_mass_sync(&self, shape: &GeometryHandle) -> Result<EVec3, BrepError> {
@@ -1455,7 +1528,19 @@ impl Brep {
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn closest_point_sync(&self, shape: &GeometryHandle, point: EVec3) -> Result<ClosestPoint, BrepError> {
+        let vertex = |id| {
+            let position = self.body.vertices.get(id).ok_or_else(|| BrepError::InvalidInput("missing vertex".into()))?.position;
+            Ok(ClosestPoint { distance: (position - pnt(point)).norm(), point: evec(position), parameter: None, uv: None })
+        };
+        let edge = |id| {
+            let edge = self.body.edges.get(id).ok_or_else(|| BrepError::InvalidInput("missing edge".into()))?;
+            let curve = self.body.curves3.get(edge.curve).ok_or_else(|| BrepError::InvalidInput("missing edge curve".into()))?;
+            let closest = curve_closest_parameter_fn(curve, edge.range, pnt(point), 1e-9);
+            Ok(ClosestPoint { distance: closest.distance, point: evec(closest.point), parameter: Some(closest.t), uv: None })
+        };
         match self.entity(shape)? {
+            Entity::Vertex(id) => vertex(*id),
+            Entity::Edge(id) => edge(*id),
             Entity::Curve(_, _) => {
                 let (t, p, d) = self.curve_closest_parameter_sync(shape, point)?;
                 Ok(ClosestPoint { distance: d, point: p, parameter: Some(t), uv: None })
@@ -1464,10 +1549,31 @@ impl Brep {
                 let (u, v, p, d) = self.surface_closest_uv_sync(shape, point)?;
                 Ok(ClosestPoint { distance: d, point: p, parameter: None, uv: Some([u, v]) })
             }
-            _ => {
-                let solid = self.solid_id(shape)?;
-                let (p, d) = closest_point_on_solid(&self.body, solid, pnt(point)).map_err(|error| map_err(&error))?;
+            Entity::Solid(id) => {
+                let (p, d) = closest_point_on_solid(&self.body, *id, pnt(point)).map_err(|error| map_err(&error))?;
                 Ok(ClosestPoint { distance: d, point: evec(p), parameter: None, uv: None })
+            }
+            entity => {
+                let reach = self.body.reachable_from(&entity_roots(entity));
+                let mut best: Option<ClosestPoint> = None;
+                let mut consider = |candidate: ClosestPoint| {
+                    if best.as_ref().is_none_or(|best| candidate.distance < best.distance) { best = Some(candidate); }
+                };
+                let mut faces: Vec<_> = reach.faces.into_iter().collect();
+                faces.sort_by_key(|id| id.raw_index());
+                for face in &faces {
+                    let (position, distance) = closest_point_on_face(&self.body, *face, pnt(point)).map_err(|error| map_err(&error))?;
+                    consider(ClosestPoint { distance, point: evec(position), parameter: None, uv: None });
+                }
+                if faces.is_empty() {
+                    let mut edges: Vec<_> = reach.edges.into_iter().collect();
+                    edges.sort_by_key(|id| id.raw_index());
+                    for id in edges { consider(edge(id)?); }
+                    let mut vertices: Vec<_> = reach.vertices.into_iter().collect();
+                    vertices.sort_by_key(|id| id.raw_index());
+                    for id in vertices { consider(vertex(id)?); }
+                }
+                best.ok_or_else(|| BrepError::InvalidInput("shape has no closest-point support".into()))
             }
         }
     }
@@ -1480,16 +1586,16 @@ impl Brep {
     pub fn validate_sync(&self, shape: &GeometryHandle) -> Result<String, BrepError> {
         let _ = self.solid_id(shape)?;
         let issues = validate_body(&self.body);
-        let report = pack::json::object([
-            ("ok".into(), pack::json::Value::Bool(issues.is_empty())),
-            ("issueCount".into(), pack::json::Value::from(issues.len() as u64)),
-            ("issues".into(), pack::json::Value::Array(issues.iter().map(|issue| pack::json::object([
-                ("entity".into(), pack::json::Value::String(issue.entity.clone())),
-                ("code".into(), pack::json::Value::String(issue.code.into())),
-                ("message".into(), pack::json::Value::String(issue.message.clone())),
+        let report = semio_framework_pack_json::object([
+            ("ok".into(), semio_framework_pack_json::Value::Bool(issues.is_empty())),
+            ("issueCount".into(), semio_framework_pack_json::Value::from(issues.len() as u64)),
+            ("issues".into(), semio_framework_pack_json::Value::Array(issues.iter().map(|issue| semio_framework_pack_json::object([
+                ("entity".into(), semio_framework_pack_json::Value::String(issue.entity.clone())),
+                ("code".into(), semio_framework_pack_json::Value::String(issue.code.into())),
+                ("message".into(), semio_framework_pack_json::Value::String(issue.message.clone())),
             ])).collect())),
         ]);
-        Ok(pack::json::to_string(&report))
+        Ok(semio_framework_pack_json::to_string(&report))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn vertex_sync(&mut self, point: EVec3) -> Result<GeometryHandle, BrepError> {
@@ -1525,36 +1631,21 @@ impl Brep {
         let _ = convert_to_nurbs(&mut self.body, solid, &mut rec).map_err(|error| map_err(&error))?;
         Ok(shape.clone())
     }
-    /// 🏷️ Deterministic per (label, kind) minting (see [`Brep::mint`]) makes this idempotent: two
-    /// calls against the same untouched `shape` walk the same solid→shell/face→coedge structure
-    /// and mint against the same [`PersistentLabel`]s each time, so the returned handles are
-    /// byte-identical, not merely equal-cardinality.
+    /// 🏷️ Uses the same shape reach as validation and retirement, sorted by arena identity.
+    /// [`Brep::mint`] retains each component's [`PersistentLabel`] across repeated decomposition.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn deconstruct_sync(&mut self, shape: &GeometryHandle) -> Result<BrepTopology, BrepError> {
-        let solid = self.solid_id(shape)?;
-        let mut topo = BrepTopology::default();
-        let mut seen_vertices = std::collections::BTreeSet::new();
-        let mut seen_edges = std::collections::BTreeSet::new();
-        for shell in self.body.solid_shells(solid) {
-            topo.shells.push(self.register_shell(shell));
-        }
-        for face in self.body.solid_faces(solid) {
-            topo.faces.push(self.register_face(face));
-            for cid in self.body.face_coedges(face) {
-                let Some(co) = self.body.coedges.get(cid) else { continue };
-                if seen_edges.insert(co.edge.raw_index()) {
-                    topo.edges.push(self.mint(GeometryKind::Edge, Entity::Edge(co.edge)));
-                }
-                if let Some((v0, v1)) = self.body.coedge_endpoints(cid) {
-                    for v in [v0, v1] {
-                        if seen_vertices.insert(v.raw_index()) {
-                            topo.vertices.push(self.mint(GeometryKind::Vertex, Entity::Vertex(v)));
-                        }
-                    }
-                }
-            }
-        }
-        Ok(topo)
+        let reach = self.body.reachable_from(&entity_roots(self.entity(shape)?));
+        let mut vertices: Vec<_> = reach.vertices.into_iter().collect(); vertices.sort_unstable_by_key(|id| id.raw_index());
+        let mut edges: Vec<_> = reach.edges.into_iter().collect(); edges.sort_unstable_by_key(|id| id.raw_index());
+        let mut faces: Vec<_> = reach.faces.into_iter().collect(); faces.sort_unstable_by_key(|id| id.raw_index());
+        let mut shells: Vec<_> = reach.shells.into_iter().collect(); shells.sort_unstable_by_key(|id| id.raw_index());
+        Ok(BrepTopology {
+            vertices: vertices.into_iter().map(|id| self.mint(GeometryKind::Vertex, Entity::Vertex(id))).collect(),
+            edges: edges.into_iter().map(|id| self.mint(GeometryKind::Edge, Entity::Edge(id))).collect(),
+            faces: faces.into_iter().map(|id| self.register_face(id)).collect(),
+            shells: shells.into_iter().map(|id| self.register_shell(id)).collect(),
+        })
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     
@@ -1580,7 +1671,7 @@ impl Brep {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn import_glb_sync(&mut self, data: &[u8], tolerance: f64) -> Result<GeometryHandle, BrepError> {
         let solid = import_glb_to_body(&mut self.body, data, tolerance).map_err(|error| map_err(&error))?;
-        Ok(self.register_solid(solid))
+        self.register_import_entity(solid)
     }
     /// 🧩️ Merges the imported body into `self.body` (see [`Body::merge`]) rather than replacing
     /// it — handles minted before this call stay resolvable, since nothing already in `self.body`
@@ -1590,12 +1681,28 @@ impl Brep {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn import_stl_sync(&mut self, data: &[u8], tolerance: f64) -> Result<GeometryHandle, BrepError> {
         let solid = import_stl_to_body(&mut self.body, data, tolerance).map_err(|error| map_err(&error))?;
-        Ok(self.register_solid(solid))
+        self.register_import_entity(solid)
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn import_obj_sync(&mut self, text: &str, tolerance: f64) -> Result<GeometryHandle, BrepError> {
         let solid = import_obj_to_body(&mut self.body, text, tolerance).map_err(|error| map_err(&error))?;
-        Ok(self.register_solid(solid))
+        self.register_import_entity(solid)
+    }
+    fn register_import_entity(&mut self,entity:EntityRef)->Result<GeometryHandle,BrepError> {match entity {EntityRef::Solid(solid)=>Ok(self.register_solid(solid)),EntityRef::Shell(shell)=>Ok(self.register_shell(shell)),_=>Err(BrepError::InvalidInput("mesh import requires shell or solid".into()))}}
+    /// 📦 Advances the canonical mesh-I/O mutation and publishes only its completed solid.
+    pub fn step_mesh_import_sync(&mut self, cursor: &mut MeshImportCursor, budget: usize) -> Result<Option<GeometryHandle>,BrepError> {
+        self.close_mesh_import_sync(cursor,budget,4096)
+    }
+    /// 🎟️ Advances import or rollback with exact byte credit before publishing its handle.
+    pub fn close_mesh_import_sync(&mut self,cursor:&mut crate::brep::engine::mesh_io::MeshImportCursor,budget:usize,bytes:usize)->Result<Option<GeometryHandle>,BrepError> {
+        if budget>0 && bytes>0 && !cursor.active && !cursor.retirement_complete() {cursor.active=true;self.pending_mutations+=1;}
+        let result=cursor.close_step(&mut self.body,budget,bytes).map_err(|error|map_err(&error));
+        if matches!(&result,Ok(MeshImportStep::Done(_))|Ok(MeshImportStep::Cancelled)|Err(_)) && cursor.active {cursor.active=false;self.pending_mutations=self.pending_mutations.checked_sub(1).expect("owned import mutation");}
+        match result? {
+            MeshImportStep::Done(EntityRef::Solid(solid))=>Ok(Some(self.register_solid(solid))),
+            MeshImportStep::Done(EntityRef::Shell(shell))=>Ok(Some(self.register_shell(shell))),
+            _=>Ok(None),
+        }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn export_mesh_sync(&self, shapes: &[GeometryHandle], deflection: f64, exporter: &dyn semio_framework_mesh_engine::MeshExporter) -> Result<Vec<u8>, BrepError> {
@@ -1605,7 +1712,7 @@ impl Brep {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn import_mesh_sync(&mut self, data: &[u8], tolerance: f64, importer: &dyn semio_framework_mesh_engine::MeshImporter) -> Result<GeometryHandle, BrepError> {
         let solid = import_mesh_to_body(&mut self.body, data, tolerance, importer).map_err(|error| map_err(&error))?;
-        Ok(self.register_solid(solid))
+        self.register_import_entity(solid)
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn kind_sync(&self, shape: &GeometryHandle) -> Result<GeometryKind, BrepError> {
@@ -1667,6 +1774,7 @@ impl Brep {
         match self.entity(shape)? {
             Entity::Solid(id) => tessellate_solid(&self.body, *id, deflection).map_err(|error| map_err(&error)),
             Entity::Face(id) => tessellate_face(&self.body, *id, deflection).map_err(|error| map_err(&error)),
+            Entity::Shell(_)=>{let mut job=self.tessellate_job_sync(shape,deflection)?;loop {match job.step(&self.body,4096).map_err(|error|map_err(&error))? {crate::brep::queries::tessellation::TessellationStep::Done(_)=>return job.into_mesh().map(|(mesh,_)|mesh).ok_or_else(||BrepError::InvalidInput("missing shell tessellation".into())),crate::brep::queries::tessellation::TessellationStep::Cancelled(_)=>return Err(BrepError::InvalidInput("shell tessellation cancelled".into())),_=>{}}}},
             Entity::Wire(wire, _) => tessellate_wire(&self.body, wire, deflection).map_err(|error| map_err(&error)),
             other => Err(BrepError::InvalidInput(format!("cannot tessellate {}", entity_tag(other)))),
         }
@@ -1680,6 +1788,7 @@ impl Brep {
         match self.entity(shape)? {
             Entity::Solid(id) => TessellationJob::for_solid(&self.body, *id, deflection).map_err(|error| map_err(&error)),
             Entity::Face(id) => TessellationJob::for_face(&self.body, *id, deflection).map_err(|error| map_err(&error)),
+            Entity::Shell(id)=>TessellationJob::for_shell(&self.body,*id,deflection).map_err(|error|map_err(&error)),
             Entity::Wire(wire, _) => Ok(TessellationJob::for_wire(wire, deflection)),
             other => Err(BrepError::InvalidInput(format!("cannot tessellate {}", entity_tag(other)))),
         }
@@ -1715,7 +1824,7 @@ impl Brep {
             return Ok(());
         }
         let reach = self.body.reachable_from(&entity_roots(entity));
-        let blocking: Vec<ValidationIssue> = validate_body(&self.body).into_iter().filter(|issue| !issue.code.starts_with("warning-")).filter(|issue| validation_issue_reaches(&reach, &issue.entity)).collect();
+        let blocking: Vec<ValidationIssue> = validate_body(&self.body).into_iter().filter(|issue| !issue.code.starts_with("warning-") && !(matches!(entity,Entity::Shell(_)) && issue.code=="shell-not-closed")).filter(|issue| validation_issue_reaches(&reach, &issue.entity)).collect();
         if blocking.is_empty() {
             Ok(())
         } else {

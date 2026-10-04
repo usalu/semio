@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/transform/mutation/rotate-layers/schema.json",
   "title": "RotateLayers",
+  "x-semio-inverse-rows": { "perTarget": { "targets": 1 } },
   "description": "The `rotate-layers` mutation record — a relative, parametric rotation of a set of layers by one angle about one world-space pivot, applied through each layer's parent transform. Internally tagged `\"mutation\": \"rotateLayers\"`.",
   "type": "object",
   "additionalProperties": false,

@@ -9,7 +9,7 @@ use std::collections::{BTreeMap, VecDeque};
 /// caching: recomputing a full topological sort over the node/edge graph on every read is cheap
 /// at pilot scale, and the graph has no natural per-entity dependency-hash boundary the way
 /// puzzle3d's flatten chain does).
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct DagTopology {
     pub topo_order: Vec<String>,

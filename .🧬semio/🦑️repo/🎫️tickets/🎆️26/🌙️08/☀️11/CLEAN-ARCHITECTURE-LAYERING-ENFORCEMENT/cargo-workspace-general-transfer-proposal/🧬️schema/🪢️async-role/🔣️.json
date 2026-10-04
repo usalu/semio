@@ -1,0 +1,70 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "cases"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 16,
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "source",
+          "expression",
+          "expectedRole",
+          "expectedKind",
+          "completesBeforeReturn",
+          "rejects"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1
+          },
+          "expression": {
+            "type": "string",
+            "minLength": 1
+          },
+          "expectedRole": {
+            "enum": [
+              "awaited",
+              "returned-promise",
+              "aggregated-promise",
+              "awaited-owned-matcher",
+              "immediately-awaited-binding",
+              "requires-owned-await-decision",
+              "adopted-promise"
+            ]
+          },
+          "expectedKind": {
+            "enum": [
+              "FunctionDeclaration",
+              "MethodDeclaration",
+              "ArrowFunction",
+              "FunctionType"
+            ]
+          },
+          "completesBeforeReturn": {
+            "type": "boolean"
+          },
+          "rejects": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

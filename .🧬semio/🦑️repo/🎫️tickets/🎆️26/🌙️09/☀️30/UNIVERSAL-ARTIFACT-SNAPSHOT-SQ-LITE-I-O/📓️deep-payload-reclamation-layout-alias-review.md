@@ -1,0 +1,9 @@
+# Deep Payload Reclamation Layout Alias
+
+Read-only source, corrected-law deep counters not yet independently observed.
+
+Concrete alias exists: retire_field starts `vec![value]`, a one-element FieldValue buffer. For a single-child Block chain, every loop pops the frontier before pushing one child, so the frontier does not need width growth. Its eventual deallocation has the same element size/alignment as Box<FieldValue>. The observer currently counts all frees by that layout, including the retirement frontier; it cannot distinguish2048 payload boxes from an additional frontier allocation. Increasing expected count to2049 would count implementation scratch rather than prove payload identity.
+
+Use actual payload allocation addresses: record leaf Vec pointer and each Box pointee pointer during iterative fixture construction, outside observed insertion; register that owned address set with the TLS observer. GlobalAlloc.dealloc receives the pointer and can count only registered addresses once, flag duplicates, and exclude scratch/error/record backing addresses. Store observer bookkeeping before enabling the scope; avoid allocating inside GlobalAlloc callbacks. A fixed bounded array or prebuilt first-party address buffer can handle authored2048 depth without layout/ABI assumptions. Narrow-stack overhead of a large inline array must be considered separately; thread-local prebuilt borrowed address storage avoids consuming the131072 operation stack unnecessarily.
+
+Current RestoreRejectedPayloadObservation now restores TLS by Drop, fixing previous panic-path scope issue. Request observer already restores by RAII. Keep the existing constructor-layout request denial checks separate from payload identity reclamation and the eleven-cardinality backing law. No allocator-refused frontier or universal zero-allocation claim follows from this payload reclamation witness.

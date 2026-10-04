@@ -1,0 +1,203 @@
+{
+  "schema": "node-graph@1",
+  "laneKeyPrefix": "framework.scene.nodeGraph.",
+  "lanes": [
+    {
+      "lane": "nodes",
+      "field": "nodes",
+      "bodyKey": "framework.scene.nodeGraph.nodes",
+      "optional": false,
+      "encoding": "json"
+    },
+    {
+      "lane": "edges",
+      "field": "edges",
+      "bodyKey": "framework.scene.nodeGraph.edges",
+      "optional": false,
+      "encoding": "json"
+    },
+    {
+      "lane": "operators",
+      "field": "operators",
+      "bodyKey": "framework.scene.nodeGraph.operators",
+      "optional": false,
+      "encoding": "json"
+    },
+    {
+      "lane": "findItems",
+      "field": "findItems",
+      "bodyKey": "framework.scene.nodeGraph.findItems",
+      "optional": false,
+      "encoding": "json"
+    },
+    {
+      "lane": "selection",
+      "field": "selection",
+      "bodyKey": "framework.scene.nodeGraph.selection",
+      "optional": false,
+      "encoding": "json"
+    },
+    {
+      "lane": "highlighted",
+      "field": "highlighted",
+      "bodyKey": "framework.scene.nodeGraph.highlighted",
+      "optional": false,
+      "encoding": "json"
+    },
+    {
+      "lane": "previewOff",
+      "field": "previewOffJson",
+      "bodyKey": "framework.scene.nodeGraph.previewOff",
+      "optional": true
+    },
+    {
+      "lane": "lod",
+      "field": "lodJson",
+      "bodyKey": "framework.scene.nodeGraph.lod",
+      "optional": true
+    },
+    {
+      "lane": "controls",
+      "field": "controlsJson",
+      "bodyKey": "framework.scene.nodeGraph.controls",
+      "optional": true
+    },
+    {
+      "lane": "clusters",
+      "field": "clustersJson",
+      "bodyKey": "framework.scene.nodeGraph.clusters",
+      "optional": true
+    },
+    {
+      "lane": "computing",
+      "field": "computingJson",
+      "bodyKey": "framework.scene.nodeGraph.computing",
+      "optional": true
+    },
+    {
+      "lane": "status",
+      "field": "statusJson",
+      "bodyKey": "framework.scene.nodeGraph.status",
+      "optional": true
+    },
+    {
+      "lane": "capabilities",
+      "field": "capabilitiesJson",
+      "bodyKey": "framework.scene.nodeGraph.capabilities",
+      "optional": true
+    },
+    {
+      "lane": "hostSnapshot",
+      "field": "hostSnapshotJson",
+      "bodyKey": "framework.scene.nodeGraph.hostSnapshot",
+      "optional": true
+    },
+    {
+      "lane": "presencePeers",
+      "field": "presencePeersJson",
+      "bodyKey": "framework.scene.nodeGraph.presencePeers",
+      "optional": true
+    },
+    {
+      "lane": "eval",
+      "field": "evalJson",
+      "bodyKey": "framework.scene.nodeGraph.eval",
+      "optional": true
+    }
+  ],
+  "spineFields": [
+    "viewport",
+    "editable",
+    "interactionDomain",
+    "hover",
+    "lanes"
+  ],
+  "node": {
+    "id": "node",
+    "label": "Grüße 日本語 🌍",
+    "x": 1,
+    "y": 2,
+    "width": 180,
+    "height": 80,
+    "inputs": [],
+    "outputs": []
+  },
+  "nodeCount": 4096,
+  "repeatCount": 4096,
+  "hostSnapshotLabel": "Grüße 日本語 🌍",
+  "sample": {
+    "nodes": [
+      {
+        "id": "node",
+        "label": "Grüße 日本語 🌍",
+        "x": 1,
+        "y": 2,
+        "width": 180,
+        "height": 80,
+        "inputs": [],
+        "outputs": []
+      }
+    ],
+    "edges": [
+      {
+        "id": "wire",
+        "sourceNodeId": "node",
+        "sourcePortId": "out",
+        "targetNodeId": "node",
+        "targetPortId": "in",
+        "label": "Grüße 日本語 🌍"
+      }
+    ],
+    "operators": [
+      {
+        "id": "operator",
+        "extension": "test",
+        "name": "Grüße 日本語 🌍",
+        "abbreviation": "G",
+        "icon": "box",
+        "summary": "typed document operator",
+        "inputs": [],
+        "outputs": []
+      }
+    ],
+    "findItems": [
+      {
+        "id": "node",
+        "label": "Grüße 日本語 🌍",
+        "category": "node"
+      }
+    ],
+    "selection": [
+      "node"
+    ],
+    "highlighted": [
+      "node@out"
+    ],
+    "viewport": {
+      "x": 1,
+      "y": 2,
+      "zoom": 1
+    },
+    "editable": true,
+    "hover": {
+      "nodeId": "node",
+      "portId": "out"
+    },
+    "interactionDomain": {
+      "id": "graph",
+      "nodeTargetPrefix": "node.",
+      "edgeTargetPrefix": "edge.",
+      "handleTargetPrefix": "handle."
+    },
+    "previewOffJson": "{\"label\":\"Grüße 日本語 🌍\"}",
+    "lodJson": "{\"label\":\"Grüße 日本語 🌍\"}",
+    "controlsJson": "{\"label\":\"Grüße 日本語 🌍\"}",
+    "clustersJson": "{\"label\":\"Grüße 日本語 🌍\"}",
+    "computingJson": "{\"label\":\"Grüße 日本語 🌍\"}",
+    "statusJson": "{\"label\":\"Grüße 日本語 🌍\"}",
+    "capabilitiesJson": "{\"label\":\"Grüße 日本語 🌍\"}",
+    "hostSnapshotJson": "{\"label\":\"Grüße 日本語 🌍\"}",
+    "presencePeersJson": "{\"label\":\"Grüße 日本語 🌍\"}",
+    "evalJson": "{\"label\":\"Grüße 日本語 🌍\"}"
+  }
+}

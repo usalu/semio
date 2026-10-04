@@ -1,0 +1,21 @@
+{
+  "name": "@semio-tech/compute-ownership-runner",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "sharedGlobals",
+        "{projectRoot}/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧪️testing/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/**/*"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️testing/📍️consumer/🏃️execution",
+        "command": "bun ./📜️script.ts test"
+      }
+    }
+  }
+}

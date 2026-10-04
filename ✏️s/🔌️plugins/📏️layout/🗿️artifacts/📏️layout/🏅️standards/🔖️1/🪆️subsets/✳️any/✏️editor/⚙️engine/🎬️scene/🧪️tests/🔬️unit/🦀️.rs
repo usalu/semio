@@ -243,7 +243,7 @@ async fn pdf_export_writes_pdf_header() {
 #[semio_framework_async_macros::async_test]
 async fn package_zip_bundles_document_and_preflight() {
     let doc = sample_document();
-    let json = dsl::os_pack::to_json_string(&doc);
+    let json = semio_framework_pack_json::to_json_string(&doc);
     let bytes = export_package_zip_headless_batch(&json, "[]").expect("package export succeeds");
     assert_eq!(doc.schema, crate::LAYOUT_DOCUMENT_SCHEMA);
     assert!(bytes.starts_with(b"PK"));
@@ -482,11 +482,11 @@ fn drawing_text_lands_on_the_page_and_inside_the_placed_frame() {
 }
 
 fn red_png() -> Vec<u8> {
-    let mut encoded = semio_s_artifact_stdio_png::PngSnapshot::default();
+    let mut encoded = semio_s_artifact_stdio_png::io::PngProjection {width:1,height:1,bit_depth:8,color_type:semio_s_artifact_stdio_png::schema::snapshot::PngColorType::Rgba,interlace:false,plte:None,trns:None,gama:None,chrm:None,srgb:None,phys:None,time:None,bkgd:None,text_chunks:Vec::new(),pixels:Vec::new(),chunk_order:Vec::new(),unknown_chunks:Vec::new()};
     encoded.width = 1;
     encoded.height = 1;
     encoded.pixels = vec![255, 0, 0, 255];
-    semio_s_artifact_stdio_png::io::encode_png(&encoded).expect("png")
+    semio_s_artifact_stdio_png::io::author_png_projection(&encoded).expect("png")
 }
 
 fn drawing_with_red_png() -> semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot {

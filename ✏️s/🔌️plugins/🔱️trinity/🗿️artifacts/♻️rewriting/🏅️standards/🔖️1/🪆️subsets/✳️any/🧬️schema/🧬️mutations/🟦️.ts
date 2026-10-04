@@ -6,13 +6,8 @@ import type { ChangeParameterBinding } from "./🔧️change-parameter/🟦️.t
 import type { RemoveParameterBinding } from "./🧹️remove-parameter-binding/🟦️.ts";
 import type { ChangeRuleLayoutPoint } from "./📐️change-rule-layout/🟦️.ts";
 import type { RemoveRuleLayoutPoint } from "./🗑️remove-rule-layout/🟦️.ts";
-import type { DragWorkingNodes } from "./✋️drag-working/🟦️.ts";
-import type { PatchWorkingNodes } from "./🩹️patch-working/🟦️.ts";
 import type { DragRuleNodes } from "./🫳️drag-rule/🟦️.ts";
 import type { SetRuleLayoutPoints } from "./📍️set-rule-layout/🟦️.ts";
-import type { DeleteWorkingNodes } from "./✂️delete-working/🟦️.ts";
-import type { ConnectWorkingPorts } from "./🔌️connect-working/🟦️.ts";
-import type { DisconnectWorkingEdges } from "./🪚️disconnect-working/🟦️.ts";
 
 export type RewriteRuleMutation =
   | ({ mutation: "editBeforeFixture" } & EditBeforeFixture)
@@ -22,10 +17,5 @@ export type RewriteRuleMutation =
   | ({ mutation: "removeParameterBinding" } & RemoveParameterBinding)
   | ({ mutation: "changeRuleLayoutPoint" } & ChangeRuleLayoutPoint)
   | ({ mutation: "removeRuleLayoutPoint" } & RemoveRuleLayoutPoint)
-  | ({ mutation: "dragWorkingNodes" } & DragWorkingNodes)
-  | ({ mutation: "patchWorkingNodes" } & PatchWorkingNodes)
   | ({ mutation: "dragRuleNodes" } & DragRuleNodes)
-  | ({ mutation: "setRuleLayoutPoints" } & SetRuleLayoutPoints)
-  | ({ mutation: "deleteWorkingNodes" } & DeleteWorkingNodes)
-  | ({ mutation: "connectWorkingPorts" } & ConnectWorkingPorts)
-  | ({ mutation: "disconnectWorkingEdges" } & DisconnectWorkingEdges);
+  | ({ mutation: "setRuleLayoutPoints" } & SetRuleLayoutPoints);

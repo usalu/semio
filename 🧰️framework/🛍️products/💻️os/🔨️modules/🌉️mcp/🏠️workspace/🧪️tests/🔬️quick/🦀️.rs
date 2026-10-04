@@ -187,7 +187,7 @@ fn authenticated_hub_workspace_fixture() -> HeadlessWorkspace {
     let binding = Arc::new(HubRemoteBinding::new("https://hub.invalid", "space-a").unwrap());
     binding.install_snapshot_for_test(snapshot);
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution-target corpus json");
-    let mut lease: semio_framework_os_kernel::os_directory::DocumentExecutionTargetLeaseFieldsV1 = semio_framework_os_kernel::os_pack::json::from_json_str(&serde_json::to_string(&corpus["manifest"]).unwrap()).expect("manifest");
+    let mut lease: semio_framework_os_kernel::os_directory::DocumentExecutionTargetLeaseFieldsV1 = semio_framework_pack_json::from_json_str(&serde_json::to_string(&corpus["manifest"]).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("manifest");
     lease.scope = DocumentScope::new("space-a", "shared-doc");
     let (descriptor, descriptor_bytes) = crate::source_builders::catalog_contract_descriptor();
     lease.package.plugin_id = descriptor.manifest.plugin_id.clone();
@@ -325,7 +325,7 @@ fn a_headless_agent_carries_document_operations_and_leaves_view_state_in_the_she
 fn an_abandoned_commands_exchange_is_closed_before_the_next_command_on_its_instance() {
     let driver = |seq: u64| {
         let mut owners = semio_framework::kernel::CommandEnvelopeSet::try_new().expect("envelope set");
-        let command = semio_framework::io::resolve_ready(store::encode_app_command(&store::AppCommand::LoadDocument { seq, pack: vec![1, 2, 3], spr: Vec::new() })).expect("the command encodes");
+        let command = ::semio_framework_async::poll::resolve_ready(store::encode_app_command(&store::AppCommand::ReadDocument { seq })).expect("the command encodes");
         assert!(owners.try_push(semio_framework::kernel::CommandEnvelope { instance: 3, seq, command }).is_ok());
         let Ok(batch) = semio_framework::kernel::CommandBatch::try_new(seq, owners) else { panic!("command batch") };
         semio_framework::kernel::CommandBatchDriver::new(seq, batch)
@@ -387,7 +387,7 @@ fn pending_response_faults_oversize_and_duplicate_and_stamps_a_silent_settlement
 #[test]
 fn guest_fault_wire_decodes_through_the_first_party_value_codec() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔣️first-party-codecs.json")).expect("language-neutral codec fixture parses");
-    let wire = store::DslValue::from(&fixture["guestFault"]["wire"]);
+    let wire = semio_framework_value::DslValue::from(&fixture["guestFault"]["wire"]);
     let fault = decode_guest_fault(&store::pack_rt::encode_wire_value(&wire));
     assert_eq!(fault.code, fixture["guestFault"]["expected"]["code"].as_str().expect("fixture fault code"));
     assert_eq!(fault.message, fixture["guestFault"]["expected"]["message"].as_str().expect("fixture fault message"));
@@ -400,7 +400,7 @@ fn guest_fault_wire_decodes_through_the_first_party_value_codec() {
 /// — the first-party `ToValue` tree must equal what it serializes for the same values.
 #[test]
 fn probe_codec_encodes_the_fixture_shape_and_agrees_with_the_third_party_serializer() {
-    use store::{FromValue as _, ToValue as _};
+    use semio_framework_value::{FromValue as _, ToValue as _};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔣️first-party-codecs.json")).expect("language-neutral codec fixture parses");
     let probe = &fixture["probeCodec"];
     let value = probe["value"].clone();
@@ -420,7 +420,7 @@ fn probe_codec_encodes_the_fixture_shape_and_agrees_with_the_third_party_seriali
     assert_eq!(ProbeMutation::from_value(mutation.to_value()).expect("mutation round trip"), mutation);
 
     for rejected in probe["rejectedMutationEncodings"].as_array().expect("fixture rejection cases") {
-        assert!(ProbeMutation::from_value(store::DslValue::from(rejected)).is_err(), "must reject {rejected}");
+        assert!(ProbeMutation::from_value(semio_framework_value::DslValue::from(rejected)).is_err(), "must reject {rejected}");
     }
 }
 
@@ -941,6 +941,20 @@ fn an_inference_without_a_published_contract_passes_its_payload_through() {
 }
 //#endregion 🔗️InferenceArtifactBinding
 
+/// 🪆️ LAW (design §20.15, W-b): the `ChildHeads` a session guest answers become the inference request's dependencies one per owned
+/// child, keyed `child:<slot>/<childId>` — the exact key the guest's request validation parses back — with the child's head pack.
+#[test]
+fn a_composed_documents_child_heads_become_child_keyed_inference_dependencies() {
+    let entries = vec![
+        store::ChildHeadPackEntry { slot: "content".into(), child_id: "flow-1".into(), dialect: "s.flow@1/*".into(), head_pack: vec![1, 2, 3] },
+        store::ChildHeadPackEntry { slot: "content".into(), child_id: "flow-2".into(), dialect: "s.flow@1/*".into(), head_pack: vec![4] },
+    ];
+    let dependencies = child_head_dependencies(entries);
+    assert_eq!(dependencies, vec![("child:content/flow-1".to_string(), vec![1, 2, 3]), ("child:content/flow-2".to_string(), vec![4])]);
+    assert!(dependencies.iter().all(|(key, _)| semio_framework_plugin::inference_child_dependency_parts(key).is_some()), "the guest parses every key back");
+    assert!(child_head_dependencies(Vec::new()).is_empty(), "a document without children sends no dependencies");
+}
+
 /// 🔡️ The bound document survives the GUEST's own JSON decoder, byte for byte. The gateway writes
 /// the pair with `serde_json`; the guest reads it with the kernel's DSL JSON parser
 /// (`protocol::json::from_json_str`) and then base64-decodes it. Two different parsers on one
@@ -954,10 +968,10 @@ fn a_bound_document_round_trips_through_the_guest_json_decoder() {
     let command = bound_inference_command(Some(crate::actions::ArtifactDocumentBinding { pack: pack.clone(), spr: spr.clone() }), b"{}");
     let bound = bind_inference_document(&declared, &command).expect("a named artifact binds");
     let text = std::str::from_utf8(&bound).expect("the bound body is UTF-8");
-    let value: store::DslValue = semio_framework_os_kernel::os_pack::json::from_json_str(text).expect("the guest's own JSON decoder reads what serde_json wrote");
+    let value: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the guest's own JSON decoder reads what serde_json wrote");
     let document = value.get("document").expect("the declared field survives the decoder");
-    let pack_text = document.get("pack").and_then(store::DslValue::as_str).expect("pack is a string");
-    let spr_text = document.get("spr").and_then(store::DslValue::as_str).expect("spr is a string");
+    let pack_text = document.get("pack").and_then(semio_framework_value::DslValue::as_str).expect("pack is a string");
+    let spr_text = document.get("spr").and_then(semio_framework_value::DslValue::as_str).expect("spr is a string");
     assert_eq!(crate::shell_channel::decode_base64(pack_text), Some(pack), "the guest decodes the EXACT pack bytes the host bound");
     assert_eq!(crate::shell_channel::decode_base64(spr_text), Some(spr), "…and the exact spr bytes");
 }

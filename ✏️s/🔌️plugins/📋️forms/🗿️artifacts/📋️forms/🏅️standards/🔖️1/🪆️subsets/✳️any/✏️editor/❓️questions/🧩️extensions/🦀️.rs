@@ -1,6 +1,6 @@
 //! 🧩️ Exact authored context passed to a question extension.
 use crate::FormQuestion;
-use dsl::os_pack::json::{Object, Value};
+use semio_framework_pack_json::{Object, Value};
 
 /// 🪟️ Authoring changes the definition; answering addresses one concrete Fill Form window.
 #[derive(Clone, Copy, Debug)]
@@ -33,7 +33,7 @@ pub fn render_payload(question: &FormQuestion, values: &Object, controller_id: &
 mod tests;
 
 /// 🗂️ Schema-owned provider metadata for every contributed question kind.
-#[derive(Clone, Debug, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct QuestionKindContribution {
     pub app_id: String,

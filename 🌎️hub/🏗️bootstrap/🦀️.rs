@@ -230,7 +230,7 @@ impl<'de, T: FromValue> Deserialize<'de> for DirectoryJson<T> {
 
 impl<T: ToValue> IntoResponse for DirectoryJson<T> {
     fn into_response(self) -> Response {
-        ([(axum::http::header::CONTENT_TYPE, "application/json")], directory::os_pack::json::to_json_string(&self.0)).into_response()
+        ([(axum::http::header::CONTENT_TYPE, "application/json")], semio_framework_pack_json::to_json_string(&self.0)).into_response()
     }
 }
 
@@ -3575,7 +3575,7 @@ async fn issue_document_open_plan_inner(space_id: String, document_id: String, h
         return Err(document_open_plan_route_error(StatusCode::BAD_REQUEST, DocumentOpenPlanErrorCodeV1::Denied));
     }
     let encoded = std::str::from_utf8(&body).map_err(|_| document_open_plan_route_error(StatusCode::BAD_REQUEST, DocumentOpenPlanErrorCodeV1::Denied))?;
-    let intent: DocumentOpenIntentV1 = directory::os_pack::json::from_json_str(encoded).map_err(|_| document_open_plan_route_error(StatusCode::BAD_REQUEST, DocumentOpenPlanErrorCodeV1::Denied))?;
+    let intent: DocumentOpenIntentV1 = semio_framework_pack_json::from_json_str(encoded, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| document_open_plan_route_error(StatusCode::BAD_REQUEST, DocumentOpenPlanErrorCodeV1::Denied))?;
     intent.validate().map_err(|_| document_open_plan_route_error(StatusCode::BAD_REQUEST, DocumentOpenPlanErrorCodeV1::Denied))?;
     let scope = DocumentScope::new(space_id, document_id);
     if intent.scope != scope {
@@ -3703,7 +3703,7 @@ async fn issue_document_plan_socket_grant_inner(space_id: String, document_id: S
         return Err(document_open_plan_route_error(StatusCode::BAD_REQUEST, DocumentOpenPlanErrorCodeV1::Denied));
     }
     let encoded = std::str::from_utf8(&body).map_err(|_| document_open_plan_route_error(StatusCode::BAD_REQUEST, DocumentOpenPlanErrorCodeV1::Denied))?;
-    let intent: DocumentPlanSocketGrantIntentV1 = directory::os_pack::json::from_json_str(encoded).map_err(|_| document_open_plan_route_error(StatusCode::BAD_REQUEST, DocumentOpenPlanErrorCodeV1::Denied))?;
+    let intent: DocumentPlanSocketGrantIntentV1 = semio_framework_pack_json::from_json_str(encoded, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| document_open_plan_route_error(StatusCode::BAD_REQUEST, DocumentOpenPlanErrorCodeV1::Denied))?;
     intent.validate().map_err(|_| document_open_plan_route_error(StatusCode::BAD_REQUEST, DocumentOpenPlanErrorCodeV1::Denied))?;
     if !state.readiness.features.open_plan_exchange {
         return Err(document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::CatalogUnavailable));
@@ -3773,7 +3773,7 @@ async fn document_execution_target_selection(space_id: String, document_id: Stri
         return Err(document_open_plan_route_error(StatusCode::BAD_REQUEST, DocumentOpenPlanErrorCodeV1::Denied));
     }
     let encoded = std::str::from_utf8(&body).map_err(|_| document_open_plan_route_error(StatusCode::BAD_REQUEST, DocumentOpenPlanErrorCodeV1::Denied))?;
-    let intent: DocumentOpenIntentV1 = directory::os_pack::json::from_json_str(encoded).map_err(|_| document_open_plan_route_error(StatusCode::BAD_REQUEST, DocumentOpenPlanErrorCodeV1::Denied))?;
+    let intent: DocumentOpenIntentV1 = semio_framework_pack_json::from_json_str(encoded, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| document_open_plan_route_error(StatusCode::BAD_REQUEST, DocumentOpenPlanErrorCodeV1::Denied))?;
     intent.validate().map_err(|_| document_open_plan_route_error(StatusCode::BAD_REQUEST, DocumentOpenPlanErrorCodeV1::Denied))?;
     let scope = DocumentScope::new(space_id, document_id);
     if intent.scope != scope {
@@ -6185,7 +6185,7 @@ async fn send_socket_document_rebootstrap(sender: &mut SplitSink<WebSocket, Mess
 /// first-party `ToValue` shape shared by every replication wire consumer.
 fn encode_messages(messages: &[protocol::MutationMessage]) -> Vec<u8> {
     let value = DslValue::Array(messages.iter().map(ToValue::to_value).collect());
-    directory::os_pack::json::to_json_string(&value).into_bytes()
+    semio_framework_pack_json::to_json_string(&value).into_bytes()
 }
 
 
@@ -6222,7 +6222,7 @@ fn undeclared_batch_refusal(envelopes: &[MutationEnvelope]) -> Option<ApplyOutco
 /// ⏳️ `ApplyOutcome::Rejected.messages` of a batch refused for a transient reason: the one
 /// `HubTransientApplyRefusalMessageV1` (`🚧️refusal`), level warning, code `hub.unavailable`, the reason bounded.
 fn transient_apply_refusal_messages(reason: &str) -> Vec<u8> {
-    encode_messages(&[protocol::MutationMessage::warn(semio_hub::refusal::HUB_TRANSIENT_APPLY_REFUSAL_CODE, semio_hub::refusal::hub_transient_apply_refusal_message(reason))])
+    encode_messages(&[protocol::MutationMessage::warning(semio_hub::refusal::HUB_TRANSIENT_APPLY_REFUSAL_CODE, semio_hub::refusal::hub_transient_apply_refusal_message(reason))])
 }
 
 
@@ -7759,7 +7759,7 @@ async fn build_directory_space_administration_page_v1(state: &HubState, space_id
     let mut documents = windows.documents.len().max(windows.public_documents.len());
     loop {
         let page = seal_space_administration_page_v1(state, caller.as_ref(), space_id, binding, generation, access, &space, &windows, members, invites, documents)?;
-        if directory::os_pack::json::to_json_string(&page).len() <= DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES {
+        if semio_framework_pack_json::to_json_string(&page).len() <= DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES {
             page.validate().map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
             return Ok(page);
         }
@@ -7972,7 +7972,7 @@ fn seal_directory_event_page_v1(binding: [u8; 32], generation: u64, after: u64, 
         receipt_sha256: String::new(),
     };
     page.receipt_sha256 = os_directory::hex_lower(&Sha256::digest(page.canonical_unsigned_json().as_bytes()));
-    if directory::os_pack::json::to_json_string(&page).len() > DIRECTORY_EVENT_PAGE_MAX_BYTES {
+    if semio_framework_pack_json::to_json_string(&page).len() > DIRECTORY_EVENT_PAGE_MAX_BYTES {
         return Err(DirectoryEventPageErrorV1::TooLarge);
     }
     page.validate()?;
@@ -8006,7 +8006,7 @@ async fn build_directory_event_page_v1(state: &HubState, caller: &AuthedUser, af
         events: Vec::new(),
         receipt_sha256: "0".repeat(64),
     };
-    let envelope_bytes = directory::os_pack::json::to_json_string(&envelope).len();
+    let envelope_bytes = semio_framework_pack_json::to_json_string(&envelope).len();
     let raw_len = raw.len();
     let mut through = after;
     let mut events = Vec::new();
@@ -8031,7 +8031,7 @@ async fn build_directory_event_page_v1(state: &HubState, caller: &AuthedUser, af
             through = event.seq;
             continue;
         }
-        let bytes = directory::os_pack::json::to_json_string(&event).len();
+        let bytes = semio_framework_pack_json::to_json_string(&event).len();
         if directory_event_page_bytes_bound(envelope_bytes, event_bytes.saturating_add(bytes), events.len() + 1) > DIRECTORY_EVENT_PAGE_MAX_BYTES {
             let mut candidate = events.clone();
             candidate.push(event.clone());
@@ -8334,7 +8334,7 @@ async fn directory_scoped_ws_v1(ws: WebSocketUpgrade, Path((space_id, document_i
 }
 
 async fn send_directory_message(sender: &mut SplitSink<WebSocket, Message>, message: &DirectoryStreamMessage) -> bool {
-    let text = directory::os_pack::json::to_json_string(message);
+    let text = semio_framework_pack_json::to_json_string(message);
     sender.send(Message::Text(text.into())).await.is_ok()
 }
 
@@ -9645,7 +9645,7 @@ where
         }
         let next_cursor = has_more.then(|| cursor(&rows)).transpose()?;
         let candidate = AdminPageV1 { rows: rows.clone(), next_cursor, observed_at_ms };
-        if directory::os_pack::json::to_json_string(&candidate).len() <= ADMIN_RESPONSE_MAX_BYTES {
+        if semio_framework_pack_json::to_json_string(&candidate).len() <= ADMIN_RESPONSE_MAX_BYTES {
             return Ok(AdminPageV1 { rows, next_cursor: candidate.next_cursor, observed_at_ms });
         }
         if rows.len() <= 1 {
@@ -9672,7 +9672,7 @@ fn admin_fit_connection_snapshot(
         }
         let next_cursor = has_more.then(|| admin_cursor_encode(cursor_key, principal, 1, offset + rows.len())).transpose()?;
         let candidate = AdminConnectionSnapshotV1 { rows: rows.clone(), next_cursor, observed_at_ms, source: "recorded-sync-sessions".into(), head_seq };
-        if directory::os_pack::json::to_json_string(&candidate).len() <= ADMIN_RESPONSE_MAX_BYTES {
+        if semio_framework_pack_json::to_json_string(&candidate).len() <= ADMIN_RESPONSE_MAX_BYTES {
             return Ok(candidate);
         }
         if rows.len() <= 1 {
@@ -9788,7 +9788,7 @@ fn validate_admin_intent(intent: &AdminIntentV1) -> Result<(), StatusCode> {
 }
 
 fn admin_intent_digest(intent: &AdminIntentV1) -> String {
-    let encoded = directory::os_pack::json::to_json_string(intent);
+    let encoded = semio_framework_pack_json::to_json_string(intent);
     let mut hash = Sha256::new();
     hash.update(b"semio/hub/admin-intent/v1\0");
     hash.update(&(encoded.len() as u32).to_be_bytes());
@@ -10390,7 +10390,7 @@ async fn admin_intents(headers: HeaderMap, axum::extract::ConnectInfo(peer): axu
         return Err(StatusCode::BAD_REQUEST);
     }
     let encoded = std::str::from_utf8(&body).map_err(|_| StatusCode::BAD_REQUEST)?;
-    let intent: AdminIntentV1 = directory::os_pack::json::from_json_str(encoded).map_err(|_| StatusCode::BAD_REQUEST)?;
+    let intent: AdminIntentV1 = semio_framework_pack_json::from_json_str(encoded, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| StatusCode::BAD_REQUEST)?;
     validate_admin_intent(&intent)?;
     let metadata = admin_intent_metadata(&intent);
     let digest = admin_intent_digest(&intent);
@@ -10636,7 +10636,7 @@ fn admin_fit_space_detail(view: SpaceView, mut rows: Vec<MemberView>, storage_ha
         }
         let next_cursor = has_more.then(|| admin_cursor_encode_scoped(cursor_key, principal, 7, Some(space_id), offset + rows.len())).transpose()?;
         let response = AdminSpaceDetailResponse { view: view.clone(), members: AdminPageV1 { rows: rows.clone(), next_cursor, observed_at_ms } };
-        if directory::os_pack::json::to_json_string(&response).len() <= ADMIN_RESPONSE_MAX_BYTES {
+        if semio_framework_pack_json::to_json_string(&response).len() <= ADMIN_RESPONSE_MAX_BYTES {
             return Ok(response);
         }
         if rows.len() <= 1 {

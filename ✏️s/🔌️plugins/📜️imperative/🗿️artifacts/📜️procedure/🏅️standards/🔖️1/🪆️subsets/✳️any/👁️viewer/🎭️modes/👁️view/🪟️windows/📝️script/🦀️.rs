@@ -4,7 +4,7 @@
 //! wrapper adds no logic this call needs, it just owns `&mut self` execution state a read-only render
 //! never touches, so this file never reaches into the editor module for it.
 
-use crate::ProcedureSnapshot;
+use crate::ProcedureScene;
 use semio_framework_plugin::app::{TextView, TextWindowKit, WindowKit};
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -25,8 +25,8 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 👁️ Pure `ProcedureSnapshot -> UiNode` read: the compiled text of the document's own working
 /// `Path`, always `read_only: true` (a viewer never emits a `replace-text` command).
-pub fn render(document: &ProcedureSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let path = crate::procedure_working_scene(document).path;
+pub fn render(scene: &ProcedureScene) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let path = &scene.path;
     TextWindowKit::render(&TextView { text: imperative_engine::compile_to_text(&path), language: Some("imperative".into()) })
 }
 //#endregion 🔖️Render

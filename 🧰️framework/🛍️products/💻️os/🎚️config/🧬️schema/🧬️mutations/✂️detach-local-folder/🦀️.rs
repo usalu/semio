@@ -27,14 +27,17 @@ impl MutationKind<LocalFolderBindings, LocalFoldersConfigMutation> for DetachLoc
 
     fn diff(&self, base: &LocalFolderBindings) -> MutationOutcome<LocalFolderBindings> {
         if !base.bindings.iter().any(|entry| entry.document_id == self.document_id) {
-            return MutationOutcome::new(base.clone()).warn("mutation.no-op", format!("\"{}\" is not attached to a folder on this device.", self.document_id));
+            return MutationOutcome::new(base.clone()).warning("mutation.no-op", format!("\"{}\" is not attached to a folder on this device.", self.document_id));
         }
         MutationOutcome::new(LocalFolderBindings { bindings: base.bindings.iter().filter(|entry| entry.document_id != self.document_id).cloned().collect() })
     }
 
-    fn inverse(&self, base: &LocalFolderBindings) -> Vec<LocalFoldersConfigMutation> {
+    fn inverse(&self, base: &LocalFolderBindings) -> Result<Vec<LocalFoldersConfigMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         base.bindings.iter().find(|entry| entry.document_id == self.document_id).map(|prior| vec![attach_local_folder(prior.clone())]).unwrap_or_default()
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Forget the folder of \"{}\"", self.document_id), &format!("Ordner von \"{}\" vergessen", self.document_id))

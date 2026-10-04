@@ -5,7 +5,7 @@
 /// fields rather than a nested record so the whole config is one `lines` DSL document, and the
 /// SAME three keys the react `World3dHost` sends under `camera` (`position`/`target`/`zoom`), so the
 /// wire pose needs no renaming on the way in or out.
-#[derive(Clone, Copy, Debug, PartialEq, dsl::DslRecord, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -42,11 +42,12 @@ impl EnergyModelViewerCameraPose {
 /// 🎚️ Persisted local state for ONE concrete `energy.model.3d` window: its camera, and nothing else.
 /// Per WINDOW, not per app — two open 3d windows orbit independently, which is exactly why this is a
 /// `WindowConfigOwner` state and not a field on `EnergyModelConfig`.
-#[derive(Clone, Copy, Debug, Default, PartialEq, dsl::DslArtifact, dsl::ToValue, dsl::FromValue)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Copy, Debug, Default, PartialEq, semio_framework_os_kernel::DslArtifact, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
-#[dsl(id = "energy.model3dviewerwindowconfig", layout = "lines")]
+#[dsl(layout = "lines")]
+#[artifact(id = "energy.model3dviewerwindowconfig")]
 pub struct EnergyModelViewerWindowConfig {
     #[dsl(block)]
     pub camera: EnergyModelViewerCameraPose,

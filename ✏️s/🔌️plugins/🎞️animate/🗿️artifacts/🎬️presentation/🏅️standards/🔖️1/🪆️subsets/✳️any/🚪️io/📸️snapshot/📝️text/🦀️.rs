@@ -14,7 +14,7 @@ use crate::{PresentationSnapshot, PRESENTATION_DOCUMENT_SCHEMA};
 pub const PRESENTATION_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
 /// 📖️ Parses `.presentation` DSL text into a `PresentationSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<PresentationSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<PresentationSnapshot, semio_framework_diagnostic::TextError> {
     <PresentationSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
@@ -32,16 +32,16 @@ impl store::ArtifactDsl for PresentationSnapshot {
     fn envelope_id() -> &'static str {
         PRESENTATION_DOCUMENT_SCHEMA
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }

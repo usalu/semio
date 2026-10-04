@@ -1,6 +1,60 @@
 syntax = "proto3";
 package semio.s_stdio_xlsx.diff;
+
+import "s_stdio_xlsx/snapshot.proto";
+import "s_stdio_xml/diff.proto";
+
+message StringModified { string key = 1; string diff = 2; }
+message ContentTypeEntriesDiff {
+  repeated string removed = 1;
+  repeated StringModified modified = 2;
+  repeated semio.s_stdio_xlsx.snapshot.NameValue added = 3;
+  repeated string order = 4;
+}
+message OpcContentTypesDiff { optional ContentTypeEntriesDiff defaults = 1; optional ContentTypeEntriesDiff overrides = 2; }
+message OpcPartDiff { optional string content_type = 1; optional bytes bytes = 2; }
+message OpcPartModified { string key = 1; OpcPartDiff diff = 2; }
+message OpcPartsDiff {
+  repeated string removed = 1;
+  repeated OpcPartModified modified = 2;
+  repeated semio.s_stdio_xlsx.snapshot.OpcPart added = 3;
+  repeated string order = 4;
+}
+message OpcRelationshipDiff {
+  optional string rel_type = 1;
+  optional string target = 2;
+  optional semio.s_stdio_xlsx.snapshot.OpcTargetMode target_mode = 3;
+}
+message OpcRelationshipModified { string key = 1; OpcRelationshipDiff diff = 2; }
+message OpcRelationshipListDiff {
+  repeated string removed = 1;
+  repeated OpcRelationshipModified modified = 2;
+  repeated semio.s_stdio_xlsx.snapshot.OpcRelationship added = 3;
+  repeated string order = 4;
+}
+message OpcRelationshipOwner { string owner = 1; repeated semio.s_stdio_xlsx.snapshot.OpcRelationship relationships = 2; }
+message OpcRelationshipOwnerModified { string key = 1; OpcRelationshipListDiff diff = 2; }
+message OpcRelationshipsDiff {
+  repeated string removed = 1;
+  repeated OpcRelationshipOwnerModified modified = 2;
+  repeated OpcRelationshipOwner added = 3;
+  repeated string order = 4;
+}
+message OpcDiff {
+  optional string comment = 1;
+  optional OpcContentTypesDiff content_types = 2;
+  optional OpcPartsDiff parts = 3;
+  optional OpcRelationshipsDiff relationships = 4;
+}
+message XmlPartDiff { optional string content_type = 1; optional semio.s_stdio_xml.diff.XmlDiff document = 2; }
+message XmlPartModified { string key = 1; XmlPartDiff diff = 2; }
+message XmlPartsDiff {
+  repeated string removed = 1;
+  repeated XmlPartModified modified = 2;
+  repeated semio.s_stdio_xlsx.snapshot.XlsxXmlPart added = 3;
+  repeated string order = 4;
+}
 message XlsxDiff {
-  string schema = 1;
-  string bytes_wire = 2;
+  optional OpcDiff opc = 1;
+  optional XmlPartsDiff xml_parts = 2;
 }

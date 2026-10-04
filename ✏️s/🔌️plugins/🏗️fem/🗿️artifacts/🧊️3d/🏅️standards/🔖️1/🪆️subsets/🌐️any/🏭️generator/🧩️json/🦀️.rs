@@ -9,7 +9,7 @@
 //!
 //! But this subset's JSON export is not a stub. Unlike its csv/md/txt leaves, which wrap the DSL text
 //! in a single blob, `🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json` emits
-//! `dsl::ToValue::to_value(snapshot)` — the real structured tree, every `Fem3dSnapshot` field. So all
+//! `semio_framework_value::ToValue::to_value(snapshot)` — the real structured tree, every `Fem3dSnapshot` field. So all
 //! nine arrays are carrier-level facts and a JSON reader witnesses every one of the 26.
 //!
 //! This is the same shape as the accepted `quick-xml`/svg and `burntsushi-csv`/mathematical readers:

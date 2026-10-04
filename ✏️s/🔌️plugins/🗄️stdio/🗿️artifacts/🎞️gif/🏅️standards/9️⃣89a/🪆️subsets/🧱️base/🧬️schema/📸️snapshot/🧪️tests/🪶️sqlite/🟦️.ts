@@ -1,3 +1,5 @@
+import refusalFixture from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧫️fixtures/🔣️.json";
+const canceledKind=refusalFixture.cases.find(item=>item.id==="canceled-projection")!.expectedKind;
 import { Database } from "bun:sqlite";
 import owned from "../../../../../../../../🧫️fixtures/🪶️sqlite/🫳️ownership/🔣️.json";
 import ownedSchema from "../../../../../../../../🧫️fixtures/🪶️sqlite/🫳️ownership/🧬️schema/🔣️.json";
@@ -33,5 +35,5 @@ test("GIF89 optionals, disposal policies, full widths and owned relationship con
  for(const disposal of ["unspecified","doNotDispose","restoreToBackground","restoreToPrevious"]as GifDisposal[]){snapshot.frames[0]!.disposal=disposal;for(const loopCount of [null,0,65535]){snapshot.loopCount=loopCount;expect(await gifSnapshotFromSqliteDatabase(await gifSnapshotToSqliteDatabase(snapshot))).toEqual(snapshot);}}
  for(const change of ["UPDATE gif89_plain_text SET id=999","UPDATE gif89_application_byte SET application_id=999 WHERE id=1","UPDATE gif89_comment SET ordinal=0 WHERE ordinal=1","UPDATE gif89_pixel SET ordinal=0 WHERE frame_id=1","UPDATE gif89_frame SET transparent_color_index=256 WHERE ordinal=0","UPDATE gif89_frame SET disposal='foreign' WHERE ordinal=0","UPDATE gif89_application SET authentication_1=256 WHERE ordinal=0"]){const db=Database.deserialize(await exportSqliteDatabase(database));try{db.run("PRAGMA ignore_check_constraints=ON");db.run(change);await expect(gifSnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(db.serialize())))).rejects.toThrow();}finally{db.close();}}
  await expect(gifSnapshotToSqliteDatabase(snapshot,{maxValueBytes:0})).rejects.toThrow();await expect(gifSnapshotFromSqliteDatabase(database,{maxRows:1})).rejects.toThrow();
- const controller=new AbortController();snapshot.appExtensions[0]!.data=new Array<number>(2000).fill(1);await expect(gifSnapshotToSqliteDatabase(snapshot,{signal:controller.signal,onProgress:event=>{if(event.completed>=256)controller.abort();}})).rejects.toHaveProperty("name","AbortError");
+ const controller=new AbortController();snapshot.appExtensions[0]!.data=new Array<number>(2000).fill(1);await expect(gifSnapshotToSqliteDatabase(snapshot,{signal:controller.signal,onProgress:event=>{if(event.completed>=256)controller.abort();}})).rejects.toHaveProperty("kind",canceledKind);
 });

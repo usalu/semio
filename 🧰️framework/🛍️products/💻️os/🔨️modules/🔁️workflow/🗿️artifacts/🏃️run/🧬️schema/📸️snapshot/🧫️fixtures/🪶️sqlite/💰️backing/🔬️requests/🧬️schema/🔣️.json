@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/workflow/run/sqlite-owned-requests.json",
+  "title": "Run Snapshot Full Concrete Requests",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "phases",
+    "tableCount",
+    "fieldOrder",
+    "fullConcreteRequests",
+    "fullReplacementRequests",
+    "exactReplay",
+    "refuseZero",
+    "refuseOneBelow",
+    "retirementRefundsAdmission"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.workflow.run.sqlite.owned-requests.v1"
+    },
+    "phases": {
+      "const": [
+        "projectSnapshot",
+        "reconstructSnapshot"
+      ]
+    },
+    "tableCount": {
+      "const": 7
+    },
+    "fieldOrder": {
+      "const": [
+        "schema",
+        "workflowRef",
+        "workflowCheckpointId",
+        "inputCollectionRef",
+        "inputSnapshotId",
+        "parameterValues",
+        "outputCollectionRef",
+        "status",
+        "trigger",
+        "nodeRecords",
+        "logs",
+        "startedAt",
+        "finishedAt",
+        "sealed"
+      ]
+    },
+    "fullConcreteRequests": {
+      "const": true
+    },
+    "fullReplacementRequests": {
+      "const": true
+    },
+    "exactReplay": {
+      "const": true
+    },
+    "refuseZero": {
+      "const": true
+    },
+    "refuseOneBelow": {
+      "const": true
+    },
+    "retirementRefundsAdmission": {
+      "const": false
+    }
+  }
+}

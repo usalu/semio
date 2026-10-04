@@ -1,7 +1,7 @@
 use super::super::{dag_index_to_wire, split_dag_endpoint, ConnectNodes, CreateNode, DagDelta, DagDiff, DagMutation, DagSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "delete-node")]
@@ -18,7 +18,8 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for DeleteNode {
         let ids: Vec<String> = base.edges.iter().filter(|edge| split_dag_endpoint(&edge.source).0 == self.id || split_dag_endpoint(&edge.target).0 == self.id).map(|edge| edge.id.clone()).collect();
         protocol::MutationOutcome::new(DagDiff::from(DagDelta { deleted_node_ids: Some(vec![self.id.clone()]), disconnected_edge_ids: (!ids.is_empty()).then_some(ids), ..Default::default() }))
     }
-    fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {
+    fn inverse(&self, base: &DagSnapshot) -> Result<Vec<DagMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         let Some(index) = base.nodes.iter().position(|node| node.id == self.id) else {
             return Vec::new();
         };
@@ -34,7 +35,9 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for DeleteNode {
             .collect();
         inverse.push(DagMutation::CreateNode(CreateNode { node: base.nodes[index].clone(), index: dag_index_to_wire(index) }));
         inverse
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete node {}", self.id), &format!("Knoten {} löschen", self.id))
     }

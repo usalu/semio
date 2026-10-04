@@ -6,20 +6,20 @@
         "parts": [],
         "contentTypes": {
           "defaults": [
-            [
-              "rels",
-              "application/vnd.openxmlformats-package.relationships+xml"
-            ],
-            [
-              "xml",
-              "application/xml"
-            ]
+            {
+              "name": "rels",
+              "contentType": "application/vnd.openxmlformats-package.relationships+xml"
+            },
+            {
+              "name": "xml",
+              "contentType": "application/xml"
+            }
           ],
           "overrides": [
-            [
-              "/word/document.xml",
-              "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"
-            ]
+            {
+              "name": "/word/document.xml",
+              "contentType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"
+            }
           ]
         },
         "relationships": {
@@ -39,28 +39,43 @@
           "path": "word/document.xml",
           "contentType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml",
           "document": {
-            "root": {
-              "kind": "element",
-              "name": "w:document",
-              "attrs": [
-                {
-                  "name": "xmlns:w",
-                  "value": "http://purl.oclc.org/ooxml/wordprocessingml/main"
-                },
-                {
-                  "name": "conformance",
-                  "value": "strict"
-                }
-              ],
-              "children": [
-                {
+            "nodes": [
+              {
+                "nextSibling": null,
+                "value": {
                   "kind": "element",
                   "name": "w:body",
-                  "attrs": [],
-                  "children": []
+                  "first_attribute": 2,
+                  "attribute_count": 0,
+                  "first_child": null
                 }
-              ]
-            }
+              },
+              {
+                "nextSibling": null,
+                "value": {
+                  "kind": "element",
+                  "name": "w:document",
+                  "first_attribute": 0,
+                  "attribute_count": 2,
+                  "first_child": 0
+                }
+              }
+            ],
+            "attributes": [
+              {
+                "name": "xmlns:w",
+                "value": "http://purl.oclc.org/ooxml/wordprocessingml/main"
+              },
+              {
+                "name": "conformance",
+                "value": "strict"
+              }
+            ],
+            "prolog": [],
+            "epilog": [],
+            "root": 1,
+            "doctype": null,
+            "declaration": null
           }
         }
       ]

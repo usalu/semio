@@ -111,7 +111,14 @@ pub fn render(document: &JsonSnapshot, windows: &TreeWindows<'_>) -> semio_frame
 }
 
 /// 📝️ Adds the natural I-JSON source draft to the structured tree for editor hosts.
-pub fn render_editor(document: &JsonSnapshot, locale: Locale, windows: &TreeWindows<'_>, controller_id: &str, revision: &str) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render_editor(
+    document: &JsonSnapshot,
+    locale: Locale,
+    windows: &TreeWindows<'_>,
+    controller_id: &str,
+    revision: &str,
+    publication_revision: semio_framework_plugin::UiPublicationRevision,
+) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let view = TreeView { roots: vec![node_view(JSON_ROOT_NODE_ID.to_string(), None, &document.value)] };
     let tree = TreeWindowKit::render_editable_nodes_windowed(&view, windows, controller_id, |path, _| {
         let source = write_json_pretty(node_at_path_id(document, path)?);
@@ -121,7 +128,7 @@ pub fn render_editor(document: &JsonSnapshot, locale: Locale, windows: &TreeWind
         arguments.try_insert("revision".into(), UiValue::Text(UiText::try_from_str(revision)?)).ok()?;
         Some(EditableTreeNode::new(source, "set-node", UiValue::Map(arguments.finish())))
     })?;
-    semio_s_artifact_stdio_contract::editing::render_file_source_editor("stdio-i-json-source", write_json_pretty(&document.value), "json", "set-node", JSON_ROOT_NODE_ID, revision, locale, tree)
+    semio_s_artifact_stdio_contract::editing::render_file_source_editor("stdio-i-json-source", write_json_pretty(&document.value), "json", "set-node", JSON_ROOT_NODE_ID, revision, publication_revision, locale, tree)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

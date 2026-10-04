@@ -23,7 +23,7 @@ fn selection_mask_preserves_soft_coverage_and_round_trips_history() {
     let emit = publish(encoder.into_result().unwrap(), &candidate, &document).unwrap();
     let mut inverses = Vec::new();
     for mutation in &emit.artifact_mutations {
-        inverses.push(mutation.inverse(&document));
+        inverses.push(mutation.inverse(&document).expect("valid retained mutation inverse fixture"));
         let (next,messages) = semio_framework_os_kernel::apply_mutation(&document,mutation).unwrap();
         assert!(messages.is_empty());
         retire(std::mem::replace(&mut document,next));
@@ -65,7 +65,7 @@ fn selection_mask_cancellation_releases_private_work_without_publication() {
 #[test]
 fn protected_pixels_refuse_before_preparation() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
-    let mut document=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();document.layers=dsl::json::from_json_str(&fixture["layers"].to_string()).unwrap();
+    let mut document=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();document.layers=semio_framework_pack_json::from_json_str(&fixture["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for id in ["locked-pixel","inherited-pixel"] {
         let command=MaskFromSelection {layer_id:id.into(),expected_image_key:None,selection:"[[0,1,255]]".into()};
         assert!(prepare(&command,&document).is_err());

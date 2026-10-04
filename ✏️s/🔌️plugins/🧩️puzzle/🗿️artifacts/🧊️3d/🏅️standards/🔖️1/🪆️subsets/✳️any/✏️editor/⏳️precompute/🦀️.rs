@@ -711,7 +711,7 @@ impl Puzzle3dCollision {
 
     #[cfg(test)]
     pub(crate) fn set_scene(&mut self, json: &str) -> Result<(), Puzzle3dError> {
-        self.set_scene_config(dsl::os_pack::json::from_json_str(json)?);
+        self.set_scene_config(semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject)?);
         Ok(())
     }
 
@@ -1259,7 +1259,7 @@ impl Puzzle3dPrecomputeSession {
     }
 
     pub fn set_scene(&mut self, json: &str) -> Result<(), Puzzle3dError> {
-        self.set_scene_config(dsl::os_pack::json::from_json_str(json)?);
+        self.set_scene_config(semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject)?);
         Ok(())
     }
 

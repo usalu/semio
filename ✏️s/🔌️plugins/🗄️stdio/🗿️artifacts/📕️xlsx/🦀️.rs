@@ -15,7 +15,7 @@ use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType,
 
 pub use schema::diff::XlsxDiff;
 pub use schema::mutations::XlsxMutation;
-pub use schema::snapshot::XlsxSnapshot;
+pub use schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxSnapshot, XlsxWorkbook, XlsxXmlPart};
 pub use schema::XlsxArtifact;
 /// 🧬️ The wire contract a native test host decodes `🥒️.feature` witnesses through and inverts them with
 /// (`Mutation::from_payload_value`/`Mutation::inverse`), re-exported because such a host links this crate alone.
@@ -115,60 +115,60 @@ fn xlsx_subset_validators() -> &'static [semio_framework_plugin::SubsetValidator
 /// `LanguageSpec` rows) from `crate::engine::register_pilot_languages`'s own
 /// `dsl::register_language(...)` call bodies.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn pilot_languages() -> &'static [dsl::LanguageSpec] {
-    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
             vec![
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "stdio.xlsx",
                     extension: Some("xlsx"),
-                    role: dsl::LanguageRole::Document,
+                    role: semio_framework_dsl::LanguageRole::Document,
                     grammar: Some(schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("stdio.xlsx"),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.xlsx"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "stdio.xlsx.op",
                     extension: None,
-                    role: dsl::LanguageRole::Ops,
+                    role: semio_framework_dsl::LanguageRole::Ops,
                     grammar: Some(schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(schema::mutations::text::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("stdio.xlsx.op"),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.xlsx.op"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "stdio.xlsx.diff",
                     extension: None,
-                    role: dsl::LanguageRole::Diff,
+                    role: semio_framework_dsl::LanguageRole::Diff,
                     grammar: Some(schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(schema::diff::text::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
-                    hooks: dsl::passthrough_hooks("stdio.xlsx.diff"),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.xlsx.diff"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "stdio.xlsx.pack",
                     extension: None,
-                    role: dsl::LanguageRole::Pack,
+                    role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("stdio.xlsx.pack"),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.xlsx.pack"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "stdio.xlsx.spr",
                     extension: None,
-                    role: dsl::LanguageRole::Spr,
+                    role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("stdio.xlsx.spr"),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.xlsx.spr"),
                 },
             ]
         })
@@ -212,7 +212,7 @@ pub mod io_registry {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
         let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("XlsxComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        semio_framework_plugin::resolve_ready((entry.compose)(sources))
+        ::semio_framework_async::poll::resolve_ready((entry.compose)(sources))
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

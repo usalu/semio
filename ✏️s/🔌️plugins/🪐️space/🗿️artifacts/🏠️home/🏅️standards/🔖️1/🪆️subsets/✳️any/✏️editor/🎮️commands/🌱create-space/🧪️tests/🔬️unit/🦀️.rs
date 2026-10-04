@@ -33,7 +33,7 @@ async fn valid_name_emits_the_replay_shell_command_with_the_right_action_id_and_
         })
         .expect("a ReplayShellCommand effect");
     assert_eq!(action_id, "os.directory.create-space");
-    let args_value: pack::JsonValue = pack::json_from_dsl_value(&args.expect("args present"));
+    let args_value: semio_framework_pack_json::Value = semio_framework_pack_json::from_dsl_value(&args.expect("args present"));
     assert_eq!(args_value["name"], "Atelier");
     assert_eq!(args_value["spaceKind"], "atelier");
     assert_eq!(args_value["visibility"], "private");
@@ -55,7 +55,7 @@ async fn blank_kind_and_visibility_default_to_atelier_and_private() {
             _ => None,
         })
         .expect("args present");
-    let args_value: pack::JsonValue = pack::json_from_dsl_value(&args);
+    let args_value: semio_framework_pack_json::Value = semio_framework_pack_json::from_dsl_value(&args);
     assert_eq!(args_value["spaceKind"], "atelier");
     assert_eq!(args_value["visibility"], "private");
 }

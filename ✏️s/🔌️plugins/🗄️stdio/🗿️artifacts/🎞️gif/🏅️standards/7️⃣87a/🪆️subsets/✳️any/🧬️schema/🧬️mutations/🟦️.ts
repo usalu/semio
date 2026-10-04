@@ -1,3 +1,4 @@
+import type { SnapshotPatch } from '../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts';
 /** 🧬️ GifMutation union. Mirrors only `SetSnapshot` of the Rust `GifMutation` enum's 11 variants
  * — `../📸️snapshot/🟦️.ts`'s `GifSnapshot` is still a raw-`entries` stub with no
  * structured screen/GCT/image model, so the other 10 variants (SetScreenSize,
@@ -6,3 +7,4 @@
  * mirror against yet; see `🦀️.rs` in this directory. */
 export type GifMutation =
   | { mutation: 'setSnapshot'; snapshot: import('../📸️snapshot/🟦️.ts').GifSnapshot };
+  | { readonly mutation: 'patchSnapshot'; readonly patch: SnapshotPatch }

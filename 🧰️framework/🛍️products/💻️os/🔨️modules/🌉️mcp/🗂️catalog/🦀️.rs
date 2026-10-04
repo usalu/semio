@@ -12,7 +12,7 @@ use semio_framework::manifest;
 use semio_framework::manifest::kernel;
 use semio_framework_ui_locale::Locale;
 use semio_framework_ui_locale::Terminology;
-use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
+use semio_framework_value::{DslValue, FromValue, ToValue, ValueError};
 use std::collections::BTreeMap;
 
 //#region 🔖️CapabilityRef
@@ -107,10 +107,10 @@ impl ToValue for CapabilityOwner {
 impl FromValue for CapabilityOwner {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let entries = DslValue::into_object(value)?;
-        let tag = entries.iter().find(|(k, _)| k == "kind").map(|(_, v)| v.clone()).ok_or_else(|| ValueError::new("missing field `kind`"))?;
+        let tag = entries.iter().find(|(k, _)| k == "kind").map(|(_, v)| v.clone()).ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "missing field `kind`"))?;
         let tag = match tag {
             DslValue::String(s) => s,
-            other => return Err(ValueError::new(format!("expected a string tag, found {other:?}"))),
+            other => return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string tag, found {other:?}"))),
         };
         let field = |name: &str| entries.iter().find(|(k, _)| k == name).map(|(_, v)| v.clone());
         Ok(match tag.as_str() {
@@ -120,7 +120,7 @@ impl FromValue for CapabilityOwner {
             "plugin" => CapabilityOwner::Plugin {
                 plugin_id: match field("pluginId") {
                     Some(v) => String::from_value(v).map_err(|error| error.under("pluginId"))?,
-                    None => return Err(ValueError::new("missing field `pluginId`")),
+                    None => return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "missing field `pluginId`")),
                 },
                 label: match field("label") {
                     Some(v) => Option::<String>::from_value(v).map_err(|error| error.under("label"))?,
@@ -142,11 +142,11 @@ impl FromValue for CapabilityOwner {
             "extension" => CapabilityOwner::Extension {
                 extension_id: match field("extensionId") {
                     Some(v) => String::from_value(v).map_err(|error| error.under("extensionId"))?,
-                    None => return Err(ValueError::new("missing field `extensionId`")),
+                    None => return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "missing field `extensionId`")),
                 },
             },
             "gateway" => CapabilityOwner::Gateway,
-            other => return Err(ValueError::new(format!("unknown `kind` variant `{other}`"))),
+            other => return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown `kind` variant `{other}`"))),
         })
     }
 }

@@ -391,7 +391,7 @@ export type InputKind = "text" | "longText" | "number" | "date" | "color" | "fil
     },
     SchemaMetadata {
         name: "InputProps",
-        version: 4,
+        version: 5,
         typescript: r####"/**
  * ⌨️ Props for `Component::Input`. `on_change` moved to the record's `bindings`
  * (`Trigger::Change`/`Trigger::Commit`).
@@ -419,7 +419,16 @@ displayFactor?: number | null,
 /**
  * ⛔️ The hard range a typed number must keep (`min`/`max` themselves when absent), see [`UiNumberLimits`].
  */
-limits?: UiNumberLimits | null, };"####,
+limits?: UiNumberLimits | null,
+/**
+ * 🎯️ Opaque producer-owned identity for retaining an in-progress draft across
+ * revisions while the same semantic edit target remains mounted.
+ */
+draftTarget?: string | null,
+/**
+ * 🧾️ Decimal u64 revision of the native document projection that authored this input.
+ */
+publicationRevision?: string | null, };"####,
     },
     SchemaMetadata {
         name: "Justify",
@@ -605,7 +614,7 @@ export type RingProps = { orbId: string, t: number, };"####,
     },
     SchemaMetadata {
         name: "RowAction",
-        version: 3,
+        version: 4,
         typescript: r####"/**
  * 🎬️ One action affordance painted on (or reachable from) a [`Component::TreeItem`] or
  * [`Component::TableRow`] row. It names only its `verb`: the scope, version and argument map are the
@@ -625,7 +634,12 @@ verb: string, placement: RowActionPlacement,
  * 🚫️ A disabled action paints and announces disabled and never dispatches ([`RowTarget::action_binding`] refuses it
  * typed). Only a disabled action carries the flag, so an enabled row costs nothing for it.
  */
-disabled: boolean, };"####,
+disabled: boolean,
+/**
+ * 💬️ Why a disabled action cannot run, producer-localized. A disabled action stays focusable (`aria-disabled`, WAI-ARIA
+ * focusable-when-disabled) and every renderer names this reason as its description (`aria-describedby`).
+ */
+reason?: Label | null, };"####,
     },
     SchemaMetadata {
         name: "RowActionPlacement",
@@ -928,7 +942,7 @@ export type TransitionHint = "introducing" | "celebrating";"####,
     },
     SchemaMetadata {
         name: "TreeItemProps",
-        version: 2,
+        version: 3,
         typescript: r####"/**
  * 🌿️ Props for `Component::TreeItem` — a single row. `items`/`control` are gone: nested items and
  * the old inline `control: Option<UiControlNode>` are now ordinary children on the record (the
@@ -946,6 +960,12 @@ export type TreeItemProps = { label: Label, description: string | null, icon: st
  * same axis as the record's `activity`/`disabled` — a dimmed row is still fully interactive.
  */
 dimmed: boolean | null,
+/**
+ * ☑️ The row's choice state when it is one option of a single-choice list: `Some(true)` is the chosen option, `Some(false)` a
+ * choosable one that is not chosen, `None` not an option row. Every renderer exposes it as the row's selected state (React
+ * `aria-selected`, the wgpu ARIA mirror's `selected`) and paints the chosen row selected — never by its icon alone.
+ */
+selected: boolean | null,
 /**
  * 🪟️ The materialised slice of this row's logical child list — see [`TreeWindow`].
  */

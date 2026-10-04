@@ -59,7 +59,8 @@ fn hex_decode(value: &str) -> Result<Vec<u8>, String> {
 
 fn print_drawing_mutation(m: &SemioDrawingMutation) -> String {
     match m {
-        SemioDrawingMutation::SetSnapshot(p) => format!("setSnapshot:{}", hex_encode(pack::to_json_string(&p.snapshot).as_bytes())),
+        SemioDrawingMutation::PatchSnapshot(payload) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(&payload.patch),
+        SemioDrawingMutation::SetSnapshot(p) => format!("setSnapshot:{}", hex_encode(semio_framework_pack_json::to_json_string(&p.snapshot).as_bytes())),
         SemioDrawingMutation::CreateLayer(p) => format!("createLayer:{},{}", p.index, enc_layer(&p.layer)),
         SemioDrawingMutation::DeleteLayer(p) => format!("deleteLayer:{}", enc_str(&p.id)),
         SemioDrawingMutation::CreateNode(p) => format!("createNode:{},{},{}", enc_node_path(&p.parent), p.index, enc_node(&p.node)),
@@ -82,11 +83,15 @@ fn print_drawing_mutation(m: &SemioDrawingMutation) -> String {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_drawing_mutation(line: &str) -> Result<SemioDrawingMutation, String> {
+    if let Some(source) = line.strip_prefix("patch-snapshot patch=") {
+        let patch = semio_s_artifact_stdio_contract::editing::snapshot_patch_from_hex(source)?;
+        return Ok(SemioDrawingMutation::PatchSnapshot(crate::standards::v1::subsets::drawing::schema::mutations::patch_snapshot::PatchSnapshot { patch }));
+    }
     if let Some(payload) = line.strip_prefix("setSnapshot:") {
         let bytes = hex_decode(payload)?;
         let json = String::from_utf8(bytes).map_err(|error| error.to_string())?;
-        let parsed = pack::parse_json(&json).map_err(|error| error.to_string())?;
-        let snapshot = dsl::FromValue::from_value(pack::json_to_dsl_value(&parsed)).map_err(|error| error.to_string())?;
+        let parsed = semio_framework_pack_json::parse(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
+        let snapshot = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|error| error.to_string())?;
         return Ok(SemioDrawingMutation::SetSnapshot(SetSnapshot { snapshot }));
     }
     let (tag, rest) = line.split_once(':').ok_or_else(|| format!("drawing mutation: missing ':' in {line:?}"))?;
@@ -167,8 +172,8 @@ impl protocol::OpText for SemioDrawingMutation {
     fn print_op(&self) -> String {
         print_drawing_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_drawing_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_drawing_mutation(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 }
 //#endregion 🔖️OpText

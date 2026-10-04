@@ -1,0 +1,117 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "role",
+    "compressionAuthority",
+    "cases"
+  ],
+  "properties": {
+    "role": {
+      "const": "interpretedNativeScanlines"
+    },
+    "compressionAuthority": {
+      "const": "completeBlockCodeTokenPadding"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "width",
+          "height",
+          "bitDepth",
+          "colorType",
+          "interlace",
+          "raw",
+          "samples",
+          "filters",
+          "unusedBits",
+          "tail",
+          "rgba"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4294967295
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4294967295
+          },
+          "bitDepth": {
+            "enum": [
+              1,
+              2,
+              4,
+              8,
+              16
+            ]
+          },
+          "colorType": {
+            "enum": [
+              0,
+              2,
+              3,
+              4,
+              6
+            ]
+          },
+          "interlace": {
+            "enum": [
+              0,
+              1
+            ]
+          },
+          "raw": {
+            "$ref": "#/definitions/octets"
+          },
+          "samples": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535
+            }
+          },
+          "filters": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4
+            }
+          },
+          "unusedBits": {
+            "$ref": "#/definitions/octets"
+          },
+          "tail": {
+            "$ref": "#/definitions/octets"
+          },
+          "rgba": {
+            "$ref": "#/definitions/octets"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "octets": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    }
+  }
+}

@@ -6,7 +6,8 @@ use crate::CadSnapshot;
 //#region 🔖️Inverse
 pub const CAD_IDENTITY_SCALE: [f64; 3] = [1.0, 1.0, 1.0];
 
-pub fn inverse(payload: &ScaleObjects, base: &CadSnapshot) -> Vec<CadMutation> {
+pub fn inverse(payload: &ScaleObjects, base: &CadSnapshot) -> Result<Vec<CadMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(scene) = crate::cad_pane_local_scene(base, payload.pane) else {
         return Vec::new();
     };
@@ -20,5 +21,7 @@ pub fn inverse(payload: &ScaleObjects, base: &CadSnapshot) -> Vec<CadMutation> {
         return Vec::new();
     }
     vec![CadMutation::ScaleObjects(ScaleObjects { pane: payload.pane, placements })]
+
+    })())
 }
 //#endregion 🔖️Inverse

@@ -23,7 +23,7 @@ UPDATE_SITE = (
     "pub fn diff(payload: &UpdateSite, _base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {\n",
     "pub fn diff(payload: &UpdateSite, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {\n"
     "    if base.site == payload.site {\n"
-    "        return protocol::MutationOutcome::empty().warn(\"mutation.no-op\", \"The site already has these values.\");\n"
+    "        return protocol::MutationOutcome::empty().warning(\"mutation.no-op\", \"The site already has these values.\");\n"
     "    }\n",
 )
 

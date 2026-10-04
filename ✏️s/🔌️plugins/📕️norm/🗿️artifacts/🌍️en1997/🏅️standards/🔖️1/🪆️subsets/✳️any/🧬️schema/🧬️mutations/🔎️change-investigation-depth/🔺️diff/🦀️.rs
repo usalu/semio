@@ -6,7 +6,7 @@ pub fn diff(payload: &ChangeInvestigationDepth, base: &En1997Snapshot) -> protoc
         return protocol::MutationOutcome::fatal("mutation.invariant", "investigation depth must be positive", Vec::<String>::new());
     }
     if base.investigation_depth == payload.new_investigation_depth {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "depth unchanged");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "depth unchanged");
     }
     protocol::MutationOutcome::new(En1997Diff { investigation_depth: Some(payload.new_investigation_depth), ..Default::default() })
 }

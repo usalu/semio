@@ -80,9 +80,9 @@ fn json_value_from_semio(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioValue>,
         }
         SemioValue::Ref { id } => {
             if !visiting.insert(id.clone()) {
-                return Err(store::PackError::Schema(format!("value->json: reference cycle detected at id {:?} (json has no graph, cannot represent a cycle)", id.value)));
+                return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, format!("value->json: reference cycle detected at id {:?} (json has no graph, cannot represent a cycle)", id.value))));
             }
-            let target = nodes.get(id).ok_or_else(|| store::PackError::Schema(format!("value->json: dangling Ref{{id: {:?}}} — not found in `nodes`", id.value)))?;
+            let target = nodes.get(id).ok_or_else(|| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("value->json: dangling Ref{{id: {:?}}} — not found in `nodes`", id.value))))?;
             let result = json_value_from_semio(target, nodes, visiting);
             visiting.remove(id);
             result

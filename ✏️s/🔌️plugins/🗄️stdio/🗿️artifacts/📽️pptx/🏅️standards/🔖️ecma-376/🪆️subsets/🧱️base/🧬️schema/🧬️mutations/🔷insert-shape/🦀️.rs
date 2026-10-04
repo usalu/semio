@@ -9,9 +9,8 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct InsertShape {
-    pub(crate) slide_index: usize,
-    pub(crate) shape_index: usize,
-    pub(crate) shape: PptxShape,
+    pub(crate) vacancy: PptxXmlVacancyAddress,
+    pub(crate) shape: XmlNode,
 }
 
 impl protocol::MutationKind<PptxSnapshot, PptxMutation> for InsertShape {
@@ -20,14 +19,17 @@ impl protocol::MutationKind<PptxSnapshot, PptxMutation> for InsertShape {
     fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<<PptxMutation as Mutation<PptxSnapshot>>::Diff> {
         agg_diff(&PptxMutation::InsertShape(self.clone()), base)
     }
-    fn inverse(&self, base: &PptxSnapshot) -> Vec<PptxMutation> {
-        agg_inverse(&PptxMutation::InsertShape(self.clone()), base)
-    }
+    fn inverse(&self, base: &PptxSnapshot) -> Result<Vec<PptxMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&PptxMutation::InsertShape(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert shape", "Form einfügen")
     }
     fn target(&self) -> Vec<String> {
-        Vec::new()
+        std::iter::once(self.vacancy.container.part_path.clone()).chain(self.vacancy.container.node_path.iter().map(usize::to_string)).chain(std::iter::once(self.vacancy.index.to_string())).collect()
     }
 }
 //#endregion 🔖️Payload

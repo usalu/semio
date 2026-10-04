@@ -6,7 +6,6 @@
 
 use crate::DocxSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a docx snapshot. One field per named inference under
@@ -20,8 +19,11 @@ pub struct DocxInference {
 }
 
 impl protocol::Inference<DocxSnapshot> for DocxInference {
-    fn infer(snapshot: &DocxSnapshot) -> Self {
+    fn infer(snapshot: &DocxSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { outline: DocxOutline::compute(snapshot) }
+    
+        })
     }
 }
 
@@ -37,13 +39,6 @@ impl protocol::InferenceSpec<DocxSnapshot> for DocxInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::standards::v_ecma_376::subsets::base::schema::DocxBuilder {
-    type Snapshot = DocxSnapshot;
-    type Inference = DocxInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.docx.inference`'s facet leaves into the OS-wide inference catalog —

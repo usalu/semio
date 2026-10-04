@@ -11,7 +11,7 @@ pub fn diff(payload: &ChangeObjectSmoothShading, base: &LowpolySnapshot) -> prot
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Object \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if existing.smooth_shading == payload.new_smooth_shading {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Object \"{}\" smooth shading is already {}.", payload.id, payload.new_smooth_shading));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Object \"{}\" smooth shading is already {}.", payload.id, payload.new_smooth_shading));
     }
     protocol::MutationOutcome::new(diff_objects_patch(payload.id.clone(), LowpolyObjectPatch { smooth_shading: Some(payload.new_smooth_shading), ..LowpolyObjectPatch::default() }))
 }

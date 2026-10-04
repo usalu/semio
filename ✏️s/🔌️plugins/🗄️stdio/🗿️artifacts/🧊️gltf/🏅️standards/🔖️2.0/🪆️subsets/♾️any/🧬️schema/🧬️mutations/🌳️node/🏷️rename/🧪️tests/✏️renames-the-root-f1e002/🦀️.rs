@@ -22,7 +22,7 @@ fn apply_mutation(base: &GltfSnapshot, mutation: &super::super::GltfMutation) ->
 #[test]
 fn canonical_leaf_metadata_matches_descriptor_and_provenance() {
     let expected: serde_json::Value = serde_json::from_str(include_str!("../../🔣️.json")).expect("valid canonical node-name descriptor");
-    assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(<ChangeNodeNameMutation as MutationLeaf>::DESCRIPTOR))).expect("serializable descriptor"), expected);
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(<ChangeNodeNameMutation as MutationLeaf>::DESCRIPTOR))).expect("serializable descriptor"), expected);
     let provenance = <ChangeNodeNameMutation as MutationLeaf>::PROVENANCE;
     assert_eq!(provenance.mutation_root, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations");
     assert_eq!(provenance.owner, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/🏷️rename");
@@ -36,7 +36,7 @@ fn canonical_leaf_metadata_matches_descriptor_and_provenance() {
 fn concrete_inverse_round_trips_names_and_actual_aggregate_codecs() {
     let base = snapshot(Some("Root"));
     let mutation = super::super::GltfMutation::ChangeNodeName(ChangeNodeNameMutation::Apply(GltfChangeNodeNamePayload { node: 0, value: Some("Pivot".into()) }));
-    let inverse = <super::super::GltfMutation as Mutation<GltfSnapshot>>::inverse(&mutation, &base);
+    let inverse = <super::super::GltfMutation as Mutation<GltfSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![super::super::GltfMutation::ChangeNodeName(ChangeNodeNameMutation::Restore(GltfChangeNodeNameRestore { node: 0, before: Some("Root".into()), after: Some("Pivot".into()) }))]);
     let mut current = apply_mutation(&base, &mutation);
     assert_eq!(current.document.nodes[0].name.as_deref(), Some("Pivot"));
@@ -44,7 +44,7 @@ fn concrete_inverse_round_trips_names_and_actual_aggregate_codecs() {
     assert_eq!(super::super::GltfMutation::decode_op(&mutation.encode_op().expect("binary codec encodes")).expect("binary codec decodes"), mutation);
     assert_eq!(super::super::GltfMutation::parse_op(&inverse[0].print_op()).expect("inverse text codec decodes"), inverse[0]);
     assert_eq!(super::super::GltfMutation::decode_op(&inverse[0].encode_op().expect("inverse binary codec encodes")).expect("inverse binary codec decodes"), inverse[0]);
-    let redo = <super::super::GltfMutation as Mutation<GltfSnapshot>>::inverse(&inverse[0], &current);
+    let redo = <super::super::GltfMutation as Mutation<GltfSnapshot>>::inverse(&inverse[0], &current).expect("valid retained mutation inverse fixture");
     assert_eq!(redo, vec![super::super::GltfMutation::ChangeNodeName(ChangeNodeNameMutation::Restore(GltfChangeNodeNameRestore { node: 0, before: Some("Pivot".into()), after: Some("Root".into()) }))]);
     assert_eq!(super::super::GltfMutation::parse_op(&redo[0].print_op()).expect("redo text codec decodes"), redo[0]);
     assert_eq!(super::super::GltfMutation::decode_op(&redo[0].encode_op().expect("redo binary codec encodes")).expect("redo binary codec decodes"), redo[0]);
@@ -58,7 +58,7 @@ fn concrete_inverse_round_trips_names_and_actual_aggregate_codecs() {
         },
         &snapshot(Some("Other")),
     );
-    assert_eq!(stale_redo.messages()[0].code, protocol::FaultCode::new("mutation.target-mismatch"));
+    assert_eq!(stale_redo.messages()[0].code, semio_framework_diagnostic::FaultCode::new("mutation.target-mismatch"));
 }
 
 #[test]
@@ -75,21 +75,21 @@ fn none_normalization_stale_guards_and_noops_emit_no_inverse() {
     )
     .expect("absent node matches null after witness");
     assert_eq!(restored.document.nodes[0].name.as_deref(), Some("Root"));
-    assert!(<ChangeNodeNameMutation as MutationKind<GltfSnapshot, super::super::GltfMutation>>::inverse(&ChangeNodeNameMutation::Apply(GltfChangeNodeNamePayload { node: 0, value: None }), &absent).is_empty());
-    assert!(<ChangeNodeNameMutation as MutationKind<GltfSnapshot, super::super::GltfMutation>>::inverse(&restore, &snapshot(Some("Other"))).is_empty());
+    assert!(<ChangeNodeNameMutation as MutationKind<GltfSnapshot, super::super::GltfMutation>>::inverse(&ChangeNodeNameMutation::Apply(GltfChangeNodeNamePayload { node: 0, value: None }), &absent).expect("valid retained mutation inverse fixture").is_empty());
+    assert!(<ChangeNodeNameMutation as MutationKind<GltfSnapshot, super::super::GltfMutation>>::inverse(&restore, &snapshot(Some("Other"))).expect("valid retained mutation inverse fixture").is_empty());
     let stale = <ChangeNodeNameMutation as MutationKind<GltfSnapshot, super::super::GltfMutation>>::diff(&restore, &snapshot(Some("Pivot")));
-    assert_eq!(stale.messages()[0].code, protocol::FaultCode::new("mutation.target-mismatch"));
+    assert_eq!(stale.messages()[0].code, semio_framework_diagnostic::FaultCode::new("mutation.target-mismatch"));
     let missing = <ChangeNodeNameMutation as MutationKind<GltfSnapshot, super::super::GltfMutation>>::diff(&ChangeNodeNameMutation::Apply(GltfChangeNodeNamePayload { node: 1, value: Some("Pivot".into()) }), &snapshot(Some("Root")));
-    assert_eq!(missing.messages()[0].code, protocol::FaultCode::new("mutation.target-missing"));
+    assert_eq!(missing.messages()[0].code, semio_framework_diagnostic::FaultCode::new("mutation.target-missing"));
 }
 
 #[test]
 fn restore_wire_requires_nullable_witnesses_and_excludes_document_diffs() {
-    assert!(pack::from_json_str::<ChangeNodeNameMutation>(r#"{"phase":"restore","value":{"node":0,"after":"Pivot"}}"#).is_err());
-    assert!(pack::from_json_str::<ChangeNodeNameMutation>(r#"{"phase":"apply","value":{"node":0}}"#).is_err());
-    assert!(pack::from_json_str::<ChangeNodeNameMutation>(r#"{"phase":"restore","value":{"node":0,"before":null,"after":"Pivot","sourceForm":"glb"}}"#).is_err());
-    let wire = pack::to_json_string(&ChangeNodeNameMutation::Restore(GltfChangeNodeNameRestore { node: 0, before: None, after: Some("Pivot".into()) }));
-    assert_eq!(pack::parse_json(&wire).expect("restore encodes valid json"), pack::json!({ "phase": "restore", "value": { "node": 0, "before": null, "after": "Pivot" } }));
+    assert!(semio_framework_pack_json::from_json_str::<ChangeNodeNameMutation>(r#"{"phase":"restore","value":{"node":0,"after":"Pivot"}}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
+    assert!(semio_framework_pack_json::from_json_str::<ChangeNodeNameMutation>(r#"{"phase":"apply","value":{"node":0}}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
+    assert!(semio_framework_pack_json::from_json_str::<ChangeNodeNameMutation>(r#"{"phase":"restore","value":{"node":0,"before":null,"after":"Pivot","sourceForm":"glb"}}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
+    let wire = semio_framework_pack_json::to_json_string(&ChangeNodeNameMutation::Restore(GltfChangeNodeNameRestore { node: 0, before: None, after: Some("Pivot".into()) }));
+    assert_eq!(semio_framework_pack_json::parse(&wire, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("restore encodes valid json"), semio_framework_pack_json::json!({ "phase": "restore", "value": { "node": 0, "before": null, "after": "Pivot" } }));
 }
 
 #[test]

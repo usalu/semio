@@ -7,20 +7,20 @@ use semio_framework_plugin::WindowConfigOwner;
 #[test]
 fn jack_graph_window_config_mutations_match_the_independent_patch_trace() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
-    let base: JackGraphWindowConfig = pack::from_json_str(&fixture["base"].to_string()).unwrap();
+    let base: JackGraphWindowConfig = semio_framework_pack_json::from_json_str(&fixture["base"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut windows = std::collections::BTreeMap::from([(fixture["leftWindowId"].as_str().unwrap().to_string(), base.clone()), (fixture["rightWindowId"].as_str().unwrap().to_string(), base)]);
     for row in fixture["cases"].as_array().unwrap() {
         let id = row["windowId"].as_str().unwrap();
-        let mutation: JackGraphWindowConfigMutation = pack::from_json_str(&row["mutation"].to_string()).unwrap();
+        let mutation: JackGraphWindowConfigMutation = semio_framework_pack_json::from_json_str(&row["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let before = windows[id].clone();
         let after = mutation.diff(&before).diff().apply(&before).unwrap();
-        let restored = mutation.inverse(&before).into_iter().fold(after.clone(), |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
+        let restored = mutation.inverse(&before).expect("valid retained mutation inverse fixture").into_iter().fold(after.clone(), |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
         assert_eq!(restored, before);
         assert_eq!(JackGraphWindowConfigMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
         assert_eq!(JackGraphWindowConfigMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
         windows.insert(id.into(), after);
         for (id, state) in &windows {
-            assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(state)).unwrap(), row["expected"][id]);
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(state)).unwrap(), row["expected"][id]);
         }
     }
 }

@@ -55,7 +55,7 @@ fn document_mesh_data(document: &SemioBrepSnapshot) -> MeshData {
 /// carries its absolute world position — see `document_mesh_data`'s merge).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn world_instances_json() -> String {
-    pack::json_to_string(&pack::JsonValue::Array(vec![pack::json!({
+    semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(vec![semio_framework_pack_json::json!({
         "id": "brep-document-instance",
         "meshId": SEMIO_BREP_VIEW_MESH_ID,
         "position": [0.0, 0.0, 0.0],
@@ -71,7 +71,7 @@ fn world_instances_json() -> String {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn render(document: &SemioBrepSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let mesh_data = document_mesh_data(document);
-    let meshes_json = pack::json_to_string(&pack::JsonValue::Array(vec![pack::json!({ "id": SEMIO_BREP_VIEW_MESH_ID, "data": pack::JsonValue::from(mesh_data) })]));
+    let meshes_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(vec![semio_framework_pack_json::json!({ "id": SEMIO_BREP_VIEW_MESH_ID, "data": semio_framework_pack_json::Value::from(mesh_data) })]));
     let view = MeshView {
         camera_json: world3d_camera_json(SEMIO_BREP_VIEW_DEFAULT_CAMERA_POSITION, SEMIO_BREP_VIEW_DEFAULT_CAMERA_TARGET, SEMIO_BREP_VIEW_DEFAULT_CAMERA_FOV),
         meshes_json,

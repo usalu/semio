@@ -1558,7 +1558,7 @@ impl<T: Default + 'static> WorkerCell<T> {
         #[cfg(not(test))]
         let state = self.0.get_or_init(|| Mutex::new(RefCell::new(T::default())));
         #[cfg(test)]
-        let state = crate::interpreter::test_worker_cell::<RefCell<T>>(std::ptr::from_ref(self).addr());
+        let state = crate::interpreter::test_worker_cell::<RefCell<T>>(std::ptr::from_ref(self).addr(), || RefCell::new(T::default()));
         let guard = state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         f(&guard)
     }

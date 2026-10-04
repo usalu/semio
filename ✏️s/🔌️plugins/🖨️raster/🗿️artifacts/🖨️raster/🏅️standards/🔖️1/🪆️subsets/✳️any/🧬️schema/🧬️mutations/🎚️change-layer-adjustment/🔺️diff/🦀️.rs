@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeLayerAdjustmentKind, base: &RasterSnapshot) -
     match find_layer(&base.layers, &payload.layer_id) {
         None => protocol::MutationOutcome::error("mutation.target-missing", format!("Layer \"{}\" does not exist.", payload.layer_id), [payload.layer_id.clone()]),
         Some(RasterLayerNode::Adjustment { adjustment_kind, .. }) if *adjustment_kind == payload.new_adjustment_kind => {
-            protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Layer \"{}\" adjustment kind is already \"{}\".", payload.layer_id, payload.new_adjustment_kind))
+            protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Layer \"{}\" adjustment kind is already \"{}\".", payload.layer_id, payload.new_adjustment_kind))
         }
         Some(RasterLayerNode::Adjustment { .. }) => protocol::MutationOutcome::new(diff_patch_layer(&payload.layer_id, RasterLayerPatch { adjustment_kind: Some(payload.new_adjustment_kind.clone()), ..Default::default() })),
         Some(_) => protocol::MutationOutcome::error("mutation.target-missing", format!("Layer \"{}\" is not an adjustment layer.", payload.layer_id), [payload.layer_id.clone()]),

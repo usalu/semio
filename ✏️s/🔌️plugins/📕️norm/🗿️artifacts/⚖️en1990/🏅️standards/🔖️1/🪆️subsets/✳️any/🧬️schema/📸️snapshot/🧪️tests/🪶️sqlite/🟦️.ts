@@ -68,11 +68,11 @@ test("EN1990 refuses malformed choice coverage ordinals relationships IEEE class
 });
 
 test("EN1990 initial cancellation and large ordered member work are bounded in both directions",async()=>{
- const expected=ownedFixture();const cancelled=new AbortController();cancelled.abort();await expect(en1990SnapshotToSqliteDatabase(expected,{signal:cancelled.signal})).rejects.toHaveProperty("name","AbortError");
- const database=await en1990SnapshotToSqliteDatabase(expected);await expect(en1990SnapshotFromSqliteDatabase(database,{signal:cancelled.signal})).rejects.toHaveProperty("name","AbortError");
+ const expected=ownedFixture();const cancelled=new AbortController();cancelled.abort();await expect(en1990SnapshotToSqliteDatabase(expected,{signal:cancelled.signal})).rejects.toHaveProperty("kind","canceled");
+ const database=await en1990SnapshotToSqliteDatabase(expected);await expect(en1990SnapshotFromSqliteDatabase(database,{signal:cancelled.signal})).rejects.toHaveProperty("kind","canceled");
  expected.members=Array.from({length:controls.entityCount},()=>({...expected.members[0]!}));
  const large=await en1990SnapshotToSqliteDatabase(expected);
- for(const phase of["projectSnapshot","reconstructSnapshot"]as const){const controller=new AbortController();let reached=false;const options={signal:controller.signal,onProgress:(event:{phase:string;completed:number})=>{if(event.phase===phase&&event.completed>=controls.cancelAt){reached=true;controller.abort()}}};await expect(phase==="projectSnapshot"?en1990SnapshotToSqliteDatabase(expected,options):en1990SnapshotFromSqliteDatabase(large,options)).rejects.toHaveProperty("name","AbortError");expect(reached).toBe(true)}
+ for(const phase of["projectSnapshot","reconstructSnapshot"]as const){const controller=new AbortController();let reached=false;const options={signal:controller.signal,onProgress:(event:{phase:string;completed:number})=>{if(event.phase===phase&&event.completed>=controls.cancelAt){reached=true;controller.abort()}}};await expect(phase==="projectSnapshot"?en1990SnapshotToSqliteDatabase(expected,options):en1990SnapshotFromSqliteDatabase(large,options)).rejects.toHaveProperty("kind","canceled");expect(reached).toBe(true)}
  expected.projectId="x".repeat(controls.largeTextBytes);await expect(en1990SnapshotToSqliteDatabase(expected,{maxValueBytes:controls.largeTextBytes-1})).rejects.toThrow();
- const controller=new AbortController();let reached=false;await expect(en1990SnapshotToSqliteDatabase(expected,{signal:controller.signal,onProgress:event=>{if(event.phase==="projectSnapshot"&&event.completed>0&&event.total===0){reached=true;controller.abort()}}})).rejects.toHaveProperty("name","AbortError");expect(reached).toBe(true);
+ const controller=new AbortController();let reached=false;await expect(en1990SnapshotToSqliteDatabase(expected,{signal:controller.signal,onProgress:event=>{if(event.phase==="projectSnapshot"&&event.completed>0&&event.total===0){reached=true;controller.abort()}}})).rejects.toHaveProperty("kind","canceled");expect(reached).toBe(true);
 });

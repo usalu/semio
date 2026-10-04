@@ -12,12 +12,13 @@
 //! state is never history; the yielded mutations are (design
 //! `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/📋️design.md` §5, §8).
 
+use semio_framework_pack_json::json;
 use crate::editor::puzzle5d::config::Puzzle5dRuntime;
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
 use crate::editor::puzzle5d::{puzzle5d_action, puzzle5d_grip_full_id, quat_rotate_vector, PUZZLE5D_PLAY_CONTROLLER_ID};
 use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle5d_mutation, connect_grips, drag_selection_2d, drag_selection_3d, rotate_selection_3d, scale_selection_3d, Puzzle5dMutation};
 use crate::Puzzle5dSnapshot;
-use dsl::json;
+
 use machine::Command;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::UtilityDefinition;
@@ -25,8 +26,6 @@ use semio_framework_plugin::WindowMeasure;
 use semio_framework_tool_machine::{ToolMachineRunner, ToolStep, ToolYield};
 use semio_s_artifact_puzzle_3d::editor::puzzle3d::modes::edit::windows::main::utilities::transform::{puzzle3d_unique_targets, Puzzle3dSelectionMotion, Puzzle3dSelectionRecord};
 use std::sync::Arc;
-
-pub use semio_s_artifact_puzzle_3d::editor::puzzle3d::modes::edit::windows::main::utilities::transform::puzzle3d_transform_tool_clock as puzzle5d_transform_tool_clock;
 
 pub const UTILITY_ID: &str = "transform";
 
@@ -63,7 +62,7 @@ pub fn options(runtime: &Puzzle5dRuntime, labels: &Puzzle5dLabels) -> WindowMeas
                 label: Some(labels.move_handle.into()),
                 pressed: runtime.transform_move,
                 text: None,
-                on_change: puzzle5d_action("setTransformGumballFlag", Some(json!({ "flag": "move" }))),
+                on_change: puzzle5d_action("setTransformGumballFlag", Some(semio_framework_pack_json::json!({ "flag": "move" }))),
             },
             WindowMeasure::Toggle {
                 id: "puzzle5d-transform-rotate".into(),
@@ -71,7 +70,7 @@ pub fn options(runtime: &Puzzle5dRuntime, labels: &Puzzle5dLabels) -> WindowMeas
                 label: Some(labels.rotate_handle.into()),
                 pressed: runtime.transform_rotate,
                 text: None,
-                on_change: puzzle5d_action("setTransformGumballFlag", Some(json!({ "flag": "rotate" }))),
+                on_change: puzzle5d_action("setTransformGumballFlag", Some(semio_framework_pack_json::json!({ "flag": "rotate" }))),
             },
         ],
     }

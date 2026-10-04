@@ -27,7 +27,7 @@ async fn render_binds_each_topic_cell_to_its_address_and_snapshot_revision() {
     let mut document = BcfSnapshot::default();
     document.topics.push(Default::default());
     document.topics[0].title = "Issue".into();
-    let node = render_revisioned(&document, "store-revision", Locale::En, &TreeWindows::unhosted()).expect("render table");
+    let node = render_revisioned(&document, "store-revision", semio_framework_plugin::UiPublicationRevision(23), Locale::En, &TreeWindows::unhosted()).expect("render table");
     let row = node_by_key(&node, "topic-0").expect("topic row");
     let cell = node_by_key(row, "cell-1").expect("title cell");
     let Component::Input(props) = &cell.component else { panic!("the title cell is an editable input") };

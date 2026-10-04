@@ -3,8 +3,10 @@
 use super::*;
 use crate::schema::mutations::{apply_addressed_xml_mutation_in_place, replace_xml_node};
 use semio_framework_plugin::plugin_app_close_prelude::store as app_store;
+use semio_framework_value::retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneSource, RetainedCloneStep};
 use semio_s_artifact_stdio_contract::editing::NativeEditPreparationRoute;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDocument, XmlNode};
+use semio_s_artifact_stdio_zip::opc::retained::RetainedOpcPackage;
 use std::{mem::ManuallyDrop, sync::Arc};
 
 const PREFIX: &str = "stdio-docx-base-set-page";
@@ -106,33 +108,9 @@ fn measure_snapshot(snapshot: &DocxSnapshot) -> Result<usize, String> {
     let mut measure = Measure::default();
     measure.add(std::mem::size_of::<DocxSnapshot>())?;
     measure.string(&snapshot.schema)?;
-    measure.add(snapshot.opc.parts.capacity().saturating_mul(std::mem::size_of::<semio_s_artifact_stdio_zip::opc::OpcPart>()))?;
-    for part in &snapshot.opc.parts {
+    for part in snapshot.xml_parts.iter() {
         measure.string(&part.path)?;
         measure.string(&part.content_type)?;
-        measure.add(part.bytes.capacity())?;
-    }
-    measure.add(snapshot.opc.content_types.defaults.capacity().saturating_add(snapshot.opc.content_types.overrides.capacity()).saturating_mul(std::mem::size_of::<(String, String)>()))?;
-    for (left, right) in snapshot.opc.content_types.defaults.iter().chain(&snapshot.opc.content_types.overrides) {
-        measure.string(left)?;
-        measure.string(right)?;
-    }
-    measure.add(snapshot.opc.relationships.len().saturating_mul(size_of::<(String, Vec<semio_s_artifact_stdio_zip::opc::OpcRelationship>)>() * 2))?;
-    for (owner, relationships) in &snapshot.opc.relationships {
-        measure.string(owner)?;
-        measure.add(relationships.capacity().saturating_mul(std::mem::size_of::<semio_s_artifact_stdio_zip::opc::OpcRelationship>()))?;
-        for relationship in relationships {
-            measure.string(&relationship.id)?;
-            measure.string(&relationship.rel_type)?;
-            measure.string(&relationship.target)?;
-        }
-    }
-    measure.string(&snapshot.opc.comment)?;
-    measure.add(snapshot.xml_parts.capacity().saturating_mul(std::mem::size_of::<crate::schema::snapshot::DocxXmlPart>()))?;
-    for part in &snapshot.xml_parts {
-        measure.string(&part.path)?;
-        measure.string(&part.content_type)?;
-        measure_document(&part.document, &mut measure)?;
     }
     Ok(measure.bytes)
 }
@@ -194,8 +172,14 @@ pub(super) fn set_run_text_is_admitted(address: &DocxXmlAddress, text: &str) -> 
 
 pub(crate) fn prepare_set_run_text(snapshot: &DocxSnapshot, address: &DocxXmlAddress, text: &str) -> Result<Option<DocxMutation>, String> {
     set_run_text_is_admitted(address, text)?;
-    let mutation = DocxMutation::SetRunText(crate::schema::mutations::set_run_text::SetRunText { address: address.clone(), text: text.to_owned() });
-    let prepared = crate::schema::mutations::prepare_addressed_xml_mutation(snapshot, &mutation)?;
+    let mutation = if address.expected_name.ends_with("}p") {
+        let Some(mutation) = crate::schema::mutations::xml_address::empty_paragraph_text_mutation(snapshot, address, text).map_err(semio_framework_value::ValueError::into_message)? else { return Ok(None) };
+        measure_mutation(&mutation)?;
+        mutation
+    } else {
+        DocxMutation::SetRunText(crate::schema::mutations::set_run_text::SetRunText { address: address.clone(), text: text.to_owned() })
+    };
+    let prepared = crate::schema::mutations::prepare_addressed_xml_mutation(snapshot, &mutation).map_err(semio_framework_value::ValueError::into_message)?;
     Ok(prepared.changed.then_some(mutation))
 }
 
@@ -207,7 +191,7 @@ impl app_store::ArtifactStoreOneItemPreparationFactory<DocxSnapshot, DocxMutatio
             return Err(format!("{PREFIX}.lane"));
         }
         let mutation_bytes = measure_mutation(mutation)?;
-        Ok(app_store::ArtifactStoreOneItemFootprint::for_one_invertible_item(TURN_BYTES.saturating_add(mutation_bytes)))
+        Ok(app_store::ArtifactStoreOneItemFootprint::for_leaf(mutation, TURN_BYTES.saturating_add(mutation_bytes)))
     }
 
     fn begin(
@@ -223,8 +207,14 @@ impl app_store::ArtifactStoreOneItemPreparationFactory<DocxSnapshot, DocxMutatio
         if !admitted {
             return Err(request);
         }
+        let source = request.base.retained_clone_source();
         Ok(Box::new(DocxPreparation {
             base: Some(request.base),
+            source: Some(source),
+            opc_cursor: RetainedOpcPackage::retained_clone_cursor(),
+            opc: None,
+            xml_parts_cursor: crate::schema::snapshot::DocxXmlParts::retained_clone_cursor(),
+            xml_parts: None,
             mutation: Some(request.mutation),
             description: request.description,
             authority: Some(request.authority),
@@ -243,6 +233,11 @@ impl app_store::ArtifactStoreOneItemPreparationFactory<DocxSnapshot, DocxMutatio
 
 struct DocxPreparation {
     base: Option<app_store::SnapshotRead<DocxSnapshot>>,
+    source: Option<RetainedCloneSource<DocxSnapshot>>,
+    opc_cursor: <RetainedOpcPackage as RetainedClone>::Cursor,
+    opc: Option<RetainedOpcPackage>,
+    xml_parts_cursor: <crate::schema::snapshot::DocxXmlParts as RetainedClone>::Cursor,
+    xml_parts: Option<crate::schema::snapshot::DocxXmlParts>,
     mutation: Option<DocxMutation>,
     description: Option<String>,
     authority: Option<Arc<app_store::ArtifactStoreOneItemLiveAuthority>>,
@@ -262,6 +257,16 @@ impl DocxPreparation {
         self.checkpoint.cursor = self.checkpoint.cursor.saturating_add(1);
         self.checkpoint.completed_items = self.checkpoint.completed_items.saturating_add(1);
         self.checkpoint.completed_bytes = self.checkpoint.completed_bytes.saturating_add(bytes as u64);
+        app_store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint)
+    }
+
+    fn retained_progress(&mut self, progress: semio_framework_value::retained_clone::RetainedCloneProgress) -> app_store::ArtifactStoreOneItemPreparationStep {
+        if progress == Default::default() {
+            return app_store::ArtifactStoreOneItemPreparationStep::Blocked;
+        }
+        self.checkpoint.cursor = self.checkpoint.cursor.saturating_add(1);
+        self.checkpoint.completed_items = self.checkpoint.completed_items.saturating_add(progress.copied_items as u32);
+        self.checkpoint.completed_bytes = self.checkpoint.completed_bytes.saturating_add(progress.copied_bytes.saturating_add(progress.retained_capacity_bytes) as u64);
         app_store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint)
     }
 }
@@ -292,14 +297,74 @@ impl app_store::ArtifactStoreOneItemPreparation<DocxSnapshot, DocxMutation> for 
         }
         match self.phase {
             0 => {
+                let source = self.source.as_ref().ok_or_else(|| format!("{PREFIX}.source"))?;
+                let retained_grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: grant.maximum_bytes, maximum_capacity_bytes: grant.maximum_bytes, maximum_depth: OWNER_DEPTH };
+                let step = self.opc_cursor.advance(source.borrow().project(1, |snapshot| &snapshot.opc), retained_grant).map_err(|error| format!("{PREFIX}.opc-copy.{error}"))?;
+                let progress = step.progress();
+                if matches!(step, RetainedCloneStep::Complete(_)) {
+                    self.opc = Some(self.opc_cursor.take().ok_or_else(|| format!("{PREFIX}.opc-copy-owner"))?);
+                    if !self.opc_cursor.begin_close() {
+                        return Err(format!("{PREFIX}.opc-copy-close"));
+                    }
+                    self.phase = 1;
+                }
+                Ok(self.retained_progress(progress))
+            }
+            1 => {
+                let step = self.opc_cursor.close_step(1, grant.maximum_bytes).map_err(|error| format!("{PREFIX}.opc-copy-close.{error}"))?;
+                match step {
+                    app_store::SnapshotRetirementStep::Pending { released_items, released_bytes } => {
+                        Ok(self.retained_progress(semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: released_items, copied_bytes: released_bytes, retained_capacity_bytes: 0 }))
+                    }
+                    app_store::SnapshotRetirementStep::Blocked => Ok(app_store::ArtifactStoreOneItemPreparationStep::Blocked),
+                    app_store::SnapshotRetirementStep::Complete => {
+                        if !self.opc_cursor.terminal_is_empty() {
+                            return Err(format!("{PREFIX}.opc-copy-close-witness"));
+                        }
+                        self.phase = 2;
+                        Ok(self.progress(0))
+                    }
+                }
+            }
+            2 => {
+                let source = self.source.as_ref().ok_or_else(|| format!("{PREFIX}.source"))?;
+                let retained_grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: grant.maximum_bytes, maximum_capacity_bytes: grant.maximum_bytes, maximum_depth: OWNER_DEPTH };
+                let step = self.xml_parts_cursor.advance(source.borrow().project(2, |snapshot| &snapshot.xml_parts), retained_grant).map_err(|error| format!("{PREFIX}.xml-parts-copy.{error}"))?;
+                let progress = step.progress();
+                if matches!(step, RetainedCloneStep::Complete(_)) {
+                    self.xml_parts = Some(self.xml_parts_cursor.take().ok_or_else(|| format!("{PREFIX}.xml-parts-copy-owner"))?);
+                    if !self.xml_parts_cursor.begin_close() {
+                        return Err(format!("{PREFIX}.xml-parts-copy-close"));
+                    }
+                    self.phase = 3;
+                }
+                Ok(self.retained_progress(progress))
+            }
+            3 => {
+                let step = self.xml_parts_cursor.close_step(1, grant.maximum_bytes).map_err(|error| format!("{PREFIX}.xml-parts-copy-close.{error}"))?;
+                match step {
+                    app_store::SnapshotRetirementStep::Pending { released_items, released_bytes } => {
+                        Ok(self.retained_progress(semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: released_items, copied_bytes: released_bytes, retained_capacity_bytes: 0 }))
+                    }
+                    app_store::SnapshotRetirementStep::Blocked => Ok(app_store::ArtifactStoreOneItemPreparationStep::Blocked),
+                    app_store::SnapshotRetirementStep::Complete => {
+                        if !self.xml_parts_cursor.terminal_is_empty() {
+                            return Err(format!("{PREFIX}.xml-parts-copy-close-witness"));
+                        }
+                        self.phase = 4;
+                        Ok(self.progress(0))
+                    }
+                }
+            }
+            4 => {
                 if grant.maximum_bytes < TURN_BYTES {
                     return Ok(app_store::ArtifactStoreOneItemPreparationStep::Blocked);
                 }
                 let base = self.base.as_ref().ok_or_else(|| format!("{PREFIX}.base"))?.get();
                 measure_snapshot(base)?;
                 let mutation = self.mutation.as_ref().ok_or_else(|| format!("{PREFIX}.mutation-owner"))?;
-                let mut post = base.clone();
-                let prepared = apply_addressed_xml_mutation_in_place(&mut post, mutation)?;
+                let mut post = DocxSnapshot { schema: base.schema.clone(), opc: self.opc.take().ok_or_else(|| format!("{PREFIX}.opc-owner"))?, xml_parts: self.xml_parts.take().ok_or_else(|| format!("{PREFIX}.xml-parts-owner"))? };
+                let prepared = apply_addressed_xml_mutation_in_place(&mut post, mutation).map_err(semio_framework_value::ValueError::into_message)?;
                 if !prepared.changed {
                     return Err(format!("{PREFIX}.no-op"));
                 }
@@ -307,43 +372,18 @@ impl app_store::ArtifactStoreOneItemPreparation<DocxSnapshot, DocxMutation> for 
                 measure_mutation(&prepared.inverse)?;
                 self.inverse = Some(prepared.inverse);
                 self.post = Some(Arc::new(post));
-                self.phase = 1;
+                self.phase = 5;
                 Ok(self.progress(TURN_BYTES))
             }
-            1 => {
+            5 => {
                 let mutation = self.mutation.take().ok_or_else(|| format!("{PREFIX}.mutation-owner"))?;
                 let inverse = self.inverse.take().ok_or_else(|| format!("{PREFIX}.inverse-owner"))?;
                 let post = self.post.take().ok_or_else(|| format!("{PREFIX}.post-owner"))?;
                 let authority = self.authority.as_ref().ok_or_else(|| format!("{PREFIX}.authority-owner"))?;
-                let id = authority.edit_id();
-                let edit = protocol::Edit { line: authority.line_id().map(str::to_owned),
-                    id: id.clone(),
-                    actor: Some(authority.actor().to_string()),
-                    forwards: vec![mutation],
-                    inverse: vec![inverse],
-                    mutation_meta: vec![protocol::MutationMeta {
-                        mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
-                        dependencies: Vec::new(),
-                        base_version: authority.base_applied_edit_count() as u64,
-                        author_id: Some(protocol::ActorId(authority.actor().to_string())),
-                        timestamp: authority.next_clock(),
-                        undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-                        payload_hash: None,
-                        semantic_kind: None,
-                        label: None,
-                        group_id: authority.group_id().map(str::to_owned),
-                        origin: Default::default(),
-                        transaction: None,
-                    }],
-                    description: self.description.take(), verb: None,
-                    coalesce_key: None,
-                    sequence_number: authority.next_sequence_number(),
-                    started_at: String::new(),
-                    finished_at: None,
-                };
+                let edit = authority.next_edit(mutation, vec![inverse]);
                 self.sealer = Some(authority.begin_one_item_seal(edit, post, Arc::new(DocxMutationRetirementFactory), Arc::new(DocxSnapshotRetirementFactory)));
                 self.seal_base = Some(self.checkpoint);
-                self.phase = 2;
+                self.phase = 6;
                 Ok(self.progress(1))
             }
             _ => Err(format!("{PREFIX}.state")),
@@ -376,15 +416,38 @@ impl app_store::ArtifactStoreOneItemPreparation<DocxSnapshot, DocxMutation> for 
         }
     }
 
-    fn close_step(&mut self, grant: app_store::ArtifactStoreOneItemGrant) -> Result<app_store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: app_store::ArtifactStoreOneItemGrant) -> Result<app_store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || !grant.permits_one() {
             return Ok(app_store::SnapshotRetirementStep::Blocked);
+        }
+        if !self.opc_cursor.terminal_is_empty() {
+            let _ = self.opc_cursor.begin_close();
+            let step = self.opc_cursor.close_step(1, grant.maximum_bytes)?;
+            if step != app_store::SnapshotRetirementStep::Complete {
+                return Ok(step);
+            }
+            if !self.opc_cursor.terminal_is_empty() {
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, format!("{PREFIX}.opc-close-witness")));
+            }
+        }
+        if !self.xml_parts_cursor.terminal_is_empty() {
+            let _ = self.xml_parts_cursor.begin_close();
+            let step = self.xml_parts_cursor.close_step(1, grant.maximum_bytes)?;
+            if step != app_store::SnapshotRetirementStep::Complete {
+                return Ok(step);
+            }
+            if !self.xml_parts_cursor.terminal_is_empty() {
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, format!("{PREFIX}.xml-parts-close-witness")));
+            }
+        }
+        if self.source.take().is_some() {
+            return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(active) = self.external_retirement.as_mut() {
             let step = active.close_step(grant.maximum_items.min(1), grant.maximum_bytes)?;
             if step == app_store::SnapshotRetirementStep::Complete {
                 if !active.terminal_is_empty() {
-                    return Err(format!("{PREFIX}.retirement-witness"));
+                    return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("{PREFIX}.retirement-witness")));
                 }
                 self.external_retirement = None;
                 return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
@@ -395,7 +458,7 @@ impl app_store::ArtifactStoreOneItemPreparation<DocxSnapshot, DocxMutation> for 
             let step = sealer.close_step(grant)?;
             if step == app_store::SnapshotRetirementStep::Complete {
                 if !sealer.terminal_is_empty() {
-                    return Err(format!("{PREFIX}.sealer-witness"));
+                    return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("{PREFIX}.sealer-witness")));
                 }
                 self.sealer = None;
                 return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
@@ -410,13 +473,21 @@ impl app_store::ArtifactStoreOneItemPreparation<DocxSnapshot, DocxMutation> for 
             self.external_retirement = Some(app_store::SnapshotRetirementFactory::retire(&DocxSnapshotRetirementFactory, value));
             return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
+        if let Some(value) = self.opc.take() {
+            self.external_retirement = Some(semio_framework_value::retirement::owned_retirement(value));
+            return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(value) = self.xml_parts.take() {
+            self.external_retirement = Some(semio_framework_value::retirement::owned_retirement(value));
+            return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
         if let Some(description) = self.description.take() {
             self.external_retirement = Some(semio_framework_value::retirement::owned_retirement(description));
             return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
-                return Err(format!("{PREFIX}.base-return"));
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("{PREFIX}.base-return")));
             }
             return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -428,7 +499,20 @@ impl app_store::ArtifactStoreOneItemPreparation<DocxSnapshot, DocxMutation> for 
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.inverse.is_none() && self.post.is_none() && self.sealer.is_none() && self.external_retirement.is_none()
+        self.closing
+            && self.base.is_none()
+            && self.source.is_none()
+            && self.opc_cursor.terminal_is_empty()
+            && self.opc.is_none()
+            && self.xml_parts_cursor.terminal_is_empty()
+            && self.xml_parts.is_none()
+            && self.mutation.is_none()
+            && self.description.is_none()
+            && self.authority.is_none()
+            && self.inverse.is_none()
+            && self.post.is_none()
+            && self.sealer.is_none()
+            && self.external_retirement.is_none()
     }
 }
 
@@ -449,7 +533,7 @@ impl<T> AdmittedRetirement<T> {
 }
 
 impl<T: Send + 'static> app_store::ErasedSnapshotRetirement for AdmittedRetirement<T> {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<app_store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<app_store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if self.value.is_some() {
             if maximum_items == 0 || maximum_bytes < TURN_BYTES {
                 return Ok(app_store::SnapshotRetirementStep::Blocked);
@@ -486,9 +570,114 @@ impl app_store::ArtifactOwnedValueRetirementFactory<DocxMutation> for DocxMutati
 
 struct DocxSnapshotRetirementFactory;
 
+struct DocxOwnedSnapshotRetirementFactory;
+
+impl app_store::ArtifactOwnedValueRetirementFactory<DocxSnapshot> for DocxOwnedSnapshotRetirementFactory {
+    fn retire_owned(&self, snapshot: DocxSnapshot) -> Box<dyn app_store::ErasedSnapshotRetirement> {
+        Box::new(DocxSnapshotRetirement::new(Arc::new(snapshot)))
+    }
+}
+
+pub(crate) fn document_store_owners() -> app_store::DocumentStoreOwners<DocxSnapshot, DocxMutation> {
+    app_store::DocumentStoreOwners::new(
+        Arc::new(DocxSnapshotRetirementFactory),
+        Arc::new(DocxOwnedSnapshotRetirementFactory),
+        Arc::new(DocxMutationRetirementFactory),
+        Box::new(app_store::ArtifactStoreCursorDisposer::<DocxSnapshot, DocxMutation>::new()),
+    )
+}
+
+struct DocxSnapshotRetirement {
+    alias: ManuallyDrop<Option<Arc<DocxSnapshot>>>,
+    opc: Option<Box<dyn app_store::ErasedSnapshotRetirement>>,
+    xml_parts: Option<Box<dyn app_store::ErasedSnapshotRetirement>>,
+    schema: ManuallyDrop<Option<String>>,
+}
+
+impl DocxSnapshotRetirement {
+    fn new(snapshot: Arc<DocxSnapshot>) -> Self {
+        match Arc::try_unwrap(snapshot) {
+            Ok(DocxSnapshot { schema, opc, xml_parts }) => {
+                Self { alias: ManuallyDrop::new(None), opc: Some(semio_framework_value::retirement::owned_retirement(opc)), xml_parts: Some(semio_framework_value::retirement::owned_retirement(xml_parts)), schema: ManuallyDrop::new(Some(schema)) }
+            }
+            Err(alias) => Self { alias: ManuallyDrop::new(Some(alias)), opc: None, xml_parts: None, schema: ManuallyDrop::new(None) },
+        }
+    }
+}
+
+impl app_store::ErasedSnapshotRetirement for DocxSnapshotRetirement {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<app_store::SnapshotRetirementStep, semio_framework_value::ValueError> {
+        if self.alias.is_some() {
+            if maximum_items == 0 || maximum_bytes < TURN_BYTES {
+                return Ok(app_store::SnapshotRetirementStep::Blocked);
+            }
+            self.alias.take();
+            return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: TURN_BYTES });
+        }
+        if let Some(opc) = self.opc.as_mut() {
+            let step = opc.close_step(maximum_items, maximum_bytes)?;
+            if step != app_store::SnapshotRetirementStep::Complete {
+                return Ok(step);
+            }
+            if !opc.terminal_is_empty() {
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, format!("{PREFIX}.snapshot-opc-retirement-witness")));
+            }
+            self.opc = None;
+            return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(xml_parts) = self.xml_parts.as_mut() {
+            let step = xml_parts.close_step(maximum_items, maximum_bytes)?;
+            if step != app_store::SnapshotRetirementStep::Complete {
+                return Ok(step);
+            }
+            if !xml_parts.terminal_is_empty() {
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, format!("{PREFIX}.snapshot-xml-parts-retirement-witness")));
+            }
+            self.xml_parts = None;
+            return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if self.schema.is_some() {
+            if maximum_items == 0 || maximum_bytes < TURN_BYTES {
+                return Ok(app_store::SnapshotRetirementStep::Blocked);
+            }
+            self.schema.take();
+            return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: TURN_BYTES });
+        }
+        Ok(app_store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.alias.is_none() && self.opc.is_none() && self.xml_parts.is_none() && self.schema.is_none()
+    }
+
+    fn next_close_byte_demand(&self) -> usize {
+        if self.alias.is_some() {
+            TURN_BYTES
+        } else if let Some(retirement) = self.opc.as_ref() {
+            retirement.next_close_byte_demand()
+        } else if let Some(retirement) = self.xml_parts.as_ref() {
+            retirement.next_close_byte_demand()
+        } else if self.schema.is_some() {
+            TURN_BYTES
+        } else {
+            1
+        }
+    }
+}
+
+impl Drop for DocxSnapshotRetirement {
+    fn drop(&mut self) {
+        assert!(std::thread::panicking() || app_store::ErasedSnapshotRetirement::terminal_is_empty(self), "DOCX snapshot retirement dropped with live owners");
+        unsafe {
+            ManuallyDrop::drop(&mut self.alias);
+            ManuallyDrop::drop(&mut self.schema);
+        }
+    }
+}
+
 impl app_store::SnapshotRetirementFactory<DocxSnapshot> for DocxSnapshotRetirementFactory {
     fn retire(&self, snapshot: Arc<DocxSnapshot>) -> Box<dyn app_store::ErasedSnapshotRetirement> {
-        Box::new(AdmittedRetirement::new(snapshot))
+        Box::new(DocxSnapshotRetirement::new(snapshot))
     }
 }
 

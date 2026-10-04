@@ -18,9 +18,12 @@ impl protocol::MutationKind<SemioFlowSnapshot, SemioFlowMutation> for SetNodeKin
     fn diff(&self, base: &SemioFlowSnapshot) -> protocol::MutationOutcome<<SemioFlowMutation as Mutation<SemioFlowSnapshot>>::Diff> {
         agg_diff(&SemioFlowMutation::SetNodeKind(self.clone()), base)
     }
-    fn inverse(&self, base: &SemioFlowSnapshot) -> Vec<SemioFlowMutation> {
-        agg_inverse(&SemioFlowMutation::SetNodeKind(self.clone()), base)
-    }
+    fn inverse(&self, base: &SemioFlowSnapshot) -> Result<Vec<SemioFlowMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&SemioFlowMutation::SetNodeKind(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set node kind", "Knotenart setzen")
     }

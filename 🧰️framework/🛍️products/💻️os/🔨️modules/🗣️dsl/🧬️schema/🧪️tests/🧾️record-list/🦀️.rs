@@ -1,7 +1,7 @@
 //! 🧾️ Canonical braces preserve ordered optional and empty record-list items.
 use super::*;
 macro_rules! ordinary_fixture_spec {
-    ($spec:path) => { crate::os_dsl::RecordSpecProducer { ordinary: $spec, decoding: |_| Err("ordinary-only test metadata has no controlled construction".into()), encoding: |_| Err("ordinary-only test metadata has no controlled construction".into()) } };
+    ($spec:path) => { semio_framework_dsl_record::RecordSpecProducer { ordinary: $spec, decoding: |_| Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "ordinary-only test metadata has no controlled construction")), encoding: |_| Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "ordinary-only test metadata has no controlled construction")) } };
 }
 
 use std::{io::Write,process::{Command,Stdio}};
@@ -10,16 +10,16 @@ fn document_spec()->RecordSpec{RecordSpec::new(None,RecordLayout::Inline,vec![Fi
 fn row_json(record:&RecordValue)->serde_json::Value{let mut out=serde_json::Map::new();for(id,key)in[(1,"min"),(2,"max"),(3,"label"),(4,"children")]{match record.get(id){Some(FieldValue::Float(v))=>{out.insert(key.into(),serde_json::json!(v));},Some(FieldValue::Text(v))=>{out.insert(key.into(),serde_json::json!(v));},Some(FieldValue::List(v))=>{out.insert(key.into(),rows_json(v));},Some(FieldValue::Absent)|None=>{},other=>panic!("unexpected {other:?}")}}out.into()}
 fn rows_json(rows:&[FieldValue])->serde_json::Value{serde_json::Value::Array(rows.iter().map(|v|match v{FieldValue::Record(row)=>row_json(row),_=>panic!("not a record")}).collect())}
 
-fn controlled_row_spec<C:producer::NativeSchemaControl>(control:&mut C)->Result<RecordSpec,String>{
+fn controlled_row_spec<C:producer::NativeSchemaControl>(control:&mut C)->Result<RecordSpec,semio_framework_value::ValueError>{
     let mut fields=control.allocate_vec(4)?;
     for(id,key,shape)in[(1,"min",Shape::Float),(2,"max",Shape::Float),(3,"label",Shape::Text),(4,"children",Shape::List(producer::boxed(Shape::Record(row_producer()),control)?))]{fields.push(producer::field(id,key,shape,control)?.optional());}
     producer::record(None,RecordLayout::Inline,fields,control)
 }
 fn row_producer()->RecordSpecProducer{RecordSpecProducer{ordinary:row_spec,decoding:|control|controlled_row_spec(control),encoding:|control|controlled_row_spec(control)}}
 
-#[derive(dsl::DslRecord)]
+#[derive(semio_framework_dsl_record_derive::DslRecord)]
 struct OptionalBlockValue{value:String}
-#[derive(dsl::DslRecord)]
+#[derive(semio_framework_dsl_record_derive::DslRecord)]
 struct OptionalBlockOwner{#[dsl(block)] child:Option<OptionalBlockValue>}
 
 #[test]
@@ -27,7 +27,7 @@ fn list_record_optional_block_controlled_projection_preserves_absence(){
     let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for case in fixture["optionalBlocks"].as_array().unwrap(){
         let source=OptionalBlockOwner{child:case["value"].as_str().map(|value|OptionalBlockValue{value:value.into()})};let ordinary=source.__dsl_to_record();
-        let mut accept=|_|true;let mut control=crate::os_dsl::NativeEncodeControl::new(65536,&mut accept);let controlled=source.__dsl_to_record_controlled(&mut control).unwrap();assert_eq!(controlled,ordinary);
+        let mut accept=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(65536,&mut accept);let controlled=source.__dsl_to_record_controlled(&mut control).unwrap();assert_eq!(controlled,ordinary);
         let spec=OptionalBlockOwner::__dsl_spec();assert_eq!(print(&ordinary,&spec,JoinMode::Inline),case["source"].as_str().unwrap());
         for mode in [JoinMode::Inline,JoinMode::Document]{let actual=print_controlled(&controlled,&spec,mode,65536,&mut control).unwrap();assert_eq!(actual,print(&ordinary,&spec,mode));assert_eq!(parse_exact(&actual,&spec,&ParseOptions::default()).unwrap(),ordinary);}
         let bytes=crate::os_pack::encode_record_body_controlled(&spec,&controlled,&crate::PackEncodeOptions::default(),&mut control).unwrap();assert_eq!(crate::os_pack::decode_record_body_exact(&bytes,&spec,&crate::PackDecodeOptions::default()).unwrap(),ordinary);
@@ -43,7 +43,7 @@ fn list_record_nested_table_controlled_text_matches_canonical_boundaries(){
         let Some(FieldValue::List(tables))=record.get(1)else{panic!("table list")};let FieldValue::List(rows)=&tables[0]else{panic!("rows")};assert_eq!(rows_json(rows),case["rows"]);
         for mode in [JoinMode::Inline,JoinMode::Document]{
             let ordinary=print(&record,&spec,mode);if mode==JoinMode::Inline{assert_eq!(ordinary,source,"{}",case["id"]);}
-            let actual=print_controlled(&record,&spec,mode,65536,&mut crate::os_dsl::NativeEncodeControl::new(65536,&mut |_|true)).unwrap();assert_eq!(actual,ordinary,"{}",case["id"]);assert_eq!(parse_exact(&actual,&spec,&ParseOptions::default()).unwrap(),record);
+            let actual=print_controlled(&record,&spec,mode,65536,&mut semio_framework_value::NativeEncodeControl::new(65536,&mut |_|true)).unwrap();assert_eq!(actual,ordinary,"{}",case["id"]);assert_eq!(parse_exact(&actual,&spec,&ParseOptions::default()).unwrap(),record);
         }
     }
 }

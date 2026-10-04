@@ -941,3 +941,530 @@ Expected red from reading the code (to be confirmed by the run): step 1–2. `�
 materialised `items`, while the layout (`📌️mounted_layout` `tree_item_has_rows`, 270) and the widget path treat `window.total > 0`
 as expandable-but-not-yet-streamed (React's `TreeDataWindow` rule). A closed history row therefore has no `aria-expanded` and
 cannot be opened through the retained tree on wgpu.
+
+### S3.5 Resume after the usage cut (~13:05) and the machine reboot (~17:00) — 18:40
+
+- Repair check: every S3.3/S3.4 edit is on disk and whole (`staged_arg_row` facet mapping, the corpus-facets law, the
+  📚️HistoryBody region, the shared `paint_retained_body`/`close_retained_body` harness; the focus law already calls the helper).
+  A peer's locale refactor (committed 17:04) rewrote `ShellState::new(…, Locale, Terminology)` / `ViewModel::new(…)` in my test
+  file, including `history_body`'s view; nothing of mine was half-written.
+- Peer break seen at 12:49: the `#[derive(Mutations)]` expansion named `::semio_framework_schema_state::StateClass`, which the dag
+  artifact (and other derive users) did not depend on; now the derive names `::semio_framework_os_kernel::StateClass` (S3-INFRA's
+  schema split). Re-checking.
+
+### S3.6 Completing the peer's `WorkerCell` initializer refactor (coordinator GO 18:52) — SOURCE COMPLETE, compile pending
+
+**Cause.** At 14:22 `🖱️ui/🎯️targets/🧊️wgpu/⚙️engine` changed `Ui::new()` to `Ui::new(locale)` and deleted `impl Default for Ui`
+(no default language). At 16:57 a peer, cut by the reboot, gave the interpreter's `WorkerCell` an initializer
+(`new(initialize: fn() -> T)`, `test_worker_cell(key, initialize)`) and stopped there. The result is in commit 202c4b7b5b1:
+`state()` and every caller were left on the old shape, which gave 236 errors in the renderer test build (18:49).
+
+**Fix, one wave:**
+- **Interpreter `WorkerCell`:**
+  - `impl<T: 'static>` (no `Default` bound).
+  - `state()` builds through `(self.initialize)()`.
+  - Under `cfg(test)`, `test_worker_cell(addr, self.initialize)` builds from `initialize()`.
+- **Statics.** All 21 `WorkerCell::new()` statics now pass `Default::default`: Interpreter ×14, EngineCanvas ×5, Shell `CHROME_PREFS` and
+  `CHROME_CONTROL_NAMES`. The edit is the counted script `T/🧪️s3-w2c-worker-cell-initializers.py`, which refuses on any count
+  mismatch.
+- **Scenes.** Its own cell passes `|| RefCell::new(T::default())` to the test hook.
+- **No default language for the engine** (coordinator decision):
+  - `static UI_ENGINE: UiEngineCell` wraps `WorkerCell<Option<Ui>>`.
+  - `UiEngineGuard` dereferences to `Ui`, so the 181 `UI_ENGINE.with(|cell| cell.borrow()…)` sites are unchanged.
+  - An access before installation is refused by the named constant `UI_ENGINE_LOCALE_UNRESOLVED`
+    (`ui.engine.locale-unresolved: …`), the same `expect`-by-name convention as `ShellState::active_locale`.
+  - `install_ui_engine_locale(locale)` builds the engine on the first resolution. Every later resolution calls the new
+    `Ui::set_locale` (→ `Shell::set_locale`, which repaints role chrome).
+  - The shell installs it as the first statement of `ShellState::new(…, locale, …)`, and after every `locale_id`
+    resolution: `setLocale`, the preferences phase, and the preferences reload.
+  - Only under `cfg(test)` does a law that builds no shell start from the named fixture `TEST_UI_ENGINE_LOCALE` (En). A
+    production build has no initial engine.
+- **Files:**
+  - `🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs` (WorkerCell, UI engine cell, statics)
+  - `🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs` (test hook)
+  - `⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs` (5 statics)
+  - `🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs` (2 statics, 4 installs)
+  - `🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🦀️.rs` (`Ui::set_locale`, additive)
+
+**Compile state:**
+- 18:57: the renderer was down to 3 errors, all mine: `ui_wgpu::wgpu::Locale` is private. Fixed to
+  `semio_framework_ui_locale::Locale`.
+- 18:58–19:03: the build was blocked by a peer editing `🎒️pack/🔤️json/🦀️.rs:1109/1516` live.
+- 19:04: blocked by `semio-framework-os-kernel`, which has 12 errors from the peer dsl/schema split: `🗣️dsl/🦀️.rs:15-16`
+  `semio_framework_dsl` is unlinked, plus `🏪️store/🦀️.rs:12182/13688/23452` and `🗄️durable-group:149/166` `&[FieldValue]`.
+  The renderer is not reached. I'll retry once the kernel is green.
+
+### S3.7 N2 on wgpu (coordinator 12:5x; S3-W1E's source landed) — LAW WRITTEN, run pending (kernel red)
+
+- `history_body` now takes the session panel (`replaying_panel()` for N15, `list_editor_panel()` for N2) instead of a flag.
+- New law `the_guest_editor_offers_list_and_chip_edits_within_their_bounds`. It builds the editor through the REAL
+  `ui_history_panel` with a `TimeTravelEditorPanel` holding three inputs:
+  - `/points`, a full list: two items, `maxItems` = `minItems` = 2;
+  - its two number items;
+  - `/targets`, a many-reference list with `minItems` 1, where `n1` is labelled "Corner"/"Ecke".
+- The law checks, in the ARIA mirror and in en and de:
+  - "Add item" / "Element hinzufügen" is a disabled button, and its row reads "Items: 2 · Maximum 2 items" /
+    "Elemente: 2 · Höchstens 2 Einträge".
+  - Each item's "Remove item" is disabled, and its row reads "Minimum 2 items" / "Mindestens 2 Einträge".
+  - The chips are enabled buttons, "Remove Corner" / "Entfernen Ecke" and "Remove n2".
+  - Activating the disabled Add dispatches nothing.
+  - Chip 0 dispatches `historyEditInput{path: "/targets/0", edit: "remove"}`.
+- The inputs section and the chip list are the plugin's `tree_window_*` containers, so they open on the first-paint allowance.
+
+### S3.8 Contract follow-ups (S3-W1E relays) and the state at 19:35
+
+- **Disclosure parity (N1):** S3-W1E's fix has landed (`UiTreeItemNode::has_rows()`), which is what my
+  `the_guest_history_body_opens_pages_and_refuses_edit_with_its_reason` needs for steps 1–2.
+- **`RowAction.reason` (S3-W1E):** disabled row actions are now focusable `aria-disabled` nodes and carry the reason as their
+  description. My N15 assertions were adapted to that: the Edit button must be disabled and not actionable, and its name or
+  description must contain both "Edit"/"Bearbeiten" and the reason. That holds whether S3-W2A keeps the label "Edit: <reason>"
+  (`.disabled(true)`, as on disk) or switches to `disabled_because(reason)`.
+- **Shell row actions:** the shell packs `UiTreeItemAction` into `RowAction` (`🧊️wgpu/🦀️.rs` ~5956, `reason: None`). Only the
+  marketplace roster disables shell row actions: own program, install in flight, failed extension. React's marketplace shows
+  no reason for those either (`canUninstall`, `🏛️ShellHost`). The packing therefore stays reasonless, for parity.
+  Cross-shell follow-up, outside this ticket: give both marketplaces localized reasons; that also needs
+  `UiTreeItemAction.reason` in the UI crate.
+
+### S3.9 Verification owed — waiting for "TREE GREEN"
+
+The coordinator has paused polling; the peer DSL crate extraction keeps the kernel, plugin and pack red. I'll run these once the
+coordinator sends TREE GREEN:
+
+1. `cargo check -p semio-framework-os-renderer-wgpu --lib --tests`, native and `--target wasm32-unknown-unknown --lib`. This covers
+   S3.3, S3.4, S3.6 and S3.7.
+2. A test binary filtered to `time_travel local_folders introspection_tests dialog_choices`. The 52 laws of S3.2, plus the new
+   `every_staged_number_row_carries_the_shared_corpus_facets`,
+   `the_guest_history_body_opens_pages_and_refuses_edit_with_its_reason` and
+   `the_guest_editor_offers_list_and_chip_edits_within_their_bounds`.
+3. The wider suites of S3.2, as a regression check on the WorkerCell/UI-engine wave: `chrome_overlays_tour_tests
+   board2d_engine_tests …`, plus the Interpreter and Scenes laws that build no shell (`ui_command_wiring`, `scenes::`), which
+   exercise the cfg(test) fixture locale.
+
+### S3.10 S3-W2A's reprojection / history-lane wire on wgpu (coordinator relay 19:4x) — SOURCE + LAWS WRITTEN, run pending
+
+1. **`HistoryPatch.reprojection`.** No wgpu code read the old `remoteReplay`, so nothing changes in the shell. The section is
+   Rust-built and renders generically. New law `a_replaying_history_step_shows_its_progress_and_cancels_in_the_mirror` runs the
+   REAL `ui_history_panel` with a local step (12 of 400) and with a refused one (`timeTravel.blocked`), in both locales. It checks:
+   - the section reads "History step" / "Verlaufsschritt";
+   - the status reads "Replaying history: 12 of 400 mutations" / "Verlauf wird neu angewendet: 12 von 400 Mutationen";
+   - Cancel replay is an enabled button that sends `historyEditCancelReplay` with no `generation`;
+   - a refused step reads "History step refused: <reason>" and offers no control.
+
+   `history_body` now also takes the `reprojection`.
+2. **New `history.replaying` notice.** `time_travel::history_lane_notice_of_fault` maps a dispatch fault carrying any code of the
+   kernel's `HISTORY_NOTICE_LABELS` to a warning notice from the kernel's one copy: `toolTransaction.open`,
+   `toolTransaction.unknown`, `history.full` (with `{n}` set to the count the fault's message names), and `history.replaying`.
+   `classify_dispatch_fault_notice` uses it right after the hub/session refusals, so wgpu shows these notices for refused
+   undo/redo/checkpoint/alternative verbs, also behind the browser bridge's prefix. Before this change wgpu showed the raw
+   fault string as an error. The shared token splitter is `fault_tokens`.
+   - New law `every_history_lane_refusal_is_a_notice_carrying_its_code`. It reads the kernel fixture
+     `🎠️kernel/🧫️fixtures/🧫️history-notices` (row order equals `HISTORY_NOTICE_LABELS`) and checks, in both locales, the
+     text, the code, the warning severity and the `shell.notice` mirror node (label = message, description = code). A code
+     inside a word is not matched.
+   - React has no consumer of `historyNotice()` yet (no `🧑‍🎨engine` TS hit). Its owner is S3-W2B.
+3. **`historyEditBegin` → `timeTravel.busy`.** This code is already in `TIME_TRAVEL_CODE_LABELS`, so wgpu shows it as a warning
+   notice, and `history_refusals_are_localized_notices_carrying_their_code` covers it through the band corpus.
+4. **N15 label + `RowAction.reason`.** Covered by S3.8's adapted assertions.
+5. **Recommendation, not done (parity first).** Neither shell announces a long local history step outside the History panel:
+   it is a body row, not a live region. Both shells could show `HistoryPatch.reprojection` as a polite progress status in
+   their bottom band, the way they do for the session. That needs one cross-shell decision (S3-W2B + S3-W2C).
+
+### S3.11 Stepped document load, `kind`, window blur, importAbort (coordinator relays 19:5x–20:xx) — SOURCE WRITTEN, run pending
+
+- **`HistoryReprojection.kind`** (`remote | step | load`, replacing `local`): the reprojection law is now
+  `a_replaying_history_step_or_document_load_shows_its_progress_and_cancels_in_the_mirror`. It covers four cases: step en/de
+  ("History step"/"Verlaufsschritt") and load en/de ("Document load"/"Dokument laden", "Loading document: 12 of 400" /
+  "Dokument wird geladen: 12 von 400"). In every case Cancel replay sends `historyEditCancelReplay` without a generation, and a
+  refused step names its reason. Per the S3-W2A correction there is no `cancelDocumentLoad` verb and no `documentLoad` section.
+- **One whole-document load (`📓️api-stepped-document-load.md` §4, wgpu host):**
+  - `ProgramBridgeEntry::load_app_document_pack(instance, pack, spr)` is now a thin call of the stepped, ACK-owned
+    `load_app_document_archive` with `DocumentArchivePack { parent_pack, parent_spr, members: [] }`. It covers all four shell
+    callers on both builds: hub checkpoint seed, the `Effect::LoadDocument` effect, the rebootstrap reseed and the
+    `H3-wgpu-native` effect replay.
+  - Deleted: the native `wasm_program_exchange::load_app_document_pack` (`AppCommand::LoadDocument`), and the bridge TS
+    `WgpuPluginHandle.loadAppDocumentPack` (`channel.loadDocument`) with its JS twin `WgpuJsBridge.loadAppArtifactPack`. The
+    browser door is `loadAppDocumentArchive`, which uses `AppChannelClient.loadDocumentArchive`: admit, poll each turn, ack.
+  - No renderer code sends `LoadDocument` any more. The command tag itself is deleted in the bump wave (S3-W2A).
+  - Law `a_plain_document_load_is_the_stepped_archive_load_without_members` (`🧪️wgpu-local-folders`).
+- **`document.loading` notice:** it joins the kernel's `HISTORY_NOTICE_LABELS` (S3-W2A). `history_lane_notice_of_fault`
+  reads that table, so wgpu shows the notice with no further change, and the S3.10 law iterates the kernel fixture.
+- **Window blur (S3-SPATIAL N9):**
+  - New region 🫥️HostWindowBlur in `🧊️wgpu/🦀️.rs`: `note_host_window_blur()` ends every typing run (`Blur`) and sets a worker-cell
+    flag. The shell's drain (`arm_host_window_blur`) then arms `hostEvent{windowId: <active pane>, kind: blur}` (React's pane
+    `onBlur` twin). `settle_pump_pending` counts a pending blur as armed work.
+  - Native: winit `Focused(false)` calls it and requests a redraw.
+  - Browser: the page's `window` blur goes to `BrowserFrameTransport.setHostWindowBlur()`, which posts `host-window-blur` to the
+    Worker; the Worker calls the door `semioWgpuHostWindowBlur`.
+  - Agreed with S3-SPATIAL: once its `WorldInteractionIntent::cancel(WorldCancelReason::Blur|CaptureLost)` lands, the same
+    drain enqueues `Blur` into every `world3d_states` entry, and the world close path enqueues `CaptureLost`.
+- **`importAbort`:** wgpu's file-open import has no cancel today. The native picker future and the browser
+  `run_file_open_request` dispatch every chunk, and there is no Tasks-window task (the wgpu Task Manager is the `no-runtime`
+  body). React's `importOpenedFilesV1` dispatches `importAbort` only after a person's cancel. A faithful twin first needs a
+  cancellable wgpu document-transfer task. That is open, see S3.9.
+
+### S3.12 Session 3, day 2 (10-03 05:48–06:10): verification after the core went green
+
+- **World cancel (S3-SPATIAL's API landed: `WorldCancelReason::{Blur, CaptureLost}`, `WorldInteractionIntent::cancel`).**
+  `arm_host_window_blur` now enqueues `cancel(Blur)` into every `world3d_states` entry before it arms the pane `hostEvent`.
+  `CaptureLost` on window close is **not** wired, because `retire_closed_world3d_windows` retires the state in the same pass,
+  so a queued cancel never publishes. The runtime's `retired` abort already leaves zero trace (told to S3-SPATIAL).
+  - New Rust law `a_host_window_blur_blurs_the_active_pane_for_its_program_once`.
+  - New vitest law "posts the page's window blur to the Worker at once, outside any batch, and nothing once closed".
+
+| Command | Result |
+| --- | --- |
+| `cargo check -p semio-framework-os-renderer-wgpu --lib --tests` (05:49→05:53) | **10 errors, none mine.** All are in `🧊️renderer/🦀️.rs:18985-18998` (`NativeSocketProbeSnapshot`): `?` from `ValueError` into a `Result<_, String>`. That is a peer's in-flight `🚪️io/🪶️sqlite-snapshot` → `ValueError` migration, which S3-INFRA is finishing in one sweep. Nothing else errors, so this session's wave type-checks: WorkerCell/UI-engine locale, staged facets, history-body, N2, reprojection, notice, stepped load, blur. |
+| `cargo check -p semio-framework-os-renderer-wgpu --lib --target wasm32-unknown-unknown` (05:54→06:00) | **Finished, exit 0** (`check-wasm-1.txt`); no warning in touched code |
+| vitest `test-browser` ♿️ + 📨️ + door | **92/92** (`vitest-browser-2.txt`), new blur law included |
+| vitest `test-preview-generated` | **27/29** (`vitest-package-integration-2.txt`). Every plugin-bridge law passes. The 2 ✘ are the frame-worker render: "WGPU browser import is not schema-owned: `🌱️value/⚠️refusal/🟦️.ts` in `🚪️io/🪶️sqlite-snapshot/🟦️.ts`", the peer's ValueError migration. |
+| `tsc -p T/🧪️s3-w2c-typecheck-wgpu-host.tsconfig.json` (bridge, host-io, wgpu Vite config, transport, browser-host, package-integration, folder-door and transport tests) | **0 errors** |
+| `bun ./📜️script.ts check-browser-worker` | **blocked by a peer**: "WGPU browser import is not schema-owned: `🖱️ui/🌐️locale/🟦️.ts` in `🚀️browser-boot/🟦️.ts`" (locale refactor). The worker file's own `tsc` needs the webworker lib this ad-hoc config lacks. |
+- **CaptureLost on window close (S3-SPATIAL's request, 06:1x):** plugin-local World3d tool machines (fem/lowpoly/gen3d
+  transients) are not retired by the runtime when a window closes, so the shell must send the abort itself. The flow:
+  1. `retire_closed_world3d_windows` asks `world3d_close_cancel_settled(host_id)` first.
+  2. On the first sighting of a closed window, the shell enqueues `cancel(CaptureLost)` and zeroes the state's bounds, so no
+     pointer reaches it.
+  3. The frame's `World3dAuthority` phase drives the cancel, which publishes the gumball or paint abort.
+  4. The window retires once its queue drained (`world3d_interaction_front_generation` is `None`), or after 8 sightings
+     (`WORLD3D_CLOSE_CANCEL_SIGHTINGS`).
+  - A full queue retires the window at once.
+  - Three shell laws that assumed same-pass retirement now drive the sightings: `🪟️window-lifecycle-template-drag`
+    `closed_world3d_retires_every_input_and_scene_owner_before_id_reuse` (it also checks the closed world is off the pointer),
+    `🧭️wgpu-navbar-footer-parity` `a_focused_world_window_does_not_retire_its_hidden_sibling`, and the `🔬️wgpu-shell-input`
+    close law.
+- Files this step: `🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs` (🫥️HostWindowBlur region, `arm_host_window_blur`, close-cancel field and
+  helper), `🎯️targets/🧊️wgpu/{🪟️winit-app/🦀️.rs, 🌐️browser-host/🟦️.ts, 🚚️browser-frame-transport/🟦️.ts,
+  🎞️frame-worker/🟦️.ts}`, `🧑‍🎨engine/🧪️tests/📨️browser-frame-transport/🟦️.ts`, the three shell laws above, and ticket
+  `🧪️s3-w2c-typecheck-wgpu-host.tsconfig.json`.
+- **`importAbort` and a cancellable import (React's `importOpenedFilesV1` + `documentTransferTasksV1`), written 06:2x.** A
+  picked import is now one `ImportTransfer`. Before this, wgpu queued every chunk at once on native and awaited them all
+  inside one browser call, with no cancel.
+  - **Creation.** The native picker future answers `ShellIoCompletion::Import(PickedImport)`, the browser's
+    `run_file_open_request` hands the pick over the same way, and both go to `begin_import_transfer`.
+  - **Dispatch.** The drain's `step_import_transfers` dispatches the oldest import's chunks in order, one awaited at a time,
+    within an 8 ms turn budget, so a Cancel lands between chunks. A refused chunk ends the import with the `import-failed`
+    error notice. While an import waits, `settle_pump_pending` stays owed.
+  - **Task Manager.** The section `os.task-manager.tasks` sits above the `no-runtime` actors and mirrors React's
+    `TaskManagerTasksPanel`:
+    - "Running tasks" / "Laufende Aufgaben", and "No task is running." while nothing runs;
+    - per import: files · "Document import" · owner · "Running";
+    - a progressbar `os.task-manager.progress.documentTransfer:<id>` of the delivered chunks;
+    - a button `os.task-manager.cancel.documentTransfer:<id>` reading "Cancel <files>" / "<files> abbrechen", which sends
+      `framework/cancelImportTransfer{transfer}`.
+  - **Cancel.** `cancel_import_transfer` drops the remaining chunks. It arms `importAbort {}` only when a chunk was delivered
+    and the app declares the verb. The notice is "Import of “<file>” cancelled." / "Import von „<file>“ abgebrochen."
+    (`shell.documentTransfer.import-cancelled`).
+  - **Law.** `a_picked_import_is_a_cancellable_task_that_frees_a_started_import`.
+- 06:11–06:14 re-checks after the import and close edits: none of the errors is in my code.
+  - native `--lib --tests`: 11 errors, the 10 ValueError probe lines plus a peer's 06:08 `⚙️EngineCanvas/…:6164:60` E0716 in
+    `write_paint2d_edit` (`check-native-tests-11.txt`).
+  - `wasm32-unknown-unknown --lib`: only that EngineCanvas E0716 (`check-wasm-2.txt`).
+  - Coordinator told; it is waiting for "renderer test target green".
+- 06:2x, after S3-SPATIAL's `world3d_cancel_owed(&World3dState)` landed: a closed world now defers its retirement only while
+  it owes a cancel (a live gumball that streamed, or an open paint stroke). Every other close retires in the same pass, as
+  before, so the three shell laws touched above are back to their original text (no diff).
+- `cargo check -p semio-framework-os-renderer-wgpu --lib --target wasm32-unknown-unknown` (06:28→06:33): **Finished, exit 0**
+  (`check-wasm-3.txt`). No warning in my new regions (import transfer, 🫥️HostWindowBlur). The S3-STROKES E0716 is fixed. The
+  native lib-test target still waits on S3-INFRA's ValueError sweep.
+- **Stepped-document-load §8 (1), "the wgpu host's cold-pair transfer asserts `Applied`" (coordinator 06:4x):** wgpu has no
+  cold-pair transfer, so there was nothing to change.
+  - No wgpu code sends `Event::ColdDocumentPairPage` or matches `ColdPairIngressStatus::{Applied, Loading}` (checked:
+    `🧊️renderer`, Shell, ProgramBridge, wgpu TS). The senders are the native `🔌️plugin/🖥️host` and the browser
+    `🏪️store/👷️worker`, the latter owned by S3-W1G.
+  - wgpu's whole-document loads are the stepped archive load (S3.11).
+  - The kernel turn loop's "non-idle cold pair is not more work" rule (`🧊️renderer/🦀️.rs` ~9187) never meets an open transfer.
+  - Told S3-W2A (a636b4d488c628fff) directly.
+
+### S3.13 F7: disabled context-menu rows with their reason (S3-W1E's `ContextMenuItemSpec.reason` landed), 06:5x — SOURCE + LAW WRITTEN
+
+All edits are in `🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`.
+- **Data:**
+  - `ContextMenuItem.reason: Option<String>`, copied from the spec in `shell_context_menu_item_from_spec`.
+  - `ContextMenuItem::painted_label` gives the label and, beside it, the reason of a disabled row ("Paste · The clipboard is
+    empty"). Both the production stepped renderer (`render_context_menu_step`) and the test level renderer paint it, muted.
+- **Hit and accessibility:** both renderers now call `ContextMenuItem::register_hit`.
+  - A disabled row registers a `ContextMenu` hit with no event, where before it registered nothing.
+  - Every row now notes its name, its disabled state and, when disabled, its reason as the description. Before this,
+    menu rows were announced by their humanized id.
+  - `chrome_accessibility_nodes` makes a disabled chrome control non-actionable everywhere (the marketplace / dialog law
+    convention), so a disabled row is a focusable `menuitem` that is `disabled`, `actionable: false` and described by its
+    reason, exactly like `RowAction`.
+- **Keys:**
+  - `context_menu_enabled_indices` became `context_menu_focusable_indices`, which skips separators only. Arrow keys and
+    submenu entry therefore reach disabled rows.
+  - Hover and focus by id (`context_menu_path_for_item_id`) reach them too.
+  - Digit ordinals stay enabled-only.
+  - Enter on a disabled row is still refused. Its hit activation now returns early and keeps the menu open, where before
+    the menu closed.
+- **Law** `a_disabled_context_menu_row_is_reachable_and_tells_its_reason` (`🧪️wgpu-time-travel` 🍔️ContextMenuReason).
+- **Compile:** the wasm32 re-check at 06:57 stopped in `semio-framework-os-kernel` (11 errors from the in-flight ValueError
+  sweep: `🧬️semio` `ValueRefusalKind`, `🚪️io:2654` `PackError::TextRefusal`, store `into_value_error`). The renderer was not
+  reached. I'll retry after TREE GREEN.
+
+### S3.14 Resume after the second usage cut (07:15 → 10:42)
+
+- Repair check: every wave is whole on disk, and the shell file is unchanged since 06:56. That covers the import transfer
+  (struct, begin/step/cancel, Task Manager rows, native `ShellIoCompletion::Import`, browser `run_file_open_request`,
+  `cancelImportTransfer` arm, drain step, settle-pump term), F7 context-menu reasons, close/blur cancels, staged facets and the
+  UI-engine locale. The coordinator's "cut mid import wave" had already landed whole at 06:2x.
+- `cargo check -p semio-framework-os-renderer-wgpu --lib --target wasm32-unknown-unknown` (10:42→10:45): **Finished, exit 0**
+  (`check-wasm-5.txt`). No warning in any region touched this session: import transfer, 🫥️HostWindowBlur, `ContextMenuItem`
+  and its key helpers, close-cancel.
+- Cold-pair host `loading` (§8 (1)): nothing to change on wgpu (S3.12). Stepped load: done (S3.11).
+- Still owed: every native `cargo test` run (the S3.9 list plus the laws of S3.3, S3.4, S3.7, S3.10–S3.13). They wait on the
+  native test target, which the peer stdio/sqlite ValueError migration blocks.
+
+### S3.15 Open items, coordinator actions, blockers (current at 10:46)
+
+- **Owed native runs (need the native renderer test target green):** build the test binary with
+  `CARGO_INCREMENTAL=0 CARGO_TARGET_DIR=…/target-nde-s3-w2c cargo test -p semio-framework-os-renderer-wgpu --lib --no-run`,
+  then run it with these filters:
+  - `time_travel local_folders introspection_tests dialog_choices`: the 52 laws of S3.2 plus the new
+    `every_staged_number_row_carries_the_shared_corpus_facets`,
+    `the_guest_history_body_opens_pages_and_refuses_edit_with_its_reason`,
+    `the_guest_editor_offers_list_and_chip_edits_within_their_bounds`,
+    `a_replaying_history_step_or_document_load_shows_its_progress_and_cancels_in_the_mirror`,
+    `every_history_lane_refusal_is_a_notice_carrying_its_code`, `a_host_window_blur_blurs_the_active_pane_for_its_program_once`,
+    `a_picked_import_is_a_cancellable_task_that_frees_a_started_import`, `a_disabled_context_menu_row_is_reachable_and_tells_its_reason`
+    and `a_plain_document_load_is_the_stepped_archive_load_without_members`;
+  - the S3.2 regression set (`chrome_overlays_tour_tests board2d_engine_tests … canvas_presence`);
+  - `context_menu`, `window_lifecycle`, `navbar_footer`, `shell_input`, `ui_command_wiring`, `scenes::`, for the WorkerCell /
+    UI-engine locale wave.
+- **Coordinator actions:**
+  - one activation + serve of 6112 for the `--renderer=wgpu` probe;
+  - the wgpu Vite config, host-io, bridge (`loadAppDocumentPack` removed), transport/worker (`host-window-blur`) and shell
+    changes take effect on the next activation.
+  - No descriptor or schema regeneration is needed for W2-C's changes.
+- **Blockers (peer):**
+  - native `--lib --tests`: `🧊️renderer/🦀️.rs:18985-18998` `NativeSocketProbeSnapshot`, `?` from `ValueError` into
+    `Result<_, String>` (S3-INFRA's sweep);
+  - `check-browser-worker`: `🚀️browser-boot` imports `🖱️ui/🌐️locale/🟦️.ts`, not schema-owned (locale refactor);
+  - `test-preview-generated` 2 ✘: `🚪️io/🪶️sqlite-snapshot/🟦️.ts` imports `🌱️value/⚠️refusal/🟦️.ts`, not schema-owned.
+- **Cross-shell recommendations (not done, parity first):**
+  - announce `HistoryPatch.reprojection` as a polite progress status in both shells' bands (S3-W2B + S3-W2C);
+  - give the marketplace's disabled row actions localized reasons (needs `UiTreeItemAction.reason` in the UI crate);
+  - feed `ActionArgDef::number_facets` into W1-E's ChromeDialog staged slider (`ChromeDialogFieldKind::Slider`).
+- 10:5x: S3-NOTICES (design §20.12 app fault notices) asked about `classify_dispatch_fault_notice`. I'm not editing it, and I
+  told them the branch order (read-only → history refusal → history-lane notice → their app notice → `app.command.rejected`
+  → generic). If their `kernel::fault_notice` framework table subsumes `HISTORY_NOTICE_LABELS`, branch 3 should be replaced
+  rather than duplicated, with `{n}` taken from `Fault.params`. I also listed my regions for them to avoid.
+
+### S3.16 After TREE GREEN (11:38) — 11:39–11:46
+
+- The `NativeSocketProbeSnapshot` sqlite lines were already on the store trait's `ValueError` (the peer sweep landed at
+  10:22), so there was nothing to convert.
+- **ProgramBridge wasm32 (coordinator's first item).** S3-NOTICES' `ProgramFault` change left two `String` tails, in
+  `handle_action_js` and `handle_command_js`. Both now end in
+  `.map_err(|error| ProgramFault::from(format!("… result parse failed: {error}")))`.
+- **Shared `DocumentArchiveLoadHost` adopted (S3-LOAD).** The native `wasm_program_exchange::load_app_document_archive`
+  (its hand-written admit/poll/ack loop deleted) now drives `protocol::DocumentArchiveLoadHost` with `next_seq` and
+  `exchange`, the same machine the MCP gateway and `🏃️run` use.
+  - Outcomes: `Ready` → Ok; `Cancelled` → the named refusal `document.load-cancelled: … the previous document is unchanged`
+    (`DOCUMENT_LOAD_CANCELLED`); `Fault` / `Refused` → the guest fault's message; an unanswered step → named.
+  - Cancel on wgpu is the person's Cancel in the history body (`historyEditCancelReplay`, the guest's own cancel).
+  - Progress is the guest's `HistoryPatch.reprojection` (`kind: load`), already rendered (S3.11).
+  - The browser path is the TS twin `AppChannelClient.loadDocumentArchive`.
+- **Blocked again (peer):** both renderer checks, native `--lib --tests` (11:40) and wasm32 (11:44), stop in
+  `semio-framework-graph`:
+  - `🕸️graph/⚙️engine/🦀️.rs:434,493,560`: `PropertyBag` has no `extend` / `clear`;
+  - `🕸️graph/🗣️dsl/🦀️.rs:443`: expected `PropertyBag`, found `BTreeMap`.
+
+  The cause is a peer's `🕸️graph/🛂️manifest/🗂️properties/🦀️.rs` change at 11:39 that has not reached its callers yet.
+  Coordinator told.
+- 11:51–11:55: the `PropertyBag` callers in `🕸️graph` were fixed at 11:51. wasm32 now stops on 6 errors in the peer's new
+  (11:30, uncommitted) `🕸️graph/🛂️manifest/🪆️binding/🦀️.rs:25-39` (`RecordSpecProducer` / `Shape::RecordProducer` /
+  `Box<RecordValue>`), part of the graph change still in flight (`check-wasm-7.txt`, `check-wasm-8.txt`). Coordinator told.
+- 12:01–12:04: the graph binding was fixed (12:00), and wasm32 got further. It now stops in `semio-framework-os-infinite`:
+  `🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs:770,2243,5408,6732`, where `DagExpandedPaths` is not found and `&BTreeSet<String>`
+  is expected (`check-wasm-9.txt`). That is a peer's in-flight board-DAG change. The renderer has not been reached since 11:40,
+  so my 11:4x edits (ProgramFault tails, `DocumentArchiveLoadHost`) are still unchecked.
+
+## Session 4 — 2026-10-04
+
+Agent: S4-WGPU (Opus executor), successor of S3-W2C. Scratch: `🗑️generated/s4-wgpu/`. Brief: `🧭️plan.md` row S4-WGPU, `📓️s4-resume.md` §7 S3-W2C.
+
+### S4.1 Repair-first check (rule 34, 02:2x)
+
+- `git diff HEAD --stat` over the owned paths: Shell `🧊️wgpu/🦀️.rs` +589/−…, `⏪️time-travel` +7, `🧊️renderer` +210, plugin bridge (−`loadAppDocumentPack`,
+  −`loadAppArtifactPack`), browser host / transport / frame worker (`host-window-blur`). Every wave of S3 is whole on disk.
+- Unstaged (peer) change since then: `🧊️renderer/🦀️.rs:19032` `NativeSocketProbeSnapshot::record_spec` now names
+  `semio_framework_dsl_record::{FieldSpec, Shape}` (DSL-record peer). Shell file mtime 10-03 23:30 equals the index (peer sweep).
+- S3-NOTICES replaced `time_travel::history_lane_notice_of_fault` by `kernel::fault_notice` (branch 3 of `classify_dispatch_fault_notice`)
+  as agreed in S3.15; the shared `fault_tokens` stays (used by `history_refusal_of_fault`).
+- `DocumentArchiveLoadHost` adoption lives in `🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs:417` (S3.16), unchecked until now.
+- No wgpu TS caller of `AppChannelClient.loadDocument` remains (S4-BUMP's wave A has nothing to touch in wgpu TS).
+
+### S4.2 First native check (02:08→02:36) and the fixes it asked for
+
+- `cargo check -p semio-framework-os-renderer-wgpu --lib --tests` (`check-native-1.txt`): **20 errors, all in owned files**, all fallout of the
+  peer value/DSL extraction: `protocol::{FromValue, ToValue}` is private now (Shell `🦀️.rs:144` + its `DocumentHttpPortDeclarationV1::from_value`),
+  `dsl::os_dsl::schema::Number` is gone (`🧪️tests/📤️wgpu-file-open-import` ×4), `store::{ToValue, FromValue, DslValue}` are private
+  (`🧑‍🎨engine/🧪️tests/🧊️wgpu-renderer-standalone` ×14). Fixed: the shell imports `semio_framework_value::{DslValue, FromValue, ToValue}`;
+  the two tests name `semio_framework_value::{Number, ToValue, FromValue, DslValue}`.
+
+### S4.3 `requestMediaFrames` host cancel (D21) — SOURCE + LAW WRITTEN
+
+- A decoded video's frame dispatches (`frameAction` × n, then `doneAction`, or the single `fallbackAction`) no longer go to
+  `deferred_actions` all at once: they become one `ImportTransfer` on the new `TransferLane::VideoFrames` lane (`begin_media_frames_transfer`;
+  native `ShellIoCompletion::MediaFrames {controller_id, frames}`, wasm32 directly). The shared drain steps it within the 8 ms import budget,
+  the Task Manager lists it ("clip.mp4 · Video frames · <owner> · Running" / "Videobilder … Läuft") with its progress and "Cancel clip.mp4",
+  and a Cancel after a delivered frame drops the rest (the `doneAction` never fires) and arms the app's `importAbort {}` once (remodel's
+  streamed import, design §15) with the `shell.documentTransfer.import-cancelled` notice. `begin_import_transfer` and the new begin share
+  `queue_transfer`.
+- Law `a_decoded_video_is_a_cancellable_task_that_frees_a_started_stream` (`🧪️wgpu-time-travel` 📥️ImportTransfer).
+- React twin is S4-UI's (`runRequestMediaFrames`).
+
+### S4.4 Marketplace disabled-row reasons (W1E-1 on the marketplace) — SOURCE + LAW WRITTEN
+
+- UI crate (shared, region-scoped): `UiTreeItemAction.reason: Option<Label>` (serde/value default, skipped when `None`), mapped from the
+  contract's `RowAction.reason` in `🔀️reconcile::row_action`; the shell maps it back into `RowAction.reason` (only while disabled) in
+  `tree_item_row_target`, so `row_action_accessibility_nodes` describes the disabled action by it and keeps it focusable.
+- Marketplace verbs carry a localized reason instead of a bare flag: `plugins.reason.installing` (mid-install), `plugins.reason.inUse`
+  (the open document's program), `plugins.reason.extensionUnavailable` (a failed extension), en + de.
+- Literal sites given `reason: None`: UI tests (`🔬️targets-wgpu-paint-unit`, `🔬️targets-wgpu-component-ui-value-round-trip` ×2,
+  `🔬️targets-wgpu-reconcile-unit`), `📖️playbook/🗿️artifacts/📖️playbook/🦀️.rs` ×2, `✏️s/🔌️plugins/🪵️sourcing/…/🧺️curated/🦀️.rs` ×2; the
+  generated TS twin `🛂️manifest/🤖️generated/🪪️manifest/🟦️.ts` `UiTreeItemAction` gains `reason?: Label` (hand-aligned to the typegen shape).
+- Law `the_marketplace_announces_a_disabled_uninstall_as_a_disabled_row_action_button` now asserts the reason (en/de), focusability and no
+  reason on the enabled sibling.
+
+### S4.5 W1E-3 wgpu half — live reprojection status outside the History panel — SOURCE + LAW WRITTEN (compile owed: plugin/kernel peer reds)
+
+- Input: S4-UI's kernel copy `semio_framework::kernel::history_reprojection_status` (+ fixture `🎠️kernel/🧫️fixtures/🧫️history-reprojection`, 11 cases).
+- Shell state `history_reprojection` (seeded by `read_history`, folded by every stale-guarded patch, the progress-patch drain and the native poll,
+  which now also polls while a reprojection replays); `⏪️time-travel` region 📡️HistoryReprojectionBand:
+  - chrome node `shell.history.reprojection` (`HISTORY_REPROJECTION_STATUS_ID`): `progressbar` over done/total + `aria-busy` while it replays,
+    polite `status` while paused or refused; named by exactly the localized status line; per coordinator correction it carries **no**
+    description (a refusal's raw code is never announced);
+  - its own bottom band (new chrome phase `HistoryReprojectionBand` after `TimeTravelBand`), wrapped at ": " on phones, with the replay track
+    while running, Info tone (Warning for a refusal), stacked above the session band when one is open; it dispatches nothing (Cancel replay /
+    Replay again stay in the History body's reprojection section);
+  - the session band's frame painting is now the shared `paint_chrome_band_frame` (7 steps) both bands use.
+- Law `every_history_reprojection_is_announced_outside_the_history_panel` (`🧪️wgpu-time-travel` 📡️HistoryReprojectionStatus): every fixture case,
+  en + de: label = fixture text, polite, no raw code, progressbar/status by running, one painted line + track, the band step paints; stacked
+  above an open session band with both live nodes; gone once adopted.
+
+### S4.6 W1E-1 + W1E-2 wgpu halves (S4-UI contract `💬️row-semantics` `revealReason` / `selectedRows`) — VERIFIED
+
+- W1E-1 (UI crate `⚡️events`, `⚙️engine`, region-scoped): router `RowReasonHint {row, index, hovered}` + `disabled_row_action_reason` (reads the
+  node's `UiTreeItemAction.reason`, filled only from contract `RowAction.reason`, only while disabled). On: pointer entering the icon
+  (`hover_row_reason` on move), pointer press on it, accessibility Focus and Activate of the virtual `::row-action::i` (Activate of a disabled one
+  dispatches nothing). Off: pointer leaving a hint it revealed, PointerCancel, accessibility Blur, Escape (consumed by the hint first). The engine
+  presents it through the retained tooltip path (`PresentedTooltip.row_action`, `synchronize_presented_row_reason`), anchored to the icon slot
+  (`EventRouter::row_action_icon_rect`, the slot paint draws and the pointer hits); a dwell hover tooltip never replaces it. Test accessors
+  `Ui::revealed_row_reason`, `Ui::row_action_icon_rect`.
+- W1E-2: `♿️accessibility` projects `TreeItemProps.selected` as the tree item's `selected` (arena presence only when the contract says nothing);
+  `🔀️reconcile::tree_item` paints the chosen option with the selected fill (`presence.selected = selected == Some(true)`). Shell-built legacy
+  rows stay `selected: None` (S4-UI's two literal lines).
+- Laws (UI crate `🧪️conformance-corpus`): `a_disabled_row_action_reveals_its_reason_on_hover_focus_and_press` (all six triggers + click on the icon,
+  description stays the reason) and `option_rows_announce_and_paint_their_selected_state`.
+
+| Command | Result |
+|---|---|
+| `cargo check -p semio-framework-ui --lib --tests --features testkit` (`check-ui-1..4.txt`) | 1: 2 errors (mine: `PresentedTooltip` test literals) → fixed; 2, 3, 4: **exit 0** |
+| `CARGO_INCREMENTAL=0 CARGO_TARGET_DIR=…/target-nde-s4-wgpu cargo test -p semio-framework-ui --features testkit --lib -- conformance_corpus row_action reconcile_unit component_ui_value tree_action` (`test-ui-1.txt`) | **18 ✔ / 0 ✘** |
+| same `-- conformance_corpus row_action tree_item accessibility` (`test-ui-2.txt`) | **40 ✔ / 0 ✘** (incl. both new laws + the marketplace-shared row-action laws) |
+| `cargo check -p semio-framework-artifact-playbook-playbook --lib` (`check-playbook-1.txt`) | blocked: os-kernel red in `🚪️io/🦀️.rs:2089/2095/2719/2736` (`IoOutcome` vs `(Cow, ArchiveChildren)`, peer W-a seam); my `reason: None` literals there unverified |
+| `cargo check -p semio-framework-os-renderer-wgpu --lib --tests` (`check-native-2.txt`, 02:44→02:54) | **exit 0** (includes S4.2–S4.4; S4.5 landed during it) — re-check `check-native-3.txt` stopped in peer `🔌️plugin/🦀️.rs:43416/35871` |
+| wgpu TS `bun ./📜️script.ts test-browser ♿️ 📨️ door` (`vitest-browser-1.txt`) | **92 ✔ / 0 ✘** |
+| `bun ./📜️script.ts test-preview-generated` (`vitest-preview-1/2.txt`) | 1: 28/29 (✘ "input changed during generation: `🎠️kernel/🟦️.ts`", a peer write mid-run); 2: **29 ✔ / 0 ✘** |
+| `bun ./📜️script.ts check-browser-worker` (`check-browser-worker-1.txt`) | browser-boot + renderer-boot checks pass; **frame-worker stale** ("run the generate-frame-worker target") → coordinator regeneration at activation |
+
+### S4.7 Native test target, first batch, and the usage cut (03:41 → 04:15; resumed 06:45)
+
+- `cargo check -p semio-framework-os-renderer-wgpu --lib --tests` (`check-native-4.txt`, 03:41→03:52, after CORE GREEN): **exit 0** — covers
+  S4.2–S4.6 (media cancel, marketplace reasons, W1E-3 band/mirror, the UI-crate hint/selected changes).
+- `CARGO_INCREMENTAL=0 CARGO_TARGET_DIR=…/target-nde-s4-wgpu cargo test -p semio-framework-os-renderer-wgpu --lib --no-run` (`test-build-1.txt`,
+  04:04→04:11): **Finished**; binary pinned at `…/target-nde-s4-wgpu/renderer-wgpu-tests` (run from the crate dir, `RUST_MIN_STACK=67108864`).
+- Batch 1 `time_travel local_folders introspection_tests dialog_choices` (`run-batch-1.txt`): **59 ✔ / 4 ✘** — all four in laws S3 wrote and
+  never ran, or mine:
+  1. `every_history_reprojection_is_announced_outside_the_history_panel` (mine): a long German refusal wraps over two band lines →
+     the band now wraps at words and the law joins the lines;
+  2. `a_replaying_history_step_or_document_load_shows_its_progress_and_cancels_in_the_mirror`: the `framework.history.reprojection`
+     **TreeSection** carries no accessible name on wgpu — `ui_contract::accessibility_projection_node` names no `TreeSection` (asked S4-UI);
+  3. `the_guest_editor_offers_list_and_chip_edits_within_their_bounds`: asserted `!actionable` on a disabled retained button, which
+     contradicts the shared accessibility fixture (`#card` disabled + actionable); law aligned (disabled + dispatches nothing). A first
+     attempt to force `actionable &= !disabled` in `♿️accessibility` broke `a_mounted_document_publishes_the_accessibility_tree_the_shared_fixture_declares`
+     (`test-ui-3.txt` 45/1) and was reverted;
+  4. `the_guest_history_body_opens_pages_and_refuses_edit_with_its_reason`: the window scrolled to 100 shows no mutation rows — under
+     diagnosis (temporary `[DEBUG]` mirror print in the law).
+- After the resume: S4-UI's band corpus now expects `TimeTravelLabel::ReplayFaulted` for an unknown replay fault (no raw code) → the wgpu
+  band's fault line reads that label; the reprojection band mirrors React's status (label `<title>: <text>`, Cancel replay
+  `shell.history.reprojection.cancel-replay` / Replay again `shell.history.reprojection.rerun` while no session is open, no generation),
+  law rewritten accordingly.
+
+### S4.8 After the second resume (06:45 → 08:55) and the third (11:35)
+
+- **Rule 43 (CHECKS ONLY, coordinator 08:0x):** no renderer `cargo test`/`--tests`/`--no-run`; my running test build was stopped and my
+  uplift dir `⚡️cache/cargo/target-nde-s4-wgpu` (252 MB, incl. the pinned test binary) deleted. Every renderer test run below is
+  **OWED (rule 43)**.
+- **UI crate:** reverted the `actionable &= !disabled` experiment (shared fixture says a disabled `#card` stays actionable);
+  `cargo check -p semio-framework-ui --lib --tests --features testkit` (`check-ui-7.txt`) **exit 0**. `the_guest_editor_offers_list_and_chip_edits_within_their_bounds`
+  now asserts disabled + "dispatches nothing" (no `!actionable` on a retained disabled button). Temporary `[DEBUG]` prints removed again.
+- **S4-UI contract follow-ups (agent `a2a0ed242ef111cc3`):** `TreeSection` is now named by its label in `ui_contract::accessibility_projection_node`
+  (S4-UI owns it), which resolves `a_replaying_history_step_or_document_load_shows_its_progress_and_cancels_in_the_mirror`'s unnamed section;
+  the band's unknown-fault line reads `TimeTravelLabel::ReplayFaulted` (no `({code})` any more); the reprojection band mirrors React
+  (label `<title>: <text>`, Cancel replay / Replay again controls while no session is open).
+- **`plugin.channel-mismatch` on wgpu (S4-BUMP handshake, coordinator relay 08:20) — SOURCE + LAW WRITTEN:**
+  - `ProgramBridgeEntry::create_app` answers `Result<u32, ProgramFault>`; the browser path keeps the bridge's rejection `fault`
+    (`js_program_fault`, i.e. `createActorApi`'s `Object.assign(new Error(..), { fault })`), the native path wraps the kernel string.
+  - Shell: `program_fault_text` (the framework's `kernel::fault_notice` text of a structured refusal, else the call's text) and
+    `ShellState::note_refused_open` (records the fault for the dispatch-fault funnel → localized `shell.notice` with the code as
+    description). Boot opens tell it and record the plugin fault with the localized text; document opens, session switches, app
+    activation and spawned workflows carry the localized text in their status.
+  - Law `a_refused_guest_channel_is_told_as_its_localized_notice` (`🧪️wgpu-fault-notices`) over `📡️spr/🧵️channel/🧫️fixtures/🧫️channel-handshake`:
+    every refused case, en + de, both channels named, mirrored politely with the code as description, never the raw code or English.
+- **Checks:** `cargo check -p semio-framework-os-renderer-wgpu --lib --target wasm32-unknown-unknown` (`check-wasm-1.txt` 08:18→08:37): 2 errors,
+  mine (callers expecting `String` from `create_app`) → fixed; `check-wasm-2.txt` (08:45→08:52) **exit 0**. Native `--lib` (`check-native-5.txt`,
+  08:09→08:15) **exit 0** before the handshake change; `check-native-6.txt` 11:35 died on the disk guard sweeping build units
+  ("failed to write … invoked.timestamp"), re-issued as `check-native-7.txt`.
+
+### S4.9 Probe readiness: the History body is a scroll region on wgpu (11:5x) — SOURCE + LAW WRITTEN (cargo frozen, rule 44)
+
+- Gap found reading `🧑‍💻dev/🧪️tests/🧪️time-travel/🟦️.ts`: the wgpu probe's `scrollHistory` / `scrollHistoryBy` (used by `pageHistory`,
+  `allHistoryRows`, `findMutationRow`, `revealHistory`, `readAlternatives`) look for a `dumpChrome` hit whose kind matches `/scroll/` and whose
+  control or window id matches `/history/`. A docked/mobile panel's retained body registered only its row hits, so no such hit existed and
+  the probe could never page the windowed History body (only the first screen of rows was reachable).
+- Fix: `ShellState::register_retained_panel_scroll_region` registers the panel's whole content rect as `HitKind::ScrollRegion`
+  `<surface>.scroll` (`framework.panel.history.scroll`), BEFORE the row hits (rows stay on top), owned by the surface in
+  `retained_hit_windows`, so a wheel over the gap below the rows scrolls the body like React's overflow container, and `dumpChrome` names it
+  (kind `ScrollRegion`, owner window = the panel). Called in `render_panel_step` and `render_mobile_panel_step`; dock windows unchanged.
+- Laws: `a_panel_body_is_one_scroll_region_under_its_rows` (new); `the_guest_history_body_opens_pages_and_refuses_edit_with_its_reason`
+  now wheels the window at 100 into view (`wheel_history_window_into_view`) — the mirror projects what the body shows, which is why the
+  window at 100 read `[]` in batch 1.
+- Native `cargo check --lib` re-issue (`check-native-8.txt`) was stopped at the CARGO FREEZE (rule 44) before reaching the renderer.
+  OWED (rule 44): native `--lib` check (wasm32 green 08:52 covers everything but S4.9), then the rule-43 test runs.
+
+### S4.10 Nested-cargo catalog drift (S4-GATES assignment, low priority) — ANALYZED, law green, re-seal NOT done
+
+- `💥️nested-cargo-collision-authority` (`bun test ./…/📚️library/🧪️tests/💥️nested-cargo-collision-authority/🟦️.ts`, `nested-cargo-1.txt`):
+  **26 ✔ / 0 ✘** — the law does not require catalog destinations to exist.
+- The 10 of 32 wgpu `mappings[].destinationPath` rows of `📚️library/🖼️assets/📽️nested-cargo-package-projection/🔣️.json` that name no
+  live file, with what happened to each (git history):
+  - moved by `8add1df1473` (the sealing commit itself): `📦️packages/🦀️rust/{package.json, 📋️project.json, 📜️script.ts}` →
+    `📦️packages/🟦️typescript/…`;
+  - `b2064cc237b`: `📦️packages/🦀️rust/🌐️.html` → `🌐️server/🌐️.html`; `📦️packages/🦀️rust/Trunk.toml` deleted (Trunk retired);
+  - `7bea15c349b`: `🪢️kernel-seam/🦀️.rs` deleted; `025ec86a429`: `📦️packages/🦀️rust/🟦️typescript/🧪️test/🟦️s.ts` deleted;
+  - `🧪️tests/🟦️{browser-frame-transport, browser-interactive-job-port, package-integration}.ts` → the engine test tree
+    (`🧑‍🎨engine/🧪️tests/{📨️browser-frame-transport, 🎮️browser-interactive-job-port, 🧩️package-integration}/🟦️.ts`).
+- Why not re-sealed now: the ledger's reverse law (`🕰️historical-json-source-encoding`) only reverses DIRECTORY renames (`to` followed by
+  `/`); whole-file moves and deletions cannot be expressed. A truthful re-seal needs a schema + law extension of `🧫️frozen-seal-ledger`
+  (`moves: [{from, to}]` exact JSON-string paths, reversible; deleted rows need a decision: keep as historical rows with a `retired`
+  marker, or drop them with the removed fragment recorded). Proposal sent to `main`; implement on GO.
+
+### S4.11 Nested-cargo re-seal attempt (coordinator GO 12:3x) — REVERTED, ledger extension kept
+
+- Kept (backward compatible, verified): `🧬️schema/🔣️frozen-seal-ledger` catalog re-seal rows may carry exact-path `moves [{from, to, revision}]` and
+  `deletions [{path, reason, revision, packageId, index, row}]` beside `renames` (`anyOf` one of the three); law `🕰️historical-json-source-encoding`
+  reverses deletions (re-inserting each removed row at its index, canonical `JSON.stringify(…, null, 2)`), then moves (exact JSON strings), then
+  renames, and requires the previous seal byte for byte. Input script `T/🧪️s4-wgpu-nested-cargo-reseal.py` (starts from the index copy; `--check`).
+- Applied then reverted (12:39 → 12:5x): the re-seal itself. It broke every taxonomy run ("Nested Cargo catalog digest drift", then
+  "boundary drift", then "joined-path authority: consumer must have one exact mapped owner"): `🔍️discovery/🟦️.ts` hard-codes the contract
+  counts (`sourceLeafCounts [32, 4]`, `purityCount 27`) and the `🧪️browser-frame-transport.test.ts` row is the consumer of the one pinned
+  `joinedPathBinding` (with the authored-fragment census). Moving files out of the wgpu owner root is also refused by the member check
+  (`members-of-wgpu-target` has no `🌐️server`; engine tests are outside the owner). Catalog, taxonomy pin/counts, discovery and ledger fixture are
+  back to the index bytes (`git diff` empty); `verify taxonomy report --scope …/📽️nested-cargo-package-projection` exit 0 (1 pre-existing
+  `directory-kind-unresolved`), 🕰️ **25/0**, 💥️ **26/0**.
+- Needed for a real re-seal (library contract owner): retire or re-point the joined-path binding and its authored fragments, decide the
+  `🌐️server` member registration, then re-seal catalog + counts + taxonomy pin + ledger row in ONE write.
+- Other TS this hour: wgpu `test-browser` **92/0** (`vitest-browser-2.txt`); `test-preview-generated` **27/29** (`vitest-preview-3.txt`), both ✘
+  are a peer's `🚪️io/🪶️sqlite-snapshot/🟦️.ts` importing `⏳️async/🪃️continuation/🟦️.ts`, not schema-owned for the WGPU browser build.

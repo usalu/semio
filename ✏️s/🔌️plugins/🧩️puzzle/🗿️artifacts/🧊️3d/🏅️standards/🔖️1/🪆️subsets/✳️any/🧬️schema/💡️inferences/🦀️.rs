@@ -7,7 +7,6 @@
 use crate::standards::v1::subsets::any::schema::inferences::flatten::{flatten_snapshot, plane_to_orientation};
 use crate::Puzzle3dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 use std::collections::BTreeMap;
 
 use super::flat_position::{Puzzle3dFlatCenter, Puzzle3dFlatPlane};
@@ -23,8 +22,11 @@ pub struct Puzzle3dInference {
 }
 
 impl protocol::Inference<Puzzle3dSnapshot> for Puzzle3dInference {
-    fn infer(snapshot: &Puzzle3dSnapshot) -> Self {
+    fn infer(snapshot: &Puzzle3dSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { flat_positions: flatten_snapshot(snapshot).into_iter().collect() }
+    
+        })
     }
 }
 
@@ -43,28 +45,6 @@ impl protocol::InferenceSpec<Puzzle3dSnapshot> for Puzzle3dInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::Puzzle3dBuilder {
-    type Snapshot = Puzzle3dSnapshot;
-    type Inference = Puzzle3dInference;
-
-    async fn infer_cached(snapshot: &Self::Snapshot, cache: &mut store::InferenceCache, session: &mut store::InferenceSession) -> Self::Inference {
-        let _ = session;
-        let planes = store::infer_field::<Puzzle3dSnapshot, Puzzle3dFlatPlane>(snapshot, Some(cache));
-        let centers = store::infer_field::<Puzzle3dSnapshot, Puzzle3dFlatCenter>(snapshot, Some(cache));
-        let flat_positions = planes
-            .into_iter()
-            .map(|(id, plane)| {
-                let center = centers.get(&id).copied().unwrap_or([0.0, 0.0]);
-                let orientation = plane_to_orientation(plane);
-                (id, FlattenPose { plane, center, orientation })
-            })
-            .collect();
-        Puzzle3dInference { flat_positions }
-    }
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.puzzle.puzzle3d.inference`'s facet leaves into the OS-wide inference catalog —

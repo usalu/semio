@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "cases",
+    "ownedFronts",
+    "higherFronts"
+  ],
+  "properties": {
+    "format": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "mode",
+          "members",
+          "traits"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "mode": {
+            "enum": [
+              "Record",
+              "Projection",
+              "Scalar",
+              "Variants"
+            ]
+          },
+          "names": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "spec",
+              "to",
+              "from"
+            ],
+            "properties": {
+              "spec": {
+                "type": "string",
+                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+              },
+              "to": {
+                "type": "string",
+                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+              },
+              "from": {
+                "type": "string",
+                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+              }
+            }
+          },
+          "members": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "traits": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "enum": [
+                "DslField",
+                "DslVariants"
+              ]
+            }
+          },
+          "declaration": {
+            "const": "struct Example {}"
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "mode": {
+                  "const": "Projection"
+                }
+              },
+              "required": [
+                "mode"
+              ]
+            },
+            "then": {
+              "properties": {
+                "names": true
+              },
+              "required": [
+                "names"
+              ]
+            },
+            "else": {
+              "properties": {
+                "names": false
+              }
+            }
+          }
+        ]
+      }
+    },
+    "ownedFronts": {
+      "const": [
+        "DslRecord",
+        "DslScalar",
+        "DslEnum",
+        "record_binding",
+        "record_projection",
+        "variant_binding"
+      ]
+    },
+    "higherFronts": {
+      "const": [
+        "DslArtifact",
+        "DslDiff",
+        "MutationLeaf",
+        "Mutations"
+      ]
+    }
+  }
+}

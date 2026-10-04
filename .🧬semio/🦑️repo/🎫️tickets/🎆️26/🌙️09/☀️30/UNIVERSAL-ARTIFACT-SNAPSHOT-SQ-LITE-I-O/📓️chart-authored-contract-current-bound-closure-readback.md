@@ -1,0 +1,9 @@
+# Chart Authored Contract Current Bound Closure Readback
+
+Read-only source audit; no execution or runtime credit. Current snapshot JSON defines its own closed AuthoredChartSpecification, requires width/height/layers, and references all thirteen normal ChartSpecification property definitions by their original absolute schema pointers. Language is optional here but, when present, keeps the original enum. The normal root ChartSpecification still requires width/height/language/layers. No language fallback is introduced.
+
+The snapshot TypeScript type omits normal language and coordinate, then restores optional language and a coordinate with the original kind and an open map of scalar or ordered scalar-array options. This deliberately repairs the narrower normal coordinate TypeScript shape for persisted schema-valid data; it does not change the normal inference type. Optional-property absence remains distinct from null.
+
+Current Native provider normative checks cover guide integer ticks and orientation, scale nice/constant/ticks positivity, padding bounds, fraction bounds, base exclusion, interpolator/interval enums and nonempty scheme. The existing finite-number, entity-kind, closed-field and required-field checks remain present. Both held and mounted Native NumericText still use default Display into a 32-byte buffer at line 76. Extreme finite numbers remain a predicted refusal boundary, intentionally retained by the owner for a genuine failing demand. The companion reader still accepts parseable finite text rather than enforcing a unique canonical spelling; retain the explicit authored REAL-edit policy and corruption demand separately.
+
+No Source/Native receipt is claimed by this audit. Parent reports Source six laws passing; that is external execution evidence, not this readback.

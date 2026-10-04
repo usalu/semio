@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/pack/error/refusal",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "package",
+    "dependencies",
+    "variant",
+    "retiredVariant",
+    "cases"
+  ],
+  "properties": {
+    "format": {
+      "const": 1
+    },
+    "package": {
+      "const": "semio-framework-pack-error"
+    },
+    "dependencies": {
+      "const": [
+        "semio-framework-diagnostic",
+        "semio-framework-value"
+      ]
+    },
+    "variant": {
+      "const": "ValueRefusal"
+    },
+    "retiredVariant": {
+      "const": "Schema"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "message",
+          "path",
+          "display"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "InvalidValue",
+              "Canceled",
+              "OwnershipLimit",
+              "AllocationFailed",
+              "WorkLimit",
+              "DepthLimit",
+              "UnsupportedOwner",
+              "InvariantViolated"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "path": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "display": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

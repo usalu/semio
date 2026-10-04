@@ -28,4 +28,4 @@ if (segments[0] === "framework-flow-physical-retirement") {
  throw new Error("Unknown Flow artifact verification");
  }
 }
-await runArtifactRustPackageMain(import.meta.dir, "semio-framework-artifact-flow-flow", { commands: { verify: OwnedVerifyScript } });
+await runArtifactRustPackageMain(import.meta.dir, "semio-framework-artifact-flow-flow", { snapshotSqliteTests: ["../../🧪️tests/🪶️sqlite/🟦️.ts"], commands: { verify: OwnedVerifyScript } });

@@ -5,34 +5,49 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "beforeFixtureJson": {
-      "type": [
-        "string",
-        "null"
-      ],
-      "x-semio-state": "artifact"
-    },
-    "lhsJson": {
-      "type": [
-        "string",
-        "null"
-      ],
-      "x-semio-state": "artifact"
-    },
-    "rhsJson": {
-      "type": [
-        "string",
-        "null"
-      ],
-      "x-semio-state": "artifact"
-    },
     "parameterBindings": {
       "anyOf": [
         {
           "type": "null"
         },
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/framework/replication/mutation/map/schema.json"
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/replication/mutation/map/schema.json"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "entries": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "operation": {
+                        "if": {
+                          "properties": {
+                            "kind": {
+                              "const": "set"
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "then": {
+                          "properties": {
+                            "value": {
+                              "$ref": "https://json.schemas.assets.semio-tech.com/framework/graph/manifest/property-value.json"
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
         }
       ],
       "x-semio-state": "artifact"
@@ -61,15 +76,18 @@
                             "kind": {
                               "const": "set"
                             }
-                          }
+                          },
+                          "type": "object"
                         },
                         "then": {
                           "properties": {
                             "value": {
                               "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/rewriting/artifact.json#/$defs/LayoutPoint"
                             }
-                          }
-                        }
+                          },
+                          "type": "object"
+                        },
+                        "type": "object"
                       }
                     }
                   }
@@ -77,6 +95,39 @@
               }
             }
           ]
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "workingGraph": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/rewriting/artifact.json#/properties/workingGraph"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "lhs": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/rewriting/artifact.json#/properties/lhs"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "rhs": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/rewriting/artifact.json#/properties/rhs"
         }
       ],
       "x-semio-state": "artifact"

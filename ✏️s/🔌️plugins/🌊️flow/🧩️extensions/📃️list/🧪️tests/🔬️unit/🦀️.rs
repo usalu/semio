@@ -7,8 +7,8 @@ fn sample_list() -> Dictionary {
 
 /// 🌱️ Wire-shape twin of [`super::number_dictionary`], built with the first-party
 /// `pack::json::Value` instead of `Dictionary`'s own `serde` codec — for JSON-text tests only.
-fn json_number(value: f64) -> pack::json::Value {
-    pack::json::object([("$schema".to_string(), pack::json::Value::from("number")), ("value".to_string(), pack::json::Value::from(value))])
+fn json_number(value: f64) -> semio_framework_pack_json::Value {
+    semio_framework_pack_json::object([("$schema".to_string(), semio_framework_pack_json::Value::from("number")), ("value".to_string(), semio_framework_pack_json::Value::from(value))])
 }
 
 #[semio_framework_async_macros::async_test]
@@ -104,8 +104,8 @@ async fn manifest_lists_operators() {
 #[semio_framework_async_macros::async_test]
 async fn evaluate_json_round_trips() {
     let reg = neural_engine::ColdOwner::new(module_registry());
-    let list = pack::json::object([("$schema".to_string(), pack::json::Value::from("list")), ("0".to_string(), json_number(1.0)), ("1".to_string(), json_number(2.0)), ("2".to_string(), json_number(3.0))]);
-    let input_json = pack::json::to_string(&pack::json::object([("list".to_string(), list)]));
+    let list = semio_framework_pack_json::object([("$schema".to_string(), semio_framework_pack_json::Value::from("list")), ("0".to_string(), json_number(1.0)), ("1".to_string(), json_number(2.0)), ("2".to_string(), json_number(3.0))]);
+    let input_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("list".to_string(), list)]));
     let out_json = evaluate_json(&reg, "list.size", &input_json);
     assert!(out_json.contains("\"count\""));
     assert!(out_json.contains("\"value\""));

@@ -56,7 +56,7 @@ async fn contribution_onto_cad_requires_a_declared_dependency() {
     // fires when the future is POLLED — `catch_unwind` over the bare builder call would catch
     // nothing. `resolve_ready` is the same bridge `bundle()` itself uses.
     let result = std::panic::catch_unwind(|| {
-        semio_framework::io::resolve_ready(
+        ::semio_framework_async::poll::resolve_ready(
             ExtensionBundle::new("cad-extension-aec-building-test-missing-dep", "Test Missing Dep", "0.1.0")
                 .extends("cad")
                 // ⚠️ deliberately NO `.depends_on("cad", …)` here.

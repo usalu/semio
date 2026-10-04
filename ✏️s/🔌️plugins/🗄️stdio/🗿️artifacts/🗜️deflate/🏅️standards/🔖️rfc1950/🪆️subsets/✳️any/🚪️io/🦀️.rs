@@ -499,6 +499,44 @@ impl DeflateEncodeJob {
         self.writer.out
     }
 
+    /// 🧵️ Advances the raw encoder without publishing job checkpoints.
+    fn advance_retained(
+        &mut self,
+        literal_codes: &[(u32, u8)],
+        distance_codes: &[(u32, u8)],
+        context: &mut semio_framework_job::StepContext<'_>,
+    ) -> RetainedZlibStep {
+        loop {
+            if self.complete {
+                return RetainedZlibStep::Complete;
+            }
+            let work = self.process_transition(&literal_codes, &distance_codes);
+            context.consume_fuel(work as u64);
+            if context.is_cancelled() {
+                return RetainedZlibStep::Cancelled;
+            }
+            if context.should_yield() {
+                return RetainedZlibStep::Yield;
+            }
+        }
+    }
+
+    fn take_retained_output(&mut self) -> Result<Vec<u8>, semio_framework_value::ValueError> {
+        if !self.complete {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "retained Deflate output requested before completion"));
+        }
+        Ok(std::mem::take(&mut self.writer.out))
+    }
+
+    fn retained_owned_bytes(&self) -> Result<usize, semio_framework_value::ValueError> {
+        self.input
+            .capacity()
+            .checked_add(self.writer.out.capacity())
+            .and_then(|bytes| bytes.checked_add(self.head.capacity().checked_mul(std::mem::size_of::<i32>())?))
+            .and_then(|bytes| bytes.checked_add(self.previous.capacity().checked_mul(std::mem::size_of::<i32>())?))
+            .ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit, "retained Deflate ownership overflow"))
+    }
+
     /// 📸️ Freezes the checkpoint at the current cursor and starts publishing it page by page.
     fn begin_checkpoint(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
         let state = PagedPayload::new(semio_framework_job::JobPayloadStream::CheckpointState, self.checkpoint_bytes());
@@ -512,6 +550,356 @@ impl DeflateEncodeJob {
         let output = PagedPayload::new(semio_framework_job::JobPayloadStream::CommitOutput, self.writer.out.clone());
         self.publication = Some(DeflatePublication::Commit { state, output });
         advance_publication(&mut self.publication, context)
+    }
+}
+
+/// 🧵️ Result of one bounded RFC 1950 retained-codec advance.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RetainedZlibStep {
+    Yield,
+    Complete,
+    Cancelled,
+}
+
+fn retained_inflate_refusal(error: semio_framework_deflate::DeflateError) -> semio_framework_value::ValueError {
+    use semio_framework_deflate::DeflateError;
+    let kind = match error {
+        DeflateError::OutputLimitExceeded => semio_framework_value::ValueRefusalKind::OwnershipLimit,
+        DeflateError::BadBlockType | DeflateError::BadStoredLength | DeflateError::BadHuffmanCode | DeflateError::BadDistance | DeflateError::UnexpectedEnd => semio_framework_value::ValueRefusalKind::InvalidValue,
+    };
+    semio_framework_value::ValueError::new(kind, format!("retained zlib decode refusal: {error:?}"))
+}
+
+/// 🌊️ Resumable RFC 1950 decoder with one raw-DEFLATE transition per fuel unit.
+pub struct RetainedZlibDecoder {
+    input: Vec<u8>,
+    raw_end: usize,
+    cursor: usize,
+    pending: Option<u8>,
+    expected_output: usize,
+    expected_adler: u32,
+    a: u32,
+    b: u32,
+    output: Vec<u8>,
+    inflater: semio_framework_deflate::Inflater,
+    complete: bool,
+    closing: bool,
+}
+
+impl RetainedZlibDecoder {
+    /// 🌱️ Admits the input, exact output, and RFC 1951 history ownership before decoding.
+    pub fn try_new(input: Vec<u8>, expected_output: usize, maximum_owned_bytes: usize) -> Result<Self, semio_framework_value::ValueError> {
+        use semio_framework_value::{ValueError, ValueRefusalKind};
+        if input.len() < 6 {
+            return Err(ValueError::new(ValueRefusalKind::InvalidValue, "zlib stream too short"));
+        }
+        let cmf = input[0];
+        let flg = input[1];
+        if cmf & 15 != 8 || cmf >> 4 > 7 {
+            return Err(ValueError::new(ValueRefusalKind::UnsupportedOwner, "unsupported zlib method or window"));
+        }
+        if !(u16::from(cmf) * 256 + u16::from(flg)).is_multiple_of(31) {
+            return Err(ValueError::new(ValueRefusalKind::InvalidValue, "zlib CMF/FLG check failed"));
+        }
+        if flg & 32 != 0 {
+            return Err(ValueError::new(ValueRefusalKind::UnsupportedOwner, "retained zlib decoder has no preset dictionary authority"));
+        }
+        let raw_end = input.len() - 4;
+        let expected_adler = u32::from_be_bytes(input[raw_end..].try_into().map_err(|_| ValueError::new(ValueRefusalKind::InvalidValue, "zlib checksum width"))?);
+        let window = 1usize << ((cmf >> 4) + 8);
+        let admitted = input.capacity().checked_add(expected_output).and_then(|bytes| bytes.checked_add(window)).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "retained zlib ownership overflow"))?;
+        if admitted > maximum_owned_bytes {
+            return Err(ValueError::new(ValueRefusalKind::OwnershipLimit, "retained zlib ownership exceeds caller limit"));
+        }
+        let mut output = Vec::new();
+        output.try_reserve_exact(expected_output).map_err(|_| ValueError::new(ValueRefusalKind::AllocationFailed, "retained zlib output allocation failed"))?;
+        let actual = input.capacity().checked_add(output.capacity()).and_then(|bytes| bytes.checked_add(window)).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "retained zlib actual ownership overflow"))?;
+        if actual > maximum_owned_bytes {
+            return Err(ValueError::new(ValueRefusalKind::OwnershipLimit, "retained zlib actual ownership exceeds caller limit"));
+        }
+        let mut inflater = semio_framework_deflate::Inflater::try_new_retained(window, window).map_err(retained_inflate_refusal)?;
+        let allocation = inflater.reserve_retained_history(window).map_err(|error| ValueError::new(error.kind, error.reason))?;
+        if !allocation.progressed && window != 0 {
+            return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "retained zlib history admission did not progress"));
+        }
+        Ok(Self { input, raw_end, cursor: 2, pending: None, expected_output, expected_adler, a: 1, b: 0, output, inflater, complete: false, closing: false })
+    }
+
+    /// ➡️ Advances until the current fuel or deadline is spent or the exact stream completes.
+    pub fn advance(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<RetainedZlibStep, semio_framework_value::ValueError> {
+        use semio_framework_deflate::InflateOutcome;
+        use semio_framework_value::{ValueError, ValueRefusalKind};
+        if self.closing {
+            return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "retained zlib decoder is closing"));
+        }
+        if self.complete {
+            return Ok(RetainedZlibStep::Complete);
+        }
+        context.set_stage("deflate:zlib-decode");
+        loop {
+            if context.is_cancelled() {
+                return Ok(RetainedZlibStep::Cancelled);
+            }
+            if context.should_yield() {
+                return Ok(RetainedZlibStep::Yield);
+            }
+            if self.pending.is_none() && self.cursor < self.raw_end {
+                self.pending = Some(self.input[self.cursor]);
+                self.cursor += 1;
+            }
+            let outcome = self.inflater.advance(&mut self.pending, self.cursor == self.raw_end).map_err(retained_inflate_refusal)?;
+            context.consume_fuel(1);
+            match outcome {
+                InflateOutcome::NeedInput if self.pending.is_none() && self.cursor == self.raw_end => return Err(ValueError::new(ValueRefusalKind::InvalidValue, "truncated retained zlib payload")),
+                InflateOutcome::NeedInput => {}
+                InflateOutcome::Wrote(byte) => {
+                    if self.output.len() == self.expected_output {
+                        return Err(ValueError::new(ValueRefusalKind::WorkLimit, "retained zlib expansion exceeds exact output extent"));
+                    }
+                    self.output.push(byte);
+                    self.a = (self.a + u32::from(byte)) % 65521;
+                    self.b = (self.b + self.a) % 65521;
+                }
+                InflateOutcome::Done => {
+                    let unused = self.inflater.terminal_unused_bytes().ok_or_else(|| ValueError::new(ValueRefusalKind::InvariantViolated, "retained zlib missing terminal state"))?;
+                    if self.pending.is_some() || self.cursor.checked_sub(unused) != Some(self.raw_end) {
+                        return Err(ValueError::new(ValueRefusalKind::InvalidValue, "trailing bytes after retained zlib terminal block"));
+                    }
+                    if self.output.len() != self.expected_output {
+                        return Err(ValueError::new(ValueRefusalKind::InvalidValue, "retained zlib output extent differs from declared extent"));
+                    }
+                    if (self.b << 16) | self.a != self.expected_adler {
+                        return Err(ValueError::new(ValueRefusalKind::InvalidValue, "retained zlib adler32 mismatch"));
+                    }
+                    self.complete = true;
+                    return Ok(RetainedZlibStep::Complete);
+                }
+            }
+        }
+    }
+
+    pub fn progress(&self) -> (usize, usize) {
+        (self.output.len(), self.expected_output)
+    }
+
+    pub fn owned_bytes(&self) -> Result<usize, semio_framework_value::ValueError> {
+        self.input.capacity().checked_add(self.output.capacity()).and_then(|bytes| bytes.checked_add(self.inflater.retained_allocated_bytes())).ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit, "retained zlib decoder ownership overflow"))
+    }
+
+    pub fn take_output(&mut self) -> Result<Vec<u8>, semio_framework_value::ValueError> {
+        if !self.complete {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "retained zlib output requested before completion"));
+        }
+        Ok(std::mem::take(&mut self.output))
+    }
+
+    pub fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if !self.closing {
+            return semio_framework_job::InteractiveJobCloseStep::Blocked;
+        }
+        if let Some((released_items, released_bytes)) = retire_deflate_vec_step(&mut self.output, maximum_items, maximum_bytes) {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+        }
+        if let Some((released_items, released_bytes)) = retire_deflate_vec_step(&mut self.input, maximum_items, maximum_bytes) {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+        }
+        match self.inflater.close_retained_step(maximum_items, maximum_bytes) {
+            semio_framework_deflate::RetainedInflateCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
+            semio_framework_deflate::RetainedInflateCloseStep::Complete => semio_framework_job::InteractiveJobCloseStep::Complete,
+        }
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.closing && self.output.capacity() == 0 && self.input.capacity() == 0 && self.inflater.retained_terminal_is_empty()
+    }
+}
+
+/// 🌊️ Resumable deterministic RFC 1950 encoder using the first-party retained raw job.
+pub struct RetainedZlibEncoder {
+    job: DeflateEncodeJob,
+    literal_codes: Vec<(u32, u8)>,
+    distance_codes: Vec<(u32, u8)>,
+    maximum_file_bytes: usize,
+    maximum_owned_bytes: usize,
+    adler_cursor: usize,
+    a: u32,
+    b: u32,
+    raw: Vec<u8>,
+    frame: Vec<u8>,
+    frame_cursor: usize,
+    phase: u8,
+    complete: bool,
+    closing: bool,
+}
+
+impl RetainedZlibEncoder {
+    /// 🌱️ Admits fixed-Huffman tables and proved worst-case output before work starts.
+    pub fn try_new(input: Vec<u8>, maximum_file_bytes: usize, maximum_owned_bytes: usize) -> Result<Self, semio_framework_value::ValueError> {
+        use semio_framework_value::{ValueError, ValueRefusalKind};
+        let raw_limit = input.len().checked_mul(9).and_then(|bits| bits.checked_add(17)).map(|bits| bits / 8).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "retained zlib output capacity overflow"))?;
+        let file_limit = raw_limit.checked_add(6).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "retained zlib framing extent overflow"))?;
+        if file_limit > maximum_file_bytes {
+            return Err(ValueError::new(ValueRefusalKind::OwnershipLimit, "retained zlib output exceeds caller file limit"));
+        }
+        let code_bytes = 288usize
+            .checked_add(32)
+            .and_then(|items| items.checked_mul(std::mem::size_of::<(u32, u8)>()))
+            .ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "retained zlib code ownership overflow"))?;
+        let admitted = input
+            .capacity()
+            .checked_add(HASH_SIZE.checked_mul(std::mem::size_of::<i32>()).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "retained zlib hash ownership overflow"))?)
+            .and_then(|bytes| bytes.checked_add(WINDOW.checked_mul(std::mem::size_of::<i32>())?))
+            .and_then(|bytes| bytes.checked_add(code_bytes))
+            .and_then(|bytes| bytes.checked_add(raw_limit))
+            .and_then(|bytes| bytes.checked_add(file_limit))
+            .ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "retained zlib encoder ownership overflow"))?;
+        if admitted > maximum_owned_bytes {
+            return Err(ValueError::new(ValueRefusalKind::OwnershipLimit, "retained zlib encoder ownership exceeds caller limit"));
+        }
+        let literal_codes = build_codes(&fixed_lit_lengths());
+        let distance_codes = build_codes(&fixed_dist_lengths());
+        let mut job = DeflateEncodeJob::new(input, usize::MAX);
+        job.writer.out.try_reserve_exact(raw_limit).map_err(|_| ValueError::new(ValueRefusalKind::AllocationFailed, "retained zlib raw output allocation failed"))?;
+        let actual = job
+            .retained_owned_bytes()?
+            .checked_add(literal_codes.capacity().checked_mul(std::mem::size_of::<(u32, u8)>()).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "retained zlib literal-code ownership overflow"))?)
+            .and_then(|bytes| bytes.checked_add(distance_codes.capacity().checked_mul(std::mem::size_of::<(u32, u8)>())?))
+            .and_then(|bytes| bytes.checked_add(file_limit))
+            .ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "retained zlib actual ownership overflow"))?;
+        if actual > maximum_owned_bytes {
+            return Err(ValueError::new(ValueRefusalKind::OwnershipLimit, "retained zlib actual ownership exceeds caller limit"));
+        }
+        Ok(Self { job, literal_codes, distance_codes, maximum_file_bytes, maximum_owned_bytes, adler_cursor: 0, a: 1, b: 0, raw: Vec::new(), frame: Vec::new(), frame_cursor: 0, phase: 0, complete: false, closing: false })
+    }
+
+    /// ➡️ Advances checksum, raw encoding, and framing within the caller's step budget.
+    pub fn advance(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<RetainedZlibStep, semio_framework_value::ValueError> {
+        use semio_framework_value::{ValueError, ValueRefusalKind};
+        if self.closing {
+            return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "retained zlib encoder is closing"));
+        }
+        if self.complete {
+            return Ok(RetainedZlibStep::Complete);
+        }
+        loop {
+            if context.is_cancelled() {
+                return Ok(RetainedZlibStep::Cancelled);
+            }
+            if context.should_yield() {
+                return Ok(RetainedZlibStep::Yield);
+            }
+            match self.phase {
+                0 => {
+                    context.set_stage("deflate:zlib-checksum");
+                    if self.adler_cursor < self.job.input.len() {
+                        let byte = self.job.input[self.adler_cursor];
+                        self.adler_cursor += 1;
+                        self.a = (self.a + u32::from(byte)) % 65521;
+                        self.b = (self.b + self.a) % 65521;
+                        context.consume_fuel(1);
+                    } else {
+                        self.phase = 1;
+                    }
+                }
+                1 => {
+                    context.set_stage("deflate:zlib-encode");
+                    match self.job.advance_retained(&self.literal_codes, &self.distance_codes, context) {
+                        RetainedZlibStep::Yield => return Ok(RetainedZlibStep::Yield),
+                        RetainedZlibStep::Cancelled => return Ok(RetainedZlibStep::Cancelled),
+                        RetainedZlibStep::Complete => {
+                            self.raw = self.job.take_retained_output()?;
+                            let size = self.raw.len().checked_add(6).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "retained zlib result extent overflow"))?;
+                            if size > self.maximum_file_bytes {
+                                return Err(ValueError::new(ValueRefusalKind::OwnershipLimit, "retained zlib result exceeds caller file limit"));
+                            }
+                            self.frame.try_reserve_exact(size).map_err(|_| ValueError::new(ValueRefusalKind::AllocationFailed, "retained zlib frame allocation failed"))?;
+                            let owned = self.owned_bytes()?;
+                            if owned > self.maximum_owned_bytes {
+                                return Err(ValueError::new(ValueRefusalKind::OwnershipLimit, "retained zlib actual ownership exceeds caller limit"));
+                            }
+                            self.frame.extend_from_slice(&[0x78, 0x01]);
+                            self.phase = 2;
+                        }
+                    }
+                }
+                2 => {
+                    context.set_stage("deflate:zlib-frame");
+                    if self.frame_cursor < self.raw.len() {
+                        self.frame.push(self.raw[self.frame_cursor]);
+                        self.frame_cursor += 1;
+                        context.consume_fuel(1);
+                    } else {
+                        self.frame.extend_from_slice(&((self.b << 16) | self.a).to_be_bytes());
+                        self.complete = true;
+                        self.phase = 3;
+                        return Ok(RetainedZlibStep::Complete);
+                    }
+                }
+                _ => return Ok(RetainedZlibStep::Complete),
+            }
+        }
+    }
+
+    pub fn progress(&self) -> (usize, usize) {
+        match self.phase {
+            0 => (self.adler_cursor, self.job.input.len()),
+            1 => self.job.progress(),
+            _ => (self.frame_cursor, self.raw.len()),
+        }
+    }
+
+    pub fn owned_bytes(&self) -> Result<usize, semio_framework_value::ValueError> {
+        self.job
+            .retained_owned_bytes()?
+            .checked_add(self.literal_codes.capacity().checked_mul(std::mem::size_of::<(u32, u8)>()).ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit, "retained zlib literal-code ownership overflow"))?)
+            .and_then(|bytes| bytes.checked_add(self.distance_codes.capacity().checked_mul(std::mem::size_of::<(u32, u8)>())?))
+            .and_then(|bytes| bytes.checked_add(self.raw.capacity()))
+            .and_then(|bytes| bytes.checked_add(self.frame.capacity()))
+            .ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit, "retained zlib encoder ownership overflow"))
+    }
+
+    pub fn take_output(&mut self) -> Result<Vec<u8>, semio_framework_value::ValueError> {
+        if !self.complete {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "retained zlib frame requested before completion"));
+        }
+        Ok(std::mem::take(&mut self.frame))
+    }
+
+    pub fn begin_close(&mut self) {
+        self.closing = true;
+        semio_framework_job::InteractiveJob::begin_close(&mut self.job);
+    }
+
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if !self.closing {
+            return semio_framework_job::InteractiveJobCloseStep::Blocked;
+        }
+        if let Some((released_items, released_bytes)) = retire_deflate_vec_step(&mut self.raw, maximum_items, maximum_bytes) {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+        }
+        if let Some((released_items, released_bytes)) = retire_deflate_vec_step(&mut self.frame, maximum_items, maximum_bytes) {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+        }
+        if let Some((released_items, released_bytes)) = retire_deflate_vec_step(&mut self.literal_codes, maximum_items, maximum_bytes) {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+        }
+        if let Some((released_items, released_bytes)) = retire_deflate_vec_step(&mut self.distance_codes, maximum_items, maximum_bytes) {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+        }
+        semio_framework_job::InteractiveJob::close_step(&mut self.job, maximum_items, maximum_bytes)
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.closing
+            && self.raw.capacity() == 0
+            && self.frame.capacity() == 0
+            && self.literal_codes.capacity() == 0
+            && self.distance_codes.capacity() == 0
+            && semio_framework_job::InteractiveJob::terminal_is_empty(&self.job)
     }
 }
 
@@ -692,16 +1080,18 @@ impl semio_framework_job::InteractiveJob for DeflateEncodeJob {
 fn retire_deflate_vec_step<T>(values: &mut Vec<T>, maximum_items: usize, maximum_bytes: usize) -> Option<(usize, usize)> {
     let item_bytes = size_of::<T>();
     if !values.is_empty() {
-        if maximum_items == 0 || maximum_bytes < item_bytes {
+        let byte_items = if item_bytes == 0 { maximum_items } else { maximum_bytes / item_bytes };
+        let released_items = values.len().min(maximum_items).min(byte_items);
+        if released_items == 0 {
             return Some((0, 0));
         }
-        drop(values.pop());
-        return Some((1, item_bytes));
+        values.truncate(values.len() - released_items);
+        return Some((released_items, released_items * item_bytes));
     }
     if values.capacity() == 0 {
         return None;
     }
-    let backing_bytes = values.capacity().saturating_mul(item_bytes);
+    let backing_bytes = values.capacity().checked_mul(item_bytes).unwrap_or(usize::MAX);
     if maximum_items == 0 || maximum_bytes < backing_bytes {
         return Some((0, 0));
     }
@@ -832,12 +1222,12 @@ impl TunedDeflateEncodeJob {
 
     /// 💾 Captures all encoder cursors, indices, tokens, and partial output without replay.
     pub fn checkpoint_bytes(&self) -> Vec<u8> {
-        pack::to_json_string(self).into_bytes()
+        semio_framework_pack_json::to_json_string(self).into_bytes()
     }
 
     /// ♻️ Restores a tuned encoder from [`Self::checkpoint_bytes`].
     pub fn from_checkpoint(bytes: &[u8]) -> Result<Self, String> {
-        std::str::from_utf8(bytes).map_err(|error| format!("invalid tuned DEFLATE checkpoint: {error}")).and_then(|text| pack::from_json_str(text).map_err(|error| format!("invalid tuned DEFLATE checkpoint: {error}")))
+        std::str::from_utf8(bytes).map_err(|error| format!("invalid tuned DEFLATE checkpoint: {error}")).and_then(|text| semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("invalid tuned DEFLATE checkpoint: {error}")))
     }
 
     fn output(&self) -> Vec<u8> {
@@ -1247,7 +1637,7 @@ pub mod io_registry {
 /// plugin root (`🗄️stdio/🦀️.rs`).
 #[cfg(not(target_arch = "wasm32"))]
 pub fn register_schema_specs() {
-    semio_framework_plugin::resolve_ready(dsl::registry::register_schema_spec("stdio.deflate", DeflateSnapshot::__dsl_spec));
+    ::semio_framework_async::poll::resolve_ready(dsl::registry::register_schema_spec("stdio.deflate", DeflateSnapshot::__dsl_spec));
 }
 
 #[cfg(target_arch = "wasm32")]

@@ -18,13 +18,13 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️delete-primitive/🚫️removes/🎯️outcome/🔣️.json");
 
 fn before() -> SemioMeshSnapshot {
-    dsl::json::from_json_str(BEFORE).expect("delete-primitive before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-primitive before snapshot decodes")
 }
 fn expected_after() -> SemioMeshSnapshot {
-    dsl::json::from_json_str(AFTER).expect("delete-primitive after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-primitive after snapshot decodes")
 }
 fn mutation() -> SemioMeshMutation {
-    dsl::json::from_json_str(MUTATION).expect("delete-primitive mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-primitive mutation decodes")
 }
 
 /// ▶️ The leading primitive goes; the trailing one slides down inside the same mesh.
@@ -43,7 +43,7 @@ async fn removes_the_leading_primitive_inside_the_mesh() {
 async fn the_undo_strips_the_tail_recreates_the_primitive_then_rebuilds_the_tail() {
     let base = before();
     let mutation = mutation();
-    let undo = mutation.inverse(&base);
+    let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 3, "one delete per trailing primitive, then the re-create, then one create per trailing primitive");
     assert!(matches!(undo[0], SemioMeshMutation::DeletePrimitive(_)), "the tail is stripped first");
     assert!(matches!(undo[1], SemioMeshMutation::CreatePrimitive(_)) && matches!(undo[2], SemioMeshMutation::CreatePrimitive(_)), "then the removed primitive and the tail are re-created in order");
@@ -58,12 +58,12 @@ async fn the_undo_strips_the_tail_recreates_the_primitive_then_rebuilds_the_tail
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioMeshSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: SemioMeshSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "delete-primitive/removes-the-leading-primitive-and-keeps-the-trailing-one: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("delete-primitive mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(mutation()))).expect("delete-primitive mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("delete-primitive mutation reparses");
     assert_eq!(reencoded, original, "delete-primitive/removes-the-leading-primitive-and-keeps-the-trailing-one: committed mutation JSON is not canonical");
 }
@@ -82,7 +82,7 @@ async fn declared_outcome_holds_as_committed() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioMeshMutation as Mutation<SemioMeshSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "delete-primitive/removes-the-leading-primitive-and-keeps-the-trailing-one: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -91,14 +91,14 @@ async fn produces_committed_diff() {
 /// allowed to touch appears in it at all.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
-    let decoded: SemioMeshDiff = dsl::json::from_json_str(DIFF).expect("committed delete-primitive diff decodes");
+    let decoded: SemioMeshDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed delete-primitive diff decodes");
     let meshes = decoded.meshes.as_ref().expect("delete-primitive must write the meshes triple");
     assert!(meshes.removed.is_empty() && meshes.added.is_empty(), "the mesh itself is modified, never removed");
     let nested = meshes.modified[0].diff.primitives.as_ref().expect("the per-mesh diff must carry a primitives triple");
     assert_eq!(nested.removed, vec!["prim-a".to_string()], "the nested removal is addressed by primitive id");
     assert!(nested.modified.is_empty() && nested.added.is_empty(), "a removal neither modifies nor adds");
     assert!(decoded.materials.is_none() && decoded.textures.is_none(), "no material or texture slot may appear in the diff");
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "delete-primitive/removes-the-leading-primitive-and-keeps-the-trailing-one: committed diff JSON is not canonical");
 }
@@ -106,7 +106,7 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioMeshDiff = dsl::json::from_json_str(DIFF).expect("committed delete-primitive diff decodes");
+    let decoded: SemioMeshDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed delete-primitive diff decodes");
     let produced = decoded.apply(&before()).expect("committed delete-primitive diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-primitive/removes-the-leading-primitive-and-keeps-the-trailing-one: committed diff did not carry before to after");
 }

@@ -1,12 +1,8 @@
 //! 🧬️ BmpArtifact schema — full artifact state.
 
-use crate::schema::snapshot::{BmpPaletteEntry, BmpRowOrder};
 use crate::BmpSnapshot;
 use framework_schema::ArtifactSchema;
 
-//#region 🔖️Artifact
-/// 🧬️ Full `stdio.bmp` artifact state — mirrors `BmpSnapshot`'s complete BITMAPINFOHEADER +
-/// palette + pixels model field-for-field.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.bmp")]
@@ -14,39 +10,10 @@ pub struct BmpArtifact {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    pub header_size: u32,
-    #[state(artifact)]
-    pub width: u32,
-    #[state(artifact)]
-    pub height: u32,
-    #[state(artifact)]
-    pub row_order: BmpRowOrder,
-    #[state(artifact)]
-    pub planes: u16,
-    #[state(artifact)]
-    pub bits_per_pixel: u16,
-    #[state(artifact)]
-    pub compression: u32,
-    #[state(artifact)]
-    pub image_size: u32,
-    #[state(artifact)]
-    pub x_pixels_per_meter: i32,
-    #[state(artifact)]
-    pub y_pixels_per_meter: i32,
-    #[state(artifact)]
-    pub colors_used: u32,
-    #[state(artifact)]
-    pub colors_important: u32,
-    #[state(artifact)]
     #[value(default)]
-    pub palette: Vec<BmpPaletteEntry>,
-    #[state(artifact)]
-    #[value(default)]
-    pub pixels: Vec<u8>,
+    pub bytes: Vec<u8>,
 }
-//#endregion 🔖️Artifact
 
-//#region 🔖️Conversions
 impl Default for BmpArtifact {
     fn default() -> Self {
         Self::from_snapshot(BmpSnapshot::default())
@@ -54,71 +21,19 @@ impl Default for BmpArtifact {
 }
 
 impl BmpArtifact {
-    /// 📸️ Persisted subset.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> BmpSnapshot {
-        BmpSnapshot {
-            schema: self.schema.clone(),
-            header_size: self.header_size,
-            width: self.width,
-            height: self.height,
-            row_order: self.row_order,
-            planes: self.planes,
-            bits_per_pixel: self.bits_per_pixel,
-            compression: self.compression,
-            image_size: self.image_size,
-            x_pixels_per_meter: self.x_pixels_per_meter,
-            y_pixels_per_meter: self.y_pixels_per_meter,
-            colors_used: self.colors_used,
-            colors_important: self.colors_important,
-            palette: self.palette.clone(),
-            pixels: self.pixels.clone(),
-        }
+        BmpSnapshot { schema: self.schema.clone(), bytes: self.bytes.clone() }
     }
 
-    /// 🧬️ Builds a full artifact from a snapshot.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: BmpSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            header_size: snapshot.header_size,
-            width: snapshot.width,
-            height: snapshot.height,
-            row_order: snapshot.row_order,
-            planes: snapshot.planes,
-            bits_per_pixel: snapshot.bits_per_pixel,
-            compression: snapshot.compression,
-            image_size: snapshot.image_size,
-            x_pixels_per_meter: snapshot.x_pixels_per_meter,
-            y_pixels_per_meter: snapshot.y_pixels_per_meter,
-            colors_used: snapshot.colors_used,
-            colors_important: snapshot.colors_important,
-            palette: snapshot.palette,
-            pixels: snapshot.pixels,
-        }
+        Self { schema: snapshot.schema, bytes: snapshot.bytes }
     }
 
-    /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_snapshot(&mut self, snapshot: BmpSnapshot) {
         self.schema = snapshot.schema;
-        self.header_size = snapshot.header_size;
-        self.width = snapshot.width;
-        self.height = snapshot.height;
-        self.row_order = snapshot.row_order;
-        self.planes = snapshot.planes;
-        self.bits_per_pixel = snapshot.bits_per_pixel;
-        self.compression = snapshot.compression;
-        self.image_size = snapshot.image_size;
-        self.x_pixels_per_meter = snapshot.x_pixels_per_meter;
-        self.y_pixels_per_meter = snapshot.y_pixels_per_meter;
-        self.colors_used = snapshot.colors_used;
-        self.colors_important = snapshot.colors_important;
-        self.palette = snapshot.palette;
-        self.pixels = snapshot.pixels;
+        self.bytes = snapshot.bytes;
     }
 }
-//#endregion 🔖️Conversions
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.stdio.bmp`.
@@ -126,7 +41,9 @@ impl BmpArtifact {
 pub fn bmp_artifact_schema_descriptor() -> semio_framework_schema_registry::ArtifactSchemaDescriptor {
     semio_framework_schema_registry::ArtifactSchemaDescriptor {
         id: "s.stdio.bmp",
-        artifact: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
+        artifact: semio_framework_schema_registry::FacetLeaves {
+            rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto")
+        },
         snapshot: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
@@ -161,7 +78,7 @@ pub mod derived_construction {
     #[derive(Clone, Debug, Default)]
     pub struct BmpBuilderConstruction {
         snapshot: BmpSnapshot,
-        diagnostics: Vec<dsl::Diagnostic>,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
     }
 
     impl ArtifactBuilder for BmpBuilderConstruction {
@@ -174,7 +91,7 @@ pub mod derived_construction {
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(Self::from_snapshot(<BmpSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
@@ -188,7 +105,7 @@ pub mod derived_construction {
             self.snapshot = <BmpDiff as protocol::MutationDiff<BmpSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -269,14 +186,14 @@ pub mod derived_analysis {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <BmpSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }
@@ -329,23 +246,6 @@ pub fn empty_bmp_snapshot() -> BmpSnapshot {
 /// `fixture_honesty_law`'s `parse_dsl(fixture) == demo()` identity). No palette (bpp=24 has none).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_bmp_snapshot() -> BmpSnapshot {
-    use crate::standards::v_v3::subsets::any::io::row_bytes;
-    BmpSnapshot {
-        schema: crate::STDIO_BMP_DOCUMENT_SCHEMA.into(),
-        header_size: 40,
-        width: 4,
-        height: 2,
-        row_order: BmpRowOrder::BottomUp,
-        planes: 1,
-        bits_per_pixel: 24,
-        compression: 0,
-        image_size: row_bytes(4, 24) as u32 * 2,
-        x_pixels_per_meter: 2835,
-        y_pixels_per_meter: 2835,
-        colors_used: 0,
-        colors_important: 0,
-        palette: Vec::new(),
-        pixels: vec![255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 255, 255, 0, 255, 0, 255, 255, 255, 255, 0, 255, 255, 128, 128, 128, 255, 0, 0, 0, 255],
-    }
+    BmpSnapshot { schema: crate::STDIO_BMP_DOCUMENT_SCHEMA.into(), bytes: crate::io::demo_bmp_bytes() }
 }
 //#endregion 🔖️DocumentHelpers

@@ -9,7 +9,6 @@
 
 use crate::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::shape::compute_semio_table_shape;
 //#region 🔖️Inference
@@ -24,8 +23,11 @@ pub struct SemioTableInference {
 }
 
 impl protocol::Inference<SemioTableSnapshot> for SemioTableInference {
-    fn infer(snapshot: &SemioTableSnapshot) -> Self {
+    fn infer(snapshot: &SemioTableSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { shape: compute_semio_table_shape(snapshot) }
+    
+        })
     }
 }
 
@@ -35,7 +37,9 @@ impl protocol::Inference<SemioTableSnapshot> for SemioTableInference {
 /// defensive pattern raster's `RasterInference` documents).
 impl Default for SemioTableInference {
     fn default() -> Self {
-        <Self as protocol::Inference<SemioTableSnapshot>>::infer(&SemioTableSnapshot::default())
+        let snapshot = &SemioTableSnapshot::default();
+
+        Self { shape: compute_semio_table_shape(snapshot) }
     }
 }
 
@@ -51,16 +55,6 @@ impl protocol::InferenceSpec<SemioTableSnapshot> for SemioTableInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 💡️ No `InferredField`s here (a column-kind census is a single whole-snapshot fold over already-
-/// flat `columns`, `rowCount` a single length read) — the default `infer_cached` passthrough
-/// (`ArtifactInferrer::infer_cached`) is exact.
-impl ArtifactInferrer for crate::standards::v1::subsets::table::schema::SemioTableBuilder {
-    type Snapshot = SemioTableSnapshot;
-    type Inference = SemioTableInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.semio.table.inference`'s facet leaves into the OS-wide inference catalog

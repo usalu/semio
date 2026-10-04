@@ -26,7 +26,7 @@ fn a_projected_backbone_effect_parses_into_the_host_send_message() {
     let projected: Vec<&serde_json::Value> = fixture["effects"].as_array().expect("effects").iter().map(|law| &law["host"]).filter(|host| !host.is_null()).collect();
     assert_eq!(projected.len(), 1);
     for host in projected {
-        let parsed = dsl::os_pack::json::from_json_str::<Effect>(&host.to_string()).expect("host effect parses");
+        let parsed = semio_framework_pack_json::from_json_str::<Effect>(&host.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("host effect parses");
         assert_eq!(parsed, expected(host));
     }
 }
@@ -35,6 +35,6 @@ fn a_projected_backbone_effect_parses_into_the_host_send_message() {
 fn the_bridge_answer_carries_the_backbone_effect_to_the_shell() {
     let fixture = fixture();
     let answer = &fixture["answer"]["json"];
-    let parsed = dsl::os_pack::json::from_json_str::<InvocationResult>(&answer.to_string()).expect("bridge answer parses");
+    let parsed = semio_framework_pack_json::from_json_str::<InvocationResult>(&answer.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("bridge answer parses");
     assert_eq!(parsed.requested_effects, vec![expected(&answer["requestedEffects"][0])]);
 }

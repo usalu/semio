@@ -95,6 +95,7 @@ Feature: Apply every typed XLSX ECMA-376 mutation to a real-world workbook
       | rename-sheet | {"name":"Länderübersicht","newName":"Länder"} |
       | set-cell     | {"address":{"partPath":"xl/worksheets/sheet1.xml","nodePath":[3,2,2],"namespaceUri":"http://schemas.openxmlformats.org/spreadsheetml/2006/main","localName":"c","revision":"c10cb4fa36844692"},"value":{"kind":"inlineString","value":"Restado (überarbeitet)"}} |
       | remove-cell  | {"address":{"partPath":"xl/worksheets/sheet1.xml","nodePath":[3,5,7],"namespaceUri":"http://schemas.openxmlformats.org/spreadsheetml/2006/main","localName":"c","revision":"b2b766d8b96c5b6b"}} |
+      | patch-snapshot | {"patch": {"operation": "set", "path": "/xmlParts/5/document/root/children/0/children/0/children/0/text", "value": "Kennung (gepatcht)"}} |
 
   @id-mutate
   @level-exhaustive
@@ -134,6 +135,7 @@ Feature: Apply every typed XLSX ECMA-376 mutation to a real-world workbook
       | insert-shared-string | {"value":"Ökobau Referenzquelle 2024"} |
       | remove-shared-string | {"index":229} |
       | set-shared-string    | {"index":0,"value":"Aktualisierter Quellwert"} |
+      | patch-snapshot | {"patch": {"operation": "set", "path": "/xmlParts/5/document/root/children/0/children/0/children/0/text", "value": "Kennung (gepatcht)"}} |
 
   @id-identity-round-trip
   @level-long

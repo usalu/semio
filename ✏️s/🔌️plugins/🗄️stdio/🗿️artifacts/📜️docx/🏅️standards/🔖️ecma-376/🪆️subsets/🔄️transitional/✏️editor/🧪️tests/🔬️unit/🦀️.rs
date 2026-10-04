@@ -8,19 +8,23 @@ fn snapshot_with_blocks(body: Vec<DocxBlock>) -> DocxSnapshot {
     build_minimal_docx(DocxDocument { body, styles: Vec::new() })
 }
 
-fn action_arguments(address: &DocxXmlAddress, text: &str) -> dsl::DslValue {
-    dsl::DslValue::object([
+fn action_arguments(address: &DocxXmlAddress, text: &str) -> semio_framework_value::DslValue {
+    semio_framework_value::DslValue::object([
         (
             "address".into(),
-            dsl::DslValue::object([
-                ("partPath".into(), dsl::DslValue::String(address.part_path.clone())),
-                ("nodePath".into(), dsl::DslValue::Array(address.node_path.iter().map(|index| dsl::DslValue::uint(*index as u64)).collect())),
-                ("expectedName".into(), dsl::DslValue::String(address.expected_name.clone())),
-                ("revision".into(), dsl::DslValue::String(address.revision.clone())),
+            semio_framework_value::DslValue::object([
+                ("partPath".into(), semio_framework_value::DslValue::String(address.part_path.clone())),
+                ("nodePath".into(), semio_framework_value::DslValue::Array(address.node_path.iter().map(|index| semio_framework_value::DslValue::uint(*index as u64)).collect())),
+                ("expectedName".into(), semio_framework_value::DslValue::String(address.expected_name.clone())),
+                ("revision".into(), semio_framework_value::DslValue::String(address.revision.clone())),
             ]),
         ),
-        ("text".into(), dsl::DslValue::String(text.into())),
+        ("text".into(), semio_framework_value::DslValue::String(text.into())),
     ])
+}
+
+fn formatting_arguments(address: &DocxXmlAddress) -> semio_framework_value::DslValue {
+    semio_framework_value::DslValue::object([("address".into(), semio_framework_value::ToValue::to_value(address)), ("bold".into(), semio_framework_value::DslValue::Bool(true)), ("italic".into(), semio_framework_value::DslValue::Bool(false)), ("underline".into(), semio_framework_value::DslValue::Bool(true))])
 }
 
 #[semio_framework_async_macros::async_test]
@@ -28,6 +32,16 @@ async fn create_docx_transitional_editor_builds_a_definition_for_the_editor_role
     let def = create_docx_transitional_editor();
     assert_eq!(def.role, semio_framework_plugin::AppRole::Editor);
     assert_eq!(def.dialect, DOCX_TRANSITIONAL_EDITOR_DIALECT.into());
+}
+
+#[test]
+fn initial_transitional_document_renders_one_empty_paragraph_target() {
+    let snapshot = <DocxTransitionalEditor as ArtifactEditor>::initial_snapshot();
+    let targets = crate::schema::mutations::docx_top_level_text_targets(&snapshot, 0).unwrap();
+    assert_eq!(targets.len(), 1);
+    assert_eq!(targets[0].kind, crate::schema::mutations::DocxTextTargetKind::EmptyParagraph);
+    assert_eq!(targets[0].text, "");
+    assert_eq!(main::render(&snapshot, semio_framework_plugin::UiPublicationRevision(23)).unwrap().children.len(), 1);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -89,4 +103,13 @@ async fn stale_set_page_revision_is_rejected() {
     let mut address = docx_block_run_address(&snapshot, &DocxBlockPath { segments: Vec::new(), index: 0 }, 0).expect("canonical address");
     address.revision = "0000000000000000".into();
     assert!(build_set_page_mutation(&snapshot, &address, "draft").is_err());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn set_run_formatting_requires_and_preserves_the_complete_canonical_address() {
+    let snapshot = snapshot_with_blocks(vec![DocxBlock::paragraph("current")]);
+    let address = docx_block_run_address(&snapshot, &DocxBlockPath { segments: Vec::new(), index: 0 }, 0).expect("canonical address");
+    let command = <DocxTransitionalEditor as ArtifactEditor>::command_from_action("set-run-formatting", Some(&formatting_arguments(&address))).expect("canonical formatting command");
+    assert_eq!(command, semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(DocxTransitionalEditorCommand::SetRunFormatting { address, bold: true, italic: false, underline: true }));
+    assert!(<DocxTransitionalEditor as ArtifactEditor>::command_from_action("set-run-formatting", None).is_err());
 }

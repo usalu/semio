@@ -59,7 +59,7 @@ fn stray(mutation: &En1996Mutation) -> Option<En1996Mutation> {
             addressed = true;
         }
     }
-    addressed.then(|| mutation.with_payload_value(dsl::DslValue::from(&payload)).ok()).flatten()
+    addressed.then(|| mutation.with_payload_value(semio_framework_value::DslValue::from(&payload)).ok()).flatten()
 }
 
 /// ⚖️ One bundle's breaches, and the outcome classes it shows production dispatch reaching. Every vector lands on its
@@ -88,12 +88,12 @@ fn vector_breaches(bundle: &Path, mutation: &En1996Mutation, reached: &mut BTree
     }
     if status != "rejected" {
         let raised = <En1996Mutation as protocol::Mutation<En1996Snapshot>>::diff(mutation, &before);
-        if json(&pack::json::to_json_string(raised.diff())) != json(&read(&bundle.join("🔺️diff/🔣️.json"))) {
+        if json(&semio_framework_pack_json::to_json_string(raised.diff())) != json(&read(&bundle.join("🔺️diff/🔣️.json"))) {
             breaches.push(format!("{name}: the produced diff is not the committed diff"));
         }
     }
     if status == "applied" {
-        let steps = inverse_en1996_mutation(mutation, &before);
+        let steps = inverse_en1996_mutation(mutation, &before).expect("valid retained mutation inverse fixture");
         let restored = steps.iter().fold(applied, |document, step| apply(&document, step).0);
         if steps.is_empty() || restored != before {
             breaches.push(format!("{name}: the mutation's own inverse ({} step(s)) does not restore the before-snapshot", steps.len()));

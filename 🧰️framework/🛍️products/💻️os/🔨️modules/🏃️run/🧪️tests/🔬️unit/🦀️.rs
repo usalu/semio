@@ -28,6 +28,14 @@ impl MediaCache for TestMediaCache {
 /// 🧪️ Outputs are keyed by app id, not by handle — a real app's export is a function of its
 /// document/logic, not of the ephemeral instance handle a host happens to mint this call, and a
 /// node genuinely does get re-opened (a fresh handle) on every dirty re-run.
+///
+/// 🗃️ Whole-document loads follow the guest's stepped archive protocol (`📓️api-stepped-document-load.md` §2–§3): an
+/// admission keyed by its own sequence that needs both pack and spr, `fold_per_poll` history operations folded per poll
+/// (`total` = one per `.spr` byte plus the commit), a cancel restoring the previous document with zero trace, an
+/// acknowledgement releasing the terminal, and every other command refused `document.loading` while a load is live.
+/// A structured media input of [`FAKE_DOCUMENT_SCHEMA`] is a whole document of the node's own schema: the fake guest admits it as
+/// such a load under the import's own sequence and answers its pending status, like `consume_media` does.
+/// `sent` records every command each handle received, so a law can name exactly what a node was sent.
 #[derive(Default)]
 struct FakeHost {
     documents: HashMap<u32, (Vec<u8>, Vec<u8>)>,
@@ -37,11 +45,140 @@ struct FakeHost {
     blob_store: InMemoryBlobStore,
     next: u32,
     imported: Vec<(u32, String, Media)>,
+    loads: HashMap<u32, FakeLoad>,
+    fold_per_poll: u64,
+    polls: usize,
+    cancel_at_poll: Option<usize>,
+    run_cancel: Arc<Mutex<Option<CancelToken>>>,
+    fault_at_poll: Option<usize>,
+    sent: Vec<(u32, &'static str)>,
+}
+
+/// 🎞️ The document schema every [`FakeHost`] node owns: a structured media input of it replaces the node's whole document.
+const FAKE_DOCUMENT_SCHEMA: &str = "fake.document";
+
+/// 📜️ History operations the whole document a media input carries stands for in [`FakeHost`]'s fold model.
+const FAKE_MEDIA_DOCUMENT_HISTORY: usize = 40;
+
+/// 🗃️ One live archive load inside [`FakeHost`].
+struct FakeLoad {
+    operation: u64,
+    document: (Vec<u8>, Vec<u8>),
+    completed: u64,
+    total: u64,
+    state: protocol::DocumentArchiveLoadState,
+    cancel_requested: bool,
+    fault: Vec<u8>,
+}
+
+impl FakeLoad {
+    fn terminal(&self) -> bool {
+        matches!(self.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault)
+    }
+
+    fn status(&self) -> protocol::DocumentArchiveLoadStatus {
+        protocol::DocumentArchiveLoadStatus { operation: self.operation, state: self.state, completed: self.completed, total: self.total, fault: self.fault.clone() }
+    }
+}
+
+/// 🏷️ The command name a law compares a node's sent script against.
+fn command_name(command: &AppCommand) -> &'static str {
+    match command {
+        AppCommand::SetMergePolicy { .. } => "SetMergePolicy",
+        AppCommand::LoadConfig { .. } => "LoadConfig",
+        AppCommand::LoadDocumentArchive { .. } => "LoadDocumentArchive",
+        AppCommand::PollDocumentArchiveLoad { .. } => "PollDocumentArchiveLoad",
+        AppCommand::CancelDocumentArchiveLoad { .. } => "CancelDocumentArchiveLoad",
+        AppCommand::AcknowledgeDocumentArchiveLoad { .. } => "AcknowledgeDocumentArchiveLoad",
+        AppCommand::MediaIn { .. } => "MediaIn",
+        AppCommand::MediaOut { .. } => "MediaOut",
+        AppCommand::MediaFingerprint { .. } => "MediaFingerprint",
+        AppCommand::ReadDocument { .. } => "ReadDocument",
+        AppCommand::ReadConfig { .. } => "ReadConfig",
+        _ => "other",
+    }
 }
 
 impl FakeHost {
     fn set_output(&mut self, app_id: &str, port: &str, json: &str) {
         self.outputs.insert((app_id.to_string(), port.to_string()), Media { media_type: fake_media_type(), payload: MediaPayload::Structured { schema: "test".into(), json: json.into() } });
+    }
+
+    /// 🎞️ Makes `port` of `app_id` export a whole document of [`FAKE_DOCUMENT_SCHEMA`].
+    fn set_document_output(&mut self, app_id: &str, port: &str, json: &str) {
+        self.outputs.insert((app_id.to_string(), port.to_string()), Media { media_type: fake_media_type(), payload: MediaPayload::Structured { schema: FAKE_DOCUMENT_SCHEMA.into(), json: json.into() } });
+    }
+
+    /// 🗃️ Answers one archive-load command the way the guest does, or `None` for every other command.
+    fn archive_frame(&mut self, node: u32, command: &AppCommand) -> Option<AppFrame> {
+        let refuse = |seq: u64, code: &str| AppFrame::Error { in_reply_to: Some(seq), fault: run_fault_bytes(code, "refused by the fake guest"), report: Vec::new() };
+        Some(match command {
+            AppCommand::LoadDocumentArchive { seq, archive } => {
+                if self.loads.contains_key(&node) {
+                    refuse(*seq, "document.loading")
+                } else if archive.parent_pack.is_empty() || archive.parent_spr.is_empty() {
+                    refuse(*seq, "plugin.sdk")
+                } else {
+                    let document = (archive.parent_pack.clone(), archive.parent_spr.clone());
+                    let total = document.1.len() as u64 + 1;
+                    self.loads.insert(node, FakeLoad { operation: *seq, document, completed: 0, total, state: protocol::DocumentArchiveLoadState::Pending, cancel_requested: false, fault: Vec::new() });
+                    AppFrame::Done { in_reply_to: *seq }
+                }
+            }
+            AppCommand::PollDocumentArchiveLoad { seq, operation } => {
+                self.polls += 1;
+                let polls = self.polls;
+                if self.cancel_at_poll == Some(polls) {
+                    if let Some(token) = self.run_cancel.lock().expect("run cancel slot").as_ref() {
+                        token.cancel_now();
+                    }
+                }
+                let fault_now = self.fault_at_poll == Some(polls);
+                let fold = self.fold_per_poll.max(1);
+                let Some(load) = self.loads.get_mut(&node).filter(|load| load.operation == *operation) else { return Some(refuse(*seq, "plugin.sdk")) };
+                if !load.terminal() {
+                    if load.cancel_requested {
+                        load.state = protocol::DocumentArchiveLoadState::Cancelled;
+                    } else if fault_now {
+                        load.state = protocol::DocumentArchiveLoadState::Fault;
+                        load.fault = run_fault_bytes("document.archive-rejected", "the fake guest rejected the archive");
+                    } else {
+                        load.completed = (load.completed + fold).min(load.total);
+                        load.state = if load.completed == load.total { protocol::DocumentArchiveLoadState::Ready } else { protocol::DocumentArchiveLoadState::Running };
+                    }
+                }
+                let status = load.status();
+                if status.state == protocol::DocumentArchiveLoadState::Ready {
+                    self.documents.insert(node, load.document.clone());
+                }
+                AppFrame::DocumentArchiveLoad { in_reply_to: *seq, status }
+            }
+            AppCommand::CancelDocumentArchiveLoad { seq, operation } => match self.loads.get_mut(&node).filter(|load| load.operation == *operation) {
+                Some(load) if !load.terminal() || load.state == protocol::DocumentArchiveLoadState::Cancelled => {
+                    load.cancel_requested = true;
+                    AppFrame::Done { in_reply_to: *seq }
+                }
+                _ => refuse(*seq, "plugin.sdk"),
+            },
+            AppCommand::AcknowledgeDocumentArchiveLoad { seq, operation } => match self.loads.get(&node).filter(|load| load.operation == *operation) {
+                Some(load) if load.terminal() => {
+                    self.loads.remove(&node);
+                    AppFrame::Done { in_reply_to: *seq }
+                }
+                _ => refuse(*seq, "plugin.sdk"),
+            },
+            other if self.loads.contains_key(&node) => refuse(other_seq(other), "document.loading"),
+            _ => return None,
+        })
+    }
+}
+
+/// 🔢️ The sequence of a command the fake guest refuses while a document load is live.
+fn other_seq(command: &AppCommand) -> u64 {
+    match command {
+        AppCommand::SetMergePolicy { seq, .. } | AppCommand::LoadConfig { seq, .. } | AppCommand::MediaIn { seq, .. } | AppCommand::MediaOut { seq, .. } | AppCommand::MediaFingerprint { seq, .. } => *seq,
+        AppCommand::ReadDocument { seq } | AppCommand::ReadConfig { seq } => *seq,
+        other => panic!("the fake guest is never sent {other:?}"),
     }
 }
 
@@ -60,6 +197,11 @@ impl AppChannelHost for FakeHost {
         let app_id = self.handle_app.get(&node).cloned().unwrap_or_default();
         let mut frames = Vec::new();
         for command in commands {
+            self.sent.push((node, command_name(&command)));
+            if let Some(frame) = self.archive_frame(node, &command) {
+                frames.push(frame);
+                continue;
+            }
             match command {
                 // 🧬️ Channel v12 retires `Hello`/`Welcome` — `open` (above) is what now
                 // establishes the instance, matching the reactor ABI's `Event::InstanceOpen`.
@@ -67,11 +209,13 @@ impl AppChannelHost for FakeHost {
                     self.configs.insert(node, (pack, spr));
                     frames.push(AppFrame::Done { in_reply_to: seq });
                 }
-                AppCommand::LoadDocument { seq, pack, spr } => {
-                    self.documents.insert(node, (pack, spr));
-                    frames.push(AppFrame::Done { in_reply_to: seq });
-                }
                 AppCommand::MediaIn { seq, port, descriptor, data } => match media_from_document(&descriptor, data, &self.blob_store).await {
+                    Ok(Media { payload: MediaPayload::Structured { schema, json }, .. }) if schema == FAKE_DOCUMENT_SCHEMA => {
+                        let document = (json.into_bytes(), vec![7; FAKE_MEDIA_DOCUMENT_HISTORY]);
+                        let load = FakeLoad { operation: seq, total: document.1.len() as u64 + 1, document, completed: 0, state: protocol::DocumentArchiveLoadState::Pending, cancel_requested: false, fault: Vec::new() };
+                        frames.push(AppFrame::DocumentArchiveLoad { in_reply_to: seq, status: load.status() });
+                        self.loads.insert(node, load);
+                    }
                     Ok(media) => {
                         self.imported.push((node, port, media));
                         frames.push(AppFrame::Done { in_reply_to: seq });
@@ -193,7 +337,7 @@ async fn run_sink_preserves_typed_admission_rejection_without_recording_it() {
     let error = sink.record(duplicate).await.expect_err("a second Start must be rejected");
     match error {
         RunError::MutationRefused(messages) => {
-            assert_eq!(messages.iter().map(|message| (message.code.0.as_str(), message.level)).collect::<Vec<_>>(), [("mutation.apply.conflicting-target", protocol::Severity::Fatal)]);
+            assert_eq!(messages.iter().map(|message| (message.code.0.as_str(), message.level)).collect::<Vec<_>>(), [("mutation.apply.conflicting-target", semio_framework_diagnostic::Severity::Fatal)]);
             assert_eq!(messages[0].target, vec!["status"]);
         }
         other => panic!("expected typed mutation rejection, got {other:?}"),
@@ -269,7 +413,7 @@ async fn editing_upstream_document_dirties_downstream_only_through_the_wire() {
     // (`spr`), not the pack, is what must dirty the node. `documents` (the first run's SOURCE map)
     // is untouched by `run()` itself — this test edits its OWN local copy to simulate a live UI edit
     // landing on the source between runs.
-    documents_2.insert("artifacts/node-a".to_string(), (Vec::new(), b"edited".to_vec()));
+    documents_2.insert("artifacts/node-a".to_string(), (b"pack".to_vec(), b"edited".to_vec()));
     let prior = prior_node_records_from(&sink_1.document);
     let mut sink_2 = fresh_sink().await;
     let report_2 = runner.run(&graph, &documents_2, &configs, &[], &[], &prior, &mut cache, &mut sink_2).await.expect("second run");
@@ -373,7 +517,6 @@ fn reply_for(command: &AppCommand) -> AppFrame {
     match command {
         AppCommand::SetMergePolicy { seq, .. } => AppFrame::Done { in_reply_to: *seq },
         AppCommand::LoadConfig { seq, .. } => AppFrame::Done { in_reply_to: *seq },
-        AppCommand::LoadDocument { seq, .. } => AppFrame::Done { in_reply_to: *seq },
         AppCommand::ReadDocument { seq } => AppFrame::Document { in_reply_to: *seq, pack: Vec::new(), spr: Vec::new(), ops: String::new() },
         AppCommand::ReadConfig { seq } => AppFrame::Config { in_reply_to: *seq, pack: Vec::new(), spr: Vec::new(), ops: String::new() },
         other => panic!("RecorderHost's test graphs never send {other:?}"),
@@ -448,7 +591,7 @@ async fn space_runner_never_overlaps_exchange_for_the_same_node_across_a_real_ru
 
     let state = recorder.0.borrow();
     assert!(!state.overlap_detected, "SpaceRunner must never issue two exchange calls for the same node concurrently");
-    assert_eq!(state.completed_in_order, vec![1, 2], "node-a (handle 1) completes strictly before node-b (handle 2) — sequential topological order preserved");
+    assert_eq!(state.completed_in_order, vec![1, 1, 2, 2], "node-a's (handle 1) two exchanges complete strictly before node-b's (handle 2) — sequential topological order preserved");
 }
 
 /// 🧪️ `compute_node` checks `self.cancel` BEFORE `open`/`exchange` (see `RunError::Cancelled`'s
@@ -476,6 +619,179 @@ async fn cancelling_the_run_token_stops_the_run_before_the_next_node() {
     assert!(recorder.0.borrow().completed_in_order.is_empty(), "no node's exchange should run once the token is cancelled before the run starts");
 }
 //#endregion 🔖️ExchangeOrderingTests
+
+//#region 🔖️SteppedDocumentLoad
+/// 📜️ A node document whose `.spr` stands for `operations` history operations in [`FakeHost`]'s fold model.
+fn long_history_document(operations: usize) -> (Vec<u8>, Vec<u8>) {
+    (b"pack".to_vec(), vec![7; operations])
+}
+
+/// 🧾️ The commands one handle was sent, in order.
+fn sent_to(host: &FakeHost, handle: u32) -> Vec<&'static str> {
+    host.sent.iter().filter(|(node, _)| *node == handle).map(|(_, name)| *name).collect()
+}
+
+/// 🗃️ LAW (S3-LOAD, `📓️api-stepped-document-load.md` §6.4): a node's document loads only through the stepped archive load —
+/// admitted beside its config, polled one exchange at a time with monotonic progress reaching the run's observer, acknowledged,
+/// and only then imported, exported and read back. A node with no stored document loads nothing, and no other load command is
+/// ever sent.
+#[semio_framework_async_macros::async_test]
+async fn a_long_history_node_document_loads_through_polls_before_any_import() {
+    let graph = two_node_graph().await;
+    let mut host = FakeHost { fold_per_poll: 16, ..FakeHost::default() };
+    host.set_output("app-node-a", "node-a:out:out", "\"hello\"");
+    let progress = Arc::new(Mutex::new(Vec::new()));
+    let observer = Arc::clone(&progress);
+    let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default()).with_document_load_progress(move |step: &NodeDocumentLoadProgress| observer.lock().expect("progress").push(step.clone()));
+    let mut cache = TestMediaCache::default();
+    let mut documents = empty_documents(&graph);
+    let document = long_history_document(240);
+    documents.insert("artifacts/node-a".to_string(), document.clone());
+    let configs = empty_configs(&graph);
+    let mut sink = fresh_sink().await;
+    runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink).await.expect("the run loads node-a's long document and computes both nodes");
+
+    let progress = progress.lock().expect("progress").clone();
+    assert!(progress.len() >= 2 && progress.iter().all(|step| step.node_id == "node-a"), "only node-a loads, over several polls: {progress:?}");
+    assert!(progress[0].completed < progress[0].total, "the first poll does not fold the whole history: {progress:?}");
+    assert!(progress.windows(2).all(|pair| pair[0].completed <= pair[1].completed && pair[0].total == pair[1].total), "load progress is monotonic: {progress:?}");
+    assert_eq!(progress.last().map(|step| (step.completed, step.total)), Some((241, 241)), "the load ends complete");
+    assert_eq!(sink.node_artifacts.get("node-a"), Some(&document), "node-a reads back the loaded document");
+    let host = runner.into_host();
+    let mut expected = vec!["SetMergePolicy", "LoadConfig", "LoadDocumentArchive"];
+    expected.extend(std::iter::repeat("PollDocumentArchiveLoad").take(241usize.div_ceil(16)));
+    expected.extend(["AcknowledgeDocumentArchiveLoad", "MediaOut", "MediaFingerprint", "ReadDocument", "ReadConfig"]);
+    assert_eq!(sent_to(&host, 1), expected, "node-a's script: admit beside its config, poll, acknowledge, then export and read back");
+    assert_eq!(sent_to(&host, 2), vec!["SetMergePolicy", "LoadConfig", "MediaIn", "ReadDocument", "ReadConfig"], "a node with no stored document loads nothing");
+    assert!(host.loads.is_empty(), "every load was acknowledged");
+}
+
+/// 🛑️ LAW: cancelling the run while a node's long document loads cancels the load in the guest and keeps polling until the
+/// guest restored the node's previous document — zero trace: no document change, the operation acknowledged, nothing exported
+/// or read back, no later node opened — and the run stops with `RunError::Cancelled`.
+#[semio_framework_async_macros::async_test]
+async fn cancelling_the_run_during_a_document_load_restores_the_node_document_and_stops_the_run() {
+    let graph = two_node_graph().await;
+    let slot = Arc::new(Mutex::new(None));
+    let mut host = FakeHost { fold_per_poll: 16, cancel_at_poll: Some(1), run_cancel: Arc::clone(&slot), ..FakeHost::default() };
+    host.set_output("app-node-a", "node-a:out:out", "\"hello\"");
+    let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default());
+    *slot.lock().expect("run cancel slot") = Some(runner.cancel_token());
+    let mut cache = TestMediaCache::default();
+    let mut documents = empty_documents(&graph);
+    documents.insert("artifacts/node-a".to_string(), long_history_document(240));
+    let configs = empty_configs(&graph);
+    let mut sink = fresh_sink().await;
+    let result = runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink).await;
+    assert!(matches!(result, Err(RunError::Cancelled)), "a run cancelled mid-load stops with RunError::Cancelled, got {result:?}");
+    assert!(sink.node_artifacts.is_empty(), "nothing was read back");
+    let host = runner.into_host();
+    assert_eq!(
+        sent_to(&host, 1),
+        vec!["SetMergePolicy", "LoadConfig", "LoadDocumentArchive", "PollDocumentArchiveLoad", "CancelDocumentArchiveLoad", "PollDocumentArchiveLoad", "AcknowledgeDocumentArchiveLoad"],
+        "the cancel is sent once and polled to its restore, then acknowledged"
+    );
+    assert!(host.documents.get(&1).is_none(), "zero trace: node-a still holds its previous document");
+    assert!(host.loads.is_empty(), "the cancelled operation was acknowledged");
+    assert!(sent_to(&host, 2).is_empty(), "the run stopped before node-b");
+}
+
+/// ⚠️ LAW: a guest that faults a node's document load restores the previous document, the load is acknowledged, and the run
+/// fails with the guest's own fault code in the node's error.
+#[semio_framework_async_macros::async_test]
+async fn a_faulted_document_load_restores_the_node_document_and_surfaces_the_guest_code() {
+    let graph = two_node_graph().await;
+    let mut host = FakeHost { fold_per_poll: 16, fault_at_poll: Some(2), ..FakeHost::default() };
+    host.set_output("app-node-a", "node-a:out:out", "\"hello\"");
+    let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default());
+    let mut cache = TestMediaCache::default();
+    let mut documents = empty_documents(&graph);
+    documents.insert("artifacts/node-a".to_string(), long_history_document(240));
+    let configs = empty_configs(&graph);
+    let mut sink = fresh_sink().await;
+    let result = runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink).await;
+    let message = match result {
+        Err(RunError::Host(message)) => message,
+        other => panic!("a faulted load fails the run with the node's host error, got {other:?}"),
+    };
+    assert!(message.contains("app-node-a") && message.contains("document.archive-rejected"), "{message}");
+    let host = runner.into_host();
+    assert_eq!(sent_to(&host, 1), vec!["SetMergePolicy", "LoadConfig", "LoadDocumentArchive", "PollDocumentArchiveLoad", "PollDocumentArchiveLoad", "AcknowledgeDocumentArchiveLoad"]);
+    assert!(host.documents.get(&1).is_none() && host.loads.is_empty(), "the faulted load left no trace and was acknowledged");
+}
+
+/// 🎞️ LAW (S4-LOAD, `📓️api-stepped-document-load.md` §4): a media input that is a whole document of the node's own schema never
+/// folds inside its import — the guest admits it as a stepped archive load under the import's own sequence, the runner polls it
+/// one exchange at a time (progress reaches the observer), acknowledges it, and only then exports and reads the node back, which
+/// answers the imported document.
+#[semio_framework_async_macros::async_test]
+async fn a_whole_document_input_loads_through_polls_before_any_export_or_read() {
+    let graph = two_node_graph().await;
+    let mut host = FakeHost { fold_per_poll: 16, ..FakeHost::default() };
+    host.set_document_output("app-node-a", "node-a:out:out", "\"source document\"");
+    let progress = Arc::new(Mutex::new(Vec::new()));
+    let observer = Arc::clone(&progress);
+    let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default()).with_document_load_progress(move |step: &NodeDocumentLoadProgress| observer.lock().expect("progress").push(step.clone()));
+    let mut cache = TestMediaCache::default();
+    let documents = empty_documents(&graph);
+    let configs = empty_configs(&graph);
+    let mut sink = fresh_sink().await;
+    runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink).await.expect("node-b loads node-a's whole document through polls");
+
+    let total = FAKE_MEDIA_DOCUMENT_HISTORY as u64 + 1;
+    let progress = progress.lock().expect("progress").clone();
+    assert!(progress.len() >= 2 && progress.iter().all(|step| step.node_id == "node-b" && step.total == total), "only node-b loads, over several polls: {progress:?}");
+    assert!(progress.windows(2).all(|pair| pair[0].completed <= pair[1].completed), "load progress is monotonic: {progress:?}");
+    assert_eq!(progress.last().map(|step| step.completed), Some(total), "the load ends complete");
+    assert_eq!(sink.node_artifacts.get("node-b"), Some(&(b"\"source document\"".to_vec(), vec![7; FAKE_MEDIA_DOCUMENT_HISTORY])), "node-b reads back the imported document");
+    let host = runner.into_host();
+    let mut expected = vec!["SetMergePolicy", "LoadConfig", "MediaIn"];
+    expected.extend(std::iter::repeat("PollDocumentArchiveLoad").take((total as usize).div_ceil(16)));
+    expected.extend(["AcknowledgeDocumentArchiveLoad", "ReadDocument", "ReadConfig"]);
+    assert_eq!(sent_to(&host, 2), expected, "node-b's script: import, poll, acknowledge, then read back");
+    assert!(host.imported.is_empty() && host.loads.is_empty(), "the whole document loaded instead of importing, and its load was acknowledged");
+}
+
+/// 🛑️ LAW: cancelling the run while a whole-document input loads cancels it in the guest, polls it to the restore and
+/// acknowledges it — zero trace: node-b keeps its previous document and reads nothing back — and the run stops `Cancelled`.
+#[semio_framework_async_macros::async_test]
+async fn cancelling_the_run_during_a_whole_document_input_restores_the_node_document() {
+    let graph = two_node_graph().await;
+    let slot = Arc::new(Mutex::new(None));
+    let mut host = FakeHost { fold_per_poll: 16, cancel_at_poll: Some(1), run_cancel: Arc::clone(&slot), ..FakeHost::default() };
+    host.set_document_output("app-node-a", "node-a:out:out", "\"source document\"");
+    let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default());
+    *slot.lock().expect("run cancel slot") = Some(runner.cancel_token());
+    let mut cache = TestMediaCache::default();
+    let documents = empty_documents(&graph);
+    let configs = empty_configs(&graph);
+    let mut sink = fresh_sink().await;
+    let result = runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink).await;
+    assert!(matches!(result, Err(RunError::Cancelled)), "a run cancelled mid-import stops with RunError::Cancelled, got {result:?}");
+    assert!(!sink.node_artifacts.contains_key("node-b"), "node-b read nothing back");
+    let host = runner.into_host();
+    assert_eq!(sent_to(&host, 2), vec!["SetMergePolicy", "LoadConfig", "MediaIn", "PollDocumentArchiveLoad", "CancelDocumentArchiveLoad", "PollDocumentArchiveLoad", "AcknowledgeDocumentArchiveLoad"]);
+    assert!(host.documents.get(&2).is_none() && host.loads.is_empty(), "zero trace: node-b keeps its previous document, the cancelled load was acknowledged");
+}
+/// 🎞️ LAW (S4-LOAD wave 4): the whole-document carrier a guest's `artifact:out` answers (`Document` wire, `pk:` base64 text of the
+/// recursive archive) crosses a run edge byte for byte — `media_from_document` keeps it as `Structured` text and `media_to_artifact`
+/// hands the downstream node the identical wire and bytes.
+#[semio_framework_async_macros::async_test]
+async fn a_whole_document_carrier_crosses_a_run_edge_byte_for_byte() {
+    let archive = protocol::DocumentArchivePack { parent_pack: vec![0x89, 0, 255, 7], parent_spr: vec![1, 2, 3], members: Vec::new() };
+    let carrier = store::pack_rt::pack_value_to_base64(&protocol::encode_document_archive_bytes(&archive).expect("archive bytes")).into_bytes();
+    let descriptor = semio_framework_plugin::app::MediaArtifactDescriptor { edge_id: None, port_id: Some("artifact:out".into()), kind_id: None, media_type: Some(fake_media_type()), wire: MediaWireFormat::Document { schema: FAKE_DOCUMENT_SCHEMA.into() }, blob_hash: None };
+    let descriptor_bytes = store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor));
+    let blobs = InMemoryBlobStore::default();
+    let media = media_from_document(&descriptor_bytes, carrier.clone(), &blobs).await.expect("a text carrier is a structured media");
+    assert!(matches!(&media.payload, MediaPayload::Structured { schema, .. } if schema == FAKE_DOCUMENT_SCHEMA));
+    let (wire_descriptor, data) = media_to_artifact(&media, &blobs).await.expect("the edge hands it on");
+    assert_eq!(data, carrier, "the carrier arrives byte for byte");
+    let wire: semio_framework_plugin::app::MediaArtifactDescriptor = semio_framework_value::FromValue::from_value(store::pack_rt::decode_wire_value(&wire_descriptor).expect("descriptor")).expect("typed descriptor");
+    assert_eq!(wire.wire, MediaWireFormat::Document { schema: FAKE_DOCUMENT_SCHEMA.into() });
+    assert_eq!(semio_framework_plugin::app::whole_document_archive(&data).await.expect("the downstream guest decodes it"), archive);
+}
+//#endregion 🔖️SteppedDocumentLoad
 
 #[semio_framework_async_macros::async_test]
 async fn rejects_incompatible_edge_media_types() {
@@ -604,10 +920,10 @@ fn test_repo_root() -> PathBuf {
 #[semio_framework_async_macros::async_test]
 async fn note_plugin_manifest_loads_from_its_committed_descriptor() {
     let repo_root = test_repo_root();
-    let descriptor_path = repo_root.join("✏️s/🔌️plugins/🗒️note/🛂️.descriptor.semio");
+    let descriptor_path = repo_root.join("🌎️hub/🧩️compositions/🗒️note/🛂️.descriptor.semio");
     assert!(descriptor_path.is_file(), "committed note descriptor missing at {}", descriptor_path.display());
 
-    let candidate_wasm_paths = ["component-dev", "component-release"].map(|profile| repo_root.join("✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/dist").join(profile).join("semio_s_plugin_note.wasm"));
+    let candidate_wasm_paths = ["component-dev", "component-release"].map(|profile| repo_root.join("🌎️hub/🧩️compositions/🗒️note/📦️packages/🦀️rust/dist").join(profile).join("semio_hub_note.wasm"));
     let Some(wasm_path) = candidate_wasm_paths.into_iter().find(|path| path.is_file()) else {
         return;
     };
@@ -635,3 +951,27 @@ async fn note_plugin_manifest_loads_from_its_committed_descriptor() {
     assert!(host.app_router().owned_surface_gaps().await.is_empty(), "note's own panels leave no viewer/editor surface gap");
 }
 //#endregion 🔖️NativeManifestSmoke
+
+
+#[semio_framework_async_macros::async_test]
+async fn intrinsic_media_wire_runner_preserves_owned_tags_words_octets_and_occurrences(){
+ use semio_framework_value::{DslValue,Number};
+ let store=InMemoryBlobStore::default();
+ let value=DslValue::Object(vec![
+ ("same".into(),DslValue::Null),("same".into(),DslValue::Bool(false)),
+ ("nul\0😀".into(),DslValue::Array(vec![DslValue::Number(Number::Int(i64::MIN)),DslValue::Number(Number::UInt(u64::MAX)),DslValue::Number(Number::Float(f64::from_bits(0x7ff8000000000011))),DslValue::Number(Number::Float(f64::from_bits(0x8000000000000000))),DslValue::String("\0引用😀".into()),DslValue::Bytes(vec![0,255,17])]))
+ ]);
+ let expected=Media{media_type:fake_media_type(),payload:MediaPayload::Intrinsic{schema:"\0form.dictionary😀".into(),value}};
+ let fingerprint=MediaFingerprint::of(&expected);
+ let(descriptor,data)=media_to_artifact(&expected,&store).await.unwrap();
+ let restored=media_from_document(&descriptor,data,&store).await.unwrap();
+ assert_eq!(MediaFingerprint::of(&restored),fingerprint);
+ let MediaPayload::Intrinsic{schema,value}=restored.payload else{panic!("intrinsic payload")};
+ assert_eq!(schema,"\0form.dictionary😀");
+ let DslValue::Object(object)=value else{panic!("object owner")};let entries=object;
+ assert_eq!(entries.len(),3);assert_eq!(entries[0].0,"same");assert!(matches!(entries[0].1,DslValue::Null));assert_eq!(entries[1].0,"same");assert!(matches!(entries[1].1,DslValue::Bool(false)));
+ let DslValue::Array(values)=&entries[2].1 else{panic!("array owner")};assert_eq!(values.len(),6);
+ assert!(matches!(values[0],DslValue::Number(Number::Int(i64::MIN))));assert!(matches!(values[1],DslValue::Number(Number::UInt(u64::MAX))));
+ assert!(matches!(values[2],DslValue::Number(Number::Float(value))if value.to_bits()==0x7ff8000000000011));assert!(matches!(values[3],DslValue::Number(Number::Float(value))if value.to_bits()==0x8000000000000000));
+ assert!(matches!(&values[4],DslValue::String(value)if value=="\0引用😀"));assert!(matches!(&values[5],DslValue::Bytes(value)if value==&[0,255,17]));
+}

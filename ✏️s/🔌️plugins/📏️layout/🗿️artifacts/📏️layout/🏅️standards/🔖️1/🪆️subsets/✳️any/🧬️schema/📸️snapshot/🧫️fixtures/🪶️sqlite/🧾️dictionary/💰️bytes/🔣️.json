@@ -1,0 +1,8 @@
+{
+  "authority": "sameCallerOwnedByteCopy",
+  "pattern": [0, 127, 255],
+  "repeat": 23400,
+  "longBytes": 70200,
+  "minimumInterior": 32768,
+  "cancelKind": "canceled"
+}

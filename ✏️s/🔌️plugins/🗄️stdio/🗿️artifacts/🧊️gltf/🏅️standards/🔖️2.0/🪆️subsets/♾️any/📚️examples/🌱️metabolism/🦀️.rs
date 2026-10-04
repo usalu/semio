@@ -33,7 +33,7 @@ pub fn decoded_snapshot() -> crate::GltfSnapshot {
 /// bytes + source form) -- registered verbatim on the manifest, not a trimmed/synthetic stand-in.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn document_json() -> String {
-    pack::to_json_string(&decoded_snapshot())
+    semio_framework_pack_json::to_json_string(&decoded_snapshot())
 }
 
 /// 📚️ Canonical example source for `App::example_source`.

@@ -22,6 +22,7 @@ fn document() -> SvgSnapshot {
 fn kinds_matches_enum_variants_and_manifest() {
     let every = vec![
         SvgBasicMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: SvgSnapshot::default() }),
+        SvgBasicMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         SvgBasicMutation::StampBaseProfile(stamp_base_profile::StampBaseProfile { base_profile: None, version: None }),
         SvgBasicMutation::InsertBasicElement(insert_basic_element::InsertBasicElement { parent: Vec::new(), index: 0, node: elem("rect", vec![], vec![]) }),
         SvgBasicMutation::RemoveElement(remove_element::RemoveElement { parent: Vec::new(), index: 0 }),
@@ -46,7 +47,7 @@ fn kinds_matches_enum_variants_and_manifest() {
 #[test]
 fn blocklists_agree_with_the_subset_conformance_checker() {
     use crate::standards::v1_1::subsets::basic::schema::check_svg_basic_conformance;
-    let hard = |snapshot: &SvgSnapshot| check_svg_basic_conformance(snapshot).into_iter().any(|d| matches!(d.severity, dsl::Severity::Error | dsl::Severity::Fatal));
+    let hard = |snapshot: &SvgSnapshot| check_svg_basic_conformance(snapshot).into_iter().any(|d| matches!(d.severity, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal));
     let root = |children: Vec<XmlNode>| {
         let mut snapshot = SvgSnapshot::default();
         snapshot.doc.root = Some(elem("svg", vec![("baseProfile", "basic"), ("version", "1.1")], children));
@@ -98,7 +99,7 @@ fn set_clip_path_reference_accepts_a_shape_only_clip_path_and_inverts() {
     let base = document();
     let mut snapshot = base.clone();
     let mutation = SvgBasicMutation::SetClipPathReference(set_clip_path_reference::SetClipPathReference { path: vec![1], clip_path_id: Some("shape".into()) });
-    let undo = Mutation::inverse(&mutation, &base);
+    let undo = Mutation::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     let outcome = apply_svg_basic_mutation(&mut snapshot, &mutation);
     assert!(outcome.messages().is_empty(), "a shape-only clipPath is legal: {:?}", outcome.messages());
     assert_eq!(element_attr(node_at(&snapshot.doc, &[1]).unwrap(), "clip-path"), Some("url(#shape)"));
@@ -122,7 +123,7 @@ fn insert_clip_path_shape_adds_a_real_shape_and_inverts() {
     let base = document();
     let mut snapshot = base.clone();
     let mutation = SvgBasicMutation::InsertClipPathShape(insert_clip_path_shape::InsertClipPathShape { clip_path_id: "shape".into(), index: 0, node: elem("circle", vec![("cx", "4"), ("cy", "4"), ("r", "4")], vec![]) });
-    let undo = Mutation::inverse(&mutation, &base);
+    let undo = Mutation::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     apply_svg_basic_mutation(&mut snapshot, &mutation);
     match node_at(&snapshot.doc, &[0, 0]) {
         Ok(XmlNode::Element { children, .. }) => assert_eq!(children.len(), 2, "the clip path must have gained the shape"),

@@ -1,0 +1,4 @@
+{
+  "mutation": "changeRunEndDay",
+  "newEndDay": 10
+}

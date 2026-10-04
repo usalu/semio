@@ -1,15 +1,16 @@
-use semio_framework_os_kernel::native_decoding::*;
+use semio_framework_value::{ValueError, ValueRefusalKind};
+use semio_framework_value::native_decoding::{NativeDecodeControl, NativeDecodeProgress};
 
 #[test]
 fn sqlite_snapshot_nested_native_stages_preserve_parent_and_cumulative_ownership(){
     use std::{cell::Cell,io::Write,process::{Command,Stdio}};
-    fn label(error:&str)->&str{match error{"native decoding exceeded declared stage workload"=>"overrun","native decoding canceled"=>"canceled","native decoding ownership exceeds caller limit"=>"limit","owned child rejected"=>"rejected",_=>panic!("unexpected decode error: {error}")}}
-    fn run(control:&mut NativeDecodeControl<'_>,operations:&serde_json::Value,errors:&mut Vec<String>)->Result<(),String>{
+    fn label(error:&ValueError)->&str{match error.kind{ValueRefusalKind::WorkLimit=>"overrun",ValueRefusalKind::Canceled=>"canceled",ValueRefusalKind::OwnershipLimit=>"limit",ValueRefusalKind::InvalidValue=>"rejected",_=>panic!("unexpected decode error: {error}")}}
+    fn run(control:&mut NativeDecodeControl<'_>,operations:&serde_json::Value,errors:&mut Vec<String>)->Result<(),ValueError>{
         for op in operations.as_array().unwrap(){match op["kind"].as_str().unwrap(){
             "begin"=>control.begin_stage(op["units"].as_u64().unwrap() as usize)?,
             "advance"=>control.advance(op["units"].as_u64().unwrap() as usize)?,
             "charge"=>control.charge(op["units"].as_u64().unwrap() as usize)?,
-            "reject"=>return Err("owned child rejected".into()),
+            "reject"=>return Err(ValueError::new(ValueRefusalKind::InvalidValue, "owned child rejected")),
             "scope"=>{if let Err(error)=control.scoped_stage(|child|run(child,&op["operations"],errors)){errors.push(label(&error).to_owned());}},
             kind=>panic!("unexpected stage operation: {kind}")
         }}Ok(())
@@ -62,6 +63,6 @@ fn sqlite_snapshot_native_materialization_preserves_caller_budget_and_cancellati
     control.charge(12).unwrap();control.begin_stage(4).unwrap();assert!(control.charge(8).is_err());assert_eq!(control.owned_bytes(),12);
     let text="🧬".repeat(copy_total/4);let mut accepted=|_:NativeDecodeProgress|true;let mut control=NativeDecodeControl::new(0,&mut accepted);assert_eq!(control.borrow_text(text.as_bytes()).unwrap(),text);assert_eq!(control.owned_bytes(),0);for bytes in [&[0xc0,0x80][..],&[0xed,0xa0,0x80][..],&[0xf4,0x90,0x80,0x80][..],&[0xf0,0x9f][..]]{assert!(control.borrow_text(bytes).is_err());}
     let mut interior=false;let mut cancel=|event:NativeDecodeProgress|{if event.completed==copy_cancel&&event.total==copy_total{interior=true;false}else{true}};let mut control=NativeDecodeControl::new(0,&mut cancel);assert!(control.borrow_text(text.as_bytes()).is_err());assert!(interior);
-    let n=&fixture["nestedStage"];let mut control=NativeDecodeControl::new(64,&mut accepted);control.begin_stage(n["parentTotal"].as_u64().unwrap() as usize).unwrap();control.advance(n["parentBefore"].as_u64().unwrap() as usize).unwrap();control.scoped_stage(|child|->Result<(),String>{child.begin_stage(n["childTotal"].as_u64().unwrap() as usize)?;child.charge(n["childBytes"].as_u64().unwrap() as usize)?;child.advance(n["childTotal"].as_u64().unwrap() as usize)}).unwrap();control.advance(n["parentAfter"].as_u64().unwrap() as usize).unwrap();assert_eq!(control.owned_bytes(),n["childBytes"].as_u64().unwrap() as usize);assert!(control.scoped_stage(|child|->Result<(),String>{child.begin_stage(2)?;Err("owned child failed".into())}).is_err());control.advance((n["parentTotal"].as_u64().unwrap()-n["parentBefore"].as_u64().unwrap()-n["parentAfter"].as_u64().unwrap()) as usize).unwrap();assert!(control.step().is_err());
+    let n=&fixture["nestedStage"];let mut control=NativeDecodeControl::new(64,&mut accepted);control.begin_stage(n["parentTotal"].as_u64().unwrap() as usize).unwrap();control.advance(n["parentBefore"].as_u64().unwrap() as usize).unwrap();control.scoped_stage(|child|->Result<(),ValueError>{child.begin_stage(n["childTotal"].as_u64().unwrap() as usize)?;child.charge(n["childBytes"].as_u64().unwrap() as usize)?;child.advance(n["childTotal"].as_u64().unwrap() as usize)}).unwrap();control.advance(n["parentAfter"].as_u64().unwrap() as usize).unwrap();assert_eq!(control.owned_bytes(),n["childBytes"].as_u64().unwrap() as usize);assert!(control.scoped_stage(|child|->Result<(),ValueError>{child.begin_stage(2)?;Err(ValueError::new(ValueRefusalKind::InvalidValue, "owned child failed"))}).is_err());control.advance((n["parentTotal"].as_u64().unwrap()-n["parentBefore"].as_u64().unwrap()-n["parentAfter"].as_u64().unwrap()) as usize).unwrap();assert!(control.step().is_err());
     let mut control=NativeDecodeControl::new(0,&mut accepted);for case in fixture["utf8"].as_array().unwrap(){let bytes:Vec<u8>=serde_json::from_value(case["bytes"].clone()).unwrap();assert_eq!(control.borrow_text(&bytes).is_ok(),case["accepted"].as_bool().unwrap());assert_eq!(control.owned_bytes(),0);}
 }

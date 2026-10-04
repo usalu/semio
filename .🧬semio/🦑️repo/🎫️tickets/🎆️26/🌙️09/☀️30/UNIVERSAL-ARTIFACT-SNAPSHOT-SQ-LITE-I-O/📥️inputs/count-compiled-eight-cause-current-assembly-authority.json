@@ -1,0 +1,88 @@
+{
+  "state": "MissingProducer_Unstaged_NotAnImplementationPair",
+  "assemblyPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/🦀️.rs",
+  "beforeSha256": "bbabd69935fb259c75b0430ca9ab7703ce8340213ad0b30e9b004a63ef68e60c",
+  "before": "//! 🧩️ Schema-first neutral SDK component for actual host codec and isolation laws.\nuse semio_framework_plugin::plugin_app_close_prelude::*;\nuse semio_framework_ui_locale::LocalizedLabel;\nuse semio_framework_plugin::__semio_dispatch_PluginApp;\nuse semio_framework_plugin::app::declarations::{ArtifactDeclaration as DeclaredArtifact,StandardDeclaration,MediaDeclaration,SubsetDeclaration,SchemaDeclaration,IoDeclaration,NativeCodecs,LanguagePair,SurfaceDeclaration};\nuse semio_framework_schema_registry::ArtifactSchemaDescriptor;\nuse semio_framework_schema_registry::FacetLeaves;\nconst KIND:&str=\"fixture.neutral-host-fixture.counter\";\nconst DIALECT:Dialect=Dialect{artifact_kind:KIND,standard:StandardId(\"1\"),subset:SubsetId::ANY};\n#[derive(Default)]\npub struct CounterApp<const VIEWER:bool>;\nimpl<const VIEWER:bool> ArtifactApp for CounterApp<VIEWER> {\n    const APP_ID:&'static str=if VIEWER {\"fixture.neutral-host-fixture.counter@1/*#viewer\"} else {\"fixture.neutral-host-fixture.counter@1/*#editor\"};\n    const DOCUMENT_SCHEMA:&'static str=KIND;\n    const DIALECT:Dialect=DIALECT;\n    const ROLE:AppRole=if VIEWER {AppRole::Viewer} else {AppRole::Editor};\n    type Snapshot=crate::Snapshot;type Mutation=crate::Mutation;\n    type Config=NoConfig;type ConfigMutation=NoConfigMutation;\n    type Draft=NoDraft;type DraftMutation=NoDraftMutation;\n    type Presence=NoPresence;type PresenceMutation=NoPresenceMutation;\n    type Transient=NoTransient;type TransientMutation=NoTransientMutation;\n    type Command=crate::Mutation;\n    async fn initial_snapshot()->Self::Snapshot {crate::Snapshot::default()}\n    async fn handle(_command:&Self::Command,_doc:&ArtifactView<'_,Self::Snapshot>,_cfg:&ConfigView<'_,Self::Config>,_interaction:&InteractionView<'_>,_view_state:Option<&ViewModel>,_draft:&DraftView<'_,Self::Draft>,_engines:&semio_framework_2d::compute::EngineHandles)->ArtifactMutationOutcome<Self::Mutation,Self::ConfigMutation,Self::DraftMutation> {Ok(Emit::default())}\n    async fn render(body_key:&str,doc:&ArtifactView<'_,Self::Snapshot>,_cfg:&ConfigView<'_,Self::Config>,_view:&ViewModel)->UiAssemblyResult<ComponentTree> {semio_framework_plugin::app::paged_text_carrier(body_key,&doc.snapshot.count.to_string()).map(|root|ComponentTree{root})}\n}\nsemio_framework_dispatch_macros::dyn_enum_close! {\n    pub enum FixtureApps:PluginApp {Editor(VcsArtifactApp<CounterApp<false>>),Viewer(VcsArtifactApp<CounterApp<true>>)}\n}\nfn surface<const VIEWER:bool>()->SurfaceDeclaration<FixtureApps> {\n    fn editor(definition:&AppDefinition)->FixtureApps {::semio_framework_async::poll::resolve_ready(VcsArtifactApp::<CounterApp<false>>::with_registry_on_bus(CounterApp::<false>,AppActionRegistry::from_definition(definition),semio_framework::ActionBus::production())).into()}\n    fn viewer(definition:&AppDefinition)->FixtureApps {::semio_framework_async::poll::resolve_ready(VcsArtifactApp::<CounterApp<true>>::with_registry_on_bus(CounterApp::<true>,AppActionRegistry::from_definition(definition),semio_framework::ActionBus::production())).into()}\n    let mut definition=if VIEWER {Viewer::builder(DIALECT).document([\"fixture\",\"neutral-host-fixture\",\"counter\"]).mode(\"view\",LocalizedLabel::native(\"View\",\"Ansicht\"),\"eye\").window_kind(\"main\",LocalizedLabel::native(\"Counter\",\"Zähler\"),\"fixture.counter\",SurfaceKind::Canvas2d,IconName::AppWindow).build_definition()} else {Editor::builder(DIALECT).document([\"fixture\",\"neutral-host-fixture\",\"counter\"]).mode(\"edit\",LocalizedLabel::native(\"Edit\",\"Bearbeiten\"),\"pencil\").window_kind(\"main\",LocalizedLabel::native(\"Counter\",\"Zähler\"),\"fixture.counter\",SurfaceKind::Canvas2d,IconName::AppWindow).build_definition()};\n    definition.io.artifact_schema=KIND.into();\n    SurfaceDeclaration {definition,factory:if VIEWER {viewer} else {editor},app_schema:||None,document_schema:KIND,codec:semio_framework_plugin::app::artifact_codec_table::<CounterApp<VIEWER>>(),mutation_roster:None,rights:if VIEWER {Rights::Read} else {Rights::Write}}\n}\nfn facet(role:&str,json_schema:&'static str)->FacetLeaves {\n    let (rust,typescript,graphql,proto)=match role {\n        \"diff\"=>(include_str!(\"🧬️schema/🔺️diff/🦀️.rs\"),include_str!(\"🧬️schema/🔺️diff/🟦️.ts\"),\"\",\"\"),\n        \"mutations\"=>(include_str!(\"🧬️schema/🧬️mutations/🦀️.rs\"),include_str!(\"🧬️schema/🧬️mutations/🟦️.ts\"),\"\",\"\"),\n        _=>(include_str!(\"🧬️schema/📸️snapshot/🦀️.rs\"),include_str!(\"🧬️schema/📸️snapshot/🟦️.ts\"),include_str!(\"🧬️schema/📸️snapshot/🔗️.graphql\"),include_str!(\"🧬️schema/📸️snapshot/🛰️.proto\")),\n    };FacetLeaves{rust,typescript,graphql,proto,json_schema}\n}\npub fn plugin()->Result<Plugin<FixtureApps>,PluginAssemblyError> {\n    let descriptor=ArtifactSchemaDescriptor{id:KIND,artifact:facet(\"artifact\",include_str!(\"🧬️schema/🔣️.json\")),snapshot:facet(\"snapshot\",include_str!(\"🧬️schema/📸️snapshot/🔣️.json\")),diff:facet(\"diff\",include_str!(\"🧬️schema/🔺️diff/🔣️.json\")),mutations:facet(\"mutations\",include_str!(\"🧬️schema/🧬️mutations/🔣️.json\"))};\n    let pair=LanguagePair{text:None,binary:None};\n    let subset=SubsetDeclaration {dialect:DIALECT,schema:SchemaDeclaration{descriptor,inferences:&[],inference_services:Vec::new()},io:IoDeclaration{native:NativeCodecs{snapshot:pair,diff:pair,mutations:pair,inferences:None,codec:store::ArtifactCodec::bare::<crate::Snapshot,crate::Mutation>(KIND)},entries:&[]},editor:surface::<false>(),viewer:surface::<true>(),examples:&[]};\n    let artifact=DeclaredArtifact{kind:store::os_io::ArtifactKindId::parse(KIND).map_err(|error|PluginAssemblyError::new(\"fixture.kind\",error))?,localization:&[],standards:vec![StandardDeclaration{id:StandardId(\"1\"),media:MediaDeclaration{mimes:&[],extensions:&[\"neutral-host-fixture\"]},subsets:vec![subset]}]};\n    Plugin::<FixtureApps>::builder(\"neutral-host-fixture\").label(\"Neutral Host Fixture\").version(\"1.0.0\").package_id(\"semio:neutral-host-fixture\").declare_artifact(artifact).try_build()\n}\n",
+  "selectedRefusals": [
+    {
+      "kind": "InvalidValue",
+      "owner": "fixture.neutral-host-fixture.snapshot-refusal@1/invalid-value",
+      "origin": "declared-compiled-provider"
+    },
+    {
+      "kind": "Canceled",
+      "owner": "fixture.neutral-host-fixture.snapshot-refusal@1/canceled",
+      "origin": "declared-compiled-provider"
+    },
+    {
+      "kind": "OwnershipLimit",
+      "owner": "fixture.neutral-host-fixture.snapshot-refusal@1/ownership-limit",
+      "origin": "declared-compiled-provider"
+    },
+    {
+      "kind": "AllocationFailed",
+      "owner": "fixture.neutral-host-fixture.snapshot-refusal@1/allocation-failed",
+      "origin": "declared-compiled-provider"
+    },
+    {
+      "kind": "WorkLimit",
+      "owner": "fixture.neutral-host-fixture.snapshot-refusal@1/work-limit",
+      "origin": "declared-compiled-provider"
+    },
+    {
+      "kind": "DepthLimit",
+      "owner": "fixture.neutral-host-fixture.snapshot-refusal@1/depth-limit",
+      "origin": "declared-compiled-provider"
+    },
+    {
+      "kind": "UnsupportedOwner",
+      "owner": "fixture.neutral-host-fixture.snapshot-refusal@1/unsupported-owner",
+      "origin": "declared-compiled-provider"
+    },
+    {
+      "kind": "InvariantViolated",
+      "owner": "fixture.neutral-host-fixture.snapshot-refusal@1/invariant-violated",
+      "origin": "declared-compiled-provider"
+    }
+  ],
+  "message": "selected typed cause\u0000引用😀",
+  "diagnostic": {
+    "code": "fixture.snapshot\u0000code",
+    "severity": "error",
+    "span": {
+      "line": 7,
+      "column": 9,
+      "length": 4
+    },
+    "message": "diagnostic\u0000引用😀",
+    "expected": {
+      "tokens": [
+        "typed\u0000token"
+      ],
+      "keywords": [
+        "word\u0000引用"
+      ],
+      "keys": [
+        "count\u0000key"
+      ]
+    },
+    "scope": {
+      "pluginId": "neutral-host-fixture",
+      "appId": "fixture\u0000app",
+      "instanceId": "lease\u0000instance",
+      "module": "sqlite\u0000module",
+      "bodyKey": "count\u0000body"
+    }
+  },
+  "requiredOwnerSchema": "CREATE TABLE fixture_refusal (id INTEGER PRIMARY KEY, value INTEGER NOT NULL);",
+  "requiredNativeText": "{\"value\":0}",
+  "unchangedCountOwner": "fixture.neutral-host-fixture.counter@1/*",
+  "requiredBranch": "component-guest WASIp2, outside cfg(test)",
+  "excluded": [
+    "native cfg(test) testkit alias",
+    "Count snapshot substitution",
+    "production roster addition",
+    "message classifier",
+    "assembly-only hook without real typed owner/provider"
+  ]
+}

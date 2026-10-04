@@ -13,7 +13,7 @@ pub fn diff(payload: &ReplaceStorageRequirement, base: &ProgramSnapshot) -> prot
         return protocol::MutationOutcome::error("mutation.target-missing", "No storage requirement exists with this id.", [payload.storage_requirement.header.id.0.clone()]);
     };
     if existing == &payload.storage_requirement {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This storage requirement already matches the requested value.").at([existing.header.id.0.clone()])]);
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This storage requirement already matches the requested value.").at([existing.header.id.0.clone()])]);
     }
     let patch = existing.diff_patch(&payload.storage_requirement).expect("diff_patch always produces a full patch");
     protocol::MutationOutcome::new(ProgramDiff { storage: Some(ProgramStorageDelta { patched: vec![ProgramStoragePatchEntry { id: payload.storage_requirement.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })

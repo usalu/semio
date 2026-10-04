@@ -4,12 +4,9 @@
 //! `ArtifactStore::fold_batch_item` compares `edit.forwards.len() + edit.inverse.len()` against the
 //! declared `work_items` and refuses the whole gesture with `batched item candidate failed its exact
 //! fixed fold contract` when the declaration is short. Every space mutation is point-invertible, so
-//! one item stages TWO rows — and `admit_space_retained_mutation` declared `work_items: 1`, which
-//! fail-closed every durable home, studio and space-index gesture in the product. `createStudio`,
-//! the local studio path that needs no hub at all, was refused with exactly that sentence on a
-//! signed-in shell (ticket 26/09/18 S10 §1). The framework's own generic factory
-//! (`bounded_config_store_one_item_preparation_factory`) has always declared
-//! `for_one_invertible_item`; this pins the space copy to the same law.
+//! one item stages TWO rows — the footprint `admit_space_retained_mutation` derives from the leaf
+//! (`ArtifactStoreOneItemFootprint::for_leaf`, design §20.5), the same derivation the framework's own
+//! generic factory (`bounded_config_store_one_item_preparation_factory`) makes (ticket 26/09/18 S10 §1).
 use super::*;
 use semio_s_artifact_space_home::{SHomeMutation, SHomeSnapshot};
 

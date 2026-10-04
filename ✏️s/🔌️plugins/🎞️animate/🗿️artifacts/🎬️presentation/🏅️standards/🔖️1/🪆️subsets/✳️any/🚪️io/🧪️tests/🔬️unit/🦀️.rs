@@ -1,11 +1,11 @@
 use super::*;
-use semio_framework_os_kernel::json::{object, Object, Value};
+use semio_framework_pack_json::{object, Object, Value};
 
 #[test]
 fn title_cards_match_the_neutral_xml_oracle() {
     let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️title-cards.json")).expect("neutral vectors");
     for row in vectors["cases"].as_array().expect("cases") {
-        let value = dsl::os_pack::json::parse(&row["document"].to_string()).expect("owned JSON");
+        let value = semio_framework_pack_json::parse(&row["document"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("owned JSON");
         let (svg, width, height) = animate_presentation_document_json_to_svg(&value).expect("title card");
         let parsed = roxmltree::Document::parse(&svg).expect("independent XML parser");
         let root = parsed.root_element();
@@ -48,7 +48,7 @@ fn from_dwg_builds_single_slide_deck_from_entity() {
         extmax: [10.0, 10.0, 0.0],
     };
     let document = animate_presentation_document_json_from_dwg(&drawing).expect("from_dwg");
-    let deck: crate::PresentationSnapshot = dsl::FromValue::from_value(document).expect("deck");
+    let deck: crate::PresentationSnapshot = semio_framework_value::FromValue::from_value(document).expect("deck");
     assert_eq!(deck.schema, crate::PRESENTATION_DOCUMENT_SCHEMA);
     let (source, tiles) = crate::presentation_working_scene(&deck);
     assert_eq!(tiles.len(), 1);
@@ -61,7 +61,7 @@ fn from_dwg_builds_single_slide_deck_from_entity() {
 fn from_dwg_never_errors_on_empty_drawing() {
     let drawing = semio_s_artifact_stdio_dwg::DwgDrawing::default();
     let document = animate_presentation_document_json_from_dwg(&drawing).expect("from_dwg on empty drawing");
-    let deck: crate::PresentationSnapshot = dsl::FromValue::from_value(document).expect("deck");
+    let deck: crate::PresentationSnapshot = semio_framework_value::FromValue::from_value(document).expect("deck");
     let (_, tiles) = crate::presentation_working_scene(&deck);
     assert_eq!(tiles.len(), 1);
 }

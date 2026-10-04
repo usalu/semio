@@ -1,9 +1,9 @@
 dialect grammar
-grammar dag.snapshot
+grammar dag.dag
 extension dag
 start document
 
-document = header body
-header = "schema" SP "dag.dag.snapshot" NL
-body = payload NL?
-payload = OCTET+
+document = header schema NL content NL?
+header = "semio dag.dag.dsl v1" NL
+schema = "schema=dag.dag"
+content = "content=child_id=" TEXT SP "target=artifact-id=" TEXT SP "artifact-kind=s.stdio.semio standard=v1 subset=graph"

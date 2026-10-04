@@ -24,9 +24,5 @@
     "valueSha256": "19cbf12cf261595972c02424f04a254deb2880e1e3b3470b4b490ac69cc0a709",
     "rawSize": 317,
     "valueSize": 184
-  },
-  "originalContracts": {
-    "count": 40,
-    "canonicalSha256": "e78713c8cbd79ab7989a12841ad959fc63c86dfe5392f5f3e0504e589e7ac6a7"
   }
 }

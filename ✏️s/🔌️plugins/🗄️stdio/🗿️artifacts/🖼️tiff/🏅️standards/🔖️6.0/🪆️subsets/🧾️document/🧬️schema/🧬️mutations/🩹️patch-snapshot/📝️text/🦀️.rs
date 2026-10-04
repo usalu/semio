@@ -17,12 +17,12 @@ pub fn print(value: &TiffMutation) -> Option<String> {
     let TiffMutation::PatchSnapshot(PatchSnapshot { patch }) = value else { return None };
     Some(format!("{TEXT_OPCODE} patch={}", hex_encode(patch.print_op().as_bytes())))
 }
-pub fn parse(line: &str) -> Result<TiffMutation, String> {
-    let (opcode, arguments) = line.split_once(' ').unwrap_or((line, ""));
-    if opcode != TEXT_OPCODE { return Err(format!("expected {TEXT_OPCODE}")); }
-    let encoded = arguments.strip_prefix("patch=").ok_or_else(|| "missing patch".to_string())?;
-    let bytes = hex_decode(encoded)?;
-    let source = std::str::from_utf8(&bytes).map_err(|error| error.to_string())?;
-    let patch = editing::SnapshotPatch::parse_op(source).map_err(|error| error.to_string())?;
+pub fn parse(line: &str) -> Result<TiffMutation, semio_framework_diagnostic::TextError> {
+    let (opcode, arguments) = line.split_once(' ').unwrap_or((line, Default::default()));
+    if opcode != TEXT_OPCODE { return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected {TEXT_OPCODE}"),semio_framework_diagnostic::TextSpan::at(1,1))); }
+    let encoded = arguments.strip_prefix("patch=").ok_or_else(|| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"missing patch",semio_framework_diagnostic::TextSpan::at(1,1)))?;
+    let bytes = hex_decode(encoded).map_err(|message| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message,semio_framework_diagnostic::TextSpan::at(1,1)))?;
+    let source = std::str::from_utf8(&bytes).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error.to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))?;
+    let patch = editing::SnapshotPatch::parse_op(source)?;
     Ok(TiffMutation::PatchSnapshot(PatchSnapshot { patch }))
 }

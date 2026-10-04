@@ -1,4 +1,14 @@
 {
+  "draftRecovery": {
+    "en": {
+      "inputDraftConflict": "This edit could not be applied. Your draft is preserved. Discard it or press Escape to use the current value.",
+      "inputDraftDiscard": "Discard draft"
+    },
+    "de": {
+      "inputDraftConflict": "Diese Änderung konnte nicht übernommen werden. Dein Entwurf bleibt erhalten. Verwirf ihn oder drücke Escape, um den aktuellen Wert zu verwenden.",
+      "inputDraftDiscard": "Entwurf verwerfen"
+    }
+  },
   "cases": [
     {
       "kind": "text",
@@ -68,5 +78,33 @@
     "next": "paint.b",
     "value": "0",
     "draft": "12.5"
+  },
+  "queuedAcknowledgements": {
+    "target": "cell:0:0",
+    "nextTarget": "cell:1:0",
+    "base": "A",
+    "first": "B",
+    "second": "C",
+    "revisionBefore": "r1",
+    "revisionAfterFirst": "r2",
+    "revisionAfterSecond": "r3",
+    "commandsWhileFirstPending": 1,
+    "commandsAfterFirstCompletes": 2,
+    "commandsAfterRefusal": 1,
+    "normalizedNumber": {
+      "base": "0",
+      "typed": "001.50",
+      "published": "1.5"
+    },
+    "admission": {
+      "maxPending": 64,
+      "overflowDraft": "unsaved latest text",
+      "recoveredDraft": "recovered edit"
+    },
+    "button": {
+      "label": "Add row",
+      "pendingDispatches": 1,
+      "settledDispatches": 2
+    }
   }
 }

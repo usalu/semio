@@ -22,8 +22,8 @@ fn puzzle5d_delta_ops_round_trip_and_stay_granular() {
         "fasteners": [],
     });
     let canonical = |value: &Value| {
-        let snapshot: Puzzle5dSnapshot = dsl::json::from_json_str(&value.to_string()).expect("typed puzzle5d fixture");
-        serde_json::from_str::<Value>(&dsl::json::to_json_string(&snapshot)).expect("canonical puzzle5d JSON")
+        let snapshot: Puzzle5dSnapshot = semio_framework_pack_json::from_json_str(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("typed puzzle5d fixture");
+        serde_json::from_str::<Value>(&semio_framework_pack_json::to_json_string(&snapshot)).expect("canonical puzzle5d JSON")
     };
     let operations = puzzle5d_document_delta_operations(&before, &after);
     assert!(operations.iter().any(|operation| matches!(operation, Puzzle5dMutation::MovePart2d(_))));
@@ -32,7 +32,7 @@ fn puzzle5d_delta_ops_round_trip_and_stay_granular() {
     let mut forward = before.clone();
     let mut inverses = Vec::new();
     for operation in &operations {
-        inverses.extend(Mutation::<Value>::inverse(operation, &forward));
+        inverses.extend(Mutation::<Value>::inverse(operation, &forward).expect("valid retained mutation inverse fixture"));
         forward = Mutation::<Value>::diff(operation, &forward).diff().apply(&forward).expect("valid mutation diff");
     }
     assert_eq!(forward, canonical(&after));
@@ -45,8 +45,8 @@ fn puzzle5d_delta_ops_round_trip_and_stay_granular() {
 //#region 🔖️MutationLaws
 use protocol::os_spr::protocol_laws::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
 
-#[test]
-fn move_part_2d_diff_absorb_law() {
+#[semio_framework_async_macros::async_test]
+async fn move_part_2d_diff_absorb_law() {
     use crate::Puzzle5dPart;
     let base = empty();
     let part = Puzzle5dPart { id: "p1".into(), ..Default::default() };
@@ -54,49 +54,49 @@ fn move_part_2d_diff_absorb_law() {
     let d1 = move_part_2d("p1".into(), 10.0, 10.0).diff(&with_part).into_parts().0;
     let mid = MutationDiff::<Puzzle5dSnapshot>::apply(&d1, &with_part).expect("valid mutation diff");
     let d2 = move_part_2d("p1".into(), 20.0, 30.0).diff(&mid).into_parts().0;
-    semio_framework::io::resolve_ready(assert_mutation_diff_absorb_law(&with_part, d1, d2));
+    (assert_mutation_diff_absorb_law(&with_part, d1, d2)).await;
 }
 
 fn empty() -> Puzzle5dSnapshot {
     Puzzle5dSnapshot::default()
 }
 
-#[test]
-fn create_delete_part_inverse_law() {
+#[semio_framework_async_macros::async_test]
+async fn create_delete_part_inverse_law() {
     use crate::Puzzle5dPart;
     let base = empty();
     let part = Puzzle5dPart { id: "p1".into(), ..Default::default() };
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&base, &create_part(part.clone(), None)));
+    (assert_mutation_inverse_law(&base, &create_part(part.clone(), None))).await;
     let with_part = MutationDiff::<Puzzle5dSnapshot>::apply(create_part(part, None).diff(&base).diff(), &base).expect("valid mutation diff");
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_part, &delete_part("p1".into())));
+    (assert_mutation_inverse_law(&with_part, &delete_part("p1".into()))).await;
 }
 
-#[test]
-fn part_field_mutations_inverse_law() {
+#[semio_framework_async_macros::async_test]
+async fn part_field_mutations_inverse_law() {
     use crate::{Puzzle5dGrip, Puzzle5dPart, Puzzle5dPartAnchor, Puzzle5dScale};
     let base = empty();
     let part = Puzzle5dPart { id: "p1".into(), grips: vec![Puzzle5dGrip { id: "g1".into(), grip_kind: None, grip_2d: Default::default(), grip_3d: Default::default() }], ..Default::default() };
     let with_part = MutationDiff::<Puzzle5dSnapshot>::apply(create_part(part, None).diff(&base).diff(), &base).expect("valid mutation diff");
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_part, &move_part_2d("p1".into(), 5.0, 6.0)));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_part, &replace_part_2d_geometry("p1".into(), Some("rectangle".into()), None, Some(4.0), Some(2.0))));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_part, &edit_part_2d_text("p1".into(), Some("hi".into()))));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_part, &change_part_2d_icon("p1".into(), Some("star".into()))));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_part, &change_part_2d_hidden("p1".into(), Some(true))));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_part, &change_part_2d_locked("p1".into(), Some(true))));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_part, &move_part_3d("p1".into(), [1.0, 2.0, 3.0])));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_part, &rotate_part_3d("p1".into(), Some([0.0, 0.0, 0.0, 1.0]))));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_part, &scale_part_3d("p1".into(), Some(Puzzle5dScale::Uniform(2.0)))));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_part, &change_part_3d_mesh("p1".into(), Some("mesh://a".into()))));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_part, &edit_part_3d_label("p1".into(), Some("Label".into()))));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_part, &change_part_kind("p1".into(), Some("core.capsule".into()))));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_part, &change_part_anchor("p1".into(), Puzzle5dPartAnchor::Derived)));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_part, &add_part_grip("p1".into(), Puzzle5dGrip { id: "g2".into(), grip_kind: None, grip_2d: Default::default(), grip_3d: Default::default() }, None)));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_part, &remove_part_grip("p1".into(), "g1".into())));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_part, &replace_part_grip("p1".into(), "g1".into(), Puzzle5dGrip { id: "g1".into(), grip_kind: Some("k".into()), grip_2d: Default::default(), grip_3d: Default::default() })));
+    (assert_mutation_inverse_law(&with_part, &move_part_2d("p1".into(), 5.0, 6.0))).await;
+    (assert_mutation_inverse_law(&with_part, &replace_part_2d_geometry("p1".into(), Some("rectangle".into()), None, Some(4.0), Some(2.0)))).await;
+    (assert_mutation_inverse_law(&with_part, &edit_part_2d_text("p1".into(), Some("hi".into())))).await;
+    (assert_mutation_inverse_law(&with_part, &change_part_2d_icon("p1".into(), Some("star".into())))).await;
+    (assert_mutation_inverse_law(&with_part, &change_part_2d_hidden("p1".into(), Some(true)))).await;
+    (assert_mutation_inverse_law(&with_part, &change_part_2d_locked("p1".into(), Some(true)))).await;
+    (assert_mutation_inverse_law(&with_part, &move_part_3d("p1".into(), [1.0, 2.0, 3.0]))).await;
+    (assert_mutation_inverse_law(&with_part, &rotate_part_3d("p1".into(), Some([0.0, 0.0, 0.0, 1.0])))).await;
+    (assert_mutation_inverse_law(&with_part, &scale_part_3d("p1".into(), Some(Puzzle5dScale::Uniform(2.0))))).await;
+    (assert_mutation_inverse_law(&with_part, &change_part_3d_mesh("p1".into(), Some("mesh://a".into())))).await;
+    (assert_mutation_inverse_law(&with_part, &edit_part_3d_label("p1".into(), Some("Label".into())))).await;
+    (assert_mutation_inverse_law(&with_part, &change_part_kind("p1".into(), Some("core.capsule".into())))).await;
+    (assert_mutation_inverse_law(&with_part, &change_part_anchor("p1".into(), Puzzle5dPartAnchor::Derived))).await;
+    (assert_mutation_inverse_law(&with_part, &add_part_grip("p1".into(), Puzzle5dGrip { id: "g2".into(), grip_kind: None, grip_2d: Default::default(), grip_3d: Default::default() }, None))).await;
+    (assert_mutation_inverse_law(&with_part, &remove_part_grip("p1".into(), "g1".into()))).await;
+    (assert_mutation_inverse_law(&with_part, &replace_part_grip("p1".into(), "g1".into(), Puzzle5dGrip { id: "g1".into(), grip_kind: Some("k".into()), grip_2d: Default::default(), grip_3d: Default::default() }))).await;
 }
 
-#[test]
-fn connect_disconnect_grips_inverse_law_and_cascade() {
+#[semio_framework_async_macros::async_test]
+async fn connect_disconnect_grips_inverse_law_and_cascade() {
     use crate::{Puzzle5dGrip, Puzzle5dPart};
     let base = empty();
     let part_a = Puzzle5dPart { id: "a".into(), grips: vec![Puzzle5dGrip { id: "ga".into(), grip_kind: None, grip_2d: Default::default(), grip_3d: Default::default() }], ..Default::default() };
@@ -104,31 +104,31 @@ fn connect_disconnect_grips_inverse_law_and_cascade() {
     let mut projection = base;
     projection = MutationDiff::<Puzzle5dSnapshot>::apply(create_part(part_a, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
     projection = MutationDiff::<Puzzle5dSnapshot>::apply(create_part(part_b, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&projection, &connect_grips("f1".into(), "a:ga".into(), "b:gb".into(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)));
+    (assert_mutation_inverse_law(&projection, &connect_grips("f1".into(), "a:ga".into(), "b:gb".into(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0))).await;
     let connected = MutationDiff::<Puzzle5dSnapshot>::apply(connect_grips("f1".into(), "a:ga".into(), "b:gb".into(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0).diff(&projection).diff(), &projection).expect("valid mutation diff");
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&connected, &disconnect_grips("f1".into())));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(
+    (assert_mutation_inverse_law(&connected, &disconnect_grips("f1".into()))).await;
+    (assert_mutation_inverse_law(
         &connected,
         &replace_fastener_geometry(ReplaceFastenerGeometry { id: "f1".into(), new_gap: 1.0, new_shift: 2.0, new_rise: 3.0, new_rotation: 4.0, new_turn: 5.0, new_tilt: 6.0, new_x: 7.0, new_y: 8.0 }),
-    ));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&connected, &change_fastener_kind("f1".into(), Some("core.link".into()))));
+    )).await;
+    (assert_mutation_inverse_law(&connected, &change_fastener_kind("f1".into(), Some("core.link".into())))).await;
     let deleted = delete_part("a".into());
     let after_delete = MutationDiff::<Puzzle5dSnapshot>::apply(deleted.diff(&connected).diff(), &connected).expect("valid mutation diff");
     assert!(!after_delete.fasteners.iter().any(|fastener| fastener.id == "f1"), "delete-part must sever fasteners touching its grips");
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&connected, &deleted));
+    (assert_mutation_inverse_law(&connected, &deleted)).await;
 }
 
-#[test]
-fn document_scalar_mutations_inverse_law() {
+#[semio_framework_async_macros::async_test]
+async fn document_scalar_mutations_inverse_law() {
     use crate::{Puzzle5dCompatSpecificity, Puzzle5dKindCatalogs};
     let base = empty();
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&base, &rename_puzzle5d(Some("Nakagin".into()))));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&base, &change_domain("mechanical".into())));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&base, &change_description("a scene".into())));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&base, &connect_kind_compatibility("a".into(), "b".into(), true, false, Puzzle5dCompatSpecificity::Grip)));
+    (assert_mutation_inverse_law(&base, &rename_puzzle5d(Some("Nakagin".into())))).await;
+    (assert_mutation_inverse_law(&base, &change_domain("mechanical".into()))).await;
+    (assert_mutation_inverse_law(&base, &change_description("a scene".into()))).await;
+    (assert_mutation_inverse_law(&base, &connect_kind_compatibility("a".into(), "b".into(), true, false, Puzzle5dCompatSpecificity::Grip))).await;
     let connected = MutationDiff::<Puzzle5dSnapshot>::apply(connect_kind_compatibility("a".into(), "b".into(), true, false, Puzzle5dCompatSpecificity::Grip).diff(&base).diff(), &base).expect("valid mutation diff");
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&connected, &disconnect_kind_compatibility("a".into(), "b".into())));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&base, &replace_kind_catalogs(Some(Puzzle5dKindCatalogs::default()))));
+    (assert_mutation_inverse_law(&connected, &disconnect_kind_compatibility("a".into(), "b".into()))).await;
+    (assert_mutation_inverse_law(&base, &replace_kind_catalogs(Some(Puzzle5dKindCatalogs::default())))).await;
 }
 
 #[test]
@@ -146,27 +146,27 @@ fn dispatch_registers_semantic_descriptors() {
 // `📓️w3-f-block-puzzle-report.md` for the `assert_outcome_policy_matrix` pending-helper note.
 use protocol::os_spr::protocol_laws::{assert_fatal_never_applies, assert_missing_target_is_error};
 
-#[test]
-fn missing_target_is_error_per_verb_family() {
+#[semio_framework_async_macros::async_test]
+async fn missing_target_is_error_per_verb_family() {
     let base = empty();
-    semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &delete_part("missing".into()))); // delete
-    semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &remove_part_grip("missing".into(), "g0".into()))); // remove
-    semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &change_part_2d_icon("missing".into(), Some("star".into())))); // change/set/update
-    semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &move_part_2d("missing".into(), 1.0, 1.0))); // move/drag/rotate/scale/resize
-    semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &edit_part_3d_label("missing".into(), Some("x".into())))); // edit/replace
-    semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &disconnect_grips("missing".into())));
+    (assert_missing_target_is_error(&base, &delete_part("missing".into()))).await; // delete
+    (assert_missing_target_is_error(&base, &remove_part_grip("missing".into(), "g0".into()))).await; // remove
+    (assert_missing_target_is_error(&base, &change_part_2d_icon("missing".into(), Some("star".into())))).await; // change/set/update
+    (assert_missing_target_is_error(&base, &move_part_2d("missing".into(), 1.0, 1.0))).await; // move/drag/rotate/scale/resize
+    (assert_missing_target_is_error(&base, &edit_part_3d_label("missing".into(), Some("x".into())))).await; // edit/replace
+    (assert_missing_target_is_error(&base, &disconnect_grips("missing".into()))).await;
     // disconnect/unbind
 }
 
-#[test]
-fn create_duplicate_id_is_fatal_and_never_applies() {
+#[semio_framework_async_macros::async_test]
+async fn create_duplicate_id_is_fatal_and_never_applies() {
     use crate::Puzzle5dPart;
     let mut base = empty();
     let part = Puzzle5dPart { id: "p0".into(), ..Default::default() };
     base.parts.push(part.clone());
     let outcome = create_part(part, None).diff(&base);
-    semio_framework::io::resolve_ready(assert_fatal_never_applies(&outcome));
-    assert_eq!(outcome.worst_level(), Some(dsl::Severity::Fatal));
+    (assert_fatal_never_applies(&outcome)).await;
+    assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal));
     assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.duplicate-id"));
 }
 //#endregion 🔖️OutcomeLaws
@@ -215,13 +215,13 @@ fn selection_labels_are_localized() {
 }
 
 /// 🚨️ A selection leaf whose every target is absent is the Error-level `mutation.target-missing`.
-#[test]
-fn selection_missing_targets_are_errors() {
+#[semio_framework_async_macros::async_test]
+async fn selection_missing_targets_are_errors() {
     let base = empty();
-    semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &drag_selection_2d(vec!["missing".into()], 1.0, 0.0)));
-    semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &drag_selection_3d(vec!["missing".into()], [1.0, 0.0, 0.0])));
-    semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &rotate_selection_3d(vec!["missing".into()], [0.0, 0.0, 1.0], 1.0)));
-    semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &scale_selection_3d(vec!["missing".into()], [2.0, 2.0, 2.0])));
+    (assert_missing_target_is_error(&base, &drag_selection_2d(vec!["missing".into()], 1.0, 0.0))).await;
+    (assert_missing_target_is_error(&base, &drag_selection_3d(vec!["missing".into()], [1.0, 0.0, 0.0]))).await;
+    (assert_missing_target_is_error(&base, &rotate_selection_3d(vec!["missing".into()], [0.0, 0.0, 1.0], 1.0))).await;
+    (assert_missing_target_is_error(&base, &scale_selection_3d(vec!["missing".into()], [2.0, 2.0, 2.0]))).await;
 }
 
 /// ⏪️ Time travel edits a selection leaf's inputs, never the gesture: a board drag superseded with a new offset

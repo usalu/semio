@@ -4,7 +4,10 @@
   "namedInputs": {
     "default": [
       "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/**/*.rs",
-      "{projectRoot}/**/*"
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/🛤️path/**/*.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/🔍️trace/**/*.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/🔀️booleans/**/*.json"
     ]
   },
   "targets": {

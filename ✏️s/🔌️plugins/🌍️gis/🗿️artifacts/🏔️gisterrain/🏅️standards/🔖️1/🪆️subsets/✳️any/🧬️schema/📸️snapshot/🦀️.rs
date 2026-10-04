@@ -10,13 +10,14 @@
 
 use crate::{gis_terrain_mesh_child_handle, gis_terrain_mesh_content_key};
 use ::semio_framework_schema::ArtifactSchema;
-use dsl::{FromValue, ToValue};
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 
 //#region 🔹Snapshot
 /// 📸️ Persisted GIS terrain document snapshot (persistent fields of the artifact).
-#[derive(Clone, Debug, PartialEq, ArtifactSchema, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact_schema(id = "s.gis.gisterrain")]
 pub struct GisTerrainSnapshot {
@@ -24,7 +25,8 @@ pub struct GisTerrainSnapshot {
     pub exaggeration: f64,
     /// 🔌️ `map:in`'s insertion point — last-imported `2d.map` descriptor JSON.
     #[state(artifact)]
-    pub imported_features_json: String,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub imported_map: Option<crate::schema::ImportedMap>,
     /// 🪆️ Exact independently owned mesh handle, preserved by parent scalar edits.
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
@@ -34,8 +36,8 @@ pub struct GisTerrainSnapshot {
 
 impl Default for GisTerrainSnapshot {
     fn default() -> Self {
-        let mesh = Some(gis_terrain_mesh_child_handle(&gis_terrain_mesh_content_key(0.0, "")));
-        Self { exaggeration: 0.0, imported_features_json: String::new(), mesh }
+        let mesh = Some(gis_terrain_mesh_child_handle(&gis_terrain_mesh_content_key(0.0, None)));
+        Self { exaggeration: 0.0, imported_map: None, mesh }
     }
 }
 //#endregion 🔹Snapshot
@@ -167,19 +169,23 @@ pub fn gis_terrain_identity_report_json(dsl_text: &str) -> Result<String, String
     let canonical_again = <GisTerrainSnapshot as store::ArtifactDsl>::print_dsl(&reparsed);
     let packed = <GisTerrainSnapshot as store::ArtifactPack>::encode_pack(&reparsed);
     let unpacked = <GisTerrainSnapshot as store::ArtifactPack>::decode_pack(&packed).map_err(|error| error.to_string())?;
-    let report = dsl::os_pack::json::object([
-        ("parsed".to_string(), dsl::os_pack::json::from_dsl_value(&parsed.to_value())),
-        ("reparsed".to_string(), dsl::os_pack::json::from_dsl_value(&reparsed.to_value())),
-        ("packDecoded".to_string(), dsl::os_pack::json::from_dsl_value(&unpacked.to_value())),
-        ("canonicalText".to_string(), dsl::os_pack::json::Value::from(canonical.as_str())),
-        ("canonicalTextAgain".to_string(), dsl::os_pack::json::Value::from(canonical_again.as_str())),
+    let report = semio_framework_pack_json::object([
+        ("parsed".to_string(), semio_framework_pack_json::from_dsl_value(&parsed.to_value())),
+        ("reparsed".to_string(), semio_framework_pack_json::from_dsl_value(&reparsed.to_value())),
+        ("packDecoded".to_string(), semio_framework_pack_json::from_dsl_value(&unpacked.to_value())),
+        ("canonicalText".to_string(), semio_framework_pack_json::Value::from(canonical.as_str())),
+        ("canonicalTextAgain".to_string(), semio_framework_pack_json::Value::from(canonical_again.as_str())),
     ]);
-    Ok(dsl::os_pack::json::to_string(&report))
+    Ok(semio_framework_pack_json::to_string(&report))
 }
 //#endregion 🌉️IdentityBridge
 
 #[path="🪶️sqlite/🦀️.rs"]
 mod sqlite;
+#[path="🧮️row-admission/🦀️.rs"]
+mod row_admission;
+#[path="🧮️value-admission/🦀️.rs"]
+mod value_admission;
 #[cfg(test)]
 #[path="🧪️tests/🪶️sqlite/🦀️.rs"]
 mod sqlite_tests;

@@ -3,12 +3,13 @@
 use super::retire_local_document::RetireLocalDocument;
 use super::LocalCatalogConfigMutation;
 use protocol::{MutationDiff, MutationKind, MutationOutcome, SemanticDescriptor};
-use semio_framework_os_kernel::{FromValue, ToValue};
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Schema
 /// 🗄️ Where a local document's events persist on this device: a folder event log or one file.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum LocalDocumentStorage {
@@ -17,7 +18,7 @@ pub enum LocalDocumentStorage {
 }
 
 /// 📄️ One document this device keeps locally: its id, artifact schema, name and where its events persist.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct LocalDocument {
@@ -30,7 +31,7 @@ pub struct LocalDocument {
 }
 
 /// 🗂️ `os.config.local-catalog` — every document this device keeps locally (persisted local-only), ordered by id.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase", default)]
 pub struct LocalCatalog {
@@ -53,7 +54,7 @@ impl MutationDiff<LocalCatalog> for LocalCatalog {
 
 //#region 🔖️Mutation
 /// 📥️ Lists one document in the local catalog, replacing any entry with the same id.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
@@ -89,7 +90,7 @@ impl MutationKind<LocalCatalog, LocalCatalogConfigMutation> for AdmitLocalDocume
     fn diff(&self, base: &LocalCatalog) -> MutationOutcome<LocalCatalog> {
         let admitted = LocalDocument::from(self);
         if base.documents.iter().any(|entry| *entry == admitted) {
-            return MutationOutcome::new(base.clone()).warn("mutation.no-op", format!("\"{}\" is already listed in the local catalog.", self.document_id));
+            return MutationOutcome::new(base.clone()).warning("mutation.no-op", format!("\"{}\" is already listed in the local catalog.", self.document_id));
         }
         let mut documents: Vec<LocalDocument> = base.documents.iter().filter(|entry| entry.document_id != self.document_id).cloned().collect();
         documents.push(admitted);
@@ -97,12 +98,15 @@ impl MutationKind<LocalCatalog, LocalCatalogConfigMutation> for AdmitLocalDocume
         MutationOutcome::new(LocalCatalog { documents })
     }
 
-    fn inverse(&self, base: &LocalCatalog) -> Vec<LocalCatalogConfigMutation> {
+    fn inverse(&self, base: &LocalCatalog) -> Result<Vec<LocalCatalogConfigMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         match base.documents.iter().find(|entry| entry.document_id == self.document_id) {
             Some(prior) => vec![admit_local_document(prior.clone())],
             None => vec![LocalCatalogConfigMutation::RetireLocalDocument(RetireLocalDocument { document_id: self.document_id.clone() })],
         }
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Keep \"{}\" on this device", self.name), &format!("\"{}\" auf diesem Gerät behalten", self.name))
@@ -123,9 +127,12 @@ pub fn apply_local_catalog_config_mutation(snapshot: &mut LocalCatalog, mutation
 }
 
 /// ↩️ Computes the mutation's inverse steps from the pre-mutation catalog.
-pub fn inverse_local_catalog_config_mutation(snapshot: &LocalCatalog, mutation: &LocalCatalogConfigMutation) -> Vec<LocalCatalogConfigMutation> {
+pub fn inverse_local_catalog_config_mutation(snapshot: &LocalCatalog, mutation: &LocalCatalogConfigMutation) -> Result<Vec<LocalCatalogConfigMutation>, semio_framework_value::ValueError> {
+    Ok({
     use protocol::Mutation as _;
-    mutation.inverse(snapshot)
+    mutation.inverse(snapshot)?
+
+    })
 }
 
 /// 📥️ Decodes the internally tagged local-catalog mutation JSON projection.
@@ -151,9 +158,12 @@ pub fn apply_local_catalog_config_mutation_reporting(snapshot: &mut LocalCatalog
 }
 
 /// ↩️ Returns the mutation's own inverse steps for an external fixture adapter.
-pub fn inverse_local_catalog_config_mutation_steps(mutation: &LocalCatalogConfigMutation, base: &LocalCatalog) -> Vec<LocalCatalogConfigMutation> {
+pub fn inverse_local_catalog_config_mutation_steps(mutation: &LocalCatalogConfigMutation, base: &LocalCatalog) -> Result<Vec<LocalCatalogConfigMutation>, semio_framework_value::ValueError> {
+    Ok({
     use protocol::Mutation as _;
-    mutation.inverse(base)
+    mutation.inverse(base)?
+
+    })
 }
 //#endregion 🌉️MutationCodecBridge
 

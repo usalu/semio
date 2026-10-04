@@ -7,10 +7,11 @@ pub mod add_element {
     use crate::op::ProgramMutation;
     use crate::schema::mutations as leaves;
     use crate::ProgramSnapshot;
-    use dsl::{FromValue, ToValue};
+    use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "add-element")]
     pub struct AddElement {
         pub name: String,
@@ -31,10 +32,11 @@ pub mod remove_element {
     use crate::op::ProgramMutation;
     use crate::schema::mutations as leaves;
     use crate::{EntityId, ProgramSnapshot};
-    use dsl::{FromValue, ToValue};
+    use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "remove-element")]
     pub struct RemoveElement {
         pub element_id: String,

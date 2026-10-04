@@ -1,0 +1,17 @@
+{
+  "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+  "regions": [
+    {
+      "before": "impl std::error::Error for CommandDecodeError {}",
+      "after": "impl std::error::Error for CommandDecodeError {\n    fn source(&self)->Option<&(dyn std::error::Error+'static)>{match self{Self::Layout(error)|Self::Operation{error,..}=>Some(error)}}\n}"
+    },
+    {
+      "before": "impl From<crate::os_pack::PackError> for CommandDecodeError {\n    fn from(error: crate::os_pack::PackError) -> Self {\n        Self::Layout(error.into())\n    }\n}",
+      "after": "impl From<crate::os_pack::PackError> for CommandDecodeError {\n    fn from(error: crate::os_pack::PackError) -> Self {\n        Self::Layout(error.into())\n    }\n}\n\nimpl From<pack::PackRefusal> for CommandDecodeError {\n    fn from(error:pack::PackRefusal)->Self{Self::Layout(error.into())}\n}"
+    },
+    {
+      "before": "/// 🔀️ The closest `PackError` variant to \"a text-format failure surfaced through a pack-facing\n/// API\" (e.g. `dsl_derive`'s generated `decode_pack_with`, whose `__dsl_from_record` step returns\n/// `TextError`). A free function, not `impl From<TextError> for PackError`: both types are\n/// re-exports of foreign crates (`dsl_core`/`pack_core`) through `vcs`, so a blanket `From` impl\n/// here would violate the orphan rule — neither type is actually local to this crate.\n// 🚫️async: E1 pure conversion, passed BY NAME into `.map_err(text_error_to_pack_error)` across\n// `dsl_derive`'s generated `decode_pack_with` impls — `.map_err`'s closure argument cannot itself\n// be async, and there is no suspension point here to justify one — see R9.\npub fn text_error_to_pack_error(error: TextError) -> PackError {\n    PackError::TextRefusal(error)\n}",
+      "after": "/// 📍️ Retains the actual positioned Text refusal at the artifact Pack boundary.\npub fn text_error_to_pack_error(error:TextError)->PackError{PackError::from(error)}"
+    }
+  ]
+}

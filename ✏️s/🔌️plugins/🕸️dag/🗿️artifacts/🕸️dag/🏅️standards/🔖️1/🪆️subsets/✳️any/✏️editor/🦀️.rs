@@ -22,9 +22,8 @@ use crate::editor::dag::modes::edit;
 use crate::editor::dag::modes::edit::tools::reorganize;
 use crate::editor::dag::modes::edit::windows::{compiled, main};
 use crate::editor::dag::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
-use crate::editor::dag::terminology::{dag_play_labels, is_de_locale};
-use crate::op::DagMutation;
-use crate::DagSnapshot;
+use crate::editor::dag::terminology::dag_play_labels;
+use crate::{DagMutation, DagSnapshot};
 use semio_framework::kernel::Effect;
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_plugin::app::{Dialect, InteractionView};
@@ -125,7 +124,7 @@ pub use semio_framework_plugin::ui_node_list;
 /// 🕹️ A domain pick row: [`semio_framework_plugin::tree_item_desc`] plus the granularity that marks
 /// the row a pick target of the panel tree's `.interaction_domain(..)`, so no per-row
 /// `interactionSelect` argument map is ever built.
-pub fn pick_item<I: AsRef<str>, L: TryInto<semio_framework_ui_locale::Label>>(
+pub fn pick_item<I: AsRef<str>, L: TryInto<semio_framework_ui_contract::Label>>(
     id: I,
     label: L,
     description: Option<String>,
@@ -166,7 +165,7 @@ semio_framework_plugin::app_commands! {
 //#endregion 🔖️Commands
 
 //#region 🔖️ContextMenu
-fn dag_context_menu_items(registry: &AppActionRegistry, labels: &crate::editor::dag::terminology::DagPlayLabels, is_de: bool, selected: &[String], request: &ContextMenuRequest) -> Vec<ContextMenuItemSpec> {
+fn dag_context_menu_items(registry: &AppActionRegistry, labels: &crate::editor::dag::terminology::DagPlayLabels, view_state: &semio_framework_plugin::ViewModel, selected: &[String], request: &ContextMenuRequest) -> Vec<ContextMenuItemSpec> {
     use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
     let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), selected, &[]);
@@ -178,17 +177,14 @@ fn dag_context_menu_items(registry: &AppActionRegistry, labels: &crate::editor::
     // the `VcsArtifactApp::context_menu` funnel) sorts groups into `RIBBON_PARENT_CATEGORIES` order and
     // inserts the pre-destructive separator itself, so no `.separator()` call is needed ahead of the
     // `deleteSelection`/`nodeGraphEdit` destructive row below.
-    let mut menu = Menu::of(registry).action_args("addNode", dsl::DslValue::object([("kind".to_string(), dsl::DslValue::String("computation".to_string()))]));
+    let mut menu = Menu::of(registry, view_state).action_args("addNode", semio_framework_value::DslValue::object([("kind".to_string(), semio_framework_value::DslValue::String("computation".to_string()))]));
     if nodes.len() == 1 {
         menu = menu.action("renameDagNode");
     }
     if let Some(edge_id) = hit_edge_id {
-        menu = menu.group("transfer", |m| m.action_args("disconnect", dsl::DslValue::object([("edgeId".to_string(), dsl::DslValue::String(edge_id))])));
+        menu = menu.group("transfer", |m| m.action_args("disconnect", semio_framework_value::DslValue::object([("edgeId".to_string(), semio_framework_value::DslValue::String(edge_id))])));
     }
-    if let Some(spec) = node_graph_delete_selection_spec(labels.delete_selection.as_str(), is_de, &nodes, &edges, NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
-        menu = menu.item(spec);
-    }
-    menu.build()
+    menu.item(node_graph_delete_selection_spec(labels.delete_selection.as_str(), view_state, &nodes, &edges, NodeGraphDeleteDispatch::ViaNodeGraphEdit)).build()
 }
 //#endregion 🔖️ContextMenu
 
@@ -203,7 +199,7 @@ pub struct DagPlayApp;
 /// before its app-owned bounded retirement authority detached` trap on this path.
 pub fn reset_dag_document_effect(document: &DagSnapshot) -> Effect {
     let pack = <DagSnapshot as store::ArtifactPack>::encode_pack(document);
-    let spr = semio_framework_plugin::resolve_ready(store::empty_document_spr("dag", crate::DAG_DOCUMENT_SCHEMA));
+    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr("dag", crate::DAG_DOCUMENT_SCHEMA));
     Effect::LoadDocument { pack, spr }
 }
 
@@ -255,8 +251,8 @@ const DAG_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &
     ArtifactToolPublicationContract { tool_id: "graphPointerDown", lanes: &[ArtifactToolPublicationLane::HostOnly] },
 ];
 
-/// 🧵️ One-shot reducer for the document verbs — the very dispatch `DagPlayApp::handle` performs,
-/// so the bounded job and the batch path stay one piece of code. `deleteSelection`/`nodeGraphEdit`
+/// 🧵️ One-shot reducer for the document verbs — the very dispatch `DagPlayApp::handle` performs, over a view composing the
+/// `content` child the admission captured (design §20.15), so the bounded job and the batch path stay one piece of code. `deleteSelection`/`nodeGraphEdit`
 /// read the `graph` domain off the raw `protocol::InteractionState` (`InteractionView`'s fields are
 /// framework-private) through each command's own `apply_with_state`.
 #[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
@@ -267,13 +263,14 @@ fn dag_retained_document_reduce(
     history: &semio_framework_plugin::HistoryView,
     interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<DagPlayApp>>>,
+    context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<DagPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<DagMutation, DagConfigMutation, NoDraftMutation>, Fault> {
     if !DAG_RETAINED_DOCUMENT_TOOL_IDS.contains(&command.command_id()) {
         return Err(Fault::from("dag-retained-document-route-mismatch"));
     }
-    let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
+    let context = context.ok_or_else(|| Fault::from("dag-retained-document-children-required"))?;
+    let doc = ArtifactView::with_children(snapshot, history, (*context.children).clone()).bound_to_operation(operation.clone());
     let cfg = ConfigView { snapshot: config, window: None };
     match command {
         DagCommand::DeleteSelection(payload) => delete_selection::apply_with_state(payload, &doc, &cfg, interaction),
@@ -289,20 +286,20 @@ fn dag_retained_document_extent(command: &DagCommand, _snapshot: &DagSnapshot, _
 /// dispatch path already speaks. `ArtifactEditor::command_from_action`'s default refuses EVERY id
 /// (`app.command.unsupported`), so without this bridge no Actions-pane row, example pick or canvas
 /// gesture could ever reach `DagCommand::dispatch`.
-fn dag_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<DagCommand, Fault> {
-    let entries: &[(String, dsl::DslValue)] = match args {
-        Some(dsl::DslValue::Object(object)) => object.as_slice(),
+fn dag_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<DagCommand, Fault> {
+    let entries: &[(String, semio_framework_value::DslValue)] = match args {
+        Some(semio_framework_value::DslValue::Object(object)) => object.as_slice(),
         _ => &[],
     };
     let lookup = |keys: &[&str]| keys.iter().find_map(|key| entries.iter().find(|(name, _)| name == key).map(|(_, value)| value));
     let text = |keys: &[&str], fallback: &str| match lookup(keys) {
-        Some(dsl::DslValue::String(raw)) if !raw.is_empty() => raw.clone(),
-        Some(dsl::DslValue::String(_)) | None => fallback.to_string(),
-        Some(other) => dsl::json::to_json_string(other),
+        Some(semio_framework_value::DslValue::String(raw)) if !raw.is_empty() => raw.clone(),
+        Some(semio_framework_value::DslValue::String(_)) | None => fallback.to_string(),
+        Some(other) => semio_framework_pack_json::to_json_string(other),
     };
     let number = |keys: &[&str]| match lookup(keys) {
-        Some(dsl::DslValue::Number(value)) => Some(value.as_f64()),
-        Some(dsl::DslValue::String(raw)) => raw.trim().parse::<f64>().ok(),
+        Some(semio_framework_value::DslValue::Number(value)) => Some(value.as_f64()),
+        Some(semio_framework_value::DslValue::String(raw)) => raw.trim().parse::<f64>().ok(),
         _ => None,
     };
     let required = |keys: &[&str], code: &str, message: &str| {
@@ -328,12 +325,12 @@ fn dag_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result
         }
         "patchDagNodes" => {
             let node_ids: Vec<String> = match lookup(&["nodeIds", "node_ids"]) {
-                Some(dsl::DslValue::Array(ids)) => ids.iter().filter_map(dsl::DslValue::as_str).map(str::to_string).collect(),
+                Some(semio_framework_value::DslValue::Array(ids)) => ids.iter().filter_map(semio_framework_value::DslValue::as_str).map(str::to_string).collect(),
                 _ => Vec::new(),
             };
             let field = required(&["field"], "dag.patch-dag-nodes.malformed", "patchDagNodes needs a field")?;
             let value = match lookup(&["value"]) {
-                Some(dsl::DslValue::Number(value)) => value.as_f64().to_string(),
+                Some(semio_framework_value::DslValue::Number(value)) => value.as_f64().to_string(),
                 Some(_) => text(&["value"], ""),
                 None => return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("dag.patch-dag-nodes.malformed"), "patchDagNodes needs a value")),
             };
@@ -469,7 +466,7 @@ fn dag_config_footprint(mutation: &DagConfigMutation) -> Result<store::ArtifactS
         DagConfigMutation::ReplaceConfig(crate::editor::dag::config::ReplaceConfig { .. }) => return Err("DAG Config preparation rejects whole-snapshot input".into()),
         DagConfigMutation::ChangeCamera(crate::editor::dag::config::ChangeCamera { .. }) => {}
     }
-    Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: DAG_CONFIG_STORE_MAXIMUM_BYTES * 4 + 1_024 })
+    Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, DAG_CONFIG_STORE_MAXIMUM_BYTES * 4 + 1_024))
 }
 
 fn prepare_dag_config(base: &DagConfig, mutation: DagConfigMutation) -> Result<(DagConfig, Vec<DagConfigMutation>, DagConfigMutation), String> {
@@ -485,35 +482,6 @@ fn prepare_dag_config(base: &DagConfig, mutation: DagConfigMutation) -> Result<(
         }
     };
     Ok((post, vec![inverse], mutation))
-}
-
-fn dag_config_edit(forward: DagConfigMutation, inverse: Vec<DagConfigMutation>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<DagConfigMutation> {
-    let id = format!("dag-config-retained-{}", authority.next_sequence_number());
-    protocol::Edit { line: authority.line_id().map(str::to_owned),
-        id: id.clone(),
-        actor: Some(authority.actor().to_string()),
-        forwards: vec![forward],
-        inverse,
-        mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
-            dependencies: Vec::new(),
-            base_version: authority.base_applied_edit_count() as u64,
-            author_id: Some(protocol::ActorId(authority.actor().to_string())),
-            timestamp: authority.next_clock(),
-            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-            payload_hash: None,
-            semantic_kind: None,
-            label: None,
-            group_id: None,
-            origin: Default::default(),
-            transaction: None,
-        }],
-        description, verb: None,
-        coalesce_key: None,
-        sequence_number: authority.next_sequence_number(),
-        started_at: String::new(),
-        finished_at: None,
-    }
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<DagConfig, DagConfigMutation> for DagConfigPreparationFactory {
@@ -576,7 +544,7 @@ impl store::ArtifactStoreOneItemPreparation<DagConfig, DagConfigMutation> for Da
         }
         let (post, inverse, forward) = self.candidate.take().ok_or_else(|| "DAG Config preparation lost its candidate".to_string())?;
         let authority = self.authority.as_ref().ok_or_else(|| "DAG Config preparation lost its Store authority".to_string())?;
-        let prepared = authority.prepare_one_item(dag_config_edit(forward, inverse, self.description.take(), authority), std::sync::Arc::new(post))?;
+        let prepared = authority.prepare_one_item(authority.next_edit(forward, inverse), std::sync::Arc::new(post))?;
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
         self.prepared = Some(prepared);
         Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
@@ -596,7 +564,7 @@ impl store::ArtifactStoreOneItemPreparation<DagConfig, DagConfigMutation> for Da
     fn begin_close(&mut self) {
         self.closing = true;
     }
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || !grant.permits_one() {
             return Ok(store::SnapshotRetirementStep::Blocked);
         }
@@ -626,7 +594,7 @@ impl store::ArtifactStoreOneItemPreparation<DagConfig, DagConfigMutation> for Da
         }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
-                return Err("DAG Config preparation could not return its exact base root".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "DAG Config preparation could not return its exact base root"));
             }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -752,7 +720,13 @@ impl ArtifactEditor for DagPlayApp {
         if request.tool_id != reorganize::TOOL_ID || request.purpose != semio_framework_plugin::ToolRunJobPurpose::Run {
             return Ok(None);
         }
-        reorganize::build_job(request.identity, &request.snapshot, &request.config, request.checkpoint, request.provisional).map(Some)
+        let scene = crate::dag_scene_from_children(&request.snapshot, &request.children)?;
+        reorganize::build_job(request.identity, &scene, &request.config, request.checkpoint, request.member_ops).map(Some)
+    }
+
+    /// 📢️ The localized notices of the editor's own refusal codes (design §20.12): the reorganize run's `dag.layout-run.*`.
+    fn fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
+        reorganize::layout_run_fault_notices()
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
@@ -766,7 +740,7 @@ impl ArtifactEditor for DagPlayApp {
             return Ok(None);
         }
         if request.command.command_id() != request.tool_id {
-            return Err(Fault::from("dag-retained-command-tool-mismatch"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "DAG command does not match its exact registered tool"));
         }
         let tool_id = request.command.command_id();
         let operation_context = AppOperationContext {
@@ -816,9 +790,12 @@ impl ArtifactEditor for DagPlayApp {
         Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, crate::DAG_DOCUMENT_SCHEMA, operation, generation))
     }
 
-    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {
+ Ok((||{
         crate::genesis_dag_child_pack(snapshot, slot, child_id)
-    }
+    
+})())
+}
 
     fn initial_snapshot() -> DagSnapshot {
         crate::default_snapshot()
@@ -836,7 +813,7 @@ impl ArtifactEditor for DagPlayApp {
         command.command_id()
     }
 
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<DagCommand, Fault> {
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<DagCommand, Fault> {
         dag_command_from_action(action, args)
     }
 
@@ -866,16 +843,16 @@ impl ArtifactEditor for DagPlayApp {
     /// so the framework's own post-render stamp paints its selection/hover, no app code needed.
     /// Flagged as a discovered framework gap, not worked around here (matches `space`'s identical gap).
     fn render(body_key: &str, doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        let document = doc.snapshot;
+        let scene = crate::dag_scene(doc).map_err(|error| semio_framework_plugin::PluginAssemblyError::new("dag.child-content", format!("{error:?}")))?;
         let config = cfg.snapshot;
         let camera = dag_config_camera(config);
         let labels = dag_play_labels(view_state);
         let node = match body_key {
-            DAG_PLAY_BODY_MAIN => main::render(document, &camera, labels),
-            DAG_PLAY_BODY_COMPILED => compiled::render(document, &camera),
-            DAG_PLAY_BODY_ARTIFACT => document_panel::render(document, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, DAG_PLAY_BODY_ARTIFACT)),
+            DAG_PLAY_BODY_MAIN => main::render(&scene, &camera, labels),
+            DAG_PLAY_BODY_COMPILED => compiled::render(&scene, &camera),
+            DAG_PLAY_BODY_ARTIFACT => document_panel::render(&scene, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, DAG_PLAY_BODY_ARTIFACT)),
             DAG_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_framework_plugin::TreeWindows::for_body(view_state, DAG_PLAY_BODY_CATALOGUE)),
-            DAG_PLAY_BODY_INSPECTOR => inspection_panel::render(document, &[], labels),
+            DAG_PLAY_BODY_INSPECTOR => inspection_panel::render(&scene, &[], labels),
             _ => return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }?;
         Ok(semio_framework_plugin::built_to_component_tree(node))
@@ -886,8 +863,7 @@ impl ArtifactEditor for DagPlayApp {
     /// own click-carried selection (independent of `graph`'s live state) still drives the menu.
     fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>, view_state: &semio_framework_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         let labels = dag_play_labels(view_state);
-        let is_de = is_de_locale(view_state);
-        dag_context_menu_items(registry, labels, is_de, &[], request)
+        dag_context_menu_items(registry, labels, view_state, &[], request)
     }
 
     /// 🕹️ `graph`'s `HierarchyProvider::Topology` — every node's parent is the source of its first
@@ -898,26 +874,27 @@ impl ArtifactEditor for DagPlayApp {
     /// join (a node with multiple incoming edges) picks its FIRST incoming edge's source as the single
     /// parent — `TopologyNode` has one parent slot, so a true multi-parent DAG only gets one branch of
     /// its transitive closure; a documented approximation, matching `PathDelimited`'s own precedent.
-    fn interaction_topology(doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> InteractionTopology {
-        let document = doc.snapshot;
-        let nodes = document.nodes();
-        let edges = document.edges();
-        // 🧵️ `DagHostSnapshotEdge.source`/`.target` are "nodeId@portId" endpoint strings (defaulting to the
-        // "out" port when bare) — `split_endpoint` peels the node id back off before it can be matched
-        // against a plain `DagNodeSpec.id`.
-        let node_id_of = |endpoint: &str| crate::schema::split_endpoint(endpoint).0;
-        let mut ordered = Vec::with_capacity(nodes.len() + edges.len());
-        for node in &nodes {
-            let parent = edges.iter().find(|edge| node_id_of(&edge.target) == node.id).map(|edge| node_id_of(&edge.source));
-            ordered.push(TopologyNode { id: node.id.clone(), granularity: "node".into(), parent });
-        }
-        for edge in &edges {
-            ordered.push(TopologyNode { id: edge.id.clone(), granularity: "edge".into(), parent: Some(node_id_of(&edge.source)) });
-        }
-        let mut domains = std::collections::BTreeMap::new();
-        domains.insert(DAG_PLAY_INTERACTION_DOMAIN.to_string(), DomainTopology { ordered });
-        InteractionTopology { domains }
+    fn interaction_topology(doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<InteractionTopology, semio_framework_value::ValueError> {
+        Ok(dag_interaction_topology(&crate::dag_scene(doc).unwrap_or_default()))
     }
+}
+
+/// 🌳️ The `graph` domain topology of a scene: every node's parent is the source of its first incoming edge (endpoints are
+/// `nodeId@portId`, the port peeled off), every edge a child of its source node (see `DagPlayApp::interaction_topology`).
+pub fn dag_interaction_topology(scene: &crate::DagScene) -> InteractionTopology {
+    let (nodes, edges) = (&scene.nodes, &scene.edges);
+    let node_id_of = |endpoint: &str| crate::schema::split_endpoint(endpoint).0;
+    let mut ordered = Vec::with_capacity(nodes.len() + edges.len());
+    for node in nodes {
+        let parent = edges.iter().find(|edge| node_id_of(&edge.target) == node.id).map(|edge| node_id_of(&edge.source));
+        ordered.push(TopologyNode { id: node.id.clone(), granularity: "node".into(), parent });
+    }
+    for edge in edges {
+        ordered.push(TopologyNode { id: edge.id.clone(), granularity: "edge".into(), parent: Some(node_id_of(&edge.source)) });
+    }
+    let mut domains = std::collections::BTreeMap::new();
+    domains.insert(DAG_PLAY_INTERACTION_DOMAIN.to_string(), DomainTopology { ordered });
+    InteractionTopology { domains }
 }
 //#endregion 🔖️DagPlayApp
 

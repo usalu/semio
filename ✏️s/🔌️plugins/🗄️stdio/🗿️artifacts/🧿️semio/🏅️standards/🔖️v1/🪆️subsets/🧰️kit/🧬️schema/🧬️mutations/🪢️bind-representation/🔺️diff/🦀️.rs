@@ -11,7 +11,7 @@ pub fn diff(payload: &super::BindRepresentation, base: &SemioKitSnapshot) -> pro
     }
     let new_link = store::ArtifactLink { target: payload.target.clone(), pin: payload.pin.clone(), role: payload.role.clone() };
     if base.representations.contains(&new_link) {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Representation is already bound for \"{}\".", payload.role));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Representation is already bound for \"{}\".", payload.role));
     }
     let mut representations = base.representations.clone();
     representations.push(new_link);

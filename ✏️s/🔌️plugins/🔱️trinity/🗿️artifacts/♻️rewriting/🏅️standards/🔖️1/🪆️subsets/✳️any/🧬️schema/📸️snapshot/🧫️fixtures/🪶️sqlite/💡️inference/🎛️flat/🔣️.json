@@ -1,0 +1,57 @@
+{
+  "contractId": "jack-flat-position-retained-child",
+  "authority": "rawEndpointComponents",
+  "cases": [
+    {
+      "name": "missingOffsets",
+      "properties": [],
+      "expected": {
+        "a": {
+          "u": 0,
+          "v": 0
+        },
+        "b": {
+          "u": 0,
+          "v": 0
+        }
+      }
+    },
+    {
+      "name": "finiteOffsets",
+      "properties": [
+        {
+          "key": "u",
+          "value": {
+            "kind": "float",
+            "lexeme": "3.5"
+          }
+        },
+        {
+          "key": "v",
+          "value": {
+            "kind": "float",
+            "lexeme": "-2.25"
+          }
+        }
+      ],
+      "expected": {
+        "a": {
+          "u": 0,
+          "v": 0
+        },
+        "b": {
+          "u": 3.5,
+          "v": -2.25
+        }
+      }
+    }
+  ],
+  "refusal": {
+    "key": "u",
+    "value": {
+      "kind": "str",
+      "value": "number"
+    }
+  },
+  "refusalKind": "invalidValue"
+}

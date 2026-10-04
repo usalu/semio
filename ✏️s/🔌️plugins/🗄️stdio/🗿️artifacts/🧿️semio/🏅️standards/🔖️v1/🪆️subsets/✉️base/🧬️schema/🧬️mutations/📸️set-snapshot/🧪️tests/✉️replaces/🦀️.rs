@@ -22,13 +22,13 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/✉️replaces/🎯️outcome/🔣️.json");
 
 fn before() -> SemioSnapshot {
-    dsl::json::from_json_str(BEFORE).expect("before envelope snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before envelope snapshot decodes")
 }
 fn expected_after() -> SemioSnapshot {
-    dsl::json::from_json_str(AFTER).expect("after envelope snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after envelope snapshot decodes")
 }
 fn mutation() -> SemioMutation {
-    dsl::json::from_json_str(MUTATION).expect("set-snapshot mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("set-snapshot mutation decodes")
 }
 
 /// ▶️ `set-snapshot` carries the envelope to exactly the committed `after`: the wrapped value graph
@@ -48,7 +48,7 @@ async fn applies_to_committed_after() {
 async fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = <SemioMutation as protocol::Mutation<SemioSnapshot>>::inverse(&mutation, &base);
+    let inverse = <SemioMutation as protocol::Mutation<SemioSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert!(matches!(inverse.as_slice(), [SemioMutation::SetSnapshot(_)]), "semio-any/set-snapshot: the envelope's inverse is a single set-snapshot back to the base");
     let mut snapshot = base.clone();
     apply_semio_mutation(&mut snapshot, &mutation);
@@ -66,12 +66,12 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioSnapshot = dsl::json::from_json_str(text).expect("envelope snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("envelope snapshot encodes");
+        let decoded: SemioSnapshot = semio_framework_pack_json::from_json_str(text,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("envelope snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("envelope snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("envelope snapshot reparses");
         assert_eq!(reencoded, original, "semio-any/set-snapshot: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("set-snapshot mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(mutation()))).expect("set-snapshot mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("set-snapshot mutation reparses");
     assert_eq!(reencoded, original, "semio-any/set-snapshot: committed mutation JSON is not canonical");
 }
@@ -97,7 +97,7 @@ async fn declared_outcome_holds() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioMutation as protocol::Mutation<SemioSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced envelope diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced envelope diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed envelope diff decodes");
     assert_eq!(produced, committed, "semio-any/set-snapshot: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -106,12 +106,12 @@ async fn produces_committed_diff() {
 /// tagged on `kind`, so the boxed successor snapshot's own fields sit beside `"kind": "replace"`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: SemioDiff = dsl::json::from_json_str(DIFF).expect("committed envelope diff decodes");
+    let decoded: SemioDiff = semio_framework_pack_json::from_json_str(DIFF,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed envelope diff decodes");
     let SemioDiff::Replace(replacement) = &decoded else {
         panic!("semio-any/set-snapshot: the envelope's set-snapshot diff must be a whole Replace, never a wrapped-subset delta");
     };
-    assert_eq!(**replacement, expected_after(), "semio-any/set-snapshot: the Replace payload must be the committed after-snapshot itself");
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("envelope diff re-encodes");
+    assert_eq!(replacement.as_ref(), &expected_after(), "semio-any/set-snapshot: the Replace payload must be the committed after-snapshot itself");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("envelope diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed envelope diff reparses");
     assert_eq!(reencoded, original, "semio-any/set-snapshot: committed diff JSON is not canonical");
 }
@@ -120,7 +120,7 @@ async fn committed_diff_is_canonical() {
 /// short-circuits the per-subset dispatch entirely and hands back its own payload.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioDiff = dsl::json::from_json_str(DIFF).expect("committed envelope diff decodes");
+    let decoded: SemioDiff = semio_framework_pack_json::from_json_str(DIFF,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed envelope diff decodes");
     let produced = <SemioDiff as protocol::MutationDiff<SemioSnapshot>>::apply(&decoded, &before()).expect("committed envelope diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "semio-any/set-snapshot: committed diff did not carry before to after");
 }

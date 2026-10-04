@@ -665,6 +665,31 @@ describe("scrub machine", () => {
       { numRuns: 400 },
     );
   });
+
+  test("random ledger inputs across windows, tools and revisions are never refused, and a released press stays silent (CLOSURE-3)", () => {
+    const leaves = fc.array(fc.integer({ min: 0, max: 9 }), { maxLength: 2 });
+    const press = { window: fc.constantFrom("w1", "w2"), tool: fc.constantFrom("t1", "t2"), base: fc.constantFrom("r1", "r2") };
+    const input: fc.Arbitrary<T.ScrubInput<number>> = fc.oneof(
+      { arbitrary: fc.record({ kind: fc.constant("tick" as const), gesture: fc.constantFrom("g1", "g2"), leaves }), weight: 5 },
+      { arbitrary: fc.record({ kind: fc.constant("commit" as const), gesture: fc.constantFrom("g1", "g2"), leaves }), weight: 2 },
+      { arbitrary: fc.record({ kind: fc.constant("abort" as const), reason: fc.constantFrom(...T.TOOL_ABORT_REASONS) }), weight: 1 },
+    );
+    fc.assert(
+      fc.property(fc.array(fc.record({ ...press, input }), { minLength: 1, maxLength: 40 }), (rows) => {
+        const ledger = new T.ScrubLedger<number>();
+        rows.forEach((row, index) => {
+          const result = ledger.send(row.window, row.tool, scrubLaw.actor, row.base, row.input, scrubClock(index));
+          expect(result.ok).toBe(true);
+          if (row.input.kind !== "commit") return;
+          expect(ledger.open(row.window)?.gesture === row.input.gesture).toBe(false);
+          const before = [scrubOpenJson(ledger), ledger.provisional()];
+          for (const late of [{ ...row.input, kind: "tick" as const }, row.input]) expect(ledger.send(row.window, row.tool, scrubLaw.actor, row.base, late, scrubClock(index))).toEqual({ ok: true, step: { kind: "idle" } });
+          expect([scrubOpenJson(ledger), ledger.provisional()]).toEqual(before);
+        });
+      }),
+      { numRuns: 400 },
+    );
+  });
 });
 //#endregion 🔖️Scrub
 

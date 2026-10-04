@@ -349,3 +349,45 @@ close (rule 29). Product acceptance unchanged (Session 2 paragraph above). Repor
 | S3-GAP | sonnet | read-only: goal-level gap analysis on the code (G1..G14 re-evaluated + new) → `📓️s3-gap.md` |
 | S3-CLOSURE-CENSUS | sonnet | read-only: census of every remaining non-machine gesture / artifact-lane amend / coalesce key / brackets / preview contracts + CLOSURE brief → `📓️s3-closure-census.md` |
 | queued | – | S3-CODES-TAX (C-1..C-5, T-1, T-2), S3-NORM (owed cargo + 47 rule-1 breaches), S3-STDIO (WP-2/WP-3, cases-2, media), S3-E2E (after serve), S3-CLOSURE, S3-GATES, audit wave B, coordinator regenerations |
+
+## Session 4 — successor roster (coordinator `⚪487b04ad…`, 2026-10-04 02:00)
+
+Session 3's fleet was cut 10-03 ~12:07. Fleet rules 1–38 (`📌️important/📝️.md`). Inputs: `📓️s4-resume.md` (§0 facts, §2 owed runs by crate,
+§4 open design items D1–D24, §5 goal matrix, §7 per-WP blocks). Focus: VERIFY → FIX → FINISH OPEN ITEMS → LIVE PROOF → CLOSE.
+
+Dev goal (binding, verbatim intent): every mutation in history is editable; starting an edit enters time-travel mode; the edited mutation is
+shown with downstream NOT applied; the user accepts or discards the input change; every input carries UI-element metadata (slider, stepper,
+min, max, snap points …); accept replays all downstream mutations, each succeeds / warns / errors; new warnings are visible in history;
+fatal errors must be edited first, repeated until the downstream is error-free; then the user sees the final result and can finalize or keep
+editing other mutations; finalize prompts "new alternative" vs "overwrite"; puzzle 2d: a dragged selection is one drag mutation whose
+selection AND drag offset stay editable; tools are state machines yielding mutations inside a transaction (tools not editable, their
+mutations are); clean artifact-agnostic mechanisms; everything end to end (React + wgpu, en + de, accessible).
+
+Common duties: rule 34 repair-first; run your owed list (`📓️s4-resume.md` §2 + your §7 block) with counts; fix reds in your files; implement
+your open items; append `## Session 4 — 2026-10-04` to your report; final message per rule 24. Shared-crate symbols owned this session:
+S4-BUMP owns the channel frame layout (`AppFrame::TransactionProposal` fields, `AppCommand::LoadDocument`, `AppChannelClient.loadDocument`,
+channel version) and the store `.description` fields (`Edit`/`Apply`/`GroupMeta`/`begin_*apply_batch`); S4-INFRA owns the ✏️s peer-fallout
+sweep (puzzle 3d sqlite + generated example, space, wfc-bitmap, norm-contract, stdio bmp/tiff/xlsx/docx/pptx). Do not edit those; message `main`.
+
+| WP | Inherits (report → append Session 4) | Mission |
+|---|---|---|
+| S4-INFRA | S3-INFRA `📓️s2-infra-report.md` | puzzle 2d activation closure green (native + wasm targets), then ✏️s peer-fallout residue; tree-green signal to `main` |
+| S4-BUMP | CLOSURE bump list → `📓️s4-bump-report.md` | §20.7 channel-bump wave A (frame) then store description wave B, verified |
+| S4-RUNTIME | S3-W2A `📓️w2-a-report.md` | owed plugin/framework/time-travel runs; D9 W2A-1 (incremental HistoryView, O(change)), W2A-2 (L4: config edits never history rows; energy L4 law green), W2A-3 (wall-deadline driver), W2A-7..14; D13 child-member paging; D18 W2A-8/9/13; D21 K3 window-transient partition derive; D8 two-instance cold-pair law (with S4-STORE); D7 publication gate (with S4-STORE/S4-PUZZLE) |
+| S4-STORE | S3-W1G `📓️w1-g-report.md` | owed kernel/replication/TS-oracle/worker/hub runs; W1G-1 remove the [DEBUG] store probes (blocks close); D7 O(document) measure + fix; D8 W1G-10 settle deadline; D10 (W1G-2 one framework ValidateEdit helper replacing 8 plugin copies + coverage-gate phase names, W1G-4..9, ring-stride prefix fold); D22 O(change) undo/redo/checkout |
+| S4-UI | S3-W1E `📓️w1-e-report.md` + S3-W2B `📓️w2-b-report.md` | owed semio-framework/UI/plugin/React runs; D18 W1E-1 (disabled reason visible), W1E-2 (selected row semantics), W1E-3 (live announcement of `HistoryPatch.reprojection`) in contract + React (wgpu half → S4-WGPU); W1E-5 layering; React `requestMediaFrames` host cancel |
+| S4-WGPU | S3-W2C `📓️w2-c-report.md` | owed renderer-wgpu native test target + filters, wasm32 check, wgpu browser TS; shared `DocumentArchiveLoadHost` adoption; wgpu halves of W1E-1/W1E-3; marketplace reasons; `requestMediaFrames` cancel; wgpu probe prerequisites |
+| S4-PUZZLE | S3-PUZZLE `📓️w3-t-puzzle-report.md` + S3-W2D `📓️w2-d-report.md` | owed puzzle 2d/3d/5d lib runs (component-app-assembly), select_tool / select_tool_history / history_edit_runtime_tests / fill laws, wasip2, board engine, os-infinite world_gumball; D7 measure on puzzle 3d with S4-STORE; wall-clock law isolation |
+| S4-E2E | S3-E2E `📓️w3-e2e-report.md` | Phase A': probe update for N1 paged windows (`window.total`), `HistoryPatch.reprojection {remote|step|load}`, `history.replaying`, `document.loading`, `editCount` (W1E-6); strict tsc. Phase B on "SERVE UP": Run 4 batches A–H React :6012 then wgpu :6112 (explore + calibrate), en + de; route every FAIL to `main` |
+| S4-AGNOSTIC | S3-AGNOSTIC `📓️s2-agnostic-report.md` | G12 batches over every wired crate; strict gates labels/editability/inputs/payloads; reload law runs; D2 W-a (serializer `ArchiveChildren`, merge serializer traits, delete `ArtifactInferrer`, guest dependency-key validation accepts `child:<slot>/<id>`); D20 G12 on child-lane edits |
+| S4-FLOWCAD | S3-FLOWCAD `📓️w3-t-flow-cad-report.md` | finish flow §20.15 (S3.8 plan) + cad §20.15 (8 findings) + reload laws; D24 flow DEFAULT document self-describing; owed S3.6 runs; greenfield decision on `optional_field_rows_keep_their_pre_migration_bytes` (no compat pins) |
+| S4-GRAPHS | S3-GRAPHS `📓️w3-t2-graphs-report.md` | graph child leaf `drag-nodes {targets,dx,dy}` FIRST (dag/wires/procedure need it; tell S4-WIRES-MATH), dag §20.15 (17), procedure/imperative §20.15 (4), D6 sequence node drag writes no transaction row, dead sequence generator; owed runs (dag/sequence/space/procedure + hub wasip2) |
+| S4-WIRES-MATH | S3-WIRES (create `📓️s3-wires-report.md`) + S3-MATH `📓️s3-math-report.md` | wires §20.15 (12; `WiresMutation` parent variants → child lane, graph `drag-nodes`), mathematical §20.15 model (a) (16; relative `move-points`), `composed_reload_law!` each; owed runs |
+| S4-TOOLS-A | S3-DRAW `📓️w3-t-draw-note-report.md` + S3-LAYOUT `📓️w3-t-layout-report.md` + S3-SPATIAL `📓️w3-t-spatial-report.md` | owed draw/note/layout/fem 2d+3d/lowpoly/shooting lib runs, renderer canvas2d/paint, use-selection laws, hub wasm32; D14 one fem playback clock; D24 layout gumball overlay → `🧭️gumball` (+ taxonomy registration, Edit tool) |
+| S4-TOOLS-B | S3-CONTROLS `📓️w3-t2-controls-report.md` + S3-PROCEDURAL `📓️w3-t2-procedural-report.md` | owed energy (fixture writer)/forms/gis/playbook/norm-registry/gen2d/gen3d/DEV/os-flow runs; playbook §20.15 (8, S3.12 design); D11 CLOSURE-5 TransactionRef unique per press; D12 two-phase release; D24 gen3d example normalization (remove its [DEBUG] printers); P5 React gumball re-anchor |
+| S4-TEXT | S3-TEXT `📓️w3-t2-text-report.md` | owed writer/trinity/stdio text/wgpu text_editor runs; jack §20.15 (8); D15 `restore-working-edges` + `wordOnlyFloat` ×6 (after the typed-workingGraph peer is quiet ≥ 30 min) |
+| S4-STROKES | S3-STROKES `📓️w3-t2-strokes-report.md` | D5 delete raster `editPixels`/`editMask`; raster/remodel/wfc/process3d runs (never run), `--ignored emit_committed_fixtures` (raster payload witnesses), wgpu paint2d, process3d E0061 `✏️editor/🦀️.rs:312`; D24 remodel `Binary64Transport` spelling |
+| S4-STDIO | S3-STDIO `📓️s3-stdio-report.md` | owed stdio runs (component-app-assembly) + inherited S2 case verification; D3 exact inverse for > 1 MiB patches (chunked/blob-referenced, undo never lossy); D4 third-party oracle arm + `🥒️.feature` row per new patch leaf (47) |
+| S4-NORM | S3-NORM `📓️s3-norm-report.md` | owed norm contract + 15 crates + wasip2 + parity exhaustive ×15 + inventory; din18599 §20.15 (1); D16 hand-written choice labels (second truth) |
+| S4-LOAD | S3-LOAD `📓️s3-load-report.md` | os-run / os-mcp checks + tests; D2 W-b producers (child head packs for inference, MCP `infer_real` dependencies, guest default `export_media` composed carrier); W2A-6 remove `load_document_*` from `PluginApp` (→ `artifact_app_laws::load_document`), delete `hydrate_document_lane`/`resolve_ready` panic path; T2/T3 test sweep |
+| S4-GATES | S3-GATES `📓️s3-gates-report.md` + S3-CLOSURE (CLOSURE-4) + S3-NOTICES + S3-CODES-TAX | gates §5–§7 (taxonomy reports on every new dir, Rust warnings of ticket files, layering, docstring emoji uniqueness PER FILE for files this ticket touched); CLOSURE-4 property test per `perTarget` leaf at cap+1 + localized `mutation.too-large`; NOTICES scoped gate (history-editing/tool refusals named + localized, framework table for the 35 framework-namespace codes); CODES-TAX residue (2 owners, 2 stale fixtures) |

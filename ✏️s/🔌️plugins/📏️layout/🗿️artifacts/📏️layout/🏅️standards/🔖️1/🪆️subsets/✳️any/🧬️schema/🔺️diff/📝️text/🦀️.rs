@@ -136,8 +136,8 @@ impl LayoutDiff {
             if let Some(value) = &self.print_target {
                 next.print_target = value.clone();
             }
-            if let Some(value) = &self.data_fields_json {
-                next.data_fields_json = value.clone();
+            if let Some(value) = &self.data_fields {
+                next.data_fields = value.dictionary.clone();
             }
             if let Some(value) = &self.background_drawing {
                 next.background_drawing = value.clone();
@@ -190,8 +190,8 @@ impl MutationDiff<LayoutSnapshot> for LayoutDiff {
             if let Some(value) = &self.print_target {
                 next.print_target = value.clone();
             }
-            if let Some(value) = &self.data_fields_json {
-                next.data_fields_json = value.clone();
+            if let Some(value) = &self.data_fields {
+                next.data_fields = value.dictionary.clone();
             }
             if let Some(value) = &self.background_drawing {
                 next.background_drawing = value.clone();
@@ -281,7 +281,7 @@ impl MutationDiff<LayoutSnapshot> for LayoutDiff {
         absorb_collection!(parent_pages);
         absorb_collection!(spreads);
         take!(print_target);
-        take!(data_fields_json);
+        take!(data_fields);
         take!(background_drawing);
         take!(referenced_model);
     }

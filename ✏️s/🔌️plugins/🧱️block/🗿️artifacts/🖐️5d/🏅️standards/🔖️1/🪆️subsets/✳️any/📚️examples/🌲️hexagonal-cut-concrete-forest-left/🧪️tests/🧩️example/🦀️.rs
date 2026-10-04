@@ -12,8 +12,8 @@ async fn inference_determinism_law() {
 
     let text = include_str!("../../🖼️assets/🌲️hexagonal-cut-concrete-forest/🗣️.dsl.semio");
     let snapshot = <Block5dSnapshot as store::ArtifactDsl>::parse_dsl(text).expect("example dsl parses");
-    let inference = crate::standards::v1::subsets::any::schema::inferences::Block5dInference::infer(&snapshot);
-    assert_eq!(inference, crate::standards::v1::subsets::any::schema::inferences::Block5dInference::infer(&snapshot));
+    let inference = crate::standards::v1::subsets::any::schema::inferences::Block5dInference::infer(&snapshot).expect("valid materialized inference fixture");
+    assert_eq!(inference, crate::standards::v1::subsets::any::schema::inferences::Block5dInference::infer(&snapshot).expect("valid materialized inference fixture"));
     assert!(inference.bounds.bounding_box.is_some(), "example has real grips, so it should have a bounding box");
 }
 
@@ -22,6 +22,6 @@ async fn inference_default_law() {
     use crate::Block5dSnapshot;
     use protocol::Inference;
 
-    assert_eq!(crate::standards::v1::subsets::any::schema::inferences::Block5dInference::infer(&Block5dSnapshot::default()), crate::standards::v1::subsets::any::schema::inferences::Block5dInference::default());
+    assert_eq!(crate::standards::v1::subsets::any::schema::inferences::Block5dInference::infer(&Block5dSnapshot::default()).expect("valid materialized inference fixture"), crate::standards::v1::subsets::any::schema::inferences::Block5dInference::default());
 }
 //#endregion 🧪️InferenceLaws

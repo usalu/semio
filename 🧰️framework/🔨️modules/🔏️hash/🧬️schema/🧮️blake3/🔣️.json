@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/hash/blake3-vectors/schema.json",
+  "title": "Independent BLAKE3 Reference Vectors",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "schema",
+    "source",
+    "vectors"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "../../🧬️schema/🧮️blake3/🔣️.json"
+    },
+    "schema": {
+      "const": "semio.hash.blake3-vectors/v1"
+    },
+    "source": {
+      "const": "blake3 1.8.7 dev oracle; input byte i = i % 251"
+    },
+    "vectors": {
+      "type": "array",
+      "minItems": 21,
+      "maxItems": 21,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "length",
+          "hash",
+          "xof131"
+        ],
+        "properties": {
+          "length": {
+            "enum": [
+              0,
+              1,
+              2,
+              3,
+              63,
+              64,
+              65,
+              1023,
+              1024,
+              1025,
+              2048,
+              2049,
+              3072,
+              3073,
+              4096,
+              4097,
+              8192,
+              8193,
+              16384,
+              102400,
+              1048577
+            ]
+          },
+          "hash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "xof131": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{262}$"
+          }
+        }
+      }
+    }
+  }
+}

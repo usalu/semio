@@ -16,7 +16,7 @@ mod tests {
         opc.content_types.set_default("xml", "application/xml");
         opc.set_part("ppt/presentation.xml", "application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml", TRANSITIONAL_PRESENTATION_XML.as_bytes().to_vec());
         opc.add_relationship("", "rId1", REL_TYPE_OFFICE_DOCUMENT, "ppt/presentation.xml");
-        PptxSnapshot { opc, ..PptxSnapshot::default() }
+        crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx(&semio_s_artifact_stdio_zip::opc::encode_opc(&opc).expect("valid OPC package")).expect("valid presentation")
     }
 
     #[semio_framework_async_macros::async_test]
@@ -28,13 +28,17 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn conforming_transitional_snapshot_builds_clean() {
         let snapshot = PptxTransitionalBuilderConstruction::from_snapshot(transitional_snapshot()).build().expect("conforming Transitional snapshot must build");
-        assert!(snapshot.opc.part_bytes("ppt/presentation.xml").is_some());
+        assert!(snapshot.xml_parts.iter().any(|part| part.path == "ppt/presentation.xml"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
         let mut violating = transitional_snapshot();
-        violating.opc.set_part("ppt/slides/slide1.xml", "application/vnd.openxmlformats-officedocument.presentationml.slide+xml", b"<p:sld xmlns:p=\"http://purl.oclc.org/ooxml/presentationml/main\"/>".to_vec());
+        violating.xml_parts.push(crate::schema::snapshot::PptxXmlPart {
+            path: "ppt/slides/slide1.xml".into(),
+            content_type: "application/vnd.openxmlformats-officedocument.presentationml.slide+xml".into(),
+            document: semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text(r#"<p:sld xmlns:p="http://purl.oclc.org/ooxml/presentationml/main"/>"#).expect("valid XML"),
+        });
         let (mutated, _diff) = PptxTransitionalBuilderConstruction::from_snapshot(PptxSnapshot::default()).mutate(PptxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: violating }));
         let err = mutated.build().expect_err("a Strict namespace anywhere must fail build()");
         assert!(err.iter().any(|d| d.code.0 == crate::standards::v_ecma_376::subsets::transitional::schema::CODE_STRICT_NS_PRESENT));

@@ -18,9 +18,12 @@ impl protocol::MutationKind<XmlSnapshot, XmlValidMutation> for DeclareDoctype {
     fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<<XmlValidMutation as Mutation<XmlSnapshot>>::Diff> {
         agg_diff(&XmlValidMutation::DeclareDoctype(self.clone()), base)
     }
-    fn inverse(&self, base: &XmlSnapshot) -> Vec<XmlValidMutation> {
-        agg_inverse(&XmlValidMutation::DeclareDoctype(self.clone()), base)
-    }
+    fn inverse(&self, base: &XmlSnapshot) -> Result<Vec<XmlValidMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&XmlValidMutation::DeclareDoctype(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Declare doctype", "Dokumenttyp deklarieren")
     }

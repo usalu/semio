@@ -26,9 +26,12 @@ impl MutationKind<Grid2dSnapshot, Grid2dMutation> for UnmaskCell {
     fn diff(&self, base: &Grid2dSnapshot) -> protocol::MutationOutcome<Grid2dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Grid2dSnapshot) -> Vec<Grid2dMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &Grid2dSnapshot) -> Result<Vec<Grid2dMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Unmask cell ({}, {})", self.x, self.y), &format!("Zelle ({}, {}) demaskieren", self.x, self.y))
     }

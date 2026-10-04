@@ -59,7 +59,7 @@ fn stray(mutation: &Din4108Mutation) -> Option<Din4108Mutation> {
             addressed = true;
         }
     }
-    addressed.then(|| mutation.with_payload_value(dsl::DslValue::from(&payload)).ok()).flatten()
+    addressed.then(|| mutation.with_payload_value(semio_framework_value::DslValue::from(&payload)).ok()).flatten()
 }
 
 /// ⚖️ One bundle's breaches, and the outcome classes it shows production dispatch reaching. Every vector lands on its
@@ -88,12 +88,12 @@ fn vector_breaches(bundle: &Path, mutation: &Din4108Mutation, reached: &mut BTre
     }
     if status != "rejected" {
         let raised = <Din4108Mutation as protocol::Mutation<Din4108Snapshot>>::diff(mutation, &before);
-        if json(&pack::json::to_json_string(raised.diff())) != json(&read(&bundle.join("🔺️diff/🔣️.json"))) {
+        if json(&semio_framework_pack_json::to_json_string(raised.diff())) != json(&read(&bundle.join("🔺️diff/🔣️.json"))) {
             breaches.push(format!("{name}: the produced diff is not the committed diff"));
         }
     }
     if status == "applied" {
-        let steps = inverse_din4108_mutation(mutation, &before);
+        let steps = inverse_din4108_mutation(mutation, &before).expect("valid retained mutation inverse fixture");
         let restored = steps.iter().fold(applied, |document, step| apply(&document, step).0);
         if steps.is_empty() || restored != before {
             breaches.push(format!("{name}: the mutation's own inverse ({} step(s)) does not restore the before-snapshot", steps.len()));
@@ -224,7 +224,7 @@ mod remove_layer;
 mod reorder_layers;
 #[path = "../../📏️change-layer-thickness/🧪️tests/✅apply/🦀️.rs"]
 mod change_layer_thickness;
-#[path = "../../🌡change-layer-lambda/🧪️tests/✅apply/🦀️.rs"]
+#[path = "../../🌡️change-layer-lambda/🧪️tests/✅apply/🦀️.rs"]
 mod change_layer_lambda;
 #[path = "../../💧change-layer-mu/🧪️tests/✅apply/🦀️.rs"]
 mod change_layer_mu;
@@ -248,7 +248,7 @@ mod change_element_delta_ug;
 mod change_element_delta_uf;
 #[path = "../../📈️change-element-delta-ur/🧪️tests/✅apply/🦀️.rs"]
 mod change_element_delta_ur;
-#[path = "../../🏷change-thermal-bridge-bb2-type/🧪️tests/✅apply/🦀️.rs"]
+#[path = "../../🏷️change-thermal-bridge-bb2-type/🧪️tests/✅apply/🦀️.rs"]
 mod change_thermal_bridge_bb2_type;
 #[path = "../../🧭change-zone-window-orientation/🧪️tests/✅apply/🦀️.rs"]
 mod change_zone_window_orientation;

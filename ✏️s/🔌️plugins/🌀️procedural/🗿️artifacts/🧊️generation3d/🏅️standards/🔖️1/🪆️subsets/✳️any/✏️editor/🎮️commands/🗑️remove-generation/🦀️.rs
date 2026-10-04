@@ -23,12 +23,12 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️SelectGeneration
 //#endregion 🔖️SelectGeneration
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "remove-generation")]
 pub struct RemoveGeneration {
     pub id: String,
 }
 
 pub fn handle(payload: &RemoveGeneration, doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
-    Ok(generation_command_result("removeGeneration", Some(&dsl::DslValue::object([("id".to_string(), dsl::DslValue::String(payload.id.clone()))])), doc.snapshot, cfg.snapshot).map(|result| result.emit).unwrap_or_default())
+    Ok(generation_command_result("removeGeneration", Some(&semio_framework_value::DslValue::object([("id".to_string(), semio_framework_value::DslValue::String(payload.id.clone()))])), doc.snapshot, cfg.snapshot).map(|result| result.emit).unwrap_or_default())
 }

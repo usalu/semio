@@ -24,17 +24,17 @@ const DIFF_ABSENT: &str = include_str!("../../../../../🧫️fixtures/🧬️mu
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️resize-tile-crop/🧪️rejects/🎯️outcome/🔣️.json");
 
 fn mutation() -> PresentationMutation {
-    dsl::os_pack::from_json_str(MUTATION).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 fn expected_after() -> PresentationSnapshot {
-    dsl::os_pack::from_json_str(AFTER).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 
 /// 🌱 The committed `⬅️before`, with its composed `presentation` child resolved to a deck holding
 /// the tile the payload addresses, carrying a healthy non-degenerate crop — so the rejection can
 /// only come from the incoming rect, never from a missing target.
 fn before() -> PresentationSnapshot {
-    let snapshot: PresentationSnapshot = dsl::os_pack::from_json_str(BEFORE).expect("before snapshot decodes");
+    let snapshot: PresentationSnapshot = semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes");
     let PresentationMutation::ResizeTileCrop(payload) = mutation() else {
         panic!("rejects-a-zero-width-crop's committed mutation must be a resize-tile-crop");
     };
@@ -64,7 +64,7 @@ fn a_zero_width_crop_is_a_fatal_invariant() {
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.invariant", "a degenerate crop is an invariant breach, not a missing target");
-    assert_eq!(messages[0].level, protocol::Severity::Fatal, "mutation.invariant is Fatal — no merge policy may absorb a degenerate rect");
+    assert_eq!(messages[0].level, semio_framework_diagnostic::Severity::Fatal, "mutation.invariant is Fatal — no merge policy may absorb a degenerate rect");
     assert_eq!(messages[0].target, vec!["tiles".to_string(), "t-hero".to_string()], "the diagnostic addresses the collection and then the tile whose crop is degenerate");
 }
 
@@ -82,12 +82,12 @@ fn the_committed_diff_is_declared_absent() {
 #[test]
 fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: PresentationSnapshot = dsl::os_pack::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: PresentationSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "resize-tile-crop/rejects-a-zero-width-crop: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&mutation())).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "resize-tile-crop/rejects-a-zero-width-crop: committed mutation JSON is not canonical");
     let PresentationMutation::ResizeTileCrop(payload) = mutation() else {
@@ -113,7 +113,7 @@ fn declared_outcome_holds() {
 /// crop the deck still holds.
 #[test]
 fn inverse_restores_the_healthy_base_crop_not_the_refused_rect() {
-    let inverse = inverse_presentation_mutation(&before(), &mutation());
+    let inverse = inverse_presentation_mutation(&before(), &mutation()).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "resize-tile-crop undoes with exactly one step once its target exists, got {inverse:?}");
     let PresentationMutation::ResizeTileCrop(undo) = &inverse[0] else {
         panic!("resize-tile-crop's inverse must be a resize-tile-crop, got {:?}", inverse[0]);

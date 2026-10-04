@@ -97,16 +97,16 @@ pub fn window_measures(lod_mode: &str, is_de: bool, on_change: impl Fn(&str, Opt
 /// serialises its whole pick/hover batch into the single `targets` text arg, and a semantic row is just
 /// a batch of one.
 pub(crate) fn graph_targets_json(granularity: &str, id: &str) -> String {
-    let mut target = dsl::json::Object::new();
-    target.insert("granularity", dsl::json::Value::String(granularity.to_string()));
-    target.insert("id", dsl::json::Value::String(id.to_string()));
-    dsl::json::to_string(&dsl::json::Value::Array(vec![dsl::json::Value::Object(target)]))
+    let mut target = semio_framework_pack_json::Object::new();
+    target.insert("granularity", semio_framework_pack_json::Value::String(granularity.to_string()));
+    target.insert("id", semio_framework_pack_json::Value::String(id.to_string()));
+    semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(vec![semio_framework_pack_json::Value::Object(target)]))
 }
 
 /// 🚦 The `NodeEvalStatus` tag `flow_backed_node_graph_extras` reported for one widget, localized —
 /// `build_flow_status_json` keys `{"<widgetId>": {"status": "ok" | "queued" | …}}`.
 fn node_status_label(status_json: Option<&String>, node_id: &str, labels: &Generation3dLabels) -> Option<&'static str> {
-    let parsed = dsl::json::parse(status_json?.as_str()).ok()?;
+    let parsed = semio_framework_pack_json::parse(status_json?.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).ok()?;
     let status = parsed.get(node_id)?.get("status")?.as_str()?;
     Some(match status {
         "queued" => labels.status_queued.as_str(),
@@ -218,6 +218,7 @@ fn operator_channel(code: &str, label: &str) -> NodeGraphOperatorChannelRecord {
         full_name: label.to_string(),
         operators: Vec::new(),
         value_types: Vec::new(),
+        item_types: Vec::new(),
         default_json: None,
         label: Some(label.to_string()),
         cardinality: "!".into(),

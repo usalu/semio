@@ -1,0 +1,468 @@
+{
+  "schema": "semio.framework.io.assembly-barrier-audit/v1",
+  "status": "proposal-not-runtime-proof",
+  "lockOrder": [
+    "barrier",
+    "document",
+    "migration",
+    "composer",
+    "subset",
+    "format",
+    "snapshot"
+  ],
+  "scenarios": [
+    {
+      "id": "single-writer",
+      "mode": "preservation",
+      "actions": [
+        "A.begin",
+        "A.acquire-all",
+        "A.preflight-all",
+        "A.commit-all",
+        "A.release"
+      ],
+      "expected": {
+        "result": "committed",
+        "published": true,
+        "progressEvents": 0,
+        "cancelled": false,
+        "poisoned": false
+      }
+    },
+    {
+      "id": "waiting-writer-resumes",
+      "mode": "preservation",
+      "actions": [
+        "A.begin",
+        "B.begin-waits",
+        "A.release",
+        "B.acquire-all",
+        "B.preflight-all",
+        "B.commit-all",
+        "B.release"
+      ],
+      "expected": {
+        "result": "committed",
+        "published": true,
+        "progressEvents": 0,
+        "cancelled": false,
+        "poisoned": false
+      }
+    },
+    {
+      "id": "exact-duplicate-idempotent",
+      "mode": "preservation",
+      "actions": [
+        "A.begin",
+        "A.acquire-all",
+        "A.preflight-identical",
+        "A.commit-all",
+        "A.release"
+      ],
+      "expected": {
+        "result": "unchanged",
+        "published": false,
+        "progressEvents": 0,
+        "cancelled": false,
+        "poisoned": false
+      }
+    },
+    {
+      "id": "conflict-document",
+      "mode": "preservation",
+      "actions": [
+        "A.begin",
+        "A.acquire-all",
+        "A.conflict-document",
+        "A.release"
+      ],
+      "expected": {
+        "result": "conflict",
+        "published": false,
+        "progressEvents": 0,
+        "cancelled": false,
+        "poisoned": false
+      }
+    },
+    {
+      "id": "poison-document",
+      "mode": "preservation",
+      "actions": [
+        "fixture.poison-document",
+        "A.begin",
+        "A.acquire-until-document",
+        "A.release"
+      ],
+      "expected": {
+        "result": "unavailable",
+        "published": false,
+        "progressEvents": 0,
+        "cancelled": false,
+        "poisoned": true
+      }
+    },
+    {
+      "id": "conflict-migration",
+      "mode": "preservation",
+      "actions": [
+        "A.begin",
+        "A.acquire-all",
+        "A.conflict-migration",
+        "A.release"
+      ],
+      "expected": {
+        "result": "conflict",
+        "published": false,
+        "progressEvents": 0,
+        "cancelled": false,
+        "poisoned": false
+      }
+    },
+    {
+      "id": "poison-migration",
+      "mode": "preservation",
+      "actions": [
+        "fixture.poison-migration",
+        "A.begin",
+        "A.acquire-until-migration",
+        "A.release"
+      ],
+      "expected": {
+        "result": "unavailable",
+        "published": false,
+        "progressEvents": 0,
+        "cancelled": false,
+        "poisoned": true
+      }
+    },
+    {
+      "id": "conflict-composer",
+      "mode": "preservation",
+      "actions": [
+        "A.begin",
+        "A.acquire-all",
+        "A.conflict-composer",
+        "A.release"
+      ],
+      "expected": {
+        "result": "conflict",
+        "published": false,
+        "progressEvents": 0,
+        "cancelled": false,
+        "poisoned": false
+      }
+    },
+    {
+      "id": "poison-composer",
+      "mode": "preservation",
+      "actions": [
+        "fixture.poison-composer",
+        "A.begin",
+        "A.acquire-until-composer",
+        "A.release"
+      ],
+      "expected": {
+        "result": "unavailable",
+        "published": false,
+        "progressEvents": 0,
+        "cancelled": false,
+        "poisoned": true
+      }
+    },
+    {
+      "id": "conflict-subset",
+      "mode": "preservation",
+      "actions": [
+        "A.begin",
+        "A.acquire-all",
+        "A.conflict-subset",
+        "A.release"
+      ],
+      "expected": {
+        "result": "conflict",
+        "published": false,
+        "progressEvents": 0,
+        "cancelled": false,
+        "poisoned": false
+      }
+    },
+    {
+      "id": "poison-subset",
+      "mode": "preservation",
+      "actions": [
+        "fixture.poison-subset",
+        "A.begin",
+        "A.acquire-until-subset",
+        "A.release"
+      ],
+      "expected": {
+        "result": "unavailable",
+        "published": false,
+        "progressEvents": 0,
+        "cancelled": false,
+        "poisoned": true
+      }
+    },
+    {
+      "id": "conflict-format",
+      "mode": "preservation",
+      "actions": [
+        "A.begin",
+        "A.acquire-all",
+        "A.conflict-format",
+        "A.release"
+      ],
+      "expected": {
+        "result": "conflict",
+        "published": false,
+        "progressEvents": 0,
+        "cancelled": false,
+        "poisoned": false
+      }
+    },
+    {
+      "id": "poison-format",
+      "mode": "preservation",
+      "actions": [
+        "fixture.poison-format",
+        "A.begin",
+        "A.acquire-until-format",
+        "A.release"
+      ],
+      "expected": {
+        "result": "unavailable",
+        "published": false,
+        "progressEvents": 0,
+        "cancelled": false,
+        "poisoned": true
+      }
+    },
+    {
+      "id": "conflict-snapshot",
+      "mode": "preservation",
+      "actions": [
+        "A.begin",
+        "A.acquire-all",
+        "A.conflict-snapshot",
+        "A.release"
+      ],
+      "expected": {
+        "result": "conflict",
+        "published": false,
+        "progressEvents": 0,
+        "cancelled": false,
+        "poisoned": false
+      }
+    },
+    {
+      "id": "poison-snapshot",
+      "mode": "preservation",
+      "actions": [
+        "fixture.poison-snapshot",
+        "A.begin",
+        "A.acquire-until-snapshot",
+        "A.release"
+      ],
+      "expected": {
+        "result": "unavailable",
+        "published": false,
+        "progressEvents": 0,
+        "cancelled": false,
+        "poisoned": true
+      }
+    },
+    {
+      "id": "poison-barrier",
+      "mode": "preservation",
+      "actions": [
+        "fixture.panic-with-barrier",
+        "A.begin"
+      ],
+      "expected": {
+        "result": "unavailable",
+        "published": false,
+        "progressEvents": 0,
+        "cancelled": false,
+        "poisoned": true
+      }
+    },
+    {
+      "id": "preflight-only",
+      "mode": "preservation",
+      "actions": [
+        "A.begin",
+        "A.preflight-all",
+        "A.release"
+      ],
+      "expected": {
+        "result": "unchanged",
+        "published": false,
+        "progressEvents": 0,
+        "cancelled": false,
+        "poisoned": false
+      }
+    },
+    {
+      "id": "reader-before-and-after",
+      "mode": "preservation",
+      "actions": [
+        "reader.read-old",
+        "A.begin",
+        "A.acquire-all",
+        "reader.read-waits",
+        "A.preflight-all",
+        "A.commit-all",
+        "A.release",
+        "reader.read-new"
+      ],
+      "expected": {
+        "result": "committed",
+        "published": true,
+        "progressEvents": 0,
+        "cancelled": false,
+        "poisoned": false
+      }
+    },
+    {
+      "id": "missing-assembled-sqlite-capability",
+      "mode": "provider-policy",
+      "actions": [
+        "A.begin",
+        "A.plan-codec-without-sqlite",
+        "A.preflight-all",
+        "A.release"
+      ],
+      "expected": {
+        "result": "conflict",
+        "published": false,
+        "progressEvents": 0,
+        "cancelled": false,
+        "poisoned": false
+      }
+    },
+    {
+      "id": "pack-only-construction-remains-legal",
+      "mode": "preservation",
+      "actions": [
+        "A.construct-bare-pack-only"
+      ],
+      "expected": {
+        "result": "unchanged",
+        "published": false,
+        "progressEvents": 0,
+        "cancelled": false,
+        "poisoned": false
+      }
+    },
+    {
+      "id": "controlled-cancel-before-acquire",
+      "mode": "control-extension",
+      "actions": [
+        "A.cancel",
+        "A.step-acquire"
+      ],
+      "expected": {
+        "result": "cancelled",
+        "published": false,
+        "progressEvents": 0,
+        "cancelled": true,
+        "poisoned": false
+      }
+    },
+    {
+      "id": "controlled-busy-returns-progress",
+      "mode": "control-extension",
+      "actions": [
+        "A.begin",
+        "B.step-acquire-busy",
+        "B.progress",
+        "B.cancel",
+        "B.step-acquire",
+        "A.release"
+      ],
+      "expected": {
+        "result": "cancelled",
+        "published": false,
+        "progressEvents": 1,
+        "cancelled": true,
+        "poisoned": false
+      }
+    },
+    {
+      "id": "controlled-cancel-before-publication",
+      "mode": "control-extension",
+      "actions": [
+        "A.begin",
+        "A.acquire-all",
+        "A.preflight-all",
+        "A.cancel",
+        "A.checkpoint",
+        "A.release"
+      ],
+      "expected": {
+        "result": "cancelled",
+        "published": false,
+        "progressEvents": 0,
+        "cancelled": true,
+        "poisoned": false
+      }
+    },
+    {
+      "id": "controlled-commit-is-indivisible",
+      "mode": "control-extension",
+      "actions": [
+        "A.begin",
+        "A.acquire-all",
+        "A.preflight-all",
+        "A.checkpoint",
+        "A.commit-all-no-callback",
+        "A.release"
+      ],
+      "expected": {
+        "result": "committed",
+        "published": true,
+        "progressEvents": 0,
+        "cancelled": false,
+        "poisoned": false
+      }
+    },
+    {
+      "id": "partial-lock-busy-releases-before-retry",
+      "mode": "control-extension",
+      "actions": [
+        "fixture.hold-format-read",
+        "A.step-acquire",
+        "A.release-partial-locks",
+        "A.pending",
+        "fixture.release-format-read",
+        "A.step-acquire",
+        "A.preflight-all",
+        "A.commit-all",
+        "A.release"
+      ],
+      "expected": {
+        "result": "committed",
+        "published": true,
+        "progressEvents": 1,
+        "cancelled": false,
+        "poisoned": false
+      }
+    },
+    {
+      "id": "no-recursive-begin-contract",
+      "mode": "control-extension",
+      "actions": [
+        "A.begin",
+        "A.try-begin-busy",
+        "A.release"
+      ],
+      "expected": {
+        "result": "pending",
+        "published": false,
+        "progressEvents": 0,
+        "cancelled": false,
+        "poisoned": false
+      }
+    }
+  ]
+}

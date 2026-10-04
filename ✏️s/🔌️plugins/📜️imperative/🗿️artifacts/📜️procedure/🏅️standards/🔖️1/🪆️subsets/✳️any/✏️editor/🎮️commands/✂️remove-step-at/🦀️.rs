@@ -1,67 +1,13 @@
-//! 🔧️ 🔧️ Imperative play app commands command — `remove-step-at`.
+//! 🔧️ Procedure command `remove-step-at`: step `id` of the addressed scope and its nested bodies leave the program.
 
 use crate::editor::procedure::config::{ImperativeConfig, ImperativeConfigMutation};
-use crate::mutations::{delete_step, ProcedureMutation};
-use crate::{PathRef, ProcedureSnapshot, Step};
+use crate::schema::operations::{move_step, path_ref_in, remove_step};
+use crate::mutations::ProcedureMutation;
+use crate::ProcedureSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-//#region 🔖️Helpers
-/// 📍️ Resolves `owner`/`slot` command fields into a [`PathRef`] so nested control-step bodies (e.g.
-/// `control.if` then/else) resolve correctly; falls back to the root path unless both are present and
-/// `owner` names a real top-level step, avoiding an unresolvable or unknown reference that would
-/// otherwise address nothing.
-fn path_ref_from(owner: Option<&str>, slot: Option<&str>, document: &ProcedureSnapshot) -> PathRef {
-    let path = crate::procedure_working_scene(document).path;
-    match (owner, slot) {
-        (Some(owner), Some(slot)) if path.steps.iter().any(|step| step.id == owner) => PathRef { owner: Some(owner.to_string()), slot: Some(slot.to_string()) },
-        _ => PathRef::default(),
-    }
-}
-
-/// 🔎️ Resolves the step list a `PathRef` addresses — the root path, or a nested `control.*` step's slot
-/// (an unmaterialized slot reads as empty).
-fn steps_at(document: &ProcedureSnapshot, path_ref: &PathRef) -> Vec<Step> {
-    let path = crate::procedure_working_scene(document).path;
-    match (&path_ref.owner, &path_ref.slot) {
-        (Some(owner), Some(slot)) => path.steps.iter().find(|step| &step.id == owner).and_then(|step| step.bodies.get(slot)).map(|body| body.steps.clone()).unwrap_or_default(),
-        _ => path.steps,
-    }
-}
-
-/// 🔎️ True when the step `id` exists in the list the `owner`/`slot` command fields address — the
-/// pre-state guard the operation arms share so a stale id never emits a no-operation edit into history.
-fn resolve_contains(document: &ProcedureSnapshot, owner: Option<&str>, slot: Option<&str>, id: &str) -> bool {
-    let path_ref = path_ref_from(owner, slot, document);
-    steps_at(document, &path_ref).iter().any(|step| step.id == id)
-}
-//#endregion 🔖️Helpers
-
-//#region 🔖️AddStep
-//#endregion 🔖️AddStep
-
-//#region 🔖️AddStepAt
-//#endregion 🔖️AddStepAt
-
-//#region 🔖️RemoveStep
-//#endregion 🔖️RemoveStep
-
-//#region 🔖️RemoveStepAt
-//#endregion 🔖️RemoveStepAt
-
-//#region 🔖️MoveStep
-//#endregion 🔖️MoveStep
-
-//#region 🔖️MoveStepAt
-//#endregion 🔖️MoveStepAt
-
-//#region 🔖️SetStepParams
-//#endregion 🔖️SetStepParams
-
-//#region 🔖️SetStepParamsAt
-//#endregion 🔖️SetStepParamsAt
-
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "remove-step-at")]
 pub struct RemoveStepAt {
     pub id: String,
@@ -69,16 +15,10 @@ pub struct RemoveStepAt {
     pub slot: Option<String>,
 }
 
-// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: no selection pruning here anymore —
-// the removed step's id is auto-pruned from the `steps` interaction domain's selection by the
-// framework (`validate_state` against `ImperativePlayApp::interaction_topology`) right after this
-// document mutation lands.
+/// ➖️ One flow-child edit removing the step from its scope; an unknown id is no edit.
 pub fn handle(payload: &RemoveStepAt, doc: &ArtifactView<'_, ProcedureSnapshot>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ProcedureMutation, ImperativeConfigMutation>, Fault> {
-    let document = doc.snapshot;
-    if resolve_contains(document, payload.owner.as_deref(), payload.slot.as_deref(), &payload.id) {
-        let path_ref = path_ref_from(payload.owner.as_deref(), payload.slot.as_deref(), document);
-        Ok(Emit::mutations(vec![delete_step(path_ref, payload.id.clone())]))
-    } else {
-        Ok(Emit::default())
-    }
+    crate::procedure_edit_emit(doc, |path| {
+        let path_ref = path_ref_in(path, payload.owner.as_deref(), payload.slot.as_deref());
+        remove_step(path, &path_ref, &payload.id);
+    })
 }

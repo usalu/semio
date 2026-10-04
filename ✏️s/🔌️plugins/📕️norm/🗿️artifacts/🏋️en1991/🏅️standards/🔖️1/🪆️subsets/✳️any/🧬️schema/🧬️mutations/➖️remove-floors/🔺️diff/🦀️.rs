@@ -1,4 +1,4 @@
-//! Diff for `remove-floors`.
+//! 🔺️ Diff for `remove-floors`.
 use super::RemoveFloors;
 use crate::artifact_schema::diff::En1991FloorsList;
 use crate::{En1991Diff, En1991Snapshot};

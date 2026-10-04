@@ -1,0 +1,168 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio://framework/value/decode/test-ownership",
+  "title": "Neutral Decode Law Ownership",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "package",
+    "packageSource",
+    "valueSource",
+    "controlSource",
+    "nativeSource",
+    "packageScript",
+    "originalControl",
+    "originalNative",
+    "originalImport",
+    "ownedImport",
+    "nativeMount",
+    "nativeLaws",
+    "unchangedInputs",
+    "absentRoots",
+    "packageSha256",
+    "valueSha256",
+    "packageManifest",
+    "referenceBindings"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "package": {
+      "const": "semio-framework-value"
+    },
+    "packageSource": {
+      "type": "string",
+      "minLength": 1
+    },
+    "valueSource": {
+      "type": "string",
+      "minLength": 1
+    },
+    "controlSource": {
+      "type": "string",
+      "minLength": 1
+    },
+    "nativeSource": {
+      "type": "string",
+      "minLength": 1
+    },
+    "packageScript": {
+      "type": "string",
+      "minLength": 1
+    },
+    "originalControl": {
+      "type": "string",
+      "minLength": 1
+    },
+    "originalNative": {
+      "type": "string",
+      "minLength": 1
+    },
+    "originalImport": {
+      "type": "string",
+      "minLength": 1
+    },
+    "ownedImport": {
+      "type": "string",
+      "minLength": 1
+    },
+    "nativeMount": {
+      "type": "string",
+      "minLength": 1
+    },
+    "nativeLaws": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "enum": [
+          "sqlite_snapshot_nested_native_stages_preserve_parent_and_cumulative_ownership",
+          "sqlite_snapshot_native_materialization_preserves_caller_budget_and_cancellation"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "unchangedInputs": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        }
+      }
+    },
+    "absentRoots": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "packageSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "valueSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "packageManifest": {
+      "type": "string",
+      "minLength": 1
+    },
+    "referenceBindings": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "originalSource",
+          "originalCall",
+          "ownedCall"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "originalSource": {
+            "type": "string",
+            "minLength": 1
+          },
+          "originalCall": {
+            "type": "string",
+            "minLength": 1
+          },
+          "ownedCall": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

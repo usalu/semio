@@ -12,7 +12,7 @@ pub fn diff(payload: &super::ResizeSlot, base: &Wfc2dSnapshot) -> protocol::Muta
     }
     let slot = &base.slots[index];
     if slot.width == payload.width && slot.height == payload.height {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Slot \"{}\" already has that size.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Slot \"{}\" already has that size.", payload.id));
     }
     let resized = crate::schema::snapshot::Wfc2dSlot { width: payload.width, height: payload.height, ..slot.clone() };
     protocol::MutationOutcome::new(Wfc2dDiff { slots_upserted: vec![(index, resized)], ..Default::default() })

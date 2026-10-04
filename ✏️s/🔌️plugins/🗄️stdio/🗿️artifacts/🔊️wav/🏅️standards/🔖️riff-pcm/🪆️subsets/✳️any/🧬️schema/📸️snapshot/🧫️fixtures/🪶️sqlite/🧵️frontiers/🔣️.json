@@ -1,0 +1,15 @@
+{
+  "entities": 769,
+  "frontier": 256,
+  "precedingPasses": 2,
+  "sampleBase": -384,
+  "octetCycle": 256,
+  "chunkWidth": 4,
+  "chunkGroup": "JUNK",
+  "schema": "owned WAV frontiers 世界",
+  "order": "reverse",
+  "priorDebt": 7,
+  "capturedRows": 4096,
+  "refusalKind": "canceled",
+  "allocationRefusalKind": "ownershipLimit"
+}

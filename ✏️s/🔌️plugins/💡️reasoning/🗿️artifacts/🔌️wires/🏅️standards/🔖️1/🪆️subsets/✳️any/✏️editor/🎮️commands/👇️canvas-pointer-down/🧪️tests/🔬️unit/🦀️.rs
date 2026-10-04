@@ -2,7 +2,7 @@ use super::*;
 use crate::editor::wires::commands::{add_node, canvas_pointer_move, canvas_pointer_up};
 use crate::editor::wires::unit_tests::context::{dispatch, new_app};
 use crate::editor::wires::WiresCommand;
-use crate::standards::v1::subsets::any::schema::inferences::find_board_node;
+use crate::schema::board_node;
 use semio_framework::kernel::Effect;
 use semio_framework_plugin::{artifact_app_laws, PluginApp, INTERACTION_SELECT_ACTION_ID};
 
@@ -30,11 +30,11 @@ async fn pointer_drag_translates_node_by_screen_delta() {
         app.dispatch_typed(command, &meta).await.expect("dispatch");
         settle(&mut app).await;
     }
-    let node = find_board_node(&app.snapshot().expect("snapshot"), "node-1").expect("node-1").clone();
+    let node = board_node(&crate::editor::wires::unit_tests::context::board(&app), "node-1").expect("node-1").clone();
     assert_eq!(node.get("x").and_then(|value| value.as_f64()), Some(40.0));
     assert_eq!(node.get("y").and_then(|value| value.as_f64()), Some(30.0));
     artifact_app_laws::settle_history_verb(&mut *app, "undo", artifact_app_laws::meta("local").instance_id).await;
-    let node = find_board_node(&app.snapshot().expect("snapshot"), "node-1").expect("node-1").clone();
+    let node = board_node(&crate::editor::wires::unit_tests::context::board(&app), "node-1").expect("node-1").clone();
     assert_eq!(node.get("x").and_then(|value| value.as_f64()), Some(0.0));
 }
 
@@ -58,12 +58,8 @@ async fn pointer_down_selects_the_hit_node_inline() {
     let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "left".into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let left = view.for_window_instance("left").expect("canvas window instance");
     let result: Result<(), String> = async {
-        let mut seed = crate::empty_wires_snapshot();
-        seed.content = crate::wires_content_child_with_owner(vec![dsl::DslValue::from(&vectors["initialNode"])], Vec::new());
-        let envelope = store::create_document_envelope::<crate::WiresSnapshot, crate::WiresMutation>(crate::MINDMAP_WIRES_SCHEMA, "reasoning-wires", seed, None);
-        let pack = store::print_document_pack(&envelope).await.map_err(|error| format!("{error:?}"))?;
-        app.load_document_pack(&pack).await.map_err(|error| format!("{error:?}"))?;
-        crate::editor::wires::unit_tests::context::retire_envelope(envelope);
+        let node = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(&vectors["initialNode"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral full graph node");
+        crate::editor::wires::unit_tests::context::load_graph_fixture(&mut app, vec![node], Vec::new()).await.map_err(|error| format!("{error:?}"))?;
         let meta = ActionMeta { view_state: Some(left.clone()), ..artifact_app_laws::meta("inline-pick") };
         app.dispatch_typed(WiresCommand::NodeGraphViewport(NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 } }), &meta).await.map_err(|error| format!("{error:?}"))?;
         artifact_app_laws::settle_registered_typed_operation(&mut *app, 1).await.map_err(|error| format!("{error:?}"))?;

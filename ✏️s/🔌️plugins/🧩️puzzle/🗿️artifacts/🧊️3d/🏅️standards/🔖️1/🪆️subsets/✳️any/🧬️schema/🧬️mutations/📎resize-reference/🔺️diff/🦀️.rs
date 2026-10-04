@@ -10,7 +10,7 @@ pub fn diff(payload: &super::mutation::ResizeReference, base: &Puzzle3dSnapshot)
     let mut next = item.clone();
     next.width_world = payload.new_width_world;
     if next == *item {
-        return protocol::MutationOutcome::new(Puzzle3dDiff::default()).absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "no changes to apply").at(vec![payload.id.clone()])]);
+        return protocol::MutationOutcome::new(Puzzle3dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(vec![payload.id.clone()])]);
     }
     protocol::MutationOutcome::new(Puzzle3dDiff {
         references: Some(Puzzle3dReferencesDelta { patched: vec![Puzzle3dReferencePatchEntry { id: payload.id.clone(), patch: Puzzle3dReferencePatch { replacement: Some(next) } }], ..Default::default() }),

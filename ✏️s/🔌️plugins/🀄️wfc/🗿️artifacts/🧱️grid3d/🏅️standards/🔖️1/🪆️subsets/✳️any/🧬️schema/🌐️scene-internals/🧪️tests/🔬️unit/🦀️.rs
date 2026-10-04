@@ -13,7 +13,7 @@ fn row(x: u32, y: u32, z: u32, tile: &str) -> Grid3dAssignment {
 }
 
 fn array_len(json_text: &str) -> usize {
-    json::parse(json_text).expect("payload is json").as_array().expect("payload is an array").len()
+    json::parse(json_text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("payload is json").as_array().expect("payload is an array").len()
 }
 
 #[test]
@@ -58,7 +58,7 @@ fn the_delta_names_only_what_moved_and_keeps_the_full_set_authoritative() {
     let snapshot = document();
     let previous = vec![row(0, 0, 0, "floor"), row(1, 0, 0, "wall")];
     let next = vec![row(0, 0, 0, "floor"), row(1, 0, 0, "roof")];
-    let delta = json::parse(&preview_instances_delta_json(&snapshot, &previous, &next, 4)).expect("delta is json");
+    let delta = json::parse(&preview_instances_delta_json(&snapshot, &previous, &next, 4), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delta is json");
     assert_eq!(delta.get("base").and_then(json::Value::as_u64), Some(3));
     assert_eq!(delta.get("revision").and_then(json::Value::as_u64), Some(4));
     assert_eq!(delta.get("count").and_then(json::Value::as_u64), Some(2));

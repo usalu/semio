@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "home-editor-transient-vectors",
+      "source": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🫧️mutate-s-home-1-any-editor-transient/🦀️.rs",
+      "helper": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🫧️mutate-s-home-1-any-editor-transient/🧫️fixtures/🦀️.rs",
+      "helperSha256": "67bc6e53228e4af5176f5e65ad9fd5c1d47f63e699b7a6c53c559467803d9950",
+      "originalSource": "//! 🫧️ `s.space.home` ✏️editor/🫧️transient state-lane mutation case — Rust adapter.\n//!\n//! Recorded no-oracle decision `s-home-1-any-editor-transient-state-lane-semantics`: the runner dispatches no oracle role, so\n//! every law is asserted inside the subject handler through `semio_repo_test_host::law::vector` over the report\n//! of this crate's production bridge `home_transient_mutation_report_json`. The oracle handler answers with the committed\n//! after- and before-snapshots read literally, so the reference side exists the moment a second producer does. The one verb\n//! is non-invertible (a derived projection page is never undone): its inverse law is asserted on the vectors that fold\n//! nothing, where no inverse step may exist and the projection must stay the committed before-snapshot.\n\nuse semio_repo_test_host::{parse_json, Adapter, Context, Outcome};\nuse semio_repo_test_host::law::vector::Vector;\n\n//#region 🔖️Vectors\n/// 🧫️ One committed vector of `apply-directory-page`, read literally from `✏️editor/🫧️transient/🧫️fixtures`.\nfn vector(id: &str) -> Result<Vector, String> {\n    macro_rules! committed {\n        ($name:literal, $observable:expr) => {\n            Vector {\n                before: include_str!(concat!(\"../../✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/\", $name, \"/📸️snapshot/⬅️before/🔣️.json\")),\n                mutation: include_str!(concat!(\"../../✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/\", $name, \"/🦠️mutation/🔣️.json\")),\n                after: include_str!(concat!(\"../../✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/\", $name, \"/📸️snapshot/➡️after/🔣️.json\")),\n                diff: include_str!(concat!(\"../../✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/\", $name, \"/🔺️diff/🔣️.json\")),\n                outcome: include_str!(concat!(\"../../✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/\", $name, \"/🎯️outcome/🔣️.json\")),\n                observable: $observable,\n            }\n        };\n    }\n    Ok(match id {\n        \"apply-directory-page-applied\" => committed!(\"✅️apply\", true),\n        \"apply-directory-page-no-op\" => committed!(\"🟰️apply\", false),\n        \"apply-directory-page-rejected\" => committed!(\"🚫️apply\", false),\n        other => return Err(format!(\"no committed vector for {other:?}\")),\n    })\n}\n//#endregion 🔖️Vectors\n\n//#region 🔖️Oracle\nfn literal(text: &str) -> Result<Outcome, String> {\n    Ok(Outcome::with_raw(text.as_bytes().to_vec(), parse_json(text)?))\n}\n\nfn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {\n    literal(vector(ctx.row()?)?.after)\n}\n\nfn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {\n    literal(vector(ctx.row()?)?.before)\n}\n//#endregion 🔖️Oracle\n\n//#region 🔖️Subject\n#[cfg(feature = \"sut\")]\nmod subject {\n    use super::*;\n    use semio_s_artifact_space_home::editor::home::transient::mutations::home_transient_mutation_report_json;\n    use semio_repo_test_host::law::vector;\n\n    pub fn mutate(ctx: &Context) -> Result<Outcome, String> {\n        let id = ctx.row()?;\n        let committed = vector(id)?;\n        let report = home_transient_mutation_report_json(committed.before, committed.mutation, committed.after)?;\n        let applied = vector::mutate(id, &report, &committed)?;\n        Ok(Outcome::with_raw(applied.to_string().into_bytes(), applied))\n    }\n\n    pub fn inverse(ctx: &Context) -> Result<Outcome, String> {\n        let id = ctx.row()?;\n        let committed = vector(id)?;\n        let report = home_transient_mutation_report_json(committed.before, committed.mutation, committed.after)?;\n        let restored = vector::inverse(id, &report)?;\n        Ok(Outcome::with_raw(restored.to_string().into_bytes(), restored))\n    }\n}\n//#endregion 🔖️Subject\n\n//#region 🔖️Registration\n/// 🧭️ Registration entry point the generated host calls.\npub fn adapter() -> Adapter {\n    let mut built = Adapter::new(\"rust\").oracle(\"mutate\", mutate_oracle).oracle(\"inverse\", inverse_oracle);\n    #[cfg(feature = \"sut\")]\n    {\n        built = built.subject(\"mutate\", subject::mutate).subject(\"inverse\", subject::inverse);\n    }\n    built\n}\n//#endregion 🔖️Registration\n",
+      "originalRegion": "//#region 🔖️Vectors\n/// 🧫️ One committed vector of `apply-directory-page`, read literally from `✏️editor/🫧️transient/🧫️fixtures`.\nfn vector(id: &str) -> Result<Vector, String> {\n    macro_rules! committed {\n        ($name:literal, $observable:expr) => {\n            Vector {\n                before: include_str!(concat!(\"../../✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/\", $name, \"/📸️snapshot/⬅️before/🔣️.json\")),\n                mutation: include_str!(concat!(\"../../✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/\", $name, \"/🦠️mutation/🔣️.json\")),\n                after: include_str!(concat!(\"../../✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/\", $name, \"/📸️snapshot/➡️after/🔣️.json\")),\n                diff: include_str!(concat!(\"../../✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/\", $name, \"/🔺️diff/🔣️.json\")),\n                outcome: include_str!(concat!(\"../../✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/\", $name, \"/🎯️outcome/🔣️.json\")),\n                observable: $observable,\n            }\n        };\n    }\n    Ok(match id {\n        \"apply-directory-page-applied\" => committed!(\"✅️apply\", true),\n        \"apply-directory-page-no-op\" => committed!(\"🟰️apply\", false),\n        \"apply-directory-page-rejected\" => committed!(\"🚫️apply\", false),\n        other => return Err(format!(\"no committed vector for {other:?}\")),\n    })\n}\n//#endregion 🔖️Vectors",
+      "currentRegion": "//#region 🔖️Vectors\n#[path = \"🧫️fixtures/🦀️.rs\"]\nmod committed_vectors;\nuse committed_vectors::vector;\n//#endregion 🔖️Vectors",
+      "importAnchor": "use semio_repo_test_host::{parse_json, Adapter, Context, Outcome};\n",
+      "originalImport": "use semio_repo_test_host::law::vector::Vector;\n",
+      "frozenCallerSha256": "ed1b831717bf871a329ed26ce5fb77fc2595d1754b0e04906188bcc0fa80ef68",
+      "inputs": [
+        {
+          "include": "../../../✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/✅️apply/📸️snapshot/⬅️before/🔣️.json",
+          "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/✅️apply/📸️snapshot/⬅️before/🔣️.json",
+          "currentSha256": "4854f12d82cceeb19e8f69eca215d0426ad9e998b2645e64943394b48c44f2f8"
+        },
+        {
+          "include": "../../../✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/✅️apply/🦠️mutation/🔣️.json",
+          "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/✅️apply/🦠️mutation/🔣️.json",
+          "currentSha256": "c6693ad818998bde348894e25e7ab27d160bc5b417abc9e60587eec16170419c"
+        },
+        {
+          "include": "../../../✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/✅️apply/📸️snapshot/➡️after/🔣️.json",
+          "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/✅️apply/📸️snapshot/➡️after/🔣️.json",
+          "currentSha256": "0438a5368b8508250f6caa0003673a98ed4a2c557bd93452a8acabfd03a0c87c"
+        },
+        {
+          "include": "../../../✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/✅️apply/🔺️diff/🔣️.json",
+          "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/✅️apply/🔺️diff/🔣️.json",
+          "currentSha256": "0438a5368b8508250f6caa0003673a98ed4a2c557bd93452a8acabfd03a0c87c"
+        },
+        {
+          "include": "../../../✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/✅️apply/🎯️outcome/🔣️.json",
+          "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/✅️apply/🎯️outcome/🔣️.json",
+          "currentSha256": "7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab"
+        },
+        {
+          "include": "../../../✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/🟰️apply/📸️snapshot/⬅️before/🔣️.json",
+          "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/🟰️apply/📸️snapshot/⬅️before/🔣️.json",
+          "currentSha256": "0438a5368b8508250f6caa0003673a98ed4a2c557bd93452a8acabfd03a0c87c"
+        },
+        {
+          "include": "../../../✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/🟰️apply/🦠️mutation/🔣️.json",
+          "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/🟰️apply/🦠️mutation/🔣️.json",
+          "currentSha256": "c6693ad818998bde348894e25e7ab27d160bc5b417abc9e60587eec16170419c"
+        },
+        {
+          "include": "../../../✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/🟰️apply/📸️snapshot/➡️after/🔣️.json",
+          "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/🟰️apply/📸️snapshot/➡️after/🔣️.json",
+          "currentSha256": "0438a5368b8508250f6caa0003673a98ed4a2c557bd93452a8acabfd03a0c87c"
+        },
+        {
+          "include": "../../../✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/🟰️apply/🔺️diff/🔣️.json",
+          "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/🟰️apply/🔺️diff/🔣️.json",
+          "currentSha256": "0438a5368b8508250f6caa0003673a98ed4a2c557bd93452a8acabfd03a0c87c"
+        },
+        {
+          "include": "../../../✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/🟰️apply/🎯️outcome/🔣️.json",
+          "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/🟰️apply/🎯️outcome/🔣️.json",
+          "currentSha256": "d2a81b51136af5be8326cbd98957610a34e7017ac480f0a877898fbdc0b356a6"
+        },
+        {
+          "include": "../../../✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/🚫️apply/📸️snapshot/⬅️before/🔣️.json",
+          "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/🚫️apply/📸️snapshot/⬅️before/🔣️.json",
+          "currentSha256": "0438a5368b8508250f6caa0003673a98ed4a2c557bd93452a8acabfd03a0c87c"
+        },
+        {
+          "include": "../../../✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/🚫️apply/🦠️mutation/🔣️.json",
+          "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/🚫️apply/🦠️mutation/🔣️.json",
+          "currentSha256": "278c0895d15af3dc45c947dd5c7e4faf92f814789bbabb2991712a0a15fe4935"
+        },
+        {
+          "include": "../../../✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/🚫️apply/📸️snapshot/➡️after/🔣️.json",
+          "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/🚫️apply/📸️snapshot/➡️after/🔣️.json",
+          "currentSha256": "0438a5368b8508250f6caa0003673a98ed4a2c557bd93452a8acabfd03a0c87c"
+        },
+        {
+          "include": "../../../✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/🚫️apply/🔺️diff/🔣️.json",
+          "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/🚫️apply/🔺️diff/🔣️.json",
+          "currentSha256": "0438a5368b8508250f6caa0003673a98ed4a2c557bd93452a8acabfd03a0c87c"
+        },
+        {
+          "include": "../../../✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/🚫️apply/🎯️outcome/🔣️.json",
+          "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/🚫️apply/🎯️outcome/🔣️.json",
+          "currentSha256": "23e65896ed2e3c1a84eac7c79d6648136d496c59bfb355612bc24cd73c77859a"
+        }
+      ],
+      "vectors": [
+        {
+          "id": "apply-directory-page-applied",
+          "observable": true
+        },
+        {
+          "id": "apply-directory-page-no-op",
+          "observable": false
+        },
+        {
+          "id": "apply-directory-page-rejected",
+          "observable": false
+        }
+      ]
+    }
+  ]
+}

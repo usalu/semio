@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeWaterSystemPeakFlow, base: &EnergyModelSnapsh
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Water system {}: peak flow (L/s) must be a positive finite value, got {}.", payload.id.0, payload.new_peak_flow_l_s), [payload.id.0.to_string()]);
     }
     if existing.peak_flow_l_s == payload.new_peak_flow_l_s {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Water system {} already carries this peak flow (L/s): {}.", payload.id.0, payload.new_peak_flow_l_s));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Water system {} already carries this peak flow (L/s): {}.", payload.id.0, payload.new_peak_flow_l_s));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.water_systems.iter_mut().find(|item| item.id == payload.id) {

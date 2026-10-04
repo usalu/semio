@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "inheritedRowPx": 24,
+  "uiSpacingPx": 3.2,
+  "indentPx": 10,
+  "togglePx": 14,
+  "cases": [
+    { "id": "inherited-row", "workbenchPx": 40, "rowPx": null, "centerPx": null, "expectedPx": 12 },
+    { "id": "custom-row", "workbenchPx": 40, "rowPx": 28, "centerPx": null, "expectedPx": 14 },
+    { "id": "custom-center", "workbenchPx": 40, "rowPx": 28, "centerPx": 12, "expectedPx": 12 }
+  ],
+  "directions": ["down", "up"]
+}

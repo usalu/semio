@@ -93,6 +93,7 @@ fn kinds_match_the_enum_and_the_catalog() {
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 pub(crate) fn sample_mutations() -> Vec<SemioVideoMutation> {
     vec![
+        SemioVideoMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         SemioVideoMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: sweep_b() }),
         SemioVideoMutation::InsertStream(insert_stream::InsertStream {
             index: 1,
@@ -136,7 +137,7 @@ async fn inverse_law() {
 
         let mut round_tripped = base.clone();
         apply_semio_video_mutation(&mut round_tripped, &mutation);
-        for inverse_mutation in <SemioVideoMutation as Mutation<SemioVideoSnapshot>>::inverse(&mutation, &base) {
+        for inverse_mutation in <SemioVideoMutation as Mutation<SemioVideoSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
             apply_semio_video_mutation(&mut round_tripped, &inverse_mutation);
         }
         assert_eq!(round_tripped, base, "inverse_law (mutation-level).await failed for {mutation:?}");

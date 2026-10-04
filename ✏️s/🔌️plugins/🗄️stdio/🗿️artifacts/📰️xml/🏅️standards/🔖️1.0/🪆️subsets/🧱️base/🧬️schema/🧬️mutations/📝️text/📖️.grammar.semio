@@ -3,5 +3,5 @@ grammar xml.mutations
 extension xml
 start document
 
-# Direct descriptor identities: set-declaration, set-doctype, insert-element, remove-element, set-attribute, set-text, set-snapshot.
+# Direct descriptor identities: set-declaration, set-doctype, insert-element, remove-element, set-attribute, set-text, set-snapshot, patch-snapshot.
 document = "xml-mutation" "payload" "=" hex

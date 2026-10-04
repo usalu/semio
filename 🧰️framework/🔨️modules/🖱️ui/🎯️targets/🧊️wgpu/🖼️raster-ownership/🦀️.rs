@@ -5,8 +5,8 @@ use std::fmt;
 use std::sync::{Arc, Mutex};
 
 pub const SCENE_RASTER_ITEM_BYTES: usize = 64 * 1024 * 1024;
-pub const SCENE_RASTER_POOL_SLOTS: usize = 4;
-pub const SCENE_RASTER_POOL_BYTES: usize = SCENE_RASTER_ITEM_BYTES * SCENE_RASTER_POOL_SLOTS;
+pub const SCENE_RASTER_POOL_SLOTS: usize = 256;
+pub const SCENE_RASTER_POOL_BYTES: usize = SCENE_RASTER_ITEM_BYTES * 4;
 pub const SCENE_RASTER_LEASE_CAPACITY: usize = 64;
 pub const SCENE_RASTER_TRANSFER_BYTES: usize = 1024 * 1024;
 pub const SCENE_RASTER_GPU_RESIDENT_CAPACITY: usize = 256;
@@ -19,6 +19,7 @@ pub enum SceneRasterProfile {
     ReferenceCanvasSrgb,
     MeshPaintMapNoColorSpace,
     MeshBaseColorSrgb,
+    MeshNumericLinear,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -41,6 +42,17 @@ pub struct SceneRasterDescriptor {
 impl SceneRasterDescriptor {
     pub fn byte_len(self) -> Option<usize> {
         usize::try_from(self.width).ok()?.checked_mul(usize::try_from(self.height).ok()?)?.checked_mul(4)
+    }
+
+    /// 🧮️ Counts the exact resident chain retained by the authored raster upload owner.
+    pub fn gpu_byte_len(self) -> Option<usize> {
+        if self.width == 0 || self.height == 0 { return None; }
+        let levels = if matches!(self.profile, SceneRasterProfile::MeshBaseColorSrgb | SceneRasterProfile::MeshNumericLinear) { u32::BITS - self.width.max(self.height).leading_zeros() } else { 1 };
+        let mut bytes = 0usize;
+        for level in 0..levels {
+            bytes = bytes.checked_add(Self { width: (self.width >> level).max(1), height: (self.height >> level).max(1), ..self }.byte_len()?)?;
+        }
+        Some(bytes)
     }
 }
 
@@ -279,8 +291,8 @@ impl SceneRasterReleaseWitness {
             drop(state);
             return Err(self);
         };
-        let bytes = self.identity.descriptor.byte_len().unwrap_or(usize::MAX);
-        let replaced_bytes = state.gpu_residents[slot].as_ref().and_then(|resident| resident.identity.descriptor.byte_len()).unwrap_or(0);
+        let bytes = self.identity.descriptor.gpu_byte_len().unwrap_or(usize::MAX);
+        let replaced_bytes = state.gpu_residents[slot].as_ref().and_then(|resident| resident.identity.descriptor.gpu_byte_len()).unwrap_or(0);
         let Some(gpu_resident_bytes) = state.gpu_resident_bytes.checked_sub(replaced_bytes).and_then(|held| held.checked_add(bytes)) else {
             drop(state);
             return Err(self);
@@ -313,7 +325,7 @@ impl Drop for SceneRasterGpuWitness {
             if !slot.as_ref().is_some_and(|resident| resident.epoch == self.epoch && resident.identity == self.identity) {
                 return;
             }
-            let bytes = slot.as_ref().and_then(|resident| resident.identity.descriptor.byte_len()).unwrap_or(0);
+            let bytes = slot.as_ref().and_then(|resident| resident.identity.descriptor.gpu_byte_len()).unwrap_or(0);
             *slot = None;
             bytes
         };
@@ -435,7 +447,7 @@ impl SceneRasterPool {
         }
         let mesh_profile_is_valid = match descriptor.profile {
             SceneRasterProfile::MeshPaintMapNoColorSpace => descriptor.mesh.is_some_and(|mesh| mesh.mesh_revision > 0 && mesh.uv_revision > 0 && mesh.uv_count > 0),
-            SceneRasterProfile::ReferenceImageMapNoColorSpace | SceneRasterProfile::ReferenceCanvasSrgb | SceneRasterProfile::MeshBaseColorSrgb => descriptor.mesh.is_none(),
+            SceneRasterProfile::ReferenceImageMapNoColorSpace | SceneRasterProfile::ReferenceCanvasSrgb | SceneRasterProfile::MeshBaseColorSrgb | SceneRasterProfile::MeshNumericLinear => descriptor.mesh.is_none(),
         };
         if !mesh_profile_is_valid {
             return SceneRasterBegin::Refused("scene raster mesh seal is missing or invalid for its profile");
@@ -504,6 +516,7 @@ impl SceneRasterPool {
             SceneRasterProfile::ReferenceCanvasSrgb => 2,
             SceneRasterProfile::MeshPaintMapNoColorSpace => 3,
             SceneRasterProfile::MeshBaseColorSrgb => 4,
+            SceneRasterProfile::MeshNumericLinear => 5,
         });
         if let Some(mesh) = descriptor.mesh {
             content.mix_word(mesh.mesh_revision);

@@ -10,7 +10,7 @@ use crate::PresentationSnapshot;
 pub fn diff(payload: &ReplaceTiles, base: &PresentationSnapshot) -> protocol::MutationOutcome<PresentationDiff> {
     let (source, tiles) = crate::presentation_working_scene(base);
     if tiles == payload.new_tiles {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "The tiles collection is already unchanged.".to_string());
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "The tiles collection is already unchanged.".to_string());
     }
     protocol::MutationOutcome::new(crate::diff::diff_set_presentation(&source, &payload.new_tiles))
 }

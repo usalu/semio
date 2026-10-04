@@ -6,9 +6,9 @@ use crate::editor::equation::{EQUATION_MAX_DELETE_IDS, EQUATION_MAX_TEXT_BYTES};
 use crate::op::EquationMutation;
 use crate::standards::v1::subsets::graph::schema::mutations::{connect_nodes::ConnectNodes, delete_node::DeleteNode, disconnect_nodes::DisconnectNodes, move_nodes::MoveNodes};
 use crate::{EquationEdge, EquationGraph, EquationSnapshot};
-use pack::json::Value as JsonValue;
+use semio_framework_pack_json::Value as JsonValue;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
-use semio_framework_tool_machine::{node_drag_commit, NodeGraphEditRow};
+use semio_framework_tool_machine::{node_drag_emit, NodeGraphEditRow};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 /// 🪪️ The verb a node-graph tool transaction is scoped by: `<appId>#nodeGraphEdit`.
@@ -19,7 +19,7 @@ pub const EQUATION_EDITOR_APP_ID: &str = "s.mathematical.equation@1/*#editor";
 
 /// 🎨️ `nodeGraphActions.edit` (`"nodeGraphEdit"`) is the shared renderer-wide action id the generic node-graph canvas
 /// dispatches interactive edit gestures under; `operations_json` is the JSON array of its rows.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "node-graph-edit")]
 pub struct NodeGraphEdit {
     pub operations_json: String,
@@ -42,7 +42,7 @@ impl EquationEditOperation {
     pub(crate) fn from_value(value: &JsonValue) -> Result<Self, Fault> {
         let text = |text: &str| if text.len() > EQUATION_MAX_TEXT_BYTES { Err(Fault::from("equation-edit-text-capacity")) } else { Ok(text.to_string()) };
         let ids = |ids: Vec<String>| if ids.len() > EQUATION_MAX_DELETE_IDS || ids.iter().any(|id| id.len() > EQUATION_MAX_TEXT_BYTES) { Err(Fault::from("equation-edit-id-capacity")) } else { Ok(ids) };
-        match NodeGraphEditRow::from_row(&pack::json::to_dsl_value(value)).map_err(|reason| Fault::from(format!("equation nodeGraphEdit refusal: {reason}")))? {
+        match NodeGraphEditRow::from_row(&semio_framework_pack_json::to_dsl_value(value)).map_err(|reason| Fault::from(format!("equation nodeGraphEdit refusal: {reason}")))? {
             NodeGraphEditRow::Move(record) => Ok(Self::Move { gesture_id: text(&record.gesture_id)?, node_ids: ids(record.node_ids)?, dx: record.dx, dy: record.dy }),
             NodeGraphEditRow::Connect { source_node_id, target_node_id, .. } => Ok(Self::Connect { source: text(&source_node_id)?, target: text(&target_node_id)? }),
             NodeGraphEditRow::Disconnect { synapse_id } => Ok(Self::Disconnect { id: text(&synapse_id)? }),
@@ -121,17 +121,13 @@ pub(crate) fn equation_edit_operation_leaves(graph: &mut EquationGraph, operatio
 /// and `<appId>#nodeGraphEdit`; everything else, or a view without command authority, is one plain edit; nothing is the
 /// empty emit (zero trace).
 pub(crate) fn equation_edit_emit(authoring_seed: &str, gesture: Option<&str>, leaves: Vec<EquationMutation>) -> Emit<EquationMutation, NoConfigMutation> {
-    let Some(gesture) = gesture.filter(|_| !authoring_seed.is_empty()) else { return Emit::mutations(leaves) };
-    let clock = protocol::HybridLogicalTimestamp { actor: 0, physical_ms: semio_framework_job::default_now_ms().unwrap_or(0), logical: 0 };
-    match node_drag_commit(format!("{EQUATION_EDITOR_APP_ID}#{NODE_GRAPH_EDIT_VERB}"), protocol::ActorId(authoring_seed.to_string()), gesture, leaves, clock) {
-        Some((transaction, leaves)) => Emit::commit_transaction(transaction, leaves),
-        None => Emit::default(),
-    }
+    let Some(gesture) = gesture else { return Emit::mutations(leaves) };
+    node_drag_emit(EQUATION_EDITOR_APP_ID, NODE_GRAPH_EDIT_VERB, authoring_seed, gesture, leaves).into()
 }
 
 pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, EquationSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<EquationMutation, NoConfigMutation>, Fault> {
-    let rows: Vec<JsonValue> = pack::json::parse(&payload.operations_json).ok().and_then(|value| value.as_array().map(|values| values.to_vec())).unwrap_or_default();
-    let mut graph = crate::equation_graph(doc.snapshot);
+    let rows: Vec<JsonValue> = semio_framework_pack_json::parse(&payload.operations_json, semio_framework_pack_json::JsonMemberPolicy::Reject).ok().and_then(|value| value.as_array().map(|values| values.to_vec())).unwrap_or_default();
+    let mut graph = doc.snapshot.graph.clone();
     let (mut leaves, mut gesture) = (Vec::new(), None);
     for row in &rows {
         let (row_leaves, row_gesture) = equation_edit_operation_leaves(&mut graph, &EquationEditOperation::from_value(row)?);

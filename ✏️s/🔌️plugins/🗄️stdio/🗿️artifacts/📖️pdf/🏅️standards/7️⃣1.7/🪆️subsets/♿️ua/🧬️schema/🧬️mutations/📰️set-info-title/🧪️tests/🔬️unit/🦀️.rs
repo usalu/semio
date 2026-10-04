@@ -9,5 +9,5 @@ fn sets_and_can_restore_the_document_title() {
     let outcome = <SetInfoTitle as MutationKind<PdfSnapshot, PdfUaMutation>>::diff(&mutation, &base);
     let next = outcome.diff().apply(&base).unwrap();
     assert_eq!(next.info.title.as_deref(), Some("after"));
-    assert_eq!(<SetInfoTitle as MutationKind<PdfSnapshot, PdfUaMutation>>::inverse(&mutation, &base), vec![PdfUaMutation::SetInfoTitle(SetInfoTitle { title: "before".to_string() })]);
+    assert_eq!(<SetInfoTitle as MutationKind<PdfSnapshot, PdfUaMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture"), vec![PdfUaMutation::SetInfoTitle(SetInfoTitle { title: "before".to_string() })]);
 }

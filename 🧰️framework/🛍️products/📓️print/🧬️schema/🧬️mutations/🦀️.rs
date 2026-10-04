@@ -2,7 +2,11 @@
 use crate::{ChartSnapshot, ChartDiff, ChartEdit};
 use protocol::{DslValue, FromValue, ToValue, Mutation, MutationDiff, MutationOutcome, MutationLeafDescriptor, MutationInvertibility, MutationDiffParticipation, MutationOutcomeClass, MutationComposition, MutationLanguageSurface};
 
-#[derive(Clone, Debug, PartialEq)]
+#[path="📦️codec/🦀️.rs"]
+mod codec;
+
+#[derive(Clone, Debug, PartialEq,semio_framework_dsl_record_derive::DslRecord)]
+#[dsl(keyword="change-chart-value")]
 pub struct ChangeChartValue {
     pub path: Vec<String>,
     pub value: Option<DslValue>,
@@ -17,10 +21,10 @@ impl ToValue for ChangeChartValue {
 }
 impl FromValue for ChangeChartValue {
     fn from_value(value:DslValue)->Result<Self,semio_framework_value::ValueError>{
-        let DslValue::Object(fields)=value else{return Err(semio_framework_value::ValueError::new("chart mutation must be an object"));};
+        let DslValue::Object(fields)=value else{return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"chart mutation must be an object"));};
         let mut path=None;let mut next=None;
-        for(key,value)in fields{match key.as_str(){"path"=>path=Some(Vec::<String>::from_value(value)?),"value"=>next=Some(value),_=>return Err(semio_framework_value::ValueError::new(format!("unknown chart mutation field {key}"))),}}
-        Ok(Self{path:path.ok_or_else(||semio_framework_value::ValueError::new("chart mutation path is required"))?,value:next})
+        for(key,value)in fields{match key.as_str(){"path"=>path=Some(Vec::<String>::from_value(value)?),"value"=>next=Some(value),_=>return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("unknown chart mutation field {key}"))),}}
+        Ok(Self{path:path.ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"chart mutation path is required"))?,value:next})
     }
 }
 

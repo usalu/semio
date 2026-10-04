@@ -1,0 +1,228 @@
+{
+  "contractId": "pptx-outline-owned-xml-refusal",
+  "authority": "actualOpcAndXml",
+  "snapshot": {
+    "schema": "stdio.pptx",
+    "opc": {
+      "parts": [],
+      "contentTypes": {
+        "defaults": [],
+        "overrides": []
+      },
+      "relationships": {
+        "": [
+          {
+            "id": "main",
+            "relType": "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument",
+            "target": "ppt/presentation.xml",
+            "targetMode": "internal"
+          }
+        ],
+        "ppt/presentation.xml": [
+          {
+            "id": "slide",
+            "relType": "http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide",
+            "target": "slides/slide1.xml",
+            "targetMode": "internal"
+          }
+        ]
+      },
+      "comment": "literal\\0引用😀"
+    },
+    "xmlParts": [
+      {
+        "path": "ppt/presentation.xml",
+        "contentType": "application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml",
+        "document": {
+          "prolog": [],
+          "epilog": [],
+          "root": {
+            "kind": "element",
+            "name": "p:presentation",
+            "attrs": [
+              {
+                "name": "xmlns:p",
+                "value": "http://schemas.openxmlformats.org/presentationml/2006/main"
+              },
+              {
+                "name": "xmlns:r",
+                "value": "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+              },
+              {
+                "name": "xmlns:a",
+                "value": "http://schemas.openxmlformats.org/drawingml/2006/main"
+              }
+            ],
+            "children": [
+              {
+                "kind": "element",
+                "name": "p:sldIdLst",
+                "attrs": [],
+                "children": [
+                  {
+                    "kind": "element",
+                    "name": "p:sldId",
+                    "attrs": [
+                      {
+                        "name": "id",
+                        "value": "1"
+                      },
+                      {
+                        "name": "r:id",
+                        "value": "slide"
+                      }
+                    ],
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "path": "ppt/slides/slide1.xml",
+        "contentType": "application/vnd.openxmlformats-officedocument.presentationml.slide+xml",
+        "document": {
+          "prolog": [],
+          "epilog": [],
+          "root": {
+            "kind": "element",
+            "name": "p:sld",
+            "attrs": [
+              {
+                "name": "xmlns:p",
+                "value": "http://schemas.openxmlformats.org/presentationml/2006/main"
+              },
+              {
+                "name": "xmlns:r",
+                "value": "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+              },
+              {
+                "name": "xmlns:a",
+                "value": "http://schemas.openxmlformats.org/drawingml/2006/main"
+              }
+            ],
+            "children": [
+              {
+                "kind": "element",
+                "name": "p:cSld",
+                "attrs": [],
+                "children": [
+                  {
+                    "kind": "element",
+                    "name": "p:spTree",
+                    "attrs": [],
+                    "children": [
+                      {
+                        "kind": "element",
+                        "name": "p:sp",
+                        "attrs": [],
+                        "children": [
+                          {
+                            "kind": "element",
+                            "name": "p:nvSpPr",
+                            "attrs": [],
+                            "children": [
+                              {
+                                "kind": "element",
+                                "name": "p:cNvPr",
+                                "attrs": [
+                                  {
+                                    "name": "id",
+                                    "value": "text"
+                                  }
+                                ],
+                                "children": []
+                              }
+                            ]
+                          },
+                          {
+                            "kind": "element",
+                            "name": "p:txBody",
+                            "attrs": [],
+                            "children": [
+                              {
+                                "kind": "element",
+                                "name": "a:p",
+                                "attrs": [],
+                                "children": [
+                                  {
+                                    "kind": "element",
+                                    "name": "a:r",
+                                    "attrs": [],
+                                    "children": [
+                                      {
+                                        "kind": "element",
+                                        "name": "a:t",
+                                        "attrs": [],
+                                        "children": [
+                                          {
+                                            "kind": "text",
+                                            "text": "hello 世界"
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "kind": "element",
+                        "name": "p:pic",
+                        "attrs": [],
+                        "children": [
+                          {
+                            "kind": "element",
+                            "name": "p:nvPicPr",
+                            "attrs": [],
+                            "children": [
+                              {
+                                "kind": "element",
+                                "name": "p:cNvPr",
+                                "attrs": [
+                                  {
+                                    "name": "id",
+                                    "value": "picture"
+                                  }
+                                ],
+                                "children": []
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "expected": {
+    "slideCount": 1,
+    "shapeCount": 2,
+    "wordCount": 2
+  },
+  "refusals": [
+    {
+      "role": "missingRelationship",
+      "kind": "invalidValue"
+    },
+    {
+      "role": "missingXmlPart",
+      "kind": "invalidValue"
+    },
+    {
+      "role": "wrongRootNamespace",
+      "kind": "invalidValue"
+    }
+  ]
+}

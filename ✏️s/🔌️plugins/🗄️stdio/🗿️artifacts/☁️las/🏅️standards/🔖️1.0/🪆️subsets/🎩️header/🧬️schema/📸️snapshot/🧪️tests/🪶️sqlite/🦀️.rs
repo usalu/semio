@@ -97,3 +97,6 @@ fn sqlite_snapshot_las_native_encoding_preflight_bounds_escaped_text_and_cancels
   let mut reached=false;assert!(snapshot.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |event|{if event.phase==SqliteSnapshotPhase::EncodeNative&&event.completed>=cases["cancelAfterWork"].as_u64().unwrap() as usize{reached=true;false}else{true}},SqliteDatabaseLimits::default())).is_err());assert!(reached,"member admission walk must checkpoint before native ownership");
  }
 }
+
+#[path="🚦️cohort/🦀️.rs"]
+mod cohort;

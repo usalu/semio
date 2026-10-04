@@ -1,7 +1,30 @@
 {
-  "beforeFixtureJson": null,
-  "lhsJson": null,
-  "rhsJson": "{\"set\":[{\"var\":\"c\",\"prop\":\"label\",\"value\":\"$caption\"},{\"var\":\"c\",\"prop\":\"count\",\"value\":\"$repeat\"}]}",
+  "workingGraph": null,
+  "lhs": null,
+  "rhs": {
+    "create": [],
+    "delete": [],
+    "set": [
+      {
+        "var": "c",
+        "prop": "label",
+        "value": {
+          "kind": "string",
+          "value": "$caption"
+        }
+      },
+      {
+        "var": "c",
+        "prop": "count",
+        "value": {
+          "kind": "string",
+          "value": "$repeat"
+        }
+      }
+    ],
+    "merge": [],
+    "parameters": []
+  },
   "parameterBindings": null,
   "ruleLayout": null
 }

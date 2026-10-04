@@ -15,6 +15,7 @@ name = "semio_s_artifact_stdio_mp4_test_oracle"
 path = "../../🦀️.rs"
 
 [features]
+default = ["oracles"]
 oracles = ["dep:mp4"]
 
 [dependencies]

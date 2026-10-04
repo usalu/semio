@@ -8,7 +8,7 @@ pub(crate) fn sample_json() -> JsonSnapshot {
 
 #[semio_framework_async_macros::async_test]
 async fn maps_nodes_and_edges() {
-    let semio = semio_framework_plugin::resolve_ready(SemioFlowFromJson::deserialize(&sample_json())).expect("deserialize");
+    let semio = ::semio_framework_async::poll::resolve_ready(SemioFlowFromJson::deserialize(&sample_json())).expect("deserialize");
     assert_eq!(semio.nodes.len(), 2);
     assert_eq!(semio.edges.len(), 1);
     assert_eq!(semio.nodes[0].id, "n1");
@@ -21,5 +21,5 @@ async fn maps_nodes_and_edges() {
 #[semio_framework_async_macros::async_test]
 async fn missing_required_member_is_a_real_error() {
     let bad = JsonSnapshot { schema: semio_s_artifact_stdio_json::STDIO_JSON_DOCUMENT_SCHEMA.into(), value: semio_s_artifact_stdio_json::schema::snapshot::parse_json_text("{}").unwrap() };
-    assert!(semio_framework_plugin::resolve_ready(SemioFlowFromJson::deserialize(&bad)).is_err());
+    assert!(::semio_framework_async::poll::resolve_ready(SemioFlowFromJson::deserialize(&bad)).is_err());
 }

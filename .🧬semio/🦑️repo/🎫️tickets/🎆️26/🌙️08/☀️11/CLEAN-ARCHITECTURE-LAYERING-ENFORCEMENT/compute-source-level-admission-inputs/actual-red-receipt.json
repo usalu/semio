@@ -1,0 +1,13 @@
+{
+  "policy": {
+    "code": 1,
+    "pass": 2,
+    "fail": 1
+  },
+  "inferred": {
+    "name": "@semio-tech/puzzle-3d-rs-compute-ownership:test-quick",
+    "code": 1,
+    "stdoutCallbacks": 10,
+    "stderrCallbacks": 3
+  }
+}

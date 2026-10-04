@@ -53,7 +53,7 @@ async fn counter_is_set_absolutely_not_incremented() {
 async fn inverse_restores_the_previous_counter() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_vcs_mutation(&base, &mutation);
+    let inverse = inverse_vcs_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "change-counter undoes with exactly one counter-set");
     let mut snapshot = base.clone();
     apply_vcs_mutation(&mut snapshot, &mutation).expect("forward applies");

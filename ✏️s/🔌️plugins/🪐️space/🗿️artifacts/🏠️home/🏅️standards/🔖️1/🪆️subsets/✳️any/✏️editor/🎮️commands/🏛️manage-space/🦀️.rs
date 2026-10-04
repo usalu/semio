@@ -9,7 +9,7 @@ use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "manage-space")]
 pub struct ManageSpace {
     pub space_id: String,
@@ -21,7 +21,7 @@ pub fn handle(payload: &ManageSpace, _doc: &ArtifactView<'_, SHomeSnapshot>, _cf
     if payload.space_id.trim().is_empty() {
         return Err(Fault::from("s.home.manage-space-requires-a-space"));
     }
-    let args = Some(pack::json_to_dsl_value(&pack::json!({ "spaceId": payload.space_id.clone() })));
+    let args = Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "spaceId": payload.space_id.clone() })));
     Ok(Emit::effect(Effect::ReplayShellCommand { action_id: "os.directory.open-administration".into(), args }))
 }
 //#endregion 🔖️Handle

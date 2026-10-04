@@ -304,19 +304,13 @@ impl machine::Host<select_tool::SelectTool> for SelectToolHost {
     }
 }
 
-/// ⏰️ The host clock a select-tool event runs on: the host's wall time, so a transaction id minted at an upsert is
-/// unique per admission AND per moment.
-pub fn puzzle2d_select_tool_clock() -> protocol::HybridLogicalTimestamp {
-    protocol::HybridLogicalTimestamp { actor: 0, physical_ms: semio_framework_job::default_now_ms().unwrap_or(0), logical: 0 }
-}
-
 /// 🧷️ One provisional entry of a persisted select-tool transaction, its mutation in value form so the window
 /// transient retires it like any other value.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle2dSelectToolEntry {
     pub key: String,
-    pub mutation: dsl::DslValue,
+    pub mutation: semio_framework_value::DslValue,
 }
 
 /// 💾️ A window's in-flight select-tool gesture, persisted in its window transient between dispatches — ephemeral
@@ -358,7 +352,7 @@ impl Puzzle2dSelectTool {
     pub fn resume(state: &Puzzle2dSelectToolState) -> Result<Self, ToolRefusal> {
         let definition = <select_tool::SelectTool as machine::Machine>::definition();
         let persisted = machine::PersistedSnapshot { version: 1, fingerprint: definition.fingerprint, states: state.states.clone(), history: Vec::new(), done: false };
-        let entries = state.entries.iter().map(|entry| Ok((entry.key.clone(), dsl::FromValue::from_value(entry.mutation.clone()).map_err(|_| ToolRefusal::Closed)?))).collect::<Result<Vec<(String, Puzzle2dMutation)>, ToolRefusal>>()?;
+        let entries = state.entries.iter().map(|entry| Ok((entry.key.clone(), semio_framework_value::FromValue::from_value(entry.mutation.clone()).map_err(|_| ToolRefusal::Closed)?))).collect::<Result<Vec<(String, Puzzle2dMutation)>, ToolRefusal>>()?;
         let stream = entries.iter().find(|(key, _)| key == PUZZLE2D_SELECT_TOOL_LEAF_KEY).and_then(|(_, leaf)| Puzzle2dSelectionRecord::from_leaf(leaf, state.connect));
         let snapshot = machine::restore::<select_tool::SelectTool, machine::NoMigrations>(&persisted, SelectToolContext { stream }, &[]).map_err(|_| ToolRefusal::Closed)?;
         let transaction = ToolTransaction::resume(state.transaction.clone(), entries);
@@ -383,7 +377,7 @@ impl Puzzle2dSelectTool {
 
     /// 📨️ Runs one event on the host clock.
     pub fn send(&mut self, event: select_tool::Event) -> Result<ToolStep<Puzzle2dMutation>, ToolRefusal> {
-        self.runner.send(event, puzzle2d_select_tool_clock())
+        self.runner.send(event, semio_framework_tool_machine::authoring_clock(0))
     }
 
     /// 🧯️ Host abort: the open transaction vanishes with zero trace and the tool rests.
@@ -402,7 +396,7 @@ impl Puzzle2dSelectTool {
             base_revision: self.base_revision,
             connect: snapshot.context.stream.as_ref().is_some_and(|stream| stream.connect),
             transaction: transaction.reference().clone(),
-            entries: transaction.entries().iter().map(|(key, mutation)| Puzzle2dSelectToolEntry { key: key.clone(), mutation: dsl::ToValue::to_value(mutation) }).collect(),
+            entries: transaction.entries().iter().map(|(key, mutation)| Puzzle2dSelectToolEntry { key: key.clone(), mutation: semio_framework_value::ToValue::to_value(mutation) }).collect(),
         })
     }
 }
@@ -419,11 +413,13 @@ pub fn puzzle2d_select_tool_commit(verb: &str, authoring_seed: &str, clock: prot
 }
 
 /// 👁️ The document a window paints while its select tool holds an open transaction: the provisional entries
-/// applied to `document` — a preview only this window sees, never history.
+/// applied to `document` — a preview only this window sees, never history. An entry the preview refuses paints nothing (a
+/// preview shows only what applies) and its refusal is never lost: the commit that lands the same entry on the committed
+/// document reports it as the history row's outcome.
 pub fn puzzle2d_select_tool_preview(document: &Puzzle2dSnapshot, state: &Puzzle2dSelectToolState) -> Puzzle2dSnapshot {
     let mut preview = document.clone();
-    for mutation in state.entries.iter().filter_map(|entry| dsl::FromValue::from_value(entry.mutation.clone()).ok()) {
-        let _ = apply_puzzle2d_mutation(&mut preview, &mutation);
+    for mutation in state.entries.iter().filter_map(|entry| semio_framework_value::FromValue::from_value(entry.mutation.clone()).ok()) {
+        let _refused_paints_nothing = apply_puzzle2d_mutation(&mut preview, &mutation);
     }
     preview
 }
@@ -445,7 +441,7 @@ pub fn puzzle2d_selection_yields(base: &Puzzle2dSnapshot, records: &[Puzzle2dSel
         if record.proximity.is_empty() && !record.connect {
             continue;
         }
-        let mut scratch = Value::from(dsl::ToValue::to_value(&state));
+        let mut scratch = Value::from(semio_framework_value::ToValue::to_value(&state));
         let mut pairs: Vec<(String, String)> = Vec::new();
         for (source, target) in &record.proximity {
             if puzzle2d_handles_open(&scratch, source, target) {

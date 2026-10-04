@@ -5,7 +5,7 @@ use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
 /// 🧬️ Full imperative artifact state across the artifact, presence, config and transient lanes.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact_schema(id = "s.imperative.procedure")]
 pub struct ProcedureArtifact {
@@ -88,7 +88,7 @@ pub mod derived_construction {
     #[derive(Clone, Debug, Default)]
     pub struct ProcedureBuilderConstruction {
         snapshot: ProcedureSnapshot,
-        diagnostics: Vec<dsl::Diagnostic>,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
     }
 
     impl ArtifactBuilder for ProcedureBuilderConstruction {
@@ -101,7 +101,7 @@ pub mod derived_construction {
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(Self { snapshot: <ProcedureSnapshot as store::ArtifactDsl>::parse_dsl(text)?, diagnostics: Vec::new() })
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
@@ -111,7 +111,7 @@ pub mod derived_construction {
             let outcome = <ProcedureMutation as protocol::Mutation<ProcedureSnapshot>>::diff(&mutation, &self.snapshot);
             match protocol::MutationDiff::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("build.apply", dsl::TextSpan::at(1, 1), error.to_string())),
+                Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
@@ -120,7 +120,7 @@ pub mod derived_construction {
             self.snapshot = snapshot;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -162,14 +162,14 @@ pub mod derived_analysis {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <ProcedureSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }
@@ -204,7 +204,7 @@ semio_framework_plugin::derive_artifact_facets!(
 /// `ProcedureWorkingScene`'s doc comment) — building the canonical default directly here, then
 /// printing it to regenerate the fixture text (see `📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`),
 /// is the honest source of truth, matching `writer`'s/`flow`'s own fixture-builder precedent.
-fn default_path() -> crate::Path {
+pub fn default_path() -> crate::Path {
     use crate::{Dictionary, Path, Step};
     use neural_engine::{Atom, Value};
     Path {
@@ -215,11 +215,12 @@ fn default_path() -> crate::Path {
     }
 }
 
-/// 📄️ The default `imperative` document — {@link default_path}'s two steps, empty seed. Relocated
+/// 📄️ The default `imperative` document — the bundled demo, whose children derive {@link default_path}'s two steps and an
+/// empty seed. Relocated
 /// from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — pure
 /// over document types, no app-runtime parameter, so it belongs beside the schema it builds.
 pub fn default_snapshot() -> crate::ProcedureSnapshot {
-    crate::procedure_snapshot_with_content("procedure.document", &default_path(), &std::collections::BTreeMap::new())
+    crate::examples::demo::snapshot()
 }
 //#endregion 🔖️DocumentHelpers
 

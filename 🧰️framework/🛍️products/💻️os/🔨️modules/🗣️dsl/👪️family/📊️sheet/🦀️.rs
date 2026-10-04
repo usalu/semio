@@ -12,8 +12,16 @@
 //! grammar is a `Shape::Wire` successor still pending migration, `Shape::Expr` has no such pending
 //! migration to avoid colliding with: reusing it directly is exactly right.
 
-use crate::os_dsl::schema::{parse_expr_text, print_expr, ExprOp, ExprValue};
-use crate::os_dsl::{lex, Limits, TextError, TextSpan, TokenKind};
+use semio_framework_dsl_record::parse_expr_text;
+use semio_framework_dsl_record::print_expr;
+use semio_framework_dsl_record::ExprOp;
+use semio_framework_dsl_record::ExprValue;
+use semio_framework_dsl::lex;
+use semio_framework_diagnostic::Limits;
+use semio_framework_diagnostic::TextError;
+use semio_framework_value::ValueRefusalKind;
+use semio_framework_diagnostic::TextSpan;
+use semio_framework_dsl::TokenKind;
 use std::collections::HashMap;
 
 //#region 🔖️Evaluate
@@ -44,16 +52,16 @@ impl std::fmt::Display for EvalError {
 // compare its `Result` directly with no `.await` in sight — see R9
 pub fn evaluate(expr: &ExprValue, env: &HashMap<String, f64>) -> Result<f64, EvalError> {
     match expr {
-        ExprValue::Num(v) => Ok(*v),
-        ExprValue::Var(name) => env.get(name).copied().ok_or_else(|| EvalError::UnknownVariable(name.clone())),
-        ExprValue::Neg(inner) => Ok(-evaluate(inner, env)?),
-        ExprValue::Binary(op, l, r) => {
+        semio_framework_dsl_record::ExprValue::Num(v) => Ok(*v),
+        semio_framework_dsl_record::ExprValue::Var(name) => env.get(name).copied().ok_or_else(|| EvalError::UnknownVariable(name.clone())),
+        semio_framework_dsl_record::ExprValue::Neg(inner) => Ok(-evaluate(inner, env)?),
+        semio_framework_dsl_record::ExprValue::Binary(op, l, r) => {
             let (lv, rv) = (evaluate(l, env)?, evaluate(r, env)?);
             match op {
-                ExprOp::Add => Ok(lv + rv),
-                ExprOp::Sub => Ok(lv - rv),
-                ExprOp::Mul => Ok(lv * rv),
-                ExprOp::Div => {
+                semio_framework_dsl_record::ExprOp::Add => Ok(lv + rv),
+                semio_framework_dsl_record::ExprOp::Sub => Ok(lv - rv),
+                semio_framework_dsl_record::ExprOp::Mul => Ok(lv * rv),
+                semio_framework_dsl_record::ExprOp::Div => {
                     if rv == 0.0 {
                         Err(EvalError::DivisionByZero)
                     } else {
@@ -62,7 +70,7 @@ pub fn evaluate(expr: &ExprValue, env: &HashMap<String, f64>) -> Result<f64, Eva
                 }
             }
         }
-        ExprValue::Call(name, args) => {
+        semio_framework_dsl_record::ExprValue::Call(name, args) => {
             let values = args.iter().map(|a| evaluate(a, env)).collect::<Result<Vec<_>, _>>()?;
             match (name.as_str(), values.as_slice()) {
                 ("min", [a, b]) => Ok(a.min(*b)),
@@ -89,7 +97,7 @@ pub struct Trace {
     pub value: f64,
 }
 
-async fn find_arrow_after(tokens: &[crate::os_dsl::SpannedToken], after: usize) -> Option<usize> {
+async fn find_arrow_after(tokens: &[semio_framework_dsl::SpannedToken], after: usize) -> Option<usize> {
     tokens.iter().position(|t| t.kind == TokenKind::Arrow).filter(|&i| i > after)
 }
 
@@ -98,23 +106,23 @@ pub async fn parse_trace_text(text: &str) -> Result<Trace, TextError> {
     let limits = Limits::default();
     let tokens: Vec<_> = lex(text, &limits, false)?.into_iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).collect();
 
-    let name_token = tokens.first().filter(|t| t.kind == TokenKind::Ident).ok_or_else(|| TextError::new("expected a trace name", TextSpan::at(1, 1)))?;
+    let name_token = tokens.first().filter(|t| t.kind == TokenKind::Ident).ok_or_else(|| TextError::new(ValueRefusalKind::InvalidValue, "expected a trace name", TextSpan::at(1, 1)))?;
     let name = name_token.text.as_str().to_string();
     let equals_index = 1;
     if tokens.get(equals_index).map(|t| t.kind) != Some(TokenKind::Equals) {
-        return Err(TextError::new("expected `=` after the trace name", tokens.get(equals_index).map_or(TextSpan::at(1, 1), |t| t.span)));
+        return Err(TextError::new(ValueRefusalKind::InvalidValue, "expected `=` after the trace name", tokens.get(equals_index).map_or(TextSpan::at(1, 1), |t| t.span)));
     }
 
-    let arrow_index = find_arrow_after(&tokens, equals_index).await.ok_or_else(|| TextError::new("expected `->` closing the trace's expression", TextSpan::at(1, 1)))?;
+    let arrow_index = find_arrow_after(&tokens, equals_index).await.ok_or_else(|| TextError::new(ValueRefusalKind::InvalidValue, "expected `->` closing the trace's expression", TextSpan::at(1, 1)))?;
     let expr_start = tokens[equals_index].byte_range.1 as usize;
     let expr_end = tokens[arrow_index].byte_range.0 as usize;
     let expr = parse_expr_text(text[expr_start..expr_end].trim())?;
 
-    let value_token = tokens.get(arrow_index + 1).filter(|t| matches!(t.kind, TokenKind::Float | TokenKind::Int)).ok_or_else(|| TextError::new("expected a number after `->`", tokens.get(arrow_index + 1).map_or(TextSpan::at(1, 1), |t| t.span)))?;
-    let value: f64 = value_token.text.as_str().parse().map_err(|_| TextError::new(format!("not a valid number: {}", value_token.text.as_str()), value_token.span))?;
+    let value_token = tokens.get(arrow_index + 1).filter(|t| matches!(t.kind, TokenKind::Float | TokenKind::Int)).ok_or_else(|| TextError::new(ValueRefusalKind::InvalidValue, "expected a number after `->`", tokens.get(arrow_index + 1).map_or(TextSpan::at(1, 1), |t| t.span)))?;
+    let value: f64 = value_token.text.as_str().parse().map_err(|_| TextError::new(ValueRefusalKind::InvalidValue, format!("not a valid number: {}", value_token.text.as_str()), value_token.span))?;
 
     if tokens.len() > arrow_index + 2 {
-        return Err(TextError::new("unexpected trailing content after trace value", tokens[arrow_index + 2].span));
+        return Err(TextError::new(ValueRefusalKind::InvalidValue, "unexpected trailing content after trace value", tokens[arrow_index + 2].span));
     }
     Ok(Trace { name, expr, value })
 }
@@ -122,7 +130,7 @@ pub async fn parse_trace_text(text: &str) -> Result<Trace, TextError> {
 /// 🖨️ Canonical printer — prints `value` exactly as stored (does NOT recompute; that's
 /// `canonicalize_trace`'s job, matching this engine's `parse`/`print`/`canonicalize` split).
 pub async fn print_trace(trace: &Trace) -> String {
-    format!("{} = {} -> {}", trace.name, print_expr(&trace.expr), crate::os_dsl::format_f64(trace.value))
+    format!("{} = {} -> {}", trace.name, print_expr(&trace.expr), semio_framework_dsl::format_f64(trace.value))
 }
 
 /// ♻️ The self-verifying step: parses `text`, RE-EVALUATES its expression against `env`
@@ -131,7 +139,7 @@ pub async fn print_trace(trace: &Trace) -> String {
 /// evaluation error (unknown variable, etc.) surfaces as `Err`, never silently keeps the old value.
 pub async fn canonicalize_trace(text: &str, env: &HashMap<String, f64>) -> Result<String, TextError> {
     let trace = parse_trace_text(text).await?;
-    let value = evaluate(&trace.expr, env).map_err(|e| TextError::new(e.to_string(), TextSpan::at(1, 1)))?;
+    let value = evaluate(&trace.expr, env).map_err(|e| TextError::new(ValueRefusalKind::InvalidValue, e.to_string(), TextSpan::at(1, 1)))?;
     Ok(print_trace(&Trace { value, ..trace }).await)
 }
 //#endregion 🔖️Trace

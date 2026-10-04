@@ -29,7 +29,7 @@ fn remove_workshop_machine_operation(snapshot: &Process3dSnapshot, id: &str) -> 
 pub mod add_workshop_machine {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "add-workshop-machine")]
     pub struct AddWorkshopMachine {
         pub catalog_id: String,
@@ -58,7 +58,7 @@ pub mod add_workshop_machine {
 pub mod remove_workshop_machine {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "remove-workshop-machine")]
     pub struct RemoveWorkshopMachine {
         pub id: String,
@@ -83,7 +83,7 @@ pub mod remove_workshop_machine {
 pub mod update_workshop_machine {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "update-workshop-machine")]
     pub struct UpdateWorkshopMachine {
         #[dsl(block)]

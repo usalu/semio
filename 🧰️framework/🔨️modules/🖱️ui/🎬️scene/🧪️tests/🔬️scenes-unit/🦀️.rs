@@ -596,7 +596,7 @@ fn paint2d_probe_scene() -> Paint2dScene {
         brush_opacity: 1.0,
         brush_color: "#e07020".into(),
         brush_hardness: 0.25,
-        paint_target:"pixels".into(),mask_value:255,pixel_selection_json:None,
+        paint_target:"pixels".into(),mask_value:255,fill_tolerance:24,pixel_selection_json:None,
         view_mode: "composite".into(),
         composite_viewport_json: None,
         lanes: Vec::new(),
@@ -675,4 +675,59 @@ fn paint2d_absent_pixel_selection_emits_no_coverage_lane(){
     assert!(spine.pixel_selection_json.is_none());
     assert_eq!(lanes.len(),2);
     assert!(!spine.lanes.iter().any(|lane|lane.lane=="pixelSelection"));
+}
+
+#[test]
+fn node_graph_lanes_pin_the_neutral_contract_and_restore_oversized_documents() {
+    let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚚️node-graph-scene-lanes/🔣️.json")).unwrap();
+    let definitions = fixture["lanes"].as_array().unwrap();
+    assert_eq!(definitions.len(), NodeGraphSceneLane::ALL.len());
+    for (lane, definition) in NodeGraphSceneLane::ALL.into_iter().zip(definitions) {
+        assert_eq!(lane.name(), definition["lane"].as_str().unwrap());
+        assert_eq!(lane.field(), definition["field"].as_str().unwrap());
+        assert_eq!(lane.body_key(), definition["bodyKey"].as_str().unwrap());
+        assert_eq!(NodeGraphSceneLane::from_body_key(lane.body_key()), Some(lane));
+    }
+    let sample: NodeGraphScene = serde_json::from_value(fixture["sample"].clone()).unwrap();
+    let (sample_spine, sample_lanes) = sample.split_lanes();
+    assert_eq!(sample_lanes.len(), NodeGraphSceneLane::ALL.len());
+    let mut sample_restored = sample_spine;
+    for lane in sample_lanes { assert!(sample_restored.merge_lane(lane.key, lane.payload)); }
+    sample_restored.lanes.clear();
+    assert_eq!(sample_restored, sample);
+    let count = fixture["nodeCount"].as_u64().unwrap() as usize;
+    let node: NodeGraphNodeRecord = serde_json::from_value(fixture["node"].clone()).unwrap();
+    let nodes = (0..count).map(|index| NodeGraphNodeRecord { id: index.to_string(), ..node.clone() }).collect();
+    let mut scene = NodeGraphScene::base(nodes, Vec::new(), Viewport2d::default());
+    scene.host_snapshot_json = Some(serde_json::json!({ "label": fixture["hostSnapshotLabel"].as_str().unwrap().repeat(fixture["repeatCount"].as_u64().unwrap() as usize) }).to_string());
+    scene.selection = vec!["4095".into()];
+    let original_bytes = scene.encode_pack().unwrap().len();
+    assert!(original_bytes > ui_contract::UI_FIXED_BYTES);
+    let (spine, lanes) = scene.split_lanes();
+    let spine_bytes = spine.encode_pack().unwrap().len();
+    assert!(spine_bytes < ui_contract::UI_FIXED_BYTES);
+    assert!(spine.nodes.is_empty());
+    assert!(spine.host_snapshot_json.is_none());
+    assert_eq!(NodeGraphScene::from_value(spine.to_value()).unwrap(), spine);
+    assert_eq!(NodeGraphScene::decode_pack(&spine.encode_pack().unwrap()).unwrap(), spine);
+    let mut restored = spine.clone();
+    for lane in &lanes {
+        let reference = spine.lanes.iter().find(|reference| NodeGraphSceneLane::from_body_key(lane.key).unwrap().name() == reference.lane).unwrap();
+        assert_eq!(reference.bytes as usize, lane.payload.len());
+        assert_eq!(reference.hash, scene_lane_hash(&lane.payload));
+        let definition = definitions.iter().find(|definition| definition["bodyKey"] == lane.key).unwrap();
+        if definition["encoding"] == "json" {
+            let oracle: Value = serde_json::from_str(&lane.payload).unwrap();
+            let mut expected = serde_json::to_value(&scene).unwrap();
+            expected[definition["field"].as_str().unwrap()] = oracle;
+            assert_eq!(serde_json::from_value::<NodeGraphScene>(expected).unwrap(), scene);
+        }
+        assert!(restored.merge_lane(lane.key, lane.payload.clone()));
+    }
+    restored.lanes.clear();
+    assert_eq!(restored, scene);
+    assert!(!restored.merge_lane("framework.scene.nodeGraph.nodes", "[truncated".into()));
+    assert!(!restored.merge_lane("framework.scene.world3d.meshes", "[]".into()));
+    assert_eq!(restored, scene);
+    println!("[DEBUG] node graph lane transport: nodes={count}, full={original_bytes}B, spine={spine_bytes}B, carriers={}", lanes.len());
 }

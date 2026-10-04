@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Shared SQLite Authored Row Frontiers",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "rowFrontier",
+    "phases",
+    "refusal",
+    "sharedProgressRoster",
+    "builderSql",
+    "builderRows"
+  ],
+  "properties": {
+    "rowFrontier": {
+      "const": 256
+    },
+    "phases": {
+      "const": [
+        "parseSchema",
+        "validateRows",
+        "buildTree"
+      ]
+    },
+    "refusal": {
+      "const": "canceled"
+    },
+    "sharedProgressRoster": {
+      "const": [
+        [
+          "reconstructSnapshot",
+          0,
+          0
+        ],
+        [
+          "reconstructSnapshot",
+          256,
+          513
+        ],
+        [
+          "reconstructSnapshot",
+          512,
+          513
+        ],
+        [
+          "validateRows",
+          256,
+          513
+        ],
+        [
+          "validateRows",
+          512,
+          513
+        ],
+        [
+          "reconstructSnapshot",
+          513,
+          513
+        ],
+        [
+          "indexTables",
+          0,
+          1
+        ],
+        [
+          "indexTables",
+          1,
+          1
+        ]
+      ]
+    },
+    "builderSql": {
+      "const": "CREATE TABLE entity (id INTEGER PRIMARY KEY, payload TEXT)"
+    },
+    "builderRows": {
+      "const": 513
+    }
+  }
+}

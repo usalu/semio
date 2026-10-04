@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/compiler/syntax/rust/absence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "owner",
+    "absentRoots",
+    "lawSuffix"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "owner": {
+      "const": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust"
+    },
+    "absentRoots": {
+      "const": [
+        "🧰️framework/🛍️products",
+        "✏️s",
+        "🌎️hub",
+        "🧰️framework/🔨️modules/🗣️dsl",
+        "🧰️framework/🔨️modules/🧬️schema",
+        "🧰️framework/🔨️modules/🌱️value"
+      ]
+    },
+    "lawSuffix": {
+      "const": "🧪️tests/🟦️.ts"
+    }
+  }
+}
+

@@ -7,9 +7,9 @@
     "portKinds": []
   },
   "camera": {
-    "x": 0.0,
-    "y": 0.0,
-    "zoom": 1.0
+    "x": {"bits": "0000000000000000"},
+    "y": {"bits": "0000000000000000"},
+    "zoom": {"bits": "3ff0000000000000"}
   },
   "content": {
     "childId": "jack-content-set-query-fixture",

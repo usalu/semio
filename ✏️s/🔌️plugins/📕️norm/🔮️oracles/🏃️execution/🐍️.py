@@ -73,12 +73,13 @@ class Subset:
     carrier round-trip reads, and the envelope token that document's preamble must carry. A vector row
     keyed by its kind is `(directory, fixture)`; a further row `<kind>-<slug>` witnessing a refusal is
     `(kind, directory, fixture)` and is applied, never inverted. `schemas` maps a kind to its committed
-    leaf payload schema, whose stated bounds a payload must keep. No verb, no
+    leaf payload schema, whose stated bounds a payload must keep; `documents` are the further committed schemas
+    those leaf schemas reference by `$id` (the subset's snapshot schema). No verb, no
     addressing rule and no carrier rule is per-subset — the derivation rules this engine implements
     are the same document for all fifteen, so implementing them fifteen times would be fifteen copies
     of one reading, not fifteen readings."""
 
-    def __init__(self, standard, kinds, vectors, dsl_asset, envelope, vector_root=None, schemas=None):
+    def __init__(self, standard, kinds, vectors, dsl_asset, envelope, vector_root=None, schemas=None, documents=()):
         self.standard = standard
         self.kinds = list(kinds)
         self.vectors = {row: tuple(vector[-2:]) for row, vector in dict(vectors).items()}
@@ -87,6 +88,7 @@ class Subset:
         self.envelope = envelope
         self.vector_root = vector_root or VECTOR_ROOT
         self.schemas = dict(schemas or {})
+        self.documents = {document["$id"]: document for document in [*documents, *self.schemas.values()] if "$id" in document}
 
 
 #: 📏 The JSON Schema numeric bounds a leaf payload schema states, with the comparison each one demands.
@@ -98,17 +100,43 @@ BOUNDS = {
 }
 
 
-def broken_bound(schema, arguments):
-    """🚧 The first numeric bound the kind's committed leaf payload schema states and `arguments` breaks, or
-    `None` — a payload outside its own schema is the `mutation.invariant` refusal, whatever document it meets."""
+def broken_bound(schema, arguments, documents=None):
+    """🚧 The first numeric bound the kind's committed leaf payload schema states — at any depth, through `$ref`s into
+    the subset's committed schemas — that `arguments` breaks, or `None` — a payload outside its own schema is the
+    `mutation.invariant` refusal, whatever document it meets."""
     properties = (schema or {}).get("properties") or {}
     for name, value in arguments.items():
-        if isinstance(value, bool) or not isinstance(value, (int, float)):
-            continue
+        breach = bound_breach(name, value, properties.get(name) or {}, schema or {}, documents or {})
+        if breach is not None:
+            return breach
+    return None
+
+
+def bound_breach(path, value, node, base, documents):
+    """🔎 The first bound `value` breaks at schema position `node` (resolved against `base`), descending objects and arrays."""
+    for _ in range(16):
+        if not isinstance(node, dict) or "$ref" not in node:
+            break
+        target, _, pointer = node["$ref"].partition("#")
+        base = base if target == "" else documents.get(target)
+        if base is None:
+            return None
+        node = base
+        for step in [part for part in pointer.split("/") if part]:
+            node = node.get(step, {}) if isinstance(node, dict) else {}
+    if isinstance(value, bool) or not isinstance(node, dict):
+        return None
+    if isinstance(value, (int, float)):
         for keyword, holds in BOUNDS.items():
-            bound = (properties.get(name) or {}).get(keyword)
+            bound = node.get(keyword)
             if isinstance(bound, (int, float)) and not holds(value, bound):
-                return "%s = %r breaks its leaf schema's %s %r" % (name, value, keyword, bound)
+                return "%s = %r breaks its leaf schema's %s %r" % (path, value, keyword, bound)
+        return None
+    if isinstance(value, list):
+        return next((breach for index, item in enumerate(value) if (breach := bound_breach("%s[%d]" % (path, index), item, node.get("items") or {}, base, documents)) is not None), None)
+    if isinstance(value, dict):
+        properties = node.get("properties") or {}
+        return next((breach for key, item in value.items() if (breach := bound_breach("%s.%s" % (path, key), item, properties.get(key) or {}, base, documents)) is not None), None)
     return None
 
 
@@ -1020,7 +1048,8 @@ def undo_address(collection, element, arguments, noun):
 PREAMBLE = re.compile(r"^semio\s+(\S+)\s+v(\d+)\n")
 TABLE_HEAD = re.compile(r"^(\S+) \[([^\]]*)\] \{$")
 #: 🧱 The record and list delimiters a field line may carry between its `key=value` fields — `[ { id=… } ]` writes a list of
-#: records — kept as written, because they are carrier bytes, not a grammar to infer.
+#: records — kept as written, because they are carrier bytes, not a grammar to infer. Inside a list a field line opens
+#: (`key=[ -0.4 0.6 ]`), the bare tokens are its elements and are kept as written too.
 BRACKETS = frozenset("{}[]")
 
 
@@ -1072,12 +1101,17 @@ def parse_dsl(envelope, text):
             cursor += 1
             blocks.append({"table": table.group(1), "columns": columns, "rows": rows})
             continue
-        fields = []
+        fields, lists = [], 0
         for token in split_fields(line):
             if token in BRACKETS:
+                lists += {"[": 1, "]": -1}.get(token, 0)
                 fields.append([token, None])
                 continue
             key, separator, value = token.partition("=")
+            if separator != "=" and lists > 0:
+                fields.append([token, None])
+                continue
+            lists += value.endswith("[")
             if separator != "=":
                 raise AssertionError(
                     "identity-round-trip: this artifact's carrier cannot be read by a second implementation. %r is not a "
@@ -1207,7 +1241,7 @@ def mutate_handler(subset, row):
         _tag, arguments = unwrap(wire)
         refusal, code = None, None
         try:
-            broken = broken_bound(subset.schemas.get(kind), arguments)
+            broken = broken_bound(subset.schemas.get(kind), arguments, subset.documents)
             if broken is not None:
                 raise Refused("%s: %s" % (kind, broken), "mutation.invariant")
             current = apply_mutation(base, kind, arguments)

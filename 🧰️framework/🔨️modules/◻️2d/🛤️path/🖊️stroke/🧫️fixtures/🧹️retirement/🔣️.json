@@ -1,0 +1,18 @@
+[
+ {"name":"fresh owner","source":"butt cap","stop":"fresh","work":{"native":11,"typescript":10},"output":false},
+ {"name":"active preparation","source":"butt cap","stop":"preparing","work":{"native":11,"typescript":10},"output":false},
+ {"name":"prepared sources","source":"butt cap","stop":"source","work":{"native":12,"typescript":11},"output":false},
+ {"name":"dash offset","source":"positive dash offset","stop":"offset","work":{"native":12,"typescript":11},"output":false},
+ {"name":"dash walking","source":"dash pattern","stop":"walk","work":{"native":12,"typescript":11},"output":false},
+ {"name":"dash finish retains both runs","source":"dash pattern","stop":"finish","work":{"native":14,"typescript":13},"output":false},
+ {"name":"ready to outline","source":"butt cap","stop":"outline","work":{"native":13,"typescript":12},"output":false},
+ {"name":"queued polygon","source":"butt cap","stop":"queue","work":{"native":14,"typescript":13},"output":false},
+ {"name":"active round subdivision","source":"round cap","stop":"round","work":{"native":15,"typescript":14},"output":false},
+ {"name":"completed output handoff","source":"round cap","stop":"done","work":{"native":13,"typescript":12},"output":true},
+ {"name":"failed coordinate remains owned","source":"butt cap","stop":"failure","work":{"native":11,"typescript":10},"output":false},
+ {"name":"previous cancellation retains queued owner","source":"butt cap","stop":"cancelled","work":{"native":14,"typescript":13},"output":false},
+ {"name":"three prepared private contour owners","source":"butt cap","repeat":3,"stop":"source","work":{"native":16,"typescript":13},"output":false},
+ {"name":"three completed contour owners","source":"butt cap","repeat":3,"stop":"done","work":{"native":19,"typescript":16},"output":true},
+ {"name":"published picture survives later cancellation","source":"round cap","stop":"done","publishedBeforeCancel":true,"work":{"native":16,"typescript":12},"output":false},
+ {"name":"unpublished complete candidate is cancelled before handoff","source":"round cap","stop":"done","cancelBeforeTransfer":true,"work":{"native":16,"typescript":15},"output":false}
+]

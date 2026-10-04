@@ -79,6 +79,7 @@ Feature: Apply every typed semio ANIMATION mutation to the real committed walk c
       | remove-keyframe           | {"mutation":"removeKeyframe","timelineIndex":0,"channelIndex":0,"index":0}                                                                                                                                                                                                          |
       | set-keyframe-time         | {"mutation":"setKeyframeTime","timelineIndex":0,"channelIndex":1,"index":0,"t":0.25}                                                                                                                                                                                                |
       | set-keyframe-value        | {"mutation":"setKeyframeValue","timelineIndex":0,"channelIndex":2,"index":0,"value":{"kind":"weights","values":[0.25,0.5,0.75]}}                                                                                                                                                    |
+      | patch-snapshot | {"mutation": "patchSnapshot", "patch": {"operation": "set", "path": "/timelines/0/channels/1/interpolation", "value": "step"}} |
 
   @id-no-mutation-baseline-mutate
   @level-exhaustive
@@ -115,6 +116,7 @@ Feature: Apply every typed semio ANIMATION mutation to the real committed walk c
       | remove-keyframe           | {"mutation":"removeKeyframe","timelineIndex":0,"channelIndex":0,"index":0}                                                                                                                                                                                                          |
       | set-keyframe-time         | {"mutation":"setKeyframeTime","timelineIndex":0,"channelIndex":1,"index":0,"t":0.25}                                                                                                                                                                                                |
       | set-keyframe-value        | {"mutation":"setKeyframeValue","timelineIndex":0,"channelIndex":2,"index":0,"value":{"kind":"weights","values":[0.25,0.5,0.75]}}                                                                                                                                                    |
+      | patch-snapshot | {"mutation": "patchSnapshot", "patch": {"operation": "set", "path": "/timelines/0/channels/1/interpolation", "value": "step"}} |
 
   @id-no-mutation-baseline-inverse
   @level-exhaustive

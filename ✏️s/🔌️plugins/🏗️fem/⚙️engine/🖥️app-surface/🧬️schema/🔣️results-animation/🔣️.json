@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json.schemas.assets.semio-tech.com/fem/results-animation/schema.json",
+  "title": "FemResultsAnimation",
+  "description": "Deformation playback transport of ONE FEM results window (2D and 3D alike) — view state, never a document field: the resting phase, play/pause, speed in cycles per second, loop mode, waveform and the pingPong direction.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "phase",
+    "playing",
+    "speed",
+    "loopMode",
+    "waveform",
+    "reverse"
+  ],
+  "properties": {
+    "phase": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "playing": {
+      "type": "boolean"
+    },
+    "speed": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "loopMode": {
+      "$ref": "#/$defs/FemLoopMode"
+    },
+    "waveform": {
+      "$ref": "#/$defs/FemWaveform"
+    },
+    "reverse": {
+      "type": "boolean"
+    }
+  },
+  "$defs": {
+    "FemLoopMode": {
+      "type": "string",
+      "enum": [
+        "loop",
+        "pingPong",
+        "once"
+      ]
+    },
+    "FemWaveform": {
+      "type": "string",
+      "enum": [
+        "ramp",
+        "sine"
+      ]
+    }
+  }
+}

@@ -33,14 +33,12 @@ impl ArtifactSerializer for SemioAudioToMp3 {
             // fabrication is required to represent "no audio content".
             return Ok(Mp3Snapshot { schema: "stdio.mp3".into(), id3v2: None, frames: Vec::new(), id3v1: None });
         }
-        Err(store::PackError::Schema(
-            "audio→mp3 export requires encoding real f32 PCM samples into compressed MPEG Layer III \
+        Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "audio→mp3 export requires encoding real f32 PCM samples into compressed MPEG Layer III \
              frames (Huffman/MDCT psychoacoustic encoding); no MP3 encoder exists in this repository \
              and implementing one is out of scope for a snapshot-to-snapshot io bridge (zero codec \
              reimplementation) -- this is the honest mirror of mp3→audio's own opaque-payload boundary, \
              not a bug"
-                .to_string(),
-        ))
+                .to_string(),)))
     }
 }
 

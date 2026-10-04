@@ -6,7 +6,6 @@
 
 use crate::ShootingSnapshot;
 use schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::topology::compute_shooting_topology;
 //#region 🔖️Inference
@@ -25,8 +24,11 @@ pub struct ShootingInference {
 }
 
 impl protocol::Inference<ShootingSnapshot> for ShootingInference {
-    fn infer(snapshot: &ShootingSnapshot) -> Self {
+    fn infer(snapshot: &ShootingSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { topology: compute_shooting_topology(snapshot) }
+    
+        })
     }
 }
 
@@ -34,7 +36,9 @@ impl protocol::Inference<ShootingSnapshot> for ShootingInference {
 /// `ShootingSnapshot::default()` happens to contain.
 impl Default for ShootingInference {
     fn default() -> Self {
-        <Self as protocol::Inference<ShootingSnapshot>>::infer(&ShootingSnapshot::default())
+        let snapshot = &ShootingSnapshot::default();
+
+        Self { topology: compute_shooting_topology(snapshot) }
     }
 }
 
@@ -50,13 +54,6 @@ impl protocol::InferenceSpec<ShootingSnapshot> for ShootingInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::ShootingBuilderFacets {
-    type Snapshot = ShootingSnapshot;
-    type Inference = ShootingInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.shooting.shooting.inference`'s facet leaves into the OS-wide inference catalog

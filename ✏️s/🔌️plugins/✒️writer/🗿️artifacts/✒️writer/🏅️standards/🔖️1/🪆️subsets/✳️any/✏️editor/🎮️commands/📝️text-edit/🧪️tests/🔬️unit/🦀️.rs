@@ -21,7 +21,7 @@ fn loaded_document(result: &semio_framework_plugin::InvocationResult) -> WriterS
 
 /// ⌨️ One whole-text `textEdit` delivery of the main window's typing run.
 async fn type_text(app: &mut crate::editor::writer::unit_tests::context::WriterApp, text: &str, now_ms: u64) {
-    type_delivery(app, "textEdit", vec![("text".into(), dsl::DslValue::String(text.into()))], now_ms).await;
+    type_delivery(app, "textEdit", vec![("text".into(), semio_framework_value::DslValue::String(text.into()))], now_ms).await;
 }
 
 /// ⚖️ LAW (design §13.2): a typing burst is ONE run — nothing lands while it is open (the render reads it as the overlay), the

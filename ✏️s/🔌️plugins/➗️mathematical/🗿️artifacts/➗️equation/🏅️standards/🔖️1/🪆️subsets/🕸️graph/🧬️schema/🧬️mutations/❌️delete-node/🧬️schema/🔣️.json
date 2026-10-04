@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/graph/mutation/delete-node/schema.json",
   "title": "DeleteNode",
+  "x-semio-inverse-rows": { "bounded": 513 },
   "type": "object",
   "additionalProperties": false,
   "required": [

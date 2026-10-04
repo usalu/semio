@@ -352,7 +352,7 @@ impl SemioFlowSnapshotDecode {
 }
 
 impl ErasedSnapshotRetirement for SemioFlowSnapshotDecode {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if self.terminal {
             return Ok(SnapshotRetirementStep::Complete);
         }
@@ -366,8 +366,8 @@ impl ErasedSnapshotRetirement for SemioFlowSnapshotDecode {
                     self.active.take();
                     Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
-                SnapshotRetirementStep::Complete => Err("Flow decoder retirement reported false terminal".into()),
-                SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > 1 || released_bytes > maximum_bytes => Err("Flow decoder retirement exceeded grant".into()),
+                SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Flow decoder retirement reported false terminal")),
+                SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > 1 || released_bytes > maximum_bytes => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Flow decoder retirement exceeded grant")),
                 step => Ok(step),
             };
         }
@@ -381,7 +381,7 @@ impl ErasedSnapshotRetirement for SemioFlowSnapshotDecode {
                     self.request.take();
                     Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
-                SnapshotRetirementStep::Complete => Err("Flow decoder input reported false terminal".into()),
+                SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Flow decoder input reported false terminal")),
                 step => Ok(step),
             };
         }

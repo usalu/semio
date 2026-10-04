@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "owner",
+    "valueBudget",
+    "allocationBudget",
+    "scalarBytes",
+    "encodings",
+    "directions",
+    "grants"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "owner": {
+      "const": "wires"
+    },
+    "valueBudget": {
+      "const": "cumulativeSqlStorageClasses"
+    },
+    "allocationBudget": {
+      "const": "independentOwnedRequests"
+    },
+    "scalarBytes": {
+      "const": 8
+    },
+    "encodings": {
+      "const": [
+        "binary",
+        "text"
+      ]
+    },
+    "directions": {
+      "const": [
+        "decodeNative",
+        "encodeNative"
+      ]
+    },
+    "grants": {
+      "const": [
+        "exact",
+        "minusOne",
+        "zero"
+      ]
+    }
+  }
+}

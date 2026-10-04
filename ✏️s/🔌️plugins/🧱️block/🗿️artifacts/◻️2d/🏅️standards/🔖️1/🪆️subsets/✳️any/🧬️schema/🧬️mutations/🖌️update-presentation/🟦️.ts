@@ -1,10 +1,11 @@
+import type {Binary64} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 /** 🖌️ `UpdatePresentation` mutation payload — mirrors `🦀️.rs`. */
 
 export interface UpdatePresentation {
-  newShape?: string;
-  newRadius?: number;
-  newWidth?: number;
-  newHeight?: number;
-  newColor?: string;
-  newIconKind?: string;
+  newShape: string|null;
+  newRadius: Binary64|null;
+  newWidth: Binary64|null;
+  newHeight: Binary64|null;
+  newColor: string|null;
+  newIconKind: string|null;
 }

@@ -4,7 +4,7 @@ async fn pdf_page_text_vectors_match_the_json_oracle() {
     let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️page-text.json")).unwrap();
     for vector in vectors["cases"].as_array().unwrap() {
         let value = serde_json::json!({"schema":"stdio.pdf","pages":vector["pages"]});
-        let pdf: PdfSnapshot = dsl::os_pack::json::from_json_str(&value.to_string()).unwrap();
+        let pdf: PdfSnapshot = semio_framework_pack_json::from_json_str(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&pdf);
         let outcome = PdfIntoWriter::deserialize(&IoPayload::Binary(bytes)).await.expect("deserialize");
         assert_eq!(crate::writer_text(&outcome.value), vector["expected"].as_str().unwrap(), "{}", vector["name"]);

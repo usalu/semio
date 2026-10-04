@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/raster/raster/mutation/fill-region/schema.json",
   "title": "FillRegion",
+  "x-semio-inverse-rows": { "bounded": 3 },
   "description": "One bucket fill on a layer's pixels or on its mask, stated as its intent: the layer, the target, the seed pixel, the colour tolerance, the fill colour and the selection the region is clipped to. Every application floods the 4-connected region of pixels whose channels lie within the tolerance of the seed's, fills it and files the filled image as a new content-addressed asset; a fill that changes no pixel is `mutation.no-op`, a missing layer or image is `mutation.target-missing`, a locked layer, a layer without pixels, a mask target without a mask, a seed outside the image or a selection past it is `mutation.target-mismatch`.",
   "x-semio-invariant": [
     {

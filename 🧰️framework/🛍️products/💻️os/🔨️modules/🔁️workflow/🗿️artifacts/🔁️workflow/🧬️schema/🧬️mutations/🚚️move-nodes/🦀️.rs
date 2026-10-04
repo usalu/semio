@@ -5,7 +5,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Payload
 /// 🚚️ One node-graph drag as intent (the node-graph gesture record of design §13.3): the canvas offset every addressed
 /// workflow node moves by from its BASE position, so editing the drag in history replays it on any base.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "move-nodes")]
@@ -35,9 +35,9 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for MoveNodes {
         if positions.is_empty() {
             return protocol::MutationOutcome::error("mutation.target-missing", format!("none of the {} workflow node(s) exists", self.node_ids.len()), missing);
         }
-        let partial = (!missing.is_empty()).then(|| protocol::MutationMessage::warn("mutation.partial", format!("{} of {} node(s) skipped (no such node): {}", missing.len(), self.node_ids.len(), missing.join(", "))).at(missing));
+        let partial = (!missing.is_empty()).then(|| protocol::MutationMessage::warning("mutation.partial", format!("{} of {} node(s) skipped (no such node): {}", missing.len(), self.node_ids.len(), missing.join(", "))).at(missing));
         if (self.dx, self.dy) == (0.0, 0.0) {
-            return protocol::MutationOutcome::empty().absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warn("mutation.no-op", "the drag offset is zero").at(self.node_ids.clone())]));
+            return protocol::MutationOutcome::empty().absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "the drag offset is zero").at(self.node_ids.clone())]));
         }
         if positions.iter().any(|position| !position.x.is_finite() || !position.y.is_finite()) {
             return protocol::MutationOutcome::error("mutation.target-mismatch", "the moved position leaves the finite canvas", self.node_ids.clone());
@@ -45,7 +45,8 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for MoveNodes {
         protocol::MutationOutcome::new(WorkflowDiff::PlaceNodes { positions }).absorb_messages(partial)
     }
     /// ↩️ ONE absolute `set-node-positions` row with every moved node's BASE position — never a negated offset.
-    fn inverse(&self, base: &WorkflowSnapshot) -> Vec<WorkflowMutation> {
+    fn inverse(&self, base: &WorkflowSnapshot) -> Result<Vec<WorkflowMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         if workflow_targets_invariant(&self.node_ids).is_err() || !self.dx.is_finite() || !self.dy.is_finite() || (self.dx, self.dy) == (0.0, 0.0) {
             return Vec::new();
         }
@@ -54,7 +55,9 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for MoveNodes {
             return Vec::new();
         }
         vec![WorkflowMutation::SetNodePositions(super::super::SetNodePositions { positions })]
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let [(x_en, x_de), (y_en, y_de)] = [self.dx, self.dy].map(workflow_label_number);
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Move {} workflow node(s) by ({x_en}, {y_en})", self.node_ids.len()), &format!("{} Arbeitsablaufknoten um ({x_de}; {y_de}) verschieben", self.node_ids.len()))

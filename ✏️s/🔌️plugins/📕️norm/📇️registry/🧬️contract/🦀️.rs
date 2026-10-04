@@ -82,7 +82,7 @@ impl std::error::Error for PackageSchemaError {}
 
 /// 🧬 Parses and validates one artifact-local package declaration.
 pub fn package_from_schema(source: &str) -> Result<NormArtifactPackage, PackageSchemaError> {
-    let parsed = pack::json::from_json_str::<PackageSource>(source).map_err(|error| PackageSchemaError(error.to_string()))?;
+    let parsed = semio_framework_pack_json::from_json_str::<PackageSource>(source, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| PackageSchemaError(error.to_string()))?;
     let expected_id = format!("s.norm.{}", parsed.artifact);
     let expected_rust = format!("semio-s-artifact-norm-{}", parsed.artifact);
     let expected_nx = format!("@semio-tech/norm-{}-rs", parsed.artifact);
@@ -129,7 +129,7 @@ pub mod payload_op_binary {
         let tag = dsl::protocol_record::records(protocol_semio).find(|(record, _)| *record == kind).map(|(_, tag)| tag).ok_or_else(|| malformed("op tag", 1, format!("📡️.protocol.semio declares no record for '{kind}'")))?;
         let tag = u8::try_from(tag).map_err(|_| malformed("op tag", 1, format!("record '{kind}' tag {tag} exceeds the u8 tag field")))?;
         let mut out = vec![dsl::variants_binary::OP_BINARY_FORMAT, tag];
-        out.extend_from_slice(pack::json::to_json_string(&op.payload_value()).as_bytes());
+        out.extend_from_slice(semio_framework_pack_json::to_json_string(&op.payload_value()).as_bytes());
         Ok(out)
     }
 
@@ -143,7 +143,7 @@ pub mod payload_op_binary {
         let (&tag, body) = rest.split_first().ok_or_else(|| malformed("op tag", 1, "the op carries no tag".into()))?;
         let kind = dsl::protocol_record::kind(protocol_semio, u64::from(tag)).ok_or_else(|| malformed("op tag", 1, format!("📡️.protocol.semio declares no record with tag {tag}")))?;
         let text = std::str::from_utf8(body).map_err(|error| malformed("op payload", 2, error.to_string()))?;
-        let payload: dsl::DslValue = pack::json::from_json_str(text).map_err(|error| malformed("op payload", 2, error.to_string()))?;
+        let payload: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| malformed("op payload", 2, error.to_string()))?;
         let op = M::from_payload_value(kind, payload).map_err(|error| malformed("op payload", 2, error.to_string()))?;
         if encode::<S, M>(protocol_semio, &op)? != bytes {
             return Err(malformed("op encoding", 0, "the op bytes are not canonical".into()));

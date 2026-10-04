@@ -2460,8 +2460,43 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     let empty = Json::Object(Vec::new());
     let params = spec.get("params").unwrap_or(&empty);
     let (mut doc, bin) = read_glb(input)?;
-    apply(&mut doc, &kind, params)?;
+    if kind == "patch-snapshot" {
+        doc = patched_document(&doc, params.get("patch").ok_or("patch-snapshot carries no `patch`")?)?;
+    } else {
+        apply(&mut doc, &kind, params)?;
+    }
     Ok(write_glb(&doc, bin.as_deref()))
+}
+
+/// 🩹️ The glTF JSON chunk with a `patch-snapshot` row's one pointer operation applied — the row addresses the snapshot's
+/// `/document`, which IS that chunk, so its pointer is read relative to it (`semio_repo_test_host::law::patched_snapshot`).
+/// glTF omits a property that holds its default, so setting an omitted object member adds it.
+#[cfg(feature = "oracles")]
+fn patched_document(doc: &json::JsonValue, patch: &Json) -> Result<json::JsonValue, String> {
+    let Json::Object(members) = patch else { return Err("patch-snapshot: the patch is not an object".to_string()) };
+    let relative = |key: &str| -> Result<Json, String> {
+        let pointer = patch.str(key);
+        pointer.strip_prefix("/document").map(|inner| Json::String(inner.to_string())).ok_or_else(|| format!("patch-snapshot {key} {pointer} reaches past the glTF JSON document this oracle reads"))
+    };
+    let mut rebased = Vec::with_capacity(members.len());
+    for (key, value) in members {
+        rebased.push((key.clone(), if key == "path" || key == "from" { relative(key)? } else { value.clone() }));
+    }
+    let host = to_host_json(doc);
+    let inner = patch.str("path").trim_start_matches("/document").to_string();
+    let omitted = inner.rsplit_once('/').is_some_and(|(parent, key)| {
+        let parent = parent.split('/').skip(1).try_fold(&host, |node, segment| match node {
+            Json::Object(_) => node.get(&segment.replace("~1", "/").replace("~0", "~")),
+            Json::Array(items) => segment.parse::<usize>().ok().and_then(|index| items.get(index)),
+            _ => None,
+        });
+        matches!(parent, Some(Json::Object(_))) && parent.and_then(|parent| parent.get(&key.replace("~1", "/").replace("~0", "~"))).is_none()
+    });
+    if patch.str("operation") == "set" && omitted {
+        rebased.iter_mut().filter(|(key, _)| key == "operation").for_each(|(_, value)| *value = Json::String("insert".to_string()));
+    }
+    let patched = semio_repo_test_host::law::patched_snapshot(&host, &Json::Object(rebased))?;
+    json::parse(&patched.to_string()).map_err(|error| format!("patch-snapshot: the patched document is not JSON: {error}"))
 }
 #[cfg(not(feature = "oracles"))]
 pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {

@@ -35,7 +35,7 @@ async fn config_mutation_snapshot_replaces_wholesale_and_inverse_restores() {
     let mutation = SpaceIndexConfigMutation::Snapshot { config: next.clone() };
     let forward = mutation.diff(&base).diff().clone();
     assert_eq!(forward, next);
-    let backwards = mutation.inverse(&base);
+    let backwards = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(backwards, vec![SpaceIndexConfigMutation::Snapshot { config: base.clone() }]);
     let restored = backwards[0].diff(&forward).diff().clone();
     assert_eq!(restored, base);

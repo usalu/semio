@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ReorderSteps, base: &Process3dSnapshot) -> protocol
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Step \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if from == payload.to_index {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Step \"{}\" is already at position #{}.", payload.id, payload.to_index));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Step \"{}\" is already at position #{}.", payload.id, payload.to_index));
     }
     let mut steps = base.step_payloads.clone();
     let step = steps.remove(from);

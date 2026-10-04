@@ -29,9 +29,12 @@ impl MutationKind<Generation2dSnapshot, Generation2dMutation> for MoveNodes {
     fn diff(&self, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Generation2dSnapshot) -> Vec<Generation2dMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &Generation2dSnapshot) -> Result<Vec<Generation2dMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let [(x_en, x_de), (y_en, y_de)] = [self.dx, self.dy].map(generation2d_label_number);
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Move {} node(s) by ({x_en}, {y_en})", self.ids.len()), &format!("{} Knoten um ({x_de}; {y_de}) verschieben", self.ids.len()))

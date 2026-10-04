@@ -6,14 +6,11 @@
 //! `equation-mutation-semantics` (`../../🔮️oracles/🔣️.json`, which also records why
 //! `petgraph` and the external CAS candidates were surveyed and DECLINED).
 //!
-//! ⚠️ The consequence is measured rather than described: three of this subset's four kinds have no
-//! forward vector. `remove-point` and `move-point` carry REJECTION vectors
-//! (`mutation.target-missing`) and `replace-points` carries an `applied`-but-`mutation.no-op`
-//! vector, because this subset's own snapshot no longer holds the point cloud inline: ticket
-//! UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM moved it into a composed `results` child no fixture can
-//! resolve. `insert-point` is the one real vector: it seeds the empty cloud with its first point,
-//! the one index-addressed verb whose inverse (`remove-point` at the same index) is exercised end
-//! to end here. The three without forward evidence are listed by name in `UNOBSERVABLE` below.
+//! ⚠️ The snapshot holds the point cloud INLINE (model (a), design §20.15), so the vectors are forward evidence where their
+//! scenario applies: `insert-point` seeds the empty cloud (its inverse is `remove-point` at the same index), `move-points`
+//! drags two points by an offset and `set-point-positions` puts them back (each the other's exact undo). `remove-point`
+//! carries a REJECTION vector (`mutation.target-missing`) and `replace-points` an `applied`-but-`mutation.no-op` vector; those
+//! two are listed by name in `UNOBSERVABLE` below.
 //!
 //! **Where the assertions live.** A recorded no-oracle case runs NO oracle role — the runner resolves
 //! an oracle implementation from the feature's `@oracle-` tag and this feature has none — so every law
@@ -30,11 +27,11 @@ use semio_repo_test_host::{parse_json, Adapter, Context, Json, Outcome};
 /// imported, because the oracle-only build must not link the subject crate. The contract's
 /// mutation-coverage gate keeps this list honest against the catalog, and that file's own
 /// `kinds_match_the_enum_and_the_catalog` keeps it honest against both the enum and the manifest.
-const KINDS: &[&str] = &["replace-points", "insert-point", "remove-point", "move-point"];
+const KINDS: &[&str] = &["replace-points", "insert-point", "remove-point", "move-points", "set-point-positions"];
 
 /// 👁️ Kinds whose COMMITTED specification vector cannot exhibit a forward effect, so
 /// [`law::mutation_is_observable`] must not demand one of them.
-const UNOBSERVABLE: &[&str] = &["replace-points", "remove-point", "move-point"];
+const UNOBSERVABLE: &[&str] = &["replace-points", "remove-point"];
 
 //#endregion 🔖️Kinds
 
@@ -77,12 +74,19 @@ fn vector(kind: &str) -> Vector {
             diff: None,
             outcome: include_str!("../../../📐️geometry/🧫️fixtures/🧬️mutations/➖️remove-point/🧪️rejects/🎯️outcome/🔣️.json"),
         },
-        "move-point" => Vector {
-            before: include_str!("../../../📐️geometry/🧫️fixtures/🧬️mutations/🎯️move-point/🧪️rejects/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../../📐️geometry/🧫️fixtures/🧬️mutations/🎯️move-point/🧪️rejects/🦠️mutation/🔣️.json"),
-            after: include_str!("../../../📐️geometry/🧫️fixtures/🧬️mutations/🎯️move-point/🧪️rejects/📸️snapshot/➡️after/🔣️.json"),
-            diff: None,
-            outcome: include_str!("../../../📐️geometry/🧫️fixtures/🧬️mutations/🎯️move-point/🧪️rejects/🎯️outcome/🔣️.json"),
+        "move-points" => Vector {
+            before: include_str!("../../../📐️geometry/🧫️fixtures/🧬️mutations/🎯️move-points/🧪️translates/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../../📐️geometry/🧫️fixtures/🧬️mutations/🎯️move-points/🧪️translates/🦠️mutation/🔣️.json"),
+            after: include_str!("../../../📐️geometry/🧫️fixtures/🧬️mutations/🎯️move-points/🧪️translates/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../../📐️geometry/🧫️fixtures/🧬️mutations/🎯️move-points/🧪️translates/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../../📐️geometry/🧫️fixtures/🧬️mutations/🎯️move-points/🧪️translates/🎯️outcome/🔣️.json"),
+        },
+        "set-point-positions" => Vector {
+            before: include_str!("../../../📐️geometry/🧫️fixtures/🧬️mutations/📌️set-point-positions/🧪️restores/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../../📐️geometry/🧫️fixtures/🧬️mutations/📌️set-point-positions/🧪️restores/🦠️mutation/🔣️.json"),
+            after: include_str!("../../../📐️geometry/🧫️fixtures/🧬️mutations/📌️set-point-positions/🧪️restores/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../../📐️geometry/🧫️fixtures/🧬️mutations/📌️set-point-positions/🧪️restores/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../../📐️geometry/🧫️fixtures/🧬️mutations/📌️set-point-positions/🧪️restores/🎯️outcome/🔣️.json"),
         },
         other => panic!("mutate-equation-1-geometry: no committed specification vector is registered for kind {other:?}"),
     }
@@ -243,7 +247,7 @@ pub fn adapter() -> Adapter {
         built = built.oracle(&format!("mutate-{kind}"), mutate_oracle_for(kind)).oracle(&format!("inverse-{kind}"), inverse_oracle_for(kind));
         #[cfg(feature = "sut")]
         {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind)).subject(&format!("inverse-{kind}"), subject::inverse(kind));
+            built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind)).subject(&format!("inverse-{kind}"), subject::inverse(kind).expect("valid retained mutation inverse fixture"));
         }
     }
     built

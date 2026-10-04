@@ -355,7 +355,7 @@
       "forbiddenRules": {
         "edge": [
           "io-renderer-independent",
-          "framework-modules-no-products"
+          "framework-no-products"
         ]
       }
     },
@@ -768,7 +768,7 @@
       ],
       "forbiddenRules": {
         "upward": [
-          "framework-modules-no-products"
+          "framework-no-products"
         ]
       }
     },
@@ -788,7 +788,7 @@
       ],
       "forbiddenRules": {
         "upward": [
-          "framework-modules-no-products"
+          "framework-no-products"
         ]
       }
     },
@@ -808,7 +808,7 @@
       ],
       "forbiddenRules": {
         "upward": [
-          "framework-modules-no-products"
+          "framework-no-products"
         ]
       }
     },
@@ -828,7 +828,7 @@
       ],
       "forbiddenRules": {
         "upward": [
-          "framework-modules-no-products"
+          "framework-no-products"
         ]
       }
     },
@@ -848,7 +848,7 @@
       ],
       "forbiddenRules": {
         "upward": [
-          "framework-modules-no-products"
+          "framework-no-products"
         ]
       }
     },
@@ -868,7 +868,7 @@
       ],
       "forbiddenRules": {
         "upward": [
-          "framework-modules-no-products"
+          "framework-no-products"
         ]
       }
     },
@@ -888,7 +888,7 @@
       ],
       "forbiddenRules": {
         "upward": [
-          "framework-modules-no-products"
+          "framework-no-products"
         ]
       }
     },
@@ -909,7 +909,7 @@
       ],
       "forbiddenRules": {
         "upward": [
-          "framework-modules-no-products"
+          "framework-no-products"
         ]
       }
     },
@@ -930,7 +930,7 @@
       ],
       "forbiddenRules": {
         "upward": [
-          "framework-modules-no-products"
+          "framework-no-products"
         ]
       }
     },
@@ -952,7 +952,7 @@
       ],
       "forbiddenRules": {
         "upward": [
-          "framework-modules-no-products"
+          "framework-no-products"
         ]
       }
     },
@@ -987,7 +987,7 @@
       ],
       "forbiddenRules": {
         "upward": [
-          "framework-modules-no-products"
+          "framework-no-products"
         ]
       }
     },
@@ -1015,6 +1015,274 @@
           "syntax": "static"
         }
       ],
+      "forbidden": []
+    },
+    {
+      "id": "framework-package-glue-static-product",
+      "from": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts",
+          "reference": "relative",
+          "syntax": "static"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ],
+      "forbiddenRules": {
+        "edge": [
+          "framework-no-products"
+        ]
+      }
+    },
+    {
+      "id": "framework-package-glue-type-product",
+      "from": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts",
+          "reference": "relative",
+          "syntax": "type"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ],
+      "forbiddenRules": {
+        "edge": [
+          "framework-no-products"
+        ]
+      }
+    },
+    {
+      "id": "framework-package-glue-dynamic-product",
+      "from": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts",
+          "reference": "relative",
+          "syntax": "dynamic"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ],
+      "forbiddenRules": {
+        "edge": [
+          "framework-no-products"
+        ]
+      }
+    },
+    {
+      "id": "framework-package-glue-export-product",
+      "from": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts",
+          "reference": "relative",
+          "syntax": "export"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ],
+      "forbiddenRules": {
+        "edge": [
+          "framework-no-products"
+        ]
+      }
+    },
+    {
+      "id": "framework-package-glue-require-product",
+      "from": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts",
+          "reference": "relative",
+          "syntax": "require"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ],
+      "forbiddenRules": {
+        "edge": [
+          "framework-no-products"
+        ]
+      }
+    },
+    {
+      "id": "framework-package-glue-export-all-product",
+      "from": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts",
+          "reference": "relative",
+          "syntax": "export-all"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ],
+      "forbiddenRules": {
+        "edge": [
+          "framework-no-products"
+        ]
+      }
+    },
+    {
+      "id": "framework-package-glue-installed-product",
+      "from": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts",
+          "reference": "package",
+          "syntax": "static",
+          "package": "@semio-tech/framework-os"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ],
+      "forbiddenRules": {
+        "edge": [
+          "framework-no-products"
+        ]
+      }
+    },
+    {
+      "id": "framework-package-glue-product-subpath",
+      "from": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts",
+          "reference": "package-subpath",
+          "syntax": "export",
+          "package": "@semio-tech/framework-os"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ],
+      "forbiddenRules": {
+        "edge": [
+          "framework-no-products"
+        ]
+      }
+    },
+    {
+      "id": "framework-package-glue-unresolved-product",
+      "from": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts",
+          "reference": "unresolved-package",
+          "syntax": "type",
+          "package": "@semio-tech/framework-os"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ],
+      "forbiddenRules": {
+        "edge": [
+          "framework-no-products"
+        ]
+      }
+    },
+    {
+      "id": "framework-package-glue-store-installed-product",
+      "from": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts",
+          "reference": "package",
+          "syntax": "dynamic",
+          "package": "@semio-tech/framework-os",
+          "installation": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/node_modules/.bun/framework-os@1/node_modules/@semio-tech/framework-os"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ],
+      "forbiddenRules": {
+        "edge": [
+          "framework-no-products"
+        ]
+      }
+    },
+    {
+      "id": "framework-package-glue-static-neutral-module",
+      "from": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🧰️framework/🔨️modules/📡️replication/🟦️.ts",
+          "reference": "relative",
+          "syntax": "static"
+        }
+      ],
+      "forbidden": []
+    },
+    {
+      "id": "framework-package-glue-export-neutral-module",
+      "from": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🧰️framework/🔨️modules/📡️replication/🟦️.ts",
+          "reference": "relative",
+          "syntax": "export"
+        }
+      ],
+      "forbidden": []
+    },
+    {
+      "id": "framework-package-glue-export-all-neutral-module",
+      "from": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🧰️framework/🔨️modules/📡️replication/🟦️.ts",
+          "reference": "relative",
+          "syntax": "export-all"
+        }
+      ],
+      "forbidden": []
+    },
+    {
+      "id": "framework-package-glue-neutral-package",
+      "from": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+          "reference": "package",
+          "syntax": "type",
+          "package": "@semio-tech/framework"
+        }
+      ],
+      "forbidden": []
+    },
+    {
+      "id": "framework-package-glue-comment-product",
+      "from": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+      "comments": [
+        "export * from \"🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts\";",
+        "import \"@semio-tech/framework-os\";"
+      ],
+      "dependencies": [],
       "forbidden": []
     }
   ],
@@ -1248,6 +1516,30 @@
       "expectedSources": [
         "🧰️framework/a.ts"
       ]
+    },
+    {
+      "id": "canonical-neutral-role-includes-module-and-package-glue",
+      "sourceRole": "framework-neutral",
+      "roots": [
+        "🧰️framework/🔨️modules",
+        "🧰️framework/📦️packages"
+      ],
+      "files": [
+        "🧰️framework/🔨️modules/📡️replication/🟦️.ts",
+        "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+        "🧰️framework/📦️packages/🟦️typescript/📜️script.ts",
+        "🧰️framework/📦️packages/🟦️typescript/schema.json",
+        "🧰️framework/📦️packages/🟦️typescript/🧪️tests/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts"
+      ],
+      "links": [],
+      "expectedSources": [
+        "🧰️framework/📦️packages/🟦️typescript/📜️script.ts",
+        "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+        "🧰️framework/📦️packages/🟦️typescript/🧪️tests/🟦️.ts",
+        "🧰️framework/🔨️modules/📡️replication/🟦️.ts"
+      ],
+      "accept": true
     }
   ],
   "resolutionCases": [
@@ -1504,81 +1796,167 @@
   ],
   "publicExportCases": [
     {
-      "id": "owner-public-spec-subpath",
-      "owner": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript",
-      "specifier": "@semio-tech/mit-bestand-praesentation-projektetage/spec",
+      "id": "synthetic-root-import",
+      "owner": "🧰️framework/🔨️modules/🧪️synthetic-public/📦️packages/🟦️typescript",
+      "specifier": "@semio-test/public-artifact",
       "accept": true,
       "conditions": [
         "import",
         "require",
         "node",
         "default"
-      ]
+      ],
+      "target": "./dist/index.js",
+      "manifest": {
+        "name": "@semio-test/public-artifact",
+        "private": true,
+        "type": "module",
+        "exports": {
+          ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js"
+          },
+          "./schema": {
+            "types": "./dist/schema.d.ts",
+            "import": "./dist/schema.js"
+          },
+          "./source": {
+            "semio-source": "./source.ts",
+            "import": "./dist/index.js"
+          }
+        }
+      },
+      "files": {
+        "./dist/index.js": "export const value = 1;\n",
+        "./dist/index.d.ts": "export declare const value: number;\n",
+        "./dist/schema.js": "export const value = 2;\n",
+        "./dist/schema.d.ts": "export declare const value: number;\n",
+        "./source.ts": "export const value = 3;\n"
+      }
     },
     {
-      "id": "owner-undeclared-private-subpath",
-      "owner": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript",
-      "specifier": "@semio-tech/mit-bestand-praesentation-projektetage/private",
-      "accept": false,
+      "id": "synthetic-root-types",
+      "owner": "🧰️framework/🔨️modules/🧪️synthetic-public/📦️packages/🟦️typescript",
+      "specifier": "@semio-test/public-artifact",
+      "accept": true,
       "conditions": [
+        "types",
         "import",
         "require",
         "node",
         "default"
-      ]
+      ],
+      "target": "./dist/index.d.ts",
+      "manifest": {
+        "name": "@semio-test/public-artifact",
+        "private": true,
+        "type": "module",
+        "exports": {
+          ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js"
+          },
+          "./schema": {
+            "types": "./dist/schema.d.ts",
+            "import": "./dist/schema.js"
+          },
+          "./source": {
+            "semio-source": "./source.ts",
+            "import": "./dist/index.js"
+          }
+        }
+      },
+      "files": {
+        "./dist/index.js": "export const value = 1;\n",
+        "./dist/index.d.ts": "export declare const value: number;\n",
+        "./dist/schema.js": "export const value = 2;\n",
+        "./dist/schema.d.ts": "export declare const value: number;\n",
+        "./source.ts": "export const value = 3;\n"
+      }
     },
     {
-      "id": "owner-pseudo-package-refused",
-      "owner": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript",
-      "specifier": "@semio-tech/mit-bestand-praesentation-projektetage-spec",
-      "accept": false,
-      "conditions": [
-        "import",
-        "require",
-        "node",
-        "default"
-      ]
-    },
-    {
-      "id": "ui-authored-chrome-subpath",
-      "owner": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript",
-      "specifier": "@semio-tech/ui-react/chrome",
+      "id": "synthetic-declared-subpath",
+      "owner": "🧰️framework/🔨️modules/🧪️synthetic-public/📦️packages/🟦️typescript",
+      "specifier": "@semio-test/public-artifact/schema",
       "accept": true,
       "conditions": [
         "import",
         "require",
         "node",
         "default"
-      ]
+      ],
+      "target": "./dist/schema.js",
+      "manifest": {
+        "name": "@semio-test/public-artifact",
+        "private": true,
+        "type": "module",
+        "exports": {
+          ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js"
+          },
+          "./schema": {
+            "types": "./dist/schema.d.ts",
+            "import": "./dist/schema.js"
+          },
+          "./source": {
+            "semio-source": "./source.ts",
+            "import": "./dist/index.js"
+          }
+        }
+      },
+      "files": {
+        "./dist/index.js": "export const value = 1;\n",
+        "./dist/index.d.ts": "export declare const value: number;\n",
+        "./dist/schema.js": "export const value = 2;\n",
+        "./dist/schema.d.ts": "export declare const value: number;\n",
+        "./source.ts": "export const value = 3;\n"
+      }
     },
     {
-      "id": "ui-authored-i18n-subpath",
-      "owner": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript",
-      "specifier": "@semio-tech/ui-react/i18n",
+      "id": "synthetic-declared-types",
+      "owner": "🧰️framework/🔨️modules/🧪️synthetic-public/📦️packages/🟦️typescript",
+      "specifier": "@semio-test/public-artifact/schema",
       "accept": true,
       "conditions": [
+        "types",
         "import",
         "require",
         "node",
         "default"
-      ]
+      ],
+      "target": "./dist/schema.d.ts",
+      "manifest": {
+        "name": "@semio-test/public-artifact",
+        "private": true,
+        "type": "module",
+        "exports": {
+          ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js"
+          },
+          "./schema": {
+            "types": "./dist/schema.d.ts",
+            "import": "./dist/schema.js"
+          },
+          "./source": {
+            "semio-source": "./source.ts",
+            "import": "./dist/index.js"
+          }
+        }
+      },
+      "files": {
+        "./dist/index.js": "export const value = 1;\n",
+        "./dist/index.d.ts": "export declare const value: number;\n",
+        "./dist/schema.js": "export const value = 2;\n",
+        "./dist/schema.d.ts": "export declare const value: number;\n",
+        "./source.ts": "export const value = 3;\n"
+      }
     },
     {
-      "id": "puzzle-artifact-owned-session",
-      "owner": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🟦️typescript",
-      "specifier": "@semio-tech/puzzle-2d",
-      "accept": true,
-      "conditions": [
-        "import",
-        "require",
-        "node",
-        "default"
-      ]
-    },
-    {
-      "id": "sequence-authored-source-condition",
-      "owner": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📦️packages/🟦️typescript",
-      "specifier": "@semio-tech/sequence-sequence",
+      "id": "synthetic-source-condition",
+      "owner": "🧰️framework/🔨️modules/🧪️synthetic-public/📦️packages/🟦️typescript",
+      "specifier": "@semio-test/public-artifact/source",
       "accept": true,
       "conditions": [
         "semio-source",
@@ -1587,14 +1965,116 @@
         "node",
         "default"
       ],
-      "target": "./🟦️.ts"
+      "target": "./source.ts",
+      "manifest": {
+        "name": "@semio-test/public-artifact",
+        "private": true,
+        "type": "module",
+        "exports": {
+          ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js"
+          },
+          "./schema": {
+            "types": "./dist/schema.d.ts",
+            "import": "./dist/schema.js"
+          },
+          "./source": {
+            "semio-source": "./source.ts",
+            "import": "./dist/index.js"
+          }
+        }
+      },
+      "files": {
+        "./dist/index.js": "export const value = 1;\n",
+        "./dist/index.d.ts": "export declare const value: number;\n",
+        "./dist/schema.js": "export const value = 2;\n",
+        "./dist/schema.d.ts": "export declare const value: number;\n",
+        "./source.ts": "export const value = 3;\n"
+      }
+    },
+    {
+      "id": "synthetic-private-subpath",
+      "owner": "🧰️framework/🔨️modules/🧪️synthetic-public/📦️packages/🟦️typescript",
+      "specifier": "@semio-test/public-artifact/private",
+      "accept": false,
+      "conditions": [
+        "import",
+        "require",
+        "node",
+        "default"
+      ],
+      "manifest": {
+        "name": "@semio-test/public-artifact",
+        "private": true,
+        "type": "module",
+        "exports": {
+          ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js"
+          },
+          "./schema": {
+            "types": "./dist/schema.d.ts",
+            "import": "./dist/schema.js"
+          },
+          "./source": {
+            "semio-source": "./source.ts",
+            "import": "./dist/index.js"
+          }
+        }
+      },
+      "files": {
+        "./dist/index.js": "export const value = 1;\n",
+        "./dist/index.d.ts": "export declare const value: number;\n",
+        "./dist/schema.js": "export const value = 2;\n",
+        "./dist/schema.d.ts": "export declare const value: number;\n",
+        "./source.ts": "export const value = 3;\n"
+      }
+    },
+    {
+      "id": "synthetic-pseudo-package",
+      "owner": "🧰️framework/🔨️modules/🧪️synthetic-public/📦️packages/🟦️typescript",
+      "specifier": "@semio-tech/synthetic-pseudo",
+      "accept": false,
+      "conditions": [
+        "import",
+        "require",
+        "node",
+        "default"
+      ],
+      "manifest": {
+        "name": "@semio-test/public-artifact",
+        "private": true,
+        "type": "module",
+        "exports": {
+          ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js"
+          },
+          "./schema": {
+            "types": "./dist/schema.d.ts",
+            "import": "./dist/schema.js"
+          },
+          "./source": {
+            "semio-source": "./source.ts",
+            "import": "./dist/index.js"
+          }
+        }
+      },
+      "files": {
+        "./dist/index.js": "export const value = 1;\n",
+        "./dist/index.d.ts": "export declare const value: number;\n",
+        "./dist/schema.js": "export const value = 2;\n",
+        "./dist/schema.d.ts": "export declare const value: number;\n",
+        "./source.ts": "export const value = 3;\n"
+      }
     }
   ],
   "typeCases": [
     {
-      "id": "jack-query-result-valid-table",
-      "source": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️ast/🟦️.ts",
-      "name": "QueryResult",
+      "id": "neutral-wire-valid-table",
+      "declaration": "export type WireValue = null | boolean | number | string | readonly WireValue[] | { readonly [key: string]: WireValue };\nexport type WireDocument = { readonly kind: 'table'; readonly columns: readonly string[]; readonly rows: readonly (readonly WireValue[])[] } | { readonly kind: 'scalar'; readonly value: WireValue };\n",
+      "name": "WireDocument",
       "value": {
         "kind": "table",
         "columns": [
@@ -1617,9 +2097,9 @@
       "accept": true
     },
     {
-      "id": "jack-query-result-invalid-kind",
-      "source": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️ast/🟦️.ts",
-      "name": "QueryResult",
+      "id": "neutral-wire-invalid-kind",
+      "declaration": "export type WireValue = null | boolean | number | string | readonly WireValue[] | { readonly [key: string]: WireValue };\nexport type WireDocument = { readonly kind: 'table'; readonly columns: readonly string[]; readonly rows: readonly (readonly WireValue[])[] } | { readonly kind: 'scalar'; readonly value: WireValue };\n",
+      "name": "WireDocument",
       "value": {
         "kind": "missing",
         "columns": [],
@@ -1628,9 +2108,9 @@
       "accept": false
     },
     {
-      "id": "jack-query-result-invalid-row",
-      "source": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️ast/🟦️.ts",
-      "name": "QueryResult",
+      "id": "neutral-wire-invalid-row",
+      "declaration": "export type WireValue = null | boolean | number | string | readonly WireValue[] | { readonly [key: string]: WireValue };\nexport type WireDocument = { readonly kind: 'table'; readonly columns: readonly string[]; readonly rows: readonly (readonly WireValue[])[] } | { readonly kind: 'scalar'; readonly value: WireValue };\n",
+      "name": "WireDocument",
       "value": {
         "kind": "table",
         "columns": [],
@@ -1643,214 +2123,508 @@
   ],
   "infrastructureCases": [
     {
-      "owner": "✏️s/🔌️plugins/✒️writer/📦️packages/🟦️typescript",
-      "name": "@semio-tech/writer-js",
+      "id": "private-command-only-test",
+      "owner": "🧰️framework/🔨️modules/🧪️synthetic-command/📦️packages/🟦️typescript",
+      "name": "@semio-test/command-owner",
       "commands": [
         "test"
-      ]
+      ],
+      "manifest": {
+        "name": "@semio-test/command-owner",
+        "private": true,
+        "type": "module",
+        "scripts": {
+          "test": "bun nx run @semio-test/command-owner:test"
+        }
+      },
+      "scriptSource": "router.register(\"test\", OwnedCommand);",
+      "entrySourcePresent": false,
+      "project": {
+        "targets": {
+          "test": {
+            "executor": "nx:run-commands",
+            "options": {
+              "command": "bun ./📜️script.ts test"
+            }
+          }
+        }
+      },
+      "accept": true
     },
     {
-      "owner": "✏️s/🔌️plugins/➗️mathematical/📦️packages/🟦️typescript",
-      "name": "@semio-tech/mathematical-js",
+      "id": "private-command-only-multiple",
+      "owner": "🧰️framework/🔨️modules/🧪️synthetic-command/📦️packages/🟦️typescript",
+      "name": "@semio-test/command-owner",
       "commands": [
+        "build",
+        "check",
         "test"
-      ]
+      ],
+      "manifest": {
+        "name": "@semio-test/command-owner",
+        "private": true,
+        "type": "module",
+        "scripts": {
+          "build": "bun nx run @semio-test/command-owner:build",
+          "check": "bun nx run @semio-test/command-owner:check",
+          "test": "bun nx run @semio-test/command-owner:test"
+        }
+      },
+      "scriptSource": "router.register(\"build\", OwnedCommand);\nrouter.register(\"check\", OwnedCommand);\nrouter.register(\"test\", OwnedCommand);",
+      "entrySourcePresent": false,
+      "project": {
+        "targets": {
+          "build": {
+            "executor": "nx:run-commands",
+            "options": {
+              "command": "bun ./📜️script.ts build"
+            }
+          },
+          "check": {
+            "executor": "nx:run-commands",
+            "options": {
+              "command": "bun ./📜️script.ts check"
+            }
+          },
+          "test": {
+            "executor": "nx:run-commands",
+            "options": {
+              "command": "bun ./📜️script.ts test"
+            }
+          }
+        }
+      },
+      "accept": true
     },
     {
-      "owner": "✏️s/🔌️plugins/🀄️wfc/📦️packages/🟦️typescript",
-      "name": "@semio-tech/wfc-js",
+      "id": "missing-private",
+      "owner": "🧰️framework/🔨️modules/🧪️synthetic-command/📦️packages/🟦️typescript",
+      "name": "@semio-test/command-owner",
       "commands": [
         "test"
-      ]
+      ],
+      "manifest": {
+        "name": "@semio-test/command-owner",
+        "type": "module",
+        "scripts": {
+          "test": "bun nx run @semio-test/command-owner:test"
+        }
+      },
+      "scriptSource": "router.register(\"test\", OwnedCommand);",
+      "entrySourcePresent": false,
+      "project": {
+        "targets": {
+          "test": {
+            "executor": "nx:run-commands",
+            "options": {
+              "command": "bun ./📜️script.ts test"
+            }
+          }
+        }
+      },
+      "accept": false
     },
     {
-      "owner": "✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript",
-      "name": "@semio-tech/procedural-js",
+      "id": "public-private-flag-false",
+      "owner": "🧰️framework/🔨️modules/🧪️synthetic-command/📦️packages/🟦️typescript",
+      "name": "@semio-test/command-owner",
       "commands": [
         "test"
-      ]
+      ],
+      "manifest": {
+        "name": "@semio-test/command-owner",
+        "private": false,
+        "type": "module",
+        "scripts": {
+          "test": "bun nx run @semio-test/command-owner:test"
+        }
+      },
+      "scriptSource": "router.register(\"test\", OwnedCommand);",
+      "entrySourcePresent": false,
+      "project": {
+        "targets": {
+          "test": {
+            "executor": "nx:run-commands",
+            "options": {
+              "command": "bun ./📜️script.ts test"
+            }
+          }
+        }
+      },
+      "accept": false
     },
     {
-      "owner": "✏️s/🔌️plugins/🌊️flow/📦️packages/🟦️typescript",
-      "name": "@semio-tech/flow-js",
+      "id": "wrong-manifest-name",
+      "owner": "🧰️framework/🔨️modules/🧪️synthetic-command/📦️packages/🟦️typescript",
+      "name": "@semio-test/command-owner",
       "commands": [
         "test"
-      ]
+      ],
+      "manifest": {
+        "name": "@semio-test/wrong",
+        "private": true,
+        "type": "module",
+        "scripts": {
+          "test": "bun nx run @semio-test/command-owner:test"
+        }
+      },
+      "scriptSource": "router.register(\"test\", OwnedCommand);",
+      "entrySourcePresent": false,
+      "project": {
+        "targets": {
+          "test": {
+            "executor": "nx:run-commands",
+            "options": {
+              "command": "bun ./📜️script.ts test"
+            }
+          }
+        }
+      },
+      "accept": false
     },
     {
-      "owner": "✏️s/🔌️plugins/🌍️gis/📦️packages/🟦️typescript",
-      "name": "@semio-tech/gis-js",
+      "id": "exports-present",
+      "owner": "🧰️framework/🔨️modules/🧪️synthetic-command/📦️packages/🟦️typescript",
+      "name": "@semio-test/command-owner",
       "commands": [
         "test"
-      ]
+      ],
+      "manifest": {
+        "name": "@semio-test/command-owner",
+        "private": true,
+        "type": "module",
+        "scripts": {
+          "test": "bun nx run @semio-test/command-owner:test"
+        },
+        "exports": {}
+      },
+      "scriptSource": "router.register(\"test\", OwnedCommand);",
+      "entrySourcePresent": false,
+      "project": {
+        "targets": {
+          "test": {
+            "executor": "nx:run-commands",
+            "options": {
+              "command": "bun ./📜️script.ts test"
+            }
+          }
+        }
+      },
+      "accept": false
     },
     {
-      "owner": "✏️s/🔌️plugins/🌿️vcs/📦️packages/🟦️typescript",
-      "name": "@semio-tech/vcs-js",
+      "id": "main-present",
+      "owner": "🧰️framework/🔨️modules/🧪️synthetic-command/📦️packages/🟦️typescript",
+      "name": "@semio-test/command-owner",
       "commands": [
         "test"
-      ]
+      ],
+      "manifest": {
+        "name": "@semio-test/command-owner",
+        "private": true,
+        "type": "module",
+        "scripts": {
+          "test": "bun nx run @semio-test/command-owner:test"
+        },
+        "main": "./entry.js"
+      },
+      "scriptSource": "router.register(\"test\", OwnedCommand);",
+      "entrySourcePresent": false,
+      "project": {
+        "targets": {
+          "test": {
+            "executor": "nx:run-commands",
+            "options": {
+              "command": "bun ./📜️script.ts test"
+            }
+          }
+        }
+      },
+      "accept": false
     },
     {
-      "owner": "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript",
-      "name": "@semio-tech/animate-js",
+      "id": "module-present",
+      "owner": "🧰️framework/🔨️modules/🧪️synthetic-command/📦️packages/🟦️typescript",
+      "name": "@semio-test/command-owner",
       "commands": [
         "test"
-      ]
+      ],
+      "manifest": {
+        "name": "@semio-test/command-owner",
+        "private": true,
+        "type": "module",
+        "scripts": {
+          "test": "bun nx run @semio-test/command-owner:test"
+        },
+        "module": "./entry.js"
+      },
+      "scriptSource": "router.register(\"test\", OwnedCommand);",
+      "entrySourcePresent": false,
+      "project": {
+        "targets": {
+          "test": {
+            "executor": "nx:run-commands",
+            "options": {
+              "command": "bun ./📜️script.ts test"
+            }
+          }
+        }
+      },
+      "accept": false
     },
     {
-      "owner": "✏️s/🔌️plugins/🎥️shooting/📦️packages/🟦️typescript",
-      "name": "@semio-tech/shooting-js",
+      "id": "types-present",
+      "owner": "🧰️framework/🔨️modules/🧪️synthetic-command/📦️packages/🟦️typescript",
+      "name": "@semio-test/command-owner",
       "commands": [
         "test"
-      ]
+      ],
+      "manifest": {
+        "name": "@semio-test/command-owner",
+        "private": true,
+        "type": "module",
+        "scripts": {
+          "test": "bun nx run @semio-test/command-owner:test"
+        },
+        "types": "./entry.js"
+      },
+      "scriptSource": "router.register(\"test\", OwnedCommand);",
+      "entrySourcePresent": false,
+      "project": {
+        "targets": {
+          "test": {
+            "executor": "nx:run-commands",
+            "options": {
+              "command": "bun ./📜️script.ts test"
+            }
+          }
+        }
+      },
+      "accept": false
     },
     {
-      "owner": "✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript",
-      "name": "@semio-tech/fem-js",
+      "id": "package-entry-present",
+      "owner": "🧰️framework/🔨️modules/🧪️synthetic-command/📦️packages/🟦️typescript",
+      "name": "@semio-test/command-owner",
       "commands": [
         "test"
-      ]
+      ],
+      "manifest": {
+        "name": "@semio-test/command-owner",
+        "private": true,
+        "type": "module",
+        "scripts": {
+          "test": "bun nx run @semio-test/command-owner:test"
+        }
+      },
+      "scriptSource": "router.register(\"test\", OwnedCommand);",
+      "entrySourcePresent": true,
+      "project": {
+        "targets": {
+          "test": {
+            "executor": "nx:run-commands",
+            "options": {
+              "command": "bun ./📜️script.ts test"
+            }
+          }
+        }
+      },
+      "accept": false
     },
     {
-      "owner": "✏️s/🔌️plugins/🏛️architect/📦️packages/🟦️typescript",
-      "name": "@semio-tech/architect-js",
+      "id": "missing-command-script",
+      "owner": "🧰️framework/🔨️modules/🧪️synthetic-command/📦️packages/🟦️typescript",
+      "name": "@semio-test/command-owner",
       "commands": [
         "test"
-      ]
+      ],
+      "manifest": {
+        "name": "@semio-test/command-owner",
+        "private": true,
+        "type": "module",
+        "scripts": {}
+      },
+      "scriptSource": "router.register(\"test\", OwnedCommand);",
+      "entrySourcePresent": false,
+      "project": {
+        "targets": {
+          "test": {
+            "executor": "nx:run-commands",
+            "options": {
+              "command": "bun ./📜️script.ts test"
+            }
+          }
+        }
+      },
+      "accept": false
     },
     {
-      "owner": "✏️s/🔌️plugins/🏭️process/📦️packages/🟦️typescript",
-      "name": "@semio-tech/process-js",
+      "id": "extra-command-script",
+      "owner": "🧰️framework/🔨️modules/🧪️synthetic-command/📦️packages/🟦️typescript",
+      "name": "@semio-test/command-owner",
       "commands": [
         "test"
-      ]
+      ],
+      "manifest": {
+        "name": "@semio-test/command-owner",
+        "private": true,
+        "type": "module",
+        "scripts": {
+          "test": "bun nx run @semio-test/command-owner:test",
+          "build": "bun nx run @semio-test/command-owner:build"
+        }
+      },
+      "scriptSource": "router.register(\"test\", OwnedCommand);",
+      "entrySourcePresent": false,
+      "project": {
+        "targets": {
+          "test": {
+            "executor": "nx:run-commands",
+            "options": {
+              "command": "bun ./📜️script.ts test"
+            }
+          }
+        }
+      },
+      "accept": false
     },
     {
-      "owner": "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🟦️typescript",
-      "name": "@semio-tech/lowpoly-js",
+      "id": "script-bypasses-nx",
+      "owner": "🧰️framework/🔨️modules/🧪️synthetic-command/📦️packages/🟦️typescript",
+      "name": "@semio-test/command-owner",
       "commands": [
         "test"
-      ]
+      ],
+      "manifest": {
+        "name": "@semio-test/command-owner",
+        "private": true,
+        "type": "module",
+        "scripts": {
+          "test": "bun ./📜️script.ts test"
+        }
+      },
+      "scriptSource": "router.register(\"test\", OwnedCommand);",
+      "entrySourcePresent": false,
+      "project": {
+        "targets": {
+          "test": {
+            "executor": "nx:run-commands",
+            "options": {
+              "command": "bun ./📜️script.ts test"
+            }
+          }
+        }
+      },
+      "accept": false
     },
     {
-      "owner": "✏️s/🔌️plugins/💡️reasoning/📦️packages/🟦️typescript",
-      "name": "@semio-tech/reasoning-js",
+      "id": "router-missing-command",
+      "owner": "🧰️framework/🔨️modules/🧪️synthetic-command/📦️packages/🟦️typescript",
+      "name": "@semio-test/command-owner",
       "commands": [
         "test"
-      ]
+      ],
+      "manifest": {
+        "name": "@semio-test/command-owner",
+        "private": true,
+        "type": "module",
+        "scripts": {
+          "test": "bun nx run @semio-test/command-owner:test"
+        }
+      },
+      "scriptSource": "router.register(\"build\", OwnedCommand);",
+      "entrySourcePresent": false,
+      "project": {
+        "targets": {
+          "test": {
+            "executor": "nx:run-commands",
+            "options": {
+              "command": "bun ./📜️script.ts test"
+            }
+          }
+        }
+      },
+      "accept": false
     },
     {
-      "owner": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🟦️typescript",
-      "name": "@semio-tech/forms-js",
+      "id": "router-comment-only-command",
+      "owner": "🧰️framework/🔨️modules/🧪️synthetic-command/📦️packages/🟦️typescript",
+      "name": "@semio-test/command-owner",
       "commands": [
         "test"
-      ]
+      ],
+      "manifest": {
+        "name": "@semio-test/command-owner",
+        "private": true,
+        "type": "module",
+        "scripts": {
+          "test": "bun nx run @semio-test/command-owner:test"
+        }
+      },
+      "scriptSource": "// router.register(\"test\", OwnedCommand);",
+      "entrySourcePresent": false,
+      "project": {
+        "targets": {
+          "test": {
+            "executor": "nx:run-commands",
+            "options": {
+              "command": "bun ./📜️script.ts test"
+            }
+          }
+        }
+      },
+      "accept": false
     },
     {
-      "owner": "✏️s/🔌️plugins/📏️layout/📦️packages/🟦️typescript",
-      "name": "@semio-tech/layout-js",
+      "id": "project-missing-command",
+      "owner": "🧰️framework/🔨️modules/🧪️synthetic-command/📦️packages/🟦️typescript",
+      "name": "@semio-test/command-owner",
       "commands": [
         "test"
-      ]
+      ],
+      "manifest": {
+        "name": "@semio-test/command-owner",
+        "private": true,
+        "type": "module",
+        "scripts": {
+          "test": "bun nx run @semio-test/command-owner:test"
+        }
+      },
+      "scriptSource": "router.register(\"test\", OwnedCommand);",
+      "entrySourcePresent": false,
+      "project": {
+        "targets": {}
+      },
+      "accept": false
     },
     {
-      "owner": "✏️s/🔌️plugins/📕️norm/📦️packages/🟦️typescript",
-      "name": "@semio-tech/norm-js",
+      "id": "project-bypasses-owner-script",
+      "owner": "🧰️framework/🔨️modules/🧪️synthetic-command/📦️packages/🟦️typescript",
+      "name": "@semio-test/command-owner",
       "commands": [
         "test"
-      ]
-    },
-    {
-      "owner": "✏️s/🔌️plugins/📖️playbook/📦️packages/🟦️typescript",
-      "name": "@semio-tech/playbook-js",
-      "commands": [
-        "test"
-      ]
-    },
-    {
-      "owner": "✏️s/🔌️plugins/📜️imperative/📦️packages/🟦️typescript",
-      "name": "@semio-tech/imperative-js",
-      "commands": [
-        "test"
-      ]
-    },
-    {
-      "owner": "✏️s/🔌️plugins/📸️remodel/📦️packages/🟦️typescript",
-      "name": "@semio-tech/remodel-js",
-      "commands": [
-        "test"
-      ]
-    },
-    {
-      "owner": "✏️s/🔌️plugins/🔋️energy/📦️packages/🟦️typescript",
-      "name": "@semio-tech/energy-js",
-      "commands": [
-        "test"
-      ]
-    },
-    {
-      "owner": "✏️s/🔌️plugins/🔱️trinity/📦️packages/🟦️typescript",
-      "name": "@semio-tech/trinity-js",
-      "commands": [
-        "test"
-      ]
-    },
-    {
-      "owner": "✏️s/🔌️plugins/🕸️dag/📦️packages/🟦️typescript",
-      "name": "@semio-tech/dag-js",
-      "commands": [
-        "test"
-      ]
-    },
-    {
-      "owner": "✏️s/🔌️plugins/🖍️draw/📦️packages/🟦️typescript",
-      "name": "@semio-tech/draw-js",
-      "commands": [
-        "test"
-      ]
-    },
-    {
-      "owner": "✏️s/🔌️plugins/🖨️raster/📦️packages/🟦️typescript",
-      "name": "@semio-tech/raster-js",
-      "commands": [
-        "test"
-      ]
-    },
-    {
-      "owner": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🟦️typescript",
-      "name": "@semio-tech/note-note-js",
-      "commands": [
-        "test"
-      ]
-    },
-    {
-      "owner": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript",
-      "name": "@semio-tech/puzzle-js",
-      "commands": [
-        "test"
-      ]
-    },
-    {
-      "owner": "✏️s/🔌️plugins/🧱️block/📦️packages/🟦️typescript",
-      "name": "@semio-tech/block-js",
-      "commands": [
-        "test"
-      ]
-    },
-    {
-      "owner": "✏️s/🔌️plugins/🪐️space/📦️packages/🟦️typescript",
-      "name": "@semio-tech/space-js",
-      "commands": [
-        "test"
-      ]
-    },
-    {
-      "owner": "✏️s/🔌️plugins/🪵️sourcing/📦️packages/🟦️typescript",
-      "name": "@semio-tech/sourcing-js",
-      "commands": [
-        "test"
-      ]
+      ],
+      "manifest": {
+        "name": "@semio-test/command-owner",
+        "private": true,
+        "type": "module",
+        "scripts": {
+          "test": "bun nx run @semio-test/command-owner:test"
+        }
+      },
+      "scriptSource": "router.register(\"test\", OwnedCommand);",
+      "entrySourcePresent": false,
+      "project": {
+        "targets": {
+          "test": {
+            "executor": "nx:run-commands",
+            "options": {
+              "command": "bun ./other.ts test"
+            }
+          }
+        }
+      },
+      "accept": false
     }
   ],
   "policyOwners": [
@@ -1878,6 +2652,264 @@
     {
       "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
       "name": "@semio-tech/repo-lib"
+    },
+    {
+      "owner": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+      "name": "@semio-tech/framework-os"
+    }
+  ],
+  "policyCases": [
+    {
+      "id": "deleted-specific-no-owners",
+      "members": [
+        "✏️s/🔌️plugins/🧪️optional/📦️packages/🟦️typescript"
+      ],
+      "directories": [],
+      "manifests": {},
+      "accept": true
+    },
+    {
+      "id": "present-synthetic-owner",
+      "members": [
+        "🧰️framework/🔨️modules/🧪️policy/📦️packages/🟦️typescript"
+      ],
+      "directories": [
+        "🧰️framework/🔨️modules/🧪️policy/📦️packages/🟦️typescript"
+      ],
+      "manifests": {
+        "🧰️framework/🔨️modules/🧪️policy/📦️packages/🟦️typescript": {
+          "name": "@semio-test/policy-owner"
+        }
+      },
+      "accept": true
+    },
+    {
+      "id": "present-missing-manifest",
+      "members": [
+        "🧰️framework/🔨️modules/🧪️policy/📦️packages/🟦️typescript"
+      ],
+      "directories": [
+        "🧰️framework/🔨️modules/🧪️policy/📦️packages/🟦️typescript"
+      ],
+      "manifests": {},
+      "accept": false
+    },
+    {
+      "id": "present-malformed-manifest",
+      "members": [
+        "🧰️framework/🔨️modules/🧪️policy/📦️packages/🟦️typescript"
+      ],
+      "directories": [
+        "🧰️framework/🔨️modules/🧪️policy/📦️packages/🟦️typescript"
+      ],
+      "manifests": {
+        "🧰️framework/🔨️modules/🧪️policy/📦️packages/🟦️typescript": "{"
+      },
+      "accept": false
+    },
+    {
+      "id": "present-missing-name",
+      "members": [
+        "🧰️framework/🔨️modules/🧪️policy/📦️packages/🟦️typescript"
+      ],
+      "directories": [
+        "🧰️framework/🔨️modules/🧪️policy/📦️packages/🟦️typescript"
+      ],
+      "manifests": {
+        "🧰️framework/🔨️modules/🧪️policy/📦️packages/🟦️typescript": {}
+      },
+      "accept": false
+    },
+    {
+      "id": "present-unknown-role",
+      "members": [
+        "🧰️framework/🔨️modules/🧪️policy/📦️packages/🟦️typescript"
+      ],
+      "directories": [
+        "🧰️framework/🔨️modules/🧪️policy/📦️packages/🟦️typescript"
+      ],
+      "manifests": {
+        "🧰️framework/🔨️modules/🧪️policy/📦️packages/🟦️typescript": {
+          "name": "@semio-test/policy-owner",
+          "semio": {
+            "dependencyRole": "unregistered"
+          }
+        }
+      },
+      "accept": false
+    },
+    {
+      "id": "present-duplicate-name",
+      "members": [
+        "🧰️framework/🔨️modules/🧪️policy/📦️packages/🟦️typescript",
+        "🧰️framework/🔨️modules/🧪️policy/📦️packages/🟦️typescript/peer"
+      ],
+      "directories": [
+        "🧰️framework/🔨️modules/🧪️policy/📦️packages/🟦️typescript",
+        "🧰️framework/🔨️modules/🧪️policy/📦️packages/🟦️typescript/peer"
+      ],
+      "manifests": {
+        "🧰️framework/🔨️modules/🧪️policy/📦️packages/🟦️typescript": {
+          "name": "@semio-test/policy-owner"
+        },
+        "🧰️framework/🔨️modules/🧪️policy/📦️packages/🟦️typescript/peer": {
+          "name": "@semio-test/policy-owner"
+        }
+      },
+      "accept": false
+    },
+    {
+      "id": "present-overlapping-globs-same-owner",
+      "members": [
+        "🧰️framework/🔨️modules/🧪️policy/📦️packages/🟦️typescript",
+        "🧰️framework/🔨️modules/🧪️policy/📦️packages/*"
+      ],
+      "directories": [
+        "🧰️framework/🔨️modules/🧪️policy/📦️packages/🟦️typescript"
+      ],
+      "manifests": {
+        "🧰️framework/🔨️modules/🧪️policy/📦️packages/🟦️typescript": {
+          "name": "@semio-test/policy-owner"
+        }
+      },
+      "accept": true
+    }
+  ],
+  "constructionCases": [
+    {
+      "id": "one-owner",
+      "packages": [
+        {
+          "owner": "🧰️framework/🔨️modules/🧪️one",
+          "name": "@semio-test/one",
+          "exports": [
+            "."
+          ]
+        }
+      ],
+      "accept": true
+    },
+    {
+      "id": "identical-owner-repeated",
+      "packages": [
+        {
+          "owner": "🧰️framework/🔨️modules/🧪️one",
+          "name": "@semio-test/one",
+          "exports": [
+            "."
+          ]
+        },
+        {
+          "owner": "🧰️framework/🔨️modules/🧪️one",
+          "name": "@semio-test/one",
+          "exports": [
+            "."
+          ]
+        }
+      ],
+      "accept": true
+    },
+    {
+      "id": "distinct-owner-same-name",
+      "packages": [
+        {
+          "owner": "🧰️framework/🔨️modules/🧪️one",
+          "name": "@semio-test/one",
+          "exports": [
+            "."
+          ]
+        },
+        {
+          "owner": "🧰️framework/🔨️modules/🧪️two",
+          "name": "@semio-test/one",
+          "exports": [
+            "."
+          ]
+        }
+      ],
+      "accept": false
+    },
+    {
+      "id": "same-owner-divergent-name",
+      "packages": [
+        {
+          "owner": "🧰️framework/🔨️modules/🧪️one",
+          "name": "@semio-test/one",
+          "exports": [
+            "."
+          ]
+        },
+        {
+          "owner": "🧰️framework/🔨️modules/🧪️one",
+          "name": "@semio-test/two",
+          "exports": [
+            "."
+          ]
+        }
+      ],
+      "accept": false
+    },
+    {
+      "id": "same-owner-divergent-exports",
+      "packages": [
+        {
+          "owner": "🧰️framework/🔨️modules/🧪️one",
+          "name": "@semio-test/one",
+          "exports": [
+            "."
+          ]
+        },
+        {
+          "owner": "🧰️framework/🔨️modules/🧪️one",
+          "name": "@semio-test/one",
+          "exports": [
+            ".",
+            "./private"
+          ]
+        }
+      ],
+      "accept": false
+    },
+    {
+      "id": "same-owner-divergent-role",
+      "packages": [
+        {
+          "owner": "🧰️framework/🔨️modules/🧪️one",
+          "name": "@semio-test/one",
+          "exports": [
+            "."
+          ]
+        },
+        {
+          "owner": "🧰️framework/🔨️modules/🧪️one",
+          "name": "@semio-test/one",
+          "exports": [
+            "."
+          ],
+          "dependencyRole": "ui"
+        }
+      ],
+      "accept": false
+    },
+    {
+      "id": "same-owner-reordered-properties",
+      "packages": [
+        {
+          "owner": "🧰️framework/🔨️modules/🧪️one",
+          "name": "@semio-test/one",
+          "exports": [
+            "."
+          ]
+        },
+        {
+          "exports": [
+            "."
+          ],
+          "name": "@semio-test/one",
+          "owner": "🧰️framework/🔨️modules/🧪️one"
+        }
+      ],
+      "accept": true
     }
   ]
 }

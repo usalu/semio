@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://semio/repo-test-artifact-root/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "scope",
+    "children",
+    "invalidScopes",
+    "marker"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "scope": {
+      "const": "lane/scenario"
+    },
+    "children": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "work",
+          "hosts",
+          "results",
+          "reports"
+        ]
+      },
+      "minItems": 4,
+      "maxItems": 4,
+      "uniqueItems": true
+    },
+    "invalidScopes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 6,
+      "uniqueItems": true
+    },
+    "marker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "testId",
+        "cacheKey"
+      ],
+      "properties": {
+        "testId": {
+          "const": "artifact-root-owner::fixture"
+        },
+        "cacheKey": {
+          "const": "source-v1"
+        }
+      }
+    }
+  }
+}

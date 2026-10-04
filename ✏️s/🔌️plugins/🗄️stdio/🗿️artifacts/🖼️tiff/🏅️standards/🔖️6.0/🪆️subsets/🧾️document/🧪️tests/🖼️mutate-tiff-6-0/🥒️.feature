@@ -18,11 +18,11 @@ Feature: Apply every typed TIFF 6.0 mutation to a real-world document
 
   Every Examples `params` cell is exactly the leaf's wire payload — its `payload_value()`, camelCase,
   no aggregate tag — decoded by the subject through the derive-generated `from_payload_value` and
-  read by the oracle's IFD-chain codec by the same field names: a tag names its `TiffFieldType` and
-  carries its `TiffValues` as `{kind, value}`, and strip bytes travel as byte arrays. `replace-pixels`
-  carries the whole replacement RGBA raster of IFD 0, which for this 2275x2560 scan would be 23.3
-  million numbers in one cell, so it runs in its own outlines on the committed 4x4 RGB document
-  (`shared://🔲️replace-pixels-applied/⬅️before.tiff`) with the raster of that recipe's own after-image.
+  read by the oracle's IFD-chain codec by the same field names: a tag carries its `TiffValues` as
+  `{kind, value}` (ASCII as its NUL-terminated octets), and an IFD's raster travels as its `storage`
+  — strip chunks of raw sample bytes whose offsets and byte counts each writer lays out itself.
+  `paint-region` paints only uncompressed TILED pages and is guarded by the revision of the subject's
+  canonical snapshot; neither committed document is tiled, so it is witnessed on the wire only.
 
   On the @id-identity-round-trip scenario the "re-encoded bytes must differ from the input" half of
   the law binds NEITHER side, and the exact-bytes law binds BOTH. The committed fixture is the output
@@ -34,31 +34,16 @@ Feature: Apply every typed TIFF 6.0 mutation to a real-world document
   and the writer reproduces the committed bytes exactly, which a dropped tag, a reordered IFD or a
   miscounted strip would all break. The mutate rows, every one of which moves the bytes, are what
   prove a real parse happened. The mutate and inverse laws are stated against the document as an
-  unchanged reference round trip leaves it: on the scan that is the scan itself, and on the small
-  raster document, which another writer authored, it is that document in the reference's normal form.
+  unchanged reference round trip leaves it, which on the scan is the scan itself.
 
-  ✅ CLOSED, AT THE CAUSE — `mutate-insert-ifd` (the ratios before and after are recorded in the
-  ticket, not here).
-  The row's `ifd` param carries six entries and a real `pixels` strip. The oracle backs that page
-  with actual strip bytes, which forces `RowsPerStrip` to the page's `ImageLength` (TIFF6 §Strips: a
-  single combined strip needs `RowsPerStrip = height`, or a reader expects `ceil(height/RowsPerStrip)`
-  strip offsets and finds one), so its IFD 2 projects seven entries where ours projected six. The
-  cause was that `TiffSnapshot` had ONE `pixels` field — IFD 0's — so this repository's encoder could
-  not back a non-primary IFD with raster at all, discarded the param's strip, and omitted the three
-  strip tags. The remedy this paragraph named has been carried out rather than papered over:
-  `TiffIfd` now has its OWN `pixels` field (raw strip bytes), threaded through the snapshot, the
-  diff (`TiffIfdDiff`), the text and binary diff codecs and the proto/graphql/ts/json mirrors, so the
-  inserted page is backed by real bytes and its `StripOffsets`/`RowsPerStrip`/`StripByteCounts`
-  triple is computed from them. Nothing was tolerated, ignored or cosmetically emitted: the profile
-  still declares no writer freedom, the row's parameters are unchanged, and an IFD carrying no strip
-  bytes still gets no invented `RowsPerStrip`. The same change closes a defect no scenario was
-  measuring — before it, every round trip of this two-page fixture silently dropped page 2's raster,
-  because the semantic projection only decodes IFD 0's.
+  `insert-ifd` inserts an 8x8 RGB page whose `storage` is one strip of real sample bytes and whose
+  `RowsPerStrip` states that one strip covers the page (TIFF6 §Strips), so both writers lay the page
+  out identically and the projection compares its seven entries and its raster.
 
   The snapshot-editing kinds production dispatch offers are measured here too: `set-snapshot`
-  installs a 2x2 RGBA document whose IFD 0 states its geometry and a Software tag, and `patch-snapshot`
-  flips the header byte order through the editor's compact path-addressed patch. The IFD-chain oracle
-  reads both through its own model, laying IFD 0's raster out as the same one chunky RGB strip.
+  installs a 2x2 RGB document whose IFD 0 states its geometry, one strip and a Software tag, and
+  `patch-snapshot` flips the header byte order through the editor's path-addressed patch. The
+  IFD-chain oracle reads both through its own model.
 
   @id-mutate
   @level-exhaustive
@@ -73,26 +58,12 @@ Feature: Apply every typed TIFF 6.0 mutation to a real-world document
     Examples:
       | id | params |
       | change-byte-order | {"byteOrder":"bigEndian"} |
-      | insert-ifd | {"index":2,"ifd":{"entries":[{"tag":256,"kind":"long","values":{"kind":"long","value":[8]}},{"tag":257,"kind":"long","values":{"kind":"long","value":[8]}},{"tag":258,"kind":"short","values":{"kind":"short","value":[8,8,8]}},{"tag":259,"kind":"short","values":{"kind":"short","value":[1]}},{"tag":262,"kind":"short","values":{"kind":"short","value":[2]}},{"tag":277,"kind":"short","values":{"kind":"short","value":[3]}}],"pixels":[254,254,254,254,254,254,254,254,254,254,254,254,254,254,254,249,247,247,249,247,247,254,254,254,254,254,254,254,254,254,254,254,254,254,254,254,252,251,251,250,247,247,251,247,247,251,250,250,254,254,254,254,254,254,254,254,254,254,254,254,247,244,244,248,243,243,249,246,246,254,254,254,254,254,254,254,254,254,254,254,254,251,249,249,250,246,246,250,247,247,253,253,253,254,254,254,254,254,254,254,254,254,254,254,254,250,247,247,248,248,248,248,246,246,251,250,250,254,254,254,251,249,249,251,248,248,251,248,248,248,246,246,251,251,251,251,250,250,249,246,246,253,252,252,249,246,246,249,245,245,248,244,244,250,247,247,248,246,246,250,248,248,248,244,244,248,245,245,252,252,252,251,250,250,251,250,250,251,250,250,252,251,251,252,251,251,248,244,244,249,246,246]}} |
+      | insert-ifd | {"index":2,"ifd":{"entries":[{"tag":256,"values":{"kind":"long","value":[8]}},{"tag":257,"values":{"kind":"long","value":[8]}},{"tag":258,"values":{"kind":"short","value":[8,8,8]}},{"tag":259,"values":{"kind":"short","value":[1]}},{"tag":262,"values":{"kind":"short","value":[2]}},{"tag":277,"values":{"kind":"short","value":[3]}},{"tag":278,"values":{"kind":"long","value":[8]}}],"storage":{"kind":"strips","offsetsKind":"long","byteCountsKind":"long","chunks":[[254,254,254,254,254,254,254,254,254,254,254,254,254,254,254,249,247,247,249,247,247,254,254,254,254,254,254,254,254,254,254,254,254,254,254,254,252,251,251,250,247,247,251,247,247,251,250,250,254,254,254,254,254,254,254,254,254,254,254,254,247,244,244,248,243,243,249,246,246,254,254,254,254,254,254,254,254,254,254,254,254,251,249,249,250,246,246,250,247,247,253,253,253,254,254,254,254,254,254,254,254,254,254,254,254,250,247,247,248,248,248,248,246,246,251,250,250,254,254,254,251,249,249,251,248,248,251,248,248,248,246,246,251,251,251,251,250,250,249,246,246,253,252,252,249,246,246,249,245,245,248,244,244,250,247,247,248,246,246,250,248,248,248,244,244,248,245,245,252,252,252,251,250,250,251,250,250,251,250,250,252,251,251,252,251,251,248,244,244,249,246,246]]}}} |
       | remove-ifd | {"index":1} |
-      | replace-tag | {"ifdIndex":0,"tag":315,"kind":"ascii","values":{"kind":"ascii","value":"Derived for ticket 26/08/23/END-TO-END-TESTING-REFACTOR"}} |
+      | replace-tag | {"ifdIndex":0,"tag":315,"values":{"kind":"ascii","value":[68,101,114,105,118,101,100,32,102,111,114,32,116,105,99,107,101,116,32,50,54,47,48,56,47,50,51,47,69,78,68,45,84,79,45,69,78,68,45,84,69,83,84,73,78,71,45,82,69,70,65,67,84,79,82,0]}} |
       | remove-tag | {"ifdIndex":0,"tag":282} |
-      | set-snapshot | {"snapshot":{"byteOrder":"littleEndian","ifds":[{"entries":[{"kind":"long","tag":256,"values":{"kind":"long","value":[2]}},{"kind":"long","tag":257,"values":{"kind":"long","value":[2]}},{"kind":"ascii","tag":305,"values":{"kind":"ascii","value":"semio"}}],"pixels":[]}],"pixels":[255,0,0,255,0,255,0,255,0,0,255,255,255,255,255,255],"schema":"stdio.tiff"}} |
-      | patch-snapshot | {"patch":{"edits":[{"path":["byteOrder"],"edit":{"operation":"set","value":"bigEndian"}}]}} |
-
-  @id-mutate
-  @level-exhaustive
-  @mode-differential
-  Scenario Outline: Apply <id> to a small document
-    Given the small input document shared://🔲️replace-pixels-applied/⬅️before.tiff
-    When the <id> mutation is applied with its parameters
-      """
-      {"kind": "<id>", "params": <params>}
-      """
-    Then the oracle and the subject agree on the semantic projection
-    Examples:
-      | id | params |
-      | replace-pixels | {"pixels":[200,200,200,255,240,200,220,255,24,200,240,255,64,200,4,255,200,4,220,255,240,4,240,255,24,4,4,255,64,4,24,255,200,64,240,255,240,64,4,255,24,64,24,255,64,64,44,255,200,124,4,255,240,124,24,255,24,124,44,255,64,124,64,255]} |
+      | set-snapshot | {"snapshot":{"schema":"stdio.tiff","byteOrder":"littleEndian","ifds":[{"entries":[{"tag":256,"values":{"kind":"short","value":[2]}},{"tag":257,"values":{"kind":"short","value":[2]}},{"tag":258,"values":{"kind":"short","value":[8,8,8]}},{"tag":259,"values":{"kind":"short","value":[1]}},{"tag":262,"values":{"kind":"short","value":[2]}},{"tag":277,"values":{"kind":"short","value":[3]}},{"tag":278,"values":{"kind":"long","value":[2]}},{"tag":305,"values":{"kind":"ascii","value":[115,101,109,105,111,0]}}],"storage":{"kind":"strips","offsetsKind":"long","byteCountsKind":"long","chunks":[[255,0,0,0,255,0,0,0,255,255,255,255]]}}]}} |
+      | patch-snapshot | {"patch":{"operation":"set","path":"/byteOrder","value":"bigEndian"}} |
 
   @id-inverse
   @level-exhaustive
@@ -108,27 +79,12 @@ Feature: Apply every typed TIFF 6.0 mutation to a real-world document
     Examples:
       | id | params |
       | change-byte-order | {"byteOrder":"bigEndian"} |
-      | insert-ifd | {"index":2,"ifd":{"entries":[{"tag":256,"kind":"long","values":{"kind":"long","value":[8]}},{"tag":257,"kind":"long","values":{"kind":"long","value":[8]}},{"tag":258,"kind":"short","values":{"kind":"short","value":[8,8,8]}},{"tag":259,"kind":"short","values":{"kind":"short","value":[1]}},{"tag":262,"kind":"short","values":{"kind":"short","value":[2]}},{"tag":277,"kind":"short","values":{"kind":"short","value":[3]}}],"pixels":[254,254,254,254,254,254,254,254,254,254,254,254,254,254,254,249,247,247,249,247,247,254,254,254,254,254,254,254,254,254,254,254,254,254,254,254,252,251,251,250,247,247,251,247,247,251,250,250,254,254,254,254,254,254,254,254,254,254,254,254,247,244,244,248,243,243,249,246,246,254,254,254,254,254,254,254,254,254,254,254,254,251,249,249,250,246,246,250,247,247,253,253,253,254,254,254,254,254,254,254,254,254,254,254,254,250,247,247,248,248,248,248,246,246,251,250,250,254,254,254,251,249,249,251,248,248,251,248,248,248,246,246,251,251,251,251,250,250,249,246,246,253,252,252,249,246,246,249,245,245,248,244,244,250,247,247,248,246,246,250,248,248,248,244,244,248,245,245,252,252,252,251,250,250,251,250,250,251,250,250,252,251,251,252,251,251,248,244,244,249,246,246]}} |
+      | insert-ifd | {"index":2,"ifd":{"entries":[{"tag":256,"values":{"kind":"long","value":[8]}},{"tag":257,"values":{"kind":"long","value":[8]}},{"tag":258,"values":{"kind":"short","value":[8,8,8]}},{"tag":259,"values":{"kind":"short","value":[1]}},{"tag":262,"values":{"kind":"short","value":[2]}},{"tag":277,"values":{"kind":"short","value":[3]}},{"tag":278,"values":{"kind":"long","value":[8]}}],"storage":{"kind":"strips","offsetsKind":"long","byteCountsKind":"long","chunks":[[254,254,254,254,254,254,254,254,254,254,254,254,254,254,254,249,247,247,249,247,247,254,254,254,254,254,254,254,254,254,254,254,254,254,254,254,252,251,251,250,247,247,251,247,247,251,250,250,254,254,254,254,254,254,254,254,254,254,254,254,247,244,244,248,243,243,249,246,246,254,254,254,254,254,254,254,254,254,254,254,254,251,249,249,250,246,246,250,247,247,253,253,253,254,254,254,254,254,254,254,254,254,254,254,254,250,247,247,248,248,248,248,246,246,251,250,250,254,254,254,251,249,249,251,248,248,251,248,248,248,246,246,251,251,251,251,250,250,249,246,246,253,252,252,249,246,246,249,245,245,248,244,244,250,247,247,248,246,246,250,248,248,248,244,244,248,245,245,252,252,252,251,250,250,251,250,250,251,250,250,252,251,251,252,251,251,248,244,244,249,246,246]]}}} |
       | remove-ifd | {"index":1} |
-      | replace-tag | {"ifdIndex":0,"tag":315,"kind":"ascii","values":{"kind":"ascii","value":"Derived for ticket 26/08/23/END-TO-END-TESTING-REFACTOR"}} |
+      | replace-tag | {"ifdIndex":0,"tag":315,"values":{"kind":"ascii","value":[68,101,114,105,118,101,100,32,102,111,114,32,116,105,99,107,101,116,32,50,54,47,48,56,47,50,51,47,69,78,68,45,84,79,45,69,78,68,45,84,69,83,84,73,78,71,45,82,69,70,65,67,84,79,82,0]}} |
       | remove-tag | {"ifdIndex":0,"tag":282} |
-      | set-snapshot | {"snapshot":{"byteOrder":"littleEndian","ifds":[{"entries":[{"kind":"long","tag":256,"values":{"kind":"long","value":[2]}},{"kind":"long","tag":257,"values":{"kind":"long","value":[2]}},{"kind":"ascii","tag":305,"values":{"kind":"ascii","value":"semio"}}],"pixels":[]}],"pixels":[255,0,0,255,0,255,0,255,0,0,255,255,255,255,255,255],"schema":"stdio.tiff"}} |
-      | patch-snapshot | {"patch":{"edits":[{"path":["byteOrder"],"edit":{"operation":"set","value":"bigEndian"}}]}} |
-
-  @id-inverse
-  @level-exhaustive
-  @mode-differential
-  Scenario Outline: Undoing <id> restores a small document
-    Given the small input document shared://🔲️replace-pixels-applied/⬅️before.tiff
-    When the <id> mutation is applied with its parameters
-      """
-      {"kind": "<id>", "params": <params>}
-      """
-    And its inverse is applied
-    Then the oracle and the subject agree on the semantic projection
-    Examples:
-      | id | params |
-      | replace-pixels | {"pixels":[200,200,200,255,240,200,220,255,24,200,240,255,64,200,4,255,200,4,220,255,240,4,240,255,24,4,4,255,64,4,24,255,200,64,240,255,240,64,4,255,24,64,24,255,64,64,44,255,200,124,4,255,240,124,24,255,24,124,44,255,64,124,64,255]} |
+      | set-snapshot | {"snapshot":{"schema":"stdio.tiff","byteOrder":"littleEndian","ifds":[{"entries":[{"tag":256,"values":{"kind":"short","value":[2]}},{"tag":257,"values":{"kind":"short","value":[2]}},{"tag":258,"values":{"kind":"short","value":[8,8,8]}},{"tag":259,"values":{"kind":"short","value":[1]}},{"tag":262,"values":{"kind":"short","value":[2]}},{"tag":277,"values":{"kind":"short","value":[3]}},{"tag":278,"values":{"kind":"long","value":[2]}},{"tag":305,"values":{"kind":"ascii","value":[115,101,109,105,111,0]}}],"storage":{"kind":"strips","offsetsKind":"long","byteCountsKind":"long","chunks":[[255,0,0,0,255,0,0,0,255,255,255,255]]}}]}} |
+      | patch-snapshot | {"patch":{"operation":"set","path":"/byteOrder","value":"bigEndian"}} |
 
   @id-identity-round-trip
   @level-long

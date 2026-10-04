@@ -1,0 +1,20 @@
+[
+  {"name":"integer rectangle","input":{"width":3,"height":2,"transform":[1,0,0,1,0,0],"rule":"nonzero","contours":[[[0,0],[2,0],[2,1],[0,1]]]},"expected":[255,255,0,0,0,0]},
+  {"name":"fractional rectangle","input":{"width":2,"height":2,"transform":[1,0,0,1,0,0],"rule":"nonzero","contours":[[[0.25,0.25],[1.25,0.25],[1.25,1.25],[0.25,1.25]]]},"expected":[143,48,48,16]},
+  {"name":"diagonal triangle","input":{"width":2,"height":2,"transform":[1,0,0,1,0,0],"rule":"nonzero","contours":[[[0,0],[2,0],[0,2]]]},"expected":[255,128,128,0]},
+  {"name":"even odd hole","input":{"width":3,"height":3,"transform":[1,0,0,1,0,0],"rule":"evenodd","contours":[[[0,0],[3,0],[3,3],[0,3]],[[1,1],[2,1],[2,2],[1,2]]]},"expected":[255,255,255,255,0,255,255,255,255]},
+  {"name":"nonzero overlap","input":{"width":3,"height":3,"transform":[1,0,0,1,0,0],"rule":"nonzero","contours":[[[0,0],[3,0],[3,3],[0,3]],[[1,1],[2,1],[2,2],[1,2]]]},"expected":[255,255,255,255,255,255,255,255,255]},
+  {"name":"opposite winding hole","input":{"width":3,"height":3,"transform":[1,0,0,1,0,0],"rule":"nonzero","contours":[[[0,0],[3,0],[3,3],[0,3]],[[1,2],[2,2],[2,1],[1,1]]]},"expected":[255,255,255,255,0,255,255,255,255]},
+  {"name":"bow tie crossing","input":{"width":2,"height":2,"transform":[1,0,0,1,0,0],"rule":"evenodd","contours":[[[0,0],[2,2],[0,2],[2,0]]]},"expected":[128,128,128,128]},
+  {"name":"crossing inside pixel","input":{"width":1,"height":1,"transform":[1,0,0,1,0,0],"rule":"nonzero","contours":[[[0,0],[1,1],[0,1],[1,0]]]},"expected":[128]},
+  {"name":"duplicate contour cancels parity","input":{"width":1,"height":1,"transform":[1,0,0,1,0,0],"rule":"evenodd","contours":[[[0,0],[1,0],[1,1],[0,1]],[[0,0],[1,0],[1,1],[0,1]]]},"expected":[0]},
+  {"name":"sheared rectangle","input":{"width":2,"height":1,"transform":[1,0,1,1,0,0],"rule":"nonzero","contours":[[[0,0],[1,0],[1,1],[0,1]]]},"expected":[128,128]},
+  {"name":"reflected contour","input":{"width":2,"height":1,"transform":[-1,0,0,1,2,0],"rule":"nonzero","contours":[[[0,0],[1,0],[1,1],[0,1]]]},"expected":[0,255]},
+  {"name":"outside clipping","input":{"width":1,"height":1,"transform":[1,0,0,1,0,0],"rule":"nonzero","contours":[[[-4,-3],[4,-3],[4,4],[-4,4]]]},"expected":[255]},
+  {"name":"empty and degenerate contours","input":{"width":2,"height":1,"transform":[1,0,0,1,0,0],"rule":"nonzero","contours":[[],[[1,0]],[[0,0],[1,0],[2,0]]]},"expected":[0,0]},
+  {"name":"singular transform","input":{"width":2,"height":1,"transform":[1,0,0,0,0,0],"rule":"nonzero","contours":[[[0,0],[1,0],[1,1],[0,1]]]},"expected":[0,0]},
+  {"name":"intersecting contour union inside pixel","input":{"width":1,"height":1,"transform":[1,0,0,1,0,0],"rule":"nonzero","contours":[[[0,0],[1,0],[0.5,1]],[[1,1],[0,1],[0.5,0]]]},"expected":[191]},
+  {"name":"intersecting contour parity inside pixel","input":{"width":1,"height":1,"transform":[1,0,0,1,0,0],"rule":"evenodd","contours":[[[0,0],[1,0],[0.5,1]],[[1,1],[0,1],[0.5,0]]]},"expected":[128]},
+  {"name":"intersecting opposite windings inside pixel","input":{"width":1,"height":1,"transform":[1,0,0,1,0,0],"rule":"nonzero","contours":[[[0,0],[1,0],[0.5,1]],[[0,1],[1,1],[0.5,0]]]},"expected":[128]},
+  {"name":"distant clipped diagonal","input":{"width":1,"height":1,"transform":[1,0,0,1,0,0],"rule":"nonzero","contours":[[[-100000000,-100000000],[100000000,100000000],[-100000000,100000000]]]},"expected":[128]}
+]

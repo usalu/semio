@@ -6,7 +6,7 @@ use crate::NoteSnapshot;
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeGridVisible, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
     if payload.new_visible == base.grid_visible {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Grid visibility already has this value.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Grid visibility already has this value.");
     }
     protocol::MutationOutcome::new(NoteDiff { grid_visible: Some(payload.new_visible), ..Default::default() })
 }

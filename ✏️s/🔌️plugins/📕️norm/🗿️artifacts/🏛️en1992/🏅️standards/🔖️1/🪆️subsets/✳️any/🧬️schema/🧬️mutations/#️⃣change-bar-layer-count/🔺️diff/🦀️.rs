@@ -11,7 +11,7 @@ pub fn diff(payload: &ChangeBarLayerCount, base: &En1992Snapshot) -> protocol::M
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Layer {} not found.", payload.layer_id), Vec::<String>::new());
     };
     if layer.count == payload.new_count {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Value unchanged.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Value unchanged.");
     }
     layer.count = payload.new_count;
     protocol::MutationOutcome::new(En1992Diff { members: Some(En1992MemberList { values: members }), ..Default::default() })

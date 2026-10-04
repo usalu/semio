@@ -28,12 +28,12 @@ fn retained_command_test_catalog() -> (&'static str, &'static str, &'static [&'s
 
 //#region ⚠️ Errors
 /// 🧯️ Puzzle 3d precompute session errors — JSON (de)serialization and brush/fill session state
-/// failures. `Json` wraps `dsl::ValueError` (not `serde_json::Error`) since every production
+/// failures. `Json` wraps `semio_framework_value::ValueError` (not `serde_json::Error`) since every production
 /// (de)serialization call site now routes text through `dsl::os_pack::json::{from_json_str,
 /// to_json_string}`, which are `ToValue`/`FromValue`-based, not `serde`-based.
 #[derive(Debug)]
 pub enum Puzzle3dError {
-    Json(dsl::ValueError),
+    Json(semio_framework_value::ValueError),
     BrushPlacementRejected,
     FillSessionUnavailable,
 }
@@ -57,8 +57,8 @@ impl std::error::Error for Puzzle3dError {
     }
 }
 
-impl From<dsl::ValueError> for Puzzle3dError {
-    fn from(error: dsl::ValueError) -> Self {
+impl From<semio_framework_value::ValueError> for Puzzle3dError {
+    fn from(error: semio_framework_value::ValueError) -> Self {
         Self::Json(error)
     }
 }
@@ -117,24 +117,28 @@ impl<'de> serde::Deserialize<'de> for Puzzle3dScale {
 
 /// 🔁️ Hand-written (mirrors the `Serialize`/`Deserialize` pair directly above): same bare-number-or-
 /// `[x, y, z]`-array wire shape.
-impl dsl::ToValue for Puzzle3dScale {
-    fn to_value(&self) -> dsl::DslValue {
+impl semio_framework_value::ToValue for Puzzle3dScale {
+    fn to_value(&self) -> semio_framework_value::DslValue {
         match self {
-            Puzzle3dScale::Uniform(scale) => dsl::ToValue::to_value(scale),
-            Puzzle3dScale::Vec3(vec3) => dsl::ToValue::to_value(vec3),
+            Puzzle3dScale::Uniform(scale) => semio_framework_value::ToValue::to_value(scale),
+            Puzzle3dScale::Vec3(vec3) => semio_framework_value::ToValue::to_value(vec3),
         }
     }
+    fn to_value_controlled(&self,c:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_value::DslValue,semio_framework_value::ValueError>{match self{Self::Uniform(v)=><f64 as semio_framework_value::ToValue>::to_value_controlled(v,c),Self::Vec3(v)=><[f64;3] as semio_framework_value::ToValue>::to_value_controlled(v,c)}}
+
 }
-impl dsl::FromValue for Puzzle3dScale {
-    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+impl semio_framework_value::FromValue for Puzzle3dScale {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         match value {
-            dsl::DslValue::Array(items) if items.len() >= 3 => {
+            semio_framework_value::DslValue::Array(items) if items.len() >= 3 => {
                 let axis = |i: usize| items[i].as_f64().unwrap_or(1.0);
                 Ok(Puzzle3dScale::Vec3([axis(0), axis(1), axis(2)]))
             }
             other => f64::from_value(other).map(Puzzle3dScale::Uniform),
         }
     }
+    fn from_value_controlled(value:&semio_framework_value::DslValue,c:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{c.charge(std::mem::size_of::<Self>())?;match value{semio_framework_value::DslValue::Array(_)=><[f64;3] as semio_framework_value::FromValue>::from_value_controlled(value,c).map(Self::Vec3),_=><f64 as semio_framework_value::FromValue>::from_value_controlled(value,c).map(Self::Uniform)}}
+
 }
 
 /// 🔗️ Hand `DslField` bridge for `Puzzle3dScale`: `objects`/`targetVolumes` are `#[dsl(table)]`
@@ -145,25 +149,52 @@ impl dsl::FromValue for Puzzle3dScale {
 /// per the engine's own `validate_table_columns`), so this binds through the bracketed
 /// `Shape::List(Float)` instead: `scale=[2]` (uniform) / `scale=[2 3 4]` (per-axis) — the brackets
 /// make it self-delimiting regardless of item count.
-impl dsl::DslField for Puzzle3dScale {
-    fn shape() -> dsl::Shape {
-        dsl::Shape::List(Box::new(dsl::Shape::Float))
+impl semio_framework_dsl_record::DslField for Puzzle3dScale {
+    fn shape_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, semio_framework_value::ValueError> {
+        <Vec<f64> as semio_framework_dsl_record::DslField>::shape_controlled(control)
     }
-    fn to_value(&self) -> dsl::FieldValue {
+    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::FieldValue, semio_framework_value::ValueError> {
+        let axes = match self { Self::Uniform(v) => std::slice::from_ref(v), Self::Vec3(v) => v.as_slice() };
+        control.scoped_stage(|control| {
+            control.begin_stage(axes.len())?;
+            let mut values = control.allocate_vec::<semio_framework_dsl_record::FieldValue>(axes.len())?;
+            for value in axes { values.push(<f64 as semio_framework_dsl_record::DslField>::to_value_controlled(value, control)?); }
+            Ok(semio_framework_dsl_record::FieldValue::List(values))
+        })
+    }
+    fn from_value_controlled(value: &semio_framework_dsl_record::FieldValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
+        control.checkpoint()?;
+        let semio_framework_dsl_record::FieldValue::List(items) = value else { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "Puzzle3d Scale requires one or three scalars")) };
+        if items.len() != 1 && items.len() != 3 { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "Puzzle3d Scale requires one or three scalars")) }
+        control.scoped_stage(|control| {
+            control.begin_stage(items.len())?;
+            control.charge(std::mem::size_of::<Self>())?;
+            let x = <f64 as semio_framework_dsl_record::DslField>::from_value_controlled(&items[0], control)?;
+            if items.len() == 1 { return Ok(Self::Uniform(x)) }
+            let y = <f64 as semio_framework_dsl_record::DslField>::from_value_controlled(&items[1], control)?;
+            let z = <f64 as semio_framework_dsl_record::DslField>::from_value_controlled(&items[2], control)?;
+            Ok(Self::Vec3([x,y,z]))
+        })
+    }
+
+    fn shape() -> semio_framework_dsl_record::Shape {
+        semio_framework_dsl_record::Shape::List(Box::new(semio_framework_dsl_record::Shape::Float))
+    }
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
         match self {
-            Puzzle3dScale::Uniform(scale) => dsl::FieldValue::List(vec![dsl::FieldValue::Float(*scale)]),
-            Puzzle3dScale::Vec3(vec3) => dsl::FieldValue::List(vec3.iter().map(|axis| dsl::FieldValue::Float(*axis)).collect()),
+            Puzzle3dScale::Uniform(scale) => semio_framework_dsl_record::FieldValue::List(vec![semio_framework_dsl_record::FieldValue::Float(*scale)]),
+            Puzzle3dScale::Vec3(vec3) => semio_framework_dsl_record::FieldValue::List(vec3.iter().map(|axis| semio_framework_dsl_record::FieldValue::Float(*axis)).collect()),
         }
     }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
         match value {
-            dsl::FieldValue::List(items) if items.len() == 1 => match &items[0] {
-                dsl::FieldValue::Float(scale) => Ok(Puzzle3dScale::Uniform(*scale)),
+            semio_framework_dsl_record::FieldValue::List(items) if items.len() == 1 => match &items[0] {
+                semio_framework_dsl_record::FieldValue::Float(scale) => Ok(Puzzle3dScale::Uniform(*scale)),
                 other => Err(format!("expected Float, found {other:?}")),
             },
-            dsl::FieldValue::List(items) if items.len() >= 3 => {
+            semio_framework_dsl_record::FieldValue::List(items) if items.len() >= 3 => {
                 let axis = |i: usize| match &items[i] {
-                    dsl::FieldValue::Float(v) => Ok(*v),
+                    semio_framework_dsl_record::FieldValue::Float(v) => Ok(*v),
                     other => Err(format!("expected Float, found {other:?}")),
                 };
                 Ok(Puzzle3dScale::Vec3([axis(0)?, axis(1)?, axis(2)?]))
@@ -176,7 +207,7 @@ impl dsl::DslField for Puzzle3dScale {
 
 // #region 🔖️Document
 /// ⚓️ Whether a root object keeps its stored plane (`Fixed`) or resets to default XY (`Derived`).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -188,7 +219,7 @@ pub enum Puzzle3dObjectAnchor {
 
 /// 🔘️ One vortex on an object's rim — `vortex_kind` gates attraction compatibility, `position`/
 /// `direction` place and orient it, `radius` sizes its brush-fill collision.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -223,7 +254,7 @@ pub struct Puzzle3dVortex {
 /// 🧱️ One placed object — `origin`/`orientation`/`scale` (a scalar-or-`[x,y,z]` `Puzzle3dScale`,
 /// see that type and `vec3_scale`) pose it, `anchor` gates flatten-root plane retention, `vortices`
 /// are its rim attraction ports.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -265,7 +296,7 @@ pub struct Puzzle3dObject {
 
 /// 🔗️ One attraction between two full vortex ids (`object_id:vortex_id`), with the eight compose
 /// connection parameters (`gap`/`shift`/`rise`/`rotation`/`turn`/`tilt` plus diagram `x`/`y`).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -304,7 +335,7 @@ pub struct Puzzle3dAttraction {
 /// 🧊️ A persisted oriented box constraining fill placement (Volume Brush voxels or Transform-gumball
 /// edited volumes). `scale` is a scalar-or-`[x,y,z]` `Puzzle3dScale` — see that type and
 /// `volume_scale_vec`.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -329,7 +360,7 @@ pub struct Puzzle3dTargetVolume {
 }
 
 /// 🌐️ Where a reference image/media's bytes live and what kind of media it is.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -343,7 +374,7 @@ pub struct Puzzle3dReferenceSource {
 }
 
 /// 🖼️ A reference plane pinned in world space at `origin`, `width_world` meters wide.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -369,7 +400,7 @@ pub struct Puzzle3dReference {
 }
 
 /// 🔗️ How specifically two vortex/cable kinds are allowed to attract.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "lowercase"))]
 #[value(rename_all = "lowercase")]
@@ -383,7 +414,7 @@ pub enum Puzzle3dCompatSpecificity {
 }
 
 /// 🧩️ One allowed (or, unidirectional, one-way-allowed) link pair between two vortex/cable kind ids.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -404,7 +435,7 @@ pub struct Puzzle3dKindCompatibility {
 }
 
 /// 🏷️ One freeform attribute on a catalog object-kind (compose `Attribute` analogue).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -424,7 +455,7 @@ pub struct Puzzle3dAttribute {
 }
 
 /// ✍️ One author credit on a catalog object-kind (compose `Author` analogue).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -447,7 +478,7 @@ pub struct Puzzle3dAuthor {
 }
 
 /// 🖼️ One tagged representation/LOD URL on a catalog object-kind (compose `Representation` analogue).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -477,7 +508,7 @@ pub struct Puzzle3dRepresentation {
 
 /// 🌱️ One rim-vortex template on a `Puzzle3dCatalogObjectKind` — compose connector analogue with
 /// `point`/`direction`/`t`/`mandatory`.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -531,7 +562,7 @@ impl Default for Puzzle3dCatalogVortexTemplate {
 }
 
 /// 🧱️ One object-kind catalog row — type-like (compose `Type` analogue).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -577,7 +608,7 @@ pub struct Puzzle3dCatalogObjectKind {
 }
 
 /// 🔘️ One vortex-kind catalog row — port-like (compose `Port` analogue).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -612,7 +643,7 @@ pub struct Puzzle3dCatalogVortexKind {
 }
 
 /// 🧵️ One cable-kind catalog row (mirrors `CableKindCatalog`).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -632,7 +663,7 @@ pub struct Puzzle3dCatalogCableKind {
 }
 
 /// 🔗️ One attraction-kind catalog row.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -650,7 +681,7 @@ pub struct Puzzle3dCatalogAttractionKind {
 /// 🗂️ The compile-time-catalog side of a self-contained fixture export: object/vortex/cable/
 /// attraction kind rows — see `puzzle/3d/manifest/*.manifest.json` for the same schema at the
 /// manifest layer.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -675,7 +706,7 @@ pub struct Puzzle3dKindCatalogs {
 
 /// 🗂️ Fixture-carried metadata: the explicit link-compatibility table plus the object/vortex/cable/
 /// attraction kind catalog bundle (typed — see `Puzzle3dKindCatalogs`).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -824,60 +855,60 @@ pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations
 /// existed as a side-effecting `register_pilot_languages()` before M1 but was never called from
 /// anywhere (dead code, confirmed by grep) — wiring it into `declaration()`'s `.languages(...)` is
 /// this conversion's one real bug fix: puzzle3d's own grammars were never actually registered.
-pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
-    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+pub fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
             vec![
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "puzzle.puzzle3d",
                     extension: Some("puzzle3d"),
-                    role: dsl::LanguageRole::Document,
+                    role: semio_framework_dsl::LanguageRole::Document,
                     grammar: Some(standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("puzzle.puzzle3d"),
+                    hooks: semio_framework_dsl::passthrough_hooks("puzzle.puzzle3d"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "puzzle.puzzle3d.op",
                     extension: None,
-                    role: dsl::LanguageRole::Ops,
+                    role: semio_framework_dsl::LanguageRole::Ops,
                     grammar: Some(standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("puzzle.puzzle3d.op"),
+                    hooks: semio_framework_dsl::passthrough_hooks("puzzle.puzzle3d.op"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "puzzle.puzzle3d.diff",
                     extension: None,
-                    role: dsl::LanguageRole::Diff,
+                    role: semio_framework_dsl::LanguageRole::Diff,
                     grammar: Some(standards::v1::subsets::any::schema::diff::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(standards::v1::subsets::any::schema::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
-                    hooks: dsl::passthrough_hooks("puzzle.puzzle3d.diff"),
+                    hooks: semio_framework_dsl::passthrough_hooks("puzzle.puzzle3d.diff"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "3d.pack",
                     extension: None,
-                    role: dsl::LanguageRole::Pack,
+                    role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("3d.pack"),
+                    hooks: semio_framework_dsl::passthrough_hooks("3d.pack"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "3d.spr",
                     extension: None,
-                    role: dsl::LanguageRole::Spr,
+                    role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("3d.spr"),
+                    hooks: semio_framework_dsl::passthrough_hooks("3d.spr"),
                 },
             ]
         })

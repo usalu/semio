@@ -13,7 +13,7 @@ pub fn diff(payload: &super::BindWeatherFile, base: &EnergyModelSnapshot) -> pro
     };
     let link = store::ArtifactLink { target, pin: store::LinkPin::Head, role: vocabulary::WEATHER_LINK_ROLE.to_string() };
     if base.weather_link.as_ref() == Some(&link) {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("The weather file is already bound to {}.", payload.target_uri));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("The weather file is already bound to {}.", payload.target_uri));
     }
     protocol::MutationOutcome::new(EnergyModelDiff { weather_link: Some(EnergyLinkSlotDelta::Attached { link }), ..Default::default() })
 }

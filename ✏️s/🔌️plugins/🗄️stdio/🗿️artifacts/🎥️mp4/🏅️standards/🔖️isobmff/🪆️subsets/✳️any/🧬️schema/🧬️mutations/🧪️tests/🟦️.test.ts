@@ -32,7 +32,7 @@ const snapshot: Mp4Snapshot = {
 };
 const operations = [
   { mutation: "setSnapshot", snapshot },
-  { mutation: "patchSnapshot", patch: { edits: [{ path: ["tracks", "0", "width"], edit: { operation: "set", value: 32 } }] } },
+  { mutation: "patchSnapshot", patch: { operation: "set", path: "/tracks/0/width", value: 32 } },
   { mutation: "setFtyp", ftyp },
   { mutation: "insertTrack", index: 0, track },
   { mutation: "removeTrack", index: 0 },

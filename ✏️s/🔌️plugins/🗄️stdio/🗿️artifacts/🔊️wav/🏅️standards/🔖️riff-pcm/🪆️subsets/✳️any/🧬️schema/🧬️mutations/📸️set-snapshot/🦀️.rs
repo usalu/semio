@@ -25,9 +25,12 @@ impl protocol::MutationKind<WavSnapshot, WavMutation> for SetSnapshot {
     fn diff(&self, base: &WavSnapshot) -> protocol::MutationOutcome<<WavMutation as Mutation<WavSnapshot>>::Diff> {
         agg_diff(&WavMutation::SetSnapshot(self.clone()), base)
     }
-    fn inverse(&self, base: &WavSnapshot) -> Vec<WavMutation> {
-        agg_inverse(&WavMutation::SetSnapshot(self.clone()), base)
-    }
+    fn inverse(&self, base: &WavSnapshot) -> Result<Vec<WavMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&WavMutation::SetSnapshot(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set snapshot", "Momentaufnahme setzen")
     }

@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "id": "flow-drawing",
+  "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖍️drawing/🦀️.rs",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/Cargo.toml",
+  "bindings": [
+    "Engine",
+    "EngineCache",
+    "EngineFault",
+    "EngineHandle",
+    "EngineKey"
+  ]
+}

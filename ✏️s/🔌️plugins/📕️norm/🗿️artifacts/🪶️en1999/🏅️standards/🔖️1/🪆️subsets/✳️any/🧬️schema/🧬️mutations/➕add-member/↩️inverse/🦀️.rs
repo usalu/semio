@@ -5,6 +5,9 @@ use crate::mutations::En1999Mutation;
 use crate::En1999Snapshot;
 use crate::mutations::remove_member;
 
-pub fn inverse(payload: &AddMember, _base: &En1999Snapshot) -> Vec<En1999Mutation> {
+pub fn inverse(payload: &AddMember, _base: &En1999Snapshot) -> Result<Vec<En1999Mutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![En1999Mutation::RemoveMember(remove_member::RemoveMember { id: payload.member.id.clone() })]
+
+    })())
 }

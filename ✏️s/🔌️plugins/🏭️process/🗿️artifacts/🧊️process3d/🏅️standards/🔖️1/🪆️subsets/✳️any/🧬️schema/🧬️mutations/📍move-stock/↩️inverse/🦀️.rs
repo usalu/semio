@@ -5,7 +5,10 @@ use crate::mutations::Process3dMutation;
 use crate::Process3dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &super::MoveStock, base: &Process3dSnapshot) -> Vec<Process3dMutation> {
+pub fn inverse(_payload: &super::MoveStock, base: &Process3dSnapshot) -> Result<Vec<Process3dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![Process3dMutation::MoveStock(super::MoveStock { new_pose: base.stock_pose.clone() })]
+
+    })())
 }
 //#endregion 🔖️Inverse

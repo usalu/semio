@@ -115,8 +115,8 @@ impl GenesisFixture {
             .await
             .unwrap();
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🗿️artifact-authority/🌱️creation/🧫️fixtures/📚️operation-v1/🔣️.json")).unwrap();
-        let mut intent: ArtifactCreationIntentV1 = directory::os_pack::json::from_json_str(&fixture["intent"].to_string()).unwrap();
-        let mut prepared: ArtifactCreationPreparedV1 = directory::os_pack::json::from_json_str(&fixture["prepared"].to_string()).unwrap();
+        let mut intent: ArtifactCreationIntentV1 = semio_framework_pack_json::from_json_str(&fixture["intent"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let mut prepared: ArtifactCreationPreparedV1 = semio_framework_pack_json::from_json_str(&fixture["prepared"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         intent.actor = ArtifactCreationActorV1 { user_id: "seed".into(), session_id: issued.record.id, authorization_generation: issued.record.authorization_generation };
         intent.scope.space_id = "default".into();
         intent.accepted_at_ms = now_ms() as u64;
@@ -394,8 +394,8 @@ mod quick {
             }
             assert_eq!(f.sqlite().head_seq().await.unwrap() - head, row["publicEvents"].as_u64().unwrap(), "{kind}");
             let operation = f.operation().await;
-            let independent: serde_json::Value = serde_json::from_str(&directory::os_pack::json::to_json_string(&operation.status())).unwrap();
-            let recovered: directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationStatusV1 = directory::os_pack::json::from_json_str(&serde_json::to_string(&independent).unwrap()).unwrap();
+            let independent: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&operation.status())).unwrap();
+            let recovered: directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationStatusV1 = semio_framework_pack_json::from_json_str(&serde_json::to_string(&independent).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
             assert_eq!(recovered, operation.status(), "{kind}: independent JSON semantic roundtrip");
             assert_eq!(format!("{:?}", operation.phase).to_lowercase(), row["terminal"].as_str().unwrap(), "{kind}");
             if matches!(kind, "revoked-session" | "expired-session" | "changed-generation" | "archived-space" | "removed-member" | "spectator") {

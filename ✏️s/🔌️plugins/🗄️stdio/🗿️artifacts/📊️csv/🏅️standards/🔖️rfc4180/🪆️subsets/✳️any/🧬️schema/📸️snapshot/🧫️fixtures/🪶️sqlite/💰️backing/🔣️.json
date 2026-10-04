@@ -1,0 +1,48 @@
+{
+  "owner": "csv",
+  "schema": "Literal schema 世界\u0000",
+  "records": [
+    {
+      "id": 7,
+      "ordinal": 0
+    },
+    {
+      "id": 2,
+      "ordinal": 1
+    },
+    {
+      "id": 99,
+      "ordinal": 2
+    }
+  ],
+  "fields": [
+    {
+      "id": 42,
+      "recordId": 2,
+      "ordinal": 1,
+      "value": "Grüße,\t\n\u0000🌠",
+      "quoted": false
+    },
+    {
+      "id": 5,
+      "recordId": 2,
+      "ordinal": 0,
+      "value": "",
+      "quoted": true
+    },
+    {
+      "id": 8,
+      "recordId": 7,
+      "ordinal": 0,
+      "value": "A\u0000B",
+      "quoted": false
+    }
+  ],
+  "policy": {
+    "zeroOwnershipBytes": 0,
+    "refusalKind": "ownershipLimit",
+    "retirementRefund": false,
+    "byteAuthority": "literalUTF8Bytes",
+    "indexAuthority": "authoredEntityRelations"
+  }
+}

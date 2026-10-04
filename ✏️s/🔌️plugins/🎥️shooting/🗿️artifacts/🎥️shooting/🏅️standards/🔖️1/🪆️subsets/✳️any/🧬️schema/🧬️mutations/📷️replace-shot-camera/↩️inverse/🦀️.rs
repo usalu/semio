@@ -4,7 +4,8 @@ use super::ReplaceShotCamera;
 use crate::mutations::ShootingMutation;
 use crate::ShootingSnapshot;
 
-pub fn inverse(payload: &ReplaceShotCamera, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
+pub fn inverse(payload: &ReplaceShotCamera, base: &ShootingSnapshot) -> Result<Vec<ShootingMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let camera_id = match base.shots.iter().find(|shot| shot.id == payload.shot_id).and_then(|shot| shot.camera_id.clone()) {
         Some(id) => id,
         None => return Vec::new(),
@@ -13,4 +14,6 @@ pub fn inverse(payload: &ReplaceShotCamera, base: &ShootingSnapshot) -> Vec<Shoo
         Some(entry) => vec![ShootingMutation::ReplaceShotCamera(ReplaceShotCamera { shot_id: payload.shot_id.clone(), new_camera: entry.camera.clone() })],
         None => Vec::new(),
     }
+
+    })())
 }

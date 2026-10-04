@@ -23,10 +23,13 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveShading {
         MutationOutcome::new(diff::diff_remove_shading(base, &self.id))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         let _ = base;
         base.shadings.iter().find(|item| item.id == self.id).map(|item| PdfMutation::SetShading(super::set_shading::SetShading { shading: item.clone() })).into_iter().collect()
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove shading {}", self.id), &format!("Schattierung {} entfernen", self.id))

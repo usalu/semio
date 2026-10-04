@@ -12,6 +12,7 @@
 
 pub use semio_framework_geometry::{Mat4, Vec3};
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 use semio_framework_ui_viewport::{
     Viewport3dAxonometricHemisphere, Viewport3dAxonometricQuadrant,
     Viewport3dAxonometricVariant, Viewport3dObliqueVariant,
@@ -761,6 +762,11 @@ pub enum Mesh3dField {
     EdgeIds,
     Uvs,
     Colors,
+    UvsMetallicRoughness,
+    UvsNormal,
+    UvsOcclusion,
+    UvsEmissive,
+    Tangents,
 }
 
 impl Mesh3dField {
@@ -775,6 +781,7 @@ impl Mesh3dField {
             Self::EdgeIds => 6,
             Self::Uvs => 7,
             Self::Colors => 8,
+            Self::UvsMetallicRoughness=>9,Self::UvsNormal=>10,Self::UvsOcclusion=>11,Self::UvsEmissive=>12,Self::Tangents=>13,
         }
     }
 }
@@ -789,11 +796,13 @@ pub struct Mesh3dSchema {
     pub edge_ids: u32,
     pub uvs: u32,
     pub colors: u32,
+    pub surface_uvs:[u32;4],
+    pub tangents:u32,
 }
 
 impl Mesh3dSchema {
     pub fn triangle_mesh(vertices: u32, indices: u32) -> Self {
-        Self { vertices, indices, face_ids: 0, vertex_ids: 0, edges: 0, edge_ids: 0, uvs: 0, colors: 0 }
+        Self { vertices, indices, face_ids: 0, vertex_ids: 0, edges: 0, edge_ids: 0, uvs: 0, colors: 0,surface_uvs:[0;4],tangents:0 }
     }
 
     fn field_items(self, field: Mesh3dField) -> u32 {
@@ -805,7 +814,8 @@ impl Mesh3dSchema {
             Mesh3dField::Edges => self.edges,
             Mesh3dField::EdgeIds => self.edge_ids,
             Mesh3dField::Uvs => self.uvs,
-            Mesh3dField::Colors => self.colors,
+            Mesh3dField::Colors => self.colors,Mesh3dField::Tangents=>self.tangents,
+            Mesh3dField::UvsMetallicRoughness=>self.surface_uvs[0],Mesh3dField::UvsNormal=>self.surface_uvs[1],Mesh3dField::UvsOcclusion=>self.surface_uvs[2],Mesh3dField::UvsEmissive=>self.surface_uvs[3],
         }
     }
 
@@ -813,8 +823,8 @@ impl Mesh3dSchema {
         match field {
             Mesh3dField::Positions | Mesh3dField::Normals => 12,
             Mesh3dField::Edges => 24,
-            Mesh3dField::Uvs => 8,
-            Mesh3dField::Colors => 16,
+            Mesh3dField::Uvs | Mesh3dField::UvsMetallicRoughness | Mesh3dField::UvsNormal | Mesh3dField::UvsOcclusion | Mesh3dField::UvsEmissive => 8,
+            Mesh3dField::Colors | Mesh3dField::Tangents => 16,
             Mesh3dField::Indices | Mesh3dField::FaceIds | Mesh3dField::VertexIds | Mesh3dField::EdgeIds => 4,
         }
     }
@@ -827,13 +837,15 @@ impl Mesh3dSchema {
             || (self.vertex_ids != 0 && self.vertex_ids != self.vertices)
             || (self.edge_ids != 0 && self.edge_ids != self.edges)
             || (self.uvs != 0 && self.uvs != self.vertices)
+            || self.surface_uvs.iter().any(|count|*count!=0 && *count!=self.vertices)
             || (self.colors != 0 && self.colors != self.vertices)
+            || (self.tangents != 0 && self.tangents != self.vertices)
         {
             return Err(Mesh3dFault::Schema);
         }
-        let mut offsets = [0usize; 9];
+        let mut offsets = [0usize; 14];
         let mut total = 0usize;
-        for field in [Mesh3dField::Positions, Mesh3dField::Normals, Mesh3dField::Indices, Mesh3dField::FaceIds, Mesh3dField::VertexIds, Mesh3dField::Edges, Mesh3dField::EdgeIds, Mesh3dField::Uvs, Mesh3dField::Colors] {
+        for field in [Mesh3dField::Positions, Mesh3dField::Normals, Mesh3dField::Indices, Mesh3dField::FaceIds, Mesh3dField::VertexIds, Mesh3dField::Edges, Mesh3dField::EdgeIds, Mesh3dField::Uvs, Mesh3dField::Colors,Mesh3dField::UvsMetallicRoughness,Mesh3dField::UvsNormal,Mesh3dField::UvsOcclusion,Mesh3dField::UvsEmissive,Mesh3dField::Tangents] {
             offsets[field.index()] = total;
             let bytes = usize::try_from(self.field_items(field)).ok().and_then(|items| items.checked_mul(Self::field_item_bytes(field))).ok_or(Mesh3dFault::ByteCapacity)?;
             total = total.checked_add(bytes).ok_or(Mesh3dFault::ByteCapacity)?;
@@ -875,7 +887,7 @@ pub struct Mesh3dLease {
 
 #[derive(Clone, Copy)]
 struct Mesh3dLayout {
-    offsets: [usize; 9],
+    offsets: [usize; 14],
     total_bytes: usize,
     page_count: u16,
 }
@@ -891,16 +903,18 @@ struct Mesh3dOwner {
     layout: Mesh3dLayout,
     pages: Box<[Option<Mesh3dPage>; MESH3D_OWNER_PAGE_CAPACITY]>,
     allocated_pages: u16,
-    written: [u32; 9],
+    written: [u32; 14],
     aabb_min: [f32; 3],
     aabb_max: [f32; 3],
     closing: bool,
     close_page: u16,
+    component_references: Option<BTreeMap<String, Vec<String>>>,
+    component_retirement: Option<Box<dyn protocol::value::ErasedSnapshotRetirement>>,
 }
 
 impl Mesh3dOwner {
     fn new(generation: u64, revision: u64, schema: Mesh3dSchema, layout: Mesh3dLayout) -> Self {
-        Self { generation, revision, schema, layout, pages: Box::new(std::array::from_fn(|_| None)), allocated_pages: 0, written: [0; 9], aabb_min: [f32::INFINITY; 3], aabb_max: [f32::NEG_INFINITY; 3], closing: false, close_page: 0 }
+        Self { generation, revision, schema, layout, pages: Box::new(std::array::from_fn(|_| None)), allocated_pages: 0, written: [0; 14], aabb_min: [f32::INFINITY; 3], aabb_max: [f32::NEG_INFINITY; 3], closing: false, close_page: 0, component_references: None, component_retirement: None }
     }
 
     fn allocate_step(&mut self) -> bool {
@@ -967,22 +981,28 @@ impl Mesh3dOwner {
         self.allocated_pages == self.layout.page_count
             && self.written.iter().enumerate().all(|(index, count)| {
                 *count
-                    == self.schema.field_items([Mesh3dField::Positions, Mesh3dField::Normals, Mesh3dField::Indices, Mesh3dField::FaceIds, Mesh3dField::VertexIds, Mesh3dField::Edges, Mesh3dField::EdgeIds, Mesh3dField::Uvs, Mesh3dField::Colors][index])
+                    == self.schema.field_items([Mesh3dField::Positions, Mesh3dField::Normals, Mesh3dField::Indices, Mesh3dField::FaceIds, Mesh3dField::VertexIds, Mesh3dField::Edges, Mesh3dField::EdgeIds, Mesh3dField::Uvs, Mesh3dField::Colors,Mesh3dField::UvsMetallicRoughness,Mesh3dField::UvsNormal,Mesh3dField::UvsOcclusion,Mesh3dField::UvsEmissive,Mesh3dField::Tangents][index])
             })
     }
 
-    fn close_step(&mut self) -> bool {
+    fn close_step(&mut self) -> Result<bool, Mesh3dFault> {
         self.closing = true;
         if self.close_page < self.allocated_pages {
             self.pages[usize::from(self.close_page)] = None;
             self.close_page += 1;
-            return false;
+            return Ok(false);
+        }
+        if let Some(original) = self.component_references.take() { self.component_retirement = Some(protocol::value::retirement::owned_retirement(original)); return Ok(false); }
+        if let Some(close) = self.component_retirement.as_mut() {
+            if !close.terminal_is_empty() { let bytes = close.next_close_byte_demand().max(MESH3D_PAGE_BYTES); close.close_step(1, bytes).map_err(|_| Mesh3dFault::Closing)?; return Ok(false); }
+            self.component_retirement = None;
+            return Ok(false);
         }
         self.layout.total_bytes = 0;
         self.layout.page_count = 0;
         self.allocated_pages = 0;
-        self.written = [0; 9];
-        true
+        self.written = [0; 14];
+        Ok(true)
     }
 }
 
@@ -1106,7 +1126,7 @@ impl Mesh3dAuthority {
         let index = usize::from(slot_index);
         let slot = self.slots.get_mut(index).and_then(Option::as_mut).filter(|slot| slot.epoch == epoch).ok_or(Mesh3dFault::Stale)?;
         let Mesh3dSlotState::Closing(owner) = &mut slot.state else { return Err(Mesh3dFault::Closing) };
-        if !owner.close_step() {
+        if !owner.close_step()? {
             return Ok(false);
         }
         let pages = usize::from(slot.reserved_pages);
@@ -1172,7 +1192,7 @@ pub fn mesh3d_write_edge(token: Mesh3dWriteToken, value: [[f32; 3]; 2]) -> Resul
 }
 
 pub fn mesh3d_write_vec2(token: Mesh3dWriteToken, field: Mesh3dField, value: [f32; 2]) -> Result<(), Mesh3dFault> {
-    if field != Mesh3dField::Uvs || !value.iter().all(|value| value.is_finite()) {
+    if !matches!(field,Mesh3dField::Uvs | Mesh3dField::UvsMetallicRoughness | Mesh3dField::UvsNormal | Mesh3dField::UvsOcclusion | Mesh3dField::UvsEmissive) || !value.iter().all(|value| value.is_finite()) {
         return Err(Mesh3dFault::Schema);
     }
     let mut bytes = [0; 8];
@@ -1184,7 +1204,7 @@ pub fn mesh3d_write_vec2(token: Mesh3dWriteToken, field: Mesh3dField, value: [f3
 }
 
 pub fn mesh3d_write_vec4(token: Mesh3dWriteToken, field: Mesh3dField, value: [f32; 4]) -> Result<(), Mesh3dFault> {
-    if field != Mesh3dField::Colors || !value.iter().all(|value| value.is_finite()) {
+    if !matches!(field,Mesh3dField::Colors | Mesh3dField::Tangents) || !value.iter().all(|value| value.is_finite()) {
         return Err(Mesh3dFault::Schema);
     }
     let mut bytes = [0; 16];
@@ -1249,6 +1269,15 @@ pub fn mesh3d_seal(token: Mesh3dWriteToken) -> Result<Mesh3dLease, Mesh3dFault> 
     mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?.seal(token)
 }
 
+/// 🎯️ Moves the original label table into the same mesh owner before publication.
+pub fn mesh3d_move_component_references(token: Mesh3dWriteToken, original: &mut BTreeMap<String, Vec<String>>) -> Result<(), Mesh3dFault> {
+    let mut authority = mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?;
+    let owner = authority.writing(token)?;
+    if owner.component_references.is_some() { return Err(Mesh3dFault::Order); }
+    owner.component_references = Some(std::mem::take(original));
+    Ok(())
+}
+
 pub fn mesh3d_abort(token: Mesh3dWriteToken) -> Result<(), Mesh3dFault> {
     mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?.begin_close_write(token)
 }
@@ -1270,6 +1299,16 @@ pub fn mesh3d_terminal_is_empty(lease: Mesh3dLease) -> bool {
 }
 
 impl Mesh3dLease {
+    /// 🔖️ Reads one original canonical label without a floating point conversion.
+    pub fn component_label(self, field: Mesh3dField, group: u32) -> Result<Option<u64>, Mesh3dFault> {
+        let kind = match field { Mesh3dField::FaceIds => "face", Mesh3dField::EdgeIds => "edge", Mesh3dField::VertexIds => "vertex", _ => return Err(Mesh3dFault::Schema) };
+        let authority = mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?;
+        let owner = authority.ready(self)?;
+        let Some(label) = owner.component_references.as_ref().and_then(|map| map.get(kind)).and_then(|labels| labels.get(group as usize)) else { return Ok(None); };
+        if label.len() > 20 || !label.as_bytes().first().is_some_and(|byte| matches!(byte, b'1'..=b'9')) || !label.bytes().all(|byte| byte.is_ascii_digit()) { return Err(Mesh3dFault::Schema); }
+        label.parse().map(Some).map_err(|_| Mesh3dFault::Schema)
+    }
+
     pub fn generation(self) -> u64 {
         self.generation
     }
@@ -1302,7 +1341,7 @@ impl Mesh3dLease {
     }
 
     pub fn vec2(self, field: Mesh3dField, item: u32) -> Result<[f32; 2], Mesh3dFault> {
-        if field != Mesh3dField::Uvs {
+        if !matches!(field,Mesh3dField::Uvs | Mesh3dField::UvsMetallicRoughness | Mesh3dField::UvsNormal | Mesh3dField::UvsOcclusion | Mesh3dField::UvsEmissive) {
             return Err(Mesh3dFault::Schema);
         }
         let bytes = self.read::<8>(field, item)?;
@@ -1318,7 +1357,7 @@ impl Mesh3dLease {
     }
 
     pub fn vec4(self, field: Mesh3dField, item: u32) -> Result<[f32; 4], Mesh3dFault> {
-        if field != Mesh3dField::Colors {
+        if !matches!(field,Mesh3dField::Colors | Mesh3dField::Tangents) {
             return Err(Mesh3dFault::Schema);
         }
         let bytes = self.read::<16>(field, item)?;
@@ -1400,11 +1439,11 @@ impl Mesh3dItemCursor {
                 }
                 Mesh3dItem::Edge([[values[0], values[1], values[2]], [values[3], values[4], values[5]]])
             }
-            Mesh3dField::Uvs => {
+            Mesh3dField::Uvs | Mesh3dField::UvsMetallicRoughness | Mesh3dField::UvsNormal | Mesh3dField::UvsOcclusion | Mesh3dField::UvsEmissive => {
                 let bytes = self.lease.read::<8>(self.field, self.index)?;
                 Mesh3dItem::Vec2([f32::from_le_bytes(bytes[..4].try_into().expect("fixed mesh scalar")), f32::from_le_bytes(bytes[4..].try_into().expect("fixed mesh scalar"))])
             }
-            Mesh3dField::Colors => {
+            Mesh3dField::Colors | Mesh3dField::Tangents => {
                 let bytes = self.lease.read::<16>(self.field, self.index)?;
                 Mesh3dItem::Vec4(std::array::from_fn(|index| f32::from_le_bytes(bytes[index * 4..index * 4 + 4].try_into().expect("fixed mesh scalar"))))
             }
@@ -1456,12 +1495,32 @@ impl Default for SceneInstanceMaterial3d {
 
 #[derive(Clone, Debug)]
 pub struct Instance3d {
+    pub component_source: Option<ComponentSource3d>,
     pub id: String,
     pub model: Mat4,
     pub color: [f32; 4],
     pub selected: bool,
     pub hovered: bool,
     pub material: SceneInstanceMaterial3d,
+}
+
+/// 🧬️ The exact analytic source identity carried by one scene instance.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ComponentSource3d {
+    handle: [u8; 64],
+    revision: [u8; 64],
+}
+
+impl ComponentSource3d {
+    pub fn new(handle: &str, revision: &str) -> Option<Self> {
+        let valid = |value: &str| value.len() == 64 && value.bytes().all(|byte| matches!(byte, b'0'..=b'9' | b'a'..=b'f'));
+        if !valid(handle) || !valid(revision) { return None; }
+        Some(Self { handle: handle.as_bytes().try_into().ok()?, revision: revision.as_bytes().try_into().ok()? })
+    }
+
+    pub fn handle(&self) -> &str { std::str::from_utf8(&self.handle).expect("validated component source handle") }
+
+    pub fn revision(&self) -> &str { std::str::from_utf8(&self.revision).expect("validated component source revision") }
 }
 
 impl Instance3d {
@@ -1503,10 +1562,19 @@ impl SceneMaterialKind3d {
         }
     }
 
+    pub fn texture_keys(&self) -> impl Iterator<Item=&str> {
+        let keys=match self {
+            Self::Painted { texture_key } => [Some(texture_key.as_str()),None,None,None,None],
+            Self::Authored(material) => [material.base_color_texture.as_deref(),material.metallic_roughness_texture.as_deref(),material.normal_texture.as_deref(),material.occlusion_texture.as_deref(),material.emissive_texture.as_deref()],
+            _ => [None;5],
+        };
+        keys.into_iter().flatten()
+    }
+
     pub fn texture_key_mut(&mut self) -> Option<&mut String> {
         match self {
             Self::Painted { texture_key } => Some(texture_key),
-            Self::Authored(material) => material.base_color_texture.as_mut(),
+            Self::Authored(material) => [&mut material.base_color_texture,&mut material.metallic_roughness_texture,&mut material.normal_texture,&mut material.occlusion_texture,&mut material.emissive_texture].into_iter().flatten().find(|key| !key.is_empty() || key.capacity() > 0),
             Self::Standard | Self::Celebration { .. } => None,
         }
     }
@@ -1530,6 +1598,10 @@ pub enum SceneTextureWrap3d {
 pub enum SceneTextureFilter3d {
     Nearest,
     Linear,
+    NearestMipmapNearest,
+    LinearMipmapNearest,
+    NearestMipmapLinear,
+    LinearMipmapLinear,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -1558,6 +1630,13 @@ pub struct SceneAuthoredMaterial3d {
     pub preserve_vertex_color: bool,
     pub base_color_texture: Option<String>,
     pub texture_sampler: SceneTextureSampler3d,
+    pub metallic_roughness_texture: Option<String>,
+    pub normal_texture: Option<String>,
+    pub occlusion_texture: Option<String>,
+    pub emissive_texture: Option<String>,
+    pub additional_texture_samplers: [SceneTextureSampler3d; 4],
+    pub normal_scale:[f32;2],
+    pub occlusion_strength:f32,
 }
 
 #[derive(Clone, Debug)]

@@ -8,9 +8,9 @@ use semio_framework_plugin::{AppOperationContext, HistoryView};
 
 fn document(locked: bool, visible: bool) -> RasterSnapshot {
     let identity = r#"{"x":0.0,"y":0.0,"a":1.0,"b":0.0,"c":0.0,"d":1.0}"#;
-    dsl::json::from_json_str(&format!(
+    semio_framework_pack_json::from_json_str(&format!(
         r#"{{"schema":"s.raster.raster","id":"fill","title":"Fill","layers":[{{"kind":"pixel","id":"ink","name":"Ink","visible":{visible},"opacity":1.0,"blendMode":"normal","transform":{identity},"mask":{{"enabled":true,"linked":true,"invert":false,"width":null,"height":null,"imageKey":null,"transform":{identity}}},"width":4,"height":3,"imageKey":null,"locked":{locked}}},{{"kind":"group","id":"folder","name":"Folder","visible":true,"opacity":1.0,"blendMode":"normal","transform":{identity},"mask":null,"children":[]}}]}}"#
-    ))
+    ), semio_framework_pack_json::JsonMemberPolicy::Reject)
     .expect("the fill document decodes")
 }
 
@@ -19,7 +19,7 @@ fn config(target: &str) -> RasterConfig {
 }
 
 fn click(layer: &str, x: f64, y: f64) -> FillRegion {
-    FillRegion { layer_id: layer.into(), x, y, tolerance: 24 }
+    FillRegion { layer_id: layer.into(), x, y }
 }
 
 fn leaf(mutation: RasterMutation) -> FillRegionLeaf {
@@ -33,12 +33,12 @@ fn retire(snapshot: RasterSnapshot) {
 
 //#region 🪣️Leaf
 #[test]
-fn a_click_fills_with_the_session_colour_from_the_clicked_pixel() {
+fn a_click_fills_with_the_session_colour_and_tolerance_from_the_clicked_pixel() {
     let document = document(false, true);
-    let built = leaf(fill_region_leaf(&click("ink", 2.75, 1.25), &document, &config("pixels")).expect("the click fills"));
+    let built = leaf(fill_region_leaf(&click("ink", 2.75, 1.25), &document, &RasterConfig { fill_tolerance: 40, ..config("pixels") }).expect("the click fills"));
     assert_eq!((built.layer_id.as_str(), built.target.as_str()), ("ink", "pixels"));
     assert_eq!(built.seed, RasterSeed { x: 2, y: 1 });
-    assert_eq!(built.tolerance, 24);
+    assert_eq!(built.tolerance, 40);
     assert_eq!(built.color, vec![1.0, 128.0 / 255.0, 0.0, 1.0]);
     assert_eq!(built.selection, None);
     retire(document);
@@ -64,17 +64,17 @@ fn the_session_selection_clips_only_fills_on_its_own_layer_and_target() {
 
 #[test]
 fn a_click_the_layer_cannot_take_is_refused() {
-    for (case, document, payload, target) in [
-        ("hidden", document(false, false), click("ink", 1.0, 1.0), "pixels"),
-        ("locked", document(true, true), click("ink", 1.0, 1.0), "pixels"),
-        ("missing", document(false, true), click("ghost", 1.0, 1.0), "pixels"),
-        ("a group holds no pixels", document(false, true), click("folder", 1.0, 1.0), "pixels"),
-        ("a group without a mask", document(false, true), click("folder", 1.0, 1.0), "mask"),
-        ("off the grid", document(false, true), click("ink", -1.0, 1.0), "pixels"),
-        ("not a number", document(false, true), click("ink", f64::NAN, 1.0), "pixels"),
-        ("tolerance past 255", document(false, true), FillRegion { tolerance: 256, ..click("ink", 1.0, 1.0) }, "pixels"),
+    for (case, document, payload, session) in [
+        ("hidden", document(false, false), click("ink", 1.0, 1.0), config("pixels")),
+        ("locked", document(true, true), click("ink", 1.0, 1.0), config("pixels")),
+        ("missing", document(false, true), click("ghost", 1.0, 1.0), config("pixels")),
+        ("a group holds no pixels", document(false, true), click("folder", 1.0, 1.0), config("pixels")),
+        ("a group without a mask", document(false, true), click("folder", 1.0, 1.0), config("mask")),
+        ("off the grid", document(false, true), click("ink", -1.0, 1.0), config("pixels")),
+        ("not a number", document(false, true), click("ink", f64::NAN, 1.0), config("pixels")),
+        ("tolerance past 255", document(false, true), click("ink", 1.0, 1.0), RasterConfig { fill_tolerance: 256, ..config("pixels") }),
     ] {
-        assert!(fill_region_leaf(&payload, &document, &config(target)).is_err(), "{case} must be refused");
+        assert!(fill_region_leaf(&payload, &document, &session).is_err(), "{case} must be refused");
         retire(document);
     }
 }

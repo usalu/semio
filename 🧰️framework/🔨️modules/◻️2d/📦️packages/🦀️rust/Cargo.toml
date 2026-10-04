@@ -38,3 +38,4 @@ semio-framework-value-derive = { path = "../../../🌱️value/✨️derive/📦
 [dev-dependencies]
 serde_json = { workspace = true }
 blake3 = "1.8.2"
+semio-framework-pixels = { path = "../../../🔲️pixels/📦️packages/🦀️rust" }

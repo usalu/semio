@@ -1,5 +1,6 @@
 syntax = "proto3";
 package semio.layout_layout.mutations;
+import "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧾️dictionary/🛰️.proto";
 
 message RenameLayout {
   string new_name = 1;
@@ -8,7 +9,7 @@ message ChangePrintTarget {
   optional string new_print_target = 1;
 }
 message ChangeDataFields {
-  optional string new_json = 1;
+  optional semio.s.forms.forms.dictionary.FormDictionary new_fields = 1;
 }
 message CreatePage {
   bytes page = 1;

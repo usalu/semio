@@ -12,7 +12,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// shared `previewEval` run, so it needs the same contributed operators the editor does;
 /// `validate_public_json_envelope` caps every string in a public command invocation at
 /// `semio_framework::PUBLIC_INVOCATION_STRING_BYTES`, so the closure always crosses as a page run.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "set-contributions")]
 #[value(rename_all = "camelCase")]
 pub struct SetContributions {

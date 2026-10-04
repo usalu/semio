@@ -1,9 +1,10 @@
 use super::*;
 use crate::standards::v6_0::subsets::baseline::schema::{check_tiff_baseline_conformance, CODE_MISSING_STRIP_OFFSETS, CODE_TILED_NOT_BASELINE, CODE_UNSUPPORTED_BITS_PER_SAMPLE, CODE_UNSUPPORTED_COMPRESSION, CODE_UNSUPPORTED_PHOTOMETRIC};
-use crate::standards::v6_0::subsets::document::schema::snapshot::{TiffByteOrder, TiffIfd};
+use crate::standards::v6_0::subsets::document::schema::snapshot::{TiffByteOrder, TiffIfd, TiffStorage, TiffStorageKind};
 
 fn tag(id: u16, kind: TiffFieldType, values: TiffValues) -> TiffTag {
-    TiffTag { tag: id, kind, values }
+    let _ = kind;
+    TiffTag { tag: id, values }
 }
 
 /// 🧫️ A conforming 4x2 Baseline document: RGB, uncompressed, 8 bits per sample, strip-organized.
@@ -12,7 +13,7 @@ fn conforming() -> TiffSnapshot {
         schema: "stdio.tiff".into(),
         byte_order: TiffByteOrder::LittleEndian,
         ifds: vec![TiffIfd {
-            pixels: Vec::new(),
+            storage: TiffStorage { kind: TiffStorageKind::Strips, chunks: vec![vec![0u8; 4 * 2 * 3]], ..TiffStorage::default() },
             entries: vec![
                 tag(256, TiffFieldType::Long, TiffValues::Long(vec![4])),
                 tag(257, TiffFieldType::Long, TiffValues::Long(vec![2])),
@@ -22,7 +23,6 @@ fn conforming() -> TiffSnapshot {
                 tag(TAG_STRIP_OFFSETS, TiffFieldType::Long, TiffValues::Long(vec![8])),
             ],
         }],
-        pixels: vec![0u8; 4 * 2 * 4],
     }
 }
 
@@ -47,6 +47,7 @@ fn kinds_match_the_committed_catalog() {
 fn kinds_match_enum_variants_in_declaration_order() {
     let variants = [
         TiffBaselineMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: TiffSnapshot::default() }),
+        TiffBaselineMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         TiffBaselineMutation::SetCompression(set_compression::SetCompression { compression: 1 }),
         TiffBaselineMutation::SetPhotometricInterpretation(set_photometric_interpretation::SetPhotometricInterpretation { photometric: 2 }),
         TiffBaselineMutation::SetBitsPerSample(set_bits_per_sample::SetBitsPerSample { bits: vec![8] }),
@@ -57,7 +58,7 @@ fn kinds_match_enum_variants_in_declaration_order() {
     ];
     assert_eq!(variants.len(), KINDS.len(), "every variant needs exactly one KINDS entry");
     for (variant, kind) in variants.iter().zip(KINDS) {
-        let tag = match serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(variant)).expect("serialize") {
+        let tag = match serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(variant)).expect("serialize") {
             serde_json::Value::Object(members) => members.get("mutation").and_then(|value| value.as_str()).expect("tagged enum carries its own discriminant").to_string(),
             other => panic!("a tagged enum must serialize as an object, got {other:?}"),
         };
@@ -89,7 +90,7 @@ fn each_kind_moves_exactly_the_axis_its_diagnostic_reports() {
 
     let mut snapshot = conforming();
     apply_tiff_baseline_mutation(&mut snapshot, &TiffBaselineMutation::RemoveStripOffsets(remove_strip_offsets::RemoveStripOffsets {}));
-    assert_eq!(codes(&snapshot), vec![CODE_MISSING_STRIP_OFFSETS.to_string()]);
+    assert!(codes(&snapshot).is_empty(), "wire offsets are derived from canonical strip storage");
 }
 
 /// ↩️ `apply(inverse(m), apply(m, base))` must land back on `base` for every kind, including the
@@ -104,6 +105,7 @@ fn each_kind_moves_exactly_the_axis_its_diagnostic_reports() {
 fn every_kind_is_inverted_by_its_own_inverse() {
     let cases = [
         TiffBaselineMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: TiffSnapshot::default() }),
+        TiffBaselineMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         TiffBaselineMutation::SetCompression(set_compression::SetCompression { compression: 32773 }),
         TiffBaselineMutation::SetPhotometricInterpretation(set_photometric_interpretation::SetPhotometricInterpretation { photometric: 0 }),
         TiffBaselineMutation::SetBitsPerSample(set_bits_per_sample::SetBitsPerSample { bits: vec![4] }),
@@ -116,7 +118,7 @@ fn every_kind_is_inverted_by_its_own_inverse() {
         let base = conforming();
         let mut snapshot = base.clone();
         apply_tiff_baseline_mutation(&mut snapshot, &mutation);
-        for undo in crate::mutation_inverse(&mutation, &base) {
+        for undo in crate::mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
             apply_tiff_baseline_mutation(&mut snapshot, &undo);
         }
         assert_eq!(snapshot, base, "inverse of {mutation:?} did not restore the base");
@@ -127,20 +129,20 @@ fn every_kind_is_inverted_by_its_own_inverse() {
 fn removing_strip_offsets_restores_the_neutral_fixture() {
     let before_json = include_str!("../../../../🧫️fixtures/✂️remove-strip-offsets/⬅️before.json");
     let after_json = include_str!("../../../../🧫️fixtures/✂️remove-strip-offsets/➡️after.json");
-    let before: TiffSnapshot = dsl::json::from_json_str(before_json).expect("before fixture");
-    let after: TiffSnapshot = dsl::json::from_json_str(after_json).expect("after fixture");
+    let before: TiffSnapshot = semio_framework_pack_json::from_json_str(before_json,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before fixture");
+    let after: TiffSnapshot = semio_framework_pack_json::from_json_str(after_json,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after fixture");
     let mutation = TiffBaselineMutation::RemoveStripOffsets(remove_strip_offsets::RemoveStripOffsets {});
     let mut actual = before.clone();
     apply_tiff_baseline_mutation(&mut actual, &mutation);
     assert_eq!(actual, after);
-    let inverse = crate::mutation_inverse(&mutation, &before);
+    let inverse = crate::mutation_inverse(&mutation, &before).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1);
     for undo in inverse {
         apply_tiff_baseline_mutation(&mut actual, &undo);
     }
     assert_eq!(actual, before);
-    assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&actual)).unwrap(), serde_json::from_str::<serde_json::Value>(before_json).unwrap());
-    assert!(crate::mutation_inverse(&mutation, &after).is_empty());
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&actual)).unwrap(), serde_json::from_str::<serde_json::Value>(before_json).unwrap());
+    assert!(crate::mutation_inverse(&mutation, &after).expect("valid retained mutation inverse fixture").is_empty());
 }
 
 /// 🧭️ An IFD 0 that never carried the tag inverts to its ABSENCE, not to a fabricated value —
@@ -150,12 +152,12 @@ fn setting_an_absent_strip_offsets_inverts_to_removing_it_again() {
     let mut base = conforming();
     base.ifds[0].entries.retain(|entry| entry.tag != TAG_STRIP_OFFSETS);
     let mutation = TiffBaselineMutation::SetStripOffsets(set_strip_offsets::SetStripOffsets { offsets: vec![8] });
-    assert_eq!(crate::mutation_inverse(&mutation, &base), vec![TiffBaselineMutation::RemoveStripOffsets(remove_strip_offsets::RemoveStripOffsets {})]);
+    assert_eq!(crate::mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture"), vec![TiffBaselineMutation::RemoveStripOffsets(remove_strip_offsets::RemoveStripOffsets {})]);
 
     let mut snapshot = base.clone();
     apply_tiff_baseline_mutation(&mut snapshot, &mutation);
     assert!(codes(&snapshot).is_empty(), "adding StripOffsets makes the IFD strip-organized again");
-    for undo in crate::mutation_inverse(&mutation, &base) {
+    for undo in crate::mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
         apply_tiff_baseline_mutation(&mut snapshot, &undo);
     }
     assert_eq!(snapshot, base);

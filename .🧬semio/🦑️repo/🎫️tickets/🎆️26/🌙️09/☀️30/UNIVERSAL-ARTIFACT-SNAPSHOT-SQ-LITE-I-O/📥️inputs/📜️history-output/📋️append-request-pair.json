@@ -1,0 +1,13 @@
+{
+  "state": "mountedAfterMarkedHistoryNumericalRed",
+  "path": "🧰️framework/🔨️modules/🌱️value/🛫️encode/🦀️.rs",
+  "before": "    pub fn append_bytes(&mut self,output:&mut Vec<u8>,bytes:&[u8])->Result<(),ValueError>{self.scoped_stage(|control|{control.begin_stage(bytes.len())?;for chunk in bytes.chunks(65536){control.charge(chunk.len())?;output.try_reserve_exact(chunk.len()).map_err(|_| ValueError::new(ValueRefusalKind::AllocationFailed, \"native encoding output allocation failed\"))?;output.extend_from_slice(chunk);control.advance(chunk.len())?;}Ok(())})}",
+  "after": "    pub fn append_bytes(&mut self,output:&mut Vec<u8>,bytes:&[u8])->Result<(),ValueError>{self.scoped_stage(|control|{control.begin_stage(bytes.len())?;for chunk in bytes.chunks(65536){let capacity=output.len().checked_add(chunk.len()).filter(|capacity|*capacity<=isize::MAX as usize).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,\"native encoding output capacity overflow\"))?;if capacity>output.capacity(){control.charge(capacity)?;output.try_reserve_exact(chunk.len()).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,\"native encoding output allocation failed\"))?;}output.extend_from_slice(chunk);control.advance(chunk.len())?;}Ok(())})}",
+  "authority": "full concrete new allocation or realloc request before exact reserve; no new request for reuse of already-owned capacity",
+  "currentNumericalFailure": {
+    "admitted": 2752230,
+    "requested": 2773171
+  },
+  "qualification": "Not mounted and no runtime repair claim. Existing thirteen unchanged History laws retain authority.",
+  "originReceipt": "9e27f3e5-7b37-432d-b065-abbed8e1063f"
+}

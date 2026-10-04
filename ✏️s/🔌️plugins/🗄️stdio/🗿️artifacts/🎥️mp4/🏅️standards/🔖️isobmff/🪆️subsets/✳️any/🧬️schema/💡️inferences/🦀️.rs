@@ -7,7 +7,6 @@
 
 use crate::standards::isobmff::subsets::any::schema::snapshot::Mp4Snapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::duration::compute_mp4_duration;
 //#region 🔖️Inference
@@ -22,8 +21,11 @@ pub struct Mp4Inference {
 }
 
 impl protocol::Inference<Mp4Snapshot> for Mp4Inference {
-    fn infer(snapshot: &Mp4Snapshot) -> Self {
+    fn infer(snapshot: &Mp4Snapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { duration: compute_mp4_duration(snapshot) }
+    
+        })
     }
 }
 
@@ -32,7 +34,9 @@ impl protocol::Inference<Mp4Snapshot> for Mp4Inference {
 /// already picks a real minimal `ftyp`, not a zeroed struct).
 impl Default for Mp4Inference {
     fn default() -> Self {
-        <Self as protocol::Inference<Mp4Snapshot>>::infer(&Mp4Snapshot::default())
+        let snapshot = &Mp4Snapshot::default();
+
+        Self { duration: compute_mp4_duration(snapshot) }
     }
 }
 
@@ -48,17 +52,6 @@ impl protocol::InferenceSpec<Mp4Snapshot> for Mp4Inference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 💡️ No `InferredField`s here — `duration` is a per-track fold over `tracks[].samples`, already
-/// O(n) in total sample count with no honest per-entity incremental decomposition (a merkle
-/// dep-chain over one flat `Vec<Mp4Track>` costs more than the fold it would cache) — the default
-/// `infer_cached` passthrough is exact.
-impl ArtifactInferrer for crate::standards::isobmff::subsets::any::schema::Mp4Builder {
-    type Snapshot = Mp4Snapshot;
-    type Inference = Mp4Inference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.mp4.inference`'s facet leaves into the OS-wide inference catalog — call

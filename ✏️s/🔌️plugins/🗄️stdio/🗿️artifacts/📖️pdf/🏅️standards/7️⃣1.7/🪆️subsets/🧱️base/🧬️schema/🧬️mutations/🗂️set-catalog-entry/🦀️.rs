@@ -24,10 +24,13 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetCatalogEntry {
         MutationOutcome::new(diff::diff_set_catalog_entry(base, &self.key, self.value.clone()))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         let _ = base;
         match base.catalog_extra.iter().find(|entry| entry.key == self.key) { Some(entry) => vec![PdfMutation::SetCatalogEntry(SetCatalogEntry { key: self.key.clone(), value: entry.value.clone() })], None => vec![PdfMutation::RemoveCatalogEntry(super::remove_catalog_entry::RemoveCatalogEntry { key: self.key.clone() })] }
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set catalog entry {}", self.key), &format!("Katalogeintrag {} setzen", self.key))

@@ -57,7 +57,7 @@ async fn the_whole_transform_facet_moves_atomically() {
 async fn inverse_restores_the_previous_transform() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_drawing_mutation(&base, &mutation);
+    let inverse = inverse_drawing_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "update-layer-transform undoes with exactly one counter-update");
     let mut snapshot = base.clone();
     apply_drawing_mutation(&mut snapshot, &mutation).expect("forward applies");

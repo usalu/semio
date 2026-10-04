@@ -30,7 +30,7 @@ fn vcs_patch_operation_for_field(field: &str, value: &str) -> Option<VcsDemoMuta
 //#region 🔖️Edit
 //#endregion 🔖️Edit
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "patch-snapshot")]
 pub struct PatchSnapshot {
     pub field: String,

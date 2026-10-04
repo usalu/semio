@@ -156,7 +156,7 @@ impl crate::value::ToValue for InputReplacement {
 impl crate::value::FromValue for InputReplacement {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(format!("expected an object for InputReplacement, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for InputReplacement, found {value:?}")));
         };
         let mut kind = None;
         let mut schema = None;
@@ -171,12 +171,12 @@ impl crate::value::FromValue for InputReplacement {
         }
         match kind.as_deref() {
             Some("input") => Ok(InputReplacement::Input {
-                schema: schema.ok_or_else(|| crate::value::ValueError::new("InputReplacement::Input missing schema"))?,
-                payload: payload.ok_or_else(|| crate::value::ValueError::new("InputReplacement::Input missing payload"))?,
+                schema: schema.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "InputReplacement::Input missing schema"))?,
+                payload: payload.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "InputReplacement::Input missing payload"))?,
             }),
             Some("withdrawn") => Ok(InputReplacement::Withdrawn),
-            Some(other) => Err(crate::value::ValueError::new(format!("unknown InputReplacement kind `{other}`"))),
-            None => Err(crate::value::ValueError::new("InputReplacement missing kind")),
+            Some(other) => Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("unknown InputReplacement kind `{other}`"))),
+            None => Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "InputReplacement missing kind")),
         }
     }
 }
@@ -195,7 +195,7 @@ impl crate::value::ToValue for EffectiveSupersession {
 impl crate::value::FromValue for EffectiveSupersession {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(format!("expected an object for EffectiveSupersession, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for EffectiveSupersession, found {value:?}")));
         };
         let mut transition_id = None;
         let mut actor = None;
@@ -213,11 +213,11 @@ impl crate::value::FromValue for EffectiveSupersession {
             }
         }
         Ok(EffectiveSupersession {
-            transition_id: transition_id.ok_or_else(|| crate::value::ValueError::new("EffectiveSupersession missing transitionId"))?,
-            actor: actor.ok_or_else(|| crate::value::ValueError::new("EffectiveSupersession missing actor"))?,
-            timestamp: timestamp.ok_or_else(|| crate::value::ValueError::new("EffectiveSupersession missing timestamp"))?,
+            transition_id: transition_id.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "EffectiveSupersession missing transitionId"))?,
+            actor: actor.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "EffectiveSupersession missing actor"))?,
+            timestamp: timestamp.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "EffectiveSupersession missing timestamp"))?,
             scope,
-            replacement: replacement.ok_or_else(|| crate::value::ValueError::new("EffectiveSupersession missing replacement"))?,
+            replacement: replacement.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "EffectiveSupersession missing replacement"))?,
         })
     }
 }

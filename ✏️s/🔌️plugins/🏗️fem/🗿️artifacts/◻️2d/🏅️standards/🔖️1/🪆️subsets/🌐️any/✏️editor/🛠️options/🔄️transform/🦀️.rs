@@ -5,7 +5,7 @@ use crate::editor::fem2d::interaction::gumball::gumball_config_for_window;
 use crate::editor::fem2d::modes::edit::windows::model;
 use crate::editor::fem2d::terminology::Fem2dLabels;
 use crate::editor::fem2d::{fem2d_measure_action, FEM2D_PLAY_CONTROLLER_ID};
-use dsl::json;
+use semio_framework_pack_json::json;
 use semio_framework_plugin::{ViewModel, WindowMeasure};
 
 pub const UTILITY_ID: &str = FEM2D_UTILITY_TRANSFORM;

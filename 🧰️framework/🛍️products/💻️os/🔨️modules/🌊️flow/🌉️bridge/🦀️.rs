@@ -25,24 +25,24 @@ impl EvalBridge {
 // #endregion 🔖️EvalBridge
 
 // #region 🔖️ChannelEval
-fn neural_value_to_json(value: &NeuralValue) -> crate::os_pack::json::Value {
-    crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(value))
+fn neural_value_to_json(value: &NeuralValue) -> semio_framework_pack_json::Value {
+    semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(value))
 }
 
-fn neural_value_from_json(value: &crate::os_pack::json::Value) -> Result<NeuralValue, crate::os_dsl::ValueError> {
-    crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(value))
+fn neural_value_from_json(value: &semio_framework_pack_json::Value) -> Result<NeuralValue, semio_framework_value::ValueError> {
+    semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(value))
 }
 
-fn dictionary_to_json_object(dict: &Dictionary) -> crate::os_pack::json::Object {
-    let mut object = crate::os_pack::json::Object::new();
+fn dictionary_to_json_object(dict: &Dictionary) -> semio_framework_pack_json::Object {
+    let mut object = semio_framework_pack_json::Object::new();
     for key in dict.keys() {
         object.insert(key.clone(), neural_value_to_json(dict.get(key).expect("key came from dict.keys(), so get(key) cannot miss")));
     }
     object
 }
 
-fn input_ports_json(dict: &Dictionary, kind_info: Option<&OperatorInfo>) -> crate::os_pack::json::Object {
-    let mut ports = crate::os_pack::json::Object::new();
+fn input_ports_json(dict: &Dictionary, kind_info: Option<&OperatorInfo>) -> semio_framework_pack_json::Object {
+    let mut ports = semio_framework_pack_json::Object::new();
     if let Some(info) = kind_info {
         if let Some(variadic) = &info.variadic_input {
             if let Some(slots) = dict.get(&variadic.slot_key).and_then(|value| value.as_dictionary()) {
@@ -66,8 +66,8 @@ fn input_ports_json(dict: &Dictionary, kind_info: Option<&OperatorInfo>) -> crat
     dictionary_to_json_object(dict)
 }
 
-fn output_ports_json(dict: &Dictionary) -> crate::os_pack::json::Object {
-    let mut ports = crate::os_pack::json::Object::new();
+fn output_ports_json(dict: &Dictionary) -> semio_framework_pack_json::Object {
+    let mut ports = semio_framework_pack_json::Object::new();
     for key in dict.keys() {
         if let Some(value) = dict.get(key) {
             ports.insert(key.clone(), neural_value_to_json(value));
@@ -77,7 +77,7 @@ fn output_ports_json(dict: &Dictionary) -> crate::os_pack::json::Object {
 }
 
 pub(crate) fn outputs_from_channel_eval_json(json: &str) -> BTreeMap<String, Dictionary> {
-    let Ok(parsed) = crate::os_pack::json::parse(json) else {
+    let Ok(parsed) = semio_framework_pack_json::parse(json, semio_framework_pack_json::JsonMemberPolicy::Reject) else {
         return BTreeMap::new();
     };
     let Some(parsed) = parsed.as_object() else {
@@ -102,7 +102,7 @@ pub(crate) fn outputs_from_channel_eval_json(json: &str) -> BTreeMap<String, Dic
 }
 
 pub(crate) fn inputs_from_channel_eval_json(json: &str) -> BTreeMap<String, Dictionary> {
-    let Ok(parsed) = crate::os_pack::json::parse(json) else {
+    let Ok(parsed) = semio_framework_pack_json::parse(json, semio_framework_pack_json::JsonMemberPolicy::Reject) else {
         return BTreeMap::new();
     };
     let Some(parsed) = parsed.as_object() else {
@@ -299,7 +299,7 @@ pub(crate) fn neuron_to_exploded_widget(neuron: &Neuron) -> Widget {
 }
 
 pub(crate) fn build_channel_eval_json(host_snapshot: &FlowHostSnapshot, channels: &EvalChannels, kind_infos: &HashMap<String, OperatorInfo>) -> String {
-    let mut widgets = crate::os_pack::json::Object::new();
+    let mut widgets = semio_framework_pack_json::Object::new();
     for widget in &host_snapshot.widgets {
         let id = widget_id_for(widget);
         let operator_info = widget_operator_info(widget, kind_infos);
@@ -309,15 +309,15 @@ pub(crate) fn build_channel_eval_json(host_snapshot: &FlowHostSnapshot, channels
             _ => channels.inputs.get(id).cloned().unwrap_or_default(),
         };
         let output_dict = channels.outputs.get(id);
-        let mut entry = crate::os_pack::json::Object::new();
-        entry.insert("in".to_string(), crate::os_pack::json::Value::Object(input_ports_json(&input_dict, kind_info)));
-        entry.insert("out".to_string(), crate::os_pack::json::Value::Object(output_dict.map(output_ports_json).unwrap_or_default()));
+        let mut entry = semio_framework_pack_json::Object::new();
+        entry.insert("in".to_string(), semio_framework_pack_json::Value::Object(input_ports_json(&input_dict, kind_info)));
+        entry.insert("out".to_string(), semio_framework_pack_json::Value::Object(output_dict.map(output_ports_json).unwrap_or_default()));
         if let Some(output) = output_dict {
             if let Some(error) = output.get("error").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()) {
-                entry.insert("error".to_string(), crate::os_pack::json::Value::String(error.to_string()));
+                entry.insert("error".to_string(), semio_framework_pack_json::Value::String(error.to_string()));
             }
         }
-        widgets.insert(id.to_string(), crate::os_pack::json::Value::Object(entry));
+        widgets.insert(id.to_string(), semio_framework_pack_json::Value::Object(entry));
         // 🧹️ `merge` MINTS a dictionary (`ColdDictionaryBuilder::finish`), so a neuron that carries
         // params leaves this projection owning the only copy — and `Dictionary::drop` fail-closes on
         // exactly that. Retire it here rather than at the loop's end: the leak is per widget, and it
@@ -325,7 +325,7 @@ pub(crate) fn build_channel_eval_json(host_snapshot: &FlowHostSnapshot, channels
         // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
         neural::ColdRetire::retire_cold(input_dict);
     }
-    crate::os_pack::json::to_string(&crate::os_pack::json::Value::Object(widgets))
+    semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Object(widgets))
 }
 
 fn is_brep_geometry_handle(handle: &str) -> bool {
@@ -400,7 +400,7 @@ pub(crate) fn collect_live_drawing_handles_from_channels(channels: &EvalChannels
 }
 
 pub(crate) fn is_global_eval_error_json(json: &str) -> bool {
-    let Ok(parsed) = crate::os_pack::json::parse(json) else {
+    let Ok(parsed) = semio_framework_pack_json::parse(json, semio_framework_pack_json::JsonMemberPolicy::Reject) else {
         return true;
     };
     let Some(object) = parsed.as_object() else {

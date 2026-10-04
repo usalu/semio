@@ -1,66 +1,74 @@
 [
   {
     "action": "nudgeSelectionLeft",
-    "keys": "left",
+    "keys": "arrowleft",
     "delta": [
       -1,
       0
-    ]
+    ],
+    "eventKey": "ArrowLeft"
   },
   {
     "action": "nudgeSelectionLeftFast",
-    "keys": "shift+left",
+    "keys": "shift+arrowleft",
     "delta": [
       -10,
       0
-    ]
+    ],
+    "eventKey": "ArrowLeft"
   },
   {
     "action": "nudgeSelectionRight",
-    "keys": "right",
+    "keys": "arrowright",
     "delta": [
       1,
       0
-    ]
+    ],
+    "eventKey": "ArrowRight"
   },
   {
     "action": "nudgeSelectionRightFast",
-    "keys": "shift+right",
+    "keys": "shift+arrowright",
     "delta": [
       10,
       0
-    ]
+    ],
+    "eventKey": "ArrowRight"
   },
   {
     "action": "nudgeSelectionUp",
-    "keys": "up",
+    "keys": "arrowup",
     "delta": [
       0,
       -1
-    ]
+    ],
+    "eventKey": "ArrowUp"
   },
   {
     "action": "nudgeSelectionUpFast",
-    "keys": "shift+up",
+    "keys": "shift+arrowup",
     "delta": [
       0,
       -10
-    ]
+    ],
+    "eventKey": "ArrowUp"
   },
   {
     "action": "nudgeSelectionDown",
-    "keys": "down",
+    "keys": "arrowdown",
     "delta": [
       0,
       1
-    ]
+    ],
+    "eventKey": "ArrowDown"
   },
   {
     "action": "nudgeSelectionDownFast",
-    "keys": "shift+down",
+    "keys": "shift+arrowdown",
     "delta": [
       0,
       10
-    ]
+    ],
+    "eventKey": "ArrowDown"
   }
 ]

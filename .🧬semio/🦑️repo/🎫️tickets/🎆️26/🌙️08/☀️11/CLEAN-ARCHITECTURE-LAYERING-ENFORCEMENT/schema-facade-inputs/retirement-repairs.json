@@ -1,0 +1,218 @@
+[
+  {
+    "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🧪️tests/🔬️unit/🦀️.rs",
+    "changed": true,
+    "pairs": [
+      [
+        "store::os_schema_composition::",
+        "semio_framework_schema_composition::"
+      ]
+    ],
+    "exactExpected": true,
+    "beforeSha256": "ee17ad392622363321891b9bcf37eeb4743baf164b1c7e4eca1306ad86f55701",
+    "currentSha256": "17bc8421123fddd26e9744a87a53c97e5ff65d730c1c65d7b0c53724f1e4bb8b"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🦀️.rs",
+    "changed": true,
+    "pairs": [
+      [
+        "pub use semio_framework_schema_state::StateClass;\npub use semio_framework_schema_composition as os_schema_composition;\n/// 📶️ Canonical artifact state class, reachable anywhere `Mutations` is derived.\n",
+        ""
+      ]
+    ],
+    "exactExpected": true,
+    "beforeSha256": "28ff98e8916ae451b159cbc06a6c1115a3e6dcc3664fda1e61c1e2cf49f9a3fa",
+    "currentSha256": "a77ed00595b2d9a29d9b88f596299fea8e148fe3681927f7c47803379617d158"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs",
+    "changed": true,
+    "pairs": [
+      [
+        "store::os_schema_composition::",
+        "semio_framework_schema_composition::"
+      ]
+    ],
+    "exactExpected": true,
+    "beforeSha256": "c02c5eae6a780923934842862347dc6ce86f8a8383b9981f3011a2f29ac11bdc",
+    "currentSha256": "eda0676b3a9217eb96832ecd450b2e237928a82d673bdcd840313433e9302920"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs",
+    "changed": true,
+    "pairs": [
+      [
+        "state_class: ::semio_framework_os_kernel::StateClass,",
+        "state_class: ::semio_framework_schema_state::StateClass,"
+      ]
+    ],
+    "exactExpected": true,
+    "beforeSha256": "88bf8195f2e93f587b227f40fed8ed42752fdcfdf4fd82241d4fe9cc19c79e74",
+    "currentSha256": "0820a7bea35dcab21b23ee975273c4c87446e769815326fa33fbd4f80ff01be2"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🧪️tests/🔬️unit/🦀️.rs",
+    "changed": true,
+    "pairs": [
+      [
+        "store::os_schema_composition::",
+        "semio_framework_schema_composition::"
+      ]
+    ],
+    "exactExpected": true,
+    "beforeSha256": "e6ae86aa6338c56e211446d6b7c59336e26d3c1041cf0bfaa3d7e87befd3b810",
+    "currentSha256": "09b91f3aef70a599885df5b47b2b20929f5944bbdb17a1abdec7bbed2324e809"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs",
+    "changed": true,
+    "pairs": [
+      [
+        "store::os_schema_composition::",
+        "semio_framework_schema_composition::"
+      ]
+    ],
+    "exactExpected": true,
+    "beforeSha256": "e27435706d6029ef81b4cb6cc5e9030da8f3dd1de5f6a9e9236fca1db9f59e10",
+    "currentSha256": "d81ea8cea9ce44ca3b216bcdfe81468d04f3d96e84d0e347a316272e21de24f5"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🧪️tests/🔬️unit/🦀️.rs",
+    "changed": true,
+    "pairs": [
+      [
+        "store::os_schema_composition::",
+        "semio_framework_schema_composition::"
+      ]
+    ],
+    "exactExpected": true,
+    "beforeSha256": "d9972719533d5b8a3f10c7b5d55b9935b7953de84e882af7f4b1799446aed116",
+    "currentSha256": "c218f34b270526dfcd22f0707036745e8f6f8f95c320d8e1385061657a0cd3df"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🦀️.rs",
+    "changed": true,
+    "pairs": [
+      [
+        "store::os_schema_composition::",
+        "semio_framework_schema_composition::"
+      ]
+    ],
+    "exactExpected": true,
+    "beforeSha256": "c628961bf2e0193ad08e2ceb85fcf1b5d81b8afeed9f1f4e49814445085a3563",
+    "currentSha256": "c90645b74c2b21021f94146fa8641bee2f350bc66d8158852326eddc8a6d5108"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs",
+    "changed": true,
+    "pairs": [
+      [
+        "pub use semio_framework_schema_state::StateClass;\nuse semio_framework_schema_state::parse_state_class_kebab;\npub use semio_framework_schema_composition::{ArtifactCompositionFields, ChildFieldRefs, ChildRefVisitor, ChildSlotSpec, LinkSlotSpec};",
+        "use semio_framework_schema_state::{StateClass, parse_state_class_kebab};"
+      ]
+    ],
+    "exactExpected": true,
+    "beforeSha256": "4bf036af96a75d15e0f79cc34c6a1cc185a1527a2691f997c4c012982c39dc1f",
+    "currentSha256": "a2ea738562c7941c9fbe74050567c2afaeecce0ed47112aecc0a7b23780ff2a1"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🕹️interaction/🧬️schema/🧪️tests/🔬️unit/🦀️.rs",
+    "changed": true,
+    "pairs": [
+      [
+        "semio_framework_schema::",
+        "semio_framework_schema_registry::"
+      ]
+    ],
+    "exactExpected": true,
+    "beforeSha256": "475e484f109762d1c7fa33a9bf91d235a93b84841ab188642290ede08e368d04",
+    "currentSha256": "07c132640bc2be4263e8bbcf40c668327ea2db254444c94ced0a9b818ec5c8e8"
+  },
+  {
+    "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🧪️tests/🔬️unit/🦀️.rs",
+    "changed": true,
+    "pairs": [
+      [
+        "store::os_schema_composition::",
+        "semio_framework_schema_composition::"
+      ]
+    ],
+    "exactExpected": true,
+    "beforeSha256": "87537aad9a7a161e61cdcfc9c0a275dbed7d9ef8f81d565262689e6f7f5b2c21",
+    "currentSha256": "a176e185a7f0d0d002dd2f1095bdfb04c03d1d816ef3457d4e0965222f98987d"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🧪️tests/🔬️unit/🦀️.rs",
+    "changed": true,
+    "pairs": [
+      [
+        "store::os_schema_composition::",
+        "semio_framework_schema_composition::"
+      ]
+    ],
+    "exactExpected": true,
+    "beforeSha256": "a7c641843c8864ee529e10fb16fc885bc4d298e5eddb78f2ab48844bfdf22435",
+    "currentSha256": "8162cd6d6771c56efa397be057c95a40c8188b6609f9c994cbcae52aa0a2c23a"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🧪️tests/🔬️unit/🦀️.rs",
+    "changed": true,
+    "pairs": [
+      [
+        "store::os_schema_composition::",
+        "semio_framework_schema_composition::"
+      ]
+    ],
+    "exactExpected": true,
+    "beforeSha256": "f6c9c686e4f4916909fb8b8892860cb6b9d219ee3db3bac3211bd7d6337d27ac",
+    "currentSha256": "5b2cdb725ad2b86b0fbf176162679afc29c29b5e392daa6724246aa4a9c43229"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/Cargo.toml",
+    "changed": true,
+    "pairs": [
+      [
+        "semio-framework-schema-registry = { path = \"../../../../../../🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust\" }\n",
+        "semio-framework-schema-registry = { path = \"../../../../../../🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust\" }\nsemio-framework-schema-composition = { path = \"../../../../../../🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust\" }\n"
+      ]
+    ],
+    "exactExpected": true,
+    "beforeSha256": "9efed569be4d21647a866e0fa9edabbbea673d1a46fb28961026f4048ea0586e",
+    "currentSha256": "2b452908c7710324a1809c23f6e2668f4ad6188bc2f9be245289e4d1199f0fbd"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust/Cargo.toml",
+    "changed": true,
+    "pairs": [
+      [
+        "semio-framework-ui-locale = { path = \"../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust\" }\n",
+        "semio-framework-ui-locale = { path = \"../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust\" }\nsemio-framework-schema-composition = { path = \"../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust\" }\nsemio-framework-schema-state = { path = \"../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust\" }\n"
+      ]
+    ],
+    "exactExpected": true,
+    "beforeSha256": "12ede73621ab652cd130fd43a7658b74da6b83596b1ddee838a7c038afcb55d4",
+    "currentSha256": "ab5861f424317887b644576460c4c8af2e33b5ab8060863e645d4f1bf5b4b741"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+    "changed": true,
+    "pairs": [
+      [
+        "semio-framework-ui-locale = { path = \"../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust\" }\n",
+        "semio-framework-ui-locale = { path = \"../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust\" }\nsemio-framework-schema-state = { path = \"../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust\" }\n"
+      ]
+    ],
+    "exactExpected": true,
+    "beforeSha256": "7b550dbac672ecdaf188ab3382ce4e800817dbbabaae5133381b925463a71159",
+    "currentSha256": "dbffb4f28ddbc0e08d4d5c7fb6de8dff02063d766b6817c5ce2cc62f0e78a66f"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/🦀️.rs",
+    "changed": false,
+    "pairs": [],
+    "exactExpected": true,
+    "beforeSha256": "ebd086abed93710fbc29f86ee0cd06e4f8b1d76d6529106d359f272968d7cd25",
+    "currentSha256": "ebd086abed93710fbc29f86ee0cd06e4f8b1d76d6529106d359f272968d7cd25"
+  }
+]

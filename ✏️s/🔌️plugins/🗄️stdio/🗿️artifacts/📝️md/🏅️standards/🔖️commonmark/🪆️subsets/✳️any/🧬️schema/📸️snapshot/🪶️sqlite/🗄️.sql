@@ -1,4 +1,4 @@
-CREATE TABLE md_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL, CHECK (id=1));
+CREATE TABLE md_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL);
 CREATE TABLE md_block (id INTEGER PRIMARY KEY, kind TEXT NOT NULL CHECK (kind IN ('heading','paragraph','list','codeBlock','blockQuote','thematicBreak','htmlBlock')));
 CREATE TABLE md_document_block (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES md_document(id), ordinal INTEGER NOT NULL CHECK (ordinal>=0), block_id INTEGER NOT NULL REFERENCES md_block(id));
 CREATE TABLE md_heading (id INTEGER PRIMARY KEY REFERENCES md_block(id), level INTEGER NOT NULL CHECK (level BETWEEN 0 AND 255));

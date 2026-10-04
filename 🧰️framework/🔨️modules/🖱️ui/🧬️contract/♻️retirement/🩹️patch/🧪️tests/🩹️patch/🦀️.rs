@@ -61,6 +61,10 @@ fn instance_lifetime_ui_patch_storage_first_payload_does_not_reserve_logical_cap
     let maximum = UI_DOCUMENT_PATCH_OPS * size_of::<Vec<UiPatchOp>>() + size_of::<UiPatchOp>();
     if cfg!(target_pointer_width = "64") {
         assert_eq!(size_of::<UiPatchOp>(), fixture["native64"]["operationBytes"].as_u64().unwrap() as usize);
+        assert_eq!(size_of::<Component>(), fixture["native64"]["componentBytes"].as_u64().unwrap() as usize);
+        assert_eq!(size_of::<InputProps>(), fixture["native64"]["inputBytes"].as_u64().unwrap() as usize);
+        assert_eq!(size_of::<Option<UiText>>(), fixture["native64"]["draftTargetBytes"].as_u64().unwrap() as usize);
+        assert_eq!(size_of::<Option<UiPublicationRevision>>(), fixture["native64"]["publicationRevisionBytes"].as_u64().unwrap() as usize);
         assert_eq!(maximum, fixture["native64"]["firstBackingBytes"].as_u64().unwrap() as usize);
     }
     assert!(allocated <= maximum, "first initialized patch must own only directory plus one payload page: allocated={allocated}, maximum={maximum}");

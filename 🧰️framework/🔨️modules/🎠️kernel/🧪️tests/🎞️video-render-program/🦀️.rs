@@ -20,8 +20,8 @@ fn valid_programs_play_the_declared_frames() {
         assert_eq!(program.validate(), Ok(()), "{id}");
         assert_eq!(program.frame_count(), case["frameCount"].as_u64().expect("frameCount"), "{id}: frames");
         assert_eq!(program.duration_milliseconds(), case["durationMs"].as_u64().expect("durationMs"), "{id}: duration");
-        let value = dsl::ToValue::to_value(&program);
-        assert_eq!(<VideoRenderProgram as dsl::FromValue>::from_value(value).expect("value round trip"), program, "{id}: value codec");
+        let value = semio_framework_value::ToValue::to_value(&program);
+        assert_eq!(<VideoRenderProgram as semio_framework_value::FromValue>::from_value(value).expect("value round trip"), program, "{id}: value codec");
         let wire = serde_json::to_value(&program).expect("serde");
         let keys = |value: &serde_json::Value| value.as_object().map(|object| object.keys().cloned().collect::<Vec<_>>()).unwrap_or_default();
         assert_eq!(keys(&wire), keys(&case["program"]), "{id}: camelCase program keys");

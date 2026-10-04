@@ -21,23 +21,23 @@ impl store::ArtifactDsl for FormsSnapshot {
     fn envelope_id() -> &'static str {
         crate::FORMS_DOCUMENT_SCHEMA
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((envelope, rest)) => {
                 if !envelope.matches_identity(Self::envelope_id(), store::semio_format::Component::Dsl, 1) {
-                    return Err(store::TextError::new("Forms text envelope mismatch", dsl::TextSpan::at(1, 1)));
+                    return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "Forms text envelope mismatch", semio_framework_diagnostic::TextSpan::at(1, 1)));
                 }
                 rest
             },
             Err(_) => text,
         };
-        let record = dsl::parse(body, &crate::schema::snapshot::native_pack::record_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
-        let snapshot = crate::schema::snapshot::native_pack::reconstruct_record(&record)?;
-        snapshot.validate().map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))?;
+        let record = semio_framework_dsl_record::parse(body, &crate::schema::snapshot::native_pack::record_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
+        let snapshot = crate::schema::snapshot::native_pack::reconstruct_record(&record).map_err(|error|semio_framework_diagnostic::TextError::from_value_error(error,semio_framework_diagnostic::TextSpan::at(1,1)))?;
+        snapshot.validate().map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, semio_framework_diagnostic::TextSpan::at(1, 1)))?;
         Ok(snapshot)
     }
     fn print_dsl(&self) -> String {
-        let body = dsl::print(&crate::schema::snapshot::native_pack::record(self).expect("valid Forms native state"), &crate::schema::snapshot::native_pack::record_spec(), dsl::JoinMode::Document);
+        let body = semio_framework_dsl_record::print(&crate::schema::snapshot::native_pack::record(self).expect("valid Forms native state"), &crate::schema::snapshot::native_pack::record_spec(), semio_framework_dsl_record::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -55,7 +55,7 @@ pub const ONBOARDING_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/�
 
 /// 📖️ Parses `.forms` DSL text into a `FormsSnapshot` — `FormsSnapshot`'s OWN persisted wire
 /// format, the derived text of its own `dsl::DslRecord` spec.
-pub fn parse_dsl(text: &str) -> Result<FormsSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<FormsSnapshot, semio_framework_diagnostic::TextError> {
     <FormsSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 

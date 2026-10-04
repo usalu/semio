@@ -9,7 +9,7 @@ use protocol::{MutationKind, SemanticDescriptor};
 /// 🧩️ Brings a new [`FormQuestion`] into existence inside `step_id`'s `blocks`, at an optional
 /// FINAL-state `index` (`None` appends). An unknown `step_id` is Error `mutation.target-missing`; a
 /// duplicate `block.id` within that step is Fatal `mutation.duplicate-id`.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct CreateBlock {
@@ -24,9 +24,12 @@ impl MutationKind<FormsSnapshot, FormMutation> for CreateBlock {
     fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
         super::diff::diff_create_block(self, base)
     }
-    fn inverse(&self, base: &FormsSnapshot) -> Vec<FormMutation> {
-        super::inverse::inverse_create_block(self, base)
-    }
+    fn inverse(&self, base: &FormsSnapshot) -> Result<Vec<FormMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse_create_block(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Create block \"{}\"", self.block.label), &format!("Block \"{}\" erstellen", self.block.label))
     }

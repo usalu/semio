@@ -45,7 +45,7 @@ async fn filters_the_named_pick_out_of_the_curation() {
 async fn recreating_the_removed_pick_restores_its_count() {
     let base = before();
     let mut snapshot = protocol::MutationDiff::apply(built_outcome().diff(), &base).expect("forward delete-curated-item applies");
-    let inverse = <SourcingMutation as protocol::Mutation<CurationSnapshot>>::inverse(&mutation(), &base);
+    let inverse = <SourcingMutation as protocol::Mutation<CurationSnapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "delete-curated-item/removes-the-clt-panel-from-the-curation: the inverse of one delete is exactly one create");
     for step in &inverse {
         let undo = <SourcingMutation as protocol::Mutation<CurationSnapshot>>::diff(step, &snapshot);

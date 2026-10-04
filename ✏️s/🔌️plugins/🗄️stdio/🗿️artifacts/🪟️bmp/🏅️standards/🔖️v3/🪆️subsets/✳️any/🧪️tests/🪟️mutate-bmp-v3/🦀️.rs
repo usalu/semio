@@ -21,8 +21,8 @@ use semio_repo_test_host::law;
 //#region 🔖️Input
 /// 🧫️ Copies the immutable document the scenario's own `Given` names into the work directory and returns the
 /// mutable copy's bytes — the committed 2334x2560, 8-bit palette architectural floor plan
-/// (`🏛️rathaus-ahlen-grundriss/🖼️.bmp`, derived once — see `🥒️.feature`'s own description), or for the
-/// raster outlines the small indexed document a whole-raster wire payload fits in. Neither is ever written to.
+/// (`🏛️rathaus-ahlen-grundriss/🖼️.bmp`, derived once — see `🥒️.feature`'s own description), the small indexed
+/// document, or the direct-colour document. None is ever written to.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
     let input = ctx.step_fixture_uris().into_iter().next().ok_or_else(|| format!("scenario {} names no input document", ctx.scenario.id))?;
     let copy = ctx.copy_fixture(&input, Some("input.bmp"))?;
@@ -33,7 +33,7 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
 //#region 🔖️Oracle
 /// 👁️ `@id-mutate`: applies the row's kind with the reference `image` codec and ASSERTS the result
 /// is distinguishable from the untouched fixture. BMP v3 is lossless and every one of this
-/// vocabulary's seven kinds reaches the compared projection, so the exemption list is empty and
+/// vocabulary's four kinds reaches the compared projection, so the exemption list is empty and
 /// stays empty: a kind that stops moving it is a regression in the oracle or the projection, not a
 /// fact about the format.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
@@ -123,7 +123,7 @@ mod subject {
         let mutation = mutation_from_spec(&ctx.doc_json()?)?;
         let mut snapshot = base.clone();
         let _ = apply_bmp_mutation(&mut snapshot, &mutation);
-        for inverse in mutation_inverse(&mutation, &base) {
+        for inverse in mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
             let _ = apply_bmp_mutation(&mut snapshot, &inverse);
         }
         let bytes = encode_bmp(&snapshot).map_err(|error| format!("encode_bmp failed: {error}"))?;

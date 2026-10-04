@@ -1,0 +1,30 @@
+{
+  "schema": "custom 世界",
+  "byteOrder": "littleEndian",
+  "ifds": [
+    {
+      "entries": [
+        {
+          "tag": 0,
+          "values": {
+            "kind": "ascii",
+            "value": []
+          }
+        },
+        {
+          "tag": 1,
+          "values": {
+            "kind": "double",
+            "value": []
+          }
+        }
+      ],
+      "storage": {
+        "kind": "none",
+        "offsetsKind": "short",
+        "byteCountsKind": "long",
+        "chunks": []
+      }
+    }
+  ]
+}

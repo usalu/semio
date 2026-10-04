@@ -1,12 +1,21 @@
 //! 🧪️ Recursive closure admission from actual typed snapshot projections.
 use super::*;
-use semio_framework_schema_composition::{ArtifactCompositionFields, ChildRefFields, ChildRefVisitor, ChildSlotSpec};
 use crate::os_store::ChildRef;
-use semio_framework_job::{root_cancel_token, StepBudget};
+use semio_framework_job::{StepBudget, root_cancel_token};
+use semio_framework_schema_composition::{ArtifactCompositionFields, ChildRefFields, ChildRefVisitor, ChildSlotSpec};
 use std::cell::Cell;
 
-struct FixtureNode { reference: ArtifactRef, owner: Option<OwnerRef>, children: Vec<ChildRef> }
-struct FixtureSource { generation: Cell<u64>, root: FixtureNode, members: Vec<FixtureNode>, projections: Cell<usize> }
+struct FixtureNode {
+    reference: ArtifactRef,
+    owner: Option<OwnerRef>,
+    children: Vec<ChildRef>,
+}
+struct FixtureSource {
+    generation: Cell<u64>,
+    root: FixtureNode,
+    members: Vec<FixtureNode>,
+    projections: Cell<usize>,
+}
 
 impl ArtifactCompositionFields for FixtureNode {
     fn child_slots() -> &'static [ChildSlotSpec] {
@@ -22,21 +31,29 @@ impl ArtifactCompositionFields for FixtureNode {
         for child in &self.children {
             visitor.step()?;
             let slot = Self::child_slots().iter().find(|slot| slot.name == child.slot).expect("fixture declares every child slot").name;
-            visitor.child(slot, ChildRefFields {
-                child_id: &child.child_id, artifact_id: &child.target.artifact_id, artifact_kind: &child.target.dialect.artifact_kind,
-                standard: &child.target.dialect.standard, subset: &child.target.dialect.subset,
-            })?;
+            visitor
+                .child(slot, ChildRefFields { child_id: &child.child_id, artifact_id: &child.target.artifact_id, artifact_kind: &child.target.dialect.artifact_kind, standard: &child.target.dialect.standard, subset: &child.target.dialect.subset })?;
         }
         Ok(())
     }
 }
 
 impl OwnedDocumentClosureSource for FixtureSource {
-    fn generation(&self) -> u64 { self.generation.get() }
-    fn root_reference(&self) -> &ArtifactRef { &self.root.reference }
-    fn member_count(&self) -> usize { self.members.len() }
-    fn member_reference(&self, index: usize) -> Option<&ArtifactRef> { self.members.get(index).map(|member| &member.reference) }
-    fn member_owner(&self, index: usize) -> Option<&OwnerRef> { self.members.get(index).and_then(|member| member.owner.as_ref()) }
+    fn generation(&self) -> u64 {
+        self.generation.get()
+    }
+    fn root_reference(&self) -> &ArtifactRef {
+        &self.root.reference
+    }
+    fn member_count(&self) -> usize {
+        self.members.len()
+    }
+    fn member_reference(&self, index: usize) -> Option<&ArtifactRef> {
+        self.members.get(index).map(|member| &member.reference)
+    }
+    fn member_owner(&self, index: usize) -> Option<&OwnerRef> {
+        self.members.get(index).and_then(|member| member.owner.as_ref())
+    }
     fn child_projection(&self, parent: Option<usize>) -> Result<ChildRestoreProjection<'_>, ChildRestoreProjectionError> {
         self.projections.set(self.projections.get() + 1);
         ChildRestoreProjection::from_snapshot(parent.map_or(&self.root, |index| &self.members[index]))
@@ -46,9 +63,9 @@ impl OwnedDocumentClosureSource for FixtureSource {
 fn fixture_source(input: &serde_json::Value) -> FixtureSource {
     fn node(row: &serde_json::Value) -> FixtureNode {
         FixtureNode {
-            reference: crate::os_pack::json::from_json_str(&row["reference"].to_string()).unwrap(),
-            owner: row.get("owner").map(|owner| crate::os_pack::json::from_json_str(&owner.to_string()).unwrap()),
-            children: crate::os_pack::json::from_json_str(&row["children"].to_string()).unwrap(),
+            reference: semio_framework_pack_json::from_json_str(&row["reference"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(),
+            owner: row.get("owner").map(|owner| semio_framework_pack_json::from_json_str(&owner.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()),
+            children: semio_framework_pack_json::from_json_str(&row["children"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(),
         }
     }
     FixtureSource { generation: Cell::new(7), root: node(&input["root"]), members: input["members"].as_array().unwrap().iter().map(node).collect(), projections: Cell::new(0) }
@@ -63,11 +80,10 @@ fn chain(count: usize) -> FixtureSource {
         if index < count { vec![ChildRef { slot: "children".into(), child_id: format!("node-{}", index + 1), target: reference(index + 1) }] } else { vec![] }
     };
     FixtureSource {
-        generation: Cell::new(7), projections: Cell::new(0),
+        generation: Cell::new(7),
+        projections: Cell::new(0),
         root: FixtureNode { reference: reference(0), owner: None, children: children(0) },
-        members: (1..=count).map(|index| FixtureNode {
-            reference: reference(index), owner: Some(OwnerRef { parent: reference(index - 1), slot: "children".into(), child_id: format!("node-{index}") }), children: children(index),
-        }).collect(),
+        members: (1..=count).map(|index| FixtureNode { reference: reference(index), owner: Some(OwnerRef { parent: reference(index - 1), slot: "children".into(), child_id: format!("node-{index}") }), children: children(index) }).collect(),
     }
 }
 
@@ -90,7 +106,10 @@ fn validates(source: &FixtureSource, fuel: u64) -> bool {
         let step = cursor.step(source, &mut cx);
         assert!(cursor.progress().steps - before <= fuel);
         match step {
-            OwnedDocumentClosureStep::Complete { members } => { assert_eq!(members, source.member_count()); return true; }
+            OwnedDocumentClosureStep::Complete { members } => {
+                assert_eq!(members, source.member_count());
+                return true;
+            }
             OwnedDocumentClosureStep::Rejected(_) => return false,
             OwnedDocumentClosureStep::Pending(_) => {}
         }
@@ -115,11 +134,11 @@ fn owned_document_closure_matches_neutral_graphs_and_independent_limits() {
         assert_eq!(cursor.progress(), progress);
     }
     for row in fixture["ownerCases"]["valid"].as_array().unwrap() {
-        let owner: OwnerRef = crate::os_pack::json::from_json_str(&row.to_string()).unwrap();
-        assert_eq!(serde_json::from_str::<serde_json::Value>(&crate::os_pack::json::to_json_string(&owner)).unwrap(), *row);
+        let owner: OwnerRef = semio_framework_pack_json::from_json_str(&row.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&owner)).unwrap(), *row);
     }
     for row in fixture["ownerCases"]["invalid"].as_array().unwrap() {
-        assert!(crate::os_pack::json::from_json_str::<OwnerRef>(&row.to_string()).is_err(), "invalid owner stamp accepted: {row}");
+        assert!(semio_framework_pack_json::from_json_str::<OwnerRef>(&row.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "invalid owner stamp accepted: {row}");
     }
     for row in fixture["cases"].as_array().unwrap() {
         for fuel in [1, 7, 64] {
@@ -133,7 +152,10 @@ fn owned_document_closure_matches_neutral_graphs_and_independent_limits() {
     for row in fixture["breadthCases"].as_array().unwrap() {
         let mut source = chain(row["children"].as_u64().unwrap() as usize);
         source.root.children = source.members.iter().map(|member| ChildRef { slot: "children".into(), child_id: member.reference.artifact_id.clone(), target: member.reference.clone() }).collect();
-        for member in &mut source.members { member.owner.as_mut().unwrap().parent = source.root.reference.clone(); member.children.clear(); }
+        for member in &mut source.members {
+            member.owner.as_mut().unwrap().parent = source.root.reference.clone();
+            member.children.clear();
+        }
         assert_eq!(validates(&source, 1), row["accepted"].as_bool().unwrap(), "breadth {}", row["children"]);
     }
 }
@@ -157,7 +179,9 @@ fn owned_document_closure_cancellation_generation_and_deadline_retain_source() {
         assert!(matches!(cursor.step(&source, &mut first), OwnedDocumentClosureStep::Pending(_)));
         let progress = cursor.progress();
         source.generation.set(source_generation);
-        if cancelled { cancel.cancel_now(); }
+        if cancelled {
+            cancel.cancel_now();
+        }
         let clock: fn() -> Option<u64> = if now == 100 { || Some(100) } else { || Some(1) };
         let mut cx = StepContext::new(OperationId(operation), Generation(generation), StepBudget::new(64, 999), cancel, clock, &mut sequence);
         assert_eq!(cursor.step(&source, &mut cx), OwnedDocumentClosureStep::Rejected(reason));

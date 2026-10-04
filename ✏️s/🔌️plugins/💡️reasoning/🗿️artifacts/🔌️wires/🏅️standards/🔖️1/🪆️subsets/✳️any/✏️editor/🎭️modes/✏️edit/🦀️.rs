@@ -13,7 +13,7 @@ pub const WIRES_PLAY_MODE_EDIT: &str = "edit";
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::wires::create_wires_app`.
 pub fn definition() -> ModeDefinition {
-    ModeDefinition { id: WIRES_PLAY_MODE_EDIT.into(), label: LocalizedLabel::native("Edit", "Bearbeiten"), icon_id: "pencil".into(), tools: vec![semio_framework::io::resolve_ready(ToolRef::new(reorganize::TOOL_ID))], layout_id: None, commands: Vec::new() }
+    ModeDefinition { id: WIRES_PLAY_MODE_EDIT.into(), label: LocalizedLabel::native("Edit", "Bearbeiten"), icon_id: "pencil".into(), tools: vec![::semio_framework_async::poll::resolve_ready(ToolRef::new(reorganize::TOOL_ID))], layout_id: None, commands: Vec::new() }
 }
 
 /// 🪟️ The app's default window layout — this mode is the app's `default_mode_id`, so its layout IS the

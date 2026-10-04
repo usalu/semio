@@ -62,7 +62,7 @@ export async function proveRelativeStylingSizesV1(): Promise<number> {
       const reference = await shape();
       await page.locator("#capsule").evaluate((element, className) => {
         element.style.borderRadius = "";
-        element.className = className;
+        element.setAttribute("class", className);
       }, row.semanticClass);
       const actual = await shape();
       assert.equal(reference.center, true, row.id + " native reference center");

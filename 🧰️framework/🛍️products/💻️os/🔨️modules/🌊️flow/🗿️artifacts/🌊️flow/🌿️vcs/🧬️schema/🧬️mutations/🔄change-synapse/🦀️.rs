@@ -4,7 +4,7 @@ use crate::os_spr::{MutationKind, MutationOutcome, SemanticDescriptor, Identifie
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🧬️Payload
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, crate::os_dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, crate::os_dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "change-synapse")]
@@ -18,9 +18,12 @@ impl MutationKind<FlowHostSnapshot, FlowMutation> for ChangeSynapse {
     fn diff(&self, _base: &FlowHostSnapshot) -> MutationOutcome<FlowDiff> {
         MutationOutcome::new(FlowDiff::from(FlowDelta::Synapses(FlowCollectionDelta { removed: vec![], inserted: vec![], replaced: vec![(self.id.clone(), self.synapse.clone())] })))
     }
-    fn inverse(&self, base: &FlowHostSnapshot) -> Vec<FlowMutation> {
+    fn inverse(&self, base: &FlowHostSnapshot) -> Result<Vec<FlowMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         base.synapses.iter().find(|item| item.id() == &self.id).map(|previous| FlowMutation::ChangeSynapse(Self { id: self.synapse.id().clone(), synapse: previous.clone() })).into_iter().collect()
-    }
+    
+    })())
+}
     fn label(&self) -> crate::LocalizedLabel {
         crate::LocalizedLabel::native(&format!("Change synapse {}", self.id), &format!("Synapse {} ändern", self.id))
     }

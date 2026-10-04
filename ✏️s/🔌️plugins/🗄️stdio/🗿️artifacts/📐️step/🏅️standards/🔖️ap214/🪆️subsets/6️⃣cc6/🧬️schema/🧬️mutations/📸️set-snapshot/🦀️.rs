@@ -20,9 +20,12 @@ impl protocol::MutationKind<StepSnapshot, StepCc6Mutation> for SetSnapshot {
     fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<<StepCc6Mutation as protocol::Mutation<StepSnapshot>>::Diff> {
         protocol::MutationOutcome::new(<StepDiff as DiffAlgebra<StepSnapshot>>::between(base, &self.snapshot))
     }
-    fn inverse(&self, base: &StepSnapshot) -> Vec<StepCc6Mutation> {
+    fn inverse(&self, base: &StepSnapshot) -> Result<Vec<StepCc6Mutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![StepCc6Mutation::SetSnapshot(SetSnapshot { snapshot: base.clone() })]
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set the whole CC6 snapshot", "Gesamte CC6-Momentaufnahme setzen")
     }

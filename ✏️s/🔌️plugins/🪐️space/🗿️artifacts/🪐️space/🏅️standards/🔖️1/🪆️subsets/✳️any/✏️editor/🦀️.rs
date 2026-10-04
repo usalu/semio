@@ -324,7 +324,7 @@ impl ArtifactEditor for SpaceIndexEditor {
             return Ok(None);
         }
         if request.command.command_id() != request.tool_id {
-            return Err(Fault::new(FaultOrigin::App, FaultCode::new("s.space.index.retained.tool-mismatch"), "space index command does not match its exact registered tool"));
+            return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.tool-mismatch"), "space index command does not match its exact registered tool"));
         }
         let tool_id = request.command.command_id();
         let work = Box::new(semio_framework_plugin::retained_command::BoundedArtifactCommandWork::new(tool_id, space_index_retained_reduce, space_index_retained_extent));
@@ -374,9 +374,9 @@ impl ArtifactEditor for SpaceIndexEditor {
     /// (the new `#s-space-create-artifact` toolbar button), the members panel's invite/remove/visibility/
     /// copy-link buttons — all of it. Mirrors `HomeCommand::command_from_action`'s `str_field` idiom
     /// (`🏠️home/…/✏️editor/🦀️.rs`) field-for-field against each command payload struct.
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<SpaceIndexCommand, Fault> {
-        let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_str).map(str::to_string);
-        let u64_field = |key: &str| args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_f64).map(|value| value as u64);
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<SpaceIndexCommand, Fault> {
+        let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_str).map(str::to_string);
+        let u64_field = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_f64).map(|value| value as u64);
         match action {
             "createArtifact" => Ok(SpaceIndexCommand::CreateArtifact(create_artifact::CreateArtifact { name: str_field("name").unwrap_or_default(), kind_choice: str_field("kindChoice").unwrap_or_default() })),
             "deleteArtifact" => Ok(SpaceIndexCommand::DeleteArtifact(delete_artifact::DeleteArtifact { id: str_field("id").unwrap_or_default() })),

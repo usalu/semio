@@ -215,18 +215,9 @@ def main(argv: list[str]) -> int:
         assert ht_limit("Detached", 140.0) == 0.40
         print("oracle_self_checks_ok")
         return 0
-    snap_path = Path(argv[1])
-    report_path = Path(argv[2])
-    climate_path = Path(argv[3]) if len(argv) > 3 else None
-    doc = json.loads(snap_path.read_text())
-    report = json.loads(report_path.read_text())
-    if climate_path is not None:
-        climate = json.loads(climate_path.read_text())
-    else:
-        climate = doc.get("_climate")
-        if climate is None:
-            raise SystemExit("climate required")
-    result = compare_to_report(doc, climate, report)
+    doc = json.loads(Path(argv[1]).read_text())
+    report = json.loads(Path(argv[2]).read_text())
+    result = compare_to_report(doc, doc["climate"], report)
     print(json.dumps(result))
     return 0 if result["ok"] else 1
 

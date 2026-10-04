@@ -63,29 +63,29 @@ impl ArtifactSerializer for SemioMeshToStl {
         for mesh in &from.meshes {
             for prim in &mesh.primitives {
                 if prim.topology != SemioTopology::Triangles {
-                    return Err(store::PackError::Schema(format!("SemioMeshToStl: primitive {:?} has topology {:?}; STL can only represent Triangles", prim.id, prim.topology)));
+                    return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, format!("SemioMeshToStl: primitive {:?} has topology {:?}; STL can only represent Triangles", prim.id, prim.topology))));
                 }
                 let corner_indices: Vec<u32> = if !prim.indices.is_empty() {
                     if prim.indices.len() % 3 != 0 {
-                        return Err(store::PackError::Schema(format!("SemioMeshToStl: primitive {:?} indices length {} is not a multiple of 3", prim.id, prim.indices.len())));
+                        return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("SemioMeshToStl: primitive {:?} indices length {} is not a multiple of 3", prim.id, prim.indices.len()))));
                     }
                     prim.indices.clone()
                 } else {
                     if prim.positions.len() % 3 != 0 {
-                        return Err(store::PackError::Schema(format!("SemioMeshToStl: non-indexed primitive {:?} has {} positions, not a multiple of 3", prim.id, prim.positions.len())));
+                        return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("SemioMeshToStl: non-indexed primitive {:?} has {} positions, not a multiple of 3", prim.id, prim.positions.len()))));
                     }
                     (0..prim.positions.len() as u32).collect()
                 };
 
                 for face in corner_indices.chunks(3) {
-                    let get = |i: u32| -> Result<SemioPoint3, store::PackError> { prim.positions.get(i as usize).copied().ok_or_else(|| store::PackError::Schema(format!("SemioMeshToStl: primitive {:?} index {i} out of bounds", prim.id))) };
+                    let get = |i: u32| -> Result<SemioPoint3, store::PackError> { prim.positions.get(i as usize).copied().ok_or_else(|| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("SemioMeshToStl: primitive {:?} index {i} out of bounds", prim.id)))) };
                     let (i0, i1, i2) = (face[0], face[1], face[2]);
                     let (v0, v1, v2) = (get(i0)?, get(i1)?, get(i2)?);
                     let normal = if !prim.normals.is_empty() {
                         let (n0, n1, n2) = (
-                            *prim.normals.get(i0 as usize).ok_or_else(|| store::PackError::Schema(format!("SemioMeshToStl: primitive {:?} normal index {i0} out of bounds", prim.id)))?,
-                            *prim.normals.get(i1 as usize).ok_or_else(|| store::PackError::Schema(format!("SemioMeshToStl: primitive {:?} normal index {i1} out of bounds", prim.id)))?,
-                            *prim.normals.get(i2 as usize).ok_or_else(|| store::PackError::Schema(format!("SemioMeshToStl: primitive {:?} normal index {i2} out of bounds", prim.id)))?,
+                            *prim.normals.get(i0 as usize).ok_or_else(|| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("SemioMeshToStl: primitive {:?} normal index {i0} out of bounds", prim.id))))?,
+                            *prim.normals.get(i1 as usize).ok_or_else(|| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("SemioMeshToStl: primitive {:?} normal index {i1} out of bounds", prim.id))))?,
+                            *prim.normals.get(i2 as usize).ok_or_else(|| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("SemioMeshToStl: primitive {:?} normal index {i2} out of bounds", prim.id))))?,
                         );
                         average_normal(n0, n1, n2)
                     } else {

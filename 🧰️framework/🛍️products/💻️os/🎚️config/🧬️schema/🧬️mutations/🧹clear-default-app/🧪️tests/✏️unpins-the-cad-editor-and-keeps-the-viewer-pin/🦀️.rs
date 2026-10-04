@@ -23,16 +23,16 @@ const DIFF: &str = include_str!("../../🧫️fixtures/✏️unpins-the-cad-edit
 const OUTCOME: &str = include_str!("../../🧫️fixtures/✏️unpins-the-cad-editor-and-keeps-the-viewer-pin/🎯️outcome/🔣️.json");
 
 fn before() -> OpeningPreferences {
-    dsl::os_pack::json::from_json_str(BEFORE).expect("before opening preferences decode")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before opening preferences decode")
 }
 fn expected_after() -> OpeningPreferences {
-    dsl::os_pack::json::from_json_str(AFTER).expect("after opening preferences decode")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after opening preferences decode")
 }
 fn mutation() -> OpeningConfigMutation {
-    dsl::os_pack::json::from_json_str(MUTATION).expect("clear-default-app mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("clear-default-app mutation decodes")
 }
-fn json_value<T: dsl::ToValue>(value: &T) -> serde_json::Value {
-    serde_json::from_str(&dsl::os_pack::json::to_json_string(value)).expect("canonical JSON parses in the independent serde_json oracle")
+fn json_value<T: semio_framework_value::ToValue>(value: &T) -> serde_json::Value {
+    serde_json::from_str(&semio_framework_pack_json::to_json_string(value)).expect("canonical JSON parses in the independent serde_json oracle")
 }
 
 /// ▶️ Unpinning `(s.cad.cad@1/*, editor)` drops exactly that entry; the viewer pin for the same
@@ -53,7 +53,7 @@ fn unpins_the_editor_and_leaves_the_viewer_pin_standing() {
 #[test]
 fn repinning_the_cleared_app_restores_before() {
     let base = before();
-    let inverse = <OpeningConfigMutation as protocol::Mutation<OpeningPreferences>>::inverse(&mutation(), &base);
+    let inverse = <OpeningConfigMutation as protocol::Mutation<OpeningPreferences>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "clear-default-app/unpins-the-cad-editor-and-keeps-the-viewer-pin: clearing an occupied coordinate proposes exactly one undo step");
     assert!(matches!(inverse[0], OpeningConfigMutation::SetDefaultApp(_)), "clear-default-app/unpins-the-cad-editor-and-keeps-the-viewer-pin: the undo of a clear is a set, carrying the prior app back");
     let forward = <OpeningConfigMutation as protocol::Mutation<OpeningPreferences>>::diff(&mutation(), &base);
@@ -70,7 +70,7 @@ fn repinning_the_cleared_app_restores_before() {
 #[test]
 fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: OpeningPreferences = dsl::os_pack::json::from_json_str(text).expect("opening preferences decode");
+        let decoded: OpeningPreferences = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("opening preferences decode");
         let reencoded = json_value(&decoded);
         let original: serde_json::Value = serde_json::from_str(text).expect("opening preferences reparse");
         assert_eq!(reencoded, original, "clear-default-app/unpins-the-cad-editor-and-keeps-the-viewer-pin: committed {label} preferences JSON is not canonical");
@@ -104,7 +104,7 @@ fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `OpeningPreferences` and re-encodes unchanged.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: OpeningPreferences = dsl::os_pack::json::from_json_str(DIFF).expect("committed clear-default-app diff decodes");
+    let decoded: OpeningPreferences = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed clear-default-app diff decodes");
     assert_eq!(decoded.defaults.len(), 1, "clear-default-app/unpins-the-cad-editor-and-keeps-the-viewer-pin: the whole-record diff must restate the one surviving pin");
     let reencoded = json_value(&decoded);
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
@@ -115,7 +115,7 @@ fn committed_diff_is_canonical() {
 /// `apply` ignores `base` outright, the diff IS the after-record.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: OpeningPreferences = dsl::os_pack::json::from_json_str(DIFF).expect("committed clear-default-app diff decodes");
+    let decoded: OpeningPreferences = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed clear-default-app diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("committed diff applies to the before-preferences");
     assert_eq!(produced, expected_after(), "clear-default-app/unpins-the-cad-editor-and-keeps-the-viewer-pin: committed diff did not carry before to after");
 }

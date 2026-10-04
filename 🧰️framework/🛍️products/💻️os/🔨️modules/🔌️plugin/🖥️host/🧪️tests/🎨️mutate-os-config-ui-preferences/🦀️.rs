@@ -170,7 +170,7 @@ mod subject {
             if current == base {
                 return Err(format!("inverse-{scenario}: the forward mutation left the record untouched, so restoring it proves nothing"));
             }
-            for step in inverse_ui_preferences_config_mutation_steps(&mutation, &base) {
+            for step in inverse_ui_preferences_config_mutation_steps(&mutation, &base).expect("valid retained mutation inverse fixture") {
                 let undone = apply_ui_preferences_config_mutation_reporting(&mut current, &step);
                 if !undone.is_empty() {
                     return Err(format!("inverse-{scenario}: an inverse step was rejected: {undone:?}"));
@@ -229,7 +229,7 @@ pub fn adapter() -> Adapter {
             built = built.oracle(&format!("inverse-{scenario}"), inverse_oracle_for(scenario));
             #[cfg(feature = "sut")]
             {
-                built = built.subject(&format!("inverse-{scenario}"), subject::inverse(scenario));
+                built = built.subject(&format!("inverse-{scenario}"), subject::inverse(scenario).expect("valid retained mutation inverse fixture"));
             }
         }
     }

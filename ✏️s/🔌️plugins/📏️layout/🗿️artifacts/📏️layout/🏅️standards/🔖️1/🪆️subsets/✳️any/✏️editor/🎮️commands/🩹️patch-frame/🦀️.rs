@@ -25,7 +25,7 @@ use crate::{Frame, LayoutSnapshot, Page, PageOverride, TextStyleRun};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "patch-frame")]
 pub struct PatchFrame {
     pub frame_id: String,
@@ -95,7 +95,8 @@ fn char_to_byte(content: &str, chars: usize) -> usize {
     content.char_indices().nth(chars).map(|(index, _)| index).unwrap_or(content.len())
 }
 
-fn byte_to_char(content: &str, byte: usize) -> usize {
+fn byte_to_char(content: &str, byte: u64) -> usize {
+    let byte=usize::try_from(byte).unwrap_or(content.len());
     content.get(..byte.min(content.len())).unwrap_or(content).chars().count()
 }
 
@@ -179,7 +180,7 @@ pub fn handle(payload: &PatchFrame, doc: &ArtifactView<'_, LayoutSnapshot>, cfg:
                 Vec::new()
             } else if document.character_styles.iter().any(|style| style.id == style_id) && !story.content.is_empty() {
                 if story.style_runs.is_empty() {
-                    vec![TextStyleRun { start: 0, end: story.content.len(), paragraph_style_id: None, character_style_id: Some(style_id.to_string()) }]
+                    vec![TextStyleRun { start: 0, end: u64::try_from(story.content.len()).expect("host string length fits u64"), paragraph_style_id: None, character_style_id: Some(style_id.to_string()) }]
                 } else {
                     let mut runs = story.style_runs.clone();
                     runs[0].character_style_id = Some(style_id.to_string());
@@ -202,7 +203,7 @@ pub fn handle(payload: &PatchFrame, doc: &ArtifactView<'_, LayoutSnapshot>, cfg:
                 return Ok(Emit::default());
             }
             if index == runs.len() {
-                runs.push(TextStyleRun { start: 0, end: story.content.len(), paragraph_style_id: None, character_style_id: None });
+                runs.push(TextStyleRun { start: 0, end: u64::try_from(story.content.len()).expect("host string length fits u64"), paragraph_style_id: None, character_style_id: None });
             }
             let run = &mut runs[index];
             let mut start_chars = byte_to_char(&story.content, run.start);
@@ -212,8 +213,8 @@ pub fn handle(payload: &PatchFrame, doc: &ArtifactView<'_, LayoutSnapshot>, cfg:
             } else {
                 end_chars = chars.max(start_chars);
             }
-            run.start = char_to_byte(&story.content, start_chars);
-            run.end = char_to_byte(&story.content, end_chars);
+            run.start = u64::try_from(char_to_byte(&story.content, start_chars)).expect("host string offset fits u64");
+            run.end = u64::try_from(char_to_byte(&story.content, end_chars)).expect("host string offset fits u64");
             Ok(Emit::mutations(vec![LayoutMutation::SetStoryRuns(SetStoryRuns { id: story.id.clone(), runs })]))
         }
         "linkWidth" | "linkHeight" | "dpi" | "colorProfile" => {

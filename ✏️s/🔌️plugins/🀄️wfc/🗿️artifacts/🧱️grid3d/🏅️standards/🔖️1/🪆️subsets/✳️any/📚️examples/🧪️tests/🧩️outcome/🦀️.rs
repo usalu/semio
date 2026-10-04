@@ -23,11 +23,11 @@ fn committed() -> Vec<Committed> {
     ]
 }
 
-fn expected(case: &Committed) -> dsl::DslValue {
-    dsl::os_pack::json::to_dsl_value(&dsl::os_pack::json::parse(case.json).expect("committed outcome is json"))
+fn expected(case: &Committed) -> semio_framework_value::DslValue {
+    semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(case.json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed outcome is json"))
 }
 
-fn field<'a>(value: &'a dsl::DslValue, key: &str) -> &'a dsl::DslValue {
+fn field<'a>(value: &'a semio_framework_value::DslValue, key: &str) -> &'a semio_framework_value::DslValue {
     value.get(key).unwrap_or_else(|| panic!("committed outcome declares '{key}'"))
 }
 

@@ -1,0 +1,15 @@
+dialect protocol
+protocol stdio.csv.snapshot
+version 1
+schema stdio.csv
+start snapshot
+framing record
+use semio.pack
+
+record snapshot {
+  schema utf8
+  has-header bool
+  records record[]
+}
+record record { fields field[] }
+record field { value utf8 quoted bool }

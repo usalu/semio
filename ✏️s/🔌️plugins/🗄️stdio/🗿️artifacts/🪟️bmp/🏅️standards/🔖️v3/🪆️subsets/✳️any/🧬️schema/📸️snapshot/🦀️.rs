@@ -1,33 +1,17 @@
-//! 🧬️ BmpSnapshot schema — persistent fields; real codec lives in `⚙️engine` (moved there to
-//! match the established stdio codec pattern — see `png`/`tiff`'s engine.rs).
+//! 🧬️ Exact BMP byte authority and handcrafted document codecs.
 
 use crate::STDIO_BMP_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 
-//#region 🔖️RowOrder
-/// 📐️ BITMAPINFOHEADER's `height` field is signed: negative encodes a top-down bitmap
-/// (rare, printer-friendly), positive (the overwhelming common case) encodes bottom-up. This
-/// carries that as a real enum instead of leaving callers to re-derive the sign every time —
-/// see `engine::decode_bmp`/`engine::encode_bmp` for how it drives row order on the wire.
-/// Decoded `pixels` are always canonicalized to row 0 = image top regardless of this value.
-/// 🧪️ F6: `dsl::DslScalar` — plain unit-variant enum binds as `DslField` directly (no
-/// `DslVariants`/`Statements` needed, see `f6-recon-report.md` §3a/§9 STEP-2a).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum BmpRowOrder {
     #[default]
     BottomUp,
     TopDown,
 }
-//#endregion 🔖️RowOrder
 
-//#region 🔖️PaletteEntry
-/// 🎨️ One BITMAPINFOHEADER color-table entry (present when `bits_per_pixel <= 8`), stored in
-/// the file's own on-disk field order — a weak/value entity, whole-value replaced in diffs.
-/// 🧪️ F6: `dsl::DslRecord` — gives this nested value type `DslField` so it can be embedded by
-/// `BmpSnapshot`'s `#[derive(dsl::DslRecord)]` and `BmpPaletteModified`/`BmpPaletteAdded`'s
-/// `#[derive(dsl::DslRecord)]` in the diff module.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct BmpPaletteEntry {
     pub b: u8,
@@ -35,134 +19,82 @@ pub struct BmpPaletteEntry {
     pub r: u8,
     pub reserved: u8,
 }
-//#endregion 🔖️PaletteEntry
 
-//#region 🔖️Snapshot
-/// 🖼️ Complete per-spec BITMAPINFOHEADER model (11 real fields) + palette + decoded pixels.
-/// `pixels` is a canonical 8-bit RGBA buffer (`width * height * 4` bytes, row 0 = image top,
-/// regardless of `row_order`) — see `engine::decode_bmp`/`engine::encode_bmp` for the real
-/// BITMAPFILEHEADER/BITMAPINFOHEADER codec and its documented encode scope cut.
-/// 🧪️ F6: `dsl::DslRecord` — flat header + palette + rows, zero enum-in-tree, zero tri-state
-/// (`Option<Option<_>>`), so the whole snapshot binds cleanly (`f6-recon-report.md` §8 row 14
-/// confirmed). `#[dsl(block)]` on `palette`/`pixels` for readability (framework precedent);
-/// `#[dsl(base64)]` on the bare `Vec<u8>` `pixels` field for a compact grammar.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.bmp")]
 pub struct BmpSnapshot {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    pub header_size: u32,
-    #[state(artifact)]
-    pub width: u32,
-    #[state(artifact)]
-    pub height: u32,
-    #[state(artifact)]
-    pub row_order: BmpRowOrder,
-    #[state(artifact)]
-    pub planes: u16,
-    #[state(artifact)]
-    pub bits_per_pixel: u16,
-    #[state(artifact)]
-    pub compression: u32,
-    #[state(artifact)]
-    pub image_size: u32,
-    #[state(artifact)]
-    pub x_pixels_per_meter: i32,
-    #[state(artifact)]
-    pub y_pixels_per_meter: i32,
-    #[state(artifact)]
-    pub colors_used: u32,
-    #[state(artifact)]
-    pub colors_important: u32,
-    #[state(artifact)]
-    #[value(default)]
-    #[dsl(block)]
-    pub palette: Vec<BmpPaletteEntry>,
-    #[state(artifact)]
     #[value(default)]
     #[dsl(base64)]
-    pub pixels: Vec<u8>,
+    pub bytes: Vec<u8>,
 }
 
 impl Default for BmpSnapshot {
     fn default() -> Self {
-        Self {
-            schema: STDIO_BMP_DOCUMENT_SCHEMA.into(),
-            header_size: 40,
-            width: 0,
-            height: 0,
-            row_order: BmpRowOrder::BottomUp,
-            planes: 1,
-            bits_per_pixel: 24,
-            compression: 0,
-            image_size: 0,
-            x_pixels_per_meter: 0,
-            y_pixels_per_meter: 0,
-            colors_used: 0,
-            colors_important: 0,
-            palette: Vec::new(),
-            pixels: Vec::new(),
-        }
+        Self { schema: STDIO_BMP_DOCUMENT_SCHEMA.into(), bytes: crate::io::empty_bmp_bytes() }
     }
 }
-//#endregion 🔖️Snapshot
 
-//#region 🔖️HandcraftedArtifactCodecs
 impl store::ArtifactDsl for BmpSnapshot {
     const EXTENSION: &'static str = "bmp";
     fn envelope_id() -> &'static str {
         "stdio.bmp"
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
         let hex: String = body.chars().filter(|c| !c.is_whitespace()).collect();
-        let mut bytes = Vec::with_capacity(hex.len() / 2);
-        let mut i = 0usize;
-        while i + 1 < hex.len() {
-            bytes.push(u8::from_str_radix(&hex[i..i + 2], 16).map_err(|e| store::TextError::new(format!("hex: {e}"), dsl::TextSpan::at(1, 1)))?);
-            i += 2;
+        if !hex.len().is_multiple_of(2) || !hex.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+            return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "BMP source requires complete ASCII hexadecimal byte pairs", semio_framework_diagnostic::TextSpan::at(1, 1)));
         }
-        crate::engine::decode_bmp(&bytes).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        let mut bytes = Vec::with_capacity(hex.len() / 2);
+        for i in (0..hex.len()).step_by(2) {
+            bytes.push(u8::from_str_radix(&hex[i..i + 2], 16).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("hex: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?);
+        }
+        crate::io::decode_bmp(&bytes).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
+
     fn print_dsl(&self) -> String {
-        let raw = crate::engine::encode_bmp(self).unwrap_or_default();
-        let body: String = raw.iter().map(|b| format!("{b:02x}")).collect();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        crate::io::bmp_layout(self).expect("BmpSnapshot invariant");
+        let body: String = self.bytes.iter().map(|byte| format!("{byte:02x}")).collect();
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
 impl store::ArtifactPack for BmpSnapshot {
-    /// 🪶️ Publishes this owner's actual relational snapshot capability.
     fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
         Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
     }
 
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let _ = options;
-        let raw = crate::engine::encode_bmp(self).map_err(store::PackError::Schema)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &raw))
+    fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        crate::io::bmp_layout(self).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::from(error.into_value_error()))?;
+        Ok(store::semio_format::wrap_binary(&envelope, &self.bytes))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+
+    fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::from(error.into_value_error()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
-        let _ = options;
-        crate::engine::decode_bmp(&inner).map_err(store::PackError::Schema)
+        crate::io::decode_bmp(&inner).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))
     }
 }
-//#endregion 🔖️HandcraftedArtifactCodecs
 
 #[path = "🪶️sqlite/🦀️.rs"]
 mod sqlite;
+#[path = "🚦️native/🦀️.rs"]
+mod sqlite_native;
 #[cfg(test)]
 #[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
 mod sqlite_tests;
+#[cfg(test)]
+#[path = "🧪️tests/🔤️source-hex/🦀️.rs"]
+mod source_hex_tests;

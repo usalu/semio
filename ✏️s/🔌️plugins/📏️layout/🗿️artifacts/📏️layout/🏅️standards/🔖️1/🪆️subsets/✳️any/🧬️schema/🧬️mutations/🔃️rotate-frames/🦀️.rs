@@ -28,9 +28,12 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for RotateFrames {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_rotate_frames(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
-        layout_frame_selection_inverse(base, &self.page_id, diff_rotate_frames(self, base))
-    }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok({
+        layout_frame_selection_inverse(base, &self.page_id, diff_rotate_frames(self, base))?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let (degrees_en, degrees_de) = layout_label_number(self.angle.to_degrees());
         let (en, de) = layout_label_frames(self.targets.len());

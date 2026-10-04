@@ -45,7 +45,7 @@ async fn missing_object_is_a_target_missing_error() {
 async fn inverse_recreates_the_object_at_its_slot() {
     let base = base();
     let mutation = delete_middle();
-    let inverse = mutation.inverse(&base);
+    let inverse = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     match &inverse[0] {
         CadMutation::CreateObject(step) => assert_eq!(step.index, 1, "the inverse must restore the removed object at its original index"),
         other => panic!("delete-object must invert to create-object, got {other:?}"),

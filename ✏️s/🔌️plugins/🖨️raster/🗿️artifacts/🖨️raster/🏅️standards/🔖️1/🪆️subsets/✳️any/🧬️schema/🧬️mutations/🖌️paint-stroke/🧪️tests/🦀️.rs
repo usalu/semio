@@ -10,9 +10,9 @@ use protocol::{Mutation, MutationDiff};
 //#region 🧫️Cases
 fn base(locked: bool) -> RasterSnapshot {
     let identity = r#"{"x":0.0,"y":0.0,"a":1.0,"b":0.0,"c":0.0,"d":1.0}"#;
-    dsl::json::from_json_str(&format!(
+    semio_framework_pack_json::from_json_str(&format!(
         r#"{{"schema":"s.raster.raster","id":"stroke","title":"Stroke","layers":[{{"kind":"pixel","id":"paint","name":"Paint","visible":true,"opacity":1.0,"blendMode":"normal","transform":{identity},"mask":{{"enabled":true,"linked":true,"invert":false,"width":null,"height":null,"imageKey":null,"transform":{identity}}},"width":6,"height":4,"imageKey":null,"locked":{locked}}}]}}"#
-    ))
+    ), semio_framework_pack_json::JsonMemberPolicy::Reject)
     .expect("the stroke base decodes")
 }
 
@@ -46,13 +46,13 @@ fn retire(snapshot: RasterSnapshot) {
     crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(snapshot);
 }
 
-fn json(value: &impl dsl::ToValue) -> serde_json::Value {
-    serde_json::from_str(&dsl::json::to_json_string(value)).expect("a value prints as JSON")
+fn json(value: &impl semio_framework_value::ToValue) -> serde_json::Value {
+    serde_json::from_str(&semio_framework_pack_json::to_json_string(value)).expect("a value prints as JSON")
 }
 
 /// 🎯️ The committed outcome of one stroke: applied, a warned no-op, or a refusal naming its code and target.
 fn outcome_json(outcome: &protocol::MutationOutcome<RasterDiff>) -> serde_json::Value {
-    let refusal = outcome.messages().iter().find(|message| matches!(message.level, protocol::Severity::Error | protocol::Severity::Fatal));
+    let refusal = outcome.messages().iter().find(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal));
     if let Some(message) = refusal {
         return serde_json::json!({ "status": "rejected", "code": message.code.0, "path": message.target });
     }
@@ -102,8 +102,8 @@ fn emit_committed_fixtures() {
 #[test]
 fn the_committed_quintets_are_a_print_of_the_leaf() {
     for (case, before, mutation) in cases() {
-        let committed_before: RasterSnapshot = dsl::json::from_json_str(&std::fs::read_to_string(fixture_root().join(case).join("📸️snapshot/⬅️before/🔣️.json")).expect("the committed before exists")).expect("the committed before decodes");
-        let committed_mutation: RasterMutation = dsl::json::from_json_str(&std::fs::read_to_string(fixture_root().join(case).join("🦠️mutation/🔣️.json")).expect("the committed mutation exists")).expect("the committed mutation decodes");
+        let committed_before: RasterSnapshot = semio_framework_pack_json::from_json_str(&std::fs::read_to_string(fixture_root().join(case).join("📸️snapshot/⬅️before/🔣️.json")).expect("the committed before exists"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the committed before decodes");
+        let committed_mutation: RasterMutation = semio_framework_pack_json::from_json_str(&std::fs::read_to_string(fixture_root().join(case).join("🦠️mutation/🔣️.json")).expect("the committed mutation exists"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the committed mutation decodes");
         assert_eq!(committed_mutation, mutation, "{case}: the committed mutation is the table's");
         for (file, value) in quintet(&committed_before, &committed_mutation) {
             let committed: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(fixture_root().join(case).join(file)).expect("the committed file exists")).expect("the committed file is JSON");
@@ -145,7 +145,7 @@ fn the_inverse_restores_the_exact_prior_image() {
     let erased = apply_raster_mutation(&painted, &erase).expect("the erase applies");
     assert_eq!(erased.assets.len(), 1, "the image the erase replaced left the pool");
     let mut restored = erased.clone();
-    for undo in inverse_raster_mutation(&painted, &erase) {
+    for undo in inverse_raster_mutation(&painted, &erase).expect("valid retained mutation inverse fixture") {
         let next = apply_raster_mutation(&restored, &undo).expect("every undo step applies");
         retire(std::mem::replace(&mut restored, next));
     }
@@ -157,7 +157,7 @@ fn the_inverse_restores_the_exact_prior_image() {
     let pixels = |document: &RasterSnapshot| document.assets.get(&key(document)).and_then(|child| child.local_owner::<SemioImageSnapshot>()).expect("materialized").frames[0].rgba8.clone();
     assert_eq!(pixels(&restored), pixels(&painted), "the restored image holds the painted pixels");
     let mut unpainted = painted.clone();
-    for undo in inverse_raster_mutation(&blank, &paint) {
+    for undo in inverse_raster_mutation(&blank, &paint).expect("valid retained mutation inverse fixture") {
         let next = apply_raster_mutation(&unpainted, &undo).expect("every undo step applies");
         retire(std::mem::replace(&mut unpainted, next));
     }
@@ -202,8 +202,8 @@ fn an_edited_stroke_rederives_itself_and_its_downstream() {
 fn the_stroke_labels_itself_in_english_and_german() {
     let RasterMutation::PaintStroke(stroke) = paint_stroke("paint", "mask", "eraser", brush(2.0, 1.0, 1.0, [0.0, 0.0, 0.0, 1.0]), points(&[(1.0, 1.0), (2.0, 2.0), (3.0, 3.0)])) else { unreachable!() };
     let label = protocol::MutationKind::<RasterSnapshot, RasterMutation>::label(&stroke);
-    assert_eq!(label.resolve(protocol::Terminology::Native, protocol::Locale::En), "Mask eraser stroke of 3 points on layer paint");
-    assert_eq!(label.resolve(protocol::Terminology::Native, protocol::Locale::De), "Masken-Radierstrich mit 3 Punkten auf Ebene paint");
+    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Mask eraser stroke of 3 points on layer paint");
+    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "Masken-Radierstrich mit 3 Punkten auf Ebene paint");
 }
 
 /// 🧯️ A payload the schema refuses is a Fatal invariant breach naming the field, and moves nothing.
@@ -221,8 +221,8 @@ fn a_payload_outside_its_bounds_is_an_invariant_breach() {
         let outcome = stroke.diff(&document);
         assert_eq!(outcome.diff(), &RasterDiff::default());
         let message = outcome.messages().first().expect("a breach raises");
-        assert_eq!((message.level, message.code.0.as_str(), message.target.as_slice()), (protocol::Severity::Fatal, "mutation.invariant", [field.to_string()].as_slice()));
-        assert!(stroke.inverse(&document).is_empty());
+        assert_eq!((message.level, message.code.0.as_str(), message.target.as_slice()), (semio_framework_diagnostic::Severity::Fatal, "mutation.invariant", [field.to_string()].as_slice()));
+        assert!(stroke.inverse(&document).expect("valid retained mutation inverse fixture").is_empty());
     }
     retire(document);
 }

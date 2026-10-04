@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    { "owner": "puzzle-2d-window", "sourceOrdinal": 0, "cause": "ValueError", "projection": "from", "upper": false },
+    { "owner": "puzzle-3d-window", "sourceOrdinal": 0, "cause": "ValueError", "projection": "from", "upper": false },
+    { "owner": "note-window", "sourceOrdinal": 0, "cause": "ValueError", "projection": "from", "upper": false },
+    { "owner": "puzzle-5d-window", "sourceOrdinal": 0, "cause": "ValueError", "projection": "from", "upper": false },
+    { "owner": "remodel-frames-config", "sourceOrdinal": 0, "cause": "SemioError", "projection": "into_value_error", "upper": false },
+    { "owner": "remodel-frames-config", "sourceOrdinal": 1, "cause": "SemioError", "projection": "into_value_error", "upper": false },
+    { "owner": "puzzle-5d-window", "sourceOrdinal": 0, "cause": "SemioError", "projection": "into_value_error", "upper": false },
+    { "owner": "puzzle-5d-window", "sourceOrdinal": 1, "cause": "SemioError", "projection": "into_value_error", "upper": false }
+  ]
+}

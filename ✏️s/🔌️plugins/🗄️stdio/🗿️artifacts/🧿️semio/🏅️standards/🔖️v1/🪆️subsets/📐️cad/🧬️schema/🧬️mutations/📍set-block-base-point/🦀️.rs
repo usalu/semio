@@ -19,9 +19,12 @@ impl protocol::MutationKind<SemioCadSnapshot, SemioCadMutation> for SetBlockBase
     fn diff(&self, base: &SemioCadSnapshot) -> protocol::MutationOutcome<<SemioCadMutation as Mutation<SemioCadSnapshot>>::Diff> {
         agg_diff(&SemioCadMutation::SetBlockBasePoint(self.clone()), base)
     }
-    fn inverse(&self, base: &SemioCadSnapshot) -> Vec<SemioCadMutation> {
-        agg_inverse(&SemioCadMutation::SetBlockBasePoint(self.clone()), base)
-    }
+    fn inverse(&self, base: &SemioCadSnapshot) -> Result<Vec<SemioCadMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&SemioCadMutation::SetBlockBasePoint(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set block base point", "Blockbasispunkt setzen")
     }

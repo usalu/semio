@@ -6,9 +6,12 @@ use crate::ProgramMutation;
 use crate::ProgramSnapshot;
 
 /// ↩️ Undo by reconnecting the captured edge. Missing target ⇒ nothing to undo.
-pub fn inverse(payload: &super::DisconnectAdjacency, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+pub fn inverse(payload: &super::DisconnectAdjacency, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.adjacencies.iter().find(|row| row.header.id == payload.id) {
         Some(existing) => vec![ProgramMutation::ConnectAdjacency(super::super::connect_adjacency::ConnectAdjacency { adjacency: existing.clone() })],
         None => Vec::new(),
     }
+
+    })())
 }

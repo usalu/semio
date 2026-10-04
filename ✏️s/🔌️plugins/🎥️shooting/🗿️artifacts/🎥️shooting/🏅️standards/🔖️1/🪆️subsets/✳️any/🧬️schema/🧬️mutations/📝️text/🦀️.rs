@@ -20,11 +20,11 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 //#region 🔖️OpText
 impl protocol::OpText for ShootingMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        dsl::os_pack::json::from_json_str(line).map_err(|e| store::__rt::field_error(format!("invalid shooting mutation line: {e}")))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        semio_framework_pack_json::from_json_str(line, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error.under("shooting mutation line"), semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
     fn print_op(&self) -> String {
-        dsl::os_pack::json::to_json_string(self)
+        semio_framework_pack_json::to_json_string(self)
     }
 }
 //#endregion 🔖️OpText

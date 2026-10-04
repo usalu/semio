@@ -7,10 +7,13 @@ use crate::{Iso16757Mutation, Iso16757Snapshot};
 use super::mutation::IntroducePropertyDefinition;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &IntroducePropertyDefinition, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
+pub fn inverse(payload: &IntroducePropertyDefinition, base: &Iso16757Snapshot) -> Result<Vec<Iso16757Mutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     if base.catalogue.property_definitions.iter().any(|definition| definition.id == payload.property_definition.id) {
         return Vec::new();
     }
     vec![Iso16757Mutation::RetirePropertyDefinition(retire_property_definition::mutation::RetirePropertyDefinition { id: payload.property_definition.id.clone() })]
+
+    })())
 }
 //#endregion 🔖️Inverse

@@ -21,7 +21,7 @@ fn trusted_browser_actor_metadata_and_generation_match_neutral_corpus() {
         });
         assert_eq!(result.is_ok(), law["accepted"].as_bool().unwrap(), "{}", law["id"]);
         if let Ok(actor) = result {
-            let public = directory::os_pack::json::to_json_string(&actor.identity());
+            let public = semio_framework_pack_json::to_json_string(&actor.identity());
             assert!(!public.contains("path") && !public.contains("byteLength"));
         }
     }

@@ -297,15 +297,15 @@ impl PartialEq for Csr {
     }
 }
 
-impl dsl::ToValue for Csr {
-    fn to_value(&self) -> dsl::DslValue {
-        dsl::ToValue::to_value(&CsrWire { n: self.n, indptr: self.indptr.iter().copied().collect(), indices: self.indices.iter().copied().collect(), vals: self.vals.iter().copied().collect() })
+impl semio_framework_value::ToValue for Csr {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::ToValue::to_value(&CsrWire { n: self.n, indptr: self.indptr.iter().copied().collect(), indices: self.indices.iter().copied().collect(), vals: self.vals.iter().copied().collect() })
     }
 }
 
-impl dsl::FromValue for Csr {
-    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
-        let wire = <CsrWire as dsl::FromValue>::from_value(value)?;
+impl semio_framework_value::FromValue for Csr {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        let wire = <CsrWire as semio_framework_value::FromValue>::from_value(value)?;
         Ok(Self::from_owned_parts(wire.n, wire.indptr, wire.indices, wire.vals))
     }
 }

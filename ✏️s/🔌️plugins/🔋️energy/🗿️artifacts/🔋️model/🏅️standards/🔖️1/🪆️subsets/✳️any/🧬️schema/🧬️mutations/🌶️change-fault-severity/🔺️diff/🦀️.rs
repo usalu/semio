@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeFaultSeverity, base: &EnergyModelSnapshot) ->
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Fault {}: severity must be a fraction in [0, 1], got {}.", payload.id.0, payload.new_severity), [payload.id.0.to_string()]);
     }
     if existing.severity == payload.new_severity {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Fault {} already carries this severity: {}.", payload.id.0, payload.new_severity));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Fault {} already carries this severity: {}.", payload.id.0, payload.new_severity));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.faults.iter_mut().find(|item| item.id == payload.id) {

@@ -17,6 +17,16 @@ class LaunchNameContractTestScript extends BundleScript {
   }
 }
 
+/** 🧱️ Proves source launch container admission against the complete neutral corpus. */
+class LaunchPlacementContractTestScript extends BundleScript {
+ async run(args: string[]): Promise<void> {
+  if(args.length)throw Error("test-launch-placement-contract accepts no arguments");
+  const {runBudgetedTestCommand}=await import("../../../../../🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts");
+  await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun","./🚀️launch/🧱️placement/🟦️.ts"],{cwd:this.root,budgetMs:30000,env:process.env,throwOnFailure:true});
+  await runBudgetedTestCommand(process.execPath,["test","./🚀️launch/🧪️tests/🧱️placement/🟦️.ts"],{cwd:this.root,budgetMs:30000,env:process.env,throwOnFailure:true});
+ }
+}
+
 /** 🗂️Verifies the owner-declared playground asset contract. */
 class AssetContractTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -69,6 +79,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("test-deployment-contract", DeploymentContractTestScript)
   .register("test-component-owners", ComponentOwnerContractTestScript)
   .register("test-launch-name-contract", LaunchNameContractTestScript)
+  .register("test-launch-placement-contract", LaunchPlacementContractTestScript)
   .register("test-playground-default-contract", PlaygroundDefaultContractTestScript)
   .registerLazy("new", async () => (await import("./🌳️surface-scaffold/🟦️.ts")).NewScript)
   .registerLazy("surface-schema", async () => (await import("./🧬️surface-schema/🟦️.ts")).SurfaceSchemaScript);

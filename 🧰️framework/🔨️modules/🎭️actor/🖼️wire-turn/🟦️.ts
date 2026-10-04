@@ -937,6 +937,7 @@ export function wireEffectToFriendly(effect: WireVariant, decodePackValue: (byte
           accept: pstr("accept"),
           ...(readAs === undefined ? {} : { readAs }),
           importAction: pstr("importAction") || pstr("import-action"),
+          ...(some(params.args) == null ? {} : { args: ppack("args") }),
           multiple: Boolean(some(params.multiple) ?? false),
         },
       };

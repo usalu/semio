@@ -4,7 +4,10 @@
 use crate::mutations::{pin_pixel, BitmapMutation};
 use crate::schema::snapshot::{pin_index, BitmapSnapshot};
 
-pub fn inverse(payload: &super::UnpinPixel, base: &BitmapSnapshot) -> Vec<BitmapMutation> {
+pub fn inverse(payload: &super::UnpinPixel, base: &BitmapSnapshot) -> Result<Vec<BitmapMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(at) = pin_index(base, payload.x, payload.y) else { return Vec::new() };
     vec![pin_pixel(payload.x, payload.y, base.pinned[at].color)]
+
+    })())
 }

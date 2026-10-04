@@ -11,7 +11,7 @@ pub fn diff(payload: &RenameBlock, base: &NoteSnapshot) -> protocol::MutationOut
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Block \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if crate::schema::block_name(block) == payload.new_name {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Block \"{}\" already has name \"{}\".", payload.id, payload.new_name));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Block \"{}\" already has name \"{}\".", payload.id, payload.new_name));
     }
     let mut updated = block.clone();
     match &mut updated {

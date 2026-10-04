@@ -9,7 +9,7 @@ pub fn diff(payload: &UpdateHssInputs, base: &En1993Snapshot) -> protocol::Mutat
     let mut values = base.load_cases.clone();
     if let Some(idx) = values.iter().position(|x| x.id == payload.load_case.id) {
         if values[idx] == payload.load_case {
-            return protocol::MutationOutcome::empty().warn("mutation.no-op", "Entity already has this value.");
+            return protocol::MutationOutcome::empty().warning("mutation.no-op", "Entity already has this value.");
         }
         values[idx] = payload.load_case.clone();
     } else {

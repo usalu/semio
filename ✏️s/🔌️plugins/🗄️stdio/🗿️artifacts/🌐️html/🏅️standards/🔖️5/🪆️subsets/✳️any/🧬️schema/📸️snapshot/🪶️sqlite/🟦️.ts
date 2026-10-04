@@ -1,6 +1,6 @@
 /** 🌐️ HTML's native typed elements, raw text, boolean attributes and child ownership. */
 import type { HtmlSnapshot, HtmlNode } from "../🟦️.ts";
-import { artifactSqliteCheckpoint, artifactSqliteDatabase, artifactSqliteDocument, artifactSqliteInteger, artifactSqliteOrderedRows, artifactSqliteTables, artifactSqliteText, artifactSqliteTextBytes, artifactSqliteValueBudget, type ArtifactSqliteOptions } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+import { artifactSqliteCheckpoint, artifactSqliteDatabase, artifactSqliteDocument, artifactSqliteInteger, artifactSqliteOrderedRows, artifactSqliteTables, artifactSqliteText, artifactSqliteTextBytes, artifactSqliteValueBudget, artifactSqliteValueByteLengthControlled, type ArtifactSqliteOptions } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
 import type { SqliteDatabase, SqliteRow, SqliteValue } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 
 /** 🏛️ Handcrafted schema byte-equal to the adjacent SQL asset. */
@@ -10,7 +10,8 @@ const COMPONENTS = [["html_element","element"],["html_text","text"],["html_comme
 function kind(node: HtmlNode): string { return node.kind === "rawText" ? "raw_text" : node.kind; }
 async function measure(snapshot: HtmlSnapshot, options: ArtifactSqliteOptions): Promise<number> {
   let rows = 1, checked = 0;
-  let bytes = 16 + artifactSqliteTextBytes(snapshot.schema) + (snapshot.doctype === undefined ? 0 : artifactSqliteTextBytes(snapshot.doctype));
+  let bytes = 16 + await artifactSqliteValueByteLengthControlled(snapshot.schema, options, "projectSnapshot", 16);
+  if (snapshot.doctype !== undefined) bytes += await artifactSqliteValueByteLengthControlled(snapshot.doctype, options, "projectSnapshot", bytes);
   const check = (): void => { if (rows > (options.maxRows ?? 1_000_000)) throw new Error("HTML SQLite row limit"); artifactSqliteValueBudget(bytes, options); };
   check();
   const stack = [{ node: snapshot.root, finish: false }];
@@ -22,20 +23,21 @@ async function measure(snapshot: HtmlSnapshot, options: ArtifactSqliteOptions): 
     active.add(node); stack.push({ node, finish: true });
     rows += 2; bytes += 16 + artifactSqliteTextBytes(kind(node));
     if (node.kind === "element") {
-      bytes += artifactSqliteTextBytes(node.name);
+      bytes += await artifactSqliteValueByteLengthControlled(node.name, options, "projectSnapshot", bytes);
       rows += node.attributes.length + node.children.length;
       if (rows + 2 * node.children.length > (options.maxRows ?? 1_000_000)) throw new Error("HTML SQLite row limit");
       bytes += 32 * node.children.length;
       check();
       for (const attr of node.attributes) {
-        bytes += 24 + artifactSqliteTextBytes(attr.name) + (attr.value === undefined ? 0 : artifactSqliteTextBytes(attr.value)); check();
+        bytes += 24; bytes += await artifactSqliteValueByteLengthControlled(attr.name, options, "projectSnapshot", bytes);
+        if (attr.value !== undefined) bytes += await artifactSqliteValueByteLengthControlled(attr.value, options, "projectSnapshot", bytes); check();
         if (++checked % 256 === 0) await artifactSqliteCheckpoint(options, "projectSnapshot", 0, rows);
       }
       for (let index = node.children.length - 1; index >= 0; index--) stack.push({ node: node.children[index]!, finish: false });
-    } else if (node.kind === "text" || node.kind === "comment") bytes += artifactSqliteTextBytes(node.text);
+    } else if (node.kind === "text" || node.kind === "comment") bytes += await artifactSqliteValueByteLengthControlled(node.text, options, "projectSnapshot", bytes);
     else if (node.kind === "rawText") {
       if (node.parentKind !== "script" && node.parentKind !== "style") throw new Error("HTML raw text parent kind is invalid");
-      bytes += artifactSqliteTextBytes(node.text) + node.parentKind.length;
+      bytes += node.parentKind.length; bytes += await artifactSqliteValueByteLengthControlled(node.text, options, "projectSnapshot", bytes);
     } else throw new Error("HTML node kind is invalid");
     check();
     if (++checked % 256 === 0) await artifactSqliteCheckpoint(options, "projectSnapshot", 0, rows);
@@ -77,7 +79,7 @@ export async function htmlSnapshotToSqliteDatabase(snapshot: HtmlSnapshot, optio
     if (parent !== undefined) insert("html_child",[parent,BigInt(ordinal!),id]);
     await tick();
   }
-  const database = artifactSqliteDatabase(HTML_SQLITE_SCHEMA,TABLES.map(name => rows.get(name)!),options);
+  const database = await artifactSqliteDatabase(HTML_SQLITE_SCHEMA,TABLES.map(name => rows.get(name)!),options);
   await artifactSqliteCheckpoint(options,"projectSnapshot",total,total);
   return database;
 }
@@ -87,6 +89,9 @@ function group(groups: Map<bigint,SqliteRow[]>, owner: bigint, row: SqliteRow): 
 export async function htmlSnapshotFromSqliteDatabase(database: SqliteDatabase, options: ArtifactSqliteOptions = {}): Promise<HtmlSnapshot> {
   const total = database.tables.reduce((sum,table) => sum + table.rows.length,0);
   await artifactSqliteCheckpoint(options,"reconstructSnapshot",0,total);
+  if (total > (options.maxRows ?? 1_000_000)) throw new Error("HTML SQLite row limit");
+  let fieldBytes = 0;
+  for (const table of database.tables) for (const row of table.rows) for (const value of row.values) fieldBytes += await artifactSqliteValueByteLengthControlled(value, options, "reconstructSnapshot", fieldBytes);
   const tableRows = await artifactSqliteTables(database,HTML_SQLITE_SCHEMA,options);
   const rows = new Map<string,readonly SqliteRow[]>(TABLES.map((name,index) => [name,tableRows[index]!]));
   const document = artifactSqliteDocument(rows.get("html_document")!);

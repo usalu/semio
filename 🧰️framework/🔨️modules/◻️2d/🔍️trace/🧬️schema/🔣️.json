@@ -1,0 +1,229 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/2d/trace",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "width",
+    "height",
+    "mask",
+    "threshold",
+    "simplifyEpsilon",
+    "maxPixels",
+    "maxEdges",
+    "maxSegments",
+    "maxWork"
+  ],
+  "properties": {
+    "width": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 8192
+    },
+    "height": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 8192
+    },
+    "mask": {
+      "type": "array",
+      "maxItems": 16777216,
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    },
+    "threshold": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "simplifyEpsilon": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 8192
+    },
+    "maxPixels": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 16777216
+    },
+    "maxEdges": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 65536
+    },
+    "maxSegments": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 65536
+    },
+    "maxWork": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000000000
+    }
+  },
+  "definitions": {
+    "result": {
+      "type": "array",
+      "maxItems": 65536,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "kind",
+              "to"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "enum": [
+                  "move",
+                  "line"
+                ]
+              },
+              "to": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 8192
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "kind"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "const": "close"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "progress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "phase",
+        "scanned",
+        "pixels",
+        "edges",
+        "contours",
+        "segments",
+        "simplified",
+        "work",
+        "done"
+      ],
+      "properties": {
+        "phase": {
+          "enum": [
+            "scan",
+            "contours",
+            "compact",
+            "simplify",
+            "topology",
+            "coverage",
+            "emit",
+            "complete"
+          ]
+        },
+        "scanned": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 16777216
+        },
+        "pixels": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16777216
+        },
+        "edges": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65536
+        },
+        "contours": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65536
+        },
+        "segments": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65536
+        },
+        "simplified": {
+          "type": "boolean"
+        },
+        "work": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000000
+        },
+        "done": {
+          "type": "boolean"
+        }
+      }
+    },
+    "retirementProgress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "phase",
+        "work",
+        "done"
+      ],
+      "description": "The mask is transferred unchanged to the caller before retirement begins. Each work unit consumes one flat owned buffer, one nested contour or one tree entry. Completion retains no geometry, entries, or mask. Work counts structural operations, not allocator bytes.",
+      "properties": {
+        "phase": {
+          "enum": [
+            "closing",
+            "complete"
+          ]
+        },
+        "work": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "done": {
+          "type": "boolean"
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "phase": {
+              "const": "closing"
+            },
+            "done": {
+              "const": false
+            }
+          }
+        },
+        {
+          "properties": {
+            "phase": {
+              "const": "complete"
+            },
+            "done": {
+              "const": true
+            }
+          }
+        }
+      ]
+    }
+  }
+}

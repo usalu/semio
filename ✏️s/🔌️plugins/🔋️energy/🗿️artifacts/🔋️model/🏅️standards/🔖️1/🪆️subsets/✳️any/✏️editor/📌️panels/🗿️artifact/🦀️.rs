@@ -158,7 +158,7 @@ pub fn site_description(model: &Model) -> String {
 /// documents as "clears selection while hover remains" — and the inspector's no-selection body is
 /// exactly where the site's editable form lives. So clicking "Site" opens the site form.
 fn clear_selection_action() -> UiAssemblyResult<(ActionId, Option<UiValue>)> {
-    let targets = protocol::json::to_json_string(&protocol::DslValue::Array(Vec::new()));
+    let targets = semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Array(Vec::new()));
     let args = ui_value_map([("domainId", ui_value_text(ENERGY_MODEL_INTERACTION_DOMAIN)?), ("merge", ui_value_text("replace")?), ("method", ui_value_text("pick")?), ("targets", ui_value_text(targets)?)])?;
     energy_model_action(INTERACTION_SELECT_ACTION_ID, Some(args))
 }

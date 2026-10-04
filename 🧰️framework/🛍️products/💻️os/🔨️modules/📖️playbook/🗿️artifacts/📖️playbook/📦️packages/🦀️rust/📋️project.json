@@ -39,6 +39,14 @@
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
       }
+    },
+    "generation-root-policy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts generation-root-policy",
+        "forwardAllArgs": true
+      }
     }
   }
 }

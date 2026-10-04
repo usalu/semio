@@ -2,9 +2,9 @@
 use crate::schema::mutations::SvgMutation;
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
-pub const TEXT_OPCODES: &[&str] = &["set-declaration", "set-doctype", "insert-element", "remove-element", "set-element-name", "set-attribute", "set-text", "set-view-box", "set-transform", "set-snapshot"];
-fn error(detail: impl Into<String>) -> store::TextError {
-    store::TextError::new(detail.into(), dsl::TextSpan::at(1, 1))
+pub const TEXT_OPCODES: &[&str] = &["set-declaration", "set-doctype", "insert-element", "remove-element", "set-element-name", "set-attribute", "set-text", "set-view-box", "set-transform", "set-snapshot", "patch-snapshot"];
+fn error(detail: impl Into<String>) -> semio_framework_diagnostic::TextError {
+    semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail.into(), semio_framework_diagnostic::TextSpan::at(1, 1))
 }
 fn encode_hex(bytes: &[u8]) -> String {
     const HEX: &[u8; 16] = b"0123456789abcdef";
@@ -29,12 +29,12 @@ fn decode_hex(value: &str) -> Result<Vec<u8>, String> {
 }
 impl protocol::OpText for SvgMutation {
     fn print_op(&self) -> String {
-        format!("svg-mutation payload={}", encode_hex(pack::to_json_string(self).as_bytes()))
+        format!("svg-mutation payload={}", encode_hex(semio_framework_pack_json::to_json_string(self).as_bytes()))
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let value = line.strip_prefix("svg-mutation payload=").ok_or_else(|| error("expected aggregate payload"))?;
         let bytes = decode_hex(value).map_err(error)?;
         let text = std::str::from_utf8(&bytes).map_err(|cause| error(cause.to_string()))?;
-        pack::from_json_str(text).map_err(|cause| error(cause.to_string()))
+        semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|cause| semio_framework_diagnostic::TextError::from_value_error(cause, semio_framework_diagnostic::TextSpan::at(1,1)))
     }
 }

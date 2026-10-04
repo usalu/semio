@@ -1,5 +1,6 @@
 {
   "status": "rejected",
   "code": "mutation.invariant",
+  "invariant": "positive-feature-budget",
   "path": []
 }

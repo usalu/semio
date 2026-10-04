@@ -24,7 +24,7 @@ struct FlowPresenceRetirement {
 }
 
 impl ErasedSnapshotRetirement for FlowPresenceRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 || maximum_bytes == 0 {
             return Ok(SnapshotRetirementStep::Blocked);
         }

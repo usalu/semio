@@ -1,16 +1,8 @@
-//! 📜️ 📜️ Trinity Rewriting app command — `set-lhs-json`.
-
-use crate::standards::v1::subsets::any::schema::mutations::edit_lhs;
-use crate::standards::v1::subsets::any::schema::mutations::text::RewriteRuleMutation;
+//! 👈️ A declared JSON input is decoded once into the actual typed match program.
+use crate::standards::v1::subsets::any::schema::{Lhs,mutations::{edit_lhs,text::RewriteRuleMutation}};
 use crate::RewritingSnapshot;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::NoConfigMutation;
-
-/// 👈️ The rule's left-hand side replaced by `value` as ONE `edit-lhs` leaf (its input is the whole pattern JSON, structured text
-/// applied explicitly); the unchanged side moves nothing.
-pub(crate) fn set_lhs_json(state: &RewritingSnapshot, value: &str) -> Emit<RewriteRuleMutation, NoConfigMutation> {
-    match state.lhs_json == value {
-        true => Emit::default(),
-        false => Emit::mutations(vec![edit_lhs(value.to_string())]),
-    }
+use semio_framework_plugin::{Emit,Fault,FaultOrigin,FaultCode,NoConfigMutation};
+pub(crate) fn set_lhs(state:&RewritingSnapshot,value:&str)->Result<Emit<RewriteRuleMutation,NoConfigMutation>,Fault>{
+ let lhs:Lhs=semio_framework_pack_json::from_json_str(value,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error|Fault::new(FaultOrigin::App,FaultCode::new("app.command.invalid-args"),error.to_string()))?;
+ Ok(if state.lhs==lhs{Emit::default()}else{Emit::mutations(vec![edit_lhs(lhs)])})
 }

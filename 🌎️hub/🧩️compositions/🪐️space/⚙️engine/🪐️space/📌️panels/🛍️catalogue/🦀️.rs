@@ -69,7 +69,7 @@ fn app_catalogue_item(windows: &TreeWindows<'_>, id_path: &str, label: &str, nod
         }
         let mut drag_data = UiFixedMap::default();
         let key = UiText::try_from_str(crate::engine::space::S_PLAY_CATALOGUE_DRAG_MIME).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "space catalogue drag mime admission failed"))?;
-        let value = UiText::try_from_string(pack::json!({ "pluginId": app.plugin_id.as_str(), "appId": app.app_id.as_str(), "label": app.label.as_str() }).to_string())
+        let value = UiText::try_from_string(semio_framework_pack_json::json!({ "pluginId": app.plugin_id.as_str(), "appId": app.app_id.as_str(), "label": app.label.as_str() }).to_string())
             .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "space catalogue drag payload admission failed"))?;
         drag_data.try_push(key, value).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "space catalogue drag map admission failed"))?;
         item = item.draggable(true).drag_data(drag_data);

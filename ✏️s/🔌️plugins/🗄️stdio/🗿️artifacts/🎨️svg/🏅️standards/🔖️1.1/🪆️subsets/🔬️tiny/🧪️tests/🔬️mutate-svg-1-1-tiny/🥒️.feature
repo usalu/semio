@@ -74,6 +74,7 @@ Feature: Apply every typed SVG Tiny 1.1 mutation to a real-world Full 1.1 drawin
       | set-view-box        | {"path": [], "viewBox": {"minX": 0, "minY": 0, "width": 2030, "height": 2030}} |
       | set-transform       | {"path": [4, 0, 0], "transform": [{"op": "translate", "x": 50, "y": 50}, {"op": "rotate", "angle": 45}]} |
       | strip-non-tiny      | {}                                                                                                                                                                                            |
+      | patch-snapshot | {"patch": {"operation": "set", "path": "/doc/root/attrs/1/value", "value": "Layer_patched"}} |
 
   @id-inverse
   @level-exhaustive
@@ -96,6 +97,7 @@ Feature: Apply every typed SVG Tiny 1.1 mutation to a real-world Full 1.1 drawin
       | set-view-box        | {"path": [], "viewBox": {"minX": 0, "minY": 0, "width": 2030, "height": 2030}} |
       | set-transform       | {"path": [4, 0, 0], "transform": [{"op": "translate", "x": 50, "y": 50}, {"op": "rotate", "angle": 45}]} |
       | strip-non-tiny      | {}                                                                                                                                                                                            |
+      | patch-snapshot | {"patch": {"operation": "set", "path": "/doc/root/attrs/1/value", "value": "Layer_patched"}} |
 
   @id-identity-round-trip
   @level-long

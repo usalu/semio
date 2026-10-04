@@ -16,10 +16,10 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️change-shot-height/↕️heightens/🎯️outcome/🔣️.json");
 
 fn before() -> ShootingSnapshot {
-    dsl::os_pack::from_json_str(BEFORE).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> ShootingSnapshot {
-    dsl::os_pack::from_json_str(AFTER).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> ShootingMutation {
     serde_json::from_str(MUTATION).expect("mutation decodes")
@@ -45,7 +45,7 @@ async fn heightens_without_dragging_the_width_along() {
 async fn inverse_restores_the_previous_height() {
     let base = before();
     let forward = mutation();
-    let inverse = forward.inverse(&base);
+    let inverse = forward.inverse(&base).expect("valid retained mutation inverse fixture");
     let mut snapshot = apply(&base, &forward);
     for step in &inverse {
         snapshot = apply(&snapshot, step);
@@ -57,8 +57,8 @@ async fn inverse_restores_the_previous_height() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: ShootingSnapshot = dsl::os_pack::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: ShootingSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "change-shot-height/heightens-shot-close-to-768: committed {label} JSON is not canonical");
     }
@@ -77,12 +77,12 @@ async fn declared_outcome_holds_and_a_zero_height_is_fatal() {
 
     let collapsed: ShootingMutation = serde_json::from_str(r#"{"mutation":"changeShotHeight","id":"shot-close","newHeight":0}"#).expect("probe mutation decodes");
     let rejected = collapsed.diff(&before());
-    assert_eq!(rejected.worst_level(), Some(protocol::Severity::Fatal), "change-shot-height/heightens-shot-close-to-768: a zero height must be Fatal");
+    assert_eq!(rejected.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal), "change-shot-height/heightens-shot-close-to-768: a zero height must be Fatal");
     assert_eq!(rejected.messages()[0].code.0, "mutation.invariant", "change-shot-height/heightens-shot-close-to-768: the positivity guard's frozen code");
 
     let again = mutation().diff(&expected_after());
     assert_eq!(again.messages()[0].code.0, "mutation.no-op", "change-shot-height/heightens-shot-close-to-768: re-applying the same height is a no-op");
-    assert_eq!(again.worst_level(), Some(protocol::Severity::Warning), "change-shot-height/heightens-shot-close-to-768: the no-op stays at Warning so it still applies");
+    assert_eq!(again.worst_level(), Some(semio_framework_diagnostic::Severity::Warning), "change-shot-height/heightens-shot-close-to-768: the no-op stays at Warning so it still applies");
 }
 
 /// 🔺️ The sparse delta this mutation produces is exactly the committed diff — it proves the mirror-image sparsity of its width sibling: `height` filled, `width` explicitly
@@ -90,7 +90,7 @@ async fn declared_outcome_holds_and_a_zero_height_is_fatal() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = mutation().diff(&before());
-    let produced = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-shot-height/heightens-shot-close-to-768: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert_eq!(committed["shots"]["patched"][0]["patch"]["height"], 768, "change-shot-height/heightens-shot-close-to-768: `height` is the one filled patch slot");
@@ -101,8 +101,8 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to `ShootingDiff` — the committed height patch round-trips through `ShootingDiff` unchanged.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: ShootingDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("diff re-encodes");
+    let decoded: ShootingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-shot-height/heightens-shot-close-to-768: committed diff JSON is not canonical");
 }
@@ -110,7 +110,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 Applying the committed diff straight to `before` yields `after` — the single height patch is enough to rebuild the after-snapshot.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: ShootingDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: ShootingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let produced = decoded.apply(&before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-shot-height/heightens-shot-close-to-768: committed diff did not carry before to after");
 }

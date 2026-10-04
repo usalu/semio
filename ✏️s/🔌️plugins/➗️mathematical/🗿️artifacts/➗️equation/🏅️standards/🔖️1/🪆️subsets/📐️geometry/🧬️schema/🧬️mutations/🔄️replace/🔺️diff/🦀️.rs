@@ -1,14 +1,13 @@
 //! 🔺️ `replace-points` — sparse diff construction.
 
-use crate::{equation_children_from_state, equation_geometry, equation_graph, EquationDiff, EquationGeometry, EquationSnapshot};
+use crate::{EquationDiff, EquationGeometry, EquationSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ReplacePoints, base: &EquationSnapshot) -> protocol::MutationOutcome<EquationDiff> {
-    if equation_geometry(base).points == payload.points {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Points are already identical to the requested replacement.");
+    if base.geometry.points == payload.points {
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Points are already identical to the requested replacement.");
     }
     let geometry = EquationGeometry { points: payload.points.clone() };
-    let (notation, results, computed) = equation_children_from_state(&equation_graph(base), &geometry);
-    protocol::MutationOutcome::new(EquationDiff { notation: Some(notation), results: Some(results), computed: Some(computed), ..Default::default() })
+    protocol::MutationOutcome::new(crate::equation_state_diff(base.graph.clone(), geometry))
 }
 //#endregion 🔖️Diff

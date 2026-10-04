@@ -50,9 +50,9 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
 
     IoDeclaration {
         native: NativeCodecs {
-            snapshot: LanguagePair { text: language_spec(dsl::LanguageRole::Document), binary: language_spec(dsl::LanguageRole::Pack) },
-            diff: LanguagePair { text: language_spec(dsl::LanguageRole::Diff), binary: None },
-            mutations: LanguagePair { text: language_spec(dsl::LanguageRole::Ops), binary: language_spec(dsl::LanguageRole::Spr) },
+            snapshot: LanguagePair { text: language_spec(semio_framework_dsl::LanguageRole::Document), binary: language_spec(semio_framework_dsl::LanguageRole::Pack) },
+            diff: LanguagePair { text: language_spec(semio_framework_dsl::LanguageRole::Diff), binary: None },
+            mutations: LanguagePair { text: language_spec(semio_framework_dsl::LanguageRole::Ops), binary: language_spec(semio_framework_dsl::LanguageRole::Spr) },
             inferences: None,
             codec: store::ArtifactCodec::bare::<CurationSnapshot, SourcingMutation>(SOURCING_CURATION_SCHEMA.to_string()),
         },

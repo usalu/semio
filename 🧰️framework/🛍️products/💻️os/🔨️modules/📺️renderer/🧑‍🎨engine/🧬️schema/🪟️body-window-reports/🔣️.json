@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.framework.body-window-reports",
+  "type": "object",
+  "required": ["header", "body", "shiftedBody", "headerViewportRows", "bodyViewportRows", "mergedKeys", "remainingKeys", "disclosure"],
+  "properties": {
+    "header": { "$ref": "#/$defs/report" },
+    "body": { "$ref": "#/$defs/report" },
+    "shiftedBody": { "$ref": "#/$defs/report" },
+    "headerViewportRows": { "type": "integer", "minimum": 1 },
+    "bodyViewportRows": { "type": "integer", "minimum": 1 },
+    "mergedKeys": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "remainingKeys": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "disclosure": { "type": "object", "required": ["body", "node", "opened", "closed"], "properties": { "body": { "type": "string" }, "node": { "type": "string" }, "opened": { "type": "boolean" }, "closed": { "type": "boolean" } }, "additionalProperties": false }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "report": { "type": "object", "required": ["nodeKey", "offset", "rows"], "properties": { "nodeKey": { "type": "string", "minLength": 1 }, "offset": { "type": "integer", "minimum": 0 }, "rows": { "type": "integer", "minimum": 0 } }, "additionalProperties": false }
+  }
+}

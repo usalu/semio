@@ -9,7 +9,7 @@ use semio_framework_plugin::{ArtifactView,ConfigView,EditorApp,Emit,Fault};
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs,ArtifactCommandWork,ArtifactCommandWorkStep};
 use semio_framework_value_derive::{FromValue,ToValue};
 
-#[derive(Clone,Debug,PartialEq,ToValue,FromValue,dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword="flatten-layers")]
 pub struct FlattenLayers {pub name:String}
 
@@ -57,7 +57,7 @@ pub struct LayerBakeWork<const MERGE_DOWN:bool> {preparing:Option<RasterStackPre
 impl<const MERGE_DOWN:bool> ArtifactCommandWork<EditorApp<RasterPlayApp>> for LayerBakeWork<MERGE_DOWN> {
     fn tool_id(&self)->&'static str {if MERGE_DOWN {"mergeDown"} else {"flattenLayers"}}
     fn extent(&self,command:&RasterCommand,_snapshot:&RasterSnapshot,_interaction:&protocol::InteractionState,_context:Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<RasterPlayApp>>>)->Option<usize> {(matches!((MERGE_DOWN,command),(false,RasterCommand::FlattenLayers(_))|(true,RasterCommand::MergeDown(_)))).then_some(1)}
-    fn step(&mut self,input:&ArtifactCommandInputs<'_,EditorApp<RasterPlayApp>>)->Result<ArtifactCommandWorkStep<EditorApp<RasterPlayApp>>,Fault> {
+    fn step(&mut self,input:&ArtifactCommandInputs<'_,EditorApp<RasterPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>)->Result<ArtifactCommandWorkStep<EditorApp<RasterPlayApp>>,Fault> {
         if self.complete {return Err(Fault::from("raster.flatten-work-complete"));}
         if !matches!((MERGE_DOWN,input.command),(false,RasterCommand::FlattenLayers(_))|(true,RasterCommand::MergeDown(_))) {return Err(Fault::from("raster.bake-work-mismatch"));}
         if let Some(encoder)=self.encoding.as_mut() {

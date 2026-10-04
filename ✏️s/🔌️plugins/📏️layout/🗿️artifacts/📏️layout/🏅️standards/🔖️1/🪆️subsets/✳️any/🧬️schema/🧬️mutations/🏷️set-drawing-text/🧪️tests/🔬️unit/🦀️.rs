@@ -31,7 +31,7 @@ fn set_drawing_text_replaces_the_label_and_inverse_restores_it() {
     let mut engine = crate::editor::layout::engine::scene::LayoutEngine::new();
     let list = crate::editor::layout::engine::scene::build_display_list_for_page(&mut engine, &next, &next.pages[0], "", &[], None, false);
     assert!(list.text_runs.iter().any(|run| run.content == "Title"));
-    let restored = mutation.inverse(&base)[0].diff(&next).diff().apply(&next).expect("inverse");
+    let restored = mutation.inverse(&base).expect("valid retained mutation inverse fixture")[0].diff(&next).diff().apply(&next).expect("inverse");
     assert_eq!(first_drawing_text(&restored).as_deref(), Some("Plan"));
 }
 
@@ -64,6 +64,6 @@ fn set_drawing_text_replaces_a_later_label_and_leaves_the_first() {
     let list = crate::editor::layout::engine::scene::build_display_list_for_page(&mut engine, &next, &next.pages[0], "", &[], None, false);
     let contents: Vec<_> = list.text_runs.iter().map(|run| run.content.as_str()).collect();
     assert!(contents.contains(&"Plan") && contents.contains(&"Caption"), "{contents:?}");
-    let restored = mutation.inverse(&base)[0].diff(&next).diff().apply(&next).expect("inverse");
+    let restored = mutation.inverse(&base).expect("valid retained mutation inverse fixture")[0].diff(&next).diff().apply(&next).expect("inverse");
     assert_eq!(drawing_labels(&restored), vec!["Plan".to_string(), "Note".to_string()]);
 }

@@ -30,7 +30,7 @@ import { type InsertRetainingWall, parseInsertRetainingWall } from "./🧱️ins
 import { type InsertFoundation, parseInsertFoundation } from "./🪨insert-foundation/🧬️schema/🟦️.ts";
 import { type InsertSilo, parseInsertSilo } from "./🫙insert-silo/🧬️schema/🟦️.ts";
 import { type ChangeBridgeVRdN, parseChangeBridgeVRdN } from "./🛑️change-bridge-v-rd-n/🧬️schema/🟦️.ts";
-import { type InsertTank, parseInsertTank } from "./🛢insert-tank/🧬️schema/🟦️.ts";
+import { type InsertTank, parseInsertTank } from "./🛢️insert-tank/🧬️schema/🟦️.ts";
 
 export type En1998Mutation =
   | ChangeAnnex

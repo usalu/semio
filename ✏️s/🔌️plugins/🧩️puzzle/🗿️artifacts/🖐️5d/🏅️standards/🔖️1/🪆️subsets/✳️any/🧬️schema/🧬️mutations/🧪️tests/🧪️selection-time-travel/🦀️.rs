@@ -21,7 +21,7 @@ struct TimeTravelCase {
     replacement: Puzzle5dMutation,
     preview: Puzzle5dSnapshot,
     replayed: Puzzle5dSnapshot,
-    outcomes: Vec<(usize, Option<protocol::Severity>, Vec<String>)>,
+    outcomes: Vec<(usize, Option<semio_framework_diagnostic::Severity>, Vec<String>)>,
     blocks: bool,
 }
 
@@ -29,15 +29,15 @@ struct TimeTravelCase {
 /// `float_roundtrip` lands some 17-digit decimals one ulp off (`1.9999999999999993` → `…91`), which made an exact
 /// cross-language state compare fail on the harness, not on the leaves.
 fn cases() -> Vec<TimeTravelCase> {
-    let corpus = dsl::json::parse(CORPUS).expect("the corpus parses");
-    let snapshot = |value: &dsl::json::Value| -> Puzzle5dSnapshot { dsl::json::from_json_str(&dsl::json::to_string(value)).expect("a corpus snapshot decodes") };
-    let mutation = |value: &dsl::json::Value| -> Puzzle5dMutation { dsl::json::from_json_str(&dsl::json::to_string(value)).expect("a corpus payload decodes") };
-    let level = |value: &dsl::json::Value| match value.as_str() {
+    let corpus = semio_framework_pack_json::parse(CORPUS, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the corpus parses");
+    let snapshot = |value: &semio_framework_pack_json::Value| -> Puzzle5dSnapshot { semio_framework_pack_json::from_json_str(&semio_framework_pack_json::to_string(value), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("a corpus snapshot decodes") };
+    let mutation = |value: &semio_framework_pack_json::Value| -> Puzzle5dMutation { semio_framework_pack_json::from_json_str(&semio_framework_pack_json::to_string(value), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("a corpus payload decodes") };
+    let level = |value: &semio_framework_pack_json::Value| match value.as_str() {
         None => None,
-        Some("info") => Some(protocol::Severity::Info),
-        Some("warning") => Some(protocol::Severity::Warning),
-        Some("error") => Some(protocol::Severity::Error),
-        Some("fatal") => Some(protocol::Severity::Fatal),
+        Some("info") => Some(semio_framework_diagnostic::Severity::Info),
+        Some("warning") => Some(semio_framework_diagnostic::Severity::Warning),
+        Some("error") => Some(semio_framework_diagnostic::Severity::Error),
+        Some("fatal") => Some(semio_framework_diagnostic::Severity::Fatal),
         Some(other) => panic!("unknown corpus level {other:?}"),
     };
     corpus["cases"]

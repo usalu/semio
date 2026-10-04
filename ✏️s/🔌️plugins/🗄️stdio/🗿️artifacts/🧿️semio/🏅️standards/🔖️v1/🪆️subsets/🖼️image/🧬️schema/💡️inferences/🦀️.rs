@@ -7,7 +7,6 @@
 
 use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::dimensions::compute_semio_image_dimensions;
 //#region 🔖️Inference
@@ -22,8 +21,11 @@ pub struct SemioImageInference {
 }
 
 impl protocol::Inference<SemioImageSnapshot> for SemioImageInference {
-    fn infer(snapshot: &SemioImageSnapshot) -> Self {
+    fn infer(snapshot: &SemioImageSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { dimensions: compute_semio_image_dimensions(snapshot) }
+    
+        })
     }
 }
 
@@ -33,7 +35,9 @@ impl protocol::Inference<SemioImageSnapshot> for SemioImageInference {
 /// being all-zero (the same defensive pattern raster's `RasterInference` documents).
 impl Default for SemioImageInference {
     fn default() -> Self {
-        <Self as protocol::Inference<SemioImageSnapshot>>::infer(&SemioImageSnapshot::default())
+        let snapshot = &SemioImageSnapshot::default();
+
+        Self { dimensions: compute_semio_image_dimensions(snapshot) }
     }
 }
 
@@ -49,16 +53,6 @@ impl protocol::InferenceSpec<SemioImageSnapshot> for SemioImageInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 💡️ No `InferredField`s here (a header-field read + a single frame-count fold is already O(n)
-/// in `frames.len()`, no per-entity incremental decomposition applies) — the default
-/// `infer_cached` passthrough (`ArtifactInferrer::infer_cached`) is exact.
-impl ArtifactInferrer for crate::standards::v1::subsets::image::schema::SemioImageBuilder {
-    type Snapshot = SemioImageSnapshot;
-    type Inference = SemioImageInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.semio.image.inference`'s facet leaves into the OS-wide inference catalog

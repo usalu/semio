@@ -113,10 +113,10 @@ pub fn lowpoly_selection_motion_diff(base: &LowpolySnapshot, object_id: &str, ve
     let Some(object) = base.objects.iter().find(|object| object.id == object_id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Object \"{object_id}\" does not exist."), [object_id.to_string()]);
     };
-    if object.mesh.is_none() || object.mesh_content.is_empty() {
+    if object.mesh.is_none() || object.mesh_state.is_none() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Object \"{object_id}\" carries no mesh."), [object_id.to_string()]);
     }
-    let Ok(mut mesh) = HalfedgeMesh::from_json(&object.mesh_content) else {
+    let Ok(mut mesh) = object.mesh_state.clone().expect("present managed mesh").into_mesh() else {
         return protocol::MutationOutcome::fatal("mutation.apply.invalid-base", format!("The mesh of object \"{object_id}\" does not decode."), [object_id.to_string()]);
     };
     let count = u32::try_from(mesh.vertex_count()).unwrap_or(u32::MAX);
@@ -124,8 +124,8 @@ pub fn lowpoly_selection_motion_diff(base: &LowpolySnapshot, object_id: &str, ve
     if present.is_empty() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("None of the {} named vertices exists on object \"{object_id}\".", vertex_ids.len()), [object_id.to_string()]);
     }
-    let partial = (!skipped.is_empty()).then(|| protocol::MutationMessage::warn("mutation.partial", format!("{} of {} named vertices skipped (not on object \"{object_id}\"): {skipped:?}", skipped.len(), vertex_ids.len())).at([object_id.to_string()]));
-    let no_op = || protocol::MutationMessage::warn("mutation.no-op", format!("The motion moves no vertex of object \"{object_id}\".")).at([object_id.to_string()]);
+    let partial = (!skipped.is_empty()).then(|| protocol::MutationMessage::warning("mutation.partial", format!("{} of {} named vertices skipped (not on object \"{object_id}\"): {skipped:?}", skipped.len(), vertex_ids.len())).at([object_id.to_string()]));
+    let no_op = || protocol::MutationMessage::warning("mutation.no-op", format!("The motion moves no vertex of object \"{object_id}\".")).at([object_id.to_string()]);
     if motion.is_identity() {
         return protocol::MutationOutcome::new(LowpolyDiff::default()).absorb_messages(partial.into_iter().chain([no_op()]));
     }
@@ -133,27 +133,28 @@ pub fn lowpoly_selection_motion_diff(base: &LowpolySnapshot, object_id: &str, ve
     if motion.apply(&mut mesh, &vertices).is_err() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("The motion degenerates the mesh of object \"{object_id}\"."), [object_id.to_string()]);
     }
-    let Ok(content) = mesh.to_json() else {
-        return protocol::MutationOutcome::fatal("mutation.apply.invalid-base", format!("The moved mesh of object \"{object_id}\" does not encode."), [object_id.to_string()]);
-    };
-    if content == object.mesh_content {
+    let state=crate::LowpolyMeshState::from_mesh(mesh);
+    if Some(&state)==object.mesh_state.as_ref() {
         return protocol::MutationOutcome::new(LowpolyDiff::default()).absorb_messages(partial.into_iter().chain([no_op()]));
     }
-    let patch = crate::LowpolyObjectPatch { mesh: Some(Some(crate::mesh_child_handle(object_id, &content))), mesh_content: Some(content), ..crate::LowpolyObjectPatch::default() };
+    let patch=crate::LowpolyObjectPatch{mesh:Some(Some(crate::managed_mesh_child_handle(object_id,&state))),mesh_state:Some(Some(state)),..crate::LowpolyObjectPatch::default()};
     protocol::MutationOutcome::new(crate::diff::diff_objects_patch(object_id.to_string(), patch)).absorb_messages(partial)
 }
 
 /// ↩️ The exact undo of a selection leaf whose own `diff` on `base` it is handed: ONE `create-mesh` restoring the
 /// object's prior handle and mesh content (point-invertible however many vertices moved, never a negated motion that
 /// would accumulate float error); nothing when the diff moves nothing.
-pub fn lowpoly_selection_motion_inverse(base: &LowpolySnapshot, object_id: &str, diff: &protocol::MutationOutcome<LowpolyDiff>) -> Vec<LowpolyMutation> {
+pub fn lowpoly_selection_motion_inverse(base: &LowpolySnapshot, object_id: &str, diff: &protocol::MutationOutcome<LowpolyDiff>) -> Result<Vec<LowpolyMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     if diff.diff().objects.is_none() {
         return Vec::new();
     }
     let Some((object, handle)) = base.objects.iter().find(|object| object.id == object_id).and_then(|object| object.mesh.as_ref().map(|handle| (object, handle))) else {
         return Vec::new();
     };
-    vec![LowpolyMutation::CreateMesh(super::create_mesh::CreateMesh { id: object_id.to_string(), child_id: handle.child_id.clone(), target: handle.target.clone(), mesh_workspace: object.mesh_content.clone() })]
+    vec![LowpolyMutation::CreateMesh(super::create_mesh::CreateMesh { id: object_id.to_string(), child_id: handle.child_id.clone(), target: handle.target.clone(), mesh_workspace: object.mesh_content.clone(), mesh_state:object.mesh_state.clone() })]
+
+    })())
 }
 //#endregion 🧲️SelectionMotion
 
@@ -164,13 +165,13 @@ pub fn lowpoly_selection_motion_inverse(base: &LowpolySnapshot, object_id: &str,
 pub mod laws {
     use crate::{LowpolyDiff, LowpolyMutation, LowpolySnapshot};
 
-    fn from_json<T: dsl::FromValue>(text: &str) -> T {
+    fn from_json<T: semio_framework_value::FromValue>(text: &str) -> T {
         let parsed: serde_json::Value = serde_json::from_str(text).expect("fixture json parses");
-        dsl::FromValue::from_value(dsl::DslValue::from(parsed)).expect("fixture json decodes")
+        semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(parsed)).expect("fixture json decodes")
     }
 
-    fn to_json<T: dsl::ToValue>(value: &T) -> serde_json::Value {
-        dsl::ToValue::to_value(value).into()
+    fn to_json<T: semio_framework_value::ToValue>(value: &T) -> serde_json::Value {
+        semio_framework_value::ToValue::to_value(value).into()
     }
 
     fn produced(mutation: &LowpolyMutation, before: &LowpolySnapshot) -> Vec<(String, String)> {
@@ -195,7 +196,7 @@ pub mod laws {
     /// ↩️ The computed inverse — ONE row writing the overwritten state back — restores `before` exactly.
     pub fn inverse_restores(before: &str, mutation: &str) {
         let (base, mutation): (LowpolySnapshot, LowpolyMutation) = (from_json(before), from_json(mutation));
-        let inverse = <LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::inverse(&mutation, &base);
+        let inverse = <LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
         assert_eq!(inverse.len(), 1, "the leaf inverts to ONE row: {inverse:?}");
         let (mut snapshot, _) = protocol::apply_mutation(&base, &mutation).expect("forward applies");
         for step in &inverse {

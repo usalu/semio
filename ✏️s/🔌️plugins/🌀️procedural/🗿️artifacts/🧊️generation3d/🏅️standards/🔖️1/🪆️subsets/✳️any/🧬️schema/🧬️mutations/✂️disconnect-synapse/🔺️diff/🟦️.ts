@@ -2,6 +2,6 @@
 import type { DisconnectSynapse } from "../🦠️mutation/🟦️.ts";
 import type { SynapseSpec } from "../../🔗️connect-synapse/🦠️mutation/🟦️.ts";
 
-export function diff(payload: DisconnectSynapse): { synapses: { removed: string[]; set: Array<[number, SynapseSpec]> } } {
+export function diff(payload: DisconnectSynapse): { synapses: { removed: string[]; set: Array<[bigint, SynapseSpec]> } } {
   return { synapses: { removed: [payload.id], set: [] } };
 }

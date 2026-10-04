@@ -11,7 +11,7 @@
 use crate::fem3d_engine::mesh_preview;
 use crate::model::Dof;
 use crate::{element_id, load_id, Fem3dSnapshot, FemAxis, FemDof, FemElement, FemLoad, FemSolid};
-use dsl::json::Value;
+use semio_framework_pack_json::Value;
 use std::collections::HashMap;
 
 //#region 🔖️Granularities
@@ -152,7 +152,7 @@ pub fn fem3d_deformed_position(pos: [f64; 3], node_id: &str, displacements: Opti
 }
 
 fn instance(id: &str, granularity: &str, mesh_id: &str, position: [f64; 3], rotation: [f64; 4], scale: [f64; 3], label: &str) -> Value {
-    dsl::json!({
+    semio_framework_pack_json::json!({
         "id": id,
         "interactionGranularityId": granularity,
         "meshId": mesh_id,
@@ -173,7 +173,7 @@ fn arrow_instances(id_prefix: &str, interaction_id: &str, tip: [f64; 3], directi
     let mut shaft = instance(&format!("{id_prefix}:shaft"), FEM3D_GRANULARITY_LOAD, "box", shaft_centre, quat_z_to(direction), [LOAD_ARROW_SHAFT_3D, LOAD_ARROW_SHAFT_3D, shaft_length], label);
     for glyph in [&mut head, &mut shaft] {
         if let Some(object) = glyph.as_object_mut() {
-            object.insert("interactionId", dsl::json!(interaction_id));
+            object.insert("interactionId", semio_framework_pack_json::json!(interaction_id));
         }
     }
     out.push(head);
@@ -319,7 +319,7 @@ pub fn fem3d_solid_mesh_entries(doc: &Fem3dSnapshot, displacements: Option<&Hash
         }
 
         let mesh_id = format!("solid-{}", solid.solid_id);
-        meshes.push(dsl::json!({ "id": mesh_id, "data": { "positions": positions, "normals": normals, "colors": colors, "indices": indices } }));
+        meshes.push(semio_framework_pack_json::json!({ "id": mesh_id, "data": { "positions": positions, "normals": normals, "colors": colors, "indices": indices } }));
         instances.push(instance(&solid.solid_id, FEM3D_GRANULARITY_SOLID, &mesh_id, [0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0], [1.0, 1.0, 1.0], &solid.solid_id));
     }
     (meshes, instances)
@@ -329,14 +329,14 @@ pub fn fem3d_solid_mesh_entries(doc: &Fem3dSnapshot, displacements: Option<&Hash
 /// primitive meshes plus every `FemSolid`'s custom surface mesh, and every node/member/solid/support/
 /// load instance — shared by the model window and every results view (static/modal/buckling).
 pub fn fem3d_scene_parts(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64, nodal_stress: Option<&HashMap<String, f64>>) -> (String, String) {
-    let mut meshes = dsl::json::parse(&semio_framework_plugin::world3d_meshes_json_from_kinds(&["box".to_string(), "cone".to_string()])).ok().and_then(|value| value.as_array().cloned()).unwrap_or_default();
+    let mut meshes = semio_framework_pack_json::parse(&semio_framework_plugin::world3d_meshes_json_from_kinds(&["box".to_string(), "cone".to_string()]), semio_framework_pack_json::JsonMemberPolicy::Reject).ok().and_then(|value| value.as_array().cloned()).unwrap_or_default();
     let mut instances = fem3d_structural_instances(doc, displacements, deform_scale);
     let (solid_meshes, solid_instances) = fem3d_solid_mesh_entries(doc, displacements, deform_scale, nodal_stress);
     meshes.extend(solid_meshes);
     instances.extend(solid_instances);
     instances.extend(fem3d_support_instances(doc, displacements, deform_scale));
     instances.extend(fem3d_load_instances(doc, displacements, deform_scale));
-    (dsl::json::to_string(&Value::Array(meshes)), dsl::json::to_string(&Value::Array(instances)))
+    (semio_framework_pack_json::to_string(&Value::Array(meshes)), semio_framework_pack_json::to_string(&Value::Array(instances)))
 }
 //#endregion 🔖️Instances
 

@@ -22,8 +22,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// 💡️ All information inferable from a snapshot — the fourth schema family alongside
 /// `Snapshot`/`Diff`/`Mutation` (ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
 /// LAWS: pure (reads only `snapshot`), deterministic (equal snapshots ⇒ byte-equal canonical
-/// serializations of the result), total (never panics, never fails — an inference with error
-/// states models them as data, not as a `Result`). `infer` is THE single semantics source: every
+/// serializations of the result), checked (retained ownership and intrinsic domain refusals propagate as ValueError). `infer` is THE single semantics source: every
 /// cache path in `crate::os_inference` must be observationally identical to calling this directly.
 /// 🌱️ Bound on [`protocol::value::ToValue`]/[`protocol::value::FromValue`], not `serde::Serialize`/
 /// `serde::de::DeserializeOwned` — the same move [`CompositeMutationKind`] below and
@@ -31,7 +30,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// the plugin tree implements these and no longer implements serde's, so the serde bound left every
 /// one of them failing to satisfy this trait.
 pub trait Inference<P>: Clone + Default + protocol::value::ToValue + protocol::value::FromValue {
-    fn infer(snapshot: &P) -> Self;
+    fn infer(snapshot: &P) -> Result<Self, semio_framework_value::ValueError>;
 }
 
 /// 🗺️ Region vocabulary shared by [`DiffRegions::touches`] and an [`InferenceFieldSpec`]'s
@@ -227,7 +226,7 @@ where
     /// Missing/already-absent target ⇒ `Vec::new()` (the semantic replacement for the old
     /// `NoMutation` sentinel variant — there is no "no-op mutation", only an inverse with nothing
     /// to undo).
-    fn inverse(&self, base: &P) -> Vec<Op>;
+    fn inverse(&self, base: &P) -> Result<Vec<Op>, semio_framework_value::ValueError> ;
     /// 🏷️ Human undo/history label in every shell locale, e.g. `Rename piece "a" to "b"` /
     /// `Piece "a" in "b" umbenennen`. [`crate::LocalizedLabel::native`] matches on `Locale`
     /// exhaustively with no catch-all arm, so a locale added to `🖱️ui/🎚️axes/🔣️.json` fails every
@@ -499,7 +498,7 @@ fn descriptor_fingerprint(id: &crate::os_spr::ids::SchemaId, schema_version: cra
     }
     let canonical = Canonical { id: &id.0, schema_version: schema_version.0, state_class, leaf: *leaf, semantics: *semantics };
     let mut bytes = b"semio.mutation-descriptor/v1\0".to_vec();
-    bytes.extend(crate::os_pack::json::to_json_string(&canonical).into_bytes());
+    bytes.extend(semio_framework_pack_json::to_json_string(&canonical).into_bytes());
     semio_framework_hash::Sha256::digest(&bytes)
 }
 
@@ -655,6 +654,16 @@ impl std::fmt::Display for PlanError {
     }
 }
 
+impl PlanError {
+    pub fn into_value_error(self) -> semio_framework_value::ValueError {
+        let kind = match &self {
+            Self::DepthExceeded(_) => semio_framework_value::ValueRefusalKind::WorkLimit,
+            Self::Cycle(_) | Self::StepRejected(_) | Self::Apply(_) | Self::Refused(_) => semio_framework_value::ValueRefusalKind::InvalidValue,
+        };
+        semio_framework_value::ValueError::new(kind, self.to_string())
+    }
+}
+
 impl std::error::Error for PlanError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
@@ -721,8 +730,8 @@ impl<P: Clone, Op: Mutation<P>> Planner<P, Op> {
     pub fn call(&mut self, op: Op) -> Result<(), PlanError> {
         let step_index = self.steps.len();
         let (diff, messages) = op.diff(&self.base).into_parts();
-        let is_fatal = messages.iter().any(|message| message.level == crate::os_dsl::Severity::Fatal);
-        let reason = messages.iter().filter(|message| message.level == crate::os_dsl::Severity::Fatal).map(|message| message.message.clone()).collect::<Vec<_>>().join("; ");
+        let is_fatal = messages.iter().any(|message| message.level == semio_framework_diagnostic::Severity::Fatal);
+        let reason = messages.iter().filter(|message| message.level == semio_framework_diagnostic::Severity::Fatal).map(|message| message.message.clone()).collect::<Vec<_>>().join("; ");
         let prefix = format!("step-{step_index}");
         self.messages.extend(messages.into_iter().map(|message| prefix_message(message, &prefix)));
         if is_fatal {
@@ -831,7 +840,7 @@ pub fn fold_plan_diff<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P, Op>
             other => MutationMessage::fatal("mutation.invariant", other.to_string()),
         });
     }
-    let rejected = plan_result.is_err() || matches!(worst_level(&messages), Some(level) if level >= crate::os_dsl::Severity::Error);
+    let rejected = plan_result.is_err() || matches!(worst_level(&messages), Some(level) if level >= semio_framework_diagnostic::Severity::Error);
     if rejected {
         return MutationOutcome::new(<Op as Mutation<P>>::Diff::default()).absorb_messages(messages);
     }
@@ -859,23 +868,39 @@ pub fn fold_plan_diff<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P, Op>
 /// that entire vector once when applying it. Preserving both the group order and each group's
 /// stored order is required for checked or otherwise noncommutative steps. A planning failure
 /// folds to an empty vector.
-pub fn fold_plan_inverse<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P, Op>>(kind: &K, base: &P) -> Vec<Op> {
+pub fn fold_plan_inverse<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P, Op>>(kind: &K, base: &P) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     let mut planner = Planner::new(base);
-    if kind.plan(base, &mut planner).is_err() {
-        return Vec::new();
+    if let Err(error) = kind.plan(base, &mut planner) {
+        let (steps, _) = planner.into_steps_with_pre_states();
+        for step in steps {
+            if let PlanStep::Local(op) = step { op.retire_cold(); }
+        }
+        return Err(error.into_value_error());
     }
     let (steps, pre_states) = planner.into_steps_with_pre_states();
-    let mut local_steps: Vec<(Op, P)> = Vec::new();
-    for (step, pre_state) in steps.into_iter().zip(pre_states) {
-        if let (PlanStep::Local(op), Some(pre_state)) = (step, pre_state) {
-            local_steps.push((op, pre_state));
+    let mut pending = steps.into_iter().zip(pre_states);
+    let mut inverses = Vec::new();
+    while let Some((step, pre_state)) = pending.next() {
+        if let PlanStep::Local(op) = step {
+            let Some(pre_state) = pre_state else {
+                op.retire_cold();
+                for value in inverses { <Op as Mutation<P>>::retire_cold(value); }
+                for (step, _) in pending { if let PlanStep::Local(value) = step { value.retire_cold(); } }
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "local inverse pre-state is missing"));
+            };
+            let result = op.inverse(&pre_state);
+            op.retire_cold();
+            match result {
+                Ok(values) => inverses.extend(values),
+                Err(error) => {
+                    for value in inverses { <Op as Mutation<P>>::retire_cold(value); }
+                    for (step, _) in pending { if let PlanStep::Local(value) = step { value.retire_cold(); } }
+                    return Err(error);
+                }
+            }
         }
     }
-    let mut inverses = Vec::new();
-    for (op, pre_state) in local_steps.into_iter() {
-        inverses.extend(op.inverse(&pre_state));
-    }
-    inverses
+    Ok(inverses)
 }
 
 /// 🌐️ The [`ForeignStep`]s of a composite's plan, in discovery order — what
@@ -917,7 +942,7 @@ pub fn mutation_payload_round_trip_failures<P, M: Mutation<P>>(ops: Vec<M>) -> V
                         Mutation::<P>::retire_cold(rebuilt);
                         (value != expected).then(|| format!("op {index} ({kind}): {law} of {payload:?} gives {value:?}, not {expected:?}"))
                     }
-                    Err(error) => Some(format!("op {index} ({kind}): {law} refuses its own payload {payload:?}: {}", error.0)),
+                    Err(error) => Some(format!("op {index} ({kind}): {law} refuses its own payload {payload:?}: {}", error.into_message())),
                 })
                 .collect();
             if !breaches.is_empty() {
@@ -940,7 +965,7 @@ pub fn mutation_input_schema_failures<P, M: Mutation<P>>() -> Vec<String> {
         failures.push(format!("{} payload schema(s) for {} leaf descriptor(s)", M::INPUT_SCHEMAS.len(), M::DESCRIPTORS.len()));
     }
     for (descriptor, schema) in M::DESCRIPTORS.iter().zip(M::INPUT_SCHEMAS) {
-        let object = crate::os_pack::json::parse(schema).ok().is_some_and(|json| crate::os_pack::json::to_dsl_value(&json).as_object().is_some());
+        let object = semio_framework_pack_json::parse(schema, semio_framework_pack_json::JsonMemberPolicy::Reject).ok().is_some_and(|json| semio_framework_pack_json::to_dsl_value(&json).as_object().is_some());
         if !object {
             failures.push(format!("{}: its payload schema is no JSON object", descriptor.semantic_kind));
         }
@@ -991,8 +1016,8 @@ pub fn mutation_fixture_ops<M: crate::FromValue>(root: &std::path::Path) -> (Vec
     let ops = files
         .iter()
         .filter_map(|path| std::fs::read_to_string(path).ok())
-        .filter_map(|text| crate::os_pack::json::parse(&text).ok())
-        .map(|json| crate::os_pack::json::to_dsl_value(&json))
+        .filter_map(|text| semio_framework_pack_json::parse(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).ok())
+        .map(|json| semio_framework_pack_json::to_dsl_value(&json))
         .map(|value| match value.get("mutation") {
             Some(mutation) if value.get("before").is_some() && value.get("after").is_some() && mutation.as_object().is_some() => mutation.clone(),
             _ => value,
@@ -1000,6 +1025,126 @@ pub fn mutation_fixture_ops<M: crate::FromValue>(root: &std::path::Path) -> (Vec
         .filter_map(|value| M::from_value(value).ok())
         .collect();
     (ops, files.len())
+}
+
+/// 🧾️ The fold-footprint law of an aggregate (design §20.5, census L3): for every committed fixture case under `root` whose
+/// `🦠️mutation` decodes as `M` and whose `📸️snapshot/⬅️before` decodes as `P`, the rows `Mutation::inverse` yields on that base
+/// never exceed the leaf's declared [`Mutation::inverse_rows`] — so `ArtifactStore::fold_batch_item` never refuses a
+/// footprint `ArtifactStoreOneItemFootprint::for_leaf` declared. Returns one line per breach and the number of cases checked. A
+/// decoded base is never dropped: a snapshot may own fail-closed roots that only its store retires.
+pub fn mutation_inverse_rows_failures<P: crate::FromValue, M: Mutation<P> + crate::FromValue>(root: &std::path::Path) -> (Vec<String>, usize) {
+    fn walk(directory: &std::path::Path, found: &mut Vec<std::path::PathBuf>) {
+        let Ok(entries) = std::fs::read_dir(directory) else { return };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            let name = entry.file_name().to_string_lossy().into_owned();
+            if path.is_dir() {
+                if name == "🦠️mutation" {
+                    if let Some(case) = path.parent() {
+                        found.push(case.to_path_buf());
+                    }
+                } else if !name.starts_with('.') && !["target", "dist", "node_modules"].contains(&name.as_str()) {
+                    walk(&path, found);
+                }
+            }
+        }
+    }
+    let decode = |path: std::path::PathBuf| std::fs::read_to_string(path).ok().and_then(|text| semio_framework_pack_json::parse(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()).map(|json| semio_framework_pack_json::to_dsl_value(&json));
+    let mut cases = Vec::new();
+    walk(root, &mut cases);
+    cases.sort();
+    let (mut failures, mut checked) = (Vec::new(), 0usize);
+    for case in cases {
+        let Some(op) = decode(case.join("🦠️mutation").join("🔣️.json")).and_then(|value| M::from_value(value).ok()) else { continue };
+        let Some(before) = decode(case.join("📸️snapshot").join("⬅️before").join("🔣️.json")).and_then(|value| P::from_value(value).ok()) else {
+            Mutation::<P>::retire_cold(op);
+            continue;
+        };
+        let before = std::mem::ManuallyDrop::new(before);
+        let inverse = match op.inverse(&before) {
+            Ok(inverse) => inverse,
+            Err(error) => {
+                failures.push(format!("{} ({}): inverse refused: {}", case.display(), op.descriptor().semantic_kind, error.into_message()));
+                Mutation::<P>::retire_cold(op);
+                checked += 1;
+                continue;
+            }
+        };
+        let (actual, declared) = (inverse.len(), Mutation::<P>::inverse_rows(&op));
+        if actual > declared {
+            failures.push(format!("{} ({}): inverse yields {actual} row(s), the leaf declares {declared}", case.display(), op.descriptor().semantic_kind));
+        }
+        for row in inverse {
+            Mutation::<P>::retire_cold(row);
+        }
+        Mutation::<P>::retire_cold(op);
+        checked += 1;
+    }
+    (failures, checked)
+}
+
+/// 🐘️ The declared-rows law of an aggregate (design §20.5, audit CLOSURE-4): every editable operation answers exactly the inverse
+/// rows its leaf payload schema's `x-semio-inverse-rows` declares for its own payload — so a hand-written aggregate that forwards
+/// leaf schemas but answers the default single row fails — and every `perTarget` leaf, grown along its first target field, is
+/// admitted by `ArtifactStoreOneItemFootprint::for_gesture` at the one-item ceiling and refused one target past it as
+/// `mutation.too-large` (a framework notice). One line per breach.
+pub fn mutation_inverse_rows_declaration_failures<P, M: Mutation<P>>(ops: &[M]) -> Vec<String> {
+    let ceiling = crate::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_WORK_ITEMS;
+    let mut failures = Vec::new();
+    let mut grown = std::collections::BTreeSet::new();
+    for (index, op) in ops.iter().enumerate() {
+        let Some(schema) = op.input_schema() else { continue };
+        let kind = op.descriptor().semantic_kind;
+        let rows = match semio_framework_pack_json::parse(schema, semio_framework_pack_json::JsonMemberPolicy::Reject) {
+            Ok(json) => semio_framework_pack_json::to_dsl_value(&json).get("x-semio-inverse-rows").cloned(),
+            Err(_) => {
+                failures.push(format!("op {index} ({kind}): its payload schema is no JSON"));
+                continue;
+            }
+        };
+        let count = |key: &str| rows.as_ref().and_then(|rows| rows.get(key)).and_then(semio_framework_value::DslValue::as_u64).map(|count| count as usize);
+        let fixed = if rows.is_none() { 1 } else { count("bounded").or_else(|| count("fixed")).unwrap_or(0) };
+        let per_target: Vec<(String, usize)> = rows.as_ref().and_then(|rows| rows.get("perTarget")).and_then(semio_framework_value::DslValue::as_object).map(|fields| fields.iter().map(|(field, rows)| (field.clone(), rows.as_u64().unwrap_or(0) as usize)).collect()).unwrap_or_default();
+        let payload = op.payload_value();
+        let length = |field: &str| payload.get(field).and_then(semio_framework_value::DslValue::as_array).map_or(0, <[semio_framework_value::DslValue]>::len);
+        let declared = fixed + per_target.iter().map(|(field, rows)| rows * length(field)).sum::<usize>();
+        if op.inverse_rows() != declared {
+            failures.push(format!("op {index} ({kind}): answers {} inverse row(s) where its leaf schema declares {declared}", op.inverse_rows()));
+            continue;
+        }
+        let Some((field, per)) = per_target.first().cloned() else { continue };
+        let items = payload.get(&field).and_then(semio_framework_value::DslValue::as_array).map(<[semio_framework_value::DslValue]>::to_vec).unwrap_or_default();
+        let base = declared - per * items.len();
+        if items.is_empty() || per == 0 || base + 1 > ceiling || grown.contains(kind) {
+            continue;
+        }
+        grown.insert(kind);
+        let admitted = (ceiling - 1 - base) / per;
+        let with_targets = |targets: usize| {
+            let entries = payload.as_object().unwrap_or_default().iter().map(|(key, value)| (key.clone(), if *key == field { semio_framework_value::DslValue::Array(items.iter().cycle().take(targets).cloned().collect()) } else { value.clone() }));
+            op.with_payload_value(semio_framework_value::DslValue::object(entries))
+        };
+        match (with_targets(admitted), with_targets(admitted + 1)) {
+            (Ok(at), Ok(past)) => {
+                if at.inverse_rows() != base + per * admitted || crate::ArtifactStoreOneItemFootprint::for_gesture::<P, M>(std::slice::from_ref(&at)).is_err() {
+                    failures.push(format!("op {index} ({kind}): {admitted} {field} at the {ceiling}-row ceiling are refused"));
+                }
+                match crate::ArtifactStoreOneItemFootprint::for_gesture::<P, M>(std::slice::from_ref(&past)) {
+                    Err(error) if semio_framework_diagnostic::FaultFrom::fault_code(&error).0 == "mutation.too-large" => {}
+                    _ => failures.push(format!("op {index} ({kind}): {} {field} past the {ceiling}-row ceiling are not refused as mutation.too-large", admitted + 1)),
+                }
+                Mutation::<P>::retire_cold(at);
+                Mutation::<P>::retire_cold(past);
+            }
+            (at, past) => {
+                failures.push(format!("op {index} ({kind}): a {field} array grown to the ceiling does not rebuild from its payload"));
+                for op in [at, past].into_iter().flatten() {
+                    Mutation::<P>::retire_cold(op);
+                }
+            }
+        }
+    }
+    failures
 }
 //#endregion 🔖️PayloadLaw
 

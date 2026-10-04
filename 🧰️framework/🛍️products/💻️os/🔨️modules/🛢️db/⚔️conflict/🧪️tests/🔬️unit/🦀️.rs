@@ -110,21 +110,21 @@ fn kind_matrix_read_only_kind_commutes_with_everything() {
 #[test]
 fn classify_is_quarantined_when_the_policy_rejects_the_worst_level() {
     let envelopes = Vec::new();
-    let kind = classify(Some(protocol::Severity::Fatal), protocol::MergePolicy::LaissezFaire, envelopes.clone(), Vec::new());
+    let kind = classify(Some(semio_framework_diagnostic::Severity::Fatal), protocol::MergePolicy::LaissezFaire, envelopes.clone(), Vec::new());
     assert_eq!(kind, Some(protocol::ConflictKind::Quarantined { envelopes }));
 }
 
 #[test]
 fn classify_is_degraded_when_accepted_but_still_warning_or_above() {
     let edit_ids = vec!["e1".to_string()];
-    let kind = classify(Some(protocol::Severity::Warning), protocol::MergePolicy::Normal, Vec::new(), edit_ids.clone());
+    let kind = classify(Some(semio_framework_diagnostic::Severity::Warning), protocol::MergePolicy::Normal, Vec::new(), edit_ids.clone());
     assert_eq!(kind, Some(protocol::ConflictKind::Degraded { edit_ids }));
 }
 
 #[test]
 fn classify_is_none_when_clean_or_below_warning() {
     assert_eq!(classify(None, protocol::MergePolicy::Vigilant, Vec::new(), Vec::new()), None);
-    assert_eq!(classify(Some(protocol::Severity::Info), protocol::MergePolicy::Vigilant, Vec::new(), Vec::new()), None);
+    assert_eq!(classify(Some(semio_framework_diagnostic::Severity::Info), protocol::MergePolicy::Vigilant, Vec::new(), Vec::new()), None);
 }
 //#endregion 🔖️Lifecycle
 

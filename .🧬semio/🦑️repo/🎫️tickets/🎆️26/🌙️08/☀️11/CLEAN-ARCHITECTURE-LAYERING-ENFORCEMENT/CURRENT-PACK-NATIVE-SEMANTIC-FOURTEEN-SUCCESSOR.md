@@ -1,0 +1,13 @@
+# Pack Native Semantic Fourteen Successor
+
+The selected Bun/Nx ticket task `pack-native-semantic stage 7` completed with status zero. [The six full source pairs](🗑️generated/pack-native-semantic/source-ready-7.json) bind their predecessors to the immutable index-three bodies consumed by the actual whole Pack compiler. The proposal remains unmounted and uncompiled.
+
+Four retained Catalog append refusals now use the defining Value list's exact reserved-slot invariant. `push_reserved` returns the rejected element, and rejects only when no admitted slot exists; it does not provide a paged-list error or allocation witness. The proposal preserves each source-authored reason and offset and supplies `InvariantViolated`, matching the same owner's existing admitted-append invariant. Two Record body retirement methods retain a typed `PackRefusal` result and carry the actual paged-list kind/reason/offset instead of discarding it into a static string.
+
+The codec and producer laws use the defining lower error's `kind()` and `into_pack_refusal()` identities. Original optional-kind expectations remain exact through `Some(kind())`. The retained-source laws assert the entire explicit canceled or ownership-limit fault, keeping their original reasons and adding the defining kind/no-allocation-witness check. No compatibility method or message classifier is introduced.
+
+Eight closed source-condition vectors passed the first-party schema validator and strict Ajv; eight unknown-field variants were refused by both. These are source/schema observations, not executed native laws. The actual preceding Pack run remains compiler RED345 with no runtime roster; the companion unchanged Replication run remains 264/264 PASS.
+
+Tooling attempts one through six remain historical failed receipts. They include syntax/preparation mistakes, the duplicate allocation-reason selection that required an actual `push_reserved` owner predicate, macro argument parsing, and a parser API property/method mismatch. Attempt seven uses complete explicit ERROR/MISSING traversal and parses only actual `assert_eq!` expression arguments. Those failures do not establish producer or runtime failures.
+
+The next coherent index composes Native's independently reviewed seven import spans over these semantic bodies and its three disjoint test/provider rows. The scalar-witness predecessor is the actual inherited compiled source, absent from the original normalized index. Index three and its compiler evidence remain immutable. Independent source/provider admission, fresh faithful preparation, and the same unchanged whole Pack and Replication requests are required before any runtime claim.

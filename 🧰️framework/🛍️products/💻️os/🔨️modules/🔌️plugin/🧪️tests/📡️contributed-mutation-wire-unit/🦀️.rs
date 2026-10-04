@@ -15,7 +15,7 @@ fn operation(delta: i32) -> WireTestMutation {
 #[test]
 fn descriptor_and_provenance_are_direct() {
     assert_eq!(
-        serde_json::Value::from(protocol::ToValue::to_value(&AddValue::DESCRIPTOR)),
+        serde_json::Value::from(semio_framework_value::ToValue::to_value(&AddValue::DESCRIPTOR)),
         serde_json::from_str::<serde_json::Value>(include_str!("../../🧫️fixtures/📡️contributed-mutation-wire/🧬️mutations/➕️add-value/🔣️.json")).expect("owned descriptor JSON")
     );
     assert!(AddValue::DESCRIPTOR.validate().is_ok());
@@ -46,7 +46,7 @@ fn ordered_checked_diff_and_minimum_inverse_are_lawful() {
         let mut rejected = false;
         for delta in row["deltas"].as_array().expect("deltas") {
             let mutation = operation(delta.as_i64().expect("delta").try_into().expect("i32 delta"));
-            stored_inverse.extend(mutation.inverse(&current));
+            stored_inverse.extend(mutation.inverse(&current).expect("valid retained mutation inverse fixture"));
             match mutation.diff(&current).diff().apply(&current) {
                 Ok(next) => current = next,
                 Err(error) => {
@@ -92,7 +92,7 @@ fn serde_binary_and_composite_plan_match_the_leaf() {
     assert!(matches!(&plan[0], protocol::PlanStep::Local(WireTestMutation::AddValue(AddValue { delta: 5 }))));
     assert_eq!(protocol::fold_plan_diff(&AddValue { delta: 5 }, &base).diff().apply(&base).expect("planned diff"), mutation.diff(&base).diff().apply(&base).expect("direct diff"));
     assert_eq!(<AddValue as CompositeMutationKind<WireTestSnapshot, WireTestMutation>>::SEMANTICS.kind, "add-value");
-    assert_eq!(<AddValue as CompositeMutationKind<WireTestSnapshot, WireTestMutation>>::label(&AddValue { delta: 5 }), protocol::LocalizedLabel::native("Add 5 to value", "5 zu Wert hinzufügen"));
+    assert_eq!(<AddValue as CompositeMutationKind<WireTestSnapshot, WireTestMutation>>::label(&AddValue { delta: 5 }), semio_framework_ui_locale::LocalizedLabel::native("Add 5 to value", "5 zu Wert hinzufügen"));
 }
 
 /// 🧾️ The committed wire witnesses decode through the aggregate's `FromValue` and re-encode to exactly the committed JSON.

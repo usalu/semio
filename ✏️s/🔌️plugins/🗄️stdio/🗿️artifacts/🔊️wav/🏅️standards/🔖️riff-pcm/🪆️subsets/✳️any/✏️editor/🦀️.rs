@@ -4,34 +4,29 @@
 
 use crate::editor::wav::modes::edit;
 use crate::editor::wav::modes::edit::windows::main;
-use crate::standards::riff_pcm::subsets::any::schema::mutations::{patch_data, set_data, set_fmt, set_other_chunks, WavMutation};
+use crate::standards::riff_pcm::subsets::any::schema::mutations::{patch_data, set_data, WavMutation};
 use crate::standards::riff_pcm::subsets::any::schema::snapshot::{WavData, WavSnapshot};
 use crate::{STDIO_WAV_DOCUMENT_SCHEMA, WAV_DIALECT};
+use semio_framework_2d::compute::EngineHandles;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::AppOperationContext;
 use semio_framework_plugin::ArtifactBoundedFirstStepProof;
+use semio_framework_plugin::ArtifactEditor;
 use semio_framework_plugin::ArtifactOwnedToolJobFactory;
 use semio_framework_plugin::ArtifactOwnedToolJobRequest;
 use semio_framework_plugin::ArtifactStoreInitializationJob;
 use semio_framework_plugin::ArtifactToolFactoryRegistry;
 use semio_framework_plugin::ArtifactToolPublicationContract;
 use semio_framework_plugin::ArtifactToolPublicationLane;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::InteractiveJobClassification;
-use semio_framework_plugin::ToolExecutionContract;
-use semio_framework_plugin::ToolFactoryKey;
-use semio_framework_plugin::ToolJobFactory;
-use semio_framework_plugin::ToolJobFactoryError;
-use semio_framework_plugin::ToolOperationSpec;
-use semio_framework_plugin::ArtifactEditor;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ConfigView;
 use semio_framework_plugin::Dialect;
 use semio_framework_plugin::DraftView;
 use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
 use semio_framework_plugin::Emit;
 use semio_framework_plugin::Fault;
-use semio_framework_ui_locale::Label;
+use semio_framework_plugin::InteractiveJobClassification;
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
 use semio_framework_plugin::NoDraft;
@@ -40,7 +35,12 @@ use semio_framework_plugin::NoPresence;
 use semio_framework_plugin::NoPresenceMutation;
 use semio_framework_plugin::NoTransient;
 use semio_framework_plugin::NoTransientMutation;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_plugin::ToolExecutionContract;
+use semio_framework_plugin::ToolFactoryKey;
+use semio_framework_plugin::ToolJobFactory;
+use semio_framework_plugin::ToolJobFactoryError;
+use semio_framework_plugin::ToolOperationSpec;
+use semio_framework_ui_locale::Label;
 use semio_s_artifact_stdio_contract::editing;
 
 #[path = "🎮️commands/🔊️edit-audio/🦀️.rs"]
@@ -50,24 +50,27 @@ pub(crate) mod edit_audio;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum WavEditCommand {
     /// 🎬️ Navbar example picker payload.
-    SetActiveExample { example_id: String },
+    SetActiveExample {
+        example_id: String,
+    },
     EditAudio(edit_audio::EditAudio),
-    EditSnapshot { event: editing::SnapshotEditEvent },
+    EditSnapshot {
+        event: editing::SnapshotEditEvent,
+    },
 }
 
 impl protocol::OpBinary for WavEditCommand {
     const TOOL_JOB_IDS: &'static [&'static str] = STDIO_WAV_DOCUMENT_SCHEMA_COMMAND_TOOL_IDS;
 
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(pack::to_json_string(self).into_bytes())
+        Ok(semio_framework_pack_json::to_json_string(self).into_bytes())
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let parsed = pack::parse_json_bytes(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "wav-edit-command", offset: 0, detail: error.to_string() })?;
-        <Self as dsl::FromValue>::from_value(pack::json_to_dsl_value(&parsed)).map_err(|error| protocol::ProtocolError::Malformed { what: "wav-edit-command", offset: 0, detail: error.to_string() })
+        let parsed = semio_framework_pack_json::parse_bytes(bytes, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Malformed { what: "wav-edit-command", offset: 0, detail: error.to_string() })?;
+        <Self as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|error| protocol::ProtocolError::Malformed { what: "wav-edit-command", offset: 0, detail: error.to_string() })
     }
 }
 //#endregion 🔖️Command
-
 
 const STDIO_WAV_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS: &[&str] = &[semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID];
 const STDIO_WAV_DOCUMENT_SCHEMA_COMMAND_TOOL_IDS: &[&str] = &[
@@ -91,7 +94,11 @@ const STDIO_WAV_DOCUMENT_SCHEMA_EXAMPLE_SCHEMA: &str = "stdio.wav.tool-command.v
 const STDIO_WAV_DOCUMENT_SCHEMA_EXAMPLE_BYTES: usize = 8_192;
 const STDIO_WAV_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT: ArtifactToolPublicationContract = ArtifactToolPublicationContract { tool_id: semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] };
 fn wavEditor_example_snapshot(example_id: &str) -> WavSnapshot {
-    if example_id == crate::examples::demo::ID { <WavSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default() } else { WavSnapshot::default() }
+    if example_id == crate::examples::demo::ID {
+        <WavSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
+    } else {
+        WavSnapshot::default()
+    }
 }
 fn wavEditor_command_id(command: &WavEditCommand) -> &'static str {
     match command {
@@ -100,8 +107,10 @@ fn wavEditor_command_id(command: &WavEditCommand) -> &'static str {
         WavEditCommand::EditSnapshot { event } => event.action_id(),
     }
 }
-fn wavEditor_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<WavEditCommand, Fault> {
-    if editing::is_snapshot_edit_action(action) { return editing::snapshot_edit_event_from_action(action, args).and_then(|event| event.map(|event| WavEditCommand::EditSnapshot { event }).ok_or_else(|| Fault::from(format!("action '{action}' is not a snapshot edit")))); }
+fn wavEditor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<WavEditCommand, Fault> {
+    if editing::is_snapshot_edit_action(action) {
+        return editing::snapshot_edit_event_from_action(action, args).and_then(|event| event.map(|event| WavEditCommand::EditSnapshot { event }).ok_or_else(|| Fault::from(format!("action '{action}' is not a snapshot edit"))));
+    }
     match action {
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(WavEditCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
         action if edit_audio::TOOL_IDS.contains(&action) => Ok(WavEditCommand::EditAudio(edit_audio::from_action(action, args)?)),
@@ -111,7 +120,16 @@ fn wavEditor_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> 
 fn wavEditor_retained_extent(command: &WavEditCommand, _snapshot: &WavSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     matches!(command, WavEditCommand::SetActiveExample { .. }).then_some(1)
 }
-fn wavEditor_retained_reduce(command: &WavEditCommand, _snapshot: &WavSnapshot, _config: &NoConfig, _history: &semio_framework_plugin::HistoryView, _interaction: &protocol::InteractionState, _hover: &semio_framework_plugin::app::InteractionHoverState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<WavEditor>>>, _operation: &AppOperationContext) -> Result<Emit<WavMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+fn wavEditor_retained_reduce(
+    command: &WavEditCommand,
+    _snapshot: &WavSnapshot,
+    _config: &NoConfig,
+    _history: &semio_framework_plugin::HistoryView,
+    _interaction: &protocol::InteractionState,
+    _hover: &semio_framework_plugin::app::InteractionHoverState,
+    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<WavEditor>>>,
+    _operation: &AppOperationContext,
+) -> Result<Emit<WavMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     match command {
         WavEditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&wavEditor_example_snapshot(example_id), STDIO_WAV_DOCUMENT_SCHEMA)], ..Default::default() }),
         _ => Err(Fault::from("stdio-example-retained-route-mismatch")),
@@ -121,28 +139,42 @@ fn wavEditor_edit_fault(code: &'static str, message: impl Into<String>) -> Fault
     Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(code), message)
 }
 fn wavEditor_sample_index(segment: &str, len: usize, insertion: bool) -> Result<usize, Fault> {
-    if insertion && segment == "-" { return Ok(len); }
+    if insertion && segment == "-" {
+        return Ok(len);
+    }
     if segment.is_empty() || (segment.len() > 1 && segment.starts_with('0')) || !segment.bytes().all(|byte| byte.is_ascii_digit()) {
         return Err(wavEditor_edit_fault("stdio.wav.invalid-sample-path", format!("sample index '{segment}' is not canonical")));
     }
     let index = segment.parse::<usize>().map_err(|error| wavEditor_edit_fault("stdio.wav.invalid-sample-path", error.to_string()))?;
-    if index > len || (!insertion && index == len) { return Err(wavEditor_edit_fault("stdio.wav.sample-index-out-of-range", format!("sample index {index} is outside 0..{len}"))); }
+    if index > len || (!insertion && index == len) {
+        return Err(wavEditor_edit_fault("stdio.wav.sample-index-out-of-range", format!("sample index {index} is outside 0..{len}")));
+    }
     Ok(index)
 }
-fn wavEditor_set_sample(data: &mut WavData, index: usize, value: &dsl::DslValue) -> Result<(), Fault> {
-    let dsl::DslValue::Number(number) = value else { return Err(wavEditor_edit_fault("stdio.wav.invalid-sample", "sample must be numeric")); };
+fn wavEditor_set_sample(data: &mut WavData, index: usize, value: &semio_framework_value::DslValue) -> Result<(), Fault> {
+    let semio_framework_value::DslValue::Number(number) = value else {
+        return Err(wavEditor_edit_fault("stdio.wav.invalid-sample", "sample must be numeric"));
+    };
     match data {
-        WavData::Pcm16(values) => values[index] = i16::try_from(number.as_i64().ok_or_else(|| wavEditor_edit_fault("stdio.wav.invalid-sample", "PCM16 sample must be an integer"))?).map_err(|_| wavEditor_edit_fault("stdio.wav.invalid-sample", "PCM16 sample is outside i16"))?,
-        WavData::Pcm8(values) | WavData::Raw(values) => values[index] = u8::try_from(number.as_u64().ok_or_else(|| wavEditor_edit_fault("stdio.wav.invalid-sample", "byte sample must be an unsigned integer"))?).map_err(|_| wavEditor_edit_fault("stdio.wav.invalid-sample", "byte sample is outside u8"))?,
+        WavData::Pcm16(values) => {
+            values[index] =
+                i16::try_from(number.as_i64().ok_or_else(|| wavEditor_edit_fault("stdio.wav.invalid-sample", "PCM16 sample must be an integer"))?).map_err(|_| wavEditor_edit_fault("stdio.wav.invalid-sample", "PCM16 sample is outside i16"))?
+        }
+        WavData::Pcm8(values) | WavData::Raw(values) => {
+            values[index] =
+                u8::try_from(number.as_u64().ok_or_else(|| wavEditor_edit_fault("stdio.wav.invalid-sample", "byte sample must be an unsigned integer"))?).map_err(|_| wavEditor_edit_fault("stdio.wav.invalid-sample", "byte sample is outside u8"))?
+        }
         WavData::Float32(values) => {
             let sample = number.as_f64();
-            if !sample.is_finite() || sample < f32::MIN as f64 || sample > f32::MAX as f64 { return Err(wavEditor_edit_fault("stdio.wav.invalid-sample", "float sample is outside finite f32")); }
+            if !sample.is_finite() || sample < f32::MIN as f64 || sample > f32::MAX as f64 {
+                return Err(wavEditor_edit_fault("stdio.wav.invalid-sample", "float sample is outside finite f32"));
+            }
             values[index] = sample as f32;
         }
     }
     Ok(())
 }
-fn wavEditor_insert_sample(data: &mut WavData, index: usize, value: &dsl::DslValue) -> Result<(), Fault> {
+fn wavEditor_insert_sample(data: &mut WavData, index: usize, value: &semio_framework_value::DslValue) -> Result<(), Fault> {
     match data {
         WavData::Pcm16(values) => values.insert(index, 0),
         WavData::Pcm8(values) | WavData::Raw(values) => values.insert(index, 0),
@@ -151,22 +183,50 @@ fn wavEditor_insert_sample(data: &mut WavData, index: usize, value: &dsl::DslVal
     wavEditor_set_sample(data, index, value)
 }
 fn wavEditor_remove_sample(data: &mut WavData, index: usize) {
-    match data { WavData::Pcm16(values) => { values.remove(index); }, WavData::Pcm8(values) | WavData::Raw(values) => { values.remove(index); }, WavData::Float32(values) => { values.remove(index); } }
+    match data {
+        WavData::Pcm16(values) => {
+            values.remove(index);
+        }
+        WavData::Pcm8(values) | WavData::Raw(values) => {
+            values.remove(index);
+        }
+        WavData::Float32(values) => {
+            values.remove(index);
+        }
+    }
 }
 fn wavEditor_move_sample(data: &mut WavData, from: usize, path: usize) {
     match data {
-        WavData::Pcm16(values) => { let value = values.remove(from); values.insert(path, value); }
-        WavData::Pcm8(values) | WavData::Raw(values) => { let value = values.remove(from); values.insert(path, value); }
-        WavData::Float32(values) => { let value = values.remove(from); values.insert(path, value); }
+        WavData::Pcm16(values) => {
+            let value = values.remove(from);
+            values.insert(path, value);
+        }
+        WavData::Pcm8(values) | WavData::Raw(values) => {
+            let value = values.remove(from);
+            values.insert(path, value);
+        }
+        WavData::Float32(values) => {
+            let value = values.remove(from);
+            values.insert(path, value);
+        }
     }
 }
 fn wavEditor_sample_len(data: &WavData) -> usize {
-    match data { WavData::Pcm16(values) => values.len(), WavData::Pcm8(values) | WavData::Raw(values) => values.len(), WavData::Float32(values) => values.len() }
+    match data {
+        WavData::Pcm16(values) => values.len(),
+        WavData::Pcm8(values) | WavData::Raw(values) => values.len(),
+        WavData::Float32(values) => values.len(),
+    }
 }
 fn wavEditor_empty_data(data: &WavData) -> WavData {
-    match data { WavData::Pcm16(_) => WavData::Pcm16(Vec::new()), WavData::Pcm8(_) => WavData::Pcm8(Vec::new()), WavData::Float32(_) => WavData::Float32(Vec::new()), WavData::Raw(_) => WavData::Raw(Vec::new()) }
+    match data {
+        WavData::Pcm16(_) => WavData::Pcm16(Vec::new()),
+        WavData::Pcm8(_) => WavData::Pcm8(Vec::new()),
+        WavData::Float32(_) => WavData::Float32(Vec::new()),
+        WavData::Raw(_) => WavData::Raw(Vec::new()),
+    }
 }
-fn wavEditor_single_sample(data: &WavData, value: &dsl::DslValue) -> Result<WavData, Fault> {
+fn wavEditor_single_sample(data: &WavData, value: &semio_framework_value::DslValue) -> Result<WavData, Fault> {
     let mut sample = wavEditor_empty_data(data);
     wavEditor_insert_sample(&mut sample, 0, value)?;
     Ok(sample)
@@ -197,13 +257,13 @@ fn wavEditor_direct_patch(event: &editing::SnapshotEditEvent, snapshot: &WavSnap
 }
 /// 🏷️ A `kind` edit switches the sample format: `{kind, value}` is rebuilt from the current samples and decoded as the requested
 /// kind, so each sample must fit it — the generic in-place path editor refuses an enum tag by design.
-fn wavEditor_retag_data(data: &WavData, kind: &dsl::DslValue) -> Result<WavData, Fault> {
+fn wavEditor_retag_data(data: &WavData, kind: &semio_framework_value::DslValue) -> Result<WavData, Fault> {
     let samples = match data {
-        WavData::Pcm16(samples) => dsl::ToValue::to_value(samples),
-        WavData::Pcm8(samples) | WavData::Raw(samples) => dsl::ToValue::to_value(samples),
-        WavData::Float32(samples) => dsl::ToValue::to_value(samples),
+        WavData::Pcm16(samples) => semio_framework_value::ToValue::to_value(samples),
+        WavData::Pcm8(samples) | WavData::Raw(samples) => semio_framework_value::ToValue::to_value(samples),
+        WavData::Float32(samples) => semio_framework_value::ToValue::to_value(samples),
     };
-    <WavData as dsl::FromValue>::from_value(dsl::DslValue::Object(vec![("kind".into(), kind.clone()), ("value".into(), samples)])).map_err(|error| wavEditor_edit_fault("stdio.wav.invalid-data", error.to_string()))
+    <WavData as semio_framework_value::FromValue>::from_value(semio_framework_value::DslValue::Object(vec![("kind".into(), kind.clone()), ("value".into(), samples)])).map_err(|error| wavEditor_edit_fault("stdio.wav.invalid-data", error.to_string()))
 }
 
 fn wavEditor_snapshot_edit(event: &editing::SnapshotEditEvent, snapshot: &WavSnapshot) -> Result<WavSnapshot, Fault> {
@@ -212,10 +272,12 @@ fn wavEditor_snapshot_edit(event: &editing::SnapshotEditEvent, snapshot: &WavSna
         return editing::snapshot_from_edit_source(source).map_err(|error| wavEditor_edit_fault("stdio.wav.invalid-source", error.to_string()));
     }
     if let SnapshotEditEvent::SetValue { path, value } = event {
-        if path.is_empty() { return <WavSnapshot as dsl::FromValue>::from_value(value.clone()).map_err(|error| wavEditor_edit_fault("stdio.wav.invalid-snapshot", error.to_string())); }
+        if path.is_empty() {
+            return <WavSnapshot as semio_framework_value::FromValue>::from_value(value.clone()).map_err(|error| wavEditor_edit_fault("stdio.wav.invalid-snapshot", error.to_string()));
+        }
         if path == "/data" {
             let mut next = snapshot.clone();
-            next.data = <WavData as dsl::FromValue>::from_value(value.clone()).map_err(|error| wavEditor_edit_fault("stdio.wav.invalid-data", error.to_string()))?;
+            next.data = <WavData as semio_framework_value::FromValue>::from_value(value.clone()).map_err(|error| wavEditor_edit_fault("stdio.wav.invalid-data", error.to_string()))?;
             return Ok(next);
         }
         if path == "/data/kind" {
@@ -226,10 +288,10 @@ fn wavEditor_snapshot_edit(event: &editing::SnapshotEditEvent, snapshot: &WavSna
         if path == "/data/value" {
             let mut next = snapshot.clone();
             next.data = match &next.data {
-                WavData::Pcm16(_) => WavData::Pcm16(<Vec<i16> as dsl::FromValue>::from_value(value.clone()).map_err(|error| wavEditor_edit_fault("stdio.wav.invalid-data", error.to_string()))?),
-                WavData::Pcm8(_) => WavData::Pcm8(<Vec<u8> as dsl::FromValue>::from_value(value.clone()).map_err(|error| wavEditor_edit_fault("stdio.wav.invalid-data", error.to_string()))?),
-                WavData::Float32(_) => WavData::Float32(<Vec<f32> as dsl::FromValue>::from_value(value.clone()).map_err(|error| wavEditor_edit_fault("stdio.wav.invalid-data", error.to_string()))?),
-                WavData::Raw(_) => WavData::Raw(<Vec<u8> as dsl::FromValue>::from_value(value.clone()).map_err(|error| wavEditor_edit_fault("stdio.wav.invalid-data", error.to_string()))?),
+                WavData::Pcm16(_) => WavData::Pcm16(<Vec<i16> as semio_framework_value::FromValue>::from_value(value.clone()).map_err(|error| wavEditor_edit_fault("stdio.wav.invalid-data", error.to_string()))?),
+                WavData::Pcm8(_) => WavData::Pcm8(<Vec<u8> as semio_framework_value::FromValue>::from_value(value.clone()).map_err(|error| wavEditor_edit_fault("stdio.wav.invalid-data", error.to_string()))?),
+                WavData::Float32(_) => WavData::Float32(<Vec<f32> as semio_framework_value::FromValue>::from_value(value.clone()).map_err(|error| wavEditor_edit_fault("stdio.wav.invalid-data", error.to_string()))?),
+                WavData::Raw(_) => WavData::Raw(<Vec<u8> as semio_framework_value::FromValue>::from_value(value.clone()).map_err(|error| wavEditor_edit_fault("stdio.wav.invalid-data", error.to_string()))?),
             };
             return Ok(next);
         }
@@ -277,16 +339,16 @@ impl<'a> WavDetailsProvider<'a> {
     fn new(snapshot: &'a WavSnapshot) -> Self {
         let mut metadata = snapshot.clone();
         metadata.data = wavEditor_empty_data(&snapshot.data);
-        Self { snapshot, metadata: editing::DslSnapshotDetailsProvider::from_value(dsl::ToValue::to_value(&metadata)), data: &snapshot.data }
+        Self { snapshot, metadata: editing::DslSnapshotDetailsProvider::from_value(semio_framework_value::ToValue::to_value(&metadata)), data: &snapshot.data }
     }
 }
 impl editing::SnapshotDetailsProvider for WavDetailsProvider<'_> {
     fn value(&self, path: &[editing::SnapshotDetailPathSegment]) -> Option<editing::SnapshotDetailValue> {
         match path {
             [editing::SnapshotDetailPathSegment::Key(data), editing::SnapshotDetailPathSegment::Key(value), editing::SnapshotDetailPathSegment::Index(index)] if data == "data" && value == "value" => match self.data {
-                WavData::Pcm16(values) => values.get(*index).map(|value| editing::SnapshotDetailValue::Number(dsl::Number::Int(i64::from(*value)))),
-                WavData::Pcm8(values) | WavData::Raw(values) => values.get(*index).map(|value| editing::SnapshotDetailValue::Number(dsl::Number::UInt(u64::from(*value)))),
-                WavData::Float32(values) => values.get(*index).map(|value| editing::SnapshotDetailValue::Number(dsl::Number::Float(f64::from(*value)))),
+                WavData::Pcm16(values) => values.get(*index).map(|value| editing::SnapshotDetailValue::Number(semio_framework_value::Number::Int(i64::from(*value)))),
+                WavData::Pcm8(values) | WavData::Raw(values) => values.get(*index).map(|value| editing::SnapshotDetailValue::Number(semio_framework_value::Number::UInt(u64::from(*value)))),
+                WavData::Float32(values) => values.get(*index).map(|value| editing::SnapshotDetailValue::Number(semio_framework_value::Number::Float(f64::from(*value)))),
             },
             _ => editing::SnapshotDetailsProvider::value(&self.metadata, path),
         }
@@ -297,29 +359,65 @@ impl editing::SnapshotDetailsProvider for WavDetailsProvider<'_> {
             _ => editing::SnapshotDetailsProvider::child_count(&self.metadata, path),
         }
     }
-    fn object_key(&self, path: &[editing::SnapshotDetailPathSegment], index: usize) -> Option<String> { editing::SnapshotDetailsProvider::object_key(&self.metadata, path, index) }
-    fn creation_template(&self, path: &[editing::SnapshotDetailPathSegment], collection_item: bool) -> Option<dsl::DslValue> { editing::SnapshotDetailsProvider::creation_template(&self.metadata, path, collection_item) }
-    fn missing_property_templates(&self, path: &[editing::SnapshotDetailPathSegment]) -> Vec<(String, dsl::DslValue)> { editing::SnapshotDetailsProvider::missing_property_templates(&self.metadata, path) }
-    fn allows_untyped_creation(&self, path: &[editing::SnapshotDetailPathSegment]) -> bool { editing::SnapshotDetailsProvider::allows_untyped_creation(&self.metadata, path) }
-    fn enum_values(&self, path: &[editing::SnapshotDetailPathSegment]) -> Vec<dsl::DslValue> { editing::SnapshotDetailsProvider::enum_values(&self.metadata, path) }
-    fn has_source(&self) -> bool { wavEditor_sample_len(self.data) <= 512 * 1_024 }
+    fn object_key(&self, path: &[editing::SnapshotDetailPathSegment], index: usize) -> Option<String> {
+        editing::SnapshotDetailsProvider::object_key(&self.metadata, path, index)
+    }
+    fn creation_template(&self, path: &[editing::SnapshotDetailPathSegment], collection_item: bool) -> Option<semio_framework_value::DslValue> {
+        editing::SnapshotDetailsProvider::creation_template(&self.metadata, path, collection_item)
+    }
+    fn missing_property_templates(&self, path: &[editing::SnapshotDetailPathSegment]) -> Vec<(String, semio_framework_value::DslValue)> {
+        editing::SnapshotDetailsProvider::missing_property_templates(&self.metadata, path)
+    }
+    fn allows_untyped_creation(&self, path: &[editing::SnapshotDetailPathSegment]) -> bool {
+        editing::SnapshotDetailsProvider::allows_untyped_creation(&self.metadata, path)
+    }
+    fn enum_values(&self, path: &[editing::SnapshotDetailPathSegment]) -> Vec<semio_framework_value::DslValue> {
+        editing::SnapshotDetailsProvider::enum_values(&self.metadata, path)
+    }
+    fn has_source(&self) -> bool {
+        wavEditor_sample_len(self.data) <= 512 * 1_024
+    }
     fn source(&self) -> Option<String> {
         let source = editing::snapshot_edit_source(self.snapshot);
         editing::snapshot_edit_source_is_admitted(&source).then_some(source)
     }
 }
-struct WavEditorExampleFactory { keys: Vec<ToolFactoryKey> }
-impl WavEditorExampleFactory { fn new(controller_id: &str) -> Self { Self { keys: STDIO_WAV_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() } } }
+struct WavEditorExampleFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+impl WavEditorExampleFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: STDIO_WAV_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
 impl ToolJobFactory for WavEditorExampleFactory {
     type Payload = ArtifactRetainedCommandPayload<EditorApp<WavEditor>>;
     type Job = ArtifactRetainedCommandJob<EditorApp<WavEditor>>;
-    fn keys(&self) -> &[ToolFactoryKey] { &self.keys }
-    fn payload_schema_id(&self) -> &str { STDIO_WAV_DOCUMENT_SCHEMA_EXAMPLE_SCHEMA }
-    fn classification(&self) -> InteractiveJobClassification { InteractiveJobClassification::Migrated }
-    fn execution_contract(&self) -> ToolExecutionContract { ToolExecutionContract::bounded_first_step(STDIO_WAV_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 64, 1, 65_536, 7_500) }
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> { Ok(ArtifactRetainedCommandJob::new(payload)) }
-    fn create_job_from_wire_pages_with_payload(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload, input: semio_framework_plugin::action_bus::RetainedToolWireInput, checkpoint: Option<semio_framework_plugin::action_bus::RetainedToolWireInput>) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_plugin::action_bus::RetainedToolWireInput, Option<semio_framework_plugin::action_bus::RetainedToolWireInput>)> {
-        if input.declared_bytes() > STDIO_WAV_DOCUMENT_SCHEMA_EXAMPLE_BYTES || checkpoint.is_some() { return Err((ToolJobFactoryError::new("stdio example command rejects oversized wire"), input, checkpoint)); }
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+    fn payload_schema_id(&self) -> &str {
+        STDIO_WAV_DOCUMENT_SCHEMA_EXAMPLE_SCHEMA
+    }
+    fn classification(&self) -> InteractiveJobClassification {
+        InteractiveJobClassification::Migrated
+    }
+    fn execution_contract(&self) -> ToolExecutionContract {
+        ToolExecutionContract::bounded_first_step(STDIO_WAV_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 64, 1, 65_536, 7_500)
+    }
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(ArtifactRetainedCommandJob::new(payload))
+    }
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework_plugin::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_plugin::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_plugin::action_bus::RetainedToolWireInput, Option<semio_framework_plugin::action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > STDIO_WAV_DOCUMENT_SCHEMA_EXAMPLE_BYTES || checkpoint.is_some() {
+            return Err((ToolJobFactoryError::new("stdio example command rejects oversized wire"), input, checkpoint));
+        }
         Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
     }
 }
@@ -327,6 +425,7 @@ impl ArtifactOwnedToolJobFactory for WavEditorExampleFactory {
     type Owner = EditorApp<WavEditor>;
     const TOOL_IDS: &'static [&'static str] = STDIO_WAV_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = STDIO_WAV_DOCUMENT_SCHEMA;
+
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[STDIO_WAV_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT];
 }
 const WAV_AUDIO_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
@@ -342,20 +441,42 @@ const WAV_AUDIO_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
 const fn wavEditor_audio_execution_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(edit_audio::MAXIMUM_RAW_BYTES, 64, edit_audio::CAPACITY.work_items() as u64, 65_536, 7_500)
 }
-struct WavAudioFactory { keys: Vec<ToolFactoryKey> }
+struct WavAudioFactory {
+    keys: Vec<ToolFactoryKey>,
+}
 impl WavAudioFactory {
-    fn new(controller_id: &str) -> Self { Self { keys: edit_audio::TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() } }
+    fn new(controller_id: &str) -> Self {
+        Self { keys: edit_audio::TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
 }
 impl ToolJobFactory for WavAudioFactory {
     type Payload = ArtifactRetainedCommandPayload<EditorApp<WavEditor>>;
     type Job = ArtifactRetainedCommandJob<EditorApp<WavEditor>>;
-    fn keys(&self) -> &[ToolFactoryKey] { &self.keys }
-    fn payload_schema_id(&self) -> &str { edit_audio::PAYLOAD_SCHEMA }
-    fn classification(&self) -> InteractiveJobClassification { InteractiveJobClassification::Migrated }
-    fn execution_contract(&self) -> ToolExecutionContract { wavEditor_audio_execution_contract() }
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> { Ok(ArtifactRetainedCommandJob::new(payload)) }
-    fn create_job_from_wire_pages_with_payload(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload, input: semio_framework_plugin::action_bus::RetainedToolWireInput, checkpoint: Option<semio_framework_plugin::action_bus::RetainedToolWireInput>) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_plugin::action_bus::RetainedToolWireInput, Option<semio_framework_plugin::action_bus::RetainedToolWireInput>)> {
-        if input.declared_bytes() > edit_audio::MAXIMUM_RAW_BYTES || checkpoint.is_some() { return Err((ToolJobFactoryError::new("WAV audio edit rejects oversized wire or checkpoint owner"), input, checkpoint)); }
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+    fn payload_schema_id(&self) -> &str {
+        edit_audio::PAYLOAD_SCHEMA
+    }
+    fn classification(&self) -> InteractiveJobClassification {
+        InteractiveJobClassification::Migrated
+    }
+    fn execution_contract(&self) -> ToolExecutionContract {
+        wavEditor_audio_execution_contract()
+    }
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(ArtifactRetainedCommandJob::new(payload))
+    }
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework_plugin::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_plugin::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_plugin::action_bus::RetainedToolWireInput, Option<semio_framework_plugin::action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > edit_audio::MAXIMUM_RAW_BYTES || checkpoint.is_some() {
+            return Err((ToolJobFactoryError::new("WAV audio edit rejects oversized wire or checkpoint owner"), input, checkpoint));
+        }
         Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
     }
 }
@@ -389,11 +510,43 @@ impl ArtifactEditor for WavEditor {
     const DIALECT: Dialect = WAV_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_WAV_DOCUMENT_SCHEMA;
 
+    fn natural_file_codec() -> Option<semio_framework_plugin::NaturalFileCodec> {
+        Some(semio_framework_plugin::NaturalFileCodec { format_kind: "s.stdio.wav@riff-pcm", extension: ".wav", media_type: "audio/wav", binary: true })
+    }
+
+    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
+        crate::standards::riff_pcm::subsets::any::io::try_encode_wav(snapshot).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:natural".into(), error))
+    }
+
+    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
+        let snapshot = crate::standards::riff_pcm::subsets::any::io::decode_wav(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:natural".into(), error))?;
+        let encoded = crate::standards::riff_pcm::subsets::any::io::try_encode_wav(&snapshot).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:natural".into(), error))?;
+        if encoded.as_slice() == bytes {
+            Ok(snapshot)
+        } else {
+            Err(semio_framework_plugin::MediaError::Payload("artifact:natural".into(), "WAV input is outside the exact RIFF PCM subset".into()))
+        }
+    }
+
+    fn whole_document_operation(snapshot: Self::Snapshot) -> Option<Self::Mutation> {
+        Some(WavMutation::SetSnapshot(crate::standards::riff_pcm::subsets::any::schema::mutations::set_snapshot::SetSnapshot { snapshot }))
+    }
+
     fn bounded_first_step_tool_proofs() -> Vec<ArtifactBoundedFirstStepProof> {
         const OWNER_FILE: &str = "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/✏️editor/🦀️.rs";
         const CONTROLLER: &str = "s.stdio.wav@riff-pcm/*#editor";
-        let mut proofs = vec![ArtifactBoundedFirstStepProof::new::<EditorApp<WavEditor>>(OWNER_FILE, CONTROLLER, "WavEditorExampleFactory", semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, "stdio.wav", ToolExecutionContract::bounded_first_step(STDIO_WAV_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 64, 1, 65_536, 7_500)).with_factory_type::<EditorApp<WavEditor>, WavEditorExampleFactory>()];
-        proofs.extend(edit_audio::TOOL_IDS.iter().map(|tool_id| ArtifactBoundedFirstStepProof::new::<EditorApp<WavEditor>>(OWNER_FILE, CONTROLLER, "WavAudioFactory", *tool_id, "stdio.wav", wavEditor_audio_execution_contract()).with_factory_type::<EditorApp<WavEditor>, WavAudioFactory>()));
+        let mut proofs = vec![ArtifactBoundedFirstStepProof::new::<EditorApp<WavEditor>>(
+            OWNER_FILE,
+            CONTROLLER,
+            "WavEditorExampleFactory",
+            semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
+            "stdio.wav",
+            ToolExecutionContract::bounded_first_step(STDIO_WAV_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 64, 1, 65_536, 7_500),
+        )
+        .with_factory_type::<EditorApp<WavEditor>, WavEditorExampleFactory>()];
+        proofs.extend(edit_audio::TOOL_IDS.iter().map(|tool_id| {
+            ArtifactBoundedFirstStepProof::new::<EditorApp<WavEditor>>(OWNER_FILE, CONTROLLER, "WavAudioFactory", *tool_id, "stdio.wav", wavEditor_audio_execution_contract()).with_factory_type::<EditorApp<WavEditor>, WavAudioFactory>()
+        }));
         proofs.extend(editing::snapshot_edit_bounded_first_step_proofs::<Self>(OWNER_FILE, CONTROLLER, "stdio.wav"));
         proofs
     }
@@ -403,28 +556,90 @@ impl ArtifactEditor for WavEditor {
         editing::register_snapshot_edit_tool_factory::<Self>(registry)
     }
     fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<ToolOperationSpec>, Fault> {
-        if editing::is_snapshot_edit_action(&request.tool_id) { return editing::build_snapshot_edit_tool_job::<Self>(request); }
+        if editing::is_snapshot_edit_action(&request.tool_id) {
+            return editing::build_snapshot_edit_tool_job::<Self>(request);
+        }
         if edit_audio::TOOL_IDS.contains(&request.tool_id.as_str()) {
-            if wavEditor_command_id(&request.command) != request.tool_id { return Err(Fault::from("stdio-wav-audio-tool-mismatch")); }
-            let operation = AppOperationContext { app_instance_id: request.app_instance_id, parent_document_id: request.parent_document_id, operation_id: request.operation.operation.0, generation: request.operation.generation.0, canonical_base_revision: request.canonical_base_revision, authoring_seed: request.authoring_seed.clone() };
+            if wavEditor_command_id(&request.command) != request.tool_id {
+                return Err(Fault::from("stdio-wav-audio-tool-mismatch"));
+            }
+            let operation = AppOperationContext {
+                app_instance_id: request.app_instance_id,
+                parent_document_id: request.parent_document_id,
+                operation_id: request.operation.operation.0,
+                generation: request.operation.generation.0,
+                canonical_base_revision: request.canonical_base_revision,
+                authoring_seed: request.authoring_seed.clone(),
+            };
             let tool_id = wavEditor_command_id(&request.command);
-            let payload = ArtifactRetainedCommandPayload::try_new(ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation, completion: request.completion }, wavEditor_command_id, edit_audio::MAXIMUM_RAW_BYTES, edit_audio::CAPACITY.work_items(), Box::new(edit_audio::EditAudioWork::new(tool_id)))?;
+            let payload = ArtifactRetainedCommandPayload::try_new(
+                ArtifactRetainedCommandInputs {
+                    command: *request.command,
+                    snapshot: request.snapshot,
+                    config: request.config,
+                    history: request.history,
+                    interaction_state: request.interaction_state,
+                    interaction_hover: request.interaction_hover,
+                    context: Some(request.context),
+                    operation,
+                    completion: request.completion,
+                },
+                wavEditor_command_id,
+                edit_audio::MAXIMUM_RAW_BYTES,
+                edit_audio::CAPACITY.work_items(),
+                Box::new(edit_audio::EditAudioWork::new(tool_id)),
+            )?;
             return Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)));
         }
-        if !STDIO_WAV_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS.contains(&request.tool_id.as_str()) { return Ok(None); }
-        if wavEditor_command_id(&request.command) != request.tool_id { return Err(Fault::from("stdio-example-tool-mismatch")); }
-        let operation = AppOperationContext { app_instance_id: request.app_instance_id, parent_document_id: request.parent_document_id, operation_id: request.operation.operation.0, generation: request.operation.generation.0, canonical_base_revision: request.canonical_base_revision, authoring_seed: request.authoring_seed.clone() };
-        let payload = ArtifactRetainedCommandPayload::try_new(ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation, completion: request.completion }, wavEditor_command_id, STDIO_WAV_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 1, Box::new(BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, wavEditor_retained_reduce, wavEditor_retained_extent)))?;
+        if !STDIO_WAV_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS.contains(&request.tool_id.as_str()) {
+            return Ok(None);
+        }
+        if wavEditor_command_id(&request.command) != request.tool_id {
+            return Err(Fault::from("stdio-example-tool-mismatch"));
+        }
+        let operation = AppOperationContext {
+            app_instance_id: request.app_instance_id,
+            parent_document_id: request.parent_document_id,
+            operation_id: request.operation.operation.0,
+            generation: request.operation.generation.0,
+            canonical_base_revision: request.canonical_base_revision,
+            authoring_seed: request.authoring_seed.clone(),
+        };
+        let payload = ArtifactRetainedCommandPayload::try_new(
+            ArtifactRetainedCommandInputs {
+                command: *request.command,
+                snapshot: request.snapshot,
+                config: request.config,
+                history: request.history,
+                interaction_state: request.interaction_state,
+                interaction_hover: request.interaction_hover,
+                context: Some(request.context),
+                operation,
+                completion: request.completion,
+            },
+            wavEditor_command_id,
+            STDIO_WAV_DOCUMENT_SCHEMA_EXAMPLE_BYTES,
+            1,
+            Box::new(BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, wavEditor_retained_reduce, wavEditor_retained_extent)),
+        )?;
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
-    fn build_document_store_initialization_job(envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Result<ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
+    fn build_document_store_initialization_job(
+        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
+        operation: semio_framework_job::OperationId,
+        generation: semio_framework_job::Generation,
+    ) -> Result<ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
         Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, STDIO_WAV_DOCUMENT_SCHEMA, operation, generation))
     }
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory("stdio-wav-artifact-retained", store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
-    fn command_id(command: &Self::Command) -> &'static str { wavEditor_command_id(command) }
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> { wavEditor_command_from_action(action, args) }
+    fn command_id(command: &Self::Command) -> &'static str {
+        wavEditor_command_id(command)
+    }
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
+        wavEditor_command_from_action(action, args)
+    }
 
     fn initial_snapshot() -> Self::Snapshot {
         WavSnapshot::default()
@@ -440,10 +655,7 @@ impl ArtifactEditor for WavEditor {
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         match command {
-            WavEditCommand::SetActiveExample { example_id } => Ok(Emit {
-                effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&wavEditor_example_snapshot(example_id), STDIO_WAV_DOCUMENT_SCHEMA)],
-                ..Default::default()
-            }),
+            WavEditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&wavEditor_example_snapshot(example_id), STDIO_WAV_DOCUMENT_SCHEMA)], ..Default::default() }),
             WavEditCommand::EditAudio(_) => Err(Fault::from("WAV natural audio editing requires the cancellable retained route")),
             WavEditCommand::EditSnapshot { event } => <Self as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, _doc.snapshot),
         }
@@ -452,10 +664,21 @@ impl ArtifactEditor for WavEditor {
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => {
-                let revision = doc.render_operation().map(|operation| semio_s_artifact_stdio_contract::window_kit_canonical_revision(operation.canonical_base_revision)).unwrap_or_else(|| semio_s_artifact_stdio_contract::window_kit_snapshot_revision(doc.snapshot));
-                main::render_revisioned(doc.snapshot, &revision, view_state.locale, &semio_framework_plugin::TreeWindows::for_body(view_state, main::BODY_KEY)).map(semio_framework_plugin::built_to_component_tree)
+                let revision = doc
+                    .render_operation()
+                    .map(|operation| semio_s_artifact_stdio_contract::window_kit_canonical_revision(operation.canonical_base_revision))
+                    .unwrap_or_else(|| semio_s_artifact_stdio_contract::window_kit_snapshot_revision(doc.snapshot));
+                let publication_revision = semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?;
+                main::render_revisioned(doc.snapshot, &revision, publication_revision, view_state.locale, &semio_framework_plugin::TreeWindows::for_body(view_state, main::BODY_KEY)).map(semio_framework_plugin::built_to_component_tree)
             }
-            editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details_provider(&WavDetailsProvider::new(doc.snapshot), view_state.locale, "s.stdio.wav@riff-pcm/*#editor", &semio_framework_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
+            editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details_provider_revisioned(
+                &WavDetailsProvider::new(doc.snapshot),
+                semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?,
+                view_state.locale,
+                "s.stdio.wav@riff-pcm/*#editor",
+                &semio_framework_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY),
+            )
+            .map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -464,7 +687,10 @@ impl ArtifactEditor for WavEditor {
 
 impl editing::SnapshotEditingEditor for WavEditor {
     fn snapshot_edit_event(command: &Self::Command) -> Option<&editing::SnapshotEditEvent> {
-        match command { WavEditCommand::EditSnapshot { event } => Some(event), _ => None }
+        match command {
+            WavEditCommand::EditSnapshot { event } => Some(event),
+            _ => None,
+        }
     }
     fn snapshot_edit_expected(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Self::Snapshot, Fault> {
         match event {
@@ -474,30 +700,33 @@ impl editing::SnapshotEditingEditor for WavEditor {
     }
     fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         if let Some(patch) = wavEditor_direct_patch(event, snapshot)? {
-            return Ok(Emit { artifact_mutations: vec![WavMutation::PatchData(patch)], description: Some("Edit WAV samples".into()), ..Default::default() });
+            return Ok(Emit { artifact_mutations: vec![WavMutation::PatchData(patch)], ..Default::default() });
         }
-        let next = wavEditor_snapshot_edit(event, snapshot)?;
-        let mutation = match (
-            next.fmt != snapshot.fmt,
-            next.data != snapshot.data,
-            next.fmt_pad_byte != snapshot.fmt_pad_byte,
-            next.data_pad_byte != snapshot.data_pad_byte,
-            next.other_chunks != snapshot.other_chunks,
-            next.chunk_order != snapshot.chunk_order,
-        ) {
-            (true, false, false, false, false, false) => WavMutation::SetFmt(set_fmt::SetFmt { fmt: next.fmt }),
-            (false, true, false, false, false, false) => WavMutation::SetData(set_data::SetData { data: next.data }),
-            (false, false, false, false, true, false) => WavMutation::SetOtherChunks(set_other_chunks::SetOtherChunks { chunks: next.other_chunks }),
-            _ => return editing::snapshot_edit_patch(event, snapshot, |patch| WavMutation::PatchSnapshot(crate::standards::riff_pcm::subsets::any::schema::mutations::patch_snapshot::PatchSnapshot { patch })),
-        };
-        Ok(Emit { artifact_mutations: vec![mutation], description: Some("Edit WAV details".into()), ..Default::default() })
+        if matches!(event, editing::SnapshotEditEvent::SetValue { path, .. } if path == "/data/kind") {
+            let next = wavEditor_snapshot_edit(event, snapshot)?;
+            return Ok(Emit { artifact_mutations: vec![WavMutation::SetData(set_data::SetData { data: next.data })], ..Default::default() });
+        }
+        editing::snapshot_edit_patch(
+            event,
+            snapshot,
+            |patch| WavMutation::PatchSnapshot(crate::standards::riff_pcm::subsets::any::schema::mutations::patch_snapshot::PatchSnapshot { patch }),
+            Some(|snapshot| WavMutation::SetSnapshot(crate::standards::riff_pcm::subsets::any::schema::mutations::set_snapshot::SetSnapshot { snapshot })),
+        )
     }
 }
 
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_wav_editor() -> semio_framework_plugin::AppDefinition {
-    let builder = Editor::builder(WAV_DIALECT).document(["semio", "wav"]).icon_id("play").mode_def(edit::definition()).default_mode_id(edit::MODE_ID).window_kind_def(main::definition()).window_kind_def(editing::snapshot_details_window_definition()).default_layout(edit::layout()).action_with(semio_s_artifact_stdio_contract::set_active_example_action())
+    let builder = Editor::builder(WAV_DIALECT)
+        .document(["semio", "wav"])
+        .icon_id("play")
+        .mode_def(edit::definition())
+        .default_mode_id(edit::MODE_ID)
+        .window_kind_def(main::definition())
+        .window_kind_def(editing::snapshot_details_window_definition())
+        .default_layout(edit::layout())
+        .action_with(semio_s_artifact_stdio_contract::set_active_example_action())
         .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(crate::examples::demo::ID, crate::examples::demo::label())], crate::examples::demo::ID))
         .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)
         .action_describe(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_description())

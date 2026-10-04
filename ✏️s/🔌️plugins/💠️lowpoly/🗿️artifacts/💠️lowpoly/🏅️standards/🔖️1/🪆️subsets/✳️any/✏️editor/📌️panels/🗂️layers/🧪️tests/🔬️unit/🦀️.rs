@@ -17,7 +17,7 @@ async fn layers_panel_lists_the_base_layer() {
 /// layers panel reads `paint_layers` alone, so the stack is all this law needs.
 fn oversized(layers: usize) -> (LowpolySnapshot, LowpolyConfig) {
     let mut snapshot = LowpolySnapshot::default();
-    snapshot.objects.push(crate::LowpolyObject {
+    snapshot.objects.push(crate::LowpolyObject { mesh_state:None,
         id: "obj-0".into(),
         name: "Object 0".into(),
         transform: LowpolyTransform::default(),

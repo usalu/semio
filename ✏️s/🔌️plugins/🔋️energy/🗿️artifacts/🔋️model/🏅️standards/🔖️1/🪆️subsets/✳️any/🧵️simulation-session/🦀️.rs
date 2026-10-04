@@ -203,6 +203,7 @@ pub fn energy_simulation_run_definition() -> ToolRunDefinition {
         revalidate_job: None,
         settings: ToolRunSettingsReads { config: ENERGY_SIMULATION_RUN_SETTINGS.iter().map(|pointer| pointer.to_string()).collect(), window_config: Default::default() },
         windows: vec![ENERGY_MODEL_3D_WINDOW_KIND_ID.into(), ENERGY_SIMULATION_WINDOW_KIND_ID.into()],
+        member: None,
     }
 }
 //#endregion 🔖️Contract

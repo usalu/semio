@@ -12,7 +12,7 @@ pub fn export_stdio_kinds() -> &'static [&'static str] {
 /// Placed beside `io_registry` rather than in the artifact root or the app: it has THREE callers across
 /// two layers — the artifact root's `declaration()` (must warm the native-module registry before
 /// building composers/inferences), the app's `🎚️config` (`crate::io::default_imperative_contributions_json`),
-/// and the app engine's `ImperativeHost::from_snapshot`. An artifact must not depend on its app, so this
+/// and the app engine's `ImperativeHost::from_scene`. An artifact must not depend on its app, so this
 /// stays artifact-side where both the root and the app can reach it by qualified path.
 pub fn default_imperative_contributions_json() -> String {
     static ENTRIES: std::sync::OnceLock<String> = std::sync::OnceLock::new();

@@ -1,0 +1,59 @@
+[
+  {
+    "name": "🏗️mesh 🎨️attributes ownership",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun nx run @semio-tech/framework-mesh-attributes-ownership:test --skip-nx-cache",
+    "cwd": "${workspaceFolder}",
+    "env": {
+      "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/mesh-fixture-owner/gui"
+    },
+    "presentation": {
+      "group": "9_gates",
+      "order": 900.057864
+    }
+  },
+  {
+    "name": "🏗️mesh 🎨️attributes ownership quick",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun nx run @semio-tech/framework-mesh-attributes-ownership:test-quick --skip-nx-cache",
+    "cwd": "${workspaceFolder}",
+    "env": {
+      "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/mesh-fixture-owner/gui-quick"
+    },
+    "presentation": {
+      "group": "9_gates",
+      "order": 900.0578641
+    }
+  },
+  {
+    "name": "🏗️mesh 🎨️attributes ownership long",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun nx run @semio-tech/framework-mesh-attributes-ownership:test-long --skip-nx-cache",
+    "cwd": "${workspaceFolder}",
+    "env": {
+      "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/mesh-fixture-owner/gui-long"
+    },
+    "presentation": {
+      "group": "9_gates",
+      "order": 900.0578642
+    }
+  },
+  {
+    "name": "🏗️mesh 🎨️attributes ownership exhaustive",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun nx run @semio-tech/framework-mesh-attributes-ownership:test-exhaustive --skip-nx-cache",
+    "cwd": "${workspaceFolder}",
+    "env": {
+      "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/mesh-fixture-owner/gui-exhaustive"
+    },
+    "presentation": {
+      "group": "9_gates",
+      "order": 900.0578643
+    }
+  }
+]
+

@@ -5,7 +5,7 @@ use crate::editor::process3d::config::Process3dConfig;
 use crate::editor::process3d::modes::edit::windows::workpiece::options;
 use crate::schema::inferences::processed_mesh;
 use crate::{Process3dSnapshot, ProcessWorkingScene};
-use semio_framework_os_kernel::json;
+use semio_framework_pack_json as json;
 use semio_framework_plugin::app::WindowKit;
 use semio_framework_plugin::mesh_from_kind;
 use semio_framework_plugin::world3d_camera_json;
@@ -82,7 +82,7 @@ pub fn config_sun(cfg: &Process3dConfig) -> WorldSunConfig {
 /// migrated world3d call site's empty-selection `world3d_selection_json` call (e.g. `📐️cad`'s
 /// `world_selection_json`).
 fn process3d_selection_json(active_utility: &str) -> String {
-    let mut value: semio_framework::DslValue = json::from_json_str(&world3d_selection_json("rectangle", &[], None)).unwrap_or_else(|_| semio_framework::DslValue::Object(Vec::new()));
+    let mut value: semio_framework::DslValue = json::from_json_str(&world3d_selection_json("rectangle", &[], None), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| semio_framework::DslValue::Object(Vec::new()));
     if let semio_framework::DslValue::Object(entries) = &mut value {
         entries.retain(|(key, _)| key != "engagementSessionActive" && key != "faceDragActive");
         entries.push(("engagementSessionActive".to_string(), semio_framework::DslValue::Bool(active_utility != "select")));

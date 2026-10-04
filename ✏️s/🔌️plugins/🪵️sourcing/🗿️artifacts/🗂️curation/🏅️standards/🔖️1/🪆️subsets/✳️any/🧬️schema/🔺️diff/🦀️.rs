@@ -9,7 +9,7 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot:
 //#region 🔖️Diff
 /// 🔺️ Sparse parent delta for catalog identity, sourcing entries and selection.
 /// Kit content changes belong to the child's own mutation history.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, ArtifactSchema)]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[artifact_schema(id = "s.sourcing.curation")]
 pub struct CurationDiff {
@@ -23,23 +23,23 @@ pub struct CurationDiff {
     #[state(artifact)]
     pub curated: Option<CurationCuratedDelta>,
 }
-impl dsl::FromValue for CurationDiff {
-    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+impl semio_framework_value::FromValue for CurationDiff {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         let mut result = Self::default();
         let mut seen = 0u8;
-        for (key, value) in dsl::DslValue::into_object(value)? {
-            let bit = match key.as_str() { "artifact" => 1, "catalog" => 2, "stockExtra" => 4, "curated" => 8, _ => return Err(dsl::ValueError::new(format!("unknown Curation diff field {key}"))) };
-            if seen & bit != 0 { return Err(dsl::ValueError::new(format!("duplicate Curation diff field {key}"))); }
+        for (key, value) in semio_framework_value::DslValue::into_object(value)? {
+            let bit = match key.as_str() { "artifact" => 1, "catalog" => 2, "stockExtra" => 4, "curated" => 8, _ => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown Curation diff field {key}"))) };
+            if seen & bit != 0 { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("duplicate Curation diff field {key}"))); }
             seen |= bit;
             match key.as_str() {
-                "artifact" => result.artifact = dsl::FromValue::from_value(value)?,
-                "catalog" => result.catalog = dsl::FromValue::from_value(value)?,
-                "stockExtra" => result.stock_extra = dsl::FromValue::from_value(value)?,
-                "curated" => result.curated = dsl::FromValue::from_value(value)?,
+                "artifact" => result.artifact = semio_framework_value::FromValue::from_value(value)?,
+                "catalog" => result.catalog = semio_framework_value::FromValue::from_value(value)?,
+                "stockExtra" => result.stock_extra = semio_framework_value::FromValue::from_value(value)?,
+                "curated" => result.curated = semio_framework_value::FromValue::from_value(value)?,
                 _ => unreachable!(),
             }
         }
-        result.validate().map_err(dsl::ValueError::new)?;
+        result.validate().map_err(|message| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message))?;
         Ok(result)
     }
 }
@@ -56,7 +56,7 @@ impl CurationDiff {
 
 //#region 🔖️DeltaHelpers
 /// 🩹 One patched stock-extra entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CurationObjectKindExtraPatchEntry {
     pub id: String,
@@ -64,7 +64,7 @@ pub struct CurationObjectKindExtraPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `stock_extra`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct CurationStockExtraDelta {
     pub added: Vec<ObjectKindExtra>,
@@ -74,7 +74,7 @@ pub struct CurationStockExtraDelta {
 }
 
 /// 🩹 One patched curated entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CurationCuratedPatchEntry {
     pub object_id: String,
@@ -82,7 +82,7 @@ pub struct CurationCuratedPatchEntry {
 }
 
 /// 🧺 Identified-collection delta for `curated`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct CurationCuratedDelta {
     pub added: Vec<CuratedItem>,

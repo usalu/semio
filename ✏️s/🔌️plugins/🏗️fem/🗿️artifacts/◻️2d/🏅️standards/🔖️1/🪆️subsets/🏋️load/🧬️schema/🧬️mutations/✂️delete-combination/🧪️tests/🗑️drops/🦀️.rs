@@ -23,13 +23,13 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️delete-combination/🗑️drops/🎯️outcome/🔣️.json");
 
 fn before() -> Fem2dSnapshot {
-    dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> Fem2dSnapshot {
-    dsl::json::from_json_str(AFTER).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> Fem2dMutation {
-    dsl::json::from_json_str(MUTATION).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 
 /// ▶️ `delete-combination` carries `before` to exactly the committed `after`.
@@ -49,7 +49,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_fem2d_mutation(&base, &mutation);
+    let inverse = inverse_fem2d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "delete-combination/drops-the-spare-60fda7: delete-combination undoes with exactly one step, got {inverse:?}");
     let mut snapshot = base.clone();
     apply_fem2d_mutation(&mut snapshot, &mutation).expect("forward applies");
@@ -62,8 +62,8 @@ fn inverse_restores_before() {
 /// 🎯️ The declared outcome — applied, with no diagnostic at all — is what this kind really emits.
 #[test]
 fn declared_outcome_holds() {
-    let outcome: dsl::DslValue = dsl::json::from_json_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(dsl::DslValue::as_str), Some("applied"), "delete-combination/drops-the-spare-60fda7 declares an applied outcome");
+    let outcome: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(OUTCOME, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
+    assert_eq!(outcome.get("status").and_then(semio_framework_value::DslValue::as_str), Some("applied"), "delete-combination/drops-the-spare-60fda7 declares an applied outcome");
     let produced = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &before());
     assert!(produced.messages().is_empty(), "delete-combination/drops-the-spare-60fda7: a clean application raises no diagnostic, got {:?}", produced.messages());
     let mut snapshot = before();
@@ -92,14 +92,14 @@ fn touches_only_its_own_member() {
 #[test]
 fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: Fem2dSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
-        let reencoded = dsl::ToValue::to_value(&decoded);
-        let original: dsl::DslValue = dsl::json::from_json_str(text).expect("snapshot reparses");
+        let decoded: Fem2dSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = semio_framework_value::ToValue::to_value(&decoded);
+        let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot reparses");
         assert_eq!(reencoded, original, "delete-combination/drops-the-spare-60fda7: committed {label} JSON is not canonical");
     }
     let decoded_mutation = mutation();
-    let reencoded = dsl::ToValue::to_value(&decoded_mutation);
-    let original: dsl::DslValue = dsl::json::from_json_str(MUTATION).expect("mutation reparses");
+    let reencoded = semio_framework_value::ToValue::to_value(&decoded_mutation);
+    let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation reparses");
     assert_eq!(reencoded, original, "delete-combination/drops-the-spare-60fda7: committed mutation JSON is not canonical");
 }
 
@@ -118,24 +118,24 @@ fn produces_committed_diff() {
     assert!(outcome.diff().sections.is_none(), "delete-combination/drops-the-spare-60fda7: no sections delta may be opened by this verb");
     assert!(outcome.diff().supports.is_none(), "delete-combination/drops-the-spare-60fda7: no supports delta may be opened by this verb");
     assert!(outcome.diff().load_cases.is_none(), "delete-combination/drops-the-spare-60fda7: no loadCases delta may be opened by this verb");
-    let produced = dsl::ToValue::to_value(outcome.diff());
-    let committed: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let produced = semio_framework_value::ToValue::to_value(outcome.diff());
+    let committed: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert_eq!(produced, committed, "delete-combination/drops-the-spare-60fda7: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: crate::standards::v1::subsets::any::schema::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    let reencoded = dsl::ToValue::to_value(&decoded);
-    let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
+    let decoded: crate::standards::v1::subsets::any::schema::diff::Fem2dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let reencoded = semio_framework_value::ToValue::to_value(&decoded);
+    let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff reparses");
     assert_eq!(reencoded, original, "delete-combination/drops-the-spare-60fda7: committed diff JSON is not canonical");
 }
 
 /// 🩹 Replaying the committed delta on `before` must reproduce the committed `after`.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: crate::standards::v1::subsets::any::schema::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: crate::standards::v1::subsets::any::schema::diff::Fem2dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let produced = <crate::standards::v1::subsets::any::schema::diff::Fem2dDiff as protocol::MutationDiff<Fem2dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-combination/drops-the-spare-60fda7: committed diff did not carry before to after");
 }

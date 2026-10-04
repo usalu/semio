@@ -7,7 +7,10 @@ use crate::{Iso16757Mutation, Iso16757Snapshot};
 use super::mutation::AddSelectionConstraint;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &AddSelectionConstraint, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
+pub fn inverse(_payload: &AddSelectionConstraint, base: &Iso16757Snapshot) -> Result<Vec<Iso16757Mutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![Iso16757Mutation::RemoveSelectionConstraint(remove_selection_constraint::mutation::RemoveSelectionConstraint { index: base.selection.constraints.len() })]
+
+    })())
 }
 //#endregion 🔖️Inverse

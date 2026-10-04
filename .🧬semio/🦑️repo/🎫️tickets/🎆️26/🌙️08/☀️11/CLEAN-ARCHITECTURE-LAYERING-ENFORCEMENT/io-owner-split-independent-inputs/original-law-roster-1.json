@@ -1,0 +1,59 @@
+{
+  "authority": "neutral-direction-four-edge-inputs/full-current-owners-callers-1.json",
+  "authorityHash": "e6556291a6886113c6cbd224df8b0eb07f5e25139877820fe6494ddfac39f952",
+  "roster": [
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/💰️frontiers/🟦️.ts",
+      "allNames": [
+        "cooperative frontier corpus is closed and independently preserves TIFF relational scalars",
+        "complete TIFF ASCII preflight cancels within its first scalar measurement",
+        "complete TIFF physical import cancels inside its actual schema token scan",
+        "complete TIFF import cancels within shared relational row validation",
+        "complete TIFF export cancels within physical corpus tree grouping",
+        "complete TIFF import retains prior debt and honors exact and minus-one cumulative grants",
+        "complete TIFF export retains prior debt and captures declarative options before mutation",
+        "actual shared authored-row builder cancels inside its schema corpus validation",
+        "final frontier corpus is closed and independently distinguishes literal table names",
+        "actual artifact lookup retains SQLite ASCII case and literal Unicode distinctions",
+        "actual artifact name index cancels within a long literal identifier",
+        "actual artifact name index cancels within reversed table census",
+        "complete TIFF export cancels inside the second physical tree grouping pass"
+      ],
+      "transferNames": [
+        "cooperative frontier corpus is closed and independently preserves TIFF relational scalars",
+        "complete TIFF ASCII preflight cancels within its first scalar measurement",
+        "complete TIFF physical import cancels inside its actual schema token scan",
+        "complete TIFF import cancels within shared relational row validation",
+        "complete TIFF export cancels within physical corpus tree grouping",
+        "complete TIFF import retains prior debt and honors exact and minus-one cumulative grants",
+        "complete TIFF export retains prior debt and captures declarative options before mutation",
+        "complete TIFF export cancels inside the second physical tree grouping pass"
+      ],
+      "retainedNames": [
+        "actual shared authored-row builder cancels inside its schema corpus validation",
+        "final frontier corpus is closed and independently distinguishes literal table names",
+        "actual artifact lookup retains SQLite ASCII case and literal Unicode distinctions",
+        "actual artifact name index cancels within a long literal identifier",
+        "actual artifact name index cancels within reversed table census"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/💰️operation/🟦️.ts",
+      "allNames": [
+        "complete operation corpus has closed neutral schema and independent scalar/debt authority",
+        "physical measurement cancels inside one Unicode scalar before any encoding backing",
+        "physical import decoder cancels inside one UTF-8 scalar without later decoding",
+        "actual TIFF pixels projector and physical file share one complete operation grant"
+      ],
+      "transferNames": [
+        "actual TIFF pixels projector and physical file share one complete operation grant"
+      ],
+      "retainedNames": [
+        "complete operation corpus has closed neutral schema and independent scalar/debt authority",
+        "physical measurement cancels inside one Unicode scalar before any encoding backing",
+        "physical import decoder cancels inside one UTF-8 scalar without later decoding"
+      ]
+    }
+  ],
+  "sourceWrites": false
+}

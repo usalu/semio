@@ -1,7 +1,7 @@
 use super::super::{ChangedNodeIcon, DagDelta, DagDiff, DagMutation, DagSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "change-node-icon")]
@@ -18,9 +18,12 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for ChangeNodeIcon {
         }
         protocol::MutationOutcome::new(DagDiff::from(DagDelta { changed_node_icon: Some(ChangedNodeIcon { id: self.id.clone(), new_icon: self.new_icon.clone() }), ..Default::default() }))
     }
-    fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {
+    fn inverse(&self, base: &DagSnapshot) -> Result<Vec<DagMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         base.nodes.iter().find(|node| node.id == self.id).map(|node| vec![DagMutation::ChangeNodeIcon(Self { id: self.id.clone(), new_icon: node.icon.clone() })]).unwrap_or_default()
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change node icon {}", self.id), &format!("Knotensymbol {} ändern", self.id))
     }

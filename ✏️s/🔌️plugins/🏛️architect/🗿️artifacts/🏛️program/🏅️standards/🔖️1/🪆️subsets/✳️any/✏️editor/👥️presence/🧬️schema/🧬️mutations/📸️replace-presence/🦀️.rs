@@ -2,7 +2,7 @@
 
 use super::*;
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "replace-presence")]
 #[mutation_leaf(contract = ::protocol)]
@@ -15,13 +15,16 @@ impl protocol::MutationKind<ArchitectPresence, ArchitectPresenceMutation> for Re
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "presence", kind: "replace-presence", record: "ReplacePresence" };
     fn diff(&self, base: &ArchitectPresence) -> protocol::MutationOutcome<ArchitectPresence> {
         if &self.presence == base {
-            return protocol::MutationOutcome::new(base.clone()).warn("mutation.no-op", "Requested presence already matches.");
+            return protocol::MutationOutcome::new(base.clone()).warning("mutation.no-op", "Requested presence already matches.");
         }
         protocol::MutationOutcome::new(self.presence.clone())
     }
-    fn inverse(&self, base: &ArchitectPresence) -> Vec<ArchitectPresenceMutation> {
+    fn inverse(&self, base: &ArchitectPresence) -> Result<Vec<ArchitectPresenceMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![ArchitectPresenceMutation::ReplacePresence(Self { presence: base.clone() })]
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Replace Presence", "Präsenz ersetzen")
     }

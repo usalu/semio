@@ -6,9 +6,12 @@ use crate::ProgramMutation;
 use crate::ProgramSnapshot;
 
 /// ↩️ Undo a replace by restoring the pre-state row content. Missing target ⇒ nothing to undo.
-pub fn inverse(payload: &super::ReplaceAccessibilityRequirement, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+pub fn inverse(payload: &super::ReplaceAccessibilityRequirement, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.accessibility.iter().find(|row| row.header.id == payload.accessibility_requirement.header.id) {
         Some(existing) => vec![ProgramMutation::ReplaceAccessibilityRequirement(super::ReplaceAccessibilityRequirement { accessibility_requirement: existing.clone() })],
         None => Vec::new(),
     }
+
+    })())
 }

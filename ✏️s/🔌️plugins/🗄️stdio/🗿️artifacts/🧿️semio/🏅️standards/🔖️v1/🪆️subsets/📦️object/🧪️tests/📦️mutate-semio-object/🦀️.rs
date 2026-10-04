@@ -118,7 +118,7 @@ mod subject {
         let mut current = base.clone();
         apply(&mut current, &mutation, &ctx.scenario.id)?;
         let mutated = projection(&current)?;
-        for step in inverse_semio_object_mutation(&mutation, &base) {
+        for step in inverse_semio_object_mutation(&mutation, &base).expect("valid retained mutation inverse fixture") {
             apply(&mut current, &step, &ctx.scenario.id)?;
         }
         if current != base {

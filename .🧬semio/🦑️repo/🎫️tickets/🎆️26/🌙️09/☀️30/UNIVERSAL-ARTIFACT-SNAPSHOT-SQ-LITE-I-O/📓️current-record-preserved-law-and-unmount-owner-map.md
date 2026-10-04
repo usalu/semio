@@ -1,0 +1,13 @@
+# Current Record Preserved Law And Unmount Owner Map
+
+Read-only fresh source comparison; no compiler or runtime by this auditor. Complete comment-filtered imports and qualified source callees are retained in `📓️current-record-unmount-rust-public-import-and-callee-census.md`. That inventory includes cfg/macro/test source; it is not evidence every path compiles in one owner.
+
+OS duplicate and Core canonical Record expose identical 31 top-level public names. Both Record unit owners retain the same 25 test names. Core intrinsic-media has five registered allocator/depth/order/control laws. OS and Core scalar witness roots are byte-identical; their four test laws differ only in DSL type qualification/import grouping and the actual canonical codec path (`crate::record` versus OS façade). No unique scalar assertion body was found. Unique schema storage authority is already separately mapped and parent reports actual canonical Native execution.
+
+The OS Pack façade mounts the duplicate `value` public family, separate scalar witness, and eight document/body forwarding functions. Its ordinary helpers return `PackError` by wrapping canonical pure refusal, whereas direct Core Record returns `PackRefusal`; consumers whose public contracts retain `PackError` need explicit genuine boundary conversion. A flat namespace replacement alone does not establish type compatibility.
+
+Store `pack_rt` contains seven generic schema forwards to remove, alongside actual domain/intrinsic/base64/runtime helpers that must survive. Retained token/cursor imports currently come through OS Pack and should bind directly to canonical Record. Store option exports similarly need canonical Record options while physical `VerificationLevel`, transport errors, varints and ByteReader remain Core Pack authority. DSL derive emits the actual seven-forward path and must change its generated Rust callee, not just existing handwritten calls.
+
+OS DSL grouped imports combine Record options/body functions with physical varint/ByteReader, so split by authority. Framework ToolRun directly imports OS Record options/body helpers. Record-codec generic law kit and its unit owner remain mounted by Kernel cfg(test or record-codec-laws); retarget their exact calls and preserve registration rather than deleting them with duplicate codec. Kernel flat globs are another source of unqualified Record APIs and require owning compilation after unmount.
+
+Core `pack::value` is the protocol trait authority and must not be rewritten as Record. No OS `value` compatibility alias is needed or justified. Physical CLI control remains a distinct OS caller authority and is outside this Record retirement edit.

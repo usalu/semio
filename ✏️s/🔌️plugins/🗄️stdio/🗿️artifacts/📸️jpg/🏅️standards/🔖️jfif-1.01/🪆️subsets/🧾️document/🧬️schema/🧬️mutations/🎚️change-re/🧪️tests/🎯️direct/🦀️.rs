@@ -24,13 +24,13 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎚️change-re/🎯️direct/🎯️outcome/🔣️.json");
 
 fn before() -> JpgSnapshot {
-    dsl::json::from_json_str(BEFORE).expect("committed before-snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed before-snapshot decodes")
 }
 fn expected_after() -> JpgSnapshot {
-    dsl::json::from_json_str(AFTER).expect("committed after-snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed after-snapshot decodes")
 }
 fn mutation() -> JpgMutation {
-    dsl::json::from_json_str(MUTATION).expect("committed change-re-encode-quality payload decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-re-encode-quality payload decodes")
 }
 
 /// ▶️ Applying the committed payload to the committed before-snapshot reaches the committed
@@ -49,7 +49,7 @@ fn inverse_restores_before() {
     let base = before();
     let payload = mutation();
     let mut current = payload.diff(&base).diff().apply(&base).expect("forward change-re-encode-quality applies");
-    for step in payload.inverse(&base) {
+    for step in payload.inverse(&base).expect("valid retained mutation inverse fixture") {
         current = step.diff(&current).diff().apply(&current).expect("the change-re-encode-quality inverse step applies");
     }
     assert_eq!(current, base, "change-re-encode-quality/direct-behavior: the undo did not restore the committed before-snapshot");
@@ -60,12 +60,12 @@ fn inverse_restores_before() {
 #[test]
 fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: JpgSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: JpgSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "change-re-encode-quality/direct-behavior: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("payload encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(mutation()))).expect("payload encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("payload reparses");
     assert_eq!(reencoded, original, "change-re-encode-quality/direct-behavior: committed payload JSON is not canonical");
 }
@@ -88,7 +88,7 @@ fn declared_outcome_holds() {
 /// diff is what replication ships and what undo inverts.
 #[test]
 fn produces_committed_diff() {
-    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(mutation().diff(&before()).diff())).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(mutation().diff(&before()).diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-re-encode-quality/direct-behavior: produced diff differs from the committed 🔺️diff/🔣️.json");
 }

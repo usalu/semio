@@ -351,7 +351,13 @@ pub fn document_layout(main_window_kind_id: &str) -> WindowLayout {
 }
 
 /// 🎛️ The selected page object's fields. A commit names `field` and lets the host supply `value`.
-pub fn render_inspector(snapshot: &PdfSnapshot, selected: Option<&str>, controller_id: &str, locale: Locale) -> UiAssemblyResult<semio_framework_ui_contract::BuiltNode> {
+pub fn render_inspector(
+    snapshot: &PdfSnapshot,
+    selected: Option<&str>,
+    controller_id: &str,
+    publication_revision: semio_framework_plugin::UiPublicationRevision,
+    locale: Locale,
+) -> UiAssemblyResult<semio_framework_ui_contract::BuiltNode> {
     let object = selected.and_then(|id| objects(snapshot).into_iter().find(|object| object.id == id));
     let mut column = ui::column().try_id("pdf-object").map_err(|_| inspector_error("pdf.object.root-id"))?;
     let Some(object) = object else {
@@ -367,7 +373,7 @@ pub fn render_inspector(snapshot: &PdfSnapshot, selected: Option<&str>, controll
         };
         column = column.try_child(ui::text(ui::Label(UiText::clipped(heading))).try_id("pdf-object-kind").map_err(|_| inspector_error("pdf.object.kind-id"))?.try_build().map_err(|_| inspector_error("pdf.object.kind"))?).map_err(|_| inspector_error("pdf.object.kind"))?;
         for field in page_fields(snapshot) {
-            column = column.try_child(field_input(0, "", &field, controller_id, locale)?).map_err(|_| inspector_error("pdf.object.field"))?;
+            column = column.try_child(field_input(0, "", &field, controller_id, publication_revision, locale)?).map_err(|_| inspector_error("pdf.object.field"))?;
         }
         return column.try_build().map_err(|_| inspector_error("pdf.object.root"));
     };
@@ -391,7 +397,7 @@ pub fn render_inspector(snapshot: &PdfSnapshot, selected: Option<&str>, controll
     };
     column = column.try_child(ui::text(ui::Label(UiText::clipped(heading))).try_id("pdf-object-kind").map_err(|_| inspector_error("pdf.object.kind-id"))?.try_build().map_err(|_| inspector_error("pdf.object.kind"))?).map_err(|_| inspector_error("pdf.object.kind"))?;
     for field in inspector_fields(snapshot, &object) {
-        column = column.try_child(field_input(object.page, &object.id, &field, controller_id, locale)?).map_err(|_| inspector_error("pdf.object.field"))?;
+        column = column.try_child(field_input(object.page, &object.id, &field, controller_id, publication_revision, locale)?).map_err(|_| inspector_error("pdf.object.field"))?;
     }
     let delete_label = match locale {
         Locale::De => "Löschen",
@@ -403,7 +409,7 @@ pub fn render_inspector(snapshot: &PdfSnapshot, selected: Option<&str>, controll
 }
 
 /// 🧾 Reads a page-edit action into a replayable payload.
-pub fn edit_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<PdfPageEdit, Fault> {
+pub fn edit_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<PdfPageEdit, Fault> {
     if !is_page_action(action) {
         return Err(fault(format!("unknown pdf page action '{action}'")));
     }
@@ -610,18 +616,18 @@ fn select_effect(id: &str, merge: &str) -> semio_framework_plugin::Effect {
     semio_framework_plugin::Effect::DispatchAction {
         req: semio_framework_plugin::RequestId(115),
         action: semio_framework_plugin::INTERACTION_SELECT_ACTION_ID.into(),
-        args: Some(dsl::DslValue::from(json!({ "domainId": OBJECT_DOMAIN, "targets": json!([{ "granularity": "object", "id": id }]).to_string(), "merge": merge, "method": "pick" }))),
+        args: Some(semio_framework_value::DslValue::from(json!({ "domainId": OBJECT_DOMAIN, "targets": json!([{ "granularity": "object", "id": id }]).to_string(), "merge": merge, "method": "pick" }))),
         delay_ms: 0,
     }
 }
 
-fn pointer_extend(args: Option<&dsl::DslValue>) -> bool {
-    let Some(dsl::DslValue::Object(entries)) = args else { return false };
+fn pointer_extend(args: Option<&semio_framework_value::DslValue>) -> bool {
+    let Some(semio_framework_value::DslValue::Object(entries)) = args else { return false };
     entries.iter().any(|(key, value)| {
         (key == "shift" || key == "ctrl" || key == "meta") && match value {
-            dsl::DslValue::Bool(flag) => *flag,
-            dsl::DslValue::Number(number) => number.as_f64() >= 0.5,
-            dsl::DslValue::String(text) => text == "true" || text == "1",
+            semio_framework_value::DslValue::Bool(flag) => *flag,
+            semio_framework_value::DslValue::Number(number) => number.as_f64() >= 0.5,
+            semio_framework_value::DslValue::String(text) => text == "true" || text == "1",
             _ => false,
         }
     })
@@ -2630,30 +2636,30 @@ fn fault(message: impl Into<String>) -> Fault {
     Fault::new(FaultOrigin::App, FaultCode::new("stdio.pdf.page-edit"), message)
 }
 
-fn text_arg(args: Option<&dsl::DslValue>, key: &str) -> String {
+fn text_arg(args: Option<&semio_framework_value::DslValue>, key: &str) -> String {
     committed_argument(args, key).unwrap_or_else(|| semio_s_artifact_stdio_contract::window_kit_text_argument(args, &[key], ""))
 }
 
-fn req_text(args: Option<&dsl::DslValue>, key: &str) -> Result<String, Fault> {
+fn req_text(args: Option<&semio_framework_value::DslValue>, key: &str) -> Result<String, Fault> {
     if directed_field(args) == key {
         return committed_argument(args, key).ok_or_else(|| fault(format!("the action requires argument '{key}'")));
     }
     semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, key).map_err(|error| fault(error.message))
 }
 
-fn directed_field(args: Option<&dsl::DslValue>) -> String {
+fn directed_field(args: Option<&semio_framework_value::DslValue>) -> String {
     semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["field"], "")
 }
 
-fn committed_argument(args: Option<&dsl::DslValue>, key: &str) -> Option<String> {
+fn committed_argument(args: Option<&semio_framework_value::DslValue>, key: &str) -> Option<String> {
     if key == "field" || directed_field(args) != key {
         return None;
     }
-    let dsl::DslValue::Object(entries) = args? else { return None };
+    let semio_framework_value::DslValue::Object(entries) = args? else { return None };
     match entries.iter().find(|(name, _)| name == "value").map(|(_, value)| value)? {
-        dsl::DslValue::String(raw) => Some(raw.clone()),
-        dsl::DslValue::Number(number) => Some(number.as_u64().map(|reading| reading.to_string()).or_else(|| number.as_i64().map(|reading| reading.to_string())).unwrap_or_else(|| number.as_f64().to_string())),
-        dsl::DslValue::Bool(flag) => Some(flag.to_string()),
+        semio_framework_value::DslValue::String(raw) => Some(raw.clone()),
+        semio_framework_value::DslValue::Number(number) => Some(number.as_u64().map(|reading| reading.to_string()).or_else(|| number.as_i64().map(|reading| reading.to_string())).unwrap_or_else(|| number.as_f64().to_string())),
+        semio_framework_value::DslValue::Bool(flag) => Some(flag.to_string()),
         _ => None,
     }
 }
@@ -2781,7 +2787,14 @@ fn annotation_box(id: &'static str, label_en: &'static str, label_de: &'static s
     InspectorField { id, label_en, label_de, action: "set-annotation", key, kind: ui::InputKind::Number, value: shown_number(value), numbers: vec![("x", object.x), ("y", object.y), ("width", object.width), ("height", object.height)], text: Some(object.text.clone()), object_key: None }
 }
 
-fn field_input(page: usize, object_id: &str, field: &InspectorField, controller_id: &str, locale: Locale) -> UiAssemblyResult<semio_framework_ui_contract::BuiltNode> {
+fn field_input(
+    page: usize,
+    object_id: &str,
+    field: &InspectorField,
+    controller_id: &str,
+    publication_revision: semio_framework_plugin::UiPublicationRevision,
+    locale: Locale,
+) -> UiAssemblyResult<semio_framework_ui_contract::BuiltNode> {
     let label = match locale {
         Locale::De => field.label_de,
         Locale::En => field.label_en,
@@ -2793,8 +2806,33 @@ fn field_input(page: usize, object_id: &str, field: &InspectorField, controller_
     if let Some(text) = &field.text {
         arguments = insert_text_arg(arguments, text)?;
     }
-    let builder = ui::input(field.kind).value(inspector_text(&field.value)?).commit(inspector_text("blur")?).try_label(label).map_err(|_| inspector_error("pdf.object.input-label"))?.try_id(field.id).map_err(|_| inspector_error("pdf.object.input-id"))?;
+    let draft_target = inspector_draft_target(controller_id, field.action, page, object_id, field.key)?;
+    let builder = ui::input(field.kind)
+        .value(inspector_text(&field.value)?)
+        .commit(inspector_text("blur")?)
+        .draft_target(draft_target)
+        .publication_revision(publication_revision)
+        .try_label(label)
+        .map_err(|_| inspector_error("pdf.object.input-label"))?
+        .try_id(field.id)
+        .map_err(|_| inspector_error("pdf.object.input-id"))?;
     builder.try_on_with(ui::Trigger::Commit, inspector_action(controller_id, field.action)?, arguments).map_err(|_| inspector_error("pdf.object.binding"))?.try_build().map_err(|_| inspector_error("pdf.object.input"))
+}
+
+fn inspector_draft_target(controller_id: &str, action_id: &str, page: usize, object_id: &str, field: &str) -> UiAssemblyResult<UiText> {
+    inspector_text(&format!(
+        "pdf-inspector.v1/{}/{}/{}/{}/{}/{}/{}/{}/{}",
+        controller_id.len(),
+        controller_id,
+        action_id.len(),
+        action_id,
+        object_id.len(),
+        object_id,
+        field.len(),
+        field,
+        page
+    ))
+    .map_err(|_| inspector_error("pdf.object.draft-target"))
 }
 
 fn object_args(page: usize, object_id: &str, field: &str, numbers: &[(&str, f64)]) -> UiAssemblyResult<UiValue> {
@@ -2840,20 +2878,20 @@ fn shown_number(value: f64) -> String {
     if trimmed.is_empty() || trimmed == "-" { "0".into() } else { trimmed }
 }
 
-fn req_index(args: Option<&dsl::DslValue>, key: &str) -> Result<u32, Fault> {
+fn req_index(args: Option<&semio_framework_value::DslValue>, key: &str) -> Result<u32, Fault> {
     semio_s_artifact_stdio_contract::window_kit_required_index_argument(args, key).map_err(|error| fault(error.message))
 }
 
-fn opt_index(args: Option<&dsl::DslValue>, key: &str) -> u32 {
+fn opt_index(args: Option<&semio_framework_value::DslValue>, key: &str) -> u32 {
     text_arg(args, key).parse::<u32>().unwrap_or(0)
 }
 
-fn req_num(args: Option<&dsl::DslValue>, key: &str) -> Result<f64, Fault> {
+fn req_num(args: Option<&semio_framework_value::DslValue>, key: &str) -> Result<f64, Fault> {
     let raw = text_arg(args, key);
     raw.parse::<f64>().map_err(|_| fault(format!("the action requires argument '{key}'"))).and_then(|value| value.is_finite().then_some(value).ok_or_else(|| fault(format!("argument '{key}' must be finite"))))
 }
 
-fn opt_num(args: Option<&dsl::DslValue>, key: &str, fallback: f64) -> f64 {
+fn opt_num(args: Option<&semio_framework_value::DslValue>, key: &str, fallback: f64) -> f64 {
     text_arg(args, key).parse::<f64>().ok().filter(|value| value.is_finite()).unwrap_or(fallback)
 }
 

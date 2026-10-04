@@ -8,5 +8,5 @@ async fn shell_fault_frame_round_trips_the_language_neutral_diagnostic() {
     assert_eq!(in_reply_to, None);
     assert!(report.is_empty());
     let decoded: semio_framework::Fault = semio_framework_value::FromValue::from_value(store::pack_rt::decode_wire_value(&bytes).unwrap()).unwrap();
-    assert_eq!(serde_json::Value::from(protocol::ToValue::to_value(&decoded)), serde_json::Value::from(protocol::ToValue::to_value(&fault)));
+    assert_eq!(serde_json::Value::from(semio_framework_value::ToValue::to_value(&decoded)), serde_json::Value::from(semio_framework_value::ToValue::to_value(&fault)));
 }

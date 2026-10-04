@@ -72,9 +72,12 @@ impl ArtifactViewer for AnimatePresentationViewer {
     const DIALECT: Dialect = ANIMATE_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PRESENTATION_DOCUMENT_SCHEMA;
 
-    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {
+ Ok((||{
         crate::genesis_presentation_child_pack(snapshot, slot, child_id)
-    }
+    
+})())
+}
 
     fn initial_snapshot() -> PresentationSnapshot {
         default_presentation_snapshot()

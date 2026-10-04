@@ -1,0 +1,3166 @@
+[
+  {
+    "name": "duplicate identity",
+    "document": {
+      "schema": "drawing.document",
+      "id": "document",
+      "layers": [
+        {
+          "id": "a",
+          "name": "a",
+          "kind": "shape",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "shapeKind": "rect",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 2,
+            "height": 1
+          }
+        },
+        {
+          "id": "a",
+          "name": "a",
+          "kind": "shape",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "shapeKind": "rect",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 2,
+            "height": 1
+          }
+        }
+      ],
+      "assets": {}
+    },
+    "limits": {
+      "maxNodes": 1024,
+      "maxDepth": 32,
+      "maxSegments": 65536,
+      "maxReferences": 32768,
+      "maxSourceBytes": 10000
+    }
+  },
+  {
+    "name": "missing image",
+    "document": {
+      "schema": "drawing.document",
+      "id": "document",
+      "layers": [
+        {
+          "id": "a",
+          "name": "a",
+          "kind": "image",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "imageKey": "shared",
+          "width": 2,
+          "height": 1
+        },
+        {
+          "id": "b",
+          "name": "b",
+          "kind": "image",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "imageKey": "shared",
+          "width": 0.25,
+          "height": 0.5
+        }
+      ],
+      "assets": {}
+    },
+    "limits": {
+      "maxNodes": 1024,
+      "maxDepth": 32,
+      "maxSegments": 65536,
+      "maxReferences": 32768,
+      "maxSourceBytes": 10000
+    }
+  },
+  {
+    "name": "missing trace",
+    "document": {
+      "schema": "drawing.document",
+      "id": "document",
+      "layers": [
+        {
+          "id": "a",
+          "name": "a",
+          "kind": "trace",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "sourceKey": "shared",
+          "params": {
+            "threshold": 0.4,
+            "simplifyEpsilon": 0.2
+          }
+        }
+      ],
+      "assets": {}
+    },
+    "limits": {
+      "maxNodes": 1024,
+      "maxDepth": 32,
+      "maxSegments": 65536,
+      "maxReferences": 32768,
+      "maxSourceBytes": 10000
+    }
+  },
+  {
+    "name": "missing operand",
+    "document": {
+      "schema": "drawing.document",
+      "id": "document",
+      "layers": [
+        {
+          "id": "a",
+          "name": "a",
+          "kind": "path",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "segments": [
+            {
+              "kind": "move",
+              "to": [
+                0,
+                0
+              ]
+            },
+            {
+              "kind": "line",
+              "to": [
+                2,
+                0
+              ]
+            },
+            {
+              "kind": "line",
+              "to": [
+                2,
+                1
+              ]
+            },
+            {
+              "kind": "line",
+              "to": [
+                0,
+                1
+              ]
+            },
+            {
+              "kind": "close"
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "name": "b",
+          "kind": "boolean",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "operation": "difference",
+          "children": [
+            "absent"
+          ]
+        }
+      ],
+      "assets": {}
+    },
+    "limits": {
+      "maxNodes": 1024,
+      "maxDepth": 32,
+      "maxSegments": 65536,
+      "maxReferences": 32768,
+      "maxSourceBytes": 10000
+    }
+  },
+  {
+    "name": "self cyclic operand",
+    "document": {
+      "schema": "drawing.document",
+      "id": "document",
+      "layers": [
+        {
+          "id": "a",
+          "name": "a",
+          "kind": "path",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "segments": [
+            {
+              "kind": "move",
+              "to": [
+                0,
+                0
+              ]
+            },
+            {
+              "kind": "line",
+              "to": [
+                2,
+                0
+              ]
+            },
+            {
+              "kind": "line",
+              "to": [
+                2,
+                1
+              ]
+            },
+            {
+              "kind": "line",
+              "to": [
+                0,
+                1
+              ]
+            },
+            {
+              "kind": "close"
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "name": "b",
+          "kind": "boolean",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "operation": "difference",
+          "children": [
+            "b"
+          ]
+        }
+      ],
+      "assets": {}
+    },
+    "limits": {
+      "maxNodes": 1024,
+      "maxDepth": 32,
+      "maxSegments": 65536,
+      "maxReferences": 32768,
+      "maxSourceBytes": 10000
+    }
+  },
+  {
+    "name": "mutual cyclic operands",
+    "document": {
+      "schema": "drawing.document",
+      "id": "document",
+      "layers": [
+        {
+          "id": "a",
+          "name": "b",
+          "kind": "boolean",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "operation": "difference",
+          "children": [
+            "b"
+          ]
+        },
+        {
+          "id": "b",
+          "name": "b",
+          "kind": "boolean",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "operation": "difference",
+          "children": [
+            "a"
+          ]
+        }
+      ],
+      "assets": {}
+    },
+    "limits": {
+      "maxNodes": 1024,
+      "maxDepth": 32,
+      "maxSegments": 65536,
+      "maxReferences": 32768,
+      "maxSourceBytes": 10000
+    }
+  },
+  {
+    "name": "segment cap",
+    "document": {
+      "schema": "drawing.document",
+      "id": "document",
+      "layers": [
+        {
+          "id": "a",
+          "name": "a",
+          "kind": "shape",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "shapeKind": "rect",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 2,
+            "height": 1
+          }
+        }
+      ],
+      "assets": {}
+    },
+    "limits": {
+      "maxNodes": 1024,
+      "maxDepth": 32,
+      "maxSegments": 4,
+      "maxReferences": 32768,
+      "maxSourceBytes": 10000
+    }
+  },
+  {
+    "name": "layer cap",
+    "document": {
+      "schema": "drawing.document",
+      "id": "document",
+      "layers": [
+        {
+          "id": "a",
+          "name": "a",
+          "kind": "image",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "imageKey": "shared",
+          "width": 2,
+          "height": 1
+        },
+        {
+          "id": "b",
+          "name": "b",
+          "kind": "image",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "imageKey": "shared",
+          "width": 0.25,
+          "height": 0.5
+        }
+      ],
+      "assets": {
+        "shared": {
+          "mime": "image/png",
+          "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg=="
+        }
+      }
+    },
+    "limits": {
+      "maxNodes": 1,
+      "maxDepth": 32,
+      "maxSegments": 65536,
+      "maxReferences": 32768,
+      "maxSourceBytes": 10000
+    }
+  },
+  {
+    "name": "depth cap",
+    "document": {
+      "schema": "drawing.document",
+      "id": "document",
+      "layers": [
+        {
+          "id": "group",
+          "name": "group",
+          "kind": "group",
+          "visible": true,
+          "locked": false,
+          "opacity": 0.5,
+          "blendMode": "multiply",
+          "transform": {
+            "x": 5,
+            "y": 7,
+            "scaleX": 2,
+            "scaleY": 3,
+            "shear": 1,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "children": [
+            {
+              "id": "child",
+              "name": "child",
+              "kind": "path",
+              "visible": true,
+              "locked": false,
+              "opacity": 1,
+              "blendMode": "normal",
+              "transform": {
+                "x": 4,
+                "y": 9,
+                "scaleX": 1,
+                "scaleY": 1,
+                "shear": 0,
+                "rotation": 0
+              },
+              "attributes": {
+                "fillRule": "nonzero",
+                "fill": {
+                  "kind": "solid",
+                  "color": [
+                    1,
+                    0,
+                    0,
+                    1
+                  ]
+                }
+              },
+              "segments": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    2,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    2,
+                    1
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    0,
+                    1
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            }
+          ],
+          "isolation": true
+        }
+      ],
+      "assets": {}
+    },
+    "limits": {
+      "maxNodes": 1024,
+      "maxDepth": 1,
+      "maxSegments": 65536,
+      "maxReferences": 32768,
+      "maxSourceBytes": 10000
+    }
+  },
+  {
+    "name": "reference cap",
+    "document": {
+      "schema": "drawing.document",
+      "id": "document",
+      "layers": [
+        {
+          "id": "a",
+          "name": "a",
+          "kind": "path",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "segments": [
+            {
+              "kind": "move",
+              "to": [
+                0,
+                0
+              ]
+            },
+            {
+              "kind": "line",
+              "to": [
+                2,
+                0
+              ]
+            },
+            {
+              "kind": "line",
+              "to": [
+                2,
+                1
+              ]
+            },
+            {
+              "kind": "line",
+              "to": [
+                0,
+                1
+              ]
+            },
+            {
+              "kind": "close"
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "name": "b",
+          "kind": "boolean",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "operation": "difference",
+          "children": [
+            "a",
+            "a"
+          ]
+        }
+      ],
+      "assets": {}
+    },
+    "limits": {
+      "maxNodes": 1024,
+      "maxDepth": 32,
+      "maxSegments": 65536,
+      "maxReferences": 1,
+      "maxSourceBytes": 10000
+    }
+  },
+  {
+    "name": "missing primitive geometry",
+    "document": {
+      "schema": "drawing.document",
+      "id": "document",
+      "layers": [
+        {
+          "id": "a",
+          "name": "a",
+          "kind": "shape",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "shapeKind": "rect"
+        }
+      ],
+      "assets": {}
+    },
+    "limits": {
+      "maxNodes": 1024,
+      "maxDepth": 32,
+      "maxSegments": 65536,
+      "maxReferences": 32768,
+      "maxSourceBytes": 10000
+    }
+  },
+  {
+    "name": "world matrix exceeds cap",
+    "document": {
+      "schema": "drawing.document",
+      "id": "document",
+      "layers": [
+        {
+          "id": "group",
+          "name": "group",
+          "kind": "group",
+          "visible": true,
+          "locked": false,
+          "opacity": 0.5,
+          "blendMode": "multiply",
+          "transform": {
+            "x": 5,
+            "y": 7,
+            "scaleX": 1000000000,
+            "scaleY": 3,
+            "shear": 1,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "children": [
+            {
+              "id": "child",
+              "name": "child",
+              "kind": "path",
+              "visible": true,
+              "locked": false,
+              "opacity": 1,
+              "blendMode": "normal",
+              "transform": {
+                "x": 4,
+                "y": 9,
+                "scaleX": 1,
+                "scaleY": 1,
+                "shear": 0,
+                "rotation": 0
+              },
+              "attributes": {
+                "fillRule": "nonzero",
+                "fill": {
+                  "kind": "solid",
+                  "color": [
+                    1,
+                    0,
+                    0,
+                    1
+                  ]
+                }
+              },
+              "segments": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    2,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    2,
+                    1
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    0,
+                    1
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            }
+          ],
+          "isolation": true
+        }
+      ],
+      "assets": {}
+    },
+    "limits": {
+      "maxNodes": 1024,
+      "maxDepth": 32,
+      "maxSegments": 65536,
+      "maxReferences": 32768,
+      "maxSourceBytes": 10000
+    }
+  },
+  {
+    "name": "invalid opacity",
+    "document": {
+      "schema": "drawing.document",
+      "id": "document",
+      "layers": [
+        {
+          "id": "a",
+          "name": "a",
+          "kind": "shape",
+          "visible": true,
+          "locked": false,
+          "opacity": 1.01,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "shapeKind": "rect",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 2,
+            "height": 1
+          }
+        }
+      ],
+      "assets": {}
+    },
+    "limits": {
+      "maxNodes": 1024,
+      "maxDepth": 32,
+      "maxSegments": 65536,
+      "maxReferences": 32768,
+      "maxSourceBytes": 10000
+    }
+  },
+  {
+    "name": "invalid fill",
+    "document": {
+      "schema": "drawing.document",
+      "id": "document",
+      "layers": [
+        {
+          "id": "a",
+          "name": "a",
+          "kind": "shape",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                -1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "shapeKind": "rect",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 2,
+            "height": 1
+          }
+        }
+      ],
+      "assets": {}
+    },
+    "limits": {
+      "maxNodes": 1024,
+      "maxDepth": 32,
+      "maxSegments": 65536,
+      "maxReferences": 32768,
+      "maxSourceBytes": 10000
+    }
+  },
+  {
+    "name": "invalid blend",
+    "document": {
+      "schema": "drawing.document",
+      "id": "document",
+      "layers": [
+        {
+          "id": "a",
+          "name": "a",
+          "kind": "shape",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "unknown",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "shapeKind": "rect",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 2,
+            "height": 1
+          }
+        }
+      ],
+      "assets": {}
+    },
+    "limits": {
+      "maxNodes": 1024,
+      "maxDepth": 32,
+      "maxSegments": 65536,
+      "maxReferences": 32768,
+      "maxSourceBytes": 10000
+    }
+  },
+  {
+    "name": "empty asset",
+    "document": {
+      "schema": "drawing.document",
+      "id": "document",
+      "layers": [
+        {
+          "id": "a",
+          "name": "a",
+          "kind": "image",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "imageKey": "shared",
+          "width": 2,
+          "height": 1
+        },
+        {
+          "id": "b",
+          "name": "b",
+          "kind": "image",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "imageKey": "shared",
+          "width": 0.25,
+          "height": 0.5
+        }
+      ],
+      "assets": {
+        "shared": {
+          "mime": "image/png",
+          "data": ""
+        }
+      }
+    },
+    "limits": {
+      "maxNodes": 1024,
+      "maxDepth": 32,
+      "maxSegments": 65536,
+      "maxReferences": 32768,
+      "maxSourceBytes": 10000
+    }
+  },
+  {
+    "name": "invalid asset media type",
+    "document": {
+      "schema": "drawing.document",
+      "id": "document",
+      "layers": [
+        {
+          "id": "a",
+          "name": "a",
+          "kind": "image",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "imageKey": "shared",
+          "width": 2,
+          "height": 1
+        },
+        {
+          "id": "b",
+          "name": "b",
+          "kind": "image",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "imageKey": "shared",
+          "width": 0.25,
+          "height": 0.5
+        }
+      ],
+      "assets": {
+        "shared": {
+          "mime": "",
+          "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg=="
+        }
+      }
+    },
+    "limits": {
+      "maxNodes": 1024,
+      "maxDepth": 32,
+      "maxSegments": 65536,
+      "maxReferences": 32768,
+      "maxSourceBytes": 10000
+    }
+  },
+  {
+    "name": "invalid image dimension",
+    "document": {
+      "schema": "drawing.document",
+      "id": "document",
+      "layers": [
+        {
+          "id": "a",
+          "name": "a",
+          "kind": "image",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "imageKey": "shared",
+          "width": 0,
+          "height": 1
+        },
+        {
+          "id": "b",
+          "name": "b",
+          "kind": "image",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "imageKey": "shared",
+          "width": 0.25,
+          "height": 0.5
+        }
+      ],
+      "assets": {
+        "shared": {
+          "mime": "image/png",
+          "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg=="
+        }
+      }
+    },
+    "limits": {
+      "maxNodes": 1024,
+      "maxDepth": 32,
+      "maxSegments": 65536,
+      "maxReferences": 32768,
+      "maxSourceBytes": 10000
+    }
+  },
+  {
+    "name": "invalid trace threshold",
+    "document": {
+      "schema": "drawing.document",
+      "id": "document",
+      "layers": [
+        {
+          "id": "a",
+          "name": "a",
+          "kind": "trace",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "sourceKey": "shared",
+          "params": {
+            "threshold": 2,
+            "simplifyEpsilon": 0.2
+          }
+        }
+      ],
+      "assets": {
+        "shared": {
+          "mime": "image/png",
+          "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg=="
+        }
+      }
+    },
+    "limits": {
+      "maxNodes": 1024,
+      "maxDepth": 32,
+      "maxSegments": 65536,
+      "maxReferences": 32768,
+      "maxSourceBytes": 10000
+    }
+  },
+  {
+    "name": "invalid trace epsilon",
+    "document": {
+      "schema": "drawing.document",
+      "id": "document",
+      "layers": [
+        {
+          "id": "a",
+          "name": "a",
+          "kind": "trace",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "sourceKey": "shared",
+          "params": {
+            "threshold": 0.4,
+            "simplifyEpsilon": -1
+          }
+        }
+      ],
+      "assets": {
+        "shared": {
+          "mime": "image/png",
+          "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg=="
+        }
+      }
+    },
+    "limits": {
+      "maxNodes": 1024,
+      "maxDepth": 32,
+      "maxSegments": 65536,
+      "maxReferences": 32768,
+      "maxSourceBytes": 10000
+    }
+  },
+  {
+    "name": "invalid stroke dash",
+    "document": {
+      "schema": "drawing.document",
+      "id": "document",
+      "layers": [
+        {
+          "id": "a",
+          "name": "a",
+          "kind": "path",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "evenodd",
+            "fill": {
+              "kind": "linearGradient",
+              "x1": 1,
+              "y1": 2,
+              "x2": 3,
+              "y2": 4,
+              "stops": [
+                {
+                  "offset": 0,
+                  "color": [
+                    1,
+                    0,
+                    0,
+                    0.5
+                  ]
+                },
+                {
+                  "offset": 1,
+                  "color": [
+                    0,
+                    0,
+                    1,
+                    1
+                  ]
+                }
+              ]
+            },
+            "stroke": {
+              "color": [
+                0,
+                1,
+                0,
+                1
+              ],
+              "width": 0.5,
+              "cap": "round",
+              "join": "bevel",
+              "dash": [
+                -1
+              ]
+            }
+          },
+          "segments": [
+            {
+              "kind": "move",
+              "to": [
+                0,
+                0
+              ]
+            },
+            {
+              "kind": "line",
+              "to": [
+                2,
+                0
+              ]
+            },
+            {
+              "kind": "line",
+              "to": [
+                2,
+                1
+              ]
+            },
+            {
+              "kind": "line",
+              "to": [
+                0,
+                1
+              ]
+            },
+            {
+              "kind": "close"
+            }
+          ]
+        }
+      ],
+      "assets": {}
+    },
+    "limits": {
+      "maxNodes": 1024,
+      "maxDepth": 32,
+      "maxSegments": 65536,
+      "maxReferences": 32768,
+      "maxSourceBytes": 10000
+    }
+  },
+  {
+    "name": "invalid maxNodes",
+    "document": {
+      "schema": "drawing.document",
+      "id": "document",
+      "layers": [
+        {
+          "id": "a",
+          "name": "a",
+          "kind": "shape",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "shapeKind": "rect",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 2,
+            "height": 1
+          }
+        }
+      ],
+      "assets": {}
+    },
+    "limits": {
+      "maxNodes": 0,
+      "maxDepth": 32,
+      "maxSegments": 65536,
+      "maxReferences": 32768,
+      "maxSourceBytes": 10000
+    }
+  },
+  {
+    "name": "invalid maxDepth",
+    "document": {
+      "schema": "drawing.document",
+      "id": "document",
+      "layers": [
+        {
+          "id": "a",
+          "name": "a",
+          "kind": "shape",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "shapeKind": "rect",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 2,
+            "height": 1
+          }
+        }
+      ],
+      "assets": {}
+    },
+    "limits": {
+      "maxNodes": 1024,
+      "maxDepth": 0,
+      "maxSegments": 65536,
+      "maxReferences": 32768,
+      "maxSourceBytes": 10000
+    }
+  },
+  {
+    "name": "invalid maxSegments",
+    "document": {
+      "schema": "drawing.document",
+      "id": "document",
+      "layers": [
+        {
+          "id": "a",
+          "name": "a",
+          "kind": "shape",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "shapeKind": "rect",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 2,
+            "height": 1
+          }
+        }
+      ],
+      "assets": {}
+    },
+    "limits": {
+      "maxNodes": 1024,
+      "maxDepth": 32,
+      "maxSegments": 0,
+      "maxReferences": 32768,
+      "maxSourceBytes": 10000
+    }
+  },
+  {
+    "name": "invalid maxReferences",
+    "document": {
+      "schema": "drawing.document",
+      "id": "document",
+      "layers": [
+        {
+          "id": "a",
+          "name": "a",
+          "kind": "shape",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "shapeKind": "rect",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 2,
+            "height": 1
+          }
+        }
+      ],
+      "assets": {}
+    },
+    "limits": {
+      "maxNodes": 1024,
+      "maxDepth": 32,
+      "maxSegments": 65536,
+      "maxReferences": 0,
+      "maxSourceBytes": 10000
+    }
+  },
+  {
+    "name": "source byte cap",
+    "document": {
+      "schema": "drawing.document",
+      "id": "document",
+      "layers": [],
+      "assets": {
+        "unused": {
+          "mime": "image/png",
+          "data": "é😀"
+        }
+      }
+    },
+    "limits": {
+      "maxNodes": 1024,
+      "maxDepth": 32,
+      "maxSegments": 65536,
+      "maxReferences": 32768,
+      "maxSourceBytes": 5
+    }
+  },
+  {
+    "name": "invalid source byte cap",
+    "document": {
+      "schema": "drawing.document",
+      "id": "document",
+      "layers": [
+        {
+          "id": "a",
+          "name": "a",
+          "kind": "shape",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "shapeKind": "rect",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 2,
+            "height": 1
+          }
+        }
+      ],
+      "assets": {}
+    },
+    "limits": {
+      "maxNodes": 1024,
+      "maxDepth": 32,
+      "maxSegments": 65536,
+      "maxReferences": 32768,
+      "maxSourceBytes": 0
+    }
+  },
+  {
+    "name": "derived primitive coordinate exceeds cap",
+    "document": {
+      "schema": "drawing.document",
+      "id": "document",
+      "layers": [
+        {
+          "id": "a",
+          "name": "a",
+          "kind": "shape",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "shapeKind": "rect",
+          "rect": {
+            "x": 1000000000,
+            "y": 0,
+            "width": 2,
+            "height": 1
+          }
+        }
+      ],
+      "assets": {}
+    },
+    "limits": {
+      "maxNodes": 1024,
+      "maxDepth": 32,
+      "maxSegments": 65536,
+      "maxReferences": 32768,
+      "maxSourceBytes": 10000
+    }
+  },
+  {
+    "name": "operand list exceeds per-layer cap",
+    "document": {
+      "schema": "drawing.document",
+      "id": "document",
+      "layers": [
+        {
+          "id": "a",
+          "name": "a",
+          "kind": "path",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "segments": [
+            {
+              "kind": "move",
+              "to": [
+                0,
+                0
+              ]
+            },
+            {
+              "kind": "line",
+              "to": [
+                2,
+                0
+              ]
+            },
+            {
+              "kind": "line",
+              "to": [
+                2,
+                1
+              ]
+            },
+            {
+              "kind": "line",
+              "to": [
+                0,
+                1
+              ]
+            },
+            {
+              "kind": "close"
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "name": "b",
+          "kind": "boolean",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "operation": "difference",
+          "children": [
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a",
+            "a"
+          ]
+        }
+      ],
+      "assets": {}
+    },
+    "limits": {
+      "maxNodes": 1024,
+      "maxDepth": 32,
+      "maxSegments": 65536,
+      "maxReferences": 32768,
+      "maxSourceBytes": 10000
+    }
+  }
+]

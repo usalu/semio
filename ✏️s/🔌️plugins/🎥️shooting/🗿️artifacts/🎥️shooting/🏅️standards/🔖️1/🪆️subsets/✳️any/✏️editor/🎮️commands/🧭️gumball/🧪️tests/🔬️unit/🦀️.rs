@@ -14,11 +14,11 @@ fn translate(asset_ids: Vec<String>, dx: f64) -> ShootingCommand {
 }
 
 fn english(row: &HistoryEntry) -> String {
-    row.label.resolve(protocol::Terminology::Native, protocol::Locale::En).to_string()
+    row.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).to_string()
 }
 
 fn german(row: &HistoryEntry) -> String {
-    row.label.resolve(protocol::Terminology::Native, protocol::Locale::De).to_string()
+    row.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De).to_string()
 }
 
 fn origin(app: &ShootingApp, asset_id: &str) -> [f64; 3] {
@@ -96,7 +96,7 @@ async fn an_id_less_gesture_moves_the_live_selection() {
     let asset_id = app.snapshot().expect("snapshot").assets[0].id.clone();
     let before = origin(&app, &asset_id);
     let targets = serde_json::to_string(&serde_json::json!([{ "granularity": "asset", "id": asset_id }])).expect("targets");
-    app.handle_action("interactionSelect", Some(&dsl::os_pack::json::to_dsl_value(&dsl::json!({ "domainId": SHOOTING_INTERACTION_DOMAIN, "targets": targets.as_str(), "merge": "replace" }))), &artifact_app_laws::meta("local")).await.expect("interactionSelect");
+    app.handle_action("interactionSelect", Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "domainId": SHOOTING_INTERACTION_DOMAIN, "targets": targets.as_str(), "merge": "replace" }))), &artifact_app_laws::meta("local")).await.expect("interactionSelect");
     artifact_app_laws::settle_registered_typed_operation(&mut *app, SHOOTING_TEST_INSTANCE).await.expect("the selection settles");
     let rows = dispatch_rows(&mut app, translate(Vec::new(), 3.0)).await;
     assert_eq!(rows.len(), 1, "the selection fallback commits one transaction");
@@ -113,8 +113,8 @@ async fn the_drag_leaf_replays_its_edited_offset_relative_to_any_base() {
     let (transaction, mutations) = shooting_gumball_commit("translateSelection", "seed", GumballToolRequest::on(&base, ShootingMutation::DragAssets(crate::mutations::drag_assets::DragAssets { asset_ids: vec![asset_id.clone()], dx: 1.0, dy: 0.0, dz: 0.0 }))).expect("a moving gesture commits");
     assert!(transaction.id.starts_with("tx-"));
     let mut value = Mutation::<ShootingSnapshot>::payload_value(&mutations[0]);
-    let dsl::DslValue::Object(entries) = &mut value else { panic!("a leaf payload is an object") };
-    entries.iter_mut().find(|(key, _)| key == "dx").expect("dx input").1 = dsl::DslValue::Number(dsl::Number::Float(5.0));
+    let semio_framework_value::DslValue::Object(entries) = &mut value else { panic!("a leaf payload is an object") };
+    entries.iter_mut().find(|(key, _)| key == "dx").expect("dx input").1 = semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(5.0));
     let edited = Mutation::<ShootingSnapshot>::with_payload_value(&mutations[0], value).expect("the edited payload decodes");
     let apply = |snapshot: &ShootingSnapshot, operation: &ShootingMutation| operation.diff(snapshot).into_parts().0.apply(snapshot).expect("the leaf applies");
     let start = base.assets[0].origin;

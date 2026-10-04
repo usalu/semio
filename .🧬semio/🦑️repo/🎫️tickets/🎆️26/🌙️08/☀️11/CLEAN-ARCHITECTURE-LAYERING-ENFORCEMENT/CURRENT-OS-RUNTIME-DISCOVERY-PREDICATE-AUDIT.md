@@ -1,0 +1,9 @@
+# OS Runtime Discovery Predicate Audit
+
+Actual fullgrammar law every_shipped_grammar_semio_parses_and_compiles has exact root CARGO_MANIFEST_DIR/../../../../.. then ✏️s/🔌️plugins. Its local collect follows path.is_dir recursively with no node_modules,target,hidden skip and otherwise selects basename ends_with .grammar.semio, then reads UTF8. Full defining source retained under runtime-discovery-independent/full-grammar-source-frame-1.json.
+
+M5 helper skip policy is different and cannot model this law. Current census .semio suffix is a legitimate retained superset only if traversal/membership for every grammar exactly covers actual law. A symbolic regular file with irrelevant basename such as tsserver is not declared runtime membership; generic refusal on any symbolic link is inventory overreach, not proof of a cycle. Directory symlinks follow actual law semantics; exact link/traversal observations and proven cycle/escape must be distinguished from unrelated regular-file symlinks. No source mutation, fallback or missing-input acceptance is required by this audit. Fresh concrete census/guard admission remains pending.
+
+## Fresh Runtime9 Census Admission
+
+Independent full checks admit1515asset source/bytecount/SHA/current frames,13declaring Rust fullcurrent source frames,1496actualregular .semio file membership via independent fast-glob rerun,1473example directory observations,349exact symbolic link targets/kinds and1210physical target-directory full childsets. Matchinglinked .semio data is empty, so irrelevant linked tooling inventory does not lose declared matching data. Cyclecollapse applies only inventory qualification; original Rust walker unchanged. Exact helper receipt/current and linkgraph continuation conserved both collector functions/roster initializer by TS AST. Ready independent-runtime-inputs-admission-1.json; no native success or generic compilerRED support inferred.

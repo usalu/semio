@@ -236,3 +236,41 @@ fn cold_pair_header_requires_an_active_checkpoint_frontier_and_exact_hashes() {
     invalid.pack_sha256 = [0; 32];
     assert_eq!(invalid.validate(), Err("cold-pair.hash"));
 }
+
+/// ⚖️ LAW (audit W2A-4): a newer transfer of the same lifetime never wipes a pair whose load still runs, then retires the
+/// finished pair in bounded steps — every attempt answers `Backpressure` with the stale cursor and wipes at most one page —
+/// before taking its own page 0 afresh; an older transfer never displaces the newer one, and the newer pair loads.
+#[test]
+fn a_newer_transfer_of_the_same_lifetime_retires_the_finished_pair_in_bounded_steps() {
+    let pack = patterned(COLD_PAIR_PAGE_MAXIMUM_BYTES * 2, 5, 1);
+    let spr = patterned(17, 3, 2);
+    let first = header(&pack, &spr, lifetime(13), 60);
+    let live = Some(first.lifetime);
+    let mut ingress = ColdDocumentPairIngressRegistry::<4>::new();
+    for index in 0..first.page_count {
+        ingress.accept_page(&page(&first, &pack, &spr, index), live);
+    }
+    let load = ingress.begin_load(first.lifetime, 60, live).expect("the verified pair loads");
+    let newer = header(&pack, &spr, lifetime(13), 61);
+    assert!(matches!(ingress.accept_page(&page(&newer, &pack, &spr, 0), live), ColdPairIngressStatus::Backpressure(cursor) if cursor.transfer_generation == 60), "a running load is never wiped");
+    assert_eq!(ingress.retained_bytes(first.lifetime), pack.len() + spr.len());
+    assert!(matches!(ingress.finish_load(load, Err(b"cold-pair.load-cancelled".to_vec()), live), ColdPairIngressStatus::Fault { .. }));
+    let mut attempts = 0;
+    let taken = loop {
+        let status = ingress.accept_page(&page(&newer, &pack, &spr, 0), live);
+        attempts += 1;
+        if !matches!(status, ColdPairIngressStatus::Backpressure(cursor) if cursor.transfer_generation == 60) {
+            break status;
+        }
+        assert!(attempts < first.page_count as usize, "each attempt wipes at most one page");
+    };
+    assert_eq!(attempts, first.page_count as usize, "one bounded wipe per page");
+    assert!(matches!(taken, ColdPairIngressStatus::PageAccepted(cursor) if cursor == newer.cursor(0)));
+    let older = header(&pack, &spr, lifetime(13), 59);
+    assert!(!matches!(ingress.accept_page(&page(&older, &pack, &spr, 0), live), ColdPairIngressStatus::PageAccepted(_)), "an older transfer never displaces a newer one");
+    for index in 1..newer.page_count {
+        ingress.accept_page(&page(&newer, &pack, &spr, index), live);
+    }
+    let reload = ingress.begin_load(newer.lifetime, 61, live).expect("the newer pair loads");
+    assert!(matches!(ingress.finish_load(reload, Ok(()), live), ColdPairIngressStatus::Applied(receipt) if receipt.transfer_generation == 61));
+}

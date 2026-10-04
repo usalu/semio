@@ -23,7 +23,7 @@
 //! documented cross-plugin limitation, not an oversight (see `## openQuestions`).
 
 use crate::{NoteBlockNode, NoteSnapshot, NoteTextParagraph, NoteTextRun};
-use semio_framework_plugin::{io_dispatch, resolve_ready, Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
+use semio_framework_plugin::{io_dispatch,  Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
 use semio_s_artifact_stdio_dwg::{DwgDrawing, DwgGeometry};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io as semio_drawing_composer;
@@ -215,7 +215,7 @@ pub fn note_document_to_svg(document: &NoteSnapshot) -> Result<(String, u32, u32
         format_subset: NOTE_SVG_DIALECT.subset.0.to_string(),
     };
     let sources = [ErasedComposeSource { dialect: NOTE_DRAWING_DIALECT, payload: IoPayload::Binary(drawing_bytes) }];
-    let composed = resolve_ready(io_dispatch(&key, &sources)).map_err(|error| format!("note→svg via semio/drawing bridge: {}", error.message))?;
+    let composed = ::semio_framework_async::poll::resolve_ready(io_dispatch(&key, &sources)).map_err(|error| format!("note→svg via semio/drawing bridge: {}", error.message))?;
     let svg_bytes = match composed.payload {
         IoPayload::Binary(bytes) => bytes,
         IoPayload::Text(_) => return Err("note→svg via semio/drawing bridge: expected a Binary (ArtifactPack) svg payload".into()),
@@ -225,7 +225,7 @@ pub fn note_document_to_svg(document: &NoteSnapshot) -> Result<(String, u32, u32
 }
 
 pub fn note_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
-    let document: NoteSnapshot = dsl::os_pack::from_json_str(&value.to_string()).map_err(|error| error.to_string())?;
+    let document: NoteSnapshot = semio_framework_pack_json::from_json_str(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
     note_document_to_svg(&document)
 }
 //#endregion 🔖️MediaExport
@@ -313,7 +313,7 @@ pub fn note_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, String
             _ => {}
         }
     }
-    serde_json::from_str::<Value>(&dsl::os_pack::to_json_string(&document)).map_err(|error| error.to_string())
+    serde_json::from_str::<Value>(&semio_framework_pack_json::to_json_string(&document)).map_err(|error| error.to_string())
 }
 //#endregion 🔖️MediaImport
 
@@ -337,59 +337,59 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
     /// ticket (the old artifact root's `pilot_languages()`) — `OnceLock` because `dsl::passthrough_hooks`
     /// is not `const fn` (matches the fixture's own `std1_strict_entries()` pattern,
     /// `📓️recipe-subset.md` §5 gotcha 5). Indices: 0=document 1=op 2=diff 3=pack 4=spr.
-    fn languages() -> &'static [dsl::LanguageSpec; 5] {
-        static LANGUAGES: OnceLock<[dsl::LanguageSpec; 5]> = OnceLock::new();
+    fn languages() -> &'static [semio_framework_dsl::LanguageSpec; 5] {
+        static LANGUAGES: OnceLock<[semio_framework_dsl::LanguageSpec; 5]> = OnceLock::new();
         LANGUAGES.get_or_init(|| {
             [
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "note.document",
                     extension: Some("note"),
-                    role: dsl::LanguageRole::Document,
+                    role: semio_framework_dsl::LanguageRole::Document,
                     grammar: Some(snapshot::text::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(snapshot::text::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(snapshot::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("note.document"),
+                    hooks: semio_framework_dsl::passthrough_hooks("note.document"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "note.op",
                     extension: None,
-                    role: dsl::LanguageRole::Ops,
+                    role: semio_framework_dsl::LanguageRole::Ops,
                     grammar: Some(mutations::text::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(mutations::text::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(mutations::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(mutations::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("note.op"),
+                    hooks: semio_framework_dsl::passthrough_hooks("note.op"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "note.diff",
                     extension: None,
-                    role: dsl::LanguageRole::Diff,
+                    role: semio_framework_dsl::LanguageRole::Diff,
                     grammar: Some(diff::text::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(diff::text::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
-                    hooks: dsl::passthrough_hooks("note.diff"),
+                    hooks: semio_framework_dsl::passthrough_hooks("note.diff"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "note.pack",
                     extension: None,
-                    role: dsl::LanguageRole::Pack,
+                    role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(snapshot::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("note.pack"),
+                    hooks: semio_framework_dsl::passthrough_hooks("note.pack"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "note.spr",
                     extension: None,
-                    role: dsl::LanguageRole::Spr,
+                    role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(mutations::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(mutations::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("note.spr"),
+                    hooks: semio_framework_dsl::passthrough_hooks("note.spr"),
                 },
             ]
         })

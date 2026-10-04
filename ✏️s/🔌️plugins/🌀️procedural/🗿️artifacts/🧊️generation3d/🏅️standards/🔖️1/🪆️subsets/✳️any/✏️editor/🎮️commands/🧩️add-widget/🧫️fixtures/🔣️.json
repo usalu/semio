@@ -53,9 +53,6 @@
       "kind": "neuron"
     },
     {
-      "kind": "outputExport"
-    },
-    {
       "kind": "outputAction"
     },
     {
@@ -73,6 +70,14 @@
     {
       "kind": "inputNote",
       "neuronKind": "math.add"
+    },
+    {
+      "kind": "outputExport",
+      "format": "svg"
+    },
+    {
+      "kind": "outputExport",
+      "format": "png"
     }
   ],
   "placements": [
@@ -237,5 +242,25 @@
       "kind": "neuron",
       "neuronKind": "missing.operator"
     }
+  ],
+  "defaults": [
+    {
+      "payload": {
+        "kind": "outputExport"
+      },
+      "descriptor": {
+        "kind": "outputExport",
+        "format": "gltf"
+      }
+    }
+  ],
+  "exportFormats": [
+    "stl",
+    "obj",
+    "ply",
+    "gltf",
+    "las",
+    "dwg",
+    "txt"
   ]
 }

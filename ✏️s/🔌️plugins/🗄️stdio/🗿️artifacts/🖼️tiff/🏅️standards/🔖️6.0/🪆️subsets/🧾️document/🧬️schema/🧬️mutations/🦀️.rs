@@ -9,8 +9,8 @@ pub use super::change_byte_order::ChangeByteOrderMutation;
 pub use super::insert_ifd::InsertIfdMutation;
 pub use super::remove_ifd::RemoveIfdMutation;
 pub use super::remove_tag::RemoveTagMutation;
-pub use super::replace_pixels::ReplacePixelsMutation;
 pub use super::replace_tag::ReplaceTagMutation;
+pub use super::paint_region::PaintRegionMutation;
 //#endregion Owners
 
 //#region Aggregate
@@ -28,7 +28,7 @@ pub enum TiffMutation {
     RemoveIfd(RemoveIfdMutation),
     ReplaceTag(ReplaceTagMutation),
     RemoveTag(RemoveTagMutation),
-    ReplacePixels(ReplacePixelsMutation),
+    PaintRegion(PaintRegionMutation),
 }
 
 //#endregion Aggregate
@@ -42,6 +42,6 @@ pub(crate) fn demo_mutation_cases() -> Vec<TiffMutation> {
         crate::schema::mutations::remove_ifd::test_case(),
         crate::schema::mutations::replace_tag::test_case(),
         crate::schema::mutations::remove_tag::test_case(),
-        crate::schema::mutations::replace_pixels::test_case(),
+        crate::schema::mutations::paint_region::test_case(),
     ]
 }

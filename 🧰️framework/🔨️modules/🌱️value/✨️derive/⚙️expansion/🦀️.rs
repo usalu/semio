@@ -512,7 +512,7 @@ fn deny_unknown_keys(entries_expr: &proc_macro2::TokenStream, allowed: &[String]
     quote! {
         for (__key, _) in #entries_expr.iter() {
             if ![#(#allowed),*].contains(&__key.as_str()) {
-                return Err(#value_crate::ValueError::new(format!("unknown field `{}`", __key)));
+                return Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("unknown field `{}`", __key)));
             }
         }
     }
@@ -556,7 +556,7 @@ fn from_value_struct_fields(fields: &[NamedField], container: &ContainerAttrs, v
         }
         let missing = match (&field.attrs.default, container.default, field.attrs.required) {
             (_, _, true) => quote! {
-                return Err(#value_crate::ValueError::new(format!("missing field `{}`", #wire_name)))
+                return Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("missing field `{}`", #wire_name)))
             },
             (FieldDefault::Path(path), _, false) => {
                 let path: syn::Path = syn::parse_str(path).expect("valid default path");
@@ -565,7 +565,7 @@ fn from_value_struct_fields(fields: &[NamedField], container: &ContainerAttrs, v
             (FieldDefault::Bare, _, false) | (FieldDefault::None, true, false) => quote! { ::std::default::Default::default() },
             (FieldDefault::None, false, false) if field.is_option => quote! { ::std::default::Default::default() },
             (FieldDefault::None, false, false) => quote! {
-                return Err(#value_crate::ValueError::new(format!("missing field `{}`", #wire_name)))
+                return Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("missing field `{}`", #wire_name)))
             },
         };
         let found = match field.attrs.effective_deserialize_with() {
@@ -665,7 +665,7 @@ fn variant_field_from_value_read(field: &syn::Field, field_attrs: &FieldAttrs, w
     }
     let missing = match (&field_attrs.default, field_attrs.required) {
         (_, true) => quote! {
-            return Err(#value_crate::ValueError::new(format!("missing field `{}`", #wire_name)))
+            return Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("missing field `{}`", #wire_name)))
         },
         (FieldDefault::Path(path), false) => {
             let path: syn::Path = syn::parse_str(path).expect("valid default path");
@@ -674,7 +674,7 @@ fn variant_field_from_value_read(field: &syn::Field, field_attrs: &FieldAttrs, w
         (FieldDefault::Bare, false) => quote! { ::std::default::Default::default() },
         (FieldDefault::None, false) if type_is_option(&field.ty) => quote! { ::std::default::Default::default() },
         (FieldDefault::None, false) => quote! {
-            return Err(#value_crate::ValueError::new(format!("missing field `{}`", #wire_name)))
+            return Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("missing field `{}`", #wire_name)))
         },
     };
     let found = match field_attrs.effective_deserialize_with() {
@@ -739,7 +739,7 @@ fn struct_to_path_body(fields: &[NamedField], value_crate: &syn::Path, method: &
             let predicate: syn::Path = syn::parse_str(predicate).expect("valid skip_serializing_if path");
             quote! {
                 if #predicate(&self.#ident) {
-                    return Err(#value_crate::ValueError::new(format!("missing object key `{}`", __segment)));
+                    return Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("missing object key `{}`", __segment)));
                 }
             }
         });
@@ -775,8 +775,8 @@ fn struct_to_path_body(fields: &[NamedField], value_crate: &syn::Path, method: &
             let call = field_to_path_call(field, &quote! { &self.#ident }, &quote! { &[] }, &method, value_crate);
             quote! {
                 match #call? {
-                    #value_crate::ValueShape::Object { len } => __len = __len.checked_add(len).ok_or_else(|| #value_crate::ValueError::new("object length overflow"))?,
-                    _ => return Err(#value_crate::ValueError::new("flattened field is not an object")),
+                    #value_crate::ValueShape::Object { len } => __len = __len.checked_add(len).ok_or_else(|| #value_crate::ValueError::new(#value_crate::ValueRefusalKind::OwnershipLimit, "object length overflow"))?,
+                    _ => return Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, "flattened field is not an object")),
                 }
             }
         });
@@ -802,7 +802,7 @@ fn struct_to_path_body(fields: &[NamedField], value_crate: &syn::Path, method: &
             #(#direct_arms,)*
             _ => {
                 #(#flatten_attempts)*
-                Err(#value_crate::ValueError::new(format!("missing object key `{}`", __segment)))
+                Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("missing object key `{}`", __segment)))
             }
         }
     }
@@ -832,7 +832,7 @@ fn struct_key_at_path_body(fields: &[NamedField], value_crate: &syn::Path) -> pr
             quote! {
                 if #admitted {
                     let #value_crate::ValueShape::Object { len } = #shape? else {
-                        return Err(#value_crate::ValueError::new("flattened field is not an object"));
+                        return Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, "flattened field is not an object"));
                     };
                     if index < __offset + len {
                         let index = index - __offset;
@@ -858,7 +858,7 @@ fn struct_key_at_path_body(fields: &[NamedField], value_crate: &syn::Path) -> pr
             let predicate: syn::Path = syn::parse_str(predicate).expect("valid skip_serializing_if path");
             quote! {
                 if #predicate(&self.#ident) {
-                    return Err(#value_crate::ValueError::new(format!("missing object key `{}`", __segment)));
+                    return Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("missing object key `{}`", __segment)));
                 }
             }
         });
@@ -878,14 +878,14 @@ fn struct_key_at_path_body(fields: &[NamedField], value_crate: &syn::Path) -> pr
         if path.is_empty() {
             let mut __offset = 0usize;
             #(#root_steps)*
-            return Err(#value_crate::ValueError::new(format!("object key index {index} is out of range for length {__offset}")));
+            return Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("object key index {index} is out of range for length {__offset}")));
         }
         let (__segment, __rest) = path.split_first().expect("non-empty path checked above");
         match *__segment {
             #(#direct_arms,)*
             _ => {
                 #(#flatten_attempts)*
-                Err(#value_crate::ValueError::new(format!("missing object key `{}`", __segment)))
+                Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("missing object key `{}`", __segment)))
             }
         }
     }
@@ -913,7 +913,7 @@ fn field_edit_call(
             }
         }
         (Some(_), None) => quote! {
-            Err(#value_crate::ValueError::new("custom wire field has no matching decoder for a typed-path edit"))
+            Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::UnsupportedOwner, "custom wire field has no matching decoder for a typed-path edit"))
         },
         (None, Some(deserializer)) => {
             let deserializer: syn::Path = syn::parse_str(&deserializer).expect("valid deserialize_with path");
@@ -925,11 +925,11 @@ fn field_edit_call(
                             *#access = __replacement;
                             Ok::<(), #value_crate::ValueError>(())
                         }
-                        #value_crate::ValueEdit::Insert(_) | #value_crate::ValueEdit::InsertAt { .. } => Err(#value_crate::ValueError::new("cannot insert a required field")),
-                        #value_crate::ValueEdit::Remove => Err(#value_crate::ValueError::new("cannot remove a required field")),
+                        #value_crate::ValueEdit::Insert(_) | #value_crate::ValueEdit::InsertAt { .. } => Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, "cannot insert a required field")),
+                        #value_crate::ValueEdit::Remove => Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, "cannot remove a required field")),
                     }
                 } else {
-                    Err(#value_crate::ValueError::new("custom wire field has no matching encoder for a nested typed-path edit"))
+                    Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::UnsupportedOwner, "custom wire field has no matching encoder for a nested typed-path edit"))
                 }
             }
         }
@@ -961,8 +961,8 @@ fn struct_edit_path_body(fields: &[NamedField], value_crate: &syn::Path) -> proc
                     *self = replacement;
                     Ok(())
                 }
-                #value_crate::ValueEdit::Insert(_) | #value_crate::ValueEdit::InsertAt { .. } => Err(#value_crate::ValueError::new("cannot insert at the record root")),
-                #value_crate::ValueEdit::Remove => Err(#value_crate::ValueError::new("cannot remove the record root")),
+                #value_crate::ValueEdit::Insert(_) | #value_crate::ValueEdit::InsertAt { .. } => Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, "cannot insert at the record root")),
+                #value_crate::ValueEdit::Remove => Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, "cannot remove the record root")),
             };
         }
         let (__segment, __rest) = path.split_first().expect("non-empty path checked above");
@@ -970,7 +970,7 @@ fn struct_edit_path_body(fields: &[NamedField], value_crate: &syn::Path) -> proc
             #(#direct_arms,)*
             _ => {
                 #(#flatten_attempts)*
-                Err(#value_crate::ValueError::new(format!("missing object key `{}`", __segment)))
+                Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("missing object key `{}`", __segment)))
             }
         }
     }
@@ -998,10 +998,10 @@ fn named_variant_edit_dispatch(fields: &[NamedField], path: &proc_macro2::TokenS
         quote! { #wire_name => #call.map_err(|error| error.under(__segment)) }
     });
     quote! {
-        let (__segment, __rest) = #path.split_first().ok_or_else(|| #value_crate::ValueError::new("cannot structurally replace an enum variant payload"))?;
+        let (__segment, __rest) = #path.split_first().ok_or_else(|| #value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, "cannot structurally replace an enum variant payload"))?;
         match *__segment {
             #(#arms,)*
-            _ => Err(#value_crate::ValueError::new(format!("missing object key `{}`", __segment))),
+            _ => Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("missing object key `{}`", __segment))),
         }
     }
 }
@@ -1016,7 +1016,7 @@ fn named_variant_to_path_dispatch(fields: &[NamedField], path: &proc_macro2::Tok
             let predicate: syn::Path = syn::parse_str(predicate).expect("valid skip_serializing_if path");
             quote! {
                 if #predicate(#ident) {
-                    return Err(#value_crate::ValueError::new(format!("missing object key `{}`", __segment)));
+                    return Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("missing object key `{}`", __segment)));
                 }
             }
         });
@@ -1077,7 +1077,7 @@ fn named_variant_to_path_dispatch(fields: &[NamedField], path: &proc_macro2::Tok
         let (__segment, __rest) = #path.split_first().expect("non-empty variant path checked above");
         match *__segment {
             #(#arms,)*
-            _ => Err(#value_crate::ValueError::new(format!("missing object key `{}`", __segment))),
+            _ => Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("missing object key `{}`", __segment))),
         }
     }
 }
@@ -1107,12 +1107,12 @@ fn named_variant_key_dispatch(fields: &[NamedField], path: &proc_macro2::TokenSt
         if #path.is_empty() {
             let mut __offset = 0usize;
             #(#root_steps)*
-            return Err(#value_crate::ValueError::new(format!("object key index {index} is out of range for length {__offset}")));
+            return Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("object key index {index} is out of range for length {__offset}")));
         }
         let (__segment, __rest) = #path.split_first().expect("non-empty path checked above");
         match *__segment {
             #(#arms,)*
-            _ => Err(#value_crate::ValueError::new(format!("missing object key `{}`", __segment))),
+            _ => Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("missing object key `{}`", __segment))),
         }
     }
 }
@@ -1133,12 +1133,12 @@ fn enum_key_at_path_body(data: &syn::DataEnum, container: &ContainerAttrs, value
                     let dispatch = if let Some(tag) = &container.tag {
                         quote! {
                             if path.is_empty() {
-                                return if index == 0 { Ok(#tag.to_owned()) } else { Err(#value_crate::ValueError::new(format!("object key index {index} is out of range for length 1"))) };
+                                return if index == 0 { Ok(#tag.to_owned()) } else { Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("object key index {index} is out of range for length 1"))) };
                             }
-                            Err(#value_crate::ValueError::new(format!("variant `{}` has no object child at the requested path", #wire_variant)))
+                            Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("variant `{}` has no object child at the requested path", #wire_variant)))
                         }
                     } else {
-                        quote! { Err(#value_crate::ValueError::new(format!("expected an object, found unit variant `{}`", #wire_variant))) }
+                        quote! { Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("expected an object, found unit variant `{}`", #wire_variant))) }
                     };
                     Ok(quote! { Self::#variant_ident => { #dispatch } })
                 }
@@ -1146,11 +1146,11 @@ fn enum_key_at_path_body(data: &syn::DataEnum, container: &ContainerAttrs, value
                     let dispatch = if container.tag.is_none() {
                         quote! {
                             if path.is_empty() {
-                                return if index == 0 { Ok(#wire_variant.to_owned()) } else { Err(#value_crate::ValueError::new(format!("object key index {index} is out of range for length 1"))) };
+                                return if index == 0 { Ok(#wire_variant.to_owned()) } else { Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("object key index {index} is out of range for length 1"))) };
                             }
                             let (__segment, __rest) = path.split_first().expect("non-empty path checked above");
                             if *__segment != #wire_variant {
-                                return Err(#value_crate::ValueError::new(format!("active variant `{}` has no child `{}`", #wire_variant, __segment)));
+                                return Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("active variant `{}` has no child `{}`", #wire_variant, __segment)));
                             }
                             #value_crate::ToValue::value_key_at_path(payload, __rest, index).map_err(|error| error.under(__segment))
                         }
@@ -1161,12 +1161,12 @@ fn enum_key_at_path_body(data: &syn::DataEnum, container: &ContainerAttrs, value
                                 return match index {
                                     0 => Ok(#tag.to_owned()),
                                     1 => Ok(#content.to_owned()),
-                                    _ => Err(#value_crate::ValueError::new(format!("object key index {index} is out of range for length 2"))),
+                                    _ => Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("object key index {index} is out of range for length 2"))),
                                 };
                             }
                             let (__segment, __rest) = path.split_first().expect("non-empty path checked above");
                             if *__segment != #content {
-                                return Err(#value_crate::ValueError::new(format!("expected an object below `{}`, found `{}`", #content, __segment)));
+                                return Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("expected an object below `{}`, found `{}`", #content, __segment)));
                             }
                             #value_crate::ToValue::value_key_at_path(payload, __rest, index).map_err(|error| error.under(__segment))
                         }
@@ -1177,19 +1177,19 @@ fn enum_key_at_path_body(data: &syn::DataEnum, container: &ContainerAttrs, value
                                 if index == 0 { return Ok(#tag.to_owned()); }
                                 return match #value_crate::ToValue::value_shape_at_path(payload, &[])? {
                                     #value_crate::ValueShape::Object { len } if index <= len => #value_crate::ToValue::value_key_at_path(payload, &[], index - 1),
-                                    #value_crate::ValueShape::Object { len } => Err(#value_crate::ValueError::new(format!("object key index {index} is out of range for length {}", len + 1))),
+                                    #value_crate::ValueShape::Object { len } => Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("object key index {index} is out of range for length {}", len + 1))),
                                     _ if index == 1 => Ok("value".to_owned()),
-                                    _ => Err(#value_crate::ValueError::new(format!("object key index {index} is out of range for length 2"))),
+                                    _ => Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("object key index {index} is out of range for length 2"))),
                                 };
                             }
                             if path.first().is_some_and(|segment| *segment == #tag) {
-                                return Err(#value_crate::ValueError::new("enum tag is not an object"));
+                                return Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, "enum tag is not an object"));
                             }
                             if matches!(#value_crate::ToValue::value_shape_at_path(payload, &[])?, #value_crate::ValueShape::Object { .. }) {
                                 return #value_crate::ToValue::value_key_at_path(payload, path, index);
                             }
                             if !path.first().is_some_and(|segment| *segment == "value") {
-                                return Err(#value_crate::ValueError::new(format!("missing object key `{}`", path[0])));
+                                return Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("missing object key `{}`", path[0])));
                             }
                             #value_crate::ToValue::value_key_at_path(payload, &path[1..], index)
                         }
@@ -1204,11 +1204,11 @@ fn enum_key_at_path_body(data: &syn::DataEnum, container: &ContainerAttrs, value
                         let named = named_variant_key_dispatch(&fields, &quote! { __rest }, value_crate);
                         quote! {
                             if path.is_empty() {
-                                return if index == 0 { Ok(#wire_variant.to_owned()) } else { Err(#value_crate::ValueError::new(format!("object key index {index} is out of range for length 1"))) };
+                                return if index == 0 { Ok(#wire_variant.to_owned()) } else { Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("object key index {index} is out of range for length 1"))) };
                             }
                             let (__segment, __rest) = path.split_first().expect("non-empty path checked above");
                             if *__segment != #wire_variant {
-                                return Err(#value_crate::ValueError::new(format!("active variant `{}` has no child `{}`", #wire_variant, __segment)));
+                                return Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("active variant `{}` has no child `{}`", #wire_variant, __segment)));
                             }
                             #named
                         }
@@ -1219,12 +1219,12 @@ fn enum_key_at_path_body(data: &syn::DataEnum, container: &ContainerAttrs, value
                             if path.is_empty() {
                                 return match index {
                                     0 => Ok(#tag.to_owned()), 1 => Ok(#content.to_owned()),
-                                    _ => Err(#value_crate::ValueError::new(format!("object key index {index} is out of range for length 2"))),
+                                    _ => Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("object key index {index} is out of range for length 2"))),
                                 };
                             }
                             let (__segment, __rest) = path.split_first().expect("non-empty path checked above");
                             if *__segment != #content {
-                                return Err(#value_crate::ValueError::new(format!("expected an object below `{}`, found `{}`", #content, __segment)));
+                                return Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("expected an object below `{}`, found `{}`", #content, __segment)));
                             }
                             #named
                         }
@@ -1250,10 +1250,10 @@ fn enum_key_at_path_body(data: &syn::DataEnum, container: &ContainerAttrs, value
                                 if index == 0 { return Ok(#tag.to_owned()); }
                                 let mut __offset = 1usize;
                                 #(#root_steps)*
-                                return Err(#value_crate::ValueError::new(format!("object key index {index} is out of range for length {__offset}")));
+                                return Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("object key index {index} is out of range for length {__offset}")));
                             }
                             if path.first().is_some_and(|segment| *segment == #tag) {
-                                return Err(#value_crate::ValueError::new("enum tag is not an object"));
+                                return Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, "enum tag is not an object"));
                             }
                             #named_path
                         }
@@ -1306,11 +1306,11 @@ fn enum_to_path_body(data: &syn::DataEnum, container: &ContainerAttrs, value_cra
                             if *__segment == #tag && __rest.is_empty() {
                                 #tag_result
                             } else {
-                                Err(#value_crate::ValueError::new(format!("variant `{}` has no child `{}`", #wire_variant, __segment)))
+                                Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("variant `{}` has no child `{}`", #wire_variant, __segment)))
                             }
                         }
                     } else {
-                        quote! { #root Err(#value_crate::ValueError::new(format!("variant `{}` has no children", #wire_variant))) }
+                        quote! { #root Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("variant `{}` has no children", #wire_variant))) }
                     };
                     Ok(quote! { Self::#variant_ident => { #dispatch } })
                 }
@@ -1322,7 +1322,7 @@ fn enum_to_path_body(data: &syn::DataEnum, container: &ContainerAttrs, value_cra
                             #root
                             let (__segment, __rest) = path.split_first().expect("non-empty path checked above");
                             if *__segment != #wire_variant {
-                                return Err(#value_crate::ValueError::new(format!("active variant `{}` has no child `{}`", #wire_variant, __segment)));
+                                return Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("active variant `{}` has no child `{}`", #wire_variant, __segment)));
                             }
                             #call.map_err(|error| error.under(__segment))
                         }
@@ -1337,7 +1337,7 @@ fn enum_to_path_body(data: &syn::DataEnum, container: &ContainerAttrs, value_cra
                                 return #tag_result;
                             }
                             if *__segment != #content {
-                                return Err(#value_crate::ValueError::new(format!("missing object key `{}`", __segment)));
+                                return Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("missing object key `{}`", __segment)));
                             }
                             #call.map_err(|error| error.under(__segment))
                         }
@@ -1348,7 +1348,7 @@ fn enum_to_path_body(data: &syn::DataEnum, container: &ContainerAttrs, value_cra
                             quote! {
                                 if path.is_empty() {
                                     return match #value_crate::ToValue::value_shape_at_path(payload, &[])? {
-                                        #value_crate::ValueShape::Object { len } => Ok(#value_crate::ValueShape::Object { len: len.checked_add(1).ok_or_else(|| #value_crate::ValueError::new("object length overflow"))? }),
+                                        #value_crate::ValueShape::Object { len } => Ok(#value_crate::ValueShape::Object { len: len.checked_add(1).ok_or_else(|| #value_crate::ValueError::new(#value_crate::ValueRefusalKind::OwnershipLimit, "object length overflow"))? }),
                                         _ => Ok(#value_crate::ValueShape::Object { len: 2 }),
                                     };
                                 }
@@ -1360,13 +1360,13 @@ fn enum_to_path_body(data: &syn::DataEnum, container: &ContainerAttrs, value_cra
                             #root
                             if path.first().is_some_and(|segment| *segment == #tag) {
                                 if path.len() == 1 { return #tag_result; }
-                                return Err(#value_crate::ValueError::new("enum tag has no children"));
+                                return Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, "enum tag has no children"));
                             }
                             if matches!(#value_crate::ToValue::value_shape_at_path(payload, &[])?, #value_crate::ValueShape::Object { .. }) {
                                 return #value_crate::ToValue::#method_ident(payload, path);
                             }
                             if !path.first().is_some_and(|segment| *segment == "value") {
-                                return Err(#value_crate::ValueError::new(format!("missing object key `{}`", path[0])));
+                                return Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("missing object key `{}`", path[0])));
                             }
                             #value_crate::ToValue::#method_ident(payload, &path[1..])
                         }
@@ -1384,7 +1384,7 @@ fn enum_to_path_body(data: &syn::DataEnum, container: &ContainerAttrs, value_cra
                             #root
                             let (__segment, __rest) = path.split_first().expect("non-empty path checked above");
                             if *__segment != #wire_variant {
-                                return Err(#value_crate::ValueError::new(format!("active variant `{}` has no child `{}`", #wire_variant, __segment)));
+                                return Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("active variant `{}` has no child `{}`", #wire_variant, __segment)));
                             }
                             #named_dispatch
                         }
@@ -1398,7 +1398,7 @@ fn enum_to_path_body(data: &syn::DataEnum, container: &ContainerAttrs, value_cra
                             let (__segment, __rest) = path.split_first().expect("non-empty path checked above");
                             if *__segment == #tag && __rest.is_empty() { return #tag_result; }
                             if *__segment != #content {
-                                return Err(#value_crate::ValueError::new(format!("missing object key `{}`", __segment)));
+                                return Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("missing object key `{}`", __segment)));
                             }
                             #named_dispatch
                         }
@@ -1431,7 +1431,7 @@ fn enum_to_path_body(data: &syn::DataEnum, container: &ContainerAttrs, value_cra
                             #root
                             if path.first().is_some_and(|segment| *segment == #tag) {
                                 if path.len() == 1 { return #tag_result; }
-                                return Err(#value_crate::ValueError::new("enum tag has no children"));
+                                return Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, "enum tag has no children"));
                             }
                             #named_dispatch
                         }
@@ -1466,26 +1466,26 @@ fn enum_edit_path_body(data: &syn::DataEnum, container: &ContainerAttrs, value_c
             let wire_variant = variant_wire_name(&variant_ident.to_string(), &variant_attrs.rename, &container.rename_all);
             match &variant.fields {
                 Fields::Unit => Ok(quote! {
-                    Self::#variant_ident => Err(#value_crate::ValueError::new(format!("variant `{}` has no editable payload", #wire_variant)))
+                    Self::#variant_ident => Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("variant `{}` has no editable payload", #wire_variant)))
                 }),
                 Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
                     let dispatch = if container.tag.is_none() {
                         quote! {
-                            let (__segment, __rest) = path.split_first().ok_or_else(|| #value_crate::ValueError::new("missing external variant path"))?;
+                            let (__segment, __rest) = path.split_first().ok_or_else(|| #value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, "missing external variant path"))?;
                             if *__segment != #wire_variant {
-                                return Err(#value_crate::ValueError::new(format!("active variant `{}` has no child `{}`", #wire_variant, __segment)));
+                                return Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("active variant `{}` has no child `{}`", #wire_variant, __segment)));
                             }
                             #value_crate::FromValue::edit_value_at_path(payload, __rest, edit).map_err(|error| error.under(__segment))
                         }
                     } else if let Some(content) = &container.content {
                         let tag = container.tag.as_ref().expect("tagged enum");
                         quote! {
-                            let (__segment, __rest) = path.split_first().ok_or_else(|| #value_crate::ValueError::new("missing adjacent enum path"))?;
+                            let (__segment, __rest) = path.split_first().ok_or_else(|| #value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, "missing adjacent enum path"))?;
                             if *__segment == #tag {
-                                return Err(#value_crate::ValueError::new("cannot edit an enum tag in place"));
+                                return Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, "cannot edit an enum tag in place"));
                             }
                             if *__segment != #content {
-                                return Err(#value_crate::ValueError::new(format!("missing object key `{}`", __segment)));
+                                return Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("missing object key `{}`", __segment)));
                             }
                             #value_crate::FromValue::edit_value_at_path(payload, __rest, edit).map_err(|error| error.under(__segment))
                         }
@@ -1493,7 +1493,7 @@ fn enum_edit_path_body(data: &syn::DataEnum, container: &ContainerAttrs, value_c
                         let tag = container.tag.as_ref().expect("tagged enum");
                         quote! {
                             if path.first().is_some_and(|segment| *segment == #tag) {
-                                return Err(#value_crate::ValueError::new("cannot edit an enum tag in place"));
+                                return Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, "cannot edit an enum tag in place"));
                             }
                             match #value_crate::FromValue::edit_value_at_path(payload, path, edit.clone()) {
                                 Ok(()) => Ok(()),
@@ -1513,9 +1513,9 @@ fn enum_edit_path_body(data: &syn::DataEnum, container: &ContainerAttrs, value_c
                     let dispatch = if container.tag.is_none() {
                         let named_dispatch = named_variant_edit_dispatch(&fields, &quote! { __rest }, &quote! { edit }, value_crate);
                         quote! {
-                            let (__segment, __rest) = path.split_first().ok_or_else(|| #value_crate::ValueError::new("missing external variant path"))?;
+                            let (__segment, __rest) = path.split_first().ok_or_else(|| #value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, "missing external variant path"))?;
                             if *__segment != #wire_variant {
-                                return Err(#value_crate::ValueError::new(format!("active variant `{}` has no child `{}`", #wire_variant, __segment)));
+                                return Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("active variant `{}` has no child `{}`", #wire_variant, __segment)));
                             }
                             #named_dispatch
                         }
@@ -1523,12 +1523,12 @@ fn enum_edit_path_body(data: &syn::DataEnum, container: &ContainerAttrs, value_c
                         let tag = container.tag.as_ref().expect("tagged enum");
                         let named_dispatch = named_variant_edit_dispatch(&fields, &quote! { __rest }, &quote! { edit }, value_crate);
                         quote! {
-                            let (__segment, __rest) = path.split_first().ok_or_else(|| #value_crate::ValueError::new("missing adjacent enum path"))?;
+                            let (__segment, __rest) = path.split_first().ok_or_else(|| #value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, "missing adjacent enum path"))?;
                             if *__segment == #tag {
-                                return Err(#value_crate::ValueError::new("cannot edit an enum tag in place"));
+                                return Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, "cannot edit an enum tag in place"));
                             }
                             if *__segment != #content {
-                                return Err(#value_crate::ValueError::new(format!("missing object key `{}`", __segment)));
+                                return Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("missing object key `{}`", __segment)));
                             }
                             #named_dispatch
                         }
@@ -1537,7 +1537,7 @@ fn enum_edit_path_body(data: &syn::DataEnum, container: &ContainerAttrs, value_c
                         let named_dispatch = named_variant_edit_dispatch(&fields, &quote! { path }, &quote! { edit }, value_crate);
                         quote! {
                             if path.first().is_some_and(|segment| *segment == #tag) {
-                                return Err(#value_crate::ValueError::new("cannot edit an enum tag in place"));
+                                return Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, "cannot edit an enum tag in place"));
                             }
                             #named_dispatch
                         }
@@ -1556,8 +1556,8 @@ fn enum_edit_path_body(data: &syn::DataEnum, container: &ContainerAttrs, value_c
                     *self = replacement;
                     Ok(())
                 }
-                #value_crate::ValueEdit::Insert(_) | #value_crate::ValueEdit::InsertAt { .. } => Err(#value_crate::ValueError::new("cannot insert at the enum root")),
-                #value_crate::ValueEdit::Remove => Err(#value_crate::ValueError::new("cannot remove the enum root")),
+                #value_crate::ValueEdit::Insert(_) | #value_crate::ValueEdit::InsertAt { .. } => Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, "cannot insert at the enum root")),
+                #value_crate::ValueEdit::Remove => Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, "cannot remove the enum root")),
             };
         }
         match self { #(#arms),* }
@@ -1853,10 +1853,10 @@ pub fn expand_from_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenS
                 Ok(quote! { #wire_variant => Ok(Self::#variant_ident), })
             }).collect::<syn::Result<Vec<_>>>()?;
             quote! {
-                let __s = match value { #value_crate::DslValue::String(s) => s, other => return Err(#value_crate::ValueError::new(format!("expected a string, found {other:?}"))) };
+                let __s = match value { #value_crate::DslValue::String(s) => s, other => return Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("expected a string, found {other:?}"))) };
                 match __s.as_str() {
                     #(#arms)*
-                    other => Err(#value_crate::ValueError::new(format!("unknown variant `{other}`"))),
+                    other => Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("unknown variant `{other}`"))),
                 }
             }
         }
@@ -1934,12 +1934,12 @@ pub fn expand_from_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenS
                 }
                 let __entries = #value_crate::DslValue::into_object(value)?;
                 if __entries.len() != 1 {
-                    return Err(#value_crate::ValueError::new(format!("expected an externally-tagged enum object with exactly one key, found {} keys", __entries.len())));
+                    return Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("expected an externally-tagged enum object with exactly one key, found {} keys", __entries.len())));
                 }
                 let (__key, __payload) = __entries.into_iter().next().expect("checked len == 1 above");
                 Ok(match __key.as_str() {
                     #(#object_arms)*
-                    other => return Err(#value_crate::ValueError::new(format!("unknown variant `{other}`"))),
+                    other => return Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("unknown variant `{other}`"))),
                 })
             }
         }
@@ -2064,7 +2064,7 @@ pub fn expand_from_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenS
             let content_helper = match &container.content {
                 Some(content) => quote! {
                     let __content = || -> ::core::result::Result<#value_crate::DslValue, #value_crate::ValueError> {
-                        __entries.iter().find(|(k, _)| k == #content).map(|(_, v)| v.clone()).ok_or_else(|| #value_crate::ValueError::new(format!("missing content field `{}`", #content)))
+                        __entries.iter().find(|(k, _)| k == #content).map(|(_, v)| v.clone()).ok_or_else(|| #value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("missing content field `{}`", #content)))
                     };
                 },
                 None => quote! {},
@@ -2080,12 +2080,12 @@ pub fn expand_from_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenS
             quote! {
                 let __entries = #value_crate::DslValue::into_object(value)?;
                 #outer_deny_check
-                let __tag = __entries.iter().find(|(k, _)| k == #tag).map(|(_, v)| v.clone()).ok_or_else(|| #value_crate::ValueError::new(format!("missing tag field `{}`", #tag)))?;
-                let __tag = match __tag { #value_crate::DslValue::String(s) => s, other => return Err(#value_crate::ValueError::new(format!("expected a string tag, found {other:?}"))) };
+                let __tag = __entries.iter().find(|(k, _)| k == #tag).map(|(_, v)| v.clone()).ok_or_else(|| #value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("missing tag field `{}`", #tag)))?;
+                let __tag = match __tag { #value_crate::DslValue::String(s) => s, other => return Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("expected a string tag, found {other:?}"))) };
                 #content_helper
                 Ok(match __tag.as_str() {
                     #(#arms)*
-                    other => return Err(#value_crate::ValueError::new(format!("unknown `{}` variant `{other}`", #tag))),
+                    other => return Err(#value_crate::ValueError::new(#value_crate::ValueRefusalKind::InvalidValue, format!("unknown `{}` variant `{other}`", #tag))),
                 })
             }
         }
@@ -2135,24 +2135,24 @@ pub fn expand_from_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenS
 //#endregion 🔖️Expand
 
 fn controlled_field_decode(ty:&syn::Type,attrs:&FieldAttrs,value:proc_macro2::TokenStream,c:&syn::Path)->syn::Result<proc_macro2::TokenStream>{
-    if attrs.effective_deserialize_with().is_some()&&attrs.retire_with.is_none(){return Ok(quote!{Err(#c::ValueError::new("custom controlled value conversion requires explicit retirement"))})}
+    if attrs.effective_deserialize_with().is_some()&&attrs.retire_with.is_none(){return Ok(quote!{Err(#c::ValueError::new(#c::ValueRefusalKind::UnsupportedOwner, "custom controlled value conversion requires explicit retirement"))})}
     if let Some(path)=attrs.deserialize_controlled_with.clone(){
         let path:syn::Path=syn::parse_str(&path)?;return Ok(quote!{#path(#value,control)})
     }
-    if attrs.effective_deserialize_with().is_some(){return Ok(quote!{Err(#c::ValueError::new("custom value conversion has no controlled constructor"))})}
+    if attrs.effective_deserialize_with().is_some(){return Ok(quote!{Err(#c::ValueError::new(#c::ValueRefusalKind::UnsupportedOwner, "custom value conversion has no controlled constructor"))})}
     Ok(quote!{<#ty as #c::FromValue>::from_value_controlled(#value,control)})
 }
 
 fn controlled_field_default(ty:&syn::Type,attrs:&FieldAttrs,container:&ContainerAttrs,wire:&str,c:&syn::Path)->syn::Result<proc_macro2::TokenStream>{
-    if attrs.skip&&attrs.retire_with.is_none(){return Ok(quote!{Err(#c::ValueError::new("skipped controlled default requires explicit retirement"))})}
-    if attrs.required&&!attrs.skip{return Ok(quote!{Err(#c::ValueError::new(format!("missing field `{}`",#wire)))})}
+    if attrs.skip&&attrs.retire_with.is_none(){return Ok(quote!{Err(#c::ValueError::new(#c::ValueRefusalKind::UnsupportedOwner, "skipped controlled default requires explicit retirement"))})}
+    if attrs.required&&!attrs.skip{return Ok(quote!{Err(#c::ValueError::new(#c::ValueRefusalKind::InvalidValue, format!("missing field `{}`",#wire)))})}
     if let Some(path)=&attrs.default_controlled{let path:syn::Path=syn::parse_str(path)?;return Ok(quote!{#path(control)})}
-    if matches!(attrs.default,FieldDefault::Path(_))||attrs.skip{return Ok(quote!{Err(#c::ValueError::new("custom or skipped default has no controlled constructor"))})}
+    if matches!(attrs.default,FieldDefault::Path(_))||attrs.skip{return Ok(quote!{Err(#c::ValueError::new(#c::ValueRefusalKind::UnsupportedOwner, "custom or skipped default has no controlled constructor"))})}
     if matches!(attrs.default,FieldDefault::Bare)||container.default||type_is_option(ty){
-        if attrs.effective_deserialize_with().is_some(){return Ok(quote!{Err(#c::ValueError::new("custom value default has no controlled constructor"))})}
+        if attrs.effective_deserialize_with().is_some(){return Ok(quote!{Err(#c::ValueError::new(#c::ValueRefusalKind::UnsupportedOwner, "custom value default has no controlled constructor"))})}
         return Ok(quote!{<#ty as #c::FromValue>::default_value_controlled(control)})
     }
-    Ok(quote!{Err(#c::ValueError::new(format!("missing field `{}`",#wire)))})
+    Ok(quote!{Err(#c::ValueError::new(#c::ValueRefusalKind::InvalidValue, format!("missing field `{}`",#wire)))})
 }
 
 fn controlled_field_retire(ty:&syn::Type,attrs:&FieldAttrs,value:proc_macro2::TokenStream,c:&syn::Path)->syn::Result<proc_macro2::TokenStream>{
@@ -2178,14 +2178,14 @@ fn controlled_named_fields(fields:&syn::FieldsNamed,container:&ContainerAttrs,re
         };
         let retire=controlled_field_retire(ty,&attrs,quote!{__value},c)?;
         if attrs.effective_deserialize_with().is_some()||attrs.skip||attrs.retire_with.is_some(){
-            reads.push(quote!{let #guard:#ty=#expression.map_err(|error:#c::ValueError|error.under(#wire))?;let #guard= #c::DecodedValue::new(#guard,|__value:#ty|{#retire});control.step().map_err(#c::ValueError::new)?;});
+            reads.push(quote!{let #guard:#ty=#expression.map_err(|error:#c::ValueError|error.under(#wire))?;let #guard= #c::DecodedValue::new(#guard,|__value:#ty|{#retire});control.step()?;});
         }else{
-            reads.push(quote!{let #guard=<#ty as #c::FromValue>::guard_decoded(#expression.map_err(|error:#c::ValueError|error.under(#wire))?);control.step().map_err(#c::ValueError::new)?;});
+            reads.push(quote!{let #guard=<#ty as #c::FromValue>::guard_decoded(#expression.map_err(|error:#c::ValueError|error.under(#wire))?);control.step()?;});
         }
         members.push(quote!{#ident:#guard.take()});
     }
     let count=fields.named.len();
-    Ok(quote!{#deny control.begin_stage(#count).map_err(#c::ValueError::new)?;#(#reads)* Ok(#constructor{#(#members),*})})
+    Ok(quote!{#deny control.begin_stage(#count)?;#(#reads)* Ok(#constructor{#(#members),*})})
 }
 
 fn type_mentions_owner(ty:&syn::Type,owner:&syn::Ident)->bool {
@@ -2214,11 +2214,11 @@ fn type_mentions_owner(ty:&syn::Type,owner:&syn::Ident)->bool {
 fn controlled_from_body(input:&DeriveInput,container:&ContainerAttrs,c:&syn::Path)->syn::Result<proc_macro2::TokenStream>{
     let recursive=input.data.clone();
     let mentions=match &recursive{Data::Struct(data)=>data.fields.iter().any(|f|type_mentions_owner(&f.ty,&input.ident)),Data::Enum(data)=>data.variants.iter().flat_map(|v|v.fields.iter()).any(|f|type_mentions_owner(&f.ty,&input.ident)),_=>false};
-    if mentions&&container.retire_with.is_none(){return Ok(quote!{control.checkpoint().map_err(#c::ValueError::new)?;Err(#c::ValueError::new("recursive value owner requires explicit controlled retirement"))})}
+    if mentions&&container.retire_with.is_none(){return Ok(quote!{control.checkpoint()?;Err(#c::ValueError::new(#c::ValueRefusalKind::InvalidValue, "recursive value owner requires explicit controlled retirement"))})}
     match &input.data{
         Data::Struct(data) if container.transparent||matches!(&data.fields,Fields::Unnamed(f)if f.unnamed.len()==1)=>{
             let field=data.fields.iter().next().unwrap();let attrs=parse_field_attrs(&field.attrs)?;let ty=&field.ty;let decode=controlled_field_decode(ty,&attrs,quote!{value},c)?;
-            Ok(if let Some(ident)=&field.ident{quote!{control.begin_stage(0).map_err(#c::ValueError::new)?;Ok(Self{#ident:#decode?})}}else{quote!{control.begin_stage(0).map_err(#c::ValueError::new)?;Ok(Self(#decode?))}})
+            Ok(if let Some(ident)=&field.ident{quote!{control.begin_stage(0)?;Ok(Self{#ident:#decode?})}}else{quote!{control.begin_stage(0)?;Ok(Self(#decode?))}})
         },
         Data::Struct(data)=>{
             let Fields::Named(fields)=&data.fields else{return Err(syn::Error::new_spanned(&data.fields,"controlled value requires named fields"))};
@@ -2236,7 +2236,7 @@ fn controlled_from_body(input:&DeriveInput,container:&ContainerAttrs,c:&syn::Pat
                 }
                 let payload=match(&container.tag,&container.content){
                     (None,_)=>quote!{__payload},
-                    (Some(_),Some(content))=>quote!{#c::DslValue::field_controlled(__entries,#content,control)?.ok_or_else(||#c::ValueError::new("missing enum content"))?},
+                    (Some(_),Some(content))=>quote!{#c::DslValue::field_controlled(__entries,#content,control)?.ok_or_else(||#c::ValueError::new(#c::ValueRefusalKind::InvalidValue, "missing enum content"))?},
                     (Some(_),None)=>quote!{value},
                 };
                 let body=match &variant.fields{
@@ -2262,13 +2262,13 @@ fn controlled_from_body(input:&DeriveInput,container:&ContainerAttrs,c:&syn::Pat
                 object_arms.push(quote!{#wire=>{#body},});
             }
             if container.tag.is_none()&&data.variants.iter().all(|v|matches!(v.fields,Fields::Unit)){
-                return Ok(quote!{control.begin_stage(1).map_err(#c::ValueError::new)?;control.step().map_err(#c::ValueError::new)?;let #c::DslValue::String(tag)=value else{return Err(#c::ValueError::new("expected enum string"))};match tag.as_str(){#(#string_arms)*_=>Err(#c::ValueError::new("unknown enum variant"))}})
+                return Ok(quote!{control.begin_stage(1)?;control.step()?;let #c::DslValue::String(tag)=value else{return Err(#c::ValueError::new(#c::ValueRefusalKind::InvalidValue, "expected enum string"))};match tag.as_str(){#(#string_arms)*_=>Err(#c::ValueError::new(#c::ValueRefusalKind::InvalidValue, "unknown enum variant"))}})
             }
             if let Some(tag)=&container.tag{
                 let deny=if let(Some(content),true)=(&container.content,container.deny_unknown_fields){quote!{#c::DslValue::deny_fields_controlled(__entries,&[#tag,#content],control)?;}}else{quote!{}};
-                Ok(quote!{let __entries=value.object_controlled(control)?;#deny let __tag=#c::DslValue::field_controlled(__entries,#tag,control)?.ok_or_else(||#c::ValueError::new("missing enum tag"))?;let #c::DslValue::String(__tag)=__tag else{return Err(#c::ValueError::new("expected enum string tag"))};match __tag.as_str(){#(#object_arms)*_=>Err(#c::ValueError::new("unknown enum variant"))}})
+                Ok(quote!{let __entries=value.object_controlled(control)?;#deny let __tag=#c::DslValue::field_controlled(__entries,#tag,control)?.ok_or_else(||#c::ValueError::new(#c::ValueRefusalKind::InvalidValue, "missing enum tag"))?;let #c::DslValue::String(__tag)=__tag else{return Err(#c::ValueError::new(#c::ValueRefusalKind::InvalidValue, "expected enum string tag"))};match __tag.as_str(){#(#object_arms)*_=>Err(#c::ValueError::new(#c::ValueRefusalKind::InvalidValue, "unknown enum variant"))}})
             }else{
-                Ok(quote!{control.begin_stage(0).map_err(#c::ValueError::new)?;if let #c::DslValue::String(tag)=value{return match tag.as_str(){#(#string_arms)*_=>Err(#c::ValueError::new("unknown enum variant"))}}let __entries=value.object_controlled(control)?;let[(__tag,__payload)]=__entries else{return Err(#c::ValueError::new("externally tagged enum requires one field"))};match __tag.as_str(){#(#object_arms)*_=>Err(#c::ValueError::new("unknown enum variant"))}})
+                Ok(quote!{control.begin_stage(0)?;if let #c::DslValue::String(tag)=value{return match tag.as_str(){#(#string_arms)*_=>Err(#c::ValueError::new(#c::ValueRefusalKind::InvalidValue, "unknown enum variant"))}}let __entries=value.object_controlled(control)?;let[(__tag,__payload)]=__entries else{return Err(#c::ValueError::new(#c::ValueRefusalKind::InvalidValue, "externally tagged enum requires one field"))};match __tag.as_str(){#(#object_arms)*_=>Err(#c::ValueError::new(#c::ValueRefusalKind::InvalidValue, "unknown enum variant"))}})
             }
         },
         Data::Union(_)=>Err(syn::Error::new_spanned(input,"controlled unions unsupported"))
@@ -2288,7 +2288,7 @@ fn controlled_retirement_body(input:&DeriveInput,container:&ContainerAttrs,c:&sy
 
 fn controlled_field_encode(attrs:&FieldAttrs,value:proc_macro2::TokenStream,c:&syn::Path)->syn::Result<proc_macro2::TokenStream>{
  if let Some(path)=&attrs.serialize_controlled_with{let path:syn::Path=syn::parse_str(path)?;return Ok(quote!{#path(#value,control)})}
- if attrs.effective_serialize_with().is_some(){return Ok(quote!{Err(#c::ValueError::new("custom value conversion has no controlled encoder"))})}
+ if attrs.effective_serialize_with().is_some(){return Ok(quote!{Err(#c::ValueError::new(#c::ValueRefusalKind::UnsupportedOwner, "custom value conversion has no controlled encoder"))})}
  Ok(quote!{#c::ToValue::to_value_controlled(#value,control)})
 }
 
@@ -2298,14 +2298,14 @@ fn controlled_named_output(fields:&syn::FieldsNamed,rename:&Option<String>,sourc
   let ident=field.ident.as_ref().unwrap();let flag=format_ident!("__emit_{index}");let attrs=parse_field_attrs(&field.attrs)?;let wire=field_wire_name(&ident.to_string(),&attrs.rename,rename);let alias=format_ident!("__source_field_{index}");let access=if source_self{quote!{&self.#ident}}else{quote!{#alias}};
   let flatten=attrs.flatten&&source_self;
   let emit=if attrs.skip{quote!{false}}else if !flatten{if let Some(path)=&attrs.skip_serializing_if{let path:syn::Path=syn::parse_str(path)?;quote!{!#path(#access)}}else{quote!{true}}}else{quote!{true}};
-  flags.push(quote!{let #flag=#emit;control.step().map_err(#c::ValueError::new)?;});
-  if attrs.skip{pushes.push(quote!{control.step().map_err(#c::ValueError::new)?;});continue}
+  flags.push(quote!{let #flag=#emit;control.step()?;});
+  if attrs.skip{pushes.push(quote!{control.step()?;});continue}
   if !flatten{capacities.push(quote!{::core::primitive::usize::from(#flag)});}
   let value=controlled_field_encode(&attrs,access,c)?;
   let push=if flatten{quote!{#c::DslValue::flatten_encoding_controlled(__output.get_mut(),#value?,control)?;}}else{quote!{#c::DslValue::push_encoding_controlled(__output.get_mut(),#wire,#value?,control)?;}};
-  pushes.push(quote!{if #flag{#push}control.step().map_err(#c::ValueError::new)?;});
+  pushes.push(quote!{if #flag{#push}control.step()?;});
  }
- Ok(quote!{control.begin_stage(#count).map_err(#c::ValueError::new)?;#(#flags)*control.begin_stage(#count).map_err(#c::ValueError::new)?;let mut __output=#c::DslValue::object_encoding_controlled(0usize #( + #capacities )*,control)?;#(#pushes)*Ok(#c::DslValue::Object(__output.take()))})
+ Ok(quote!{control.begin_stage(#count)?;#(#flags)*control.begin_stage(#count)?;let mut __output=#c::DslValue::object_encoding_controlled(0usize #( + #capacities )*,control)?;#(#pushes)*Ok(#c::DslValue::Object(__output.take()))})
 }
 
 fn controlled_to_body(input:&DeriveInput,container:&ContainerAttrs,c:&syn::Path)->syn::Result<proc_macro2::TokenStream>{
@@ -2326,7 +2326,7 @@ fn controlled_to_body(input:&DeriveInput,container:&ContainerAttrs,c:&syn::Path)
      _=>return Err(syn::Error::new_spanned(variant,"unsupported controlled output fields"))
     };
     let body=match(&container.tag,&container.content,payload){
-     (None,_,None)=>quote!{control.copy_text(#wire).map(#c::DslValue::String).map_err(#c::ValueError::new)},
+     (None,_,None)=>quote!{control.copy_text(#wire).map(#c::DslValue::String)},
      (None,_,Some(payload))=>quote!{let __payload=#c::DslValue::guard_encoded((||->::core::result::Result<#c::DslValue,#c::ValueError>{#payload})()?);let mut __wrapper=#c::DslValue::object_encoding_controlled(1,control)?;#c::DslValue::push_encoding_controlled(__wrapper.get_mut(),#wire,__payload.take(),control)?;Ok(#c::DslValue::Object(__wrapper.take()))},
      (Some(tag),content,payload)=>{
       let count=if payload.is_some(){2usize}else{1};let payload_push=match(payload,content){
@@ -2334,7 +2334,7 @@ fn controlled_to_body(input:&DeriveInput,container:&ContainerAttrs,c:&syn::Path)
        (Some(payload),Some(content))=>quote!{let __payload=#c::DslValue::guard_encoded((||->::core::result::Result<#c::DslValue,#c::ValueError>{#payload})()?);#c::DslValue::push_encoding_controlled(__wrapper.get_mut(),#content,__payload.take(),control)?;},
        (Some(payload),None)=>quote!{let __payload=#c::DslValue::guard_encoded((||->::core::result::Result<#c::DslValue,#c::ValueError>{#payload})()?);if matches!(__payload.get(),#c::DslValue::Object(_)){#c::DslValue::flatten_encoding_controlled(__wrapper.get_mut(),__payload.take(),control)?;}else{#c::DslValue::push_encoding_controlled(__wrapper.get_mut(),"value",__payload.take(),control)?;}}
       };
-      quote!{let mut __wrapper=#c::DslValue::object_encoding_controlled(#count,control)?;let __tag=control.copy_text(#wire).map(#c::DslValue::String).map_err(#c::ValueError::new)?;#c::DslValue::push_encoding_controlled(__wrapper.get_mut(),#tag,__tag,control)?;#payload_push Ok(#c::DslValue::Object(__wrapper.take()))}
+      quote!{let mut __wrapper=#c::DslValue::object_encoding_controlled(#count,control)?;let __tag=control.copy_text(#wire).map(#c::DslValue::String)?;#c::DslValue::push_encoding_controlled(__wrapper.get_mut(),#tag,__tag,control)?;#payload_push Ok(#c::DslValue::Object(__wrapper.take()))}
      }
     };
     arms.push(quote!{#pattern=>{#body}});

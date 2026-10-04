@@ -21,9 +21,12 @@ impl protocol::MutationKind<StepSnapshot, StepCc4Mutation> for SetProductIdentit
     fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<<StepCc4Mutation as protocol::Mutation<StepSnapshot>>::Diff> {
         class_diff(base, &ClassEdit::ProductIdentity { identity: self.identity.clone() })
     }
-    fn inverse(&self, base: &StepSnapshot) -> Vec<StepCc4Mutation> {
-        class_inverse(base, &ClassEdit::ProductIdentity { identity: self.identity.clone() })
-    }
+    fn inverse(&self, base: &StepSnapshot) -> Result<Vec<StepCc4Mutation>, semio_framework_value::ValueError> {
+    Ok({
+        class_inverse(base, &ClassEdit::ProductIdentity { identity: self.identity.clone() })?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set the PRODUCT identity chain", "Produktidentitätskette setzen")
     }

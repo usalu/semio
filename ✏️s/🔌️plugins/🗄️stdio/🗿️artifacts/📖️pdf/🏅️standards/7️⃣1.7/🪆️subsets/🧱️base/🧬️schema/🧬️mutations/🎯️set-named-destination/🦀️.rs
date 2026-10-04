@@ -23,10 +23,13 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetNamedDestination {
         MutationOutcome::new(diff::diff_set_named_destination(base, self.destination.clone()))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         let _ = base;
         match base.named_destinations.iter().find(|item| item.name == self.destination.name) { Some(previous) => vec![PdfMutation::SetNamedDestination(SetNamedDestination { destination: previous.clone() })], None => vec![PdfMutation::RemoveNamedDestination(super::remove_named_destination::RemoveNamedDestination { name: self.destination.name.clone() })] }
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set named destination {}", self.destination.name), &format!("Benanntes Ziel {} setzen", self.destination.name))

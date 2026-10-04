@@ -1,6 +1,0 @@
-# 🧬️ SetNodeRoot mutation payload.
-
-type SetNodeRoot {
-  nodeId: String!
-  newRoot: Boolean!
-}

@@ -47,7 +47,7 @@ impl OpText for CounterMutation {
         }
     }
 
-    fn parse_op(line: &str) -> Result<Self, crate::os_dsl::TextError> {
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let opcode = line.split_once(' ').map_or(line, |(opcode, _)| opcode);
         match opcode {
             value if Some(value) == AddCounter::DESCRIPTOR.text_opcode => AddCounter::parse_op(line).map(Into::into),
@@ -55,7 +55,7 @@ impl OpText for CounterMutation {
             value if Some(value) == AddUncheckedCounter::DESCRIPTOR.text_opcode => AddUncheckedCounter::parse_op(line).map(Into::into),
             value if Some(value) == AddObservedCounter::DESCRIPTOR.text_opcode => AddObservedCounter::parse_op(line).map(Into::into),
             value if Some(value) == AddRejectedCounter::DESCRIPTOR.text_opcode => AddRejectedCounter::parse_op(line).map(Into::into),
-            _ => Err(crate::os_dsl::TextError::new("unknown counter operation", crate::os_dsl::TextSpan::at(1, 1))),
+            _ => Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "unknown counter operation", semio_framework_diagnostic::TextSpan::at(1, 1))),
         }
     }
 }

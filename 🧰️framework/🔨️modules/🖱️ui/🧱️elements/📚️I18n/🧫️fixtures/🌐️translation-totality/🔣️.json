@@ -1,5 +1,23 @@
 {
   "cases": [
+    {"locale": "en", "key": "ui.host.inputDraftConflict", "options": {}, "normal": "This edit could not be applied. Your draft is preserved. Discard it or press Escape to use the current value.", "beginner": "This edit could not be applied. Your draft is preserved. Discard it or press Escape to use the current value."},
+    {"locale": "en", "key": "ui.host.inputDraftDiscard", "options": {}, "normal": "Discard draft", "beginner": "Discard draft"},
+    {"locale": "de", "key": "ui.host.inputDraftConflict", "options": {}, "normal": "Diese Änderung konnte nicht übernommen werden. Dein Entwurf bleibt erhalten. Verwirf ihn oder drücke Escape, um den aktuellen Wert zu verwenden.", "beginner": "Diese Änderung konnte nicht übernommen werden. Dein Entwurf bleibt erhalten. Verwirf ihn oder drücke Escape, um den aktuellen Wert zu verwenden."},
+    {"locale": "de", "key": "ui.host.inputDraftDiscard", "options": {}, "normal": "Entwurf verwerfen", "beginner": "Entwurf verwerfen"},
+    { "locale": "en", "key": "ui.windowFault.title", "options": {}, "normal": "Window is not responding", "beginner": "Window is not responding" },
+    { "locale": "de", "key": "ui.windowFault.title", "options": {}, "normal": "Fenster reagiert nicht", "beginner": "Fenster reagiert nicht" },
+    { "locale": "en", "key": "ui.windowFault.abiMismatch", "options": {}, "normal": "Plugin module does not match the host interface", "beginner": "This plugin is out of date and no longer fits the program" },
+    { "locale": "de", "key": "ui.windowFault.abiMismatch", "options": {}, "normal": "Plugin-Modul passt nicht zur Host-Schnittstelle", "beginner": "Das Plugin ist veraltet und passt nicht mehr zum Programm" },
+    { "locale": "en", "key": "ui.windowFault.interactiveCeiling", "options": {}, "normal": "Plugin step overran the interactive time ceiling", "beginner": "The plugin took too long for one step" },
+    { "locale": "de", "key": "ui.windowFault.interactiveCeiling", "options": {}, "normal": "Plugin-Schritt hat die interaktive Zeitgrenze überschritten", "beginner": "Das Plugin hat für einen Schritt zu lange gebraucht" },
+    { "locale": "en", "key": "ui.windowFault.clock", "options": {}, "normal": "No monotonic clock available", "beginner": "The system clock reading is unavailable" },
+    { "locale": "de", "key": "ui.windowFault.clock", "options": {}, "normal": "Keine monotone Uhr verfügbar", "beginner": "Die Zeitmessung des Systems steht nicht zur Verfügung" },
+    { "locale": "en", "key": "ui.windowFault.pluginInternal", "options": {}, "normal": "Internal plugin runtime fault", "beginner": "Something went wrong inside the plugin" },
+    { "locale": "de", "key": "ui.windowFault.pluginInternal", "options": {}, "normal": "Interner Plugin-Laufzeitfehler", "beginner": "Im Plugin ist ein interner Fehler aufgetreten" },
+    { "locale": "en", "key": "ui.windowFault.installFailed", "options": {}, "normal": "Plugin failed to install", "beginner": "The plugin could not be loaded" },
+    { "locale": "de", "key": "ui.windowFault.installFailed", "options": {}, "normal": "Plugin konnte nicht installiert werden", "beginner": "Das Plugin liess sich nicht laden" },
+    { "locale": "en", "key": "ui.windowFault.unknown", "options": {}, "normal": "Unknown fault cause", "beginner": "The cause is unknown" },
+    { "locale": "de", "key": "ui.windowFault.unknown", "options": {}, "normal": "Unbekannte Fehlerursache", "beginner": "Die Ursache ist unbekannt" },
     {
       "locale": "en",
       "key": "ui.mutation.history.foreignTransition",

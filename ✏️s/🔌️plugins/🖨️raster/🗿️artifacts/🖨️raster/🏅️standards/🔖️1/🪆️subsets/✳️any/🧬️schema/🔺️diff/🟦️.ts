@@ -6,6 +6,7 @@ import {
   parseRasterLayerNode,
   parseRasterLayerMask,
   parseRasterTransform,
+  rasterTransformNumbers,
   type RasterTransform,
   type RasterLayerMask,
   type RasterArtifact,
@@ -221,7 +222,7 @@ export function parseRasterLayerPatch(value: unknown, at = "$"): RasterLayerPatc
   const row = rasterRasterDiffGuardObject(value, at);
   if(row.transform!=null&&(row.transformX!=null||row.transformY!=null))return rasterRasterDiffGuardReject(at,"full and partial transforms cannot occur in one patch");
   const transform=row.transform==null?undefined:parseRasterTransform(row.transform,`${at}.transform`);
-  if(transform)inverse([transform.a,transform.b,transform.c,transform.d,transform.x,transform.y]);
+  if(transform){const t=rasterTransformNumbers(transform);inverse([t.a,t.b,t.c,t.d,t.x,t.y]);}
   return {
     name: row["name"] == null ? undefined : rasterRasterDiffGuardString(row["name"], `${at}.name`),
     visible: row["visible"] == null ? undefined : rasterRasterDiffGuardBoolean(row["visible"], `${at}.visible`),

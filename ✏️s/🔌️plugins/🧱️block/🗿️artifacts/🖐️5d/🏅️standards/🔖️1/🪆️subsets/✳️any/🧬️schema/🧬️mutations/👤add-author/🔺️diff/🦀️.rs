@@ -6,7 +6,7 @@ use crate::standards::v1::subsets::any::schema::diff::{Block5dAuthorList, Block5
 //#region 🔖️Diff
 pub fn diff(payload: &super::AddAuthor, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
     if base.authors.iter().any(|item| item.id == payload.author.id) {
-        return protocol::MutationOutcome::new(Block5dDiff::default()).absorb_messages([protocol::MutationMessage::warn("mutation.no-op", format!("{} \"{}\" already present", "author", payload.author.id)).at(vec![payload.author.id.clone()])]);
+        return protocol::MutationOutcome::new(Block5dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", format!("{} \"{}\" already present", "author", payload.author.id)).at(vec![payload.author.id.clone()])]);
     }
     let mut values = base.authors.clone();
     values.push(payload.author.clone());

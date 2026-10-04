@@ -20,7 +20,7 @@ pub mod diff;
 pub mod inverse;
 //#endregion 🔖️Facets
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_dsl_record_derive::DslRecord)]
 #[mutation_leaf(contract = ::protocol)]
 #[dsl(keyword = "set-snapshot")]
 pub struct SetSnapshot {
@@ -34,9 +34,12 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetSnapshot {
     fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as Mutation<ObjSnapshot>>::Diff> {
         agg_diff(&ObjMutation::SetSnapshot(self.clone()), base)
     }
-    fn inverse(&self, base: &ObjSnapshot) -> Vec<ObjMutation> {
-        agg_inverse(&ObjMutation::SetSnapshot(self.clone()), base)
-    }
+    fn inverse(&self, base: &ObjSnapshot) -> Result<Vec<ObjMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&ObjMutation::SetSnapshot(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set snapshot", "Momentaufnahme setzen")
     }

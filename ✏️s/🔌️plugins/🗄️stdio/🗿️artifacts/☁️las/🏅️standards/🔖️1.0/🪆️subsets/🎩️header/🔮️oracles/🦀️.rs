@@ -473,6 +473,10 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     match spec.str("kind").as_str() {
         "" => Err("mutation spec carries no `kind`".to_string()),
         "set-snapshot" => raw_doc::write(&snapshot_of_wire(params.get("snapshot").ok_or("set-snapshot: missing `snapshot`")?).ok_or("set-snapshot: malformed `snapshot`")?),
+        "patch-snapshot" => {
+            let patched = semio_repo_test_host::law::patched_snapshot(&snapshot_to_wire(&raw_doc::read(input)?), params.get("patch").ok_or("patch-snapshot: missing `patch`")?)?;
+            raw_doc::write(&snapshot_of_wire(&patched).ok_or("patch-snapshot: the patched snapshot is not a LasSnapshot")?)
+        }
         "set-version" => {
             let mut doc = raw_doc::read(input)?;
             doc.header.version = las::Version::new(number(&params, "major").ok_or("set-version: missing `major`")? as u8, number(&params, "minor").ok_or("set-version: missing `minor`")? as u8);
@@ -587,7 +591,7 @@ pub fn oracle_inverse_spec(base: &[u8], spec: &Json) -> Result<Option<Json>, Str
     let doc = raw_doc::read(base)?;
     Ok(Some(match spec.str("kind").as_str() {
         "" => return Err("mutation spec carries no `kind`".to_string()),
-        "set-snapshot" => spec_of("set-snapshot", Json::Object(vec![("snapshot".to_string(), snapshot_to_wire(&doc))])),
+        "set-snapshot" | "patch-snapshot" => spec_of("set-snapshot", Json::Object(vec![("snapshot".to_string(), snapshot_to_wire(&doc))])),
         "set-version" => spec_of("set-version", Json::Object(vec![("major".to_string(), Json::Number(doc.header.version.major as f64)), ("minor".to_string(), Json::Number(doc.header.version.minor as f64))])),
         "set-system-identifier" => spec_of("set-system-identifier", Json::Object(vec![("systemIdentifier".to_string(), Json::String(read_fixed_str(&doc.header.system_identifier)))])),
         "set-software-info" => spec_of("set-software-info", Json::Object(vec![("generatingSoftware".to_string(), Json::String(read_fixed_str(&doc.header.generating_software)))])),

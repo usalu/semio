@@ -13,7 +13,7 @@ export type BrowserActorEphemeralSnapshotV1 = Readonly<{ presence: readonly numb
 export type BrowserActorUnsolicitedPublicationV1 =
   | { readonly kind: "ephemeral"; readonly snapshot: BrowserActorEphemeralSnapshotV1 }
   | { readonly kind: "merge-report" }
-  | { readonly kind: "operation-completed"; readonly historyPatch: BrowserActorHistoryPatchBytesV1 }
+  | { readonly kind: "operation-completed"; readonly operation: bigint; readonly revision: bigint; readonly historyPatch: BrowserActorHistoryPatchBytesV1 }
   | { readonly kind: "completion"; readonly projection: BrowserActorCommandMutationProjectionV1; readonly historyPatch: BrowserActorHistoryPatchBytesV1 };
 export type BrowserActorIntentPublicationV1 = { readonly kind: "emit" } | { readonly kind: "error"; readonly reason: string; readonly detail: string } | BrowserActorUnsolicitedPublicationV1;
 type BrowserActorCommandMutationProjectionV1 = ReturnType<typeof decodeInvocationResultPacks>;
@@ -123,7 +123,7 @@ export function decodeBrowserActorIntentPublicationV1(bytes: Uint8Array): Browse
  * `OperationCompleted`; each with the history patch it carries. */
 function unsolicitedCompletion(frame: ReturnType<typeof decodeAppFrame>): Exclude<BrowserActorUnsolicitedPublicationV1, { readonly kind: "ephemeral" | "merge-report" }> | null {
   if ("OperationCompleted" in frame) {
-    return { kind: "operation-completed", historyPatch: historyPatchBytes(frame.OperationCompleted.history_patch) };
+    return { kind: "operation-completed", operation: frame.OperationCompleted.operation, revision: frame.OperationCompleted.revision, historyPatch: historyPatchBytes(frame.OperationCompleted.history_patch) };
   }
   if (!("Invocation" in frame) || frame.Invocation.in_reply_to !== 0) return null;
   return { kind: "completion", projection: decodeInvocationResultPacks(frame.Invocation), historyPatch: historyPatchBytes(frame.Invocation.history_patch) };

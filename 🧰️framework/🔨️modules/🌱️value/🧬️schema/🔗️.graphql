@@ -1,2 +1,31 @@
-"""🌱️ A JSON value tree preserving null, scalars, arrays, and object fields."""
-scalar DslValue
+"""🔢️ Canonical decimal magnitude from zero through 18446744073709551615."""
+scalar UInt64
+"""➖️ Canonical signed decimal magnitude within the complete Int64 domain."""
+scalar Int64
+"""🧬️ An integer octet from zero through 255."""
+scalar Octet
+"""🌱️ The complete intrinsic owner retains numeric tags, IEEE words and ordered members."""
+union DslValue = DslNull | DslBoolean | DslUnsigned | DslSigned | DslFloat | DslText | DslBytes | DslArray | DslObject
+enum DslNullLiteral { NULL }
+type DslNull { literal: DslNullLiteral! }
+type DslBoolean { value: Boolean! }
+type DslUnsigned { value: UInt64! }
+type DslSigned { value: Int64! }
+type DslFloat { bits: UInt64! }
+type DslText { value: String! }
+type DslBytes { value: [Octet!]! }
+type DslArray { items: [DslValue!]! }
+type DslMember { name: String! value: DslValue! }
+type DslObject { members: [DslMember!]! }
+input DslValueInput @oneOf { null: DslNullLiteral boolean: Boolean unsigned: UInt64 signed: Int64 floatBits: UInt64 text: String bytes: [Octet!] array: [DslValueInput!] object: [DslMemberInput!] }
+input DslMemberInput { name: String! value: DslValueInput! }
+
+"""🔢️ An exact IEEE 754 binary64 word."""
+type Binary64Word { bits: UInt64! }
+input Binary64WordInput { bits: UInt64! }
+enum ValueTypeScalar { BOOLEAN INTEGER DECIMAL TEXT ANY }
+union ValueType = ScalarValueType | ListValueType | SchemaValueType
+type ScalarValueType { kind: ValueTypeScalar! }
+type ListValueType { of: ValueType! }
+type SchemaValueType { of: String! }
+input ValueTypeInput @oneOf { scalar: ValueTypeScalar list: ValueTypeInput schema: String }

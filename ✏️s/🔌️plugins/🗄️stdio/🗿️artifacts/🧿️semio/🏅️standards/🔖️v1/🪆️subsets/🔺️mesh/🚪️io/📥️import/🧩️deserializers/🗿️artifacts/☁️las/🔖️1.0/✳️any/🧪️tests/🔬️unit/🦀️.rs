@@ -46,7 +46,7 @@ fn sample_las() -> LasSnapshot {
 
 #[semio_framework_async_macros::async_test]
 async fn deserialize_maps_positions_and_uniform_rgb_as_points() {
-    let semio = semio_framework_plugin::resolve_ready(SemioMeshFromLas::deserialize(&sample_las())).expect("deserialize");
+    let semio = ::semio_framework_async::poll::resolve_ready(SemioMeshFromLas::deserialize(&sample_las())).expect("deserialize");
     let prim = &semio.meshes[0].primitives[0];
     assert_eq!(prim.topology, SemioTopology::Points);
     assert_eq!(prim.positions.len(), 2);
@@ -60,6 +60,6 @@ async fn deserialize_maps_positions_and_uniform_rgb_as_points() {
 async fn non_uniform_rgb_presence_drops_colors_rather_than_fabricating() {
     let mut las = sample_las();
     las.points[1].rgb = None;
-    let semio = semio_framework_plugin::resolve_ready(SemioMeshFromLas::deserialize(&las)).expect("deserialize");
+    let semio = ::semio_framework_async::poll::resolve_ready(SemioMeshFromLas::deserialize(&las)).expect("deserialize");
     assert!(semio.meshes[0].primitives[0].colors.is_empty());
 }

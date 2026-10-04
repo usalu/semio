@@ -24,5 +24,5 @@ async fn wait_for_scripted_guest_relay_release(runtime: &GuestRuntimes, completi
 // production FnMut(...) -> Result<...> closure signature).
 fn host_fault_bytes(code: impl Into<String>, message: impl Into<String>) -> Vec<u8> {
     let code = code.into();
-    dsl::encode_fault_bytes(&dsl::Fault::new(dsl::FaultOrigin::Os, dsl::FaultCode::new(code), message))
+    semio_framework_diagnostic::encode_fault_bytes(&semio_framework_diagnostic::Fault::new(semio_framework_diagnostic::FaultOrigin::Os, semio_framework_diagnostic::FaultCode::new(code), message))
 }

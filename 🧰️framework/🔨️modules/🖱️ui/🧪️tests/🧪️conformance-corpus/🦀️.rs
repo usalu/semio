@@ -113,7 +113,7 @@ fn node_of<'a>(ui: &'a Ui, window: &str, id: u64) -> &'a UiNode {
 #[test]
 fn every_accept_case_of_the_corpus_mounts_every_record() {
     let cases = accept_cases();
-    assert_eq!(cases.len(), 54, "the shape groups hold every accept case of the corpus");
+    assert_eq!(cases.len(), 55, "the shape groups hold every accept case of the corpus");
     for (group, case, snapshot, expectation) in &cases {
         let window = format!("conformance.{case}");
         let (ui, instances) = mount(&window, snapshot);
@@ -373,5 +373,105 @@ fn the_g6_number_control_cases_carry_and_paint_every_facet() {
     let limits = field.limits.as_ref().expect("the field carries its limits");
     for (typed, verdict) in [("-1", Err("Must be greater than 0".to_string())), ("0", Err("Must be greater than 0".to_string())), ("120", Err("Must be at most 100".to_string())), ("4.5", Ok(4.5)), ("x", Err(String::new()))] {
         assert_eq!(crate::wgpu::events::typed_number(typed, field.display_factor, field.precision, [4.0], field.min, field.max, Some(limits)), verdict, "{typed}");
+    }
+}
+
+/// 💬️ LAW (coordinator decision on tree rows, shared with React's Interpreter law over the same case): in
+/// `🖥️composite/💬️row-semantics` a property row's description is the description of the control it holds, and a disabled row
+/// action stays focusable and tabbable, is not actionable, and names its reason as its description — its dispatch refused by
+/// the contract twin.
+#[test]
+fn row_descriptions_reach_their_controls_and_disabled_row_actions_stay_focusable_with_their_reason() {
+    let folder = corpus_dir().join("🖥️composite/💬️row-semantics");
+    let window = "a11y.row-semantics";
+    let snapshot = read(&folder.join("📸️snapshot.json"));
+    let (ui, _) = mount(window, &snapshot);
+    let semantics = read(&folder.join("🎯️expect.json"))["rowSemantics"].clone();
+    let projection = crate::wgpu::accessibility::accessibility_projection(ui.tree(window).expect("window tree"));
+    let projected = |id: u64| projection.iter().find(|node| node.node_id == id).unwrap_or_else(|| panic!("record {id} is projected: {projection:?}"));
+    for described in semantics["describedControls"].as_array().expect("described controls") {
+        let control = projected(described["control"].as_u64().expect("control id"));
+        assert!(control.focusable, "the control is reachable: {control:?}");
+        assert_eq!(control.description.as_deref(), described["description"].as_str(), "the row's description names its control");
+    }
+    for disabled in semantics["disabledRowActions"].as_array().expect("disabled row actions") {
+        let row = projected(disabled["row"].as_u64().expect("row id"));
+        let key = format!("{}{}{}", row.key, crate::wgpu::accessibility::ROW_ACTION_KEY_INFIX, disabled["index"].as_u64().expect("action index"));
+        let action = projection.iter().find(|node| node.key == key).unwrap_or_else(|| panic!("{key} is projected"));
+        assert_eq!((action.label.as_deref(), action.disabled, action.focusable, action.tabbable, action.actionable, action.description.as_deref()), (disabled["label"].as_str(), true, true, true, false, disabled["reason"].as_str()), "{key}");
+        let record = snapshot["nodes"].as_array().expect("nodes").iter().find(|node| node["id"] == disabled["row"]).expect("row record");
+        let target: ui_contract::RowTarget = serde_json::from_value(record["component"]["target"].clone()).expect("row target");
+        let actions: Vec<ui_contract::RowAction> = serde_json::from_value(record["component"]["rowActions"].clone()).expect("row actions");
+        assert!(target.action_binding(&actions[disabled["index"].as_u64().expect("action index") as usize]).is_err(), "{key}: a disabled action never dispatches");
+    }
+}
+
+/// 💬️ LAW (audit W1E-1, `💬️row-semantics` `revealReason`, the wgpu half of React's `[data-slot="row-action-reason"][data-revealed]`):
+/// a disabled row action's reason stays its description and is SHOWN as a hint anchored to its icon after each `on` trigger — the
+/// pointer entering the icon, keyboard focus on the action, a press that dispatches nothing — and hidden after each `off` trigger:
+/// the pointer leaving the icon, blur, Escape.
+#[test]
+fn a_disabled_row_action_reveals_its_reason_on_hover_focus_and_press() {
+    use crate::wgpu::events::{AccessibilityUiEvent, UiEvent};
+    let folder = corpus_dir().join("🖥️composite/💬️row-semantics");
+    let window = "a11y.row-reason";
+    let (mut ui, _) = mount(window, &read(&folder.join("📸️snapshot.json")));
+    let semantics = read(&folder.join("🎯️expect.json"))["rowSemantics"].clone();
+    let generation = ui.surface_generation(window).expect("published surface generation");
+    for disabled in semantics["disabledRowActions"].as_array().expect("disabled row actions") {
+        let (row, index, reason) = (disabled["row"].as_u64().expect("row id"), disabled["index"].as_u64().expect("action index") as usize, disabled["reason"].as_str().expect("reason"));
+        let triggers = |side: &str| disabled["revealReason"][side].as_array().expect("revealReason").iter().map(|trigger| trigger.as_str().expect("trigger").to_string()).collect::<Vec<_>>();
+        assert_eq!((triggers("on"), triggers("off")), (vec!["hover".to_string(), "focus".into(), "press".into()], vec!["leave".to_string(), "blur".into(), "escape".into()]), "the corpus names the triggers this law drives");
+        let projection = crate::wgpu::accessibility::accessibility_projection(ui.tree(window).expect("window tree"));
+        let row_key = projection.iter().find(|node| node.node_id == row).expect("row projected").key.clone();
+        let key = format!("{row_key}{}{index}", crate::wgpu::accessibility::ROW_ACTION_KEY_INFIX);
+        let shown = |ui: &Ui| ui.revealed_row_reason(window);
+        let expected = Some((ui_contract::UiNodeId(row), index, reason.to_string()));
+        let icon = ui.row_action_icon_rect(window, ui_contract::UiNodeId(row), index).expect("the action paints an icon");
+        let (x, y) = (icon.x + icon.w * 0.5, icon.y + icon.h * 0.5);
+        assert_eq!(shown(&ui), None, "no hint before any trigger");
+
+        let _ = ui.dispatch_pointer_event(window, 1, UiEvent::PointerMove { x, y, modifiers: Default::default() });
+        assert_eq!(shown(&ui), expected, "hover: the pointer on the icon shows the reason");
+        let _ = ui.dispatch_pointer_event(window, 1, UiEvent::PointerMove { x: icon.x - 200.0, y, modifiers: Default::default() });
+        assert_eq!(shown(&ui), None, "leave: the pointer off the icon hides it");
+
+        let focused = ui.dispatch_accessibility_event(window, generation, row, &key, AccessibilityUiEvent::Focus).expect("focus admitted");
+        assert!(!focused.iter().any(|command| matches!(command, crate::wgpu::events::UiCommand::App { .. })) && shown(&ui) == expected, "focus: keyboard focus on the action shows it at once");
+        let _ = ui.dispatch_accessibility_event(window, generation, row, &key, AccessibilityUiEvent::Blur).expect("blur admitted");
+        assert_eq!(shown(&ui), None, "blur: focus leaving hides it");
+
+        let pressed = ui.dispatch_accessibility_event(window, generation, row, &key, AccessibilityUiEvent::Activate).expect("activation admitted");
+        assert!(!pressed.iter().any(|command| matches!(command, crate::wgpu::events::UiCommand::App { .. })), "press: a disabled action never dispatches");
+        assert_eq!(shown(&ui), expected, "press: activating it shows the reason");
+        let _ = ui.dispatch_event(window, UiEvent::KeyDown { key: "Escape".into(), modifiers: Default::default() });
+        assert_eq!(shown(&ui), None, "escape: hides it");
+
+        let _ = ui.dispatch_pointer_event(window, 1, UiEvent::PointerDown { x, y, button: crate::wgpu::events::PointerButton::Primary, modifiers: Default::default() });
+        let released = ui.dispatch_pointer_event(window, 1, UiEvent::PointerUp { x, y, button: crate::wgpu::events::PointerButton::Primary, modifiers: Default::default() });
+        assert!(!released.iter().any(|command| matches!(command, crate::wgpu::events::UiCommand::App { .. })) && shown(&ui) == expected, "press: a click on the icon shows the reason and dispatches nothing");
+        let projection = crate::wgpu::accessibility::accessibility_projection(ui.tree(window).expect("window tree"));
+        assert_eq!(projection.iter().find(|node| node.key == key).and_then(|node| node.description.clone()).as_deref(), Some(reason), "the reason stays the action's description throughout");
+    }
+}
+
+/// 🔘️ LAW (audit W1E-2, `💬️row-semantics` `selectedRows`, wgpu half of React's `aria-selected`): an option row of a single-choice
+/// list announces its choice as the row's selected state in the ARIA mirror, and the chosen row paints the selected fill (its
+/// retained item is selected), never by its icon alone; the unchosen option announces `selected: false` and paints unselected.
+#[test]
+fn option_rows_announce_and_paint_their_selected_state() {
+    let folder = corpus_dir().join("🖥️composite/💬️row-semantics");
+    let window = "a11y.row-selected";
+    let (ui, _) = mount(window, &read(&folder.join("📸️snapshot.json")));
+    let rows = read(&folder.join("🎯️expect.json"))["rowSemantics"]["selectedRows"].as_array().expect("selected rows").clone();
+    assert!(rows.iter().any(|row| row["selected"] == true) && rows.iter().any(|row| row["selected"] == false), "the corpus names a chosen and an unchosen option");
+    let tree = ui.tree(window).expect("window tree");
+    let projection = crate::wgpu::accessibility::accessibility_projection(tree);
+    for row in &rows {
+        let (id, selected) = (row["row"].as_u64().expect("row id"), row["selected"].as_bool().expect("selected"));
+        let node = projection.iter().find(|node| node.node_id == id).unwrap_or_else(|| panic!("option row {id} is projected"));
+        assert_eq!((node.role.as_str(), node.selected), ("treeitem", Some(selected)), "option row {id} announces its choice");
+        let item = tree.document_node(ui_contract::UiNodeId(id)).and_then(|node| tree.authored_tree_item(node)).unwrap_or_else(|| panic!("option row {id} mounts a retained item"));
+        assert_eq!(item.presence.selected, selected, "option row {id} paints the selected fill exactly when chosen");
     }
 }

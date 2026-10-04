@@ -1,0 +1,33 @@
+# Rewriting Rust46 Authentic Host Preparation Receipt
+
+Root's unchanged registered Rust46 subject baseline exited 1 after Nx11m44. It selected one case, executed zero scenarios, and reported zero passed/failed/errored scenario results with parity0/0 and not-exercised1. The generated plan contains the prospective46. Host preparation exited101. This is an actual compiler prerequisite failure, not feature assertion RED; active adapter/registry/helper/features[] and production typed child/provider/frame remain held.
+
+The full capture was already retained beneath the explicit ticket artifact root: `🗑️generated/root-rewriting46-native-artifacts/tasks/root/rewriting46-native/reports/latest/📊️summary.json`. Its problems[1] is the complete 183096-byte Cargo stdout; problems[2] is the complete 1936676-byte stderr. stdout contains build-finished success=false and no compiler-message errors; stderr ends with the real Rewriting19 diagnostics/56 warnings. The original console log stops within an earlier warning, so absence of console-tail errors was not absence of compiler errors. The scenario coordinator records the full captured strings into the summary before printing them; current SubjectScript immediately calls process.exit after printing. That can truncate queued console writes and is a plausible explanation, not a newly executed reproduction. No task capture/retention producer change is needed to recover this baseline.
+
+Exact streams were extracted without modification into `🗑️generated/worker-rewriting46-authentic-host-preparation.stdout.jsonl` and `🗑️generated/worker-rewriting46-authentic-host-preparation.stderr.log`. Full diagnostic blocks are retained at `🗑️generated/worker-rewriting46-host-preparation-diagnostic-census.json`. No Cargo was called.
+
+| # | Actual compiler diagnostic | Actual source authority |
+| --- | --- | --- |
+| 1 | error: MutationLeaf source authority failed: mutation descriptor must contain exactly the fourteen schema fields | ✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️edit-before-fixture/🦀️.rs:8:1 |
+| 2 | error: MutationLeaf source authority failed: mutation descriptor must contain exactly the fourteen schema fields | ✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👈️edit-lhs/🦀️.rs:7:1 |
+| 3 | error: MutationLeaf source authority failed: mutation descriptor must contain exactly the fourteen schema fields | ✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👉️edit-rhs/🦀️.rs:7:1 |
+| 4 | error[E0433]: cannot find module or crate `semio_s_artifact_stdio_semio` in this scope | ✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕸️working/🦀️.rs:3:5 |
+| 5 | error[E0433]: cannot find module or crate `semio_s_artifact_stdio_semio` in this scope | ✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕸️working/🦀️.rs:4:5 |
+| 6 | error[E0433]: cannot find `os_spr` in `replication` | ✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️typed/🗂️layout/🦀️.rs:59:19 |
+| 7 | error[E0425]: cannot find type `RuleLayout` in module `super` | ✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs:26:29 |
+| 8 | error[E0425]: cannot find type `Lhs` in module `super` | ✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs:18:28 |
+| 9 | error[E0425]: cannot find type `Rhs` in module `super` | ✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs:20:28 |
+| 10 | error[E0433]: cannot find `snapshot` in `super` | ✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs:34:19 |
+| 11 | error[E0433]: cannot find `snapshot` in `super` | ✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs:40:19 |
+| 12 | error[E0603]: struct `ValueError` is private | ✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs:26:70 |
+| 13 | error[E0603]: trait `ToValue` is private | ✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs:34:45 |
+| 14 | error[E0603]: trait `FromValue` is private | ✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs:41:7 |
+| 15 | error[E0603]: struct `LocalizedLabel` is private | ✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️add-working/🦀️.rs:52:34 |
+| 16 | error[E0603]: struct `LocalizedLabel` is private | ✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️add-working/🦀️.rs:53:19 |
+| 17 | error[E0277]: the trait bound `standards::v1::subsets::any::schema::mutations::edit_rhs::component::EditRhs: MutationLeaf` is not satisfied | ✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👉️edit-rhs/🦀️.rs:22:73 |
+| 18 | error[E0277]: the trait bound `standards::v1::subsets::any::schema::mutations::edit_lhs::component::EditLhs: MutationLeaf` is not satisfied | ✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👈️edit-lhs/🦀️.rs:21:73 |
+| 19 | error[E0277]: the trait bound `EditBeforeFixture: MutationLeaf` is not satisfied | ✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️edit-before-fixture/🦀️.rs:22:73 |
+
+The three MutationLeaf descriptor-authority refusals precede their three consequent trait-bound errors. Required descriptor field shape must be paired at its authored schema/asset authority, preserving all14 intrinsic fields. Semio direct crate imports require the actual declared dependency and feature authority; no compatibility reexport or adapter activation is justified. Existing typed layout/snapshot/diff/inference joins and private value/locale qualifier sites require precise current first-party imports. These are prerequisites; there is still no runtime evidence for the held Rust46 consumer or provider.
+
+The authoritative captured summary and generated-host main/manifest/plan remain in the ticket. No output-root workaround, global cache move, warning suppression, parser-based GREEN claim, or new receipt infrastructure was introduced. Root's native lane remains sole owner.

@@ -61,6 +61,7 @@ Feature: Apply every typed ZIP 2.0 mutation to a real-world multi-entry archive
       | remove-entry        | {"name":"projekt/P05_recypark_demets.jpg"} |
       | rename-entry        | {"name":"projekt/P10_haus_hos.jpg","newName":"projekt/P10_haus_hos_bestand.jpg"} |
       | set-entry-data      | {"name":"projekt/P08_holbein_gardens.jpg","data":[69,82,83,65,84,90,73,78,72,65,76,84,58,32,66,105,108,100,98,101,108,101,103,32,100,117,114,99,104,32,80,108,97,116,122,104,97,108,116,101,114,116,101,120,116,32,101,114,115,101,116,122,116,46]} |
+      | patch-snapshot | {"patch": {"operation": "set", "path": "/comment", "value": "Projektfotos patched comment"}} |
 
   @id-inverse
   @level-exhaustive
@@ -81,6 +82,7 @@ Feature: Apply every typed ZIP 2.0 mutation to a real-world multi-entry archive
       | remove-entry        | {"name":"projekt/P05_recypark_demets.jpg"} |
       | rename-entry        | {"name":"projekt/P10_haus_hos.jpg","newName":"projekt/P10_haus_hos_bestand.jpg"} |
       | set-entry-data      | {"name":"projekt/P08_holbein_gardens.jpg","data":[69,82,83,65,84,90,73,78,72,65,76,84,58,32,66,105,108,100,98,101,108,101,103,32,100,117,114,99,104,32,80,108,97,116,122,104,97,108,116,101,114,116,101,120,116,32,101,114,115,101,116,122,116,46]} |
+      | patch-snapshot | {"patch": {"operation": "set", "path": "/comment", "value": "Projektfotos patched comment"}} |
 
   @id-identity-round-trip
   @level-long

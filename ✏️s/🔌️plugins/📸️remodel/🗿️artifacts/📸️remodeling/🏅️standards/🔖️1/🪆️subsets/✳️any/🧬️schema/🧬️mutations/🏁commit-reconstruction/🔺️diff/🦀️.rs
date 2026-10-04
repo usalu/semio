@@ -43,7 +43,7 @@ pub fn diff(payload: &super::CommitReconstruction, base: &RemodelingSnapshot) ->
         results.mesh = (**mesh).clone();
     }
     if results == base.results && assets == base.assets {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "The reconstruction result is already committed.".to_string());
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "The reconstruction result is already committed.".to_string());
     }
     protocol::MutationOutcome::new(RemodelingDiff { assets: (assets != base.assets).then_some(assets), results: Some(results), ..Default::default() })
 }

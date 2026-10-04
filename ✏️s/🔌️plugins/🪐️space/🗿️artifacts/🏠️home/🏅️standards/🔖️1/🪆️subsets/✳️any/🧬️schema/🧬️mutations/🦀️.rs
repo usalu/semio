@@ -7,7 +7,7 @@ pub use crate::standards::v1::subsets::any::schema::operations::*;
 
 //#region 🔖️Aggregate
 /// 🧮️ Home launcher mutation vocabulary backed by its direct semantic owner.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslEnum, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = SHomeSnapshot, diff = SHomeDiff, schema = "s.space.home")]
 pub enum SHomeMutation {

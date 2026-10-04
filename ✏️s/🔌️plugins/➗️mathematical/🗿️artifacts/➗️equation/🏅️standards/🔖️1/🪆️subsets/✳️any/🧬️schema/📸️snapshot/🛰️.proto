@@ -2,9 +2,12 @@ syntax = "proto3";
 package semio.s.mathematical.equation.snapshot;
 import "🧰️framework/🔨️modules/🌱️value/🧬️schema/🛰️.proto";
 import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
+import "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
 message EquationSnapshot {
-  semio.os.store.ArtifactChild notation = 1;
-  semio.os.store.ArtifactChild results = 2;
-  semio.os.store.ArtifactChild computed = 3;
-  semio.framework.value.DslValue equation = 4;
+  semio.s.mathematical.equation.artifact.EquationGraph graph = 1;
+  semio.s.mathematical.equation.artifact.EquationGeometry geometry = 2;
+  semio.os.store.ArtifactChild notation = 3;
+  semio.os.store.ArtifactChild results = 4;
+  semio.os.store.ArtifactChild computed = 5;
+  semio.framework.value.DslValue equation = 6;
 }

@@ -171,7 +171,7 @@ fn tree_row_kind(tree: &UiTree, id: NodeId, parent_kind: Option<LayoutNodeKind>,
                 return Some(LayoutNodeKind::TreeRow { row: 0.0, height: 0.0, expanded: false, reversed, lead: 0.0 });
             }
             let height = live_tree_item_height(tree, id, item, &metrics, 0);
-            let expanded = height > 0.0 && tree.disclosure_open(id).unwrap_or(item.default_open.unwrap_or(false)) && tree_item_has_rows(item);
+            let expanded = height > 0.0 && tree.disclosure_open(id).unwrap_or(item.default_open.unwrap_or(false)) && item.has_rows();
             let lead = row_window_lead(tree, id, key, owner);
             Some(LayoutNodeKind::TreeRow { row: if expanded { metrics.row_height } else { 0.0 }, height, expanded, reversed, lead })
         }
@@ -264,12 +264,6 @@ pub(crate) fn live_tree_section_height(tree: &UiTree, id: NodeId, section: &crat
     }
     let (lead, trail) = tree_window_spacer_px(section.window.as_ref(), section.items.len());
     header + lead + trail + section.items.iter().filter_map(|item| tree.explicit_child(id, &item.id).map(|item_id| live_tree_item_height(tree, item_id, item, metrics, 0))).sum::<f32>()
-}
-
-/// 🪟️ Whether a row folds open onto rows: materialised children, or a window declaring rows not materialised yet
-/// (`total > 0` with no children is expandable-but-not-yet-streamed, never a leaf).
-fn tree_item_has_rows(item: &UiTreeItemNode) -> bool {
-    item.items.as_deref().is_some_and(|items| !items.is_empty()) || item.window.is_some_and(|window| window.total > 0)
 }
 
 /// 🪟️ The leading spacer a windowed container places before `key`, when `key` is its FIRST materialised child.

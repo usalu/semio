@@ -1,5 +1,15 @@
 {
   "ChangeDataFields": {
-    "newJson": "{\"client\":\"acme\"}"
+    "newFields": {
+      "entries": [
+        {
+          "questionId": "client",
+          "value": {
+            "kind": "text",
+            "value": "acme"
+          }
+        }
+      ]
+    }
   }
 }

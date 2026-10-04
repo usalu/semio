@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "entry": "📦️packages/🟦️typescript/📜️script.ts",
+  "commands": ["installation-identity-check", "test", "test-artifact-reference", "test-script-boundary", "typecheck"],
+  "refusedOwners": ["🧰️framework/🛍️products", "✏️s", "🌎️hub"]
+}

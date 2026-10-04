@@ -1,0 +1,12 @@
+[
+ {"source":"solid-alpha","work":{"prepared":{"native":2,"typescript":2},"ramp":{"native":0,"typescript":0}}},
+ {"source":"empty-gradient","work":{"prepared":{"native":4,"typescript":4},"ramp":{"native":2,"typescript":2}}},
+ {"source":"single-stop","work":{"prepared":{"native":4,"typescript":5},"ramp":{"native":2,"typescript":3}}},
+ {"source":"linear-pad-and-interpolation","work":{"prepared":{"native":4,"typescript":6},"ramp":{"native":2,"typescript":4}}},
+ {"source":"authored-unsorted-stops","work":{"prepared":{"native":4,"typescript":7},"ramp":{"native":2,"typescript":5}}},
+ {"source":"coincident-stop-transition","work":{"prepared":{"native":4,"typescript":8},"ramp":{"native":2,"typescript":6}}},
+ {"source":"radial-distance","work":{"prepared":{"native":4,"typescript":6},"ramp":{"native":2,"typescript":4}}},
+ {"source":"empty-radial-gradient","work":{"prepared":{"native":4,"typescript":4},"ramp":{"native":2,"typescript":2}}},
+ {"source":"collapsed-unsorted-tied-stops","work":{"prepared":{"native":4,"typescript":8},"ramp":{"native":2,"typescript":6}}},
+ {"source":"single-stop","repeat":4096,"work":{"prepared":{"native":4,"typescript":4100},"ramp":{"native":2,"typescript":4098}}}
+]

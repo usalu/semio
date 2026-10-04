@@ -31,6 +31,7 @@ use super::set_snapshot::SetSnapshot;
 #[mutations(snapshot = SemioObjectSnapshot, diff = SemioObjectDiff, schema = "s.stdio.semio.object")]
 pub enum SemioObjectMutation {
     SetSnapshot(SetSnapshot),
+    PatchSnapshot(super::patch_snapshot::PatchSnapshot),
     MoveObject(move_object::MoveObject),
     RotateObject(rotate_object::RotateObject),
     ScaleObject(scale_object::ScaleObject),
@@ -47,7 +48,7 @@ pub enum SemioObjectMutation {
 /// and `📦️mutate-semio-object`'s exhaustive test case measures itself against. `kinds_match_the_enum_
 /// and_the_catalog` below is what keeps this list honest against the enum, since the framework
 /// never parses Rust.
-pub const KINDS: &[&str] = &["set-snapshot", "move-object", "rotate-object", "scale-object", "create-brep", "delete-brep", "create-mesh", "delete-mesh", "create-properties", "delete-properties"];
+pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "move-object", "rotate-object", "scale-object", "create-brep", "delete-brep", "create-mesh", "delete-mesh", "create-properties", "delete-properties"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -66,9 +67,12 @@ pub fn apply_semio_object_mutation(snapshot: &mut SemioObjectSnapshot, mutation:
 /// need a mutation's own computed inverse) can still reach the inverse law that
 /// [`apply_semio_object_mutation`] alone cannot. Same shape as `🧰️kit`'s `inverse_semio_kit_mutation`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse_semio_object_mutation(mutation: &SemioObjectMutation, base: &SemioObjectSnapshot) -> Vec<SemioObjectMutation> {
+pub fn inverse_semio_object_mutation(mutation: &SemioObjectMutation, base: &SemioObjectSnapshot) -> Result<Vec<SemioObjectMutation>, semio_framework_value::ValueError> {
+    Ok({
     use protocol::Mutation;
-    <SemioObjectMutation as Mutation<SemioObjectSnapshot>>::inverse(mutation, base)
+    <SemioObjectMutation as Mutation<SemioObjectSnapshot>>::inverse(mutation, base)?
+
+    })
 }
 
 /// 📥️ Decodes this facet's own externally-tagged (`{"<VariantName>": {<snake_case payload>}}`)
@@ -79,7 +83,7 @@ pub fn inverse_semio_object_mutation(mutation: &SemioObjectMutation, base: &Semi
 /// is what turns those six child-lifecycle kinds from unreachable into exercisable.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_object_mutation_json(text: &str) -> Result<SemioObjectMutation, String> {
-    pack::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Apply
 

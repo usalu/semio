@@ -44,8 +44,8 @@ async fn workshop_dsl_round_trips_through_document() {
 #[semio_framework_async_macros::async_test]
 async fn workshop_machines_round_trip_through_the_first_party_json_bridge() {
     let machines = sample_workshop().machines;
-    let text = semio_framework_os_kernel::json::to_json_string(&machines);
-    let parsed: Vec<WorkshopMachine> = semio_framework_os_kernel::json::from_json_str(&text).expect("decode");
+    let text = semio_framework_pack_json::to_json_string(&machines);
+    let parsed: Vec<WorkshopMachine> = semio_framework_pack_json::from_json_str(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("decode");
     assert_eq!(parsed, machines);
 }
 

@@ -10,7 +10,8 @@ pub mod derived_composition {
     use super::super::import::deserializers::artifacts::pptx::v_ecma_376::any::SemioPresentationFromPptx;
     use crate::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;
     use crate::standards::v1::subsets::presentation::schema::SemioPresentationAnalyzer;
-    use dsl::{Diagnostic, TextSpan};
+    use semio_framework_diagnostic::Diagnostic;
+use semio_framework_diagnostic::TextSpan;
     #[cfg(feature = "conversion-presentation")]
     use semio_framework_plugin::{deserializer_entry_of, register_composer_entries, serializer_entry_of, ComposerEntry};
     use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};

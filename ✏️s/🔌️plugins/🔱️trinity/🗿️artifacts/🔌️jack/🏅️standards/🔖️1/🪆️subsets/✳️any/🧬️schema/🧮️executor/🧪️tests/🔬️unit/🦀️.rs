@@ -3,13 +3,18 @@ use super::*;
 use crate::ast::QueryResultKind;
 use crate::language_service::{complete, format as format_source, hover, lint, semantic_tokens};
 use crate::lexer::{lex, tokenize, Token, TokenClass};
-use crate::{Camera, Manifest};
+use crate::{Camera, JackSnapshot, Manifest};
+
+/// 🧸️ The retained content child of a standalone snapshot — what the run-query job reads from its child view.
+fn content_of(snapshot: &JackSnapshot) -> semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot {
+    crate::jack_content_for_handle(&snapshot.content).expect("retained content child").snapshot().clone()
+}
 
 fn mini_graph() -> Graph {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪜️resumable-query/🔣️.json")).unwrap();
     let graph = &fixture["graph"];
-    let nodes = dsl::FromValue::from_value(dsl::DslValue::from(graph["nodes"].clone())).unwrap();
-    let edges = dsl::FromValue::from_value(dsl::DslValue::from(graph["edges"].clone())).unwrap();
+    let nodes = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(graph["nodes"].clone())).unwrap();
+    let edges = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(graph["edges"].clone())).unwrap();
     let fixture = JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), graph["name"].as_str().unwrap().into(), Some(graph["manifestId"].as_str().unwrap().into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes: nodes, edges: edges }, Some(graph["rootNodeId"].as_str().unwrap().into()));
     Graph::from_snapshot(fixture).unwrap()
 }
@@ -35,8 +40,8 @@ async fn run_match_return_graph() {
     let result = run(&mut g, "MATCH (a:Piece)-[r:Connection]->(b:Piece) RETURN a, r, b").unwrap();
     assert_eq!(result.kind, QueryResultKind::Graph);
     let fixture = result.graph_fixture.expect("graph fixture");
-    assert_eq!(fixture.nodes().len(), 2);
-    assert_eq!(fixture.edges().len(), 1);
+    assert_eq!(fixture.nodes().expect("valid retained Jack child").len(), 2);
+    assert_eq!(fixture.edges().expect("valid retained Jack child").len(), 1);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -189,12 +194,13 @@ async fn query_ownership_resumable_matches_neutral_results_and_single_mutation_p
         let query = parse(case["query"].as_str().unwrap()).unwrap();
         let expected = execute(&graph, &query).unwrap();
         let snapshot = graph.to_snapshot();
+        let content = content_of(&snapshot);
         let mut preparation = QueryExecutionPreparation::new(query);
         let mut preparation_turns = 0;
         let mut execution = loop {
             preparation_turns += 1;
             assert!(preparation_turns < 10_000);
-            match preparation.step(&snapshot, 4096).expect("retained query preparation") {
+            match preparation.step(&snapshot, &content, 4096).expect("retained query preparation") {
                 QueryPreparationStep::Pending => {}
                 QueryPreparationStep::Complete(execution) => break execution,
             }
@@ -214,15 +220,15 @@ async fn query_ownership_resumable_matches_neutral_results_and_single_mutation_p
         assert_eq!(actual.1, expected.1);
         let graph_value = |snapshot: &Option<Box<JackSnapshot>>| snapshot.as_ref().map(|snapshot| serde_json::from_str::<serde_json::Value>(&snapshot.to_json().expect("materialized graph JSON")).expect("reference JSON"));
         assert_eq!(graph_value(&actual.0.graph_fixture), graph_value(&expected.0.graph_fixture));
-        let packed = pack::to_json_string(&actual.0);
+        let packed = semio_framework_pack_json::to_json_string(&actual.0);
         assert!(packed.len() <= 1_048_576, "retained query result exceeded its emitted byte admission");
         let json: serde_json::Value = serde_json::from_str(&packed).unwrap();
         assert_eq!(json["columns"], case["columns"]);
         assert_eq!(json["rows"], case["rows"]);
         if let Some(node_ids) = case.get("nodeIds") {
             let graph = actual.0.graph_fixture.as_ref().expect("typed graph result retains its local fixture owner");
-            let mut actual_nodes: Vec<_> = graph.nodes().iter().map(|node| node.id.clone()).collect();
-            let mut actual_edges: Vec<_> = graph.edges().iter().map(|edge| edge.id.clone()).collect();
+            let mut actual_nodes: Vec<_> = graph.nodes().expect("valid retained Jack child").iter().map(|node| node.id.clone()).collect();
+            let mut actual_edges: Vec<_> = graph.edges().expect("valid retained Jack child").iter().map(|edge| edge.id.clone()).collect();
             actual_nodes.sort();
             actual_edges.sort();
             assert_eq!(serde_json::to_value(actual_nodes).unwrap(), *node_ids);
@@ -230,7 +236,7 @@ async fn query_ownership_resumable_matches_neutral_results_and_single_mutation_p
             assert_eq!(serde_json::to_value(&graph.manifest_id).unwrap(), *case.get("manifestId").unwrap_or(&fixture["graph"]["manifestId"]));
             let graph_json = graph.to_json().unwrap();
             let projected: serde_json::Value = serde_json::from_str(&graph_json).unwrap();
-            assert_eq!(projected["manifest"], serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&graph.manifest)).unwrap());
+            assert_eq!(projected["manifest"], serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&graph.manifest)).unwrap());
             let decoded = JackSnapshot::from_json(&graph_json).unwrap();
             assert_eq!(decoded.manifest_id, graph.manifest_id);
             assert_eq!(decoded.manifest, graph.manifest);
@@ -259,11 +265,12 @@ fn query_ownership_cancelled_preparation_closes_while_source_scene_remains_live(
     let cancel_after = policy["cancelAfterWorkUnits"].as_u64().expect("cancel units") as usize;
     let maximum_bytes = policy["retirementBytesPerStep"].as_u64().expect("retirement bytes") as usize;
     let source = mini_graph().to_snapshot();
-    let source_owner = source.content.local_owner::<crate::JackWorkingScene>().expect("source scene owner");
+    let source_owner = source.content.local_owner::<crate::JackContentOwner>().expect("source content owner");
     let query = parse("MATCH (a:Apartment) RETURN a.name").expect("query");
     let mut preparation = QueryExecutionPreparation::new(query);
+    let content = content_of(&source);
     for _ in 0..cancel_after {
-        assert!(matches!(preparation.step(&source, maximum_bytes).expect("preparation step"), QueryPreparationStep::Pending));
+        assert!(matches!(preparation.step(&source, &content, maximum_bytes).expect("preparation step"), QueryPreparationStep::Pending));
     }
     preparation.begin_close();
     for _ in 0..100_000 {
@@ -277,14 +284,15 @@ fn query_ownership_cancelled_preparation_closes_while_source_scene_remains_live(
         }
     }
     assert!(preparation.terminal_is_empty());
-    assert_eq!(source.content.local_owner::<crate::JackWorkingScene>().expect("source survives cancellation").nodes.len(), source_owner.nodes.len());
+    assert_eq!(source.content.local_owner::<crate::JackContentOwner>().expect("source survives cancellation").snapshot().nodes.len(), source_owner.snapshot().nodes.len());
     drop(preparation);
 }
 
-fn query_ownership_preparation_rejection(source: &JackSnapshot) -> String {
+fn query_ownership_preparation_rejection(source: &JackSnapshot) -> semio_framework_value::ValueError {
     let mut preparation = QueryExecutionPreparation::new(parse("MATCH (a:Piece) RETURN a.name").expect("query"));
+    let content = content_of(source);
     let error = (0..100_000)
-        .find_map(|_| match preparation.step(source, 4_096) {
+        .find_map(|_| match preparation.step(source, &content, 4_096) {
             Ok(QueryPreparationStep::Pending) => None,
             Ok(QueryPreparationStep::Complete(_)) => panic!("oversized source entity was cloned"),
             Err(error) => Some(error),
@@ -316,13 +324,13 @@ fn query_ownership_preparation_rejects_oversized_node_and_edge_before_clone() {
     let mut node_graph = mini_graph();
     node_graph.nodes.get_mut("root").expect("root node").properties.insert("payload".into(), PropertyValue::String("n".repeat(property_bytes)));
     let node_source = node_graph.to_snapshot();
-    assert_eq!(query_ownership_preparation_rejection(&node_source), "query entity exceeds its byte grant");
-    assert_eq!(node_source.nodes().iter().find(|node| node.id == "root").expect("oversized source node remains live").properties["payload"].as_str().map(str::len), Some(property_bytes));
+    let error=query_ownership_preparation_rejection(&node_source);assert_eq!(error.kind,semio_framework_value::ValueRefusalKind::OwnershipLimit);assert_eq!(error.message,"query entity exceeds its byte grant");
+    assert_eq!(node_source.nodes().expect("valid retained Jack child").iter().find(|node| node.id == "root").expect("oversized source node remains live").properties.get("payload").expect("retained payload property").as_str().map(str::len), Some(property_bytes));
     let mut edge_graph = mini_graph();
     edge_graph.edges.get_mut("e1").expect("fixture edge").properties.insert("payload".into(), PropertyValue::String("e".repeat(property_bytes)));
     let edge_source = edge_graph.to_snapshot();
-    assert_eq!(query_ownership_preparation_rejection(&edge_source), "query entity exceeds its byte grant");
-    assert_eq!(edge_source.edges().iter().find(|edge| edge.id == "e1").expect("oversized source edge remains live").properties["payload"].as_str().map(str::len), Some(property_bytes));
+    let error=query_ownership_preparation_rejection(&edge_source);assert_eq!(error.kind,semio_framework_value::ValueRefusalKind::OwnershipLimit);assert_eq!(error.message,"query entity exceeds its byte grant");
+    assert_eq!(edge_source.edges().expect("valid retained Jack child").iter().find(|edge| edge.id == "e1").expect("oversized source edge remains live").properties.get("payload").expect("retained payload property").as_str().map(str::len), Some(property_bytes));
 }
 
 #[test]
@@ -343,7 +351,7 @@ fn query_ownership_output_admission_rejects_oversized_table_before_publication()
         let mut node = template.clone();
         node.id = format!("n-{index:04}");
         node.name = "x".repeat(cell_bytes);
-        node.properties.clear();
+        while let Some((key,value))=node.properties.pop_last(){drop(key);<PropertyValue as semio_framework_dsl_record::DslField>::retire_decoded(value);}
         node.ports.clear();
         graph.nodes.insert(node.id.clone(), node);
     }
@@ -355,7 +363,7 @@ fn query_ownership_output_admission_rejects_oversized_table_before_publication()
             Err(error) => Some(error),
         })
         .expect("oversized query result is rejected");
-    assert_eq!(error, "query result exceeds its output admission");
+    assert_eq!(error.kind,semio_framework_value::ValueRefusalKind::OwnershipLimit);assert_eq!(error.message, "query result exceeds its output admission");
     execution.begin_close();
     let mut complete = false;
     for _ in 0..100_000 {

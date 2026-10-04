@@ -12,6 +12,8 @@
 //! https://www.iso.org/standard/70303.html (IFC4) / https://www.iso.org/standard/63141.html (Part 21)
 
 use crate::STDIO_IFC_DOCUMENT_SCHEMA;
+#[path="🚦️native/🦀️.rs"]
+mod native;
 #[path="🪶️sqlite/🦀️.rs"]
 pub mod sqlite_snapshot;
 #[cfg(test)]
@@ -265,48 +267,20 @@ pub fn from_part21_document(schema: impl Into<String>, doc: &Part21Document) -> 
 }
 //#endregion 🔖️Part21Conversion
 
-//#region 🔖️Part21Codec
+//#region 🔖️NativeCodec
 impl store::ArtifactDsl for IfcSnapshot {
     const EXTENSION: &'static str = "ifc";
-    fn envelope_id() -> &'static str {
-        "stdio.ifc"
-    }
-
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        let document = parse_part21(body).map_err(|e| store::TextError::new(format!("ifc parse: {e}"), dsl::TextSpan::at(1, 1)))?;
-        Ok(from_part21_document(STDIO_IFC_DOCUMENT_SCHEMA, &document))
-    }
-    fn print_dsl(&self) -> String {
-        let body = write_part21(&to_part21_document(self));
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
+    fn envelope_id() -> &'static str { STDIO_IFC_DOCUMENT_SCHEMA }
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> { native::parse_text(text) }
+    fn print_dsl(&self) -> String { native::print_text(self) }
 }
 
 impl store::ArtifactPack for IfcSnapshot {
     fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as semio_framework_os_kernel::ArtifactSqliteSnapshot>::sqlite_codec())}
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let _ = options;
-        let raw = write_part21(&to_part21_document(self)).into_bytes();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &raw))
-    }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
-        }
-        let _ = options;
-        let text = String::from_utf8(inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        let document = parse_part21(&text).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(from_part21_document(STDIO_IFC_DOCUMENT_SCHEMA, &document))
-    }
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> { native::encode_pack(self,options) }
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> { native::decode_pack(bytes,options) }
 }
-//#endregion 🔖️Part21Codec
+//#endregion 🔖️NativeCodec
 
 //#region 🧪️Tests
 #[cfg(test)]

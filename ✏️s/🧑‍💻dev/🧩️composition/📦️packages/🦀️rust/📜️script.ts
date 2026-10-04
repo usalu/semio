@@ -17,10 +17,13 @@ class TestScript extends BundleScript {
     const { rest } = resolveTestLevel(segments);
     const selected = rest.indexOf("--test");
     const target = selected < 0 ? undefined : rest[selected + 1];
-    const groups = compositionLawGroups().filter(group => target === undefined || group.target.name === target);
-    if (!groups.length || (selected >= 0 && !target)) throw new Error("unknown composition test target");
+    const filtered = rest.indexOf("--law-filter");
+    const pattern = filtered < 0 ? undefined : rest[filtered + 1];
+    if (filtered >= 0 && !pattern) throw new Error("law filter requires a name fragment");
+    const groups = compositionLawGroups().filter(group => target === undefined || group.target.name === target).map(group => ({ ...group, laws: group.laws.filter(law => pattern === undefined || law.includes(pattern)) })).filter(group => group.laws.length > 0);
+    if (!groups.length || (selected >= 0 && !target)) throw new Error("unknown composition target or empty law selection");
     testCompositionOwnership(target);
-    const cargoArgs = selected < 0 ? rest : rest.filter((_value, index) => index !== selected && index !== selected + 1);
+    const cargoArgs = rest.filter((_value, index) => (selected < 0 || index !== selected && index !== selected + 1) && (filtered < 0 || index !== filtered && index !== filtered + 1));
     await runRepositoryExactCargoLaws({ cwd: this.repoRoot, cargoArgs, buildBudgetMs: buildBudgetMs(), lawBudgetMs: 600_000, env: process.env, nativeEnv: { RUST_MIN_STACK: process.env.RUST_MIN_STACK ?? "134217728" }, groups, progress(event) { console.log(`[composition-laws] ${event.stage}: ${event.law ?? ""}`); } });
   }
 }

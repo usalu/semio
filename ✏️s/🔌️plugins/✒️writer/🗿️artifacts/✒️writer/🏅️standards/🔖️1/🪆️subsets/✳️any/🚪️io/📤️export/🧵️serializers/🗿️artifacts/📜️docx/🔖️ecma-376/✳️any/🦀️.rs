@@ -3,7 +3,7 @@
 //! typed builder — not a fabricated/renamed text file inside a zip.
 
 use crate::{writer_text, WriterSnapshot};
-use semio_framework::io::io_mechanism::Serializer;
+use semio_framework::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{Dialect, StandardId, SubsetId};
 use semio_s_artifact_stdio_docx::schema::snapshot::DocxBlock;
@@ -17,7 +17,7 @@ impl Serializer<WriterSnapshot> for WriterIntoDocx {
     const INTO: Dialect = DOCX_DIALECT;
     /// 🪧️ Lossy — see the sibling deserializer's doc comment.
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &WriterSnapshot) -> IoResult<IoPayload> {
+    async fn serialize(from: &WriterSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
         let body: Vec<DocxBlock> = writer_text(from).split('\n').map(DocxBlock::paragraph).collect();
         let document = semio_s_artifact_stdio_docx::schema::snapshot::DocxDocument { body, styles: Vec::new() };
         let docx = semio_s_artifact_stdio_docx::engine::build_minimal_docx(document);

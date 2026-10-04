@@ -30,19 +30,22 @@ impl MutationKind<OpeningPreferences, OpeningConfigMutation> for ClearDefaultApp
     fn diff(&self, base: &OpeningPreferences) -> MutationOutcome<OpeningPreferences> {
         if !base.defaults.iter().any(|entry| entry.dialect == self.dialect && entry.role == self.role) {
             let role = role_name(self.role);
-            return MutationOutcome::new(base.clone()).warn("mutation.no-op", format!("\"{}\" has no pinned default {} to clear.", self.dialect.to_coordinate(), role));
+            return MutationOutcome::new(base.clone()).warning("mutation.no-op", format!("\"{}\" has no pinned default {} to clear.", self.dialect.to_coordinate(), role));
         }
         let defaults = base.defaults.iter().filter(|entry| !(entry.dialect == self.dialect && entry.role == self.role)).cloned().collect();
         MutationOutcome::new(OpeningPreferences { defaults })
     }
 
-    fn inverse(&self, base: &OpeningPreferences) -> Vec<OpeningConfigMutation> {
+    fn inverse(&self, base: &OpeningPreferences) -> Result<Vec<OpeningConfigMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         base.defaults
             .iter()
             .find(|entry| entry.dialect == self.dialect && entry.role == self.role)
             .map(|prior| vec![OpeningConfigMutation::SetDefaultApp(SetDefaultApp { dialect: self.dialect.clone(), role: self.role, app: prior.app.clone() })])
             .unwrap_or_default()
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Clear default {} for \"{}\"", role_name(self.role), self.dialect.to_coordinate()), &format!("Standard-{} für \"{}\" entfernen", role_name_de(self.role), self.dialect.to_coordinate()))

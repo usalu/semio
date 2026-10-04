@@ -143,8 +143,8 @@ impl RasterTableGpuHarness {
     }
 
     fn stage(&mut self, key: &str, width: u32, height: u32, identity: crate::wgpu::prepared::RasterContentIdentity, owner: RasterTextureWitness) {
-        assert!(self.table.prepare_admission_step(key, width, height, identity, owner).expect("table admission prepares"));
-        let admission = self.table.reserve_engine_texture(key, width, height, identity, owner, owner).expect("table texture reserves");
+        assert!(self.table.prepare_admission_step(key, width, height,1, identity, owner).expect("table admission prepares"));
+        let admission = self.table.reserve_engine_texture(key, width, height,1, identity, owner, owner).expect("table texture reserves");
         let texture = self.device.create_texture(&wgpu::TextureDescriptor {
             label: Some("raster_table_lifecycle_value"),
             size: wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
@@ -270,6 +270,64 @@ fn neutral_capacity_fixture_pins_identity_peak_policy_and_single_engine_target()
     assert_eq!(law["scenarios"][5]["expected"]["tableTargets"], 1);
 }
 
+/// 🧱️ Authored mip publication retains exact GPU credits and cancellation closes every upload phase.
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn authored_mip_upload_bounds_each_slice_and_cancellation_retires_the_same_owner() {
+    use crate::wgpu::raster_ownership::{SceneRasterBegin, SceneRasterPool, SceneRasterPoolLimits, SceneRasterProfile, SceneRasterWriteMode};
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json")).unwrap();
+    assert!(law["pixelCases"].as_array().unwrap().iter().any(|row| row["id"] == "authoredMipLinear"));
+    let _guard = RASTER_TABLE_GPU_LAW_LOCK.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let Some(mut harness) = semio_framework_async::block_on(RasterTableGpuHarness::new()) else { return };
+    let pool = SceneRasterPool::try_new(SceneRasterPoolLimits { item_bytes: 4096, pool_bytes: 4096, slot_capacity: 1, lease_capacity_per_slot: 4, transfer_bytes: 256, retire_bytes: 256, gpu_resident_bytes: 5460 }).unwrap();
+    for revision in 1..=2 {
+        while !pool.maintenance_step() {}
+        let descriptor = crate::wgpu::raster_ownership::SceneRasterDescriptor { width: 32, height: 32, profile: SceneRasterProfile::MeshNumericLinear, ..integration_scene_descriptor(revision) };
+        assert_eq!(descriptor.gpu_byte_len(), Some(5460));
+        let mut writer = (0..64).find_map(|_| match pool.begin(descriptor, revision, SceneRasterWriteMode::Streamed) {
+            SceneRasterBegin::Writer(writer) => Some(writer),
+            SceneRasterBegin::Backpressure(_) => { pool.maintenance_step(); None },
+            _ => panic!("authored raster writer"),
+        }).expect("authored writer progresses through bounded retirement");
+        for _ in 0..16 { writer = pool.push(writer, &[127; 256]).unwrap(); }
+        let lease = pool.seal(writer).unwrap();
+        let owner = witness(revision);
+        let key = format!("authored-mip-{revision}");
+        harness.publish(owner, std::slice::from_ref(&key));
+        let mut previous = (0, 1, 0);
+        let mut slices = 0;
+        loop {
+            let ready = harness.table.ensure_raster_step(&harness.device, &harness.queue, &harness.globals, &harness.glyph_view, &harness.glyph_sampler, &harness.glyph_view, &harness.glyph_sampler, &key, RasterUploadPixels::Scene(&lease), 32, 32, owner, owner).unwrap();
+            slices += 1;
+            assert!(slices < 64);
+            if ready { break; }
+            let cursor = harness.table.upload.as_ref().unwrap();
+            assert_eq!(harness.table.retained_bytes(), 5460);
+            if cursor.row == previous.0 && cursor.mip == previous.1 { assert!(cursor.mip_row.saturating_sub(previous.2) <= 8); }
+            previous = (cursor.row, cursor.mip, cursor.mip_row);
+            if revision == 1 && cursor.mip_row == 8 { break; }
+        }
+        if revision == 1 {
+            let mut closing = 0;
+            while !matches!(harness.table.close_upload_step(), RasterTextureCleanupStep::Complete) { closing += 1; assert!(closing < 64); }
+            harness.abort(owner);
+            assert!(harness.table.get(&key).is_none());
+            assert_eq!(harness.table.retained_bytes(), 0);
+            assert_eq!(pool.live_lease_count(descriptor), 0);
+            assert_eq!(pool.gpu_resident_bytes(), 0);
+        } else {
+            assert!(harness.table.begin_presenting(owner).unwrap());
+            harness.commit(owner);
+            assert_eq!(pool.gpu_resident_bytes(), 5460);
+            assert_eq!(pool.live_lease_count(descriptor), 0);
+            harness.close();
+            assert_eq!(pool.gpu_resident_bytes(), 0);
+        }
+        eprintln!("[DEBUG] authored mip upload revision={revision} slices={slices} residentBytes={} terminal={} ", pool.gpu_resident_bytes(), harness.table.get(&key).is_none());
+    }
+    assert!(semio_framework_async::block_on(harness.validation_error()).is_none());
+}
+
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn real_gpu_table_commits_six_scene_leases_retires_the_first_and_recovers_its_natural_dimensions() {
@@ -391,7 +449,7 @@ fn production_table_reoffers_a_full_committed_frame_and_backpressures_a_changed_
     let repeated = witness(11);
     harness.publish(repeated, &keys);
     for (index, key) in keys.iter().enumerate() {
-        assert!(harness.table.prepare_admission_step(key, 1, 1, RasterTableGpuHarness::identity(1, 1, index as u64 + 1), repeated).expect("unchanged full-table admission reuses"));
+        assert!(harness.table.prepare_admission_step(key, 1, 1,1, RasterTableGpuHarness::identity(1, 1, index as u64 + 1), repeated).expect("unchanged full-table admission reuses"));
     }
     assert!(harness.table.staged.is_empty());
     assert!(!harness.table.begin_presenting(repeated).expect("unchanged frame needs no staged presentation"));
@@ -402,7 +460,7 @@ fn production_table_reoffers_a_full_committed_frame_and_backpressures_a_changed_
     harness.publish(changed, &keys);
     let mut pending = 0usize;
     let fault = loop {
-        match harness.table.prepare_admission_step(&keys[0], 1, 1, RasterTableGpuHarness::identity(1, 1, u64::MAX), changed) {
+        match harness.table.prepare_admission_step(&keys[0], 1, 1,1, RasterTableGpuHarness::identity(1, 1, u64::MAX), changed) {
             Ok(false) => pending += 1,
             Ok(true) => panic!("changed protected content must not exceed full table capacity"),
             Err(fault) => break fault,
@@ -577,7 +635,7 @@ fn all_world_ui_and_overlay_raster_sources_publish_into_one_exact_set() {
         mesh_version: 1,
         first_index: 0,
         index_count: u32::MAX,
-        instances: vec![crate::wgpu::kernel_3d_scene::Instance3d {
+        instances: vec![crate::wgpu::kernel_3d_scene::Instance3d { component_source: None,
             id: "painted-instance".into(),
             model: crate::wgpu::kernel_3d_scene::Instance3d::model_from_trs([0.0; 3], [0.0, 0.0, 0.0, 1.0], [1.0; 3]),
             color: [1.0; 4],
@@ -593,8 +651,8 @@ fn all_world_ui_and_overlay_raster_sources_publish_into_one_exact_set() {
             mesh_key:"authored-mesh".into(),mesh_version:1,first_index:0,index_count:3,instances:Vec::new(),translucent:false,
             material:crate::wgpu::kernel_3d_scene::SceneMaterialKind3d::Authored(crate::wgpu::kernel_3d_scene::SceneAuthoredMaterial3d {
                 base_color:[1.0;4],emissive:[0.0;3],metalness:0.0,roughness:1.0,alpha:crate::wgpu::kernel_3d_scene::SceneMaterialAlpha3d::Opaque,
-                alpha_cutoff:0.5,double_sided:false,preserve_vertex_color:false,base_color_texture:texture,texture_sampler:Default::default(),
-            }),
+                alpha_cutoff:0.5,double_sided:false,preserve_vertex_color:false,base_color_texture:texture,texture_sampler:Default::default(),metallic_roughness_texture:None,normal_texture:None,occlusion_texture:None,emissive_texture:None,additional_texture_samplers:[Default::default();4],
+            normal_scale:[1.0;2],occlusion_strength:1.0,}),
         });
     }
     draw.scene_passes.push(pass);

@@ -93,7 +93,7 @@ export async function objSnapshotToSqliteDatabase(snapshot: ObjSnapshot, options
     table.push({ rowid: id, values: encodeIeee754Cells([id,...cells],floatColumns(name),options.maxColumns) });
     if (++completed % 256 === 0) await artifactSqliteCheckpoint(options, "projectSnapshot", completed, total);
   });
-  const database = artifactSqliteDatabase(OBJ_SQLITE_SCHEMA, TABLES.map(name => rows.get(name)!), options);
+  const database = await artifactSqliteDatabase(OBJ_SQLITE_SCHEMA, TABLES.map(name => rows.get(name)!), options);
   await artifactSqliteCheckpoint(options, "projectSnapshot", total, total);
   return database;
 }

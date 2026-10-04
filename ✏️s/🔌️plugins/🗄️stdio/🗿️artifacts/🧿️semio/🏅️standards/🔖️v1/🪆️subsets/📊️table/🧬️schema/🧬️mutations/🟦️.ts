@@ -9,6 +9,7 @@
  * leaf's own field names are the literal Rust snake_case names verbatim. */
 import type { SetSnapshot } from './📸️set-snapshot/🟦️.ts';
 import type { SemioTableCellKind, SemioTableRow, SemioValue } from "../📸️snapshot/🟦️.ts";
+import type { SnapshotPatch } from '../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts';
 
 export interface CreateColumn {
   name: string;
@@ -60,3 +61,4 @@ export type SemioTableMutation =
   | { ReorderRows: ReorderRows }
   | { EditCell: EditCell }
   | { SetSnapshot: SetSnapshot };
+  | { readonly PatchSnapshot: { readonly patch: SnapshotPatch } }

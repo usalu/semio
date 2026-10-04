@@ -50,7 +50,7 @@ fn inverse_spec(original: &[u8], forward: &Json) -> Result<Json, String> {
         _ => None,
     };
     match forward.str("kind").as_str() {
-        "set-snapshot" => {
+        "set-snapshot" | "patch-snapshot" => {
             let grid = read_grid(original)?;
             let snapshot = json_object(vec![("schema", Json::String("stdio.tsv".to_string())), ("records", rows_json(&grid.records)), ("trailingNewline", Json::Bool(grid.trailing_newline)), ("lineEnding", Json::String(grid.line_ending))]);
             Ok(kind_spec("set-snapshot", json_object(vec![("snapshot", snapshot)])))
@@ -169,7 +169,7 @@ mod subject {
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let mut snapshot = decode(&mutable_input(ctx)?)?;
         let mutation = mutation_from_spec(&ctx.doc_json()?)?;
-        let undo = mutation_inverse(&mutation, &snapshot);
+        let undo = mutation_inverse(&mutation, &snapshot).expect("valid retained mutation inverse fixture");
         apply_tsv_mutation(&mut snapshot, &mutation);
         for step in &undo {
             apply_tsv_mutation(&mut snapshot, step);

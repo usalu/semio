@@ -96,12 +96,22 @@
     },
     {
       "id": "a-remote-change-replays-before-it-is-adopted",
-      "patch": { "cursor": 12, "commandFilter": "all", "remoteReplay": { "done": 40, "total": 200 } },
+      "patch": { "cursor": 12, "commandFilter": "all", "reprojection": { "done": 40, "total": 200 } },
+      "keys": []
+    },
+    {
+      "id": "a-local-history-step-replays-before-it-is-adopted",
+      "patch": { "cursor": 14, "commandFilter": "all", "reprojection": { "done": 256, "total": 600, "kind": "step" }, "editCount": 64 },
+      "keys": []
+    },
+    {
+      "id": "a-whole-document-load-replays-before-it-is-adopted",
+      "patch": { "cursor": 15, "commandFilter": "all", "reprojection": { "done": 12, "total": 241, "kind": "load" } },
       "keys": []
     },
     {
       "id": "a-paused-remote-replay-names-its-refusal",
-      "patch": { "cursor": 13, "commandFilter": "all", "remoteReplay": { "done": 0, "total": 200, "paused": true, "fault": "history.transition-refused" } },
+      "patch": { "cursor": 13, "commandFilter": "all", "reprojection": { "done": 0, "total": 200, "paused": true, "fault": "history.transition-refused" } },
       "keys": []
     },
     {
@@ -136,7 +146,9 @@
     }
   ],
   "invalid": [
-    { "id": "remote-replay-without-total", "patch": { "cursor": 1, "remoteReplay": { "done": 3 } }, "reason": "a remote replay names how many operations it replays" },
+    { "id": "reprojection-without-total", "patch": { "cursor": 1, "reprojection": { "done": 3 } }, "reason": "a reprojection names how many operations it replays" },
+    { "id": "edit-count-negative", "patch": { "cursor": 1, "editCount": -1 }, "reason": "an edit count is a u32" },
+    { "id": "reprojection-kind-unknown", "patch": { "cursor": 1, "reprojection": { "done": 0, "total": 3, "kind": "local" } }, "reason": "a reprojection is a remote change, this replica's own step or a whole-document load" },
     { "id": "introduced-not-a-boolean", "patch": { "cursor": 1, "upserts": [{ "seq": 1, "editId": "e-1", "actionId": "apply", "label": { "native": { "en": "Apply", "de": "Anwenden" }, "reuse": { "en": "Apply", "de": "Anwenden" } }, "kind": "mutation", "timestamp": "t", "mutations": [{ "mutationId": "e-1#0", "position": 0, "opIndex": 0, "label": { "native": { "en": "Apply", "de": "Anwenden" }, "reuse": { "en": "Apply", "de": "Anwenden" } }, "introduced": "yes" }] }] }, "reason": "introduced is a boolean" },
     { "id": "unknown-severity", "patch": { "cursor": 1, "timeTravel": { "sessionId": "1", "generation": 0, "stage": "reviewing", "worst": "catastrophic" } }, "reason": "worst is one of info, warning, error, fatal" },
     { "id": "unknown-stage", "patch": { "cursor": 1, "timeTravel": { "sessionId": "1", "generation": 0, "stage": "inactive" } }, "reason": "an inactive session is an absent timeTravel, never a stage" },

@@ -4,12 +4,12 @@ import * as snapshot from "../../🟦️.ts";
 import * as artifact from "../../../🟦️.ts";
 import * as diff from "../../../🔺️diff/🟦️.ts";
 import fixture from "../../🧫️fixtures/🪶️sqlite/🔣️.json";
-import {fem3dSnapshotToSqliteDatabase,fem3dSnapshotFromSqliteDatabase,type Fem3dSqliteSnapshot} from "../../🪶️sqlite/🟦️.ts";
+import {fem3dSnapshotToSqliteDatabase,fem3dSnapshotFromSqliteDatabase} from "../../🪶️sqlite/🟦️.ts";
 import type {FemDof} from "../../🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase,type SqliteValue} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 const bits=(word:string)=>({bits:BigInt("0x"+word)});
 function dof(value:string):FemDof{switch(value){case"Tx":case"Ty":case"Tz":case"Rx":case"Ry":case"Rz":return value;default:throw Error("fixture DOF")}}
-function state():Fem3dSqliteSnapshot{
+function state():snapshot.Fem3dSnapshot{
  const s=fixture.document;
  return{
   nodes:s.nodes.map(v=>({id:v.id,x:bits(v.xBits),y:bits(v.yBits),z:bits(v.zBits)})),
@@ -23,7 +23,7 @@ function state():Fem3dSqliteSnapshot{
   analysis:{modalCount:BigInt(s.analysis.modalCount),bucklingCount:BigInt(s.analysis.bucklingCount),deformationScale:bits(s.analysis.deformationScaleBits)}
  }
 }
-function everyWord(s:Fem3dSqliteSnapshot,word:string):void{
+function everyWord(s:snapshot.Fem3dSnapshot,word:string):void{
  const v=bits(word);s.analysis.deformationScale=v;for(const n of s.nodes){n.x=v;n.y=v;n.z=v}for(const e of s.elements)if(e.kind==="frame")e.roll=v;
  for(const m of s.materials){m.e=v;m.g=v;m.nu=v;m.rho=v}for(const x of s.sections){x.area=v;x.iy=v;x.iz=v;x.j=v}
  for(const x of s.solids){x.baseZ=v;x.height=v;x.meshSize=v;for(const p of x.outline){p[0]=v;p[1]=v}for(const h of x.holes)for(const p of h){p[0]=v;p[1]=v}}
@@ -93,6 +93,7 @@ for(const word of fixture.ieee754Words)test(`fem3d canonical snapshot artifact a
    expect(artifact.parseFem3dArtifact(source)).toEqual(source);
    const delta=diff.parseFem3dNodesDelta({added:source.nodes,removed:[],patched:[]});
    expect(delta.added).toEqual(source.nodes);
+   expect(diff.parseFem3dNodesDelta({added:[],removed:[],patched:source.nodes.map(item=>({id:item.id,item}))}).patched).toEqual(source.nodes.map(item=>({id:item.id,item})));
    expect(await fem3dSnapshotFromSqliteDatabase(await fem3dSnapshotToSqliteDatabase(artifact.parseFem3dArtifact(source)))).toEqual(source);
   }
 });

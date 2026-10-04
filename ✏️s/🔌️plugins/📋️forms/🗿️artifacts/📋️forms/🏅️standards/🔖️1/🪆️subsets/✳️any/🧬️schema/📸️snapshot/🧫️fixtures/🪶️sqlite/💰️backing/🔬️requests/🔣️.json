@@ -1,0 +1,53 @@
+{
+  "fieldOrder": [
+    "schema",
+    "id",
+    "version",
+    "title",
+    "definition",
+    "responses",
+    "structure",
+    "results"
+  ],
+  "tableCount": 30,
+  "phases": [
+    "projectSnapshot",
+    "reconstructSnapshot"
+  ],
+  "requestExtent": "fullConcreteRequests",
+  "reallocation": "completeReplacement",
+  "exactReplay": true,
+  "denial": "oneByteBelowObserved",
+  "retirementRefund": false,
+  "refusalKind": "ownershipLimit",
+  "zeroOwnershipBytes": 0,
+  "ieeeWords": [
+    "fff0000000000123",
+    "0000000000000000",
+    "8000000000000000",
+    "0000000000000001",
+    "3ff0000000000000",
+    "7fefffffffffffff",
+    "7ff0000000000000",
+    "fff0000000000000"
+  ],
+  "intrinsicKinds": [
+    "null",
+    "boolean",
+    "unsigned",
+    "signed",
+    "float",
+    "text",
+    "bytes",
+    "array",
+    "object"
+  ],
+  "conditionKinds": [
+    "const",
+    "var",
+    "eq",
+    "and",
+    "or",
+    "truthy"
+  ]
+}

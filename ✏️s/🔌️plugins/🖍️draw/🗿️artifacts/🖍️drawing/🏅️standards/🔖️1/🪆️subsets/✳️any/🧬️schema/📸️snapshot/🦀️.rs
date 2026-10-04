@@ -6,9 +6,10 @@ use std::collections::BTreeMap;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted drawing document snapshot (persistent fields of the artifact).
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
+#[value(retire_with = "sqlite::retire")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(id = "drawing.drawing", layout = "lines")]
 #[artifact_schema(id = "s.draw.drawing")]
@@ -45,3 +46,10 @@ impl Default for DrawingSnapshot {
     }
 }
 //#endregion 🔖️Snapshot
+
+#[cfg(test)]
+#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;
+
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;

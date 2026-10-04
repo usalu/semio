@@ -13,7 +13,7 @@ use semio_s_artifact_stdio_las::LasSnapshot;
 
 pub fn register() {}
 
-pub fn serialize(snapshot: &LowpolySnapshot) -> Result<LasSnapshot, store::TextError> {
+pub fn serialize(snapshot: &LowpolySnapshot) -> Result<LasSnapshot, semio_framework_diagnostic::TextError> {
     let mut points = Vec::new();
     let mut min = [f64::INFINITY; 3];
     let mut max = [f64::NEG_INFINITY; 3];
@@ -62,6 +62,6 @@ pub fn serialize(snapshot: &LowpolySnapshot) -> Result<LasSnapshot, store::TextE
     })
 }
 
-pub fn serialize_bytes(snapshot: &LowpolySnapshot) -> Result<Vec<u8>, store::TextError> {
-    encode_las(&serialize(snapshot)?).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+pub fn serialize_bytes(snapshot: &LowpolySnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
+    encode_las(&serialize(snapshot)?).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
 }

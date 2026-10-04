@@ -3,7 +3,7 @@ use super::*;
 #[test]
 fn app_config_carries_weights_and_fill_count_but_no_window_or_operation_state() {
     let config = Puzzle2dConfig::default();
-    let json = dsl::json::to_json_string(&config);
+    let json = semio_framework_pack_json::to_json_string(&config);
     let oracle: serde_json::Value = serde_json::from_str(&json).expect("third-party JSON oracle");
     assert_eq!(oracle.as_object().map(serde_json::Map::len), Some(5));
     assert!(oracle.get("nodeKindWeights").is_some());

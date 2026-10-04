@@ -389,5 +389,41 @@
         }
       }
     ]
+  },
+  "member": {
+    "toolId": "toyMemberFill",
+    "slot": "slot",
+    "childId": "child-1",
+    "childDialect": {
+      "artifactKind": "s.test.child",
+      "standard": "native",
+      "subset": "*"
+    },
+    "units": 5,
+    "groupId": "toolRun:1",
+    "countAfterFinalize": 5,
+    "labelAfterFinalize": "unit-5",
+    "memberEditsAdded": 1,
+    "parentEditsAdded": 0,
+    "transactionRowsAdded": 1,
+    "countAfterUndo": 0,
+    "labelAfterUndo": "",
+    "toolLabel": {
+      "en": "Toy member fill",
+      "de": "Spielfüllung im Mitglied"
+    },
+    "abort": {
+      "target": 1000,
+      "unitsBeforeAbort": 1
+    },
+    "pauseStep": {
+      "target": 1000,
+      "opsPerStep": 2,
+      "steps": 3
+    },
+    "capped": {
+      "target": 3000,
+      "memberOpsMax": 4096
+    }
   }
 }

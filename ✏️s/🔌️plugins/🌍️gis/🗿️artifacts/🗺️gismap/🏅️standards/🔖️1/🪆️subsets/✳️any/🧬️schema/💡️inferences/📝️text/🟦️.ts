@@ -49,5 +49,5 @@ export const gisGismapInferenceTextGuardConstant = <T extends string | number | 
 //#endregion 🚪️Parsers
 
 export function parseGisMapInferenceText(value: unknown, at = "$"): GisMapInferenceText {
-  return gisGismapInferenceTextGuardObject(value, `${at}`);
+  return gisGismapInferenceTextGuardString(value, `${at}`);
 }

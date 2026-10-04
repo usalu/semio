@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeMaterialThermalAbsorptance, base: &EnergyMode
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Material {}: thermal absorptance must be a fraction in [0, 1], got {}.", payload.id.0, payload.new_thermal_absorptance), [payload.id.0.to_string()]);
     }
     if existing.thermal_absorptance == payload.new_thermal_absorptance {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Material {} already carries this thermal absorptance: {}.", payload.id.0, payload.new_thermal_absorptance));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Material {} already carries this thermal absorptance: {}.", payload.id.0, payload.new_thermal_absorptance));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.materials.iter_mut().find(|item| item.id == payload.id) {

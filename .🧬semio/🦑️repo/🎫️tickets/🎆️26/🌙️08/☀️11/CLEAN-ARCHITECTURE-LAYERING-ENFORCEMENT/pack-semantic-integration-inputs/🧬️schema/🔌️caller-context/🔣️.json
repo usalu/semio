@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 14,
+      "maxItems": 14,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "path",
+          "owner",
+          "callee",
+          "mode",
+          "beforeArguments",
+          "afterArguments",
+          "maximumBytes",
+          "cancellation",
+          "progress"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "path": {
+            "enum": [
+              "🧰️framework/🔨️modules/🎒️pack/🔌️io/🧪️tests/🔬️native-unit/🦀️.rs",
+              "🧰️framework/🔨️modules/🎒️pack/🔌️io/🧪️tests/🧭️producer-authority/🦀️.rs"
+            ]
+          },
+          "owner": {
+            "enum": [
+              "file_source_sink_write_then_read_back",
+              "write_atomic_produces_full_content_and_no_stray_tmp_file",
+              "write_atomic_never_exposes_a_partial_target_from_a_simulated_interrupted_write",
+              "streaming_writer_full_session_multiple_segments_and_a_chunk_round_trips",
+              "build_valid_session_file",
+              "recover_file_with_footer_stripped_still_recovers_every_body_segment",
+              "recover_file_truncated_mid_segment_recovers_a_strict_prefix_without_panicking",
+              "recover_file_on_a_file_too_short_for_a_header_errors_never_panics",
+              "actual_atomic_writer_missing_filename_retains_invalid_value_authority"
+            ]
+          },
+          "callee": {
+            "enum": [
+              "FilePackSource::open",
+              "FilePackSink::create",
+              "StreamingPackWriter::create",
+              "write_atomic",
+              "recover_file"
+            ]
+          },
+          "mode": {
+            "enum": [
+              "owned",
+              "borrowed"
+            ]
+          },
+          "beforeArguments": {
+            "enum": [
+              1,
+              2
+            ]
+          },
+          "afterArguments": {
+            "enum": [
+              2,
+              3
+            ]
+          },
+          "maximumBytes": {
+            "const": 1048576
+          },
+          "cancellation": {
+            "const": "caller-owned AtomicBool checked before every checkpoint"
+          },
+          "progress": {
+            "const": "caller-owned AtomicUsize receives every progress event"
+          }
+        }
+      }
+    }
+  }
+}

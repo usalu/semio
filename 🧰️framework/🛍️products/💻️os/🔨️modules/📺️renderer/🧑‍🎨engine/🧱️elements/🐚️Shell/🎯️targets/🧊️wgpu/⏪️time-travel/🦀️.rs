@@ -13,7 +13,7 @@
 //! refusals (the hub's `history.*`, the session's `timeTravel.*`) are localized here too.
 
 use super::*;
-use semio_framework::kernel::{HistoryTimeTravel, HistoryTimeTravelReview, HistoryTimeTravelStage};
+use semio_framework::kernel::{HistoryReprojection, HistoryReprojectionStatus, HistoryTimeTravel, HistoryTimeTravelReview, HistoryTimeTravelStage};
 use semio_framework_time_travel::TimeTravelLabel;
 
 //#region ⏪️TimeTravelControls
@@ -286,7 +286,12 @@ pub(crate) fn history_refusal_notice(code: &str, locale: Locale) -> Option<(&'st
 /// `code: message`, then ` — code: message [target]; …` for the report's messages (the browser prefixes its bridge
 /// call), so the fault's own code comes first and each report code after it; each is read as one whole token.
 pub(crate) fn history_refusal_of_fault(fault: &str, locale: Locale) -> Option<(&'static str, &'static str, semio_framework::Severity)> {
-    fault.split(|c: char| c.is_whitespace() || matches!(c, ':' | ';' | ',' | '[' | ']' | '(' | ')')).find_map(|token| history_refusal_notice(token, locale))
+    fault_tokens(fault).find_map(|token| history_refusal_notice(token, locale))
+}
+
+/// ✂️ A dispatch-fault string's whole tokens, in order — a code is only ever a whole token.
+fn fault_tokens(fault: &str) -> impl Iterator<Item = &str> {
+    fault.split(|c: char| c.is_whitespace() || matches!(c, ':' | ';' | ',' | '[' | ']' | '(' | ')'))
 }
 
 /// 📝️ The band's lines in one locale; a line the session does not carry is `None` — React's `TimeTravelBandTextV1`.
@@ -325,8 +330,8 @@ fn time_travel_target_text(status: &HistoryTimeTravel, terminology: Terminology,
 }
 
 /// 📝️ [`TimeTravelBandLines`] of `status` — React's `timeTravelBandTextV1`: a review reads what the session states
-/// (`review`), never what a missing report might mean; severity is always named in words, never by colour alone; and a
-/// fault code the shell knows reads as its localized refusal.
+/// (`review`), never what a missing report might mean; severity is always named in words, never by colour alone; a fault
+/// code the shell knows reads as its localized refusal, any other as the shared replay-failed copy — never the code itself.
 pub(crate) fn time_travel_band_lines(status: &HistoryTimeTravel, terminology: Terminology, locale: Locale) -> TimeTravelBandLines {
     let en = locale == Locale::En;
     TimeTravelBandLines {
@@ -337,8 +342,7 @@ pub(crate) fn time_travel_band_lines(status: &HistoryTimeTravel, terminology: Te
         outcome: status.worst.map(|worst| if en { format!("Worst outcome: {}", time_travel_severity_text(worst, locale)) } else { format!("Schwerstes Ergebnis: {}", time_travel_severity_text(worst, locale)) }),
         fault: status.fault.as_deref().map(|fault| match history_refusal_notice(fault, locale) {
             Some((code, message, _)) if code == fault => message.to_string(),
-            _ if en => format!("Replay failed ({fault})"),
-            _ => format!("Neuanwendung fehlgeschlagen ({fault})"),
+            _ => time_travel_label(TimeTravelLabel::ReplayFaulted, locale).to_string(),
         }),
         accepted: (status.accepted_count > 0).then(|| if en { format!("Accepted changes: {}", status.accepted_count) } else { format!("Übernommene Änderungen: {}", status.accepted_count) }),
     }
@@ -514,7 +518,96 @@ pub(crate) fn time_travel_band_plan(status: &HistoryTimeTravel, message: String,
     let buttons = buttons.into_iter().zip(layout.buttons).map(|((control, label), rect)| TimeTravelBandButton { control, label, rect }).collect();
     TimeTravelBandPlan { band, lines: layout.lines, progress, buttons }
 }
+
+/// 🖌️ One opportunity of a bottom chrome band's frame — its fill (0), its four edges (1–4), the replay track (5) and the track's
+/// filled share (6) — shared by the session band and the reprojection band.
+fn paint_chrome_band_frame(scalar: usize, overlay: &mut DrawList, band: Rect, progress: Option<(Rect, f32)>, (border, fill): (Rgba, Rgba), theme: &Theme) {
+    let hair = theme.stroke_hairline;
+    match scalar {
+        0 => overlay.push_rounded([band.x, band.y, band.w, band.h], fill, theme.border_radius),
+        1 => overlay.push_solid([band.x, band.y, band.w, hair], border),
+        2 => overlay.push_solid([band.x, band.y + band.h - hair, band.w, hair], border),
+        3 => overlay.push_solid([band.x, band.y, hair, band.h], border),
+        4 => overlay.push_solid([band.x + band.w - hair, band.y, hair, band.h], border),
+        5 => {
+            if let Some((track, _)) = progress {
+                overlay.push_solid([track.x, track.y, track.w, track.h], theme.border_normal);
+            }
+        }
+        _ => {
+            if let Some((track, share)) = progress {
+                overlay.push_solid([track.x, track.y, track.w * share, track.h], theme.progress);
+            }
+        }
+    }
+}
+
+/// 🧮️ The opportunities [`paint_chrome_band_frame`] takes before a band's text.
+const CHROME_BAND_FRAME_STEPS: usize = 7;
 //#endregion 📐️TimeTravelBand
+
+//#region 📡️HistoryReprojectionBand
+/// 🗝️ The mirror key of the polite status that announces a history change replaying before this replica adopts it, outside the
+/// History panel — React's `[data-semio-history-reprojection]` (audit W1E-3).
+pub(crate) const HISTORY_REPROJECTION_STATUS_ID: &str = "shell.history.reprojection";
+
+/// 🏃️ Whether the announced change still replays: operations remain and nobody paused it (a refusal has nothing left).
+pub(crate) fn history_reprojection_running(status: &HistoryReprojectionStatus) -> bool {
+    !status.paused && status.total > 0
+}
+
+/// 📢️ What the band paints and its live node speaks — React's `[data-semio-history-reprojection]` status, `<title>: <text>`.
+pub(crate) fn history_reprojection_message(status: &HistoryReprojectionStatus) -> String {
+    format!("{}: {}", status.title, status.text)
+}
+
+/// 🔘️ The band's control while no session is open (a session's own band addresses the session) — React's reprojection status
+/// buttons, the history body section's twin: Cancel replay while it replays (a step or a load is dropped with zero trace, a
+/// remote change pauses), Replay again while a remote change is paused; none for a refusal. Sent without a generation.
+pub(crate) fn history_reprojection_control(status: &HistoryReprojectionStatus, session_open: bool) -> Option<TimeTravelVerb> {
+    match (session_open, status.paused, history_reprojection_running(status)) {
+        (true, _, _) => None,
+        (false, true, _) => Some(TimeTravelVerb::Rerun),
+        (false, false, true) => Some(TimeTravelVerb::CancelReplay),
+        (false, false, false) => None,
+    }
+}
+
+/// 🆔️ The reprojection band control's id: `shell.history.reprojection.<cancel-replay|rerun>`.
+pub(crate) fn history_reprojection_control_id(verb: TimeTravelVerb) -> &'static str {
+    match verb {
+        TimeTravelVerb::Rerun => "shell.history.reprojection.rerun",
+        _ => "shell.history.reprojection.cancel-replay",
+    }
+}
+
+/// 📐️ The reprojection band laid out for one frame: its box, the status line's lines, the replay track with its filled share and
+/// the rect of its one control.
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct HistoryReprojectionBandPlan {
+    pub band: Rect,
+    pub lines: Vec<ChromeBandLine>,
+    pub progress: Option<(Rect, f32)>,
+    pub control: Option<(TimeTravelVerb, Rect)>,
+}
+
+/// 📐️ Lays the reprojection band out bottom-centre through [`chrome_band_layout`] on `floor` (the footer, or the top of the session
+/// band it then stacks above), wrapping its message at its words when it outgrows the band, its control right-aligned, with the
+/// replay track along its lower edge while it replays.
+pub(crate) fn history_reprojection_band_plan(status: &HistoryReprojectionStatus, control: Option<TimeTravelVerb>, floor: f32, width: f32, locale: Locale, theme: &Theme) -> HistoryReprojectionBandPlan {
+    let labels: Vec<&str> = control.map(|verb| verb.label(locale)).into_iter().collect();
+    let layout = chrome_band_layout(&history_reprojection_message(status), " ", &labels, floor, width, TIME_TRAVEL_BAND_MAX_WIDTH, theme);
+    let band = layout.band;
+    let pad = theme.padding_standard;
+    let progress = history_reprojection_running(status).then(|| (Rect::new(band.x + pad, band.y + band.h - TIME_TRAVEL_PROGRESS_TRACK - 1.0, band.w - pad * 2.0, TIME_TRAVEL_PROGRESS_TRACK), (status.done as f32 / status.total as f32).clamp(0.0, 1.0)));
+    HistoryReprojectionBandPlan { band, lines: layout.lines, progress, control: control.zip(layout.buttons.first().copied()) }
+}
+
+/// 🎨️ The reprojection band's border, fill and ink: a refused adoption warns, a replaying or paused change informs.
+fn history_reprojection_band_tone(status: &HistoryReprojectionStatus, theme: &Theme) -> (Rgba, Rgba, Rgba) {
+    transient_notice_tone(if status.fault.is_some() && status.total == 0 { semio_framework::Severity::Warning } else { semio_framework::Severity::Info }, theme)
+}
+//#endregion 📡️HistoryReprojectionBand
 
 //#region 🪟️TimeTravelIndicator
 /// 🆔️ One pane's time-travel indicator — under React's `framework.window.<id>` parent like every pane chip.
@@ -673,14 +766,15 @@ impl ShellState {
         crate::interpreter::set_ui_presence_notes(&self.peer_time_travel_presence().notes)
     }
 
-    /// ⏱️ While the runtime replays or finalizes, re-reads the history at most every [`TIME_TRAVEL_POLL_MS`] and folds the
-    /// snapshot — rows, cursor and session status — so a reply older than it can no longer roll the band back. The
+    /// ⏱️ While the runtime replays or finalizes a session, or a history change replays before adoption, re-reads the history at
+    /// most every [`TIME_TRAVEL_POLL_MS`] and folds the snapshot — rows, cursor, session and reprojection status — so a reply older
+    /// than it can no longer roll the bands back. The
     /// runtime also pushes throttled progress patches on uncorrelated `AppFrame::Invocation` frames, which reach
     /// [`ShellState::observe_invocation_history`] with the next exchange; this poll is what moves the band between two
     /// exchanges. `true` when the status changed.
     #[cfg(not(target_arch = "wasm32"))]
     pub(crate) async fn poll_time_travel_progress(&mut self) -> bool {
-        let polling = self.history_time_travel.as_ref().is_some_and(|status| matches!(status.stage, HistoryTimeTravelStage::Replaying | HistoryTimeTravelStage::Finalizing));
+        let polling = self.history_time_travel.as_ref().is_some_and(|status| matches!(status.stage, HistoryTimeTravelStage::Replaying | HistoryTimeTravelStage::Finalizing)) || self.history_reprojection.as_ref().is_some_and(|reprojection| !reprojection.paused && reprojection.total > 0);
         let now = chrome_now_ms();
         if !polling || now - self.time_travel_polled_at_ms < TIME_TRAVEL_POLL_MS {
             return false;
@@ -689,9 +783,10 @@ impl ShellState {
         let Some((plugin, instance_id)) = self.session.as_ref().and_then(|session| self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).cloned().map(|plugin| (plugin, session.instance_id))) else { return false };
         match plugin.read_history(instance_id).await {
             Ok(patch) if patch.cursor >= self.history_cursor => {
-                let changed = patch.time_travel != self.history_time_travel;
+                let changed = patch.time_travel != self.history_time_travel || patch.reprojection != self.history_reprojection;
                 fold_history_patch(&mut self.history_entries, &mut self.history_cursor, &patch, true);
                 self.observe_history_time_travel(patch.time_travel.as_ref());
+                self.observe_history_reprojection(patch.reprojection.as_ref());
                 changed
             }
             Ok(_) => false,
@@ -705,17 +800,17 @@ impl ShellState {
     /// ⏪️ Folds the history patches the session's guest pushed on uncorrelated UI-progress frames since the last frame —
     /// the wgpu twin of React's `subscribeOperationProgress` → `applyHistoryPatch`. Each one takes the same stale-guarded
     /// path a dispatch reply does ([`ShellState::observe_invocation_history`]), so the band moves with every throttled
-    /// replay step on the browser build too. `true` when the session status changed.
+    /// replay step on the browser build too. `true` when the session or the reprojection status changed.
     pub(crate) async fn drain_progress_history_patches(&mut self) -> bool {
         let patches = self.session.as_ref().and_then(|session| self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).map(|plugin| plugin.take_progress_history_patches(session.instance_id))).unwrap_or_default();
         if patches.is_empty() {
             return false;
         }
-        let before = self.history_time_travel.clone();
+        let before = (self.history_time_travel.clone(), self.history_reprojection.clone());
         for patch in &patches {
             self.observe_invocation_history(Some(patch)).await;
         }
-        before != self.history_time_travel
+        before != (self.history_time_travel.clone(), self.history_reprojection.clone())
     }
 
     /// ⌨️ The dispatch a `ui.timeTravel.*` chord asks for, or `None` when it must fall through: no session, a verb the
@@ -750,33 +845,12 @@ impl ShellState {
         let Some(status) = self.history_time_travel.clone() else { return true };
         let plan = self.time_travel_band_plan_for(&status, theme);
         let (border, fill, text_color) = time_travel_band_tone(&status, theme);
-        let band = plan.band;
-        let hair = theme.stroke_hairline;
         let baseline = |rect: Rect| rect.y + (rect.h + theme.font_size_small) * 0.5 - 1.0;
-        let buttons_from = 7 + plan.lines.len();
+        let buttons_from = CHROME_BAND_FRAME_STEPS + plan.lines.len();
         match cursor.scalar {
-            0 => overlay.push_rounded([band.x, band.y, band.w, band.h], fill, theme.border_radius),
-            1..=4 => {
-                let edge = match cursor.scalar {
-                    1 => [band.x, band.y, band.w, hair],
-                    2 => [band.x, band.y + band.h - hair, band.w, hair],
-                    3 => [band.x, band.y, hair, band.h],
-                    _ => [band.x + band.w - hair, band.y, hair, band.h],
-                };
-                overlay.push_solid(edge, border);
-            }
-            5 => {
-                if let Some((track, _)) = plan.progress {
-                    overlay.push_solid([track.x, track.y, track.w, track.h], theme.border_normal);
-                }
-            }
-            6 => {
-                if let Some((track, share)) = plan.progress {
-                    overlay.push_solid([track.x, track.y, track.w * share, track.h], theme.progress);
-                }
-            }
+            scalar if scalar < CHROME_BAND_FRAME_STEPS => paint_chrome_band_frame(scalar, overlay, plan.band, plan.progress, (border, fill), theme),
             scalar if scalar < buttons_from => {
-                let line = &plan.lines[scalar - 7];
+                let line = &plan.lines[scalar - CHROME_BAND_FRAME_STEPS];
                 match chrome_text_complete_step(overlay, atlas, &line.text, line.rect.x, baseline(line.rect), line.rect.w, theme.font_size_small, text_color, &mut cursor.glyph) {
                     Ok(false) => return false,
                     Ok(true) => {}
@@ -835,6 +909,92 @@ impl ShellState {
             node.value_text = node.label.clone();
         }
         node.busy = matches!(status.stage, HistoryTimeTravelStage::Replaying | HistoryTimeTravelStage::Finalizing);
+        Some(node)
+    }
+
+    /// 📡️ Takes the history change one history patch says replays before this replica adopts it (absent = none waits).
+    pub(crate) fn observe_history_reprojection(&mut self, reprojection: Option<&HistoryReprojection>) {
+        self.history_reprojection = reprojection.cloned();
+    }
+
+    /// 📢️ The replaying history change in the kernel's one status copy (`kernel::history_reprojection_status`, en/de), or `None`
+    /// while none waits.
+    pub(crate) fn history_reprojection_status(&self) -> Option<HistoryReprojectionStatus> {
+        Some(semio_framework::kernel::history_reprojection_status(self.history_reprojection.as_ref()?, self.active_terminology(), self.active_locale()))
+    }
+
+    /// 📐️ This frame's reprojection band, or `None` while no history change waits.
+    pub(crate) fn history_reprojection_band_plan_for(&self, theme: &Theme) -> Option<(HistoryReprojectionStatus, HistoryReprojectionBandPlan)> {
+        let status = self.history_reprojection_status()?;
+        let floor = self.history_time_travel.as_ref().map_or(self.screen_h - theme.footer_height, |session| self.time_travel_band_plan_for(session, theme).band.y);
+        let control = history_reprojection_control(&status, self.history_time_travel.is_some());
+        let plan = history_reprojection_band_plan(&status, control, floor, self.screen_w, self.active_locale(), theme);
+        Some((status, plan))
+    }
+
+    /// 📡️ Paints the band of a history change replaying before adoption, one scalar, glyph run or hit per opportunity — the shared
+    /// band frame with its replay track, each line of its message, then its control's fill, caption and hit (Cancel replay or Replay
+    /// again on the session controller, no generation) — stacked above the session band while one is open, which then owns the
+    /// controls. No control registers while a modal dialog owns the pointer.
+    pub(super) fn render_history_reprojection_band_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme) -> bool {
+        let Some((status, plan)) = self.history_reprojection_band_plan_for(theme) else { return true };
+        let (border, fill, text_color) = history_reprojection_band_tone(&status, theme);
+        let baseline = |rect: Rect| rect.y + (rect.h + theme.font_size_small) * 0.5 - 1.0;
+        let control_from = CHROME_BAND_FRAME_STEPS + plan.lines.len();
+        match cursor.scalar {
+            scalar if scalar < CHROME_BAND_FRAME_STEPS => paint_chrome_band_frame(scalar, overlay, plan.band, plan.progress, (border, fill), theme),
+            scalar if scalar < control_from => {
+                let line = &plan.lines[scalar - CHROME_BAND_FRAME_STEPS];
+                match chrome_text_complete_step(overlay, atlas, &line.text, line.rect.x, baseline(line.rect), line.rect.w, theme.font_size_small, text_color, &mut cursor.glyph) {
+                    Ok(false) => return false,
+                    Ok(true) => {}
+                    Err(()) => {
+                        self.error = Some("Shell history reprojection band text exceeded the retained glyph boundary".to_string());
+                        cursor.glyph.reset();
+                    }
+                }
+            }
+            scalar => {
+                let Some((verb, rect)) = plan.control.filter(|_| scalar < control_from + 3) else { return true };
+                let locale = self.active_locale();
+                match scalar - control_from {
+                    0 => overlay.push_rounded([rect.x, rect.y, rect.w, rect.h], theme.button, theme.border_radius),
+                    1 => match chrome_text_complete_step(overlay, atlas, verb.label(locale), rect.x + theme.padding_standard, baseline(rect), (rect.w - theme.padding_standard).max(1.0), theme.font_size_small, theme.text, &mut cursor.glyph) {
+                        Ok(false) => return false,
+                        Ok(true) => {}
+                        Err(()) => {
+                            self.error = Some("Shell history reprojection band button text exceeded the retained glyph boundary".to_string());
+                            cursor.glyph.reset();
+                        }
+                    },
+                    _ => {
+                        if let Some(controller_id) = self.session.as_ref().map(|session| session.app.controller_id.clone()).filter(|_| !self.chrome_build.dialog_open()) {
+                            let control_id = history_reprojection_control_id(verb);
+                            note_chrome_control_name(control_id, Some(verb.label(locale)));
+                            input.register_hit(HitTarget { rect, event: Some(ActionDescriptor { controller_id, action: verb.action_id().to_string(), args: None }), control_id: Some(control_id.to_string()), kind: HitKind::Button, drag_axis: None, drag_data: None });
+                        }
+                    }
+                }
+            }
+        }
+        cursor.scalar += 1;
+        false
+    }
+
+    /// 🔊️ The reprojection band's live node (audit W1E-3): a progress bar while the change replays, a polite status while it is
+    /// paused or refused, named by exactly the painted, localized message `<title>: <text>` (a refusal's code is never announced) —
+    /// so a reader hears an interior Undo, a peer's history change or a document load replaying without opening the History panel.
+    pub(crate) fn history_reprojection_accessibility_node(&self, node_id: u64) -> Option<ui_contract::AccessibilityProjectionNode> {
+        let status = self.history_reprojection_status()?;
+        let mut node = chrome_status_accessibility_node(node_id, HISTORY_REPROJECTION_STATUS_ID, history_reprojection_message(&status));
+        if history_reprojection_running(&status) {
+            node.role = "progressbar".into();
+            node.value_min = Some(0.0);
+            node.value_max = Some(f64::from(status.total));
+            node.value_now = Some(f64::from(status.done));
+            node.value_text = node.label.clone();
+            node.busy = true;
+        }
         Some(node)
     }
 

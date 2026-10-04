@@ -27,18 +27,18 @@ fn sample_snapshot() -> Generation2dSnapshot {
 #[test]
 fn inference_determinism_law() {
     let snapshot = sample_snapshot();
-    assert_eq!(Generation2dInference::infer(&snapshot), Generation2dInference::infer(&snapshot));
+    assert_eq!(Generation2dInference::infer(&snapshot).expect("valid materialized inference fixture"), Generation2dInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
 #[test]
 fn inference_default_law() {
-    assert_eq!(Generation2dInference::infer(&Generation2dSnapshot::default()), Generation2dInference::default());
+    assert_eq!(Generation2dInference::infer(&Generation2dSnapshot::default()).expect("valid materialized inference fixture"), Generation2dInference::default());
 }
 
 #[test]
 fn topology_matches_the_linear_chain() {
     let snapshot = sample_snapshot();
-    let inferred = Generation2dInference::infer(&snapshot);
+    let inferred = Generation2dInference::infer(&snapshot).expect("valid materialized inference fixture");
     assert_eq!(inferred.topology.node_count, 3);
     assert_eq!(inferred.topology.edge_count, 2);
     assert!(inferred.topology.cycle_free);

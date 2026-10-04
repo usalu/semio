@@ -26,8 +26,11 @@ pub struct CadInference {
 }
 
 impl protocol::Inference<CadSnapshot> for CadInference {
-    fn infer(snapshot: &CadSnapshot) -> Self {
+    fn infer(snapshot: &CadSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { object_count: object_count(snapshot), vertex_count: vertex_count(snapshot), bounds: scene_bounds(snapshot) }
+    
+        })
     }
 }
 
@@ -47,13 +50,6 @@ impl protocol::InferenceSpec<CadSnapshot> for CadInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-impl semio_framework_plugin::ArtifactInferrer for crate::standards::v1::subsets::any::schema::CadBuilder {
-    type Snapshot = CadSnapshot;
-    type Inference = CadInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.cad.cad.inference`'s facet leaves into the OS-wide inference catalog — call
@@ -642,7 +638,7 @@ mod scene_compute {
         if let Some(handle_id) = solid_handle {
             let handle = GeometryHandle(handle_id.into());
             if let Ok(mesh) = kernel.tessellate(&handle, 0.1) {
-                return mesh_data_from_mesh_transfer(&mesh);
+                if let Ok(data)=mesh_data_from_mesh_transfer(&mesh) {return data;}
             }
         }
         let Some(handle) = typology_local_solid(&mut kernel, typology, extent) else {
@@ -656,7 +652,7 @@ mod scene_compute {
             }
         };
         kernel.dispose(&handle);
-        let mut mesh_data = mesh_data_from_mesh_transfer(&mesh);
+        let Ok(mut mesh_data) = mesh_data_from_mesh_transfer(&mesh) else {return mesh_from_kind(typology_mesh_kind(typology));};
         if let Some(center) = centroid {
             translate_mesh_positions(&mut mesh_data, [center[0] as f32, center[1] as f32, center[2] as f32]);
         }
@@ -773,15 +769,15 @@ mod scene_compute {
 
     /// 🗃️ Reads one pane's objects and geometry from the shared quad fixture.
     pub(crate) fn cad_document_pane_bundle(source_json: &str, model_index: usize) -> (Vec<CadObject>, CadGeometry) {
-        let Ok(root) = protocol::json::parse(source_json) else {
+        let Ok(root) = semio_framework_pack_json::parse(source_json, semio_framework_pack_json::JsonMemberPolicy::Reject) else {
             return (Vec::new(), CadGeometry::default());
         };
-        let geometry_value = root.pointer(&format!("/models/{model_index}/model/geometry")).map(protocol::json::to_dsl_value);
+        let geometry_value = root.pointer(&format!("/models/{model_index}/model/geometry")).map(semio_framework_pack_json::to_dsl_value);
         let geometry = parse_geometry(geometry_value.as_ref());
         let Some(objects_value) = root.pointer(&format!("/models/{model_index}/model/objects")).and_then(|value| value.as_array()) else {
             return (Vec::new(), geometry);
         };
-        let objects_value: Vec<protocol::DslValue> = objects_value.iter().map(protocol::json::to_dsl_value).collect();
+        let objects_value: Vec<semio_framework_value::DslValue> = objects_value.iter().map(semio_framework_pack_json::to_dsl_value).collect();
         let mut kernel = cad_brep_kernel();
         let objects = objects_from_host_snapshot_model(&mut kernel, &objects_value, &geometry);
         (objects, geometry)
@@ -801,27 +797,17 @@ mod scene_compute {
         cad_document_pane_bundle(FOREST_LEFT_MODEL_JSON, model_index)
     }
 
-    fn forest_references_for_model_definitions(reference_z: f64) -> std::collections::BTreeMap<String, Vec<CadReference>> {
-        CadPaneId::all()
-            .into_iter()
-            .map(|pane| {
-                (
-                    pane.model_definition_id().into(),
-                    vec![CadReference {
-                        id: "ref-concrete-forest".into(),
-                        source_url: CAD_CONCRETE_FOREST_REFERENCE_URL.into(),
-                        media_kind: "image".into(),
-                        origin: forest_reference_origin(reference_z),
-                        orientation: None,
-                        scale: None,
-                        width_world: CAD_FOREST_REFERENCE_WIDTH_WORLD,
-                        hidden: false,
-                        locked: true,
-                        opacity: Some(1.0),
-                    }],
-                )
-            })
-            .collect()
+    fn forest_references_for_model_definitions(reference_z: f64) -> crate::CadReferenceIndex {
+        let mut output = crate::CadReferenceIndex::new();
+        for pane in CadPaneId::all() {
+            output.insert(pane.model_definition_id().into(), vec![CadReference {
+                id: "ref-concrete-forest".into(), source_url: CAD_CONCRETE_FOREST_REFERENCE_URL.into(),
+                media_kind: "image".into(), origin: forest_reference_origin(reference_z),
+                orientation: None, scale: None, width_world: CAD_FOREST_REFERENCE_WIDTH_WORLD,
+                hidden: false, locked: true, opacity: Some(1.0),
+            }]);
+        }
+        output
     }
 
     /// 🧊️ The kernel primitive a typology's persisted `extent` rebuilds: cylinders and spheres are
@@ -852,7 +838,7 @@ mod scene_compute {
             structure_classic_model: None,
             drawings: Vec::new(),
             nodes: vec![CadNode { id: "node-root".into(), label: "Model".into(), kind: "group".into() }, CadNode { id: "node-box".into(), label: "Box".into(), kind: "solid".into() }],
-            references_by_model_definition_id: std::collections::BTreeMap::new(),
+            references_by_model_definition_id: crate::CadReferenceIndex::new(),
         }
     }
 
@@ -867,7 +853,7 @@ mod scene_compute {
         if objects.is_empty() {
             return None;
         }
-        let content_json = protocol::json::to_json_string(&semio_model_snapshot_from_objects(objects));
+        let content_json = semio_framework_pack_json::to_json_string(&semio_model_snapshot_from_objects(objects));
         Some(cad_model_child_handle(pane, &content_json).with_local_owner(scene))
     }
 

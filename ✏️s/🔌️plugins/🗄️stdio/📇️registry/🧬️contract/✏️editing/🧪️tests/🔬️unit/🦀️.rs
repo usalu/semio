@@ -62,7 +62,7 @@ impl ArtifactDsl for FixtureSnapshot {
     const EXTENSION: &'static str = "json";
 
     fn parse_dsl(text: &str) -> Result<Self, kernel::TextError> {
-        Err(kernel::TextError::new(format!("native source omits details: {text}"), kernel::TextSpan::at(1, 1)))
+        Err(kernel::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("native source omits details: {text}"), kernel::TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
@@ -75,11 +75,11 @@ fn fixture() -> serde_json::Value {
 }
 
 fn snapshot(value: &serde_json::Value) -> FixtureSnapshot {
-    pack::json::from_json_str(&value.to_string()).expect("typed fixture snapshot")
+    semio_framework_pack_json::from_json_str(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("typed fixture snapshot")
 }
 
 fn event(value: &serde_json::Value) -> SnapshotEditEvent {
-    pack::json::from_json_str(&value.to_string()).expect("typed fixture event")
+    semio_framework_pack_json::from_json_str(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("typed fixture event")
 }
 
 struct ProbePreparationFactory {
@@ -90,7 +90,7 @@ struct ProbePreparationFactory {
 impl fixture_store::ArtifactStoreOneItemPreparationFactory<u8, u8> for ProbePreparationFactory {
     fn preflight(&self, mutation: &u8, _description: Option<&str>, _lane: fixture_store::HistoryLane) -> Result<fixture_store::ArtifactStoreOneItemFootprint, String> {
         if (self.accepts)(mutation) {
-            Ok(fixture_store::ArtifactStoreOneItemFootprint::for_one_invertible_item(self.retained_bytes))
+            Ok(fixture_store::ArtifactStoreOneItemFootprint { work_items: fixture_store::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS, retained_bytes: self.retained_bytes })
         } else {
             Err("probe-refused".into())
         }
@@ -140,7 +140,7 @@ impl fixture_store::ArtifactStoreOneItemPreparation<u8, u8> for ProbePreparation
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: fixture_store::ArtifactStoreOneItemGrant) -> Result<fixture_store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: fixture_store::ArtifactStoreOneItemGrant) -> Result<fixture_store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || !grant.permits_one() {
             return Ok(fixture_store::SnapshotRetirementStep::Blocked);
         }
@@ -327,7 +327,7 @@ fn integral_json_numbers_edit_float_fields_without_losing_precision() {
     let base = snapshot(&fixture["base"]);
     for row in fixture["floatInputs"].as_array().expect("numeric control cases") {
         let source = row["source"].as_str().unwrap();
-        let value: DslValue = pack::json::from_json_str(source).unwrap();
+        let value: DslValue = semio_framework_pack_json::from_json_str(source, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let result = apply_snapshot_edit(&base, &SnapshotEditEvent::SetValue { path: "/ratio".into(), value });
         if row["accepted"].as_bool().unwrap() {
             let oracle: f64 = serde_json::from_str(source).unwrap();
@@ -372,7 +372,7 @@ fn direct_control_action_inputs_preserve_their_typed_values() {
     let fixture = fixture();
     let definitions = snapshot_edit_actions();
     for case in fixture["actionInputs"].as_array().expect("direct action inputs") {
-        let args: DslValue = pack::json::from_json_str(&case["args"].to_string()).expect("typed action args");
+        let args: DslValue = semio_framework_pack_json::from_json_str(&case["args"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("typed action args");
         let definition = definitions.iter().find(|definition| definition.id == case["action"].as_str().expect("action id")).expect("registered action");
         let effective = semio_framework_plugin::effective_action_args(&definition.args, &args, None);
         assert!(semio_framework_plugin::missing_required_args(&definition.args, &effective).is_empty(), "{}: host action argument admission", case["id"]);
@@ -392,6 +392,28 @@ fn source_replacement_validates_the_complete_snapshot_without_defaulting() {
     let error = apply_snapshot_edit(&base, &SnapshotEditEvent::ReplaceSource { source: "not json".into() }).expect_err("invalid source");
     assert_eq!(error.code, "snapshot-edit.invalid-source");
     assert_eq!(base.title, "Alpha");
+}
+
+#[test]
+fn malformed_source_is_admitted_by_bounded_preflight_then_reports_its_exact_typed_span() {
+    let diagnostic_fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🩺️source-diagnostic/🔣️.json")).expect("source diagnostic fixture");
+    let edit_fixture = fixture();
+    let base = snapshot(&edit_fixture["base"]);
+    for row in diagnostic_fixture["cases"].as_array().expect("diagnostic cases") {
+        let source = row["source"].as_str().expect("source");
+        let event = SnapshotEditEvent::ReplaceSource { source: source.to_owned() };
+        assert!(snapshot_edit_value_is_admitted(&event, &base), "{}: bounded preflight admits semantic validation", row["id"]);
+        let oracle = serde_json::from_str::<serde_json::Value>(source).expect_err("the independent JSON parser rejects malformed source");
+        let error = apply_snapshot_edit(&base, &event).expect_err("the reducer rejects malformed source");
+        let expected = &row["expected"];
+        let span = error.span.expect("malformed source has a span");
+        assert_eq!(error.code, expected["code"].as_str().expect("code"), "{}", row["id"]);
+        assert_eq!((u64::from(span.line), u64::from(span.column), u64::from(span.length)), (expected["line"].as_u64().unwrap(), expected["column"].as_u64().unwrap(), expected["length"].as_u64().unwrap()), "{}", row["id"]);
+        assert_eq!((oracle.line() as u64, oracle.column() as u64), (u64::from(span.line), u64::from(span.column)), "{}: serde_json independently locates the same refusal", row["id"]);
+        let fault = snapshot_edit_fault(error);
+        assert_eq!(fault.code.0, "snapshot-edit.invalid-source");
+        assert_eq!(fault.span, Some(span));
+    }
 }
 
 #[test]

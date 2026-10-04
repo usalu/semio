@@ -46,10 +46,10 @@ pub fn diff(payload: &super::mutation::DragPathPoints, base: &DrawingSnapshot) -
     let partial: Vec<protocol::MutationMessage> = [(missing, "not in this drawing"), (locked, "locked or hidden"), (unmatched, "no longer a path owning these points")]
         .into_iter()
         .filter(|(skipped, _)| !skipped.is_empty())
-        .map(|(skipped, reason)| protocol::MutationMessage::warn("mutation.partial", format!("{} of {} path(s) skipped ({reason}): {}", skipped.len(), layers.len(), skipped.join(", "))).at(skipped))
+        .map(|(skipped, reason)| protocol::MutationMessage::warning("mutation.partial", format!("{} of {} path(s) skipped ({reason}): {}", skipped.len(), layers.len(), skipped.join(", "))).at(skipped))
         .collect();
     if patched.is_empty() {
-        return protocol::MutationOutcome::new(crate::diff::DrawingDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warn("mutation.no-op", "no path point moves").at(layers)]));
+        return protocol::MutationOutcome::new(crate::diff::DrawingDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "no path point moves").at(layers)]));
     }
     protocol::MutationOutcome::new(crate::diff::diff_set_path_geometries(patched)).absorb_messages(partial)
 }

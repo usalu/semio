@@ -230,7 +230,7 @@ pub fn iconed_tree_item_with_action(
 /// dispatched its boot `setActiveExample`.
 pub fn reset_process3d_document_effect(document: &Process3dSnapshot) -> Effect {
     let pack = <Process3dSnapshot as ArtifactPack>::encode_pack(document);
-    let spr = semio_framework_plugin::resolve_ready(store::empty_document_spr("process3d", crate::PROCESS_3D_SCHEMA));
+    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr("process3d", crate::PROCESS_3D_SCHEMA));
     Effect::LoadDocument { pack, spr }
 }
 
@@ -308,8 +308,8 @@ pub struct Process3dPlayApp;
 /// 🖱️ The one context-menu implementation both `ArtifactEditor` entry points share — the destructive
 /// `removeSelectedStep` row exists only for a non-empty `"geometry"` selection, so a right-click on
 /// empty space never offers a verb that would silently no-op in `remove_selected_step::handle`.
-fn process3d_context_menu_items(registry: &AppActionRegistry, selected_ids: &[String]) -> Vec<ContextMenuItemSpec> {
-    let menu = Menu::of(registry).action("addStep");
+fn process3d_context_menu_items(registry: &AppActionRegistry, view_state: &semio_framework_plugin::ViewModel, selected_ids: &[String]) -> Vec<ContextMenuItemSpec> {
+    let menu = Menu::of(registry, view_state).action("addStep");
     let menu = if selected_ids.is_empty() { menu } else { menu.destructive("removeSelectedStep") };
     menu.separator().action("undo").action("redo").build()
 }
@@ -527,7 +527,7 @@ impl ArtifactCommandWork<EditorApp<Process3dPlayApp>> for Process3dResumableComm
         Some(self.extent)
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Process3dPlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<Process3dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Process3dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Process3dPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot: _snapshot, config, history: _history, interaction: _interaction, hover: _hover, context: _context, operation: _operation } = *input;
         if self.complete {
             return Err(Fault::from("process3d-retained-work-repeated"));
@@ -564,7 +564,7 @@ impl ArtifactCommandWork<EditorApp<Process3dPlayApp>> for Process3dResumableComm
         }
         let identity = u64::from_le_bytes(checkpoint[24..32].try_into().map_err(|_| Fault::from("process3d-retained-checkpoint-identity"))?);
         if identity != process3d_tool_identity(self.tool_id) {
-            return Err(Fault::from("process3d-retained-checkpoint-tool-mismatch"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "Process 3D checkpoint belongs to another registered tool"));
         }
         let extent = u64::from_le_bytes(checkpoint[32..40].try_into().map_err(|_| Fault::from("process3d-retained-checkpoint-extent"))?);
         if extent != self.extent as u64 {
@@ -789,10 +789,7 @@ fn admit_process3d_config_mutation(mutation: &Process3dConfigMutation) -> Result
     if retained_bytes > envelope {
         return Err("Process3d config mutation exceeds its fixed retained preparation envelope".into());
     }
-    // 🧺️ `work_items` counts staged edit ROWS, not mutations: `prepare_process3d_config` always yields
-    // exactly one inverse row beside the forward one, so every config gesture folds TWO rows. Declaring
-    // 1 fail-closes each of them with `batched item candidate failed its exact fixed fold contract`.
-    Ok(store::ArtifactStoreOneItemFootprint::for_one_invertible_item(retained_bytes))
+    Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))
 }
 
 fn prepare_process3d_config(base: &Process3dConfig, mutation: Process3dConfigMutation) -> Result<(Process3dConfig, Vec<Process3dConfigMutation>, Process3dConfigMutation), String> {
@@ -829,35 +826,6 @@ fn prepare_process3d_config(base: &Process3dConfig, mutation: Process3dConfigMut
         return Err("Process3d config post-state exceeds its fixed retained preparation envelope".into());
     }
     Ok((post, vec![inverse], mutation))
-}
-
-fn process3d_config_store_edit(forward: Process3dConfigMutation, inverse: Vec<Process3dConfigMutation>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<Process3dConfigMutation> {
-    let id = format!("process3d-config-retained-{}", authority.next_sequence_number());
-    protocol::Edit { line: authority.line_id().map(str::to_owned),
-        id: id.clone(),
-        actor: Some(authority.actor().to_string()),
-        forwards: vec![forward],
-        inverse,
-        mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
-            dependencies: Vec::new(),
-            base_version: authority.base_applied_edit_count() as u64,
-            author_id: Some(protocol::ActorId(authority.actor().to_string())),
-            timestamp: authority.next_clock(),
-            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-            payload_hash: None,
-            semantic_kind: None,
-            label: None,
-            group_id: None,
-            origin: Default::default(),
-            transaction: None,
-        }],
-        description, verb: None,
-        coalesce_key: None,
-        sequence_number: authority.next_sequence_number(),
-        started_at: String::new(),
-        finished_at: None,
-    }
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<Process3dConfig, Process3dConfigMutation> for Process3dConfigStorePreparationFactory {
@@ -905,7 +873,7 @@ impl store::ArtifactStoreOneItemPreparation<Process3dConfig, Process3dConfigMuta
         let mutation = self.mutation.take().ok_or_else(|| "Process3d config preparation lost its mutation owner".to_string())?;
         let (post, inverse, forward) = prepare_process3d_config(base.get(), mutation)?;
         let authority = self.authority.as_ref().ok_or_else(|| "Process3d config preparation lost its Store authority".to_string())?;
-        let edit = process3d_config_store_edit(forward, inverse, self.description.take(), authority);
+        let edit = authority.next_edit(forward, inverse);
         let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
         self.prepared = Some(prepared);
@@ -932,7 +900,7 @@ impl store::ArtifactStoreOneItemPreparation<Process3dConfig, Process3dConfigMuta
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -941,7 +909,7 @@ impl store::ArtifactStoreOneItemPreparation<Process3dConfig, Process3dConfigMuta
         }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
-                return Err("Process3d config preparation could not return its exact base root".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Process3d config preparation could not return its exact base root"));
             }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -1000,18 +968,18 @@ struct Process3dArtifactPreparation {
 }
 
 /// 📏️ One text field's own retained cost — rejected rather than truncated past the fixed envelope.
-fn process3d_text_bytes(value: &str) -> Result<usize, String> {
+fn process3d_text_bytes(value: &str) -> Result<usize, semio_framework_value::ValueError> {
     if value.len() > PROCESS3D_DOCUMENT_TEXT_BYTES {
-        return Err("Process3d document carries a text field beyond its encoded text envelope".into());
+        return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit, "Process3d document carries a text field beyond its encoded text envelope"));
     }
     Ok(value.len())
 }
 
-fn process3d_child_bytes<S>(child: &store::ArtifactChild<S>) -> Result<usize, String> {
+fn process3d_child_bytes<S>(child: &store::ArtifactChild<S>) -> Result<usize, semio_framework_value::ValueError> {
     Ok(process3d_text_bytes(&child.child_id)?.saturating_add(process3d_text_bytes(&child.target.to_uri())?))
 }
 
-fn process3d_solid_bytes(solid: &WorkingSolid) -> Result<usize, String> {
+fn process3d_solid_bytes(solid: &WorkingSolid) -> Result<usize, semio_framework_value::ValueError> {
     match solid {
         WorkingSolid::Box { .. } | WorkingSolid::Cylinder { .. } | WorkingSolid::Sphere { .. } => Ok(0),
         WorkingSolid::ImportedMesh { mesh_url } => process3d_text_bytes(mesh_url),
@@ -1020,7 +988,7 @@ fn process3d_solid_bytes(solid: &WorkingSolid) -> Result<usize, String> {
     }
 }
 
-fn process3d_measure_bytes(measure: &ProcessMeasure) -> Result<usize, String> {
+fn process3d_measure_bytes(measure: &ProcessMeasure) -> Result<usize, semio_framework_value::ValueError> {
     match measure {
         ProcessMeasure::Cut { tool, .. } => process3d_solid_bytes(tool),
         ProcessMeasure::Attach { component, .. } => process3d_solid_bytes(component),
@@ -1028,18 +996,18 @@ fn process3d_measure_bytes(measure: &ProcessMeasure) -> Result<usize, String> {
     }
 }
 
-fn process3d_origin_bytes(origin: Option<&StepOrigin>) -> Result<usize, String> {
+fn process3d_origin_bytes(origin: Option<&StepOrigin>) -> Result<usize, semio_framework_value::ValueError> {
     match origin {
         Some(origin) => Ok(process3d_text_bytes(&origin.machine_id)?.saturating_add(process3d_text_bytes(&origin.capability_id)?)),
         None => Ok(0),
     }
 }
 
-fn process3d_step_bytes(step: &ProcessStep) -> Result<usize, String> {
+fn process3d_step_bytes(step: &ProcessStep) -> Result<usize, semio_framework_value::ValueError> {
     Ok(process3d_text_bytes(&step.id)?.saturating_add(process3d_text_bytes(&step.label)?).saturating_add(process3d_origin_bytes(step.origin.as_ref())?).saturating_add(process3d_measure_bytes(&step.measure)?).saturating_add(size_of::<ProcessStep>()))
 }
 
-fn process3d_recipe_bytes(recipe: &MeasureRecipe) -> Result<usize, String> {
+fn process3d_recipe_bytes(recipe: &MeasureRecipe) -> Result<usize, semio_framework_value::ValueError> {
     let parts: [&str; 3] = match recipe {
         MeasureRecipe::DiscCut { diameter, kerf } => [diameter, kerf, ""],
         MeasureRecipe::BladeCut { kerf, length, depth } => [kerf, length, depth],
@@ -1048,12 +1016,12 @@ fn process3d_recipe_bytes(recipe: &MeasureRecipe) -> Result<usize, String> {
         MeasureRecipe::CylinderAttach { radius, length } => [radius, length, ""],
         MeasureRecipe::BoxAttach { width, depth, height } => [width, depth, height],
     };
-    parts.iter().try_fold(0usize, |bytes, part| -> Result<usize, String> { Ok(bytes.saturating_add(process3d_text_bytes(part)?)) })
+    parts.iter().try_fold(0usize, |bytes, part| -> Result<usize, semio_framework_value::ValueError> { Ok(bytes.saturating_add(process3d_text_bytes(part)?)) })
 }
 
-fn process3d_capability_bytes(capability: &Capability) -> Result<usize, String> {
-    let parameters = capability.parameters.iter().try_fold(0usize, |bytes, parameter| -> Result<usize, String> { Ok(bytes.saturating_add(process3d_text_bytes(&parameter.id)?).saturating_add(process3d_text_bytes(&parameter.label)?)) })?;
-    let rules = capability.rules.iter().try_fold(0usize, |bytes, rule| -> Result<usize, String> {
+fn process3d_capability_bytes(capability: &Capability) -> Result<usize, semio_framework_value::ValueError> {
+    let parameters = capability.parameters.iter().try_fold(0usize, |bytes, parameter| -> Result<usize, semio_framework_value::ValueError> { Ok(bytes.saturating_add(process3d_text_bytes(&parameter.id)?).saturating_add(process3d_text_bytes(&parameter.label)?)) })?;
+    let rules = capability.rules.iter().try_fold(0usize, |bytes, rule| -> Result<usize, semio_framework_value::ValueError> {
         let (CapabilityRule::Min { parameter, .. } | CapabilityRule::Max { parameter, .. }) = rule;
         Ok(bytes.saturating_add(process3d_text_bytes(parameter)?))
     })?;
@@ -1075,11 +1043,11 @@ fn process3d_capabilities_items(capabilities: &[Capability]) -> usize {
     capabilities.iter().fold(1usize, |items, capability| items.saturating_add(process3d_capability_items(capability)))
 }
 
-fn process3d_capabilities_bytes(capabilities: &[Capability]) -> Result<usize, String> {
-    capabilities.iter().try_fold(0usize, |bytes, capability| -> Result<usize, String> { Ok(bytes.saturating_add(process3d_capability_bytes(capability)?)) })
+fn process3d_capabilities_bytes(capabilities: &[Capability]) -> Result<usize, semio_framework_value::ValueError> {
+    capabilities.iter().try_fold(0usize, |bytes, capability| -> Result<usize, semio_framework_value::ValueError> { Ok(bytes.saturating_add(process3d_capability_bytes(capability)?)) })
 }
 
-fn process3d_machine_bytes(machine: &WorkshopMachine) -> Result<usize, String> {
+fn process3d_machine_bytes(machine: &WorkshopMachine) -> Result<usize, semio_framework_value::ValueError> {
     Ok(process3d_text_bytes(&machine.id)?
         .saturating_add(process3d_text_bytes(&machine.label)?)
         .saturating_add(process3d_text_bytes(&machine.icon_id)?)
@@ -1092,20 +1060,20 @@ fn process3d_machine_items(machine: &WorkshopMachine) -> usize {
     process3d_capabilities_items(&machine.capabilities)
 }
 
-fn process3d_stock_bytes(stock: &Stock) -> Result<usize, String> {
+fn process3d_stock_bytes(stock: &Stock) -> Result<usize, semio_framework_value::ValueError> {
     Ok(process3d_text_bytes(&stock.id)?.saturating_add(process3d_text_bytes(&stock.label)?).saturating_add(process3d_solid_bytes(&stock.solid)?))
 }
 
 /// 📏️ The retained footprint of one document base — rejected rather than truncated when the timeline,
 /// the workshop, or any single id/label/handle outgrows the fixed envelope.
-fn process3d_document_bytes(document: &Process3dSnapshot) -> Result<usize, String> {
+fn process3d_document_bytes(document: &Process3dSnapshot) -> Result<usize, semio_framework_value::ValueError> {
     let items = document.step_payloads.len().saturating_add(document.tool_solids.len()).saturating_add(document.workshop.machines.iter().fold(0usize, |items, machine| items.saturating_add(process3d_machine_items(machine))));
     if items > PROCESS3D_DOCUMENT_MAXIMUM_ITEMS {
-        return Err("Process3d document base exceeds its retained item envelope".into());
+        return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit, "Process3d document base exceeds its retained item envelope"));
     }
-    let steps = document.step_payloads.iter().try_fold(0usize, |bytes, step| -> Result<usize, String> { Ok(bytes.saturating_add(process3d_step_bytes(step)?)) })?;
-    let machines = document.workshop.machines.iter().try_fold(0usize, |bytes, machine| -> Result<usize, String> { Ok(bytes.saturating_add(process3d_machine_bytes(machine)?)) })?;
-    let tools = document.tool_solids.iter().try_fold(0usize, |bytes, tool| -> Result<usize, String> { Ok(bytes.saturating_add(process3d_child_bytes(tool)?)) })?;
+    let steps = document.step_payloads.iter().try_fold(0usize, |bytes, step| -> Result<usize, semio_framework_value::ValueError> { Ok(bytes.saturating_add(process3d_step_bytes(step)?)) })?;
+    let machines = document.workshop.machines.iter().try_fold(0usize, |bytes, machine| -> Result<usize, semio_framework_value::ValueError> { Ok(bytes.saturating_add(process3d_machine_bytes(machine)?)) })?;
+    let tools = document.tool_solids.iter().try_fold(0usize, |bytes, tool| -> Result<usize, semio_framework_value::ValueError> { Ok(bytes.saturating_add(process3d_child_bytes(tool)?)) })?;
     let bytes = process3d_text_bytes(&document.stock_id)?
         .saturating_add(process3d_text_bytes(&document.stock_label)?)
         .saturating_add(process3d_stock_bytes(&document.stock_payload)?)
@@ -1116,16 +1084,16 @@ fn process3d_document_bytes(document: &Process3dSnapshot) -> Result<usize, Strin
         .saturating_add(tools)
         .saturating_add(size_of::<Process3dSnapshot>());
     if bytes > PROCESS3D_DOCUMENT_MAXIMUM_BYTES {
-        return Err("Process3d document base exceeds its retained byte envelope".into());
+        return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit, "Process3d document base exceeds its retained byte envelope"));
     }
     Ok(bytes)
 }
 
-/// 📏️ One semantic mutation's own retained footprint, shaped like what it actually addresses: a
-/// single step, machine, stock field or cursor is one work item carrying that target's own text,
-/// while a created machine or a replaced capability set is one item per capability leaf it carries.
-fn process3d_mutation_footprint(mutation: &Process3dMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-    let (work_items, retained_bytes) = match mutation {
+/// 📏️ One semantic mutation's own retained bytes, shaped like what it actually addresses: a single step, machine,
+/// stock field or cursor is one item carrying that target's own text, while a created machine or a replaced capability
+/// set is one item per capability leaf it carries — the items bounded by `PROCESS3D_DOCUMENT_MAXIMUM_ITEMS`.
+fn process3d_mutation_retained_bytes(mutation: &Process3dMutation) -> Result<usize, semio_framework_value::ValueError> {
+    let (items, retained_bytes) = match mutation {
         Process3dMutation::CreateStep(payload) => (1, process3d_step_bytes(&payload.step)?),
         Process3dMutation::DeleteStep(payload) => (1, process3d_text_bytes(&payload.id)?),
         Process3dMutation::RenameStep(payload) => (1, process3d_text_bytes(&payload.id)?.saturating_add(process3d_text_bytes(&payload.new_label)?)),
@@ -1143,10 +1111,13 @@ fn process3d_mutation_footprint(mutation: &Process3dMutation) -> Result<store::A
         Process3dMutation::ReplaceStockSolid(payload) => (1, process3d_child_bytes(&payload.new_solid)?),
     };
     let retained_bytes = retained_bytes.saturating_add(size_of::<Process3dMutation>());
-    if work_items > PROCESS3D_DOCUMENT_MAXIMUM_ITEMS || retained_bytes > PROCESS3D_DOCUMENT_MAXIMUM_BYTES {
-        return Err("Process3d document mutation exceeds its fixed one-item preparation envelope".into());
+    if items > PROCESS3D_DOCUMENT_MAXIMUM_ITEMS {
+        return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit, "Process3d document mutation exceeds its fixed one-item preparation envelope"));
     }
-    Ok(store::ArtifactStoreOneItemFootprint { work_items, retained_bytes })
+    if retained_bytes > PROCESS3D_DOCUMENT_MAXIMUM_BYTES {
+        return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit, "Process3d document mutation exceeds its fixed one-item preparation envelope"));
+    }
+    Ok(retained_bytes)
 }
 
 /// 🧮️ Runs the mutation's own semantic `diff`/`inverse` against `base` and applies the resulting diff,
@@ -1154,45 +1125,16 @@ fn process3d_mutation_footprint(mutation: &Process3dMutation) -> Result<store::A
 /// step id, a missing target) is a REJECTION here, not a silent no-op: `MutationOutcome::error`/
 /// `fatal` force an EMPTY diff, and publishing anyway would write a no-op edit into history.
 fn prepare_process3d_document(base: &Process3dSnapshot, mutation: Process3dMutation) -> Result<(Process3dSnapshot, Vec<Process3dMutation>, Process3dMutation), String> {
-    process3d_mutation_footprint(&mutation)?;
-    process3d_document_bytes(base)?;
+    process3d_mutation_retained_bytes(&mutation).map_err(semio_framework_value::ValueError::into_message)?;
+    process3d_document_bytes(base).map_err(semio_framework_value::ValueError::into_message)?;
     let outcome = <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::diff(&mutation, base);
-    if let Some(message) = outcome.messages().iter().find(|message| matches!(message.level, protocol::Severity::Error | protocol::Severity::Fatal)) {
+    if let Some(message) = outcome.messages().iter().find(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)) {
         return Err(format!("Process3d document mutation was refused by its own vocabulary: {}", message.message));
     }
-    let inverse = <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::inverse(&mutation, base);
+    let inverse = <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::inverse(&mutation, base).map_err(semio_framework_value::ValueError::into_message)?;
     let post = protocol::MutationDiff::apply(outcome.diff(), base).map_err(|error| format!("Process3d document mutation could not apply onto its exact base: {}", error.message))?;
-    process3d_document_bytes(&post)?;
+    process3d_document_bytes(&post).map_err(semio_framework_value::ValueError::into_message)?;
     Ok((post, inverse, mutation))
-}
-
-fn process3d_document_store_edit(forward: Process3dMutation, inverse: Vec<Process3dMutation>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<Process3dMutation> {
-    let id = format!("process3d-document-retained-{}", authority.next_sequence_number());
-    protocol::Edit { line: authority.line_id().map(str::to_owned),
-        id: id.clone(),
-        actor: Some(authority.actor().to_string()),
-        forwards: vec![forward],
-        inverse,
-        mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
-            dependencies: Vec::new(),
-            base_version: authority.base_applied_edit_count() as u64,
-            author_id: Some(protocol::ActorId(authority.actor().to_string())),
-            timestamp: authority.next_clock(),
-            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-            payload_hash: None,
-            semantic_kind: None,
-            label: None,
-            group_id: None,
-            origin: Default::default(),
-            transaction: None,
-        }],
-        description, verb: None,
-        coalesce_key: None,
-        sequence_number: authority.next_sequence_number(),
-        started_at: String::new(),
-        finished_at: None,
-    }
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<Process3dSnapshot, Process3dMutation> for Process3dArtifactPreparationFactory {
@@ -1200,8 +1142,8 @@ impl store::ArtifactStoreOneItemPreparationFactory<Process3dSnapshot, Process3dM
         if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
             return Err("Process3d document preparation rejected its lane or description envelope".into());
         }
-        process3d_mutation_footprint(mutation)?;
-        Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: PROCESS3D_DOCUMENT_GRANT_BYTES })
+        process3d_mutation_retained_bytes(mutation).map_err(semio_framework_value::ValueError::into_message)?;
+        Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, PROCESS3D_DOCUMENT_GRANT_BYTES))
     }
 
     fn begin(
@@ -1242,7 +1184,7 @@ impl store::ArtifactStoreOneItemPreparation<Process3dSnapshot, Process3dMutation
         }
         if self.candidate.is_none() {
             let base = self.base.as_ref().ok_or_else(|| "Process3d document preparation lost its exact base root".to_string())?.get();
-            process3d_document_bytes(base)?;
+            process3d_document_bytes(base).map_err(semio_framework_value::ValueError::into_message)?;
             if grant.maximum_bytes < PROCESS3D_DOCUMENT_GRANT_BYTES {
                 return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
             }
@@ -1261,7 +1203,7 @@ impl store::ArtifactStoreOneItemPreparation<Process3dSnapshot, Process3dMutation
         }
         let (post, inverse, forward) = self.candidate.take().ok_or_else(|| "Process3d document preparation lost its candidate".to_string())?;
         let authority = self.authority.as_ref().ok_or_else(|| "Process3d document preparation lost its Store authority".to_string())?;
-        let prepared = authority.prepare_one_item(process3d_document_store_edit(forward, inverse, self.description.take(), authority), std::sync::Arc::new(post))?;
+        let prepared = authority.prepare_one_item(authority.next_edit(forward, inverse), std::sync::Arc::new(post))?;
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
         self.prepared = Some(prepared);
         Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
@@ -1287,7 +1229,7 @@ impl store::ArtifactStoreOneItemPreparation<Process3dSnapshot, Process3dMutation
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || !grant.permits_one() {
             return Ok(store::SnapshotRetirementStep::Blocked);
         }
@@ -1301,7 +1243,7 @@ impl store::ArtifactStoreOneItemPreparation<Process3dSnapshot, Process3dMutation
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
         }
         if let Some(mutation) = self.mutation.as_ref() {
-            let bytes = process3d_mutation_footprint(mutation)?.retained_bytes;
+            let bytes = process3d_mutation_retained_bytes(mutation)?;
             if grant.maximum_bytes < PROCESS3D_DOCUMENT_GRANT_BYTES {
                 return Ok(store::SnapshotRetirementStep::Blocked);
             }
@@ -1318,7 +1260,7 @@ impl store::ArtifactStoreOneItemPreparation<Process3dSnapshot, Process3dMutation
         }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
-                return Err("Process3d document preparation could not return its exact base root".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Process3d document preparation could not return its exact base root"));
             }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -1420,6 +1362,18 @@ fn process3d_render_body(body_key: &str, doc: &Process3dSnapshot, config: &Proce
 }
 
 impl ArtifactEditor for Process3dPlayApp {
+    /// 📢️ The localized notices of this editor's user-reachable refusals (design §20.12).
+    fn fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
+        use semio_framework_ui_locale::LocalizedLabel;
+        static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 2]> = std::sync::LazyLock::new(|| {
+            [
+            ("process3d.action.invalid", LocalizedLabel::native("This action's arguments are not valid.", "Die Argumente dieser Aktion sind ungültig.")),
+            ("process3d.media.export", LocalizedLabel::native("The model cannot be exported.", "Das Modell lässt sich nicht exportieren.")),
+            ]
+        });
+        &*NOTICES
+    }
+
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
     fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
         vec![crate::examples::demo::source(), crate::examples::concrete_forest::source()]
@@ -1468,7 +1422,7 @@ impl ArtifactEditor for Process3dPlayApp {
             return Ok(None);
         };
         if request.command.command_id() != request.tool_id {
-            return Err(Fault::from("process3d-command-tool-mismatch"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "Process 3D command does not match its exact registered tool"));
         }
         let tool_id = request.command.command_id();
         let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = match disposition {
@@ -1580,9 +1534,12 @@ impl ArtifactEditor for Process3dPlayApp {
         crate::process3d_child_restore_projection(snapshot)
     }
 
-    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {
+ Ok((||{
         crate::genesis_process3d_child_pack(snapshot, slot, child_id)
-    }
+    
+})())
+}
 
     fn initial_snapshot() -> Process3dSnapshot {
         crate::schema::default_document()
@@ -1602,7 +1559,7 @@ impl ArtifactEditor for Process3dPlayApp {
                 Some(export) => {
                     let text = match export.data {
                         DslValue::String(text) => text,
-                        other => semio_framework_os_kernel::json::to_json_string(&other),
+                        other => semio_framework_pack_json::to_json_string(&other),
                     };
                     Ok(semio_framework_plugin::Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep }, payload: MediaPayload::Structured { schema: "3d.process".into(), json: text } })
                 }
@@ -1680,7 +1637,7 @@ impl ArtifactEditor for Process3dPlayApp {
         };
         match action {
             "setSnapshot" => {
-                let json = string_field("json").or_else(|| field("document").map(semio_framework_os_kernel::json::to_json_string)).unwrap_or_default();
+                let json = string_field("json").or_else(|| field("document").map(semio_framework_pack_json::to_json_string)).unwrap_or_default();
                 Ok(Process3dCommand::SetDocument(set_snapshot::SetDocument { json }))
             }
             "setActiveExample" => Ok(Process3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: string_field("exampleId").or_else(|| string_field("id")).unwrap_or_else(|| PROCESS3D_EXAMPLE_TIMBER.into()) })),
@@ -1699,7 +1656,7 @@ impl ArtifactEditor for Process3dPlayApp {
                 machine: args
                     .and_then(|value| value.get("machine"))
                     .cloned()
-                    .map(<WorkshopMachine as semio_framework_os_kernel::FromValue>::from_value)
+                    .map(<WorkshopMachine as semio_framework_value::FromValue>::from_value)
                     .transpose()
                     .map_err(|error| process3d_action_fault(action, format!("invalid 'machine': {error}")))?
                     .unwrap_or(WorkshopMachine { id: String::new(), label: String::new(), icon_id: String::new(), catalog_id: None, capabilities: Vec::new() }),
@@ -1708,7 +1665,7 @@ impl ArtifactEditor for Process3dPlayApp {
             "removeSelectedStep" => Ok(Process3dCommand::RemoveSelectedStep(remove_selected_step::RemoveSelectedStep {})),
             "moveStep" => Ok(Process3dCommand::MoveStep(move_step::MoveStep { id: string_field("id").unwrap_or_default(), index: unsigned_field("index").unwrap_or_default() as usize })),
             "updateStep" => {
-                let step_json = string_field("stepJson").or_else(|| string_field("step_json")).or_else(|| field("step").map(semio_framework_os_kernel::json::to_json_string)).unwrap_or_default();
+                let step_json = string_field("stepJson").or_else(|| string_field("step_json")).or_else(|| field("step").map(semio_framework_pack_json::to_json_string)).unwrap_or_default();
                 Ok(Process3dCommand::UpdateStep(update_step::UpdateStep { step_json }))
             }
             "setStepEnabled" => Ok(Process3dCommand::SetStepEnabled(set_step_enabled::SetStepEnabled {
@@ -1810,8 +1767,8 @@ impl ArtifactEditor for Process3dPlayApp {
 
     /// 🖱️ Interaction-less twin of [`Self::context_menu_with_request_context`] — an empty
     /// `"geometry"` domain, so the destructive row is withheld.
-    fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _view_state: &semio_framework_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
-        process3d_context_menu_items(registry, &[])
+    fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, view_state: &semio_framework_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+        process3d_context_menu_items(registry, view_state, &[])
     }
 
     /// 🕹️ `removeSelectedStep` appears only for a real `"geometry"` selection — the authoritative
@@ -1821,11 +1778,11 @@ impl ArtifactEditor for Process3dPlayApp {
         _request: &ContextMenuRequest,
         _doc: &ArtifactView<'_, Process3dSnapshot>,
         _cfg: &ConfigView<'_, Process3dConfig>,
-        _view_state: &semio_framework_plugin::ViewModel,
+        view_state: &semio_framework_plugin::ViewModel,
         interaction: &semio_framework_plugin::app::InteractionView<'_>,
         registry: &AppActionRegistry,
     ) -> Vec<ContextMenuItemSpec> {
-        process3d_context_menu_items(registry, &interaction.selection(PROCESS3D_INTERACTION_DOMAIN).ids)
+        process3d_context_menu_items(registry, view_state, &interaction.selection(PROCESS3D_INTERACTION_DOMAIN).ids)
     }
 }
 //#endregion 🔖️Process3dPlayApp
@@ -2221,11 +2178,11 @@ pub(crate) fn installable_contributions(contributions_json: &str, maximum_bytes:
             continue;
         }
         kept.push(entry);
-        if semio_framework_os_kernel::json::to_json_string(&kept).len() > maximum_bytes {
+        if semio_framework_pack_json::to_json_string(&kept).len() > maximum_bytes {
             kept.pop();
         }
     }
-    if kept.is_empty() { empty } else { semio_framework_os_kernel::json::to_json_string(&kept) }
+    if kept.is_empty() { empty } else { semio_framework_pack_json::to_json_string(&kept) }
 }
 
 fn contributed_machine_catalogs(contributions_json: &str) -> Vec<ContributedMachineCatalog> {
@@ -2244,7 +2201,7 @@ fn contributed_machine_catalogs(contributions_json: &str) -> Vec<ContributedMach
         if !process_json_envelope_is_bounded(&machines_json) {
             continue;
         }
-        let Ok(machines) = semio_framework_os_kernel::json::from_json_str::<Vec<WorkshopMachine>>(&machines_json) else {
+        let Ok(machines) = semio_framework_pack_json::from_json_str::<Vec<WorkshopMachine>>(&machines_json, semio_framework_pack_json::JsonMemberPolicy::Reject) else {
             continue;
         };
         if machines.len() > PROCESS_CONTRIBUTION_MAX_ITEMS {

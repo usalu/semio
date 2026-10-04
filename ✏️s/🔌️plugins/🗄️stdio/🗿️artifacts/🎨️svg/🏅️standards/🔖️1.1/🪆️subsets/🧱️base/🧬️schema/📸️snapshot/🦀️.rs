@@ -56,9 +56,22 @@ impl SvgSnapshot {
         Ok(Self { schema: STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: parse_svg_xml(text)? })
     }
 
+    /// 🛡️ Verifies the shared natural SVG identity without materializing a second document.
+    pub fn validate_natural(&self) -> Result<(), String> {
+        if self.schema != STDIO_SVG_DOCUMENT_SCHEMA {
+            return Err(format!("svg schema must be {STDIO_SVG_DOCUMENT_SCHEMA}"));
+        }
+        match &self.doc.root {
+            Some(XmlNode::Element { name, .. }) if name == "svg" || name.ends_with(":svg") => Ok(()),
+            Some(XmlNode::Element { .. }) => Err("root element must be svg".into()),
+            _ => Err("svg document requires root element".into()),
+        }
+    }
+
     /// 📤️ Deterministically materializes SVG from the logical XML model.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn export_utf8(&self) -> Result<Vec<u8>, String> {
+        self.validate_natural()?;
         Ok(xml_document_to_text_checked(&self.doc)?.into_bytes())
     }
 }
@@ -1332,10 +1345,10 @@ impl store::ArtifactDsl for SvgSnapshot {
     /// two-branch shape the sibling `📰️xml` artifact's `parse_dsl` uses, and for the same reason:
     /// `from_text` (this subset's `DerivedConstruction`, and `📚️examples`' own raw markup) hands raw
     /// SVG straight in, and refusing it made every such caller fail on the preamble check alone.
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         match store::semio_format::split_text_preamble(text) {
-            Ok((_, body)) => crate::schema::mutation_support::decode_snapshot(body.trim()).map_err(|e| store::TextError::new(format!("svg state parse: {e}"), dsl::TextSpan::at(1, 1))),
-            Err(_) => Self::import_utf8(text.as_bytes()).map_err(|e| store::TextError::new(format!("svg parse: {e}"), dsl::TextSpan::at(1, 1))),
+            Ok((_, body)) => crate::schema::mutation_support::decode_snapshot(body.trim()).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("svg state parse: {e}"), semio_framework_diagnostic::TextSpan::at(1, 1))),
+            Err(_) => Self::import_utf8(text.as_bytes()).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("svg parse: {e}"), semio_framework_diagnostic::TextSpan::at(1, 1))),
         }
     }
     fn print_dsl(&self) -> String {
@@ -1362,21 +1375,21 @@ impl store::ArtifactPack for SvgSnapshot {
         let _ = options;
         let mut raw = vec![1];
         crate::schema::mutation_support::encode_snapshot_binary(self, &mut raw);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let _ = options;
         let mut reader = store::ByteReader::new(&inner);
-        let version = reader.read_u8().map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let version = reader.read_u8().map_err(|e| store::PackError::from(e))?;
         if version != 1 {
-            return Err(store::PackError::Schema(format!("unsupported svg snapshot state version {version}")));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, format!("unsupported svg snapshot state version {version}"))));
         }
-        crate::schema::mutation_support::decode_snapshot_binary(&mut reader).map_err(store::PackError::Schema)
+        crate::schema::mutation_support::decode_snapshot_binary(&mut reader).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
@@ -1393,3 +1406,6 @@ mod sqlite;
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[path="🚦️native/🦀️.rs"]
+mod native;

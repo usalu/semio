@@ -1,14 +1,14 @@
 syntax = "proto3";
 
-message Fem2dResultsWindowTransient {
-  Fem2dPlaybackClock clock = 1;
+message FemResultsWindowTransient {
+  FemPlaybackClock clock = 1;
 }
 
-message Fem2dPlaybackClock {
+message FemPlaybackClock {
   double phase = 1;
   bool reverse = 2;
 }
 
 message SetPlaybackClock {
-  Fem2dPlaybackClock clock = 1;
+  FemPlaybackClock clock = 1;
 }

@@ -19,9 +19,12 @@ impl MutationKind<i64, CounterMutation> for AddCounter {
     fn diff(&self, _base: &i64) -> MutationOutcome<CounterDiff> {
         MutationOutcome::new(CounterDiff::delta(self.delta))
     }
-    fn inverse(&self, _base: &i64) -> Vec<CounterMutation> {
+    fn inverse(&self, _base: &i64) -> Result<Vec<CounterMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         CounterDiff::from_wide(-i128::from(self.delta)).deltas.into_iter().rev().map(|delta| Self { delta }.into()).collect()
-    }
+    
+    })())
+}
     fn label(&self) -> crate::LocalizedLabel {
         crate::LocalizedLabel::native(&format!("Add {}", self.delta), &format!("{} hinzufügen", self.delta))
     }
@@ -33,8 +36,8 @@ impl OpText for AddCounter {
     fn print_op(&self) -> String {
         format!("add-counter {}", self.delta)
     }
-    fn parse_op(line: &str) -> Result<Self, crate::os_dsl::TextError> {
-        let error = || crate::os_dsl::TextError::new("expected add-counter <i64>", crate::os_dsl::TextSpan::at(1, 1));
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        let error = || semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected add-counter <i64>", semio_framework_diagnostic::TextSpan::at(1, 1));
         let delta = line.strip_prefix("add-counter ").ok_or_else(error)?.parse::<i64>().map_err(|_| error())?;
         Ok(Self { delta })
     }

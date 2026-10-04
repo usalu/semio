@@ -3,7 +3,7 @@
 //! over the canonical graph bytes, and the derived codec round-trips byte-exactly.
 use super::*;
 
-#[derive(Clone, Debug, PartialEq, crate::os_dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(extension = "composed")]
 struct ComposedSnapshot {
     schema: String,
@@ -13,7 +13,7 @@ struct ComposedSnapshot {
     links: Vec<ArtifactLink>,
 }
 
-#[derive(Clone, Debug, PartialEq, crate::os_dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(extension = "composed")]
 struct ComposedWithoutLinks {
     schema: String,
@@ -22,7 +22,7 @@ struct ComposedWithoutLinks {
     cover: Option<ArtifactLink>,
 }
 
-#[derive(Clone, Debug, PartialEq, crate::os_dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(extension = "composed")]
 struct ComposedRenamedChild {
     schema: String,
@@ -64,25 +64,32 @@ fn snapshot(row: &serde_json::Value) -> ComposedSnapshot {
     }
 }
 
-fn graph_json(spec: &crate::os_dsl::RecordSpec) -> serde_json::Value {
-    serde_json::from_str(&crate::os_pack::json::to_string(&crate::os_pack::PackSchemaGraph::of(spec).to_json())).expect("graph json")
+fn graph_json(spec: &semio_framework_dsl_record::RecordSpec) -> serde_json::Value {
+    serde_json::from_str(&semio_framework_pack_json::to_string(&crate::os_pack::PackSchemaGraph::of(spec).to_json())).expect("graph json")
 }
 
-fn renamed_role_link_spec() -> crate::os_dsl::RecordSpec {
+fn renamed_role_link_spec() -> semio_framework_dsl_record::RecordSpec {
     let mut spec = artifact_link_spec();
     spec.fields.iter_mut().find(|field| field.key == "role").expect("link role field").key = "purpose".into();
     spec
 }
 
-fn renamed_role_link_controlled<C:crate::os_dsl::NativeSchemaControl>(control:&mut C)->Result<crate::os_dsl::RecordSpec,String>{let mut spec=artifact_link_spec_controlled(control)?;let field=spec.fields.iter_mut().find(|field|field.key=="role").ok_or("link role field")?;field.key=control.copy_text("purpose")?;Ok(spec)}
-fn renamed_role_link_producer()->crate::os_dsl::RecordSpecProducer{crate::os_dsl::RecordSpecProducer{ordinary:renamed_role_link_spec,decoding:|control|renamed_role_link_controlled(control),encoding:|control|renamed_role_link_controlled(control)}}
+fn renamed_role_link_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::RecordSpec, semio_framework_value::ValueError> {
+    let mut spec = artifact_link_spec_controlled(control)?;
+    let field = spec.fields.iter_mut().find(|field| field.key == "role").ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "link role field"))?;
+    field.key = control.copy_text("purpose")?;
+    Ok(spec)
+}
+fn renamed_role_link_producer() -> semio_framework_dsl_record::RecordSpecProducer {
+    semio_framework_dsl_record::RecordSpecProducer { ordinary: renamed_role_link_spec, decoding: |control| renamed_role_link_controlled(control), encoding: |control| renamed_role_link_controlled(control) }
+}
 
-fn with_link_spec(link: crate::os_dsl::RecordSpecProducer) -> crate::os_dsl::RecordSpec {
+fn with_link_spec(link: semio_framework_dsl_record::RecordSpecProducer) -> semio_framework_dsl_record::RecordSpec {
     let mut spec = ComposedSnapshot::__dsl_spec();
     for field in &mut spec.fields {
         field.shape = match (field.key.as_str(), &field.shape) {
-            ("cover", crate::os_dsl::Shape::Record(_)) => crate::os_dsl::Shape::Record(link),
-            ("links", crate::os_dsl::Shape::List(_)) => crate::os_dsl::Shape::List(Box::new(crate::os_dsl::Shape::Record(link))),
+            ("cover", semio_framework_dsl_record::Shape::Record(_)) => semio_framework_dsl_record::Shape::Record(link),
+            ("links", semio_framework_dsl_record::Shape::List(_)) => semio_framework_dsl_record::Shape::List(Box::new(semio_framework_dsl_record::Shape::Record(link))),
             _ => continue,
         };
     }

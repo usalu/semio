@@ -1,0 +1,6 @@
+/** 🦀️ Checks syntax of the actual mounted Semio native demand and accounting pair without type or runtime claims. */
+import {spawnSync} from "node:child_process";
+import {readFileSync,writeFileSync} from "node:fs";
+const receipts=[];for(const path of ["/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🛬️native/🦀️.rs","/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🛫️native/🦀️.rs","/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"]){const run=spawnSync("rustfmt",["--edition","2021","--emit","stdout","--config","skip_children=true"],{input:readFileSync(path),encoding:"utf8"});receipts.push({path,status:run.status,stderr:run.stderr});if(run.status!==0){console.error(run.stderr);process.exitCode=1;}}
+writeFileSync("/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-semio-native-cumulative-admission-rust-syntax-receipt.json",JSON.stringify({scope:"Syntax only; no type or Native assertions",receipts},null,2)+"\n");console.log("[DEBUG] Semio actual native Rust syntax files="+receipts.length+" errors="+receipts.filter(x=>x.status!==0).length);
+

@@ -20,7 +20,8 @@ pub mod mutations;
 pub mod derived_construction {
     use crate::standards::v_ap214::subsets::cc2::schema::check_cc2_conformance;
     use crate::{StepDiff, StepMutation, StepSnapshot};
-    use dsl::{Diagnostic, Severity};
+    use semio_framework_diagnostic::Diagnostic;
+use semio_framework_diagnostic::Severity;
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
@@ -43,7 +44,7 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
 
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(Self::from_snapshot(<StepSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
 
@@ -90,7 +91,11 @@ pub mod derived_analysis {
     use crate::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
     use crate::standards::v_ap214::subsets::base::schema::StepAnalyzer as StepAnyAnalyzer;
     pub use crate::standards::v_ap214::subsets::base::schema::StepParts;
-    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
+    use semio_framework_diagnostic::Diagnostic;
+use semio_framework_diagnostic::FaultCode;
+use semio_framework_diagnostic::FaultScope;
+use semio_framework_diagnostic::Severity;
+use semio_framework_diagnostic::TextSpan;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     /// 🎯️ This subset's dialect coordinate.
@@ -135,7 +140,7 @@ pub mod derived_analysis {
         out
     }
     /// 🛡️ Checks owned CC2 facts with cancellation before diagnostic allocation.
-    pub fn check_cc2_conformance_controlled(snapshot:&StepSnapshot,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,String>{
+    pub fn check_cc2_conformance_controlled(snapshot:&StepSnapshot,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,semio_framework_os_kernel::sqlite_snapshot::ValueError>{
         let facts=crate::schema::snapshot::sqlite_snapshot::conformance_facts(snapshot,MAX_RUNG,control)?;let mut out=Vec::new();
         if !facts.file_schema{out.push(hard(CODE_FILE_SCHEMA,"FILE_SCHEMA does not declare AUTOMOTIVE_DESIGN -- ISO 10303-214 requires the AP214 EXPRESS schema".into()));}
         for(index,(id,type_name,rung))in facts.violations.into_iter().enumerate(){if index%256==0||type_name.len()>65536{control.checkpoint(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot,index,0)?;}out.push(hard(CODE_LADDER,format!("instance #{id} is a {type_name} (ladder rung {rung}) -- exceeds cc2's max rung 2")));}

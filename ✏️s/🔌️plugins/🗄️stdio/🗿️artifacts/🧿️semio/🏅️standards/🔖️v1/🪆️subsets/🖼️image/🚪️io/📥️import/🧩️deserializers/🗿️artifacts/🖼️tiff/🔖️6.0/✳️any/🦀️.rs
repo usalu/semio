@@ -34,7 +34,7 @@ const CORE_TAGS: [u16; 9] = [TAG_IMAGE_WIDTH, TAG_IMAGE_LENGTH, TAG_BITS_PER_SAM
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn value_to_metadata_string(v: &TiffValues) -> String {
     match v {
-        TiffValues::Ascii(s) => s.clone(),
+        TiffValues::Ascii(bytes) => String::from_utf8_lossy(bytes.strip_suffix(&[0]).unwrap_or(bytes)).into_owned(),
         other => other.first_u32().map_or_else(|| format!("{other:?}"), |n| n.to_string()),
     }
 }
@@ -49,11 +49,9 @@ impl ArtifactDeserializer for SemioImageFromTiff {
     const INTO: Dialect = INTO_DIALECT;
 
     async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        let width = from.width().ok_or_else(|| store::PackError::Schema("tiff→semio/image: missing ImageWidth tag in ifds[0]".into()))?;
-        let height = from.height().ok_or_else(|| store::PackError::Schema("tiff→semio/image: missing ImageLength tag in ifds[0]".into()))?;
-        if from.pixels.len() != (width as usize) * (height as usize) * 4 {
-            return Err(store::PackError::Schema("tiff→semio/image: pixels length does not match width*height*4".into()));
-        }
+        let width = from.width().ok_or_else(|| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "tiff→semio/image: missing ImageWidth tag in ifds[0]")))?;
+        let height = from.height().ok_or_else(|| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "tiff→semio/image: missing ImageLength tag in ifds[0]")))?;
+        let page = semio_s_artifact_stdio_tiff::engine::decode_tiff_page_rgba(from, 0).map_err(|error| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("tiff→semio/image: {error}"))))?;
         let samples_per_pixel = from.tag(TAG_SAMPLES_PER_PIXEL).and_then(|t| t.values.first_u32());
         let photometric = from.tag(TAG_PHOTOMETRIC).and_then(|t| t.values.first_u32());
         let colorspace = match (photometric, samples_per_pixel) {
@@ -63,7 +61,7 @@ impl ArtifactDeserializer for SemioImageFromTiff {
         };
         let bit_depth = from.tag(TAG_BITS_PER_SAMPLE).and_then(|t| t.values.first_u32()).unwrap_or(0).min(u8::MAX as u32) as u8;
         let metadata = from.ifds.first().map(|ifd| ifd.entries.iter().filter(|t| !CORE_TAGS.contains(&t.tag)).map(|t| SemioImageMetadataEntry { key: t.tag.to_string(), value: value_to_metadata_string(&t.values) }).collect()).unwrap_or_default();
-        Ok(SemioImageSnapshot { schema: STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(), width, height, colorspace, bit_depth, frames: vec![SemioImageFrame { delay_ms: 0, rgba8: from.pixels.clone() }], icc: None, metadata })
+        Ok(SemioImageSnapshot { schema: STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(), width, height, colorspace, bit_depth, frames: vec![SemioImageFrame { delay_ms: 0, rgba8: page.pixels }], icc: None, metadata })
     }
 }
 //#endregion 🔖️Deserializer

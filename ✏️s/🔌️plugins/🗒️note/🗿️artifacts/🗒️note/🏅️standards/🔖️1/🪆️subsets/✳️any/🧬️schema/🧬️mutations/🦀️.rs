@@ -21,7 +21,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// text/math/ink, plus table row/column insert/remove). Whole-document replace has NO replacement
 /// here — see `crate::editor::note::reset_document_effect`, which goes through
 /// `Effect::LoadDocument` outside undo history.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslEnum, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = NoteSnapshot, diff = NoteDiff, schema = "note.note")]
 pub enum NoteMutation {
@@ -104,8 +104,11 @@ pub fn apply_note_mutation(snapshot: &NoteSnapshot, mutation: &NoteMutation) -> 
     MutationDiff::apply(&diff, snapshot)
 }
 
-pub fn inverse_note_mutation(snapshot: &NoteSnapshot, mutation: &NoteMutation) -> Vec<NoteMutation> {
-    mutation.inverse(snapshot)
+pub fn inverse_note_mutation(snapshot: &NoteSnapshot, mutation: &NoteMutation) -> Result<Vec<NoteMutation>, semio_framework_value::ValueError> {
+    Ok({
+    mutation.inverse(snapshot)?
+
+    })
 }
 
 /// 🔢️ A history label's number, `(en, de)`: two decimals at most, trailing zeros trimmed, a German decimal comma.
@@ -182,28 +185,31 @@ pub fn apply_note_mutation_outcome(snapshot: &mut NoteSnapshot, mutation: &NoteM
 /// returns. Reachable from outside this crate, which `protocol::Mutation` itself is not — the
 /// `protocol` extern-crate alias is private to `🦀️.rs`.
 // 🚫️async: E1 pure computation over an in-memory snapshot, consumed from a synchronous external test host — see R9
-pub fn inverse_note_mutation_steps(mutation: &NoteMutation, base: &NoteSnapshot) -> Vec<NoteMutation> {
-    <NoteMutation as Mutation<NoteSnapshot>>::inverse(mutation, base)
+pub fn inverse_note_mutation_steps(mutation: &NoteMutation, base: &NoteSnapshot) -> Result<Vec<NoteMutation>, semio_framework_value::ValueError> {
+    Ok({
+    <NoteMutation as Mutation<NoteSnapshot>>::inverse(mutation, base)?
+
+    })
 }
 
 /// 📥️ Decodes the internally-tagged (`{"mutation": "<camelCaseVariant>", …}`) projection the
 /// committed `<slug>/🧪️tests/<fixture>/🦠️mutation/🔣️.json` vectors carry.
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
 pub fn decode_note_mutation_json(text: &str) -> Result<NoteMutation, String> {
-    dsl::os_pack::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 
 /// 📥️ Decodes a committed `📸️snapshot/{⬅️before,➡️after}/🔣️.json` vector.
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
 pub fn decode_note_snapshot_json(text: &str) -> Result<NoteSnapshot, String> {
-    dsl::os_pack::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 
 /// 📤️ The snapshot as the same canonical JSON the committed vectors are written in — the
 /// projection an external test host compares through.
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
 pub fn encode_note_snapshot_json(snapshot: &NoteSnapshot) -> String {
-    dsl::os_pack::to_json_string(snapshot)
+    semio_framework_pack_json::to_json_string(snapshot)
 }
 //#endregion 🔖️Kinds
 

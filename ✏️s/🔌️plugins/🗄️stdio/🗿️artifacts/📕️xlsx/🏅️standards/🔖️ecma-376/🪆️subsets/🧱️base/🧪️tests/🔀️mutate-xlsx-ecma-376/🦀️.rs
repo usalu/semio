@@ -220,7 +220,7 @@ mod subject {
         let spec = ctx.doc_json()?;
         let base = decode(&arranged_input(ctx, &spec)?)?;
         let mutation = mutation_from_spec(&spec)?;
-        let undo = mutation_inverse(&mutation, &base);
+        let undo = mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
         let mut snapshot = base;
         apply_xlsx_mutation(&mut snapshot, &mutation);
         for step in &undo {

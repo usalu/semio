@@ -40,6 +40,22 @@
         "forwardAllArgs": true
       }
     },
+    "canonical-architecture": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts canonical-architecture"
+      }
+    },
+    "test-oracle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-oracle"
+      }
+    },
     "test-snapshot-sqlite": {
       "executor": "nx:run-commands",
       "options": {

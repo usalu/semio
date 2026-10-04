@@ -1,0 +1,179 @@
+{
+  "schema": "collection.sqlite-fixture/v1",
+  "dialect": "os.collection@1/*",
+  "cancelAt": 256,
+  "identityOffset": 1000,
+  "nativeSnapshot": {
+    "schema": "literal schema\u0000",
+    "name": "Collection 世界",
+    "folders": [
+      {
+        "id": "cycle",
+        "parent_id": "cycle",
+        "name": ""
+      },
+      {
+        "id": "cycle",
+        "parent_id": "missing",
+        "name": "同じ"
+      },
+      {
+        "id": "",
+        "parent_id": null,
+        "name": "root"
+      }
+    ],
+    "entries": [
+      {
+        "id": "id",
+        "folder_id": "unresolved",
+        "name": "doc",
+        "kind_id": "independent",
+        "body": {
+          "kind": "document",
+          "schema": "not known\u0000",
+          "document_id": "different id"
+        }
+      },
+      {
+        "id": "id",
+        "folder_id": "cycle",
+        "name": "blob",
+        "kind_id": "",
+        "body": {
+          "kind": "blob",
+          "blob": {
+            "hash": "literal\u0000hash",
+            "size": 0,
+            "mediaType": ""
+          }
+        }
+      },
+      {
+        "id": "",
+        "folder_id": null,
+        "name": "",
+        "kind_id": "",
+        "body": {
+          "kind": "blob",
+          "blob": {
+            "hash": "",
+            "size": 0,
+            "mediaType": "application/未知"
+          }
+        }
+      }
+    ]
+  },
+  "blobSizes": [
+    "18446744073709551615",
+    "9007199254740993"
+  ],
+  "rows": {
+    "collection_document": [
+      [
+        1,
+        "literal schema\u0000",
+        "Collection 世界"
+      ]
+    ],
+    "collection_folder": [
+      [
+        1,
+        1,
+        0,
+        "cycle",
+        "cycle",
+        ""
+      ],
+      [
+        2,
+        1,
+        1,
+        "cycle",
+        "missing",
+        "同じ"
+      ],
+      [
+        3,
+        1,
+        2,
+        "",
+        null,
+        "root"
+      ]
+    ],
+    "collection_entry": [
+      [
+        1,
+        1,
+        0,
+        "id",
+        "unresolved",
+        "doc",
+        "independent",
+        "document"
+      ],
+      [
+        2,
+        1,
+        1,
+        "id",
+        "cycle",
+        "blob",
+        "",
+        "blob"
+      ],
+      [
+        3,
+        1,
+        2,
+        "",
+        null,
+        "",
+        "",
+        "blob"
+      ]
+    ],
+    "collection_document_body": [
+      [
+        1,
+        "not known\u0000",
+        "different id"
+      ]
+    ],
+    "collection_blob_body": [
+      [
+        2,
+        "literal\u0000hash",
+        4294967295,
+        4294967295,
+        ""
+      ],
+      [
+        3,
+        "",
+        2097152,
+        1,
+        "application/未知"
+      ]
+    ]
+  },
+  "edit": {
+    "table": "collection_document_body",
+    "column": "addressed_document_id",
+    "value": "edited address 日本\u0000"
+  },
+  "rowsTotal": 10,
+  "reconstructionBudget": {
+    "textUnit": "日本𐀀",
+    "repeat": 32768,
+    "retainedCopies": 2,
+    "ceilingNumerator": 3,
+    "ceilingDenominator": 2
+  },
+  "nativeRetention": {
+    "ceilingNumerator": 3,
+    "ceilingDenominator": 2
+  }
+}

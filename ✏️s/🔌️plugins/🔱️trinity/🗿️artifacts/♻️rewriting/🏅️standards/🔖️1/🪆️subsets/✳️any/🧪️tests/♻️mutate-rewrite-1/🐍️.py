@@ -1,440 +1,314 @@
-#!/usr/bin/env python3
-"""♻️ An INDEPENDENT second implementation of the `s.trinity.rewriting` graph-rewrite rule and all
-fourteen of its typed mutations, in Python, serving as this case's differential oracle.
-
-**Why a second implementation and not a third-party library.** A rewrite rule here is five members:
-three whole JSON DOCUMENTS carried as strings — the before-fixture graph, the left-hand pattern and
-the right-hand side — plus two string-keyed maps, one of parameter bindings and one of layout
-points. Graph-rewriting systems (GrGen, AGG, `networkx`'s isomorphism module) implement rewriting;
-none of them models THIS rule document, none reads `.dsl.semio`, and none has an opinion on whether
-`change-parameter-binding` on a key that is absent should insert or refuse. What a reference can
-genuinely adjudicate is the document algebra — three whole-value setters and a
-set/remove pair over each of two maps — and that is what this file implements, from the
-specification, in another language.
-
-**What it was written from.**
-
-* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`` — `RewritingSnapshot` is
-  exactly `beforeFixtureJson`, `lhsJson`, `rhsJson` (all three `contentMediaType:
-  application/json`), `parameterBindings` (a map of open `PropertyValue`s) and `ruleLayout` (a map of
-  `{x, y}` `LayoutPoint`s), `additionalProperties: false`.
-* ``…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`` — the fourteen verbs and their positional
-  argument lists: three `edit-<member> text`, `change-parameter-binding key value`,
-  `remove-parameter-binding key`, `change-rule-layout-point key point-block`,
-  `remove-rule-layout-point key`, the relative `drag-working-nodes targets dx dy`, `patch-working-nodes targets field
-  value`, `delete-working-nodes targets`, `connect-working-ports source target kind`, `disconnect-working-edges targets` and
-  `drag-rule-nodes targets dx dy`, and the absolute
-  `set-rule-layout-points placement-table targets`.
-* the fourteen committed `(before, mutation, after, outcome)` specification vectors, which give the
-  INTERNALLY tagged wire form of each verb. All fourteen are ACCEPTING, so unlike this artifact's
-  `🔌️jack` sibling the accepting direction here already had committed evidence.
-
-**What this implementation deliberately does not do, and why.** It does not read `.rewriting.dsl.semio`.
-That carrier has no prose document and mixes three different value encodings in one file — a
-backslash-escaped quoted string, a braced block, and a fenced ```json block — with nothing stating
-which member gets which. A reference that guessed the rule and then claimed byte-exact reproduction
-would be asserting a specification that does not exist. The real-document scenarios therefore read a
-snapshot fixture derived once from that committed file (provenance in the feature description), and
-the carrier's own laws stay asserted in role on the Rust side.
-
-**No Rust was read to write this.** `🦀️.rs` beside this file registers the SUBJECT half
-only.
-"""
-
-# region 🔖️Imports
+"""🧪️ Independent typed Rewriting document and full declared Semio child oracle."""
 import copy
 import json
+import re
+import struct
+from semio_repo_test import Adapter, Outcome
 
-from semio_repo_test import Adapter, Context, Outcome
-
-# endregion 🔖️Imports
-
-
-# region 🔖️Vocabulary
-MEMBERS = ("beforeFixtureJson", "lhsJson", "rhsJson", "parameterBindings", "ruleLayout")
-"""🗂️ The five members `RewritingSnapshot` declares — and the cross-language projection."""
-
-KINDS = ("edit-before-fixture", "edit-lhs", "edit-rhs", "change-parameter-binding", "remove-parameter-binding", "change-rule-layout-point", "remove-rule-layout-point", "drag-working-nodes", "patch-working-nodes", "drag-rule-nodes", "set-rule-layout-points", "delete-working-nodes", "connect-working-ports", "disconnect-working-edges")
-"""🏷️ Every kind the catalog declares."""
-
-TAGS = {
-    "edit-before-fixture": "editBeforeFixture",
-    "edit-lhs": "editLhs",
-    "edit-rhs": "editRhs",
-    "change-parameter-binding": "changeParameterBinding",
-    "remove-parameter-binding": "removeParameterBinding",
-    "change-rule-layout-point": "changeRuleLayoutPoint",
-    "remove-rule-layout-point": "removeRuleLayoutPoint",
-    "drag-working-nodes": "dragWorkingNodes",
-    "patch-working-nodes": "patchWorkingNodes",
-    "drag-rule-nodes": "dragRuleNodes",
-    "set-rule-layout-points": "setRuleLayoutPoints",
-    "delete-working-nodes": "deleteWorkingNodes",
-    "connect-working-ports": "connectWorkingPorts",
-    "disconnect-working-edges": "disconnectWorkingEdges",
-}
-"""🔤️ The internally tagged `mutation` discriminator of each kind, as the committed vectors spell it."""
-
-DOCUMENTS = {"edit-before-fixture": ("beforeFixtureJson", "newBeforeFixtureJson"), "edit-lhs": ("lhsJson", "newLhsJson"), "edit-rhs": ("rhsJson", "newRhsJson")}
-"""📄️ The three whole-document setters: which member each writes, and what its argument is called."""
-
-WORKING = ("drag-working-nodes", "patch-working-nodes", "delete-working-nodes", "connect-working-ports", "disconnect-working-edges")
-"""🕸️ The five relative working-graph verbs: they move, patch or delete nodes (a delete with every edge touching them), draw or cut
-wires INSIDE the
-before-fixture document and write it back as compact
-JSON with sorted keys, which is the form the leaves' own specification fixes so that a second implementation reproduces the bytes."""
-
+MEMBERS = ("workingGraph", "lhs", "rhs", "parameterBindings", "ruleLayout")
+KINDS = ("edit-before-fixture", "edit-lhs", "edit-rhs", "change-parameter-binding", "remove-parameter-binding", "change-rule-layout-point", "remove-rule-layout-point", "drag-rule-nodes", "set-rule-layout-points")
+TAGS = dict(zip(KINDS, ("editBeforeFixture", "editLhs", "editRhs", "changeParameterBinding", "removeParameterBinding", "changeRuleLayoutPoint", "removeRuleLayoutPoint", "dragRuleNodes", "setRuleLayoutPoints")))
+DOCUMENTS = {"edit-before-fixture": ("workingGraph", "newWorkingGraph"), "edit-lhs": ("lhs", "newLhs"), "edit-rhs": ("rhs", "newRhs")}
 RULE_ROWS = ("create", "merge", "set", "delete", "parameters")
-"""📐️ The RHS clause lists in the row order the rule editor draws them (y = 0, 80, 160, 240, 320; 220 between clauses)."""
 
-# endregion 🔖️Vocabulary
+def exact(value, required, optional=()):
+    if not isinstance(value, dict) or not set(required).issubset(value) or set(value) - set(required) - set(optional):
+        raise AssertionError("typed fields required %r optional %r, found %r" % (required, optional, value))
 
+def word(value):
+    if isinstance(value, dict):
+        exact(value, ("bits",))
+        if not isinstance(value["bits"], str) or re.fullmatch("[0-9a-f]{16}", value["bits"]) is None:
+            raise AssertionError("binary64 requires the exact lowercase word")
+        return copy.deepcopy(value)
+    if type(value) not in (int, float):
+        raise AssertionError("declared numeric input or binary64 word required")
+    return {"bits": struct.pack(">d", float(value)).hex()}
 
-# region 🔖️Document
-def validate(document):
-    """✅️ Holds the document to the committed JSON Schema — including that the three string members
-    really are JSON documents, which is what `contentMediaType: application/json` declares and what a
-    setter that wrote a truncated payload would break."""
-    if set(document) != set(MEMBERS):
-        raise AssertionError("a rewrite rule must carry exactly %r, found %r" % (sorted(MEMBERS), sorted(document)))
-    for name in DOCUMENTS.values():
-        member = name[0]
-        if not isinstance(document[member], str):
-            raise AssertionError("%s must be a string, found %r" % (member, document[member]))
-        try:
-            json.loads(document[member])
-        except ValueError as error:
-            raise AssertionError("%s declares contentMediaType application/json but does not parse: %s" % (member, error))
-    if not isinstance(document["parameterBindings"], dict):
-        raise AssertionError("parameterBindings must be a map, found %r" % document["parameterBindings"])
-    for key, point in document["ruleLayout"].items():
-        if not isinstance(point, dict) or set(point) != {"x", "y"}:
-            raise AssertionError("ruleLayout[%r] must be exactly {x, y}, found %r" % (key, point))
+def decimal(value):
+    return struct.unpack(">d", bytes.fromhex(word(value)["bits"]))[0]
 
+def intrinsic(value):
+    pending = [value]
+    while pending:
+        held = pending.pop()
+        kind = held.get("kind") if isinstance(held, dict) else None
+        if kind == "null":
+            exact(held, ("kind",))
+        elif kind == "bool":
+            exact(held, ("kind", "value"))
+            if type(held["value"]) is not bool:
+                raise AssertionError("intrinsic bool required")
+        elif kind in ("int", "float"):
+            exact(held, ("kind", "lexeme"))
+            if not isinstance(held["lexeme"], str):
+                raise AssertionError("intrinsic numeric lexeme required")
+        elif kind == "str":
+            exact(held, ("kind", "value"))
+            if not isinstance(held["value"], str):
+                raise AssertionError("intrinsic literal string required")
+        elif kind == "bytes":
+            exact(held, ("kind", "value"))
+            if not isinstance(held["value"], list) or any(type(x) is not int or not 0 <= x <= 255 for x in held["value"]):
+                raise AssertionError("intrinsic octets required")
+        elif kind == "ref":
+            exact(held, ("kind", "id")); exact(held["id"], ("value",))
+            if not isinstance(held["id"]["value"], str):
+                raise AssertionError("literal intrinsic reference required")
+        elif kind == "list":
+            exact(held, ("kind", "items"))
+            if not isinstance(held["items"], list):
+                raise AssertionError("ordered intrinsic list required")
+            pending.extend(held["items"])
+        elif kind == "map":
+            exact(held, ("kind", "entries"))
+            if not isinstance(held["entries"], list):
+                raise AssertionError("ordered intrinsic map occurrences required")
+            for entry in held["entries"]:
+                exact(entry, ("key", "value"))
+                if not isinstance(entry["key"], str):
+                    raise AssertionError("literal member key required")
+                pending.append(entry["value"])
+        else:
+            raise AssertionError("unknown intrinsic variant %r" % kind)
 
-def document_of(payload):
-    """📥️ Reads a rewrite rule out of a snapshot JSON value."""
-    document = copy.deepcopy(payload)
-    validate(document)
-    return document
+def properties(entries):
+    if not isinstance(entries, list):
+        raise AssertionError("ordered property occurrences required")
+    for entry in entries:
+        exact(entry, ("key", "value"))
+        if not isinstance(entry["key"], str):
+            raise AssertionError("literal property key required")
+        intrinsic(entry["value"])
 
+def validate_child(child):
+    exact(child, ("schema", "nodes", "edges"))
+    if child["schema"] != "s.stdio.semio.graph" or not isinstance(child["nodes"], list) or not isinstance(child["edges"], list):
+        raise AssertionError("full declared Semio child required")
+    for node in child["nodes"]:
+        exact(node, ("id", "kind", "label", "position", "width", "height", "ports", "properties"))
+        exact(node["id"], ("value",)); exact(node["position"], ("x", "y"))
+        if not all(isinstance(node[k], str) for k in ("kind", "label")) or not isinstance(node["id"]["value"], str):
+            raise AssertionError("literal node fields required")
+        for axis in (node["position"]["x"], node["position"]["y"], node["width"], node["height"]):
+            if word(axis) != axis:
+                raise AssertionError("retained child geometry uses raw words")
+        properties(node["properties"])
+        for port in node["ports"]:
+            exact(port, ("name", "kind", "category", "properties"))
+            properties(port["properties"])
+    for edge in child["edges"]:
+        exact(edge, ("id", "source", "target", "kind", "label", "properties"), ("sourcePort", "targetPort"))
+        exact(edge["id"], ("value",)); exact(edge["source"], ("value",)); exact(edge["target"], ("value",))
+        properties(edge["properties"])
 
-# endregion 🔖️Document
+def validate_owner(owner):
+    parent, child = owner
+    exact(parent, MEMBERS)
+    graph = parent["workingGraph"]
+    exact(graph, ("schema", "name", "manifest", "camera", "content", "query"), ("manifestId", "rootNodeId"))
+    exact(graph["camera"], ("x", "y", "zoom"))
+    for axis in graph["camera"].values():
+        word(axis)
+    exact(graph["content"], ("childId", "target")); exact(graph["content"]["target"], ("artifactId", "dialect"))
+    if graph["content"]["target"]["dialect"] != {"artifactKind": "s.stdio.semio", "standard": "v1", "subset": "graph"}:
+        raise AssertionError("workingGraph requires its exact Semio child dialect")
+    exact(parent["lhs"], ("pattern",), ("whereClause",))
+    exact(parent["rhs"], RULE_ROWS)
+    if not isinstance(parent["parameterBindings"], dict) or not isinstance(parent["ruleLayout"], dict):
+        raise AssertionError("typed bindings and layout required")
+    for point in parent["ruleLayout"].values():
+        exact(point, ("x", "y")); word(point["x"]); word(point["y"])
+    validate_child(child)
 
+def fixture(ctx, role):
+    prefix = role + " shared://"
+    hits = [step["text"][len(role) + 1:] for step in ctx.scenario["steps"] if step["text"].startswith(prefix)]
+    if len(hits) != 1 or not hits[0].startswith("shared://"):
+        raise AssertionError("scenario %s must declare exactly one %s input" % (ctx.scenario["id"], role))
+    return json.loads(ctx.fixture_bytes(hits[0]).decode("utf-8"))
 
-# region 🔖️Mutations
-def compact(value):
-    """🗜️ Compact JSON with sorted keys and verbatim UTF-8 — the form the working-graph verbs write the before-fixture in."""
-    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+def owner_input(ctx, parent_role, child_role):
+    owner = (fixture(ctx, parent_role), fixture(ctx, child_role))
+    validate_owner(owner)
+    return owner
 
-
-def endpoint(key):
-    """🔌️ The node an edge endpoint names: a `node@port` key names its node before the `@`; any other key is the node itself."""
-    node, separator, port = key.partition("@")
-    return node if separator and node and port else key
-
-
-def rule_graph_slots(document):
-    """📐️ Every semantic rule-graph node id with its default position, read from the rule's own two sides: the LHS match at
-    (0, 0), its WHERE clause (when non-blank) at (220, 80), then each RHS clause list row by row, or `rhs-empty` at (0, 0)."""
-    slots = {}
-    try:
-        lhs = json.loads(document["lhsJson"])
-        slots["lhs-match"] = (0.0, 0.0)
-        if (lhs.get("whereClause") or "").strip():
-            slots["lhs-where"] = (220.0, 80.0)
-    except ValueError:
-        pass
-    try:
-        rhs = json.loads(document["rhsJson"])
-        clauses = {}
-        for row, name in enumerate(RULE_ROWS):
-            prefix = "rhs-parameter" if name == "parameters" else "rhs-" + name
-            for index in range(len(rhs.get(name, []))):
-                clauses["%s-%d" % (prefix, index)] = (index * 220.0, row * 80.0)
-        slots.update(clauses or {"rhs-empty": (0.0, 0.0)})
-    except ValueError:
-        pass
-    return slots
-
-
-def rule_position(document, key):
-    """📍️ Where a rule-graph node sits: its layout point, else its default slot; `None` for an id the rule draws no node for."""
-    slots = rule_graph_slots(document)
-    if key not in slots:
-        return None
-    held = document["ruleLayout"].get(key)
-    return (held["x"], held["y"]) if held is not None else slots[key]
-
+def payload(ctx):
+    rows = [step["docString"] for step in ctx.scenario["steps"] if "docString" in step]
+    if len(rows) != 1:
+        raise AssertionError("exactly one declared typed payload required")
+    return json.loads(rows[0])
 
 def kind_of(mutation):
-    """🏷️ The kind an internally tagged mutation payload names."""
-    if not isinstance(mutation, dict) or "mutation" not in mutation:
-        raise AssertionError("a mutation carries an internally tagged `mutation` member, found %r" % mutation)
     for kind, tag in TAGS.items():
-        if tag == mutation["mutation"]:
+        if mutation.get("mutation") == tag:
             return kind
-    raise AssertionError("unknown mutation variant %r" % mutation["mutation"])
+    raise AssertionError("unknown typed mutation")
 
+def rule_graph_slots(parent):
+    slots = {"lhs-match": (0.0, 0.0)}
+    if (parent["lhs"].get("whereClause") or "").strip():
+        slots["lhs-where"] = (220.0, 80.0)
+    clauses = {}
+    for row, name in enumerate(RULE_ROWS):
+        prefix = "rhs-parameter" if name == "parameters" else "rhs-" + name
+        for index in range(len(parent["rhs"][name])):
+            clauses["%s-%d" % (prefix, index)] = (index * 220.0, row * 80.0)
+    slots.update(clauses or {"rhs-empty": (0.0, 0.0)})
+    return slots
 
-def apply_mutation(document, mutation):
-    """🧬️ Applies one typed mutation, returning the resulting document.
+def rule_position(parent, key):
+    slots = rule_graph_slots(parent)
+    if key not in slots:
+        return None
+    point = parent["ruleLayout"].get(key)
+    return (decimal(point["x"]), decimal(point["y"])) if point is not None else slots[key]
 
-    `change-` on an absent key INSERTS and `remove-` on an absent key is a no-op that leaves the map
-    alone: the grammar gives both verbs a bare `key` with no existence precondition, and the schema
-    declares both members open maps rather than closed records.
-    """
+def apply_mutation(owner, mutation, replacement=None):
     kind = kind_of(mutation)
-    result = copy.deepcopy(document)
+    parent, child = copy.deepcopy(owner)
     if kind in DOCUMENTS:
-        member, argument = DOCUMENTS[kind]
-        result[member] = mutation[argument]
-    elif kind == "change-parameter-binding":
-        result["parameterBindings"][mutation["key"]] = copy.deepcopy(mutation["newValue"])
-    elif kind == "remove-parameter-binding":
-        result["parameterBindings"].pop(mutation["key"], None)
-    elif kind == "delete-working-nodes":
-        graph = json.loads(result["beforeFixtureJson"])
-        gone = {node.get("id") for node in graph["nodes"] if node.get("id") in mutation["targets"]}
-        graph["nodes"] = [node for node in graph["nodes"] if node.get("id") not in gone]
-        if "edges" in graph:
-            graph["edges"] = [edge for edge in graph["edges"] if endpoint(edge.get("source", "")) not in gone and endpoint(edge.get("target", "")) not in gone]
-        if graph.get("rootNodeId") in gone:
-            graph["rootNodeId"] = None
-        result["beforeFixtureJson"] = compact(graph)
-    elif kind == "connect-working-ports":
-        graph = json.loads(result["beforeFixtureJson"])
-        edges = graph.setdefault("edges", [])
-        if not any(edge.get("source") == mutation["source"] and edge.get("target") == mutation["target"] for edge in edges):
-            edges.append({"id": "%s->%s" % (mutation["source"], mutation["target"]), "kind": mutation["kind"], "source": mutation["source"], "target": mutation["target"]})
-        result["beforeFixtureJson"] = compact(graph)
-    elif kind == "disconnect-working-edges":
-        graph = json.loads(result["beforeFixtureJson"])
-        if "edges" in graph:
-            graph["edges"] = [edge for edge in graph["edges"] if edge.get("id") not in mutation["targets"]]
-        result["beforeFixtureJson"] = compact(graph)
-    elif kind in WORKING:
-        graph = json.loads(result["beforeFixtureJson"])
-        for node in graph["nodes"]:
-            if node.get("id") in mutation["targets"]:
-                if kind == "drag-working-nodes":
-                    node["x"] = float(node.get("x", 0.0)) + float(mutation["dx"])
-                    node["y"] = float(node.get("y", 0.0)) + float(mutation["dy"])
-                else:
-                    node[mutation["field"]] = mutation["value"].strip()
-        result["beforeFixtureJson"] = compact(graph)
+        field, argument = DOCUMENTS[kind]
+        parent[field] = copy.deepcopy(mutation[argument])
+        if kind == "edit-before-fixture":
+            if replacement is None:
+                raise AssertionError("edit-before-fixture requires its declared full replacement child")
+            child = copy.deepcopy(replacement)
+    elif kind.endswith("parameter-binding"):
+        if kind == "change-parameter-binding":
+            parent["parameterBindings"][mutation["key"]] = copy.deepcopy(mutation["newValue"])
+        else:
+            parent["parameterBindings"].pop(mutation["key"], None)
     elif kind == "drag-rule-nodes":
         for key in mutation["targets"]:
-            at = rule_position(document, key)
+            at = rule_position(parent, key)
             if at is not None:
-                result["ruleLayout"][key] = {"x": float(at[0]) + float(mutation["dx"]), "y": float(at[1]) + float(mutation["dy"])}
+                parent["ruleLayout"][key] = {"x": word(at[0] + decimal(mutation["dx"])), "y": word(at[1] + decimal(mutation["dy"]))}
     elif kind == "set-rule-layout-points":
         for point in mutation["points"]:
-            result["ruleLayout"][point["key"]] = {"x": float(point["x"]), "y": float(point["y"])}
+            parent["ruleLayout"][point["key"]] = {"x": word(point["x"]), "y": word(point["y"])}
         for key in mutation["cleared"]:
-            result["ruleLayout"].pop(key, None)
+            parent["ruleLayout"].pop(key, None)
     elif kind == "change-rule-layout-point":
-        point = mutation["newPoint"]
-        result["ruleLayout"][mutation["key"]] = {"x": float(point["x"]), "y": float(point["y"])}
+        parent["ruleLayout"][mutation["key"]] = {"x": word(mutation["newPoint"]["x"]), "y": word(mutation["newPoint"]["y"])}
+    elif kind == "remove-rule-layout-point":
+        parent["ruleLayout"].pop(mutation["key"], None)
     else:
-        result["ruleLayout"].pop(mutation["key"], None)
-    validate(result)
+        raise AssertionError("unhandled declared mutation")
+    result = (parent, child)
+    validate_owner(result)
     return result
 
-
-def inverse_mutation(document, mutation):
-    """↩️ The mutation that undoes one application, computed against the document it applies to."""
+def inverse_mutation(owner, mutation):
+    parent, child = owner
     kind = kind_of(mutation)
+    if kind == "edit-before-fixture":
+        return ({"mutation": TAGS["edit-before-fixture"], "newWorkingGraph": copy.deepcopy(parent["workingGraph"])}, copy.deepcopy(child))
     if kind in DOCUMENTS:
-        member, argument = DOCUMENTS[kind]
-        return {"mutation": TAGS[kind], argument: document[member]}
-    if kind in WORKING:
-        return {"mutation": TAGS["edit-before-fixture"], "newBeforeFixtureJson": document["beforeFixtureJson"]}
+        field, argument = DOCUMENTS[kind]
+        return ({"mutation": TAGS[kind], argument: copy.deepcopy(parent[field])}, None)
     if kind in ("drag-rule-nodes", "set-rule-layout-points"):
-        keys = [key for key in mutation["targets"] if rule_position(document, key) is not None] if kind == "drag-rule-nodes" else [point["key"] for point in mutation["points"]] + list(mutation["cleared"])
-        layout = document["ruleLayout"]
-        return {"mutation": TAGS["set-rule-layout-points"], "points": [{"key": key, "x": layout[key]["x"], "y": layout[key]["y"]} for key in keys if key in layout], "cleared": [key for key in keys if key not in layout]}
-    map_name = "parameterBindings" if kind.endswith("parameter-binding") else "ruleLayout"
-    change, remove = ("change-parameter-binding", "remove-parameter-binding") if map_name == "parameterBindings" else ("change-rule-layout-point", "remove-rule-layout-point")
+        keys = [key for key in mutation["targets"] if rule_position(parent, key) is not None] if kind == "drag-rule-nodes" else [point["key"] for point in mutation["points"]] + mutation["cleared"]
+        layout = parent["ruleLayout"]
+        return ({"mutation": TAGS["set-rule-layout-points"], "points": [{"key": key, **copy.deepcopy(layout[key])} for key in keys if key in layout], "cleared": [key for key in keys if key not in layout]}, None)
+    field = "parameterBindings" if kind.endswith("parameter-binding") else "ruleLayout"
+    change, remove = ("change-parameter-binding", "remove-parameter-binding") if field == "parameterBindings" else ("change-rule-layout-point", "remove-rule-layout-point")
     key = mutation["key"]
-    if key not in document[map_name]:
-        return {"mutation": TAGS[remove], "key": key}
-    held = copy.deepcopy(document[map_name][key])
-    return {"mutation": TAGS[change], "key": key, "newValue" if map_name == "parameterBindings" else "newPoint": held}
+    if key not in parent[field]:
+        return ({"mutation": TAGS[remove], "key": key}, None)
+    return ({"mutation": TAGS[change], "key": key, "newValue" if field == "parameterBindings" else "newPoint": copy.deepcopy(parent[field][key])}, None)
 
+def projection(owner):
+    return {"snapshot": owner[0], "child": owner[1]}
 
-# endregion 🔖️Mutations
-
-
-# region 🔖️Laws
-def observable(scenario, before, after):
-    """👁️ Every row below writes a value the rule does not already hold, so a forward application
-    must move it. A setter that quietly did nothing would otherwise pass by agreeing."""
-    if before == after:
-        raise AssertionError("%s: the forward mutation left the rule untouched, so nothing was proved" % scenario)
-
+def first_difference(actual, expected):
+    pending = [("owner", actual, expected)]
+    while pending:
+        path, got, wanted = pending.pop()
+        if got == wanted:
+            continue
+        if isinstance(got, dict) and isinstance(wanted, dict) and got.keys() == wanted.keys():
+            pending.extend((path + "." + key, got[key], wanted[key]) for key in reversed(got))
+        elif isinstance(got, list) and isinstance(wanted, list) and len(got) == len(wanted):
+            pending.extend((path + "[%d]" % index, got[index], wanted[index]) for index in range(len(got) - 1, -1, -1))
+        else:
+            return "%s: actual=%r expected=%r" % (path, got, wanted)
+    return "equal"
 
 def touches_one(scenario, kind, before, after):
-    """🔀️ Each verb writes exactly ONE of the five members. An implementation that rebuilt the whole
-    rule on every edit — re-serializing a JSON member, say — would satisfy an after-snapshot
-    comparison and fail this."""
-    written = DOCUMENTS[kind][0] if kind in DOCUMENTS else "beforeFixtureJson" if kind in WORKING else "parameterBindings" if kind.endswith("parameter-binding") else "ruleLayout"
-    moved = [name for name in MEMBERS if before[name] != after[name]]
-    if moved != [written]:
-        raise AssertionError("%s: this verb writes %s and nothing else, but %r moved" % (scenario, written, moved))
-
+    expected = DOCUMENTS[kind][0] if kind in DOCUMENTS else "parameterBindings" if kind.endswith("parameter-binding") else "ruleLayout"
+    moved = [field for field in MEMBERS if before[0][field] != after[0][field] or field == "workingGraph" and before[1] != after[1]]
+    if moved != [expected]:
+        raise AssertionError("%s writes exactly %s, found %r" % (scenario, expected, moved))
 
 def restores(kind, restored, original):
-    """↩️ The metamorphic inverse law, reported by the member that failed to come back."""
-    for name in MEMBERS:
-        if restored[name] != original[name]:
-            raise AssertionError("inverse-%s: %s came back as %s, not %s" % (kind, name, json.dumps(restored[name], sort_keys=True)[:200], json.dumps(original[name], sort_keys=True)[:200]))
+    if projection(restored) != projection(original):
+        raise AssertionError("inverse-%s must restore the complete declared parent and child" % kind)
 
+def outcome_of(value):
+    return Outcome(value, raw=json.dumps(value, separators=(",", ":"), ensure_ascii=False).encode("utf-8"))
 
-def equals_committed(kind, produced, committed):
-    """🎯️ The committed after-snapshot claim, member by member."""
-    for name in MEMBERS:
-        if produced[name] != committed[name]:
-            raise AssertionError("spec-vector-%s: %s is %s, the committed after-snapshot says %s" % (kind, name, json.dumps(produced[name], sort_keys=True)[:200], json.dumps(committed[name], sort_keys=True)[:200]))
-
-
-# endregion 🔖️Laws
-
-
-# region 🔖️Plan
-def doc_string(ctx):
-    """📜️ The scenario's doc string — the Python `Context` has no accessor of its own."""
-    for step in ctx.scenario["steps"]:
-        if step.get("docString"):
-            return step["docString"]
-    raise AssertionError("scenario %s carries no doc string" % ctx.scenario["id"])
-
-
-def uri_in(ctx, needle):
-    """🧫️ The one declared fixture URI of this scenario's steps containing `needle`."""
-    for step in ctx.scenario["steps"]:
-        for token in step["text"].split():
-            if token.startswith(("asset://", "shared://♻️mutate-rewrite-1/", "shared://")) and needle in token:
-                return token
-    raise AssertionError("scenario %s declares no fixture URI containing %r" % (ctx.scenario["id"], needle))
-
-
-def json_fixture(ctx, needle):
-    """🧫️ The declared JSON fixture this scenario names."""
-    return json.loads(ctx.fixture_bytes(uri_in(ctx, needle)).decode("utf-8"))
-
-
-def outcome_of(payload):
-    """📤️ Wraps a projection with its own compact serialization as the raw artifact."""
-    return Outcome(payload, raw=json.dumps(payload, separators=(",", ":"), ensure_ascii=False).encode("utf-8"))
-
-
-# endregion 🔖️Plan
-
-
-# region 🔖️Handlers
-def mutate_handler(kind):
-    """🎯️ Applies one kind to the real derived Nakagin ground-floor rule."""
-
+def mutate_handler(kind, inverse=False):
     def handler(ctx):
-        document = document_of(json_fixture(ctx, "shared://♻️mutate-rewrite-1/🔣️.snapshot.json"))
-        mutation = json.loads(doc_string(ctx))
+        before = owner_input(ctx, "the real derived rule", "the real derived child")
+        mutation = payload(ctx)
         if kind_of(mutation) != kind:
-            raise AssertionError("mutate-%s: the feature states a %s payload" % (kind, kind_of(mutation)))
-        applied = apply_mutation(document, mutation)
-        observable("mutate-%s" % kind, document, applied)
-        touches_one("mutate-%s" % kind, kind, document, applied)
-        return outcome_of(applied)
-
+            raise AssertionError("scenario payload discriminator differs from its exact declared kind")
+        replacement = fixture(ctx, "the replacement working child") if kind == "edit-before-fixture" else None
+        applied = apply_mutation(before, mutation, replacement)
+        if projection(applied) == projection(before):
+            raise AssertionError("forward operation must move its declared member")
+        touches_one(ctx.scenario["id"], kind, before, applied)
+        if inverse:
+            back, retained = inverse_mutation(before, mutation)
+            restored = apply_mutation(applied, back, retained)
+            restores(kind, restored, before)
+            return outcome_of({"mutated": projection(applied), "restored": projection(restored)})
+        return outcome_of(projection(applied))
     return handler
-
-
-def inverse_handler(kind):
-    """↩️ Applies one kind to the real derived rule and then its OWN computed inverse.
-
-    The projection carries BOTH rules; projecting only the restored one would make all fourteen rows
-    project the same value and the differential would be vacuous.
-    """
-
-    def handler(ctx):
-        document = document_of(json_fixture(ctx, "shared://♻️mutate-rewrite-1/🔣️.snapshot.json"))
-        mutation = json.loads(doc_string(ctx))
-        if kind_of(mutation) != kind:
-            raise AssertionError("inverse-%s: the feature states a %s payload" % (kind, kind_of(mutation)))
-        applied = apply_mutation(document, mutation)
-        observable("inverse-%s" % kind, document, applied)
-        restored = apply_mutation(applied, inverse_mutation(document, mutation))
-        restores(kind, restored, document)
-        return outcome_of({"mutated": applied, "restored": restored})
-
-    return handler
-
 
 def spec_vector_handler(kind):
-    """📐️ Replays the committed handcrafted `(before, mutation, after)` triple for one kind."""
-
     def handler(ctx):
-        before = document_of(json_fixture(ctx, "⬅️before"))
-        mutation = json_fixture(ctx, "🦠️mutation")
-        after = document_of(json_fixture(ctx, "➡️after"))
+        before = owner_input(ctx, "the committed before-rule", "the committed before-child")
+        mutation = fixture(ctx, "the committed mutation")
         if kind_of(mutation) != kind:
-            raise AssertionError("spec-vector-%s: the committed vector carries a %s payload" % (kind, kind_of(mutation)))
-        applied = apply_mutation(before, mutation)
-        equals_committed(kind, applied, after)
-        observable("spec-vector-%s" % kind, before, applied)
-        touches_one("spec-vector-%s" % kind, kind, before, applied)
-        restores(kind, apply_mutation(applied, inverse_mutation(before, mutation)), before)
-        return outcome_of(applied)
-
+            raise AssertionError("committed discriminator differs from the declared scenario")
+        replacement = fixture(ctx, "the committed after-child") if kind == "edit-before-fixture" else None
+        applied = apply_mutation(before, mutation, replacement)
+        after = owner_input(ctx, "the committed after-rule", "the committed after-child")
+        if projection(applied) != projection(after):
+            raise AssertionError("spec-vector-%s must equal the complete committed parent and child: %s" % (kind, first_difference(projection(applied), projection(after))))
+        if projection(applied) == projection(before):
+            raise AssertionError("committed forward operation must move its declared member")
+        touches_one(ctx.scenario["id"], kind, before, applied)
+        back, retained = inverse_mutation(before, mutation)
+        restores(kind, apply_mutation(applied, back, retained), before)
+        return outcome_of(projection(applied))
     return handler
 
-
 def identity_handler(ctx):
-    """🔁️ Reads the derived real rule and answers with the whole document.
+    ground = owner_input(ctx, "the two-node ground-floor rule this case used to rest on", "the two-node ground-floor child")
+    tower = owner_input(ctx, "the real derived rule", "the real derived child")
+    for view, expected in ((ground, (2, 1, 2)), (tower, (180, 179, 364))):
+        parent, child = view
+        facts = (len(child["nodes"]), len(child["edges"]), sum(len(node["ports"]) for node in child["nodes"]))
+        if facts != expected:
+            raise AssertionError("committed full Nakagin facts differ: %r != %r" % (facts, expected))
+        if "whereClause" not in parent["lhs"]:
+            raise AssertionError("the actual pattern retains its declared where clause")
+        names = {item["name"] for item in parent["rhs"]["parameters"]}
+        if any(name not in names for name in parent["parameterBindings"]):
+            raise AssertionError("a binding must retain its declared RHS parameter")
+        if json.loads(json.dumps(projection(view))) != projection(view):
+            raise AssertionError("complete declared JSON serialization moves the owner")
+    if ground[0]["workingGraph"]["rootNodeId"] != tower[0]["workingGraph"]["rootNodeId"]:
+        raise AssertionError("both authored owners retain the same actual root piece")
+    return outcome_of({"groundFloor": projection(ground), "capsuleTower": projection(tower)})
 
-    This implementation additionally requires, in role, that the rule really is the committed one:
-    its before-fixture is the two-node Nakagin ground floor with a real connection between the
-    service core and the left capsule, its left-hand pattern carries a `whereClause`, and its
-    right-hand side declares the `label` parameter its bindings bind. The `.dsl.semio` carrier's own
-    laws are asserted in role on the Rust side, against the artifact's committed example.
-    """
-    ground_floor = document_of(json_fixture(ctx, "nakagin-ground-floor"))
-    small = json.loads(ground_floor["beforeFixtureJson"])
-    if small.get("name") != "Nakagin Capsule Tower — Ground Floor" or len(small["nodes"]) != 2 or len(small["edges"]) != 1:
-        raise AssertionError("identity-round-trip: the committed ground-floor rule rewrites a two-node graph, found %r" % small.get("name"))
-    document = document_of(json_fixture(ctx, "shared://♻️mutate-rewrite-1/🔣️.snapshot.json"))
-    fixture = json.loads(document["beforeFixtureJson"])
-    ports = sum(len(node["ports"]) for node in fixture["nodes"])
-    if fixture.get("name") != "Nakagin Capsule Tower" or len(fixture["nodes"]) != 180 or ports != 364 or len(fixture["edges"]) != 179:
-        raise AssertionError("identity-round-trip: the rule rewrites the whole 180-node 364-port 179-edge Nakagin building, found %r with %d node(s), %d port(s) and %d edge(s)" % (fixture.get("name"), len(fixture["nodes"]), ports, len(fixture["edges"])))
-    if fixture["rootNodeId"] != small["rootNodeId"]:
-        raise AssertionError("identity-round-trip: the whole building and the ground floor name different root pieces, so they are not the same real model")
-    for whole in (ground_floor, document):
-        if "whereClause" not in json.loads(whole["lhsJson"]):
-            raise AssertionError("identity-round-trip: the committed left-hand pattern carries a whereClause")
-        declared = {parameter["name"] for parameter in json.loads(whole["rhsJson"])["parameters"]}
-        unbound = [key for key in whole["parameterBindings"] if key not in declared]
-        if unbound:
-            raise AssertionError("identity-round-trip: %r is bound but not declared by the right-hand side" % unbound)
-        if document_of(json.loads(json.dumps(whole))) != whole:
-            raise AssertionError("identity-round-trip: serializing and re-reading the rule moved it")
-    return outcome_of({"groundFloor": ground_floor, "capsuleTower": document})
-
-
-# endregion 🔖️Handlers
-
-
-# region 🔖️Registration
 def adapter():
-    """🧭️ Registration by FULL expanded scenario id, in the ORACLE role only — registering these
-    handlers as subjects too would make the reference its own subject and manufacture a green
-    self-comparison."""
     built = Adapter("python")
     for kind in KINDS:
-        built = built.oracle("mutate-%s" % kind, mutate_handler(kind))
-        built = built.oracle("inverse-%s" % kind, inverse_handler(kind))
-        built = built.oracle("spec-vector-%s" % kind, spec_vector_handler(kind))
+        built = built.oracle("mutate-" + kind, mutate_handler(kind))
+        built = built.oracle("inverse-" + kind, mutate_handler(kind, True))
+        built = built.oracle("spec-vector-" + kind, spec_vector_handler(kind))
     return built.oracle("identity-round-trip", identity_handler)
-
-
-# endregion 🔖️Registration

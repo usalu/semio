@@ -75,14 +75,18 @@ describe("node graph gestures", () => {
     }
   });
 
-  it("writes each of those fields, under that name, in the wgpu action builder", () => {
+  it("writes each of those fields, under that name, in the ONE row encoder both renderers use", () => {
+    const dag = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs"), "utf8");
+    const encoder = dag.slice(dag.indexOf("pub fn write_dag_graph_edit_rows"));
+    const body = encoder.slice(0, encoder.indexOf("\n}\n"));
     for (const [operation, fields] of Object.entries(law.operationFields)) {
-      expect(canvas, operation).toContain(`builder.string(Some("operation"), "${operation}")?`);
-      for (const field of fields) {
-        const snake = field.replace(/[A-Z]/gu, (letter) => `_${letter.toLowerCase()}`);
-        expect(canvas.includes(`Some("${field}"), ${snake}`) || canvas.includes(`Some("${field}"), *${snake}`) || canvas.includes(`builder.begin_array(Some("${field}"))`), `${operation}.${field}`).toBe(true);
-      }
+      const arm = body.slice(body.indexOf(`sink.text("operation", "${operation}")?`));
+      expect(arm.length, operation).toBeLessThan(body.length);
+      const armBody = arm.slice(0, arm.indexOf("}"));
+      for (const field of fields) expect(armBody, `${operation}.${field}`).toMatch(new RegExp(`sink\\.(text|texts|number|integer)\\("${field}"`, "u"));
     }
+    expect(canvas).toContain("flow::dag::write_dag_graph_edit_rows(edits, &mut BoundedGraphEditRows(builder))?");
+    expect(canvas).not.toContain('builder.string(Some("operation")');
   });
 
   it("expects every declared edit to carry exactly its operation's own fields", () => {
@@ -160,11 +164,14 @@ describe("node graph gestures", () => {
   it("lets the HOST journal every content change a released gesture made, so no renderer publishes the fixture", () => {
     const flowHost = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🦀️.rs"), "utf8");
     const answer = flowHost.slice(flowHost.indexOf("pub fn take_graph_edits_json"));
-    expect(answer.slice(0, answer.indexOf("\n    }\n"))).toContain("dag::dag_graph_edit_rows_json(self.dag.take_graph_edits())");
+    const answerBody = answer.slice(0, answer.indexOf("\n    }\n"));
+    expect(answerBody).toContain("self.dag.take_graph_edits()");
+    expect(answerBody).toContain("dag::dag_graph_edit_rows_json(&edits, refusal)");
     const commit = flowHost.slice(flowHost.indexOf("fn commit_gesture_history"));
     const commitBody = commit.slice(0, commit.indexOf("\n    }\n"));
     expect(commitBody).toContain("if !Self::content_changed(&baseline, &self.host_snapshot)");
-    expect(commitBody).toContain("self.journal_gesture_moves(&baseline);");
+    expect(commitBody).toContain("if let Err(refusal) = self.journal_gesture_moves(&baseline)");
+    expect(commitBody).toContain("self.dag.carry_journal_refusal(refusal);");
     expect(flowHost).toContain("self.dag.journal_port_insert(widget_id, side, index);");
     const reactGraph = readFileSync(resolve(engineRoot, "🧱️elements/🕸️NodeGraph/🟦️.tsx"), "utf8");
     expect(reactGraph).not.toContain("commitFixture");

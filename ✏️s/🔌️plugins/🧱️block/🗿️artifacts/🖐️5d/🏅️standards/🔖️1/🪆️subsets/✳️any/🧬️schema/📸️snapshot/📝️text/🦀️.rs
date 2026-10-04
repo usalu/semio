@@ -15,7 +15,7 @@ pub const BLOCK5D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT: &str = include_str!("../../
 pub const BLOCK5D_NAKAGIN_CAPSULE_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🏢️nakagin-capsule/🖼️assets/🏢️nakagin-capsule/🗣️.dsl.semio");
 
 /// 📖️ Parses `.block5d` DSL text into a `Block5dSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<Block5dSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<Block5dSnapshot, semio_framework_diagnostic::TextError> {
     <Block5dSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 

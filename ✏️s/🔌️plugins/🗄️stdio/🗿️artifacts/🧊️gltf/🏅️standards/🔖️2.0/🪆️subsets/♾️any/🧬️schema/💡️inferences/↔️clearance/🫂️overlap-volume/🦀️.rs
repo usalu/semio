@@ -41,8 +41,8 @@ pub fn unavailable_measure(ids: &[String]) -> GltfMeasure<f64> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_result(indicators: &GltfEntityIndicators) -> dsl::DslValue {
-    dsl::ToValue::to_value(&indicators.clearance.overlap_volume)
+pub fn encode_result(indicators: &GltfEntityIndicators) -> semio_framework_value::DslValue {
+    semio_framework_value::ToValue::to_value(&indicators.clearance.overlap_volume)
 }
 
 #[cfg(test)]

@@ -1,0 +1,94 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.test.jack-inference-retained-child-refusal",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractId",
+    "authority",
+    "cases",
+    "refusals",
+    "refusalKind"
+  ],
+  "properties": {
+    "contractId": {
+      "const": "jack-inference-retained-child-refusal"
+    },
+    "authority": {
+      "const": "actualSemioChild"
+    },
+    "refusalKind": {
+      "const": "invalidValue"
+    },
+    "refusals": {
+      "const": [
+        "missingOwner",
+        "wrongDialect",
+        "orphanEdge"
+      ]
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "edgeOrdinals",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "enum": [
+              "cycle",
+              "acyclic"
+            ]
+          },
+          "edgeOrdinals": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "uniqueItems": true
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "topoOrder",
+              "depth",
+              "cycleFree",
+              "nodeCount"
+            ],
+            "properties": {
+              "topoOrder": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "uniqueItems": true
+              },
+              "depth": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "cycleFree": {
+                "type": "boolean"
+              },
+              "nodeCount": {
+                "const": 2
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

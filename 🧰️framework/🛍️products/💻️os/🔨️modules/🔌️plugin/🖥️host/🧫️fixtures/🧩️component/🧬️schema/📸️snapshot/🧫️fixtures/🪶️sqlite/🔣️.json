@@ -1,0 +1,64 @@
+{
+  "owner": "fixture.neutral-host-fixture.counter@1/*",
+  "counts": [
+    -2147483648,
+    -1,
+    0,
+    1,
+    2147483647
+  ],
+  "rows": [
+    [
+      1,
+      -2147483648
+    ],
+    [
+      1,
+      -1
+    ],
+    [
+      1,
+      0
+    ],
+    [
+      1,
+      1
+    ],
+    [
+      1,
+      2147483647
+    ]
+  ],
+  "refused": [
+    {
+      "id": "belowI32",
+      "count": -2147483649
+    },
+    {
+      "id": "aboveI32",
+      "count": 2147483648
+    },
+    {
+      "id": "fractional",
+      "count": 0.5
+    },
+    {
+      "id": "text",
+      "count": "opaque\u0000number"
+    },
+    {
+      "id": "null",
+      "count": null
+    }
+  ],
+  "table": "fixture_counter",
+  "columns": [
+    "id",
+    "count"
+  ],
+  "identity": 1,
+  "encodings": [
+    "binary",
+    "text"
+  ]
+}

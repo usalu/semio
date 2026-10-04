@@ -43,6 +43,7 @@ js-sys = "0.3.83"
 wasm-bindgen = "0.2.106"
 
 [dev-dependencies]
+parking_lot = "=0.12.5"
 semio-framework-async-macros = { path = "../../✨️macros/📦️packages/🦀️rust" }
 # 🧪️ `🤝️cooperative`'s `#[cfg(test)]` fixture-driven suite parses a JSON test corpus; no shipped
 # type in this crate derives Serialize/Deserialize any more (ticket `26/09/01/RUNTIME-DEPENDENCY-

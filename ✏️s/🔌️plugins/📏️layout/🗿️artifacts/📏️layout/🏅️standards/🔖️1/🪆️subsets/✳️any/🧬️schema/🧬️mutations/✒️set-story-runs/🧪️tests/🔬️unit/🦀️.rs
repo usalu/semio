@@ -10,6 +10,6 @@ fn set_story_runs_applies_a_character_style_and_inverse_clears_it() {
     let next = mutation.diff(&base).diff().apply(&base).expect("runs apply");
     assert_eq!(next.stories[0].style_runs.len(), 1);
     assert_eq!(next.stories[0].style_runs[0].end, 5);
-    let restored = mutation.inverse(&base)[0].diff(&next).diff().apply(&next).expect("inverse");
+    let restored = mutation.inverse(&base).expect("valid retained mutation inverse fixture")[0].diff(&next).diff().apply(&next).expect("inverse");
     assert!(restored.stories[0].style_runs.is_empty());
 }

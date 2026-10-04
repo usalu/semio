@@ -1,0 +1,58 @@
+[
+  {
+    "source": "single pixel",
+    "phase": "fresh",
+    "work": 13
+  },
+  {
+    "source": "staircase simplification",
+    "phase": "scan",
+    "work": 16
+  },
+  {
+    "source": "staircase simplification",
+    "phase": "contours",
+    "work": 29
+  },
+  {
+    "source": "staircase simplification",
+    "phase": "compact",
+    "work": 46
+  },
+  {
+    "source": "staircase simplification",
+    "phase": "simplify",
+    "work": 30
+  },
+  {
+    "source": "staircase simplification",
+    "phase": "topology",
+    "work": 34
+  },
+  {
+    "source": "staircase simplification",
+    "phase": "coverage",
+    "work": 34
+  },
+  {
+    "source": "staircase simplification",
+    "phase": "emit",
+    "work": 33
+  },
+  {
+    "source": "staircase simplification",
+    "phase": "complete",
+    "work": 33
+  },
+  {
+    "source": "single pixel",
+    "phase": "failure",
+    "maxEdges": 3,
+    "work": 16
+  },
+  {
+    "source": "single pixel",
+    "phase": "cancelled",
+    "work": 13
+  }
+]

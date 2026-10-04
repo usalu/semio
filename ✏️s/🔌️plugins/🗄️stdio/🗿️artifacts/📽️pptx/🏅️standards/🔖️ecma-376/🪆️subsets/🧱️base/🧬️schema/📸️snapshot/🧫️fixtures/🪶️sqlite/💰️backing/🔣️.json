@@ -1,0 +1,24 @@
+{
+  "fieldOrder": [
+    "schema",
+    "opc",
+    "xmlParts"
+  ],
+  "tableCount": 21,
+  "admission": "beforeConcreteBacking",
+  "retirementRefund": false,
+  "roles": {
+    "maxValueBytes": "semanticLiteralBytes",
+    "maxAllocationBytes": "cumulativeOwnedBacking",
+    "encodedBound": "prospectiveWithoutPayload",
+    "borrowedPreflight": "paidTraversalFrontiers"
+  },
+  "refusalKinds": {
+    "owned": "ownershipLimit",
+    "allocator": "allocationFailed",
+    "work": "workLimit",
+    "cancellation": "canceled"
+  },
+  "literal": "Grüße\t\n\u0000🌠",
+  "literalUtf8Hex": "4772c3bcc39f65090a00f09f8ca0"
+}

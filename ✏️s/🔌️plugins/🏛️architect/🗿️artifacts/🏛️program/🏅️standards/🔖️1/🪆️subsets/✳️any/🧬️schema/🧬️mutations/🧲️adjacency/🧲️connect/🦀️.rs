@@ -9,7 +9,7 @@ use protocol::{MutationKind, SemanticDescriptor};
 
 /// 🔌️ Upserts an adjacency edge between two elements: normalizes the endpoint pair, replaces the
 /// existing edge for that pair if present (keeping its id), otherwise adds a new edge.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
@@ -22,9 +22,12 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ConnectAdjacency {
     fn diff(&self, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Connect adjacency between \"{}\" and \"{}\"", self.adjacency.element_a_id.0, self.adjacency.element_b_id.0), &format!("Nachbarschaft zwischen \"{}\" und \"{}\" herstellen", self.adjacency.element_a_id.0, self.adjacency.element_b_id.0))
     }

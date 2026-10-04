@@ -17,7 +17,7 @@ const MODEL_FIELD_COUNT: u32 = 44;
 async fn default_model_yields_the_full_field_count_and_a_real_byte_size() {
     let entries = compute_energy_model_entries(&EnergyModelSnapshot::default());
     assert_eq!(entries.entry_count, MODEL_FIELD_COUNT);
-    let expected_bytes = pack::json::to_json_string(&crate::model::Model::default()).len() as u32;
+    let expected_bytes = semio_framework_pack_json::to_json_string(&crate::model::Model::default()).len() as u32;
     assert_eq!(entries.byte_size, expected_bytes);
 }
 

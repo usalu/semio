@@ -1,9 +1,6 @@
 /** 🔁 generation3d direct `update-camera` payload mirror of `UpdateCamera`. */
-export interface CameraJson {
-  x: number;
-  y: number;
-  zoom: number;
-}
+import type{CameraJson}from"../../../🟦️.ts";
+export type{CameraJson};
 
 export interface UpdateCamera {
   camera: CameraJson;

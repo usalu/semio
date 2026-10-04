@@ -1,14 +1,39 @@
-# 📡️ P2-FG1: `IfcSnapshot::encode_pack_with` wraps a `SemioEnvelope` header (`wrap_binary`, envelope
-# id `stdio.ifc`, component `Pack`, version 1) around the UTF-8 bytes of
-# `write_part21(&to_part21_document(self))` — the SAME Part-21 text the DSL facet emits. No packed
-# binary layout of its own exists at this facet; text-native, same shape as the sibling STEP
-# artifact's own snapshot protocol (both reuse the shared Part-21 tokenizer). The SEMIO envelope is
-# described ONCE, framework-side — this file describes ONLY the post-unwrap payload.
 dialect protocol
 protocol stdio.ifc.snapshot
 version 1
 schema stdio.ifc
-start body
+start frame
+framing magic 0x8953504b0d0a1a0a
 
-framing record
-chain payload utf8
+header fixed 32
+field format_major u16
+field format_minor u16
+field required_flags u32
+field optional_flags u32
+field header_crc32 u32
+field reserved fixed 8
+
+repeat segments {
+  tag fixed 2
+  until 0x0000
+  arm 0x0000 { stored_length varint payload Array(u8, Field(stored_length)) crc32 u32 }
+  arm 0x0100 { stored_length varint payload Array(u8, Field(stored_length)) crc32 u32 }
+  arm 0x0200 { stored_length varint payload Array(u8, Field(stored_length)) crc32 u32 }
+  arm 0x0300 { stored_length varint payload Array(u8, Field(stored_length)) crc32 u32 }
+  arm 0x0400 { stored_length varint payload Array(u8, Field(stored_length)) crc32 u32 }
+  arm 0x0500 { stored_length varint payload Array(u8, Field(stored_length)) crc32 u32 }
+  arm 0x0600 { stored_length varint payload Array(u8, Field(stored_length)) crc32 u32 }
+  arm 0x0700 { stored_length varint payload Array(u8, Field(stored_length)) crc32 u32 }
+  arm 0x0800 { stored_length varint payload Array(u8, Field(stored_length)) crc32 u32 }
+  arm 0x7f00 { stored_length varint payload Array(u8, Field(stored_length)) crc32 u32 }
+  arm 0x0103 { stored_length varint raw_length varint payload Array(u8, Field(stored_length)) crc32 u32 }
+  arm 0x0203 { stored_length varint raw_length varint payload Array(u8, Field(stored_length)) crc32 u32 }
+  arm 0x0303 { stored_length varint raw_length varint payload Array(u8, Field(stored_length)) crc32 u32 }
+  arm 0x0403 { stored_length varint raw_length varint payload Array(u8, Field(stored_length)) crc32 u32 }
+  arm 0x0503 { stored_length varint raw_length varint payload Array(u8, Field(stored_length)) crc32 u32 }
+  arm 0x0603 { stored_length varint raw_length varint payload Array(u8, Field(stored_length)) crc32 u32 }
+  arm 0x0703 { stored_length varint raw_length varint payload Array(u8, Field(stored_length)) crc32 u32 }
+  arm 0x0803 { stored_length varint raw_length varint payload Array(u8, Field(stored_length)) crc32 u32 }
+  arm 0x7f03 { stored_length varint raw_length varint payload Array(u8, Field(stored_length)) crc32 u32 }
+}
+footer fixed 84

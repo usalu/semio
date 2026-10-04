@@ -1,4 +1,10 @@
 {
   "mutation": "editLhs",
-  "newLhsJson": "{\"pattern\":{\"var\":\"c\",\"kind\":\"Piece\",\"near\":\"shaft\"}}"
+  "newLhs": {
+    "pattern": {
+      "leftVar": "c",
+      "leftKind": "Piece"
+    },
+    "whereClause": "c.name != 'shaft'"
+  }
 }

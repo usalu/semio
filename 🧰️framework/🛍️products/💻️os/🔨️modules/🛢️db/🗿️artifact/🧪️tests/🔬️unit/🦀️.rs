@@ -900,12 +900,12 @@ async fn command_batch_rejects_empty_and_mixed_documents() {
 mod bridge {
     use super::*;
 
-    #[derive(Clone, serde::Serialize, serde::Deserialize, store::ToValue, store::FromValue)]
+    #[derive(Clone, serde::Serialize, serde::Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
     struct Counter {
         value: i64,
     }
 
-    #[derive(Clone, Default, serde::Serialize, serde::Deserialize, store::ToValue, store::FromValue)]
+    #[derive(Clone, Default, serde::Serialize, serde::Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
     struct AddDiff {
         amount: i64,
     }
@@ -919,7 +919,7 @@ mod bridge {
         }
     }
 
-    #[derive(Clone, serde::Serialize, serde::Deserialize, store::ToValue, store::FromValue)]
+    #[derive(Clone, serde::Serialize, serde::Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
     struct Add {
         amount: i64,
     }
@@ -950,9 +950,12 @@ mod bridge {
         fn diff(&self, _base: &Counter) -> protocol::MutationOutcome<AddDiff> {
             protocol::MutationOutcome::new(AddDiff { amount: self.amount })
         }
-        fn inverse(&self, _base: &Counter) -> Vec<Self> {
+        fn inverse(&self, _base: &Counter) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+    Ok((|| {
             vec![Add { amount: -self.amount }]
-        }
+        
+    })())
+}
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1520,13 +1523,13 @@ fn journal_grant() -> store::ArtifactStoreOneItemGrant {
 /// #⃣ The smallest concrete projection/operation pair a durable-group recovery law can open real
 /// `store::ArtifactStore`s over: a projection that IS one content hash and an operation that
 /// overwrites it (its `inverse` restores the prior hash). Test-only fixture.
-#[derive(Clone, Debug, Default, PartialEq, store::ToValue, store::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 pub struct HashProjection {
     pub latest_hash: [u8; 32],
 }
 
-impl store::os_schema_composition::ArtifactCompositionFields for HashProjection {
-    fn visit_child_refs<'a, V: store::os_schema_composition::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {
+impl semio_framework_schema_composition::ArtifactCompositionFields for HashProjection {
+    fn visit_child_refs<'a, V: semio_framework_schema_composition::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {
         Ok(())
     }
 }
@@ -1534,14 +1537,14 @@ impl store::os_schema_composition::ArtifactCompositionFields for HashProjection 
 impl store::ArtifactDsl for HashProjection {
     const EXTENSION: &'static str = "dbhash";
 
-    fn parse_dsl(text: &str) -> Result<HashProjection, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<HashProjection, semio_framework_diagnostic::TextError> {
         let trimmed = text.trim();
         if trimmed.len() != 64 || !trimmed.bytes().all(|byte| byte.is_ascii_hexdigit()) {
-            return Err(store::TextError::new("expected 64 lowercase hex characters", store::TextSpan::at(1, 1)));
+            return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected 64 lowercase hex characters", semio_framework_diagnostic::TextSpan::at(1, 1)));
         }
         let mut latest_hash = [0u8; 32];
         for (index, slot) in latest_hash.iter_mut().enumerate() {
-            *slot = u8::from_str_radix(&trimmed[index * 2..index * 2 + 2], 16).map_err(|_| store::TextError::new("invalid hex byte", store::TextSpan::at(1, (index * 2 + 1) as u32)))?;
+            *slot = u8::from_str_radix(&trimmed[index * 2..index * 2 + 2], 16).map_err(|_| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "invalid hex byte", semio_framework_diagnostic::TextSpan::at(1, (index * 2 + 1) as u32)))?;
         }
         Ok(HashProjection { latest_hash })
     }
@@ -1566,7 +1569,7 @@ impl store::ArtifactPack for HashProjection {
     }
 }
 
-#[derive(Clone, Debug, Default, store::ToValue, store::FromValue)]
+#[derive(Clone, Debug, Default, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 pub struct HashDiff {
     pub hash: Option<[u8; 32]>,
 }
@@ -1586,7 +1589,7 @@ impl protocol::MutationDiff<HashProjection> for HashDiff {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, store::ToValue, store::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 pub struct HashMutation {
     pub hash: [u8; 32],
     pub author: Option<protocol::ActorId>,
@@ -1624,9 +1627,12 @@ impl protocol::Mutation<HashProjection> for HashMutation {
 
     /// ↩️ The true inverse: an operation that would restore `base`'s hash — not a
     /// no-op placeholder.
-    fn inverse(&self, base: &HashProjection) -> Vec<HashMutation> {
+    fn inverse(&self, base: &HashProjection) -> Result<Vec<HashMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![HashMutation { hash: base.latest_hash, author: self.author.clone(), timestamp: self.timestamp }]
-    }
+    
+    })())
+}
 
     fn author_id(&self) -> Option<protocol::ActorId> {
         self.author.clone()
@@ -1670,8 +1676,8 @@ impl protocol::OpText for HashMutation {
         }
         out
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let err = |detail: String| store::TextError::new(detail, store::TextSpan::at(1, 1));
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        let err = |detail: String| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail, semio_framework_diagnostic::TextSpan::at(1, 1));
         let mut hash = None;
         let mut author = None;
         let mut timestamp = None;
@@ -1747,7 +1753,7 @@ impl protocol::OpBinary for HashMutation {
 struct HashOwnedRetirement<T>(Option<T>);
 
 impl<T: Send> store::ErasedSnapshotRetirement for HashOwnedRetirement<T> {
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -1773,7 +1779,7 @@ impl<T: Send + 'static> store::ArtifactOwnedValueRetirementFactory<T> for HashOw
 struct HashSnapshotRetirement(Option<Arc<HashProjection>>);
 
 impl store::ErasedSnapshotRetirement for HashSnapshotRetirement {
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }

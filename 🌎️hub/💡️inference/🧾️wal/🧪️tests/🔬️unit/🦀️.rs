@@ -86,7 +86,6 @@ fn durable_edit<Mutation>(ordinal: i32, mutation_id: &str, actor: &str, timestam
             transaction: None,
         }],
         description: Some(format!("inference Store member {ordinal}")), verb: None,
-        coalesce_key: None,
         sequence_number: ordinal,
         started_at: format!("2026-09-06T00:00:0{ordinal}Z"),
         finished_at: Some(format!("2026-09-06T00:00:1{ordinal}Z")),
@@ -167,8 +166,8 @@ pub(super) fn durable_fixture_record(fixture: &serde_json::Value) -> DurableFixt
         apply_semio_drawing_mutation(&mut drawing_post, &work.drawing);
         let mut value_post = value_base.clone();
         apply_semio_value_mutation(&mut value_post, &work.value);
-        let proposal = directory::os_pack::json::to_json_string(&work.parent).into_bytes();
-        let inverse = directory::os_pack::json::to_json_string(&work.parent_inverse).into_bytes();
+        let proposal = semio_framework_pack_json::to_json_string(&work.parent).into_bytes();
+        let inverse = semio_framework_pack_json::to_json_string(&work.parent_inverse).into_bytes();
         let record = directory::os_store::durable_group::durable_owned_group_journal_test_record_from_edits(
             directory::os_io::ArtifactRef { artifact_id: document_key.into(), dialect: directory::os_io::ArtifactDialect { artifact_kind: "s.gis.gismap".into(), standard: "1".into(), subset: "*".into() } },
             durable_edit(1, identity, edit_actor, timestamp, work.parent, work.parent_inverse),
@@ -181,7 +180,7 @@ pub(super) fn durable_fixture_record(fixture: &serde_json::Value) -> DurableFixt
         .expect("Store-owned typed fixed-three decision fixture");
         (record, proposal, inverse)
     };
-    let canonical_proposal = directory::os_pack::json::to_json_string(&GisMapInference::infer(&base).create_region_group_work(&base, job_id).expect("typed fixed-three inference work").parent).into_bytes();
+    let canonical_proposal = semio_framework_pack_json::to_json_string(&GisMapInference::infer(&base).create_region_group_work(&base, job_id).expect("typed fixed-three inference work").parent).into_bytes();
     let proposal_hash = crate::inference::sha256(&canonical_proposal);
     let mutation_id = crate::inference::sha256(format!("semio.hub.inference-approval-mutation/v1\0{job_id}\0{proposal_hash}").as_bytes())[..32].to_string();
     let (record, proposal, inverse) = sealed(job_id, &mutation_id, actor);

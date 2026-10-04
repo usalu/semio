@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 //#endregion 📦️Imports
 
 //#region 🧬️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -19,11 +19,14 @@ pub struct SetWarningN {
 impl crate::os_spr::MutationKind<DemoSnapshot, SeverityMutation> for SetWarningN {
     const SEMANTICS: crate::os_spr::SemanticDescriptor = crate::os_spr::SemanticDescriptor { verb: "set", entity: "warning-n", kind: "set-warning-n", record: "SetWarningN" };
     fn diff(&self, _base: &DemoSnapshot) -> crate::os_spr::MutationOutcome<DemoDiff> {
-        crate::os_spr::MutationOutcome::new(DemoDiff::value(Some(self.n))).warn("mutation.clamped", "n was clamped to a safe range")
+        crate::os_spr::MutationOutcome::new(DemoDiff::value(Some(self.n))).warning("mutation.clamped", "n was clamped to a safe range")
     }
-    fn inverse(&self, base: &DemoSnapshot) -> Vec<SeverityMutation> {
+    fn inverse(&self, base: &DemoSnapshot) -> Result<Vec<SeverityMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![SeverityMutation::RestoreN(RestoreN { n: base.n })]
-    }
+    
+    })())
+}
     fn label(&self) -> crate::LocalizedLabel {
         crate::LocalizedLabel::native("Set Warning N", "Warnung N setzen")
     }

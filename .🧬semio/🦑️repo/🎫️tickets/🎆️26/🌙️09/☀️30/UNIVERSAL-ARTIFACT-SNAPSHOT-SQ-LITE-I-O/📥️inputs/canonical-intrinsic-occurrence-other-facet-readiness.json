@@ -1,0 +1,9 @@
+{
+  "current_replacements": [],
+  "canonical_record_rust_target": "@semio-tech/framework-dsl-record-rs:test-native",
+  "canonical_record_source_target": "@semio-tech/framework-dsl-record-rs:test-ownership",
+  "typescript_record_text_emitter_found": false,
+  "typescript_typed_intrinsic_parser": "🧰️framework/🔨️modules/🌱️value/🧬️schema/🌳️intrinsic/🟦️.ts",
+  "typed_members_occurrence_preserved_source": true,
+  "runtime_observed": false
+}

@@ -46,7 +46,7 @@ async fn gis2d_config_operation_backwards_restores_the_pre_operation_snapshot() 
     let operation = MapWindowConfigMutation::SetLayerVisibility(SetLayerVisibility { layer_id: "water".into(), visible: Some(false) });
     let next = operation.diff(&base).diff().apply(&base).expect("apply");
     assert_eq!(next.layer_visibility.get("water"), Some(&false));
-    let backwards = operation.inverse(&base);
+    let backwards = operation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(backwards, vec![MapWindowConfigMutation::SetLayerVisibility(SetLayerVisibility { layer_id: "water".into(), visible: None })]);
     let restored = backwards[0].diff(&next).diff().apply(&next).expect("restore");
     assert_eq!(restored, base, "the per-field inverse restores the exact pre-operation config, including the absent map entry");
@@ -60,7 +60,7 @@ async fn gis2d_config_layer_stroke_scale_backwards_restores_an_absent_entry() {
     let operation = MapWindowConfigMutation::SetLayerStrokeScale(SetLayerStrokeScale { layer_id: "roads".into(), value: Some(2.0) });
     let next = operation.diff(&base).diff().apply(&base).expect("apply");
     assert_eq!(next.layer_stroke_scale.get("roads"), Some(&2.0));
-    let backwards = operation.inverse(&base);
+    let backwards = operation.inverse(&base).expect("valid retained mutation inverse fixture");
     let restored = backwards[0].diff(&next).diff().apply(&next).expect("restore");
     assert_eq!(restored, base);
     assert!(!restored.layer_stroke_scale.contains_key("roads"));

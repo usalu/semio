@@ -13,7 +13,7 @@ export function stageOracle(c:StageCase):StageResult {
   const run=(operations:StageOperation[])=>{for(const op of operations){
     if(op.kind==="begin"){stage++;completed=0;total=op.units;started=false;checkpoint();}
     else if(op.kind==="advance"){if(!started)checkpoint();const previous=completed;completed+=op.units;if(total!==0&&completed>total)throw new Error("overrun");if(Math.floor(previous/256)!==Math.floor(completed/256)||total!==0&&completed===total)checkpoint();}
-    else if(op.kind==="charge"){if(owned()+op.units>c.maximumBytes)throw new Error("limit");if(!started||op.units>65536)checkpoint();db.run("INSERT INTO charges VALUES(?)",op.units);}
+    else if(op.kind==="charge"){if(owned()+op.units>c.maximumBytes)throw new Error("limit");if(!started||op.units>65536)checkpoint();db.run("INSERT INTO charges VALUES(?)",[op.units]);}
     else if(op.kind==="reject")throw new Error("rejected");
     else {const parent=[completed,total,started,stage] as const;try{run(op.operations);}catch(error){errors.push((error as Error).message);}finally{if(stage!==parent[3]){[completed,total,started,stage]=parent;}}}
   }};

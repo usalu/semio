@@ -13,7 +13,7 @@ export interface En1997Artifact {
   /** @state artifact */
   designApproach: string;
   /** @state artifact */
-  annex: "de" | "en";
+  annex: "En" | "De";
   /** @state artifact */
   groundwaterLevel: number;
   /** @state artifact */
@@ -32,4 +32,4 @@ export interface En1997Artifact {
   upliftCases: { [key: string]: NormJson }[];
 }
 
-export const parseEn1997Artifact: NormWireReader<En1997Artifact> = normWireObject<En1997Artifact>({ structureId: normWireRequired(normWireString), geotechnicalCategory: normWireRequired(normWireInteger), designSituation: normWireRequired(normWireString), designApproach: normWireRequired(normWireString), annex: normWireRequired(normWireLiteral("de", "en")), groundwaterLevel: normWireRequired(normWireNumber), investigationDepth: normWireRequired(normWireNumber), layers: normWireRequired(normWireArray(normWireMap(normWireJson))), footings: normWireRequired(normWireArray(normWireMap(normWireJson))), piles: normWireRequired(normWireArray(normWireMap(normWireJson))), retainingWalls: normWireRequired(normWireArray(normWireMap(normWireJson))), slopes: normWireRequired(normWireArray(normWireMap(normWireJson))), upliftCases: normWireRequired(normWireArray(normWireMap(normWireJson))) });
+export const parseEn1997Artifact: NormWireReader<En1997Artifact> = normWireObject<En1997Artifact>({ structureId: normWireRequired(normWireString), geotechnicalCategory: normWireRequired(normWireInteger), designSituation: normWireRequired(normWireString), designApproach: normWireRequired(normWireString), annex: normWireRequired(normWireLiteral("En", "De")), groundwaterLevel: normWireRequired(normWireNumber), investigationDepth: normWireRequired(normWireNumber), layers: normWireRequired(normWireArray(normWireMap(normWireJson))), footings: normWireRequired(normWireArray(normWireMap(normWireJson))), piles: normWireRequired(normWireArray(normWireMap(normWireJson))), retainingWalls: normWireRequired(normWireArray(normWireMap(normWireJson))), slopes: normWireRequired(normWireArray(normWireMap(normWireJson))), upliftCases: normWireRequired(normWireArray(normWireMap(normWireJson))) });

@@ -78,6 +78,7 @@ fn conditional_visibility_filters_blocks() {
     assert_eq!(visible_blocks(&step, &values).len(), 1);
     values.insert("show".into(), DslValue::Bool(true));
     assert_eq!(visible_blocks(&step, &values).len(), 2);
+    FromValue::retire_decoded(values);
 }
 
 //#region 🔖️DslAndOpText

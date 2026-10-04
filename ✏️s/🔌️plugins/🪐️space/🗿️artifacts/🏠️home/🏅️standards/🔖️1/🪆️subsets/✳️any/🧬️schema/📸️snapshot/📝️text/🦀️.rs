@@ -14,7 +14,7 @@ use crate::SHomeSnapshot;
 pub const HOME_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
 /// 📖️ Parses `.shome` DSL text into an `SHomeSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<SHomeSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<SHomeSnapshot, semio_framework_diagnostic::TextError> {
     <SHomeSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 

@@ -1,4 +1,27 @@
 {
   "mutation": "editRhs",
-  "newRhsJson": "{\"set\":[{\"var\":\"c\",\"prop\":\"label\",\"value\":\"$caption\"},{\"var\":\"c\",\"prop\":\"count\",\"value\":\"$repeat\"}]}"
+  "newRhs": {
+    "create": [],
+    "delete": [],
+    "set": [
+      {
+        "var": "c",
+        "prop": "label",
+        "value": {
+          "kind": "string",
+          "value": "$caption"
+        }
+      },
+      {
+        "var": "c",
+        "prop": "count",
+        "value": {
+          "kind": "string",
+          "value": "$repeat"
+        }
+      }
+    ],
+    "merge": [],
+    "parameters": []
+  }
 }

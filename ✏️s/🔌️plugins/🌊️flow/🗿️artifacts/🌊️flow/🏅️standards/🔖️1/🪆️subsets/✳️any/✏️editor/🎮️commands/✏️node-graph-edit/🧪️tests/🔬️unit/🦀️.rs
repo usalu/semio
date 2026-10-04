@@ -22,7 +22,7 @@ async fn node_graph_wire_connect_and_disconnect_republish_the_owner_assigned_syn
     let matches_edge = |edge: &serde_json::Value| edge["from"] == "slider" && edge["fromPort"] == "number" && edge["to"] == "add" && edge["toPort"] == "b";
     assert!(!initial_edges.iter().any(matches_edge), "the physical specimen starts with the target input free");
     let content_id = app.snapshot().unwrap().content.child_id.clone();
-    let connect = dsl::DslValue::from(serde_json::json!({
+    let connect = semio_framework_value::DslValue::from(serde_json::json!({
         "operations": [{ "operation": "connect", "sourceNodeId": "slider", "sourcePortId": "number", "targetNodeId": "add", "targetPortId": "b" }]
     }));
     app.handle_action("nodeGraphEdit", Some(&connect), &meta("renderer-wire-connect")).await.expect("wire connect admission");
@@ -36,7 +36,7 @@ async fn node_graph_wire_connect_and_disconnect_republish_the_owner_assigned_syn
     let id = matches[0]["id"].as_str().filter(|id| !id.is_empty()).expect("owner assigned synapse identity").to_owned();
     let content = content_snapshot(&app).await;
     assert!(content.edges.iter().any(|edge| edge.id == id && edge.from.node == "slider" && edge.from.port == "number" && edge.to.node == "add" && edge.to.port == "b"));
-    let disconnect = dsl::DslValue::from(serde_json::json!({ "operations": [{ "operation": "disconnect", "synapseId": id }] }));
+    let disconnect = semio_framework_value::DslValue::from(serde_json::json!({ "operations": [{ "operation": "disconnect", "synapseId": id }] }));
     app.handle_action("nodeGraphEdit", Some(&disconnect), &meta("renderer-wire-disconnect")).await.expect("wire disconnect admission");
     let receipt = settle_registered_typed_operation(&mut *app, meta("local").instance_id).await.expect("wire disconnect publication");
     assert_eq!(receipt.lanes, [TypedOperationResultLane::Child, TypedOperationResultLane::Ui, TypedOperationResultLane::Terminal]);
@@ -83,7 +83,7 @@ async fn a_delete_row_removes_the_named_widget_and_its_wires_as_intent_leaves() 
 #[semio_framework_async_macros::async_test]
 async fn a_connect_row_is_one_insert_edge_leaf() {
     let mut app = flow_app_closing().await;
-    let connect = dsl::DslValue::from(serde_json::json!({ "operations": [{ "operation": "connect", "sourceNodeId": "slider", "sourcePortId": "number", "targetNodeId": "add", "targetPortId": "b" }] }));
+    let connect = semio_framework_value::DslValue::from(serde_json::json!({ "operations": [{ "operation": "connect", "sourceNodeId": "slider", "sourcePortId": "number", "targetNodeId": "add", "targetPortId": "b" }] }));
     app.handle_action("nodeGraphEdit", Some(&connect), &meta("renderer-wire-connect")).await.expect("connect admission");
     settle_registered_typed_operation(&mut *app, meta("local").instance_id).await.expect("connect publication");
     let rows = member_rows(&mut app).await;
@@ -119,7 +119,7 @@ async fn spotlight_commit_shares_the_node_graph_edit_vocabulary() {
 
 #[semio_framework_async_macros::async_test]
 async fn renderer_operation_rows_decode_through_one_closed_vocabulary() {
-    let args = dsl::DslValue::from(serde_json::json!({
+    let args = semio_framework_value::DslValue::from(serde_json::json!({
         "operations": [
             { "operation": "delete", "nodeIds": ["add"], "synapseIds": ["s2"] },
             { "operation": "insertPort", "nodeId": "add", "side": "output", "index": 1 },
@@ -138,7 +138,7 @@ async fn renderer_operation_rows_decode_through_one_closed_vocabulary() {
             FlowNodeGraphEditOp::Move { gesture_id: "node-drag:3".into(), node_ids: vec!["add".into(), "slider".into()], dx: 284.0, dy: 48.0 },
         ]
     );
-    let malformed = dsl::DslValue::from(serde_json::json!({
+    let malformed = semio_framework_value::DslValue::from(serde_json::json!({
         "operations": [
             { "operation": "move", "gestureId": "node-drag:3", "nodeIds": ["add"], "dx": 284.0, "dy": 48.0 },
             { "operation": "move", "nodeId": "add", "x": 568.0, "y": 96.0 }
@@ -153,18 +153,18 @@ async fn renderer_operation_rows_decode_through_one_closed_vocabulary() {
         serde_json::json!({ "operation": "insertPort", "nodeId": "add", "side": "left", "index": 1 }),
         serde_json::json!({ "operation": "insertPort", "nodeId": "add", "side": "input", "index": 1.5 }),
     ] {
-        assert!(operations_from_action(&dsl::DslValue::from(serde_json::json!({ "operations": [refused.clone()] }))).is_err(), "{refused} is no row");
+        assert!(operations_from_action(&semio_framework_value::DslValue::from(serde_json::json!({ "operations": [refused.clone()] }))).is_err(), "{refused} is no row");
     }
 }
 
 #[semio_framework_async_macros::async_test]
 async fn operation_parser_refuses_beyond_the_retained_route_row_and_wire_authorities() {
-    let too_many = dsl::DslValue::from(serde_json::json!({
+    let too_many = semio_framework_value::DslValue::from(serde_json::json!({
         "operations": (0..=crate::editor::flow::FLOW_STORE_MAX_MUTATION_ITEMS).map(|_| serde_json::json!({ "operation": "deleteSelection" })).collect::<Vec<_>>()
     }));
     assert!(operations_from_action(&too_many).is_err(), "the parser must refuse before walking row 257");
 
-    let oversized = dsl::DslValue::from(serde_json::json!({
+    let oversized = semio_framework_value::DslValue::from(serde_json::json!({
         "operations": [{ "operation": "move", "gestureId": "node-drag:3", "nodeIds": ["x".repeat(crate::editor::flow::FLOW_GRAPH_OPERATION_RAW_BYTES)], "dx": 1.0, "dy": 2.0 }]
     }));
     assert!(operations_from_action(&oversized).is_err(), "the parser must share the retained route's 16 KiB wire authority");
@@ -179,7 +179,7 @@ async fn node_graph_move_wire_publishes_the_requested_widget_layout() {
     let initial_position = initial.layout.get("add").map_or((0.0, 0.0), |layout| (layout.x, layout.y));
     initial.retire_cold();
     assert_eq!(initial_position, (0.0, 0.0), "the move law must observe the target's actual starting position");
-    let args = dsl::DslValue::from(serde_json::json!({
+    let args = semio_framework_value::DslValue::from(serde_json::json!({
         "operations": [{ "operation": "move", "gestureId": "node-drag:3", "nodeIds": ["add"], "dx": 284.0, "dy": 48.0 }]
     }));
     app.handle_action("nodeGraphEdit", Some(&args), &meta("flow-node-graph-move")).await.expect("nodeGraphEdit move admission");
@@ -199,7 +199,7 @@ async fn node_graph_move_wire_publishes_the_requested_widget_layout() {
 #[semio_framework_async_macros::async_test]
 async fn node_graph_edit_rejects_an_unknown_operation_instead_of_dropping_it() {
     let mut app = flow_app_closing().await;
-    let args = dsl::DslValue::from(serde_json::json!({
+    let args = semio_framework_value::DslValue::from(serde_json::json!({
         "operations": [
             { "operation": "move", "gestureId": "node-drag:3", "nodeIds": ["add"], "dx": 284.0, "dy": 48.0 },
             { "operation": "teleport", "nodeId": "add", "x": 568.0, "y": 96.0 }
@@ -222,7 +222,7 @@ async fn release_drag(app: &mut FlowApp, nodes: &[&str], dx: f64, dy: f64) {
 
 /// 🎭️ [`release_drag`] dispatched by `metadata`'s actor on `metadata`'s instance.
 async fn release_drag_as(app: &mut FlowApp, metadata: &semio_framework_plugin::ActionMeta, nodes: &[&str], dx: f64, dy: f64) {
-    let args = dsl::DslValue::from(serde_json::json!({ "operations": [{ "operation": "move", "gestureId": "node-drag:9", "nodeIds": nodes, "dx": dx, "dy": dy }] }));
+    let args = semio_framework_value::DslValue::from(serde_json::json!({ "operations": [{ "operation": "move", "gestureId": "node-drag:9", "nodeIds": nodes, "dx": dx, "dy": dy }] }));
     app.handle_action("nodeGraphEdit", Some(&args), metadata).await.expect("node drag admission");
     settle_registered_typed_operation(app, metadata.instance_id).await.expect("node drag publication");
 }
@@ -239,21 +239,21 @@ fn node_position(content: &SemioFlowSnapshot, id: &str) -> (f64, f64) {
 }
 
 /// ⏪️ Runs one history-edit verb and answers its output (a refusal is a `{rejected}` output, a fault fails the law).
-async fn history_edit(app: &mut FlowApp, verb: &str, args: Vec<(&str, dsl::DslValue)>) -> dsl::DslValue {
+async fn history_edit(app: &mut FlowApp, verb: &str, args: Vec<(&str, semio_framework_value::DslValue)>) -> semio_framework_value::DslValue {
     history_edit_as(app, &meta("history-edit"), verb, args).await
 }
 
 /// 🎭️ [`history_edit`] dispatched by `metadata`'s actor on `metadata`'s instance.
-async fn history_edit_as(app: &mut FlowApp, metadata: &semio_framework_plugin::ActionMeta, verb: &str, args: Vec<(&str, dsl::DslValue)>) -> dsl::DslValue {
-    let args = dsl::DslValue::Object(args.into_iter().map(|(key, value)| (key.to_string(), value)).collect());
+async fn history_edit_as(app: &mut FlowApp, metadata: &semio_framework_plugin::ActionMeta, verb: &str, args: Vec<(&str, semio_framework_value::DslValue)>) -> semio_framework_value::DslValue {
+    let args = semio_framework_value::DslValue::Object(args.into_iter().map(|(key, value)| (key.to_string(), value)).collect());
     app.handle_action(verb, Some(&args), metadata).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}")).output
 }
 
 /// ✏️ Edits the drag `mutation` of member `store` to `dx = 100` through time travel, accepts it and waits for the review.
 async fn edit_drag_offset(app: &mut FlowApp, metadata: &semio_framework_plugin::ActionMeta, store: &str, mutation: String) {
-    let begun = history_edit_as(app, metadata, "historyEditBegin", vec![("mutationId", dsl::DslValue::String(mutation)), ("store", dsl::DslValue::String(store.into()))]).await;
+    let begun = history_edit_as(app, metadata, "historyEditBegin", vec![("mutationId", semio_framework_value::DslValue::String(mutation)), ("store", semio_framework_value::DslValue::String(store.into()))]).await;
     assert!(begun.get("rejected").is_none(), "{begun:?}");
-    let input = history_edit_as(app, metadata, "historyEditInput", vec![("path", dsl::DslValue::String("/dx".into())), ("value", dsl::DslValue::float(100.0))]).await;
+    let input = history_edit_as(app, metadata, "historyEditInput", vec![("path", semio_framework_value::DslValue::String("/dx".into())), ("value", semio_framework_value::DslValue::float(100.0))]).await;
     assert!(input.get("rejected").is_none(), "{input:?}");
     history_edit_as(app, metadata, "historyEditAccept", Vec::new()).await;
     pump_time_travel(app, |stage| stage != Some(semio_framework::kernel::HistoryTimeTravelStage::Replaying)).await;
@@ -263,7 +263,7 @@ async fn edit_drag_offset(app: &mut FlowApp, metadata: &semio_framework_plugin::
 /// 🌿️ Finalizes the reviewed session as the new alternative `name` and waits until it closed.
 async fn finalize_as_alternative(app: &mut FlowApp, metadata: &semio_framework_plugin::ActionMeta, name: &str) {
     history_edit_as(app, metadata, "historyEditFinalize", Vec::new()).await;
-    let committed = history_edit_as(app, metadata, "historyEditCommit", vec![("name", dsl::DslValue::String(name.into()))]).await;
+    let committed = history_edit_as(app, metadata, "historyEditCommit", vec![("name", semio_framework_value::DslValue::String(name.into()))]).await;
     assert!(committed.get("rejected").is_none(), "{committed:?}");
     pump_time_travel(app, |stage| stage.is_none()).await;
 }
@@ -311,6 +311,23 @@ async fn a_node_drag_is_one_child_transaction_row_naming_its_member_store() {
     assert_eq!(mutation.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "1 Knoten um (284; 48) ziehen");
 }
 
+/// ⚖️ LAW (design §19.1, audit F5): a release that drew a wire and dragged a node is ONE row labelled by the drag, though
+/// the wire's `insert-edge` lands before the relative `drag-nodes`.
+#[semio_framework_async_macros::async_test]
+async fn a_release_that_wires_and_drags_is_labelled_by_the_drag() {
+    let mut app = flow_app_closing().await;
+    let args = semio_framework_value::DslValue::from(serde_json::json!({ "operations": [
+        { "operation": "connect", "sourceNodeId": "slider", "sourcePortId": "number", "targetNodeId": "add", "targetPortId": "b" },
+        { "operation": "move", "gestureId": "node-drag:4", "nodeIds": ["add"], "dx": 10.0, "dy": 0.0 }
+    ] }));
+    app.handle_action("nodeGraphEdit", Some(&args), &meta("renderer-node-drag")).await.expect("wire and drag admission");
+    settle_registered_typed_operation(&mut *app, meta("local").instance_id).await.expect("wire and drag publication");
+    let rows = member_rows(&mut app).await;
+    assert_eq!(rows.len(), 1, "one release is one row: {rows:?}");
+    assert!(rows[0].op_lines.first().is_some_and(|line| line.starts_with("insert-edge")), "{:?}", rows[0].op_lines);
+    assert_eq!(rows[0].label.resolve(protocol::Terminology::Native, protocol::Locale::En), "Drag 1 node by (10, 0)");
+}
+
 /// ⚖️ LAW (design §12): time travel on a composed child's mutation runs on that member store — editing the drag's `dx`
 /// previews on the main window without touching the committed member, the replay reviews, and the overwrite folds the
 /// edited offset into the member, which the parent's scene then shows.
@@ -320,9 +337,9 @@ async fn editing_a_node_drag_offset_replays_the_member_and_the_parent_scene_foll
     let store = format!("content/{}", app.snapshot().expect("snapshot").content.child_id);
     release_drag(&mut app, &["add"], 284.0, 48.0).await;
     let mutation = member_rows(&mut app).await[0].mutations[0].mutation_id.clone();
-    let begun = history_edit(&mut app, "historyEditBegin", vec![("mutationId", dsl::DslValue::String(mutation)), ("store", dsl::DslValue::String(store.clone()))]).await;
+    let begun = history_edit(&mut app, "historyEditBegin", vec![("mutationId", semio_framework_value::DslValue::String(mutation)), ("store", semio_framework_value::DslValue::String(store.clone()))]).await;
     assert!(begun.get("rejected").is_none(), "{begun:?}");
-    let input = history_edit(&mut app, "historyEditInput", vec![("path", dsl::DslValue::String("/dx".into())), ("value", dsl::DslValue::float(100.0))]).await;
+    let input = history_edit(&mut app, "historyEditInput", vec![("path", semio_framework_value::DslValue::String("/dx".into())), ("value", semio_framework_value::DslValue::float(100.0))]).await;
     assert!(input.get("rejected").is_none(), "{input:?}");
     assert_eq!(published_host_snapshot(&mut app).await["layout"]["add"], serde_json::json!({ "x": 100.0, "y": 48.0 }), "the main window renders the member's preview");
     assert_eq!(node_position(&content_snapshot(&app).await, "add"), (284.0, 48.0), "editing never touches the committed member");
@@ -330,7 +347,7 @@ async fn editing_a_node_drag_offset_replays_the_member_and_the_parent_scene_foll
     pump_time_travel(&mut app, |stage| stage != Some(semio_framework::kernel::HistoryTimeTravelStage::Replaying)).await;
     assert_eq!(time_travel_stage(&mut app).await, Some(semio_framework::kernel::HistoryTimeTravelStage::Reviewing));
     history_edit(&mut app, "historyEditFinalize", Vec::new()).await;
-    let committed = history_edit(&mut app, "historyEditCommit", vec![("choice", dsl::DslValue::String("overwrite".into()))]).await;
+    let committed = history_edit(&mut app, "historyEditCommit", vec![("choice", semio_framework_value::DslValue::String("overwrite".into()))]).await;
     assert!(committed.get("rejected").is_none(), "{committed:?}");
     pump_time_travel(&mut app, |stage| stage.is_none()).await;
     assert_eq!(node_position(&content_snapshot(&app).await, "add"), (100.0, 48.0), "the overwrite folds the edited offset into the member");
@@ -400,12 +417,12 @@ async fn withdrawing_a_node_drag_in_history_puts_the_node_back() {
     let store = format!("content/{}", app.snapshot().expect("snapshot").content.child_id);
     release_drag(&mut app, &["add"], 284.0, 48.0).await;
     let mutation = member_rows(&mut app).await[0].mutations[0].mutation_id.clone();
-    history_edit(&mut app, "historyEditBegin", vec![("mutationId", dsl::DslValue::String(mutation)), ("store", dsl::DslValue::String(store))]).await;
+    history_edit(&mut app, "historyEditBegin", vec![("mutationId", semio_framework_value::DslValue::String(mutation)), ("store", semio_framework_value::DslValue::String(store))]).await;
     history_edit(&mut app, "historyEditWithdraw", Vec::new()).await;
     history_edit(&mut app, "historyEditAccept", Vec::new()).await;
     pump_time_travel(&mut app, |stage| stage != Some(semio_framework::kernel::HistoryTimeTravelStage::Replaying)).await;
     history_edit(&mut app, "historyEditFinalize", Vec::new()).await;
-    history_edit(&mut app, "historyEditCommit", vec![("choice", dsl::DslValue::String("overwrite".into()))]).await;
+    history_edit(&mut app, "historyEditCommit", vec![("choice", semio_framework_value::DslValue::String("overwrite".into()))]).await;
     pump_time_travel(&mut app, |stage| stage.is_none()).await;
     assert_eq!(node_position(&content_snapshot(&app).await, "add"), (0.0, 0.0), "the withdrawn drag moves nothing");
     assert_eq!(published_host_snapshot(&mut app).await["layout"]["add"], serde_json::json!({ "x": 0.0, "y": 0.0 }));
@@ -419,13 +436,13 @@ async fn a_blocking_member_replay_refuses_to_finalize_and_exits_with_zero_trace(
     let mut app = flow_app_closing().await;
     let store = format!("content/{}", app.snapshot().expect("snapshot").content.child_id);
     let before: Vec<String> = content_snapshot(&app).await.nodes.iter().map(|node| node.id.clone()).collect();
-    app.handle_action("addWidget", Some(&dsl::DslValue::from(serde_json::json!({ "kind": "inputNote", "x": 40.0, "y": 40.0 }))), &meta("add-widget")).await.expect("addWidget admission");
+    app.handle_action("addWidget", Some(&semio_framework_value::DslValue::from(serde_json::json!({ "kind": "inputNote", "x": 40.0, "y": 40.0 }))), &meta("add-widget")).await.expect("addWidget admission");
     settle_registered_typed_operation(&mut *app, meta("local").instance_id).await.expect("addWidget publication");
     let added = content_snapshot(&app).await.nodes.iter().map(|node| node.id.clone()).find(|id| !before.contains(id)).expect("the added node");
     release_drag(&mut app, &[added.as_str()], 10.0, 0.0).await;
     let rows = member_rows(&mut app).await;
     let insert = rows.iter().flat_map(|row| row.mutations.iter()).find(|mutation| mutation.editable && rows.last().is_some_and(|last| !last.mutations.iter().any(|drag| drag.mutation_id == mutation.mutation_id))).expect("the insert's mutation row").mutation_id.clone();
-    history_edit(&mut app, "historyEditBegin", vec![("mutationId", dsl::DslValue::String(insert)), ("store", dsl::DslValue::String(store))]).await;
+    history_edit(&mut app, "historyEditBegin", vec![("mutationId", semio_framework_value::DslValue::String(insert)), ("store", semio_framework_value::DslValue::String(store))]).await;
     history_edit(&mut app, "historyEditWithdraw", Vec::new()).await;
     history_edit(&mut app, "historyEditAccept", Vec::new()).await;
     pump_time_travel(&mut app, |stage| stage != Some(semio_framework::kernel::HistoryTimeTravelStage::Replaying)).await;
@@ -440,11 +457,11 @@ async fn a_blocking_member_replay_refuses_to_finalize_and_exits_with_zero_trace(
 
 /// 🎚️ One inline-slider dispatch of the press `gesture` (design §13.1): the absolute `setSlider` row with the press's own
 /// `gesture`, the release adding `commit`, a cancel naming its `abort` reason; settles whatever it published.
-async fn slide(app: &mut FlowApp, gesture: &str, value: Option<f64>, phase: Option<(&str, dsl::DslValue)>) {
+async fn slide(app: &mut FlowApp, gesture: &str, value: Option<f64>, phase: Option<(&str, semio_framework_value::DslValue)>) {
     let operations: Vec<serde_json::Value> = value.map(|value| serde_json::json!({ "operation": "setSlider", "widgetId": "slider", "value": value })).into_iter().collect();
-    let mut args = vec![("operations".to_string(), dsl::DslValue::from(serde_json::Value::Array(operations))), ("gesture".to_string(), dsl::DslValue::String(gesture.into()))];
+    let mut args = vec![("operations".to_string(), semio_framework_value::DslValue::from(serde_json::Value::Array(operations))), ("gesture".to_string(), semio_framework_value::DslValue::String(gesture.into()))];
     args.extend(phase.map(|(key, value)| (key.to_string(), value)));
-    app.handle_action("nodeGraphEdit", Some(&dsl::DslValue::Object(args)), &crate::editor::flow::unit_tests::context::flow_main_window_meta()).await.expect("slider dispatch admission");
+    app.handle_action("nodeGraphEdit", Some(&semio_framework_value::DslValue::Object(args)), &crate::editor::flow::unit_tests::context::flow_main_window_meta()).await.expect("slider dispatch admission");
     let _ = settle_registered_typed_operation(app, meta("local").instance_id).await;
 }
 
@@ -464,7 +481,7 @@ async fn a_dragged_inline_slider_is_one_child_transaction_and_a_cancel_leaves_ze
     slide(&mut app, "slider:1", Some(5.0), None).await;
     assert_eq!(slider_value(&content_snapshot(&app).await), start, "ticks publish nothing");
     assert!(member_rows(&mut app).await.is_empty(), "ticks list no history row");
-    slide(&mut app, "slider:1", Some(6.0), Some(("commit", dsl::DslValue::Bool(true)))).await;
+    slide(&mut app, "slider:1", Some(6.0), Some(("commit", semio_framework_value::DslValue::Bool(true)))).await;
     assert_eq!(slider_value(&content_snapshot(&app).await).as_deref(), Some("6"), "the release lands the value the knob ended on");
     let rows = member_rows(&mut app).await;
     assert_eq!(rows.len(), 1, "one press is one row: {rows:?}");
@@ -472,7 +489,7 @@ async fn a_dragged_inline_slider_is_one_child_transaction_and_a_cancel_leaves_ze
     assert_eq!(rows[0].mutations.len(), 1, "one absolute leaf: {:?}", rows[0].mutations);
     assert_eq!(rows[0].mutations[0].store.as_deref(), Some(store.as_str()));
     slide(&mut app, "slider:2", Some(9.0), None).await;
-    slide(&mut app, "slider:2", None, Some(("abort", dsl::DslValue::String("captureLost".into())))).await;
+    slide(&mut app, "slider:2", None, Some(("abort", semio_framework_value::DslValue::String("captureLost".into())))).await;
     assert_eq!(slider_value(&content_snapshot(&app).await).as_deref(), Some("6"), "a cancelled press leaves zero trace");
     assert_eq!(member_rows(&mut app).await.len(), 1, "a cancelled press lists no row");
 }
@@ -482,7 +499,7 @@ async fn a_dragged_inline_slider_is_one_child_transaction_and_a_cancel_leaves_ze
 #[semio_framework_async_macros::async_test]
 async fn patching_a_widget_value_is_one_absolute_node_param_leaf() {
     let mut app = flow_app_closing().await;
-    let patch = |value: &str| dsl::DslValue::from(serde_json::json!({ "widgetIds": ["slider"], "field": "value", "value": value }));
+    let patch = |value: &str| semio_framework_value::DslValue::from(serde_json::json!({ "widgetIds": ["slider"], "field": "value", "value": value }));
     app.handle_action("patchFlowWidgets", Some(&patch("7.5")), &crate::editor::flow::unit_tests::context::flow_main_window_meta()).await.expect("patch admission");
     settle_registered_typed_operation(&mut *app, meta("local").instance_id).await.expect("patch publication");
     assert_eq!(slider_value(&content_snapshot(&app).await).as_deref(), Some("7.5"));
@@ -505,13 +522,14 @@ const NODE_GRAPH_EDIT_ROWS_JSON: &str = include_str!("../../../../../../../../..
 async fn the_guest_reads_exactly_the_shared_node_graph_edit_rows() {
     let fixture: serde_json::Value = serde_json::from_str(NODE_GRAPH_EDIT_ROWS_JSON).expect("node-graph edit rows fixture");
     for case in fixture["accepted"].as_array().expect("accepted rows") {
-        let args = dsl::DslValue::from(serde_json::json!({ "operations": [case["row"].clone()] }));
+        let args = semio_framework_value::DslValue::from(serde_json::json!({ "operations": [case["row"].clone()] }));
         assert_eq!(operations_from_action(&args).map(|rows| rows.len()).ok(), Some(1), "{} decodes", case["id"]);
     }
     for case in fixture["refused"].as_array().expect("refused rows") {
-        let args = dsl::DslValue::from(serde_json::json!({ "operations": [case["row"].clone()] }));
+        let args = semio_framework_value::DslValue::from(serde_json::json!({ "operations": [case["row"].clone()] }));
         assert!(operations_from_action(&args).is_err(), "{} is refused", case["id"]);
     }
+    assert_eq!(flow::dag::DAG_GRAPH_EDIT_CAPACITY, semio_framework_tool_machine::NODE_GRAPH_EDIT_MAX_ROWS, "a host journal never holds more rows than one dispatch admits");
 }
 
 fn flow_node(id: &str, kind: &str, params: &[(&str, &str)], x: f64) -> semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::FlowNode {

@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "dialect",
+    "schema",
+    "table",
+    "schemaSql",
+    "literal",
+    "maximumAllocationBytes",
+    "exportCopies",
+    "importCopies",
+    "exportPhases",
+    "importPhases"
+  ],
+  "properties": {
+    "dialect": {
+      "const": {
+        "artifactKind": "fixture.sqlite-transfer",
+        "standard": "1",
+        "subset": "*"
+      }
+    },
+    "schema": {
+      "const": "fixture.sqlite-transfer/v1"
+    },
+    "table": {
+      "const": "transfer_literal"
+    },
+    "schemaSql": {
+      "const": "CREATE TABLE transfer_literal (id INTEGER PRIMARY KEY, literal TEXT NOT NULL);"
+    },
+    "literal": {
+      "const": "literal 世界 🌠 complete transfer"
+    },
+    "maximumAllocationBytes": {
+      "const": 1048576
+    },
+    "exportCopies": {
+      "const": 1
+    },
+    "importCopies": {
+      "const": 2
+    },
+    "exportPhases": {
+      "const": [
+        "decodeNative",
+        "projectSnapshot",
+        "writePages"
+      ]
+    },
+    "importPhases": {
+      "const": [
+        "readPages",
+        "reconstructSnapshot",
+        "encodeNative"
+      ]
+    }
+  }
+}

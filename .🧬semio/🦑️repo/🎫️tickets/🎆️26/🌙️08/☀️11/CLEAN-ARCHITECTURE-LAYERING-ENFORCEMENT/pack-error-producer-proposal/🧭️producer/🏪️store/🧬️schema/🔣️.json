@@ -1,0 +1,13 @@
+{
+ "$schema":"https://json-schema.org/draft/2020-12/schema",
+ "type":"object","additionalProperties":false,"required":["cases"],
+ "properties":{"cases":{"type":"array","minItems":10,"maxItems":10,"items":{
+  "type":"object","additionalProperties":false,"required":["kind","reason","sourceBytes","reservationBytes","context"],
+  "properties":{
+   "kind":{"enum":["invalidValue","canceled","ownershipLimit","allocationFailed","workLimit","depthLimit","unsupportedOwner","invariantViolated"]},
+   "reason":{"type":"string"},"context":{"type":"string"},
+   "sourceBytes":{"anyOf":[{"type":"null"},{"type":"integer","minimum":0}]},
+   "reservationBytes":{"type":"integer","minimum":0}
+  }
+ }}}
+}

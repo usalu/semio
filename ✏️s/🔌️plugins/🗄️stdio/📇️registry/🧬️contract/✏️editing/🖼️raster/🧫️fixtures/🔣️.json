@@ -1,0 +1,19 @@
+{
+  "schema": "s.stdio.editing.raster-region.fixture.v1",
+  "planOwnership": {"case":"middle-rows","foreignPlanError":"foreign-plan","replacementColor":[200,201,202,203]},
+  "cases": [
+    {"id":"middle-rows", "width":3, "height":2, "pixels":[0,0,0,255,0,0,0,255,0,0,0,255,0,0,0,255,0,0,0,255,0,0,0,255], "region":{"x":1,"y":0,"width":1,"height":2,"color":[9,8,7,6]}, "patchBytes":24, "patches":1, "expected":[0,0,0,255,9,8,7,6,0,0,0,255,0,0,0,255,9,8,7,6,0,0,0,255]},
+    {"id":"wide-row-chunks", "width":5, "height":1, "pixels":[0,0,0,255,0,0,0,255,0,0,0,255,0,0,0,255,0,0,0,255], "region":{"x":1,"y":0,"width":3,"height":1,"color":[1,2,3,4]}, "patchBytes":8, "patches":2, "expected":[0,0,0,255,1,2,3,4,1,2,3,4,1,2,3,4,0,0,0,255]},
+    {"id":"last-pixel", "width":2, "height":2, "pixels":[0,0,0,255,0,0,0,255,0,0,0,255,0,0,0,255], "region":{"x":1,"y":1,"width":1,"height":1,"color":[255,0,128,255]}, "patchBytes":4, "patches":1, "expected":[0,0,0,255,0,0,0,255,0,0,0,255,255,0,128,255]},
+    {"id":"unchanged", "width":1, "height":1, "pixels":[1,2,3,4], "region":{"x":0,"y":0,"width":1,"height":1,"color":[1,2,3,4]}, "patchBytes":4, "patches":1, "expected":[1,2,3,4]}
+  ],
+  "rejected": [
+    {"id":"empty", "width":2,"height":2,"byteLength":16,"region":{"x":0,"y":0,"width":0,"height":1,"color":[1,2,3,4]},"patchBytes":4,"maxPatches":4,"error":"empty"},
+    {"id":"outside", "width":2,"height":2,"byteLength":16,"region":{"x":2,"y":0,"width":1,"height":1,"color":[1,2,3,4]},"patchBytes":4,"maxPatches":4,"error":"out-of-bounds"},
+    {"id":"overflow", "width":2,"height":2,"byteLength":16,"region":{"x":4294967295,"y":0,"width":1,"height":1,"color":[1,2,3,4]},"patchBytes":4,"maxPatches":4,"error":"bounds-overflow"},
+    {"id":"bad-length", "width":2,"height":2,"byteLength":15,"region":{"x":0,"y":0,"width":1,"height":1,"color":[1,2,3,4]},"patchBytes":4,"maxPatches":4,"error":"noncanonical-raster"},
+    {"id":"unaligned-budget", "width":2,"height":2,"byteLength":16,"region":{"x":0,"y":0,"width":1,"height":1,"color":[1,2,3,4]},"patchBytes":5,"maxPatches":4,"error":"invalid-budget"},
+    {"id":"zero-budget", "width":2,"height":2,"byteLength":16,"region":{"x":0,"y":0,"width":1,"height":1,"color":[1,2,3,4]},"patchBytes":0,"maxPatches":4,"error":"invalid-budget"},
+    {"id":"too-many-patches", "width":2,"height":2,"byteLength":16,"region":{"x":0,"y":0,"width":2,"height":2,"color":[1,2,3,4]},"patchBytes":4,"maxPatches":3,"error":"too-many-patches"}
+  ]
+}

@@ -1,7 +1,7 @@
 //! 🔢️ 🔢️ S Studio app command — `patch-parameter`.
 
 use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation};
-use pack::json::{self, Value};
+use semio_framework_pack_json::{self, Value};
 use semio_framework_os::{WorkflowMutation, WorkflowParameter, WorkflowSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 

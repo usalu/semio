@@ -1,11 +1,12 @@
 //! 📨️ `engagement-submit` command.
 
+use semio_framework_pack_json::json;
 use crate::editor::puzzle5d::commands::{focus_selection, rotate_selection, scale_selection, set_fill_count, translate_selection};
 use crate::editor::puzzle5d::modes::edit::tools::fill as fill_tool;
 use crate::editor::puzzle5d::modes::edit::windows::world3d;
 use crate::editor::puzzle5d::{Puzzle5dActionCtx, PUZZLE5D_DEFAULT_UTILITY};
-use dsl::json;
-use dsl::os_pack::json::Value;
+
+use semio_framework_pack_json::Value;
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_tool_run::{TOOL_RUN_ARG_TOOL_ID, TOOL_RUN_START_ACTION_ID};
 
@@ -46,12 +47,12 @@ pub fn engagement_submit(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) 
         // poking selection state this app does not own.
         "clear" => ctx.clear_selection(),
         "zoom" => focus_selection::focus_selection(ctx),
-        "move" if numbers.len() >= 2 => translate_selection::translate_selection(ctx, Some(&json!({ "dx": numbers[0], "dy": numbers[1], "dz": numbers.get(2).copied().unwrap_or(0.0) }))),
+        "move" if numbers.len() >= 2 => translate_selection::translate_selection(ctx, Some(&semio_framework_pack_json::json!({ "dx": numbers[0], "dy": numbers[1], "dz": numbers.get(2).copied().unwrap_or(0.0) }))),
         "rotate" if !numbers.is_empty() => rotate_selection::rotate_selection(
             ctx,
-            Some(&json!({ "ax": PUZZLE5D_ENGAGEMENT_ROTATE_AXIS[0], "ay": PUZZLE5D_ENGAGEMENT_ROTATE_AXIS[1], "az": PUZZLE5D_ENGAGEMENT_ROTATE_AXIS[2], "angle": numbers[0].to_radians() })),
+            Some(&semio_framework_pack_json::json!({ "ax": PUZZLE5D_ENGAGEMENT_ROTATE_AXIS[0], "ay": PUZZLE5D_ENGAGEMENT_ROTATE_AXIS[1], "az": PUZZLE5D_ENGAGEMENT_ROTATE_AXIS[2], "angle": numbers[0].to_radians() })),
         ),
-        "scale" if numbers.first().is_some_and(|factor| *factor > 0.0) => scale_selection::scale_selection(ctx, Some(&json!({ "sx": numbers[0], "sy": numbers[0], "sz": numbers[0] }))),
+        "scale" if numbers.first().is_some_and(|factor| *factor > 0.0) => scale_selection::scale_selection(ctx, Some(&semio_framework_pack_json::json!({ "sx": numbers[0], "sy": numbers[0], "sz": numbers[0] }))),
         _ => {}
     }
     ctx.scene.runtime.engagement_input_by_window.insert(ctx.window_id.to_string(), String::new());

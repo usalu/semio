@@ -35,6 +35,10 @@ fn descriptor_contract_matches_the_language_neutral_fixture() {
         let fault = payload(value).descriptor_json().expect_err("invalid descriptor");
         assert_eq!(fault.code.0, fixture()["faultCode"].as_str().unwrap());
     }
+    for row in fixture()["defaults"].as_array().unwrap() {
+        let descriptor: serde_json::Value = serde_json::from_str(&payload(&row["payload"]).descriptor_json().unwrap()).unwrap();
+        assert_eq!(descriptor, row["descriptor"]);
+    }
 }
 #[test]
 fn non_finite_coordinates_are_rejected_before_host_mutation() {

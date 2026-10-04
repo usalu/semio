@@ -28,7 +28,7 @@ const contextMenuOrdinalClassName = "w-small shrink-0 text-center text-xs text-m
 export function contextMenuItemClassName(item: Pick<ContextMenuItem, "checked" | "destructive">, ...extra: Array<string | false | null | undefined>): string {
   return cn(
     floatingMenuItemClass,
-    "pointer-events-auto whitespace-nowrap data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+    "pointer-events-auto whitespace-nowrap data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50",
     item.destructive && "text-destructive focus:bg-destructive/10 hover:bg-destructive/10",
     ...extra,
     item.checked && "bg-active-base text-emphasized hover:bg-active-base/90 hover:text-emphasized",
@@ -44,7 +44,10 @@ export interface ContextMenuItem {
   icon?: ControlIcon;
   color?: string;
   shortcut?: string;
+  /** 🚫️ A disabled row stays focusable (`aria-disabled`, WAI-ARIA focusable-when-disabled) and never runs. */
   disabled?: boolean;
+  /** 💬️ Why a disabled row cannot run: shown beside its label and named by `aria-describedby`. */
+  reason?: UiLabel;
   separator?: boolean;
   checked?: boolean;
   destructive?: boolean;
@@ -174,8 +177,24 @@ export function contextMenuOrdinals(items: readonly ContextMenuItem[]): Readonly
   return map;
 }
 
-function contextMenuEnabledIndices(items: readonly ContextMenuItem[]): number[] {
-  return items.flatMap((item, index) => (!item.separator && !item.disabled ? [index] : []));
+/** ⌨️ The rows arrow keys reach: every row but separators — a disabled row is focusable and announces why it cannot run. */
+function contextMenuFocusableIndices(items: readonly ContextMenuItem[]): number[] {
+  return items.flatMap((item, index) => (!item.separator ? [index] : []));
+}
+
+/** 💬️ The id of a disabled row's reason element — what its `aria-describedby` names. */
+function contextMenuReasonId(item: ContextMenuItem): string | undefined {
+  return item.disabled && item.reason ? `${item.id}::reason` : undefined;
+}
+
+/** 💬️ A disabled row's reason, visible beside its label and named by the row's `aria-describedby`. */
+function renderContextMenuReason(item: ContextMenuItem): React.ReactNode {
+  const id = contextMenuReasonId(item);
+  return id ? (
+    <span id={id} data-slot="context-menu-reason" className="truncate ps-tiny text-xs text-muted-foreground">
+      {item.reason}
+    </span>
+  ) : null;
 }
 
 /** 📂️ Resolves the item list at `pathPrefix` (empty = top level). */
@@ -264,7 +283,7 @@ export function contextMenuNavigationFromKey(key: string): ContextMenuNavDirecti
 export function moveContextMenuActivePath(root: readonly ContextMenuItem[], path: readonly number[], direction: "up" | "down"): number[] {
   const levelPrefix = path.length > 0 ? path.slice(0, -1) : [];
   const level = contextMenuItemsAtLevel(root, levelPrefix);
-  const enabled = contextMenuEnabledIndices(level);
+  const enabled = contextMenuFocusableIndices(level);
   if (enabled.length === 0) {
     return [...path];
   }
@@ -305,7 +324,7 @@ export function contextMenuOpenSubmenuPath(root: readonly ContextMenuItem[], pat
   if (!item?.children?.length) {
     return undefined;
   }
-  const enabled = contextMenuEnabledIndices(item.children);
+  const enabled = contextMenuFocusableIndices(item.children);
   if (enabled.length === 0) {
     return [...path];
   }
@@ -490,7 +509,8 @@ function ContextMenuSubmenuRow({ item, rowPath, ordinal, isActive, submenuOpen, 
       <button
         id={item.id}
         ref={(node) => registerRow(pathKey, node)}
-        aria-disabled={item.disabled}
+        aria-disabled={item.disabled || undefined}
+        aria-describedby={contextMenuReasonId(item)}
         aria-expanded={submenuOpen}
         aria-haspopup="menu"
         className={contextMenuItemClassName(item)}
@@ -499,7 +519,6 @@ function ContextMenuSubmenuRow({ item, rowPath, ordinal, isActive, submenuOpen, 
         data-disabled={item.disabled ? "" : undefined}
         data-selected={item.checked ? "true" : undefined}
         data-menu-action={item.action}
-        disabled={item.disabled}
         onClick={toggleSubmenu}
         onPointerEnter={() => item.onHover?.()}
         onPointerLeave={() => item.onHoverEnd?.()}
@@ -510,6 +529,7 @@ function ContextMenuSubmenuRow({ item, rowPath, ordinal, isActive, submenuOpen, 
         {renderContextMenuOrdinalBadge(ordinal)}
         {renderContextMenuLeading(item)}
         <span className="truncate">{item.label ?? item.id}</span>
+        {renderContextMenuReason(item)}
         {item.shortcut ? (
           <span aria-hidden className={contextMenuShortcutClassName}>
             {item.shortcut}
@@ -558,15 +578,16 @@ function renderFixedContextMenuItems(items: readonly ContextMenuItem[], pathPref
         id={item.id}
         ref={(node) => registerRow(contextMenuPathKey(rowPath), node)}
         aria-checked={item.checked}
-        aria-disabled={item.disabled}
+        aria-disabled={item.disabled || undefined}
+        aria-describedby={contextMenuReasonId(item)}
         className={contextMenuItemClassName(item)}
         data-active={isActive ? "true" : undefined}
         data-context-menu-path={contextMenuPathKey(rowPath)}
         data-disabled={item.disabled ? "" : undefined}
         data-selected={item.checked ? "true" : undefined}
         data-menu-action={item.action}
-        disabled={item.disabled}
         onClick={(event) => {
+          if (item.disabled) return;
           item.onSelect?.(event.nativeEvent);
           onClose();
         }}
@@ -582,6 +603,7 @@ function renderFixedContextMenuItems(items: readonly ContextMenuItem[], pathPref
         {renderContextMenuOrdinalBadge(ordinal)}
         {renderContextMenuLeading(item)}
         <span className="truncate">{item.label ?? item.id}</span>
+        {renderContextMenuReason(item)}
         {item.shortcut ? (
           <span aria-hidden className={contextMenuShortcutClassName}>
             {item.shortcut}

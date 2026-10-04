@@ -6,7 +6,7 @@ use crate::{Puzzle5dFastener, Puzzle5dSnapshot};
 //#region 🔖️Diff
 pub fn diff(payload: &super::ConnectGrips, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
     if base.fasteners.iter().any(|entry| entry.id == payload.id) {
-        return protocol::MutationOutcome::new(Puzzle5dDiff::default()).absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "already connected").at(vec![payload.id.clone()])]);
+        return protocol::MutationOutcome::new(Puzzle5dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "already connected").at(vec![payload.id.clone()])]);
     }
     let fastener = Puzzle5dFastener {
         id: payload.id.clone(),

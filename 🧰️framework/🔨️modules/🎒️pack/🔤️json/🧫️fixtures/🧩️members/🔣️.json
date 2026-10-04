@@ -1,0 +1,67 @@
+{
+  "cases": [
+    {
+      "id": "unique",
+      "text": "{\"a\":1,\"b\":2}",
+      "duplicate": null
+    },
+    {
+      "id": "plain-duplicate",
+      "text": "{\"a\":1,\"a\":2}",
+      "duplicate": {
+        "name": "a",
+        "offset": 7
+      }
+    },
+    {
+      "id": "escaped-duplicate",
+      "text": "{\"a\":1,\"\\u0061\":2}",
+      "duplicate": {
+        "name": "a",
+        "offset": 7
+      }
+    },
+    {
+      "id": "escaped-distinct",
+      "text": "{\"a\":1,\"\\u0062\":2}",
+      "duplicate": null
+    },
+    {
+      "id": "nested-duplicate",
+      "text": "{\"left\":{\"name\":1,\"na\\u006de\":2}}",
+      "duplicate": {
+        "name": "name",
+        "offset": 18
+      }
+    },
+    {
+      "id": "unicode-duplicate",
+      "text": "{\"世界\":1,\"\\u4e16\\u754c\":2}",
+      "duplicate": {
+        "name": "世界",
+        "offset": 12
+      }
+    },
+    {
+      "id": "replacement-order",
+      "text": "{\"z\":1,\"a\":2,\"z\":3}",
+      "duplicate": {
+        "name": "z",
+        "offset": 13
+      }
+    }
+  ],
+  "comparison": {
+    "keyUnit": "世界key",
+    "repetitions": 32768,
+    "chunkBytes": 65536,
+    "maximumOwnedBytes": 8000000
+  },
+  "ownership": {
+    "text": "{\"z\":{\"name\":\"owned descendants\"},\"a\":[1,null],\"z\":{\"name\":\"last owned descendants\"}}",
+    "keys": [
+      "z",
+      "a"
+    ]
+  }
+}

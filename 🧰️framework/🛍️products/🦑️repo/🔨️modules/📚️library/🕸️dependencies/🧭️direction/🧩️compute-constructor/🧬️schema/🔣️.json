@@ -1,0 +1,126 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/repo/compute-constructor-ownership.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "constructorPolicy"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "constructorPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owners",
+        "cases"
+      ],
+      "properties": {
+        "owners": {
+          "const": [
+            "🧰️framework/🔨️modules/◻️2d/🧮️compute",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin"
+          ]
+        },
+        "cases": {
+          "type": "array",
+          "const": [
+            {
+              "id": "canonical-owner",
+              "path": "🧰️framework/🔨️modules/◻️2d/🧮️compute/🦀️.rs",
+              "allowed": true
+            },
+            {
+              "id": "canonical-original-laws",
+              "path": "🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️tests/🔬️unit/🦀️.rs",
+              "allowed": true
+            },
+            {
+              "id": "retained-plugin-owner",
+              "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+              "allowed": true
+            },
+            {
+              "id": "retained-plugin-child",
+              "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️.rs",
+              "allowed": true
+            },
+            {
+              "id": "removed-os-owner",
+              "path": "🧰️framework/🛍️products/💻️os/🔨️modules/⚙️engine/🦀️.rs",
+              "allowed": false
+            },
+            {
+              "id": "canonical-sibling-prefix",
+              "path": "🧰️framework/🔨️modules/◻️2d/🧮️compute-foreign/🦀️.rs",
+              "allowed": false
+            },
+            {
+              "id": "plugin-sibling-prefix",
+              "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin-shadow/🦀️.rs",
+              "allowed": false
+            },
+            {
+              "id": "foreign-owner",
+              "path": "✏️s/🔌️plugins/🧩️puzzle/🦀️.rs",
+              "allowed": false
+            },
+            {
+              "id": "native-windows-owner",
+              "path": "🧰️framework\\🔨️modules\\◻️2d\\🧮️compute\\🦀️.rs",
+              "allowed": true
+            },
+            {
+              "id": "raw-parent-traversal",
+              "path": "🧰️framework/🔨️modules/◻️2d/🧮️compute/../foreign/🦀️.rs",
+              "allowed": false
+            },
+            {
+              "id": "legacy-rep-debt-path",
+              "path": "🧰️framework/🔨️modules/◻️2d/🗄️store/🦀️.rs",
+              "allowed": false
+            }
+          ],
+          "minItems": 11,
+          "maxItems": 11,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "path",
+              "allowed"
+            ],
+            "properties": {
+              "id": {
+                "enum": [
+                  "canonical-owner",
+                  "canonical-original-laws",
+                  "retained-plugin-owner",
+                  "retained-plugin-child",
+                  "removed-os-owner",
+                  "canonical-sibling-prefix",
+                  "plugin-sibling-prefix",
+                  "foreign-owner",
+                  "native-windows-owner",
+                  "raw-parent-traversal",
+                  "legacy-rep-debt-path"
+                ]
+              },
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "allowed": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

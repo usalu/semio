@@ -1,7 +1,7 @@
 //! 🔢️ Imperative math module: numeric scope operators.
 
 use neural_engine::{Atom, ChannelSpec, Dictionary, EvalError, Operator, OperatorImpl, OperatorInfo, Registry, Value};
-use pack::json::{array, object, to_string, Value as JsonValue};
+use semio_framework_pack_json::{array, object, to_string, Value as JsonValue};
 
 fn read_string(input: &Dictionary, key: &str) -> Result<String, EvalError> {
     input.get(key).and_then(|v| v.as_atom()).and_then(|a| a.as_str()).map(str::to_string).ok_or_else(|| EvalError::MissingInput(key.into()))

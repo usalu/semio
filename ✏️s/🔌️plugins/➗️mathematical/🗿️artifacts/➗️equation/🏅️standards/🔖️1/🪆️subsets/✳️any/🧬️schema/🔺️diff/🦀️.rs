@@ -1,14 +1,13 @@
 //! 🧬️ Equation diff schema — sparse field delta over the artifact.
 
 use crate::standards::v1::subsets::any::schema::snapshot::EquationExprSnapshot;
-use crate::{EquationComputedChild, EquationNotationChild, EquationResultsChild};
+use crate::{EquationComputedChild, EquationGeometry, EquationGraph, EquationNotationChild, EquationResultsChild};
 use framework_schema::ArtifactSchema;
-use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
+use semio_framework_value::{DslValue, FromValue, ToValue, ValueError};
 
 //#region 🔖️Diff
-/// 🔺️ Sparse field delta for the equation artifact. `notation`/`results`/`computed`/`equation`
-/// are always-present slots (never absent, only ever replaced) — single-`Option`, matching writer's
-/// `document: Option<WriterDocumentChild>` diff shape, not lowpoly's optional-slot double-`Option`.
+/// 🔺️ Sparse field delta for the equation artifact. Every field is an always-present slot (never absent, only ever replaced):
+/// a state leaf replaces `graph`/`geometry` together with the derived handles it re-mints (`crate::equation_state_diff`).
 /// The former `artifact: Option<Box<EquationArtifact>>` whole-snapshot-replace slot is REMOVED:
 /// it was dead code (never constructed by any app command — `SetArtifact` already routes through
 /// the granular `ReplaceGraph`/`ReplacePoints` mutations) and would otherwise be exactly the banned
@@ -20,6 +19,10 @@ use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
 #[artifact_schema(id = "s.mathematical.equation")]
 pub struct EquationDiff {
     #[state(artifact)]
+    pub graph: Option<EquationGraph>,
+    #[state(artifact)]
+    pub geometry: Option<EquationGeometry>,
+    #[state(artifact)]
     pub notation: Option<EquationNotationChild>,
     #[state(artifact)]
     pub results: Option<EquationResultsChild>,
@@ -29,16 +32,14 @@ pub struct EquationDiff {
     pub equation: Option<EquationExprSnapshot>,
 }
 
-// 🌱️ Hand-written, not derived — `notation`/`results`/`computed` are `Option<store::ArtifactChild<S>>`,
-// and `ArtifactChild<S>` carries a `local_owner: Option<Arc<dyn Any>>` field a
-// `#[derive(ToValue, FromValue)]` cannot route through (fan-out playbook trap #3; mirrors
-// `📸️snapshot/🦀️.rs`'s own `EquationSnapshot` impl for the non-`Option` version of the
-// same three fields). Bridged per composed field through the PRE-EXISTING `to_dsl_value`/
-// `from_dsl_value` serde bridge (framework-internal, exempt); every other field goes through
-// `ToValue`/`FromValue` directly, relying on the blanket `Option<T: ToValue/FromValue>` impl.
+// 🌱️ Hand-written, not derived — `notation`/`results`/`computed` are `Option<store::ArtifactChild<S>>`, a generic framework
+// handle `#[derive(ToValue, FromValue)]` cannot route through (fan-out playbook trap #3); every other field goes through the
+// blanket `Option<T: ToValue/FromValue>` impl.
 impl ToValue for EquationDiff {
     fn to_value(&self) -> DslValue {
         DslValue::object([
+            ("graph".to_string(), self.graph.to_value()),
+            ("geometry".to_string(), self.geometry.to_value()),
             ("notation".to_string(), semio_framework_value::ToValue::to_value(&self.notation)),
             ("results".to_string(), semio_framework_value::ToValue::to_value(&self.results)),
             ("computed".to_string(), semio_framework_value::ToValue::to_value(&self.computed)),
@@ -51,6 +52,8 @@ impl FromValue for EquationDiff {
         let entries = DslValue::into_object(value)?;
         let field = |key: &str| entries.iter().find(|(k, _)| k == key).map_or(DslValue::Null, |(_, v)| v.clone());
         Ok(Self {
+            graph: Option::from_value(field("graph"))?,
+            geometry: Option::from_value(field("geometry"))?,
             notation: semio_framework_value::FromValue::from_value(field("notation"))?,
             results: semio_framework_value::FromValue::from_value(field("results"))?,
             computed: semio_framework_value::FromValue::from_value(field("computed"))?,

@@ -157,7 +157,7 @@ async fn host_event(app: &mut RemodelingApp, window_id: &str, kind: &str) {
     let mut view = test_window(capture::windows::frames::REMODELING_PLAY_WINDOW_FRAMES);
     view.window_instances.push(semio_framework_plugin::ViewWindowInstance { id: OTHER_WINDOW.into(), window_kind_id: model::windows::model::REMODELING_PLAY_WINDOW_MAIN.into() });
     let under = semio_framework_plugin::ActionMeta { view_state: Some(view), ..meta("local") };
-    let args = dsl::DslValue::from(&serde_json::json!({ "windowId": window_id, "kind": kind }));
+    let args = semio_framework_value::DslValue::from(&serde_json::json!({ "windowId": window_id, "kind": kind }));
     let admitted = app.handle_action(semio_framework::HOST_EVENT_ACTION_ID, Some(&args), &under).await.unwrap_or_else(|fault| panic!("hostEvent {kind}: {fault:?}"));
     semio_framework_plugin::app::settle_framework_reserved_admission(&mut **app, admitted).await.unwrap_or_else(|fault| panic!("hostEvent {kind} settles: {fault:?}"));
     settle_registered_typed_operation(&mut **app, meta("local").instance_id).await.unwrap_or_else(|fault| panic!("hostEvent {kind} answer settles: {fault:?}"));
@@ -225,7 +225,58 @@ async fn a_windowless_multi_file_pick_is_refused() {
         Err(fault) => fault,
         Ok(_) => settle_registered_typed_operation(&mut *app, meta("local").instance_id).await.err().expect("a windowless multi-file pick is refused"),
     };
-    assert!(format!("{refusal:?}").contains("remodeling-import-window-required"), "{refusal:?}");
+    assert!(format!("{refusal:?}").contains("remodeling.import.window-required"), "{refusal:?}");
     assert_eq!(shape(&app), (0, 0, 0));
+}
+/// 🎞️ Drives video ticks straight through the importing window's tool state, applying each tick's streamed operations
+/// to the document the next tick sees — the pure path the retained step runs.
+fn drive_ticks(frames: &[(u32, String)]) -> (crate::RemodelingSnapshot, crate::editor::remodeling::transient::RemodelingWindowTransient) {
+    use crate::editor::remodeling::transient::RemodelingWindowTransient;
+    let mut scene = crate::RemodelingSnapshot::default();
+    let mut window = RemodelingWindowTransient::default();
+    let history = semio_framework_plugin::HistoryView::empty();
+    for (index, payload) in frames {
+        let operation = semio_framework_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "remodel".into(), operation_id: u64::from(*index), generation: 0, canonical_base_revision: [0; 32], authoring_seed: "seed-video".into() };
+        let doc = semio_framework_plugin::ArtifactView::with_operation(&scene, &history, operation);
+        let tick = ImportVideoFramePayload { payload: payload.clone(), name: "clip.mp4".into(), index: *index, frame_index: *index, timestamp_ms: f64::from(*index) * 40.0 };
+        let (emit, next) = handle_in_window(&tick, &doc, &window).expect("a tick streams");
+        let mut document = scene.clone();
+        for mutation in &emit.artifact_mutations {
+            document = crate::mutations::apply_remodeling_mutation(&document, mutation).expect("a streamed tick applies");
+        }
+        scene = document;
+        window = next;
+    }
+    (scene, window)
+}
+
+/// 🚦️ The blur gate's rolling window lives in the import's tool state, capped at its window — a tick decodes only its own
+/// frame — and a frame far blurrier than the window's median is refused without touching the document.
+#[semio_framework_async_macros::async_test]
+async fn the_blur_gate_rolls_in_the_import_state_and_refuses_a_blurred_frame() {
+    let sharp = checker_data_url_jpeg(24, 24, 3).await;
+    let ticks: Vec<(u32, String)> = (0..20u32).map(|index| (index, sharp.clone())).collect();
+    let (scene, window) = drive_ticks(&ticks);
+    let import = window.import.as_ref().expect("the import is in flight");
+    assert_eq!(import.done, 20);
+    assert_eq!(import.rolling_scores.len(), BLUR_GATE_ROLLING_WINDOW, "the window keeps the last admitted scores only");
+    assert_eq!(scene.streams[0].frames.len(), 20, "every sharp frame streams");
+    let flat = checker_data_url_jpeg(24, 24, 24).await;
+    let mut blurred = ticks.clone();
+    blurred.push((20, flat));
+    let (gated, _) = drive_ticks(&blurred);
+    assert_eq!(gated.streams[0].frames.len(), 20, "a frame without gradient energy is gated out");
+}
+
+/// 🚧️ A new import started in a window whose import still streams is refused by name; the open import is untouched.
+#[semio_framework_async_macros::async_test]
+async fn a_new_import_over_a_live_one_in_the_same_window_is_refused() {
+    let sharp = checker_data_url_jpeg(24, 24, 3).await;
+    let (scene, window) = drive_ticks(&[(0, sharp.clone()), (1, sharp.clone())]);
+    let history = semio_framework_plugin::HistoryView::empty();
+    let doc = semio_framework_plugin::ArtifactView::new(&scene, &history);
+    let restart = ImportVideoFramePayload { payload: sharp, name: "other.mp4".into(), index: 0, frame_index: 0, timestamp_ms: 0.0 };
+    let Err(fault) = handle_in_window(&restart, &doc, &window) else { panic!("a second import over a live one is refused") };
+    assert_eq!(fault.code.0, "remodeling.import.open");
 }
 //#endregion 🧾️ImportTransaction

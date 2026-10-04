@@ -23,9 +23,12 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangeFrameWrapMode {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_change_frame_wrap_mode(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
-        inverse_change_frame_wrap_mode(self, base)
-    }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok({
+        inverse_change_frame_wrap_mode(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change frame \"{}\" wrap mode", self.frame_id), &format!("Umbruchmodus von Rahmen \"{}\" ändern", self.frame_id))
     }
@@ -45,7 +48,7 @@ pub fn diff_change_frame_wrap_mode(payload: &ChangeFrameWrapMode, base: &LayoutS
     };
     if let Frame::Text { wrap_mode, .. } = frame {
         if *wrap_mode == payload.new_wrap_mode {
-            return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Frame \"{}\" already has wrap mode \"{}\".", payload.frame_id, payload.new_wrap_mode));
+            return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Frame \"{}\" already has wrap mode \"{}\".", payload.frame_id, payload.new_wrap_mode));
         }
     }
     protocol::MutationOutcome::new(LayoutDiff {
@@ -62,7 +65,8 @@ pub fn diff_change_frame_wrap_mode(payload: &ChangeFrameWrapMode, base: &LayoutS
 //#endregion 🔤ChangeFrameWrapMode
 
 //#region 🔤ChangeFrameWrapMode
-pub fn inverse_change_frame_wrap_mode(payload: &ChangeFrameWrapMode, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_change_frame_wrap_mode(payload: &ChangeFrameWrapMode, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else {
         return Vec::new();
     };
@@ -73,5 +77,7 @@ pub fn inverse_change_frame_wrap_mode(payload: &ChangeFrameWrapMode, base: &Layo
         return Vec::new();
     };
     vec![LayoutMutation::ChangeFrameWrapMode(ChangeFrameWrapMode { page_id: payload.page_id.clone(), frame_id: payload.frame_id.clone(), new_wrap_mode: wrap_mode.clone() })]
+
+    })())
 }
 //#endregion 🔤ChangeFrameWrapMode

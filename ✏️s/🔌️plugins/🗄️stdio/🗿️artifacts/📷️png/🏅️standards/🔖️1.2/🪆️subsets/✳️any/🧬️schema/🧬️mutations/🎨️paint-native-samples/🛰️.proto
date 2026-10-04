@@ -1,0 +1,6 @@
+syntax = "proto3"; package stdio.png.mutation;
+enum PngNativeProfile { PNG_NATIVE_PROFILE_INDEXED = 0; PNG_NATIVE_PROFILE_GRAYSCALE = 1; PNG_NATIVE_PROFILE_GRAYSCALE_ALPHA = 2; PNG_NATIVE_PROFILE_RGB = 3; PNG_NATIVE_PROFILE_RGBA = 4; }
+message PngNativeRegion { uint32 x = 1; uint32 y = 2; uint32 width = 3; uint32 height = 4; }
+message PngNativePaint { PngNativeProfile profile = 1; uint32 first = 2; uint32 second = 3; uint32 third = 4; uint32 fourth = 5; }
+message PngSnapshot { string schema = 1; bytes bytes = 2; }
+message PaintNativeSamplesMutation { string revision = 1; PngNativeRegion region = 2; PngNativePaint paint = 3; PngSnapshot result = 4; }

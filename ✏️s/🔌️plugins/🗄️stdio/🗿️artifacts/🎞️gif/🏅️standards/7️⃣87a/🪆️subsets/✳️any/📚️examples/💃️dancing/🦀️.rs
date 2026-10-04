@@ -28,7 +28,7 @@ pub fn decoded_snapshot() -> crate::standards::v89a::subsets::any::schema::snaps
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn source() -> ExampleSource {
-    let artifact_json = pack::to_json_string(&decoded_snapshot());
+    let artifact_json = semio_framework_pack_json::to_json_string(&decoded_snapshot());
     ExampleSource::new(ID, label(), artifact_json, ICON)
 }
 

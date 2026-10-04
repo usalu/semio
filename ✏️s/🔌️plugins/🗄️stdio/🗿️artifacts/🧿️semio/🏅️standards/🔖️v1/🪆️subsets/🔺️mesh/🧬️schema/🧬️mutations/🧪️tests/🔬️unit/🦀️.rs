@@ -12,7 +12,7 @@ use protocol::{Mutation, MutationDiff, SemanticMutation};
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn round_trip(base: &SemioMeshSnapshot, operation: &SemioMeshMutation) -> SemioMeshSnapshot {
     let forward = operation.diff(base).diff().apply(base).expect("apply must succeed for a well-formed fixture");
-    let backwards = operation.inverse(base);
+    let backwards = operation.inverse(base).expect("valid retained mutation inverse fixture");
     let mut restored = forward.clone();
     for back in &backwards {
         restored = back.diff(&restored).diff().apply(&restored).expect("apply must succeed for a well-formed fixture");
@@ -37,7 +37,7 @@ async fn create_delete_mesh_round_trips_explicitly() {
     let after_create = round_trip(&base, &create);
     assert!(after_create.meshes.iter().any(|m| m.id == "mesh-c"));
 
-    let undo = create.inverse(&base);
+    let undo = create.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![SemioMeshMutation::DeleteMesh(delete_mesh::DeleteMesh { id: "mesh-c".into() })]);
 
     let delete = SemioMeshMutation::DeleteMesh(delete_mesh::DeleteMesh { id: "mesh-a".into() });
@@ -49,7 +49,7 @@ async fn create_delete_mesh_round_trips_explicitly() {
 async fn delete_of_an_absent_id_has_an_empty_inverse_and_is_a_diff_level_no_op() {
     let base = fixture();
     let delete = SemioMeshMutation::DeleteMaterial(delete_material::DeleteMaterial { id: "mat-missing".into() });
-    assert!(delete.inverse(&base).is_empty(), "deleting an absent id has nothing to undo");
+    assert!(delete.inverse(&base).expect("valid retained mutation inverse fixture").is_empty(), "deleting an absent id has nothing to undo");
     assert!(delete.diff(&base).diff().is_empty(), "deleting an absent id must diff empty, not merely be harmless to apply");
 }
 
@@ -58,7 +58,7 @@ async fn set_change_replace_move_of_an_absent_target_have_empty_inverse_and_are_
     let base = fixture();
 
     let topo = SemioMeshMutation::SetPrimitiveTopology(set_primitive_topology::SetPrimitiveTopology { mesh_id: "mesh-missing".into(), primitive_id: "prim-missing".into(), topology: SemioTopology::Lines });
-    assert!(topo.inverse(&base).is_empty());
+    assert!(topo.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
     assert_eq!(topo.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "set-primitive-topology on an absent target is a no-op");
 
     let geom = SemioMeshMutation::ReplacePrimitiveGeometry(replace_primitive_geometry::ReplacePrimitiveGeometry {
@@ -70,15 +70,15 @@ async fn set_change_replace_move_of_an_absent_target_have_empty_inverse_and_are_
         colors: vec![],
         indices: vec![],
     });
-    assert!(geom.inverse(&base).is_empty());
+    assert!(geom.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
     assert_eq!(geom.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "replace-primitive-geometry on an absent target is a no-op");
 
     let color = SemioMeshMutation::ChangeMaterialBaseColor(change_material_base_color::ChangeMaterialBaseColor { id: "mat-missing".into(), new_base_color: SemioRgba::default() });
-    assert!(color.inverse(&base).is_empty());
+    assert!(color.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
     assert_eq!(color.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "change-material-base-color on an absent target is a no-op");
 
     let mv = SemioMeshMutation::MoveVertex(move_vertex::MoveVertex { mesh_id: "mesh-a".into(), primitive_id: "prim-a".into(), vertex_index: 999, new_point: SemioPoint3::default() });
-    assert!(mv.inverse(&base).is_empty());
+    assert!(mv.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
     assert_eq!(mv.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "move-vertex at an out-of-bounds index is a no-op");
 }
 //#endregion 🧪️InverseRoundTripLaw
@@ -111,7 +111,7 @@ async fn determinism_law_diff_and_inverse_are_pure_functions_of_payload_and_base
     let base = fixture();
     for m in demo_mutation_cases() {
         assert_eq!(m.diff(&base), m.diff(&base), "diff({m:?}) must be deterministic");
-        assert_eq!(m.inverse(&base), m.inverse(&base), "inverse({m:?}) must be deterministic");
+        assert_eq!(m.inverse(&base).expect("valid retained mutation inverse fixture"), m.inverse(&base).expect("valid retained mutation inverse fixture"), "inverse({m:?}) must be deterministic");
     }
 }
 //#endregion 🧪️DeterminismLaw

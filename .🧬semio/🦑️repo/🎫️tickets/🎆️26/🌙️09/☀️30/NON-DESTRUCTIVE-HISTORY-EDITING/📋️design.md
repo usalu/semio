@@ -401,3 +401,66 @@ Slider, dial, stepper and vector axes share one law (UI contract corpus, Rust + 
    helpers). Every row label comes from the leaves (`SemanticMutation::label`, en/de) or, for runtime verbs (load example), from a
    framework-localized label. Once the sites are gone, `Emit.description` and the label parameter of `Emit::commit` are DELETED from
    the runtime (S3-CLOSURE), so the breach cannot be written again; gate class `labelHandwritten` (S3-AGNOSTIC).
+4. **§19.2 applies to every inserted operator.** Whenever a gesture inserts an operator/widget record (generation3d component
+   gumball's first grab included), the record is inserted with DEFAULT params and each user-set channel (mode, selection/targets,
+   pivot, values) is its own appended `change-widget-input`, so every channel stays individually editable in history.
+7. **Guest↔host frame layout changes ride ONE channel bump.** Deleting `AppFrame::TransactionProposal.coalesce_key` (frame tag 15)
+   changes the frame layout; it lands with an `APP_CHANNEL_VERSION` bump, the TS twin, the regenerated frame-worker and a rebuild +
+   describe of every plugin component, in one final coordinator wave (a silently misread frame is never acceptable). Until that
+   wave the field is sent empty and never read.
+8. **Pure commands are head-only.** A pure (stateless) command runs against a HEAD-snapshot pack with an empty history — never a
+   fold of `.spr` history; verbs that need history refuse with a named localized code and require a live instance. Document loads
+   ride the history wire (`HistoryPatch.reprojection {kind: remote|step|load}`); `historyEditCancelReplay` cancels a live load, else a
+   deferred step, else pauses a remote change.
+9. **Folds are pure over the snapshot; inserted records are self-describing.** A fold never reads a runtime registry (installed
+   contributions differ per replica). An inserted operator/widget materializes every declared input's default literal into its
+   record at authoring time, so validity (unknown channel → `mutation.target-missing`, wrong literal type/wired → `target-mismatch`)
+   is decided from the snapshot alone and the same history folds identically on every replica.
+10. **A wire shadows the recorded literal.** With inserted records self-describing (§20.9), evaluation precedence per input port is
+    wire > recorded literal > declared default: the engine drops from a neuron's `params` every key that is the `to_port` of an
+    incoming synapse before merging (one helper at the compute merge sites). A literal set in history stays recorded and becomes
+    effective again when the wire is removed.
+11. **Snapshot-sourced options.** `x-semio-ui.optionSource: {snapshot: "<pointer template over the payload>"}` (mirroring
+    `snapSource`) makes a select's options the keys found at that pointer in the previewed snapshot (state before the edited
+    mutation), e.g. `change-widget-input.channel` over `/host_snapshot/widgets/{id}/params`. Schema-first in the `InputUi`
+    meta-schema; readers (Rust + TS), the time-travel panel and both renderers resolve it; the fold still refuses unknown keys.
+12. **App fault notices are localized like framework notices.** A guest refusal reaches the user through its `code`: apps declare
+    `ArtifactApp::fault_notices()` (`code → LocalizedLabel`, every locale, structured placeholders), published in the descriptor;
+    both shells resolve framework codes first, then the app table. A code without labels is a gate failure, never a raw-code UI.
+13. **L4 holds: config-lane edits are never history rows.** View/config state (camera, playback cursor, viewer settings, window
+    config) is persisted local configuration, not artifact history: the history projection never lists a config-lane edit (not as
+    a row, not as a mutation), undo/redo of the artifact never steps over them, and the law observes ALL rows (no `edit_id` filter).
+14. **Budgets are wall-time.** Every stepped replay/reprojection/load runs against the reactor's per-turn wall budget (≈ 4 ms), with an
+    operation cap only as a secondary bound; per-mutation and per-render work is O(change), never O(history) or O(document).
+15. **Composed content is edited only on the child lane (§12 completed).** A composed parent's own (parent-lane) leaves never read
+    the owned child's content (`ArtifactChild::local_owner`); every content edit is a child-lane leaf in the child's store; readers
+    compose parent + child on read. A decoded/reloaded/remote parent therefore needs no materialization step, and history replay of
+    either lane never depends on the other being loaded. Gate: no parent-lane leaf of a composed parent reads `local_owner`. Law per
+    composed plugin: save → fresh load renders and folds identically (incl. time travel over the reloaded document).
+
+## §21 Session-4 decisions (coordinator, 2026-10-04)
+
+1. **Tool runs may target an owned composed-child member.** `⏯️tool-run` is generic over its target (parent | owned member): the run's
+   ledger is typed by the target's mutation vocabulary, provisional ops overlay the composed read (§20.15 compose on read), stepped slices
+   report progress and cancel with zero trace, and finalize publishes ONE edit in the target store stamped with the run's `TransactionRef`
+   (child targets via the ChildEmit path, §12). No composed app downgrades a stepped tool run to a plain command job. Owner: S4-WIRES-MATH
+   (mechanism + wires Reorganize); S4-GRAPHS converts dag onto it.
+2. Docstring-emoji uniqueness is enforced per file for every file this ticket touched; no repo-wide sweep (S4-GATES).
+3. Compat pins are deleted, not kept: `optional_field_rows_keep_their_pre_migration_bytes` (flow) is removed or re-sealed with a reason (S4-FLOWCAD).
+4. **Registry generation degrades per plugin; release gates stay strict.** Since the guest↔host channel handshake (`admit_guest_channel_version`,
+   `plugin.channel-mismatch`) refuses a mismatched component at instantiation, the catalog descriptor const is no longer the only version gate.
+   Dev `plugin-registry:generate` therefore EXCLUDES every committed descriptor whose `executionProtocol.appChannelVersion` differs from the host's
+   (`stale-channel` diagnostic per plugin in the generated catalog + console summary; the plugin is simply not offered until re-described),
+   instead of failing the whole registry. `plugin-registry:check`, `verify-staged` and the trusted-catalog preflight/publish still refuse ANY stale
+   descriptor. Law: a fixture registry with one stale descriptor generates without it (diagnostic present) and `check` fails on it. Owner: S4-INFRA.
+5. Kit-wide window-transient partitions use `semio_framework_plugin::transient_root!` / `window_transient_owners!` (K3, S4-RUNTIME); S4-RUNTIME
+   converts the hand-written whole-root transients in flow, cad, fem, lowpoly, remodel, raster, wfc, layout, draw, forms itself (one invocation
+   each, wire `{"kind":"snapshot","transient":…}`), compile-atomic per crate, owners informed.
+
+6. **§21.6 Whole-document carrier is a stepped export job (S4-LOAD F11, 2026-10-04).** `artifact:out` never encodes O(document) inside one `MediaOut` reply: it is produced by the framework-owned stepped media-export job (submit → poll with progress → take chunks → cancel), the size admitted by the same bound the load side enforces and refused with the localized `plugin.document-load.too-large`/`too-many-members` codes. `composed_artifact_media` and its `export_media` override are deleted; the single carrier is the full recursive archive with the parent `.spr`.
+
+7. **§21.7 Playbook content child is the forms artifact (S4-TOOLS-B F2, 2026-10-04).** Playbook steps and blocks live in a composed forms child whose field-granular leaves (`change-block-field`, block insert/remove/move) carry typed `x-semio-ui`; the whole-list `blocksJson` set leaves the vocabulary. Nested composition (forms itself composing stdio children) is admitted by the generic recursive archive; no playbook-specific path.
+
+8. **§21.8 Uninhabited parents carry no diff facet (S4-WIRES-MATH F13, 2026-10-04).** `ArtifactSchemaDescriptor` admits an absent diff facet exactly when the parent mutation aggregate is uninhabited; every §20.15 parent (wires, dag, sequence, flow, imperative) deletes its `🔺️diff` schema and codecs instead of keeping an empty placeholder.
+
+9. **§21.9 Composition is recursive (S4-TOOLS-B F2 admission finding, 2026-10-04).** A composed member may itself compose children, including derived ones; every live maintenance path recurses over member projections with the member as `owner.parent`: boot genesis, derived-child follow (after every child-lane publication, not only root generations), archive-load genesis, replacement genesis and `open_child`. Members carry their own derivation authority (`MemberFactory::genesis_child_pack(member_snapshot, slot, child_id)` generated by `space_members!` from the member artifact's app). `ChildMemberRegistry`, `ChildContentView` and the per-member lanes are keyed by an owner PATH, never by `(slot, child_id)`. Laws: a two-level composed fixture through boot, child-lane edit + re-mint, save → fresh load, member history edit and time travel over the reloaded document. Playbook F2 (§21.7) lands on top of it; no interim flow-node encoding.

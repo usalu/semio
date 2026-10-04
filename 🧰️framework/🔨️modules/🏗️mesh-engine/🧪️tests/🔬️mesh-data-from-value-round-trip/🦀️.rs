@@ -12,6 +12,9 @@ fn populated_mesh() -> MeshData {
     mesh.edge_uvs = vec![0.75];
     mesh.edge_is_seam = vec![1, 0];
     mesh.paint_texture_base64 = Some("abc".to_string());
+    mesh.attributes.insert("temperature".into(),MeshAttribute { indices:Some(vec![0;mesh.vertex_count()]), domain:MeshAttributeDomain::Vertex,semantic:MeshAttributeSemantic::Custom,interpolation:MeshAttributeInterpolation::Linear,values:vec![DslValue::float(0.25)] });
+    mesh.materials.insert("red".into(),DslValue::object([("baseColor".into(),DslValue::Array(vec![DslValue::float(1.0),DslValue::float(0.0),DslValue::float(0.0),DslValue::float(1.0)]))]));
+    mesh.textures.insert("albedo".into(),MeshTexture { mime:"image/png".into(),bytes:vec![137,80,78,71] });
     mesh
 }
 
@@ -84,4 +87,33 @@ fn from_value_agrees_with_serde_json_oracle_decode() {
     let ours = MeshData::from_value(mesh.to_value()).expect("first-party decode");
     assert_eq!(ours, oracle);
     assert_eq!(ours, mesh);
+}
+
+#[test]
+fn indexed_mesh_metadata_cursor_matches_serde_with_bounded_large_values() {
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎨️attributes/🔣️.json")).unwrap();
+    let owned=serde_json::to_string(&fixture["indexedMesh"]).unwrap();
+    let value=json::parse(&owned,json::JsonMemberPolicy::Reject).unwrap();
+    let attributes=BTreeMap::from_value(json::to_dsl_value(&value["attributes"])).unwrap();
+    let materials=BTreeMap::from_value(json::to_dsl_value(&value["materials"])).unwrap();
+    let textures=BTreeMap::from_value(json::to_dsl_value(&value["textures"])).unwrap();
+    let mut cursor=MeshMetadataCursor::default();let mut text=String::from("{");let mut steps=0;
+    loop {let before=text.len();let done=cursor.step(&attributes,&materials,&textures,None,None,None,&mut text).unwrap();assert!(text.len()-before<=2048);steps+=1;if done {break;}assert!(steps<100000);}
+    text.push('}');assert!(steps>4096);
+    let expected=serde_json::json!({"attributes":fixture["indexedMesh"]["attributes"],"materials":fixture["indexedMesh"]["materials"],"textures":fixture["indexedMesh"]["textures"]});
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&text).unwrap(),expected);
+}
+
+#[test]
+fn polygon_source_parser_shares_indexed_fixture_and_refuses_invalid_owned_channels() {
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎨️attributes/🔣️.json")).unwrap();
+    for name in ["mesh","indexedMesh"] {
+        let source=parse_polygon_mesh_source(&fixture[name].to_string()).unwrap();
+        let encoded=serde_json::from_str::<serde_json::Value>(&source.encode()).unwrap();for field in ["faces","attributes","materials","textures"] {assert_eq!(encoded[field],fixture[name][field]);}for (a,b) in encoded["vertices"].as_array().unwrap().iter().zip(fixture[name]["vertices"].as_array().unwrap()) {for (a,b) in a.as_array().unwrap().iter().zip(b.as_array().unwrap()) {assert_eq!(a.as_f64(),b.as_f64());}}
+        assert_eq!(PolygonMeshSource::from_value(source.to_value()).unwrap(),source);
+    }
+    for value in [serde_json::json!({"vertices":[[0,0,0],[1,0,0],[0,1,0]],"faces":[[0,1,3]]}),serde_json::json!({"vertices":[[0,0,0],[1,0,0],[0,1,0]],"faces":[[0,1,1]]})] {assert!(parse_polygon_mesh_source(&value.to_string()).is_err());}
+    let mut bad=fixture["indexedMesh"].clone();bad["attributes"]["normal"]["indices"]=serde_json::json!([1,0,0,0,0,0]);assert!(parse_polygon_mesh_source(&bad.to_string()).is_err());
+    bad=fixture["mesh"].clone();bad["materials"]["red"]["roughness"]=serde_json::json!(1.1);assert!(parse_polygon_mesh_source(&bad.to_string()).is_err());
+    bad=fixture["mesh"].clone();bad["materials"]["red"]["baseColorTexture"]=serde_json::json!("unowned");assert!(parse_polygon_mesh_source(&bad.to_string()).is_err());
 }

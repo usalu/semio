@@ -6,7 +6,7 @@ use crate::CurationSnapshot;
 //#region 🔖️Mutation
 /// 🔢 `change-curated-item-count` payload — addressed by `object_id`; the old count is recovered
 /// from `base` at inverse time, never carried on the payload itself.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "change-curated-item-count")]
@@ -26,9 +26,12 @@ impl protocol::MutationKind<CurationSnapshot, SourcingMutation> for ChangeCurate
     fn diff(&self, base: &CurationSnapshot) -> protocol::MutationOutcome<CurationDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &CurationSnapshot) -> Vec<SourcingMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &CurationSnapshot) -> Result<Vec<SourcingMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set curated count of \"{}\" to {}", self.object_id, self.new_count), &format!("Kuratierte Anzahl von \"{}\" auf {} setzen", self.object_id, self.new_count))
     }

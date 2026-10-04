@@ -69,6 +69,10 @@ fn refuses() -> Vector {
     catalog_vector("🖼️apply-image", "🚫️refuses")
 }
 
+fn patches() -> Vector {
+    catalog_vector("🩹️patch-snapshot", "✏️edits")
+}
+
 /// 🧫️ The vector a `mutate-<kind>`/`inverse-<kind>` scenario is measured on: the committed
 /// `set-snapshot` vector, or the wrapped arm's committed before/mutation/result triple.
 fn kind_vector(kind: &str) -> Vector {
@@ -119,7 +123,7 @@ fn outcome_of(envelope: &Json, diagnostics: &[String], matches_reference: bool) 
 
 //#region 🔖️Oracle
 mod oracle {
-    use super::{kind_vector, outcome_of, reasserts, refuses, replaces, retypes, Vector};
+    use super::{kind_vector, outcome_of, patches, reasserts, refuses, replaces, retypes, Vector};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_semio_test_oracle::standards::v1::subsets::base::{read_carrier, restore, route, Routed};
 
@@ -165,6 +169,14 @@ mod oracle {
         backward(ctx, kind_vector("set-snapshot"))
     }
 
+    pub fn mutate_patch_snapshot(ctx: &Context) -> Result<Outcome, String> {
+        forward(ctx, patches())
+    }
+
+    pub fn inverse_patch_snapshot(ctx: &Context) -> Result<Outcome, String> {
+        backward(ctx, patches())
+    }
+
     pub fn reasserting(ctx: &Context) -> Result<Outcome, String> {
         forward(ctx, reasserts())
     }
@@ -195,7 +207,7 @@ mod oracle {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{kind_vector, outcome_of, reasserts, refuses, replaces, retypes, Vector, DSL_ASSET, PACK_ASSET};
+    use super::{kind_vector, outcome_of, patches, reasserts, refuses, replaces, retypes, Vector, DSL_ASSET, PACK_ASSET};
     use semio_repo_test_host::{parse_json, Context, Outcome};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::{apply_semio_mutation, decode_semio_mutation_json, inverse_semio_mutation, semio_mutation_refusal_codes, set_snapshot, SemioMutation};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::snapshot::{decode_semio_envelope_pack, decode_semio_snapshot_json, encode_semio_envelope_pack, encode_semio_snapshot_json, parse_semio_envelope_dsl, print_semio_envelope_dsl, SemioSnapshot};
@@ -233,7 +245,7 @@ mod subject {
         let base = envelope(ctx, &vector.before)?;
         let forward = mutation(ctx, &vector.mutation)?;
         let (mut current, mut raised) = apply(&base, &forward);
-        for step in &inverse_semio_mutation(&forward, &base) {
+        for step in &inverse_semio_mutation(&forward, &base).expect("valid retained mutation inverse fixture") {
             let (next, more) = apply(&current, step);
             current = next;
             raised.extend(more);
@@ -255,6 +267,14 @@ mod subject {
 
     pub fn inverse_set_snapshot(ctx: &Context) -> Result<Outcome, String> {
         backward(ctx, kind_vector("set-snapshot"))
+    }
+
+    pub fn mutate_patch_snapshot(ctx: &Context) -> Result<Outcome, String> {
+        forward(ctx, patches())
+    }
+
+    pub fn inverse_patch_snapshot(ctx: &Context) -> Result<Outcome, String> {
+        backward(ctx, patches())
     }
 
     pub fn reasserting(ctx: &Context) -> Result<Outcome, String> {
@@ -301,6 +321,8 @@ pub fn adapter() -> Adapter {
         .oracle("inverse", oracle::inverse)
         .oracle("mutate-set-snapshot", oracle::mutate_set_snapshot)
         .oracle("inverse-set-snapshot", oracle::inverse_set_snapshot)
+        .oracle("mutate-patch-snapshot", oracle::mutate_patch_snapshot)
+        .oracle("inverse-patch-snapshot", oracle::inverse_patch_snapshot)
         .oracle("reasserts-the-envelope-unchanged", oracle::reasserting)
         .oracle("undoes-reasserting-the-envelope", oracle::undoes_reasserting)
         .oracle("rejects-a-mismatched-arm", oracle::mismatch)
@@ -313,6 +335,8 @@ pub fn adapter() -> Adapter {
             .subject("inverse", subject::inverse)
             .subject("mutate-set-snapshot", subject::mutate_set_snapshot)
             .subject("inverse-set-snapshot", subject::inverse_set_snapshot)
+            .subject("mutate-patch-snapshot", subject::mutate_patch_snapshot)
+            .subject("inverse-patch-snapshot", subject::inverse_patch_snapshot)
             .subject("reasserts-the-envelope-unchanged", subject::reasserting)
             .subject("undoes-reasserting-the-envelope", subject::undoes_reasserting)
             .subject("rejects-a-mismatched-arm", subject::mismatch)

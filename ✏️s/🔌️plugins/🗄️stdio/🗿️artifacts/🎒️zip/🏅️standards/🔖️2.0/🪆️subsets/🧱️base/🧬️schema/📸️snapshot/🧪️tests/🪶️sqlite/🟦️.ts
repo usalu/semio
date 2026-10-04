@@ -1,3 +1,5 @@
+import refusalFixture from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧫️fixtures/🔣️.json";
+const canceledKind=refusalFixture.cases.find(item=>item.id==="canceled-projection")!.expectedKind;
 import { Database } from "bun:sqlite";
 import { expect, test } from "bun:test";
 import fixture from "../../🧫️fixtures/🪶️sqlite/🔣️.json";
@@ -34,7 +36,7 @@ test("ZIP header ownership, legacy option presence, widths and budgets reject in
   }
   const controller = new AbortController();
   snapshot.entries[0]!.data = new Array<number>(2000).fill(1);
-  await expect(zipSnapshotToSqliteDatabase(snapshot, { signal: controller.signal, onProgress: event => { if (event.completed >= 256) controller.abort(); } })).rejects.toHaveProperty("name", "AbortError");
+  await expect(zipSnapshotToSqliteDatabase(snapshot, { signal: controller.signal, onProgress: event => { if (event.completed >= 256) controller.abort(); } })).rejects.toHaveProperty("kind",canceledKind);
 });
 
 import subsetFixture from "../../🧫️fixtures/🪶️sqlite/🚦️subsets.json";
@@ -76,7 +78,7 @@ test("ZIP named metadata traversal can cancel before scanning all members", asyn
   const snapshot = parseZipSnapshot(fixture);snapshot.entries=new Array(600).fill(snapshot.entries[1]!);
   const database = await zipSnapshotToSqliteDatabase(snapshot);
   const controller = new AbortController();let reached=false;
-  await expect(zipSnapshotValidateSqliteSubset(snapshot,subsetFixture.acceptedDialects[1]!,database,{signal:controller.signal,onProgress:event=>{if(event.completed===256){reached=true;controller.abort();}}})).rejects.toHaveProperty("name","AbortError");
+  await expect(zipSnapshotValidateSqliteSubset(snapshot,subsetFixture.acceptedDialects[1]!,database,{signal:controller.signal,onProgress:event=>{if(event.completed===256){reached=true;controller.abort();}}})).rejects.toHaveProperty("kind",canceledKind);
   expect(reached).toBe(true);
 });
 
@@ -87,4 +89,48 @@ test("ZIP wildcard snapshots retain the full native unsigned16 method domain",as
   try{expect(db.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(db.query("SELECT compression_method FROM zip_entry WHERE id=1").get()).toEqual({compression_method:method});db.run("UPDATE zip_entry SET compression_method=65535 WHERE id=1");const edited=await importSqliteDatabase(new Uint8Array(db.serialize()));const restored=await zipSnapshotFromSqliteDatabase(edited);expect(restored.entries[0]!.metadata.compressionMethod).toBe(65535);expect(await zipSnapshotValidateSqliteSubset(restored,subsetFixture.acceptedDialects[0]!,edited)).toEqual([]);expect((await zipSnapshotValidateSqliteSubset(restored,subsetFixture.acceptedDialects[1]!,edited)).some(d=>d.code==="stdio.zip.iso21320.compression-method-unsupported"&&d.severity==="Error")).toBe(true);}finally{db.close();}
  }
  for(const method of subsetFixture.invalidMethodCodes){const raw=structuredClone(fixture);raw.entries[0]!.metadata.compressionMethod=method;expect(()=>parseZipSnapshot(raw)).toThrow("compressionMethod");}
+});
+
+import Ajv2020 from "ajv/dist/2020.js";
+import Ajv from "ajv";
+import structuredPatches from "../../../🧬️mutations/🧫️fixtures/🩹️structured/🔣️.json";
+import structuredPatchSchema from "../../../🧬️mutations/🧫️fixtures/🩹️structured/🧬️schema/🔣️.json";
+import nativeControl from "../../🧫️fixtures/🪶️sqlite/🚦️native.json";
+import nativeControlSchema from "../../🧫️fixtures/🪶️sqlite/🧬️schema/🚦️native.json";
+
+test("ZIP native control corpus matches independent exact semantic row admission",async()=>{
+  expect(new Ajv2020({strict:true}).validate(nativeControlSchema,nativeControl)).toBe(true);
+  const snapshot=parseZipSnapshot(fixture),database=await zipSnapshotToSqliteDatabase(snapshot,{maxRows:nativeControl.fixtureRows});
+  expect(database.tables.reduce((n,t)=>n+t.rows.length,0)).toBe(nativeControl.fixtureRows);
+  await expect(zipSnapshotToSqliteDatabase(snapshot,{maxRows:nativeControl.fixtureRows-1})).rejects.toThrow();
+  const independent=Database.deserialize(await exportSqliteDatabase(database));
+  try{
+    const actual=independent.query("SELECT (SELECT count(*) FROM zip_archive)+(SELECT count(*) FROM zip_entry)+(SELECT count(*) FROM zip_entry_byte)+(SELECT count(*) FROM zip_local_header)+(SELECT count(*) FROM zip_local_extra_field)+(SELECT count(*) FROM zip_local_extra_field_byte)+(SELECT count(*) FROM zip_local_legacy_name_byte)+(SELECT count(*) FROM zip_central_header)+(SELECT count(*) FROM zip_central_extra_field)+(SELECT count(*) FROM zip_central_extra_field_byte)+(SELECT count(*) FROM zip_central_legacy_name_byte)+(SELECT count(*) FROM zip_central_legacy_comment_byte) AS n").get() as {n:number};
+    expect(actual.n).toBe(nativeControl.fixtureRows);
+    expect(independent.query("PRAGMA foreign_key_check").all()).toEqual([]);
+  }finally{independent.close();}
+});
+
+test("ZIP structured mutation corpus preserves operation fields and optional presence independently",()=>{
+  const validate=new Ajv({strict:true}).compile(structuredPatchSchema);
+  expect(validate(structuredPatches)).toBe(true);
+  const db=new Database(":memory:");
+  try{
+    db.run("CREATE TABLE patch_case (ordinal INTEGER PRIMARY KEY, patch TEXT NOT NULL, source TEXT NOT NULL)");
+    const insert=db.prepare("INSERT INTO patch_case VALUES (?, ?, ?)");
+    for(const [ordinal,sample] of structuredPatches.cases.entries()) insert.run(ordinal,JSON.stringify(sample.patch),sample.source);
+    const actual=db.query("SELECT ordinal,json_extract(patch,'$.operation') AS operation,json_extract(patch,'$.path') AS path,json_type(patch,'$.index') AS index_type,json_extract(patch,'$.index') AS item_index,json_extract(patch,'$.from') AS source_path,json_extract(patch,'$.key') AS member_key,json_extract(patch,'$.value') AS value,source FROM patch_case ORDER BY ordinal").all();
+    expect(actual).toEqual([
+      {ordinal:0,operation:"set",path:"/schema",index_type:null,item_index:null,source_path:null,member_key:null,value:"Grüße",source:structuredPatches.cases[0]!.source},
+      {ordinal:1,operation:"insert",path:"/entries/0",index_type:"integer",item_index:2,source_path:null,member_key:null,value:'{"name":"a","data":[1,2]}',source:structuredPatches.cases[1]!.source},
+      {ordinal:2,operation:"remove",path:"/entries/1",index_type:null,item_index:null,source_path:null,member_key:null,value:null,source:structuredPatches.cases[2]!.source},
+      {ordinal:3,operation:"move",path:"/entries/0",index_type:"integer",item_index:1,source_path:"/entries/1",member_key:null,value:null,source:structuredPatches.cases[3]!.source},
+      {ordinal:4,operation:"rename",path:"/metadata",index_type:null,item_index:null,source_path:null,member_key:"with space",value:null,source:structuredPatches.cases[4]!.source},
+    ]);
+    for(const patch of [{operation:"set",path:"/schema"},{operation:"remove",path:"/entries/1",value:1},{operation:"move",path:"/entries/0",from:"/entries/1",index:-1}]){
+      const invalid=structuredClone(structuredPatches);
+      invalid.cases[0]!.patch=patch as typeof invalid.cases[0]["patch"];
+      expect(validate(invalid)).toBe(false);
+    }
+  }finally{db.close();}
 });

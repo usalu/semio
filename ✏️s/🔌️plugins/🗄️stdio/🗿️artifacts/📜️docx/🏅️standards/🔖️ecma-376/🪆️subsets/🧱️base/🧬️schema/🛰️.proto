@@ -1,6 +1,10 @@
 syntax = "proto3";
 package semio.s_stdio_docx.artifact;
+
+import "s_stdio_docx/snapshot.proto";
+
 message DocxArtifact {
   string schema = 1;
-  string bytes_wire = 2;
+  semio.s_stdio_docx.snapshot.OpcPackage opc = 2;
+  repeated semio.s_stdio_docx.snapshot.DocxXmlPart xml_parts = 3;
 }

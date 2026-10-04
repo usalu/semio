@@ -7,8 +7,8 @@ const fn choice(value: &'static str, label_en: &'static str, label_de: &'static 
 }
 
 const ANNEX: &[NormFieldChoice] = &[
-    choice("en", "EN (CEN recommended)", "EN (CEN-Empfehlung)"),
-    choice("de", "Germany (DIN NA)", "Deutschland (DIN NA)"),
+    choice("En", "EN (CEN recommended)", "EN (CEN-Empfehlung)"),
+    choice("De", "Germany (DIN NA)", "Deutschland (DIN NA)"),
 ];
 const STRUCTURE: &[NormFieldChoice] = &[
     choice("building", "Building", "Hochbau"),

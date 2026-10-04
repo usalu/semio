@@ -3,10 +3,6 @@
   "facadeExports": [
     "DslArtifact",
     "DslDiff",
-    "DslEnum",
-    "DslOps",
-    "DslRecord",
-    "DslScalar",
     "MutationLeaf",
     "Mutations"
   ],
@@ -14,10 +10,6 @@
     "CompositeMutation",
     "DslArtifact",
     "DslDiff",
-    "DslEnum",
-    "DslOps",
-    "DslRecord",
-    "DslScalar",
     "MutationLeaf",
     "Mutations"
   ],

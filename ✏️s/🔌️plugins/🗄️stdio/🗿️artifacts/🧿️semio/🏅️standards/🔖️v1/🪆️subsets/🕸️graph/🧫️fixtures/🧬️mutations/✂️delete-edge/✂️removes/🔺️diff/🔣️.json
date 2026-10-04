@@ -12,7 +12,8 @@
           "value": "b"
         },
         "kind": "data",
-        "label": "A to B"
+        "label": "A to B",
+        "properties": []
       }
     ]
   }

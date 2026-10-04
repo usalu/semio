@@ -6,7 +6,7 @@ use crate::ShootingSnapshot;
 
 pub fn diff(payload: &ChangeSceneSunEnabled, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
     if base.scene.sun.enabled == payload.new_enabled {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Sun is already {}.", if payload.new_enabled { "enabled" } else { "disabled" }));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Sun is already {}.", if payload.new_enabled { "enabled" } else { "disabled" }));
     }
     let mut scene = base.scene.clone();
     scene.sun.enabled = payload.new_enabled;

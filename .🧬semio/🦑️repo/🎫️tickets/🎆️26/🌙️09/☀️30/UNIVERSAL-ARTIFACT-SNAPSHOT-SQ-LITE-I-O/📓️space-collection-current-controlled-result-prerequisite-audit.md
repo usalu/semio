@@ -1,0 +1,17 @@
+# Space Collection Current Controlled Result Prerequisites
+
+Root authentic owning baseline stopped before assertions:42 errors, zero tests, Nx59.6s. Machine measured census retained in generated independent-space-collection-current-42-diagnostic-census.json. Warnings were excluded. No execution/edit by this audit. Held exact five-file current before/after candidate is `📥️inputs/framework-space-collection-measured-controlled-result-pairs.json`. Public preflight implementations/defaults stay unchanged, so authentic12/12/16 assertionRED is still required.
+
+## Exact Authority
+
+Canonical Record binding `framework/DSL/schema/🪆️binding/🦀️.rs:393–416` DslVariants controlled schema/projection/construction return canonical ValueError. Ordinary from_named_record remains positioned TextError. NativeSchemaControl and controlled producer factories also return ValueError. Generated current Record derives already match this authority. No DslOps/legacy/alias or public visibility change is needed.
+
+Space SQL leaf18/23 and Collection SQL19/26 currently feed those ValueError factories into shared owned-native helpers whose constructor bounds still require TextError. Actual shared authority is Store `📦️codec/🪶️snapshot-capability/{🛬️native-decoding,🛫️native-encoding}/🦀️.rs:18/17`. The candidate makes ONLY typed owned constructor callbacks Result<ValueError> and propagates them directly. Syntax parser/print APIs returning actual TextError still convert their owned kind/message explicitly at that source boundary; caller-owned cancellation/ownership/allocation/work/depth/unsupported/invariant categories are not reclassified as InvalidValue or guessed from text. No blanket From<String>/TextError alias is introduced.
+
+Collection root61/73 schema factories and96/105/119 three controlled DslVariants methods retain old String/TextError signatures. Candidate changes their canonical result type and preserves all samecontrol allocations/steps. Missing cells and undeclared variant are explicitly actual InvalidValue owner-domain errors; controlled child errors propagate directly. The former result→TextError wrapper incorrectly rebuilt every controlled failure as InvalidValue and is removed. Ordinary positioned variant decoder149 and ordinary source parse218 remain unchanged. Two actual SQL callbacks drop ValueError→TextError roundtrips and use WorkLimit for checked row overflow/row allowance refusal, matching check_rows canonical authority, with every list count/field constructor preserved.
+
+## Scoped Pair Versus Global Caller Closure
+
+This is a verified measured-scope prerequisite candidate, not a whole-repo coherent migration certificate. Shared helper signature change also touches existing callers still wrapping controlled errors as TextError: Sequence, Demonstrator Playground, plugin Space/Home, Reasoning Wires, Jack, CAD (both actual roots), Writer, Energy Model, VDI3805 and more. Their own current callback outputs must be paired individually; no generic compatibility error-bound is acceptable. Root can use the candidate for Space/Collection owning prerequisites while retaining an explicit global caller followup. Do not claim all Native callers compile after five-file mount.
+
+No borrowed preflight code/forecast/fixtures/laws are activated by this capsule. The owning registered Space12/Collection12 and History16 commands remain in the framework preflight report. No Source pass is interpreted as compiler or runtime proof. Exact file SHA anchors require fresh read before any concurrent mount.

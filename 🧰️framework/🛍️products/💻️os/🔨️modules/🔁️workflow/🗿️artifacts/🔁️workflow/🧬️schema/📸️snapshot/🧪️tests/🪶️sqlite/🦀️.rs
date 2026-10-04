@@ -4,16 +4,16 @@ fn laws()->serde_json::Value{serde_json::from_str(include_str!("../../🧫️fix
 fn sqlite_snapshot_workflow_bare_native_codec_requires_the_complete_semantic_owner(){assert!(store::ArtifactCodec::bare::<WorkflowSnapshot,WorkflowMutation>(S_WORKFLOW_SCHEMA).snapshot_sqlite.is_some(),"Workflow requires its own semantic provider");}
 #[test]
 fn sqlite_snapshot_workflow_complete_neutral_native_fields_retain_both_declared_encodings(){
- let expected:WorkflowSnapshot=store::json::from_json_str(&laws()["snapshot"].to_string()).unwrap();assert_eq!(expected.parameters.len(),4);assert_eq!(expected.graph.nodes.len(),2);assert_eq!(expected.graph.edges[0].contract.conversion,Some((crate::MediaForm::Procedure,crate::MediaForm::Deck)));for text in[false,true]{let actual=if text{<WorkflowSnapshot as store::ArtifactDsl>::parse_dsl(&store::ArtifactDsl::print_dsl(&expected)).unwrap()}else{<WorkflowSnapshot as store::ArtifactPack>::decode_pack_with(&store::ArtifactPack::encode_pack_with(&expected,&store::PackEncodeOptions::default()).unwrap(),&store::PackDecodeOptions::default()).unwrap()};assert_eq!(actual,expected);}
+ let expected:WorkflowSnapshot=semio_framework_pack_json::from_json_str(&laws()["snapshot"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();assert_eq!(expected.parameters.len(),4);assert_eq!(expected.graph.nodes.len(),2);assert_eq!(expected.graph.edges[0].contract.conversion,Some((crate::MediaForm::Procedure,crate::MediaForm::Deck)));for text in[false,true]{let actual=if text{<WorkflowSnapshot as store::ArtifactDsl>::parse_dsl(&store::ArtifactDsl::print_dsl(&expected)).unwrap()}else{<WorkflowSnapshot as store::ArtifactPack>::decode_pack_with(&store::ArtifactPack::encode_pack_with(&expected,&store::PackEncodeOptions::default()).unwrap(),&store::PackDecodeOptions::default()).unwrap()};assert_eq!(actual,expected);}
 }
 fn words(value:&WorkflowSnapshot)->Vec<Option<u64>>{let mut words=Vec::new();for node in &value.graph.nodes{words.extend([Some(node.x.to_bits()),Some(node.y.to_bits()),Some(node.width.to_bits()),Some(node.height.to_bits())])}for parameter in &value.parameters{if let crate::WorkflowParameter::Numeric{value,min,max,step,..}=parameter{words.extend([Some(value.to_bits()),min.map(f64::to_bits),max.map(f64::to_bits),step.map(f64::to_bits)])}}words}
 #[test]
 fn sqlite_snapshot_workflow_all_native_geometry_and_optional_parameter_words_are_exact(){
- for hex in laws()["binary64Words"].as_array().unwrap(){let bits=u64::from_str_radix(hex.as_str().unwrap(),16).unwrap();let number=f64::from_bits(bits);let mut expected:WorkflowSnapshot=store::json::from_json_str(&laws()["snapshot"].to_string()).unwrap();for node in &mut expected.graph.nodes{node.x=number;node.y=number;node.width=number;node.height=number}for parameter in &mut expected.parameters{if let crate::WorkflowParameter::Numeric{value,min,max,step,..}=parameter{*value=number;*min=Some(number);*max=Some(number);*step=Some(number)}}for text in[false,true]{let actual=if text{<WorkflowSnapshot as store::ArtifactDsl>::parse_dsl(&store::ArtifactDsl::print_dsl(&expected)).unwrap()}else{<WorkflowSnapshot as store::ArtifactPack>::decode_pack_with(&store::ArtifactPack::encode_pack_with(&expected,&store::PackEncodeOptions::default()).unwrap(),&store::PackDecodeOptions::default()).unwrap()};assert_eq!(words(&actual),vec![Some(bits);12],"{hex}: native Text={text}");assert_eq!(actual.graph.edges,expected.graph.edges);assert_eq!(actual.inputs,expected.inputs);assert_eq!(actual.parameter_bindings,expected.parameter_bindings);}}
+ for hex in laws()["binary64Words"].as_array().unwrap(){let bits=u64::from_str_radix(hex.as_str().unwrap(),16).unwrap();let number=f64::from_bits(bits);let mut expected:WorkflowSnapshot=semio_framework_pack_json::from_json_str(&laws()["snapshot"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();for node in &mut expected.graph.nodes{node.x=number;node.y=number;node.width=number;node.height=number}for parameter in &mut expected.parameters{if let crate::WorkflowParameter::Numeric{value,min,max,step,..}=parameter{*value=number;*min=Some(number);*max=Some(number);*step=Some(number)}}for text in[false,true]{let actual=if text{<WorkflowSnapshot as store::ArtifactDsl>::parse_dsl(&store::ArtifactDsl::print_dsl(&expected)).unwrap()}else{<WorkflowSnapshot as store::ArtifactPack>::decode_pack_with(&store::ArtifactPack::encode_pack_with(&expected,&store::PackEncodeOptions::default()).unwrap(),&store::PackDecodeOptions::default()).unwrap()};assert_eq!(words(&actual),vec![Some(bits);12],"{hex}: native Text={text}");assert_eq!(actual.graph.edges,expected.graph.edges);assert_eq!(actual.inputs,expected.inputs);assert_eq!(actual.parameter_bindings,expected.parameter_bindings);}}
 }
 
 use store::{ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteDatabaseLimits,SqliteSnapshotControl,SqliteSnapshotPhase,SqliteSnapshotProgress,SnapshotEncoding,export_sqlite_database,import_sqlite_database}};
-fn source()->WorkflowSnapshot{store::json::from_json_str(&laws()["snapshot"].to_string()).unwrap()}
+fn source()->WorkflowSnapshot{semio_framework_pack_json::from_json_str(&laws()["snapshot"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
 fn database(value:&WorkflowSnapshot)->SqliteDatabase{value.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap()}
 fn restore(value:&SqliteDatabase)->WorkflowSnapshot{WorkflowSnapshot::from_sqlite_database(value,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap()}
 fn file(value:&WorkflowSnapshot)->Vec<u8>{export_sqlite_database(&database(value),SqliteDatabaseLimits::default(),&mut |_|true).unwrap()}
@@ -59,4 +59,21 @@ fn sqlite_snapshot_workflow_caller_cancellation_reaches_interior_known_node_coll
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_workflow_imperative_registration_routes_actual_queryable_files(){
  let codec=store::ArtifactCodec::bare::<WorkflowSnapshot,WorkflowMutation>(S_WORKFLOW_SCHEMA);store::io::register_native_document_codec(store::io_schema::Dialect{artifact_kind:"os.workflow",standard:store::io_schema::StandardId("1"),subset:store::io_schema::SubsetId("*")},codec).unwrap();let expected=source();for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let bytes=store::io::io_mechanism::io_export_sqlite_snapshot(&dialect(),&expected,encoding,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value;assert!(bytes.starts_with(b"SQLite format 3\0"));assert_eq!(store::io::io_mechanism::io_import_sqlite_snapshot::<WorkflowSnapshot>(&dialect(),&bytes,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value,expected);}
+}
+
+#[test]
+fn sqlite_snapshot_workflow_intrinsic_contract_full_native_and_sqlite_branches(){
+ let cases:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🎞️wire/🔣️.json")).unwrap();
+ for schema in cases["schemas"].as_array().unwrap(){
+  let mut expected=source();expected.graph.edges[1].contract.wire=crate::MediaWireFormat::Intrinsic{schema:schema.as_str().unwrap().to_owned()};
+  assert_eq!(restore(&database(&expected)),expected);
+  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{
+   let codec=store::ArtifactCodec::bare::<WorkflowSnapshot,WorkflowMutation>(S_WORKFLOW_SCHEMA);let owner=codec.snapshot_sqlite.unwrap();
+   let source=payload(&expected,encoding);
+   let db=(owner.export)(&codec.schema,&dialect(),&source,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap().value;
+   let result=(owner.import)(&codec.schema,&dialect(),db,encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap().value;
+   let actual=WorkflowSnapshot::decode_sqlite_snapshot_native(&result,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();
+   assert_eq!(actual,expected);
+  }
+ }
 }

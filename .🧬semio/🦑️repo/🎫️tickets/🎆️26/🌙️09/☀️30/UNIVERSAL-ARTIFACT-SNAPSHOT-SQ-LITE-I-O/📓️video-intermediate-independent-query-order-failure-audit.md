@@ -1,0 +1,12 @@
+# Video Intermediate Independent Query Order Failure Audit
+
+Read-only actual204-law receipt and source; no execution. Receipt57009e77 reaches202pass/2fail; Video60 fails only Bun full-query equality after controlled native decode and relational restore already equal the original snapshot for first encoding.
+
+Closed intermediate fixture intentionally preserves code-admitted rate1/0, zero dimensions and schema/codec NUL/Unicode. Query selects rate_numerator then rate_denominator; expected values are1 and0. Actual writer31 inserts both as INTEGER in that same semantic pair. The native controlled decode/restore equality before oracle confirms no denominator validation/normalization lost this intermediate owner on that route.
+
+Concrete probable oracle cause is object insertion order: Rust parses neutral fixture into serde_json::Value and serializes it to argv. Default serde_json object map orders keys lexically, so expectedRows object arrives rate_denominator before rate_numerator. Bun query row follows SELECT order numerator then denominator. JSON.stringify compares raw key order rather than relational values. Both can represent exactly1/0 yet differ as text. This is a source-supported inference, not an independently executed query.
+
+Finite exact witness: retain full query but print original actualRows/expectedRows (DEBUG) and their key lists once, then compare every named cell and exact row count or normalize both through query-defined ordered column arrays. Preserve integrity/foreign-key checks and provider import/native roundtrip. Do not change fixture denominator0, weaken complete query semantics, delete oracle, or add semantic validation inconsistent with original code-admitted owner. Native encoder/writer changes are not indicated by current evidence.
+# Current Comparator Repair Readback
+
+Independent static readback of actual Video SQLite law line59 confirms both actual and expected rows now use the same `record` projection: sorted complete column names paired with corresponding original values. It preserves row order/count, exact column membership, null/string/number types and values; it removes only object-property insertion ordering from the comparison. Integrity and foreign-key checks remain before comparison, and actual database serialization remains after it. No temporary DEBUG text occurs in this law. This is static verification only; owning AFTER execution belongs to Physical.

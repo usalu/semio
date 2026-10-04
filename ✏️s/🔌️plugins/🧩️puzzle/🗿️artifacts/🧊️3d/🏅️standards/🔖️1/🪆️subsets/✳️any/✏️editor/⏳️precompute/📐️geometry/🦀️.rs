@@ -859,14 +859,14 @@ pub(crate) fn negate_vec3(v: Vec3) -> Vec3 {
     [-v[0], -v[1], -v[2]]
 }
 
-pub(crate) fn vec3_scale(v: Vec3, scale: &Option<dsl::DslValue>) -> Vec3 {
+pub(crate) fn vec3_scale(v: Vec3, scale: &Option<semio_framework_value::DslValue>) -> Vec3 {
     match scale {
         None => v,
-        Some(dsl::DslValue::Number(n)) => {
+        Some(semio_framework_value::DslValue::Number(n)) => {
             let s = n.as_f64();
             [v[0] * s, v[1] * s, v[2] * s]
         }
-        Some(dsl::DslValue::Array(arr)) if arr.len() >= 3 => {
+        Some(semio_framework_value::DslValue::Array(arr)) if arr.len() >= 3 => {
             let sx = arr[0].as_f64().unwrap_or(1.0);
             let sy = arr[1].as_f64().unwrap_or(1.0);
             let sz = arr[2].as_f64().unwrap_or(1.0);
@@ -903,7 +903,7 @@ pub(crate) fn anti_parallel_brush_orientation(target_dir: Vec3) -> Quat {
     quaternion_from_180_degree_axis(axis)
 }
 
-pub(crate) fn pose_isometry(origin: Vec3, orientation: Quat, _scale: &Option<dsl::DslValue>) -> Pose3d {
+pub(crate) fn pose_isometry(origin: Vec3, orientation: Quat, _scale: &Option<semio_framework_value::DslValue>) -> Pose3d {
     let q = unit_quat_from_cad(orientation);
     let t = Vec3d::new(origin[0] as f32, origin[1] as f32, origin[2] as f32);
     Pose3d::from_parts(t, q)
@@ -912,7 +912,7 @@ pub(crate) fn pose_isometry(origin: Vec3, orientation: Quat, _scale: &Option<dsl
 pub(crate) fn compute_brush_placement_pose(
     source_local_position: Vec3,
     source_local_direction: Vec3,
-    scale: &Option<dsl::DslValue>,
+    scale: &Option<semio_framework_value::DslValue>,
     target_world_position: Vec3,
     target_world_direction: Vec3,
     reference_orientation: Option<Quat>,
@@ -945,6 +945,38 @@ pub(crate) fn compute_brush_placement_pose(
 }
 //#endregion 🔖️Vectors
 
+//#region 🧮️WorkMeter
+#[cfg(test)]
+thread_local! {
+    /// 🧮️ Primitive precompute work done on THIS thread: one unit per surface-distance or containment query, per triangle
+    /// clipped against a near face, per spatial-index lookup or member walked, per mesh vertex and triangle ingested, and
+    /// per unit the brush and fill machines advance. The interactive laws read it as their clock, so a step's cost is a
+    /// deterministic count instead of a wall reading a loaded machine inflates.
+    static PRECOMPUTE_WORK: std::cell::Cell<u64> = const { std::cell::Cell::new(0) };
+}
+
+/// 🧮️ Charges `units` of primitive work to this thread's [`precompute_work_done`] meter; a no-op outside test builds.
+#[inline(always)]
+pub(crate) fn precompute_work(units: usize) {
+    #[cfg(test)]
+    PRECOMPUTE_WORK.with(|meter| meter.set(meter.get().saturating_add(units as u64)));
+    #[cfg(not(test))]
+    let _ = units;
+}
+
+/// 🕰️ This thread's primitive precompute work so far — the deterministic clock the interactive laws drive and bound steps by.
+#[cfg(test)]
+pub(crate) fn precompute_work_done() -> u64 {
+    PRECOMPUTE_WORK.with(std::cell::Cell::get)
+}
+
+/// ⏲️ [`precompute_work_done`] as a job clock: a step's deadline then expires after a fixed amount of work, not of wall time.
+#[cfg(test)]
+pub(crate) fn precompute_work_clock() -> Option<u64> {
+    Some(precompute_work_done())
+}
+//#endregion 🧮️WorkMeter
+
 //#region 🔖️Collision
 #[derive(Clone)]
 pub(crate) struct CollisionMeshPart {
@@ -963,6 +995,7 @@ pub(crate) fn collision_body_from_buffers(positions: &[f32], indices: &[u32]) ->
     if positions.len() < 9 || indices.len() < 3 {
         return None;
     }
+    precompute_work(positions.len() / 3 + indices.len() / 3);
     let mut verts: Vec<Point3d> = Vec::with_capacity(positions.len() / 3);
     let mut min = Point3d::new(f32::INFINITY, f32::INFINITY, f32::INFINITY);
     let mut max = Point3d::new(f32::NEG_INFINITY, f32::NEG_INFINITY, f32::NEG_INFINITY);
@@ -1005,13 +1038,13 @@ pub(crate) fn world_bounds(body: &CollisionBody, world: &Pose3d) -> (Point3d, Po
     (min, max)
 }
 
-pub(crate) fn volume_scale_vec(scale: &Option<dsl::DslValue>) -> [f32; 3] {
+pub(crate) fn volume_scale_vec(scale: &Option<semio_framework_value::DslValue>) -> [f32; 3] {
     match scale {
-        Some(dsl::DslValue::Number(n)) => {
+        Some(semio_framework_value::DslValue::Number(n)) => {
             let s = n.as_f64() as f32;
             [s, s, s]
         }
-        Some(dsl::DslValue::Array(values)) if values.len() == 3 => {
+        Some(semio_framework_value::DslValue::Array(values)) if values.len() == 3 => {
             let read = |index: usize| values.get(index).and_then(|v| v.as_f64()).unwrap_or(1.0) as f32;
             [read(0), read(1), read(2)]
         }
@@ -1389,6 +1422,7 @@ impl CollisionSpatialIndex {
         if mutation.owner != current {
             return CollisionMutationStep::Stale;
         }
+        precompute_work(1);
         match mutation.stage {
             CollisionMutationStage::PreflightNew => {
                 if self.entries.get(mutation.id.as_str()).is_none() && self.entries.len() == self.entries.capacity() {
@@ -1527,6 +1561,7 @@ impl CollisionSpatialIndex {
         if removal.owner != current {
             return CollisionMutationStep::Stale;
         }
+        precompute_work(1);
         if removal.complete {
             return CollisionMutationStep::Complete;
         }
@@ -1571,6 +1606,7 @@ impl CollisionSpatialIndex {
         if query.owner != current {
             return CollisionQueryStep::Stale;
         }
+        precompute_work(query.member_cursor + 1);
         let candidate = match query.stage {
             CollisionQueryStage::Cells => {
                 let span = query.span.expect("cell query span");
@@ -1951,8 +1987,13 @@ impl CollisionPenetrationState {
         if outside(0, point.x) || outside(1, point.y) || outside(2, point.z) {
             return false;
         }
+        precompute_work(1);
         let distance = f64::from(collision::distance_to_surface(solid_pose, &solid.shape, point));
-        if distance <= COLLISION_CONTACT_NOISE_M || distance <= self.depth || !collision::contains_point_fast(solid_pose, &solid.shape, point) {
+        if distance <= COLLISION_CONTACT_NOISE_M || distance <= self.depth {
+            return false;
+        }
+        precompute_work(1);
+        if !collision::contains_point_fast(solid_pose, &solid.shape, point) {
             return false;
         }
         self.depth = distance;
@@ -2010,6 +2051,7 @@ impl CollisionPenetrationState {
         let bounds = CollisionAabb::from_body(solid, solid_world);
         let mut near = Vec::new();
         solid_part.shape.shape.triangles_near(solid_pose, triangle, self.tolerance as f32, &mut near);
+        precompute_work(near.len() + 1);
         for index in near {
             let face = solid_part.shape.shape.world_triangle_outward(solid_pose, index as usize);
             let clipped = collision::clip_behind_triangle(triangle, face);

@@ -80,9 +80,13 @@ test("repeated layer creation retains every requested instance with Immer", asyn
 
 import nudges from "../../../🕹️nudge-selection/🧫️fixtures/🔣️.json";
 import nudgeSchema from "../../../🕹️nudge-selection/🧬️schema/🔣️.json";
+import nudgeBindingsSchema from "../../../🕹️nudge-selection/🧬️schema/⌨️bindings/🔣️.json";
 test("canvas nudge shortcuts have explicit argument-free input contracts",async()=>{
   const validate=new Ajv({strict:true}).compile(nudgeSchema);
   expect(validate({})).toBe(true);expect(validate({delta:[1,0]})).toBe(false);
+  const bindings=new Ajv({strict:true}).compile(nudgeBindingsSchema);
+  expect(bindings(nudges)).toBe(true);
+  expect(bindings(nudges.map(row=>({...row,keys:row.keys.replace("arrow","")})))).toBe(false);
   const source=await Bun.file(new URL("../../../../🦀️.rs",import.meta.url)).text();
   for(const row of nudges) {
     expect(source.includes(`.keybinding("${row.keys}", "${row.action}")`)).toBe(true);

@@ -3,7 +3,7 @@ import vfsDescriptorFixture from "../../../../../../../🔨️modules/🖱️ui/
 import gumballTargetsFixture from "../../🧱️elements/🌐️World3dHost/🧫️fixtures/🧭️gesture-targets.json";
 import gumballTargetsSchema from "../../🧱️elements/🌐️World3dHost/🧬️schema/🧭️gesture-targets/🔣️.json";
 import gumballLiveProtocolFixture from "../../🧱️elements/🌐️World3dHost/🧫️fixtures/🛠️gumball-live-protocol.json";
-import gumballLiveProtocolSchema from "../../🧱️elements/🌐️World3dHost/🧬️schema/🛠️gumball-live-protocol/🔣️.json";
+import gumballLiveProtocolSchema from "../../🧱️elements/🌐️World3dHost/🧬️schema/🔣️gumball-live-protocol/🔣️.json";
 import { worldGumballStep, WORLD_GUMBALL_IDLE, type WorldGumballEvent, type WorldGumballTargets } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
 import { renderVirtualFileSystemDescriptorCell, type DescriptorKind, type FileNodeDescriptorValue } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/⚙️VirtualFileSystem/🟦️.tsx";
 import gizmoTipBoundsFixture from "../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🧭️gizmo-tip-bounds/🔣️.json";
@@ -79,6 +79,12 @@ import {
   historyRefreshNeededV1,
   undeclaredActionDiagnostic,
   downloadMediaExport,
+  naturalFileFormatV1,
+  naturalFileNameV1,
+  naturalMediaDescriptorMatchesV1,
+  openNaturalFileOwnerV1,
+  readBlobBytesBoundedV1,
+  requestFileSelectionV1,
   mediaExportEncodingText,
   makeEffectDispatchOne,
   renderStagedArgControl,
@@ -88,7 +94,7 @@ import {
   windowMeasureDomId,
   qualifyWindowMeasureIds,
 } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
-import { FRAMEWORK_HISTORY_BODY_KEY, resolveUiDirtyScope, type UiDirtyScope } from "@semio-tech/framework";
+import { FRAMEWORK_HISTORY_BODY_KEY, OPEN_ARTIFACT_FILE_ACTION_ID, SAVE_ARTIFACT_FILE_ACTION_ID, resolveUiDirtyScope, type UiDirtyScope } from "@semio-tech/framework";
 import { hostArmedViewContext, panelViewContext, parseResolvedPluginViewState, windowViewContext } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
 import { world3dComputeStatusV1 } from "../../../../../../../🔨️modules/🖱️ui/🎬️scene/🟦️.ts";
 import surfaceControlsFixture from "../../🧱️elements/🐚️Shell/🧫️fixtures/🛑️surface-controls/🔣️.json";
@@ -96,7 +102,8 @@ import bootExampleFixture from "../../🧱️elements/🐚️Shell/🧫️fixtur
 import exampleOfferFixture from "../../🧱️elements/🐚️Shell/🧫️fixtures/📚️example-offer/🔣️.json";
 import exampleOfferSchema from "../../🧱️elements/🐚️Shell/📚️example-offer/🔣️.json";
 import { BOOT_QUERY_CAPACITY, BOOT_QUERY_EXAMPLE_PARAM, resolveBootQueryExampleId } from "../../../../🧑‍💻dev/🔗️boot-query/🟦️.ts";
-import { createContinuationScheduler, createVirtualContinuationHost } from "../../../../../../../🔨️modules/⏳️async/🪃️continuation/🟦️.ts";
+import { createContinuationScheduler } from "../../../../../../../🔨️modules/⏳️async/🪃️continuation/🟦️.ts";
+import { createVirtualContinuationHost } from "../../../../../../../🔨️modules/⏳️async/🪃️continuation/🧪️tests/⚖️oracle/🟦️.ts";
 import { SHARD_RUNTIME_DIAGNOSTICS_KEY, SHARD_WORKER_DIAGNOSTICS_PARAM, SHARD_WORKER_URL, shardWorkerUrl } from "../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts";
 /** 🗣️ The resolver every `makeEffectDispatchOne` owner passes — the shell's `resolvedTargetViewState`, reduced to what a test session needs: both host preferences always stamped. */
 const resolvedViewStateFixture = (session: { readonly viewState?: unknown }) => parseResolvedPluginViewState({ ...(session.viewState as Record<string, unknown> | undefined), locale: "en", terminology: "native" }) as never;
@@ -156,6 +163,8 @@ import chordKeyTokensFixture from "../../🧱️elements/🛠️ShellHelpers/�
 import labelResolutionFixture from "../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/🔣️label-resolution.json";
 import tutorialInteractionFixture from "../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/🎥️tutorial-interaction/🔣️.json";
 import pluginAvailabilityRouteFixture from "../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/🔁️plugin-availability-route/🔣️.json";
+import naturalFileLifecycleFixture from "../../../../🔌️plugin/🧫️fixtures/📄️natural-file-lifecycle/🔣️.json" with { type: "json" };
+import naturalFileLifecycleSchema from "../../../../🔌️plugin/🧬️schema/📄️natural-file-lifecycle/🔣️.json" with { type: "json" };
 import interactionSchema from "../../../../../../../🔨️modules/🕹️interaction/🧬️schema/🔣️.json";
 import type { InteractionState } from "../../../../../../../🔨️modules/🕹️interaction/🟦️.ts";
 import { stubFetch } from "../../../../../🧪️tests/🌐️fetch-stub/🟦️.ts";
@@ -1939,6 +1948,7 @@ import {
 } from "@semio-tech/ui-react";
 import { renderUiControl } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
 import { worldHoverPaintIdV1 } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
+import { worldInstanceHighlighted } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
 import type { GumballPose } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️.tsx";
 import {
   WorldOrbitProjectionSwitchPane,
@@ -1964,7 +1974,11 @@ import {
   leftoverWorldOverlayAppliesV1,
   mergeWorldInteractionWithLeftoverV1,
   mergeWorldSelectionWithLeftoverV1,
-  gumballPreviewWorldPoint,
+  gumballPreviewOwnedWorldPoint,
+  gumballPreviewOwnedWorldDirection,
+  worldGumballOwnerPoses,
+  worldVorticesWithGumballPreview,
+  worldAttractionsWithGumballPreview,
   world3dSuggestionsGestureConsumesContextMenu,
   world3dSuggestionsRightDownRoutesOnWindowCapture,
   worldVortexHitProxy,
@@ -1979,6 +1993,7 @@ import {
   worldToScreenLogical,
   readCanvas2dSurfaceColors,
   Board2dHost,
+  applyBoard2dHighlightedIds,
   board2dCameraActionArgs,
   beginPuzzle2dPeerGesture,
   collectPuzzle2dLiveMirrorMutations,
@@ -2251,7 +2266,8 @@ import {
   scheduleDispatchAction,
   sampleMediaFrameTimestampsMs,
   runTier2VideoFrames,
-  runRequestMediaFrames,
+  requestMediaFramesSourceV1,
+  runMediaFramesV1,
   createFrameworkDisplayPanelTabs,
   type DisplayHostApi,
   createFrameworkSettingsPanelTab,
@@ -4779,7 +4795,7 @@ describe("declarative forms parity", () => {
     const markup = renderContractTree({
       key: "forms-try.name",
       component: { type: "container", role: "field", label: "Name", description: "Your full name", required: true, error: "Name is required", defaultOpen: null, dropOverlay: null },
-      children: [{ key: "forms-try.name.input", component: { type: "input", kind: "text", value: "", placeholder: null, commit: null, min: null, max: null, step: null, accept: null } }],
+      children: [{ key: "forms-try.name.input", component: { type: "input", kind: "text", value: "", placeholder: null, commit: null, min: null, max: null, step: null, accept: null, precision: null, snaps: [] } }],
     });
     expect(markup).toContain("Your full name");
     expect(markup).toContain("Name is required");
@@ -4788,12 +4804,12 @@ describe("declarative forms parity", () => {
   });
 
   it("renders slider unit readout", () => {
-    const markup = renderContractTree({ key: "forms-try.volume.slider", component: { type: "slider", value: 60, min: 0, max: 100, step: 5, unit: "%" } });
+    const markup = renderContractTree({ key: "forms-try.volume.slider", component: { type: "slider", value: 60, min: 0, max: 100, step: 5, unit: "%", snaps: [] } });
     expect(markup).toContain("60 %");
   });
 
   it("renders numberStepper as a single-border Stepper control, not hand-rolled double-bordered buttons", () => {
-    const markup = renderContractTree({ key: "forms-try.height.stepper", component: { type: "numberStepper", value: 3, step: 1, uniform: true, min: null, max: null } });
+    const markup = renderContractTree({ key: "forms-try.height.stepper", component: { type: "numberStepper", value: 3, step: 1, uniform: true, min: null, max: null, precision: null } });
     expect(markup).toContain('data-slot="stepper-group"');
     expect(markup).toContain('data-slot="stepper-minus"');
     expect(markup).toContain('data-slot="stepper-plus"');
@@ -4801,7 +4817,7 @@ describe("declarative forms parity", () => {
   });
 
   it("shows the mixed-values placeholder on a non-uniform numberStepper", () => {
-    const markup = renderContractTree({ key: "forms-try.height.stepper", component: { type: "numberStepper", value: 0, step: 1, uniform: false, min: null, max: null } });
+    const markup = renderContractTree({ key: "forms-try.height.stepper", component: { type: "numberStepper", value: 0, step: 1, uniform: false, min: null, max: null, precision: null } });
     expect(markup).toContain('data-mixed="true"');
   });
 
@@ -4815,12 +4831,12 @@ describe("declarative forms parity", () => {
         {
           key: "puzzle3d-play-inspector.object.origin.x",
           component: { type: "container", role: "field", label: "X", description: null, required: null, error: null, defaultOpen: null, dropOverlay: null },
-          children: [{ key: "puzzle3d-play-inspector.object.origin.x.stepper", component: { type: "numberStepper", value: 1, step: 0.1, uniform: true, min: null, max: null } }],
+          children: [{ key: "puzzle3d-play-inspector.object.origin.x.stepper", component: { type: "numberStepper", value: 1, step: 0.1, uniform: true, min: null, max: null, precision: null } }],
         },
         {
           key: "puzzle3d-play-inspector.object.origin.y",
           component: { type: "container", role: "field", label: "Y", description: null, required: null, error: null, defaultOpen: null, dropOverlay: null },
-          children: [{ key: "puzzle3d-play-inspector.object.origin.y.stepper", component: { type: "numberStepper", value: 2, step: 0.1, uniform: true, min: null, max: null } }],
+          children: [{ key: "puzzle3d-play-inspector.object.origin.y.stepper", component: { type: "numberStepper", value: 2, step: 0.1, uniform: true, min: null, max: null, precision: null } }],
         },
       ],
     });
@@ -4848,15 +4864,15 @@ describe("declarative forms parity", () => {
         { key: "sep", component: { type: "separator" } },
       ],
     });
-    expect(markup).toMatch(/gap:\s*0\.2rem/);
+    expect(markup).toMatch(/gap:\s*calc\(1 \* var\(--ui-spacing\)\)/);
     expect(markup).not.toContain("border-border");
   });
 
   it("passes number bounds and file accept to inputs", () => {
-    const numberMarkup = renderContractTree({ key: "forms-try.age.input", component: { type: "input", kind: "number", value: "28", placeholder: null, commit: null, min: 13, max: 120, step: 1, accept: null } });
+    const numberMarkup = renderContractTree({ key: "forms-try.age.input", component: { type: "input", kind: "number", value: "28", placeholder: null, commit: null, min: 13, max: 120, step: 1, accept: null, precision: null, snaps: [] } });
     expect(numberMarkup).toContain('min="13"');
     expect(numberMarkup).toContain('max="120"');
-    const fileMarkup = renderContractTree({ key: "forms-try.resume.input", component: { type: "input", kind: "file", value: "", placeholder: null, commit: null, min: null, max: null, step: null, accept: ".pdf,.doc" } });
+    const fileMarkup = renderContractTree({ key: "forms-try.resume.input", component: { type: "input", kind: "file", value: "", placeholder: null, commit: null, min: null, max: null, step: null, accept: ".pdf,.doc", precision: null, snaps: [] } });
     expect(fileMarkup).toContain('accept=".pdf,.doc"');
   });
 
@@ -5454,6 +5470,8 @@ describe("framework renderer hosts", () => {
         }
         root.getBoundingClientRect = () => ({ x: 0, y: 0, width: 100, height: 16, left: 0, right: 100, top: 0, bottom: 16, toJSON: () => ({}) });
         (root.querySelector('[data-slot="slider-track"]') as HTMLElement).getBoundingClientRect = root.getBoundingClientRect;
+        const gesturePrefix = `${item.surfaceId}:${item.widgetId}`.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const gesturePattern = new RegExp(`^${gesturePrefix}:\\d+:\\d+$`);
         slider.focus();
         fireEvent.keyDown(slider, { key: "ArrowRight" });
         fireEvent.keyUp(slider, { key: "ArrowRight" });
@@ -5461,7 +5479,7 @@ describe("framework renderer hosts", () => {
           expect(onAction).toHaveBeenLastCalledWith({
             controllerId: item.controllerId,
             action: graphParameterFixture.action,
-            args: { surfaceId: item.surfaceId, operations: [{ operation: "setSlider", widgetId: item.widgetId, value: 3 }], gesture: `${item.surfaceId}:${item.widgetId}`, commit: true },
+            args: { surfaceId: item.surfaceId, operations: [{ operation: "setSlider", widgetId: item.widgetId, value: 3 }], gesture: expect.stringMatching(gesturePattern), commit: true },
           }),
         );
         expect(document.activeElement).toBe(slider);
@@ -5479,7 +5497,7 @@ describe("framework renderer hosts", () => {
         await waitFor(() => {
           const event = onAction.mock.calls.at(-1)?.[0];
           expect(event).toMatchObject({ controllerId: item.controllerId, action: graphParameterFixture.action, args: { surfaceId: item.surfaceId, operations: [{ operation: "setSlider", widgetId: item.widgetId, value: 8 }], commit: false } });
-          expect(event.args.gesture).toMatch(new RegExp(`^${item.surfaceId}:${item.widgetId}:\\d+$`));
+          expect(event.args.gesture).toMatch(gesturePattern);
         });
         await waitFor(() => expect(slider.getAttribute("aria-valuenow")).toBe("8"));
         await reactAct(async () => {
@@ -5843,6 +5861,18 @@ describe("framework renderer hosts", () => {
       renderToStaticMarkup(createElement(Board2dHost, { node: { type: "componentScene", surfaceId: "puzzle2d.play.composite.2d-overview", controllerId: "puzzle2d-play", componentKind: "board-2d", board2d: { ...board2d, highlightedIdsJson } }, onAction: noopAction }));
     expect(mount('["mid","left"]')).toContain('data-board-highlighted-ids-json="[&quot;mid&quot;,&quot;left&quot;]"');
     expect(mount(undefined)).toContain('data-board-highlighted-ids-json="[]"');
+  });
+
+  it("forwards the ids a time-travel draft references to the puzzle 2d board session as the wgpu board sync does", () => {
+    type Session = Parameters<typeof applyBoard2dHighlightedIds>[0];
+    const forwarded: string[] = [];
+    const session = { setHighlightedIdsJson: (json: string) => void forwarded.push(json) } as unknown as Session;
+    applyBoard2dHighlightedIds(session, { highlightedIdsJson: '["mid","left"]' });
+    applyBoard2dHighlightedIds(session, {});
+    applyBoard2dHighlightedIds(null, { highlightedIdsJson: '["ghost"]' });
+    applyBoard2dHighlightedIds({} as unknown as Session, { highlightedIdsJson: '["ghost"]' });
+    applyBoard2dHighlightedIds({ setHighlightedIdsJson: () => { throw new Error("session not ready"); } } as unknown as Session, { highlightedIdsJson: '["ghost"]' });
+    expect(forwarded).toEqual(['["mid","left"]', "[]"]);
   });
 
   it("uses the live puzzle 2d board camera for wheel persistence actions", () => {
@@ -6457,6 +6487,142 @@ describe("framework renderer hosts", () => {
     }
   });
 
+  it("mounts exact natural codecs and opens bytes into an isolated owner", async () => {
+    const validate = new Ajv2020({ strict: true }).compile(naturalFileLifecycleSchema);
+    expect(validate(naturalFileLifecycleFixture)).toBe(true);
+    const definition = (row: (typeof naturalFileLifecycleFixture.formats)[number]): AppDefinition => {
+      const args = [
+        { id: "formatKind", default: row.formatKind },
+        { id: "extension", default: row.extension },
+        { id: "mediaType", default: row.mediaType },
+        { id: "binary", default: row.binary },
+      ];
+      return {
+        id: row.appId,
+        actions: [],
+        io: { exportFormats: [row.formatKind], importFormats: [row.formatKind] },
+        windowKinds: [{ actions: [{ id: SAVE_ARTIFACT_FILE_ACTION_ID, args }, { id: OPEN_ARTIFACT_FILE_ACTION_ID, args }] }],
+      } as unknown as AppDefinition;
+    };
+    for (const row of naturalFileLifecycleFixture.formats) {
+      const format = { formatKind: row.formatKind, extension: row.extension, mediaType: row.mediaType, binary: row.binary };
+      expect(naturalFileFormatV1(definition(row))).toEqual(format);
+      expect(naturalFileNameV1(row.appId, row.extension, new Date("2026-10-03T12:34:56.000Z"))).toMatch(new RegExp(`20261003T123456Z\\${row.extension}$`, "u"));
+      expect(naturalMediaDescriptorMatchesV1({ portId: "artifact:native", kindId: row.formatKind, wire: { kind: "binary", format_kind: row.formatKind } }, format)).toBe(true);
+      expect(naturalMediaDescriptorMatchesV1({ portId: "artifact:native", kindId: row.formatKind, wire: { Binary: { format_kind: row.formatKind } } }, format)).toBe(false);
+    }
+    const unsupported = { id: naturalFileLifecycleFixture.unsupported[0]!.appId, actions: [], io: { exportFormats: [], importFormats: [] }, windowKinds: [{ actions: [] }] } as unknown as AppDefinition;
+    expect(naturalFileFormatV1(unsupported)).toBeNull();
+    const matched = definition(naturalFileLifecycleFixture.formats[0]!);
+    const mismatched = { ...matched, io: { ...matched.io, importFormats: [] } } as AppDefinition;
+    expect(naturalFileFormatV1(mismatched)).toBeNull();
+
+    const currentHistory = ["edit"];
+    const openedHistory: string[] = [];
+    const retired: number[] = [];
+    const signal = new AbortController();
+    const opened = await openNaturalFileOwnerV1({
+      signal: signal.signal,
+      create: async () => naturalFileLifecycleFixture.lifecycle.openedInstanceId,
+      importBytes: async (instanceId) => {
+        expect(instanceId).toBe(naturalFileLifecycleFixture.lifecycle.openedInstanceId);
+        openedHistory.push("set-snapshot");
+      },
+      retire: async (instanceId) => {
+        retired.push(instanceId);
+      },
+    });
+    expect({
+      saveInstanceId: naturalFileLifecycleFixture.lifecycle.currentInstanceId,
+      preservedInstanceId: naturalFileLifecycleFixture.lifecycle.currentInstanceId,
+      openedInstanceId: opened,
+      openedHistoryEntries: openedHistory.length,
+    }).toEqual(naturalFileLifecycleFixture.lifecycle.expected);
+    expect(currentHistory).toEqual(["edit"]);
+    expect(retired).toEqual([]);
+
+    const cancelled = new AbortController();
+    const cancelledRetirements: number[] = [];
+    await expect(openNaturalFileOwnerV1({
+      signal: cancelled.signal,
+      create: async () => naturalFileLifecycleFixture.lifecycle.openedInstanceId,
+      importBytes: async () => cancelled.abort(),
+      retire: async (instanceId) => {
+        cancelledRetirements.push(instanceId);
+      },
+    })).rejects.toBeDefined();
+    expect(cancelledRetirements).toEqual([naturalFileLifecycleFixture.lifecycle.openedInstanceId]);
+
+    const read = naturalFileLifecycleFixture.browserRead;
+    const source = new Blob([Uint8Array.from(read.octets)]);
+    const progress: number[] = [];
+    const loaded = await readBlobBytesBoundedV1(source, {
+      signal: new AbortController().signal,
+      maximumBytes: read.maximumBytes,
+      chunkBytes: read.chunkBytes,
+      progress: (completed) => progress.push(completed),
+    });
+    expect([...loaded]).toEqual(read.octets);
+    expect(progress).toEqual(read.expectedProgress);
+    await expect(readBlobBytesBoundedV1(source, {
+      signal: new AbortController().signal,
+      maximumBytes: read.octets.length - 1,
+      chunkBytes: read.chunkBytes,
+      progress: () => {},
+    })).rejects.toThrow("natural-file.read-limit");
+
+    const interrupted = new AbortController();
+    await expect(readBlobBytesBoundedV1(source, {
+      signal: interrupted.signal,
+      maximumBytes: read.maximumBytes,
+      chunkBytes: read.chunkBytes,
+      progress: (completed) => {
+        if (completed === read.cancelAfterBytes) interrupted.abort("fixture cancellation");
+      },
+    })).rejects.toBe("fixture cancellation");
+    const retried = await readBlobBytesBoundedV1(source, {
+      signal: new AbortController().signal,
+      maximumBytes: read.maximumBytes,
+      chunkBytes: read.chunkBytes,
+      progress: () => {},
+    });
+    expect([...retried]).toEqual(read.octets);
+
+    const failedBlob = { size: 1, slice: () => ({ arrayBuffer: async () => { throw new Error("fixture read fault"); } }) } as unknown as Blob;
+    await expect(readBlobBytesBoundedV1(failedBlob, {
+      signal: new AbortController().signal,
+      maximumBytes: read.maximumBytes,
+      chunkBytes: read.chunkBytes,
+      progress: () => {},
+    })).rejects.toThrow("natural-file.read-failed");
+
+    const picker = document.createElement("input");
+    const createElement = vi.spyOn(document, "createElement").mockReturnValueOnce(picker);
+    const click = vi.spyOn(picker, "click").mockImplementation(() => {});
+    const remove = vi.spyOn(picker, "remove");
+    const selection = requestFileSelectionV1(".csv,text/csv");
+    picker.dispatchEvent(new Event("cancel"));
+    expect(await selection).toEqual([]);
+    expect(picker.onchange).toBeNull();
+    expect(picker.oncancel).toBeNull();
+    expect(click).toHaveBeenCalledOnce();
+    expect(remove).toHaveBeenCalledOnce();
+    createElement.mockRestore();
+    click.mockRestore();
+    remove.mockRestore();
+
+    const retryPicker = document.createElement("input");
+    const retryFile = new File([Uint8Array.from(read.octets)], "retry.csv", { type: "text/csv" });
+    Object.defineProperty(retryPicker, "files", { configurable: true, value: [retryFile] });
+    const retryCreateElement = vi.spyOn(document, "createElement").mockReturnValueOnce(retryPicker);
+    const retryClick = vi.spyOn(retryPicker, "click").mockImplementation(() => {});
+    const retrySelection = requestFileSelectionV1(".csv,text/csv");
+    retryPicker.dispatchEvent(new Event("change"));
+    expect(await retrySelection).toEqual([retryFile]);
+    retryCreateElement.mockRestore();
+    retryClick.mockRestore();
+  });
+
   it("shares the world catalogue drop preview across all registered hosts", () => {
     clearWorldCatalogueDropPreview("puzzle3d-play");
     const notifications: Array<ReturnType<typeof getWorldCatalogueDropPreview>> = [];
@@ -6542,7 +6708,34 @@ describe("framework renderer hosts", () => {
     const after: GumballPose = { position: [0, 0, 0], quaternion: [0, 0.7071067811865476, 0, 0.7071067811865476], scale: [1, 1, 1] };
     expect(gumballTransformDeltaBetweenPoses("move", before, after, base, "rotateY")?.action).toBe("rotateSelection");
     const translateAfter: GumballPose = { position: [2, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] };
-    expect(gumballPreviewWorldPoint([0, 0, 0], "transform", before, translateAfter, "moveX", [1, 0, 0])).toEqual([3, 0, 0]);
+    expect(gumballPreviewOwnedWorldPoint({ position: [0, 0, 0], rotation: [0, 0, 0, 1] }, "transform", before, translateAfter, "moveX", [1, 0, 0])).toEqual([3, 0, 0]);
+  });
+
+  it("previews a multi-object turn and scale of markers about each owner's origin, where the selection leaves land them", () => {
+    const close = (actual: readonly number[], expected: readonly number[]) => actual.forEach((value, index) => expect(value).toBeCloseTo(expected[index]!, 9));
+    const owners = worldGumballOwnerPoses([
+      { id: "a", position: [0, 0, 0], rotation: [0, 0, 0, 1] },
+      { id: "b", position: [10, 0, 0], rotation: [0, 0, Math.SQRT1_2, Math.SQRT1_2] },
+    ]);
+    const quarter: GumballPose = { position: [5, 0, 0], quaternion: [0, 0, Math.SQRT1_2, Math.SQRT1_2], scale: [1, 1, 1] };
+    const start: GumballPose = { position: [5, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] };
+    const preview = { sourceId: "pane", transformMode: "rotate", handleKind: "rotateZ" as const, before: start, after: quarter, instanceIds: ["a", "b"], pivot: [5, 0, 0] as const };
+    const vortices = [
+      { fullId: "a:v0", objectId: "a", position: [1, 0, 0] as const, direction: [1, 0, 0] as const },
+      { fullId: "b:v0", objectId: "b", position: [11, 0, 0] as const, direction: [1, 0, 0] as const },
+      { fullId: "c:v0", objectId: "c", position: [20, 0, 0] as const },
+    ];
+    const turned = worldVorticesWithGumballPreview(vortices, preview, owners);
+    close(turned[0]!.position, [0, 1, 0]);
+    close(turned[1]!.position, [10, 1, 0]);
+    close(turned[1]!.direction!, [0, 1, 0]);
+    expect(turned[2]).toBe(vortices[2]);
+    const [attraction] = worldAttractionsWithGumballPreview([{ id: "ab", from: [1, 0, 0], to: [11, 0, 0] }], vortices, preview, owners);
+    close(attraction!.from, [0, 1, 0]);
+    close(attraction!.to, [10, 1, 0]);
+    const stretched: GumballPose = { position: [5, 0, 0], quaternion: [0, 0, 0, 1], scale: [2, 1, 1] };
+    close(gumballPreviewOwnedWorldPoint(owners.get("b")!, "scale", start, stretched, "scaleX", [10, 1, 0]), [10, 2, 0]);
+    close(gumballPreviewOwnedWorldDirection(owners.get("b")!, "scale", start, stretched, "scaleX", [1, 1, 0]), [1 / Math.sqrt(5), 2 / Math.sqrt(5), 0]);
   });
 
   it("pushes fixture-drop previews to every board2d peer on the same controller", () => {
@@ -7023,6 +7216,13 @@ describe("framework renderer hosts", () => {
     expect(resolveMeshStyle({ disabled: true, selected: true, highlighted: true, hovered: true, celebrating: true })).toBe("disabled");
   });
 
+  it("paints the guest-stamped highlight (a history draft's reference) whether or not the host's own kind hover is on", () => {
+    expect(worldInstanceHighlighted(false, { highlighted: true })).toBe(true);
+    expect(worldInstanceHighlighted(true, {})).toBe(true);
+    expect(worldInstanceHighlighted(false, {})).toBe(false);
+    expect(resolveMeshSelectionPreviewStyle({ hovered: true, highlighted: worldInstanceHighlighted(false, { highlighted: true }) })).toBe("highlighted");
+  });
+
   it("celebrateWorldInstances stamps ids and cancel clears them so paint prefers celebrated over selected", () => {
     const cancel = celebrateWorldInstances(["drop-1"], 60_000);
     expect(isWorldInstanceCelebrating("drop-1")).toBe(true);
@@ -7488,7 +7688,7 @@ describe("framework renderer hosts", () => {
           await waitFor(() => expect(onAction).toHaveBeenCalledWith({ controllerId: "writer", action: "textSelect", args: { surfaceId: "writer.keys", start: law.expect.selection[0], end: law.expect.selection[1] } }));
           const actions = onAction.mock.calls.map(([action]) => action);
           expect(actions.map((action) => action.action)).toEqual(law.operation === "insertText" ? ["textEdit", "textSelect"] : ["textSelect"]);
-          if (law.operation === "insertText") expect(actions[0]?.args).toEqual({ surfaceId: "writer.keys", text: law.expect.text });
+          if (law.operation === "insertText") expect(actions[0]?.args).toEqual({ surfaceId: "writer.keys", text: law.expect.text, typing: "writer.keys" });
         } else {
           for (const operation of Object.values(operations)) expect(operation).not.toHaveBeenCalled();
           expect(onAction).not.toHaveBeenCalled();
@@ -7502,6 +7702,7 @@ describe("framework renderer hosts", () => {
 
   for (const stepKind of ["paste", "compose"] as const)
     it(`routes the actual React text editor ${stepKind} event through the shared text-input fixture`, async () => {
+      await uiI18n.changeLanguage("en");
       const stepText = (step: (typeof textInputFixture.sequences)[number]["steps"][number]): string | undefined => (stepKind === "paste" ? ("paste" in step ? step.paste : undefined) : "compose" in step ? step.compose : undefined);
       const law = textInputFixture.sequences.find((sequence) => sequence.steps.some((step) => stepText(step) !== undefined))!;
       const committed = law.steps.map(stepText).find((text) => text !== undefined)!;
@@ -7539,7 +7740,7 @@ describe("framework renderer hosts", () => {
       try {
         await waitFor(() => expect(session.attachCanvas).toHaveBeenCalledOnce());
         const area = view.container.querySelector("textarea")!;
-        expect(area.getAttribute("aria-label")).toBe("Editor");
+        expect(area.getAttribute("aria-label")).toBe("Artifact");
         expect(area.getAttribute("aria-readonly")).toBe("false");
         const event = new Event(stepKind === "paste" ? "paste" : "compositionend", { bubbles: true, cancelable: true });
         if (stepKind === "paste") Object.defineProperty(event, "clipboardData", { value: { getData: (type: string) => (type === "text/plain" ? committed : "") } });
@@ -7550,7 +7751,7 @@ describe("framework renderer hosts", () => {
         await waitFor(() => expect(onAction).toHaveBeenCalledTimes(2));
         expect(commit).toHaveBeenCalledWith(committed);
         expect(onAction.mock.calls.map(([action]) => action)).toEqual([
-          { controllerId: "writer", action: "textEdit", args: { surfaceId: `writer.${stepKind}`, text: law.expect.text } },
+          { controllerId: "writer", action: "textEdit", args: { surfaceId: `writer.${stepKind}`, text: law.expect.text, typing: `writer.${stepKind}` } },
           { controllerId: "writer", action: "textSelect", args: { surfaceId: `writer.${stepKind}`, start: law.expect.selection[0], end: law.expect.selection[1] } },
         ]);
       } finally {
@@ -7982,7 +8183,7 @@ describe("framework renderer hosts", () => {
         disconnect() {}
       },
     );
-    const node:UiComponentSceneNode={type:"componentScene",surfaceId:"raster.play.viewport",controllerId:"raster-play",componentKind:"paint-2d",paint2d:{documentSyncJson:JSON.stringify(fixture.document),assetsJson:JSON.stringify(fixture.assets),cameraJson:JSON.stringify(fixture.camera),selectionJson:"[]",activeUtility:"selectMarquee",brushSize:24,brushOpacity:1,brushColor:"#2878dc",brushHardness:1,paintTarget:"pixels" as const,maskValue:255,viewMode:"composite"}};
+    const node:UiComponentSceneNode={type:"componentScene",surfaceId:"raster.play.viewport",controllerId:"raster-play",componentKind:"paint-2d",paint2d:{documentSyncJson:JSON.stringify(fixture.document),assetsJson:JSON.stringify(fixture.assets),cameraJson:JSON.stringify(fixture.camera),selectionJson:"[]",activeUtility:"selectMarquee",brushSize:24,brushOpacity:1,brushColor:"#2878dc",brushHardness:1,paintTarget:"pixels" as const,maskValue:255,fillTolerance:24,viewMode:"composite"}};
     const view=render(createElement(Paint2dHost,{node,onAction:noopAction}));
     try {
       await waitFor(() => expect(setCanvasThemeJson).toHaveBeenCalled());
@@ -8075,7 +8276,7 @@ describe("framework renderer hosts", () => {
             brushSize: 24,
             brushOpacity: 1,
             brushColor: "#2878dc",
-            brushHardness: 1,paintTarget:"pixels" as const,maskValue:255,
+            brushHardness: 1,paintTarget:"pixels" as const,maskValue:255,fillTolerance:24,
             viewMode: "composite",
           },
         },
@@ -8161,7 +8362,7 @@ describe("framework renderer hosts", () => {
             brushSize: 24,
             brushOpacity: 1,
             brushColor: "#2878dc",
-            brushHardness: 1,paintTarget:"pixels" as const,maskValue:255,
+            brushHardness: 1,paintTarget:"pixels" as const,maskValue:255,fillTolerance:24,
             viewMode: "composite",
           },
         },
@@ -8198,7 +8399,7 @@ describe("framework renderer hosts", () => {
             brushSize: 24,
             brushOpacity: 1,
             brushColor: "#2878dc",
-            brushHardness: 1,paintTarget:"pixels" as const,maskValue:255,
+            brushHardness: 1,paintTarget:"pixels" as const,maskValue:255,fillTolerance:24,
             viewMode: "composite",
           },
         },
@@ -8227,7 +8428,7 @@ describe("framework renderer hosts", () => {
             brushSize: 24,
             brushOpacity: 1,
             brushColor: "#2878dc",
-            brushHardness: 1,paintTarget:"pixels" as const,maskValue:255,
+            brushHardness: 1,paintTarget:"pixels" as const,maskValue:255,fillTolerance:24,
             viewMode: "navigator",
             compositeViewportJson: '{"width":640,"height":480}',
           },
@@ -9319,6 +9520,7 @@ describe("s workflow flow routing", () => {
                   draggable: true,
                   dragData: { "application/x-semio-catalogue-item": '{"pluginId":"s.system","appId":"draw"}' },
                   dimmed: null,
+                  selected: null,
                   window: null,
                   granularity: null,
                   inlineToolbar: null,
@@ -9365,6 +9567,7 @@ describe("s workflow flow routing", () => {
                   draggable: true,
                   dragData: { "application/x-semio-catalogue-item": '{"objectKind":"Hexagonal Cut Concrete Forest Left"}' },
                   dimmed: null,
+                  selected: null,
                   window: null,
                   granularity: null,
                   inlineToolbar: null,
@@ -9374,7 +9577,7 @@ describe("s workflow flow routing", () => {
                 children: [
                   {
                     key: "puzzle3d-kind-vortex.0.b-l",
-                    component: { type: "treeItem", label: "b-l", description: "[4,4,3]", icon: "circle-dot", defaultOpen: null, draggable: null, dragData: null, dimmed: null, window: null, granularity: null, inlineToolbar: null, detail: null, rowActions: [], target: null },
+                    component: { type: "treeItem", label: "b-l", description: "[4,4,3]", icon: "circle-dot", defaultOpen: null, draggable: null, dragData: null, dimmed: null, selected: null, window: null, granularity: null, inlineToolbar: null, detail: null, rowActions: [], target: null },
                   },
                 ],
               },
@@ -9479,6 +9682,7 @@ describe("s workflow flow routing", () => {
                 draggable: null,
                 dragData: null,
                 dimmed: null,
+                selected: null,
                 window: null,
                 granularity: "object",
                 inlineToolbar: null,
@@ -9861,19 +10065,22 @@ describe("window action panel — staging and single dispatch (P1/P2)", () => {
 
   it("gates Execute on required args, but a default-satisfied required arg counts without staging", () => {
     const onExecute = vi.fn();
+    const unavailable = (button: HTMLButtonElement) => [button.getAttribute("aria-disabled") === "true", button.disabled];
     const required = render(createElement(Harness, { actions: [twoArgAction], onExecute }));
     fireEvent.click(rowByText(required.container, "Extrude…"));
-    expect(buttonByText(required.container, "Execute").disabled).toBe(true);
+    expect(unavailable(buttonByText(required.container, "Execute")), "a gated Execute stays focusable, aria-disabled").toEqual([true, false]);
+    fireEvent.click(buttonByText(required.container, "Execute"));
+    expect(onExecute).not.toHaveBeenCalled();
     const inputs = required.container.querySelectorAll('input[type="number"]');
     fireEvent.change(inputs[0]!, { target: { value: "3" } });
-    expect(buttonByText(required.container, "Execute").disabled).toBe(true);
+    expect(unavailable(buttonByText(required.container, "Execute"))).toEqual([true, false]);
     fireEvent.change(inputs[1]!, { target: { value: "2" } });
-    expect(buttonByText(required.container, "Execute").disabled).toBe(false);
+    expect(unavailable(buttonByText(required.container, "Execute"))).toEqual([false, false]);
     cleanup();
 
     const defaulted = render(createElement(Harness, { actions: [defaultedAction], onExecute }));
     fireEvent.click(rowByText(defaulted.container, "Bevel…"));
-    expect(buttonByText(defaulted.container, "Execute").disabled).toBe(false);
+    expect(unavailable(buttonByText(defaulted.container, "Execute"))).toEqual([false, false]);
     fireEvent.click(buttonByText(defaulted.container, "Execute"));
     expect(onExecute).toHaveBeenLastCalledWith({ controllerId: "c", action: "bevel", args: { radius: 2 } });
   });
@@ -10386,7 +10593,7 @@ describe("registry-derived utilities and activation (P5)", () => {
           key: "framework.history.commands",
           component: { type: "treeSection", label: null, defaultOpen: true, headerToolbar: null, window: null },
           children: [
-            { key: "framework.history.entry.1", component: { type: "treeItem", label: "Increment", description: null, icon: null, defaultOpen: null, draggable: null, dragData: null, dimmed: null, window: null, granularity: null, inlineToolbar: null, detail: null, rowActions: [], target: null } },
+            { key: "framework.history.entry.1", component: { type: "treeItem", label: "Increment", description: null, icon: null, defaultOpen: null, draggable: null, dragData: null, dimmed: null, selected: null, window: null, granularity: null, inlineToolbar: null, detail: null, rowActions: [], target: null } },
           ],
         },
       ],
@@ -11793,7 +12000,7 @@ describe("host effect dispatch (D2 DispatchAction, D3 RequestFileOpen.multiple, 
     expect(doneCalls[0]!.args).toMatchObject({ name: "clip.mp4", frameCount: frameCalls.length, sampledCount: frameCalls.length, streamId: "s1" });
   });
 
-  it("runRequestMediaFrames (D5): Tier 2 failure (video element throws mid-seek) ⇒ dispatches fallbackAction exactly once with raw bytes as a data URL, no frame/done calls", async () => {
+  it("runMediaFramesV1 (D5): Tier 2 failure (video element throws mid-seek) ⇒ dispatches fallbackAction exactly once with raw bytes as a data URL, no frame/done calls", async () => {
     const dispatchOne = vi.fn().mockResolvedValue(undefined);
     const payload = "data:video/mp4;base64," + btoa("not a real mp4 but bytes exist");
     const throwingVideo = mockVideoElement(1000, 16, 16);
@@ -11806,7 +12013,8 @@ describe("host effect dispatch (D2 DispatchAction, D3 RequestFileOpen.multiple, 
         throw new Error("decode failed");
       },
     });
-    await runRequestMediaFrames({ frameAction: "frame", doneAction: "done", fallbackAction: "fallback", sampleStride: 1, maxFrames: 2, maxLongEdgePx: 0, fpsHint: 30 }, "video/mp4", payload, dispatchOne, () => throwingVideo);
+    const source = await requestMediaFramesSourceV1("video/mp4", payload);
+    expect(await runMediaFramesV1({ frameAction: "frame", doneAction: "done", fallbackAction: "fallback", sampleStride: 1, maxFrames: 2, maxLongEdgePx: 0, fpsHint: 30 }, source!, dispatchOne, { actions: [] }, new AbortController().signal, undefined, () => throwingVideo)).toBe("done");
     expect(dispatchOne).toHaveBeenCalledTimes(1);
     const [action, args] = dispatchOne.mock.calls[0]! as [string, Record<string, unknown>];
     expect(action).toBe("fallback");
@@ -11814,14 +12022,38 @@ describe("host effect dispatch (D2 DispatchAction, D3 RequestFileOpen.multiple, 
     expect(String(args.payload)).toMatch(/^data:video\/mp4;base64,/);
   });
 
-  it("runRequestMediaFrames (D5): payload bytes in hand ⇒ Tier 2 seek-capture runs, ending in doneAction (no picker needed)", async () => {
+  it("runMediaFramesV1 (D5): payload bytes in hand ⇒ Tier 2 seek-capture runs, reporting every frame, ending in doneAction (no picker needed)", async () => {
     mockCanvasCapture();
     const dispatchOne = vi.fn().mockResolvedValue(undefined);
     const payload = "data:video/mp4;base64," + btoa("not a real mp4 but bytes exist");
-    await runRequestMediaFrames({ frameAction: "frame", doneAction: "done", fallbackAction: "fallback", sampleStride: 1, maxFrames: 2, maxLongEdgePx: 0, fpsHint: 30 }, "video/mp4", payload, dispatchOne, () => mockVideoElement(1000, 16, 16));
+    const progress: [number, number][] = [];
+    const source = await requestMediaFramesSourceV1("video/mp4", payload);
+    expect(source?.name).toBe("video");
+    expect(await runMediaFramesV1({ frameAction: "frame", doneAction: "done", fallbackAction: "fallback", sampleStride: 1, maxFrames: 2, maxLongEdgePx: 0, fpsHint: 30 }, source!, dispatchOne, { actions: [] }, new AbortController().signal, (completed, total) => progress.push([completed, total]), () => mockVideoElement(1000, 16, 16))).toBe("done");
     const actions = dispatchOne.mock.calls.map((call) => call[0] as string);
-    expect(actions.at(-1)).toBe("done");
-    expect(actions.filter((action) => action === "frame").length).toBeGreaterThan(0);
+    expect(actions).toEqual(["frame", "frame", "done"]);
+    expect(progress).toEqual([[1, 2], [2, 2]]);
+  });
+
+  it("runMediaFramesV1 (D5): a host cancel stops before the next frame — no done, no fallback; `importAbort` only when a frame reached a declaring guest", async () => {
+    mockCanvasCapture();
+    const payload = "data:video/mp4;base64," + btoa("not a real mp4 but bytes exist");
+    const args = { frameAction: "frame", doneAction: "done", fallbackAction: "fallback", sampleStride: 1, maxFrames: 4, maxLongEdgePx: 0, fpsHint: 30 } as const;
+    const run = async (declares: boolean, cancelAfter: number | "before") => {
+      const controller = new AbortController();
+      if (cancelAfter === "before") controller.abort();
+      const dispatched: string[] = [];
+      const dispatchOne = vi.fn().mockImplementation(async (action: string) => {
+        dispatched.push(action);
+        if (dispatched.filter((entry) => entry === "frame").length === cancelAfter) controller.abort();
+      });
+      const outcome = await runMediaFramesV1(args, (await requestMediaFramesSourceV1("video/mp4", payload))!, dispatchOne, { actions: declares ? [{ id: "importAbort" }] : [] } as unknown as Parameters<typeof runMediaFramesV1>[3], controller.signal, undefined, () => mockVideoElement(1000, 16, 16));
+      return { outcome, dispatched };
+    };
+    expect(await run(true, 1)).toEqual({ outcome: "cancelled", dispatched: ["frame", "importAbort"] });
+    expect(await run(true, 2)).toEqual({ outcome: "cancelled", dispatched: ["frame", "frame", "importAbort"] });
+    expect(await run(false, 1)).toEqual({ outcome: "cancelled", dispatched: ["frame"] });
+    expect(await run(true, "before")).toEqual({ outcome: "cancelled", dispatched: [] });
   });
 });
 
@@ -12523,7 +12755,8 @@ describe("TutorialRecorder LocalizedLabel synthesis", () => {
         dispatchEvent: () => false,
       })) as unknown as typeof window.matchMedia;
     }
-    const { container } = render(createElement(FrameworkOsShell, { plugins: [], appId: "test" }));
+    const backboneWorkerFactory = () => Object.assign(new EventTarget(), { onmessage: null, postMessage: vi.fn(), terminate: vi.fn() }) as unknown as Worker;
+    const { container } = render(createElement(FrameworkOsShell, { plugins: [], appId: "test", backboneWorkerFactory }));
     const portalLayer = container.querySelector("[data-semio-portal-layer]");
     expect(portalLayer).toBeTruthy();
     expect(portalLayer?.className).not.toContain("z-tutorial");

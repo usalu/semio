@@ -2,7 +2,7 @@
  * mirror of the World3d scene payload `render()` produces — no mutation-shaped fields (no
  * exaggeration control, no persisted camera), matching the viewer's `ViewEmit`-only contract. */
 
-/** 👁️ One imported overlay pin, read straight off `GisTerrainSnapshot.importedFeaturesJson`. */
+/** 👁️ One imported overlay pin, read straight off `GisTerrainSnapshot.importedMap`. */
 export interface GisTerrainViewTerrainPin {
   id: string;
   meshId: "pin";

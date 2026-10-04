@@ -6,7 +6,8 @@ use crate::EnergyModelSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ A refused or no-op forward step has nothing to undo, so it answers with no steps at all.
-pub fn inverse(payload: &super::ReplaceSurfaceVertices, base: &EnergyModelSnapshot) -> Vec<EnergyModelMutation> {
+pub fn inverse(payload: &super::ReplaceSurfaceVertices, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(existing) = base.model.surfaces.iter().find(|item| item.id == payload.id) else {
         return Vec::new();
     };
@@ -14,5 +15,7 @@ pub fn inverse(payload: &super::ReplaceSurfaceVertices, base: &EnergyModelSnapsh
         return Vec::new();
     }
     vec![vocabulary::replace_surface_vertices(payload.id, existing.vertices_m.clone())]
+
+    })())
 }
 //#endregion 🔖️Inverse

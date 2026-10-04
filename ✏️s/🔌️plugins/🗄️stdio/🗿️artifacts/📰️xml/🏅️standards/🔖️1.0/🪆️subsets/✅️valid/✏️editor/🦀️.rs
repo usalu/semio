@@ -142,25 +142,25 @@ impl protocol::OpText for XmlValidEditorCommand {
             XmlValidEditorCommand::SetActiveExample { example_id } => format!("active-example id={}", hex_encode(example_id.as_bytes())),
         }
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         if let Some(rest) = line.strip_prefix("active-example id=") {
-            let example_id = String::from_utf8(hex_decode(rest).map_err(|error| store::TextError::new(format!("xml valid editor command: invalid example hex {error}"), dsl::TextSpan::at(1, 1)))?)
-                .map_err(|error| store::TextError::new(format!("xml valid editor command: invalid example utf8 {error}"), dsl::TextSpan::at(1, 1)))?;
+            let example_id = String::from_utf8(hex_decode(rest).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("xml valid editor command: invalid example hex {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?)
+                .map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("xml valid editor command: invalid example utf8 {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
             return Ok(XmlValidEditorCommand::SetActiveExample { example_id });
         }
         if let Some(rest) = line.strip_prefix("snapshot-edit event=") {
-            let bytes = hex_decode(rest).map_err(|error| store::TextError::new(format!("xml valid editor command: invalid snapshot edit hex {error}"), dsl::TextSpan::at(1, 1)))?;
-            let event = <SnapshotEditEvent as protocol::OpBinary>::decode_op(&bytes).map_err(|error| store::TextError::new(format!("xml valid editor command: invalid snapshot edit {error}"), dsl::TextSpan::at(1, 1)))?;
+            let bytes = hex_decode(rest).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("xml valid editor command: invalid snapshot edit hex {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
+            let event = <SnapshotEditEvent as protocol::OpBinary>::decode_op(&bytes).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("xml valid editor command: invalid snapshot edit {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
             return Ok(XmlValidEditorCommand::EditSnapshot { event });
         }
-        let rest = line.strip_prefix("set-node ").ok_or_else(|| store::TextError::new(format!("xml editor command: unknown line {line:?}"), dsl::TextSpan::at(1, 1)))?;
+        let rest = line.strip_prefix("set-node ").ok_or_else(|| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("xml editor command: unknown line {line:?}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
         let mut node_id = None;
         let mut revision = None;
         let mut value = None;
         for token in rest.split(' ') {
-            let (key, raw) = token.split_once('=').ok_or_else(|| store::TextError::new(format!("xml editor command: bad token {token:?}"), dsl::TextSpan::at(1, 1)))?;
-            let decoded = String::from_utf8(hex_decode(raw).map_err(|error| store::TextError::new(format!("xml valid editor command: invalid field hex {error}"), dsl::TextSpan::at(1, 1)))?)
-                .map_err(|error| store::TextError::new(format!("xml valid editor command: invalid field utf8 {error}"), dsl::TextSpan::at(1, 1)))?;
+            let (key, raw) = token.split_once('=').ok_or_else(|| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("xml editor command: bad token {token:?}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
+            let decoded = String::from_utf8(hex_decode(raw).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("xml valid editor command: invalid field hex {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?)
+                .map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("xml valid editor command: invalid field utf8 {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
             match key {
                 "node-id" => node_id = Some(decoded),
                 "revision" => revision = Some(decoded),
@@ -169,7 +169,7 @@ impl protocol::OpText for XmlValidEditorCommand {
             }
         }
         let (node_id, revision, value) =
-            node_id.zip(revision).zip(value).map(|((node_id, revision), value)| (node_id, revision, value)).ok_or_else(|| store::TextError::new("xml editor command: missing node-id/revision/value", dsl::TextSpan::at(1, 1)))?;
+            node_id.zip(revision).zip(value).map(|((node_id, revision), value)| (node_id, revision, value)).ok_or_else(|| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "xml editor command: missing node-id/revision/value", semio_framework_diagnostic::TextSpan::at(1, 1)))?;
         Ok(XmlValidEditorCommand::SetNode { node_id, revision, value })
     }
 }
@@ -242,7 +242,7 @@ fn xml_valid_example_snapshot(example_id: &str) -> XmlSnapshot {
 /// `ArtifactEditor::command_from_action`'s default refuses EVERY id, which is why the boot example,
 /// every navbar pick and every Actions-pane row died before reaching a command.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn xml_valid_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<XmlValidEditorCommand, Fault> {
+fn xml_valid_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<XmlValidEditorCommand, Fault> {
     if let Some(event) = semio_s_artifact_stdio_contract::editing::snapshot_edit_event_from_action(action, args)? {
         return Ok(XmlValidEditorCommand::EditSnapshot { event });
     }
@@ -401,6 +401,24 @@ impl ArtifactEditor for XmlValidEditor {
     const DIALECT: Dialect = XML_VALID_EDITOR_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_XML_DOCUMENT_SCHEMA;
 
+    fn natural_file_codec() -> Option<semio_framework_plugin::NaturalFileCodec> {
+        Some(semio_framework_plugin::NaturalFileCodec { format_kind: "s.stdio.xml@1.0", extension: ".xml", media_type: "application/xml", binary: false })
+    }
+
+    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
+        snapshot.export_utf8().map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error))
+    }
+
+    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
+        XmlSnapshot::import_utf8(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error))
+    }
+
+    fn whole_document_operation(snapshot: Self::Snapshot) -> Option<Self::Mutation> {
+        Some(XmlValidMutation::SetSnapshot(
+            crate::standards::v1_0::subsets::valid::schema::valid_mutations::set_snapshot::SetSnapshot { snapshot },
+        ))
+    }
+
     semio_s_artifact_stdio_contract::snapshot_editing_bounded_first_step_tool_proofs! {
         owner: EditorApp<XmlValidEditor>,
         owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✅️valid/✏️editor/🦀️.rs",
@@ -521,7 +539,7 @@ impl ArtifactEditor for XmlValidEditor {
         xml_valid_command_id(command)
     }
 
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
         xml_valid_command_from_action(action, args)
     }
 
@@ -551,10 +569,11 @@ impl ArtifactEditor for XmlValidEditor {
             main::BODY_KEY => {
                 let revision =
                     doc.render_operation().map_or_else(|| semio_s_artifact_stdio_contract::window_kit_snapshot_revision(doc.snapshot), |operation| semio_s_artifact_stdio_contract::window_kit_canonical_revision(operation.canonical_base_revision));
-                main::render_editor(doc.snapshot, view_state.locale, &semio_framework_plugin::TreeWindows::for_body(view_state, main::BODY_KEY), "s.stdio.xml@1.0/valid#editor", &revision).map(semio_framework_plugin::built_to_component_tree)
+                let publication_revision = semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?;
+                main::render_editor(doc.snapshot, view_state.locale, &semio_framework_plugin::TreeWindows::for_body(view_state, main::BODY_KEY), "s.stdio.xml@1.0/valid#editor", &revision, publication_revision).map(semio_framework_plugin::built_to_component_tree)
             }
             semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY => semio_s_artifact_stdio_contract::editing::render_snapshot_details(
-                doc.snapshot,
+                doc,
                 view_state.locale,
                 "s.stdio.xml@1.0/valid#editor",
                 &semio_framework_plugin::TreeWindows::for_body(view_state, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY),
@@ -574,7 +593,7 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for XmlVali
     }
 
     fn snapshot_edit_mutations(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| XmlValidMutation::SetSnapshot(crate::standards::v1_0::subsets::valid::schema::valid_mutations::set_snapshot::SetSnapshot { snapshot }))
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_patch(event, snapshot, |patch| XmlValidMutation::PatchSnapshot(crate::standards::v1_0::subsets::valid::schema::valid_mutations::patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| XmlValidMutation::SetSnapshot(crate::standards::v1_0::subsets::valid::schema::valid_mutations::set_snapshot::SetSnapshot { snapshot })))
     }
 }
 //#endregion 🔖️Editor

@@ -1,0 +1,10 @@
+{
+  "RenameNode": {
+    "id": {
+      "value": "a"
+    },
+    "new_id": {
+      "value": "origin"
+    }
+  }
+}

@@ -1,0 +1,219 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/paint-native-samples/schema.json",
+  "title": "Paint Native PNG Samples",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "revision",
+    "region",
+    "paint",
+    "result"
+  ],
+  "properties": {
+    "revision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{16}$",
+      "x-semio-ui": {
+        "label": {
+          "en": "Source revision",
+          "de": "Quellrevision"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "region": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height"
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "Paint region",
+          "de": "Malbereich"
+        },
+        "group": "region",
+        "order": 20
+      },
+      "properties": {
+        "x": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Left",
+              "de": "Links"
+            },
+            "group": "position",
+            "order": 10
+          }
+        },
+        "y": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Top",
+              "de": "Oben"
+            },
+            "group": "position",
+            "order": 20
+          }
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 1,
+          "x-semio-ui": {
+            "label": {
+              "en": "Width",
+              "de": "Breite"
+            },
+            "group": "extent",
+            "order": 30
+          }
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1,
+          "x-semio-ui": {
+            "label": {
+              "en": "Height",
+              "de": "Höhe"
+            },
+            "group": "extent",
+            "order": 40
+          }
+        }
+      }
+    },
+    "paint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile",
+        "first",
+        "second",
+        "third",
+        "fourth"
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "Native samples",
+          "de": "Native Abtastwerte"
+        },
+        "group": "samples",
+        "order": 30
+      },
+      "properties": {
+        "profile": {
+          "type": "string",
+          "enum": [
+            "indexed",
+            "grayscale",
+            "grayscale-alpha",
+            "rgb",
+            "rgba"
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Sample profile",
+              "de": "Abtastprofil"
+            },
+            "group": "profile",
+            "order": 10,
+            "options": {
+              "indexed": {
+                "en": "Palette index",
+                "de": "Palettenindex"
+              },
+              "grayscale": {
+                "en": "Grayscale",
+                "de": "Graustufe"
+              },
+              "grayscale-alpha": {
+                "en": "Grayscale alpha",
+                "de": "Graustufe mit Alpha"
+              },
+              "rgb": {
+                "en": "RGB",
+                "de": "RGB"
+              },
+              "rgba": {
+                "en": "RGBA",
+                "de": "RGBA"
+              }
+            }
+          }
+        },
+        "first": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Sample 1",
+              "de": "Abtastwert 1"
+            },
+            "group": "values",
+            "order": 20
+          }
+        },
+        "second": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Sample 2",
+              "de": "Abtastwert 2"
+            },
+            "group": "values",
+            "order": 30
+          }
+        },
+        "third": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Sample 3",
+              "de": "Abtastwert 3"
+            },
+            "group": "values",
+            "order": 40
+          }
+        },
+        "fourth": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535,
+          "x-semio-ui": {
+            "label": {
+              "en": "Sample 4",
+              "de": "Abtastwert 4"
+            },
+            "group": "values",
+            "order": 50
+          }
+        }
+      }
+    },
+    "result": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/snapshot.json",
+      "x-semio-ui": {
+        "label": {
+          "en": "Completed PNG",
+          "de": "Fertiggestelltes PNG"
+        },
+        "group": "result",
+        "order": 40
+      }
+    }
+  }
+}

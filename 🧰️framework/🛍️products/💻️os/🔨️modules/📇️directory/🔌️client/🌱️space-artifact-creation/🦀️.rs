@@ -48,7 +48,7 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
         if !request.validate() {
             return Err(DirectoryClientError::Decode("space artifact creation intent is invalid".into()));
         }
-        let body = crate::os_pack::json::to_json_string(request).into_bytes();
+        let body = semio_framework_pack_json::to_json_string(request).into_bytes();
         let receipt = self.space_artifact_creation_exchange(ctx, HttpMethod::Post, space_id, SpaceArtifactCreationRoute::Collection, Some(body), SPACE_ARTIFACT_CREATION_MAX_BYTES).await?;
         space_artifact_creation_status(&receipt, space_id, &request.request_id)
     }

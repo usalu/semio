@@ -1,0 +1,260 @@
+{
+  "WireValueMaterializationCase": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "rawHex",
+      "limits",
+      "physicalAllowance",
+      "ownedUtf8Bytes",
+      "grammar",
+      "expect"
+    ],
+    "properties": {
+      "id": {
+        "enum": [
+          "canonical-null",
+          "interned-repeat-at-limit",
+          "interned-repeat-over-limit",
+          "inline-string-at-limit",
+          "inline-string-over-limit",
+          "array-slots-at-limit",
+          "array-slots-over-limit",
+          "map-slots-at-limit",
+          "map-slots-over-limit",
+          "nested-array-map-at-depth",
+          "nested-array-map-over-depth",
+          "list-count-over-items",
+          "map-count-over-items",
+          "field-count-zero",
+          "field-count-two",
+          "duplicate-field-id",
+          "foreign-field-id",
+          "non-value-root-tag",
+          "trailing-byte",
+          "symbol-count-over-limit",
+          "symbol-bytes-over-materialization"
+        ]
+      },
+      "rawHex": {
+        "type": "string",
+        "pattern": "^(?:[0-9a-f]{2})+$"
+      },
+      "allowanceProbeHex": {
+        "type": "string",
+        "pattern": "^(?:[0-9a-f]{2})+$"
+      },
+      "limits": {
+        "$ref": "#/$defs/WireValueMaterializationLimits"
+      },
+      "physicalAllowance": {
+        "$ref": "#/$defs/WireValueMaterializationPhysicalAllowance"
+      },
+      "ownedUtf8Bytes": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 9007199254740991
+      },
+      "grammar": {
+        "oneOf": [
+          {
+            "$ref": "#/$defs/WireValueMaterializationAccepted"
+          },
+          {
+            "$ref": "#/$defs/WireValueMaterializationRejected"
+          }
+        ]
+      },
+      "expect": {
+        "oneOf": [
+          {
+            "$ref": "#/$defs/WireValueMaterializationAccepted"
+          },
+          {
+            "$ref": "#/$defs/WireValueMaterializationRejected"
+          }
+        ]
+      }
+    },
+    "allOf": [
+      {
+        "if": {
+          "properties": {
+            "id": {
+              "const": "symbol-bytes-over-materialization"
+            }
+          },
+          "required": [
+            "id"
+          ]
+        },
+        "then": {
+          "properties": {
+            "allowanceProbeHex": {
+              "type": "string",
+              "pattern": "^(?:[0-9a-f]{2})+$"
+            }
+          },
+          "required": [
+            "allowanceProbeHex"
+          ]
+        },
+        "else": {
+          "not": {
+            "type": "object",
+            "properties": {
+              "allowanceProbeHex": {}
+            },
+            "required": [
+              "allowanceProbeHex"
+            ]
+          }
+        }
+      },
+      {
+        "if": {
+          "properties": {
+            "physicalAllowance": {
+              "type": "object",
+              "properties": {
+                "mode": {
+                  "const": "oneByteShort"
+                }
+              },
+              "required": [
+                "mode"
+              ]
+            }
+          },
+          "required": [
+            "physicalAllowance"
+          ]
+        },
+        "then": {
+          "properties": {
+            "expect": {
+              "type": "object",
+              "properties": {
+                "outcome": {
+                  "const": "limit"
+                }
+              },
+              "required": [
+                "outcome"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "if": {
+          "properties": {
+            "physicalAllowance": {
+              "type": "object",
+              "properties": {
+                "mode": {
+                  "enum": [
+                    "exact",
+                    "zero"
+                  ]
+                }
+              },
+              "required": [
+                "mode"
+              ]
+            }
+          },
+          "required": [
+            "physicalAllowance"
+          ]
+        },
+        "then": {
+          "properties": {
+            "expect": {
+              "type": "object",
+              "properties": {
+                "outcome": {
+                  "const": "accepted"
+                }
+              },
+              "required": [
+                "outcome"
+              ]
+            },
+            "grammar": {
+              "type": "object",
+              "properties": {
+                "outcome": {
+                  "const": "accepted"
+                }
+              },
+              "required": [
+                "outcome"
+              ]
+            }
+          }
+        }
+      }
+    ]
+  },
+  "WireValueMaterializationLimits": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "maxFileLen",
+      "maxSegmentLen",
+      "maxSymbols",
+      "maxDepth",
+      "maxItems"
+    ],
+    "properties": {
+      "maxFileLen": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 9007199254740991
+      },
+      "maxSegmentLen": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 9007199254740991
+      },
+      "maxSymbols": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 4294967295
+      },
+      "maxDepth": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 65535
+      },
+      "maxItems": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 9007199254740991
+      }
+    }
+  },
+  "WireValueMaterializationPhysicalAllowance": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "basis",
+      "mode"
+    ],
+    "properties": {
+      "basis": {
+        "const": "observedRequests"
+      },
+      "mode": {
+        "enum": [
+          "zero",
+          "exact",
+          "oneByteShort",
+          "unbounded"
+        ]
+      }
+    }
+  }
+}

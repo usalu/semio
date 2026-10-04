@@ -343,7 +343,7 @@
       "plugin": "vcs",
       "kind": "s.vcs.vcs",
       "definition": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🦀️.rs",
-      "root": "✏️s/🔌️plugins/🌿️vcs/🦀️.rs"
+      "root": "🌎️hub/🧩️compositions/🌿️vcs/🦀️.rs"
     },
     {
       "plugin": "writer",

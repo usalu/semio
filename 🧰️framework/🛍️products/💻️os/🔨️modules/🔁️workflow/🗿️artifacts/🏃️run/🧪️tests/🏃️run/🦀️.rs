@@ -1,41 +1,41 @@
 //! 🧪️ Run package serialization, admission, and replay laws.
 use crate::*;
-use dsl::DslField as _;
-fn assert_run_manual_binding<T:dsl::DslField+PartialEq+std::fmt::Debug>(value:&T,maximum:usize,tiny:usize){
- let expected=T::to_value(value);let mut admitted=|_|true;let mut control=dsl::NativeEncodeControl::new(maximum,&mut admitted);let encoded=value.to_value_controlled(&mut control).expect("owned run field projection");let exact=control.owned_bytes();assert_eq!(encoded,expected);assert!(exact>0);assert!(value.to_value_controlled(&mut dsl::NativeEncodeControl::new(exact,&mut |_|true)).is_ok());assert!(value.to_value_controlled(&mut dsl::NativeEncodeControl::new(exact-1,&mut |_|true)).is_err());
- let mut admitted=|_|true;let mut control=dsl::NativeDecodeControl::new(maximum,&mut admitted);assert_eq!(&T::from_value_controlled(&encoded,&mut control).expect("owned run field construction"),value);let decoded_exact=control.owned_bytes();assert!(T::from_value_controlled(&encoded,&mut dsl::NativeDecodeControl::new(decoded_exact,&mut |_|true)).is_ok());if decoded_exact>0{assert!(T::from_value_controlled(&encoded,&mut dsl::NativeDecodeControl::new(decoded_exact-1,&mut |_|true)).is_err());}
- let dsl::FieldValue::Record(record)=&encoded else{panic!("explicit run record")};assert_eq!(value.to_record_controlled(&mut dsl::NativeEncodeControl::new(maximum,&mut |_|true)).unwrap(),*record);assert_eq!(&T::from_record_controlled(record,&mut dsl::NativeDecodeControl::new(maximum,&mut |_|true)).unwrap(),value);
- let mut admitted=|_|true;let mut control=dsl::NativeEncodeControl::new(tiny,&mut admitted);assert!(value.to_value_controlled(&mut control).is_err());assert_eq!(control.owned_bytes(),0);if decoded_exact>tiny{assert!(T::from_value_controlled(&encoded,&mut dsl::NativeDecodeControl::new(tiny,&mut |_|true)).is_err());}assert!(value.to_value_controlled(&mut dsl::NativeEncodeControl::new(maximum,&mut |_|false)).is_err());assert!(T::from_value_controlled(&encoded,&mut dsl::NativeDecodeControl::new(maximum,&mut |_|false)).is_err());
+use semio_framework_dsl_record::DslField as _;
+fn assert_run_manual_binding<T:semio_framework_dsl_record::DslField+PartialEq+std::fmt::Debug>(value:&T,maximum:usize,tiny:usize){
+ let expected=T::to_value(value);let mut admitted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(maximum,&mut admitted);let encoded=value.to_value_controlled(&mut control).expect("owned run field projection");let exact=control.owned_bytes();assert_eq!(encoded,expected);assert!(exact>0);assert!(value.to_value_controlled(&mut semio_framework_value::NativeEncodeControl::new(exact,&mut |_|true)).is_ok());assert!(value.to_value_controlled(&mut semio_framework_value::NativeEncodeControl::new(exact-1,&mut |_|true)).is_err());
+ let mut admitted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(maximum,&mut admitted);assert_eq!(&T::from_value_controlled(&encoded,&mut control).expect("owned run field construction"),value);let decoded_exact=control.owned_bytes();assert!(T::from_value_controlled(&encoded,&mut semio_framework_value::NativeDecodeControl::new(decoded_exact,&mut |_|true)).is_ok());if decoded_exact>0{assert!(T::from_value_controlled(&encoded,&mut semio_framework_value::NativeDecodeControl::new(decoded_exact-1,&mut |_|true)).is_err());}
+ let semio_framework_dsl_record::FieldValue::Record(record)=&encoded else{panic!("explicit run record")};assert_eq!(value.to_record_controlled(&mut semio_framework_value::NativeEncodeControl::new(maximum,&mut |_|true)).unwrap(),*record);assert_eq!(&T::from_record_controlled(record,&mut semio_framework_value::NativeDecodeControl::new(maximum,&mut |_|true)).unwrap(),value);
+ let mut admitted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(tiny,&mut admitted);assert!(value.to_value_controlled(&mut control).is_err());assert_eq!(control.owned_bytes(),0);if decoded_exact>tiny{assert!(T::from_value_controlled(&encoded,&mut semio_framework_value::NativeDecodeControl::new(tiny,&mut |_|true)).is_err());}assert!(value.to_value_controlled(&mut semio_framework_value::NativeEncodeControl::new(maximum,&mut |_|false)).is_err());assert!(T::from_value_controlled(&encoded,&mut semio_framework_value::NativeDecodeControl::new(maximum,&mut |_|false)).is_err());
 }
 #[test]
 fn sqlite_snapshot_run_trigger_binds_literal_values_and_cancels_owned_utf8(){
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪆️binding/🔣️.json")).unwrap();let maximum=fixture["maximumBytes"].as_u64().unwrap()as usize;let tiny=fixture["tinyBytes"].as_u64().unwrap()as usize;
- for expected in fixture["triggers"].as_array().unwrap(){let value:RunTrigger=dsl::os_pack::json::from_json_str(&serde_json::to_string(expected).unwrap()).unwrap();assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&value)).unwrap(),*expected);assert_run_manual_binding(&value,maximum,tiny);}
- let text="😀".repeat(fixture["largeCharacters"].as_u64().unwrap()as usize);let value=RunTrigger::Automation{automation_ref:text.clone(),event_fingerprint:text.clone()};let raw=<RunTrigger as dsl::DslField>::to_value(&value);let threshold=fixture["cancelAfterBytes"].as_u64().unwrap()as usize;
- let mut observed=false;let mut cancel=|event:semio_framework_value::native_encoding::NativeEncodeProgress|{if event.total==text.len()&&event.completed>=threshold{observed=true;false}else{true}};assert!(value.to_value_controlled(&mut dsl::NativeEncodeControl::new(maximum,&mut cancel)).is_err());assert!(observed);
- let mut observed=false;let mut cancel=|event:semio_framework_value::native_decoding::NativeDecodeProgress|{if event.total==text.len()&&event.completed>=threshold{observed=true;false}else{true}};assert!(<RunTrigger as dsl::DslField>::from_value_controlled(&raw,&mut dsl::NativeDecodeControl::new(maximum,&mut cancel)).is_err());assert!(observed);
+ for expected in fixture["triggers"].as_array().unwrap(){let value:RunTrigger=semio_framework_pack_json::from_json_str(&serde_json::to_string(expected).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&value)).unwrap(),*expected);assert_run_manual_binding(&value,maximum,tiny);}
+ let text="😀".repeat(fixture["largeCharacters"].as_u64().unwrap()as usize);let value=RunTrigger::Automation{automation_ref:text.clone(),event_fingerprint:text.clone()};let raw=<RunTrigger as semio_framework_dsl_record::DslField>::to_value(&value);let threshold=fixture["cancelAfterBytes"].as_u64().unwrap()as usize;
+ let mut observed=false;let mut cancel=|event:semio_framework_value::native_encoding::NativeEncodeProgress|{if event.total==text.len()&&event.completed>=threshold{observed=true;false}else{true}};assert!(value.to_value_controlled(&mut semio_framework_value::NativeEncodeControl::new(maximum,&mut cancel)).is_err());assert!(observed);
+ let mut observed=false;let mut cancel=|event:semio_framework_value::native_decoding::NativeDecodeProgress|{if event.total==text.len()&&event.completed>=threshold{observed=true;false}else{true}};assert!(<RunTrigger as semio_framework_dsl_record::DslField>::from_value_controlled(&raw,&mut semio_framework_value::NativeDecodeControl::new(maximum,&mut cancel)).is_err());assert!(observed);
 }
 use protocol::MutationDiff;
-fn assert_run_native_status<T:dsl::DslField+PartialEq+std::fmt::Debug>(value:&T,index:u32,invalid:u32){
- let mut admitted=|_|true;let mut encoding=dsl::NativeEncodeControl::new(0,&mut admitted);let native=value.to_value_controlled(&mut encoding).expect("owned declared status ordinal");assert_eq!(native,dsl::FieldValue::Enum(index));assert_eq!(encoding.owned_bytes(),0);
- let mut admitted=|_|true;let mut decoding=dsl::NativeDecodeControl::new(0,&mut admitted);assert_eq!(&T::from_value_controlled(&native,&mut decoding).unwrap(),value);assert_eq!(decoding.owned_bytes(),0);assert!(T::from_value_controlled(&dsl::FieldValue::Enum(invalid),&mut dsl::NativeDecodeControl::new(0,&mut |_|true)).is_err());assert!(value.to_value_controlled(&mut dsl::NativeEncodeControl::new(0,&mut |_|false)).is_err());assert!(T::from_value_controlled(&native,&mut dsl::NativeDecodeControl::new(0,&mut |_|false)).is_err());
+fn assert_run_native_status<T:semio_framework_dsl_record::DslField+PartialEq+std::fmt::Debug>(value:&T,index:u32,invalid:u32){
+ let mut admitted=|_|true;let mut encoding=semio_framework_value::NativeEncodeControl::new(0,&mut admitted);let native=value.to_value_controlled(&mut encoding).expect("owned declared status ordinal");assert_eq!(native,semio_framework_dsl_record::FieldValue::Enum(index));assert_eq!(encoding.owned_bytes(),0);
+ let mut admitted=|_|true;let mut decoding=semio_framework_value::NativeDecodeControl::new(0,&mut admitted);assert_eq!(&T::from_value_controlled(&native,&mut decoding).unwrap(),value);assert_eq!(decoding.owned_bytes(),0);assert!(T::from_value_controlled(&semio_framework_dsl_record::FieldValue::Enum(invalid),&mut semio_framework_value::NativeDecodeControl::new(0,&mut |_|true)).is_err());assert!(value.to_value_controlled(&mut semio_framework_value::NativeEncodeControl::new(0,&mut |_|false)).is_err());assert!(T::from_value_controlled(&native,&mut semio_framework_value::NativeDecodeControl::new(0,&mut |_|false)).is_err());
 }
 #[test]
 fn sqlite_snapshot_run_status_binds_every_declared_ordinal_without_allocation(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪆️binding/🔣️.json")).unwrap();let invalid=fixture["invalidOrdinal"].as_u64().unwrap()as u32;for(index,word)in fixture["statuses"].as_array().unwrap().iter().enumerate(){let value:RunStatus=dsl::os_pack::json::from_json_str(&serde_json::to_string(word).unwrap()).unwrap();assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&value)).unwrap(),*word);assert_run_native_status(&value,index as u32,invalid);}
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪆️binding/🔣️.json")).unwrap();let invalid=fixture["invalidOrdinal"].as_u64().unwrap()as u32;for(index,word)in fixture["statuses"].as_array().unwrap().iter().enumerate(){let value:RunStatus=semio_framework_pack_json::from_json_str(&serde_json::to_string(word).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&value)).unwrap(),*word);assert_run_native_status(&value,index as u32,invalid);}
 }
 #[test]
 fn sqlite_snapshot_run_node_status_binds_every_declared_ordinal_without_allocation(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪆️binding/🔣️.json")).unwrap();let invalid=fixture["invalidOrdinal"].as_u64().unwrap()as u32;for(index,word)in fixture["nodeStatuses"].as_array().unwrap().iter().enumerate(){let value:RunNodeStatus=dsl::os_pack::json::from_json_str(&serde_json::to_string(word).unwrap()).unwrap();assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&value)).unwrap(),*word);assert_run_native_status(&value,index as u32,invalid);}
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪆️binding/🔣️.json")).unwrap();let invalid=fixture["invalidOrdinal"].as_u64().unwrap()as u32;for(index,word)in fixture["nodeStatuses"].as_array().unwrap().iter().enumerate(){let value:RunNodeStatus=semio_framework_pack_json::from_json_str(&serde_json::to_string(word).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&value)).unwrap(),*word);assert_run_native_status(&value,index as u32,invalid);}
 }
 #[test]
 fn sqlite_snapshot_run_manual_metadata_preserves_neutral_trigger_fields_and_statuses(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🏭️schema/🔣️.json")).unwrap();let maximum=fixture["maximumBytes"].as_u64().unwrap()as usize;let tiny=fixture["tinyBytes"].as_u64().unwrap()as usize;let dsl::Shape::Record(producer)=<RunTrigger as dsl::DslField>::shape()else{panic!("declared trigger record")};
- let mut admitted=|_|true;let mut encoding=dsl::NativeEncodeControl::new(maximum,&mut admitted);let encoded=producer.encode(&mut encoding).unwrap();let exact=encoding.owned_bytes();let mut admitted=|_|true;let mut decoding=dsl::NativeDecodeControl::new(maximum,&mut admitted);let decoded=producer.decode(&mut decoding).unwrap();for record in[encoded,decoded]{let fields:Vec<_>=record.fields.iter().map(|field|serde_json::json!([field.id,field.key,field.optional])).collect();assert_eq!(serde_json::json!(fields),fixture["fields"]);}
- assert!(exact>0);assert!(producer.encode(&mut dsl::NativeEncodeControl::new(exact,&mut |_|true)).is_ok());assert!(producer.encode(&mut dsl::NativeEncodeControl::new(exact-1,&mut |_|true)).is_err());let mut admitted=|_|true;let mut control=dsl::NativeEncodeControl::new(tiny,&mut admitted);assert!(producer.encode(&mut control).is_err());assert_eq!(control.owned_bytes(),0);assert!(producer.decode(&mut dsl::NativeDecodeControl::new(tiny,&mut |_|true)).is_err());assert!(producer.encode(&mut dsl::NativeEncodeControl::new(maximum,&mut |_|false)).is_err());assert!(producer.decode(&mut dsl::NativeDecodeControl::new(maximum,&mut |_|false)).is_err());
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🏭️schema/🔣️.json")).unwrap();let maximum=fixture["maximumBytes"].as_u64().unwrap()as usize;let tiny=fixture["tinyBytes"].as_u64().unwrap()as usize;let semio_framework_dsl_record::Shape::Record(producer)=<RunTrigger as semio_framework_dsl_record::DslField>::shape()else{panic!("declared trigger record")};
+ let mut admitted=|_|true;let mut encoding=semio_framework_value::NativeEncodeControl::new(maximum,&mut admitted);let encoded=producer.encode(&mut encoding).unwrap();let exact=encoding.owned_bytes();let mut admitted=|_|true;let mut decoding=semio_framework_value::NativeDecodeControl::new(maximum,&mut admitted);let decoded=producer.decode(&mut decoding).unwrap();for record in[encoded,decoded]{let fields:Vec<_>=record.fields.iter().map(|field|serde_json::json!([field.id,field.key,field.optional])).collect();assert_eq!(serde_json::json!(fields),fixture["fields"]);}
+ assert!(exact>0);assert!(producer.encode(&mut semio_framework_value::NativeEncodeControl::new(exact,&mut |_|true)).is_ok());assert!(producer.encode(&mut semio_framework_value::NativeEncodeControl::new(exact-1,&mut |_|true)).is_err());let mut admitted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(tiny,&mut admitted);assert!(producer.encode(&mut control).is_err());assert_eq!(control.owned_bytes(),0);assert!(producer.decode(&mut semio_framework_value::NativeDecodeControl::new(tiny,&mut |_|true)).is_err());assert!(producer.encode(&mut semio_framework_value::NativeEncodeControl::new(maximum,&mut |_|false)).is_err());assert!(producer.decode(&mut semio_framework_value::NativeDecodeControl::new(maximum,&mut |_|false)).is_err());
  for index in 0..2{
-  let mut admitted=|_|true;let mut control=dsl::NativeEncodeControl::new(maximum,&mut admitted);let shape=if index==0{<RunStatus as dsl::DslField>::shape_controlled(&mut control)}else{<RunNodeStatus as dsl::DslField>::shape_controlled(&mut control)}.unwrap();let dsl::Shape::Enum(labels)=shape else{panic!("declared status labels")};assert_eq!(serde_json::json!(labels),fixture["statuses"][index]);
-  let mut admitted=|_|true;let mut control=dsl::NativeDecodeControl::new(maximum,&mut admitted);let shape=if index==0{<RunStatus as dsl::DslField>::shape_controlled(&mut control)}else{<RunNodeStatus as dsl::DslField>::shape_controlled(&mut control)}.unwrap();let dsl::Shape::Enum(labels)=shape else{panic!("declared status labels")};assert_eq!(serde_json::json!(labels),fixture["statuses"][index]);let mut admitted=|_|true;let mut control=dsl::NativeEncodeControl::new(tiny,&mut admitted);assert!(if index==0{<RunStatus as dsl::DslField>::shape_controlled(&mut control)}else{<RunNodeStatus as dsl::DslField>::shape_controlled(&mut control)}.is_err());assert_eq!(control.owned_bytes(),0);
+  let mut admitted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(maximum,&mut admitted);let shape=if index==0{<RunStatus as semio_framework_dsl_record::DslField>::shape_controlled(&mut control)}else{<RunNodeStatus as semio_framework_dsl_record::DslField>::shape_controlled(&mut control)}.unwrap();let semio_framework_dsl_record::Shape::Enum(labels)=shape else{panic!("declared status labels")};assert_eq!(serde_json::json!(labels),fixture["statuses"][index]);
+  let mut admitted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(maximum,&mut admitted);let shape=if index==0{<RunStatus as semio_framework_dsl_record::DslField>::shape_controlled(&mut control)}else{<RunNodeStatus as semio_framework_dsl_record::DslField>::shape_controlled(&mut control)}.unwrap();let semio_framework_dsl_record::Shape::Enum(labels)=shape else{panic!("declared status labels")};assert_eq!(serde_json::json!(labels),fixture["statuses"][index]);let mut admitted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(tiny,&mut admitted);assert!(if index==0{<RunStatus as semio_framework_dsl_record::DslField>::shape_controlled(&mut control)}else{<RunNodeStatus as semio_framework_dsl_record::DslField>::shape_controlled(&mut control)}.is_err());assert_eq!(control.owned_bytes(),0);
  }
 }
 
@@ -129,14 +129,14 @@ async fn run_operation_op_text_round_trips_every_variant() {
 #[test]
 fn run_payload_json_uses_exact_camel_case_and_rejects_unknown_fields() {
     let automation = RunTrigger::Automation { automation_ref: "automation".into(), event_fingerprint: "event".into() };
-    let encoded = dsl::os_pack::json::parse(&dsl::os_pack::json::to_json_string(&automation)).expect("RunTrigger JSON");
-    let expected = dsl::os_pack::json::parse(r#"{"kind":"automation","automationRef":"automation","eventFingerprint":"event"}"#).expect("expected JSON");
-    assert!(dsl::os_pack::json::value_eq_ignoring_object_order(&encoded, &expected));
-    assert!(dsl::os_pack::json::from_json_str::<RunTrigger>(r#"{"kind":"automation","automation_ref":"automation","event_fingerprint":"event"}"#).is_err());
-    assert!(dsl::os_pack::json::from_json_str::<RunTrigger>(r#"{"kind":"manual","actor":"operator","extra":true}"#).is_err());
-    assert!(dsl::os_pack::json::from_json_str::<RunNodeRecord>(
+    let encoded = semio_framework_pack_json::parse(&semio_framework_pack_json::to_json_string(&automation), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("RunTrigger JSON");
+    let expected = semio_framework_pack_json::parse(r#"{"kind":"automation","automationRef":"automation","eventFingerprint":"event"}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("expected JSON");
+    assert!(semio_framework_pack_json::value_eq_ignoring_object_order(&encoded, &expected));
+    assert!(semio_framework_pack_json::from_json_str::<RunTrigger>(r#"{"kind":"automation","automation_ref":"automation","event_fingerprint":"event"}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
+    assert!(semio_framework_pack_json::from_json_str::<RunTrigger>(r#"{"kind":"manual","actor":"operator","extra":true}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
+    assert!(semio_framework_pack_json::from_json_str::<RunNodeRecord>(
         r#"{"nodeId":"node","status":"computed","documentFingerprint":"document","configFingerprint":"config","inputFingerprints":[],"outputFingerprints":[],"outputs":[],"durationMs":1.0,"extra":true}"#
-    )
+    , semio_framework_pack_json::JsonMemberPolicy::Reject)
     .is_err());
 }
 
@@ -158,7 +158,7 @@ async fn checked_run_admission_matches_the_typed_diff_rejection() {
     expected.push(protocol::MutationMessage::fatal(rejection.code, rejection.message).at(rejection.target));
     let actual = apply_run_operation_checked(&started, start).await.expect_err("checked admission rejects the same second start");
     assert_eq!(actual, expected, "the checked seam reports exactly what MutationOutcome::apply_to would persist");
-    assert_eq!(actual.iter().map(|message| (message.code.0.as_str(), message.level)).collect::<Vec<_>>(), [("mutation.apply.conflicting-target", protocol::Severity::Fatal)]);
+    assert_eq!(actual.iter().map(|message| (message.code.0.as_str(), message.level)).collect::<Vec<_>>(), [("mutation.apply.conflicting-target", semio_framework_diagnostic::Severity::Fatal)]);
     assert_eq!(actual[0].target, vec!["status"]);
     assert!(actual.iter().all(|message| protocol::outcome_code_level(&message.code.0) == Some(message.level)), "{actual:?}");
 }
@@ -280,7 +280,7 @@ async fn finish_run_node_replacement_inverse_restores_the_original_node_order() 
     let mut document = empty_run_document().await;
     document.node_records = vec![sample_run_node_record("a", RunNodeStatus::CacheHit).await, sample_run_node_record("b", RunNodeStatus::CacheHit).await, sample_run_node_record("c", RunNodeStatus::CacheHit).await];
     let operation = RunMutation::FinishRunNode(FinishRunNode { node_record: sample_run_node_record("b", RunNodeStatus::Computed).await });
-    let inverse = protocol::Mutation::inverse(&operation, &document);
+    let inverse = protocol::Mutation::inverse(&operation, &document).expect("valid retained mutation inverse fixture");
     let mut restored = apply_run_operation(&document, &operation);
     assert_eq!(restored.node_records.iter().map(|record| record.node_id.as_str()).collect::<Vec<_>>(), vec!["a", "b", "c"]);
     for step in inverse.iter().rev() {
@@ -306,15 +306,15 @@ async fn language_neutral_package_cases_match_serde_json() {
         let mut rejections = Vec::new();
         for value in case["operations"].as_array().expect("operations") {
             let encoded = serde_json::to_string(value).expect("third-party JSON oracle");
-            let operation: RunMutation = dsl::os_pack::json::from_json_str(&encoded).expect("domain operation JSON");
-            let actual: serde_json::Value = serde_json::from_str(&dsl::os_pack::json::to_json_string(&operation)).expect("domain JSON output");
+            let operation: RunMutation = semio_framework_pack_json::from_json_str(&encoded, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("domain operation JSON");
+            let actual: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&operation)).expect("domain JSON output");
             assert_eq!(&actual, value);
             match apply_run_operation_checked(&document, operation).await {
                 Ok(next) => document = next,
                 Err(messages) => rejections.extend(messages.into_iter().map(|message| message.code.0)),
             }
         }
-        let status: serde_json::Value = serde_json::from_str(&dsl::os_pack::json::to_json_string(&document.status)).expect("status JSON");
+        let status: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&document.status)).expect("status JSON");
         let actual = serde_json::json!({"schema":document.schema,"status":status,"sealed":document.sealed,"logs":document.logs.iter().map(|line| &line.message).collect::<Vec<_>>(),"rejections":rejections});
         assert_eq!(actual, case["expected"], "{}", case["name"]);
     }

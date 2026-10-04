@@ -1,6 +1,5 @@
 {
   "exaggeration": 2.5,
-  "importedFeaturesJson": "null",
   "mesh": {
     "childId": "gisterrain-mesh-derived",
     "target": {

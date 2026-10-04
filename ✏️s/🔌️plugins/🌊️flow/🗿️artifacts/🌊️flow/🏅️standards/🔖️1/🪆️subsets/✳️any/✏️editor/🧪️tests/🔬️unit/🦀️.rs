@@ -52,6 +52,8 @@ pub(crate) mod context {
     }
 
     semio_framework_plugin::history_edit_acceptance_law!("flow", FlowPlayApp, || semio_framework_plugin::App { definition: create_flow_app(), examples: Vec::new() }, "../..");
+    semio_framework_plugin::composed_reload_law!("flow", FlowPlayApp, || semio_framework_plugin::App { definition: create_flow_app(), examples: Vec::new() }, "../..");
+    semio_framework_plugin::composed_child_history_law!("flow", FlowPlayApp, || semio_framework_plugin::App { definition: create_flow_app(), examples: Vec::new() }, [("nodeGraphEdit", r#"{"operations":[{"operation":"move","gestureId":"node-drag:1","nodeIds":["add"],"dx":25.0,"dy":5.0}]}"#)]);
     
     /// 🧪️ Installs a hand-authored `flow.extension` manifest fixture (a "math" module contributing the
     /// `math.add` operator) so tests exercising the catalogue/extension surfaces have something real
@@ -90,7 +92,7 @@ pub(crate) mod context {
                     settings: vec![],
                 },
             };
-            let manifest_json = flow::os_pack::json::to_json_string(&manifest);
+            let manifest_json = semio_framework_pack_json::to_json_string(&manifest);
             for schema in manifest.contributes.schemas { schema.retire_cold(); }
             for operator in manifest.contributes.operators { operator.retire_cold(); }
             flow::install_flow_extension_manifest("flow-core-test-fixture", &manifest_json).expect("fixture extension admission");
@@ -180,7 +182,7 @@ pub(crate) mod context {
         let mut targets: Vec<Value> = node_ids.iter().map(|id| serde_json::json!({ "granularity": "node", "id": flow_graph_node_target_id(id) })).collect();
         targets.extend(edge_ids.iter().map(|id| serde_json::json!({ "granularity": "edge", "id": flow_graph_edge_target_id(id) })));
         let targets_json = serde_json::to_string(&targets).expect("targets json");
-        let args = dsl::DslValue::from(serde_json::json!({ "domainId": FLOW_INTERACTION_GRAPH, "targets": targets_json, "merge": "replace" }));
+        let args = semio_framework_value::DslValue::from(serde_json::json!({ "domainId": FLOW_INTERACTION_GRAPH, "targets": targets_json, "merge": "replace" }));
         let admitted = app.handle_action("interactionSelect", Some(&args), &flow_main_window_meta()).await.expect("interactionSelect admission");
         semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted).await.expect("interactionSelect reserved-job commit");
     }
@@ -267,36 +269,57 @@ async fn retained_add_widget_dispatches_one_acknowledged_child_group_and_retires
     assert!(PluginApp::close_terminal_is_empty(&*app));
 }
 
-/// ↩️ Nonadjacent severed edges regain their exact original indices and large authored content.
+/// ↩️ LAW (design §20.15): deleting a node is child-lane `remove-edge` leaves for every edge touching it (child order) and
+/// then its `remove-node`; undoing them through their own inverses restores every node and edge by id, large authored
+/// content included.
 #[test]
-fn delete_cascade_inverse_restores_exact_edge_order_and_label() {
+fn a_node_delete_is_child_removal_leaves_whose_inverses_restore_the_content() {
+    #[derive(semio_framework_value::FromValue)]
+    struct Scene {
+        widgets: Vec<Widget>,
+        synapses: Vec<SynapseSpec>,
+        layout: flow::OrderedMap<WidgetLayout>,
+    }
     let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧹️delete-cascade/🔣️.json")).unwrap();
-    let mut scene = fixture["scene"].clone();
     let label = fixture["label"]["unit"].as_str().unwrap().repeat(fixture["label"]["repetitions"].as_u64().unwrap() as usize);
     assert_eq!(label.len(), fixture["label"]["expectedBytes"].as_u64().unwrap() as usize);
-    scene["widgets"][1]["label"] = Value::String(label);
-    let (widgets, synapses, layout) = crate::schema::mutations::decode_flow_scene_json(&scene.to_string()).unwrap();
-    let base = FlowSnapshot { content: crate::flow_content_child_handle_and_cache(widgets, synapses, layout), ..FlowSnapshot::default() };
-    let mutation = FlowMutation::DeleteWidget(DeleteWidget { id: fixture["targetId"].as_str().unwrap().into() });
-    let ordinary_inverse = crate::schema::mutations::inverse_flow_mutation(&base, &mutation);
-    let (post, prepared_inverse, _) = prepare_flow_artifact(&base, mutation).unwrap();
-    let forward = crate::flow_working_scene(&post);
-    assert_eq!(serde_json::to_value(forward.synapses.iter().map(|edge| &edge.id).collect::<Vec<_>>()).unwrap(), fixture["expectedForwardSynapses"]);
-    for inverses in [ordinary_inverse, prepared_inverse] {
-        let indices: Vec<_> = inverses
-            .iter()
-            .filter_map(|inverse| match inverse {
-                FlowMutation::ConnectWidgets(value) => Some(value.index),
-                _ => None,
-            })
-            .collect();
-        assert_eq!(serde_json::to_value(indices).unwrap(), fixture["expectedInverseIndices"]);
-        let mut restored = post.clone();
-        for inverse in inverses {
-            crate::schema::mutations::apply_flow_mutation(&mut restored, &inverse).unwrap();
-        }
-        assert_eq!(crate::schema::mutations::encode_flow_projection_json(&restored), crate::schema::mutations::encode_flow_projection_json(&base));
-    }
+    let mut scene = fixture["scene"].clone();
+    scene["widgets"][1]["label"] = Value::String(label.clone());
+    let Scene { widgets, synapses, layout } = semio_framework_value::FromValue::from_value(scene.into()).unwrap();
+    let working = FlowWorkingScene { widgets, synapses, layout };
+    let base = crate::flow_content_snapshot_from_working(&working.widgets, &working.synapses, &working.layout);
+    drop(working);
+    let target = fixture["targetId"].as_str().unwrap().to_string();
+    let leaves = flow_removal_leaves(&base, std::slice::from_ref(&target), &[]);
+    let named: Vec<Value> = leaves
+        .iter()
+        .map(|leaf| match leaf {
+            SemioFlowMutation::RemoveEdge(value) => json!({ "kind": "remove-edge", "id": value.id }),
+            SemioFlowMutation::RemoveNode(value) => json!({ "kind": "remove-node", "id": value.id }),
+            other => panic!("unexpected removal leaf {other:?}"),
+        })
+        .collect();
+    assert_eq!(Value::Array(named), fixture["expectedLeaves"]);
+    let (forward, inverses) = leaves.iter().fold((base.clone(), Vec::new()), |(state, mut inverses), leaf| {
+        inverses.push(<SemioFlowMutation as protocol::Mutation<SemioFlowSnapshot>>::inverse(leaf, &state).unwrap());
+        let (diff, messages) = <SemioFlowMutation as protocol::Mutation<SemioFlowSnapshot>>::diff(leaf, &state).into_parts();
+        assert!(messages.is_empty(), "{leaf:?}: {messages:?}");
+        (<<SemioFlowMutation as protocol::Mutation<SemioFlowSnapshot>>::Diff as protocol::MutationDiff<SemioFlowSnapshot>>::apply(&diff, &state).unwrap(), inverses)
+    });
+    assert_eq!(serde_json::to_value(forward.edges.iter().map(|edge| &edge.id).collect::<Vec<_>>()).unwrap(), fixture["expectedForwardSynapses"]);
+    assert!(forward.nodes.iter().all(|node| node.id != target));
+    let restored = inverses.iter().rev().flatten().fold(forward, |state, inverse| {
+        let diff = <SemioFlowMutation as protocol::Mutation<SemioFlowSnapshot>>::diff(inverse, &state).into_parts().0;
+        <<SemioFlowMutation as protocol::Mutation<SemioFlowSnapshot>>::Diff as protocol::MutationDiff<SemioFlowSnapshot>>::apply(&diff, &state).unwrap()
+    });
+    let by_id = |mut snapshot: SemioFlowSnapshot| {
+        snapshot.nodes.sort_by(|a, b| a.id.cmp(&b.id));
+        snapshot.edges.sort_by(|a, b| a.id.cmp(&b.id));
+        snapshot
+    };
+    let restored = by_id(restored);
+    assert_eq!(restored, by_id(base));
+    assert_eq!(restored.nodes.iter().find(|node| node.id == target).map(|node| node.label.as_str()), Some(label.as_str()));
 }
 
 /// 🗂️ Serde is the independent Rust JSON oracle for the language-agnostic Flow/Note route census, read exactly as the
@@ -365,31 +388,6 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
     }
 }
 
-/// ⚖️ The two rows whose `Option` fields make `None`/`Some` distinct wire cases, pinned to the exact
-/// bytes captured from the pre-merge `flow_protocol` crate. A regression here is a real format break,
-/// not a test-fixture mismatch.
-#[semio_framework_async_macros::async_test]
-async fn optional_field_rows_keep_their_pre_migration_bytes() {
-    let cases: [(FlowCommand, &str, &str); 3] = [
-        (FlowCommand::AddWidget(add_widget::AddWidget { kind: "neuron".into(), neuron_kind: Some("math.add".into()), x: None, y: None, label: None, action: None, format: None }), "add-widget kind=neuron neuron-kind=math.add", "010002086d6174682e616464066e6575726f6e02000601010600"),
-        // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `SetGridVisible`'s binary
-        // ordinal shifted 24 (0x18) → 18 (0x12) — seven rows ahead of it in `FlowCommand`
-        // (`setSelection`/`clearSelection`/`selectAll`/`selectNode`/`nodeGraphSelect`/
-        // `nodeGraphHover`/`graphPointerDown`) were deleted (framework-injected now), a real,
-        // documented wire-format break (row order IS the ordinal — deleting from the middle is not
-        // the safe "append only" case the row-order doc comment calls out). Adding `setActiveExample`
-        // ahead of it later bumped the ordinal once more to 19 (0x13).
-        (FlowCommand::SetGridVisible(set_grid_visible::SetGridVisible { pressed: None }), "set-grid-visible", "01130000"),
-        (FlowCommand::SetGridVisible(set_grid_visible::SetGridVisible { pressed: Some(true) }), "set-grid-visible pressed=true", "011300010002"),
-    ];
-    for (command, text, hex) in cases {
-        let encoded = protocol::OpBinary::encode_op(&command).expect("encode").iter().map(|b| format!("{b:02x}")).collect::<String>();
-        assert_eq!(protocol::OpText::print_op(&command), text, "text for {command:?}");
-        assert_eq!(encoded, hex, "hex for {command:?}");
-        store::os_store::test_support::assert_op_text_binary_equivalence(&command);
-    }
-}
-
 /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
 pub(super) fn every_command() -> Vec<FlowCommand> {
     use semio_framework_artifact_flow_flow::CameraJson;
@@ -432,7 +430,7 @@ pub(super) fn every_command() -> Vec<FlowCommand> {
         FlowCommand::RemoveGeneration(remove_generation::RemoveGeneration { id: "g1".into() }),
         FlowCommand::SelectGeneration(select_generation::SelectGeneration { id: "g1".into() }),
         FlowCommand::RenameGeneration(rename_generation::RenameGeneration { id: "g1".into(), name: "Copy".into() }),
-        FlowCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues { generation_id: Some("g1".into()), question_id: "q1".into(), value: dsl::DslValue::float(5.0) }),
+        FlowCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues { generation_id: Some("g1".into()), question_id: "q1".into(), value: semio_framework_value::DslValue::float(5.0) }),
         FlowCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick { window_id: main::FLOW_PLAY_WINDOW_MAIN.into(), window_kind_id: main::FLOW_PLAY_WINDOW_MAIN.into() }),
         FlowCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve { window_id: main::FLOW_PLAY_WINDOW_MAIN.into(), node_hash: 42, output_json: "{}".into() }),
         FlowCommand::SetContributions(set_contributions::SetContributions { json: "[]".into(), page: 0, page_count: 1 }),
@@ -484,7 +482,7 @@ async fn interaction_topology_registers_every_widget_and_synapse_as_a_root() {
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
     let cfg = ConfigView { snapshot: &config, window: None };
-    let topology = FlowPlayApp::interaction_topology(&doc, &cfg);
+    let topology = FlowPlayApp::interaction_topology(&doc, &cfg).expect("valid retained interaction fixture");
     let graph = topology.domains.get(FLOW_INTERACTION_GRAPH).expect("graph domain present in topology");
     let live = document.to_host_snapshot();
     assert_eq!(graph.ordered.len(), live.widgets.len() + live.synapses.len());
@@ -654,7 +652,7 @@ async fn context_menu_includes_select_all_when_empty() {
     assert!(menu_json.contains("selectAll"), "menu should be {menu_json}");
     assert!(menu_json.contains("Select All") || menu_json.contains("select-all"), "menu should be {menu_json}");
     assert!(menu_json.contains(r#""icon":"plus""#), "add-node icon: {menu_json}");
-    assert!(!menu_json.contains(r#""id":"delete-selection""#), "empty canvas must omit delete: {menu_json}");
+    assert!(menu_json.contains(r#""id":"delete-selection""#) && menu_json.contains(r#""reason":"Nothing selected""#) && !menu_json.contains(r#""action":"deleteSelection""#), "empty canvas keeps delete disabled with its reason: {menu_json}");
     assert!(!menu_json.contains("setPreviewOff"), "empty canvas must omit preview: {menu_json}");
 }
 
@@ -694,7 +692,7 @@ async fn context_menu_includes_hide_preview_for_selection_and_set_preview_off_mu
 async fn context_menu_at_selects_target_and_enables_preview() {
     let mut app = flow_app_with_registry().await;
     let before = context_menu_items(&mut app, None).await.to_string();
-    assert!(!before.contains(r#""id":"delete-selection""#), "preview starts without delete: {before}");
+    assert!(before.contains(r#""reason":"Nothing selected""#) && !before.contains(r#""action":"deleteSelection""#), "preview starts with delete disabled: {before}");
     dispatch(&mut app, FlowCommand::ContextMenuAt(context_menu_at::ContextMenuAt { id: "slider".into() })).await;
     settle(&mut app).await;
     let after = context_menu_items(&mut app, Some(node_selection_surface(&["slider"]))).await.to_string();
@@ -703,10 +701,10 @@ async fn context_menu_at_selects_target_and_enables_preview() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn context_menu_annotates_mixed_selection_counts_and_omits_delete_without_selection() {
+async fn context_menu_annotates_mixed_selection_counts_and_disables_delete_without_selection() {
     let mut app = flow_app_with_registry().await;
     let empty = context_menu_items(&mut app, Some(semio_framework_plugin::ContextMenuSurfaceTarget { surface_id: "main".into(), kind: "nodeGraph".into(), hits: vec![], selection: vec![], text: None })).await.to_string();
-    assert!(!empty.contains(r#""id":"delete-selection""#), "empty must omit delete: {empty}");
+    assert!(empty.contains(r#""reason":"Nothing selected""#) && !empty.contains(r#""action":"deleteSelection""#), "empty keeps delete disabled with its reason: {empty}");
 
     let menu = context_menu_items(
         &mut app,

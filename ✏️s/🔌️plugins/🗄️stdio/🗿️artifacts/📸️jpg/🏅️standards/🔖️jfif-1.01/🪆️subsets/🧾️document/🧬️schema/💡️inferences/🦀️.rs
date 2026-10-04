@@ -20,8 +20,11 @@ pub struct JpgInference {
 }
 
 impl protocol::Inference<JpgSnapshot> for JpgInference {
-    fn infer(snapshot: &JpgSnapshot) -> Self {
+    fn infer(snapshot: &JpgSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { dimensions: compute_jpg_dimensions(snapshot) }
+    
+        })
     }
 }
 
@@ -32,7 +35,9 @@ impl protocol::Inference<JpgSnapshot> for JpgInference {
 /// `📡️spr/🎮️command/🦀️.rs`.
 impl Default for JpgInference {
     fn default() -> Self {
-        <Self as protocol::Inference<JpgSnapshot>>::infer(&JpgSnapshot::default())
+        let snapshot = &JpgSnapshot::default();
+
+        Self { dimensions: compute_jpg_dimensions(snapshot) }
     }
 }
 
@@ -48,15 +53,6 @@ impl protocol::InferenceSpec<JpgSnapshot> for JpgInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 💡️ No `InferredField`s here (a canonical-field read is already O(1)) — the default
-/// `infer_cached` passthrough (`ArtifactInferrer::infer_cached`) is exact.
-impl semio_framework_plugin::ArtifactInferrer for crate::standards::v_jfif_1_01::subsets::document::schema::JpgBuilder {
-    type Snapshot = JpgSnapshot;
-    type Inference = JpgInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.jpg.inference`'s facet leaves into the OS-wide inference catalog — call

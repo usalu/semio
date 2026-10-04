@@ -10,7 +10,7 @@
 //!
 //! Twelve kinds are four verbs over three PARALLEL id-keyed collections, and the parallelism is a
 //! specification — `📓️derivation-rules.md`'s per-id-keyed-collection recipe — not a copy. A
-//! `MapFeature` is an id plus an opaque `dsl::DslValue` the artifact never interprets, so
+//! `MapFeature` is an id plus an opaque `semio_framework_value::DslValue` the artifact never interprets, so
 //! `replace-<noun>-data` swaps a whole untyped value. Order is meaningful and both the real-document
 //! parameters and the three committed reorder vectors exercise different displacements.
 //!
@@ -382,7 +382,7 @@ pub fn adapter() -> Adapter {
         let mut built = built;
         for kind in KINDS {
             built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind));
-            built = built.subject(&format!("inverse-{kind}"), subject::inverse(kind));
+            built = built.subject(&format!("inverse-{kind}"), subject::inverse(kind).expect("valid retained mutation inverse fixture"));
             built = built.subject(&format!("spec-vector-{kind}"), subject::spec_vector(kind));
         }
         return built.subject("identity-round-trip", subject::round_trip);

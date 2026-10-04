@@ -16,15 +16,18 @@ pub mod rename_entry;
 pub mod set_archive_comment;
 #[path = "✍️set-entry-data/🦀️.rs"]
 pub mod set_entry_data;
+#[path = "🩹️patch-snapshot/🦀️.rs"]
+pub mod patch_snapshot;
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 //#endregion 🔖️Leaves
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
 #[mutations(snapshot = ZipSnapshot, diff = ZipDiff, schema = "ZipMutation")]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum ZipMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
+    PatchSnapshot(patch_snapshot::PatchSnapshot),
     SetArchiveComment(set_archive_comment::SetArchiveComment),
     AddEntry(add_entry::AddEntry),
     RemoveEntry(remove_entry::RemoveEntry),
@@ -38,7 +41,7 @@ pub enum ZipMutation {
 /// list `../../🔣️oracle.json`'s `mutationCatalogs` entry must declare. The framework
 /// never parses this enum; `kinds_matches_enum_variants_and_manifest` below is what keeps the two
 /// declarations honest against each other.
-pub const KINDS: &[&str] = &["set-snapshot", "set-archive-comment", "add-entry", "remove-entry", "rename-entry", "set-entry-data"];
+pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "set-archive-comment", "add-entry", "remove-entry", "rename-entry", "set-entry-data"];
 
 /// 🏷️ The `KINDS` spelling of one mutation's own variant. An exhaustive match (no wildcard arm), so
 /// a new variant that forgets its kebab spelling here fails to compile rather than failing silently.
@@ -46,6 +49,7 @@ pub const KINDS: &[&str] = &["set-snapshot", "set-archive-comment", "add-entry",
 pub fn kind_of(mutation: &ZipMutation) -> &'static str {
     match mutation {
         ZipMutation::SetSnapshot(_) => "set-snapshot",
+        ZipMutation::PatchSnapshot(_) => "patch-snapshot",
         ZipMutation::SetArchiveComment(_) => "set-archive-comment",
         ZipMutation::AddEntry(_) => "add-entry",
         ZipMutation::RemoveEntry(_) => "remove-entry",
@@ -71,22 +75,22 @@ pub fn apply_zip_mutation(snapshot: &mut ZipSnapshot, mutation: &ZipMutation) ->
 
 //#region 🔖️Codecs
 impl protocol::OpText for ZipMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         for (keyword, spec) in &variants {
             if line == keyword || line.starts_with(&format!("{keyword} ")) {
-                let record = dsl::parse(line, &(spec.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 64 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = semio_framework_dsl_record::parse(line, &(spec.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits { max_bytes: 64 * 1024 * 1024, ..semio_framework_diagnostic::Limits::default() }, mode: semio_framework_dsl_record::SourceMode::Inline })?;
+                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown ZIP operation '{line}'")))
+        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown ZIP operation '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
     }
 
     fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let spec = variants.iter().find(|(name, _)| name == &keyword).map(|(_, spec)| *spec).expect("ZIP operation spec");
-        dsl::print(&record, &(spec.ordinary)(), dsl::JoinMode::Inline)
+        semio_framework_dsl_record::print(&record, &(spec.ordinary)(), semio_framework_dsl_record::JoinMode::Inline)
     }
 }
 
@@ -106,6 +110,7 @@ impl protocol::OpBinary for ZipMutation {
 pub(crate) fn agg_diff(this: &ZipMutation, base: &ZipSnapshot) -> protocol::MutationOutcome<ZipDiff> {
     protocol::MutationOutcome::new(match this {
         ZipMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff::diff_set_snapshot(base, snapshot),
+        ZipMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<ZipSnapshot, ZipMutation>>::diff(patch, base),
         ZipMutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment, comment_utf8 }) => diff::diff_set_archive_comment(comment, *comment_utf8),
         ZipMutation::AddEntry(add_entry::AddEntry { entry, before }) => {
             if before.as_ref().is_some_and(|name| !base.entries.iter().any(|entry| &entry.name == name)) {
@@ -120,9 +125,11 @@ pub(crate) fn agg_diff(this: &ZipMutation, base: &ZipSnapshot) -> protocol::Muta
 }
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &ZipMutation, base: &ZipSnapshot) -> Vec<ZipMutation> {
+pub(crate) fn agg_inverse(this: &ZipMutation, base: &ZipSnapshot) -> Result<Vec<ZipMutation>, semio_framework_value::ValueError> {
+    Ok({
     match this {
         ZipMutation::SetSnapshot(_) => vec![ZipMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
+        ZipMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<ZipSnapshot, ZipMutation>>::inverse(patch, base)?),
         ZipMutation::SetArchiveComment(_) => vec![ZipMutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment: base.comment.clone(), comment_utf8: base.comment_utf8 })],
         ZipMutation::AddEntry(add_entry::AddEntry { entry, .. }) => vec![ZipMutation::RemoveEntry(remove_entry::RemoveEntry { name: entry.name.clone() })],
         ZipMutation::RemoveEntry(remove_entry::RemoveEntry { name }) => base.entries.iter().position(|entry| entry.name == *name).map(|index| vec![ZipMutation::AddEntry(add_entry::AddEntry { entry: base.entries[index].clone(), before: base.entries.get(index + 1).map(|entry| entry.name.clone()) })]).unwrap_or_default(),
@@ -131,6 +138,8 @@ pub(crate) fn agg_inverse(this: &ZipMutation, base: &ZipSnapshot) -> Vec<ZipMuta
             base.entries.iter().find(|entry| entry.name == *name).map(|entry| vec![ZipMutation::SetEntryData(set_entry_data::SetEntryData { name: name.clone(), data: entry.data.clone() })]).unwrap_or_default()
         }
     }
+
+    })
 }
 //#endregion 🔖️MutationTrait
 
@@ -150,6 +159,7 @@ pub(crate) fn base_snapshot() -> ZipSnapshot {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<ZipMutation> {
     vec![
+        ZipMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         ZipMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base_snapshot() }),
         ZipMutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment: "new".into(), comment_utf8: true }),
         ZipMutation::AddEntry(add_entry::AddEntry { entry: entry("x.bin", b"xxx"), before: None }),

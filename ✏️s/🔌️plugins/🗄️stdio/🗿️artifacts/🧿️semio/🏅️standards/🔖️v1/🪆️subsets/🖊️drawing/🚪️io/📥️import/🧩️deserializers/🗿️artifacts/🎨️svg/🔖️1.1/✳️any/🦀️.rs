@@ -354,8 +354,8 @@ impl ArtifactDeserializer for SemioDrawingFromSvg {
     const INTO: Dialect = INTO_DIALECT;
 
     async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        let root_node = from.doc.root.as_ref().ok_or_else(|| store::PackError::Schema("svg→semio/drawing: document has no root element".into()))?;
-        let root = svg_element_from_xml_node(root_node).map_err(store::PackError::Schema)?;
+        let root_node = from.doc.root.as_ref().ok_or_else(|| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "svg→semio/drawing: document has no root element")))?;
+        let root = svg_element_from_xml_node(root_node).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))?;
         let (canvas, children) = match &root {
             SvgElement::Svg { view_box, width, height, children, .. } => {
                 let (w, h) = match view_box {
@@ -364,7 +364,7 @@ impl ArtifactDeserializer for SemioDrawingFromSvg {
                 };
                 (DrawCanvas { width: w, height: h, background: None }, children.as_slice())
             }
-            _ => return Err(store::PackError::Schema("svg→semio/drawing: root element is not <svg>".into())),
+            _ => return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "svg→semio/drawing: root element is not <svg>"))),
         };
         let mut styles = Vec::new();
         let nodes: Vec<DrawNode> = children.iter().filter_map(|c| draw_node_from_svg(c, &mut styles)).collect();

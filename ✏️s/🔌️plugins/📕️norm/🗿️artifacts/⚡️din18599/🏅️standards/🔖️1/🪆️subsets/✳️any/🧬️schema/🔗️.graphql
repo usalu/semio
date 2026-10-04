@@ -68,6 +68,11 @@ type Renewables {
   solarThermalKwhA: Float! @state(class: ARTIFACT)
 }
 
+type MonthlyClimate {
+  thetaEC: [Float!]! @state(class: ARTIFACT)
+  gHWM2: [Float!]! @state(class: ARTIFACT)
+}
+
 type Din18599Artifact {
   buildingCategory: String! @state(class: ARTIFACT)
   attachment: String! @state(class: ARTIFACT)
@@ -86,5 +91,6 @@ type Din18599Artifact {
   cooling: CoolingSystem! @state(class: ARTIFACT)
   lighting: LightingSystem! @state(class: ARTIFACT)
   renewables: Renewables! @state(class: ARTIFACT)
-  climate: ArtifactChild! @state(class: ARTIFACT) @child(kind: "s.stdio.semio")
+  climate: MonthlyClimate! @state(class: ARTIFACT)
+  climateTable: ArtifactChild! @state(class: ARTIFACT) @child(kind: "s.stdio.semio")
 }

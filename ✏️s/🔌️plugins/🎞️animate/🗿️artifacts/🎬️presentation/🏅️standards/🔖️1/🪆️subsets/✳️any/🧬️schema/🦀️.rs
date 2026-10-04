@@ -86,10 +86,7 @@ pub fn presentation_artifact_schema_descriptor() -> semio_framework_schema_regis
 /// 🏗️ Replaces the deleted `derive_artifact_facets!`-generated `PresentationBuilder`/`PresentationAnalyzer`/
 /// `PresentationComposer` (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §2) — the
 /// generic construction/mutation-application path every trivial subset (no custom analysis/
-/// composition logic beyond ordinary `Mutation`/`MutationDiff` algebra) now uses. Never referenced
-/// by `ArtifactInferrer` (orphan-rule violation, see `🚪️io/💡️inferences/🦀️.rs`'s own
-/// `PresentationInferrer` marker) — kept only as the documented replacement anchor, mirroring
-/// `🎬️sequence`'s identical shape.
+/// composition logic beyond ordinary `Mutation`/`MutationDiff` algebra) now uses, mirroring `🎬️sequence`'s identical shape.
 pub type Construction = semio_framework_plugin::app::SnapshotBuilder<crate::PresentationSnapshot, crate::PresentationMutation>;
 //#endregion 🏗️Construction
 
@@ -103,7 +100,7 @@ pub type Construction = semio_framework_plugin::app::SnapshotBuilder<crate::Pres
 #[derive(Debug)]
 pub enum PresentationError {
     /// 🧾️ The stored envelope JSON was malformed.
-    DeserializeEnvelope(dsl::ValueError),
+    DeserializeEnvelope(semio_framework_value::ValueError),
     /// 🧬️ Whole-buffer envelope ingress was rejected in favor of the persistent fixed-page decoder.
     EnvelopeIngress(store::ArtifactEnvelopeWholeBufferIngressError),
     /// 📐️ VCS replay failed while materializing the projection.
@@ -130,8 +127,8 @@ impl std::error::Error for PresentationError {
     }
 }
 
-impl From<dsl::ValueError> for PresentationError {
-    fn from(error: dsl::ValueError) -> Self {
+impl From<semio_framework_value::ValueError> for PresentationError {
+    fn from(error: semio_framework_value::ValueError) -> Self {
         Self::DeserializeEnvelope(error)
     }
 }
@@ -250,7 +247,7 @@ pub fn build_tile_morph_prompt(source: &crate::FigureTileSource, drafts: &[crate
         String::new(),
         "## Source media".into(),
         format!("- kind: {kind}"),
-        format!("- src: {}", dsl::os_pack::json::to_json_string(&source.src)),
+        format!("- src: {}", semio_framework_pack_json::to_json_string(&source.src)),
     ];
     if let Some(aspect) = source.source_aspect {
         lines.push(format!("- sourceAspect: {aspect}"));

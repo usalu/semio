@@ -6,7 +6,6 @@
 
 use crate::Din18599Snapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a din18599 snapshot. One field per named inference under
@@ -23,14 +22,19 @@ pub struct Din18599Inference {
 }
 
 impl protocol::Inference<Din18599Snapshot> for Din18599Inference {
-    fn infer(snapshot: &Din18599Snapshot) -> Self {
+    fn infer(snapshot: &Din18599Snapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { outline: Din18599Outline::compute(snapshot) }
+    
+        })
     }
 }
 
 impl Default for Din18599Inference {
     fn default() -> Self {
-        <Self as protocol::Inference<Din18599Snapshot>>::infer(&Din18599Snapshot::default())
+        let snapshot = &Din18599Snapshot::default();
+
+        Self { outline: Din18599Outline::compute(snapshot) }
     }
 }
 
@@ -63,18 +67,12 @@ impl protocol::InferenceSpec<Din18599Snapshot> for Din18599Inference {
                 "lighting",
                 "renewables",
                 "climate",
+                "climateTable",
             ],
         }]
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::Din18599Builder {
-    type Snapshot = Din18599Snapshot;
-    type Inference = Din18599Inference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.norm.din18599.inference`'s facet leaves into the OS-wide inference catalog — call once at

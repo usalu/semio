@@ -8,7 +8,7 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, F
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "apply-remedy")]
 pub struct ApplyRemedy {
     pub check_id: String,
@@ -32,16 +32,15 @@ pub fn handle(payload: &ApplyRemedy, doc: &ArtifactView<'_, En1998Snapshot>, _cf
     let path = remedy.target.path.clone();
     crate::app_surface::commit_value_tree_edit(
         doc.snapshot,
-        "applyRemedy",
         move |tree| {
             let current = crate::app_surface::get_value_at_path(tree, &path)?;
             let value = match current {
-                dsl::DslValue::Bool(_) => dsl::DslValue::Bool(remedy.required.value >= 0.5),
+                semio_framework_value::DslValue::Bool(_) => semio_framework_value::DslValue::Bool(remedy.required.value >= 0.5),
                 _ if matches!(remedy.bound, RemedyBound::OneOf) => {
                     let option = remedy.options.first().cloned().unwrap_or_default();
-                    dsl::DslValue::String(option)
+                    semio_framework_value::DslValue::String(option)
                 }
-                _ => dsl::DslValue::float(remedy.required.value),
+                _ => semio_framework_value::DslValue::float(remedy.required.value),
             };
             crate::app_surface::set_value_at_path(tree, &path, value)
         },

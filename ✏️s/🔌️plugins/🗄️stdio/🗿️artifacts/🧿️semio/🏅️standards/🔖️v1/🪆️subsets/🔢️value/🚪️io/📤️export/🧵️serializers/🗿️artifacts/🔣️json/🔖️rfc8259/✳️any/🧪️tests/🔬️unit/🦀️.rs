@@ -63,7 +63,7 @@ async fn json_to_value_to_json_to_value_round_trips() {
     };
     let s1_value = semio_value_from_json(&json);
     let s1 = SemioValueSnapshot { schema: crate::standards::v1::subsets::value::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(), root: s1_value, nodes: Vec::new() };
-    let json_x = semio_framework_plugin::resolve_ready(SemioValueToJson::serialize(&s1)).expect("serialize");
+    let json_x = ::semio_framework_async::poll::resolve_ready(SemioValueToJson::serialize(&s1)).expect("serialize");
     let s2_value = semio_value_from_json(&json_x.value);
     assert_eq!(s1.root, s2_value);
 }
@@ -75,7 +75,7 @@ async fn nodes_graph_round_trips_through_dereferenced_json() {
         root: SemioValue::Map { entries: vec![SemioValueEntry { key: "linked".into(), value: SemioValue::Ref { id: ValueId::new("n1") } }] },
         nodes: vec![SemioValueNode { id: ValueId::new("n1"), value: SemioValue::Int { lexeme: "7".into() } }],
     };
-    let json_x = semio_framework_plugin::resolve_ready(SemioValueToJson::serialize(&s1)).expect("serialize");
+    let json_x = ::semio_framework_async::poll::resolve_ready(SemioValueToJson::serialize(&s1)).expect("serialize");
     match &json_x.value {
         JsonValue::Object { members } => {
             assert_eq!(members[0].key, "linked");

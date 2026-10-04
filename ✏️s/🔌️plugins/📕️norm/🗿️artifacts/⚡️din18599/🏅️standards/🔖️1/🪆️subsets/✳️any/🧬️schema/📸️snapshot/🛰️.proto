@@ -114,6 +114,13 @@ message Renewables {
   double solar_thermal_kwh_a = 3;
 }
 
+message MonthlyClimate {
+  // @state artifact
+  repeated double theta_e_c = 1;
+  // @state artifact
+  repeated double g_h_w_m2 = 2;
+}
+
 message Din18599Snapshot {
   // @state artifact
   string building_category = 1;
@@ -150,5 +157,7 @@ message Din18599Snapshot {
   // @state artifact
   Renewables renewables = 17;
   // @state artifact
-  semio.framework.store.ArtifactChild climate = 18;
+  MonthlyClimate climate = 18;
+  // @state artifact
+  semio.framework.store.ArtifactChild climate_table = 19;
 }

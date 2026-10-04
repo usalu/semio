@@ -1045,7 +1045,7 @@ pub fn diff_set_point(base: &LasSnapshot, index: usize, point: &LasPoint) -> Las
 ///    ...> DslField for (A, B, ...)` anywhere in the `dsl` crate either (confirmed by the SAME
 ///    compiler error above: even a single-layer `Option<(u16, u16, u16)>` would fail to bind, tri-state
 ///    or not). The Mutation side hits this independently and more directly: `LasMutation::SetScaleAndOffset`/
-///    `SetBounds` carry bare `(f64, f64, f64)` fields — confirmed via a SEPARATE real `#[derive(dsl::DslOps)]`
+///    `SetBounds` carry bare `(f64, f64, f64)` fields — confirmed via a SEPARATE real `#[derive(semio_framework_dsl_record_derive::DslEnum)]`
 ///    probe on `LasMutation`: `error[E0277]: the trait bound `(f64, f64, f64): DslField` is not satisfied`
 ///    (4 occurrences, `scale`/`offset`/`max`/`min`). Both `LasDiff` and `LasMutation` are hand-rolled.
 ///
@@ -2081,8 +2081,8 @@ impl DiffCodec for LasDiff {
     fn print_diff(&self) -> String {
         print_las_diff(self)
     }
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_las_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_diff(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_las_diff(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
     /// ⚡️ REAL binary frame (`format u8 | header_mask u32 | <present header fields> | <vlrs diff
     /// if present> | <points diff if present>`), matching `../💾️binary/📡️component.protocol.

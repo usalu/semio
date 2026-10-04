@@ -303,9 +303,9 @@ impl<V> UpdateCursor<V> {
     fn new(base: OrderedMap<V>, key: Arc<String>, value: Option<Arc<V>>) -> Self { Self { state: ManuallyDrop::new(UpdateState::new(base, key, value)) } }
     pub fn advance(&mut self, grant: Grant) -> Step { self.state.advance(grant) }
     /// 🛬️ Admits an insert's concrete node and path allocations before one byte-bounded update step.
-    pub fn advance_insert_controlled(&mut self, grant: Grant, control: &mut crate::NativeDecodeControl<'_>) -> Result<Step, String> {
+    pub fn advance_insert_controlled(&mut self, grant: Grant, control: &mut crate::NativeDecodeControl<'_>) -> Result<Step, crate::ValueError> {
         if self.state.closing || grant.maximum_items == 0 || grant.maximum_bytes == 0 { return Ok(Step::Blocked); }
-        if self.state.value.is_none() { return Err("controlled native ordered update requires an insert".into()); }
+        if self.state.value.is_none() { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvalidValue, "controlled native ordered update requires an insert")); }
         let shared = 2 * std::mem::size_of::<usize>();
         let node_bytes = shared + std::mem::size_of::<Node<V>>();
         let balanced_bytes = |left: &Root<V>, right: &Root<V>| {
@@ -322,7 +322,7 @@ impl<V> UpdateCursor<V> {
             },
             Phase::Rebuild => self.state.path.front().map_or(0, |parent| if parent.left { balanced_bytes(&self.state.replacement, &parent.node.right) } else { balanced_bytes(&parent.node.left, &self.state.replacement) }),
             Phase::Complete => 0,
-            _ => return Err("controlled native insert reached a removal phase".into()),
+            _ => return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "controlled native insert reached a removal phase")),
         };
         control.checkpoint()?;
         control.charge(bytes)?;
@@ -548,15 +548,22 @@ impl<'de, V: serde::Deserialize<'de>> serde::Deserialize<'de> for OrderedMap<V> 
 /// the derive's hard-literal `::semio_framework_os_kernel::…` path would resolve) and
 /// `replication` (where it would not — `replication` sits below `os-kernel` in the DAG); a
 /// relative path resolves correctly under either mount point.
+#[path = "🚦️native/🦀️.rs"]
+mod native_controlled;
+
 impl<V: super::ToValue> super::ToValue for OrderedMap<V> {
+    fn to_value_controlled(&self, control: &mut crate::NativeEncodeControl<'_>) -> Result<crate::DslValue, crate::ValueError> { native_controlled::encode(self, control) }
     fn to_value(&self) -> super::DslValue {
         super::DslValue::Object(self.iter().map(|(key, value)| (key.clone(), super::ToValue::to_value(value))).collect())
     }
 }
 impl<V: super::FromValue> super::FromValue for OrderedMap<V> {
+    fn from_value_controlled(value: &crate::DslValue, control: &mut crate::NativeDecodeControl<'_>) -> Result<Self, crate::ValueError> { native_controlled::decode(value, control) }
+    fn default_value_controlled(control: &mut crate::NativeDecodeControl<'_>) -> Result<Self, crate::ValueError> { native_controlled::empty(control) }
+    fn retire_decoded(self) { native_controlled::retire(self) }
     fn from_value(value: super::DslValue) -> Result<Self, super::ValueError> {
         let super::DslValue::Object(fields) = value else {
-            return Err(super::ValueError::new(format!("expected an ordered string-keyed object, found {value:?}")));
+            return Err(super::ValueError::new(crate::ValueRefusalKind::InvalidValue, format!("expected an ordered string-keyed object, found {value:?}")));
         };
         let mut map = OrderedMap::new();
         for (key, entry) in fields {

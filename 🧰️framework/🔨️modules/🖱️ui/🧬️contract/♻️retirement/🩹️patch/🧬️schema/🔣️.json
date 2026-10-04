@@ -26,18 +26,22 @@
       ],
       "properties": {
         "version": {
-          "const": 1
+          "const": 2
         },
         "logicalCapacity": {
           "const": 1153
         },
         "native64": {
           "const": {
-            "operationBytes": 6592,
+            "operationBytes": 7088,
+            "componentBytes": 3768,
+            "inputBytes": 3768,
+            "draftTargetBytes": 516,
+            "publicationRevisionBytes": 16,
             "descriptorBytes": 24,
             "directoryBytes": 27672,
-            "firstPayloadBytes": 6592,
-            "firstBackingBytes": 34264
+            "firstPayloadBytes": 7088,
+            "firstBackingBytes": 34760
           }
         },
         "physicalGrant": {
@@ -55,8 +59,8 @@
           "const": [
             0,
             4096,
-            6591,
-            6592,
+            7087,
+            7088,
             32768
           ]
         },
@@ -65,8 +69,8 @@
             0,
             0,
             0,
-            6592,
-            6592
+            7088,
+            7088
           ]
         },
         "operations": {

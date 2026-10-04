@@ -6,7 +6,7 @@ use crate::RemodelingSnapshot;
 //#region 🔖️Diff
 pub fn diff(payload: &super::ReplaceDense, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
     if payload.dense == base.results.dense {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Dense results already have this value.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Dense results already have this value.");
     }
     let mut results = base.results.clone();
     results.dense = payload.dense.clone();

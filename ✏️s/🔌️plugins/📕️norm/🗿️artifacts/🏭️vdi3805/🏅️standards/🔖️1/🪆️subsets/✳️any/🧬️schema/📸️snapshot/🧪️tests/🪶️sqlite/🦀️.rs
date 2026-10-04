@@ -2,7 +2,7 @@
 use super::Vdi3805Snapshot;
 #[test]
 fn sqlite_snapshot_vdi3805_native_sheet_id_refuses_every_out_of_width_word(){
- for word in[65536,u64::MAX]{assert!(serde_json::from_value::<crate::SheetId>(serde_json::json!(word)).is_err());assert!(<crate::SheetId as dsl::DslField>::from_value(&dsl::FieldValue::UInt(word)).is_err());}
+ for word in[65536,u64::MAX]{assert!(serde_json::from_value::<crate::SheetId>(serde_json::json!(word)).is_err());assert!(<crate::SheetId as semio_framework_dsl_record::DslField>::from_value(&semio_framework_dsl_record::FieldValue::UInt(word)).is_err());}
 }
 #[test]
 fn sqlite_snapshot_vdi3805_owned_native_decoder_controls_physical_and_typed_construction(){
@@ -30,21 +30,21 @@ fn sqlite_snapshot_vdi3805_controlled_native_binding_preserves_every_neutral_num
 }
 #[test]
 fn sqlite_snapshot_vdi3805_controlled_attribute_binding_admits_before_owned_copy_and_cancels_inside_entries(){
- use dsl::DslField;
+ use semio_framework_dsl_record::DslField;
  use semio_framework_value::native_decoding::NativeDecodeProgress;
  let neutral:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🎛️control.json")).unwrap();
  let count=neutral["entityCount"].as_u64().unwrap()as usize;let cancel_at=neutral["cancelAt"].as_u64().unwrap()as usize;let length=neutral["largeTextBytes"].as_u64().unwrap()as usize;
  let attributes=crate::SheetAttributes::Generic(crate::GenericAttributes{entries:(0..count).map(|n|crate::GenericAttribute{key:n.to_string(),value:"世界".into(),unit:None}).collect()});let value=attributes.to_value();
  let mut reached=false;let mut callback=|event:NativeDecodeProgress|{if event.completed>=cancel_at{reached=true;false}else{true}};
- assert!(crate::SheetAttributes::from_value_controlled(&value,&mut dsl::NativeDecodeControl::new(1024*1024,&mut callback)).is_err());assert!(reached);
- let mut permit=|_:NativeDecodeProgress|true;let mut limited=dsl::NativeDecodeControl::new(1024,&mut permit);assert!(crate::SheetAttributes::from_value_controlled(&value,&mut limited).is_err());assert!(limited.owned_bytes()<=1024);
+ assert!(crate::SheetAttributes::from_value_controlled(&value,&mut semio_framework_value::NativeDecodeControl::new(1024*1024,&mut callback)).is_err());assert!(reached);
+ let mut permit=|_:NativeDecodeProgress|true;let mut limited=semio_framework_value::NativeDecodeControl::new(1024,&mut permit);assert!(crate::SheetAttributes::from_value_controlled(&value,&mut limited).is_err());assert!(limited.owned_bytes()<=1024);
  let attributes=crate::SheetAttributes::Generic(crate::GenericAttributes{entries:vec![crate::GenericAttribute{key:String::new(),value:"x".repeat(length),unit:None}]});let value=attributes.to_value();
- let mut limited=dsl::NativeDecodeControl::new(65536,&mut permit);assert!(crate::SheetAttributes::from_value_controlled(&value,&mut limited).is_err());assert!(limited.owned_bytes()<=65536);
+ let mut limited=semio_framework_value::NativeDecodeControl::new(65536,&mut permit);assert!(crate::SheetAttributes::from_value_controlled(&value,&mut limited).is_err());assert!(limited.owned_bytes()<=65536);
  let mut reached=false;let mut callback=|event:NativeDecodeProgress|{if event.total==length&&event.completed>=65536{reached=true;false}else{true}};
- assert!(crate::SheetAttributes::from_value_controlled(&value,&mut dsl::NativeDecodeControl::new(1024*1024,&mut callback)).is_err());assert!(reached);
+ assert!(crate::SheetAttributes::from_value_controlled(&value,&mut semio_framework_value::NativeDecodeControl::new(1024*1024,&mut callback)).is_err());assert!(reached);
 }
 use store::{ArtifactSqliteSnapshot,sqlite_snapshot::{export_sqlite_database,import_sqlite_database,SnapshotEncoding,SqliteDatabase,SqliteDatabaseLimits,SqliteSnapshotControl,SqliteSnapshotPhase,SqliteValue}};
-fn fixture()->Vdi3805Snapshot{store::json::from_json_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap()}
+fn fixture()->Vdi3805Snapshot{semio_framework_pack_json::from_json_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
 fn database(snapshot:&Vdi3805Snapshot)->SqliteDatabase{snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap()}
 fn roundtrip(snapshot:&Vdi3805Snapshot)->Vdi3805Snapshot{let bytes=export_sqlite_database(&database(snapshot),SqliteDatabaseLimits::default(),&mut |_|true).unwrap();Vdi3805Snapshot::from_sqlite_database(&import_sqlite_database(&bytes,SqliteDatabaseLimits::default(),&mut |_|true).unwrap(),&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap()}
 fn set_every_word(s:&mut Vdi3805Snapshot,v:f64){
@@ -90,7 +90,7 @@ fn sqlite_snapshot_vdi3805_refuses_malformed_choices_widths_booleans_parents_ord
 #[test]
 fn sqlite_snapshot_vdi3805_initial_and_nested_operations_support_cancellation_and_borrowed_native_admission(){
  let mut snapshot=fixture();assert!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|false,SqliteDatabaseLimits::default())).is_err());assert!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_rows:1,..SqliteDatabaseLimits::default()})).is_err());assert!(Vdi3805Snapshot::from_sqlite_database(&database(&snapshot),&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_value_bytes:0,..SqliteDatabaseLimits::default()})).is_err());
- for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{snapshot.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();assert!(snapshot.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|false,SqliteDatabaseLimits::default())).is_err());assert!(snapshot.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_file_bytes:1024,..SqliteDatabaseLimits::default()})).unwrap_err().contains("native encoding exceeds file byte limit"));}
+ for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{snapshot.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();assert!(snapshot.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|false,SqliteDatabaseLimits::default())).is_err());assert!(snapshot.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_file_bytes:1024,..SqliteDatabaseLimits::default()})).unwrap_err().to_string().contains("native encoding exceeds file byte limit"));}
  let controls:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🎛️control.json")).unwrap();snapshot.catalog.products[0].records[0].fields=vec!["任意\0field".into();controls["entityCount"].as_u64().unwrap()as usize];let cancel_at=controls["cancelAt"].as_u64().unwrap()as usize;for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let mut reached=false;assert!(snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut|event|{if event.phase==SqliteSnapshotPhase::EncodeNative&&event.completed>=cancel_at{reached=true;false}else{true}},SqliteDatabaseLimits::default())).is_err());assert!(reached);}let large=database(&snapshot);for phase in[SqliteSnapshotPhase::ProjectSnapshot,SqliteSnapshotPhase::ReconstructSnapshot]{let mut reached=false;let mut callback=|event:store::sqlite_snapshot::SqliteSnapshotProgress|{if event.phase==phase&&event.completed>=cancel_at{reached=true;false}else{true}};let mut control=SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits::default());assert!(if phase==SqliteSnapshotPhase::ProjectSnapshot{snapshot.to_sqlite_database(&mut control).is_err()}else{Vdi3805Snapshot::from_sqlite_database(&large,&mut control).is_err()});assert!(reached);}
 }
 #[test]

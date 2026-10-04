@@ -8,7 +8,6 @@
 
 use crate::standards::v1::subsets::document::schema::snapshot::SemioDocumentSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::outline::compute_semio_document_outline;
 //#region 🔖️Inference
@@ -23,8 +22,11 @@ pub struct SemioDocumentInference {
 }
 
 impl protocol::Inference<SemioDocumentSnapshot> for SemioDocumentInference {
-    fn infer(snapshot: &SemioDocumentSnapshot) -> Self {
+    fn infer(snapshot: &SemioDocumentSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { outline: compute_semio_document_outline(snapshot) }
+    
+        })
     }
 }
 
@@ -32,7 +34,9 @@ impl protocol::Inference<SemioDocumentSnapshot> for SemioDocumentInference {
 /// `SemioDocumentSnapshot::default()`'s `blocks` ever stops being empty.
 impl Default for SemioDocumentInference {
     fn default() -> Self {
-        <Self as protocol::Inference<SemioDocumentSnapshot>>::infer(&SemioDocumentSnapshot::default())
+        let snapshot = &SemioDocumentSnapshot::default();
+
+        Self { outline: compute_semio_document_outline(snapshot) }
     }
 }
 
@@ -48,16 +52,6 @@ impl protocol::InferenceSpec<SemioDocumentSnapshot> for SemioDocumentInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 💡️ No `InferredField`s here — `outline` is a single recursive walk over `blocks` (already
-/// O(n) in total block count, gathering headings + block/word counts in one pass), with no honest
-/// per-entity incremental decomposition — the default `infer_cached` passthrough is exact.
-impl ArtifactInferrer for crate::standards::v1::subsets::document::schema::SemioDocumentBuilder {
-    type Snapshot = SemioDocumentSnapshot;
-    type Inference = SemioDocumentInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.semio.document.inference`'s facet leaves into the OS-wide inference

@@ -143,87 +143,371 @@
         "prolog": [],
         "epilog": []
       }
-    }
-  ],
-  "presentation": {
-    "slides": [
-      {
-        "shapes": [
-          {
-            "shapeKind": "textBox",
-            "position": {
-              "x": "-9223372036854775808",
-              "y": "9223372036854775807",
-              "cx": "9007199254740993",
-              "cy": "-9007199254740993"
-            },
-            "textFrame": [
-              {
-                "runs": []
-              },
-              {
-                "runs": [
-                  {
-                    "text": "run\u0000世界",
-                    "bold": true,
-                    "italic": false,
-                    "fontSize": null
-                  },
-                  {
-                    "text": "",
-                    "bold": false,
-                    "italic": true,
-                    "fontSize": 4294967295
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "shapeKind": "picture",
-            "position": {
-              "x": "1",
-              "y": "2",
-              "cx": "3",
-              "cy": "4"
-            },
-            "blipRelId": ""
-          },
-          {
-            "shapeKind": "placeholder",
-            "kind": "",
-            "position": {
-              "x": "-1",
-              "y": "-2",
-              "cx": "-3",
-              "cy": "-4"
-            },
-            "textFrame": []
-          },
-          {
-            "shapeKind": "other",
-            "node": {
+    },
+    {
+      "path": "ppt/slides/slide1.xml",
+      "contentType": "application/vnd.openxmlformats-officedocument.presentationml.slide+xml",
+      "document": {
+        "root": {
+          "kind": "element",
+          "name": "p:sld",
+          "attrs": [],
+          "children": [
+            {
               "kind": "element",
-              "name": "arbitrary",
-              "attrs": [
-                {
-                  "name": "",
-                  "value": ""
-                }
-              ],
+              "name": "p:cSld",
+              "attrs": [],
               "children": [
                 {
-                  "kind": "text",
-                  "text": "owned XML"
+                  "kind": "element",
+                  "name": "p:spTree",
+                  "attrs": [],
+                  "children": [
+                    {
+                      "kind": "element",
+                      "name": "p:sp",
+                      "attrs": [],
+                      "children": [
+                        {
+                          "kind": "element",
+                          "name": "p:spPr",
+                          "attrs": [],
+                          "children": [
+                            {
+                              "kind": "element",
+                              "name": "a:xfrm",
+                              "attrs": [],
+                              "children": [
+                                {
+                                  "kind": "element",
+                                  "name": "a:off",
+                                  "attrs": [
+                                    {
+                                      "name": "x",
+                                      "value": "-9223372036854775808"
+                                    },
+                                    {
+                                      "name": "y",
+                                      "value": "9223372036854775807"
+                                    }
+                                  ],
+                                  "children": []
+                                },
+                                {
+                                  "kind": "element",
+                                  "name": "a:ext",
+                                  "attrs": [
+                                    {
+                                      "name": "cx",
+                                      "value": "9007199254740993"
+                                    },
+                                    {
+                                      "name": "cy",
+                                      "value": "-9007199254740993"
+                                    }
+                                  ],
+                                  "children": []
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "element",
+                          "name": "p:txBody",
+                          "attrs": [],
+                          "children": [
+                            {
+                              "kind": "element",
+                              "name": "a:p",
+                              "attrs": [],
+                              "children": []
+                            },
+                            {
+                              "kind": "element",
+                              "name": "a:p",
+                              "attrs": [],
+                              "children": [
+                                {
+                                  "kind": "element",
+                                  "name": "a:r",
+                                  "attrs": [],
+                                  "children": [
+                                    {
+                                      "kind": "element",
+                                      "name": "a:rPr",
+                                      "attrs": [
+                                        {
+                                          "name": "b",
+                                          "value": "1"
+                                        },
+                                        {
+                                          "name": "i",
+                                          "value": "0"
+                                        }
+                                      ],
+                                      "children": []
+                                    },
+                                    {
+                                      "kind": "element",
+                                      "name": "a:t",
+                                      "attrs": [],
+                                      "children": [
+                                        {
+                                          "kind": "text",
+                                          "text": "run\u0000世界"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "element",
+                                  "name": "a:r",
+                                  "attrs": [],
+                                  "children": [
+                                    {
+                                      "kind": "element",
+                                      "name": "a:rPr",
+                                      "attrs": [
+                                        {
+                                          "name": "b",
+                                          "value": "0"
+                                        },
+                                        {
+                                          "name": "i",
+                                          "value": "1"
+                                        },
+                                        {
+                                          "name": "sz",
+                                          "value": "4294967295"
+                                        }
+                                      ],
+                                      "children": []
+                                    },
+                                    {
+                                      "kind": "element",
+                                      "name": "a:t",
+                                      "attrs": [],
+                                      "children": [
+                                        {
+                                          "kind": "text",
+                                          "text": ""
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "element",
+                      "name": "p:pic",
+                      "attrs": [],
+                      "children": [
+                        {
+                          "kind": "element",
+                          "name": "p:blipFill",
+                          "attrs": [],
+                          "children": [
+                            {
+                              "kind": "element",
+                              "name": "a:blip",
+                              "attrs": [
+                                {
+                                  "name": "r:embed",
+                                  "value": ""
+                                }
+                              ],
+                              "children": []
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "element",
+                          "name": "p:spPr",
+                          "attrs": [],
+                          "children": [
+                            {
+                              "kind": "element",
+                              "name": "a:xfrm",
+                              "attrs": [],
+                              "children": [
+                                {
+                                  "kind": "element",
+                                  "name": "a:off",
+                                  "attrs": [
+                                    {
+                                      "name": "x",
+                                      "value": "1"
+                                    },
+                                    {
+                                      "name": "y",
+                                      "value": "2"
+                                    }
+                                  ],
+                                  "children": []
+                                },
+                                {
+                                  "kind": "element",
+                                  "name": "a:ext",
+                                  "attrs": [
+                                    {
+                                      "name": "cx",
+                                      "value": "3"
+                                    },
+                                    {
+                                      "name": "cy",
+                                      "value": "4"
+                                    }
+                                  ],
+                                  "children": []
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "element",
+                      "name": "p:sp",
+                      "attrs": [],
+                      "children": [
+                        {
+                          "kind": "element",
+                          "name": "p:nvSpPr",
+                          "attrs": [],
+                          "children": [
+                            {
+                              "kind": "element",
+                              "name": "p:nvPr",
+                              "attrs": [],
+                              "children": [
+                                {
+                                  "kind": "element",
+                                  "name": "p:ph",
+                                  "attrs": [
+                                    {
+                                      "name": "type",
+                                      "value": ""
+                                    }
+                                  ],
+                                  "children": []
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "element",
+                          "name": "p:spPr",
+                          "attrs": [],
+                          "children": [
+                            {
+                              "kind": "element",
+                              "name": "a:xfrm",
+                              "attrs": [],
+                              "children": [
+                                {
+                                  "kind": "element",
+                                  "name": "a:off",
+                                  "attrs": [
+                                    {
+                                      "name": "x",
+                                      "value": "-1"
+                                    },
+                                    {
+                                      "name": "y",
+                                      "value": "-2"
+                                    }
+                                  ],
+                                  "children": []
+                                },
+                                {
+                                  "kind": "element",
+                                  "name": "a:ext",
+                                  "attrs": [
+                                    {
+                                      "name": "cx",
+                                      "value": "-3"
+                                    },
+                                    {
+                                      "name": "cy",
+                                      "value": "-4"
+                                    }
+                                  ],
+                                  "children": []
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "element",
+                          "name": "p:txBody",
+                          "attrs": [],
+                          "children": []
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "element",
+                      "name": "arbitrary",
+                      "attrs": [
+                        {
+                          "name": "",
+                          "value": ""
+                        }
+                      ],
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "owned XML"
+                        }
+                      ]
+                    }
+                  ]
                 }
               ]
             }
-          }
-        ]
-      },
-      {
-        "shapes": []
+          ]
+        },
+        "prolog": [],
+        "epilog": []
       }
-    ]
-  }
+    },
+    {
+      "path": "ppt/slides/slide2.xml",
+      "contentType": "application/vnd.openxmlformats-officedocument.presentationml.slide+xml",
+      "document": {
+        "root": {
+          "kind": "element",
+          "name": "p:sld",
+          "attrs": [],
+          "children": [
+            {
+              "kind": "element",
+              "name": "p:cSld",
+              "attrs": [],
+              "children": [
+                {
+                  "kind": "element",
+                  "name": "p:spTree",
+                  "attrs": [],
+                  "children": []
+                }
+              ]
+            }
+          ]
+        },
+        "prolog": [],
+        "epilog": []
+      }
+    }
+  ]
 }

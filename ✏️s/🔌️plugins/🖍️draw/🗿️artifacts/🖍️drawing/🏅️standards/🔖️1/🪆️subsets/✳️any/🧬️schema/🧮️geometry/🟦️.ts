@@ -1,5 +1,5 @@
 /** 📐️ Affine geometry twin, sharing the language-neutral extrema fixtures with Rust. */
-import type { PathSegment } from "../🟦️.ts";
+import type { PathSegment } from "../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🟦️.ts";
 export type Matrix = [number, number, number, number, number, number];
 export type Point = [number, number];
 export function multiply(a: Matrix, b: Matrix): Matrix {
@@ -41,7 +41,7 @@ export function arcPoint(arc: ArcGeometry, t: number): Point {
   const angle = arc.start + arc.sweep*t, sin = Math.sin(angle), cos = Math.cos(angle), sr = Math.sin(arc.rotation), cr = Math.cos(arc.rotation);
   return [arc.center[0]+arc.radii[0]*cos*cr-arc.radii[1]*sin*sr,arc.center[1]+arc.radii[0]*cos*sr+arc.radii[1]*sin*cr];
 }
-export function arcGeometry(from: Point, radii: Point, rotationDegrees: number, largeArc: boolean, sweep: boolean, to: Point): ArcGeometry | null {
+export function arcGeometry(from: Readonly<Point>, radii: Readonly<Point>, rotationDegrees: number, largeArc: boolean, sweep: boolean, to: Readonly<Point>): ArcGeometry | null {
   if (![...from,...radii,rotationDegrees,...to].every(Number.isFinite) || radii.some(value => value<=0) || (from[0]===to[0] && from[1]===to[1])) return null;
   const rotation=rotationDegrees*Math.PI/180,sin=Math.sin(rotation),cos=Math.cos(rotation),dx=(from[0]-to[0])/2,dy=(from[1]-to[1])/2,x=cos*dx+sin*dy,y=-sin*dx+cos*dy;
   const factor=Math.max(1,Math.hypot(x/radii[0],y/radii[1])),rx=radii[0]*factor,ry=radii[1]*factor,nx=x/rx,ny=y/ry,length=nx*nx+ny*ny;
@@ -56,9 +56,9 @@ export function arcGeometry(from: Point, radii: Point, rotationDegrees: number, 
 }
 
 /** 🎯 Exact affine bounds for a single path segment. */
-export function segmentBounds(segment: PathSegment, from: Point, contourStart: Point, matrix: Matrix): [number,number,number,number] {
-  const map=(point: Point): Point=>[matrix[0]*point[0]+matrix[2]*point[1]+matrix[4],matrix[1]*point[0]+matrix[3]*point[1]+matrix[5]];
-  const line=(a: Point,b: Point): [number,number,number,number]=>{a=map(a);b=map(b);return [Math.min(a[0],b[0]),Math.min(a[1],b[1]),Math.abs(a[0]-b[0]),Math.abs(a[1]-b[1])];};
+export function segmentBounds(segment: PathSegment, from: Readonly<Point>, contourStart: Readonly<Point>, matrix: Matrix): [number,number,number,number] {
+  const map=(point: Readonly<Point>): Point=>[matrix[0]*point[0]+matrix[2]*point[1]+matrix[4],matrix[1]*point[0]+matrix[3]*point[1]+matrix[5]];
+  const line=(a: Readonly<Point>,b: Readonly<Point>): [number,number,number,number]=>{a=map(a);b=map(b);return [Math.min(a[0],b[0]),Math.min(a[1],b[1]),Math.abs(a[0]-b[0]),Math.abs(a[1]-b[1])];};
   switch(segment.kind) {
     case "move": { const to=map(segment.to); return [...to,0,0]; }
     case "line": return line(from,segment.to);

@@ -55,7 +55,7 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
 
 //#region 🔖️MediaCodec
 /// 🖼️ Encodes a portable title card through the shared XML/SVG model.
-pub fn animate_presentation_document_json_to_svg(value: &semio_framework_os_kernel::json::Value) -> Result<(String, u32, u32), String> {
+pub fn animate_presentation_document_json_to_svg(value: &semio_framework_pack_json::Value) -> Result<(String, u32, u32), String> {
     use semio_s_artifact_stdio_svg::schema::snapshot::write_svg_xml;
     use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDocument, XmlNode};
     let title = value.get("title").and_then(|entry| entry.as_str()).or_else(|| value.get("id").and_then(|entry| entry.as_str())).unwrap_or("Animate Presentation");
@@ -68,7 +68,7 @@ pub fn animate_presentation_document_json_to_svg(value: &semio_framework_os_kern
 
 /// 📥️ Rasterizes a DWG drawing through the native host into a one-slide deck.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-pub fn animate_presentation_document_json_from_dwg(drawing: &semio_s_artifact_stdio_dwg::DwgDrawing) -> Result<dsl::DslValue, String> {
+pub fn animate_presentation_document_json_from_dwg(drawing: &semio_s_artifact_stdio_dwg::DwgDrawing) -> Result<semio_framework_value::DslValue, String> {
     use semio_s_artifact_stdio_svg::schema::snapshot::{parse_svg_xml, write_svg_xml};
     let (svg, width, height) = semio_s_artifact_stdio_dwg::standards::v_ac1024::subsets::any::io::dwg_drawing_to_svg(drawing)?;
     let validated_svg = write_svg_xml(&parse_svg_xml(&svg)?)?;
@@ -77,7 +77,7 @@ pub fn animate_presentation_document_json_from_dwg(drawing: &semio_s_artifact_st
     let source = crate::FigureTileSource { src: format!("data:image/png;base64,{png_base64}"), kind: "image".into(), frame: frame.clone(), source_aspect: Some(width as f64 / height.max(1) as f64), pdf_page: None };
     let tiles = vec![crate::FigureTileDraft { id: "imported-drawing".into(), name: "Imported Drawing".into(), crop: frame }];
     let deck = crate::presentation_snapshot_with_tiles(&source, &tiles);
-    Ok(dsl::ToValue::to_value(&deck))
+    Ok(semio_framework_value::ToValue::to_value(&deck))
 }
 
 #[cfg(test)]

@@ -7,11 +7,12 @@ pub mod node_graph_edit {
     use crate::registers::AdjacencyKind;
     use crate::schema::mutations as leaves;
     use crate::{EntityId, ProgramSnapshot};
-    use dsl::DslValue as Value;
-    use dsl::{FromValue, ToValue};
+    use semio_framework_value::DslValue as Value;
+    use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "node-graph-edit")]
     pub struct NodeGraphEdit {
         pub operations_json: String,
@@ -19,13 +20,13 @@ pub mod node_graph_edit {
 
     pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let program = doc.snapshot;
-        let edit_operations: Vec<Value> = dsl::json::from_json_str(&payload.operations_json).unwrap_or_default();
+        let edit_operations: Vec<Value> = semio_framework_pack_json::from_json_str(&payload.operations_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_default();
         let mut emitted = Vec::new();
         for operation in edit_operations {
-            match operation.get("operation").and_then(Value::as_str).unwrap_or("") {
+            match operation.get("operation").and_then(semio_framework_value::DslValue::as_str).unwrap_or("") {
                 "connect" => {
-                    let source = operation.get("sourceNodeId").and_then(Value::as_str);
-                    let target = operation.get("targetNodeId").and_then(Value::as_str);
+                    let source = operation.get("sourceNodeId").and_then(semio_framework_value::DslValue::as_str);
+                    let target = operation.get("targetNodeId").and_then(semio_framework_value::DslValue::as_str);
                     if let (Some(source), Some(target)) = (source, target) {
                         let a = EntityId(source.into());
                         let b = EntityId(target.into());
@@ -58,11 +59,12 @@ pub mod node_graph_viewport {
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::op::ProgramMutation;
     use crate::ProgramSnapshot;
-    use dsl::{FromValue, ToValue};
+    use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
     use semio_framework_os_kernel::Viewport2d;
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "node-graph-viewport")]
     pub struct NodeGraphViewport {
         #[dsl(block)]

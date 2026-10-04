@@ -12,7 +12,7 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 fn reset_from_json(json: &str) -> Emit<LowpolyMutation, LowpolyConfigMutation> {
-    match dsl::json::from_json_str::<LowpolySnapshot>(json) {
+    match semio_framework_pack_json::from_json_str::<LowpolySnapshot>(json, semio_framework_pack_json::JsonMemberPolicy::Reject) {
         Ok(parsed) => Emit { effects: vec![crate::editor::lowpoly::reset_document_effect(&parsed)], ..Default::default() },
         Err(_) => Emit::default(),
     }
@@ -22,7 +22,7 @@ fn reset_from_json(json: &str) -> Emit<LowpolyMutation, LowpolyConfigMutation> {
 pub mod set_snapshot_json {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "import-snapshot-json")]
     pub struct ImportSnapshotJson {
@@ -39,7 +39,7 @@ pub mod set_snapshot_json {
 pub mod replace_snapshot_json {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "replace-snapshot-json")]
     pub struct ReplaceSnapshotJson {

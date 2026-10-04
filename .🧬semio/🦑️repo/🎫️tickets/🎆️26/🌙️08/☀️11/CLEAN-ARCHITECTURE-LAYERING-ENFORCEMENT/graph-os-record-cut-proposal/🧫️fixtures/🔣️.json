@@ -1,0 +1,28 @@
+{
+  "contract": "canonical-record-ownership-v1",
+  "bindings": [
+    { "id": "canonical-std", "traitOwner": "record", "typeOwner": "std", "implementationOwner": "record", "canonical": true, "legal": true },
+    { "id": "graph-local", "traitOwner": "record", "typeOwner": "graph", "implementationOwner": "graph", "canonical": true, "legal": true },
+    { "id": "io-artifact-ref", "traitOwner": "record", "typeOwner": "io", "implementationOwner": "io", "canonical": true, "legal": true },
+    { "id": "viewport-local", "traitOwner": "record", "typeOwner": "viewport", "implementationOwner": "viewport", "canonical": true, "legal": true },
+    { "id": "os-local", "traitOwner": "record", "typeOwner": "os", "implementationOwner": "os", "canonical": true, "legal": true },
+    { "id": "os-duplicate-identity", "traitOwner": "os", "typeOwner": "graph", "implementationOwner": "graph", "canonical": false, "legal": true },
+    { "id": "os-std-orphan", "traitOwner": "record", "typeOwner": "std", "implementationOwner": "os", "canonical": true, "legal": false },
+    { "id": "os-artifact-ref-orphan", "traitOwner": "record", "typeOwner": "io", "implementationOwner": "os", "canonical": true, "legal": false },
+    { "id": "os-viewport-orphan", "traitOwner": "record", "typeOwner": "viewport", "implementationOwner": "os", "canonical": true, "legal": false }
+  ],
+  "containers": [
+    { "name": "Edge", "field": "properties", "type": "PropertyBag", "owner": "graph" },
+    { "name": "NodeKindDef", "field": "properties", "type": "Vec<PropertyDef>", "owner": "graph" },
+    { "name": "EdgeKindDef", "field": "properties", "type": "Vec<PropertyDef>", "owner": "graph" },
+    { "name": "PortKindDef", "field": "properties", "type": "Vec<PropertyDef>", "owner": "graph" }
+  ],
+  "directEdges": [
+    { "consumer": "graph", "provider": "record" },
+    { "consumer": "graph", "provider": "value" },
+    { "consumer": "graph", "provider": "diagnostic" },
+    { "consumer": "graph", "provider": "replication" },
+    { "consumer": "jack", "provider": "record" },
+    { "consumer": "jack", "provider": "record-derive" }
+  ]
+}

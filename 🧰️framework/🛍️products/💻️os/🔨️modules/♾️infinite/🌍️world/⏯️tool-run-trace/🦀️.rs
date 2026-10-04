@@ -228,7 +228,7 @@ impl ToolRunTraceLayer {
                         let ToolRunTraceSubject::Instance3d { position, rotation, scale, .. } = *subject else { return None };
                         let newest = newest_testing == Some(*record);
                         let alpha = if newest { base.a } else { base.a * tool_run_trace_fade(newest_stamp - stamp) };
-                        Some(Instance3d { id: format!("toolRunTrace:{record}"), model: Instance3d::model_from_trs(position, rotation, [scale; 3]), color: [base.r, base.g, base.b, alpha], selected: newest, hovered: false, material: Default::default() })
+                        Some(Instance3d { component_source: None, id: format!("toolRunTrace:{record}"), model: Instance3d::model_from_trs(position, rotation, [scale; 3]), color: [base.r, base.g, base.b, alpha], selected: newest, hovered: false, material: Default::default() })
                     })
                     .collect();
                 ToolRunTraceDraw { mesh: key.index, verdict, instances }

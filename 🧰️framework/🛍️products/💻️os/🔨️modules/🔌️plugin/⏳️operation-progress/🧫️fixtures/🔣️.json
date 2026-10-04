@@ -115,5 +115,35 @@
       "workerFault": true,
       "lane": "fault"
     }
+  ],
+  "cancellationTargets": [
+    {
+      "name": "live cancellable operation",
+      "present": true,
+      "terminal": false,
+      "cancellable": true,
+      "admitted": true
+    },
+    {
+      "name": "missing operation",
+      "present": false,
+      "terminal": false,
+      "cancellable": false,
+      "admitted": false
+    },
+    {
+      "name": "terminal operation",
+      "present": true,
+      "terminal": true,
+      "cancellable": true,
+      "admitted": false
+    },
+    {
+      "name": "operation without cancellation lease",
+      "present": true,
+      "terminal": false,
+      "cancellable": false,
+      "admitted": false
+    }
   ]
 }

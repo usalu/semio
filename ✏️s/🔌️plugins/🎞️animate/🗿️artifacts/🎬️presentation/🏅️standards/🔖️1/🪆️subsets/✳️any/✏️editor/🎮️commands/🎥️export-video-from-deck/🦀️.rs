@@ -17,7 +17,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// contiguous-request ceiling (64 KiB).
 pub const ANIMATE_VIDEO_PROGRAM_MAXIMUM_BYTES: usize = 49_152;
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "export-video-from-deck")]
 pub struct ExportVideoFromDeck {
     pub scene_json: String,
@@ -44,8 +44,8 @@ pub fn handle(payload: &ExportVideoFromDeck, doc: &ArtifactView<'_, Presentation
     let (filename, program) = if stated.is_empty() || stated == "null" {
         (video_filename_for_deck(doc.snapshot), video_render_program_from_deck(doc.snapshot).map_err(refused)?)
     } else {
-        let value = dsl::os_pack::json::parse(stated).map_err(|error| scene_json_fault(format!("export-video-from-deck scene is not JSON: {error}")))?;
-        let scene: PresentationScene = dsl::FromValue::from_value(dsl::os_pack::json::to_dsl_value(&value)).map_err(|error| scene_json_fault(format!("export-video-from-deck scene is not a presentation scene: {error}")))?;
+        let value = semio_framework_pack_json::parse(stated, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| scene_json_fault(format!("export-video-from-deck scene is not JSON: {error}")))?;
+        let scene: PresentationScene = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&value)).map_err(|error| scene_json_fault(format!("export-video-from-deck scene is not a presentation scene: {error}")))?;
         (video_filename_for_title(&scene.title), video_render_program_from_scene(&scene).map_err(refused)?)
     };
     let bytes = video_program_packed_bytes(&program);

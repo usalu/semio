@@ -13,7 +13,7 @@ pub fn diff(payload: &ReplaceStakeholder, base: &ProgramSnapshot) -> protocol::M
         return protocol::MutationOutcome::error("mutation.target-missing", "No stakeholder exists with this id.", [payload.stakeholder.header.id.0.clone()]);
     };
     if existing == &payload.stakeholder {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This stakeholder already matches the requested value.").at([existing.header.id.0.clone()])]);
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This stakeholder already matches the requested value.").at([existing.header.id.0.clone()])]);
     }
     let patch = existing.diff_patch(&payload.stakeholder).expect("diff_patch always produces a full patch");
     protocol::MutationOutcome::new(ProgramDiff { stakeholders: Some(ProgramStakeholdersDelta { patched: vec![ProgramStakeholdersPatchEntry { id: payload.stakeholder.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })

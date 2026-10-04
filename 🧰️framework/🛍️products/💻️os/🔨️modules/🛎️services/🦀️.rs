@@ -2466,11 +2466,11 @@ impl Mailbox {
         }
     }
 
-    /// 📮️ `coalesce_key` is only meaningful for a [`ChannelPolicy::Coalesced`] mailbox — an
+    /// 📮️ `mailbox_key` is only meaningful for a [`ChannelPolicy::Coalesced`] mailbox — an
     /// incoming message under a key already pending REPLACES it (collapse); a new key queues
     /// alongside the others.
     // 🚫️async: E1-adjacent — see `Mailbox::new`'s tag above (R9).
-    fn publish(&mut self, coalesce_key: Option<&str>, payload: Vec<u8>) -> PublishOutcome {
+    fn publish(&mut self, mailbox_key: Option<&str>, payload: Vec<u8>) -> PublishOutcome {
         match self {
             Mailbox::LatestWins { max_bytes, pending } => {
                 if payload.len() as u64 > *max_bytes {
@@ -2485,7 +2485,7 @@ impl Mailbox {
                 }
             }
             Mailbox::Coalesced { cap, max_bytes, used_bytes, pending, order } => {
-                let key = coalesce_key.unwrap_or_default().to_string();
+                let key = mailbox_key.unwrap_or_default().to_string();
                 let cost = payload.len() as u64;
                 if *cap == 0 {
                     return PublishOutcome::RejectedFull { cap: *cap };
@@ -2639,13 +2639,13 @@ impl EventRouter {
 
     /// 📮️ Delivers `payload` to every subscriber of `topic`, honouring each one's OWN policy
     /// independently — one bounded subscriber rejecting never affects another's delivery.
-    pub async fn publish(&self, topic: &Topic, coalesce_key: Option<&str>, payload: &[u8]) -> Vec<(ActorId, PublishOutcome)> {
+    pub async fn publish(&self, topic: &Topic, mailbox_key: Option<&str>, payload: &[u8]) -> Vec<(ActorId, PublishOutcome)> {
         let subscribers = self.subscribers.lock().expect("EventRouter subscribers mutex poisoned").get(topic).cloned().unwrap_or_default();
         let mut mailboxes = self.mailboxes.lock().expect("EventRouter mailboxes mutex poisoned");
         subscribers
             .into_iter()
             .map(|subscriber| {
-                let outcome = mailboxes.get_mut(&(topic.clone(), subscriber.actor)).map_or(PublishOutcome::NoSuchSubscriber, |mailbox| mailbox.publish(coalesce_key, payload.to_vec()));
+                let outcome = mailboxes.get_mut(&(topic.clone(), subscriber.actor)).map_or(PublishOutcome::NoSuchSubscriber, |mailbox| mailbox.publish(mailbox_key, payload.to_vec()));
                 (subscriber.actor, outcome)
             })
             .collect()

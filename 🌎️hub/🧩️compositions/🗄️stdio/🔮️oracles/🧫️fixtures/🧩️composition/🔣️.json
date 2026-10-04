@@ -2880,23 +2880,6 @@
       "sha256": "3f67f0662ed9ee63fa79bb9c383898d9be0697707d37541bb221f0c1d6bd502e"
     },
     {
-      "source": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🌊️mutate-flow-1/🦀️.rs",
-      "owner": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
-      "rewrites": [
-        {
-          "previous": "semio_s_plugin_stdio_test_oracle::law",
-          "current": "semio_repo_test_host::law",
-          "package": "semio-repo-test-host"
-        },
-        {
-          "previous": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law",
-          "current": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/⚖️law",
-          "package": "semio-repo-test-host"
-        }
-      ],
-      "sha256": "87cb6ae1fede7b57355e2eb42993c030f1b1c31b37948123852e7e7726270883"
-    },
-    {
       "source": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🏔️mutate-gisterrain-1/🦀️.rs",
       "owner": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain",
       "rewrites": [

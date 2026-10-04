@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "owner": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust",
+  "absentRoots": [
+    "🧰️framework/🛍️products",
+    "✏️s",
+    "🌎️hub",
+    "🧰️framework/🔨️modules/🗣️dsl",
+    "🧰️framework/🔨️modules/🧬️schema",
+    "🧰️framework/🔨️modules/🌱️value"
+  ],
+  "lawSuffix": "🧪️tests/🟦️.ts"
+}
+

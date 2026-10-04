@@ -1,7 +1,7 @@
 export * from "../../🔨️modules/🚪️io/🧬️schema/🟦️.ts";
 export{parseIntrinsicValue,parseIntrinsicValueControlled}from"../../🔨️modules/🌱️value/🧬️schema/🌳️intrinsic/🟦️.ts";
 export type{IntrinsicValue,IntrinsicMember}from"../../🔨️modules/🌱️value/🧬️schema/🌳️intrinsic/🟦️.ts";
-export { exportSqliteDatabase, importSqliteDatabase, parseSqliteDatabaseSchema, validateSqliteDatabaseSchema } from "../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+export { SqliteOperation, sqliteOperation, SqliteAllocationControl, exportSqliteDatabase, importSqliteDatabase, parseSqliteDatabaseSchema, validateSqliteDatabaseSchema, parseSqliteDatabaseSchemaControlled, validateSqliteDatabaseSchemaControlled } from "../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 export type { SqliteValue, SqliteRow, SqliteTable, SqliteDatabase, SqliteDatabaseOptions, SqliteDatabaseProgress } from "../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 export type { ArtifactSqliteOptions, ArtifactSqliteProgress } from "../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
 export { binary64, binary32, binary64Value, binary32Value, parseBinary64, parseBinary32 } from "../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";

@@ -1,0 +1,227 @@
+{
+  "schema": "layout.form-dictionary/v1",
+  "valueKinds": [
+    "null",
+    "boolean",
+    "unsigned",
+    "signed",
+    "float",
+    "text",
+    "bytes",
+    "array",
+    "object"
+  ],
+  "floatWords": [
+    "0000000000000000",
+    "8000000000000000",
+    "0000000000000001",
+    "000fffffffffffff",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff8000000000011",
+    "7ff0000000000007"
+  ],
+  "dictionary": {
+    "entries": [
+      {
+        "questionId": "",
+        "value": {
+          "kind": "null"
+        }
+      },
+      {
+        "questionId": "flag",
+        "value": {
+          "kind": "boolean",
+          "value": false
+        }
+      },
+      {
+        "questionId": "wide",
+        "value": {
+          "kind": "unsigned",
+          "value": "18446744073709551615"
+        }
+      },
+      {
+        "questionId": "signed",
+        "value": {
+          "kind": "signed",
+          "value": "-9223372036854775808"
+        }
+      },
+      {
+        "questionId": "word",
+        "value": {
+          "kind": "float",
+          "value": "7ff8000000000011"
+        }
+      },
+      {
+        "questionId": "literal\u0000語",
+        "value": {
+          "kind": "text",
+          "value": "intrinsic data field\u0000😀"
+        }
+      },
+      {
+        "questionId": "octets",
+        "value": {
+          "kind": "bytes",
+          "value": [
+            0,
+            127,
+            255
+          ]
+        }
+      },
+      {
+        "questionId": "ordered",
+        "value": {
+          "kind": "array",
+          "items": [
+            {
+              "kind": "text",
+              "value": "first"
+            },
+            {
+              "kind": "null"
+            },
+            {
+              "kind": "unsigned",
+              "value": "0"
+            }
+          ]
+        }
+      },
+      {
+        "questionId": "unknown",
+        "value": {
+          "kind": "object",
+          "members": [
+            {
+              "name": "custom\u0000",
+              "value": {
+                "kind": "unsigned",
+                "value": "18446744073709551615"
+              }
+            },
+            {
+              "name": "",
+              "value": {
+                "kind": "array",
+                "items": [
+                  {
+                    "kind": "object",
+                    "members": [
+                      {
+                        "name": "?",
+                        "value": {
+                          "kind": "bytes",
+                          "value": [
+                            255,
+                            0
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "name": "custom\u0000",
+              "value": {
+                "kind": "text",
+                "value": "ordered duplicate intrinsic member"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "tables": [
+    "layout_form_dictionary",
+    "layout_dictionary_entry",
+    "layout_dictionary_value",
+    "layout_dictionary_boolean",
+    "layout_dictionary_unsigned",
+    "layout_dictionary_signed",
+    "layout_dictionary_float",
+    "layout_dictionary_text",
+    "layout_dictionary_bytes",
+    "layout_dictionary_array",
+    "layout_dictionary_member"
+  ],
+  "refusals": [
+    "duplicateQuestionId",
+    "orphanValue",
+    "sparseOrdinal",
+    "wrongScalarKind",
+    "sharedValueOwner"
+  ],
+  "absence": "noDictionaryRow",
+  "empty": "dictionaryRowWithoutEntries",
+  "memberNull": "entryWithNullValue",
+  "allocation": "fullConcreteRequests",
+  "retirementRefund": false,
+  "nativePreflight": {
+    "schema": "layout.borrowed-native/v1",
+    "encodings": [
+      "binary",
+      "text"
+    ],
+    "scratchOwnership": "paidFrontiersOnly",
+    "copiedOwnerFields": false,
+    "forecastCeilings": [
+      "maxFileBytes",
+      "maxValueBytes"
+    ],
+    "ownedAllowance": "maxAllocationBytes",
+    "literal": "é語🧾",
+    "repeat": 14564,
+    "utf8Bytes": 131076,
+    "cancelAfterBytes": 65536
+  },
+  "liveVcs": {
+    "schema": "forms.layout.intrinsic-vcs/v1",
+    "producer": "FormsPlayApp",
+    "consumer": "LayoutPlayApp",
+    "output": "dictionary:out",
+    "input": "fields:in",
+    "wire": "intrinsic",
+    "payloadSchema": "form.dictionary",
+    "questionIds": [
+      "null",
+      "flag",
+      "wide",
+      "signed",
+      "word",
+      "literal\u0000語",
+      "octets",
+      "ordered",
+      "unknown",
+      "word0",
+      "word1",
+      "word2",
+      "word3",
+      "word4",
+      "word5",
+      "word6",
+      "word7"
+    ],
+    "flow": [
+      "registeredEditor",
+      "documentPackLoad",
+      "produceMedia",
+      "wirePackRoundTrip",
+      "consumeMedia",
+      "reservedImportJob",
+      "documentEmit",
+      "typedTargetSnapshot"
+    ],
+    "failureBeforeDispatch": "unchangedRevision",
+    "completedOwner": "terminalEmpty"
+  }
+}

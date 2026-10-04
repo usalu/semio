@@ -4,15 +4,16 @@ const testSourceUrl = new URL("../../🧩️composition/🪪️member-dialect/�
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import Ajv from "ajv";
+import Ajv2019 from "ajv/dist/2019";
 import { createRequire } from "node:module";
 import { testInitialChildIdentityFixture } from "../🪪️initial-child-identity/🟦️.ts";
 
 export function testMemberDialectFixture(): void {
   testInitialChildIdentityFixture();
   const read = (path: string) => readFileSync(new URL(path, testSourceUrl.href), "utf8");
-  const fixture = JSON.parse(read("./🧪️tests/🔣️.json"));
+  const fixture = JSON.parse(read("./🧫️fixtures/🔣️.json"));
   const contracts = new Ajv({ strict: true, allErrors: true });
-  const ajv = new Ajv({ strict: true, allErrors: true });
+  const ajv = new Ajv2019({ strict: true, allErrors: true });
   const admission = JSON.parse(read("./🧬️schema/🔣️.json"));
   contracts.addSchema(admission);
   const validate = contracts.getSchema(`${admission.$id}#/$defs/ClosedMemberDialectAdmission`)!;
@@ -55,18 +56,20 @@ export function testMemberDialectFixture(): void {
     ids.add(row.id);
     const counts = new Map<string, number>();
     const children = new Set<string>();
+    const targets = new Set<string>();
     let projected = row.parent.length <= 64;
     for (const ref of row.parent) {
       const slot = fixture.projectionSlots.find((slot: { name: string }) => slot.name === ref.slot);
       const count = (counts.get(ref.slot) ?? 0) + 1;
-      projected &&= !!slot && slot.kind === ref.artifactKind && (slot.many || count === 1) && !children.has(ref.childId)
+      projected &&= !!slot && slot.kind === ref.artifactKind && (slot.many || count === 1) && !children.has(ref.childId) && !targets.has(ref.artifactId)
         && Object.values(ref).every((value) => typeof value === "string" && new TextEncoder().encode(value).length > 0 && new TextEncoder().encode(value).length <= 256);
       counts.set(ref.slot, count);
       children.add(ref.childId);
+      targets.add(ref.artifactId);
     }
     const refSchema = { type: "object", required: ["slot", "childId", "artifactId", "artifactKind", "standard", "subset"], properties: Object.fromEntries(["slot", "childId", "artifactId", "artifactKind", "standard", "subset"].map((name) => [name, { type: "string", minLength: 1 }])), anyOf: fixture.projectionSlots.map((slot: { name: string; kind: string }) => ({ properties: { slot: { const: slot.name }, artifactKind: { const: slot.kind } } })) };
     const independent = ajv.compile({ type: "array", maxItems: 64, items: refSchema, allOf: fixture.projectionSlots.filter((slot: { many: boolean }) => !slot.many).map((slot: { name: string }) => ({ contains: { type: "object", required: ["slot"], properties: { slot: { const: slot.name } } }, minContains: 0, maxContains: 1 })) });
-    const oracle = independent(row.parent) && ajv.compile({ type: "array", uniqueItems: true })(row.parent.map((ref: { childId: string }) => ref.childId))
+    const oracle = independent(row.parent) && ajv.compile({ type: "array", uniqueItems: true })(row.parent.map((ref: { childId: string }) => ref.childId)) && ajv.compile({ type: "array", uniqueItems: true })(row.parent.map((ref: { artifactId: string }) => ref.artifactId))
       && row.parent.every((ref: { childId: string; artifactId: string }) => Object.values(ref).every((value) => Buffer.byteLength(value) <= 256));
     assert.equal(projected, oracle, row.id);
     assert.equal(projected, row.projected, row.id);
@@ -75,7 +78,9 @@ export function testMemberDialectFixture(): void {
     assert.equal(admitted, projected && ajv.compile({ const: canonical(row.parent) })(canonical(row.incoming)), row.id);
     assert.equal(admitted, row.accepted, row.id);
   }
-  const derive = read("../../../../../../🔨️modules/🧬️schema/✨️derive/🦀️.rs");
+  const deriveGlue = read("../../../../../../🔨️modules/🧬️schema/✨️derive/🦀️.rs");
+  assert(deriveGlue.includes('#[path = "⚙️expansion/🦀️.rs"]') && deriveGlue.includes("component::expand_artifact_schema(&input)"));
+  const derive = read("../../../../../../🔨️modules/🧬️schema/✨️derive/⚙️expansion/🦀️.rs");
   assert(derive.includes("ChildFieldRefs>::MANY") && derive.includes("visit_child_refs"), "schema derive projects marked real fields, including aliases, through typed child cardinality");
   assert(store.includes("pub struct ChildRestoreProjection") && store.includes("pub fn admit_complete"), "restore needs a bounded exact loaded-parent reference projection");
   const owner = { parentId: "parent-1", parentDialect: "s.test.parent@v1/*", slot: "content", childId: "child-1" };
@@ -118,7 +123,7 @@ export function testMemberDialectFixture(): void {
     assert.equal(syncAccepted, row.syncAccepted, `${row.id}: sync`);
   }
   assert(store.includes("existing_owner != parent_id || existing_slot != slot"), "graph admission rejects same child under a different slot");
-  const sync = store.slice(store.indexOf("pub async fn sync_member<P: ArtifactRefs>"), store.indexOf("/// 🧹 Releases at most one retained graph edge"));
+  const sync = store.slice(store.indexOf("pub async fn sync_member<P: ArtifactRefs>"), store.indexOf("/// 🧹️ One grant-sized retirement turn"));
   assert(sync.indexOf("let mut next_owns") >= 0 && sync.indexOf("self.owns.retain") > sync.lastIndexOf(".await"), "graph sync completes all fallible preparation before removing prior ownership");
   assert(!contract.includes("kind: &str"), "MemberFactory must receive a full dialect, never an arbitrary discriminator");
   assert(contract.includes("async fn open(expected: &crate::os_io::ArtifactRef, owner: Option<&OwnerRef>"), "member restore requires exact reference and ownership");

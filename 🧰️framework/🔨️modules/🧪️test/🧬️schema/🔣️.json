@@ -2566,6 +2566,7 @@
         "schema-mutation-payload-parity",
         "schema-mutation-label",
         "schema-mutation-editability",
+        "schema-fault-notice",
         "schema-fixture-defines-schema",
         "schema-fixture-local-schema-fallback",
         "schema-fixture-metadata-invalid",

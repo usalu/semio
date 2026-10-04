@@ -197,7 +197,7 @@ pub fn semio_example_snapshot() -> crate::NoteSnapshot {
 /// contractually require JSON text (`PluginApp::render`'s `projection_override_json`, `App::example`'s
 /// manifest `document_json`).
 pub fn semio_example_json() -> String {
-    dsl::os_pack::to_json_string(&semio_example_snapshot())
+    semio_framework_pack_json::to_json_string(&semio_example_snapshot())
 }
 
 pub fn empty_note_snapshot() -> crate::NoteSnapshot {

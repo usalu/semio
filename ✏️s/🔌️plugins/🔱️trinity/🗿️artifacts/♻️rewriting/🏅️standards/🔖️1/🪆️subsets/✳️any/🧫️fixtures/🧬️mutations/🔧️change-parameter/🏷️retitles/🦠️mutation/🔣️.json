@@ -1,5 +1,5 @@
 {
   "mutation": "changeParameterBinding",
   "key": "caption",
-  "newValue": "Capsule Tower"
+  "newValue": {"kind": "string", "value": "Capsule Tower"}
 }

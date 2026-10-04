@@ -44,6 +44,7 @@ use semio_framework_plugin::InteractiveJobClassification;
 use semio_framework_2d::compute::EngineHandles;
 use semio_s_artifact_stdio_contract::editing;
 use crate::standards::v2x3::subsets::base::schema::mutations::set_snapshot as snapshot_edit_set_snapshot;
+use crate::standards::v2x3::subsets::base::schema::mutations::patch_snapshot;
 
 //#region 🔖️Dialect
 pub const IFC2X3_COBIE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ifc", standard: StandardId("2x3"), subset: SubsetId("cobie") };
@@ -62,11 +63,11 @@ impl protocol::OpBinary for Ifc2x3CobieEditCommand {
     const TOOL_JOB_IDS: &'static [&'static str] = IFC2X3_COBIE_DOCUMENT_SCHEMA_COMMAND_TOOL_IDS;
 
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(pack::to_json_string(self).into_bytes())
+        Ok(semio_framework_pack_json::to_json_string(self).into_bytes())
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let parsed = pack::parse_json_bytes(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "Ifc2x3CobieEditCommand", offset: 0, detail: error.to_string() })?;
-        <Self as dsl::FromValue>::from_value(pack::json_to_dsl_value(&parsed)).map_err(|error| protocol::ProtocolError::Malformed { what: "Ifc2x3CobieEditCommand", offset: 0, detail: error.to_string() })
+        let parsed = semio_framework_pack_json::parse_bytes(bytes, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Malformed { what: "Ifc2x3CobieEditCommand", offset: 0, detail: error.to_string() })?;
+        <Self as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|error| protocol::ProtocolError::Malformed { what: "Ifc2x3CobieEditCommand", offset: 0, detail: error.to_string() })
     }
 }
 //#endregion 🔖️Command
@@ -102,7 +103,7 @@ fn ifc2x3CobieEditor_command_id(command: &Ifc2x3CobieEditCommand) -> &'static st
     }
 }
 
-fn ifc2x3CobieEditor_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Ifc2x3CobieEditCommand, Fault> {
+fn ifc2x3CobieEditor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Ifc2x3CobieEditCommand, Fault> {
     if editing::is_snapshot_edit_action(action) { return editing::snapshot_edit_event_from_action(action, args).and_then(|event| event.map(|event| Ifc2x3CobieEditCommand::EditSnapshot { event }).ok_or_else(|| Fault::from(format!("action '{action}' is not a snapshot edit")))); }
     match action {
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(Ifc2x3CobieEditCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
@@ -249,7 +250,7 @@ impl ArtifactEditor for Ifc2x3CobieEditor {
 
     fn command_id(command: &Self::Command) -> &'static str { ifc2x3CobieEditor_command_id(command) }
 
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> { ifc2x3CobieEditor_command_from_action(action, args) }
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> { ifc2x3CobieEditor_command_from_action(action, args) }
 
     fn initial_snapshot() -> Ifc2x3Snapshot {
         Ifc2x3Snapshot::default()
@@ -276,7 +277,7 @@ impl ArtifactEditor for Ifc2x3CobieEditor {
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
-            editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details(doc.snapshot, view_state.locale, "s.stdio.ifc@2x3/cobie#editor", &semio_framework_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
+            editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details(doc, view_state.locale, "s.stdio.ifc@2x3/cobie#editor", &semio_framework_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -289,7 +290,7 @@ impl editing::SnapshotEditingEditor for Ifc2x3CobieEditor {
         match command { Ifc2x3CobieEditCommand::EditSnapshot { event } => Some(event), _ => None }
     }
     fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| Ifc2x3Mutation::SetSnapshot(snapshot_edit_set_snapshot::SetSnapshot { snapshot: Box::new(snapshot) }))
+        editing::snapshot_edit_patch(event, snapshot, |patch| Ifc2x3Mutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| Ifc2x3Mutation::SetSnapshot(snapshot_edit_set_snapshot::SetSnapshot { snapshot: Box::new(snapshot) })))
     }
 }
 

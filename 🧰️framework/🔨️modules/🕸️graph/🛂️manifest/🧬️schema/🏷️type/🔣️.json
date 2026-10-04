@@ -1,0 +1,238 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio://framework/graph/manifest/type-laws",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "types": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/$defs/valueType"
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "graphValues": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9
+    },
+    "graphCases": {
+      "type": "array",
+      "minItems": 63,
+      "maxItems": 63,
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 6
+          },
+          "value": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 8
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "type",
+          "value",
+          "accepted"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "controlledProperties": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "properties": {
+          "input": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "schema"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          },
+          "expected": {
+            "$ref": "#/$defs/valueType"
+          }
+        },
+        "required": [
+          "input",
+          "expected"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "controlledWork": {
+      "type": "object",
+      "properties": {
+        "depth": {
+          "const": 300
+        },
+        "schemaUnit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expressionUnit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "repeat": {
+          "const": 20000
+        },
+        "cancelAt": {
+          "const": 256
+        }
+      },
+      "required": [
+        "depth",
+        "schemaUnit",
+        "expressionUnit",
+        "repeat",
+        "cancelAt"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "types",
+    "graphValues",
+    "graphCases",
+    "controlledProperties",
+    "controlledWork"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "valueType": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "enum": [
+                "boolean",
+                "integer",
+                "decimal",
+                "text",
+                "any"
+              ]
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "list"
+            },
+            "of": {
+              "$ref": "#/$defs/valueType"
+            }
+          },
+          "required": [
+            "kind",
+            "of"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "schema"
+            },
+            "of": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "of"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "valueKind": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "enum": [
+                "null",
+                "boolean",
+                "integer",
+                "decimal",
+                "text"
+              ]
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "dictionary"
+            },
+            "schema": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    }
+  }
+}

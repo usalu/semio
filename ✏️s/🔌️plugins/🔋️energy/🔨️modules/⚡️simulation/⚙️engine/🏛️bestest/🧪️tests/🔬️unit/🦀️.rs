@@ -241,12 +241,12 @@ fn weather_fixture() -> Option<String> {
     std::fs::read_to_string(subset_root().join("🧫️fixtures").join("🌦️denver-tmy").join("🌦️.epw")).ok()
 }
 
-fn energyplus_reference(case: &str) -> Option<pack::json::Value> {
+fn energyplus_reference(case: &str) -> Option<semio_framework_pack_json::Value> {
     let text = std::fs::read_to_string(subset_root().join("🧫️fixtures").join(format!("🏛️bestest-{case}")).join("🔮️energyplus.json")).ok()?;
-    pack::json::parse(&text).ok()
+    semio_framework_pack_json::parse(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()
 }
 
-fn member(value: &pack::json::Value, path: &[&str]) -> Option<f64> {
+fn member(value: &semio_framework_pack_json::Value, path: &[&str]) -> Option<f64> {
     let mut cursor = value;
     for key in path {
         cursor = cursor.get(key)?;
@@ -377,7 +377,7 @@ fn committed_bestest_fixtures_match_the_builders() {
 fn committed_bestest_fixtures_decode_back_into_their_models() {
     for case in CASES {
         let committed = std::fs::read_to_string(fixture_path(case)).expect("committed fixture is present");
-        let decoded: Model = pack::json::from_json_str(&committed).unwrap_or_else(|error| panic!("committed fixture for case {case} does not decode: {error}"));
+        let decoded: Model = semio_framework_pack_json::from_json_str(&committed, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|error| panic!("committed fixture for case {case} does not decode: {error}"));
         assert_eq!(decoded, model(case).expect("case builds"), "committed fixture for case {case} decodes into a different model");
     }
 }

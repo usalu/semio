@@ -11,7 +11,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { FRAMEWORK_PANEL_TAB_HISTORY_ID, HISTORY_EDIT_ARG_GENERATION, historyEntryLabelText, type ActionDescriptor, type HistoryEditActionId, type HistoryEntry, type HistoryTimeTravel, type HistoryTimeTravelReview, type HistoryTimeTravelStage } from "@semio-tech/framework";
+import { FRAMEWORK_PANEL_TAB_HISTORY_ID, HISTORY_EDIT_ARG_GENERATION, historyEntryLabelText, historyReprojectionStatus, type ActionDescriptor, type HistoryEditActionId, type HistoryEntry, type HistoryReprojection, type HistoryTimeTravel, type HistoryTimeTravelReview, type HistoryTimeTravelStage, type ShellLocale } from "@semio-tech/framework";
 import type { ArtifactPresenceHistoryEdit } from "@semio-tech/framework-replication";
 import { ariaKeyshortcutsText, findPanelTabInDock, findPanelTabPath, Icon, resolveControlKeybindingRaw, SHELL_KEYBINDINGS, useControlKeybinding, useUiKeybindingsByControlId, type PanelDock, type PanelTabNode, type PresencePeer, type UiTranslationKey } from "@semio-tech/ui-react";
 import { useEffect, useId, useRef, type ReactElement } from "react";
@@ -113,7 +113,8 @@ function timeTravelTargetText(session: HistoryTimeTravel, axes: { readonly termi
 
 /** 🖋️ {@link TimeTravelBandTextV1} of `session`: a review's status is the session's own `review`, never inferred from a
  * missing report; severity is always named in words (`ui.mutation.level.*`) and only when the session reports one,
- * never by colour alone; a fault code the shell knows (`timeTravel.cancelled`, the refusals) reads as its own text. */
+ * never by colour alone; a fault code the shell knows (`timeTravel.cancelled`, the refusals) reads as its own text, any other
+ * reads the replay-failed copy — the code itself is only the band's `data-semio-time-travel-fault`, never shown. */
 export function timeTravelBandTextV1(session: HistoryTimeTravel, axes: { readonly terminology: string; readonly locale: string }): TimeTravelBandTextV1 {
   const target = timeTravelTargetText(session, axes);
   const fault = session.fault === undefined ? null : historyRefusalCodeV1(session.fault);
@@ -123,7 +124,7 @@ export function timeTravelBandTextV1(session: HistoryTimeTravel, axes: { readonl
     progress: session.stage === "replaying" && session.total !== undefined ? String(shellLabel("ui.timeTravel.progress", { done: session.done ?? 0, total: session.total })) : null,
     review: session.stage === "reviewing" && session.review !== undefined ? String(shellLabel(REVIEW_LABEL_KEYS[session.review])) : null,
     outcome: session.worst === undefined ? null : String(shellLabel("ui.timeTravel.worst", { level: shellLabel(`ui.mutation.level.${session.worst}`) })),
-    fault: session.fault === undefined ? null : fault !== null ? String(shellLabel(HISTORY_REFUSAL_LABEL_KEYS[fault])) : String(shellLabel("ui.timeTravel.fault", { code: session.fault })),
+    fault: session.fault === undefined ? null : String(shellLabel(HISTORY_REFUSAL_LABEL_KEYS[fault ?? "timeTravel.replay-faulted"])),
     accepted: (session.acceptedCount ?? 0) > 0 ? String(shellLabel("ui.timeTravel.accepted", { count: session.acceptedCount })) : null,
   };
 }
@@ -361,6 +362,48 @@ export function TimeTravelBand({ session, terminology, locale, controllerId, onA
           {shellLabel(entry.label)}
         </button>
       ))}
+    </div>
+  );
+}
+
+/** 🔁️ What the reprojection status offers while no history-edit session is open: Cancel replay while a remote change, a
+ * history step or a document load replays (the history body's own control), Replay again while a remote change is paused,
+ * nothing for a refused adoption — a session's band owns both controls while it is open. */
+export function historyReprojectionControlV1(reprojection: HistoryReprojection, sessionOpen: boolean): "cancelReplay" | "rerun" | null {
+  if (sessionOpen || reprojection.total === 0) return null;
+  return reprojection.paused === true && (reprojection.kind ?? "remote") === "remote" ? "rerun" : "cancelReplay";
+}
+
+/** 📡️ The polite status a history change replaying before adoption raises OUTSIDE the History panel (audit W1E-3) — another
+ * replica's change, this replica's own deferred history step, a whole-document load — read from `HistoryPatch.reprojection`
+ * through the kernel's one copy (`historyReprojectionStatus`, the same bytes the wgpu shell mirrors as
+ * `shell.history.reprojection`): the kind's title, its progress (announced when it starts, then shown and carried by the
+ * progress bar without re-announcing every step), a pause or a refused adoption in words — its code only as
+ * `data-notice-code` — and Cancel replay / Replay again ({@link historyReprojectionControlV1}). */
+export function HistoryReprojectionStatus({ reprojection, locale, sessionOpen, controllerId, onAction }: { readonly reprojection: HistoryReprojection; readonly locale: ShellLocale; readonly sessionOpen: boolean; readonly controllerId: string; readonly onAction: (action: ActionDescriptor) => void }): ReactElement {
+  const status = historyReprojectionStatus(reprojection, "native", locale);
+  const kind = reprojection.kind ?? "remote";
+  const phase = status.fault !== null && status.total === 0 ? "refused" : status.paused ? "paused" : "progress";
+  const announced = useRef<{ readonly key: string; readonly text: string } | null>(null);
+  const key = `${kind}:${phase}:${locale}`;
+  if (announced.current?.key !== key) announced.current = { key, text: status.text };
+  const control = historyReprojectionControlV1(reprojection, sessionOpen);
+  return (
+    <div data-semio-history-reprojection={kind} data-semio-history-reprojection-phase={phase} data-notice-code={status.fault ?? undefined} className="pointer-events-auto flex max-w-[90vw] flex-wrap items-center gap-single rounded-sm border border-normal bg-menu px-double py-single text-sm shadow-sm">
+      <span role="status" aria-live="polite" aria-atomic="true" className="sr-only" data-semio-history-reprojection-announcement="">
+        {`${status.title}: ${announced.current.text}`}
+      </span>
+      <Icon icon={phase === "refused" ? "triangle-alert" : kind === "load" ? "download" : "loader-2"} size="small" />
+      <strong aria-hidden="true">{status.title}</strong>
+      <span aria-hidden="true" data-semio-history-reprojection-text="">
+        {status.text}
+      </span>
+      {phase === "progress" && status.total > 0 ? <progress data-semio-history-reprojection-progress="" value={status.done} max={status.total} aria-label={status.title} aria-valuetext={status.text} /> : null}
+      {control === null ? null : (
+        <button type="button" className="min-h-medium px-tiny underline" data-semio-history-reprojection-control={control} onClick={() => onAction({ controllerId, action: TIME_TRAVEL_VERBS[control], args: {} })}>
+          {shellLabel(`ui.timeTravel.${control}`)}
+        </button>
+      )}
     </div>
   );
 }

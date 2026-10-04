@@ -22,7 +22,7 @@ where
     M: Mutation<S, Diff = S> + OpText + OpBinary + Clone + std::fmt::Debug + PartialEq,
 {
     let after = mutation.diff(base).diff().apply(base).unwrap();
-    let restored = mutation.inverse(base).into_iter().fold(after.clone(), |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
+    let restored = mutation.inverse(base).expect("valid retained mutation inverse fixture").into_iter().fold(after.clone(), |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
     assert_eq!(restored, *base);
     assert_eq!(M::parse_op(&mutation.print_op()).unwrap(), *mutation);
     assert_eq!(M::decode_op(&mutation.encode_op().unwrap()).unwrap(), *mutation);
@@ -33,14 +33,14 @@ where
 #[test]
 fn remodel_window_ownership_mutations_match_neutral_fixture_and_codecs() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window-ownership/🔣️.json")).unwrap();
-    let model_base: RemodelingModelWindowConfig = dsl::json::from_json_str(&fixture["base"]["model"].to_string()).unwrap();
-    let frames_base: RemodelingFramesWindowConfig = dsl::json::from_json_str(&fixture["base"]["frames"].to_string()).unwrap();
-    let report_base: RemodelingReportWindowConfig = dsl::json::from_json_str(&fixture["base"]["report"].to_string()).unwrap();
+    let model_base: RemodelingModelWindowConfig = semio_framework_pack_json::from_json_str(&fixture["base"]["model"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let frames_base: RemodelingFramesWindowConfig = semio_framework_pack_json::from_json_str(&fixture["base"]["frames"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let report_base: RemodelingReportWindowConfig = semio_framework_pack_json::from_json_str(&fixture["base"]["report"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for row in fixture["mutations"].as_array().unwrap() {
         match row["owner"].as_str().unwrap() {
-            "model" => assert_config_codecs(&model_base, &dsl::json::from_json_str::<RemodelingModelWindowConfigMutation>(&row["mutation"].to_string()).unwrap()),
-            "frames" => assert_config_codecs(&frames_base, &dsl::json::from_json_str::<RemodelingFramesWindowConfigMutation>(&row["mutation"].to_string()).unwrap()),
-            "report" => assert_config_codecs(&report_base, &dsl::json::from_json_str::<RemodelingReportWindowConfigMutation>(&row["mutation"].to_string()).unwrap()),
+            "model" => assert_config_codecs(&model_base, &semio_framework_pack_json::from_json_str::<RemodelingModelWindowConfigMutation>(&row["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()),
+            "frames" => assert_config_codecs(&frames_base, &semio_framework_pack_json::from_json_str::<RemodelingFramesWindowConfigMutation>(&row["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()),
+            "report" => assert_config_codecs(&report_base, &semio_framework_pack_json::from_json_str::<RemodelingReportWindowConfigMutation>(&row["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()),
             owner => panic!("unknown fixture owner {owner}"),
         }
     }
@@ -137,7 +137,7 @@ fn remodel_window_ownership_runtime_isolates_renders_and_reopens_six_windows() {
                 let right_frames = frames_scene(&mut app, &frames_right).await?;
                 let left_report = report_scene(&mut app, &report_left).await?;
                 let right_report = report_scene(&mut app, &report_right).await?;
-                let left_camera: store::Viewport3dOrbit = dsl::json::from_json_str(&left_model.camera_json).map_err(|error| format!("{error:?}"))?;
+                let left_camera: store::Viewport3dOrbit = semio_framework_pack_json::from_json_str(&left_model.camera_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("{error:?}"))?;
                 if left_model == right_model { return Err("Remodel Model rendered identical scenes for two isolated window configs".into()); }
                 if left_camera != expected_left_camera {
                     return Err(format!("Remodel Model rendered the wrong left camera: {left_camera:?}"));
@@ -149,7 +149,7 @@ fn remodel_window_ownership_runtime_isolates_renders_and_reopens_six_windows() {
                 if packs.len() != 6 { return Err(format!("Remodel persisted {} exact window packs instead of six", packs.len())); }
                 let mut reopened = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<RemodelingPlayApp>>(manifest).await);
                 reopened.bind_instance_id(89).await;
-                reopened.load_document_pack(&document_before).await.map_err(|error| format!("{error:?}"))?;
+                semio_framework_plugin::artifact_app_laws::load_document(&mut reopened, &document_before).await.map_err(|error| format!("{error:?}"))?;
                 for pack in packs { reopened.load_window_config_pack(pack).await.map_err(|error| format!("{error:?}"))?; }
                 let reopened_model_left = model_scene(&mut reopened, &model_left).await?;
                 let reopened_model_right = model_scene(&mut reopened, &model_right).await?;

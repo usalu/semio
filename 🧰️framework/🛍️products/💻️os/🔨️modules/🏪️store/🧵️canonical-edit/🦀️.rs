@@ -91,7 +91,7 @@ impl<'a, M: ArtifactCanonicalJson> CanonicalEditNode<'a, M> {
         let mut fields = [("", false); 12];
         match self {
             Self::Edit(edit) => {
-                fields[..12].copy_from_slice(&[
+                fields[..11].copy_from_slice(&[
                     ("id", true),
                     ("actor", edit.actor.is_some()),
                     ("forwards", true),
@@ -99,7 +99,6 @@ impl<'a, M: ArtifactCanonicalJson> CanonicalEditNode<'a, M> {
                     ("mutationMeta", !edit.mutation_meta.is_empty()),
                     ("description", edit.description.is_some()),
                     ("verb", edit.verb.is_some()),
-                    ("coalesceKey", edit.coalesce_key.is_some()),
                     ("sequenceNumber", true),
                     ("startedAt", true),
                     ("finishedAt", edit.finished_at.is_some()),
@@ -145,11 +144,10 @@ impl<'a, M: ArtifactCanonicalJson> CanonicalEditNode<'a, M> {
                 4 => Self::Metas(&edit.mutation_meta),
                 5 => Self::Scalar(N::String(edit.description.as_deref().ok_or_else(invalid_path)?)),
                 6 => Self::Scalar(N::String(edit.verb.as_deref().ok_or_else(invalid_path)?)),
-                7 => Self::Scalar(N::String(edit.coalesce_key.as_deref().ok_or_else(invalid_path)?)),
-                8 => Self::Scalar(N::I64(i64::from(edit.sequence_number))),
-                9 => Self::Scalar(N::String(&edit.started_at)),
-                10 => Self::Scalar(N::String(edit.finished_at.as_deref().ok_or_else(invalid_path)?)),
-                11 => Self::Scalar(edit.line.as_deref().map_or(N::Null, N::String)),
+                7 => Self::Scalar(N::I64(i64::from(edit.sequence_number))),
+                8 => Self::Scalar(N::String(&edit.started_at)),
+                9 => Self::Scalar(N::String(edit.finished_at.as_deref().ok_or_else(invalid_path)?)),
+                10 => Self::Scalar(edit.line.as_deref().map_or(N::Null, N::String)),
                 _ => return Err(invalid_path()),
             },
             Self::Mutations(values) => Self::Mutation(values.get(index).ok_or_else(invalid_path)?),
@@ -346,7 +344,7 @@ impl ScalarBytes {
             ArtifactCanonicalJsonNode::I128(value) => write!(scalar, "{value}").map_err(|error| error.to_string()),
             ArtifactCanonicalJsonNode::U128(value) => write!(scalar, "{value}").map_err(|error| error.to_string()),
             ArtifactCanonicalJsonNode::F32(value) => serde_json::to_writer(&mut scalar, &value).map_err(|error| error.to_string()),
-            ArtifactCanonicalJsonNode::F64(value) => scalar.write_all(crate::os_pack::json::format_f64(value).as_bytes()).map_err(|error| error.to_string()),
+            ArtifactCanonicalJsonNode::F64(value) => scalar.write_all(semio_framework_pack_json::format_f64(value).as_bytes()).map_err(|error| error.to_string()),
             _ => return Err(invalid_path()),
         }?;
         Ok(scalar)
@@ -570,7 +568,7 @@ impl ArtifactStoreOneItemAuthorityRetirement {
 }
 
 impl ErasedSnapshotRetirement for ArtifactStoreOneItemAuthorityRetirement {
-    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if items == 0 || bytes == 0 {
             return Ok(SnapshotRetirementStep::Blocked);
         }
@@ -702,11 +700,7 @@ impl<P, M> ArtifactStoreOneItemSealer<P, M> {
         self.replay = None;
     }
     pub fn canonical_chunk(&self) -> &[u8] {
-        if self.last_canonical {
-            &self.last_chunk[..self.last_length]
-        } else {
-            &[]
-        }
+        if self.last_canonical { &self.last_chunk[..self.last_length] } else { &[] }
     }
 
     pub fn checkpoint(&self) -> ArtifactStoreOneItemSealCheckpoint {
@@ -856,7 +850,7 @@ impl<P: Send + Sync + 'static, M: ArtifactCanonicalJson + Send + 'static> Artifa
                 if self.encoder.is_complete() {
                     if self.phase == 1 {
                         self.phase = 2;
-                        self.encoder.reset()?;
+                        self.encoder.reset().map_err(semio_framework_value::ValueError::into_message)?;
                     } else {
                         self.phase = 4;
                     }
@@ -922,7 +916,7 @@ impl<P: Send + Sync + 'static, M: ArtifactCanonicalJson + Send + 'static> Artifa
         Ok(ArtifactStoreOneItemPreparationStep::Progress(self.progress()))
     }
 
-    pub fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String> {
+    pub fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || !grant.permits_one() {
             return Ok(SnapshotRetirementStep::Blocked);
         }
@@ -932,11 +926,11 @@ impl<P: Send + Sync + 'static, M: ArtifactCanonicalJson + Send + 'static> Artifa
         if let Some(active) = self.active_retirement.as_mut() {
             return match active.close_step(grant.maximum_items.min(1), grant.maximum_bytes)? {
                 SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes <= grant.maximum_bytes => Ok(SnapshotRetirementStep::Pending { released_items, released_bytes }),
-                SnapshotRetirementStep::Pending { .. } => Err("canonical-edit.retirement-grant".into()),
+                SnapshotRetirementStep::Pending { .. } => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "canonical-edit.retirement-grant")),
                 SnapshotRetirementStep::Blocked => Ok(SnapshotRetirementStep::Blocked),
                 SnapshotRetirementStep::Complete => {
                     if !active.terminal_is_empty() {
-                        return Err("canonical-edit.retirement-witness".into());
+                        return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "canonical-edit.retirement-witness"));
                     }
                     self.active_retirement = None;
                     Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })

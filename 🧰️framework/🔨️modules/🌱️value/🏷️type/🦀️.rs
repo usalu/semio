@@ -41,7 +41,9 @@ impl ValueType {
 
     /// 🎯️ Matches an owner-supplied classification without constructing a value carrier.
     pub fn matches(&self, value: ValueKind<'_>) -> bool {
-        if value == ValueKind::Null { return false; }
+        if value == ValueKind::Null {
+            return false;
+        }
         match self {
             ValueType::Any => true,
             ValueType::Boolean => value == ValueKind::Boolean,
@@ -55,6 +57,9 @@ impl ValueType {
 }
 
 impl ToValue for ValueType {
+    fn to_value_controlled(&self, control: &mut crate::NativeEncodeControl<'_>) -> Result<DslValue, ValueError> {
+        controlled::encode(self, control)
+    }
     fn to_value(&self) -> DslValue {
         match self {
             ValueType::Boolean => DslValue::object([("kind".to_string(), "boolean".to_value())]),
@@ -69,20 +74,30 @@ impl ToValue for ValueType {
 }
 
 impl FromValue for ValueType {
+    fn from_value_controlled(value: &DslValue, control: &mut crate::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
+        controlled::decode(value, control)
+    }
+    fn retire_decoded(self) {
+        controlled::retire(self)
+    }
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
-        let DslValue::Object(fields) = &value else { return Err(ValueError::new("expected a type object")); };
-        let kind = value.get("kind").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new("kind"))?;
+        let DslValue::Object(fields) = &value else {
+            return Err(ValueError::new(crate::ValueRefusalKind::InvalidValue, "expected a type object"));
+        };
+        let kind = value.get("kind").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new(crate::ValueRefusalKind::InvalidValue, "kind"))?;
         let expected = if matches!(kind.as_str(), "list" | "schema") { 2 } else { 1 };
-        if fields.len() != expected || fields.iter().any(|(key, _)| key != "kind" && key != "of") { return Err(ValueError::new("invalid type fields")); }
+        if fields.len() != expected || fields.iter().any(|(key, _)| key != "kind" && key != "of") {
+            return Err(ValueError::new(crate::ValueRefusalKind::InvalidValue, "invalid type fields"));
+        }
         match kind.as_str() {
             "boolean" => Ok(ValueType::Boolean),
             "integer" => Ok(ValueType::Integer),
             "decimal" => Ok(ValueType::Decimal),
             "text" => Ok(ValueType::Text),
-            "list" => Ok(ValueType::List(Box::new(value.get("of").cloned().map(ValueType::from_value).transpose()?.ok_or_else(|| ValueError::new("of"))?))),
-            "schema" => Ok(ValueType::Schema(value.get("of").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new("of"))?)),
+            "list" => Ok(ValueType::List(Box::new(value.get("of").cloned().map(ValueType::from_value).transpose()?.ok_or_else(|| ValueError::new(crate::ValueRefusalKind::InvalidValue, "of"))?))),
+            "schema" => Ok(ValueType::Schema(value.get("of").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new(crate::ValueRefusalKind::InvalidValue, "of"))?)),
             "any" => Ok(ValueType::Any),
-            other => Err(ValueError::new(format!("unknown ValueType kind '{other}'"))),
+            other => Err(ValueError::new(crate::ValueRefusalKind::InvalidValue, format!("unknown ValueType kind '{other}'"))),
         }
     }
 }
@@ -90,3 +105,8 @@ impl FromValue for ValueType {
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;
+
+#[path = "🛬️controlled/🦀️.rs"]
+mod controlled;
+
+impl crate::retirement::RetireOwned for ValueType { fn retirement(self)->Box<dyn crate::retirement::RetirementCursor>{use crate::retirement::RetireOwned;match self{Self::List(value)=>value.retirement(),Self::Schema(value)=>value.retirement(),_=>crate::retirement::leaf(())}}}

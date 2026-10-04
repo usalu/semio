@@ -7,16 +7,16 @@ fn files_window_projects_the_fixture_hierarchy_without_navigation_or_selection_a
     let files = &fixture["files"];
     let mut block = default_block("project-name".into(), "text");
     block.label = "Project Name".into();
-    let snapshot = crate::playbook_snapshot_with_steps(
-        "playbook.program",
-        "playbook",
-        "1",
-        Some("Playbook".into()),
-        vec![
+    let snapshot = crate::PlaybookSpec {
+        schema: "playbook.program".into(),
+        id: "playbook".into(),
+        version: "1".into(),
+        title: Some("Playbook".into()),
+        steps: vec![
             PlaybookStep { id: "basics".into(), title: "Project Basics".into(), description: None, blocks: vec![block] },
             PlaybookStep { id: "publish".into(), title: "Publish".into(), description: None, blocks: Vec::new() },
         ],
-    );
+    };
     let labels = crate::editor::playbook::terminology::playbook_play_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let projected = scene(&snapshot, labels);
     let schema: serde_json::Value = serde_json::from_str(&projected.schema_json).expect("files schema");

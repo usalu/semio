@@ -18,7 +18,7 @@ CREATE TABLE en1999_plate_element (
 );
 CREATE TABLE en1999_member (
  id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES en1999_document(id), ordinal INTEGER NOT NULL CHECK(ordinal>=0), logical_id TEXT NOT NULL, section_reference TEXT NOT NULL, material_reference TEXT NOT NULL,
- length REAL, support TEXT NOT NULL, buckling_length_y REAL, buckling_length_z REAL, buckling_length_t REAL, ltb_length REAL, c1 REAL, restrained_ltb INTEGER NOT NULL CHECK(restrained_ltb IN(0,1)),
+ length REAL, support TEXT NOT NULL CHECK(support IN('simplySupported','continuous','cantilever')), buckling_length_y REAL, buckling_length_z REAL, buckling_length_t REAL, ltb_length REAL, c1 REAL, restrained_ltb INTEGER NOT NULL CHECK(restrained_ltb IN(0,1)),
  length_ieee754_bits INTEGER NOT NULL, length_ieee754_class TEXT NOT NULL,
  buckling_length_y_ieee754_bits INTEGER NOT NULL, buckling_length_y_ieee754_class TEXT NOT NULL,
  buckling_length_z_ieee754_bits INTEGER NOT NULL, buckling_length_z_ieee754_class TEXT NOT NULL,

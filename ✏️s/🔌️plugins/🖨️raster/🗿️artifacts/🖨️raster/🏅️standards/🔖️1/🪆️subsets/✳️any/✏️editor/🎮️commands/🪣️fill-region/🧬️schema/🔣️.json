@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Fill Region",
+  "description": "One bucket click: the layer and the clicked point in its image's pixels. Colour, tolerance, target and selection are the session's.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "layerId",
+    "x",
+    "y"
+  ],
+  "properties": {
+    "layerId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "x": {
+      "type": "number",
+      "minimum": 0
+    },
+    "y": {
+      "type": "number",
+      "minimum": 0
+    }
+  }
+}

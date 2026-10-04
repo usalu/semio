@@ -13,7 +13,7 @@ export function startNativeProgress(label: string, intervalMs = 10_000, output: 
 /** 🏃️ Runs a bounded owned command with progress and process-tree cancellation. Its stdout (unless ignored) and stderr are piped and
  * forwarded, never inherited: an inherited pipe shares this Bun process's `O_NONBLOCK`, and a burst from the command then fails with
  * `EAGAIN` once a slow reader lets the pipe fill ([[cargoStreamingStatus]], ticket 26/09/23 W4). */
-export async function runOwnedCommand(command: string, args: string[], cwd: string, label: string, timeoutMs: number, options: { stdout?: "inherit" | "ignore"; env?: Readonly<Record<string, string | undefined>>; signal?: AbortSignal; onLine?: (line: string) => void } = {}): Promise<void> {
+export async function runOwnedCommand(command: string, args: string[], cwd: string, label: string, timeoutMs: number, options: { stdout?: "inherit" | "ignore"; env?: Readonly<Record<string, string | undefined>>; signal?: AbortSignal; onLine?: (line: string) => void; onProgress?: (line: string) => void } = {}): Promise<void> {
   if (options.signal?.aborted) throw new Error(`${label} stopped: cancelled`);
   const child = spawn(command, args, { cwd, env: options.env ?? process.env, detached: process.platform !== "win32", stdio: ["inherit", options.stdout === "ignore" ? "ignore" : "pipe", "pipe"], windowsHide: true });
   child.stdout?.pipe(process.stdout, { end: false });
@@ -57,7 +57,7 @@ export async function runOwnedCommand(command: string, args: string[], cwd: stri
   const stop = (): void => terminate("SIGTERM");
   process.once("SIGINT", interrupt);
   process.once("SIGTERM", stop);
-  const stopProgress = startNativeProgress(label);
+  const stopProgress = startNativeProgress(label, 10_000, options.onProgress);
   const timeout = timeoutMs > 0 ? setTimeout(() => terminate(`timeout ${timeoutMs}ms`), timeoutMs) : undefined;
   try {
     const status = await new Promise<number>((accept) => {

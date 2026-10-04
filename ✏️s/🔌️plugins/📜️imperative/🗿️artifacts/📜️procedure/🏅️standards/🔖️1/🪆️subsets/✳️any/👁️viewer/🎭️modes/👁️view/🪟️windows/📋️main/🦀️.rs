@@ -3,7 +3,7 @@
 //! sibling editor window's `build_table_scene` call does. A viewer table has no run-output row; its
 //! localized column labels resolve from the shared OS-owned view context.
 
-use crate::ProcedureSnapshot;
+use crate::ProcedureScene;
 use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -28,8 +28,8 @@ pub fn definition() -> WindowKindDefinition {
 /// 👁️ Pure `ProcedureSnapshot -> UiNode` read: one row per top-level step (`index`, `id`, `kind`),
 /// localized headers from the shared view context, and no run-output row (the editor's own `run`
 /// view-action is a `Command`, and the viewer declares none).
-pub fn render(document: &ProcedureSnapshot, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let path = crate::procedure_working_scene(document).path;
+pub fn render(scene: &ProcedureScene, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let path = &scene.path;
     let rows = path.steps.iter().enumerate().map(|(index, step)| vec![(index + 1).to_string(), step.id.clone(), step.kind.clone()]).collect();
     let columns = if view_state.locale == semio_framework_ui_locale::Locale::De { vec!["#".into(), "ID".into(), "Art".into()] } else { vec!["#".into(), "Id".into(), "Kind".into()] };
     TableWindowKit::render(&TableView { columns, rows })

@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/ui/row-action-admission-v1.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "owner", "initial", "replacement", "expected"],
+  "properties": {
+    "schema": { "const": "semio.ui.row-action-admission.v1" },
+    "owner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pluginId", "appId", "sessionInstanceId", "runtimeKey", "clientInstanceId"],
+      "properties": {
+        "pluginId": { "type": "string", "minLength": 1 },
+        "appId": { "type": "string", "minLength": 1 },
+        "sessionInstanceId": { "type": "integer", "minimum": 0 },
+        "runtimeKey": { "type": "string", "minLength": 1 },
+        "clientInstanceId": { "type": "string", "minLength": 1 }
+      }
+    },
+    "initial": { "$ref": "#/$defs/case" },
+    "replacement": { "$ref": "#/$defs/case" },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pendingDispatches", "replacementDispatches", "tableRowName", "treeRowName"],
+      "properties": {
+        "pendingDispatches": { "const": 1 },
+        "replacementDispatches": { "const": 2 },
+        "tableRowName": { "type": "string", "minLength": 1 },
+        "treeRowName": { "type": "string", "minLength": 1 }
+      }
+    }
+  },
+  "$defs": {
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["target", "action"],
+      "properties": {
+        "target": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["scope", "version", "args", "activation"],
+          "properties": {
+            "scope": { "type": "string", "minLength": 1 },
+            "version": { "type": "integer", "minimum": 1 },
+            "args": { "type": "object" },
+            "activation": { "type": ["string", "null"] }
+          }
+        },
+        "action": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["icon", "label", "verb", "placement", "disabled"],
+          "properties": {
+            "icon": { "type": "string", "minLength": 1 },
+            "label": { "type": "string", "minLength": 1 },
+            "verb": { "type": "string", "minLength": 1 },
+            "placement": { "enum": ["row", "menu"] },
+            "disabled": { "type": "boolean" }
+          }
+        }
+      }
+    }
+  }
+}

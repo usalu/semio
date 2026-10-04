@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { continuationCaseFaults, runContinuationCase, runContinuationCaseLive, createVirtualContinuationHost, createContinuationScheduler, type ContinuationSuite, type ContinuationCancel } from "../../🟦️.ts";
+import { createContinuationScheduler, type ContinuationCancel } from "../../🟦️.ts";
+import { continuationCaseFaults, runContinuationCase, runContinuationCaseLive, createVirtualContinuationHost, type ContinuationSuite } from "../⚖️oracle/🟦️.ts";
 
 const { readFileSync } = await import("node:fs");
 const { fileURLToPath } = await import("node:url");

@@ -1,2 +1,0 @@
-semio sequence.sequence.dsl v1
-schema=sequence.sequence content=child_id=sequence-content-13e3545f6a91fe1f target=artifact-id=sequence-content-13e3545f6a91fe1f artifact-kind=s.stdio.semio standard=v1 subset=flow

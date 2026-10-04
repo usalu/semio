@@ -2,7 +2,7 @@
 
 use crate::{EnergyStructureChild, EnergyZonesChild};
 use framework_schema::ArtifactSchema;
-use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
+use semio_framework_value::{DslValue, FromValue, ToValue, ValueError};
 
 //#region 🔖️LinkSlotDelta
 /// 🔗️ A link slot's delta. The field is `Option<EnergyLinkSlotDelta>`, and ABSENT means the slot did

@@ -14,7 +14,7 @@ async fn inference_determinism_law() {
     use crate::TiffSnapshot;
     use protocol::Inference;
     let snapshot = <TiffSnapshot as store::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).expect("demo fixture must parse");
-    assert_eq!(TiffInference::infer(&snapshot), TiffInference::infer(&snapshot));
+    assert_eq!(TiffInference::infer(&snapshot).expect("valid materialized inference fixture"), TiffInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -22,7 +22,7 @@ async fn inference_default_law() {
     use crate::standards::v6_0::subsets::document::schema::inferences::TiffInference;
     use crate::TiffSnapshot;
     use protocol::Inference;
-    assert_eq!(TiffInference::infer(&TiffSnapshot::default()), TiffInference::default());
+    assert_eq!(TiffInference::infer(&TiffSnapshot::default()).expect("valid materialized inference fixture"), TiffInference::default());
 }
 
 //#region 🧪️SubsetRoundtrip
@@ -57,7 +57,7 @@ impl store::os_store::test_support::SubsetRoundtripSpec for TiffAnyRoundtrip {
         crate::engine::decode_tiff(bytes)
     }
 
-    async fn infer(snapshot: &Self::Snapshot) -> Self::Inference {
+    async fn infer(snapshot: &Self::Snapshot) -> Result<Self::Inference, semio_framework_value::ValueError> {
         use protocol::Inference;
         Self::Inference::infer(snapshot)
     }
@@ -73,7 +73,7 @@ impl store::os_store::test_support::SubsetRoundtripSpec for TiffAnyRoundtrip {
                 _ => None,
             })
             .unwrap_or(1);
-        vec![crate::TiffMutation::ReplaceTag(crate::schema::mutations::ReplaceTagMutation { ifd_index: 0, tag: TAG_IMAGE_WIDTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![width + 1]) })]
+        vec![crate::TiffMutation::ReplaceTag(crate::schema::mutations::ReplaceTagMutation { ifd_index: 0, tag: TAG_IMAGE_WIDTH, values: TiffValues::Long(vec![width + 1]) })]
     }
 
     async fn validate_payload(bytes: &[u8]) -> Result<(), Vec<String>> {

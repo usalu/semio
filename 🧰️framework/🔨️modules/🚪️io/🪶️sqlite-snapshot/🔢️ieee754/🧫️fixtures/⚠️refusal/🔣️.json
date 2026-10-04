@@ -1,0 +1,14 @@
+{
+ "table": "exact_scalar",
+ "rowid": 1,
+ "malformedRefusal": "invalidValue",
+ "columnRefusal": "workLimit",
+ "edits": [
+  "UPDATE exact_scalar SET large_numeric_class='undeclared' WHERE id=1",
+  "UPDATE exact_scalar SET large_ieee754_bits='invalid' WHERE id=1",
+  "UPDATE exact_scalar SET large=1 WHERE id=1",
+  "UPDATE exact_scalar SET small_numeric_class='undeclared' WHERE id=1",
+  "UPDATE exact_scalar SET small_ieee754_bits=-1 WHERE id=1",
+  "UPDATE exact_scalar SET small=1 WHERE id=1"
+ ]
+}

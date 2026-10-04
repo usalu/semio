@@ -6,7 +6,7 @@ use crate::standards::v1::subsets::any::schema::snapshot::{SSpaceSnapshot, Space
 //#region 🔖️Mutation
 /// 🌱 `create-artifact` payload — the full initial row (id/name/kind/schema/dialect/timestamps all
 /// fixed at creation, mirroring `dag`'s `CreateNode { node: DagNodeSpec }` shape).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "create-artifact")]
@@ -26,9 +26,12 @@ impl protocol::MutationKind<SSpaceSnapshot, SSpaceMutation> for CreateArtifact {
     fn diff(&self, base: &SSpaceSnapshot) -> protocol::MutationOutcome<SSpaceDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SSpaceSnapshot) -> Vec<SSpaceMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &SSpaceSnapshot) -> Result<Vec<SSpaceMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Create artifact \"{}\"", self.artifact.id), &format!("Artefakt \"{}\" erstellen", self.artifact.id))
     }

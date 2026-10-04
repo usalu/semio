@@ -2,7 +2,7 @@
 
 use super::{Wfc2dConfig, Wfc2dConfigMutation};
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
@@ -17,9 +17,12 @@ impl protocol::MutationKind<Wfc2dConfig, Wfc2dConfigMutation> for ChangeActiveTi
     fn diff(&self, base: &Wfc2dConfig) -> protocol::MutationOutcome<Wfc2dConfig> {
         protocol::MutationOutcome::new(Wfc2dConfig { active_tile_id: self.tile_id.clone(), ..base.clone() })
     }
-    fn inverse(&self, base: &Wfc2dConfig) -> Vec<Wfc2dConfigMutation> {
+    fn inverse(&self, base: &Wfc2dConfig) -> Result<Vec<Wfc2dConfigMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![Wfc2dConfigMutation::ChangeActiveTile(ChangeActiveTile { tile_id: base.active_tile_id.clone() })]
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Change Active Tile", "Aktive Kachel ändern")
     }

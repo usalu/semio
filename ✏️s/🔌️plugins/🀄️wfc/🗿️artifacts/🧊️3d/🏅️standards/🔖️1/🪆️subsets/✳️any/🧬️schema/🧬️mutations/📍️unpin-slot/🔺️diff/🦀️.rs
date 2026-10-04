@@ -9,7 +9,7 @@ pub fn diff(payload: &super::UnpinSlot, base: &Wfc3dSnapshot) -> protocol::Mutat
     };
     let slot = &base.slots[index];
     if slot.pinned_tile_id.is_none() {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Slot \"{}\" carries no pin.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Slot \"{}\" carries no pin.", payload.id));
     }
     let mut released = slot.clone();
     released.pinned_tile_id = None;

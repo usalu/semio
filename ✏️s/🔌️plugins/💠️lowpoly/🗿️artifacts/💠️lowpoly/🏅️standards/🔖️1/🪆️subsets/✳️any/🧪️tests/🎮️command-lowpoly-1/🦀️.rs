@@ -73,7 +73,7 @@ mod subject {
 
     pub fn patch_object_dispatch(_ctx: &Context) -> Result<Outcome, String> {
         let mut snapshot = LowpolySnapshot::default();
-        snapshot.objects.push(LowpolyObject {
+        snapshot.objects.push(LowpolyObject { mesh_state:None,
             id: "obj-1".into(),
             name: "Original".into(),
             transform: Default::default(),

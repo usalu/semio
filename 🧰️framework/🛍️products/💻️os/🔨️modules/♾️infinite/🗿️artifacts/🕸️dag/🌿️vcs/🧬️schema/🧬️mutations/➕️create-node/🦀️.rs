@@ -1,7 +1,7 @@
 use super::super::{DagDelta, DagDiff, DagMutation, DagNodeSpec, DagSnapshot, DeleteNode};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "create-node")]
@@ -15,9 +15,12 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for CreateNode {
     fn diff(&self, _base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
         protocol::MutationOutcome::new(DagDiff::from(DagDelta { created_node: Some(self.node.clone()), created_node_at: Some(self.index), ..Default::default() }))
     }
-    fn inverse(&self, _base: &DagSnapshot) -> Vec<DagMutation> {
+    fn inverse(&self, _base: &DagSnapshot) -> Result<Vec<DagMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![DagMutation::DeleteNode(DeleteNode { id: self.node.id.clone() })]
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Create node {}", self.node.id), &format!("Knoten {} erstellen", self.node.id))
     }

@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeBatteryCapacity, base: &EnergyModelSnapshot) 
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Battery {}: storage capacity (kWh) must be a positive finite value, got {}.", payload.id.0, payload.new_capacity_kwh), [payload.id.0.to_string()]);
     }
     if existing.capacity_kwh == payload.new_capacity_kwh {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Battery {} already carries this storage capacity (kWh): {}.", payload.id.0, payload.new_capacity_kwh));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Battery {} already carries this storage capacity (kWh): {}.", payload.id.0, payload.new_capacity_kwh));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.battery_storage.iter_mut().find(|item| item.id == payload.id) {

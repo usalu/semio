@@ -6,7 +6,6 @@
 
 use crate::XlsxSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from an xlsx snapshot. One field per named inference under
@@ -20,8 +19,11 @@ pub struct XlsxInference {
 }
 
 impl protocol::Inference<XlsxSnapshot> for XlsxInference {
-    fn infer(snapshot: &XlsxSnapshot) -> Self {
+    fn infer(snapshot: &XlsxSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { outline: XlsxOutline::compute(snapshot) }
+    
+        })
     }
 }
 
@@ -37,13 +39,6 @@ impl protocol::InferenceSpec<XlsxSnapshot> for XlsxInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::standards::v_ecma_376::subsets::base::schema::XlsxBuilder {
-    type Snapshot = XlsxSnapshot;
-    type Inference = XlsxInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.xlsx.inference`'s facet leaves into the OS-wide inference catalog —

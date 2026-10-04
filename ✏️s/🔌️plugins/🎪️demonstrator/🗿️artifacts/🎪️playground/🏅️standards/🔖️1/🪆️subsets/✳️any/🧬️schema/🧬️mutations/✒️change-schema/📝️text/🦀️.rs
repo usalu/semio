@@ -76,13 +76,13 @@ impl protocol::OpText for PlaygroundMutation {
         }
     }
 
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
-        let arguments = parse_arguments(rest).map_err(|error| store::TextError::new(error, store::TextSpan::at(1, 1)))?;
-        let argument = |key: &str| arguments.get(key).cloned().ok_or_else(|| store::TextError::new(format!("playground mutation: missing arg '{key}' for '{keyword}'"), store::TextSpan::at(1, 1)));
+        let arguments = parse_arguments(rest).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, semio_framework_diagnostic::TextSpan::at(1, 1)))?;
+        let argument = |key: &str| arguments.get(key).cloned().ok_or_else(|| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("playground mutation: missing arg '{key}' for '{keyword}'"), semio_framework_diagnostic::TextSpan::at(1, 1)));
         match keyword {
-            TEXT_OPCODE => Ok(PlaygroundMutation::ChangeSchema(ChangeSchema { new_schema: decode_string(&argument("new-schema")?).map_err(|error| store::TextError::new(error, store::TextSpan::at(1, 1)))? })),
-            other => Err(store::TextError::new(format!("playground mutation: unknown keyword {other:?}"), store::TextSpan::at(1, 1))),
+            TEXT_OPCODE => Ok(PlaygroundMutation::ChangeSchema(ChangeSchema { new_schema: decode_string(&argument("new-schema")?).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, semio_framework_diagnostic::TextSpan::at(1, 1)))? })),
+            other => Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("playground mutation: unknown keyword {other:?}"), semio_framework_diagnostic::TextSpan::at(1, 1))),
         }
     }
 }

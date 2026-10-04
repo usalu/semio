@@ -1,4 +1,4 @@
-//! Diff for `remove-roofs`.
+//! 🔺️ Diff for `remove-roofs`.
 use super::RemoveRoofs;
 use crate::artifact_schema::diff::En1991RoofsList;
 use crate::{En1991Diff, En1991Snapshot};

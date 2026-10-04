@@ -4,7 +4,10 @@ use super::SetActiveShot;
 use crate::mutations::ShootingMutation;
 use crate::ShootingSnapshot;
 
-pub fn inverse(_payload: &SetActiveShot, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
+pub fn inverse(_payload: &SetActiveShot, base: &ShootingSnapshot) -> Result<Vec<ShootingMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let shot_id = if base.active_shot_id.is_empty() { None } else { Some(base.active_shot_id.clone()) };
     vec![ShootingMutation::SetActiveShot(SetActiveShot { shot_id })]
+
+    })())
 }

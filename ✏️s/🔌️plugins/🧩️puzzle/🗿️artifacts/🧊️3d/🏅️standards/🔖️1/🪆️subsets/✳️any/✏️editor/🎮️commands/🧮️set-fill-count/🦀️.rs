@@ -2,7 +2,7 @@
 //! reads it when its job is built, and the framework tool run driver reconfigures a live run when it
 //! changes (`📋️tool-run-contract.md` §3.3, §3.7.5) — this command never touches the document.
 
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 use semio_framework::kernel::Effect;
 
 /// 📨️ Routes text-entry requests through the retained public command.

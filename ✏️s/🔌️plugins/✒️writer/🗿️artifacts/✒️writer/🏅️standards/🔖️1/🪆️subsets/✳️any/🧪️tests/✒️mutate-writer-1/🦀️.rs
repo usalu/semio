@@ -138,7 +138,7 @@ mod subject {
         let original = projection(&base)?;
         let mut current = base.clone();
         apply_writer_mutation_outcome(&mut current, &mutation);
-        for step in inverse_writer_mutation_steps(&mutation, &base) {
+        for step in inverse_writer_mutation_steps(&mutation, &base).expect("valid retained mutation inverse fixture") {
             apply_writer_mutation_outcome(&mut current, &step);
         }
         let restored = projection(&current)?;

@@ -17,7 +17,7 @@ use crate::En1991Snapshot;
 pub const EN1991_DE_OFFICE_COMPLIANT_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🏢de-office-compliant/🏢de-office-compliant/🗣️.dsl.semio");
 
 /// 📖️ Parses `.en1991` DSL text into a `Document`.
-pub fn parse_dsl(text: &str) -> Result<En1991Snapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<En1991Snapshot, semio_framework_diagnostic::TextError> {
     <En1991Snapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 

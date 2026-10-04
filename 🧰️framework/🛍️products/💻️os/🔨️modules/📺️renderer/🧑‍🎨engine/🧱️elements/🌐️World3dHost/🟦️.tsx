@@ -81,7 +81,12 @@ import {
   Quaternion,
   ShaderMaterial,
   SphereGeometry,
+  Texture,
+  ClampToEdgeWrapping,RepeatWrapping,MirroredRepeatWrapping,NearestFilter,LinearFilter,NearestMipmapNearestFilter,LinearMipmapNearestFilter,NearestMipmapLinearFilter,LinearMipmapLinearFilter,
   TextureLoader,
+  FrontSide,
+  SRGBColorSpace,
+  NoColorSpace,
   TorusGeometry,
   Vector3,
   GLTFLoader,
@@ -150,20 +155,27 @@ import { PRESENCE_VIEW_PUBLISH_MIN_INTERVAL_MS, publishLocalPresenceWindowViewV1
 
 //#region 🔖️World3dHost
 //#region WorldSceneParsing
-type WorldMeshData = {
+export type WorldMeshData = {
   readonly positions: readonly number[];
   readonly normals: readonly number[];
   readonly indices: readonly number[];
-  /** Per-vertex RGB (0..1, 3 floats per vertex) — e.g. FEM stress contours. Native wgpu renderer has no
-   * per-vertex color pipeline yet, so this is a react-renderer-only capability for now. */
+  /** 🎨️ Canonical per-vertex RGBA in linear color space. */
   readonly colors?: readonly number[];
   readonly uvs?: readonly number[];
   readonly faceIds?: readonly number[];
   readonly vertexIds?: readonly number[];
   readonly edgePositions?: readonly number[];
   readonly edgeIds?: readonly number[];
+  readonly componentReferences?: Readonly<Record<string, readonly string[]>>;
   readonly paintTextureBase64?: string;
+  readonly attributes?: Record<string, WorldMeshAttribute>;
+  readonly materials?: Record<string, Record<string, unknown>>;
+  readonly textures?: Record<string, { readonly mime: string; readonly bytes: readonly number[] }>;
+  readonly edgeUvs?: readonly number[];
+  readonly edgeIsSeam?: readonly number[];
 };
+
+export type WorldMeshAttribute = { readonly domain: "vertex" | "corner" | "face" | "edge"; readonly semantic: "normal" | "uv" | "color" | "material" | "custom"; readonly interpolation: "linear" | "nearest" | "constant"; readonly values: readonly unknown[]; readonly indices?: readonly number[] };
 
 type WorldCameraRecord = {
   readonly position?: readonly [number, number, number];
@@ -196,7 +208,7 @@ export type WorldInstanceRecord = {
   readonly z?: number;
   readonly selected?: boolean;
   readonly hovered?: boolean;
-  /** 🎨️ Compatible/suggested state (e.g. catalog-kind hover in puzzle) — resolves to the secondary "highlighted" mesh style. */
+  /** 🎨️ Guest-stamped highlight (e.g. an object the open time-travel draft references) — resolves to the secondary "highlighted" mesh style, ORed with the host's own catalog-kind hover highlight. */
   readonly highlighted?: boolean;
   /** 🎨️ Non-interactive/locked state — resolves to the muted "disabled" mesh style at reduced opacity. */
   readonly disabled?: boolean;
@@ -212,6 +224,7 @@ export type WorldInstanceRecord = {
    * hover/selection id absent from the topology. Dispatches on a `domainId`-bound world window use
    * this when set, falling back to `id`. */
   readonly interactionId?: string;
+  readonly componentSource?: { readonly handle: string; readonly revision: string };
   /** 🎯️ The granularity the instance's interaction target lives under, when it differs from the
    * scene's `domainGranularityId` — a fem3d scene draws nodes, members, solids, supports and load
    * glyphs as one instance lane under one domain, and each row names its own granularity so a pick
@@ -490,6 +503,12 @@ export function resolveMeshSelectionPreviewStyle(
     highlighted: selectionExited || instance.highlighted,
     hovered: instance.hovered,
   });
+}
+
+/** 🔗️ An instance's effective highlight: the host's own catalog-kind hover OR the flag the guest stamped on the record
+ * (an object the open time-travel draft references) — the host's hover never erases what the guest asked to show. */
+export function worldInstanceHighlighted(hostHighlighted: boolean, instance: Pick<WorldInstanceRecord, "highlighted">): boolean {
+  return hostHighlighted || instance.highlighted === true;
 }
 
 /** 🎨️ Slim alias over {@link MeshStylePalette} for call sites that only need the four legacy semantic colors (face/edge/vertex component overlays, markers). */
@@ -1980,6 +1999,7 @@ export function mapContextMenuSpecs(
       color: spec.color,
       shortcut,
       disabled: spec.disabled,
+      reason: spec.disabled && spec.reason ? wireLabel(spec.reason) : undefined,
       separator: spec.separator,
       checked: spec.checked,
       destructive: spec.destructive,
@@ -2095,17 +2115,67 @@ function parseEngagementPreview(engagementPreviewJson: string | undefined): read
   return parseJsonArray<WorldEngagementPreviewItem>(engagementPreviewJson);
 }
 
-function geometryFromMesh(mesh: WorldMeshData) {
+function surfaceSample(attribute: WorldMeshAttribute, mesh: WorldMeshData, corner: number): unknown {
+  const vertex = mesh.indices[corner]!;
+  const domain = attribute.domain === "vertex" ? vertex : attribute.domain === "corner" ? corner : attribute.domain === "face" ? Math.floor(corner / 3) : -1;
+  if (domain < 0) throw new Error("a directed edge attribute cannot shade a triangle");
+  const sample = attribute.indices?.[domain] ?? (attribute.indices ? -1 : domain);
+  if (!Number.isInteger(sample) || sample < 0 || sample >= attribute.values.length) throw new Error("surface attribute references an invalid sample");
+  return attribute.values[sample];
+}
+
+function surfaceTuple(value: unknown, width: number, name: string): number[] {
+  if (!Array.isArray(value) || value.length !== width || value.some(value => typeof value !== "number" || !Number.isFinite(value))) throw new Error(`${name} requires a finite ${width}-component tuple`);
+  return value as number[];
+}
+
+function surfaceAttributes(mesh: WorldMeshData, semantic: WorldMeshAttribute["semantic"]): [string, WorldMeshAttribute][] {
+  return Object.entries(mesh.attributes ?? {}).filter(([, attribute]) => attribute.semantic === semantic).sort(([a],[b]) => a < b ? -1 : a > b ? 1 : 0);
+}
+
+/** 🎨️ Builds authored draw samples while retaining triangle order and original picking identities. */
+export function geometryFromMesh(mesh: WorldMeshData) {
+  if (mesh.positions.length % 3 || mesh.indices.length % 3 || mesh.positions.some(value => !Number.isFinite(value)) || mesh.indices.some(value => !Number.isInteger(value) || value < 0 || value >= mesh.positions.length / 3)) throw new Error("surface mesh has invalid positions or triangle indices");
+  const normal = surfaceAttributes(mesh,"normal")[0]?.[1];
+  const color = surfaceAttributes(mesh,"color")[0]?.[1];
+  const tangent=mesh.attributes?.tangent;
+  const uv = surfaceAttributes(mesh,"uv");
+  const channels = [normal,color,tangent,...uv.map(([,attribute])=>attribute)].filter((value):value is WorldMeshAttribute=>Boolean(value));
+  for(const attribute of channels){
+    const count=attribute.domain === "vertex" ? mesh.positions.length/3 : attribute.domain === "face" ? mesh.indices.length/3 : mesh.indices.length;
+    if(!["vertex","corner","face"].includes(attribute.domain)||(attribute.indices?.length ?? attribute.values.length)!==count||attribute.indices?.some(index=>!Number.isInteger(index)||index<0||index>=attribute.values.length))throw new Error("surface attribute cardinality differs from its domain");
+  }
   const geometry = new BufferGeometry();
-  geometry.setAttribute("position", new BufferAttribute(new Float32Array(mesh.positions), 3));
-  if (mesh.uvs?.length) geometry.setAttribute("uv", new BufferAttribute(new Float32Array(mesh.uvs), 2));
-  if (mesh.colors?.length) geometry.setAttribute("color", new BufferAttribute(new Float32Array(mesh.colors), 3));
-  if (mesh.indices.length > 0) geometry.setIndex([...mesh.indices]);
-  // 🧭️ A mesh published without per-vertex normals (e.g. a tool-run trace marker) would otherwise bind a
-  // shorter normal buffer than its index reaches, and WebGL drops every draw of it.
-  if (mesh.normals?.length === mesh.positions.length) geometry.setAttribute("normal", new BufferAttribute(new Float32Array(mesh.normals), 3));
-  else geometry.computeVertexNormals();
-  return geometry;
+  const expanded = channels.some(attribute=>attribute.domain !== "vertex");
+  const corners = expanded ? mesh.indices.length : mesh.positions.length / 3;
+  const positions = expanded ? mesh.indices.flatMap(vertex=>mesh.positions.slice(vertex*3,vertex*3+3)) : mesh.positions;
+  geometry.setAttribute("position",new BufferAttribute(new Float32Array(positions),3));
+  if (!expanded && mesh.indices.length) geometry.setIndex([...mesh.indices]);
+  const bind = (name:string,attribute:WorldMeshAttribute|undefined,width:number,fallback:readonly number[]|undefined)=>{
+    if (attribute) {
+      const values:number[]=[];
+      for(let index=0;index<corners;index++){
+        const value=expanded ? surfaceSample(attribute,mesh,index) : attribute.values[attribute.indices?.[index] ?? index];
+        const tuple=surfaceTuple(value,width,name);if(name === "normal" && tuple.every(value=>value === 0))throw new Error("surface normal cannot be zero");values.push(...tuple);
+      }
+      geometry.setAttribute(name,new BufferAttribute(new Float32Array(values),width));
+    } else if (fallback?.length) {
+      if (fallback.length !== mesh.positions.length/3*width) throw new Error(`${name} buffer cardinality differs from the vertex count`);
+      const values=expanded ? mesh.indices.flatMap(vertex=>fallback.slice(vertex*width,vertex*width+width)) : fallback;
+      geometry.setAttribute(name,new BufferAttribute(new Float32Array(values),width));
+    }
+  };
+  try {
+    bind("normal",normal,3,mesh.normals);
+    bind("color",color,4,mesh.colors);
+    bind("tangent",tangent,4,undefined);
+    if(tangent){const values=geometry.getAttribute("tangent");for(let i=0;i<values.count;i++){if(values.getW(i)!==1 && values.getW(i)!==-1 || values.getX(i)===0 && values.getY(i)===0 && values.getZ(i)===0)throw new Error("surface tangent requires a nonzero direction and signed handedness");}}
+    if (uv.length) uv.forEach(([name,attribute],index)=>{const declared=/^uv(\d+)?$/.exec(name);const set=declared ? Number(declared[1] ?? 0) : index;bind(set ? `uv${set}` : "uv",attribute,2,undefined);});
+    else bind("uv",undefined,2,mesh.uvs);
+    if (geometry.hasAttribute("uv") && !geometry.hasAttribute("uv1")) geometry.setAttribute("uv1",geometry.getAttribute("uv").clone());
+    if (!geometry.hasAttribute("normal")) geometry.computeVertexNormals();
+    return geometry;
+  } catch(error) {geometry.dispose();throw error;}
 }
 
 type VertexPickData = {
@@ -2131,32 +2201,104 @@ function buildVertexPickData(mesh: WorldMeshData): VertexPickData | null {
   return { geometry, vertexIds };
 }
 
-/** 🧊️ Everything one mesh id owns on the GPU side, built once per mesh CONTENT and disposed as one. */
-export type MeshVisuals = {
-  readonly record: WorldMeshRecord;
-  readonly geometry: BufferGeometry | null;
-  readonly border: EdgesGeometry | null;
-  readonly vertexPick: VertexPickData | null;
-  readonly edge: BufferGeometry | null;
+export type WorldMeshAppearance = {
+  readonly materials: MeshStandardMaterial[];
+  readonly textures: Map<string, Texture>;
+  readonly urls: Set<string>;
+  readonly listeners: Set<()=>void>;
+  pending: number;
+  fault?: string;
+  closed: boolean;
 };
 
-/** 🧊️ Builds one mesh id's visuals. A record with no `data` (an unresolved url reference) owns
- * nothing, and says so, rather than being absent from the cache and rebuilt on every render. */
-export function buildMeshVisuals(record: WorldMeshRecord): MeshVisuals {
-  if (!record.data) return { record, geometry: null, border: null, vertexPick: null, edge: null };
-  const geometry = geometryFromMesh(record.data);
-  return { record, geometry, border: new EdgesGeometry(geometry), vertexPick: buildVertexPickData(record.data), edge: buildEdgeGeometry(record.data) };
+/** 🖍️ Applies owned material coefficients using glTF alpha and color-space conventions. */
+export function worldSurfaceMaterial(name:string,source:Record<string,unknown>,vertexColors:boolean):MeshStandardMaterial {
+  const base=surfaceTuple(source.baseColor ?? [1,1,1,1],4,"baseColor");
+  const emissive=surfaceTuple(source.emissive ?? [0,0,0],3,"emissive");
+  const alpha=source.alphaMode ?? "OPAQUE";
+  if (!["OPAQUE","MASK","BLEND"].includes(String(alpha))) throw new Error("surface material has an invalid alpha mode");
+  const coefficient=(name:string,defaultValue:number,maximum=1)=>{const value=source[name]??defaultValue;if(typeof value!=="number"||!Number.isFinite(Math.fround(value))||value<0||value>maximum)throw new Error(`surface material ${name} requires a coefficient in [0,${maximum}]`);return value;};
+  if(base.some(value=>value<0||value>1)||emissive.some(value=>value<0))throw new Error("surface color coefficients are outside their domain");
+  const normalScale=surfaceTuple(Array.isArray(source.normalScale)?source.normalScale:[source.normalScale ?? 1,source.normalScale ?? 1],2,"normalScale");if(normalScale.some(value=>Math.abs(value)>3.4028234663852886e38))throw new Error("surface material normalScale requires finite coefficients");
+  const occlusionStrength=coefficient("occlusionStrength",1);
+  const coordinates=source.textureCoordinates;if(coordinates!==undefined && (typeof coordinates!=="object"||coordinates===null||Array.isArray(coordinates)||Object.entries(coordinates).some(([key,value])=>!["baseColorTexture","metallicRoughnessTexture","normalTexture","occlusionTexture","emissiveTexture"].includes(key)||!Number.isInteger(value)||(value as number)<0||(value as number)>63)))throw new Error("surface material has invalid UV selectors");
+  const material=new MeshStandardMaterial({name,vertexColors,metalness:coefficient("metallic",1),roughness:coefficient("roughness",1),opacity:alpha === "OPAQUE" ? 1 : base[3],transparent:alpha === "BLEND",alphaTest:alpha === "MASK" ? coefficient("alphaCutoff",.5,3.4028234663852886e38) : 0,depthWrite:alpha !== "BLEND",side:source.doubleSided === true ? DoubleSide : FrontSide});
+  material.color.setRGB(base[0]!,base[1]!,base[2]!);
+  material.emissive.setRGB(emissive[0]!,emissive[1]!,emissive[2]!);
+  material.normalScale.set(normalScale[0]!,normalScale[1]!);material.aoMapIntensity=occlusionStrength;
+  const extra=[...new Set(Object.values((coordinates ?? {}) as Record<string,number>).filter(set=>set>3))].sort((a,b)=>a-b);
+  if(extra.length){material.onBeforeCompile=shader=>{shader.vertexShader=extra.map(set=>`attribute vec2 uv${set};`).join("\n")+"\n"+shader.vertexShader;};material.customProgramCacheKey=()=>`surface-uv:${extra.join(",")}`;}
+  return material;
 }
 
-/** 🧹️ The dispose law of {@link buildMeshVisuals}: every buffer it allocated is released exactly
- * once. Before this pair existed the instanced layer allocated a `BufferGeometry`, an
- * `EdgesGeometry`, a vertex-pick buffer and an edge buffer for every mesh of every refresh and
- * disposed none of them. */
-export function disposeMeshVisuals(visuals: MeshVisuals): void {
-  visuals.geometry?.dispose();
-  visuals.border?.dispose();
-  visuals.vertexPick?.geometry.dispose();
-  visuals.edge?.dispose();
+function buildWorldMeshAppearance(mesh:WorldMeshData,geometry:BufferGeometry):WorldMeshAppearance|null {
+  const assignments=surfaceAttributes(mesh,"material")[0]?.[1];
+  if (!assignments && !Object.keys(mesh.materials ?? {}).length) return null;
+  const appearance:WorldMeshAppearance={materials:[],textures:new Map(),urls:new Set(),listeners:new Set(),pending:0,closed:false};
+  const names:string[]=[];
+  try {
+    for(let corner=0;corner<mesh.indices.length;corner+=3){
+      const name=assignments ? surfaceSample(assignments,mesh,corner) : Object.keys(mesh.materials!)[0];
+      if (typeof name !== "string" || !mesh.materials?.[name]) throw new Error("face material references an unowned material");
+      let index=names.indexOf(name);
+      if(index<0){index=names.length;names.push(name);appearance.materials.push(worldSurfaceMaterial(name,mesh.materials[name]!,geometry.hasAttribute("color")));}
+      const previous=geometry.groups.at(-1);
+      if(previous?.materialIndex===index) previous.count+=3;
+      else geometry.addGroup(corner,3,index);
+    }
+    for(const [index,name] of names.entries()){
+      const source=mesh.materials![name]!;const material=appearance.materials[index]!;
+      for(const [field,roles,srgb] of [["baseColorTexture",["map"],true],["metallicRoughnessTexture",["metalnessMap","roughnessMap"],false],["normalTexture",["normalMap"],false],["occlusionTexture",["aoMap"],false],["emissiveTexture",["emissiveMap"],true]] as const){
+        const id=source[field];if(id===undefined)continue;
+        if(typeof id!=="string"||!mesh.textures?.[id])throw new Error(`${field} references an unowned texture`);
+        const coordinates=source.textureCoordinates as Record<string,number>|undefined;const set=coordinates?.[field] ?? 0;
+        if(!geometry.hasAttribute(set ? `uv${set}` : "uv"))throw new Error(`${field} references an absent UV set`);
+        const sampler=(source.textureSamplers as Record<string,Record<string,number>>|undefined)?.[field] ?? {};
+        if(Object.entries(sampler).some(([field,value])=>!({wrapS:[33071,33648,10497],wrapT:[33071,33648,10497],magFilter:[9728,9729],minFilter:[9728,9729,9984,9985,9986,9987]} as Record<string,number[]>)[field]?.includes(value)))throw new Error("surface material texture sampler is invalid");
+        const owned=mesh.textures[id]!;const key=`${id}:${srgb ? "srgb" : "linear"}:${set}:${sampler.wrapS ?? 10497}:${sampler.wrapT ?? 10497}:${sampler.magFilter ?? 9729}:${sampler.minFilter ?? 9729}`;
+        let texture=appearance.textures.get(key);
+        if(!texture){
+          if(!["image/png","image/jpeg"].includes(owned.mime)||owned.bytes.length>16_000_000||owned.bytes.some(value=>!Number.isInteger(value)||value<0||value>255))throw new Error("surface texture requires bounded owned PNG/JPEG bytes");
+          texture=new Texture();texture.colorSpace=srgb ? SRGBColorSpace : NoColorSpace;texture.channel=set;texture.flipY=false;
+          const wraps={33071:ClampToEdgeWrapping,33648:MirroredRepeatWrapping,10497:RepeatWrapping};const filters={9728:NearestFilter,9729:LinearFilter,9984:NearestMipmapNearestFilter,9985:LinearMipmapNearestFilter,9986:NearestMipmapLinearFilter,9987:LinearMipmapLinearFilter};
+          texture.wrapS=wraps[(sampler.wrapS ?? 10497) as keyof typeof wraps];texture.wrapT=wraps[(sampler.wrapT ?? 10497) as keyof typeof wraps];texture.magFilter=filters[(sampler.magFilter ?? 9729) as 9728|9729];texture.minFilter=filters[(sampler.minFilter ?? 9729) as keyof typeof filters];appearance.textures.set(key,texture);
+          if(typeof URL.createObjectURL==="function"){
+            const url=URL.createObjectURL(new Blob([Uint8Array.from(owned.bytes)],{type:owned.mime}));appearance.urls.add(url);appearance.pending++;
+            const target=texture;
+            new TextureLoader().load(url,loaded=>{URL.revokeObjectURL(url);appearance.urls.delete(url);if(!appearance.closed){target.image=loaded.image;target.needsUpdate=true;appearance.pending--;for(const listener of appearance.listeners)listener();}loaded.dispose();},undefined,()=>{URL.revokeObjectURL(url);appearance.urls.delete(url);if(!appearance.closed){appearance.pending--;appearance.fault=`texture ${id} could not be decoded`;for(const listener of appearance.listeners)listener();}});
+          }
+        }
+        for(const role of roles)material[role]=texture;
+      }
+    }
+    return appearance;
+  }catch(error){disposeWorldMeshAppearance(appearance);throw error;}
+}
+
+function disposeWorldMeshAppearance(appearance:WorldMeshAppearance):void {
+  if(appearance.closed)return;appearance.closed=true;for(const listener of appearance.listeners)listener();appearance.listeners.clear();
+  for(const material of appearance.materials)material.dispose();
+  for(const texture of appearance.textures.values())texture.dispose();
+  for(const url of appearance.urls)URL.revokeObjectURL(url);appearance.urls.clear();
+}
+
+/** 🧊️ One existing mesh visual lease owns every draw buffer, material and decoded texture. */
+export type MeshVisuals = { readonly record:WorldMeshRecord;readonly geometry:BufferGeometry|null;readonly border:EdgesGeometry|null;readonly vertexPick:VertexPickData|null;readonly edge:BufferGeometry|null;readonly appearance:WorldMeshAppearance|null;readonly fault?:string;closed:boolean; };
+
+/** 🧊️ Builds authored visuals at the existing retained record boundary. */
+export function buildMeshVisuals(record:WorldMeshRecord):MeshVisuals {
+  if(!record.data)return {record,geometry:null,border:null,vertexPick:null,edge:null,appearance:null,closed:false};
+  const geometry=geometryFromMesh(record.data);
+  let border:EdgesGeometry|null=null;let vertexPick:VertexPickData|null=null;let edge:BufferGeometry|null=null;let appearance:WorldMeshAppearance|null=null;
+  try {appearance=buildWorldMeshAppearance(record.data,geometry);border=new EdgesGeometry(geometry);vertexPick=buildVertexPickData(record.data);edge=buildEdgeGeometry(record.data);return {record,geometry,border,vertexPick,edge,appearance,closed:false};}
+  catch(error){geometry.dispose();border?.dispose();vertexPick?.geometry.dispose();edge?.dispose();if(appearance)disposeWorldMeshAppearance(appearance);throw error;}
+}
+
+/** 🧹️ Retires each visual-owned resource exactly once; loader-shared GLB assets remain owned by their loader. */
+export function disposeMeshVisuals(visuals:MeshVisuals):void {
+  if(visuals.closed)return;visuals.closed=true;
+  visuals.geometry?.dispose();visuals.border?.dispose();visuals.vertexPick?.geometry.dispose();visuals.edge?.dispose();
+  if(visuals.appearance)disposeWorldMeshAppearance(visuals.appearance);
 }
 
 function buildEdgeGeometry(mesh: WorldMeshData): BufferGeometry | null {
@@ -2264,6 +2406,7 @@ function PaintTexturedMesh({
   style,
   styleKind,
   textureBase64,
+  appearance,
   flatShading,
   children,
   ...meshProps
@@ -2272,10 +2415,15 @@ function PaintTexturedMesh({
   readonly style: MeshStyleColors;
   readonly styleKind: MeshStyleKind;
   readonly textureBase64?: string;
+  readonly appearance?: WorldMeshAppearance | null;
   readonly flatShading?: boolean;
   readonly children?: React.ReactNode;
 } & ComponentProps<"mesh">) {
   const paintMap = textureBase64 ? useLoader(TextureLoader, paintTextureUrl(textureBase64)) : null;
+  const invalidate=useThree(state=>state.invalidate);
+  useSyncExternalStore(useCallback(listener=>{appearance?.listeners.add(listener);return ()=>appearance?.listeners.delete(listener);},[appearance]),()=>`${appearance?.pending ?? 0}:${appearance?.fault ?? ""}:${appearance?.closed ?? false}`,()=>"0::false");
+  useEffect(()=>{if(!appearance)return;const listener=()=>invalidate();appearance.listeners.add(listener);return ()=>{appearance.listeners.delete(listener);};},[appearance,invalidate]);
+  const authored=appearance && !appearance.closed && (styleKind === "neutral" || styleKind === "disabled");
   // Per-vertex colours (energy class swatches, FEM contours) multiply against the material `color` in
   // three.js — white lets them show through in the neutral/disabled styles only. Selected/hovered paint
   // must match url-backed meshes (puzzle 3d, cad): solid token fill + emissive, not a guest-side bake.
@@ -2284,7 +2432,7 @@ function PaintTexturedMesh({
   const celebrating = styleKind === "celebrated" && !preserveVertexColors;
   return (
     <mesh geometry={geometry} {...meshProps}>
-      {celebrating ? (
+      {authored ? <primitive object={appearance.materials} attach="material" dispose={null} /> : celebrating ? (
         <CelebratingConicMaterial opacity={style.opacity} />
       ) : (
         <meshStandardMaterial
@@ -2410,6 +2558,51 @@ function applyGlbMeshEdgeBorders(root: Object3D, borderColor: string): void {
 
 //#endregion GlbMeshStyling
 
+/** 🎭️ Clones authored materials for neutral styles and applies reversible active selection paint. */
+export function cloneWorldGlbSurface(source:Object3D,revision:MeshStyleKind,style:{meshColor:string;emissiveIntensity:number;opacity:number},emissive=style.meshColor):Object3D {
+  const cloned=source.clone(true);const owned=new Set<MeshStandardMaterial|ShaderMaterial>();const retained=new Map<object,MeshStandardMaterial>();const textures=new Map<Texture,Map<string,Texture>>();const geometries=new Set<BufferGeometry>();
+  cloned.userData.semioOwnedSurfaceMaterials=owned;cloned.userData.semioOwnedSurfaceGeometries=geometries;
+  try {cloned.traverse(child=>{
+    if(!(child instanceof Mesh))return;
+    if(revision === "neutral" || revision === "disabled"){
+      const clone=(material:MeshStandardMaterial)=>{
+        let result=retained.get(material);
+        if(!result){
+          result=material.clone();retained.set(material,result);owned.add(result);
+          for(const role of ["map","metalnessMap","roughnessMap","normalMap","aoMap","emissiveMap"] as const){
+            const texture=material[role];if(!texture)continue;
+            const colorSpace=role === "map" || role === "emissiveMap" ? SRGBColorSpace : NoColorSpace;
+            let roles=textures.get(texture);if(!roles){roles=new Map();textures.set(texture,roles);}
+            let mapped=roles.get(colorSpace);if(!mapped){mapped=texture.clone();mapped.colorSpace=colorSpace;mapped.needsUpdate=true;roles.set(colorSpace,mapped);}result[role]=mapped;
+          }
+          const extra=[...new Set(["map","metalnessMap","roughnessMap","normalMap","aoMap","emissiveMap"].map(role=>(result as unknown as Record<string,Texture|null>)[role]?.channel ?? 0).filter(set=>set>3))].sort((a,b)=>a-b);
+          if(extra.length){result.onBeforeCompile=shader=>{shader.vertexShader=extra.map(set=>`attribute vec2 uv${set};`).join("\n")+"\n"+shader.vertexShader;};result.customProgramCacheKey=()=>`surface-uv:${extra.join(",")}`;}
+        }
+        return result;
+      };
+      child.material=Array.isArray(child.material) ? child.material.map(clone) : clone(child.material as MeshStandardMaterial);
+      const coordinates=[...new Set((Array.isArray(child.material)?child.material:[child.material]).flatMap(material=>["map","metalnessMap","roughnessMap","normalMap","aoMap","emissiveMap"].flatMap(role=>{const texture=(material as unknown as Record<string,Texture|null>)[role];return texture?[texture.channel]:[];})))];
+      const missing=coordinates.filter(set=>!child.geometry.hasAttribute(set?`uv${set}`:"uv"));
+      if(missing.length){const geometry=child.geometry.clone();for(const set of missing){const attribute=geometry.getAttribute(`texcoord_${set}`);if(!attribute){geometry.dispose();throw new Error("GLB texture references an absent UV set");}geometry.setAttribute(set?`uv${set}`:"uv",attribute);}child.geometry=geometry;geometries.add(geometry);}
+
+    }else{
+      const material=revision === "celebrated" ? createCelebratingConicMaterial(style.opacity) : new MeshStandardMaterial({color:new Color(style.meshColor),emissive:new Color(emissive),emissiveIntensity:style.emissiveIntensity,metalness:0,roughness:1,transparent:style.opacity<1,opacity:style.opacity});
+      child.material=material;owned.add(material);
+    }
+  });}catch(error){cloned.userData.semioOwnedSurfaceTextures=new Set([...textures.values()].flatMap(roles=>[...roles.values()]));disposeWorldGlbSurface(cloned);throw error;}
+  cloned.userData.semioOwnedSurfaceTextures=new Set([...textures.values()].flatMap(roles=>[...roles.values()]));
+  return cloned;
+}
+
+/** 🧹️ Releases clone-owned material/chrome resources while preserving loader-owned geometry and textures. */
+export function disposeWorldGlbSurface(scene:Object3D):void {
+  const materials=scene.userData.semioOwnedSurfaceMaterials as Set<MeshStandardMaterial|ShaderMaterial>|undefined;
+  if(!materials)return;for(const material of materials)material.dispose();materials.clear();delete scene.userData.semioOwnedSurfaceMaterials;
+  const geometries=scene.userData.semioOwnedSurfaceGeometries as Set<BufferGeometry>|undefined;for(const geometry of geometries??[])geometry.dispose();geometries?.clear();delete scene.userData.semioOwnedSurfaceGeometries;
+  const textures=scene.userData.semioOwnedSurfaceTextures as Set<Texture>|undefined;for(const texture of textures??[])texture.dispose();textures?.clear();delete scene.userData.semioOwnedSurfaceTextures;
+  scene.traverse(child=>{if(child instanceof LineSegments && child.userData[WORLD_MESH_OUTLINE_USER_DATA_KEY]){const material=child.material;for(const owned of Array.isArray(material)?material:[material])owned.dispose();}});
+}
+
 function GlbInstanceMesh({
   url,
   color,
@@ -2443,28 +2636,12 @@ function GlbInstanceMesh({
   // 🎨️ Bake selection/hover paint into the clone itself. Imperative `color.set` after deselect was leaving
   // the previous selected tint until a later hover remounted materials — style deps must recreate the tree.
   const scene = useMemo(() => {
-    const cloned = gltf.scene.clone(true);
-    cloned.traverse((child) => {
-      if (!(child instanceof Mesh)) return;
-      if (celebrating) {
-        child.material = createCelebratingConicMaterial(opacity);
-      } else {
-        child.material = new MeshStandardMaterial({
-          color: new Color(color),
-          emissive: new Color(emissive),
-          emissiveIntensity,
-          metalness: material?.metalness ?? 0,
-          roughness: material?.roughness ?? 1,
-          transparent: opacity < 1,
-          opacity,
-        });
-      }
-      child.castShadow = shadowEnabled === true;
-      child.receiveShadow = shadowEnabled === true;
-    });
+    const cloned=cloneWorldGlbSurface(gltf.scene,revision,{meshColor:color,emissiveIntensity,opacity},emissive);
+    cloned.traverse(child=>{if(child instanceof Mesh){child.castShadow=shadowEnabled===true;child.receiveShadow=shadowEnabled===true;}});
     applyGlbMeshEdgeBorders(cloned, borderColor);
     return cloned;
   }, [gltf.scene, material?.metalness, material?.roughness, shadowEnabled, color, emissive, emissiveIntensity, opacity, borderColor, revision, celebrating]);
+  useEffect(()=>()=>disposeWorldGlbSurface(scene),[scene]);
   useFrame(() => {
     if (!celebrating) return;
     const angle = celebrateConicAngleRadians();
@@ -2895,9 +3072,28 @@ export function applyGumballLivePreviewPoseToObject3D(target: Object3D, pose: Wo
   target.updateMatrixWorld(true);
 }
 
-/** 🌀 Applies the same gumball preview delta a selected instance root receives onto one world-space point (vortex markers, attraction endpoints). */
-export function gumballPreviewWorldPoint(
-  pivot: readonly [number, number, number],
+/** 🧭️ The drag-start pose of the instance a marker belongs to: the origin and orientation it turns and scales about. */
+export type WorldGumballOwnerPose = {
+  readonly position: readonly [number, number, number];
+  readonly rotation: readonly [number, number, number, number];
+};
+
+/** 🧭️ Every instance's drag-start pose by id — what a marker of that instance is previewed about. */
+export function worldGumballOwnerPoses(instances: readonly WorldInstanceRecord[]): ReadonlyMap<string, WorldGumballOwnerPose> {
+  const owners = new Map<string, WorldGumballOwnerPose>();
+  for (const instance of instances) owners.set(instance.id, { position: instance.position ?? [instance.x ?? 0, instance.y ?? 0, instance.z ?? 0], rotation: instance.rotation ?? [0, 0, 0, 1] });
+  return owners;
+}
+
+/**
+ * 🌀 One marker point (vortex, grip, attraction end) of an instance under the gumball preview, about that instance's OWN
+ * origin: a turn rotates it about the owner's origin and a scale stretches it along the owner's local axes — exactly what
+ * {@link applyGumballLivePreviewDeltaToPose} does to the owner itself and what the committed selection leaves do to every
+ * target (puzzle `rotate-selection`/`scale-selection`, …). The gumball pivot only anchors the widget, so a multi-object
+ * turn previews the markers where the release lands them instead of orbiting them about the pivot.
+ */
+export function gumballPreviewOwnedWorldPoint(
+  owner: WorldGumballOwnerPose,
   transformMode: string | undefined,
   before: GumballPose,
   after: GumballPose,
@@ -2906,20 +3102,20 @@ export function gumballPreviewWorldPoint(
 ): readonly [number, number, number] {
   const delta = gumballLivePreviewDeltaBetweenPoses(transformMode, before, after, handleKind ?? undefined);
   if (!delta) return worldPoint;
-  if (delta.kind === "translate") {
-    return [worldPoint[0] + delta.dx, worldPoint[1] + delta.dy, worldPoint[2] + delta.dz];
-  }
+  if (delta.kind === "translate") return [worldPoint[0] + delta.dx, worldPoint[1] + delta.dy, worldPoint[2] + delta.dz];
+  const offset = new Vector3(worldPoint[0] - owner.position[0], worldPoint[1] - owner.position[1], worldPoint[2] - owner.position[2]);
   if (delta.kind === "rotate") {
-    const rotation = new Quaternion(delta.qx, delta.qy, delta.qz, delta.qw);
-    const offset = new Vector3(worldPoint[0] - pivot[0], worldPoint[1] - pivot[1], worldPoint[2] - pivot[2]);
-    offset.applyQuaternion(rotation);
-    return [pivot[0] + offset.x, pivot[1] + offset.y, pivot[2] + offset.z];
+    offset.applyQuaternion(new Quaternion(delta.qx, delta.qy, delta.qz, delta.qw));
+  } else {
+    const turn = new Quaternion(owner.rotation[0], owner.rotation[1], owner.rotation[2], owner.rotation[3]);
+    offset.applyQuaternion(turn.clone().invert()).multiply(new Vector3(delta.sx, delta.sy, delta.sz)).applyQuaternion(turn);
   }
-  return worldPoint;
+  return [owner.position[0] + offset.x, owner.position[1] + offset.y, owner.position[2] + offset.z];
 }
 
-/** 🌀 Applies gumball preview rotation to a world-space direction vector. */
-export function gumballPreviewWorldDirection(
+/** 🌀 One marker direction of an instance under the gumball preview: turned with the owner, or carried through the owner's local stretch and renormalized. */
+export function gumballPreviewOwnedWorldDirection(
+  owner: WorldGumballOwnerPose,
   transformMode: string | undefined,
   before: GumballPose,
   after: GumballPose,
@@ -2927,9 +3123,15 @@ export function gumballPreviewWorldDirection(
   direction: readonly [number, number, number],
 ): readonly [number, number, number] {
   const delta = gumballLivePreviewDeltaBetweenPoses(transformMode, before, after, handleKind ?? undefined);
-  if (!delta || delta.kind !== "rotate") return direction;
-  const rotation = new Quaternion(delta.qx, delta.qy, delta.qz, delta.qw);
-  const vector = new Vector3(direction[0], direction[1], direction[2]).applyQuaternion(rotation).normalize();
+  if (!delta || delta.kind === "translate") return direction;
+  const vector = new Vector3(direction[0], direction[1], direction[2]);
+  if (delta.kind === "rotate") {
+    vector.applyQuaternion(new Quaternion(delta.qx, delta.qy, delta.qz, delta.qw));
+  } else {
+    const turn = new Quaternion(owner.rotation[0], owner.rotation[1], owner.rotation[2], owner.rotation[3]);
+    vector.applyQuaternion(turn.clone().invert()).multiply(new Vector3(delta.sx, delta.sy, delta.sz)).applyQuaternion(turn);
+  }
+  vector.normalize();
   return [vector.x, vector.y, vector.z];
 }
 
@@ -3035,6 +3237,7 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
   meshRecord,
   meshData,
   geometry,
+  appearance,
   borderGeometry,
   palette,
   vertexPick,
@@ -3071,6 +3274,7 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
   readonly meshRecord?: WorldMeshRecord;
   readonly meshData?: WorldMeshData;
   readonly geometry?: BufferGeometry;
+  readonly appearance?: WorldMeshAppearance | null;
   /** 🎨️ Shared per-meshId edge outline geometry (see {@link WorldInstancesLayer}'s `geometries` memo); never rebuilt per instance. */
   readonly borderGeometry?: EdgesGeometry;
   readonly palette: MeshStylePalette;
@@ -3118,7 +3322,7 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
   const celebratingIds = useCelebratingWorldInstanceIds();
   const provisional = useToolRunProvisional(instance) || instance.provisional === true;
   const styleKind = resolveMeshSelectionPreviewStyle(
-    { ...instance, provisional, selected: chrome.selected, hovered: chrome.hovered, highlighted: chrome.highlighted, celebrating: celebratingIds.has(instance.id) },
+    { ...instance, provisional, selected: chrome.selected, hovered: chrome.hovered, highlighted: worldInstanceHighlighted(chrome.highlighted, instance), celebrating: celebratingIds.has(instance.id) },
     chrome.previewSelected ?? previewInstanceSelected,
   );
   const style = palette[styleKind];
@@ -3158,6 +3362,7 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
           {hasShadedMesh && geometry ? (
             <PaintTexturedMesh
             geometry={geometry}
+            appearance={appearance}
             style={style}
             styleKind={styleKind}
             textureBase64={paintTextureBase64}
@@ -3430,7 +3635,51 @@ function worldInstanceQuaternion(instance: WorldInstanceRecord): Quaternion | un
   return quaternion;
 }
 
+/** 🧊️ Retains the viewport's existing visual leases for both drawing and accessible publication status. */
+function useWorldMeshVisuals(meshes:readonly WorldMeshRecord[]):Map<string,MeshVisuals>{
+  const meshVisualsRef = useRef(new Map<string, MeshVisuals>());
+  const retiredMeshVisualsRef = useRef<MeshVisuals[]>([]);
+  const meshVisuals = useMemo(() => {
+    const held = meshVisualsRef.current;
+    const next = new Map<string, MeshVisuals>();
+    const closeSpan = hopTrace.open("mesh.decode", { meshes: meshes.length });
+    let built = 0;
+    for (const mesh of meshes) {
+      const existing = held.get(mesh.id);
+      if (existing && existing.record === mesh) {
+        next.set(mesh.id, existing);
+        continue;
+      }
+      if (existing) retiredMeshVisualsRef.current.push(existing);
+      try{next.set(mesh.id, buildMeshVisuals(mesh));}catch(error){next.set(mesh.id,{record:mesh,geometry:null,border:null,vertexPick:null,edge:null,appearance:null,fault:error instanceof Error?error.message:String(error),closed:false});}
+      built += 1;
+    }
+    for (const [meshId, existing] of held) if (!next.has(meshId)) retiredMeshVisualsRef.current.push(existing);
+    meshVisualsRef.current = next;
+    closeSpan({ built, kept: meshes.length - built });
+    return next;
+  }, [meshes]);
+  // 🧹️ Dispose-on-remove, after the commit that stopped referencing them: a geometry retired during
+  // render is still in the mounted scene until React commits the new one.
+  useEffect(() => {
+    const retired = retiredMeshVisualsRef.current;
+    retiredMeshVisualsRef.current = [];
+    for (const entry of retired) disposeMeshVisuals(entry);
+  }, [meshVisuals]);
+  useEffect(
+    () => () => {
+      for (const entry of meshVisualsRef.current.values()) disposeMeshVisuals(entry);
+      meshVisualsRef.current = new Map();
+      for (const entry of retiredMeshVisualsRef.current) disposeMeshVisuals(entry);
+      retiredMeshVisualsRef.current = [];
+    },
+    [],
+  );
+  return meshVisuals;
+}
+
 function WorldInstancesLayer({
+  meshVisuals,
   instances,
   meshes,
   selection,
@@ -3459,6 +3708,7 @@ function WorldInstancesLayer({
   blockPick,
   environment,
 }: {
+  readonly meshVisuals:ReadonlyMap<string,MeshVisuals>;
   readonly instances: readonly WorldInstanceRecord[];
   readonly meshes: readonly WorldMeshRecord[];
   readonly selection: WorldSelectionRecord;
@@ -3519,44 +3769,6 @@ function WorldInstancesLayer({
   // 🧊️ Per-mesh-id visuals, keyed on the mesh RECORD's identity (`advanceWorldMeshResidency` keeps
   // that identity across a refresh that did not touch the mesh), so an N-mesh surface with one moved
   // mesh allocates one `BufferGeometry` instead of N — and every retired one is disposed.
-  const meshVisualsRef = useRef(new Map<string, MeshVisuals>());
-  const retiredMeshVisualsRef = useRef<MeshVisuals[]>([]);
-  const meshVisuals = useMemo(() => {
-    const held = meshVisualsRef.current;
-    const next = new Map<string, MeshVisuals>();
-    const closeSpan = hopTrace.open("mesh.decode", { meshes: meshes.length });
-    let built = 0;
-    for (const mesh of meshes) {
-      const existing = held.get(mesh.id);
-      if (existing && existing.record === mesh) {
-        next.set(mesh.id, existing);
-        continue;
-      }
-      if (existing) retiredMeshVisualsRef.current.push(existing);
-      next.set(mesh.id, buildMeshVisuals(mesh));
-      built += 1;
-    }
-    for (const [meshId, existing] of held) if (!next.has(meshId)) retiredMeshVisualsRef.current.push(existing);
-    meshVisualsRef.current = next;
-    closeSpan({ built, kept: meshes.length - built });
-    return next;
-  }, [meshes]);
-  // 🧹️ Dispose-on-remove, after the commit that stopped referencing them: a geometry retired during
-  // render is still in the mounted scene until React commits the new one.
-  useEffect(() => {
-    const retired = retiredMeshVisualsRef.current;
-    retiredMeshVisualsRef.current = [];
-    for (const entry of retired) disposeMeshVisuals(entry);
-  }, [meshVisuals]);
-  useEffect(
-    () => () => {
-      for (const entry of meshVisualsRef.current.values()) disposeMeshVisuals(entry);
-      meshVisualsRef.current = new Map();
-      for (const entry of retiredMeshVisualsRef.current) disposeMeshVisuals(entry);
-      retiredMeshVisualsRef.current = [];
-    },
-    [],
-  );
   const geometries = useMemo(() => {
     const map = new Map<string, BufferGeometry>();
     for (const [meshId, entry] of meshVisuals) if (entry.geometry) map.set(meshId, entry.geometry);
@@ -3900,6 +4112,7 @@ function WorldInstancesLayer({
               meshRecord={meshRecord}
               meshData={meshData}
               geometry={geometry}
+              appearance={meshVisuals.get(meshId)?.appearance}
               borderGeometry={borderGeometries.get(meshId)}
               palette={palette}
               vertexPick={vertexPickByMeshId.get(meshId) ?? null}
@@ -4253,6 +4466,15 @@ function CatalogueDropPreviewInvalidate({ preview }: { readonly preview: Puzzle3
  * CLAUDE.md law, and an expensive operation with progress but no stop is only half of it
  * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
  */
+/** 🎨️ Announces the current owned surface publication without copying mesh or appearance state. */
+export function WorldSurfaceStatusPane({visuals,locale,glassClass}:{readonly visuals:ReadonlyMap<string,MeshVisuals>;readonly locale?:string;readonly glassClass:string}){
+  const snapshot=()=>{let pending=0,failed=0,cancelled=0;for(const visual of visuals.values()){pending+=visual.appearance?.closed?0:visual.appearance?.pending ?? 0;if(visual.fault||visual.appearance?.fault && visual.appearance.fault!=="cancelled")failed++;if(visual.appearance?.fault==="cancelled")cancelled++;}return `${pending}:${failed}:${cancelled}`;};
+  const version=useSyncExternalStore(useCallback(listener=>{const appearances=[...visuals.values()].flatMap(visual=>visual.appearance?[visual.appearance]:[]);for(const appearance of appearances)appearance.listeners.add(listener);return()=>{for(const appearance of appearances)appearance.listeners.delete(listener);};},[visuals]),snapshot,snapshot);
+  const [pending,failed,cancelled]=version.split(":").map(Number);const language=locale?.split(/[-_]/)[0];const labels=language==="en"?{loading:"Loading surface textures",failed:"Surface could not be displayed",cancelled:"Surface texture loading cancelled",cancel:"Cancel"}:language==="de"?{loading:"Oberflächentexturen werden geladen",failed:"Oberfläche konnte nicht dargestellt werden",cancelled:"Laden der Oberflächentexturen abgebrochen",cancel:"Abbrechen"}:undefined;
+  const active=Boolean(pending||failed||cancelled);
+  return <div role="status" aria-live="polite" aria-busy={pending>0 || undefined} data-slot="world-surface-status" data-surface-pending={pending} data-surface-failed={failed} data-surface-cancelled={cancelled} className={active?cn("pointer-events-auto rounded px-single py-half text-xs shadow-sm",glassClass):"sr-only"}>{active&&<><span>{failed?labels?.failed:pending?labels?.loading:labels?.cancelled}</span>{pending>0&&<><progress value={[...visuals.values()].reduce((sum,visual)=>sum+(visual.appearance?.textures.size ?? 0),0)-pending} max={[...visuals.values()].reduce((sum,visual)=>sum+(visual.appearance?.textures.size ?? 0),0)} aria-label={labels?.loading}/><button type="button" onClick={()=>{for(const visual of visuals.values()){const appearance=visual.appearance;if(appearance&&!appearance.closed&&appearance.pending){appearance.fault="cancelled";disposeWorldMeshAppearance(appearance);}}}}>{labels?.cancel}</button></>}</>}</div>;
+}
+
 function WorldComputeStatusPane({
   status,
   glassClass,
@@ -5253,19 +5475,23 @@ export function clearWorldGumballTransformPreview(controllerId: string, sourceId
   setWorldGumballTransformPreview(controllerId, null);
 }
 
-/** 🌀 Maps committed vortex markers through an active gumball preview when they belong to a transformed instance. */
+/** 🌀 Maps committed vortex markers through an active gumball preview when they belong to a transformed instance — each about
+ * its OWN instance's drag-start pose (`owners`, see {@link gumballPreviewOwnedWorldPoint}), so a multi-object turn or scale
+ * previews every marker where the release lands it. */
 export function worldVorticesWithGumballPreview(
   vortices: readonly WorldVortexRecord[],
   preview: WorldGumballTransformPreview | null,
+  owners: ReadonlyMap<string, WorldGumballOwnerPose>,
 ): readonly WorldVortexRecord[] {
   if (!preview || preview.instanceIds.length === 0) return vortices;
   const selected = new Set(preview.instanceIds);
   return vortices.map((vortex) => {
     const objectId = vortex.objectId ?? vortex.fullId.split(":")[0];
-    if (!objectId || !selected.has(objectId)) return vortex;
-    const position = gumballPreviewWorldPoint(preview.pivot, preview.transformMode, preview.before, preview.after, preview.handleKind, vortex.position);
+    const owner = objectId ? owners.get(objectId) : undefined;
+    if (!objectId || !owner || !selected.has(objectId)) return vortex;
+    const position = gumballPreviewOwnedWorldPoint(owner, preview.transformMode, preview.before, preview.after, preview.handleKind, vortex.position);
     const direction = vortex.direction
-      ? gumballPreviewWorldDirection(preview.transformMode, preview.before, preview.after, preview.handleKind, vortex.direction)
+      ? gumballPreviewOwnedWorldDirection(owner, preview.transformMode, preview.before, preview.after, preview.handleKind, vortex.direction)
       : vortex.direction;
     return direction === vortex.direction && position.every((value, index) => Math.abs(value - vortex.position[index]!) < GUMBALL_TRANSFORM_EPSILON)
       ? vortex
@@ -5273,23 +5499,23 @@ export function worldVorticesWithGumballPreview(
   });
 }
 
-/** 🌀 Maps committed attraction endpoints through an active gumball preview when they touch a transformed instance's vortices. */
+/** 🌀 Maps committed attraction endpoints through an active gumball preview when they touch a transformed instance's vortices,
+ * each about its own instance's drag-start pose (`owners`) like {@link worldVorticesWithGumballPreview}. */
 export function worldAttractionsWithGumballPreview(
   attractions: readonly WorldAttractionRecord[],
   vortices: readonly WorldVortexRecord[],
   preview: WorldGumballTransformPreview | null,
+  owners: ReadonlyMap<string, WorldGumballOwnerPose>,
 ): readonly WorldAttractionRecord[] {
   if (!preview || preview.instanceIds.length === 0) return attractions;
   const selected = new Set(preview.instanceIds);
   const endpointMap = new Map<string, readonly [number, number, number]>();
   for (const vortex of vortices) {
     const objectId = vortex.objectId ?? vortex.fullId.split(":")[0];
-    if (!objectId || !selected.has(objectId)) continue;
+    const owner = objectId ? owners.get(objectId) : undefined;
+    if (!objectId || !owner || !selected.has(objectId)) continue;
     const key = vortex.position.join(",");
-    endpointMap.set(
-      key,
-      gumballPreviewWorldPoint(preview.pivot, preview.transformMode, preview.before, preview.after, preview.handleKind, vortex.position),
-    );
+    endpointMap.set(key, gumballPreviewOwnedWorldPoint(owner, preview.transformMode, preview.before, preview.after, preview.handleKind, vortex.position));
   }
   const remap = (point: readonly [number, number, number]) => endpointMap.get(point.join(",")) ?? point;
   return attractions.map((attraction) => {
@@ -5739,9 +5965,16 @@ export function world3dInstanceInteractionTargets(instances: readonly WorldInsta
 /** 🎯️ The interaction target of one mesh COMPONENT (face/edge/vertex) of a rendered instance under a
  * domain: `<objectInteractionId>.<granularity>.<componentId>`, the object's own target id extended by the
  * component address (the lowpoly "mesh" domain's `lowpoly-document.<objectId>.<granularity>.<id>` rows). */
-export function world3dComponentInteractionTarget(instances: readonly WorldInstanceRecord[], objectId: string, granularity: string, componentId: number): { readonly granularity: string; readonly id: string } {
+export function world3dComponentInteractionTarget(instances: readonly WorldInstanceRecord[], meshes: readonly WorldMeshRecord[], objectId: string, granularity: string, componentId: number): { readonly granularity: string; readonly id: string } | undefined {
   const record = instances.find((entry) => entry.id === objectId) ?? instances.find((entry) => entry.interactionId === objectId);
-  return { granularity, id: `${record?.interactionId ?? objectId}.${granularity}.${componentId}` };
+  const id = `${record?.interactionId ?? objectId}.${granularity}.${componentId}`;
+  const source = record?.componentSource;
+  if (!source) return { granularity, id };
+  if (!Number.isInteger(componentId) || componentId < 0 || !["edge", "face"].includes(granularity) || !/^[0-9a-f]{64}$/.test(source.handle) || !/^[0-9a-f]{64}$/.test(source.revision)) return undefined;
+  const references = meshes.find(mesh => mesh.id === record?.meshId)?.data?.componentReferences?.[granularity];
+  const label = references?.[componentId];
+  if (!label || !/^[1-9][0-9]{0,19}$/.test(label) || BigInt(label) > 18446744073709551615n || references!.filter(value => value === label).length !== 1) return undefined;
+  return { granularity, id: `${id}~${source.handle}~${label}~${source.revision}` };
 }
 
 /** 🎯️ `interactionSelect` args over already-resolved `{ granularity, id }` targets. */
@@ -5964,6 +6197,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     meshResidencyRef.current = advanced;
     return advanced.records as WorldMeshRecord[];
   }, [scene?.meshesJson]);
+  const meshVisuals=useWorldMeshVisuals(meshes);
   const paneLeftover = useSyncExternalStore(subscribeLeftoverWorldSelectionV1, () => leftoverWorldWindowOverlayV1(windowInstanceId), () => leftoverWorldWindowOverlayV1(windowInstanceId));
   const selection = useMemo(() => mergeWorldSelectionWithLeftoverV1(parseSelection(scene?.selectionJson ?? "{}"), paneLeftover, instances), [paneLeftover, scene?.selectionJson, instances]);
   const vortices = useMemo(() => parseJsonArray<WorldVortexRecord>(scene?.vorticesJson), [scene?.vorticesJson]);
@@ -6109,13 +6343,14 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     () => getWorldGumballTransformPreview(node.controllerId),
     () => getWorldGumballTransformPreviewServerSnapshot(node.controllerId),
   );
+  const gumballOwnerPoses = useMemo(() => worldGumballOwnerPoses(instances), [instances]);
   const previewVortices = useMemo(
-    () => worldVorticesWithGumballPreview(displayVortices, sharedGumballTransformPreview),
-    [displayVortices, sharedGumballTransformPreview],
+    () => worldVorticesWithGumballPreview(displayVortices, sharedGumballTransformPreview, gumballOwnerPoses),
+    [displayVortices, sharedGumballTransformPreview, gumballOwnerPoses],
   );
   const previewAttractions = useMemo(
-    () => worldAttractionsWithGumballPreview(attractions, displayVortices, sharedGumballTransformPreview),
-    [attractions, displayVortices, sharedGumballTransformPreview],
+    () => worldAttractionsWithGumballPreview(attractions, displayVortices, sharedGumballTransformPreview, gumballOwnerPoses),
+    [attractions, displayVortices, sharedGumballTransformPreview, gumballOwnerPoses],
   );
   const gumballTransformPreviewSourceId = windowInstanceId ?? node.surfaceId;
   const [contextMenu, setContextMenu] = useState<(SurfaceContextMenuResult & { readonly x: number; readonly y: number; readonly suggestTarget: string | null }) | null>(null);
@@ -6779,8 +7014,8 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const dispatchComponentHover = useMemo(
     () =>
       createCoalescingActionDispatcher<{ objectId: string; mode: string; id: number }>((args) => {
-        const target = world3dComponentInteractionTarget(instancesRef.current, args.objectId, args.mode, args.id);
-        return dispatchSettled("interactionHover", world3dHoverActionArgs(interactionDomainId ?? "", target.granularity, target.id));
+        const target = world3dComponentInteractionTarget(instancesRef.current, meshesRef.current, args.objectId, args.mode, args.id);
+        return dispatchSettled("interactionHover", world3dHoverActionArgs(interactionDomainId ?? "", target?.granularity ?? args.mode, target?.id ?? null));
       }),
     [dispatchSettled, interactionDomainId],
   );
@@ -6934,8 +7169,8 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const handleWorldPick = useCallback(
     (args: { granularity: string; id: number; merge: string; objectId?: string }) => {
       if (interactionDomainId && args.objectId != null && args.id != null) {
-        const target = world3dComponentInteractionTarget(instancesRef.current, args.objectId, args.granularity, args.id);
-        dispatch("interactionSelect", world3dSelectionTargetsActionArgs(interactionDomainId, [target], args.merge as MergeMode));
+        const target = world3dComponentInteractionTarget(instancesRef.current, meshesRef.current, args.objectId, args.granularity, args.id);
+        dispatch("interactionSelect", world3dSelectionTargetsActionArgs(interactionDomainId, target ? [target] : [], args.merge as MergeMode));
         return;
       }
       dispatch("worldPick", args);
@@ -7392,7 +7627,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
               "interactionSelect",
               world3dSelectionTargetsActionArgs(
                 interactionDomainId,
-                preview.mergedComponentIds.map((componentId) => world3dComponentInteractionTarget(instancesRef.current, activeObjectId, selectionMode, componentId)),
+                preview.mergedComponentIds.flatMap((componentId) => { const target = world3dComponentInteractionTarget(instancesRef.current, meshesRef.current, activeObjectId, selectionMode, componentId); return target ? [target] : []; }),
                 "replace",
                 method === "lasso" ? "lasso" : "rectangle",
               ),
@@ -7789,6 +8024,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
               className="pointer-events-none absolute z-40 flex flex-col items-end gap-single"
               style={chromePanelSafeAreaStyle("top-right", overlayRailSafeArea, { block: windowChromeClearedTopOffset })}
             >
+              <WorldSurfaceStatusPane visuals={meshVisuals} locale={shellScope?.i18n.language} glassClass={glassClass} />
               <WorldComputeStatusPane status={computeStatus} glassClass={glassClass} locale={shellScope?.i18n.language} onCancel={() => dispatch(computeStatus.cancelAction, computeStatus.cancelArgs)} />
             </div>
             <CanvasPresenceOverlayV1
@@ -7904,6 +8140,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
             <WorldPointCloudLayer pointsJson={scene?.pointsJson} />
             <group ref={instancesGroupRef}>
               <WorldInstancesLayer
+                meshVisuals={meshVisuals}
                 instances={instances}
                 meshes={meshes}
                 selection={selection}

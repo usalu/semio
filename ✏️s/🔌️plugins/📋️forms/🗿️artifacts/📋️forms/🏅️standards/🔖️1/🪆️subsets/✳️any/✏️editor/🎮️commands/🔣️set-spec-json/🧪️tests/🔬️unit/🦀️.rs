@@ -27,7 +27,7 @@ async fn set_active_example_with_blank_id_clears_the_document() {
 async fn set_spec_json_replaces_the_document() {
     let mut app = forms_app().await;
     let onboarding_snapshot = onboarding_example_spec();
-    let onboarding = dsl::os_pack::json::to_json_string(&onboarding_snapshot);
+    let onboarding = semio_framework_pack_json::to_json_string(&onboarding_snapshot);
     dispatch(&mut app, FormsCommand::SetSpecJson(SetSpecJson { json: onboarding })).await;
     let spec = app.snapshot().expect("projection");
     assert_eq!(forms_steps(&spec).len(), 3);
@@ -51,7 +51,7 @@ async fn set_spec_json_with_invalid_json_reports_a_fault() {
 fn canonical_import_vectors_preserve_document_identity_and_answers() {
     use protocol::Mutation;
     let vectors: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧬️schema/🧫️fixtures/📥️import/🔣️.json")).unwrap();
-    let current: FormsSnapshot = dsl::json::from_json_str(include_str!("../../../../../🧬️schema/🧫️fixtures/💾️persistence/🔣️.json")).unwrap();
+    let current: FormsSnapshot = semio_framework_pack_json::from_json_str(include_str!("../../../../../🧬️schema/🧫️fixtures/💾️persistence/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let history = semio_framework_plugin::HistoryView::empty();
     let config = FormsConfig::default();
     for case in vectors["cases"].as_array().unwrap() {
@@ -62,7 +62,7 @@ fn canonical_import_vectors_preserve_document_identity_and_answers() {
             for mutation in emit.artifact_mutations { mutation.diff(&result).apply_to(&mut result); }
             assert_eq!(result.id, current.id);
             assert_eq!(result.responses, current.responses);
-            let expected: FormsSnapshot = dsl::json::from_json_str(case["source"].as_str().unwrap()).unwrap();
+            let expected: FormsSnapshot = semio_framework_pack_json::from_json_str(case["source"].as_str().unwrap(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
             assert_eq!(result.definition, expected.definition);
             assert_eq!(result.title, expected.title);
         }

@@ -18,7 +18,7 @@ fn real_world_animation() -> SemioAnimationSnapshot {
 
 #[semio_framework_async_macros::async_test]
 async fn serialize_builds_one_synthetic_track_with_real_derived_durations() {
-    let mp4 = semio_framework_plugin::resolve_ready(SemioAnimationToMp4::serialize(&real_world_animation())).expect("serialize");
+    let mp4 = ::semio_framework_async::poll::resolve_ready(SemioAnimationToMp4::serialize(&real_world_animation())).expect("serialize");
     assert_eq!(mp4.tracks.len(), 1);
     assert_eq!(mp4.tracks[0].timescale, SYNTHETIC_TIMESCALE);
     assert_eq!(mp4.tracks[0].samples.len(), 3);
@@ -30,6 +30,6 @@ async fn serialize_builds_one_synthetic_track_with_real_derived_durations() {
 #[semio_framework_async_macros::async_test]
 async fn empty_animation_serializes_to_zero_tracks() {
     let snap = SemioAnimationSnapshot { schema: STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA.into(), timelines: Vec::new() };
-    let mp4 = semio_framework_plugin::resolve_ready(SemioAnimationToMp4::serialize(&snap)).expect("serialize");
+    let mp4 = ::semio_framework_async::poll::resolve_ready(SemioAnimationToMp4::serialize(&snap)).expect("serialize");
     assert!(mp4.tracks.is_empty());
 }

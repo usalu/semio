@@ -10,6 +10,8 @@ pub fn label() -> LocalizedLabel {
 }
 pub const ICON: &str = "file";
 pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/🗣️.dsl.semio");
+/// 📐️ Authored external AP214 exchange input for the editor's initial domain snapshot.
+pub const EXCHANGE_TEXT: &str = include_str!("🖼️assets/📐️.step");
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn source() -> ExampleSource {
     ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON)

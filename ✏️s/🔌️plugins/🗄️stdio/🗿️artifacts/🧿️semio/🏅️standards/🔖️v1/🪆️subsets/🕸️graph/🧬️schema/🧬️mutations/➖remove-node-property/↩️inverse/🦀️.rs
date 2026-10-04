@@ -1,14 +1,17 @@
 //! ↩️ Inverse for `RemoveNodeProperty`.
 
-use crate::standards::v1::subsets::graph::schema::mutations::{add_node_property, SemioGraphMutation};
+use crate::standards::v1::subsets::graph::schema::mutations::{add_node_property::AddNodeProperty, SemioGraphMutation};
 use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
 
 //#region 🔖️Inverse
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+/// ↩️ The exact undo: one `add-node-property` of the removed entry at its BASE index (byte-exact); nothing when the key is absent.
 pub fn inverse(payload: &super::RemoveNodeProperty, base: &SemioGraphSnapshot) -> Vec<SemioGraphMutation> {
-    match base.nodes.iter().find(|n| n.id == payload.node_id).and_then(|node| node.properties.get(payload.index)) {
-        Some(property) => vec![SemioGraphMutation::AddNodeProperty(add_node_property::AddNodeProperty { node_id: payload.node_id.clone(), index: payload.index, property: property.clone() })],
-        None => Vec::new(),
-    }
+    base.nodes
+        .iter()
+        .find(|node| node.id == payload.node_id)
+        .and_then(|node| node.properties.iter().position(|property| property.key == payload.key).map(|index| (index, node.properties[index].clone())))
+        .map(|(index, property)| SemioGraphMutation::AddNodeProperty(AddNodeProperty { node_id: payload.node_id.clone(), index, property }))
+        .into_iter()
+        .collect()
 }
 //#endregion 🔖️Inverse

@@ -3,11 +3,11 @@
 use crate::op::FormMutation;
 // 🧷️ Aliased (not the bare `dsl` name): this file also needs the EXTERN `dsl` crate (kernel DSL
 // value/derive surface) for `value_to_dsl`/`dsl_to_value` below — importing the artifact's own `dsl`
-// submodule under the bare name would shadow that crate and break every `dsl::DslValue`/`semio_framework_value::ToValue::to_value`
+// submodule under the bare name would shadow that crate and break every `semio_framework_value::DslValue`/`semio_framework_value::ToValue::to_value`
 // reference in this file (confirmed by `cargo check`: E0425/E0433 "not found in `dsl`").
 use crate::document_dsl as forms_dsl;
 use crate::{forms_snapshot_with_state, forms_steps, FormsResultsChild, FormsSnapshot, FormsStructureChild, FORMS_DOCUMENT_SCHEMA};
-use dsl::os_pack::json::{Object, Value};
+use semio_framework_pack_json::{Object, Value};
 use framework_schema::ArtifactSchema;
 
 #[path = "📝️definition/🦀️.rs"]
@@ -16,11 +16,13 @@ pub mod definition;
 pub mod response;
 #[path = "✅️validation/🦀️.rs"]
 pub mod validation;
+#[path = "🧾️dictionary/🦀️.rs"]
+pub mod dictionary;
 pub use validation::{can_advance, step_errors};
 
 //#region 🔖️Artifact
 /// 🧬️ Form domain state and its derived composition slots.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.forms.forms")]
 pub struct FormsArtifact {
@@ -45,9 +47,9 @@ pub struct FormsArtifact {
     pub results: FormsResultsChild,
 }
 
-impl dsl::FromValue for FormsArtifact {
-    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
-        <crate::FormsSnapshot as dsl::FromValue>::from_value(value).map(Self::from_snapshot)
+impl semio_framework_value::FromValue for FormsArtifact {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        <crate::FormsSnapshot as semio_framework_value::FromValue>::from_value(value).map(Self::from_snapshot)
     }
 }
 
@@ -96,10 +98,12 @@ pub use crate::playbook::{
 };
 
 pub fn initial_try_values(spec: &FormsSnapshot, overrides: &Object) -> Object {
-    let overrides_map: std::collections::HashMap<String, dsl::DslValue> = overrides.iter().map(|(key, value)| (key.to_string(), dsl::os_pack::json::to_dsl_value(value))).collect();
+    let overrides_map: crate::playbook::PlaybookValues = overrides.iter().map(|(key, value)| (key.to_string(), semio_framework_pack_json::to_dsl_value(value))).collect();
     let result = crate::playbook::initial_values(&crate::mutations::as_playbook_spec(spec), &overrides_map);
-    result.into_iter().map(|(key, value)| (key, dsl::os_pack::json::from_dsl_value(&value))).collect()
+    result.iter().map(|(key, value)| (key.clone(), semio_framework_pack_json::from_dsl_value(value))).collect()
 }
+/// 🧾️ Configured defaults retain the actual value owners and declared question order.
+pub fn configured_dictionary(spec:&FormsSnapshot)->Result<dictionary::FormDictionary,semio_framework_value::ValueError>{let spec=crate::mutations::as_playbook_spec(spec);let mut entries=Vec::new();for step in &spec.steps{for block in &step.blocks{entries.push(dictionary::FormDictionaryEntry{question_id:block.id.clone(),value:crate::playbook::default_value_for_block(block)});}}let owner=semio_framework_value::DecodedValue::new(dictionary::FormDictionary{entries},<dictionary::FormDictionary as semio_framework_value::FromValue>::retire_decoded);owner.get().validate()?;Ok(owner.take())}
 //#endregion 🔖️PlaybookVocabulary
 
 //#region 🔖️DocumentHelpers
@@ -122,7 +126,7 @@ pub fn default_example_spec() -> FormsSnapshot {
 /// 📄️ JSON re-serialization of [`default_example_spec`], for the framework-generic call sites that
 /// contractually require JSON text (`App::example`'s manifest `document_json`).
 pub fn default_example_json() -> String {
-    dsl::os_pack::json::to_json_string(&default_example_spec())
+    semio_framework_pack_json::to_json_string(&default_example_spec())
 }
 
 /// 📄️ The `onboarding` example, parsed once from `forms_dsl::ONBOARDING_EXAMPLE_TEXT`.
@@ -133,7 +137,7 @@ pub fn onboarding_example_spec() -> FormsSnapshot {
 /// 📄️ JSON re-serialization of [`onboarding_example_spec`], for the framework-generic call sites that
 /// contractually require JSON text (`App::example`'s manifest `document_json`).
 pub fn onboarding_example_json() -> String {
-    dsl::os_pack::json::to_json_string(&onboarding_example_spec())
+    semio_framework_pack_json::to_json_string(&onboarding_example_spec())
 }
 
 /// 🔠️ Every `(step title, question)` pair in document order — the empty-inspector diagnostic and every
@@ -203,25 +207,25 @@ pub fn forms_play_step_tree_id(step_id: &str) -> String {
 //#endregion 🔖️Ids
 
 //#region 🔖️Values
-/// 🔄️ Converts a `dsl::os_pack::json::Value` to a `dsl::DslValue` — first-party, infallible.
-pub fn value_to_dsl(value: &Value) -> dsl::DslValue {
-    dsl::os_pack::json::to_dsl_value(value)
+/// 🔄️ Converts a `dsl::os_pack::json::Value` to a `semio_framework_value::DslValue` — first-party, infallible.
+pub fn value_to_dsl(value: &Value) -> semio_framework_value::DslValue {
+    semio_framework_pack_json::to_dsl_value(value)
 }
 
-/// 🔄️ Converts a `dsl::DslValue` back to a `dsl::os_pack::json::Value` — first-party, infallible.
-pub fn dsl_to_value(value: &dsl::DslValue) -> Value {
-    dsl::os_pack::json::from_dsl_value(value)
+/// 🔄️ Converts a `semio_framework_value::DslValue` back to a `dsl::os_pack::json::Value` — first-party, infallible.
+pub fn dsl_to_value(value: &semio_framework_value::DslValue) -> Value {
+    semio_framework_pack_json::from_dsl_value(value)
 }
 
-/// 🔤️ A `dsl::DslValue` rendered as a display string — the inspector's text-field representation of a
+/// 🔤️ A `semio_framework_value::DslValue` rendered as a display string — the inspector's text-field representation of a
 /// question's typed default.
-pub fn dsl_string_value(value: &dsl::DslValue) -> String {
+pub fn dsl_string_value(value: &semio_framework_value::DslValue) -> String {
     json_string_value(&dsl_to_value(value))
 }
 
-/// 🔢️ A `dsl::DslValue` rendered as `f64` — the inspector's numeric-field representation of a question's
+/// 🔢️ A `semio_framework_value::DslValue` rendered as `f64` — the inspector's numeric-field representation of a question's
 /// typed default.
-pub fn dsl_f64_value(value: &dsl::DslValue) -> f64 {
+pub fn dsl_f64_value(value: &semio_framework_value::DslValue) -> f64 {
     json_f64_value(&dsl_to_value(value))
 }
 
@@ -231,9 +235,9 @@ pub fn json_string_value(value: &Value) -> String {
     match value {
         Value::String(text) => text.clone(),
         Value::Bool(flag) => flag.to_string(),
-        Value::Number(dsl::os_pack::json::Number::UInt(v)) => v.to_string(),
-        Value::Number(dsl::os_pack::json::Number::Int(v)) => v.to_string(),
-        Value::Number(dsl::os_pack::json::Number::Float(v)) => v.to_string(),
+        Value::Number(semio_framework_pack_json::Number::UInt(v)) => v.to_string(),
+        Value::Number(semio_framework_pack_json::Number::Int(v)) => v.to_string(),
+        Value::Number(semio_framework_pack_json::Number::Float(v)) => v.to_string(),
         Value::Null => String::new(),
         other => other.to_string(),
     }

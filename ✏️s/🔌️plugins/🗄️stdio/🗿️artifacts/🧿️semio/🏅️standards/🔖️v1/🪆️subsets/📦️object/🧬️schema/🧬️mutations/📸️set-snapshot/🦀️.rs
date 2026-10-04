@@ -16,9 +16,12 @@ impl protocol::MutationKind<SemioObjectSnapshot, SemioObjectMutation> for SetSna
     fn diff(&self, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<<SemioObjectMutation as Mutation<SemioObjectSnapshot>>::Diff> {
         protocol::MutationOutcome::new(<SemioObjectDiff as DiffAlgebra<SemioObjectSnapshot>>::between(base, &self.snapshot))
     }
-    fn inverse(&self, base: &SemioObjectSnapshot) -> Vec<SemioObjectMutation> {
+    fn inverse(&self, base: &SemioObjectSnapshot) -> Result<Vec<SemioObjectMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![SemioObjectMutation::SetSnapshot(Self { snapshot: base.clone() })]
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Set snapshot", "Momentaufnahme setzen") }
     fn target(&self) -> Vec<String> { Vec::new() }
 }

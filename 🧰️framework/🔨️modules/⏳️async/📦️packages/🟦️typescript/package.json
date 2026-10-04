@@ -2,7 +2,7 @@
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
   "name": "@semio-tech/framework-async",
   "version": "0.1.0",
-  "description": "framework-async · pure async-runtime interface TS surface — owned-schema mirror (see 🤖️generated) of the OperationContext/CancelToken/Scope/ChannelPolicy vocabulary, plus the documented (not yet implemented) WebAsyncScope seam for a future web host.",
+  "description": "Owned async wire vocabulary and implemented host continuation scheduling.",
   "type": "module",
   "private": true,
   "exports": {
@@ -15,6 +15,11 @@
     "directory": "framework"
   },
   "bundleKind": "library",
+  "scripts": {
+    "test-publication-contract": "nx run @semio-tech/framework-async:test-publication-contract",
+    "single-poll-check": "nx run @semio-tech/framework-async:single-poll-check",
+    "test-api-contract": "nx run @semio-tech/framework-async:test-api-contract"
+  },
   "nx": {
     "includedScripts": []
   }

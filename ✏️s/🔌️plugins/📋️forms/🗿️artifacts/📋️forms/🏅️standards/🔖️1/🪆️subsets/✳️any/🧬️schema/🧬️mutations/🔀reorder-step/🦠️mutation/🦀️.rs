@@ -8,7 +8,7 @@ use protocol::{MutationKind, SemanticDescriptor};
 
 //#region 🔀️ReorderStep
 /// 🔀️ Repositions a step to a FINAL-state `to_index` within `steps`.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct ReorderStep {
@@ -22,9 +22,12 @@ impl MutationKind<FormsSnapshot, FormMutation> for ReorderStep {
     fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
         super::diff::diff_reorder_step(self, base)
     }
-    fn inverse(&self, base: &FormsSnapshot) -> Vec<FormMutation> {
-        super::inverse::inverse_reorder_step(self, base)
-    }
+    fn inverse(&self, base: &FormsSnapshot) -> Result<Vec<FormMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse_reorder_step(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Reorder step \"{}\"", self.id), &format!("Reihenfolge von Schritt \"{}\" ändern", self.id))
     }

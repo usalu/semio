@@ -1,0 +1,1 @@
+{"format":1,"encodings":["binary","text"],"semantic":"borrowedLiteralLeafBytes","physical":"sameCallerOwnedBacking","maximumValueBytes":4096,"maximumAllocationBytes":16777216,"property":"literal","text":"literal intrinsic text 世界","repetitions":10000,"textBytes":290000,"totalBytes":290015}

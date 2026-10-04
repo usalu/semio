@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio:brep:vertex-provenance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "unselectable",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "brep.vertex-provenance.v1"
+    },
+    "unselectable": {
+      "const": 4294967295
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "dimensions",
+          "points"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "box",
+              "wire"
+            ]
+          },
+          "dimensions": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 3,
+            "items": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          },
+          "points": {
+            "type": "array",
+            "minItems": 4,
+            "items": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

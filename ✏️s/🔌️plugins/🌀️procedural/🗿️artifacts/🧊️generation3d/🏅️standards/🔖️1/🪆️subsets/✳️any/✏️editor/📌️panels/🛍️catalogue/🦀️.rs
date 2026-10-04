@@ -54,10 +54,10 @@ fn catalogue_error(scope: &'static str) -> PluginAssemblyError {
 }
 
 /// 🖱️ Drag payload the flow canvas already accepts: MIME `application/x-flow-widget` whose value is the widget descriptor JSON.
-fn widget_drag_json(item: &semio_framework_os_flow::CatalogueItem) -> dsl::os_pack::json::Value {
+fn widget_drag_json(item: &semio_framework_os_flow::CatalogueItem) -> semio_framework_pack_json::Value {
     let payload = crate::editor::generation3d::commands::add_widget::AddWidget::from_catalogue(item);
-    let descriptor = dsl::os_pack::json::object(payload.descriptor_fields().into_iter().map(|(name, value)| (name.into(), dsl::os_pack::json::Value::String(value.into()))));
-    dsl::os_pack::json::object([(GENERATION_3D_WIDGET_DRAG_MIME.to_string(), dsl::os_pack::json::Value::String(descriptor.to_string()))])
+    let descriptor = semio_framework_pack_json::object(payload.descriptor_fields().into_iter().map(|(name, value)| (name.into(), semio_framework_pack_json::Value::String(value.into()))));
+    semio_framework_pack_json::object([(GENERATION_3D_WIDGET_DRAG_MIME.to_string(), semio_framework_pack_json::Value::String(descriptor.to_string()))])
 }
 
 fn catalogue_row(labels: &Generation3dLabels, item: &semio_framework_os_flow::CatalogueItem) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
@@ -94,11 +94,27 @@ fn group_row(labels: &Generation3dLabels, windows: &TreeWindows<'_>, section: &s
 }
 
 pub fn render(labels: &Generation3dLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let sections = semio_framework_os_flow::flow_palette_catalogue_sections();
+    let mut sections = semio_framework_os_flow::flow_palette_catalogue_sections();
+    owning_exports(&mut sections);
     let first_group = sections.first().map(|section| section.id.clone()).unwrap_or_default();
     PanelTreeBuilder::new("procedural-play-catalogue")?
         .window_section(windows, GENERATION_3D_PLAY_CATALOGUE_SECTION, Some(crate::ui_label(labels.widgets.as_str())?), true, &sections, |section| group_row(labels, windows, section, section.id == first_group))?
         .build()
+}
+
+/// 📤️ The palette and retained spotlight share the artifact's owning 3D export roster.
+pub fn catalogue() -> semio_framework_os_flow::FlowAppCatalogue {
+    let mut catalogue = semio_framework_os_flow::flow_app_catalogue();
+    owning_exports(&mut catalogue.sections);
+    catalogue
+}
+
+/// 📤️ One export roster is shared by the palette and retained catalogue projection.
+fn owning_exports(sections: &mut [semio_framework_os_flow::CatalogueSection]) {
+    if let Some(outputs) = sections.iter_mut().find(|section| section.id == "outputs") {
+        outputs.items.retain(|item| item.kind != "outputExport");
+        outputs.items.extend(crate::standards::v1::subsets::any::io::document_io::EXPORT_FORMATS.iter().map(|format| semio_framework_os_flow::CatalogueItem { kind: "outputExport".into(), neuron_kind: None, action: None, format: Some(format.id.into()), name: format.label_en.into(), abbreviation: format.id.to_uppercase(), icon: "emoji:📤️".into(), summary: format.label_en.into() }));
+    }
 }
 //#endregion 🔖️Render
 

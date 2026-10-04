@@ -1,0 +1,115 @@
+{
+  "$schema": "../../🧬️schema/🔣️history-reprojection/🔣️.json",
+  "note": "📡️ The status of a history change that replays before this replica adopts it (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING design §16.6, §20.8, gap N17; audit W1E-3): every shell announces `text` in a polite status region outside the History panel (React `[data-semio-history-reprojection]`, wgpu mirror key `shell.history.reprojection`) and the history body titles its `framework.history.reprojection` section with `title`. A refused adoption (a fault with nothing left to replay) reads `<kind>.refused` with the fault's placeholder-free history notice, else `reason.unnamed`; a paused remote change reads `remote.paused` (a step or a load is never paused); anything else its kind's progress (a fault while operations remain keeps the progress line). An absent kind is `remote`. The Rust kernel (`HISTORY_REPROJECTION_LABELS`, `history_reprojection_status`) and its TypeScript twin carry exactly these rows and read every case to its status.",
+  "labels": [
+    { "key": "remote.title", "en": "Remote history change", "de": "Entfernte Verlaufsänderung" },
+    { "key": "remote.progress", "en": "Replaying a remote history change: {done} of {total} mutations", "de": "Entfernte Verlaufsänderung wird angewendet: {done} von {total} Mutationen" },
+    { "key": "remote.paused", "en": "Remote history change paused: this replica still shows the history before it", "de": "Entfernte Verlaufsänderung pausiert: dieses Replikat zeigt noch den Verlauf davor" },
+    { "key": "remote.refused", "en": "Remote history change refused: {reason}", "de": "Entfernte Verlaufsänderung abgelehnt: {reason}" },
+    { "key": "step.title", "en": "History step", "de": "Verlaufsschritt" },
+    { "key": "step.progress", "en": "Replaying history: {done} of {total} mutations", "de": "Verlauf wird neu angewendet: {done} von {total} Mutationen" },
+    { "key": "step.refused", "en": "History step refused: {reason}", "de": "Verlaufsschritt abgelehnt: {reason}" },
+    { "key": "load.title", "en": "Document load", "de": "Dokument laden" },
+    { "key": "load.progress", "en": "Loading document: {done} of {total}", "de": "Dokument wird geladen: {done} von {total}" },
+    { "key": "load.refused", "en": "Document load refused: {reason}", "de": "Laden des Dokuments abgelehnt: {reason}" },
+    { "key": "reason.unnamed", "en": "the change could not be applied", "de": "die Änderung konnte nicht angewendet werden" }
+  ],
+  "cases": [
+    {
+      "name": "a remote change replays",
+      "reprojection": { "done": 3, "total": 12, "kind": "remote" },
+      "title": { "en": "Remote history change", "de": "Entfernte Verlaufsänderung" },
+      "text": { "en": "Replaying a remote history change: 3 of 12 mutations", "de": "Entfernte Verlaufsänderung wird angewendet: 3 von 12 Mutationen" },
+      "paused": false,
+      "fault": null
+    },
+    {
+      "name": "an absent kind is a remote change",
+      "reprojection": { "done": 0, "total": 4 },
+      "title": { "en": "Remote history change", "de": "Entfernte Verlaufsänderung" },
+      "text": { "en": "Replaying a remote history change: 0 of 4 mutations", "de": "Entfernte Verlaufsänderung wird angewendet: 0 von 4 Mutationen" },
+      "paused": false,
+      "fault": null
+    },
+    {
+      "name": "the user paused a remote change",
+      "reprojection": { "done": 5, "total": 12, "kind": "remote", "paused": true },
+      "title": { "en": "Remote history change", "de": "Entfernte Verlaufsänderung" },
+      "text": { "en": "Remote history change paused: this replica still shows the history before it", "de": "Entfernte Verlaufsänderung pausiert: dieses Replikat zeigt noch den Verlauf davor" },
+      "paused": true,
+      "fault": null
+    },
+    {
+      "name": "a refused remote adoption names its history notice",
+      "reprojection": { "done": 0, "total": 0, "kind": "remote", "fault": "history.replaying" },
+      "title": { "en": "Remote history change", "de": "Entfernte Verlaufsänderung" },
+      "text": { "en": "Remote history change refused: History is still replaying — wait for it or cancel it first.", "de": "Entfernte Verlaufsänderung abgelehnt: Der Verlauf wird noch neu angewendet — abwarten oder zuerst abbrechen." },
+      "paused": false,
+      "fault": "history.replaying"
+    },
+    {
+      "name": "a fault while operations remain keeps the progress line",
+      "reprojection": { "done": 2, "total": 9, "kind": "remote", "fault": "vcs.rejected" },
+      "title": { "en": "Remote history change", "de": "Entfernte Verlaufsänderung" },
+      "text": { "en": "Replaying a remote history change: 2 of 9 mutations", "de": "Entfernte Verlaufsänderung wird angewendet: 2 von 9 Mutationen" },
+      "paused": false,
+      "fault": "vcs.rejected"
+    },
+    {
+      "name": "this replica's own history step replays",
+      "reprojection": { "done": 120, "total": 240, "kind": "step" },
+      "title": { "en": "History step", "de": "Verlaufsschritt" },
+      "text": { "en": "Replaying history: 120 of 240 mutations", "de": "Verlauf wird neu angewendet: 120 von 240 Mutationen" },
+      "paused": false,
+      "fault": null
+    },
+    {
+      "name": "a step is never paused",
+      "reprojection": { "done": 1, "total": 3, "kind": "step", "paused": true },
+      "title": { "en": "History step", "de": "Verlaufsschritt" },
+      "text": { "en": "Replaying history: 1 of 3 mutations", "de": "Verlauf wird neu angewendet: 1 von 3 Mutationen" },
+      "paused": false,
+      "fault": null
+    },
+    {
+      "name": "a refused step whose notice needs a placeholder reads the unnamed reason, never the raw code",
+      "reprojection": { "done": 0, "total": 0, "kind": "step", "fault": "history.full" },
+      "title": { "en": "History step", "de": "Verlaufsschritt" },
+      "text": { "en": "History step refused: the change could not be applied", "de": "Verlaufsschritt abgelehnt: die Änderung konnte nicht angewendet werden" },
+      "paused": false,
+      "fault": "history.full"
+    },
+    {
+      "name": "a refused step whose replay would leave errors names it",
+      "reprojection": { "done": 0, "total": 0, "kind": "step", "fault": "history.step-blocked" },
+      "title": { "en": "History step", "de": "Verlaufsschritt" },
+      "text": { "en": "History step refused: Later mutations would end with errors — fix or withdraw them first.", "de": "Verlaufsschritt abgelehnt: Spätere Mutationen würden mit Fehlern enden — zuerst beheben oder zurückziehen." },
+      "paused": false,
+      "fault": "history.step-blocked"
+    },
+    {
+      "name": "a refused step without a notice reads the unnamed reason",
+      "reprojection": { "done": 0, "total": 0, "kind": "step", "fault": "timeTravel.blocked" },
+      "title": { "en": "History step", "de": "Verlaufsschritt" },
+      "text": { "en": "History step refused: the change could not be applied", "de": "Verlaufsschritt abgelehnt: die Änderung konnte nicht angewendet werden" },
+      "paused": false,
+      "fault": "timeTravel.blocked"
+    },
+    {
+      "name": "a whole-document load progresses",
+      "reprojection": { "done": 2, "total": 7, "kind": "load" },
+      "title": { "en": "Document load", "de": "Dokument laden" },
+      "text": { "en": "Loading document: 2 of 7", "de": "Dokument wird geladen: 2 von 7" },
+      "paused": false,
+      "fault": null
+    },
+    {
+      "name": "a refused load names its own kind",
+      "reprojection": { "done": 0, "total": 0, "kind": "load", "fault": "pure.history-unavailable" },
+      "title": { "en": "Document load", "de": "Dokument laden" },
+      "text": { "en": "Document load refused: This is a head-only evaluation without history — open the document in a live instance to use its history.", "de": "Laden des Dokuments abgelehnt: Dies ist eine Auswertung nur des aktuellen Stands ohne Verlauf — für den Verlauf das Dokument in einer laufenden Instanz öffnen." },
+      "paused": false,
+      "fault": "pure.history-unavailable"
+    }
+  ]
+}

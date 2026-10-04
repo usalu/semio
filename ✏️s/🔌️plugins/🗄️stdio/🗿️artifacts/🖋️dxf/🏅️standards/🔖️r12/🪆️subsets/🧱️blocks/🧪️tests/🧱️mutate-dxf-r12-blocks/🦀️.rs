@@ -181,7 +181,7 @@ mod subject {
         let spec = ctx.doc_json()?;
         let kind = spec.str("kind");
         let forward = mutation_of(&spec)?;
-        let backward = mutation_inverse(&forward, &snapshot);
+        let backward = mutation_inverse(&forward, &snapshot).expect("valid retained mutation inverse fixture");
         applied(&mut snapshot, &forward, &kind)?;
         for mutation in &backward {
             applied(&mut snapshot, mutation, &format!("the inverse of {kind}"))?;

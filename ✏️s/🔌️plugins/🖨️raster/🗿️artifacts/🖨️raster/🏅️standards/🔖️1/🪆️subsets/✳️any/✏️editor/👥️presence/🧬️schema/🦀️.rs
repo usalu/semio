@@ -1,7 +1,7 @@
 //! 🧬️ schema leaf
 use schema::ArtifactSchema;
 
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.raster.raster.presence")]
 pub struct RasterPresence {
@@ -13,7 +13,7 @@ pub struct RasterPresence {
     pub camera: RasterPresenceCamera,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.raster.raster.rasterpresencecamera")]
 pub struct RasterPresenceCamera {

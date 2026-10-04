@@ -58,6 +58,7 @@
       ],
       "kinds": [
         "set-snapshot",
+        "patch-snapshot",
         "set-location",
         "set-design-conditions",
         "set-typical-extreme-periods",
@@ -285,6 +286,26 @@
             "operation": "set-snapshot",
             "bridgeVersion": 1,
             "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "epw-energyplus-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "patch-snapshot",
+          "capability": "epw-energyplus-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "patch-snapshot",
+            "bridgeVersion": 1,
+            "variant": "PatchSnapshot"
           },
           "oracleRequirements": [
             {

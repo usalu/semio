@@ -2,9 +2,9 @@
 
 use crate::ast::QueryResult;
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact)]
 #[value(rename_all = "camelCase", default)]
-#[dsl(extension = "trinity.jackresultswindowtransient")]
+#[artifact(extension = "trinity.jackresultswindowtransient")]
 #[dsl(layout = "lines")]
 pub struct JackResultsWindowTransient {
     pub query_execution_id: Option<String>,

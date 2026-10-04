@@ -38,34 +38,34 @@ pub mod scene_json {
         pub locked: Option<bool>,
     }
 
-    impl dsl::ToValue for EdgeDescJson {
-        fn to_value(&self) -> dsl::DslValue {
-            dsl::DslValue::object([
-                ("id".to_string(), dsl::ToValue::to_value(&self.id)),
-                ("source".to_string(), dsl::ToValue::to_value(&self.source)),
-                ("target".to_string(), dsl::ToValue::to_value(&self.target)),
-                ("edgeKind".to_string(), dsl::ToValue::to_value(&self.edge_kind)),
-                ("sourceTip".to_string(), dsl::ToValue::to_value(&self.source_tip)),
-                ("targetTip".to_string(), dsl::ToValue::to_value(&self.target_tip)),
-                ("selected".to_string(), dsl::ToValue::to_value(&self.selected)),
-                ("style".to_string(), dsl::ToValue::to_value(&self.style)),
+    impl semio_framework_value::ToValue for EdgeDescJson {
+        fn to_value(&self) -> semio_framework_value::DslValue {
+            semio_framework_value::DslValue::object([
+                ("id".to_string(), semio_framework_value::ToValue::to_value(&self.id)),
+                ("source".to_string(), semio_framework_value::ToValue::to_value(&self.source)),
+                ("target".to_string(), semio_framework_value::ToValue::to_value(&self.target)),
+                ("edgeKind".to_string(), semio_framework_value::ToValue::to_value(&self.edge_kind)),
+                ("sourceTip".to_string(), semio_framework_value::ToValue::to_value(&self.source_tip)),
+                ("targetTip".to_string(), semio_framework_value::ToValue::to_value(&self.target_tip)),
+                ("selected".to_string(), semio_framework_value::ToValue::to_value(&self.selected)),
+                ("style".to_string(), semio_framework_value::ToValue::to_value(&self.style)),
                 (
                     "userData".to_string(),
                     match &self.user_data {
-                        Some(v) => dsl::DslValue::from(v),
-                        None => dsl::DslValue::Null,
+                        Some(v) => semio_framework_value::DslValue::from(v),
+                        None => semio_framework_value::DslValue::Null,
                     },
                 ),
-                ("visible".to_string(), dsl::ToValue::to_value(&self.visible)),
-                ("locked".to_string(), dsl::ToValue::to_value(&self.locked)),
+                ("visible".to_string(), semio_framework_value::ToValue::to_value(&self.visible)),
+                ("locked".to_string(), semio_framework_value::ToValue::to_value(&self.locked)),
             ])
         }
     }
 
-    impl dsl::FromValue for EdgeDescJson {
-        fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
-            let dsl::DslValue::Object(fields) = value else {
-                return Err(dsl::ValueError::new(format!("expected an object for EdgeDescJson, found {value:?}")));
+    impl semio_framework_value::FromValue for EdgeDescJson {
+        fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+            let semio_framework_value::DslValue::Object(fields) = value else {
+                return Err(semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for EdgeDescJson, found {value:?}")));
             };
             let mut id = None;
             let mut source = None;
@@ -80,24 +80,24 @@ pub mod scene_json {
             let mut locked = None;
             for (key, entry) in fields {
                 match key.as_str() {
-                    "id" => id = Some(<String as dsl::FromValue>::from_value(entry).map_err(|e| e.under("id"))?),
-                    "source" => source = Some(<String as dsl::FromValue>::from_value(entry).map_err(|e| e.under("source"))?),
-                    "target" => target = Some(<String as dsl::FromValue>::from_value(entry).map_err(|e| e.under("target"))?),
-                    "edgeKind" => edge_kind = <Option<String> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("edgeKind"))?,
-                    "sourceTip" => source_tip = <Option<String> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("sourceTip"))?,
-                    "targetTip" => target_tip = <Option<String> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("targetTip"))?,
-                    "selected" => selected = <Option<bool> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("selected"))?,
-                    "style" => style = <Option<String> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("style"))?,
-                    "userData" => user_data = if matches!(entry, dsl::DslValue::Null) { None } else { Some(serde_json::Value::from(&entry)) },
-                    "visible" => visible = <Option<bool> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("visible"))?,
-                    "locked" => locked = <Option<bool> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("locked"))?,
+                    "id" => id = Some(<String as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("id"))?),
+                    "source" => source = Some(<String as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("source"))?),
+                    "target" => target = Some(<String as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("target"))?),
+                    "edgeKind" => edge_kind = <Option<String> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("edgeKind"))?,
+                    "sourceTip" => source_tip = <Option<String> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("sourceTip"))?,
+                    "targetTip" => target_tip = <Option<String> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("targetTip"))?,
+                    "selected" => selected = <Option<bool> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("selected"))?,
+                    "style" => style = <Option<String> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("style"))?,
+                    "userData" => user_data = if matches!(entry, semio_framework_value::DslValue::Null) { None } else { Some(serde_json::Value::from(&entry)) },
+                    "visible" => visible = <Option<bool> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("visible"))?,
+                    "locked" => locked = <Option<bool> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("locked"))?,
                     _ => {}
                 }
             }
             Ok(EdgeDescJson {
-                id: id.ok_or_else(|| dsl::ValueError::new("EdgeDescJson missing id"))?,
-                source: source.ok_or_else(|| dsl::ValueError::new("EdgeDescJson missing source"))?,
-                target: target.ok_or_else(|| dsl::ValueError::new("EdgeDescJson missing target"))?,
+                id: id.ok_or_else(|| semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, "EdgeDescJson missing id"))?,
+                source: source.ok_or_else(|| semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, "EdgeDescJson missing source"))?,
+                target: target.ok_or_else(|| semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, "EdgeDescJson missing target"))?,
                 edge_kind,
                 source_tip,
                 target_tip,
@@ -140,34 +140,34 @@ pub mod scene_json {
         pub locked: Option<bool>,
     }
 
-    impl dsl::ToValue for WireDescJson {
-        fn to_value(&self) -> dsl::DslValue {
-            dsl::DslValue::object([
-                ("id".to_string(), dsl::ToValue::to_value(&self.id)),
-                ("source".to_string(), dsl::ToValue::to_value(&self.source)),
-                ("wireKind".to_string(), dsl::ToValue::to_value(&self.wire_kind)),
-                ("target".to_string(), dsl::ToValue::to_value(&self.target)),
-                ("endX".to_string(), dsl::ToValue::to_value(&self.end_x)),
-                ("endY".to_string(), dsl::ToValue::to_value(&self.end_y)),
-                ("selected".to_string(), dsl::ToValue::to_value(&self.selected)),
-                ("style".to_string(), dsl::ToValue::to_value(&self.style)),
+    impl semio_framework_value::ToValue for WireDescJson {
+        fn to_value(&self) -> semio_framework_value::DslValue {
+            semio_framework_value::DslValue::object([
+                ("id".to_string(), semio_framework_value::ToValue::to_value(&self.id)),
+                ("source".to_string(), semio_framework_value::ToValue::to_value(&self.source)),
+                ("wireKind".to_string(), semio_framework_value::ToValue::to_value(&self.wire_kind)),
+                ("target".to_string(), semio_framework_value::ToValue::to_value(&self.target)),
+                ("endX".to_string(), semio_framework_value::ToValue::to_value(&self.end_x)),
+                ("endY".to_string(), semio_framework_value::ToValue::to_value(&self.end_y)),
+                ("selected".to_string(), semio_framework_value::ToValue::to_value(&self.selected)),
+                ("style".to_string(), semio_framework_value::ToValue::to_value(&self.style)),
                 (
                     "userData".to_string(),
                     match &self.user_data {
-                        Some(v) => dsl::DslValue::from(v),
-                        None => dsl::DslValue::Null,
+                        Some(v) => semio_framework_value::DslValue::from(v),
+                        None => semio_framework_value::DslValue::Null,
                     },
                 ),
-                ("visible".to_string(), dsl::ToValue::to_value(&self.visible)),
-                ("locked".to_string(), dsl::ToValue::to_value(&self.locked)),
+                ("visible".to_string(), semio_framework_value::ToValue::to_value(&self.visible)),
+                ("locked".to_string(), semio_framework_value::ToValue::to_value(&self.locked)),
             ])
         }
     }
 
-    impl dsl::FromValue for WireDescJson {
-        fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
-            let dsl::DslValue::Object(fields) = value else {
-                return Err(dsl::ValueError::new(format!("expected an object for WireDescJson, found {value:?}")));
+    impl semio_framework_value::FromValue for WireDescJson {
+        fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+            let semio_framework_value::DslValue::Object(fields) = value else {
+                return Err(semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for WireDescJson, found {value:?}")));
             };
             let mut id = None;
             let mut source = None;
@@ -182,23 +182,23 @@ pub mod scene_json {
             let mut locked = None;
             for (key, entry) in fields {
                 match key.as_str() {
-                    "id" => id = Some(<String as dsl::FromValue>::from_value(entry).map_err(|e| e.under("id"))?),
-                    "source" => source = Some(<String as dsl::FromValue>::from_value(entry).map_err(|e| e.under("source"))?),
-                    "wireKind" => wire_kind = <Option<String> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("wireKind"))?,
-                    "target" => target = <Option<String> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("target"))?,
-                    "endX" => end_x = <Option<f64> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("endX"))?,
-                    "endY" => end_y = <Option<f64> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("endY"))?,
-                    "selected" => selected = <Option<bool> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("selected"))?,
-                    "style" => style = <Option<String> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("style"))?,
-                    "userData" => user_data = if matches!(entry, dsl::DslValue::Null) { None } else { Some(serde_json::Value::from(&entry)) },
-                    "visible" => visible = <Option<bool> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("visible"))?,
-                    "locked" => locked = <Option<bool> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("locked"))?,
+                    "id" => id = Some(<String as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("id"))?),
+                    "source" => source = Some(<String as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("source"))?),
+                    "wireKind" => wire_kind = <Option<String> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("wireKind"))?,
+                    "target" => target = <Option<String> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("target"))?,
+                    "endX" => end_x = <Option<f64> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("endX"))?,
+                    "endY" => end_y = <Option<f64> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("endY"))?,
+                    "selected" => selected = <Option<bool> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("selected"))?,
+                    "style" => style = <Option<String> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("style"))?,
+                    "userData" => user_data = if matches!(entry, semio_framework_value::DslValue::Null) { None } else { Some(serde_json::Value::from(&entry)) },
+                    "visible" => visible = <Option<bool> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("visible"))?,
+                    "locked" => locked = <Option<bool> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("locked"))?,
                     _ => {}
                 }
             }
             Ok(WireDescJson {
-                id: id.ok_or_else(|| dsl::ValueError::new("WireDescJson missing id"))?,
-                source: source.ok_or_else(|| dsl::ValueError::new("WireDescJson missing source"))?,
+                id: id.ok_or_else(|| semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, "WireDescJson missing id"))?,
+                source: source.ok_or_else(|| semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, "WireDescJson missing source"))?,
                 wire_kind,
                 target,
                 end_x,
@@ -279,35 +279,35 @@ pub mod scene_json {
         pub meta: Option<serde_json::Value>,
     }
 
-    impl dsl::ToValue for FixtureJson {
-        fn to_value(&self) -> dsl::DslValue {
-            dsl::DslValue::object([
-                ("schema".to_string(), dsl::ToValue::to_value(&self.schema)),
+    impl semio_framework_value::ToValue for FixtureJson {
+        fn to_value(&self) -> semio_framework_value::DslValue {
+            semio_framework_value::DslValue::object([
+                ("schema".to_string(), semio_framework_value::ToValue::to_value(&self.schema)),
                 (
                     "camera".to_string(),
                     match &self.camera {
-                        Some(camera) => dsl::ToValue::to_value(camera),
-                        None => dsl::DslValue::Null,
+                        Some(camera) => semio_framework_value::ToValue::to_value(camera),
+                        None => semio_framework_value::DslValue::Null,
                     },
                 ),
-                ("nodes".to_string(), dsl::DslValue::Array(self.nodes.iter().map(dsl::DslValue::from).collect())),
-                ("edges".to_string(), dsl::DslValue::Array(self.edges.iter().map(dsl::DslValue::from).collect())),
-                ("targetRegions".to_string(), dsl::DslValue::Array(self.target_regions.iter().map(dsl::DslValue::from).collect())),
+                ("nodes".to_string(), semio_framework_value::DslValue::Array(self.nodes.iter().map(semio_framework_value::DslValue::from).collect())),
+                ("edges".to_string(), semio_framework_value::DslValue::Array(self.edges.iter().map(semio_framework_value::DslValue::from).collect())),
+                ("targetRegions".to_string(), semio_framework_value::DslValue::Array(self.target_regions.iter().map(semio_framework_value::DslValue::from).collect())),
                 (
                     "meta".to_string(),
                     match &self.meta {
-                        Some(v) => dsl::DslValue::from(v),
-                        None => dsl::DslValue::Null,
+                        Some(v) => semio_framework_value::DslValue::from(v),
+                        None => semio_framework_value::DslValue::Null,
                     },
                 ),
             ])
         }
     }
 
-    impl dsl::FromValue for FixtureJson {
-        fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
-            let dsl::DslValue::Object(fields) = value else {
-                return Err(dsl::ValueError::new(format!("expected an object for FixtureJson, found {value:?}")));
+    impl semio_framework_value::FromValue for FixtureJson {
+        fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+            let semio_framework_value::DslValue::Object(fields) = value else {
+                return Err(semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for FixtureJson, found {value:?}")));
             };
             let mut schema = None;
             let mut camera = None;
@@ -317,31 +317,31 @@ pub mod scene_json {
             let mut meta = None;
             for (key, entry) in fields {
                 match key.as_str() {
-                    "schema" => schema = Some(<String as dsl::FromValue>::from_value(entry).map_err(|e| e.under("schema"))?),
-                    "camera" => camera = if matches!(entry, dsl::DslValue::Null) { None } else { Some(<CameraJson as dsl::FromValue>::from_value(entry).map_err(|e| e.under("camera"))?) },
+                    "schema" => schema = Some(<String as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("schema"))?),
+                    "camera" => camera = if matches!(entry, semio_framework_value::DslValue::Null) { None } else { Some(<CameraJson as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("camera"))?) },
                     "nodes" => {
-                        let dsl::DslValue::Array(items) = entry else {
-                            return Err(dsl::ValueError::new("expected an array for nodes").under("nodes"));
+                        let semio_framework_value::DslValue::Array(items) = entry else {
+                            return Err(semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, "expected an array for nodes").under("nodes"));
                         };
                         nodes = items.iter().map(serde_json::Value::from).collect();
                     }
                     "edges" => {
-                        let dsl::DslValue::Array(items) = entry else {
-                            return Err(dsl::ValueError::new("expected an array for edges").under("edges"));
+                        let semio_framework_value::DslValue::Array(items) = entry else {
+                            return Err(semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, "expected an array for edges").under("edges"));
                         };
                         edges = items.iter().map(serde_json::Value::from).collect();
                     }
                     "targetRegions" => {
-                        let dsl::DslValue::Array(items) = entry else {
-                            return Err(dsl::ValueError::new("expected an array for targetRegions").under("targetRegions"));
+                        let semio_framework_value::DslValue::Array(items) = entry else {
+                            return Err(semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, "expected an array for targetRegions").under("targetRegions"));
                         };
                         target_regions = items.iter().map(serde_json::Value::from).collect();
                     }
-                    "meta" => meta = if matches!(entry, dsl::DslValue::Null) { None } else { Some(serde_json::Value::from(&entry)) },
+                    "meta" => meta = if matches!(entry, semio_framework_value::DslValue::Null) { None } else { Some(serde_json::Value::from(&entry)) },
                     _ => {}
                 }
             }
-            Ok(FixtureJson { schema: schema.ok_or_else(|| dsl::ValueError::new("FixtureJson missing schema"))?, camera, nodes, edges, target_regions, meta })
+            Ok(FixtureJson { schema: schema.ok_or_else(|| semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, "FixtureJson missing schema"))?, camera, nodes, edges, target_regions, meta })
         }
     }
 

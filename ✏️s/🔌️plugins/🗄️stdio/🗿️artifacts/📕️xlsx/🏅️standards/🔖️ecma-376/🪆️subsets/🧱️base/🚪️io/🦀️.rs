@@ -33,6 +33,13 @@ impl std::fmt::Display for XlsxError {
 }
 
 impl std::error::Error for XlsxError {}
+/// 🪢️ Package and ownership layers keep their own kind; every document-structure refusal is invalid input.
+impl From<XlsxError> for semio_framework_value::ValueError {
+    fn from(error: XlsxError) -> Self {
+        let kind = match &error { XlsxError::Opc(error) => error.refusal_kind(), _ => semio_framework_value::ValueRefusalKind::InvalidValue };
+        Self::new(kind, error.to_string())
+    }
+}
 
 impl From<semio_s_artifact_stdio_zip::opc::OpcError> for XlsxError {
     fn from(e: semio_s_artifact_stdio_zip::opc::OpcError) -> Self {

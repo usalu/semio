@@ -53,7 +53,7 @@ async fn create_then_delete_step_round_trips() {
     let after_create = create.diff(&base).diff().apply(&base).expect("valid mutation diff");
     assert!(steps_of(&after_create).iter().any(|step| step.id == "s3"));
 
-    let undo = create.inverse(&base);
+    let undo = create.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![FormMutation::DeleteStep(delete_step::mutation::DeleteStep { id: "s3".into() })]);
     let mut state = after_create;
     for step in &undo {
@@ -71,7 +71,7 @@ async fn delete_step_inverse_recreates_step_with_its_blocks_at_original_index() 
     let after_delete = delete.diff(&base).diff().apply(&base).expect("valid mutation diff");
     assert!(!steps_of(&after_delete).iter().any(|step| step.id == "s1"));
 
-    let undo = delete.inverse(&base);
+    let undo = delete.inverse(&base).expect("valid retained mutation inverse fixture");
     match undo.first() {
         Some(FormMutation::CreateStep(payload)) => {
             assert_eq!(payload.index, Some(0));
@@ -93,7 +93,7 @@ async fn reorder_step_round_trips() {
     let after = mutation.diff(&base).diff().apply(&base).expect("valid mutation diff");
     assert_eq!(steps_of(&after)[0].id, "s2");
 
-    let undo = mutation.inverse(&base);
+    let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     let mut state = after;
     for step in &undo {
         state = step.diff(&state).diff().apply(&state).expect("valid mutation diff");
@@ -107,7 +107,7 @@ async fn rename_step_and_change_description_round_trip() {
     let rename = FormMutation::RenameStep(rename_step::mutation::RenameStep { id: "s1".into(), new_title: "Renamed".into() });
     let after_rename = rename.diff(&base).diff().apply(&base).expect("valid mutation diff");
     assert_eq!(steps_of(&after_rename)[0].title, "Renamed");
-    let undo = rename.inverse(&base);
+    let undo = rename.inverse(&base).expect("valid retained mutation inverse fixture");
     let mut state = after_rename;
     for step in &undo {
         state = step.diff(&state).diff().apply(&state).expect("valid mutation diff");
@@ -117,7 +117,7 @@ async fn rename_step_and_change_description_round_trip() {
     let change = FormMutation::ChangeStepDescription(change_step_description::mutation::ChangeStepDescription { id: "s1".into(), new_description: Some("desc".into()) });
     let after_change = change.diff(&base).diff().apply(&base).expect("valid mutation diff");
     assert_eq!(steps_of(&after_change)[0].description.as_deref(), Some("desc"));
-    let undo = change.inverse(&base);
+    let undo = change.inverse(&base).expect("valid retained mutation inverse fixture");
     let mut state = after_change;
     for step in &undo {
         state = step.diff(&state).diff().apply(&state).expect("valid mutation diff");
@@ -132,7 +132,7 @@ async fn create_then_delete_block_round_trips() {
     let after_create = create.diff(&base).diff().apply(&base).expect("valid mutation diff");
     assert!(steps_of(&after_create)[0].blocks.iter().any(|block| block.id == "b1"));
 
-    let undo = create.inverse(&base);
+    let undo = create.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![FormMutation::DeleteBlock(delete_block::mutation::DeleteBlock { step_id: "s1".into(), id: "b1".into() })]);
     let mut state = after_create;
     for step in &undo {
@@ -150,7 +150,7 @@ async fn delete_block_inverse_recreates_block_at_original_index() {
     let after_delete = delete.diff(&base).diff().apply(&base).expect("valid mutation diff");
     assert_eq!(steps_of(&after_delete)[0].blocks.len(), 1);
 
-    let undo = delete.inverse(&base);
+    let undo = delete.inverse(&base).expect("valid retained mutation inverse fixture");
     match undo.first() {
         Some(FormMutation::CreateBlock(payload)) => assert_eq!(payload.index, Some(0)),
         other => panic!("expected CreateBlock as delete-block's inverse, got {other:?}"),
@@ -172,7 +172,7 @@ async fn move_block_to_step_round_trips_across_steps() {
     assert!(steps_of(&after)[0].blocks.is_empty());
     assert!(steps_of(&after)[1].blocks.iter().any(|block| block.id == "b1"));
 
-    let undo = mutation.inverse(&base);
+    let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     let mut state = after;
     for step in &undo {
         state = step.diff(&state).diff().apply(&state).expect("valid mutation diff");
@@ -189,7 +189,7 @@ async fn move_block_to_step_reorders_within_the_same_step() {
     let after = mutation.diff(&base).diff().apply(&base).expect("valid mutation diff");
     assert_eq!(steps_of(&after)[0].blocks.iter().map(|block| block.id.clone()).collect::<Vec<_>>(), vec!["b2".to_string(), "b1".to_string()]);
 
-    let undo = mutation.inverse(&base);
+    let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     let mut state = after;
     for step in &undo {
         state = step.diff(&state).diff().apply(&state).expect("valid mutation diff");
@@ -208,7 +208,7 @@ async fn replace_block_round_trips() {
     let after = mutation.diff(&base).diff().apply(&base).expect("valid mutation diff");
     assert_eq!(steps_of(&after)[0].blocks[0].label, "Renamed block");
 
-    let undo = mutation.inverse(&base);
+    let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     let mut state = after;
     for step in &undo {
         state = step.diff(&state).diff().apply(&state).expect("valid mutation diff");
@@ -241,7 +241,7 @@ async fn change_block_field_sets_one_field_and_round_trips() {
         assert_eq!(change.read(question), change, "the question holds exactly the set value");
         assert_eq!(&change.applied(&steps_of(&base)[1].blocks[0]), question, "nothing but the field moved");
         let mut state = after;
-        for step in &mutation.inverse(&base) {
+        for step in &mutation.inverse(&base).expect("valid retained mutation inverse fixture") {
             state = applied(&state, step);
         }
         assert_eq!(steps_of(&state), steps_of(&base), "{change:?}: the inverse restores the base question");
@@ -260,12 +260,12 @@ async fn change_block_field_refuses_broken_invariants_as_fatal() {
         (BlockField::Min(Some(150.0)), "mutation.invariant"),
         (BlockField::Max(Some(-1.0)), "mutation.invariant"),
         (BlockField::Step(Some(0.0)), "mutation.invariant"),
-        (BlockField::Default(Some(dsl::DslValue::String("ten".into()))), "mutation.invariant"),
-        (BlockField::Params(Some(dsl::DslValue::Bool(true))), "mutation.invariant"),
+        (BlockField::Default(Some(semio_framework_value::DslValue::String("ten".into()))), "mutation.invariant"),
+        (BlockField::Params(Some(semio_framework_value::DslValue::Bool(true))), "mutation.invariant"),
         (BlockField::Options(Some(repeated)), "mutation.duplicate-id"),
     ] {
         let outcome = FormMutation::ChangeBlockField(ChangeBlockField { block_id: "b1".into(), change: change.clone() }).diff(&base);
-        assert_eq!((outcome.worst_level(), outcome.messages().first().map(|message| message.code.0.clone())), (Some(protocol::Severity::Fatal), Some(code.to_string())), "{change:?}");
+        assert_eq!((outcome.worst_level(), outcome.messages().first().map(|message| message.code.0.clone())), (Some(semio_framework_diagnostic::Severity::Fatal), Some(code.to_string())), "{change:?}");
         assert_fatal_never_applies(&outcome).await;
     }
 }
@@ -278,7 +278,7 @@ async fn change_block_field_missing_target_is_error_and_a_repeat_is_a_no_op() {
     let base = base_snapshot_with_steps(vec![step1]);
     assert_missing_target_is_error(&base, &FormMutation::ChangeBlockField(ChangeBlockField { block_id: "missing".into(), change: BlockField::Min(Some(1.0)) })).await;
     let repeat = FormMutation::ChangeBlockField(ChangeBlockField { block_id: "b1".into(), change: BlockField::Min(Some(0.0)) }).diff(&base);
-    assert_eq!(repeat.messages().first().map(|message| (message.code.0.as_str(), message.level)), Some(("mutation.no-op", protocol::Severity::Warning)));
+    assert_eq!(repeat.messages().first().map(|message| (message.code.0.as_str(), message.level)), Some(("mutation.no-op", semio_framework_diagnostic::Severity::Warning)));
 }
 
 /// 🧮️ `BlockField::changes` names every field two versions of a question differ in, in declaration order.
@@ -295,8 +295,8 @@ fn block_field_changes_name_every_differing_field_in_order() {
 fn change_block_field_is_labelled_from_its_field() {
     let mutation = FormMutation::ChangeBlockField(ChangeBlockField { block_id: "q-area".into(), change: BlockField::Min(Some(1.0)) });
     let label = <FormMutation as SemanticMutation<FormsSnapshot>>::label(&mutation);
-    assert_eq!(label.resolve(protocol::Terminology::Native, protocol::Locale::En), "Change minimum of question \"q-area\"");
-    assert_eq!(label.resolve(protocol::Terminology::Native, protocol::Locale::De), "Minimum der Frage \"q-area\" ändern");
+    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Change minimum of question \"q-area\"");
+    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "Minimum der Frage \"q-area\" ändern");
     assert_eq!(<FormMutation as SemanticMutation<FormsSnapshot>>::target(&mutation), vec!["q-area".to_string()]);
 }
 //#endregion 🎛️ChangeBlockField
@@ -308,7 +308,7 @@ async fn change_form_title_round_trips_including_clearing() {
     let after = mutation.diff(&base).diff().apply(&base).expect("valid mutation diff");
     assert_eq!(after.title.as_deref(), Some("Renamed"));
 
-    let undo = mutation.inverse(&base);
+    let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     let mut state = after.clone();
     for step in &undo {
         state = step.diff(&after).diff().apply(&state).expect("valid mutation diff");
@@ -332,7 +332,7 @@ async fn apply_form_edit_mutation_and_inverse_form_mutation_delegate_to_the_deri
     let base = base_snapshot();
     let mutation = FormMutation::ChangeFormTitle(change_form_title::mutation::ChangeFormTitle { new_title: Some("Delegated".into()) });
     assert_eq!(apply_form_edit_mutation(&base, &mutation).expect("valid mutation diff").title.as_deref(), Some("Delegated"));
-    assert_eq!(inverse_form_mutation(&base, &mutation), mutation.inverse(&base));
+    assert_eq!(inverse_form_mutation(&base, &mutation).expect("valid retained mutation inverse fixture"), mutation.inverse(&base).expect("valid retained mutation inverse fixture"));
 }
 
 //#region 🔖️OutcomeLaws
@@ -381,7 +381,7 @@ async fn replace_family_missing_target_is_error() {
 async fn create_family_fatal_never_applies() {
     let base = base_snapshot();
     let outcome = FormMutation::CreateStep(create_step::mutation::CreateStep { step: sample_step("s1"), index: None }).diff(&base);
-    assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+    assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal));
     assert_fatal_never_applies(&outcome).await;
 }
 

@@ -17,7 +17,7 @@ pub fn diff(payload: &RenamePaintLayer, base: &LowpolySnapshot) -> protocol::Mut
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Paint layer {} does not exist on object \"{}\".", payload.index, payload.object_id), [payload.object_id.clone()]);
     };
     if layer.name == payload.new_name {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Paint layer {} is already named \"{}\".", payload.index, payload.new_name));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Paint layer {} is already named \"{}\".", payload.index, payload.new_name));
     }
     protocol::MutationOutcome::new(diff_patch_paint_layer(payload.object_id.clone(), payload.index, LowpolyPaintLayerPatch { name: Some(payload.new_name.clone()), ..LowpolyPaintLayerPatch::default() }))
 }

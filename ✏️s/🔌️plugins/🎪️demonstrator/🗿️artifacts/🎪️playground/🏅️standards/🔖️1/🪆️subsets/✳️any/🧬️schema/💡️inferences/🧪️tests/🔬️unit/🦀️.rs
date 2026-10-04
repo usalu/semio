@@ -4,12 +4,12 @@ use protocol::Inference;
 #[test]
 fn inference_determinism_law() {
     let snapshot = PlaygroundSnapshot::default();
-    assert_eq!(PlaygroundInference::infer(&snapshot), PlaygroundInference::infer(&snapshot));
+    assert_eq!(PlaygroundInference::infer(&snapshot).expect("valid materialized inference fixture"), PlaygroundInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
 #[test]
 fn inference_default_law() {
-    assert_eq!(PlaygroundInference::infer(&PlaygroundSnapshot::default()), PlaygroundInference::default());
+    assert_eq!(PlaygroundInference::infer(&PlaygroundSnapshot::default()).expect("valid materialized inference fixture"), PlaygroundInference::default());
 }
 
 #[test]

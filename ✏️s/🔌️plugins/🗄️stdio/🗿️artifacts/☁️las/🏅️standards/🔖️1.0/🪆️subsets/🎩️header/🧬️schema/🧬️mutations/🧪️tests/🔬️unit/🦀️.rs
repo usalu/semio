@@ -58,7 +58,7 @@ fn inverse_law() {
         // Mutation-level round trip.
         let mut snap = base.clone();
         apply_las_mutation(&mut snap, &m);
-        for inv in m.inverse(&base) {
+        for inv in m.inverse(&base).expect("valid retained mutation inverse fixture") {
             apply_las_mutation(&mut snap, &inv);
         }
         assert_eq!(snap, base, "mutation-level inverse must restore base for {m:?}");
@@ -406,7 +406,7 @@ fn out_of_range_index_mutation_is_rejected_without_mutating() {
 
 //#region 🔖️op_text_binary_roundtrip_law
 /// 🧪️ F6 (las): `OpText`/`OpBinary` round-trip law over the full 14-variant vocabulary
-/// (hand-rolled, `dsl::DslOps` blocked — see the `OpCodecs` region's doc comment), via
+/// (hand-rolled, `semio_framework_dsl_record_derive::DslEnum` blocked — see the `OpCodecs` region's doc comment), via
 /// `demo_mutation_cases()` — the single source of truth also reused by
 /// `⚙️engine/🦀️.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`.
 #[test]
@@ -438,6 +438,7 @@ fn kinds_match_enum_and_catalog() {
     fn kind_of(mutation: &LasMutation) -> &'static str {
         match mutation {
             LasMutation::SetSnapshot(_) => "set-snapshot",
+            LasMutation::PatchSnapshot(_) => "patch-snapshot",
             LasMutation::SetVersion(_) => "set-version",
             LasMutation::SetSystemIdentifier(_) => "set-system-identifier",
             LasMutation::SetSoftwareInfo(_) => "set-software-info",
@@ -455,6 +456,7 @@ fn kinds_match_enum_and_catalog() {
     }
     let samples = [
         LasMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base_snapshot() }),
+        LasMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         LasMutation::SetVersion(set_version::SetVersion { major: 1, minor: 0 }),
         LasMutation::SetSystemIdentifier(set_system_identifier::SetSystemIdentifier { system_identifier: String::new() }),
         LasMutation::SetSoftwareInfo(set_software_info::SetSoftwareInfo { generating_software: String::new() }),
@@ -536,7 +538,7 @@ fn set_scale_and_offset_keeps_every_point_record_where_it_is() {
         // ↩️ Exact in BOTH directions, the coarsening one included — that is the direction a
         // re-quantizing reading would round away for good.
         let mut restored = moved;
-        for step in &<LasMutation as Mutation<LasSnapshot>>::inverse(&kind, &base) {
+        for step in &<LasMutation as Mutation<LasSnapshot>>::inverse(&kind, &base).expect("valid retained mutation inverse fixture") {
             apply_las_mutation(&mut restored, step);
         }
         assert_eq!(restored, base, "putting the old scale and offset back must restore the document exactly");

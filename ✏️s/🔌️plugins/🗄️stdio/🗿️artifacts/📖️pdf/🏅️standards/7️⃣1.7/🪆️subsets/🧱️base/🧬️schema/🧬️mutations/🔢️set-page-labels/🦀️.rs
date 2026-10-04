@@ -23,10 +23,13 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetPageLabels {
         MutationOutcome::new(diff::diff_set_page_labels(base, &self.labels))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         let _ = base;
         vec![PdfMutation::SetPageLabels(SetPageLabels { labels: base.page_labels.clone() })]
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set {} page label ranges", self.labels.len()), &format!("{} Seitenbeschriftungsbereiche setzen", self.labels.len()))

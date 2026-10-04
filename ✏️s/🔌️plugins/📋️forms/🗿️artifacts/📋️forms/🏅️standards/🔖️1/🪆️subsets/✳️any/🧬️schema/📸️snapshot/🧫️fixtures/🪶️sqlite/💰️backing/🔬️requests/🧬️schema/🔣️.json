@@ -1,0 +1,100 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Forms Concrete Ownership Settlement",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "fieldOrder",
+    "tableCount",
+    "phases",
+    "requestExtent",
+    "reallocation",
+    "exactReplay",
+    "denial",
+    "retirementRefund",
+    "refusalKind",
+    "zeroOwnershipBytes",
+    "ieeeWords",
+    "intrinsicKinds",
+    "conditionKinds"
+  ],
+  "properties": {
+    "fieldOrder": {
+      "const": [
+        "schema",
+        "id",
+        "version",
+        "title",
+        "definition",
+        "responses",
+        "structure",
+        "results"
+      ]
+    },
+    "tableCount": {
+      "const": 30
+    },
+    "phases": {
+      "const": [
+        "projectSnapshot",
+        "reconstructSnapshot"
+      ]
+    },
+    "requestExtent": {
+      "const": "fullConcreteRequests"
+    },
+    "reallocation": {
+      "const": "completeReplacement"
+    },
+    "exactReplay": {
+      "const": true
+    },
+    "denial": {
+      "const": "oneByteBelowObserved"
+    },
+    "retirementRefund": {
+      "const": false
+    },
+    "refusalKind": {
+      "const": "ownershipLimit"
+    },
+    "zeroOwnershipBytes": {
+      "const": 0
+    },
+    "ieeeWords": {
+      "const": [
+        "fff0000000000123",
+        "0000000000000000",
+        "8000000000000000",
+        "0000000000000001",
+        "3ff0000000000000",
+        "7fefffffffffffff",
+        "7ff0000000000000",
+        "fff0000000000000"
+      ]
+    },
+    "intrinsicKinds": {
+      "const": [
+        "null",
+        "boolean",
+        "unsigned",
+        "signed",
+        "float",
+        "text",
+        "bytes",
+        "array",
+        "object"
+      ]
+    },
+    "conditionKinds": {
+      "const": [
+        "const",
+        "var",
+        "eq",
+        "and",
+        "or",
+        "truthy"
+      ]
+    }
+  }
+}

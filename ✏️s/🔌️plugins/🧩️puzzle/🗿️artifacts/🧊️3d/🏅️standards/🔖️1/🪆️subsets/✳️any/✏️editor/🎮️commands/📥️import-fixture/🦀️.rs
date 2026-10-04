@@ -10,9 +10,9 @@
 
 use crate::editor::puzzle3d::{Puzzle3dActionCtx, Puzzle3dFixture, PUZZLE3D_FIXTURE_SCHEMA};
 use crate::retained_command::PUZZLE_IMPORT_TOTAL_BYTES;
-use dsl::json;
-use dsl::os_pack::json::{parse, Value};
-use dsl::FromValue;
+
+use semio_framework_pack_json::{parse, Value};
+use semio_framework_value::FromValue;
 use semio_framework::kernel::IMPORT_ARGUMENT_PAYLOAD;
 
 /// 🚫️ Why one import was refused. Every arm becomes a localized shell notice — never a silent no-op.
@@ -39,7 +39,7 @@ impl Puzzle3dImportFault {
 pub fn puzzle3d_import_value(args: &Value) -> Result<Value, Puzzle3dImportFault> {
     match args.get(IMPORT_ARGUMENT_PAYLOAD).and_then(Value::as_str) {
         Some(text) if text.len() > PUZZLE_IMPORT_TOTAL_BYTES => Err(Puzzle3dImportFault::Capacity),
-        Some(text) => parse(text).ok().filter(|value| value.as_object().is_some()).ok_or(Puzzle3dImportFault::Payload),
+        Some(text) => parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).ok().filter(|value| value.as_object().is_some()).ok_or(Puzzle3dImportFault::Payload),
         None => args
             .get("json")
             .cloned()
@@ -66,7 +66,7 @@ pub fn import_fixture(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
         Ok(value) => value,
         Err(fault) => return refuse(ctx, fault),
     };
-    let Ok(mut fixture) = Puzzle3dFixture::from_value(json::to_dsl_value(&value)) else {
+    let Ok(mut fixture) = Puzzle3dFixture::from_value(semio_framework_pack_json::to_dsl_value(&value)) else {
         return refuse(ctx, Puzzle3dImportFault::Payload);
     };
     if fixture.schema.is_empty() {

@@ -1,7 +1,7 @@
 use super::*;
 use crate::editor::wires::unit_tests::context::{metabolism_app, render as render_body};
 use crate::editor::wires::WIRES_PLAY_BODY_ARTIFACT as APP_BODY_ARTIFACT;
-use dsl::DslValue;
+use semio_framework_value::DslValue;
 use semio_framework_plugin::{TreeWindowRequest, ViewModel, TREE_WINDOW_DEFAULT_ROWS};
 
 #[semio_framework_async_macros::async_test]
@@ -23,22 +23,20 @@ async fn definition_binds_the_framework_document_tab_to_this_body_key() {
 //#region 🪟️WindowLaws
 /// 🪟️ A board an order of magnitude past one viewport — the shape a real reasoning document reaches
 /// and the one this flat tree used to hard-fail on past the fixed child cap.
-fn oversized(identities: usize, relationships: usize) -> WiresSnapshot {
+fn oversized(identities: usize, relationships: usize) -> crate::WiresComposed {
     let rows: Vec<DslValue> =
-        (0..identities).map(|index| DslValue::object([("nodeId".into(), DslValue::String(format!("identity-{index}"))), ("label".into(), DslValue::String(format!("Identity {index}")))])).collect();
-    let edges: Vec<DslValue> = (0..relationships).map(|index| DslValue::object([("id".into(), DslValue::String(format!("edge-{index}")))])).collect();
+        (0..identities).map(|index| semio_framework_value::DslValue::object([("nodeId".into(), semio_framework_value::DslValue::String(format!("identity-{index}"))), ("label".into(), semio_framework_value::DslValue::String(format!("Identity {index}")))])).collect();
+    let edges: Vec<DslValue> = (0..relationships).map(|index| semio_framework_value::DslValue::object([("id".into(), semio_framework_value::DslValue::String(format!("edge-{index}")))])).collect();
     let mut document = crate::empty_wires_snapshot();
-    document.wires_fixture = DslValue::object([
-        ("schema".into(), DslValue::String(crate::MINDMAP_WIRES_SCHEMA.into())),
-        ("identities".into(), DslValue::Array(rows)),
-        ("relationships".into(), DslValue::Array(Vec::new())),
+    document.wires_fixture = semio_framework_value::DslValue::object([
+        ("schema".into(), semio_framework_value::DslValue::String(crate::MINDMAP_WIRES_SCHEMA.into())),
+        ("identities".into(), semio_framework_value::DslValue::Array(rows)),
     ]);
-    document.content = crate::wires_content_child_with_owner(Vec::new(), edges);
-    document
+    crate::wires_composed(&document, &crate::wires_content_snapshot(&[], &edges))
 }
 
 /// 🪟️ The panel body exactly as the host reads it, for the host-known windows in `requests`.
-fn window_body(document: &WiresSnapshot, requests: Vec<TreeWindowRequest>) -> String {
+fn window_body(document: &crate::WiresComposed, requests: Vec<TreeWindowRequest>) -> String {
     let view_state = ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let labels = semio_framework_plugin::resolve_labels::<WiresLabels>(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let node = render(document, labels, &TreeWindows::for_body(&view_state, WIRES_PLAY_BODY_ARTIFACT)).expect("wires document tree assembly");

@@ -16,7 +16,7 @@ use super::*;
     #[test]
     fn app_pack_and_spr_exclude_window_and_transient_fields() {
         let shared = crate::editor::puzzle2d::config::Puzzle2dConfig::default();
-        let spr = dsl::json::to_json_string(&shared);
+        let spr = semio_framework_pack_json::to_json_string(&shared);
         let oracle: serde_json::Value = serde_json::from_str(&spr).expect("serde_json oracle accepts the neutral config");
         assert_eq!(oracle.as_object().map(serde_json::Map::len), Some(5));
         let pack = store::ArtifactPack::encode_pack(&shared);
@@ -39,9 +39,9 @@ use super::*;
     fn nested_transient_retirement_and_preflight_are_bounded_by_exact_grants() {
         let transient = Puzzle2dWindowTransient {
             engagement_input: "two-dimensional-input".repeat(256),
-            brush_candidates: vec![dsl::DslValue::Object(vec![(
+            brush_candidates: vec![semio_framework_value::DslValue::Object(vec![(
                 "candidate".into(),
-                dsl::DslValue::Array(vec![dsl::DslValue::String("nested-owner".repeat(512))]),
+                semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::String("nested-owner".repeat(512))]),
             )])],
             brush_candidate_source_handle_id: "source-handle".repeat(256),
             ..Default::default()
@@ -126,7 +126,7 @@ use super::*;
             retire_returned_puzzle2d_transient(returned);
         }
         {
-            let values = Vec::with_capacity(maximum / std::mem::size_of::<dsl::DslValue>() + 1);
+            let values = Vec::with_capacity(maximum / std::mem::size_of::<semio_framework_value::DslValue>() + 1);
             let pointer = values.as_ptr();
             let capacity = values.capacity();
             let returned = rejected_puzzle2d_transient(Puzzle2dWindowTransient { brush_candidates: values, ..Default::default() });
@@ -141,38 +141,38 @@ use super::*;
             let pointer = value.as_ptr();
             let capacity = value.capacity();
             let returned = rejected_puzzle2d_transient(Puzzle2dWindowTransient {
-                brush_candidates: vec![dsl::DslValue::String(value)],
+                brush_candidates: vec![semio_framework_value::DslValue::String(value)],
                 ..Default::default()
             });
-            let dsl::DslValue::String(value) = &returned.brush_candidates[0] else { panic!("returned nested string") };
+            let semio_framework_value::DslValue::String(value) = &returned.brush_candidates[0] else { panic!("returned nested string") };
             assert_eq!(value, "s");
             assert_eq!(value.as_ptr(), pointer);
             assert_eq!(value.capacity(), capacity);
             retire_returned_puzzle2d_transient(returned);
         }
         {
-            let values = Vec::with_capacity(maximum / std::mem::size_of::<dsl::DslValue>() + 1);
+            let values = Vec::with_capacity(maximum / std::mem::size_of::<semio_framework_value::DslValue>() + 1);
             let pointer = values.as_ptr();
             let capacity = values.capacity();
             let returned = rejected_puzzle2d_transient(Puzzle2dWindowTransient {
-                brush_candidates: vec![dsl::DslValue::Array(values)],
+                brush_candidates: vec![semio_framework_value::DslValue::Array(values)],
                 ..Default::default()
             });
-            let dsl::DslValue::Array(values) = &returned.brush_candidates[0] else { panic!("returned nested array") };
+            let semio_framework_value::DslValue::Array(values) = &returned.brush_candidates[0] else { panic!("returned nested array") };
             assert!(values.is_empty());
             assert_eq!(values.as_ptr(), pointer);
             assert_eq!(values.capacity(), capacity);
             retire_returned_puzzle2d_transient(returned);
         }
         {
-            let entries = Vec::with_capacity(maximum / std::mem::size_of::<(String, dsl::DslValue)>() + 1);
+            let entries = Vec::with_capacity(maximum / std::mem::size_of::<(String, semio_framework_value::DslValue)>() + 1);
             let pointer = entries.as_ptr();
             let capacity = entries.capacity();
             let returned = rejected_puzzle2d_transient(Puzzle2dWindowTransient {
-                brush_candidates: vec![dsl::DslValue::Object(entries)],
+                brush_candidates: vec![semio_framework_value::DslValue::Object(entries)],
                 ..Default::default()
             });
-            let dsl::DslValue::Object(entries) = &returned.brush_candidates[0] else { panic!("returned nested object") };
+            let semio_framework_value::DslValue::Object(entries) = &returned.brush_candidates[0] else { panic!("returned nested object") };
             assert!(entries.is_empty());
             assert_eq!(entries.as_ptr(), pointer);
             assert_eq!(entries.capacity(), capacity);
@@ -184,10 +184,10 @@ use super::*;
             let pointer = key.as_ptr();
             let capacity = key.capacity();
             let returned = rejected_puzzle2d_transient(Puzzle2dWindowTransient {
-                brush_candidates: vec![dsl::DslValue::Object(vec![(key, dsl::DslValue::Null)])],
+                brush_candidates: vec![semio_framework_value::DslValue::Object(vec![(key, semio_framework_value::DslValue::Null)])],
                 ..Default::default()
             });
-            let dsl::DslValue::Object(entries) = &returned.brush_candidates[0] else { panic!("returned keyed object") };
+            let semio_framework_value::DslValue::Object(entries) = &returned.brush_candidates[0] else { panic!("returned keyed object") };
             assert_eq!(entries[0].0, "k");
             assert_eq!(entries[0].0.as_ptr(), pointer);
             assert_eq!(entries[0].0.capacity(), capacity);

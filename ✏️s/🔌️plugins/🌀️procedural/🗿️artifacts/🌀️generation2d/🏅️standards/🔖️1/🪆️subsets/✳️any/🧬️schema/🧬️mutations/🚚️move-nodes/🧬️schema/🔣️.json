@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/procedural/generation2d/mutation/move-nodes/schema.json",
   "title": "MoveNodes",
+  "x-semio-inverse-rows": { "perTarget": { "ids": 1 } },
   "description": "The `move-nodes` mutation record — one node-graph drag as intent: the canvas offset every addressed widget moves by from its BASE position, so an edited drag replays on any base.",
   "type": "object",
   "additionalProperties": false,

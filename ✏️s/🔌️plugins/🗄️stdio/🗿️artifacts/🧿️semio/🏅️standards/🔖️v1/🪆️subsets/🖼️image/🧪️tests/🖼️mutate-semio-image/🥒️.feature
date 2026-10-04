@@ -92,6 +92,7 @@ Feature: Apply every typed semio IMAGE mutation to a real animated raster, again
       | set-frame-pixels | 🖌️set-frame-pixels |
       | set-metadata-entry | 🏷️set-metadata-entry |
       | remove-metadata-entry | 🗑️remove-metadata-entry |
+      | patch-snapshot | 🩹️patch-snapshot |
 
   @id-no-mutation-baseline-mutate
   @level-exhaustive
@@ -126,6 +127,7 @@ Feature: Apply every typed semio IMAGE mutation to a real animated raster, again
       | set-frame-pixels | 🖌️set-frame-pixels |
       | set-metadata-entry | 🏷️set-metadata-entry |
       | remove-metadata-entry | 🗑️remove-metadata-entry |
+      | patch-snapshot | 🩹️patch-snapshot |
 
   @id-no-mutation-baseline-inverse
   @level-exhaustive

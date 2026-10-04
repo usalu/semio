@@ -1,0 +1,17 @@
+{
+  "$schema": "s.stdio.png.command.paint-native-region.fixture.v1",
+  "cases": [
+    {"id": "indexed-duplicate-identity", "source": "indexed-2bit-duplicate-palette.png", "profile": "indexed", "region": {"x": 1, "y": 0, "width": 1, "height": 1}, "samples": [1], "expected": [1]},
+    {"id": "packed-grayscale-tail", "source": "grayscale-1bit.png", "profile": "grayscale", "region": {"x": 1, "y": 0, "width": 2, "height": 1}, "samples": [1], "expected": [1]},
+    {"id": "grayscale-16-low-byte", "source": "precision-16bit-gray.png", "profile": "grayscale", "region": {"x": 1, "y": 0, "width": 1, "height": 1}, "samples": [4660], "expected": [4660]},
+    {"id": "rgba-adam7", "source": "rgba8-adam7.png", "profile": "rgba", "region": {"x": 2, "y": 2, "width": 1, "height": 1}, "samples": [9, 8, 7, 6], "expected": [9, 8, 7, 6]}
+  ],
+  "matrix": {
+    "grayscale": [1, 2, 4, 8, 16],
+    "rgb": [8, 16],
+    "indexed": [1, 2, 4, 8],
+    "grayscaleAlpha": [8, 16],
+    "rgba": [8, 16],
+    "interlace": ["none", "adam7"]
+  }
+}

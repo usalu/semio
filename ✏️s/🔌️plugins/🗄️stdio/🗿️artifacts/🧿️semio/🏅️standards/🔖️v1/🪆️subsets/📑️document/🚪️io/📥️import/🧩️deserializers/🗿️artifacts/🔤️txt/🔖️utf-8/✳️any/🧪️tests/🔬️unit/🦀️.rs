@@ -8,7 +8,7 @@ pub(crate) fn sample_txt() -> TxtSnapshot {
 
 #[semio_framework_async_macros::async_test]
 async fn each_line_becomes_a_paragraph_blank_lines_become_empty_paragraphs() {
-    let semio = semio_framework_plugin::resolve_ready(SemioDocumentFromTxt::deserialize(&sample_txt())).expect("deserialize");
+    let semio = ::semio_framework_async::poll::resolve_ready(SemioDocumentFromTxt::deserialize(&sample_txt())).expect("deserialize");
     assert_eq!(semio.blocks.len(), 3);
     assert!(matches!(&semio.blocks[0], DocBlock::Paragraph { runs, .. } if runs[0].text == "First line."));
     assert!(matches!(&semio.blocks[1], DocBlock::Paragraph { runs, .. } if runs.is_empty()));

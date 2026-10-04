@@ -1,0 +1,13 @@
+# Canonical Record Actual Core Package Ownership Contract
+
+Read-only package/registration audit; no task execution.
+
+Actual Rust owner is `semio-framework-pack`, lib `pack`, manifest `🎒️pack/📦️packages/🦀️rust/Cargo.toml`. Its lib mounts `../../🌱️value/🦀️.rs` as public `record` at lines64–65. It separately reexports `protocol::value` as `value`: these are distinct authorities. Record Rust subdirectory has no Cargo manifest. Its `test-native` script currently points nonexistent local Cargo.toml and phantom package semio-framework-pack-record. Do not introduce a circular separate Record crate depending on Pack while Pack mounts Record.
+
+Truthful contract should model one actual package plus module: package semio-framework-pack, lib pack, public module record, exact relative mount and actual authoritative manifest/lib paths. Validate actual manifest with both Bun TOML and independent TOML oracle; inspect actual dependency paths/keys. Pack genuinely depends on semio-framework-replication and optional ureq; do not claim forbidden replication or system-only dependency identity when actual owner has them. Record source must exclude product paths/OS Kernel imports while permitting the existing first-party protocol NativeEncode/DecodeControl seams. A blanket forbidden protocol:: check currently rejects legitimate controlled encoding.
+
+Replace ownership fixture/schema independent package/dependency assertions with exact actual package+module+public APIs and explicit allowed framework control authority. Preserve independent AJV/TOML validation and acyclic product boundary checks. There is no Record self-dependency; actual Pack→DSL Record/Pack Error/Value dependencies can be checked against their real manifests without fabricating a new provider.
+
+Record source tasks can remain an Nx grouping project. Its test-native must run actual Pack manifest/package with actual Record law selection (record:: prefix plus separately registered pack_schema_hash target as required), not all unrelated Pack laws under a label claiming only Record. Launch currently targets Record source/refusal/schema/native at lines2103,18135,18146,18223; preserve these discoverable names but route through truthful scripts. Add actual Core package inputs to Nx namedInputs because the module depends on that manifest/lib plus shared pack source; current namedInputs only Record subtree/process misses authority changes.
+
+Core refusal source task remains source evidence; parent actual Native selection separately establishes runtime. No source ownership check should declare unrelated physical allocator/cancellation/native execution passing.

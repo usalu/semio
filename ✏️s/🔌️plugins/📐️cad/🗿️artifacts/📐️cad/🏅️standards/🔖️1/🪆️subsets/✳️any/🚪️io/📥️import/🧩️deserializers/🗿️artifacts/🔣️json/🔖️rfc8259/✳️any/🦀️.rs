@@ -9,7 +9,7 @@ use crate::CadSnapshot;
 //#region Deserialize
 pub fn register() {}
 
-pub fn deserialize_text(text: &str) -> Result<CadSnapshot, store::TextError> {
+pub fn deserialize_text(text: &str) -> Result<CadSnapshot, semio_framework_diagnostic::TextError> {
     <CadSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 //#endregion Deserialize

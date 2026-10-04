@@ -177,7 +177,7 @@ mod subject {
         let mutation = mutation_from_spec(&ctx.doc_json()?)?;
         let mut snapshot = base.clone();
         apply_jpg_mutation(&mut snapshot, &mutation);
-        for undo in mutation_inverse(&mutation, &base) {
+        for undo in mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
             apply_jpg_mutation(&mut snapshot, &undo);
         }
         let output = encode_jpg(&snapshot).map_err(|error| format!("encode_jpg (restore) failed: {error:?}"))?;

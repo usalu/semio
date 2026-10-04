@@ -4,10 +4,13 @@ use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::ChangeTargetRegionHidden, base: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {
+pub fn inverse(payload: &super::ChangeTargetRegionHidden, base: &Puzzle2dSnapshot) -> Result<Vec<Puzzle2dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(region) = base.target_regions.iter().find(|entry| entry.id == payload.id) else {
         return Vec::new();
     };
     vec![crate::standards::v1::subsets::any::schema::mutations::change_target_region_hidden::change_target_region_hidden(region.id.clone(), region.hidden)]
+
+    })())
 }
 //#endregion 🔖️Inverse

@@ -13,6 +13,8 @@ fn ordered_set_wire_matches_serde_btree_oracle_and_retirement_uses_tiny_grants()
     assert_eq!(serde_json::to_value(&set).unwrap(), fixture["expectedValues"]);
     let alias = set.clone();
     assert!(std::ptr::eq(set.iter().next().unwrap(), alias.iter().next().unwrap()));
+    for(index,key)in oracle.iter().enumerate(){let original=set.key_at_rank(index).unwrap();let shared=alias.key_at_rank(index).unwrap();assert_eq!(original,key);assert!(std::ptr::eq(original,shared));assert_eq!(original.as_ptr(),shared.as_ptr());}
+    assert!(set.key_at_rank(set.len()).is_none());assert!(set.key_at_rank(usize::MAX).is_none());
     let mut first = set.retire();
     while !matches!(first.advance(Grant { maximum_items: 1, maximum_bytes: 1 }), RetirementStep::Complete) {}
     let bytes: usize = alias.iter().map(String::len).sum();
@@ -28,6 +30,7 @@ fn ordered_set_wire_matches_serde_btree_oracle_and_retirement_uses_tiny_grants()
         }
     }
     assert_eq!(released, bytes);
+    eprintln!("[DEBUG] OrderedSet original ranked keys share pointer identity, match independentBTreeSet and retire under onebyte grants");
 }
 
 #[test]

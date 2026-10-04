@@ -35,7 +35,7 @@ pub const ANIMATE_DIALECT: semio_framework_plugin::Dialect = semio_framework_plu
 //#region 🔖️Domain
 /// 📐️ Normalized `x,y,width,height` rect — always reached through a `#[dsl(block)]` field (see
 /// {@link FigureTileSource}/{@link FigureTileDraft}), so it declares no `#[dsl(keyword)]` of its own.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct FigureTileFrame {
     pub x: f64,
@@ -44,7 +44,7 @@ pub struct FigureTileFrame {
     pub height: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct FigureTileSource {
     pub src: String,
@@ -57,7 +57,7 @@ pub struct FigureTileSource {
     pub pdf_page: Option<u32>,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct FigureTileDraft {
     pub id: String,
@@ -180,7 +180,7 @@ pub fn source_tiles_from_presentation_snapshot(snapshot: &semio_s_artifact_stdio
 /// changes, mirroring lowpoly's `mesh_child_handle`/writer's `document_child_handle`.
 pub fn presentation_child_handle(source: &FigureTileSource, tiles: &[FigureTileDraft]) -> PresentationChild {
     let content = presentation_snapshot_from_source_tiles(source, tiles);
-    let content_json = dsl::os_pack::json::to_json_string(&content);
+    let content_json = semio_framework_pack_json::to_json_string(&content);
     let child_id = store::content_id("presentation", content_json.as_bytes());
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "presentation".into() };
     let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
@@ -194,7 +194,7 @@ pub fn presentation_child_handle(source: &FigureTileSource, tiles: &[FigureTileD
 /// natural extension: per-tile camera-pan/transition timing) without another schema migration.
 pub fn animation_child_handle() -> AnimationChild {
     use semio_s_artifact_stdio_semio::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;
-    let content_json = dsl::os_pack::json::to_json_string(&SemioAnimationSnapshot::default());
+    let content_json = semio_framework_pack_json::to_json_string(&SemioAnimationSnapshot::default());
     let child_id = store::content_id("animation", content_json.as_bytes());
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "animation".into() };
     let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
@@ -292,7 +292,7 @@ impl Identified<String> for FigureTileDraft {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct FigureTileDraftPatch {
     pub name: Option<String>,

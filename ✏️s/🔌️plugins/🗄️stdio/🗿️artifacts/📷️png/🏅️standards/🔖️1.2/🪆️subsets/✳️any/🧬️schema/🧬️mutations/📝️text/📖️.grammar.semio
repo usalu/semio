@@ -1,63 +1,10 @@
-# Direct identities: set-snapshot, change-header, replace-palette, change-transparency, change-gamma, change-chromaticities, change-srgb-intent, change-physical-dims, change-timestamp, change-background, insert-text-chunk, remove-text-chunk, replace-text-chunk, replace-pixels, insert-unknown-chunk, remove-unknown-chunk, patch-pixels
 dialect grammar
 grammar stdio.png.mutations
 start op
-
 comment none
-
-op = set-snapshot-op | patch-snapshot-op | change-header-op | replace-palette-op | change-transparency-op | change-gamma-op | change-chromaticities-op | change-srgb-intent-op | change-physical-dims-op | change-timestamp-op | change-background-op | insert-text-chunk-op | remove-text-chunk-op | replace-text-chunk-op | replace-pixels-op | insert-unknown-chunk-op | remove-unknown-chunk-op | patch-pixels-op
-
+op = set-snapshot-op | patch-snapshot-op | change-gamma-op | patch-pixels-op | paint-native-samples-op
 set-snapshot-op = "set-snapshot" "snapshot" "=" hex
 patch-snapshot-op = "patch-snapshot" "patch" "=" hex
-change-header-op = "change-header" "width" "=" INT "height" "=" INT "bit-depth" "=" INT "color-type" "=" color-type "interlace" "=" bit
-replace-palette-op = "replace-palette" "plte" "=" palette-opt
-change-transparency-op = "change-transparency" "trns" "=" transparency-opt
-change-gamma-op = "change-gamma" "gama" "=" int-opt
-change-chromaticities-op = "change-chromaticities" "chrm" "=" chromaticities-opt
-change-srgb-intent-op = "change-srgb-intent" "srgb" "=" int-opt
-change-physical-dims-op = "change-physical-dims" "phys" "=" physical-dims-opt
-change-timestamp-op = "change-timestamp" "time" "=" timestamp-opt
-change-background-op = "change-background" "bkgd" "=" background-opt
-insert-text-chunk-op = "insert-text-chunk" "index" "=" INT "chunk" "=" text-chunk-value
-remove-text-chunk-op = "remove-text-chunk" "index" "=" INT
-replace-text-chunk-op = "replace-text-chunk" "index" "=" INT "chunk" "=" text-chunk-value
-replace-pixels-op = "replace-pixels" "pixels" "=" hex
-insert-unknown-chunk-op = "insert-unknown-chunk" "index" "=" INT "chunk" "=" chunk-value
-remove-unknown-chunk-op = "remove-unknown-chunk" "index" "=" INT
-patch-pixels-op = "patch-pixels" "index" "=" INT "remove-count" "=" INT "pixels" "=" hex "move-to" "=" int-none
-
-bit = "0" | "1"
-color-type = INT
-int-opt = "[" "0" "]" | "[" "1" "," INT "]"
-int-none = "none" | INT
-
-palette-opt = "[" "0" "]" | "[" "1" "," "[" palette-items? "]" "]"
-palette-items = rgb-value {"," rgb-value}*
-rgb-value = "[" INT "," INT "," INT "]"
-
-transparency-opt = "[" "0" "]" | "[" "1" "," transparency-value "]"
-transparency-value = "I" "[" hex "]" | "G" "[" INT "]" | "R" "[" INT "," INT "," INT "]"
-
-chromaticities-opt = "[" "0" "]" | "[" "1" "," chromaticities-value "]"
-chromaticities-value = "[" INT "," INT "," INT "," INT "," INT "," INT "," INT "," INT "]"
-
-physical-dims-opt = "[" "0" "]" | "[" "1" "," physical-dims-value "]"
-physical-dims-value = "[" INT "," INT "," bit "]"
-
-timestamp-opt = "[" "0" "]" | "[" "1" "," timestamp-value "]"
-timestamp-value = "[" INT "," INT "," INT "," INT "," INT "," INT "]"
-
-background-opt = "[" "0" "]" | "[" "1" "," background-value "]"
-background-value = "G" "[" INT "]" | "R" "[" INT "," INT "," INT "]" | "I" "[" INT "]"
-
-text-chunk-list = "[" text-chunk-items? "]"
-text-chunk-items = text-chunk-value {"," text-chunk-value}*
-text-chunk-value = "[" hex "," hex "," bit "," INT "," hex "," hex "]"
-
-chunk-marker-list = "[" chunk-marker-items? "]"
-chunk-marker-items = chunk-marker-value {"," chunk-marker-value}*
-chunk-marker-value = "IHDR" | "PLTE" | "TRNS" | "GAMA" | "CHRM" | "SRGB" | "PHYS" | "TIME" | "BKGD" | "IDAT" | "IEND" | "TEXT" "[" INT "]" | "UNKN" "[" INT "]"
-
-chunk-list = "[" chunk-items? "]"
-chunk-items = chunk-value {"," chunk-value}*
-chunk-value = "[" hex "," hex "]"
+change-gamma-op = "change-gamma" "payload" "=" hex
+patch-pixels-op = "patch-pixels" "payload" "=" hex
+paint-native-samples-op = "paint-native-samples" "payload" "=" hex

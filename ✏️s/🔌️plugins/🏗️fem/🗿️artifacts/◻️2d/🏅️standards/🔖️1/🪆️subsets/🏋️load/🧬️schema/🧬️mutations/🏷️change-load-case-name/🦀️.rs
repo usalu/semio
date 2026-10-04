@@ -8,7 +8,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Mutation
 /// 🏷️ Sets an existing load case's human-readable `name`. The `id` is the identity every
 /// combination term resolves through and is untouched, so a rename orphans nothing.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "change-load-case-name")]
@@ -23,9 +23,12 @@ impl MutationKind<Fem2dSnapshot, Fem2dMutation> for ChangeLoadCaseName {
     fn diff(&self, base: &Fem2dSnapshot) -> protocol::MutationOutcome<crate::standards::v1::subsets::any::schema::diff::Fem2dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Fem2dSnapshot) -> Vec<Fem2dMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &Fem2dSnapshot) -> Result<Vec<Fem2dMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename case \"{}\" to \"{}\"", self.case_id, self.new_name), &format!("Lastfall \"{}\" in \"{}\" umbenennen", self.case_id, self.new_name))
     }

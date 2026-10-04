@@ -70,6 +70,9 @@ impl Din18599Diff {
             if let Some(value) = &self.climate {
                 next.climate = value.clone();
             }
+            if let Some(value) = &self.climate_table {
+                next.climate_table = value.clone();
+            }
             next
         })
     }
@@ -133,6 +136,9 @@ impl MutationDiff<Din18599Snapshot> for Din18599Diff {
             if let Some(value) = &self.climate {
                 next.climate = value.clone();
             }
+            if let Some(value) = &self.climate_table {
+                next.climate_table = value.clone();
+            }
             next
         })
     }
@@ -162,6 +168,7 @@ impl MutationDiff<Din18599Snapshot> for Din18599Diff {
         take!(lighting);
         take!(renewables);
         take!(climate);
+        take!(climate_table);
     }
 }
 //#endregion 🔖️Apply

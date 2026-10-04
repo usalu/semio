@@ -3,7 +3,7 @@
 
 use crate::editor::puzzle3d::apply_puzzle3d_selection_flag;
 use crate::editor::puzzle3d::Puzzle3dActionCtx;
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 
 /// 🙈️ Explicit `{entity, ids}` (the document tree's row actions) patches exactly those; otherwise the
 /// whole live object/vortex/target-volume selection is flagged at once (the context menu's path).
@@ -24,7 +24,7 @@ pub fn set_selection_flag_value(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&V
 
 fn apply(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>, flag: &str, value: bool) {
     let entity = args.and_then(|value| value.get("entity")).and_then(|value| value.as_str());
-    let explicit_ids: Option<Vec<String>> = args.and_then(|value| value.get("ids")).and_then(|value| dsl::FromValue::from_value(dsl::os_pack::json::to_dsl_value(value)).ok());
+    let explicit_ids: Option<Vec<String>> = args.and_then(|value| value.get("ids")).and_then(|value| semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(value)).ok());
     match (entity, explicit_ids) {
         (Some(entity), Some(ids)) => {
             apply_puzzle3d_selection_flag(&mut ctx.scene.fixture, entity, &ids, flag, value);

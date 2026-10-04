@@ -487,7 +487,8 @@ fn material_override(material: &IconRenderMaterialFields) -> SceneAuthoredMateri
         preserve_vertex_color: false,
         base_color_texture: None,
         texture_sampler: Default::default(),
-    }
+        metallic_roughness_texture:None,normal_texture:None,occlusion_texture:None,emissive_texture:None,additional_texture_samplers:[Default::default();4],
+    normal_scale:[1.0;2],occlusion_strength:1.0,}
 }
 
 #[derive(Clone, Copy)]

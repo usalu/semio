@@ -38,7 +38,7 @@ fn base_snapshot() -> GifSnapshot {
 fn round_trips(base: &GifSnapshot, mutation: GifMutation) {
     let diff = mutation.diff(base);
     let mutated = diff.diff().apply(base).expect("diff must apply to base");
-    let inverses = mutation.inverse(base);
+    let inverses = mutation.inverse(base).expect("valid retained mutation inverse fixture");
     let mut restored = mutated.clone();
     for inv in &inverses {
         let inv_diff = inv.diff(&restored);

@@ -10,7 +10,7 @@
 
 use crate::schema::inferences::processed_mesh;
 use crate::Process3dSnapshot;
-use semio_framework_os_kernel::json;
+use semio_framework_pack_json as json;
 use semio_framework_plugin::app::WindowKit;
 use semio_framework_plugin::mesh_from_kind;
 use semio_framework_plugin::world3d_camera_json;

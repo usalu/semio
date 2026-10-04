@@ -10,22 +10,49 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Snapshot schema",
+          "de": "Snapshot-Schema"
+        },
+        "description": {
+          "en": "Identifier of the snapshot schema version.",
+          "de": "Kennung der Version des Snapshot-Schemas."
+        }
+      }
     },
     "opc": {
       "$ref": "#/$defs/OpcPackage",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "label": {
+          "en": "OPC package",
+          "de": "OPC-Paket"
+        },
+        "description": {
+          "en": "Open Packaging Conventions container of the document (ISO/IEC 29500-2).",
+          "de": "Container des Dokuments nach Open Packaging Conventions (ISO/IEC 29500-2)."
+        }
+      }
     },
     "xmlParts": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/PptxXmlPart"
       },
-      "x-semio-state": "artifact"
-    },
-    "presentation": {
-      "$ref": "#/$defs/PptxPresentation",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "label": {
+          "en": "XML parts",
+          "de": "XML-Teile"
+        },
+        "description": {
+          "en": "Parsed XML parts of the package.",
+          "de": "Geparste XML-Teile des Pakets."
+        }
+      }
     }
   },
   "$defs": {
@@ -37,10 +64,26 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/OpcPart"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Package parts",
+              "de": "Paketteile"
+            }
           }
         },
         "contentTypes": {
-          "$ref": "#/$defs/OpcContentTypes"
+          "$ref": "#/$defs/OpcContentTypes",
+          "x-semio-ui": {
+            "label": {
+              "en": "Content types",
+              "de": "Inhaltstypen"
+            },
+            "description": {
+              "en": "Content of the [Content_Types].xml part.",
+              "de": "Inhalt des Teils [Content_Types].xml."
+            }
+          }
         },
         "relationships": {
           "type": "object",
@@ -49,10 +92,22 @@
             "items": {
               "$ref": "#/$defs/OpcRelationship"
             }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Relationships",
+              "de": "Beziehungen"
+            }
           }
         },
         "comment": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Comment",
+              "de": "Kommentar"
+            }
+          }
         }
       }
     },
@@ -65,10 +120,27 @@
       ],
       "properties": {
         "path": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Path",
+              "de": "Pfad"
+            }
+          }
         },
         "contentType": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Content type",
+              "de": "Inhaltstyp"
+            },
+            "description": {
+              "en": "MIME media type of the package part.",
+              "de": "MIME-Medientyp des Paketteils."
+            }
+          }
         },
         "bytes": {
           "type": "array",
@@ -76,6 +148,12 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 255
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Part bytes",
+              "de": "Bytes des Paketteils"
+            }
           }
         }
       }
@@ -99,6 +177,16 @@
             "additionalItems": false,
             "minItems": 2,
             "maxItems": 2
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Default content types",
+              "de": "Standard-Inhaltstypen"
+            },
+            "description": {
+              "en": "Content type per file extension.",
+              "de": "Inhaltstyp je Dateierweiterung."
+            }
           }
         },
         "overrides": {
@@ -116,6 +204,16 @@
             "additionalItems": false,
             "minItems": 2,
             "maxItems": 2
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Content type overrides",
+              "de": "Inhaltstyp-Überschreibungen"
+            },
+            "description": {
+              "en": "Content type per part name, overriding the extension default.",
+              "de": "Inhaltstyp je Teilname; überschreibt den Standard der Dateierweiterung."
+            }
           }
         }
       }
@@ -131,16 +229,40 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            }
+          }
         },
         "relType": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Relationship type",
+              "de": "Beziehungstyp"
+            }
+          }
         },
         "target": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Target",
+              "de": "Ziel"
+            }
+          }
         },
         "targetMode": {
-          "$ref": "#/$defs/OpcTargetMode"
+          "$ref": "#/$defs/OpcTargetMode",
+          "x-semio-ui": {
+            "label": {
+              "en": "Target mode",
+              "de": "Zielmodus"
+            }
+          }
         }
       }
     },
@@ -161,13 +283,31 @@
       ],
       "properties": {
         "path": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Path",
+              "de": "Pfad"
+            }
+          }
         },
         "contentType": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Content type",
+              "de": "Inhaltstyp"
+            }
+          }
         },
         "document": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/base/snapshot.json#/$defs/XmlDocument"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/base/snapshot.json#/$defs/XmlDocument",
+          "x-semio-ui": {
+            "label": {
+              "en": "Document",
+              "de": "Dokument"
+            }
+          }
         }
       }
     },
@@ -183,7 +323,13 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Root element",
+              "de": "Wurzelelement"
+            }
+          }
         },
         "doctype": {
           "anyOf": [
@@ -193,7 +339,13 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Document type",
+              "de": "Dokumenttyp"
+            }
+          }
         },
         "declaration": {
           "anyOf": [
@@ -203,18 +355,36 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "XML declaration",
+              "de": "XML-Deklaration"
+            }
+          }
         },
         "prolog": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/XmlNode"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Prolog",
+              "de": "Prolog"
+            }
           }
         },
         "epilog": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/XmlNode"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Epilog",
+              "de": "Epilog"
+            }
           }
         }
       }
@@ -233,18 +403,36 @@
               "const": "element"
             },
             "name": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Name",
+                  "de": "Name"
+                }
+              }
             },
             "attrs": {
               "type": "array",
               "items": {
                 "$ref": "#/$defs/XmlAttr"
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Attributes",
+                  "de": "Attribute"
+                }
               }
             },
             "children": {
               "type": "array",
               "items": {
                 "$ref": "#/$defs/XmlNode"
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Children",
+                  "de": "Unterelemente"
+                }
               }
             }
           }
@@ -261,7 +449,13 @@
               "const": "text"
             },
             "text": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Text",
+                  "de": "Text"
+                }
+              }
             }
           }
         },
@@ -277,7 +471,13 @@
               "const": "cData"
             },
             "text": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Text",
+                  "de": "Text"
+                }
+              }
             }
           }
         },
@@ -293,7 +493,13 @@
               "const": "comment"
             },
             "text": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Text",
+                  "de": "Text"
+                }
+              }
             }
           }
         },
@@ -310,10 +516,22 @@
               "const": "processingInstruction"
             },
             "target": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Target",
+                  "de": "Ziel"
+                }
+              }
             },
             "data": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Data",
+                  "de": "Daten"
+                }
+              }
             }
           }
         }
@@ -328,10 +546,22 @@
       ],
       "properties": {
         "name": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Name",
+              "de": "Name"
+            }
+          }
         },
         "value": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Value",
+              "de": "Wert"
+            }
+          }
         }
       }
     },
@@ -345,10 +575,22 @@
         "prologPosition": {
           "type": "string",
           "pattern": "^(0|[1-9][0-9]*)$",
-          "maxLength": 20
+          "maxLength": 20,
+          "x-semio-ui": {
+            "label": {
+              "en": "Prolog position",
+              "de": "Prologposition"
+            }
+          }
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Name",
+              "de": "Name"
+            }
+          }
         },
         "externalId": {
           "anyOf": [
@@ -358,12 +600,24 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "External ID",
+              "de": "Externe ID"
+            }
+          }
         },
         "declarations": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/XmlDtdDeclaration"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Declarations",
+              "de": "Deklarationen"
+            }
           }
         }
       }
@@ -382,7 +636,13 @@
               "const": "system"
             },
             "systemId": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "label": {
+                  "en": "System ID",
+                  "de": "System-ID"
+                }
+              }
             }
           }
         },
@@ -399,10 +659,22 @@
               "const": "public"
             },
             "publicId": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Public ID",
+                  "de": "Öffentliche ID"
+                }
+              }
             },
             "systemId": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "label": {
+                  "en": "System ID",
+                  "de": "System-ID"
+                }
+              }
             }
           }
         }
@@ -424,13 +696,31 @@
               "const": "entity"
             },
             "parameter": {
-              "type": "boolean"
+              "type": "boolean",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Parameter",
+                  "de": "Parameter"
+                }
+              }
             },
             "name": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Name",
+                  "de": "Name"
+                }
+              }
             },
             "value": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Value",
+                  "de": "Wert"
+                }
+              }
             }
           }
         }
@@ -444,7 +734,13 @@
       ],
       "properties": {
         "version": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Version",
+              "de": "Version"
+            }
+          }
         },
         "encoding": {
           "anyOf": [
@@ -454,7 +750,13 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Encoding",
+              "de": "Kodierung"
+            }
+          }
         },
         "standalone": {
           "anyOf": [
@@ -464,14 +766,26 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Standalone",
+              "de": "Eigenständig"
+            }
+          }
         },
         "quote": {
           "type": "string",
           "enum": [
             "double",
             "single"
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Quotation marks",
+              "de": "Anführungszeichen"
+            }
+          }
         }
       }
     },
@@ -483,6 +797,12 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/PptxSlide"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Slides",
+              "de": "Folien"
+            }
           }
         }
       }
@@ -495,6 +815,12 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/PptxShape"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Shapes",
+              "de": "Formen"
+            }
           }
         }
       }
@@ -515,10 +841,22 @@
               "type": "array",
               "items": {
                 "$ref": "#/$defs/PptxParagraph"
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Text frame",
+                  "de": "Textrahmen"
+                }
               }
             },
             "position": {
-              "$ref": "#/$defs/PptxTransform"
+              "$ref": "#/$defs/PptxTransform",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Position",
+                  "de": "Position"
+                }
+              }
             }
           }
         },
@@ -534,10 +872,22 @@
               "const": "picture"
             },
             "blipRelId": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Image relationship ID",
+                  "de": "Bildbeziehungs-ID"
+                }
+              }
             },
             "position": {
-              "$ref": "#/$defs/PptxTransform"
+              "$ref": "#/$defs/PptxTransform",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Position",
+                  "de": "Position"
+                }
+              }
             }
           }
         },
@@ -553,16 +903,34 @@
               "const": "placeholder"
             },
             "kind": {
-              "type": "string"
+              "type": "string",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Kind",
+                  "de": "Art"
+                }
+              }
             },
             "textFrame": {
               "type": "array",
               "items": {
                 "$ref": "#/$defs/PptxParagraph"
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Text frame",
+                  "de": "Textrahmen"
+                }
               }
             },
             "position": {
-              "$ref": "#/$defs/PptxTransform"
+              "$ref": "#/$defs/PptxTransform",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Position",
+                  "de": "Position"
+                }
+              }
             }
           }
         },
@@ -578,7 +946,13 @@
               "const": "other"
             },
             "node": {
-              "$ref": "#/$defs/XmlNode"
+              "$ref": "#/$defs/XmlNode",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Node",
+                  "de": "Knoten"
+                }
+              }
             }
           }
         }
@@ -592,6 +966,12 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/PptxRun"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Text runs",
+              "de": "Textabschnitte"
+            }
           }
         }
       }
@@ -604,13 +984,31 @@
       ],
       "properties": {
         "text": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Text",
+              "de": "Text"
+            }
+          }
         },
         "bold": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Bold",
+              "de": "Fett"
+            }
+          }
         },
         "italic": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Italic",
+              "de": "Kursiv"
+            }
+          }
         },
         "fontSize": {
           "anyOf": [
@@ -622,7 +1020,13 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Font size",
+              "de": "Schriftgröße"
+            }
+          }
         }
       }
     },
@@ -639,22 +1043,62 @@
         "x": {
           "type": "string",
           "pattern": "^(-?[1-9][0-9]*|0)$",
-          "maxLength": 20
+          "maxLength": 20,
+          "x-semio-ui": {
+            "label": {
+              "en": "Horizontal position (EMU)",
+              "de": "Horizontale Position (EMU)"
+            },
+            "description": {
+              "en": "Shape offset along x in English Metric Units (914400 per inch).",
+              "de": "Versatz der Form entlang x in English Metric Units (914400 pro Zoll)."
+            }
+          }
         },
         "y": {
           "type": "string",
           "pattern": "^(-?[1-9][0-9]*|0)$",
-          "maxLength": 20
+          "maxLength": 20,
+          "x-semio-ui": {
+            "label": {
+              "en": "Vertical position (EMU)",
+              "de": "Vertikale Position (EMU)"
+            },
+            "description": {
+              "en": "Shape offset along y in English Metric Units (914400 per inch).",
+              "de": "Versatz der Form entlang y in English Metric Units (914400 pro Zoll)."
+            }
+          }
         },
         "cx": {
           "type": "string",
           "pattern": "^(-?[1-9][0-9]*|0)$",
-          "maxLength": 20
+          "maxLength": 20,
+          "x-semio-ui": {
+            "label": {
+              "en": "Width (EMU)",
+              "de": "Breite (EMU)"
+            },
+            "description": {
+              "en": "Shape extent along x in English Metric Units (914400 per inch).",
+              "de": "Ausdehnung der Form entlang x in English Metric Units (914400 pro Zoll)."
+            }
+          }
         },
         "cy": {
           "type": "string",
           "pattern": "^(-?[1-9][0-9]*|0)$",
-          "maxLength": 20
+          "maxLength": 20,
+          "x-semio-ui": {
+            "label": {
+              "en": "Height (EMU)",
+              "de": "Höhe (EMU)"
+            },
+            "description": {
+              "en": "Shape extent along y in English Metric Units (914400 per inch).",
+              "de": "Ausdehnung der Form entlang y in English Metric Units (914400 pro Zoll)."
+            }
+          }
         }
       }
     }

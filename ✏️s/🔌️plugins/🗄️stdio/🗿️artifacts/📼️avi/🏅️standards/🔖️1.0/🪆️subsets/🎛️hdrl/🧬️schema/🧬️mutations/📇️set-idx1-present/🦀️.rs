@@ -18,9 +18,12 @@ impl protocol::MutationKind<AviSnapshot, AviMutation> for SetIdx1Present {
     fn diff(&self, base: &AviSnapshot) -> protocol::MutationOutcome<<AviMutation as Mutation<AviSnapshot>>::Diff> {
         agg_diff(&AviMutation::SetIdx1Present(self.clone()), base)
     }
-    fn inverse(&self, base: &AviSnapshot) -> Vec<AviMutation> {
-        agg_inverse(&AviMutation::SetIdx1Present(self.clone()), base)
-    }
+    fn inverse(&self, base: &AviSnapshot) -> Result<Vec<AviMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&AviMutation::SetIdx1Present(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set idx1 present", "idx1-Index vorhanden setzen")
     }

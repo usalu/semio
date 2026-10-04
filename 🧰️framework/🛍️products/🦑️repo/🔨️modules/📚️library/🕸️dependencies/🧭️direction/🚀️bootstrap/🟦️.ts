@@ -1,4 +1,4 @@
-import { loadDependencyDirectionPolicy as capturePolicy } from "./🟨️.cjs";
+import { createRequire } from "node:module";
 
 export type DependencyPolicyAuthoritySource = Readonly<{ path: string; kind: "file"; sha256: string; bytes: number } | { path: string; kind: "directory"; sha256: string; entries: readonly Readonly<{ name: string; kind: "file" | "directory" | "symlink" | "other" }>[] } | { path: string; kind: "missing" }>;
 export type DependencyPolicyPackage = Readonly<{ owner: string; name: string; exports: readonly string[]; dependencyRole?: string }>;
@@ -6,6 +6,8 @@ export type DependencyPolicyRule = Readonly<{ name: string; severity: "error" | 
 export type DependencyPolicyTaxonomy = Readonly<{ implementationLeafPolicy: Readonly<{ ignoredPathPatterns: readonly string[] }>; pathExclusions: Readonly<Record<string, Readonly<{ path: string }>>>; areaLayers: Readonly<Record<string, string>>; dependencyDirections: Readonly<{ rules: Readonly<Record<string, Readonly<{ fromRoles: readonly string[]; toRoles: readonly string[] }>>>; roles: Readonly<Record<string, Readonly<{ ownerPaths: readonly string[]; externalPackages: readonly string[] }>>> }> }>;
 export type DependencyPolicySnapshot = Readonly<{ workspaceRoot: string; taxonomyPath: string; taxonomy: DependencyPolicyTaxonomy; workspacePackages: readonly DependencyPolicyPackage[]; plugins: readonly string[]; sources: readonly DependencyPolicyAuthoritySource[]; policy: Readonly<{ forbidden: readonly DependencyPolicyRule[]; options: Readonly<{ exclude: Readonly<{ path: readonly string[] }>; doNotFollow: Readonly<{ path: string }>; tsPreCompilationDeps: true; combinedDependencies: true; enhancedResolveOptions: Readonly<{ exportsFields: readonly string[]; conditionNames: readonly string[] }> }> }> }>;
 export type DependencyPolicyCaptureOptions = Readonly<{ signal?: AbortSignal; onProgress?: (progress: Readonly<{ phase: "capture" | "complete"; sources: number }>) => void }>;
+
+const capturePolicy: (root: string, options?: DependencyPolicyCaptureOptions) => DependencyPolicySnapshot = createRequire(import.meta.url)("./🟨️.cjs").loadDependencyDirectionPolicy;
 
 /** 🛡️ Captures current no-follow inputs through the shared Node and Bun policy implementation. */
 export const loadDependencyDirectionPolicy: (root: string, options?: DependencyPolicyCaptureOptions) => DependencyPolicySnapshot = capturePolicy;

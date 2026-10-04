@@ -9,7 +9,7 @@ pub fn diff(payload: &super::ReplaceTrajectory, base: &RemodelingSnapshot) -> pr
         return protocol::MutationOutcome::error("mutation.target-missing", "There is no trajectory to clear.".to_string(), [base.id.clone()]);
     }
     if payload.trajectory == base.results.trajectory {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Trajectory is already up to date.".to_string());
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Trajectory is already up to date.".to_string());
     }
     let mut results = base.results.clone();
     results.trajectory = payload.trajectory.clone();

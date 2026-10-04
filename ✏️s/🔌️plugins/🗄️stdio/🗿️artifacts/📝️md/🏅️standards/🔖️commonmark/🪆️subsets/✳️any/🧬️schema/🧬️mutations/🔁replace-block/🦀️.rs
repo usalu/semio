@@ -19,9 +19,12 @@ impl protocol::MutationKind<MdSnapshot, MdMutation> for ReplaceBlock {
     fn diff(&self, base: &MdSnapshot) -> protocol::MutationOutcome<<MdMutation as Mutation<MdSnapshot>>::Diff> {
         agg_diff(&MdMutation::ReplaceBlock(self.clone()), base)
     }
-    fn inverse(&self, base: &MdSnapshot) -> Vec<MdMutation> {
-        agg_inverse(&MdMutation::ReplaceBlock(self.clone()), base)
-    }
+    fn inverse(&self, base: &MdSnapshot) -> Result<Vec<MdMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&MdMutation::ReplaceBlock(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Replace block", "Block ersetzen")
     }

@@ -6,6 +6,9 @@ use crate::ProgramMutation;
 use crate::ProgramSnapshot;
 
 /// ↩️ Undo a create by deleting the row it added.
-pub fn inverse(payload: &super::CreatePerformanceCriterion, _base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+pub fn inverse(payload: &super::CreatePerformanceCriterion, _base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![ProgramMutation::DeletePerformanceCriterion(super::super::delete_performance_criterion::DeletePerformanceCriterion { id: payload.performance_criterion.header.id.clone() })]
+
+    })())
 }

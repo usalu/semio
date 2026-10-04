@@ -1,0 +1,96 @@
+{
+  "cases": [
+    {
+      "id": "neuron-invalid-child-tree",
+      "owner": "neuron",
+      "payload": {
+        "id": "root",
+        "kind": "cluster",
+        "params": {
+          "owned": 1
+        },
+        "tree": 3
+      },
+      "oracle": "shape"
+    },
+    {
+      "id": "neuron-nested-integer-overflow",
+      "owner": "neuron",
+      "payload": {
+        "id": "root",
+        "kind": "cluster",
+        "params": {
+          "owned": 1
+        },
+        "tree": {
+          "neurons": [
+            {
+              "id": "child",
+              "kind": "literal",
+              "params": {
+                "value": 9223372036854776000
+              }
+            }
+          ],
+          "synapses": []
+        }
+      },
+      "oracle": "integer",
+      "integerPath": [
+        "tree",
+        "neurons",
+        "0",
+        "params",
+        "value"
+      ]
+    },
+    {
+      "id": "tree-invalid-later-neuron",
+      "owner": "tree",
+      "payload": {
+        "neurons": [
+          {
+            "id": "first",
+            "kind": "literal",
+            "params": {
+              "owned": 1
+            }
+          },
+          {
+            "id": "second"
+          }
+        ],
+        "synapses": []
+      },
+      "oracle": "shape"
+    },
+    {
+      "id": "tree-invalid-later-synapse",
+      "owner": "tree",
+      "payload": {
+        "neurons": [
+          {
+            "id": "first",
+            "kind": "literal",
+            "params": {
+              "owned": 1
+            }
+          }
+        ],
+        "synapses": [
+          {
+            "id": 3,
+            "from": "first",
+            "to": "unresolved"
+          }
+        ]
+      },
+      "oracle": "shape"
+    }
+  ],
+  "controlledRefusals": {
+    "canceled": "canceled",
+    "allocation": "ownershipLimit",
+    "malformed": "invalidValue"
+  }
+}

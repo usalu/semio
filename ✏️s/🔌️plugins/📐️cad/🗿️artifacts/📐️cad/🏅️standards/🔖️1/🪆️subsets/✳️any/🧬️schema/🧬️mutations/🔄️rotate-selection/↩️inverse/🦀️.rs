@@ -5,7 +5,8 @@ use crate::mutations::{cad_quaternion_product, cad_selection_inverse_objects, Ca
 use crate::CadSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &RotateSelection, base: &CadSnapshot) -> Vec<CadMutation> {
+pub fn inverse(payload: &RotateSelection, base: &CadSnapshot) -> Result<Vec<CadMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(delta) = payload.delta() else {
         return Vec::new();
     };
@@ -20,5 +21,7 @@ pub fn inverse(payload: &RotateSelection, base: &CadSnapshot) -> Vec<CadMutation
         return Vec::new();
     }
     vec![CadMutation::RotateObjects(RotateObjects { pane: payload.pane, placements })]
+
+    })())
 }
 //#endregion 🔖️Inverse

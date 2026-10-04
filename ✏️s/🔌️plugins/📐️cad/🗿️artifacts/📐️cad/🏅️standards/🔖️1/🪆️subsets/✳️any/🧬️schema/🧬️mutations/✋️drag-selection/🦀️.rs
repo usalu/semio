@@ -10,7 +10,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Mutation
 /// ✋️ `drag-selection` payload — the pane, the objects it moves and the world offset every one of them moves by.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "drag-selection")]
@@ -26,9 +26,12 @@ impl MutationKind<CadSnapshot, CadMutation> for DragSelection {
     fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<CadDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &CadSnapshot) -> Result<Vec<CadMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let (items_en, items_de) = cad_selection_items(self.targets.len());
         let (offset_en, offset_de) = cad_selection_vector(self.offset);

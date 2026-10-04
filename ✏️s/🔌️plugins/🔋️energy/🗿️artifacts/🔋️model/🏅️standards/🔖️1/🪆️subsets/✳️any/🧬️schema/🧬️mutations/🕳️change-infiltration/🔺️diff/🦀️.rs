@@ -17,7 +17,7 @@ pub fn diff(payload: &super::ChangeInfiltrationEffectiveLeakageArea, base: &Ener
         );
     }
     if existing.effective_leakage_area_m2 == payload.new_effective_leakage_area_m2 {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Infiltration {} already carries this effective leakage area (m²): {}.", payload.id.0, payload.new_effective_leakage_area_m2));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Infiltration {} already carries this effective leakage area (m²): {}.", payload.id.0, payload.new_effective_leakage_area_m2));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.infiltrations.iter_mut().find(|item| item.id == payload.id) {

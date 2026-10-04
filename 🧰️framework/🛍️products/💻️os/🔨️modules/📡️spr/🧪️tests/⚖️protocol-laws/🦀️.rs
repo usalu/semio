@@ -169,14 +169,13 @@ impl HistoryLogGen {
             let started_at = next_timestamp(&mut rng, profile.adversarial).await;
             let finished_at = if rng.next_bool().await { Some(next_timestamp(&mut rng, profile.adversarial).await) } else { None };
             let actor = if rng.next_bool().await { Some(next_ident(&mut rng, "actor", i, profile.adversarial).await) } else { None };
-            let coalesce_key = if rng.next_bool().await { Some(next_ident(&mut rng, "key", i, profile.adversarial).await) } else { None };
             let description = if rng.next_bool().await { Some(next_text(&mut rng, profile.adversarial).await) } else { None };
             let op_count = if profile.adversarial && rng.next_bool().await { 0 } else { rng.next_range(profile.max_ops_per_edit as u64 + 1).await as usize };
             let mut ops = Vec::with_capacity(op_count);
             for _ in 0..op_count {
                 ops.push(crate::os_spr::OpPayload { text: Some(next_text(&mut rng, profile.adversarial).await), binary: None });
             }
-            edits.push(crate::os_spr::HistoryEdit { line: None, id, actor, started_at, finished_at, coalesce_key, description, verb: None, ops, inverse: Vec::new(), meta: None, lane: None });
+            edits.push(crate::os_spr::HistoryEdit { line: None, id, actor, started_at, finished_at, description, verb: None, ops, inverse: Vec::new(), meta: None, lane: None });
         }
 
         let mut transitions: Vec<crate::os_spr::HistoryTransitionRecord> = Vec::new();
@@ -491,7 +490,8 @@ pub async fn assert_compaction_identity(bytes: &[u8]) {
     let options = crate::os_spr::CompactOptions { drop_ephemeral: true, keep_snapshots: crate::os_spr::KeepSnapshots::All };
     // 🎯️ `compact` rewrites the file in place, so it must be awaited BEFORE reading it back —
     // reading first would race the physical rewrite and observe the pre-compaction bytes.
-    crate::os_spr::compact(&path, &options, &limits).await.expect("crate::os_spr::compact must succeed on an already-valid stream");
+    let token=semio_framework_async::CancelToken::root_now();let transport=crate::os_pack::control::admit_command_transport(limits.max_total_alloc,token.clone(),|_|{}).unwrap();let context=crate::os_pack::control::CommandContext::try_new(transport,limits.max_total_alloc,token,|_|{}).unwrap();
+    crate::os_spr::compact(&path, &options, &limits, &context).await.expect("crate::os_spr::compact must succeed on an already-valid stream");
     let compacted = std::fs::read(&path);
     let _ = std::fs::remove_file(&path);
 
@@ -577,12 +577,12 @@ where
 {
     use crate::os_spr::MutationDiff;
     let (forward, messages) = mutation.diff(base).into_parts();
-    let rejected = messages.iter().any(|message| matches!(message.level, crate::os_dsl::Severity::Error | crate::os_dsl::Severity::Fatal));
+    let rejected = messages.iter().any(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal));
     let applied = (!rejected).then(|| forward.apply(base));
     forward.retire_cold();
     assert!(!rejected, "a mutation expected to invert cleanly must not have been rejected — forward outcome carries an Error/Fatal message: {messages:?}");
     let mut state = applied.expect("an unrejected forward outcome is applied").expect("valid forward diff must apply");
-    let mut backward = mutation.inverse(base);
+    let mut backward = mutation.inverse(base).expect("valid retained mutation inverse fixture");
     backward.reverse();
     for undo in &backward {
         let (delta, _) = undo.diff(&state).into_parts();
@@ -610,12 +610,12 @@ where
 {
     use crate::os_spr::MutationDiff;
     let (forward, messages) = mutation.diff(base).into_parts();
-    let rejected = messages.iter().any(|message| matches!(message.level, crate::os_dsl::Severity::Error | crate::os_dsl::Severity::Fatal));
+    let rejected = messages.iter().any(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal));
     let applied = (!rejected).then(|| forward.apply(base));
     retire_diff(forward);
     assert!(!rejected, "a mutation expected to invert cleanly must not have been rejected — forward outcome carries an Error/Fatal message: {messages:?}");
     let mut state = applied.expect("an unrejected forward outcome is applied").expect("valid forward diff must apply");
-    let mut backward = mutation.inverse(base);
+    let mut backward = mutation.inverse(base).expect("valid retained mutation inverse fixture");
     backward.reverse();
     for undo in &backward {
         let (delta, _) = undo.diff(&state).into_parts();
@@ -777,7 +777,7 @@ where
     Op::Diff: PartialEq + std::fmt::Debug + Default,
 {
     let outcome = mutation.diff(base);
-    let has_missing_target_error = outcome.messages().iter().any(|message| message.level == crate::os_dsl::Severity::Error && message.code.0 == "mutation.target-missing");
+    let has_missing_target_error = outcome.messages().iter().any(|message| message.level == semio_framework_diagnostic::Severity::Error && message.code.0 == "mutation.target-missing");
     assert!(has_missing_target_error, "a mutation targeting an absent element must carry an Error message with code 'mutation.target-missing', got {:?}", outcome.messages());
     assert_eq!(outcome.diff(), &Op::Diff::default(), "a mutation.target-missing outcome must carry no change (diff == Diff::default())");
 }
@@ -788,7 +788,7 @@ pub async fn assert_fatal_never_applies<D>(outcome: &crate::os_spr::MutationOutc
 where
     D: PartialEq + std::fmt::Debug + Default,
 {
-    if outcome.worst_level() == Some(crate::os_dsl::Severity::Fatal) {
+    if outcome.worst_level() == Some(semio_framework_diagnostic::Severity::Fatal) {
         assert_eq!(outcome.diff(), &D::default(), "a Fatal outcome must carry diff == D::default()");
     }
 }
@@ -809,23 +809,23 @@ where
 
 //#region 🔖️Policy
 const POLICY_MATRIX_POLICIES: [crate::os_spr::MergePolicy; 3] = [crate::os_spr::MergePolicy::LaissezFaire, crate::os_spr::MergePolicy::Normal, crate::os_spr::MergePolicy::Vigilant];
-const POLICY_MATRIX_LEVELS: [crate::os_dsl::Severity; 4] = [crate::os_dsl::Severity::Info, crate::os_dsl::Severity::Warning, crate::os_dsl::Severity::Error, crate::os_dsl::Severity::Fatal];
+const POLICY_MATRIX_LEVELS: [semio_framework_diagnostic::Severity; 4] = [semio_framework_diagnostic::Severity::Info, semio_framework_diagnostic::Severity::Warning, semio_framework_diagnostic::Severity::Error, semio_framework_diagnostic::Severity::Fatal];
 
 /// 📐️ The frozen 3×4 table (`📋️contract-freeze.md` "The three merge policies"): `LaissezFaire`
 /// rejects only `Fatal`; `Normal` rejects `Error`+`Fatal`; `Vigilant` rejects
 /// `Warning`+`Error`+`Fatal`.
-async fn policy_matrix_expected_reject(policy: crate::os_spr::MergePolicy, level: crate::os_dsl::Severity) -> bool {
+async fn policy_matrix_expected_reject(policy: crate::os_spr::MergePolicy, level: semio_framework_diagnostic::Severity) -> bool {
     match policy {
-        crate::os_spr::MergePolicy::LaissezFaire => level == crate::os_dsl::Severity::Fatal,
-        crate::os_spr::MergePolicy::Normal => level >= crate::os_dsl::Severity::Error,
-        crate::os_spr::MergePolicy::Vigilant => level >= crate::os_dsl::Severity::Warning,
+        crate::os_spr::MergePolicy::LaissezFaire => level == semio_framework_diagnostic::Severity::Fatal,
+        crate::os_spr::MergePolicy::Normal => level >= semio_framework_diagnostic::Severity::Error,
+        crate::os_spr::MergePolicy::Vigilant => level >= semio_framework_diagnostic::Severity::Warning,
     }
 }
 
 /// ✅️ LAW: `rejects` (typically `MergePolicy::rejects`) and `is_applicable` (typically a
 /// single-message `MutationOutcome::is_applicable` probe at `level`) must both agree with the
 /// frozen 3×4 policy matrix for every `(policy, level)` pair.
-pub async fn assert_policy_matrix(rejects: impl AsyncFn(crate::os_spr::MergePolicy, crate::os_dsl::Severity) -> bool, is_applicable: impl AsyncFn(crate::os_spr::MergePolicy, crate::os_dsl::Severity) -> bool) {
+pub async fn assert_policy_matrix(rejects: impl AsyncFn(crate::os_spr::MergePolicy, semio_framework_diagnostic::Severity) -> bool, is_applicable: impl AsyncFn(crate::os_spr::MergePolicy, semio_framework_diagnostic::Severity) -> bool) {
     for policy in POLICY_MATRIX_POLICIES {
         for level in POLICY_MATRIX_LEVELS {
             let expected_reject = policy_matrix_expected_reject(policy, level).await;
@@ -897,7 +897,7 @@ pub async fn assert_merge_convergence<P: PartialEq + std::fmt::Debug>(seed: u64,
 /// `report.replayed` must carry an `Error` message, `report.conflict` must resolve to a
 /// `ConflictKind::Degraded`, and `part_present(post_state)` must be `false`.
 pub async fn assert_modify_vs_delete<P: PartialEq + std::fmt::Debug>(policy: crate::os_spr::MergePolicy, pre_state: &P, post_state: &P, report: &crate::os_spr::MergeReport, conflicts: &[crate::os_spr::Conflict], part_present: impl Fn(&P) -> bool) {
-    let has_error = report.replayed.iter().flat_map(|edit| &edit.messages).any(|message| message.level == crate::os_dsl::Severity::Error);
+    let has_error = report.replayed.iter().flat_map(|edit| &edit.messages).any(|message| message.level == semio_framework_diagnostic::Severity::Error);
     match policy {
         crate::os_spr::MergePolicy::Normal | crate::os_spr::MergePolicy::Vigilant => {
             assert!(!report.accepted, "under {policy:?}, a modify-vs-delete remote merge must be quarantined (MergeReport::accepted == false)");

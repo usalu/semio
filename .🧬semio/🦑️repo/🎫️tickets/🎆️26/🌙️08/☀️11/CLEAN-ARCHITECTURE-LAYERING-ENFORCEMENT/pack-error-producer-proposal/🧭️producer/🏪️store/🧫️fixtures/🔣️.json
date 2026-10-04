@@ -1,0 +1,12 @@
+{"cases":[
+ {"kind":"invalidValue","reason":"same canceled allocation grammar prose","sourceBytes":null,"reservationBytes":0,"context":"mounted-pack.capacity"},
+ {"kind":"canceled","reason":"same canceled allocation grammar prose","sourceBytes":null,"reservationBytes":0,"context":"mounted-pack.capacity"},
+ {"kind":"ownershipLimit","reason":"same canceled allocation grammar prose","sourceBytes":null,"reservationBytes":0,"context":"mounted-pack.capacity"},
+ {"kind":"allocationFailed","reason":"same canceled allocation grammar prose","sourceBytes":null,"reservationBytes":0,"context":"mounted-pack.capacity"},
+ {"kind":"workLimit","reason":"same canceled allocation grammar prose","sourceBytes":null,"reservationBytes":0,"context":"mounted-pack.capacity"},
+ {"kind":"depthLimit","reason":"same canceled allocation grammar prose","sourceBytes":null,"reservationBytes":0,"context":"mounted-pack.capacity"},
+ {"kind":"unsupportedOwner","reason":"same canceled allocation grammar prose","sourceBytes":null,"reservationBytes":0,"context":"mounted-pack.capacity"},
+ {"kind":"invariantViolated","reason":"same canceled allocation grammar prose","sourceBytes":null,"reservationBytes":0,"context":"mounted-pack.capacity"},
+ {"kind":"ownershipLimit","reason":"same canceled allocation grammar prose","sourceBytes":128,"reservationBytes":0,"context":"mounted-pack.capacity"},
+ {"kind":"allocationFailed","reason":"same canceled allocation grammar prose","sourceBytes":0,"reservationBytes":64,"context":"mounted-pack.capacity"}
+]}

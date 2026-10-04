@@ -6,7 +6,7 @@
 
 use crate::editor::puzzle5d::{Puzzle5dActionCtx, Puzzle5dDocument, PUZZLE5D_SCHEMA};
 use crate::retained_command::PUZZLE_IMPORT_TOTAL_BYTES;
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 use semio_framework::kernel::IMPORT_ARGUMENT_PAYLOAD;
 use serde_json::Value as JsonValue;
 
@@ -52,7 +52,7 @@ pub fn puzzle5d_import_value(args: &Value) -> Result<JsonValue, Puzzle5dImportFa
         Some(text) => puzzle5d_decode_document(text),
         None => {
             let inline = args.get("json").or_else(|| args.get("fixture")).or_else(|| args.get(IMPORT_ARGUMENT_PAYLOAD)).ok_or(Puzzle5dImportFault::Payload)?;
-            Some(JsonValue::from(&dsl::os_pack::json::to_dsl_value(inline))).filter(is_document).ok_or(Puzzle5dImportFault::Payload)
+            Some(JsonValue::from(&semio_framework_pack_json::to_dsl_value(inline))).filter(is_document).ok_or(Puzzle5dImportFault::Payload)
         }
     }
 }

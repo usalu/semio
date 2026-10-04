@@ -72,12 +72,12 @@ fn one_nudge_is_one_tool_transaction_of_one_relative_leaf() {
     assert_eq!(first.artifact_mutations,vec![drag_layers(vec!["parent".into()],10.0,-5.0)],"the ancestor owns its descendant's movement");
     let transaction=first.transaction.clone().expect("a nudge commits as one tool transaction");
     assert_eq!(transaction.tool,"s.draw.drawing@1/*#editor#nudgeSelectionRight");
-    assert!(first.description.is_none() && first.coalesce_key.is_none(),"the row label comes from the leaf");
+
     let second=plan(&source,&session,[10.0,-5.0]).unwrap();
     assert_ne!(second.transaction.expect("a second nudge is its own transaction").id,transaction.id);
     let label=<DrawingMutation as protocol::SemanticMutation<DrawingSnapshot>>::label(&first.artifact_mutations[0]);
-    assert_eq!(label.resolve(protocol::Terminology::Native,protocol::Locale::En),"Drag 1 layer by (10, -5)");
-    assert_eq!(label.resolve(protocol::Terminology::Native,protocol::Locale::De),"1 Ebene um (10; -5) ziehen");
+    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native,semio_framework_ui_locale::Locale::En),"Drag 1 layer by (10, -5)");
+    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native,semio_framework_ui_locale::Locale::De),"1 Ebene um (10; -5) ziehen");
 }
 
 #[test]

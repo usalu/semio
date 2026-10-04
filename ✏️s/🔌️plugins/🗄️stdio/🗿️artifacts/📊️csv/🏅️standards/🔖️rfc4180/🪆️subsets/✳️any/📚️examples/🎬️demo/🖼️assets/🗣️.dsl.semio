@@ -1,4 +1,2 @@
 semio stdio.csv.dsl v1
-name,note
-alpha,plain
-"Doe, John","He said ""hi"""
+schema=stdio.csv has-header=true records=[ { fields=[ { value=name quoted=false } { value=note quoted=false } ] } { fields=[ { value=alpha quoted=false } { value=plain quoted=false } ] } { fields=[ { value="Doe, John" quoted=true } { value="He said \"hi\"" quoted=true } ] } ]

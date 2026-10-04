@@ -22,9 +22,12 @@ impl MutationKind<PdfSnapshot, PdfUaMutation> for SetInfoTitle {
         MutationOutcome::new(<PdfDiff as DiffAlgebra<PdfSnapshot>>::between(base, &next))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfUaMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfUaMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![PdfUaMutation::SetInfoTitle(SetInfoTitle { title: base.info.title.clone().unwrap_or_default() })]
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set PDF/UA title \"{}\"", self.title), &format!("PDF/UA-Titel \"{}\" setzen", self.title))

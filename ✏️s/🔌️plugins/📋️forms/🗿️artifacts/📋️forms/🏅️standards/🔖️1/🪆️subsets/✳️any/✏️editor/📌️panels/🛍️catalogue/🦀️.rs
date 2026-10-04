@@ -11,7 +11,7 @@
 
 use crate::editor::forms::config::FormsConfig;
 use crate::editor::forms::{catalogue_kinds, forms_action, parse_contributions};
-use dsl::os_pack::json::{object, Value};
+use semio_framework_pack_json::{object, Value};
 use semio_framework_plugin::tree_item_with_action;
 use semio_framework_plugin::tree_item_with_action_draggable;
 use semio_framework_plugin::ui_node_list;

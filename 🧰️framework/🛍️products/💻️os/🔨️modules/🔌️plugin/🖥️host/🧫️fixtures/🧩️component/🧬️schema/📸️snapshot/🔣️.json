@@ -9,7 +9,9 @@
   "properties": {
     "count": {
       "type": "integer",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "minimum": -2147483648,
+      "maximum": 2147483647
     }
   }
 }

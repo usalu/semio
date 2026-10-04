@@ -34,18 +34,18 @@ pub const FLOW_WIDGET_DRAG_MIME: &str = "application/x-flow-widget";
 //#endregion 🔖️Constants
 
 //#region 🔖️WidgetDescriptors
-pub fn flow_widget_descriptor(kind: &str, neuron_kind: Option<&str>) -> dsl::os_pack::json::Value {
+pub fn flow_widget_descriptor(kind: &str, neuron_kind: Option<&str>) -> semio_framework_pack_json::Value {
     if kind == "neuron" {
-        dsl::os_pack::json::object([("kind".to_string(), dsl::os_pack::json::Value::String("neuron".to_string())), ("neuronKind".to_string(), dsl::os_pack::json::Value::String(neuron_kind.unwrap_or(kind).to_string()))])
+        semio_framework_pack_json::object([("kind".to_string(), semio_framework_pack_json::Value::String("neuron".to_string())), ("neuronKind".to_string(), semio_framework_pack_json::Value::String(neuron_kind.unwrap_or(kind).to_string()))])
     } else {
-        dsl::os_pack::json::object([("kind".to_string(), dsl::os_pack::json::Value::String(kind.to_string()))])
+        semio_framework_pack_json::object([("kind".to_string(), semio_framework_pack_json::Value::String(kind.to_string()))])
     }
 }
 
 /// 🪢️ Wraps a widget descriptor into the `{mime: payload}` JSON shape `tree_item_with_action_draggable`
 /// expects for its drag-data map.
-pub fn flow_widget_drag_json(descriptor: &dsl::os_pack::json::Value) -> dsl::os_pack::json::Value {
-    dsl::os_pack::json::object([(FLOW_WIDGET_DRAG_MIME.to_string(), dsl::os_pack::json::Value::String(descriptor.to_string()))])
+pub fn flow_widget_drag_json(descriptor: &semio_framework_pack_json::Value) -> semio_framework_pack_json::Value {
+    semio_framework_pack_json::object([(FLOW_WIDGET_DRAG_MIME.to_string(), semio_framework_pack_json::Value::String(descriptor.to_string()))])
 }
 //#endregion 🔖️WidgetDescriptors
 

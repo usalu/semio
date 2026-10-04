@@ -1,0 +1,22 @@
+{
+  "at": "2026-10-03T07:17:01.127Z",
+  "status": "unmounted",
+  "rows": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧬️schema/🔣️.json",
+      "currentMatchesBefore": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧫️fixtures/🔣️.json",
+      "currentMatchesBefore": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs",
+      "currentMatchesBefore": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🗄️durable-owned-group/🟦️.ts",
+      "currentMatchesBefore": true
+    }
+  ]
+}

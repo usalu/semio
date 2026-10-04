@@ -19,7 +19,7 @@ impl CompiledDocumentHttpPortV1 {
             return Err(DocumentHttpPortCodeV1::Invalid);
         }
         let declaration_schema = OwnedJsonSchemaValidator::compile(include_str!("../🧬️schema/🔣️.json")).map_err(|_| DocumentHttpPortCodeV1::Invalid)?;
-        declaration_schema.validate_json(&pack::json::to_json_string(&declaration)).map_err(|_| DocumentHttpPortCodeV1::Invalid)?;
+        declaration_schema.validate_json(&semio_framework_pack_json::to_json_string(&declaration)).map_err(|_| DocumentHttpPortCodeV1::Invalid)?;
         let mut schemas = Vec::new();
         let mut actions = std::collections::HashSet::new();
         for operation in &declaration.operations {
@@ -29,8 +29,8 @@ impl CompiledDocumentHttpPortV1 {
             let mut validators = Vec::new();
             for source in [&operation.input_schema, &operation.output_schema] {
                 if source.len() > 32 * 1024 { return Err(DocumentHttpPortCodeV1::Bounds); }
-                let schema = pack::json::parse(source).map_err(|_| DocumentHttpPortCodeV1::Invalid)?;
-                if !schema.get("$id").and_then(pack::json::Value::as_str).is_some_and(|id| id.starts_with(&format!("{owner}:"))) { return Err(DocumentHttpPortCodeV1::Invalid); }
+                let schema = semio_framework_pack_json::parse(source, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| DocumentHttpPortCodeV1::Invalid)?;
+                if !schema.get("$id").and_then(semio_framework_pack_json::Value::as_str).is_some_and(|id| id.starts_with(&format!("{owner}:"))) { return Err(DocumentHttpPortCodeV1::Invalid); }
                 validators.push(OwnedJsonSchemaValidator::compile(source).map_err(|_| DocumentHttpPortCodeV1::Invalid)?);
             }
             let output = validators.pop().ok_or(DocumentHttpPortCodeV1::Invalid)?;
@@ -65,10 +65,10 @@ impl CompiledDocumentHttpPortV1 {
         let index=self.declaration.operations.iter().position(|operation|operation.action==action).ok_or(DocumentHttpPortCodeV1::Unavailable)?;
         let operation=&self.declaration.operations[index];
         Self::validate_payload(payload,operation.request_max_bytes)?;
-        let source=pack::json::to_json_string(payload);
+        let source=semio_framework_pack_json::to_json_string(payload);
         if source.len()>operation.request_max_bytes {return Err(DocumentHttpPortCodeV1::Bounds);}
         self.schemas[index].0.validate_json(&source).map_err(|_|DocumentHttpPortCodeV1::Invalid)?;
-        let value=pack::json::parse(&source).map_err(|_|DocumentHttpPortCodeV1::Invalid)?;
+        let value=semio_framework_pack_json::parse(&source, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_|DocumentHttpPortCodeV1::Invalid)?;
         request(operation,&value,source.into_bytes())
     }
 
@@ -78,7 +78,7 @@ impl CompiledDocumentHttpPortV1 {
         if bytes.len()>self.declaration.operations[index].response_max_bytes {return Err(DocumentHttpPortCodeV1::Bounds);}
         let source=std::str::from_utf8(bytes).map_err(|_|DocumentHttpPortCodeV1::Invalid)?;
         self.schemas[index].1.validate_json(source).map_err(|_|DocumentHttpPortCodeV1::Invalid)?;
-        let decoded=pack::json::from_json_str(source).map_err(|_|DocumentHttpPortCodeV1::Invalid)?;
+        let decoded=semio_framework_pack_json::from_json_str(source, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_|DocumentHttpPortCodeV1::Invalid)?;
         Self::validate_payload(&decoded,self.declaration.operations[index].response_max_bytes)?;
         Ok(decoded)
     }
@@ -90,15 +90,15 @@ impl CompiledDocumentHttpPortV1 {
     }
 }
 
-fn request(operation: &DocumentHttpOperationV1, input: &pack::json::Value, bytes: Vec<u8>) -> Result<DocumentHttpRequestV1, DocumentHttpPortCodeV1> {
+fn request(operation: &DocumentHttpOperationV1, input: &semio_framework_pack_json::Value, bytes: Vec<u8>) -> Result<DocumentHttpRequestV1, DocumentHttpPortCodeV1> {
     let mut segments = Vec::new();
     for segment in &operation.route {
         let value = if let Some(field) = segment.strip_prefix('{').and_then(|value| value.strip_suffix('}')) {
-            input.get(field).and_then(pack::json::Value::as_str).ok_or(DocumentHttpPortCodeV1::Invalid)?.to_string()
+            input.get(field).and_then(semio_framework_pack_json::Value::as_str).ok_or(DocumentHttpPortCodeV1::Invalid)?.to_string()
         } else { segment.clone() };
         segments.push(value);
     }
-    let after = operation.cursor_field.as_ref().map(|field| input.get(field).and_then(pack::json::Value::as_u64).ok_or(DocumentHttpPortCodeV1::Invalid)).transpose()?;
+    let after = operation.cursor_field.as_ref().map(|field| input.get(field).and_then(semio_framework_pack_json::Value::as_u64).ok_or(DocumentHttpPortCodeV1::Invalid)).transpose()?;
     Ok(DocumentHttpRequestV1 { method: if operation.method == "GET" { HttpMethod::Get } else { HttpMethod::Post }, segments, after, body: operation.send_body.then_some(bytes), request_max_bytes: operation.request_max_bytes, response_max_bytes: operation.response_max_bytes })
 }
 

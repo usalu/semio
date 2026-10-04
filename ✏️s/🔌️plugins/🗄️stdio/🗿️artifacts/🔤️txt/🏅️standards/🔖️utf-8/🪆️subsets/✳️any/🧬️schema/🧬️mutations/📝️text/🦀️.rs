@@ -1,6 +1,6 @@
 //! 📝️ Generic framing and descriptor roster for the transparent TxtMutation.
 //#region 🔖️Registry
-use crate::schema::mutations::{insert_line, remove_line, set_line, set_line_ending, set_trailing_newline, TxtMutation};
+use crate::schema::mutations::{insert_line, remove_line, set_line, set_line_ending, set_snapshot, set_trailing_newline, TxtMutation};
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 struct TextCodec {
@@ -9,18 +9,19 @@ struct TextCodec {
     decode: fn(&str) -> Result<TxtMutation, String>,
 }
 const TEXT_CODECS: &[TextCodec] = &[
+    TextCodec { opcode: set_snapshot::text::TEXT_OPCODE, try_encode: set_snapshot::text::try_encode, decode: set_snapshot::text::decode_mutation },
     TextCodec { opcode: set_trailing_newline::text::TEXT_OPCODE, try_encode: set_trailing_newline::text::try_encode, decode: set_trailing_newline::text::decode_mutation },
     TextCodec { opcode: set_line_ending::text::TEXT_OPCODE, try_encode: set_line_ending::text::try_encode, decode: set_line_ending::text::decode_mutation },
     TextCodec { opcode: insert_line::text::TEXT_OPCODE, try_encode: insert_line::text::try_encode, decode: insert_line::text::decode_mutation },
     TextCodec { opcode: remove_line::text::TEXT_OPCODE, try_encode: remove_line::text::try_encode, decode: remove_line::text::decode_mutation },
     TextCodec { opcode: set_line::text::TEXT_OPCODE, try_encode: set_line::text::try_encode, decode: set_line::text::decode_mutation },
 ];
-pub const TEXT_OPCODES: &[&str] = &[set_trailing_newline::text::TEXT_OPCODE, set_line_ending::text::TEXT_OPCODE, insert_line::text::TEXT_OPCODE, remove_line::text::TEXT_OPCODE, set_line::text::TEXT_OPCODE];
+pub const TEXT_OPCODES: &[&str] = &[set_snapshot::text::TEXT_OPCODE, set_trailing_newline::text::TEXT_OPCODE, set_line_ending::text::TEXT_OPCODE, insert_line::text::TEXT_OPCODE, remove_line::text::TEXT_OPCODE, set_line::text::TEXT_OPCODE];
 //#endregion 🔖️Registry
 
 //#region 🔖️Framing
-fn error(detail: impl Into<String>) -> store::TextError {
-    store::TextError::new(detail.into(), dsl::TextSpan::at(1, 1))
+fn error(detail: impl Into<String>) -> semio_framework_diagnostic::TextError {
+    semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail.into(), semio_framework_diagnostic::TextSpan::at(1, 1))
 }
 fn encode_hex(bytes: &[u8]) -> String {
     const HEX: &[u8; 16] = b"0123456789abcdef";
@@ -55,7 +56,7 @@ impl protocol::OpText for TxtMutation {
         format!("txt-mutation {opcode} payload={}", encode_hex(payload.expect("leaf text payload serialization").as_bytes()))
     }
 
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let frame = line.strip_prefix("txt-mutation ").ok_or_else(|| error("expected txt mutation frame"))?;
         let (opcode, payload) = frame.split_once(" payload=").ok_or_else(|| error("expected opcode and payload"))?;
         let bytes = decode_hex(payload).map_err(error)?;

@@ -9,7 +9,7 @@ pub fn diff(payload: &UpdateSiloShellInputs, base: &En1993Snapshot) -> protocol:
     let mut values = base.silo_shells.clone();
     if let Some(idx) = values.iter().position(|x| x.id == payload.silo_shell.id) {
         if values[idx] == payload.silo_shell {
-            return protocol::MutationOutcome::empty().warn("mutation.no-op", "Entity already has this value.");
+            return protocol::MutationOutcome::empty().warning("mutation.no-op", "Entity already has this value.");
         }
         values[idx] = payload.silo_shell.clone();
     } else {

@@ -8,7 +8,6 @@
 
 use crate::LasSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::bounds::compute_las_bounds;
 //#region 🔖️Inference
@@ -23,8 +22,11 @@ pub struct LasInference {
 }
 
 impl protocol::Inference<LasSnapshot> for LasInference {
-    fn infer(snapshot: &LasSnapshot) -> Self {
+    fn infer(snapshot: &LasSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { bounds: compute_las_bounds(snapshot) }
+    
+        })
     }
 }
 
@@ -32,7 +34,9 @@ impl protocol::Inference<LasSnapshot> for LasInference {
 /// `LasSnapshot::default()`'s `header` ever stops being all-zero.
 impl Default for LasInference {
     fn default() -> Self {
-        <Self as protocol::Inference<LasSnapshot>>::infer(&LasSnapshot::default())
+        let snapshot = &LasSnapshot::default();
+
+        Self { bounds: compute_las_bounds(snapshot) }
     }
 }
 
@@ -48,17 +52,6 @@ impl protocol::InferenceSpec<LasSnapshot> for LasInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 💡️ No `InferredField`s here — `bounds` is a direct honest read of the header's own
-/// spec-mandated declared bounds/count fields, already O(1) with no per-entity decomposition (a
-/// merkle dep-chain over a flat header-field read costs more than the read it would cache) — the
-/// default `infer_cached` passthrough is exact.
-impl ArtifactInferrer for crate::standards::v1_0::subsets::any::schema::LasBuilder {
-    type Snapshot = LasSnapshot;
-    type Inference = LasInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.las.inference`'s facet leaves into the OS-wide inference catalog —

@@ -68,6 +68,7 @@ Feature: Move a real scanned TIFF across every axis of the Adobe TIFF 6.0 Baseli
       | remove-tile-tags |  | {"kind": "insert-tile-tags", "params": {"tileWidth": 256, "tileLength": 256}} | {} |
       | set-strip-offsets |  | {} | {"offsets":[8,65536]} |
       | remove-strip-offsets | stdio.tiff.baseline.missing-strip-offsets | {} | {} |
+      | patch-snapshot | stdio.tiff.baseline.unsupported-compression | {} | {"patch": {"operation": "set", "path": "/ifds/0/entries/3/values/value", "value": [5]}} |
 
   @id-inverse
   @level-exhaustive
@@ -89,4 +90,5 @@ Feature: Move a real scanned TIFF across every axis of the Adobe TIFF 6.0 Baseli
       | remove-tile-tags |  | {"kind": "insert-tile-tags", "params": {"tileWidth": 256, "tileLength": 256}} | {} |
       | set-strip-offsets |  | {} | {"offsets":[8,65536]} |
       | remove-strip-offsets | stdio.tiff.baseline.missing-strip-offsets | {} | {} |
+      | patch-snapshot | stdio.tiff.baseline.unsupported-compression | {} | {"patch": {"operation": "set", "path": "/ifds/0/entries/3/values/value", "value": [5]}} |
 

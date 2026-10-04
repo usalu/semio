@@ -4,7 +4,10 @@ use crate::mutations::{delete_object, CadMutation};
 use crate::CadSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &CreateObject, _base: &CadSnapshot) -> Vec<CadMutation> {
+pub fn inverse(payload: &CreateObject, _base: &CadSnapshot) -> Result<Vec<CadMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![CadMutation::DeleteObject(delete_object::DeleteObject { pane: payload.pane, object_id: payload.object.id.clone() })]
+
+    })())
 }
 //#endregion 🔖️Inverse

@@ -5,17 +5,14 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 //!
-//! ⚠️ Why this leaf pins the NO-OP branch: `EquationSnapshot` keeps its graph and its point
-//! cloud in three co-derived composed CHILDREN (`notation`/`results`/`computed`,
-//! `🔖️WorkingScene`), and every state-changing equation diff re-mints all three through
-//! `equation_children_from_state`, which attaches the live `(graph, geometry)` pair as the
-//! handle's LOCAL OWNER — an in-process value no committed JSON can carry into an `➡️after`. A committed snapshot therefore decodes to an UNRESOLVED handle and
-//! `equation_scene` fails soft to an EMPTY point cloud, which this committed payload replays
-//! verbatim, taking `replace-points`' own whole-value `mutation.no-op` guard.
+//! ⚠️ Model (a) (design §20.15): the committed snapshot carries its graph and its point cloud INLINE as parent-owned
+//! fields, every leaf decides from them, and the `notation`/`results`/`computed` handles are the content addresses of their
+//! derivation (`crate::equation_children`), kept exact by the fixture writer law. This vector pins the outcome its
+//! `🎯️outcome` declares on that committed state.
 
 use crate::standards::v1::subsets::geometry::schema::mutations::replace_points::ReplacePoints;
-use crate::{equation_geometry, EquationDiff, EquationMutation, EquationPoint, EquationSnapshot};
-use semio_framework_os_kernel::ToValue;
+use crate::{EquationDiff, EquationMutation, EquationPoint, EquationSnapshot};
+use semio_framework_value::ToValue;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔄️replace/🧪️replays/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔄️replace/🧪️replays/📸️snapshot/➡️after/🔣️.json");
@@ -24,13 +21,13 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔄️replace/🧪️replays/🎯️outcome/🔣️.json");
 
 fn before() -> EquationSnapshot {
-    pack::from_json_str(BEFORE).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> EquationSnapshot {
-    pack::from_json_str(AFTER).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> EquationMutation {
-    pack::from_json_str(MUTATION).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 fn produced() -> protocol::MutationOutcome<EquationDiff> {
     <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(&mutation(), &before())
@@ -44,7 +41,7 @@ async fn applies_to_committed_after() {
     let EquationMutation::ReplacePoints(payload) = mutation() else {
         panic!("replays-the-identical-empty-point-cloud's committed mutation must be a replace-points");
     };
-    assert_eq!(equation_geometry(&base).points, payload.points, "the committed payload must be exactly the point cloud BASE resolves to, or the no-op guard is never reached");
+    assert_eq!(base.geometry.points, payload.points, "the committed payload must be exactly the point cloud BASE resolves to, or the no-op guard is never reached");
     let applied = <EquationDiff as protocol::MutationDiff<EquationSnapshot>>::apply(produced().diff(), &base).expect("an empty diff still applies cleanly");
     assert_eq!(applied, expected_after(), "replace-points/replays-the-identical-empty-point-cloud: applied state differs from committed after-snapshot");
     assert_eq!((applied.notation, applied.results, applied.computed), (base.notation, base.results, base.computed), "a no-op replace-points must not mint a fresh notation/results/computed triple");
@@ -55,7 +52,7 @@ async fn applies_to_committed_after() {
 #[semio_framework_async_macros::async_test]
 async fn inverse_restores_before() {
     let base = before();
-    let inverse = <EquationMutation as protocol::Mutation<EquationSnapshot>>::inverse(&mutation(), &base);
+    let inverse = <EquationMutation as protocol::Mutation<EquationSnapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![EquationMutation::ReplacePoints(ReplacePoints { points: Vec::new() })], "replace-points inverts to a replace-points carrying BASE's whole prior cloud, got {inverse:?}");
     let mut snapshot = <EquationDiff as protocol::MutationDiff<EquationSnapshot>>::apply(produced().diff(), &base).expect("forward applies");
     for step in &inverse {
@@ -69,53 +66,53 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: EquationSnapshot = pack::from_json_str(text).expect("snapshot decodes");
-        let reencoded = pack::json_from_dsl_value(&decoded.to_value());
-        let original = pack::parse_json(text).expect("snapshot reparses");
-        assert!(pack::json::value_eq_ignoring_object_order(&reencoded, &original), "replace-points/replays-the-identical-empty-point-cloud: committed {label} JSON is not canonical ({reencoded:?} vs {original:?})");
+        let decoded: EquationSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = semio_framework_pack_json::from_dsl_value(&decoded.to_value());
+        let original = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot reparses");
+        assert!(semio_framework_pack_json::value_eq_ignoring_object_order(&reencoded, &original), "replace-points/replays-the-identical-empty-point-cloud: committed {label} JSON is not canonical ({reencoded:?} vs {original:?})");
     }
-    let reencoded = pack::json_from_dsl_value(&(mutation()).to_value());
-    let original = pack::parse_json(MUTATION).expect("mutation reparses");
-    assert!(pack::json::value_eq_ignoring_object_order(&reencoded, &original), "replace-points/replays-the-identical-empty-point-cloud: committed mutation JSON is not canonical ({reencoded:?} vs {original:?})");
+    let reencoded = semio_framework_pack_json::from_dsl_value(&(mutation()).to_value());
+    let original = semio_framework_pack_json::parse(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation reparses");
+    assert!(semio_framework_pack_json::value_eq_ignoring_object_order(&reencoded, &original), "replace-points/replays-the-identical-empty-point-cloud: committed mutation JSON is not canonical ({reencoded:?} vs {original:?})");
 }
 
 /// 🎯️ The declared outcome — `no-op`, with one `mutation.no-op` warning — is what the builder emits.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
-    let outcome = pack::parse_json(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(pack::JsonValue::as_str), Some("no-op"), "replace-points/replays-the-identical-empty-point-cloud declares a no-op outcome");
+    let outcome = semio_framework_pack_json::parse(OUTCOME, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
+    assert_eq!(outcome.get("status").and_then(semio_framework_pack_json::Value::as_str), Some("no-op"), "replace-points/replays-the-identical-empty-point-cloud declares a no-op outcome");
     let emitted = produced();
     let messages = emitted.messages();
     assert_eq!(messages.len(), 1, "exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.no-op", "replaying an identical point cloud is reported as no-op");
-    assert_eq!(messages[0].level, protocol::Severity::Warning, "a no-op is a Warning — never a refusal, it just changes nothing");
-    let declared = outcome.get("messages").and_then(pack::JsonValue::as_array).expect("the declared outcome carries its warning");
-    assert_eq!(declared[0].get("code").and_then(pack::JsonValue::as_str), Some(messages[0].code.0.as_str()), "the declared code must match the emitted one");
+    assert_eq!(messages[0].level, semio_framework_diagnostic::Severity::Warning, "a no-op is a Warning — never a refusal, it just changes nothing");
+    let declared = outcome.get("messages").and_then(semio_framework_pack_json::Value::as_array).expect("the declared outcome carries its warning");
+    assert_eq!(declared[0].get("code").and_then(semio_framework_pack_json::Value::as_str), Some(messages[0].code.0.as_str()), "the declared code must match the emitted one");
 }
 
-/// 🔺️ A no-op emits the artifact's `Default` diff — all four artifact slots `null`.
+/// 🔺️ A no-op emits the artifact's `Default` diff — all six artifact slots `null`.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = produced();
     assert_eq!(outcome.diff(), &EquationDiff::default(), "a no-op replace-points must carry the empty diff, never a re-minted child triple");
-    let produced_value = pack::json_from_dsl_value(&(outcome.diff()).to_value());
-    let committed = pack::parse_json(DIFF).expect("committed diff decodes");
-    assert!(pack::json::value_eq_ignoring_object_order(&produced_value, &committed), "replace-points/replays-the-identical-empty-point-cloud: produced diff differs from the committed 🔺️diff/🔣️.json ({produced_value:?} vs {committed:?})");
+    let produced_value = semio_framework_pack_json::from_dsl_value(&(outcome.diff()).to_value());
+    let committed = semio_framework_pack_json::parse(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    assert!(semio_framework_pack_json::value_eq_ignoring_object_order(&produced_value, &committed), "replace-points/replays-the-identical-empty-point-cloud: produced diff differs from the committed 🔺️diff/🔣️.json ({produced_value:?} vs {committed:?})");
 }
 
 /// 🔣️ The committed diff is canonical and decodes to `EquationDiff`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: EquationDiff = pack::from_json_str(DIFF).expect("committed diff decodes");
-    let reencoded = pack::json_from_dsl_value(&decoded.to_value());
-    let original = pack::parse_json(DIFF).expect("committed diff reparses");
-    assert!(pack::json::value_eq_ignoring_object_order(&reencoded, &original), "replace-points/replays-the-identical-empty-point-cloud: committed diff JSON is not canonical ({reencoded:?} vs {original:?})");
+    let decoded: EquationDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let reencoded = semio_framework_pack_json::from_dsl_value(&decoded.to_value());
+    let original = semio_framework_pack_json::parse(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff reparses");
+    assert!(semio_framework_pack_json::value_eq_ignoring_object_order(&reencoded, &original), "replace-points/replays-the-identical-empty-point-cloud: committed diff JSON is not canonical ({reencoded:?} vs {original:?})");
 }
 
 /// 🩹 Applying the committed (empty) diff to `before` yields the committed `after` unchanged.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: EquationDiff = pack::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: EquationDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let produced_snapshot = <EquationDiff as protocol::MutationDiff<EquationSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced_snapshot, expected_after(), "replace-points/replays-the-identical-empty-point-cloud: committed diff did not carry before to after");
 }

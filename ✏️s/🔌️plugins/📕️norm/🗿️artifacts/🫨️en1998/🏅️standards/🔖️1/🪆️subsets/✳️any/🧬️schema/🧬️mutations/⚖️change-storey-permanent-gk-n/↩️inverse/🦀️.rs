@@ -2,7 +2,8 @@
 use super::ChangeStoreyPermanentGkN;
 use crate::{En1998Mutation, En1998Snapshot};
 
-pub fn inverse(payload: &ChangeStoreyPermanentGkN, base: &En1998Snapshot) -> Vec<En1998Mutation> {
+pub fn inverse(payload: &ChangeStoreyPermanentGkN, base: &En1998Snapshot) -> Result<Vec<En1998Mutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.buildings.get(payload.building_index).and_then(|b| b.storeys.get(payload.storey_index)) {
         Some(st) => vec![En1998Mutation::ChangeStoreyPermanentGkN(ChangeStoreyPermanentGkN {
             building_index: payload.building_index,
@@ -11,4 +12,6 @@ pub fn inverse(payload: &ChangeStoreyPermanentGkN, base: &En1998Snapshot) -> Vec
         })],
         None => Vec::new(),
     }
+
+    })())
 }

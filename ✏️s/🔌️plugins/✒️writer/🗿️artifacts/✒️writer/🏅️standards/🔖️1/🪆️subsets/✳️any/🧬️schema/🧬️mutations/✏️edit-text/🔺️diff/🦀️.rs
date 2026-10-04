@@ -10,7 +10,7 @@ use crate::WriterSnapshot;
 /// text, rather than diffing character-by-character — see that file's `🔖️Builders` doc comment).
 pub fn diff(payload: &EditText, base: &WriterSnapshot) -> protocol::MutationOutcome<WriterDiff> {
     if crate::writer_text(base) == payload.text {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Document text is unchanged.".to_string());
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Document text is unchanged.".to_string());
     }
     protocol::MutationOutcome::new(crate::standards::v1::subsets::any::io::diff::text::diff_set_text(&payload.text, &base.id, &base.language_id))
 }

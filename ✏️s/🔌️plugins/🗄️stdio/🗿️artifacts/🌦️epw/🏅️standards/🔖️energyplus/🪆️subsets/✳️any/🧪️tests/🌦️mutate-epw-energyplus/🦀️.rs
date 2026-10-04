@@ -48,7 +48,7 @@ fn inverse_spec(original: &[u8], forward: &Json) -> Result<Json, String> {
     let snapshot = epw_snapshot_wire(original)?;
     let header = |kind: &str, key: &str, member: &str| Ok(kind_spec(kind, json_object(vec![(key, snapshot.get(member).cloned().unwrap_or(Json::Null))])));
     match forward.str("kind").as_str() {
-        "set-snapshot" => Ok(kind_spec("set-snapshot", json_object(vec![("snapshot", snapshot.clone())]))),
+        "set-snapshot" | "patch-snapshot" => Ok(kind_spec("set-snapshot", json_object(vec![("snapshot", snapshot.clone())]))),
         "set-location" => header("set-location", "location", "location"),
         "set-design-conditions" => header("set-design-conditions", "value", "designConditions"),
         "set-typical-extreme-periods" => header("set-typical-extreme-periods", "value", "typicalExtremePeriods"),
@@ -166,7 +166,7 @@ mod subject {
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let mut snapshot = decode(&mutable_input(ctx)?)?;
         let forward = mutation_of(&ctx.doc_json()?)?;
-        let backward = mutation_inverse(&forward, &snapshot);
+        let backward = mutation_inverse(&forward, &snapshot).expect("valid retained mutation inverse fixture");
         apply_epw_mutation(&mut snapshot, &forward);
         for mutation in &backward {
             apply_epw_mutation(&mut snapshot, mutation);

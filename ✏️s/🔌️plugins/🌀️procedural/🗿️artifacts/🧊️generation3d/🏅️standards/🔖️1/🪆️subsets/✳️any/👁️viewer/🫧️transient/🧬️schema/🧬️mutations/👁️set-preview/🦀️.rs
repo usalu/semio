@@ -3,7 +3,7 @@
 
 use super::{Generation3dViewTransient, Generation3dViewTransientMutation};
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[dsl(keyword = "set-preview-eval")]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
@@ -20,9 +20,12 @@ impl protocol::MutationKind<Generation3dViewTransient, Generation3dViewTransient
         protocol::MutationOutcome::new(next)
     }
 
-    fn inverse(&self, base: &Generation3dViewTransient) -> Vec<Generation3dViewTransientMutation> {
+    fn inverse(&self, base: &Generation3dViewTransient) -> Result<Vec<Generation3dViewTransientMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![Self { eval_text: base.preview_eval_text.clone() }.into()]
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set Preview Eval", "Vorschauauswertung setzen")

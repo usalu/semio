@@ -11,7 +11,7 @@ pub fn diff(payload: &ChangeMemberAxisDistance, base: &En1992Snapshot) -> protoc
         return protocol::MutationOutcome::error("mutation.target-missing", "Member has no fire spec.", Vec::<String>::new());
     };
     if (f.axis_distance - payload.new_axis_distance).abs() < f64::EPSILON {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Value unchanged.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Value unchanged.");
     }
     f.axis_distance = payload.new_axis_distance;
     protocol::MutationOutcome::new(En1992Diff { members: Some(En1992MemberList { values: members }), ..Default::default() })

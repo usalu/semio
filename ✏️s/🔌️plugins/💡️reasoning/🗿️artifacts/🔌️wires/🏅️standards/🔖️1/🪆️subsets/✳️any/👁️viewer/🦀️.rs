@@ -71,9 +71,12 @@ impl ArtifactViewer for WiresViewer {
     }
     const DOCUMENT_SCHEMA: &'static str = MINDMAP_WIRES_SCHEMA;
 
-    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {
+ Ok((||{
         crate::genesis_wires_child_pack(snapshot, slot, child_id)
-    }
+    
+})())
+}
 
     /// 🔐️ The artifact's own document-store owner catalogue, identical to the sibling editor's: a viewer holds the same
     /// snapshot and must retire its owned values the same way, never through the framework's generic bounded owners.
@@ -102,7 +105,7 @@ impl ArtifactViewer for WiresViewer {
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
         match body_key {
-            canvas::WIRES_VIEW_BODY_CANVAS => canvas::render(doc.snapshot),
+            canvas::WIRES_VIEW_BODY_CANVAS => canvas::render(&crate::wires_composed_from_children(doc.snapshot, &doc.children).map_err(|fault| semio_framework_plugin::PluginAssemblyError::new(fault.code.0, fault.message))?),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "wires diagnostic admission failed")),
         }
         .map(semio_framework_plugin::built_to_component_tree)

@@ -5,7 +5,8 @@ use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::op::DrawingMutation;
 use crate::schema::find_drawing_layer_location;
 use crate::DrawingSnapshot;
-use dsl::{FromValue, ToValue};
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
 //#region 🔖️DocumentHelpers
@@ -24,7 +25,7 @@ pub(crate) fn resolve_reorder_target(document: &DrawingSnapshot, target_row_id: 
 }
 //#endregion 🔖️DocumentHelpers
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "move-layer")]
 pub struct MoveLayer {
     pub layer_id: String,

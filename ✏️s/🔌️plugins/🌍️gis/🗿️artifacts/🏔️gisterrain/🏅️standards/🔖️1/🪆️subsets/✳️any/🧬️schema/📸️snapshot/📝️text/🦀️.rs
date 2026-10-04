@@ -12,7 +12,7 @@ use crate::GisTerrainSnapshot;
 pub const REUSE_TERRAIN_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
 /// 📖️ Parses `.gisterrain` DSL text into a `GisTerrainSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<GisTerrainSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<GisTerrainSnapshot, semio_framework_diagnostic::TextError> {
     <GisTerrainSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 

@@ -1,0 +1,13 @@
+{
+ "$schema":"http://json-schema.org/draft-07/schema#",
+ "type":"object",
+ "additionalProperties":false,
+ "required":["table","rowid","malformedRefusal","columnRefusal","edits"],
+ "properties":{
+  "table":{"const":"exact_scalar"},
+  "rowid":{"const":1},
+  "malformedRefusal":{"const":"invalidValue"},
+  "columnRefusal":{"const":"workLimit"},
+  "edits":{"type":"array","minItems":6,"maxItems":6,"items":{"type":"string","minLength":1}}
+ }
+}

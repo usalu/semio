@@ -13,9 +13,9 @@ pub fn diff(payload: &super::DragSlots, base: &Wfc2dSnapshot) -> protocol::Mutat
         return protocol::MutationOutcome::error("mutation.target-missing", format!("none of the {} target(s) is a slot of this document", payload.targets.len()), payload.targets.clone());
     }
     let partial: Vec<protocol::MutationMessage> =
-        (!missing.is_empty()).then(|| protocol::MutationMessage::warn("mutation.partial", format!("{} of {} target(s) skipped (not in this document): {}", missing.len(), payload.targets.len(), missing.join(", "))).at(missing)).into_iter().collect();
+        (!missing.is_empty()).then(|| protocol::MutationMessage::warning("mutation.partial", format!("{} of {} target(s) skipped (not in this document): {}", missing.len(), payload.targets.len(), missing.join(", "))).at(missing)).into_iter().collect();
     if (payload.dx, payload.dy) == (0.0, 0.0) {
-        return protocol::MutationOutcome::new(Wfc2dDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warn("mutation.no-op", "a zero offset moves nothing").at(payload.targets.clone())]));
+        return protocol::MutationOutcome::new(Wfc2dDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "a zero offset moves nothing").at(payload.targets.clone())]));
     }
     let slots_upserted = base
         .slots

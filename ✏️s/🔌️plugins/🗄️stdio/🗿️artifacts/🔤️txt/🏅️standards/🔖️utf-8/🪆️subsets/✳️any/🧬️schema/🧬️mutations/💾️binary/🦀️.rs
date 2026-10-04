@@ -3,7 +3,7 @@
 /// 📦 Encodes a recognized mutation payload or declines another variant.
 pub type TxtMutationPayloadEncoder = fn(&TxtMutation) -> Option<Result<Vec<u8>, String>>;
 
-use crate::schema::mutations::{insert_line, remove_line, set_line, set_line_ending, set_trailing_newline, TxtMutation};
+use crate::schema::mutations::{insert_line, remove_line, set_line, set_line_ending, set_snapshot, set_trailing_newline, TxtMutation};
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 struct BinaryCodec {
@@ -12,6 +12,7 @@ struct BinaryCodec {
     decode: fn(&[u8]) -> Result<TxtMutation, String>,
 }
 const BINARY_CODECS: &[BinaryCodec] = &[
+    BinaryCodec { tag: set_snapshot::binary::BINARY_TAG, try_encode: set_snapshot::binary::try_encode, decode: set_snapshot::binary::decode_mutation },
     BinaryCodec { tag: set_trailing_newline::binary::BINARY_TAG, try_encode: set_trailing_newline::binary::try_encode, decode: set_trailing_newline::binary::decode_mutation },
     BinaryCodec { tag: set_line_ending::binary::BINARY_TAG, try_encode: set_line_ending::binary::try_encode, decode: set_line_ending::binary::decode_mutation },
     BinaryCodec { tag: insert_line::binary::BINARY_TAG, try_encode: insert_line::binary::try_encode, decode: insert_line::binary::decode_mutation },
@@ -19,6 +20,7 @@ const BINARY_CODECS: &[BinaryCodec] = &[
     BinaryCodec { tag: set_line::binary::BINARY_TAG, try_encode: set_line::binary::try_encode, decode: set_line::binary::decode_mutation },
 ];
 pub const BINARY_TAGS: &[(&str, u32)] = &[
+    (set_snapshot::text::TEXT_OPCODE, set_snapshot::binary::BINARY_TAG),
     (set_trailing_newline::text::TEXT_OPCODE, set_trailing_newline::binary::BINARY_TAG),
     (set_line_ending::text::TEXT_OPCODE, set_line_ending::binary::BINARY_TAG),
     (insert_line::text::TEXT_OPCODE, insert_line::binary::BINARY_TAG),

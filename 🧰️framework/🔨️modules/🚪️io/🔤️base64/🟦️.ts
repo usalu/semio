@@ -54,6 +54,20 @@ function sextet(byte: number, index: number): number {
   throw new Base64DecodeError({ kind: "invalidByte", index, byte });
 }
 
+/** 🧮️ Validates one standard-alphabet quartet and writes at most three bytes without allocation. */
+export function decodeBase64Quad(quad:ArrayLike<number>,index:number,last:boolean,output:Uint8Array,at=0):number {
+  if(quad.length!==4)throw new Base64DecodeError({kind:"invalidLength"});
+  if(quad[0]===61||quad[1]===61)throw new Base64DecodeError({kind:"invalidPadding"});
+  const a=sextet(quad[0]!,index),b=sextet(quad[1]!,index+1),pad2=quad[2]===61,pad1=quad[3]===61;
+  if((pad1||pad2)&&!last||pad2&&!pad1)throw new Base64DecodeError({kind:"invalidPadding"});
+  const c=pad2?0:sextet(quad[2]!,index+2),d=pad1?0:sextet(quad[3]!,index+3);
+  if(pad2&&(b&15)!==0||pad1&&!pad2&&(c&3)!==0)throw new Base64DecodeError({kind:"nonCanonicalTrailingBits"});
+  const count=pad2?1:pad1?2:3;
+  if(!(output instanceof Uint8Array)||!Number.isSafeInteger(at)||at<0||at+count>output.length)throw new RangeError("Base64 quartet output is too small");
+  output[at]=(a<<2)|(b>>>4);if(count>1)output[at+1]=(b<<4)|(c>>>2);if(count>2)output[at+2]=(c<<6)|d;
+  return count;
+}
+
 /** 🔤️ Decodes padded RFC 4648 standard base64 and rejects whitespace, misplaced padding and
  * non-canonical unused bits — throwing {@link Base64DecodeError}, never returning partial bytes. */
 export function base64StandardDecode(encoded:string):Uint8Array{return base64StandardDecodeControlled(encoded,{maximumOutputBytes:Number.MAX_SAFE_INTEGER,progress:()=>true});}
@@ -92,18 +106,16 @@ export function base64StandardDecodeControlled(text:string,control:Base64Control
   if(text.length%4)throw new Base64DecodeError({kind:"invalidLength"});
   const padding=text.endsWith("==")?2:text.endsWith("=")?1:0;
   const size=text.length/4*3-padding;admit(size,control);checkpoint(control,"validate",0,text.length);
+  const quad=new Array<number>(4),scratch=new Uint8Array(3);
   for(let offset=0;offset<text.length;offset+=4){
-    if(text[offset]==="="||text[offset+1]==="=")throw new Base64DecodeError({kind:"invalidPadding"});
-    const a=sextet(text.charCodeAt(offset),offset),b=sextet(text.charCodeAt(offset+1),offset+1),pad2=text[offset+2]==="=",pad1=text[offset+3]==="=",last=offset+4===text.length;
-    if(((pad1||pad2)&&!last)||(pad2&&!pad1))throw new Base64DecodeError({kind:"invalidPadding"});
-    const c=pad2?0:sextet(text.charCodeAt(offset+2),offset+2);if(!pad1)sextet(text.charCodeAt(offset+3),offset+3);
-    if((pad2&&(b&15)!==0)||(pad1&&!pad2&&(c&3)!==0))throw new Base64DecodeError({kind:"nonCanonicalTrailingBits"});
+    for(let i=0;i<4;i++)quad[i]=text.charCodeAt(offset+i);
+    const last=offset+4===text.length;decodeBase64Quad(quad,offset,last,scratch);
     if((offset+4)%4096===0||last)checkpoint(control,"validate",offset+4,text.length);
   }
   checkpoint(control,"decode",0,text.length);const bytes=new Uint8Array(size);let output=0;
   for(let offset=0;offset<text.length;offset+=4){
-    const a=sextet(text.charCodeAt(offset),offset),b=sextet(text.charCodeAt(offset+1),offset+1),c=text[offset+2]==="="?0:sextet(text.charCodeAt(offset+2),offset+2),d=text[offset+3]==="="?0:sextet(text.charCodeAt(offset+3),offset+3);
-    bytes[output++]=(a<<2)|(b>>>4);if(output<size)bytes[output++]=(b<<4)|(c>>>2);if(output<size)bytes[output++]=(c<<6)|d;
+    for(let i=0;i<4;i++)quad[i]=text.charCodeAt(offset+i);
+    output+=decodeBase64Quad(quad,offset,offset+4===text.length,bytes,output);
     if((offset+4)%4096===0||offset+4===text.length)checkpoint(control,"decode",offset+4,text.length);
   }
   return bytes;

@@ -23,7 +23,8 @@ use canvas::lod::{Lod, LodScale};
 use std::cell::RefCell;
 // 🌱️ `ToValue`/`FromValue` here is the first-party analog of `Serialize`/`Deserialize`, for ticket
 // 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-use dsl::{FromValue, ToValue};
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
 
 // #region 🔖️MapPalette
 fn map_color(rgba: [f32; 4]) -> Color {
@@ -1502,7 +1503,7 @@ impl MapExtension for DefaultMapExtension {
 // 🌱️ `source_url`'s `#[serde(alias = "sourceUrl")]` has NO `#[value(...)]` equivalent (derive has no
 // alias support) — read-compat gap, not replicated in `FromValue` on purpose rather than faked.
 // Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[derive(Clone, Debug, serde::Deserialize, FromValue)]
+#[derive(Clone, Debug, serde::Deserialize, semio_framework_value::FromValue)]
 pub struct PositionData {
     pub id: String,
     pub lon: f64,
@@ -1524,7 +1525,7 @@ pub struct PositionData {
     pub source_url: Option<String>,
 }
 
-#[derive(Clone, Debug, serde::Deserialize, FromValue)]
+#[derive(Clone, Debug, serde::Deserialize, semio_framework_value::FromValue)]
 pub struct RouteData {
     pub id: String,
     pub points: Vec<[f64; 2]>,
@@ -1537,13 +1538,13 @@ fn default_route_stroke() -> f64 {
     ui_styling::strokes::MAP_ROUTE_DEFAULT
 }
 
-#[derive(Clone, Debug, serde::Deserialize, FromValue)]
+#[derive(Clone, Debug, serde::Deserialize, semio_framework_value::FromValue)]
 pub struct RegionData {
     pub id: String,
     pub ring: Vec<[f64; 2]>,
 }
 
-#[derive(Clone, Debug, Default, serde::Deserialize, FromValue)]
+#[derive(Clone, Debug, Default, serde::Deserialize, semio_framework_value::FromValue)]
 pub struct MapDescriptorJson {
     #[serde(default)]
     #[value(default)]
@@ -1677,7 +1678,7 @@ pub fn clamp_map_layer_weight(value: f64) -> f64 {
 }
 
 /// 🎚️ Per-layer line/label weight multipliers (1.0 = default cartography).
-#[derive(Clone, Copy, Debug, serde::Deserialize, serde::Serialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, serde::Deserialize, serde::Serialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase", default)]
 #[value(rename_all = "camelCase", default)]
 pub struct MapLayerStrokeScale {
@@ -1741,7 +1742,7 @@ impl MapLayerStrokeScale {
 }
 
 /// 👁️ Per-layer show/hide gates for base map vector paint and user overlays.
-#[derive(Clone, Copy, Debug, serde::Deserialize, serde::Serialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, serde::Deserialize, serde::Serialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase", default)]
 #[value(rename_all = "camelCase", default)]
 pub struct MapLayerVisibility {

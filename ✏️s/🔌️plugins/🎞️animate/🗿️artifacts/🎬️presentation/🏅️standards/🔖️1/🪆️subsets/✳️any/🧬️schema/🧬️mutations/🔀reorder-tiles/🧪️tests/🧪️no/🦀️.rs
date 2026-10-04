@@ -24,16 +24,16 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-tiles/🧪️no/🎯️outcome/🔣️.json");
 
 fn mutation() -> PresentationMutation {
-    dsl::os_pack::from_json_str(MUTATION).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 fn expected_after() -> PresentationSnapshot {
-    dsl::os_pack::from_json_str(AFTER).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 
 /// 🌱 The committed `⬅️before`, with its composed `presentation` child resolved to a single-tile
 /// deck whose only tile is the id the payload names. Only the id and the list length matter here.
 fn before() -> PresentationSnapshot {
-    let snapshot: PresentationSnapshot = dsl::os_pack::from_json_str(BEFORE).expect("before snapshot decodes");
+    let snapshot: PresentationSnapshot = semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes");
     let PresentationMutation::ReorderTiles(payload) = mutation() else {
         panic!("no-ops-when-the-tile-is-already-at-that-index's committed mutation must be a reorder-tiles");
     };
@@ -58,7 +58,7 @@ fn applies_to_committed_after() {
 #[test]
 fn produces_committed_diff() {
     let outcome = <PresentationMutation as protocol::Mutation<PresentationSnapshot>>::diff(&mutation(), &before());
-    let produced = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "reorder-tiles/no-ops-when-the-tile-is-already-at-that-index: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert_eq!(outcome.diff(), &PresentationDiff::default(), "a positional no-op must carry the identity diff");
@@ -67,8 +67,8 @@ fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to presentation's own diff type.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: PresentationDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("diff re-encodes");
+    let decoded: PresentationDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "reorder-tiles/no-ops-when-the-tile-is-already-at-that-index: committed diff JSON is not canonical");
 }
@@ -78,7 +78,7 @@ fn committed_diff_is_canonical() {
 /// verb specifically needs.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: PresentationDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: PresentationDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert!(decoded.presentation.is_none(), "a positional no-op must leave the order-bearing presentation slot unset");
     let produced = <PresentationDiff as protocol::MutationDiff<PresentationSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "reorder-tiles/no-ops-when-the-tile-is-already-at-that-index: committed diff did not carry before to after");
@@ -88,12 +88,12 @@ fn committed_diff_applies_to_after() {
 #[test]
 fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: PresentationSnapshot = dsl::os_pack::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: PresentationSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "reorder-tiles/no-ops-when-the-tile-is-already-at-that-index: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&mutation())).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "reorder-tiles/no-ops-when-the-tile-is-already-at-that-index: committed mutation JSON is not canonical");
     assert_eq!(original.get("ReorderTiles").and_then(|payload| payload.get("toIndex")).and_then(serde_json::Value::as_u64), Some(0), "the landing slot is addressed by id plus a final-state index");
@@ -109,7 +109,7 @@ fn declared_outcome_holds() {
     let messages = produced.messages();
     assert_eq!(messages.len(), declared.len(), "exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(declared[0].get("code").and_then(serde_json::Value::as_str), Some(messages[0].code.0.as_str()), "the declared code must match the emitted one");
-    assert_eq!(messages[0].level, protocol::Severity::Warning, "an already-there reorder is a warning, not a missing-target error");
+    assert_eq!(messages[0].level, semio_framework_diagnostic::Severity::Warning, "an already-there reorder is a warning, not a missing-target error");
 }
 
 /// ↩️ `reorder-tiles`' inverse is BASE-derived: it moves the tile back to the index it currently
@@ -117,7 +117,7 @@ fn declared_outcome_holds() {
 #[test]
 fn inverse_moves_the_tile_back_to_its_base_index() {
     let base = before();
-    let inverse = inverse_presentation_mutation(&base, &mutation());
+    let inverse = inverse_presentation_mutation(&base, &mutation()).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "reorder-tiles undoes with exactly one step, got {inverse:?}");
     let PresentationMutation::ReorderTiles(undo) = &inverse[0] else {
         panic!("reorder-tiles' inverse must be a reorder-tiles, got {:?}", inverse[0]);

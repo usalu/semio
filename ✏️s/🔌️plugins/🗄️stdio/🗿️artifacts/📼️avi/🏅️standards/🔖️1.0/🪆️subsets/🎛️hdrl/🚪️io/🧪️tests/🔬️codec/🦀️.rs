@@ -157,6 +157,32 @@ async fn codec_retention_law_round_trips_the_real_fixture_byte_identically() {
         assert!(REAL_EXAMPLE_AVI.windows(chunk.data.len().max(1)).any(|w| w == chunk.data.as_slice()), "chunk data must be a verbatim slice of the real source file");
     }
 }
+
+#[semio_framework_async_macros::async_test]
+async fn incremental_cursor_yields_bounded_pages_matching_the_real_fixture() {
+    let snapshot = decode_avi(REAL_EXAMPLE_AVI).expect("decode the real fixture");
+    let mut cursor = AviEncodeCursor::new(&snapshot);
+    let mut output = Vec::new();
+    let mut progress = 0usize;
+    let mut chunks = 0usize;
+    loop {
+        match cursor.advance(&snapshot, 257).expect("advance bounded AVI cursor") {
+            AviEncodeAdvance::Progress => progress += 1,
+            AviEncodeAdvance::Chunk(chunk) => {
+                assert!(!chunk.is_empty());
+                assert!(chunk.len() <= 257);
+                output.extend_from_slice(&chunk);
+                chunks += 1;
+            }
+            AviEncodeAdvance::Complete => break,
+        }
+    }
+    assert!(progress > snapshot.streams[0].chunks.len());
+    assert!(chunks > 1);
+    assert_eq!(cursor.emitted_bytes(), output.len() as u64);
+    assert_eq!(output, encode_avi(&snapshot));
+    assert_eq!(output, REAL_EXAMPLE_AVI);
+}
 //#endregion codec_retention_law
 
 //#region real_ffmpeg_fixture — BUG 1 + BUG 2, see the ticket's own w7-avi-1-0-mutate-report.md

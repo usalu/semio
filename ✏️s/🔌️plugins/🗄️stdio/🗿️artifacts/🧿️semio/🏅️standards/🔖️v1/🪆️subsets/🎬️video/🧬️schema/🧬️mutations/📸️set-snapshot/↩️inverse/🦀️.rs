@@ -6,6 +6,9 @@ use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(base: &SemioVideoSnapshot, mutation: &SemioVideoMutation) -> Vec<SemioVideoMutation> {
-    <SemioVideoMutation as Mutation<SemioVideoSnapshot>>::inverse(mutation, base)
+pub fn inverse(base: &SemioVideoSnapshot, mutation: &SemioVideoMutation) -> Result<Vec<SemioVideoMutation>, semio_framework_value::ValueError> {
+    Ok({
+    <SemioVideoMutation as Mutation<SemioVideoSnapshot>>::inverse(mutation, base)?
+
+    })
 }

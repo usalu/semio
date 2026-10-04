@@ -17,7 +17,10 @@ pub struct ChangeMemberAxisDistance {
 impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeMemberAxisDistance {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "member-axis-distance", kind: "change-member-axis-distance", record: "ChangedMemberAxisDistance" };
     fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> { super::diff::diff(self, base) }
-    fn inverse(&self, base: &En1992Snapshot) -> Vec<En1992Mutation> { super::inverse::inverse(self, base) }
+    fn inverse(&self, base: &En1992Snapshot) -> Result<Vec<En1992Mutation>, semio_framework_value::ValueError> {
+    Ok({ super::inverse::inverse(self, base)? 
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change fire axis distance of member {}", self.member_id), &format!("Achsabstand für den Brandschutz von Bauteil {} ändern", self.member_id))
     }

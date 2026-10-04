@@ -14,9 +14,10 @@ use crate::standards::v1::subsets::any::schema::empty_playground_snapshot;
 use crate::standards::v1::subsets::any::schema::mutations::PlaygroundMutation;
 use crate::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
 use crate::{PLAYGROUND_DIALECT, PLAYGROUND_DOCUMENT_SCHEMA};
-#[cfg(test)]
-use dsl::os_pack::json::{parse, Value};
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
+use semio_framework_2d::compute::EngineHandles;
+#[cfg(test)]
+use semio_framework_pack_json::{parse, Value};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::AppOperationContext;
@@ -35,8 +36,6 @@ use semio_framework_plugin::EditorApp;
 use semio_framework_plugin::Emit;
 use semio_framework_plugin::Fault;
 use semio_framework_plugin::InteractiveJobClassification;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
 use semio_framework_plugin::NoDraft;
@@ -46,7 +45,8 @@ use semio_framework_plugin::NoPresenceMutation;
 use semio_framework_plugin::NoTransient;
 use semio_framework_plugin::NoTransientMutation;
 use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
 
 //#region 🔖️Commands
 semio_framework_plugin::app_commands! {
@@ -146,7 +146,8 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for PlaygroundCommandJo
     type Owner = EditorApp<PlaygroundEditor>;
     const TOOL_IDS: &'static [&'static str] = PLAYGROUND_RETAINED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = PLAYGROUND_DOCUMENT_SCHEMA;
-    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: "changeSchema", lanes: &[ArtifactToolPublicationLane::Artifact] }, ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Artifact] }];
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] =
+        &[ArtifactToolPublicationContract { tool_id: "changeSchema", lanes: &[ArtifactToolPublicationLane::Artifact] }, ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Artifact] }];
 }
 //#endregion 🧵️RetainedCommands
 
@@ -175,41 +176,12 @@ fn playground_mutation_bytes(mutation: &PlaygroundMutation) -> Result<usize, Str
     }
 }
 
-fn playground_store_edit(forward: PlaygroundMutation, inverse: Vec<PlaygroundMutation>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<PlaygroundMutation> {
-    let id = format!("playground-schema-retained-{}", authority.next_sequence_number());
-    protocol::Edit { line: authority.line_id().map(str::to_owned),
-        id: id.clone(),
-        actor: Some(authority.actor().to_string()),
-        forwards: vec![forward],
-        inverse,
-        mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
-            dependencies: Vec::new(),
-            base_version: authority.base_applied_edit_count() as u64,
-            author_id: Some(protocol::ActorId(authority.actor().to_string())),
-            timestamp: authority.next_clock(),
-            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-            payload_hash: None,
-            semantic_kind: None,
-            label: None,
-            group_id: None,
-            origin: Default::default(),
-            transaction: None,
-        }],
-        description, verb: None,
-        coalesce_key: None,
-        sequence_number: authority.next_sequence_number(),
-        started_at: String::new(),
-        finished_at: None,
-    }
-}
-
 impl store::ArtifactStoreOneItemPreparationFactory<PlaygroundSnapshot, PlaygroundMutation> for PlaygroundStorePreparationFactory {
     fn preflight(&self, mutation: &PlaygroundMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
             return Err("Playground Store preparation rejected its lane or description".into());
         }
-        Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: playground_mutation_bytes(mutation)? })
+        Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, playground_mutation_bytes(mutation)?))
     }
 
     fn begin(
@@ -254,7 +226,7 @@ impl store::ArtifactStoreOneItemPreparation<PlaygroundSnapshot, PlaygroundMutati
                 let base = self.base.as_ref().ok_or_else(|| "Playground preparation lost its exact base root".to_string())?;
                 let mutation = self.mutation.take().ok_or_else(|| "Playground preparation lost its mutation owner".to_string())?;
                 let completed_bytes = playground_mutation_bytes(&mutation)?;
-                let inverse = mutation.inverse(base.get());
+                let inverse = mutation.inverse(base.get()).map_err(semio_framework_value::ValueError::into_message)?;
                 let post = mutation.diff(base.get()).into_parts().0.apply(base.get()).map_err(|_| "Playground mutation could not produce its post root".to_string())?;
                 self.candidate = Some((post, inverse, mutation, completed_bytes));
                 self.phase = 1;
@@ -264,7 +236,7 @@ impl store::ArtifactStoreOneItemPreparation<PlaygroundSnapshot, PlaygroundMutati
             1 => {
                 let (post, inverse, mutation, completed_bytes) = self.candidate.take().ok_or_else(|| "Playground preparation lost its semantic candidate".to_string())?;
                 let authority = self.authority.as_ref().ok_or_else(|| "Playground preparation lost its Store authority".to_string())?;
-                let prepared = authority.prepare_one_item(playground_store_edit(mutation, inverse, self.description.take(), authority), std::sync::Arc::new(post))?;
+                let prepared = authority.prepare_one_item(authority.next_edit(mutation, inverse), std::sync::Arc::new(post))?;
                 self.phase = 2;
                 self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: completed_bytes as u64, digest: prepared.edit_digest() };
                 self.prepared = Some(prepared);
@@ -289,7 +261,7 @@ impl store::ArtifactStoreOneItemPreparation<PlaygroundSnapshot, PlaygroundMutati
     fn begin_close(&mut self) {
         self.closing = true;
     }
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -298,7 +270,7 @@ impl store::ArtifactStoreOneItemPreparation<PlaygroundSnapshot, PlaygroundMutati
         }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
-                return Err("Playground preparation could not return its exact base root".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Playground preparation could not return its exact base root"));
             }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -462,18 +434,18 @@ impl ArtifactEditor for PlaygroundEditor {
 
     /// 🗺️ Maps the manifest `changeSchema` action (declared via `.mutation(...)` below) to the one
     /// typed command row — the same shape `gis2d`'s `command_from_action` uses for its own rows.
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<PlaygroundCommand, Fault> {
-        let args = args.cloned().unwrap_or(dsl::DslValue::Null);
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<PlaygroundCommand, Fault> {
+        let args = args.cloned().unwrap_or(semio_framework_value::DslValue::Null);
         match action {
             "changeSchema" => {
-                let new_schema = args.get("newSchema").or_else(|| args.get("new_schema")).and_then(dsl::DslValue::as_str).unwrap_or_default();
+                let new_schema = args.get("newSchema").or_else(|| args.get("new_schema")).and_then(semio_framework_value::DslValue::as_str).unwrap_or_default();
                 if new_schema.len() > PLAYGROUND_RETAINED_RAW_BYTES {
                     return Err(Fault::from("playground-command-payload-too-large"));
                 }
                 Ok(PlaygroundCommand::ChangeSchema(change_schema::ChangeSchema { new_schema: new_schema.to_string() }))
             }
             "setActiveExample" => {
-                let example_id = args.get("exampleId").or_else(|| args.get("example_id")).and_then(dsl::DslValue::as_str).unwrap_or_default();
+                let example_id = args.get("exampleId").or_else(|| args.get("example_id")).and_then(semio_framework_value::DslValue::as_str).unwrap_or_default();
                 Ok(PlaygroundCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: example_id.to_string() }))
             }
             other => Err(Fault::from(format!(
@@ -497,7 +469,10 @@ impl ArtifactEditor for PlaygroundEditor {
 
     fn render(body_key: &str, doc: &ArtifactView<'_, PlaygroundSnapshot>, _cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot, view_state.locale).map(semio_framework_plugin::built_to_component_tree),
+            main::BODY_KEY => {
+                let publication_revision = semio_framework_plugin::app::artifact_render_publication_revision(doc)?;
+                main::render(doc.snapshot, view_state.locale, publication_revision).map(semio_framework_plugin::built_to_component_tree)
+            }
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -522,8 +497,17 @@ pub fn create_playground_editor() -> semio_framework_plugin::AppDefinition {
         .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Beispiel setzen"))
         .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
         .action_destructive("setActiveExample")
-        .action_describe("changeSchema", LocalizedLabel::native("Replaces the playground's schema metadata string, the whole persistent content of a playground document, with the given text.", "Ersetzt die Schema-Metadaten-Zeichenkette des Playgrounds, den gesamten dauerhaften Inhalt eines Playground-Dokuments, durch den angegebenen Text."))
-        .action_describe("setActiveExample", LocalizedLabel::native("Loads the bundled demo playground's schema, or clears the schema for an empty example id.", "Lädt das Schema des mitgelieferten Demo-Playgrounds oder leert das Schema bei leerer Beispiel-Id."))
+        .action_describe(
+            "changeSchema",
+            LocalizedLabel::native(
+                "Replaces the playground's schema metadata string, the whole persistent content of a playground document, with the given text.",
+                "Ersetzt die Schema-Metadaten-Zeichenkette des Playgrounds, den gesamten dauerhaften Inhalt eines Playground-Dokuments, durch den angegebenen Text.",
+            ),
+        )
+        .action_describe(
+            "setActiveExample",
+            LocalizedLabel::native("Loads the bundled demo playground's schema, or clears the schema for an empty example id.", "Lädt das Schema des mitgelieferten Demo-Playgrounds oder leert das Schema bei leerer Beispiel-Id."),
+        )
         .action_destructive("changeSchema")
         .build_definition()
 }
@@ -534,4 +518,3 @@ pub fn create_playground_editor() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 pub(crate) mod unit_tests;
 //#endregion 🧪️UnitTests
-

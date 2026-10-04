@@ -38,30 +38,30 @@ pub struct HandleDescJson {
     pub scale: Option<f64>,
 }
 
-impl dsl::ToValue for HandleDescJson {
-    fn to_value(&self) -> dsl::DslValue {
-        dsl::DslValue::object([
-            ("id".to_string(), dsl::ToValue::to_value(&self.id)),
-            ("nodeId".to_string(), dsl::ToValue::to_value(&self.node_id)),
-            ("angle".to_string(), dsl::ToValue::to_value(&self.angle)),
-            ("radius".to_string(), dsl::ToValue::to_value(&self.radius)),
-            ("selected".to_string(), dsl::ToValue::to_value(&self.selected)),
-            ("style".to_string(), dsl::ToValue::to_value(&self.style)),
-            ("handleKind".to_string(), dsl::ToValue::to_value(&self.handle_kind)),
-            ("color".to_string(), dsl::ToValue::to_value(&self.color)),
-            ("iconKind".to_string(), dsl::ToValue::to_value(&self.icon_kind)),
-            ("userData".to_string(), match &self.user_data { Some(v) => dsl::DslValue::from(v), None => dsl::DslValue::Null }),
-            ("visible".to_string(), dsl::ToValue::to_value(&self.visible)),
-            ("locked".to_string(), dsl::ToValue::to_value(&self.locked)),
-            ("scale".to_string(), dsl::ToValue::to_value(&self.scale)),
+impl semio_framework_value::ToValue for HandleDescJson {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::object([
+            ("id".to_string(), semio_framework_value::ToValue::to_value(&self.id)),
+            ("nodeId".to_string(), semio_framework_value::ToValue::to_value(&self.node_id)),
+            ("angle".to_string(), semio_framework_value::ToValue::to_value(&self.angle)),
+            ("radius".to_string(), semio_framework_value::ToValue::to_value(&self.radius)),
+            ("selected".to_string(), semio_framework_value::ToValue::to_value(&self.selected)),
+            ("style".to_string(), semio_framework_value::ToValue::to_value(&self.style)),
+            ("handleKind".to_string(), semio_framework_value::ToValue::to_value(&self.handle_kind)),
+            ("color".to_string(), semio_framework_value::ToValue::to_value(&self.color)),
+            ("iconKind".to_string(), semio_framework_value::ToValue::to_value(&self.icon_kind)),
+            ("userData".to_string(), match &self.user_data { Some(v) => semio_framework_value::DslValue::from(v), None => semio_framework_value::DslValue::Null }),
+            ("visible".to_string(), semio_framework_value::ToValue::to_value(&self.visible)),
+            ("locked".to_string(), semio_framework_value::ToValue::to_value(&self.locked)),
+            ("scale".to_string(), semio_framework_value::ToValue::to_value(&self.scale)),
         ])
     }
 }
 
-impl dsl::FromValue for HandleDescJson {
-    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
-        let dsl::DslValue::Object(fields) = value else {
-            return Err(dsl::ValueError::new(format!("expected an object for HandleDescJson, found {value:?}")));
+impl semio_framework_value::FromValue for HandleDescJson {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        let semio_framework_value::DslValue::Object(fields) = value else {
+            return Err(semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for HandleDescJson, found {value:?}")));
         };
         let mut id = None;
         let mut node_id = None;
@@ -78,26 +78,26 @@ impl dsl::FromValue for HandleDescJson {
         let mut scale = None;
         for (key, entry) in fields {
             match key.as_str() {
-                "id" => id = Some(<String as dsl::FromValue>::from_value(entry).map_err(|e| e.under("id"))?),
-                "nodeId" => node_id = Some(<String as dsl::FromValue>::from_value(entry).map_err(|e| e.under("nodeId"))?),
-                "angle" => angle = Some(<f64 as dsl::FromValue>::from_value(entry).map_err(|e| e.under("angle"))?),
-                "radius" => radius = <Option<f64> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("radius"))?,
-                "selected" => selected = <Option<bool> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("selected"))?,
-                "style" => style = <Option<String> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("style"))?,
-                "handleKind" => handle_kind = <Option<String> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("handleKind"))?,
-                "color" => color = <Option<String> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("color"))?,
-                "iconKind" => icon_kind = <Option<String> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("iconKind"))?,
-                "userData" => user_data = if matches!(entry, dsl::DslValue::Null) { None } else { Some(serde_json::Value::from(&entry)) },
-                "visible" => visible = <Option<bool> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("visible"))?,
-                "locked" => locked = <Option<bool> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("locked"))?,
-                "scale" => scale = <Option<f64> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("scale"))?,
+                "id" => id = Some(<String as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("id"))?),
+                "nodeId" => node_id = Some(<String as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("nodeId"))?),
+                "angle" => angle = Some(<f64 as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("angle"))?),
+                "radius" => radius = <Option<f64> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("radius"))?,
+                "selected" => selected = <Option<bool> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("selected"))?,
+                "style" => style = <Option<String> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("style"))?,
+                "handleKind" => handle_kind = <Option<String> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("handleKind"))?,
+                "color" => color = <Option<String> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("color"))?,
+                "iconKind" => icon_kind = <Option<String> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("iconKind"))?,
+                "userData" => user_data = if matches!(entry, semio_framework_value::DslValue::Null) { None } else { Some(serde_json::Value::from(&entry)) },
+                "visible" => visible = <Option<bool> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("visible"))?,
+                "locked" => locked = <Option<bool> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("locked"))?,
+                "scale" => scale = <Option<f64> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("scale"))?,
                 _ => {}
             }
         }
         Ok(HandleDescJson {
-            id: id.ok_or_else(|| dsl::ValueError::new("HandleDescJson missing id"))?,
-            node_id: node_id.ok_or_else(|| dsl::ValueError::new("HandleDescJson missing nodeId"))?,
-            angle: angle.ok_or_else(|| dsl::ValueError::new("HandleDescJson missing angle"))?,
+            id: id.ok_or_else(|| semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, "HandleDescJson missing id"))?,
+            node_id: node_id.ok_or_else(|| semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, "HandleDescJson missing nodeId"))?,
+            angle: angle.ok_or_else(|| semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, "HandleDescJson missing angle"))?,
             radius,
             selected,
             style,

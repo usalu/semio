@@ -32,7 +32,7 @@ async fn set_active_example_is_declared_and_bridged() {
         definition.actions.iter().any(|action| action.id == "setActiveExample") || definition.window_kinds.iter().any(|window| window.actions.iter().any(|action| action.id == "setActiveExample")),
         "setActiveExample must be reachable from the manifest"
     );
-    let command = crate::editor::sequence::SequencePlayApp::command_from_action("setActiveExample", Some(&dsl::json::to_dsl_value(&dsl::json!({ "exampleId": "demo" })))).expect("setActiveExample bridges");
+    let command = crate::editor::sequence::SequencePlayApp::command_from_action("setActiveExample", Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "exampleId": "demo" })))).expect("setActiveExample bridges");
     assert_eq!(crate::editor::sequence::SequencePlayApp::command_id(&command), "setActiveExample");
 }
 

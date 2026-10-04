@@ -14,7 +14,7 @@ pub use crate::schema::operations::*;
 
 //#region 🔖️Aggregate
 /// 🧮️ Semantic Writer document mutation vocabulary.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = WriterSnapshot, diff = WriterDiff, schema = "writer.writer")]

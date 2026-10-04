@@ -19,6 +19,132 @@
     }
   },
   "$defs": {
+    "Generation3dPreparedMesh": {
+      "title": "Generation3dPreparedMesh",
+      "type": "object",
+      "required": [
+        "positions",
+        "indices"
+      ],
+      "properties": {
+        "positions": {
+          "type": "array",
+          "minItems": 9,
+          "maxItems": 300000,
+          "items": {
+            "type": "number"
+          }
+        },
+        "indices": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 300000,
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "normals": {
+          "type": "array",
+          "maxItems": 300000,
+          "items": {
+            "type": "number"
+          }
+        },
+        "uvs": {
+          "type": "array",
+          "maxItems": 200000,
+          "items": {
+            "type": "number"
+          }
+        },
+        "colors": {
+          "type": "array",
+          "maxItems": 400000,
+          "items": {
+            "type": "number"
+          }
+        },
+        "attributes": {
+          "type": "object"
+        },
+        "materials": {
+          "type": "object"
+        },
+        "textures": {
+          "type": "object"
+        },
+        "faceIds": {
+          "type": "array",
+          "maxItems": 600000,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          }
+        },
+        "edgeIds": {
+          "type": "array",
+          "maxItems": 600000,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          }
+        },
+        "vertexIds": {
+          "type": "array",
+          "maxItems": 600000,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          }
+        },
+        "edgePositions": {
+          "type": "array",
+          "maxItems": 3600000,
+          "items": {
+            "type": "number",
+            "minimum": -3.4028234663852886e+38,
+            "maximum": 3.4028234663852886e+38
+          }
+        },
+        "componentReferences": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "face": {
+              "type": "array",
+              "maxItems": 600000,
+              "items": {
+                "type": "string",
+                "maxLength": 128
+              }
+            },
+            "edge": {
+              "type": "array",
+              "maxItems": 600000,
+              "items": {
+                "type": "string",
+                "maxLength": 128
+              }
+            },
+            "vertex": {
+              "type": "array",
+              "maxItems": 600000,
+              "items": {
+                "type": "string",
+                "maxLength": 128
+              }
+            }
+          }
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
+    },
     "Generation3dRegistryTextRoundTrip": {
       "title": "Generation3dRegistryTextRoundTrip",
       "type": "object",
@@ -187,7 +313,6 @@
       ],
       "properties": {
         "x": {
-          "type": "number",
           "format": "double",
           "x-semio-ui": {
             "widget": "stepper",
@@ -200,10 +325,10 @@
             "precision": 1,
             "group": "camera",
             "order": 10
-          }
+          },
+          "$ref": "#/$defs/Binary64Transport"
         },
         "y": {
-          "type": "number",
           "format": "double",
           "x-semio-ui": {
             "widget": "stepper",
@@ -216,10 +341,10 @@
             "precision": 1,
             "group": "camera",
             "order": 20
-          }
+          },
+          "$ref": "#/$defs/Binary64Transport"
         },
         "zoom": {
-          "type": "number",
           "format": "double",
           "x-semio-ui": {
             "widget": "slider",
@@ -240,7 +365,8 @@
             ],
             "group": "camera",
             "order": 30
-          }
+          },
+          "$ref": "#/$defs/Binary64Transport"
         }
       }
     },
@@ -254,12 +380,12 @@
       ],
       "properties": {
         "x": {
-          "type": "number",
-          "format": "double"
+          "format": "double",
+          "$ref": "#/$defs/Binary64Transport"
         },
         "y": {
-          "type": "number",
-          "format": "double"
+          "format": "double",
+          "$ref": "#/$defs/Binary64Transport"
         }
       }
     },
@@ -474,7 +600,6 @@
               }
             },
             "value": {
-              "type": "number",
               "x-semio-ui": {
                 "widget": "stepper",
                 "role": "value",
@@ -486,10 +611,10 @@
                 "precision": 3,
                 "group": "value",
                 "order": 30
-              }
+              },
+              "$ref": "#/$defs/Binary64Transport"
             },
             "min": {
-              "type": "number",
               "x-semio-ui": {
                 "widget": "stepper",
                 "role": "value",
@@ -501,10 +626,10 @@
                 "precision": 3,
                 "group": "range",
                 "order": 40
-              }
+              },
+              "$ref": "#/$defs/Binary64Transport"
             },
             "max": {
-              "type": "number",
               "x-semio-ui": {
                 "widget": "stepper",
                 "role": "value",
@@ -516,10 +641,10 @@
                 "precision": 3,
                 "group": "range",
                 "order": 50
-              }
+              },
+              "$ref": "#/$defs/Binary64Transport"
             },
             "step": {
-              "type": "number",
               "x-semio-ui": {
                 "widget": "stepper",
                 "role": "value",
@@ -531,7 +656,8 @@
                 "precision": 3,
                 "group": "range",
                 "order": 60
-              }
+              },
+              "$ref": "#/$defs/Binary64Transport"
             }
           },
           "x-semio-ui": {
@@ -915,8 +1041,8 @@
                   "de": "Format"
                 },
                 "description": {
-                  "en": "Export format, e.g. svg or png.",
-                  "de": "Exportformat, z. B. svg oder png."
+                  "en": "Artifact-owned 3D export format, e.g. gltf or obj.",
+                  "de": "Artefakteigenes 3D-Exportformat, z. B. gltf oder obj."
                 },
                 "group": "value",
                 "order": 20
@@ -1452,7 +1578,6 @@
               }
             },
             "min": {
-              "type": "number",
               "x-semio-ui": {
                 "widget": "stepper",
                 "role": "value",
@@ -1464,10 +1589,10 @@
                 "precision": 3,
                 "group": "range",
                 "order": 20
-              }
+              },
+              "$ref": "#/$defs/Binary64Transport"
             },
             "max": {
-              "type": "number",
               "x-semio-ui": {
                 "widget": "stepper",
                 "role": "value",
@@ -1479,10 +1604,10 @@
                 "precision": 3,
                 "group": "range",
                 "order": 30
-              }
+              },
+              "$ref": "#/$defs/Binary64Transport"
             },
             "step": {
-              "type": "number",
               "x-semio-ui": {
                 "widget": "stepper",
                 "role": "value",
@@ -1494,10 +1619,10 @@
                 "precision": 3,
                 "group": "range",
                 "order": 40
-              }
+              },
+              "$ref": "#/$defs/Binary64Transport"
             },
             "value": {
-              "type": "number",
               "x-semio-ui": {
                 "widget": "stepper",
                 "role": "value",
@@ -1509,7 +1634,8 @@
                 "precision": 3,
                 "group": "value",
                 "order": 50
-              }
+              },
+              "$ref": "#/$defs/Binary64Transport"
             }
           },
           "x-semio-ui": {
@@ -1791,6 +1917,54 @@
             "group": "ports",
             "order": 20
           }
+        }
+      }
+    },
+    "Binary64Word": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bits"
+      ],
+      "properties": {
+        "bits": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{16}$"
+        }
+      }
+    },
+    "Binary64Transport": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Binary64Word"
+        },
+        {
+          "type": "number"
+        }
+      ]
+    },
+    "Generation3dExportRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "format"
+      ],
+      "properties": {
+        "format": {
+          "enum": [
+            "stl",
+            "obj",
+            "ply",
+            "gltf",
+            "las",
+            "dwg",
+            "txt"
+          ]
+        },
+        "widgetId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
         }
       }
     }

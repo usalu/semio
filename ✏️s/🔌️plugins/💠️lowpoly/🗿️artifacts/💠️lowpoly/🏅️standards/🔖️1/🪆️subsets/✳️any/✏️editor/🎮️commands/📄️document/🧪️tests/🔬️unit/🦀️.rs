@@ -11,8 +11,10 @@ use crate::schema::default_snapshot;
 #[semio_framework_async_macros::async_test]
 async fn import_snapshot_json_replaces_the_whole_document() {
     let mesh_json = crate::schema::default_mesh_workspace()["obj-1"].clone();
-    let replacement = crate::snapshot_from_mesh_json(&mesh_json, "obj-x", "X");
-    let json = serde_json::to_string(&Into::<serde_json::Value>::into(dsl::ToValue::to_value(&replacement))).unwrap();
+    let mut replacement=crate::snapshot_from_mesh_json("", "obj-x", "X");
+    replacement.objects[0].mesh=Some(crate::managed_mesh_child_handle("obj-x",&mesh_json));
+    replacement.objects[0].mesh_state=Some(mesh_json);
+    let json = serde_json::to_string(&Into::<serde_json::Value>::into(semio_framework_value::ToValue::to_value(&replacement))).unwrap();
     let snapshot = default_snapshot();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);

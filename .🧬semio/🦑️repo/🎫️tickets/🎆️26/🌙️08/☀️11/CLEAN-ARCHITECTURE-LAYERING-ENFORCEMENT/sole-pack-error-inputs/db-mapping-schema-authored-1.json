@@ -1,0 +1,288 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "owner",
+    "definingErrorOwner",
+    "rule",
+    "cases"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "owner": {
+      "const": "semio-framework-os-kernel-db"
+    },
+    "definingErrorOwner": {
+      "const": "semio-framework-pack-error"
+    },
+    "rule": {
+      "const": {
+        "invalidValue": "InvalidArgument",
+        "otherValueKinds": "Corrupt",
+        "messageClassification": false
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 12,
+      "items": {
+        "$ref": "#/definitions/case"
+      }
+    }
+  },
+  "definitions": {
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "source",
+        "kind",
+        "message",
+        "path",
+        "offset",
+        "category",
+        "output"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "enum": [
+            "ValueRefusal",
+            "Io",
+            "LimitExceeded",
+            "BadMagic",
+            "Truncated"
+          ]
+        },
+        "kind": {
+          "enum": [
+            null,
+            "InvalidValue",
+            "Canceled",
+            "OwnershipLimit",
+            "AllocationFailed",
+            "WorkLimit",
+            "DepthLimit",
+            "UnsupportedOwner",
+            "InvariantViolated"
+          ]
+        },
+        "message": {
+          "type": "string"
+        },
+        "path": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "offset": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "category": {
+          "enum": [
+            "InvalidArgument",
+            "Corrupt",
+            "Io",
+            "LimitExceeded"
+          ]
+        },
+        "output": {
+          "type": "string"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "source": {
+                "const": "ValueRefusal"
+              }
+            },
+            "required": [
+              "source"
+            ]
+          },
+          "then": {
+            "properties": {
+              "kind": {
+                "enum": [
+                  "InvalidValue",
+                  "Canceled",
+                  "OwnershipLimit",
+                  "AllocationFailed",
+                  "WorkLimit",
+                  "DepthLimit",
+                  "UnsupportedOwner",
+                  "InvariantViolated"
+                ]
+              },
+              "offset": {
+                "const": null
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "kind": {
+                "const": null
+              },
+              "path": {
+                "maxItems": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "InvalidValue"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "category": {
+                "const": "InvalidArgument"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "enum": [
+                  "Canceled",
+                  "OwnershipLimit",
+                  "AllocationFailed",
+                  "WorkLimit",
+                  "DepthLimit",
+                  "UnsupportedOwner",
+                  "InvariantViolated"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "category": {
+                "const": "Corrupt"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "source": {
+                "const": "Io"
+              }
+            },
+            "required": [
+              "source"
+            ]
+          },
+          "then": {
+            "properties": {
+              "category": {
+                "const": "Io"
+              },
+              "offset": {
+                "const": null
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "source": {
+                "const": "LimitExceeded"
+              }
+            },
+            "required": [
+              "source"
+            ]
+          },
+          "then": {
+            "properties": {
+              "category": {
+                "const": "LimitExceeded"
+              },
+              "offset": {
+                "const": null
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "source": {
+                "const": "BadMagic"
+              }
+            },
+            "required": [
+              "source"
+            ]
+          },
+          "then": {
+            "properties": {
+              "category": {
+                "const": "Corrupt"
+              },
+              "offset": {
+                "const": null
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "source": {
+                "const": "Truncated"
+              }
+            },
+            "required": [
+              "source"
+            ]
+          },
+          "then": {
+            "properties": {
+              "category": {
+                "const": "Corrupt"
+              },
+              "offset": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

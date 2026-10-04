@@ -1,4 +1,4 @@
-use super::tests::{assert_fixture_descriptor, Value};
+use super::tests::{Value, assert_fixture_descriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 

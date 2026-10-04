@@ -1,0 +1,30 @@
+{
+  "schema": "semio.stdio.pdf-natural-file-edit.v1",
+  "input": "../✏️edit-existing-pdf/2️⃣two-pages.pdf",
+  "codec": {
+    "formatKind": "s.stdio.pdf@1.7",
+    "extension": ".pdf",
+    "mediaType": "application/pdf",
+    "binary": true
+  },
+  "mutation": {
+    "kind": "set-page-rotation",
+    "params": {
+      "index": 1,
+      "rotation": 90
+    }
+  },
+  "expected": {
+    "pageCount": 2,
+    "rotation": 90,
+    "preserve": [
+      "otherPages",
+      "text",
+      "metadata",
+      "catalog",
+      "trailer"
+    ],
+    "openMutation": "set-snapshot"
+  },
+  "invalidText": "This is not a PDF."
+}

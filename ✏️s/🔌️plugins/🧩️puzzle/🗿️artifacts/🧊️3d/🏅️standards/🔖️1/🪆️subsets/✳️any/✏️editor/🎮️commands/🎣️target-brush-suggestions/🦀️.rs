@@ -3,7 +3,7 @@
 use crate::editor::puzzle3d::modes::edit::windows::main::utilities::brush;
 use crate::editor::puzzle3d::puzzle3d_brush_target_vortex;
 use crate::editor::puzzle3d::Puzzle3dActionCtx;
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 
 /// 🎣️ Points the brush suggestions run at the vortex the armed brush is over (`fullId`, else the brush's own
 /// selection/hover target), or at nothing once the brush is disarmed or the pointer left every vortex. It only

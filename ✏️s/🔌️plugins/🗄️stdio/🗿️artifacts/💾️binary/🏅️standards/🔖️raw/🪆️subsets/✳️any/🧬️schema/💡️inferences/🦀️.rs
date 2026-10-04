@@ -11,7 +11,6 @@
 
 use crate::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::extent::compute_binary_extent;
 //#region 🔖️Inference
@@ -26,8 +25,11 @@ pub struct BinaryInference {
 }
 
 impl protocol::Inference<BinarySnapshot> for BinaryInference {
-    fn infer(snapshot: &BinarySnapshot) -> Self {
+    fn infer(snapshot: &BinarySnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { extent: compute_binary_extent(snapshot) }
+    
+        })
     }
 }
 
@@ -35,7 +37,9 @@ impl protocol::Inference<BinarySnapshot> for BinaryInference {
 /// `BinarySnapshot::default()`'s `bytes` ever stop being empty.
 impl Default for BinaryInference {
     fn default() -> Self {
-        <Self as protocol::Inference<BinarySnapshot>>::infer(&BinarySnapshot::default())
+        let snapshot = &BinarySnapshot::default();
+
+        Self { extent: compute_binary_extent(snapshot) }
     }
 }
 
@@ -51,17 +55,6 @@ impl protocol::InferenceSpec<BinarySnapshot> for BinaryInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 💡️ No `InferredField`s here — `extent` is a single length read plus a fold over `bytes`,
-/// already O(n) in byte count with no honest per-entity incremental decomposition (there is no
-/// "entity" to decompose in an opaque byte blob) — the default `infer_cached` passthrough is
-/// exact.
-impl ArtifactInferrer for crate::standards::v_raw::subsets::any::schema::BinaryBuilder {
-    type Snapshot = BinarySnapshot;
-    type Inference = BinaryInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.binary.inference`'s facet leaves into the OS-wide inference catalog —

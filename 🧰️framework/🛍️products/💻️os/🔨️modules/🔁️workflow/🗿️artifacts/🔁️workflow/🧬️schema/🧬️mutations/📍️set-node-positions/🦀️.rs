@@ -4,7 +4,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Payload
 /// 📌️ One workflow node's absolute canvas position.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct WorkflowNodePosition {
     #[dsl(key = "id")]
@@ -15,7 +15,7 @@ pub struct WorkflowNodePosition {
 
 /// 📍️ Absolute canvas positions of a set of workflow nodes in ONE row: the exact undo of a `move-nodes` drag (every moved
 /// node back at its base position) and of itself, so a multi-node gesture stays one point-invertible row.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "set-node-positions")]
@@ -49,15 +49,16 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for SetNodePosit
         if present.is_empty() {
             return protocol::MutationOutcome::error("mutation.target-missing", format!("none of the {} workflow node(s) exists", ids.len()), missing);
         }
-        let partial = (!missing.is_empty()).then(|| protocol::MutationMessage::warn("mutation.partial", format!("{} of {} node(s) skipped (no such node): {}", missing.len(), ids.len(), missing.join(", "))).at(missing));
+        let partial = (!missing.is_empty()).then(|| protocol::MutationMessage::warning("mutation.partial", format!("{} of {} node(s) skipped (no such node): {}", missing.len(), ids.len(), missing.join(", "))).at(missing));
         let moves = present.iter().any(|position| base.graph.nodes.iter().any(|node| node.id == position.node_id && (node.x, node.y) != (position.x, position.y)));
         if !moves {
-            return protocol::MutationOutcome::empty().absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warn("mutation.no-op", "every node already sits at its position").at(ids)]));
+            return protocol::MutationOutcome::empty().absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "every node already sits at its position").at(ids)]));
         }
         protocol::MutationOutcome::new(WorkflowDiff::PlaceNodes { positions: present.into_iter().cloned().collect() }).absorb_messages(partial)
     }
     /// ↩️ ONE `set-node-positions` row with every placed node's BASE position; a placement that moves nothing has none.
-    fn inverse(&self, base: &WorkflowSnapshot) -> Vec<WorkflowMutation> {
+    fn inverse(&self, base: &WorkflowSnapshot) -> Result<Vec<WorkflowMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         if workflow_targets_invariant(&self.node_ids()).is_err() || self.positions.iter().any(|position| !position.x.is_finite() || !position.y.is_finite()) {
             return Vec::new();
         }
@@ -70,7 +71,9 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for SetNodePosit
             return Vec::new();
         }
         vec![WorkflowMutation::SetNodePositions(SetNodePositions { positions: placed.into_iter().map(|(position, _)| position).collect() })]
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set the positions of {} workflow node(s)", self.positions.len()), &format!("Positionen von {} Arbeitsablaufknoten setzen", self.positions.len()))
     }

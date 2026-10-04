@@ -7,10 +7,13 @@ use crate::standards::v1::subsets::any::schema::{find_layer, locate_layer};
 use crate::RasterSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::DeleteLayer, base: &RasterSnapshot) -> Vec<RasterMutation> {
+pub fn inverse(payload: &super::DeleteLayer, base: &RasterSnapshot) -> Result<Vec<RasterMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match (locate_layer(&base.layers, &payload.layer_id), find_layer(&base.layers, &payload.layer_id)) {
         (Some((parent_id, index)), Some(layer)) => vec![RasterMutation::CreateLayer(create_layer::CreateLayer { parent_id, index, layer: Box::new(layer.clone()) })],
         _ => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

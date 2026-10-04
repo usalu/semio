@@ -1,26 +1,27 @@
 //! 🖋️ Ordered PDF operators with explicitly named operands and intrinsic inline-image bytes.
+use semio_framework_value::{ValueError,ValueRefusalKind};
 use super::*;
 
 #[derive(Clone, Copy)]
 enum O { LineWidth, LineCap, LineJoin, MiterLimit, DashPhase, RenderingIntent, Flatness, ExtGState, X1, Y1, X2, Y2, X3, Y3, Width, Height, CharSpacing, WordSpacing, HorizontalScale, Leading, FontName, FontSize, TextRenderingMode, TextRise, Tx, Ty, TextKind, TextValue, TextCodes, GlyphWx, GlyphWy, BboxLlx, BboxLly, BboxUrx, BboxUry, ColorSpaceName, PatternName, Gray, Red, Green, Blue, Cyan, Magenta, Yellow, Black, ShadingName, XobjectName, MarkedTag, PropertyKind, PropertyName, PropertyDictionary, InlineImage, UnknownOperator }
 const WIDTH: usize = O::UnknownOperator as usize + 1;
-impl O { fn column(self) -> usize { self as usize + 4 } fn real(self, row:Row<'_>) -> Result<f64, String> { row.real(self.column()) } fn text<'a>(self, row:Row<'a>) -> Result<&'a str, String> { row.text(self.column()) } }
+impl O { fn column(self) -> usize { self as usize + 4 } fn real(self, row:Row<'_>) -> Result<f64,ValueError> { row.real(self.column()) } fn text<'a>(self, row:Row<'a>) -> Result<&'a str,ValueError> { row.text(self.column()) } }
 
 fn text_fields<'a>(fields: &mut [C<'a>; WIDTH], value: &'a PdfTextString) { match value { PdfTextString::Text { text } => { fields[O::TextKind as usize] = C::Text("text"); fields[O::TextValue as usize] = C::Text(text); }, PdfTextString::Codes { bytes } => { fields[O::TextKind as usize] = C::Text("codes"); fields[O::TextCodes as usize] = C::Blob(bytes); } } }
-fn read_text(reader:&mut Reader<'_,'_,'_>,row:Row<'_>) -> Result<PdfTextString, String> { match O::TextKind.text(row)? { "text" => { if row.values[O::TextCodes.column()] != V::Null { return Err("PDF text operand has both text and codes".into()); } Ok(PdfTextString::Text { text: reader.text(row,O::TextValue.column())? }) }, "codes" => { if row.values[O::TextValue.column()] != V::Null { return Err("PDF text operand has both codes and text".into()); } Ok(PdfTextString::Codes { bytes: reader.blob(row,O::TextCodes.column())? }) }, _ => Err("unknown PDF text operand kind".into()) } }
+fn read_text(reader:&mut Reader<'_,'_,'_>,row:Row<'_>) -> Result<PdfTextString,ValueError> { match O::TextKind.text(row)? { "text" => { if row.values[O::TextCodes.column()] != V::Null { return Err(ValueError::new(ValueRefusalKind::InvalidValue,"PDF text operand has both text and codes")); } Ok(PdfTextString::Text { text: reader.text(row,O::TextValue.column())? }) }, "codes" => { if row.values[O::TextValue.column()] != V::Null { return Err(ValueError::new(ValueRefusalKind::InvalidValue,"PDF text operand has both codes and text")); } Ok(PdfTextString::Codes { bytes: reader.blob(row,O::TextCodes.column())? }) }, _ => Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown PDF text operand kind")) } }
 
-fn write_inline(out: &mut Projection<'_, '_>, image: &PdfInlineImage) -> Result<i64, String> {
+fn write_inline(out: &mut Projection<'_, '_>, image: &PdfInlineImage) -> Result<i64,ValueError> {
     let color = image.color_space.as_ref().map(|color| color::write_color(out, color)).transpose()?; let filters = cos::write_filters(out, &image.filters)?; let extra = cos::write_dictionary(out, &image.extra)?;
     let key = out.insert("pdf_inline_image", &[C::Integer(i64::from(image.width)), C::Integer(i64::from(image.height)), C::Integer(i64::from(image.bits_per_component)), color.map_or(C::Null, C::Integer), C::Integer(i64::from(image.image_mask)), C::Integer(i64::from(image.interpolate)), C::Integer(filters), C::Blob(&image.data), C::Integer(extra)])?;
     for (ordinal, value) in image.decode.iter().enumerate() { out.insert("pdf_inline_decode", &[C::Integer(key), C::Integer(ordinal as i64), C::Real(*value)])?; }
     Ok(key)
 }
-fn read_inline(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<PdfInlineImage, String> {
+fn read_inline(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<PdfInlineImage,ValueError> {
     let row = reader.take("pdf_inline_image", key, 10)?; let mut decode = Vec::new(); for value in reader.children("pdf_inline_decode", 1, 2, key)? { let value = reader.take("pdf_inline_decode", value.rowid, 4)?; decode.push(value.real(3)?); }
     Ok(PdfInlineImage { width: integer(row, 1)?, height: integer(row, 2)?, bits_per_component: integer(row, 3)?, color_space: optional_integer(row, 4)?.map(|key| color::read_color(reader, key)).transpose()?, image_mask: boolean(row, 5)?, decode, interpolate: boolean(row, 6)?, filters: cos::read_filters(reader, row.integer(7)?)?, data: reader.blob(row,8)?, extra: cos::read_dictionary(reader, row.integer(9)?)? })
 }
 
-pub(super) fn write_ops(out: &mut Projection<'_, '_>, operations: &[PdfOp]) -> Result<i64, String> {
+pub(super) fn write_ops(out: &mut Projection<'_, '_>, operations: &[PdfOp]) -> Result<i64,ValueError> {
     let content = out.insert("pdf_content", &[])?;
     for (ordinal, operation) in operations.iter().enumerate() {
         let mut fields = [C::Null; WIDTH];
@@ -66,17 +67,17 @@ pub(super) fn write_ops(out: &mut Projection<'_, '_>, operations: &[PdfOp]) -> R
     Ok(content)
 }
 
-fn read_components(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<Vec<f64>, String> { let mut values = Vec::new(); for value in reader.children("pdf_operation_component",1,2,key)? { let value = reader.take("pdf_operation_component",value.rowid,4)?; values.push(value.real(3)?); } Ok(values) }
-fn read_matrix(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<PdfMatrix, String> { let value = reader.take("pdf_operation_matrix",key,7)?; Ok([value.real(1)?,value.real(2)?,value.real(3)?,value.real(4)?,value.real(5)?,value.real(6)?]) }
-fn read_properties(reader: &mut Reader<'_, '_, '_>, row:Row<'_>) -> Result<PdfPropertyList, String> {
+fn read_components(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<Vec<f64>,ValueError> { let mut values = Vec::new(); for value in reader.children("pdf_operation_component",1,2,key)? { let value = reader.take("pdf_operation_component",value.rowid,4)?; values.push(value.real(3)?); } Ok(values) }
+fn read_matrix(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<PdfMatrix,ValueError> { let value = reader.take("pdf_operation_matrix",key,7)?; Ok([value.real(1)?,value.real(2)?,value.real(3)?,value.real(4)?,value.real(5)?,value.real(6)?]) }
+fn read_properties(reader: &mut Reader<'_, '_, '_>, row:Row<'_>) -> Result<PdfPropertyList,ValueError> {
     match O::PropertyKind.text(row)? {
-        "named" => { if row.values[O::PropertyDictionary.column()] != V::Null { return Err("named PDF property list also has an inline dictionary".into()); } Ok(PdfPropertyList::Named { name: reader.text(row,O::PropertyName.column())? }) },
-        "inline" => { if row.values[O::PropertyName.column()] != V::Null { return Err("inline PDF property list also has a resource name".into()); } Ok(PdfPropertyList::Inline { entries: cos::read_dictionary(reader,row.integer(O::PropertyDictionary.column())?)? }) },
-        _ => Err("unknown PDF property list kind".into()),
+        "named" => { if row.values[O::PropertyDictionary.column()] != V::Null { return Err(ValueError::new(ValueRefusalKind::InvalidValue,"named PDF property list also has an inline dictionary")); } Ok(PdfPropertyList::Named { name: reader.text(row,O::PropertyName.column())? }) },
+        "inline" => { if row.values[O::PropertyName.column()] != V::Null { return Err(ValueError::new(ValueRefusalKind::InvalidValue,"inline PDF property list also has a resource name")); } Ok(PdfPropertyList::Inline { entries: cos::read_dictionary(reader,row.integer(O::PropertyDictionary.column())?)? }) },
+        _ => Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown PDF property list kind")),
     }
 }
 
-pub(super) fn read_ops(reader: &mut Reader<'_, '_, '_>, content: i64) -> Result<Vec<PdfOp>, String> {
+pub(super) fn read_ops(reader: &mut Reader<'_, '_, '_>, content: i64) -> Result<Vec<PdfOp>,ValueError> {
     use O::*;
     reader.take("pdf_content",content,1)?;
     let mut operations = Vec::new();
@@ -84,8 +85,8 @@ pub(super) fn read_ops(reader: &mut Reader<'_, '_, '_>, content: i64) -> Result<
         let row = reader.take("pdf_operation",row.rowid,WIDTH+4)?; let key = row.rowid;
         let (operation,present): (PdfOp,&[O]) = match row.text(3)? {
             "setLineWidth" => (PdfOp::SetLineWidth { width: LineWidth.real(row)? }, &[LineWidth]),
-            "setLineCap" => (PdfOp::SetLineCap { cap: match LineCap.text(row)? { "butt" => PdfLineCap::Butt, "round" => PdfLineCap::Round, "square" => PdfLineCap::Square, _ => return Err("unknown PDF line cap".into()) } }, &[LineCap]),
-            "setLineJoin" => (PdfOp::SetLineJoin { join: match LineJoin.text(row)? { "miter" => PdfLineJoin::Miter, "round" => PdfLineJoin::Round, "bevel" => PdfLineJoin::Bevel, _ => return Err("unknown PDF line join".into()) } }, &[LineJoin]),
+            "setLineCap" => (PdfOp::SetLineCap { cap: match LineCap.text(row)? { "butt" => PdfLineCap::Butt, "round" => PdfLineCap::Round, "square" => PdfLineCap::Square, _ => return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown PDF line cap")) } }, &[LineCap]),
+            "setLineJoin" => (PdfOp::SetLineJoin { join: match LineJoin.text(row)? { "miter" => PdfLineJoin::Miter, "round" => PdfLineJoin::Round, "bevel" => PdfLineJoin::Bevel, _ => return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown PDF line join")) } }, &[LineJoin]),
             "setMiterLimit" => (PdfOp::SetMiterLimit { limit: MiterLimit.real(row)? }, &[MiterLimit]),
             "setDash" => (PdfOp::SetDash { array: read_components(reader,key)?, phase: DashPhase.real(row)? }, &[DashPhase]),
             "setRenderingIntent" => (PdfOp::SetRenderingIntent { intent: reader.text(row,RenderingIntent.column())? }, &[RenderingIntent]),
@@ -101,7 +102,7 @@ pub(super) fn read_ops(reader: &mut Reader<'_, '_, '_>, content: i64) -> Result<
             "moveText" => (PdfOp::MoveText { tx:Tx.real(row)?,ty:Ty.real(row)? }, &[Tx,Ty]), "moveTextSetLeading" => (PdfOp::MoveTextSetLeading { tx:Tx.real(row)?,ty:Ty.real(row)? }, &[Tx,Ty]), "setTextMatrix" => (PdfOp::SetTextMatrix { matrix:read_matrix(reader,key)? }, &[]), "nextLine" => (PdfOp::NextLine,&[]),
             "showText" => (PdfOp::ShowText { text:read_text(reader,row)? }, &[TextKind,TextValue,TextCodes]), "nextLineShowText" => (PdfOp::NextLineShowText { text:read_text(reader,row)? }, &[TextKind,TextValue,TextCodes]), "nextLineShowTextSpaced" => (PdfOp::NextLineShowTextSpaced { word_spacing:WordSpacing.real(row)?,char_spacing:CharSpacing.real(row)?,text:read_text(reader,row)? }, &[WordSpacing,CharSpacing,TextKind,TextValue,TextCodes]),
             "showTextArray" => {
-                let mut items = Vec::new(); for item in reader.children("pdf_text_array_item",1,2,key)? { let item = reader.take("pdf_text_array_item",item.rowid,7)?; items.push(match item.text(3)? { "text" => { null_except(item,4..7,&[4])?; PdfTextArrayItem::Text { text:reader.text(item,4)? } }, "codes" => { null_except(item,4..7,&[5])?; PdfTextArrayItem::Codes { bytes:reader.blob(item,5)? } }, "adjust" => { null_except(item,4..7,&[6])?; PdfTextArrayItem::Adjust { amount:item.real(6)? } }, _ => return Err("unknown PDF text-array item kind".into()) }); } (PdfOp::ShowTextArray { items },&[])
+                let mut items = Vec::new(); for item in reader.children("pdf_text_array_item",1,2,key)? { let item = reader.take("pdf_text_array_item",item.rowid,7)?; items.push(match item.text(3)? { "text" => { null_except(item,4..7,&[4])?; PdfTextArrayItem::Text { text:reader.text(item,4)? } }, "codes" => { null_except(item,4..7,&[5])?; PdfTextArrayItem::Codes { bytes:reader.blob(item,5)? } }, "adjust" => { null_except(item,4..7,&[6])?; PdfTextArrayItem::Adjust { amount:item.real(6)? } }, _ => return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown PDF text-array item kind")) }); } (PdfOp::ShowTextArray { items },&[])
             },
             "setGlyphWidth" => (PdfOp::SetGlyphWidth { wx:GlyphWx.real(row)?,wy:GlyphWy.real(row)? }, &[GlyphWx,GlyphWy]), "setGlyphWidthAndBox" => (PdfOp::SetGlyphWidthAndBox { wx:GlyphWx.real(row)?,wy:GlyphWy.real(row)?,llx:BboxLlx.real(row)?,lly:BboxLly.real(row)?,urx:BboxUrx.real(row)?,ury:BboxUry.real(row)? }, &[GlyphWx,GlyphWy,BboxLlx,BboxLly,BboxUrx,BboxUry]),
             "setStrokeColorSpace" => (PdfOp::SetStrokeColorSpace { name:reader.text(row,ColorSpaceName.column())? }, &[ColorSpaceName]), "setFillColorSpace" => (PdfOp::SetFillColorSpace { name:reader.text(row,ColorSpaceName.column())? }, &[ColorSpaceName]),
@@ -113,7 +114,7 @@ pub(super) fn read_ops(reader: &mut Reader<'_, '_, '_>, content: i64) -> Result<
             "markedContentPoint" => (PdfOp::MarkedContentPoint { tag:reader.text(row,MarkedTag.column())? }, &[MarkedTag]), "beginMarkedContent" => (PdfOp::BeginMarkedContent { tag:reader.text(row,MarkedTag.column())? }, &[MarkedTag]), "markedContentPointWithProperties" => (PdfOp::MarkedContentPointWithProperties { tag:reader.text(row,MarkedTag.column())?,properties:read_properties(reader,row)? }, &[MarkedTag,PropertyKind,PropertyName,PropertyDictionary]), "beginMarkedContentWithProperties" => (PdfOp::BeginMarkedContentWithProperties { tag:reader.text(row,MarkedTag.column())?,properties:read_properties(reader,row)? }, &[MarkedTag,PropertyKind,PropertyName,PropertyDictionary]),
             "endMarkedContent" => (PdfOp::EndMarkedContent,&[]), "beginCompatibility" => (PdfOp::BeginCompatibility,&[]), "endCompatibility" => (PdfOp::EndCompatibility,&[]),
             "unknown" => { let mut operands = Vec::new(); for value in reader.children("pdf_unknown_operand",1,2,key)? { let value = reader.take("pdf_unknown_operand",value.rowid,4)?; operands.push(cos::read_object(reader,value.integer(3)?)?); } (PdfOp::Unknown { operator:reader.text(row,UnknownOperator.column())?,operands }, &[UnknownOperator]) },
-            _ => return Err("unknown PDF operation kind".into()),
+            _ => return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown PDF operation kind")),
         };
         let present = present.iter().copied().map(O::column).collect::<Vec<_>>(); null_except(row,4..WIDTH+4,&present)?;
         operations.push(operation);

@@ -152,6 +152,27 @@ fn library_from_wire(value: &Json) -> Result<json::JsonValue, String> {
     })
 }
 
+/// 🌲️ A `json::JsonValue` as the tagged `JsonValue` wire [`library_from_wire`] reads (a number as the lexeme json-rust prints).
+#[cfg(feature = "oracles")]
+fn library_to_wire(value: &json::JsonValue) -> Json {
+    let tagged = |kind: &str, member: Option<(&str, Json)>| Json::Object(std::iter::once(("kind".to_string(), Json::String(kind.to_string()))).chain(member.map(|(key, value)| (key.to_string(), value))).collect());
+    match value {
+        json::JsonValue::Null => tagged("null", None),
+        json::JsonValue::Boolean(flag) => tagged("bool", Some(("value", Json::Bool(*flag)))),
+        json::JsonValue::Number(_) => tagged("number", Some(("lexeme", Json::String(value.dump())))),
+        json::JsonValue::Short(_) | json::JsonValue::String(_) => tagged("string", Some(("value", Json::String(value.as_str().unwrap_or_default().to_string())))),
+        json::JsonValue::Array(items) => tagged("array", Some(("items", Json::Array(items.iter().map(library_to_wire).collect())))),
+        json::JsonValue::Object(object) => tagged("object", Some(("members", Json::Array(object.iter().map(|(key, member)| Json::Object(vec![("key".to_string(), Json::String(key.to_string())), ("value".to_string(), library_to_wire(member))])).collect())))),
+    }
+}
+
+/// 🩹️ The reference's own `JsonSnapshot` reading of `input` (`{schema, value}`) that a `patch-snapshot` row's pointer
+/// operation addresses, and that the case adapter restores the original through (`restore-snapshot`).
+#[cfg(feature = "oracles")]
+pub fn snapshot_wire(input: &[u8]) -> Result<Json, String> {
+    Ok(Json::Object(vec![("schema".to_string(), Json::String("stdio.json".to_string())), ("value".to_string(), library_to_wire(&read_json(input)?))]))
+}
+
 /// 🌳 The `value` member of a leaf payload, read through [`library_from_wire`].
 #[cfg(feature = "oracles")]
 fn value_param(params: &Json) -> Result<json::JsonValue, String> {
@@ -233,8 +254,19 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
             }
             write_json(&root)
         }
+        "patch-snapshot" => {
+            let patched = semio_repo_test_host::law::patched_snapshot(&snapshot_wire(input)?, params.get("patch").ok_or("patch-snapshot: missing `patch`")?)?;
+            write_json(&library_from_wire(patched.get("value").unwrap_or(&Json::Null))?)
+        }
+        "restore-snapshot" => write_json(&library_from_wire(params.get("snapshot").and_then(|snapshot| snapshot.get("value")).unwrap_or(&Json::Null))?),
         kind => Err(format!("mutation kind {kind:?} has no oracle implementation ({} input byte(s))", input.len())),
     }
+}
+
+/// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
+#[cfg(not(feature = "oracles"))]
+pub fn snapshot_wire(_input: &[u8]) -> Result<Json, String> {
+    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 
 /// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.

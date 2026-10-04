@@ -38,20 +38,6 @@
           "en": "Support conditions",
           "de": "Lagerungsart"
         },
-        "options": {
-          "SimplySupported": {
-            "en": "Simply supported",
-            "de": "Einfeldträger"
-          },
-          "Cantilever": {
-            "en": "Cantilever",
-            "de": "Kragträger"
-          },
-          "ContinuousTwoSpan": {
-            "en": "Continuous over two spans",
-            "de": "Zweifeldträger"
-          }
-        },
         "group": "geometry",
         "order": 20
       }

@@ -2,7 +2,7 @@
 
 use super::*;
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "set-engagement-input")]
@@ -18,9 +18,12 @@ impl protocol::MutationKind<PresentationConfig, PresentationConfigMutation> for 
         next.engagement_input = self.value.clone();
         protocol::MutationOutcome::new(next)
     }
-    fn inverse(&self, base: &PresentationConfig) -> Vec<PresentationConfigMutation> {
+    fn inverse(&self, base: &PresentationConfig) -> Result<Vec<PresentationConfigMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![PresentationConfigMutation::SetEngagementInput(Self { value: base.engagement_input.clone() })]
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set Engagement Input", "Interaktionseingabe setzen")
     }

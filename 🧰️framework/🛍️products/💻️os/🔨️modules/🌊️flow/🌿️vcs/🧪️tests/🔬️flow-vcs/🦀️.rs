@@ -71,19 +71,19 @@ struct SerdeJsonFlowOracle;
 
 impl FlowSemanticOracle for SerdeJsonFlowOracle {
     fn evaluate_operations(&self, source: &str) -> Vec<FlowOracleCase> {
-        let root: crate::os_pack::json::Value = crate::os_pack::json::parse(source).expect("test-only Flow oracle fixture");
+        let root: semio_framework_pack_json::Value = semio_framework_pack_json::parse(source, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("test-only Flow oracle fixture");
         let mut document = root.get("initial").expect("oracle initial document").clone();
-        let mut undo: Vec<(crate::os_pack::json::Value, usize)> = Vec::new();
-        let mut redo: Vec<(crate::os_pack::json::Value, usize)> = Vec::new();
+        let mut undo: Vec<(semio_framework_pack_json::Value, usize)> = Vec::new();
+        let mut redo: Vec<(semio_framework_pack_json::Value, usize)> = Vec::new();
         let mut versions = 1usize;
         let mut active = 0usize;
         let mut revision = 1u64;
         let mut document_generation = 1u64;
         let mut semantic_digest = flow_oracle_scalar_digest(&document);
         let mut results = Vec::new();
-        let operations = root.get("operations").and_then(crate::os_pack::json::Value::as_array).expect("oracle operations");
+        let operations = root.get("operations").and_then(semio_framework_pack_json::Value::as_array).expect("oracle operations");
         for (index, operation) in operations.iter().enumerate() {
-            let feature = operation.get("feature").and_then(crate::os_pack::json::Value::as_str).expect("oracle feature");
+            let feature = operation.get("feature").and_then(semio_framework_pack_json::Value::as_str).expect("oracle feature");
             let input = operation.get("input").expect("oracle operation input");
             match feature {
                 "undo" => {
@@ -134,7 +134,7 @@ impl FlowSemanticOracle for SerdeJsonFlowOracle {
                 semantic_digest,
             };
             let history = FlowOracleHistory { undo_owners: undo.len(), redo_owners: redo.len() };
-            let fingerprint_name = operation.get("expected").and_then(|value| value.get("handback")).and_then(|value| value.get("fingerprint")).and_then(crate::os_pack::json::Value::as_str).expect("oracle fingerprint reference");
+            let fingerprint_name = operation.get("expected").and_then(|value| value.get("handback")).and_then(|value| value.get("fingerprint")).and_then(semio_framework_pack_json::Value::as_str).expect("oracle fingerprint reference");
             let fingerprint = root.get("terminalFingerprints").and_then(|value| value.get(fingerprint_name)).expect("oracle terminal fingerprint");
             results.push(FlowOracleCase { feature: feature.to_owned(), document: flow_oracle_canonical_json(&document), handback: flow_oracle_expected_handback(fingerprint, &page, &history, versions, active), page, history });
         }
@@ -142,22 +142,22 @@ impl FlowSemanticOracle for SerdeJsonFlowOracle {
     }
 
     fn expected_operations(&self, source: &str) -> Vec<FlowOracleCase> {
-        let root: crate::os_pack::json::Value = crate::os_pack::json::parse(source).expect("test-only Flow oracle fixture");
-        let documents = root.get("documents").and_then(crate::os_pack::json::Value::as_object).expect("oracle document ledger");
+        let root: semio_framework_pack_json::Value = semio_framework_pack_json::parse(source, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("test-only Flow oracle fixture");
+        let documents = root.get("documents").and_then(semio_framework_pack_json::Value::as_object).expect("oracle document ledger");
         root.get("operations")
-            .and_then(crate::os_pack::json::Value::as_array)
+            .and_then(semio_framework_pack_json::Value::as_array)
             .expect("oracle operations")
             .iter()
             .map(|operation| {
-                let feature = operation.get("feature").and_then(crate::os_pack::json::Value::as_str).expect("oracle feature").to_owned();
+                let feature = operation.get("feature").and_then(semio_framework_pack_json::Value::as_str).expect("oracle feature").to_owned();
                 let expected = operation.get("expected").expect("oracle expected result");
-                let document_name = expected.get("document").and_then(crate::os_pack::json::Value::as_str).expect("oracle expected document");
+                let document_name = expected.get("document").and_then(semio_framework_pack_json::Value::as_str).expect("oracle expected document");
                 let page = flow_oracle_expected_page(expected.get("page").expect("oracle expected page"));
                 let history = flow_oracle_expected_history(expected.get("history").expect("oracle expected history"));
                 let handback = expected.get("handback").expect("oracle expected handback");
                 let versions = flow_oracle_usize(handback, "documentVersions");
                 let active = flow_oracle_usize(handback, "activeDocumentVersion");
-                let fingerprint_name = handback.get("fingerprint").and_then(crate::os_pack::json::Value::as_str).expect("oracle fingerprint reference");
+                let fingerprint_name = handback.get("fingerprint").and_then(semio_framework_pack_json::Value::as_str).expect("oracle fingerprint reference");
                 let fingerprint = root.get("terminalFingerprints").and_then(|value| value.get(fingerprint_name)).expect("oracle terminal fingerprint");
                 FlowOracleCase { feature, document: flow_oracle_canonical_json(documents.get(document_name).expect("oracle document reference")), handback: flow_oracle_expected_handback(fingerprint, &page, &history, versions, active), page, history }
             })
@@ -165,99 +165,99 @@ impl FlowSemanticOracle for SerdeJsonFlowOracle {
     }
 }
 
-fn flow_oracle_collection_len(document: &crate::os_pack::json::Value, key: &str) -> usize {
-    document.get(key).and_then(crate::os_pack::json::Value::as_array).expect("oracle collection").len()
+fn flow_oracle_collection_len(document: &semio_framework_pack_json::Value, key: &str) -> usize {
+    document.get(key).and_then(semio_framework_pack_json::Value::as_array).expect("oracle collection").len()
 }
 
-fn flow_oracle_object_len(document: &crate::os_pack::json::Value, key: &str) -> usize {
-    document.get(key).and_then(crate::os_pack::json::Value::as_object).expect("oracle object").len()
+fn flow_oracle_object_len(document: &semio_framework_pack_json::Value, key: &str) -> usize {
+    document.get(key).and_then(semio_framework_pack_json::Value::as_object).expect("oracle object").len()
 }
 
-fn flow_oracle_id_position(values: &[crate::os_pack::json::Value], id: &str) -> usize {
-    values.iter().position(|value| value.get("id").and_then(crate::os_pack::json::Value::as_str) == Some(id)).expect("oracle retained id")
+fn flow_oracle_id_position(values: &[semio_framework_pack_json::Value], id: &str) -> usize {
+    values.iter().position(|value| value.get("id").and_then(semio_framework_pack_json::Value::as_str) == Some(id)).expect("oracle retained id")
 }
 
-fn flow_oracle_apply_operation(feature: &str, input: &crate::os_pack::json::Value, document: &mut crate::os_pack::json::Value) {
+fn flow_oracle_apply_operation(feature: &str, input: &semio_framework_pack_json::Value, document: &mut semio_framework_pack_json::Value) {
     match feature {
         "addWidget" => {
             let index = flow_oracle_usize(input, "index");
-            document.get_mut("widgets").and_then(crate::os_pack::json::Value::as_array_mut).expect("oracle widgets").insert(index, input.get("widget").expect("oracle widget input").clone());
+            document.get_mut("widgets").and_then(semio_framework_pack_json::Value::as_array_mut).expect("oracle widgets").insert(index, input.get("widget").expect("oracle widget input").clone());
         }
         "removeWidget" => {
-            let id = input.get("id").and_then(crate::os_pack::json::Value::as_str).expect("oracle widget id");
-            let widgets = document.get_mut("widgets").and_then(crate::os_pack::json::Value::as_array_mut).expect("oracle widgets");
+            let id = input.get("id").and_then(semio_framework_pack_json::Value::as_str).expect("oracle widget id");
+            let widgets = document.get_mut("widgets").and_then(semio_framework_pack_json::Value::as_array_mut).expect("oracle widgets");
             let index = flow_oracle_id_position(widgets, id);
             widgets.remove(index);
         }
         "moveWidget" => {
-            let id = input.get("id").and_then(crate::os_pack::json::Value::as_str).expect("oracle widget id");
+            let id = input.get("id").and_then(semio_framework_pack_json::Value::as_str).expect("oracle widget id");
             let target = flow_oracle_usize(input, "index");
-            let widgets = document.get_mut("widgets").and_then(crate::os_pack::json::Value::as_array_mut).expect("oracle widgets");
+            let widgets = document.get_mut("widgets").and_then(semio_framework_pack_json::Value::as_array_mut).expect("oracle widgets");
             let index = flow_oracle_id_position(widgets, id);
             let widget = widgets.remove(index);
             widgets.insert(target, widget);
         }
         "patchWidget" => {
-            let id = input.get("id").and_then(crate::os_pack::json::Value::as_str).expect("oracle widget id");
-            let widgets = document.get_mut("widgets").and_then(crate::os_pack::json::Value::as_array_mut).expect("oracle widgets");
+            let id = input.get("id").and_then(semio_framework_pack_json::Value::as_str).expect("oracle widget id");
+            let widgets = document.get_mut("widgets").and_then(semio_framework_pack_json::Value::as_array_mut).expect("oracle widgets");
             let index = flow_oracle_id_position(widgets, id);
             widgets[index] = input.get("widget").expect("oracle widget patch").clone();
         }
         "addSynapse" => {
             let index = flow_oracle_usize(input, "index");
-            document.get_mut("synapses").and_then(crate::os_pack::json::Value::as_array_mut).expect("oracle synapses").insert(index, input.get("synapse").expect("oracle synapse input").clone());
+            document.get_mut("synapses").and_then(semio_framework_pack_json::Value::as_array_mut).expect("oracle synapses").insert(index, input.get("synapse").expect("oracle synapse input").clone());
         }
         "removeSynapse" => {
-            let id = input.get("id").and_then(crate::os_pack::json::Value::as_str).expect("oracle synapse id");
-            let synapses = document.get_mut("synapses").and_then(crate::os_pack::json::Value::as_array_mut).expect("oracle synapses");
+            let id = input.get("id").and_then(semio_framework_pack_json::Value::as_str).expect("oracle synapse id");
+            let synapses = document.get_mut("synapses").and_then(semio_framework_pack_json::Value::as_array_mut).expect("oracle synapses");
             let index = flow_oracle_id_position(synapses, id);
             synapses.remove(index);
         }
         "moveSynapse" => {
-            let id = input.get("id").and_then(crate::os_pack::json::Value::as_str).expect("oracle synapse id");
+            let id = input.get("id").and_then(semio_framework_pack_json::Value::as_str).expect("oracle synapse id");
             let target = flow_oracle_usize(input, "index");
-            let synapses = document.get_mut("synapses").and_then(crate::os_pack::json::Value::as_array_mut).expect("oracle synapses");
+            let synapses = document.get_mut("synapses").and_then(semio_framework_pack_json::Value::as_array_mut).expect("oracle synapses");
             let index = flow_oracle_id_position(synapses, id);
             let synapse = synapses.remove(index);
             synapses.insert(target, synapse);
         }
         "patchSynapse" => {
-            let id = input.get("id").and_then(crate::os_pack::json::Value::as_str).expect("oracle synapse id");
-            let synapses = document.get_mut("synapses").and_then(crate::os_pack::json::Value::as_array_mut).expect("oracle synapses");
+            let id = input.get("id").and_then(semio_framework_pack_json::Value::as_str).expect("oracle synapse id");
+            let synapses = document.get_mut("synapses").and_then(semio_framework_pack_json::Value::as_array_mut).expect("oracle synapses");
             let index = flow_oracle_id_position(synapses, id);
             synapses[index] = input.get("synapse").expect("oracle synapse patch").clone();
         }
         "setLayout" => {
-            let id = input.get("id").and_then(crate::os_pack::json::Value::as_str).expect("oracle layout id").to_owned();
+            let id = input.get("id").and_then(semio_framework_pack_json::Value::as_str).expect("oracle layout id").to_owned();
             let layout = input.get("layout").expect("oracle layout input").clone();
-            document.get_mut("layout").and_then(crate::os_pack::json::Value::as_object_mut).expect("oracle layout").insert(id, layout);
+            document.get_mut("layout").and_then(semio_framework_pack_json::Value::as_object_mut).expect("oracle layout").insert(id, layout);
         }
         "replaceDocument" => *document = input.get("document").expect("oracle replacement").clone(),
         _ => panic!("unsupported oracle operation {feature}"),
     }
 }
 
-fn flow_oracle_scalar_digest(document: &crate::os_pack::json::Value) -> u64 {
-    let schema = document.get("schema").and_then(crate::os_pack::json::Value::as_str).expect("oracle schema");
+fn flow_oracle_scalar_digest(document: &semio_framework_pack_json::Value) -> u64 {
+    let schema = document.get("schema").and_then(semio_framework_pack_json::Value::as_str).expect("oracle schema");
     let camera = document.get("camera").expect("oracle camera");
     14_695_981_039_346_656_037
         ^ u64::try_from(schema.len()).expect("oracle schema bytes").rotate_left(3)
         ^ u64::try_from(flow_oracle_collection_len(document, "widgets")).expect("oracle widget count").rotate_left(11)
         ^ u64::try_from(flow_oracle_collection_len(document, "synapses")).expect("oracle synapse count").rotate_left(23)
         ^ u64::try_from(flow_oracle_object_len(document, "layout")).expect("oracle layout count").rotate_left(37)
-        ^ camera.get("x").and_then(crate::os_pack::json::Value::as_f64).expect("oracle camera x").to_bits()
-        ^ camera.get("y").and_then(crate::os_pack::json::Value::as_f64).expect("oracle camera y").to_bits().rotate_left(17)
-        ^ camera.get("zoom").and_then(crate::os_pack::json::Value::as_f64).expect("oracle camera zoom").to_bits().rotate_left(31)
+        ^ camera.get("x").and_then(semio_framework_pack_json::Value::as_f64).expect("oracle camera x").to_bits()
+        ^ camera.get("y").and_then(semio_framework_pack_json::Value::as_f64).expect("oracle camera y").to_bits().rotate_left(17)
+        ^ camera.get("zoom").and_then(semio_framework_pack_json::Value::as_f64).expect("oracle camera zoom").to_bits().rotate_left(31)
 }
 
-fn flow_oracle_canonical_json(value: &crate::os_pack::json::Value) -> String {
-    fn append(value: &crate::os_pack::json::Value, output: &mut String) {
+fn flow_oracle_canonical_json(value: &semio_framework_pack_json::Value) -> String {
+    fn append(value: &semio_framework_pack_json::Value, output: &mut String) {
         match value {
-            crate::os_pack::json::Value::Null => output.push_str("null"),
-            crate::os_pack::json::Value::Bool(value) => output.push_str(if *value { "true" } else { "false" }),
-            crate::os_pack::json::Value::Number(value) => output.push_str(&format!("f64:{:016x}", value.as_f64().to_bits())),
-            crate::os_pack::json::Value::String(value) => output.push_str(&crate::os_pack::json::to_string(&crate::os_pack::json::Value::String(value.clone()))),
-            crate::os_pack::json::Value::Array(values) => {
+            semio_framework_pack_json::Value::Null => output.push_str("null"),
+            semio_framework_pack_json::Value::Bool(value) => output.push_str(if *value { "true" } else { "false" }),
+            semio_framework_pack_json::Value::Number(value) => output.push_str(&format!("f64:{:016x}", value.as_f64().to_bits())),
+            semio_framework_pack_json::Value::String(value) => output.push_str(&semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::String(value.clone()))),
+            semio_framework_pack_json::Value::Array(values) => {
                 output.push('[');
                 for value in values {
                     append(value, output);
@@ -265,12 +265,12 @@ fn flow_oracle_canonical_json(value: &crate::os_pack::json::Value) -> String {
                 }
                 output.push(']');
             }
-            crate::os_pack::json::Value::Object(values) => {
+            semio_framework_pack_json::Value::Object(values) => {
                 let mut keys: Vec<&str> = values.iter().map(|(key, _)| key).collect();
                 keys.sort();
                 output.push('{');
                 for key in keys {
-                    output.push_str(&crate::os_pack::json::to_string(&crate::os_pack::json::Value::String(key.to_string())));
+                    output.push_str(&semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::String(key.to_string())));
                     output.push(':');
                     append(values.get(key).expect("oracle value"), output);
                     output.push(',');
@@ -284,16 +284,16 @@ fn flow_oracle_canonical_json(value: &crate::os_pack::json::Value) -> String {
     output
 }
 
-fn flow_oracle_u64(value: &crate::os_pack::json::Value, key: &str) -> u64 {
+fn flow_oracle_u64(value: &semio_framework_pack_json::Value, key: &str) -> u64 {
     let value = value.get(key).expect("oracle numeric field");
     value.as_u64().or_else(|| value.as_str().and_then(|text| text.parse().ok())).expect("oracle u64 field")
 }
 
-fn flow_oracle_usize(value: &crate::os_pack::json::Value, key: &str) -> usize {
+fn flow_oracle_usize(value: &semio_framework_pack_json::Value, key: &str) -> usize {
     usize::try_from(flow_oracle_u64(value, key)).expect("oracle usize field")
 }
 
-fn flow_oracle_expected_page(value: &crate::os_pack::json::Value) -> FlowOraclePage {
+fn flow_oracle_expected_page(value: &semio_framework_pack_json::Value) -> FlowOraclePage {
     FlowOraclePage {
         sequence: flow_oracle_u64(value, "sequence"),
         operation: flow_oracle_u64(value, "operation"),
@@ -308,11 +308,11 @@ fn flow_oracle_expected_page(value: &crate::os_pack::json::Value) -> FlowOracleP
     }
 }
 
-fn flow_oracle_expected_history(value: &crate::os_pack::json::Value) -> FlowOracleHistory {
+fn flow_oracle_expected_history(value: &semio_framework_pack_json::Value) -> FlowOracleHistory {
     FlowOracleHistory { undo_owners: flow_oracle_usize(value, "undoOwners"), redo_owners: flow_oracle_usize(value, "redoOwners") }
 }
 
-fn flow_oracle_expected_handback(template: &crate::os_pack::json::Value, page: &FlowOraclePage, history: &FlowOracleHistory, document_versions: usize, active_document_version: usize) -> FlowOracleHandback {
+fn flow_oracle_expected_handback(template: &semio_framework_pack_json::Value, page: &FlowOraclePage, history: &FlowOracleHistory, document_versions: usize, active_document_version: usize) -> FlowOracleHandback {
     let credits = template.get("credits").expect("oracle terminal credits");
     FlowOracleHandback {
         credits: [
@@ -336,13 +336,13 @@ fn flow_oracle_expected_handback(template: &crate::os_pack::json::Value, page: &
         document_digest: page.semantic_digest,
         document_versions,
         active_document_version,
-        edit_owner: template.get("editOwner").and_then(crate::os_pack::json::Value::as_u64),
-        document_retained: template.get("documentRetained").and_then(crate::os_pack::json::Value::as_bool).expect("oracle document retained"),
-        closing: template.get("closing").and_then(crate::os_pack::json::Value::as_bool).expect("oracle closing"),
+        edit_owner: template.get("editOwner").and_then(semio_framework_pack_json::Value::as_u64),
+        document_retained: template.get("documentRetained").and_then(semio_framework_pack_json::Value::as_bool).expect("oracle document retained"),
+        closing: template.get("closing").and_then(semio_framework_pack_json::Value::as_bool).expect("oracle closing"),
     }
 }
 
-fn flow_hostile_expected_fingerprint(lifecycle: &crate::os_pack::json::Value, name: &str) -> FlowOracleHandback {
+fn flow_hostile_expected_fingerprint(lifecycle: &semio_framework_pack_json::Value, name: &str) -> FlowOracleHandback {
     let value = lifecycle.get("fingerprints").and_then(|values| values.get(name)).expect("hostile fingerprint reference");
     let credits = value.get("credits").expect("hostile fingerprint credits");
     FlowOracleHandback {
@@ -367,15 +367,15 @@ fn flow_hostile_expected_fingerprint(lifecycle: &crate::os_pack::json::Value, na
         document_digest: flow_oracle_u64(value, "documentDigest"),
         document_versions: flow_oracle_usize(value, "documentVersions"),
         active_document_version: flow_oracle_usize(value, "activeDocumentVersion"),
-        edit_owner: value.get("editOwner").and_then(crate::os_pack::json::Value::as_u64),
-        document_retained: value.get("documentRetained").and_then(crate::os_pack::json::Value::as_bool).expect("hostile document retained"),
-        closing: value.get("closing").and_then(crate::os_pack::json::Value::as_bool).expect("hostile closing"),
+        edit_owner: value.get("editOwner").and_then(semio_framework_pack_json::Value::as_u64),
+        document_retained: value.get("documentRetained").and_then(semio_framework_pack_json::Value::as_bool).expect("hostile document retained"),
+        closing: value.get("closing").and_then(semio_framework_pack_json::Value::as_bool).expect("hostile closing"),
     }
 }
 
-fn flow_hostile_resolve_document<'a>(lifecycle: &'a crate::os_pack::json::Value, oracle: &'a crate::os_pack::json::Value, reference: &crate::os_pack::json::Value) -> &'a crate::os_pack::json::Value {
-    let fixture = reference.get("fixture").and_then(crate::os_pack::json::Value::as_str).expect("hostile document fixture");
-    let path = reference.get("path").and_then(crate::os_pack::json::Value::as_str).expect("hostile document path");
+fn flow_hostile_resolve_document<'a>(lifecycle: &'a semio_framework_pack_json::Value, oracle: &'a semio_framework_pack_json::Value, reference: &semio_framework_pack_json::Value) -> &'a semio_framework_pack_json::Value {
+    let fixture = reference.get("fixture").and_then(semio_framework_pack_json::Value::as_str).expect("hostile document fixture");
+    let path = reference.get("path").and_then(semio_framework_pack_json::Value::as_str).expect("hostile document path");
     match (fixture, path) {
         ("oracle", "initial") => oracle.get("initial").expect("oracle initial document"),
         ("lifecycle", "protocolDocuments.replacementBoundary") => lifecycle.get("protocolDocuments").and_then(|value| value.get("replacementBoundary")).expect("replacement boundary document"),
@@ -384,12 +384,12 @@ fn flow_hostile_resolve_document<'a>(lifecycle: &'a crate::os_pack::json::Value,
     }
 }
 
-fn flow_hostile_expected_state(lifecycle: &crate::os_pack::json::Value, oracle: &crate::os_pack::json::Value, name: &str) -> FlowHostileState {
+fn flow_hostile_expected_state(lifecycle: &semio_framework_pack_json::Value, oracle: &semio_framework_pack_json::Value, name: &str) -> FlowHostileState {
     let state = lifecycle.get("expectedStates").and_then(|states| states.get(name)).expect("hostile expected state reference");
     let document = flow_hostile_resolve_document(lifecycle, oracle, state.get("document").expect("hostile expected document"));
-    assert!(state.get("page").is_some_and(crate::os_pack::json::Value::is_null), "hostile state page must be explicitly null");
+    assert!(state.get("page").is_some_and(semio_framework_pack_json::Value::is_null), "hostile state page must be explicitly null");
     let history = flow_oracle_expected_history(state.get("history").expect("hostile expected history"));
-    let fingerprint_name = state.get("handback").and_then(|value| value.get("fingerprint")).and_then(crate::os_pack::json::Value::as_str).expect("hostile fingerprint name");
+    let fingerprint_name = state.get("handback").and_then(|value| value.get("fingerprint")).and_then(semio_framework_pack_json::Value::as_str).expect("hostile fingerprint name");
     FlowHostileState { document: flow_oracle_canonical_json(document), page: None, history, handback: flow_hostile_expected_fingerprint(lifecycle, fingerprint_name) }
 }
 
@@ -416,7 +416,7 @@ fn flow_hostile_actual_fingerprint(fingerprint: FlowVcsResourceFingerprint) -> F
 
 fn flow_hostile_actual_state(session: &FlowRetainedVcs) -> FlowHostileState {
     let fingerprint = session.resource_fingerprint();
-    let document = crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(session.document.as_ref().expect("hostile retained document").host_snapshot()));
+    let document = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(session.document.as_ref().expect("hostile retained document").host_snapshot()));
     let page = session.operations[0]
         .as_ref()
         .and_then(|operation| operation.page)
@@ -438,7 +438,7 @@ fn flow_hostile_actual_state(session: &FlowRetainedVcs) -> FlowHostileState {
     FlowHostileState { document: flow_oracle_canonical_json(&document), page, history: FlowOracleHistory { undo_owners: fingerprint.undo_owners, redo_owners: fingerprint.redo_owners }, handback: flow_hostile_actual_fingerprint(fingerprint) }
 }
 
-fn flow_hostile_grant(value: &crate::os_pack::json::Value) -> FlowVcsGrant {
+fn flow_hostile_grant(value: &semio_framework_pack_json::Value) -> FlowVcsGrant {
     FlowVcsGrant {
         items: flow_oracle_usize(value, "items"),
         bytes: flow_oracle_usize(value, "bytes"),
@@ -448,7 +448,7 @@ fn flow_hostile_grant(value: &crate::os_pack::json::Value) -> FlowVcsGrant {
         fuel: u32::try_from(flow_oracle_u64(value, "fuel")).expect("hostile grant fuel"),
         now_milliseconds: flow_oracle_u64(value, "nowMilliseconds"),
         deadline_milliseconds: flow_oracle_u64(value, "deadlineMilliseconds"),
-        interrupted: value.get("interrupted").and_then(crate::os_pack::json::Value::as_bool).expect("hostile grant interruption"),
+        interrupted: value.get("interrupted").and_then(semio_framework_pack_json::Value::as_bool).expect("hostile grant interruption"),
     }
 }
 
@@ -472,7 +472,7 @@ enum FlowHostilePath {
     Index(usize),
 }
 
-fn flow_hostile_fixture_digest(value: &crate::os_pack::json::Value) -> u64 {
+fn flow_hostile_fixture_digest(value: &semio_framework_pack_json::Value) -> u64 {
     let mut digest = 14_695_981_039_346_656_037u64;
     for byte in flow_oracle_canonical_json(value).as_bytes() {
         digest ^= u64::from(*byte);
@@ -481,16 +481,16 @@ fn flow_hostile_fixture_digest(value: &crate::os_pack::json::Value) -> u64 {
     digest
 }
 
-fn flow_hostile_scalar_paths(value: &crate::os_pack::json::Value, path: &mut Vec<FlowHostilePath>, output: &mut Vec<Vec<FlowHostilePath>>) {
+fn flow_hostile_scalar_paths(value: &semio_framework_pack_json::Value, path: &mut Vec<FlowHostilePath>, output: &mut Vec<Vec<FlowHostilePath>>) {
     match value {
-        crate::os_pack::json::Value::Array(values) => {
+        semio_framework_pack_json::Value::Array(values) => {
             for (index, value) in values.iter().enumerate() {
                 path.push(FlowHostilePath::Index(index));
                 flow_hostile_scalar_paths(value, path, output);
                 path.pop();
             }
         }
-        crate::os_pack::json::Value::Object(values) => {
+        semio_framework_pack_json::Value::Object(values) => {
             for (key, value) in values.iter() {
                 path.push(FlowHostilePath::Key(key.to_string()));
                 flow_hostile_scalar_paths(value, path, output);
@@ -501,7 +501,7 @@ fn flow_hostile_scalar_paths(value: &crate::os_pack::json::Value, path: &mut Vec
     }
 }
 
-fn flow_hostile_mutate_scalar(value: &mut crate::os_pack::json::Value, path: &[FlowHostilePath]) {
+fn flow_hostile_mutate_scalar(value: &mut semio_framework_pack_json::Value, path: &[FlowHostilePath]) {
     let mut target = value;
     for component in path {
         target = match component {
@@ -510,15 +510,15 @@ fn flow_hostile_mutate_scalar(value: &mut crate::os_pack::json::Value, path: &[F
         };
     }
     *target = match target {
-        crate::os_pack::json::Value::Null => crate::os_pack::json::Value::Bool(true),
-        crate::os_pack::json::Value::Bool(value) => crate::os_pack::json::Value::Bool(!*value),
-        crate::os_pack::json::Value::Number(value) => crate::os_pack::json::Value::Number((value.as_f64() + 1.0).into()),
-        crate::os_pack::json::Value::String(value) => crate::os_pack::json::Value::String(format!("{value}!")),
+        semio_framework_pack_json::Value::Null => semio_framework_pack_json::Value::Bool(true),
+        semio_framework_pack_json::Value::Bool(value) => semio_framework_pack_json::Value::Bool(!*value),
+        semio_framework_pack_json::Value::Number(value) => semio_framework_pack_json::Value::Number((value.as_f64() + 1.0).into()),
+        semio_framework_pack_json::Value::String(value) => semio_framework_pack_json::Value::String(format!("{value}!")),
         _ => unreachable!("hostile mutation targets scalars"),
     };
 }
 
-fn flow_hostile_assert_every_scalar_is_signed(value: &crate::os_pack::json::Value, expected: u64) {
+fn flow_hostile_assert_every_scalar_is_signed(value: &semio_framework_pack_json::Value, expected: u64) {
     assert_eq!(flow_hostile_fixture_digest(value), expected);
     let mut paths = Vec::new();
     flow_hostile_scalar_paths(value, &mut Vec::new(), &mut paths);
@@ -532,7 +532,7 @@ fn flow_hostile_assert_every_scalar_is_signed(value: &crate::os_pack::json::Valu
 
 fn flow_oracle_actual_case(feature: &str, session: &FlowRetainedVcs, page: FlowVcsPage) -> FlowOracleCase {
     let fingerprint = session.resource_fingerprint();
-    let document = crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(session.document.as_ref().expect("oracle retained document").host_snapshot()));
+    let document = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(session.document.as_ref().expect("oracle retained document").host_snapshot()));
     FlowOracleCase {
         feature: feature.to_owned(),
         document: flow_oracle_canonical_json(&document),
@@ -570,55 +570,55 @@ fn flow_oracle_actual_case(feature: &str, session: &FlowRetainedVcs, page: FlowV
     }
 }
 
-fn flow_oracle_begin_operation(session: &mut FlowRetainedVcs, operation: &crate::os_pack::json::Value) -> FlowVcsHandle {
-    let feature = operation.get("feature").and_then(crate::os_pack::json::Value::as_str).expect("oracle feature");
+fn flow_oracle_begin_operation(session: &mut FlowRetainedVcs, operation: &semio_framework_pack_json::Value) -> FlowVcsHandle {
+    let feature = operation.get("feature").and_then(semio_framework_pack_json::Value::as_str).expect("oracle feature");
     let input = operation.get("input").expect("oracle operation input");
     let authority = session.authority();
     match feature {
         "addWidget" => {
-            let mut source = FlowVcsSource::new(<Widget as crate::os_dsl::FromValue>::from_value(crate::os_pack::json::to_dsl_value(&input.get("widget").expect("oracle widget").clone())).expect("oracle widget input"));
+            let mut source = FlowVcsSource::new(<Widget as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&input.get("widget").expect("oracle widget").clone())).expect("oracle widget input"));
             session.begin_add_widget(authority, flow_oracle_usize(input, "index"), &mut source).expect("oracle add widget")
         }
         "removeWidget" => {
-            let mut source = FlowVcsSource::new(input.get("id").and_then(crate::os_pack::json::Value::as_str).expect("oracle widget id").to_owned());
+            let mut source = FlowVcsSource::new(input.get("id").and_then(semio_framework_pack_json::Value::as_str).expect("oracle widget id").to_owned());
             session.begin_remove_widget(authority, &mut source).expect("oracle remove widget")
         }
         "moveWidget" => {
-            let mut source = FlowVcsSource::new(input.get("id").and_then(crate::os_pack::json::Value::as_str).expect("oracle widget id").to_owned());
+            let mut source = FlowVcsSource::new(input.get("id").and_then(semio_framework_pack_json::Value::as_str).expect("oracle widget id").to_owned());
             session.begin_move_widget(authority, flow_oracle_usize(input, "index"), &mut source).expect("oracle move widget")
         }
         "patchWidget" => {
-            let mut id = FlowVcsSource::new(input.get("id").and_then(crate::os_pack::json::Value::as_str).expect("oracle widget id").to_owned());
-            let mut source = FlowVcsSource::new(<Widget as crate::os_dsl::FromValue>::from_value(crate::os_pack::json::to_dsl_value(&input.get("widget").expect("oracle widget").clone())).expect("oracle widget patch"));
+            let mut id = FlowVcsSource::new(input.get("id").and_then(semio_framework_pack_json::Value::as_str).expect("oracle widget id").to_owned());
+            let mut source = FlowVcsSource::new(<Widget as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&input.get("widget").expect("oracle widget").clone())).expect("oracle widget patch"));
             session.begin_patch_widget(authority, &mut id, &mut source).expect("oracle patch widget")
         }
         "addSynapse" => {
-            let mut source = FlowVcsSource::new(<SynapseSpec as crate::os_dsl::FromValue>::from_value(crate::os_pack::json::to_dsl_value(&input.get("synapse").expect("oracle synapse").clone())).expect("oracle synapse input"));
+            let mut source = FlowVcsSource::new(<SynapseSpec as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&input.get("synapse").expect("oracle synapse").clone())).expect("oracle synapse input"));
             session.begin_add_synapse(authority, flow_oracle_usize(input, "index"), &mut source).expect("oracle add synapse")
         }
         "removeSynapse" => {
-            let mut source = FlowVcsSource::new(input.get("id").and_then(crate::os_pack::json::Value::as_str).expect("oracle synapse id").to_owned());
+            let mut source = FlowVcsSource::new(input.get("id").and_then(semio_framework_pack_json::Value::as_str).expect("oracle synapse id").to_owned());
             session.begin_remove_synapse(authority, &mut source).expect("oracle remove synapse")
         }
         "moveSynapse" => {
-            let mut source = FlowVcsSource::new(input.get("id").and_then(crate::os_pack::json::Value::as_str).expect("oracle synapse id").to_owned());
+            let mut source = FlowVcsSource::new(input.get("id").and_then(semio_framework_pack_json::Value::as_str).expect("oracle synapse id").to_owned());
             session.begin_move_synapse(authority, flow_oracle_usize(input, "index"), &mut source).expect("oracle move synapse")
         }
         "patchSynapse" => {
-            let mut id = FlowVcsSource::new(input.get("id").and_then(crate::os_pack::json::Value::as_str).expect("oracle synapse id").to_owned());
-            let mut source = FlowVcsSource::new(<SynapseSpec as crate::os_dsl::FromValue>::from_value(crate::os_pack::json::to_dsl_value(&input.get("synapse").expect("oracle synapse").clone())).expect("oracle synapse patch"));
+            let mut id = FlowVcsSource::new(input.get("id").and_then(semio_framework_pack_json::Value::as_str).expect("oracle synapse id").to_owned());
+            let mut source = FlowVcsSource::new(<SynapseSpec as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&input.get("synapse").expect("oracle synapse").clone())).expect("oracle synapse patch"));
             session.begin_patch_synapse(authority, &mut id, &mut source).expect("oracle patch synapse")
         }
         "setLayout" => {
             let layout = input.get("layout").expect("oracle layout");
             let mut source = FlowVcsSource::new(FlowLayoutEntry {
-                id: input.get("id").and_then(crate::os_pack::json::Value::as_str).expect("oracle layout id").to_owned(),
-                layout: Some(WidgetLayout { x: layout.get("x").and_then(crate::os_pack::json::Value::as_f64).expect("oracle layout x"), y: layout.get("y").and_then(crate::os_pack::json::Value::as_f64).expect("oracle layout y") }),
+                id: input.get("id").and_then(semio_framework_pack_json::Value::as_str).expect("oracle layout id").to_owned(),
+                layout: Some(WidgetLayout { x: layout.get("x").and_then(semio_framework_pack_json::Value::as_f64).expect("oracle layout x"), y: layout.get("y").and_then(semio_framework_pack_json::Value::as_f64).expect("oracle layout y") }),
             });
             session.begin_set_layout(authority, &mut source).expect("oracle set layout")
         }
         "replaceDocument" => {
-            let mut source = FlowVcsSource::new(<FlowHostSnapshot as crate::os_dsl::FromValue>::from_value(crate::os_pack::json::to_dsl_value(&input.get("document").expect("oracle replacement").clone())).expect("oracle replacement document"));
+            let mut source = FlowVcsSource::new(<FlowHostSnapshot as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&input.get("document").expect("oracle replacement").clone())).expect("oracle replacement document"));
             session.begin_replace_document(authority, &mut source).expect("oracle replace document")
         }
         "undo" => session.begin_undo(authority).expect("oracle undo"),
@@ -628,23 +628,23 @@ fn flow_oracle_begin_operation(session: &mut FlowRetainedVcs, operation: &crate:
     }
 }
 
-fn flow_hostile_named_grant(lifecycle: &crate::os_pack::json::Value, name: &str) -> FlowVcsGrant {
-    let vector = lifecycle.get("grantVectors").and_then(crate::os_pack::json::Value::as_array).and_then(|values| values.iter().find(|value| value.get("name").and_then(crate::os_pack::json::Value::as_str) == Some(name))).expect("hostile named grant");
+fn flow_hostile_named_grant(lifecycle: &semio_framework_pack_json::Value, name: &str) -> FlowVcsGrant {
+    let vector = lifecycle.get("grantVectors").and_then(semio_framework_pack_json::Value::as_array).and_then(|values| values.iter().find(|value| value.get("name").and_then(semio_framework_pack_json::Value::as_str) == Some(name))).expect("hostile named grant");
     flow_hostile_grant(vector.get("protocol").and_then(|value| value.get("call")).and_then(|value| value.get("grant")).expect("hostile named grant input"))
 }
 
-fn flow_hostile_session(lifecycle: &crate::os_pack::json::Value, oracle: &crate::os_pack::json::Value, protocol: &crate::os_pack::json::Value) -> FlowRetainedVcs {
-    let document_reference = protocol.get("document").and_then(crate::os_pack::json::Value::as_str).expect("hostile protocol document");
+fn flow_hostile_session(lifecycle: &semio_framework_pack_json::Value, oracle: &semio_framework_pack_json::Value, protocol: &semio_framework_pack_json::Value) -> FlowRetainedVcs {
+    let document_reference = protocol.get("document").and_then(semio_framework_pack_json::Value::as_str).expect("hostile protocol document");
     assert_eq!(document_reference, "oracle.initial");
-    let document = <FlowHostSnapshot as crate::os_dsl::FromValue>::from_value(crate::os_pack::json::to_dsl_value(&oracle.get("initial").expect("hostile oracle initial").clone())).expect("hostile initial Flow fixture");
+    let document = <FlowHostSnapshot as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&oracle.get("initial").expect("hostile oracle initial").clone())).expect("hostile initial Flow fixture");
     let session = protocol.get("session").expect("hostile protocol session");
     let _ = lifecycle;
     FlowRetainedVcs::new(document, u32::try_from(flow_oracle_u64(session, "generation")).expect("hostile session generation"), flow_oracle_u64(session, "revision"), flow_oracle_u64(session, "parentRevision"))
 }
 
-fn flow_hostile_apply_setup(session: &mut FlowRetainedVcs, setup: &crate::os_pack::json::Value) {
-    let undo_owners = setup.get("undoOwners").and_then(crate::os_pack::json::Value::as_u64).unwrap_or(0);
-    let redo_owners = setup.get("redoOwners").and_then(crate::os_pack::json::Value::as_u64).unwrap_or(0);
+fn flow_hostile_apply_setup(session: &mut FlowRetainedVcs, setup: &semio_framework_pack_json::Value) {
+    let undo_owners = setup.get("undoOwners").and_then(semio_framework_pack_json::Value::as_u64).unwrap_or(0);
+    let redo_owners = setup.get("redoOwners").and_then(semio_framework_pack_json::Value::as_u64).unwrap_or(0);
     for _ in 0..undo_owners {
         session.undo.push(FlowVcsAction::Checkpoint).expect("hostile undo setup");
     }
@@ -656,7 +656,7 @@ fn flow_hostile_apply_setup(session: &mut FlowRetainedVcs, setup: &crate::os_pac
     }
 }
 
-fn flow_hostile_authority(session: &FlowRetainedVcs, operation: &crate::os_pack::json::Value) -> FlowVcsAuthority {
+fn flow_hostile_authority(session: &FlowRetainedVcs, operation: &semio_framework_pack_json::Value) -> FlowVcsAuthority {
     operation.get("authority").map_or_else(
         || session.authority(),
         |value| FlowVcsAuthority {
@@ -667,8 +667,8 @@ fn flow_hostile_authority(session: &FlowRetainedVcs, operation: &crate::os_pack:
     )
 }
 
-fn flow_hostile_begin_operation(session: &mut FlowRetainedVcs, lifecycle: &crate::os_pack::json::Value, oracle: &crate::os_pack::json::Value, operation: &crate::os_pack::json::Value) -> FlowVcsHandle {
-    let feature = operation.get("feature").and_then(crate::os_pack::json::Value::as_str).expect("hostile feature");
+fn flow_hostile_begin_operation(session: &mut FlowRetainedVcs, lifecycle: &semio_framework_pack_json::Value, oracle: &semio_framework_pack_json::Value, operation: &semio_framework_pack_json::Value) -> FlowVcsHandle {
+    let feature = operation.get("feature").and_then(semio_framework_pack_json::Value::as_str).expect("hostile feature");
     let authority = flow_hostile_authority(session, operation);
     match feature {
         "checkpoint" => session.begin_checkpoint(authority).expect("hostile checkpoint"),
@@ -677,40 +677,40 @@ fn flow_hostile_begin_operation(session: &mut FlowRetainedVcs, lifecycle: &crate
             let input = operation.get("input").expect("hostile layout input");
             let layout = input.get("layout").expect("hostile layout value");
             let mut source = FlowVcsSource::new(FlowLayoutEntry {
-                id: input.get("id").and_then(crate::os_pack::json::Value::as_str).expect("hostile layout id").to_owned(),
-                layout: Some(WidgetLayout { x: layout.get("x").and_then(crate::os_pack::json::Value::as_f64).expect("hostile layout x"), y: layout.get("y").and_then(crate::os_pack::json::Value::as_f64).expect("hostile layout y") }),
+                id: input.get("id").and_then(semio_framework_pack_json::Value::as_str).expect("hostile layout id").to_owned(),
+                layout: Some(WidgetLayout { x: layout.get("x").and_then(semio_framework_pack_json::Value::as_f64).expect("hostile layout x"), y: layout.get("y").and_then(semio_framework_pack_json::Value::as_f64).expect("hostile layout y") }),
             });
             session.begin_set_layout(authority, &mut source).expect("hostile set layout")
         }
         "addWidget" => {
             let input = operation.get("input").expect("hostile widget input");
-            let mut source = FlowVcsSource::new(<Widget as crate::os_dsl::FromValue>::from_value(crate::os_pack::json::to_dsl_value(&input.get("widget").expect("hostile widget").clone())).expect("hostile widget input"));
+            let mut source = FlowVcsSource::new(<Widget as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&input.get("widget").expect("hostile widget").clone())).expect("hostile widget input"));
             session.begin_add_widget(authority, flow_oracle_usize(input, "index"), &mut source).expect("hostile add widget")
         }
         "removeWidget" => {
             let input = operation.get("input").expect("hostile remove input");
-            let mut source = FlowVcsSource::new(input.get("id").and_then(crate::os_pack::json::Value::as_str).expect("hostile remove id").to_owned());
+            let mut source = FlowVcsSource::new(input.get("id").and_then(semio_framework_pack_json::Value::as_str).expect("hostile remove id").to_owned());
             session.begin_remove_widget(authority, &mut source).expect("hostile remove widget")
         }
         "moveWidget" => {
             let input = operation.get("input").expect("hostile move input");
-            let mut source = FlowVcsSource::new(input.get("id").and_then(crate::os_pack::json::Value::as_str).expect("hostile move id").to_owned());
+            let mut source = FlowVcsSource::new(input.get("id").and_then(semio_framework_pack_json::Value::as_str).expect("hostile move id").to_owned());
             session.begin_move_widget(authority, flow_oracle_usize(input, "index"), &mut source).expect("hostile move widget")
         }
         "replaceDocument" => {
             let reference = operation.get("input").and_then(|value| value.get("document")).expect("hostile replacement reference");
             let document = flow_hostile_resolve_document(lifecycle, oracle, reference);
-            let mut source = FlowVcsSource::new(<FlowHostSnapshot as crate::os_dsl::FromValue>::from_value(crate::os_pack::json::to_dsl_value(&document.clone())).expect("hostile replacement document"));
+            let mut source = FlowVcsSource::new(<FlowHostSnapshot as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&document.clone())).expect("hostile replacement document"));
             session.begin_replace_document(authority, &mut source).expect("hostile replace document")
         }
         _ => panic!("unsupported hostile operation {feature}"),
     }
 }
 
-fn flow_hostile_cursor_matches(session: &FlowRetainedVcs, handle: FlowVcsHandle, target: &crate::os_pack::json::Value) -> bool {
+fn flow_hostile_cursor_matches(session: &FlowRetainedVcs, handle: FlowVcsHandle, target: &semio_framework_pack_json::Value) -> bool {
     let operation = session.operations[usize::from(handle.slot)].as_ref().expect("hostile operation slot");
     let cursor = &operation.cursor;
-    if let Some(phase) = target.get("phase").and_then(crate::os_pack::json::Value::as_str) {
+    if let Some(phase) = target.get("phase").and_then(semio_framework_pack_json::Value::as_str) {
         let actual = match cursor.phase {
             FlowVcsCursorPhase::LoadHistory => "LoadHistory",
             FlowVcsCursorPhase::Scan => "Scan",
@@ -737,7 +737,7 @@ fn flow_hostile_cursor_matches(session: &FlowRetainedVcs, handle: FlowVcsHandle,
             return false;
         }
     }
-    if let Some(kind) = target.get("kind").and_then(crate::os_pack::json::Value::as_str) {
+    if let Some(kind) = target.get("kind").and_then(semio_framework_pack_json::Value::as_str) {
         let actual = match cursor.kind {
             FlowVcsCursorKind::None => "None",
             FlowVcsCursorKind::InsertWidget => "InsertWidget",
@@ -784,7 +784,7 @@ fn flow_hostile_close_and_drain(session: &mut FlowRetainedVcs, handle: FlowVcsHa
     }
 }
 
-fn flow_hostile_expected_handle(value: &crate::os_pack::json::Value) -> FlowVcsHandle {
+fn flow_hostile_expected_handle(value: &semio_framework_pack_json::Value) -> FlowVcsHandle {
     FlowVcsHandle {
         operation: flow_oracle_u64(value, "operation"),
         slot: u8::try_from(flow_oracle_u64(value, "slot")).expect("hostile handle slot"),
@@ -792,7 +792,7 @@ fn flow_hostile_expected_handle(value: &crate::os_pack::json::Value) -> FlowVcsH
     }
 }
 
-fn flow_hostile_surface_owner(value: &crate::os_pack::json::Value) -> FlowSurfaceOwner {
+fn flow_hostile_surface_owner(value: &semio_framework_pack_json::Value) -> FlowSurfaceOwner {
     FlowSurfaceOwner {
         surface: flow_oracle_u64(value, "surface"),
         host: flow_oracle_u64(value, "host"),
@@ -811,19 +811,19 @@ fn flow_hostile_surface_owner(value: &crate::os_pack::json::Value) -> FlowSurfac
     }
 }
 
-fn flow_hostile_assert_rollback_boundary(session: &FlowRetainedVcs, handle: FlowVcsHandle, operation_fixture: &crate::os_pack::json::Value, target: &crate::os_pack::json::Value, expected: &crate::os_pack::json::Value) {
+fn flow_hostile_assert_rollback_boundary(session: &FlowRetainedVcs, handle: FlowVcsHandle, operation_fixture: &semio_framework_pack_json::Value, target: &semio_framework_pack_json::Value, expected: &semio_framework_pack_json::Value) {
     let operation = session.operations[usize::from(handle.slot)].as_ref().expect("rollback operation");
     let stage = match operation.stage {
         FlowVcsStage::Cancelled => "Cancelled",
         FlowVcsStage::Faulted => "Faulted",
         _ => "Unexpected",
     };
-    assert_eq!(stage, expected.get("stage").and_then(crate::os_pack::json::Value::as_str).expect("rollback stage"));
+    assert_eq!(stage, expected.get("stage").and_then(semio_framework_pack_json::Value::as_str).expect("rollback stage"));
     assert_eq!(operation.authority, flow_hostile_authority(session, expected));
     assert_eq!(operation.authority, flow_hostile_authority(session, operation_fixture));
     let surface = target.get("surfaceOwner").expect("rollback surface owner");
     let owner = flow_hostile_surface_owner(surface);
-    match surface.get("location").and_then(crate::os_pack::json::Value::as_str).expect("rollback surface location") {
+    match surface.get("location").and_then(semio_framework_pack_json::Value::as_str).expect("rollback surface location") {
         "retired" => {
             assert!(session.document.as_ref().expect("rollback document").surface.is_none());
             assert_eq!(session.retired_surfaces.len(), 1);
@@ -919,8 +919,8 @@ fn retire_snapshot_source(source: &mut FlowVcsSource<FlowHostSnapshot>) {
 //#region 📍️OrderedLayoutLaws
 #[test]
 fn retained_vcs_shared_snapshot_readers_retire_without_waiting_on_each_other() {
-    let fixture: crate::os_pack::json::Value = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
-    let snapshot = Arc::new(<FlowHostSnapshot as crate::os_dsl::FromValue>::from_value(crate::os_pack::json::to_dsl_value(&fixture["initial"].clone())).unwrap());
+    let fixture: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let snapshot = Arc::new(<FlowHostSnapshot as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&fixture["initial"].clone())).unwrap());
     let mut readers = [std::mem::ManuallyDrop::new(FlowSnapshotRetirementFactory.retire(Arc::clone(&snapshot))), std::mem::ManuallyDrop::new(FlowSnapshotRetirementFactory.retire(snapshot))];
     for reader in &mut readers {
         assert!(matches!(reader.close_step(0, 256).unwrap(), SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
@@ -957,9 +957,9 @@ fn close_layout_session(session: &mut FlowRetainedVcs) {
 
 #[test]
 fn retained_vcs_ordered_layout_edits_undo_redo_match_json_oracle() {
-    let fixture: crate::os_pack::json::Value = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut expected = fixture["initial"]["layout"].clone();
-    let mut session = FlowRetainedVcs::new(crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(&fixture["initial"].clone())).unwrap(), 1, 0, 0);
+    let mut session = FlowRetainedVcs::new(semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&fixture["initial"].clone())).unwrap(), 1, 0, 0);
     for edit in fixture["edits"].as_array().unwrap() {
         let previous = expected.clone();
         let key = edit["id"].as_str().unwrap();
@@ -968,16 +968,16 @@ fn retained_vcs_ordered_layout_edits_undo_redo_match_json_oracle() {
         } else {
             expected.as_object_mut().unwrap().insert(key.to_owned(), edit["layout"].clone());
         }
-        let mut source = FlowVcsSource::new(<FlowLayoutEntry as crate::os_dsl::FromValue>::from_value(crate::os_pack::json::to_dsl_value(&edit.clone())).unwrap());
+        let mut source = FlowVcsSource::new(<FlowLayoutEntry as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&edit.clone())).unwrap());
         let handle = session.begin_set_layout(session.authority(), &mut source).unwrap();
         publish_and_close(&mut session, handle);
-        assert_eq!(crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&session.document.as_ref().unwrap().host_snapshot().layout)), expected);
+        assert_eq!(semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&session.document.as_ref().unwrap().host_snapshot().layout)), expected);
         let undo = session.begin_undo(session.authority()).unwrap();
         publish_and_close(&mut session, undo);
-        assert_eq!(crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&session.document.as_ref().unwrap().host_snapshot().layout)), previous);
+        assert_eq!(semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&session.document.as_ref().unwrap().host_snapshot().layout)), previous);
         let redo = session.begin_redo(session.authority()).unwrap();
         publish_and_close(&mut session, redo);
-        assert_eq!(crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&session.document.as_ref().unwrap().host_snapshot().layout)), expected);
+        assert_eq!(semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&session.document.as_ref().unwrap().host_snapshot().layout)), expected);
         while !session.close_retired_step(retained_grant()).unwrap() {}
     }
     close_layout_session(&mut session);
@@ -985,11 +985,11 @@ fn retained_vcs_ordered_layout_edits_undo_redo_match_json_oracle() {
 
 #[test]
 fn retained_vcs_ordered_layout_cancel_at_each_unpublished_boundary_retires_exactly() {
-    let fixture: crate::os_pack::json::Value = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for edit in fixture["edits"].as_array().unwrap() {
         for boundary in 0..64 {
-            let mut session = FlowRetainedVcs::new(crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(&fixture["initial"].clone())).unwrap(), 1, 0, 0);
-            let mut source = FlowVcsSource::new(<FlowLayoutEntry as crate::os_dsl::FromValue>::from_value(crate::os_pack::json::to_dsl_value(&edit.clone())).unwrap());
+            let mut session = FlowRetainedVcs::new(semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&fixture["initial"].clone())).unwrap(), 1, 0, 0);
+            let mut source = FlowVcsSource::new(<FlowLayoutEntry as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&edit.clone())).unwrap());
             let handle = session.begin_set_layout(session.authority(), &mut source).unwrap();
             let mut published = false;
             for _ in 0..boundary {
@@ -1006,7 +1006,7 @@ fn retained_vcs_ordered_layout_cancel_at_each_unpublished_boundary_retires_exact
             }
             while !session.close_operation_step(handle, retained_grant()).unwrap() {}
             if !published {
-                assert_eq!(crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&session.document.as_ref().unwrap().host_snapshot().layout)), fixture["initial"]["layout"], "cancel boundary {boundary}");
+                assert_eq!(semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&session.document.as_ref().unwrap().host_snapshot().layout)), fixture["initial"]["layout"], "cancel boundary {boundary}");
                 assert_eq!(session.credits(), FlowVcsCredits::default());
             }
             close_layout_session(&mut session);
@@ -1067,13 +1067,13 @@ fn retained_vcs_all_thirteen_fixture_operations_match_independent_third_party_or
     assert_eq!(independently_evaluated, expected);
     assert_eq!(expected.len(), FLOW_VCS_FEATURES.len());
 
-    let root: crate::os_pack::json::Value = crate::os_pack::json::parse(source).expect("retained oracle fixture");
-    let initial = <FlowHostSnapshot as crate::os_dsl::FromValue>::from_value(crate::os_pack::json::to_dsl_value(&root.get("initial").expect("oracle initial document").clone())).expect("oracle initial Flow fixture");
-    let operations = root.get("operations").and_then(crate::os_pack::json::Value::as_array).expect("oracle operation ledger");
+    let root: semio_framework_pack_json::Value = semio_framework_pack_json::parse(source, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("retained oracle fixture");
+    let initial = <FlowHostSnapshot as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&root.get("initial").expect("oracle initial document").clone())).expect("oracle initial Flow fixture");
+    let operations = root.get("operations").and_then(semio_framework_pack_json::Value::as_array).expect("oracle operation ledger");
     let mut session = FlowRetainedVcs::new(initial, 77, 1, 0);
     let mut actual = Vec::new();
     for (operation, expected_feature) in operations.iter().zip(FLOW_VCS_FEATURES) {
-        let feature = operation.get("feature").and_then(crate::os_pack::json::Value::as_str).expect("oracle feature");
+        let feature = operation.get("feature").and_then(semio_framework_pack_json::Value::as_str).expect("oracle feature");
         assert_eq!(feature, expected_feature);
         let handle = flow_oracle_begin_operation(&mut session, operation);
         let page = publish_and_close(&mut session, handle);
@@ -1085,13 +1085,13 @@ fn retained_vcs_all_thirteen_fixture_operations_match_independent_third_party_or
 
 #[test]
 fn retained_vcs_language_neutral_vector_signatures_detect_every_field_and_value_mutation() {
-    let oracle: crate::os_pack::json::Value = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🧾️semantic-history/🔣️.json")).expect("oracle fixture");
-    let lifecycle: crate::os_pack::json::Value = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🔄️lifecycle/🔣️.json")).expect("lifecycle fixture");
-    let owners: crate::os_pack::json::Value = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🫴️owners/🔣️.json")).expect("owner fixture");
-    let operations = oracle.get("operations").and_then(crate::os_pack::json::Value::as_array).expect("operation ledger");
+    let oracle: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🧾️semantic-history/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("oracle fixture");
+    let lifecycle: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🔄️lifecycle/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("lifecycle fixture");
+    let owners: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🫴️owners/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("owner fixture");
+    let operations = oracle.get("operations").and_then(semio_framework_pack_json::Value::as_array).expect("operation ledger");
     assert_eq!(operations.len(), FLOW_VCS_FEATURES.len());
     for (operation, feature) in operations.iter().zip(FLOW_VCS_FEATURES) {
-        assert_eq!(operation.get("feature").and_then(crate::os_pack::json::Value::as_str), Some(feature));
+        assert_eq!(operation.get("feature").and_then(semio_framework_pack_json::Value::as_str), Some(feature));
         let expected = operation.get("expected").expect("expected operation ledger");
         assert!(operation.get("input").is_some());
         assert!(expected.get("document").is_some());
@@ -1101,39 +1101,39 @@ fn retained_vcs_language_neutral_vector_signatures_detect_every_field_and_value_
     }
     let signatures = lifecycle.get("hostileVectorDigests").expect("hostile vector signatures");
     for name in ["byteVectors", "authorityVectors", "malformedVectors", "grantVectors", "transferControlLedger"] {
-        let values = lifecycle.get(name).and_then(crate::os_pack::json::Value::as_array).expect("hostile vector collection");
-        let expected = signatures.get(name).and_then(crate::os_pack::json::Value::as_array).expect("hostile vector digest collection");
+        let values = lifecycle.get(name).and_then(semio_framework_pack_json::Value::as_array).expect("hostile vector collection");
+        let expected = signatures.get(name).and_then(semio_framework_pack_json::Value::as_array).expect("hostile vector digest collection");
         assert_eq!(values.len(), expected.len());
         for (value, digest) in values.iter().zip(expected) {
             flow_hostile_assert_every_scalar_is_signed(value, digest.as_str().and_then(|value| value.parse().ok()).expect("hostile vector digest"));
         }
     }
     for name in ["fingerprints", "expectedStates", "protocolDocuments"] {
-        let values = lifecycle.get(name).and_then(crate::os_pack::json::Value::as_object).expect("hostile vector map");
-        let expected = signatures.get(name).and_then(crate::os_pack::json::Value::as_object).expect("hostile vector digest map");
+        let values = lifecycle.get(name).and_then(semio_framework_pack_json::Value::as_object).expect("hostile vector map");
+        let expected = signatures.get(name).and_then(semio_framework_pack_json::Value::as_object).expect("hostile vector digest map");
         assert_eq!(values.len(), expected.len());
         for (key, value) in values {
-            flow_hostile_assert_every_scalar_is_signed(value, expected.get(key).and_then(crate::os_pack::json::Value::as_str).and_then(|value| value.parse().ok()).expect("hostile map digest"));
+            flow_hostile_assert_every_scalar_is_signed(value, expected.get(key).and_then(semio_framework_pack_json::Value::as_str).and_then(|value| value.parse().ok()).expect("hostile map digest"));
         }
     }
-    assert_eq!(lifecycle.get("byteVectors").and_then(crate::os_pack::json::Value::as_array).expect("byte vectors").len(), 3);
-    assert_eq!(lifecycle.get("authorityVectors").and_then(crate::os_pack::json::Value::as_array).expect("authority vectors").len(), 4);
-    assert_eq!(lifecycle.get("malformedVectors").and_then(crate::os_pack::json::Value::as_array).expect("malformed vectors").len(), 3);
-    assert_eq!(lifecycle.get("grantVectors").and_then(crate::os_pack::json::Value::as_array).expect("grant vectors").len(), 5);
-    let transfers = lifecycle.get("transferControlLedger").and_then(crate::os_pack::json::Value::as_array).expect("transfer ledgers");
+    assert_eq!(lifecycle.get("byteVectors").and_then(semio_framework_pack_json::Value::as_array).expect("byte vectors").len(), 3);
+    assert_eq!(lifecycle.get("authorityVectors").and_then(semio_framework_pack_json::Value::as_array).expect("authority vectors").len(), 4);
+    assert_eq!(lifecycle.get("malformedVectors").and_then(semio_framework_pack_json::Value::as_array).expect("malformed vectors").len(), 3);
+    assert_eq!(lifecycle.get("grantVectors").and_then(semio_framework_pack_json::Value::as_array).expect("grant vectors").len(), 5);
+    let transfers = lifecycle.get("transferControlLedger").and_then(semio_framework_pack_json::Value::as_array).expect("transfer ledgers");
     assert_eq!(transfers.len(), 24);
-    assert!(transfers.iter().all(|value| value.get("controls").and_then(crate::os_pack::json::Value::as_array).is_some_and(|controls| controls.len() == 2)));
+    assert!(transfers.iter().all(|value| value.get("controls").and_then(semio_framework_pack_json::Value::as_array).is_some_and(|controls| controls.len() == 2)));
     let rollback = transfers.iter().filter(|value| value.get("protocol").and_then(|protocol| protocol.get("target")).and_then(|target| target.get("rollbackSteps")).is_some()).collect::<Vec<_>>();
     assert_eq!(rollback.len(), 5);
     for value in rollback {
-        let controls = value.get("controls").and_then(crate::os_pack::json::Value::as_array).expect("rollback controls");
-        assert_eq!(controls[0].get("control").and_then(crate::os_pack::json::Value::as_str), Some("cancel"));
-        assert_eq!(controls[1].get("control").and_then(crate::os_pack::json::Value::as_str), Some("fault"));
-        assert!(controls.iter().all(|control| control.get("expected").and_then(|expected| expected.get("result")).and_then(crate::os_pack::json::Value::as_str) == Some("ok")));
-        assert_eq!(controls[0].get("expected").and_then(|expected| expected.get("atBoundary")).and_then(|boundary| boundary.get("stage")).and_then(crate::os_pack::json::Value::as_str), Some("Cancelled"));
-        assert_eq!(controls[1].get("expected").and_then(|expected| expected.get("atBoundary")).and_then(|boundary| boundary.get("stage")).and_then(crate::os_pack::json::Value::as_str), Some("Faulted"));
+        let controls = value.get("controls").and_then(semio_framework_pack_json::Value::as_array).expect("rollback controls");
+        assert_eq!(controls[0].get("control").and_then(semio_framework_pack_json::Value::as_str), Some("cancel"));
+        assert_eq!(controls[1].get("control").and_then(semio_framework_pack_json::Value::as_str), Some("fault"));
+        assert!(controls.iter().all(|control| control.get("expected").and_then(|expected| expected.get("result")).and_then(semio_framework_pack_json::Value::as_str) == Some("ok")));
+        assert_eq!(controls[0].get("expected").and_then(|expected| expected.get("atBoundary")).and_then(|boundary| boundary.get("stage")).and_then(semio_framework_pack_json::Value::as_str), Some("Cancelled"));
+        assert_eq!(controls[1].get("expected").and_then(|expected| expected.get("atBoundary")).and_then(|boundary| boundary.get("stage")).and_then(semio_framework_pack_json::Value::as_str), Some("Faulted"));
     }
-    assert_eq!(owners.get("fixtureLedgers").and_then(|value| value.get("hostileOmissionLaws")).and_then(crate::os_pack::json::Value::as_array).expect("hostile omission laws").len(), 17);
+    assert_eq!(owners.get("fixtureLedgers").and_then(|value| value.get("hostileOmissionLaws")).and_then(semio_framework_pack_json::Value::as_array).expect("hostile omission laws").len(), 17);
 
     let laws = include_str!("🦀️.rs");
     let source = &laws[..laws.find("fn retained_vcs_language_neutral_vector_signatures_detect_every_field_and_value_mutation").expect("this law's own definition")];
@@ -1149,15 +1149,15 @@ fn retained_vcs_language_neutral_vector_signatures_detect_every_field_and_value_
 
 #[test]
 fn retained_vcs_fixture_byte_vectors_execute_exact_multibyte_max_and_max_plus_one_results() {
-    let oracle: crate::os_pack::json::Value = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🧾️semantic-history/🔣️.json")).expect("oracle fixture");
-    let lifecycle: crate::os_pack::json::Value = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🔄️lifecycle/🔣️.json")).expect("lifecycle fixture");
-    for vector in lifecycle.get("byteVectors").and_then(crate::os_pack::json::Value::as_array).expect("byte vectors") {
+    let oracle: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🧾️semantic-history/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("oracle fixture");
+    let lifecycle: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🔄️lifecycle/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("lifecycle fixture");
+    for vector in lifecycle.get("byteVectors").and_then(semio_framework_pack_json::Value::as_array).expect("byte vectors") {
         let protocol = vector.get("protocol").expect("byte protocol");
         let input = protocol.get("operation").expect("byte operation");
-        assert_eq!(input.get("feature").and_then(crate::os_pack::json::Value::as_str), Some("removeWidget"));
-        let value = match input.get("encoding").and_then(crate::os_pack::json::Value::as_str).expect("byte encoding") {
-            "literal" => input.get("value").and_then(crate::os_pack::json::Value::as_str).expect("byte literal").to_owned(),
-            "repeatUtf8" => input.get("unit").and_then(crate::os_pack::json::Value::as_str).expect("byte unit").repeat(flow_oracle_usize(input, "repetitions")),
+        assert_eq!(input.get("feature").and_then(semio_framework_pack_json::Value::as_str), Some("removeWidget"));
+        let value = match input.get("encoding").and_then(semio_framework_pack_json::Value::as_str).expect("byte encoding") {
+            "literal" => input.get("value").and_then(semio_framework_pack_json::Value::as_str).expect("byte literal").to_owned(),
+            "repeatUtf8" => input.get("unit").and_then(semio_framework_pack_json::Value::as_str).expect("byte unit").repeat(flow_oracle_usize(input, "repetitions")),
             encoding => panic!("unsupported byte encoding {encoding}"),
         };
         assert_eq!(value.chars().count(), flow_oracle_usize(input, "characterCount"));
@@ -1167,42 +1167,42 @@ fn retained_vcs_fixture_byte_vectors_execute_exact_multibyte_max_and_max_plus_on
         let authority = flow_hostile_authority(&session, input);
         let result = session.begin_remove_widget(authority, &mut source);
         let expected = vector.get("expected").expect("byte expected result");
-        let expected_result = expected.get("result").and_then(crate::os_pack::json::Value::as_str).expect("byte result");
+        let expected_result = expected.get("result").and_then(semio_framework_pack_json::Value::as_str).expect("byte result");
         match result {
             Ok(handle) => {
                 assert_eq!(expected_result, "accepted");
                 assert_eq!(handle, flow_hostile_expected_handle(expected.get("expectedHandle").expect("byte expected handle")));
-                assert_eq!(source.retained(), expected.get("sourceRetained").and_then(crate::os_pack::json::Value::as_bool).expect("byte retained result"));
-                assert_eq!(flow_hostile_actual_state(&session), flow_hostile_expected_state(&lifecycle, &oracle, expected.get("admissionState").and_then(crate::os_pack::json::Value::as_str).expect("byte admission state")));
-                let grant_name = protocol.get("cleanup").and_then(|value| value.get("grant")).and_then(crate::os_pack::json::Value::as_str).expect("byte cleanup grant");
+                assert_eq!(source.retained(), expected.get("sourceRetained").and_then(semio_framework_pack_json::Value::as_bool).expect("byte retained result"));
+                assert_eq!(flow_hostile_actual_state(&session), flow_hostile_expected_state(&lifecycle, &oracle, expected.get("admissionState").and_then(semio_framework_pack_json::Value::as_str).expect("byte admission state")));
+                let grant_name = protocol.get("cleanup").and_then(|value| value.get("grant")).and_then(semio_framework_pack_json::Value::as_str).expect("byte cleanup grant");
                 let grant = flow_hostile_named_grant(&lifecycle, grant_name);
-                let cleanup = protocol.get("cleanup").and_then(|value| value.get("control")).and_then(crate::os_pack::json::Value::as_str).expect("byte cleanup control");
+                let cleanup = protocol.get("cleanup").and_then(|value| value.get("control")).and_then(semio_framework_pack_json::Value::as_str).expect("byte cleanup control");
                 assert_eq!(cleanup, "cancel");
                 session.cancel(handle, grant).expect("byte vector cleanup cancel");
                 flow_hostile_close_and_drain(&mut session, handle, grant);
             }
             Err(fault) => {
                 assert_eq!(flow_hostile_fault_name(fault), expected_result);
-                assert!(expected.get("expectedHandle").is_some_and(crate::os_pack::json::Value::is_null));
-                assert_eq!(source.retained(), expected.get("sourceRetained").and_then(crate::os_pack::json::Value::as_bool).expect("byte retained result"));
+                assert!(expected.get("expectedHandle").is_some_and(semio_framework_pack_json::Value::is_null));
+                assert_eq!(source.retained(), expected.get("sourceRetained").and_then(semio_framework_pack_json::Value::as_bool).expect("byte retained result"));
             }
         }
-        assert_eq!(flow_hostile_actual_state(&session), flow_hostile_expected_state(&lifecycle, &oracle, expected.get("afterCloseState").and_then(crate::os_pack::json::Value::as_str).expect("byte final state")));
+        assert_eq!(flow_hostile_actual_state(&session), flow_hostile_expected_state(&lifecycle, &oracle, expected.get("afterCloseState").and_then(semio_framework_pack_json::Value::as_str).expect("byte final state")));
         close_to_terminal(&mut session);
     }
 }
 
 #[test]
 fn retained_vcs_fixture_authority_malformed_and_grant_vectors_execute_exact_results() {
-    let oracle: crate::os_pack::json::Value = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🧾️semantic-history/🔣️.json")).expect("oracle fixture");
-    let lifecycle: crate::os_pack::json::Value = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🔄️lifecycle/🔣️.json")).expect("lifecycle fixture");
+    let oracle: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🧾️semantic-history/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("oracle fixture");
+    let lifecycle: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🔄️lifecycle/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("lifecycle fixture");
     let valid_grant = flow_hostile_named_grant(&lifecycle, "valid");
 
-    for vector in lifecycle.get("authorityVectors").and_then(crate::os_pack::json::Value::as_array).expect("authority vectors") {
+    for vector in lifecycle.get("authorityVectors").and_then(semio_framework_pack_json::Value::as_array).expect("authority vectors") {
         let protocol = vector.get("protocol").expect("authority protocol");
         let mut session = flow_hostile_session(&lifecycle, &oracle, protocol);
         let operation = protocol.get("operation").expect("authority operation");
-        assert_eq!(operation.get("feature").and_then(crate::os_pack::json::Value::as_str), Some("checkpoint"));
+        assert_eq!(operation.get("feature").and_then(semio_framework_pack_json::Value::as_str), Some("checkpoint"));
         let authority = operation.get("authority").map_or_else(
             || session.authority(),
             |value| FlowVcsAuthority {
@@ -1214,16 +1214,16 @@ fn retained_vcs_fixture_authority_malformed_and_grant_vectors_execute_exact_resu
         let handle = session.begin_checkpoint(authority).expect("authority checkpoint admission");
         assert_eq!(handle, flow_hostile_expected_handle(protocol.get("expectedAdmittedHandle").expect("authority admitted handle")));
         let call = protocol.get("call").expect("authority call");
-        assert_eq!(call.get("method").and_then(crate::os_pack::json::Value::as_str), Some("poll"));
-        let grant = flow_hostile_named_grant(&lifecycle, call.get("grant").and_then(crate::os_pack::json::Value::as_str).expect("authority grant"));
-        let result = if let Some(polls) = call.get("polls").and_then(crate::os_pack::json::Value::as_u64) {
+        assert_eq!(call.get("method").and_then(semio_framework_pack_json::Value::as_str), Some("poll"));
+        let grant = flow_hostile_named_grant(&lifecycle, call.get("grant").and_then(semio_framework_pack_json::Value::as_str).expect("authority grant"));
+        let result = if let Some(polls) = call.get("polls").and_then(semio_framework_pack_json::Value::as_u64) {
             for _ in 1..polls {
                 session.poll(handle, grant).expect("authority setup poll");
             }
             session.poll(handle, grant)
         } else {
             let forged = call.get("handle").expect("forged handle");
-            if let Some(prior) = call.get("priorGeneration").and_then(crate::os_pack::json::Value::as_u64) {
+            if let Some(prior) = call.get("priorGeneration").and_then(semio_framework_pack_json::Value::as_u64) {
                 assert_eq!(prior, u64::from(handle.generation));
             }
             session.poll(
@@ -1236,51 +1236,51 @@ fn retained_vcs_fixture_authority_malformed_and_grant_vectors_execute_exact_resu
             )
         };
         let expected = vector.get("expected").expect("authority expected");
-        assert_eq!(flow_hostile_fault_name(result.expect_err("authority rejection")), expected.get("result").and_then(crate::os_pack::json::Value::as_str).expect("authority result"));
-        assert_eq!(flow_hostile_actual_state(&session), flow_hostile_expected_state(&lifecycle, &oracle, expected.get("atResultState").and_then(crate::os_pack::json::Value::as_str).expect("authority result state")));
+        assert_eq!(flow_hostile_fault_name(result.expect_err("authority rejection")), expected.get("result").and_then(semio_framework_pack_json::Value::as_str).expect("authority result"));
+        assert_eq!(flow_hostile_actual_state(&session), flow_hostile_expected_state(&lifecycle, &oracle, expected.get("atResultState").and_then(semio_framework_pack_json::Value::as_str).expect("authority result state")));
         session.cancel(handle, valid_grant).expect("authority cleanup cancel");
         flow_hostile_close_and_drain(&mut session, handle, valid_grant);
-        assert_eq!(flow_hostile_actual_state(&session), flow_hostile_expected_state(&lifecycle, &oracle, expected.get("afterCloseState").and_then(crate::os_pack::json::Value::as_str).expect("authority final state")));
+        assert_eq!(flow_hostile_actual_state(&session), flow_hostile_expected_state(&lifecycle, &oracle, expected.get("afterCloseState").and_then(semio_framework_pack_json::Value::as_str).expect("authority final state")));
         close_to_terminal(&mut session);
     }
 
-    for vector in lifecycle.get("malformedVectors").and_then(crate::os_pack::json::Value::as_array).expect("malformed vectors") {
+    for vector in lifecycle.get("malformedVectors").and_then(semio_framework_pack_json::Value::as_array).expect("malformed vectors") {
         let protocol = vector.get("protocol").expect("malformed protocol");
         let mut session = flow_hostile_session(&lifecycle, &oracle, protocol);
         let operation = protocol.get("operation").expect("malformed operation");
-        assert_eq!(operation.get("feature").and_then(crate::os_pack::json::Value::as_str), Some("patchWidget"));
+        assert_eq!(operation.get("feature").and_then(semio_framework_pack_json::Value::as_str), Some("patchWidget"));
         let id = operation.get("id").expect("malformed id");
         let widget = operation.get("widget").expect("malformed widget");
         let mut id_source =
-            FlowVcsSource { value: id.get("present").and_then(crate::os_pack::json::Value::as_bool).filter(|present| *present).map(|_| id.get("value").and_then(crate::os_pack::json::Value::as_str).expect("malformed id value").to_owned()) };
+            FlowVcsSource { value: id.get("present").and_then(semio_framework_pack_json::Value::as_bool).filter(|present| *present).map(|_| id.get("value").and_then(semio_framework_pack_json::Value::as_str).expect("malformed id value").to_owned()) };
         let mut widget_source = FlowVcsSource {
             value: widget
                 .get("present")
-                .and_then(crate::os_pack::json::Value::as_bool)
+                .and_then(semio_framework_pack_json::Value::as_bool)
                 .filter(|present| *present)
-                .map(|_| <Widget as crate::os_dsl::FromValue>::from_value(crate::os_pack::json::to_dsl_value(&widget.get("value").expect("malformed widget value").clone())).expect("malformed widget")),
+                .map(|_| <Widget as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&widget.get("value").expect("malformed widget value").clone())).expect("malformed widget")),
         };
         let authority = flow_hostile_authority(&session, operation);
         let result = session.begin_patch_widget(authority, &mut id_source, &mut widget_source);
         let expected = vector.get("expected").expect("malformed expected");
-        assert_eq!(flow_hostile_fault_name(result.expect_err("malformed rejection")), expected.get("result").and_then(crate::os_pack::json::Value::as_str).expect("malformed result"));
-        assert!(expected.get("expectedHandle").is_some_and(crate::os_pack::json::Value::is_null));
+        assert_eq!(flow_hostile_fault_name(result.expect_err("malformed rejection")), expected.get("result").and_then(semio_framework_pack_json::Value::as_str).expect("malformed result"));
+        assert!(expected.get("expectedHandle").is_some_and(semio_framework_pack_json::Value::is_null));
         let sources = expected.get("sources").expect("malformed source results");
-        assert_eq!(id_source.retained(), sources.get("idRetained").and_then(crate::os_pack::json::Value::as_bool).expect("malformed id retained"));
-        assert_eq!(widget_source.retained(), sources.get("widgetRetained").and_then(crate::os_pack::json::Value::as_bool).expect("malformed widget retained"));
-        assert_eq!(flow_hostile_actual_state(&session), flow_hostile_expected_state(&lifecycle, &oracle, expected.get("atResultState").and_then(crate::os_pack::json::Value::as_str).expect("malformed result state")));
+        assert_eq!(id_source.retained(), sources.get("idRetained").and_then(semio_framework_pack_json::Value::as_bool).expect("malformed id retained"));
+        assert_eq!(widget_source.retained(), sources.get("widgetRetained").and_then(semio_framework_pack_json::Value::as_bool).expect("malformed widget retained"));
+        assert_eq!(flow_hostile_actual_state(&session), flow_hostile_expected_state(&lifecycle, &oracle, expected.get("atResultState").and_then(semio_framework_pack_json::Value::as_str).expect("malformed result state")));
         close_to_terminal(&mut session);
         retire_widget_source(&mut widget_source);
     }
 
-    for vector in lifecycle.get("grantVectors").and_then(crate::os_pack::json::Value::as_array).expect("grant vectors") {
+    for vector in lifecycle.get("grantVectors").and_then(semio_framework_pack_json::Value::as_array).expect("grant vectors") {
         let protocol = vector.get("protocol").expect("grant protocol");
         let mut session = flow_hostile_session(&lifecycle, &oracle, protocol);
-        assert_eq!(protocol.get("operation").and_then(|value| value.get("feature")).and_then(crate::os_pack::json::Value::as_str), Some("checkpoint"));
+        assert_eq!(protocol.get("operation").and_then(|value| value.get("feature")).and_then(semio_framework_pack_json::Value::as_str), Some("checkpoint"));
         let handle = flow_hostile_begin_operation(&mut session, &lifecycle, &oracle, protocol.get("operation").expect("grant operation"));
         assert_eq!(handle, flow_hostile_expected_handle(protocol.get("expectedHandle").expect("grant expected handle")));
         let call = protocol.get("call").expect("grant call");
-        assert_eq!(call.get("method").and_then(crate::os_pack::json::Value::as_str), Some("poll"));
+        assert_eq!(call.get("method").and_then(semio_framework_pack_json::Value::as_str), Some("poll"));
         let result = session.poll(handle, flow_hostile_grant(call.get("grant").expect("grant input")));
         let actual_result = match result {
             Ok(FlowVcsPoll::Progress { .. }) => "progress",
@@ -1288,24 +1288,24 @@ fn retained_vcs_fixture_authority_malformed_and_grant_vectors_execute_exact_resu
             Err(fault) => flow_hostile_fault_name(fault),
         };
         let expected = vector.get("expected").expect("grant expected");
-        assert_eq!(actual_result, expected.get("result").and_then(crate::os_pack::json::Value::as_str).expect("grant result"));
-        assert_eq!(flow_hostile_actual_state(&session), flow_hostile_expected_state(&lifecycle, &oracle, expected.get("atResultState").and_then(crate::os_pack::json::Value::as_str).expect("grant result state")));
+        assert_eq!(actual_result, expected.get("result").and_then(semio_framework_pack_json::Value::as_str).expect("grant result"));
+        assert_eq!(flow_hostile_actual_state(&session), flow_hostile_expected_state(&lifecycle, &oracle, expected.get("atResultState").and_then(semio_framework_pack_json::Value::as_str).expect("grant result state")));
         session.cancel(handle, valid_grant).expect("grant cleanup cancel");
         flow_hostile_close_and_drain(&mut session, handle, valid_grant);
-        assert_eq!(flow_hostile_actual_state(&session), flow_hostile_expected_state(&lifecycle, &oracle, expected.get("afterCloseState").and_then(crate::os_pack::json::Value::as_str).expect("grant final state")));
+        assert_eq!(flow_hostile_actual_state(&session), flow_hostile_expected_state(&lifecycle, &oracle, expected.get("afterCloseState").and_then(semio_framework_pack_json::Value::as_str).expect("grant final state")));
         close_to_terminal(&mut session);
     }
 }
 
 #[test]
 fn retained_vcs_fixture_cancel_and_fault_execute_all_twenty_four_exact_transfer_states() {
-    let oracle: crate::os_pack::json::Value = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🧾️semantic-history/🔣️.json")).expect("oracle fixture");
-    let lifecycle: crate::os_pack::json::Value = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🔄️lifecycle/🔣️.json")).expect("lifecycle fixture");
-    for boundary in lifecycle.get("transferControlLedger").and_then(crate::os_pack::json::Value::as_array).expect("transfer control ledger") {
+    let oracle: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🧾️semantic-history/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("oracle fixture");
+    let lifecycle: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🔄️lifecycle/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("lifecycle fixture");
+    for boundary in lifecycle.get("transferControlLedger").and_then(semio_framework_pack_json::Value::as_array).expect("transfer control ledger") {
         let protocol = boundary.get("protocol").expect("transfer protocol");
         let target = protocol.get("target").expect("transfer target");
-        let grant = flow_hostile_named_grant(&lifecycle, protocol.get("grant").and_then(crate::os_pack::json::Value::as_str).expect("transfer grant"));
-        for control in boundary.get("controls").and_then(crate::os_pack::json::Value::as_array).expect("transfer controls") {
+        let grant = flow_hostile_named_grant(&lifecycle, protocol.get("grant").and_then(semio_framework_pack_json::Value::as_str).expect("transfer grant"));
+        for control in boundary.get("controls").and_then(semio_framework_pack_json::Value::as_array).expect("transfer controls") {
             let mut session = flow_hostile_session(&lifecycle, &oracle, protocol);
             flow_hostile_apply_setup(&mut session, protocol.get("setup").expect("transfer setup"));
             let handle = flow_hostile_begin_operation(&mut session, &lifecycle, &oracle, protocol.get("operation").expect("transfer operation"));
@@ -1313,7 +1313,7 @@ fn retained_vcs_fixture_cancel_and_fault_execute_all_twenty_four_exact_transfer_
             session.poll(handle, grant).expect("transfer admission progress");
             session.poll(handle, grant).expect("transfer admission checkpoint");
 
-            let rollback_steps = target.get("rollbackSteps").and_then(crate::os_pack::json::Value::as_u64);
+            let rollback_steps = target.get("rollbackSteps").and_then(semio_framework_pack_json::Value::as_u64);
             if rollback_steps.is_some() {
                 for _ in 0..2048 {
                     let operation = session.operations[usize::from(handle.slot)].as_ref().expect("transfer operation");
@@ -1332,20 +1332,20 @@ fn retained_vcs_fixture_cancel_and_fault_execute_all_twenty_four_exact_transfer_
                 assert!(
                     flow_hostile_cursor_matches(&session, handle, target),
                     "transfer boundary {} never reached target {target:?}; cursor stopped at {:?}",
-                    boundary.get("boundary").and_then(crate::os_pack::json::Value::as_str).expect("transfer boundary"),
+                    boundary.get("boundary").and_then(semio_framework_pack_json::Value::as_str).expect("transfer boundary"),
                     session.operations[usize::from(handle.slot)].as_ref().map(|operation| operation.cursor)
                 );
             }
 
             let before_control = session.resource_fingerprint();
-            let control_name = control.get("control").and_then(crate::os_pack::json::Value::as_str).expect("transfer control");
+            let control_name = control.get("control").and_then(semio_framework_pack_json::Value::as_str).expect("transfer control");
             let result = match control_name {
                 "cancel" => session.cancel(handle, grant),
                 "fault" => session.fault(handle, grant),
                 value => panic!("unsupported transfer control {value}"),
             };
             let expected = control.get("expected").expect("transfer expected");
-            assert_eq!(result.map(|_| "ok").unwrap_or_else(flow_hostile_fault_name), expected.get("result").and_then(crate::os_pack::json::Value::as_str).expect("transfer control result"));
+            assert_eq!(result.map(|_| "ok").unwrap_or_else(flow_hostile_fault_name), expected.get("result").and_then(semio_framework_pack_json::Value::as_str).expect("transfer control result"));
             if let Some(steps) = rollback_steps {
                 for _ in 0..steps {
                     assert!(!session.close_operation_step(handle, grant).expect("rollback boundary step"));
@@ -1353,16 +1353,16 @@ fn retained_vcs_fixture_cancel_and_fault_execute_all_twenty_four_exact_transfer_
                 assert!(
                     flow_hostile_cursor_matches(&session, handle, target),
                     "rollback boundary {} via {control_name} missed target {target:?}; cursor at {:?}",
-                    boundary.get("boundary").and_then(crate::os_pack::json::Value::as_str).expect("rollback boundary"),
+                    boundary.get("boundary").and_then(semio_framework_pack_json::Value::as_str).expect("rollback boundary"),
                     session.operations[usize::from(handle.slot)].as_ref().map(|operation| operation.cursor)
                 );
                 let at_boundary = expected.get("atBoundary").expect("rollback expected boundary");
                 flow_hostile_assert_rollback_boundary(&session, handle, protocol.get("operation").expect("rollback operation fixture"), target, at_boundary);
                 assert_eq!(
                     flow_hostile_actual_state(&session),
-                    flow_hostile_expected_state(&lifecycle, &oracle, at_boundary.get("state").and_then(crate::os_pack::json::Value::as_str).expect("rollback boundary state")),
+                    flow_hostile_expected_state(&lifecycle, &oracle, at_boundary.get("state").and_then(semio_framework_pack_json::Value::as_str).expect("rollback boundary state")),
                     "fixture rollback boundary mismatch at {} via {}",
-                    boundary.get("boundary").and_then(crate::os_pack::json::Value::as_str).expect("rollback boundary"),
+                    boundary.get("boundary").and_then(semio_framework_pack_json::Value::as_str).expect("rollback boundary"),
                     control_name
                 );
                 let before_repeat = session.resource_fingerprint();
@@ -1371,17 +1371,17 @@ fn retained_vcs_fixture_cancel_and_fault_execute_all_twenty_four_exact_transfer_
                     "fault" => session.fault(handle, grant),
                     value => panic!("unsupported repeated transfer control {value}"),
                 };
-                assert_eq!(repeat.map(|_| "ok").unwrap_or_else(flow_hostile_fault_name), expected.get("repeatResult").and_then(crate::os_pack::json::Value::as_str).expect("rollback repeat result"));
+                assert_eq!(repeat.map(|_| "ok").unwrap_or_else(flow_hostile_fault_name), expected.get("repeatResult").and_then(semio_framework_pack_json::Value::as_str).expect("rollback repeat result"));
                 assert_eq!(session.resource_fingerprint(), before_repeat);
-            } else if expected.get("result").and_then(crate::os_pack::json::Value::as_str) == Some("duplicateControl") {
+            } else if expected.get("result").and_then(semio_framework_pack_json::Value::as_str) == Some("duplicateControl") {
                 assert_eq!(session.resource_fingerprint(), before_control);
             }
             flow_hostile_close_and_drain(&mut session, handle, grant);
             assert_eq!(
                 flow_hostile_actual_state(&session),
-                flow_hostile_expected_state(&lifecycle, &oracle, expected.get("finalState").and_then(crate::os_pack::json::Value::as_str).expect("transfer final state")),
+                flow_hostile_expected_state(&lifecycle, &oracle, expected.get("finalState").and_then(semio_framework_pack_json::Value::as_str).expect("transfer final state")),
                 "fixture transfer result mismatch at {} via {}",
-                boundary.get("boundary").and_then(crate::os_pack::json::Value::as_str).expect("transfer boundary"),
+                boundary.get("boundary").and_then(semio_framework_pack_json::Value::as_str).expect("transfer boundary"),
                 control_name
             );
             close_to_terminal(&mut session);
@@ -1772,7 +1772,7 @@ fn sample_widget(id: &str) -> Widget {
 
 fn round_trip(host_snapshot: &FlowHostSnapshot, operation: &FlowMutation) -> FlowHostSnapshot {
     let forward = operation.diff(host_snapshot).diff().apply(host_snapshot).expect("valid flow diff");
-    let inverse = operation.inverse(host_snapshot);
+    let inverse = operation.inverse(host_snapshot).expect("valid retained mutation inverse fixture");
     let mut restored = forward.clone();
     for back in inverse.iter().rev() {
         let next = back.diff(&restored).diff().apply(&restored).expect("valid inverse flow diff");
@@ -1833,23 +1833,25 @@ fn flow_fixture_ops_diffs_widgets_synapses_layout() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn coalesced_layout_drag_produces_one_edit() {
+async fn a_streamed_layout_drag_produces_one_edit() {
     let mut store = FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow", empty_flow_snapshot(), None)).await.expect("valid flow store fixture");
     // 🔐️ `ArtifactStore::new` installs no owner catalog, and every mutating command is refused
     // without one — the refusal drops the replayed projection on its error path, so the law reports
-    // `ordered-map root must be explicitly retired before drop` from inside `amend_command` instead
-    // of the validation that caused it (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    // `ordered-map root must be explicitly retired before drop` instead of the validation that caused it
+    // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     store.install_document_store_owners_exact(<FlowHostSnapshot as crate::os_store::MemberStoreOwner<FlowMutation>>::member_store_owners());
+    let transaction = crate::os_spr::TransactionRef { id: "tx-00000000000000f1".into(), tool: "s.flow@1/*#editor#drag".into() };
     for y in [10.0, 20.0, 30.0] {
         store
-            .dispatch(ArtifactCommand::AmendLast {
+            .dispatch(ArtifactCommand::AppendTransaction {
                 mutations: vec![FlowMutation::ChangeLayout(ChangeLayout { entries: vec![FlowLayoutEntry { id: "slider".into(), layout: Some(WidgetLayout { x: 0.0, y }) }] })],
-                coalesce_key: Some("move-slider".into()),
+                transaction: transaction.clone(),
             })
             .await
             .expect("drag tick");
     }
-    assert_eq!(store.envelope().vcs.edits.len(), 1, "coalesced drag must produce exactly one edit");
+    store.dispatch(ArtifactCommand::CommitTransaction { transaction_id: transaction.id }).await.expect("drag commit");
+    assert_eq!(store.envelope().vcs.edits.len(), 1, "a streamed drag must produce exactly one edit");
     let snapshot = store.snapshot().expect("projection");
     assert_eq!(snapshot.layout.get("slider"), Some(&WidgetLayout { x: 0.0, y: 30.0 }));
     snapshot.retire_cold();

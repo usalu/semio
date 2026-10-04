@@ -14,6 +14,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const request = parseBrowserActorActionRequestV1(fixture.request);
     const acknowledged = parseBrowserActorActionResultV1(fixture.acknowledged);
     expect(browserActorActionOwnerMatchesV1(request, acknowledged)).toBe(true);
+    expect(acknowledged.commit).toEqual({ operation: "18446744073709551615", revision: "18364758544493064720" });
     expect(equal(request, fixture.request)).toBe(true);
     expect(parseBrowserActorActionRequestV1(fixture.commandRequest).payload.kind).toBe("app-command");
     expect(parseBrowserActorActionResultV1(fixture.rejected).reason).toBe("action-refused");
@@ -32,6 +33,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     for (const hostile of fixture.hostileResults) expect(browserActorActionOwnerMatchesV1(request, parseBrowserActorActionResultV1(hostile))).toBe(false);
     expect(() => parseBrowserActorActionRequestV1({ ...fixture.request, payload: { ...fixture.request.payload, bytes: new Array(BROWSER_ACTOR_ACTION_PACK_MAXIMUM_BYTES + 1).fill(0) } })).toThrow(/bounded bytes/u);
     expect(() => parseBrowserActorActionRequestV1({ ...fixture.request, intent: fixture.request.payload.bytes })).toThrow(/exact fields/u);
+    expect(() => parseBrowserActorActionResultV1({ ...fixture.acknowledged, commit: { operation: "01", revision: "2" } })).toThrow(/decimal u64/u);
+    expect(() => parseBrowserActorActionResultV1({ ...fixture.acknowledged, commit: { operation: "18446744073709551616", revision: "2" } })).toThrow(/decimal u64/u);
+    expect(() => parseBrowserActorActionResultV1({ ...fixture.rejected, commit: fixture.acknowledged.commit })).toThrow(/rejected publication/u);
 
     const owner = { ...request, actionSequence: 11 };
     const intent = createBrowserActorUiIntentRequestV1(owner, fixture.uiIntent.surface, { ...fixture.uiIntent, seq: BigInt(fixture.uiIntent.seq) });

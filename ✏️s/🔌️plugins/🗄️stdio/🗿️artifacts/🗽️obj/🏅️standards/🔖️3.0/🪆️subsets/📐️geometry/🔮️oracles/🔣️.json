@@ -115,7 +115,7 @@
     {
       "id": "semantic-obj-3-0-v1",
       "description": "Wavefront OBJ documents compared by the `tobj` triangle mesh (vertex set, face topology, counts) AND by the document surface a mesh reader cannot see: declared v/vt/vn row counts with their per-component extent and totals, the mtllib reference, the g/o membership spans, the usemtl/s run starts and the retained comment lines. Unlike the shared semantic-mesh-v1 profile, none of those are writer freedom here -- ObjMutation's set-mtllib/set-usemtl/set-smoothing-groups/set-unknown-statements and the four name-keyed g/o kinds mutate exactly that surface, so ignoring it would leave 14 of the 22 declared kinds unobservable. Only byte length and decimal precision remain producer freedom; per-component extents and totals are compared under the mesh tolerance so the two producers' differing decimal formatting never registers as a divergence.",
-      "tolerance": 0.00001,
+      "tolerance": 1e-05,
       "ignoreKeys": [
         "byteLength",
         "fileSize",
@@ -149,6 +149,7 @@
       ],
       "kinds": [
         "set-snapshot",
+        "patch-snapshot",
         "insert-vertex",
         "remove-vertex",
         "set-vertex",
@@ -191,6 +192,38 @@
             "operation": "set-snapshot",
             "bridgeVersion": 1,
             "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "obj-3-0-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "tobj-obj-3-0-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "obj"
+          ],
+          "invariants": {
+            "local": [
+              "replacement-snapshot-reproduces-exactly-or-reports-no-op"
+            ],
+            "enclosing": [
+              "tobj-mesh-and-independent-document-projection-agree"
+            ]
+          }
+        },
+        {
+          "id": "patch-snapshot",
+          "capability": "obj-3-0-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#PatchSnapshot",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "patch-snapshot",
+            "bridgeVersion": 1,
+            "variant": "PatchSnapshot"
           },
           "oracleRequirements": [
             {

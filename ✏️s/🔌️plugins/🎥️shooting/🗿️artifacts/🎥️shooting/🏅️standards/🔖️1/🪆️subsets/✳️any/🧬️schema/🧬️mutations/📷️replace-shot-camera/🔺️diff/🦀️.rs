@@ -11,7 +11,7 @@ pub fn diff(payload: &ReplaceShotCamera, base: &ShootingSnapshot) -> protocol::M
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Shot \"{}\" does not exist.", payload.shot_id), [payload.shot_id.clone()]);
     };
     let Some(camera_id) = shot.camera_id.clone() else {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Shot \"{}\" has no saved camera to replace.", payload.shot_id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Shot \"{}\" has no saved camera to replace.", payload.shot_id));
     };
     protocol::MutationOutcome::new(ShootingDiff {
         saved_cameras: Some(ShootingSavedCamerasDelta { patched: vec![ShootingSavedCameraPatchEntry { id: camera_id, patch: ShootingSavedCameraPatch { label: None, camera: Some(payload.new_camera.clone()) } }], ..Default::default() }),

@@ -57,7 +57,7 @@ pub fn replace_page_unicode_text(page: &schema::snapshot::PdfPage, text: &str) -
 
 /// 🔐️ The token an agent's omitted `set-page` revision is admitted against: the addressed page text's own token, as its draft
 /// binding carries it; a missing page is refused exactly as the edit itself would refuse it.
-pub fn page_text_agent_revision(snapshot: &PdfSnapshot, args: &dsl::DslValue) -> Result<Option<String>, semio_framework_plugin::Fault> {
+pub fn page_text_agent_revision(snapshot: &PdfSnapshot, args: &semio_framework_value::DslValue) -> Result<Option<String>, semio_framework_plugin::Fault> {
     let page_index = semio_s_artifact_stdio_contract::window_kit_required_index_argument(Some(args), "page")? as usize;
     let target = snapshot.pages.get(page_index).ok_or_else(|| {
         semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.pdf.set-page.stale-target"), format!("PDF page {page_index} no longer exists"))
@@ -227,60 +227,60 @@ fn pdf_1_4_subset_validators() -> &'static [semio_framework_plugin::SubsetValida
 /// 📌️ `standards::v1_7`'s five `LanguageSpec` rows, copied verbatim from that standard's own
 /// engine `register_pilot_languages`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn pilot_languages_1_7() -> &'static [dsl::LanguageSpec] {
-    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+fn pilot_languages_1_7() -> &'static [semio_framework_dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
             vec![
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "stdio.pdf.1.7",
                     extension: Some("pdf"),
-                    role: dsl::LanguageRole::Document,
+                    role: semio_framework_dsl::LanguageRole::Document,
                     grammar: Some(standards::v1_7::subsets::base::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(standards::v1_7::subsets::base::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(standards::v1_7::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(standards::v1_7::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("stdio.pdf.1.7"),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.pdf.1.7"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "stdio.pdf.1.7.op",
                     extension: None,
-                    role: dsl::LanguageRole::Ops,
+                    role: semio_framework_dsl::LanguageRole::Ops,
                     grammar: Some(standards::v1_7::subsets::base::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(standards::v1_7::subsets::base::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(standards::v1_7::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(standards::v1_7::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("stdio.pdf.1.7.op"),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.pdf.1.7.op"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "stdio.pdf.1.7.diff",
                     extension: None,
-                    role: dsl::LanguageRole::Diff,
+                    role: semio_framework_dsl::LanguageRole::Diff,
                     grammar: Some(standards::v1_7::subsets::base::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(standards::v1_7::subsets::base::schema::diff::text::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
-                    hooks: dsl::passthrough_hooks("stdio.pdf.1.7.diff"),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.pdf.1.7.diff"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "stdio.pdf.1.7.pack",
                     extension: None,
-                    role: dsl::LanguageRole::Pack,
+                    role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(standards::v1_7::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(standards::v1_7::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("stdio.pdf.1.7.pack"),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.pdf.1.7.pack"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "stdio.pdf.1.7.spr",
                     extension: None,
-                    role: dsl::LanguageRole::Spr,
+                    role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(standards::v1_7::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(standards::v1_7::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("stdio.pdf.1.7.spr"),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.pdf.1.7.spr"),
                 },
             ]
         })
@@ -290,60 +290,60 @@ fn pilot_languages_1_7() -> &'static [dsl::LanguageSpec] {
 /// 📌️ `standards::v1_4`'s five `LanguageSpec` rows, copied verbatim from that standard's own
 /// engine `register_pilot_languages`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn pilot_languages_1_4() -> &'static [dsl::LanguageSpec] {
-    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+fn pilot_languages_1_4() -> &'static [semio_framework_dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
             vec![
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "stdio.pdf",
                     extension: Some("pdf"),
-                    role: dsl::LanguageRole::Document,
+                    role: semio_framework_dsl::LanguageRole::Document,
                     grammar: Some(standards::v1_4::subsets::base::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(standards::v1_4::subsets::base::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(standards::v1_4::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(standards::v1_4::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("stdio.pdf"),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.pdf"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "stdio.pdf.op",
                     extension: None,
-                    role: dsl::LanguageRole::Ops,
+                    role: semio_framework_dsl::LanguageRole::Ops,
                     grammar: Some(standards::v1_4::subsets::base::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(standards::v1_4::subsets::base::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(standards::v1_4::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(standards::v1_4::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("stdio.pdf.op"),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.pdf.op"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "stdio.pdf.diff",
                     extension: None,
-                    role: dsl::LanguageRole::Diff,
+                    role: semio_framework_dsl::LanguageRole::Diff,
                     grammar: Some(standards::v1_4::subsets::base::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(standards::v1_4::subsets::base::schema::diff::text::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
-                    hooks: dsl::passthrough_hooks("stdio.pdf.diff"),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.pdf.diff"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "stdio.pdf.pack",
                     extension: None,
-                    role: dsl::LanguageRole::Pack,
+                    role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(standards::v1_4::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(standards::v1_4::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("stdio.pdf.pack"),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.pdf.pack"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "stdio.pdf.spr",
                     extension: None,
-                    role: dsl::LanguageRole::Spr,
+                    role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(standards::v1_4::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(standards::v1_4::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("stdio.pdf.spr"),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.pdf.spr"),
                 },
             ]
         })
@@ -388,7 +388,7 @@ pub mod io_registry {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
         let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("PdfComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        semio_framework_plugin::resolve_ready((entry.compose)(sources))
+        ::semio_framework_async::poll::resolve_ready((entry.compose)(sources))
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -1529,9 +1529,9 @@ fn sqlite_snapshot_pdf_owned_assets_describe_each_exact_record() {
     for (text, record, grammar, protocol) in cases {
         let (envelope, body) = store::semio_format::split_text_preamble(&text).unwrap();
         let source = format!("{}\n{body}", envelope.envelope_id());
-        assert!(dsl::Recognizer::compile(&dsl::parse_grammar(grammar).unwrap()).recognize(&source).unwrap(), "{source}");
-        let protocol = dsl::parse_protocol(protocol).unwrap();
-        let fields = protocol.blocks.iter().find_map(|block| match block { dsl::Block::Record { name, fields, .. } if name == "snapshot" => Some(fields), _ => None }).unwrap();
+        assert!(semio_framework_dsl::Recognizer::compile(&semio_framework_dsl::parse_grammar(grammar).unwrap(), &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments").recognize(&source).unwrap(), "{source}");
+        let protocol = semio_framework_dsl::parse_protocol(protocol).unwrap();
+        let fields = protocol.blocks.iter().find_map(|block| match block { semio_framework_dsl::Block::Record { name, fields, .. } if name == "snapshot" => Some(fields), _ => None }).unwrap();
         assert_eq!(fields.iter().map(|field| field.name.as_str()).collect::<Vec<_>>(), record.fields.iter().map(|field| field.key.as_str()).collect::<Vec<_>>());
     }
     let wrong = store::semio_format::SemioEnvelope::from_envelope_id("stdio.pdf", store::semio_format::Component::Dsl, 1).unwrap();

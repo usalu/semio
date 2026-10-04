@@ -63,7 +63,7 @@ fn close_domain(domain: &mut FlowDomainAdapter) {
 
 #[test]
 fn compiled_session_close_retires_the_real_vcs_and_host_before_terminal_empty() {
-    let fixture = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🧹️session-close/🔣️.json")).unwrap();
+    let fixture = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🧹️session-close/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut bridge = FlowBridge::new(FlowDomainAdapter::default);
     bridge.try_send(bridge_request(protocol::FLOW_OPERATION_OPEN, 1, 1, Vec::new()), bridge_budget()).unwrap();
     let AbiMessage::Reply(reply) = bridge_poll(&mut bridge) else { panic!("session reply") };
@@ -102,8 +102,8 @@ fn compiled_session_close_receipt_preserves_a_real_sibling_until_global_close() 
                 assert_eq!(reply.request_id.0, 3);
                 assert_eq!(reply.status, semio_framework::abi::AbiStatus::OK);
                 let independent: Value = serde_json::from_slice(reply.bytes.as_slice()).unwrap();
-                let own = crate::os_pack::json::parse(std::str::from_utf8(reply.bytes.as_slice()).unwrap()).unwrap();
-                assert_eq!(crate::os_pack::json::to_string(&own), independent.to_string());
+                let own = semio_framework_pack_json::parse(std::str::from_utf8(reply.bytes.as_slice()).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+                assert_eq!(semio_framework_pack_json::to_string(&own), independent.to_string());
                 completed = true;
                 break;
             }
@@ -247,11 +247,11 @@ fn synchronized_document_json_is_the_exact_retained_document() {
     for (index, widget) in ["slider", "add", "preview"].into_iter().enumerate() {
         expected.layout.insert(widget.into(), crate::artifact::WidgetLayout { x: 240.0 * index as f64, y: 40.0 });
     }
-    let json = crate::os_pack::json::to_json_string(&expected);
+    let json = semio_framework_pack_json::to_json_string(&expected);
     run(&mut domain, 2_610, text_payload(&json)).unwrap();
     let bytes = run(&mut domain, 2_609, Vec::new()).unwrap();
-    let value = crate::os_pack::json::parse(std::str::from_utf8(&bytes).unwrap()).unwrap();
-    let actual = <crate::artifact::FlowHostSnapshot as crate::os_dsl::FromValue>::from_value(crate::os_pack::json::to_dsl_value(&value)).unwrap();
+    let value = semio_framework_pack_json::parse(std::str::from_utf8(&bytes).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let actual = <crate::artifact::FlowHostSnapshot as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&value)).unwrap();
     let equal = actual == expected;
     let report = format!("{actual:?}\n!=\n{expected:?}");
     actual.retire_cold();
@@ -272,7 +272,7 @@ fn row_document_json(rows: u32) -> String {
     for index in 0..rows {
         document.widgets.push(Widget::InputNote { id: format!("measured-{index}"), text: format!("measured payload row {index}: a retained node-graph draw list carries thousands of bytes of exactly this shape") });
     }
-    let json = crate::os_pack::json::to_json_string(&document);
+    let json = semio_framework_pack_json::to_json_string(&document);
     document.retire_cold();
     json
 }
@@ -709,7 +709,7 @@ fn scaled_document_json(target_bytes: usize) -> String {
     for index in 0..ROWS {
         document.widgets.push(Widget::InputNote { id: format!("scaled-{index}"), text: text.clone() });
     }
-    let json = crate::os_pack::json::to_json_string(&document);
+    let json = semio_framework_pack_json::to_json_string(&document);
     document.retire_cold();
     json
 }

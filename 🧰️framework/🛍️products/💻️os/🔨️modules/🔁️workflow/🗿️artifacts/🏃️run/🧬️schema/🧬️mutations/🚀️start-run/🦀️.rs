@@ -2,7 +2,7 @@ use super::super::{RunArtifact, RunDiff, RunMutation, RunParameterValue, RunTrig
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "start-run")]
@@ -33,11 +33,14 @@ impl protocol::MutationKind<RunArtifact, RunMutation> for StartRun {
             trigger: self.trigger.clone(),
         })
     }
-    fn inverse(&self, _base: &RunArtifact) -> Vec<RunMutation> {
+    fn inverse(&self, _base: &RunArtifact) -> Result<Vec<RunMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         Vec::new()
-    }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Start run for {}", self.workflow_ref), &format!("Lauf für {} starten", self.workflow_ref))
+    
+    })())
+}
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Start run for {}", self.workflow_ref), &format!("Lauf für {} starten", self.workflow_ref))
     }
     fn target(&self) -> Vec<String> {
         vec!["run".into()]

@@ -1,17 +1,5 @@
 use super::*;
 
-trait DagChildOwnerOracle {
-    fn expected() -> serde_json::Value;
-}
-
-struct SerdeJsonDagChildOwnerOracle;
-
-impl DagChildOwnerOracle for SerdeJsonDagChildOwnerOracle {
-    fn expected() -> serde_json::Value {
-        serde_json::from_str(include_str!("../../🧫️fixtures/🧫️child-owner-isolation/🔣️.json")).expect("language-neutral DAG child-owner fixture")
-    }
-}
-
 #[semio_framework_async_macros::async_test]
 async fn artifact_kind_declares_the_graph_dag_component_kind() {
     assert_eq!(artifact_kind().id, "graph.dag");
@@ -23,28 +11,26 @@ async fn default_snapshot_matches_artifact_schema() {
     assert_eq!(default_snapshot().schema, DAG_DOCUMENT_SCHEMA);
 }
 
+/// 🌉️ The demo scene round-trips through the composed graph content exactly (native slots + typed properties).
 #[semio_framework_async_macros::async_test]
 async fn node_edge_content_round_trips_through_the_composed_child_snapshot() {
-    let document = default_snapshot();
-    let scene = dag_working_scene(&document);
-    let content = dag_content_snapshot_from_working(&scene.nodes, &scene.edges);
-    let (nodes, edges) = working_from_dag_content_snapshot(&content);
-    assert_eq!(nodes, scene.nodes);
-    assert_eq!(edges, scene.edges);
+    let scene = examples::demo::scene();
+    assert_eq!(dag_scene_of_content(&dag_content_snapshot(&scene)), scene);
 }
 
+/// 🌱️ Only the derivable contents (bundled demo, empty graph) have a genesis pack; any other child id is not derivable,
+/// so a decoded parent never needs a working scene on its handle (design §20.15).
 #[semio_framework_async_macros::async_test]
-async fn dag_working_scene_is_owned_by_the_exact_snapshot_child() {
-    let owned = dag_content_child_with_owner(Vec::new(), Vec::new());
-    let wire = dsl::json::to_json_string(&owned);
-    let reconstructed: DagContentChild = dsl::json::from_json_str(&wire).expect("DAG child wire roundtrip");
-    let observed = serde_json::json!({
-        "ownedHasScene": owned.local_owner::<DagWorkingScene>().is_some(),
-        "wireIdentityMatches": owned == reconstructed,
-        "wireHasScene": reconstructed.local_owner::<DagWorkingScene>().is_some(),
-    });
-
-    assert_eq!(observed, SerdeJsonDagChildOwnerOracle::expected());
+async fn only_derivable_children_have_a_genesis_pack() {
+    use store::ArtifactPack;
+    let demo = default_snapshot();
+    let pack = genesis_dag_child_pack(&demo, "content", &demo.content.child_id).expect("the demo content is derivable");
+    assert_eq!(dag_scene_of_content(&SemioGraphSnapshot::decode_pack(&pack).expect("genesis pack decodes")), examples::demo::scene());
+    let empty = empty_snapshot();
+    assert!(genesis_dag_child_pack(&empty, "content", &empty.content.child_id).is_some(), "the empty graph is derivable");
+    let other = DagSnapshot { content: dag_content_child_handle(&DagScene { nodes: vec![schema::default_node_for_kind("note", "x", 0.0, 0.0)], edges: Vec::new() }), ..default_snapshot() };
+    assert!(genesis_dag_child_pack(&other, "content", &other.content.child_id).is_none());
+    assert!(genesis_dag_child_pack(&demo, "other-slot", &demo.content.child_id).is_none());
 }
 
 /// 🧬️ The projection names exactly the snapshot's declared child slots — what the live envelope load checks
@@ -53,5 +39,5 @@ async fn dag_working_scene_is_owned_by_the_exact_snapshot_child() {
 fn the_child_restore_projection_names_every_declared_child_slot() {
     let snapshot = crate::default_snapshot();
     let projection = crate::dag_child_restore_projection(&snapshot).expect("the loaded-parent child projection");
-    assert_eq!(projection.len(), <crate::DagSnapshot as store::os_schema_composition::ArtifactCompositionFields>::child_slots().len());
+    assert_eq!(projection.len(), <crate::DagSnapshot as semio_framework_schema_composition::ArtifactCompositionFields>::child_slots().len());
 }

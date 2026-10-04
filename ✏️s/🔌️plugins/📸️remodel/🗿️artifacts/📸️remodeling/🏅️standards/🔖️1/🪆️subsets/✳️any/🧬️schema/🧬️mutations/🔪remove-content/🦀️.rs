@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 🔪️ `remove-content` payload.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
@@ -30,9 +30,12 @@ impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for RemoveCo
     fn diff(&self, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<RemodelingMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove content \"{}\" leaves from {}", self.content_id, self.from), &format!("Blätter von Inhalt \"{}\" aus {} entfernen", self.content_id, self.from))
     }

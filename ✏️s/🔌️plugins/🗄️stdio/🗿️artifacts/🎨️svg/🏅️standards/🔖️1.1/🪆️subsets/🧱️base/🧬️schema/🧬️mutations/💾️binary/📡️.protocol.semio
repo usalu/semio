@@ -31,3 +31,5 @@ record set-transform tag=9
 field payload bytes
 record set-snapshot tag=10
 field payload bytes
+record patch-snapshot tag=11
+field payload bytes

@@ -43,9 +43,9 @@ mod vector_change_assessment_rkn;
 mod vector_insert_silo;
 #[path = "../../🫙insert-silo/🧪️tests/⛔dupe/🦀️.rs"]
 mod vector_insert_silo_dupe;
-#[path = "../../🛢insert-tank/🧪️tests/✅apply/🦀️.rs"]
+#[path = "../../🛢️insert-tank/🧪️tests/✅apply/🦀️.rs"]
 mod vector_insert_tank;
-#[path = "../../🛢insert-tank/🧪️tests/⛔dupe/🦀️.rs"]
+#[path = "../../🛢️insert-tank/🧪️tests/⛔dupe/🦀️.rs"]
 mod vector_insert_tank_dupe;
 #[path = "../../🪨insert-foundation/🧪️tests/✅apply/🦀️.rs"]
 mod vector_insert_foundation;

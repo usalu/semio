@@ -7,14 +7,13 @@
 use super::topology::compute_sequence_topology;
 use crate::SequenceSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 use serde::{Deserialize, Serialize};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a sequence snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `topology`, backed by the `🧭topology/` slug dir) — sequence is a
 /// genuine step DAG (`steps` + `edges`), so `topology` here is a real Kahn's-algorithm topological
 /// sort, not a degenerate stand-in.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.sequence.sequence.inference")]
@@ -24,8 +23,11 @@ pub struct SequenceInference {
 }
 
 impl protocol::Inference<SequenceSnapshot> for SequenceInference {
-    fn infer(snapshot: &SequenceSnapshot) -> Self {
+    fn infer(snapshot: &SequenceSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { topology: compute_sequence_topology(snapshot) }
+    
+        })
     }
 }
 
@@ -35,7 +37,9 @@ impl protocol::Inference<SequenceSnapshot> for SequenceInference {
 /// it via `infer` instead keeps the law correct regardless of what the default snapshot contains.
 impl Default for SequenceInference {
     fn default() -> Self {
-        <Self as protocol::Inference<SequenceSnapshot>>::infer(&neural_engine::ColdOwner::new(SequenceSnapshot::default()))
+        let snapshot = &neural_engine::ColdOwner::new(SequenceSnapshot::default());
+
+        Self { topology: compute_sequence_topology(snapshot) }
     }
 }
 
@@ -51,24 +55,6 @@ impl protocol::InferenceSpec<SequenceSnapshot> for SequenceInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 🌳️ Retargeted (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM) — the old
-/// `derive_artifact_facets!`-generated `SequenceBuilderFacets` this impl targeted is deleted along
-/// with the rest of the hand-rolled `ArtifactComposition`/`ArtifactAnalyzer` cluster (design.md §5
-/// step 3). The recipe's suggested replacement (`semio_framework_plugin::app::SnapshotBuilder<S,
-/// M>`) does NOT work here: `SnapshotBuilder` is a foreign (non-`#[fundamental]`) generic struct,
-/// so `impl ArtifactInferrer for SnapshotBuilder<SequenceSnapshot, SequenceMutation>` is a genuine
-/// orphan-rule violation (E0117) regardless of the type PARAMETERS being local — confirmed by
-/// compiling it (see `📓️w4-sequence-report.md` `## recipeGaps`). `ArtifactInferrer::infer` takes
-/// `&Self::Snapshot`, never `&self` — the impl target is a pure type-level anchor with zero live
-/// callers repo-wide (grepped), so a trivial local zero-sized marker is the correct, minimal fix.
-pub struct SequenceInferrer;
-impl ArtifactInferrer for SequenceInferrer {
-    type Snapshot = SequenceSnapshot;
-    type Inference = SequenceInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.sequence.sequence.inference`'s facet leaves into the OS-wide inference catalog

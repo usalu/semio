@@ -1,0 +1,56 @@
+{
+  "assets": {
+    "pixels-paint-798ed08399352f73": {
+      "childId": "raster-asset-798ed08399352f73",
+      "target": {
+        "artifactId": "pixels-paint-798ed08399352f73-image",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "image"
+        }
+      }
+    }
+  },
+  "id": "fill",
+  "layers": [
+    {
+      "blendMode": "normal",
+      "height": 4,
+      "id": "paint",
+      "imageKey": "pixels-paint-798ed08399352f73",
+      "kind": "pixel",
+      "locked": false,
+      "mask": {
+        "enabled": true,
+        "height": null,
+        "imageKey": null,
+        "invert": false,
+        "linked": true,
+        "transform": {
+          "a": 1.0,
+          "b": 0.0,
+          "c": 0.0,
+          "d": 1.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        "width": null
+      },
+      "name": "Paint",
+      "opacity": 1.0,
+      "transform": {
+        "a": 1.0,
+        "b": 0.0,
+        "c": 0.0,
+        "d": 1.0,
+        "x": 0.0,
+        "y": 0.0
+      },
+      "visible": true,
+      "width": 6
+    }
+  ],
+  "schema": "s.raster.raster",
+  "title": "Fill"
+}

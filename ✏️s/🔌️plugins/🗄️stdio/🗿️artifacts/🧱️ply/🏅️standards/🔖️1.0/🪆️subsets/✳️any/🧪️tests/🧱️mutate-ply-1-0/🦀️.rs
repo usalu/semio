@@ -56,7 +56,7 @@ fn inverse_spec(spec: &Json, base: &[u8]) -> Result<Json, String> {
     let element = |name: &str| elements.iter().position(|element| element.str("name") == name).map(|at| (at, elements[at].clone())).ok_or_else(|| format!("the real document declares no element {name:?}"));
     let at = |items: Vec<Json>, index: usize, what: &str| items.get(index).cloned().ok_or_else(|| format!("the real document has no {what} {index}"));
     Ok(match kind.as_str() {
-        "set-snapshot" => json_spec("set-snapshot", json_obj(vec![("snapshot", snapshot.clone())])),
+        "set-snapshot" | "patch-snapshot" => json_spec("set-snapshot", json_obj(vec![("snapshot", snapshot.clone())])),
         "set-format" => json_spec("set-format", json_obj(vec![("format", Json::String(snapshot.str("format")))])),
         "insert-comment" => json_spec("remove-comment", json_obj(vec![("index", Json::Number(number("index")?.min(snapshot.array("comments").len()) as f64))])),
         "remove-comment" => {
@@ -177,7 +177,7 @@ mod subject {
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let mut snapshot = decode(&mutable_input(ctx)?)?;
         let forward = mutation_of(&ctx.doc_json()?)?;
-        let backward = mutation_inverse(&forward, &snapshot);
+        let backward = mutation_inverse(&forward, &snapshot).expect("valid retained mutation inverse fixture");
         apply_ply_mutation(&mut snapshot, &forward);
         for mutation in &backward {
             apply_ply_mutation(&mut snapshot, mutation);

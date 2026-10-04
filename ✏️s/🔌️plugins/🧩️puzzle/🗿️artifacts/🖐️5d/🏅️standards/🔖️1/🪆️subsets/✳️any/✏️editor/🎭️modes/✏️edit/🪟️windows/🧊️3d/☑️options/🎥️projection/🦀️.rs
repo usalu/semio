@@ -9,9 +9,9 @@ use semio_framework_plugin::{world3d_projection_measures, WindowMeasure};
 /// 🧭️ The projection select plus its parameter sliders for this window instance's camera.
 /// 🔗️ `world3d_projection_measures` is a framework helper still bound to `serde_json::Value`
 /// (framework file, out of this crate's remit) while `puzzle5d_action` takes the DSL-side
-/// `dsl::os_pack::json::Value`, so this closure bridges the seam through the framework's own
+/// `semio_framework_pack_json::Value`, so this closure bridges the seam through the framework's own
 /// `DslValue: From<&serde_json::Value>` impl rather than widening `puzzle5d_action`'s signature —
 /// the identical bridge `☑️options/☀️sun` already carries.
 pub fn measure(runtime: &Puzzle5dRuntime) -> WindowMeasure {
-    world3d_projection_measures("puzzle5d", &runtime.camera3d.projection, |action, args| puzzle5d_action(action, args.map(|value| dsl::os_pack::json::from_dsl_value(&value))))
+    world3d_projection_measures("puzzle5d", &runtime.camera3d.projection, |action, args| puzzle5d_action(action, args.map(|value| semio_framework_pack_json::from_dsl_value(&value))))
 }

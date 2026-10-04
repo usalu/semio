@@ -1,0 +1,152 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "variant": "BadMagic",
+      "owner": "PackRefusal",
+      "valueConversion": "semantic",
+      "retainedFields": [
+        "originalVariantFields"
+      ]
+    },
+    {
+      "variant": "UnsupportedVersion",
+      "owner": "PackRefusal",
+      "valueConversion": "semantic",
+      "retainedFields": [
+        "originalVariantFields"
+      ]
+    },
+    {
+      "variant": "UnknownRequiredFlags",
+      "owner": "PackRefusal",
+      "valueConversion": "semantic",
+      "retainedFields": [
+        "originalVariantFields"
+      ]
+    },
+    {
+      "variant": "Truncated",
+      "owner": "PackRefusal",
+      "valueConversion": "semantic",
+      "retainedFields": [
+        "originalVariantFields"
+      ]
+    },
+    {
+      "variant": "ChecksumMismatch",
+      "owner": "PackRefusal",
+      "valueConversion": "semantic",
+      "retainedFields": [
+        "originalVariantFields"
+      ]
+    },
+    {
+      "variant": "ContentHashMismatch",
+      "owner": "PackRefusal",
+      "valueConversion": "semantic",
+      "retainedFields": [
+        "originalVariantFields"
+      ]
+    },
+    {
+      "variant": "LimitExceeded",
+      "owner": "PackRefusal",
+      "valueConversion": "semantic",
+      "retainedFields": [
+        "originalVariantFields"
+      ]
+    },
+    {
+      "variant": "RetainedMalformed",
+      "owner": "PackRefusal",
+      "valueConversion": "semantic",
+      "retainedFields": [
+        "originalVariantFields"
+      ]
+    },
+    {
+      "variant": "RetainedAllocation",
+      "owner": "PackRefusal",
+      "valueConversion": "semantic",
+      "retainedFields": [
+        "kind",
+        "allocated_bytes",
+        "what",
+        "offset",
+        "detail"
+      ]
+    },
+    {
+      "variant": "Malformed",
+      "owner": "PackRefusal",
+      "valueConversion": "semantic",
+      "retainedFields": [
+        "originalVariantFields"
+      ]
+    },
+    {
+      "variant": "NonCanonical",
+      "owner": "PackRefusal",
+      "valueConversion": "semantic",
+      "retainedFields": [
+        "originalVariantFields"
+      ]
+    },
+    {
+      "variant": "UnsupportedCodec",
+      "owner": "PackRefusal",
+      "valueConversion": "semantic",
+      "retainedFields": [
+        "originalVariantFields"
+      ]
+    },
+    {
+      "variant": "ValueRefusal",
+      "owner": "PackRefusal",
+      "valueConversion": "semantic",
+      "retainedFields": [
+        "originalVariantFields"
+      ]
+    },
+    {
+      "variant": "TextRefusal",
+      "owner": "PackRefusal",
+      "valueConversion": "semantic",
+      "retainedFields": [
+        "originalVariantFields"
+      ]
+    },
+    {
+      "variant": "Io",
+      "owner": "PackRefusal",
+      "valueConversion": "semantic",
+      "retainedFields": [
+        "valueKind",
+        "ownedMessageIdentity",
+        "retry"
+      ]
+    },
+    {
+      "variant": "TransportFailure",
+      "owner": "PackError",
+      "valueConversion": "preserveTransport",
+      "retainedFields": [
+        "category",
+        "retry",
+        "privateSourceIdentity",
+        "allocatedBytes"
+      ]
+    },
+    {
+      "variant": "TransportAdmission",
+      "owner": "PackRefusal",
+      "valueConversion": "semantic",
+      "retainedFields": [
+        "category",
+        "refusal.kind",
+        "refusal.allocated_bytes"
+      ]
+    }
+  ]
+}

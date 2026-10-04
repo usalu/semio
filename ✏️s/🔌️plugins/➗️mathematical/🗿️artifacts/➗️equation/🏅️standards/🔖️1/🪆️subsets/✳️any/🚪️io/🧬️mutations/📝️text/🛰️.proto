@@ -1,21 +1,54 @@
 syntax = "proto3";
 package semio.s_mathematical_equation.mutations;
 
+message EquationNode {
+  string id = 1;
+  string label = 2;
+  double x = 3;
+  double y = 4;
+}
+message EquationEdge {
+  string id = 1;
+  string source = 2;
+  string target = 3;
+}
+message EquationGraph {
+  bool directed = 1;
+  repeated EquationNode nodes = 2;
+  repeated EquationEdge edges = 3;
+  string algorithm = 4;
+  optional string algorithm_seed = 5;
+}
+message EquationPoint {
+  double x = 1;
+  double y = 2;
+}
+message EquationNodePosition {
+  string id = 1;
+  double x = 2;
+  double y = 3;
+}
+message EquationPointPosition {
+  uint64 index = 1;
+  double x = 2;
+  double y = 3;
+}
 message ChangeGraphDirected {
   bool new_directed = 1;
 }
 message UpdateGraphAlgorithm {
   string new_algorithm = 1;
-  string new_algorithm_seed = 2;
+  optional string new_algorithm_seed = 2;
 }
 message ReplaceGraph {
-  bytes graph = 1;
+  EquationGraph graph = 1;
 }
 message CreateNode {
   string id = 1;
   string label = 2;
   double x = 3;
   double y = 4;
+  optional uint64 index = 5;
 }
 message DeleteNode {
   string id = 1;
@@ -36,25 +69,42 @@ message ConnectNodes {
   string id = 1;
   string source = 2;
   string target = 3;
+  optional uint64 index = 4;
 }
 message DisconnectNodes {
   string id = 1;
 }
 message ReplacePoints {
-  repeated bytes points = 1;
+  repeated EquationPoint points = 1;
 }
 message InsertPoint {
-  uint32 index = 1;
+  uint64 index = 1;
   double x = 2;
   double y = 3;
 }
 message RemovePoint {
-  uint32 index = 1;
+  uint64 index = 1;
 }
-message MovePoint {
-  uint32 index = 1;
-  double x = 2;
-  double y = 3;
+message MovePoints {
+  repeated uint64 indices = 1;
+  double dx = 2;
+  double dy = 3;
+}
+message ChangeCoefficient {
+  uint64 label = 1;
+  string numer = 2;
+  string denom = 3;
+}
+message MoveNodes {
+  repeated string ids = 1;
+  double dx = 2;
+  double dy = 3;
+}
+message SetNodePositions {
+  repeated EquationNodePosition positions = 1;
+}
+message SetPointPositions {
+  repeated EquationPointPosition positions = 1;
 }
 
 message EquationMutation {
@@ -72,6 +122,10 @@ message EquationMutation {
     ReplacePoints replace_points = 11;
     InsertPoint insert_point = 12;
     RemovePoint remove_point = 13;
-    MovePoint move_point = 14;
+    MovePoints move_points = 14;
+    ChangeCoefficient change_coefficient = 15;
+    MoveNodes move_nodes = 16;
+    SetNodePositions set_node_positions = 17;
+    SetPointPositions set_point_positions = 18;
   }
 }

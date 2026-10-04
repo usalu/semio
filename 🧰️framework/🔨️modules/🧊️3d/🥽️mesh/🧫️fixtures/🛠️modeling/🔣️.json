@@ -1,4 +1,146 @@
 {
+  "ownedCapture": {"operations":["translate","rotate","scale","mirror","mergeCoplanar","weld","subdivide","orient","fillHoles","knife","inset","extrude","loopCut","bevel","decimate"],"vertices":8,"faces":6,"area":6,"volume":1},
+  "loopCutJob": {
+    "cuts": 2,
+    "edge": 0,
+    "vertices": 16,
+    "faces": 14,
+    "area": 6,
+    "volume": 1,
+    "phases": [
+      "snapshot",
+      "loop-cut-incidence",
+      "loop-cut-selection",
+      "loop-cut-propagate",
+      "loop-cut-admission",
+      "loop-cut-vertices",
+      "loop-cut-grid",
+      "loop-cut-reconstruct"
+    ]
+  },
+  "editingJobs": [
+    {
+      "operation": "translate",
+      "vertices": 8,
+      "faces": 6,
+      "area": 6,
+      "volume": 1,
+      "phases": [
+        "transform-vertices"
+      ]
+    },
+    {
+      "operation": "rotate",
+      "vertices": 8,
+      "faces": 6,
+      "area": 6,
+      "volume": 1,
+      "phases": [
+        "transform-vertices",
+        "transform-winding",
+        "transform-initialize",
+        "transform-corners",
+        "transform-normal",
+        "transform-scatter",
+        "transform-vertex-normal",
+        "transform-attributes"
+      ]
+    },
+    {
+      "operation": "scale",
+      "vertices": 8,
+      "faces": 6,
+      "area": 52,
+      "volume": 24,
+      "phases": [
+        "transform-vertices",
+        "transform-winding",
+        "transform-initialize",
+        "transform-corners",
+        "transform-normal",
+        "transform-scatter",
+        "transform-vertex-normal",
+        "transform-attributes"
+      ]
+    },
+    {
+      "operation": "inset",
+      "amount": 0.1,
+      "vertices": 12,
+      "faces": 10,
+      "area": 6,
+      "volume": 1,
+      "phases": [
+        "inset-selection",
+        "snapshot",
+        "inset-vertices",
+        "inset-borders",
+        "inset-corners",
+        "inset-transfer",
+        "inset-reconstruct"
+      ]
+    },
+    {
+      "operation": "extrude",
+      "amount": 1,
+      "vertices": 12,
+      "faces": 10,
+      "area": 10,
+      "volume": 2,
+      "phases": [
+        "extrude-selection",
+        "snapshot",
+        "extrude-boundaries",
+        "extrude-vertices",
+        "extrude-corners",
+        "extrude-borders",
+        "extrude-reconstruct"
+      ]
+    },
+    {
+      "operation": "orient",
+      "vertices": 8,
+      "faces": 6,
+      "area": 6,
+      "volume": 1,
+      "phases": [
+        "snapshot",
+        "orient-initialize",
+        "orient-incidence",
+        "orient-adjacency",
+        "orient-components",
+        "orient-corners",
+        "orient-reconstruct"
+      ]
+    },
+    {
+      "operation": "fillHoles",
+      "vertices": 8,
+      "faces": 6,
+      "area": 6,
+      "volume": 1,
+      "phases": [
+        "snapshot",
+        "fill-holes-boundaries",
+        "fill-holes-rotate",
+        "fill-holes-corners",
+        "fill-holes-reconstruct"
+      ]
+    },
+    {
+      "operation": "import",
+      "vertices": 8,
+      "faces": 12,
+      "area": 6,
+      "volume": 1,
+      "phases": [
+        "mesh-import-vertices",
+        "mesh-import-corners",
+        "mesh-import-reconstruct",
+        "mesh-import-normals"
+      ]
+    }
+  ],
   "cases": [
     {
       "name": "extrude-box-face",
@@ -1532,7 +1674,21 @@
       ],
       "minimumSteps": 12,
       "volume": 0.9976536686473018,
-      "cancelPhases": ["snapshot", "validate", "profile", "clip", "reconstruct"]
+      "cancelPhases": [
+        "snapshot",
+        "validate",
+        "profile",
+        "clip",
+        "reconstruct"
+      ],
+      "sliceEvidence": {
+        "snapshotVertices": 8,
+        "snapshotFaces": 6,
+        "snapshotCorners": 24,
+        "profilePlanes": 4,
+        "clipPlanes": 4,
+        "cancelPhaseUnits": 3
+      }
     },
     {
       "name": "decimation-candidates-sliced",
@@ -1545,7 +1701,1588 @@
       ],
       "minimumSteps": 3,
       "minimumVolume": 0.05,
-      "cancelPhases": ["snapshot", "edges", "candidate", "reconstruct"]
+      "cancelPhases": [
+        "snapshot",
+        "edges",
+        "candidate",
+        "reconstruct"
+      ],
+      "sliceEvidence": {
+        "snapshotVertices": 8,
+        "snapshotFaces": 6,
+        "snapshotCorners": 24,
+        "candidateVertices": 8,
+        "cancelPhaseUnits": 3
+      }
+    }
+  ],
+  "componentJobs": {
+    "positions": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        0
+      ],
+      [
+        0,
+        1,
+        0
+      ],
+      [
+        0,
+        0,
+        1
+      ]
+    ],
+    "faces": [
+      [
+        0,
+        1,
+        2
+      ],
+      [
+        0,
+        2,
+        3
+      ]
+    ],
+    "selectedFace": 0,
+    "normal": [
+      1,
+      1,
+      0
+    ],
+    "angle": 1.5707963267948966,
+    "normalIndices": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      1
+    ],
+    "cases": [
+      {
+        "operation": "move",
+        "expected": [
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            1
+          ]
+        ],
+        "area": 1.2071067811865475,
+        "phases": [
+          "transform-selection",
+          "transform-vertices",
+          "transform-corners",
+          "transform-normal",
+          "transform-selection-release"
+        ]
+      },
+      {
+        "operation": "rotate",
+        "expected": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            -1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1
+          ]
+        ],
+        "normal": [
+          -0.7071067811865475,
+          0.7071067811865475,
+          0
+        ],
+        "area": 1,
+        "phases": [
+          "transform-selection",
+          "transform-vertices",
+          "transform-corners",
+          "transform-normal",
+          "transform-attributes",
+          "transform-attribute-release",
+          "transform-selection-release"
+        ]
+      },
+      {
+        "operation": "scale",
+        "expected": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            1
+          ]
+        ],
+        "normal": [
+          0.4472135954999579,
+          0.8944271909999159,
+          0
+        ],
+        "area": 1.5,
+        "phases": [
+          "transform-selection",
+          "transform-vertices",
+          "transform-corners",
+          "transform-normal",
+          "transform-attributes",
+          "transform-attribute-release",
+          "transform-selection-release"
+        ]
+      }
+    ]
+  },
+  "generatedAttributeJobs": {
+    "positions": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        0
+      ],
+      [
+        1,
+        1,
+        0
+      ],
+      [
+        0,
+        1,
+        0
+      ]
+    ],
+    "faces": [
+      [
+        0,
+        1,
+        2,
+        3
+      ]
+    ],
+    "uv": [
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "linear": [
+      0,
+      1,
+      3,
+      2
+    ],
+    "edgeLabels": [
+      10,
+      20,
+      30,
+      40
+    ],
+    "faceLabel": "source-face-0",
+    "cases": [
+      {
+        "operation": "subdivide",
+        "vertices": 5,
+        "faces": 4,
+        "generated": [
+          [
+            0.5,
+            0.5,
+            0
+          ]
+        ],
+        "area": 1,
+        "phases": [
+          "subdivide-source-vertices",
+          "subdivide-source-remap",
+          "subdivide-attributes"
+        ],
+        "generatedLinear": [
+          1.5
+        ]
+      },
+      {
+        "operation": "loopCut",
+        "vertices": 6,
+        "faces": 2,
+        "generated": [
+          [
+            0.5,
+            0,
+            0
+          ],
+          [
+            0.5,
+            1,
+            0
+          ]
+        ],
+        "area": 1,
+        "phases": [
+          "loop-cut-source-vertices",
+          "loop-cut-source-remap",
+          "loop-cut-attributes"
+        ],
+        "generatedLinear": [
+          0.5,
+          2.5
+        ]
+      },
+      {
+        "operation": "knife",
+        "vertices": 6,
+        "faces": 2,
+        "generated": [
+          [
+            0.5,
+            0,
+            0
+          ],
+          [
+            0.5,
+            1,
+            0
+          ]
+        ],
+        "area": 1,
+        "phases": [
+          "knife-source-vertices",
+          "knife-source-remap",
+          "knife-attributes"
+        ],
+        "generatedLinear": [
+          0.5,
+          2.5
+        ]
+      }
+    ],
+    "normal": [
+      [
+        1,
+        0,
+        1
+      ],
+      [
+        0,
+        1,
+        1
+      ]
+    ],
+    "normalIndices": [
+      0,
+      1,
+      0,
+      1
+    ],
+    "normalMidpoint": [
+      0.408248290463863,
+      0.408248290463863,
+      0.816496580927726
+    ],
+    "nearest": [
+      "v0",
+      "v1",
+      "v2",
+      "v3"
+    ]
+  },
+  "triangulationJob": {
+    "positions": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        3,
+        0,
+        0
+      ],
+      [
+        3,
+        1,
+        0
+      ],
+      [
+        1,
+        1,
+        0
+      ],
+      [
+        1,
+        3,
+        0
+      ],
+      [
+        0,
+        3,
+        0
+      ],
+      [
+        5,
+        0,
+        0
+      ],
+      [
+        6,
+        0,
+        0
+      ],
+      [
+        5,
+        1,
+        0
+      ]
+    ],
+    "faces": [
+      [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      [
+        6,
+        7,
+        8
+      ]
+    ],
+    "vertices": 9,
+    "triangles": 5,
+    "sourceFaces": [
+      4,
+      1
+    ],
+    "area": 5.5,
+    "phases": [
+      "snapshot",
+      "subdivide-source-vertices",
+      "subdivide-convexity",
+      "subdivide-triangulate",
+      "subdivide-corners",
+      "subdivide-reconstruct",
+      "subdivide-source-remap",
+      "subdivide-attributes"
+    ]
+  },
+  "positionJobs": {
+    "normal": [
+      1,
+      1,
+      1
+    ],
+    "phases": [
+      "transform-selection",
+      "transform-vertices",
+      "transform-corners",
+      "transform-normal",
+      "transform-selection-release"
+    ],
+    "cases": [
+      {
+        "operation": "snap",
+        "positions": [
+          [
+            0.1,
+            0.1,
+            0
+          ],
+          [
+            1.1,
+            0.1,
+            0
+          ],
+          [
+            0.1,
+            1.1,
+            0
+          ]
+        ],
+        "selected": [
+          0,
+          1,
+          2
+        ],
+        "grid": 1,
+        "expected": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ],
+        "area": 0.5
+      },
+      {
+        "operation": "proportional",
+        "positions": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ],
+        "selected": [
+          0
+        ],
+        "offset": [
+          0,
+          0,
+          1
+        ],
+        "pivot": [
+          0,
+          0,
+          0
+        ],
+        "radius": 2,
+        "expected": [
+          [
+            0,
+            0,
+            1
+          ],
+          [
+            1,
+            0,
+            0.5
+          ],
+          [
+            0,
+            1,
+            0.5
+          ]
+        ],
+        "area": 0.6123724356957945
+      },
+      {
+        "operation": "proportional",
+        "positions": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ],
+        "selected": [
+          0
+        ],
+        "offset": [
+          0,
+          0,
+          1
+        ],
+        "pivot": [
+          10,
+          0,
+          0
+        ],
+        "radius": 2,
+        "expected": [
+          [
+            0,
+            0,
+            1
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ],
+        "area": 0.8660254037844386
+      }
+    ]
+  },
+  "affineJobs": {
+    "operator": "brep.mesh.transform",
+    "layout": "column-major",
+    "length": 16,
+    "positions": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        0
+      ],
+      [
+        0,
+        1,
+        0
+      ]
+    ],
+    "faces": [
+      [
+        0,
+        1,
+        2
+      ]
+    ],
+    "normal": [
+      1,
+      1,
+      0
+    ],
+    "cases": [
+      {
+        "name": "shear-scale-translate",
+        "matrix": [
+          2,
+          0,
+          0,
+          0,
+          1,
+          3,
+          0,
+          0,
+          0,
+          0,
+          4,
+          0,
+          5,
+          -2,
+          7,
+          1
+        ],
+        "positions": [
+          [
+            5,
+            -2,
+            7
+          ],
+          [
+            7,
+            -2,
+            7
+          ],
+          [
+            6,
+            1,
+            7
+          ]
+        ],
+        "normal": [
+          0.9486832980505138,
+          0.31622776601683794,
+          0
+        ],
+        "flipped": false,
+        "area": 3
+      },
+      {
+        "name": "reflection",
+        "matrix": [
+          -2,
+          0,
+          0,
+          0,
+          0,
+          3,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          2,
+          0,
+          1
+        ],
+        "positions": [
+          [
+            1,
+            2,
+            0
+          ],
+          [
+            -1,
+            2,
+            0
+          ],
+          [
+            1,
+            5,
+            0
+          ]
+        ],
+        "normal": [
+          -0.8320502943378437,
+          0.5547001962252291,
+          0
+        ],
+        "flipped": true,
+        "area": 3
+      }
+    ],
+    "invalid": [
+      {
+        "name": "singular",
+        "matrix": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        "reason": "singular"
+      },
+      {
+        "name": "projective",
+        "matrix": [
+          1,
+          0,
+          0,
+          0.1,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        "reason": "affine"
+      },
+      {
+        "name": "nonfinite",
+        "matrix": [
+          "NaN",
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        "reason": "finite"
+      }
+    ]
+  },
+  "coplanarJob": {
+    "positions": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        0
+      ],
+      [
+        2,
+        0,
+        0
+      ],
+      [
+        3,
+        0,
+        0
+      ],
+      [
+        0,
+        1,
+        0
+      ],
+      [
+        1,
+        1,
+        0
+      ],
+      [
+        2,
+        1,
+        0
+      ],
+      [
+        3,
+        1,
+        0
+      ]
+    ],
+    "faces": [
+      [
+        0,
+        1,
+        5,
+        4
+      ],
+      [
+        1,
+        2,
+        6,
+        5
+      ],
+      [
+        2,
+        3,
+        7,
+        6
+      ]
+    ],
+    "merges": 2,
+    "vertices": 8,
+    "outputFaces": 1,
+    "corners": 4,
+    "area": 3,
+    "phases": [
+      "snapshot",
+      "coplanar-incidence",
+      "coplanar-candidates",
+      "coplanar-normal",
+      "coplanar-distance",
+      "coplanar-shared-edges",
+      "coplanar-splice",
+      "coplanar-remove-edges",
+      "coplanar-insert-edges",
+      "coplanar-release-candidate",
+      "coplanar-cleanup-incidence",
+      "coplanar-cleanup-classify",
+      "coplanar-cleanup-corners",
+      "coplanar-reconstruct"
+    ]
+  },
+  "coplanarAttributeJob": {
+    "source": "coplanarJob",
+    "merges": 2,
+    "outputFaces": 1,
+    "corners": 8,
+    "faceValues": [
+      10,
+      20,
+      30
+    ],
+    "faceLinear": 20,
+    "faceNearest": 0,
+    "discontinuousFaces": 3,
+    "seamedFaces": 2,
+    "area": 3
+  },
+  "retainedDissolutionJobs": {
+    "edge": {
+      "positions": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          0,
+          2,
+          3
+        ]
+      ],
+      "selection": [
+        2
+      ],
+      "vertices": 4,
+      "outputFaces": 1,
+      "corners": 4,
+      "area": 1,
+      "faceValues": [
+        10,
+        20
+      ],
+      "faceLinear": 15,
+      "faceNearest": 0,
+      "output": {
+        "positions": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ],
+        "faces": [
+          [
+            0,
+            1,
+            2,
+            3
+          ]
+        ]
+      }
+    },
+    "vertex": {
+      "positions": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          -1,
+          -1,
+          0
+        ],
+        [
+          1,
+          -1,
+          0
+        ],
+        [
+          1,
+          1,
+          0
+        ],
+        [
+          -1,
+          1,
+          0
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          0,
+          2,
+          3
+        ],
+        [
+          0,
+          3,
+          4
+        ],
+        [
+          0,
+          4,
+          1
+        ]
+      ],
+      "selection": [
+        0
+      ],
+      "vertices": 4,
+      "outputFaces": 1,
+      "corners": 4,
+      "area": 4,
+      "faceValues": [
+        10,
+        20,
+        30,
+        40
+      ],
+      "faceLinear": 25,
+      "faceNearest": 0,
+      "output": {
+        "positions": [
+          [
+            -1,
+            -1,
+            0
+          ],
+          [
+            1,
+            -1,
+            0
+          ],
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            -1,
+            1,
+            0
+          ]
+        ],
+        "faces": [
+          [
+            0,
+            1,
+            2,
+            3
+          ]
+        ]
+      }
+    },
+    "weld": {
+      "positions": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          3,
+          4,
+          5
+        ]
+      ],
+      "precision": 0.0001,
+      "vertices": 4,
+      "removedVertices": 2,
+      "outputFaces": 2,
+      "corners": 6,
+      "area": 1,
+      "vertexValues": [
+        0,
+        1,
+        2,
+        6,
+        8,
+        5
+      ],
+      "vertexLinear": [
+        3,
+        1,
+        5,
+        5
+      ],
+      "vertexNearest": [
+        0,
+        1,
+        2,
+        5
+      ],
+      "output": {
+        "positions": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ],
+        "faces": [
+          [
+            0,
+            1,
+            2
+          ],
+          [
+            0,
+            2,
+            3
+          ]
+        ]
+      },
+      "largeGroup": {
+        "positions": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            -2,
+            0,
+            0
+          ],
+          [
+            -1,
+            -2,
+            0
+          ],
+          [
+            1,
+            -2,
+            0
+          ],
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            1,
+            2,
+            0
+          ],
+          [
+            -1,
+            2,
+            0
+          ]
+        ],
+        "faces": [
+          [
+            0,
+            6,
+            7
+          ],
+          [
+            1,
+            7,
+            8
+          ],
+          [
+            2,
+            8,
+            9
+          ],
+          [
+            3,
+            9,
+            10
+          ],
+          [
+            4,
+            10,
+            11
+          ],
+          [
+            5,
+            11,
+            6
+          ]
+        ],
+        "output": {
+          "positions": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              -2,
+              0,
+              0
+            ],
+            [
+              -1,
+              -2,
+              0
+            ],
+            [
+              1,
+              -2,
+              0
+            ],
+            [
+              2,
+              0,
+              0
+            ],
+            [
+              1,
+              2,
+              0
+            ],
+            [
+              -1,
+              2,
+              0
+            ]
+          ],
+          "faces": [
+            [
+              0,
+              1,
+              2
+            ],
+            [
+              0,
+              2,
+              3
+            ],
+            [
+              0,
+              3,
+              4
+            ],
+            [
+              0,
+              4,
+              5
+            ],
+            [
+              0,
+              5,
+              6
+            ],
+            [
+              0,
+              6,
+              1
+            ]
+          ]
+        },
+        "vertices": 7,
+        "removedVertices": 5,
+        "outputFaces": 6,
+        "corners": 18,
+        "area": 12,
+        "vertexValues": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11
+        ],
+        "vertexLinear": [
+          2.5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11
+        ],
+        "vertexNearest": [
+          0,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11
+        ]
+      }
+    }
+  },
+  "tangentJobs": {
+    "positions": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        0
+      ],
+      [
+        1,
+        1,
+        0
+      ],
+      [
+        0,
+        1,
+        0
+      ]
+    ],
+    "faces": [
+      [
+        0,
+        1,
+        2
+      ],
+      [
+        0,
+        2,
+        3
+      ]
+    ],
+    "tangent": [
+      0.7071067811865475,
+      0.7071067811865475,
+      0,
+      1
+    ],
+    "matrix": [
+      -2,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      3,
+      0,
+      0,
+      0,
+      0,
+      1
+    ],
+    "factor": [
+      -2,
+      1,
+      3
+    ],
+    "expected": [
+      -0.8944271909999159,
+      0.4472135954999579,
+      0,
+      -1
+    ],
+    "selectedFaces": [
+      0
+    ],
+    "selectedVertexDomains": [
+      0,
+      1,
+      2
+    ],
+    "selectedCornerDomains": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "refusePartialFaceDomain": true
+  },
+  "flipJob": {
+    "positions": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        0
+      ],
+      [
+        0,
+        1,
+        0
+      ],
+      [
+        0,
+        0,
+        1
+      ]
+    ],
+    "faces": [
+      [
+        0,
+        1,
+        2
+      ],
+      [
+        0,
+        3,
+        1
+      ]
+    ],
+    "selection": [
+      0
+    ],
+    "outputFaces": [
+      [
+        2,
+        1,
+        0
+      ],
+      [
+        0,
+        3,
+        1
+      ]
+    ],
+    "area": 1
+  },
+  "primitiveJobs": [
+    {
+      "kind": "box",
+      "dimensions": [
+        2,
+        3,
+        4
+      ],
+      "parameter": 0,
+      "vertices": 8,
+      "faces": 6,
+      "corners": 24
+    },
+    {
+      "kind": "plane",
+      "dimensions": [
+        2,
+        3,
+        0
+      ],
+      "parameter": 0,
+      "vertices": 4,
+      "faces": 1,
+      "corners": 4
+    },
+    {
+      "kind": "cylinder",
+      "dimensions": [
+        2,
+        3,
+        0
+      ],
+      "parameter": 8,
+      "vertices": 16,
+      "faces": 10,
+      "corners": 48
+    },
+    {
+      "kind": "cone",
+      "dimensions": [
+        2,
+        3,
+        0
+      ],
+      "parameter": 8,
+      "vertices": 9,
+      "faces": 9,
+      "corners": 32
+    },
+    {
+      "kind": "sphere",
+      "dimensions": [
+        2,
+        0,
+        0
+      ],
+      "parameter": 2,
+      "vertices": 162,
+      "faces": 320,
+      "corners": 960
     }
   ]
 }

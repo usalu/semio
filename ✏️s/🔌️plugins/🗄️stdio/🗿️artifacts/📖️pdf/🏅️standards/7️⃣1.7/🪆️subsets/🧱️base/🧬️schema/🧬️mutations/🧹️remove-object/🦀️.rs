@@ -23,9 +23,12 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveObject {
         MutationOutcome::new(diff::diff_graph_edit(base, diff::diff_remove_object(self.id)))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         base.objects.iter().find(|object| object.id == self.id).map(|object| PdfMutation::InsertObject(InsertObject { id: self.id, value: object.value.clone() })).into_iter().collect()
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove object {} {}", self.id.num, self.id.gen), &format!("Objekt {} {} entfernen", self.id.num, self.id.gen))

@@ -287,6 +287,119 @@
               "directoryName": "✂️clips"
             }
           ]
+        },
+        {
+          "mutationId": "apply-filter",
+          "sourceMutationDirectoryName": "🌈️apply-filter",
+          "mutationDirectoryName": "🌈️apply-filter",
+          "scenarios": [
+            {
+              "id": "inverts-the-layer-pixels",
+              "directoryName": "🌈️inverts"
+            },
+            {
+              "id": "brightens-the-layer-pixels",
+              "directoryName": "🔆️brightens"
+            },
+            {
+              "id": "blurs-the-layer-pixels",
+              "directoryName": "🌫️blurs"
+            },
+            {
+              "id": "flips-the-layer-image",
+              "directoryName": "↔️flips"
+            },
+            {
+              "id": "leaves-an-image-the-filter-does-not-change",
+              "directoryName": "⚠️unchanged"
+            },
+            {
+              "id": "refuses-a-locked-layer",
+              "directoryName": "🔒️locked"
+            },
+            {
+              "id": "refuses-a-layer-the-document-lacks",
+              "directoryName": "🚫️rejects"
+            },
+            {
+              "id": "clips-the-filter-to-the-selection",
+              "directoryName": "✂️clips"
+            }
+          ]
+        },
+        {
+          "mutationId": "transform-image",
+          "sourceMutationDirectoryName": "🔄️transform-image",
+          "mutationDirectoryName": "🔄️transform-image",
+          "scenarios": [
+            {
+              "id": "turns-the-image-right",
+              "directoryName": "↪️rotates-right"
+            },
+            {
+              "id": "turns-the-image-left",
+              "directoryName": "↩️rotates-left"
+            },
+            {
+              "id": "resizes-to-the-nearest-pixels",
+              "directoryName": "📏️resizes"
+            },
+            {
+              "id": "resizes-with-smooth-sampling",
+              "directoryName": "🫧️smooths"
+            },
+            {
+              "id": "crops-to-the-window-in-place",
+              "directoryName": "✂️crops"
+            },
+            {
+              "id": "refuses-a-window-past-the-image",
+              "directoryName": "📍️outside"
+            },
+            {
+              "id": "refuses-a-locked-layer",
+              "directoryName": "🔒️locked"
+            },
+            {
+              "id": "refuses-a-layer-the-document-lacks",
+              "directoryName": "🚫️rejects"
+            }
+          ]
+        },
+        {
+          "mutationId": "fill-selection",
+          "sourceMutationDirectoryName": "🫗️fill-selection",
+          "mutationDirectoryName": "🫗️fill-selection",
+          "scenarios": [
+            {
+              "id": "fills-the-whole-image",
+              "directoryName": "🫗️fills"
+            },
+            {
+              "id": "fills-only-the-selection",
+              "directoryName": "✂️clips"
+            },
+            {
+              "id": "fills-the-mask-coverage",
+              "directoryName": "🎭️masks"
+            },
+            {
+              "id": "leaves-an-image-the-fill-does-not-change",
+              "directoryName": "⚠️unchanged"
+            },
+            {
+              "id": "refuses-a-selection-past-the-image",
+              "directoryName": "📍️outside"
+            },
+            {
+              "id": "refuses-a-locked-layer",
+              "directoryName": "🔒️locked"
+            },
+            {
+              "id": "refuses-a-layer-the-document-lacks",
+              "directoryName": "🚫️rejects"
+            }
+          ]
         }
       ],
       "kinds": [
@@ -308,7 +421,10 @@
         "change-layer-locked",
         "change-layer-transform",
         "paint-stroke",
-        "fill-region"
+        "fill-region",
+        "apply-filter",
+        "transform-image",
+        "fill-selection"
       ]
     }
   ],
@@ -707,6 +823,68 @@
             "operation": "fill-region",
             "bridgeVersion": 1,
             "variant": "FillRegion"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "raster-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "apply-filter",
+          "capability": "raster-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "apply-filter",
+            "bridgeVersion": 1,
+            "variant": "ApplyFilter"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "raster-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "transform-image",
+          "capability": "raster-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "transform-image",
+            "bridgeVersion": 1,
+            "variant": "TransformImage"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "raster-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "fill-selection",
+          "capability": "raster-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "fill-selection",
+            "bridgeVersion": 1,
+            "variant": "FillSelection"
           },
           "oracleRequirements": [
             {

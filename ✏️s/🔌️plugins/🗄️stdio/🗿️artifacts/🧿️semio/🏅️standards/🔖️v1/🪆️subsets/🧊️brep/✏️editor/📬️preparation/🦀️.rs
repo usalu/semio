@@ -763,7 +763,7 @@ impl BrepStructuralCopy {
         Ok(value)
     }
 
-    fn finish_active_close(&mut self, grant: app_store::ArtifactStoreOneItemGrant) -> Result<Option<app_store::SnapshotRetirementStep>, String> {
+    fn finish_active_close(&mut self, grant: app_store::ArtifactStoreOneItemGrant) -> Result<Option<app_store::SnapshotRetirementStep>, semio_framework_value::ValueError> {
         if let Some(value) = self.vertex.as_mut() {
             let step = value.fields.close_step(grant);
             if step != app_store::SnapshotRetirementStep::Complete {
@@ -1014,7 +1014,7 @@ impl StructuralMutationCopy<SemioBrepSnapshot, SemioBrepMutation> for BrepStruct
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: app_store::ArtifactStoreOneItemGrant) -> Result<app_store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: app_store::ArtifactStoreOneItemGrant) -> Result<app_store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing {
             return Ok(app_store::SnapshotRetirementStep::Blocked);
         }
@@ -1029,7 +1029,7 @@ impl StructuralMutationCopy<SemioBrepSnapshot, SemioBrepMutation> for BrepStruct
             let step = retirement.close_step(grant.maximum_items.min(1), grant.maximum_bytes)?;
             if step == app_store::SnapshotRetirementStep::Complete {
                 if !retirement.terminal_is_empty() {
-                    return Err(format!("{PREFIX}-retirement-witness"));
+                    return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,format!("{PREFIX}-retirement-witness")));
                 }
                 self.retirement = None;
                 return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });

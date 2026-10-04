@@ -10,17 +10,17 @@ fn picked_snapshot() -> CurationSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
     let snapshot = picked_snapshot();
-    assert_eq!(CurationInference::infer(&snapshot), CurationInference::infer(&snapshot));
+    assert_eq!(CurationInference::infer(&snapshot).expect("valid materialized inference fixture"), CurationInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
-    assert_eq!(CurationInference::infer(&CurationSnapshot::default()), CurationInference::default());
+    assert_eq!(CurationInference::infer(&CurationSnapshot::default()).expect("valid materialized inference fixture"), CurationInference::default());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn entries_counts_curated_lines_and_total_quantity() {
-    let inferred = CurationInference::infer(&picked_snapshot());
+    let inferred = CurationInference::infer(&picked_snapshot()).expect("valid materialized inference fixture");
     assert_eq!(inferred.entries.entry_count, 2);
     assert_eq!(inferred.entries.total_count, 10);
 }

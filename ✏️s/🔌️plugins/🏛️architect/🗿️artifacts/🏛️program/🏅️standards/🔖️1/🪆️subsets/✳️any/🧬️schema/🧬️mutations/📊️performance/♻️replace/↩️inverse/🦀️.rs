@@ -6,9 +6,12 @@ use crate::ProgramMutation;
 use crate::ProgramSnapshot;
 
 /// ↩️ Undo a replace by restoring the pre-state row content. Missing target ⇒ nothing to undo.
-pub fn inverse(payload: &super::ReplacePerformanceCriterion, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+pub fn inverse(payload: &super::ReplacePerformanceCriterion, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.performance.iter().find(|row| row.header.id == payload.performance_criterion.header.id) {
         Some(existing) => vec![ProgramMutation::ReplacePerformanceCriterion(super::ReplacePerformanceCriterion { performance_criterion: existing.clone() })],
         None => Vec::new(),
     }
+
+    })())
 }

@@ -45,7 +45,7 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 /// 🧱️ One block-list step per register row — the wire shape the block-list surface consumes.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -55,7 +55,7 @@ struct RegisterBlockStep {
     blocks: Vec<RegisterBlockItem>,
 }
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -80,11 +80,11 @@ pub fn render(program: &ProgramSnapshot, cfg: &config::ArchitectRegisterWindowCo
             Some(RegisterBlockStep { id: id.clone(), title: name.clone(), blocks: vec![RegisterBlockItem { id: format!("{id}-block"), label: name, kind: register.into() }] })
         })
         .collect();
-    let steps_json = dsl::json::to_json_string(&steps);
-    let palette_json = dsl::json::to_json_string(&vec![dsl::DslValue::object([
-        ("blockKind".to_string(), dsl::DslValue::String(register.to_string())),
-        ("label".to_string(), dsl::DslValue::String(register.to_string())),
-        ("iconId".to_string(), dsl::DslValue::String("square".to_string())),
+    let steps_json = semio_framework_pack_json::to_json_string(&steps);
+    let palette_json = semio_framework_pack_json::to_json_string(&vec![semio_framework_value::DslValue::object([
+        ("blockKind".to_string(), semio_framework_value::DslValue::String(register.to_string())),
+        ("label".to_string(), semio_framework_value::DslValue::String(register.to_string())),
+        ("iconId".to_string(), semio_framework_value::DslValue::String("square".to_string())),
     ])]);
     // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `ArtifactEditor::render` carries no
     // `InteractionView` and `BlockListScene` has no `interaction_domain` field for the wrapper to

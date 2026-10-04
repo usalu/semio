@@ -5,7 +5,8 @@ use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 
 //#region 🔖️Inverse
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(payload: &super::DeleteFace, base: &SemioBrepSnapshot) -> Vec<SemioBrepMutation> {
+pub fn inverse(payload: &super::DeleteFace, base: &SemioBrepSnapshot) -> Result<Vec<SemioBrepMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(index) = base.faces.iter().position(|x| x.id == payload.id) else {
         return Vec::new();
     };
@@ -15,5 +16,7 @@ pub fn inverse(payload: &super::DeleteFace, base: &SemioBrepSnapshot) -> Vec<Sem
         tail.iter().map(|x| SemioBrepMutation::CreateFace(create_face::CreateFace { id: x.id.clone(), outer_loop: x.outer_loop.clone(), inner_loops: x.inner_loops.clone(), surface: x.surface.clone(), orientation: x.orientation, tol: x.tol })),
     );
     undo
+
+    })())
 }
 //#endregion 🔖️Inverse

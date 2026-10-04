@@ -15,14 +15,14 @@ async fn set_data_fields_diff_applies_onto_the_base_snapshot() {
         spreads: Vec::new(),
         pages: Vec::new(),
         print_target: None,
-        data_fields_json: None,
+        data_fields: None,
         background_drawing: None,
         referenced_model: None,
     };
-    let operation = crate::mutations::LayoutMutation::ChangeDataFields(crate::mutations::change_data_fields::ChangeDataFields { new_json: Some("{}".into()) });
+    let operation = crate::mutations::LayoutMutation::ChangeDataFields(crate::mutations::change_data_fields::ChangeDataFields { new_fields: Some(crate::FormDictionary::default()) });
     let diff: LayoutDiff = operation.diff(&base).into_parts().0;
     let applied = diff.apply(&base).expect("valid mutation diff");
-    assert_eq!(applied.data_fields_json.as_deref(), Some("{}"));
+    assert_eq!(applied.data_fields, Some(crate::FormDictionary::default()));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -40,7 +40,7 @@ async fn absorb_replaces_with_whole_artifact_diff() {
         spreads: Vec::new(),
         pages: Vec::new(),
         print_target: None,
-        data_fields_json: None,
+        data_fields: None,
         background_drawing: None,
         referenced_model: None,
     };

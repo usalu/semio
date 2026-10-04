@@ -39,7 +39,7 @@ from __future__ import annotations
 import json
 import struct
 
-from semio_repo_test import Adapter, Context, Outcome, digest
+from semio_repo_test import Adapter, Context, Outcome, digest, patched_snapshot
 
 # endregion 🔖️Imports
 
@@ -50,6 +50,7 @@ from semio_repo_test import Adapter, Context, Outcome, digest
 KINDS = (
     "no-mutation",
     "set-snapshot",
+    "patch-snapshot",
     "set-sample-rate",
     "set-format",
     "insert-channel",
@@ -238,6 +239,8 @@ def apply_mutation(snapshot: dict, mutation: dict) -> dict:
     kind, args = parts(mutation)
     if kind == "no-mutation":
         return result
+    if kind == "patch-snapshot":
+        return patched_snapshot(snapshot, args["patch"])
     if kind == "set-snapshot":
         return clone(args["snapshot"])
     if kind == "set-sample-rate":
@@ -275,6 +278,8 @@ def inverse_mutation(snapshot: dict, mutation: dict) -> dict:
     kind, args = parts(mutation)
     if kind == "no-mutation":
         return wire("no-mutation", {})
+    if kind == "patch-snapshot":
+        return wire("set-snapshot", {"snapshot": clone(snapshot)})
     if kind == "set-snapshot":
         return wire("set-snapshot", {"snapshot": clone(snapshot)})
     if kind == "set-sample-rate":

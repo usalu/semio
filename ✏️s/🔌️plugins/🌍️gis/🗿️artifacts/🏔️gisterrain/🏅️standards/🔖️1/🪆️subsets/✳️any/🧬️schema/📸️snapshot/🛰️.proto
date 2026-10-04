@@ -1,8 +1,9 @@
 syntax = "proto3";
+import "🗺️imported-map/🛰️.proto";
 package semio.s.gis.gisterrain;
 import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
 message GisTerrainSnapshot {
   double exaggeration = 1;
-  string imported_features_json = 2;
+  optional ImportedMap imported_map = 2;
   optional semio.os.store.ArtifactChild mesh = 3;
 }

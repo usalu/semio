@@ -23,16 +23,18 @@ impl protocol::MutationKind<WireTestSnapshot, WireTestMutation> for AddValue {
         protocol::MutationOutcome::new(WireTestDiff { deltas: vec![self.delta] })
     }
 
-    fn inverse(&self, _base: &WireTestSnapshot) -> Vec<WireTestMutation> {
-        if self.delta == i32::MIN {
-            vec![WireTestMutation::AddValue(Self { delta: 1 }), WireTestMutation::AddValue(Self { delta: i32::MAX })]
-        } else {
-            vec![WireTestMutation::AddValue(Self { delta: -self.delta })]
-        }
+    fn inverse(&self, _base: &WireTestSnapshot) -> Result<Vec<WireTestMutation>, semio_framework_value::ValueError> {
+        Ok((|| {
+            if self.delta == i32::MIN {
+                vec![WireTestMutation::AddValue(Self { delta: 1 }), WireTestMutation::AddValue(Self { delta: i32::MAX })]
+            } else {
+                vec![WireTestMutation::AddValue(Self { delta: -self.delta })]
+            }
+        })())
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Add {} to value", self.delta), &format!("{} zu Wert hinzufügen", self.delta))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add {} to value", self.delta), &format!("{} zu Wert hinzufügen", self.delta))
     }
 
     fn target(&self) -> Vec<String> {
@@ -47,7 +49,7 @@ impl protocol::CompositeMutationKind<WireTestSnapshot, WireTestMutation> for Add
         planner.call(WireTestMutation::AddValue(self.clone()))
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         <Self as protocol::MutationKind<WireTestSnapshot, WireTestMutation>>::label(self)
     }
 

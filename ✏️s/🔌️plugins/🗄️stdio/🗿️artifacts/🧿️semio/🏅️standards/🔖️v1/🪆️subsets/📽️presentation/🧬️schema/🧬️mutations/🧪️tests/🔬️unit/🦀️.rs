@@ -107,6 +107,7 @@ fn sweep_b() -> SemioPresentationSnapshot {
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sample_mutations() -> Vec<SemioPresentationMutation> {
     vec![
+        SemioPresentationMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         SemioPresentationMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: sweep_b() }),
         SemioPresentationMutation::InsertSlide(insert_slide::InsertSlide { index: 1, slide: Slide { id: "new".into(), layout_id: None, shapes: Vec::new(), notes: Vec::new() } }),
         SemioPresentationMutation::RemoveSlide(remove_slide::RemoveSlide { index: 0 }),
@@ -158,7 +159,7 @@ async fn inverse_law() {
 
         let mut round_tripped = base.clone();
         apply_semio_presentation_mutation(&mut round_tripped, &mutation);
-        for inverse_mutation in <SemioPresentationMutation as Mutation<SemioPresentationSnapshot>>::inverse(&mutation, &base) {
+        for inverse_mutation in <SemioPresentationMutation as Mutation<SemioPresentationSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
             apply_semio_presentation_mutation(&mut round_tripped, &inverse_mutation);
         }
         assert_eq!(round_tripped, base, "inverse_law (mutation-level).await failed for {mutation:?}");

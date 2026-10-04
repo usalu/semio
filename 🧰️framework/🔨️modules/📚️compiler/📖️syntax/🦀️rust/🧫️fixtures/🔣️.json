@@ -1,0 +1,331 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "all-literal-compile-edges",
+      "source": "const TEXT: &str = include_str!(\"fixture.txt\");\nconst BYTES: &[u8] = include_bytes!(r#\"fixture.txt\"#);\ninclude!(\"leaf.rs\");\n#[path = \"module.rs\"] mod child;\n",
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "fixture.txt",
+          "line": 1
+        },
+        {
+          "kind": "include_bytes",
+          "path": "fixture.txt",
+          "line": 2
+        },
+        {
+          "kind": "include",
+          "path": "leaf.rs",
+          "line": 3
+        },
+        {
+          "kind": "path",
+          "path": "module.rs",
+          "line": 4
+        }
+      ]
+    },
+    {
+      "id": "comment-string-and-character-decoys",
+      "source": "// include_str!(\"absent.txt\")\n/* #[path = \"absent.rs\"] /* include!(\"absent.rs\") */ */\nconst DECOY: &str = r##\"include_bytes!(\"absent.txt\")\"##;\nconst QUOTE: char = '\"';\nconst TEXT: &str = include_str!(r###\"fixture.txt\"###);\n",
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "fixture.txt",
+          "line": 5
+        }
+      ]
+    },
+    {
+      "id": "constant-concat-and-nested-test",
+      "source": "#[cfg(test)] mod tests {\n const TEXT: &str = include_str!(concat!(\"fix\", concat!(\"ture\", \".txt\")));\n}\n",
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "fixture.txt",
+          "line": 2,
+          "modulePath": [
+            "tests"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "escaped-literal-identity",
+      "source": "const TEXT: &str = include_str!(\"fix\\u{74}ure.txt\");\n",
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "fixture.txt",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "cfg-attribute-module-path",
+      "source": "#[cfg_attr(test, path=\"module.rs\")] mod child;\n",
+      "references": [
+        {
+          "kind": "path",
+          "path": "module.rs",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "generated-output-input",
+      "source": "const TEXT: &str = include_str!(concat!(env!(\"OUT_DIR\"), \"/fixture.txt\"));\n",
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "/fixture.txt",
+          "line": 1,
+          "base": "generated"
+        }
+      ]
+    },
+    {
+      "id": "manifest-relative-input",
+      "source": "const TEXT: &str = include_str!(concat!(env!(\"CARGO_MANIFEST_DIR\"), \"/fixture.txt\"));\n",
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "/fixture.txt",
+          "line": 1,
+          "base": "manifest"
+        }
+      ]
+    },
+    {
+      "id": "unused-macro-authored-input",
+      "source": "macro_rules! unused { () => { include!(\"leaf.rs\"); }; }\n",
+      "references": [
+        {
+          "kind": "include",
+          "path": "leaf.rs",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "prototype-name-delimiter-decoys",
+      "source": "mod child { fn constructor() { let _ = include_str!(\"fixture.txt\"); } fn toString() {} }\n",
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "fixture.txt",
+          "line": 1,
+          "modulePath": [
+            "child"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "literal-template-invocation",
+      "source": "macro_rules! load { ($stem:literal, $extension:literal) => { include_str!(concat!($stem, $extension)) }; }\nconst TEXT: &str = load!(\"fixture\", \".txt\");\n",
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "fixture.txt",
+          "line": 1,
+          "expansion": {
+            "kind": "local-macro",
+            "macro": "load",
+            "definitionLine": 1,
+            "invocationLine": 2,
+            "definitionOffset": 0,
+            "templateOffset": 61,
+            "invocationOffset": 126,
+            "scope": {
+              "kind": "module",
+              "modulePath": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "inline-module-directory-mount",
+      "source": "#[path=\"alternate\"] mod child { const TEXT: &str = include_str!(\"fixture.txt\"); }\n",
+      "references": [
+        {
+          "kind": "path",
+          "path": "alternate",
+          "line": 1,
+          "directory": true
+        },
+        {
+          "kind": "include_str",
+          "path": "fixture.txt",
+          "line": 1,
+          "modulePath": [
+            "child"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "empty-inline-current-directory",
+      "source": "#[path=\"\"] mod child { const TEXT: &str = include_str!(\"fixture.txt\"); }\n",
+      "references": [
+        {
+          "kind": "path",
+          "path": "",
+          "line": 1,
+          "directory": true
+        },
+        {
+          "kind": "include_str",
+          "path": "fixture.txt",
+          "line": 1,
+          "modulePath": [
+            "child"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "multiline-raw-module-mount",
+      "source": "#[\npath =\nr###\"module.rs\"###\n]\nmod child;\n",
+      "references": [
+        {
+          "kind": "path",
+          "path": "module.rs",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "id": "outer-documentation-input",
+      "source": "#[doc = include_str!(\"fixture.txt\")]\npub struct Subject;\n",
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "fixture.txt",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "inner-documentation-input",
+      "source": "#![doc = include_str!(\"fixture.txt\")]\npub struct Subject;\n",
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "fixture.txt",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "concatenated-documentation-input",
+      "source": "#[doc = concat!(\"Source:\\n\",include_str!(\"fixture.txt\"))]\npub struct Subject;\n",
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "fixture.txt",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "active-conditional-documentation-input",
+      "source": "#[cfg_attr(all(), doc = include_str!(\"fixture.txt\"))]\npub struct Subject;\n",
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "fixture.txt",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "raw-builtin-input",
+      "source": "const TEXT: &str = r#include_str!(\"fixture.txt\");\n",
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "fixture.txt",
+          "line": 1
+        }
+      ]
+    }
+  ],
+  "unsupported": [
+    {
+      "id": "unrecognized-env",
+      "source": "include_str!(concat!(env!(\"HOME\"), \"/data\"));"
+    },
+    {
+      "id": "unrecognized-macro",
+      "source": "include!(choose_path!());"
+    },
+    {
+      "id": "metavariable-template",
+      "source": "macro_rules! load { ($path:expr) => { include!($path); }; }"
+    },
+    {
+      "id": "attribute-expression",
+      "source": "#[path=choose_path!()] mod child;"
+    },
+    {
+      "id": "generated-path-traversal",
+      "source": "include_str!(concat!(env!(\"OUT_DIR\"), \"/../authored.txt\"));"
+    },
+    {
+      "id": "emitted-quote-input",
+      "source": "quote! { const INPUT: &str = include_str!(#dependency); }"
+    },
+    {
+      "id": "conditional-inline-alternate-owner",
+      "source": "#[cfg_attr(unix,path=\"safe\")] #[cfg_attr(windows,path=\"../../specific\")] mod mounted { #[path=\"leaf.rs\"] mod child; }"
+    },
+    {
+      "id": "conditional-inline-default-alternative",
+      "source": "#[cfg_attr(test,path=\"alternate\")] mod mounted { #[path=\"leaf.rs\"] mod child; }"
+    }
+  ],
+  "oracle": [
+    {
+      "id": "literal-includes",
+      "source": "const X: &str = include_str!(\"a.json\");\nconst B: &[u8] = include_bytes!(\"b.bin\");",
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "a.json",
+          "line": 1
+        },
+        {
+          "kind": "include_bytes",
+          "path": "b.bin",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "id": "comment-string-decoys",
+      "source": "// include_str!(\"decoy.json\")\nconst MESSAGE: &str = \"include_bytes!(fake)\";\nconst X: &str = include_str!(\"actual.json\");",
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "actual.json",
+          "line": 3
+        }
+      ]
+    },
+    {
+      "id": "unicode-and-raw-literal",
+      "source": "const X: &str = include_str!(r#\"ä/😀.json\"#);",
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "ä/😀.json",
+          "line": 1
+        }
+      ]
+    }
+  ]
+}

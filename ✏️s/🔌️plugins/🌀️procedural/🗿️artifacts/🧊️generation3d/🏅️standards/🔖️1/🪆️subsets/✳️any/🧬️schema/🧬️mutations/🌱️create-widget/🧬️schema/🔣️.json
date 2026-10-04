@@ -674,8 +674,8 @@
                   "de": "Format"
                 },
                 "description": {
-                  "en": "Export format, e.g. svg or png.",
-                  "de": "Exportformat, z. B. svg oder png."
+                  "en": "Artifact-owned 3D export format, e.g. gltf or obj.",
+                  "de": "Artefakteigenes 3D-Exportformat, z. B. gltf oder obj."
                 },
                 "group": "value",
                 "order": 20

@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📸️snapshot/🩹️patch",
+  "semanticKind": "patch-snapshot",
+  "displayName": "Patch Snapshot",
+  "emoji": "🩹️",
+  "aggregateVariant": "PatchSnapshot",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "patch-snapshot",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

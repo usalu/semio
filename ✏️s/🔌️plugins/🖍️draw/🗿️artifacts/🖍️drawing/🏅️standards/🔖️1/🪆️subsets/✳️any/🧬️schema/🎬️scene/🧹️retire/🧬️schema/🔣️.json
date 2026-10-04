@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/s/draw/scene/retire",
+  "title": "Drawing Scene Plan Retirement",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "phase",
+    "owners",
+    "work",
+    "done"
+  ],
+  "description": "One grant processes one shallow owner or one container entry. Owners counts completed logical owners, not freed allocator bytes. Shared encoded sources retain their other aliases. A complete job retains no plan, entries, or source aliases.",
+  "properties": {
+    "phase": {
+      "enum": [
+        "closing",
+        "complete"
+      ]
+    },
+    "owners": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "work": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "done": {
+      "type": "boolean"
+    }
+  },
+  "definitions": {
+    "input": {
+      "$ref": "https://semio.tech/s/draw/scene/prepare"
+    },
+    "grant": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    }
+  },
+  "oneOf": [
+    {
+      "properties": {
+        "phase": {
+          "const": "closing"
+        },
+        "done": {
+          "const": false
+        }
+      }
+    },
+    {
+      "properties": {
+        "phase": {
+          "const": "complete"
+        },
+        "done": {
+          "const": true
+        }
+      }
+    }
+  ]
+}

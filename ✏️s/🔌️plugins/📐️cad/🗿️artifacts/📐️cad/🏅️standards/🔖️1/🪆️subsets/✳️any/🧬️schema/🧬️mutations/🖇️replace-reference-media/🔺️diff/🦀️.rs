@@ -13,7 +13,7 @@ pub fn diff(payload: &ReplaceReferenceMedia, base: &CadSnapshot) -> protocol::Mu
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Reference \"{}\" does not exist.", payload.reference_id), [payload.model_definition_id.clone(), payload.reference_id.clone()]);
     };
     if existing.source_url == payload.new_source_url && existing.media_kind == payload.new_media_kind && existing.orientation == payload.new_orientation && existing.scale == payload.new_scale && existing.opacity == payload.new_opacity {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Reference \"{}\" media is already up to date.", payload.reference_id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Reference \"{}\" media is already up to date.", payload.reference_id));
     }
     let patch =
         CadReferencePatch { source_url: Some(payload.new_source_url.clone()), media_kind: Some(payload.new_media_kind.clone()), orientation: payload.new_orientation, scale: payload.new_scale, opacity: payload.new_opacity, ..Default::default() };

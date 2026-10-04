@@ -1,0 +1,51 @@
+{
+  "contract": "semio.workflow.run.sqlite.intrinsic-refusals.v1",
+  "kind": "invalidValue",
+  "cases": [
+    {
+      "path": [
+        "sealed"
+      ],
+      "value": "yes"
+    },
+    {
+      "path": [
+        "status"
+      ],
+      "value": "undeclared"
+    },
+    {
+      "path": [
+        "nodeRecords",
+        0,
+        "status"
+      ],
+      "value": "undeclared"
+    },
+    {
+      "path": [
+        "trigger",
+        "kind"
+      ],
+      "value": "undeclared"
+    },
+    {
+      "path": [
+        "undeclaredRoot"
+      ],
+      "value": true
+    },
+    {
+      "path": [
+        "parameterValues"
+      ],
+      "value": {}
+    },
+    {
+      "path": [
+        "trigger"
+      ],
+      "value": null
+    }
+  ]
+}

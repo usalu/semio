@@ -1,0 +1,7 @@
+# Editor Public Error Seam
+
+The actual General Editor public `EditorError` enum exposes external `serde_json::Error` and product `store::PackError` variant payloads. Public `From` implementations also require these provider types at the exported conversion boundary. The existing comment describing this enum as internal is contradicted by its public declaration and public theme/scene methods returning it.
+
+Root's current bounded Framework/S/Hub census found no external `EditorError::Json` or `EditorError::Pack` construction or pattern match; it found the defining declaration, Display/Error implementations and conversions in the Editor component. This is lexical evidence, not Rust namespace/macro completeness. No error interface source was changed by this research.
+
+The coherent correction should expose only Editor-owned refusal kinds and an owned error interface. Provider errors may remain private behind that interface while their producers are still present; private conversion functions must replace public conversions requiring external types. Preserve concrete causes and ordinary standard-library error/display behavior rather than flattening the Pack cause into a string. The existing JSON/theme/scene and Pack laws must execute under the owning whole Editor route. This interface correction is separate from moving renderer/session ownership and removing normal Kernel/Infinite dependencies.

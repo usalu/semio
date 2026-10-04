@@ -13,7 +13,7 @@ pub fn diff(payload: &ReplaceFunction, base: &ProgramSnapshot) -> protocol::Muta
         return protocol::MutationOutcome::error("mutation.target-missing", "No function exists with this id.", [payload.function.header.id.0.clone()]);
     };
     if existing == &payload.function {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This function already matches the requested value.").at([existing.header.id.0.clone()])]);
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This function already matches the requested value.").at([existing.header.id.0.clone()])]);
     }
     let patch = existing.diff_patch(&payload.function).expect("diff_patch always produces a full patch");
     protocol::MutationOutcome::new(ProgramDiff { functions: Some(ProgramFunctionsDelta { patched: vec![ProgramFunctionsPatchEntry { id: payload.function.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })

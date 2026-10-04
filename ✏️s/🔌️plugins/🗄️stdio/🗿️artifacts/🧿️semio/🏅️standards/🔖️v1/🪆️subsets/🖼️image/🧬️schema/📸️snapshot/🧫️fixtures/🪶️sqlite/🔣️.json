@@ -23,7 +23,7 @@
       ""
     ]
   ],
-  "query": "SELECT delay_ms,hex(rgba8) FROM semio_image_frame ORDER BY ordinal",
+  "query": "SELECT f.delay_ms,count(s.id) AS samples FROM semio_image_frame f LEFT JOIN semio_image_sample s ON s.frame_id=f.id GROUP BY f.id ORDER BY f.ordinal",
   "sqliteDialect": {
     "artifactKind": "s.stdio.semio",
     "standard": "v1",

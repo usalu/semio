@@ -8,7 +8,10 @@ pub mod derived_composition {
     use crate::standards::v1_4::subsets::a::schema::check_pdf_a_conformance;
     use crate::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot;
     use crate::standards::v1_4::subsets::base::schema::PdfComposer as PdfAnyComposer;
-    use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
+    use semio_framework_diagnostic::Diagnostic;
+use semio_framework_diagnostic::FaultCode;
+use semio_framework_diagnostic::Severity;
+use semio_framework_diagnostic::TextSpan;
     use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
     use std::sync::OnceLock;
 
@@ -56,7 +59,7 @@ pub mod derived_composition {
                     span: TextSpan::at(1, 1),
                     message: "PDF/A (1.4) SubsetValidator: payload did not decode as a PdfSnapshot -- skipped".into(),
                     expected: None,
-                    scope: dsl::FaultScope::default(),
+                    scope: semio_framework_diagnostic::FaultScope::default(),
                 }],
             }
         }

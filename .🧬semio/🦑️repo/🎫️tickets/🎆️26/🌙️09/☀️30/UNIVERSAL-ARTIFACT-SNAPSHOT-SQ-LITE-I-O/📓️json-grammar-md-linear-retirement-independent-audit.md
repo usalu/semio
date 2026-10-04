@@ -1,0 +1,33 @@
+# JSON Grammar And CommonMark Linear Retirement Independent Audit
+
+Read-only source inspection on 2026-10-03; no Cargo, build, Native execution, production edit, Git mutation or worktree. This audit does not independently reproduce Root's reported JSON Native 18/18, canonical DSL 82 or Source 13/1238 receipts. CommonMark Source/public 12/90 remains the measured baseline; 22 actual Native selectors and the separate retirement draft are authored candidates only.
+
+## CommonMark
+
+`md-owned-native-draft.rs:32–38` supports the claimed allocation-free continuation traversal. Every continuation push follows a pop from that same Vec, including the outer list item push at line 36. Moving the parent work Vec preserves its allocation; `swap(0,last)` is constant work. The continuation is consumed after remaining siblings, with no ancestor restart or width-proportional rotation. Empty items are consumed once. Synthetic continuation nodes/items add bounded work per original descent. Destructuring normally drops link URL/title, image/code/HTML strings and list scalar metadata; no leak/forget path was found.
+
+`md-owned-native-draft.rs:40–49` routes OwnedNodes, OwnedSlots, OwnedItems and partially filled paid_children ownership through that traversal. The per-slot node wrapper introduces only bounded nested calls into the iterative drain. `md-block-native-draft.rs:Kind::List` begins exact `items.len()` work, guards the assembled items, inserts each paid child list and steps afterward; the nested scoped paid_children stage restores the enclosing item frontier even for empty items.
+
+The actual MD snapshot SQLite test leaf at `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:97` uses ordinary Binary/Text producers and requires the reconstruction TLS scope, excluding earlier parser/binding events as its cancellation witness. That scope is entered only by draft `reconstruct_controlled`, line 51. It is not a runtime receipt while the production hook remains unmounted.
+
+`md-retirement-native-tests-draft.rs:1–42` tracks standard allocator bytes and refuses alloc/alloc_zeroed/realloc during the public retire hook; it includes 8192-deep inline and mixed block shapes, 4096 wide items, nonempty literals and a 64 KiB thread stack. The assertions check zero attempts, zero remaining bytes and a bounded visit ceiling. This is a credible staged proof design, not executed evidence. TLS accounting assumes allocations and frees within the enabled interval belong to the locally constructed snapshot; cross-thread frees or unrelated pre-existing frees would invalidate its byte counter. Its deliberately isolated spawned closure supports that assumption, but actual linking/global allocator coexistence and Windows stack behavior still require authentic execution. No allocation fallback remains to test.
+
+## JSON Grammar Findings
+
+Exact grammar directory: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📝️text`.
+
+- **Concrete ANTLR lexical hole:** `🅰️.g4:18–25` text admits most implicit keyword tokens but omits `null`, `true` and `false`. Those are implicit literals at lines 8/17 and win over IDENT. Thus `schema = null nodes = []`, and unquoted `string-value = true` or member `key = false`, cannot parse through text despite the owned decoder accepting these Ident tokens for Shape::Text. Add these literals to text if this grammar describes decoder acceptance.
+- **Bare identifier overacceptance:** `🅰️.g4:29` and `🔤️.ebnf:17–19` allow `_`, `a--b` and `nan64_0000000000000000`. The owned scanner classifies `_` as Placeholder, stops at `--`, and recognizes IEEE-word prefixes as Float (`🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🛬️decoding/🦀️.rs:52–56`); Shape::Text accepts only Text/Ident (`:99`). These assets currently describe a lexical superset. Canonical encoding additionally quotes reserved scalar words and IEEE prefixes (`🧬️schema/🛫️encoding/🦀️.rs:96`). Clearly distinguish decoder acceptance from canonical printer output before tightening this restriction.
+- **Unicode escape semantic limit:** both assets allow arbitrary HEX+ while native decoding limits escapes to 1–6 digits and a valid Unicode scalar (`🧬️schema/🛬️decoding/🦀️.rs:74`). `\\u{0}` is correctly admitted; `\\u{D800}`, `\\u{110000}` and seven-digit escapes are grammar-admitted but decoder-refused. This needs a stated semantic constraint or tighter lexical production.
+- **Raw controls differ across assets:** ANTLR excludes only U+0000–U+001F, while EBNF says any control character. The native quoted scanner does not reject raw controls at scan time (`decoding/🦀️.rs:35–37`), so these are not identical acceptance languages. Canonical printer escape policy is a separate question.
+- Exact number lexemes remain TEXT, avoiding numeric normalization; ordered repeated member productions preserve duplicate member keys. Variant field combinations, node reference validity and integer bounds are semantic constraints beyond these broad productions.
+
+## Existing Independent Validation Route
+
+No installed ANTLR command was found; inspected bun lock/package declarations contain no ANTLR/EBNF parser dependency. Bundled Python import checks actually returned `lark=False`, `antlr4=False`, `pyparsing=False`. Existing literal TypeScript tests use Bun, Buffer, SQLite and Ajv (`🧰️framework/🔨️modules/🗣️dsl/📖️grammar/📡️literal/🧪️tests/🟦️.ts:1–6`); these validate domain fixtures, not an ANTLR parser.
+
+The available no-new-dependency route is the existing semio grammar/token/parser implementation and its registered DSL tests, which can independently check the native owned decoder's source cases but do not compile the ANTLR asset. Bun regular expressions can independently exercise the documented lexical cases, and existing Ajv can validate neutral fixture structure; neither establishes generated ANTLR syntax/runtime behavior. No authentic independent generated-parser route was located in the inspected environment, so claiming ANTLR validation would exceed this evidence.
+
+## Follow-up Grammar Readback
+
+Root read the actual canonical controlled Reader scanner and text binder, not only the ordinary lexer. ANTLR text now includes the implicit null/true/false tokens, preserving their accepted use as literal text. The canonical emitter quotes reserved scalar words. The structural EBNF/ANTLR assets still require the native semantic scalar/identifier checks documented above; no generated ANTLR compiler or runtime was available, so no generated-parser validation is claimed. The existing registered JSON Native18 receipt verifies the semio authored grammar, not ANTLR.

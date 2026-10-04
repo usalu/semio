@@ -171,7 +171,7 @@ mod subject {
         let base = decoded(&input)?;
         let baseline = project_step_ap214_cc1(&encoded(&base))?;
         let mutated = encoded(&applied(base.clone(), std::slice::from_ref(&operation))?);
-        let restored = encoded(&applied(decoded(&mutated)?, &mutation_inverse(&operation, &base))?);
+        let restored = encoded(&applied(decoded(&mutated)?, &mutation_inverse(&operation, &base).expect("valid retained mutation inverse fixture"))?);
         let projection = project_step_ap214_cc1(&restored)?;
         inverse_restores(&spec.str("kind"), &projection, &baseline)?;
         Ok(Outcome::with_raw(restored, projection))

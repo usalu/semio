@@ -9,12 +9,47 @@ use crate::standards::v1::subsets::any::schema::mutations::drag_transforms::drag
 use crate::standards::v1::subsets::any::schema::mutations::rotate_transforms::rotate_transforms;
 use crate::standards::v1::subsets::any::schema::mutations::scale_transforms::scale_transforms;
 use crate::standards::v1::subsets::any::schema::transforms::{compose_scale, AxisAngle};
-use crate::standards::v1::subsets::any::schema::{commit_host_snapshot, ensure_gumball_node, mutations::text::Generation3dMutation, with_host};
+use crate::standards::v1::subsets::any::schema::mutations::change_widget_input::WidgetInputValue;
+use crate::standards::v1::subsets::any::schema::{commit_host_snapshot, ensure_gumball_node, gumball_identity, mutations::text::Generation3dMutation, record_input_leaves, with_host, GumballRefusal};
 use machine::Command;
 use semio_framework_artifact_flow_flow::{FlowHostSnapshot, Widget};
 use semio_framework_os_flow::FlowHost;
-use semio_framework_plugin::{Emit, Fault, InteractionWrite};
-use semio_framework_tool_machine::{ToolAbortReason, ToolMachineRunner, ToolStep, ToolYield};
+use semio_framework_plugin::{Emit, Fault, FaultCode, FaultOrigin, InteractionWrite};
+use semio_framework_ui_locale::LocalizedLabel;
+pub use semio_framework_tool_machine::GesturePhase;
+use semio_framework_tool_machine::{drive_gesture, GestureTool, ToolAbortReason, ToolMachineRunner, ToolRefusal, ToolStep, ToolTransaction, ToolTransactionState, ToolYield};
+
+impl From<GumballRefusal> for Fault {
+    fn from(refusal: GumballRefusal) -> Self {
+        let fault = Fault::new(FaultOrigin::App, FaultCode::new(refusal.code()), refusal.detail());
+        match refusal {
+            GumballRefusal::KindUnavailable(kind) | GumballRefusal::TransformUnavailable(kind) => fault.with_param("kind", kind),
+            _ => fault,
+        }
+    }
+}
+
+/// 📢️ The localized notice of every gumball refusal code (design §20.12), the editor's declared fault-notice table: one
+/// fixed sentence per code, `{kind}` filled from the fault's `kind` param; the English developer detail is never shown.
+pub fn gumball_fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
+    static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 12]> = std::sync::LazyLock::new(|| {
+        [
+            ("generation3d.gumball.unknown-operation", LocalizedLabel::native("This transform is not available.", "Diese Transformation ist nicht verfügbar.")),
+            ("generation3d.gumball.no-shape-source", LocalizedLabel::native("Select a node that produces a shape.", "Einen Knoten auswählen, der eine Form erzeugt.")),
+            ("generation3d.gumball.kind-unavailable", LocalizedLabel::native("The node kind {kind} is not available here.", "Die Knotenart {kind} ist hier nicht verfügbar.")),
+            ("generation3d.gumball.no-shape-output", LocalizedLabel::native("The selected output holds no shape.", "Die ausgewählte Ausgabe enthält keine Form.")),
+            ("generation3d.gumball.list-output", LocalizedLabel::native("Take one shape out of the list before transforming it.", "Vor dem Transformieren eine einzelne Form aus der Liste entnehmen.")),
+            ("generation3d.gumball.identifier-occupied", LocalizedLabel::native("Another node already uses the transform's name.", "Ein anderer Knoten verwendet bereits den Namen der Transformation.")),
+            ("generation3d.gumball.transform-unavailable", LocalizedLabel::native("The transform {kind} is not available here.", "Die Transformation {kind} ist hier nicht verfügbar.")),
+            ("generation3d.gumball.mesh-missing", LocalizedLabel::native("The selected mesh no longer exists.", "Das ausgewählte Netz existiert nicht mehr.")),
+            ("generation3d.gumball.not-indexed-mesh", LocalizedLabel::native("Select one indexed mesh output; convert B-Rep geometry to a mesh first.", "Eine einzelne indizierte Netzausgabe auswählen; B-Rep-Geometrie zuerst in ein Netz umwandeln.")),
+            ("generation3d.gumball.selection-changed", LocalizedLabel::native("The component selection changed during the transform.", "Die Komponentenauswahl hat sich während der Transformation geändert.")),
+            ("generation3d.gumball.component-selection", LocalizedLabel::native("Select components of a single mesh.", "Komponenten eines einzelnen Netzes auswählen.")),
+            ("generation3d.gumball.host-edit", LocalizedLabel::native("The transform could not be added to the graph.", "Die Transformation konnte dem Graphen nicht hinzugefügt werden.")),
+        ]
+    });
+    &*NOTICES
+}
 
 pub fn selection_ids(ids: &[String], fallback: &[String]) -> Vec<String> {
     if ids.is_empty() { fallback.to_vec() } else { ids.to_vec() }
@@ -23,10 +58,10 @@ pub fn selection_ids(ids: &[String], fallback: &[String]) -> Vec<String> {
 /// 🧷️ Accepts pinned components only while the same set continues through its transforms.
 pub fn validate_component_gesture(snapshot: &FlowHostSnapshot, pinned: &[String], selected: &[String]) -> Result<(), Fault> {
     if pinned.is_empty() { return Ok(()); }
-    let (origin, pinned_components) = component_group(pinned).map_err(Fault::from)?;
-    let (target, components) = component_group(selected).map_err(Fault::from)?;
+    let (origin, pinned_components) = component_group(pinned).map_err(GumballRefusal::ComponentSelection)?;
+    let (target, components) = component_group(selected).map_err(GumballRefusal::ComponentSelection)?;
     if origin.granularity != target.granularity || origin.index != target.index || pinned_components != components {
-        return Err(Fault::from("The component selection changed during the transform"));
+        return Err(GumballRefusal::SelectionChanged.into());
     }
     let mut widget_id = target.widget;
     let mut channel = target.channel;
@@ -43,7 +78,7 @@ pub fn validate_component_gesture(snapshot: &FlowHostSnapshot, pinned: &[String]
         widget_id = &source.from;
         channel = &source.from_port;
     }
-    Err(Fault::from("The component selection changed during the transform"))
+    Err(GumballRefusal::SelectionChanged.into())
 }
 
 //#region 🛠️GumballTool
@@ -56,7 +91,7 @@ pub enum GumballMotion {
 }
 
 impl GumballMotion {
-    /// 🧭️ The operator family this motion composes into (`translate`, `rotate`, `scale`).
+    /// 🗺️ The operator family this motion composes into (`translate`, `rotate`, `scale`).
     pub fn operation(&self) -> &'static str {
         match self {
             Self::Translate(_) => "translate",
@@ -106,7 +141,7 @@ impl GumballMotion {
     }
 }
 
-/// 🎬️ One gumball tick the tool yields: the operator ids the motion composes into and the motion.
+/// 📼️ One gumball tick the tool yields: the operator ids the motion composes into and the motion.
 #[derive(Clone, Debug, PartialEq)]
 pub struct GumballRecord {
     pub targets: Vec<String>,
@@ -116,6 +151,17 @@ pub struct GumballRecord {
 impl GumballRecord {
     fn moves(&self) -> bool {
         !self.targets.is_empty() && self.motion.moves()
+    }
+
+    /// 🔬️ The record a relative leaf states — how a resumed gesture recovers the stream it accumulated.
+    fn of_leaf(leaf: &Generation3dMutation) -> Option<Self> {
+        let targets = match leaf {
+            Generation3dMutation::DragTransforms(leaf) => &leaf.targets,
+            Generation3dMutation::RotateTransforms(leaf) => &leaf.targets,
+            Generation3dMutation::ScaleTransforms(leaf) => &leaf.targets,
+            _ => return None,
+        };
+        Some(Self { targets: targets.clone(), motion: GumballMotion::of_leaf(leaf)? })
     }
 }
 
@@ -195,7 +241,7 @@ machine::statechart! {
     }
 }
 
-/// 🧷️ The gumball tool's host: its chart declares no timer, no invoke and no foreign effect, so every duty is empty.
+/// 🏠️ The gumball tool's host: its chart declares no timer, no invoke and no foreign effect, so every duty is empty.
 pub struct GumballToolHost;
 
 impl machine::Host<gumball_tool::GumballTool> for GumballToolHost {
@@ -209,39 +255,113 @@ impl machine::Host<gumball_tool::GumballTool> for GumballToolHost {
     }
 }
 
-/// 🎚️ Where one dispatch of a gumball verb sits in its gesture (the `World3dHost` live protocol): a one-shot `Once`, a
-/// `Stream` tick into the window's open transaction, the `Commit` that ends it, or a host `Abort` with its reason.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum GumballPhase {
-    Once,
-    Stream,
-    Commit,
-    Abort(ToolAbortReason),
+/// 💾️ One window's open gumball gesture between dispatches — ephemeral local tool state the app instance retains, never
+/// history: the statechart configuration, the verb, the admission, the document revision it opened on, its open transaction
+/// (ONE net relative leaf) and the selection it transforms. The splice that inserts a missing operator is re-derived from
+/// the selection on the committed base at the release and for every preview, so the open transaction never holds a
+/// structural row.
+#[derive(Clone, Debug, PartialEq)]
+pub struct GumballGesture {
+    states: Vec<String>,
+    verb: String,
+    authoring_seed: String,
+    base_revision: String,
+    transaction: protocol::TransactionRef,
+    entries: Vec<(String, Generation3dMutation)>,
+    ids: Vec<String>,
 }
 
-impl GumballPhase {
-    /// 🧩️ Reads a gumball verb's `phase` (`stream` | `commit` | `abort`, absent = one-shot) and an abort's `reason` (absent =
-    /// `tool`); `None` for an unknown one.
-    pub fn parse(phase: Option<&str>, reason: Option<&str>) -> Option<Self> {
-        match phase {
-            None => Some(Self::Once),
-            Some("stream") => Some(Self::Stream),
-            Some("commit") => Some(Self::Commit),
-            Some("abort") => reason.map_or(Some(ToolAbortReason::Tool), ToolAbortReason::parse).map(Self::Abort),
-            Some(_) => None,
-        }
+impl GumballGesture {
+    /// 🔁️ Whether a dispatch of `verb` in `phase` on `base_revision` continues this gesture — exactly the rule
+    /// [`drive_gesture`] applies, read before the drive so the splice is derived from the selection the gesture transforms.
+    fn continues(&self, verb: &str, phase: GesturePhase, base_revision: &str) -> bool {
+        self.verb == verb && self.base_revision == base_revision && !matches!(phase, GesturePhase::Once | GesturePhase::Abort(_))
+    }
+
+    /// 🥅️ The gesture's ONE net relative leaf.
+    fn leaf(&self) -> Option<&Generation3dMutation> {
+        self.entries.iter().find(|(key, _)| key == GENERATION3D_GUMBALL_LEAF_KEY).map(|(_, leaf)| leaf)
     }
 }
 
-/// 💾️ One window's open gumball gesture, retained by the app instance between dispatches — ephemeral local tool state,
-/// never history: the runner with its open transaction (ONE net relative leaf), the verb, the selection it transforms and
-/// the document revision it opened on. The splice that inserts a missing operator is re-derived from the selection on the
-/// committed base at the release and for every preview, so the open transaction never holds a structural row.
-pub struct GumballGesture {
+/// 🎫️ One gumball tick handed to the tool: the selection it transforms (kept by the gesture it opens) and its record.
+pub struct GumballTick {
+    pub ids: Vec<String>,
+    pub record: GumballRecord,
+}
+
+/// 🤖️ One window's gumball tool for ONE dispatch on the shared streamed-gesture runner ([`drive_gesture`]), a
+/// `🛠️tool-machine` runner scoped `<appId>#<verb>`.
+pub struct Generation3dGumballTool {
     runner: ToolMachineRunner<gumball_tool::GumballTool, GumballToolHost>,
-    verb: &'static str,
+    verb: String,
+    authoring_seed: String,
+    base_revision: String,
     ids: Vec<String>,
-    base_revision: [u8; 32],
+}
+
+impl GestureTool for Generation3dGumballTool {
+    type Gesture = GumballGesture;
+    type Tick = GumballTick;
+    type Mutation = Generation3dMutation;
+
+    fn start(verb: &str, authoring_seed: &str, base_revision: &str) -> Result<Self, ToolRefusal> {
+        let runner = ToolMachineRunner::start(format!("{}#{verb}", crate::editor::generation3d::GENERATION3D_EDITOR_APP_ID), protocol::ActorId(authoring_seed.to_string()), GumballToolContext::default(), GumballToolHost)?;
+        Ok(Self { runner, verb: verb.to_string(), authoring_seed: authoring_seed.to_string(), base_revision: base_revision.to_string(), ids: Vec::new() })
+    }
+
+    fn resume(gesture: &GumballGesture) -> Result<Self, ToolRefusal> {
+        let stream = gesture.leaf().and_then(GumballRecord::of_leaf);
+        let persisted = machine::PersistedSnapshot { version: 1, fingerprint: <gumball_tool::GumballTool as machine::Machine>::definition().fingerprint, states: gesture.states.clone(), history: Vec::new(), done: false };
+        let snapshot = machine::restore::<gumball_tool::GumballTool, machine::NoMigrations>(&persisted, GumballToolContext { stream }, &[]).map_err(|_| ToolRefusal::Closed)?;
+        let transaction = ToolTransaction::resume(gesture.transaction.clone(), gesture.entries.clone());
+        let runner = ToolMachineRunner::resume(format!("{}#{}", crate::editor::generation3d::GENERATION3D_EDITOR_APP_ID, gesture.verb), protocol::ActorId(gesture.authoring_seed.clone()), GumballToolContext::default(), snapshot, Some(transaction), GumballToolHost)?;
+        Ok(Self { runner, verb: gesture.verb.clone(), authoring_seed: gesture.authoring_seed.clone(), base_revision: gesture.base_revision.clone(), ids: gesture.ids.clone() })
+    }
+
+    fn verb(&self) -> &str {
+        &self.verb
+    }
+
+    fn base_revision(&self) -> &str {
+        &self.base_revision
+    }
+
+    fn abort(&mut self, reason: ToolAbortReason) {
+        self.runner.abort(reason);
+    }
+
+    fn send(&mut self, phase: GesturePhase, tick: Option<GumballTick>) -> Result<ToolStep<Generation3dMutation>, ToolRefusal> {
+        let event = match (phase, tick) {
+            (GesturePhase::Abort(_), _) => gumball_tool::Event::Cancel,
+            (_, None) => return Ok(ToolStep::Idle),
+            (phase, Some(tick)) => {
+                if self.runner.at_rest() {
+                    self.ids = tick.ids;
+                }
+                match phase {
+                    GesturePhase::Stream => gumball_tool::Event::Stream(tick.record),
+                    GesturePhase::Commit if !self.runner.at_rest() => gumball_tool::Event::Finish(tick.record),
+                    _ => gumball_tool::Event::Once(tick.record),
+                }
+            }
+        };
+        self.runner.send(event, semio_framework_tool_machine::authoring_clock(0))
+    }
+
+    fn persist(self) -> Option<GumballGesture> {
+        let (snapshot, transaction) = self.runner.into_parts();
+        let transaction = transaction.filter(|transaction| transaction.state() == ToolTransactionState::Open)?;
+        Some(GumballGesture {
+            states: machine::persist(&snapshot).states,
+            verb: self.verb,
+            authoring_seed: self.authoring_seed,
+            base_revision: self.base_revision,
+            transaction: transaction.reference().clone(),
+            entries: transaction.entries().to_vec(),
+            ids: self.ids,
+        })
+    }
 }
 
 /// 📨️ One dispatch of a gumball verb: the verb, the selection (shape instance ids or mesh component ids) it transforms,
@@ -251,7 +371,7 @@ pub struct GumballDispatch<'a> {
     pub window: &'a str,
     pub ids: Vec<String>,
     pub motion: GumballMotion,
-    pub phase: GumballPhase,
+    pub phase: GesturePhase,
     pub authoring_seed: &'a str,
     pub base_revision: [u8; 32],
 }
@@ -292,26 +412,49 @@ pub struct GumballPreview {
     pub selections: Vec<GumballSelection>,
 }
 
+/// 🎛️ The channels a component gesture sets on the component operator: its granularity, its component set and — for a
+/// turn or a scaling — the selection pivot.
+pub fn component_gesture_inputs(mode: &str, components: &[u32], operation: &str) -> Vec<(&'static str, WidgetInputValue)> {
+    let mut inputs = vec![("mode", WidgetInputValue::Text(mode.into())), ("selection", WidgetInputValue::Text(serde_json::to_string(components).unwrap_or_default()))];
+    if operation != "translate" {
+        inputs.push(("pivot", WidgetInputValue::Text("selection".into())));
+    }
+    inputs
+}
+
 /// 🧩️ What one gumball selection needs on `host_snapshot`: the absolute splice rows that insert every missing transform
-/// operator (none when they exist), the operator ids the motion composes into, and the selection that follows the
-/// gesture onto them. A mesh-component selection splices ONE component operator for the whole component set.
+/// operator with its DEFAULT params, then one `change-widget-input` per channel the gesture sets on an inserted operator
+/// (design §19.4: a component operator's mode, components and pivot, every transform's identity), the operator ids the
+/// motion composes into, and the selection that follows the gesture onto them. A mesh-component selection splices ONE
+/// component operator for the whole component set; an operator that exists already gets no input row.
 pub fn gumball_splice(host_snapshot: &FlowHostSnapshot, ids: &[String], operation: &str) -> Result<(Vec<Generation3dMutation>, Vec<String>, GumballSelection), Fault> {
     with_host(host_snapshot, |host| {
-        let (targets, selection) = if ids.iter().any(|id| ComponentTarget::parse(id).is_some()) {
-            let (id, mode, components) = ensure_component_node(host, ids, operation).map_err(Fault::from)?;
+        let (targets, selection, mut wanted) = if ids.iter().any(|id| ComponentTarget::parse(id).is_some()) {
+            let (id, mode, components) = ensure_component_node(host, ids, operation)?;
+            let wanted = component_gesture_inputs(&mode, &components, operation);
             let addressed = components.iter().map(|component| format!("{id}@meshOut#0.{mode}.{component}")).collect();
-            (vec![id.clone()], GumballSelection { nodes: vec![id], components: Some((mode, addressed)) })
+            (vec![id.clone()], GumballSelection { nodes: vec![id], components: Some((mode, addressed)) }, wanted)
         } else {
             let mut targets: Vec<String> = Vec::new();
             for id in ids {
-                let next = ensure_gumball_node(host, id, operation).map_err(Fault::from)?;
+                let next = ensure_gumball_node(host, id, operation)?;
                 if !targets.contains(&next) {
                     targets.push(next);
                 }
             }
-            (targets.clone(), GumballSelection { nodes: targets, components: None })
+            (targets.clone(), GumballSelection { nodes: targets, components: None }, Vec::new())
         };
-        Ok((commit_host_snapshot(host_snapshot, &host.host_snapshot), targets, selection))
+        wanted.extend(gumball_identity(operation));
+        let mut rows = commit_host_snapshot(host_snapshot, &host.host_snapshot);
+        for target in &targets {
+            if host_snapshot.widgets.iter().any(|widget| crate::widget_id(widget) == target.as_str()) {
+                continue;
+            }
+            if let Some(record) = host.host_snapshot.widgets.iter().find(|widget| crate::widget_id(widget) == target.as_str()) {
+                rows.extend(record_input_leaves(record, &wanted));
+            }
+        }
+        Ok((rows, targets, selection))
     })
 }
 
@@ -333,11 +476,12 @@ impl GumballGestures {
     }
 
     /// 🧯️ Host abort of `window`'s open gesture: its transaction vanishes with zero trace. Answers whether one was open.
-    pub fn abort(&mut self, window: &str, reason: ToolAbortReason) -> bool {
-        let Some(mut gesture) = self.open.remove(window) else { return false };
-        gesture.runner.abort(reason);
-        self.revision = self.revision.wrapping_add(1);
-        true
+    pub fn abort(&mut self, window: &str, _reason: ToolAbortReason) -> bool {
+        let dropped = self.open.remove(window).is_some();
+        if dropped {
+            self.revision = self.revision.wrapping_add(1);
+        }
+        dropped
     }
 
     /// 👁️ What a derived view folds onto `host_snapshot` to show every open gesture: each gesture's splice re-derived on
@@ -346,7 +490,7 @@ impl GumballGestures {
     pub fn provisional(&self, host_snapshot: &FlowHostSnapshot) -> GumballPreview {
         let mut preview = GumballPreview::default();
         for gesture in self.open.values() {
-            let Some(motion) = gesture.runner.transaction().and_then(|transaction| transaction.entries().iter().find(|(key, _)| key == GENERATION3D_GUMBALL_LEAF_KEY).and_then(|(_, leaf)| GumballMotion::of_leaf(leaf))) else { continue };
+            let Some(motion) = gesture.leaf().and_then(GumballMotion::of_leaf) else { continue };
             let Ok((splice, targets, selection)) = gumball_splice(host_snapshot, &gesture.ids, motion.operation()) else { continue };
             preview.rows.extend(splice);
             preview.rows.push(motion.leaf(targets));
@@ -355,70 +499,50 @@ impl GumballGestures {
         preview
     }
 
-    /// 🛠️ Drives `request.window`'s gumball tool through ONE dispatch. `Once` commits the motion as one transaction;
-    /// `Stream` upserts it into the window's open transaction — opening it on the first tick — which the app instance
-    /// retains and every preview folds in; `Commit` folds the tail in and commits the whole gesture as ONE edit (the splice
-    /// rows re-derived on the committed base, then the net relative leaf, every row stamped with the transaction); `Abort`
-    /// drops the open gesture with zero trace. An open gesture another verb or a one-shot interrupts is aborted
-    /// `captureLost`; one whose document moved under it is aborted `baseMoved`, and a tick or commit that finds it so is
-    /// dropped with it.
+    /// 🛠️ Drives `request.window`'s gumball tool through ONE dispatch on the shared streamed-gesture runner
+    /// ([`drive_gesture`]): `Once` commits the motion as one transaction; `Stream` upserts it into the window's open
+    /// transaction, which the app instance retains and every preview folds in; `Commit` folds the tail in and commits the
+    /// whole gesture as ONE edit (the splice rows re-derived on the committed base, then the net relative leaf, every row
+    /// stamped with the transaction); `Abort` drops the open gesture with zero trace. An open gesture another verb or a
+    /// one-shot interrupts is aborted `captureLost`; one whose document moved under it is aborted `baseMoved`; a selection
+    /// the base no longer splices drops the gesture and refuses with the gumball's named code.
     pub fn dispatch(&mut self, request: GumballDispatch<'_>, host_snapshot: &FlowHostSnapshot) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
-        let open = self.open.remove(request.window);
-        if open.is_some() {
+        if let GesturePhase::Abort(reason) = request.phase {
+            self.abort(request.window, reason);
+            return Ok(Emit::default());
+        }
+        let base_revision: String = request.base_revision.iter().map(|byte| format!("{byte:02x}")).collect();
+        let ids = match self.open.get(request.window).filter(|gesture| gesture.continues(request.verb, request.phase, &base_revision)) {
+            Some(gesture) => gesture.ids.clone(),
+            None => request.ids,
+        };
+        let (splice, targets, selection) = match gumball_splice(host_snapshot, &ids, request.motion.operation()) {
+            Ok(parts) => parts,
+            Err(fault) => {
+                self.abort(request.window, ToolAbortReason::Tool);
+                return Err(fault);
+            }
+        };
+        let tick = GumballTick { ids, record: GumballRecord { targets, motion: request.motion } };
+        let drive = drive_gesture::<Generation3dGumballTool>(self.open.get(request.window), request.verb, request.phase, Some(tick), request.authoring_seed, &base_revision);
+        if let Some(next) = drive.next {
+            match next {
+                Some(gesture) => self.open.insert(request.window.to_string(), gesture),
+                None => self.open.remove(request.window),
+            };
             self.revision = self.revision.wrapping_add(1);
         }
-        let open = match (open, request.phase) {
-            (Some(mut gesture), GumballPhase::Abort(reason)) => {
-                gesture.runner.abort(reason);
-                return Ok(Emit::default());
-            }
-            (None, GumballPhase::Abort(_)) => return Ok(Emit::default()),
-            (Some(mut gesture), phase) if gesture.base_revision != request.base_revision => {
-                gesture.runner.abort(ToolAbortReason::BaseMoved);
-                if phase != GumballPhase::Once {
-                    return Ok(Emit::default());
-                }
-                None
-            }
-            (Some(mut gesture), phase) if gesture.verb != request.verb || phase == GumballPhase::Once => {
-                gesture.runner.abort(ToolAbortReason::CaptureLost);
-                None
-            }
-            (open, _) => open,
-        };
-        let mut gesture = match open {
-            Some(gesture) => gesture,
-            None => GumballGesture {
-                runner: ToolMachineRunner::start(format!("{}#{}", crate::editor::generation3d::GENERATION3D_EDITOR_APP_ID, request.verb), protocol::ActorId(request.authoring_seed.to_string()), GumballToolContext::default(), GumballToolHost).map_err(|refusal| Fault::from(refusal.code()))?,
-                verb: request.verb,
-                ids: request.ids.clone(),
-                base_revision: request.base_revision,
-            },
-        };
-        let (splice, targets, selection) = gumball_splice(host_snapshot, &gesture.ids, request.motion.operation())?;
-        let record = GumballRecord { targets, motion: request.motion };
-        let event = match request.phase {
-            GumballPhase::Stream => gumball_tool::Event::Stream(record),
-            GumballPhase::Commit if !gesture.runner.at_rest() => gumball_tool::Event::Finish(record),
-            _ => gumball_tool::Event::Once(record),
-        };
-        let step = gesture.runner.send(event, crate::editor::generation3d::commands::node_graph_edit::generation3d_gesture_clock()).map_err(|refusal| Fault::from(refusal.code()))?;
-        let emit = match step {
-            ToolStep::Committed(transaction, leaves) => {
+        Ok(match drive.committed {
+            Some((transaction, leaves)) => {
                 let rows: Vec<Generation3dMutation> = splice.into_iter().chain(leaves).collect();
                 let emit = if request.authoring_seed.is_empty() { Emit::mutations(rows) } else { Emit::commit_transaction(transaction, rows) };
                 Emit { interaction_writes: selection.writes(), ..emit }
             }
-            _ => {
+            None => {
                 retire_rows(splice);
                 Emit::default()
             }
-        };
-        if !gesture.runner.at_rest() {
-            self.open.insert(request.window.to_string(), gesture);
-            self.revision = self.revision.wrapping_add(1);
-        }
-        Ok(emit)
+        })
     }
 }
 
@@ -441,43 +565,42 @@ pub fn gumball_once(verb: &'static str, ids: Vec<String>, motion: GumballMotion,
         return Ok(Emit::default());
     }
     let (authoring_seed, base_revision) = doc.operation().map(|operation| (operation.authoring_seed.clone(), operation.canonical_base_revision)).unwrap_or_default();
-    GumballGestures::default().dispatch(GumballDispatch { verb, window: "", ids, motion, phase: GumballPhase::Once, authoring_seed: &authoring_seed, base_revision }, &doc.snapshot.host_snapshot)
+    GumballGestures::default().dispatch(GumballDispatch { verb, window: "", ids, motion, phase: GesturePhase::Once, authoring_seed: &authoring_seed, base_revision }, &doc.snapshot.host_snapshot)
 }
 //#endregion 🛠️GumballTool
 
-/// 🎯️ Splices an adjustable component transform and reuses it only for its own component set.
-pub fn ensure_component_node(host: &mut FlowHost, ids: &[String], operation: &str) -> Result<(String, String, Vec<u32>), String> {
-    let (target, components) = component_group(ids)?;
-    if !matches!(operation, "translate" | "rotate" | "scale") { return Err("Unknown component transform".into()); }
-    if target.index != 0 { return Err("Extract one mesh from the list before editing its components".into()); }
+/// 🪡️ Splices an adjustable component transform with its DEFAULT params (the gesture's channels follow as
+/// `change-widget-input` leaves, [`gumball_splice`]) and reuses it only for its own component set.
+pub fn ensure_component_node(host: &mut FlowHost, ids: &[String], operation: &str) -> Result<(String, String, Vec<u32>), GumballRefusal> {
+    let (target, components) = component_group(ids).map_err(GumballRefusal::ComponentSelection)?;
+    if !matches!(operation, "translate" | "rotate" | "scale") { return Err(GumballRefusal::UnknownOperation); }
+    if target.index != 0 { return Err(GumballRefusal::ListOutput); }
     let kind = host.host_snapshot.widgets.iter().find_map(|widget| match widget {
         Widget::Neuron { id, neuron_kind, .. } if id == target.widget => Some(neuron_kind),
         _ => None,
-    }).ok_or("The selected mesh no longer exists")?;
+    }).ok_or(GumballRefusal::MeshMissing)?;
     let infos = semio_framework_os_flow::flow_neuron_kind_info_map();
-    let source = infos.get(kind).ok_or("The selected mesh operator is unavailable")?;
+    let source = infos.get(kind).ok_or_else(|| GumballRefusal::KindUnavailable(kind.clone()))?;
     if !source.outputs.iter().any(|port| port.name == target.channel && !port.cardinality.is_collection() && port.value_types.iter().any(|kind| kind == "mesh")) {
-        return Err("Select a single indexed mesh output; convert B-Rep geometry to a mesh first".into());
+        return Err(GumballRefusal::NotIndexedMesh);
     }
     let next_kind = format!("brep.mesh.{operation}Components");
-    let selection = serde_json::to_string(&components).map_err(|error| error.to_string())?;
+    let selection = serde_json::to_string(&components).map_err(|error| GumballRefusal::ComponentSelection(error.to_string()))?;
     let current = crate::standards::v1::subsets::any::schema::gumball_widget_json(host, target.widget);
     let params = current.as_ref().and_then(|value| value.get("params"));
-    let parameter = |name| params.and_then(|value| value.get(name)).and_then(|value| value.get("value")).and_then(dsl::DslValue::as_str);
+    let parameter = |name| params.and_then(|value| value.get(name)).and_then(|value| value.get("value")).and_then(semio_framework_value::DslValue::as_str);
     let inputs = host.host_snapshot.synapses.iter().filter(|wire| wire.to == target.widget).collect::<Vec<_>>();
     if kind == &next_kind && parameter("mode") == Some(target.granularity) && parameter("selection") == Some(selection.as_str()) && (operation == "translate" || parameter("pivot") == Some("selection")) && inputs.len() == 1 && inputs[0].to_port == "mesh" {
         return Ok((target.widget.into(), target.granularity.into(), components));
     }
-    let output = infos.get(&next_kind).and_then(|info| info.outputs.first()).ok_or("The component transform is unavailable")?;
+    let output = infos.get(&next_kind).and_then(|info| info.outputs.first()).ok_or_else(|| GumballRefusal::TransformUnavailable(next_kind.clone()))?;
     let base = format!("{}__{operation}Components", target.widget);
     let mut id = base.clone();
     let mut suffix = 2;
     while host.host_snapshot.widgets.iter().any(|widget| crate::widget_id(widget) == id) { id = format!("{base}_{suffix}"); suffix += 1; }
     let (x, y) = host.host_snapshot.layout.get(target.widget).map_or((0.0, 0.0), |layout| (layout.x, layout.y));
-    host.add_widget(&serde_json::json!({"kind":"neuron","id":id,"neuronKind":next_kind}).to_string(), x + 220.0, y).map_err(|error| error.to_string())?;
-    let params = serde_json::json!({"mode":{"$schema":"text","value":target.granularity},"selection":{"$schema":"text","value":selection},"pivot":{"$schema":"text","value":"selection"}});
-    host.set_neuron_params(&id, &params.to_string()).map_err(|error| error.to_string())?;
-    host.insert_between(target.widget, target.channel, &id, "mesh", &output.name).map_err(|error| error.to_string())?;
+    host.add_widget(&serde_json::json!({"kind":"neuron","id":id,"neuronKind":next_kind}).to_string(), x + 220.0, y).map_err(|error| GumballRefusal::HostEdit(error.to_string()))?;
+    host.insert_between(target.widget, target.channel, &id, "mesh", &output.name).map_err(|error| GumballRefusal::HostEdit(error.to_string()))?;
     for widget in &mut host.host_snapshot.widgets {
         if let Widget::Neuron { id: widget_id, preview, .. } = widget {
             if widget_id == &id { *preview = true; }

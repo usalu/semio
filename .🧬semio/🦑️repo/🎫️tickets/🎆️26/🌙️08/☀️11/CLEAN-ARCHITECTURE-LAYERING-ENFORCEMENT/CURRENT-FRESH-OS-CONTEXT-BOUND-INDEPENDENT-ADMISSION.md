@@ -1,0 +1,13 @@
+# Fresh OS Context And Bound Independent Admission
+
+Fresh context1 preserves actual production SPR IO and both CLI bodies; it adds only the test policy host and explicit caller context/limits arguments to original laws. Actual read_sidecar and TailFollower law calls now match their current four-argument signatures. Independent Rust tree parsing confirms the complete seven before/after grammar frontiers are conserved. No native acceptance is claimed.
+
+Three current test sources advanced after capture: SPR native-unit and both CLI unit-law files now carry foreign test_command_context helpers and explicit context calls. Their current bodies differ from both staged predecessors and authored successors. Preserve these current foreign helpers/calls during current publication; the retained context1 pairs remain a time-scoped proposal authority, without current-live overwrite permission.
+
+Fresh associated bound1 preserves both production HistoryAppender and dictionary helper bounds already present. Its only changed contract is the original materialize law helper where ProtocolError: From<S::Error>, matching the defining generic SprWriter requirement. Independent Rust parsing conserves both full grammar frontiers; the assertion/workload body is unchanged.
+
+Evidence: `🗑️generated/cargo-workspace-general-transfer/os-fresh-file-caller-context-source-ready-1.json` and `os-fresh-associated-protocol-bounds-source-ready-1.json`.
+
+The fresh sixty-nine compiler caller successor is independently source-ready for its bounded pinned proposal: twelve before/after Rust grammar frontiers are conserved; the eight cuts bind actual pure lower recognizers, consume Semio error into its Value cause, declare fixture mismatch kinds, conserve the materialize relation, and supply the current mandatory CommandContext with finite input/transport credit and same caller token to compact. Eight current files have since advanced beyond this retained stage. These later live bytes do not authorize overwriting foreign source; Native can run the exact admitted authored snapshot. No new implementation defect was identified, and broader production retirement/mounted closure remain expressly separate.
+
+Fresh caller-source2 supersedes source1 for current common-policy composition: all twelve complete pairs are actual current no-ops with zero owned corrections and exact before/after hashes. No source1 correction overwrites the current foreign implementations or law helpers. Equal full source bodies conserve every grammar frontier by identity; current nominal CommandContext caller and existing materialize conversion bound are preserved. Runtime/compiler acceptance remains separate.

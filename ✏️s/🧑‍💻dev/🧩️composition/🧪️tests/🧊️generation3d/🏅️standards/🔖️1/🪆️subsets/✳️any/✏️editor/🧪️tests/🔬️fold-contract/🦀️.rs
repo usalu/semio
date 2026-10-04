@@ -65,14 +65,66 @@ fn folded_rows_against_declaration(items: &[(usize, usize)]) -> (usize, usize) {
 /// so the literal can never come back through either lane.
 
 
-/// 🔒️ Both durable lanes declare through the ONE shared builder — not two literals that can drift
-/// apart, and never a bare `ArtifactStoreOneItemFootprint { work_items: … }` struct literal.
+/// 🔒️ Both durable lanes derive their footprint from the mutation's schema-declared inverse rows
+/// (`ArtifactStoreOneItemFootprint::for_leaf`, design §20.5) — never a bare
+/// `ArtifactStoreOneItemFootprint { work_items: … }` struct literal.
 #[test]
-fn both_durable_lanes_declare_through_the_one_shared_footprint_builder() {
+fn both_durable_lanes_derive_their_footprint_from_the_mutation() {
     let source = include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
-    assert_eq!(source.matches("fn generation3d_one_item_footprint(").count(), 1, "the shared fold-envelope builder is declared exactly once");
-    assert_eq!(source.matches("Ok(generation3d_one_item_footprint(retained_bytes))").count(), 2, "both the artifact and the config preflight declare through the shared builder");
+    assert_eq!(source.matches("Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))").count(), 2, "both the artifact and the config preflight derive their footprint from the mutation");
     assert!(!source.contains("ArtifactStoreOneItemFootprint { work_items"), "a durable lane regained a hand-written work-items literal");
+}
+
+/// 🧾️ Every `{example}/{operator}@{input}` of the bundled examples whose declared default the operator does not record,
+/// plus every operator whose kind the installed registry does not know — empty for a self-describing example set.
+fn unrecorded_example_defaults() -> Vec<String> {
+    use semio_framework_artifact_flow_flow::neural::ColdRetire;
+    use semio_framework_artifact_flow_flow::{default_neuron_params_from_info, Widget};
+    use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_MESH_WORKBENCH;
+    let infos = semio_framework_os_flow::flow_neuron_kind_info_map();
+    BUNDLED_EXAMPLES.iter().copied().chain([PROCEDURAL_EXAMPLE_MESH_WORKBENCH]).flat_map(|example_id| {
+        let read = SnapshotRead::new(example_snapshot(example_id).expect("bundled example snapshot"));
+        let unrecorded: Vec<String> = read.host_snapshot.widgets.iter().filter_map(|widget| match widget { Widget::Neuron { id, neuron_kind, params, .. } => Some((id, neuron_kind, params)), _ => None }).flat_map(|(id, kind, params)| {
+            let declared = default_neuron_params_from_info(infos.get(kind));
+            let missing = if infos.contains_key(kind) { declared.keys().filter(|key| params.get(key).is_none()).map(|key| format!("{example_id}/{id}@{key}")).collect() } else { vec![format!("{example_id}/{id}: unknown kind {kind}")] };
+            declared.retire_cold();
+            missing
+        }).collect();
+        unrecorded
+    }).collect()
+}
+
+/// ⚖️ LAW (design §20.9): every bundled example is a self-describing document — each operator records every declared
+/// input's default literal in its `params`, exactly as an inserted operator does — so an input edit on a loaded example
+/// folds from the snapshot alone and never meets `mutation.target-missing`.
+#[test]
+fn every_bundled_example_records_every_declared_default_of_its_operators() {
+    let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
+    let unrecorded = unrecorded_example_defaults();
+    assert!(unrecorded.is_empty(), "every operator of a bundled example records its declared defaults: {unrecorded:?}");
+}
+
+/// 🐛️ [DEBUG] Temporary: prints every bundled example with its operators' declared defaults recorded, for the one-time
+/// normalization of the example assets (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING). Deleted once the assets hold it.
+#[test]
+fn debug_print_normalized_examples() {
+    use semio_framework_artifact_flow_flow::neural::ColdRetire;
+    use semio_framework_artifact_flow_flow::{default_neuron_params_from_info, Widget};
+    use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_MESH_WORKBENCH;
+    let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
+    let infos = semio_framework_os_flow::flow_neuron_kind_info_map();
+    for example_id in BUNDLED_EXAMPLES.iter().copied().chain([PROCEDURAL_EXAMPLE_MESH_WORKBENCH]) {
+        let mut read = SnapshotRead::new(example_snapshot(example_id).expect("bundled example snapshot"));
+        for widget in read.host_snapshot.widgets.iter_mut() {
+            if let Widget::Neuron { neuron_kind, params, .. } = widget {
+                let declared = default_neuron_params_from_info(infos.get(neuron_kind));
+                let recorded = declared.iter().filter(|(key, _)| params.get(key).is_none()).fold(params.clone(), |recorded, (key, value)| recorded.insert(key.clone(), value.clone()));
+                std::mem::replace(params, recorded).retire_cold();
+                declared.retire_cold();
+            }
+        }
+        eprintln!("[DEBUG] BEGIN {example_id}\n{}\n[DEBUG] END {example_id}", store::ArtifactDsl::print_dsl(&*read));
+    }
 }
 
 /// 🎬️ Boots ONE app, publishes `setActiveExample` through the real retained path (the host's bounded

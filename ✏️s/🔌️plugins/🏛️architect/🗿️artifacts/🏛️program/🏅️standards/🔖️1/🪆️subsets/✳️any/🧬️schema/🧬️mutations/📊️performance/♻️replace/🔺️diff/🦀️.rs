@@ -13,7 +13,7 @@ pub fn diff(payload: &ReplacePerformanceCriterion, base: &ProgramSnapshot) -> pr
         return protocol::MutationOutcome::error("mutation.target-missing", "No performance criterion exists with this id.", [payload.performance_criterion.header.id.0.clone()]);
     };
     if existing == &payload.performance_criterion {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This performance criterion already matches the requested value.").at([existing.header.id.0.clone()])]);
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This performance criterion already matches the requested value.").at([existing.header.id.0.clone()])]);
     }
     let patch = existing.diff_patch(&payload.performance_criterion).expect("diff_patch always produces a full patch");
     protocol::MutationOutcome::new(ProgramDiff {

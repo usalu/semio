@@ -420,6 +420,48 @@ pub mod live {
             MarkupTransformOp::SkewY { angle } => obj(vec![("kind", Json::String("skewY".into())), ("angle", n(*angle))]),
         }
     }
+
+    /// 🌲️ One node as the `XmlNode` wire [`node_from_wire`] reads.
+    pub fn node_to_wire(node: &MarkupNode) -> Json {
+        let text = |kind: &str, text: &str| obj(vec![("kind", Json::String(kind.into())), ("text", Json::String(text.into()))]);
+        match node {
+            MarkupNode::Element { name, attrs, children } => obj(vec![
+                ("kind", Json::String("element".into())),
+                ("name", Json::String(name.clone())),
+                ("attrs", Json::Array(attrs.iter().map(|(name, value)| obj(vec![("name", Json::String(name.clone())), ("value", Json::String(value.clone()))])).collect())),
+                ("children", Json::Array(children.iter().map(node_to_wire).collect())),
+            ]),
+            MarkupNode::Text(value) => text("text", value),
+            MarkupNode::CData(value) => text("cData", value),
+            MarkupNode::Comment(value) => text("comment", value),
+            MarkupNode::Pi { target, data } => obj(vec![("kind", Json::String("processingInstruction".into())), ("target", Json::String(target.clone())), ("data", Json::String(data.clone()))]),
+        }
+    }
+
+    /// 🩹️ `doc` with a `patch-snapshot` row's one pointer operation applied to this reader's own `{schema, doc}` snapshot
+    /// reading (`semio_repo_test_host::law::patched_snapshot`). The doctype stays the raw body this tree keeps, so a pointer
+    /// into `/doc/doctype` is refused rather than guessed.
+    pub fn patched_markup(doc: &MarkupDoc, schema: &str, patch: &Json) -> Result<MarkupDoc, String> {
+        if patch.str("path").starts_with("/doc/doctype") || patch.str("from").starts_with("/doc/doctype") {
+            return Err("patch-snapshot: this reference tree keeps the doctype raw and reads no pointer into it".to_string());
+        }
+        let declaration = doc.declaration.as_ref().map_or(Json::Null, |declaration| {
+            obj(vec![
+                ("version", Json::String(declaration.version.clone())),
+                ("encoding", declaration.encoding.clone().map_or(Json::Null, Json::String)),
+                ("standalone", declaration.standalone.map_or(Json::Null, Json::Bool)),
+            ])
+        });
+        let wire = obj(vec![
+            ("declaration", declaration),
+            ("doctype", Json::Null),
+            ("prolog", Json::Array(doc.prolog.iter().map(node_to_wire).collect())),
+            ("root", doc.root.as_ref().map_or(Json::Null, node_to_wire)),
+            ("epilog", Json::Array(Vec::new())),
+        ]);
+        let patched = semio_repo_test_host::law::patched_snapshot(&obj(vec![("schema", Json::String(schema.into())), ("doc", wire)]), patch)?;
+        Ok(MarkupDoc { doctype: doc.doctype.clone(), ..doc_from_wire(&member(&patched, "doc"))? })
+    }
     //#endregion 🔖️JsonCodec
 
     //#region 🔖️Parse

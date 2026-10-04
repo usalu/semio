@@ -65,9 +65,12 @@ impl ArtifactViewer for FormsViewer {
 
     const DIALECT: Dialect = FORMS_DIALECT;
     /// 🧬️ The crate's one loaded-parent child projection (`crate::forms_child_restore_projection`).
-    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {
+ Ok((||{
         crate::forms_genesis_child_pack(snapshot, slot, child_id)
-    }
+    
+})())
+}
 
     fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
         crate::forms_child_restore_projection(snapshot)

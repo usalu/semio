@@ -1,0 +1,74 @@
+[
+  {
+    "path": "🧰️framework/📦️packages/🟦️typescript/📜️script.ts",
+    "prefix": 25747,
+    "pair": {
+      "before": "class TestScript extends BundleScript {\n  async run(segments: string[]): Promise<void> {\n    const { rest } = resolveTestLevel(segments);\n    retainedUiNativeStripOnly();\n    await runVitestV1(readVitestPolicyV1(process.env, this.root), rest, \"../../🧪️tests/🎚️config/🟦️.ts\", process.env);\n  }\n}\n\n/** 🔎️ Type-checks every `🧰️framework/🔨️modules/**` and `🧰️framework/📦️packages/**` source file against `tsconfig.json`. */\nclass TypecheckScript extends BundleScript {\n  async run(segments: string[]): Promise<void> {\n    await runOwnedCommand(process.execPath, [Bun.resolveSync(\"typescript/bin/tsc\", this.root), \"--noEmit\", \"-p\", \"tsconfig.json\", ...segments], this.root, \"framework:typescript\", cmdBudgetMs(process.env));\n  }\n}\n\n/** ⚖️ Executes the neutral portable installation identity contract. */\nclass InstallationIdentityScript extends BundleScript {\n  run(args: string[]): void {\n    if (args.length) throw new Error(\"Installation identity check accepts no arguments\");\n    const child = spawnSync(process.execPath, [\"test\", fileURLToPath(new URL(\"../../🔨️modules/🪪️identity/📁️installation/🧪️tests/🟦️.ts\", import.meta.url))], { cwd: this.root, env: process.env, stdio: \"inherit\" });\n    if (child.status !== 0) throw new Error(\"Installation identity contract failed\");\n  }\n}\n\nconst router = new ScriptRouter(import.meta.dir).register(\"test\", TestScript).register(\"typecheck\", TypecheckScript).register(\"installation-identity-check\", InstallationIdentityScript).register(\"test-script-boundary\", ScriptBoundary",
+      "after": "/** 🔗️ Executes literal artifact-reference admission against the independent SQLite oracle. */\nclass ArtifactReferenceScript extends BundleScript {\n  async run(args: string[]): Promise<void> {\n    if (args.length) throw Error(\"test-artifact-reference accepts no arguments\");\n    await runOwnedCommand(process.execPath, [\"test\", fileURLToPath(new URL(\"../../🔨️modules/🚪️io/🧬️schema/🔗️reference/🧪️tests/🟦️.ts\", import.meta.url))], this.root, \"framework:artifact-reference\", cmdBudgetMs(process.env));\n  }\n}\n\nclass TestScript extends BundleScript {\n  async run(segments: string[]): Promise<void> {\n    const { rest } = resolveTestLevel(segments);\n    retainedUiNativeStripOnly();\n    await runVitestV1(readVitestPolicyV1(process.env, this.root), rest, \"../../🧪️tests/🎚️config/🟦️.ts\", process.env);\n  }\n}\n\n/** 🔎️ Type-checks every `🧰️framework/🔨️modules/**` and `🧰️framework/📦️packages/**` source file against `tsconfig.json`. */\nclass TypecheckScript extends BundleScript {\n  async run(segments: string[]): Promise<void> {\n    await runOwnedCommand(process.execPath, [Bun.resolveSync(\"typescript/bin/tsc\", this.root), \"--noEmit\", \"-p\", \"tsconfig.json\", ...segments], this.root, \"framework:typescript\", cmdBudgetMs(process.env));\n  }\n}\n\n/** ⚖️ Executes the neutral portable installation identity contract. */\nclass InstallationIdentityScript extends BundleScript {\n  run(args: string[]): void {\n    if (args.length) throw new Error(\"Installation identity check accepts no arguments\");\n    const child = spawnSync(process.execPath, [\"test\", fileURLToPath(new URL(\"../../🔨️modules/🪪️identity/📁️installation/🧪️tests/🟦️.ts\", import.meta.url))], { cwd: this.root, env: process.env, stdio: \"inherit\" });\n    if (child.status !== 0) throw new Error(\"Installation identity contract failed\");\n  }\n}\n\nconst router = new ScriptRouter(import.meta.dir).register(\"test\", TestScript).register(\"typecheck\", TypecheckScript).register(\"installation-identity-check\", InstallationIdentityScript).register(\"test-script-boundary\", ScriptBoundaryScript).register(\"test-artifact-reference\", ArtifactReference"
+    },
+    "beforeSha256": "eb93ab8b43dbb3ebf487f4f4fadc3449706467e4cf1df6e0b9d135049f5b2988",
+    "afterSha256": "99d91ecb5de03a4757eef8c1b0b686828478f4b50cf533a66ce90adde531fb79",
+    "restoredSha256": "eb93ab8b43dbb3ebf487f4f4fadc3449706467e4cf1df6e0b9d135049f5b2988",
+    "ok": true
+  },
+  {
+    "path": "🧰️framework/📦️packages/🟦️typescript/📋️project.json",
+    "prefix": 269,
+    "pair": {
+      "before": "",
+      "after": "artifact-reference\": {\n      \"executor\": \"nx:run-commands\",\n      \"cache\": false,\n      \"dependsOn\": [],\n      \"outputs\": [],\n      \"inputs\": [\"{projectRoot}/**/*\", \"{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🧬️schema/**/*\", \"{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/**/*\"],\n      \"options\": { \"command\": \"bun ./📜️script.ts test-artifact-reference\", \"cwd\": \"{projectRoot}\" }\n    },\n    \"test-"
+    },
+    "beforeSha256": "92db94b14cd35514da1645319ecd4b954818ba2417cea630f6a8af489e0700d2",
+    "afterSha256": "656642f054d79e8507322316f24d94d72e0b5d3bd1a6803adce2763770d418cd",
+    "restoredSha256": "92db94b14cd35514da1645319ecd4b954818ba2417cea630f6a8af489e0700d2",
+    "ok": true
+  },
+  {
+    "path": "🧰️framework/📦️packages/🟦️typescript/package.json",
+    "prefix": 394,
+    "pair": {
+      "before": "",
+      "after": "artifact-reference\": \"nx run @semio-tech/framework:test-artifact-reference\",\n    \"test-"
+    },
+    "beforeSha256": "e3a38f1092ba98354a35c58317b5771eb7b9c07a5317e25f488b4d2469bcbe3a",
+    "afterSha256": "f8f69c5ddac4389aa670d20b2fe978ffe3e19ee5be0249cb5b07799633776723",
+    "restoredSha256": "e3a38f1092ba98354a35c58317b5771eb7b9c07a5317e25f488b4d2469bcbe3a",
+    "ok": true
+  },
+  {
+    "path": "🧰️framework/📏️script-boundary/🧫️fixtures/🔣️.json",
+    "prefix": 131,
+    "pair": {
+      "before": "",
+      "after": "artifact-reference\", \"test-"
+    },
+    "beforeSha256": "5aaac6789c838cd35c1f79f667a844d6871675a8c8a078044e727cec5a1b66fb",
+    "afterSha256": "b7c42e1652fe82c6bc52d77652c95b2062ff47fe8a7e34832fffd9b9e9daadb3",
+    "restoredSha256": "5aaac6789c838cd35c1f79f667a844d6871675a8c8a078044e727cec5a1b66fb",
+    "ok": true
+  },
+  {
+    "path": "🧰️framework/📏️script-boundary/🧬️schema/🔣️.json",
+    "prefix": 480,
+    "pair": {
+      "before": "4, \"maxItems\": 4, \"uniqueItems\": true, \"items\": { \"enum\": [\"installation-identity-check\", \"test",
+      "after": "5, \"maxItems\": 5, \"uniqueItems\": true, \"items\": { \"enum\": [\"installation-identity-check\", \"test\", \"test-artifact-reference"
+    },
+    "beforeSha256": "559df564367a58674e9a9d60ac06ed28a1d8350992fe5bff4c729960c6a426f4",
+    "afterSha256": "c7a321ac815c6a3d57e5d5d5ac407677ecd34a6820edee3325a4531b70907c09",
+    "restoredSha256": "559df564367a58674e9a9d60ac06ed28a1d8350992fe5bff4c729960c6a426f4",
+    "ok": true
+  },
+  {
+    "path": ".vscode/🧩️launch.seed.jsonc",
+    "prefix": 378666,
+    "pair": {
+      "before": "",
+      "after": "🧪️test🧰️framework🔗️artifact-reference\",\n      \"type\": \"node-terminal\",\n      \"request\": \"launch\",\n      \"command\": \"bun nx run @semio-tech/framework:test-artifact-reference --skip-nx-cache\",\n      \"cwd\": \"${workspaceFolder}\",\n      \"presentation\": { \"group\": \"9_gates\", \"order\": 900.05851 }\n    },\n    {\n      \"name\": \""
+    },
+    "beforeSha256": "8ff446b94e70d12e621615c813f91bc0f9ebddbf6d3f5cb22b1b023b60f2aa95",
+    "afterSha256": "47e045df1a6457805abfdac3e8d2755a1dfef4a0886a23467e0d425282822ea8",
+    "restoredSha256": "8ff446b94e70d12e621615c813f91bc0f9ebddbf6d3f5cb22b1b023b60f2aa95",
+    "ok": true
+  }
+]

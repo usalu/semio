@@ -1,0 +1,11 @@
+# Current Stdio WFC GIS SQLite Owner Route Census
+
+Read-only finite source census, no runtime. Structured19 concrete Semio owners and exact relational implementation/codec route paths are retained in `📥️inputs/current-stdio-sqlite-owner-census.json`. Presence is source authority, not runtime registration/execution proof.
+
+Actual Store bare ArtifactCodec constructor11730 takes P::sqlite_snapshot_codec; default ArtifactPack11071 returns None. ArtifactSqliteSnapshot11193 requires handwritten schema/projection/reconstruction; native decode/encode defaults explicitly refuse UnsupportedOwner rather than serializing generic payload. Thus matching trait implementation alone is insufficient; each concrete ArtifactPack route must expose it.
+
+Semio root register114–133 enumerates19 subsets: brep,mesh,model,value,document,cad,drawing,image,video,audio,animation,presentation,flow,text,table,graph,object,kit,base. All19 have actual handwritten ArtifactSqliteSnapshot implementations, explicit controlled native methods and concrete sqlite_snapshot_codec route sources. No missing concrete owner found in this finite set. The existing Semio concrete-owner law explicitly constructs matching bare codecs, but no new execution is credited here.
+
+WFC3d wildcard IO86 builds bare Wfc3dSnapshot/Wfc3dMutation; text219 exposes its SQLite codec; snapshot202 mounts handwritten SQLite implementation. It writes distinct document/tile/mesh/position/index/color/slot/edge/rule tables and separate mesh child identity columns. GIS Map owned Pack66 exposes codec; handwritten20-table model distinguishes feature geometry, child identity and intrinsic null/bool/unsigned/signed/float/text/bytes/octet/array/object/member relations. No whole-snapshot JSON/BLOB carrier fallback found in these inspected relational implementations.
+
+Semio relational BLOB occurrences are actual scalar bytes/media assets (Value Bytes, image ICC, document image bytes, mesh texture bytes, video samples, picture/drawing image bytes), not evidence of whole-payload serialization. No serde_json/to_json_string carrier occurs in the19 relational implementation files. This finite census does not prove every framework/plugin registered owner outside these families, nor does it establish physical backing retirement, native cancellation or complete registry lookup execution.

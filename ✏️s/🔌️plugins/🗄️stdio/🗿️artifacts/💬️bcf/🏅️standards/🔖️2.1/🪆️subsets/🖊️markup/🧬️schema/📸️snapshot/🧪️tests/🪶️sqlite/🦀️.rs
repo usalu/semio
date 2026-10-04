@@ -2,9 +2,9 @@ use super::*;
 #[test]
 fn sqlite_snapshot_bcf_manual_variant_metadata_retains_neutral_choices_under_both_controls(){
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🏭️schema/🔣️.json")).unwrap();let maximum=fixture["maximumBytes"].as_u64().unwrap()as usize;let tiny=fixture["tinyBytes"].as_u64().unwrap()as usize;
- let mut admitted=|_|true;let mut encoding=dsl::NativeEncodeControl::new(maximum,&mut admitted);let dsl::Shape::Statements(encoded)=<BcfCamera as dsl::DslField>::shape_controlled(&mut encoding).unwrap()else{panic!("declared choices")};let mut output=Vec::new();for(keyword,producer)in &encoded{let record=producer.encode(&mut encoding).unwrap();output.push(serde_json::json!([keyword,record.fields.len()]));}assert_eq!(serde_json::json!(output),fixture["variants"]);let exact=encoding.owned_bytes();assert!(exact>0);
- let mut admitted=|_|true;let mut decoding=dsl::NativeDecodeControl::new(maximum,&mut admitted);let dsl::Shape::Statements(decoded)=<BcfCamera as dsl::DslField>::shape_controlled(&mut decoding).unwrap()else{panic!("declared choices")};let mut output=Vec::new();for(keyword,producer)in &decoded{let record=producer.decode(&mut decoding).unwrap();output.push(serde_json::json!([keyword,record.fields.len()]));}assert_eq!(serde_json::json!(output),fixture["variants"]);
- let mut admitted=|_|true;let mut control=dsl::NativeEncodeControl::new(tiny,&mut admitted);assert!(<BcfCamera as dsl::DslField>::shape_controlled(&mut control).is_err());assert_eq!(control.owned_bytes(),0);assert!(<BcfCamera as dsl::DslField>::shape_controlled(&mut dsl::NativeDecodeControl::new(tiny,&mut |_|true)).is_err());assert!(<BcfCamera as dsl::DslField>::shape_controlled(&mut dsl::NativeEncodeControl::new(maximum,&mut |_|false)).is_err());assert!(<BcfCamera as dsl::DslField>::shape_controlled(&mut dsl::NativeDecodeControl::new(maximum,&mut |_|false)).is_err());
+ let mut admitted=|_|true;let mut encoding=semio_framework_value::NativeEncodeControl::new(maximum,&mut admitted);let semio_framework_dsl_record::Shape::Statements(encoded)=<BcfCamera as semio_framework_dsl_record::DslField>::shape_controlled(&mut encoding).unwrap()else{panic!("declared choices")};let mut output=Vec::new();for(keyword,producer)in &encoded{let record=producer.encode(&mut encoding).unwrap();output.push(serde_json::json!([keyword,record.fields.len()]));}assert_eq!(serde_json::json!(output),fixture["variants"]);let exact=encoding.owned_bytes();assert!(exact>0);
+ let mut admitted=|_|true;let mut decoding=semio_framework_value::NativeDecodeControl::new(maximum,&mut admitted);let semio_framework_dsl_record::Shape::Statements(decoded)=<BcfCamera as semio_framework_dsl_record::DslField>::shape_controlled(&mut decoding).unwrap()else{panic!("declared choices")};let mut output=Vec::new();for(keyword,producer)in &decoded{let record=producer.decode(&mut decoding).unwrap();output.push(serde_json::json!([keyword,record.fields.len()]));}assert_eq!(serde_json::json!(output),fixture["variants"]);
+ let mut admitted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(tiny,&mut admitted);assert!(<BcfCamera as semio_framework_dsl_record::DslField>::shape_controlled(&mut control).is_err());assert_eq!(control.owned_bytes(),0);assert!(<BcfCamera as semio_framework_dsl_record::DslField>::shape_controlled(&mut semio_framework_value::NativeDecodeControl::new(tiny,&mut |_|true)).is_err());assert!(<BcfCamera as semio_framework_dsl_record::DslField>::shape_controlled(&mut semio_framework_value::NativeEncodeControl::new(maximum,&mut |_|false)).is_err());assert!(<BcfCamera as semio_framework_dsl_record::DslField>::shape_controlled(&mut semio_framework_value::NativeDecodeControl::new(maximum,&mut |_|false)).is_err());
 }
 #[test]
 fn sqlite_snapshot_bcf_controlled_native_owner_preserves_full_fixture_and_enforces_caller_limits(){
@@ -60,12 +60,12 @@ fn sqlite_snapshot_bcf_native_factory_has_the_actual_structural_identity() {
 }
 use semio_framework_os_kernel::{sqlite_snapshot::{export_sqlite_database,import_sqlite_database,SqliteDatabaseLimits,SqliteSnapshotControl,SqliteValue},ArtifactSqliteSnapshot};
 
-fn fixture()->BcfSnapshot{store::json::from_json_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap()}
+fn fixture()->BcfSnapshot{semio_framework_pack_json::from_json_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
 fn roundtrip(snapshot:&BcfSnapshot)->BcfSnapshot{let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();let bytes=export_sqlite_database(&database,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();BcfSnapshot::from_sqlite_database(&import_sqlite_database(&bytes,SqliteDatabaseLimits::default(),&mut |_|true).unwrap(),&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap()}
 
 #[test]
 fn sqlite_snapshot_bcf_full_neutral_corpus_and_optional_empty_domains(){
- let snapshot=fixture();assert_eq!(roundtrip(&snapshot),snapshot);let oracle:serde_json::Value=serde_json::from_str(&store::json::to_json_string(&protocol::ToValue::to_value(&snapshot))).unwrap();assert_eq!(oracle,serde_json::from_str::<serde_json::Value>(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap());assert_eq!(roundtrip(&BcfSnapshot{schema:"".into(),version:"".into(),topics:Vec::new(),parts:Vec::new()}),BcfSnapshot{schema:"".into(),version:"".into(),topics:Vec::new(),parts:Vec::new()});
+ let snapshot=fixture();assert_eq!(roundtrip(&snapshot),snapshot);let oracle:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&snapshot))).unwrap();assert_eq!(oracle,serde_json::from_str::<serde_json::Value>(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap());assert_eq!(roundtrip(&BcfSnapshot{schema:"".into(),version:"".into(),topics:Vec::new(),parts:Vec::new()}),BcfSnapshot{schema:"".into(),version:"".into(),topics:Vec::new(),parts:Vec::new()});
 }
 
 #[test]
@@ -103,7 +103,7 @@ fn sqlite_snapshot_bcf_large_intrinsic_image_copies_cancel_before_owned_allocati
 async fn sqlite_snapshot_bcf_actual_erased_capability_preserves_owned_binary_and_text(){use semio_framework_os_kernel::{io::{ArtifactDialect,IoPayload},sqlite_snapshot::SnapshotEncoding};let mut snapshot=fixture();snapshot.schema="owned 世界\0".into();semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio").label("bcf erased SQLite").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();let codec=store::document_codec(<BcfSnapshot as store::ArtifactDsl>::envelope_id()).await.unwrap().unwrap();let provider=codec.snapshot_sqlite.as_ref().unwrap();let dialect=ArtifactDialect{artifact_kind:"s.stdio.bcf".into(),standard:"2.1".into(),subset:"*".into()};let expected=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=match encoding{SnapshotEncoding::Binary=>IoPayload::Binary(<BcfSnapshot as store::ArtifactPack>::encode_pack_with(&snapshot,&store::PackEncodeOptions::default()).unwrap()),SnapshotEncoding::Text=>IoPayload::Text(<BcfSnapshot as store::ArtifactDsl>::print_dsl(&snapshot))};let database=(provider.export)(&codec.schema,&dialect,&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap().value;assert_eq!(database,expected);let restored=(provider.import)(&codec.schema,&dialect,database,encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap().value;let restored=match restored{IoPayload::Binary(bytes)=><BcfSnapshot as store::ArtifactPack>::decode_pack(&bytes).unwrap(),IoPayload::Text(text)=><BcfSnapshot as store::ArtifactDsl>::parse_dsl(&text).unwrap()};assert_eq!(restored.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap(),expected);}}
 
 #[test]
-fn sqlite_snapshot_bcf_owned_encoding_preflight_checks_bounds_before_allocation(){use semio_framework_os_kernel::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotPhase};for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let mut snapshot=fixture();snapshot.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();assert!(snapshot.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_file_bytes:1024,..SqliteDatabaseLimits::default()})).unwrap_err().contains("native encoding exceeds file byte limit"));snapshot.parts[0].data=vec![255;131073];let mut reached=false;assert!(snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |event|{if event.phase==SqliteSnapshotPhase::EncodeNative&&event.completed>0{reached=true;false}else{true}},SqliteDatabaseLimits::default())).is_err());assert!(reached);}}
+fn sqlite_snapshot_bcf_owned_encoding_preflight_checks_bounds_before_allocation(){use semio_framework_os_kernel::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotPhase};for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let mut snapshot=fixture();snapshot.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();assert_eq!(snapshot.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_file_bytes:1024,..SqliteDatabaseLimits::default()})).unwrap_err().kind,semio_framework_value::ValueRefusalKind::OwnershipLimit);snapshot.parts[0].data=vec![255;131073];let mut reached=false;assert!(snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |event|{if event.phase==SqliteSnapshotPhase::EncodeNative&&event.completed>0{reached=true;false}else{true}},SqliteDatabaseLimits::default())).is_err());assert!(reached);}}
 
 #[test]
 fn sqlite_snapshot_bcf_genuine_output_admits_exact_row_and_file_frontiers(){
@@ -120,5 +120,36 @@ fn sqlite_snapshot_bcf_genuine_output_admits_exact_row_and_file_frontiers(){
   let restored=BcfSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();assert_eq!(restored.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),expected);
   for restricted in[SqliteDatabaseLimits{max_rows:rows-1,..limits},SqliteDatabaseLimits{max_file_bytes:physical-1,..limits},SqliteDatabaseLimits{max_value_bytes:1,..limits}]{assert!(snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,restricted)).is_err(),"{encoding:?}: {restricted:?}");}
   assert!(snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|false,limits)).is_err());
+ }
+}
+
+#[test]
+fn sqlite_snapshot_bcf_native_semantic_frontier_matches_independent_json_values() {
+ fn bytes(value:&serde_json::Value,key:&str)->usize {
+  match value {
+   serde_json::Value::Null=>0,
+   serde_json::Value::Bool(_)=>1,
+   serde_json::Value::Number(_)=>8,
+   serde_json::Value::String(text)=>if key=="kind" {1} else {text.len()},
+   serde_json::Value::Array(values)=>if matches!(key,"data"|"snapshot") {values.len()} else {values.iter().map(|value|bytes(value,"")).sum()},
+   serde_json::Value::Object(fields)=>fields.iter().map(|(key,value)|bytes(value,key)).sum(),
+  }
+ }
+ let source:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap();
+ let controls:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🎛️control.json")).unwrap();
+ let exact=controls["nativeSemanticBytes"].as_u64().unwrap() as usize;
+ assert_eq!(bytes(&source,""),exact);
+ let snapshot=fixture();let limits=SqliteDatabaseLimits::default();
+ let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();
+ let rows=database.tables.iter().map(|table|table.rows.len()).sum::<usize>();
+ for encoding in [store::sqlite_snapshot::SnapshotEncoding::Binary,store::sqlite_snapshot::SnapshotEncoding::Text] {
+  let admitted=SqliteDatabaseLimits{max_value_bytes:exact,max_rows:rows,..limits};
+  let payload=snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,admitted)).unwrap();
+  assert_eq!(BcfSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,admitted)).unwrap(),snapshot);
+  let refused=SqliteDatabaseLimits{max_value_bytes:exact-1,..limits};
+  assert_eq!(snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,refused)).unwrap_err().kind,semio_framework_value::ValueRefusalKind::OwnershipLimit);
+  assert_eq!(BcfSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,refused)).unwrap_err().kind,semio_framework_value::ValueRefusalKind::OwnershipLimit);
+  assert!(BcfSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_rows:rows-1,..limits})).is_err());
+  eprintln!("[DEBUG] BCF {encoding:?}: exact {exact} semantic bytes and {rows} rows admit; one-less frontiers refuse");
  }
 }

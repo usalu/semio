@@ -54,6 +54,17 @@ export type ShellInputActionV1 = Readonly<{
   provenance?: Omit<InputProvenanceV1, "inputSeq"> & Partial<Pick<InputProvenanceV1, "inputSeq">>;
 }>;
 
+/** 🪟️ Binds a retained control to its owning window without changing domain arguments. */
+export function inputActionWithWindowV1(action: ShellInputActionV1, windowId: string): ShellInputActionV1 {
+  return { ...action, provenance: { ...action.provenance, windowId, origin: action.provenance?.origin ?? "user", causedBy: action.provenance?.causedBy ?? null } };
+}
+
+/** 🧭️ Control ownership precedes explicit chrome targets and the currently focused window. */
+export function inputActionWindowV1(action: ShellInputActionV1, focusedWindowId: string | null): string | null {
+  const args = action.args as { windowId?: unknown } | null | undefined;
+  return action.provenance?.windowId ?? (typeof args?.windowId === "string" ? args.windowId : focusedWindowId);
+}
+
 /** 🔗️ The sort key L2 dequeues by: a follow-up inherits its cause's position, a root input its own. */
 export function causalOrderKeyV1(provenance: Pick<InputProvenanceV1, "inputSeq" | "causedBy">): number {
   return provenance.causedBy ?? provenance.inputSeq;
@@ -84,10 +95,23 @@ export type InputRefusalReasonV1 =
   | "not-applied"
   | "catching-up";
 
+/** 🧾️ Exact native terminal identity for one committed document mutation. Decimal strings preserve
+ * both u64 lanes across JSON, logs and renderer state without JavaScript number narrowing. */
+export type InputCommitReceiptV1 = Readonly<{ operation: string; revision: string }>;
+
+/** 🩺️ Structured native refusal detail retained for the issuing control. Presentation maps the stable code through
+ * localized labels; message is diagnostic evidence and is never parsed for semantics. */
+export type InputDiagnosticV1 = Readonly<{
+  code: string;
+  message: string;
+  span?: Readonly<{ line: number; column: number; length: number }>;
+  params?: Readonly<Record<string, string>>;
+}>;
+
 export type InputOutcomeV1 =
-  | Readonly<{ kind: "applied"; inputSeq: number }>
+  | Readonly<{ kind: "applied"; inputSeq: number; commit?: InputCommitReceiptV1 }>
   | Readonly<{ kind: "superseded"; inputSeq: number; by: number }>
-  | Readonly<{ kind: "refused"; inputSeq: number; reason: InputRefusalReasonV1; retryable: boolean; detail?: string }>;
+  | Readonly<{ kind: "refused"; inputSeq: number; reason: InputRefusalReasonV1; retryable: boolean; detail?: string; diagnostic?: InputDiagnosticV1 }>;
 
 /** 🔁️ Whether a refusal is worth retrying unchanged: a full queue or a stale owner drains; a sealed instance,
  * an undeclared action or a read-only viewer never becomes admissible by waiting. */
@@ -125,18 +149,51 @@ export const INPUT_REFUSAL_NOTIFIED_V1: Readonly<Record<InputRefusalReasonV1, bo
   "catching-up": true,
 };
 
-export function inputAppliedV1(inputSeq: number): InputOutcomeV1 {
-  return { kind: "applied", inputSeq };
+export function inputCommitReceiptV1(operation: bigint, revision: bigint): InputCommitReceiptV1 {
+  if (operation < 0n || operation > 0xffff_ffff_ffff_ffffn || revision < 0n || revision > 0xffff_ffff_ffff_ffffn) throw new RangeError("input commit receipt lanes must fit u64");
+  return { operation: operation.toString(10), revision: revision.toString(10) };
+}
+
+/** 🔗️ Whether one retained input publication is the exact native commit acknowledged by an applied
+ * outcome. Value equality and binding guards deliberately do not participate in this proof. */
+export function inputCommitReceiptMatchesPublicationV1(outcome: InputOutcomeV1, publicationRevision: string | null | undefined): boolean {
+  return outcome.kind === "applied" && outcome.commit !== undefined && publicationRevision !== null && publicationRevision !== undefined && /^(0|[1-9][0-9]*)$/u.test(publicationRevision) && outcome.commit.revision === publicationRevision;
+}
+
+export function inputAppliedV1(inputSeq: number, commit?: InputCommitReceiptV1): InputOutcomeV1 {
+  return commit === undefined ? { kind: "applied", inputSeq } : { kind: "applied", inputSeq, commit };
 }
 
 export function inputSupersededV1(inputSeq: number, by: number): InputOutcomeV1 {
   return { kind: "superseded", inputSeq, by };
 }
 
-export function inputRefusedV1(inputSeq: number, reason: InputRefusalReasonV1, detail?: string): InputOutcomeV1 {
-  return detail === undefined
-    ? { kind: "refused", inputSeq, reason, retryable: INPUT_REFUSAL_RETRYABLE_V1[reason] }
-    : { kind: "refused", inputSeq, reason, retryable: INPUT_REFUSAL_RETRYABLE_V1[reason], detail };
+/** 🧬️ Narrows a decoded native Fault into the bounded refusal detail controls consume. */
+export function inputDiagnosticV1(value: unknown): InputDiagnosticV1 | undefined {
+  if (typeof value !== "object" || value === null) return undefined;
+  const source = value as { readonly code?: unknown; readonly message?: unknown; readonly span?: unknown; readonly params?: unknown };
+  if (typeof source.code !== "string" || source.code.length === 0 || typeof source.message !== "string") return undefined;
+  const diagnostic: { code: string; message: string; span?: { line: number; column: number; length: number }; params?: Record<string, string> } = { code: source.code, message: source.message };
+  if (typeof source.span === "object" && source.span !== null) {
+    const span = source.span as { readonly line?: unknown; readonly column?: unknown; readonly length?: unknown };
+    if ([span.line, span.column, span.length].every((lane) => typeof lane === "number" && Number.isInteger(lane) && lane >= 0 && lane <= 0xffff_ffff)) diagnostic.span = { line: span.line as number, column: span.column as number, length: span.length as number };
+  }
+  if (typeof source.params === "object" && source.params !== null && !Array.isArray(source.params)) {
+    const params = Object.fromEntries(Object.entries(source.params).filter((entry): entry is [string, string] => typeof entry[1] === "string"));
+    if (Object.keys(params).length > 0) diagnostic.params = params;
+  }
+  return diagnostic;
+}
+
+export function inputRefusedV1(inputSeq: number, reason: InputRefusalReasonV1, detail?: string, diagnostic?: InputDiagnosticV1): InputOutcomeV1 {
+  return {
+    kind: "refused",
+    inputSeq,
+    reason,
+    retryable: INPUT_REFUSAL_RETRYABLE_V1[reason],
+    ...(detail === undefined ? {} : { detail }),
+    ...(diagnostic === undefined ? {} : { diagnostic }),
+  };
 }
 
 /** 🗣️ One plain console line per refusal — never `[TRACE]`-gated, so a swallowed click is greppable. */

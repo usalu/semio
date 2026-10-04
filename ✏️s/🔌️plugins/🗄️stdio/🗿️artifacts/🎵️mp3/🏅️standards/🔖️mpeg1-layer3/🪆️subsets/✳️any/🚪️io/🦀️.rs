@@ -324,6 +324,524 @@ pub fn encode_mp3(snapshot: &Mp3Snapshot) -> Vec<u8> {
     }
     out
 }
+
+/// 🧵️ One bounded advance of the native MP3 serializer.
+#[derive(Debug, PartialEq, Eq)]
+pub enum Mp3EncodeAdvance {
+    Progress,
+    Chunk(Vec<u8>),
+    Complete,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Mp3EncodePhase {
+    MeasureId3v2,
+    Id3v2Header,
+    Id3v2FrameHeader,
+    Id3v2FrameData,
+    AudioFrameHeader,
+    AudioFrameData,
+    Id3v1,
+    Complete,
+}
+
+/// 🎚️ Incrementally serializes retained MP3 structure without materializing the encoded file.
+pub struct Mp3EncodeCursor {
+    phase: Mp3EncodePhase,
+    index: usize,
+    offset: usize,
+    id3v2_body_bytes: usize,
+    emitted_bytes: u64,
+}
+
+impl Mp3EncodeCursor {
+    pub fn new(snapshot: &Mp3Snapshot) -> Self {
+        let phase = if snapshot.id3v2.is_some() { Mp3EncodePhase::MeasureId3v2 } else if snapshot.frames.is_empty() { Mp3EncodePhase::Id3v1 } else { Mp3EncodePhase::AudioFrameHeader };
+        Self { phase, index: 0, offset: 0, id3v2_body_bytes: 0, emitted_bytes: 0 }
+    }
+
+    pub fn emitted_bytes(&self) -> u64 {
+        self.emitted_bytes
+    }
+
+    pub fn advance(&mut self, snapshot: &Mp3Snapshot, maximum_bytes: usize) -> Result<Mp3EncodeAdvance, String> {
+        if maximum_bytes == 0 {
+            return Err("mp3.encode.zero-byte-grant".into());
+        }
+        loop {
+            match self.phase {
+                Mp3EncodePhase::MeasureId3v2 => {
+                    let tag = snapshot.id3v2.as_ref().ok_or("mp3.encode.id3v2-owner-missing")?;
+                    if let Some(frame) = tag.frames.get(self.index) {
+                        u32::try_from(frame.data.len()).map_err(|_| "mp3.encode.id3v2-frame-too-large")?;
+                        self.id3v2_body_bytes = self.id3v2_body_bytes.checked_add(10).and_then(|bytes| bytes.checked_add(frame.data.len())).ok_or("mp3.encode.id3v2-size-overflow")?;
+                        self.index += 1;
+                        return Ok(Mp3EncodeAdvance::Progress);
+                    }
+                    if self.id3v2_body_bytes >= 1 << 28 {
+                        return Err("mp3.encode.id3v2-body-too-large".into());
+                    }
+                    self.phase = Mp3EncodePhase::Id3v2Header;
+                    self.index = 0;
+                    self.offset = 0;
+                    return Ok(Mp3EncodeAdvance::Progress);
+                }
+                Mp3EncodePhase::Id3v2Header => {
+                    let tag = snapshot.id3v2.as_ref().ok_or("mp3.encode.id3v2-owner-missing")?;
+                    let size = encode_syncsafe(self.id3v2_body_bytes as u32);
+                    let bytes = [b'I', b'D', b'3', tag.major_version, tag.minor_version, tag.flags, size[0], size[1], size[2], size[3]];
+                    let chunk = self.take_slice(&bytes, maximum_bytes);
+                    if self.offset == bytes.len() {
+                        self.phase = if tag.frames.is_empty() { self.phase_after_id3v2(snapshot) } else { Mp3EncodePhase::Id3v2FrameHeader };
+                        self.offset = 0;
+                    }
+                    return Ok(Mp3EncodeAdvance::Chunk(chunk));
+                }
+                Mp3EncodePhase::Id3v2FrameHeader => {
+                    let tag = snapshot.id3v2.as_ref().ok_or("mp3.encode.id3v2-owner-missing")?;
+                    let frame = tag.frames.get(self.index).ok_or("mp3.encode.id3v2-frame-missing")?;
+                    let mut bytes = [0u8; 10];
+                    let id = frame.id.as_bytes();
+                    let id_bytes = id.len().min(4);
+                    bytes[..id_bytes].copy_from_slice(&id[..id_bytes]);
+                    let size = u32::try_from(frame.data.len()).map_err(|_| "mp3.encode.id3v2-frame-too-large")?;
+                    let encoded_size = if tag.major_version >= 4 { encode_syncsafe(size) } else { size.to_be_bytes() };
+                    bytes[4..8].copy_from_slice(&encoded_size);
+                    bytes[8..10].copy_from_slice(&frame.flags.to_be_bytes());
+                    let chunk = self.take_slice(&bytes, maximum_bytes);
+                    if self.offset == bytes.len() {
+                        self.phase = if frame.data.is_empty() { self.advance_id3v2_frame(snapshot) } else { Mp3EncodePhase::Id3v2FrameData };
+                        self.offset = 0;
+                    }
+                    return Ok(Mp3EncodeAdvance::Chunk(chunk));
+                }
+                Mp3EncodePhase::Id3v2FrameData => {
+                    let frame = snapshot.id3v2.as_ref().and_then(|tag| tag.frames.get(self.index)).ok_or("mp3.encode.id3v2-frame-missing")?;
+                    let chunk = self.take_slice(&frame.data, maximum_bytes);
+                    if self.offset == frame.data.len() {
+                        self.phase = self.advance_id3v2_frame(snapshot);
+                        self.offset = 0;
+                    }
+                    return Ok(Mp3EncodeAdvance::Chunk(chunk));
+                }
+                Mp3EncodePhase::AudioFrameHeader => {
+                    let frame = snapshot.frames.get(self.index).ok_or("mp3.encode.audio-frame-missing")?;
+                    let bytes = encode_frame_header(&frame.header);
+                    let chunk = self.take_slice(&bytes, maximum_bytes);
+                    if self.offset == bytes.len() {
+                        self.phase = if frame.payload.is_empty() { self.advance_audio_frame(snapshot) } else { Mp3EncodePhase::AudioFrameData };
+                        self.offset = 0;
+                    }
+                    return Ok(Mp3EncodeAdvance::Chunk(chunk));
+                }
+                Mp3EncodePhase::AudioFrameData => {
+                    let frame = snapshot.frames.get(self.index).ok_or("mp3.encode.audio-frame-missing")?;
+                    let chunk = self.take_slice(&frame.payload, maximum_bytes);
+                    if self.offset == frame.payload.len() {
+                        self.phase = self.advance_audio_frame(snapshot);
+                        self.offset = 0;
+                    }
+                    return Ok(Mp3EncodeAdvance::Chunk(chunk));
+                }
+                Mp3EncodePhase::Id3v1 => {
+                    let Some(tag) = snapshot.id3v1.as_ref() else {
+                        self.phase = Mp3EncodePhase::Complete;
+                        continue;
+                    };
+                    let chunk = self.take_slice(&tag.raw, maximum_bytes);
+                    if self.offset == tag.raw.len() {
+                        self.phase = Mp3EncodePhase::Complete;
+                        self.offset = 0;
+                    }
+                    if chunk.is_empty() {
+                        continue;
+                    }
+                    return Ok(Mp3EncodeAdvance::Chunk(chunk));
+                }
+                Mp3EncodePhase::Complete => return Ok(Mp3EncodeAdvance::Complete),
+            }
+        }
+    }
+
+    fn take_slice(&mut self, bytes: &[u8], maximum_bytes: usize) -> Vec<u8> {
+        let end = self.offset.saturating_add(maximum_bytes).min(bytes.len());
+        let chunk = bytes[self.offset..end].to_vec();
+        self.offset = end;
+        self.emitted_bytes += chunk.len() as u64;
+        chunk
+    }
+
+    fn phase_after_id3v2(&mut self, snapshot: &Mp3Snapshot) -> Mp3EncodePhase {
+        self.index = 0;
+        if snapshot.frames.is_empty() { Mp3EncodePhase::Id3v1 } else { Mp3EncodePhase::AudioFrameHeader }
+    }
+
+    fn advance_id3v2_frame(&mut self, snapshot: &Mp3Snapshot) -> Mp3EncodePhase {
+        self.index += 1;
+        let frame_count = snapshot.id3v2.as_ref().map_or(0, |tag| tag.frames.len());
+        if self.index < frame_count { Mp3EncodePhase::Id3v2FrameHeader } else { self.phase_after_id3v2(snapshot) }
+    }
+
+    fn advance_audio_frame(&mut self, snapshot: &Mp3Snapshot) -> Mp3EncodePhase {
+        self.index += 1;
+        if self.index < snapshot.frames.len() { Mp3EncodePhase::AudioFrameHeader } else { self.index = 0; Mp3EncodePhase::Id3v1 }
+    }
+}
+
+pub mod playback {
+    use super::{Mp3EncodeAdvance, Mp3EncodeCursor, Mp3Snapshot, STDIO_MP3_DOCUMENT_SCHEMA};
+    use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
+    use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, Operation, RetainedJobPayload, StepContext, StepOutcome};
+    use semio_framework_plugin::app::{ArtifactMediaExportCompletion, ArtifactMediaExportCredit, ArtifactMediaExportResult, ArtifactOutputChunks, ArtifactSnapshotCloseLease};
+    use semio_framework_plugin::{ArtifactApp, ArtifactMediaExportJobRequest, ArtifactOwnedToolJobFactory, ArtifactReservedJob, ArtifactReservedToolJob, ArtifactSnapshotDisposer, ArtifactToolPublicationContract, ArtifactToolPublicationLane, Fault, MediaClass, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, PluginCloseStep, PortMultiplicity};
+    use std::marker::PhantomData;
+    use std::sync::Arc;
+
+    pub const PORT_ID: &str = "playback:out";
+    pub const TOOL_ID: &str = "export-media:playback:out";
+    pub const PAYLOAD_SCHEMA: &str = "stdio.mp3.playback-export.v1";
+    pub const MEDIA_SCHEMA: &str = "stdio.mp3";
+    pub const MIME_TYPE: &str = "audio/mpeg";
+    pub const MEDIA_TYPE: MediaType = MediaType { class: MediaClass::Presentation, form: MediaForm::Sequence };
+    pub const CONTRACT: ToolExecutionContract = ToolExecutionContract::resumable(4_096, 4_096, 1, ArtifactOutputChunks::MAXIMUM_TOTAL_BYTES, 2_000, 64, 1);
+
+    pub fn app_io() -> semio_framework_plugin::AppIo {
+        semio_framework_plugin::AppIo {
+            artifact_schema: STDIO_MP3_DOCUMENT_SCHEMA.into(),
+            artifact_media_type: MEDIA_TYPE,
+            ports: vec![MediaPortSpec {
+                id: PORT_ID.into(),
+                label: "Playback".into(),
+                direction: MediaPortDirection::Out,
+                media_type: MEDIA_TYPE,
+                kind_id: Some("s.stdio.mp3".into()),
+                required: false,
+                multiplicity: PortMultiplicity::Many,
+            }],
+            export_formats: Vec::new(),
+            import_formats: Vec::new(),
+            artifact: semio_framework_plugin::ArtifactPresentation { id: "stdio.mp3".into(), name: "MP3 Audio".into(), dimension: "time".into(), component_kind: "audio".into() },
+        }
+    }
+
+    pub struct Mp3PlaybackExportJob {
+        operation: Operation,
+        snapshot: Option<Arc<Mp3Snapshot>>,
+        snapshot_close: Option<ArtifactSnapshotCloseLease<Mp3Snapshot>>,
+        cursor: Option<Mp3EncodeCursor>,
+        page: Vec<u8>,
+        chunks: Option<ArtifactOutputChunks>,
+        credit: Option<ArtifactMediaExportCredit>,
+        completion: Option<ArtifactMediaExportCompletion>,
+        progress: u64,
+        completed: bool,
+        closing: bool,
+    }
+
+    impl Mp3PlaybackExportJob {
+        pub fn new<A>(request: ArtifactMediaExportJobRequest<A>) -> Self
+        where
+            A: ArtifactApp<Snapshot = Mp3Snapshot>,
+        {
+            let cursor = Mp3EncodeCursor::new(&request.snapshot);
+            Self {
+                operation: request.operation,
+                snapshot: Some(request.snapshot),
+                snapshot_close: Some(request.snapshot_close),
+                cursor: Some(cursor),
+                page: Vec::with_capacity(ArtifactOutputChunks::CHUNK_BYTES),
+                chunks: Some(request.output_chunks),
+                credit: Some(request.output_credit),
+                completion: Some(request.completion),
+                progress: 0,
+                completed: false,
+                closing: false,
+            }
+        }
+
+        fn fault(context: &mut StepContext<'_>, message: &str) -> StepOutcome {
+            let bytes = message.as_bytes();
+            let bounded = &bytes[..bytes.len().min(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)];
+            let detail = context.payload_from_bytes(JobPayloadStream::Fault, bounded).unwrap_or_else(|rejected| {
+                drop(rejected.into_source());
+                RetainedJobPayload::empty(JobPayloadStream::Fault)
+            });
+            StepOutcome::Fault(JobFault { detail })
+        }
+
+        fn advance(&mut self) -> Result<bool, Fault> {
+            let snapshot = self.snapshot.as_deref().ok_or_else(|| Fault::from("mp3.export.snapshot-missing"))?;
+            if self.page.len() == ArtifactOutputChunks::CHUNK_BYTES {
+                let page = std::mem::replace(&mut self.page, Vec::with_capacity(ArtifactOutputChunks::CHUNK_BYTES));
+                self.credit.as_ref().ok_or_else(|| Fault::from("mp3.export.credit-missing"))?.credit(page.len())?;
+                self.chunks.as_ref().ok_or_else(|| Fault::from("mp3.export.chunks-missing"))?.push(page)?;
+                self.progress = self.progress.checked_add(1).ok_or_else(|| Fault::from("mp3.export.progress-overflow"))?;
+                return Ok(false);
+            }
+            let maximum_bytes = ArtifactOutputChunks::CHUNK_BYTES - self.page.len();
+            let advance = self.cursor.as_mut().ok_or_else(|| Fault::from("mp3.export.cursor-missing"))?.advance(snapshot, maximum_bytes).map_err(Fault::from)?;
+            self.progress = self.progress.checked_add(1).ok_or_else(|| Fault::from("mp3.export.progress-overflow"))?;
+            match advance {
+                Mp3EncodeAdvance::Progress => Ok(false),
+                Mp3EncodeAdvance::Chunk(chunk) => {
+                    self.page.extend_from_slice(&chunk);
+                    Ok(false)
+                }
+                Mp3EncodeAdvance::Complete => {
+                    if !self.page.is_empty() {
+                        let page = std::mem::replace(&mut self.page, Vec::with_capacity(ArtifactOutputChunks::CHUNK_BYTES));
+                        self.credit.as_ref().ok_or_else(|| Fault::from("mp3.export.credit-missing"))?.credit(page.len())?;
+                        self.chunks.as_ref().ok_or_else(|| Fault::from("mp3.export.chunks-missing"))?.push(page)?;
+                        return Ok(false);
+                    }
+                    let chunks = self.chunks.take().ok_or_else(|| Fault::from("mp3.export.chunks-missing"))?;
+                    chunks.seal()?;
+                    self.credit.as_ref().ok_or_else(|| Fault::from("mp3.export.credit-missing"))?.credit(MEDIA_SCHEMA.len())?;
+                    let result = ArtifactMediaExportResult::structured(MEDIA_TYPE, MEDIA_SCHEMA, MIME_TYPE, chunks)?;
+                    self.completion.as_ref().ok_or_else(|| Fault::from("mp3.export.completion-missing"))?.complete(Ok(result))?;
+                    self.completed = true;
+                    Ok(true)
+                }
+            }
+        }
+    }
+
+    impl InteractiveJob for Mp3PlaybackExportJob {
+        fn step(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
+            if self.closing || context.is_cancelled() {
+                return StepOutcome::Cancelled;
+            }
+            if context.should_yield() {
+                return StepOutcome::Yield;
+            }
+            if context.operation() != self.operation.operation || context.generation() != self.operation.generation || self.completed {
+                return Self::fault(context, "mp3.export.operation-authority-invalid");
+            }
+            context.set_stage("encode-mp3");
+            context.consume_fuel(1);
+            match self.advance() {
+                Err(error) => Self::fault(context, &format!("{}: {}", error.code.0, error.message)),
+                Ok(true) => StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output: RetainedJobPayload::empty(JobPayloadStream::CommitOutput) }),
+                Ok(false) => StepOutcome::CheckpointReady(Checkpoint { state: RetainedJobPayload::empty(JobPayloadStream::CheckpointState), applied_progress: self.progress }),
+            }
+        }
+
+        fn begin_close(&mut self) {
+            self.closing = true;
+        }
+
+        fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
+            match ArtifactReservedJob::close_step(self, maximum_items, maximum_bytes) {
+                Ok(PluginCloseStep::Complete) => InteractiveJobCloseStep::Complete,
+                Ok(PluginCloseStep::Pending { released_items, released_bytes }) => InteractiveJobCloseStep::Pending { released_items, released_bytes },
+                _ => InteractiveJobCloseStep::Blocked,
+            }
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            ArtifactReservedJob::terminal_is_empty(self)
+        }
+    }
+
+    impl ArtifactReservedJob for Mp3PlaybackExportJob {
+        fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+            self.begin_close();
+            if maximum_items == 0 {
+                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            if self.cursor.take().is_some() {
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            if self.page.capacity() != 0 {
+                if maximum_bytes < self.page.capacity() {
+                    return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                }
+                let released_bytes = self.page.capacity();
+                self.page = Vec::new();
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes });
+            }
+            if self.chunks.take().is_some() {
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            if self.completion.take().is_some() {
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            if self.credit.take().is_some() {
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            if let Some(snapshot) = self.snapshot.as_ref() {
+                if !self.snapshot_close.as_ref().is_some_and(|lease| lease.can_release(snapshot)) {
+                    return Err(Fault::from("mp3.export.snapshot-unwitnessed"));
+                }
+                self.snapshot = None;
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            self.snapshot_close = None;
+            Ok(PluginCloseStep::Complete)
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.cursor.is_none() && self.page.capacity() == 0 && self.chunks.is_none() && self.completion.is_none() && self.credit.is_none() && self.snapshot.is_none() && self.snapshot_close.is_none()
+        }
+    }
+
+    pub struct Mp3MediaExportJobFactory<A: ArtifactApp<Snapshot = Mp3Snapshot>> {
+        keys: [ToolFactoryKey; 1],
+        owner: PhantomData<fn() -> A>,
+    }
+
+    impl<A: ArtifactApp<Snapshot = Mp3Snapshot>> Mp3MediaExportJobFactory<A> {
+        pub fn new(controller: &str) -> Self {
+            Self { keys: [ToolFactoryKey::new(controller, TOOL_ID)], owner: PhantomData }
+        }
+    }
+
+    impl<A: ArtifactApp<Snapshot = Mp3Snapshot>> ToolJobFactory for Mp3MediaExportJobFactory<A> {
+        type Payload = ArtifactReservedToolJob;
+        type Job = ArtifactReservedToolJob;
+
+        fn keys(&self) -> &[ToolFactoryKey] {
+            &self.keys
+        }
+
+        fn payload_schema_id(&self) -> &str {
+            PAYLOAD_SCHEMA
+        }
+
+        fn classification(&self) -> InteractiveJobClassification {
+            InteractiveJobClassification::Migrated
+        }
+
+        fn execution_contract(&self) -> ToolExecutionContract {
+            CONTRACT
+        }
+
+        fn create_job(&mut self, _operation: Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+            Ok(payload)
+        }
+    }
+
+    impl<A: ArtifactApp<Snapshot = Mp3Snapshot>> ArtifactOwnedToolJobFactory for Mp3MediaExportJobFactory<A> {
+        type Owner = A;
+        const TOOL_IDS: &'static [&'static str] = &[TOOL_ID];
+        const DOCUMENT_SCHEMA: &'static str = STDIO_MP3_DOCUMENT_SCHEMA;
+        const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: TOOL_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] }];
+    }
+
+    #[derive(Default)]
+    pub struct Mp3ExportSnapshotDisposer {
+        retirement: Option<Mp3SnapshotRetirement>,
+    }
+
+    impl ArtifactSnapshotDisposer<Mp3Snapshot> for Mp3ExportSnapshotDisposer {
+        fn close_step(&mut self, snapshot: &mut Option<Arc<Mp3Snapshot>>, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+            if maximum_items == 0 {
+                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            if let Some(retirement) = self.retirement.as_mut() {
+                let step = retirement.close_step(maximum_bytes);
+                if retirement.terminal_is_empty() {
+                    self.retirement = None;
+                }
+                return Ok(step);
+            }
+            let Some(owner) = snapshot.take() else {
+                return Ok(PluginCloseStep::Complete);
+            };
+            if let Some(value) = Arc::into_inner(owner) {
+                self.retirement = Some(Mp3SnapshotRetirement::new(value));
+                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+        }
+
+        fn terminal_is_empty(&self, snapshot: &Option<Arc<Mp3Snapshot>>) -> bool {
+            snapshot.is_none() && self.retirement.is_none()
+        }
+    }
+
+    struct Mp3SnapshotRetirement {
+        schema: Option<Vec<u8>>,
+        id3_frames: Vec<super::Id3Frame>,
+        audio_frames: Vec<super::Mp3Frame>,
+        id3v1: Option<Vec<u8>>,
+        pending: Option<Vec<u8>>,
+        deferred: Option<Vec<u8>>,
+        pending_debt: usize,
+        outer_debt: usize,
+    }
+
+    impl Mp3SnapshotRetirement {
+        fn new(snapshot: Mp3Snapshot) -> Self {
+            let id3_frames = snapshot.id3v2.map_or_else(Vec::new, |tag| tag.frames);
+            let audio_frames = snapshot.frames;
+            let outer_debt = id3_frames.capacity().saturating_mul(std::mem::size_of::<super::Id3Frame>()).saturating_add(audio_frames.capacity().saturating_mul(std::mem::size_of::<super::Mp3Frame>()));
+            Self {
+                schema: Some(snapshot.schema.into_bytes()),
+                id3_frames,
+                audio_frames,
+                id3v1: snapshot.id3v1.map(|tag| tag.raw),
+                pending: None,
+                deferred: None,
+                pending_debt: 0,
+                outer_debt,
+            }
+        }
+
+        fn close_step(&mut self, maximum_bytes: usize) -> PluginCloseStep {
+            if self.pending.is_some() {
+                let released_bytes = maximum_bytes.min(self.pending_debt);
+                self.pending_debt -= released_bytes;
+                if self.pending_debt == 0 {
+                    self.pending = None;
+                    return PluginCloseStep::Pending { released_items: 1, released_bytes };
+                }
+                return PluginCloseStep::Pending { released_items: 0, released_bytes };
+            }
+            if let Some(bytes) = self.deferred.take() {
+                self.set_pending(bytes);
+                return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            if let Some(bytes) = self.schema.take() {
+                self.set_pending(bytes);
+                return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            if let Some(frame) = self.id3_frames.pop() {
+                self.deferred = Some(frame.data);
+                self.set_pending(frame.id.into_bytes());
+                return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            if let Some(frame) = self.audio_frames.pop() {
+                self.set_pending(frame.payload);
+                return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            if let Some(bytes) = self.id3v1.take() {
+                self.set_pending(bytes);
+                return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            if self.outer_debt != 0 {
+                let released_bytes = maximum_bytes.min(self.outer_debt);
+                self.outer_debt -= released_bytes;
+                if self.outer_debt == 0 {
+                    self.id3_frames = Vec::new();
+                    self.audio_frames = Vec::new();
+                    return PluginCloseStep::Pending { released_items: 1, released_bytes };
+                }
+                return PluginCloseStep::Pending { released_items: 0, released_bytes };
+            }
+            PluginCloseStep::Complete
+        }
+
+        fn set_pending(&mut self, bytes: Vec<u8>) {
+            self.pending_debt = bytes.capacity();
+            self.pending = Some(bytes);
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.schema.is_none() && self.id3_frames.capacity() == 0 && self.audio_frames.capacity() == 0 && self.id3v1.is_none() && self.pending.is_none() && self.deferred.is_none() && self.pending_debt == 0 && self.outer_debt == 0
+        }
+    }
+}
 //#endregion 🔖️Codec
 
 #[cfg(test)]

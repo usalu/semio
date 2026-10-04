@@ -43,7 +43,7 @@ async fn mutation_diff_law_and_inverse_law_hold_for_every_variant() {
         assert_eq!(returned, diff, "apply_mp4_mutation must return the SAME diff as Mutation::diff for {m:?}");
         assert_eq!(snap, expected, "mutation_diff_law failed for {m:?}");
 
-        let inv = <Mp4Mutation as Mutation<Mp4Snapshot>>::inverse(&m, &base);
+        let inv = <Mp4Mutation as Mutation<Mp4Snapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
         assert_eq!(inv.len(), 1);
         let mut round = snap.clone();
         apply_mp4_mutation(&mut round, &inv[0]);
@@ -61,7 +61,7 @@ async fn remove_track_then_insert_track_round_trips() {
     apply_mp4_mutation(&mut snap, &m);
     assert_eq!(snap, diff.diff().apply(&base).unwrap());
     assert_eq!(snap.tracks.len(), 1);
-    let inv = <Mp4Mutation as Mutation<Mp4Snapshot>>::inverse(&m, &base);
+    let inv = <Mp4Mutation as Mutation<Mp4Snapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
     let mut round = snap.clone();
     apply_mp4_mutation(&mut round, &inv[0]);
     assert_eq!(round, base);
@@ -76,7 +76,7 @@ async fn remove_sample_then_insert_sample_round_trips() {
     let mut snap = base.clone();
     apply_mp4_mutation(&mut snap, &m);
     assert_eq!(snap.tracks[0].samples.len(), 1);
-    let inv = <Mp4Mutation as Mutation<Mp4Snapshot>>::inverse(&m, &base);
+    let inv = <Mp4Mutation as Mutation<Mp4Snapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
     let mut round = snap.clone();
     apply_mp4_mutation(&mut round, &inv[0]);
     assert_eq!(round, base);
@@ -90,7 +90,7 @@ async fn set_snapshot_still_works_as_a_full_replace() {
     let mutation = Mp4Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: next.clone() });
     let diff = <Mp4Mutation as Mutation<Mp4Snapshot>>::diff(&mutation, &base);
     assert_eq!(diff.diff().apply(&base).unwrap(), next);
-    let inv = <Mp4Mutation as Mutation<Mp4Snapshot>>::inverse(&mutation, &base);
+    let inv = <Mp4Mutation as Mutation<Mp4Snapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     let mut round = next.clone();
     apply_mp4_mutation(&mut round, &inv[0]);
     assert_eq!(round, base);
@@ -100,7 +100,7 @@ async fn set_snapshot_still_works_as_a_full_replace() {
 #[semio_framework_async_macros::async_test]
 async fn op_text_binary_roundtrip_law() {
     let base = base_snapshot().await;
-    let patch = semio_s_artifact_stdio_contract::editing::prepare_snapshot_patch(&base, &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent::SetValue { path: "/movie/title".into(), value: dsl::DslValue::String("Edited".into()) }).unwrap();
+    let patch = semio_s_artifact_stdio_contract::editing::prepare_snapshot_patch(&base, &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent::SetValue { path: "/movie/title".into(), value: semio_framework_value::DslValue::String("Edited".into()) }).unwrap();
     for m in [
         Mp4Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
         Mp4Mutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }),
@@ -122,10 +122,10 @@ async fn op_text_binary_roundtrip_law() {
 #[semio_framework_async_macros::async_test]
 async fn text_descriptor_recognizes_patch_snapshot_printer_output() {
     let base = base_snapshot().await;
-    let patch = semio_s_artifact_stdio_contract::editing::prepare_snapshot_patch(&base, &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent::SetValue { path: "/movie/title".into(), value: dsl::DslValue::String("Edited".into()) }).unwrap();
+    let patch = semio_s_artifact_stdio_contract::editing::prepare_snapshot_patch(&base, &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent::SetValue { path: "/movie/title".into(), value: semio_framework_value::DslValue::String("Edited".into()) }).unwrap();
     let mutation = Mp4Mutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch });
-    let grammar = dsl::parse_grammar(crate::standards::isobmff::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse MP4 mutation grammar");
-    let recognizer = dsl::Recognizer::compile(&grammar);
+    let grammar = semio_framework_dsl::parse_grammar(crate::standards::isobmff::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse MP4 mutation grammar");
+    let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
     let printed = mutation.print_op();
     assert!(recognizer.recognize(&printed).unwrap_or(false), "MP4 mutation grammar did not recognize {printed:?}");
 }
@@ -138,7 +138,7 @@ async fn kinds_const_matches_enum_variants_in_declaration_order() {
     let base = base_snapshot().await;
     let one_per_variant = vec![
         Mp4Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
-        Mp4Mutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::prepare_snapshot_patch(&base, &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent::SetValue { path: "/movie/title".into(), value: dsl::DslValue::String("Edited".into()) }).unwrap() }),
+        Mp4Mutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::prepare_snapshot_patch(&base, &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent::SetValue { path: "/movie/title".into(), value: semio_framework_value::DslValue::String("Edited".into()) }).unwrap() }),
         Mp4Mutation::SetFtyp(set_ftyp::SetFtyp { ftyp: base.ftyp.clone() }),
         Mp4Mutation::InsertTrack(insert_track::InsertTrack { index: 1, track: base.tracks[0].clone() }),
         Mp4Mutation::RemoveTrack(remove_track::RemoveTrack { index: 0 }),
@@ -167,7 +167,7 @@ async fn exact_fixture_no_mutation_inverse_and_set_snapshot_binary_codec_preserv
     assert_eq!(crate::standards::isobmff::subsets::any::io::encode_mp4(&unchanged), bytes);
 
     let mutation = Mp4Mutation::SetSampleSync(set_sample_sync::SetSampleSync { track_index: 0, index: 0, sync: !base.tracks[0].samples[0].sync });
-    let inverse = mutation.inverse(&base);
+    let inverse = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     let mut round_trip = base.clone();
     apply_mp4_mutation(&mut round_trip, &mutation);
     apply_mp4_mutation(&mut round_trip, &inverse[0]);

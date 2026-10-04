@@ -75,6 +75,8 @@ pub mod set_normal;
 pub mod set_object;
 #[path = "🧵set-smoothing-groups/🦀️.rs"]
 pub mod set_smoothing_groups;
+#[path = "🩹️patch-snapshot/🦀️.rs"]
+pub mod patch_snapshot;
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "🧭set-texcoord/🦀️.rs"]
@@ -90,11 +92,12 @@ pub mod set_vertex;
 /// 📐️ Typed content mutation for `stdio.obj`. `NoMutation` was dropped: `#[derive(dsl::Mutations)]`
 /// requires every variant to wrap exactly one leaf payload and a unit variant wraps none, and `no`
 /// is not an approved semantic verb.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
 #[mutations(snapshot = ObjSnapshot, diff = ObjDiff, schema = "ObjMutation")]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum ObjMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
+    PatchSnapshot(patch_snapshot::PatchSnapshot),
 
     /// ➕️ Inserts a whole `v` row at `index` (clamped to the end on apply).
     InsertVertex(insert_vertex::InsertVertex),
@@ -148,7 +151,7 @@ pub enum ObjMutation {
 /// mutate/inverse test case measures itself against. `kinds_cover_every_variant` below is what keeps
 /// this list honest against the enum it names, since the framework never parses Rust.
 pub const KINDS: &[&str] = &[
-    "set-snapshot",
+    "set-snapshot", "patch-snapshot",
     "insert-vertex",
     "remove-vertex",
     "set-vertex",
@@ -233,6 +236,7 @@ fn restore_object_at(at: usize, base: &ObjSnapshot) -> Vec<ObjMutation> {
 pub(crate) fn agg_diff(this: &ObjMutation, base: &ObjSnapshot) -> protocol::MutationOutcome<ObjDiff> {
     protocol::MutationOutcome::new(match this {
         ObjMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff_set_snapshot(base, snapshot),
+        ObjMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<ObjSnapshot, ObjMutation>>::diff(patch, base),
 
         ObjMutation::InsertVertex(insert_vertex::InsertVertex { index, vertex }) => diff_insert_vertex(*index, vertex.clone()),
         ObjMutation::RemoveVertex(remove_vertex::RemoveVertex { index }) => diff_remove_vertex(*index),
@@ -281,9 +285,11 @@ pub(crate) fn agg_diff(this: &ObjMutation, base: &ObjSnapshot) -> protocol::Muta
 }
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &ObjMutation, base: &ObjSnapshot) -> Vec<ObjMutation> {
+pub(crate) fn agg_inverse(this: &ObjMutation, base: &ObjSnapshot) -> Result<Vec<ObjMutation>, semio_framework_value::ValueError> {
+    Ok({
     match this {
         ObjMutation::SetSnapshot(_) => vec![ObjMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
+        ObjMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<ObjSnapshot, ObjMutation>>::inverse(patch, base)?),
 
         ObjMutation::InsertVertex(insert_vertex::InsertVertex { index, .. }) => vec![ObjMutation::RemoveVertex(remove_vertex::RemoveVertex { index: (*index).min(base.vertices.len()) })],
         ObjMutation::RemoveVertex(remove_vertex::RemoveVertex { index }) => match base.vertices.get(*index) {
@@ -347,6 +353,8 @@ pub(crate) fn agg_inverse(this: &ObjMutation, base: &ObjSnapshot) -> Vec<ObjMuta
         ObjMutation::SetSmoothingGroups(_) => vec![ObjMutation::SetSmoothingGroups(set_smoothing_groups::SetSmoothingGroups { smoothing_groups: base.smoothing_groups.clone() })],
         ObjMutation::SetUnknownStatements(_) => vec![ObjMutation::SetUnknownStatements(set_unknown_statements::SetUnknownStatements { unknown_statements: base.unknown_statements.clone() })],
     }
+
+    })
 }
 //#endregion 🔖️MutationTrait
 
@@ -355,22 +363,22 @@ pub(crate) fn agg_inverse(this: &ObjMutation, base: &ObjSnapshot) -> Vec<ObjMuta
 /// every `DslOps`-derived enum's `OpText` impl uses (`GifMutation`, `FlowMutationDsl`,
 /// `SpaceMutation`; see `f6-recon-report.md` §2).
 impl OpText for ObjMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = semio_framework_dsl_record::parse(line, &(spec_fn.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?;
+                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown operation line '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
     }
     fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &(spec_fn.ordinary)(), dsl::JoinMode::Inline)
+        semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline)
     }
 }
 
@@ -412,6 +420,7 @@ pub(crate) fn base_snapshot() -> ObjSnapshot {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<ObjMutation> {
     vec![
+        ObjMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         ObjMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: sweep_b() }),
         ObjMutation::InsertVertex(insert_vertex::InsertVertex { index: 1, vertex: ObjVertex { x: 9.0, y: 9.0, z: 9.0, w: Some(1.0) } }),
         ObjMutation::RemoveVertex(remove_vertex::RemoveVertex { index: 0 }),

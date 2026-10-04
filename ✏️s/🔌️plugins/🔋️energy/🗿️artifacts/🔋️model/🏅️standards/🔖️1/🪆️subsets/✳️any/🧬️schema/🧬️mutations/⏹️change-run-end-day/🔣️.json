@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏹️change-run-end-day",
+  "semanticKind": "change-run-end-day",
+  "displayName": "Change Run End Day",
+  "emoji": "⏹️",
+  "aggregateVariant": "ChangeRunEndDay",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "change-run-end-day",
+  "binaryTag": 298,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

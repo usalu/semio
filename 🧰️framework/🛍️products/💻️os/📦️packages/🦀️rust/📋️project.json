@@ -9,6 +9,22 @@
     "family:os-kernel"
   ],
   "targets": {
+    "test-snapshot-sqlite-admission": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite-admission"
+      }
+    },
+    "test-artifact-kind": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-artifact-kind"
+      }
+    },
     "retained-clone-check": {
       "executor": "nx:run-commands",
       "cache": true,
@@ -392,6 +408,24 @@
       },
       "outputs": []
     },
+    "test-space-history-sqlite-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-space-history-sqlite-native",
+        "forwardAllArgs": true
+      }
+    },
+    "test-space-history-sqlite-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-space-history-sqlite-source",
+        "forwardAllArgs": true
+      }
+    },
     "test-native": {
       "executor": "nx:run-commands",
       "options": {
@@ -554,6 +588,82 @@
       "options": {
         "command": "bun ./📜️script.ts test-composed-pack-schema",
         "cwd": "{projectRoot}",
+        "forwardAllArgs": true
+      }
+    },
+    "test-assembly-lifetime-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/**/*"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-assembly-lifetime-native"
+      }
+    },
+    "test-dsl-architecture": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-dsl-architecture"
+      }
+    },
+    "test-command-ingress-consumer": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-command-ingress-consumer",
+        "forwardAllArgs": true
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/Cargo.toml",
+        "{workspaceRoot}/package.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🏛️ownership/📥️command-ingress/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🏛️ownership/🧪️testing/🧩️consumer/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🧪️tests/🔬️unit/🦀️.rs"
+      ]
+    },
+    "test-command-transport-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test-command-transport-source",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      }
+    },
+    "test-command-transport-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test-command-transport-native",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      }
+    },
+    "test-borrowed-key-index-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test-borrowed-key-index-native",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      }
+    },
+    "test-intrinsic-retirement-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test-intrinsic-retirement-native",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
         "forwardAllArgs": true
       }
     }

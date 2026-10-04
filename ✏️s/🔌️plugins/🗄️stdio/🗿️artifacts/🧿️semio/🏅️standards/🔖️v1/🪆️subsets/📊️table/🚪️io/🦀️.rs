@@ -55,14 +55,14 @@ pub mod derived_composition {
 
     impl SubsetValidator for SemioTableValidator {
         const DIALECT: Dialect = DIALECT;
-        async fn validate(payload: &IoPayload) -> Vec<dsl::Diagnostic> {
+        async fn validate(payload: &IoPayload) -> Vec<semio_framework_diagnostic::Diagnostic> {
             let decoded = match payload {
                 IoPayload::Binary(bytes) => <SemioTableSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
                 IoPayload::Text(text) => <SemioTableSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
             };
             match decoded {
                 Some(_) => Vec::new(),
-                None => vec![dsl::Diagnostic::error("stdio.semio_table.validate-decode-failed", dsl::TextSpan::at(1, 1), "SemioTableValidator: payload did not decode as a SemioTableSnapshot".to_string())],
+                None => vec![semio_framework_diagnostic::Diagnostic::error("stdio.semio_table.validate-decode-failed", semio_framework_diagnostic::TextSpan::at(1, 1), "SemioTableValidator: payload did not decode as a SemioTableSnapshot".to_string())],
             }
         }
     }

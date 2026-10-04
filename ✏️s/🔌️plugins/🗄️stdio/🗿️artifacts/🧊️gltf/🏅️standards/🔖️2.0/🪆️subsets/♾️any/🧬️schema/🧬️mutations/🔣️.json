@@ -29,6 +29,22 @@
       ],
       "properties": {
         "mutation": {
+          "const": "patchSnapshot"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/patch-snapshot/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
           "const": "bindDefaultScene"
         },
         "payload": {

@@ -23,8 +23,11 @@ pub struct EpwInference {
 }
 
 impl protocol::Inference<EpwSnapshot> for EpwInference {
-    fn infer(snapshot: &EpwSnapshot) -> Self {
+    fn infer(snapshot: &EpwSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { climate: compute_epw_climate_summary(snapshot) }
+    
+        })
     }
 }
 
@@ -32,7 +35,9 @@ impl protocol::Inference<EpwSnapshot> for EpwInference {
 /// `EpwSnapshot::default()`'s `records` ever stops being empty.
 impl Default for EpwInference {
     fn default() -> Self {
-        <Self as protocol::Inference<EpwSnapshot>>::infer(&EpwSnapshot::default())
+        let snapshot = &EpwSnapshot::default();
+
+        Self { climate: compute_epw_climate_summary(snapshot) }
     }
 }
 
@@ -48,17 +53,6 @@ impl protocol::InferenceSpec<EpwSnapshot> for EpwInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 💡️ No `InferredField`s here — `climate` is a single min/max/avg fold over `records`' own
-/// `dry_bulb_temp` column (already O(n) in total record count), with no honest per-entity
-/// incremental decomposition (a merkle dep-chain over this flat whole-snapshot fold costs more
-/// than the fold it would cache) — the default `infer_cached` passthrough is exact.
-impl semio_framework_plugin::ArtifactInferrer for crate::standards::energyplus::subsets::any::schema::EpwBuilder {
-    type Snapshot = EpwSnapshot;
-    type Inference = EpwInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.epw.inference`'s facet leaves into the OS-wide inference catalog — call

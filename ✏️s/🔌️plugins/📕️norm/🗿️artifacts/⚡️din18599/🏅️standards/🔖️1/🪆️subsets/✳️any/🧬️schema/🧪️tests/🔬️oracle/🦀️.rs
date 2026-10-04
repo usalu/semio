@@ -55,11 +55,7 @@ fn python_oracle_matches_evaluate_within_half_percent() {
         let rep = tmp.join(format!("{name}.oracle.report.json"));
         std::fs::write(&snap, encode_din18599_snapshot_json(&doc)).expect("snap");
         std::fs::write(&rep, serde_json::to_string_pretty(&report).expect("report")).expect("rep");
-        let climate = crate::din18599_climate(&doc);
-        let climate_path = tmp.join(format!("{name}.climate.json"));
-        let climate_json = serde_json::json!({ "thetaEC": climate.theta_e_c, "gHWM2": climate.g_h_w_m2 });
-        std::fs::write(&climate_path, climate_json.to_string()).expect("climate");
-        let out = Command::new("python3").arg(&oracle).arg(&snap).arg(&rep).arg(&climate_path).output().expect("run oracle");
+        let out = Command::new("python3").arg(&oracle).arg(&snap).arg(&rep).output().expect("run oracle");
         assert!(out.status.success(), "oracle {name}: {}\n{}", String::from_utf8_lossy(&out.stdout), String::from_utf8_lossy(&out.stderr));
         let body = String::from_utf8_lossy(&out.stdout);
         let v: serde_json::Value = serde_json::from_str(body.trim()).expect("oracle json");

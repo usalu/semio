@@ -5,10 +5,13 @@ use crate::standards::v1::subsets::graph::schema::mutations::delete_node;
 use crate::{EquationMutation, EquationSnapshot};
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::CreateNode, base: &EquationSnapshot) -> Vec<EquationMutation> {
-    if crate::equation_graph(base).nodes.iter().any(|node| node.id == payload.id) {
+pub fn inverse(payload: &super::CreateNode, base: &EquationSnapshot) -> Result<Vec<EquationMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
+    if base.graph.nodes.iter().any(|node| node.id == payload.id) {
         return Vec::new();
     }
     vec![EquationMutation::DeleteNode(delete_node::DeleteNode { id: payload.id.clone() })]
+
+    })())
 }
 //#endregion 🔖️Inverse

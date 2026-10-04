@@ -77,6 +77,7 @@ Feature: Apply every typed semio TEXT mutation to a real published article, agai
       | reorder-runs        | {"ReorderRuns":{"from":329,"to":356}} |
       | add-mark            | {"AddMark":{"run_index":330,"index":0,"mark":{"kind":"link","href":"https://www.zukunftbau.de/projekte/forschungsfoerderung"}}} |
       | remove-mark         | {"RemoveMark":{"run_index":60,"index":0}} |
+      | patch-snapshot | {"PatchSnapshot": {"patch": {"operation": "set", "path": "/runs/60/content", "value": "Baustellenblog Variowohnungen"}}} |
 
   @id-inverse
   @level-exhaustive
@@ -97,6 +98,7 @@ Feature: Apply every typed semio TEXT mutation to a real published article, agai
       | reorder-runs        | {"ReorderRuns":{"from":329,"to":356}} |
       | add-mark            | {"AddMark":{"run_index":330,"index":0,"mark":{"kind":"link","href":"https://www.zukunftbau.de/projekte/forschungsfoerderung"}}} |
       | remove-mark         | {"RemoveMark":{"run_index":60,"index":0}} |
+      | patch-snapshot | {"PatchSnapshot": {"patch": {"operation": "set", "path": "/runs/60/content", "value": "Baustellenblog Variowohnungen"}}} |
 
   @id-spec-vector
   @level-exhaustive

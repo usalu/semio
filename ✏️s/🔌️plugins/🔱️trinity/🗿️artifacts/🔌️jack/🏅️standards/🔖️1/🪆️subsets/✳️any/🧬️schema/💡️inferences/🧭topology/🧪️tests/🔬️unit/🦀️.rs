@@ -30,7 +30,7 @@ fn chain_snapshot() -> JackSnapshot {
 //#region 🧪️TopologyLaws
 #[semio_framework_async_macros::async_test]
 async fn chain_is_cycle_free_with_increasing_depth() {
-    let topology = compute_topology(&chain_snapshot());
+    let topology = compute_topology(&chain_snapshot()).expect("valid retained child inference fixture");
     assert!(topology.cycle_free);
     assert_eq!(topology.node_count, 3);
     assert_eq!(topology.topo_order, vec!["root".to_string(), "mid".to_string(), "leaf".to_string()]);
@@ -42,16 +42,16 @@ async fn chain_is_cycle_free_with_increasing_depth() {
 #[semio_framework_async_macros::async_test]
 async fn a_cycle_is_reported_as_not_cycle_free() {
     let snapshot = chain_snapshot();
-    let mut edges = snapshot.edges();
+    let mut edges = snapshot.edges().expect("valid retained child edges");
     edges.push(edge("e3", "leaf@out", "root@in"));
-    let snapshot = JackSnapshot::with_content(snapshot.schema.clone(), snapshot.name.clone(), snapshot.manifest_id.clone(), snapshot.manifest.clone(), snapshot.camera.clone(), JackWorkingScene { nodes: snapshot.nodes(), edges: edges }, snapshot.root_node_id.clone());
-    let topology = compute_topology(&snapshot);
+    let snapshot = JackSnapshot::with_content(snapshot.schema.clone(), snapshot.name.clone(), snapshot.manifest_id.clone(), snapshot.manifest.clone(), snapshot.camera.clone(), JackWorkingScene { nodes: snapshot.nodes().expect("valid retained child nodes"), edges: edges }, snapshot.root_node_id.clone());
+    let topology = compute_topology(&snapshot).expect("valid retained child inference fixture");
     assert!(!topology.cycle_free);
     assert!(topology.topo_order.is_empty(), "every node in the 3-cycle has nonzero indegree");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn empty_snapshot_yields_default_topology() {
-    assert_eq!(compute_topology(&JackSnapshot::default()), JackTopology::default());
+    assert_eq!(compute_topology(&JackSnapshot::default()).expect("valid retained child inference fixture"), JackTopology::default());
 }
 //#endregion 🧪️TopologyLaws

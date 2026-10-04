@@ -18,9 +18,12 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for InsertBlock {
     fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as Mutation<DxfSnapshot>>::Diff> {
         agg_diff(&DxfMutation::InsertBlock(self.clone()), base)
     }
-    fn inverse(&self, base: &DxfSnapshot) -> Vec<DxfMutation> {
-        agg_inverse(&DxfMutation::InsertBlock(self.clone()), base)
-    }
+    fn inverse(&self, base: &DxfSnapshot) -> Result<Vec<DxfMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&DxfMutation::InsertBlock(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert block", "Block einfügen")
     }

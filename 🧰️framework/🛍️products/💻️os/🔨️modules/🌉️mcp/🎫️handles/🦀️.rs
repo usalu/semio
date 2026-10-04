@@ -9,7 +9,7 @@
 
 use crate::errors::{GatewayError, GatewayErrorCode};
 use crate::schema::InvocationReport;
-use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
+use semio_framework_value::{DslValue, FromValue, ToValue, ValueError};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicU64, Ordering};

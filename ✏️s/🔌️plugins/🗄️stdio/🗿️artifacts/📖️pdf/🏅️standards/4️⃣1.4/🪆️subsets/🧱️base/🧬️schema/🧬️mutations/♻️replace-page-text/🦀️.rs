@@ -34,12 +34,15 @@ impl MutationKind<PdfSnapshot, PdfMutation> for ReplacePageText {
         MutationOutcome::new(PdfDiff { pages: Some(PdfPagesDiff { modified: vec![PdfPageModified { index: self.index, diff: PdfPageDiff { text: Some(self.text.clone()), ..Default::default() } }], ..Default::default() }) })
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         if !self.valid(base) {
             return Vec::new();
         }
         vec![PdfMutation::ReplacePageText(ReplacePageText { index: self.index, text: base.pages[self.index].text.clone() })]
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Replace page text", "Seitentext ersetzen")

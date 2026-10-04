@@ -1,18 +1,15 @@
-/** 🧪️ block2d io — cross-language parity for the `🔣️json` and `🔤️txt` leaves.
- *
- * `🧫️fixtures/*.json` is the single shared oracle: the Rust `🚪️io/🦀️.rs` test
- * `json_matches_the_typescript_parity_fixture` asserts the same files from `Block2dIntoJson`, so a
- * disagreement between the two implementations fails on both sides instead of drifting silently.
- */
-
+import Ajv from "ajv";
+import jsonSchema from "../../../🧬️schema/🔣️.json";
+const validate=new Ajv({strict:false}).compile(jsonSchema);
+/** 🧪️ Declared finite JSON inputs and actual Text examples retain complete canonical fields. */
 import { describe, expect, test } from "bun:test";
 import { block2dToJsonText } from "../../📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🟦️";
-import { block2dCanonicalJsonText } from "../../📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🟦️";
+import { block2dCanonicalJsonText,block2dFromJsonText } from "../../📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🟦️";
 import { block2dFromDslText } from "../../📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🟦️";
 
 const FIXTURES = [
-  { asset: "hexagonal-cut-concrete-forest-left", fixture: "⬅️hexagonal-cut-concrete-forest-left.json", example: "🌲️hexagonal-cut-concrete-forest-left" },
-  { asset: "hexagonal-cut-concrete-forest-right", fixture: "➡️hexagonal-cut-concrete-forest-right.json", example: "➡️hexagonal-cut-concrete-forest" },
+  { asset: "hexagonal-cut-concrete-forest-left", fixture: "⬅️hexagonal-cut-concrete-forest-left.json", example: "🌲️hexagonal-cut-concrete-forest-left", content: "🌲️hexagonal-cut-concrete-forest" },
+  { asset: "hexagonal-cut-concrete-forest-right", fixture: "➡️hexagonal-cut-concrete-forest-right.json", example: "➡️hexagonal-cut-concrete-forest-right", content: "➡️hexagonal-cut-concrete-forest" },
 ] as const;
 
 async function read(path: string): Promise<string> {
@@ -20,16 +17,20 @@ async function read(path: string): Promise<string> {
 }
 
 describe("block2d io", () => {
-  for (const { asset, example, fixture } of FIXTURES) {
-    test(`${asset}: the TypeScript json writer is a fixed point on the Rust bytes`, async () => {
+  for (const { asset, example, content, fixture } of FIXTURES) {
+    test(`${asset}: declared JSON input retains complete canonical fields and stable emitted words`, async () => {
       const expected = await read(`../../🧫️fixtures/${fixture}`);
-      expect(block2dCanonicalJsonText(expected)).toBe(expected);
+      expect(validate(JSON.parse(expected)),JSON.stringify(validate.errors)).toBe(true);
+      const canonical=block2dCanonicalJsonText(expected);
+      expect(validate(JSON.parse(canonical)),JSON.stringify(validate.errors)).toBe(true);
+      expect(block2dCanonicalJsonText(canonical)).toBe(canonical);
+      expect(block2dFromJsonText(canonical)).toEqual(block2dFromJsonText(expected));
     });
 
-    test(`${asset}: the TypeScript dsl reader + json writer reproduce the Rust bytes`, async () => {
+    test(`${asset}: actual Text example agrees with the declared JSON semantic input`, async () => {
       const expected = await read(`../../🧫️fixtures/${fixture}`);
-      const dsl = await read(`../../../📚️examples/${example}/🖼️assets/${example}/🗣️.dsl.semio`);
-      expect(block2dToJsonText(block2dFromDslText(dsl))).toBe(expected);
+      const dsl = await read(`../../../📚️examples/${example}/🖼️assets/${content}/🗣️.dsl.semio`);
+      expect(block2dToJsonText(block2dFromDslText(dsl))).toBe(block2dCanonicalJsonText(expected));
     });
   }
 });

@@ -1,27 +1,10 @@
 //! 🕸️ 🕸️ DAG play app commands command — `delete-selection`.
 
 use crate::editor::dag::config::{DagConfig, DagConfigMutation};
-use crate::op::DagMutation;
-use crate::DagSnapshot;
+use crate::{DagMutation, DagSnapshot};
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
 
-//#region 🔖️Shared
-/// 🗑️ Builds the removal `DagMutation`s for the given node ids, or `None` when none of them exist. No config mutation
-/// clears the selection any more: the framework auto-prunes the
-/// deleted ids out of `graph`'s selection via `DagPlayApp::interaction_topology`
-/// (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM). `remove_node::RemoveNode` deliberately
-/// does NOT use this helper: it only ever removes the one node it names.
-pub(crate) fn delete_selection_result(document: &DagSnapshot, node_ids: &[String]) -> Option<Vec<DagMutation>> {
-    let removes = crate::schema::remove_nodes_operations(document, node_ids);
-    if removes.is_empty() {
-        None
-    } else {
-        Some(removes)
-    }
-}
-//#endregion 🔖️Shared
-
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "delete-selection")]
 pub struct DeleteSelection {}
 
@@ -32,11 +15,11 @@ pub struct DeleteSelection {}
 /// `delete_selection` split.
 pub fn handle(payload: &DeleteSelection, doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
     let _ = cfg;
-    Ok(apply_to(payload, doc, &[]))
+    apply_to(payload, doc, &[])
 }
 
 pub fn apply(payload: &DeleteSelection, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>, interaction: &InteractionView<'_>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
-    Ok(apply_to(payload, doc, &interaction.selection("graph").ids))
+    apply_to(payload, doc, &interaction.selection("graph").ids)
 }
 
 /// 🧵️ The retained-tool twin of [`apply`]: a bounded tool-job reducer is handed the raw
@@ -44,12 +27,11 @@ pub fn apply(payload: &DeleteSelection, doc: &ArtifactView<'_, DagSnapshot>, _cf
 /// selection is read straight off the state instead of being wrapped first.
 pub fn apply_with_state(payload: &DeleteSelection, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>, interaction: &protocol::InteractionState) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
     let selected = interaction.selection.get("graph").map(|domain| domain.ids.clone()).unwrap_or_default();
-    Ok(apply_to(payload, doc, &selected))
+    apply_to(payload, doc, &selected)
 }
 
-fn apply_to(_payload: &DeleteSelection, doc: &ArtifactView<'_, DagSnapshot>, selected: &[String]) -> Emit<DagMutation, DagConfigMutation> {
-    match delete_selection_result(doc.snapshot, selected) {
-        Some(removes) => Emit::mutations(removes),
-        None => Emit::default(),
-    }
+/// 🗑️ The selected nodes leave the `content` child with every edge they hold (edges first, each row point-invertible); the
+/// framework prunes the deleted ids out of `graph`'s selection via `DagPlayApp::interaction_topology`.
+fn apply_to(_payload: &DeleteSelection, doc: &ArtifactView<'_, DagSnapshot>, selected: &[String]) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+    Ok(crate::dag_child_emit(doc.snapshot, &crate::schema::remove_nodes_leaves(&crate::dag_scene(doc)?, selected)))
 }

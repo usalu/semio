@@ -1,6 +1,0 @@
-{
-  "mutation": "change-srgb-intent",
-  "payload": {
-    "srgb": "saturation"
-  }
-}

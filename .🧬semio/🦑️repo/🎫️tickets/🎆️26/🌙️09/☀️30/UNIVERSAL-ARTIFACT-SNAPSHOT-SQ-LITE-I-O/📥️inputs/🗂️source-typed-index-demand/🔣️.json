@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "tableNames": [
+    "a",
+    "i",
+    "q"
+  ],
+  "lookupNames": [
+    "a",
+    "i",
+    "q",
+    "absent"
+  ],
+  "lookupIndices": [
+    0,
+    1,
+    2,
+    null
+  ],
+  "capacity": 8,
+  "tableSlotBytes": 32,
+  "hash": {
+    "name": "fnv1a-utf16-ascii-fold",
+    "offset": 2166136261,
+    "prime": 16777619,
+    "mask": 7,
+    "collisionBucket": 4
+  },
+  "literalNames": [
+    "A",
+    "Ä",
+    "ä",
+    "with space",
+    "quote\"name"
+  ],
+  "rows": [
+    {
+      "parent": "1",
+      "ordinal": 2,
+      "payload": "third"
+    },
+    {
+      "parent": "9",
+      "ordinal": 0,
+      "payload": "other"
+    },
+    {
+      "parent": "1",
+      "ordinal": 0,
+      "payload": "first"
+    },
+    {
+      "parent": "1",
+      "ordinal": 1,
+      "payload": "second"
+    }
+  ],
+  "groups": [
+    {
+      "parent": "1",
+      "positions": [
+        2,
+        3,
+        0
+      ]
+    },
+    {
+      "parent": "9",
+      "positions": [
+        1
+      ]
+    },
+    {
+      "parent": "17",
+      "positions": []
+    }
+  ],
+  "usedRowBytes": 4,
+  "positionBytes": 16,
+  "refusals": [
+    "duplicate-name",
+    "duplicate-ordinal",
+    "negative-ordinal",
+    "ordinal-gap",
+    "unknown-parent",
+    "duplicate-row-consumption",
+    "unconsumed-row"
+  ],
+  "budgetRoles": [
+    "zero",
+    "observed-exact",
+    "observed-minus-one",
+    "two-call-cumulative"
+  ],
+  "cancelRoles": [
+    "before-allocation",
+    "collision-probe",
+    "long-name",
+    "row-index-interior"
+  ]
+}

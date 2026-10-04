@@ -1,0 +1,7 @@
+{
+  "cases": [
+    {"id":"exact-before", "before":"pub use os::Value;\nfn f() { 1 }\n", "authored":"use value::Value;\nfn f() { 1 }\n", "current":"pub use os::Value;\nfn f() { 1 }\n", "expected":"use value::Value;\nfn f() { 1 }\n"},
+    {"id":"exact-already-authored", "before":"pub use os::Value;\nfn f() { 1 }\n", "authored":"use value::Value;\nfn f() { 1 }\n", "current":"use value::Value;\nfn f() { 1 }\n", "expected":"use value::Value;\nfn f() { 1 }\n"},
+    {"id":"foreign-canonical-requires-scoped-admission", "before":"pub use os::Value;\nfn f() { 1 }\n", "authored":"use value::Value;\nfn f() { 1 }\n", "current":"use value::Value;\nfn f() { 2 }\n", "expected":null}
+  ]
+}

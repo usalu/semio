@@ -71,9 +71,7 @@ export async function testImportEdgeEquality(workspace: string, output: string):
     assert.ok(nodes && fm.fileMap, "current Nx graph snapshots must declare nodes and fileMap");
     const repoProjects = Object.fromEntries(Object.entries(nodes).map(([name, node]: any) => [name, { name, root: node.data.root, targets: node.data.targets || {} }]));
     const fileMapRepo = fm.fileMap;
-    const repoData = join(output, "import-edges-repo-cache");
-    rmSync(repoData, { recursive: true, force: true });
-    mkdirSync(repoData, { recursive: true });
+    const repoData = mkdtempSync(join(root, "repository-facts-"));
     process.env.NX_WORKSPACE_DATA_DIRECTORY = repoData;
     const repoContext = {
       workspaceRoot: workspace,
@@ -85,7 +83,7 @@ export async function testImportEdgeEquality(workspace: string, output: string):
     };
     const cold: readonly ImportEdge[] = await cacheInternals.createDependenciesImplementation({ analyzeLockfile: false }, repoContext);
     const warm = await cacheInternals.createDependenciesImplementation({ analyzeLockfile: false }, repoContext);
-    assert.deepEqual([...warm.map(key)].sort(), [...cold.map(key)].sort(), "warm hash cache must preserve the full edge set");
+    assert.deepEqual([...warm.map(key)].sort(), [...cold.map(key)].sort(), "warm immutable facts must preserve the full edge set");
 
     const byPackage = new Map<string, string>();
     for (const [name, project] of Object.entries(repoProjects) as [string, { root: string }][]) {
@@ -101,6 +99,7 @@ export async function testImportEdgeEquality(workspace: string, output: string):
     await cacheInternals.collectImportEdges(workspace, fileMapRepo.projectFileMap, repoProjects, byPackage, undefined, add);
     const fromCreate = cold.filter((edge) => /\.[cm]?[jt]sx?$/.test(edge.sourceFile ?? ""));
     assert.deepEqual([...fromCreate.map(key)].sort(), [...importOnly.values()].map(key).sort(), "createDependencies import edges must equal full collectImportEdges scan");
+    console.log(`[DEBUG] full repository import dependency equality: ${cold.length} edges, cold/warm/incremental fixture and independent import-only scan`);
   } finally {
     if (previousData === undefined) delete process.env.NX_WORKSPACE_DATA_DIRECTORY;
     else process.env.NX_WORKSPACE_DATA_DIRECTORY = previousData;

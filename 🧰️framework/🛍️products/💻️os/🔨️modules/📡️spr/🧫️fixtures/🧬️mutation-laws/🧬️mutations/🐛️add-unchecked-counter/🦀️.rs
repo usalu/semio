@@ -17,9 +17,12 @@ impl MutationKind<i64, CounterMutation> for AddUncheckedCounter {
     fn diff(&self, _base: &i64) -> MutationOutcome<CounterDiff> {
         MutationOutcome::new(CounterDiff::delta(1))
     }
-    fn inverse(&self, _base: &i64) -> Vec<CounterMutation> {
+    fn inverse(&self, _base: &i64) -> Result<Vec<CounterMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![Self {}.into()]
-    }
+    
+    })())
+}
     fn label(&self) -> crate::LocalizedLabel {
         crate::LocalizedLabel::native("Add to unchecked counter", "Zum ungeprüften Zähler addieren")
     }
@@ -31,11 +34,11 @@ impl OpText for AddUncheckedCounter {
     fn print_op(&self) -> String {
         "add-unchecked-counter".into()
     }
-    fn parse_op(line: &str) -> Result<Self, crate::os_dsl::TextError> {
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         if line == "add-unchecked-counter" {
             Ok(Self {})
         } else {
-            Err(crate::os_dsl::TextError::new("expected add-unchecked-counter", crate::os_dsl::TextSpan::at(1, 1)))
+            Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected add-unchecked-counter", semio_framework_diagnostic::TextSpan::at(1, 1)))
         }
     }
 }

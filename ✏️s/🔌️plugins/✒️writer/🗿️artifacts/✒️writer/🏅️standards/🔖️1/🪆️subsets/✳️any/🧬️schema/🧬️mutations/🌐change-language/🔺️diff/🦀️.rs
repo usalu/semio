@@ -8,7 +8,7 @@ use crate::WriterSnapshot;
 /// construction, never apply-then-capture, never a snapshot clone.
 pub fn diff(payload: &ChangeLanguage, base: &WriterSnapshot) -> protocol::MutationOutcome<WriterDiff> {
     if base.language_id == payload.new_language_id {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Document language is already \"{}\".", payload.new_language_id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Document language is already \"{}\".", payload.new_language_id));
     }
     protocol::MutationOutcome::new(WriterDiff { language_id: Some(payload.new_language_id.clone()), ..Default::default() })
 }

@@ -32,5 +32,6 @@ export function parseGisMapArtifact(value: unknown, at = "$"): GisMapArtifact {
     value: parseArtifactChild(row.value),
   };
   if (row.image != null) document.image = parseArtifactChild(row.image);
+  for(const child of[document.drawing,document.image,document.value])if(child)for(const value of[child.childId,child.target.artifactId,child.target.dialect.artifactKind,child.target.dialect.standard,child.target.dialect.subset])if(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/.test(value))throw Error(`${at}: native child UTF8 required`);
   return document;
 }

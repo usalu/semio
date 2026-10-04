@@ -14,7 +14,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 pub const LOWPOLY_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🌲️hexagonal-cut-concrete-forest-left/🖼️assets/🗣️.dsl.semio");
 
 /// 📖️ Parses `.lowpoly` DSL text into a `LowpolySnapshot`.
-pub fn parse_dsl(text: &str) -> Result<LowpolySnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<LowpolySnapshot, semio_framework_diagnostic::TextError> {
     <LowpolySnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 

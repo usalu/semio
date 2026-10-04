@@ -14,7 +14,7 @@ use crate::En1995Snapshot;
 pub const EN1995_GLULAM_FOOTBRIDGE_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🌉️glulam-footbridge/🌉️glulam-footbridge/🗣️.dsl.semio");
 
 /// 📖️ Parses `.en1995` DSL text into a `En1995Snapshot`.
-pub fn parse_dsl(text: &str) -> Result<En1995Snapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<En1995Snapshot, semio_framework_diagnostic::TextError> {
     <En1995Snapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 

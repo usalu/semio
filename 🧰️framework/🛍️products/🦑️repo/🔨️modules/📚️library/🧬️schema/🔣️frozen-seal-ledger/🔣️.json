@@ -1,0 +1,344 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "FrozenSealLedger",
+  "description": "The recorded history of every frozen coordinate evidence contract since a pin: the seal each contract had at `pinnedAt` and every later re-seal, each with the revision that recorded it, a reason and whether the sealed coordinates changed. `seal` is the sha256 of the canonical JSON of the contract's seal entry (`frozenCoordinateEvidenceSeal`); `coordinatesSha256` is the sha256 of the canonical JSON array of `{pointer, kind, value}` of the coordinates the sealed bytes resolve. A re-seal marked `unchanged` must carry the previous coordinate digest; the last recorded seal must be the live one; a contract registered after the pin is listed in `later` with its reason. Re-sealing without a ledger row fails the law. `catalogs` does the same for every whole-document authority catalog a projection contract pins (`authorityCatalogSha256`): the seal registered at `sealedBy` and every later re-seal, each with its evidence revision and at least one of: directory-segment renames (`renames`, applied to segments followed by `/`), exact-path moves of individually moved files (`moves`, every whole JSON string equal to `to` was `from`) and deletions of rows naming deleted files (`deletions`, each with the removed row and its index); reversing the deletions, then the moves, then the renames on the live catalog must reproduce the previous seal byte for byte.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "contract",
+    "pinnedAt",
+    "pinnedFor",
+    "contracts",
+    "later",
+    "catalogs"
+  ],
+  "additionalProperties": false,
+  "definitions": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "revision": {
+      "type": "string",
+      "pattern": "^(?:[0-9a-f]{7,40}|[0-9]{4}/[0-9]{2}/[0-9]{2}/[A-Z0-9][A-Z0-9-]*)$"
+    },
+    "reseal": {
+      "type": "object",
+      "required": [
+        "seal",
+        "coordinates",
+        "coordinatesSha256",
+        "recordedBy",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "seal": {
+          "$ref": "#/definitions/sha256"
+        },
+        "coordinates": {
+          "enum": [
+            "changed",
+            "unchanged"
+          ]
+        },
+        "coordinatesSha256": {
+          "$ref": "#/definitions/sha256"
+        },
+        "recordedBy": {
+          "$ref": "#/definitions/revision"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 12
+        }
+      }
+    },
+    "entry": {
+      "type": "object",
+      "required": [
+        "seal"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "seal": {
+          "$ref": "#/definitions/sha256"
+        },
+        "coordinatesSha256": {
+          "$ref": "#/definitions/sha256"
+        },
+        "reseals": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/reseal"
+          }
+        }
+      }
+    },
+    "later": {
+      "type": "object",
+      "required": [
+        "recordedBy",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "recordedBy": {
+          "$ref": "#/definitions/revision"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 12
+        }
+      }
+    },
+    "rename": {
+      "type": "object",
+      "required": [
+        "from",
+        "to"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "from": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^/\\\\:]+$"
+        },
+        "to": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^/\\\\:]+$"
+        }
+      }
+    },
+    "move": {
+      "type": "object",
+      "required": [
+        "from",
+        "to",
+        "revision"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "from": {
+          "type": "string",
+          "minLength": 3,
+          "pattern": "^[^/\\\\:][^\\\\:]*/[^\\\\:]*[^/\\\\:]$"
+        },
+        "to": {
+          "type": "string",
+          "minLength": 3,
+          "pattern": "^[^/\\\\:][^\\\\:]*/[^\\\\:]*[^/\\\\:]$"
+        },
+        "revision": {
+          "$ref": "#/definitions/revision"
+        }
+      }
+    },
+    "deletion": {
+      "type": "object",
+      "required": [
+        "path",
+        "reason",
+        "revision",
+        "packageId",
+        "index",
+        "row"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 3,
+          "pattern": "^[^/\\\\:][^\\\\:]*/[^\\\\:]*[^/\\\\:]$"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 12
+        },
+        "revision": {
+          "$ref": "#/definitions/revision"
+        },
+        "packageId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "type": "object",
+          "required": [
+            "destinationPath"
+          ],
+          "properties": {
+            "destinationPath": {
+              "type": "string",
+              "minLength": 3,
+              "pattern": "^[^/\\\\:][^\\\\:]*/[^\\\\:]*[^/\\\\:]$"
+            }
+          }
+        }
+      }
+    },
+    "catalogReseal": {
+      "type": "object",
+      "required": [
+        "seal",
+        "recordedBy",
+        "evidence",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "seal": {
+          "$ref": "#/definitions/sha256"
+        },
+        "recordedBy": {
+          "$ref": "#/definitions/revision"
+        },
+        "evidence": {
+          "type": "object",
+          "required": [
+            "revision",
+            "date"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "revision": {
+              "$ref": "#/definitions/revision"
+            },
+            "date": {
+              "type": "string",
+              "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+            }
+          }
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 12
+        },
+        "renames": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/rename"
+          }
+        },
+        "moves": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/move"
+          }
+        },
+        "deletions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/deletion"
+          }
+        }
+      },
+      "anyOf": [
+        {
+          "properties": {
+            "renames": {
+              "type": "array"
+            }
+          },
+          "required": [
+            "renames"
+          ]
+        },
+        {
+          "properties": {
+            "moves": {
+              "type": "array"
+            }
+          },
+          "required": [
+            "moves"
+          ]
+        },
+        {
+          "properties": {
+            "deletions": {
+              "type": "array"
+            }
+          },
+          "required": [
+            "deletions"
+          ]
+        }
+      ]
+    },
+    "catalog": {
+      "type": "object",
+      "required": [
+        "family",
+        "seal",
+        "sealedBy"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "family": {
+          "enum": [
+            "semanticPackageProjectionContracts",
+            "semanticOwnedFileProjectionContracts"
+          ]
+        },
+        "seal": {
+          "$ref": "#/definitions/sha256"
+        },
+        "sealedBy": {
+          "$ref": "#/definitions/revision"
+        },
+        "reseals": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/catalogReseal"
+          }
+        }
+      }
+    }
+  },
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "contract": {
+      "const": "frozen-seal-ledger-v1"
+    },
+    "pinnedAt": {
+      "$ref": "#/definitions/revision"
+    },
+    "pinnedFor": {
+      "type": "string",
+      "minLength": 1
+    },
+    "contracts": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "$ref": "#/definitions/entry"
+      }
+    },
+    "later": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/later"
+      }
+    },
+    "catalogs": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/catalog"
+      }
+    }
+  }
+}

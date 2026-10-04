@@ -1,18 +1,12 @@
-//! 📜️ 📜️ Trinity Rewriting app command — `set-rhs-json`.
-
-use crate::standards::v1::subsets::any::schema::mutations::edit_rhs;
-use crate::standards::v1::subsets::any::schema::mutations::text::RewriteRuleMutation;
+//! 👉️ A declared JSON input is decoded into the typed rewrite program and its actual parameter defaults.
+use crate::standards::v1::subsets::any::schema::{Rhs,snapshot::json,mutations::{edit_rhs,text::RewriteRuleMutation}};
 use crate::RewritingSnapshot;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::NoConfigMutation;
-
-/// 👉️ The rule's right-hand side replaced by `value` as ONE `edit-rhs` leaf, followed by the parameter-binding leaves that reset
-/// every binding to the new side's declared defaults ([`crate::editor::rewriting::parameter_binding_mutations`]); the unchanged
-/// side moves nothing.
-pub(crate) fn set_rhs_json(state: &RewritingSnapshot, value: &str) -> Emit<RewriteRuleMutation, NoConfigMutation> {
-    if state.rhs_json == value {
-        return Emit::default();
-    }
-    let defaults = crate::editor::rewriting::default_parameter_bindings(value);
-    Emit::mutations(std::iter::once(edit_rhs(value.to_string())).chain(crate::editor::rewriting::parameter_binding_mutations(&state.parameter_bindings, &defaults)).collect())
+use semio_framework_plugin::{Emit,Fault,FaultOrigin,FaultCode,NoConfigMutation};
+pub(crate) fn set_rhs(state:&RewritingSnapshot,value:&str)->Result<Emit<RewriteRuleMutation,NoConfigMutation>,Fault>{
+ let invalid=|message:String|Fault::new(FaultOrigin::App,FaultCode::new("app.command.invalid-args"),message);
+ let value=semio_framework_pack_json::parse(value,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error|invalid(error.to_string()))?;
+ let rhs=<Rhs as semio_framework_value::FromValue>::from_value(json::rhs(semio_framework_pack_json::to_dsl_value(&value),true).map_err(|error|invalid(error.into_message()))?).map_err(|error|invalid(error.into_message()))?;
+ if state.rhs==rhs{return Ok(Emit::default())}
+ let defaults=crate::editor::rewriting::default_parameter_bindings(&rhs);
+ Ok(Emit::mutations(std::iter::once(edit_rhs(rhs)).chain(crate::editor::rewriting::parameter_binding_mutations(&state.parameter_bindings,&defaults)).collect()))
 }

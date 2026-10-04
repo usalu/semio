@@ -221,13 +221,14 @@ function directoryPageInvocation(owner: DirectoryHomeOwnerV1, canonicalJson: str
  * `applyDirectoryEventPage` is a `Migrated`, job-routed verb: its admitting `InvocationResult` carries
  * the `{ operationId, generation }` handle (`🔌️plugin/🦀️.rs`'s `start_typed_command_operation`, both
  * decimal STRINGS) and NOT the verb's result, while `AppFrame::OperationCompleted.operation` carries
- * the same id as a number. This is where the two spellings meet, and it is the ONLY thing this lane
+ * the same id as an exact u64 bigint. This is where the two spellings meet, and it is the ONLY thing this lane
  * reads out of the admission. */
-export function startedDirectoryOperationIdV1(output: unknown): number | null {
+export function startedDirectoryOperationIdV1(output: unknown): bigint | null {
   if (typeof output !== "object" || output === null || Array.isArray(output)) return null;
   const raw = (output as { readonly operationId?: unknown }).operationId;
-  const operation = typeof raw === "string" ? (/^[0-9]+$/u.test(raw) ? Number(raw) : Number.NaN) : typeof raw === "number" ? raw : Number.NaN;
-  return Number.isSafeInteger(operation) && operation >= 0 ? operation : null;
+  if (typeof raw !== "string" || !/^(0|[1-9][0-9]*)$/u.test(raw)) return null;
+  const operation = BigInt(raw);
+  return operation <= 0xffff_ffff_ffff_ffffn ? operation : null;
 }
 
 /** ♻️ Whether a refusal is one this page may be re-offered after. The wire already answers it: every
@@ -260,11 +261,11 @@ class DirectoryOwnerRetiredError extends Error {}
  * the runtime's own continuation drain (`drainTypedOperations`) advances the operation and
  * `subscribeOperationCompletions` is its only delivery path. */
 function watchDirectoryOperationV1(owner: DirectoryHomeOwnerV1, deadlineMs: number): Readonly<{
-  terminalOutputOf(operation: number): Promise<unknown>;
+  terminalOutputOf(operation: bigint): Promise<unknown>;
   dispose(): void;
 }> {
-  const arrived = new Map<number, unknown>();
-  let waiting: Readonly<{ operation: number; resolve(output: unknown): void }> | null = null;
+  const arrived = new Map<bigint, unknown>();
+  let waiting: Readonly<{ operation: bigint; resolve(output: unknown): void }> | null = null;
   const receive = (completion: PluginOperationCompletion): void => {
     if (waiting && waiting.operation === completion.operation) {
       const settled = waiting;

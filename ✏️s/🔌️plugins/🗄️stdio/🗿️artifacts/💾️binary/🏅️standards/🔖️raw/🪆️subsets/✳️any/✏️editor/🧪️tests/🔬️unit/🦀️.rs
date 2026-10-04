@@ -21,7 +21,7 @@ async fn editor_declares_the_main_window() {
 #[semio_framework_async_macros::async_test]
 async fn parse_hex_dump_round_trips_a_rendered_snapshot() {
     let document = BinarySnapshot { bytes: vec![0xde, 0xad, 0xbe, 0xef], ..BinarySnapshot::default() };
-    let node = main::render(&document, semio_framework_ui_locale::Locale::En).expect("render");
+    let node = main::render(&document, semio_framework_ui_locale::Locale::En, semio_framework_plugin::UiPublicationRevision(23)).expect("render");
     let scene: semio_framework_ui_scene::TextEditorScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(&node).expect("decode the text scene with its lanes");
     let parsed = parse_hex_dump(&scene.buffer).expect("well-formed hex dump must parse");
     assert_eq!(parsed, vec![0xde, 0xad, 0xbe, 0xef]);
@@ -36,7 +36,7 @@ async fn parse_hex_dump_rejects_odd_length_hex() {
 #[test]
 fn text_edit_requires_an_explicit_text_argument_and_allows_intentional_empty_bytes() {
     assert!(<BinaryEditor as ArtifactEditor>::command_from_action("textEdit", None).is_err());
-    let args = dsl::DslValue::object([("text".into(), dsl::DslValue::String(String::new()))]);
+    let args = semio_framework_value::DslValue::object([("text".into(), semio_framework_value::DslValue::String(String::new()))]);
     let command = <BinaryEditor as ArtifactEditor>::command_from_action("textEdit", Some(&args)).expect("explicit empty text");
     let source = BinarySnapshot { bytes: vec![1, 2, 3], ..BinarySnapshot::default() };
     let emitted = binary_text_emit(&command, &source).expect("empty hex intentionally clears the byte buffer");
@@ -52,13 +52,12 @@ fn text_edit_requires_an_explicit_text_argument_and_allows_intentional_empty_byt
 fn an_applied_hex_dump_is_one_net_byte_range() {
     let source = BinarySnapshot { bytes: vec![0xde, 0xad, 0xbe, 0xef], ..BinarySnapshot::default() };
     let emit = |text: &str| {
-        let args = dsl::DslValue::object([("text".into(), dsl::DslValue::String(text.into()))]);
+        let args = semio_framework_value::DslValue::object([("text".into(), semio_framework_value::DslValue::String(text.into()))]);
         let command = <BinaryEditor as ArtifactEditor>::command_from_action("textEdit", Some(&args)).expect("explicit text");
         binary_text_emit(&command, &source).expect("well-formed hex")
     };
     let changed = emit("de00beef");
     assert!(matches!(changed.artifact_mutations.as_slice(), [BinaryMutation::ReplaceByteRange(range)] if (range.offset, range.remove_len, range.insert.as_slice()) == (1, 1, &[0x00][..])), "{:?}", changed.artifact_mutations);
-    assert!(changed.description.is_none(), "the history row is labelled from its leaf");
     let inserted = emit("deadbe01ef");
     assert!(matches!(inserted.artifact_mutations.as_slice(), [BinaryMutation::ReplaceByteRange(range)] if (range.offset, range.remove_len, range.insert.as_slice()) == (3, 0, &[0x01][..])), "{:?}", inserted.artifact_mutations);
     assert!(emit("deadbeef").artifact_mutations.is_empty(), "an unchanged dump moves nothing");
@@ -75,8 +74,18 @@ fn a_document_details_edit_is_one_net_byte_range() {
     let edit = |next: &BinarySnapshot| <BinaryEditor as SnapshotEditingEditor>::snapshot_edit_emit(&SnapshotEditEvent::ReplaceSource { source: snapshot_edit_source(next) }, &base).expect("the details edit publishes");
     let changed = edit(&next);
     assert!(matches!(changed.artifact_mutations.as_slice(), [BinaryMutation::ReplaceByteRange(range)] if (range.offset, range.remove_len, range.insert.as_slice()) == (1, 1, &[0x00][..])), "{:?}", changed.artifact_mutations);
-    assert!(changed.description.is_none(), "the history row is labelled from its leaf");
     assert!(edit(&base).artifact_mutations.is_empty(), "an unchanged value moves nothing");
+}
+
+/// ⚖️ LAW (audit T4): the ONLY whole-document `set-snapshot` the details net leaves emit is another document schema; a byte change
+/// is ONE `replace-byte-range`.
+#[test]
+fn only_another_document_schema_is_a_whole_document_set_snapshot() {
+    let base = BinarySnapshot { bytes: vec![1, 2, 3], ..BinarySnapshot::default() };
+    let bytes = BinarySnapshot { bytes: vec![1, 9, 3], ..base.clone() };
+    assert!(matches!(binary_net_mutations(&base, &bytes).as_slice(), [BinaryMutation::ReplaceByteRange(_)]));
+    let other = BinarySnapshot { schema: "stdio.binary.other-schema".into(), ..base.clone() };
+    assert!(matches!(binary_net_mutations(&base, &other).as_slice(), [BinaryMutation::SetSnapshot(set)] if set.snapshot == other), "another document schema replaces the document");
 }
 
 //#region 🧮️NetLeafLaws
@@ -91,14 +100,16 @@ fn an_applied_hex_dump_is_exactly_the_corpus_net_byte_range() {
     for case in corpus["cases"].as_array().expect("cases") {
         let (id, after) = (case["id"].as_str().expect("id"), case["after"].as_str().expect("after"));
         let source = BinarySnapshot { bytes: bytes(case["before"].as_str().expect("before")), ..BinarySnapshot::default() };
-        let args = dsl::DslValue::object([("text".into(), dsl::DslValue::String(after.into()))]);
+        let args = semio_framework_value::DslValue::object([("text".into(), semio_framework_value::DslValue::String(after.into()))]);
         let command = <BinaryEditor as ArtifactEditor>::command_from_action("textEdit", Some(&args)).expect("explicit text");
         let emit = binary_text_emit(&command, &source).expect("well-formed hex");
         let summary: Vec<serde_json::Value> = emit
             .artifact_mutations
             .iter()
             .map(|leaf| match leaf {
-                BinaryMutation::ReplaceByteRange(range) => serde_json::json!({ "kind": "replace-byte-range", "offset": range.offset, "removeLen": range.remove_len, "insert": range.insert.iter().map(|byte| format!("{byte:02x}")).collect::<String>() }),
+                BinaryMutation::ReplaceByteRange(range) => {
+                    serde_json::json!({ "kind": "replace-byte-range", "offset": range.offset, "removeLen": range.remove_len, "insert": range.insert.iter().map(|byte| format!("{byte:02x}")).collect::<String>() })
+                }
                 other => serde_json::json!({ "kind": format!("{other:?}") }),
             })
             .collect();
@@ -113,3 +124,5 @@ fn an_applied_hex_dump_is_exactly_the_corpus_net_byte_range() {
     }
 }
 //#endregion 🧮️NetLeafLaws
+
+semio_framework_plugin::history_edit_acceptance_law!("stdio", super::BinaryEditor, || semio_framework_plugin::App { definition: super::create_binary_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️raw/🪆️subsets/✳️any");

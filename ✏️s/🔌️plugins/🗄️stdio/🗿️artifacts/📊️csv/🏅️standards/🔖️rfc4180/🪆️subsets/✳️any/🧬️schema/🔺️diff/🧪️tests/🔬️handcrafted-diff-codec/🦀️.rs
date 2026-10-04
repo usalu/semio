@@ -34,8 +34,8 @@ async fn diff_codec_text_binary_roundtrip_law() {
 #[semio_framework_async_macros::async_test]
 async fn diff_grammar_conformance_law() {
     let grammar_text = crate::schema::diff::text::COMPONENT_GRAMMAR_SEMIO;
-    let grammar = dsl::parse_grammar(grammar_text).expect("parse diff grammar");
-    let recognizer = dsl::Recognizer::compile(&grammar);
+    let grammar = semio_framework_dsl::parse_grammar(grammar_text).expect("parse diff grammar");
+    let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
 
     let a = CsvSnapshot { schema: "stdio.csv".into(), has_header: true, records: vec![record(&[("name", false), ("note, with comma", true)]), record(&[("a", false), ("b", false)]), record(&[("x", false), ("y", false)])] };
     let b = CsvSnapshot { schema: "stdio.csv".into(), has_header: false, records: vec![record(&[("new-a", true), ("new-b", false)]), record(&[("x", false), ("y", false)]), record(&[("brand [new]", true)])] };

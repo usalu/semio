@@ -24,25 +24,25 @@ pub const IMPORT_NEURON_KIND: &str = "brep.io.importDwg";
 
 pub fn register() {}
 
-pub fn mesh_from_bytes(bytes: &[u8]) -> Result<SemioMeshSnapshot, store::TextError> {
+pub fn mesh_from_bytes(bytes: &[u8]) -> Result<SemioMeshSnapshot, semio_framework_diagnostic::TextError> {
     mesh_from_snapshot(&semio_s_artifact_stdio_dwg::schema::snapshot::decode_dwg(bytes).map_err(|error| io_error(format!("generation3d←dwg: {error}")))?)
 }
 
-pub fn mesh_from_snapshot(from: &DwgSnapshot) -> Result<SemioMeshSnapshot, store::TextError> {
-    let mesh = semio_framework_plugin::resolve_ready(SemioMeshFromDwg::deserialize(from)).map_err(|error| io_error(format!("generation3d←dwg: {error}")))?;
+pub fn mesh_from_snapshot(from: &DwgSnapshot) -> Result<SemioMeshSnapshot, semio_framework_diagnostic::TextError> {
+    let mesh = ::semio_framework_async::poll::resolve_ready(SemioMeshFromDwg::deserialize(from)).map_err(|error| io_error(format!("generation3d←dwg: {error}")))?;
     if mesh.meshes.iter().all(|entry| entry.primitives.is_empty()) {
         return Err(io_error("generation3d←dwg: the drawing carries no polyface-mesh or 3d-face entity, so it holds no geometry this artifact can preview"));
     }
     Ok(mesh)
 }
 
-pub fn deserialize(from: &DwgSnapshot) -> Result<Generation3dSnapshot, store::TextError> {
+pub fn deserialize(from: &DwgSnapshot) -> Result<Generation3dSnapshot, semio_framework_diagnostic::TextError> {
     mesh_from_snapshot(from)?;
     let bytes = semio_s_artifact_stdio_dwg::schema::snapshot::encode_dwg(from).map_err(|error| io_error(format!("generation3d←dwg: {error}")))?;
     Ok(import_document(IMPORT_NEURON_KIND, base64_encode(&bytes)))
 }
 
-pub fn deserialize_bytes(bytes: &[u8]) -> Result<Generation3dSnapshot, store::TextError> {
+pub fn deserialize_bytes(bytes: &[u8]) -> Result<Generation3dSnapshot, semio_framework_diagnostic::TextError> {
     mesh_from_bytes(bytes)?;
     Ok(import_document(IMPORT_NEURON_KIND, base64_encode(bytes)))
 }

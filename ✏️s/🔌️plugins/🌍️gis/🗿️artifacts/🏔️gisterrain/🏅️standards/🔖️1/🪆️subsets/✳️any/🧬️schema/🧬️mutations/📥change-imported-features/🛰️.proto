@@ -1,6 +1,7 @@
 syntax = "proto3";
+import "🗺️imported-map/🛰️.proto";
 package semio.s.gis.gisterrain.mutation;
 
 message ChangeImportedFeatures {
-  string new_imported_features_json = 1;
+  optional ImportedMap new_imported_map = 1;
 }

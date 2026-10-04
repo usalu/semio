@@ -798,6 +798,47 @@ fn a_scrub_persisted_between_ticks_continues_the_same_press() {
     assert!(resumed.persist().is_none() && live.persist().is_none(), "a released scrub persists nothing");
 }
 
+fn explore_scrub_ledger(ledger: &ScrubLedger<Value>, alphabet: &[(&str, &str, ScrubInput<Value>)], depth: usize, actor: &ActorId, sends: &mut usize) {
+    if depth == 0 {
+        return;
+    }
+    for (tool, base, input) in alphabet {
+        let late = match input {
+            ScrubInput::Tick { gesture, .. } | ScrubInput::Commit { gesture, .. } => ledger.closed.get("w") == Some(gesture),
+            ScrubInput::Abort { .. } => false,
+        };
+        let mut next = ledger.clone();
+        let step = next.send("w", tool, actor, base, input.clone(), HybridLogicalTimestamp { actor: 0, physical_ms: *sends as u64, logical: 0 }).expect("the scrub ledger never refuses");
+        *sends += 1;
+        if late {
+            assert_eq!((&step, &next), (&ToolStep::Idle, ledger), "a late input of the closed press changes nothing");
+        }
+        if !late && matches!(input, ScrubInput::Commit { .. }) {
+            assert!(next.open("w").is_none(), "a release always decides its press");
+        }
+        explore_scrub_ledger(&next, alphabet, depth - 1, actor, sends);
+    }
+}
+
+/// ⚖️ LAW (CLOSURE-3): the scrub ledger is total — every order of up to four inputs on one window, across two presses, two
+/// tools, two document revisions, empty and non-empty ticks, releases and host aborts, answers a step and never a refusal,
+/// so a release always decides its press (the runtime publishes every lane of the press from that one step); a late input
+/// of the press the window already closed leaves the ledger exactly as it was.
+#[test]
+fn the_scrub_ledger_never_refuses_and_late_inputs_change_nothing() {
+    let mut alphabet = vec![("t1", "r1", ScrubInput::Abort { reason: ToolAbortReason::Blur })];
+    for (tool, base) in [("t1", "r1"), ("t1", "r2"), ("t2", "r1")] {
+        for gesture in ["g1", "g2"] {
+            alphabet.push((tool, base, ScrubInput::Tick { gesture: gesture.into(), leaves: vec![json!(gesture), json!(1)] }));
+            alphabet.push((tool, base, ScrubInput::Tick { gesture: gesture.into(), leaves: Vec::new() }));
+            alphabet.push((tool, base, ScrubInput::Commit { gesture: gesture.into(), leaves: vec![json!(2)] }));
+        }
+    }
+    let mut sends = 0;
+    explore_scrub_ledger(&ScrubLedger::default(), &alphabet, 4, &ActorId("actor".into()), &mut sends);
+    assert_eq!(sends, (1..=4).map(|depth| alphabet.len().pow(depth)).sum::<usize>());
+}
+
 #[test]
 fn a_persisted_scrub_of_another_chart_is_refused() {
     let state = ScrubState { states: vec!["nowhere".into()], tool: "demo#set".into(), actor: "a".into(), gesture: "g".into(), base_revision: "r".into(), transaction: TransactionRef { id: "tx-0000000000000000".into(), tool: "demo#set".into() }, entries: vec![("0".into(), json!(1))] };
@@ -1089,3 +1130,120 @@ fn a_released_node_drag_commits_one_transaction_of_its_leaves() {
     assert_eq!(node_drag_commit::<Value>(tool, actor, text(&commit["gesture"]), Vec::new(), at), None, "an empty release leaves zero trace");
 }
 //#endregion 🔖️NodeDragLaws
+
+//#region 🌊️GestureLaws
+#[derive(Clone, Debug, PartialEq)]
+struct PendingGesture {
+    verb: String,
+    base: String,
+    ticks: Vec<i32>,
+}
+
+/// 🧮️ A runner-free streamed tool: counts its ticks, opens on `Stream`, commits them on `Once`/`Commit`.
+struct CountingTool {
+    verb: String,
+    base: String,
+    ticks: Vec<i32>,
+    open: bool,
+}
+
+impl super::GestureTool for CountingTool {
+    type Gesture = PendingGesture;
+    type Tick = i32;
+    type Mutation = i32;
+
+    fn start(verb: &str, _authoring_seed: &str, base_revision: &str) -> Result<Self, ToolRefusal> {
+        Ok(Self { verb: verb.into(), base: base_revision.into(), ticks: Vec::new(), open: false })
+    }
+
+    fn resume(gesture: &PendingGesture) -> Result<Self, ToolRefusal> {
+        Ok(Self { verb: gesture.verb.clone(), base: gesture.base.clone(), ticks: gesture.ticks.clone(), open: true })
+    }
+
+    fn verb(&self) -> &str {
+        &self.verb
+    }
+
+    fn base_revision(&self) -> &str {
+        &self.base
+    }
+
+    fn abort(&mut self, _reason: ToolAbortReason) {
+        self.ticks.clear();
+        self.open = false;
+    }
+
+    fn send(&mut self, phase: GesturePhase, tick: Option<i32>) -> Result<ToolStep<i32>, ToolRefusal> {
+        self.ticks.extend(tick);
+        Ok(match phase {
+            GesturePhase::Stream => {
+                self.open = true;
+                ToolStep::Open
+            }
+            GesturePhase::Once | GesturePhase::Commit => {
+                self.open = false;
+                ToolStep::Committed(TransactionRef { id: "tx".into(), tool: self.verb.clone() }, std::mem::take(&mut self.ticks))
+            }
+            GesturePhase::Abort(reason) => {
+                self.abort(reason);
+                ToolStep::Idle
+            }
+        })
+    }
+
+    fn persist(self) -> Option<PendingGesture> {
+        self.open.then_some(PendingGesture { verb: self.verb, base: self.base, ticks: self.ticks })
+    }
+}
+
+fn pending(verb: &str, base: &str, ticks: &[i32]) -> PendingGesture {
+    PendingGesture { verb: verb.into(), base: base.into(), ticks: ticks.to_vec() }
+}
+
+/// 🗣️ LAW: a gesture verb's `phase`/`reason` pair reads into exactly one phase; unknown words are refused.
+#[test]
+fn gesture_phases_parse_their_wire_words() {
+    assert_eq!(GesturePhase::parse(None, None), Some(GesturePhase::Once));
+    assert_eq!(GesturePhase::parse(Some("stream"), None), Some(GesturePhase::Stream));
+    assert_eq!(GesturePhase::parse(Some("commit"), None), Some(GesturePhase::Commit));
+    assert_eq!(GesturePhase::parse(Some("abort"), None), Some(GesturePhase::Abort(ToolAbortReason::Tool)));
+    assert_eq!(GesturePhase::parse(Some("abort"), Some("captureLost")), Some(GesturePhase::Abort(ToolAbortReason::CaptureLost)));
+    assert_eq!(GesturePhase::parse(Some("abort"), Some("bogus")), None);
+    assert_eq!(GesturePhase::parse(Some("bogus"), None), None);
+}
+
+/// 🌊️ LAW: a one-shot commits ONE transaction and persists nothing; stream ticks accumulate in the window's open gesture
+/// and the commit publishes them all as ONE transaction and clears the gesture.
+#[test]
+fn a_streamed_gesture_accumulates_and_commits_once() {
+    let once = drive_gesture::<CountingTool>(None, "drag", GesturePhase::Once, Some(1), "seed", "b");
+    assert_eq!((once.committed.map(|(_, ticks)| ticks), once.next), (Some(vec![1]), None));
+    let first = drive_gesture::<CountingTool>(None, "drag", GesturePhase::Stream, Some(1), "seed", "b");
+    assert_eq!((first.committed, first.next.clone()), (None, Some(Some(pending("drag", "b", &[1])))));
+    let open = first.next.flatten().expect("the first tick opened the gesture");
+    let second = drive_gesture::<CountingTool>(Some(&open), "drag", GesturePhase::Stream, Some(2), "seed", "b");
+    let open = second.next.flatten().expect("the second tick kept it open");
+    assert_eq!(open, pending("drag", "b", &[1, 2]));
+    let done = drive_gesture::<CountingTool>(Some(&open), "drag", GesturePhase::Commit, Some(3), "seed", "b");
+    assert_eq!((done.committed.map(|(_, ticks)| ticks), done.next), (Some(vec![1, 2, 3]), Some(None)));
+}
+
+/// 🧯️ LAW: an abort drops the open gesture with zero trace (and changes nothing without one); a base that moved under
+/// the gesture drops it, a one-shot then commits fresh; another verb or a one-shot interrupts it (`captureLost`).
+#[test]
+fn aborts_moved_bases_and_interruptions_drop_the_open_gesture() {
+    let open = pending("drag", "b", &[1]);
+    let aborted = drive_gesture::<CountingTool>(Some(&open), "drag", GesturePhase::Abort(ToolAbortReason::Blur), None, "seed", "b");
+    assert_eq!((aborted.committed, aborted.next), (None, Some(None)));
+    let idle = drive_gesture::<CountingTool>(None, "drag", GesturePhase::Abort(ToolAbortReason::Blur), None, "seed", "b");
+    assert_eq!((idle.committed, idle.next), (None, None));
+    let moved = drive_gesture::<CountingTool>(Some(&open), "drag", GesturePhase::Stream, Some(2), "seed", "moved");
+    assert_eq!((moved.committed, moved.next), (None, Some(None)));
+    let fresh = drive_gesture::<CountingTool>(Some(&open), "drag", GesturePhase::Once, Some(9), "seed", "moved");
+    assert_eq!((fresh.committed.map(|(_, ticks)| ticks), fresh.next), (Some(vec![9]), Some(None)));
+    let switched = drive_gesture::<CountingTool>(Some(&open), "turn", GesturePhase::Stream, Some(5), "seed", "b");
+    assert_eq!((switched.committed, switched.next), (None, Some(Some(pending("turn", "b", &[5])))));
+    let interrupted = drive_gesture::<CountingTool>(Some(&open), "drag", GesturePhase::Once, Some(7), "seed", "b");
+    assert_eq!((interrupted.committed.map(|(_, ticks)| ticks), interrupted.next), (Some(vec![7]), Some(None)));
+}
+//#endregion 🌊️GestureLaws

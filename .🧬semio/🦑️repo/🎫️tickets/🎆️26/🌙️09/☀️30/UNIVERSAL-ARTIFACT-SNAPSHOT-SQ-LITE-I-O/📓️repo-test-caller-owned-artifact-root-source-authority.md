@@ -1,0 +1,22 @@
+# Caller Owned Scenario Artifact Root Authority
+
+Root authorized this infrastructure prerequisite so the actual Rust46 coordinator can keep task-generated outputs inside the active ticket. The existing declared `SEMIO_TEST_ARTIFACT_DIR` now selects the explicit test artifact root; absent or whitespace-only input preserves the canonical repository test cache. The existing validated two-segment `SEMIO_TEST_OUTPUT_SCOPE` still creates separate task roots.
+
+The first registered five-law baseline reached actual assertions:1 passed,4 failed,8 assertions, exit1. All four failures observed the canonical cache instead of the explicit caller root. The closed neutral fixture passed independent strict Ajv. Log: `🗑️generated/worker-repo-artifact-root-source-genuine-baseline.log`. This is genuine behavioral RED before the implementation mount, not a compiler or graph error.
+
+After that RED, the first-party output root and marker producers were paired in `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟦️.ts`. Marker admission rejects lexical escapes, physical symlink/junction escapes, existing foreign-owner markers and malformed marker files before writing. A valid same-owner rerun may update its cache key; the logical owner remains unchanged. Scope admission also rejects backslashes and Windows drive-colon components, retaining portable literal task segments.
+
+The existing test domain routes the new `test-artifact-root-source` target through its actual `📜️script.ts test artifact-root-source` branch. Both launch catalogs register `⚖️gate🧪️repo🧾️artifact-root🟦️source`. The feature uses no runtime library or extra script. Neutral fixture/schema and actual Bun laws are adjacent in `🧫️fixtures/🧾️artifact-root-source`, `🧬️schema/🧾️artifact-root-source`, and `🧪️tests/🧾️artifact-root-source`.
+
+The five Source laws prove the default and explicit/scoped roots, seven invalid scopes, unknown child rejection, actual host/plan/result/artifact locations, actual marker identities, preserved target/build environment, absolute generated adapter import, foreign/malformed ownership rejection, and a real symlink/junction escape refusal. The host law invokes only existing plan and Rust-host materialization; it does not invoke the returned Cargo build preparation or execute a binary.
+
+The first mounted replay executed4 passing laws and1 authored input failure: the synthetic feature omitted its mandatory `@mode-property`, so the real parser correctly selected0 scenarios where the law requires1. The fixture was paired to that actual grammar while preserving the assertion and test budget. Log: `🗑️generated/worker-repo-artifact-root-source-mounted-current.log`. No production parser or scenario count was relaxed. The complete unchanged law replay is `🗑️generated/worker-repo-artifact-root-source-complete-host-pair-current.log`; it executed5/5 with0 failures and41 assertions,11.60s tests and12.8s Nx, exit0. All actual host/plan/result path, ownership and physical escape assertions passed.
+
+Root's full Rust46 command is saved in `🪆️rewriting-rust46-capsule/🔣️baseline-command.json`. It declares `SEMIO_TEST_ARTIFACT_DIR=<ticket>/🗑️generated/root-rewriting46-native-artifacts`, placing actual scenario work, hosts, plans, results and reports beneath its marked `tasks/root/rewriting46-native` scope. Both Cargo directory variables point to the existing Root-owned `<ticket>/🗑️generated/cargo-root-norm-owned`; no new private compiler pool is introduced. Both scoped Rust46 launch configurations carry the same artifact and warm compiler authorities.
+
+The active Rewriting Rust adapter and contribution remain byte-identical to the recorded baseline capsules. Semio/Jack extra dependencies, after adapter/helper inclusion, production Native/provider opt-in and global typed-child/frame activation remain held. Source materialization is not Native46 or Native12 evidence.
+
+
+## Final Dispatch Readiness
+
+The final actual API readback resolves all four scoped roots beneath the ticket artifact directory and both Cargo directories to the existing Root warm pool. JSONC validation returned0 syntax problems in both catalogs, with one new artifact-root launch each and the updated scoped Rust46 artifact/warm environments. Registry and subject SHA256 anchors remain unchanged. Receipt: `🗑️generated/worker-rewriting-rust46-ticket-contained-final-authority-readback.json`. No Rust host compilation or execution occurred in this lane. Root may now dispatch the unchanged owning Rust46 baseline using the saved command.

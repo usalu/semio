@@ -11,7 +11,7 @@ pub fn diff(payload: &super::UpdateSfmParams, base: &RemodelingSnapshot) -> prot
         return protocol::MutationOutcome::fatal("mutation.invariant", "SfM params have non-finite thresholds.".to_string(), [base.id.clone()]);
     }
     if payload.params == base.params.sfm {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "SfM params are already up to date.".to_string());
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "SfM params are already up to date.".to_string());
     }
     let mut params = base.params.clone();
     params.sfm = payload.params.clone();

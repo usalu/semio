@@ -17,9 +17,12 @@ impl protocol::MutationKind<SemioTextSnapshot, SemioTextMutation> for ChangeRunL
     fn diff(&self, base: &SemioTextSnapshot) -> protocol::MutationOutcome<<SemioTextMutation as protocol::Mutation<SemioTextSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioTextSnapshot) -> Vec<SemioTextMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &SemioTextSnapshot) -> Result<Vec<SemioTextMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change run #{} language to {}", self.index, self.new_language), &format!("Sprache von Textlauf #{} auf {} ändern", self.index, self.new_language))
     }

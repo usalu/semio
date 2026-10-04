@@ -9,12 +9,16 @@ async fn definition_declares_the_paint2d_surface_and_body_key() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn window_measures_surface_brush_and_eraser_groups() {
+async fn window_measures_surface_brush_eraser_and_bucket_groups() {
     let config = RasterConfig::default();
     let measures = window_measures(&config, &crate::editor::raster::terminology::RasterPlayLabels::NATIVE_EN);
-    assert_eq!(measures.len(), 2);
+    assert_eq!(measures.len(), 3);
     assert!(measures.iter().any(|m| matches!(m, WindowMeasure::Group { id, .. } if id == "raster-utility-options-paintBrush")));
     assert!(measures.iter().any(|m| matches!(m, WindowMeasure::Group { id, .. } if id == "raster-utility-options-paintEraser")));
+    let bucket = measures.iter().find(|m| matches!(m, WindowMeasure::Group { id, .. } if id == "raster-utility-options-paintBucket")).expect("the bucket group");
+    let WindowMeasure::Group { active_utility_id, children, .. } = bucket else { panic!("bucket group") };
+    assert_eq!(active_utility_id.as_deref(), Some("paintBucket"));
+    assert!(children.iter().any(|m| matches!(m, WindowMeasure::Slider { id, value, on_change, .. } if id == "raster-paintBucket-tolerance" && *value == 24.0 && on_change.action == "setFillTolerance")));
 }
 
 #[semio_framework_async_macros::async_test]

@@ -12,7 +12,7 @@ fn real_world_wav() -> WavSnapshot {
 
 #[semio_framework_async_macros::async_test]
 async fn deserialize_deinterleaves_pcm16_into_real_f32_channels() {
-    let audio = semio_framework_plugin::resolve_ready(SemioAudioFromWav::deserialize(&real_world_wav())).expect("deserialize");
+    let audio = ::semio_framework_async::poll::resolve_ready(SemioAudioFromWav::deserialize(&real_world_wav())).expect("deserialize");
     assert_eq!(audio.sample_rate, 44_100);
     assert_eq!(audio.format, SemioAudioFormat::Pcm16);
     assert_eq!(audio.channels.len(), 2);
@@ -25,7 +25,7 @@ async fn raw_fallback_data_yields_correct_channel_count_with_no_fabricated_sampl
     let mut wav = real_world_wav();
     wav.fmt.bits_per_sample = 24;
     wav.data = WavData::Raw(vec![0u8; 18]);
-    let audio = semio_framework_plugin::resolve_ready(SemioAudioFromWav::deserialize(&wav)).expect("deserialize");
+    let audio = ::semio_framework_async::poll::resolve_ready(SemioAudioFromWav::deserialize(&wav)).expect("deserialize");
     assert_eq!(audio.format, SemioAudioFormat::Pcm24);
     assert_eq!(audio.channels.len(), 2);
     for ch in &audio.channels {

@@ -1,13 +1,13 @@
 //! 🫥️ Visual condition edits preserve the closed expression tree and sibling rules.
 use crate::FormExpr;
 use crate::schema::value_to_dsl;
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 
 fn create_condition(kind: &str) -> Result<FormExpr, String> {
     Ok(match kind {
-        "const" => FormExpr::Const { value: dsl::DslValue::Bool(true) },
+        "const" => FormExpr::Const { value: semio_framework_value::DslValue::Bool(true) },
         "var" => FormExpr::Var { name: String::new() },
-        "eq" => FormExpr::Eq { left: Box::new(create_condition("var")?), right: Box::new(FormExpr::Const { value: dsl::DslValue::String(String::new()) }) },
+        "eq" => FormExpr::Eq { left: Box::new(create_condition("var")?), right: Box::new(FormExpr::Const { value: semio_framework_value::DslValue::String(String::new()) }) },
         "truthy" => FormExpr::Truthy { expr: Box::new(create_condition("var")?) },
         "and" => FormExpr::And { items: vec![create_condition("const")?] },
         "or" => FormExpr::Or { items: vec![create_condition("const")?] },
@@ -35,13 +35,13 @@ fn edit(node: &mut FormExpr, path: &[usize], field: &str, value: &Value) -> Resu
         if !same { *node = create_condition(kind)?; }
         return Ok(());
     }
-    if field == "remove" { *node = FormExpr::Const { value: dsl::DslValue::Bool(false) }; return Ok(()); }
+    if field == "remove" { *node = FormExpr::Const { value: semio_framework_value::DslValue::Bool(false) }; return Ok(()); }
     match (node, field) {
         (FormExpr::Var { name }, "name") => *name = value.as_str().ok_or("invalid-condition-edit")?.into(),
         (FormExpr::Const { value: slot }, "value") => *slot = value_to_dsl(value),
         (FormExpr::Const { value: slot }, "valueType") => *slot = match value.as_str() {
-            Some("boolean") => dsl::DslValue::Bool(false), Some("number") => dsl::DslValue::int(0),
-            Some("text") => dsl::DslValue::String(String::new()), Some("null") => dsl::DslValue::Null,
+            Some("boolean") => semio_framework_value::DslValue::Bool(false), Some("number") => semio_framework_value::DslValue::int(0),
+            Some("text") => semio_framework_value::DslValue::String(String::new()), Some("null") => semio_framework_value::DslValue::Null,
             _ => return Err("invalid-condition-edit".into()),
         },
         (FormExpr::And { items } | FormExpr::Or { items }, "add") => items.push(create_condition("const")?),

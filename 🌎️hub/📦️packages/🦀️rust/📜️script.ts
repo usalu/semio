@@ -9133,7 +9133,7 @@ async function proveTrustedStdioGisBootstrapFixture(repoRoot: string): Promise<v
 
 /** 🔗️ Exercises receipt-derived dependency claims with Pack, AJV and independent byte framing. */
 async function proveTrustedCompiledDependenciesFixture(repoRoot: string): Promise<void> {
-  await (await import("../../../🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/📜️script.ts")).proveWireValueMaterializationFixture(repoRoot);
+  await (await import("../../../🧰️framework/🔨️modules/🎒️pack/🌱️value/📜️script.ts")).proveWireValueMaterializationFixture(repoRoot);
   const assert: (typeof import("node:assert"))["strict"] = (await import("node:assert/strict")).default;
   const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/🔗️compiled-dependencies");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));

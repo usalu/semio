@@ -18,5 +18,5 @@ pub fn diff(payload: &InsertAccidental, base: &En1990Snapshot) -> MutationOutcom
     if index == payload.index {
         return outcome;
     }
-    outcome.warn("mutation.clamped", format!("Position {} is past the end of the accidental action list; inserted at {index}.", payload.index))
+    outcome.warning("mutation.clamped", format!("Position {} is past the end of the accidental action list; inserted at {index}.", payload.index))
 }

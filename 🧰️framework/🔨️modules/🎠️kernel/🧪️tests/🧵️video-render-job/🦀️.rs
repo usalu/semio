@@ -22,8 +22,8 @@ fn streams_fold_into_the_declared_task_list() {
         assert_eq!(serde_json::to_value(ledger.running()).expect("rows"), stream["running"], "{id}: running rows");
         assert_eq!(ledger.last_job(), stream["lastJob"].as_u64().expect("lastJob"), "{id}: last job");
         for event in &events {
-            let value = dsl::ToValue::to_value(event);
-            assert_eq!(&<VideoRenderJobEvent as dsl::FromValue>::from_value(value).expect("value round trip"), event, "{id}: value codec");
+            let value = semio_framework_value::ToValue::to_value(event);
+            assert_eq!(&<VideoRenderJobEvent as semio_framework_value::FromValue>::from_value(value).expect("value round trip"), event, "{id}: value codec");
         }
         assert_eq!(serde_json::to_value(&events).expect("serde"), stream["events"], "{id}: camelCase wire");
     }

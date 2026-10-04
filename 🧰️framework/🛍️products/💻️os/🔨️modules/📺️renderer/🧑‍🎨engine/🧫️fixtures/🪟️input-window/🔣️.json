@@ -1,0 +1,10 @@
+{
+  "schema": "semio.renderer.input-window-ownership.v1",
+  "owner": "s.stdio.window.table",
+  "focused": "s.stdio.window.snapshot-details",
+  "label": "Cell",
+  "value": "A",
+  "draft": "B",
+  "action": "set-cell",
+  "controller": "csv"
+}

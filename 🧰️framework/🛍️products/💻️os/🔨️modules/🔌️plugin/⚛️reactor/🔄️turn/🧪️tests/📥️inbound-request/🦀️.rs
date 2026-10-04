@@ -83,7 +83,7 @@ fn every_inbound_request_row_is_answered_on_the_turn_it_arrives() {
     assert_eq!(fixture.seam.outcome_arms, vec!["ok".to_string(), "fault".to_string()]);
     assert_eq!(fixture.seam.origin_tag, "shell");
     assert_eq!(fixture.seam.answered_on_turn, 1);
-    semio_framework::io::resolve_ready(async {
+    ::semio_framework_async::poll::resolve_ready(async {
         let runtime = crate::plugin_runtime::PluginRuntime::<crate::app::NoPluginApp>::new();
         crate::plugin_runtime::extension_deactivate().await;
         let mut installed = false;

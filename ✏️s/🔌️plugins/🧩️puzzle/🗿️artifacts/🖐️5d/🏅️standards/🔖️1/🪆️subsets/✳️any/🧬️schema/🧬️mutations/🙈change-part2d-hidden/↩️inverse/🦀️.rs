@@ -3,10 +3,13 @@ use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::ChangePart2dHidden, base: &Puzzle5dSnapshot) -> Vec<Puzzle5dMutation> {
+pub fn inverse(payload: &super::ChangePart2dHidden, base: &Puzzle5dSnapshot) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(item) = base.parts.iter().find(|entry| entry.id == payload.id) else {
         return Vec::new();
     };
     vec![crate::standards::v1::subsets::any::schema::mutations::change_part_2d_hidden::change_part_2d_hidden(item.id.clone(), item.part_2d.hidden)]
+
+    })())
 }
 //#endregion 🔖️Inverse

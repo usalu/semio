@@ -1,0 +1,99 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractId",
+    "authority",
+    "snapshot",
+    "expected",
+    "refusals"
+  ],
+  "properties": {
+    "contractId": {
+      "const": "pptx-outline-owned-xml-refusal"
+    },
+    "authority": {
+      "const": "actualOpcAndXml"
+    },
+    "snapshot": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pptx/ecma-376/base/snapshot.json"
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "slideCount",
+        "shapeCount",
+        "wordCount"
+      ],
+      "properties": {
+        "slideCount": {
+          "const": 1
+        },
+        "shapeCount": {
+          "const": 2
+        },
+        "wordCount": {
+          "const": 2
+        }
+      }
+    },
+    "refusals": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "role",
+            "kind"
+          ],
+          "properties": {
+            "role": {
+              "const": "missingRelationship"
+            },
+            "kind": {
+              "const": "invalidValue"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "role",
+            "kind"
+          ],
+          "properties": {
+            "role": {
+              "const": "missingXmlPart"
+            },
+            "kind": {
+              "const": "invalidValue"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "role",
+            "kind"
+          ],
+          "properties": {
+            "role": {
+              "const": "wrongRootNamespace"
+            },
+            "kind": {
+              "const": "invalidValue"
+            }
+          }
+        }
+      ],
+      "additionalItems": false
+    }
+  }
+}

@@ -6,7 +6,7 @@ use protocol::{Mutation, MutationDiff, SemanticMutation};
 
 fn round_trip(snapshot: &ProgramSnapshot, operation: &ProgramMutation) -> ProgramSnapshot {
     let forward = operation.diff(snapshot).diff().apply(snapshot).expect("valid mutation diff");
-    let mut backward = operation.inverse(snapshot);
+    let mut backward = operation.inverse(snapshot).expect("valid retained mutation inverse fixture");
     backward.reverse();
     let mut restored = forward.clone();
     for undo in &backward {
@@ -48,7 +48,7 @@ async fn stakeholders_create_rename_replace_delete_round_trip() {
 async fn delete_stakeholder_of_a_missing_id_has_an_empty_inverse() {
     let snapshot = sample_plugin();
     let delete = ProgramMutation::DeleteStakeholder(super::super::delete_stakeholder::DeleteStakeholder { id: EntityId("nope".into()) });
-    assert!(delete.inverse(&snapshot).is_empty(), "deleting an absent id has nothing to undo");
+    assert!(delete.inverse(&snapshot).expect("valid retained mutation inverse fixture").is_empty(), "deleting an absent id has nothing to undo");
 }
 //#endregion 👥stakeholders
 

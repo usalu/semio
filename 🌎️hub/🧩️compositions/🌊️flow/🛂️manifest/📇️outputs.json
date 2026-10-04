@@ -1,9 +1,14 @@
 {
-  "$schema": "../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
+  "$schema": "../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json#/$defs/Outputs",
+  "contractId": "flow-graph-catalog",
   "version": 1,
   "inputAreas": [
     "✏️s/🔌️plugins/🌊️flow"
   ],
+  "policy": {
+    "excludedInputPaths": ["✏️s/🔌️plugins/🌊️flow/📦️packages/🟦️typescript/node_modules"],
+    "genericEmojiIdentities": ["📁️", "📂️", "📄️"]
+  },
   "shared": {
     "rustRegistry": "📇️registry/🦀️.rs",
     "typescriptIndex": "🟦️.ts",

@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/graph/mutation/remove-edge-property/schema.json",
+  "title": "RemoveEdgeProperty",
+  "description": "The `remove-edge-property` mutation record: the property entry carrying a key is detached from an edge.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "edge_id",
+    "key"
+  ],
+  "properties": {
+    "edge_id": {
+      "$ref": "#/$defs/GraphEdgeId",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Edge",
+          "de": "Kante"
+        },
+        "description": {
+          "en": "Edge the property is detached from.",
+          "de": "Kante, von der die Eigenschaft gelöst wird."
+        },
+        "ref": {
+          "kind": "edge",
+          "domain": "graph",
+          "granularity": "edge"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "key": {
+      "type": "string",
+      "minLength": 1,
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "target",
+        "label": {
+          "en": "Property",
+          "de": "Eigenschaft"
+        },
+        "description": {
+          "en": "Key of the edge property that is detached.",
+          "de": "Schlüssel der Kanteneigenschaft, die gelöst wird."
+        },
+        "group": "target",
+        "order": 20
+      }
+    }
+  },
+  "$defs": {
+    "GraphEdgeId": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

@@ -49,5 +49,5 @@ export const blockBlock2dSnapshotTextGuardConstant = <T extends string | number 
 //#endregion 🚪️Parsers
 
 export function parseBlock2dSnapshotText(value: unknown, at = "$"): Block2dSnapshotText {
-  return blockBlock2dSnapshotTextGuardObject(value, `${at}`);
+  return blockBlock2dSnapshotTextGuardString(value, at);
 }

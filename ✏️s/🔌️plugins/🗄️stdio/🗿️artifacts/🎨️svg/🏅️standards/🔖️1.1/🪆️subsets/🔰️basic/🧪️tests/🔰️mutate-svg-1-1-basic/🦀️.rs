@@ -158,7 +158,7 @@ mod subject {
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let base = base_snapshot(ctx)?;
         let mutation = mutation_from_spec(&ctx.doc_json()?)?;
-        let undo = mutation_inverse(&mutation, &base);
+        let undo = mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
         let mut snapshot = base;
         apply_svg_basic_mutation(&mut snapshot, &mutation);
         for step in &undo {

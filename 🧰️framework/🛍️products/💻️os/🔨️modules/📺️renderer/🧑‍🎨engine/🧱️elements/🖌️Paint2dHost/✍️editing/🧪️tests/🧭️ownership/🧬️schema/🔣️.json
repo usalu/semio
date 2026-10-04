@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["cases"],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "source", "tests", "admit"],
+        "properties": {
+          "name": {"type": "string", "minLength": 1},
+          "source": {"type": "boolean"},
+          "tests": {"type": "boolean"},
+          "admit": {"type": "boolean"}
+        }
+      }
+    }
+  }
+}

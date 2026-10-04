@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/graph/mutation/rename-node/schema.json",
+  "title": "RenameNode",
+  "description": "The `rename-node` mutation record: a node's identity key changes and every edge endpoint naming it follows.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "new_id"
+  ],
+  "properties": {
+    "id": {
+      "$ref": "#/$defs/GraphNodeId",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "Node whose id changes.",
+          "de": "Knoten, dessen ID sich ändert."
+        },
+        "ref": {
+          "kind": "node",
+          "domain": "graph",
+          "granularity": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "new_id": {
+      "$ref": "#/$defs/NewGraphNodeId",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New id",
+          "de": "Neue ID"
+        },
+        "description": {
+          "en": "Identity key the node takes; no other node may carry it.",
+          "de": "Identitätsschlüssel, den der Knoten erhält; kein anderer Knoten darf ihn tragen."
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  },
+  "$defs": {
+    "GraphNodeId": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "NewGraphNodeId": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

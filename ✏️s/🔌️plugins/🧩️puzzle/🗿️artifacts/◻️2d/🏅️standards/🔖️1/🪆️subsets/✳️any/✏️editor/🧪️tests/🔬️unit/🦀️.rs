@@ -184,7 +184,7 @@ pub(crate) mod context {
                 | "setInteractionGranularity"
                 | "hostEvent"
         ) {
-            let dsl_args = args.map(dsl::DslValue::from);
+            let dsl_args = args.map(semio_framework_value::DslValue::from);
             let result = block_on(app.handle_action(action, dsl_args.as_ref(), &action_meta)).and_then(|admitted| block_on(semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted)));
             return settle(app, result);
         }
@@ -446,7 +446,7 @@ fn an_example_reload_publishes_no_no_op_mutation() {
         crate::standards::v1::subsets::any::schema::mutations::apply_puzzle2d_mutation(&mut state, mutation).expect("the first load applies");
     }
     assert!(first.artifact_mutations.iter().any(|mutation| matches!(mutation, Puzzle2dMutation::ReplaceKindCatalogs(_))) || state.meta.kind_catalogs.is_none(), "a first load states the example's catalogs");
-    let loaded = Puzzle2dPlaySnapshot::new(Value::from(dsl::ToValue::to_value(&state)));
+    let loaded = Puzzle2dPlaySnapshot::new(Value::from(semio_framework_value::ToValue::to_value(&state)));
     let reload = puzzle2d_active_example_emit(&command, &loaded, &Puzzle2dConfig::default()).expect("reload");
     assert!(!reload.artifact_mutations.iter().any(|mutation| matches!(mutation, Puzzle2dMutation::ReplaceKindCatalogs(_) | Puzzle2dMutation::ChangeManifestId(_))), "a reload re-states nothing the document already holds");
     let mut running = loaded.typed().clone();
@@ -989,7 +989,7 @@ async fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructi
         window_instance_id: None,
         point: None,
     };
-    let menu = block_on(app.context_menu(&request, &Default::default()));
+    let menu = block_on(app.context_menu(&request, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)));
     assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
     let last = menu.last().expect("grouped disclosure menu should not be empty");
     assert_eq!(last.id, "deleteSelection", "the destructive row must stay last as a top-level leaf");
@@ -1170,7 +1170,7 @@ fn suggestion_popup_publishes_the_shared_candidate_page_and_the_previewed_index(
         suggestion_menu: Some(crate::editor::puzzle2d::config::Puzzle2dSuggestionMenu { x: 12.0, y: 34.0, window_id: overview::WINDOW_KIND_ID.into(), handle_id: handle_id.clone() }),
         brush_candidate_source_handle_id: handle_id.clone(),
         brush_candidate_index: 1,
-        brush_candidates: vec![dsl::DslValue::from(&json!({ "nodeKind": "alpha", "targetHandleIndex": 0 })), dsl::DslValue::from(&json!({ "nodeKind": "beta", "targetHandleIndex": 2 }))],
+        brush_candidates: vec![semio_framework_value::DslValue::from(&json!({ "nodeKind": "alpha", "targetHandleIndex": 0 })), semio_framework_value::DslValue::from(&json!({ "nodeKind": "beta", "targetHandleIndex": 2 }))],
         ..Default::default()
     };
     let envelope = Puzzle2dScene { fixture, runtime, active_utility: "select".into(), interaction: Puzzle2dInteractionSnapshot::default() };
@@ -1212,7 +1212,7 @@ async fn context_menu_offers_suggest_nodes_on_one_selected_handle_only() {
             window_instance_id: None,
             point: None,
         };
-        block_on(app.context_menu(&request, &Default::default()))
+        block_on(app.context_menu(&request, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)))
     };
     let on_handle = menu_for(&mut app, vec![handle_id.clone()]);
     let on_node = menu_for(&mut app, vec![node_id]);
@@ -1568,7 +1568,7 @@ fn a_rotate_record_orbits_a_two_node_selection_about_its_recorded_pivot() {
     assert_eq!(yields.len(), 1, "a rotate yields its one leaf and no connection");
     let mut after = base.clone();
     crate::standards::v1::subsets::any::schema::mutations::apply_puzzle2d_mutation(&mut after, &yields[0].1).expect("the leaf applies");
-    let fixture = Value::from(dsl::ToValue::to_value(&after));
+    let fixture = Value::from(semio_framework_value::ToValue::to_value(&after));
     let a = transform_law_node(&fixture, "node-a");
     assert!(a.get("x").and_then(Value::as_f64).expect("x").abs() < 1e-6 && (a.get("y").and_then(Value::as_f64).expect("y") + 40.0).abs() < 1e-6, "node-a orbits to (0,-40): {a}");
     let b = transform_law_node(&fixture, "node-b");
@@ -1654,7 +1654,7 @@ fn outliner_set_verbs_are_idempotent_by_value_and_refuse_a_missing_value() {
         ("setTargetRegionHidden", "hidden", json!({ "id": region.clone() })),
         ("setTargetRegionLocked", "locked", json!({ "id": region.clone() })),
     ] {
-        assert!(<Puzzle2dPlayApp as ArtifactEditor>::command_from_action(verb, Some(&dsl::DslValue::from(&args))).is_err(), "{verb} without its {flag} value must be refused");
+        assert!(<Puzzle2dPlayApp as ArtifactEditor>::command_from_action(verb, Some(&semio_framework_value::DslValue::from(&args))).is_err(), "{verb} without its {flag} value must be refused");
         args[flag] = json!(true);
         let first = dispatch(&mut app, verb, Some(&args), None).unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
         assert_eq!(committed_edits(&first), 1, "{verb} commits exactly one document edit");

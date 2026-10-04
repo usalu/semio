@@ -1,4 +1,4 @@
-//! Diff for `insert-self-weight-elements`.
+//! 🔺️ Diff for `insert-self-weight-elements`.
 use super::InsertSelfWeightElements;
 use crate::artifact_schema::diff::En1991SelfWeightElementsList;
 use crate::{En1991Diff, En1991Snapshot};

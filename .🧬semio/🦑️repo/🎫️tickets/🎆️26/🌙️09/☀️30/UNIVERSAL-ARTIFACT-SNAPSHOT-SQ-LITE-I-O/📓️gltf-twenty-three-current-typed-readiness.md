@@ -1,0 +1,24 @@
+# GLTF Twenty Three Current Typed Readiness
+
+The actual mounted snapshot unit file declares23 sqlite_snapshot_ laws. The existing @semio-tech/stdio-gltf-rs:test-snapshot-sqlite-native target takes no arguments and calls the package router test-snapshot-sqlite native, which forwards --lib sqlite_snapshot_ --no-fail-fast. No guessed19-count or extra selector is used. Existing generic launch project/target choices remain; no new executable command was introduced.
+
+One fixture API prerequisite changed: the retained required-field failure now asserts canonical InvalidValue, retaining its original required-message content assertion through error.message. It no longer calls String.contains on ValueError. Seven JSON fixture readers already use actual semio_framework_pack_json and explicit JsonMemberPolicy::Reject; no obsolete namespace remains here. The23 law bodies and literal thresholds are retained.
+
+Fresh actual registered Source execution:12/12,81 assertions,0 failures,3.51s Bun/12.5s uncached Nx. Command: NX_DAEMON=false NX_ISOLATE_PLUGINS=false bun nx run @semio-tech/stdio-gltf-rs:test-snapshot-sqlite-source --skip-nx-cache. Output generated/gltf-current-canonical-source-readiness.log. These existing Source laws independently exercise57-table handwritten DDL through Bun SQLite, relational edits/FKs, full IEEE/u64 companions, duplicate/deep extras, optional entities, and actual typed guards. This is not proof of Native output or new closed allocation policies; no fixtures/schema were changed by this readiness task.
+
+Mounted current authority: ValueError SQL projection/reconstruction, actual controlled input decode, subset IoError::from_value_error, preflight forecast, and Pack optional codec. Missing encode_sqlite_snapshot_native override remains on the actual provider, so the declared output laws can reach the shared UnsupportedOwner default at runtime. The current input uses max_value_bytes rather than allocation_stage, and SQL indexes still use BTreeMap/Vec::with_capacity. Those are explicit remaining paid-backing gaps, not marked complete by this Source result.
+
+Adjacent UNMOUNTED output draft remains snapshot/📦️pack/🛫️encoding/🦀️.rs; the actual owned_pack module has no path declaration for it. Its explicit fields cover root schema/document/resolved buffers/source_form; flat JSON node/member identities and literal duplicate order; morph attributes, all7 primitive members, exclusive camera3 fields, image7 fields, texture6 fields. Generated GltfDocument metadata and controlled field factories supply the full authored domain rather than native DTO copies. Custom DslField controlled producer and metadata overrides are still absent from mounted owned_pack and must activate only after genuine owning RED.
+
+The draft borrowed extras frontier now uses a separately admitted full replacement Vec via allocate_vec(capacity), preserving cumulative charges for the old buffer; the previous delta-only reserve forecast was removed from the unmounted draft. Its new typed encode_native entry calls the actual Store record terminal with the declared spec producer and typed borrowed snapshot factory. The terminal currently explicitly accepts TextError construction; this draft retains ValueError until that declared boundary and supplies its kind/message with the boundary span through TextError::from_value_error. No String map or compatibility bridge is added.
+
+There is no actual named native_footprint helper in GLTF. Existing mounted snapshot/🪶️sqlite/📏️encoding/🦀️.rs is an unpaid NativeEncodingBound forecast over every domain, root schema and independent buffers; it must remain distinct from actual backing admission. Its extras frontier is still an unadmitted vec and is a future genuine controlled-preflight demand, not a proven paid implementation. No forecast is charged as backing in this readiness task.
+
+Parser-only checks on changed fixture and adjacent draft:2/2 exit0, receipt generated/gltf-current-typed-draft-parser.json. Root owns compilation and authentic23 assertion baseline; no Cargo ran here. No Native encode hook or new module was mounted.
+
+Changed files:
+
+- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs
+- ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📸️snapshot/📦️pack/🛫️encoding/🦀️.rs
+
+Root actual first23 attempt reached0 assertions and15 E0433 removed JSON namespace gates outside the primary snapshot suite. Four actual mounted test files now use canonical firstparty PackJSON: topology canonical vectors, mutation unit, mutation fixture corpus, node rename law. Eight reads explicitly reject duplicate members and seven canonical writes preserve original serde_json/fixture comparisons. Parser4/4 exit0. This compiler prerequisite is not feature RED; output hook remains unmounted. Exact receipt generated/gltf23-measured-fifteen-json-fixture-pair.json.

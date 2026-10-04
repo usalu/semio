@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "error",
+          "kind",
+          "condition"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "retained-pack.catalog-chunk-allocation",
+              "retained-pack.symbol-span-allocation",
+              "retained-pack.symbol-scalar-allocation",
+              "retained-pack.catalog-observed-allocation",
+              "record-value-close",
+              "record-symbol-close",
+              "source-canceled",
+              "source-allocation-credit"
+            ]
+          },
+          "error": {
+            "enum": [
+              "RetainedPackCatalogFault",
+              "PackRefusal",
+              "RetainedPackSourceFault"
+            ]
+          },
+          "kind": {
+            "enum": [
+              "InvariantViolated",
+              "preserved",
+              "Canceled",
+              "OwnershipLimit"
+            ]
+          },
+          "condition": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

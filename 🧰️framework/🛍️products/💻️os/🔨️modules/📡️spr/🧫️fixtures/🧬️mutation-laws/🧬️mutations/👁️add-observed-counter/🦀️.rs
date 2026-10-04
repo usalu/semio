@@ -23,9 +23,12 @@ impl MutationKind<i64, CounterMutation> for AddObservedCounter {
         self.calls.set(count + 1);
         MutationOutcome::new(CounterDiff::delta(count))
     }
-    fn inverse(&self, _base: &i64) -> Vec<CounterMutation> {
+    fn inverse(&self, _base: &i64) -> Result<Vec<CounterMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         Vec::new()
-    }
+    
+    })())
+}
     fn label(&self) -> crate::LocalizedLabel {
         crate::LocalizedLabel::native("Add observed counter", "Beobachteten Zähler hinzufügen")
     }
@@ -37,11 +40,11 @@ impl OpText for AddObservedCounter {
     fn print_op(&self) -> String {
         "add-observed-counter".into()
     }
-    fn parse_op(line: &str) -> Result<Self, crate::os_dsl::TextError> {
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         if line == "add-observed-counter" {
             Ok(Self::default())
         } else {
-            Err(crate::os_dsl::TextError::new("expected add-observed-counter", crate::os_dsl::TextSpan::at(1, 1)))
+            Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected add-observed-counter", semio_framework_diagnostic::TextSpan::at(1, 1)))
         }
     }
 }

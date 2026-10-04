@@ -31,5 +31,5 @@ test("DWG incomplete ownership, widths and bounded cancellation reject",async()=
   const bad=new DwgNumberRow("dwg_named_reference",{rowid:1n,values:[1n,4294967296n,null,0n]});
   expect(()=>dwgUnsigned(bad,1)).toThrow();expect(()=>dwgOptionalUnsigned(bad,2,3)).toThrow();
   await expect(DwgReader.create(database,sql,{maxRows:2})).rejects.toThrow();
-  const controller=new AbortController();await expect(DwgReader.create(database,sql,{signal:controller.signal,onProgress:()=>controller.abort()})).rejects.toMatchObject({name:"AbortError"});
+  const controller=new AbortController();await expect(DwgReader.create(database,sql,{signal:controller.signal,onProgress:()=>controller.abort()})).rejects.toMatchObject({kind:"canceled"});
 },30000);

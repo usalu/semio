@@ -5,7 +5,7 @@
 
 use super::super::super::{DocxError, MAIN_DOCUMENT_PART, REL_TYPE_STYLES, STRICT_REL_TYPE_OFFICE_DOCUMENT, STRICT_REL_TYPE_STYLES, STYLES_PART};
 use crate::DocxSnapshot;
-use crate::schema::snapshot::{DocxBlock, DocxDocument, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow, DocxXmlPart, docx_part_is_xml};
+use crate::schema::snapshot::{DocxBlock, DocxDocument, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow, DocxXmlPart, DocxXmlParts, docx_part_is_xml};
 use crate::standards::v_ecma_376::subsets::base::io::namespaces::{is_word_name, scoped_bindings, word_attr, word_local_name};
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDocument, XmlNode, xml_document_from_text};
 use semio_s_artifact_stdio_zip::opc::{self, REL_TYPE_OFFICE_DOCUMENT};
@@ -178,18 +178,31 @@ pub fn styles_from_xml(doc: &XmlDocument) -> Result<Vec<DocxStyle>, DocxError> {
 //#region 🔖️Codec
 /// 🧭️ Resolves the authoritative WordprocessingML main document part.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn main_document_path(opc: &semio_s_artifact_stdio_zip::opc::OpcPackage) -> Result<String, DocxError> {
+pub fn main_document_path(opc: &semio_s_artifact_stdio_zip::opc::retained::RetainedOpcPackage) -> Result<String, DocxError> {
     opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT).or_else(|| opc.resolve_relationship("", STRICT_REL_TYPE_OFFICE_DOCUMENT)).ok_or(DocxError::MissingMainDocumentRelationship)
 }
 
 /// 📰️ Projects the semantic document view from authoritative XML parts without mutating them.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn project_document(opc: &semio_s_artifact_stdio_zip::opc::OpcPackage, xml_parts: &[DocxXmlPart]) -> Result<DocxDocument, DocxError> {
+pub fn project_document(opc: &semio_s_artifact_stdio_zip::opc::retained::RetainedOpcPackage, xml_parts: &DocxXmlParts) -> Result<DocxDocument, DocxError> {
     let main_path = main_document_path(opc)?;
     let main = xml_parts.iter().find(|part| part.path == main_path).ok_or_else(|| DocxError::MissingPart(main_path.clone()))?;
-    let body = document_from_xml(&main.document)?;
-    let styles = match opc.resolve_relationship(&main_path, REL_TYPE_STYLES).or_else(|| opc.resolve_relationship(&main_path, STRICT_REL_TYPE_STYLES)) {
-        Some(styles_path) => xml_parts.iter().find(|part| part.path == styles_path).map(|part| styles_from_xml(&part.document)).transpose()?.unwrap_or_default(),
+    let styles_part = opc
+        .resolve_relationship(&main_path, REL_TYPE_STYLES)
+        .or_else(|| opc.resolve_relationship(&main_path, STRICT_REL_TYPE_STYLES))
+        .and_then(|styles_path| xml_parts.iter().find(|part| part.path == styles_path));
+    let owned_bytes = styles_part.map_or(Ok(main.document.materialization_owned_bytes()?), |styles| {
+        main.document
+            .materialization_owned_bytes()?
+            .checked_add(styles.document.materialization_owned_bytes()?)
+            .ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit, "DOCX semantic projection ownership overflow"))
+    })?;
+    let mut progress = |_| true;
+    let mut control = semio_framework_value::NativeEncodeControl::new(owned_bytes, &mut progress);
+    let main_document = main.materialize_document(&mut control)?;
+    let body = document_from_xml(&main_document)?;
+    let styles = match styles_part {
+        Some(styles) => styles_from_xml(&styles.materialize_document(&mut control)?)?,
         None => Vec::new(),
     };
     Ok(DocxDocument { body, styles })
@@ -210,13 +223,13 @@ pub fn decode_docx(data: &[u8]) -> Result<DocxSnapshot, DocxError> {
         if docx_part_is_xml(&part.path, &part.content_type) {
             let text = String::from_utf8(part.bytes).map_err(|_| DocxError::Xml { part: part.path.clone(), detail: "not valid utf-8".into() })?;
             let document = xml_document_from_text(&text).map_err(|detail| DocxError::Xml { part: part.path.clone(), detail })?;
-            xml_parts.push(DocxXmlPart { path: part.path, content_type: part.content_type, document });
+            xml_parts.push(DocxXmlPart::try_from_document(part.path, part.content_type, document)?);
         } else {
             binary_parts.push(part);
         }
     }
     opc.parts = binary_parts;
-    let snapshot = DocxSnapshot::from_parts(opc, xml_parts);
+    let snapshot = DocxSnapshot::from_parts(opc, xml_parts)?;
     snapshot.validate_authority()?;
     project_snapshot_document(&snapshot)?;
     Ok(snapshot)
@@ -228,6 +241,9 @@ pub fn decode_docx(data: &[u8]) -> Result<DocxSnapshot, DocxError> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn sniff_docx_bytes(data: &[u8]) -> bool {
     let Ok(opc) = opc::decode_opc(data) else { return false };
-    main_document_path(&opc).ok().and_then(|path| opc.part(&path)).is_some_and(|part| part.content_type == super::super::super::MAIN_DOCUMENT_CONTENT_TYPE)
+    opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT)
+        .or_else(|| opc.resolve_relationship("", STRICT_REL_TYPE_OFFICE_DOCUMENT))
+        .and_then(|path| opc.part(&path))
+        .is_some_and(|part| part.content_type == super::super::super::MAIN_DOCUMENT_CONTENT_TYPE)
 }
 //#endregion 🔖️Sniff

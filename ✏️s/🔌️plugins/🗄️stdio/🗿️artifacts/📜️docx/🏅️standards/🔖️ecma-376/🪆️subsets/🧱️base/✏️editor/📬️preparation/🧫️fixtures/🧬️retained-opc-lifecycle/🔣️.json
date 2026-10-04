@@ -1,0 +1,11 @@
+{
+  "partPath": "word/media/large-owner.bin",
+  "contentType": "application/octet-stream",
+  "partBytes": 1310720,
+  "fillByte": 151,
+  "xmlPayloadBytes": 1114112,
+  "xmlFillByte": 126,
+  "beforeText": "before",
+  "afterText": "after",
+  "maximumTurns": 16384
+}

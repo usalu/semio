@@ -1235,7 +1235,7 @@ fn write_bin_rgb(w: &mut dsl::ByteWriter, c: &GifRgb) {
     w.write_u8(c.b);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_bin_rgb(r: &mut dsl::ByteReader<'_>) -> Result<GifRgb, dsl::PackError> {
+fn read_bin_rgb(r: &mut dsl::ByteReader<'_>) -> Result<GifRgb, dsl::PackRefusal> {
     Ok(GifRgb { r: r.read_u8()?, g: r.read_u8()?, b: r.read_u8()? })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1244,7 +1244,7 @@ fn write_bin_color_table(w: &mut dsl::ByteWriter, t: &GifColorTable) {
     write_bin_vec(w, &t.colors, write_bin_rgb);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_bin_color_table(r: &mut dsl::ByteReader<'_>) -> Result<GifColorTable, dsl::PackError> {
+fn read_bin_color_table(r: &mut dsl::ByteReader<'_>) -> Result<GifColorTable, dsl::PackRefusal> {
     let sorted = r.read_u8()? != 0;
     let colors = read_bin_vec(r, read_bin_rgb)?;
     Ok(GifColorTable { sorted, colors })
@@ -1255,7 +1255,7 @@ fn write_bin_blob(w: &mut dsl::ByteWriter, bytes: &[u8]) {
     w.write_bytes(bytes);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_bin_blob(r: &mut dsl::ByteReader<'_>) -> Result<Vec<u8>, dsl::PackError> {
+fn read_bin_blob(r: &mut dsl::ByteReader<'_>) -> Result<Vec<u8>, dsl::PackRefusal> {
     let len = r.read_varint_u64()? as usize;
     Ok(r.read_bytes(len)?.to_vec())
 }
@@ -1264,16 +1264,16 @@ fn write_bin_str(w: &mut dsl::ByteWriter, s: &str) {
     write_bin_blob(w, s.as_bytes());
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_bin_str(r: &mut dsl::ByteReader<'_>) -> Result<String, dsl::PackError> {
+fn read_bin_str(r: &mut dsl::ByteReader<'_>) -> Result<String, dsl::PackRefusal> {
     let bytes = read_bin_blob(r)?;
-    String::from_utf8(bytes).map_err(|e| dsl::PackError::Malformed { what: "gif89a binary utf8 string", offset: 0, detail: e.to_string() })
+    String::from_utf8(bytes).map_err(|e| dsl::PackRefusal::Malformed { kind: semio_framework_value::ValueRefusalKind::InvalidValue, what: "gif89a binary utf8 string", offset: 0, detail: e.to_string() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn write_bin_disposal(w: &mut dsl::ByteWriter, d: GifDisposal) {
     w.write_u8(d.to_bits());
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_bin_disposal(r: &mut dsl::ByteReader<'_>) -> Result<GifDisposal, dsl::PackError> {
+fn read_bin_disposal(r: &mut dsl::ByteReader<'_>) -> Result<GifDisposal, dsl::PackRefusal> {
     Ok(GifDisposal::from_bits(r.read_u8()?))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1289,7 +1289,7 @@ fn write_bin_plain_text(w: &mut dsl::ByteWriter, p: &GifPlainText) {
     write_bin_str(w, &p.text);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_bin_plain_text(r: &mut dsl::ByteReader<'_>) -> Result<GifPlainText, dsl::PackError> {
+fn read_bin_plain_text(r: &mut dsl::ByteReader<'_>) -> Result<GifPlainText, dsl::PackRefusal> {
     Ok(GifPlainText {
         left: r.read_u32_le()?,
         top: r.read_u32_le()?,
@@ -1318,7 +1318,7 @@ fn write_bin_frame(w: &mut dsl::ByteWriter, f: &GifFrame) {
     write_bin_option(w, &f.plain_text, write_bin_plain_text);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_bin_frame(r: &mut dsl::ByteReader<'_>) -> Result<GifFrame, dsl::PackError> {
+fn read_bin_frame(r: &mut dsl::ByteReader<'_>) -> Result<GifFrame, dsl::PackRefusal> {
     Ok(GifFrame {
         left: r.read_u32_le()?,
         top: r.read_u32_le()?,
@@ -1341,9 +1341,9 @@ fn write_bin_app_extension(w: &mut dsl::ByteWriter, e: &GifAppExtension) {
     write_bin_blob(w, &e.data);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_bin_app_extension(r: &mut dsl::ByteReader<'_>) -> Result<GifAppExtension, dsl::PackError> {
-    let identifier: [u8; 8] = r.read_bytes(8)?.try_into().map_err(|_| dsl::PackError::Malformed { what: "gif89a app extension identifier", offset: 0, detail: "expected 8 bytes".into() })?;
-    let auth_code: [u8; 3] = r.read_bytes(3)?.try_into().map_err(|_| dsl::PackError::Malformed { what: "gif89a app extension auth_code", offset: 0, detail: "expected 3 bytes".into() })?;
+fn read_bin_app_extension(r: &mut dsl::ByteReader<'_>) -> Result<GifAppExtension, dsl::PackRefusal> {
+    let identifier: [u8; 8] = r.read_bytes(8)?.try_into().map_err(|_| dsl::PackRefusal::Malformed { kind: semio_framework_value::ValueRefusalKind::InvalidValue, what: "gif89a app extension identifier", offset: 0, detail: "expected 8 bytes".into() })?;
+    let auth_code: [u8; 3] = r.read_bytes(3)?.try_into().map_err(|_| dsl::PackRefusal::Malformed { kind: semio_framework_value::ValueRefusalKind::InvalidValue, what: "gif89a app extension auth_code", offset: 0, detail: "expected 3 bytes".into() })?;
     Ok(GifAppExtension { identifier, auth_code, data: read_bin_blob(r)? })
 }
 /// 🧩 2-way presence flag (`0`=None, `1`=Some) — shared by every plain `Option<T>` field.
@@ -1358,11 +1358,11 @@ fn write_bin_option<T>(w: &mut dsl::ByteWriter, v: &Option<T>, write_value: impl
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_bin_option<T>(r: &mut dsl::ByteReader<'_>, read_value: impl FnOnce(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Option<T>, dsl::PackError> {
+fn read_bin_option<T>(r: &mut dsl::ByteReader<'_>, read_value: impl FnOnce(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackRefusal>) -> Result<Option<T>, dsl::PackRefusal> {
     match r.read_u8()? {
         0 => Ok(None),
         1 => Ok(Some(read_value(r)?)),
-        other => Err(dsl::PackError::Malformed { what: "gif89a binary option tag", offset: 0, detail: format!("unknown tag {other}") }),
+        other => Err(dsl::PackRefusal::Malformed { kind: semio_framework_value::ValueRefusalKind::InvalidValue, what: "gif89a binary option tag", offset: 0, detail: format!("unknown tag {other}") }),
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1373,7 +1373,7 @@ fn write_bin_vec<T>(w: &mut dsl::ByteWriter, items: &[T], write_item: impl Fn(&m
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_bin_vec<T>(r: &mut dsl::ByteReader<'_>, mut read_item: impl FnMut(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Vec<T>, dsl::PackError> {
+fn read_bin_vec<T>(r: &mut dsl::ByteReader<'_>, mut read_item: impl FnMut(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackRefusal>) -> Result<Vec<T>, dsl::PackRefusal> {
     let n = r.read_varint_u64()? as usize;
     let mut out = Vec::with_capacity(n);
     for _ in 0..n {
@@ -1397,16 +1397,16 @@ fn write_bin_tri_flag<T>(w: &mut dsl::ByteWriter, v: &Option<Option<T>>, write_v
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_bin_tri_flag<T>(r: &mut dsl::ByteReader<'_>, read_value: impl FnOnce(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Option<Option<T>>, dsl::PackError> {
+fn read_bin_tri_flag<T>(r: &mut dsl::ByteReader<'_>, read_value: impl FnOnce(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackRefusal>) -> Result<Option<Option<T>>, dsl::PackRefusal> {
     match r.read_u8()? {
         0 => Ok(None),
         1 => Ok(Some(None)),
         2 => Ok(Some(Some(read_value(r)?))),
-        other => Err(dsl::PackError::Malformed { what: "gif89a diff tri-flag", offset: 0, detail: format!("unknown flag {other}") }),
+        other => Err(dsl::PackRefusal::Malformed { kind: semio_framework_value::ValueRefusalKind::InvalidValue, what: "gif89a diff tri-flag", offset: 0, detail: format!("unknown flag {other}") }),
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_pack_err(e: &dsl::PackError) -> protocol::ProtocolError {
+fn diff_pack_err(e: &dsl::PackRefusal) -> protocol::ProtocolError {
     protocol::ProtocolError::Malformed { what: "gif89a diff binary", offset: 0, detail: e.to_string() }
 }
 //#endregion 🔖️RealBinaryPrimitives
@@ -1434,7 +1434,7 @@ fn write_bin_frame_diff(w: &mut dsl::ByteWriter, d: &GifFrameDiff) {
     write_bin_tri_flag(w, &d.plain_text, write_bin_plain_text);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_bin_frame_diff(r: &mut dsl::ByteReader<'_>) -> Result<GifFrameDiff, dsl::PackError> {
+fn read_bin_frame_diff(r: &mut dsl::ByteReader<'_>) -> Result<GifFrameDiff, dsl::PackRefusal> {
     Ok(GifFrameDiff {
         left: read_bin_option(r, |r| r.read_u32_le())?,
         top: read_bin_option(r, |r| r.read_u32_le())?,
@@ -1465,7 +1465,7 @@ fn enc_frames_diff_bin(d: &GifFramesDiff) -> Vec<u8> {
     w.into_bytes()
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_frames_diff_bin(bytes: &[u8]) -> Result<GifFramesDiff, dsl::PackError> {
+fn dec_frames_diff_bin(bytes: &[u8]) -> Result<GifFramesDiff, dsl::PackRefusal> {
     let mut r = dsl::ByteReader::new(bytes);
     let removed = read_bin_vec(&mut r, |r| Ok(r.read_varint_u64()? as usize))?;
     let modified = read_bin_vec(&mut r, |r| {
@@ -1495,7 +1495,7 @@ fn enc_comments_diff_bin(d: &GifCommentsDiff) -> Vec<u8> {
     w.into_bytes()
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_comments_diff_bin(bytes: &[u8]) -> Result<GifCommentsDiff, dsl::PackError> {
+fn dec_comments_diff_bin(bytes: &[u8]) -> Result<GifCommentsDiff, dsl::PackRefusal> {
     let mut r = dsl::ByteReader::new(bytes);
     let removed = read_bin_vec(&mut r, |r| Ok(r.read_varint_u64()? as usize))?;
     let modified = read_bin_vec(&mut r, |r| {
@@ -1525,7 +1525,7 @@ fn enc_app_extensions_diff_bin(d: &GifAppExtensionsDiff) -> Vec<u8> {
     w.into_bytes()
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_app_extensions_diff_bin(bytes: &[u8]) -> Result<GifAppExtensionsDiff, dsl::PackError> {
+fn dec_app_extensions_diff_bin(bytes: &[u8]) -> Result<GifAppExtensionsDiff, dsl::PackRefusal> {
     let mut r = dsl::ByteReader::new(bytes);
     let removed = read_bin_vec(&mut r, |r| Ok(r.read_varint_u64()? as usize))?;
     let modified = read_bin_vec(&mut r, |r| {
@@ -1611,8 +1611,8 @@ impl DiffCodec for GifDiff {
     fn print_diff(&self) -> String {
         print_gif_diff(self)
     }
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_gif_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_diff(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_gif_diff(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
     /// ⚡️ P2-FG2: real binary diff-frame — upgraded from the F6-era `print_diff().into_bytes()`
     /// text-as-binary shortcut (100% of stdio's `DiffCodec` impls were still on that shortcut

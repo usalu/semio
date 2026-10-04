@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/delete-surface/schema.json",
   "title": "DeleteSurface",
+  "x-semio-inverse-rows": { "bounded": 1025 },
   "type": "object",
   "additionalProperties": false,
   "required": [

@@ -20,7 +20,7 @@
 //! | foreign dialect | direction | fidelity | behaviour |
 //! |---|---|---|---|
 //! | `s.stdio.txt@utf-8/*` | both | `Exact` | this subset's own `.semio` DSL snapshot text — the exact bytes `📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio` carries |
-//! | `s.stdio.json@rfc8259/*` | both | `Exact` | the `dsl::ToValue` record tree as compact rfc8259 |
+//! | `s.stdio.json@rfc8259/*` | both | `Exact` | the `semio_framework_value::ToValue` record tree as compact rfc8259 |
 //! | `s.stdio.csv@rfc4180/*` | export | `Lossy` | the node coordinate table (`id,x,y,z`), written by stdio's own RFC 4180 codec |
 //! | `s.stdio.stl@ascii/*` | export | `Lossy` | REAL geometry — tetrahedralised `FemSolid` extrusions via the meshing kernel |
 //! | `s.stdio.obj@3.0/*` | export | `Lossy` | REAL geometry — same kernel, `.obj` grammar |

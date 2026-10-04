@@ -1,6 +1,27 @@
 syntax = "proto3";
 package semio.s_stdio_docx.snapshot;
+
+import "s_stdio_xml/snapshot.proto";
+
+message OpcMetadataEntry { string name = 1; string content_type = 2; }
+message OpcContentTypes { repeated OpcMetadataEntry defaults = 1; repeated OpcMetadataEntry overrides = 2; }
+message OpcPart { string path = 1; string content_type = 2; bytes bytes = 3; }
+enum OpcTargetMode { OPC_TARGET_MODE_INTERNAL = 0; OPC_TARGET_MODE_EXTERNAL = 1; }
+message OpcRelationship { string id = 1; string rel_type = 2; string target = 3; OpcTargetMode target_mode = 4; }
+message OpcRelationshipOwner { string owner = 1; repeated OpcRelationship relationships = 2; }
+message OpcPackage {
+  repeated OpcPart parts = 1;
+  OpcContentTypes content_types = 2;
+  repeated OpcRelationshipOwner relationships = 3;
+  string comment = 4;
+}
+message DocxXmlPart {
+  string path = 1;
+  string content_type = 2;
+  semio.s_stdio_xml.snapshot.RetainedXmlDocument document = 3;
+}
 message DocxSnapshot {
   string schema = 1;
-  string bytes_wire = 2;
+  OpcPackage opc = 2;
+  repeated DocxXmlPart xml_parts = 3;
 }

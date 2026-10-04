@@ -19,3 +19,23 @@ import{document as strip}from"../../../../📚️examples/🧱️wall-roof-facad
 test('wfc2d owned mutations, inverse and four authored example consumers',async()=>{const before=corridor(),mutation={DragSlots:parseDragSlots({targets:['corridor'],dx:3,dy:-2})},after=applyWfc2dMutation(mutation,before);expect(after.slots[0]!.x).toEqual(binary64(5));let restored=after;for(const op of wfc2dInverse(mutation,before))restored=applyWfc2dMutation(op,restored);expect(restored).toEqual(before);const seed=applyWfc2dMutation({ChangeSeed:{seed:18446744073709551615n}},before);expect(seed.seed).toBe(18446744073709551615n);expect(wfc2dDiff({ChangeTileMedia:{tileId:'corridor',media:before.tiles[0]!.media}},before).messages).toEqual([{level:'warning',code:'mutation.no-op'}]);for(const make of[terrain,corridor,ring,strip]){const owned=make(),bytes=await exportSqliteDatabase(await wfc2dSnapshotToSqliteDatabase(owned));expect(await wfc2dSnapshotFromSqliteDatabase(await importSqliteDatabase(bytes))).toEqual(owned);}});
 
 test("wfc2d authored duplicate and unresolved identities remain literal owned state",async()=>{for(const case_ of fixture.literalIdentityStates){const original=structuredClone(state()),source:Wfc2dSnapshot={...original,tiles:original.tiles.map(tile=>({...tile,id:case_.tileId})),slots:original.slots.map(slot=>({...slot,id:case_.slotId,pinnedTileId:case_.pinTileId})),rules:original.rules.map(rule=>({...rule,id:case_.ruleId,tileAId:case_.tileAId,tileBId:case_.tileBId})),edges:original.edges.map(edge=>({...edge,id:case_.edgeId,fromSlotId:case_.fromSlotId,toSlotId:case_.toSlotId}))};const db=Database.deserialize(await exportSqliteDatabase(await wfc2dSnapshotToSqliteDatabase(source)));try{expect(db.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);expect(db.query("SELECT authored_id,pinned_tile_id FROM wfc2d_slot ORDER BY ordinal").all()).toEqual(source.slots.map(()=>({authored_id:case_.slotId,pinned_tile_id:case_.pinTileId})));expect(db.query("SELECT authored_id,from_slot_id,to_slot_id FROM wfc2d_slot_edge ORDER BY ordinal").all()).toEqual(source.edges.map(()=>({authored_id:case_.edgeId,from_slot_id:case_.fromSlotId,to_slot_id:case_.toSlotId})));expect(await wfc2dSnapshotFromSqliteDatabase(await importSqliteDatabase(db.serialize()))).toEqual(source);}finally{db.close();}}});
+
+import{verifyBitmapSqlite}from"../../../../../../../../../../🪶️sqlite/🎨️bitmap/🧪️tests/🟦️.ts";
+test("wfc2d canonical per-pixel edits and complete intermediate literal states",async()=>{
+ const bitmap=(source:ReturnType<typeof state>)=>{const media=source.tiles[1]!.media;if(typeof media==="string"||!("Bitmap"in media))throw Error("expected authored bitmap");return media.Bitmap;};
+ await verifyBitmapSqlite("wfc2d",value=>{const source=state(),prior=bitmap(source);source.tiles[1]!.media={Bitmap:{width:value.width,height:value.height,palette:prior.palette,pixels:value.text}};return source;},bitmap,wfc2dSnapshotToSqliteDatabase,wfc2dSnapshotFromSqliteDatabase);
+});
+
+import AjvRaster from "ajv";
+import {PNG} from "pngjs";
+import raster from "../../../../🧫️fixtures/🎨️raster/🔣️.json";
+import rasterSchema from "../../../../🧫️fixtures/🎨️raster/🧬️schema/🔣️.json";
+test("wfc2d raster clamps palette components and retains transparent unknown indices",()=>{
+ const validate=new AjvRaster({strict:true,allErrors:true}).compile(rasterSchema);
+ expect(validate(raster),JSON.stringify(validate.errors)).toBe(true);
+ const data=Buffer.from(raster.indices.flatMap(index=>{const color=raster.palette[index];return color?[color.r,color.g,color.b,color.a].map(v=>Math.min(v,255)):[0,0,0,0];}));
+ expect([...data]).toEqual(raster.rgba);
+ const encoded=PNG.sync.write({width:raster.width,height:raster.height,data} as PNG),decoded=PNG.sync.read(encoded);
+ expect([decoded.width,decoded.height]).toEqual([raster.width,raster.height]);expect([...decoded.data]).toEqual(raster.rgba);
+ expect(validate({...raster,carrier:"snapshot"})).toBe(false);
+});

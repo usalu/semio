@@ -6,10 +6,13 @@ use crate::EnergyModelSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ A refused or no-op forward step has nothing to undo, so it answers with no steps at all.
-pub fn inverse(payload: &super::ChangeWaterSystemFixtureCount, base: &EnergyModelSnapshot) -> Vec<EnergyModelMutation> {
+pub fn inverse(payload: &super::ChangeWaterSystemFixtureCount, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.model.water_systems.iter().find(|item| item.id == payload.id) {
         Some(item) if item.fixture_count != payload.new_fixture_count && payload.new_fixture_count != 0 => vec![vocabulary::change_water_system_fixture_count(payload.id, item.fixture_count)],
         _ => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

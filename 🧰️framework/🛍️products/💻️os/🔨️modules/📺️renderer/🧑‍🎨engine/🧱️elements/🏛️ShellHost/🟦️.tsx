@@ -11,7 +11,7 @@ import { useInitialExampleReadiness } from "../🐚️Shell/🎬️initial-examp
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { createAdmittedShellInstanceV1, shellDialogOriginIsCurrentV1, shellDialogOriginV1, shellDialogSessionIsCurrentV1, shellEffectOwnerIsCurrentV1, type ShellDialogOriginV1, type ShellDialogV1 } from "./🗨️dialog-origin/🟦️.ts";
+import { createAdmittedShellInstanceV1, shellDialogOriginIsCurrentV1, shellDialogOriginV1, shellDialogSessionIsCurrentV1, shellEffectOwnerIsCurrentV1, type ShellDialogOriginV1, type ShellDialogSessionV1, type ShellDialogV1 } from "./🗨️dialog-origin/🟦️.ts";
 import { OwnedShellDialog } from "./🗨️dialog-origin/🌐️browser/🟦️.tsx";
 import { admitDocumentOpeningV1, BackgroundDocumentSessionsV1, browserDocumentMountIsCurrentV1, DocumentAttachmentLaneV1, LatestDocumentReplacementV1, parkDocumentOpeningReplacementV1, restoreDocumentArchiveV1, runDocumentOpeningAttemptV1, settleDocumentOpeningReplacementV1, type DocumentOpeningReceiptV1 } from "./🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
 import { createArtifactCreationCatalogMountV1, runArtifactCreationReadyOpeningV1, type ArtifactCreationCatalogMountV1 } from "./🌱️artifact-creation/🚪️ready-opening/🟦️.ts";
@@ -45,6 +45,7 @@ import { renderIconRequest } from "../🖼️IconRenderHost/🚚️request/🟦�
 import {
   HOST_EVENT_ACTION_ID,
   type HostEventKind,
+  type ActionDispatchLifecycleV1,
   type ActionDescriptor,
   type ActionInvocation,
   type AppDefinition,
@@ -134,6 +135,8 @@ import {
   type ShellBrand,
   EXPORT_ARTIFACT_DOCUMENT_ACTION_ID,
   IMPORT_ARTIFACT_DOCUMENT_ACTION_ID,
+  OPEN_ARTIFACT_FILE_ACTION_ID,
+  SAVE_ARTIFACT_FILE_ACTION_ID,
   START_INTRODUCTION_ACTION_ID,
   START_TUTORIAL_ACTION_ID,
   type StoragePort,
@@ -207,6 +210,7 @@ import {
   hubDeviceInstanceIdV1,
   type DocumentScope,
   type DocumentArchivePack,
+  type DocumentArchiveLoadStatus,
   type ArtifactFrontier,
   type DirectoryStreamMessage,
   documentRuntimeKeyV1,
@@ -225,7 +229,7 @@ import { collectLocalPresenceWindowViewsV1, collectLocalActiveToolV1, localPrese
 import { MODE_STEP_CONTROL_IDS, SURFACE_ROLE_CONTROL_IDS, SURFACE_ROLE_ORDER, createSealedInstanceLedgerV1, createSessionAppSwitchGateV1, createSessionWorkLedgerV1, createShellSessionLaneV1, quiesceSessionWorkV1, SHELL_HUB_ROUTE, shellHumanChangeRecoveryV1, shellIdentityResolutionV1, shellRouteAdmissionTextV1, shellRouteAdmissionV1, shellRouteIsOverlayV1, shellSessionRouteV1, resolveBootPrimaryAppV1, roleSwitchTargetV1, sealedInstanceDropTextV1, sealedInstanceDropV1, stepModeIdV1, surfaceRoleAppsV1, surfaceSwitchBusyTextV1, type ShellHumanV1 } from "./🔀️surface-switch/🟦️.ts";
 import { KEYBINDING_UNOWNED_CODE, dockSeedActiveWindowIdV1, keybindingUnownedTextV1, modeLayoutStacksV1, reservedShellChordsV1, resolveKeybindingTargetWindowV1, type WindowScopeInstanceV1, type WindowScopeKindV1, type WindowScopeLayoutNodeV1 } from "./⌨️window-scope/🟦️.ts";
 import { contributionsReceiverSessionV1, focusedProgramKeyV1, focusedProgramV1, programEntriesV1, programHistoryKeyV1, programKeyedEntriesV1, withProgramEntriesV1, programHistoryProjectionV1, programHistoryProjectionsAfterPatchV1, programHistoryProjectionsRetainedV1, createProgramHistoryStoreV1, spawnedBridgeCensusV1, spawnedProgramViewStateV1, guestActiveUtilityByWindowIdV1, guestWindowIdV1, renameLayoutWindowIdsV1, spawnedGuestWindowInstancesV1, spawnedIdOfWindowInstanceV1, spawnedLayoutRenameV1, spawnedProgramWindowInstancesV1, spawnedWindowInstanceIdV1, spawnedWindowKindOfInstanceV1, spawnProgramRefusalCodeV1, spawnProgramRefusalNoticeTextV1, type FocusedProgramV1, type ProgramHistoryProjectionsV1, type SpawnProgramRefusalReasonV1 } from "./🪟️spawned-program/🟦️.ts";
-import { causalOrderKeyV1, createHubIdentitySettleV1, createInputLedgerV1, createRefusalNoticeThrottleV1, createVersionedRegisterV1, expectedGenerationFromArgsV1, INPUT_IDENTITY_SETTLE_BOUND_MS_V1, inputAppliedV1, inputAwaitsHubIdentityV1, inputIdentitySettleNoticeTextV1, inputRefusalNoticeTextV1, inputRefusalNotifiesV1, inputRefusalTextV1, inputRefusedV1, resolveUtilityActivationV1, type HubIdentityGateV1, type InputOutcomeV1, type InputRefusalReasonV1, type ShellInputActionV1, type VersionedRegisterCellV1 } from "./🎯️input-ledger/🟦️.ts";
+import { causalOrderKeyV1, createHubIdentitySettleV1, createInputLedgerV1, createRefusalNoticeThrottleV1, createVersionedRegisterV1, expectedGenerationFromArgsV1, INPUT_IDENTITY_SETTLE_BOUND_MS_V1, inputActionWindowV1, inputActionWithWindowV1, inputAppliedV1, inputAwaitsHubIdentityV1, inputCommitReceiptV1, inputDiagnosticV1, inputIdentitySettleNoticeTextV1, inputRefusalNoticeTextV1, inputRefusalNotifiesV1, inputRefusalTextV1, inputRefusedV1, resolveUtilityActivationV1, type HubIdentityGateV1, type InputCommitReceiptV1, type InputDiagnosticV1, type InputOutcomeV1, type InputRefusalReasonV1, type ShellInputActionV1, type VersionedRegisterCellV1 } from "./🎯️input-ledger/🟦️.ts";
 
 
 function scopeRuntimeKey(message: { readonly documentId: string; readonly scope?: DocumentScope }): string | null {
@@ -442,6 +446,7 @@ import {
   wireLabel,
   type TreeWindowContextValue,
 } from "../🗣️Interpreter/🟦️.tsx";
+import { localDocumentOwnerIdentityForSessionV1, LocalDocumentOwnerRegistryV1 } from "../🗣️Interpreter/🧭️local-document-owner/🟦️.ts";
 import { builtNodeToSnapshot, UiDocumentStore } from "../📃️UiDocumentStore/🟦️.tsx";
 import { MEDIA_TRANSPORT_EXTENSION_ID, MediaTransportOwnerContext, type MediaTransportOwner } from "../🎬️MediaTransportHost/🟦️.tsx";
 import { SpaceAdministrationPane, spaceAdministrationCapabilities, spaceAdministrationInviteRevocable, spaceAdministrationMemberRemovable, spaceAdministrationNameValid, type SpaceAdministrationIntentV1 } from "../🛂️SpaceAdministration/🟦️.tsx";
@@ -533,7 +538,15 @@ import {
   DOCUMENT_ARCHIVE_FILE_EXTENSION,
   DOCUMENT_ARCHIVE_MEDIA_TYPE,
   documentArchiveFileNameV1,
+  naturalFileNameV1,
+  naturalFileFormatV1,
+  naturalMediaDescriptorMatchesV1,
+  openNaturalFileOwnerV1,
   bytesOfDataUrlV1,
+  NATURAL_FILE_BROWSER_MAXIMUM_BYTES_V1,
+  NATURAL_FILE_BROWSER_READ_CHUNK_BYTES_V1,
+  readBlobBytesBoundedV1,
+  requestFileSelectionV1,
   documentTransferNoticeTextV1,
   documentTransferNoticeCodeV1,
   downloadMediaExportBytes,
@@ -562,8 +575,8 @@ import {
   commandKeybindingChords,
   commandOwnerPluginId,
   detectCommandPlatform,
-  dispatchOpenedFiles,
   dispatchOsCommand,
+  documentLoadCancelledV1,
   drainSegmentedMediaExport,
   downloadDataUrl,
   downloadMediaExport,
@@ -595,6 +608,7 @@ import {
   panelTabDefinitionToNode,
   presenceEphemeralSnapshotWithinBoundV1,
   createTreeWindowSchedulerV1,
+  createTreeWindowContextV1,
   type PanelTreeConfigCacheV1,
   applyBrowserActorUiPatchesV1,
   browserActorPanelKeysV1,
@@ -610,10 +624,13 @@ import {
   type ShellHistoryProjectionV1,
   type ShellLabelTextV1,
   HISTORY_REFUSAL_LABEL_KEYS,
+  appFaultNoticeV1,
+  historyFaultNoticeV1,
+  historyLaneNoticeV1,
+  historyOutputNoticeV1,
   historyRefusalCodeV1,
   historyRefusalNoticeV1,
-  historyRefusalOfFaultV1,
-  historyRefusalOfOutputV1,
+  importOpenedFilesV1,
   type BrowserActorPanelHostV1,
   type TreeWindowHostV1,
   type TreeWindowSchedulerV1,
@@ -670,7 +687,8 @@ import {
   resolveUtilityNodes,
   resolveWindowEngagement,
   retitleWindowLayoutNode,
-  runRequestMediaFrames,
+  requestMediaFramesSourceV1,
+  runMediaFramesV1,
   scheduleDispatchAction,
   SEGMENTED_DOWNLOAD_MARKER_PREFIX,
   sessionWindowInstances,
@@ -713,7 +731,7 @@ import {
   type UiRefreshCache,
 } from "../🛠️ShellHelpers/🟦️.tsx";
 import { toolRunPanelReveal, toolRunPanelTasksV1, type ToolRunPanelControlV1 } from "../🛠️ShellHelpers/⏯️tool-run-panel/🟦️.ts";
-import { TimeTravelBand, timeTravelIndicatorTextV1, timeTravelPeerPresenceV1, TimeTravelWindowIndicator, useTimeTravelRevealV1 } from "../🛠️ShellHelpers/⏪️time-travel/🟦️.tsx";
+import { HistoryReprojectionStatus, TimeTravelBand, timeTravelIndicatorTextV1, timeTravelPeerPresenceV1, TimeTravelWindowIndicator, useTimeTravelRevealV1 } from "../🛠️ShellHelpers/⏪️time-travel/🟦️.tsx";
 import { commitLocalFoldersConfigMutationV1, localFolderNameV1, LocalFolderReconnectBand, localFolderReconnectOfferV1, readLocalFolderBindingsV1, type LocalFolderIdentityV1 } from "./📎️local-folders/🟦️.tsx";
 import { attachLocalFolder, detachLocalFolder, type LocalFolderBinding, type LocalFolderBindings } from "../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
 import { retireSkippedWindowBodies } from "./🪟️mounted-window-refresh/🟦️.ts";
@@ -743,7 +761,7 @@ import {
   ShellRouteNotFoundPage,
   useNamedLayoutHost,
 } from "../📌️ChromePanels/🟦️.tsx";
-import { guestIngressGenerationV1, isPluginInstanceRetiredV1, onPluginInstancesLost, PluginBootShardLostError, leftoverInspectionRefreshScope, leftoverInspectionPanelHash, type PluginWasmHandle, type PluginExtensionCompletion, serializePerActor, setPluginRuntimeActor } from "../🔌️PluginRuntime/🟦️.tsx";
+import { guestIngressGenerationV1, isPluginInstanceRetiredV1, onPluginInstancesLost, PluginBootShardLostError, leftoverInspectionRefreshScope, leftoverInspectionPanelHash, type PluginWasmHandle, type PluginExtensionCompletion, type PluginOperationCompletion, serializePerActor, setPluginRuntimeActor } from "../🔌️PluginRuntime/🟦️.tsx";
 import { documentBackboneEffectV1, type ActorDocumentMessagePortV1 } from "../../../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts";
 import { BrowserActorActionMailboxV1, browserActorActionRefusalReasonV1 } from "../../../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📮️requests/🟦️.ts";
 import { BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION } from "../../../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts";
@@ -969,13 +987,37 @@ function shellUncommittedEditCountV1(entries: ShellHistoryProjectionV1["entries"
 /** 🏁️ The typed-operation id an admitting `InvocationResult` started, or `undefined` when the action
  * started none. `dispatch_typed_command_inner` (`🔌️plugin/🦀️.rs`) answers a started operation with
  * `output = { operationId, generation }`, both decimal STRINGS; `OperationCompletionV1.operation` is
- * the same id as a number, so this is where the two representations meet. */
-function startedTypedOperationId(output: unknown): number | undefined {
+ * the same id as an exact u64 bigint, so this is where the two representations meet. */
+export type StartedTypedOperationV1 = Readonly<{ operationId: string; generation: string; operation: bigint; generationValue: bigint }>;
+
+/** 🎯️ Parses both exact u64 authorities from one typed-operation admission. */
+export function startedTypedOperationV1(output: unknown): StartedTypedOperationV1 | undefined {
   if (typeof output !== "object" || output === null) return undefined;
-  const raw = (output as { readonly operationId?: unknown }).operationId;
-  const operation = typeof raw === "string" ? Number(raw) : typeof raw === "number" ? raw : Number.NaN;
-  return Number.isSafeInteger(operation) && operation >= 0 ? operation : undefined;
+  const row = output as { readonly operationId?: unknown; readonly generation?: unknown };
+  const exact = (value: unknown): bigint | undefined => {
+    if (typeof value !== "string" || !/^(0|[1-9][0-9]*)$/u.test(value)) return undefined;
+    const number = BigInt(value);
+    return number <= 0xffff_ffff_ffff_ffffn ? number : undefined;
+  };
+  const operation = exact(row.operationId);
+  const generationValue = exact(row.generation);
+  return operation === undefined || generationValue === undefined ? undefined : { operationId: row.operationId as string, generation: row.generation as string, operation, generationValue };
 }
+
+const CANCEL_TYPED_OPERATION_ACTION_ID_V1 = "cancelTypedOperation";
+const exactU64HexV1 = (value: bigint): string => value.toString(16).padStart(16, "0");
+
+/** ⏹️ Builds the framework cancellation gesture with the original controller, provenance and exact operation authority. */
+export function typedOperationCancellationActionV1(origin: ShellInputActionV1, operation: StartedTypedOperationV1): ShellInputActionV1 {
+  return { ...origin, action: CANCEL_TYPED_OPERATION_ACTION_ID_V1, args: { operationId: exactU64HexV1(operation.operation), generation: exactU64HexV1(operation.generationValue) } };
+}
+
+/** 🔒️ Refuses a coincident operation id after its admitting program or document owner retired. */
+export function typedOperationCancellationOwnerIsCurrentV1(admitted: ShellDialogSessionV1, target: ShellDialogSessionV1, ownerCurrent: boolean): boolean {
+  return ownerCurrent && shellDialogSessionIsCurrentV1(admitted, target);
+}
+
+function operationSettleKeyV1(instanceId: number, operation: bigint): string { return `${instanceId}:${operation}`; }
 //#endregion 🏁️OperationSettle
 
 /** 🩺️ `WindowFaultClass` → its `ui.windowFault.*` label key. Total by construction, so a new class
@@ -2237,6 +2279,8 @@ function FrameworkOsShellInner({
   readonly suppressAutoIntroduction?: boolean;
 }) {
   const scope = useShellScope();
+  const [localDocumentOwnerRegistry] = useState(() => new LocalDocumentOwnerRegistryV1());
+  useEffect(() => () => localDocumentOwnerRegistry.retireAll(), [localDocumentOwnerRegistry]);
   const shellContextMenuTitleLabel = useLabel("ui.surfaceContextMenu.workspace");
   // 🏠️🧳️ `hostConfig` is the sole piece of per-plugin identity knowledge the shell needs (which app id is
   // "landing", which is "host") — every controller id / default panel tab derives from the *loaded*
@@ -2542,44 +2586,44 @@ function FrameworkOsShellInner({
    * the `OperationCompleted` frame race — the completion can land first). Both are fixed-capacity: a
    * waiter that would exceed the ceiling resolves at once rather than growing the map, and the settled
    * ring keeps only the newest ids. Nothing here is state — a settle is not something to re-render for. */
-  const operationSettlersRef = useRef(new Map<number, () => void>());
-  const settledOperationsRef = useRef<number[]>([]);
+  const operationSettlersRef = useRef(new Map<string, (completion: PluginOperationCompletion) => void>());
+  const settledOperationsRef = useRef<PluginOperationCompletion[]>([]);
   /** 🏁️ Resolves every waiter for `operation`, or records it as already settled for a waiter that has
    * not registered yet. Called from the operation-completion subscription. */
-  const settleOperation = useCallback((operation: number) => {
-    const settler = operationSettlersRef.current.get(operation);
+  const settleOperation = useCallback((completion: PluginOperationCompletion) => {
+    const key = operationSettleKeyV1(completion.instanceId, completion.operation);
+    const settler = operationSettlersRef.current.get(key);
     if (settler) {
-      settler();
+      settler(completion);
       return;
     }
     const settled = settledOperationsRef.current;
-    settled.push(operation);
+    settled.push(completion);
     if (settled.length > OPERATION_SETTLE_RING_SLOTS) settled.splice(0, settled.length - OPERATION_SETTLE_RING_SLOTS);
   }, []);
   /** 🏁️ The promise `onAction` returns: settles when the operation the admitting reply started reaches
    * its terminal completion. An action that started no operation (a framework-reserved verb, a
    * config-only emit, a rejected admission) settles at once, and a watchdog bounds a completion that
    * never arrives so a caller can never wedge forever on a lost frame. */
-  const awaitOperationSettle = useCallback((output: unknown): Promise<void> => {
-    const operation = startedTypedOperationId(output);
-    if (operation === undefined) return Promise.resolve();
+  const awaitOperationSettle = useCallback((instanceId: number, operation: bigint | undefined): Promise<PluginOperationCompletion | null> => {
+    if (operation === undefined) return Promise.resolve(null);
+    const key = operationSettleKeyV1(instanceId, operation);
     const settled = settledOperationsRef.current;
-    const alreadySettled = settled.indexOf(operation);
+    const alreadySettled = settled.findIndex((completion) => completion.instanceId === instanceId && completion.operation === operation);
     if (alreadySettled !== -1) {
-      settled.splice(alreadySettled, 1);
-      return Promise.resolve();
+      return Promise.resolve(settled.splice(alreadySettled, 1)[0] ?? null);
     }
     const settlers = operationSettlersRef.current;
-    if (settlers.has(operation) || settlers.size >= OPERATION_SETTLE_WAITER_SLOTS) return Promise.resolve();
-    return new Promise<void>((resolve) => {
+    if (settlers.has(key) || settlers.size >= OPERATION_SETTLE_WAITER_SLOTS) return Promise.resolve(null);
+    return new Promise<PluginOperationCompletion | null>((resolve) => {
       const timer = setTimeout(() => {
-        operationSettlersRef.current.delete(operation);
-        resolve();
+        operationSettlersRef.current.delete(key);
+        resolve(null);
       }, OPERATION_SETTLE_WATCHDOG_MS);
-      settlers.set(operation, () => {
+      settlers.set(key, (completion) => {
         clearTimeout(timer);
-        operationSettlersRef.current.delete(operation);
-        resolve();
+        operationSettlersRef.current.delete(key);
+        resolve(completion);
       });
     });
   }, []);
@@ -2689,12 +2733,7 @@ function FrameworkOsShellInner({
     (bodyKey: string): TreeWindowContextValue => {
       const known = windowTreeContextsRef.current.get(bodyKey);
       if (known) return known;
-      const created: TreeWindowContextValue = {
-        bodyKey,
-        openStates: {},
-        setOpen: (nodeKey, open) => treeWindowHost.setOpen(bodyKey, nodeKey, open),
-        reportWindows: (requests, viewportRows) => treeWindowHost.reportWindows(bodyKey, requests, viewportRows),
-      };
+      const created = createTreeWindowContextV1(bodyKey, treeWindowHost);
       windowTreeContextsRef.current.set(bodyKey, created);
       return created;
     },
@@ -3209,7 +3248,9 @@ function FrameworkOsShellInner({
     }
     if (current()) entry.resolveReady();
   }, [receiveDocumentBackbone]);
-  const loadDocumentArchive = useCallback(async (plugin: PluginWasmHandle, instanceId: number, archive: DocumentArchivePack, current: () => boolean): Promise<boolean> => {
+  /** 🗃️ Loads one archive into a program through the stepped, ACK-owned archive load: `task` hears every polled status and
+   * cancels it; a cancelled or faulted load leaves the previous document exactly as it was and its backbone bound again. */
+  const loadDocumentArchive = useCallback(async (plugin: PluginWasmHandle, instanceId: number, archive: DocumentArchivePack, current: () => boolean, task?: { readonly signal?: AbortSignal; readonly progress?: (status: DocumentArchiveLoadStatus) => void }): Promise<boolean> => {
     const archiveBytes = encodeDocumentArchiveBytes(archive);
     if (archiveBytes.length > DOCUMENT_ARCHIVE_MAXIMUM_BYTES) throw new Error("document-backbone.archive-capacity");
     if (!plugin.loadAppDocumentArchive) throw new Error("document-backbone.archive-loader-unavailable");
@@ -3220,7 +3261,7 @@ function FrameworkOsShellInner({
       const owner = `cold:${crypto.randomUUID()}`;
       const unbound = () => current() && ![...openDocumentSessionsRef.current.values()].some(entry => entry.plugin === plugin && entry.session.instanceId === instanceId);
       let loaded = false;
-      try { await lane.replace(owner, unbound, async () => { if (unbound()) { await load(instanceId, archive); loaded = unbound(); } }); }
+      try { await lane.replace(owner, unbound, async () => { if (unbound()) { await load(instanceId, archive, task?.signal, task?.progress); loaded = unbound(); } }); }
       finally { await lane.close(owner); }
       return loaded;
     }
@@ -3233,13 +3274,16 @@ function FrameworkOsShellInner({
       await lane.replace(entry.clientInstanceId, exact, async () => {
         await retirement;
         if (!exact()) return;
-        await load(instanceId, candidate);
-        if (exact()) await bindDocumentBackbone(runtimeKey, entry, latest);
+        try {
+          await load(instanceId, candidate, task?.signal, task?.progress);
+        } finally {
+          if (exact()) await bindDocumentBackbone(runtimeKey, entry, latest);
+        }
       });
     });
   }, [bindDocumentBackbone, documentAttachmentLane]);
-  const loadDocumentPair = useCallback(async (plugin: PluginWasmHandle, instanceId: number, pack: Uint8Array, spr: Uint8Array, current: () => boolean): Promise<boolean> =>
-    loadDocumentArchive(plugin, instanceId, { parent_pack: Array.from(pack), parent_spr: Array.from(spr), members: [] }, current), [loadDocumentArchive]);
+  const loadDocumentPair = useCallback(async (plugin: PluginWasmHandle, instanceId: number, pack: Uint8Array, spr: Uint8Array, current: () => boolean, task?: { readonly signal?: AbortSignal; readonly progress?: (status: DocumentArchiveLoadStatus) => void }): Promise<boolean> =>
+    loadDocumentArchive(plugin, instanceId, { parent_pack: Array.from(pack), parent_spr: Array.from(spr), members: [] }, current, task), [loadDocumentArchive]);
   const captureDialogOrigin = useCallback((target: ActiveSession | null): ShellDialogOriginV1 | null =>
     shellDialogOriginV1(target, [...openDocumentSessionsRef.current].map(([runtimeKey, entry]) => ({ runtimeKey, ...entry }))), []);
   const isCurrentDialogOrigin = useCallback((origin: ShellDialogOriginV1 | null): boolean =>
@@ -3921,10 +3965,8 @@ function FrameworkOsShellInner({
         // transition (`history.transition-refused` & co.), which the human is told about in their language.
         console.warn("[os-shell] sync conflict", message.documentId, event.message);
         const refusal = historyRefusalCodeV1(event.code);
-        if (refusal !== null) {
-          const notice = historyRefusalNoticeV1(refusal);
-          showTransientNoticeRef.current(notice.text, notice.kind, notice.code);
-        }
+        const notice = refusal !== null ? historyRefusalNoticeV1(refusal) : historyLaneNoticeV1({ code: typeof event.code === "string" ? event.code : undefined }, programHistoryProjectionV1(historyStore.get(), programHistoryKeyV1(sessionRef.current), EMPTY_SHELL_HISTORY_PROJECTION_V1).editCount);
+        if (notice !== null) showTransientNoticeRef.current(notice.text, notice.kind, notice.code);
       }
     };
     const failBrowserActorActions = () => {
@@ -5174,6 +5216,9 @@ function FrameworkOsShellInner({
    * is open, and every window of that program wears the indicator. The indicator reads only the stage and its own
    * text, so a replay progress step re-renders the band and never the window descriptors. */
   const focusedTimeTravel = useSyncExternalStore(historyStore.subscribe, () => focusedHistoryV1().timeTravel, () => null);
+  /** 📡️ The focused program's history change replaying before adoption (remote, its own step, a document load), `null` while
+   * none waits: the shell announces it outside the History panel whichever panel is open (audit W1E-3). */
+  const focusedReprojection = useSyncExternalStore(historyStore.subscribe, () => focusedHistoryV1().reprojection, () => null);
   const focusedHistoryEntries = useSyncExternalStore(historyStore.subscribe, () => focusedHistoryV1().entries, () => EMPTY_SHELL_HISTORY_PROJECTION_V1.entries);
   const timeTravelIndicatorStage = focusedTimeTravel?.stage ?? null;
   const timeTravelIndicatorText = focusedTimeTravel === null ? null : timeTravelIndicatorTextV1(focusedTimeTravel, { terminology: uiTerminology, locale: uiLocale });
@@ -6729,7 +6774,7 @@ function FrameworkOsShellInner({
     owned: NonNullable<ReturnType<typeof directBrowserActorForSession>>,
     invocation: ActionInvocation | CommandInvocation,
     viewState: ViewModel,
-  ): Promise<void> => {
+  ) => {
     const { runtimeKey, retained, entry, identity } = owned;
     const current = (): boolean => {
       const live = browserActorUiByRuntimeKeyRef.current.get(runtimeKey);
@@ -6763,6 +6808,7 @@ function FrameworkOsShellInner({
     if (dirty.kind !== "none" && current()) {
       await refreshUi({ ...entry.session, viewState }, dirty, undefined, leftoverReplaceRefreshBodiesV1());
     }
+    return result;
   }, [applyHistoryPatch, directBrowserActorForSession, refreshUi, requestServiceOperation]);
 
   const applyHostEffects = useCallback(
@@ -6832,15 +6878,24 @@ function FrameworkOsShellInner({
         if ("loadDocument" in effect) {
           const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === baseSession.pluginId);
           const payload = effect.loadDocument;
-          if (payload.pack && payload.spr && pluginEntry?.handle.loadAppDocumentPack) {
+          if (payload.pack && payload.spr && pluginEntry?.handle.loadAppDocumentArchive) {
             const packBytes = coerceWireBytes(payload.pack);
             const sprBytes = coerceWireBytes(payload.spr);
-            if (await loadDocumentPair(pluginEntry.handle, baseSession.instanceId, packBytes, sprBytes, () => isCurrentEffectOwner(effectOwner))) await refreshHistorySnapshot(baseSession);
+            const file = resolveManifestLabel(baseSession.app.label, uiTerminologyRef.current, uiLocaleRef.current) || baseSession.app.id;
+            const task = documentTransferRef.current.trackDocumentTransfer(file, baseSession.pluginId);
+            try {
+              if (await loadDocumentPair(pluginEntry.handle, baseSession.instanceId, packBytes, sprBytes, () => isCurrentEffectOwner(effectOwner), { signal: task.signal, progress: (status) => task.progress(status.completed, status.total > 0 ? status.total : null) })) await refreshHistorySnapshot(baseSession);
+            } catch (error) {
+              const cancelled = documentLoadCancelledV1(error, task.signal);
+              console.warn(`[os-shell] ${documentTransferNoticeCodeV1(cancelled ? "load-cancelled" : "load-failed")} ${baseSession.pluginId}#${baseSession.instanceId}`, error);
+              documentTransferRef.current.notifyDocumentTransfer(cancelled ? "load-cancelled" : "load-failed", file, cancelled ? "info" : "error");
+            } finally {
+              task.finish();
+            }
           } else {
-            // 🚧️ `Effect::LoadDocument` is pack+spr bytes only now (no JSON-text fallback exists on the
-            // wire anymore — see this variant's own doc comment on `@semio-tech/framework`'s `Effect`
-            // type) — a program without `loadAppDocumentPack` simply cannot receive this effect.
-            console.error("[os-shell] loadDocument: program has no pack loader", baseSession.pluginId, Object.keys(payload));
+            // 🚧️ `Effect::LoadDocument` is pack+spr bytes only (no JSON-text fallback exists on the wire) and loads through the
+            // stepped archive load — a program without `loadAppDocumentArchive` simply cannot receive this effect.
+            console.error("[os-shell] loadDocument: program has no archive loader", baseSession.pluginId, Object.keys(payload));
           }
           continue;
         }
@@ -6893,7 +6948,7 @@ function FrameworkOsShellInner({
           continue;
         }
         if ("requestFileOpen" in effect) {
-          const { accept, readAs, importAction, multiple } = effect.requestFileOpen;
+          const { accept, readAs, importAction, multiple, args } = effect.requestFileOpen;
           const resolvedImport = importAction || "importFixture";
           const opened = await requestFileOpen(accept || ".spk,.dsl,.ops,application/octet-stream", readAs, multiple);
           if (opened.length > 0) {
@@ -6901,10 +6956,8 @@ function FrameworkOsShellInner({
             if (pluginEntry) {
               const task = documentTransferRef.current.trackDocumentTransfer(opened.map((file) => file.name).join(", "), baseSession.pluginId);
               try {
-                await dispatchOpenedFiles(opened, resolvedImport, Boolean(multiple), makeEffectDispatchOne(pluginEntry, baseSession, (effects, target, scope) => applyHostEffects(effects, target, scope, effectOwner), () => isCurrentEffectOwner(effectOwner), resolvedTargetViewState, { causedBy: effectOwner.inputSeq, windowId: baseSession.viewState.windowId ?? null }), task.signal, task.progress);
-              } catch (error) {
-                if (!task.signal.aborted) throw error;
-                documentTransferRef.current.notifyDocumentTransfer("import-cancelled", opened[0]!.name, "info");
+                const dispatchOne = makeEffectDispatchOne(pluginEntry, baseSession, (effects, target, scope) => applyHostEffects(effects, target, scope, effectOwner), () => isCurrentEffectOwner(effectOwner), resolvedTargetViewState, { causedBy: effectOwner.inputSeq, windowId: baseSession.viewState.windowId ?? null });
+                if ((await importOpenedFilesV1(baseSession.app, opened, resolvedImport, Boolean(multiple), dispatchOne, task.signal, task.progress, args as Readonly<Record<string, unknown>> | undefined)) === "cancelled") documentTransferRef.current.notifyDocumentTransfer("import-cancelled", opened[0]!.name, "info");
               } finally {
                 task.finish();
               }
@@ -7098,28 +7151,22 @@ function FrameworkOsShellInner({
           continue;
         }
         if ("requestMediaFrames" in effect) {
-          // 🎞️ D5: decodes a video (file picker, or `payload` bytes already in hand from a drop zone)
-          // and fans sampled frames + a completion marker out through the same `dispatchOne` path as
-          // every other effect branch — see `runRequestMediaFrames` for the Tier 1 (WebCodecs)/Tier 2
-          // (`<video>` seek-and-capture)/fallback decision tree.
+          // 🎞️ D5: decodes a video (file picker, or `payload` bytes already in hand from a drop zone) as one Tasks-window
+          // transfer with frame progress and Cancel, fanning sampled frames + a completion marker out through the same
+          // `dispatchOne` path as every other effect branch — see `runMediaFramesV1` for the Tier 1 (WebCodecs)/Tier 2
+          // (`<video>` seek-and-capture)/fallback decision tree and the `importAbort` a cancel after a frame sends.
           const { accept, payload, frameAction, doneAction, fallbackAction, sampleStride, maxFrames, maxLongEdgePx, fpsHint, args } = effect.requestMediaFrames;
           const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === baseSession.pluginId);
-          if (pluginEntry) {
-            await runRequestMediaFrames(
-              {
-                frameAction,
-                doneAction,
-                fallbackAction,
-                sampleStride: sampleStride ?? 0,
-                maxFrames: maxFrames ?? 0,
-                maxLongEdgePx: maxLongEdgePx ?? 0,
-                fpsHint: fpsHint ?? 0,
-                args: args as Record<string, unknown> | undefined,
-              },
-              accept,
-              payload,
-              makeEffectDispatchOne(pluginEntry, baseSession, (effects, target, scope) => applyHostEffects(effects, target, scope, effectOwner), () => isCurrentEffectOwner(effectOwner), resolvedTargetViewState, { causedBy: effectOwner.inputSeq, windowId: baseSession.viewState.windowId ?? null }),
-            );
+          const source = pluginEntry ? await requestMediaFramesSourceV1(accept, payload) : null;
+          if (pluginEntry && source) {
+            const task = documentTransferRef.current.trackDocumentTransfer(source.name, baseSession.pluginId);
+            try {
+              const dispatchOne = makeEffectDispatchOne(pluginEntry, baseSession, (effects, target, scope) => applyHostEffects(effects, target, scope, effectOwner), () => isCurrentEffectOwner(effectOwner), resolvedTargetViewState, { causedBy: effectOwner.inputSeq, windowId: baseSession.viewState.windowId ?? null });
+              const outcome = await runMediaFramesV1({ frameAction, doneAction, fallbackAction, sampleStride: sampleStride ?? 0, maxFrames: maxFrames ?? 0, maxLongEdgePx: maxLongEdgePx ?? 0, fpsHint: fpsHint ?? 0, args: args as Record<string, unknown> | undefined }, source, dispatchOne, baseSession.app, task.signal, task.progress);
+              if (outcome === "cancelled") documentTransferRef.current.notifyDocumentTransfer("import-cancelled", source.name, "info");
+            } finally {
+              task.finish();
+            }
           }
           continue;
         }
@@ -7263,7 +7310,7 @@ function FrameworkOsShellInner({
         // 🏁️ Release every `onAction` promise waiting on this operation BEFORE the (async) effect pass —
         // the caller's contract is "the guest work is finished", and the host-effect pass that follows is
         // this same subscription's own work, not the guest's.
-        settleOperation(completion.operation);
+        settleOperation(completion);
         applyHistoryPatch(completion.historyPatch, false, { pluginId: target.pluginId, instanceId: target.instanceId });
         const refresh = typedOperationCompletionRefreshV1(completion);
         const owner = captureProgramEffectOwner(target);
@@ -7298,7 +7345,7 @@ function FrameworkOsShellInner({
       const target: ActiveSession = { pluginId: spawned.pluginId, instanceId: spawned.instanceId, app, viewState: spawnedProgramViewStateV1(session.viewState, app) };
       try {
         const dispose = entry.handle.subscribeOperationCompletions(spawned.instanceId, (completion) => {
-          settleOperation(completion.operation);
+          settleOperation(completion);
           applyHistoryPatch(completion.historyPatch, false, { pluginId: spawned.pluginId, instanceId: spawned.instanceId });
           const refresh = typedOperationCompletionRefreshV1(completion);
           if (refresh === null) return;
@@ -7713,6 +7760,7 @@ function FrameworkOsShellInner({
       dispatch({ type: "CLEAR_INFERENCE_PORT_FOR_DOCUMENT", runtimeKey });
     }
     void retireDocumentAttachment(entry.plugin, entry.session.instanceId, entry.clientInstanceId).catch(error => undefined);
+    localDocumentOwnerRegistry.retire({ pluginId: entry.session.pluginId, appId: entry.session.app.id, sessionInstanceId: entry.session.instanceId, runtimeKey, clientInstanceId: entry.clientInstanceId });
     openDocumentSessionsRef.current.delete(runtimeKey);
     const dialog = liveDialogRef.current;
     if (dialog?.origin.document?.runtimeKey === runtimeKey && dialog.origin.document.clientInstanceId === entry?.clientInstanceId) closeOwnedDialog(dialog.openingId);
@@ -7750,7 +7798,7 @@ function FrameworkOsShellInner({
     }
     const request: BackboneWorkerRequest = { kind: "close", documentId: entry.documentId, clientInstanceId: entry.clientInstanceId, ...(entry.scope === undefined ? {} : { spaceId: entry.scope.spaceId }) };
     backboneWorkerRef.current?.postMessage({ wire: encodeBackboneWorkerRequest(request) });
-  }, [retireBrowserActorUi]);
+  }, [localDocumentOwnerRegistry, retireBrowserActorUi]);
   closeDocumentRef.current = closeDocument;
 
   /** 🔗️ Opens the sync card's typed target ({@link SyncAttachTargetV1}) through {@link openDocument}: a hub space's
@@ -7890,12 +7938,12 @@ function FrameworkOsShellInner({
    * `console.warn` line and, for a user-origin input whose reason the notice table admits, one throttled
    * notice (§G). `propagateFailure` keeps rethrowing AFTER the ledger is settled (the tutorial director). */
   const onAction = useCallback(
-    async (requested: ShellInputActionV1, submittedOrigin?: ShellDialogOriginV1, propagateFailure = false): Promise<InputOutcomeV1> => {
-      const requestedWindowId = typeof requested.args === "object" && requested.args !== null && typeof (requested.args as { windowId?: unknown }).windowId === "string" ? (requested.args as { windowId: string }).windowId : null;
+    async (requested: ShellInputActionV1, submittedOrigin?: ShellDialogOriginV1, propagateFailure = false, lifecycle?: ActionDispatchLifecycleV1, requiredOperationOwner?: ReturnType<typeof captureEffectOwner>): Promise<InputOutcomeV1> => {
+      const requestedWindowId = inputActionWindowV1(requested, activeWindowIdRef.current);
       const ledger = inputLedgerRef.current;
       const entry = ledger.issue(requested, { windowId: requestedWindowId ?? activeWindowIdRef.current ?? null, origin: requested.provenance?.origin ?? "user" });
-      const refuse = (reason: InputRefusalReasonV1, detail?: string, alreadyNotified = false): InputOutcomeV1 => {
-        const outcome = inputRefusedV1(entry.provenance.inputSeq, reason, detail);
+      const refuse = (reason: InputRefusalReasonV1, detail?: string, alreadyNotified = false, diagnostic?: InputDiagnosticV1): InputOutcomeV1 => {
+        const outcome = inputRefusedV1(entry.provenance.inputSeq, reason, detail, diagnostic);
         if (ledger.settle(outcome) && outcome.kind === "refused") {
           console.warn(inputRefusalTextV1(entry.action, outcome, entry.provenance));
           if (!alreadyNotified && inputRefusalNotifiesV1(outcome, entry.provenance) && refusalNoticeThrottleRef.current.admit(reason, performance.now())) {
@@ -7904,21 +7952,22 @@ function FrameworkOsShellInner({
         }
         return outcome;
       };
-      const applied = (): InputOutcomeV1 => {
-        const outcome = inputAppliedV1(entry.provenance.inputSeq);
+      const applied = (commit?: InputCommitReceiptV1): InputOutcomeV1 => {
+        const outcome = inputAppliedV1(entry.provenance.inputSeq, commit);
         ledger.settle(outcome);
         return outcome;
       };
       /** 🚦️ The one place a thrown dispatch error becomes a reason — shared by the direct-actor route and
        * the `handleAction` route so both speak the ledger's vocabulary. */
-      const refusalReasonForError = (error: unknown): { readonly reason: InputRefusalReasonV1; readonly detail?: string } => {
-        if (isViewerReadOnlyFault(error)) return { reason: "viewer-read-only" };
-        if (isMutationRejectedFault(error)) return { reason: "mutation-rejected" };
+      const refusalReasonForError = (error: unknown): { readonly reason: InputRefusalReasonV1; readonly detail?: string; readonly diagnostic?: InputDiagnosticV1 } => {
+        const diagnostic = error instanceof SemioFaultError ? inputDiagnosticV1(error.fault) : undefined;
+        if (isViewerReadOnlyFault(error)) return { reason: "viewer-read-only", diagnostic };
+        if (isMutationRejectedFault(error)) return { reason: "mutation-rejected", diagnostic };
         const text = String(error instanceof Error ? error.message : error);
-        if (/queue is full|queue full|another action pending|action-busy/u.test(text)) return { reason: "queue-full", detail: text };
-        if (/action-catching-up/u.test(text)) return { reason: "catching-up", detail: text };
-        if (/action-owner-mismatch|owner retired|ambiguous document owner/u.test(text)) return { reason: "owner-mismatch", detail: text };
-        return { reason: "dispatch-failed", detail: text };
+        if (/queue is full|queue full|another action pending|action-busy/u.test(text)) return { reason: "queue-full", detail: text, diagnostic };
+        if (/action-catching-up/u.test(text)) return { reason: "catching-up", detail: text, diagnostic };
+        if (/action-owner-mismatch|owner retired|ambiguous document owner/u.test(text)) return { reason: "owner-mismatch", detail: text, diagnostic };
+        return { reason: "dispatch-failed", detail: text, diagnostic };
       };
       try {
         const action = pasteActionWithRetainedFragment(requested, clipboardFragmentRef.current);
@@ -7979,6 +8028,14 @@ function FrameworkOsShellInner({
         }
         if (action.action === IMPORT_ARTIFACT_DOCUMENT_ACTION_ID) {
           void documentTransferRef.current.importDocumentArchive();
+          return applied();
+        }
+        if (action.action === SAVE_ARTIFACT_FILE_ACTION_ID) {
+          void documentTransferRef.current.saveNaturalFile();
+          return applied();
+        }
+        if (action.action === OPEN_ARTIFACT_FILE_ACTION_ID) {
+          void documentTransferRef.current.openNaturalFile();
           return applied();
         }
         // 🎓️ First-run walkthrough (mirrors setActiveUtility below): fully shell-intercepted, resets
@@ -8240,10 +8297,9 @@ function FrameworkOsShellInner({
                 return { pluginId: spawned.pluginId, instanceId: spawned.instanceId, app, viewState: spawnedProgramViewStateV1(session.viewState, app) };
               })()
             : session;
-        const actionWindowId = typeof action.args === "object" && action.args != null && typeof (action.args as { windowId?: unknown }).windowId === "string" ? (action.args as { windowId: string }).windowId : undefined;
         /** 🪟️ The window id in the SHELL's namespace — what the canvas, the utility map and the
          * leftover-overlay lane are keyed by. */
-        const hostWindowId = actionWindowId ?? activeWindowIdRef.current ?? undefined;
+        const hostWindowId = inputActionWindowV1(action, activeWindowIdRef.current) ?? undefined;
         /**
          * 🪟️ A WINDOW-scoped dispatch belongs to the program that owns that window, whatever
          * controller raised it. Shell chrome (the navbar's history verbs, a keybinding, a panel row)
@@ -8292,6 +8348,9 @@ function FrameworkOsShellInner({
               targetSession = documentOwners[0]!.session;
             }
           }
+        }
+        if (requiredOperationOwner !== undefined && !typedOperationCancellationOwnerIsCurrentV1(requiredOperationOwner.session, targetSession, isCurrentEffectOwner(requiredOperationOwner))) {
+          return refuse("owner-mismatch", "typed operation owner is no longer current");
         }
         const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === targetSession.pluginId)?.handle;
         if (!plugin) return refuse("dispatch-failed", `no loaded program for "${targetSession.pluginId}"`);
@@ -8406,20 +8465,23 @@ function FrameworkOsShellInner({
           // plus a "render error" toast (design §0 row 2). The mailbox names its own reasons
           // (`browserActorActionRefusalReasonV1`); a fault it does not know falls back to the shared mapper.
           try {
-            await dispatchDirectBrowserActorCommand(
+            const result = await dispatchDirectBrowserActorCommand(
               directBrowserActor,
               windowActionInvocation({ ...targetSession, viewState: dispatchViewState }, action, dispatchExtraInstances, dispatchWindowId),
               dispatchViewState,
             );
+            return applied(result.commit ?? undefined);
           } catch (actionError) {
             const mailboxReason = browserActorActionRefusalReasonV1(actionError);
-            const { reason, detail } = mailboxReason === null ? refusalReasonForError(actionError) : { reason: mailboxReason, detail: String(actionError instanceof Error ? actionError.message : actionError) };
+            const mapped = refusalReasonForError(actionError);
+            const { reason, detail, diagnostic } = mailboxReason === null ? mapped : { ...mapped, reason: mailboxReason, detail: String(actionError instanceof Error ? actionError.message : actionError) };
             if (reason === "mutation-rejected") showMutationRejectedNotice((actionError as SemioFaultError).fault);
-            const outcome = refuse(reason, detail, reason === "mutation-rejected");
+            const appNotice = reason === "dispatch-failed" && actionError instanceof SemioFaultError ? appFaultNoticeV1(actionError.fault, targetSession.app, uiTerminologyRef.current) : null;
+            if (appNotice !== null) showTransientNotice(appNotice.text, appNotice.kind, appNotice.code);
+            const outcome = refuse(reason, appNotice?.code ?? detail, reason === "mutation-rejected" || appNotice !== null, diagnostic);
             if (propagateFailure) throw actionError;
             return outcome;
           }
-          return applied();
         }
         // ⏳️ The whole round trip — admitting turn, host-effect pass and the `OperationCompleted` frame
         // `awaitOperationSettle` waits for — is what a switch has to outlive, so the ledger entry spans
@@ -8427,13 +8489,16 @@ function FrameworkOsShellInner({
         const releaseActionWork = sessionWorkRef.current.begin(targetSession.pluginId, targetSession.instanceId, "typed-operation");
         try {
           const response = await plugin.handleAction(targetSession.instanceId, encodeWindowActionInvocation({ ...targetSession, viewState: dispatchViewState }, action, dispatchExtraInstances, dispatchWindowId), dispatchViewState, { order: causalOrderKeyV1(entry.provenance) });
+          const startedOperation = startedTypedOperationV1(response.output);
+          if (startedOperation !== undefined && isCurrentEffectOwner(actionOwner)) lifecycle?.started({
+            operationId: startedOperation.operationId,
+            generation: startedOperation.generation,
+            cancel: () => onAction(typedOperationCancellationActionV1(action, startedOperation), actionOrigin!, false, undefined, actionOwner),
+          });
           applyHistoryPatch(response.historyPatch, false, { pluginId: targetSession.pluginId, instanceId: targetSession.instanceId });
           applyLeftoverInteractionView(response.output, hostWindowId);
-          const rejectedHistoryEdit = historyRefusalOfOutputV1(response.output);
-          if (rejectedHistoryEdit !== null) {
-            const notice = historyRefusalNoticeV1(rejectedHistoryEdit);
-            showTransientNotice(notice.text, notice.kind, notice.code);
-          }
+          const rejectedNotice = historyOutputNoticeV1(response.output, programHistoryProjectionV1(historyStore.get(), programHistoryKeyV1(targetSession), EMPTY_SHELL_HISTORY_PROJECTION_V1).editCount);
+          if (rejectedNotice !== null) showTransientNotice(rejectedNotice.text, rejectedNotice.kind, rejectedNotice.code);
           const navbarExample = navbarExampleIdFromHistoryUpserts(response.historyPatch?.upserts, lastDispatchedExampleIdRef.current, resolveBootExampleId("", exampleOptionsRef.current, defaults.exampleId));
           if (navbarExample !== undefined) dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: navbarExample });
           const needsHistoryRefresh = historyRefreshNeededV1(action.action, response.historyPatch);
@@ -8448,29 +8513,33 @@ function FrameworkOsShellInner({
           // frame here is what makes this promise mean "the action finished", which every self-gating
           // background tick loop depends on (`ComponentSceneHostProps.onAction`). The ledger's own
           // `settled(inputSeq)` is the input-level twin (design §H).
-          await awaitOperationSettle(response.output);
+          const completion = await awaitOperationSettle(targetSession.instanceId, startedOperation?.operation);
           if (needsHistoryRefresh) refreshHistorySnapshot({ pluginId: targetSession.pluginId, instanceId: targetSession.instanceId });
-          return applied();
+          return applied(completion === null ? undefined : inputCommitReceiptV1(completion.operation, completion.revision));
         } catch (actionError) {
           let outcome: InputOutcomeV1;
-          const historyRefusal = actionError instanceof SemioFaultError ? historyRefusalOfFaultV1(actionError.fault) : null;
+          const diagnostic = actionError instanceof SemioFaultError ? inputDiagnosticV1(actionError.fault) : undefined;
+          const historyNotice = actionError instanceof SemioFaultError ? historyFaultNoticeV1(actionError.fault, programHistoryProjectionV1(historyStore.get(), programHistoryKeyV1(targetSession), EMPTY_SHELL_HISTORY_PROJECTION_V1).editCount) : null;
+          const appNotice = actionError instanceof SemioFaultError ? appFaultNoticeV1(actionError.fault, targetSession.app, uiTerminologyRef.current) : null;
           if (isViewerReadOnlyFault(actionError)) {
             showTransientNotice(viewerReadOnlyNoticeText(uiLocale), "info", SURFACE_FAULT_CODES.ViewerReadOnly);
-            outcome = refuse("viewer-read-only", undefined, true);
+            outcome = refuse("viewer-read-only", undefined, true, diagnostic);
           } else if (isMutationRejectedFault(actionError)) {
             showMutationRejectedNotice((actionError as SemioFaultError).fault);
-            outcome = refuse("mutation-rejected", undefined, true);
-          } else if (historyRefusal !== null) {
-            const notice = historyRefusalNoticeV1(historyRefusal, (actionError as SemioFaultError).fault.severity);
-            showTransientNotice(notice.text, notice.kind, notice.code);
-            outcome = refuse("dispatch-failed", notice.code, true);
+            outcome = refuse("mutation-rejected", undefined, true, diagnostic);
+          } else if (historyNotice !== null) {
+            showTransientNotice(historyNotice.text, historyNotice.kind, historyNotice.code);
+            outcome = refuse("dispatch-failed", historyNotice.code, true, diagnostic);
+          } else if (appNotice !== null) {
+            showTransientNotice(appNotice.text, appNotice.kind, appNotice.code);
+            outcome = refuse("dispatch-failed", appNotice.code, true, diagnostic);
           } else if (dropForSealedInstance(targetSession, "action failure", action.action)) {
             outcome = refuse("instance-sealed", `${targetSession.pluginId}#${targetSession.instanceId}`);
           } else if (dropForRetiredInstance(targetSession, `action ${action.action}`, actionError)) {
             outcome = refuse("instance-retired", `${targetSession.pluginId}#${targetSession.instanceId}`);
           } else {
-            const { reason, detail } = refusalReasonForError(actionError);
-            outcome = refuse(reason, detail);
+            const { reason, detail, diagnostic } = refusalReasonForError(actionError);
+            outcome = refuse(reason, detail, false, diagnostic);
           }
           if (propagateFailure) throw actionError;
           return outcome;
@@ -8480,7 +8549,7 @@ function FrameworkOsShellInner({
       } catch (unexpected) {
         // 🧯️ L1: an input never dangles — a throw anywhere above that no branch mapped still settles the
         // entry (`settle` is idempotent, so an already-settled entry keeps its first outcome).
-        const outcome = refuse("dispatch-failed", `unexpected: ${String(unexpected instanceof Error ? unexpected.message : unexpected)}`);
+        const outcome = refuse("dispatch-failed", `unexpected: ${String(unexpected instanceof Error ? unexpected.message : unexpected)}`, false, unexpected instanceof SemioFaultError ? inputDiagnosticV1(unexpected.fault) : undefined);
         if (propagateFailure) throw unexpected;
         return ledger.outcome(entry.provenance.inputSeq) ?? outcome;
       }
@@ -8554,36 +8623,58 @@ function FrameworkOsShellInner({
   // trees built from `UiNode`s only need a *callable* action dispatcher, not a fresh one each time —
   // route them through this permanently-stable ref indirection so `interpretUiNode`'s `React.memo`
   // (and any `useMemo` keyed on the dispatcher passed to it) can actually bail.
-  const onActionStable = useCallback((action: Parameters<typeof onAction>[0]): Promise<InputOutcomeV1> => onActionRef.current(action), []);
-  // 🎯️ `onIntent` consumers (`🗣️Interpreter`) await a `Promise<void>` that means "settled"; the ledger outcome itself is the `onAction` contract.
-  const onIntentStable = useCallback((intent: Parameters<typeof uiIntentToActionDescriptor>[0]): Promise<void> => onActionStable(uiIntentToActionDescriptor(intent)).then(() => undefined), [onActionStable]);
-  const onBrowserActorIntent = useCallback((runtimeKey: string, captured: RetainedBrowserActorUiV1, surfaceKey: string, intent: Parameters<typeof uiIntentToActionDescriptor>[0]) => {
+  const onActionStable = useCallback((action: Parameters<typeof onAction>[0], lifecycle?: ActionDispatchLifecycleV1): Promise<InputOutcomeV1> => onActionRef.current(action, undefined, false, lifecycle), []);
+  const onIntentStable = useCallback((intent: Parameters<typeof uiIntentToActionDescriptor>[0], windowId?: string): Promise<InputOutcomeV1> => {
+    const action = uiIntentToActionDescriptor(intent);
+    return onActionStable(windowId === undefined ? action : inputActionWithWindowV1(action, windowId));
+  }, [onActionStable]);
+  const onBrowserActorIntent = useCallback(async (runtimeKey: string, captured: RetainedBrowserActorUiV1, surfaceKey: string, intent: Parameters<typeof uiIntentToActionDescriptor>[0]): Promise<InputOutcomeV1> => {
+    const action = uiIntentToActionDescriptor(intent);
+    const ledger = inputLedgerRef.current;
+    const issued = ledger.issue(action, { windowId: surfaceKey, origin: "user" });
+    const applied = (commit?: InputCommitReceiptV1): InputOutcomeV1 => {
+      const outcome = inputAppliedV1(issued.provenance.inputSeq, commit);
+      ledger.settle(outcome);
+      return outcome;
+    };
+    const refused = (reason: InputRefusalReasonV1, detail?: string, diagnostic?: InputDiagnosticV1): InputOutcomeV1 => {
+      const outcome = inputRefusedV1(issued.provenance.inputSeq, reason, detail, diagnostic);
+      if (ledger.settle(outcome)) console.warn(inputRefusalTextV1(issued.action, outcome as Extract<InputOutcomeV1, { kind: "refused" }>, issued.provenance));
+      return outcome;
+    };
     const retained = browserActorUiByRuntimeKeyRef.current.get(runtimeKey);
     const entry = openDocumentSessionsRef.current.get(runtimeKey);
     const store = retained?.windows.get(surfaceKey) ?? retained?.panels.get(surfaceKey);
-    if (store === undefined || retained?.actions !== captured.actions || retained.identity === null || entry?.clientInstanceId !== captured.clientInstanceId || entry.session.instanceId !== captured.sessionInstanceId || !shellDialogSessionIsCurrentV1(shellStateRef.current.pluginRuntime.session, entry.session)) return;
+    if (store === undefined || retained?.actions !== captured.actions || retained.identity === null || entry?.clientInstanceId !== captured.clientInstanceId || entry.session.instanceId !== captured.sessionInstanceId || !shellDialogSessionIsCurrentV1(shellStateRef.current.pluginRuntime.session, entry.session)) return refused("owner-mismatch", "browser actor owner retired");
     const current = (): boolean => {
       const live = browserActorUiByRuntimeKeyRef.current.get(runtimeKey);
       const opening = openDocumentSessionsRef.current.get(runtimeKey);
       return live?.actions === captured.actions && live.identity !== null && opening?.clientInstanceId === captured.clientInstanceId && opening.session.instanceId === captured.sessionInstanceId && shellDialogSessionIsCurrentV1(shellStateRef.current.pluginRuntime.session, opening.session);
     };
-    void retained.actions.dispatchIntent({
-      scope: retained.scope,
-      verifiedSurfaceId: retained.verifiedSurfaceId,
-      activationGeneration: retained.activationGeneration,
-      appChannelVersion: BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION,
-      instanceId: retained.identity.instanceId,
-      surfaceRevision: store.getRevisionSnapshot(),
-    }, surfaceKey, intent).then((result) => {
+    try {
+      const result = await retained.actions.dispatchIntent({
+        scope: retained.scope,
+        verifiedSurfaceId: retained.verifiedSurfaceId,
+        activationGeneration: retained.activationGeneration,
+        appChannelVersion: BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION,
+        instanceId: retained.identity.instanceId,
+        surfaceRevision: store.getRevisionSnapshot(),
+      }, surfaceKey, intent);
+      if (!current()) return refused("owner-mismatch", "browser actor owner retired after completion");
       for (const patch of result.historyPatches) if (current()) applyHistoryPatch(decodePackWire(Uint8Array.from(patch), "$.historyPatch") as HistoryPatch, false, { pluginId: entry.session.pluginId, instanceId: entry.session.instanceId });
-      return publishBrowserActorHostEffectsV1(result.hostEffects, current, (effect) => {
+      await publishBrowserActorHostEffectsV1(result.hostEffects, current, (effect) => {
         if ("requestServiceOperation" in effect) return requestServiceOperation(entry.session, effect.requestServiceOperation, current);
         else window.open(effect.openExternalUrl.url, "_blank", "noopener,noreferrer");
       });
-    }).catch((error) => {
-      if (browserActorUiByRuntimeKeyRef.current.get(runtimeKey)?.actions !== captured.actions) return;
+      if (!current()) return refused("owner-mismatch", "browser actor owner retired during publication");
+      return applied(result.commit ?? undefined);
+    } catch (error) {
+      const reason = browserActorActionRefusalReasonV1(error) ?? "dispatch-failed";
+      const detail = String(error instanceof Error ? error.message : error);
+      if (browserActorUiByRuntimeKeyRef.current.get(runtimeKey)?.actions !== captured.actions) return refused("owner-mismatch", detail);
       showTransientNotice(shellLabel("ui.common.renderError"), "error");
-    });
+      return refused(reason, detail, error instanceof SemioFaultError ? inputDiagnosticV1(error.fault) : undefined);
+    }
   }, [applyHistoryPatch, requestServiceOperation]);
 
   //#region 🎥️TutorialOrchestration
@@ -8714,7 +8805,7 @@ function FrameworkOsShellInner({
           if (plugin?.applyMutations) await plugin.applyMutations(activeSession.instanceId, encodeMutationEnvelopesPack(mutations));
         } else if (kind.kind === "load") {
           // 🚧️ `kind.documentDsl`/`kind.previousDsl` is authored DSL/JSON document TEXT — the channel
-          // only carries binary pack/spr containers (`AppCommand::LoadDocument`), and no TS-side
+          // only carries binary pack/spr containers (`AppCommand::LoadDocumentArchive`), and no TS-side
           // text→pack encoder exists (a separate, much larger work package), so a `Load` history entry
           // cannot replay through the plugin bridge; the UI/camera/event tracks alongside it still do.
           documentTouched = true;
@@ -8799,7 +8890,7 @@ function FrameworkOsShellInner({
             if (plugin?.applyMutations) await plugin.applyMutations(session.instanceId, encodeMutationEnvelopesPack(mutations));
           } else if (kind.kind === "load") {
             // 🚧️ `kind.documentDsl`/`kind.previousDsl` is authored DSL/JSON document TEXT — the channel
-            // only carries binary pack/spr containers (`AppCommand::LoadDocument`), and no TS-side
+            // only carries binary pack/spr containers (`AppCommand::LoadDocumentArchive`), and no TS-side
             // text→pack encoder exists (a separate, much larger work package), so a `Load` history
             // entry cannot replay through the plugin bridge on a seek either.
             documentTouched = true;
@@ -10557,8 +10648,67 @@ function FrameworkOsShellInner({
       task.finish();
     }
   };
-  const documentTransferRef = useRef({ exportDocumentArchive, importDocumentArchive, trackDocumentTransfer, notifyDocumentTransfer });
-  documentTransferRef.current = { exportDocumentArchive, importDocumentArchive, trackDocumentTransfer, notifyDocumentTransfer };
+  const saveNaturalFile = async (): Promise<void> => {
+    const owned = documentTransferTarget();
+    if (owned === null) return notifyDocumentTransfer("no-document", "", "info");
+    const format = naturalFileFormatV1(owned.target.app);
+    const exportMedia = owned.handle.exportAppMedia;
+    const file = format === null ? "" : naturalFileNameV1(owned.target.app.id, format.extension, new Date());
+    const task = trackDocumentTransfer(file, owned.target.pluginId);
+    try {
+      if (format === null || exportMedia === undefined) throw new Error("natural-file.exporter-unavailable");
+      if (task.signal.aborted) throw task.signal.reason;
+      task.progress(0, 1);
+      const artifact = await exportMedia(owned.target.instanceId, "artifact:native");
+      if (artifact === null || task.signal.aborted) throw task.signal.reason ?? new Error("natural-file.export-empty");
+      if (!naturalMediaDescriptorMatchesV1(decodePackValue(artifact.descriptor), format)) throw new Error("natural-file.export-descriptor-mismatch");
+      downloadMediaExportBytes(file, format.mediaType, artifact.data);
+      task.progress(1, 1);
+      notifyDocumentTransfer("file-saved", file, "info");
+    } catch (error) {
+      console.error(`[os-shell] ${documentTransferNoticeCodeV1("file-save-failed")} ${owned.target.pluginId}#${owned.target.instanceId}`, error);
+      notifyDocumentTransfer("file-save-failed", file, "error");
+    } finally {
+      task.finish();
+    }
+  };
+  const openNaturalFile = async (): Promise<void> => {
+    const owned = documentTransferTarget();
+    if (owned === null || session === null) return notifyDocumentTransfer("no-document", "", "info");
+    const format = naturalFileFormatV1(owned.target.app);
+    const importMedia = owned.handle.importAppMedia;
+    if (format === null || importMedia === undefined) return notifyDocumentTransfer("file-open-failed", "", "error");
+    const [picked] = await requestFileSelectionV1(`${format.extension},${format.mediaType}`);
+    if (picked === undefined) return;
+    const task = trackDocumentTransfer(picked.name, owned.target.pluginId);
+    let instanceId: number | null = null;
+    try {
+      if (task.signal.aborted) throw task.signal.reason;
+      const bytes = await readBlobBytesBoundedV1(picked, {
+        signal: task.signal,
+        maximumBytes: NATURAL_FILE_BROWSER_MAXIMUM_BYTES_V1,
+        chunkBytes: NATURAL_FILE_BROWSER_READ_CHUNK_BYTES_V1,
+        progress: task.progress,
+      });
+      instanceId = await openNaturalFileOwnerV1({
+        signal: task.signal,
+        create: () => owned.handle.createApp(owned.target.app.id),
+        importBytes: (freshInstanceId) => importMedia(freshInstanceId, "artifact:native", { portId: "artifact:native", kindId: format.formatKind, wire: { kind: "binary", format_kind: format.formatKind } }, bytes),
+        retire: (freshInstanceId) => owned.handle.destroyApp(freshInstanceId),
+      });
+      const program = spacePrograms.find((entry) => entry.pluginId === owned.target.pluginId && entry.appId === owned.target.app.id);
+      const currentPanel = parsePanelState(session.viewState) ?? buildSpacePanelState([], requiredHostPanelLeafId(hostApp));
+      updateSpacePanel(studioPanelFocusingSpawned(currentPanel, { id: `${owned.target.pluginId}-${instanceId}`, pluginId: owned.target.pluginId, instanceId, appId: owned.target.app.id, label: program?.label ?? owned.target.app.id, breadcrumb: program?.breadcrumb ?? [] }));
+      notifyDocumentTransfer("file-opened", picked.name, "info");
+    } catch (error) {
+      console.warn(`[os-shell] ${documentTransferNoticeCodeV1("file-open-failed")} ${picked.name}`, error);
+      notifyDocumentTransfer("file-open-failed", picked.name, task.signal.aborted ? "info" : "error");
+    } finally {
+      task.finish();
+    }
+  };
+  const documentTransferRef = useRef({ exportDocumentArchive, importDocumentArchive, saveNaturalFile, openNaturalFile, trackDocumentTransfer, notifyDocumentTransfer });
+  documentTransferRef.current = { exportDocumentArchive, importDocumentArchive, saveNaturalFile, openNaturalFile, trackDocumentTransfer, notifyDocumentTransfer };
   //#endregion 📤️DocumentTransfer
   /** ⛩️ An approval request has ONE affordance: its row in the agent conversation. Revealing the chat panel
    * is what makes it visible; `focus` additionally moves keyboard focus onto it (the footer notice's
@@ -10709,6 +10859,21 @@ function FrameworkOsShellInner({
     }
     return null;
   })();
+  const currentDocumentEntry = currentDocumentRuntimeKey === null ? undefined : openDocumentSessionsRef.current.get(currentDocumentRuntimeKey);
+  const currentLocalDocumentOwnerIdentity = !session
+    ? null
+    : localDocumentOwnerIdentityForSessionV1(
+      { pluginId: session.pluginId, appId: session.app.id, sessionInstanceId: session.instanceId },
+      currentDocumentRuntimeKey === null || currentDocumentEntry === undefined ? undefined : { runtimeKey: currentDocumentRuntimeKey, clientInstanceId: currentDocumentEntry.clientInstanceId },
+    );
+  const currentLocalDocumentOwner = currentLocalDocumentOwnerIdentity === null ? null : localDocumentOwnerRegistry.acquire(currentLocalDocumentOwnerIdentity);
+  useEffect(() => {
+    localDocumentOwnerRegistry.retain([
+      ...[...openDocumentSessionsRef.current.entries()].map(([runtimeKey, entry]) => ({ pluginId: entry.session.pluginId, appId: entry.session.app.id, sessionInstanceId: entry.session.instanceId, runtimeKey, clientInstanceId: entry.clientInstanceId })),
+      ...(panel?.spawnedApps ?? []).map(spawned => ({ pluginId: spawned.pluginId, appId: spawned.appId, sessionInstanceId: spawned.instanceId, runtimeKey: `spawned:${spawned.id}`, clientInstanceId: spawned.id })),
+      ...(currentDocumentEntry === undefined && currentLocalDocumentOwnerIdentity !== null ? [currentLocalDocumentOwnerIdentity] : []),
+    ]);
+  });
   useEffect(() => {
     foldSpaceDirectoryRef.current();
   }, [currentDocumentRuntimeKey, session?.pluginId, session?.instanceId]);
@@ -11399,10 +11564,14 @@ function FrameworkOsShellInner({
             showMutationRejectedNotice((error as SemioFaultError).fault);
             return;
           }
-          const historyRefusal = error instanceof SemioFaultError ? historyRefusalOfFaultV1(error.fault) : null;
-          if (historyRefusal !== null) {
-            const notice = historyRefusalNoticeV1(historyRefusal, (error as SemioFaultError).fault.severity);
-            showTransientNotice(notice.text, notice.kind, notice.code);
+          const historyNotice = error instanceof SemioFaultError ? historyFaultNoticeV1(error.fault, programHistoryProjectionV1(historyStore.get(), programHistoryKeyV1(session), EMPTY_SHELL_HISTORY_PROJECTION_V1).editCount) : null;
+          if (historyNotice !== null) {
+            showTransientNotice(historyNotice.text, historyNotice.kind, historyNotice.code);
+            return;
+          }
+          const appNotice = error instanceof SemioFaultError ? appFaultNoticeV1(error.fault, session.app, uiTerminologyRef.current) : null;
+          if (appNotice !== null) {
+            showTransientNotice(appNotice.text, appNotice.kind, appNotice.code);
             return;
           }
           console.error("Command execution failed", error);
@@ -12440,6 +12609,7 @@ function FrameworkOsShellInner({
     if (hostMode && activeSpawnedEntry && activeSpawnedApp && focusedSpawnedId !== null) {
       const spawned = activeSpawnedEntry;
       const spawnedApp = activeSpawnedApp;
+      const spawnedLocalDocumentOwner = localDocumentOwnerRegistry.acquire({ pluginId: spawned.pluginId, appId: spawned.appId, sessionInstanceId: spawned.instanceId, runtimeKey: `spawned:${spawned.id}`, clientInstanceId: spawned.id });
       const spawnedMediaHandle = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId)?.handle;
       const spawnedMediaOwner = (windowId: string): MediaTransportOwner | null => spawnedMediaHandle ? { instanceId: spawned.instanceId, controllerId: spawnedApp.controllerId, windowId, port: spawnedMediaHandle } : null;
       const spawnedWorld3dViews = world3dWindowViewRegistry.scope(`${spawned.pluginId}:${spawned.appId}:${spawned.instanceId}`);
@@ -12476,7 +12646,7 @@ function FrameworkOsShellInner({
               <World3dWindowViewStoreContext.Provider key={`${spawned.pluginId}:${spawned.appId}:${spawned.instanceId}`} value={spawnedWorld3dViews}>
                 <WindowInstanceIdContext.Provider value={windowId}>
                   <ShellFaultBoundary boundaryId={`window-${windowId}`} fallbackLabel={shellLabel("ui.common.renderError")}>
-                    {bodyStore ? <MediaTransportOwnerContext.Provider value={spawnedMediaOwner(windowId)}><InterpretedUiNode store={bodyStore} onAction={onActionStable} onIntent={onIntentStable} /></MediaTransportOwnerContext.Provider> : spawnedWindowFault ? <WindowFaultStatus fault={spawnedWindowFault} /> : <WindowBodySkeleton />}
+                    {bodyStore ? <MediaTransportOwnerContext.Provider value={spawnedMediaOwner(windowId)}><InterpretedUiNode windowId={windowId} localDocumentOwner={spawnedLocalDocumentOwner} store={bodyStore} onAction={onActionStable} onIntent={onIntentStable} /></MediaTransportOwnerContext.Provider> : spawnedWindowFault ? <WindowFaultStatus fault={spawnedWindowFault} /> : <WindowBodySkeleton />}
                   </ShellFaultBoundary>
                 </WindowInstanceIdContext.Provider>
               </World3dWindowViewStoreContext.Provider>
@@ -12515,7 +12685,7 @@ function FrameworkOsShellInner({
                 <ShellFaultBoundary boundaryId={`window-${kind.id}`} fallbackLabel={shellLabel("ui.common.renderError")}>
                   {instanceFault ? <WindowFaultStatus fault={instanceFault} /> : null}
                   <TreeWindowContext.Provider value={windowTreeContext(kind.bodyKey)}>
-                  <MediaTransportOwnerContext.Provider value={browserActorStore === undefined ? primaryMediaOwner(kind.id) : null}><InterpretedUiNode store={browserActorStore ?? builtNodeStoreFor(`window:${kind.id}`, windowUiByWindowId[kind.id] ?? PENDING_WINDOW_UI_NODE)} onAction={onActionStable} onIntent={browserActorStore === undefined ? onIntentStable : (intent) => { if (currentDocumentRuntimeKey !== null && browserActorUi !== undefined) onBrowserActorIntent(currentDocumentRuntimeKey, browserActorUi, kind.id, intent); }} /></MediaTransportOwnerContext.Provider>
+                  <MediaTransportOwnerContext.Provider value={browserActorStore === undefined ? primaryMediaOwner(kind.id) : null}><InterpretedUiNode windowId={kind.id} localDocumentOwner={currentLocalDocumentOwner} store={browserActorStore ?? builtNodeStoreFor(`window:${kind.id}`, windowUiByWindowId[kind.id] ?? PENDING_WINDOW_UI_NODE)} onAction={onActionStable} onIntent={browserActorStore === undefined ? onIntentStable : (intent) => currentDocumentRuntimeKey !== null && browserActorUi !== undefined ? onBrowserActorIntent(currentDocumentRuntimeKey, browserActorUi, kind.id, intent) : undefined} /></MediaTransportOwnerContext.Provider>
                   </TreeWindowContext.Provider>
                 </ShellFaultBoundary>
               </WindowInstanceIdContext.Provider>
@@ -12566,7 +12736,7 @@ function FrameworkOsShellInner({
                   <ShellFaultBoundary boundaryId={`window-${instance.id}`} fallbackLabel={shellLabel("ui.common.renderError")}>
                     {instanceFault ? <WindowFaultStatus fault={instanceFault} /> : null}
                     <TreeWindowContext.Provider value={windowTreeContext(kind.bodyKey)}>
-                      <MediaTransportOwnerContext.Provider value={primaryMediaOwner(instance.id)}><InterpretedUiNode store={builtNodeStoreFor(`window:${instance.id}`, windowUiByWindowId[instance.id] ?? PENDING_WINDOW_UI_NODE)} onAction={onActionStable} onIntent={onIntentStable} /></MediaTransportOwnerContext.Provider>
+                      <MediaTransportOwnerContext.Provider value={primaryMediaOwner(instance.id)}><InterpretedUiNode windowId={instance.id} localDocumentOwner={currentLocalDocumentOwner} store={builtNodeStoreFor(`window:${instance.id}`, windowUiByWindowId[instance.id] ?? PENDING_WINDOW_UI_NODE)} onAction={onActionStable} onIntent={onIntentStable} /></MediaTransportOwnerContext.Provider>
                     </TreeWindowContext.Provider>
                   </ShellFaultBoundary>
                 </WindowInstanceIdContext.Provider>
@@ -12592,11 +12762,13 @@ function FrameworkOsShellInner({
     builtNodeStoreFor,
     currentBrowserActorUi,
     currentDocumentRuntimeKey,
+    currentLocalDocumentOwner,
     extraWindowInstances,
     introductionActionWindowSegment,
     introductionUtilityId,
     introductionUtilityWindowId,
     loadedPlugins,
+    localDocumentOwnerRegistry,
     onActionStable,
     onBrowserActorIntent,
     onIntentStable,
@@ -13230,6 +13402,7 @@ function FrameworkOsShellInner({
                 />
               )}
               {focusedTimeTravel === null || focusedApp === null ? null : <TimeTravelBand session={focusedTimeTravel} terminology={uiTerminology} locale={uiLocale} controllerId={focusedApp.controllerId} onAction={onActionStable} />}
+              {focusedReprojection === null || focusedApp === null ? null : <HistoryReprojectionStatus reprojection={focusedReprojection} locale={uiLocale} sessionOpen={focusedTimeTravel !== null} controllerId={focusedApp.controllerId} onAction={onActionStable} />}
               {currentCheckIn === undefined || currentDocumentRuntimeKey === null ? null : (
                 <div role="status" aria-live="polite" data-semio-checkin-band={currentCheckIn.status.phase} className="pointer-events-auto flex flex-wrap items-center gap-single rounded-sm border border-normal bg-menu px-double py-single text-sm shadow-sm">
                   <span id="s-checkin-status">{checkinStatusText(currentCheckIn.status, uiLocale)}</span>

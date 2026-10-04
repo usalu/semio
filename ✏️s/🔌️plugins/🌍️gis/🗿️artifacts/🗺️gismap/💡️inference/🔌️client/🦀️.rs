@@ -1,6 +1,6 @@
 //! 🌍 Owner-authored GIS HTTP routes, schemas and closed proposal decoding.
 
-use semio_framework_os_kernel::{DslValue, FromValue, ToValue};
+use semio_framework_value::{DslValue, FromValue, ToValue};
 use semio_framework_os_kernel::os_directory::schema::DocumentScope;
 use crate::inference_schema::{GisMapApprovalUndoReceiptV1, GisMapApprovalUndoRequestV1, GisMapReconciledJobV1, GisMapInferenceApprovalReceiptV1, GisMapInferenceApprovalRequestV1, GisMapInferenceEventPageV1, GisMapInferenceJobReceiptV1, GisMapInferenceJobRequestV1};
 use semio_framework_job::reconcile::{JobReconcileRequestV1, JobReconcileResultV1, parse_job_reconcile_result_v1};

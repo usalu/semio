@@ -10,6 +10,7 @@
  * every leaf's own field names are the literal Rust snake_case names verbatim. */
 import type { SetSnapshot } from './📸️set-snapshot/🟦️.ts';
 import type { SemioMesh, SemioMaterial, SemioTexture, SemioPrimitive, SemioTopology, SemioPoint3, SemioUv, SemioRgba } from "../📸️snapshot/🟦️";
+import type { SnapshotPatch } from '../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts';
 
 export interface CreateMesh {
   mesh: SemioMesh;
@@ -118,3 +119,4 @@ export type SemioMeshMutation =
   | { ReplaceTextureBytes: ReplaceTextureBytes }
   | { MoveVertex: MoveVertex }
   | { SetSnapshot: SetSnapshot };
+  | { readonly PatchSnapshot: { readonly patch: SnapshotPatch } }

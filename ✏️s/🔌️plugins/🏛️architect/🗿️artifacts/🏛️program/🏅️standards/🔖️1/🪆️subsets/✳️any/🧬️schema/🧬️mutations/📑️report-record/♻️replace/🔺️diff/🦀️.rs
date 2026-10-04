@@ -13,7 +13,7 @@ pub fn diff(payload: &ReplaceReportRecord, base: &ProgramSnapshot) -> protocol::
         return protocol::MutationOutcome::error("mutation.target-missing", "No report record exists with this id.", [payload.report_record.header.id.0.clone()]);
     };
     if existing == &payload.report_record {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This report record already matches the requested value.").at([existing.header.id.0.clone()])]);
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This report record already matches the requested value.").at([existing.header.id.0.clone()])]);
     }
     let patch = existing.diff_patch(&payload.report_record).expect("diff_patch always produces a full patch");
     protocol::MutationOutcome::new(ProgramDiff { reports: Some(ProgramReportsDelta { patched: vec![ProgramReportsPatchEntry { id: payload.report_record.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })

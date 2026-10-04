@@ -2,9 +2,9 @@ pub(crate) mod context {
     //! 🧪️ `context::assert_declared_actions_bridge_to_commands`'s signature is still
     //! `fn(manifest: fn() -> App)` (framework test context gap, `📓️w0-f-report.md` Gap 3) — `App { definition,
     //! examples }` shape kept alive here purely to satisfy that call.
-    use super::super::create_playground_editor;
+    use super::super::{create_playground_editor, PlaygroundEditor};
     use semio_framework_plugin::App;
-    
+
     pub fn playground_editor_manifest_for_tests() -> App {
         App { definition: create_playground_editor(), examples: Vec::new() }
     }
@@ -39,7 +39,7 @@ fn change_schema_factory_declares_the_exact_bounded_contract() {
 
 #[test]
 fn change_schema_admission_matches_the_language_neutral_limit_oracle() {
-    let fixture: Value = parse(RETAINED_LIMITS).expect("retained command limits decode");
+    let fixture: Value = parse(RETAINED_LIMITS, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("retained command limits decode");
     let maximum = fixture.get("maximumSchemaBytes").and_then(Value::as_u64).expect("maximumSchemaBytes") as usize;
     let additional = fixture.get("rejectedAdditionalBytes").and_then(Value::as_u64).expect("rejectedAdditionalBytes") as usize;
     let expected_items = fixture.get("expectedWorkItems").and_then(Value::as_u64).expect("expectedWorkItems") as usize;
@@ -51,8 +51,8 @@ fn change_schema_admission_matches_the_language_neutral_limit_oracle() {
     let interaction = protocol::InteractionState::default();
     assert_eq!(playground_retained_extent(&accepted, &snapshot, &interaction), Some(expected_items));
     assert_eq!(playground_retained_extent(&rejected, &snapshot, &interaction), None);
-    assert!(PlaygroundEditor::command_from_action("changeSchema", Some(&dsl::DslValue::object([("newSchema".to_string(), dsl::DslValue::String("s".repeat(maximum)))]))).is_ok());
-    assert!(PlaygroundEditor::command_from_action("changeSchema", Some(&dsl::DslValue::object([("newSchema".to_string(), dsl::DslValue::String("s".repeat(maximum + additional)))]))).is_err());
+    assert!(PlaygroundEditor::command_from_action("changeSchema", Some(&semio_framework_value::DslValue::object([("newSchema".to_string(), semio_framework_value::DslValue::String("s".repeat(maximum)))]))).is_ok());
+    assert!(PlaygroundEditor::command_from_action("changeSchema", Some(&semio_framework_value::DslValue::object([("newSchema".to_string(), semio_framework_value::DslValue::String("s".repeat(maximum + additional)))]))).is_err());
 }
 
 #[semio_framework_async_macros::async_test]

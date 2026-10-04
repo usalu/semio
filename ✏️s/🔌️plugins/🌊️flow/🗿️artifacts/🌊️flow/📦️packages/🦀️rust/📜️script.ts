@@ -18,7 +18,7 @@ if (segments[0] === "flow-window-ownership") {
       if (segments[1] === "check" || segments[1] === "native") {
         const { runCargo } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
         const mode = segments[1] === "check" ? ["check", "--tests"] : ["test", "--lib", "flow_window_ownership_", "--", "--nocapture"];
-        await runCargo([mode[0]!, "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-flow-flow", ...mode.slice(1)], this.repoRoot);
+        await runCargo([mode[0]!, "--manifest-path", resolve(this.root, "Cargo.toml"), "-p", "semio-s-artifact-flow-flow", ...mode.slice(1)], this.repoRoot);
       }
       return;
     }
@@ -205,4 +205,3 @@ class AddWidgetRetainedCheckScript extends BundleScript {
 }
 
 await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-flow-flow", { snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"], commands: { verify: OwnedVerifyScript, "test-source": SourceTestScript, "child-identity-check": ChildIdentityCheckScript, "child-edit-check": ChildEditCheckScript, "add-widget-retained-check": AddWidgetRetainedCheckScript } });
-

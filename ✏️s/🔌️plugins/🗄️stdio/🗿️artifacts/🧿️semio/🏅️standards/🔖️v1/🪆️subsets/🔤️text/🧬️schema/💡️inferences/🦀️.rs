@@ -9,7 +9,6 @@
 
 use crate::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::profile::compute_semio_text_profile;
 //#region 🔖️Inference
@@ -24,8 +23,11 @@ pub struct SemioTextInference {
 }
 
 impl protocol::Inference<SemioTextSnapshot> for SemioTextInference {
-    fn infer(snapshot: &SemioTextSnapshot) -> Self {
+    fn infer(snapshot: &SemioTextSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { profile: compute_semio_text_profile(snapshot) }
+    
+        })
     }
 }
 
@@ -35,7 +37,9 @@ impl protocol::Inference<SemioTextSnapshot> for SemioTextInference {
 /// defensive pattern raster's `RasterInference` documents).
 impl Default for SemioTextInference {
     fn default() -> Self {
-        <Self as protocol::Inference<SemioTextSnapshot>>::infer(&SemioTextSnapshot::default())
+        let snapshot = &SemioTextSnapshot::default();
+
+        Self { profile: compute_semio_text_profile(snapshot) }
     }
 }
 
@@ -51,16 +55,6 @@ impl protocol::InferenceSpec<SemioTextSnapshot> for SemioTextInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 💡️ No `InferredField`s here (a word/mark/language census is a single whole-snapshot fold over
-/// already-flat `runs`) — the default `infer_cached` passthrough (`ArtifactInferrer::infer_cached`)
-/// is exact.
-impl ArtifactInferrer for crate::standards::v1::subsets::text::schema::SemioTextBuilder {
-    type Snapshot = SemioTextSnapshot;
-    type Inference = SemioTextInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.semio.text.inference`'s facet leaves into the OS-wide inference catalog

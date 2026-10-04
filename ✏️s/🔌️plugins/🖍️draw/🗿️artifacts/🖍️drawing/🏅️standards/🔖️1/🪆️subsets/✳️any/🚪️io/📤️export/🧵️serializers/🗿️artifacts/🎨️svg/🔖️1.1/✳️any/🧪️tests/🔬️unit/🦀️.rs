@@ -4,7 +4,7 @@ use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot
 #[test]
 fn svg_scene_fixture_preserves_paint_geometry_and_text() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
-    let nodes: Vec<DrawingSceneNode> = dsl::json::from_json_str(&fixture["nodes"].to_string()).unwrap();
+    let nodes: Vec<DrawingSceneNode> = semio_framework_pack_json::from_json_str(&fixture["nodes"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let view_box: [f64;4] = serde_json::from_value(fixture["viewBox"].clone()).unwrap();
     let output = drawing_scene_to_svg(&nodes,view_box).unwrap();
     let root = svg_document_to_typed(&parse_svg_xml(&output).unwrap()).unwrap();
@@ -37,7 +37,7 @@ fn svg_refuses_invalid_view_box_and_transform() {
 fn svg_refuses_nonfinite_geometry_and_paint() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     for sample in fixture["invalidNumbers"].as_array().unwrap() {
-        let mut nodes: Vec<DrawingSceneNode> = dsl::json::from_json_str(&fixture["nodes"].to_string()).unwrap();
+        let mut nodes: Vec<DrawingSceneNode> = semio_framework_pack_json::from_json_str(&fixture["nodes"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let value = sample["value"].as_str().unwrap().parse::<f64>().unwrap();
         let node = &mut nodes[sample["node"].as_u64().unwrap() as usize];
         match sample["field"].as_str().unwrap() {
@@ -70,7 +70,7 @@ fn svg_preserves_shared_isolated_compositing_hierarchies() {
     }
     let cases:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../🧬️schema/🎬️scene/🧩️compositing/🧫️fixtures/🔣️.json")).unwrap();
     for case in cases.as_array().unwrap() {
-        let nodes:Vec<DrawingSceneNode>=dsl::json::from_json_str(&case["nodes"].to_string()).unwrap();
+        let nodes:Vec<DrawingSceneNode>=semio_framework_pack_json::from_json_str(&case["nodes"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let output=drawing_scene_to_svg(&nodes,[0.0,0.0,24.0,16.0]).unwrap();
         let root=svg_document_to_typed(&parse_svg_xml(&output).unwrap()).unwrap();
         let mut actual=std::collections::BTreeMap::new();visit(&root,&mut Vec::new(),&mut actual);
@@ -110,4 +110,33 @@ fn explicit_isolation_survives_unit_opacity_scene_projection() {
     assert_eq!(nodes[0].groups.len(),1);assert_eq!(nodes[0].groups[0].id,"isolated");assert_eq!(nodes[0].groups[0].opacity,1.0);
     let crate::DrawingLayerNode::Group(body)=&mut document.layers[0] else {unreachable!()};body.isolation=false;
     assert!(flatten_drawing_document_to_scene_nodes(&document)[0].groups.is_empty());
+}
+
+#[test]
+fn svg_emits_constant_gradients_as_solid_paint_and_rejects_invalid_paint() {
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let mut nodes:Vec<DrawingSceneNode>=semio_framework_pack_json::from_json_str(&fixture["nodes"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    nodes.truncate(1);
+    let cases:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../🧬️schema/🎨️fill/🎨️sampling/🧫️fixtures/🔣️.json")).unwrap();
+    for case in cases.as_array().unwrap() {
+        let fill:FillStyle=serde_json::from_value(case["fill"].clone()).unwrap();
+        nodes[0].fill=Some(fill.clone());
+        let output=drawing_scene_to_svg(&nodes,[0.0,0.0,16.0,16.0]);
+        if case["error"]==true {assert!(output.is_err(),"{}",case["name"]);continue;}
+        let constant=match &fill {
+            FillStyle::Solid {color}=>Some(*color),
+            FillStyle::LinearGradient {x1,y1,x2,y2,stops} if stops.len()<=1||x1==x2&&y1==y2=>Some(stops.iter().enumerate().max_by(|(a,left),(b,right)|left.offset.total_cmp(&right.offset).then(a.cmp(b))).map_or([0.0;4],|(_,stop)|stop.color)),
+            FillStyle::RadialGradient {r,stops,..} if stops.len()<=1||*r==0.0=>Some(stops.iter().enumerate().max_by(|(a,left),(b,right)|left.offset.total_cmp(&right.offset).then(a.cmp(b))).map_or([0.0;4],|(_,stop)|stop.color)),
+            _=>None,
+        };
+        if let Some(color)=constant {
+            let root=svg_document_to_typed(&parse_svg_xml(&output.unwrap()).unwrap()).unwrap();
+            let SvgElement::Svg {children,..}=root else {panic!("SVG root")};
+            assert_eq!(children.len(),1,"{}",case["name"]);
+            let SvgElement::Group {children,..}=&children[0] else {panic!("layer wrapper")};
+            let SvgElement::Path {common,..}=&children[0] else {panic!("path")};
+            assert_eq!(common.presentation.fill.as_deref(),Some(rgb(&color).as_str()),"{}",case["name"]);
+            assert_eq!(common.presentation.fill_opacity.as_deref(),Some(color[3].to_string().as_str()));
+        }
+    }
 }

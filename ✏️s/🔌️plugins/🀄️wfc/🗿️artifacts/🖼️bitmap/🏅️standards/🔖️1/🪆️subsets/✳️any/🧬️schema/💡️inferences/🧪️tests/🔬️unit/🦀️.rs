@@ -287,7 +287,7 @@ fn the_published_contract_binds_the_field_the_request_decodes() {
     assert!(binding.required, "a bitmap solve cannot be stated by hand, so the binding is required");
 
     let wire = format!("{{\"{}\":{{\"pack\":\"AAAA\",\"spr\":\"AAAA\"}}}}", binding.field);
-    let request: BitmapInferenceRequest = protocol::json::from_json_str(&wire).expect("the field the contract names is the field the request decodes");
+    let request: BitmapInferenceRequest = semio_framework_pack_json::from_json_str(&wire, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the field the contract names is the field the request decodes");
     assert!(request.document.is_some() && request.snapshot.is_none());
 }
 
@@ -369,10 +369,10 @@ fn genesis_wire_request(law: &serde_json::Value, cancellation_id: &str) -> Vec<u
         cancellation_id: cancellation_id.into(),
         previous_state: None,
         requested_cache_mode: semio_framework_plugin::app::WireArtifactInferenceCacheMode::Cold,
-        canonical_payload: protocol::json::to_json_string(&payload).into_bytes(),
+        canonical_payload: semio_framework_pack_json::to_json_string(&payload).into_bytes(),
         dependencies: Vec::new(),
     };
-    protocol::json::to_json_string(&request).into_bytes()
+    semio_framework_pack_json::to_json_string(&request).into_bytes()
 }
 
 /// 🏁 Drives one `semio.infer` job through the guest job protocol under `grant` exactly as the host

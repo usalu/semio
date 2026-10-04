@@ -1,6 +1,6 @@
 /** 🧊️ Schema-first GLTF semantic SQLite projection and complete typed reconstruction. */
 import {artifactSqliteCheckpoint,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import {validateSqliteDatabaseSchema,type SqliteDatabase} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {validateSqliteDatabaseSchemaControlled,type SqliteDatabase} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 import type {ArtifactDialect} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts";
 import type {GltfSnapshot} from "../🟦️.ts";
 import {Write,Read} from "./🧩️control/🟦️.ts";
@@ -20,7 +20,7 @@ export async function reconstructGltfSnapshotSqlite(database:SqliteDatabase,opti
 export async function validateGltfSnapshotSqliteDialect(snapshot:GltfSnapshot,dialect:ArtifactDialect,database:SqliteDatabase,options:ArtifactSqliteOptions={}):Promise<readonly never[]>{
  await artifactSqliteCheckpoint(options,"projectSnapshot",0,0,false);
  if(dialect.artifactKind!=="s.stdio.gltf"||dialect.standard!=="2.0"||dialect.subset!=="*")throw Error("GLTF owned SQLite dialect differs");
- validateSqliteDatabaseSchema(database,GLTF_SQLITE_SCHEMA,options);
+ await validateSqliteDatabaseSchemaControlled(database,GLTF_SQLITE_SCHEMA,options);
  const expected=await projectGltfSnapshotSqlite(snapshot,options),candidate=await reconstructGltfSnapshotSqlite(database,options),canonical=await projectGltfSnapshotSqlite(candidate,options),total=expected.tables.reduce((total,table)=>total+table.rows.length,0);let completed=0;
  for(const table of expected.tables){
   const actual=canonical.tables.find(value=>value.name===table.name)!;

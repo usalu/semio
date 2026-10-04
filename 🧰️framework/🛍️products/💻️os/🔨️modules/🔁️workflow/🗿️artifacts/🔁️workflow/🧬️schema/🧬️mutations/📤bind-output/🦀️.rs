@@ -2,7 +2,7 @@ use super::super::{UnbindOutput, WorkflowDiff, WorkflowMutation, WorkflowOutputB
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "bind-output")]
@@ -17,12 +17,15 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for BindOutput {
     fn diff(&self, _base: &WorkflowSnapshot) -> protocol::MutationOutcome<WorkflowDiff> {
         protocol::MutationOutcome::new(WorkflowDiff::BindOutput { binding: self.binding.clone() })
     }
-    fn inverse(&self, base: &WorkflowSnapshot) -> Vec<WorkflowMutation> {
+    fn inverse(&self, base: &WorkflowSnapshot) -> Result<Vec<WorkflowMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         match base.output_bindings.iter().find(|entry| entry.node_id == self.binding.node_id && entry.port_id == self.binding.port_id) {
             Some(existing) => vec![WorkflowMutation::BindOutput(BindOutput { binding: existing.clone() })],
             None => vec![WorkflowMutation::UnbindOutput(UnbindOutput { node_id: self.binding.node_id.clone(), port_id: self.binding.port_id.clone() })],
         }
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Bind workflow output {}", self.binding.node_id), &format!("Arbeitsablaufausgabe {} binden", self.binding.node_id))
     }

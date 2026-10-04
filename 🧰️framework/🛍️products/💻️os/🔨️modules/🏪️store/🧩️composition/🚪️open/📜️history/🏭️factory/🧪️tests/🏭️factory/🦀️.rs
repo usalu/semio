@@ -4,8 +4,8 @@ use super::super::{MemberHistoryInputStep, MemberHistoryVerification};
 use super::*;
 use crate::os_io::{ArtifactDialect, ArtifactRef};
 use crate::os_spr::format::retained::RetainedSprLimits;
-use crate::os_store::{MemberOpenRequest, OwnedSchemaDecodeCredits, OwnedSchemaDecodePage, OwnedSchemaDecodePages, OwnerRef, VcsError, OWNED_SCHEMA_DECODE_PAGE_BYTES};
-use semio_framework_job::{root_cancel_token, Generation, OperationId, StepBudget};
+use crate::os_store::{MemberOpenRequest, OWNED_SCHEMA_DECODE_PAGE_BYTES, OwnedSchemaDecodeCredits, OwnedSchemaDecodePage, OwnedSchemaDecodePages, OwnerRef, VcsError};
+use semio_framework_job::{Generation, OperationId, StepBudget, root_cancel_token};
 use serde_json::Value;
 
 const fn declaration(subset: &'static str) -> MemberOpenDeclaration {
@@ -317,7 +317,7 @@ fn member_factory_selection_uses_only_complete_closed_declarations() {
 }
 
 async fn semantic_history(fixture: &Value, row: &Value) -> Vec<u8> {
-    use crate::os_spr::history::{encode_history, EncodeOptions, HistoryComposition, HistoryLog};
+    use crate::os_spr::history::{EncodeOptions, HistoryComposition, HistoryLog, encode_history};
     let fields = fixture["requestIdentity"].as_array().unwrap();
     let string = |index: usize| fields[index].as_str().unwrap().to_owned();
     let mut log = HistoryLog {

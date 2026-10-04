@@ -7,11 +7,12 @@
 use super::topology::compute_playbook_topology;
 use crate::PlaybookSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a playbook snapshot. One field per named inference under
-/// `💡️inferences/` (currently: `topology`, backed by the `🧭topology/` slug dir).
+/// `💡️inferences/` (currently: `topology`, backed by the `🧭topology/` slug dir). A fold is pure over the PARENT snapshot (design
+/// §20.9), whose steps live on the `flow` child (§20.15): until inference receives the child packs as dependencies (AGNOSTIC
+/// W-b), the parent alone infers the topology of no steps.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.playbook.playbook.inference")]
@@ -22,13 +23,13 @@ pub struct PlaybookInference {
 
 impl Default for PlaybookInference {
     fn default() -> Self {
-        <Self as protocol::Inference<PlaybookSnapshot>>::infer(&PlaybookSnapshot::default())
+        Self { topology: compute_playbook_topology(&[]) }
     }
 }
 
 impl protocol::Inference<PlaybookSnapshot> for PlaybookInference {
-    fn infer(snapshot: &PlaybookSnapshot) -> Self {
-        Self { topology: compute_playbook_topology(&snapshot.steps()) }
+    fn infer(_snapshot: &PlaybookSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok(Self::default())
     }
 }
 
@@ -40,17 +41,10 @@ impl protocol::InferenceSpec<PlaybookSnapshot> for PlaybookInference {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec { id: "s.playbook.playbook.inference.topology", reads: &["steps"] }]
+        &[protocol::InferenceFieldSpec { id: "s.playbook.playbook.inference.topology", reads: &["flow"] }]
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::PlaybookBuilder {
-    type Snapshot = PlaybookSnapshot;
-    type Inference = PlaybookInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.playbook.playbook.inference`'s facet leaves into the OS-wide inference catalog

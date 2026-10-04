@@ -96,7 +96,7 @@ pub fn render(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &
     let (nodes, edges) = with_host_from_snapshot(snapshot, config, session, |host| dag_host_snapshot_to_workflow(&host.dag.host_snapshot));
     let viewport = Viewport2d { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom };
     let (fixture_json, flow_extras) = with_live_host_snapshot(snapshot, |live| {
-        (Some(dsl::json::to_json_string(live)), flow_backed_node_graph_extras(live, &config.lod_mode, config.proximity_distance, config.grid_visible, config.grid_snap_enabled, config.grid_factor, Some(session)))
+        (Some(semio_framework_pack_json::to_json_string(live)), flow_backed_node_graph_extras(live, &config.lod_mode, config.proximity_distance, config.grid_visible, config.grid_snap_enabled, config.grid_factor, Some(session)))
     });
     let preview_off_json = if config.preview_off_node_ids.is_empty() { None } else { serde_json::to_string(&config.preview_off_node_ids).ok() };
     let scene = NodeGraphScene {

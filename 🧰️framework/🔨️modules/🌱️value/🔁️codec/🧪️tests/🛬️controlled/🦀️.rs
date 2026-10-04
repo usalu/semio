@@ -88,7 +88,7 @@ fn controlled_value_custom_defaults_require_owned_constructor_without_foreign_co
             _=>panic!("unsupported corpus mode")
         };
         assert_eq!(plain,oracle);assert_eq!(plain,row["plainPayload"]);assert_eq!(actual.is_ok(),row["controlledAccepted"].as_bool().unwrap());
-        match actual{Ok(value)=>assert_eq!(value,oracle),Err(error)=>assert_eq!(error.0,row["controlledError"].as_str().unwrap())}
+        match actual{Ok(value)=>assert_eq!(value,oracle),Err(error)=>assert_eq!(error.message,row["controlledError"].as_str().unwrap())}
     }
 }
 
@@ -216,7 +216,7 @@ struct Retained;
 impl Drop for Retained{fn drop(&mut self){DROPPED.fetch_add(1,std::sync::atomic::Ordering::SeqCst);}}
 impl FromValue for Retained{
     fn from_value(_:DslValue)->Result<Self,ValueError>{Ok(Self)}
-    fn from_value_controlled(_: &DslValue,control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{control.checkpoint().map_err(ValueError::new)?;Ok(Self)}
+    fn from_value_controlled(_: &DslValue,control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{control.checkpoint()?;Ok(Self)}
     fn retire_decoded(self){RETIRED.fetch_add(1,std::sync::atomic::Ordering::SeqCst);std::mem::forget(self);}
 }
 #[derive(crate::FromValue)]
@@ -236,7 +236,7 @@ fn retire_recursive(value:Recursive){let mut pending=vec![value];while let Some(
 #[test]
 fn controlled_value_recursive_derive_has_own_depth_bound(){
     let mut value=serde_json::json!({"children":[]});for _ in 0..80{value=serde_json::json!({"children":[value]});}
-    let value=DslValue::from(&value);let mut callback=|_|true;let mut control=NativeDecodeControl::new(1024*1024,&mut callback);let error=Recursive::from_value_controlled(&value,&mut control).err().unwrap();assert!(error.0.contains("depth limit"));
+    let value=DslValue::from(&value);let mut callback=|_|true;let mut control=NativeDecodeControl::new(1024*1024,&mut callback);let error=Recursive::from_value_controlled(&value,&mut control).err().unwrap();assert!(error.message.contains("depth limit"));
     let success=DslValue::Object(vec![("children".into(),DslValue::Array(vec![]))]);let result=Recursive::from_value_controlled(&success,&mut control).unwrap();Recursive::retire_decoded(result);DslValue::retire_decoded(value);
 }
 
@@ -253,7 +253,7 @@ fn serde_custom<'de,D:serde::Deserializer<'de>>(decoder:D)->Result<String,D::Err
 fn ordinary_custom(value:DslValue)->Result<String,ValueError>{String::from_value(value)}
 fn controlled_custom(value:&DslValue,control:&mut NativeDecodeControl<'_>)->Result<String,ValueError>{String::from_value_controlled(value,control)}
 fn ordinary_default()->String{"owned-default".into()}
-fn controlled_default(control:&mut NativeDecodeControl<'_>)->Result<String,ValueError>{control.copy_text("owned-default").map_err(ValueError::new)}
+fn controlled_default(control:&mut NativeDecodeControl<'_>)->Result<String,ValueError>{control.copy_text("owned-default")}
 #[derive(crate::FromValue)]
 #[value(crate="crate")]
 struct UncontrolledCustom { #[value(deserialize_with="ordinary_custom")] converted:String }
@@ -304,7 +304,7 @@ impl FromValue for UncontrolledKey{fn from_value(value:DslValue)->Result<Self,Va
 #[test]
 fn controlled_value_custom_map_keys_refuse_uncontrolled_parsing(){
     let value=DslValue::Object(vec![("1".into(),DslValue::Bool(true))]);let mut callback=|_|true;let mut control=NativeDecodeControl::new(4096,&mut callback);
-    let error=std::collections::HashMap::<UncontrolledKey,bool>::from_value_controlled(&value,&mut control).err().unwrap();assert!(error.0.contains("key owner"));
+    let error=std::collections::HashMap::<UncontrolledKey,bool>::from_value_controlled(&value,&mut control).err().unwrap();assert!(error.message.contains("key owner"));
 }
 
 #[test]
@@ -387,7 +387,7 @@ struct ScalarOwnerDefaults {
 impl ScalarOwnerDefaults {
     fn one() -> u32 { 1 }
     fn controlled_one(control: &mut NativeDecodeControl<'_>) -> Result<u32, ValueError> {
-        control.checkpoint().map_err(ValueError::new)?;
+        control.checkpoint()?;
         Ok(1)
     }
 }
@@ -414,4 +414,35 @@ fn controlled_value_owner_named_array_capacity_is_not_recursive_storage() {
     let oracle: CapacityOwner = serde_json::from_value(fixture["scalarOwnerConstInput"].clone()).unwrap();
     assert_eq!(oracle.items, [7, 9]);
     assert_eq!(decode::<CapacityOwner>(&fixture["scalarOwnerConstInput"]).unwrap(), oracle);
+}
+
+#[test]
+fn controlled_value_borrowed_object_keys_cancel_inside_hashing_without_copying_keys() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🛬️controlled/🔗️borrowed-keys.json")).unwrap();
+    let key = fixture["unit"].as_str().unwrap().repeat(usize::try_from(fixture["repeat"].as_u64().unwrap()).unwrap());
+    let maximum = usize::try_from(fixture["maximumOwnedBytes"].as_u64().unwrap()).unwrap();
+    for case in fixture["cases"].as_array().unwrap() {
+        let count = usize::try_from(case["entries"].as_u64().unwrap()).unwrap();
+        let input = DslValue::object((0..count).map(|_| (key.clone(), DslValue::Null)));
+        let mut reached = false;
+        let mut stages = 0usize;
+        let cancel_stage = usize::try_from(case["cancelStage"].as_u64().unwrap()).unwrap();
+        let mut callback = |progress: crate::native_decoding::NativeDecodeProgress| {
+            if progress.total == key.len() && progress.completed == 0 { stages += 1; }
+            if stages == cancel_stage && progress.total == key.len() && progress.completed >= 65536 && progress.completed < progress.total { reached = true; false } else { true }
+        };
+        let mut control = NativeDecodeControl::new(maximum, &mut callback);
+        let error = match input.object_controlled(&mut control) { Err(error) => error, Ok(_) => panic!("borrowed-key interior cancellation was not reached: {}",case["id"]) };
+        assert_eq!(error.kind.as_str(), fixture["expectedKind"].as_str().unwrap(), "{}", case["id"]);
+        assert!(control.owned_bytes() < key.len());
+        assert!(reached, "{}", case["id"]);
+    }
+    let duplicate = DslValue::object([(key.clone(), DslValue::Null), (key.clone(), DslValue::Null)]);
+    let error = match duplicate.object_controlled(&mut NativeDecodeControl::new(maximum, &mut |_|true)) { Err(error) => error, Ok(_) => panic!("duplicate literal key admitted") };
+    assert_eq!(error.kind, crate::ValueRefusalKind::InvalidValue);
+    assert_eq!(error.message,"duplicate object key");
+    let ordered = DslValue::object([(key, DslValue::Bool(true)), ("".into(), DslValue::Bool(false))]);
+    let mut yes = |_|true;
+    let mut control = NativeDecodeControl::new(maximum, &mut yes);
+    assert_eq!(ordered.object_controlled(&mut control).unwrap(), ordered.as_object().unwrap());
 }

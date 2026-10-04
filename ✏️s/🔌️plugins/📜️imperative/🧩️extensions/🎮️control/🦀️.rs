@@ -1,6 +1,6 @@
 //! 🔀️ Imperative control module: catalogue-only control-flow step kinds.
 
-use pack::json::{array, object, to_string, Value};
+use semio_framework_pack_json::{array, object, to_string, Value};
 
 // 🚫️async: E1 pure — pack::json only, zero suspension points — see R9.
 pub fn catalogue_json() -> String {

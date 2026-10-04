@@ -1,3 +1,0 @@
-# 🧬️ remove-palette-entry/RemovePaletteEntry
-scalar RemovePaletteEntryMutationValue
-input RemovePaletteEntryMutation { index: Int! }

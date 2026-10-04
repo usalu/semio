@@ -1,7 +1,7 @@
 //! 🚧️ `set-brush-placement-contact-tolerance` command.
 
 use crate::editor::puzzle5d::{puzzle5d_absolute_or_delta, Puzzle5dActionCtx};
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 
 /// 🖌️ The collision budget every brush/fill placement is tested against — an absolute `value` or a
 /// `delta` nudge, clamped into the unit band the brush option's slider declares.

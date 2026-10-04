@@ -7,9 +7,12 @@ use crate::standards::v1::subsets::any::schema::mutations::{widget_index, Genera
 use crate::Generation3dSnapshot;
 
 /// ↩️ One `move-widget` per addressed widget that has a stored base position.
-pub fn inverse(payload: &MoveNodes, base: &Generation3dSnapshot) -> Vec<Generation3dMutation> {
+pub fn inverse(payload: &MoveNodes, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     if (payload.dx, payload.dy) == (0.0, 0.0) {
         return Vec::new();
     }
     payload.ids.iter().filter(|id| widget_index(&base.host_snapshot, id).is_some()).filter_map(|id| base.host_snapshot.layout.get(id).map(|layout| Generation3dMutation::MoveWidget(MoveWidget { id: id.clone(), layout: layout.clone() }))).collect()
+
+    })())
 }

@@ -1,0 +1,36 @@
+{
+  "at": "2026-10-03T10:47:26.537Z",
+  "source": "reviewed-before-1.json",
+  "nativeRelease": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-worker/sqlite-native-ledger-production-native-fence-released-1.json",
+  "mutations": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧫️fixtures/basic-remote-ops/edits.ops",
+      "changed": true,
+      "sha256": "90fb8a4d5b4809ebb7bf0a3654d9d8243bb85c5f99f33d36d82fb20cc0e92ff5",
+      "exact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧫️fixtures/remote-ops-backlog/edits.ops",
+      "changed": true,
+      "sha256": "7739f8a1c706fb4ef6d54fb887b0638696289fa23012ca04a290a4053e08cd8d",
+      "exact": true
+    }
+  ],
+  "protected": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧫️fixtures/basic-remote-ops/🔣️fixture.dsl",
+      "changed": false,
+      "sha256": "f128d390f5472bb98abd2076f9e16a8ac4003bdeec64de118f971c34d24c0675",
+      "exact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧫️fixtures/remote-ops-backlog/🔣️fixture.dsl",
+      "changed": false,
+      "sha256": "772dc1c20285877a199d8c74c7d6e398aea80d1092dbbf8f9af636bdea5e3973",
+      "exact": true
+    }
+  ],
+  "insertedOptionalNoneLists": 3,
+  "nativeRuntime": "pending",
+  "sourceWrites": 2
+}

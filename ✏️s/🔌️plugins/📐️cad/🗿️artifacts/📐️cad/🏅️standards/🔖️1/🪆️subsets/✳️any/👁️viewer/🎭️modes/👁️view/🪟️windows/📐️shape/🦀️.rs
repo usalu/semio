@@ -61,15 +61,15 @@ pub fn definition() -> WindowKindDefinition {
 /// 🌉️ `MeshData` (`semio_framework_plugin`) carries its own first-party `From<MeshData> for
 /// pack::json::Value` — reached here through the `dsl`/`protocol` alias's `os_pack` re-export of the
 /// same `pack` crate, never through `serde_json`.
-fn mesh_data_to_dsl(data: &semio_framework_plugin::MeshData) -> protocol::DslValue {
-    protocol::os_pack::json::to_dsl_value(&protocol::os_pack::json::Value::from(data.clone()))
+fn mesh_data_to_dsl(data: &semio_framework_plugin::MeshData) -> semio_framework_value::DslValue {
+    semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::Value::from(data.clone()))
 }
 
 pub fn render(_document: &CadSnapshot) -> UiAssemblyResult<BuiltNode> {
     let camera = CadCamera::default();
     let camera_json = world3d_camera_projection_json(camera.position, camera.target, None, camera.zoom, &cad_camera_projection_config(&camera));
-    let fallback_mesh = vec![protocol::DslValue::object([("id".to_string(), protocol::DslValue::String(CAD_VIEW_FALLBACK_MESH_KIND.to_string())), ("data".to_string(), mesh_data_to_dsl(&mesh_from_kind(CAD_VIEW_FALLBACK_MESH_KIND)))])];
-    let meshes_json = protocol::json::to_json_string(&fallback_mesh);
+    let fallback_mesh = vec![semio_framework_value::DslValue::object([("id".to_string(), semio_framework_value::DslValue::String(CAD_VIEW_FALLBACK_MESH_KIND.to_string())), ("data".to_string(), mesh_data_to_dsl(&mesh_from_kind(CAD_VIEW_FALLBACK_MESH_KIND)))])];
+    let meshes_json = semio_framework_pack_json::to_json_string(&fallback_mesh);
     let instances_json = "[]".to_string();
     let selection_json = world3d_selection_json("rectangle", &[], None);
     MeshWindowKit::render(&MeshView { camera_json, meshes_json, instances_json, selection_json })

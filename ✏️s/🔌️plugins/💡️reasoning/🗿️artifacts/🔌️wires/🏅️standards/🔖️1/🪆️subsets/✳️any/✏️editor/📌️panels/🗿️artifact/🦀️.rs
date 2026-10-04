@@ -9,7 +9,7 @@
 use crate::editor::wires::terminology::WiresLabels;
 use crate::editor::wires::{ui_label, WIRES_GRANULARITY_EDGE, WIRES_GRANULARITY_NODE, WIRES_INTERACTION_GRAPH, WIRES_PLAY_APP_ID};
 use crate::schema::{dsl_id, fixture_edges, wires_identities, wires_relationships};
-use crate::WiresSnapshot;
+use crate::WiresComposed;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::PanelGroup;
@@ -42,24 +42,25 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn identity_label_lookup(wires: &dsl::DslValue, identity_id: u64) -> Option<String> {
+fn identity_label_lookup(wires: &semio_framework_value::DslValue, identity_id: u64) -> Option<String> {
     wires_identities(wires).iter().find(|identity| dsl_id(identity.get("identityId")) == Some(identity_id)).and_then(|identity| identity.get("label").and_then(|value| value.as_str())).map(str::to_string)
 }
 
-fn wires_identity_kind_name(wires: &dsl::DslValue, identity_kind_id: &str) -> Option<String> {
-    wires
+fn wires_identity_kind_name(composed: &WiresComposed, identity_kind_id: &str) -> Option<String> {
+    composed
+        .fixture
         .get("kindCatalogs")
         .and_then(|value| value.get("identityKinds"))
         .and_then(|value| value.as_array())
         .into_iter()
         .flatten()
-        .chain(wires.get("board").and_then(|value| value.get("meta")).and_then(|value| value.get("kindCatalogs")).and_then(|value| value.get("identityKinds")).and_then(|value| value.as_array()).into_iter().flatten())
+        .chain(composed.board.get("meta").and_then(|value| value.get("kindCatalogs")).and_then(|value| value.get("identityKinds")).and_then(|value| value.as_array()).into_iter().flatten())
         .find(|row| row.get("id").and_then(|value| value.as_str()) == Some(identity_kind_id))
         .and_then(|row| row.get("name").and_then(|value| value.as_str()))
         .map(str::to_string)
 }
 
-fn wires_relationship_document_label(wires: &dsl::DslValue, edge_id: &str, labels: &WiresLabels) -> Option<String> {
+fn wires_relationship_document_label(wires: &semio_framework_value::DslValue, edge_id: &str, labels: &WiresLabels) -> Option<String> {
     let relationship = wires_relationships(wires).iter().find(|row| row.get("edgeId").and_then(|value| value.as_str()) == Some(edge_id))?;
     let kind = relationship.get("kind")?.as_str()?;
     let source_id = dsl_id(relationship.get("sourceIdentityId"))?;
@@ -87,14 +88,14 @@ fn pick_row(id: &str, label: impl AsRef<str>, description: Option<String>, granu
     row.try_build().map_err(|_| admission("wires row admission failed"))
 }
 
-fn identity_row(wires: &dsl::DslValue, identity: &dsl::DslValue) -> UiAssemblyResult<BuiltNode> {
+fn identity_row(composed: &WiresComposed, identity: &semio_framework_value::DslValue) -> UiAssemblyResult<BuiltNode> {
     let node_id = identity.get("nodeId").and_then(|value| value.as_str()).ok_or_else(|| PluginAssemblyError::new("ui.document", "wires identity node id is required"))?;
     let label = identity.get("label").and_then(|value| value.as_str()).ok_or_else(|| PluginAssemblyError::new("ui.document", "wires identity label is required"))?;
-    let description = identity.get("identityKind").and_then(|value| value.as_str()).and_then(|kind| wires_identity_kind_name(wires, kind)).filter(|kind_name| kind_name != label);
+    let description = identity.get("identityKind").and_then(|value| value.as_str()).and_then(|kind| wires_identity_kind_name(composed, kind)).filter(|kind_name| kind_name != label);
     pick_row(node_id, label, description, WIRES_GRANULARITY_NODE)
 }
 
-fn relationship_row(wires: &dsl::DslValue, edge: &dsl::DslValue, labels: &WiresLabels) -> UiAssemblyResult<BuiltNode> {
+fn relationship_row(wires: &semio_framework_value::DslValue, edge: &semio_framework_value::DslValue, labels: &WiresLabels) -> UiAssemblyResult<BuiltNode> {
     let edge_id = edge.get("id").and_then(|value| value.as_str()).ok_or_else(|| PluginAssemblyError::new("ui.document", "wires relationship id is required"))?;
     let label = wires_relationship_document_label(wires, edge_id, labels).unwrap_or_else(|| edge_id.into());
     pick_row(edge_id, label, None, WIRES_GRANULARITY_EDGE)
@@ -103,13 +104,12 @@ fn relationship_row(wires: &dsl::DslValue, edge: &dsl::DslValue, labels: &WiresL
 /// 🕹️ `.selected()?`/`.highlighted()?`/`.selection_change()` deleted — the framework stamps this tree's
 /// presence from the "graph" `InteractionState` post-render and would overwrite whatever this function
 /// stamped anyway.
-pub fn render(document: &WiresSnapshot, labels: &WiresLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
-    let wires = &document.wires_fixture;
-    let board = &crate::wires_working_board(document);
+pub fn render(composed: &WiresComposed, labels: &WiresLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
+    let wires = &composed.fixture;
     let identities = wires_identities(wires);
-    let relationships = fixture_edges(board);
+    let relationships = fixture_edges(&composed.board);
     PanelTreeBuilder::new(WIRES_PLAY_DOCUMENT_NAMESPACE)?
-        .window_section_or_placeholder(windows, "wires-play-document.identities", Some(ui_label(labels.identities.as_str())?), true, identities, |identity| identity_row(wires, identity), ui_label("(none)")?)?
+        .window_section_or_placeholder(windows, "wires-play-document.identities", Some(ui_label(labels.identities.as_str())?), true, identities, |identity| identity_row(composed, identity), ui_label("(none)")?)?
         .window_section_or_placeholder(windows, "wires-play-document.relationships", Some(ui_label(labels.relationships.as_str())?), false, relationships, |edge| relationship_row(wires, edge, labels), ui_label("(none)")?)?
         .interaction_domain(WIRES_PLAY_APP_ID, WIRES_INTERACTION_GRAPH)?
         .build()

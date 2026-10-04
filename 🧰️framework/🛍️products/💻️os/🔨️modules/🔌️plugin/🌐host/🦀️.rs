@@ -26,7 +26,7 @@
 //! wraps an `Rc`; `Direct` carries no state at all).
 
 use crate::reactor::requests::RequestRegistry;
-use dsl::DslValue;
+use semio_framework_value::DslValue;
 use semio_framework::kernel::{CapabilityId, ClipboardFragment, Effect, IconRenderExportItem, JobPlacement, RequestId, RequestOutcome, WindowHandle, WindowKindId};
 use semio_framework::{Fault, FaultCode, FaultOrigin, MediaType};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -38,13 +38,13 @@ pub use body::BodyReader;
 /// 📦️ Encodes a fault as the ABI `pack` `completion-result.fault` and every `host-async` Err arm carry.
 /// Schema: `🔌️plugin/🧬️schema/📜️.wit` `type pack = list<u8>` — no JSON string on this data path.
 pub(crate) fn encode_fault_pack(fault: &Fault) -> Vec<u8> {
-    store::pack_rt::encode_wire_value(&dsl::ToValue::to_value(fault))
+    store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(fault))
 }
 
 /// 📦️ Inverse of [`encode_fault_pack`] — the guest decode of a host-written fault pack.
 pub(crate) fn decode_fault_pack(bytes: &[u8]) -> Fault {
     match store::pack_rt::decode_wire_value(bytes) {
-        Ok(value) => dsl::FromValue::from_value(value).unwrap_or_else(|_| Fault::new(FaultOrigin::Os, FaultCode::new("os.fault.decode"), String::from_utf8_lossy(bytes).into_owned())),
+        Ok(value) => semio_framework_value::FromValue::from_value(value).unwrap_or_else(|_| Fault::new(FaultOrigin::Os, FaultCode::new("os.fault.decode"), String::from_utf8_lossy(bytes).into_owned())),
         Err(_) => Fault::new(FaultOrigin::Os, FaultCode::new("os.fault.decode"), String::from_utf8_lossy(bytes).into_owned()),
     }
 }
@@ -115,8 +115,8 @@ async fn direct_unavailable_fault(op: &str) -> Fault {
 // themselves are not.
 #[cfg(feature = "component-guest-async")]
 fn pack<T: serde::Serialize>(value: &T) -> Vec<u8> {
-    let value = serde_json::to_value(value).map(|json| DslValue::from(&json)).unwrap_or(DslValue::Null);
-    semio_framework::io::resolve_ready(store::pack_rt::encode_wire_value(&value))
+    let value = serde_json::to_value(value).map(|json| semio_framework_value::DslValue::from(&json)).unwrap_or(semio_framework_value::DslValue::Null);
+    ::semio_framework_async::poll::resolve_ready(store::pack_rt::encode_wire_value(&value))
 }
 
 /// 🔀️ `kernel::JobPlacement` → the Direct world's `job-placement` enum — only ever called from
@@ -313,7 +313,7 @@ impl Host {
                 {
                     let response = direct::host_async::http_fetch(direct::effects::HttpParams { method, url, headers, body, streaming: stream }).await.map_err(|bytes| decode_fault_pack(&bytes))?;
                     let body = collect_direct_body(response.body).await?;
-                    Ok(dsl::os_pack::json::to_json_string(&HttpResponseWire { status: response.status, headers: response.headers, body }).into_bytes())
+                    Ok(semio_framework_pack_json::to_json_string(&HttpResponseWire { status: response.status, headers: response.headers, body }).into_bytes())
                 }
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
@@ -341,8 +341,8 @@ impl Host {
             HostBackend::Poll(registry) => {
                 let bytes = registry.request(move |req| Effect::HttpRequest { req, method, url, headers, body, stream: true }).await?;
                 let bytes_text = std::str::from_utf8(&bytes).map_err(|error| Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.host.http-decode-error"), format!("could not decode the http-request completion envelope: {error}")))?;
-                let wire: HttpResponseWire =
-                    dsl::os_pack::json::from_json_str(bytes_text).map_err(|error| Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.host.http-decode-error"), format!("could not decode the http-request completion envelope: {error}")))?;
+                let wire: HttpResponseWire = semio_framework_pack_json::from_json_str(bytes_text, semio_framework_pack_json::JsonMemberPolicy::Reject)
+                    .map_err(|error| Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.host.http-decode-error"), format!("could not decode the http-request completion envelope: {error}")))?;
                 Ok(HttpFetchResponse { status: wire.status, headers: wire.headers, body: BodyReader::poll_buffered(wire.body).await })
             }
             #[cfg(feature = "component-guest-async")]
@@ -721,12 +721,12 @@ impl Host {
         let accept = accept.into();
         let import_action = import_action.into();
         match &self.backend {
-            HostBackend::Poll(registry) => registry.request(move |req| Effect::RequestFileOpen { req, accept, read_as, import_action, multiple }).await,
+            HostBackend::Poll(registry) => registry.request(move |req| Effect::RequestFileOpen { req, accept, read_as, import_action, multiple, args: None }).await,
             #[cfg(feature = "component-guest-async")]
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
                 {
-                    direct::host_async::request_file_open(direct::effects::RequestFileOpenParams { accept, read_as, import_action, multiple }).await.map_err(|bytes| decode_fault_pack(&bytes))
+                    direct::host_async::request_file_open(direct::effects::RequestFileOpenParams { accept, read_as, import_action, multiple, args: None }).await.map_err(|bytes| decode_fault_pack(&bytes))
                 }
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {

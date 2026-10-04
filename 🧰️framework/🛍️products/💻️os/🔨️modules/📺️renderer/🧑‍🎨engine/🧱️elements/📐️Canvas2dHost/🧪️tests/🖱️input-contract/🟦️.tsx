@@ -605,3 +605,20 @@ it("publishes initial framing once and keeps navigation through same-window refr
 });
 
 });
+
+import drawNudges from "../../../../../../../../../../✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕹️nudge-selection/🧫️fixtures/🔣️.json" with {type:"json"};
+import {keyboardEventMatchesChord} from "../../../🛠️ShellHelpers/🟦️.tsx";
+
+it("matches Draw nudge bindings against independently dispatched DOM arrow events",()=>{
+  const target=document.createElement("div");
+  for(const row of drawNudges) {
+    let matched=false;
+    const receive=(event:KeyboardEvent)=>{matched=keyboardEventMatchesChord(event,row.keys);};
+    target.addEventListener("keydown",receive);
+    fireEvent.keyDown(target,{key:row.eventKey,shiftKey:row.keys.startsWith("shift+")});
+    expect(matched,row.action).toBe(true);
+    fireEvent.keyDown(target,{key:row.eventKey,shiftKey:!row.keys.startsWith("shift+")});
+    expect(matched,row.action).toBe(false);
+    target.removeEventListener("keydown",receive);
+  }
+});

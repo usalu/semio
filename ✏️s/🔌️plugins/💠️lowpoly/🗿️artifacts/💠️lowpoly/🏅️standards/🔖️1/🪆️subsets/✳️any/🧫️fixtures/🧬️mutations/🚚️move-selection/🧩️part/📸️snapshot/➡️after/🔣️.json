@@ -41,6 +41,115 @@
           1.0,
           1.0
         ]
+      },
+      "meshState": {
+        "vertices": [
+          {
+            "position": [
+              "bf800000",
+              "3f000000",
+              "bf800000"
+            ],
+            "normal": [
+              "bdfc1764",
+              "bf7c1764",
+              "bdfc1764"
+            ],
+            "halfedge": 0
+          },
+          {
+            "position": [
+              "3f800000",
+              "00000000",
+              "bf800000"
+            ],
+            "normal": [
+              "bdfc1764",
+              "bf7c1764",
+              "bdfc1764"
+            ],
+            "halfedge": 1
+          },
+          {
+            "position": [
+              "3f800000",
+              "00000000",
+              "3f800000"
+            ],
+            "normal": [
+              "bdfc1764",
+              "bf7c1764",
+              "bdfc1764"
+            ],
+            "halfedge": 2
+          },
+          {
+            "position": [
+              "bf800000",
+              "00000000",
+              "3f800000"
+            ],
+            "normal": [
+              "bdfc1764",
+              "bf7c1764",
+              "bdfc1764"
+            ],
+            "halfedge": 3
+          }
+        ],
+        "halfedges": [
+          {
+            "vertex": 0,
+            "twin": null,
+            "next": 1,
+            "face": 0,
+            "uv": [
+              "00000000",
+              "00000000"
+            ]
+          },
+          {
+            "vertex": 1,
+            "twin": null,
+            "next": 2,
+            "face": 0,
+            "uv": [
+              "3f800000",
+              "00000000"
+            ]
+          },
+          {
+            "vertex": 2,
+            "twin": null,
+            "next": 3,
+            "face": 0,
+            "uv": [
+              "3f800000",
+              "3f800000"
+            ]
+          },
+          {
+            "vertex": 3,
+            "twin": null,
+            "next": 0,
+            "face": 0,
+            "uv": [
+              "00000000",
+              "3f800000"
+            ]
+          }
+        ],
+        "faces": [
+          {
+            "halfedge": 0,
+            "smooth": false,
+            "flipped": false
+          }
+        ],
+        "uvSeams": [],
+        "attributes": [],
+        "materials": [],
+        "textures": []
       }
     },
     {
@@ -66,7 +175,8 @@
           1.0,
           1.0
         ]
-      }
+      },
+      "meshState": null
     }
   ],
   "schema": "lowpoly.document"

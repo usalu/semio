@@ -12,18 +12,18 @@ fn chain_snapshot() -> FlowSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
     let snapshot = chain_snapshot();
-    assert_eq!(FlowInference::infer(&snapshot), FlowInference::infer(&snapshot));
+    assert_eq!(FlowInference::infer(&snapshot).expect("valid materialized inference fixture"), FlowInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
-    assert_eq!(FlowInference::infer(&FlowSnapshot::default()), FlowInference::default());
+    assert_eq!(FlowInference::infer(&FlowSnapshot::default()).expect("valid materialized inference fixture"), FlowInference::default());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn topology_counts_every_widget_exactly_once() {
     let snapshot = chain_snapshot();
-    let inferred = FlowInference::infer(&snapshot);
+    let inferred = FlowInference::infer(&snapshot).expect("valid materialized inference fixture");
     let widget_count = snapshot.to_host_snapshot().widgets.len();
     assert_eq!(inferred.topology.node_count as usize, widget_count);
     assert_eq!(inferred.topology.topo_order.len(), widget_count);

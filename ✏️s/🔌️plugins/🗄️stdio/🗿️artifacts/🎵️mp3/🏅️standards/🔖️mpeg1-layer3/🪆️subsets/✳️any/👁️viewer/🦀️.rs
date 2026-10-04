@@ -11,6 +11,7 @@ use crate::viewer::mp3::modes::view::windows::main;
 use crate::{MP3_DIALECT, STDIO_MP3_DOCUMENT_SCHEMA};
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ArtifactViewer;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
 use semio_framework_plugin::ConfigView;
 use semio_framework_plugin::Dialect;
 use semio_framework_plugin::Fault;
@@ -23,6 +24,7 @@ use semio_framework_plugin::NoTransient;
 use semio_framework_plugin::NoTransientMutation;
 use semio_framework_plugin::ViewEmit;
 use semio_framework_plugin::Viewer;
+use semio_framework_plugin::ViewerApp;
 use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Command
@@ -60,8 +62,28 @@ impl ArtifactViewer for Mp3Viewer {
     const DIALECT: Dialect = MP3_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_MP3_DOCUMENT_SCHEMA;
 
+    fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, ViewerApp<Self>>) -> Result<(), Fault> {
+        registry.register(crate::standards::mpeg1_layer3::subsets::any::io::playback::Mp3MediaExportJobFactory::<ViewerApp<Self>>::new(registry.controller_id()))
+    }
+
     fn initial_snapshot() -> Self::Snapshot {
         Mp3Snapshot::default()
+    }
+
+    fn io() -> Option<semio_framework_plugin::AppIo> {
+        Some(crate::standards::mpeg1_layer3::subsets::any::io::playback::app_io())
+    }
+
+    fn build_media_export_job(request: semio_framework_plugin::ArtifactMediaExportJobRequest<ViewerApp<Self>>) -> Result<Option<semio_framework_plugin::ArtifactReservedToolJob>, Fault> {
+        use crate::standards::mpeg1_layer3::subsets::any::io::playback;
+        if request.port != playback::PORT_ID || request.tool_id != playback::TOOL_ID {
+            return Ok(None);
+        }
+        Ok(Some(semio_framework_plugin::ArtifactReservedToolJob::new(playback::Mp3PlaybackExportJob::new(request))))
+    }
+
+    fn build_snapshot_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactSnapshotDisposer<Self::Snapshot>>> {
+        Some(Box::new(crate::standards::mpeg1_layer3::subsets::any::io::playback::Mp3ExportSnapshotDisposer::default()))
     }
 
     fn handle(

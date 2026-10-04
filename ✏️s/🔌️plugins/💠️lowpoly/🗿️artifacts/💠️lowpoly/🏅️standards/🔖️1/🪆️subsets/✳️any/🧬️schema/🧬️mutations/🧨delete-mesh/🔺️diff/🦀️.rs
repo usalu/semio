@@ -1,11 +1,4 @@
-//! 🔺️ `delete-mesh` — sparse diff construction: clears `mesh` (handle) on the target object. The
-//! live mesh content is not a document field at all any more (round 2 of this ticket's round-trip
-//! law fix) — a live session's own `🖌️session::LowpolyScratch` cache drops/ignores its entry for
-//! this object on its own terms, never through the document diff/apply pipeline.
-
-//! Error `target-missing` when the object is absent; Warning `no-op` when the mesh slot is already
-//! empty — treated as a `clear`-style slot (idempotent per this triad's mutation doc), not a
-//! collection `delete`.
+//! 🕸️ Mesh operations preserve independent source literals and the complete typed managed owner.
 
 use super::DeleteMesh;
 use crate::diff::diff_objects_patch;
@@ -17,8 +10,8 @@ pub fn diff(payload: &DeleteMesh, base: &LowpolySnapshot) -> protocol::MutationO
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Object \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if object.mesh.is_none() {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Object \"{}\" has no mesh to delete.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Object \"{}\" has no mesh to delete.", payload.id));
     }
-    protocol::MutationOutcome::new(diff_objects_patch(payload.id.clone(), LowpolyObjectPatch { mesh: Some(None), mesh_content: Some(String::new()), ..LowpolyObjectPatch::default() }))
+    protocol::MutationOutcome::new(diff_objects_patch(payload.id.clone(), LowpolyObjectPatch { mesh: Some(None), mesh_state:Some(None),mesh_content:Some(String::new()), ..LowpolyObjectPatch::default() }))
 }
 //#endregion 🔖️Diff

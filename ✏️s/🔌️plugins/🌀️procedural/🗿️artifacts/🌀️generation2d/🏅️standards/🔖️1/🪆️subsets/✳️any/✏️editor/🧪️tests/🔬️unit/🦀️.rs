@@ -50,7 +50,7 @@ pub(crate) mod context {
     pub async fn select_graph(app: &mut Generation2dApp, granularity: &str, ids: &[&str]) -> InvocationResult {
         let targets: Vec<semio_framework_plugin::InteractionTarget> = ids.iter().map(|id| semio_framework_plugin::InteractionTarget { granularity: granularity.into(), id: (*id).into() }).collect();
         let targets_json = serde_json::to_string(&targets).expect("selection targets");
-        let args: dsl::DslValue = serde_json::json!({ "domainId": crate::editor::generation2d::GENERATION2D_INTERACTION_DOMAIN, "targets": targets_json, "merge": "replace", "method": "pick" }).into();
+        let args: semio_framework_value::DslValue = serde_json::json!({ "domainId": crate::editor::generation2d::GENERATION2D_INTERACTION_DOMAIN, "targets": targets_json, "merge": "replace", "method": "pick" }).into();
         let admitted = app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&args), &meta("local")).await.expect("interaction selection admitted");
         semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted).await.expect("interaction selection settles its reserved tool job")
     }
@@ -138,7 +138,7 @@ pub(crate) mod context {
             if app.has_pending_typed_operations() {
                 effects.extend(Box::pin(settle_registered_typed_operation(app, action_meta.instance_id)).await.expect("the run's driver turns settle").effects);
             }
-            let dispatches: Vec<(String, Option<dsl::DslValue>)> = std::mem::take(&mut effects).into_iter().filter_map(|effect| match effect {
+            let dispatches: Vec<(String, Option<semio_framework_value::DslValue>)> = std::mem::take(&mut effects).into_iter().filter_map(|effect| match effect {
                 semio_framework_plugin::Effect::DispatchAction { action, args, .. } => Some((action, args)),
                 _ => None,
             }).collect();
@@ -154,10 +154,10 @@ pub(crate) mod context {
                 }
                 if action == "flowEvalTick" {
                     receipt.hops += 1;
-                    receipt.hop_windows.push(args.as_ref().and_then(|args| args.get("windowId")).and_then(dsl::DslValue::as_str).unwrap_or_default().to_string());
+                    receipt.hop_windows.push(args.as_ref().and_then(|args| args.get("windowId")).and_then(semio_framework_value::DslValue::as_str).unwrap_or_default().to_string());
                 }
                 let arguments = match args.as_ref() {
-                    Some(dsl::DslValue::Object(entries)) => entries.iter().cloned().collect(),
+                    Some(semio_framework_value::DslValue::Object(entries)) => entries.iter().cloned().collect(),
                     _ => std::collections::BTreeMap::new(),
                 };
                 let app_id = app.app_id().await.to_string();
@@ -434,10 +434,10 @@ fn contributions_route_declares_a_reachable_wire_ceiling() {
     assert_eq!(GENERATION2D_CONTRIBUTIONS_RAW_BYTES, semio_framework::kernel::COMMAND_MAXIMUM_BYTES, "the contributions route is bound by what the paged command ingress can assemble, not by the JSON entry point's string page");
     assert!(GENERATION2D_CONTRIBUTIONS_RAW_BYTES >= GENERATION2D_MEASURED_CONTRIBUTIONS_WIRE_BYTES, "the measured {GENERATION2D_MEASURED_CONTRIBUTIONS_WIRE_BYTES}-byte push must be admitted, the contract declares {GENERATION2D_CONTRIBUTIONS_RAW_BYTES}");
     let pack: String = std::iter::repeat_n('x', GENERATION2D_MEASURED_CONTRIBUTIONS_WIRE_BYTES).collect();
-    let wire = protocol::json::to_json_string(&("setContributions", Some(dsl::DslValue::object([
-        ("json".to_string(), dsl::DslValue::String(pack)),
-        ("page".to_string(), dsl::DslValue::uint(0)),
-        ("pageCount".to_string(), dsl::DslValue::uint(1)),
+    let wire = semio_framework_pack_json::to_json_string(&("setContributions", Some(semio_framework_value::DslValue::object([
+        ("json".to_string(), semio_framework_value::DslValue::String(pack)),
+        ("page".to_string(), semio_framework_value::DslValue::uint(0)),
+        ("pageCount".to_string(), semio_framework_value::DslValue::uint(1)),
     ]))));
     assert!(wire.len() <= GENERATION2D_CONTRIBUTIONS_RAW_BYTES, "a whole page-0-of-1 push encodes to {} bytes but the contract declares {GENERATION2D_CONTRIBUTIONS_RAW_BYTES}", wire.len());
     assert_eq!(generation2d_contributions_contract().max_raw_wire_bytes, GENERATION2D_CONTRIBUTIONS_RAW_BYTES);
@@ -552,9 +552,9 @@ async fn the_preview_eval_run_finalizes_nothing_and_an_abort_leaves_the_document
         let view = app.tool_run_ledger().view().ok_or("the gesture's run start must open a run")?;
         app.handle_action(
             semio_framework_plugin::TOOL_RUN_ABORT_ACTION_ID,
-            Some(&dsl::DslValue::object([
-                (semio_framework_tool_run::TOOL_RUN_ARG_RUN_ID.to_string(), dsl::DslValue::String(view.identity.id.run.to_string())),
-                (semio_framework_tool_run::TOOL_RUN_ARG_GENERATION.to_string(), dsl::DslValue::uint(u64::from(view.identity.generation))),
+            Some(&semio_framework_value::DslValue::object([
+                (semio_framework_tool_run::TOOL_RUN_ARG_RUN_ID.to_string(), semio_framework_value::DslValue::String(view.identity.id.run.to_string())),
+                (semio_framework_tool_run::TOOL_RUN_ARG_GENERATION.to_string(), semio_framework_value::DslValue::uint(u64::from(view.identity.generation))),
             ])),
             &action_meta,
         )
@@ -568,7 +568,7 @@ async fn the_preview_eval_run_finalizes_nothing_and_an_abort_leaves_the_document
         if (after_abort.0.pack.as_slice(), after_abort.0.spr.as_slice(), after_abort.1) != (edited.0.pack.as_slice(), edited.0.spr.as_slice(), edited.1) {
             return Err("an aborted read-only run must leave the document byte-identical".into());
         }
-        app.handle_action(semio_framework_tool_run::TOOL_RUN_DISMISS_ACTION_ID, Some(&dsl::DslValue::object([(semio_framework_tool_run::TOOL_RUN_ARG_RUN_ID.to_string(), dsl::DslValue::String(view.identity.id.run.to_string()))])), &action_meta).await.map_err(|error| format!("toolRunDismiss: {error:?}"))?;
+        app.handle_action(semio_framework_tool_run::TOOL_RUN_DISMISS_ACTION_ID, Some(&semio_framework_value::DslValue::object([(semio_framework_tool_run::TOOL_RUN_ARG_RUN_ID.to_string(), semio_framework_value::DslValue::String(view.identity.id.run.to_string()))])), &action_meta).await.map_err(|error| format!("toolRunDismiss: {error:?}"))?;
         Ok(())
     }
     .await;
@@ -782,7 +782,7 @@ pub(super) fn every_command() -> Vec<Generation2dCommand> {
         Generation2dCommand::AddGeneration(add_generation::AddGeneration {}),
         Generation2dCommand::RemoveGeneration(remove_generation::RemoveGeneration { id: "g1".into() }),
         Generation2dCommand::RenameGeneration(rename_generation::RenameGeneration { id: "g1".into(), name: "Copy".into() }),
-        Generation2dCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues { generation_id: Some("g1".into()), question_id: "q1".into(), value: dsl::DslValue::float(5.0) }),
+        Generation2dCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues { generation_id: Some("g1".into()), question_id: "q1".into(), value: semio_framework_value::DslValue::float(5.0) }),
         Generation2dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d::default() }),
         Generation2dCommand::SetShowMode(set_show_mode::SetShowMode { value: "wire".into() }),
         Generation2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::examples::demo::ID.into() }),
@@ -834,18 +834,18 @@ async fn declared_actions_bridge_to_commands() {
 /// real release. Generation2d keeps no canvas drag gesture, so both handlers stay no-ops either way.
 #[test]
 fn canvas_pointer_wire_defaults_samples_and_cancelled() {
-    let bridge = |action: &str, args: dsl::DslValue| <Generation2dPlayApp as ArtifactEditor>::command_from_action(action, Some(&args)).expect("declared pointer action bridges");
-    let f = dsl::DslValue::float;
-    let legacy = dsl::DslValue::object([("x".into(), f(5.0)), ("y".into(), f(6.0))]);
+    let bridge = |action: &str, args: semio_framework_value::DslValue| <Generation2dPlayApp as ArtifactEditor>::command_from_action(action, Some(&args)).expect("declared pointer action bridges");
+    let f = semio_framework_value::DslValue::float;
+    let legacy = semio_framework_value::DslValue::object([("x".into(), f(5.0)), ("y".into(), f(6.0))]);
     assert_eq!(bridge("canvasPointerMove", legacy.clone()), Generation2dCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { samples: vec![[5.0, 6.0]] }), "an absent `samples` is the single (x, y)");
-    assert_eq!(bridge("canvasPointerMove", dsl::DslValue::Object(Vec::new())), Generation2dCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { samples: Vec::new() }), "no coordinates at all is an empty batch");
-    let pair = |x: f64, y: f64| dsl::DslValue::Array(vec![f(x), f(y)]);
-    let batched = dsl::DslValue::object([("x".into(), f(3.0)), ("y".into(), f(4.0)), ("samples".into(), dsl::DslValue::Array(vec![pair(1.0, 1.5), pair(3.0, 4.0)]))]);
+    assert_eq!(bridge("canvasPointerMove", semio_framework_value::DslValue::Object(Vec::new())), Generation2dCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { samples: Vec::new() }), "no coordinates at all is an empty batch");
+    let pair = |x: f64, y: f64| semio_framework_value::DslValue::Array(vec![f(x), f(y)]);
+    let batched = semio_framework_value::DslValue::object([("x".into(), f(3.0)), ("y".into(), f(4.0)), ("samples".into(), semio_framework_value::DslValue::Array(vec![pair(1.0, 1.5), pair(3.0, 4.0)]))]);
     let Generation2dCommand::CanvasPointerMove(moved) = bridge("canvasPointerMove", batched) else { panic!("move") };
     assert_eq!(moved.samples, vec![[1.0, 1.5], [3.0, 4.0]]);
     assert_eq!(moved.last_sample(), Some([3.0, 4.0]));
     assert_eq!(bridge("canvasPointerUp", legacy), Generation2dCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: false }), "an absent `cancelled` is a real release");
-    assert_eq!(bridge("canvasPointerUp", dsl::DslValue::object([("cancelled".into(), dsl::DslValue::Bool(true))])), Generation2dCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: true }));
+    assert_eq!(bridge("canvasPointerUp", semio_framework_value::DslValue::object([("cancelled".into(), semio_framework_value::DslValue::Bool(true))])), Generation2dCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: true }));
     let document = Generation2dPlayApp::initial_snapshot();
     let history = semio_framework_plugin::HistoryView::empty();
     let view = ArtifactView::new(&document, &history);
@@ -866,15 +866,15 @@ fn canvas_pointer_wire_defaults_samples_and_cancelled() {
 /// faults. The generic bridge law only exercises the absent half.
 #[test]
 fn node_graph_viewport_decodes_an_absent_viewport_as_identity_and_refuses_a_malformed_one() {
-    let decode = |args: dsl::DslValue| <Generation2dPlayApp as ArtifactEditor>::command_from_action("nodeGraphViewport", Some(&args));
+    let decode = |args: semio_framework_value::DslValue| <Generation2dPlayApp as ArtifactEditor>::command_from_action("nodeGraphViewport", Some(&args));
     let identity = semio_framework_os_kernel::Viewport2d::default();
-    assert_eq!(decode(dsl::DslValue::Object(Vec::new())).expect("an argless invocation bridges"), Generation2dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: identity }));
+    assert_eq!(decode(semio_framework_value::DslValue::Object(Vec::new())).expect("an argless invocation bridges"), Generation2dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: identity }));
     let authored = semio_framework_os_kernel::Viewport2d { x: 12.0, y: -8.0, zoom: 2.0 };
     assert_eq!(
-        decode(dsl::DslValue::object([("viewport".into(), protocol::ToValue::to_value(&authored))])).expect("an authored viewport bridges"),
+        decode(semio_framework_value::DslValue::object([("viewport".into(), semio_framework_value::ToValue::to_value(&authored))])).expect("an authored viewport bridges"),
         Generation2dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: authored })
     );
-    let refused = decode(dsl::DslValue::object([("viewport".into(), dsl::DslValue::object([("x".into(), dsl::DslValue::float(1.0)), ("y".into(), dsl::DslValue::float(2.0)), ("zoom".into(), dsl::DslValue::float(0.0))]))]));
+    let refused = decode(semio_framework_value::DslValue::object([("viewport".into(), semio_framework_value::DslValue::object([("x".into(), semio_framework_value::DslValue::float(1.0)), ("y".into(), semio_framework_value::DslValue::float(2.0)), ("zoom".into(), semio_framework_value::DslValue::float(0.0))]))]));
     assert!(refused.is_err(), "a zoom the graph cannot express must fault instead of being replaced by the identity camera");
 }
 
@@ -985,7 +985,10 @@ async fn context_menu_stays_within_disclosure_budget() {
     let items = app.context_menu(&request, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await;
     close(app);
     assert!(items.len() <= 9, "top-level menu rows (leaves + groups + separator) must stay within disclosure budget, got {}", items.len());
-    assert!(items.iter().all(|item| item.id != "delete-selection"), "an empty selection must not offer delete-selection");
+    assert!(
+        items.iter().any(|item| item.id == "delete-selection" && item.disabled == Some(true) && item.reason.as_deref() == Some("Nothing selected") && item.action.is_none() && item.args.is_none()),
+        "an empty selection keeps delete-selection visible, disabled with its reason, and dispatching nothing: {items:?}"
+    );
 }
 
 /// 🕹️ The runtime funnels every right-click through `context_menu_with_request_context`, so a node
@@ -1014,7 +1017,7 @@ async fn context_menu_reads_the_framework_owned_graph_selection() {
 #[semio_framework_async_macros::async_test]
 async fn export_drawing_out_returns_vector_media() {
     let mut app = app().await;
-    let media = semio_framework_plugin::resolve_ready(app.export_media("drawing:out")).expect("export drawing:out");
+    let media = ::semio_framework_async::poll::resolve_ready(app.export_media("drawing:out")).expect("export drawing:out");
     close(app);
     assert_eq!(media.media_type, MediaType { class: MediaClass::TwoD, form: MediaForm::Vector });
 }
@@ -1022,7 +1025,7 @@ async fn export_drawing_out_returns_vector_media() {
 #[semio_framework_async_macros::async_test]
 async fn export_document_out_returns_flow_media() {
     let mut app = app().await;
-    let media = semio_framework_plugin::resolve_ready(app.export_media("artifact:out")).expect("export document:out");
+    let media = ::semio_framework_async::poll::resolve_ready(app.export_media("artifact:out")).expect("export document:out");
     close(app);
     assert_eq!(media.media_type, MediaType { class: MediaClass::TwoD, form: MediaForm::Flow });
     assert!(matches!(media.payload, semio_framework_plugin::MediaPayload::Structured { schema, .. } if schema == GENERATION_2D_SCHEMA));
@@ -1054,6 +1057,27 @@ async fn import_params_in_patches_matching_input_slider() {
     assert_eq!(value, Some(42.0));
 }
 
+#[semio_framework_async_macros::async_test]
+async fn import_intrinsic_params_borrows_the_canonical_numeric_rows_and_retires_source() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📥️media/🔣️.json")).unwrap();
+    for case in fixture["cases"].as_array().unwrap() {
+        let oracle = case["input"].as_object().unwrap().get("slider").and_then(serde_json::Value::as_f64).unwrap_or(fixture["initialValue"].as_f64().unwrap());
+        assert_eq!(oracle, case["expected"].as_f64().unwrap());
+        let mut app = app().await;
+        crate::editor::generation2d::unit_tests::context::dispatch(&mut app, Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, format: None, action: None, x: None, y: None })).await;
+        let slider_id = snapshot_read(&app).host_snapshot.widgets.iter().rev().find_map(|widget| match widget { Widget::InputSlider { id, .. } => Some(id.clone()), _ => None }).unwrap();
+        assert!(snapshot_read(&app).host_snapshot.widgets.iter().any(|widget| matches!(widget, Widget::InputSlider { id, value, .. } if id == &slider_id && *value == fixture["initialValue"].as_f64().unwrap())));
+        let source = semio_framework_value::DslValue::Object(case["input"].as_object().unwrap().iter().map(|(key, value)| (if key == "slider" { slider_id.clone() } else { key.clone() }, semio_framework_value::DslValue::from(value))).collect());
+        let media = semio_framework_plugin::Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: semio_framework_plugin::MediaPayload::Intrinsic { schema: fixture["schema"].as_str().unwrap().into(), value: source } };
+        let result = app.import_media(fixture["port"].as_str().unwrap(), media, &semio_framework_plugin::artifact_app_laws::meta("local")).await;
+        let value = snapshot_read(&app).host_snapshot.widgets.iter().find_map(|widget| match widget { Widget::InputSlider { id, value, .. } if id == &slider_id => Some(*value), _ => None });
+        close(app);
+        assert!(result.is_ok(), "{}: {result:?}", case["id"]);
+        assert_eq!(value, Some(oracle), "{}", case["id"]);
+        eprintln!("[DEBUG] intrinsic Gen2D params {} matched the independent JSON numeric projection and closed its original input owner", case["id"]);
+    }
+}
+
 /// 🔐️ LAW: the app-owned resumable importer is the ONLY inbound media route, and it fails closed
 /// on every payload it does not own — an unknown port, a non-structured payload and a non-object
 /// JSON root all reject without publishing an operation.
@@ -1067,6 +1091,7 @@ async fn import_media_fails_closed_off_its_own_params_in_contract() {
         ("params:out", structured("{}")),
         ("params:in", structured("[1, 2]")),
         ("params:in", structured("not json")),
+        ("params:in", semio_framework_plugin::Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: semio_framework_plugin::MediaPayload::Intrinsic { schema: "params".into(), value: semio_framework_value::DslValue::String("invalid object".into()) } }),
         (
             "params:in",
             semio_framework_plugin::Media {
@@ -1115,7 +1140,7 @@ async fn media_ports_declare_params_in_and_drawing_out() {
 
 #[test]
 fn generation2d_io_declares_the_params_and_drawing_ports() {
-    let io = semio_framework::io::resolve_ready(generation2d_io());
+    let io = ::semio_framework_async::poll::resolve_ready(generation2d_io());
     assert_eq!(io.artifact_schema, "generation.2d");
     let params = io.ports.iter().find(|port| port.id == "params:in").expect("params:in declared");
     assert!(!params.required);

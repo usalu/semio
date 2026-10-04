@@ -17,9 +17,12 @@ impl protocol::MutationKind<SvgSnapshot, SvgTinyMutation> for SetSnapshot {
     fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<<SvgTinyMutation as Mutation<SvgSnapshot>>::Diff> {
         agg_diff(&SvgTinyMutation::SetSnapshot(self.clone()), base)
     }
-    fn inverse(&self, base: &SvgSnapshot) -> Vec<SvgTinyMutation> {
-        agg_inverse(&SvgTinyMutation::SetSnapshot(self.clone()), base)
-    }
+    fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<SvgTinyMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&SvgTinyMutation::SetSnapshot(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set snapshot", "Momentaufnahme setzen")
     }

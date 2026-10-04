@@ -1,4 +1,0 @@
-syntax = "proto3";
-package semio.s.trinity.rewriting.mutation.delete_working_nodes;
-// delete-working-nodes / DeleteWorkingNodes
-message DeleteWorkingNodes { repeated string targets = 1; }

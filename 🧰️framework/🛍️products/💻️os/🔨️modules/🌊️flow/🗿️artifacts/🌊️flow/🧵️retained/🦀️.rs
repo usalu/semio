@@ -2,7 +2,7 @@
 
 use crate::os_store::{ErasedSnapshotRetirement, SnapshotRetirementStep};
 use crate::{neural, FlowArtifact, FlowHostSnapshot, FlowGui, FlowLayoutEntry, FlowNodeGui, FlowPreviewGui, NodeChrome, OrderedMap, OrderedSet, SynapseSpec, Widget, WidgetLayout};
-use protocol::value::list::{PagedList, PagedListAllocationError, PagedListProgress};
+use protocol::value::list::{PagedList, PagedListAllocationError, PagedListError, PagedListRefusalKind, PagedListProgress};
 use protocol::value::ordered::{Grant, Retirement, RetirementStep};
 use std::mem::{size_of, ManuallyDrop};
 
@@ -220,12 +220,12 @@ impl FlowRetirement {
         self.frontier.len().checked_add(self.root.as_ref().map_or(0, owner_continuation_slots)).ok_or("Flow frontier capacity overflow")
     }
 
-    pub fn next_allocation_bytes(&self) -> Result<Option<usize>, &'static str> {
-        self.frontier.next_capacity_allocation_bytes(self.target_frontier_capacity()?)
+    pub fn next_allocation_bytes(&self) -> Result<Option<usize>, PagedListError> {
+        self.frontier.next_capacity_allocation_bytes(self.target_frontier_capacity().map_err(|reason|PagedListError {kind:PagedListRefusalKind::OwnershipLimit,reason})?)
     }
 
     pub fn reserve_allocation(&mut self, maximum_bytes: usize) -> Result<PagedListProgress, PagedListAllocationError> {
-        let target = self.target_frontier_capacity().map_err(|reason| PagedListAllocationError { allocated_bytes: 0, reason })?;
+        let target = self.target_frontier_capacity().map_err(|reason| PagedListAllocationError { allocated_bytes: 0, kind:PagedListRefusalKind::OwnershipLimit, reason })?;
         match self.frontier.reserve_capacity_one(target, maximum_bytes) {
             Ok(step) => Ok(step),
             Err(error) => {
@@ -255,7 +255,7 @@ impl FlowRetirement {
     /// owner. Both entries are the same step: a driver holding only the erased view is never worse
     /// off than one holding the concrete frontier
     /// (ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END).
-    pub fn close_page(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    pub fn close_page(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         <Self as ErasedSnapshotRetirement>::close_step(self, maximum_items, maximum_bytes)
     }
 
@@ -622,7 +622,7 @@ impl FlowArtifact {
 }
 
 impl ErasedSnapshotRetirement for FlowRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         use SnapshotRetirementStep as Step;
         if self.terminal_is_empty() {
             return Ok(Step::Complete);
@@ -630,8 +630,8 @@ impl ErasedSnapshotRetirement for FlowRetirement {
         if maximum_items == 0 || maximum_bytes == 0 {
             return Ok(Step::Blocked);
         }
-        if let Some(demand) = self.next_allocation_bytes().map_err(str::to_owned)? {
-            self.reserve_allocation(demand).map_err(|error| error.reason.to_owned())?;
+        if let Some(demand) = self.next_allocation_bytes().map_err(semio_framework_value::ValueError::from)? {
+            self.reserve_allocation(demand).map_err(|error|semio_framework_value::ValueError::from(error.refusal()))?;
             return Ok(Step::Pending { released_items: 1, released_bytes: 0 });
         }
         match self.release_root_backing(maximum_bytes) {
@@ -645,8 +645,8 @@ impl ErasedSnapshotRetirement for FlowRetirement {
                 self.root_backing_credit = 0;
                 return Ok(Step::Pending { released_items: 1, released_bytes: 0 });
             }
-            let demand = self.frontier.next_release_allocation_bytes().map_err(str::to_owned)?;
-            let release = self.frontier.release_empty_page(maximum_bytes.max(demand)).map_err(str::to_owned)?;
+            let demand = self.frontier.next_release_allocation_bytes().map_err(semio_framework_value::ValueError::from)?;
+            let release = self.frontier.release_empty_page(maximum_bytes.max(demand)).map_err(semio_framework_value::ValueError::from)?;
             if !release.progressed {
                 return Ok(Step::Blocked);
             }
@@ -655,7 +655,7 @@ impl ErasedSnapshotRetirement for FlowRetirement {
         let owner = self.root.take().expect("nonempty Flow retirement");
         if matches!(owner, FlowOwner::Bytes(_)) {
             *self.root = Some(owner);
-            return Err("Flow byte backing reached logical dispatch before its physical release".into());
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Flow byte backing reached logical dispatch before its physical release"));
         }
         let Some(released_bytes) = self.retire_owner(owner, maximum_bytes) else {
             return Ok(Step::Blocked);

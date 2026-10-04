@@ -75,7 +75,7 @@ async fn inverse_law() {
         // 🔁️ mutation-level round trip
         let mut forward = base.clone();
         apply_csv_mutation(&mut forward, &m);
-        for inv in m.inverse(&base) {
+        for inv in m.inverse(&base).expect("valid retained mutation inverse fixture") {
             apply_csv_mutation(&mut forward, &inv);
         }
         assert_eq!(forward, base, "mutation-level inverse round trip failed for {m:?}");
@@ -214,6 +214,7 @@ async fn op_text_binary_roundtrip_law() {
         CsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: sweep_b() }),
         patch_snapshot::test_case(),
         CsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: CsvSnapshot { schema: "stdio.csv".into(), has_header: false, records: vec![record(&[("a, tricky [value]", true), ("plain", false)])] } }),
+        CsvMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         CsvMutation::SetHasHeader(set_has_header::SetHasHeader { has_header: true }),
         CsvMutation::SetHasHeader(set_has_header::SetHasHeader { has_header: false }),
         CsvMutation::InsertRecord(insert_record::InsertRecord { index: 1, record: record(&[("new, [tricky]", true)]) }),
@@ -241,8 +242,8 @@ async fn op_text_binary_roundtrip_law() {
 #[semio_framework_async_macros::async_test]
 async fn ops_grammar_conformance_law() {
     let grammar_text = crate::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO;
-    let grammar = dsl::parse_grammar(grammar_text).expect("parse mutations grammar");
-    let recognizer = dsl::Recognizer::compile(&grammar);
+    let grammar = semio_framework_dsl::parse_grammar(grammar_text).expect("parse mutations grammar");
+    let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
 
     let mutations = vec![
         CsvMutation::SetHasHeader(set_has_header::SetHasHeader { has_header: false }),

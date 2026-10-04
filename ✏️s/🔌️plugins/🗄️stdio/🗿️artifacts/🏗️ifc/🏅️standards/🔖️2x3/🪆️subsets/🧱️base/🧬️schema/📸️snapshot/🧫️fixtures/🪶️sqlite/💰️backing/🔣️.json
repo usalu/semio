@@ -1,0 +1,28 @@
+{
+  "forecast": "unpaidBorrowedBound",
+  "allocation": "fullConcreteBufferBeforeConstruction",
+  "retirement": "noCumulativeRefund",
+  "inlineRoot": "noBackingRequest",
+  "semanticTables": 12,
+  "limits": {
+    "semantic": "maxValueBytes",
+    "backing": "maxAllocationBytes",
+    "file": "maxFileBytes"
+  },
+  "ledger": {
+    "requests": [
+      24,
+      48,
+      65536
+    ],
+    "expectedSpent": 65608,
+    "exact": 65608,
+    "refused": 65607
+  },
+  "nativeRoles": {
+    "owned": "maxAllocationBytes",
+    "semantic": "maxValueBytes",
+    "preflight": "paidFrontiersOnly",
+    "decimal": "literalUtf8Coefficient"
+  }
+}

@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::fem2d::transient::{FemGumballPhase, FemGumballTransient};
+use crate::editor::fem2d::transient::FemGumballTransient;
 use crate::editor::fem2d::interaction::canvas_gesture::FEM2D_UTILITY_TRANSFORM;
 use store::ArtifactDsl;
 
@@ -56,7 +56,7 @@ fn ticks_compose_into_one_net_leaf() {
 }
 
 /// 🛠️ Drives the tool the way the retained route does, on window `window` of `transient`.
-fn drive(transient: &FemGumballTransient, window: &str, phase: FemGumballPhase, tick: Option<MoveSelection>, base: &str) -> crate::editor::fem2d::transient::FemGumballDrive<Fem2dMutation> {
+fn drive(transient: &FemGumballTransient, window: &str, phase: GesturePhase, tick: Option<MoveSelection>, base: &str) -> crate::editor::fem2d::transient::FemGumballDrive<Fem2dMutation> {
     crate::editor::fem2d::transient::fem_gumball_drive::<Fem2dGumballTool>(transient, window, "translateSelection", phase, tick, "seed", base)
 }
 
@@ -65,7 +65,7 @@ fn drive(transient: &FemGumballTransient, window: &str, phase: FemGumballPhase, 
 fn a_one_shot_tick_commits_one_transaction() {
     let doc = demo();
     let tick = fem2d_gumball_tick(&doc, &["n1".into()], Fem2dGumballMotion::Translate { dx: 1.0, dy: 0.0 });
-    let done = drive(&FemGumballTransient::default(), "w", FemGumballPhase::Once, tick.clone(), "base");
+    let done = drive(&FemGumballTransient::default(), "w", GesturePhase::Once, tick.clone(), "base");
     let (reference, mutations) = done.committed.expect("committed");
     assert!(reference.id.starts_with("tx-") && reference.tool == format!("{FEM2D_EDITOR_APP_ID}#translateSelection"));
     assert_eq!(mutations, vec![Fem2dMutation::MoveSelection(tick.expect("tick"))]);
@@ -78,17 +78,17 @@ fn a_one_shot_tick_commits_one_transaction() {
 fn streamed_ticks_commit_the_net_leaf_once() {
     let doc = demo();
     let tick = |dx| fem2d_gumball_tick(&doc, &["n1".into()], Fem2dGumballMotion::Translate { dx, dy: 0.0 });
-    let first = drive(&FemGumballTransient::default(), "w", FemGumballPhase::Stream, tick(0.5), "base");
+    let first = drive(&FemGumballTransient::default(), "w", GesturePhase::Stream, tick(0.5), "base");
     assert!(first.committed.is_none(), "a stream tick commits nothing");
     let open = first.transient.expect("the first tick opens the window's gesture");
     let minted = open.gestures["w"].transaction.clone();
-    let second = drive(&open, "w", FemGumballPhase::Stream, tick(0.25), "base");
+    let second = drive(&open, "w", GesturePhase::Stream, tick(0.25), "base");
     let open = second.transient.expect("the second tick advances it");
     assert_eq!(open.gestures["w"].transaction, minted, "every tick rides the same transaction");
     let preview = open.preview::<Fem2dSnapshot, Fem2dMutation>(&doc).expect("an open gesture previews");
     let start = doc.nodes.iter().find(|node| node.id == "n1").expect("n1").x;
     assert_eq!(preview.nodes.iter().find(|node| node.id == "n1").expect("n1").x, start + 0.75, "the preview is the net transform");
-    let done = drive(&open, "w", FemGumballPhase::Commit, tick(0.0), "base");
+    let done = drive(&open, "w", GesturePhase::Commit, tick(0.0), "base");
     let (reference, mutations) = done.committed.expect("the commit publishes");
     assert_eq!(reference, minted);
     let [Fem2dMutation::MoveSelection(net)] = mutations.as_slice() else { panic!("one net leaf: {mutations:?}") };
@@ -102,18 +102,18 @@ fn streamed_ticks_commit_the_net_leaf_once() {
 fn host_aborts_leave_zero_trace_and_keep_sibling_gestures() {
     let doc = demo();
     let tick = || fem2d_gumball_tick(&doc, &["n1".into()], Fem2dGumballMotion::Translate { dx: 0.5, dy: 0.0 });
-    let left = drive(&FemGumballTransient::default(), "left", FemGumballPhase::Stream, tick(), "base").transient.expect("left opens");
-    let both = drive(&left, "right", FemGumballPhase::Stream, tick(), "base").transient.expect("right opens");
+    let left = drive(&FemGumballTransient::default(), "left", GesturePhase::Stream, tick(), "base").transient.expect("left opens");
+    let both = drive(&left, "right", GesturePhase::Stream, tick(), "base").transient.expect("right opens");
     assert_eq!(both.gestures.len(), 2, "two windows hold two gestures");
-    let aborted = drive(&both, "left", FemGumballPhase::Abort(ToolAbortReason::Blur), None, "base");
+    let aborted = drive(&both, "left", GesturePhase::Abort(ToolAbortReason::Blur), None, "base");
     assert!(aborted.committed.is_none());
     let rest = aborted.transient.expect("the abort clears the window's gesture");
     assert_eq!(rest.gestures.keys().collect::<Vec<_>>(), vec!["right"], "only the owner's gesture is dropped");
-    let moved = drive(&rest, "right", FemGumballPhase::Commit, tick(), "moved");
+    let moved = drive(&rest, "right", GesturePhase::Commit, tick(), "moved");
     assert!(moved.committed.is_none(), "a commit on a moved base is dropped with its gesture");
     assert!(moved.transient.expect("baseMoved clears it").gestures.is_empty());
-    let open = drive(&FemGumballTransient::default(), "w", FemGumballPhase::Stream, tick(), "base").transient.expect("opens");
-    let interrupted = drive(&open, "w", FemGumballPhase::Once, tick(), "base");
+    let open = drive(&FemGumballTransient::default(), "w", GesturePhase::Stream, tick(), "base").transient.expect("opens");
+    let interrupted = drive(&open, "w", GesturePhase::Once, tick(), "base");
     let (_, mutations) = interrupted.committed.expect("the one-shot commits its own transaction");
     let [Fem2dMutation::MoveSelection(only)] = mutations.as_slice() else { panic!("one leaf") };
     assert_eq!(only.dx, 0.5, "the interrupted stream contributes nothing");

@@ -9,7 +9,7 @@ pub fn diff(payload: &ChangeElementU, base: &Din18599Snapshot) -> protocol::Muta
     for e in &mut elements {
         if e.id == payload.element_id {
             if (e.u_value_w_m2k - payload.new_u_value_w_m2k).abs() < f64::EPSILON {
-                return protocol::MutationOutcome::empty().warn("mutation.no-op", "Element U-value already has this value.");
+                return protocol::MutationOutcome::empty().warning("mutation.no-op", "Element U-value already has this value.");
             }
             e.u_value_w_m2k = payload.new_u_value_w_m2k;
         }

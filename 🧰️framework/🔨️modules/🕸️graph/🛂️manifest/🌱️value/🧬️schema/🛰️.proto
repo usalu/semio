@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.framework.graph.manifest;
+import "🧰️framework/🔨️modules/🌱️value/🧬️schema/🛰️.proto";
+message PropertyValue { oneof value { semio.framework.value.NullValue null = 1; bool boolean = 2; fixed64 number_bits = 3; string text = 4; PropertyArray array = 5; PropertyObject object = 6; } }
+message PropertyArray { repeated PropertyValue values = 1; }
+message PropertyObject { map<string, PropertyValue> values = 1; }

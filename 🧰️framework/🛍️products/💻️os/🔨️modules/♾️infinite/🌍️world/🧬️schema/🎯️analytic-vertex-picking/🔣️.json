@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio:world:analytic-vertex-picking",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "instance",
+    "handle",
+    "revision",
+    "label",
+    "expected",
+    "mesh",
+    "camera"
+  ],
+  "properties": {
+    "schema": {
+      "const": "world.analytic-vertex-picking.v1"
+    },
+    "instance": {
+      "type": "string",
+      "minLength": 1
+    },
+    "handle": {
+      "type": "string",
+      "minLength": 1
+    },
+    "revision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "label": {
+      "type": "string",
+      "minLength": 1
+    },
+    "expected": {
+      "type": "string",
+      "minLength": 1
+    },
+    "mesh": {
+      "type": "object"
+    },
+    "camera": {
+      "type": "object"
+    }
+  }
+}

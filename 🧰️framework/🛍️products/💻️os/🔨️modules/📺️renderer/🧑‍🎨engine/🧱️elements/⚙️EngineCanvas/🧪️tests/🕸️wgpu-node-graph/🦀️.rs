@@ -86,7 +86,7 @@ fn paint_scene_into_draw_list(scene: &UiComponentSceneNode, bounds: Rect) -> sup
 /// 🔤️ One action's string fields, key-sorted — the emitted value contract is order-preserving, and a
 /// key-order assertion would pin the writer's statement order rather than the payload React sends.
 pub(super) fn action_fields(action: &ActionDescriptor) -> Vec<(String, String)> {
-    let mut fields: Vec<(String, String)> = action.args.as_ref().and_then(dsl::DslValue::as_object).expect("action args are an object").iter().map(|(key, value)| (key.clone(), value.as_str().unwrap_or_default().to_owned())).collect();
+    let mut fields: Vec<(String, String)> = action.args.as_ref().and_then(semio_framework_value::DslValue::as_object).expect("action args are an object").iter().map(|(key, value)| (key.clone(), value.as_str().unwrap_or_default().to_owned())).collect();
     fields.sort_by(|left, right| left.0.cmp(&right.0));
     fields
 }

@@ -7,7 +7,6 @@
 
 use crate::standards::v1::subsets::cad::schema::snapshot::SemioCadSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::bounds::compute_semio_cad_bounds;
 //#region 🔖️Inference
@@ -22,8 +21,11 @@ pub struct SemioCadInference {
 }
 
 impl protocol::Inference<SemioCadSnapshot> for SemioCadInference {
-    fn infer(snapshot: &SemioCadSnapshot) -> Self {
+    fn infer(snapshot: &SemioCadSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { bounds: compute_semio_cad_bounds(snapshot) }
+    
+        })
     }
 }
 
@@ -31,7 +33,9 @@ impl protocol::Inference<SemioCadSnapshot> for SemioCadInference {
 /// `SemioCadSnapshot::default()`'s `entities`/`blocks` ever stop being empty.
 impl Default for SemioCadInference {
     fn default() -> Self {
-        <Self as protocol::Inference<SemioCadSnapshot>>::infer(&SemioCadSnapshot::default())
+        let snapshot = &SemioCadSnapshot::default();
+
+        Self { bounds: compute_semio_cad_bounds(snapshot) }
     }
 }
 
@@ -47,18 +51,6 @@ impl protocol::InferenceSpec<SemioCadSnapshot> for SemioCadInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 💡️ No `InferredField`s here — `bounds` is a single min/max fold over every entity's own point
-/// fields (top-level `entities` plus every block's nested `entities`), already O(n) in total
-/// entity count with no honest per-entity incremental decomposition (a merkle dep-chain over this
-/// flat entity list costs more than the fold it would cache) — the default `infer_cached`
-/// passthrough is exact.
-impl ArtifactInferrer for crate::standards::v1::subsets::cad::schema::SemioCadBuilder {
-    type Snapshot = SemioCadSnapshot;
-    type Inference = SemioCadInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.semio.cad.inference`'s facet leaves into the OS-wide inference catalog —

@@ -9,7 +9,7 @@ pub fn diff(payload: &RenameProductGroup, base: &Iso16757Snapshot) -> protocol::
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Product group \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if group.names.preferred.text == payload.new_name {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Product group \"{}\" already has that name.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Product group \"{}\" already has that name.", payload.id));
     }
     let mut catalogue = base.catalogue.clone();
     if let Some(group) = catalogue.product_groups.iter_mut().find(|group| group.id == payload.id) {

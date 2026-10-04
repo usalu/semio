@@ -25,3 +25,7 @@ Changed owner files are PDF1.7 `🪶️sqlite/🔢️number/🦀️.rs`, `🪶�
 ## Full Current Row-Forecast Regression
 
 The full owning quick route selected 560 tests (Nextest `136bef2b-c30a-496f-be7e-6bd8fb991e62`). The unchanged 300000 ms aggregate assertion budget expired, with the bachelor-thesis full structural snapshot/mutation/diff/I/O/inverse law still active. There is no final Nextest pass count, so this is not a full current GREEN. Its retained output is `🗑️generated/pdf-full-owner-complete-row-admission-current.log`. The previously measured 559-law full pass remains historical; the new explicit 2056-row refusal/admission law passed independently after the production repair. Performance investigation is pending; no quota increase, skipped law, or weaker admission was introduced.
+
+## Isolated Profiler Admission On Current Canonical Dependencies
+
+The existing registered isolated lossless-law command was started with quick and the unchanged 300-second assertion budget, then stopped before assertions at Root’s explicit sole-fleet Cargo lane coordination request while Root ZIP baseline remained active. Only this invocation and its verified process descendants were terminated; compiler caches and the log were retained. It reached compilation but produced no Nextest assertion or stage-timing result. The full560 aggregate timeout remains unresolved; prior full559 and the separate2056-row law retain their narrower evidence.

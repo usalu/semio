@@ -9,15 +9,20 @@ import { parse as parseToml } from "@iarna/toml";
 import { join as oracleJoin, normalize as oracleNormalize } from "pathe";
 import ts from "typescript";
 import { canonicalJson } from "../../🧾️serialization/🔣️json/🟦️.ts";
-import { inspectRustAssertionMessageSpans, inspectRustCargoManifest, inspectRustJoinArgumentSpans, inspectRustManifestPathCandidates, inspectRustManifestPathReferences, inspectRustModuleGraph, inspectRustModuleGraphFacts, rustModuleScopeProof, inspectRustNonRepoJoinBaseSpans, rustTokens as rustSyntaxTokens, rustTokenPairs } from "../../🔍️discovery/🟦️.ts";
+import { inspectRustAssertionMessageSpans, inspectRustCargoManifest, inspectRustJoinArgumentSpans, inspectRustManifestPathCandidates, inspectRustManifestPathReferences, inspectRustModuleGraph, inspectRustModuleGraphFacts, rustModuleScopeProof, inspectRustNonRepoJoinBaseSpans } from "../../🔍️discovery/🟦️.ts";
+import { rustTokens as rustSyntaxTokens, rustTokenPairs } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 
 const root = resolve(import.meta.dir, "../../../../../../..");
-const ticket = join(root, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION");
+const output = process.env.SEMIO_TEST_ARTIFACT_DIR;
+if (!output) throw Error("SEMIO_TEST_ARTIFACT_DIR is required");
+mkdirSync(output, { recursive: true });
+const ticket = resolve(output);
 const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🥤️rust-finite-target-consumption/🔣️.json"), "utf8"));
 const sourcePath = resolve(import.meta.dir, "../../🧹️normalization/🟦️.ts");
 const sourceInputs = normalizationSourceFiles(sourcePath);
 const source = normalizationSourceDeclarations(sourcePath), syntax = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true);
 const discoveryPath = resolve(import.meta.dir, "../../🔍️discovery/🟦️.ts"), discovery = ts.createSourceFile(discoveryPath, readFileSync(discoveryPath, "utf8"), ts.ScriptTarget.Latest, true);
+const rustSyntaxPath = join(root, "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts"), rustSyntax = ts.createSourceFile(rustSyntaxPath, readFileSync(rustSyntaxPath, "utf8"), ts.ScriptTarget.Latest, true);
 const marker = "rust-finite-manifest-targets";
 type Token = { start: number; end: number; value: string; structuredLocation: string; adapter: string; physicalTargets?: string[]; physicalInterpretation?: string; rewriteKind?: string; unsupportedReason?: string };
 type Row = { id: string; source: string; targets: string[]; expected: string; affected: string[]; condition: string };
@@ -90,11 +95,11 @@ function fixture(row: Row) {
     known.add("alias");
   }
   if (row.condition === "cancelled-module-edge") {
-    put(entry, '#[path = "../pkg/reader.rs"] mod reader;\npub fn origin() -> &\'static str { reader::origin() }\n');
+    put(entry, '#[path = "../alias/../pkg/reader.rs"] mod reader;\npub fn origin() -> &\'static str { reader::origin() }\n');
     put("elsewhere/pkg/reader.rs", 'pub fn origin() -> &\'static str { "actual physical module" }\n');
   }
   if (row.condition === "cancelled-manifest-edge") {
-    put(manifest, manifestBytes.replace('path = "entry.rs"', 'path = "../pkg/entry.rs"'));
+    put(manifest, manifestBytes.replace('path = "entry.rs"', 'path = "../alias/../pkg/entry.rs"'));
     put("elsewhere/pkg/entry.rs", "pub const ACTUAL_CRATE: bool = true;\n");
   }
   if (row.condition === "cancelled-file") put("not-directory", "not a directory\n");
@@ -159,10 +164,10 @@ test("new finite interpretation declarations satisfy strict TypeScript without a
   const body = syntax.statements.filter((node) => (ts.isFunctionDeclaration(node) || ts.isInterfaceDeclaration(node)) && declarations.has(node.name?.text ?? "")).map((node) => node.getText(syntax)).join("\n");
   expect(body.includes("function rustFiniteManifestTargets")).toBe(true);
   const graphNames = new Set(["RustStructuralVisibility", "RustModuleMount", "RustModuleContext", "RustModuleGraph", "RustModuleParticipationReason", "RustModuleParticipation"]);
-  const graphContracts = discovery.statements.filter((node) => (ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node)) && graphNames.has(node.name.text));
+  const graphContracts = [...rustSyntax.statements, ...discovery.statements].filter((node) => (ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node)) && graphNames.has(node.name.text));
   expect(graphContracts.length).toBe(graphNames.size);
   const contracts = [
-    ...graphContracts.map((node) => node.getText(discovery)),
+    ...graphContracts.map((node) => node.getText(node.getSourceFile())),
     'type TaxonomyReferenceAdapter = string;',
     'interface Reference { readonly start: number; readonly end: number; readonly value: string; readonly base: readonly string[] }',
     'interface Candidate { readonly start: number; readonly end: number; readonly value: string; readonly targets: readonly (readonly string[])[] }',
@@ -222,7 +227,7 @@ test("exact finite consumer route and launch registration preserve the canonical
   expect(branches[0]!.thenStatement.getText(router)).toContain('runRepositoryTestCommand(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot })');
   const launch = parseJsonc(readFileSync(join(root, ".vscode/launch.json"), "utf8")).configurations.filter((item: any) => item.name === registration.launchName);
   expect(launch).toHaveLength(1);
-  expect(launch[0]).toEqual({ name: registration.launchName, type: "node-terminal", request: "launch", command: registration.launchCommand, cwd: "$" + "{workspaceFolder}", presentation: { group: "4_gate", order: registration.launchOrder } });
+  expect(launch[0]).toEqual({ name: registration.launchName, type: "node-terminal", request: "launch", command: registration.launchCommand, cwd: "$" + "{workspaceFolder}", env: { SEMIO_TEST_ARTIFACT_DIR: "$" + "{workspaceFolder}/$" + "{input:processContractArtifacts}/rust-finite-target-consumption" }, presentation: { group: "4_gate", order: registration.launchOrder } });
 });
 
 
@@ -322,9 +327,9 @@ for (const compiler of compilers) test(compiler.name + " neighboring equal-value
 
 test("actual rustc proves cancelled symlink steps target different bytes from normalized lexical paths", () => {
   const row = vector.cases.find((item: Row) => item.id === "cancelled-symlink-ancestor") as Row, f = fixture(row);
-  const nativeSource = 'fn main() { let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")); let actual = root.join("../foreign").join("item.json"); println!("{}", std::fs::read_to_string(actual).unwrap().trim()); }\n';
+  const nativeSource = 'fn main() { let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")); let actual = root.join("../alias/../foreign").join("item.json"); println!("{}", std::fs::read_to_string(actual).unwrap().trim()); }\n';
   f.put("🧾️native/🦀️.rs", nativeSource);
-  const binary = join(f.directory, "🧾️native", process.platform === "win32" ? "🔣️.exe" : "../../🧫️fixtures/🥤️rust-finite-target-consumption/🔣️.json");
+  const binary = join(f.directory, "🧾️native", process.platform === "win32" ? "🔣️.exe" : "🔣️");
   const compile = Bun.spawnSync(["rustc", "--edition=2021", "--crate-name", "finite_path_identity", join(f.directory, "🧾️native/🦀️.rs"), "-o", binary], { cwd: f.directory, env: { ...process.env, CARGO_MANIFEST_DIR: join(f.directory, "pkg") }, stdout: "pipe", stderr: "pipe" });
   expect(compile.exitCode, compile.stderr.toString()).toBe(0);
   const execution = Bun.spawnSync([binary], { cwd: f.directory, stdout: "pipe", stderr: "pipe" });
@@ -337,7 +342,7 @@ test("actual rustc proves cancelled symlink steps target different bytes from no
 test("actual rustc resolves raw module ownership paths before lexical cancellation", () => {
   const row = vector.cases.find((item: Row) => item.id === "cancelled-module-ownership-edge") as Row, f = fixture(row);
   f.put("🧾️native/🦀️.rs", '#[path = "../pkg/entry.rs"] mod owner;\nfn main() { println!("{}", owner::origin()); }\n');
-  const binary = join(f.directory, "🧾️native", process.platform === "win32" ? "🔣️.exe" : "../../🧫️fixtures/🥤️rust-finite-target-consumption/🔣️.json");
+  const binary = join(f.directory, "🧾️native", process.platform === "win32" ? "🔣️.exe" : "🔣️");
   const compile = Bun.spawnSync(["rustc", "--edition=2021", "--crate-name", "finite_source_identity", join(f.directory, "🧾️native/🦀️.rs"), "-o", binary], { cwd: f.directory, env: { ...process.env, CARGO_MANIFEST_DIR: join(f.directory, "pkg") }, stdout: "pipe", stderr: "pipe" });
   expect(compile.exitCode, compile.stderr.toString()).toBe(0);
   const execution = Bun.spawnSync([binary], { cwd: f.directory, stdout: "pipe", stderr: "pipe" });
@@ -350,7 +355,7 @@ test("actual rustc resolves raw module ownership paths before lexical cancellati
 test("actual rustc proves inherited env macro provenance is part of physical source authority", () => {
   const row = vector.cases.find((item: Row) => item.id === "inherited-env-macro") as Row, f = fixture(row);
   f.put("🧾️native/🦀️.rs", '#[path = "../pkg/entry.rs"] mod owner;\nfn main() { owner::run(); }\n');
-  const binary = join(f.directory, "🧾️native", process.platform === "win32" ? "🔣️.exe" : "../../🧫️fixtures/🥤️rust-finite-target-consumption/🔣️.json");
+  const binary = join(f.directory, "🧾️native", process.platform === "win32" ? "🔣️.exe" : "🔣️");
   const compile = Bun.spawnSync(["rustc", "--edition=2021", "--crate-name", "finite_macro_identity", join(f.directory, "🧾️native/🦀️.rs"), "-o", binary], { cwd: f.directory, env: { ...process.env, CARGO_MANIFEST_DIR: join(f.directory, "pkg") }, stdout: "pipe", stderr: "pipe" });
   expect(compile.exitCode, compile.stderr.toString()).toBe(0);
   const execution = Bun.spawnSync([binary], { cwd: f.directory, stdout: "pipe", stderr: "pipe" });

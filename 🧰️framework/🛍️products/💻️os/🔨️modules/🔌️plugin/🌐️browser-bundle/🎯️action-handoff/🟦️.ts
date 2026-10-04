@@ -5,7 +5,7 @@ export const BROWSER_ACTOR_ACTION_PACK_MAXIMUM_BYTES = 256 * 1024;
 export const BROWSER_ACTOR_ACTION_MUTATION_MAXIMUM = 4_096;
 export const BROWSER_ACTOR_ACTION_HOST_EFFECT_MAXIMUM = 1;
 export const BROWSER_ACTOR_ACTION_HISTORY_PATCH_MAXIMUM = 8;
-export const BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION = 20;
+export const BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION = 21;
 
 export type BrowserActorActionScopeV1 = { readonly spaceId: string; readonly documentId: string };
 
@@ -28,10 +28,14 @@ export type BrowserActorActionRequestV1 = BrowserActorActionOwnerV1 & {
   readonly payload: BrowserActorActionPayloadV1;
 };
 
+/** 🧾️ Exact native operation terminal captured inside the actor-owned action turn. */
+export type BrowserActorActionCommitReceiptV1 = Readonly<{ operation: string; revision: string }>;
+
 export type BrowserActorActionResultV1 = BrowserActorActionOwnerV1 & {
   readonly kind: "browser-actor-action-result";
   readonly outcome: "guest-applied" | "rejected";
   readonly mutationCount: number;
+  readonly commit: BrowserActorActionCommitReceiptV1 | null;
   readonly hostEffects: readonly (readonly number[])[];
   readonly historyPatches: readonly (readonly number[])[];
   readonly reason?: string;
@@ -83,6 +87,17 @@ function natural(value: unknown, path: string, minimum: number, maximum = Number
 function generation(value: unknown): string {
   if (typeof value !== "string" || !/^[1-9][0-9]{0,19}$/u.test(value) || BigInt(value) > 0xffffffffffffffffn) throw new Error("browserActorAction.activationGeneration: invalid");
   return value;
+}
+
+function decimalU64(value: unknown, path: string): string {
+  if (typeof value !== "string" || !/^(0|[1-9][0-9]{0,19})$/u.test(value) || BigInt(value) > 0xffffffffffffffffn) throw new Error(`${path}: invalid decimal u64`);
+  return value;
+}
+
+function commitReceipt(value: unknown): BrowserActorActionCommitReceiptV1 | null {
+  if (value === null) return null;
+  const record = object(value, "browserActorActionResult.commit", ["operation", "revision"]);
+  return { operation: decimalU64(record.operation, "browserActorActionResult.commit.operation"), revision: decimalU64(record.revision, "browserActorActionResult.commit.revision") };
 }
 
 function appChannelVersion(value: unknown): typeof BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION {
@@ -152,9 +167,11 @@ export function parseBrowserActorActionRequestV1(value: unknown): BrowserActorAc
 
 /** 📤️ Decodes the worker's exact action disposition; mutation bodies remain on the ordinary Commands lane. */
 export function parseBrowserActorActionResultV1(value: unknown): BrowserActorActionResultV1 {
-  const source = object(value, "browserActorActionResult", ["actionSequence", "activationGeneration", "appChannelVersion", "historyPatches", "hostEffects", "instanceId", "kind", "mutationCount", "outcome", "scope", "surfaceRevision", "verifiedSurfaceId"], ["reason"]);
+  const source = object(value, "browserActorActionResult", ["actionSequence", "activationGeneration", "appChannelVersion", "commit", "historyPatches", "hostEffects", "instanceId", "kind", "mutationCount", "outcome", "scope", "surfaceRevision", "verifiedSurfaceId"], ["reason"]);
   if (source.kind !== "browser-actor-action-result" || (source.outcome !== "guest-applied" && source.outcome !== "rejected")) throw new Error("browserActorActionResult.outcome: invalid");
   if ((source.outcome === "rejected") !== (source.reason !== undefined)) throw new Error("browserActorActionResult.reason: invalid pairing");
+  const commit = commitReceipt(source.commit);
+  if (source.outcome === "rejected" && commit !== null) throw new Error("browserActorActionResult.commit: rejected publication");
   const hostEffects = parseBrowserActorHostEffectBytesV1(source.hostEffects);
   if (source.outcome === "rejected" && hostEffects.length !== 0) throw new Error("browserActorActionResult.hostEffects: rejected publication");
   const historyPatches = parseBrowserActorHistoryPatchBytesV1(source.historyPatches);
@@ -164,6 +181,7 @@ export function parseBrowserActorActionResultV1(value: unknown): BrowserActorAct
     ...owner(source),
     outcome: source.outcome,
     mutationCount: natural(source.mutationCount, "browserActorActionResult.mutationCount", 0, BROWSER_ACTOR_ACTION_MUTATION_MAXIMUM),
+    commit,
     hostEffects,
     historyPatches,
     ...(source.reason === undefined ? {} : { reason: text(source.reason, "browserActorActionResult.reason") }),

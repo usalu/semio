@@ -121,6 +121,40 @@
         "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json",
         "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema/🛂️mutation-source-authority/🧭️domains.json"
       ]
+    },
+    "test-command-ingress-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-command-ingress-ownership",
+        "forwardAllArgs": true
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/Cargo.toml",
+        "{workspaceRoot}/package.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🧫️fixtures/📄️pages/🔣️.json"
+      ]
+    },
+    "test-command-ingress-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-command-ingress-native",
+        "forwardAllArgs": true
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/Cargo.toml",
+        "{workspaceRoot}/package.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🧫️fixtures/📄️pages/🔣️.json"
+      ]
     }
   }
 }

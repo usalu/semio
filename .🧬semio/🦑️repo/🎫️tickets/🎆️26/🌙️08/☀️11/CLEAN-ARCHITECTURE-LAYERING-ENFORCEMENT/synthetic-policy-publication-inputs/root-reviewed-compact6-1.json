@@ -1,0 +1,329 @@
+{
+  "at": "2026-10-03T13:22:25.783Z",
+  "authority": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/framework-import-enforcement/synthetic-neutral-enforcement-source-ready-6.json",
+  "authorityHash": "e747f814bdea2cdcf7c4f6e8f1fd3cffa2d727e24dc594a9df1ef3bc1592fa0c",
+  "rows": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧱️dependency-direction/🔣️.json",
+      "phase": "test-only",
+      "beforeHash": "6db379910eb0c363d2f555fbe7d4120bd7df231752a7131e70890ab7ce1eda3f",
+      "authoredHash": "e04d6791b8d1c75ae3056cc337c737dcfd233816fbe5cb6ecb6faf8749862349"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧱️dependency-direction/🔣️.json",
+      "phase": "test-only",
+      "beforeHash": "2a7fa6385291bb2364e7c137aa187eb594dce536baff2c9220e0dc3f81a39df8",
+      "authoredHash": "0280f1eeb9a87dd07d62e54ec495db96a5955cf35b56fceb437ecad44e4bee34"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️dependency-direction/🟦️.ts",
+      "phase": "test-only",
+      "beforeHash": "c19580238f2395b24972db35cd7d0249971b19738e6023348d865b10897a3bf5",
+      "authoredHash": "794e0c0f4d354179d608458d804d820fa48ebd5b66d4b81a8789d3bd13d0e7f9"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "phase": "production",
+      "beforeHash": "d41f18820c6be7798a62beeb8e01e3d23cf5a7ac9a23ea885f6b857c662c7612",
+      "authoredHash": "ea21b4ce4dbadf149a4f06fcc482811b1e8f39b8259e89ea0196272930cc23d9"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+      "phase": "test-only",
+      "beforeHash": "932237f7a49c5a481e4dd6d28a5c74df09f314b88c2d5b7f39fa4299c51c090c",
+      "authoredHash": "ff692c5c69bac67424952d616d8a4fffe309a288c4881fd33e7d63d2ad7e0ea3"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+      "phase": "test-only",
+      "beforeHash": "284af8705c768de9d0a9f2251e317c665ccd4ff9321c89445b220ccd28b48428",
+      "authoredHash": "10f053eb21ca1fbd6f1bcc7c196a91f466ae0529f2e00cf134508bce239b2f64"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🚀️bootstrap/🧫️fixtures/🔣️.json",
+      "phase": "test-only",
+      "beforeHash": "c5662917b66d6f13ca4644b5ceb84700bc20600b47dcc0474cfbb9ccadb430ef",
+      "authoredHash": "eaa295680713f510d66568c5e676768563a45bac88b50f906f36402e02776b02"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧱️rust-source-direction/🔣️.json",
+      "phase": "test-only",
+      "beforeHash": "d749b12df1c27fbd518004f74a68c15fdcfa36615659f0e52ca4d9a690ff965b",
+      "authoredHash": "71d0f3fdf23097edc510eca8adff559777ce27c000df932bb274c731a78b3420"
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "phase": "test-only",
+      "beforeHash": "f863c376e29c0bd20dbe3382ea3b915fbbc082916363d4799fe6d69a87df72be",
+      "authoredHash": "45ceca558840b5602e46bdb6136d58fdefb60e401fc47647e0310580584f5526"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🟦️.ts",
+      "phase": "production",
+      "beforeHash": "8ff23493a16d33f4d7546de08d6b8534263542b7faaef5af63114ebcd8b9bd69",
+      "authoredHash": "b73fa61bc54397fa9a63a39f8f094839219c34ae9898153bac773d993a039f01"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🚀️bootstrap/🟨️.cjs",
+      "phase": "production",
+      "beforeHash": "cf61f55c647cf505b27aa9641d9ec9c71ee657ae8fd9565ef2c60c0dada45eec",
+      "authoredHash": "3d2f0e75843009f523b69d1554e684dc39c4644f42f970a6423fac115ef9cdf4"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🏗️construction/🟨️.cjs",
+      "phase": "production",
+      "beforeHash": "3d7227450c702b34c7b9f9cebb61f82f23907e9d4cf2f2e9c3367c6f87c4fad4",
+      "authoredHash": "24ac800fbf5f78ba7f1cbb5f4bb2a8bdbf2479f635af6c18d2f11533708de7b7"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️ast/🧫️fixtures/📦️wire-types/🔣️.json",
+      "phase": "owner-test",
+      "beforeHash": null,
+      "authoredHash": "fb16905b11ad5553623c90e150eb9214792e828a65fd70ca6438842f9b0dbc32"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️ast/🧪️tests/📦️wire-types/🧬️schema/🔣️.json",
+      "phase": "owner-test",
+      "beforeHash": null,
+      "authoredHash": "4bed240397b4cdec53c4cb5464152a521d017ec2b0fb04d2b8489a3e5f08902e"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️ast/🧪️tests/📦️wire-types/🟦️.ts",
+      "phase": "owner-test",
+      "beforeHash": null,
+      "authoredHash": "338e4b57a33f3e65465da0f397473adfbb08600f26d7eb9d35373c5de895f156"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🟦️typescript/📜️script.ts",
+      "phase": "owner-test",
+      "beforeHash": "f5f6a93f5a04e8240751e93fa1c19cbf630955b8afaae9277a21ad36fda6aa96",
+      "authoredHash": "7ae7c80bced79ac6be7d0f6f0fd2091446a365e4712e8dca9ad98811d024e0d0"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🟦️typescript/package.json",
+      "phase": "owner-package",
+      "beforeHash": "b372654987daea2fb5fc2c3646f1b461e5a109344979ed299fe9682c714a8d93",
+      "authoredHash": "46e8a41e76f7af15075ec66b5cd1ca9013911fbd68239bef7b4dede8eba4eed7"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪶️consumers/🟦️.ts",
+      "phase": "owner-test",
+      "beforeHash": "e62e21c43463a164f6fb5bd52479fddd8623cde200f7391fef024144d97c1bf8",
+      "authoredHash": "fa3159e1044ce1a42364fa778082a347eb3155b3a0870c82ee0b18c9ada55d5c"
+    }
+  ],
+  "checks": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧱️dependency-direction/🔣️.json",
+      "expected": "6db379910eb0c363d2f555fbe7d4120bd7df231752a7131e70890ab7ce1eda3f",
+      "current": "6db379910eb0c363d2f555fbe7d4120bd7df231752a7131e70890ab7ce1eda3f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧱️dependency-direction/🔣️.json",
+      "expected": "2a7fa6385291bb2364e7c137aa187eb594dce536baff2c9220e0dc3f81a39df8",
+      "current": "2a7fa6385291bb2364e7c137aa187eb594dce536baff2c9220e0dc3f81a39df8"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️dependency-direction/🟦️.ts",
+      "expected": "c19580238f2395b24972db35cd7d0249971b19738e6023348d865b10897a3bf5",
+      "current": "c19580238f2395b24972db35cd7d0249971b19738e6023348d865b10897a3bf5"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "expected": "d41f18820c6be7798a62beeb8e01e3d23cf5a7ac9a23ea885f6b857c662c7612",
+      "current": "d41f18820c6be7798a62beeb8e01e3d23cf5a7ac9a23ea885f6b857c662c7612"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+      "expected": "932237f7a49c5a481e4dd6d28a5c74df09f314b88c2d5b7f39fa4299c51c090c",
+      "current": "932237f7a49c5a481e4dd6d28a5c74df09f314b88c2d5b7f39fa4299c51c090c"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+      "expected": "284af8705c768de9d0a9f2251e317c665ccd4ff9321c89445b220ccd28b48428",
+      "current": "284af8705c768de9d0a9f2251e317c665ccd4ff9321c89445b220ccd28b48428"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🚀️bootstrap/🧫️fixtures/🔣️.json",
+      "expected": "c5662917b66d6f13ca4644b5ceb84700bc20600b47dcc0474cfbb9ccadb430ef",
+      "current": "c5662917b66d6f13ca4644b5ceb84700bc20600b47dcc0474cfbb9ccadb430ef"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧱️rust-source-direction/🔣️.json",
+      "expected": "d749b12df1c27fbd518004f74a68c15fdcfa36615659f0e52ca4d9a690ff965b",
+      "current": "d749b12df1c27fbd518004f74a68c15fdcfa36615659f0e52ca4d9a690ff965b"
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "expected": "f863c376e29c0bd20dbe3382ea3b915fbbc082916363d4799fe6d69a87df72be",
+      "current": "f863c376e29c0bd20dbe3382ea3b915fbbc082916363d4799fe6d69a87df72be"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🟦️.ts",
+      "expected": "8ff23493a16d33f4d7546de08d6b8534263542b7faaef5af63114ebcd8b9bd69",
+      "current": "8ff23493a16d33f4d7546de08d6b8534263542b7faaef5af63114ebcd8b9bd69"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🚀️bootstrap/🟨️.cjs",
+      "expected": "cf61f55c647cf505b27aa9641d9ec9c71ee657ae8fd9565ef2c60c0dada45eec",
+      "current": "cf61f55c647cf505b27aa9641d9ec9c71ee657ae8fd9565ef2c60c0dada45eec"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🏗️construction/🟨️.cjs",
+      "expected": "3d7227450c702b34c7b9f9cebb61f82f23907e9d4cf2f2e9c3367c6f87c4fad4",
+      "current": "3d7227450c702b34c7b9f9cebb61f82f23907e9d4cf2f2e9c3367c6f87c4fad4"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️ast/🧫️fixtures/📦️wire-types/🔣️.json",
+      "expected": null,
+      "current": null
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️ast/🧪️tests/📦️wire-types/🧬️schema/🔣️.json",
+      "expected": null,
+      "current": null
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️ast/🧪️tests/📦️wire-types/🟦️.ts",
+      "expected": null,
+      "current": null
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🟦️typescript/📜️script.ts",
+      "expected": "f5f6a93f5a04e8240751e93fa1c19cbf630955b8afaae9277a21ad36fda6aa96",
+      "current": "f5f6a93f5a04e8240751e93fa1c19cbf630955b8afaae9277a21ad36fda6aa96"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🟦️typescript/package.json",
+      "expected": "b372654987daea2fb5fc2c3646f1b461e5a109344979ed299fe9682c714a8d93",
+      "current": "b372654987daea2fb5fc2c3646f1b461e5a109344979ed299fe9682c714a8d93"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪶️consumers/🟦️.ts",
+      "expected": "e62e21c43463a164f6fb5bd52479fddd8623cde200f7391fef024144d97c1bf8",
+      "current": "e62e21c43463a164f6fb5bd52479fddd8623cde200f7391fef024144d97c1bf8"
+    },
+    {
+      "path": "📜️script.ts",
+      "expected": "8ae94e7715e61f2b61980663af938267956182d39b15abe59c221d4f0de5bab9",
+      "current": "8ae94e7715e61f2b61980663af938267956182d39b15abe59c221d4f0de5bab9"
+    },
+    {
+      "path": "📋️project.json",
+      "expected": "5265dc51fbdbd74e5a472c2abea16e9066b399de1112aea5f6fef4461d855119",
+      "current": "5265dc51fbdbd74e5a472c2abea16e9066b399de1112aea5f6fef4461d855119"
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "expected": "f863c376e29c0bd20dbe3382ea3b915fbbc082916363d4799fe6d69a87df72be",
+      "current": "f863c376e29c0bd20dbe3382ea3b915fbbc082916363d4799fe6d69a87df72be"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+      "expected": "932237f7a49c5a481e4dd6d28a5c74df09f314b88c2d5b7f39fa4299c51c090c",
+      "current": "932237f7a49c5a481e4dd6d28a5c74df09f314b88c2d5b7f39fa4299c51c090c"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+      "expected": "284af8705c768de9d0a9f2251e317c665ccd4ff9321c89445b220ccd28b48428",
+      "current": "284af8705c768de9d0a9f2251e317c665ccd4ff9321c89445b220ccd28b48428"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "expected": "d41f18820c6be7798a62beeb8e01e3d23cf5a7ac9a23ea885f6b857c662c7612",
+      "current": "d41f18820c6be7798a62beeb8e01e3d23cf5a7ac9a23ea885f6b857c662c7612"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🏗️construction/🟨️.cjs",
+      "expected": "3d7227450c702b34c7b9f9cebb61f82f23907e9d4cf2f2e9c3367c6f87c4fad4",
+      "current": "3d7227450c702b34c7b9f9cebb61f82f23907e9d4cf2f2e9c3367c6f87c4fad4"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️cargo/🟦️.ts",
+      "expected": "6f2b4e1d9d60d6ce7cb1b01a31723039fa8cc48533864042a58e3b541d963f38",
+      "current": "6f2b4e1d9d60d6ce7cb1b01a31723039fa8cc48533864042a58e3b541d963f38"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️cargo/🏃️execution/🟦️.ts",
+      "expected": "a11aadd23c812c285b90a4406bd1cf10591829532b2e724ef7619290f6161a4d",
+      "current": "a11aadd23c812c285b90a4406bd1cf10591829532b2e724ef7619290f6161a4d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧱️dependency-direction/🔣️.json",
+      "expected": "2a7fa6385291bb2364e7c137aa187eb594dce536baff2c9220e0dc3f81a39df8",
+      "current": "2a7fa6385291bb2364e7c137aa187eb594dce536baff2c9220e0dc3f81a39df8"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧱️dependency-direction/🔣️.json",
+      "expected": "6db379910eb0c363d2f555fbe7d4120bd7df231752a7131e70890ab7ce1eda3f",
+      "current": "6db379910eb0c363d2f555fbe7d4120bd7df231752a7131e70890ab7ce1eda3f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️dependency-direction/🟦️.ts",
+      "expected": "c19580238f2395b24972db35cd7d0249971b19738e6023348d865b10897a3bf5",
+      "current": "c19580238f2395b24972db35cd7d0249971b19738e6023348d865b10897a3bf5"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🦀️rust/Cargo.toml",
+      "expected": "c2ebee3da5063c34aab1a07175611d5b4218f566b7219b1bee5c6d15a1329c6e",
+      "current": "c2ebee3da5063c34aab1a07175611d5b4218f566b7219b1bee5c6d15a1329c6e"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+      "expected": "5c94ec057bf38c67ff400710b4b4c66881f4ee9128472e3fab9b949b8dd1ff83",
+      "current": "5c94ec057bf38c67ff400710b4b4c66881f4ee9128472e3fab9b949b8dd1ff83"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/package.json",
+      "expected": "404d3e426f16a3f7e3da00030504c518a94b62fd35e350e2d7f909492eb0448f",
+      "current": "404d3e426f16a3f7e3da00030504c518a94b62fd35e350e2d7f909492eb0448f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/package.json",
+      "expected": "f6f941d57e9701f45a14119f062b7c1205d9039b571aca784065f48f168b2de4",
+      "current": "f6f941d57e9701f45a14119f062b7c1205d9039b571aca784065f48f168b2de4"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🟦️typescript/package.json",
+      "expected": "b372654987daea2fb5fc2c3646f1b461e5a109344979ed299fe9682c714a8d93",
+      "current": "b372654987daea2fb5fc2c3646f1b461e5a109344979ed299fe9682c714a8d93"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🟦️typescript/📜️script.ts",
+      "expected": "20bfcda1a6d52bd732f9c497dbc1194677235c93bc2a9919c99a040062cf7933",
+      "current": "20bfcda1a6d52bd732f9c497dbc1194677235c93bc2a9919c99a040062cf7933"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🟦️typescript/📋️project.json",
+      "expected": "26b0f4e77b99ff985a80b1cb5808772f8bf42f74d1f164aa73c1cc4e4734224b",
+      "current": "26b0f4e77b99ff985a80b1cb5808772f8bf42f74d1f164aa73c1cc4e4734224b"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🟦️.ts",
+      "expected": "816f0af9bcacbd6a8d974b1de85f9c69351f90474a73068ca358b01f80615cf9",
+      "current": "816f0af9bcacbd6a8d974b1de85f9c69351f90474a73068ca358b01f80615cf9"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts",
+      "expected": "247f37a9a1b8d445700c18ebb35dde84d461d425b823d04e5e8dd24fab5ec945",
+      "current": "247f37a9a1b8d445700c18ebb35dde84d461d425b823d04e5e8dd24fab5ec945"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️ast/🟦️.ts",
+      "expected": "011e93937a3cf15e15086866a556d12f2a84107b6fc507f21c7d427c7bf63242",
+      "current": "011e93937a3cf15e15086866a556d12f2a84107b6fc507f21c7d427c7bf63242"
+    }
+  ],
+  "gaps": [],
+  "rootReview": {
+    "productionCount": 4,
+    "testAndOwnerCount": 14,
+    "productionBehavior": "Framework-neutral role includes module and package roots; no legacy role/rule/route alias. Distinct physical owners cannot share a package name. Conflicting same-owner package authority refused in constructor.",
+    "testOwnership": "Shared policy has synthetic package/export/type/infrastructure fixtures only; Jack/Forms own actual surface/type declarations and runtime checks.",
+    "noRuntimeDependenciesAdded": true,
+    "sourcePublication": false,
+    "native": false,
+    "independentReview": "CURRENT-SYNTHETIC-POLICY-COMPACT6-INDEPENDENT-ADMISSION.md",
+    "remaining": "After Native source fence: test-phase actual registered RED, production4 publication, identical full registered GREEN and Jack/Forms actual owner suites"
+  }
+}

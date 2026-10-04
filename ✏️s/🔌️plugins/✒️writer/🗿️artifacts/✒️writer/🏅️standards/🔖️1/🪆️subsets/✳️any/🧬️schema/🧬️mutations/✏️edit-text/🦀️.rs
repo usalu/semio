@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 /// ✏️ Replaces `WriterSnapshot::text` wholesale with `text` — the taxonomy's `edit` verb covers
 /// "an authored content body (text, cell, code)". Diff/inverse delegate to the sibling
 /// `🔺️diff`/`↩️inverse` leaves.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[mutation_leaf(contract = ::protocol)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
@@ -30,9 +30,12 @@ impl MutationKind<WriterSnapshot, WriterMutation> for EditText {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &WriterSnapshot) -> Vec<WriterMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &WriterSnapshot) -> Result<Vec<WriterMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 
     /// 🎯️ The writer's authored body — its composed `document` child derives from it. Concurrent writers of the same field conflict; writers of different fields never do.
     fn target(&self) -> Vec<String> {

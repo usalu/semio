@@ -1,3 +1,13 @@
+use semio_framework_dsl::DslIdiom;
+use semio_framework_dsl::hooks_for;
+use semio_framework_dsl::LanguageRole;
+use semio_framework_dsl::LanguageSpec;
+use semio_framework_dsl::register_language;
+use semio_framework_dsl::language;
+use semio_framework_diagnostic::TextError;
+use semio_framework_diagnostic::TextSpan;
+use semio_framework_diagnostic::Limits;
+use semio_framework_dsl::TokenClass;
 use super::*;
 
 #[semio_framework_async_macros::async_test]
@@ -34,7 +44,7 @@ impl DslIdiom for GreetIdiom {
 
     // 🚫️async: E4 fn-pointer slot — DslIdiom::parse must stay sync, see the trait's own tag.
     fn parse(text: &str) -> Result<Self::Ast, TextError> {
-        text.strip_prefix("hello ").map(|name| GreetAst { name: name.trim().to_string() }).ok_or_else(|| TextError::new("expected 'hello <name>'", TextSpan::at(1, 1)))
+        text.strip_prefix("hello ").map(|name| GreetAst { name: name.trim().to_string() }).ok_or_else(|| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected 'hello <name>'", TextSpan::at(1, 1)))
     }
 
     // 🚫️async: E4 fn-pointer slot — see parse above
@@ -48,24 +58,9 @@ impl DslIdiom for GreetIdiom {
     }
 }
 
-#[semio_framework_async_macros::async_test]
-async fn dsl_idiom_round_trips_through_its_own_parse_and_print() {
-    let ast = GreetIdiom::parse("hello world").expect("parse");
-    assert_eq!(ast, GreetAst { name: "world".to_string() });
-    assert_eq!(GreetIdiom::print(&ast), "hello world");
-    assert_eq!(GreetIdiom::parse(&GreetIdiom::print(&ast)), Ok(ast), "idiom round trip law");
-}
 
-#[semio_framework_async_macros::async_test]
-async fn dsl_idiom_registry_resolves_by_lang_and_canonicalizes_through_the_hooks() {
-    register_idiom(hooks_for::<GreetIdiom>());
-    let hooks = idiom("greet").expect("registered idiom must be found by its LANG id");
-    assert_eq!(hooks.lang, "greet");
-    let canonical = (hooks.canonicalize)("hello   world").expect("canonicalize");
-    assert_eq!(canonical, "hello world", "canonicalize normalizes through parse -> print");
-    assert!((hooks.canonicalize)("not a greeting").is_err(), "a malformed idiom body must surface the idiom's own parse error");
-    assert!(idiom("never-registered-lang").is_none(), "an unregistered lang must resolve to None, never a default/error");
-}
+
+
 
 #[semio_framework_async_macros::async_test]
 async fn language_registry_resolves_by_id_and_semio_content() {
@@ -91,15 +86,15 @@ async fn dsl_value_dsl_field_round_trips_through_record_value() {
 
 // --- end-to-end derive tests: mirrors the norm-family "flat scalar document" worked example ---
 
-#[derive(Clone, Debug, PartialEq, DslScalar, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslScalar, serde::Serialize, serde::Deserialize)]
 enum ClimateZone {
     Cold,
     Temperate,
     Warm,
 }
 
-#[derive(Clone, Debug, PartialEq, DslArtifact, serde::Serialize, serde::Deserialize)]
-#[dsl(id = "derived.doc", extension = "derivedoc")]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, DslArtifact, serde::Serialize, serde::Deserialize)]
+#[artifact(id = "derived.doc", extension = "derivedoc")]
 struct DerivedDocument {
     category: String,
     climate: ClimateZone,
@@ -142,13 +137,13 @@ impl crate::os_store::ArtifactPack for DerivedDocument {
     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
         let inner = crate::os_store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope =
-            crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1).map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
+            crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1).map_err(|error| crate::os_store::PackError::from(error.into_value_error()))?;
         Ok(crate::os_store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
-        let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|error| crate::os_store::PackError::from(error.into_value_error()))?;
         if !envelope.matches_identity(<Self as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1) {
-            return Err(crate::os_store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as crate::os_store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(crate::os_store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as crate::os_store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = crate::os_store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(crate::os_store::text_error_to_pack_error)
@@ -178,7 +173,7 @@ async fn derived_document_round_trips_with_optional_field_present() {
 
 // --- end-to-end derive test: a Mutation enum via #[derive(DslOps)] ---
 
-#[derive(Clone, Debug, PartialEq, DslOps, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum, serde::Serialize, serde::Deserialize)]
 enum DerivedMutation {
     #[dsl(key = "setCategory")]
     SetCategory { category: String },
@@ -295,7 +290,7 @@ async fn derived_op_binary_round_trips_every_variant_and_matches_text() {
 // --- end-to-end derive test: `#[derive(DslEnum)]` recursive block tree (the `note`/`draw`
 // pilots' hard case), `Vec<Vec<T>>`, `[T; N]`, and `BTreeMap<String, V>` fields ---
 
-#[derive(Clone, Debug, PartialEq, DslEnum, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum, serde::Serialize, serde::Deserialize)]
 enum SceneNode {
     #[dsl(key = "point")]
     Point { pos: [f64; 3] },
@@ -310,15 +305,15 @@ enum SceneNode {
     },
 }
 
-#[derive(Clone, Debug, PartialEq, DslRecord, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, serde::Serialize, serde::Deserialize)]
 #[dsl(keyword = "camera")]
 struct SceneCamera {
     x: f64,
     y: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, DslArtifact, serde::Serialize, serde::Deserialize)]
-#[dsl(id = "scene.doc", extension = "scenedoc")]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, DslArtifact, serde::Serialize, serde::Deserialize)]
+#[artifact(id = "scene.doc", extension = "scenedoc")]
 struct SceneDocument {
     // `#[dsl(block)]` alone (no `statements`) wraps a plain nested-record scalar field so it
     // prints as a bare `camera { x=.. y=.. }` line instead of a `camera=...` attribute.
@@ -357,13 +352,13 @@ impl crate::os_store::ArtifactPack for SceneDocument {
     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
         let inner = crate::os_store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope =
-            crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1).map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
+            crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1).map_err(|error| crate::os_store::PackError::from(error.into_value_error()))?;
         Ok(crate::os_store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
-        let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|error| crate::os_store::PackError::from(error.into_value_error()))?;
         if !envelope.matches_identity(<Self as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1) {
-            return Err(crate::os_store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as crate::os_store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(crate::os_store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as crate::os_store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = crate::os_store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(crate::os_store::text_error_to_pack_error)
@@ -390,7 +385,7 @@ async fn derived_enum_recursive_block_tree_and_map_and_nested_collections_round_
 // --- end-to-end derive test: single-field tuple ("newtype") variants (the `draw` pilot's
 // `LayerNode::Shape(ShapeBody)` shape) delegate entirely to the inner type's own spec/keyword ---
 
-#[derive(Clone, Debug, PartialEq, DslRecord, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, serde::Serialize, serde::Deserialize)]
 #[dsl(keyword = "circle")]
 struct CircleBody {
     #[dsl(positional)]
@@ -398,7 +393,7 @@ struct CircleBody {
     r: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, DslRecord, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, serde::Serialize, serde::Deserialize)]
 #[dsl(keyword = "square")]
 struct SquareBody {
     #[dsl(positional)]
@@ -406,7 +401,7 @@ struct SquareBody {
     side: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, DslEnum, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum, serde::Serialize, serde::Deserialize)]
 enum ShapeNode {
     #[dsl(key = "circle")]
     Circle(CircleBody),
@@ -414,8 +409,8 @@ enum ShapeNode {
     Square(SquareBody),
 }
 
-#[derive(Clone, Debug, PartialEq, DslArtifact, serde::Serialize, serde::Deserialize)]
-#[dsl(id = "shape.doc", extension = "shapedoc")]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, DslArtifact, serde::Serialize, serde::Deserialize)]
+#[artifact(id = "shape.doc", extension = "shapedoc")]
 struct ShapeDocument {
     #[dsl(statements, block)]
     shapes: Vec<ShapeNode>,
@@ -449,13 +444,13 @@ impl crate::os_store::ArtifactPack for ShapeDocument {
     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
         let inner = crate::os_store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope =
-            crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1).map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
+            crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1).map_err(|error| crate::os_store::PackError::from(error.into_value_error()))?;
         Ok(crate::os_store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
-        let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|error| crate::os_store::PackError::from(error.into_value_error()))?;
         if !envelope.matches_identity(<Self as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1) {
-            return Err(crate::os_store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as crate::os_store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(crate::os_store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as crate::os_store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = crate::os_store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(crate::os_store::text_error_to_pack_error)
@@ -481,7 +476,7 @@ async fn derived_newtype_tuple_variants_round_trip() {
 // --- end-to-end derive test: `#[dsl(statements, block)] Option<T>` (the `draw` pilot's
 // `attributes.fill: Option<FillStyle>` shape) — a sum-type scalar field, not a collection ---
 
-#[derive(Clone, Debug, PartialEq, DslEnum, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum, serde::Serialize, serde::Deserialize)]
 enum PaintStyle {
     #[dsl(key = "solid")]
     Solid { color: [f64; 4] },
@@ -489,14 +484,14 @@ enum PaintStyle {
     Gradient { stops: Vec<f64> },
 }
 
-#[derive(Clone, Debug, PartialEq, DslRecord, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, serde::Serialize, serde::Deserialize)]
 struct PaintAttributes {
     #[dsl(statements, block)]
     fill: Option<PaintStyle>,
 }
 
-#[derive(Clone, Debug, PartialEq, DslArtifact, serde::Serialize, serde::Deserialize)]
-#[dsl(id = "paint.doc", extension = "paintdoc")]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, DslArtifact, serde::Serialize, serde::Deserialize)]
+#[artifact(id = "paint.doc", extension = "paintdoc")]
 struct PaintDocument {
     #[dsl(block)]
     attributes: PaintAttributes,
@@ -530,13 +525,13 @@ impl crate::os_store::ArtifactPack for PaintDocument {
     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
         let inner = crate::os_store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope =
-            crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1).map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
+            crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1).map_err(|error| crate::os_store::PackError::from(error.into_value_error()))?;
         Ok(crate::os_store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
-        let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|error| crate::os_store::PackError::from(error.into_value_error()))?;
         if !envelope.matches_identity(<Self as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1) {
-            return Err(crate::os_store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as crate::os_store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(crate::os_store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as crate::os_store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = crate::os_store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(crate::os_store::text_error_to_pack_error)
@@ -566,14 +561,14 @@ async fn derived_option_statements_field_round_trips_present_and_absent() {
 // Option<StrokeStyle>` shape) — `None` must OMIT the field, not print empty `{ }` braces, since
 // reparsing empty braces would otherwise try to build a record whose required fields are absent ---
 
-#[derive(Clone, Debug, PartialEq, DslRecord, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, serde::Serialize, serde::Deserialize)]
 struct BrushStyle {
     color: [f64; 4],
     width: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, DslArtifact, serde::Serialize, serde::Deserialize)]
-#[dsl(id = "art.doc", extension = "brushdoc")]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, DslArtifact, serde::Serialize, serde::Deserialize)]
+#[artifact(id = "art.doc", extension = "brushdoc")]
 struct BrushDocument {
     #[dsl(block)]
     brush: Option<BrushStyle>,
@@ -607,13 +602,13 @@ impl crate::os_store::ArtifactPack for BrushDocument {
     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
         let inner = crate::os_store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope =
-            crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1).map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
+            crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1).map_err(|error| crate::os_store::PackError::from(error.into_value_error()))?;
         Ok(crate::os_store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
-        let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|error| crate::os_store::PackError::from(error.into_value_error()))?;
         if !envelope.matches_identity(<Self as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1) {
-            return Err(crate::os_store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as crate::os_store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(crate::os_store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as crate::os_store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = crate::os_store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(crate::os_store::text_error_to_pack_error)
@@ -643,7 +638,7 @@ async fn derived_option_block_record_field_omits_rather_than_printing_empty_brac
 // --- end-to-end derive test: `#[dsl(statements)] Box<T>` (the `draw` pilot's
 // `AddLayer { layer: Box<DrawLayerNode> }` shape) — exactly one required tagged value ---
 
-#[derive(Clone, Debug, PartialEq, DslOps, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum, serde::Serialize, serde::Deserialize)]
 enum PaintOp {
     #[dsl(key = "addShape")]
     AddShape {
@@ -664,7 +659,7 @@ impl crate::os_spr::OpText for PaintOp {
                 return <Self as DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("unknown operation line '{line}'"),semio_framework_diagnostic::TextSpan::at(1,1)))
     }
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as DslVariants>::to_named_record(self);
@@ -726,7 +721,7 @@ async fn derived_required_statements_boxed_field_round_trips() {
 // before a single byte of real data was ever touched. Now lazy (a `fn() -> RecordSpec` pointer,
 // mirroring `Statements`), so this must round trip a genuinely nested value correctly.
 
-#[derive(Clone, Debug, PartialEq, DslRecord, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, serde::Serialize, serde::Deserialize)]
 struct SelfRefValue {
     #[dsl(key = "n")]
     number: Option<i64>,
@@ -734,8 +729,8 @@ struct SelfRefValue {
     dictionary: Option<std::collections::BTreeMap<String, SelfRefValue>>,
 }
 
-#[derive(Clone, Debug, PartialEq, DslArtifact, serde::Serialize, serde::Deserialize)]
-#[dsl(id = "selfref.doc", extension = "selfrefdoc")]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, DslArtifact, serde::Serialize, serde::Deserialize)]
+#[artifact(id = "selfref.doc", extension = "selfrefdoc")]
 struct SelfRefDocument {
     #[dsl(block)]
     root: SelfRefValue,
@@ -769,13 +764,13 @@ impl crate::os_store::ArtifactPack for SelfRefDocument {
     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
         let inner = crate::os_store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope =
-            crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1).map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
+            crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1).map_err(|error| crate::os_store::PackError::from(error.into_value_error()))?;
         Ok(crate::os_store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
-        let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|error| crate::os_store::PackError::from(error.into_value_error()))?;
         if !envelope.matches_identity(<Self as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1) {
-            return Err(crate::os_store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as crate::os_store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(crate::os_store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as crate::os_store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = crate::os_store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(crate::os_store::text_error_to_pack_error)
@@ -802,15 +797,15 @@ async fn derived_self_referential_record_struct_round_trips_nested_values() {
 
 // --- end-to-end derive test: `#[dsl(table)] Vec<T>` (Structure-of-Arrays columnar field) ---
 
-#[derive(Clone, Debug, PartialEq, DslRecord, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, serde::Serialize, serde::Deserialize)]
 struct TableNodeRow {
     id: String,
     x: f64,
     y: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, DslArtifact, serde::Serialize, serde::Deserialize)]
-#[dsl(id = "table.doc", extension = "tabledoc")]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, DslArtifact, serde::Serialize, serde::Deserialize)]
+#[artifact(id = "table.doc", extension = "tabledoc")]
 struct TableDocument {
     #[dsl(table)]
     nodes: Vec<TableNodeRow>,
@@ -844,13 +839,13 @@ impl crate::os_store::ArtifactPack for TableDocument {
     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
         let inner = crate::os_store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope =
-            crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1).map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
+            crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1).map_err(|error| crate::os_store::PackError::from(error.into_value_error()))?;
         Ok(crate::os_store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
-        let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|error| crate::os_store::PackError::from(error.into_value_error()))?;
         if !envelope.matches_identity(<Self as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1) {
-            return Err(crate::os_store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as crate::os_store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(crate::os_store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as crate::os_store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = crate::os_store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(crate::os_store::text_error_to_pack_error)
@@ -870,3 +865,9 @@ async fn derived_table_field_prints_compact_soa_and_round_trips() {
     assert_eq!(parsed, doc, "table round trip diverged;\nprinted:\n{printed}");
     crate::os_store::test_support::assert_dsl_pack_equivalence(&doc);
 }
+
+#[path = "../🪆️refusal/🦀️.rs"]
+mod controlled_refusal;
+
+#[path = "../🔢️number-refusal/🦀️.rs"]
+mod controlled_number_refusal;

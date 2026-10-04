@@ -29,9 +29,17 @@
     clippy::vec_init_then_push
 )]
 
+#[cfg(test)]
+#[path = "../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/🦀️.rs"]
+pub(crate) mod test_allocation;
+
+#[cfg(test)]
+#[global_allocator]
+static TEST_ALLOCATION_OBSERVER: test_allocation::RequestedAllocator = test_allocation::RequestedAllocator;
+
 extern crate self as dsl;
 extern crate self as dsl_grammar;
-extern crate self as dsl_notation;
+
 pub extern crate self as semio_format;
 extern crate self as semio_framework_os_kernel;
 extern crate self as spr;
@@ -51,27 +59,6 @@ pub mod os_dsl {
     #[path = "../../🔨️modules/🗣️dsl/🦀️.rs"]
     mod component;
     pub use component::*;
-
-    // 📡️ `span`/`diagnostic` are owned by `🧰️framework/🔨️modules/⚠️diagnostic` and reach the tree
-    // through the replication crate, which mounts them once — every `crate::os_dsl::Severity` /
-    // `TextSpan` / `Fault` path below resolves through these re-exports unchanged.
-    pub use protocol::diagnostic;
-    pub use protocol::span;
-
-    #[path = "../../🔨️modules/🗣️dsl/🔤️token/🦀️.rs"]
-    pub mod token;
-
-    #[path = "../../🔨️modules/🗣️dsl/🔍️lexer/🦀️.rs"]
-    pub mod lexer;
-
-    #[path = "../../🔨️modules/🗣️dsl/🎖️trust/🦀️.rs"]
-    pub mod trust;
-
-    pub use self::diagnostic::*;
-    pub use self::lexer::*;
-    pub use self::span::*;
-    pub use self::token::*;
-    pub use self::trust::*;
 
     #[path = "."]
     pub mod family {
@@ -107,19 +94,20 @@ pub mod os_dsl {
     #[path = "../../🔨️modules/🗣️dsl/🧠️lsp/🦀️.rs"]
     pub mod lsp;
 
-    #[path = "../../🔨️modules/🗣️dsl/🖋️notation/🦀️.rs"]
-    pub mod notation;
+
 
     #[cfg(not(target_arch = "wasm32"))]
     #[path = "../../🔨️modules/🗣️dsl/📇️registry/🦀️.rs"]
     pub mod registry;
 
-    #[path = "../../🔨️modules/🗣️dsl/🧬️schema/🦀️.rs"]
-    pub mod schema;
+
 }
 
 #[path = "."]
 pub mod os_pack {
+    #[cfg(not(target_arch = "wasm32"))]
+    #[path = "../../🔨️modules/🎒️pack/🚦️control/🦀️.rs"]
+    pub mod control;
     #[path = "../../🔨️modules/🎒️pack/🦀️.rs"]
     mod component;
     pub use component::*;
@@ -138,10 +126,6 @@ pub mod os_pack {
     pub use pack::http;
     #[cfg(not(target_arch = "wasm32"))]
     pub use pack::io;
-    // 🌉️ `DslValue ↔ pack::json::Value` bridge + `to_json_string`/`from_json_str` — ticket
-    // `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`'s `TopicContribution`
-    // seam and every plugin converting off `serde_json` route JSON text through this.
-    pub use pack::json;
     pub use pack::source;
 
     // 🎾️ The flat codec/ids/source surface arrives through `component`'s `pub use pack::*` above —
@@ -248,9 +232,7 @@ pub mod os_io;
 pub use crate::os_io as io;
 pub use crate::os_io::{ComposeFuture, ErasedComposeSource};
 
-// 🧬️ Artifact dialect vocabulary is mounted once here and reexported by framework facades.
-#[path = "../../../../🔨️modules/🚪️io/🧬️schema/🦀️.rs"]
-pub mod io_schema;
+pub use semio_framework_io_schema as io_schema;
 
 #[path = "../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🦀️.rs"]
 pub mod sqlite_snapshot;
@@ -315,27 +297,23 @@ pub use crate::os_semio::*;
 pub use crate::os_vcs::*;
 
 // Former dsl_notation crate root surface
-pub use crate::os_dsl::grammar::*;
-pub use crate::os_dsl::notation::*;
-pub use crate::os_dsl::{diagnostic::*, lexer::*, span::*, token::*, trust::*};
+pub use crate::os_dsl::grammar::{family_fragments,product_macros,verify_protocol_bytes};
 
-/// 🌱️ Crate-root re-export of `os_dsl::schema`'s `ToValue`/`FromValue`/`DslValue`/`ValueError` —
-/// `#[derive(ToValue, FromValue)]` (`semio-framework-value-derive`) generates fully-qualified
-/// `::semio_framework_os_kernel::ToValue`/`FromValue` paths, so every plugin depending on this
-/// crate under that literal name needs them reachable at the crate root, not only as
-/// `crate::schema::ToValue`.
-pub use crate::os_dsl::schema::{edit_through_value, DslValue, FromValue, ToValue, ValueEdit, ValueError, ValueShape};
-pub use semio_framework_schema_state::StateClass;
-pub use semio_framework_schema_composition as os_schema_composition;
-/// 📶️ Canonical artifact state class, reachable anywhere `Mutations` is derived.
-pub use protocol::dsl_value;
-pub use protocol::value::native_decoding;
+
+use semio_framework_dsl_record::*;
+use semio_framework_value::{DslValue,FromValue,ToValue,ValueError,ValueRefusalKind,ValueShape,ValueEdit,edit_through_value,NativeDecodeControl,NativeEncodeControl};
+
+
 pub use semio_framework_ui_viewport::{Viewport2d, Viewport3dOrbit};
 
 /// 🌿️ Publishes the canonical retained ownership derives beside their owned value traits.
-pub use semio_framework_value_derive::{RetainedClone,RetireOwned};
+
 
 //#region 🧪️Tests
 #[cfg(test)]
 include!("../../🧪️tests/🔬️standalone/🦀️.rs");
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+#[path="../../../../🔨️modules/🌱️value/🔁️codec/🧪️tests/♻️retirement/🦀️.rs"]
+mod canonical_intrinsic_retirement_tests;

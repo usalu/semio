@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeFenestrationSillHeight, base: &EnergyModelSna
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Fenestration {} needs a non-negative finite sill height, got {}.", payload.id.0, payload.new_sill_height_m), [payload.id.0.to_string()]);
     }
     if existing.sill_height_m == payload.new_sill_height_m {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Fenestration {} already has this sill height.", payload.id.0));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Fenestration {} already has this sill height.", payload.id.0));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.fenestrations.iter_mut().find(|item| item.id == payload.id) {

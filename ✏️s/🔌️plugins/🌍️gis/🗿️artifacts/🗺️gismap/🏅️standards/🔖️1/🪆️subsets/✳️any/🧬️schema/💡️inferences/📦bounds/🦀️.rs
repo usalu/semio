@@ -1,5 +1,5 @@
 //! 📦 `bounds` — one named inference: geographic bounding box across every `positions`/`routes`/
-//! `regions` feature. `MapFeature::data` is deliberately untyped (`dsl::DslValue`, the engine's
+//! `regions` feature. `MapFeature::data` is deliberately untyped (`semio_framework_value::DslValue`, the engine's
 //! `Shape::Value` escape hatch — see `crate`'s own docs), so the box is derived
 //! by a generic coordinate-pair scan over each feature's raw value rather than by assuming a fixed
 //! shape: any `{lon, lat}` object or `[number, number]` pair anywhere inside `data` counts as one
@@ -22,14 +22,14 @@ pub struct GisMapBounds {
 }
 
 /// 🗺️ Recursively collects every `{lon, lat}` object and `[number, number]` pair inside `value`.
-pub(crate) fn scan_lon_lat_pairs(value: &dsl::DslValue, out: &mut Vec<(f64, f64)>) {
+pub(crate) fn scan_lon_lat_pairs(value: &semio_framework_value::DslValue, out: &mut Vec<(f64, f64)>) {
     visit_lon_lat_pairs(value, 1, &mut |lon, lat| out.push((lon, lat)), &mut |_| Ok::<(), std::convert::Infallible>(())).expect("infallible coordinate collection");
 }
 
-fn visit_lon_lat_pairs<E>(value: &dsl::DslValue, depth: u32, point: &mut impl FnMut(f64, f64), checkpoint: &mut impl FnMut(u32) -> Result<(), E>) -> Result<(), E> {
+fn visit_lon_lat_pairs<E>(value: &semio_framework_value::DslValue, depth: u32, point: &mut impl FnMut(f64, f64), checkpoint: &mut impl FnMut(u32) -> Result<(), E>) -> Result<(), E> {
     checkpoint(depth)?;
     match value {
-        dsl::DslValue::Object(entries) => {
+        semio_framework_value::DslValue::Object(entries) => {
             let lon = entries.iter().find(|(key, _)| key == "lon").and_then(|(_, value)| value.as_f64());
             let lat = entries.iter().find(|(key, _)| key == "lat").and_then(|(_, value)| value.as_f64());
             if let (Some(lon), Some(lat)) = (lon, lat) {
@@ -39,7 +39,7 @@ fn visit_lon_lat_pairs<E>(value: &dsl::DslValue, depth: u32, point: &mut impl Fn
                 visit_lon_lat_pairs(value, depth.saturating_add(1), point, checkpoint)?;
             }
         }
-        dsl::DslValue::Array(items) => {
+        semio_framework_value::DslValue::Array(items) => {
             if let [a, b] = items.as_slice() {
                 if let (Some(a), Some(b)) = (a.as_f64(), b.as_f64()) {
                     point(a, b);

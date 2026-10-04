@@ -7,7 +7,7 @@ use crate::Din18599Snapshot;
 pub fn diff(payload: &SpecifyHeatingSystem, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
 
     if base.heating == payload.new_heating {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "heating already has this value.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "heating already has this value.");
     }
     protocol::MutationOutcome::new(Din18599Diff { heating: Some(payload.new_heating.clone()), ..Default::default() })
 }

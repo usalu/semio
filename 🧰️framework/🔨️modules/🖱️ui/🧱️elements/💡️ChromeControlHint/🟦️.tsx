@@ -128,3 +128,99 @@ export function ChromeControlHint({ id, text, always = false, children }: { read
   );
 }
 // #endregion 💡️ChromeControlHint
+
+// #region 💬️DisabledReasonHint
+/** 💬️ Why a disabled action cannot run, as ONE element with `id`: always the action's description (the caller names `id` in
+ * the action's `aria-describedby`), and visible text anchored to the action while it is hovered (after
+ * {@link CHROME_CONTROL_TOOLTIP_DELAY_MS}), keyboard-focused or pressed (click, tap, Enter, Space) — until a hovering pointer leaves,
+ * focus moves away, Escape, or a press lands elsewhere. Conformance case `💬️row-semantics` (`revealReason`), the same hint
+ * the wgpu renderer paints. */
+export function DisabledReasonHint({ id, reason, children }: { readonly id: string; readonly reason: string; readonly children: React.ReactElement }): React.ReactNode {
+  const flow = useFlow();
+  const floatingHost = useShellFloatingSurfaceHost();
+  const triggerRef = React.useRef<HTMLSpanElement>(null);
+  const contentRef = React.useRef<HTMLSpanElement>(null);
+  const [revealed, setRevealed] = React.useState(false);
+  const [placement, setPlacement] = React.useState<{ left: number; top: number; transformOrigin: string } | null>(null);
+  const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const clearTimer = React.useCallback(() => {
+    if (timerRef.current !== null) clearTimeout(timerRef.current);
+    timerRef.current = null;
+  }, []);
+  const reveal = React.useCallback(() => {
+    clearTimer();
+    setRevealed(true);
+  }, [clearTimer]);
+  const conceal = React.useCallback(() => {
+    clearTimer();
+    setRevealed(false);
+  }, [clearTimer]);
+  const revealAfterDelay = React.useCallback(() => {
+    clearTimer();
+    timerRef.current = setTimeout(() => setRevealed(true), CHROME_CONTROL_TOOLTIP_DELAY_MS);
+  }, [clearTimer]);
+
+  React.useEffect(() => clearTimer, [clearTimer]);
+  React.useEffect(() => {
+    if (!revealed) return;
+    const pressElsewhere = (event: PointerEvent) => {
+      if (!triggerRef.current?.contains(event.target as Node | null)) conceal();
+    };
+    document.addEventListener("pointerdown", pressElsewhere, true);
+    return () => document.removeEventListener("pointerdown", pressElsewhere, true);
+  }, [conceal, revealed]);
+  React.useLayoutEffect(() => {
+    const trigger = triggerRef.current;
+    const content = contentRef.current;
+    if (!revealed || !trigger || !content) {
+      setPlacement(null);
+      return;
+    }
+    const resolved = resolvePopoverPlacement(trigger.getBoundingClientRect(), content.getBoundingClientRect(), { width: window.innerWidth, height: window.innerHeight }, "top", "center", 8, 0, 8, flow.inline === "rtl", true);
+    setPlacement({ left: resolved.left, top: resolved.top, transformOrigin: resolved.transformOrigin });
+  }, [flow.inline, revealed]);
+
+  const shown = revealed && floatingHost !== null;
+  return (
+    <>
+      <span
+        ref={triggerRef}
+        data-slot="disabled-reason-hint"
+        className="inline-flex max-w-full"
+        onPointerEnter={(event) => (event.pointerType === "touch" ? undefined : revealAfterDelay())}
+        onPointerLeave={(event) => (event.pointerType === "touch" ? undefined : conceal())}
+        onFocusCapture={reveal}
+        onBlurCapture={conceal}
+        onClickCapture={reveal}
+        onKeyDownCapture={(event) => (event.key === "Escape" ? conceal() : undefined)}
+      >
+        {children}
+      </span>
+      {shown ? (
+        createPortal(
+          <span
+            ref={contentRef}
+            id={id}
+            role="tooltip"
+            data-slot="row-action-reason"
+            data-revealed=""
+            data-level="menu"
+            dir={flow.inline === "rtl" ? "rtl" : undefined}
+            className={chromeControlTooltipSurfaceClass}
+            style={placement ? { left: placement.left, top: placement.top, transformOrigin: placement.transformOrigin, visibility: "visible" } : { left: 0, top: 0, visibility: "hidden" }}
+          >
+            <SurfaceScope level="menu" fill="glass">
+              {reason}
+            </SurfaceScope>
+          </span>,
+          floatingHost,
+        )
+      ) : (
+        <span id={id} data-slot="row-action-reason" className="sr-only">
+          {reason}
+        </span>
+      )}
+    </>
+  );
+}
+// #endregion 💬️DisabledReasonHint

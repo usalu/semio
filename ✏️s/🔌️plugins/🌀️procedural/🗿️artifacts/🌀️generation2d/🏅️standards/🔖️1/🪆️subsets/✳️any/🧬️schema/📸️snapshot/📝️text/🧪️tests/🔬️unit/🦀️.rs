@@ -25,7 +25,7 @@ fn dsl_round_trip_with_generation_state() {
     // behavior, not a bug in this crate's mirror/conversion code — so a whole-number input like
     // `3.0` would legitimately compare unequal to its round-tripped `3` here. `3.5` has no such
     // ambiguity.
-    values.insert("count".into(), dsl::DslValue::float(3.5));
+    values.insert("count".into(), semio_framework_value::DslValue::float(3.5));
     projection.generation.cold_builder_mut().expect("unique cold generation owner").generations.push(FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values });
     projection.generation.cold_builder_mut().expect("unique cold generation owner").selected_generation_id = Some("generation-1".into());
     projection.generation.cold_builder_mut().expect("unique cold generation owner").preview_text = Some("42".into());

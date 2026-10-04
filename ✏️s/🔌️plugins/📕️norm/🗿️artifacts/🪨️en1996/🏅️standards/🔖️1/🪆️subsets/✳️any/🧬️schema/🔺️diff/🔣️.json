@@ -3,24 +3,82 @@
   "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/diff.json",
   "title": "En1996Diff",
   "type": "object",
+  "additionalProperties": false,
   "properties": {
     "artifact": {
-      "type": "object"
+      "anyOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/artifact.json"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
     },
     "annex": {
-      "type": "string"
+      "anyOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/properties/annex"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
     },
     "masonryClass": {
-      "type": "string"
+      "anyOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/properties/masonryClass"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
     },
     "designSituation": {
-      "type": "string"
+      "anyOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/properties/designSituation"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
     },
     "storeys": {
-      "type": "integer"
+      "anyOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/properties/storeys"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
     },
     "walls": {
-      "type": "object"
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "values"
+          ],
+          "properties": {
+            "values": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/properties/walls"
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
     }
   }
 }

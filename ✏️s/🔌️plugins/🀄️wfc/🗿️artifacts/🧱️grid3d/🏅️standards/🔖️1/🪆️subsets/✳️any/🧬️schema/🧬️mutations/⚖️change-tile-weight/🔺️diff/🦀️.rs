@@ -12,7 +12,7 @@ pub fn diff(payload: &super::ChangeTileWeight, base: &Grid3dSnapshot) -> protoco
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Tile \"{}\" needs a finite positive weight.", payload.tile_id), [payload.tile_id.clone()]);
     }
     if base.tiles[index].weight == payload.weight {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Tile \"{}\" already carries that weight.", payload.tile_id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Tile \"{}\" already carries that weight.", payload.tile_id));
     }
     let mut tile = base.tiles[index].clone();
     tile.weight = payload.weight;

@@ -1,0 +1,233 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "https://semio.tech/s/draw/scene/trace",
+ "title": "Bounded Complete Document Image Trace",
+ "type": "object",
+ "required": [
+  "plan",
+  "limits"
+ ],
+ "additionalProperties": false,
+ "properties": {
+  "plan": {
+   "$ref": "https://semio.tech/s/draw/scene/prepare"
+  },
+  "limits": {
+   "$ref": "#/definitions/limits"
+  }
+ },
+ "definitions": {
+  "limits": {
+   "type": "object",
+   "required": [
+    "maxPixels",
+    "maxDecodedPixels",
+    "maxSourceBytes",
+    "maxBytes",
+    "maxChunks",
+    "maxEdges",
+    "maxSegments",
+    "maxRetainedSegments",
+    "maxWork"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "maxPixels": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 16777216
+    },
+    "maxDecodedPixels": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 67108864,
+     "description": "Total distinct decoded source pixels retained as shared luma masks; temporary RGBA storage is bounded by maxPixels."
+    },
+    "maxSourceBytes": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 268439552,
+     "description": "Aggregate encoded ASCII source bytes admitted once per referenced asset."
+    },
+    "maxBytes": {
+     "type": "integer",
+     "minimum": 8,
+     "maximum": 67108864
+    },
+    "maxChunks": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 65536
+    },
+    "maxEdges": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 65536
+    },
+    "maxSegments": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 65536
+    },
+    "maxRetainedSegments": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 65536,
+     "description": "Original prepared paths plus all published trace paths; preserves Boolean producer admission."
+    },
+    "maxWork": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 1000000000
+    }
+   }
+  },
+  "result": {
+   "$ref": "https://semio.tech/s/draw/scene/prepare",
+   "description": "Native source-pixel coordinates and original layer transforms/paint; no implicit resizing or artboard fitting. Luma is round((299R+587G+114B)*A/255000)."
+  },
+  "progress": {
+   "type": "object",
+   "required": [
+    "phase",
+    "assets",
+    "nodes",
+    "resolved",
+    "decodes",
+    "pixels",
+    "sourceBytes",
+    "segments",
+    "work",
+    "decoding",
+    "trace",
+    "done"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "phase": {
+     "enum": [
+      "assets",
+      "indexing",
+      "nodes",
+      "decoding",
+      "luma",
+      "tracing",
+      "publishing",
+      "complete"
+     ]
+    },
+    "assets": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 1024
+    },
+    "nodes": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 1024
+    },
+    "resolved": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 1024
+    },
+    "decodes": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 1024
+    },
+    "pixels": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 67108864
+    },
+    "sourceBytes": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 268439552
+    },
+    "segments": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 65536
+    },
+    "work": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 1000000000
+    },
+    "decoding": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "$ref": "https://semio.tech/framework/pixels/image-decoding#/definitions/progress"
+      }
+     ]
+    },
+    "trace": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "$ref": "https://semio.tech/framework/2d/trace#/definitions/progress"
+      }
+     ]
+    },
+    "done": {
+     "type": "boolean"
+    }
+   }
+  },
+  "retirementProgress": {
+   "description": "Logical private trace/kernel/map/scene cleanup under positive work grants. Remaining input ownership returns to the caller; completed output is independent. Flat decode owners count as fixed structural work, not allocator byte credit.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "phase",
+    "work",
+    "done"
+   ],
+   "properties": {
+    "phase": {
+     "enum": [
+      "closing",
+      "complete"
+     ]
+    },
+    "work": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "done": {
+     "type": "boolean"
+    }
+   },
+   "oneOf": [
+    {
+     "properties": {
+      "phase": {
+       "const": "closing"
+      },
+      "done": {
+       "const": false
+      }
+     }
+    },
+    {
+     "properties": {
+      "phase": {
+       "const": "complete"
+      },
+      "done": {
+       "const": true
+      }
+     }
+    }
+   ]
+  }
+ }
+}

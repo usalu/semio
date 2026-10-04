@@ -1,0 +1,56 @@
+{
+  "$schema": "../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🔮️ This owner's contribution to the repository test platform: the third-party references its own laws judge against.",
+  "oracles": [
+    {
+      "id": "mutation-label-tree-sitter-rust",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "web-tree-sitter",
+      "version": "0.20.8",
+      "engine": {
+        "family": "web-tree-sitter",
+        "implementation": "web-tree-sitter Parser",
+        "version": "0.20.8"
+      },
+      "capabilities": [
+        "repo.test.mutation-label-gate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://github.com/tree-sitter/tree-sitter/tree/master/lib/binding_web",
+      "rationale": "The independent syntax-tree reading of every label site in `🧪️tests/🧪️mutation-history-gates`: the `schema mutation-labels` token gate and the tree-sitter-rust parse must give the same verdict on every corpus case of `🧫️fixtures/🧫️mutation-labels`."
+    },
+    {
+      "id": "mutation-label-tree-sitter-rust-grammar",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "tree-sitter-wasms",
+      "version": "0.1.13",
+      "engine": {
+        "family": "tree-sitter-wasms",
+        "implementation": "tree-sitter-wasms out/tree-sitter-rust.wasm",
+        "version": "0.1.13"
+      },
+      "capabilities": [
+        "repo.test.mutation-label-gate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "Unlicense",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://github.com/Gregoor/tree-sitter-wasms",
+      "rationale": "The prebuilt tree-sitter-rust grammar that `mutation-label-tree-sitter-rust` loads (`Bun.resolveSync(\"tree-sitter-wasms/package.json\")` → `out/tree-sitter-rust.wasm`) in `🧪️tests/🧪️mutation-history-gates`; third-party, so the syntax tree the label oracle reads is not this repository's own grammar."
+    }
+  ],
+  "noOracleDecisions": []
+}

@@ -1,13 +1,13 @@
 //! 🚪️ fem2d → json — foreign `Serializer<Fem2dSnapshot>` on the framework's `io_mechanism` channel.
-//! `Fem2dSnapshot` is a pure `dsl::ToValue` record tree (nodes/elements/regions/materials/sections/
+//! `Fem2dSnapshot` is a pure `semio_framework_value::ToValue` record tree (nodes/elements/regions/materials/sections/
 //! supports/load-cases/combinations/analysis, no external child references), so its rfc8259
 //! rendition carries every field and the sibling `📥️import` leaf reconstructs the snapshot exactly:
 //! `IoFidelity::Exact`. The text is written by stdio's own real RFC 8259 codec (`write_json_text`),
-//! never a re-derived encoder; `dsl::json::from_dsl_value` keeps integers integral across the bridge
+//! never a re-derived encoder; `semio_framework_pack_json::from_dsl_value` keeps integers integral across the bridge
 //! instead of widening them to `f64`.
 
 use crate::Fem2dSnapshot;
-use semio_framework::io::io_mechanism::Serializer;
+use semio_framework::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{Dialect, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
 use semio_s_artifact_stdio_json::schema::snapshot::write_json_text;
@@ -18,7 +18,7 @@ pub const JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", stand
 
 /// 🔣️ This subset's snapshot as compact rfc8259 text.
 pub fn json_text(from: &Fem2dSnapshot) -> String {
-    write_json_text(&JsonSnapshot::from_value(dsl::json::from_dsl_value(&dsl::ToValue::to_value(from))).value)
+    write_json_text(&JsonSnapshot::from_value(semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(from))).value)
 }
 
 /// 🧵️ `s.fem.fem2d@1/*` → `s.stdio.json@rfc8259/*`.
@@ -27,7 +27,7 @@ pub struct Fem2dIntoJson;
 impl Serializer<Fem2dSnapshot> for Fem2dIntoJson {
     const INTO: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn serialize(from: &Fem2dSnapshot) -> IoResult<IoPayload> {
+    async fn serialize(from: &Fem2dSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
         Ok(IoOutcome::clean(IoPayload::Text(json_text(from))))
     }
 }

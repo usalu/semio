@@ -6,6 +6,7 @@
     "includedScripts": []
   },
   "scripts": {
+    "test-neutral-ownership": "nx run @semio-tech/2d-compute:test-neutral-ownership",
     "test-schema": "nx run @semio-tech/2d-compute:test-schema",
     "test-ownership": "nx run @semio-tech/2d-compute:test-ownership",
     "check-types": "nx run @semio-tech/2d-compute:check-types"

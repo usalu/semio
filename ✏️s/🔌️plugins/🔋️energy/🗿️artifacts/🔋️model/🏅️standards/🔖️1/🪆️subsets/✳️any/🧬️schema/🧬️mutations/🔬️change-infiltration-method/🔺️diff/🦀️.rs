@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeInfiltrationMethod, base: &EnergyModelSnapsho
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Infiltration {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if existing.method == payload.new_method {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Infiltration {} already carries this infiltration method: {:?}.", payload.id.0, payload.new_method));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Infiltration {} already carries this infiltration method: {:?}.", payload.id.0, payload.new_method));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.infiltrations.iter_mut().find(|item| item.id == payload.id) {

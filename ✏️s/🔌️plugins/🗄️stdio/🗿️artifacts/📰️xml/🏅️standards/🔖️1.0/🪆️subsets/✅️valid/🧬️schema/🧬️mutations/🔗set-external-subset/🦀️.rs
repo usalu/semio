@@ -18,9 +18,12 @@ impl protocol::MutationKind<XmlSnapshot, XmlValidMutation> for SetExternalSubset
     fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<<XmlValidMutation as Mutation<XmlSnapshot>>::Diff> {
         agg_diff(&XmlValidMutation::SetExternalSubset(self.clone()), base)
     }
-    fn inverse(&self, base: &XmlSnapshot) -> Vec<XmlValidMutation> {
-        agg_inverse(&XmlValidMutation::SetExternalSubset(self.clone()), base)
-    }
+    fn inverse(&self, base: &XmlSnapshot) -> Result<Vec<XmlValidMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&XmlValidMutation::SetExternalSubset(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set external subset", "Externe Teilmenge setzen")
     }

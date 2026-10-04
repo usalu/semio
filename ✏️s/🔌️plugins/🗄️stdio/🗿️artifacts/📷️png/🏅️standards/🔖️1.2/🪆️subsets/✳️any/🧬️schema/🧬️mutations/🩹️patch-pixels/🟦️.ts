@@ -1,7 +1,1 @@
-/** 🩹️ Bounded PNG pixel-range patch. */
-export interface PatchPixelsMutation {
-  readonly index: number;
-  readonly removeCount: number;
-  readonly pixels: ReadonlyArray<number>;
-  readonly moveTo?: number;
-}
+export interface PatchPixelsMutation { readonly revision: string; readonly x: number; readonly y: number; readonly width: number; readonly height: number; readonly red: number; readonly green: number; readonly blue: number; readonly alpha: number; }

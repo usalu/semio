@@ -1,8 +1,55 @@
-type XlsxEntry {
-  name: String!
-  data: [Int!]!
+enum XlsxMutationTag {
+  SET_SNAPSHOT
+  PATCH_SNAPSHOT
+  INSERT_SHEET
+  REMOVE_SHEET
+  RENAME_SHEET
+  SET_CELL
+  INSERT_CELL
+  REMOVE_CELL
+  INSERT_SHARED_STRING
+  REMOVE_SHARED_STRING
+  SET_SHARED_STRING
 }
-type XlsxMutation {
-  schema: String! @state(class: ARTIFACT)
-  entries: [XlsxEntry!]! @state(class: ARTIFACT)
+enum XlsxCellValueKind { NUMBER SHARED_STRING INLINE_STRING BOOLEAN ERROR FORMULA EMPTY }
+input XlsxCellValueInput {
+  kind: XlsxCellValueKind!
+  number: Float
+  index: Int
+  text: String
+  boolean: Boolean
+  expr: String
+  cached: XlsxCellValueInput
+}
+input XlsxCellInput { row: Int!, col: Int!, value: XlsxCellValueInput! }
+input XlsxSheetInput { name: String!, cells: [XlsxCellInput!]! }
+input XlsxCellAddressInput {
+  partPath: String!
+  nodePath: [Int!]!
+  namespaceUri: String!
+  localName: String!
+  revision: String!
+}
+input XlsxWorksheetAddressInput {
+  partPath: String!
+  nodePath: [Int!]!
+  namespaceUri: String!
+  localName: String!
+  revision: String!
+}
+input XlsxCellVacancyAddressInput { worksheet: XlsxWorksheetAddressInput!, row: Int!, column: Int! }
+scalar SnapshotPatch
+scalar XlsxSnapshotInput
+scalar XlsxMutationValue
+input XlsxMutationInput {
+  mutation: XlsxMutationTag!
+  snapshot: XlsxSnapshotInput
+  patch: SnapshotPatch
+  sheet: XlsxSheetInput
+  name: String
+  newName: String
+  address: XlsxCellAddressInput
+  vacancy: XlsxCellVacancyAddressInput
+  value: XlsxMutationValue
+  index: Int
 }

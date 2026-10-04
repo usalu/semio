@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "canonicalPads"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "additionalItems": false,
+      "items": [
+        {
+          "const": {
+            "id": "absent",
+            "present": false,
+            "value": 0
+          }
+        },
+        {
+          "const": {
+            "id": "explicit-zero",
+            "present": true,
+            "value": 0
+          }
+        }
+      ]
+    },
+    "canonicalPads": {
+      "const": {
+        "format": 0,
+        "samples": 0,
+        "auxiliary": 0
+      }
+    }
+  }
+}

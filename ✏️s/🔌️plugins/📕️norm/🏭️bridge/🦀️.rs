@@ -75,33 +75,33 @@ fn main() {
     };
     let owner_prefix = format!("{owner}/");
     let in_state_lane = |leaf: &str| surface.is_empty() && leaf.split('/').any(|segment| SURFACE_DIRS.contains(&segment));
-    let mut rows: Vec<pack::JsonValue> = Vec::new();
+    let mut rows: Vec<semio_framework_pack_json::Value> = Vec::new();
     let mut seen: Vec<&str> = Vec::new();
     for descriptor in AGGREGATES.iter().filter(|(name, _)| name.starts_with(prefix)).flat_map(|(_, aggregate)| aggregate().iter()) {
         if !descriptor.owner.starts_with(&owner_prefix) || in_state_lane(&descriptor.owner[owner_prefix.len()..]) || seen.contains(&descriptor.semantic_kind) {
             continue;
         }
         seen.push(descriptor.semantic_kind);
-        rows.push(pack::json_object([
-            ("id".to_string(), pack::JsonValue::from(descriptor.semantic_kind)),
-            ("variant".to_string(), pack::JsonValue::from(descriptor.aggregate_variant)),
-            ("outcomes".to_string(), pack::json_array(descriptor.outcome_classes.iter().map(|class| pack::JsonValue::from(class.as_str())))),
+        rows.push(semio_framework_pack_json::object([
+            ("id".to_string(), semio_framework_pack_json::Value::from(descriptor.semantic_kind)),
+            ("variant".to_string(), semio_framework_pack_json::Value::from(descriptor.aggregate_variant)),
+            ("outcomes".to_string(), semio_framework_pack_json::array(descriptor.outcome_classes.iter().map(|class| semio_framework_pack_json::Value::from(class.as_str())))),
         ]));
     }
     let mut fields = vec![
-        ("schema".to_string(), pack::JsonValue::from("semio.repository-test.runtime-inventory/v2")),
-        ("artifact".to_string(), pack::JsonValue::from(artifact.as_str())),
-        ("standard".to_string(), pack::JsonValue::from(standard.as_str())),
-        ("subset".to_string(), pack::JsonValue::from(subset.as_str())),
+        ("schema".to_string(), semio_framework_pack_json::Value::from("semio.repository-test.runtime-inventory/v2")),
+        ("artifact".to_string(), semio_framework_pack_json::Value::from(artifact.as_str())),
+        ("standard".to_string(), semio_framework_pack_json::Value::from(standard.as_str())),
+        ("subset".to_string(), semio_framework_pack_json::Value::from(subset.as_str())),
     ];
     if !surface.is_empty() {
-        fields.push(("surface".to_string(), pack::JsonValue::from(surface)));
+        fields.push(("surface".to_string(), semio_framework_pack_json::Value::from(surface)));
     }
     fields.extend([
-        ("bridgeVersion".to_string(), pack::JsonValue::from(1_i64)),
-        ("producedBy".to_string(), pack::JsonValue::from("semio-norm-mutation-bridge")),
-        ("mutations".to_string(), pack::json_array(rows)),
+        ("bridgeVersion".to_string(), semio_framework_pack_json::Value::from(1_i64)),
+        ("producedBy".to_string(), semio_framework_pack_json::Value::from("semio-norm-mutation-bridge")),
+        ("mutations".to_string(), semio_framework_pack_json::array(rows)),
     ]);
-    let out = pack::json_object(fields);
-    println!("{}", pack::json_to_string(&out));
+    let out = semio_framework_pack_json::object(fields);
+    println!("{}", semio_framework_pack_json::to_string(&out));
 }

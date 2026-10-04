@@ -117,7 +117,7 @@ pub(crate) mod context {
         for effect in &result.requested_effects {
             if let Effect::LoadDocument { pack, spr } = effect {
                 let files = store::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
-                app.load_document_pack(&files).await.expect("test host applies load-document effect");
+                semio_framework_plugin::artifact_app_laws::load_document(app, &files).await.expect("test host applies load-document effect");
             }
         }
         Dispatched { result, lanes: settled.lanes }
@@ -598,15 +598,15 @@ async fn command_from_action_covers_every_declared_action_and_rejects_unknown_on
 /// a `u32` field, and a `setCamera` payload is accepted both flat and `{camera:{…}}`-nested.
 #[semio_framework_async_macros::async_test]
 async fn the_action_bridge_coerces_select_strings_and_both_camera_arg_shapes() {
-    let mesh = RemodelingPlayApp::command_from_action("setMeshParams", Some(&dsl::DslValue::from(&serde_json::json!({ "textureSize": "4096" })))).expect("bridge");
+    let mesh = RemodelingPlayApp::command_from_action("setMeshParams", Some(&semio_framework_value::DslValue::from(&serde_json::json!({ "textureSize": "4096" })))).expect("bridge");
     let RemodelingCommand::SetMeshParams(payload) = mesh else { panic!("expected SetMeshParams") };
     assert_eq!(payload.texture_size, 4096);
 
-    let flat = RemodelingPlayApp::command_from_action("setCamera", Some(&dsl::DslValue::from(&serde_json::json!({ "position": [1.0, 2.0, 3.0], "target": [0.0, 0.0, 0.0], "zoom": 1.25 })))).expect("bridge");
-    let nested = RemodelingPlayApp::command_from_action("setCamera", Some(&dsl::DslValue::from(&serde_json::json!({ "camera": { "position": [1.0, 2.0, 3.0], "target": [0.0, 0.0, 0.0], "zoom": 1.25 } })))).expect("bridge");
+    let flat = RemodelingPlayApp::command_from_action("setCamera", Some(&semio_framework_value::DslValue::from(&serde_json::json!({ "position": [1.0, 2.0, 3.0], "target": [0.0, 0.0, 0.0], "zoom": 1.25 })))).expect("bridge");
+    let nested = RemodelingPlayApp::command_from_action("setCamera", Some(&semio_framework_value::DslValue::from(&serde_json::json!({ "camera": { "position": [1.0, 2.0, 3.0], "target": [0.0, 0.0, 0.0], "zoom": 1.25 } })))).expect("bridge");
     assert_eq!(flat, nested);
 
-    let example = RemodelingPlayApp::command_from_action("setActiveExample", Some(&dsl::DslValue::from(&serde_json::json!({ "exampleId": "demo-session" })))).expect("bridge");
+    let example = RemodelingPlayApp::command_from_action("setActiveExample", Some(&semio_framework_value::DslValue::from(&serde_json::json!({ "exampleId": "demo-session" })))).expect("bridge");
     assert_eq!(example, RemodelingCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "demo-session".into() }));
 }
 
@@ -743,6 +743,7 @@ async fn export_media_mesh_out_exports_a_structured_3d_mesh() {
             assert!(!json.is_empty());
         }
         MediaPayload::Binary { .. } => panic!("expected a Structured payload"),
+        MediaPayload::Intrinsic { .. } => panic!("expected a Structured payload"),
     }
 }
 //#endregion 🔖️MediaPortTests

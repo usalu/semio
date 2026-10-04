@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 // #region 🔖️ScheduleType
 /// 📆️ Schedule interpolation mode.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar)]
 pub enum ScheduleInterpolation {
     Continuous,
     Discrete,

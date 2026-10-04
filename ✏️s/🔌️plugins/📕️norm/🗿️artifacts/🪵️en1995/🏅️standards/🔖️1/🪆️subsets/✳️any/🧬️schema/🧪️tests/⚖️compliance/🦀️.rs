@@ -24,9 +24,9 @@ fn check<'a>(report: &'a CheckReport, id: &str) -> &'a crate::document::CheckRes
 }
 
 fn apply_remedy(snap: &En1995Snapshot, report: &CheckReport, check_id: &str, remedy_index: usize) -> En1995Snapshot {
-    let mut tree = dsl::ToValue::to_value(snap);
+    let mut tree = semio_framework_value::ToValue::to_value(snap);
     apply_remedy_edit(report, check_id, remedy_index, 0, &mut tree).unwrap_or_else(|f| panic!("{check_id}[{remedy_index}]: {f:?}"));
-    dsl::FromValue::from_value(tree).unwrap_or_else(|e| panic!("{check_id}[{remedy_index}] decode: {e}"))
+    semio_framework_value::FromValue::from_value(tree).unwrap_or_else(|e| panic!("{check_id}[{remedy_index}] decode: {e}"))
 }
 
 #[semio_framework_async_macros::async_test]
@@ -167,7 +167,7 @@ async fn remedy_spacing_or_compression_flips_fail() {
 #[semio_framework_async_macros::async_test]
 async fn every_emitted_path_resolves_on_examples() {
     for (name, snap) in bundled_examples() {
-        let root = dsl::ToValue::to_value(&snap);
+        let root = semio_framework_value::ToValue::to_value(&snap);
         for annex in [AnnexChoice::En, AnnexChoice::De] {
             let report = evaluate_structure(annex, &snap.members, &snap.connections);
             assert!(!report.checks.is_empty(), "{name}");
@@ -211,15 +211,15 @@ async fn annex_changes_results_on_every_example_with_timber_resistance() {
     }
 }
 
-fn leaf_paths(prefix: &str, value: &dsl::DslValue, out: &mut Vec<String>) {
+fn leaf_paths(prefix: &str, value: &semio_framework_value::DslValue, out: &mut Vec<String>) {
     match value {
-        dsl::DslValue::Object(fields) => {
+        semio_framework_value::DslValue::Object(fields) => {
             for (key, child) in fields {
                 let path = if prefix.is_empty() { key.clone() } else { format!("{prefix}.{key}") };
                 leaf_paths(&path, child, out);
             }
         }
-        dsl::DslValue::Array(items) => {
+        semio_framework_value::DslValue::Array(items) => {
             for (index, child) in items.iter().enumerate() {
                 leaf_paths(&format!("{prefix}[{index}]"), child, out);
             }
@@ -232,7 +232,7 @@ fn leaf_paths(prefix: &str, value: &dsl::DslValue, out: &mut Vec<String>) {
 async fn default_snapshot_every_editable_leaf_has_en_de_meta() {
     let mut leaves = Vec::new();
     for snap in [En1995Snapshot::default(), En1995Snapshot::noncompliant_building(), En1995Snapshot::compliant_bridge()] {
-        leaf_paths("", &dsl::ToValue::to_value(&snap), &mut leaves);
+        leaf_paths("", &semio_framework_value::ToValue::to_value(&snap), &mut leaves);
     }
     assert!(leaves.len() > 60, "expected every member, action and connection leaf, got {}", leaves.len());
     for path in &leaves {

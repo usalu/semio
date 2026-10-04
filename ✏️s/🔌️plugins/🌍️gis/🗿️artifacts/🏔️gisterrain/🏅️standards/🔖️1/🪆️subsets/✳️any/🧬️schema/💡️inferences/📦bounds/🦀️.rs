@@ -1,5 +1,5 @@
 //! 📦 `bounds` — one named inference: geographic bounding box + position count decoded from the
-//! `map:in` overlay carried in `imported_features_json`'s `{positions:[{id,lon,lat,label?,icon?}]}`
+//! `map:in` overlay carried in `imported_map`'s `{positions:[{id,lon,lat,label?,icon?}]}`
 //! descriptor JSON (mirrors `⚙️engine`'s private `imported_positions` decoder — kept independent
 //! here per the schema-layer's own read of the snapshot, rather than reaching into engine
 //! internals that aren't `pub`). Simple whole-snapshot scalar: no `InferredField` caching, the
@@ -19,16 +19,10 @@ pub struct GisTerrainBounds {
     pub lat_max: f64,
 }
 
-/// 🗺️ Decodes `imported_features_json`'s `positions` overlay into raw `(lon, lat)` pairs —
+/// 🗺️ Decodes `imported_map`'s `positions` overlay into raw `(lon, lat)` pairs —
 /// malformed/empty JSON (including the default empty string) contributes no positions.
 pub(crate) fn imported_lon_lat_positions(snapshot: &GisTerrainSnapshot) -> Vec<(f64, f64)> {
-    let Ok(value) = serde_json::from_str::<serde_json::Value>(&snapshot.imported_features_json) else {
-        return Vec::new();
-    };
-    let Some(positions) = value.get("positions").and_then(|value| value.as_array()) else {
-        return Vec::new();
-    };
-    positions.iter().filter_map(|entry| Some((entry.get("lon")?.as_f64()?, entry.get("lat")?.as_f64()?))).collect()
+    snapshot.imported_map.as_ref().map(|map| map.coordinates().collect()).unwrap_or_default()
 }
 
 /// 📦 Bounding box across every decoded `(lon, lat)` pair, or `None` for an empty overlay.

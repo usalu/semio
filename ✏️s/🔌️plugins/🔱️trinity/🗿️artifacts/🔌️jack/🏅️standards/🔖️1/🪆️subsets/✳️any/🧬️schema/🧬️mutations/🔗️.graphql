@@ -1,28 +1,6 @@
 # 🧬️ Jack direct mutation aggregate.
-scalar JSON
-
-input JackMutationEntityRefInput { entity: String!, id: String! }
-input JackMutationPortInput { id: String!, kind: String!, direction: String!, properties: JSON! }
-input JackMutationNodeInput { id: String!, kind: String!, name: String!, x: Float!, y: Float!, width: Float!, height: Float!, properties: JSON!, ports: [JackMutationPortInput!]! }
-input JackMutationEdgeInput { id: String!, kind: String!, source: String!, target: String!, properties: JSON! }
-input ChangeDataPropertyInput { entity: JackMutationEntityRefInput!, key: String!, newValue: JSON! }
-input CreateEdgeInput { edge: JackMutationEdgeInput! }
-input CreateNodeInput { node: JackMutationNodeInput! }
-input DeleteEdgeInput { id: String! }
-input DeleteNodeInput { id: String! }
-input MoveNodeInput { id: String!, x: Float!, y: Float! }
-input RemoveDataPropertyInput { entity: JackMutationEntityRefInput!, key: String! }
-input RenameNodeInput { id: String!, newName: String! }
 input SetQueryInput { value: String! }
 
 input JackMutationInput {
-  changeDataProperty: ChangeDataPropertyInput
-  createEdge: CreateEdgeInput
-  createNode: CreateNodeInput
-  deleteEdge: DeleteEdgeInput
-  deleteNode: DeleteNodeInput
-  moveNode: MoveNodeInput
-  removeDataProperty: RemoveDataPropertyInput
-  renameNode: RenameNodeInput
   setQuery: SetQueryInput
 }

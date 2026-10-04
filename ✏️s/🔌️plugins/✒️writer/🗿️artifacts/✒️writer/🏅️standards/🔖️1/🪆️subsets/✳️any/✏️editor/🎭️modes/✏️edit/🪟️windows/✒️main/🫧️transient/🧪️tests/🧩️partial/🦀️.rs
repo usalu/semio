@@ -13,8 +13,8 @@ fn writer_window_state_partial_construction_preserves_large_utf8_and_cancels() {
         for cancel in [false, true] {
             let mut before = fixture["base"].clone();
             before["engagementInput"] = text.clone().into();
-            let base: WriterMainWindowTransient = dsl::json::from_json_str(&before.to_string()).unwrap();
-            let mutation: WriterMainWindowTransientMutation = dsl::json::from_json_str(&row["mutation"].to_string()).unwrap();
+            let base: WriterMainWindowTransient = semio_framework_pack_json::from_json_str(&before.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+            let mutation: WriterMainWindowTransientMutation = semio_framework_pack_json::from_json_str(&row["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
             let mut state = store::TransientStore::<_, WriterMainWindowTransientMutation>::new(base);
             let mut publication = state.begin_publish_one_leased(semio_framework_job::OperationId(1), 0, mutation, owners.preparation.as_ref(), owners.state_retirement.clone()).unwrap();
             let zero = store::ArtifactStoreOneItemGrant { maximum_items: 0, maximum_bytes: 4096 };
@@ -36,7 +36,7 @@ fn writer_window_state_partial_construction_preserves_large_utf8_and_cancels() {
                 assert_eq!(publication.progress().completed_bytes, row["copiedBytes"].as_u64().unwrap());
                 expected
             };
-            assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(state.current_root().as_ref())).unwrap(), expected);
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(state.current_root().as_ref())).unwrap(), expected);
             assert_eq!(publication.close_step(zero).unwrap(), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
             for _ in 0..65_536 {
                 match publication.close_step(grant).unwrap() {

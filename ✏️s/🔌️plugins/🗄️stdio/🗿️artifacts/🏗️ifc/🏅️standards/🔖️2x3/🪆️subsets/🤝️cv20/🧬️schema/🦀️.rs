@@ -21,7 +21,8 @@ pub mod derived_construction {
     use crate::standards::v2x3::subsets::base::schema::mutations::{apply_ifc2x3_mutation, upsert_instance, Ifc2x3Mutation};
     use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
     use crate::standards::v2x3::subsets::cv20::schema::check_cv20_conformance;
-    use dsl::{Diagnostic, Severity};
+    use semio_framework_diagnostic::Diagnostic;
+use semio_framework_diagnostic::Severity;
     use semio_framework_plugin::ArtifactBuilder;
     use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
 
@@ -30,10 +31,10 @@ pub mod derived_construction {
         diagnostics.extend(outcome.messages().iter().filter(|message| message.level >= Severity::Error).map(|message| Diagnostic {
             code: message.code.clone(),
             severity: message.level,
-            span: dsl::TextSpan::at(1, 1),
+            span: semio_framework_diagnostic::TextSpan::at(1, 1),
             message: if message.target.is_empty() { message.message.clone() } else { format!("{} at {}", message.message, message.target.join("/")) },
             expected: None,
-            scope: dsl::FaultScope::default(),
+            scope: semio_framework_diagnostic::FaultScope::default(),
         }));
     }
 
@@ -124,7 +125,7 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
 
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(Self::from_snapshot(<Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
 
@@ -166,7 +167,11 @@ pub use derived_construction::*;
 pub mod derived_analysis {
     use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
     use crate::standards::v2x3::subsets::base::schema::{Ifc2x3Analyzer as Ifc2x3AnyAnalyzer, Ifc2x3Parts};
-    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
+    use semio_framework_diagnostic::Diagnostic;
+use semio_framework_diagnostic::FaultCode;
+use semio_framework_diagnostic::FaultScope;
+use semio_framework_diagnostic::Severity;
+use semio_framework_diagnostic::TextSpan;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     /// 🎯️ This subset's dialect coordinate.
@@ -256,17 +261,18 @@ pub mod derived_analysis {
         out
     }
     /// 🛡️ Checks the exact Coordination View rules with bounded borrowed scans.
-    pub fn check_cv20_conformance_controlled(snapshot:&Ifc2x3Snapshot,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,String>{
-        use crate::standards::v2x3::subsets::base::schema::snapshot::sqlite_snapshot::{mvd_header,mvd_instances,mvd_identity_index,mvd_entity,mvd_diagnostic};
-        let(mut out,mut bytes)=(Vec::new(),0usize);let(schema,view)=mvd_header(snapshot,"CoordinationView",control)?;
-        if !schema{let message="FILE_SCHEMA does not declare IFC2X3 -- Coordination View 2.0 is an IFC2x3 MVD";mvd_diagnostic(control,&mut bytes,out.len(),message.len())?;out.push(hard(CODE_FILE_SCHEMA,message.into()));}
-        if !view{let message="FILE_DESCRIPTION's ViewDefinition tuple does not name CoordinationView";mvd_diagnostic(control,&mut bytes,out.len(),message.len())?;out.push(hard(CODE_VIEW_DEFINITION,message.into()));}
-        for ty in FORBIDDEN_STRUCTURAL_TYPES{for inst in mvd_instances(snapshot,ty,control)?{mvd_diagnostic(control,&mut bytes,out.len(),128+ty.len())?;out.push(hard(CODE_STRUCTURAL_ENTITY,format!("instance #{} is {ty} -- CV2.0 is architectural/coordination scope, not structural analysis",inst.id)));}}
+    pub fn check_cv20_conformance_controlled(snapshot:&Ifc2x3Snapshot,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,semio_framework_os_kernel::sqlite_snapshot::ValueError>{
+        use semio_framework_os_kernel::sqlite_snapshot::{ValueError,ValueRefusalKind};
+        use crate::standards::v2x3::subsets::base::schema::snapshot::sqlite_snapshot::{mvd_header,mvd_instances,mvd_identity_index,mvd_entity,MvdDiagnostics};
+        let mut out=MvdDiagnostics::default();let(schema,view)=mvd_header(snapshot,"CoordinationView",control)?;
+        if !schema{let message="FILE_SCHEMA does not declare IFC2X3 -- Coordination View 2.0 is an IFC2x3 MVD";out.emit(CODE_FILE_SCHEMA,Severity::Error,format_args!("{message}"),control)?;}
+        if !view{let message="FILE_DESCRIPTION's ViewDefinition tuple does not name CoordinationView";out.emit(CODE_VIEW_DEFINITION,Severity::Error,format_args!("{message}"),control)?;}
+        for ty in FORBIDDEN_STRUCTURAL_TYPES{for inst in mvd_instances(snapshot,ty,control)?{out.emit(CODE_STRUCTURAL_ENTITY,Severity::Error,format_args!("instance #{} is {ty} -- CV2.0 is architectural/coordination scope, not structural analysis",inst.id),control)?;}}
         let projects=mvd_instances(snapshot,"IFCPROJECT",control)?;
-        if projects.len()!=1{mvd_diagnostic(control,&mut bytes,out.len(),80)?;out.push(soft(CODE_PROJECT_UNITS,format!("expected exactly one IFCPROJECT, found {}",projects.len())));}else if !mvd_entity(projects[0],"IFCPROJECT",control)?.ok_or("missing IFC project arguments")?.get(8).is_some_and(|v|!v.is_unset()){mvd_diagnostic(control,&mut bytes,out.len(),100)?;out.push(soft(CODE_PROJECT_UNITS,format!("IFCPROJECT #{} has no UnitsInContext (IfcUnitAssignment)",projects[0].id)));}
+        if projects.len()!=1{out.emit(CODE_PROJECT_UNITS,Severity::Warning,format_args!("expected exactly one IFCPROJECT, found {}",projects.len()),control)?;}else if !mvd_entity(projects[0],"IFCPROJECT",control)?.ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"missing IFC project arguments"))?.get(8).is_some_and(|v|!v.is_unset()){out.emit(CODE_PROJECT_UNITS,Severity::Warning,format_args!("IFCPROJECT #{} has no UnitsInContext (IfcUnitAssignment)",projects[0].id),control)?;}
         let identities=mvd_identity_index(snapshot,control)?;
-        for ty in GEOMETRY_BEARING_PRODUCT_TYPES{for inst in mvd_instances(snapshot,ty,control)?{let placement=mvd_entity(inst,ty,control)?.ok_or("missing IFC product arguments")?.get(5).and_then(|v|v.as_ref_id()).and_then(|id|identities.get(&id));let placed=match placement{Some(instance)=>mvd_entity(instance,"IFCLOCALPLACEMENT",control)?.is_some(),None=>false};if !placed{mvd_diagnostic(control,&mut bytes,out.len(),128+ty.len())?;out.push(soft(CODE_PRODUCT_PLACEMENT,format!("{ty} instance #{} does not resolve ObjectPlacement to an IFCLOCALPLACEMENT",inst.id)));}}}
-        Ok(out)
+        for ty in GEOMETRY_BEARING_PRODUCT_TYPES{for inst in mvd_instances(snapshot,ty,control)?{let placement=mvd_entity(inst,ty,control)?.ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"missing IFC product arguments"))?.get(5).and_then(|v|v.as_ref_id()).and_then(|id|identities.resolve(id));let placed=match placement{Some(instance)=>mvd_entity(instance,"IFCLOCALPLACEMENT",control)?.is_some(),None=>false};if !placed{out.emit(CODE_PRODUCT_PLACEMENT,Severity::Warning,format_args!("{ty} instance #{} does not resolve ObjectPlacement to an IFCLOCALPLACEMENT",inst.id),control)?;}}}
+        Ok(out.finish())
     }
     //#endregion 🔖️Conformance
 

@@ -40,7 +40,7 @@ fn every_mutation() -> Vec<En1997Mutation> {
 fn round_trip(base: &En1997Snapshot, mutation: &En1997Mutation) -> En1997Snapshot {
     let forward = vcs::apply_mutation(base, mutation).expect("valid mutation").0;
     let mut restored = forward.clone();
-    for back in mutation.inverse(base) {
+    for back in mutation.inverse(base).expect("valid retained mutation inverse fixture") {
         restored = vcs::apply_mutation(&restored, &back).expect("valid inverse mutation").0;
     }
     assert_eq!(&restored, base, "inverse(base) must restore the pre-mutation document");

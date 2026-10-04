@@ -19,15 +19,19 @@ pub const MESH_PACK_FIELD_EDGE_IDS: u16 = 9;
 pub const MESH_PACK_FIELD_EDGE_UVS: u16 = 10;
 pub const MESH_PACK_FIELD_EDGE_IS_SEAM: u16 = 11;
 pub const MESH_PACK_FIELD_PAINT_TEXTURE: u16 = 12;
+pub const MESH_PACK_FIELD_METADATA: u16 = 13;
 
 /// 🎒️ The `RecordSpec` both `pack::encode_record_body` and `pack::decode_record_body_exact` drive
 /// the mesh payload through — container-less, no chunk table, no manifest.
-pub fn mesh_pack_spec() -> crate::os_dsl::schema::RecordSpec {
-    use crate::os_dsl::schema::{FieldSpec, RecordLayout, RecordSpec, Shape};
-    let bytes = |id: u16, key: &str| FieldSpec::new(id, key, Shape::Bytes64).optional();
-    RecordSpec::new(
+pub fn mesh_pack_spec() -> semio_framework_dsl_record::RecordSpec {
+    use semio_framework_dsl_record::FieldSpec;
+use semio_framework_dsl_record::RecordLayout;
+use semio_framework_dsl_record::RecordSpec;
+use semio_framework_dsl_record::Shape;
+    let bytes = |id: u16, key: &str| semio_framework_dsl_record::FieldSpec::new(id, key, semio_framework_dsl_record::Shape::Bytes64).optional();
+    semio_framework_dsl_record::RecordSpec::new(
         Some("mesh"),
-        RecordLayout::Lines,
+        semio_framework_dsl_record::RecordLayout::Lines,
         vec![
             bytes(MESH_PACK_FIELD_POSITIONS, "positions"),
             bytes(MESH_PACK_FIELD_NORMALS, "normals"),
@@ -40,6 +44,7 @@ pub fn mesh_pack_spec() -> crate::os_dsl::schema::RecordSpec {
             bytes(MESH_PACK_FIELD_EDGE_IDS, "edgeIds"),
             bytes(MESH_PACK_FIELD_EDGE_UVS, "edgeUvs"),
             bytes(MESH_PACK_FIELD_EDGE_IS_SEAM, "edgeIsSeam"),
+            bytes(MESH_PACK_FIELD_METADATA, "metadata"),
             FieldSpec::new(MESH_PACK_FIELD_PAINT_TEXTURE, "paintTextureBase64", Shape::Text).optional(),
         ],
     )
@@ -82,11 +87,13 @@ fn u32_from_blob(bytes: &[u8]) -> Result<Vec<u32>, String> {
 /// 🎒️ Encodes `mesh` as one `pack` record body — the compact binary form the preview mesh crosses
 /// the host↔extension boundary in, replacing the JSON number-array string.
 pub fn encode_mesh_pack(mesh: &semio_framework::MeshData) -> Result<Vec<u8>, String> {
-    use crate::os_dsl::schema::{FieldValue, RecordValue};
-    let mut record = RecordValue::default();
+    use semio_framework_dsl_record::FieldValue;
+use semio_framework_dsl_record::RecordValue;
+    if mesh.paint_texture_base64.is_none() {let mut job=MeshPackEncodingJob::new(mesh.clone(),usize::MAX)?;loop {if let Some(bytes)=job.step(4096)? {return Ok(bytes);}}}
+    let mut record = semio_framework_dsl_record::RecordValue::default();
     let mut put = |id: u16, bytes: Vec<u8>| {
         if !bytes.is_empty() {
-            record.fields.insert(id, FieldValue::Bytes64(bytes));
+            record.fields.insert(id, semio_framework_dsl_record::FieldValue::Bytes64(bytes));
         }
     };
     put(MESH_PACK_FIELD_POSITIONS, f32_blob(&mesh.positions));
@@ -101,20 +108,118 @@ pub fn encode_mesh_pack(mesh: &semio_framework::MeshData) -> Result<Vec<u8>, Str
     put(MESH_PACK_FIELD_EDGE_UVS, f32_blob(&mesh.edge_uvs));
     put(MESH_PACK_FIELD_EDGE_IS_SEAM, mesh.edge_is_seam.clone());
     if let Some(texture) = mesh.paint_texture_base64.as_ref() {
-        record.fields.insert(MESH_PACK_FIELD_PAINT_TEXTURE, FieldValue::Text(texture.clone()));
+        record.fields.insert(MESH_PACK_FIELD_PAINT_TEXTURE, semio_framework_dsl_record::FieldValue::Text(texture.clone()));
+    }
+    if !mesh.attributes.is_empty() || !mesh.materials.is_empty() || !mesh.textures.is_empty() || !mesh.component_references.is_empty() {
+        let mut cursor=semio_framework::MeshMetadataCursor::default();let mut text=String::from("{");
+        while !cursor.step(&mesh.attributes,&mesh.materials,&mesh.textures,Some(&mesh.component_references),None,None,&mut text)? {}text.push('}');
+        record.fields.insert(MESH_PACK_FIELD_METADATA,semio_framework_dsl_record::FieldValue::Bytes64(text.into_bytes()));
     }
     crate::os_pack::encode_record_body(&mesh_pack_spec(), &record, &crate::os_pack::EncodeOptions::default()).map_err(|error| error.to_string())
 }
 
+/// ⏳️ Retained numeric preview record encoder using the mesh record field identities.
+pub struct MeshPackEncodingJob {
+    mesh: semio_framework::MeshData,
+    field: u16,
+    cursor: usize,
+    bytes: Option<Vec<u8>>,
+    cancelled: bool,
+    metadata_cursor:semio_framework::MeshMetadataCursor,
+    metadata_text:String,
+    metadata_ready:bool,
+    maximum_bytes:usize,
+}
+
+impl MeshPackEncodingJob {
+    pub fn new(mesh: semio_framework::MeshData, maximum_bytes: usize) -> Result<Self, String> {
+        if mesh.paint_texture_base64.is_some() { return Err("retained numeric mesh preview cannot encode a paint texture".into()); }
+        let mut job = Self { mesh, field: 1, cursor: 0, bytes: Some(Vec::new()), cancelled: false,metadata_cursor:Default::default(),metadata_text:String::from("{"),metadata_ready:false,maximum_bytes };
+        let mut count = 0; let mut size = 2usize;
+        for field in 1..=11 {
+            let len = job.field_len(field);
+            if len > 0 { count += 1; size = size.checked_add(len).and_then(|size| size.checked_add(12)).ok_or("mesh preview capacity overflow")?; }
+        }
+        if !job.mesh.attributes.is_empty() || !job.mesh.materials.is_empty() || !job.mesh.textures.is_empty() || !job.mesh.component_references.is_empty() {count+=1;size=size.checked_add(12).ok_or("mesh preview capacity overflow")?;}
+        if size > maximum_bytes { return Err(format!("mesh preview exceeds {maximum_bytes} bytes")); }
+        job.bytes.as_mut().unwrap().extend_from_slice(&[0, count]);
+        Ok(job)
+    }
+    fn field_len(&self, field: u16) -> usize {
+        match field {
+            1 => self.mesh.positions.len()*4, 2 => self.mesh.normals.len()*4, 3 => self.mesh.indices.len()*4,
+            4 => self.mesh.colors.len()*4, 5 => self.mesh.uvs.len()*4, 6 => self.mesh.face_ids.len()*4,
+            7 => self.mesh.vertex_ids.len()*4, 8 => self.mesh.edge_positions.len()*4, 9 => self.mesh.edge_ids.len()*4,
+            10 => self.mesh.edge_uvs.len()*4, 11 => self.mesh.edge_is_seam.len(), _ => 0,
+        }
+    }
+    pub fn cancel(&mut self) { self.cancelled = true; self.bytes = None; }
+    /// 📏️ One unit emits a field header or at most 1024 little-endian payload bytes.
+    pub fn step(&mut self, budget: usize) -> Result<Option<Vec<u8>>, String> {
+        if self.cancelled { return Err("mesh encoding cancelled".into()); }
+        if self.bytes.is_none() { return Err("mesh encoding job is retired".into()); }
+        for _ in 0..budget {
+            if self.field>11 {
+                if self.mesh.attributes.is_empty() && self.mesh.materials.is_empty() && self.mesh.textures.is_empty() && self.mesh.component_references.is_empty() {return Ok(self.bytes.take());}
+                if !self.metadata_ready {
+                    if self.metadata_cursor.step(&self.mesh.attributes,&self.mesh.materials,&self.mesh.textures,Some(&self.mesh.component_references),None,None,&mut self.metadata_text)? {self.metadata_text.push('}');self.metadata_ready=true;self.cursor=0;}
+                    if self.metadata_text.len()>16_000_000 || self.bytes.as_ref().unwrap().len().saturating_add(self.metadata_text.len()).saturating_add(12)>self.maximum_bytes {return Err(format!("mesh metadata preview exceeds {} bytes",self.maximum_bytes));}
+                    continue;
+                }
+                let out=self.bytes.as_mut().unwrap();let text=self.metadata_text.as_bytes();
+                if self.cursor==0 {crate::os_pack::write_varint_u64(out,MESH_PACK_FIELD_METADATA as u64);out.push(0x08);crate::os_pack::write_varint_u64(out,text.len() as u64);}
+                let end=(self.cursor+1024).min(text.len());out.extend_from_slice(&text[self.cursor..end]);self.cursor=end;
+                if end==text.len() {return Ok(self.bytes.take());}
+                continue;
+            }
+            let len = self.field_len(self.field);
+            if len == 0 { self.field += 1; continue; }
+            let out = self.bytes.as_mut().unwrap();
+            if self.cursor == 0 {
+                crate::os_pack::write_varint_u64(out,self.field as u64); out.push(0x08); crate::os_pack::write_varint_u64(out,len as u64);
+            }
+            let width = if self.field == 11 { 1 } else { 4 };
+            let end = (self.cursor + 1024/width).min(len/width);
+            for index in self.cursor..end {
+                let bytes = match self.field {
+                    1 => self.mesh.positions[index].to_le_bytes(), 2 => self.mesh.normals[index].to_le_bytes(),
+                    3 => self.mesh.indices[index].to_le_bytes(), 4 => self.mesh.colors[index].to_le_bytes(),
+                    5 => self.mesh.uvs[index].to_le_bytes(), 6 => self.mesh.face_ids[index].to_le_bytes(),
+                    7 => self.mesh.vertex_ids[index].to_le_bytes(), 8 => self.mesh.edge_positions[index].to_le_bytes(),
+                    9 => self.mesh.edge_ids[index].to_le_bytes(), 10 => self.mesh.edge_uvs[index].to_le_bytes(),
+                    11 => [self.mesh.edge_is_seam[index],0,0,0], _ => unreachable!(),
+                };
+                out.extend_from_slice(&bytes[..width]);
+            }
+            self.cursor = end;
+            if end*width == len { self.field += 1; self.cursor = 0; }
+        }
+        if budget>0 && self.field>11 && self.mesh.attributes.is_empty() && self.mesh.materials.is_empty() && self.mesh.textures.is_empty() && self.mesh.component_references.is_empty() {Ok(self.bytes.take())}else {Ok(None)}
+    }
+}
+
 /// 🎒️ Decodes an [`encode_mesh_pack`] body back into `MeshData` — the exact inverse, byte-for-byte.
 pub fn decode_mesh_pack(bytes: &[u8]) -> Result<semio_framework::MeshData, String> {
-    use crate::os_dsl::schema::FieldValue;
+    use semio_framework_dsl_record::FieldValue;
     let record = crate::os_pack::decode_record_body_exact(bytes, &mesh_pack_spec(), &crate::os_pack::DecodeOptions::default()).map_err(|error| error.to_string())?;
     let blob = |id: u16| match record.get(id) {
-        Some(FieldValue::Bytes64(bytes)) => bytes.as_slice(),
+        Some(semio_framework_dsl_record::FieldValue::Bytes64(bytes)) => bytes.as_slice(),
         _ => &[][..],
     };
-    Ok(semio_framework::MeshData {
+    let metadata=blob(MESH_PACK_FIELD_METADATA);
+    let (attributes,materials,textures,component_references)=if metadata.is_empty() {(Default::default(),Default::default(),Default::default(),Default::default())}else {
+        use semio_framework_value::FromValue;
+        if metadata.len()>16_000_000 {return Err("mesh metadata exceeds 16 MB".into());}
+        let value=semio_framework_pack_json::parse(core::str::from_utf8(metadata).map_err(|error|error.to_string())?,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error|error.to_string())?;
+        if value.as_object().is_none_or(|object|object.iter().any(|(name,_)|!["attributes","materials","textures","componentReferences"].contains(&name))) {return Err("unknown mesh metadata field".into());}
+        let decode=|name|semio_framework_pack_json::to_dsl_value(&value[name]);
+        (if value["attributes"].is_null() {Default::default()}else {std::collections::BTreeMap::from_value(decode("attributes")).map_err(|error|error.into_message())?},
+         if value["materials"].is_null() {Default::default()}else {std::collections::BTreeMap::from_value(decode("materials")).map_err(|error|error.into_message())?},
+         if value["textures"].is_null() {Default::default()}else {std::collections::BTreeMap::from_value(decode("textures")).map_err(|error|error.into_message())?},
+         if value["componentReferences"].is_null() {Default::default()}else {std::collections::BTreeMap::from_value(decode("componentReferences")).map_err(|error|error.into_message())?})
+    };
+    let mesh=semio_framework::MeshData {
+        attributes,materials,textures,component_references,
         positions: f32_from_blob(blob(MESH_PACK_FIELD_POSITIONS))?,
         normals: f32_from_blob(blob(MESH_PACK_FIELD_NORMALS))?,
         colors: f32_from_blob(blob(MESH_PACK_FIELD_COLORS))?,
@@ -127,10 +232,13 @@ pub fn decode_mesh_pack(bytes: &[u8]) -> Result<semio_framework::MeshData, Strin
         edge_uvs: f32_from_blob(blob(MESH_PACK_FIELD_EDGE_UVS))?,
         edge_is_seam: blob(MESH_PACK_FIELD_EDGE_IS_SEAM).to_vec(),
         paint_texture_base64: match record.get(MESH_PACK_FIELD_PAINT_TEXTURE) {
-            Some(FieldValue::Text(text)) => Some(text.clone()),
+            Some(semio_framework_dsl_record::FieldValue::Text(text)) => Some(text.clone()),
             _ => None,
         },
-    })
+        ..Default::default()
+    };
+    mesh.validate_component_references()?;
+    Ok(mesh)
 }
 
 /// 🧱️ Base64 characters per continuation chunk. One `flowTessellateResolve` dispatch carries at most
@@ -165,8 +273,8 @@ pub const TESSELLATE_STEP_WALL_MICROS: u64 = 6_000;
 /// that declares a wire bound for its `flowTessellateResolve`-shaped response action asserts against
 /// this, so the transfer unit and the bound can never drift apart.
 pub fn tessellate_envelope_maximum_bytes() -> usize {
-    use crate::os_pack::json::{object, Value};
-    crate::os_pack::json::to_string(&object([
+    use semio_framework_pack_json::{object, Value};
+    semio_framework_pack_json::to_string(&object([
         ("done".to_string(), Value::Bool(true)),
         ("cancellable".to_string(), Value::Bool(false)),
         ("phase".to_string(), Value::String("complete".to_string())),
@@ -197,4 +305,8 @@ pub fn decode_base64(text: &str) -> Result<Vec<u8>, EvalError> {
 }
 pub fn encode_base64(data: &[u8]) -> String {
     base64::engine::general_purpose::STANDARD.encode(data)
+}
+
+impl semio_framework_value::retirement::RetireOwned for MeshPackEncodingJob {
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {semio_framework_value::artifact_retirement_sequence![self.mesh,self.bytes,self.metadata_cursor,self.metadata_text]}
 }

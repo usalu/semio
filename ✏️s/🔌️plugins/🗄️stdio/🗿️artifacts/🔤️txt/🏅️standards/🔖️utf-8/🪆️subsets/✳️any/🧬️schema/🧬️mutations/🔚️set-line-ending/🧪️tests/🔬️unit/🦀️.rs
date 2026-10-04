@@ -5,7 +5,7 @@ use protocol::{Mutation, MutationKind, MutationLeaf, OpBinary, OpText};
 #[test]
 fn canonical_leaf_metadata_matches_descriptor_and_provenance() {
     let expected: serde_json::Value = serde_json::from_str(include_str!("../../🔣️.json")).expect("valid canonical set-line-ending descriptor");
-    assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(<SetLineEndingMutation as MutationLeaf>::DESCRIPTOR))).expect("serializable descriptor"), expected);
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(<SetLineEndingMutation as MutationLeaf>::DESCRIPTOR))).expect("serializable descriptor"), expected);
     let provenance = <SetLineEndingMutation as MutationLeaf>::PROVENANCE;
     assert_eq!(provenance.mutation_root, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
     assert_eq!(provenance.owner, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔚️set-line-ending");
@@ -24,7 +24,7 @@ fn semantic_identity_matches_descriptor() {
 fn inverse_and_root_codecs_restore_a_visible_crlf_style() {
     let base = TxtSnapshot { lines: vec!["a".into(), "b".into()], ..Default::default() };
     let mutation = TxtMutation::SetLineEnding(SetLineEndingMutation { value: LineEnding::CrLf });
-    let inverse = <TxtMutation as Mutation<TxtSnapshot>>::inverse(&mutation, &base);
+    let inverse = <TxtMutation as Mutation<TxtSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     let mut after = base.clone();
     assert!(apply_txt_mutation(&mut after, &mutation).messages().is_empty());
     assert_eq!(TxtSnapshot::from_body(&after.to_body()), after);
@@ -42,5 +42,5 @@ fn refuses_an_invisible_crlf_choice_and_unknown_fields() {
     let base = TxtSnapshot { lines: vec!["a".into()], ..Default::default() };
     let mutation = SetLineEndingMutation { value: LineEnding::CrLf };
     assert!(!<SetLineEndingMutation as MutationKind<TxtSnapshot, TxtMutation>>::diff(&mutation, &base).messages().is_empty());
-    assert!(dsl::json::from_json_str::<SetLineEndingMutation>(r#"{"value":"lf","unknown":true}"#).is_err());
+    assert!(semio_framework_pack_json::from_json_str::<SetLineEndingMutation>(r#"{"value":"lf","unknown":true}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
 }

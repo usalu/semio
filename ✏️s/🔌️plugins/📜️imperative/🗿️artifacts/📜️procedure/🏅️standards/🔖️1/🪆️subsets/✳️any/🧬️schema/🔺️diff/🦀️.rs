@@ -10,7 +10,7 @@ use framework_schema::ArtifactSchema;
 /// `📓️wave3-reports/writer-report.md`'s `document: Option<WriterDocumentChild>` precedent; both
 /// slots are never absent, only ever replaced, so a single `Option<…Child>` — not the double-
 /// `Option` an optional slot needs — is the sparse-vs-unchanged signal here).
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[artifact_schema(id = "s.imperative.procedure")]
 pub struct ProcedureDiff {
@@ -27,7 +27,7 @@ pub struct ProcedureDiff {
 
 //#region 🔖️DeltaHelpers
 /// 📋 String-list wrapper so optional list diffs stay scalar across formats.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase", default)]
 pub struct ProcedureStringList {
     pub values: Vec<String>,

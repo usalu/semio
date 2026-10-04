@@ -68,11 +68,11 @@ fn dec_opt_usize(s: &str) -> Result<Option<usize>, String> {
 /// 🧬️ Every structured payload field (manufacturer file header, security limits, catalogue
 /// products, geometry, curves, ...) already derives `ToValue`/`FromValue` — a quoted JSON
 /// string reuses that losslessly instead of a second handcrafted grammar per type.
-fn enc_json<T: dsl::ToValue>(value: &T) -> String {
-    enc_str(&pack::json::to_json_string(value))
+fn enc_json<T: semio_framework_value::ToValue>(value: &T) -> String {
+    enc_str(&semio_framework_pack_json::to_json_string(value))
 }
-fn dec_json<T: dsl::FromValue>(s: &str) -> Result<T, String> {
-    pack::json::from_json_str(&dec_str(s)?).map_err(|e| e.to_string())
+fn dec_json<T: semio_framework_value::FromValue>(s: &str) -> Result<T, String> {
+    semio_framework_pack_json::from_json_str(&dec_str(s)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| e.to_string())
 }
 //#endregion 🔖️ScalarCodec
 
@@ -170,8 +170,8 @@ impl protocol::OpText for Vdi3805Mutation {
     fn print_op(&self) -> String {
         print_vdi3805_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_vdi3805_mutation(line).map_err(|e| store::TextError::new(e, store::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_vdi3805_mutation(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 }
 //#endregion 🔖️OpText
@@ -189,11 +189,11 @@ fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     let bytes = reader.read_bytes(len).map_err(|e| e.to_string())?;
     String::from_utf8(bytes.to_vec()).map_err(|e| e.to_string())
 }
-fn write_json_bin<T: dsl::ToValue>(out: &mut Vec<u8>, value: &T) {
-    write_str_bin(out, &pack::json::to_json_string(value));
+fn write_json_bin<T: semio_framework_value::ToValue>(out: &mut Vec<u8>, value: &T) {
+    write_str_bin(out, &semio_framework_pack_json::to_json_string(value));
 }
-fn read_json_bin<T: dsl::FromValue>(reader: &mut store::ByteReader<'_>) -> Result<T, String> {
-    pack::json::from_json_str(&read_str_bin(reader)?).map_err(|e| e.to_string())
+fn read_json_bin<T: semio_framework_value::FromValue>(reader: &mut store::ByteReader<'_>) -> Result<T, String> {
+    semio_framework_pack_json::from_json_str(&read_str_bin(reader)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| e.to_string())
 }
 fn write_bool_bin(out: &mut Vec<u8>, v: bool) {
     out.push(if v { 1 } else { 0 });

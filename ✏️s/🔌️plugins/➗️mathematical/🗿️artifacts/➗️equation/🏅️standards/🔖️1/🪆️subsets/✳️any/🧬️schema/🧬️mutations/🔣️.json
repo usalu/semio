@@ -163,11 +163,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "MovePoint"
+        "MovePoints"
       ],
       "properties": {
-        "MovePoint": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/geometry/mutation/move-point/schema.json"
+        "MovePoints": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/geometry/mutation/move-points/schema.json"
         }
       }
     },
@@ -204,6 +204,18 @@
       "properties": {
         "SetNodePositions": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/graph/mutation/set-node-positions/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetPointPositions"
+      ],
+      "properties": {
+        "SetPointPositions": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/geometry/mutation/set-point-positions/schema.json"
         }
       }
     }

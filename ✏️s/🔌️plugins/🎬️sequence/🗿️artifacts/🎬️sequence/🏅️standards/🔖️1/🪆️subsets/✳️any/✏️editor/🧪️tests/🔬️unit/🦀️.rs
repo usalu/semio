@@ -38,7 +38,7 @@ pub(crate) mod context {
 
     pub async fn register_content_child(app: &mut SequenceApp) {
         let snapshot = app.snapshot().expect("Sequence parent snapshot");
-        let materialized = neural_engine::ColdOwner::new(default_snapshot());
+        let materialized = neural_engine::ColdOwner::new(crate::default_snapshot());
         let fixture = materialized.to_host_snapshot();
         let content = crate::sequence_content_snapshot_from_working(&fixture.steps, &fixture.edges);
         neural_engine::ColdRetire::retire_cold(fixture);
@@ -77,6 +77,8 @@ pub(crate) mod context {
     }
 
     semio_framework_plugin::history_edit_acceptance_law!("sequence", SequencePlayApp, sequence_manifest_for_tests, "../..");
+    semio_framework_plugin::composed_reload_law!("sequence", SequencePlayApp, sequence_manifest_for_tests, "../..");
+    semio_framework_plugin::composed_child_history_law!("sequence", SequencePlayApp, sequence_manifest_for_tests, [("nodeGraphEdit", r#"{"operations":[{"operation":"move","gestureId":"node-drag:1","nodeIds":["step-1"],"dx":25.0,"dy":5.0}]}"#)]);
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
     /// 🪪️ MOUNTED: a registered app refuses every typed command whose `ActionMeta.instance_id` is not
@@ -187,6 +189,7 @@ pub(crate) mod context {
 }
 
 use super::*;
+use crate::default_snapshot;
 use crate::editor::sequence::unit_tests::context::{live_host_snapshot, new_app, new_app_with_registry_wired};
 use semio_framework_ui_locale::Locale;
 use semio_framework_plugin::PluginApp;
@@ -194,7 +197,7 @@ use semio_framework_ui_locale::Terminology;
 
 #[semio_framework_async_macros::async_test]
 async fn default_snapshot_has_steps() {
-    let fixture = neural_engine::ColdOwner::new(default_snapshot());
+    let fixture = neural_engine::ColdOwner::new(crate::default_snapshot());
     assert_eq!(fixture.to_host_snapshot().steps.len(), 2);
 }
 
@@ -303,7 +306,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
 #[semio_framework_async_macros::async_test]
 async fn context_menu_stays_within_nine_rows_and_ends_with_destructive_delete() {
     let registry = AppActionRegistry::from_definition(&create_sequence_app());
-    let items = sequence_context_menu_items(&registry, false, None, &["step-1".to_string()]);
+    let items = sequence_context_menu_items(&registry, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), None, &["step-1".to_string()]);
     assert!(items.len() <= 9, "expected <= 9 top-level rows, got {} ({items:?})", items.len());
     let last = items.last().expect("at least one row");
     assert_eq!(last.id, "delete-selection");
@@ -347,6 +350,25 @@ async fn import_media_steps_in_wraps_a_bare_scalar_payload() {
     let after = live_host_snapshot(&app).await;
     let imported = after.steps.last().expect("imported step");
     assert_eq!(imported.params.get("value").and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()), Some(42.0));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn import_media_steps_in_consumes_original_intrinsic_unicode_and_signed_scalar(){
+    use semio_framework_value::{DslValue,Number};
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧫️fixtures/🧵️continuation/🔣️.json")).unwrap();
+    let text=fixture["textUnit"].as_str().unwrap().repeat(fixture["projection"]["textRepeats"].as_u64().unwrap()as usize);
+    assert_eq!(serde_json::from_str::<String>(&serde_json::to_string(&text).unwrap()).unwrap(),text);
+    let mut app=new_app_with_registry_wired().await;
+    let before=live_host_snapshot(&app).await.steps.len();
+    for value in [DslValue::Object(vec![("message".into(),DslValue::String(text.clone()))]),DslValue::Number(Number::Int(42))]{
+        let media=Media{media_type:semio_framework_plugin::MediaType{class:semio_framework_plugin::MediaClass::Computation,form:semio_framework_plugin::MediaForm::Any},payload:MediaPayload::Intrinsic{schema:"computation.value".into(),value}};
+        app.import_media("steps:in",media,&semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("intrinsic steps import");
+    }
+    let after=live_host_snapshot(&app).await;
+    assert_eq!(after.steps.len(),before+2);
+    assert_eq!(after.steps[before].params.get("message").and_then(|value|value.as_atom()).and_then(|atom|atom.as_str()),Some(text.as_str()));
+    assert_eq!(after.steps[before+1].params.get("value").and_then(|value|value.as_atom()).and_then(|atom|atom.as_f64()),Some(42.));
+    eprintln!("[DEBUG] Sequence admitted intrinsic original Unicode object and signed scalar pass through the registered import owner");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -523,7 +545,7 @@ async fn replace_snapshot_preserves_next_serial_and_selection() {
     let first = host.add_step("math.add", 40.0, 40.0);
     host.dag.set_selection(std::slice::from_ref(&first));
     let json = host.to_json().expect("fixture json");
-    let round_trip: SequenceHostSnapshot = dsl::os_pack::from_json_str(&json).expect("parse");
+    let round_trip: SequenceHostSnapshot = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("parse");
     host.replace_snapshot(round_trip).expect("replace");
     let second = host.add_step("math.add", 80.0, 80.0);
     assert_ne!(first, second);
@@ -537,7 +559,7 @@ async fn repeated_drops_after_replace_snapshot_use_distinct_ids() {
     let mut host = neural_engine::ColdOwner::new(SequenceHost::default());
     let first = host.add_step_dropped("math.add", 10.0, 10.0, None);
     let json = host.to_json().expect("fixture json");
-    let round_trip: SequenceHostSnapshot = dsl::os_pack::from_json_str(&json).expect("parse");
+    let round_trip: SequenceHostSnapshot = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("parse");
     host.replace_snapshot(round_trip).expect("replace");
     let second = host.add_step_dropped("math.add", 20.0, 20.0, None);
     assert_ne!(first, second);
@@ -812,11 +834,4 @@ async fn sequence_io_declares_the_steps_in_port() {
     assert!(!port.required);
 }
 
-#[semio_framework_async_macros::async_test]
-async fn next_available_step_id_is_free_and_deterministic() {
-    let fixture = neural_engine::ColdOwner::new(default_snapshot());
-    let id = next_available_step_id(&fixture);
-    assert!(!fixture.to_host_snapshot().steps.iter().any(|step| step.id == id));
-    assert_eq!(id, next_available_step_id(&fixture), "pure function of the fixture, not a mutating counter");
-}
 //#endregion 🔖️HostTests

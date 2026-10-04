@@ -17,8 +17,8 @@ mod tests {
         opc.add_relationship("", "rId1", rel_type, "word/document.xml");
         DocxSnapshot::from_parts(
             opc,
-            vec![DocxXmlPart { path: "word/document.xml".into(), content_type: content_type.into(), document: semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text(std::str::from_utf8(&doc_bytes).unwrap()).unwrap() }],
-        )
+            vec![DocxXmlPart { path: "word/document.xml".into(), content_type: content_type.into(), document: semio_s_artifact_stdio_xml::schema::snapshot::retained::RetainedXmlDocument::try_from_document(&semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text(std::str::from_utf8(&doc_bytes).unwrap()).unwrap()).unwrap() }],
+        ).expect("bounded test OPC converts to retained ownership")
     }
 
     #[semio_framework_async_macros::async_test]
@@ -42,11 +42,11 @@ mod tests {
         let rel_type = format!("{STRICT_REL_BASE}/officeDocument");
         let mut snapshot = snapshot_with_main_part(&rel_type, strict_document_bytes());
         snapshot.opc.content_types.set_override("word/styles.xml", "application/xml");
-        snapshot.xml_parts.push(DocxXmlPart {
+        snapshot.xml_parts.try_push(DocxXmlPart {
             path: "word/styles.xml".into(),
             content_type: "application/xml".into(),
-            document: semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text(&format!(r#"<w:styles xmlns:w="{TRANSITIONAL_MAIN_NS}"/>"#)).unwrap(),
-        });
+            document: semio_s_artifact_stdio_xml::schema::snapshot::retained::RetainedXmlDocument::try_from_document(&semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text(&format!(r#"<w:styles xmlns:w="{TRANSITIONAL_MAIN_NS}"/>"#)).unwrap()).unwrap(),
+        }).unwrap();
         let diagnostics = check_strict_conformance(&snapshot);
         assert!(diagnostics.iter().any(|d| d.code.0 == CODE_TRANSITIONAL_NS_PRESENT && d.severity == Severity::Error), "got {diagnostics:?}");
     }
@@ -56,11 +56,11 @@ mod tests {
         let rel_type = format!("{STRICT_REL_BASE}/officeDocument");
         let mut snapshot = snapshot_with_main_part(&rel_type, strict_document_bytes());
         snapshot.opc.content_types.set_override("word/header1.xml", "application/xml");
-        snapshot.xml_parts.push(DocxXmlPart {
+        snapshot.xml_parts.try_push(DocxXmlPart {
             path: "word/header1.xml".into(),
             content_type: "application/xml".into(),
-            document: semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text(&format!(r#"<w:hdr xmlns:v="{VML_NS}"/>"#)).unwrap(),
-        });
+            document: semio_s_artifact_stdio_xml::schema::snapshot::retained::RetainedXmlDocument::try_from_document(&semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text(&format!(r#"<w:hdr xmlns:v="{VML_NS}"/>"#)).unwrap()).unwrap(),
+        }).unwrap();
         let diagnostics = check_strict_conformance(&snapshot);
         assert!(diagnostics.iter().any(|d| d.code.0 == CODE_VML_PRESENT && d.severity == Severity::Error), "got {diagnostics:?}");
     }
@@ -86,7 +86,7 @@ mod tests {
         let rel_type = format!("{STRICT_REL_BASE}/officeDocument");
         let mut snapshot = snapshot_with_main_part(&rel_type, strict_document_bytes());
         snapshot.opc.content_types.set_override("word/document2.xml", "application/xml");
-        snapshot.xml_parts.push(DocxXmlPart { path: "word/document2.xml".into(), content_type: "application/xml".into(), document: semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text("<mc:AlternateContent/>").unwrap() });
+        snapshot.xml_parts.try_push(DocxXmlPart { path: "word/document2.xml".into(), content_type: "application/xml".into(), document: semio_s_artifact_stdio_xml::schema::snapshot::retained::RetainedXmlDocument::try_from_document(&semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text("<mc:AlternateContent/>").unwrap()).unwrap() }).unwrap();
         let diagnostics = check_strict_conformance(&snapshot);
         assert!(diagnostics.iter().any(|d| d.code.0 == CODE_ALTERNATE_CONTENT && d.severity == Severity::Warning), "got {diagnostics:?}");
     }
@@ -95,7 +95,7 @@ mod tests {
     async fn missing_officedocument_relationship_is_hard() {
         let mut opc = OpcPackage::empty();
         opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
-        let snapshot = DocxSnapshot::from_parts(opc, Default::default());
+        let snapshot = DocxSnapshot::from_parts(opc, Default::default()).expect("bounded test OPC converts to retained ownership");
         let diagnostics = check_strict_conformance(&snapshot);
         assert!(diagnostics.iter().any(|d| d.code.0 == CODE_MAIN_NS_MISSING && d.severity == Severity::Error), "got {diagnostics:?}");
     }

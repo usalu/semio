@@ -221,7 +221,7 @@ async fn operation_diff_apply_matches_backwards_inverse() {
     let op = CounterMutation::AddCounter(AddCounter { delta: 5 });
     let forward = op.diff(&base).diff().apply(&base).expect("valid forward diff");
     assert_eq!(forward, 15);
-    let [undo] = <[CounterMutation; 1]>::try_from(op.inverse(&base)).unwrap();
+    let [undo] = <[CounterMutation; 1]>::try_from(op.inverse(&base).expect("valid retained mutation inverse fixture")).unwrap();
     assert_eq!(undo.diff(&forward).diff().apply(&forward), Ok(base));
 }
 
@@ -297,9 +297,12 @@ impl crate::os_spr::Mutation<i64> for ColdCounterMutation {
         crate::os_spr::Mutation::<i64>::diff(&self.inner, base)
     }
 
-    fn inverse(&self, base: &i64) -> Vec<Self> {
-        crate::os_spr::Mutation::<i64>::inverse(&self.inner, base).into_iter().map(Self::wrap).collect()
-    }
+    fn inverse(&self, base: &i64) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+    Ok({
+        crate::os_spr::Mutation::<i64>::inverse(&self.inner, base)?.into_iter().map(Self::wrap).collect()
+    
+    })
+}
 
     fn retire_cold(mut self) {
         self.live = false;
@@ -317,7 +320,7 @@ impl crate::os_spr::Mutation<i64> for ColdCounterMutation {
 async fn mutation_inverse_law_retires_every_operation_it_mints() {
     COLD_COUNTER_RETIREMENTS.with(|count| count.set(0));
     let operation = ColdCounterMutation::add(5);
-    let minted = crate::os_spr::Mutation::<i64>::inverse(&operation, &10i64);
+    let minted = crate::os_spr::Mutation::<i64>::inverse(&operation, &10i64).expect("valid retained mutation inverse fixture");
     let minted_count = minted.len();
     assert!(minted_count > 0, "the fixture operation must mint at least one inverse for this law to mean anything");
     for undo in minted {
@@ -362,7 +365,7 @@ async fn op_text_round_trip_panics_on_a_lossy_impl() {
         fn print_op(&self) -> String {
             "lossy".to_string()
         }
-        fn parse_op(_line: &str) -> Result<Self, crate::os_dsl::TextError> {
+        fn parse_op(_line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(LossyOp { delta: 0 })
         }
     }
@@ -428,12 +431,12 @@ async fn outcome_deterministic_panics_on_a_nondeterministic_impl() {
 //#endregion 🔖️Outcome
 
 //#region 🔖️Policy
-async fn message_at_level(level: crate::os_dsl::Severity) -> crate::os_spr::MutationMessage {
+async fn message_at_level(level: semio_framework_diagnostic::Severity) -> crate::os_spr::MutationMessage {
     match level {
-        crate::os_dsl::Severity::Info => crate::os_spr::MutationMessage::info("mutation.cascade", "probe"),
-        crate::os_dsl::Severity::Warning => crate::os_spr::MutationMessage::warn("mutation.no-op", "probe"),
-        crate::os_dsl::Severity::Error => crate::os_spr::MutationMessage::error("mutation.target-missing", "probe"),
-        crate::os_dsl::Severity::Fatal => crate::os_spr::MutationMessage::fatal("mutation.invariant", "probe"),
+        semio_framework_diagnostic::Severity::Info => crate::os_spr::MutationMessage::info("mutation.cascade", "probe"),
+        semio_framework_diagnostic::Severity::Warning => crate::os_spr::MutationMessage::warning("mutation.no-op", "probe"),
+        semio_framework_diagnostic::Severity::Error => crate::os_spr::MutationMessage::error("mutation.target-missing", "probe"),
+        semio_framework_diagnostic::Severity::Fatal => crate::os_spr::MutationMessage::fatal("mutation.invariant", "probe"),
     }
 }
 
@@ -484,7 +487,7 @@ async fn modify_vs_delete_holds_for_normal_quarantine() {
     let pre = Some("part".to_string());
     let post = pre.clone();
     let conflict = sample_conflict("c1", crate::os_spr::ConflictKind::Quarantined { envelopes: Vec::new() }).await;
-    let report = crate::os_spr::MergeReport { policy: crate::os_spr::MergePolicy::Normal, accepted: false, insertion_index: 0, replayed: Vec::new(), worst: Some(crate::os_dsl::Severity::Error), conflict: Some(conflict.id.clone()) };
+    let report = crate::os_spr::MergeReport { policy: crate::os_spr::MergePolicy::Normal, accepted: false, insertion_index: 0, replayed: Vec::new(), worst: Some(semio_framework_diagnostic::Severity::Error), conflict: Some(conflict.id.clone()) };
     assert_modify_vs_delete(crate::os_spr::MergePolicy::Normal, &pre, &post, &report, std::slice::from_ref(&conflict), |state| state.is_some()).await;
 }
 
@@ -507,7 +510,7 @@ async fn modify_vs_delete_holds_for_laissez_faire_apply() {
         accepted: true,
         insertion_index: 0,
         replayed: vec![crate::os_spr::EditMessages { edit_id: "e1".to_string(), messages: vec![crate::os_spr::MutationMessage::error("mutation.target-missing", "part gone")] }],
-        worst: Some(crate::os_dsl::Severity::Error),
+        worst: Some(semio_framework_diagnostic::Severity::Error),
         conflict: Some(conflict.id.clone()),
     };
     assert_modify_vs_delete(crate::os_spr::MergePolicy::LaissezFaire, &pre, &post, &report, std::slice::from_ref(&conflict), |state| state.is_some()).await;
@@ -524,7 +527,7 @@ async fn modify_vs_delete_panics_when_laissez_faire_part_still_present() {
         accepted: true,
         insertion_index: 0,
         replayed: vec![crate::os_spr::EditMessages { edit_id: "e1".to_string(), messages: vec![crate::os_spr::MutationMessage::error("mutation.target-missing", "part gone")] }],
-        worst: Some(crate::os_dsl::Severity::Error),
+        worst: Some(semio_framework_diagnostic::Severity::Error),
         conflict: Some(conflict.id.clone()),
     };
     assert_modify_vs_delete(crate::os_spr::MergePolicy::LaissezFaire, &pre, &post, &report, std::slice::from_ref(&conflict), |state| state.is_some()).await;
@@ -638,7 +641,7 @@ async fn frame_corpus_round_trip_panics_for_a_lossy_codec() {
 async fn fuzz_truncation_never_panics_history_reader_open() {
     let log = HistoryLogGen::new(23).await.generate(&typical_profile().await).await;
     let bytes = write_history_log(&log, true).await;
-    let report = fuzz_truncation(&bytes, CorruptionLevel::Quick, |candidate| crate::os_io::resolve_ready(open_and_log(candidate, &crate::os_spr::DecodeOptions::default())).map(|_| ()).map_err(|error| error.to_string()));
+    let report = fuzz_truncation(&bytes, CorruptionLevel::Quick, |candidate| ::semio_framework_async::poll::resolve_ready(open_and_log(candidate, &crate::os_spr::DecodeOptions::default())).map(|_| ()).map_err(|error| error.to_string()));
     assert!(report.cases_panicked.is_empty(), "HistoryReader::open must never panic on a truncated buffer: {:?}", report.cases_panicked);
 }
 
@@ -646,7 +649,7 @@ async fn fuzz_truncation_never_panics_history_reader_open() {
 async fn fuzz_bit_flips_never_panics_history_reader_open() {
     let log = HistoryLogGen::new(24).await.generate(&typical_profile().await).await;
     let bytes = write_history_log(&log, true).await;
-    let report = fuzz_bit_flips(&bytes, CorruptionLevel::Quick, |candidate| crate::os_io::resolve_ready(open_and_log(candidate, &crate::os_spr::DecodeOptions::default())).map(|_| ()).map_err(|error| error.to_string()));
+    let report = fuzz_bit_flips(&bytes, CorruptionLevel::Quick, |candidate| ::semio_framework_async::poll::resolve_ready(open_and_log(candidate, &crate::os_spr::DecodeOptions::default())).map(|_| ()).map_err(|error| error.to_string()));
     assert!(report.cases_panicked.is_empty(), "HistoryReader::open must never panic on a bit-flipped buffer: {:?}", report.cases_panicked);
 }
 
@@ -655,7 +658,7 @@ async fn fuzz_truncation_never_panics_recover() {
     let log = HistoryLogGen::new(25).await.generate(&typical_profile().await).await;
     let bytes = write_history_log(&log, true).await;
     let limits = crate::os_spr::ProtocolLimits::default();
-    let report = fuzz_truncation(&bytes, CorruptionLevel::Quick, |candidate| crate::os_io::resolve_ready(crate::os_spr::format::recover(&candidate, &limits, crate::os_spr::RecoveryMode::LastCommit)).map(|_| ()).map_err(|error| error.to_string()));
+    let report = fuzz_truncation(&bytes, CorruptionLevel::Quick, |candidate| ::semio_framework_async::poll::resolve_ready(crate::os_spr::format::recover(&candidate, &limits, crate::os_spr::RecoveryMode::LastCommit)).map(|_| ()).map_err(|error| error.to_string()));
     assert!(report.cases_panicked.is_empty(), "crate::os_spr::format::recover must never panic on a truncated buffer: {:?}", report.cases_panicked);
 }
 //#endregion 🔖️Corrupt

@@ -26,7 +26,6 @@ fn video_container_provider_callbacks_v1() {
     assert_eq!(CALLS.load(Ordering::SeqCst), 1);
     assert_eq!(probe_with_providers_v1(&[VideoContainerProviderV1 { probe: refuse, ..selected }], b"future"), Err(VideoError::Container("owned callback failure".into())));
     assert_eq!(probe_with_providers_v1(&[VideoContainerProviderV1 { id: "other", ..selected }], b"future"), Err(VideoError::InvalidProbe));
-    eprintln!("[DEBUG] actual future provider callbacks={}, missing/ambiguous/invalid paths invoked none", CALLS.load(Ordering::SeqCst));
 }
 
 /// 📼️Refuses AVI bytes when its source capability is not linked.
@@ -144,7 +143,6 @@ fn write_mp4_mjpeg_probe_round_trip_reports_exact_frames() {
     let frames: Vec<Vec<u8>> = (0..5).map(|i| remodeling_image::encode_jpeg(&synth_rgba(16, 16, 100 + i), 90)).collect();
     let mp4 = container_providers::mp4::write_mjpeg(&frames, 10.0);
     let info = container_providers::mp4::probe(&mp4).expect("probes");
-    eprintln!("[DEBUG] actual MP4 provider: {}x{}, {} frames, {}ms", info.width, info.height, info.frame_count, info.duration_ms);
     assert_eq!(info.frame_count, 5);
     assert_eq!(info.codec, VideoCodec::Mjpeg);
     assert_eq!(info.width, 16);
@@ -188,7 +186,6 @@ fn write_avi_mjpg_probe_round_trip_reports_exact_frames() {
     let frames: Vec<Vec<u8>> = (0..4).map(|i| remodeling_image::encode_jpeg(&synth_rgba(8, 8, 300 + i), 85)).collect();
     let avi = container_providers::avi::write_mjpeg(&frames, 8.0);
     let info = container_providers::avi::probe(&avi).expect("probes");
-    eprintln!("[DEBUG] actual AVI provider: {}x{}, {} frames, {}fps", info.width, info.height, info.frame_count, info.fps);
     assert_eq!(info.frame_count, 4);
     assert_eq!(info.codec, VideoCodec::Mjpeg);
     assert_eq!(info.width, 8);

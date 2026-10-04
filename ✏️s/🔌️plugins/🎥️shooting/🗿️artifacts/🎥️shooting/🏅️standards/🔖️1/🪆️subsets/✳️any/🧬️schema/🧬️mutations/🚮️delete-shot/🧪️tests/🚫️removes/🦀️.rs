@@ -16,10 +16,10 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚮️delete-shot/🚫️removes/🎯️outcome/🔣️.json");
 
 fn before() -> ShootingSnapshot {
-    dsl::os_pack::from_json_str(BEFORE).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> ShootingSnapshot {
-    dsl::os_pack::from_json_str(AFTER).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> ShootingMutation {
     serde_json::from_str(MUTATION).expect("mutation decodes")
@@ -45,7 +45,7 @@ async fn removes_the_shot_without_touching_the_saved_cameras() {
 async fn inverse_recreates_the_deleted_shot() {
     let base = before();
     let forward = mutation();
-    let inverse = forward.inverse(&base);
+    let inverse = forward.inverse(&base).expect("valid retained mutation inverse fixture");
     let mut snapshot = apply(&base, &forward);
     for step in &inverse {
         snapshot = apply(&snapshot, step);
@@ -57,8 +57,8 @@ async fn inverse_recreates_the_deleted_shot() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: ShootingSnapshot = dsl::os_pack::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: ShootingSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "delete-shot/removes-trailing-shot-close: committed {label} JSON is not canonical");
     }
@@ -76,7 +76,7 @@ async fn declared_outcome_holds_and_second_delete_is_target_missing() {
     assert!(mutation().diff(&before()).messages().is_empty(), "delete-shot/removes-trailing-shot-close: deleting a present shot must raise no diagnostic");
 
     let second = mutation().diff(&expected_after());
-    assert_eq!(second.worst_level(), Some(protocol::Severity::Error), "delete-shot/removes-trailing-shot-close: deleting an absent shot is an Error");
+    assert_eq!(second.worst_level(), Some(semio_framework_diagnostic::Severity::Error), "delete-shot/removes-trailing-shot-close: deleting an absent shot is an Error");
     assert_eq!(second.messages()[0].code.0, "mutation.target-missing", "delete-shot/removes-trailing-shot-close: the absence guard's frozen code");
     assert_eq!(second.messages()[0].target, vec!["shot-close".to_string()], "delete-shot/removes-trailing-shot-close: the missing target is named");
     let unchanged = second.into_parts().0.apply(&expected_after()).expect("an Error outcome carries the default diff");
@@ -88,7 +88,7 @@ async fn declared_outcome_holds_and_second_delete_is_target_missing() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = mutation().diff(&before());
-    let produced = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "delete-shot/removes-trailing-shot-close: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert_eq!(committed["shots"]["removed"][0], "shot-close", "delete-shot/removes-trailing-shot-close: a delete is an id, never a record");
@@ -99,8 +99,8 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to `ShootingDiff` — the committed delete-shot delta round-trips through `ShootingDiff` unchanged.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: ShootingDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("diff re-encodes");
+    let decoded: ShootingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "delete-shot/removes-trailing-shot-close: committed diff JSON is not canonical");
 }
@@ -108,7 +108,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 Applying the committed diff straight to `before` yields `after` — the lone removed id is enough to rebuild the after-snapshot.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: ShootingDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: ShootingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let produced = decoded.apply(&before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-shot/removes-trailing-shot-close: committed diff did not carry before to after");
 }

@@ -6,7 +6,7 @@
 /// tail (`cbSize` bytes) verbatim when present — `None` for the plain 16-byte PCM form. NO type
 /// sharing with `avi` (both are RIFF-based but deliberately distinct vocabularies per the master
 /// plan).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct WavFmt {
     pub audio_format: u16,
@@ -29,12 +29,16 @@ impl Default for WavFmt {
 /// `(audio_format, bits_per_sample)` — `Raw` is the honest fallback for anything this codec
 /// doesn't interpret sample-by-sample (24-bit PCM, ADPCM, WAVE_FORMAT_EXTENSIBLE payloads, …).
 /// 🔢️ JSON float samples retain their complete unsigned IEEE 754 words.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub enum WavData {
     Pcm16(Vec<i16>),
     Pcm8(Vec<u8>),
     Float32(Vec<f32>),
     Raw(Vec<u8>),
+}
+
+impl PartialEq for WavData{
+    fn eq(&self,other:&Self)->bool{match(self,other){(Self::Pcm16(a),Self::Pcm16(b))=>a==b,(Self::Pcm8(a),Self::Pcm8(b))|(Self::Raw(a),Self::Raw(b))=>a==b,(Self::Float32(a),Self::Float32(b))=>a.len()==b.len()&&a.iter().zip(b).all(|(a,b)|a.to_bits()==b.to_bits()),_=>false}}
 }
 
 impl Default for WavData {
@@ -43,152 +47,154 @@ impl Default for WavData {
     }
 }
 
-fn wav_tagged_fields(value: dsl::DslValue) -> Result<(String, Option<dsl::DslValue>), dsl::ValueError> {
-    let dsl::DslValue::Object(mut fields) = value else { return Err(dsl::ValueError::new("WAV variant requires an object")); };
-    let index = fields.iter().position(|(key, _)| key == "kind").ok_or_else(|| dsl::ValueError::new("WAV variant requires kind"))?;
-    let dsl::DslValue::String(kind) = fields.remove(index).1 else { return Err(dsl::ValueError::new("WAV variant kind requires a string")); };
+fn wav_tagged_fields(value: semio_framework_value::DslValue) -> Result<(String, Option<semio_framework_value::DslValue>), semio_framework_value::ValueError> {
+    let semio_framework_value::DslValue::Object(mut fields) = value else { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "WAV variant requires an object")); };
+    let index = fields.iter().position(|(key, _)| key == "kind").ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "WAV variant requires kind"))?;
+    let semio_framework_value::DslValue::String(kind) = fields.remove(index).1 else { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "WAV variant kind requires a string")); };
     let payload = match fields.len() {
         0 => None,
         1 if fields[0].0 == "value" => Some(fields.remove(0).1),
-        _ => return Err(dsl::ValueError::new("WAV variant has duplicate or unknown fields")),
+        _ => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "WAV variant has duplicate or unknown fields")),
     };
     Ok((kind, payload))
 }
 
-impl dsl::ToValue for WavData {
-    fn to_value(&self) -> dsl::DslValue {
+impl semio_framework_value::ToValue for WavData {
+    fn to_value(&self) -> semio_framework_value::DslValue {
         let (kind, value) = match self {
-            Self::Pcm16(samples) => ("pcm16", dsl::ToValue::to_value(samples)),
-            Self::Pcm8(samples) => ("pcm8", dsl::ToValue::to_value(samples)),
-            Self::Raw(samples) => ("raw", dsl::ToValue::to_value(samples)),
-            Self::Float32(samples) => ("float32", dsl::DslValue::Array(samples.iter().map(|sample| dsl::DslValue::Object(vec![("bits".into(), dsl::ToValue::to_value(&sample.to_bits()))])).collect())),
+            Self::Pcm16(samples) => ("pcm16", semio_framework_value::ToValue::to_value(samples)),
+            Self::Pcm8(samples) => ("pcm8", semio_framework_value::ToValue::to_value(samples)),
+            Self::Raw(samples) => ("raw", semio_framework_value::ToValue::to_value(samples)),
+            Self::Float32(samples) => ("float32", semio_framework_value::DslValue::Array(samples.iter().map(|sample| semio_framework_value::DslValue::Object(vec![("bits".into(), semio_framework_value::ToValue::to_value(&sample.to_bits()))])).collect())),
         };
-        dsl::DslValue::Object(vec![("kind".into(), dsl::DslValue::String(kind.into())), ("value".into(), value)])
+        semio_framework_value::DslValue::Object(vec![("kind".into(), semio_framework_value::DslValue::String(kind.into())), ("value".into(), value)])
     }
 }
 
-impl dsl::FromValue for WavData {
-    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+impl semio_framework_value::FromValue for WavData {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         let (kind, value) = wav_tagged_fields(value)?;
-        let value = value.ok_or_else(|| dsl::ValueError::new("WAV samples require value"))?;
+        let value = value.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "WAV samples require value"))?;
         match kind.as_str() {
-            "pcm16" => Ok(Self::Pcm16(dsl::FromValue::from_value(value)?)),
-            "pcm8" => Ok(Self::Pcm8(dsl::FromValue::from_value(value)?)),
-            "raw" => Ok(Self::Raw(dsl::FromValue::from_value(value)?)),
+            "pcm16" => Ok(Self::Pcm16(semio_framework_value::FromValue::from_value(value)?)),
+            "pcm8" => Ok(Self::Pcm8(semio_framework_value::FromValue::from_value(value)?)),
+            "raw" => Ok(Self::Raw(semio_framework_value::FromValue::from_value(value)?)),
             "float32" => {
-                let dsl::DslValue::Array(samples) = value else { return Err(dsl::ValueError::new("WAV float samples require an array")); };
+                let semio_framework_value::DslValue::Array(samples) = value else { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "WAV float samples require an array")); };
                 Ok(Self::Float32(samples.into_iter().map(|sample| {
-                    let dsl::DslValue::Object(mut fields) = sample else { return Err(dsl::ValueError::new("WAV float sample requires its unsigned word")); };
-                    if fields.len() != 1 || fields[0].0 != "bits" { return Err(dsl::ValueError::new("WAV float sample requires exactly bits")); }
-                    let bits: u32 = dsl::FromValue::from_value(fields.remove(0).1)?;
+                    let semio_framework_value::DslValue::Object(mut fields) = sample else { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "WAV float sample requires its unsigned word")); };
+                    if fields.len() != 1 || fields[0].0 != "bits" { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "WAV float sample requires exactly bits")); }
+                    let bits: u32 = semio_framework_value::FromValue::from_value(fields.remove(0).1)?;
                     Ok(f32::from_bits(bits))
-                }).collect::<Result<Vec<_>, dsl::ValueError>>()?))
+                }).collect::<Result<Vec<_>, semio_framework_value::ValueError>>()?))
             }
-            _ => Err(dsl::ValueError::new("WAV samples have an unknown kind")),
+            _ => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "WAV samples have an unknown kind")),
         }
     }
-    fn edit_value_at_path(&mut self, path: &[&str], edit: dsl::ValueEdit) -> Result<(), dsl::ValueError> {
-        dsl::edit_through_value(self, path, edit)
+    fn edit_value_at_path(&mut self, path: &[&str], edit: semio_framework_value::ValueEdit) -> Result<(), semio_framework_value::ValueError> {
+        semio_framework_value::edit_through_value(self, path, edit)
     }
 }
 
-fn wav_data_spec() -> dsl::RecordSpec {
-    dsl::RecordSpec::new(
+fn wav_data_spec() -> semio_framework_dsl_record::RecordSpec {
+    semio_framework_dsl_record::RecordSpec::new(
         None,
-        dsl::RecordLayout::Inline,
+        semio_framework_dsl_record::RecordLayout::Inline,
         vec![
-            dsl::FieldSpec::new(1, "kind", dsl::Shape::Enum(vec![("pcm16".into(), 0), ("pcm8".into(), 1), ("float32".into(), 2), ("raw".into(), 3)])),
-            dsl::FieldSpec::new(2, "pcm16", <Vec<i16> as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(3, "pcm8", <Vec<u8> as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(4, "float32", <Vec<f32> as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(5, "raw", <Vec<u8> as dsl::DslField>::shape()).optional(),
+            semio_framework_dsl_record::FieldSpec::new(1, "kind", semio_framework_dsl_record::Shape::Enum(vec![("pcm16".into(), 0), ("pcm8".into(), 1), ("float32".into(), 2), ("raw".into(), 3)])),
+            semio_framework_dsl_record::FieldSpec::new(2, "pcm16", <Vec<i16> as semio_framework_dsl_record::DslField>::shape()).optional(),
+            semio_framework_dsl_record::FieldSpec::new(3, "pcm8", <Vec<u8> as semio_framework_dsl_record::DslField>::shape()).optional(),
+            semio_framework_dsl_record::FieldSpec::new(4, "float32", <Vec<f32> as semio_framework_dsl_record::DslField>::shape()).optional(),
+            semio_framework_dsl_record::FieldSpec::new(5, "raw", <Vec<u8> as semio_framework_dsl_record::DslField>::shape()).optional(),
         ],
     )
 }
 
-fn wav_enum_shape_controlled<C:dsl::NativeSchemaControl>(labels:&[(&str,u32)],control:&mut C)->Result<dsl::Shape,String>{
-    control.scoped_stage(|control|{control.begin_stage(labels.len())?;let mut values=control.allocate_vec::<(String,u32)>(labels.len())?;for(label,ordinal)in labels{values.push((control.copy_text(label)?,*ordinal));control.step()?;}Ok(dsl::Shape::Enum(values))})
+fn wav_invalid(message:impl Into<String>)->semio_framework_value::ValueError{semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message)}
+
+fn wav_enum_shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(labels:&[(&str,u32)],control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{
+    control.scoped_stage(|control|{control.begin_stage(labels.len())?;let mut values=control.allocate_vec::<(String,u32)>(labels.len())?;for(label,ordinal)in labels{values.push((control.copy_text(label)?,*ordinal));control.step()?;}Ok(semio_framework_dsl_record::Shape::Enum(values))})
 }
 
-fn wav_data_spec_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::RecordSpec,String>{
+fn wav_data_spec_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::RecordSpec,semio_framework_value::ValueError>{
     control.scoped_stage(|control|{
-        control.begin_stage(5)?;let mut fields=control.allocate_vec::<dsl::FieldSpec>(5)?;
-        let kind=wav_enum_shape_controlled(&[("pcm16",0),("pcm8",1),("float32",2),("raw",3)],control)?;fields.push(dsl::schema::producer::field(1,"kind",kind,control)?);control.step()?;
-        let pcm16=<Vec<i16>as dsl::DslField>::shape_controlled(control)?;fields.push(dsl::schema::producer::field(2,"pcm16",pcm16,control)?.optional());control.step()?;
-        let pcm8=<Vec<u8>as dsl::DslField>::shape_controlled(control)?;fields.push(dsl::schema::producer::field(3,"pcm8",pcm8,control)?.optional());control.step()?;
-        let float32=<Vec<f32>as dsl::DslField>::shape_controlled(control)?;fields.push(dsl::schema::producer::field(4,"float32",float32,control)?.optional());control.step()?;
-        let raw=<Vec<u8>as dsl::DslField>::shape_controlled(control)?;fields.push(dsl::schema::producer::field(5,"raw",raw,control)?.optional());control.step()?;
-        dsl::schema::producer::record(None,dsl::RecordLayout::Inline,fields,control)
+        control.begin_stage(5)?;let mut fields=control.allocate_vec::<semio_framework_dsl_record::FieldSpec>(5)?;
+        let kind=wav_enum_shape_controlled(&[("pcm16",0),("pcm8",1),("float32",2),("raw",3)],control)?;fields.push(semio_framework_dsl_record::producer::field(1,"kind",kind,control)?);control.step()?;
+        let pcm16=<Vec<i16>as semio_framework_dsl_record::DslField>::shape_controlled(control)?;fields.push(semio_framework_dsl_record::producer::field(2,"pcm16",pcm16,control)?.optional());control.step()?;
+        let pcm8=<Vec<u8>as semio_framework_dsl_record::DslField>::shape_controlled(control)?;fields.push(semio_framework_dsl_record::producer::field(3,"pcm8",pcm8,control)?.optional());control.step()?;
+        let float32=<Vec<f32>as semio_framework_dsl_record::DslField>::shape_controlled(control)?;fields.push(semio_framework_dsl_record::producer::field(4,"float32",float32,control)?.optional());control.step()?;
+        let raw=<Vec<u8>as semio_framework_dsl_record::DslField>::shape_controlled(control)?;fields.push(semio_framework_dsl_record::producer::field(5,"raw",raw,control)?.optional());control.step()?;
+        semio_framework_dsl_record::producer::record(None,semio_framework_dsl_record::RecordLayout::Inline,fields,control)
     })
 }
 
-fn wav_data_spec_producer()->dsl::RecordSpecProducer{dsl::RecordSpecProducer{ordinary:wav_data_spec,decoding:|control|wav_data_spec_controlled(control),encoding:|control|wav_data_spec_controlled(control)}}
+fn wav_data_spec_producer()->semio_framework_dsl_record::RecordSpecProducer{semio_framework_dsl_record::RecordSpecProducer{ordinary:wav_data_spec,decoding:|control|wav_data_spec_controlled(control),encoding:|control|wav_data_spec_controlled(control)}}
 
-impl dsl::DslField for WavData {
-    fn to_value_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::FieldValue,String>{self.to_record_controlled(control).map(dsl::FieldValue::Record)}
-    fn to_record_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::RecordValue,String>{
+impl semio_framework_dsl_record::DslField for WavData {
+    fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,semio_framework_value::ValueError>{self.to_record_controlled(control).map(semio_framework_dsl_record::FieldValue::Record)}
+    fn to_record_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::RecordValue,semio_framework_value::ValueError>{
         control.scoped_depth(64,|control|control.scoped_stage(|control|{
-            control.begin_stage(2)?;let mut record=dsl::native_encoding::EncodedRecord::new(2,control)?;
+            control.begin_stage(2)?;let mut record=semio_framework_dsl_record::native_encoding::EncodedRecord::new(2,control)?;
             let(kind,id)=match self{Self::Pcm16(_)=>(0,2),Self::Pcm8(_)=>(1,3),Self::Float32(_)=>(2,4),Self::Raw(_)=>(3,5)};
-            record.insert(1,dsl::FieldValue::Enum(kind));control.step()?;
-            let values=match self{Self::Pcm16(values)=><Vec<i16>as dsl::DslField>::to_value_controlled(values,control)?,Self::Pcm8(values)|Self::Raw(values)=><Vec<u8>as dsl::DslField>::to_value_controlled(values,control)?,Self::Float32(values)=><Vec<f32>as dsl::DslField>::to_value_controlled(values,control)?};
-            record.insert(id,values);control.step()?;Ok(record.take())
+            record.insert(1,semio_framework_dsl_record::FieldValue::Enum(kind))?;control.step()?;
+            let values=match self{Self::Pcm16(values)=><Vec<i16>as semio_framework_dsl_record::DslField>::to_value_controlled(values,control)?,Self::Pcm8(values)|Self::Raw(values)=><Vec<u8>as semio_framework_dsl_record::DslField>::to_value_controlled(values,control)?,Self::Float32(values)=><Vec<f32>as semio_framework_dsl_record::DslField>::to_value_controlled(values,control)?};
+            record.insert(id,values)?;control.step()?;Ok(record.take())
         }))
     }
-    fn from_value_controlled(value:&dsl::FieldValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{
-        let dsl::FieldValue::Record(record)=value else{return Err("WAV samples require a typed record".into());};
+    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{
+        let semio_framework_dsl_record::FieldValue::Record(record)=value else{return Err(wav_invalid("WAV samples require a typed record"));};
         Self::from_record_controlled(record,control)
     }
-    fn from_record_controlled(record:&dsl::RecordValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{
+    fn from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{
         control.step()?;
-        if record.fields.len()>5{return Err("WAV sample record contains excess fields".into());}
-        let Some(dsl::FieldValue::Enum(kind))=record.get(1)else{return Err("WAV samples require a declared kind".into());};
-        let id=kind.checked_add(2).filter(|id|*id<=5).ok_or("WAV samples have an unknown kind")?as u16;
-        for(other,value)in &record.fields{control.step()?;if *other!=1&&*other!=id&&!matches!(value,dsl::FieldValue::Absent){return Err("WAV sample kind selects exactly one typed array".into());}}
-        let values=record.get(id).ok_or("WAV selected sample array is absent")?;
+        if record.fields.len()>5{return Err(wav_invalid("WAV sample record contains excess fields"));}
+        let Some(semio_framework_dsl_record::FieldValue::Enum(kind))=record.get(1)else{return Err(wav_invalid("WAV samples require a declared kind"));};
+        let id=kind.checked_add(2).filter(|id|*id<=5).ok_or_else(||wav_invalid("WAV samples have an unknown kind"))?as u16;
+        for(other,value)in &record.fields{control.step()?;if *other!=1&&*other!=id&&!matches!(value,semio_framework_dsl_record::FieldValue::Absent){return Err(wav_invalid("WAV sample kind selects exactly one typed array"));}}
+        let values=record.get(id).ok_or_else(||wav_invalid("WAV selected sample array is absent"))?;
         match kind{
-            0=><Vec<i16>as dsl::DslField>::from_value_controlled(values,control).map(Self::Pcm16),
-            1=><Vec<u8>as dsl::DslField>::from_value_controlled(values,control).map(Self::Pcm8),
-            2=><Vec<f32>as dsl::DslField>::from_value_controlled(values,control).map(Self::Float32),
-            3=><Vec<u8>as dsl::DslField>::from_value_controlled(values,control).map(Self::Raw),
-            _=>Err("WAV samples have an unknown kind".into()),
+            0=><Vec<i16>as semio_framework_dsl_record::DslField>::from_value_controlled(values,control).map(Self::Pcm16),
+            1=><Vec<u8>as semio_framework_dsl_record::DslField>::from_value_controlled(values,control).map(Self::Pcm8),
+            2=><Vec<f32>as semio_framework_dsl_record::DslField>::from_value_controlled(values,control).map(Self::Float32),
+            3=><Vec<u8>as semio_framework_dsl_record::DslField>::from_value_controlled(values,control).map(Self::Raw),
+            _=>Err(wav_invalid("WAV samples have an unknown kind")),
         }
     }
-    fn shape() -> dsl::Shape {
-        dsl::Shape::Record(wav_data_spec_producer())
+    fn shape() -> semio_framework_dsl_record::Shape {
+        semio_framework_dsl_record::Shape::Record(wav_data_spec_producer())
     }
-    fn shape_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::Shape,String>{control.checkpoint()?;Ok(dsl::Shape::Record(wav_data_spec_producer()))}
-    fn to_value(&self) -> dsl::FieldValue {
+    fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{control.checkpoint()?;Ok(semio_framework_dsl_record::Shape::Record(wav_data_spec_producer()))}
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
         let (kind, id, value) = match self {
-            Self::Pcm16(values) => (0, 2, dsl::DslField::to_value(values)),
-            Self::Pcm8(values) => (1, 3, dsl::DslField::to_value(values)),
-            Self::Float32(values) => (2, 4, dsl::DslField::to_value(values)),
-            Self::Raw(values) => (3, 5, dsl::DslField::to_value(values)),
+            Self::Pcm16(values) => (0, 2, semio_framework_dsl_record::DslField::to_value(values)),
+            Self::Pcm8(values) => (1, 3, semio_framework_dsl_record::DslField::to_value(values)),
+            Self::Float32(values) => (2, 4, semio_framework_dsl_record::DslField::to_value(values)),
+            Self::Raw(values) => (3, 5, semio_framework_dsl_record::DslField::to_value(values)),
         };
-        let mut record = dsl::RecordValue::default();
-        record.fields.insert(1, dsl::FieldValue::Enum(kind));
+        let mut record = semio_framework_dsl_record::RecordValue::default();
+        record.fields.insert(1, semio_framework_dsl_record::FieldValue::Enum(kind));
         record.fields.insert(id, value);
-        dsl::FieldValue::Record(record)
+        semio_framework_dsl_record::FieldValue::Record(record)
     }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
-        let dsl::FieldValue::Record(record) = value else {
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
+        let semio_framework_dsl_record::FieldValue::Record(record) = value else {
             return Err("WAV samples require a typed record".into());
         };
-        let Some(dsl::FieldValue::Enum(kind)) = record.get(1) else {
+        let Some(semio_framework_dsl_record::FieldValue::Enum(kind)) = record.get(1) else {
             return Err("WAV samples require a declared kind".into());
         };
         let id = kind.checked_add(2).filter(|id| *id <= 5).ok_or("WAV samples have an unknown kind")? as u16;
         for (other, value) in &record.fields {
-            if *other != 1 && *other != id && !matches!(value, dsl::FieldValue::Absent) {
+            if *other != 1 && *other != id && !matches!(value, semio_framework_dsl_record::FieldValue::Absent) {
                 return Err("WAV sample kind selects exactly one typed array".into());
             }
         }
         let values = record.get(id).ok_or("WAV selected sample array is absent")?;
         match kind {
-            0 => Ok(Self::Pcm16(dsl::DslField::from_value(values)?)),
-            1 => Ok(Self::Pcm8(dsl::DslField::from_value(values)?)),
-            2 => Ok(Self::Float32(dsl::DslField::from_value(values)?)),
-            3 => Ok(Self::Raw(dsl::DslField::from_value(values)?)),
+            0 => Ok(Self::Pcm16(semio_framework_dsl_record::DslField::from_value(values)?)),
+            1 => Ok(Self::Pcm8(semio_framework_dsl_record::DslField::from_value(values)?)),
+            2 => Ok(Self::Float32(semio_framework_dsl_record::DslField::from_value(values)?)),
+            3 => Ok(Self::Raw(semio_framework_dsl_record::DslField::from_value(values)?)),
             _ => Err("WAV samples have an unknown kind".into()),
         }
     }
@@ -200,7 +206,7 @@ pub(crate) fn is_zero_byte(value: &u8) -> bool {
     *value == 0
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct RiffChunk {
     pub fourcc: String,
@@ -221,101 +227,101 @@ pub enum WavChunkRef {
     Other(u64),
 }
 
-impl dsl::ToValue for WavChunkRef {
-    fn to_value(&self) -> dsl::DslValue {
+impl semio_framework_value::ToValue for WavChunkRef {
+    fn to_value(&self) -> semio_framework_value::DslValue {
         let kind = match self { Self::Format => "format", Self::Samples => "samples", Self::Other(_) => "other" };
-        let mut fields = vec![("kind".into(), dsl::DslValue::String(kind.into()))];
-        if let Self::Other(index) = self { fields.push(("value".into(), dsl::DslValue::String(index.to_string()))); }
-        dsl::DslValue::Object(fields)
+        let mut fields = vec![("kind".into(), semio_framework_value::DslValue::String(kind.into()))];
+        if let Self::Other(index) = self { fields.push(("value".into(), semio_framework_value::DslValue::String(index.to_string()))); }
+        semio_framework_value::DslValue::Object(fields)
     }
 }
 
-impl dsl::FromValue for WavChunkRef {
-    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+impl semio_framework_value::FromValue for WavChunkRef {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         match wav_tagged_fields(value)? {
             (kind, None) if kind == "format" => Ok(Self::Format),
             (kind, None) if kind == "samples" => Ok(Self::Samples),
-            (kind, Some(dsl::DslValue::String(text))) if kind == "other" => {
-                let index = text.parse::<u64>().map_err(|_| dsl::ValueError::new("WAV chunk index requires unsigned64 decimal text"))?;
-                if index.to_string() != text { return Err(dsl::ValueError::new("WAV chunk index requires canonical decimal text")); }
+            (kind, Some(semio_framework_value::DslValue::String(text))) if kind == "other" => {
+                let index = text.parse::<u64>().map_err(|_| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "WAV chunk index requires unsigned64 decimal text"))?;
+                if index.to_string() != text { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "WAV chunk index requires canonical decimal text")); }
                 Ok(Self::Other(index))
             }
-            _ => Err(dsl::ValueError::new("WAV chunk reference requires its exact kind and unsigned64 index")),
+            _ => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "WAV chunk reference requires its exact kind and unsigned64 index")),
         }
     }
-    fn edit_value_at_path(&mut self, path: &[&str], edit: dsl::ValueEdit) -> Result<(), dsl::ValueError> {
-        dsl::edit_through_value(self, path, edit)
+    fn edit_value_at_path(&mut self, path: &[&str], edit: semio_framework_value::ValueEdit) -> Result<(), semio_framework_value::ValueError> {
+        semio_framework_value::edit_through_value(self, path, edit)
     }
 }
 
-fn wav_chunk_ref_spec() -> dsl::RecordSpec {
-    dsl::RecordSpec::new(None, dsl::RecordLayout::Inline, vec![dsl::FieldSpec::new(1, "kind", dsl::Shape::Enum(vec![("format".into(), 0), ("samples".into(), 1), ("other".into(), 2)])), dsl::FieldSpec::new(2, "index", dsl::Shape::UInt).optional()])
+fn wav_chunk_ref_spec() -> semio_framework_dsl_record::RecordSpec {
+    semio_framework_dsl_record::RecordSpec::new(None, semio_framework_dsl_record::RecordLayout::Inline, vec![semio_framework_dsl_record::FieldSpec::new(1, "kind", semio_framework_dsl_record::Shape::Enum(vec![("format".into(), 0), ("samples".into(), 1), ("other".into(), 2)])), semio_framework_dsl_record::FieldSpec::new(2, "index", semio_framework_dsl_record::Shape::UInt).optional()])
 }
 
-fn wav_chunk_ref_spec_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::RecordSpec,String>{
+fn wav_chunk_ref_spec_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::RecordSpec,semio_framework_value::ValueError>{
     control.scoped_stage(|control|{
-        control.begin_stage(2)?;let mut fields=control.allocate_vec::<dsl::FieldSpec>(2)?;
-        let kind=wav_enum_shape_controlled(&[("format",0),("samples",1),("other",2)],control)?;fields.push(dsl::schema::producer::field(1,"kind",kind,control)?);control.step()?;
-        fields.push(dsl::schema::producer::field(2,"index",dsl::Shape::UInt,control)?.optional());control.step()?;
-        dsl::schema::producer::record(None,dsl::RecordLayout::Inline,fields,control)
+        control.begin_stage(2)?;let mut fields=control.allocate_vec::<semio_framework_dsl_record::FieldSpec>(2)?;
+        let kind=wav_enum_shape_controlled(&[("format",0),("samples",1),("other",2)],control)?;fields.push(semio_framework_dsl_record::producer::field(1,"kind",kind,control)?);control.step()?;
+        fields.push(semio_framework_dsl_record::producer::field(2,"index",semio_framework_dsl_record::Shape::UInt,control)?.optional());control.step()?;
+        semio_framework_dsl_record::producer::record(None,semio_framework_dsl_record::RecordLayout::Inline,fields,control)
     })
 }
 
-fn wav_chunk_ref_spec_producer()->dsl::RecordSpecProducer{dsl::RecordSpecProducer{ordinary:wav_chunk_ref_spec,decoding:|control|wav_chunk_ref_spec_controlled(control),encoding:|control|wav_chunk_ref_spec_controlled(control)}}
+fn wav_chunk_ref_spec_producer()->semio_framework_dsl_record::RecordSpecProducer{semio_framework_dsl_record::RecordSpecProducer{ordinary:wav_chunk_ref_spec,decoding:|control|wav_chunk_ref_spec_controlled(control),encoding:|control|wav_chunk_ref_spec_controlled(control)}}
 
-impl dsl::DslField for WavChunkRef {
-    fn to_value_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::FieldValue,String>{self.to_record_controlled(control).map(dsl::FieldValue::Record)}
-    fn to_record_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::RecordValue,String>{
+impl semio_framework_dsl_record::DslField for WavChunkRef {
+    fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,semio_framework_value::ValueError>{self.to_record_controlled(control).map(semio_framework_dsl_record::FieldValue::Record)}
+    fn to_record_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::RecordValue,semio_framework_value::ValueError>{
         control.scoped_depth(64,|control|control.scoped_stage(|control|{
-            let count=if matches!(self,Self::Other(_)){2}else{1};control.begin_stage(count)?;let mut record=dsl::native_encoding::EncodedRecord::new(count,control)?;
-            let kind=match self{Self::Format=>0,Self::Samples=>1,Self::Other(_)=>2};record.insert(1,dsl::FieldValue::Enum(kind));control.step()?;
-            if let Self::Other(index)=self{record.insert(2,dsl::FieldValue::UInt(*index));control.step()?;}Ok(record.take())
+            let count=if matches!(self,Self::Other(_)){2}else{1};control.begin_stage(count)?;let mut record=semio_framework_dsl_record::native_encoding::EncodedRecord::new(count,control)?;
+            let kind=match self{Self::Format=>0,Self::Samples=>1,Self::Other(_)=>2};record.insert(1,semio_framework_dsl_record::FieldValue::Enum(kind))?;control.step()?;
+            if let Self::Other(index)=self{record.insert(2,semio_framework_dsl_record::FieldValue::UInt(*index))?;control.step()?;}Ok(record.take())
         }))
     }
-    fn from_value_controlled(value:&dsl::FieldValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{
-        let dsl::FieldValue::Record(record)=value else{return Err("WAV chunk reference requires a typed record".into());};
+    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{
+        let semio_framework_dsl_record::FieldValue::Record(record)=value else{return Err(wav_invalid("WAV chunk reference requires a typed record"));};
         Self::from_record_controlled(record,control)
     }
-    fn from_record_controlled(record:&dsl::RecordValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{
+    fn from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{
         control.step()?;
-        if record.fields.len()>2||record.fields.keys().any(|id|![1,2].contains(id)){return Err("WAV chunk reference contains an unknown field".into());}
-        let index=record.get(2).filter(|value|!matches!(value,dsl::FieldValue::Absent));
+        if record.fields.len()>2||record.fields.keys().any(|id|![1,2].contains(id)){return Err(wav_invalid("WAV chunk reference contains an unknown field"));}
+        let index=record.get(2).filter(|value|!matches!(value,semio_framework_dsl_record::FieldValue::Absent));
         match(record.get(1),index){
-            (Some(dsl::FieldValue::Enum(0)),None)=>Ok(Self::Format),
-            (Some(dsl::FieldValue::Enum(1)),None)=>Ok(Self::Samples),
-            (Some(dsl::FieldValue::Enum(2)),Some(dsl::FieldValue::UInt(index)))=>Ok(Self::Other(*index)),
-            _=>Err("WAV chunk reference requires its exact declared kind and unsigned64 index".into()),
+            (Some(semio_framework_dsl_record::FieldValue::Enum(0)),None)=>Ok(Self::Format),
+            (Some(semio_framework_dsl_record::FieldValue::Enum(1)),None)=>Ok(Self::Samples),
+            (Some(semio_framework_dsl_record::FieldValue::Enum(2)),Some(semio_framework_dsl_record::FieldValue::UInt(index)))=>Ok(Self::Other(*index)),
+            _=>Err(wav_invalid("WAV chunk reference requires its exact declared kind and unsigned64 index")),
         }
     }
-    fn shape() -> dsl::Shape {
-        dsl::Shape::Record(wav_chunk_ref_spec_producer())
+    fn shape() -> semio_framework_dsl_record::Shape {
+        semio_framework_dsl_record::Shape::Record(wav_chunk_ref_spec_producer())
     }
-    fn shape_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::Shape,String>{control.checkpoint()?;Ok(dsl::Shape::Record(wav_chunk_ref_spec_producer()))}
-    fn to_value(&self) -> dsl::FieldValue {
-        let mut record = dsl::RecordValue::default();
+    fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{control.checkpoint()?;Ok(semio_framework_dsl_record::Shape::Record(wav_chunk_ref_spec_producer()))}
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
+        let mut record = semio_framework_dsl_record::RecordValue::default();
         let kind = match self {
             Self::Format => 0,
             Self::Samples => 1,
             Self::Other(index) => {
-                record.fields.insert(2, dsl::FieldValue::UInt(*index));
+                record.fields.insert(2, semio_framework_dsl_record::FieldValue::UInt(*index));
                 2
             }
         };
-        record.fields.insert(1, dsl::FieldValue::Enum(kind));
-        dsl::FieldValue::Record(record)
+        record.fields.insert(1, semio_framework_dsl_record::FieldValue::Enum(kind));
+        semio_framework_dsl_record::FieldValue::Record(record)
     }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
-        let dsl::FieldValue::Record(record) = value else {
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
+        let semio_framework_dsl_record::FieldValue::Record(record) = value else {
             return Err("WAV chunk reference requires a typed record".into());
         };
         if record.fields.keys().any(|id| ![1, 2].contains(id)) {
             return Err("WAV chunk reference contains an unknown field".into());
         }
-        let index = record.get(2).filter(|value| !matches!(value, dsl::FieldValue::Absent));
+        let index = record.get(2).filter(|value| !matches!(value, semio_framework_dsl_record::FieldValue::Absent));
         match (record.get(1), index) {
-            (Some(dsl::FieldValue::Enum(0)), None) => Ok(Self::Format),
-            (Some(dsl::FieldValue::Enum(1)), None) => Ok(Self::Samples),
-            (Some(dsl::FieldValue::Enum(2)), Some(dsl::FieldValue::UInt(index))) => Ok(Self::Other(*index)),
+            (Some(semio_framework_dsl_record::FieldValue::Enum(0)), None) => Ok(Self::Format),
+            (Some(semio_framework_dsl_record::FieldValue::Enum(1)), None) => Ok(Self::Samples),
+            (Some(semio_framework_dsl_record::FieldValue::Enum(2)), Some(semio_framework_dsl_record::FieldValue::UInt(index))) => Ok(Self::Other(*index)),
             _ => Err("WAV chunk reference requires its exact declared kind and unsigned64 index".into()),
         }
     }
@@ -375,7 +381,7 @@ pub fn validate_wav_serialization(snapshot: &WavSnapshot) -> Result<(), WavSeria
 }
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.wav")]
 pub struct WavSnapshot {
@@ -414,17 +420,17 @@ impl store::ArtifactDsl for WavSnapshot {
         STDIO_WAV_DOCUMENT_SCHEMA
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 32 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Document })?;
+        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits { max_bytes: 32 * 1024 * 1024, ..semio_framework_diagnostic::Limits::default() }, mode: semio_framework_dsl_record::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
 
     fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -433,20 +439,20 @@ impl store::ArtifactDsl for WavSnapshot {
 impl store::ArtifactPack for WavSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let raw = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
 
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
     }
     fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {

@@ -37,7 +37,7 @@ from __future__ import annotations
 import json
 import struct
 
-from semio_repo_test import Adapter, Context, Outcome, digest
+from semio_repo_test import Adapter, Context, Outcome, digest, patched_snapshot, snapshot_patch_inverse
 
 # endregion 🔖️Imports
 
@@ -382,7 +382,7 @@ def pack_bytes(document: dict) -> bytes:
 
 
 # region 🔖️Mutations
-KINDS = ("move-object", "rotate-object", "scale-object", "create-brep", "delete-brep", "create-mesh", "delete-mesh", "create-properties", "delete-properties")
+KINDS = ("move-object", "rotate-object", "scale-object", "create-brep", "delete-brep", "create-mesh", "delete-mesh", "create-properties", "delete-properties", "patch-snapshot")
 
 #: 🏷️ The externally tagged JSON name of each kebab-case kind, as the committed specification
 #: vectors under `…/🧬️mutations/<kind>/🧪️tests/<fixture>/🦠️mutation/` spell it.
@@ -396,6 +396,7 @@ TAG_OF_KIND = {
     "delete-mesh": "DeleteMesh",
     "create-properties": "CreateProperties",
     "delete-properties": "DeleteProperties",
+    "patch-snapshot": "PatchSnapshot",
 }
 SLOT_OF_TAG = {"CreateBrep": "brep", "DeleteBrep": "brep", "CreateMesh": "mesh", "DeleteMesh": "mesh", "CreateProperties": "properties", "DeleteProperties": "properties"}
 FIELD_OF_TAG = {"MoveObject": ("translation", "translation"), "RotateObject": ("rotation", "rotation"), "ScaleObject": ("scale", "scale")}
@@ -421,6 +422,8 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
     pass."""
     result = clone(document)
     tag, args = tagged(mutation)
+    if tag == "PatchSnapshot":
+        return patched_snapshot(document, args["patch"])
     if tag in FIELD_OF_TAG:
         field, argument = FIELD_OF_TAG[tag]
         result["transform"][field] = clone(args[argument])
@@ -442,6 +445,8 @@ def inverse_mutation(document: dict, mutation: dict) -> list:
     meanings — an overwrite is undone by an overwrite with the value it displaced, an attachment by
     the matching detachment, and a detachment by re-attaching the exact handle it removed."""
     tag, args = tagged(mutation)
+    if tag == "PatchSnapshot":
+        return [{"PatchSnapshot": {"patch": snapshot_patch_inverse(document, args["patch"])}}]
     if tag in FIELD_OF_TAG:
         field, argument = FIELD_OF_TAG[tag]
         return [{tag: {argument: clone(document["transform"][field])}}]

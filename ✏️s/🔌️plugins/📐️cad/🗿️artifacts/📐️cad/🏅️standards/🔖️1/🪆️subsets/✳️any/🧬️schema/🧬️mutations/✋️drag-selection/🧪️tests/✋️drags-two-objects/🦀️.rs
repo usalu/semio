@@ -7,7 +7,10 @@
 use crate::mutations::{drag_selection::DragSelection, CadMutation};
 use crate::sample_scene_fixture::{materialized_objects, materialized_shape_scene, sample_object};
 use crate::CadPaneId;
-use protocol::{Mutation, MutationDiff, SemanticMutation, Severity};
+use protocol::Mutation;
+use protocol::MutationDiff;
+use protocol::SemanticMutation;
+use semio_framework_diagnostic::Severity;
 
 fn base() -> crate::CadSnapshot {
     materialized_shape_scene(vec![sample_object("object-a", [0.0, 0.0, 0.0]), sample_object("object-b", [4.0, 0.0, 0.0]), sample_object("object-c", [9.0, 9.0, 0.0])])
@@ -44,7 +47,7 @@ async fn replays_relative_to_any_base() {
 async fn inverse_restores_the_exact_base() {
     let base = base();
     let mutation = drag(&["object-a", "object-b"], [0.1, 0.2, 0.3]);
-    let inverse = mutation.inverse(&base);
+    let inverse = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "a drag inverts to exactly one absolute setter");
     assert!(matches!(&inverse[0], CadMutation::MoveObjects(step) if step.placements.len() == 2), "the inverse must be one move-objects over both moved objects, got {inverse:?}");
     let mut snapshot = mutation.diff(&base).diff().apply(&base).expect("drag applies");
@@ -73,7 +76,7 @@ async fn refuses_by_the_outcome_vocabulary() {
     assert!(missing.messages().iter().any(|message| message.code.0 == "mutation.target-missing" && message.level == Severity::Error), "{:?}", missing.messages());
     let still = drag(&["object-a"], [0.0, 0.0, 0.0]).diff(&base);
     assert!(still.messages().iter().any(|message| message.code.0 == "mutation.no-op" && message.level == Severity::Warning), "{:?}", still.messages());
-    assert!(drag(&["object-a"], [0.0, 0.0, 0.0]).inverse(&base).is_empty(), "a no-op drag has no inverse step");
+    assert!(drag(&["object-a"], [0.0, 0.0, 0.0]).inverse(&base).expect("valid retained mutation inverse fixture").is_empty(), "a no-op drag has no inverse step");
     for malformed in [drag(&[], [1.0, 0.0, 0.0]), drag(&["object-a", "object-a"], [1.0, 0.0, 0.0]), drag(&["object-a"], [f64::NAN, 0.0, 0.0])] {
         let outcome = malformed.diff(&base);
         assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.invariant" && message.level == Severity::Fatal), "{malformed:?} must be Fatal, got {:?}", outcome.messages());
@@ -85,7 +88,7 @@ async fn refuses_by_the_outcome_vocabulary() {
 #[test]
 fn labels_the_row_from_its_inputs() {
     let label = drag(&["object-a", "object-b"], [1.5, -2.0, 0.0]).label();
-    assert_eq!(label.resolve(protocol::Terminology::Native, protocol::Locale::En), "Drag 2 objects by (1.5, -2, 0)");
-    assert_eq!(label.resolve(protocol::Terminology::Native, protocol::Locale::De), "2 Objekte um (1,5; -2; 0) ziehen");
+    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Drag 2 objects by (1.5, -2, 0)");
+    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "2 Objekte um (1,5; -2; 0) ziehen");
     assert_eq!(SemanticMutation::<crate::CadSnapshot>::target(&drag(&["object-a"], [1.0, 0.0, 0.0])), vec!["object-a".to_string()]);
 }

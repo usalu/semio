@@ -4,6 +4,8 @@ enum SemioGraphPortKind { IN OUT IN_OUT }
 type SemioGraphPort {
   name: String!
   kind: SemioGraphPortKind!
+  category: String!
+  properties: [SemioValueEntry!]!
 }
 
 type GraphNodeId { value: String! }
@@ -13,10 +15,15 @@ type SemioGraphNode {
   id: GraphNodeId!
   kind: String!
   label: String!
-  position: SemioPoint2!
+  position: SemioGraphPosition!
+  width: Binary64Word!
+  height: Binary64Word!
   ports: [SemioGraphPort!]!
   properties: [SemioValueEntry!]!
 }
+
+type Binary64Word { bits: String! }
+type SemioGraphPosition { x: Binary64Word! y: Binary64Word! }
 
 type SemioGraphEdge {
   id: GraphEdgeId!
@@ -24,6 +31,9 @@ type SemioGraphEdge {
   target: GraphNodeId!
   kind: String!
   label: String!
+  sourcePort: String
+  targetPort: String
+  properties: [SemioValueEntry!]!
 }
 
 type SemioGraphSnapshot {

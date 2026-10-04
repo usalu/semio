@@ -25,7 +25,7 @@ fn base_doc() -> crate::LayoutSnapshot {
         spreads: Vec::new(),
         pages: Vec::new(),
         print_target: None,
-        data_fields_json: None,
+        data_fields: None,
         background_drawing: None,
         referenced_model: None,
     }

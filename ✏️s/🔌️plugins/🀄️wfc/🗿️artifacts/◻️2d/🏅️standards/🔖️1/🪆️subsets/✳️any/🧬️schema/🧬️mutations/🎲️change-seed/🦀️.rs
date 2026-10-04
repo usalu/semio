@@ -26,9 +26,12 @@ impl MutationKind<Wfc2dSnapshot, Wfc2dMutation> for ChangeSeed {
     fn diff(&self, base: &Wfc2dSnapshot) -> protocol::MutationOutcome<Wfc2dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Wfc2dSnapshot) -> Vec<Wfc2dMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &Wfc2dSnapshot) -> Result<Vec<Wfc2dMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Change Seed", "Startwert ändern")
     }

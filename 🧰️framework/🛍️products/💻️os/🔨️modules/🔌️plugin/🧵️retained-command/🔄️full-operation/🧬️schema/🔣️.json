@@ -15,7 +15,8 @@
     "laneTrace",
     "rawPageLaws",
     "faultLaws",
-    "closeLaws"
+    "closeLaws",
+    "download"
   ],
   "properties": {
     "version": {
@@ -58,7 +59,6 @@
         "required": [
           "name",
           "description",
-          "coalesceKey",
           "expectedBytes",
           "accepted"
         ],
@@ -68,9 +68,6 @@
             "minLength": 1
           },
           "description": {
-            "type": "string"
-          },
-          "coalesceKey": {
             "type": "string"
           },
           "expectedBytes": {
@@ -492,6 +489,53 @@
             }
           }
         ]
+      }
+    },
+    "download": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "wireBytes",
+        "payloadBytes",
+        "chunkBytes",
+        "retirementBytes",
+        "replies",
+        "busyRetainsOwner",
+        "canceledDownloads",
+        "queueSlots",
+        "vectorMetadataWords"
+      ],
+      "properties": {
+        "wireBytes": {
+          "const": 16384
+        },
+        "payloadBytes": {
+          "const": 16433
+        },
+        "chunkBytes": {
+          "const": 4096
+        },
+        "retirementBytes": {
+          "const": 3
+        },
+        "replies": {
+          "const": [
+            "progress",
+            "download"
+          ]
+        },
+        "busyRetainsOwner": {
+          "const": true
+        },
+        "canceledDownloads": {
+          "const": 0
+        },
+        "queueSlots": {
+          "const": 5
+        },
+        "vectorMetadataWords": {
+          "const": 3
+        }
       }
     }
   }

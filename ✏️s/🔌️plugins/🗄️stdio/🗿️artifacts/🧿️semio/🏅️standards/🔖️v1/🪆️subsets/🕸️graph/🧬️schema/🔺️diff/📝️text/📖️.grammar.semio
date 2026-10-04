@@ -12,16 +12,16 @@ field = nodes-line | edges-line
 
 nodes-line = "nodes" "=" "[" node-list? "]"
 node-list = node {"," node}*
-node = "[" hex "," hex "," hex "," hex "," hex "," "[" port-list? "]" "," "[" property-list? "]" "]"
+node = "[" hex "," hex "," hex "," hex "," hex "," hex "," hex "," "[" port-list? "]" "," "[" property-list? "]" "]"
 port-list = port {"," port}*
-port = "[" hex "," port-kind "]"
+port = "[" hex "," port-kind "," hex "," "[" property-list? "]" "]"
 port-kind = "i" | "o" | "x"
 property-list = property {"," property}*
 property = hex ":" value
 
 edges-line = "edges" "=" "[" edge-list? "]"
 edge-list = edge {"," edge}*
-edge = "[" hex "," hex "," hex "," hex "," hex "]"
+edge = "[" hex "," hex "," hex "," hex "," hex "," optional-text "," optional-text "," "[" property-list? "]" "]"
 
 # `value` is the `🔢️value` subset's own `SemioValue` grammar production, RESTATED here (every
 # grammar file is self-contained, no cross-file production references) — same convention the
@@ -31,3 +31,5 @@ value = "Z" | "B" "[" bit "]" | "I" "[" hex "]" | "F" "[" hex "]" | "S" "[" hex 
 list-item = value ","?
 map-item = hex ":" value ","?
 bit = "0" | "1"
+
+optional-text = "-" | "[" hex "]"

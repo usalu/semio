@@ -2,7 +2,7 @@
 
 use crate::editor::puzzle3d::precompute::{decode_brush_mesh_page_values, Puzzle3dMeshUploadFault, PUZZLE3D_MESH_PAGE_VALUES};
 use crate::editor::puzzle3d::Puzzle3dActionCtx;
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 use semio_framework::kernel::Effect;
 
 /// 🥽️ Real GLB geometry for one mesh id. Two admissible forms, and the id-only one is the normal case:

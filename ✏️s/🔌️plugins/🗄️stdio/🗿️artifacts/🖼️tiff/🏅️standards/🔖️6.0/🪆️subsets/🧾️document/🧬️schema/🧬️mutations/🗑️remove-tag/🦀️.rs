@@ -27,17 +27,20 @@ impl protocol::MutationKind<TiffSnapshot, TiffMutation> for RemoveTagMutation {
         let Self { ifd_index, tag } = self;
         protocol::MutationOutcome::new(contribute(base, *ifd_index, *tag))
     }
-    fn inverse(&self, base: &TiffSnapshot) -> Vec<TiffMutation> {
+    fn inverse(&self, base: &TiffSnapshot) -> Result<Vec<TiffMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         let Self { ifd_index, tag } = self;
         let outcome = <Self as protocol::MutationKind<TiffSnapshot, TiffMutation>>::diff(self, base);
         if <TiffDiff as protocol::DiffAlgebra<TiffSnapshot>>::is_empty(outcome.diff()) {
             return Vec::new();
         }
         match base.ifds.get(*ifd_index).and_then(|ifd| ifd.entries.iter().find(|t| t.tag == *tag)) {
-            Some(existing) => vec![TiffMutation::ReplaceTag(crate::schema::mutations::ReplaceTagMutation { ifd_index: *ifd_index, tag: *tag, kind: existing.kind, values: existing.values.clone() })],
+            Some(existing) => vec![TiffMutation::ReplaceTag(crate::schema::mutations::ReplaceTagMutation { ifd_index: *ifd_index, tag: *tag, values: existing.values.clone() })],
             None => Vec::new(),
         }
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove tag", "Tag entfernen")
     }
@@ -51,7 +54,7 @@ pub fn contribute(base: &TiffSnapshot, ifd_index: usize, tag: u16) -> TiffDiff {
         return TiffDiff::default();
     }
     TiffDiff {
-        ifds: Some(TiffIfdsDiff { removed: vec![], modified: vec![TiffIfdModified { index: ifd_index, diff: TiffIfdDiff { entries: TiffTagsDiff { removed: vec![tag], modified: vec![], added: vec![] }, pixels: None } }], added: vec![] }),
+        ifds: Some(TiffIfdsDiff { removed: vec![], modified: vec![TiffIfdModified { index: ifd_index, diff: TiffIfdDiff { entries: TiffTagsDiff { removed: vec![tag], modified: vec![], added: vec![] }, storage: None } }], added: vec![] }),
         ..Default::default()
     }
 }
@@ -59,7 +62,7 @@ pub fn contribute(base: &TiffSnapshot, ifd_index: usize, tag: u16) -> TiffDiff {
 
 #[cfg(test)]
 pub(crate) fn test_case() -> TiffMutation {
-    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🗑️remove-tag/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed remove-tag payload")
+    semio_framework_pack_json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🗑️remove-tag/🎯️direct-behavior/🦠️mutation/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed remove-tag payload")
 }
 #[cfg(test)]
 #[path = "🧪️tests/🎯️direct-behavior/🦀️.rs"]

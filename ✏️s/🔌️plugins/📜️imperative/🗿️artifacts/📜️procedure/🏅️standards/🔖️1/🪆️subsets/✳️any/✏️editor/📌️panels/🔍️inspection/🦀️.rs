@@ -1,7 +1,7 @@
 //! 🔍️ Imperative play app panel — inspection: read-only summary of the document.
 
 use crate::editor::procedure::terminology::ImperativeLabels;
-use crate::ProcedureSnapshot;
+use crate::ProcedureScene;
 use semio_framework_plugin::tree_item_desc;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::PanelGroup;
@@ -35,8 +35,8 @@ pub fn definition() -> PanelTabDefinition {
 /// `handle`/`copy_fragment`/`cut_operations` are). Documented reduced-fidelity gap, same shape as
 /// `🖍️draw`'s `📌️panels/🔍️properties/🦀️.rs`: falls through to a step-count summary until a
 /// resolved-selection render path exists.
-pub fn render(document: &ProcedureSnapshot, labels: &ImperativeLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let path = crate::procedure_working_scene(document).path;
+pub fn render(scene: &ProcedureScene, labels: &ImperativeLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let path = &scene.path;
     let field = tree_item_desc("imperative-play-inspector.steps", labels.inspector_steps.as_str(), Some(path.steps.len().to_string()))?;
     let mut fields = semio_framework_plugin::UiFixedList::default();
     fields.try_push(field).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed inspector field admission failed"))?;

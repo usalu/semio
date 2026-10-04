@@ -1,0 +1,221 @@
+{
+  "contract": "outcome-law-gate-v1",
+  "vocabulary": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🧫️outcome-code/🔣️.json",
+  "cases": [
+    {
+      "id": "rust-diff-leaf-codes",
+      "description": "A diff leaf's builders, chainable shorthand and namespace literals outside the vocabulary or at the wrong level.",
+      "segments": ["p", "🧬️mutations", "a", "🔺️diff", "🦀️.rs"],
+      "lines": [
+        "fn diff() -> MutationOutcome<D> {",
+        "    MutationOutcome::error(\"mutation.missing\", \"m\", [\"\"]);",
+        "    MutationOutcome::error(\"mutation.invariant\", \"m\", [\"\"]);",
+        "    MutationOutcome::empty().warning(\"wfc3d.seed.unchanged\", \"m\");",
+        "    Err(\"mutation.asset-missing\")",
+        "}"
+      ],
+      "breaches": [
+        {"line": 2, "fault": "outside-vocabulary", "code": "mutation.missing"},
+        {"line": 3, "fault": "level-mismatch", "code": "mutation.invariant", "level": "error", "expected": "fatal"},
+        {"line": 4, "fault": "outside-vocabulary", "code": "wfc3d.seed.unchanged"},
+        {"line": 5, "fault": "outside-vocabulary", "code": "mutation.asset-missing"}
+      ]
+    },
+    {
+      "id": "rust-apply-errors",
+      "description": "Apply-time rejections must spell a mutation.apply.<kebab-detail> code.",
+      "segments": ["p", "🔺️diff", "🦀️.rs"],
+      "lines": [
+        "fn apply() { MutationApplyError::new(\"invalid-add-index\", \"m\"); MutationApplyError { code: \"mutation.apply.Bad\".into() }; }"
+      ],
+      "breaches": [
+        {"line": 1, "fault": "not-apply-code", "code": "invalid-add-index"},
+        {"line": 1, "fault": "not-apply-code", "code": "mutation.apply.Bad"}
+      ]
+    },
+    {
+      "id": "rust-level-decoder",
+      "description": "A hand-written Rust level decoder admitting the retired warn spelling.",
+      "segments": ["p", "🧪️tests", "a", "🦀️.rs"],
+      "lines": [
+        "fn level(text: &str) -> protocol::Severity {",
+        "    match text {",
+        "        \"info\" => protocol::Severity::Info,",
+        "        \"warn\" => protocol::Severity::Warning,",
+        "        \"warning\" => protocol::Severity::Warning,",
+        "        _ => protocol::Severity::Fatal,",
+        "    }",
+        "}"
+      ],
+      "breaches": [
+        {"line": 4, "fault": "level-alias"}
+      ]
+    },
+    {
+      "id": "rust-retired-builders",
+      "description": "The retired warn builders of MutationMessage and MutationOutcome; the level has one spelling in the API as on the wire.",
+      "segments": ["p", "🧬️mutations", "b", "🔺️diff", "🦀️.rs"],
+      "lines": [
+        "fn diff() -> MutationOutcome<D> {",
+        "    let note = MutationMessage::warn(\"mutation.partial\", \"m\");",
+        "    MutationOutcome::new(d).warn(\"mutation.no-op\", \"m\").absorb_messages([note])",
+        "}"
+      ],
+      "breaches": [
+        {"line": 2, "fault": "retired-builder", "builder": "warn"},
+        {"line": 3, "fault": "retired-builder", "builder": "warn"}
+      ]
+    },
+    {
+      "id": "rust-canonical-leaf",
+      "description": "Canonical control: vocabulary codes at their levels, an apply code, and a non-outcome warning sink outside any outcome-building body.",
+      "segments": ["p", "🧬️mutations", "c", "🔺️diff", "🦀️.rs"],
+      "lines": [
+        "fn diff() -> MutationOutcome<D> {",
+        "    if missing { return MutationOutcome::error(\"mutation.target-missing\", \"m\", [\"\"]); }",
+        "    if broken { return MutationOutcome::fatal(\"mutation.invariant\", \"m\", [\"\"]); }",
+        "    let note = MutationMessage::warning(\"mutation.partial\", \"m\");",
+        "    MutationOutcome::new(d).warning(\"mutation.no-op\", \"m\").info(\"mutation.cascade\", \"m\").absorb_messages([note])",
+        "}",
+        "fn apply() -> Result<(), MutationApplyError> { Err(MutationApplyError::new(\"mutation.apply.invalid-base\", \"m\")) }",
+        "fn log(sink: &Sink) { sink.warn(\"disk.almost-full\", \"m\"); }"
+      ],
+      "breaches": []
+    },
+    {
+      "id": "ts-twin-codes",
+      "description": "TypeScript twin refusals and messages outside the vocabulary or at the wrong level.",
+      "segments": ["p", "🧬️mutations", "🟦️.ts"],
+      "lines": [
+        "refuse(\"error\", \"mutation.referenced\", \"m\"); const x = { level: \"fatal\", code: \"mutation.target-missing\" };"
+      ],
+      "breaches": [
+        {"line": 1, "fault": "outside-vocabulary", "code": "mutation.referenced"},
+        {"line": 1, "fault": "level-mismatch", "code": "mutation.target-missing", "level": "fatal", "expected": "error"}
+      ]
+    },
+    {
+      "id": "ts-level-spelling",
+      "description": "TypeScript refusals and messages spelling the retired warn level, with canonical warning controls.",
+      "segments": ["p", "🧬️mutations", "b", "🟦️.ts"],
+      "lines": [
+        "refuse(\"warn\", \"mutation.no-op\", \"m\");",
+        "refuse(\"warning\", \"mutation.no-op\", \"m\");",
+        "const a = { level: \"warn\", code: \"mutation.partial\" };",
+        "const b = { level: \"warning\", code: \"mutation.partial\" };"
+      ],
+      "breaches": [
+        {"line": 1, "fault": "level-mismatch", "code": "mutation.no-op", "level": "warn", "expected": "warning"},
+        {"line": 3, "fault": "level-mismatch", "code": "mutation.partial", "level": "warn", "expected": "warning"}
+      ]
+    },
+    {
+      "id": "ts-canonical",
+      "description": "Canonical control: both message key orders at their fixed levels, and a mutation-namespace label outside any leaf.",
+      "segments": ["p", "🖱️ui", "🟦️.ts"],
+      "lines": [
+        "refuse(\"error\", \"mutation.target-missing\", \"m\");",
+        "const m = { code: \"mutation.cascade\", level: \"info\" };",
+        "const label = \"mutation.anything-goes\";"
+      ],
+      "breaches": []
+    },
+    {
+      "id": "python-oracle-codes",
+      "description": "Python second-implementation tuples and literals outside the vocabulary.",
+      "segments": ["p", "🧪️tests", "o", "🐍️.py"],
+      "lines": [
+        "return empty(), [(\"error\", \"wfc3d.slot.missing\")]",
+        "raise Fatal(\"mutation.colour-in-use\")"
+      ],
+      "breaches": [
+        {"line": 1, "fault": "outside-vocabulary", "code": "wfc3d.slot.missing"},
+        {"line": 2, "fault": "outside-vocabulary", "code": "mutation.colour-in-use"}
+      ]
+    },
+    {
+      "id": "python-level-spelling",
+      "description": "A Python tuple spelling the retired warn level, with a canonical warning control.",
+      "segments": ["p", "🧪️tests", "q", "🐍️.py"],
+      "lines": [
+        "return empty(), [(\"warn\", \"mutation.clamped\")]",
+        "return empty(), [(\"warning\", \"mutation.clamped\")]"
+      ],
+      "breaches": [
+        {"line": 1, "fault": "level-mismatch", "code": "mutation.clamped", "level": "warn", "expected": "warning"}
+      ]
+    },
+    {
+      "id": "python-outside-tests",
+      "description": "Canonical control: Python outside a tests tree is not an oracle position.",
+      "segments": ["p", "🐍️.py"],
+      "lines": [
+        "return empty(), [(\"error\", \"wfc3d.slot.missing\")]"
+      ],
+      "breaches": []
+    },
+    {
+      "id": "gherkin-codes",
+      "description": "A Gherkin token outside the vocabulary; file names and apply placeholders stay silent.",
+      "segments": ["p", "🧪️tests", "o", "🥒️.feature"],
+      "lines": [
+        "  | case | mutation.content-gap |",
+        "  reads 🦠️mutation.json and mutation.apply.<detail>"
+      ],
+      "breaches": [
+        {"line": 1, "fault": "outside-vocabulary", "code": "mutation.content-gap"}
+      ]
+    },
+    {
+      "id": "gherkin-level-spelling",
+      "description": "A Gherkin message spelling the retired warn level, with canonical and placeholder controls.",
+      "segments": ["p", "🧪️tests", "q", "🥒️.feature"],
+      "lines": [
+        "  answers {level: warn, code: mutation.no-op}",
+        "  answers {level: warning, code: mutation.no-op}",
+        "  answers {level: fatal, code: mutation.apply.<detail>}"
+      ],
+      "breaches": [
+        {"line": 1, "fault": "level-mismatch", "code": "mutation.no-op", "level": "warn", "expected": "warning"}
+      ]
+    },
+    {
+      "id": "outcome-document-codes",
+      "description": "A committed outcome document with a level mismatch and a foreign-namespace code.",
+      "segments": ["p", "🧫️fixtures", "c", "🎯️outcome", "🔣️.json"],
+      "lines": [
+        "{\"status\":\"rejected\",\"messages\":[{\"level\":\"warn\",\"code\":\"mutation.duplicate-id\"},{\"level\":\"error\",\"code\":\"forms.missing-response\"}]}"
+      ],
+      "breaches": [
+        {"line": 1, "fault": "level-mismatch", "code": "mutation.duplicate-id", "level": "warn", "expected": "fatal"},
+        {"line": 1, "fault": "outside-vocabulary", "code": "forms.missing-response"}
+      ]
+    },
+    {
+      "id": "outcome-document-lines",
+      "description": "A multi-line outcome document repeating one code: each breach names the line of its own message.",
+      "segments": ["p", "🧫️fixtures", "d", "🎯️outcome", "🔣️.json"],
+      "lines": [
+        "{",
+        "  \"status\": \"no-op\",",
+        "  \"messages\": [",
+        "    { \"level\": \"warning\", \"code\": \"mutation.no-op\" },",
+        "    { \"level\": \"error\", \"code\": \"mutation.no-op\" }",
+        "  ]",
+        "}"
+      ],
+      "breaches": [
+        {"line": 5, "fault": "level-mismatch", "code": "mutation.no-op", "level": "error", "expected": "warning"}
+      ]
+    },
+    {
+      "id": "outcome-document-canonical",
+      "description": "Canonical control: a rejected outcome with a top-level apply code and vocabulary messages at their levels.",
+      "segments": ["p", "🧫️fixtures", "e", "🎯️outcome", "🔣️.json"],
+      "lines": [
+        "{\"status\":\"rejected\",\"code\":\"mutation.apply.invalid-base\",\"level\":\"fatal\",\"messages\":[{\"level\":\"warning\",\"code\":\"mutation.clamped\"},{\"level\":\"info\",\"code\":\"mutation.cascade\"}]}"
+      ],
+      "breaches": []
+    }
+  ]
+}

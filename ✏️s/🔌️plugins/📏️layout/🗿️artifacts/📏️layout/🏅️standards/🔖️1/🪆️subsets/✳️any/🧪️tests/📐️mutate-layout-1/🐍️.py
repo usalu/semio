@@ -16,7 +16,7 @@ document shape the committed vectors actually use) and each mutation's own commi
 transliterates none of it.
 
 🪆️ A layout document is FOUR pools at TWO nesting depths: three root scalars (`name`, `printTarget`,
-`dataFieldsJson`), three id-keyed root collections (`pages`, `stories`, `links`), and two collections
+`dataFields`), three id-keyed root collections (`pages`, `stories`, `links`), and two collections
 that live ONE LEVEL INSIDE a page (`frames`, `layers`) — a frame is addressed by `(pageId, frameId)`,
 never by id alone. `create-frame`'s forward effect touches TWO places at once — `page.frames` (by the
 declared `index`) and the named layer's `objectIds` (by APPENDING, never inserting positionally: the
@@ -33,8 +33,8 @@ FULL captured member and its BASE-state list position; `reorder-pages`'s inverse
 rule 3 read for an id-keyed reorder rather than an index-keyed one.
 
 🐛 A first standalone run against the committed vectors caught a real bug: `inverse-change-data-fields`
-restored `dataFieldsJson` as an explicit `null` rather than OMITTING the key, and the committed
-before-document genuinely omits it (`printTarget` is present-with-`null`; `dataFieldsJson` is not a
+restored `dataFields` as an explicit `null` rather than OMITTING the key, and the committed
+before-document genuinely omits it (`printTarget` is present-with-`null`; `dataFields` is not a
 key at all) — so the restored document disagreed with the committed one on key presence even though
 every value looked equal at a glance. Fixed in `apply_change_data_fields` before this reference was
 registered as an oracle.
@@ -149,17 +149,17 @@ def apply_change_print_target(doc, p):
 
 
 def apply_change_data_fields(doc, p):
-    """🧾 `dataFieldsJson` is OPTIONAL (genuinely ABSENT when unset, confirmed against the committed
-    before-document: `printTarget` is present-with-`null`, `dataFieldsJson` is not a key at all) —
+    """🧾 `dataFields` is OPTIONAL (genuinely ABSENT when unset, confirmed against the committed
+    before-document: `printTarget` is present-with-`null`, `dataFields` is not a key at all) —
     unlike `change-print-target`'s scalar, so a `None` inverse must POP the key rather than set it to
     `null`; a first standalone run against the committed vector caught exactly this (an inverse that
     wrote `null` instead of omitting the key failed the before-document comparison)."""
     after = copy.deepcopy(doc)
-    value = p.get("newJson")
+    value = p.get("newFields")
     if value is None:
-        after.pop("dataFieldsJson", None)
+        after.pop("dataFields", None)
     else:
-        after["dataFieldsJson"] = value
+        after["dataFields"] = copy.deepcopy(value)
     return after
 
 
@@ -430,7 +430,7 @@ def inverse_mutation(kind, before, payload):
     if kind == "change-print-target":
         return "ChangePrintTarget", {"newPrintTarget": before.get("printTarget")}
     if kind == "change-data-fields":
-        return "ChangeDataFields", {"newJson": before.get("dataFieldsJson")}
+        return "ChangeDataFields", {"newFields": copy.deepcopy(before.get("dataFields"))}
     if kind == "create-page":
         return "DeletePage", {"id": payload["page"]["id"]}
     if kind == "delete-page":

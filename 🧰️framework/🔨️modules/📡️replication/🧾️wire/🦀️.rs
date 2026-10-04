@@ -4,7 +4,7 @@
 /// 🚨️ The one error type every `protocol_*` public fn returns; never leaks `std::io::Error`.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ProtocolError {
-    Pack(crate::codec::PackError),
+    Pack(semio_framework_pack_error::PackError),
     ChainMismatch { commit_seq: u64 },
     TornTail(u64),
     UnknownCriticalRecord(u8),
@@ -46,13 +46,19 @@ impl std::error::Error for ProtocolError {
     }
 }
 
-impl From<crate::codec::PackError> for ProtocolError {
-    fn from(error: crate::codec::PackError) -> Self {
+impl From<semio_framework_pack_error::PackError> for ProtocolError {
+    fn from(error: semio_framework_pack_error::PackError) -> Self {
         Self::Pack(error)
     }
 }
 
-crate::fault_from_error!(ProtocolError, crate::diagnostic::FaultOrigin::Module, "module.protocol");
+impl From<semio_framework_pack_error::PackRefusal> for ProtocolError {
+    fn from(error: semio_framework_pack_error::PackRefusal) -> Self {
+        Self::Pack(semio_framework_pack_error::PackError::Refusal(error))
+    }
+}
+
+semio_framework_diagnostic::fault_from_error!(ProtocolError, semio_framework_diagnostic::FaultOrigin::Module, "module.protocol");
 
 //#endregion 🔖️Errors
 
@@ -192,14 +198,14 @@ impl crate::value::ToValue for UndoPolicy {
 impl crate::value::FromValue for UndoPolicy {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::String(tag) = value else {
-            return Err(crate::value::ValueError::new(format!("expected a string for UndoPolicy, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected a string for UndoPolicy, found {value:?}")));
         };
         match tag.as_str() {
             "ExactBaseOnly" => Ok(UndoPolicy::ExactBaseOnly),
             "TransformAgainstConcurrent" => Ok(UndoPolicy::TransformAgainstConcurrent),
             "SemanticUndo" => Ok(UndoPolicy::SemanticUndo),
             "CompensatingAction" => Ok(UndoPolicy::CompensatingAction),
-            other => Err(crate::value::ValueError::new(format!("unknown UndoPolicy variant `{other}`"))),
+            other => Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("unknown UndoPolicy variant `{other}`"))),
         }
     }
 }
@@ -233,13 +239,13 @@ impl crate::value::ToValue for MergePolicy {
 impl crate::value::FromValue for MergePolicy {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::String(tag) = value else {
-            return Err(crate::value::ValueError::new(format!("expected a string for MergePolicy, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected a string for MergePolicy, found {value:?}")));
         };
         match tag.as_str() {
             "LaissezFaire" => Ok(MergePolicy::LaissezFaire),
             "Normal" => Ok(MergePolicy::Normal),
             "Vigilant" => Ok(MergePolicy::Vigilant),
-            other => Err(crate::value::ValueError::new(format!("unknown MergePolicy variant `{other}`"))),
+            other => Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("unknown MergePolicy variant `{other}`"))),
         }
     }
 }
@@ -248,11 +254,11 @@ impl MergePolicy {
     /// 🚫️ Whether this policy rejects an outcome whose worst level is `level`:
     /// `LaissezFaire` only rejects `Fatal`; `Normal` rejects `Error` and `Fatal`; `Vigilant` rejects
     /// `Warning`, `Error`, and `Fatal`. `Info` is never rejected by any policy.
-    pub fn rejects(self, level: crate::diagnostic::Severity) -> bool {
+    pub fn rejects(self, level: semio_framework_diagnostic::Severity) -> bool {
         let floor = match self {
-            MergePolicy::LaissezFaire => crate::diagnostic::Severity::Fatal,
-            MergePolicy::Normal => crate::diagnostic::Severity::Error,
-            MergePolicy::Vigilant => crate::diagnostic::Severity::Warning,
+            MergePolicy::LaissezFaire => semio_framework_diagnostic::Severity::Fatal,
+            MergePolicy::Normal => semio_framework_diagnostic::Severity::Error,
+            MergePolicy::Vigilant => semio_framework_diagnostic::Severity::Warning,
         };
         level >= floor
     }

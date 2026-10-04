@@ -12,14 +12,7 @@ pub struct Entry {
     pub encode: BmpMutationPayloadEncoder,
     pub decode: fn(&[u8]) -> Result<BmpMutation, protocol::ProtocolError>,
 }
-pub const REGISTRY: &[Entry] = &[
-    crate::schema::mutations::set_snapshot::binary::CODEC,
-    crate::schema::mutations::change_header_fields::binary::CODEC,
-    crate::schema::mutations::insert_palette_entry::binary::CODEC,
-    crate::schema::mutations::remove_palette_entry::binary::CODEC,
-    crate::schema::mutations::replace_palette_entry::binary::CODEC,
-    crate::schema::mutations::replace_pixel_data::binary::CODEC,
-];
+pub const REGISTRY: &[Entry] = &[crate::schema::mutations::set_snapshot::binary::CODEC, crate::schema::mutations::patch_snapshot::binary::CODEC, crate::schema::mutations::paint_indexed_region::binary::CODEC, crate::schema::mutations::paint_direct_region::binary::CODEC];
 //#endregion Registry
 
 //#region Framing

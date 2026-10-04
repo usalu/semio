@@ -1,13 +1,10 @@
 //! 🗿️ obj round trip — the committed unit cube out as Wavefront OBJ and back.
 //!
-//! OBJ is the one mesh lane whose flow operator takes PLAIN TEXT, so the import fixture's note is
-//! asserted to be readable OBJ source rather than base64 — that is a real user-visible property of
-//! the imported graph, not an implementation detail.
+//! Import keeps editable polygon data in the existing mesh constructor.
 
-use crate::{assert_is_unit_cube, assert_oracle_agrees_on_unit_cube, project, retire_document, unit_cube_semio_mesh};
+use crate::{assert_is_unit_cube, assert_oracle_agrees_on_unit_cube, project, assert_imported_polygon_is_unit_cube, unit_cube_semio_mesh};
 use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::export::serializers::artifacts::obj::v3_0::any as export;
 use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::import::deserializers::artifacts::obj::v3_0::any as import;
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::mesh_bridge;
 
 fn exported() -> Vec<u8> {
     export::serialize_mesh_bytes(&unit_cube_semio_mesh()).expect("the unit cube exports as obj")
@@ -32,13 +29,9 @@ fn obj_round_trip_preserves_the_unit_cube() {
 }
 
 #[test]
-fn obj_import_plants_a_previewable_import_neuron_carrying_readable_source_text() {
-    let bytes = exported();
-    let document = import::deserialize_bytes(&bytes).expect("obj imports into a document");
-    let (kind, payload) = mesh_bridge::imported_source(&document).expect("the import fixture plants a source note and an import neuron");
-    assert_eq!(kind, import::IMPORT_NEURON_KIND, "obj re-enters the graph through its own brep operator");
-    assert!(payload.lines().filter(|line| line.starts_with("f ")).count() == 12, "the note holds plain obj text, not base64");
-    retire_document(document);
+fn obj_import_plants_editable_polygon_geometry_without_losing_the_cube() {
+    let document = import::deserialize_bytes(&exported()).expect("obj imports into an editable document");
+    assert_imported_polygon_is_unit_cube("obj editable import", document);
 }
 
 #[test]

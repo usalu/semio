@@ -1,7 +1,7 @@
 //! 📐️ `set-voxel-dims` command.
 
 use crate::editor::puzzle5d::{Puzzle5dActionCtx, PUZZLE5D_VOXEL_DIM_MAX, PUZZLE5D_VOXEL_DIM_MIN};
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 
 /// 🧊️ One axis of the Volume Brush's voxel extent, in grid-spacing units, clamped into the declared
 /// `[1, 64]` band the world-window config schema states. An unknown axis writes nothing.

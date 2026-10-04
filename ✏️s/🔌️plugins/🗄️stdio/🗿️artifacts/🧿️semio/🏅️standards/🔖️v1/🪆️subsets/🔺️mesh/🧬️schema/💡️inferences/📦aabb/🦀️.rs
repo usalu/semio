@@ -54,14 +54,14 @@ pub struct SemioAabb {
 /// and, mirrored, the store's `🌉️SerdeValueBridge` (`🏪️store/🧬️schema/🧬️mutations/🦀️.rs`).
 impl serde::Serialize for SemioAabb {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serde_json::Value::from(&<Self as store::ToValue>::to_value(self)).serialize(serializer)
+        serde_json::Value::from(&<Self as semio_framework_value::ToValue>::to_value(self)).serialize(serializer)
     }
 }
 
 impl<'de> serde::Deserialize<'de> for SemioAabb {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let json = serde_json::Value::deserialize(deserializer)?;
-        <Self as store::FromValue>::from_value(store::DslValue::from(json)).map_err(serde::de::Error::custom)
+        <Self as semio_framework_value::FromValue>::from_value(semio_framework_value::DslValue::from(json)).map_err(serde::de::Error::custom)
     }
 }
 //#endregion 🌉️SerdeBridge
@@ -105,7 +105,7 @@ impl store::InferredField<SemioMeshSnapshot> for MeshAabb {
     /// the incrementality-law test below.
     fn dep_input(snapshot: &SemioMeshSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
         match find_primitive_by_key(snapshot, key) {
-            Some((_, primitive)) => pack::to_json_string(&primitive.positions).into_bytes(),
+            Some((_, primitive)) => semio_framework_pack_json::to_json_string(&primitive.positions).into_bytes(),
             None => Vec::new(),
         }
     }

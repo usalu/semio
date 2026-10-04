@@ -5,6 +5,9 @@ use crate::standards::v1::subsets::image::schema::mutations::set_metadata_entry;
 
 /// ↩️ Inverse of set-metadata-entry.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(base: &SemioImageSnapshot, key: String, value: String) -> Vec<SemioImageMutation> {
-    <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key, value }), base)
+pub fn inverse(base: &SemioImageSnapshot, key: String, value: String) -> Result<Vec<SemioImageMutation>, semio_framework_value::ValueError> {
+    Ok({
+    <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key, value }), base)?
+
+    })
 }

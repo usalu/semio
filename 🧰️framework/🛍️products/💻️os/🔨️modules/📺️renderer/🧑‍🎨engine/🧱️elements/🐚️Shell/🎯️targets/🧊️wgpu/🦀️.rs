@@ -140,8 +140,7 @@ const COMPOSE_WINDOW_TEMPLATE_MIME: &str = "application/x-compose-window-templat
 const FRAMEWORK_DISPLAY_LAYOUT_TAB_ID: &str = "framework.display.layout";
 const FRAMEWORK_SETTINGS_GENERAL_TAB_ID: &str = "framework.settings.general";
 
-use dsl::DslValue;
-use protocol::{FromValue, ToValue};
+use semio_framework_value::{DslValue, FromValue, ToValue};
 #[cfg(not(target_arch = "wasm32"))]
 use protocol::os_directory::client::{DocumentHttpPortDeclarationV1, InstalledServiceContributionV1, InstalledServiceDriverV1, InstalledServiceTurnV1, InstalledServiceStatusV1, DOCUMENT_HTTP_PORT_TOPIC};
 #[cfg(not(target_arch = "wasm32"))]
@@ -413,7 +412,7 @@ fn context_menu_action_kind_str(kind: semio_framework::ActionKind) -> String {
 /// so resolving through the taxonomy alone rendered it with an EMPTY label. Its React twin resolves the
 /// same id through `ui.contextMenu.more` (`🛠️ShellHelpers/🟦️.tsx`'s `contextMenuGroupLabel`).
 fn shell_context_menu_item_from_spec(spec: ui_wgpu::wgpu::ContextMenuItemSpec, controller_id: &str, is_de: bool) -> ContextMenuItem {
-    let ui_wgpu::wgpu::ContextMenuItemSpec { id, label, icon, shortcut, disabled, separator, checked, destructive, action, args, children, .. } = spec;
+    let ui_wgpu::wgpu::ContextMenuItemSpec { id, label, icon, shortcut, disabled, reason, separator, checked, destructive, action, args, children, .. } = spec;
     let is_group_row = id.starts_with(ui_wgpu::wgpu::CONTEXT_MENU_GROUP_ID_PREFIX);
     let label = ui_wgpu::wgpu::context_menu_group_label(&id, is_de).map(str::to_string).or(label);
     let icon = icon.or_else(|| is_group_row.then(|| "folder".to_string()));
@@ -426,6 +425,7 @@ fn shell_context_menu_item_from_spec(spec: ui_wgpu::wgpu::ContextMenuItemSpec, c
         action: action.map(|action| ActionDescriptor { controller_id: controller_id.into(), action, args }),
         children: children.unwrap_or_default().into_iter().map(|child| shell_context_menu_item_from_spec(child, controller_id, is_de)).collect(),
         disabled: disabled.unwrap_or(false),
+        reason,
         separator: separator.unwrap_or(false),
         checked: checked.unwrap_or(false),
     }
@@ -449,12 +449,12 @@ fn action_window_instance_id(requested: Option<&str>, panel_leaves: &[&str], vie
 
 fn scope_action_to_window(action: &mut ActionDescriptor, window_id: &str) {
     let mut args = match action.args.take() {
-        Some(DslValue::Object(entries)) => entries,
+        Some(semio_framework_value::DslValue::Object(entries)) => entries,
         _ => Vec::new(),
     };
     args.retain(|(key, _)| key != "windowId");
-    args.push(("windowId".into(), DslValue::String(window_id.into())));
-    action.args = Some(DslValue::Object(args));
+    args.push(("windowId".into(), semio_framework_value::DslValue::String(window_id.into())));
+    action.args = Some(semio_framework_value::DslValue::Object(args));
 }
 
 fn scope_context_menu_items(items: &mut [ContextMenuItem], window_id: &str) {
@@ -1282,8 +1282,30 @@ pub struct ContextMenuItem {
     pub action: Option<ActionDescriptor>,
     pub children: Vec<ContextMenuItem>,
     pub disabled: bool,
+    /// 💬️ Why a disabled row cannot run (`ContextMenuItemSpec.reason`, producer-localized): painted muted beside the label
+    /// and announced as the focusable disabled row's description.
+    pub reason: Option<String>,
     pub separator: bool,
     pub checked: bool,
+}
+
+impl ContextMenuItem {
+    /// 🏷️ The row's painted text: its label, and beside it the reason a disabled row cannot run.
+    fn painted_label(&self) -> String {
+        match self.reason.as_deref().filter(|_| self.disabled) {
+            Some(reason) => format!("{} \u{b7} {reason}", self.label),
+            None => self.label.clone(),
+        }
+    }
+
+    /// ♿️ Registers the row's hit and its accessible presentation: an enabled row fires its action; a disabled row is still
+    /// a focusable `menuitem` (`aria-disabled`, described by its reason) that fires nothing — the `RowAction` contract.
+    fn register_hit(&self, row: Rect, input: &mut InputState<ActionDescriptor>) {
+        input.register_hit(HitTarget { rect: row, event: self.action.clone().filter(|_| !self.disabled), control_id: Some(self.id.clone()), kind: HitKind::ContextMenu, drag_axis: None, drag_data: None });
+        note_chrome_control_name(&self.id, Some(self.label.as_str()));
+        note_chrome_control_disabled(&self.id, self.disabled);
+        note_chrome_control_description(&self.id, self.reason.as_deref().filter(|_| self.disabled));
+    }
 }
 
 #[derive(Clone, Debug, Default)]
@@ -1306,8 +1328,9 @@ pub enum ContextMenuKeyOutcome {
     CloseMenu,
 }
 
-fn context_menu_enabled_indices(items: &[ContextMenuItem]) -> Vec<usize> {
-    items.iter().enumerate().filter(|(_, item)| !item.separator && !item.disabled).map(|(index, _)| index).collect()
+/// ⌨️ The rows arrow keys reach: every row but a separator — a disabled row is focusable, so its reason is heard.
+fn context_menu_focusable_indices(items: &[ContextMenuItem]) -> Vec<usize> {
+    items.iter().enumerate().filter(|(_, item)| !item.separator).map(|(index, _)| index).collect()
 }
 
 fn context_menu_items_at_level<'a>(root: &'a [ContextMenuItem], path_prefix: &[usize]) -> &'a [ContextMenuItem] {
@@ -1342,7 +1365,7 @@ fn context_menu_item_at_path<'a>(root: &'a [ContextMenuItem], path: &[usize]) ->
 
 fn context_menu_path_for_item_id(root: &[ContextMenuItem], item_id: &str, prefix: &mut Vec<usize>) -> Option<Vec<usize>> {
     for (index, item) in root.iter().enumerate() {
-        if item.separator || item.disabled {
+        if item.separator {
             continue;
         }
         prefix.push(index);
@@ -1362,7 +1385,7 @@ fn context_menu_path_for_item_id(root: &[ContextMenuItem], item_id: &str, prefix
 fn context_menu_move_active(root: &[ContextMenuItem], path: &[usize], down: bool) -> Vec<usize> {
     let level_prefix = if path.is_empty() { &[][..] } else { &path[..path.len() - 1] };
     let level = context_menu_items_at_level(root, level_prefix);
-    let enabled = context_menu_enabled_indices(level);
+    let enabled = context_menu_focusable_indices(level);
     if enabled.is_empty() {
         return path.to_vec();
     }
@@ -1412,7 +1435,7 @@ fn context_menu_open_submenu_path(root: &[ContextMenuItem], path: &[usize]) -> O
     if item.children.is_empty() {
         return None;
     }
-    let enabled = context_menu_enabled_indices(&item.children);
+    let enabled = context_menu_focusable_indices(&item.children);
     if enabled.is_empty() {
         return Some(path.to_vec());
     }
@@ -1734,6 +1757,8 @@ struct ShellChromeBuildState {
     preferences: ChromePrefsState,
     /// 🧯️ The one live non-fatal notice — see `🧯️TransientNoticeAndAgentOverlays`.
     transient_notice: Option<ShellTransientNotice>,
+    /// 📣️ The structured guest refusal behind the dispatch-fault string the funnel classifies next — see [`RefusedGuestFault`].
+    refused_guest_fault: Option<RefusedGuestFault>,
     /// 🌉️ MCP agent bridge consumer (presence + parked approvals), packet W1j.
     agent: crate::agent_bridge::AgentBridgeState,
     /// ✅️ The approvals modal's own open/dismiss state, alongside `agent.pending_approvals`.
@@ -2422,7 +2447,7 @@ fn terminal_directory_home_ack(result: &semio_framework::kernel::InvocationResul
             return Err("retained Home directory publication emitted an unexpected receipt".into());
         }
         let value = store::pack_rt::decode_wire_value(payload).map_err(|error| error.to_string())?;
-        let DslValue::Object(fields) = &value else {
+        let semio_framework_value::DslValue::Object(fields) = &value else {
             return Err("retained Home directory receipt is not an object".into());
         };
         let expected_keys = ["schema", "sessionBindingSha256", "authorizationGeneration", "throughSeqInclusive", "receiptSha256"];
@@ -2454,6 +2479,8 @@ mod shell_pool_future_tests;
 #[cfg(not(target_arch = "wasm32"))]
 enum ShellIoCompletion {
     Actions(Vec<ActionDescriptor>),
+    Import(PickedImport),
+    MediaFrames { controller_id: String, frames: Vec<ActionDescriptor> },
     Finished,
 }
 
@@ -3450,6 +3477,7 @@ struct PendingFileOpen {
     accept: String,
     read_as: Option<String>,
     import_action: String,
+    args: Option<semio_framework::DslValue>,
     multiple: bool,
 }
 
@@ -3728,6 +3756,9 @@ pub struct ShellState {
     /// 🪦 Closed World3d owners, detached from input immediately and drained one bounded step per
     /// frame before Drop. Keys include a shell epoch so reopening the same window id is independent.
     pub retired_world3d_states: VecDeque<(String, World3dState)>,
+    /// 🧯️ Closed World3d owners whose `cancel(CaptureLost)` waits for one drive of their world authority before they retire,
+    /// with the sightings so far ([`ShellState::world3d_close_cancel_settled`]).
+    world3d_close_cancels: BTreeMap<String, u8>,
     component_world3d_retirement: Option<Box<crate::scenes::AdmittedSurfaceCloseOwner<World3dState>>>,
     world3d_retirement_epoch: u64,
     world3d_retirement_sequence: u64,
@@ -3868,6 +3899,9 @@ pub struct ShellState {
     pending_file_opens: Vec<PendingFileOpen>,
     #[cfg(not(target_arch = "wasm32"))]
     shell_io_pending: std::collections::VecDeque<PendingShellIo>,
+    /// 📥️ Picked-file imports moving into the session's program chunk by chunk, oldest first ([`ImportTransfer`]).
+    pub(crate) import_transfers: VecDeque<ImportTransfer>,
+    import_transfer_next: u64,
     pub fullscreen_toggle_requested: bool,
     pub fullscreen_active: bool,
     pub active_utilities: Vec<UtilityNode>,
@@ -4094,6 +4128,9 @@ pub struct ShellState {
     /// ⏪️ The live history-edit session `HistoryPatch.timeTravel` last carried (`None` = no session) — what the
     /// time-travel band, the pane chips and the `ui.timeTravel.*` chords read (see `⏪️time-travel`).
     history_time_travel: Option<semio_framework::kernel::HistoryTimeTravel>,
+    /// 📡️ The history change `HistoryPatch.reprojection` last said replays before adoption (`None` = none waits) — what the
+    /// reprojection band and its live status read (see `⏪️time-travel`, audit W1E-3).
+    history_reprojection: Option<semio_framework::kernel::HistoryReprojection>,
     /// 🎯️ Where keyboard focus goes once the session edge that named it reaches the screen, and until when its target
     /// may take before the band fallback (`⏪️time-travel` `TimeTravelFocus`).
     time_travel_focus: Option<(time_travel::TimeTravelFocus, f64)>,
@@ -5076,7 +5113,7 @@ impl WindowMeasuresProjection<'_> {
             WindowMeasure::Toggle { id, icon_id, label, pressed, text, on_change } => {
                 let toggle = ui_contract::ToggleProps { appearance: ui_contract::ToggleAppearance::Checkbox, on: *pressed, icon: UiText::clipped(icon_id.as_str()), text: text.as_deref().map(measure_label) };
                 let record =
-                    MeasureRecord { bindings: measure_bindings(ui_contract::Trigger::Change, on_change, Some(("pressed", DslValue::Bool(!pressed))))?, label: label.as_deref().or(text.as_deref()).map(measure_label), ..MeasureRecord::default() };
+                    MeasureRecord { bindings: measure_bindings(ui_contract::Trigger::Change, on_change, Some(("pressed", semio_framework_value::DslValue::Bool(!pressed))))?, label: label.as_deref().or(text.as_deref()).map(measure_label), ..MeasureRecord::default() };
                 self.control(id, label.as_deref(), ui_contract::Component::Toggle(toggle), record).map(Some)
             }
             WindowMeasure::Group { id, label, default_open, value, min, max, step, loading, waiting, on_change, children, .. } => {
@@ -5110,6 +5147,7 @@ fn measure_tree_item(label: ui_contract::Label, default_open: Option<bool>) -> u
         draggable: None,
         drag_data: None,
         dimmed: None,
+        selected: None,
         window: None,
         granularity: None,
         inline_toolbar: None,
@@ -5143,7 +5181,7 @@ fn measure_activity(loading: Option<bool>, waiting: Option<bool>) -> ui_contract
 /// them. The gesture's own scalar is merged over these again by the retained router.
 fn measure_binding(trigger: ui_contract::Trigger, action: &ActionDescriptor, extra: Option<(&str, DslValue)>) -> Result<ui_contract::ActionBinding, String> {
     let mut entries = match action.args.as_ref() {
-        Some(DslValue::Object(entries)) => entries.clone(),
+        Some(semio_framework_value::DslValue::Object(entries)) => entries.clone(),
         _ => Vec::new(),
     };
     if let Some((key, value)) = extra {
@@ -5153,7 +5191,7 @@ fn measure_binding(trigger: ui_contract::Trigger, action: &ActionDescriptor, ext
     let args = if entries.is_empty() {
         None
     } else {
-        Some(serde_json::from_value::<ui_contract::UiValue>(dsl_value_as_json(&DslValue::Object(entries))).map_err(|error| format!("measure action '{}' args exceed the retained contract: {error}", action.action))?)
+        Some(serde_json::from_value::<ui_contract::UiValue>(dsl_value_as_json(&semio_framework_value::DslValue::Object(entries))).map_err(|error| format!("measure action '{}' args exceed the retained contract: {error}", action.action))?)
     };
     let action_id = ui_contract::ActionId::try_v1(&action.controller_id, &action.action).ok_or_else(|| format!("measure action '{}' exceeds the retained contract", action.action))?;
     Ok(ui_contract::ActionBinding { trigger, action: action_id, args, capability: None })
@@ -5676,7 +5714,7 @@ impl PanelProjection<'_> {
                 let id = self.reserve();
                 let on = presence.selected;
                 let props = ui_contract::ToggleProps { appearance: toggle.appearance, on, icon: UiText::clipped(toggle.icon_id.as_str()), text: toggle.text.as_ref().map(|label| measure_label(label.as_str())) };
-                let bindings = measure_bindings(ui_contract::Trigger::Change, &toggle.on_change, Some(("pressed", DslValue::Bool(!on))))?;
+                let bindings = measure_bindings(ui_contract::Trigger::Change, &toggle.on_change, Some(("pressed", semio_framework_value::DslValue::Bool(!on))))?;
                 self.place(
                     id,
                     key,
@@ -5907,6 +5945,7 @@ impl PanelProjection<'_> {
             draggable: item.draggable,
             drag_data: self.drag_data(&item.id, item.drag_data.as_ref())?,
             dimmed: item.dimmed,
+            selected: None,
             window: item.window.map(|window| ui_contract::TreeWindow {
                 total: window.total,
                 offset: window.offset,
@@ -5953,7 +5992,7 @@ impl PanelProjection<'_> {
                 ui_wgpu::wgpu::component::ui::UiTreeActionPlacement::Row => ui_contract::RowActionPlacement::Row,
                 ui_wgpu::wgpu::component::ui::UiTreeActionPlacement::Menu => ui_contract::RowActionPlacement::Menu,
             };
-            let row_action = ui_contract::RowAction { icon: UiText::clipped(action.icon_id.as_str()), label: action.label.as_ref().map(|label| measure_label(label.as_str())), verb, placement, disabled: action.disabled };
+            let row_action = ui_contract::RowAction { icon: UiText::clipped(action.icon_id.as_str()), label: action.label.as_ref().map(|label| measure_label(label.as_str())), verb, placement, disabled: action.disabled, reason: action.reason.as_ref().filter(|_| action.disabled).map(|reason| measure_label(reason.as_str())) };
             row_actions.try_push(row_action).map_err(|_| format!("panel '{}' tree row '{}' packs more row actions than one record admits", self.surface_id, item.id))?;
         }
         Ok((row_actions, Some(target)))
@@ -6638,7 +6677,7 @@ fn staged_arg_row(row_id: String, control_id: &str, arg: &semio_framework::Actio
             (None, Some(items))
         }
         semio_framework::ActionArgControl::Reference { domain, granularity, many, id_type, .. } => {
-            let text = |id: &Value| semio_framework::reference_id_text(&DslValue::from(id));
+            let text = |id: &Value| semio_framework::reference_id_text(&semio_framework_value::DslValue::from(id));
             let ids: Vec<String> = match value {
                 Some(Value::Array(ids)) => ids.iter().filter_map(text).collect(),
                 Some(id) => text(id).into_iter().collect(),
@@ -6711,7 +6750,7 @@ fn staged_arg_args(base: Option<&DslValue>, extra: Value) -> Option<DslValue> {
     if let Value::Object(extra) = extra {
         args.extend(extra);
     }
-    Some(DslValue::from(Value::Object(args)))
+    Some(semio_framework_value::DslValue::from(Value::Object(args)))
 }
 
 /// 📝️ The value one staged-arg dispatch stages: a segmented button's `option`, a colour part's colour, a vector axis
@@ -6924,6 +6963,22 @@ impl ShellState {
                     changed |= !actions.is_empty();
                     self.deferred_actions.extend(actions);
                 }
+                Ok(ShellIoCompletion::Import(picked)) => {
+                    if let Some(pending) = self.shell_io_pending.pop_front() {
+                        if let Some(task) = pending.task {
+                            task.cancel();
+                        }
+                    }
+                    changed |= self.begin_import_transfer(picked);
+                }
+                Ok(ShellIoCompletion::MediaFrames { controller_id, frames }) => {
+                    if let Some(pending) = self.shell_io_pending.pop_front() {
+                        if let Some(task) = pending.task {
+                            task.cancel();
+                        }
+                    }
+                    changed |= self.begin_media_frames_transfer(controller_id, frames);
+                }
                 Ok(ShellIoCompletion::Finished) | Err(std::sync::mpsc::TryRecvError::Disconnected) => {
                     if let Some(pending) = self.shell_io_pending.pop_front() {
                         if let Some(task) = pending.task {
@@ -7019,6 +7074,7 @@ impl ShellState {
     /// every hop is one `fetch` the page makes on this shell's behalf — so the transport is a unit
     /// value and only the cancellation root has to be minted.
     pub fn new(plugins: Vec<ProgramBridgeEntry>, plugin_filter: String, locale: Locale, terminology: Terminology) -> Self {
+        crate::interpreter::install_ui_engine_locale(locale);
         let space_mode = is_space_mode(&plugin_filter);
         #[cfg(not(target_arch = "wasm32"))]
         let (directory_transport, directory_cancel): (ShellDirectoryTransport, CancelToken) = {
@@ -7095,6 +7151,7 @@ impl ShellState {
             world3d_states: AdmittedSurfaceMap::default(),
             world3d_window_ids: HashMap::new(),
             retired_world3d_states: VecDeque::with_capacity(SCENE_SURFACE_CAPACITY),
+            world3d_close_cancels: BTreeMap::new(),
             component_world3d_retirement: None,
             world3d_retirement_epoch: 0,
             world3d_retirement_sequence: 0,
@@ -7170,6 +7227,8 @@ impl ShellState {
             pending_file_opens: Vec::new(),
             #[cfg(not(target_arch = "wasm32"))]
             shell_io_pending: std::collections::VecDeque::new(),
+            import_transfers: VecDeque::new(),
+            import_transfer_next: 1,
             fullscreen_toggle_requested: false,
             fullscreen_active: false,
             active_utilities: Vec::new(),
@@ -7251,6 +7310,7 @@ impl ShellState {
             history_entries: BTreeMap::new(),
             history_current_checkpoint_id: None,
             history_time_travel: None,
+            history_reprojection: None,
             time_travel_focus: None,
             #[cfg(not(target_arch = "wasm32"))]
             time_travel_polled_at_ms: 0.0,
@@ -7355,7 +7415,7 @@ impl ShellState {
 
     /// 🎯️ The app instance addressed by a retained action's controller and surface.
     fn action_session(&self, action: &ActionDescriptor) -> Option<&ActiveSession> {
-        let requested = action.args.as_ref().and_then(|args| args.get("windowId")).and_then(DslValue::as_str);
+        let requested = action.args.as_ref().and_then(|args| args.get("windowId")).and_then(semio_framework_value::DslValue::as_str);
         let spawned = self.spawned_session.as_ref().filter(|_| self.space_mode);
         if requested == Some("spawned") || spawned.is_some_and(|session| requested.is_some_and(|id| session.view_state.window_instances.iter().any(|window| window.id == id))) {
             return spawned.filter(|session| session.app.controller_id == action.controller_id);
@@ -7388,15 +7448,15 @@ impl ShellState {
 
     /// 🧭️ A shell surface alias resolves to its owner's concrete guest window address.
     fn session_action_invocation(&self, session: &ActiveSession, action: &ActionDescriptor, view: &ViewModel) -> Result<semio_framework::manifest::ActionInvocation, String> {
-        let supplied_window = action.args.as_ref().and_then(|args| args.get("windowId")).and_then(DslValue::as_str);
+        let supplied_window = action.args.as_ref().and_then(|args| args.get("windowId")).and_then(semio_framework_value::DslValue::as_str);
         let requested_window = if supplied_window == Some("spawned") { session.view_state.window_id.as_deref() } else { supplied_window };
         let panel_leaves: Vec<&str> = Self::flatten_panel_tab_leaves(&session.app.panel_tabs).into_iter().map(|tab| tab.id()).collect();
         let window_instance_id = action_window_instance_id(requested_window, &panel_leaves, session.view_state.window_id.as_deref(), view.focused_window_id.as_deref(), &session.app.window_kinds.first().id);
         let window_kind_id = view.window_instances.iter().find(|instance| instance.id == window_instance_id).map(|instance| instance.window_kind_id.clone()).or_else(|| session.app.window_kinds.iter().find(|kind| kind.id == window_instance_id).map(|kind| kind.id.clone())).ok_or_else(|| format!("action window instance {window_instance_id} has no declared kind"))?;
         let panel_origin = requested_window.is_some_and(|id| panel_leaves.contains(&id));
-        let mut arguments: std::collections::BTreeMap<String, DslValue> = action.args.as_ref().and_then(DslValue::as_object).map(|entries| entries.iter().filter(|(key, _)| !(panel_origin && key == "windowId")).cloned().collect()).unwrap_or_default();
+        let mut arguments: std::collections::BTreeMap<String, DslValue> = action.args.as_ref().and_then(semio_framework_value::DslValue::as_object).map(|entries| entries.iter().filter(|(key, _)| !(panel_origin && key == "windowId")).cloned().collect()).unwrap_or_default();
         if supplied_window == Some("spawned") {
-            arguments.insert("windowId".into(), DslValue::from(serde_json::json!(window_instance_id)));
+            arguments.insert("windowId".into(), semio_framework_value::DslValue::from(serde_json::json!(window_instance_id)));
         }
         Ok(semio_framework::manifest::ActionInvocation {
             address: semio_framework::manifest::ActionAddress { plugin_id: session.plugin_id.clone(), app_id: session.app.id.clone(), mode_id: session.view_state.active_mode_id.clone().unwrap_or_else(|| session.app.default_mode_id.clone()), window_kind_id, window_instance_id, action_id: action.action.clone() },
@@ -7630,8 +7690,9 @@ impl ShellState {
         };
         match program.create_app(app_id).await {
             Ok(instance_id) => Some(instance_id),
-            Err(error) => {
-                self.record_plugin_fault(plugin_id, app_id, error);
+            Err(refusal) => {
+                let detail = self.note_refused_open(refusal);
+                self.record_plugin_fault(plugin_id, app_id, detail);
                 None
             }
         }
@@ -7961,7 +8022,7 @@ impl ShellState {
         let Some(target_app) = target_app else {
             return None;
         };
-        let tab_id = match action.args.as_ref().and_then(|args| args.get("tabId")).and_then(DslValue::as_str) {
+        let tab_id = match action.args.as_ref().and_then(|args| args.get("tabId")).and_then(semio_framework_value::DslValue::as_str) {
             Some(tab_id) if Self::panel_identifier(tab_id) => tab_id.to_string(),
             _ => return Some(Err("host-panel.invalid-tab-id".into())),
         };
@@ -8697,11 +8758,41 @@ impl ShellState {
         self.sync_world3d_declared_actions();
     }
 
-    /// 🪟️ Retires a closed World3d window at the layout-to-input sync boundary. The scene owner and
-    /// every shell-local projection keyed by that owner disappear in one bounded pass before input.
+    /// 🧯️ Whether a closed World3d window may retire now: at once unless it holds a gesture to abort
+    /// (`world3d_cancel_owed`: a live gumball that streamed, an open paint stroke). Then its first sighting enqueues
+    /// `cancel(CaptureLost)` (zero trace, as React's unmount does), takes the surface off the pointer's way (empty bounds) and
+    /// waits for the frame's world authority to drive the cancel; it retires once its queue drained, or after
+    /// [`WORLD3D_CLOSE_CANCEL_SIGHTINGS`] sightings. A cancel the full queue refuses retires at once.
+    fn world3d_close_cancel_settled(&mut self, host_id: &str) -> bool {
+        let Some(state) = self.world3d_states.get_mut(host_id) else { return true };
+        let Some(sightings) = self.world3d_close_cancels.get_mut(host_id) else {
+            if !infinite_world::world::world3d_cancel_owed(state) {
+                return true;
+            }
+            let owed = enqueue_world3d_events(state, [WorldInteractionIntent::cancel(infinite_world::world::WorldCancelReason::CaptureLost)]).is_ok();
+            if owed {
+                state.bounds = Rect::new(0.0, 0.0, 0.0, 0.0);
+                self.world3d_close_cancels.insert(host_id.to_owned(), 0);
+            }
+            return !owed;
+        };
+        *sightings = sightings.saturating_add(1);
+        let settled = infinite_world::world::world3d_interaction_front_generation(state).is_none() || *sightings >= WORLD3D_CLOSE_CANCEL_SIGHTINGS;
+        if settled {
+            self.world3d_close_cancels.remove(host_id);
+        }
+        settled
+    }
+
+    /// 🪟️ Retires a closed World3d window at the layout-to-input sync boundary, once its capture-lost cancel was driven
+    /// ([`Self::world3d_close_cancel_settled`]). The scene owner and every shell-local projection keyed by that owner
+    /// disappear in one bounded pass before input.
     fn retire_closed_world3d_windows(&mut self, live_window_ids: &[&str]) {
         let retired: Vec<String> = self.world3d_window_ids.iter().filter(|(_, window_id)| !live_window_ids.contains(&window_id.as_str())).map(|(host_id, _)| host_id.clone()).collect();
         for host_id in retired {
+            if !self.world3d_close_cancel_settled(&host_id) {
+                continue;
+            }
             let Some(window_id) = self.world3d_window_ids.remove(&host_id) else { continue };
             let Some(mut state) = self.world3d_states.remove(&host_id) else { continue };
             begin_world3d_dynamic_retirement(&mut state);
@@ -9064,12 +9155,14 @@ impl ShellState {
                         let controller_id = controller_id.to_string();
                         let args = optional_dsl_value_as_json(args);
                         self.submit_shell_io_future(async move {
-                            ShellIoCompletion::Actions(request_media_frames(&controller_id, &accept, &frame_action, &done_action, &fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload.as_deref(), args).await)
+                            let frames = request_media_frames(&controller_id, &accept, &frame_action, &done_action, &fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload.as_deref(), args).await;
+                            ShellIoCompletion::MediaFrames { controller_id, frames }
                         });
                     }
                     #[cfg(target_arch = "wasm32")]
-                    for descriptor in request_media_frames(controller_id, &accept, &frame_action, &done_action, &fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload.as_deref(), optional_dsl_value_as_json(args)) {
-                        self.deferred_actions.push(descriptor);
+                    {
+                        let frames = request_media_frames(controller_id, &accept, &frame_action, &done_action, &fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload.as_deref(), optional_dsl_value_as_json(args));
+                        self.begin_media_frames_transfer(controller_id.to_string(), frames);
                     }
                 }
                 semio_framework::kernel::Effect::SendMessage { target: semio_framework::kernel::MessageEndpoint::Backbone { uri }, payload } => {
@@ -9100,13 +9193,13 @@ impl ShellState {
                 semio_framework::kernel::Effect::IconRenderExport { items } => {
                     self.enqueue_icon_export(items);
                 }
-                semio_framework::kernel::Effect::RequestFileOpen { accept, read_as, import_action, multiple, .. } => {
+                semio_framework::kernel::Effect::RequestFileOpen { accept, read_as, import_action, args, multiple, .. } => {
                     #[cfg(target_arch = "wasm32")]
-                    self.pending_file_opens.push(PendingFileOpen { controller_id: controller_id.to_string(), accept, read_as, import_action, multiple });
+                    self.pending_file_opens.push(PendingFileOpen { controller_id: controller_id.to_string(), accept, read_as, import_action, args, multiple });
                     #[cfg(not(target_arch = "wasm32"))]
                     {
                         let controller_id = controller_id.to_string();
-                        self.submit_shell_io_future(async move { ShellIoCompletion::Actions(file_open_import_actions(&controller_id, &import_action, request_file_open(&accept, read_as.as_deref(), multiple).await, multiple)) });
+                        self.submit_shell_io_future(async move { ShellIoCompletion::Import(PickedImport { opened: request_file_open(&accept, read_as.as_deref(), multiple).await, controller_id, import_action, args, multiple }) });
                     }
                 }
                 other => {
@@ -9712,8 +9805,9 @@ impl ShellState {
     /// 🎯️ Every row carries its verbs as ROW ACTIONS on ONE target (U6's row model): a plugin row targets
     /// `framework` with `{ pluginId }` and names `installPlugin` or `reloadPlugin`/`uninstallPlugin`; an extension row targets
     /// `{ extensionId, enabled: !enabled }` and names `setExtensionEnabled`/`uninstallExtension`. A verb the row cannot run
-    /// paints and announces DISABLED (React's `disabled` buttons) instead of disappearing — the session's own program is never
-    /// uninstallable (React's `canUninstall`), a plugin mid-install offers nothing, a failed extension cannot be enabled.
+    /// paints and announces DISABLED (React's `disabled` buttons) instead of disappearing, and names why as its localized reason
+    /// (the contract's `RowAction.reason`, announced as its description) — the session's own program is never uninstallable
+    /// (React's `canUninstall`), a plugin mid-install offers nothing, a failed extension cannot be enabled.
     ///
     /// 🪟️ The roster is ONE windowed Tree section (`framework.marketplace.source.local`): the rows the tree window observer
     /// reported for it ([`tree_windows::TreeWindowScheduler::window_of`]) — one viewport of rows before the first report —
@@ -9725,12 +9819,13 @@ impl ShellState {
         let session_plugin = self.session.as_ref().map(|session| session.plugin_id.clone());
         let ids = self.marketplace_roster();
         let installing = self.plugin_install.as_ref().map(|install| install.plugin_id.clone());
-        let verb = |action: &str, args: Option<DslValue>, icon: IconName, label_key: &'static str, disabled: bool| ui_wgpu::wgpu::component::ui::UiTreeItemAction {
+        let verb = |action: &str, args: Option<DslValue>, icon: IconName, label_key: &'static str, disabled_because: Option<&'static str>| ui_wgpu::wgpu::component::ui::UiTreeItemAction {
             icon_id: icon,
             label: Some(Label::data(shell_chrome_string(label_key, is_de))),
             action: ActionDescriptor { controller_id: "framework".into(), action: action.into(), args },
             placement: None,
-            disabled,
+            disabled: disabled_because.is_some(),
+            reason: disabled_because.map(|reason_key| Label::data(shell_chrome_string(reason_key, is_de))),
         };
         let extension_item = |entry: &ShellExtensionProjection| {
             let extension_id = entry.record.extension_id.clone();
@@ -9740,8 +9835,8 @@ impl ShellState {
                 id: format!("framework.marketplace.plugin.{}.extension.{extension_id}", entry.record.extends_host),
                 label: Label::data(format!("{} · {} · {}", entry.record.label, entry.record.version, shell_chrome_string(if entry.enabled { "plugins.extension.enabled" } else { "plugins.extension.disabled" }, is_de))),
                 actions: Some(vec![
-                    verb("setExtensionEnabled", target.clone(), if entry.enabled { IconName::EyeOff } else { IconName::Eye }, if entry.enabled { "plugins.extension.disable" } else { "plugins.extension.enable" }, !can_toggle),
-                    verb("uninstallExtension", target, IconName::Trash2, "plugins.action.uninstall", false),
+                    verb("setExtensionEnabled", target.clone(), if entry.enabled { IconName::EyeOff } else { IconName::Eye }, if entry.enabled { "plugins.extension.disable" } else { "plugins.extension.enable" }, (!can_toggle).then_some("plugins.reason.extensionUnavailable")),
+                    verb("uninstallExtension", target, IconName::Trash2, "plugins.action.uninstall", None),
                 ]),
                 ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
             }
@@ -9760,11 +9855,12 @@ impl ShellState {
             let version = resident.map(|entry| entry.manifest.version.clone()).unwrap_or_default();
             let head = if version.is_empty() { format!("{label} \u{b7} {}", shell_chrome_string(status_key, is_de)) } else { format!("{label} \u{b7} {version} \u{b7} {}", shell_chrome_string(status_key, is_de)) };
             let target = crate::action_args_json!({ "pluginId": plugin_id });
-            let can_uninstall = resident.is_some() && session_plugin.as_deref() != Some(plugin_id);
+            let installing_reason = in_flight.then_some("plugins.reason.installing");
+            let uninstall_reason = installing_reason.or_else(|| (session_plugin.as_deref() == Some(plugin_id)).then_some("plugins.reason.inUse"));
             let actions = if resident.is_some() {
-                vec![verb("reloadPlugin", target.clone(), IconName::RotateCcw, "plugins.action.reload", in_flight), verb("uninstallPlugin", target, IconName::Trash2, "plugins.action.uninstall", !can_uninstall || in_flight)]
+                vec![verb("reloadPlugin", target.clone(), IconName::RotateCcw, "plugins.action.reload", installing_reason), verb("uninstallPlugin", target, IconName::Trash2, "plugins.action.uninstall", uninstall_reason)]
             } else {
-                vec![verb("installPlugin", target, IconName::Download, "plugins.action.install", in_flight)]
+                vec![verb("installPlugin", target, IconName::Download, "plugins.action.install", installing_reason)]
             };
             let extensions: Vec<UiTreeItemNode> = self.extensions.iter().filter(|entry| entry.record.extends_host == plugin_id).map(&extension_item).collect();
             UiTreeItemNode {
@@ -10073,8 +10169,10 @@ impl ShellState {
         UiNode::Stack(UiStackNode { direction: "column".into(), gap: None, padding: None, id: Some("framework.sync.panel".into()), children, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, menu: None })
     }
 
-    /// 🧵️ The truthful Task Manager body for this target. WGPU has no actor-registry metrics or
-    /// dispatch bridge, so it projects React's distinct `no-runtime` state and publishes no actor verbs.
+    /// 🧵️ The truthful Task Manager body for this target — React's `TaskManagerWindow`: the running tasks this shell owns
+    /// (picked-file imports, [`ShellState::import_task_nodes`]) with their progress and a Cancel each, above the actors. WGPU
+    /// has no actor-registry metrics or dispatch bridge, so the actors read React's distinct `no-runtime` state and publish no
+    /// actor verbs.
     pub(crate) fn build_task_manager_ui(&self) -> UiNode {
         let is_de = self.locale_id == "de";
         UiNode::Stack(UiStackNode {
@@ -10082,7 +10180,7 @@ impl ShellState {
             gap: None,
             padding: None,
             id: Some("os.task-manager.panel".into()),
-            children: vec![UiNode::Stack(UiStackNode {
+            children: vec![self.import_task_nodes(), UiNode::Stack(UiStackNode {
                 direction: "column".into(),
                 gap: None,
                 padding: None,
@@ -10589,7 +10687,7 @@ impl ShellState {
                     message: worst.map(|message| message.message.clone()).unwrap_or_default(),
                     preview_after: match &conflict.kind {
                         protocol::ConflictKind::Quarantined { envelopes } => {
-                            let compact = protocol::json::to_json_string(envelopes);
+                            let compact = semio_framework_pack_json::to_json_string(envelopes);
                             serde_json::from_str::<serde_json::Value>(&compact).ok().and_then(|value| serde_json::to_string_pretty(&value).ok()).unwrap_or(compact)
                         }
                         protocol::ConflictKind::Degraded { edit_ids } => format!("// degraded edits: {}", edit_ids.join(", ")),
@@ -11075,6 +11173,7 @@ impl ShellState {
         self.history_entries.clear();
         self.history_current_checkpoint_id = None;
         self.history_time_travel = None;
+        self.history_reprojection = None;
         self.last_uncommitted_edit_at_ms = None;
         self.auto_checkin_pending = false;
         self.checkpoint_dispatched = false;
@@ -11094,6 +11193,7 @@ impl ShellState {
             Ok(patch) => {
                 fold_history_patch(&mut self.history_entries, &mut self.history_cursor, &patch, true);
                 self.observe_history_time_travel(patch.time_travel.as_ref());
+                self.observe_history_reprojection(patch.reprojection.as_ref());
                 self.history_current_checkpoint_id = patch.current_checkpoint_id;
             }
             Err(error) => Self::debug_log(&format!("[TRACE] wgpu shell read_history failed: {error}")),
@@ -11121,6 +11221,7 @@ impl ShellState {
             let Some(patch) = history_patch else { return };
             if patch.cursor >= self.history_cursor {
                 self.observe_history_time_travel(patch.time_travel.as_ref());
+                self.observe_history_reprojection(patch.reprojection.as_ref());
             }
             if !fold_history_patch(&mut self.history_entries, &mut self.history_cursor, patch, false) {
                 return;
@@ -11237,7 +11338,7 @@ impl ShellState {
     async fn touch_space_index_artifact(&mut self, space_id: &str, artifact_id: &str) {
         let now_ms = chrome_now_ms();
         let actor = self.identity.as_ref().map(|identity| identity.user_id.clone()).unwrap_or_else(|| self.shell_session_id.clone());
-        let arguments: BTreeMap<String, DslValue> = BTreeMap::from([("id".to_string(), DslValue::String(artifact_id.to_string())), ("nowMs".to_string(), DslValue::float(now_ms)), ("actor".to_string(), DslValue::String(actor.clone()))]);
+        let arguments: BTreeMap<String, DslValue> = BTreeMap::from([("id".to_string(), semio_framework_value::DslValue::String(artifact_id.to_string())), ("nowMs".to_string(), semio_framework_value::DslValue::float(now_ms)), ("actor".to_string(), semio_framework_value::DslValue::String(actor.clone()))]);
         if self.sync_channel.as_ref().map(|channel| channel.document_id.as_str()) == Some(S_SPACE_INDEX_DOCUMENT_ID) && self.open_space_id.as_deref() == Some(space_id) {
             let Some(session) = self.session.clone() else { return };
             let Some(program) = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).cloned() else { return };
@@ -11246,7 +11347,7 @@ impl ShellState {
                 address: semio_framework::manifest::CommandAddress { owner: semio_framework::manifest::CommandOwnerAddress::App { plugin_id: session.plugin_id.clone(), app_id: app.id.clone() }, command_id: "touchArtifact".into() },
                 arguments,
             };
-            let command_json = dsl::os_pack::json::to_json_string(&invocation);
+            let command_json = semio_framework_pack_json::to_json_string(&invocation);
             match program.handle_command(session.instance_id, &command_json, &session.view_state).await {
                 Ok(result) => self.queue_host_effects(&session.app.controller_id, result.requested_effects),
                 Err(error) => Self::debug_log(&format!("[TRACE] wgpu shell touchArtifact (live session) failed: {error}")),
@@ -11305,7 +11406,7 @@ impl ShellState {
             address: semio_framework::manifest::CommandAddress { owner: semio_framework::manifest::CommandOwnerAddress::App { plugin_id: program.plugin_id.clone(), app_id: app.id.clone() }, command_id: "touchArtifact".into() },
             arguments,
         };
-        let command_json = dsl::os_pack::json::to_json_string(&invocation);
+        let command_json = semio_framework_pack_json::to_json_string(&invocation);
         let view_state = ViewModel::new(self.active_locale(), self.active_terminology());
         match program.handle_command(instance_id, &command_json, &view_state).await {
             Ok(result) => match route_document_backbone_effects(&actor_uri, &channels.cmd_tx, result.requested_effects) {
@@ -11339,7 +11440,7 @@ impl ShellState {
                     Ok(())
                 }
                 "submit" => {
-                    let message = action.args.as_ref().and_then(|args| args.get("message")).and_then(DslValue::as_str).map(str::trim).filter(|value| !value.is_empty()).unwrap_or("check-in").to_string();
+                    let message = action.args.as_ref().and_then(|args| args.get("message")).and_then(semio_framework_value::DslValue::as_str).map(str::trim).filter(|value| !value.is_empty()).unwrap_or("check-in").to_string();
                     self.checkin_dialog_draft = None;
                     self.dispatch_checkpoint(&message).await;
                     Ok(())
@@ -11938,7 +12039,8 @@ impl ShellState {
     pub fn dispatch_action<'a>(&'a mut self, mut action: ActionDescriptor) -> ShellTurn<'a, Result<(), String>> {
 
         shell_turn(async move {
-            if let Some(owner) = action.args.as_ref().and_then(|args| args.get("windowId")).and_then(DslValue::as_str).and_then(window_pane_owner).map(str::to_string) {
+            self.chrome_build.refused_guest_fault = None;
+            if let Some(owner) = action.args.as_ref().and_then(|args| args.get("windowId")).and_then(semio_framework_value::DslValue::as_str).and_then(window_pane_owner).map(str::to_string) {
                 scope_action_to_window(&mut action, &owner);
             }
             crate::interpreter::note_dispatched_action(&action, self.dispatch_origin);
@@ -11958,10 +12060,10 @@ impl ShellState {
             if !record_tutorial_after_acceptance && action.controller_id != "framework" {
                 if let Some(session) = self.action_session(&action).cloned() {
                     if Self::app_owns_command(&session.app, &action.action) {
-                        if action.args.as_ref().and_then(|args| args.get("windowId")).and_then(DslValue::as_str) == Some("spawned") {
+                        if action.args.as_ref().and_then(|args| args.get("windowId")).and_then(semio_framework_value::DslValue::as_str) == Some("spawned") {
                             if let Some(id) = session.view_state.window_id.as_deref() { scope_action_to_window(&mut action, id); }
                         }
-                        let arguments = action.args.as_ref().and_then(DslValue::as_object).map(|entries| entries.iter().cloned().collect()).unwrap_or_default();
+                        let arguments = action.args.as_ref().and_then(semio_framework_value::DslValue::as_object).map(|entries| entries.iter().cloned().collect()).unwrap_or_default();
                         return self
                             .dispatch_session_command(semio_framework::manifest::CommandInvocation {
                                 address: semio_framework::manifest::CommandAddress { owner: semio_framework::manifest::CommandOwnerAddress::App { plugin_id: session.plugin_id.clone(), app_id: session.app.id.clone() }, command_id: action.action.clone() },
@@ -12038,6 +12140,7 @@ impl ShellState {
                         if let Some(value) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|v| v.as_str()) {
                             let changed = self.locale_id != value;
                             self.locale_id = value.to_string();
+                            crate::interpreter::install_ui_engine_locale(self.active_locale());
                             if let Some(status) = self.plugin_fault_status() {
                                 self.error = Some(status);
                             }
@@ -12188,6 +12291,12 @@ impl ShellState {
                         }
                         return Ok(());
                     }
+                    IMPORT_TRANSFER_CANCEL_ACTION => {
+                        if let Some(transfer) = action.args.as_ref().map(dsl_value_as_json).and_then(|args| args.get("transfer").and_then(Value::as_u64)) {
+                            self.cancel_import_transfer(transfer);
+                        }
+                        return Ok(());
+                    }
                     "stageActionArg" => {
                         let args = action.args.as_ref().map(dsl_value_as_json).unwrap_or(Value::Null);
                         if let (Some(window_id), Some(action_id), Some(arg_id)) = (args.get("window").and_then(Value::as_str), args.get("action").and_then(Value::as_str), args.get("arg").and_then(Value::as_str)) {
@@ -12290,7 +12399,7 @@ impl ShellState {
                     }
                     "resolveConflict" => {
                         let conflict_id = action.args.as_ref().and_then(|args| args.get("conflictId")).and_then(|v| v.as_str()).map(ToOwned::to_owned);
-                        let accept = action.args.as_ref().and_then(|args| args.get("accept")).and_then(DslValue::as_bool).unwrap_or(true);
+                        let accept = action.args.as_ref().and_then(|args| args.get("accept")).and_then(semio_framework_value::DslValue::as_bool).unwrap_or(true);
                         if let Some(conflict_id) = conflict_id {
                             self.resolve_open_conflict(&conflict_id, accept).await;
                         }
@@ -12336,7 +12445,7 @@ impl ShellState {
                     }
                     "setExtensionEnabled" => {
                         let extension_id = action.args.as_ref().and_then(|args| args.get("extensionId")).and_then(|value| value.as_str()).map(ToOwned::to_owned);
-                        let enabled = action.args.as_ref().and_then(|args| args.get("enabled")).and_then(DslValue::as_bool).unwrap_or(true);
+                        let enabled = action.args.as_ref().and_then(|args| args.get("enabled")).and_then(semio_framework_value::DslValue::as_bool).unwrap_or(true);
                         if let Some(extension_id) = extension_id {
                             if self.set_extension_enabled(&extension_id, enabled).await? {
                                 self.note_shell_setting_command(if enabled { "os.enableExtension" } else { "os.disableExtension" }, Some(&extension_id)).await?;
@@ -12515,8 +12624,9 @@ impl ShellState {
             let program = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id).ok_or("action program missing")?;
             let live_view_state = self.live_view_state(&session);
             let invocation = self.session_action_invocation(&session, &action, &live_view_state)?;
-            let action_json = dsl::os_pack::json::to_json_string(&invocation);
-            let mut result = program.handle_action(session.instance_id, &action_json, &live_view_state).await?;
+            let action_json = semio_framework_pack_json::to_json_string(&invocation);
+            let answer = program.handle_action(session.instance_id, &action_json, &live_view_state).await;
+            let mut result = answer.map_err(|refusal| self.refused_guest_call(refusal, &session.app))?;
             self.observe_invocation_history(result.history_patch.as_ref()).await;
             self.observe_interaction_output(&result.output);
             if record_tutorial_after_acceptance {
@@ -12574,7 +12684,7 @@ impl ShellState {
             if matches!(invocation.address.owner, semio_framework::manifest::CommandOwnerAddress::Os) {
                 return Err("os commands must be dispatched by the shell".into());
             }
-            let window_id = invocation.arguments.get("windowId").and_then(DslValue::as_str);
+            let window_id = invocation.arguments.get("windowId").and_then(semio_framework_value::DslValue::as_str);
             let session = self.command_session(&invocation.address.owner, window_id).cloned().ok_or("command has no mounted app owner")?;
             self.dispatch_session_command(invocation, session).await
         })
@@ -12588,9 +12698,10 @@ impl ShellState {
                 semio_framework::manifest::CommandOwnerAddress::Os => return Err("os commands must be dispatched by the shell".into()),
             };
             let program = self.plugins.iter().find(|entry| entry.plugin_id == *owner_plugin_id).cloned().ok_or("command program missing")?;
-            let command_json = dsl::os_pack::json::to_json_string(&invocation);
+            let command_json = semio_framework_pack_json::to_json_string(&invocation);
             let live_view_state = self.live_view_state(&session);
-            let mut result = program.handle_command(session.instance_id, &command_json, &live_view_state).await?;
+            let answer = program.handle_command(session.instance_id, &command_json, &live_view_state).await;
+            let mut result = answer.map_err(|refusal| self.refused_guest_call(refusal, &session.app))?;
             Self::debug_log(&format!("[TRACE] wgpu-shell command {} settled effects={} mutations={}", invocation.address.command_id, result.requested_effects.len(), result.mutations.len()));
             self.observe_invocation_history(result.history_patch.as_ref()).await;
             self.observe_interaction_output(&result.output);
@@ -12896,9 +13007,9 @@ impl ShellState {
     /// door (see this file's own note in the retained editor lane).
     fn handle_hub_workspace_action<'a>(&'a mut self, verb: &'a str, args: Option<DslValue>) -> ShellTurn<'a, ()> {
         shell_turn(async move {
-            let value = args.as_ref().and_then(|args| args.get("value")).and_then(DslValue::as_str).unwrap_or_default().to_string();
-            let space_id = args.as_ref().and_then(|args| args.get("spaceId")).and_then(DslValue::as_str).unwrap_or_default().to_string();
-            let connection_id = args.as_ref().and_then(|args| args.get("connectionId")).and_then(DslValue::as_str).unwrap_or_default().to_string();
+            let value = args.as_ref().and_then(|args| args.get("value")).and_then(semio_framework_value::DslValue::as_str).unwrap_or_default().to_string();
+            let space_id = args.as_ref().and_then(|args| args.get("spaceId")).and_then(semio_framework_value::DslValue::as_str).unwrap_or_default().to_string();
+            let connection_id = args.as_ref().and_then(|args| args.get("connectionId")).and_then(semio_framework_value::DslValue::as_str).unwrap_or_default().to_string();
             match verb {
                 hub_action::SET_EMAIL => self.hub_workspace.email_draft = value,
                 hub_action::SET_PASSWORD => self.hub_workspace.password_draft = value,
@@ -12974,7 +13085,7 @@ impl ShellState {
                 hub_action::CREATE_INVITE => self.run_hub_create_invite_turn(&space_id).await,
                 hub_action::REDEEM_INVITE => self.run_hub_redeem_turn().await,
                 hub_action::SELECT_ARTIFACT_KIND => {
-                    let kind_id = args.as_ref().and_then(|args| args.get("kindId")).and_then(DslValue::as_str).unwrap_or_default();
+                    let kind_id = args.as_ref().and_then(|args| args.get("kindId")).and_then(semio_framework_value::DslValue::as_str).unwrap_or_default();
                     let creation = &mut self.hub_workspace.creation;
                     if creation.catalog.as_ref().is_some_and(|catalog| catalog.kinds.iter().any(|kind| kind.kind_id == kind_id)) {
                         creation.kind_id = Some(kind_id.to_string());
@@ -13509,9 +13620,10 @@ impl ShellState {
                     Self::debug_log(&format!("[TRACE] wgpu shell os.open-artifact could not switch to {plugin_id}: program missing"));
                     return;
                 };
-                let label = app.label.resolve(self.active_terminology(), self.active_locale()).to_string();
+                let (terminology, locale) = (self.active_terminology(), self.active_locale());
+                let label = app.label.resolve(terminology, locale).to_string();
                 let app_id = app.id.clone();
-                let pending = ShellDetached::spawn(async move { program.create_app(&app_id).await.map(ShellDocumentOpenAnswer::Instantiated) });
+                let pending = ShellDetached::spawn(async move { program.create_app(&app_id).await.map(ShellDocumentOpenAnswer::Instantiated).map_err(|refusal| program_fault_text(&refusal, terminology, locale)) });
                 self.document_opening = Some(ShellDocumentOpening::new(label, ShellDocumentOpenPhase::Instantiating, plugin_id, app.id, document, Some(pending)));
             }
             _ => {
@@ -13649,7 +13761,8 @@ impl ShellState {
             return;
         }
         let app_id = app.id.clone();
-        opening.pending = Some(ShellDetached::spawn(async move { program.create_app(&app_id).await.map(ShellDocumentOpenAnswer::Instantiated) }));
+        let (terminology, locale) = (self.active_terminology(), self.active_locale());
+        opening.pending = Some(ShellDetached::spawn(async move { program.create_app(&app_id).await.map(ShellDocumentOpenAnswer::Instantiated).map_err(|refusal| program_fault_text(&refusal, terminology, locale)) }));
         opening.phase = ShellDocumentOpenPhase::Instantiating;
         self.document_opening = Some(opening);
     }
@@ -13830,16 +13943,16 @@ impl ShellState {
     fn dispatch_fold_directory_events(&mut self, events: &[semio_framework_os_kernel::os_directory::DirectoryEvent]) {
         let Some(session) = self.session.clone().filter(|session| session.app.dialect == space_index_dialect()) else { return };
         let Some(program) = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).cloned() else { return };
-        let events_json = dsl::os_pack::json::to_json_string(&events.to_vec());
+        let events_json = semio_framework_pack_json::to_json_string(&events.to_vec());
         let live_view_state = self.live_view_state(&session);
         let window_kind_id = session.app.window_kinds.first().id.clone();
         let window_instance_id = live_view_state.window_id.clone().unwrap_or_else(|| window_kind_id.clone());
         let mode_id = live_view_state.active_mode_id.clone().unwrap_or_else(|| session.app.default_mode_id.clone());
         let invocation = semio_framework::manifest::ActionInvocation {
             address: semio_framework::manifest::ActionAddress { plugin_id: session.plugin_id.clone(), app_id: session.app.id.clone(), mode_id, window_kind_id, window_instance_id, action_id: "foldDirectoryEvents".into() },
-            arguments: BTreeMap::from([("eventsJson".into(), DslValue::String(events_json))]),
+            arguments: BTreeMap::from([("eventsJson".into(), semio_framework_value::DslValue::String(events_json))]),
         };
-        let action_json = dsl::os_pack::json::to_json_string(&invocation);
+        let action_json = semio_framework_pack_json::to_json_string(&invocation);
         let pool = crate::renderer_worker_pool();
         let instance_id = session.instance_id;
         let _ = ShellPoolFuture::spawn(pool, Lane::Io, async move {
@@ -13905,15 +14018,15 @@ impl ShellState {
                 window_instance_id,
                 action_id: "applyDirectoryEventPage".into(),
             },
-            arguments: BTreeMap::from([("pageJson".into(), DslValue::String(canonical_json))]),
+            arguments: BTreeMap::from([("pageJson".into(), semio_framework_value::DslValue::String(canonical_json))]),
         };
-        let action_json = dsl::os_pack::json::to_json_string(&invocation);
+        let action_json = semio_framework_pack_json::to_json_string(&invocation);
         let (tx, rx) = std::sync::mpsc::channel();
         let expected_for_task = expected.clone();
         let pool = crate::renderer_worker_pool();
         let task = ShellPoolFuture::spawn(pool, Lane::Io, async move {
             let outcome = match program.handle_action(instance_id, &action_json, &view_state).await {
-                Err(error) => ShellDirectoryHomePublicationOutcome::Rejected(error),
+                Err(error) => ShellDirectoryHomePublicationOutcome::Rejected(error.text),
                 Ok(result) => match terminal_directory_home_ack(&result, epoch) {
                     Ok(actual) if actual == expected_for_task => ShellDirectoryHomePublicationOutcome::Published(actual),
                     Ok(_) => ShellDirectoryHomePublicationOutcome::Terminal("retained Home directory acknowledgement does not match the pending page".into()),
@@ -14419,7 +14532,7 @@ impl ShellState {
         let Some(previous) = self.session.clone() else {
             return Ok(());
         };
-        let instance_id = program.create_app(&app.id).await?;
+        let instance_id = program.create_app(&app.id).await.map_err(|refusal| program_fault_text(&refusal, self.active_terminology(), self.active_locale()))?;
         Self::debug_log(&format!("[TRACE] shell session switch {}", serde_json::json!({ "step": "create", "plugin": program.plugin_id, "from": previous.app.id, "to": app.id, "instance": instance_id })));
         self.retire_documents_outside(&[], true)?;
         self.retire_documents_outside(&[], false)?;
@@ -14773,7 +14886,7 @@ impl ShellState {
                 return Ok(());
             }
         }
-        let instance_id = program.create_app(&app.id).await?;
+        let instance_id = program.create_app(&app.id).await.map_err(|refusal| program_fault_text(&refusal, self.active_terminology(), self.active_locale()))?;
         self.install_app_session(plugin_id, app, instance_id);
         self.refresh_ui(UiDirtyScope::Full).await
     }
@@ -14896,8 +15009,9 @@ impl ShellState {
         let Some(workflow) = workflows.iter().find(|entry| entry.plugin_id == plugin_id).cloned() else {
             return Ok(());
         };
+        let (terminology, locale) = (self.active_terminology(), self.active_locale());
         let bridge = self.plugins.iter().find(|entry| entry.plugin_id == workflow.plugin_id).ok_or("spawn program missing")?;
-        let instance_id = bridge.create_app(&workflow.app_id).await?;
+        let instance_id = bridge.create_app(&workflow.app_id).await.map_err(|refusal| program_fault_text(&refusal, terminology, locale))?;
         let mut panel = Self::panel_state_from_view(&view_state)?.unwrap_or(self.default_host_panel_state()?);
         let spawned_id = format!("{}-{}", bridge.plugin_id, instance_id);
         panel.spawned_apps.push(SpawnedAppEntry { id: spawned_id.clone(), plugin_id: bridge.plugin_id.clone(), instance_id, app_id: workflow.app_id.clone(), label: workflow.label.clone(), breadcrumb: workflow.breadcrumb.clone() });
@@ -15023,6 +15137,35 @@ fn tree_row_has_chevron(input: &InputState<ActionDescriptor>, item_id: &str) -> 
     let chevron = format!("tree.chevron.{item_id}");
     input.hits().iter().chain(input.staged_hits().iter()).any(|hit| hit.control_id.as_deref() == Some(chevron.as_str()))
 }
+
+//#region 🫥️HostWindowBlur
+/// 🧯️ Frames a closed World3d window waits at most for its capture-lost cancel to drain before it retires regardless.
+const WORLD3D_CLOSE_CANCEL_SIGHTINGS: u8 = 8;
+
+/// 🫥️ Whether the host window lost the system focus since the shell last looked (native winit `Focused(false)`, the browser
+/// page's `window` blur through the `semioWgpuHostWindowBlur` door). A worker cell, so a law's thread owns its own.
+static HOST_WINDOW_BLUR_PENDING: crate::interpreter::WorkerCell<bool> = crate::interpreter::WorkerCell::new(Default::default);
+
+/// 🫥️ The host window lost the system focus: every open text-editor typing run ends at once (`blur`, design §13.2 of ticket
+/// 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING), and the shell's next drain blurs the focused pane for its program
+/// ([`ShellState::arm_host_window_blur`]) — what React's pane `onBlur` does when the page loses focus.
+pub fn note_host_window_blur() {
+    crate::engine_canvas::end_every_text_editor_typing(crate::engine_canvas::TextEditorTypingEnd::Blur);
+    *HOST_WINDOW_BLUR_PENDING.borrow_mut() = true;
+}
+
+/// 🫥️ Whether a host window blur waits for the shell's drain.
+fn host_window_blur_pending() -> bool {
+    *HOST_WINDOW_BLUR_PENDING.borrow()
+}
+
+/// 🫥️ The browser frame Worker's window-blur door (`host-window-blur`): the page's `window` lost focus.
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen::prelude::wasm_bindgen(js_name = semioWgpuHostWindowBlur)]
+pub fn semio_wgpu_host_window_blur() {
+    note_host_window_blur();
+}
+//#endregion 🫥️HostWindowBlur
 
 /// 📨️ `hostEvent{windowId, kind}` on `controller_id`: the window fact the program answers by ending an open gesture there —
 /// the wgpu twin of React's `windowHostEventHandlersV1` (a pane that loses the activation is blurred, a cancelled pointer
@@ -15711,6 +15854,15 @@ impl ShellState {
     /// there has none, which faulted the frame.
     fn retained_surface_is_panel(&self, surface_id: &str) -> bool {
         self.open_anchors().into_iter().any(|anchor| self.anchor_state(anchor).active_tab() == Some(surface_id)) || self.shell_owned_panel_leaves().iter().any(|leaf| leaf == surface_id)
+    }
+
+    /// 📜️ Registers a docked or mobile panel's whole content rect as its scroll region `<surface>.scroll`, under the node hits
+    /// [`Self::register_retained_body_hits`] registers next, and routes it to the retained body — so a wheel over the gap between
+    /// rows scrolls the panel as React's overflow container does, and a probe finds the panel's scroll region in `dumpChrome`.
+    fn register_retained_panel_scroll_region(&mut self, surface: &str, content: Rect, input: &mut InputState<ActionDescriptor>) {
+        let control_id = format!("{surface}{RETAINED_PANEL_SCROLL_SUFFIX}");
+        input.register_hit(HitTarget { rect: content, event: None, control_id: Some(control_id.clone()), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None });
+        self.retained_hit_windows_staging.insert(control_id, (surface.to_string(), content));
     }
 
     /// 🎯️ Publishes one retained body's own registry into the host's `InputState` and remembers who
@@ -16854,6 +17006,13 @@ impl ShellState {
                 context_menu_path_for_item_id(&menu.items, id, &mut prefix).is_some()
             }) =>
             {
+                let disabled = self.context_menu.as_ref().is_some_and(|menu| {
+                    let mut prefix = Vec::new();
+                    context_menu_path_for_item_id(&menu.items, id, &mut prefix).and_then(|path| context_menu_item_at_path(&menu.items, &path)).is_some_and(|item| item.disabled)
+                });
+                if disabled {
+                    return Ok(true);
+                }
                 let submenu_path = self.context_menu.as_ref().and_then(|menu| {
                     let mut prefix = Vec::new();
                     let path = context_menu_path_for_item_id(&menu.items, id, &mut prefix)?;
@@ -16912,7 +17071,7 @@ impl ShellState {
                     if let Some(action) = self.widget_maps.select_metas.get(select_id).cloned() {
                         ui_wgpu::wgpu::clear_select_scroll(&mut self.scroll_offsets, select_id);
                         self.open_selects.insert(select_id.to_string(), false);
-                        let args = merge_committed_args(action.args.as_ref(), DslValue::String(value.to_string()));
+                        let args = merge_committed_args(action.args.as_ref(), semio_framework_value::DslValue::String(value.to_string()));
                         self.dispatch_action(ActionDescriptor { controller_id: action.controller_id, action: action.action, args }).await?;
                         return Ok(true);
                     }
@@ -17054,7 +17213,8 @@ impl ShellState {
     async fn drain_deferred_actions(&mut self) -> Result<usize, String> {
         self.arm_window_activation_note();
         self.arm_window_blur_host_event();
-        let mut worked = 0usize;
+        self.arm_host_window_blur();
+        let mut worked = self.step_import_transfers().await;
         for _ in 0..SHELL_DEFERRED_CHAIN_ROUNDS {
             let actions = std::mem::take(&mut self.deferred_actions);
             #[cfg(target_arch = "wasm32")]
@@ -17151,7 +17311,7 @@ impl ShellState {
         let parked = !self.pending_extension_invocations.is_empty() || !self.pending_file_opens.is_empty();
         #[cfg(not(target_arch = "wasm32"))]
         let parked = false;
-        let armed_work = !self.deferred_actions.is_empty() || self.pending_shell_uri_apply || parked;
+        let armed_work = !self.deferred_actions.is_empty() || self.pending_shell_uri_apply || parked || host_window_blur_pending() || !self.import_transfers.is_empty();
         let computing = self.live_compute_surfaces().any(|(surface_id, _)| !self.settle_pump.watches.get(&surface_id).is_some_and(|watch| watch.standing));
         self.icon_export.as_ref().is_some_and(icon_export::IconExportBatch::running) || crate::interpreter::ui_document_close_pending() || settle_pump_owes(self.settling, self.session.is_some(), armed_work, &self.owed_refresh_scope, self.settle_pump.owed, computing)
     }
@@ -17348,26 +17508,16 @@ impl ShellState {
         session.app.window_kinds.iter().find(|kind| kind.id == kind_id).map(|kind| kind.body_key.clone())
     }
 
-    /// 📤️ One file-open round trip: opens a REAL browser picker, then dispatches the picked files as
-    /// import chunks through the normal action path — so each chunk's own effects, mutations and
-    /// history patch are folded in exactly as a user-pressed action's are.
-    ///
-    /// 🧯 The chunks of one file go IN ORDER, one awaited at a time: the guest's staging refuses a gap
-    /// rather than resuming into bytes nobody can account for, so a concurrent fan-out costs the whole
-    /// file. A cancelled picker dispatches nothing and is not an error.
+    /// 📤️ One file-open round trip: opens a REAL browser picker, then hands the picked files to an [`ImportTransfer`] whose
+    /// chunks the drain dispatches in order through the normal action path — so each chunk's own effects, mutations and
+    /// history patch are folded in exactly as a user-pressed action's are, and a person can cancel it between chunks.
+    /// A cancelled picker dispatches nothing and is not an error.
     #[cfg(target_arch = "wasm32")]
     async fn run_file_open_request(&mut self, request: PendingFileOpen) {
-        let PendingFileOpen { controller_id, accept, read_as, import_action, multiple } = request;
+        let PendingFileOpen { controller_id, accept, read_as, import_action, args, multiple } = request;
         let opened = request_file_open(&accept, read_as.as_deref(), multiple).await;
         Self::debug_log(&format!("[TRACE] wgpu-shell file open accept={accept} action={import_action} files={} bytes={}", opened.len(), opened.iter().map(|file| file.contents.len()).sum::<usize>()));
-        let actions = file_open_import_actions(&controller_id, &import_action, opened, multiple);
-        Self::debug_log(&format!("[TRACE] wgpu-shell file open chunks={} action={import_action}", actions.len()));
-        for action in actions {
-            if let Err(error) = self.dispatch_action(action).await {
-                Self::debug_log(&format!("[TRACE] wgpu-shell import chunk {import_action} failed: {error}"));
-                return;
-            }
-        }
+        self.begin_import_transfer(PickedImport { controller_id, import_action, opened, args, multiple });
     }
 
     /// 📥️ One extension round trip, with its answer's own effects folded back into this shell —
@@ -18201,7 +18351,7 @@ impl ShellState {
                 };
                 self.apply_os_command(&command_id, option_value.as_deref()).await?;
             } else if let Some(command_json) = action.strip_prefix("command:") {
-                let invocation: semio_framework::manifest::CommandInvocation = dsl::os_pack::json::from_json_str(command_json).map_err(|error| error.to_string())?;
+                let invocation: semio_framework::manifest::CommandInvocation = semio_framework_pack_json::from_json_str(command_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
                 self.dispatch_command(invocation).await?;
             } else if let Some(command_key) = action.strip_prefix("command-form:") {
                 let command_key = command_key.to_string();
@@ -21744,7 +21894,7 @@ const WINDOW_SEARCH_SUGGESTIONS_CONTROL_ID: &str = "ui.windowSearch.suggestions"
 /// 🚦️ React's `FRAMEWORK_RESERVED_ACTION_IDS` (`🛠️ShellHelpers/🟦️.tsx:308`) — the framework's OWN
 /// verbs, which an armed utility never gates: their chords keep firing while a brush owns the
 /// pointer, so a pane row that refused them at the same moment would contradict its own keybinding.
-const FRAMEWORK_RESERVED_ACTION_IDS: [&str; 19] = [
+const FRAMEWORK_RESERVED_ACTION_IDS: [&str; 22] = [
     "undo",
     "redo",
     "commitCheckpoint",
@@ -21764,6 +21914,9 @@ const FRAMEWORK_RESERVED_ACTION_IDS: [&str; 19] = [
     "setActiveTool",
     semio_framework::EXPORT_ARTIFACT_DOCUMENT_ACTION_ID,
     semio_framework::IMPORT_ARTIFACT_DOCUMENT_ACTION_ID,
+    semio_framework::SAVE_ARTIFACT_FILE_ACTION_ID,
+    semio_framework::OPEN_ARTIFACT_FILE_ACTION_ID,
+    semio_framework::HOST_EVENT_ACTION_ID,
 ];
 
 /// 🗂️ React's `actionCategoryId` (`🛠️ShellHelpers/🟦️.tsx`): the declared category, else `history` for
@@ -21893,12 +22046,12 @@ fn engagement_control_rows(control: &ui_wgpu::wgpu::WindowEngagementControl, is_
     let with_id = |action: &Option<ActionDescriptor>, option_id: &str| -> Option<ActionDescriptor> {
         action.clone().map(|mut action| {
             let mut entries = match action.args.take() {
-                Some(DslValue::Object(entries)) => entries,
+                Some(semio_framework_value::DslValue::Object(entries)) => entries,
                 _ => Vec::new(),
             };
             entries.retain(|(key, _)| key != "id");
-            entries.push(("id".to_string(), DslValue::String(option_id.to_string())));
-            action.args = Some(DslValue::Object(entries));
+            entries.push(("id".to_string(), semio_framework_value::DslValue::String(option_id.to_string())));
+            action.args = Some(semio_framework_value::DslValue::Object(entries));
             action
         })
     };
@@ -23035,7 +23188,7 @@ impl ShellState {
 
     /// 🧮️ Resolves required presence and current catalog membership before native staged execution.
     pub(crate) fn resolved_execute_args(defs: &[semio_framework::ActionArgDef], staged: &serde_json::Map<String, Value>) -> Option<serde_json::Map<String, Value>> {
-        let staged_dsl = DslValue::from(Value::Object(staged.clone()));
+        let staged_dsl = semio_framework_value::DslValue::from(Value::Object(staged.clone()));
         let effective = semio_framework::effective_action_args(defs, &staged_dsl, None);
         if semio_framework::unresolved_action_args(defs, &effective).is_empty() {
             Value::from(&effective).as_object().cloned()
@@ -23189,7 +23342,7 @@ impl ShellState {
                     description,
                     group,
                     dispatch_action: None,
-                    action: Some(if is_os { format!("os-command:{}", definition.id) } else { format!("command:{}", dsl::os_pack::json::to_json_string(&invocation)) }),
+                    action: Some(if is_os { format!("os-command:{}", definition.id) } else { format!("command:{}", semio_framework_pack_json::to_json_string(&invocation)) }),
                     category: Some(category.clone()),
                 });
                 continue;
@@ -23423,6 +23576,25 @@ impl ShellState {
         }
     }
 
+    /// 🫥️ Takes a pending host window blur ([`note_host_window_blur`]): every World3d surface hears a `Blur` cancel (a live
+    /// gumball that streamed or an open paint stroke aborts with zero trace), and `hostEvent{windowId, kind: blur}` is armed for
+    /// the pane holding the activation, so its program ends an open gesture there. `true` when one was pending.
+    pub(crate) fn arm_host_window_blur(&mut self) -> bool {
+        if !std::mem::take(&mut *HOST_WINDOW_BLUR_PENDING.borrow_mut()) {
+            return false;
+        }
+        for state in self.world3d_states.values_mut() {
+            if enqueue_world3d_events(state, [WorldInteractionIntent::cancel(infinite_world::world::WorldCancelReason::Blur)]).is_err() {
+                Self::debug_log("[TRACE] wgpu-shell world3d blur cancel refused: the intent queue is full");
+            }
+        }
+        let active = self.active_window_id.clone().filter(|id| !id.is_empty());
+        if let (Some(active), Some(_), Some(controller_id)) = (active, self.session.as_ref(), self.shell_command_controller_id()) {
+            self.deferred_actions.push(window_host_event_action(&controller_id, &active, semio_framework::HOST_EVENT_KIND_BLUR));
+        }
+        true
+    }
+
     /// 🕒️ `handle_shell_hit`'s generic seam into `shell_command_for_control`'s `(commandId, label)`
     /// mapping — every discrete chrome-control arm that should log a history row calls this instead
     /// of hand-rolling the same `host_controller_id`/`dispatch_action` boilerplate. A silent no-op for
@@ -23570,7 +23742,7 @@ impl ShellState {
         if let Some(expanded) = expanded_key.as_ref().and_then(|key| entries.iter().find(|entry| &command_address_stable_key(&entry.address) == key)) {
             let key = command_address_stable_key(&expanded.address);
             let staged = self.staged_command_args.get(&key).cloned().unwrap_or_default();
-            let staged_dsl = DslValue::from(Value::Object(staged.clone()));
+            let staged_dsl = semio_framework_value::DslValue::from(Value::Object(staged.clone()));
             let effective_dsl = semio_framework::effective_action_args(&expanded.definition.args, &staged_dsl, None);
             let missing = !semio_framework::unresolved_action_args(&expanded.definition.args, &effective_dsl).is_empty();
             let effective = Value::from(&effective_dsl).as_object().cloned().unwrap_or_default();
@@ -24165,26 +24337,60 @@ fn document_opening_rect(message: &str, action_label: &str, width: f32, theme: &
 const VIEWER_READ_ONLY_FAULT_CODE: &str = "viewer.read-only";
 const COMMAND_REJECTED_FAULT_CODE: &str = "app.command.rejected";
 
-/// 🧯️ Classifies one dispatch-fault string into the banner React would show for it: a read-only
-/// viewer is an `info` with its own frozen copy, a hub history refusal an `error` with its localized
-/// copy (`time_travel::history_refusal_notice`), a rejected mutation is an `error` carrying the
-/// frozen code, anything else is the generic render-error `error`. Pure, so the mapping is testable
-/// without a live plugin bridge.
-fn classify_dispatch_fault_notice(error: &str, locale: Locale) -> (String, semio_framework::Severity, Option<&'static str>) {
+/// 📜️ The suffix of a retained panel's whole-content scroll region id (`framework.panel.history.scroll`).
+const RETAINED_PANEL_SCROLL_SUFFIX: &str = ".scroll";
+
+/// 📣️ The structured guest refusal behind one dispatch-fault string (design §20.12): the guest's own `Fault` — its code,
+/// severity and the `params` a notice fills its placeholders from — and the refusing app's published notices. Recorded where a
+/// program call refuses ([`ShellState::refused_guest_call`]), taken by the funnel ([`ShellState::note_dispatch_fault`]) when
+/// the string it classifies names the same code, cleared when the next dispatch starts.
+#[derive(Clone, Debug)]
+struct RefusedGuestFault {
+    fault: semio_framework::Fault,
+    notices: Vec<semio_framework::FaultNoticeDefinition>,
+}
+
+/// 🧯️ Classifies one dispatch-fault string — and the structured guest refusal behind it, when there is one — into the banner
+/// React would show for it: a read-only viewer is an `info` with its own frozen copy, a hub history refusal an `error` with
+/// its localized copy (`time_travel::history_refusal_notice`), a guest refusal the framework or its app declared a notice for
+/// (`kernel::fault_notice`: the kernel's history-lane refusals — an open or ended tool recording, a full or still replaying
+/// history, `{n}` from `Fault.params` — as warnings, then the app's `faultNotices` with the fault's own severity), a rejected
+/// mutation an `error` carrying the frozen code, any other guest refusal React's localized `dispatch-failed` notice (never its
+/// raw code), and any other shell error its own text. Pure, so the mapping is testable without a live plugin bridge.
+fn classify_dispatch_fault_notice(error: &str, refused: Option<&RefusedGuestFault>, terminology: Terminology, locale: Locale) -> (String, semio_framework::Severity, Option<String>) {
     use semio_framework::Severity;
-    let terminology = Terminology::ALL[0];
     if error.contains(VIEWER_READ_ONLY_FAULT_CODE) {
         let text = LocalizedLabel::native("This is a read-only viewer — editing is disabled.", "Dies ist ein schreibgeschützter Betrachter – Bearbeiten ist deaktiviert.").resolve(terminology, locale).to_string();
-        return (text, Severity::Info, Some(VIEWER_READ_ONLY_FAULT_CODE));
+        return (text, Severity::Info, Some(VIEWER_READ_ONLY_FAULT_CODE.to_string()));
     }
     if let Some((code, text, severity)) = time_travel::history_refusal_of_fault(error, locale) {
-        return (text.to_string(), severity, Some(code));
+        return (text.to_string(), severity, Some(code.to_string()));
+    }
+    if let Some((refused, notice)) = refused.and_then(|refused| semio_framework::kernel::fault_notice(&refused.fault, &refused.notices, terminology, locale).map(|notice| (refused, notice))) {
+        let severity = if semio_framework::kernel::history_notice(&notice.code).is_some() { Severity::Warning } else { refused.fault.severity };
+        return (notice.text, severity, Some(notice.code));
     }
     if error.contains(COMMAND_REJECTED_FAULT_CODE) {
         let title = LocalizedLabel::native("Change rejected", "Änderung abgelehnt").resolve(terminology, locale).to_string();
-        return (format!("{title}: {error}"), Severity::Error, Some(COMMAND_REJECTED_FAULT_CODE));
+        return (format!("{title}: {error}"), Severity::Error, Some(COMMAND_REJECTED_FAULT_CODE.to_string()));
+    }
+    if refused.is_some() {
+        return (LocalizedLabel::native("The input could not be delivered.", "Die Eingabe konnte nicht zugestellt werden.").resolve(terminology, locale).to_string(), Severity::Info, None);
     }
     (error.to_string(), Severity::Error, None)
+}
+
+/// 📣️ The text a refused program call reads in the shell's language: the localized notice of the structured fault behind it
+/// (`kernel::fault_notice` over the framework's tables — the host's guest admission `plugin.channel-mismatch` names both
+/// channels), else the call's own text.
+fn program_fault_text(refusal: &crate::program_bridge::ProgramFault, terminology: Terminology, locale: Locale) -> String {
+    refusal.fault.as_ref().and_then(|fault| semio_framework::kernel::fault_notice(fault, &[], terminology, locale)).map_or_else(|| refusal.text.clone(), |notice| notice.text)
+}
+
+/// ✂️ Whether a dispatch-fault string names `code` as one whole token — the string the funnel classifies and the structured
+/// refusal recorded beside it describe the same fault.
+fn dispatch_fault_names_code(error: &str, code: &str) -> bool {
+    error.split(|c: char| c.is_whitespace() || matches!(c, ':' | ';' | ',' | '[' | ']' | '(' | ')')).any(|token| token == code)
 }
 
 /// ⚔️ The notice code a hub refusal naming no history transition is told under — React's `sync.command.rejected`.
@@ -24283,8 +24489,26 @@ impl ShellState {
     /// way React's three call sites classify theirs. This replaces parking the string in
     /// `self.error`, which never cleared and sat in the bottom-left corner far from the gesture.
     pub fn note_dispatch_fault(&mut self, error: &str) {
-        let (message, severity, code) = classify_dispatch_fault_notice(error, self.active_locale());
-        self.show_transient_notice(message, severity, code);
+        let refused = self.chrome_build.refused_guest_fault.take().filter(|refused| dispatch_fault_names_code(error, &refused.fault.code.0));
+        let (message, severity, code) = classify_dispatch_fault_notice(error, refused.as_ref(), self.active_terminology(), self.active_locale());
+        self.show_transient_notice(message, severity, code.as_deref());
+    }
+
+    /// 📣️ Records one refused program call's structured guest fault beside the refusing app's notices for the funnel, and
+    /// answers the `code: message` text every `String` dispatch channel carries.
+    fn refused_guest_call(&mut self, refusal: crate::program_bridge::ProgramFault, app: &AppDefinition) -> String {
+        self.chrome_build.refused_guest_fault = refusal.fault.map(|fault| RefusedGuestFault { fault, notices: app.fault_notices.clone() });
+        refusal.text
+    }
+
+    /// 🤝️ Tells one refused instance open — the host's guest admission (`plugin.channel-mismatch`, both channels named) or any
+    /// other structured refusal — through the dispatch-fault funnel, so it reaches the person as its localized notice and never
+    /// as a raw code; answers the text the open's own status keeps ([`program_fault_text`]).
+    pub(crate) fn note_refused_open(&mut self, refusal: crate::program_bridge::ProgramFault) -> String {
+        let detail = program_fault_text(&refusal, self.active_terminology(), self.active_locale());
+        self.chrome_build.refused_guest_fault = refusal.fault.map(|fault| RefusedGuestFault { fault, notices: Vec::new() });
+        self.note_dispatch_fault(&refusal.text);
+        detail
     }
 
     /// 🌉️ The agent bridge consumer this shell drives — a transport hands it one socket message at a
@@ -24508,7 +24732,7 @@ impl ChromeDialogRequest {
         let resolve = |label: &LocalizedLabel| label.resolve(terminology, locale).to_string();
         let positive = |step: Option<f64>| step.filter(|step| step.is_finite() && *step > 0.0).unwrap_or(1.0);
         let digits = |precision: Option<u32>| precision.map(|precision| u16::try_from(precision).unwrap_or(ui_contract::UI_NUMBER_PRECISION_MAX));
-        let initial = semio_framework::effective_action_args(&dialog.args, &DslValue::Object(Vec::new()), seed.as_ref());
+        let initial = semio_framework::effective_action_args(&dialog.args, &semio_framework_value::DslValue::Object(Vec::new()), seed.as_ref());
         let fields = dialog
             .args
             .iter()
@@ -24546,8 +24770,8 @@ impl ChromeDialogRequest {
                 kinds.into_iter().map(move |(label, kind)| {
                     let draft = match (&kind, value.as_ref()) {
                         (ChromeDialogFieldKind::Number { precision, .. }, Some(value)) => value.as_f64().map_or_else(String::new, |value| chrome_dialog_number_text(value, *precision)),
-                        (ChromeDialogFieldKind::Axis { axis, precision, .. }, Some(value)) => value.as_array().and_then(|tuple| tuple.get(*axis)).and_then(DslValue::as_f64).map_or_else(String::new, |value| chrome_dialog_number_text(value, *precision)),
-                        (ChromeDialogFieldKind::Color { alpha }, Some(value)) => ui_contract::ui_color_hex(&value.as_array().map(|components| components.iter().filter_map(DslValue::as_f64).collect::<Vec<_>>()).unwrap_or_default(), *alpha),
+                        (ChromeDialogFieldKind::Axis { axis, precision, .. }, Some(value)) => value.as_array().and_then(|tuple| tuple.get(*axis)).and_then(semio_framework_value::DslValue::as_f64).map_or_else(String::new, |value| chrome_dialog_number_text(value, *precision)),
+                        (ChromeDialogFieldKind::Color { alpha }, Some(value)) => ui_contract::ui_color_hex(&value.as_array().map(|components| components.iter().filter_map(semio_framework_value::DslValue::as_f64).collect::<Vec<_>>()).unwrap_or_default(), *alpha),
                         (ChromeDialogFieldKind::Text, Some(value)) => value.as_str().unwrap_or_default().to_string(),
                         _ => String::new(),
                     };
@@ -24589,15 +24813,15 @@ impl ChromeDialogRequest {
     /// none, so a hex passing through a short form while it is typed never loses the opacity. An unedited hex (the
     /// one the colour prints as) changes nothing, so an untouched colour keeps its exact components.
     fn effective(&self) -> DslValue {
-        let mut effective = semio_framework::effective_action_args(&self.defs, &DslValue::Object(self.staged.clone()), self.seed.as_ref());
+        let mut effective = semio_framework::effective_action_args(&self.defs, &semio_framework_value::DslValue::Object(self.staged.clone()), self.seed.as_ref());
         for field in &self.fields {
             let ChromeDialogFieldKind::Color { alpha } = field.kind else { continue };
-            let base: Vec<f64> = effective.get(&field.id).and_then(|value| value.as_array().map(|components| components.iter().filter_map(DslValue::as_f64).collect())).unwrap_or_default();
+            let base: Vec<f64> = effective.get(&field.id).and_then(|value| value.as_array().map(|components| components.iter().filter_map(semio_framework_value::DslValue::as_f64).collect())).unwrap_or_default();
             let Some(parsed) = ui_contract::parse_ui_color_hex(&field.draft).filter(|_| field.draft != ui_contract::ui_color_hex(&base, alpha)) else { continue };
             let typed_alpha = matches!(field.draft.trim().trim_start_matches('#').len(), 4 | 8);
             let rgba = [parsed[0], parsed[1], parsed[2], if typed_alpha { parsed[3] } else { base.get(3).copied().unwrap_or(1.0) }];
-            let value = DslValue::Array(rgba[..if alpha { 4 } else { 3 }].iter().map(|component| DslValue::float(*component)).collect());
-            if let DslValue::Object(entries) = &mut effective {
+            let value = semio_framework_value::DslValue::Array(rgba[..if alpha { 4 } else { 3 }].iter().map(|component| semio_framework_value::DslValue::float(*component)).collect());
+            if let semio_framework_value::DslValue::Object(entries) = &mut effective {
                 match entries.iter_mut().find(|(key, _)| *key == field.id) {
                     Some(entry) => entry.1 = value,
                     None => entries.push((field.id.clone(), value)),
@@ -24662,18 +24886,18 @@ impl ChromeDialogRequest {
         let Some(field) = self.fields.get(index) else { return };
         let number = draft.trim().parse::<f64>().ok().filter(|value| value.is_finite());
         let value = match field.kind {
-            ChromeDialogFieldKind::Number { precision, .. } => number.map_or(DslValue::Null, |value| DslValue::float(precision.map_or(value, |precision| ui_contract::round_ui_number(value, precision)))),
+            ChromeDialogFieldKind::Number { precision, .. } => number.map_or(semio_framework_value::DslValue::Null, |value| semio_framework_value::DslValue::float(precision.map_or(value, |precision| ui_contract::round_ui_number(value, precision)))),
             ChromeDialogFieldKind::Axis { axis, dims, precision, min, max, .. } => {
                 let mut tuple: Vec<DslValue> = self.field_value(index).and_then(|value| value.as_array().map(<[DslValue]>::to_vec)).unwrap_or_default();
-                tuple.resize(dims, DslValue::float(0.0));
-                tuple[axis] = number.map_or(DslValue::Null, |value| DslValue::float(precision.map_or(value, |precision| ui_contract::round_ui_number(value, precision)).max(min.unwrap_or(f64::NEG_INFINITY)).min(max.unwrap_or(f64::INFINITY))));
-                DslValue::Array(tuple)
+                tuple.resize(dims, semio_framework_value::DslValue::float(0.0));
+                tuple[axis] = number.map_or(semio_framework_value::DslValue::Null, |value| semio_framework_value::DslValue::float(precision.map_or(value, |precision| ui_contract::round_ui_number(value, precision)).max(min.unwrap_or(f64::NEG_INFINITY)).min(max.unwrap_or(f64::INFINITY))));
+                semio_framework_value::DslValue::Array(tuple)
             }
             ChromeDialogFieldKind::Color { .. } => {
                 self.fields[index].draft = draft;
                 return;
             }
-            _ => DslValue::String(draft.clone()),
+            _ => semio_framework_value::DslValue::String(draft.clone()),
         };
         let id = field.id.clone();
         self.fields[index].draft = draft;
@@ -24684,7 +24908,7 @@ impl ChromeDialogRequest {
     fn flip(&mut self, index: usize) {
         let on = matches!(self.field_value(index), Some(DslValue::Bool(true)));
         if let Some(id) = self.fields.get(index).filter(|field| matches!(field.kind, ChromeDialogFieldKind::Toggle)).map(|field| field.id.clone()) {
-            self.stage(&id, DslValue::Bool(!on));
+            self.stage(&id, semio_framework_value::DslValue::Bool(!on));
         }
     }
 
@@ -24717,7 +24941,7 @@ impl ChromeDialogRequest {
     fn choose(&mut self, index: usize, option: usize) {
         let Some(value) = self.options(index).get(option).map(|(value, _)| value.clone()) else { return };
         let id = self.fields[index].id.clone();
-        self.stage(&id, DslValue::String(value));
+        self.stage(&id, semio_framework_value::DslValue::String(value));
     }
 
     /// 🔢️ Steps a number or axis field through the shared keyboard law (`ui_contract::ui_number_key_value`): a
@@ -24750,7 +24974,7 @@ impl ChromeDialogRequest {
         let ChromeDialogFieldKind::Slider { min, max, component, .. } = self.fields.get(index)?.kind else { return None };
         let value = self.field_value(index);
         let current = match component {
-            Some((at, _, absent)) => value.and_then(|value| value.as_array().and_then(|components| components.get(at)).and_then(DslValue::as_f64)).unwrap_or(absent),
+            Some((at, _, absent)) => value.and_then(|value| value.as_array().and_then(|components| components.get(at)).and_then(semio_framework_value::DslValue::as_f64)).unwrap_or(absent),
             None => value.and_then(|value| value.as_f64()).unwrap_or(min),
         };
         Some(current.clamp(min, max))
@@ -24760,18 +24984,18 @@ impl ChromeDialogRequest {
     /// into its vector.
     fn set_slider(&mut self, index: usize, value: f64) {
         let Some(ChromeDialogFieldKind::Slider { min, max, precision, component, .. }) = self.fields.get(index).map(|field| field.kind.clone()) else { return };
-        let value = DslValue::float(precision.map_or(value.clamp(min, max), |precision| ui_contract::round_ui_number(value.clamp(min, max), precision)));
+        let value = semio_framework_value::DslValue::float(precision.map_or(value.clamp(min, max), |precision| ui_contract::round_ui_number(value.clamp(min, max), precision)));
         let staged = match component {
             Some((at, dims, _)) => {
                 let mut tuple: Vec<DslValue> = self.field_value(index).and_then(|current| current.as_array().map(<[DslValue]>::to_vec)).unwrap_or_default();
-                tuple.resize(dims, DslValue::float(0.0));
+                tuple.resize(dims, semio_framework_value::DslValue::float(0.0));
                 tuple[at] = value;
-                DslValue::Array(tuple)
+                semio_framework_value::DslValue::Array(tuple)
             }
             None => value,
         };
         let id = self.fields[index].id.clone();
-        let printed = component.and_then(|_| staged.as_array().map(|components| components.iter().filter_map(DslValue::as_f64).collect::<Vec<_>>()));
+        let printed = component.and_then(|_| staged.as_array().map(|components| components.iter().filter_map(semio_framework_value::DslValue::as_f64).collect::<Vec<_>>()));
         self.stage(&id, staged);
         if let Some(components) = printed {
             for field in self.fields.iter_mut().filter(|field| field.id == id) {
@@ -24812,8 +25036,8 @@ impl ChromeDialogRequest {
     /// 🧷️ A reference field's referenced ids, in order.
     fn reference_ids(&self, index: usize) -> Vec<String> {
         match self.field_value(index) {
-            Some(DslValue::Array(ids)) => ids.iter().filter_map(|id| id.as_str().map(str::to_string)).collect(),
-            Some(DslValue::String(id)) if !id.is_empty() => vec![id],
+            Some(semio_framework_value::DslValue::Array(ids)) => ids.iter().filter_map(|id| id.as_str().map(str::to_string)).collect(),
+            Some(semio_framework_value::DslValue::String(id)) if !id.is_empty() => vec![id],
             _ => Vec::new(),
         }
     }
@@ -24821,7 +25045,7 @@ impl ChromeDialogRequest {
     /// 🧷️ Stages `ids` into a reference field — a list when it takes many, else the first id.
     fn stage_references(&mut self, index: usize, ids: Vec<String>) {
         let Some(ChromeDialogFieldKind::Reference { many, .. }) = self.fields.get(index).map(|field| field.kind.clone()) else { return };
-        let value = if many { DslValue::Array(ids.into_iter().map(DslValue::String).collect()) } else { ids.into_iter().next().map_or(DslValue::Null, DslValue::String) };
+        let value = if many { semio_framework_value::DslValue::Array(ids.into_iter().map(semio_framework_value::DslValue::String).collect()) } else { ids.into_iter().next().map_or(semio_framework_value::DslValue::Null, semio_framework_value::DslValue::String) };
         let id = self.fields[index].id.clone();
         self.stage(&id, value);
     }
@@ -26459,6 +26683,8 @@ enum ShellChromeFramePhase {
     /// ⏪️ The persistent time-travel band (`HistoryPatch.timeTravel`) above the footer — under every overlay, so an
     /// open dialog's veil covers it exactly as it covers the rest of the workbench.
     TimeTravelBand,
+    /// 📡️ The band of a history change replaying before adoption (`HistoryPatch.reprojection`), stacked above the session band.
+    HistoryReprojectionBand,
     Overlay,
     HubWorkspace,
     /// 🛂️ The Space Administration sheet (packet W15e) — React mounts it in the same absolutely
@@ -26562,6 +26788,7 @@ impl ShellChromeFramePhase {
             Self::Footer => "Footer",
             Self::FolderReconnectBand => "FolderReconnectBand",
             Self::TimeTravelBand => "TimeTravelBand",
+            Self::HistoryReprojectionBand => "HistoryReprojectionBand",
             Self::Overlay => "Overlay",
             Self::HubWorkspace => "HubWorkspace",
             Self::SpaceAdministration => "SpaceAdministration",
@@ -26837,6 +27064,12 @@ impl ShellState {
             }
             ShellChromeFramePhase::TimeTravelBand => {
                 if !self.render_time_travel_band_step(&mut cursor.child, overlay, atlas, input, theme) {
+                    return false;
+                }
+                cursor.advance(ShellChromeFramePhase::HistoryReprojectionBand);
+            }
+            ShellChromeFramePhase::HistoryReprojectionBand => {
+                if !self.render_history_reprojection_band_step(&mut cursor.child, overlay, atlas, input, theme) {
                     return false;
                 }
                 cursor.advance(ShellChromeFramePhase::Overlay);
@@ -27143,6 +27376,7 @@ impl ShellState {
                 let custom_themes = custom_themes_from(&preferences);
                 self.appearance_id = resolve_appearance_id(&preferences);
                 self.locale_id = resolve_locale_id(env_lock("SEMIO_LOCKED_LOCALE"), &preferences, self.active_locale());
+                crate::interpreter::install_ui_engine_locale(self.active_locale());
                 self.terminology_id = env_lock("SEMIO_LOCKED_TERMINOLOGY").or(preferences.terminology).unwrap_or_else(|| self.active_terminology().as_str().to_string());
                 self.driver_id = preferences.driver_id.unwrap_or_else(|| "default".to_string());
                 self.chrome_build.preferences.custom_drivers = preferences.custom_drivers;
@@ -28244,6 +28478,7 @@ impl ShellState {
                 } else {
                     self.note_retained_body_painted(window.as_str());
                 }
+                self.register_retained_panel_scroll_region(window.as_str(), content, input);
                 self.register_retained_body_hits(window.as_str(), content, input);
                 cursor.phase = 9;
             }
@@ -28353,6 +28588,7 @@ impl ShellState {
                 } else {
                     self.note_retained_body_painted(window.as_str());
                 }
+                self.register_retained_panel_scroll_region(window.as_str(), content, input);
                 self.register_retained_body_hits(window.as_str(), content, input);
                 cursor.phase = 3;
             }
@@ -29587,7 +29823,7 @@ impl ShellState {
                         match chrome_text_complete_step(
                             overlay,
                             atlas,
-                            &item.label,
+                            &item.painted_label(),
                             row.x + theme.font_size_body + theme.gap_standard * 2.0,
                             row.y + (row.h + theme.font_size_small) * 0.5 - 1.0,
                             (row.w - theme.font_size_body - theme.gap_standard * 3.0).max(1.0),
@@ -29603,9 +29839,7 @@ impl ShellState {
                             }
                         }
                         cursor.flag = false;
-                        if !item.disabled {
-                            input.register_hit(HitTarget { rect: row, event: item.action.clone(), control_id: Some(item.id.clone()), kind: HitKind::ContextMenu, drag_axis: None, drag_data: None });
-                        }
+                        item.register_hit(row, input);
                     }
                 }
                 cursor.item += 1;
@@ -30327,7 +30561,7 @@ impl ShellState {
                     let select = matches!(field_kind, ChromeDialogFieldKind::Select { .. });
                     let caret = if focused == stop && !select { "|" } else { "" };
                     let swatch_w = if let ChromeDialogFieldKind::Color { .. } = field_kind {
-                        let components: Vec<f64> = request.field_value(index).and_then(|value| value.as_array().map(|components| components.iter().filter_map(DslValue::as_f64).collect())).unwrap_or_default();
+                        let components: Vec<f64> = request.field_value(index).and_then(|value| value.as_array().map(|components| components.iter().filter_map(semio_framework_value::DslValue::as_f64).collect())).unwrap_or_default();
                         let channel = |at: usize| (components.get(at).copied().unwrap_or(if at == 3 { 1.0 } else { 0.0 }).clamp(0.0, 1.0) * 255.0).round() as u8;
                         let side = (control_h - gap * 2.0).max(4.0);
                         ops.push(ChromeDialogPaintOp::Fill { rect: Rect::new(x + gap, y + (control_h - side) * 0.5, side, side), color: Rgba::from_srgb8(channel(0), channel(1), channel(2), channel(3)) });
@@ -31068,7 +31302,7 @@ impl ShellState {
     fn context_menu_level_width(items: &[ContextMenuItem], theme: &Theme) -> f32 {
         let mut w = 180.0;
         for item in items.iter().filter(|item| !item.separator || !item.label.is_empty()) {
-            let label_w = item.label.chars().count() as f32 * theme.font_size_body * 0.55;
+            let label_w = item.painted_label().chars().count() as f32 * theme.font_size_body * 0.55;
             let shortcut_w = item.shortcut.as_ref().map(|s| s.chars().count() as f32 * theme.font_size_small * 0.55 + 16.0).unwrap_or(0.0);
             w = f32::max(w, 56.0_f32 + label_w + shortcut_w);
         }
@@ -31148,14 +31382,12 @@ impl ShellState {
                 let icon_id = item.icon.as_deref().unwrap_or("circle-dot");
                 chrome_icon(overlay, icons, icon_id, text_x, row.y + (row.h - icon_size) * 0.5, icon_size, if item.disabled { theme.text_muted } else { fg });
                 text_x += icon_size + theme.gap_standard;
-                chrome_text(overlay, atlas, input, theme, &item.label, text_x, row.y + (row.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, if item.disabled { theme.text_muted } else { fg });
+                chrome_text(overlay, atlas, input, theme, &item.painted_label(), text_x, row.y + (row.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, if item.disabled { theme.text_muted } else { fg });
                 if let Some(shortcut) = item.shortcut.as_deref() {
                     let shortcut_w = shortcut.chars().count() as f32 * theme.font_size_small * 0.55;
                     chrome_text(overlay, atlas, input, theme, shortcut, row.x + row.w - 8.0 - shortcut_w, row.y + (row.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text_muted);
                 }
-                if !item.disabled {
-                    input.register_hit(HitTarget { rect: row, event: item.action.clone(), control_id: Some(item.id.clone()), kind: HitKind::ContextMenu, drag_axis: None, drag_data: None });
-                }
+                item.register_hit(row, input);
             }
             if submenu_open {
                 let child_w = Self::context_menu_level_width(&item.children, theme);
@@ -31997,7 +32229,7 @@ thread_local! {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-static CHROME_PREFS: crate::interpreter::WorkerCell<Option<ChromePrefsState>> = crate::interpreter::WorkerCell::new();
+static CHROME_PREFS: crate::interpreter::WorkerCell<Option<ChromePrefsState>> = crate::interpreter::WorkerCell::new(Default::default);
 
 fn default_compute_worker_count() -> u32 {
     std::thread::available_parallelism().map(|n| n.get() as u32).unwrap_or(1)
@@ -32198,6 +32430,12 @@ fn shell_chrome_string(key: &'static str, is_de: bool) -> &'static str {
         ("plugins.action.uninstall", true) => "Deinstallieren",
         ("plugins.action.reload", false) => "Reload",
         ("plugins.action.reload", true) => "Neu laden",
+        ("plugins.reason.installing", false) => "The plugin is being installed.",
+        ("plugins.reason.installing", true) => "Das Plugin wird gerade installiert.",
+        ("plugins.reason.inUse", false) => "The open document uses this plugin.",
+        ("plugins.reason.inUse", true) => "Das geöffnete Dokument verwendet dieses Plugin.",
+        ("plugins.reason.extensionUnavailable", false) => "The extension did not load.",
+        ("plugins.reason.extensionUnavailable", true) => "Die Erweiterung wurde nicht geladen.",
         ("display.tab.windows", false) => "Windows",
         ("display.tab.windows", true) => "Fenster",
         ("display.tab.layout", false) => "Layout",
@@ -32789,7 +33027,7 @@ fn decode_ui_preferences_event_log(raw: &str) -> Result<UiPreferencesEventLog, U
 }
 
 fn encode_ui_preferences_event_log(log: &UiPreferencesEventLog) -> String {
-    let events: Vec<Value> = log.events.iter().map(|event| dsl_value_as_json(&dsl::ToValue::to_value(event))).collect();
+    let events: Vec<Value> = log.events.iter().map(|event| dsl_value_as_json(&semio_framework_value::ToValue::to_value(event))).collect();
     serde_json::json!({ "version": log.version, "events": events }).to_string()
 }
 
@@ -32998,6 +33236,7 @@ impl ShellState {
         let preferences = read_ui_preferences();
         self.appearance_id = resolve_appearance_id(&preferences);
         self.locale_id = resolve_locale_id(locks.locale.clone(), &preferences, self.active_locale());
+        crate::interpreter::install_ui_engine_locale(self.active_locale());
         self.terminology_id = locks.terminology.clone().or(preferences.terminology).unwrap_or_else(|| self.active_terminology().as_str().to_string());
         self.driver_id = preferences.driver_id.unwrap_or_else(|| "default".to_string());
         self.chrome_build.preferences = with_chrome_prefs(|preferences| preferences.clone());
@@ -33072,6 +33311,11 @@ mod chrome_overlays_tour_tests;
 #[cfg(all(test, not(target_arch = "wasm32")))]
 #[path = "../../🧪️tests/🔬️wgpu-agent-overlays/🦀️.rs"]
 mod agent_overlays_tests;
+
+/// 🧪️ Design §20.12 — app fault notices told from the structured guest refusal, mirrored as the polite status.
+#[cfg(all(test, not(target_arch = "wasm32")))]
+#[path = "../../🧪️tests/🧪️wgpu-fault-notices/🦀️.rs"]
+mod fault_notices_tests;
 //#endregion 🧪️ChromeOverlaysAndTourTests
 
 //#endregion ShellChrome
@@ -33203,16 +33447,198 @@ pub struct OpenedFile {
 /// chunkCount}` per chunk, and a plugin could satisfy only one of them. An unchunked import also asks
 /// the fixed guest heap for a contiguous block the size of the whole file
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-fn file_open_import_actions(controller_id: &str, import_action: &str, opened: Vec<OpenedFile>, multiple: bool) -> Vec<ActionDescriptor> {
+fn file_open_import_actions(controller_id: &str, import_action: &str, opened: Vec<OpenedFile>, multiple: bool, retained_args: Option<&semio_framework::DslValue>) -> Vec<ActionDescriptor> {
     let total = opened.len();
     let mut actions = Vec::new();
     for (index, file) in opened.into_iter().enumerate() {
         for chunk in semio_framework::kernel::import_payload_chunks(&file.contents) {
-            let args = semio_framework::kernel::import_chunk_arguments(&file.name, &chunk, multiple.then_some((index, total)));
+            let mut args = semio_framework::kernel::import_chunk_arguments(&file.name, &chunk, multiple.then_some((index, total)));
+            if let (semio_framework::DslValue::Object(fields), Some(semio_framework::DslValue::Object(extra))) = (&mut args, retained_args) { for (name, value) in extra { if !fields.iter().any(|(key, _)| key == name) { fields.push((name.clone(), value.clone())); } } }
             actions.push(ActionDescriptor { controller_id: controller_id.to_string(), action: import_action.to_string(), args: Some(args) });
         }
     }
     actions
+}
+
+/// 📥️ The verb an app declares to free an import a host stopped part-way (remodel's `importAbort {reason?}`) — React's
+/// `IMPORT_ABORT_ACTION_ID`: sent without a reason, a person's cancel, once a cancelled import handed the guest a chunk.
+const IMPORT_ABORT_ACTION_ID: &str = "importAbort";
+
+/// 🛑️ The shell verb a Task Manager row's Cancel sends (`{transfer}` on the `framework` controller).
+const IMPORT_TRANSFER_CANCEL_ACTION: &str = "cancelImportTransfer";
+
+/// ⏱️ The wall budget one drain spends dispatching import chunks, so a Cancel lands between chunks.
+const IMPORT_TRANSFER_TURN_MS: f64 = 8.0;
+
+/// 📥️ The files one picker answered, with the verb their chunks go to.
+pub(crate) struct PickedImport {
+    pub controller_id: String,
+    pub import_action: String,
+    pub args: Option<semio_framework::DslValue>,
+    pub opened: Vec<OpenedFile>,
+    pub multiple: bool,
+}
+
+/// 🎞️ What one transfer moves into the guest: a picked document's chunks, or the frames one decoded video yields
+/// (`RequestMediaFrames`: one `frameAction` per sampled frame, then its `doneAction` — or its one `fallbackAction`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum TransferLane {
+    DocumentImport,
+    VideoFrames,
+}
+
+impl TransferLane {
+    /// 🏷️ The lane a Task Manager row names.
+    fn label(self, de: bool) -> &'static str {
+        match (self, de) {
+            (Self::DocumentImport, false) => "Document import",
+            (Self::DocumentImport, true) => "Dokumentimport",
+            (Self::VideoFrames, false) => "Video frames",
+            (Self::VideoFrames, true) => "Videobilder",
+        }
+    }
+}
+
+/// 📥️ One transfer moving into the session's program, dispatch by dispatch — React's `importOpenedFilesV1` task: the
+/// Task Manager lists it with its progress and a Cancel, and a cancelled transfer that already handed the guest a chunk or a
+/// frame is freed by the app's `importAbort`, so its open import transaction leaves zero trace.
+#[derive(Clone, Debug)]
+pub(crate) struct ImportTransfer {
+    pub id: u64,
+    pub file: String,
+    pub first_file: String,
+    pub owner: String,
+    pub controller_id: String,
+    pub lane: TransferLane,
+    pub chunks: VecDeque<ActionDescriptor>,
+    pub delivered: usize,
+    pub total: usize,
+}
+
+/// 🗣️ One document-transfer outcome a person is told about — React's `DOCUMENT_TRANSFER_NOTICE_LABELS_V1`, by its code
+/// `shell.documentTransfer.<notice>`; `{file}` names the file.
+fn import_transfer_notice(notice: &str, file: &str, locale: Locale) -> String {
+    let (en, de) = match notice {
+        "import-cancelled" => ("Import of “{file}” cancelled.", "Import von „{file}“ abgebrochen."),
+        _ => ("“{file}” could not be opened as a document.", "„{file}“ konnte nicht als Dokument geöffnet werden."),
+    };
+    match locale {
+        Locale::En => en,
+        Locale::De => de,
+    }
+    .replace("{file}", file)
+}
+
+impl ShellState {
+    /// 📥️ Starts a picked-file import as an [`ImportTransfer`] the drain steps; an empty pick starts nothing. `true` when one
+    /// started.
+    pub(crate) fn begin_import_transfer(&mut self, picked: PickedImport) -> bool {
+        let PickedImport { controller_id, import_action, opened, args, multiple } = picked;
+        let Some(first_file) = opened.first().map(|file| file.name.clone()) else { return false };
+        let file = opened.iter().map(|file| file.name.as_str()).collect::<Vec<_>>().join(", ");
+        let chunks: VecDeque<ActionDescriptor> = file_open_import_actions(&controller_id, &import_action, opened, multiple, args.as_ref()).into();
+        Self::debug_log(&format!("[TRACE] wgpu-shell import {import_action} file={file} chunks={}", chunks.len()));
+        self.queue_transfer(TransferLane::DocumentImport, file, first_file, controller_id, chunks)
+    }
+
+    /// 🎞️ Starts the frame dispatches of one decoded video as an [`ImportTransfer`] on the [`TransferLane::VideoFrames`]
+    /// lane — the host cancel `RequestMediaFrames` lacked: listed with its progress and a Cancel, stepped within the same
+    /// turn budget as an import, and a cancelled stream that already handed the guest a frame is freed by the app's
+    /// `importAbort`, so its open import transaction (design §15) leaves zero trace. An empty answer starts nothing.
+    pub(crate) fn begin_media_frames_transfer(&mut self, controller_id: String, frames: Vec<ActionDescriptor>) -> bool {
+        let Some(file) = frames.first().map(|frame| frame.args.as_ref().and_then(|args| args.get("name")).and_then(semio_framework::DslValue::as_str).unwrap_or("video").to_string()) else { return false };
+        self.queue_transfer(TransferLane::VideoFrames, file.clone(), file, controller_id, frames.into())
+    }
+
+    /// 🧾️ Queues one transfer behind the running ones under a fresh id, owned by the session's plugin.
+    fn queue_transfer(&mut self, lane: TransferLane, file: String, first_file: String, controller_id: String, chunks: VecDeque<ActionDescriptor>) -> bool {
+        let owner = self.session.as_ref().map(|session| session.plugin_id.clone()).unwrap_or_default();
+        let id = self.import_transfer_next;
+        self.import_transfer_next = self.import_transfer_next.wrapping_add(1).max(1);
+        self.import_transfers.push_back(ImportTransfer { id, file, first_file, owner, controller_id, lane, total: chunks.len(), chunks, delivered: 0 });
+        true
+    }
+
+    /// 📥️ Dispatches the oldest import's next chunks, in order and one awaited at a time (the guest's staging refuses a
+    /// gap), within [`IMPORT_TRANSFER_TURN_MS`]; a finished import leaves, and a refused chunk ends its import with the
+    /// `import-failed` notice. Answers the chunks it dispatched.
+    pub(crate) async fn step_import_transfers(&mut self) -> usize {
+        let started = chrome_now_ms();
+        let mut sent = 0usize;
+        while let Some(chunk) = self.import_transfers.front_mut().and_then(|transfer| transfer.chunks.pop_front()) {
+            sent += 1;
+            match self.dispatch_action(chunk).await {
+                Ok(()) => {
+                    if let Some(transfer) = self.import_transfers.front_mut() {
+                        transfer.delivered += 1;
+                    }
+                }
+                Err(error) => {
+                    if let Some(failed) = self.import_transfers.pop_front() {
+                        Self::debug_log(&format!("[TRACE] wgpu-shell import of {} failed: {error}", failed.file));
+                        let text = import_transfer_notice("import-failed", &failed.first_file, self.active_locale());
+                        self.show_transient_notice(text, semio_framework::Severity::Error, Some("shell.documentTransfer.import-failed"));
+                    }
+                }
+            }
+            if self.import_transfers.front().is_some_and(|transfer| transfer.chunks.is_empty()) {
+                self.import_transfers.pop_front();
+            }
+            if chrome_now_ms() - started >= IMPORT_TRANSFER_TURN_MS {
+                break;
+            }
+        }
+        sent
+    }
+
+    /// 🛑️ A person's Cancel of one import: its chunks are dropped, an import that already handed the guest a chunk arms the
+    /// app's `importAbort` when the app declares it, and the person is told — React's `importOpenedFilesV1` cancel.
+    pub(crate) fn cancel_import_transfer(&mut self, id: u64) -> bool {
+        let Some(index) = self.import_transfers.iter().position(|transfer| transfer.id == id) else { return false };
+        let Some(transfer) = self.import_transfers.remove(index) else { return false };
+        let declares_abort = self.session.as_ref().is_some_and(|session| session.app.actions.iter().any(|action| action.id == IMPORT_ABORT_ACTION_ID));
+        if transfer.delivered > 0 && declares_abort {
+            self.deferred_actions.push(ActionDescriptor { controller_id: transfer.controller_id.clone(), action: IMPORT_ABORT_ACTION_ID.into(), args: crate::action_args_json!({}) });
+        }
+        let text = import_transfer_notice("import-cancelled", &transfer.first_file, self.active_locale());
+        self.show_transient_notice(text, semio_framework::Severity::Info, Some("shell.documentTransfer.import-cancelled"));
+        true
+    }
+
+    /// 🧵️ The Task Manager's running-tasks section — React's `TaskManagerTasksPanel` over `documentTransferTasksV1`: per import
+    /// its title, lane, owner and state, a progress bar of the chunks delivered, and "Cancel <file>"; "No task is running."
+    /// while none runs.
+    pub(crate) fn import_task_nodes(&self) -> UiNode {
+        let is_de = self.locale_id == "de";
+        let pick = |en: &str, de: &str| if is_de { de.to_string() } else { en.to_string() };
+        let mut children = vec![settings_text_row(&pick("Running tasks", "Laufende Aufgaben"))];
+        if self.import_transfers.is_empty() {
+            children.push(settings_text_row(&pick("No task is running.", "Es läuft keine Aufgabe.")));
+        }
+        for transfer in &self.import_transfers {
+            let task = format!("documentTransfer:{}", transfer.id);
+            let progress = format!("{}/{}", transfer.delivered, transfer.total);
+            children.push(settings_text_row(&format!("{} · {} · {} · {}", transfer.file, transfer.lane.label(is_de), transfer.owner, pick("Running", "Läuft"))));
+            children.push(UiNode::Progress(ui_wgpu::wgpu::component::ui::UiProgressNode {
+                id: format!("os.task-manager.progress.{task}"),
+                completed: transfer.delivered as f64,
+                total: Some(transfer.total as f64),
+                value_text: Label::data(if is_de { format!("Fortschritt von {}: {progress}", transfer.file) } else { format!("Progress of {}: {progress}", transfer.file) }),
+                presence: UiPresence::default(),
+                menu: None,
+            }));
+            children.push(UiNode::Button(UiButtonNode {
+                id: Some(format!("os.task-manager.cancel.{task}")),
+                icon_id: IconName::Square,
+                label: Label::data(if is_de { format!("{} abbrechen", transfer.file) } else { format!("Cancel {}", transfer.file) }),
+                action: ActionDescriptor { controller_id: "framework".into(), action: IMPORT_TRANSFER_CANCEL_ACTION.into(), args: crate::action_args_json!({ "transfer": transfer.id }) },
+                style: None,
+                presence: UiPresence::default(),
+                menu: None,
+            }));
+        }
+        UiNode::Stack(UiStackNode { direction: "column".into(), gap: None, padding: None, id: Some("os.task-manager.tasks".into()), children, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, menu: None })
+    }
 }
 
 /// 📤️ Opens the native file picker; one entry per selected file, in selection order.
@@ -34309,12 +34735,12 @@ fn custom_theme_id_for_label(label: &str) -> Option<String> {
 /// ascending so the projected argument object is stable.
 fn merge_committed_args(authored: Option<&DslValue>, value: DslValue) -> Option<DslValue> {
     let mut fields: Vec<(String, DslValue)> = match authored {
-        Some(DslValue::Object(existing)) => existing.iter().filter(|(key, _)| key != "value").cloned().collect(),
+        Some(semio_framework_value::DslValue::Object(existing)) => existing.iter().filter(|(key, _)| key != "value").cloned().collect(),
         _ => Vec::new(),
     };
     fields.push(("value".to_string(), value));
     fields.sort_by(|left, right| left.0.cmp(&right.0));
-    Some(DslValue::Object(fields))
+    Some(semio_framework_value::DslValue::Object(fields))
 }
 //#endregion 🎨️ThemeDocumentDoors
 
@@ -34456,7 +34882,7 @@ thread_local! {
 }
 
 #[cfg(not(any(target_arch = "wasm32", test)))]
-static CHROME_CONTROL_NAMES: crate::interpreter::WorkerCell<BTreeMap<String, ChromeControlPresentation>> = crate::interpreter::WorkerCell::new();
+static CHROME_CONTROL_NAMES: crate::interpreter::WorkerCell<BTreeMap<String, ChromeControlPresentation>> = crate::interpreter::WorkerCell::new(Default::default);
 
 fn with_chrome_control_names<R>(f: impl FnOnce(&mut BTreeMap<String, ChromeControlPresentation>) -> R) -> R {
     #[cfg(any(target_arch = "wasm32", test))]
@@ -34786,7 +35212,7 @@ impl ShellState {
                         disabled: presentation.is_some_and(|name| name.disabled),
                         focusable,
                         tabbable: focusable && (role != "tab" || selected == Some(true)),
-                        actionable: names.get(id).is_none_or(|name| name.role != Some("tabpanel")),
+                        actionable: names.get(id).is_none_or(|name| name.role != Some("tabpanel") && !name.disabled),
                         focused: self.accessibility_focused_control_id.as_deref() == Some(id),
                         checked: (role == "switch").then(|| self.chrome_accessibility_checked(id, &hit.kind)).flatten(),
                         pressed,
@@ -34867,6 +35293,9 @@ impl ShellState {
                 nodes.push(folder);
             }
             if let Some(status) = self.time_travel_status_accessibility_node(nodes.len() as u64 + 1).filter(|_| nodes.len() < SHELL_CHROME_ACCESSIBLE_NAME_CAPACITY) {
+                nodes.push(status);
+            }
+            if let Some(status) = self.history_reprojection_accessibility_node(nodes.len() as u64 + 1).filter(|_| nodes.len() < SHELL_CHROME_ACCESSIBLE_NAME_CAPACITY) {
                 nodes.push(status);
             }
             for (key, label) in self.footer_status_chips() {

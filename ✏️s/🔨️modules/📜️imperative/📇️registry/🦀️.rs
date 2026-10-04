@@ -119,7 +119,7 @@ fn compose_registry(contributions_json: &str) -> (Registry, Vec<serde_json::Valu
         if app_id != imperative_extension_sdk::IMPERATIVE_PLAY_APP_ID {
             continue;
         }
-        let Ok(manifest) = semio_framework_os_kernel::os_pack::json::from_json_str::<ImperativeExtensionManifest>(&manifest_json) else {
+        let Ok(manifest) = semio_framework_pack_json::from_json_str::<ImperativeExtensionManifest>(&manifest_json, semio_framework_pack_json::JsonMemberPolicy::Reject) else {
             continue;
         };
         if let Some(register) = registrars.get(&entry.plugin_id) {
@@ -201,7 +201,7 @@ pub fn imperative_catalogue_json(registry: &Registry) -> String {
 
 /// 🧩️ Serializes contribution entries for host bootstrap.
 pub fn contributions_json_from_entries(entries: &[ProgramContributionEntry]) -> String {
-    semio_framework_os_kernel::os_pack::json::to_json_string(&entries.to_vec())
+    semio_framework_pack_json::to_json_string(&entries.to_vec())
 }
 // #endregion 🔖️ModuleRegistry
 

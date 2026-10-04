@@ -17,7 +17,7 @@ use semio_s_artifact_stdio_obj::ObjSnapshot;
 
 pub fn register() {}
 
-pub fn serialize(snapshot: &LowpolySnapshot) -> Result<ObjSnapshot, store::TextError> {
+pub fn serialize(snapshot: &LowpolySnapshot) -> Result<ObjSnapshot, semio_framework_diagnostic::TextError> {
     let mut obj = ObjSnapshot::default();
     let mut used_names: std::collections::HashSet<String> = std::collections::HashSet::new();
     for part in world_parts("obj", snapshot)? {
@@ -41,6 +41,6 @@ pub fn serialize(snapshot: &LowpolySnapshot) -> Result<ObjSnapshot, store::TextE
     Ok(obj)
 }
 
-pub fn serialize_bytes(snapshot: &LowpolySnapshot) -> Result<Vec<u8>, store::TextError> {
+pub fn serialize_bytes(snapshot: &LowpolySnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
     Ok(encode_obj(&serialize(snapshot)?).into_bytes())
 }

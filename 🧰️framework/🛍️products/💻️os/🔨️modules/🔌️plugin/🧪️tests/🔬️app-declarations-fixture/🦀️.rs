@@ -42,11 +42,11 @@ pub(crate) mod fixture {
             }
             impl store::ArtifactDsl for $snapshot {
                 const EXTENSION: &'static str = $schema;
-                fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+                fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
                     if text.trim().is_empty() {
                         return Ok(Self::default());
                     }
-                    serde_json::from_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+                    serde_json::from_str(text).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), semio_framework_diagnostic::TextSpan::at(1, 1)))
                 }
                 fn print_dsl(&self) -> String {
                     serde_json::to_string(self).unwrap_or_default()
@@ -59,50 +59,50 @@ pub(crate) mod fixture {
     }
 
                 fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-                    serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()))
+                    serde_json::to_vec(self).map_err(|error| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string())))
                 }
                 fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
                     if bytes.is_empty() {
                         return Ok(Self::default());
                     }
-                    serde_json::from_slice(bytes).map_err(|error| store::PackError::Schema(error.to_string()))
+                    serde_json::from_slice(bytes).map_err(|error| match (u32::try_from(error.line()), u32::try_from(error.column())) { (Ok(line), Ok(column)) => store::PackError::from(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), semio_framework_diagnostic::TextSpan::at(line, column))), _ => store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit, error.to_string())) })
                 }
             }
 
             impl store::ArtifactSqliteSnapshot for $snapshot {
                 const SQLITE_SCHEMA: &'static str = include_str!("../../../../../../🔨️modules/🚪️io/🧫️fixtures/🪶️sqlite-snapshot-registration/🗄️.sql");
-                fn preflight_sqlite_snapshot_encoding(&self, _: store::sqlite_snapshot::SnapshotEncoding, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<(), String> {
+                fn preflight_sqlite_snapshot_encoding(&self, _: store::sqlite_snapshot::SnapshotEncoding, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<(), semio_framework_value::ValueError> {
                     let mut bound = store::sqlite_snapshot::artifact::NativeEncodingBound::new(control)?;
                     bound.add(64)?;
                     bound.finish()
                 }
 
                 fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework::io_schema::ArtifactDialect,_database:&store::sqlite_snapshot::SqliteDatabase,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>)->semio_framework::io_schema::IoResult<()>{
-                    control.checkpoint(store::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot,0,1)?;
+                    control.checkpoint(store::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot,0,1).map_err(semio_framework::io_schema::IoError::from_value_error)?;
                     if dialect.subset=="*"{return Ok(semio_framework::io_schema::IoOutcome::clean(()));}
-                    if dialect!=&semio_framework::io_schema::ArtifactDialect::from($dialect)||dialect.subset!="strict"{return Err("fixture subset has no semantic validator".to_string().into());}
-                    let diagnostics=if self.value<0{vec![dsl::Diagnostic{code:dsl::FaultCode::new(if self.value==i32::MIN{"fixture.strict.fatal-value"}else{"fixture.strict.negative-value"}),severity:if self.value==i32::MIN{dsl::Severity::Fatal}else{dsl::Severity::Error},span:dsl::TextSpan::at(1,1),message:"strict fixture requires a non-negative value".into(),expected:None,scope:dsl::FaultScope::default()}]}else if self.value==0{vec![dsl::Diagnostic{code:dsl::FaultCode::new("fixture.strict.zero-value"),severity:dsl::Severity::Warning,span:dsl::TextSpan::at(1,1),message:"strict fixture has no positive value".into(),expected:None,scope:dsl::FaultScope::default()}]}else{Vec::new()};
+                    if dialect!=&semio_framework::io_schema::ArtifactDialect::from($dialect)||dialect.subset!="strict"{return Err(semio_framework::io_schema::IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"fixture subset has no semantic validator")));}
+                    let diagnostics=if self.value<0{vec![semio_framework_diagnostic::Diagnostic{code:semio_framework_diagnostic::FaultCode::new(if self.value==i32::MIN{"fixture.strict.fatal-value"}else{"fixture.strict.negative-value"}),severity:if self.value==i32::MIN{semio_framework_diagnostic::Severity::Fatal}else{semio_framework_diagnostic::Severity::Error},span:semio_framework_diagnostic::TextSpan::at(1,1),message:"strict fixture requires a non-negative value".into(),expected:None,scope:semio_framework_diagnostic::FaultScope::default()}]}else if self.value==0{vec![semio_framework_diagnostic::Diagnostic{code:semio_framework_diagnostic::FaultCode::new("fixture.strict.zero-value"),severity:semio_framework_diagnostic::Severity::Warning,span:semio_framework_diagnostic::TextSpan::at(1,1),message:"strict fixture has no positive value".into(),expected:None,scope:semio_framework_diagnostic::FaultScope::default()}]}else{Vec::new()};
                     Ok(semio_framework::io_schema::IoOutcome{value:(),diagnostics})
                 }
 
-                fn to_sqlite_database(&self, control: &mut semio_framework::io::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, String> {
+                fn to_sqlite_database(&self, control: &mut semio_framework::io::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, semio_framework_value::ValueError> {
                     control.checkpoint(store::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot, 0, 1)?;
-                    let mut database = store::sqlite_snapshot::SqliteDatabase::from_schema(Self::SQLITE_SCHEMA).map_err(|error| error.to_string())?;
+                    let mut database = store::sqlite_snapshot::SqliteDatabase::from_schema(Self::SQLITE_SCHEMA)?;
                     database.table_mut("fixture_value")?.rows.push(store::sqlite_snapshot::SqliteRow { rowid: 1, values: vec![store::sqlite_snapshot::SqliteValue::Integer(1), store::sqlite_snapshot::SqliteValue::Integer(i64::from(self.value))] });
                     control.checkpoint(store::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot, 1, 1)?;
                     Ok(database)
                 }
 
-                fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, control: &mut semio_framework::io::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, String> {
+                fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, control: &mut semio_framework::io::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
                     control.checkpoint(store::sqlite_snapshot::SqliteSnapshotPhase::ReconstructSnapshot, 0, 1)?;
                     let table = database.table("fixture_value")?;
                     if table.rows.len() != 1 || table.rows[0].rowid != 1 {
-                        return Err("fixture SQLite snapshot requires one value row".to_string());
+                        return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "fixture SQLite snapshot requires one value row"));
                     }
                     let [store::sqlite_snapshot::SqliteValue::Integer(1), store::sqlite_snapshot::SqliteValue::Integer(value)] = table.rows[0].values.as_slice() else {
-                        return Err("fixture SQLite snapshot value columns are invalid".to_string());
+                        return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "fixture SQLite snapshot value columns are invalid"));
                     };
-                    let snapshot = Self { value: i32::try_from(*value).map_err(|error| error.to_string())? };
+                    let snapshot = Self { value: i32::try_from(*value).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()))? };
                     control.checkpoint(store::sqlite_snapshot::SqliteSnapshotPhase::ReconstructSnapshot, 1, 1)?;
                     Ok(snapshot)
                 }
@@ -124,8 +124,8 @@ pub(crate) mod fixture {
             }
 
             impl protocol::OpText for $mutation {
-                fn parse_op(line: &str) -> Result<Self, store::TextError> {
-                    serde_json::from_str(line).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+                fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+                    serde_json::from_str(line).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), semio_framework_diagnostic::TextSpan::at(1, 1)))
                 }
                 fn print_op(&self) -> String {
                     serde_json::to_string(self).unwrap_or_default()
@@ -133,10 +133,10 @@ pub(crate) mod fixture {
             }
             impl protocol::OpBinary for $mutation {
                 fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-                    serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()).into())
+                    serde_json::to_vec(self).map_err(|error| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string())).into())
                 }
                 fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-                    serde_json::from_slice(bytes).map_err(|error| store::PackError::Schema(error.to_string()).into())
+                    serde_json::from_slice(bytes).map_err(|error| match (u32::try_from(error.line()), u32::try_from(error.column())) { (Ok(line), Ok(column)) => store::PackError::from(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), semio_framework_diagnostic::TextSpan::at(line, column))), _ => store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit, error.to_string())) }.into())
                 }
             }
 
@@ -317,26 +317,26 @@ pub(crate) mod fixture {
     impl semio_framework::io::io_mechanism::Deserializer<Std1StrictSnapshot> for StrictFromAny {
         const FROM: Dialect = STD1_ANY_DIALECT;
         const FIDELITY: semio_framework::io_schema::IoFidelity = semio_framework::io_schema::IoFidelity::Semantic;
-        const CONFORMANCE: Option<fn(&Std1StrictSnapshot) -> Vec<dsl::Diagnostic>> = Some(check_non_negative);
+        const CONFORMANCE: Option<fn(&Std1StrictSnapshot) -> Vec<semio_framework_diagnostic::Diagnostic>> = Some(check_non_negative);
         async fn deserialize(payload: &semio_framework::io_schema::IoPayload) -> semio_framework::io_schema::IoResult<Std1StrictSnapshot> {
             let semio_framework::io_schema::IoPayload::Binary(bytes) = payload else {
-                return Err(semio_framework::io_schema::IoError { message: "StrictFromAny: expected a binary payload".to_string(), diagnostics: Vec::new() });
+                return Err(semio_framework::io_schema::IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "StrictFromAny: expected a binary payload")));
             };
-            let base = Std1AnySnapshot::decode_pack(bytes).map_err(|error| semio_framework::io_schema::IoError { message: format!("StrictFromAny: base decode failed: {error}"), diagnostics: Vec::new() })?;
+            let base = Std1AnySnapshot::decode_pack(bytes).map_err(|error| semio_framework::io_schema::IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("StrictFromAny: base decode failed: {error}"))))?;
             Ok(semio_framework::io_schema::IoOutcome { value: Std1StrictSnapshot { value: base.value }, diagnostics: Vec::new() })
         }
     }
 
     // 🚫️async: E4 fn-pointer slot — `Deserializer::CONFORMANCE: Option<fn(&T) -> Vec<Diagnostic>>`.
-    fn check_non_negative(snapshot: &Std1StrictSnapshot) -> Vec<dsl::Diagnostic> {
-        if snapshot.value < 0 { vec![dsl::Diagnostic::error("s.testkit.w1c-fixture.negative-value", dsl::TextSpan::at(0, 0), "conformance profile requires a non-negative value")] } else { Vec::new() }
+    fn check_non_negative(snapshot: &Std1StrictSnapshot) -> Vec<semio_framework_diagnostic::Diagnostic> {
+        if snapshot.value < 0 { vec![semio_framework_diagnostic::Diagnostic::error("s.testkit.w1c-fixture.negative-value", semio_framework_diagnostic::TextSpan::at(0, 0), "conformance profile requires a non-negative value")] } else { Vec::new() }
     }
 
     pub(crate) struct StrictIntoAny;
     impl semio_framework::io::io_mechanism::Serializer<Std1StrictSnapshot> for StrictIntoAny {
         const INTO: Dialect = STD1_ANY_DIALECT;
         const FIDELITY: semio_framework::io_schema::IoFidelity = semio_framework::io_schema::IoFidelity::Exact;
-        async fn serialize(from: &Std1StrictSnapshot) -> semio_framework::io_schema::IoResult<semio_framework::io_schema::IoPayload> {
+        async fn serialize(from: &Std1StrictSnapshot, _: &semio_framework::io::io_mechanism::ArchiveChildren) -> semio_framework::io_schema::IoResult<semio_framework::io_schema::IoPayload> {
             Ok(semio_framework::io_schema::IoOutcome { value: semio_framework::io_schema::IoPayload::Binary(Std1AnySnapshot { value: from.value }.encode_pack()), diagnostics: Vec::new() })
         }
     }
@@ -360,8 +360,8 @@ pub(crate) mod fixture {
 
     fn native_codecs<S, M>(schema: &str) -> NativeCodecs
     where
-        S: Clone + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + store::ArtifactSqliteSnapshot + 'static,
-        M: Mutation<S> + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + OpText + OpBinary + 'static,
+        S: Clone + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + store::ArtifactSqliteSnapshot + 'static,
+        M: Mutation<S> + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + OpText + OpBinary + 'static,
     {
         NativeCodecs {
             snapshot: LanguagePair { text: None, binary: None },
@@ -574,11 +574,11 @@ pub(crate) mod fixture {
         assert_eq!(profiled.value, 7);
     }
 
-    fn sqlite_fixture_strict_validate(payload: &semio_framework::io_schema::IoPayload) -> Vec<dsl::Diagnostic> {
+    fn sqlite_fixture_strict_validate(payload: &semio_framework::io_schema::IoPayload) -> Vec<semio_framework_diagnostic::Diagnostic> {
         let decoded = match payload { semio_framework::io_schema::IoPayload::Binary(bytes) => Std1StrictSnapshot::decode_pack(bytes).map_err(|error| error.to_string()), semio_framework::io_schema::IoPayload::Text(text) => <Std1StrictSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string()) };
         if decoded.as_ref().is_ok_and(|snapshot| snapshot.value >= 0) { return Vec::new(); }
         let fatal=decoded.as_ref().is_ok_and(|snapshot|snapshot.value==i32::MIN);
-        vec![dsl::Diagnostic { code: dsl::FaultCode::new(if fatal{"fixture.strict.fatal-value"}else{"fixture.strict.negative-value"}), severity: if fatal{dsl::Severity::Fatal}else{dsl::Severity::Error}, span: dsl::TextSpan::at(1, 1), message: "strict fixture requires a non-negative value".into(), expected: None, scope: dsl::FaultScope::default() }]
+        vec![semio_framework_diagnostic::Diagnostic { code: semio_framework_diagnostic::FaultCode::new(if fatal{"fixture.strict.fatal-value"}else{"fixture.strict.negative-value"}), severity: if fatal{semio_framework_diagnostic::Severity::Fatal}else{semio_framework_diagnostic::Severity::Error}, span: semio_framework_diagnostic::TextSpan::at(1, 1), message: "strict fixture requires a non-negative value".into(), expected: None, scope: semio_framework_diagnostic::FaultScope::default() }]
     }
 
     static SQLITE_FIXTURE_STRICT_VALIDATOR: semio_framework::io::SubsetValidatorEntry = semio_framework::io::SubsetValidatorEntry { dialect: STD1_STRICT_DIALECT, validate: sqlite_fixture_strict_validate };
@@ -649,12 +649,12 @@ pub(crate) mod fixture {
         }
         let strict_export = io_route(&ArtifactDialect::from(STD1_STRICT_DIALECT), &sqlite, 1).await.expect("strict export route").value;
         assert!(io_run(&strict_export, IoPayload::Text("{\"value\":-1}".into())).await.is_err());
-        let fatal=io_run(&strict_export,IoPayload::Binary(Std1StrictSnapshot{value:i32::MIN}.encode_pack())).await.unwrap_err();assert_eq!(fatal.diagnostics[0].severity,dsl::Severity::Fatal);
+        let fatal=io_run(&strict_export,IoPayload::Binary(Std1StrictSnapshot{value:i32::MIN}.encode_pack())).await.unwrap_err();assert_eq!(fatal.diagnostics[0].severity,semio_framework_diagnostic::Severity::Fatal);
         let strict_import = io_route(&sqlite, &ArtifactDialect::from(STD1_STRICT_DIALECT), 1).await.unwrap().value;
         for payload in [IoPayload::Binary(Std1StrictSnapshot { value: 0 }.encode_pack()), IoPayload::Text("{\"value\":0}".into())] {
             let exported = io_run(&strict_export, payload.clone()).await.unwrap();
             assert_eq!(exported.diagnostics.len(), 1);
-            assert_eq!(exported.diagnostics[0].severity, dsl::Severity::Warning);
+            assert_eq!(exported.diagnostics[0].severity, semio_framework_diagnostic::Severity::Warning);
             let restored = io_run(&strict_import, exported.value).await.unwrap();
             assert_eq!(restored.value, payload);
             assert_eq!(restored.diagnostics, exported.diagnostics);
@@ -702,7 +702,7 @@ pub(crate) mod fixture {
         assert!(io_export_sqlite_snapshot(&TYPED.into(), &snapshot, SnapshotEncoding::Binary, limits, &mut |_| false).await.is_err());
         let _plugin=Plugin::<FixtureApps>::builder("testkit").label("typed strict fixture").version("0.0.1").package_id("semio:testkit").declare_artifact(build_declaration()).try_build().unwrap();
         let cases:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🔨️modules/🚪️io/🧫️fixtures/🪶️sqlite-snapshot-registration/🔣️.json")).unwrap();let cases=&cases["ownedSubsetValidation"];
-        let mut strict_phases=Vec::new();let outcome=io_export_sqlite_snapshot(&STD1_STRICT_DIALECT.into(),&Std1StrictSnapshot{value:i32::try_from(cases["warning"]["value"].as_i64().unwrap()).unwrap()},SnapshotEncoding::Binary,limits,&mut |event|{strict_phases.push(event.phase);true}).await.unwrap();assert_eq!(outcome.diagnostics.len(),1);assert_eq!(outcome.diagnostics[0].severity,dsl::Severity::Warning);
+        let mut strict_phases=Vec::new();let outcome=io_export_sqlite_snapshot(&STD1_STRICT_DIALECT.into(),&Std1StrictSnapshot{value:i32::try_from(cases["warning"]["value"].as_i64().unwrap()).unwrap()},SnapshotEncoding::Binary,limits,&mut |event|{strict_phases.push(event.phase);true}).await.unwrap();assert_eq!(outcome.diagnostics.len(),1);assert_eq!(outcome.diagnostics[0].severity,semio_framework_diagnostic::Severity::Warning);
         let restored=io_import_sqlite_snapshot::<Std1StrictSnapshot>(&STD1_STRICT_DIALECT.into(),&outcome.value,limits,&mut |event|{strict_phases.push(event.phase);true}).await.unwrap();assert_eq!(restored.value.value,0);assert_eq!(restored.diagnostics,outcome.diagnostics);assert!(!strict_phases.iter().any(|phase|matches!(phase,SqliteSnapshotPhase::EncodeNative|SqliteSnapshotPhase::DecodeNative)));
         let rejected=io_export_sqlite_snapshot(&STD1_STRICT_DIALECT.into(),&Std1StrictSnapshot{value:i32::try_from(cases["rejected"]["value"].as_i64().unwrap()).unwrap()},SnapshotEncoding::Binary,limits,&mut |_|true).await.unwrap_err();assert_eq!(rejected.diagnostics[0].code.0.as_str(),cases["rejected"]["code"].as_str().unwrap());
     }
@@ -780,5 +780,6 @@ pub(crate) mod fixture {
             "the peer half of the presence lane is framework-owned too"
         );
     }
+    include!("⚠️refusal/🦀️.rs");
     //#endregion 🔖️Tests
 }

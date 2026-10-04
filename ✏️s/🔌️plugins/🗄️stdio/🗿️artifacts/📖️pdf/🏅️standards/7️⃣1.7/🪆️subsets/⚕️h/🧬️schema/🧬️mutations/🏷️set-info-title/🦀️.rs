@@ -22,9 +22,12 @@ impl MutationKind<PdfSnapshot, PdfHMutation> for SetInfoTitle {
         MutationOutcome::new(<PdfDiff as DiffAlgebra<PdfSnapshot>>::between(base, &next))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfHMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfHMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![PdfHMutation::SetInfoTitle(SetInfoTitle { title: base.info.title.clone().unwrap_or_default() })]
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set PDF/H title \"{}\"", self.title), &format!("PDF/H-Titel \"{}\" setzen", self.title))

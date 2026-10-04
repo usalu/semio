@@ -2,7 +2,7 @@
 
 use crate::editor::puzzle3d::puzzle3d_brush_target_vortex;
 use crate::editor::puzzle3d::Puzzle3dActionCtx;
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 
 /// 🔁️ `cycleBrushCandidate`/`cycleBrushCandidateBack` share one arm — the default step is the
 /// direction the action id names, and an explicit `delta` overrides it.

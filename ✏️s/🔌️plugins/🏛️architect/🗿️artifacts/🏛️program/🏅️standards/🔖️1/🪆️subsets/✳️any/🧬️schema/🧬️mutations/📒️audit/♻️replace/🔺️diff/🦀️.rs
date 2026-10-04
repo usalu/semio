@@ -13,7 +13,7 @@ pub fn diff(payload: &ReplaceAuditEvent, base: &ProgramSnapshot) -> protocol::Mu
         return protocol::MutationOutcome::error("mutation.target-missing", "No audit event exists with this id.", [payload.audit_event.header.id.0.clone()]);
     };
     if existing == &payload.audit_event {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This audit event already matches the requested value.").at([existing.header.id.0.clone()])]);
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This audit event already matches the requested value.").at([existing.header.id.0.clone()])]);
     }
     let patch = existing.diff_patch(&payload.audit_event).expect("diff_patch always produces a full patch");
     protocol::MutationOutcome::new(ProgramDiff { audit_events: Some(ProgramAuditEventsDelta { patched: vec![ProgramAuditEventsPatchEntry { id: payload.audit_event.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })

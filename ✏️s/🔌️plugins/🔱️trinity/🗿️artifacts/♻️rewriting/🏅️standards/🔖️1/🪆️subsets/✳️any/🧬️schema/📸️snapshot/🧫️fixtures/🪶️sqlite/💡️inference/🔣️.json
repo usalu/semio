@@ -1,0 +1,43 @@
+{
+  "contractId": "jack-inference-retained-child-refusal",
+  "authority": "actualSemioChild",
+  "cases": [
+    {
+      "name": "cycle",
+      "edgeOrdinals": [
+        0,
+        1
+      ],
+      "expected": {
+        "topoOrder": [],
+        "depth": {},
+        "cycleFree": false,
+        "nodeCount": 2
+      }
+    },
+    {
+      "name": "acyclic",
+      "edgeOrdinals": [
+        0
+      ],
+      "expected": {
+        "topoOrder": [
+          "a",
+          "b"
+        ],
+        "depth": {
+          "a": 0,
+          "b": 1
+        },
+        "cycleFree": true,
+        "nodeCount": 2
+      }
+    }
+  ],
+  "refusals": [
+    "missingOwner",
+    "wrongDialect",
+    "orphanEdge"
+  ],
+  "refusalKind": "invalidValue"
+}

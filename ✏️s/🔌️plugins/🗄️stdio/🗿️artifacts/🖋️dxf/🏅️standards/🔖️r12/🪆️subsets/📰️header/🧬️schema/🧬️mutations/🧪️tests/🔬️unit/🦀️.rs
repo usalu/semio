@@ -131,7 +131,7 @@ async fn inverse_law() {
     for m in variants() {
         let mut forward = base.clone();
         apply_dxf_mutation(&mut forward, &m);
-        for inv in m.inverse(&base) {
+        for inv in m.inverse(&base).expect("valid retained mutation inverse fixture") {
             apply_dxf_mutation(&mut forward, &inv);
         }
         assert_eq!(forward, base, "mutation-level inverse round trip failed for {m:?}");
@@ -346,7 +346,7 @@ async fn op_text_binary_roundtrip_law() {
 /// wave 7 fleet brief's registration rule ("the framework never parses Rust").
 #[semio_framework_async_macros::async_test]
 async fn kinds_const_matches_enum_variants_in_declaration_order() {
-    assert_eq!(KINDS.len(), 18, "DxfMutation has 18 variants");
+    assert_eq!(KINDS.len(), 19, "DxfMutation has 19 variants");
     let mut seen: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
     for m in demo_mutation_cases() {
         let printed = m.print_op();

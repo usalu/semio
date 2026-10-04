@@ -37,7 +37,7 @@ use semio_framework_plugin::ViewerApp;
 /// pointer sample over the pane). Every route is inert: a viewer emits no mutation by construction,
 /// and `ArtifactViewer` has no `build_document_store_initialization_job`, so it cannot admit a
 /// whole-document replacement either — switching examples is an editor gesture.
-#[derive(Clone, Debug, Default, PartialEq, Eq, dsl::DslOps, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, semio_framework_dsl_record_derive::DslEnum, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 pub enum Grid2dViewCommand {
     #[dsl(key = "set-active-example")]
     SetActiveExample { example_id: String },
@@ -111,11 +111,11 @@ fn view_example_document(example_id: &str) -> Option<Grid2dSnapshot> {
 }
 
 /// 🔑️ The example id the navbar picker names, under any of the spellings it sends.
-fn view_example_id(args: Option<&dsl::DslValue>) -> String {
-    let dsl::DslValue::Object(entries) = args.unwrap_or(&dsl::DslValue::Null) else { return String::new() };
+fn view_example_id(args: Option<&semio_framework_value::DslValue>) -> String {
+    let semio_framework_value::DslValue::Object(entries) = args.unwrap_or(&semio_framework_value::DslValue::Null) else { return String::new() };
     ["exampleId", "id", "value"]
         .iter()
-        .find_map(|key| entries.iter().find(|(name, _)| name == key).and_then(|(_, value)| if let dsl::DslValue::String(text) = value { Some(text.clone()) } else { None }))
+        .find_map(|key| entries.iter().find(|(name, _)| name == key).and_then(|(_, value)| if let semio_framework_value::DslValue::String(text) = value { Some(text.clone()) } else { None }))
         .unwrap_or_default()
 }
 
@@ -144,7 +144,7 @@ impl ArtifactCommandWork<ViewerApp<Grid2dViewer>> for Grid2dViewCommandWork {
     /// envelope an `Effect::LoadDocument` carries. Declaring and accepting the verb is still what
     /// removes the shell's boot-time `undeclared-action` refusal; switching examples is an editor
     /// gesture.
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Grid2dViewer>>) -> Result<ArtifactCommandWorkStep<ViewerApp<Grid2dViewer>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Grid2dViewer>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<ViewerApp<Grid2dViewer>>, Fault> {
         if self.consumed {
             return Err(Fault::from("wfc-grid2d-view-retained-work-repeated"));
         }
@@ -302,7 +302,7 @@ impl ArtifactViewer for Grid2dViewer {
         }
         let tool_id = grid2d_view_command_id(&request.command);
         if tool_id != request.tool_id {
-            return Err(Fault::from("wfc-grid2d-view-command-tool-mismatch"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "WFC grid 2D view command does not match its exact registered tool"));
         }
         let operation = AppOperationContext {
             app_instance_id: request.app_instance_id,
@@ -339,7 +339,7 @@ impl ArtifactViewer for Grid2dViewer {
     /// 👁️ The canvas host dispatches pointer and camera verbs at any `Canvas2d` surface, read-only
     /// or not, and the shell's navbar picker dispatches `setActiveExample`. Anything else is refused
     /// rather than silently swallowed, so a real typo still surfaces.
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
         Ok(match action {
             "setActiveExample" => Grid2dViewCommand::SetActiveExample { example_id: view_example_id(args) },
             "canvasPointerDown" => Grid2dViewCommand::CanvasPointerDown,

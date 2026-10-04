@@ -5,12 +5,22 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "graph",
+    "geometry",
     "notation",
     "results",
     "computed",
     "equation"
   ],
   "properties": {
+    "graph": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/equation/equation/artifact.json#/$defs/graph",
+      "x-semio-state": "artifact"
+    },
+    "geometry": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/equation/equation/artifact.json#/$defs/geometry",
+      "x-semio-state": "artifact"
+    },
     "notation": {
       "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json",
       "x-semio-state": "artifact"

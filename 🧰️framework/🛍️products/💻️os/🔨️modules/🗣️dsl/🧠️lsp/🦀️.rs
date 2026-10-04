@@ -1,8 +1,13 @@
 //! 📡️ `dsl_lsp` — LSP 3.17 JSON-RPC subset and in-process [`LanguageSession`] over
 //! [`crate::os_dsl::LanguageSpec`] hooks (semantic tokens, completion, canonicalize).
 
-use crate::os_dsl::{CompletionItem, GrammarFile, LanguageSpec, ProtocolFile, TextError, TokenClass};
-use crate::os_pack::json::{object, Object, Value};
+use semio_framework_dsl::CompletionItem;
+use semio_framework_dsl::GrammarFile;
+use semio_framework_dsl::LanguageSpec;
+use semio_framework_dsl::ProtocolFile;
+use semio_framework_diagnostic::TextError;
+use semio_framework_dsl::TokenClass;
+use semio_framework_pack_json::{object, Object, Value};
 
 //#region 🔖️Session
 /// 🗣️ In-process language host for editor surfaces (writer, playground).
@@ -94,7 +99,7 @@ impl LanguageSession {
 //#region 🔖️JsonRpc
 /// 📨 Handles one LSP JSON-RPC request string; returns optional response JSON text.
 pub fn handle_json_rpc(line: &str, session: &LanguageSession) -> Option<String> {
-    let msg: Value = crate::os_pack::json::parse(line).ok()?;
+    let msg: Value = semio_framework_pack_json::parse(line, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()?;
     let id = msg.get("id").cloned();
     let method = msg.get("method")?.as_str()?;
     let result = match method {
@@ -108,7 +113,7 @@ pub fn handle_json_rpc(line: &str, session: &LanguageSession) -> Option<String> 
         response.insert("jsonrpc", Value::from("2.0"));
         response.insert("id", id);
         response.insert("result", result);
-        crate::os_pack::json::to_string(&Value::Object(response))
+        semio_framework_pack_json::to_string(&Value::Object(response))
     })
 }
 //#endregion 🔖️JsonRpc

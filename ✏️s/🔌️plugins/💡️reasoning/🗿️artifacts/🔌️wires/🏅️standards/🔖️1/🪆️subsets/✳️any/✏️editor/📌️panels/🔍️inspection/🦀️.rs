@@ -2,8 +2,8 @@
 //! current selection; see `render`'s doc comment for why that's gone).
 
 use crate::schema::{fixture_json_string, fixture_nodes};
-use crate::{WiresSnapshot, MINDMAP_WIRES_SCHEMA};
-use dsl::os_pack::json::Value;
+use crate::MINDMAP_WIRES_SCHEMA;
+use semio_framework_pack_json::Value;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase};
 use semio_framework_plugin::ui_node_list;
 use semio_framework_plugin::BuiltNode;
@@ -40,15 +40,15 @@ pub fn definition() -> PanelTabDefinition {
 /// selection to render against and always falls through to the document summary below — the same gap
 /// layout's/gis2d's/puzzle3d's inspection panels flag (see this ticket's w3b-summary.md). Not fixed
 /// here (framework file, out of this crate's remit).
-pub fn render(document: &WiresSnapshot, labels: &crate::editor::wires::terminology::WiresLabels) -> UiAssemblyResult<BuiltNode> {
-    let board = crate::wires_working_board(document);
-    let extension = DefaultWiresExtension::from_host_snapshot_json(&fixture_json_string(&document.wires_fixture)).ok();
+pub fn render(composed: &crate::WiresComposed, labels: &crate::editor::wires::terminology::WiresLabels) -> UiAssemblyResult<BuiltNode> {
+    let board = &composed.board;
+    let extension = DefaultWiresExtension::from_host_snapshot_json(&fixture_json_string(&composed.fixture)).ok();
     let namespace = PanelTreeBuilder::new("wires-inspection")?;
     let rows = [
         format!("{}: {MINDMAP_WIRES_SCHEMA}", labels.schema.as_str()),
         format!("{}: {}", labels.identities.as_str(), extension.as_ref().map_or(0, |ext| ext.topics.len())),
         format!("{}: {}", labels.relationships.as_str(), extension.as_ref().map_or(0, |ext| ext.relationships.len())),
-        format!("{}: {}", labels.board_nodes.as_str(), fixture_nodes(&board).len()),
+        format!("{}: {}", labels.board_nodes.as_str(), fixture_nodes(board).len()),
     ];
     let nodes = ui_node_list(rows.iter().enumerate().map(|(index, row)| {
         semio_framework_ui_contract::text(crate::editor::wires::ui_label(row)?)
@@ -76,7 +76,7 @@ pub type TopicId = canvas::board::NodeId;
 /// 🧯️ WIRES extension errors — fixture (de)serialization and fixed-identity-set validation failures.
 #[derive(Debug)]
 pub enum WiresError {
-    Json(dsl::os_pack::json::JsonError),
+    Json(semio_framework_pack_json::JsonError),
     FixtureRootNotObject,
     SchemaMismatch,
     IdentitiesMissing,
@@ -106,8 +106,8 @@ impl std::error::Error for WiresError {
     }
 }
 
-impl From<dsl::os_pack::json::JsonError> for WiresError {
-    fn from(error: dsl::os_pack::json::JsonError) -> Self {
+impl From<semio_framework_pack_json::JsonError> for WiresError {
+    fn from(error: semio_framework_pack_json::JsonError) -> Self {
         Self::Json(error)
     }
 }
@@ -168,7 +168,7 @@ impl canvas::board::GraphExtension for DefaultWiresExtension {}
 impl DefaultWiresExtension {
     /// 🔗️ Hydrate extension state from `reasoning.wires.fixture` JSON.
     pub fn from_host_snapshot_json(json: &str) -> Result<Self, WiresError> {
-        let root: Value = dsl::os_pack::json::parse(json)?;
+        let root: Value = semio_framework_pack_json::parse(json, semio_framework_pack_json::JsonMemberPolicy::Reject)?;
         let Some(obj) = root.as_object() else {
             return Err(WiresError::FixtureRootNotObject);
         };

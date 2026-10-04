@@ -32,7 +32,7 @@ async fn division_by_zero_is_diagnosed() {
 
 #[semio_framework_async_macros::async_test]
 async fn parses_and_prints_a_trace_line() {
-    // `crate::os_dsl::schema::print_expr`'s canonical form spaces every binary operator (`1.35 * G`, not
+    // `semio_framework_dsl_record::print_expr`'s canonical form spaces every binary operator (`1.35 * G`, not
     // `1.35*G`) — parse accepts either spacing; only the printed/canonical form is fixed.
     let trace = parse_trace_text("uls = 1.35*G + 1.5*Q -> 210").await.expect("parse_trace_text");
     assert_eq!(trace.name, "uls");
@@ -64,7 +64,7 @@ async fn canonicalize_trace_surfaces_an_unknown_variable_as_an_error() {
 #[semio_framework_async_macros::async_test]
 async fn grammar_file_is_syntactically_valid() {
     let source = include_str!("../../📖️.grammar.semio");
-    let grammar = crate::os_dsl::grammar::parse_grammar(source).expect("family-sheet.grammar must parse");
+    let grammar = semio_framework_dsl::grammar::parse_grammar(source).expect("family-sheet.grammar must parse");
     assert_eq!(grammar.id, "family-sheet");
     assert!(grammar.productions.len() > 10, "family-sheet should cover qty, assign, expr, and eng-record");
 }

@@ -367,7 +367,7 @@ mod subject {
         let mut current = base.clone();
         apply(&mut current, &step, &ctx.scenario.id)?;
         let mutated = snapshot_json(&current);
-        for undo in inverse_semio_value_mutation(&step, &base) {
+        for undo in inverse_semio_value_mutation(&step, &base).expect("valid retained mutation inverse fixture") {
             apply(&mut current, &undo, &ctx.scenario.id)?;
         }
         if current != base {
@@ -388,7 +388,7 @@ mod subject {
             return Err(disagreement(&format!("{}: the applied document does not match the committed after-snapshot", ctx.scenario.id), &current, &expected));
         }
         let applied = snapshot_json(&current);
-        for undo in inverse_semio_value_mutation(&step, &base) {
+        for undo in inverse_semio_value_mutation(&step, &base).expect("valid retained mutation inverse fixture") {
             apply(&mut current, &undo, &ctx.scenario.id)?;
         }
         if current != base {

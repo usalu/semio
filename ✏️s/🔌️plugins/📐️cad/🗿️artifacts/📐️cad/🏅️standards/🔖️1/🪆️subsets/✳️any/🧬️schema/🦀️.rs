@@ -3,7 +3,9 @@
 use crate::{CadDrawingChild, CadModelChild, CadSnapshot};
 use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
-use std::collections::BTreeMap;
+#[path = "📎️references/🦀️.rs"]
+pub mod references;
+pub use references::CadReferenceIndex;
 
 #[cfg(test)]
 #[path = "🧪️tests/🪪️document/🦀️.rs"]
@@ -46,7 +48,7 @@ pub struct CadArtifact {
     pub drawings: Vec<CadDrawingChild>,
     #[state(artifact)]
     #[value(default)]
-    pub references_by_model_definition_id: BTreeMap<String, CadReferenceList>,
+    pub references_by_model_definition_id: CadReferenceIndex,
     #[state(artifact)]
     #[value(default)]
     pub nodes: Vec<CadNode>,
@@ -142,7 +144,7 @@ pub mod derived_construction {
     use crate::mutations::CadMutation;
     use crate::{CadSnapshot, CAD_PLAY_DOCUMENT_SCHEMA};
     use semio_framework_plugin::ArtifactBuilder;
-    use std::collections::BTreeMap;
+    use crate::CadReferenceIndex;
 
     //#region Builder
     fn empty_snapshot() -> CadSnapshot {
@@ -154,7 +156,7 @@ pub mod derived_construction {
             energy_model: None,
             structure_classic_model: None,
             drawings: Vec::new(),
-            references_by_model_definition_id: BTreeMap::new(),
+            references_by_model_definition_id: CadReferenceIndex::new(),
             nodes: Vec::new(),
         }
     }
@@ -163,7 +165,7 @@ pub mod derived_construction {
     #[derive(Clone, Debug)]
     pub struct CadBuilderConstruction {
         snapshot: CadSnapshot,
-        diagnostics: Vec<dsl::Diagnostic>,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
     }
 
     impl ArtifactBuilder for CadBuilderConstruction {
@@ -179,7 +181,7 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
 
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(Self::from_snapshot(<CadSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
 
@@ -191,7 +193,7 @@ pub mod derived_construction {
             let outcome = <CadMutation as protocol::Mutation<CadSnapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("build.apply", dsl::TextSpan::at(1, 1), error.to_string())),
+                Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
@@ -202,7 +204,7 @@ pub mod derived_construction {
             Ok(self)
         }
 
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -245,14 +247,14 @@ pub mod derived_analysis {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <CadSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }

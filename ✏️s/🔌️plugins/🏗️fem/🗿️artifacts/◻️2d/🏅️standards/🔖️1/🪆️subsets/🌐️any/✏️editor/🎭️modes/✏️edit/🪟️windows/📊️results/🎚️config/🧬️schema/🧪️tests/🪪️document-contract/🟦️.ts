@@ -1,4 +1,5 @@
 import resultModeSchema from "../../../../../../../../../../../../../../../⚙️engine/🖥️app-surface/🧬️schema/👁️result-mode/🔣️.json" with { type: "json" };
+import resultsAnimationSchema from "../../../../../../../../../../../../../../../⚙️engine/🖥️app-surface/🧬️schema/🔣️results-animation/🔣️.json" with { type: "json" };
 import assert from "node:assert/strict";
 import Ajv from "ajv/dist/2020.js";
 import draft7 from "ajv/dist/refs/json-schema-draft-07.json" with { type: "json" };
@@ -9,7 +10,7 @@ import fixture from "../../🧫️fixtures/🪪️document-contract/🔣️.json
 import { parseFem2dResultsWindowConfig } from "../../🟦️.ts";
 
 export function testFem2dResultsWindowConfigContract(): void {
-  const validate = new Ajv({ strict: true, allErrors: true }).addMetaSchema(draft7).addSchema(viewportSchema).addSchema(resultModeSchema).compile(schema);
+  const validate = new Ajv({ strict: true, allErrors: true }).addMetaSchema(draft7).addSchema(viewportSchema).addSchema(resultModeSchema).addSchema(resultsAnimationSchema).compile(schema);
   const base = fixture.valid[0];
   for (const candidate of fixture.valid) {
     assert(validate(candidate), JSON.stringify(validate.errors));

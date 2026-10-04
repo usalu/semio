@@ -8,7 +8,6 @@
 
 use crate::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::outline::compute_semio_presentation_outline;
 //#region 🔖️Inference
@@ -23,8 +22,11 @@ pub struct SemioPresentationInference {
 }
 
 impl protocol::Inference<SemioPresentationSnapshot> for SemioPresentationInference {
-    fn infer(snapshot: &SemioPresentationSnapshot) -> Self {
+    fn infer(snapshot: &SemioPresentationSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { outline: compute_semio_presentation_outline(snapshot) }
+    
+        })
     }
 }
 
@@ -34,7 +36,9 @@ impl protocol::Inference<SemioPresentationSnapshot> for SemioPresentationInferen
 /// all-empty (the same defensive pattern raster's `RasterInference` documents).
 impl Default for SemioPresentationInference {
     fn default() -> Self {
-        <Self as protocol::Inference<SemioPresentationSnapshot>>::infer(&SemioPresentationSnapshot::default())
+        let snapshot = &SemioPresentationSnapshot::default();
+
+        Self { outline: compute_semio_presentation_outline(snapshot) }
     }
 }
 
@@ -50,16 +54,6 @@ impl protocol::InferenceSpec<SemioPresentationSnapshot> for SemioPresentationInf
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 💡️ No `InferredField`s here (a recursive block walk is a single whole-snapshot pass over
-/// already-flat `masters`/`layouts`/`slides` collections, no per-entity incremental decomposition
-/// applies) — the default `infer_cached` passthrough (`ArtifactInferrer::infer_cached`) is exact.
-impl ArtifactInferrer for crate::standards::v1::subsets::presentation::schema::SemioPresentationBuilder {
-    type Snapshot = SemioPresentationSnapshot;
-    type Inference = SemioPresentationInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.semio.presentation.inference`'s facet leaves into the OS-wide inference

@@ -1,6 +1,6 @@
-//! 📜️ Playbook source window — a read-only TextEditor surface for the authored snapshot wire.
+//! 📜️ Playbook source window — a read-only TextEditor surface for the composed playbook (parent + `flow` child steps).
 
-use crate::PlaybookSnapshot;
+use crate::PlaybookSpec;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::SurfaceKind;
 use semio_framework_plugin::WindowKindDefinition;
@@ -30,11 +30,11 @@ pub fn definition() -> WindowKindDefinition {
     }
 }
 
-pub fn scene(spec: &PlaybookSnapshot) -> TextEditorScene {
-    TextEditorScene::base(protocol::json::to_json_string(spec), Some("json".into()), None)
+pub fn scene(spec: &PlaybookSpec) -> TextEditorScene {
+    TextEditorScene::base(semio_framework_pack_json::to_json_string(spec), Some("json".into()), None)
 }
 
-pub fn render(spec: &PlaybookSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(spec: &PlaybookSpec) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     semio_framework_plugin::scene_surface(PLAYBOOK_PLAY_SURFACE_SOURCE, semio_framework_ui_contract::SurfaceKind::TextEditor, &scene(spec))
 }
 

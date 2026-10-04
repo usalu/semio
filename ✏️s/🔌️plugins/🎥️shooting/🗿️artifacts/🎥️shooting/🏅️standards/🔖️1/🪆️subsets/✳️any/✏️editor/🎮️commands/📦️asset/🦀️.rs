@@ -9,8 +9,8 @@ use crate::mutations::set_active_asset::SetActiveAsset as SetActiveAssetMutation
 use crate::op::ShootingMutation;
 use crate::standards::v1::subsets::any::schema::next_shooting_id;
 use crate::{ShootingAsset, ShootingSnapshot};
-use dsl::json;
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::json;
+use semio_framework_pack_json::Value;
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -28,7 +28,7 @@ fn asset_mutation_for_field(id: String, field: &str, value: &Value) -> Option<Sh
 pub mod set_active_asset {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "active-asset")]
     pub struct SetActiveAsset {
         pub asset_id: Option<String>,
@@ -51,7 +51,7 @@ pub mod set_active_asset {
 pub mod patch_assets {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "patch-assets")]
     pub struct PatchAssets {
         pub asset_ids: Vec<String>,
@@ -78,7 +78,7 @@ pub mod patch_assets {
 pub mod add_asset {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "add-asset")]
     pub struct AddAsset {
         pub format: String,
@@ -103,7 +103,7 @@ pub mod add_asset {
 pub mod import_asset {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "import-asset")]
     pub struct ImportAsset {
         pub payload: String,
@@ -130,12 +130,12 @@ pub mod import_asset {
 pub mod import_asset_request {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "import-asset-request")]
     pub struct ImportAssetRequest {}
 
     pub fn handle(_payload: &ImportAssetRequest, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        Ok(Emit::effect(Effect::RequestFileOpen { req: semio_framework_plugin::RequestId(108), accept: ".glb,model/gltf-binary".into(), read_as: Some("dataUrl".into()), import_action: "importAsset".into(), multiple: false }))
+        Ok(Emit::effect(Effect::RequestFileOpen { req: semio_framework_plugin::RequestId(108), accept: ".glb,model/gltf-binary".into(), read_as: Some("dataUrl".into()), import_action: "importAsset".into(), multiple: false, args: None }))
     }
 }
 //#endregion 🔖️ImportAssetRequest

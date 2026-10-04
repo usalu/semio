@@ -135,7 +135,7 @@ export interface ChangePrintTarget {
 }
 
 export interface ChangeDataFields {
-  newJson: string | null;
+  newFields: import("../🟦️.ts").FormDictionary | null;
 }
 
 export interface CreatePage {

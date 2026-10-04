@@ -31,9 +31,9 @@ fn config_mutations_are_invertible() {
     let next = <ChangeCamera as MutationKind<Wfc2dConfig, Wfc2dConfigMutation>>::diff(&camera, &base).diff().clone();
     assert_eq!(next.camera_x, 9.0);
     assert_eq!(next.active_tile_id, "room", "a camera change never disarms the tile");
-    let inverse = <ChangeCamera as MutationKind<Wfc2dConfig, Wfc2dConfigMutation>>::inverse(&camera, &base);
+    let inverse = <ChangeCamera as MutationKind<Wfc2dConfig, Wfc2dConfigMutation>>::inverse(&camera, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![Wfc2dConfigMutation::ChangeCamera(ChangeCamera { x: 1.0, y: 2.0, zoom: 3.0 })]);
     let tile = ChangeActiveTile { tile_id: "corridor".into() };
-    let inverse = <ChangeActiveTile as MutationKind<Wfc2dConfig, Wfc2dConfigMutation>>::inverse(&tile, &base);
+    let inverse = <ChangeActiveTile as MutationKind<Wfc2dConfig, Wfc2dConfigMutation>>::inverse(&tile, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![Wfc2dConfigMutation::ChangeActiveTile(ChangeActiveTile { tile_id: "room".into() })]);
 }

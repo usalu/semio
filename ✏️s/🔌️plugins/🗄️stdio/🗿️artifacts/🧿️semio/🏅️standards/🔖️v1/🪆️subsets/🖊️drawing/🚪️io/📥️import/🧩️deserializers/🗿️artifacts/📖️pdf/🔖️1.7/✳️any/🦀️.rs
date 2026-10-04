@@ -27,7 +27,7 @@ impl ArtifactDeserializer for SemioDrawingFromPdf {
 
     async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         if from.pages.is_empty() {
-            return Err(store::PackError::Schema("pdf→semio/drawing: no pages".into()));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "pdf→semio/drawing: no pages")));
         }
         let first = &from.pages[0];
         let canvas = DrawCanvas { width: first.media_box[2] - first.media_box[0], height: first.media_box[3] - first.media_box[1], background: None };

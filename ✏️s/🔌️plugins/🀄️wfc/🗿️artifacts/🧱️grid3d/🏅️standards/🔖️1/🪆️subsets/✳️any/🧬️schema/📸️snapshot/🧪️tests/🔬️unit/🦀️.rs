@@ -58,12 +58,12 @@ fn the_cell_key_is_the_canonical_sort_key_the_collections_use() {
 #[test]
 fn tile_media_round_trips_through_its_own_value_bridge() {
     let media = Grid3dTileMedia::Mesh { mesh: Grid3dMesh { positions: vec![0.0, 0.0, 0.0], indices: vec![0], color: Some(Grid3dColor { r: 1, g: 2, b: 3, a: 4 }) } };
-    let value = dsl::ToValue::to_value(&media);
-    let decoded: Grid3dTileMedia = dsl::FromValue::from_value(value).expect("tile media decodes");
+    let value = semio_framework_value::ToValue::to_value(&media);
+    let decoded: Grid3dTileMedia = semio_framework_value::FromValue::from_value(value).expect("tile media decodes");
     assert_eq!(decoded, media);
     let child = Grid3dTileMedia::MeshChild { child: crate::mesh_child_handle("mesh-a") };
-    let value = dsl::ToValue::to_value(&child);
-    let decoded: Grid3dTileMedia = dsl::FromValue::from_value(value).expect("mesh child decodes");
+    let value = semio_framework_value::ToValue::to_value(&child);
+    let decoded: Grid3dTileMedia = semio_framework_value::FromValue::from_value(value).expect("mesh child decodes");
     assert_eq!(decoded, child);
 }
 
@@ -77,10 +77,10 @@ fn every_direction_carries_its_screaming_wire_token() {
         (Grid3dDirection::Bottom, "BOTTOM"),
         (Grid3dDirection::Top, "TOP"),
     ] {
-        let value = dsl::ToValue::to_value(&direction);
-        assert_eq!(dsl::json::to_json_string(&direction), format!("\"{token}\""), "the wire token must match every schema leaf");
+        let value = semio_framework_value::ToValue::to_value(&direction);
+        assert_eq!(semio_framework_pack_json::to_json_string(&direction), format!("\"{token}\""), "the wire token must match every schema leaf");
         assert_eq!(direction.label(), token);
-        let decoded: Grid3dDirection = dsl::FromValue::from_value(value).expect("the token decodes back");
+        let decoded: Grid3dDirection = semio_framework_value::FromValue::from_value(value).expect("the token decodes back");
         assert_eq!(decoded, direction);
     }
 }
@@ -88,7 +88,7 @@ fn every_direction_carries_its_screaming_wire_token() {
 #[test]
 fn every_axis_carries_its_own_lowercase_wire_token() {
     for (axis, token) in [(Grid3dAxis::X, "x"), (Grid3dAxis::Y, "y"), (Grid3dAxis::Z, "z")] {
-        assert_eq!(dsl::json::to_json_string(&axis), format!("\"{token}\""));
+        assert_eq!(semio_framework_pack_json::to_json_string(&axis), format!("\"{token}\""));
         assert_eq!(axis.label(), token);
     }
 }

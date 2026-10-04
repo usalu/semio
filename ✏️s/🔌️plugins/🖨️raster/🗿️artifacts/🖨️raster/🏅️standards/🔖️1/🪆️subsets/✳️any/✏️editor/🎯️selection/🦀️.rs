@@ -1,7 +1,7 @@
 //! 🎯️ Completed selection coverage shared by paint hosts and authoritative commands.
 use semio_framework_plugin::{Fault,FaultCode,FaultOrigin};
 
-#[derive(Clone,Debug,PartialEq,dsl::ToValue,dsl::FromValue,dsl::DslRecord,schema::ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, schema::ArtifactSchema)]
 #[value(rename_all="camelCase")]
 #[dsl(keyword="pixel-selection")]
 #[artifact_schema(id="s.raster.raster.pixelselection")]
@@ -53,7 +53,7 @@ fn fault(message:impl Into<String>)->Fault{Fault::new(FaultOrigin::App,FaultCode
 
 pub fn selection_spans(json:&str,count:usize)->Result<Vec<(usize,usize,u8)>,Fault> {
     if json.len()>40000 {return Err(fault("Selection exceeds transport budget"));}
-    let value = dsl::os_pack::json::parse(json).map_err(|_| fault("Invalid selection JSON"))?;
+    let value = semio_framework_pack_json::parse(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| fault("Invalid selection JSON"))?;
     let spans = value.as_array().ok_or_else(|| fault("Selection must contain spans"))?;
     let mut result=Vec::with_capacity(spans.len());
     let mut previous = 0;

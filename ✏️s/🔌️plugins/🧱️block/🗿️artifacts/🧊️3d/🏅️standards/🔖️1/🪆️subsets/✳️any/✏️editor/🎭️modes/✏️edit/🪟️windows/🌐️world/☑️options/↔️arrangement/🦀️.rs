@@ -16,6 +16,6 @@ pub fn measure(config: &Block3dConfig, window_id: &str, labels: &Block3dLabels) 
             MeasureSelectItem { id: "y".into(), value: "y".into(), label: "Y".into() },
             MeasureSelectItem { id: "z".into(), value: "z".into(), label: "Z".into() },
         ],
-        on_change: crate::editor::block3d::block3d_window_action("setWindowArrangement", Some(dsl::DslValue::object([("windowId".to_string(), dsl::DslValue::String(window_id.to_string()))]))),
+        on_change: crate::editor::block3d::block3d_window_action("setWindowArrangement", Some(semio_framework_value::DslValue::object([("windowId".to_string(), semio_framework_value::DslValue::String(window_id.to_string()))]))),
     }
 }

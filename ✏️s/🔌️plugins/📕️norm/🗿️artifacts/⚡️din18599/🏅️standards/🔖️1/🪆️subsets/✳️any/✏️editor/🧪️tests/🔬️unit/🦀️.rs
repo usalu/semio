@@ -1,6 +1,6 @@
 pub(crate) mod context {
     use super::super::*;
-    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
+    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry_and_members};
     use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
     
     /// ✏️ Adapts `create_din18599_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
@@ -10,12 +10,13 @@ pub(crate) mod context {
         semio_framework_plugin::App { definition: create_din18599_app(), examples: Vec::new() }
     }
     
-    pub type NormApp = VcsArtifactApp<EditorApp<Din18599PlayApp>>;
+    pub type NormApp = VcsArtifactApp<EditorApp<Din18599PlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
     
-    /// ð§¬ï¸ A wrapper carrying the real registry so kind discipline (View-emits-operations rejection) runs.
+    /// 🧬️ A wrapper carrying the real registry so kind discipline (View-emits-operations rejection) runs, over the stdio semio
+    /// member roster that opens the derived `climateTable` child.
     pub async fn app_with_registry() -> NormApp {
-        let mut app = new_app_with_registry::<EditorApp<Din18599PlayApp>>(din18599_manifest_for_tests).await;
-        semio_framework::io::resolve_ready(app.bind_instance_id(meta("local").instance_id));
+        let mut app = new_app_with_registry_and_members::<EditorApp<Din18599PlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(din18599_manifest_for_tests).await;
+        ::semio_framework_async::poll::resolve_ready(app.bind_instance_id(meta("local").instance_id));
         app
     }
 
@@ -222,7 +223,7 @@ async fn undo_redo_round_trips_through_the_wrapper() {
 #[semio_framework_async_macros::async_test]
 async fn report_out_exports_the_computed_check_report() {
     let mut app = context::app_with_registry().await;
-    let media = semio_framework_plugin::resolve_ready(PluginApp::export_media(&mut app, "report:out")).expect("export report:out");
+    let media = ::semio_framework_async::poll::resolve_ready(PluginApp::export_media(&mut app, "report:out")).expect("export report:out");
     let semio_framework_plugin::MediaPayload::Structured { schema, json } = media.payload else { panic!("expected a structured payload") };
     assert_eq!(schema, crate::app_surface::artifact_kind_id(VARIANT));
     let value: serde_json::Value = serde_json::from_str(&json).expect("report json parses");
@@ -250,10 +251,13 @@ async fn report_out_exports_the_computed_check_report() {
 async fn the_declared_snapshot_argument_carries_the_documents_json() {
     const AFTER: &str = include_str!("../../../🧫️fixtures/🧬️mutations/📐️change-net-floor-area-m2/✅apply/📸️snapshot/➡️after/🔣️.json");
     let expected = crate::standards::v1::subsets::any::schema::snapshot::decode_din18599_snapshot_json(AFTER).expect("the committed after fixture decodes");
-    let args = dsl::json::from_json_str::<dsl::DslValue>(&format!("{{\"snapshot\":{AFTER}}}")).expect("rail arguments");
+    let args = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(&format!("{{\"snapshot\":{AFTER}}}"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rail arguments");
     let command = <Din18599PlayApp as ArtifactEditor>::command_from_action("setSnapshot", Some(&args)).expect("setSnapshot converts from the declared argument");
     let Din18599Command::ReplaceSnapshot(payload) = &command else { panic!("setSnapshot resolves to ReplaceSnapshot, got {command:?}") };
     let carried = <Din18599Snapshot as store::ArtifactDsl>::parse_dsl(&crate::document::unescape_op_text_field(&payload.text)).expect("the payload carries the document's own DSL text");
     assert_eq!(carried, expected, "the rail's JSON document must reach the handler unchanged");
-    assert!(<Din18599PlayApp as ArtifactEditor>::command_from_action("setSnapshot", Some(&dsl::json::from_json_str::<dsl::DslValue>(r#"{"text":"x"}"#).unwrap())).is_err(), "only the declared `snapshot` argument is read");
+    assert!(<Din18599PlayApp as ArtifactEditor>::command_from_action("setSnapshot", Some(&semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(r#"{"text":"x"}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).is_err(), "only the declared `snapshot` argument is read");
 }
+
+semio_framework_plugin::history_edit_acceptance_law!("norm", super::Din18599PlayApp, || semio_framework_plugin::App { definition: super::create_din18599_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+semio_framework_plugin::composed_reload_law!("norm", super::Din18599PlayApp, || semio_framework_plugin::App { definition: super::create_din18599_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");

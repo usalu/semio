@@ -23,9 +23,12 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for DeleteFrame {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_delete_frame(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
-        inverse_delete_frame(self, base)
-    }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok({
+        inverse_delete_frame(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete frame \"{}\"", self.frame_id), &format!("Rahmen \"{}\" löschen", self.frame_id))
     }
@@ -51,7 +54,8 @@ pub fn diff_delete_frame(payload: &DeleteFrame, base: &LayoutSnapshot) -> protoc
 //#endregion ➖️DeleteFrame
 
 //#region ➖️DeleteFrame
-pub fn inverse_delete_frame(payload: &DeleteFrame, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_delete_frame(payload: &DeleteFrame, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else {
         return Vec::new();
     };
@@ -61,5 +65,7 @@ pub fn inverse_delete_frame(payload: &DeleteFrame, base: &LayoutSnapshot) -> Vec
     let frame = page.frames[index].clone();
     let layer_id = page.layers.iter().find(|layer| layer.object_ids.iter().any(|id| id == &payload.frame_id)).map(|layer| layer.id.clone());
     vec![LayoutMutation::CreateFrame(create_frame::CreateFrame { page_id: payload.page_id.clone(), frame, index: Some(index), layer_id })]
+
+    })())
 }
 //#endregion ➖️DeleteFrame

@@ -352,11 +352,11 @@ pub fn selection_merge_mode(shift: bool, ctrl: bool, meta: bool) -> &'static str
 }
 
 fn targets_json<G: AsRef<str>, I: AsRef<str>>(targets: &[(G, I)]) -> String {
-    let items: Vec<dsl::json::Value> = targets.iter().map(|(granularity, id)| dsl::json!({ "granularity": granularity.as_ref(), "id": id.as_ref() })).collect();
-    dsl::json::to_string(&dsl::json::Value::Array(items))
+    let items: Vec<semio_framework_pack_json::Value> = targets.iter().map(|(granularity, id)| semio_framework_pack_json::json!({ "granularity": granularity.as_ref(), "id": id.as_ref() })).collect();
+    semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(items))
 }
 
-fn request_interaction_action(action_id: &str, args: dsl::DslValue) -> Effect {
+fn request_interaction_action(action_id: &str, args: semio_framework_value::DslValue) -> Effect {
     Effect::ReplayShellCommand { action_id: action_id.into(), args: Some(args) }
 }
 
@@ -365,11 +365,11 @@ fn request_interaction_action(action_id: &str, args: dsl::DslValue) -> Effect {
 pub fn interaction_select_effect<G: AsRef<str>, I: AsRef<str>>(targets: &[(G, I)], merge: &str, method: &str) -> Effect {
     request_interaction_action(
         semio_framework::INTERACTION_SELECT_ACTION_ID,
-        dsl::DslValue::object([
-            ("domainId".to_string(), dsl::DslValue::String(FEM2D_INTERACTION_DOMAIN.to_string())),
-            ("targets".to_string(), dsl::DslValue::String(targets_json(targets))),
-            ("merge".to_string(), dsl::DslValue::String(merge.to_string())),
-            ("method".to_string(), dsl::DslValue::String(method.to_string())),
+        semio_framework_value::DslValue::object([
+            ("domainId".to_string(), semio_framework_value::DslValue::String(FEM2D_INTERACTION_DOMAIN.to_string())),
+            ("targets".to_string(), semio_framework_value::DslValue::String(targets_json(targets))),
+            ("merge".to_string(), semio_framework_value::DslValue::String(merge.to_string())),
+            ("method".to_string(), semio_framework_value::DslValue::String(method.to_string())),
         ]),
     )
 }
@@ -385,10 +385,10 @@ pub mod gumball;
 pub fn interaction_hover_effect<G: AsRef<str>, I: AsRef<str>>(targets: &[(G, I)]) -> Effect {
     request_interaction_action(
         semio_framework::INTERACTION_HOVER_ACTION_ID,
-        dsl::DslValue::object([
-            ("domainId".to_string(), dsl::DslValue::String(FEM2D_INTERACTION_DOMAIN.to_string())),
-            ("channel".to_string(), dsl::DslValue::String(FEM2D_POINTER_CHANNEL.to_string())),
-            ("targets".to_string(), dsl::DslValue::String(targets_json(targets))),
+        semio_framework_value::DslValue::object([
+            ("domainId".to_string(), semio_framework_value::DslValue::String(FEM2D_INTERACTION_DOMAIN.to_string())),
+            ("channel".to_string(), semio_framework_value::DslValue::String(FEM2D_POINTER_CHANNEL.to_string())),
+            ("targets".to_string(), semio_framework_value::DslValue::String(targets_json(targets))),
         ]),
     )
 }

@@ -1,4 +1,5 @@
 {
+  "jobPhases":["snapshot","knife-scale","knife-distances","knife-projection","knife-triangulate","knife-pieces","knife-classify","knife-clip","knife-neighbors","knife-reconstruct"],
   "cases": [
     {
       "name": "split-quad-without-overlapping-original",

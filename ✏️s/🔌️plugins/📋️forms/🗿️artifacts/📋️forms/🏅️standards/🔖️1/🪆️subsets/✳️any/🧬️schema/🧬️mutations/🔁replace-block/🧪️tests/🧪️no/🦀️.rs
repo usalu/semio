@@ -29,17 +29,17 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔁replace-block/🧪️no/🎯️outcome/🔣️.json");
 
 fn mutation() -> FormMutation {
-    dsl::os_pack::json::from_json_str(MUTATION).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 fn expected_after() -> FormsSnapshot {
-    dsl::os_pack::json::from_json_str(AFTER).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 
 /// 🌱 The committed `⬅️before`, with its composed children resolved to a scene whose single step
 /// holds exactly the block the committed payload asks to install — the structural identity the
 /// guard tests.
 fn before() -> FormsSnapshot {
-    let mut snapshot: FormsSnapshot = dsl::os_pack::json::from_json_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: FormsSnapshot = semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes");
     let FormMutation::ReplaceBlock(payload) = mutation() else {
         panic!("no-ops-when-the-replacement-block-is-identical's committed mutation must be a replace-block");
     };
@@ -64,7 +64,7 @@ async fn applies_to_committed_after() {
 async fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_form_mutation(&base, &mutation);
+    let inverse = inverse_form_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "replace-block undoes with exactly one step whenever step and block resolve, got {inverse:?}");
     let FormMutation::ReplaceBlock(undo) = &inverse[0] else {
         panic!("replace-block's inverse must be another replace-block, got {:?}", inverse[0]);
@@ -85,12 +85,12 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: FormsSnapshot = dsl::os_pack::json::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: FormsSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "replace-block/no-ops-when-the-replacement-block-is-identical: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&mutation())).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "replace-block/no-ops-when-the-replacement-block-is-identical: committed mutation JSON is not canonical");
 }
@@ -107,7 +107,7 @@ async fn declared_outcome_holds() {
     assert_eq!(messages.len(), declared.len(), "exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(declared[0].get("code").and_then(serde_json::Value::as_str), Some(messages[0].code.0.as_str()), "the declared code must match the emitted one");
     assert_eq!(messages[0].code.0, "mutation.no-op", "an identical replacement is a no-op, never a target-missing");
-    assert_eq!(messages[0].level, protocol::Severity::Warning, "a redundant replace must not escalate to Error or Fatal");
+    assert_eq!(messages[0].level, semio_framework_diagnostic::Severity::Warning, "a redundant replace must not escalate to Error or Fatal");
     let semantics = <FormMutation as protocol::SemanticMutation<FormsSnapshot>>::semantics(&mutation());
     assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("replace", "block", "replace-block", "ReplacedBlock"), "the fixture must be bound to replace-block's own descriptor");
 }
@@ -117,7 +117,7 @@ async fn declared_outcome_holds() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = <FormMutation as protocol::Mutation<FormsSnapshot>>::diff(&mutation(), &before());
-    let produced = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "replace-block/no-ops-when-the-replacement-block-is-identical: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert_eq!(outcome.diff(), &FormsDiff::default(), "a refused replace-block must carry the identity diff");
@@ -126,8 +126,8 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to forms' own diff type.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: FormsDiff = dsl::os_pack::json::from_json_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&decoded)).expect("diff re-encodes");
+    let decoded: FormsDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "replace-block/no-ops-when-the-replacement-block-is-identical: committed diff JSON is not canonical");
 }
@@ -135,7 +135,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 Applying the committed identity diff directly to `before` yields the committed `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: FormsDiff = dsl::os_pack::json::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: FormsDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let produced = <FormsDiff as protocol::MutationDiff<FormsSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "replace-block/no-ops-when-the-replacement-block-is-identical: committed diff did not carry before to after");
 }

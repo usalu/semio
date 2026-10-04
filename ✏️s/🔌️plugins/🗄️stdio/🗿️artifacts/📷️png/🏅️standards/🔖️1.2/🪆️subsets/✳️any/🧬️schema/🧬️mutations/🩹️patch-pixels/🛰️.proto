@@ -1,4 +1,1 @@
-syntax = "proto3";
-package stdio.png.mutation;
-// 🩹️ Bounded PNG pixel-range patch.
-message PatchPixelsMutation { uint64 index = 1; uint64 remove_count = 2; bytes pixels = 3; optional uint64 move_to = 4; }
+syntax = "proto3"; package stdio.png.mutation; message PatchPixelsMutation { string revision = 1; uint32 x = 2; uint32 y = 3; uint32 width = 4; uint32 height = 5; uint32 red = 6; uint32 green = 7; uint32 blue = 8; uint32 alpha = 9; }

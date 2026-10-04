@@ -49,5 +49,5 @@ export const proceduralGeneration3dMutationsTextGuardConstant = <T extends strin
 //#endregion 🚪️Parsers
 
 export function parseGeneration3dMutationsText(value: unknown, at = "$"): Generation3dMutationsText {
-  return proceduralGeneration3dMutationsTextGuardObject(value, `${at}`);
+  return proceduralGeneration3dMutationsTextGuardString(value, `${at}`);
 }

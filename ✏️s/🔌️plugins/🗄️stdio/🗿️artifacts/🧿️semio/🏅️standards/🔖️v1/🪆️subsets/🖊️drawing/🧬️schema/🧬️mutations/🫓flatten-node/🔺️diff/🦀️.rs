@@ -12,10 +12,10 @@ pub fn diff(payload: &super::FlattenNode, base: &SemioDrawingSnapshot) -> protoc
     match node {
         DrawNode::Group { transform, children } => match super::collect_flattened_leaves(children) {
             Some(leaves) if leaves != *children => protocol::MutationOutcome::new(diff_at_path(&payload.at, DrawNodeDiff::Replace { node: DrawNode::Group { transform: *transform, children: leaves } })),
-            Some(_) => protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Node in layer #{} is already flat.", payload.at.layer)),
-            None => protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Node in layer #{} cannot be flattened without losing a descendant transform.", payload.at.layer)),
+            Some(_) => protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Node in layer #{} is already flat.", payload.at.layer)),
+            None => protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Node in layer #{} cannot be flattened without losing a descendant transform.", payload.at.layer)),
         },
-        _ => protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Node in layer #{} is not a group.", payload.at.layer)),
+        _ => protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Node in layer #{} is not a group.", payload.at.layer)),
     }
 }
 //#endregion 🔖️Diff

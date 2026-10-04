@@ -14,6 +14,8 @@
 //! the app-engine channel is a single logical stream, not split into causally-ordered vs.
 //! best-effort lanes.
 
+use ::protocol::wire::command_ingress::{FixedCommandPage, CommandPageSet, PagedCommand, PagedCommandReader, COMMAND_PAGE_MAXIMUM_BYTES, COMMAND_MAXIMUM_BYTES, COMMAND_MAXIMUM_PAGES, INVOCATION_RESULT_PACK_MAXIMUM_BYTES};
+
 //#region 🔖️Version
 /// 🔢️ The channel wire format's own version, pinned against the shared cross-language
 /// fixture `🔖️channel-version.json` so a half-done bump fails a test instead of drifting silently.
@@ -21,8 +23,27 @@
 /// `AppFrame::Welcome` handshake entirely — lifecycle now arrives through the reactor ABI's
 /// `Event::InstanceOpen`/`InstanceClose`, so this constant is no longer carried on the wire by any
 /// frame; it exists purely as the drift guard the tests below assert against.
-pub const CHANNEL_VERSION: u32 = 20;
+pub const CHANNEL_VERSION: u32 = 21;
 //#endregion 🔖️Version
+
+//#region 🔖️ChannelHandshake
+/// 🤝️ Fault code of a guest compiled for another app-channel version than its host. The host reads the guest's version
+/// (`reactor.channel-version`, owned twin `semio_owned_channel_version_v1`) once, right after instantiation and before any
+/// frame; its framework notice names `{guest}` and `{host}`.
+pub const CHANNEL_MISMATCH_CODE: &str = "plugin.channel-mismatch";
+
+/// 🤝️ Admits a guest compiled for the host's app-channel version; any other version, older or newer, is refused before a single
+/// frame is exchanged, so a stale component is never misread under a stale or forged descriptor. Corpus
+/// `🧫️fixtures/🧫️channel-handshake`; TS twin `admitGuestChannelVersion`.
+pub fn admit_guest_channel_version(guest: u32, host: u32) -> Result<(), semio_framework_diagnostic::Fault> {
+    if guest == host {
+        return Ok(());
+    }
+    Err(semio_framework_diagnostic::Fault::new(semio_framework_diagnostic::FaultOrigin::Framework, semio_framework_diagnostic::FaultCode::new(CHANNEL_MISMATCH_CODE), format!("the guest speaks app channel {guest}, the host app channel {host}"))
+        .with_param("guest", guest.to_string())
+        .with_param("host", host.to_string()))
+}
+//#endregion 🔖️ChannelHandshake
 
 /// 🪪️ A bounded document root identity read independently from authored renderer props.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -80,7 +101,7 @@ impl MediaExportStateWire {
 //#region 🔖️ChildPackEntry
 /// 🧸️ One owned child's whole persisted envelope, as it travels between host and guest.
 /// Composed children are their OWN envelopes with their own `ArtifactVcs` history, so a composing
-/// document's `LoadDocument`/`Document` pair is not sufficient to save or restore it — its children
+/// document's own pack+spr (`AppFrame::Document`) is not sufficient to save or restore it — its children
 /// would exist only until the process ended. `AppCommand::LoadChildren`/`AppFrame::Children` carry
 /// exactly these, keyed the way the parent's `ArtifactChild` handles name them.
 #[derive(Clone, Debug, PartialEq)]
@@ -93,11 +114,26 @@ pub struct ChildPackEntry {
     /// 📦️ The child's full envelope pack (`encode_document_pack_bytes` framing: pack + spr).
     pub envelope_pack: Vec<u8>,
 }
+
+/// 🪆️ One owned child's CURRENT content as its head snapshot pack (`ArtifactPack::encode_pack`), nested members included — what a
+/// reader that composes on read takes beside the parent (design §20.15), e.g. an inference request's `child:<slot>/<childId>` dependency.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ChildHeadPackEntry {
+    pub slot: String,
+    pub child_id: String,
+    /// 🎯️ `ArtifactDialect` as its `<kind>@<standard>/<subset>` wire string.
+    pub dialect: String,
+    /// 📦️ The child's head snapshot pack.
+    pub head_pack: Vec<u8>,
+}
 //#endregion 🔖️ChildPackEntry
 
 //#region 🔖️DocumentArchive
 pub const DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS: usize = 1_024;
 pub const DOCUMENT_ARCHIVE_MAXIMUM_BYTES: usize = 4 * 1_024 * 1_024;
+/// 🔰️ The leading byte of every encoded document archive (a snapshot pack starts with its magic `0x89` instead), so a reader tells
+/// a composed carrier from a plain pack by its first byte.
+pub const DOCUMENT_ARCHIVE_VERSION: u8 = 1;
 
 /// 🪪️ Full artifact identity carried by a recursive document archive without depending on a
 /// concrete store implementation.
@@ -186,1089 +222,7 @@ pub struct WindowConfigPackEntry {
 }
 //#endregion 🔖️WindowConfigPackEntry
 
-//#region 🔖️PagedCommandIngress
-pub const COMMAND_PAGE_MAXIMUM_BYTES: usize = 4_096;
 
-/// 📥️ Largest ASSEMBLED command the host may deliver into a guest.
-///
-/// 🧊️ A command is a host answer like any other, so it is bound by the one declared budget for an
-/// assembled host answer rather than by a transport constant of its own. Nothing here chooses a
-/// ceiling: [`semio_framework_trace::GUEST_HOST_ANSWER_CEILING_BYTES`] already says what a guest may
-/// be handed for ONE outstanding request before it answers with a typed fault instead of allocating.
-pub const COMMAND_MAXIMUM_BYTES: usize = semio_framework_trace::GUEST_HOST_ANSWER_CEILING_BYTES;
-
-/// 📄️ Pages that budget occupies — the assembled ceiling over the page extent, not a chosen number.
-///
-/// 🧊️ A page authority's spine is `COMMAND_MAXIMUM_PAGES * size_of::<FixedCommandPage>()`, and a
-/// page slot is a POINTER to its own 4 KiB block (see [`FixedCommandPage`]), never the block itself
-/// — so the spine stays inside [`semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES`]
-/// while the command it assembles is free to be as long as the host-answer budget allows. Storing
-/// the blocks INLINE is what forced a 64-page ceiling: 64 inline pages are 262 272 contiguous bytes,
-/// four times what a fragmented guest can be relied on to serve, and the ceiling that bought that
-/// reservation also refused every command past 262 144 bytes — a 272 089-char contributions pack
-/// among them (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-pub const COMMAND_MAXIMUM_PAGES: usize = COMMAND_MAXIMUM_BYTES / COMMAND_PAGE_MAXIMUM_BYTES;
-pub const COMMAND_BATCH_MAXIMUM_ITEMS: usize = 64;
-pub const INVOCATION_RESULT_PACK_MAXIMUM_BYTES: usize = COMMAND_MAXIMUM_BYTES;
-
-/// 🧱️ One command page's own 4 KiB block, reserved fallibly so an exhausted guest heap answers with
-/// a `Fault` the host can display rather than `handle_alloc_error` → `unreachable`.
-fn try_reserve_command_page_block() -> Result<Box<[u8; COMMAND_PAGE_MAXIMUM_BYTES]>, crate::Fault> {
-    let mut block = Vec::new();
-    block
-        .try_reserve_exact(COMMAND_PAGE_MAXIMUM_BYTES)
-        .map_err(|_| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-page-allocation"), "a command page could not reserve its exact 4096-byte block"))?;
-    block.resize(COMMAND_PAGE_MAXIMUM_BYTES, 0);
-    block
-        .into_boxed_slice()
-        .try_into()
-        .map_err(|_| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-page-allocation"), "a command page block is not its exact 4096-byte extent"))
-}
-
-/// 📄️ One 4 KiB command page, holding its block BEHIND a pointer.
-///
-/// 🧊️ The indirection is the whole reason a command has no page ceiling: every collection of pages
-/// on this path (`CommandPageSet`, `PagedCommand`, `CommandEnvelopeSet`, `CommandBatch`) reserves a
-/// spine of `size_of::<FixedCommandPage>()`-byte slots, so assembling a 272 KB command asks the
-/// guest allocator for 67 separate 4 KiB blocks — each one a routine request — instead of one
-/// quarter-megabyte contiguous block it is the first to refuse.
-#[derive(Clone, Debug, PartialEq)]
-pub struct FixedCommandPage {
-    bytes: Box<[u8; COMMAND_PAGE_MAXIMUM_BYTES]>,
-    len: u16,
-}
-
-impl FixedCommandPage {
-    pub fn try_from_array(bytes: [u8; COMMAND_PAGE_MAXIMUM_BYTES], len: u32) -> Result<Self, crate::Fault> {
-        let len = usize::try_from(len).map_err(|_| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-page-length"), "command page length is not representable"))?;
-        if len > COMMAND_PAGE_MAXIMUM_BYTES {
-            return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-page-length"), "command page length exceeds its fixed 4096-byte authority"));
-        }
-        if bytes[len..].iter().any(|byte| *byte != 0) {
-            return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-page-padding"), "command page carries nonzero bytes outside its declared authority"));
-        }
-        let mut block = try_reserve_command_page_block()?;
-        block.copy_from_slice(&bytes);
-        Ok(Self { bytes: block, len: len as u16 })
-    }
-
-    pub fn try_copy_from(bytes: &[u8]) -> Result<Self, crate::Fault> {
-        if bytes.len() > COMMAND_PAGE_MAXIMUM_BYTES {
-            return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-page-length"), "command page length exceeds its fixed 4096-byte authority"));
-        }
-        let mut block = try_reserve_command_page_block()?;
-        block[..bytes.len()].copy_from_slice(bytes);
-        Ok(Self { bytes: block, len: bytes.len() as u16 })
-    }
-
-    pub fn as_slice(&self) -> &[u8] {
-        &self.bytes[..usize::from(self.len)]
-    }
-
-    pub fn len(&self) -> usize {
-        usize::from(self.len)
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.len == 0
-    }
-}
-
-/// 🌉️ Hand-written, not derived: `bytes` is a fixed `[u8; COMMAND_PAGE_MAXIMUM_BYTES]` (4096 slots,
-/// most unused past `len`) — deriving would walk all 4096 via the blanket `[T; N]` impl instead of
-/// just the live `len` prefix the old hand-rolled `serde::Serialize` tuple encoding took care to
-/// emit only. Wire shape: a plain `DslValue::Array` of the `len` live bytes (no separate length
-/// field — the array's own length IS the count, simpler than the old length-prefixed tuple).
-impl protocol::value::ToValue for FixedCommandPage {
-    fn to_value(&self) -> protocol::value::DslValue {
-        protocol::value::DslValue::Array(self.as_slice().iter().map(protocol::value::ToValue::to_value).collect())
-    }
-}
-
-impl protocol::value::FromValue for FixedCommandPage {
-    fn from_value(value: protocol::value::DslValue) -> Result<Self, protocol::value::ValueError> {
-        let protocol::value::DslValue::Array(items) = value else {
-            return Err(protocol::value::ValueError::new(format!("expected an array for FixedCommandPage, found {value:?}")));
-        };
-        if items.len() > COMMAND_PAGE_MAXIMUM_BYTES {
-            return Err(protocol::value::ValueError::new("fixed command page exceeds 4096 bytes".to_string()));
-        }
-        let mut bytes = Vec::with_capacity(items.len());
-        for (index, item) in items.into_iter().enumerate() {
-            bytes.push(<u8 as protocol::value::FromValue>::from_value(item).map_err(|error| error.under(index))?);
-        }
-        FixedCommandPage::try_copy_from(&bytes).map_err(|fault| protocol::value::ValueError::new(fault.message))
-    }
-}
-
-/// 🪢️ `serde` kept alongside the hand-written `ToValue`/`FromValue` above for the same
-/// wire-sharing reason as `CommandPageCursor`/`CommandIngressStatus`: mirrors the `DslValue::Array`
-/// of just the `len` live bytes, no length prefix, no derive over the fixed 4096-slot backing array.
-impl serde::Serialize for FixedCommandPage {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.collect_seq(self.as_slice().iter().copied())
-    }
-}
-
-impl<'de> serde::Deserialize<'de> for FixedCommandPage {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let bytes = Vec::<u8>::deserialize(deserializer)?;
-        FixedCommandPage::try_copy_from(&bytes).map_err(|fault| serde::de::Error::custom(fault.message))
-    }
-}
-
-/// 📄️ One command's page authority, reserved ONCE for exactly the pages that command DECLARES.
-///
-/// 🧊️ The reservation is `declared * size_of::<FixedCommandPage>()` contiguous bytes and it is taken
-/// on the guest's own fixed linear memory, once per command, on the reactor's command-ingress
-/// prologue. Reserving the page ceiling regardless of the declared count asked for 262 272 B for
-/// a one-page command — the single largest routine allocation on a 4 Hz command stream, and the
-/// first request a fragmented or exhausted guest heap refuses (`plugin.command-page-allocation`,
-/// ticket 26/09/02 build #29). The declared count is validated `1..=COMMAND_MAXIMUM_PAGES` by the
-/// caller's cursor and is identical for every page of one command, so an exact reservation still
-/// admits every page without a second allocation.
-///
-/// 📐️ A slot holds a POINTER to its page's own 4 KiB block, so the whole ceiling's spine is
-/// `COMMAND_MAXIMUM_PAGES * size_of::<FixedCommandPage>()` — inside
-/// [`semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES`], which is the law that decides
-/// how many pages a command may declare at all.
-#[derive(Debug, PartialEq)]
-pub struct CommandPageSet {
-    pages: std::collections::VecDeque<FixedCommandPage>,
-    declared: usize,
-    byte_len: usize,
-    generic_shape_valid: bool,
-    all_nonempty: bool,
-}
-
-impl CommandPageSet {
-    pub fn try_new(declared: usize) -> Result<Self, crate::Fault> {
-        if declared == 0 || declared > COMMAND_MAXIMUM_PAGES {
-            return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-page-count"), "a command page authority is declared for 1..=COMMAND_MAXIMUM_PAGES pages"));
-        }
-        let mut pages = std::collections::VecDeque::new();
-        pages.try_reserve_exact(declared).map_err(|_| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-page-allocation"), "declared command page authority could not reserve its exact page slots"))?;
-        Ok(Self { pages, declared, byte_len: 0, generic_shape_valid: true, all_nonempty: true })
-    }
-
-    /// 📏️ Contiguous bytes a `declared`-page authority reserves — what the reactor's footprint law
-    /// compares against `semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES`.
-    pub const fn reservation_bytes(declared: usize) -> usize {
-        declared * size_of::<FixedCommandPage>()
-    }
-
-    pub fn declared(&self) -> usize {
-        self.declared
-    }
-
-    pub fn try_push(&mut self, page: FixedCommandPage) -> Result<(), (crate::Fault, FixedCommandPage)> {
-        if self.pages.len() == self.declared {
-            return Err((crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-page-count"), "command page authority is saturated"), page));
-        }
-        let Some(byte_len) = self.byte_len.checked_add(page.len()).filter(|total| *total <= COMMAND_MAXIMUM_BYTES) else {
-            return Err((crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-byte-cap"), "command exceeds the assembled host-answer authority a guest may be handed"), page));
-        };
-        if page.is_empty() {
-            self.generic_shape_valid = false;
-            self.all_nonempty = false;
-        }
-        if self.pages.back().is_some_and(|previous| previous.len() != COMMAND_PAGE_MAXIMUM_BYTES) {
-            self.generic_shape_valid = false;
-        }
-        self.pages.push_back(page);
-        self.byte_len = byte_len;
-        Ok(())
-    }
-
-    pub fn len(&self) -> usize {
-        self.pages.len()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.pages.is_empty()
-    }
-
-    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize) {
-        let Some(length) = self.pages.front().map(FixedCommandPage::len) else {
-            return (true, 0);
-        };
-        if length > maximum_bytes {
-            return (false, 0);
-        }
-        let page = self.pages.pop_front().expect("fixed command page was present");
-        let released = page.len();
-        self.byte_len -= released;
-        drop(page);
-        (self.pages.is_empty(), released)
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub struct PagedCommand {
-    pages: std::collections::VecDeque<FixedCommandPage>,
-    byte_len: usize,
-    kind: u8,
-    metadata: u32,
-    item_count: u32,
-}
-
-impl PagedCommand {
-    pub fn try_from_pages(pages: CommandPageSet) -> Result<Self, (crate::Fault, CommandPageSet)> {
-        if pages.is_empty() || pages.len() > COMMAND_MAXIMUM_PAGES {
-            return Err((crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-page-count"), "command requires 1..=COMMAND_MAXIMUM_PAGES admitted pages"), pages));
-        }
-        if !pages.generic_shape_valid {
-            return Err((crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-page-shape"), "command pages must be nonempty, at most 4096 bytes, and every nonterminal page must be full"), pages));
-        }
-        let Some(kind) = pages.pages.front().and_then(|page| page.as_slice().first()).copied() else {
-            return Err((crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-page-empty"), "command has no kind byte"), pages));
-        };
-        Ok(Self { pages: pages.pages, byte_len: pages.byte_len, kind, metadata: 0, item_count: 0 })
-    }
-
-    pub fn try_from_presence_pages(own_color: Option<u8>, pages: CommandPageSet, item_count: usize) -> Result<Self, (crate::Fault, CommandPageSet)> {
-        if item_count > COMMAND_BATCH_MAXIMUM_ITEMS || pages.len() != item_count.max(1) {
-            return Err((crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-presence-item-cap"), "Presence command requires one exact page per peer and at most 64 peers"), pages));
-        }
-        if (item_count == 0 && pages.byte_len != 0) || (item_count != 0 && !pages.all_nonempty) {
-            return Err((crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-presence-page-shape"), "each Presence peer page must be nonempty and at most 4096 bytes"), pages));
-        }
-        let metadata = own_color.map_or(0, |color| (1u32 << 8) | u32::from(color));
-        Ok(Self { pages: pages.pages, byte_len: pages.byte_len, kind: 28, metadata, item_count: item_count as u32 })
-    }
-
-    pub fn byte_len(&self) -> usize {
-        self.byte_len
-    }
-
-    pub fn page_len(&self) -> usize {
-        self.pages.len()
-    }
-
-    pub fn front_page(&self) -> Option<&FixedCommandPage> {
-        self.pages.front()
-    }
-
-    pub fn release_front_page(&mut self, maximum_bytes: usize) -> Option<(bool, usize)> {
-        let page_len = self.pages.front().map(FixedCommandPage::len)?;
-        if page_len > maximum_bytes {
-            return None;
-        }
-        let page = self.pages.pop_front().expect("front page was present");
-        self.byte_len -= page.len();
-        let released = page.len();
-        drop(page);
-        Some((self.pages.is_empty(), released))
-    }
-
-    pub fn terminal_is_empty(&self) -> bool {
-        self.pages.is_empty() && self.byte_len == 0
-    }
-
-    pub fn kind(&self) -> u8 {
-        self.kind
-    }
-
-    pub fn metadata(&self) -> u32 {
-        self.metadata
-    }
-
-    pub fn item_count(&self) -> u32 {
-        self.item_count
-    }
-}
-
-#[derive(Debug)]
-pub struct PagedCommandReader {
-    command: PagedCommand,
-    offset: usize,
-}
-
-impl PagedCommandReader {
-    pub fn new(command: PagedCommand) -> Self {
-        Self { command, offset: 0 }
-    }
-
-    pub fn kind(&self) -> u8 {
-        self.command.kind()
-    }
-
-    pub fn read_byte(&mut self) -> Result<u8, crate::Fault> {
-        let byte = self
-            .command
-            .front_page()
-            .and_then(|page| page.as_slice().get(self.offset))
-            .copied()
-            .ok_or_else(|| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-decode-truncated"), "paged command ended inside a field"))?;
-        self.offset += 1;
-        if self.command.front_page().is_some_and(|page| self.offset == page.len()) {
-            let _ = self.command.release_front_page(COMMAND_PAGE_MAXIMUM_BYTES).expect("fully consumed fixed page is releasable");
-            self.offset = 0;
-        }
-        Ok(byte)
-    }
-
-    pub fn read_varint(&mut self) -> Result<u64, crate::Fault> {
-        let mut value = 0u64;
-        for shift in (0..70).step_by(7) {
-            let byte = self.read_byte()?;
-            if shift == 63 && byte > 1 {
-                return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-decode-varint"), "paged command varint overflowed u64"));
-            }
-            value |= u64::from(byte & 0x7f) << shift;
-            if byte & 0x80 == 0 {
-                return Ok(value);
-            }
-        }
-        Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-decode-varint"), "paged command varint exceeds ten bytes"))
-    }
-
-    pub fn read_bounded_bytes(&mut self, maximum: usize) -> Result<Vec<u8>, crate::Fault> {
-        let length = usize::try_from(self.read_varint()?).map_err(|_| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-field-length"), "paged command field length is not representable"))?;
-        if length > maximum {
-            return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-field-cap"), "paged command field exceeds its exact bounded decode authority"));
-        }
-        let mut bytes = Vec::new();
-        bytes.try_reserve_exact(length).map_err(|_| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-field-allocation"), "paged command field could not reserve its exact bounded authority"))?;
-        for _ in 0..length {
-            bytes.push(self.read_byte()?);
-        }
-        Ok(bytes)
-    }
-
-    pub fn terminal_is_empty(&self) -> bool {
-        self.offset == 0 && self.command.terminal_is_empty()
-    }
-
-    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize) {
-        let Some(page_len) = self.command.front_page().map(FixedCommandPage::len) else {
-            return (self.offset == 0, 0);
-        };
-        if page_len > maximum_bytes {
-            return (false, 0);
-        }
-        let released = self.command.release_front_page(maximum_bytes).expect("front fixed page was grant-admitted").1;
-        self.offset = 0;
-        (self.command.terminal_is_empty(), released)
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub struct CommandEnvelope {
-    pub instance: u32,
-    pub seq: u64,
-    pub command: PagedCommand,
-}
-
-#[derive(Debug, PartialEq)]
-pub struct CommandBatch {
-    pub generation: u64,
-    commands: std::collections::VecDeque<CommandBatchEntry>,
-    pages: std::collections::VecDeque<FixedCommandPage>,
-    bytes: usize,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-struct CommandBatchEntry {
-    instance: u32,
-    seq: u64,
-    kind: u8,
-    metadata: u32,
-    item_count: u32,
-    page_count: u32,
-    remaining_pages: u32,
-}
-
-#[derive(Debug, PartialEq)]
-pub struct CommandEnvelopeSet {
-    commands: std::collections::VecDeque<CommandBatchEntry>,
-    page_storage: std::collections::VecDeque<FixedCommandPage>,
-    pages: usize,
-    bytes: usize,
-}
-
-impl CommandEnvelopeSet {
-    pub fn try_new() -> Result<Self, crate::Fault> {
-        let mut commands = std::collections::VecDeque::new();
-        commands
-            .try_reserve_exact(COMMAND_BATCH_MAXIMUM_ITEMS)
-            .map_err(|_| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-batch-allocation"), "fixed command batch authority could not reserve its exact 64 slots"))?;
-        Ok(Self { commands, page_storage: std::collections::VecDeque::new(), pages: 0, bytes: 0 })
-    }
-
-    pub fn try_push(&mut self, command: CommandEnvelope) -> Result<(), (crate::Fault, CommandEnvelope)> {
-        if self.commands.len() == COMMAND_BATCH_MAXIMUM_ITEMS {
-            return Err((crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-batch-cap"), "command batch exceeds its exact 64-item authority"), command));
-        }
-        let pages = match self.pages.checked_add(command.command.page_len()) {
-            Some(pages) if pages <= COMMAND_MAXIMUM_PAGES => pages,
-            _ => return Err((crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-batch-page-cap"), "command batch exceeds its aggregate page authority"), command)),
-        };
-        let bytes = match self.bytes.checked_add(command.command.byte_len()) {
-            Some(bytes) if bytes <= COMMAND_MAXIMUM_BYTES => bytes,
-            _ => return Err((crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-batch-byte-cap"), "command batch exceeds its aggregate assembled-byte authority"), command)),
-        };
-        if self.page_storage.try_reserve_exact(command.command.page_len()).is_err() {
-            return Err((crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-batch-page-allocation"), "command batch could not reserve the exact page slots this command declares"), command));
-        }
-        let CommandEnvelope { instance, seq, command } = command;
-        let PagedCommand { pages: mut command_pages, kind, metadata, item_count, .. } = command;
-        let page_count = u32::try_from(command_pages.len()).expect("admitted command page count is u32-bounded");
-        self.commands.push_back(CommandBatchEntry { instance, seq, kind, metadata, item_count, page_count, remaining_pages: page_count });
-        while let Some(page) = command_pages.pop_front() {
-            self.page_storage.push_back(page);
-        }
-        self.pages = pages;
-        self.bytes = bytes;
-        Ok(())
-    }
-
-    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize) {
-        let Some(command) = self.commands.front_mut() else {
-            return (self.page_storage.is_empty(), 0);
-        };
-        if command.remaining_pages == 0 {
-            let _terminal = self.commands.pop_front().expect("empty command-build shell was present");
-            return (self.commands.is_empty() && self.page_storage.is_empty(), 0);
-        }
-        let Some(page_len) = self.page_storage.front().map(FixedCommandPage::len) else {
-            return (false, 0);
-        };
-        if page_len > maximum_bytes {
-            return (false, 0);
-        }
-        let page = self.page_storage.pop_front().expect("command-build page was present");
-        let released = page.len();
-        self.pages -= 1;
-        self.bytes -= released;
-        command.remaining_pages -= 1;
-        drop(page);
-        if command.remaining_pages == 0 {
-            let _terminal = self.commands.pop_front().expect("empty command-build shell was present");
-        }
-        (self.commands.is_empty() && self.page_storage.is_empty(), released)
-    }
-
-    pub fn terminal_is_empty(&self) -> bool {
-        self.commands.is_empty() && self.page_storage.is_empty() && self.pages == 0 && self.bytes == 0
-    }
-}
-
-#[derive(Debug)]
-pub struct RejectedCommandBuild {
-    rejected: Option<CommandEnvelope>,
-    admitted: CommandEnvelopeSet,
-}
-
-impl RejectedCommandBuild {
-    pub fn new(admitted: CommandEnvelopeSet, rejected: CommandEnvelope) -> Self {
-        Self { rejected: Some(rejected), admitted }
-    }
-
-    pub fn from_admitted(admitted: CommandEnvelopeSet) -> Self {
-        Self { rejected: None, admitted }
-    }
-
-    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize) {
-        if let Some(rejected) = self.rejected.as_mut() {
-            let Some((empty, released)) = rejected.command.release_front_page(maximum_bytes) else {
-                return (false, 0);
-            };
-            if empty {
-                let _terminal = self.rejected.take().expect("rejected command reached terminal empty");
-            }
-            return (self.terminal_is_empty(), released);
-        }
-        self.admitted.close_step(maximum_bytes)
-    }
-
-    pub fn terminal_is_empty(&self) -> bool {
-        self.rejected.is_none() && self.admitted.terminal_is_empty()
-    }
-
-    pub fn remaining_pages(&self) -> usize {
-        self.rejected.as_ref().map_or(0, |rejected| rejected.command.page_len()) + self.admitted.pages
-    }
-
-    pub fn remaining_bytes(&self) -> usize {
-        self.rejected.as_ref().map_or(0, |rejected| rejected.command.byte_len()) + self.admitted.bytes
-    }
-}
-
-#[derive(Debug)]
-pub struct RejectedCommandBuildRegistry<const CAPACITY: usize> {
-    slots: [Option<RejectedCommandBuild>; CAPACITY],
-    close_index: usize,
-    occupied: usize,
-}
-
-impl<const CAPACITY: usize> Default for RejectedCommandBuildRegistry<CAPACITY> {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl<const CAPACITY: usize> RejectedCommandBuildRegistry<CAPACITY> {
-    pub fn new() -> Self {
-        assert!(CAPACITY > 0);
-        Self { slots: std::array::from_fn(|_| None), close_index: 0, occupied: 0 }
-    }
-
-    pub fn can_insert(&self, key: u64) -> bool {
-        self.slots[key as usize % CAPACITY].is_none()
-    }
-
-    pub fn try_insert(&mut self, key: u64, owner: RejectedCommandBuild) -> Result<(), (crate::Fault, RejectedCommandBuild)> {
-        let index = key as usize % CAPACITY;
-        if self.slots[index].is_some() {
-            return Err((crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-build-close-capacity"), "fixed rejected command-build close registry is occupied or collided"), owner));
-        }
-        self.slots[index] = Some(owner);
-        self.occupied += 1;
-        Ok(())
-    }
-
-    pub fn insert_admitted(&mut self, key: u64, owner: RejectedCommandBuild) {
-        let index = key as usize % CAPACITY;
-        assert!(self.slots[index].is_none(), "fixed rejected command-build admission changed before insert");
-        self.slots[index] = Some(owner);
-        self.occupied += 1;
-    }
-
-    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
-        if self.occupied == 0 {
-            return (true, 0, 0);
-        }
-        for _ in 0..CAPACITY {
-            let index = self.close_index;
-            self.close_index = (self.close_index + 1) % CAPACITY;
-            let Some(owner) = self.slots[index].as_mut() else {
-                continue;
-            };
-            let (terminal, released) = owner.close_step(maximum_bytes);
-            if terminal {
-                let terminal = self.slots[index].take().expect("terminal rejected command build was present");
-                self.occupied -= 1;
-                assert!(terminal.terminal_is_empty(), "rejected command build terminal witness changed before removal");
-            }
-            return (self.occupied == 0, 1, released);
-        }
-        (false, 0, 0)
-    }
-
-    pub fn terminal_is_empty(&self) -> bool {
-        self.occupied == 0
-    }
-}
-
-impl CommandBatch {
-    pub fn try_new(generation: u64, commands: CommandEnvelopeSet) -> Result<Self, (crate::Fault, CommandEnvelopeSet)> {
-        if commands.commands.is_empty() {
-            return Err((crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-batch-cap"), "command batch requires at least one exact command owner"), commands));
-        }
-        Ok(Self { generation, commands: commands.commands, pages: commands.page_storage, bytes: commands.bytes })
-    }
-
-    pub fn generation(&self) -> u64 {
-        self.generation
-    }
-
-    pub fn remaining_pages(&self) -> usize {
-        self.pages.len()
-    }
-
-    pub fn remaining_bytes(&self) -> usize {
-        self.bytes
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.commands.is_empty() && self.pages.is_empty() && self.bytes == 0
-    }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum CommandBatchProgress {
-    PageReady,
-    Waiting,
-    Complete,
-    Faulted,
-}
-
-#[derive(Debug)]
-pub struct CommandBatchDriver {
-    owner: u64,
-    batch: CommandBatch,
-    command_index: u32,
-    page_index: u32,
-    admitted_page_count: u32,
-    admitted_kind: u8,
-    faulted: bool,
-    waiting: bool,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum CommandDriverRetentionState {
-    Active,
-    Suspended,
-    Closing,
-}
-
-#[derive(Debug)]
-struct CommandDriverRetentionSlot {
-    key: u64,
-    generation: u64,
-    driver: CommandBatchDriver,
-    state: CommandDriverRetentionState,
-    close_previous: Option<u16>,
-    close_next: Option<u16>,
-}
-
-#[derive(Debug)]
-pub struct CommandDriverRegistry<const CAPACITY: usize> {
-    slots: [Option<CommandDriverRetentionSlot>; CAPACITY],
-    close_head: Option<u16>,
-    close_tail: Option<u16>,
-    occupied: usize,
-}
-
-impl<const CAPACITY: usize> Default for CommandDriverRegistry<CAPACITY> {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl<const CAPACITY: usize> CommandDriverRegistry<CAPACITY> {
-    pub fn new() -> Self {
-        assert!(CAPACITY > 0 && CAPACITY <= usize::from(u16::MAX));
-        Self { slots: std::array::from_fn(|_| None), close_head: None, close_tail: None, occupied: 0 }
-    }
-
-    pub fn try_insert(&mut self, key: u64, generation: u64, driver: CommandBatchDriver) -> Result<(), (crate::Fault, CommandBatchDriver)> {
-        if !self.can_insert(key) {
-            return Err((crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-driver-capacity"), "fixed retained command-driver slot is occupied or collided"), driver));
-        }
-        self.insert_admitted(key, generation, driver);
-        Ok(())
-    }
-
-    pub fn can_insert(&self, key: u64) -> bool {
-        self.slots[key as usize % CAPACITY].is_none()
-    }
-
-    pub fn insert_admitted(&mut self, key: u64, generation: u64, driver: CommandBatchDriver) {
-        let index = key as usize % CAPACITY;
-        assert!(self.slots[index].is_none(), "fixed retained command-driver admission changed before insert");
-        self.slots[index] = Some(CommandDriverRetentionSlot { key, generation, driver, state: CommandDriverRetentionState::Active, close_previous: None, close_next: None });
-        self.occupied += 1;
-    }
-
-    pub fn with_driver_mut<R>(&mut self, key: u64, generation: u64, f: impl FnOnce(&mut CommandBatchDriver) -> R) -> Result<R, crate::Fault> {
-        let slot = self.slot_mut(key, generation)?;
-        if slot.state != CommandDriverRetentionState::Active {
-            return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-driver-not-active"), "retained command driver is suspended or closing"));
-        }
-        Ok(f(&mut slot.driver))
-    }
-
-    pub fn prepare_suspend(&mut self, key: u64, generation: u64) -> Result<(), crate::Fault> {
-        let index = self.index_of(key, generation)?;
-        if self.slots[index].as_ref().expect("retained command slot exists").state != CommandDriverRetentionState::Active {
-            return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-driver-suspend-state"), "retained command driver is not active before suspension"));
-        }
-        self.link_close(index);
-        self.slots[index].as_mut().expect("retained command slot exists").state = CommandDriverRetentionState::Suspended;
-        Ok(())
-    }
-
-    pub fn resume(&mut self, key: u64, generation: u64) -> Result<(), crate::Fault> {
-        let index = self.index_of(key, generation)?;
-        if self.slots[index].as_ref().expect("retained command slot exists").state != CommandDriverRetentionState::Suspended {
-            return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-driver-resume-state"), "retained command driver is not suspended before resume"));
-        }
-        self.unlink_close(index);
-        self.slots[index].as_mut().expect("retained command slot exists").state = CommandDriverRetentionState::Active;
-        Ok(())
-    }
-
-    pub fn begin_close(&mut self, key: u64, generation: u64) -> Result<(), crate::Fault> {
-        let index = self.index_of(key, generation)?;
-        let state = self.slots[index].as_ref().expect("retained command slot exists").state;
-        if state == CommandDriverRetentionState::Active {
-            self.link_close(index);
-        }
-        self.slots[index].as_mut().expect("retained command slot exists").state = CommandDriverRetentionState::Closing;
-        Ok(())
-    }
-
-    pub fn begin_close_key(&mut self, key: u64) -> Result<u64, crate::Fault> {
-        let index = key as usize % CAPACITY;
-        let generation = match self.slots[index].as_ref() {
-            Some(slot) if slot.key == key => slot.generation,
-            _ => return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-driver-stale"), "retained command driver key is stale")),
-        };
-        self.begin_close(key, generation)?;
-        Ok(generation)
-    }
-
-    pub fn remove_terminal(&mut self, key: u64, generation: u64) -> Result<(), crate::Fault> {
-        let index = self.index_of(key, generation)?;
-        if !self.slots[index].as_ref().expect("retained command slot exists").driver.terminal_is_empty() {
-            return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-driver-nonterminal-remove"), "retained command driver cannot be removed before terminal empty"));
-        }
-        if self.slots[index].as_ref().expect("retained command slot exists").state != CommandDriverRetentionState::Active {
-            self.unlink_close(index);
-        }
-        let terminal = self.slots[index].take().expect("retained command slot exists");
-        self.occupied -= 1;
-        drop(terminal);
-        Ok(())
-    }
-
-    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
-        let Some(index) = self.close_head.map(usize::from) else {
-            return (self.occupied == 0, 0, 0);
-        };
-        let (terminal, released) = {
-            let slot = self.slots[index].as_mut().expect("close-list command slot exists");
-            slot.driver.close_step(maximum_bytes)
-        };
-        if terminal {
-            self.unlink_close(index);
-            let terminal = self.slots[index].take().expect("terminal command slot exists");
-            self.occupied -= 1;
-            drop(terminal);
-        }
-        (self.occupied == 0, 1, released)
-    }
-
-    pub fn terminal_is_empty(&self) -> bool {
-        self.occupied == 0 && self.close_head.is_none() && self.close_tail.is_none()
-    }
-
-    pub fn has_close_work(&self) -> bool {
-        self.close_head.is_some()
-    }
-
-    pub fn contains(&self, key: u64, generation: u64) -> bool {
-        self.index_of(key, generation).is_ok()
-    }
-
-    pub fn is_active(&self, key: u64, generation: u64) -> bool {
-        self.index_of(key, generation).ok().and_then(|index| self.slots[index].as_ref()).is_some_and(|slot| slot.state == CommandDriverRetentionState::Active)
-    }
-
-    fn slot_mut(&mut self, key: u64, generation: u64) -> Result<&mut CommandDriverRetentionSlot, crate::Fault> {
-        let index = self.index_of(key, generation)?;
-        Ok(self.slots[index].as_mut().expect("retained command slot exists"))
-    }
-
-    fn index_of(&self, key: u64, generation: u64) -> Result<usize, crate::Fault> {
-        let index = key as usize % CAPACITY;
-        match self.slots[index].as_ref() {
-            Some(slot) if slot.key == key && slot.generation == generation => Ok(index),
-            _ => Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-driver-stale"), "retained command driver identity or generation is stale")),
-        }
-    }
-
-    fn link_close(&mut self, index: usize) {
-        let previous = self.close_tail;
-        let index_u16 = u16::try_from(index).expect("command registry capacity is u16-bounded");
-        {
-            let slot = self.slots[index].as_mut().expect("retained command slot exists");
-            slot.close_previous = previous;
-            slot.close_next = None;
-        }
-        if let Some(previous) = previous {
-            self.slots[usize::from(previous)].as_mut().expect("previous close slot exists").close_next = Some(index_u16);
-        } else {
-            self.close_head = Some(index_u16);
-        }
-        self.close_tail = Some(index_u16);
-    }
-
-    fn unlink_close(&mut self, index: usize) {
-        let (previous, next) = {
-            let slot = self.slots[index].as_ref().expect("retained command slot exists");
-            (slot.close_previous, slot.close_next)
-        };
-        if let Some(previous) = previous {
-            self.slots[usize::from(previous)].as_mut().expect("previous close slot exists").close_next = next;
-        } else {
-            self.close_head = next;
-        }
-        if let Some(next) = next {
-            self.slots[usize::from(next)].as_mut().expect("next close slot exists").close_previous = previous;
-        } else {
-            self.close_tail = previous;
-        }
-        let slot = self.slots[index].as_mut().expect("retained command slot exists");
-        slot.close_previous = None;
-        slot.close_next = None;
-    }
-}
-
-impl CommandBatchDriver {
-    pub fn new(owner: u64, batch: CommandBatch) -> Self {
-        Self { owner, batch, command_index: 0, page_index: 0, admitted_page_count: 0, admitted_kind: 0, faulted: false, waiting: false }
-    }
-
-    pub fn next_page(&mut self) -> Result<Option<(CommandPageCursor, FixedCommandPage)>, crate::Fault> {
-        if self.faulted || self.waiting {
-            return Ok(None);
-        }
-        let Some(command) = self.batch.commands.front() else {
-            return Ok(None);
-        };
-        if self.admitted_page_count == 0 {
-            self.admitted_page_count = command.page_count;
-            self.admitted_kind = command.kind;
-        }
-        let bytes = self.batch.pages.front().ok_or_else(|| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-owner-empty"), "nonterminal command owner has no page"))?.clone();
-        let cursor = CommandPageCursor {
-            owner: self.owner,
-            generation: self.batch.generation,
-            command_index: self.command_index,
-            command_count: u32::try_from(self.batch.commands.len()).unwrap_or(u32::MAX).saturating_add(self.command_index),
-            instance: command.instance,
-            seq: command.seq,
-            kind: self.admitted_kind,
-            page_index: self.page_index,
-            page_count: self.admitted_page_count,
-            item_count: command.item_count,
-            metadata: command.metadata,
-        };
-        Ok(Some((cursor, bytes)))
-    }
-
-    pub fn observe(&mut self, status: &CommandIngressStatus, maximum_release_bytes: usize) -> Result<CommandBatchProgress, crate::Fault> {
-        let (cursor, shape) = match status {
-            CommandIngressStatus::Idle => {
-                return Ok(if self.batch.commands.is_empty() {
-                    CommandBatchProgress::Complete
-                } else if self.faulted {
-                    CommandBatchProgress::Faulted
-                } else if self.waiting {
-                    CommandBatchProgress::Waiting
-                } else {
-                    CommandBatchProgress::PageReady
-                });
-            }
-            CommandIngressStatus::PageAccepted(cursor) | CommandIngressStatus::Backpressure(cursor) => (cursor, CursorShape::Page),
-            CommandIngressStatus::CommandPending(cursor) | CommandIngressStatus::CommandComplete(cursor) => (cursor, CursorShape::Terminal),
-            CommandIngressStatus::Fault { cursor, .. } => (cursor, CursorShape::Fault),
-        };
-        self.validate_cursor(cursor, shape)?;
-        match status {
-            CommandIngressStatus::Backpressure(_) => Ok(CommandBatchProgress::PageReady),
-            CommandIngressStatus::PageAccepted(_) => {
-                let Some(command) = self.batch.commands.front_mut() else {
-                    return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-owner-missing"), "accepted page has no exact host owner"));
-                };
-                let page_len =
-                    self.batch.pages.front().map(FixedCommandPage::len).ok_or_else(|| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-owner-missing"), "accepted page has no exact retained batch page"))?;
-                if page_len > maximum_release_bytes {
-                    return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-release-budget"), "accepted page exceeds its exact release grant"));
-                }
-                let page = self.batch.pages.pop_front().expect("accepted retained batch page was present");
-                let released = page.len();
-                self.batch.bytes -= released;
-                drop(page);
-                command.remaining_pages = command
-                    .remaining_pages
-                    .checked_sub(1)
-                    .ok_or_else(|| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-page-underflow"), "accepted page arrived after the retained command page owner was empty"))?;
-                let empty = command.remaining_pages == 0;
-                self.page_index = self.page_index.saturating_add(1);
-                if empty {
-                    self.waiting = true;
-                    Ok(CommandBatchProgress::Waiting)
-                } else {
-                    Ok(CommandBatchProgress::PageReady)
-                }
-            }
-            CommandIngressStatus::CommandPending(_) => {
-                self.waiting = true;
-                Ok(CommandBatchProgress::Waiting)
-            }
-            CommandIngressStatus::CommandComplete(_) => {
-                let Some(command) = self.batch.commands.front() else {
-                    return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-owner-missing"), "terminal command has no exact host owner"));
-                };
-                if command.remaining_pages > 1 {
-                    return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-terminal-pages"), "terminal acknowledgement arrived before every exact page was released"));
-                }
-                if command.remaining_pages == 1 {
-                    let page_len = self
-                        .batch
-                        .pages
-                        .front()
-                        .map(FixedCommandPage::len)
-                        .ok_or_else(|| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-owner-missing"), "terminal command has no exact retained batch page"))?;
-                    if page_len > maximum_release_bytes {
-                        return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-release-budget"), "terminal page exceeds its exact release grant"));
-                    }
-                    let page = self.batch.pages.pop_front().expect("terminal retained batch page was present");
-                    self.batch.bytes -= page.len();
-                    drop(page);
-                }
-                let _terminal = self.batch.commands.pop_front().expect("terminal command was present");
-                self.command_index = self.command_index.saturating_add(1);
-                self.page_index = 0;
-                self.admitted_page_count = 0;
-                self.admitted_kind = 0;
-                self.waiting = false;
-                Ok(if self.batch.commands.is_empty() { CommandBatchProgress::Complete } else { CommandBatchProgress::PageReady })
-            }
-            CommandIngressStatus::Fault { .. } => {
-                self.faulted = true;
-                Ok(CommandBatchProgress::Faulted)
-            }
-            CommandIngressStatus::Idle => unreachable!(),
-        }
-    }
-
-    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize) {
-        let Some(command) = self.batch.commands.front_mut() else {
-            return (self.batch.pages.is_empty(), 0);
-        };
-        if command.remaining_pages == 0 {
-            let _terminal = self.batch.commands.pop_front().expect("empty retained command shell was present");
-            self.command_index = self.command_index.saturating_add(1);
-            self.page_index = 0;
-            self.admitted_page_count = 0;
-            self.admitted_kind = 0;
-            self.waiting = false;
-            return (self.batch.terminal_is_empty(), 0);
-        }
-        let Some(page_len) = self.batch.pages.front().map(FixedCommandPage::len) else {
-            return (false, 0);
-        };
-        if page_len > maximum_bytes {
-            return (false, 0);
-        }
-        let page = self.batch.pages.pop_front().expect("retained batch close page was present");
-        let released = page.len();
-        self.batch.bytes -= released;
-        drop(page);
-        command.remaining_pages -= 1;
-        let empty = command.remaining_pages == 0;
-        if empty {
-            let _terminal = self.batch.commands.pop_front().expect("empty command was present");
-            self.command_index = self.command_index.saturating_add(1);
-            self.page_index = 0;
-            self.admitted_page_count = 0;
-            self.admitted_kind = 0;
-            self.waiting = false;
-        }
-        (self.batch.terminal_is_empty(), released)
-    }
-
-    pub fn terminal_is_empty(&self) -> bool {
-        self.batch.terminal_is_empty()
-    }
-
-    pub fn generation(&self) -> u64 {
-        self.batch.generation
-    }
-
-    pub fn remaining_pages(&self) -> usize {
-        self.batch.pages.len()
-    }
-
-    pub fn remaining_bytes(&self) -> usize {
-        self.batch.bytes
-    }
-
-    /// 🎯️ A terminal status carries `last_page_index + 1`, and a guest that consumed a command's LAST
-    /// page and ran it to completion inside ONE turn publishes only that terminal — the per-page
-    /// `PageAccepted` the host would otherwise have stepped through never exists. (`⚛️reactor/🔄️turn`'s
-    /// single-page fast path does exactly this for every `page_count == 1` command, i.e. every ordinary
-    /// mutation.) So a terminal cursor is validated against `page_index + remaining_pages`, which is
-    /// the same number in both shapes, and a fault's cursor is accepted at either end of that range —
-    /// a fault must attribute itself to its owner, never be replaced by a cursor complaint that hides
-    /// the guest's own message (ticket 26/09/18 slice A2).
-    fn validate_cursor(&self, cursor: &CommandPageCursor, shape: CursorShape) -> Result<(), crate::Fault> {
-        let Some(command) = self.batch.commands.front() else {
-            return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-owner-missing"), "ingress status has no exact host owner"));
-        };
-        let terminal_page_index = self.page_index.saturating_add(command.remaining_pages);
-        let page_index_matches = match shape {
-            CursorShape::Page => cursor.page_index == self.page_index,
-            CursorShape::Terminal => cursor.page_index == terminal_page_index,
-            CursorShape::Fault => cursor.page_index == self.page_index || cursor.page_index == terminal_page_index,
-        };
-        let mismatch = if cursor.owner != self.owner {
-            Some(("owner", u64::from(cursor.owner), self.owner))
-        } else if cursor.generation != self.batch.generation {
-            Some(("generation", cursor.generation, self.batch.generation))
-        } else if cursor.command_index != self.command_index {
-            Some(("commandIndex", u64::from(cursor.command_index), u64::from(self.command_index)))
-        } else if cursor.instance != command.instance {
-            Some(("instance", u64::from(cursor.instance), u64::from(command.instance)))
-        } else if cursor.seq != command.seq {
-            Some(("seq", cursor.seq, command.seq))
-        } else if cursor.kind != self.admitted_kind {
-            Some(("kind", u64::from(cursor.kind), u64::from(self.admitted_kind)))
-        } else if !page_index_matches {
-            Some(("pageIndex", u64::from(cursor.page_index), u64::from(if matches!(shape, CursorShape::Page) { self.page_index } else { terminal_page_index })))
-        } else if cursor.page_count != self.admitted_page_count {
-            Some(("pageCount", u64::from(cursor.page_count), u64::from(self.admitted_page_count)))
-        } else if cursor.item_count != command.item_count {
-            Some(("itemCount", u64::from(cursor.item_count), u64::from(command.item_count)))
-        } else if cursor.metadata != command.metadata {
-            Some(("metadata", u64::from(cursor.metadata), u64::from(command.metadata)))
-        } else {
-            None
-        };
-        if let Some((field, reported, expected)) = mismatch {
-            return Err(crate::Fault::new(
-                crate::FaultOrigin::Framework,
-                crate::FaultCode::new("plugin.command-cursor-mismatch"),
-                format!("ingress status does not identify the exact retained host owner: {field} is {reported}, the retained owner's is {expected}"),
-            ));
-        }
-        Ok(())
-    }
-}
-
-/// 🪢️ `serde` kept alongside `ToValue`/`FromValue`: `kernel::Event`/`TurnResult` carry this type
-/// across the plugin-host `serde_json` wire (`🔌️plugin/🖥️host/🧵️shard/🦀️.rs`'s
-/// `serde_json::to_vec(&result.command_ingress)`) and stay on that encoding, not `DslValue` — both
-/// derives must produce the same shape, so `#[serde(rename_all = "camelCase")]` mirrors `#[value(…)]`.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
-pub struct CommandPageCursor {
-    pub owner: u64,
-    pub generation: u64,
-    pub command_index: u32,
-    pub command_count: u32,
-    pub instance: u32,
-    pub seq: u64,
-    pub kind: u8,
-    pub page_index: u32,
-    pub page_count: u32,
-    pub item_count: u32,
-    pub metadata: u32,
-}
-
-/// 🪢️ `serde` kept alongside `ToValue`/`FromValue` — same wire-sharing reason as
-/// `CommandPageCursor` above. No `#[serde(tag = …)]`: `#[value(rename_all = "camelCase")]` with no
-/// `tag` derives externally-tagged (`✨️derive/🦀️.rs`'s documented default for a tag-less,
-/// mixed-variant enum), which is also serde's own default enum representation — the two already
-/// agree without a matching attribute.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
-pub enum CommandIngressStatus {
-    Idle,
-    PageAccepted(CommandPageCursor),
-    Backpressure(CommandPageCursor),
-    CommandPending(CommandPageCursor),
-    CommandComplete(CommandPageCursor),
-    Fault { cursor: CommandPageCursor, fault: Vec<u8> },
-}
-//#endregion 🔖️PagedCommandIngress
 
 //#region 🔖️PresenceRosterWire
 pub const PRESENCE_ROSTER_MAXIMUM_ITEMS: usize = 64;
@@ -1428,10 +382,10 @@ impl PresenceCommandCursor {
 //#region 🔖️PagedAppCommandDecode
 const APP_COMMAND_FIELD_MAXIMUM_BYTES: usize = COMMAND_MAXIMUM_BYTES;
 
-/// 🧮️ `AppCommand::PureCommand`'s seven byte fields, in `encode_app_command`'s own order: `command`,
-/// then the `document`/`config`/`draft` pack+spr pairs. One field per retained decode step, so a
-/// mutation's payload never costs more than one bounded read per host turn.
-const PURE_COMMAND_FIELDS: usize = 7;
+/// 🧮️ `AppCommand::PureCommand`'s two byte fields, in `encode_app_command`'s own order: `command`, then the `head`
+/// snapshot pack. One field per retained decode step, so a mutation's payload never costs more than one bounded read
+/// per host turn.
+const PURE_COMMAND_FIELDS: usize = 2;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum DocumentArchiveDecodePhase {
@@ -1497,17 +451,17 @@ impl PagedDocumentArchiveDecode {
         }
     }
 
-    fn read_string(&mut self, reader: &mut PagedCommandReader, label: &'static str) -> Result<String, crate::Fault> {
+    fn read_string(&mut self, reader: &mut PagedCommandReader, label: &'static str) -> Result<String, semio_framework_diagnostic::Fault> {
         let bytes = reader.read_bounded_bytes(APP_COMMAND_FIELD_MAXIMUM_BYTES)?;
         String::from_utf8(bytes).map_err(|error| {
             self.rejected = Some(error.into_bytes());
-            crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.document-archive-utf8"), label)
+            semio_framework_diagnostic::Fault::new(semio_framework_diagnostic::FaultOrigin::Framework, semio_framework_diagnostic::FaultCode::new("plugin.document-archive-utf8"), label)
         })
     }
 
-    fn step(&mut self, reader: &mut PagedCommandReader) -> Result<Option<DocumentArchivePack>, crate::Fault> {
+    fn step(&mut self, reader: &mut PagedCommandReader) -> Result<Option<DocumentArchivePack>, semio_framework_diagnostic::Fault> {
         if self.rejected.is_some() {
-            return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.document-archive-closing"), "rejected document archive must be closed before another decode step"));
+            return Err(semio_framework_diagnostic::Fault::new(semio_framework_diagnostic::FaultOrigin::Framework, semio_framework_diagnostic::FaultCode::new("plugin.document-archive-closing"), "rejected document archive must be closed before another decode step"));
         }
         match self.phase {
             DocumentArchiveDecodePhase::ParentPack => {
@@ -1519,16 +473,16 @@ impl PagedDocumentArchiveDecode {
                 self.phase = DocumentArchiveDecodePhase::MemberCount;
             }
             DocumentArchiveDecodePhase::MemberCount => {
-                let count = usize::try_from(reader.read_varint()?).map_err(|_| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.document-archive-members"), "document archive member count is not representable"))?;
+                let count = usize::try_from(reader.read_varint()?).map_err(|_| semio_framework_diagnostic::Fault::new(semio_framework_diagnostic::FaultOrigin::Framework, semio_framework_diagnostic::FaultCode::new("plugin.document-archive-members"), "document archive member count is not representable"))?;
                 if count > DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS {
-                    return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.document-archive-members"), "document archive exceeds its fixed 1024-member authority"));
+                    return Err(semio_framework_diagnostic::Fault::new(semio_framework_diagnostic::FaultOrigin::Framework, semio_framework_diagnostic::FaultCode::new("plugin.document-archive-members"), "document archive exceeds its fixed 1024-member authority"));
                 }
-                self.archive.members.try_reserve_exact(count).map_err(|_| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.document-archive-allocation"), "document archive member roster could not reserve its exact bounded authority"))?;
+                self.archive.members.try_reserve_exact(count).map_err(|_| semio_framework_diagnostic::Fault::new(semio_framework_diagnostic::FaultOrigin::Framework, semio_framework_diagnostic::FaultCode::new("plugin.document-archive-allocation"), "document archive member roster could not reserve its exact bounded authority"))?;
                 self.remaining = count;
                 self.phase = if count == 0 { DocumentArchiveDecodePhase::Complete } else { DocumentArchiveDecodePhase::Ordinal };
             }
             DocumentArchiveDecodePhase::Ordinal => {
-                self.partial.ordinal = u32::try_from(reader.read_varint()?).map_err(|_| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.document-archive-ordinal"), "document archive member ordinal exceeds u32"))?;
+                self.partial.ordinal = u32::try_from(reader.read_varint()?).map_err(|_| semio_framework_diagnostic::Fault::new(semio_framework_diagnostic::FaultOrigin::Framework, semio_framework_diagnostic::FaultCode::new("plugin.document-archive-ordinal"), "document archive member ordinal exceeds u32"))?;
                 self.phase = DocumentArchiveDecodePhase::ReferenceArtifactId;
             }
             DocumentArchiveDecodePhase::ReferenceArtifactId => {
@@ -1704,7 +658,7 @@ const fn route_field_plan(tag: u8) -> Option<(usize, bool, usize)> {
         10 => Some((3, false, 0)),
         11 => Some((2, false, 0)),
         12 => Some((1, false, 0)),
-        17 => Some((3, true, 3)),
+        17 => Some((3, true, 2)),
         18..=21 => Some((1, false, 0)),
         _ => None,
     }
@@ -1737,15 +691,15 @@ impl PagedRouteFieldsDecode {
         String::from_utf8(bytes).map_err(std::string::FromUtf8Error::into_bytes)
     }
 
-    fn step(&mut self, seq: u64, reader: &mut PagedCommandReader) -> Result<Option<AppCommand>, crate::Fault> {
+    fn step(&mut self, seq: u64, reader: &mut PagedCommandReader) -> Result<Option<AppCommand>, semio_framework_diagnostic::Fault> {
         if self.fields.len() < self.leading {
             self.fields.push(reader.read_bounded_bytes(APP_COMMAND_FIELD_MAXIMUM_BYTES)?);
         } else if self.has_ops && self.ops_remaining.is_none() {
-            let count = usize::try_from(reader.read_varint()?).map_err(|_| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.transaction-prepared-ops"), "transaction prepared-ops count is not representable"))?;
+            let count = usize::try_from(reader.read_varint()?).map_err(|_| semio_framework_diagnostic::Fault::new(semio_framework_diagnostic::FaultOrigin::Framework, semio_framework_diagnostic::FaultCode::new("plugin.transaction-prepared-ops"), "transaction prepared-ops count is not representable"))?;
             if count > TRANSACTION_PREPARED_OPS_MAXIMUM {
-                return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.transaction-prepared-ops"), "transaction prepare exceeds its fixed 1024 prepared-op authority"));
+                return Err(semio_framework_diagnostic::Fault::new(semio_framework_diagnostic::FaultOrigin::Framework, semio_framework_diagnostic::FaultCode::new("plugin.transaction-prepared-ops"), "transaction prepare exceeds its fixed 1024 prepared-op authority"));
             }
-            self.ops.try_reserve_exact(count).map_err(|_| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.transaction-prepared-ops-allocation"), "transaction prepared-op roster could not reserve its exact bounded authority"))?;
+            self.ops.try_reserve_exact(count).map_err(|_| semio_framework_diagnostic::Fault::new(semio_framework_diagnostic::FaultOrigin::Framework, semio_framework_diagnostic::FaultCode::new("plugin.transaction-prepared-ops-allocation"), "transaction prepared-op roster could not reserve its exact bounded authority"))?;
             self.ops_remaining = Some(count);
         } else if self.ops_remaining.is_some_and(|count| self.ops.len() < count) {
             self.ops.push(reader.read_bounded_bytes(APP_COMMAND_FIELD_MAXIMUM_BYTES)?);
@@ -1758,7 +712,7 @@ impl PagedRouteFieldsDecode {
         Ok(Some(self.finish(seq)?))
     }
 
-    fn finish(&mut self, seq: u64) -> Result<AppCommand, crate::Fault> {
+    fn finish(&mut self, seq: u64) -> Result<AppCommand, semio_framework_diagnostic::Fault> {
         let ops = std::mem::take(&mut self.ops);
         let mut fields = std::mem::take(&mut self.fields).into_iter();
         let built = match self.tag {
@@ -1768,9 +722,8 @@ impl PagedRouteFieldsDecode {
             17 => Self::text(&mut fields).and_then(|txn_id| {
                 let mutation_id = Self::text(&mut fields)?;
                 let payload = fields.next().expect("retained transaction payload");
-                let label = Self::text(&mut fields)?;
                 let origin = fields.next().expect("retained transaction origin");
-                Ok(AppCommand::TransactionPrepare { seq, txn_id, mutation_id, payload, prepared_ops: ops, label, origin, prepared_child_ops: fields.next().expect("retained transaction child op groups") })
+                Ok(AppCommand::TransactionPrepare { seq, txn_id, mutation_id, payload, prepared_ops: ops, origin, prepared_child_ops: fields.next().expect("retained transaction child op groups") })
             }),
             18 => Self::text(&mut fields).map(|txn_id| AppCommand::TransactionCommit { seq, txn_id }),
             19 => Self::text(&mut fields).map(|txn_id| AppCommand::TransactionRollback { seq, txn_id }),
@@ -1782,7 +735,7 @@ impl PagedRouteFieldsDecode {
             Ok(command) => Ok(command),
             Err(rejected) => {
                 self.fields = std::iter::once(rejected).chain(fields).collect();
-                Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-field-utf8"), "route command identity is not valid UTF-8"))
+                Err(semio_framework_diagnostic::Fault::new(semio_framework_diagnostic::FaultOrigin::Framework, semio_framework_diagnostic::FaultCode::new("plugin.command-field-utf8"), "route command identity is not valid UTF-8"))
             }
         }
     }
@@ -1814,10 +767,10 @@ struct PagedMediaExportHandleDecode {
 }
 
 impl PagedMediaExportHandleDecode {
-    fn step(&mut self, reader: &mut PagedCommandReader) -> Result<Option<MediaExportHandleWire>, crate::Fault> {
+    fn step(&mut self, reader: &mut PagedCommandReader) -> Result<Option<MediaExportHandleWire>, semio_framework_diagnostic::Fault> {
         match self.stage {
             0 => {
-                self.app_instance_id = u32::try_from(reader.read_varint()?).map_err(|_| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.media-export-app-instance"), "media export app instance exceeds u32"))?;
+                self.app_instance_id = u32::try_from(reader.read_varint()?).map_err(|_| semio_framework_diagnostic::Fault::new(semio_framework_diagnostic::FaultOrigin::Framework, semio_framework_diagnostic::FaultCode::new("plugin.media-export-app-instance"), "media export app instance exceeds u32"))?;
                 self.stage = 1;
                 Ok(None)
             }
@@ -1827,7 +780,7 @@ impl PagedMediaExportHandleDecode {
                     Ok(value) => Some(value),
                     Err(error) => {
                         self.rejected = Some(error.into_bytes());
-                        return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-field-utf8"), "media export parent document id is not valid UTF-8"));
+                        return Err(semio_framework_diagnostic::Fault::new(semio_framework_diagnostic::FaultOrigin::Framework, semio_framework_diagnostic::FaultCode::new("plugin.command-field-utf8"), "media export parent document id is not valid UTF-8"));
                     }
                 };
                 self.stage = 2;
@@ -1885,8 +838,6 @@ enum PagedAppCommandDecodeState {
     CommandText { seq: u64 },
     ContextMenu { seq: u64 },
     ArtifactCommand { seq: u64 },
-    LoadDocumentPack { seq: u64 },
-    LoadDocumentSpr { seq: u64, pack: Option<Vec<u8>> },
     ReadDocument { seq: u64 },
     LoadConfigPack { seq: u64 },
     LoadConfigSpr { seq: u64, pack: Option<Vec<u8>> },
@@ -1903,6 +854,7 @@ enum PagedAppCommandDecodeState {
     RouteFields { seq: u64, decode: PagedRouteFieldsDecode },
     ReadDocumentArchive { seq: u64 },
     ReadDocumentIdentity { seq: u64 },
+    ReadChildHeads { seq: u64 },
     LoadDocumentArchive { seq: u64, decode: PagedDocumentArchiveDecode },
     DocumentArchiveOperation { seq: u64, kind: u8 },
     MediaExportSubmitPort { seq: u64 },
@@ -1975,10 +927,10 @@ impl DecodedAppCommandOwner {
         let field = match (self.close_stage, command) {
             (0, AppCommand::ConfigCommand { command, .. }) | (0, AppCommand::ContextMenu { request: command, .. }) | (0, AppCommand::ArtifactCommand { command, .. }) | (0, AppCommand::Command { command, .. }) => Some(std::mem::take(command)),
             (0, AppCommand::CommandText { line, .. }) => Some(std::mem::take(line).into_bytes()),
-            (0, AppCommand::LoadDocument { pack, .. }) | (0, AppCommand::LoadConfig { pack, .. }) => Some(std::mem::take(pack)),
+            (0, AppCommand::LoadConfig { pack, .. }) => Some(std::mem::take(pack)),
             (0, AppCommand::LoadWindowConfig { entry, .. }) => Some(std::mem::take(&mut entry.window_id).into_bytes()),
             (1, AppCommand::Command { view_state, .. }) => Some(std::mem::take(view_state)),
-            (1, AppCommand::LoadDocument { spr, .. }) | (1, AppCommand::LoadConfig { spr, .. }) => Some(std::mem::take(spr)),
+            (1, AppCommand::LoadConfig { spr, .. }) => Some(std::mem::take(spr)),
             (1, AppCommand::LoadWindowConfig { entry, .. }) => Some(std::mem::take(&mut entry.window_kind_id).into_bytes()),
             (2, AppCommand::LoadWindowConfig { entry, .. }) => Some(std::mem::take(&mut entry.envelope_pack)),
             (0, AppCommand::MediaIn { data, .. }) => Some(std::mem::take(data)),
@@ -1990,8 +942,7 @@ impl DecodedAppCommandOwner {
             (1, AppCommand::TransactionPrepare { origin, .. }) => Some(std::mem::take(origin)),
             (2, AppCommand::TransactionPrepare { txn_id, .. }) => Some(std::mem::take(txn_id).into_bytes()),
             (3, AppCommand::TransactionPrepare { mutation_id, .. }) => Some(std::mem::take(mutation_id).into_bytes()),
-            (4, AppCommand::TransactionPrepare { label, .. }) => Some(std::mem::take(label).into_bytes()),
-            (5, AppCommand::TransactionPrepare { prepared_child_ops, .. }) => Some(std::mem::take(prepared_child_ops)),
+            (4, AppCommand::TransactionPrepare { prepared_child_ops, .. }) => Some(std::mem::take(prepared_child_ops)),
             (0, AppCommand::TransactionCommit { txn_id, .. }) | (0, AppCommand::TransactionRollback { txn_id, .. }) => Some(std::mem::take(txn_id).into_bytes()),
             (0, AppCommand::TransactionUndo { group_id, .. }) | (0, AppCommand::TransactionRedo { group_id, .. }) => Some(std::mem::take(group_id).into_bytes()),
             (0, AppCommand::SubmitMediaExport { port, .. }) => Some(std::mem::take(port).into_bytes()),
@@ -2004,10 +955,10 @@ impl DecodedAppCommandOwner {
                 match (self.close_stage, self.command.as_mut().expect("decoded command owner was present")) {
                     (0, AppCommand::ConfigCommand { command, .. }) | (0, AppCommand::ContextMenu { request: command, .. }) | (0, AppCommand::ArtifactCommand { command, .. }) | (0, AppCommand::Command { command, .. }) => *command = field,
                     (0, AppCommand::CommandText { line, .. }) => *line = String::from_utf8(field).expect("decoded command text remains valid UTF-8"),
-                    (0, AppCommand::LoadDocument { pack, .. }) | (0, AppCommand::LoadConfig { pack, .. }) => *pack = field,
+                    (0, AppCommand::LoadConfig { pack, .. }) => *pack = field,
                     (0, AppCommand::LoadWindowConfig { entry, .. }) => entry.window_id = String::from_utf8(field).expect("decoded window id remains valid UTF-8"),
                     (1, AppCommand::Command { view_state, .. }) => *view_state = field,
-                    (1, AppCommand::LoadDocument { spr, .. }) | (1, AppCommand::LoadConfig { spr, .. }) => *spr = field,
+                    (1, AppCommand::LoadConfig { spr, .. }) => *spr = field,
                     (1, AppCommand::LoadWindowConfig { entry, .. }) => entry.window_kind_id = String::from_utf8(field).expect("decoded window kind id remains valid UTF-8"),
                     (2, AppCommand::LoadWindowConfig { entry, .. }) => entry.envelope_pack = field,
                     (0, AppCommand::MediaIn { data, .. }) => *data = field,
@@ -2019,8 +970,7 @@ impl DecodedAppCommandOwner {
                     (1, AppCommand::TransactionPrepare { origin, .. }) => *origin = field,
                     (2, AppCommand::TransactionPrepare { txn_id, .. }) => *txn_id = String::from_utf8(field).expect("decoded transaction id remains valid UTF-8"),
                     (3, AppCommand::TransactionPrepare { mutation_id, .. }) => *mutation_id = String::from_utf8(field).expect("decoded mutation id remains valid UTF-8"),
-                    (4, AppCommand::TransactionPrepare { label, .. }) => *label = String::from_utf8(field).expect("decoded transaction label remains valid UTF-8"),
-                    (5, AppCommand::TransactionPrepare { prepared_child_ops, .. }) => *prepared_child_ops = field,
+                    (4, AppCommand::TransactionPrepare { prepared_child_ops, .. }) => *prepared_child_ops = field,
                     (0, AppCommand::TransactionCommit { txn_id, .. }) | (0, AppCommand::TransactionRollback { txn_id, .. }) => *txn_id = String::from_utf8(field).expect("decoded transaction id remains valid UTF-8"),
                     (0, AppCommand::TransactionUndo { group_id, .. }) | (0, AppCommand::TransactionRedo { group_id, .. }) => *group_id = String::from_utf8(field).expect("decoded transaction group id remains valid UTF-8"),
                     (0, AppCommand::SubmitMediaExport { port, .. }) => *port = String::from_utf8(field).expect("decoded media export port remains valid UTF-8"),
@@ -2062,7 +1012,7 @@ impl PagedAppCommandDecodeCursor {
         self.reader.kind()
     }
 
-    pub fn step(&mut self) -> Result<Option<AppCommand>, crate::Fault> {
+    pub fn step(&mut self) -> Result<Option<AppCommand>, semio_framework_diagnostic::Fault> {
         let state = std::mem::replace(&mut self.state, PagedAppCommandDecodeState::Faulted);
         let outcome = match state {
             PagedAppCommandDecodeState::Header => {
@@ -2074,7 +1024,6 @@ impl PagedAppCommandDecodeCursor {
                     2 => PagedAppCommandDecodeState::CommandText { seq },
                     3 => PagedAppCommandDecodeState::ContextMenu { seq },
                     4 => PagedAppCommandDecodeState::ArtifactCommand { seq },
-                    6 => PagedAppCommandDecodeState::LoadDocumentPack { seq },
                     7 => PagedAppCommandDecodeState::ReadDocument { seq },
                     8 => PagedAppCommandDecodeState::LoadConfigPack { seq },
                     9 => PagedAppCommandDecodeState::ReadConfig { seq },
@@ -2088,6 +1037,7 @@ impl PagedAppCommandDecodeCursor {
                     32 => PagedAppCommandDecodeState::LoadDocumentArchive { seq, decode: PagedDocumentArchiveDecode::new() },
                     33 => PagedAppCommandDecodeState::ReadDocumentArchive { seq },
                     41 => PagedAppCommandDecodeState::ReadDocumentIdentity { seq },
+                    42 => PagedAppCommandDecodeState::ReadChildHeads { seq },
                     34..=36 => PagedAppCommandDecodeState::DocumentArchiveOperation { seq, kind: tag },
                     37 => PagedAppCommandDecodeState::MediaExportSubmitPort { seq },
                     38..=40 => PagedAppCommandDecodeState::MediaExportHandle { seq, kind: tag, decode: PagedMediaExportHandleDecode::default() },
@@ -2095,7 +1045,7 @@ impl PagedAppCommandDecodeCursor {
                         PagedAppCommandDecodeState::RouteFields { seq, decode: PagedRouteFieldsDecode::new(tag, route_field_plan(tag).expect("route field plan was just matched")) }
                     }
                     _ => {
-                        return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-route-state-machine-required"), "this AppCommand kind requires its route-specific retained decoder before admission"));
+                        return Err(semio_framework_diagnostic::Fault::new(semio_framework_diagnostic::FaultOrigin::Framework, semio_framework_diagnostic::FaultCode::new("plugin.command-route-state-machine-required"), "this AppCommand kind requires its route-specific retained decoder before admission"));
                     }
                 };
                 None
@@ -2125,7 +1075,7 @@ impl PagedAppCommandDecodeCursor {
                     Ok(line) => line,
                     Err(error) => {
                         self.state = PagedAppCommandDecodeState::RejectedFields { fields: vec![error.into_bytes()] };
-                        return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-field-utf8"), "paged command text is not valid UTF-8"));
+                        return Err(semio_framework_diagnostic::Fault::new(semio_framework_diagnostic::FaultOrigin::Framework, semio_framework_diagnostic::FaultCode::new("plugin.command-field-utf8"), "paged command text is not valid UTF-8"));
                     }
                 };
                 Some(AppCommand::CommandText { seq, line })
@@ -2137,21 +1087,6 @@ impl PagedAppCommandDecodeCursor {
             PagedAppCommandDecodeState::ArtifactCommand { seq } => {
                 let command = self.reader.read_bounded_bytes(APP_COMMAND_FIELD_MAXIMUM_BYTES)?;
                 Some(AppCommand::ArtifactCommand { seq, command })
-            }
-            PagedAppCommandDecodeState::LoadDocumentPack { seq } => {
-                let pack = self.reader.read_bounded_bytes(APP_COMMAND_FIELD_MAXIMUM_BYTES)?;
-                self.state = PagedAppCommandDecodeState::LoadDocumentSpr { seq, pack: Some(pack) };
-                None
-            }
-            PagedAppCommandDecodeState::LoadDocumentSpr { seq, mut pack } => {
-                let spr = match self.reader.read_bounded_bytes(APP_COMMAND_FIELD_MAXIMUM_BYTES) {
-                    Ok(spr) => spr,
-                    Err(fault) => {
-                        self.state = PagedAppCommandDecodeState::LoadDocumentSpr { seq, pack };
-                        return Err(fault);
-                    }
-                };
-                Some(AppCommand::LoadDocument { seq, pack: pack.take().expect("retained document pack"), spr })
             }
             PagedAppCommandDecodeState::ReadDocument { seq } => Some(AppCommand::ReadDocument { seq }),
             PagedAppCommandDecodeState::LoadConfigPack { seq } => {
@@ -2174,9 +1109,10 @@ impl PagedAppCommandDecodeCursor {
             PagedAppCommandDecodeState::ReadHistory { seq } => Some(AppCommand::ReadHistory { seq }),
             PagedAppCommandDecodeState::ReadConflicts { seq } => Some(AppCommand::ReadConflicts { seq }),
             PagedAppCommandDecodeState::ReadDocumentIdentity { seq } => Some(AppCommand::ReadDocumentIdentity { seq }),
+            PagedAppCommandDecodeState::ReadChildHeads { seq } => Some(AppCommand::ReadChildHeads { seq }),
             PagedAppCommandDecodeState::LocalInteractionQuery { seq } => {
                 let bytes = self.reader.read_bounded_bytes(142)?;
-                let command = protocol::decode_local_interaction_query_command(&bytes).map_err(|reason| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("local-interaction.command-wire"), reason))?;
+                let command = protocol::decode_local_interaction_query_command(&bytes).map_err(|reason| semio_framework_diagnostic::Fault::new(semio_framework_diagnostic::FaultOrigin::Framework, semio_framework_diagnostic::FaultCode::new("local-interaction.command-wire"), reason))?;
                 Some(AppCommand::LocalInteractionQuery { seq, command })
             }
             PagedAppCommandDecodeState::LoadWindowConfigWindowId { seq } => {
@@ -2185,7 +1121,7 @@ impl PagedAppCommandDecodeCursor {
                     Ok(window_id) => window_id,
                     Err(error) => {
                         self.state = PagedAppCommandDecodeState::RejectedFields { fields: vec![error.into_bytes()] };
-                        return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-field-utf8"), "window config window id is not valid UTF-8"));
+                        return Err(semio_framework_diagnostic::Fault::new(semio_framework_diagnostic::FaultOrigin::Framework, semio_framework_diagnostic::FaultCode::new("plugin.command-field-utf8"), "window config window id is not valid UTF-8"));
                     }
                 };
                 self.state = PagedAppCommandDecodeState::LoadWindowConfigKind { seq, window_id: Some(window_id) };
@@ -2205,7 +1141,7 @@ impl PagedAppCommandDecodeCursor {
                         self.state = PagedAppCommandDecodeState::RejectedFields {
                             fields: vec![window_id.take().expect("retained window id").into_bytes(), error.into_bytes()],
                         };
-                        return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-field-utf8"), "window config kind id is not valid UTF-8"));
+                        return Err(semio_framework_diagnostic::Fault::new(semio_framework_diagnostic::FaultOrigin::Framework, semio_framework_diagnostic::FaultCode::new("plugin.command-field-utf8"), "window config kind id is not valid UTF-8"));
                     }
                 };
                 self.state = PagedAppCommandDecodeState::LoadWindowConfigPack { seq, window_id, window_kind_id: Some(window_kind_id) };
@@ -2244,7 +1180,7 @@ impl PagedAppCommandDecodeCursor {
                 }
                 let mut fields = fields.into_iter();
                 let mut next = || fields.next().expect("retained pure-command field");
-                Some(AppCommand::PureCommand { seq, command: next(), document: next(), document_spr: next(), config: next(), config_spr: next(), draft: next(), draft_spr: next() })
+                Some(AppCommand::PureCommand { seq, command: next(), head: next() })
             }
             PagedAppCommandDecodeState::RouteFields { seq, mut decode } => match decode.step(seq, &mut self.reader) {
                 Ok(Some(command)) => Some(command),
@@ -2284,7 +1220,7 @@ impl PagedAppCommandDecodeCursor {
                     Ok(value) => value,
                     Err(error) => {
                         self.state = PagedAppCommandDecodeState::RejectedFields { fields: vec![error.into_bytes()] };
-                        return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-field-utf8"), "media export port is not valid UTF-8"));
+                        return Err(semio_framework_diagnostic::Fault::new(semio_framework_diagnostic::FaultOrigin::Framework, semio_framework_diagnostic::FaultCode::new("plugin.command-field-utf8"), "media export port is not valid UTF-8"));
                     }
                 };
                 self.state = PagedAppCommandDecodeState::MediaExportSubmitDocument { seq, port: Some(port) };
@@ -2302,7 +1238,7 @@ impl PagedAppCommandDecodeCursor {
                     Ok(value) => value,
                     Err(error) => {
                         self.state = PagedAppCommandDecodeState::RejectedFields { fields: vec![port.take().expect("retained media export port").into_bytes(), error.into_bytes()] };
-                        return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-field-utf8"), "media export parent document id is not valid UTF-8"));
+                        return Err(semio_framework_diagnostic::Fault::new(semio_framework_diagnostic::FaultOrigin::Framework, semio_framework_diagnostic::FaultCode::new("plugin.command-field-utf8"), "media export parent document id is not valid UTF-8"));
                     }
                 };
                 self.state = PagedAppCommandDecodeState::MediaExportSubmitRevision { seq, port, expected_parent_document_id: Some(expected_parent_document_id) };
@@ -2332,10 +1268,10 @@ impl PagedAppCommandDecodeCursor {
             },
             PagedAppCommandDecodeState::RejectedFields { fields } => {
                 self.state = PagedAppCommandDecodeState::RejectedFields { fields };
-                return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-decode-closing"), "rejected paged command must be closed before it can be stepped again"));
+                return Err(semio_framework_diagnostic::Fault::new(semio_framework_diagnostic::FaultOrigin::Framework, semio_framework_diagnostic::FaultCode::new("plugin.command-decode-closing"), "rejected paged command must be closed before it can be stepped again"));
             }
             PagedAppCommandDecodeState::Terminal | PagedAppCommandDecodeState::Faulted => {
-                return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-decode-terminal"), "paged command decoder was stepped after terminal"));
+                return Err(semio_framework_diagnostic::Fault::new(semio_framework_diagnostic::FaultOrigin::Framework, semio_framework_diagnostic::FaultCode::new("plugin.command-decode-terminal"), "paged command decoder was stepped after terminal"));
             }
         };
         if let Some(command) = outcome {
@@ -2344,7 +1280,8 @@ impl PagedAppCommandDecodeCursor {
                     AppCommand::ConfigCommand { command, .. } | AppCommand::ContextMenu { request: command, .. } | AppCommand::ArtifactCommand { command, .. } => vec![command],
                     AppCommand::Command { command, view_state, .. } => vec![command, view_state],
                     AppCommand::CommandText { line, .. } => vec![line.into_bytes()],
-                    AppCommand::LoadDocument { pack, spr, .. } | AppCommand::LoadConfig { pack, spr, .. } => vec![pack, spr],
+                    AppCommand::LoadConfig { pack, spr, .. } => vec![pack, spr],
+                    AppCommand::PureCommand { command, head, .. } => vec![command, head],
                     AppCommand::LoadWindowConfig { entry, .. } => vec![entry.window_id.into_bytes(), entry.window_kind_id.into_bytes(), entry.envelope_pack],
                     AppCommand::ReadDocument { .. }
                     | AppCommand::ReadConfig { .. }
@@ -2353,6 +1290,7 @@ impl PagedAppCommandDecodeCursor {
                     | AppCommand::ReadConflicts { .. }
                     | AppCommand::LocalInteractionQuery { .. }
                     | AppCommand::ReadDocumentIdentity { .. }
+                    | AppCommand::ReadChildHeads { .. }
                     | AppCommand::ReadWindowConfigs { .. }
                     | AppCommand::PollDocumentArchiveLoad { .. }
                     | AppCommand::CancelDocumentArchiveLoad { .. }
@@ -2362,8 +1300,8 @@ impl PagedAppCommandDecodeCursor {
                     AppCommand::MediaIn { port, descriptor, data, .. } => vec![port.into_bytes(), descriptor, data],
                     AppCommand::MediaOut { port, request, .. } => vec![port.into_bytes(), request],
                     AppCommand::MediaFingerprint { port, .. } => vec![port.into_bytes()],
-                    AppCommand::TransactionPrepare { txn_id, mutation_id, payload, prepared_ops, label, origin, prepared_child_ops, .. } => {
-                        let mut fields = vec![txn_id.into_bytes(), mutation_id.into_bytes(), payload, label.into_bytes(), origin, prepared_child_ops];
+                    AppCommand::TransactionPrepare { txn_id, mutation_id, payload, prepared_ops, origin, prepared_child_ops, .. } => {
+                        let mut fields = vec![txn_id.into_bytes(), mutation_id.into_bytes(), payload, origin, prepared_child_ops];
                         fields.extend(prepared_ops);
                         fields
                     }
@@ -2375,7 +1313,7 @@ impl PagedAppCommandDecodeCursor {
                     _ => unreachable!("route-specific AppCommand is never decoded by the generic paged cursor"),
                 };
                 self.state = PagedAppCommandDecodeState::RejectedFields { fields };
-                return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-decode-trailing"), "paged command carries trailing bytes after its terminal field"));
+                return Err(semio_framework_diagnostic::Fault::new(semio_framework_diagnostic::FaultOrigin::Framework, semio_framework_diagnostic::FaultCode::new("plugin.command-decode-trailing"), "paged command carries trailing bytes after its terminal field"));
             }
             self.state = PagedAppCommandDecodeState::Terminal;
             Ok(Some(command))
@@ -2415,7 +1353,7 @@ impl PagedAppCommandDecodeCursor {
             }
         }
         if let Some(retained) = match &mut self.state {
-            PagedAppCommandDecodeState::LoadDocumentSpr { pack, .. } | PagedAppCommandDecodeState::LoadConfigSpr { pack, .. } => Some(pack),
+            PagedAppCommandDecodeState::LoadConfigSpr { pack, .. } => Some(pack),
             _ => None,
         } {
             if let Some(bytes) = retained.as_ref() {
@@ -2525,11 +1463,6 @@ pub enum AppCommand {
         seq: u64,
         envelopes: Vec<crate::os_spr::causal::MutationEnvelope>,
     },
-    LoadDocument {
-        seq: u64,
-        pack: Vec<u8>,
-        spr: Vec<u8>,
-    },
     ReadDocument {
         seq: u64,
     },
@@ -2565,20 +1498,17 @@ pub enum AppCommand {
         seq: u64,
         port: String,
     },
-    /// 🧾 Host-authoritative command: document/config/draft packs travel with the command; guest
-    /// returns `AppFrame::Emit` ops only (host applies). CHANNEL_VERSION 5 wire addition.
+    /// 🧾 Host-authoritative command: the guest evaluates `command` and returns `AppFrame::Emit` ops only (host
+    /// applies). CHANNEL_VERSION 5 wire addition; CHANNEL_VERSION 21 reduced its lanes to one `head` (design §20.8).
     PureCommand {
         seq: u64,
         command: Vec<u8>,
-        document: Vec<u8>,
-        document_spr: Vec<u8>,
-        config: Vec<u8>,
-        config_spr: Vec<u8>,
-        draft: Vec<u8>,
-        draft_spr: Vec<u8>,
+        /// 📸️ The HEAD snapshot pack a stateless evaluation runs against with an empty history — never a fold of `.spr`
+        /// history; empty evaluates against the instance's live document.
+        head: Vec<u8>,
     },
     /// 🧸️ Restores a composing document's owned children into the engine, each as its own live
-    /// store. Sent after `LoadDocument` (the parent must exist before its children can be adopted).
+    /// store. Sent after the parent's document is loaded (the parent must exist before its children can be adopted).
     /// CHANNEL_VERSION 6 wire addition.
     LoadChildren {
         seq: u64,
@@ -2595,16 +1525,16 @@ pub enum AppCommand {
     },
     /// 🤝️ Phase-1 prepare for one transaction member — flat fields carry EITHER the owner-mutation
     /// form (`mutation_id`+`payload` set, `prepared_ops` empty) OR the pre-planned form
-    /// (`prepared_ops`+`label`+`origin` set, `mutation_id` empty); see contract-freeze.md §2 of
+    /// (`prepared_ops`+`origin` set, `mutation_id` empty); see contract-freeze.md §2 of
     /// `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS/`.
-    /// CHANNEL_VERSION 9 wire addition.
+    /// CHANNEL_VERSION 9 wire addition; CHANNEL_VERSION 21 dropped the host-written label (a member's history row is
+    /// named by its own leaves, design §20.6).
     TransactionPrepare {
         seq: u64,
         txn_id: String,
         mutation_id: String,
         payload: Vec<u8>,
         prepared_ops: Vec<Vec<u8>>,
-        label: String,
         origin: Vec<u8>,
         /// 🧩️ The pre-planned form's owned-child op groups (CHANNEL_VERSION 18 trailing addition): the composing
         /// guest's own `ChildEmit` list as one wire pack, exactly as its `AppFrame::Emit.child_ops` preview produced
@@ -2741,6 +1671,9 @@ pub enum AppCommand {
         handle: MediaExportHandleWire,
     },
     ReadDocumentIdentity { seq: u64 },
+    /// 🪆️ Reads every owned child's CURRENT head snapshot pack (nested members included) for a reader that composes
+    /// parent + children on read (design §20.15). Reply `AppFrame::ChildHeads`. CHANNEL_VERSION 21 wire addition.
+    ReadChildHeads { seq: u64 },
 }
 //#endregion 🔖️AppCommand
 
@@ -2864,13 +1797,12 @@ pub enum AppFrame {
     /// 📣️ A guest's dispatch touched a foreign artifact — the host mints `txn_id`, resolves each
     /// opaque `ForeignStep` in `foreign` (one `store::pack_rt::encode_wire_value`-encoded serde
     /// form per element; not decoded at this layer), and drives the transaction protocol (contract
-    /// freeze §5). CHANNEL_VERSION 9 wire addition.
+    /// freeze §5). CHANNEL_VERSION 9 wire addition; CHANNEL_VERSION 21 dropped its never-read description and
+    /// coalesce key (design §20.1/§20.7).
     TransactionProposal {
         in_reply_to: u64,
         proposal_id: String,
         local_ops: Vec<Vec<u8>>,
-        description: String,
-        coalesce_key: String,
         foreign: Vec<Vec<u8>>,
     },
     /// 🤝️ Phase-1 reply — empty `rejection` means the member is prepared. CHANNEL_VERSION 9 wire addition.
@@ -2975,8 +1907,155 @@ pub enum AppFrame {
         terminal: bool,
     },
     DocumentIdentity { in_reply_to: u64, identity: AppDocumentIdentity },
+    /// 🪆️ Reply to `AppCommand::ReadChildHeads`: one entry per owned child. CHANNEL_VERSION 21 wire addition.
+    ChildHeads { in_reply_to: u64, entries: Vec<ChildHeadPackEntry> },
 }
 //#endregion 🔖️AppFrame
+
+//#region 🔖️DocumentArchiveLoadHost
+/// 🏁️ How one host-driven whole-document load ended (`📓️api-stepped-document-load.md` §2.3, ticket
+/// 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING). `Cancelled` and `Fault` both left the previous document exactly as it was;
+/// `Fault` carries the guest's encoded fault.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum DocumentArchiveLoadOutcome {
+    Ready,
+    Cancelled,
+    Fault(Vec<u8>),
+}
+
+/// 🧭️ What a host does next with one [`DocumentArchiveLoadHost`]: send this command, stamped with the sequence the host minted
+/// for it, or stop, because the load reached its acknowledged terminal or was cancelled before it was ever admitted.
+#[derive(Debug, PartialEq)]
+pub enum DocumentArchiveLoadStep {
+    Send { seq: u64, command: AppCommand },
+    Finished(DocumentArchiveLoadOutcome),
+}
+
+/// 🚧️ An answer a load cannot go on from: the guest refused the admission, a poll or an acknowledgement (its encoded fault), or the
+/// frame handed back answers some other command.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum DocumentArchiveLoadRefusal {
+    Refused(Vec<u8>),
+    Unanswered,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum DocumentArchiveLoadSent {
+    Admit,
+    Poll,
+    Cancel,
+    Acknowledge,
+}
+
+/// 🗃️ The host half of the stepped, ACK-owned whole-document load (`📓️api-stepped-document-load.md` §2): a transport-free state
+/// machine every Rust host drives with its own exchange — the MCP gateway, the `🏃️run` batch runner, the wgpu bridge — so
+/// admit → poll* → (cancel → poll*) → acknowledge exists once. TS twin: `AppChannelClient.loadDocumentArchive` (`💻️os/🟦️.ts`).
+/// Corpus: `🧫️fixtures/🧫️document-archive-load-host/🔣️.json` (schema `🧬️schema/🔣️document-archive-load-host/🔣️.json`).
+///
+/// 🔢️ The operation is the admission's own sequence, which is how the guest keys the load. A host's sequence is minted only for
+/// a command that is sent, never for the step that finishes. Steps and answers alternate: every [`Self::step`] that sends is
+/// answered by exactly one [`Self::answer`] under the same sequence.
+///
+/// 🛑️ A cancel requested before admission sends nothing and finishes `Cancelled`. After admission it sends
+/// `CancelDocumentArchiveLoad` once and keeps polling: only the guest's terminal status says whether the previous document was
+/// restored or the load won the race (a refused cancel is that race, and the next poll answers it). A cancelled terminal whose
+/// acknowledgement is refused still owns retained input, so it is polled again before the next acknowledgement.
+pub struct DocumentArchiveLoadHost {
+    archive: Option<DocumentArchivePack>,
+    operation: Option<u64>,
+    sent: Option<(u64, DocumentArchiveLoadSent)>,
+    cancel_requested: bool,
+    cancel_sent: bool,
+    terminal: Option<DocumentArchiveLoadStatus>,
+    outcome: Option<DocumentArchiveLoadOutcome>,
+}
+
+impl DocumentArchiveLoadHost {
+    pub fn new(archive: DocumentArchivePack) -> Self {
+        Self { archive: Some(archive), operation: None, sent: None, cancel_requested: false, cancel_sent: false, terminal: None, outcome: None }
+    }
+
+    /// 🎞️ A load the guest admitted itself under `operation`, the host sequence of the command that started it: a `MediaIn` of a whole
+    /// document of the app's own schema answers `AppFrame::DocumentArchiveLoad` (pending) for its own sequence
+    /// (`📓️api-stepped-document-load.md` §4). Driven from its first poll exactly like an admission this driver sent.
+    pub fn admitted(operation: u64) -> Self {
+        Self { archive: None, operation: Some(operation), sent: None, cancel_requested: false, cancel_sent: false, terminal: None, outcome: None }
+    }
+
+    /// 🔢️ The admitted operation, once the admission was sent.
+    pub fn operation(&self) -> Option<u64> {
+        self.operation
+    }
+
+    /// 🛑️ Asks for the load to stop; idempotent, and a no-op once a terminal status is known.
+    pub fn request_cancel(&mut self) {
+        self.cancel_requested = true;
+        if self.operation.is_none() && self.outcome.is_none() {
+            self.archive = None;
+            self.outcome = Some(DocumentArchiveLoadOutcome::Cancelled);
+        }
+    }
+
+    /// ➡️ The next command, stamped with a sequence from `next_seq`, or the outcome once the load is over.
+    pub fn step(&mut self, next_seq: impl FnOnce() -> u64) -> DocumentArchiveLoadStep {
+        if let Some(outcome) = &self.outcome {
+            return DocumentArchiveLoadStep::Finished(outcome.clone());
+        }
+        let seq = next_seq();
+        let (sent, command) = match (self.operation, &self.terminal) {
+            (None, _) => (DocumentArchiveLoadSent::Admit, AppCommand::LoadDocumentArchive { seq, archive: self.archive.take().unwrap_or_default() }),
+            (Some(operation), Some(_)) => (DocumentArchiveLoadSent::Acknowledge, AppCommand::AcknowledgeDocumentArchiveLoad { seq, operation }),
+            (Some(operation), None) if self.cancel_requested && !self.cancel_sent => (DocumentArchiveLoadSent::Cancel, AppCommand::CancelDocumentArchiveLoad { seq, operation }),
+            (Some(operation), None) => (DocumentArchiveLoadSent::Poll, AppCommand::PollDocumentArchiveLoad { seq, operation }),
+        };
+        if sent == DocumentArchiveLoadSent::Admit {
+            self.operation = Some(seq);
+        }
+        self.sent = Some((seq, sent));
+        DocumentArchiveLoadStep::Send { seq, command }
+    }
+
+    /// 📬️ Takes the guest's answer to the command sent under `seq`; a poll answers its status for the host's progress.
+    pub fn answer(&mut self, seq: u64, frame: &AppFrame) -> Result<Option<DocumentArchiveLoadStatus>, DocumentArchiveLoadRefusal> {
+        let (sent, operation) = match (self.sent.take(), self.operation) {
+            (Some((sent_seq, sent)), Some(operation)) if sent_seq == seq => (sent, operation),
+            _ => return Err(DocumentArchiveLoadRefusal::Unanswered),
+        };
+        match (sent, frame) {
+            (DocumentArchiveLoadSent::Admit, AppFrame::Done { in_reply_to }) if *in_reply_to == seq => Ok(None),
+            (DocumentArchiveLoadSent::Cancel, AppFrame::Done { in_reply_to }) if *in_reply_to == seq => {
+                self.cancel_sent = true;
+                Ok(None)
+            }
+            (DocumentArchiveLoadSent::Poll, AppFrame::DocumentArchiveLoad { in_reply_to, status }) if *in_reply_to == seq && status.operation == operation => {
+                if matches!(status.state, DocumentArchiveLoadState::Ready | DocumentArchiveLoadState::Cancelled | DocumentArchiveLoadState::Fault) {
+                    self.terminal = Some(status.clone());
+                }
+                Ok(Some(status.clone()))
+            }
+            (DocumentArchiveLoadSent::Acknowledge, AppFrame::Done { in_reply_to }) if *in_reply_to == seq => {
+                let terminal = self.terminal.take().ok_or(DocumentArchiveLoadRefusal::Unanswered)?;
+                self.outcome = Some(match terminal.state {
+                    DocumentArchiveLoadState::Ready => DocumentArchiveLoadOutcome::Ready,
+                    DocumentArchiveLoadState::Cancelled => DocumentArchiveLoadOutcome::Cancelled,
+                    _ => DocumentArchiveLoadOutcome::Fault(terminal.fault),
+                });
+                Ok(None)
+            }
+            (DocumentArchiveLoadSent::Cancel, AppFrame::Error { in_reply_to: Some(reply), .. }) if *reply == seq => {
+                self.cancel_sent = true;
+                Ok(None)
+            }
+            (DocumentArchiveLoadSent::Acknowledge, AppFrame::Error { in_reply_to: Some(reply), .. }) if *reply == seq && self.terminal.as_ref().is_some_and(|terminal| terminal.state == DocumentArchiveLoadState::Cancelled) => {
+                self.terminal = None;
+                Ok(None)
+            }
+            (_, AppFrame::Error { in_reply_to: Some(reply), fault, .. }) if *reply == seq => Err(DocumentArchiveLoadRefusal::Refused(fault.clone())),
+            _ => Err(DocumentArchiveLoadRefusal::Unanswered),
+        }
+    }
+}
+//#endregion 🔖️DocumentArchiveLoadHost
 
 //#region 🔖️Codec
 // Hand-rolled binary frame encode/decode: `tag: u8 | fields...` — see the module-level docstring.
@@ -3093,18 +2172,18 @@ impl CommandPageWriter {
     /// ✍️ The generic encoder is the ONE authority that cannot declare its page count up front — it
     /// discovers it while writing — so it declares the whole 64-page ceiling. It runs on a host, not
     /// on the guest's fixed linear memory: the guest never encodes, it only admits pages.
-    fn try_new() -> Result<Self, crate::Fault> {
+    fn try_new() -> Result<Self, semio_framework_diagnostic::Fault> {
         Ok(Self { pages: CommandPageSet::try_new(COMMAND_MAXIMUM_PAGES)?, current: [0; COMMAND_PAGE_MAXIMUM_BYTES], current_len: 0, bytes: 0 })
     }
 
-    fn flush(&mut self) -> Result<(), crate::Fault> {
+    fn flush(&mut self) -> Result<(), semio_framework_diagnostic::Fault> {
         let current = std::mem::replace(&mut self.current, [0; COMMAND_PAGE_MAXIMUM_BYTES]);
         let page = FixedCommandPage::try_from_array(current, self.current_len as u32)?;
         self.current_len = 0;
         self.pages.try_push(page).map_err(|(fault, _page)| fault)
     }
 
-    fn write(&mut self, mut bytes: &[u8]) -> Result<(), crate::Fault> {
+    fn write(&mut self, mut bytes: &[u8]) -> Result<(), semio_framework_diagnostic::Fault> {
         while !bytes.is_empty() {
             if self.current_len == COMMAND_PAGE_MAXIMUM_BYTES {
                 self.flush()?;
@@ -3118,11 +2197,11 @@ impl CommandPageWriter {
         Ok(())
     }
 
-    fn byte(&mut self, byte: u8) -> Result<(), crate::Fault> {
+    fn byte(&mut self, byte: u8) -> Result<(), semio_framework_diagnostic::Fault> {
         self.write(&[byte])
     }
 
-    fn varint(&mut self, mut value: u64) -> Result<(), crate::Fault> {
+    fn varint(&mut self, mut value: u64) -> Result<(), semio_framework_diagnostic::Fault> {
         loop {
             let mut byte = (value & 0x7f) as u8;
             value >>= 7;
@@ -3136,16 +2215,16 @@ impl CommandPageWriter {
         }
     }
 
-    fn bytes(&mut self, bytes: &[u8]) -> Result<(), crate::Fault> {
+    fn bytes(&mut self, bytes: &[u8]) -> Result<(), semio_framework_diagnostic::Fault> {
         self.varint(bytes.len() as u64)?;
         self.write(bytes)
     }
 
-    fn string(&mut self, value: &str) -> Result<(), crate::Fault> {
+    fn string(&mut self, value: &str) -> Result<(), semio_framework_diagnostic::Fault> {
         self.bytes(value.as_bytes())
     }
 
-    fn envelope(&mut self, value: &crate::os_spr::causal::MutationEnvelope) -> Result<(), crate::Fault> {
+    fn envelope(&mut self, value: &crate::os_spr::causal::MutationEnvelope) -> Result<(), semio_framework_diagnostic::Fault> {
         self.string(&value.mutation_id.0)?;
         self.string(&value.document_id.0)?;
         self.string(&value.actor.0)?;
@@ -3181,7 +2260,7 @@ impl CommandPageWriter {
         }
     }
 
-    fn finish(mut self) -> Result<PagedCommand, crate::Fault> {
+    fn finish(mut self) -> Result<PagedCommand, semio_framework_diagnostic::Fault> {
         if self.current_len != 0 {
             self.flush()?;
         }
@@ -3189,7 +2268,7 @@ impl CommandPageWriter {
     }
 }
 
-fn write_media_export_handle_paged(out: &mut CommandPageWriter, handle: &MediaExportHandleWire) -> Result<(), crate::Fault> {
+fn write_media_export_handle_paged(out: &mut CommandPageWriter, handle: &MediaExportHandleWire) -> Result<(), semio_framework_diagnostic::Fault> {
     out.varint(u64::from(handle.app_instance_id))?;
     out.string(&handle.parent_document_id)?;
     out.varint(handle.operation_id)?;
@@ -3217,7 +2296,7 @@ fn read_media_export_handle(bytes: &[u8], pos: &mut usize) -> Result<MediaExport
 }
 
 /// 📄️ Produces the exact pre-admitted page owner consumed by reactor command batches.
-pub async fn encode_app_command(command: &AppCommand) -> Result<PagedCommand, crate::Fault> {
+pub async fn encode_app_command(command: &AppCommand) -> Result<PagedCommand, semio_framework_diagnostic::Fault> {
     if let AppCommand::Presence { own_color, peers, .. } = command {
         let mut pages = CommandPageSet::try_new(peers.len().max(1))?;
         for peer in peers.iter() {
@@ -3264,12 +2343,6 @@ pub async fn encode_app_command(command: &AppCommand) -> Result<PagedCommand, cr
                 out.envelope(envelope)?;
             }
         }
-        AppCommand::LoadDocument { seq, pack, spr } => {
-            out.byte(6)?;
-            out.varint(*seq)?;
-            out.bytes(pack)?;
-            out.bytes(spr)?;
-        }
         AppCommand::ReadDocument { seq } => {
             out.byte(7)?;
             out.varint(*seq)?;
@@ -3313,16 +2386,11 @@ pub async fn encode_app_command(command: &AppCommand) -> Result<PagedCommand, cr
             out.varint(*seq)?;
             out.string(port)?;
         }
-        AppCommand::PureCommand { seq, command, document, document_spr, config, config_spr, draft, draft_spr } => {
+        AppCommand::PureCommand { seq, command, head } => {
             out.byte(13)?;
             out.varint(*seq)?;
             out.bytes(command)?;
-            out.bytes(document)?;
-            out.bytes(document_spr)?;
-            out.bytes(config)?;
-            out.bytes(config_spr)?;
-            out.bytes(draft)?;
-            out.bytes(draft_spr)?;
+            out.bytes(head)?;
         }
         AppCommand::LoadChildren { seq, entries } => {
             out.byte(14)?;
@@ -3343,9 +2411,9 @@ pub async fn encode_app_command(command: &AppCommand) -> Result<PagedCommand, cr
             out.byte(16)?;
             out.varint(*seq)?;
         }
-        AppCommand::TransactionPrepare { seq, txn_id, mutation_id, payload, prepared_ops, label, origin, prepared_child_ops } => {
+        AppCommand::TransactionPrepare { seq, txn_id, mutation_id, payload, prepared_ops, origin, prepared_child_ops } => {
             if prepared_ops.len() > TRANSACTION_PREPARED_OPS_MAXIMUM {
-                return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.transaction-prepared-ops"), "transaction prepare exceeds its fixed 1024 prepared-op authority"));
+                return Err(semio_framework_diagnostic::Fault::new(semio_framework_diagnostic::FaultOrigin::Framework, semio_framework_diagnostic::FaultCode::new("plugin.transaction-prepared-ops"), "transaction prepare exceeds its fixed 1024 prepared-op authority"));
             }
             out.byte(17)?;
             out.varint(*seq)?;
@@ -3356,7 +2424,6 @@ pub async fn encode_app_command(command: &AppCommand) -> Result<PagedCommand, cr
             for op in prepared_ops {
                 out.bytes(op)?;
             }
-            out.string(label)?;
             out.bytes(origin)?;
             out.bytes(prepared_child_ops)?;
         }
@@ -3428,7 +2495,7 @@ pub async fn encode_app_command(command: &AppCommand) -> Result<PagedCommand, cr
         }
         AppCommand::LoadDocumentArchive { seq, archive } => {
             if archive.members.len() > DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS {
-                return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.document-archive-members"), "document archive exceeds its fixed 1024-member authority"));
+                return Err(semio_framework_diagnostic::Fault::new(semio_framework_diagnostic::FaultOrigin::Framework, semio_framework_diagnostic::FaultCode::new("plugin.document-archive-members"), "document archive exceeds its fixed 1024-member authority"));
             }
             out.byte(32)?;
             out.varint(*seq)?;
@@ -3491,6 +2558,10 @@ pub async fn encode_app_command(command: &AppCommand) -> Result<PagedCommand, cr
             out.byte(41)?;
             out.varint(*seq)?;
         }
+        AppCommand::ReadChildHeads { seq } => {
+            out.byte(42)?;
+            out.varint(*seq)?;
+        }
         AppCommand::Presence { .. } => unreachable!(),
     }
     out.finish()
@@ -3506,6 +2577,30 @@ async fn write_vec_child_pack(out: &mut Vec<u8>, entries: &[ChildPackEntry]) {
         crate::os_spr::write_str(out, &entry.dialect);
         crate::os_spr::write_bytes(out, &entry.envelope_pack);
     }
+}
+
+/// 🪆️ `count varint | (slot, child_id, dialect, head_pack)*` — `AppFrame::ChildHeads`' list codec.
+fn write_vec_child_head(out: &mut Vec<u8>, entries: &[ChildHeadPackEntry]) {
+    crate::os_spr::write_varint_u64(out, entries.len() as u64);
+    for entry in entries {
+        crate::os_spr::write_str(out, &entry.slot);
+        crate::os_spr::write_str(out, &entry.child_id);
+        crate::os_spr::write_str(out, &entry.dialect);
+        crate::os_spr::write_bytes(out, &entry.head_pack);
+    }
+}
+
+/// 🪆️ Inverse of [`write_vec_child_head`]; the declared count never reserves past the archive's member authority.
+fn read_vec_child_head(bytes: &[u8], pos: &mut usize) -> Result<Vec<ChildHeadPackEntry>, crate::os_spr::ProtocolError> {
+    let count = crate::os_spr::read_varint_u64(bytes, pos)?;
+    if count > DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS as u64 {
+        return Err(malformed("channel child heads", *pos as u64, "child head count exceeds the member authority"));
+    }
+    let mut entries = Vec::with_capacity(count as usize);
+    for _ in 0..count {
+        entries.push(ChildHeadPackEntry { slot: crate::os_spr::read_str(bytes, pos)?, child_id: crate::os_spr::read_str(bytes, pos)?, dialect: crate::os_spr::read_str(bytes, pos)?, head_pack: crate::os_spr::read_bytes(bytes, pos)? });
+    }
+    Ok(entries)
 }
 
 /// 🧸️ Inverse of [`write_vec_child_pack`].
@@ -3543,7 +2638,7 @@ pub fn encode_document_archive_bytes(archive: &DocumentArchivePack) -> Result<Ve
     if archive.members.len() > DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS {
         return Err(malformed("document archive member count", 0, "member count exceeds 1024"));
     }
-    let mut bytes = vec![1];
+    let mut bytes = vec![DOCUMENT_ARCHIVE_VERSION];
     write_document_archive(&mut bytes, archive);
     if bytes.len() > DOCUMENT_ARCHIVE_MAXIMUM_BYTES {
         return Err(malformed("document archive bytes", 0, "archive exceeds its fixed byte authority"));
@@ -3606,7 +2701,7 @@ pub async fn decode_document_archive_bytes(bytes: &[u8]) -> Result<DocumentArchi
     if bytes.is_empty() || bytes.len() > DOCUMENT_ARCHIVE_MAXIMUM_BYTES {
         return Err(malformed("document archive bytes", 0, "archive exceeds its fixed byte authority"));
     }
-    if bytes[0] != 1 {
+    if bytes[0] != DOCUMENT_ARCHIVE_VERSION {
         return Err(malformed("document archive version", 0, "unsupported or missing version"));
     }
     let mut position = 1;
@@ -3652,23 +2747,13 @@ pub(super) async fn decode_app_command(bytes: &[u8]) -> Result<AppCommand, crate
         3 => AppCommand::ContextMenu { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, request: crate::os_spr::read_bytes(bytes, &mut pos)? },
         4 => AppCommand::ArtifactCommand { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, command: crate::os_spr::read_bytes(bytes, &mut pos)? },
         5 => AppCommand::ApplyEnvelopes { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, envelopes: read_vec_envelope(bytes, &mut pos).await? },
-        6 => AppCommand::LoadDocument { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, pack: crate::os_spr::read_bytes(bytes, &mut pos)?, spr: crate::os_spr::read_bytes(bytes, &mut pos)? },
         7 => AppCommand::ReadDocument { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
         8 => AppCommand::LoadConfig { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, pack: crate::os_spr::read_bytes(bytes, &mut pos)?, spr: crate::os_spr::read_bytes(bytes, &mut pos)? },
         9 => AppCommand::ReadConfig { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
         10 => AppCommand::MediaIn { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, port: crate::os_spr::read_str(bytes, &mut pos)?, descriptor: crate::os_spr::read_bytes(bytes, &mut pos)?, data: crate::os_spr::read_bytes(bytes, &mut pos)? },
         11 => AppCommand::MediaOut { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, port: crate::os_spr::read_str(bytes, &mut pos)?, request: crate::os_spr::read_bytes(bytes, &mut pos)? },
         12 => AppCommand::MediaFingerprint { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, port: crate::os_spr::read_str(bytes, &mut pos)? },
-        13 => AppCommand::PureCommand {
-            seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
-            command: crate::os_spr::read_bytes(bytes, &mut pos)?,
-            document: crate::os_spr::read_bytes(bytes, &mut pos)?,
-            document_spr: crate::os_spr::read_bytes(bytes, &mut pos)?,
-            config: crate::os_spr::read_bytes(bytes, &mut pos)?,
-            config_spr: crate::os_spr::read_bytes(bytes, &mut pos)?,
-            draft: crate::os_spr::read_bytes(bytes, &mut pos)?,
-            draft_spr: crate::os_spr::read_bytes(bytes, &mut pos)?,
-        },
+        13 => AppCommand::PureCommand { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, command: crate::os_spr::read_bytes(bytes, &mut pos)?, head: crate::os_spr::read_bytes(bytes, &mut pos)? },
         14 => AppCommand::LoadChildren { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, entries: read_vec_child_pack(bytes, &mut pos).await? },
         15 => AppCommand::ReadChildren { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
         16 => AppCommand::ReadHistory { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
@@ -3678,7 +2763,6 @@ pub(super) async fn decode_app_command(bytes: &[u8]) -> Result<AppCommand, crate
             mutation_id: crate::os_spr::read_str(bytes, &mut pos)?,
             payload: crate::os_spr::read_bytes(bytes, &mut pos)?,
             prepared_ops: read_vec_bytes(bytes, &mut pos).await?,
-            label: crate::os_spr::read_str(bytes, &mut pos)?,
             origin: crate::os_spr::read_bytes(bytes, &mut pos)?,
             prepared_child_ops: crate::os_spr::read_bytes(bytes, &mut pos)?,
         },
@@ -3767,6 +2851,7 @@ pub(super) async fn decode_app_command(bytes: &[u8]) -> Result<AppCommand, crate
             }
         }
         41 => AppCommand::ReadDocumentIdentity { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
+        42 => AppCommand::ReadChildHeads { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
         other => return Err(malformed("channel app-command tag", pos as u64, &format!("unknown tag {other:#x}"))),
     };
     Ok(command)
@@ -3898,13 +2983,11 @@ pub async fn encode_app_frame(frame: &AppFrame) -> Vec<u8> {
             crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
             crate::os_spr::write_bytes(&mut out, history_patch);
         }
-        AppFrame::TransactionProposal { in_reply_to, proposal_id, local_ops, description, coalesce_key, foreign } => {
+        AppFrame::TransactionProposal { in_reply_to, proposal_id, local_ops, foreign } => {
             out.push(15);
             crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
             crate::os_spr::write_str(&mut out, proposal_id);
             write_vec_bytes(&mut out, local_ops).await;
-            crate::os_spr::write_str(&mut out, description);
-            crate::os_spr::write_str(&mut out, coalesce_key);
             write_vec_bytes(&mut out, foreign).await;
         }
         AppFrame::TransactionPrepared { txn_id, foreign, rejection } => {
@@ -3999,6 +3082,11 @@ pub async fn encode_app_frame(frame: &AppFrame) -> Vec<u8> {
                 crate::os_spr::write_str(&mut out, id);
             }
         }
+        AppFrame::ChildHeads { in_reply_to, entries } => {
+            out.push(32);
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
+            write_vec_child_head(&mut out, entries);
+        }
     }
     out
 }
@@ -4053,8 +3141,6 @@ pub async fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, crate::os_spr::P
             in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
             proposal_id: crate::os_spr::read_str(bytes, &mut pos)?,
             local_ops: read_vec_bytes(bytes, &mut pos).await?,
-            description: crate::os_spr::read_str(bytes, &mut pos)?,
-            coalesce_key: crate::os_spr::read_str(bytes, &mut pos)?,
             foreign: read_vec_bytes(bytes, &mut pos).await?,
         },
         16 => AppFrame::TransactionPrepared { txn_id: crate::os_spr::read_str(bytes, &mut pos)?, foreign: read_vec_bytes(bytes, &mut pos).await?, rejection: crate::os_spr::read_bytes(bytes, &mut pos)? },
@@ -4144,6 +3230,7 @@ pub async fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, crate::os_spr::P
             } else { None };
             AppFrame::DocumentIdentity { in_reply_to, identity: AppDocumentIdentity { app_instance_id, parent_document_id } }
         }
+        32 => AppFrame::ChildHeads { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?, entries: read_vec_child_head(bytes, &mut pos)? },
         other => return Err(malformed("channel app-frame tag", pos as u64, &format!("unknown tag {other:#x}"))),
     };
     if pos != bytes.len() {

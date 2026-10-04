@@ -8,20 +8,34 @@
       "kind": "source",
       "label": "Source",
       "position": {
-        "x": 0.0,
-        "y": 0.0
+        "x": {
+          "bits": "0000000000000000"
+        },
+        "y": {
+          "bits": "0000000000000000"
+        }
       },
       "ports": [
         {
           "name": "reset",
-          "kind": "in"
+          "kind": "in",
+          "category": "",
+          "properties": []
         },
         {
           "name": "out",
-          "kind": "out"
+          "kind": "out",
+          "category": "",
+          "properties": []
         }
       ],
-      "properties": []
+      "properties": [],
+      "width": {
+        "bits": "0000000000000000"
+      },
+      "height": {
+        "bits": "0000000000000000"
+      }
     },
     {
       "id": {
@@ -30,11 +44,21 @@
       "kind": "sink",
       "label": "Sink",
       "position": {
-        "x": 4.0,
-        "y": 0.0
+        "x": {
+          "bits": "4010000000000000"
+        },
+        "y": {
+          "bits": "0000000000000000"
+        }
       },
       "ports": [],
-      "properties": []
+      "properties": [],
+      "width": {
+        "bits": "0000000000000000"
+      },
+      "height": {
+        "bits": "0000000000000000"
+      }
     }
   ],
   "edges": [
@@ -49,7 +73,8 @@
         "value": "b"
       },
       "kind": "data",
-      "label": "A to B"
+      "label": "A to B",
+      "properties": []
     }
   ]
 }

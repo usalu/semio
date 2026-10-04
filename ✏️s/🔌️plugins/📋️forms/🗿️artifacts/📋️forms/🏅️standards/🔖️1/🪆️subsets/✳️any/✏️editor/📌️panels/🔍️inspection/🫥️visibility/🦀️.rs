@@ -38,13 +38,13 @@ fn render_node(question: &FormQuestion, expression: Option<&FormExpr>, path: &st
             rows.push(row(&format!("{id}.source"), labels.question.as_str(), select, "patchQuestions", args(question, path, "name", false)?)?);
         }
         Some(FormExpr::Const { value }) => {
-            let kind = match value { dsl::DslValue::Bool(_) => "boolean", dsl::DslValue::Number(_) => "number", dsl::DslValue::String(_) => "text", dsl::DslValue::Null => "null", _ => "structured" };
+            let kind = match value { semio_framework_value::DslValue::Bool(_) => "boolean", semio_framework_value::DslValue::Number(_) => "number", semio_framework_value::DslValue::String(_) => "text", semio_framework_value::DslValue::Null => "null", _ => "structured" };
             let mut select = ui::select(ui_text_value(kind)?);
             for (value, label) in [("text", labels.kind_text.as_str()), ("number", labels.kind_number.as_str()), ("boolean", labels.kind_boolean.as_str()), ("null", labels.rule_empty.as_str())] {
                 select = ui_admit(select.try_item(ui_text_value(value)?, ui_label(label)?))?;
             }
             rows.push(row(&format!("{id}.value-type"), labels.kind.as_str(), select, "patchQuestions", args(question, path, "valueType", false)?)?);
-            if let dsl::DslValue::Bool(value) = value {
+            if let semio_framework_value::DslValue::Bool(value) = value {
                 rows.push(row(&format!("{id}.value"), labels.value.as_str(), ui::toggle(*value).text(ui_label(labels.value.as_str())?), "patchQuestions", args(question, path, "value", false)?)?);
             } else if kind == "text" || kind == "number" {
                 rows.push(input_row(&format!("{id}.value"), labels.value.as_str(), if kind == "number" { ui::InputKind::Number } else { ui::InputKind::Text }, crate::schema::dsl_string_value(value), "patchQuestions", args(question, path, "value", false)?)?);

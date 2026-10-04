@@ -1,7 +1,7 @@
 use super::*;
 use crate::editor::animate::unit_tests::context::{presentation_app, render as render_body};
 use crate::editor::animate::PresentationCommand;
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 use semio_framework_plugin::artifact_app_laws::meta;
 
 #[semio_framework_async_macros::async_test]
@@ -25,7 +25,7 @@ async fn source_frame_renders_as_actual_image_layer_behind_tiles() {
     crate::editor::animate::unit_tests::context::dispatch(&mut app, PresentationCommand::SeedGrid(crate::editor::animate::commands::seed_grid::SeedGrid { rows: 1, columns: 2 })).await;
     let deck = app.snapshot().expect("projection");
     let layers_json = deck_to_canvas_layers(&deck);
-    let layers: Vec<Value> = dsl::os_pack::json::parse(&layers_json).unwrap().as_array().cloned().unwrap_or_default();
+    let layers: Vec<Value> = semio_framework_pack_json::parse(&layers_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap().as_array().cloned().unwrap_or_default();
     let (source, _) = crate::presentation_working_scene(&deck);
     assert!(!source.src.trim().is_empty());
     let source_layer = layers.first().expect("source layer is first (renders behind tiles)");
@@ -45,7 +45,7 @@ async fn deck_to_canvas_layers_omits_data_url_when_source_has_no_image() {
     source.src = String::new();
     let deck = crate::presentation_snapshot_with_tiles(&source, &tiles);
     let layers_json = deck_to_canvas_layers(&deck);
-    let layers: Vec<Value> = dsl::os_pack::json::parse(&layers_json).unwrap().as_array().cloned().unwrap_or_default();
+    let layers: Vec<Value> = semio_framework_pack_json::parse(&layers_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap().as_array().cloned().unwrap_or_default();
     let source_layer = layers.first().expect("source layer presentation");
     assert_eq!(source_layer.get("kind").and_then(|v| v.as_str()), Some("source"));
     assert!(source_layer.get("dataUrl").is_none() || source_layer.get("dataUrl") == Some(&Value::Null));
@@ -58,7 +58,7 @@ async fn deck_to_canvas_layers_treats_pdf_kind_as_non_image() {
     source.kind = "pdf".into();
     let deck = crate::presentation_snapshot_with_tiles(&source, &tiles);
     let layers_json = deck_to_canvas_layers(&deck);
-    let layers: Vec<Value> = dsl::os_pack::json::parse(&layers_json).unwrap().as_array().cloned().unwrap_or_default();
+    let layers: Vec<Value> = semio_framework_pack_json::parse(&layers_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap().as_array().cloned().unwrap_or_default();
     let source_layer = layers.first().expect("source layer presentation");
     assert_eq!(source_layer.get("kind").and_then(|v| v.as_str()), Some("source"));
 }
@@ -76,7 +76,7 @@ fn the_first_paint_camera_frames_every_layer_inside_the_narrowest_pane() {
         let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("canvas surface") };
         let scene: Canvas2dScene = semio_framework_ui_scene::decode(props).expect("packed canvas");
         assert!(scene.zoom > 0.0 && scene.zoom <= 1.0, "zoom {} must fit, never magnify", scene.zoom);
-        let layers: Vec<Value> = dsl::os_pack::json::parse(&scene.layers_json).expect("layers JSON").as_array().cloned().unwrap_or_default();
+        let layers: Vec<Value> = semio_framework_pack_json::parse(&scene.layers_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("layers JSON").as_array().cloned().unwrap_or_default();
         assert!(!layers.is_empty());
         for layer in &layers {
             let field = |key: &str| layer.get(key).and_then(|value| value.as_f64()).expect("numeric layer bound");

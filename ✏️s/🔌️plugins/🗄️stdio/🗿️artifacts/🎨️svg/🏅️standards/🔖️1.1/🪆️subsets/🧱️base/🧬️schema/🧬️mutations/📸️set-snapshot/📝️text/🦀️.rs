@@ -10,14 +10,14 @@ fn hex_decode(value: &str) -> Result<Vec<u8>, String> {
 }
 pub fn print(value: &SvgMutation) -> Option<String> {
     let SvgMutation::SetSnapshot(SetSnapshot { snapshot }) = value else { return None };
-    Some(format!("{TEXT_OPCODE} snapshot={}", hex_encode(pack::to_json_string(snapshot).as_bytes())))
+    Some(format!("{TEXT_OPCODE} snapshot={}", hex_encode(semio_framework_pack_json::to_json_string(snapshot).as_bytes())))
 }
 pub fn parse(line: &str) -> Result<SvgMutation, String> {
     let (opcode, arguments) = line.split_once(' ').unwrap_or((line, ""));
     if opcode != TEXT_OPCODE { return Err(format!("expected {TEXT_OPCODE}")); }
     let encoded = arguments.strip_prefix("snapshot=").ok_or_else(|| "missing snapshot".to_string())?;
     let bytes = hex_decode(encoded)?;
-    let parsed = pack::parse_json_bytes(&bytes).map_err(|error| error.to_string())?;
-    let snapshot = <SvgSnapshot as dsl::FromValue>::from_value(pack::json_to_dsl_value(&parsed)).map_err(|error| error.to_string())?;
+    let parsed = semio_framework_pack_json::parse_bytes(&bytes, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
+    let snapshot = <SvgSnapshot as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|error| error.to_string())?;
     Ok(SvgMutation::SetSnapshot(SetSnapshot { snapshot }))
 }

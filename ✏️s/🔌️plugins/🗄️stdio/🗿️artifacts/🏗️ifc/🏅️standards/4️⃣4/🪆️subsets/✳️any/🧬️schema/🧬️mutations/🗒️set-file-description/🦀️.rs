@@ -18,9 +18,12 @@ impl protocol::MutationKind<IfcSnapshot, IfcMutation> for SetFileDescription {
     fn diff(&self, base: &IfcSnapshot) -> protocol::MutationOutcome<<IfcMutation as Mutation<IfcSnapshot>>::Diff> {
         agg_diff(&IfcMutation::SetFileDescription(self.clone()), base)
     }
-    fn inverse(&self, base: &IfcSnapshot) -> Vec<IfcMutation> {
-        agg_inverse(&IfcMutation::SetFileDescription(self.clone()), base)
-    }
+    fn inverse(&self, base: &IfcSnapshot) -> Result<Vec<IfcMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&IfcMutation::SetFileDescription(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set file description", "Dateibeschreibung setzen")
     }

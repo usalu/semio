@@ -60,7 +60,7 @@ pub fn fem2d_active_utility(view: &ViewModel) -> &str {
 }
 
 pub fn fem2d_addressed_window_id(view: &ViewModel, fault: &str) -> Result<String, Fault> {
-    view.window_id.clone().ok_or_else(|| Fault::from(format!("{fault}.window-required")))
+    view.window_id.clone().ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("fem.canvas.window-required"), format!("{fault}: the gesture names no window")))
 }
 
 fn fem2d_selection_method_for_utility(utility: &str) -> Option<&'static str> {
@@ -78,8 +78,8 @@ pub fn fem2d_is_marquee_utility(utility: &str) -> bool {
 const FEM2D_MARQUEE_STROKE: [f64; 4] = [0.22, 0.74, 0.97, 0.9];
 const FEM2D_MARQUEE_FILL: [f64; 4] = [0.22, 0.74, 0.97, 0.12];
 
-pub fn fem2d_canvas_meta_utility_layer(utility: &str) -> dsl::json::Value {
-    dsl::json!({
+pub fn fem2d_canvas_meta_utility_layer(utility: &str) -> semio_framework_pack_json::Value {
+    semio_framework_pack_json::json!({
         "id": "meta:utility",
         "role": "meta",
         "utility": utility,
@@ -98,7 +98,7 @@ pub fn fem2d_gesture_window_id_for_render(view: &ViewModel, body_key: &str) -> O
     view.window_instances.iter().find(|window| window.window_kind_id == kind).map(|window| window.id.clone())
 }
 
-pub fn fem2d_finish_canvas_layers_json(mut layers: Vec<dsl::json::Value>, window_instance_id: Option<&str>, active_utility: &str, gumball_meta: Option<dsl::json::Value>) -> String {
+pub fn fem2d_finish_canvas_layers_json(mut layers: Vec<semio_framework_pack_json::Value>, window_instance_id: Option<&str>, active_utility: &str, gumball_meta: Option<semio_framework_pack_json::Value>) -> String {
     layers.insert(0, fem2d_canvas_meta_utility_layer(active_utility));
     if let Some(meta) = gumball_meta {
         layers.insert(1, meta);
@@ -106,7 +106,7 @@ pub fn fem2d_finish_canvas_layers_json(mut layers: Vec<dsl::json::Value>, window
     if let Some(window_id) = window_instance_id {
         layers.extend(fem2d_marquee_overlay_layers(&gesture_for_window(window_id)));
     }
-    dsl::json::to_string(&dsl::json::Value::Array(layers))
+    semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(layers))
 }
 
 fn canvas_to_layer(camera: &Viewport2d, x: f64, y: f64, width: f64, height: f64) -> (f64, f64) {
@@ -130,7 +130,7 @@ pub fn fem2d_addressed_body_key(view: &ViewModel, fault: &str) -> Result<&'stati
     match super::fem2d_addressed_window_kind(view, fault)? {
         crate::editor::fem2d::modes::edit::windows::model::WINDOW_KIND_ID => Ok(crate::editor::fem2d::modes::edit::windows::model::BODY_KEY),
         crate::editor::fem2d::modes::edit::windows::results::WINDOW_KIND_ID => Ok(crate::editor::fem2d::modes::edit::windows::results::BODY_KEY),
-        _ => Err(Fault::from(format!("{fault}.window-kind"))),
+        _ => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("fem.canvas.window-kind"), format!("{fault}: the addressed window has the wrong kind"))),
     }
 }
 //#endregion 🔖️GestureStore
@@ -349,8 +349,8 @@ pub fn fem2d_marquee_hits(doc: &Fem2dSnapshot, camera: &Viewport2d, method: &str
     hits
 }
 
-fn marquee_overlay_layer(id: &str, segments: Vec<dsl::json::Value>) -> dsl::json::Value {
-    dsl::json!({
+fn marquee_overlay_layer(id: &str, segments: Vec<semio_framework_pack_json::Value>) -> semio_framework_pack_json::Value {
+    semio_framework_pack_json::json!({
         "id": id,
         "role": "overlay",
         "transform": [1.0, 0.0, 0.0, 1.0, 0.0, 0.0],
@@ -364,7 +364,7 @@ fn marquee_overlay_layer(id: &str, segments: Vec<dsl::json::Value>) -> dsl::json
     })
 }
 
-pub fn fem2d_marquee_overlay_layers(gesture: &Fem2dCanvasGesture) -> Vec<dsl::json::Value> {
+pub fn fem2d_marquee_overlay_layers(gesture: &Fem2dCanvasGesture) -> Vec<semio_framework_pack_json::Value> {
     if !gesture.active || gesture.layer_points.len() < 2 {
         return Vec::new();
     }
@@ -372,12 +372,12 @@ pub fn fem2d_marquee_overlay_layers(gesture: &Fem2dCanvasGesture) -> Vec<dsl::js
         let mut segments = Vec::with_capacity(gesture.layer_points.len() + 1);
         for (index, (x, y)) in gesture.layer_points.iter().enumerate() {
             segments.push(if index == 0 {
-                dsl::json!({ "kind": "move", "to": [x, y] })
+                semio_framework_pack_json::json!({ "kind": "move", "to": [x, y] })
             } else {
-                dsl::json!({ "kind": "line", "to": [x, y] })
+                semio_framework_pack_json::json!({ "kind": "line", "to": [x, y] })
             });
         }
-        segments.push(dsl::json!({ "kind": "close" }));
+        segments.push(semio_framework_pack_json::json!({ "kind": "close" }));
         return vec![marquee_overlay_layer("overlay:marquee-lasso", segments)];
     }
     let (x0, y0) = gesture.layer_points[0];
@@ -387,11 +387,11 @@ pub fn fem2d_marquee_overlay_layers(gesture: &Fem2dCanvasGesture) -> Vec<dsl::js
     let width = (x1 - x0).abs();
     let height = (y1 - y0).abs();
     let segments = vec![
-        dsl::json!({ "kind": "move", "to": [x, y] }),
-        dsl::json!({ "kind": "line", "to": [x + width, y] }),
-        dsl::json!({ "kind": "line", "to": [x + width, y + height] }),
-        dsl::json!({ "kind": "line", "to": [x, y + height] }),
-        dsl::json!({ "kind": "close" }),
+        semio_framework_pack_json::json!({ "kind": "move", "to": [x, y] }),
+        semio_framework_pack_json::json!({ "kind": "line", "to": [x + width, y] }),
+        semio_framework_pack_json::json!({ "kind": "line", "to": [x + width, y + height] }),
+        semio_framework_pack_json::json!({ "kind": "line", "to": [x, y + height] }),
+        semio_framework_pack_json::json!({ "kind": "close" }),
     ];
     vec![marquee_overlay_layer("overlay:marquee-rect", segments)]
 }

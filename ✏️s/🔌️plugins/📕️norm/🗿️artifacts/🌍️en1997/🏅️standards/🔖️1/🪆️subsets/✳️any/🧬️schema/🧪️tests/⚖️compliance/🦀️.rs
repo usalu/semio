@@ -2,7 +2,7 @@
 
 use crate::app_surface::{get_value_at_path, parse_path};
 use crate::document::{AnnexChoice, CheckStatus};
-use dsl::ToValue;
+use semio_framework_value::ToValue;
 use crate::standards::v1::subsets::any::schema::{
     check_project, part_1, part_2, parse_design_approach, resolve_params, DesignApproach,
 };
@@ -591,7 +591,7 @@ fn default_snapshot_editable_leaves_have_meta() {
 fn every_emitted_path_resolves_via_get_value_at_path() {
     let doc = noncompliant_demo();
     let report = check_project(&doc);
-    let tree = ToValue::to_value(&doc);
+    let tree = semio_framework_value::ToValue::to_value(&doc);
     let mut saw_id = false;
     for check in &report.checks {
         if check.subject.path.is_empty() {

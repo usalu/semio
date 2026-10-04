@@ -7,8 +7,8 @@ const fn choice(value: &'static str, label_en: &'static str, label_de: &'static 
 }
 
 const ANNEX: &[NormFieldChoice] = &[
-    choice("en", "EN — recommended values (CEN)", "EN — Empfohlene Werte (CEN)"),
-    choice("de", "DE — German national annex (DIN)", "DE — Deutscher Nationaler Anhang (DIN)"),
+    choice("En", "EN — recommended values (CEN)", "EN — Empfohlene Werte (CEN)"),
+    choice("De", "DE — German national annex (DIN)", "DE — Deutscher Nationaler Anhang (DIN)"),
 ];
 const STRENGTH: &[NormFieldChoice] = &[
     choice("C14", "C14 — softwood strength class", "C14 — Nadelholz-Festigkeitsklasse"),

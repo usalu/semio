@@ -72,7 +72,7 @@
       "capacityConstant": "UI_LAYOUT_SURFACE_SLOTS",
       "capacity": 64,
       "elementType": "Option<UiSurfaceSlot>",
-      "elementSizeBytes": 165920,
+      "elementSizeBytes": 165984,
       "ownerSizeBytes": 520
     },
     {
@@ -92,7 +92,7 @@
       "capacityConstant": "WORLD_INTERACTION_OBJECT_CAPACITY",
       "capacity": 1024,
       "elementType": "Option<WorldInteractionObjectSlot>",
-      "elementSizeBytes": 400,
+      "elementSizeBytes": 528,
       "ownerSizeBytes": 168
     }
   ]

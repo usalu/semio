@@ -6,11 +6,14 @@ use crate::mutations::create_step;
 use crate::{forms_steps, FormMutation, FormsSnapshot};
 
 //#region 🔖️Inverse
-pub fn inverse_delete_step(payload: &DeleteStep, base: &FormsSnapshot) -> Vec<FormMutation> {
+pub fn inverse_delete_step(payload: &DeleteStep, base: &FormsSnapshot) -> Result<Vec<FormMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let steps = forms_steps(base);
     match steps.iter().position(|step| step.id == payload.id) {
         Some(index) => vec![FormMutation::CreateStep(create_step::mutation::CreateStep { step: steps[index].clone(), index: Some(index) })],
         None => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

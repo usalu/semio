@@ -1,0 +1,191 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/repo/test/fault-notices-gate/schema.json",
+  "title": "FaultNoticesGateFixture",
+  "description": "The schema-fault-notice gate fixture (design §20.12): Rust snippets with the fault code sites both the token gate and the tree-sitter-rust oracle read, and one planted repository (plugin, plugin SDK, descriptor, framework table) whose files yield exactly the listed findings and one census row per owner (with its finding count overall and in scope), and exactly `scoped.findings` under one scope.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "description",
+    "cases",
+    "plugin"
+  ],
+  "definitions": {
+    "finding": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": [
+        {
+          "enum": [
+            "faultNoticeMissing",
+            "faultNoticeSyntax",
+            "faultNoticeFramework",
+            "faultAnonymous",
+            "faultNoticeInvalid",
+            "faultNoticeUnresolved",
+            "faultNoticeStale",
+            "faultNoticeDescriptor"
+          ]
+        },
+        {
+          "type": "string",
+          "minLength": 1
+        }
+      ]
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "rust",
+          "sites"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "rust": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sites": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "code",
+                "via"
+              ],
+              "properties": {
+                "code": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "via": {
+                  "enum": [
+                    "faultCode",
+                    "faultNew",
+                    "faultMacro",
+                    "codeFn",
+                    "faultHelper",
+                    "faultFrom"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "plugin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "files",
+        "findings",
+        "census",
+        "scoped"
+      ],
+      "properties": {
+        "files": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "findings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/finding"
+          }
+        },
+        "census": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "owner",
+              "codes",
+              "labelled",
+              "declared",
+              "anonymous",
+              "findings",
+              "scoped"
+            ],
+            "properties": {
+              "owner": {
+                "type": "string",
+                "minLength": 1
+              },
+              "codes": {
+                "$ref": "#/definitions/count"
+              },
+              "labelled": {
+                "$ref": "#/definitions/count"
+              },
+              "declared": {
+                "$ref": "#/definitions/count"
+              },
+              "anonymous": {
+                "$ref": "#/definitions/count"
+              },
+              "findings": {
+                "$ref": "#/definitions/count"
+              },
+              "scoped": {
+                "$ref": "#/definitions/count"
+              }
+            }
+          }
+        },
+        "scoped": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "scope",
+            "findings"
+          ],
+          "properties": {
+            "scope": {
+              "enum": [
+                "history-editing"
+              ]
+            },
+            "findings": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/finding"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

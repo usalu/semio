@@ -128,6 +128,7 @@ semio-s-artifact-norm-en1998 = { workspace = true }
 semio-s-artifact-norm-en1999 = { workspace = true }
 semio-s-artifact-norm-iso16757 = { workspace = true }
 semio-s-artifact-norm-vdi3805 = { workspace = true }
+semio-s-artifact-stdio-semio = { workspace = true }
 
 [dev-dependencies]
 semio-framework-plugin = { workspace = true, features = ["component-guest", "artifact-app-testing"] }

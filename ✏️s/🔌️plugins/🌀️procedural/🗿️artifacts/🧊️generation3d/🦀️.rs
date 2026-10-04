@@ -41,7 +41,40 @@ pub fn widget_id(widget: &Widget) -> &str {
         | Widget::Cluster { id, .. } => id,
     }
 }
+/// 👁️ Whether a widget contributes preview geometry at all. A `Neuron` carries its own author-set
+/// `preview` toggle; an `OutputPreview` is a preview by construction; a `Cluster` has no toggle of
+/// its own, so its contract output channels always preview, which is the only way a grouped
+/// sub-graph's geometry reaches the 3D world at all.
+pub fn widget_previews(widget: &semio_framework_artifact_flow_flow::Widget) -> bool {
+    matches!(widget, semio_framework_artifact_flow_flow::Widget::Neuron { preview: true, .. } | semio_framework_artifact_flow_flow::Widget::OutputPreview { .. } | semio_framework_artifact_flow_flow::Widget::Cluster { .. })
+}
+
 //#endregion 🔖️Helpers
+
+//#region 🔖️FaultNotices
+/// 🪆️ The refusal code of a loaded parent whose composed children cannot be projected.
+pub const GENERATION3D_CHILD_PROJECTION: &str = "generation3d.child.projection";
+/// 📤️ The refusal code of a document export that could not be written.
+pub const GENERATION3D_IO_EXPORT: &str = "generation3d.io.export";
+/// 📂️ The refusal code of an import whose accepted file types cannot be determined.
+pub const GENERATION3D_IO_IMPORT_ACCEPT: &str = "generation3d.io.import-accept";
+/// 🧩️ The refusal code of a node the editor could not add.
+pub const GENERATION3D_WIDGET_ADD: &str = "generation3d.widget.add";
+
+/// 📣️ The localized notices of the document-level refusals both surfaces raise (design §20.12).
+pub fn generation3d_document_fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
+    use semio_framework_ui_locale::LocalizedLabel;
+    static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 4]> = std::sync::LazyLock::new(|| {
+        [
+            (GENERATION3D_CHILD_PROJECTION, LocalizedLabel::native("The document's composed parts cannot be restored.", "Die zusammengesetzten Teile des Dokuments können nicht wiederhergestellt werden.")),
+            (GENERATION3D_IO_EXPORT, LocalizedLabel::native("The document could not be exported.", "Das Dokument konnte nicht exportiert werden.")),
+            (GENERATION3D_IO_IMPORT_ACCEPT, LocalizedLabel::native("The importable file types could not be determined.", "Die importierbaren Dateitypen konnten nicht bestimmt werden.")),
+            (GENERATION3D_WIDGET_ADD, LocalizedLabel::native("The node could not be added.", "Der Knoten konnte nicht hinzugefügt werden.")),
+        ]
+    });
+    &*NOTICES
+}
+//#endregion 🔖️FaultNotices
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
@@ -145,6 +178,11 @@ pub(crate) mod publication_authority;
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+/// 🗣️ The generation3d label set, compiled with every feature set: a mutation's history label names its operator kind in
+/// every locale (`create-widget`), so the labels are not the editor surface's alone.
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs"]
+pub mod terminology;
 
 #[path = "."]
 pub mod standards {
@@ -624,8 +662,7 @@ pub mod editor {
             pub mod schema;
         }
 
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs"]
-        pub mod terminology;
+        pub use crate::terminology;
         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️.rs"]
         pub mod wasm;
 

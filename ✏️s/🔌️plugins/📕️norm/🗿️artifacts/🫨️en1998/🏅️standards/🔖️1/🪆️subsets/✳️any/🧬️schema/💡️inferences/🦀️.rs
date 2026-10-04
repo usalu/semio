@@ -4,7 +4,6 @@ use crate::En1998Snapshot;
 use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef};
 use crate::standards::v1::subsets::any::schema::{na_de, part_1, part_2, part_3, part_4, part_5, part_6, AnnexParams};
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 //#region 🔖️Inference
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
@@ -19,14 +18,16 @@ pub struct En1998Inference {
 
 impl Default for En1998Inference {
     fn default() -> Self {
-        use protocol::Inference;
-        Self::infer(&En1998Snapshot::default())
+        Self { outline: En1998Outline::compute(&En1998Snapshot::default()) }
     }
 }
 
 impl protocol::Inference<En1998Snapshot> for En1998Inference {
-    fn infer(snapshot: &En1998Snapshot) -> Self {
+    fn infer(snapshot: &En1998Snapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { outline: En1998Outline::compute(snapshot) }
+    
+        })
     }
 }
 
@@ -41,11 +42,6 @@ impl protocol::InferenceSpec<En1998Snapshot> for En1998Inference {
     }
 }
 //#endregion 🔖️Inference
-
-impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::En1998Builder {
-    type Snapshot = En1998Snapshot;
-    type Inference = En1998Inference;
-}
 
 pub fn en1998_artifact_inference_descriptor() -> semio_framework_schema_registry::ArtifactInferenceDescriptor {
     semio_framework_schema_registry::ArtifactInferenceDescriptor {

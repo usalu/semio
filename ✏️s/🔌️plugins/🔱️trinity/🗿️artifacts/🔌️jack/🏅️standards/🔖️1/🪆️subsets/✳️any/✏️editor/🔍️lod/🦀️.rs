@@ -16,10 +16,10 @@ pub const TRINITY_LOD_SCALE: LodScale = LodScale { lods: TRINITY_LODS };
 
 /// 📋️ Serializes the shared detail tiers for graph controls.
 pub fn trinity_lod_scale_json() -> String {
-    let rows: Vec<pack::JsonValue> = TRINITY_LODS
+    let rows: Vec<semio_framework_pack_json::Value> = TRINITY_LODS
         .iter()
         .map(|lod| {
-            pack::json!({
+            semio_framework_pack_json::json!({
                 "id": lod.id,
                 "name": lod.name,
                 "description": lod.description,
@@ -27,5 +27,5 @@ pub fn trinity_lod_scale_json() -> String {
             })
         })
         .collect();
-    pack::json_to_string(&pack::json_array(rows))
+    semio_framework_pack_json::to_string(&semio_framework_pack_json::array(rows))
 }

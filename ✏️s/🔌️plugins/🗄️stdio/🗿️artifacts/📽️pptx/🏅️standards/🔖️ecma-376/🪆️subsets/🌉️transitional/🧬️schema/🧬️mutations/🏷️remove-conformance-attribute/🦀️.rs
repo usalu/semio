@@ -15,9 +15,12 @@ impl protocol::MutationKind<PptxSnapshot, PptxTransitionalMutation> for RemoveCo
     fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<<PptxTransitionalMutation as Mutation<PptxSnapshot>>::Diff> {
         agg_diff(&PptxTransitionalMutation::RemoveConformanceAttribute(self.clone()), base)
     }
-    fn inverse(&self, base: &PptxSnapshot) -> Vec<PptxTransitionalMutation> {
-        agg_inverse(&PptxTransitionalMutation::RemoveConformanceAttribute(self.clone()), base)
-    }
+    fn inverse(&self, base: &PptxSnapshot) -> Result<Vec<PptxTransitionalMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&PptxTransitionalMutation::RemoveConformanceAttribute(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove conformance attribute", "Konformitätsattribut entfernen")
     }

@@ -151,7 +151,15 @@
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite source",
         "forwardAllArgs": true
-      }
+      },
+      "dependsOn": [
+        {
+          "target": "build",
+          "projects": [
+            "@semio-tech/stdio-dwg"
+          ]
+        }
+      ]
     }
   }
 }

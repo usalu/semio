@@ -1,0 +1,58 @@
+{
+  "contract": "completeTsvLogicalOwner",
+  "encodings": [
+    "binary",
+    "text"
+  ],
+  "snapshots": [
+    {
+      "schema": "tsv.owner.雪\u0000",
+      "records": [],
+      "trailingNewline": false,
+      "lineEnding": "crlf"
+    },
+    {
+      "schema": "stdio.tsv",
+      "records": [
+        [],
+        [
+          ""
+        ],
+        []
+      ],
+      "trailingNewline": true,
+      "lineEnding": "lf"
+    },
+    {
+      "schema": "",
+      "records": [
+        [
+          "Grüße\u0000雪",
+          "literal\tfield",
+          "literal\r\nfield"
+        ],
+        []
+      ],
+      "trailingNewline": false,
+      "lineEnding": "crlf"
+    },
+    {
+      "schema": "",
+      "records": [],
+      "trailingNewline": true,
+      "lineEnding": "crlf"
+    }
+  ],
+  "policy": {
+    "preserveSchema": true,
+    "preserveTrailingNewline": true,
+    "preserveLineEnding": true,
+    "preserveEmptyRecord": true,
+    "nativeOwner": "declaredLogicalRecord",
+    "naturalFile": "ianaTsv"
+  },
+  "edit": {
+    "query": "UPDATE tsv_document SET line_ending='lf',trailing_newline=0",
+    "snapshotIndex": 3
+  }
+}

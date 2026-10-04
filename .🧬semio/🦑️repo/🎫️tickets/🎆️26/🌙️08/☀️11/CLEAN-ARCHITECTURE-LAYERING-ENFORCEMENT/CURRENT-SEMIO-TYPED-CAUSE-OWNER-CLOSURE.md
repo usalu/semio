@@ -1,0 +1,7 @@
+# Current Semio Typed Cause Owner Closure
+
+452/452 original parsed Semio causes are associated with current normal canonical Kernel ownership, actual store library aliases or the Kernel self-alias, and retained physical source mount evidence. The canonical library mounts os_semio and explicitly exports its members. Full current source/hash/inverse frames are retained in generated/sole-pack-error/independent-semio-normal-alias-mount-closure-2.json.
+
+SemioError::into_value_error preserves DecodingControl’s typed ValueError, classifies UnknownEnvelope as UnsupportedOwner, and the other envelope failures as InvalidValue. Preserve this projection through the genuine semantic refusal conversion; do not flatten all causes to InvalidValue. This is source ownership admission only, with no cfg execution, consumer compilation or transport-role claim. Unresolved rows: 0.
+
+Fresh Specific caller successor2 has independent source admission for 207 full pairs and 411 exact Semio projection edits. Current predecessors, complete inverses, descending original-expression replay and complete ERROR/missing-node grammar shape parity pass with zero gaps. Actual canonical Semio alias/provider ownership is the earlier 452-site closure; 41 OS sites remain explicitly delegated. Full proof: `🗑️generated/sole-pack-error/independent-semio-four-hundred-eleven-current-caller-admission-2.json`. Defining pure signatures/providers/native closure remain pending.

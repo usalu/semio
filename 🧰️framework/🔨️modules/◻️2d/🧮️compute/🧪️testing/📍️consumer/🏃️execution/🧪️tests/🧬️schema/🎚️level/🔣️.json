@@ -1,0 +1,83 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "vectors"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "vectors": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "args",
+          "env",
+          "accepted",
+          "level",
+          "budgetMs"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "args": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "env": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "SEMIO_TEST_LEVEL": {
+                "enum": [
+                  "fundamental",
+                  "quick",
+                  "long",
+                  "exhaustive"
+                ]
+              },
+              "SEMIO_TEST_BUDGET_MS": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "SEMIO_COVERAGE": {
+                "type": "string"
+              }
+            }
+          },
+          "accepted": {
+            "type": "boolean"
+          },
+          "level": {
+            "enum": [
+              "fundamental",
+              "quick",
+              "long",
+              "exhaustive"
+            ]
+          },
+          "budgetMs": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "missingOutput": {
+            "type": "boolean"
+          },
+          "coverage": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

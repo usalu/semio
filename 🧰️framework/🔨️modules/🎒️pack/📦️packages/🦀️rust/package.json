@@ -1,0 +1,20 @@
+{
+  "name": "@semio-tech/framework-pack-rs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test-absolute-varint-source": "nx run @semio-tech/framework-pack-rs:test-absolute-varint-source",
+    "test-absolute-varint-native": "nx run @semio-tech/framework-pack-rs:test-absolute-varint-native",
+    "test-borrowed-preflight-source": "nx run @semio-tech/framework-pack-rs:test-borrowed-preflight-source",
+    "test-borrowed-preflight-native": "nx run @semio-tech/framework-pack-rs:test-borrowed-preflight-native",
+    "test-schema-hash-native": "bun nx run @semio-tech/framework-pack-rs:test-schema-hash-native",
+    "test-schema-storage-native": "bun nx run @semio-tech/framework-pack-rs:test-schema-storage-native"
+  },
+  "nx": {
+    "includedScripts": []
+  },
+  "devDependencies": {
+    "@webassemblyjs/leb128": "1.13.2"
+  }
+}

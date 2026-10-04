@@ -14,6 +14,13 @@ pub struct GisTerrainDiff {
     #[state(artifact)]
     pub exaggeration: Option<f64>,
     #[state(artifact)]
-    pub imported_features_json: Option<String>,
+    pub imported_map: Option<ImportedMapChange>,
+}
+/// 🔄️ A present replacement can explicitly clear the optional imported map owner.
+#[derive(Clone,Debug,Default,PartialEq,ToValue,FromValue)]
+#[value(rename_all="camelCase",deny_unknown_fields)]
+pub struct ImportedMapChange{
+    #[value(default,skip_serializing_if="Option::is_none")]
+    pub value:Option<crate::schema::ImportedMap>,
 }
 //#endregion 🔹Diff

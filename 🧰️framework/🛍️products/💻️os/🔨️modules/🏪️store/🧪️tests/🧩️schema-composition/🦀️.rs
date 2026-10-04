@@ -13,12 +13,7 @@ async fn artifact_composition_projection_real_child_alias_has_fixed_admission_bo
         #[child(kind = "s.test.member")]
         many: Vec<Option<ChildAlias>>,
     }
-    let child = |id: String| {
-        Some(ArtifactChild::new(
-            id.clone(),
-            crate::os_io::ArtifactRef { artifact_id: id, dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.test.member".into(), standard: "v1".into(), subset: "first".into() } },
-        ))
-    };
+    let child = |id: String| Some(ArtifactChild::new(id.clone(), crate::os_io::ArtifactRef { artifact_id: id, dialect: crate::os_io::ArtifactDialect { artifact_kind: "s.test.member".into(), standard: "v1".into(), subset: "first".into() } }));
     let mut parent = DerivedParent { many: (0..64).map(|index| child(index.to_string())).collect() };
     assert_eq!(ChildRestoreProjection::from_snapshot(&parent).unwrap().len(), 64);
     parent.many.push(child("overflow".into()));
@@ -30,4 +25,3 @@ async fn artifact_composition_projection_real_child_alias_has_fixed_admission_bo
     parent.many = vec![child(format!("{}x", "ä".repeat(128)))];
     assert!(matches!(ChildRestoreProjection::from_snapshot(&parent), Err(ChildRestoreProjectionError::InvalidReference)));
 }
-

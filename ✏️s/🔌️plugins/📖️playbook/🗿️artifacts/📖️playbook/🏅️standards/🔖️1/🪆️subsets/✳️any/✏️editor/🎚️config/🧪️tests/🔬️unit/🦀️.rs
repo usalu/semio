@@ -24,7 +24,7 @@ async fn playbook_config_pack_round_trips() {
 
 fn config_round_trip(base: &PlaybookConfig, operation: &PlaybookConfigMutation) -> PlaybookConfig {
     let forward = operation.diff(base).diff().clone();
-    let backwards = operation.inverse(base);
+    let backwards = operation.inverse(base).expect("valid retained mutation inverse fixture");
     let mut restored = forward.clone();
     for back in &backwards {
         restored = back.diff(&restored).diff().clone();

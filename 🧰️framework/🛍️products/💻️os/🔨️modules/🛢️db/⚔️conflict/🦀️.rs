@@ -268,7 +268,7 @@ fn intervals_overlap(start_a: u64, end_a: u64, start_b: u64, end_b: u64) -> bool
 //#region 🔖️ConflictRecord
 /// 🗺️ What was found to conflict: either an intersecting touched-region set, or a shared
 /// uniqueness-constraint claim. Purely structural — grading this into a
-/// `crate::os_dsl::Severity`/`protocol::MutationMessage` (region intersection = `Warning`,
+/// `semio_framework_diagnostic::Severity`/`protocol::MutationMessage` (region intersection = `Warning`,
 /// constraint violation = `Fatal`) is `db_artifact`'s job, one layer up (see module doc).
 #[derive(Clone, Debug, PartialEq)]
 pub enum ConflictKind {
@@ -301,11 +301,11 @@ pub struct ConflictRecord {
 /// whole batch's envelopes are the evidence); `Degraded` when the batch was still accepted but its
 /// worst level reached `Warning` or above (already durable, `edit_ids` names what's worth a human's
 /// attention). `None` when the batch was clean.
-pub fn classify(worst: Option<protocol::Severity>, policy: protocol::MergePolicy, envelopes: Vec<protocol::MutationEnvelope>, edit_ids: Vec<String>) -> Option<protocol::ConflictKind> {
+pub fn classify(worst: Option<semio_framework_diagnostic::Severity>, policy: protocol::MergePolicy, envelopes: Vec<protocol::MutationEnvelope>, edit_ids: Vec<String>) -> Option<protocol::ConflictKind> {
     let level = worst?;
     if policy.rejects(level) {
         Some(protocol::ConflictKind::Quarantined { envelopes })
-    } else if level >= protocol::Severity::Warning {
+    } else if level >= semio_framework_diagnostic::Severity::Warning {
         Some(protocol::ConflictKind::Degraded { edit_ids })
     } else {
         None

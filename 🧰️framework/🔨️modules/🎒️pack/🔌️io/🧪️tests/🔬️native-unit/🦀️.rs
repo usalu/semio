@@ -18,11 +18,12 @@ mod tests {
     //#region 🔖️File
     #[semio_framework_async_macros::async_test]
     async fn file_source_sink_write_then_read_back() {
+        let (context, _cancellation, _progress) = crate::io::caller_test_policy::context();
         let dir = scratch_dir("file_rw");
         let path = dir.join("blob.bin");
         let payload = b"hello pack_io world, this is a test payload";
 
-        let mut sink = FilePackSink::create(&path).unwrap();
+        let mut sink = FilePackSink::create(&path, context.clone()).unwrap();
         assert_eq!(sink.position().await, 0);
         sink.write_all(&payload[..10]).await.unwrap();
         assert_eq!(sink.position().await, 10);
@@ -31,7 +32,7 @@ mod tests {
         sink.flush().await.unwrap();
         drop(sink);
 
-        let source = FilePackSource::open(&path).unwrap();
+        let source = FilePackSource::open(&path, context.clone()).unwrap();
         assert_eq!(PackSource::len(&source).await, payload.len() as u64);
         assert!(!source.is_empty().await);
 
@@ -51,7 +52,7 @@ mod tests {
 
         let mut past_end = [0u8; 4];
         let result = source.read_at(1_000_000, &mut past_end).await;
-        assert!(matches!(result, Err(PackError::Truncated(1_000_000))));
+        assert!(matches!(result, Err(PackError::Refusal(semio_framework_pack_error::PackRefusal::Truncated(1_000_000)))));
 
         let mut short = [0u8; 100];
         let n = source.read_at((payload.len() - 3) as u64, &mut short).await.unwrap();
@@ -63,11 +64,12 @@ mod tests {
     //#region 🔖️Atomic
     #[test]
     fn write_atomic_produces_full_content_and_no_stray_tmp_file() {
+        let (context, _cancellation, _progress) = crate::io::caller_test_policy::context();
         let dir = scratch_dir("atomic_ok");
         let path = dir.join("doc.spk");
         let bytes = b"atomic write payload";
 
-        write_atomic(&path, bytes).unwrap();
+        write_atomic(&path, bytes, &context).unwrap();
 
         let read_back = std::fs::read(&path).unwrap();
         assert_eq!(read_back, bytes);
@@ -78,11 +80,12 @@ mod tests {
 
     #[test]
     fn write_atomic_never_exposes_a_partial_target_from_a_simulated_interrupted_write() {
+        let (context, _cancellation, _progress) = crate::io::caller_test_policy::context();
         let dir = scratch_dir("atomic_interrupt");
         let path = dir.join("doc.spk");
         let original = b"original committed content";
 
-        write_atomic(&path, original).unwrap();
+        write_atomic(&path, original, &context).unwrap();
 
         // Simulate a crash between "temp file written" and "rename into place": create a
         // stray tmp file with the naming scheme write_atomic uses, but never rename it.
@@ -97,7 +100,7 @@ mod tests {
         // A second, real write_atomic call still succeeds and atomically replaces the content
         // even with an unrelated stray tmp file sitting in the same directory.
         let updated = b"second committed content, replaces the first";
-        write_atomic(&path, updated).unwrap();
+        write_atomic(&path, updated, &context).unwrap();
         let read_back = std::fs::read(&path).unwrap();
         assert_eq!(read_back, updated);
     }
@@ -119,13 +122,14 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn streaming_writer_full_session_multiple_segments_and_a_chunk_round_trips() {
+        let (context, _cancellation, _progress) = crate::io::caller_test_policy::context();
         let dir = scratch_dir("stream_session");
         let path = dir.join("session.spk");
         let doc_payload = b"the streamed document body";
         let chunk_payload = b"a chunk of blob bytes carried alongside the document";
         let schema_payload = b"an extra schema segment written after the chunk";
 
-        let mut writer = StreamingPackWriter::create(&path, &no_compression_options()).await.unwrap();
+        let mut writer = StreamingPackWriter::create(&path, &no_compression_options(), context.clone()).await.unwrap();
         writer.write_segment(KIND_DOCUMENT, doc_payload).await.unwrap();
         let mut chunk = writer.begin_identity_chunk(chunk_payload.len()).await.unwrap();
         for fragment in chunk_payload.chunks(7) {
@@ -149,7 +153,7 @@ mod tests {
         };
         writer.finish(&manifest).await.unwrap();
 
-        let source = FilePackSource::open(&path).unwrap();
+        let source = FilePackSource::open(&path, context.clone()).unwrap();
         let limits = PackLimits::default();
         let pack_file = crate::format::PackFile::open_manifest(source, &limits, VerificationLevel::Standard).await.unwrap();
 
@@ -168,7 +172,7 @@ mod tests {
 
         // Forward-scan recovery should independently see every segment this session wrote:
         // document, chunk, schema, chunk table, manifest, end.
-        let report = recover_file(&path, &limits).await.unwrap();
+        let report = recover_file(&path, &limits, context.clone()).await.unwrap();
         assert_eq!(report.segments_recovered, 6);
         assert!(report.manifest.is_some());
     }
@@ -176,11 +180,12 @@ mod tests {
 
     //#region 🔖️Recover
     async fn build_valid_session_file(dir: &Path, name: &str) -> std::path::PathBuf {
+        let (context, _cancellation, _progress) = crate::io::caller_test_policy::context();
         let path = dir.join(name);
         let doc_payload = b"recoverable document body";
         let chunk_payload = b"recoverable chunk payload";
 
-        let mut writer = StreamingPackWriter::create(&path, &no_compression_options()).await.unwrap();
+        let mut writer = StreamingPackWriter::create(&path, &no_compression_options(), context.clone()).await.unwrap();
         writer.write_segment(KIND_DOCUMENT, doc_payload).await.unwrap();
         let mut chunk = writer.begin_identity_chunk(chunk_payload.len()).await.unwrap();
         for fragment in chunk_payload.chunks(5) {
@@ -207,6 +212,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn recover_file_with_footer_stripped_still_recovers_every_body_segment() {
+        let (context, _cancellation, _progress) = crate::io::caller_test_policy::context();
         let dir = scratch_dir("recover_no_footer");
         let path = build_valid_session_file(&dir, "truncated_footer.spk").await;
         let limits = PackLimits::default();
@@ -217,10 +223,10 @@ mod tests {
         drop(file);
 
         // Superblock open must fail (no valid footer) — this is the scenario recover_file is for.
-        let source = FilePackSource::open(&path).unwrap();
+        let source = FilePackSource::open(&path, context.clone()).unwrap();
         assert!(crate::format::PackFile::open_superblock(source, &limits).await.is_err());
 
-        let report = recover_file(&path, &limits).await.unwrap();
+        let report = recover_file(&path, &limits, context.clone()).await.unwrap();
         // document, chunk, chunk_table (since one chunk was written), manifest, end.
         assert_eq!(report.segments_recovered, 5);
         assert!(report.bytes_recovered > 0);
@@ -229,6 +235,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn recover_file_truncated_mid_segment_recovers_a_strict_prefix_without_panicking() {
+        let (context, _cancellation, _progress) = crate::io::caller_test_policy::context();
         let dir = scratch_dir("recover_mid_segment");
         let path = build_valid_session_file(&dir, "truncated_mid.spk").await;
         let limits = PackLimits::default();
@@ -241,7 +248,7 @@ mod tests {
         file.set_len(cut_len).unwrap();
         drop(file);
 
-        let report = recover_file(&path, &limits).await.unwrap();
+        let report = recover_file(&path, &limits, context.clone()).await.unwrap();
         // Fewer than the full 5 segments (document, chunk, chunk_table, manifest, end) since
         // the trailing bytes of the last segment are gone; recovery must stop cleanly there,
         // never panic, and never report more than what a full session would produce.
@@ -251,12 +258,13 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn recover_file_on_a_file_too_short_for_a_header_errors_never_panics() {
+        let (context, _cancellation, _progress) = crate::io::caller_test_policy::context();
         let dir = scratch_dir("recover_too_short");
         let path = dir.join("empty.spk");
         std::fs::write(&path, b"short").unwrap();
         let limits = PackLimits::default();
-        let result = recover_file(&path, &limits).await;
-        assert!(matches!(result, Err(PackError::Truncated(_))));
+        let result = recover_file(&path, &limits, context.clone()).await;
+        assert!(matches!(result, Err(PackError::Refusal(semio_framework_pack_error::PackRefusal::Truncated(_)))));
     }
     //#endregion 🔖️Recover
 }

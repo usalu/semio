@@ -5,11 +5,11 @@ use semio_s_artifact_stdio_txt::TxtSnapshot;
 
 pub fn register() {}
 
-pub fn deserialize(from: &TxtSnapshot) -> Result<GisTerrainSnapshot, store::TextError> {
+pub fn deserialize(from: &TxtSnapshot) -> Result<GisTerrainSnapshot, semio_framework_diagnostic::TextError> {
     <GisTerrainSnapshot as store::ArtifactDsl>::parse_dsl(&from.to_body())
 }
 
-pub fn deserialize_bytes(bytes: &[u8]) -> Result<GisTerrainSnapshot, store::TextError> {
-    let text = std::str::from_utf8(bytes).map_err(|error| store::TextError::new(format!("gisterrain←txt: {error}"), dsl::TextSpan::at(1, 1)))?;
+pub fn deserialize_bytes(bytes: &[u8]) -> Result<GisTerrainSnapshot, semio_framework_diagnostic::TextError> {
+    let text = std::str::from_utf8(bytes).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("gisterrain←txt: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
     <GisTerrainSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }

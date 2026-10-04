@@ -21,10 +21,10 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot
 use semio_s_artifact_stdio_stl::StlSnapshot;
 
 /// 🔺️ The mesh half, isolated so the round-trip test can drive it without a live flow evaluator.
-pub fn serialize_mesh(mesh: &SemioMeshSnapshot) -> Result<StlSnapshot, store::TextError> {
-    semio_framework_plugin::resolve_ready(SemioMeshToStl::serialize(mesh)).map_err(|error| io_error(format!("generation3d→stl: {error}")))
+pub fn serialize_mesh(mesh: &SemioMeshSnapshot) -> Result<StlSnapshot, semio_framework_diagnostic::TextError> {
+    ::semio_framework_async::poll::resolve_ready(SemioMeshToStl::serialize(mesh)).map_err(|error| io_error(format!("generation3d→stl: {error}")))
 }
 
-pub fn serialize_mesh_bytes(mesh: &SemioMeshSnapshot) -> Result<Vec<u8>, store::TextError> {
+pub fn serialize_mesh_bytes(mesh: &SemioMeshSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
     Ok(semio_s_artifact_stdio_stl::engine::encode_stl_ascii(&serialize_mesh(mesh)?).into_bytes())
 }

@@ -140,7 +140,7 @@ members = [
     "🧑‍💻dev/🧩️composition/📦️packages/🦀️rust",
     "🧑‍💻dev/🧹️fixture-sweep/📦️packages/🦀️rust",
 ]
-exclude = ["**/🏅️standards/**", "**/🔮️oracles/**", "**/👽️guest/**"]
+exclude = ["**/🏅️standards/**", "**/🔮️oracles/**", "**/👽️guest/**", "🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🔮️oracles/📦️packages/🦀️rust", "🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🔮️oracles/📦️packages/🦀️rust", "🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🔮️oracles/📦️packages/🦀️rust", "🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🔮️oracles/📦️packages/🦀️rust", "🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🔮️oracles/📦️packages/🦀️rust", "🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🔮️oracles/📦️packages/🦀️rust", "🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🔮️oracles/📦️packages/🦀️rust", "🔌️plugins/🗄️stdio/🔮️oracles/📃️document/📦️packages/🦀️rust", "🔌️plugins/🗄️stdio/🔮️oracles/📰markup/📦️packages/🦀️rust", "🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🔮️oracles/📦️packages/🦀️rust", "🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🔮️oracles/📦️packages/🦀️rust", "🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🔮️oracles/📦️packages/🦀️rust", "🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🔮️oracles/📦️packages/🦀️rust", "🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🔮️oracles/📦️packages/🦀️rust", "🔌️plugins/🗄️stdio/🔮️oracles/🔊️audio/📦️packages/🦀️rust"]
 
 [workspace.metadata.semio.repository]
 schema-version = 1

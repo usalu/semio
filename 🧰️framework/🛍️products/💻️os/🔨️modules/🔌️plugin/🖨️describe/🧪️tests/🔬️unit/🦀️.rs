@@ -165,7 +165,7 @@ fn owned_exports_reached_by(arm: &str) -> Vec<String> {
     owned_export_definitions(core)
 }
 
-/// 🛡️ Every component owner exports the SAME thirteen `semio_owned_*_v1` core symbols, from ONE
+/// 🛡️ Every component owner exports the SAME eighteen `semio_owned_*_v1` core symbols, from ONE
 /// shared definition, and that set is exactly the one `OwnedSemioArtifact::from_component` demands.
 /// The last four are the owned twin of `world actor`'s `codec` interface (ticket 26/09/18 slice
 /// TC3b) — a component that carries the other nine but not those cannot answer a headless hub's
@@ -180,7 +180,7 @@ fn owned_exports_reached_by(arm: &str) -> Vec<String> {
 async fn owned_core_exports_are_defined_once_and_invoked_by_both_owners() {
     let mut required: Vec<String> = interpreter::OwnedSemioExport::ALL.iter().map(|export| export.core_name().to_string()).collect();
     required.sort();
-    assert_eq!(required.len(), 13, "the owned Semio actor ABI is thirteen core exports");
+    assert_eq!(required.len(), 18, "the owned Semio actor ABI is eighteen core exports");
 
     let defined_in_shared_macro = owned_export_definitions(macro_rules_body(PLUGIN_SDK_SOURCE, "__semio_owned_core_exports"));
     assert_eq!(defined_in_shared_macro, required, "the shared owned-core-export macro does not define exactly `OwnedSemioExport::ALL`");

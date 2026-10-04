@@ -51,13 +51,13 @@ struct NoDefault(u32);
 #[semio_framework_async_macros::async_test]
 async fn json_round_trips_a_non_default_item_type() {
     let diff: NamedTripleDiff<String, NoDefault, NoDefault> = NamedTripleDiff { removed: vec!["gone".to_string()], modified: vec![NamedModified { key: "kept".to_string(), diff: NoDefault(9) }], added: vec![NoDefault(3)] };
-    let json = pack::to_json_string(&diff);
-    let decoded: NamedTripleDiff<String, NoDefault, NoDefault> = pack::from_json_str(&json).expect("deserialize");
+    let json = semio_framework_pack_json::to_json_string(&diff);
+    let decoded: NamedTripleDiff<String, NoDefault, NoDefault> = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("deserialize");
     assert_eq!(decoded, diff);
 
     let idiff: IndexedTripleDiff<NoDefault, NoDefault> = IndexedTripleDiff { removed: vec![1], modified: vec![IndexModified { index: 0, diff: NoDefault(5) }], added: vec![IndexAdded { index: 2, item: NoDefault(7) }] };
-    let ijson = pack::to_json_string(&idiff);
-    let idecoded: IndexedTripleDiff<NoDefault, NoDefault> = pack::from_json_str(&ijson).expect("deserialize");
+    let ijson = semio_framework_pack_json::to_json_string(&idiff);
+    let idecoded: IndexedTripleDiff<NoDefault, NoDefault> = semio_framework_pack_json::from_json_str(&ijson, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("deserialize");
     assert_eq!(idecoded, idiff);
 }
 

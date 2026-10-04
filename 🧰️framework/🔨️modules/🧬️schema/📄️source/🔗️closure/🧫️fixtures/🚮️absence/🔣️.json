@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "owners": [
+    "🧰️framework/🔨️modules/🧬️schema/📄️source/🔗️closure",
+    "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode"
+  ],
+  "sharedSources": [
+    "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧩️members/🟦️.ts"
+  ],
+  "absentRoots": [
+    "✏️s",
+    "🌎️hub",
+    "🧰️framework/🛍️products"
+  ],
+  "lawSuffix": "🧪️tests/🟦️.ts"
+}
+

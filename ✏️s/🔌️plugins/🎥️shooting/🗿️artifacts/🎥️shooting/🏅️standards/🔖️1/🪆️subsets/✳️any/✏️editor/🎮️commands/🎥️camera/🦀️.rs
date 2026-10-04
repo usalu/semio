@@ -20,7 +20,7 @@ pub mod set_shot_camera {
     /// 🎥️ Deliberately overwrites `shot_id`'s *saved* camera with the given pose — a real, undoable
     /// document edit. A no-op when that shot has no saved camera (the free/live camera is `SetCamera`'s
     /// job, and never reaches this operation).
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "shot-camera")]
     pub struct SetShotCamera {
         pub shot_id: String,
@@ -40,7 +40,7 @@ pub mod save_camera {
     use crate::standards::v1::subsets::any::schema::next_shooting_id;
 
     /// 💾️ Saves the live viewport camera under `label` (the submitted camera field; `Camera N` when blank).
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "save-camera")]
     pub struct SaveCamera {
         pub label: String,
@@ -60,7 +60,7 @@ pub mod save_camera {
 pub mod load_saved_camera {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "load-saved-camera")]
     pub struct LoadSavedCamera {
         pub id: String,
@@ -79,7 +79,7 @@ pub mod load_saved_camera {
 pub mod set_camera {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "camera")]
     pub struct SetCamera {
         #[dsl(block)]

@@ -1,16 +1,27 @@
-# 📸️ Jack persisted snapshot with one composed graph-content identity.
-# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
+# 📸️ Jack owns complete inline manifests, exact camera words and one composed child.
+# import ArtifactChild, ArtifactChildInput from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
+# import Binary64Word, Binary64WordInput, ValueType, ValueTypeInput from "🧰️framework/🔨️modules/🌱️value/🧬️schema/🔗️.graphql"
 type JackSnapshot {
-  schema: String! @state(class: ARTIFACT)
-  name: String! @state(class: ARTIFACT)
-  manifestId: String @state(class: ARTIFACT)
-  manifest: Manifest! @state(class: ARTIFACT)
-  camera: Camera! @state(class: ARTIFACT)
-  content: ArtifactChild! @state(class: ARTIFACT)
-  rootNodeId: String @state(class: ARTIFACT)
-  query: String! @state(class: ARTIFACT)
+ schema: String! @state(class: ARTIFACT)
+ name: String! @state(class: ARTIFACT)
+ manifestId: String @state(class: ARTIFACT)
+ manifest: Manifest! @state(class: ARTIFACT)
+ camera: Camera! @state(class: ARTIFACT)
+ content: ArtifactChild! @state(class: ARTIFACT)
+ rootNodeId: String @state(class: ARTIFACT)
+ query: String! @state(class: ARTIFACT)
 }
-type Camera { x: Float! y: Float! zoom: Float! }
-type Manifest { nodeKinds: [ManifestKind!]! edgeKinds: [ManifestKind!]! portKinds: [ManifestPortKind!]! }
-type ManifestKind { name: String! }
-type ManifestPortKind { name: String! direction: String! }
+type Camera { x: Binary64Word! y: Binary64Word! zoom: Binary64Word! }
+enum ManifestPropertyKind { DATA DERIVED }
+type ManifestProperty { name: String! kind: ManifestPropertyKind! valueType: ValueType! expr: String }
+type ManifestNodeKind { name: String! properties: [ManifestProperty!]! portKinds: [String!]! }
+type ManifestEdgeKind { name: String! properties: [ManifestProperty!]! }
+type ManifestPortKind { name: String! direction: String! properties: [ManifestProperty!]! }
+type Manifest { nodeKinds: [ManifestNodeKind!]! edgeKinds: [ManifestEdgeKind!]! portKinds: [ManifestPortKind!]! }
+input JackSnapshotInput { schema: String! name: String! manifestId: String manifest: ManifestInput! camera: CameraInput! content: ArtifactChildInput! rootNodeId: String query: String! }
+input CameraInput { x: Binary64WordInput! y: Binary64WordInput! zoom: Binary64WordInput! }
+input ManifestPropertyInput { name: String! kind: ManifestPropertyKind! valueType: ValueTypeInput! expr: String }
+input ManifestNodeKindInput { name: String! properties: [ManifestPropertyInput!]! portKinds: [String!]! }
+input ManifestEdgeKindInput { name: String! properties: [ManifestPropertyInput!]! }
+input ManifestPortKindInput { name: String! direction: String! properties: [ManifestPropertyInput!]! }
+input ManifestInput { nodeKinds: [ManifestNodeKindInput!]! edgeKinds: [ManifestEdgeKindInput!]! portKinds: [ManifestPortKindInput!]! }

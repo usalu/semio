@@ -13,7 +13,7 @@ pub fn diff(payload: &RenameCostRequirement, base: &ProgramSnapshot) -> protocol
         return protocol::MutationOutcome::error("mutation.target-missing", "No cost requirement exists with this id.", [payload.id.0.clone()]);
     };
     if existing.header.name == payload.new_name {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This cost requirement already has this name.").at([payload.id.0.clone()])]);
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This cost requirement already has this name.").at([payload.id.0.clone()])]);
     }
     let patch = CostRequirementPatch { name: Some(payload.new_name.clone()), ..Default::default() };
     protocol::MutationOutcome::new(ProgramDiff { costs: Some(ProgramCostsDelta { patched: vec![ProgramCostsPatchEntry { id: payload.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })

@@ -531,7 +531,7 @@ pub fn example_graph() -> Graph {
 
 /// 🧩️ [`example_graph_fixture`] serialized as fixture JSON.
 pub fn example_graph_fixture_json() -> String {
-    pack::to_json_string(&example_graph_fixture())
+    semio_framework_pack_json::to_json_string(&example_graph_fixture())
 }
 // #endregion 🔖️ExampleFixture
 struct Parser {

@@ -48,6 +48,7 @@ fn kinds_match_the_committed_catalog() {
 fn kinds_match_enum_variants_in_declaration_order() {
     let variants = [
         JpgBaselineMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: JpgSnapshot::default() }),
+        JpgBaselineMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         JpgBaselineMutation::SetSofMarker(set_sof_marker::SetSofMarker { marker: SOF0 }),
         JpgBaselineMutation::SetSamplePrecision(set_sample_precision::SetSamplePrecision { precision: BASELINE_PRECISION }),
         JpgBaselineMutation::SetArithmetic(set_arithmetic::SetArithmetic { arithmetic: false }),
@@ -59,7 +60,7 @@ fn kinds_match_enum_variants_in_declaration_order() {
     ];
     assert_eq!(variants.len(), KINDS.len(), "every variant needs exactly one KINDS entry");
     for (variant, kind) in variants.iter().zip(KINDS) {
-        let tag = match serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(variant)).expect("serialize") {
+        let tag = match serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(variant)).expect("serialize") {
             serde_json::Value::Object(members) => members.get("mutation").and_then(|value| value.as_str()).expect("tagged enum carries its own discriminant").to_string(),
             other => panic!("a tagged enum must serialize as an object, got {other:?}"),
         };
@@ -110,6 +111,7 @@ fn a_fifth_frame_component_is_what_crosses_the_component_count_line() {
 fn every_kind_is_inverted_by_its_own_inverse() {
     let cases = [
         JpgBaselineMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: JpgSnapshot::default() }),
+        JpgBaselineMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         JpgBaselineMutation::SetSofMarker(set_sof_marker::SetSofMarker { marker: 0xC1 }),
         JpgBaselineMutation::SetSamplePrecision(set_sample_precision::SetSamplePrecision { precision: 12 }),
         JpgBaselineMutation::SetArithmetic(set_arithmetic::SetArithmetic { arithmetic: true }),
@@ -123,7 +125,7 @@ fn every_kind_is_inverted_by_its_own_inverse() {
         let base = conforming();
         let mut snapshot = base.clone();
         apply_jpg_baseline_mutation(&mut snapshot, &mutation);
-        for undo in crate::mutation_inverse(&mutation, &base) {
+        for undo in crate::mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
             apply_jpg_baseline_mutation(&mut snapshot, &undo);
         }
         assert_eq!(snapshot.sof_marker, base.sof_marker, "inverse of {mutation:?} left sof_marker moved");
@@ -140,9 +142,9 @@ fn an_insertion_that_finds_its_target_present_produces_an_empty_diff() {
     let base = conforming();
     let already = JpgBaselineMutation::InsertHuffmanTable(insert_huffman_table::InsertHuffmanTable { index: 0, table: table(JpgHuffmanClass::Dc, 0) });
     assert_eq!(<JpgBaselineMutation as Mutation<JpgSnapshot>>::diff(&already, &base).diff(), &JpgDiff::default());
-    assert_eq!(crate::mutation_inverse(&already, &base), Vec::new());
+    assert_eq!(crate::mutation_inverse(&already, &base).expect("valid retained mutation inverse fixture"), Vec::new());
 
     let absent = JpgBaselineMutation::RemoveFrameComponent(remove_frame_component::RemoveFrameComponent { id: 42 });
     assert_eq!(<JpgBaselineMutation as Mutation<JpgSnapshot>>::diff(&absent, &base).diff(), &JpgDiff::default());
-    assert_eq!(crate::mutation_inverse(&absent, &base), Vec::new());
+    assert_eq!(crate::mutation_inverse(&absent, &base).expect("valid retained mutation inverse fixture"), Vec::new());
 }

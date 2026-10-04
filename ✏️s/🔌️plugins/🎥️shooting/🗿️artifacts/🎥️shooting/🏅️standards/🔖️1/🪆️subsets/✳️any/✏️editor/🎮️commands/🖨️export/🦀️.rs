@@ -22,7 +22,7 @@ fn export(all: bool, doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<
             .iter()
             .map(|shot| IconRenderExportItem {
                 filename: format!("{}.{}", shot.id, if shot.format == "png" { "png" } else { "svg" }),
-                request: dsl::os_pack::json::parse(&shooting_icon_render_request_json(doc.snapshot, shot, asset, &config.camera, config.center_model)).map_or(DslValue::Null, |value| dsl::os_pack::json::to_dsl_value(&value)),
+                request: semio_framework_pack_json::parse(&shooting_icon_render_request_json(doc.snapshot, shot, asset, &config.camera, config.center_model), semio_framework_pack_json::JsonMemberPolicy::Reject).map_or(DslValue::Null, |value| semio_framework_pack_json::to_dsl_value(&value)),
             })
             .collect();
         if !items.is_empty() {
@@ -37,7 +37,7 @@ fn export(all: bool, doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<
 pub mod export_active_shot {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "export-active-shot")]
     pub struct ExportActiveShot {}
 
@@ -51,7 +51,7 @@ pub mod export_active_shot {
 pub mod export_all_shots {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "export-all-shots")]
     pub struct ExportAllShots {}
 

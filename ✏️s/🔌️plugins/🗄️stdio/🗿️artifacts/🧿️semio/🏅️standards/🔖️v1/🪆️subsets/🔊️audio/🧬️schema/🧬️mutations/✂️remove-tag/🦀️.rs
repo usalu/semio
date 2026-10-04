@@ -19,9 +19,12 @@ impl protocol::MutationKind<SemioAudioSnapshot, SemioAudioMutation> for RemoveTa
     fn diff(&self, base: &SemioAudioSnapshot) -> protocol::MutationOutcome<<SemioAudioMutation as Mutation<SemioAudioSnapshot>>::Diff> {
         agg_diff(&SemioAudioMutation::RemoveTag(self.clone()), base)
     }
-    fn inverse(&self, base: &SemioAudioSnapshot) -> Vec<SemioAudioMutation> {
-        agg_inverse(&SemioAudioMutation::RemoveTag(self.clone()), base)
-    }
+    fn inverse(&self, base: &SemioAudioSnapshot) -> Result<Vec<SemioAudioMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&SemioAudioMutation::RemoveTag(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove tag", "Tag entfernen")
     }

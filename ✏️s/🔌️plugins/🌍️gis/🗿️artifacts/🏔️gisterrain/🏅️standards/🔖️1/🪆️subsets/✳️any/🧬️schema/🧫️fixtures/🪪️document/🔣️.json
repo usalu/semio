@@ -1,7 +1,16 @@
 {
   "document": {
     "exaggeration": 2.5,
-    "importedFeaturesJson": "{\"positions\":[{\"id\":\"pier\"}]}",
+    "importedMap": {
+      "positions": [
+        {
+          "id": "pier"
+        }
+      ],
+      "routes": [],
+      "regions": [],
+      "properties": []
+    },
     "mesh": {
       "childId": "terrain-mesh-custom",
       "target": {
@@ -17,19 +26,29 @@
   "diff": {
     "artifact": null,
     "exaggeration": 3.0,
-    "importedFeaturesJson": null
+    "importedMap": null
   },
   "invalidDocuments": [
     {
       "exaggeration": 2.0,
-      "importedFeaturesJson": "{}",
+      "importedMap": {
+        "positions": [],
+        "routes": [],
+        "regions": [],
+        "properties": []
+      },
       "mesh": {
         "vertices": []
       }
     },
     {
       "exaggeration": 2.0,
-      "importedFeaturesJson": "{}",
+      "importedMap": {
+        "positions": [],
+        "routes": [],
+        "regions": [],
+        "properties": []
+      },
       "locale": "de"
     }
   ],
@@ -40,7 +59,12 @@
     {
       "artifact": {
         "exaggeration": 2.0,
-        "importedFeaturesJson": "{}",
+        "importedMap": {
+          "positions": [],
+          "routes": [],
+          "regions": [],
+          "properties": []
+        },
         "mesh": {
           "vertices": []
         }
@@ -52,7 +76,16 @@
       "name": "empty",
       "before": {
         "exaggeration": 2.5,
-        "importedFeaturesJson": "{\"positions\":[{\"id\":\"pier\"}]}",
+        "importedMap": {
+          "positions": [
+            {
+              "id": "pier"
+            }
+          ],
+          "routes": [],
+          "regions": [],
+          "properties": []
+        },
         "mesh": {
           "childId": "terrain-mesh-custom",
           "target": {
@@ -69,7 +102,16 @@
       "patch": [],
       "after": {
         "exaggeration": 2.5,
-        "importedFeaturesJson": "{\"positions\":[{\"id\":\"pier\"}]}",
+        "importedMap": {
+          "positions": [
+            {
+              "id": "pier"
+            }
+          ],
+          "routes": [],
+          "regions": [],
+          "properties": []
+        },
         "mesh": {
           "childId": "terrain-mesh-custom",
           "target": {
@@ -87,7 +129,16 @@
       "name": "exaggeration",
       "before": {
         "exaggeration": 2.5,
-        "importedFeaturesJson": "{\"positions\":[{\"id\":\"pier\"}]}",
+        "importedMap": {
+          "positions": [
+            {
+              "id": "pier"
+            }
+          ],
+          "routes": [],
+          "regions": [],
+          "properties": []
+        },
         "mesh": {
           "childId": "terrain-mesh-custom",
           "target": {
@@ -112,7 +163,16 @@
       ],
       "after": {
         "exaggeration": 3.0,
-        "importedFeaturesJson": "{\"positions\":[{\"id\":\"pier\"}]}",
+        "importedMap": {
+          "positions": [
+            {
+              "id": "pier"
+            }
+          ],
+          "routes": [],
+          "regions": [],
+          "properties": []
+        },
         "mesh": {
           "childId": "terrain-mesh-custom",
           "target": {
@@ -130,7 +190,16 @@
       "name": "import",
       "before": {
         "exaggeration": 2.5,
-        "importedFeaturesJson": "{\"positions\":[{\"id\":\"pier\"}]}",
+        "importedMap": {
+          "positions": [
+            {
+              "id": "pier"
+            }
+          ],
+          "routes": [],
+          "regions": [],
+          "properties": []
+        },
         "mesh": {
           "childId": "terrain-mesh-custom",
           "target": {
@@ -144,18 +213,35 @@
         }
       },
       "diff": {
-        "importedFeaturesJson": "{}"
+        "importedMap": {
+          "value": {
+            "positions": [],
+            "routes": [],
+            "regions": [],
+            "properties": []
+          }
+        }
       },
       "patch": [
         {
           "op": "replace",
-          "path": "/importedFeaturesJson",
-          "value": "{}"
+          "path": "/importedMap",
+          "value": {
+            "positions": [],
+            "routes": [],
+            "regions": [],
+            "properties": []
+          }
         }
       ],
       "after": {
         "exaggeration": 2.5,
-        "importedFeaturesJson": "{}",
+        "importedMap": {
+          "positions": [],
+          "routes": [],
+          "regions": [],
+          "properties": []
+        },
         "mesh": {
           "childId": "terrain-mesh-custom",
           "target": {
@@ -173,7 +259,16 @@
       "name": "explicit replacement",
       "before": {
         "exaggeration": 2.5,
-        "importedFeaturesJson": "{\"positions\":[{\"id\":\"pier\"}]}",
+        "importedMap": {
+          "positions": [
+            {
+              "id": "pier"
+            }
+          ],
+          "routes": [],
+          "regions": [],
+          "properties": []
+        },
         "mesh": {
           "childId": "terrain-mesh-custom",
           "target": {
@@ -189,7 +284,16 @@
       "diff": {
         "artifact": {
           "exaggeration": 2.5,
-          "importedFeaturesJson": "{\"positions\":[{\"id\":\"pier\"}]}",
+          "importedMap": {
+            "positions": [
+              {
+                "id": "pier"
+              }
+            ],
+            "routes": [],
+            "regions": [],
+            "properties": []
+          },
           "mesh": {
             "childId": "terrain-mesh-replaced",
             "target": {
@@ -209,7 +313,16 @@
           "path": "",
           "value": {
             "exaggeration": 2.5,
-            "importedFeaturesJson": "{\"positions\":[{\"id\":\"pier\"}]}",
+            "importedMap": {
+              "positions": [
+                {
+                  "id": "pier"
+                }
+              ],
+              "routes": [],
+              "regions": [],
+              "properties": []
+            },
             "mesh": {
               "childId": "terrain-mesh-replaced",
               "target": {
@@ -226,7 +339,16 @@
       ],
       "after": {
         "exaggeration": 2.5,
-        "importedFeaturesJson": "{\"positions\":[{\"id\":\"pier\"}]}",
+        "importedMap": {
+          "positions": [
+            {
+              "id": "pier"
+            }
+          ],
+          "routes": [],
+          "regions": [],
+          "properties": []
+        },
         "mesh": {
           "childId": "terrain-mesh-replaced",
           "target": {

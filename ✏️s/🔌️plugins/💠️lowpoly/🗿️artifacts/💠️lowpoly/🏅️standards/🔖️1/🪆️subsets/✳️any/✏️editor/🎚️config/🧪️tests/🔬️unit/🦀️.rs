@@ -26,7 +26,7 @@ async fn config_op_backwards_always_snapshots_prior_state() {
     let operation = LowpolyConfigMutation::SetActiveObject { object_id: "obj-2".into() };
     let after = operation.diff(&base).into_parts().0;
     assert_eq!(after.active_object_id, "obj-2");
-    let backwards = operation.inverse(&base);
+    let backwards = operation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(backwards, vec![LowpolyConfigMutation::Snapshot { config: base.clone() }]);
     assert_eq!(backwards[0].diff(&after).into_parts().0, base);
 }

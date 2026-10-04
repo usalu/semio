@@ -27,13 +27,13 @@ use semio_framework_plugin::{BuiltNode, Component, TreeWindowRequest, TreeWindow
 const STEPS_SECTION: &str = "imperative-play-document.steps";
 const OVERSIZED: usize = 200;
 
-/// 📜️ A procedure past one node's fixed child capacity — the exact document that used to make
+/// 📜️ A procedure scene past one node's fixed child capacity — the exact program that used to make
 /// `render()` return `Err("ui.fixed-capacity", "imperative step admission failed")`.
-fn oversized_procedure(count: usize) -> crate::ProcedureSnapshot {
+fn oversized_procedure(count: usize) -> crate::ProcedureScene {
     let path = imperative_engine::Path {
         steps: (0..count).map(|index| imperative_engine::Step { id: format!("step-{index:03}"), kind: "log.print".to_string(), params: Default::default(), bodies: Default::default() }).collect(),
     };
-    crate::procedure_snapshot_with_content("procedure.document", &path, &std::collections::BTreeMap::new())
+    crate::ProcedureScene { path, seed: Default::default() }
 }
 
 fn window_law_request(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> TreeWindowRequest {

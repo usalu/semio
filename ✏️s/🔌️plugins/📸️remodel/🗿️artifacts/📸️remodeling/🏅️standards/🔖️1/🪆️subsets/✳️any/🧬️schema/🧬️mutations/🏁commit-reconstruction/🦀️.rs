@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 🖼️ One `assets` binding: the asset id bound to complete durable image content, or unbound (`None`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 pub struct ReconstructionAssetCommit {
@@ -19,7 +19,7 @@ pub struct ReconstructionAssetCommit {
 }
 
 /// 🏁️ Atomic result payload: result lanes plus content-id bindings. `mesh: None` keeps the stored mesh.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "commit-reconstruction")]
@@ -50,9 +50,12 @@ impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for CommitRe
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<RemodelingMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Commit reconstruction", "Rekonstruktion festschreiben")

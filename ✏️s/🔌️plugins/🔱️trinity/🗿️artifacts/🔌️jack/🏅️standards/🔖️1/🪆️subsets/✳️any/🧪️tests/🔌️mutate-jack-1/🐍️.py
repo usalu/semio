@@ -1,52 +1,17 @@
 #!/usr/bin/env python3
-"""🔌 An INDEPENDENT second implementation of the `s.trinity.jack` assembly scene and all nine of
-its typed mutations, in Python, serving as this case's differential oracle.
+"""🔌 An INDEPENDENT second implementation of the `s.trinity.jack` parent document, of its `.dsl.semio` carrier and of
+its one parent-lane mutation, `set-query`, in Python, serving as this case's differential oracle.
 
-**Why a second implementation and not a third-party library.** A jack scene is a labelled property
-graph whose nodes carry PORTS and whose edges address `node@port` endpoints, over a `manifest` that
-declares which node, edge and port kinds exist. Graph libraries — `networkx`, `igraph`, `petgraph` —
-model vertices and edges but have no notion of a port-addressed endpoint, of a manifest that closes
-the kind vocabulary, or of the untyped `properties` bag that `change-data-property` and
-`remove-data-property` edit; and none of them reads `.dsl.semio`. What a reference genuinely can
-adjudicate is this vocabulary's own algebra — append-node, append-edge, delete-by-id, the two
-in-place node edits, and the two property-bag edits, each with its own rejection rule — and that is
-what this file implements, from the specification, in another language.
+**Scope.** The scene (nodes with ports, edges over `node@port` endpoints) lives in the composed `content` child,
+`s.stdio.semio@v1/graph`; its edits are that shared graph vocabulary's leaves (design §20.15) and are adjudicated by the
+graph subset's own oracles. This file reads the scene only to project it — the identity round trip and the scene the
+`set-query` vector starts from — and implements the parent's own algebra: `set-query` replaces the document's query,
+writing the query it already holds is an accepted no-op, and its inverse writes the previous query back.
 
-**What it was written from.**
-
-* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`` — `JackSnapshot` is
-  `schema`, `name`, `manifestId`, `manifest`, `camera`, `nodes`, `edges`, `rootNodeId` and `query`; a `Node`
-  is `{id, kind, name, x, y, width, height, properties, ports}` and a `Port` is
-  `{id, kind, direction, properties}`; an `Edge` is `{id, kind, source, target, properties}`; both
-  property bags are open objects, everything else is `additionalProperties: false`.
-* ``…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`` — the nine verbs and their positional
-  argument lists, including `entity = "node" ":" id / "edge" ":" id` for the two property verbs.
-* the nine committed specification vectors, which give the INTERNALLY tagged wire form of each verb
-  and — this is all they give — its REJECTION rule.
-
-**A defect in the specification, found while writing this and reported rather than worked around.**
-``…/🧬️schema/🧬️mutations/🔣️.json`` does not describe the mutations at all: it is a verbatim
-copy of the snapshot schema, `title` changed to `JackMutation` and nothing else. The wire form was
-therefore read off the committed vectors, which spell it internally tagged and — inconsistently —
-mix camelCase discriminators with snake_case arguments (`new_name`, `new_value`).
-
-**A gap in the evidence, likewise reported.** ALL EIGHT committed SCENE vectors are NEGATIVE: three
-rejections and five accepted no-ops. Not one of them exercises a mutation that actually changes the
-scene, so the accepting direction of the scene vocabulary had no committed evidence before this
-case's real-document scenarios. The ninth, `set-query`'s, is the first positive one: it replaces the
-document's query and leaves the scene alone.
-
-**What is inferred rather than read, and on what grounds.** Nothing states whether deleting a node
-also deletes the edges that name it. The document HAS the invariant — `create-edge`'s committed
-vector is rejected with `mutation.target-missing` precisely because its endpoints are absent — so a
-delete that left a dangling edge behind would produce a document the format refuses to construct.
-This implementation therefore cascades, and says so; the feature's `delete-node` row nevertheless
-addresses a node no edge names, so the cross-language comparison never rests on the inference.
-
-**No Rust was read to write this.** `🦀️.rs` beside this file registers the SUBJECT half
-only. (2026-09-25: the carrier reader follows the committed example's record notation, and the
-absent-target rule follows the committed scenes `🧩️capsule-stack.scene.json`/`🫙️empty.scene.json` the
-vectors now start from — which is also where the subject's `mutation.target-missing` became visible.)
+**What it was written from.** ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`` (the document members),
+``…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`` (`set-query = "set-query" SP text`) and the committed `set-query`
+specification vector. No graph library reads this carrier or models the document's query member, so a second
+implementation is the reference. No Rust was read to write this; `🦀️.rs` beside this file registers the SUBJECT half only.
 """
 
 # region 🔖️Imports
@@ -72,20 +37,10 @@ schema. What both forms do carry, once an absent `nodes`/`edges`/`rootNodeId` is
 the seven members above.
 """
 
-KINDS = ("create-node", "delete-node", "create-edge", "delete-edge", "rename-node", "move-node", "change-data-property", "remove-data-property", "set-query")
+KINDS = ("set-query",)
 """🏷️ Every kind the catalog declares."""
 
-TAGS = {
-    "create-node": "createNode",
-    "delete-node": "deleteNode",
-    "create-edge": "createEdge",
-    "delete-edge": "deleteEdge",
-    "rename-node": "renameNode",
-    "move-node": "moveNode",
-    "change-data-property": "changeDataProperty",
-    "remove-data-property": "removeDataProperty",
-    "set-query": "setQuery",
-}
+TAGS = {"set-query": "setQuery"}
 """🔤️ The internally tagged `mutation` discriminator of each kind, as the committed vectors spell it."""
 
 NODE_MEMBERS = {"id", "kind", "name", "x", "y", "width", "height", "properties", "ports"}
@@ -290,25 +245,6 @@ def endpoint_node(endpoint):
     return endpoint.split("@", 1)[0]
 
 
-def find(items, identifier):
-    """🔎️ The index of an id in a member list, or `None`."""
-    for at, item in enumerate(items):
-        if item["id"] == identifier:
-            return at
-    return None
-
-
-def bag(document, entity, kind):
-    """🎒️ The property bag one `entity` addresses; an entity the scene does not hold is refused."""
-    items = document["nodes"] if entity["entity"] == "node" else document["edges"] if entity["entity"] == "edge" else None
-    if items is None:
-        raise AssertionError("%s: %r is neither a node nor an edge" % (kind, entity["entity"]))
-    at = find(items, entity["id"])
-    if at is None:
-        raise AssertionError("%s: no %s %r in the scene" % (kind, entity["entity"], entity["id"]))
-    return items[at]["properties"]
-
-
 # endregion 🔖️Document
 
 
@@ -324,106 +260,21 @@ def kind_of(mutation):
 
 
 def apply_mutation(document, mutation):
-    """🧬️ Applies one typed mutation, returning `(document, no-op)`.
-
-    Four in-place verbs have a committed vector showing that writing the value the scene already holds
-    is an accepted NO-OP rather than a change, so this returns whether the application was one. Every
-    verb refuses a target the scene does not hold, and the three structural verbs refuse their own
-    conflicts, each with the code its committed vector names.
-    """
-    kind = kind_of(mutation)
+    """🧬️ Applies the one parent-lane mutation, returning `(document, no-op)`: writing the query the document
+    already holds is an accepted no-op."""
+    kind_of(mutation)
     result = copy.deepcopy(document)
-    if kind == "create-node":
-        node = copy.deepcopy(mutation["node"])
-        if find(result["nodes"], node["id"]) is not None:
-            raise AssertionError("%s: the scene already holds a node %r" % (kind, node["id"]))
-        result["nodes"].append(node)
-    elif kind == "delete-node":
-        at = find(result["nodes"], mutation["id"])
-        if at is None:
-            raise AssertionError("%s: no node %r in the scene" % (kind, mutation["id"]))
-        result["nodes"].pop(at)
-        result["edges"] = [edge for edge in result["edges"] if mutation["id"] not in (endpoint_node(edge["source"]), endpoint_node(edge["target"]))]
-    elif kind == "create-edge":
-        edge = copy.deepcopy(mutation["edge"])
-        if find(result["edges"], edge["id"]) is not None:
-            raise AssertionError("%s: the scene already holds an edge %r" % (kind, edge["id"]))
-        for end in ("source", "target"):
-            if find(result["nodes"], endpoint_node(edge[end])) is None:
-                raise AssertionError("%s: the edge's %s names %r, which is not a node in the scene" % (kind, end, edge[end]))
-        result["edges"].append(edge)
-    elif kind == "delete-edge":
-        at = find(result["edges"], mutation["id"])
-        if at is None:
-            raise AssertionError("%s: no edge %r in the scene" % (kind, mutation["id"]))
-        result["edges"].pop(at)
-    elif kind == "rename-node":
-        at = find(result["nodes"], mutation["id"])
-        if at is None:
-            raise AssertionError("%s: no node %r in the scene" % (kind, mutation["id"]))
-        if result["nodes"][at]["name"] == mutation["new_name"]:
-            return result, True
-        result["nodes"][at]["name"] = mutation["new_name"]
-    elif kind == "move-node":
-        at = find(result["nodes"], mutation["id"])
-        if at is None:
-            raise AssertionError("%s: no node %r in the scene" % (kind, mutation["id"]))
-        node = result["nodes"][at]
-        if (node["x"], node["y"]) == (mutation["x"], mutation["y"]):
-            return result, True
-        node["x"], node["y"] = float(mutation["x"]), float(mutation["y"])
-    elif kind == "change-data-property":
-        properties = bag(result, mutation["entity"], kind)
-        if mutation["key"] in properties and properties[mutation["key"]] == mutation["new_value"]:
-            return result, True
-        properties[mutation["key"]] = copy.deepcopy(mutation["new_value"])
-    elif kind == "set-query":
-        if result.get("query", "") == mutation["value"]:
-            return result, True
-        result["query"] = mutation["value"]
-    else:
-        properties = bag(result, mutation["entity"], kind)
-        if mutation["key"] not in properties:
-            return result, True
-        del properties[mutation["key"]]
+    if result.get("query", "") == mutation["value"]:
+        return result, True
+    result["query"] = mutation["value"]
     validate(result)
     return result, False
 
 
 def inverse_mutation(document, mutation):
-    """↩️ The mutation that undoes one application, computed against the document it applies to."""
-    kind = kind_of(mutation)
-    if kind == "create-node":
-        return {"mutation": TAGS["delete-node"], "id": mutation["node"]["id"]}
-    if kind == "delete-node":
-        at = find(document["nodes"], mutation["id"])
-        if at is None:
-            raise AssertionError("inverse of %s: no node %r in the scene" % (kind, mutation["id"]))
-        return {"mutation": TAGS["create-node"], "node": copy.deepcopy(document["nodes"][at])}
-    if kind == "create-edge":
-        return {"mutation": TAGS["delete-edge"], "id": mutation["edge"]["id"]}
-    if kind == "delete-edge":
-        at = find(document["edges"], mutation["id"])
-        if at is None:
-            raise AssertionError("inverse of %s: no edge %r in the scene" % (kind, mutation["id"]))
-        return {"mutation": TAGS["create-edge"], "edge": copy.deepcopy(document["edges"][at])}
-    if kind == "rename-node":
-        at = find(document["nodes"], mutation["id"])
-        return {"mutation": TAGS[kind], "id": mutation["id"], "new_name": document["nodes"][at]["name"]}
-    if kind == "move-node":
-        at = find(document["nodes"], mutation["id"])
-        node = document["nodes"][at]
-        return {"mutation": TAGS[kind], "id": mutation["id"], "x": node["x"], "y": node["y"]}
-    if kind == "set-query":
-        return {"mutation": TAGS[kind], "value": document.get("query", "")}
-    properties = bag(document, mutation["entity"], "inverse of %s" % kind)
-    if kind == "change-data-property":
-        if mutation["key"] not in properties:
-            return {"mutation": TAGS["remove-data-property"], "entity": copy.deepcopy(mutation["entity"]), "key": mutation["key"]}
-        return {"mutation": TAGS[kind], "entity": copy.deepcopy(mutation["entity"]), "key": mutation["key"], "new_value": copy.deepcopy(properties[mutation["key"]])}
-    if mutation["key"] not in properties:
-        return {"mutation": TAGS["remove-data-property"], "entity": copy.deepcopy(mutation["entity"]), "key": mutation["key"]}
-    return {"mutation": TAGS["change-data-property"], "entity": copy.deepcopy(mutation["entity"]), "key": mutation["key"], "new_value": copy.deepcopy(properties[mutation["key"]])}
+    """↩️ The mutation that undoes one application: the query the document held before it."""
+    kind_of(mutation)
+    return {"mutation": TAGS["set-query"], "value": document.get("query", "")}
 
 
 # endregion 🔖️Mutations
@@ -520,8 +371,8 @@ def mutate_handler(kind):
 def inverse_handler(kind):
     """↩️ Applies one kind to the REAL tower scene and then its OWN computed inverse.
 
-    The projection carries BOTH scenes; projecting only the restored one would make all nine rows
-    project the same value and the differential would be vacuous.
+    The projection carries BOTH documents; projecting only the restored one would make the row project the original
+    value and the differential would be vacuous.
     """
 
     def handler(ctx):
@@ -541,10 +392,9 @@ def inverse_handler(kind):
 
 
 def spec_vector_handler(kind):
-    """📐️ Replays one committed handcrafted vector over the composed scene the feature names for it.
-    Eight of the nine are NEGATIVE and `set-query`'s is applied, so the feature's `verdict` column states which answer each one
-    commits to: `refused` must be refused outright, and `noop` must be accepted while leaving the scene
-    exactly where it was."""
+    """📐️ Replays one committed handcrafted vector over the composed scene the feature names for it; the feature's
+    `verdict` column states the answer it commits to: `refused` must be refused outright, `noop` must be accepted while
+    leaving the document where it was, and `applied` must move it to the committed after-document."""
 
     def handler(ctx):
         scene = json_fixture(ctx, ".scene.json")

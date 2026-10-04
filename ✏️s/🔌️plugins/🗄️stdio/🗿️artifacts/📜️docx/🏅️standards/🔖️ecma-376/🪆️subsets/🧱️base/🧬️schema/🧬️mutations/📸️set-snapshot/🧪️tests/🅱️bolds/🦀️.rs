@@ -43,7 +43,7 @@ async fn set_snapshot_diff_replay_and_inverse_are_exact() {
     let outcome = apply_docx_mutation(&mut applied, &mutation);
     assert!(outcome.messages().is_empty());
     assert_eq!(applied, after());
-    for inverse in Mutation::inverse(&mutation, &base) {
+    for inverse in Mutation::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
         apply_docx_mutation(&mut applied, &inverse);
     }
     assert_eq!(applied, base);
@@ -70,10 +70,10 @@ fn neutral_json_fixture_matches_the_canonical_xml_authority() {
         serde_json::from_str::<serde_json::Value>(text).expect("third-party JSON parser accepts fixture");
     }
 
-    let fixture_before: DocxSnapshot = dsl::os_pack::json::from_json_str(before_text).expect("before snapshot decodes");
-    let fixture_after: DocxSnapshot = dsl::os_pack::json::from_json_str(after_text).expect("after snapshot decodes");
-    let fixture_mutation: DocxMutation = dsl::os_pack::json::from_json_str(mutation_text).expect("mutation decodes");
-    let fixture_diff: DocxDiff = dsl::os_pack::json::from_json_str(diff_text).expect("diff decodes");
+    let fixture_before: DocxSnapshot = semio_framework_pack_json::from_json_str(before_text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes");
+    let fixture_after: DocxSnapshot = semio_framework_pack_json::from_json_str(after_text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes");
+    let fixture_mutation: DocxMutation = semio_framework_pack_json::from_json_str(mutation_text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes");
+    let fixture_diff: DocxDiff = semio_framework_pack_json::from_json_str(diff_text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("diff decodes");
 
     fixture_before.validate_authority().expect("before authority is valid");
     fixture_after.validate_authority().expect("after authority is valid");

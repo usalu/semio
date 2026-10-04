@@ -1,4 +1,6 @@
 use super::*;
+#[path="💰️backing/🦀️.rs"]
+mod owned_requests;
 
 fn owned_control_laws()->serde_json::Value{serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🎛️controls.json")).unwrap()}
 fn owned_control_payload(snapshot:&WavSnapshot,encoding:store::sqlite_snapshot::SnapshotEncoding)->store::io::IoPayload{match encoding{store::sqlite_snapshot::SnapshotEncoding::Binary=>store::io::IoPayload::Binary(store::ArtifactPack::encode_pack(snapshot)),store::sqlite_snapshot::SnapshotEncoding::Text=>store::io::IoPayload::Text(store::ArtifactDsl::print_dsl(snapshot))}}
@@ -23,8 +25,8 @@ fn sqlite_snapshot_wav_authored_schema_is_admitted_before_native_ownership(){
 
 #[test]
 fn sqlite_snapshot_wav_exact_native_row_forecast_matches_independent_sqlite(){
- use std::io::Write;use store::sqlite_snapshot::SnapshotEncoding;let expected=fixture();let database=expected.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,Default::default())).unwrap();let bytes=export_sqlite_database(&database,Default::default(),&mut |_|true).unwrap();let script="import{Database}from'bun:sqlite';const d=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()));let n=0;for(const r of d.query(\"SELECT name FROM sqlite_schema WHERE type='table'\").all())n+=d.query('SELECT COUNT(*) AS n FROM \"'+r.name+'\"').get().n;await Bun.write(Bun.stdout,String(n));d.close();";let mut child=std::process::Command::new("bun").args(["-e",script]).stdin(std::process::Stdio::piped()).stdout(std::process::Stdio::piped()).stderr(std::process::Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&bytes).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));let count=String::from_utf8(output.stdout).unwrap().parse::<usize>().unwrap();assert_eq!(count,owned_control_laws()["exactFixtureRows"].as_u64().unwrap()as usize);eprintln!("[DEBUG] WAV independent SQLite admitted {count} literal domain rows");
- for offset in owned_control_laws()["rowLimitOffsets"].as_array().unwrap(){let maximum=count.checked_add_signed(offset.as_i64().unwrap()as isize).unwrap();let limits=SqliteDatabaseLimits{max_rows:maximum,..Default::default()};for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let input=owned_control_payload(&expected,encoding);assert_eq!(WavSnapshot::decode_sqlite_snapshot_native(&input,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_ok(),maximum==count,"{encoding:?} input row bound {maximum}");assert_eq!(expected.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_ok(),maximum==count,"{encoding:?} output row bound {maximum}");}}
+ use std::io::Write;use store::sqlite_snapshot::SnapshotEncoding;let expected=fixture();let database=expected.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,Default::default())).unwrap();let bytes=export_sqlite_database(&database,Default::default(),&mut |_|true).unwrap();let script="import{Database}from'bun:sqlite';const d=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()));let n=0;for(const r of d.query(\"SELECT name FROM sqlite_schema WHERE type='table'\").all())n+=d.query('SELECT COUNT(*) AS n FROM \"'+r.name+'\"').get().n;await Bun.write(Bun.stdout,String(n));d.close();";let mut child=std::process::Command::new("bun").args(["-e",script]).stdin(std::process::Stdio::piped()).stdout(std::process::Stdio::piped()).stderr(std::process::Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&bytes).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));let count=String::from_utf8(output.stdout).unwrap().parse::<usize>().unwrap();assert_eq!(count,owned_control_laws()["exactFixtureRows"].as_u64().unwrap()as usize);
+ for offset in owned_control_laws()["rowLimitOffsets"].as_array().unwrap(){let maximum=count.checked_add_signed(offset.as_i64().unwrap()as isize).unwrap();let limits=SqliteDatabaseLimits{max_rows:maximum,..Default::default()};for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let input=owned_control_payload(&expected,encoding);let decoded=WavSnapshot::decode_sqlite_snapshot_native(&input,&mut SqliteSnapshotControl::new(&mut |_|true,limits));assert_eq!(decoded.is_ok(),maximum==count,"{encoding:?} input row bound {maximum}");if let Err(error)=decoded{assert_eq!(error.kind.as_str(),owned_control_laws()["rowRefusalKind"].as_str().unwrap(),"{encoding:?} input row origin");}let encoded=expected.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits));assert_eq!(encoded.is_ok(),maximum==count,"{encoding:?} output row bound {maximum}");if let Err(error)=encoded{assert_eq!(error.kind.as_str(),owned_control_laws()["rowRefusalKind"].as_str().unwrap(),"{encoding:?} output row origin");}}}
 }
 
 #[test]
@@ -37,11 +39,11 @@ fn sqlite_snapshot_wav_large_owned_text_cancels_inside_all_four_phases(){
 fn sqlite_snapshot_wav_manual_metadata_preserves_neutral_fields_and_enforces_cumulative_admission(){
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🏭️schema/🔣️.json")).unwrap();let maximum=fixture["maximumBytes"].as_u64().unwrap()as usize;let tiny=fixture["tinyBytes"].as_u64().unwrap()as usize;
  for(index,producer)in[super::wav_data_spec_producer(),super::wav_chunk_ref_spec_producer()].iter().enumerate(){
-  let mut admitted=|_|true;let mut encoding=dsl::NativeEncodeControl::new(maximum,&mut admitted);let encoded=producer.encode(&mut encoding).unwrap();let exact=encoding.owned_bytes();assert!(exact>0);
-  let mut admitted=|_|true;let mut decoding=dsl::NativeDecodeControl::new(maximum,&mut admitted);let decoded=producer.decode(&mut decoding).unwrap();
-  for record in[encoded,decoded]{let fields:Vec<_>=record.fields.iter().map(|field|serde_json::json!([field.id,field.key,field.optional])).collect();assert_eq!(serde_json::json!(fields),fixture["records"][index]["fields"]);let dsl::Shape::Enum(labels)=&record.fields[0].shape else{panic!("declared enum")};assert_eq!(serde_json::json!(labels),fixture["records"][index]["tags"]);}
-  assert!(producer.encode(&mut dsl::NativeEncodeControl::new(exact,&mut |_|true)).is_ok());assert!(producer.encode(&mut dsl::NativeEncodeControl::new(exact-1,&mut |_|true)).is_err());
-  let mut admitted=|_|true;let mut control=dsl::NativeEncodeControl::new(tiny,&mut admitted);assert!(producer.encode(&mut control).is_err());assert_eq!(control.owned_bytes(),0);assert!(producer.decode(&mut dsl::NativeDecodeControl::new(tiny,&mut |_|true)).is_err());assert!(producer.encode(&mut dsl::NativeEncodeControl::new(maximum,&mut |_|false)).is_err());assert!(producer.decode(&mut dsl::NativeDecodeControl::new(maximum,&mut |_|false)).is_err());
+  let mut admitted=|_|true;let mut encoding=semio_framework_value::NativeEncodeControl::new(maximum,&mut admitted);let encoded=producer.encode(&mut encoding).unwrap();let exact=encoding.owned_bytes();assert!(exact>0);
+  let mut admitted=|_|true;let mut decoding=semio_framework_value::NativeDecodeControl::new(maximum,&mut admitted);let decoded=producer.decode(&mut decoding).unwrap();
+  for record in[encoded,decoded]{let fields:Vec<_>=record.fields.iter().map(|field|serde_json::json!([field.id,field.key,field.optional])).collect();assert_eq!(serde_json::json!(fields),fixture["records"][index]["fields"]);let semio_framework_dsl_record::Shape::Enum(labels)=&record.fields[0].shape else{panic!("declared enum")};assert_eq!(serde_json::json!(labels),fixture["records"][index]["tags"]);}
+  assert!(producer.encode(&mut semio_framework_value::NativeEncodeControl::new(exact,&mut |_|true)).is_ok());assert!(producer.encode(&mut semio_framework_value::NativeEncodeControl::new(exact-1,&mut |_|true)).is_err());
+  let mut admitted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(tiny,&mut admitted);assert!(producer.encode(&mut control).is_err());assert_eq!(control.owned_bytes(),0);assert!(producer.decode(&mut semio_framework_value::NativeDecodeControl::new(tiny,&mut |_|true)).is_err());assert!(producer.encode(&mut semio_framework_value::NativeEncodeControl::new(maximum,&mut |_|false)).is_err());assert!(producer.decode(&mut semio_framework_value::NativeDecodeControl::new(maximum,&mut |_|false)).is_err());
  }
 }
 #[test]
@@ -60,31 +62,31 @@ fn sqlite_snapshot_wav_canonical_json_preserves_raw_sample_words_and_full_chunk_
     let words: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔢️float32.json")).unwrap();
     let bits: Vec<u32> = words["ieee754Binary32Bits"].as_array().unwrap().iter().map(|word| word.as_u64().unwrap() as u32).collect();
     let snapshot = WavSnapshot { data: WavData::Float32(bits.iter().copied().map(f32::from_bits).collect()), chunk_order: vec![WavChunkRef::Other(u64::MAX)], ..fixture() };
-    let text = dsl::json::to_json_string(&snapshot);
+    let text = semio_framework_pack_json::to_json_string(&snapshot);
     let independent: serde_json::Value = serde_json::from_str(&text).unwrap();
     assert_eq!(independent["data"]["value"], serde_json::Value::Array(bits.iter().map(|word| serde_json::json!({"bits":word})).collect()));
     assert_eq!(independent["chunkOrder"][0]["value"], u64::MAX.to_string());
-    let restored: WavSnapshot = dsl::json::from_json_str(&text).unwrap();
+    let restored: WavSnapshot = semio_framework_pack_json::from_json_str(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let WavData::Float32(samples) = restored.data else { panic!("float32 kind"); };
     assert_eq!(samples.iter().map(|sample| sample.to_bits()).collect::<Vec<_>>(), bits);
     for invalid in [r#"{"kind":"other","value":0}"#, r#"{"kind":"other","value":"00"}"#, r#"{"kind":"other","value":"+1"}"#, r#"{"kind":"other","value":"18446744073709551616"}"#, r#"{"kind":"format","value":"0"}"#] {
-        assert!(dsl::json::from_json_str::<WavChunkRef>(invalid).is_err());
+        assert!(semio_framework_pack_json::from_json_str::<WavChunkRef>(invalid, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
     }
     for invalid in [r#"{"kind":"float32","value":[0.0]}"#, r#"{"kind":"float32","value":[{"bits":4294967296}]}"#, r#"{"kind":"float32","value":[{"bits":0,"extra":0}]}"#] {
-        assert!(dsl::json::from_json_str::<WavData>(invalid).is_err());
+        assert!(semio_framework_pack_json::from_json_str::<WavData>(invalid, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
     }
 }
 
 #[test]
 fn sqlite_snapshot_wav_authored_grammar_and_protocol_admit_complete_logical_records() {
-    let grammar = dsl::parse_grammar(include_str!("../../📝️text/📖️.grammar.semio")).unwrap();
-    let recognizer = dsl::Recognizer::compile(&grammar);
+    let grammar = semio_framework_dsl::parse_grammar(include_str!("../../📝️text/📖️.grammar.semio")).unwrap();
+    let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
     for snapshot in [fixture(), WavSnapshot::default(), crate::standards::riff_pcm::subsets::any::io::decode_wav(include_bytes!("../../../../📚️examples/🎬️demo/🖼️assets/🎧️example/🔊️.wav")).unwrap()] {
         let text = <WavSnapshot as store::ArtifactDsl>::print_dsl(&snapshot);
         let (_, body) = store::semio_format::split_text_preamble(&text).unwrap();
         assert!(recognizer.recognize(body).unwrap(), "{body}");
     }
-    let protocol = dsl::parse_protocol(include_str!("../../💾️binary/📡️.protocol.semio")).unwrap();
+    let protocol = semio_framework_dsl::parse_protocol(include_str!("../../💾️binary/📡️.protocol.semio")).unwrap();
     assert_eq!(protocol.schema, "stdio.wav");
     assert_eq!(protocol.version, 1);
 }
@@ -102,7 +104,7 @@ use semio_framework_os_kernel::{
 };
 
 fn fixture() -> WavSnapshot {
-    pack::json::from_json_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap()
+    semio_framework_pack_json::from_json_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()
 }
 #[test]
 fn sqlite_snapshot_wav_complete_unsigned64_chunk_indices_survive_owned_relationships() {
@@ -199,7 +201,7 @@ fn roundtrip(value: &WavSnapshot) -> WavSnapshot {
 fn sqlite_snapshot_wav_semantic_fields_and_all_sample_kinds() {
     let snapshot = fixture();
     assert_eq!(roundtrip(&snapshot), snapshot);
-    let oracle: serde_json::Value = serde_json::from_str(&pack::json::to_json_string(&protocol::ToValue::to_value(&snapshot))).unwrap();
+    let oracle: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&snapshot))).unwrap();
     assert_eq!(oracle, serde_json::from_str::<serde_json::Value>(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap());
     for data in [WavData::Pcm16(vec![i16::MIN, i16::MAX]), WavData::Pcm8(vec![0, 255]), WavData::Raw(vec![0, 255, 17])] {
         let value = WavSnapshot {
@@ -305,5 +307,51 @@ fn sqlite_snapshot_wav_ieee754_samples_survive_independent_sqlite_and_detect_inc
         let mut invalid = database.clone();
         invalid.table_mut("wav_float32_sample").unwrap().rows[0].values[column] = value;
         assert!(WavSnapshot::from_sqlite_database(&invalid, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).is_err());
+    }
+}
+
+#[test]
+fn sqlite_snapshot_wav_data_equality_preserves_every_literal_ieee_word(){
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔢️float32.json")).unwrap();
+ let words=fixture["ieee754Binary32Bits"].as_array().unwrap();
+ for left in words{for right in words{
+  let left=left.as_u64().unwrap()as u32;let right=right.as_u64().unwrap()as u32;
+  let a=WavData::Float32(vec![f32::from_bits(left)]);let b=WavData::Float32(vec![f32::from_bits(right)]);
+  assert_eq!(a==b,left==right);assert_eq!(semio_framework_value::ToValue::to_value(&a)==semio_framework_value::ToValue::to_value(&b),left==right);
+ }}
+ assert_ne!(WavData::Pcm8(vec![0]),WavData::Raw(vec![0]));
+ assert_ne!(WavData::Float32(vec![0.0]),WavData::Float32(vec![0.0,0.0]));
+}
+
+#[test]
+fn sqlite_snapshot_wav_required_padding_defaults_match_the_closed_neutral_contract() {
+    let laws: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🎚️presence/🔣️.json")).unwrap();
+    for role in laws["cases"].as_array().unwrap() {
+        let mut wire: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap();
+        for field in ["fmtPadByte", "dataPadByte"] {
+            if role["present"].as_bool().unwrap() {
+                wire.as_object_mut().unwrap().insert(field.into(), role["value"].clone());
+            } else {
+                wire.as_object_mut().unwrap().remove(field);
+            }
+        }
+        for chunk in wire["otherChunks"].as_array_mut().unwrap() {
+            if role["present"].as_bool().unwrap() {
+                chunk.as_object_mut().unwrap().insert("padByte".into(), role["value"].clone());
+            } else {
+                chunk.as_object_mut().unwrap().remove("padByte");
+            }
+        }
+        let snapshot: WavSnapshot = semio_framework_pack_json::from_json_str(&wire.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        assert_eq!(u64::from(snapshot.fmt_pad_byte), laws["canonicalPads"]["format"].as_u64().unwrap());
+        assert_eq!(u64::from(snapshot.data_pad_byte), laws["canonicalPads"]["samples"].as_u64().unwrap());
+        assert!(snapshot.other_chunks.iter().all(|chunk| u64::from(chunk.pad_byte) == laws["canonicalPads"]["auxiliary"].as_u64().unwrap()));
+        let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, Default::default())).unwrap();
+        assert_eq!(database.table("wav_format").unwrap().rows[0].values[7], SqliteValue::Integer(0));
+        assert_eq!(database.table("wav_data").unwrap().rows[0].values[2], SqliteValue::Integer(0));
+        assert!(database.table("wav_other_chunk").unwrap().rows.iter().all(|row| row.values[4] == SqliteValue::Integer(0)));
+        let file = export_sqlite_database(&database, Default::default(), &mut |_| true).unwrap();
+        let restored_database = import_sqlite_database(&file, Default::default(), &mut |_| true).unwrap();
+        assert_eq!(WavSnapshot::from_sqlite_database(&restored_database, &mut SqliteSnapshotControl::new(&mut |_| true, Default::default())).unwrap(), snapshot);
     }
 }

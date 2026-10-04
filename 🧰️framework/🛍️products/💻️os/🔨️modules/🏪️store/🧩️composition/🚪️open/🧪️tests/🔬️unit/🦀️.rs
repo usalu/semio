@@ -1,5 +1,5 @@
 use super::*;
-use crate::os_store::{OwnedSchemaDecodeCredits, OWNED_SCHEMA_DECODE_PAGE_BYTES};
+use crate::os_store::{OWNED_SCHEMA_DECODE_PAGE_BYTES, OwnedSchemaDecodeCredits};
 
 fn request_for(bytes: &[u8]) -> MemberOpenRequest {
     let mut pages = OwnedSchemaDecodePages::try_with_credits(OwnedSchemaDecodeCredits { maximum_pages: bytes.len().max(1).div_ceil(OWNED_SCHEMA_DECODE_PAGE_BYTES), maximum_bytes: bytes.len().max(1) }).unwrap();
@@ -27,7 +27,7 @@ fn retire_request(request: &mut MemberOpenRequest) {
 
 #[test]
 fn member_open_input_framing_is_canonical_scoped_and_budgeted() {
-    use semio_framework_job::{root_cancel_token, StepBudget};
+    use semio_framework_job::{StepBudget, root_cancel_token};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["framing"].as_array().unwrap() {
         let bytes: Vec<u8> = serde_json::from_value(row["bytes"].clone()).unwrap();

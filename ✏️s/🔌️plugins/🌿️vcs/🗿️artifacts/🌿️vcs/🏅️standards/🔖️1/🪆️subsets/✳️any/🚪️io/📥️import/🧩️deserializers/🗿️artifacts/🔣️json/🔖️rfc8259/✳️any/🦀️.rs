@@ -5,7 +5,7 @@
 //! this hop), so this hop is `IoFidelity::Exact`.
 
 use crate::VcsSnapshot;
-use dsl::FromValue;
+use semio_framework_value::FromValue;
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
@@ -14,13 +14,13 @@ use semio_s_artifact_stdio_json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 
 pub const JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId::ANY };
 
-pub fn deserialize(from: &JsonSnapshot) -> Result<VcsSnapshot, store::TextError> {
+pub fn deserialize(from: &JsonSnapshot) -> Result<VcsSnapshot, semio_framework_diagnostic::TextError> {
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-    VcsSnapshot::from_value(dsl::json::to_dsl_value(&from.to_pack_value())).map_err(|error| store::TextError::new(format!("vcs<-json: {error}"), dsl::TextSpan::at(1, 1)))
+    VcsSnapshot::from_value(semio_framework_pack_json::to_dsl_value(&from.to_pack_value())).map_err(|error| semio_framework_diagnostic::TextError::new(error.kind, format!("vcs<-json: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))
 }
 
-pub fn deserialize_bytes(bytes: &[u8]) -> Result<VcsSnapshot, store::TextError> {
-    let text = std::str::from_utf8(bytes).map_err(|error| store::TextError::new(error.to_string(), dsl::TextSpan::at(1, 1)))?;
+pub fn deserialize_bytes(bytes: &[u8]) -> Result<VcsSnapshot, semio_framework_diagnostic::TextError> {
+    let text = std::str::from_utf8(bytes).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
     let value = parse_json_text(text)?;
     deserialize(&JsonSnapshot::from_value(value))
 }
@@ -32,8 +32,8 @@ impl Deserializer<VcsSnapshot> for JsonIntoVcs {
     const FIDELITY: IoFidelity = IoFidelity::Exact;
     async fn deserialize(payload: &IoPayload) -> IoResult<VcsSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
-            return Err(IoError { message: "JsonIntoVcs: expected a binary json payload".to_string(), diagnostics: Vec::new() });
+            return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "JsonIntoVcs: expected a binary json payload".to_string())));
         };
-        deserialize_bytes(bytes).map(IoOutcome::clean).map_err(|error| IoError { message: format!("JsonIntoVcs: {error}"), diagnostics: Vec::new() })
+        deserialize_bytes(bytes).map(IoOutcome::clean).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("JsonIntoVcs: {error}"))))
     }
 }

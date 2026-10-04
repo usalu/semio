@@ -134,7 +134,7 @@ mod subject {
         let base = decode_tiff(&input).map_err(|error| format!("decode_tiff failed: {error:?}"))?;
         let mut snapshot = base.clone();
         apply_tiff_mutation(&mut snapshot, &mutation);
-        for inverse in mutation_inverse(&mutation, &base) {
+        for inverse in mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
             apply_tiff_mutation(&mut snapshot, &inverse);
         }
         let output = encode_tiff(&snapshot).map_err(|error| format!("encode_tiff failed: {error:?}"))?;

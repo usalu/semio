@@ -21,9 +21,12 @@ impl protocol::MutationKind<CsvSnapshot, CsvMutation> for SetField {
     fn diff(&self, base: &CsvSnapshot) -> protocol::MutationOutcome<<CsvMutation as Mutation<CsvSnapshot>>::Diff> {
         agg_diff(&CsvMutation::SetField(self.clone()), base)
     }
-    fn inverse(&self, base: &CsvSnapshot) -> Vec<CsvMutation> {
-        agg_inverse(&CsvMutation::SetField(self.clone()), base)
-    }
+    fn inverse(&self, base: &CsvSnapshot) -> Result<Vec<CsvMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&CsvMutation::SetField(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set field", "Feld setzen")
     }

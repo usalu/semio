@@ -6,14 +6,14 @@ import { produce } from "immer";
 import { editPath, dragPathPoint, type PathEdit } from "../../🟦️.ts";
 import { arcGeometry, arcPoint, segmentBounds, type Point, type Matrix } from "../../../🟦️.ts";
 import boundsFixture from "../../../🧫️fixtures/🔄️arc-bounds/🔣️.json";
-import type { PathSegment } from "../../../../🟦️.ts";
+import type { PathGeometrySegment } from "../../../../🟦️.ts";
 import fixture from "../../🧫️fixtures/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
 test("path node editing matches shared cases and independent geometry", () => {
   const validate = new Ajv({ strict: true }).compile(schema);
   for (const item of fixture) {
     expect(validate(item.operation)).toBe(true);
-    const before = item.before as PathSegment[];
+    const before = item.before as PathGeometrySegment[];
     const operation = item.operation as PathEdit;
     if ("error" in item) { expect(() => editPath(before, operation)).toThrow(); continue; }
     const result = editPath(before, operation);
@@ -69,7 +69,7 @@ test("ellipse centers preserve rotation, radius correction and sweep direction",
 
 test("segment conversions preserve endpoints and independently evaluated curve geometry", () => {
   for (const item of fixture.filter(item => item.name.startsWith("convert-"))) {
-    const before = item.before as PathSegment[], saved = structuredClone(before);
+    const before = item.before as PathGeometrySegment[], saved = structuredClone(before);
     const result = editPath(before, item.operation as PathEdit);
     expect(before).toEqual(saved);
     const start = before[0]!, source = before[1]!, segment = result[1]!;
@@ -112,15 +112,15 @@ test("converted multi-quadrant arcs retain rotated ellipse geometry and sweep", 
 
 test("joining preserves oriented curves and matches independent contour splices", () => {
   const separated=fixture.find(item=>item.name==="join-separated-contours")!;
-  const before=separated.before as PathSegment[],saved=structuredClone(before);
+  const before=separated.before as PathGeometrySegment[],saved=structuredClone(before);
   const result=editPath(before,separated.operation as PathEdit);
   const oracle=produce(before,draft=>{ draft[2]={kind:"line",to:[10,0]}; });
   expect(result).toEqual(oracle);
   expect(before).toEqual(saved);
   const coincident=fixture.find(item=>item.name==="join-coincident-endpoints")!;
-  expect(editPath(coincident.before as PathSegment[],coincident.operation as PathEdit)).toEqual(produce(coincident.before,draft=>{draft.splice(2,1);}));
+  expect(editPath(coincident.before as PathGeometrySegment[],coincident.operation as PathEdit)).toEqual(produce(coincident.before,draft=>{draft.splice(2,1);}));
   const reversed=fixture.find(item=>item.name==="join-reversed-contours")!;
-  const joined=editPath(reversed.before as PathSegment[],reversed.operation as PathEdit),segment=joined[1]!;
+  const joined=editPath(reversed.before as PathGeometrySegment[],reversed.operation as PathEdit),segment=joined[1]!;
   if(segment.kind!=="cubic") throw new Error("Missing joined curve");
   const original=new CubicBezierCurve(new Vector2(0,0),new Vector2(1,2),new Vector2(4,2),new Vector2(5,0));
   const curve=new CubicBezierCurve(new Vector2(5,0),new Vector2(...segment.ctrl1),new Vector2(...segment.ctrl2),new Vector2(...segment.to));
@@ -129,7 +129,7 @@ test("joining preserves oriented curves and matches independent contour splices"
 
 test("arc extrema agree with shared fixtures and an independent ellipse", () => {
   for (const item of boundsFixture) {
-    const bounds=segmentBounds(item.segment as PathSegment,item.from as Point,item.from as Point,item.matrix as Matrix);
+    const bounds=segmentBounds(item.segment as PathGeometrySegment,item.from as Point,item.from as Point,item.matrix as Matrix);
     for (let axis=0;axis<4;axis++) expect(bounds[axis]).toBeCloseTo(item.bounds[axis]!,10);
     const oracle=new EllipseCurve(5,0,5,5,Math.PI,Math.PI*2,false,0);
     const [a,b,c,d,e,f]=item.matrix as Matrix,matrix=new Matrix3().set(a,c,e,b,d,f,0,0,1);
@@ -141,7 +141,7 @@ test("arc extrema agree with shared fixtures and an independent ellipse", () => 
 
  test("two-axis node positioning preserves adjacent tangents and source ownership",()=>{
   for(const item of fixture.filter(row=>row.name.startsWith("position-") && !('error' in row))) {
-    const before=item.before as PathSegment[],saved=structuredClone(before),operation=item.operation as Extract<PathEdit,{kind:"position"}>;
+    const before=item.before as PathGeometrySegment[],saved=structuredClone(before),operation=item.operation as Extract<PathEdit,{kind:"position"}>;
     const result=editPath(before,operation);
     const oracle=produce(before,draft=>{
       const node=draft[operation.index]!;
@@ -164,7 +164,7 @@ test("arc extrema agree with shared fixtures and an independent ellipse", () => 
 import drags from "../../🧫️fixtures/🖱️drag/🔣️.json";
 test("node pointer deltas stay correct through affine ancestors without snapping to the press",()=>{
   for(const sample of drags){
-    const segment=sample.segment as PathSegment,point=sample.point as "anchor"|"control1"|"control2";
+    const segment=sample.segment as PathGeometrySegment,point=sample.point as "anchor"|"control1"|"control2";
     const result=dragPathPoint(segment,point,sample.matrix as Matrix,sample.start as Point,sample.end as Point,sample.constrained);
     if("error" in sample){expect(result).toBeNull();continue;}
     expect(result![0]).toBeCloseTo(sample.to![0]!,12);expect(result![1]).toBeCloseTo(sample.to![1]!,12);
@@ -182,7 +182,7 @@ test("node pointer deltas stay correct through affine ancestors without snapping
 import { patchPathPoint } from "../../🟦️.ts";
 test("gesture position previews copy at most the edited segment and its adjacent tangent",()=>{
   for(const row of fixture.filter(row=>row.name.startsWith("position-") && !("error" in row))) {
-    const source=row.before as PathSegment[], saved=structuredClone(source), operation=row.operation as Extract<PathEdit,{kind:"position"}>;
+    const source=row.before as PathGeometrySegment[], saved=structuredClone(source), operation=row.operation as Extract<PathEdit,{kind:"position"}>;
     const patch=patchPathPoint(source[operation.index]!,source[operation.index+1],operation.point,operation.to);
     const preview=produce(source,draft=>{draft[operation.index]=patch[0];if(patch[1])draft[operation.index+1]=patch[1];});
     expect(preview).toEqual(row.after);
@@ -198,7 +198,7 @@ import pointHits from "../../🧫️fixtures/🎯️point-hit/🔣️.json";
 import { pathPointHit } from "../../🟦️.ts";
 test("node picking names the nearest visible point with deterministic anchor priority",()=>{
   for(const row of pointHits) {
-    const segment=row.segment as PathSegment, matrix=row.matrix as Matrix;
+    const segment=row.segment as PathGeometrySegment, matrix=row.matrix as Matrix;
     const result=pathPointHit(segment,matrix,row.world as Point,row.tolerance);
     expect(result?.point??null).toBe(row.point);
     const candidates=segment.kind==="close"?[]:[{point:"anchor",to:segment.to},...(segment.kind==="quad"?[{point:"control1",to:segment.ctrl}]:segment.kind==="cubic"?[{point:"control1",to:segment.ctrl1},{point:"control2",to:segment.ctrl2}]:[])];
@@ -215,7 +215,7 @@ import translationFixture from "../../🧫️fixtures/↔️points/🔣️.json"
 test("multi-point translation is atomic, order-independent and agrees with Three vectors", () => {
   const validate=new Ajv({strict:true}).compile(schema);
   for(const row of translationFixture) {
-    const source=row.before as PathSegment[],saved=structuredClone(source),operation=row.operation as PathEdit;
+    const source=row.before as PathGeometrySegment[],saved=structuredClone(source),operation=row.operation as PathEdit;
     expect(validate(operation)).toBe(true);
     if("error" in row) { expect(()=>editPath(source,operation)).toThrow(); expect(source).toEqual(saved); continue; }
     const actual=editPath(source,operation);
@@ -226,14 +226,14 @@ test("multi-point translation is atomic, order-independent and agrees with Three
       const segment=oracle[index as number]!,coordinate=segment[field as string] as [number,number];
       segment[field as string]=new Vector2(...coordinate).add(new Vector2(...row.operation.delta as [number,number])).toArray();
     }
-    expect(actual).toEqual(oracle as unknown as PathSegment[]);
+    expect(actual).toEqual(oracle as unknown as PathGeometrySegment[]);
     expect(editPath(source,{...row.operation,points:[...row.operation.points].reverse()} as PathEdit)).toEqual(actual);
     expect(editPath(actual,{...row.operation,delta:row.operation.delta.map(value=>-value)} as PathEdit)).toEqual(source);
   }
 });
 
 test("multi-point translation rejects empty selection, invalid indices and nonfinite deltas", () => {
-  const source:PathSegment[]=[{kind:"move",to:[0,0]}];
+  const source:PathGeometrySegment[]=[{kind:"move",to:[0,0]}];
   const valid={kind:"translate",points:[{index:0,point:"anchor"}],delta:[1,2]};
   const invalid=[{...valid,points:[]},{...valid,points:[{index:-1,point:"anchor"}]},{...valid,points:[{index:0.5,point:"anchor"}]},{...valid,points:[{index:0,point:"unknown"}]},{...valid,delta:[Infinity,0]},{...valid,delta:[NaN,0]},{...valid,delta:[1]}];
   const validate=new Ajv({strict:true}).compile(schema);
@@ -246,7 +246,7 @@ import { translateWorldPathPoints } from "../../🟦️.ts";
 
 test("world point nudges ignore translation and honor the complete affine basis",()=>{
   for(const row of worldTranslationFixture) {
-    const source=structuredClone(row.segments) as PathSegment[],points=row.points as import("../../🟦️.ts").PathPointRef[];
+    const source=structuredClone(row.segments) as PathGeometrySegment[],points=row.points as import("../../🟦️.ts").PathPointRef[];
     if(!row.after){expect(()=>translateWorldPathPoints(source,points,row.matrix as [number,number,number,number,number,number],row.delta as [number,number])).toThrow();continue;}
     const actual=translateWorldPathPoints(source,points,row.matrix as [number,number,number,number,number,number],row.delta as [number,number]);
     expect(actual).toEqual(row.after);expect(source).toEqual(row.segments);

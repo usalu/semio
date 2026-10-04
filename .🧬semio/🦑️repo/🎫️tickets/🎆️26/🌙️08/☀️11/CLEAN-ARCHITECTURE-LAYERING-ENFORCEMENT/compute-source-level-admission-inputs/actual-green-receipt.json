@@ -1,0 +1,31 @@
+{
+  "policy": {
+    "name": "@semio-tech/compute-ownership-runner:test",
+    "code": 0,
+    "pass": 3,
+    "fail": 0,
+    "stdoutCallbacks": 10,
+    "stderrCallbacks": 1
+  },
+  "inferred": {
+    "projects": [
+      "@semio-tech/puzzle-3d-rs-compute-ownership",
+      "@semio-tech/framework-plugin-compute-ownership",
+      "@semio-tech/framework-plugin-host-fixture-compute-ownership",
+      "@semio-tech/space-plugin-compute-ownership",
+      "@semio-tech/framework-os-flow-compute-ownership",
+      "@semio-tech/framework-os-compute-ownership"
+    ],
+    "levels": [
+      "quick",
+      "long",
+      "exhaustive"
+    ],
+    "tasks": 18,
+    "pass": 51,
+    "fail": 0,
+    "code": 0,
+    "stdoutCallbacks": 112,
+    "stderrCallbacks": 1
+  }
+}

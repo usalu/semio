@@ -8,7 +8,7 @@ pub fn diff(payload: &ChangeTIntC, base: &Din4108Snapshot) -> protocol::Mutation
         return protocol::MutationOutcome::fatal("mutation.invariant", "t_int_c must be a finite temperature above absolute zero (-273.15 °C).", Vec::<String>::new());
     }
     if base.t_int_c == payload.new_t_int_c {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "t_int_c already has this value.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "t_int_c already has this value.");
     }
     protocol::MutationOutcome::new(Din4108Diff { t_int_c: Some(payload.new_t_int_c), ..Default::default() })
 }

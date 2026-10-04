@@ -1,0 +1,290 @@
+[
+  {
+    "input": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/📷️png/💾️binary/📡️.protocol.semio",
+    "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+    "inputSHA256": "94abe1a4afafee64bc8d4b2fa7ff405cfc4def66ce3a81582988888b030622cf",
+    "currentDestinationSHA256": "fae0c8a340fe7d7486768794f7f3cad326ec9cd055fe271985154c383c48f9d0",
+    "held": false,
+    "mountedSHA256": "94abe1a4afafee64bc8d4b2fa7ff405cfc4def66ce3a81582988888b030622cf",
+    "currentMountedSHA256": "94abe1a4afafee64bc8d4b2fa7ff405cfc4def66ce3a81582988888b030622cf"
+  },
+  {
+    "input": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/📷️png/💾️binary/🟦️.ts",
+    "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🟦️.ts",
+    "inputSHA256": "f9bd8a0414322eaac568bed0dd3e8cb2504fed07697d59e11555df8700555333",
+    "currentDestinationSHA256": "42bf5c2da0cb07de27023d2e523eba4483d8de9d3067cc59e7b5617c0f67b94b",
+    "held": false,
+    "mountedSHA256": "f9bd8a0414322eaac568bed0dd3e8cb2504fed07697d59e11555df8700555333",
+    "currentMountedSHA256": "f9bd8a0414322eaac568bed0dd3e8cb2504fed07697d59e11555df8700555333"
+  },
+  {
+    "input": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/📷️png/📝️text/🅰️.g4",
+    "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🅰️.g4",
+    "inputSHA256": "5c50d8e883dfa08db417fc85b0de4ddd5397956f103b362dbd8f6108579cb961",
+    "currentDestinationSHA256": "defb26c4b27786da6652dd8f2e9e4cef8f39a5210a3bebe34179b5647e90e74c",
+    "held": false,
+    "mountedSHA256": "5c50d8e883dfa08db417fc85b0de4ddd5397956f103b362dbd8f6108579cb961",
+    "currentMountedSHA256": "6a49e1b1ea395334c6da7f2ede9deb133508ba21c29acb3425521b536d4e7a81"
+  },
+  {
+    "input": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/📷️png/📝️text/📖️.grammar.semio",
+    "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio",
+    "inputSHA256": "71904b4abf09fd079847157d2aa47a8d21367202876bd41426093399dffffb92",
+    "currentDestinationSHA256": "5d30c98571f5c28494efc2693ccd567e21d7a1505491a7c7778b2a39ec34668c",
+    "held": false,
+    "mountedSHA256": "71904b4abf09fd079847157d2aa47a8d21367202876bd41426093399dffffb92",
+    "currentMountedSHA256": "71904b4abf09fd079847157d2aa47a8d21367202876bd41426093399dffffb92"
+  },
+  {
+    "input": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/📷️png/📝️text/🔤️.ebnf",
+    "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🔤️.ebnf",
+    "inputSHA256": "0c2cc25c0960a1eca24764e565ac470c4cc06a0d94e2a36db47f77e5a5737a5f",
+    "currentDestinationSHA256": "861cd1cc1196dde2d9c3e53f19bc9d204910032134b0b0be7ce8a4a4fe43a16f",
+    "held": false,
+    "mountedSHA256": "0c2cc25c0960a1eca24764e565ac470c4cc06a0d94e2a36db47f77e5a5737a5f",
+    "currentMountedSHA256": "2eacf7234c37d2cc9e88f7bce3a6b0c168ae3a326625e18534a73f105f0fbe98"
+  },
+  {
+    "input": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/📷️png/📝️text/🟦️.ts",
+    "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🟦️.ts",
+    "inputSHA256": "00f9d73a1039903c2c33211a4acae3264da4c96b6d797fb7565d014656b4a3b2",
+    "currentDestinationSHA256": "1ea8f1826f9d6427375b76267e505318488fa6ff177a3eca22750ad400b69c4a",
+    "held": false,
+    "mountedSHA256": "00f9d73a1039903c2c33211a4acae3264da4c96b6d797fb7565d014656b4a3b2",
+    "currentMountedSHA256": "00f9d73a1039903c2c33211a4acae3264da4c96b6d797fb7565d014656b4a3b2"
+  },
+  {
+    "input": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/📷️png/📦️pack/🦀️.rs",
+    "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️pack/🦀️.rs",
+    "inputSHA256": "c130d3c7b171535c1a357f3e2ef94f800405841272da2d6297feb69abb00eedf",
+    "currentDestinationSHA256": null,
+    "held": false,
+    "mountedSHA256": "c130d3c7b171535c1a357f3e2ef94f800405841272da2d6297feb69abb00eedf",
+    "currentMountedSHA256": "c130d3c7b171535c1a357f3e2ef94f800405841272da2d6297feb69abb00eedf"
+  },
+  {
+    "input": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/📷️png/🔣️.json",
+    "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json",
+    "inputSHA256": "8a9f7fdd9e4d3bfe22d099625d2d638d8cfa9ed36f4a361fd7737d36f75d24bf",
+    "currentDestinationSHA256": "3fb0b9a2d671c5ca3df525687f6318cfbfb52563c259427ad5feea0c364549f1",
+    "held": false,
+    "mountedSHA256": "8a9f7fdd9e4d3bfe22d099625d2d638d8cfa9ed36f4a361fd7737d36f75d24bf",
+    "currentMountedSHA256": "8a9f7fdd9e4d3bfe22d099625d2d638d8cfa9ed36f4a361fd7737d36f75d24bf"
+  },
+  {
+    "input": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/📷️png/🚦️native/🦀️.rs",
+    "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🚦️native/🦀️.rs",
+    "inputSHA256": "15c3624ef6e1c7b52595c9088e5e83e25bfc2e778b84373fba7cae53b4433b6e",
+    "currentDestinationSHA256": "70f8cfbef1752128398bb573fb9be1485a66f7b9889507cbb6f2fc106b03a76b",
+    "held": false,
+    "mountedSHA256": "15c3624ef6e1c7b52595c9088e5e83e25bfc2e778b84373fba7cae53b4433b6e",
+    "currentMountedSHA256": "15c3624ef6e1c7b52595c9088e5e83e25bfc2e778b84373fba7cae53b4433b6e"
+  },
+  {
+    "input": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/📷️png/🚪️io/💾️binary/🌶️.spicy",
+    "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/💾️binary/🌶️.spicy",
+    "inputSHA256": "f61fff768bdab40c1b522e7a43b8121213fd36c099bc5a21ffce9784ab0bc065",
+    "currentDestinationSHA256": null,
+    "held": false,
+    "mountedSHA256": "f61fff768bdab40c1b522e7a43b8121213fd36c099bc5a21ffce9784ab0bc065",
+    "currentMountedSHA256": "f61fff768bdab40c1b522e7a43b8121213fd36c099bc5a21ffce9784ab0bc065"
+  },
+  {
+    "input": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/📷️png/🚪️io/💾️binary/📡️.protocol.semio",
+    "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/💾️binary/📡️.protocol.semio",
+    "inputSHA256": "63a491634ef27c6e9c67ba0c5ed024f2ac022a9cbd4b33eca42f254529482678",
+    "currentDestinationSHA256": null,
+    "held": false,
+    "mountedSHA256": "63a491634ef27c6e9c67ba0c5ed024f2ac022a9cbd4b33eca42f254529482678",
+    "currentMountedSHA256": "63a491634ef27c6e9c67ba0c5ed024f2ac022a9cbd4b33eca42f254529482678"
+  },
+  {
+    "input": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/📷️png/🚪️io/💾️binary/🔠️.abnf",
+    "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/💾️binary/🔠️.abnf",
+    "inputSHA256": "ae58859a2804654813c29abd32ac09f7e8bf56e4afd1f02e498b55d3eb1b4d36",
+    "currentDestinationSHA256": null,
+    "held": false,
+    "mountedSHA256": "ae58859a2804654813c29abd32ac09f7e8bf56e4afd1f02e498b55d3eb1b4d36",
+    "currentMountedSHA256": "ae58859a2804654813c29abd32ac09f7e8bf56e4afd1f02e498b55d3eb1b4d36"
+  },
+  {
+    "input": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/📷️png/🚪️io/💾️binary/🥋️.ksy",
+    "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/💾️binary/🥋️.ksy",
+    "inputSHA256": "00a956c35bff387f8b56b4bebf893aa29e16a38ee2540fb41d7a861f919302b6",
+    "currentDestinationSHA256": null,
+    "held": false,
+    "mountedSHA256": "00a956c35bff387f8b56b4bebf893aa29e16a38ee2540fb41d7a861f919302b6",
+    "currentMountedSHA256": "00a956c35bff387f8b56b4bebf893aa29e16a38ee2540fb41d7a861f919302b6"
+  },
+  {
+    "input": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/📷️png/🟦️.ts",
+    "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts",
+    "inputSHA256": "420c33382184ce4beaaf232aa8ff6ed986a5637f2aa28dc49f7925037a5357fb",
+    "currentDestinationSHA256": "5b0e9b297b8e95be6c860a79a371db93754e56b315b4ddf6ab966fb5a4f867e9",
+    "held": false,
+    "mountedSHA256": "420c33382184ce4beaaf232aa8ff6ed986a5637f2aa28dc49f7925037a5357fb",
+    "currentMountedSHA256": "420c33382184ce4beaaf232aa8ff6ed986a5637f2aa28dc49f7925037a5357fb"
+  },
+  {
+    "input": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/📷️png/🦀️.rs",
+    "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+    "inputSHA256": "1440d3ff508e2d56d59c9708470b311d0d43c5f5d6757920acd23df048f328e0",
+    "currentDestinationSHA256": "d3c11f61663496570073c718c8cff0413149d2652e8a534b3743d8d756149fb3",
+    "held": false,
+    "mountedSHA256": "1440d3ff508e2d56d59c9708470b311d0d43c5f5d6757920acd23df048f328e0",
+    "currentMountedSHA256": "1440d3ff508e2d56d59c9708470b311d0d43c5f5d6757920acd23df048f328e0"
+  },
+  {
+    "input": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/📷️png/🧪️tests/🪆️owner/🦀️.rs",
+    "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪆️owner/🦀️.rs",
+    "inputSHA256": "b44b84e99c5b79fd4842e419ffc0c623c7714e3332f3d386da0a6f6854774d53",
+    "currentDestinationSHA256": null,
+    "held": false,
+    "mountedSHA256": "b44b84e99c5b79fd4842e419ffc0c623c7714e3332f3d386da0a6f6854774d53",
+    "currentMountedSHA256": "b44b84e99c5b79fd4842e419ffc0c623c7714e3332f3d386da0a6f6854774d53"
+  },
+  {
+    "input": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/📷️png/🧪️tests/🪶️sqlite/🚦️audit/🟦️.ts",
+    "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🚦️audit/🟦️.ts",
+    "inputSHA256": "c7b64bd06e292fbc55cb125a9883717f0d5dec0af31a50c178deb172c6a5a8c7",
+    "currentDestinationSHA256": "6418992eac45229b5d8d31ae6e22aa1eb91442212f2c5a2bc010c6a0231b722d",
+    "held": false,
+    "mountedSHA256": "c7b64bd06e292fbc55cb125a9883717f0d5dec0af31a50c178deb172c6a5a8c7",
+    "currentMountedSHA256": "c7b64bd06e292fbc55cb125a9883717f0d5dec0af31a50c178deb172c6a5a8c7"
+  },
+  {
+    "input": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/📷️png/🧪️tests/🪶️sqlite/🟦️.ts",
+    "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts",
+    "inputSHA256": "543dfd702cf276fe4abbc57e32dc51843f78320572ccc8b144cff4bd3a5c39f1",
+    "currentDestinationSHA256": "571540fa759d01904da7f3a01f93c584b1b0619557935763856f146de9075427",
+    "held": false,
+    "mountedSHA256": "543dfd702cf276fe4abbc57e32dc51843f78320572ccc8b144cff4bd3a5c39f1",
+    "currentMountedSHA256": "543dfd702cf276fe4abbc57e32dc51843f78320572ccc8b144cff4bd3a5c39f1"
+  },
+  {
+    "input": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/📷️png/🧪️tests/🪶️sqlite/🦀️.rs",
+    "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+    "inputSHA256": "ca1b8258dd8e4fac69f4b0e57752315f06ea1ac6ad9b26cad4d96041f6e07609",
+    "currentDestinationSHA256": "cb33f266e91a9f3a19c78383e04782bc1368783b6b37931298b98c6742f3296f",
+    "held": false,
+    "mountedSHA256": "ca1b8258dd8e4fac69f4b0e57752315f06ea1ac6ad9b26cad4d96041f6e07609",
+    "currentMountedSHA256": "ca1b8258dd8e4fac69f4b0e57752315f06ea1ac6ad9b26cad4d96041f6e07609"
+  },
+  {
+    "input": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/📷️png/🪶️sqlite/⚠️syntax/🦀️.rs",
+    "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/⚠️syntax/🦀️.rs",
+    "inputSHA256": "e860cea5065b60171e07f2e1545bc974130dd4b4c2eec0ce941607b565bab88c",
+    "currentDestinationSHA256": null,
+    "held": false,
+    "mountedSHA256": "e860cea5065b60171e07f2e1545bc974130dd4b4c2eec0ce941607b565bab88c",
+    "currentMountedSHA256": "e860cea5065b60171e07f2e1545bc974130dd4b4c2eec0ce941607b565bab88c"
+  },
+  {
+    "input": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/📷️png/🪶️sqlite/🌈️scanline/🦀️.rs",
+    "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🌈️scanline/🦀️.rs",
+    "inputSHA256": "6165a5e0ebdcfd8b8e14964d087168149964a01495b9c3311e284c06fb9e2d20",
+    "currentDestinationSHA256": null,
+    "held": false,
+    "mountedSHA256": "6165a5e0ebdcfd8b8e14964d087168149964a01495b9c3311e284c06fb9e2d20",
+    "currentMountedSHA256": "6165a5e0ebdcfd8b8e14964d087168149964a01495b9c3311e284c06fb9e2d20"
+  },
+  {
+    "input": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/📷️png/🪶️sqlite/💰️backing/🦀️.rs",
+    "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/💰️backing/🦀️.rs",
+    "inputSHA256": "70117d93c111c1779c0a7747cc67fe308617ef3901ea0ebde44233d592cf8dd2",
+    "currentDestinationSHA256": "fb1b9b0839f0551f2177137df6ecceb103ef854b0c8e4d76c9b08fcb93c7c341",
+    "held": false,
+    "mountedSHA256": "70117d93c111c1779c0a7747cc67fe308617ef3901ea0ebde44233d592cf8dd2",
+    "currentMountedSHA256": "70117d93c111c1779c0a7747cc67fe308617ef3901ea0ebde44233d592cf8dd2"
+  },
+  {
+    "input": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/📷️png/🪶️sqlite/🔍️rows/🦀️.rs",
+    "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🔍️rows/🦀️.rs",
+    "inputSHA256": "b5b6e7a6a1a4f4b86671618a5511ed72ef9339197ac4ab6a363547546227e001",
+    "currentDestinationSHA256": null,
+    "held": false,
+    "mountedSHA256": "b5b6e7a6a1a4f4b86671618a5511ed72ef9339197ac4ab6a363547546227e001",
+    "currentMountedSHA256": "b5b6e7a6a1a4f4b86671618a5511ed72ef9339197ac4ab6a363547546227e001"
+  },
+  {
+    "input": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/📷️png/🪶️sqlite/🗄️.sql",
+    "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🗄️.sql",
+    "inputSHA256": "c9ef9d9a3a26070896200f88be3022103a13b6a157a93b62b78155b41f41943d",
+    "currentDestinationSHA256": "b6218dda0e48c13fdda0edff9db358178b7cce79613f0ae3df7624a1c6351afc",
+    "held": false,
+    "mountedSHA256": "c9ef9d9a3a26070896200f88be3022103a13b6a157a93b62b78155b41f41943d",
+    "currentMountedSHA256": "c9ef9d9a3a26070896200f88be3022103a13b6a157a93b62b78155b41f41943d"
+  },
+  {
+    "input": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/📷️png/🪶️sqlite/🗜️compression/🦀️.rs",
+    "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🗜️compression/🦀️.rs",
+    "inputSHA256": "f11c369b867705ea7d3dc7fe5a2fd1004012607a0a83693818cb08824cbbdf9b",
+    "currentDestinationSHA256": null,
+    "held": false,
+    "mountedSHA256": "f11c369b867705ea7d3dc7fe5a2fd1004012607a0a83693818cb08824cbbdf9b",
+    "currentMountedSHA256": "f11c369b867705ea7d3dc7fe5a2fd1004012607a0a83693818cb08824cbbdf9b"
+  },
+  {
+    "input": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/📷️png/🪶️sqlite/🛫️projection/🦀️.rs",
+    "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🛫️projection/🦀️.rs",
+    "inputSHA256": "7eafa87131877c1d65dbea46f07fd996d5535f8c9c6bf6e0b750e5b212d7ccad",
+    "currentDestinationSHA256": null,
+    "held": false,
+    "mountedSHA256": "7eafa87131877c1d65dbea46f07fd996d5535f8c9c6bf6e0b750e5b212d7ccad",
+    "currentMountedSHA256": "7eafa87131877c1d65dbea46f07fd996d5535f8c9c6bf6e0b750e5b212d7ccad"
+  },
+  {
+    "input": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/📷️png/🪶️sqlite/🛬️reconstruction/🦀️.rs",
+    "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🛬️reconstruction/🦀️.rs",
+    "inputSHA256": "e9fa5d3b9b3dfa565dc028f4bea8874047df6e80035ae84d38da0ec571f40b81",
+    "currentDestinationSHA256": null,
+    "held": false,
+    "mountedSHA256": "e9fa5d3b9b3dfa565dc028f4bea8874047df6e80035ae84d38da0ec571f40b81",
+    "currentMountedSHA256": "e9fa5d3b9b3dfa565dc028f4bea8874047df6e80035ae84d38da0ec571f40b81"
+  },
+  {
+    "input": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/📷️png/🪶️sqlite/🟦️.ts",
+    "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+    "inputSHA256": "4c8c5e2e47039d346a95eeff02702dec6d9639fb2a6bf17fc93ac30821b78f07",
+    "currentDestinationSHA256": "27a4ec154dee409de1ca8e394a2f56fb75455752d3f724fe42b80c1fb9891bae",
+    "held": false,
+    "mountedSHA256": "4c8c5e2e47039d346a95eeff02702dec6d9639fb2a6bf17fc93ac30821b78f07",
+    "currentMountedSHA256": "4c8c5e2e47039d346a95eeff02702dec6d9639fb2a6bf17fc93ac30821b78f07"
+  },
+  {
+    "input": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/📷️png/🪶️sqlite/🦀️.rs",
+    "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+    "inputSHA256": "275b38616e28024c78f91614b37c578662d9ba867041dcaddf2279aed40c0c6e",
+    "currentDestinationSHA256": "7a23d7b0ce3fe971f083601e90391fa82583128e86f7827197d13db811ec8eaf",
+    "held": false,
+    "mountedSHA256": "275b38616e28024c78f91614b37c578662d9ba867041dcaddf2279aed40c0c6e",
+    "currentMountedSHA256": "275b38616e28024c78f91614b37c578662d9ba867041dcaddf2279aed40c0c6e"
+  },
+  {
+    "input": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/📷️png/🪶️sqlite/🧩️chunks/🦀️.rs",
+    "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🧩️chunks/🦀️.rs",
+    "inputSHA256": "846b24991ebb9f69b968edc61dddd2b40ccbc06ae2a49dab4faed689a421cd65",
+    "currentDestinationSHA256": null,
+    "held": false,
+    "mountedSHA256": "846b24991ebb9f69b968edc61dddd2b40ccbc06ae2a49dab4faed689a421cd65",
+    "currentMountedSHA256": "846b24991ebb9f69b968edc61dddd2b40ccbc06ae2a49dab4faed689a421cd65"
+  },
+  {
+    "input": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/📷️png/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio",
+    "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio",
+    "currentDestinationSHA256": "eb68ecc56c61e66fa57d622127be73d686bc0ad74c64af10ba4c1c5c96a90695",
+    "held": false,
+    "inputSHA256": "4b666ce5bc4953d6b2ba9d9a600d39e1702c6c1a529c52f2470f336713ed24f4",
+    "mountedSHA256": "4b666ce5bc4953d6b2ba9d9a600d39e1702c6c1a529c52f2470f336713ed24f4",
+    "currentMountedSHA256": "4b666ce5bc4953d6b2ba9d9a600d39e1702c6c1a529c52f2470f336713ed24f4"
+  },
+  {
+    "input": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/📷️png/📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio",
+    "destination": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio",
+    "currentDestinationSHA256": "7c1ef7271338b72cdc2ab06160437f0bf3de8bf4a4190795e7b84b825898e1aa",
+    "held": false,
+    "inputSHA256": "e9521d12e3a892f38924fc6bd8bae260f5cc28a53e2926280a7146c6c245d4fe",
+    "mountedSHA256": "e9521d12e3a892f38924fc6bd8bae260f5cc28a53e2926280a7146c6c245d4fe",
+    "currentMountedSHA256": "e9521d12e3a892f38924fc6bd8bae260f5cc28a53e2926280a7146c6c245d4fe"
+  }
+]

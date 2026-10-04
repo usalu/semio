@@ -3,8 +3,8 @@
 use super::super::{MemberHistoryInputStep, MemberHistoryVerification};
 use super::*;
 use crate::os_io::{ArtifactDialect, ArtifactRef};
-use crate::os_store::{OwnedSchemaDecodeCredits, OwnedSchemaDecodePage, OwnedSchemaDecodePages, OwnerRef, OWNED_SCHEMA_DECODE_PAGE_BYTES};
-use semio_framework_job::{root_cancel_token, Generation, OperationId, StepBudget};
+use crate::os_store::{OWNED_SCHEMA_DECODE_PAGE_BYTES, OwnedSchemaDecodeCredits, OwnedSchemaDecodePage, OwnedSchemaDecodePages, OwnerRef};
+use semio_framework_job::{Generation, OperationId, StepBudget, root_cancel_token};
 use serde_json::Value;
 
 fn fixture() -> Value {

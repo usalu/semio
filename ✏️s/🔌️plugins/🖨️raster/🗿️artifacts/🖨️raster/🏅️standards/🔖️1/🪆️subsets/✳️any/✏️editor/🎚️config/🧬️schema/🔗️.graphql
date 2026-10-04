@@ -16,6 +16,7 @@ type RasterConfig {
   brushHardness: Float! @state(class: CONFIG)
   paintTarget: String! @state(class: CONFIG)
   maskValue: Int! @state(class: CONFIG)
+  fillTolerance: Int! @state(class: CONFIG)
   pixelSelection: RasterPixelSelection @state(class: CONFIG)
   compositeViewport: RasterConfigViewportSize @state(class: CONFIG)
   camera: RasterCamera! @state(class: CONFIG)

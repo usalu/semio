@@ -9,7 +9,6 @@
 
 use crate::IfcSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::bounds::compute_ifc_bounds;
 //#region 🔖️Inference
@@ -24,8 +23,11 @@ pub struct IfcInference {
 }
 
 impl protocol::Inference<IfcSnapshot> for IfcInference {
-    fn infer(snapshot: &IfcSnapshot) -> Self {
+    fn infer(snapshot: &IfcSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { bounds: compute_ifc_bounds(snapshot) }
+    
+        })
     }
 }
 
@@ -33,7 +35,9 @@ impl protocol::Inference<IfcSnapshot> for IfcInference {
 /// `IfcSnapshot::default()`'s `entities` ever stops being empty.
 impl Default for IfcInference {
     fn default() -> Self {
-        <Self as protocol::Inference<IfcSnapshot>>::infer(&IfcSnapshot::default())
+        let snapshot = &IfcSnapshot::default();
+
+        Self { bounds: compute_ifc_bounds(snapshot) }
     }
 }
 
@@ -49,17 +53,6 @@ impl protocol::InferenceSpec<IfcSnapshot> for IfcInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 💡️ No `InferredField`s here — `bounds` is a single min/max fold over every
-/// `IFCCARTESIANPOINT` entity in `entities`, already O(n) in total entity count with no honest
-/// per-entity incremental decomposition (a merkle dep-chain over this flat entity list costs more
-/// than the fold it would cache) — the default `infer_cached` passthrough is exact.
-impl ArtifactInferrer for crate::standards::v4::subsets::any::schema::IfcBuilder {
-    type Snapshot = IfcSnapshot;
-    type Inference = IfcInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.ifc.inference`'s facet leaves into the OS-wide inference catalog — call

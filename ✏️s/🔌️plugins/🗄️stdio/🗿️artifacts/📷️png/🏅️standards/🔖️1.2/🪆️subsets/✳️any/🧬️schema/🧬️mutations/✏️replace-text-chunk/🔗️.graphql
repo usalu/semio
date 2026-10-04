@@ -1,3 +1,0 @@
-# 🧬️ replace-text-chunk/ReplaceTextChunk
-scalar ReplaceTextChunkMutationValue
-input ReplaceTextChunkMutation { index: Int! chunk: ReplaceTextChunkMutationValue! }

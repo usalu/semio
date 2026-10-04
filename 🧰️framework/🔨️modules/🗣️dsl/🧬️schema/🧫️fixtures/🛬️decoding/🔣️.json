@@ -1,0 +1,79 @@
+{
+  "source": "controlled flag=true signed=-9223372036854775808 unsigned=18446744073709551615 float=nan64_7ff0000000000001 text=\"🧬\\u{0}field\" octets=\"AP+A\" tag=second count=x18446744073709551615 coord=@inf,-inf,-0 dir=^1,2,3 dim=infx3x4 range=(inf..inf,1) labels=[ first \"second value\" ] nested=label=child value=nan64_7ff0000000000001 entries={ first=1 second=2 } dynamic={ a=[null true -0.0] n=18446744073709551615 raw=bytes64(\"AP+A\") } formula=(10-2*3) rows [label:TEXT value:NUM] { row 1 } stress=infGPa embedded=\"raw content\"",
+  "signed": "-9223372036854775808",
+  "unsigned": "18446744073709551615",
+  "floatWord": "7ff0000000000001",
+  "text": "🧬\u0000field",
+  "octets": [
+    0,
+    255,
+    128
+  ],
+  "formulaValue": 4,
+  "wires": [
+    {
+      "source": "edge a:Kind@out->b:Kind2@in",
+      "from": "a",
+      "to": "b",
+      "directed": true,
+      "labelId": null,
+      "labelKind": null
+    },
+    {
+      "source": "edge a--b",
+      "from": "a",
+      "to": "b",
+      "directed": false,
+      "labelId": null,
+      "labelKind": null
+    },
+    {
+      "source": "edge solo",
+      "from": "solo",
+      "to": null,
+      "directed": null,
+      "labelId": null,
+      "labelKind": null
+    },
+    {
+      "source": "edge a -e1:Connection>b",
+      "from": "a",
+      "to": "b",
+      "directed": true,
+      "labelId": "e1",
+      "labelKind": "Connection"
+    },
+    {
+      "source": "edge a -e1-b",
+      "from": "a",
+      "to": "b",
+      "directed": false,
+      "labelId": "e1",
+      "labelKind": null
+    },
+    {
+      "source": "edge a -:Connection>b",
+      "from": "a",
+      "to": "b",
+      "directed": true,
+      "labelId": null,
+      "labelKind": "Connection"
+    },
+    {
+      "source": "edge b<-[e1:Connection]-a",
+      "from": "a",
+      "to": "b",
+      "directed": true,
+      "labelId": "e1",
+      "labelKind": "Connection"
+    },
+    {
+      "source": "edge a -[e1:Connection]->b { raw=bytes64(\"AP+A\") title=\"🧬\\u{0}field\" }",
+      "from": "a",
+      "to": "b",
+      "directed": true,
+      "labelId": "e1",
+      "labelKind": "Connection"
+    }
+  ]
+}

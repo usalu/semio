@@ -3,7 +3,7 @@ use super::*;
 
 use semio_framework_os_kernel::{sqlite_snapshot::{export_sqlite_database, import_sqlite_database, SqliteDatabaseLimits, SqliteSnapshotControl, SqliteValue}, ArtifactSqliteSnapshot};
 
-fn fixture() -> ObjSnapshot { pack::json::from_json_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap() }
+fn fixture() -> ObjSnapshot { semio_framework_pack_json::from_json_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap() }
 
 #[test]
 fn sqlite_snapshot_obj_controlled_output_retains_exact_ieee_and_source_words_with_interior_cancellation(){
@@ -28,7 +28,7 @@ async fn sqlite_snapshot_obj_actual_declaration_typed_and_erased_io_mount(){
 #[test]
 fn sqlite_snapshot_obj_unresolved_native_source_indices_are_complete_states(){
     let mut corpus:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔗️source-indices.json")).unwrap();corpus.as_object_mut().unwrap().remove("unsigned64Indices");
-    let snapshot:ObjSnapshot=pack::json::from_json_str(&corpus.to_string()).unwrap();
+    let snapshot:ObjSnapshot=semio_framework_pack_json::from_json_str(&corpus.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();
     let bytes=export_sqlite_database(&database,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();
     use std::{process::{Command,Stdio},io::Write};
@@ -93,7 +93,7 @@ fn sqlite_snapshot_obj_geometry_membership_ranges_and_unknown_statements_roundtr
     let database = import_sqlite_database(&bytes, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
     let restored = ObjSnapshot::from_sqlite_database(&database, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();
     assert_eq!(restored, snapshot);
-    let oracle: serde_json::Value = serde_json::from_str(&pack::json::to_json_string(&protocol::ToValue::to_value(&restored))).unwrap();
+    let oracle: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&restored))).unwrap();
     let expected: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap();
     assert_eq!(oracle, expected);
     assert_eq!(<ObjSnapshot as store::ArtifactPack>::encode_pack(&restored), <ObjSnapshot as store::ArtifactPack>::encode_pack(&snapshot));
@@ -147,7 +147,7 @@ fn sqlite_snapshot_ieee754_native_domain_through_independent_sqlite() {
         let script="import{Database}from'bun:sqlite';const d=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()));d.run(\"UPDATE obj_vertex SET x=NULL,x_ieee754_bits=0,x_numeric_class='nan'\");if(d.query('PRAGMA integrity_check').get().integrity_check!=='ok'||d.query('PRAGMA foreign_key_check').all().length)throw Error('malformed oracle');await Bun.write(Bun.stdout,d.serialize());d.close();";
         let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&bytes).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));
         let malformed=import_sqlite_database(&output.stdout,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();
-        assert!(ObjSnapshot::from_sqlite_database(&malformed,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap_err().contains("IEEE"));
+        assert!(ObjSnapshot::from_sqlite_database(&malformed,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap_err().message.contains("IEEE"));
     }
     println!("[DEBUG] geometry full native binary64 domain survives independent SQLite");
 }

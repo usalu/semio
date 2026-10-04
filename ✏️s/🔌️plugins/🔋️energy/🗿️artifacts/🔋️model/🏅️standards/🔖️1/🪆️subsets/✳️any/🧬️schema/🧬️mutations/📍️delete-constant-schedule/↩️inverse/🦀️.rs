@@ -6,7 +6,8 @@ use crate::EnergyModelSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ A refused or no-op forward step has nothing to undo, so it answers with no steps at all.
-pub fn inverse(payload: &super::DeleteConstantSchedule, base: &EnergyModelSnapshot) -> Vec<EnergyModelMutation> {
+pub fn inverse(payload: &super::DeleteConstantSchedule, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(index) = base.model.schedules.constants.iter().position(|item| item.id == payload.id) else {
         return Vec::new();
     };
@@ -30,5 +31,7 @@ pub fn inverse(payload: &super::DeleteConstantSchedule, base: &EnergyModelSnapsh
     }
     let existing = &base.model.schedules.constants[index];
     vec![vocabulary::create_constant_schedule(index as u32, existing.id, existing.value)]
+
+    })())
 }
 //#endregion 🔖️Inverse

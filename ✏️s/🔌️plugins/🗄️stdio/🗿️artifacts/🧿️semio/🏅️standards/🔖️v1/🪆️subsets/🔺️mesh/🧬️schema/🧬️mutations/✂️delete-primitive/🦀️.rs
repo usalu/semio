@@ -17,9 +17,12 @@ impl protocol::MutationKind<SemioMeshSnapshot, SemioMeshMutation> for DeletePrim
     fn diff(&self, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<<SemioMeshMutation as protocol::Mutation<SemioMeshSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioMeshSnapshot) -> Vec<SemioMeshMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &SemioMeshSnapshot) -> Result<Vec<SemioMeshMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete primitive \"{}\" from mesh \"{}\"", self.primitive_id, self.mesh_id), &format!("Primitiv \"{}\" aus Netz \"{}\" löschen", self.primitive_id, self.mesh_id))
     }

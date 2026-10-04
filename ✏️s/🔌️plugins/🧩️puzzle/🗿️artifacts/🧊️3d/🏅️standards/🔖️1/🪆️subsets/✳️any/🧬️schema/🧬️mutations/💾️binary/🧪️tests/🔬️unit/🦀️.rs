@@ -1,20 +1,20 @@
 use super::*;
 
-#[test]
-fn puzzle3d_document_vcs_replays_granular_operations() {
+#[semio_framework_async_macros::async_test]
+async fn puzzle3d_document_vcs_replays_granular_operations() {
     use crate::standards::v1::subsets::any::schema::empty_puzzle3d_snapshot;
     use crate::{Puzzle3dObject, PUZZLE_3D_SCHEMA};
     use store::{create_document_envelope, ArtifactCommand};
 
-    let mut store = semio_framework::io::resolve_ready(puzzle3d_store(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", empty_puzzle3d_snapshot(), None))).expect("store");
-    semio_framework::io::resolve_ready(store.dispatch(ArtifactCommand::Apply {
+    let mut store = (puzzle3d_store(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", empty_puzzle3d_snapshot(), None))).await.expect("store");
+    (store.dispatch(ArtifactCommand::Apply {
         mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_object(
             Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false },
             None,
         )],
         description: None,
         transaction: None,
-    }))
+    })).await
     .expect("apply");
     let projection = store.snapshot().expect("projection");
     assert_eq!(projection.objects.len(), 1);

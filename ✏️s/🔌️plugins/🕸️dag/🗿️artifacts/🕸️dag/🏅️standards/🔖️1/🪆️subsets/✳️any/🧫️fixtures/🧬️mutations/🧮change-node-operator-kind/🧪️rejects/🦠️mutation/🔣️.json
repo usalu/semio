@@ -1,5 +1,0 @@
-{
-  "mutation": "changeNodeOperatorKind",
-  "id": "node-a",
-  "newOperatorKind": "sum"
-}

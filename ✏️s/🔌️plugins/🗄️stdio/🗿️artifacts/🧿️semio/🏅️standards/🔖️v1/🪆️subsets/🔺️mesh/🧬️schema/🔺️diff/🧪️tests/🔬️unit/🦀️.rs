@@ -18,7 +18,7 @@ fn snapshot_a() -> SemioMeshSnapshot {
                 material_id: Some("mat1".into()),
             }],
         }],
-        materials: vec![SemioMaterial { id: "mat1".into(), base_color: SemioRgba { r: 1.0, g: 0.0, b: 0.0, a: 1.0 }, metallic: 0.0, roughness: 1.0 }],
+        materials: vec![SemioMaterial { id: "mat1".into(), base_color: SemioRgba { r: 1.0, g: 0.0, b: 0.0, a: 1.0 }, metallic: 0.0, roughness: 1.0, ..Default::default() }],
         textures: vec![SemioTexture { id: "tex1".into(), mime: "image/png".into(), bytes: vec![1, 2, 3] }],
         ..Default::default()
     }
@@ -40,7 +40,7 @@ fn snapshot_b() -> SemioMeshSnapshot {
                 material_id: None,
             }],
         }],
-        materials: vec![SemioMaterial { id: "mat1".into(), base_color: SemioRgba { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, metallic: 1.0, roughness: 0.0 }],
+        materials: vec![SemioMaterial { id: "mat1".into(), base_color: SemioRgba { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, metallic: 1.0, roughness: 0.0, ..Default::default() }],
         textures: vec![SemioTexture { id: "tex1".into(), mime: "image/jpeg".into(), bytes: vec![4, 5] }],
         ..Default::default()
     }
@@ -101,4 +101,33 @@ async fn diff_codec_text_binary_roundtrip_law() {
     let diff_ba = <SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(&b, &a);
     let prim_mod_ba = diff_ba.meshes.as_ref().unwrap().modified[0].diff.primitives.as_ref().unwrap().modified.iter().find(|p| p.key == "p1").unwrap();
     assert_eq!(prim_mod_ba.diff.material_id, Some(Some("mat1".to_string())), "material_id tri-state Some(Some(_)) not exercised");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn material_texture_refs_roundtrip_sparse_clear_inverse_and_absorb() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📸️snapshot/🧫️fixtures/🎨️material-textures/🔣️.json")).unwrap();
+    let before = snapshot_a();
+    let mut set = before.clone();
+    set.materials[0].base_color_texture = Some(fixture["bindings"]["baseColorTexture"].as_str().unwrap().into());
+    set.materials[0].metallic_roughness_texture = Some(fixture["bindings"]["metallicRoughnessTexture"].as_str().unwrap().into());
+    set.materials[0].normal_texture = Some(fixture["bindings"]["normalTexture"].as_str().unwrap().into());
+    set.materials[0].occlusion_texture = Some(fixture["bindings"]["occlusionTexture"].as_str().unwrap().into());
+    set.materials[0].emissive_texture = Some(fixture["bindings"]["emissiveTexture"].as_str().unwrap().into());
+
+    let diff = <SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(&before, &set);
+    assert_eq!(diff.apply(&before).unwrap(), set);
+    assert_eq!(diff.inverse(&before).apply(&set).unwrap(), before);
+    let mut cleared = set.clone();
+    cleared.materials[0].normal_texture = None;
+    let clear = <SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(&set, &cleared);
+    assert_eq!(clear.materials.as_ref().unwrap().modified[0].diff.normal_texture, Some(None));
+    assert_eq!(clear.inverse(&set).apply(&cleared).unwrap(), set);
+    for value in [&diff, &clear] {
+        assert_eq!(SemioMeshDiff::parse_diff(&value.print_diff()).unwrap(), *value);
+        assert_eq!(SemioMeshDiff::decode_diff(&value.encode_diff().unwrap()).unwrap(), *value);
+    }
+    let mut combined = diff;
+    combined.absorb(clear);
+    assert_eq!(combined.apply(&before).unwrap(), cleared);
+    println!("[DEBUG] Five Semio material texture references survive sparse codecs, inverse and absorb");
 }

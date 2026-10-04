@@ -99,6 +99,7 @@ Feature: Apply every typed BCF 2.1 markup mutation and round-trip a real-world c
       | insert-comment   | 🗨️insert-comment-applied   | {"topicGuid": "topic-clash-01", "comment": {"guid": "comment-02", "date": "2026-01-05T11:00:00Z", "author": "bob@example.com", "text": "Confirmed, rerouting duct.", "viewpointRef": null}} |
       | remove-comment   | 🧹️remove-comment-applied   | {"topicGuid": "topic-clash-01", "guid": "comment-01"} |
       | set-comment      | ✏️set-comment-applied      | {"topicGuid": "topic-clash-01", "guid": "comment-01", "text": "Please review — updated."} |
+      | patch-snapshot | 🔢️set-version-applied | {"patch": {"operation": "set", "path": "/version", "value": "2.2"}} |
 
   @id-inverse
   @level-exhaustive
@@ -120,6 +121,7 @@ Feature: Apply every typed BCF 2.1 markup mutation and round-trip a real-world c
       | insert-comment   | 🗨️insert-comment-applied   | {"topicGuid": "topic-clash-01", "comment": {"guid": "comment-02", "date": "2026-01-05T11:00:00Z", "author": "bob@example.com", "text": "Confirmed, rerouting duct.", "viewpointRef": null}} |
       | remove-comment   | 🧹️remove-comment-applied   | {"topicGuid": "topic-clash-01", "guid": "comment-01"} |
       | set-comment      | ✏️set-comment-applied      | {"topicGuid": "topic-clash-01", "guid": "comment-01", "text": "Please review — updated."} |
+      | patch-snapshot | 🔢️set-version-applied | {"patch": {"operation": "set", "path": "/version", "value": "2.2"}} |
 
   @id-identity-round-trip
   @level-long

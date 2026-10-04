@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "neutralSource": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🦀️.rs",
+  "retiredMount": "#[path = \"../../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧪️tests/🦀️.rs\"]\nmod native_materialization;\n",
+  "retainedModules": [
+    "native_binding",
+    "decoding",
+    "encoding",
+    "retirement"
+  ]
+}

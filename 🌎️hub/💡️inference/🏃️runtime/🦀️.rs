@@ -1070,8 +1070,8 @@ impl RetainedGisMapApprovalCommitterV1 {
         if request.composed_children.len() != 2 || request.composed_children[0] != work.drawing_child.child_id || request.composed_children[1] != work.value_child.child_id {
             return Err(GisMapApprovalCommitErrorV1::Rejected);
         }
-        let proposal = directory::os_pack::json::to_json_string(&work.parent).into_bytes();
-        let inverse = directory::os_pack::json::to_json_string(&work.parent_inverse).into_bytes();
+        let proposal = semio_framework_pack_json::to_json_string(&work.parent).into_bytes();
+        let inverse = semio_framework_pack_json::to_json_string(&work.parent_inverse).into_bytes();
         let command = CanonicalInferenceCommandV1::decode(request.command).map_err(|_| GisMapApprovalCommitErrorV1::Rejected)?;
         let actor = request.actor.strip_prefix("user:").and_then(|value| value.split_once("#session:"));
         let admitted_actor = actor.is_some_and(|(user, session)| request.ingress.scope() == request.scope && request.ingress.user_id() == user && request.ingress.session_id() == session && request.ingress.authorization_generation() != 0);
@@ -1119,15 +1119,15 @@ impl RetainedGisMapApprovalCommitterV1 {
         let command = CanonicalInferenceCommandV1::decode(request.command).map_err(|_| GisMapApprovalCommitErrorV1::Rejected)?;
         let original = CanonicalInferenceCommandV1::decode(target.original_command.as_slice()).map_err(|_| GisMapApprovalCommitErrorV1::Rejected)?;
         let inverse_text = std::str::from_utf8(original.inverse_payload()).map_err(|_| GisMapApprovalCommitErrorV1::Rejected)?;
-        let inverses = directory::os_pack::json::from_json_str::<Vec<GisMapMutation>>(inverse_text).map_err(|_| GisMapApprovalCommitErrorV1::Rejected)?;
+        let inverses = semio_framework_pack_json::from_json_str::<Vec<GisMapMutation>>(inverse_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| GisMapApprovalCommitErrorV1::Rejected)?;
         if inverses.len() != 1 {
             return Err(GisMapApprovalCommitErrorV1::Conflict);
         }
         let mut before = snapshot.clone();
         apply_gis_map_mutation(&mut before, &inverses[0]).map_err(|_| GisMapApprovalCommitErrorV1::Conflict)?;
         let work = GisMapInference::infer(&before).create_region_group_work(&before, &target.original_job_id).map_err(|_| GisMapApprovalCommitErrorV1::Conflict)?;
-        let undo_forward = directory::os_pack::json::to_json_string(&inverses[0]).into_bytes();
-        let undo_inverse = directory::os_pack::json::to_json_string(&vec![work.parent]).into_bytes();
+        let undo_forward = semio_framework_pack_json::to_json_string(&inverses[0]).into_bytes();
+        let undo_inverse = semio_framework_pack_json::to_json_string(&vec![work.parent]).into_bytes();
         if target.scope != *request.scope
             || target.user_id != request.ingress.user_id()
             || target.session_id != request.ingress.session_id()
@@ -1626,7 +1626,7 @@ impl RetainedGisMapApprovalCommitterV1 {
                     Ok(value) => value,
                     Err(_) => return Err((GisMapApprovalCommitErrorV1::Rejected, owners)),
                 };
-                let inverses = match directory::os_pack::json::from_json_str::<Vec<GisMapMutation>>(inverse_text) {
+                let inverses = match semio_framework_pack_json::from_json_str::<Vec<GisMapMutation>>(inverse_text, semio_framework_pack_json::JsonMemberPolicy::Reject) {
                     Ok(value) if value.len() == 1 => value,
                     _ => return Err((GisMapApprovalCommitErrorV1::Rejected, owners)),
                 };
@@ -1638,8 +1638,8 @@ impl RetainedGisMapApprovalCommitterV1 {
                     Ok(work) => work,
                     Err(_) => return Err((GisMapApprovalCommitErrorV1::Conflict, owners)),
                 };
-                let expected_inverse = directory::os_pack::json::to_json_string(&work.parent_inverse).into_bytes();
-                let expected_forward = directory::os_pack::json::to_json_string(&work.parent).into_bytes();
+                let expected_inverse = semio_framework_pack_json::to_json_string(&work.parent_inverse).into_bytes();
+                let expected_forward = semio_framework_pack_json::to_json_string(&work.parent).into_bytes();
                 if !command.matches_fixed_three_parent(&approval_mutation_id(original_job_id, &sha256(&expected_forward)), &document_key(&identity.scope), &identity.actor, &expected_forward, &expected_inverse) {
                     return Err((GisMapApprovalCommitErrorV1::Conflict, owners));
                 }
@@ -2202,7 +2202,7 @@ impl RetainedGisMapApprovalCommitterV1 {
             {
                 return Err(gis_map_commit_conflict(GisMapCommitConflictArmV1::PublishProjectedFrontierDiffers));
             }
-            let files = semio_framework::io::resolve_ready(owners.parent.as_ref().ok_or_else(|| gis_map_storage_refusal(&"absent"))?.snapshot_pack()).map_err(|error| gis_map_storage_refusal(&error))?;
+            let files = ::semio_framework_async::poll::resolve_ready(owners.parent.as_ref().ok_or_else(|| gis_map_storage_refusal(&"absent"))?.snapshot_pack()).map_err(|error| gis_map_storage_refusal(&error))?;
             if files.pack.is_empty() || files.spr.is_empty() {
                 return Err(gis_map_storage_refusal(&"refused"));
             }
@@ -2301,7 +2301,7 @@ impl RetainedGisMapApprovalCommitterV1 {
                 let documents = self.documents.lock().await;
                 match documents.get(key) {
                     Some(RetainedGisMapDocumentStateV1::Published { owners, .. }) => {
-                        let files = semio_framework::io::resolve_ready(owners.parent.as_ref().ok_or_else(|| gis_map_storage_refusal(&"absent"))?.snapshot_pack()).map_err(|error| gis_map_storage_refusal(&error))?;
+                        let files = ::semio_framework_async::poll::resolve_ready(owners.parent.as_ref().ok_or_else(|| gis_map_storage_refusal(&"absent"))?.snapshot_pack()).map_err(|error| gis_map_storage_refusal(&error))?;
                         (owners.handle.clone(), sha256(&files.pack))
                     }
                     _ => return Err(gis_map_commit_conflict(GisMapCommitConflictArmV1::VerifyPublishedStateDiffers)),
@@ -3225,7 +3225,7 @@ impl HubInferenceRuntimeV1 {
         let snapshot = <semio_s_artifact_gis_gismap::GisMapSnapshot as directory::ArtifactPack>::decode_pack(base.pack.as_slice()).map_err(|_| InferenceRouteErrorV1::Invalid)?;
         let inference = GisMapInference::from_value(directory::pack_rt::decode_wire_value(&execution.canonical_payload).map_err(|_| InferenceRouteErrorV1::Invalid)?).map_err(|_| InferenceRouteErrorV1::Invalid)?;
         let mutation = inference.bounds_proposal(&snapshot, job_id).map_err(|_| InferenceRouteErrorV1::Conflict)?;
-        let proposal_bytes = directory::os_pack::json::to_json_string(&mutation).into_bytes();
+        let proposal_bytes = semio_framework_pack_json::to_json_string(&mutation).into_bytes();
         let proposal = InferencePrivateBytesV1::new(proposal_bytes, PROPOSAL_MAX_BYTES)?;
         let proposal_hash = sha256(proposal.as_slice());
         Ok(InferenceProposalV1 { result: InferencePrivateBytesV1::new(execution.canonical_payload, RESULT_MAX_BYTES)?, proposal, proposal_hash })
@@ -3236,12 +3236,12 @@ impl HubInferenceRuntimeV1 {
         use semio_s_artifact_gis_gismap::mutations::inverse_gis_map_mutation;
         let (snapshot, inference) = deterministic_map_inference(base, job_id)?;
         let mutation = inference.bounds_proposal(&snapshot, job_id).map_err(|_| InferenceRouteErrorV1::Conflict)?;
-        let proposal_bytes = directory::os_pack::json::to_json_string(&mutation).into_bytes();
+        let proposal_bytes = semio_framework_pack_json::to_json_string(&mutation).into_bytes();
         if sha256(&proposal_bytes) != proposal_hash {
             return Err(InferenceRouteErrorV1::Conflict);
         }
         let inverse = inverse_gis_map_mutation(&snapshot, &mutation);
-        let inverse_bytes = directory::os_pack::json::to_json_string(&inverse).into_bytes();
+        let inverse_bytes = semio_framework_pack_json::to_json_string(&inverse).into_bytes();
         let mutation_id = approval_mutation_id(job_id, proposal_hash);
         let scope = DocumentScope::new(identity.space_id.clone(), identity.document_id.clone());
         let bytes = encode_server_stamped_command_v1(&CanonicalInferenceCommandPartsV1 {
@@ -3268,7 +3268,7 @@ impl HubInferenceRuntimeV1 {
         }
         let original = CanonicalInferenceCommandV1::decode(target.original_command.as_slice()).map_err(|_| InferenceRouteErrorV1::Conflict)?;
         let inverse_text = std::str::from_utf8(original.inverse_payload()).map_err(|_| InferenceRouteErrorV1::Invalid)?;
-        let inverses = directory::os_pack::json::from_json_str::<Vec<GisMapMutation>>(inverse_text).map_err(|_| InferenceRouteErrorV1::Invalid)?;
+        let inverses = semio_framework_pack_json::from_json_str::<Vec<GisMapMutation>>(inverse_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| InferenceRouteErrorV1::Invalid)?;
         if inverses.len() != 1 {
             return Err(InferenceRouteErrorV1::Conflict);
         }
@@ -3276,16 +3276,16 @@ impl HubInferenceRuntimeV1 {
         let mut before = current.clone();
         apply_gis_map_mutation(&mut before, &inverses[0]).map_err(|_| InferenceRouteErrorV1::Conflict)?;
         let work = GisMapInference::infer(&before).create_region_group_work(&before, &target.original_job_id).map_err(|_| InferenceRouteErrorV1::Conflict)?;
-        let original_forward = directory::os_pack::json::to_json_string(&work.parent).into_bytes();
-        let original_inverse = directory::os_pack::json::to_json_string(&work.parent_inverse).into_bytes();
+        let original_forward = semio_framework_pack_json::to_json_string(&work.parent).into_bytes();
+        let original_inverse = semio_framework_pack_json::to_json_string(&work.parent_inverse).into_bytes();
         let actor = format!("user:{}#session:{}", target.user_id, target.session_id);
         if target.original_mutation_id != approval_mutation_id(&target.original_job_id, &sha256(&original_forward))
             || !original.matches_fixed_three_parent(&target.original_mutation_id, &document_key(&target.scope), &actor, &original_forward, &original_inverse)
         {
             return Err(InferenceRouteErrorV1::Conflict);
         }
-        let diff = directory::os_pack::json::to_json_string(&inverses[0]).into_bytes();
-        let inverse = directory::os_pack::json::to_json_string(&vec![work.parent]).into_bytes();
+        let diff = semio_framework_pack_json::to_json_string(&inverses[0]).into_bytes();
+        let inverse = semio_framework_pack_json::to_json_string(&vec![work.parent]).into_bytes();
         let operation_id = sha256(format!("semio.hub.gis-map-approval-undo-operation/v1\0{}\0{idempotency_key}", target.target_id).as_bytes())[..32].to_owned();
         let proposal_hash = sha256(&diff);
         let mutation_id = approval_mutation_id(&operation_id, &proposal_hash);
@@ -3478,7 +3478,7 @@ fn gis_map_inference_preview(job_id: &str, proposal_hash: &str, proposal: &[u8])
         return Err(InferenceRouteErrorV1::Conflict);
     }
     let text = std::str::from_utf8(proposal).map_err(|_| InferenceRouteErrorV1::Invalid)?;
-    let mutation = directory::os_pack::json::from_json_str::<GisMapMutation>(text).map_err(|_| InferenceRouteErrorV1::Invalid)?;
+    let mutation = semio_framework_pack_json::from_json_str::<GisMapMutation>(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| InferenceRouteErrorV1::Invalid)?;
     let GisMapMutation::CreateRegion(created) = mutation else {
         return Err(InferenceRouteErrorV1::Conflict);
     };

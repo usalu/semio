@@ -1,0 +1,17 @@
+{
+  "scope": "read-only current source; all five measured diagnostics concurrently paired",
+  "replacements": [],
+  "currentJoins": [
+    {
+      "file": "🧰️framework/🔨️modules/🚪️io/🦀️.rs",
+      "line": 2087,
+      "current": "fn native_carrier(bytes: &[u8]) -> Result<(std::borrow::Cow<'_, [u8]>, ArchiveChildren), IoError> {",
+      "note": "Actual lifetime spelling is Cow<'_, [u8]>; private helper is bare Result, not public IoResult."
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️.rs",
+      "line": 1133,
+      "current": "Err(error) if semio_framework_diagnostic::FaultFrom::fault_code(&error).0 == \"mutation.too-large\" => {}"
+    }
+  ]
+}

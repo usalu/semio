@@ -1,0 +1,129 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "valid": true,
+      "id": "direct-record",
+      "source": "#[derive(dsl::DslRecord)] struct Probe;",
+      "expected": [
+        {
+          "condition": null,
+          "members": [
+            "dsl::DslRecord"
+          ]
+        }
+      ]
+    },
+    {
+      "valid": true,
+      "id": "separate-record",
+      "source": "#[derive(dsl::DslRecord)] #[derive(dsl::DslArtifact)] struct Probe;",
+      "expected": [
+        {
+          "condition": null,
+          "members": [
+            "dsl::DslRecord"
+          ]
+        },
+        {
+          "condition": null,
+          "members": [
+            "dsl::DslArtifact"
+          ]
+        }
+      ]
+    },
+    {
+      "valid": true,
+      "id": "conditional-paired",
+      "source": "#[cfg_attr(feature = \"portable\", derive(dsl::DslArtifact))] struct Probe;",
+      "expected": [
+        {
+          "condition": "feature = \"portable\"",
+          "members": [
+            "dsl::DslArtifact"
+          ]
+        }
+      ]
+    },
+    {
+      "valid": true,
+      "id": "nested-conditional",
+      "source": "#[cfg_attr(feature = \"outer\", cfg_attr(feature = \"inner\", derive(dsl::DslDiff)))] struct Probe;",
+      "expected": [
+        {
+          "condition": "feature = \"outer\" && feature = \"inner\"",
+          "members": [
+            "dsl::DslDiff"
+          ]
+        }
+      ]
+    },
+    {
+      "valid": true,
+      "id": "conditional-multiple",
+      "source": "#[cfg_attr(feature = \"portable\", derive(Clone), derive(dsl::DslRecord, dsl::DslArtifact))] struct Probe;",
+      "expected": [
+        {
+          "condition": "feature = \"portable\"",
+          "members": [
+            "Clone"
+          ]
+        },
+        {
+          "condition": "feature = \"portable\"",
+          "members": [
+            "dsl::DslRecord",
+            "dsl::DslArtifact"
+          ]
+        }
+      ]
+    },
+    {
+      "valid": true,
+      "id": "unrelated-string",
+      "source": "#[dsl(id = \"derive(dsl::DslArtifact)\")] #[derive(Clone)] struct Probe;",
+      "expected": [
+        {
+          "condition": null,
+          "members": [
+            "Clone"
+          ]
+        }
+      ]
+    },
+    {
+      "valid": true,
+      "id": "trailing-comma",
+      "source": "#[derive(Clone, dsl::DslScalar,)] struct Probe;",
+      "expected": [
+        {
+          "condition": null,
+          "members": [
+            "Clone",
+            "dsl::DslScalar"
+          ]
+        }
+      ]
+    },
+    {
+      "valid": true,
+      "id": "comments-excluded",
+      "source": "// #[derive(dsl::DslArtifact)]\n#[derive(Clone)] struct Probe;",
+      "expected": [
+        {
+          "condition": null,
+          "members": [
+            "Clone"
+          ]
+        }
+      ]
+    },
+    {
+      "valid": false,
+      "id": "malformed-declaration",
+      "source": "#[derive(dsl::DslRecord)] struct Probe {",
+      "expected": []
+    }
+  ]
+}

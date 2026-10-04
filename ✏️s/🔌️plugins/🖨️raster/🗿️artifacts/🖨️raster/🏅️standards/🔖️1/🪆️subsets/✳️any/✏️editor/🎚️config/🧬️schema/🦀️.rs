@@ -2,7 +2,7 @@
 use schema::ArtifactSchema;
 pub use crate::editor::raster::selection::RasterPixelSelection;
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.raster.raster.config")]
 pub struct RasterConfig {
@@ -19,6 +19,8 @@ pub struct RasterConfig {
     #[state(config)]
     pub mask_value:u32,
     #[state(config)]
+    pub fill_tolerance:u32,
+    #[state(config)]
     pub pixel_selection:Option<RasterPixelSelection>,
     #[state(config)]
     pub composite_viewport: Option<RasterConfigViewportSize>,
@@ -26,7 +28,7 @@ pub struct RasterConfig {
     pub camera: RasterCamera,
 }
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.raster.raster.rastercamera")]
 pub struct RasterCamera {
@@ -38,7 +40,7 @@ pub struct RasterCamera {
     pub zoom: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.raster.raster.rasterconfigviewportsize")]
 pub struct RasterConfigViewportSize {

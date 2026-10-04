@@ -5,7 +5,7 @@
 //! `RasterMutationDsl` enum flattens every real variant into its own keyworded record, converted at
 //! the `OpText`/`OpBinary` boundary only — `RasterMutation` itself is untouched.
 
-use crate::mutations::{fill_region,paint_stroke,change_layer_transform,change_layer_locked,change_layer_adjustment_parameter, change_layer_mask, change_layer_pixels, add_layer_asset, change_layer_adjustment_kind, change_layer_blend_mode, change_layer_opacity, change_layer_visible, create_layer, delete_layer, move_layer, remove_layer_asset, rename_layer, reorder_layers, resize_layer};
+use crate::mutations::{apply_filter,transform_image,fill_selection,fill_region,paint_stroke,change_layer_transform,change_layer_locked,change_layer_adjustment_parameter, change_layer_mask, change_layer_pixels, add_layer_asset, change_layer_adjustment_kind, change_layer_blend_mode, change_layer_opacity, change_layer_visible, create_layer, delete_layer, move_layer, remove_layer_asset, rename_layer, reorder_layers, resize_layer};
 pub use crate::mutations::{apply_raster_mutation, inverse_raster_mutation, RasterEnvelope, RasterMutation, RasterStore};
 use crate::{RasterImageAsset, RasterLayerNode};
 use protocol::OpText;
@@ -19,7 +19,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 //#region 🔖️OpText
 /// ✂️ Local DSL-only mirror of `RasterMutation` — every real variant flattened into its own
 /// keyworded record, converted at the `store::OpText` boundary only.
-#[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
 enum RasterMutationDsl {
     CreateLayer {
         #[dsl(key = "parent")]
@@ -149,27 +149,51 @@ enum RasterMutationDsl {
         color: Vec<f64>,
         selection: Option<String>,
     },
+    ApplyFilter {
+        #[dsl(key = "id")]
+        layer_id: String,
+        filter: String,
+        amount: f64,
+        selection: Option<String>,
+    },
+    TransformImage {
+        #[dsl(key = "id")]
+        layer_id: String,
+        operation: String,
+        x: u32,
+        y: u32,
+        width: u32,
+        height: u32,
+        bilinear: bool,
+    },
+    FillSelection {
+        #[dsl(key = "id")]
+        layer_id: String,
+        target: String,
+        color: Vec<f64>,
+        selection: Option<String>,
+    },
 }
 
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
 impl OpText for RasterMutationDsl {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = semio_framework_dsl_record::parse(line, &(spec_fn.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?;
+                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
+        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown mutation line '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
     }
     fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &(spec_fn.ordinary)(), dsl::JoinMode::Inline)
+        semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline)
     }
 }
 
@@ -212,7 +236,7 @@ fn raster_mutation_to_dsl(mutation: &RasterMutation) -> RasterMutationDsl {
             color: payload.brush.color.clone(),
             xs: payload.points.iter().map(|point| point.x).collect(),
             ys: payload.points.iter().map(|point| point.y).collect(),
-            selection: payload.selection.as_ref().map(dsl::json::to_json_string),
+            selection: payload.selection.as_ref().map(semio_framework_pack_json::to_json_string),
         },
         RasterMutation::FillRegion(payload) => RasterMutationDsl::FillRegion {
             layer_id: payload.layer_id.clone(),
@@ -221,7 +245,28 @@ fn raster_mutation_to_dsl(mutation: &RasterMutation) -> RasterMutationDsl {
             y: payload.seed.y,
             tolerance: payload.tolerance,
             color: payload.color.clone(),
-            selection: payload.selection.as_ref().map(dsl::json::to_json_string),
+            selection: payload.selection.as_ref().map(semio_framework_pack_json::to_json_string),
+        },
+        RasterMutation::ApplyFilter(payload) => RasterMutationDsl::ApplyFilter {
+            layer_id: payload.layer_id.clone(),
+            filter: payload.filter.clone(),
+            amount: payload.amount,
+            selection: payload.selection.as_ref().map(semio_framework_pack_json::to_json_string),
+        },
+        RasterMutation::TransformImage(payload) => RasterMutationDsl::TransformImage {
+            layer_id: payload.layer_id.clone(),
+            operation: payload.operation.clone(),
+            x: payload.x,
+            y: payload.y,
+            width: payload.width,
+            height: payload.height,
+            bilinear: payload.bilinear,
+        },
+        RasterMutation::FillSelection(payload) => RasterMutationDsl::FillSelection {
+            layer_id: payload.layer_id.clone(),
+            target: payload.target.clone(),
+            color: payload.color.clone(),
+            selection: payload.selection.as_ref().map(semio_framework_pack_json::to_json_string),
         },
     }
 }
@@ -251,7 +296,7 @@ fn raster_mutation_from_dsl(mutation: RasterMutationDsl) -> RasterMutation {
             tool,
             brush: paint_stroke::RasterBrush { size, hardness, opacity, color },
             points: xs.into_iter().zip(ys).map(|(x, y)| paint_stroke::RasterStrokePoint { x, y }).collect(),
-            selection: selection.and_then(|spans| dsl::json::from_json_str(&spans).ok()),
+            selection: selection.and_then(|spans| semio_framework_pack_json::from_json_str(&spans, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()),
         }),
         RasterMutationDsl::FillRegion { layer_id, target, x, y, tolerance, color, selection } => RasterMutation::FillRegion(fill_region::FillRegion {
             layer_id,
@@ -259,13 +304,26 @@ fn raster_mutation_from_dsl(mutation: RasterMutationDsl) -> RasterMutation {
             seed: fill_region::RasterSeed { x, y },
             tolerance,
             color,
-            selection: selection.and_then(|spans| dsl::json::from_json_str(&spans).ok()),
+            selection: selection.and_then(|spans| semio_framework_pack_json::from_json_str(&spans, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()),
+        }),
+        RasterMutationDsl::ApplyFilter { layer_id, filter, amount, selection } => RasterMutation::ApplyFilter(apply_filter::ApplyFilter {
+            layer_id,
+            filter,
+            amount,
+            selection: selection.and_then(|spans| semio_framework_pack_json::from_json_str(&spans, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()),
+        }),
+        RasterMutationDsl::TransformImage { layer_id, operation, x, y, width, height, bilinear } => RasterMutation::TransformImage(transform_image::TransformImage { layer_id, operation, x, y, width, height, bilinear }),
+        RasterMutationDsl::FillSelection { layer_id, target, color, selection } => RasterMutation::FillSelection(fill_selection::FillSelection {
+            layer_id,
+            target,
+            color,
+            selection: selection.and_then(|spans| semio_framework_pack_json::from_json_str(&spans, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()),
         }),
     }
 }
 
 impl OpText for RasterMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         Ok(raster_mutation_from_dsl(<RasterMutationDsl as OpText>::parse_op(line)?))
     }
 

@@ -1,0 +1,132 @@
+{
+ "source": "native pixel cell hole",
+ "minimumWork": 13,
+ "cases": [
+  {
+   "phase": "fresh",
+   "offset": 0
+  },
+  {
+   "phase": "assets",
+   "offset": 2
+  },
+  {
+   "phase": "indexing",
+   "offset": 2
+  },
+  {
+   "phase": "nodes",
+   "offset": 2
+  },
+  {
+   "phase": "decoding",
+   "offset": 2
+  },
+  {
+   "phase": "luma",
+   "offset": 2
+  },
+  {
+   "phase": "tracing",
+   "offset": 2
+  },
+  {
+   "phase": "publishing",
+   "offset": 2
+  },
+  {
+   "phase": "complete",
+   "offset": 0
+  },
+  {
+   "source": "trace keeps full group and authored local coordinates",
+   "phase": "complete",
+   "offset": 0
+  },
+  {
+   "source": "actual traced geometry is a Boolean operand",
+   "phase": "complete",
+   "offset": 0
+  },
+  {
+   "phase": "failure",
+   "maxWork": 1,
+   "offset": 0
+  },
+  {
+   "phase": "failure",
+   "maxRetainedSegments": 1,
+   "offset": 0
+  },
+  {
+   "phase": "cancelled",
+   "offset": 8
+  },
+  {
+   "phase": "publishing",
+   "checkpoint": "kernelRetirement",
+   "offset": 0
+  },
+  {
+   "phase": "publishing",
+   "checkpoint": "kernelRetirement",
+   "offset": 5
+  }
+ ],
+ "metadata": {
+  "group": {
+   "id": "owned-group",
+   "opacity": 0.5,
+   "blendMode": "normal"
+  },
+  "fill": {
+   "kind": "linearGradient",
+   "x1": 0,
+   "y1": 0,
+   "x2": 10,
+   "y2": 0,
+   "stops": [
+    {
+     "offset": 0,
+     "color": [
+      1,
+      0,
+      0,
+      1
+     ]
+    },
+    {
+     "offset": 1,
+     "color": [
+      0,
+      0,
+      1,
+      1
+     ]
+    }
+   ]
+  },
+  "stroke": {
+   "color": [
+    0,
+    1,
+    0,
+    1
+   ],
+   "width": 1,
+   "cap": "round",
+   "join": "round",
+   "dash": [
+    1,
+    2,
+    3,
+    4
+   ]
+  },
+  "asset": {
+   "id": "unused-source",
+   "mime": "image/png",
+   "data": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLttAAAAABJRU5ErkJggg=="
+  }
+ }
+}

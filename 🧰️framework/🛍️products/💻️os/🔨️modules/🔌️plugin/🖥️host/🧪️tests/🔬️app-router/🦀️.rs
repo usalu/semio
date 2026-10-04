@@ -69,6 +69,7 @@ pub(super) async fn fixture_app(id: &str, dialect: semio_framework::ArtifactDial
             semio_framework::ArtifactPresentation { id: id.into(), name: id.into(), dimension: String::new(), component_kind: id.into() },
         )
         .await,
+        fault_notices: Vec::new(),
     }
 }
 

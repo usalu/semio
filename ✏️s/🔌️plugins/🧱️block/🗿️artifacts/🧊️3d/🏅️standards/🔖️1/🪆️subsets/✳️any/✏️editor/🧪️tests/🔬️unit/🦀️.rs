@@ -415,7 +415,7 @@ async fn interaction_topology_covers_every_representation_and_vortex() {
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg_snapshot = Block3dConfig::default();
     let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
-    let topology = <Block3dPlayApp as ArtifactEditor>::interaction_topology(&doc, &cfg);
+    let topology = <Block3dPlayApp as ArtifactEditor>::interaction_topology(&doc, &cfg).expect("valid retained interaction fixture");
     let domain = topology.domains.get(BLOCK3D_INTERACTION_VORTEX).expect("vortex domain topology present");
     assert!(domain.contains(&format!("surface:{representation_id}")).await);
     assert!(domain.contains(&format!("vortex:{vortex_id}")).await);
@@ -563,7 +563,7 @@ async fn set_active_representation_writes_config_not_document() {
 async fn export_media_catalog_out_wraps_the_puzzle3d_fragment() {
     let mut app = new_app().await;
     context::dispatch(&mut app, Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK3D_EXAMPLE_CAPSULE.into() })).await;
-    let media = semio_framework_plugin::resolve_ready(app.export_media("catalog:out")).expect("export catalog");
+    let media = ::semio_framework_async::poll::resolve_ready(app.export_media("catalog:out")).expect("export catalog");
     assert_eq!(media.media_type, MediaType { class: MediaClass::Kit, form: MediaForm::Type });
     match media.payload {
         MediaPayload::Structured { schema, json } => {
@@ -592,7 +592,7 @@ async fn place_vortex_on_surface_auto_creates_kind_and_vortex() {
 #[semio_framework_async_macros::async_test]
 async fn command_from_action_bridges_set_active_example() {
     assert!(
-        matches!(<Block3dPlayApp as ArtifactEditor>::command_from_action("setActiveExample", Some(&dsl::json::to_dsl_value(&dsl::json!({ "exampleId": "capsule" })))), Ok(Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id })) if id == "capsule")
+        matches!(<Block3dPlayApp as ArtifactEditor>::command_from_action("setActiveExample", Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "exampleId": "capsule" })))), Ok(Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id })) if id == "capsule")
     );
 }
 //#endregion 🔖️Behavior
@@ -618,3 +618,5 @@ async fn world_window_measures_collect_all_five_options() {
     assert_eq!(measures.len(), 5, "world window must expose representations/quick-pick/arrangement/spacing/brush");
 }
 //#endregion 🔖️WindowMeasures
+
+semio_framework_plugin::history_edit_acceptance_law!("block", super::Block3dPlayApp, || semio_framework_plugin::App { definition: super::create_block3d_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");

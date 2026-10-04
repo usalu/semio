@@ -1,12 +1,13 @@
 //! 🧵️ Exact, resumable ownership retirement for persisted DAG snapshots and mutations.
 
-use crate::os_dsl::DslValue;
+use semio_framework_value::DslValue;
 use crate::os_store::{ArtifactOwnedValueRetirementFactory, ArtifactStoreCursorDisposer, ErasedSnapshotRetirement, MemberStoreOwner, DocumentStoreOwners, SnapshotRetirementFactory, SnapshotRetirementStep};
 use crate::{DagHostSnapshotEdge, DagMedia, DagMutation, DagNodeKind, DagNodeSpec, DagPreviewContent, DagSnapshot, IoPortSpec};
 use graph::manifest::{PropertyBag, PropertyValue};
-use std::collections::{BTreeSet, LinkedList};
+use std::collections::LinkedList;
 use std::mem::ManuallyDrop;
 use std::sync::Arc;
+use semio_framework_value::{ValueError,ValueRefusalKind};
 
 enum DagOwner {
     Bytes(Vec<u8>),
@@ -19,7 +20,7 @@ enum DagOwner {
     Port(IoPortSpec),
     Ports(Vec<IoPortSpec>),
     Strings(Vec<String>),
-    Expanded(BTreeSet<String>),
+    Expanded(crate::DagExpandedPaths),
     Preview(DagPreviewContent),
     Kind(DagNodeKind),
     Node(DagNodeSpec),
@@ -208,7 +209,7 @@ impl DagRetirement {
 }
 
 impl ErasedSnapshotRetirement for DagRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, ValueError> {
         use SnapshotRetirementStep as Step;
         if self.is_empty() {
             return Ok(Step::Complete);
@@ -227,11 +228,11 @@ impl ErasedSnapshotRetirement for DagRetirement {
                 }
             }
             DagOwner::Dsl(value) => match value {
-                DslValue::String(value) => self.text(value),
-                DslValue::Bytes(value) => self.push(DagOwner::Bytes(value)),
-                DslValue::Array(values) => self.push(DagOwner::DslValues(values)),
-                DslValue::Object(values) => self.push(DagOwner::DslEntries(values)),
-                DslValue::Null | DslValue::Bool(_) | DslValue::Number(_) => {}
+                semio_framework_value::DslValue::String(value) => self.text(value),
+                semio_framework_value::DslValue::Bytes(value) => self.push(DagOwner::Bytes(value)),
+                semio_framework_value::DslValue::Array(values) => self.push(DagOwner::DslValues(values)),
+                semio_framework_value::DslValue::Object(values) => self.push(DagOwner::DslEntries(values)),
+                semio_framework_value::DslValue::Null | semio_framework_value::DslValue::Bool(_) | semio_framework_value::DslValue::Number(_) => {}
             },
             DagOwner::DslValues(mut values) => {
                 let next = values.pop();
@@ -259,7 +260,7 @@ impl ErasedSnapshotRetirement for DagRetirement {
                 PropertyValue::Null | PropertyValue::Bool(_) | PropertyValue::Number(_) => {}
             },
             DagOwner::Properties(mut values) => {
-                if let Some((key, value)) = values.pop_first() {
+                if let Some((key, value)) = values.pop_last() {
                     if !values.is_empty() {
                         self.push(DagOwner::Properties(values));
                     }
@@ -296,7 +297,7 @@ impl ErasedSnapshotRetirement for DagRetirement {
                 }
             }
             DagOwner::Expanded(mut values) => {
-                if let Some(value) = values.pop_first() {
+                if let Some(value) = values.pop_last() {
                     if !values.is_empty() {
                         self.push(DagOwner::Expanded(values));
                     }
@@ -363,7 +364,7 @@ struct DagSnapshotRetirement {
 }
 
 impl ErasedSnapshotRetirement for DagSnapshotRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, ValueError> {
         if self.snapshot.is_some() && maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Blocked);
         }
@@ -379,7 +380,7 @@ impl ErasedSnapshotRetirement for DagSnapshotRetirement {
         let step = retirement.close_step(maximum_items, maximum_bytes)?;
         if matches!(step, SnapshotRetirementStep::Complete) {
             if !retirement.terminal_is_empty() {
-                return Err("DAG snapshot retirement reported Complete before terminal-empty".into());
+                return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"DAG snapshot retirement reported Complete before terminal-empty"));
             }
             self.retirement = None;
         }

@@ -41,9 +41,9 @@ fn idiom_hooks_canonicalize_and_classify_through_the_dsl_registry_seam() {
         assert!((hooks.canonicalize)("not jack at all $$$").is_err() || (hooks.canonicalize)("not jack at all $$$").is_ok(), "canonicalize must not panic on malformed input");
         let classes = (hooks.classify)("MATCH (a:computation) RETURN a.name");
         assert!(!classes.is_empty());
-        assert!(classes.iter().any(|(class, _)| *class == dsl_core::TokenClass::Keyword), "MATCH/RETURN must classify as keywords");
-        dsl_core::register_idiom(hooks);
-        let resolved = dsl_core::idiom("jack").expect("jack must be resolvable by lang id after registration");
+        assert!(classes.iter().any(|(class, _)| *class == semio_framework_dsl::TokenClass::Keyword), "MATCH/RETURN must classify as keywords");
+        semio_framework_dsl::register_idiom(hooks);
+        let resolved = semio_framework_dsl::idiom("jack").expect("jack must be resolvable by lang id after registration");
         assert_eq!((resolved.canonicalize)("MATCH (a:computation) RETURN a.name").unwrap(), format("MATCH (a:computation) RETURN a.name").unwrap());
     });
 }
@@ -408,7 +408,7 @@ fn board_graph_node_property_id_kind_all_and_missing() {
 #[test]
 fn manifest_helpers_merge_graph_and_manifest_kinds() {
     block_on_test(async {
-        let manifest = <crate::manifest::Manifest as dsl_core::FromValue>::from_value(dsl_core::json::to_dsl_value(&dsl_core::json::parse(r#"{"schema":"manifest","id":"future.neutral.geometry","nodeKinds":[{"id":"Declared"}]}"#).unwrap())).unwrap();
+        let manifest = <crate::manifest::Manifest as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(r#"{"schema":"manifest","id":"future.neutral.geometry","nodeKinds":[{"id":"Declared"}]}"#,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).unwrap();
         let graph = BoardQueryableGraph::from_host_snapshot_json(split_endpoint_fixture(), Some(manifest)).unwrap();
         assert_eq!(graph.manifest().map(|m| m.id.as_str()), Some("future.neutral.geometry"));
         let node_kinds = manifest_node_kinds(&graph);
@@ -432,7 +432,7 @@ fn subgraph_fixture_json_filters_to_requested_ids() {
         let node_ids = BTreeSet::from(["a".to_string(), "b".to_string()]);
         let edge_ids = BTreeSet::from(["e1".to_string()]);
         let json = graph.subgraph_fixture_json(&node_ids, &edge_ids).unwrap();
-        let value: dsl_core::json::Value = dsl_core::json::parse(&json).unwrap();
+        let value: semio_framework_pack_json::Value = semio_framework_pack_json::parse(&json,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         assert_eq!(value["nodes"].as_array().unwrap().len(), 2);
         assert_eq!(value["edges"].as_array().unwrap().len(), 1);
     });
@@ -468,10 +468,10 @@ fn from_object_snapshot_json_passes_through_existing_nodes() {
 
 #[test]
 fn explicit_manifest_consumption_follows_portable_owner_corpus() {
-    let corpus = dsl_core::json::parse(include_str!("../../../🛂️manifest/🧫️fixtures/🧩️consumption/🔣️.json")).unwrap();
+    let corpus = semio_framework_pack_json::parse(include_str!("../../../🛂️manifest/🧫️fixtures/🧩️consumption/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for row in corpus["cases"].as_array().unwrap() {
-        let manifest = if row["manifest"].is_null() { None } else { Some(<crate::manifest::Manifest as dsl_core::FromValue>::from_value(dsl_core::json::to_dsl_value(&row["manifest"])).unwrap()) };
-        let actual = BoardQueryableGraph::from_host_snapshot_json(&dsl_core::json::to_string(&row["snapshot"]), manifest);
+        let manifest = if row["manifest"].is_null() { None } else { Some(<crate::manifest::Manifest as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&row["manifest"])).unwrap()) };
+        let actual = BoardQueryableGraph::from_host_snapshot_json(&semio_framework_pack_json::to_string(&row["snapshot"]), manifest);
         assert_eq!(actual.is_ok(), row["expected"]["accepted"].as_bool().unwrap(), "{}", row["id"]);
         if let Ok(graph) = actual {
             assert_eq!(graph.manifest().map(|value| value.id.as_str()), row["expected"]["manifestId"].as_str());
@@ -998,7 +998,7 @@ fn run_query_json_serializes_result() {
     block_on_test(async {
         let graph = BoardQueryableGraph::from_host_snapshot_json(split_endpoint_fixture(), None).unwrap();
         let json = run_query_json(&graph, "MATCH (a:computation) RETURN a.name").unwrap();
-        let value: dsl_core::json::Value = dsl_core::json::parse(&json).unwrap();
+        let value: semio_framework_pack_json::Value = semio_framework_pack_json::parse(&json,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         assert_eq!(value["columns"][0], "a.name");
     });
 }

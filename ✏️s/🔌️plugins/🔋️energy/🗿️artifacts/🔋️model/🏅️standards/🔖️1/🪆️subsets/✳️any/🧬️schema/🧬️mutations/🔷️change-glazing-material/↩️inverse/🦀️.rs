@@ -6,10 +6,13 @@ use crate::EnergyModelSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ A refused or no-op forward step has nothing to undo, so it answers with no steps at all.
-pub fn inverse(payload: &super::ChangeGlazingMaterialThickness, base: &EnergyModelSnapshot) -> Vec<EnergyModelMutation> {
+pub fn inverse(payload: &super::ChangeGlazingMaterialThickness, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.model.glazing_materials.iter().find(|item| item.id == payload.id) {
         Some(item) if item.thickness_m != payload.new_thickness_m && payload.new_thickness_m.is_finite() && payload.new_thickness_m > 0.0 => vec![vocabulary::change_glazing_material_thickness(payload.id, item.thickness_m)],
         _ => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

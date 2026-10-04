@@ -4,7 +4,9 @@
 //! `🔺️mesh` (not `os`) so plugins and the OS product share one definition without an
 //! inverted dependency — same reasoning as mesh's now-retired legacy format enum.
 
-use dsl::{Diagnostic, FromValue, ToValue};
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
+use semio_framework_diagnostic::Diagnostic;
 use std::collections::{BTreeMap, HashMap};
 use std::sync::RwLock;
 
@@ -752,7 +754,7 @@ pub enum AnalyzeSource<'a> {
 }
 
 /// 🎚 Soft confidence for partial analysis/composition success.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 pub enum Confidence {
     High,
     Medium,
@@ -783,7 +785,7 @@ pub struct Composition<T> {
 }
 
 /// ⚠️ Composition failed: no compatible source dialect, or every candidate errored.
-#[derive(Clone, Debug, ToValue, FromValue)]
+#[derive(Clone, Debug, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 pub struct ComposeError {
     pub message: String,
     pub diagnostics: Vec<Diagnostic>,
@@ -852,7 +854,7 @@ macro_rules! io_run_thunk {
     ($f:path) => {{
         // 🚫️async: E4 fn-pointer slot
         fn __thunk(payload: &$crate::io_schema::IoPayload) -> $crate::io_schema::IoResult<$crate::io_schema::IoPayload> {
-            $crate::io::resolve_ready($f(payload))
+            ::semio_framework_async::poll::resolve_ready($f(payload))
         }
         __thunk
     }};
@@ -865,37 +867,13 @@ macro_rules! io_sniff_thunk {
     ($f:path) => {{
         // 🚫️async: E4 fn-pointer slot
         fn __thunk(payload: &$crate::io_schema::IoPayload) -> $crate::io_schema::Confidence {
-            $crate::io::resolve_ready($f(payload))
+            ::semio_framework_async::poll::resolve_ready($f(payload))
         }
         __thunk
     }};
 }
 
-/// 🌉️ Resolves a future that is guaranteed Ready on its very first poll. Every artifact-IO codec
-/// body in this tree runs synchronously to completion internally — `io-async-signatures` made the
-/// SIGNATURES uniformly async without adding any real suspension point anywhere in a codec body
-/// (a later packet owns real scheduler-driven awaiting); this bridges the handful of call sites
-/// that must stay synchronous themselves (existing sync tests, the `wire_artifact_compose` ABI
-/// boundary, whose export shape a real wasm async-component-model isn't yet safe to change — see
-/// `📌️important.md` rule 9, and every `IoEntry.run`/`.sniff`/`ComposerEntry`-adjacent E4 thunk in
-/// this file) back onto that guarantee. Panics rather than silently blocking if the guarantee is
-/// ever violated by a future edit that adds a real await point.
-// 🚫️async: E5 executor bridge — the whole point of this function is to be CALLABLE from a
-// synchronous context (a bare `fn`-pointer thunk cannot itself be `async` and still coerce into an
-// `IoEntry.run`/`AsyncComposeFn`-shaped slot), so `resolve_ready` itself must stay a plain `fn`; the
-// codemod that made it `async fn` — and its two `RawWakerVTable` helpers, which cannot be async at
-// all since `RawWakerVTable::new` requires bare `unsafe fn` pointers — broke exactly this property.
-// Matches `poll_ready` in `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️.rs`.
-pub fn resolve_ready<F: std::future::Future>(fut: F) -> F::Output {
-    use std::task::{Context, Poll};
-    let waker = std::task::Waker::noop();
-    let mut cx = Context::from_waker(waker);
-    let mut boxed = Box::pin(fut);
-    match boxed.as_mut().poll(&mut cx) {
-        Poll::Ready(value) => value,
-        Poll::Pending => panic!("resolve_ready: future was not ready on first poll — io-async-signatures requires every artifact-IO body to complete without real suspension"),
-    }
-}
+
 
 /// 🎹️ Type-erased composer vtable row. Built by a plugin's composer facet from its typed
 /// `ArtifactComposer` impl (SDK trait lives in the plugin crate, this struct only carries the
@@ -906,7 +884,7 @@ pub struct ComposerEntry {
     pub compose: AsyncComposeFn,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, ToValue, FromValue)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 pub enum IoDirection {
     Import,
     Export,
@@ -914,7 +892,7 @@ pub enum IoDirection {
 
 /// 🗝️ Owned mirror of two dialects + direction — the registry key. Owned (not `&'static`) so it
 /// can be built from runtime UI input (format kind strings) as well as static composer entries.
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, ToValue, FromValue)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct IoKey {
     pub artifact_kind: String,
@@ -1219,7 +1197,7 @@ pub fn subset_validator_entry_of<V: SubsetValidator>() -> SubsetValidatorEntry {
     // `SubsetValidator::validate` stays `async fn` (a real trait method) and this thunk drives it
     // to completion synchronously via `resolve_ready`, same pattern as the `IoEntry` constructors.
     fn validate<V: SubsetValidator>(payload: &IoPayload) -> Vec<Diagnostic> {
-        resolve_ready(V::validate(payload))
+        ::semio_framework_async::poll::resolve_ready(V::validate(payload))
     }
     SubsetValidatorEntry { dialect: V::DIALECT, validate: validate::<V> }
 }
@@ -1360,7 +1338,7 @@ async fn run_subset_validation(dialect: Dialect, payload: &IoPayload, diagnostic
 
 //#region 🔖️IoFidelity
 /// ⚖️ Declared strongest IO fidelity a subset codec achieves.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub enum IoFidelityClass {
     Exact,
@@ -1401,7 +1379,7 @@ impl IoFidelityClass {
 }
 
 /// 📜 Manifest-facing IO fidelity declaration for a subset dialect.
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct IoFidelityDeclaration {
     pub class: IoFidelityClass,
@@ -1433,7 +1411,7 @@ mod io_fidelity_tests;
 /// resolved back to the real `&'static Dialect` locally by matching coordinate strings against the
 /// receiving side's own `ComposerEntry.reads` — exactly like the native W15 dispatch sites in
 /// `🧰️framework/🛍️products/💻️os/🦀️.rs` already do via `io_dialects_for(...).find(...)`.
-#[derive(Clone, Debug, ToValue, FromValue)]
+#[derive(Clone, Debug, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct WireComposeSource {
     pub dialect: ArtifactDialect,
@@ -1441,7 +1419,7 @@ pub struct WireComposeSource {
 }
 
 /// 🎹️ Wire twin of `ComposedArtifact`.
-#[derive(Clone, Debug, ToValue, FromValue)]
+#[derive(Clone, Debug, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct WireComposedArtifact {
     pub dialect: ArtifactDialect,
@@ -1544,7 +1522,7 @@ async fn validate_wire_key(key: &IoKey) -> Result<(), IoWireError> {
 }
 
 async fn encode_wire_json<T: ToValue>(operation: &'static str, value: &T) -> Result<Vec<u8>, IoWireError> {
-    let bytes = dsl::os_pack::json::to_json_string(value).into_bytes();
+    let bytes = semio_framework_pack_json::to_json_string(value).into_bytes();
     ensure_wire_bytes(operation, &bytes)?;
     Ok(bytes)
 }
@@ -1553,7 +1531,7 @@ async fn encode_wire_json<T: ToValue>(operation: &'static str, value: &T) -> Res
 /// `T: ToValue` half above) via `pack::json`/`FromValue` instead of `serde_json`.
 async fn decode_wire_json<T: FromValue>(operation: &'static str, bytes: &[u8]) -> Result<T, IoWireError> {
     let text = std::str::from_utf8(bytes).map_err(|error| IoWireError::Decode { operation, message: error.to_string() })?;
-    dsl::os_pack::json::from_json_str(text).map_err(|error| IoWireError::Decode { operation, message: error.to_string() })
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| IoWireError::Decode { operation, message: error.to_string() })
 }
 
 async fn intern_dialect(dialect: &ArtifactDialect) -> Result<Dialect, IoWireError> {
@@ -1625,7 +1603,7 @@ pub async fn wire_artifact_compose(key_bytes: &[u8], sources_bytes: &[u8]) -> Re
         let dialect = entry.reads.iter().copied().find(|&d| ArtifactDialect::from(d) == wire.dialect).ok_or_else(|| IoWireError::Resolve(format!("composer for {} does not read dialect {}", key.artifact_kind, wire.dialect.to_coordinate())))?;
         sources.push(ErasedComposeSource { dialect, payload: wire.payload });
     }
-    match resolve_ready((entry.compose)(&sources)) {
+    match ::semio_framework_async::poll::resolve_ready((entry.compose)(&sources)) {
         Ok(mut composed) => {
             run_subset_validation(composed.dialect, &composed.payload, &mut composed.diagnostics).await.map_err(IoWireError::Subset)?;
             encode_wire_json("composed-artifact", &WireComposedArtifact::from(composed)).await
@@ -1644,7 +1622,7 @@ pub async fn wire_artifact_compose(key_bytes: &[u8], sources_bytes: &[u8]) -> Re
 /// can call `register_format_descriptors` from its own init. `mesh`'s catalog itself is untouched
 /// here -- evicting it onto this registry is a LATER wave's job, once every producer/consumer of
 /// `StdioFormatEntry` has migrated to `FormatDescriptor`.
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct FormatDescriptor {
     pub kind_id: String,
@@ -2021,18 +1999,20 @@ mod tests;
 /// is untouched and keeps working; this region is purely additive until W6 deletes the old one.
 pub mod io_mechanism {
     use crate::io_schema::{ArtifactDialect, Confidence, Dialect, IoEntryDescriptor, IoError, IoFidelity, IoOutcome, IoPayload, IoResult, IoRoute, CARRIER_BINARY, CARRIER_TEXT, SQLITE_SNAPSHOT};
-    use super::sqlite_snapshot::{SnapshotEncoding, SqliteDatabase, SqliteDatabaseLimits, SqliteRow, SqliteTable, SqliteValue, SqliteSnapshotProgress, SqliteSnapshotControl, SqliteSnapshotPhase, export_sqlite_database, import_sqlite_database};
-    use dsl::Diagnostic;
+    use super::sqlite_snapshot::{SnapshotEncoding, SqliteDatabase, SqliteDatabaseLimits, SqliteRow, SqliteTable, SqliteValue, SqliteSnapshotProgress, SqliteSnapshotControl, SqliteSnapshotPhase, export_sqlite_database, import_sqlite_database, export_sqlite_database_controlled, import_sqlite_database_controlled};
+    use semio_framework_diagnostic::Diagnostic;
+    use semio_framework_value::{ValueError, ValueRefusalKind};
     use std::collections::{BTreeMap, BTreeSet};
     use std::sync::RwLock;
 
     //#region 🔖️Traits
     /// 🎹️ A typed native-value → foreign-payload encoder. `INTO`/`FIDELITY` are the foreign
-    /// dialect and the strongest fidelity this serializer achieves.
+    /// dialect and the strongest fidelity this serializer achieves. `children` are the owned members of a composed native (design
+    /// §20.15: composed content is read on read, never through the parent's local owner) — the empty view for any other native.
     pub trait Serializer<S> {
         const INTO: Dialect;
         const FIDELITY: IoFidelity;
-        fn serialize(from: &S) -> impl std::future::Future<Output = IoResult<IoPayload>> + Send;
+        fn serialize(from: &S, children: &ArchiveChildren) -> impl std::future::Future<Output = IoResult<IoPayload>> + Send;
     }
 
     /// 🎹️ A typed foreign-payload → native-value decoder. `FROM`/`FIDELITY` are the foreign
@@ -2054,6 +2034,68 @@ pub mod io_mechanism {
     }
     //#endregion 🔖️Traits
 
+    //#region 🔖️ArchiveChildren
+    /// 🪆️ The read-only typed view of a composed artifact's owned children that a reader takes beside its parent (design §20.15:
+    /// composed content is read on read, never through the parent's local owner): the members of the document's recursive archive
+    /// (`store::channel::DocumentArchivePack`), addressed by slot and child id. A native without owned children gets the empty view.
+    #[derive(Clone, Debug, Default, PartialEq, Eq)]
+    pub struct ArchiveChildren {
+        members: Vec<store::channel::OwnedDocumentMemberPackEntry>,
+    }
+
+    impl ArchiveChildren {
+        /// 🈳️ The view of a document without owned children.
+        pub const fn empty() -> Self {
+            Self { members: Vec::new() }
+        }
+
+        /// 🗃️ The owned members of `archive`, nested ones included.
+        pub fn from_archive(archive: &store::channel::DocumentArchivePack) -> Self {
+            Self { members: archive.members.clone() }
+        }
+
+        /// 📋️ Every `(slot, child_id)` the view holds, in archive order.
+        pub fn slots(&self) -> Vec<(String, String)> {
+            self.members.iter().map(|member| (member.owner.slot.clone(), member.owner.child_id.clone())).collect()
+        }
+
+        /// 🎯️ The dialect the child at `slot`/`child_id` materializes as.
+        pub fn dialect(&self, slot: &str, child_id: &str) -> Option<ArtifactDialect> {
+            self.find(slot, child_id).map(|member| ArtifactDialect { artifact_kind: member.reference.artifact_kind.clone(), standard: member.reference.standard.clone(), subset: member.reference.subset.clone() })
+        }
+
+        /// 🧵️ The head snapshot of the child at `slot`/`child_id`: its archived envelope decoded and its history folded.
+        pub async fn typed<S, M>(&self, slot: &str, child_id: &str) -> Result<S, IoError>
+        where
+            S: Clone + store::ArtifactPack,
+            M: store::OpText + store::OpBinary + store::Mutation<S>,
+        {
+            let member = self.find(slot, child_id).ok_or_else(|| refusal(ValueRefusalKind::InvalidValue, format!("no owned child {slot}/{child_id} in the archive")))?;
+            let (pack, spr) = store::decode_document_pack_bytes(&member.envelope_pack).await.map_err(|error| refusal(ValueRefusalKind::InvalidValue, format!("owned child {slot}/{child_id}: {error}")))?;
+            store::parse_document_pack::<S, M>(&pack, &spr).await.map(store::ParsedDocumentText::into_snapshot).map_err(text_refusal)
+        }
+
+        /// 🔎️ The archived member at `slot`/`child_id`.
+        fn find(&self, slot: &str, child_id: &str) -> Option<&store::channel::OwnedDocumentMemberPackEntry> {
+            self.members.iter().find(|member| member.owner.slot == slot && member.owner.child_id == child_id)
+        }
+    }
+
+    /// 📨️ A binary native payload split into the parent's native bytes and its owned children: a composed artifact's head carrier
+    /// (`store::channel::encode_document_archive_bytes` of `{parent HEAD native, empty parent history, members}`, first byte
+    /// [`store::channel::DOCUMENT_ARCHIVE_VERSION`]) yields its parent bytes and members; any other payload is the parent alone.
+    fn native_carrier(bytes: &[u8]) -> Result<(std::borrow::Cow<'_, [u8]>, ArchiveChildren), IoError> {
+        if bytes.first() != Some(&store::channel::DOCUMENT_ARCHIVE_VERSION) {
+            return Ok((std::borrow::Cow::Borrowed(bytes), ArchiveChildren::empty()));
+        }
+        let archive = ::semio_framework_async::poll::resolve_ready(store::channel::decode_document_archive_bytes(bytes)).map_err(|error| refusal(ValueRefusalKind::InvalidValue, format!("composed carrier: {error}")))?;
+        if !archive.parent_spr.is_empty() {
+            return Err(refusal(ValueRefusalKind::InvalidValue, "composed carrier: a head carrier holds no parent history"));
+        }
+        Ok((std::borrow::Cow::Owned(archive.parent_pack), ArchiveChildren { members: archive.members }))
+    }
+    //#endregion 🔖️ArchiveChildren
+
     //#region 🔖️DslTxtCarrier
     /// 🗒️ Serialize any `ArtifactDsl` document as UTF-8 carrier text (stdio.txt body law).
     pub fn serialize_dsl_txt<S: store::ArtifactDsl>(from: &S) -> IoResult<IoPayload> {
@@ -2064,19 +2106,44 @@ pub mod io_mechanism {
     pub fn deserialize_dsl_txt<S: store::ArtifactDsl>(payload: &IoPayload) -> IoResult<S> {
         let text = match payload {
             IoPayload::Text(text) => text.as_str(),
-            IoPayload::Binary(bytes) => std::str::from_utf8(bytes).map_err(|error| IoError { message: error.to_string(), diagnostics: Vec::new() })?,
+            IoPayload::Binary(bytes) => std::str::from_utf8(bytes).map_err(|error| IoError::from_value_error(ValueError::new(ValueRefusalKind::InvalidValue, error.to_string())))?,
         };
-        S::parse_dsl(text).map(IoOutcome::clean).map_err(|error| IoError { message: error.to_string(), diagnostics: Vec::new() })
+        S::parse_dsl(text).map(IoOutcome::clean).map_err(text_refusal)
+    }
+
+    fn refusal(kind: ValueRefusalKind, message: impl Into<String>) -> IoError { IoError::from_value_error(ValueError::new(kind, message)) }
+
+    fn text_refusal(error: semio_framework_diagnostic::TextError) -> IoError {
+        let mut callback = |_| true;
+        let mut control = semio_framework_value::NativeEncodeControl::new(isize::MAX as usize, &mut callback);
+        IoError::from_text_error_controlled(error, &mut control).unwrap_or_else(IoError::from_value_error)
     }
     //#endregion 🔖️DslTxtCarrier
 
     //#region 🔖️Entry
-    /// 🧾️ Type-erased io vtable row: one directed hop `from -> into` at a declared `fidelity`, an
+    /// 🧲️ The side of an entry that is the registering artifact's native dialect, declared by the constructor and never inferred: an
+    /// `Export` entry serializes out of it (`from` is native), an `Import` entry deserializes into it (`into` is native).
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+    pub enum IoEntryDirection {
+        Export,
+        Import,
+    }
+
+    /// 🛤️ One registered entry seen from its native side — the shape a package descriptor lists as an import/export row.
+    #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+    pub struct IoNativeRoute {
+        pub native: ArtifactDialect,
+        pub foreign: ArtifactDialect,
+        pub direction: IoEntryDirection,
+    }
+
+    /// 🧾️ Type-erased io vtable row: one directed hop `from -> into` at a declared `fidelity`, its native side `direction`, an
     /// optional `sniff` (carrier-dialect identification), and the erased `run` this hop executes.
     pub struct IoEntry {
         pub from: Dialect,
         pub into: Dialect,
         pub fidelity: IoFidelity,
+        pub direction: IoEntryDirection,
         pub sniff: Option<fn(&IoPayload) -> Confidence>,
         pub run: fn(&IoPayload) -> IoResult<IoPayload>,
     }
@@ -2087,7 +2154,7 @@ pub mod io_mechanism {
             (None, None) => true,
             _ => false,
         };
-        ArtifactDialect::from(left.from) == ArtifactDialect::from(right.from) && ArtifactDialect::from(left.into) == ArtifactDialect::from(right.into) && left.fidelity == right.fidelity && same_sniff && std::ptr::fn_addr_eq(left.run, right.run)
+        ArtifactDialect::from(left.from) == ArtifactDialect::from(right.from) && ArtifactDialect::from(left.into) == ArtifactDialect::from(right.into) && left.fidelity == right.fidelity && left.direction == right.direction && same_sniff && std::ptr::fn_addr_eq(left.run, right.run)
     }
 
     fn descriptor_of(entry: &IoEntry) -> IoEntryDescriptor {
@@ -2187,62 +2254,106 @@ pub mod io_mechanism {
 
     const SNAPSHOT_METADATA_SQL: &str = include_str!("🪶️sqlite-snapshot/🧬️schema/🗄️.sql");
 
-    fn validate_snapshot_schema(database: &SqliteDatabase, schema: &str, limits: SqliteDatabaseLimits) -> Result<(), String> {
-        crate::sqlite_snapshot::validate_sqlite_database_schema(database, schema, limits).map_err(|error| error.to_string())
+    fn validate_snapshot_schema(database: &SqliteDatabase, schema: &str, phase: SqliteSnapshotPhase, control: &mut SqliteSnapshotControl<'_>) -> Result<(), ValueError> {
+        crate::sqlite_snapshot::validate_sqlite_database_schema_controlled(database, schema, phase, control)
     }
 
-    /// 🪪️ Reads explicit artifact, standard, subset and native encoding from semantic SQLite.
-    pub fn sqlite_snapshot_metadata(database: &SqliteDatabase) -> Result<(ArtifactDialect, SnapshotEncoding), String> {
-        let table = database.tables.iter().find(|table| table.name == "semio_snapshot").ok_or_else(|| "SQLite file has no semantic snapshot metadata".to_string())?;
-        if crate::sqlite_snapshot::validate_sqlite_table_schema(table, SNAPSHOT_METADATA_SQL, SqliteDatabaseLimits::default()).is_err() || table.rows.len() != 1 {
-            return Err("snapshot SQLite metadata schema or row count is invalid".to_string());
+    fn validate_snapshot_coordinate(kind: &str, standard: &str, subset: &str, control: &mut SqliteSnapshotControl<'_>, phase: SqliteSnapshotPhase) -> Result<(), ValueError> {
+        if kind.is_empty() || standard.is_empty() || subset.is_empty() { return Err(ValueError::new(ValueRefusalKind::InvalidValue, "snapshot SQLite metadata dialect is invalid")); }
+        for (index, text) in [kind, standard, subset].iter().enumerate() {
+            let mut position = 0usize;
+            let mut characters = 0usize;
+            for character in text.chars() {
+                if character.is_control() || index == 0 && character == '@' || index == 2 && character == '/' { return Err(ValueError::new(ValueRefusalKind::InvalidValue, "snapshot SQLite metadata dialect is invalid")); }
+                position += character.len_utf8();
+                characters += 1;
+                if characters % 256 == 0 { control.checkpoint(phase, position, text.len())?; }
+            }
+            control.checkpoint(phase, position, text.len())?;
         }
-        let row = &table.rows[0];
-        let [SqliteValue::Integer(1), SqliteValue::Text(kind), SqliteValue::Text(standard), SqliteValue::Text(subset), SqliteValue::Integer(1), SqliteValue::Text(encoding)] = row.values.as_slice() else {
-            return Err("snapshot SQLite metadata values are invalid".to_string());
-        };
-        let dialect = ArtifactDialect { artifact_kind: kind.clone(), standard: standard.clone(), subset: subset.clone() };
-        let coordinate = dialect.to_coordinate();
-        if row.rowid != 1 || ArtifactDialect::parse_coordinate(&coordinate).as_ref() != Ok(&dialect) || coordinate.chars().any(char::is_control) {
-            return Err("snapshot SQLite metadata dialect is invalid".to_string());
-        }
-        Ok((dialect, SnapshotEncoding::parse(encoding).map_err(|error| error.to_string())?))
+        Ok(())
     }
 
-    /// 🪪️ Adds the reserved decomposed coordinate metadata to a provider's domain database.
-    pub fn attach_sqlite_snapshot_metadata(database: &mut SqliteDatabase, dialect: &ArtifactDialect, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), String> {
-        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 0)?;
-        if database.tables.iter().any(|table| table.name.eq_ignore_ascii_case("semio_snapshot")) { return Err("domain schema cannot claim reserved snapshot metadata".into()); }
+    fn validate_snapshot_metadata<'a>(table: &'a SqliteTable, control: &mut SqliteSnapshotControl<'_>) -> Result<(&'a str, &'a str, &'a str, SnapshotEncoding), ValueError> {
+        crate::sqlite_snapshot::validate_sqlite_table_schema_controlled(table, SNAPSHOT_METADATA_SQL, SqliteSnapshotPhase::ReconstructSnapshot, control)?;
+        if table.rows.len() != 1 || table.rows[0].rowid != 1 { return Err(ValueError::new(ValueRefusalKind::InvalidValue, "snapshot SQLite metadata schema or row count is invalid")); }
+        let [SqliteValue::Integer(1), SqliteValue::Text(kind), SqliteValue::Text(standard), SqliteValue::Text(subset), SqliteValue::Integer(1), SqliteValue::Text(encoding)] = table.rows[0].values.as_slice() else { return Err(ValueError::new(ValueRefusalKind::InvalidValue, "snapshot SQLite metadata values are invalid")); };
+        validate_snapshot_coordinate(kind, standard, subset, control, SqliteSnapshotPhase::ReconstructSnapshot)?;
+        Ok((kind, standard, subset, SnapshotEncoding::parse(encoding)?))
+    }
+
+    /// 🪪️ Reads the decomposed coordinate using an operation-owned admission authority.
+    pub fn sqlite_snapshot_metadata(database: &SqliteDatabase) -> Result<(ArtifactDialect, SnapshotEncoding), ValueError> {
+        let mut callback = |_| true;
+        let mut control = SqliteSnapshotControl::new(&mut callback, SqliteDatabaseLimits::default());
+        let table = database.tables.iter().find(|table| table.name == "semio_snapshot").ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue, "SQLite file has no semantic snapshot metadata"))?;
+        let (kind, standard, subset, encoding) = validate_snapshot_metadata(table, &mut control)?;
+        let copy = crate::sqlite_snapshot::transfer::copy_text;
+        Ok((ArtifactDialect { artifact_kind: copy(kind, SqliteSnapshotPhase::ReconstructSnapshot, &mut control)?, standard: copy(standard, SqliteSnapshotPhase::ReconstructSnapshot, &mut control)?, subset: copy(subset, SqliteSnapshotPhase::ReconstructSnapshot, &mut control)? }, encoding))
+    }
+
+    /// 🪪️ Admits the literal metadata cells and their actual backing before ownership.
+    pub fn attach_sqlite_snapshot_metadata(database: &mut SqliteDatabase, dialect: &ArtifactDialect, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), ValueError> {
+        use crate::sqlite_snapshot::transfer::{reserve, copy_text};
+        let phase = SqliteSnapshotPhase::ProjectSnapshot;
+        control.checkpoint(phase, 0, 0)?;
+        validate_snapshot_coordinate(&dialect.artifact_kind, &dialect.standard, &dialect.subset, control, phase)?;
+        if database.tables.iter().any(|table| table.name.eq_ignore_ascii_case("semio_snapshot")) { return Err(ValueError::new(ValueRefusalKind::InvalidValue, "domain schema cannot claim reserved snapshot metadata")); }
         let limits = control.limits();
-        if database.tables.len().checked_add(1).ok_or("snapshot table count overflow")? > limits.max_tables || limits.max_columns < 6 { return Err("snapshot metadata exceeds table or column limit".into()); }
+        if database.tables.len().checked_add(1).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "snapshot table count overflow"))? > limits.max_tables || limits.max_columns < 6 { return Err(ValueError::new(ValueRefusalKind::WorkLimit, "snapshot metadata exceeds table or column limit")); }
         let mut rows = 1usize;
-        control.check_rows(rows)?;
-        let mut bytes = 16usize.checked_add(dialect.artifact_kind.len()).and_then(|value| value.checked_add(dialect.standard.len())).and_then(|value| value.checked_add(dialect.subset.len())).and_then(|value| value.checked_add(encoding.as_str().len())).ok_or("snapshot metadata byte count overflow")?;
-        control.check_value_bytes(bytes)?;
-        let mut schema_bytes = SNAPSHOT_METADATA_SQL.trim().trim_end_matches(';').len().checked_add("semio_snapshot".len()).ok_or("snapshot schema byte count overflow")?;
+        let sql = SNAPSHOT_METADATA_SQL.trim().trim_end_matches(';');
+        let mut bytes = 16usize.checked_add(dialect.artifact_kind.len()).and_then(|v| v.checked_add(dialect.standard.len())).and_then(|v| v.checked_add(dialect.subset.len())).and_then(|v| v.checked_add(encoding.as_str().len())).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "snapshot metadata byte count overflow"))?;
+        let mut schema_bytes = sql.len().checked_add("semio_snapshot".len()).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "snapshot schema byte count overflow"))?;
         for table in &database.tables {
-            schema_bytes = schema_bytes.checked_add(table.sql.len()).and_then(|value| value.checked_add(table.name.len())).ok_or("snapshot schema byte count overflow")?;
-            if schema_bytes > limits.max_schema_bytes { return Err("snapshot metadata exceeds schema byte limit".into()); }
+            schema_bytes = schema_bytes.checked_add(table.sql.len()).and_then(|v| v.checked_add(table.name.len())).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "snapshot schema byte count overflow"))?;
             for row in &table.rows {
-                rows = rows.checked_add(1).ok_or("snapshot row count overflow")?;
-                control.check_rows(rows)?;
-                for value in &row.values {
-                    bytes = bytes.checked_add(match value { SqliteValue::Null => 0, SqliteValue::Integer(_) | SqliteValue::Real(_) => 8, SqliteValue::Text(text) => text.len(), SqliteValue::Blob(blob) => blob.len() }).ok_or("snapshot value byte count overflow")?;
-                    control.check_value_bytes(bytes)?;
-                }
-                if rows % 256 == 0 { control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, rows, 0)?; }
+                rows = rows.checked_add(1).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "snapshot row count overflow"))?;
+                for value in &row.values { bytes = bytes.checked_add(match value { SqliteValue::Null => 0, SqliteValue::Integer(_) | SqliteValue::Real(_) => 8, SqliteValue::Text(text) => text.len(), SqliteValue::Blob(blob) => blob.len() }).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "snapshot value byte count overflow"))?; }
+                if rows % 256 == 0 { control.checkpoint(phase, rows, 0)?; }
             }
         }
-        if schema_bytes > limits.max_schema_bytes { return Err("snapshot metadata exceeds schema byte limit".into()); }
-        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, rows, rows)?;
-        database.tables.push(SqliteTable { name: "semio_snapshot".to_string(), sql: SNAPSHOT_METADATA_SQL.trim().trim_end_matches(';').to_string(), rows: vec![SqliteRow { rowid: 1, values: vec![SqliteValue::Integer(1), SqliteValue::Text(dialect.artifact_kind.clone()), SqliteValue::Text(dialect.standard.clone()), SqliteValue::Text(dialect.subset.clone()), SqliteValue::Integer(1), SqliteValue::Text(encoding.as_str().to_string())] }] });
-        sqlite_snapshot_metadata(database).map(|_| ())
+        control.check_rows(rows)?;
+        control.check_value_bytes(bytes)?;
+        if schema_bytes > limits.max_schema_bytes { return Err(ValueError::new(ValueRefusalKind::OwnershipLimit, "snapshot metadata exceeds schema byte limit")); }
+        let mut values = reserve(6, control)?;
+        values.push(SqliteValue::Integer(1));
+        for text in [&dialect.artifact_kind, &dialect.standard, &dialect.subset] { values.push(SqliteValue::Text(copy_text(text, phase, control)?)); }
+        values.push(SqliteValue::Integer(1));
+        values.push(SqliteValue::Text(copy_text(encoding.as_str(), phase, control)?));
+        let mut metadata_rows = reserve(1, control)?;
+        metadata_rows.push(SqliteRow { rowid: 1, values });
+        let name = copy_text("semio_snapshot", phase, control)?;
+        let sql = copy_text(sql, phase, control)?;
+        if database.tables.len() == database.tables.capacity() {
+            let mut tables = reserve(database.tables.len().checked_add(1).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "snapshot table count overflow"))?, control)?;
+            let total = database.tables.len();
+            for (index, table) in database.tables.drain(..).enumerate() { tables.push(table); if index % 256 == 0 { control.checkpoint(phase, index, total)?; } }
+            database.tables = tables;
+        }
+        database.tables.push(SqliteTable { name, sql, rows: metadata_rows });
+        control.checkpoint(phase, rows, rows)
     }
 
-    pub fn take_sqlite_snapshot_metadata(database: &mut SqliteDatabase) -> Result<(ArtifactDialect, SnapshotEncoding), String> {
-        let metadata = sqlite_snapshot_metadata(database)?;
-        database.tables.retain(|table| table.name != "semio_snapshot");
-        Ok(metadata)
+    /// 🪪️ Moves validated metadata out without cloning its literal coordinate fields.
+    pub fn take_sqlite_snapshot_metadata_controlled(database: &mut SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<(ArtifactDialect, SnapshotEncoding), ValueError> {
+        let index = database.tables.iter().position(|table| table.name == "semio_snapshot").ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue, "SQLite file has no semantic snapshot metadata"))?;
+        let (_, _, _, encoding) = validate_snapshot_metadata(&database.tables[index], control)?;
+        let count = database.tables.len();
+        for at in index..count - 1 { database.tables.swap(at, at + 1); if at % 256 == 0 { control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, at, count)?; } }
+        let mut table = database.tables.pop().ok_or_else(|| ValueError::new(ValueRefusalKind::InvariantViolated, "snapshot metadata disappeared"))?;
+        let mut row = table.rows.pop().ok_or_else(|| ValueError::new(ValueRefusalKind::InvariantViolated, "snapshot metadata row disappeared"))?;
+        let mut values = row.values.drain(..);
+        values.next();
+        let kind = match values.next() { Some(SqliteValue::Text(v)) => v, _ => return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "snapshot metadata kind disappeared")) };
+        let standard = match values.next() { Some(SqliteValue::Text(v)) => v, _ => return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "snapshot metadata standard disappeared")) };
+        let subset = match values.next() { Some(SqliteValue::Text(v)) => v, _ => return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "snapshot metadata subset disappeared")) };
+        Ok((ArtifactDialect { artifact_kind: kind, standard, subset }, encoding))
+    }
+
+    /// 🪪️ Extracts metadata under one operation-owned control.
+    pub fn take_sqlite_snapshot_metadata(database: &mut SqliteDatabase) -> Result<(ArtifactDialect, SnapshotEncoding), ValueError> {
+        take_sqlite_snapshot_metadata_controlled(database, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()))
     }
     // 🐛️ terra-io-thunks: every call site below awaits this before `.read()`/`.write()` — the
     // codemod that added `async` here left all five callers unfixed (the `no .await needed` case
@@ -2382,7 +2493,7 @@ pub mod io_mechanism {
     async fn resolve_route(registry: &EntryMap, from: &ArtifactDialect, into: &ArtifactDialect, max_hops: u8) -> IoResult<IoRoute> {
         let max_hops = max_hops.min(3);
         if max_hops == 0 {
-            return Err(IoError { message: format!("io_route {} -> {}: max_hops clamped to 0", from.to_coordinate(), into.to_coordinate()), diagnostics: Vec::new() });
+            return Err(refusal(ValueRefusalKind::InvalidValue, format!("io_route {} -> {}: max_hops clamped to 0", from.to_coordinate(), into.to_coordinate())));
         }
         let mut candidates: Vec<Vec<&'static IoEntry>> = Vec::new();
         let mut path: Vec<&'static IoEntry> = Vec::new();
@@ -2390,7 +2501,7 @@ pub mod io_mechanism {
         visited.insert(from.clone());
         walk_routes(registry, from, into, max_hops, &mut path, &mut visited, &mut candidates).await;
         if candidates.is_empty() {
-            return Err(IoError { message: format!("no io route from {} to {} within {max_hops} hops", from.to_coordinate(), into.to_coordinate()), diagnostics: Vec::new() });
+            return Err(refusal(ValueRefusalKind::UnsupportedOwner, format!("no io route from {} to {} within {max_hops} hops", from.to_coordinate(), into.to_coordinate())));
         }
         let mut ranked = Vec::with_capacity(candidates.len());
         for route in candidates {
@@ -2410,25 +2521,25 @@ pub mod io_mechanism {
     /// 🌉️ `resolve_route` against the process-wide registry.
     pub async fn io_route(from: &ArtifactDialect, into: &ArtifactDialect, max_hops: u8) -> IoResult<IoRoute> {
         if max_hops > 0 {
-            let snapshots = native_snapshot_registry().read().map_err(|_| IoError { message: "native snapshot registry unavailable".to_string(), diagnostics: Vec::new() })?;
+            let snapshots = native_snapshot_registry().read().map_err(|_| refusal(ValueRefusalKind::InvariantViolated, "native snapshot registry unavailable"))?;
             if let Some(hop) = supplemental_snapshot_entry(&snapshots, from, into) {
                 return Ok(IoOutcome::clean(IoRoute { hops: vec![hop], fidelity: IoFidelity::Exact }));
             }
         }
-        let registry = io_mechanism_registry().read().map_err(|_| IoError { message: "io mechanism registry unavailable".to_string(), diagnostics: Vec::new() })?.clone();
+        let registry = io_mechanism_registry().read().map_err(|_| refusal(ValueRefusalKind::InvariantViolated, "io mechanism registry unavailable"))?.clone();
         resolve_route(&registry, from, into, max_hops).await
     }
 
     fn typed_snapshot_codec<P: store::ArtifactSqliteSnapshot + 'static>(dialect: &ArtifactDialect) -> Result<store::ArtifactCodec, IoError> {
-        let codec = native_snapshot_registry().read().map_err(|_| IoError::from("native snapshot registry unavailable".to_string()))?.get(dialect).cloned().ok_or_else(|| IoError::from(format!("unregistered typed snapshot dialect {}", dialect.to_coordinate())))?;
-        let provider = codec.snapshot_sqlite.as_ref().ok_or_else(|| IoError::from("artifact has no semantic SQLite provider".to_string()))?;
+        let codec = native_snapshot_registry().read().map_err(|_| refusal(ValueRefusalKind::InvariantViolated, "native snapshot registry unavailable"))?.get(dialect).cloned().ok_or_else(|| refusal(ValueRefusalKind::UnsupportedOwner, format!("unregistered typed snapshot dialect {}", dialect.to_coordinate())))?;
+        let provider = codec.snapshot_sqlite.as_ref().ok_or_else(|| refusal(ValueRefusalKind::UnsupportedOwner, "artifact has no semantic SQLite provider"))?;
         if provider.snapshot_type != Some(std::any::TypeId::of::<P>()) || provider.schema != P::SQLITE_SCHEMA {
-            return Err("typed snapshot does not own the requested exact dialect".to_string().into());
+            return Err(refusal(ValueRefusalKind::InvalidValue, "typed snapshot does not own the requested exact dialect"));
         }
         Ok(codec)
     }
 
-    fn validate_typed_snapshot_subset<P: store::ArtifactSqliteSnapshot>(dialect: &ArtifactDialect, snapshot: &P, database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Vec<crate::Diagnostic>, IoError> {
+    fn validate_typed_snapshot_subset<P: store::ArtifactSqliteSnapshot>(dialect: &ArtifactDialect, snapshot: &P, database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Vec<semio_framework_diagnostic::Diagnostic>, IoError> {
         store::validate_owned_sqlite_snapshot_subset(snapshot, dialect, database, control).map(|outcome| outcome.diagnostics)
     }
 
@@ -2436,63 +2547,63 @@ pub mod io_mechanism {
     pub async fn io_export_sqlite_snapshot<P: store::ArtifactSqliteSnapshot + 'static>(dialect: &ArtifactDialect, snapshot: &P, encoding: SnapshotEncoding, limits: SqliteDatabaseLimits, progress: &mut dyn FnMut(SqliteSnapshotProgress) -> bool) -> IoResult<Vec<u8>> {
         typed_snapshot_codec::<P>(dialect)?;
         let mut control = SqliteSnapshotControl::new(progress, limits);
-        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 0)?;
-        let mut database = snapshot.to_sqlite_database(&mut control)?;
-        validate_snapshot_schema(&database, P::SQLITE_SCHEMA, limits)?;
+        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 0).map_err(IoError::from_value_error)?;
+        let mut database = snapshot.to_sqlite_database(&mut control).map_err(IoError::from_value_error)?;
+        validate_snapshot_schema(&database, P::SQLITE_SCHEMA, SqliteSnapshotPhase::ProjectSnapshot, &mut control).map_err(IoError::from_value_error)?;
         let diagnostics = validate_typed_snapshot_subset(dialect, snapshot, &database, &mut control)?;
-        attach_sqlite_snapshot_metadata(&mut database, dialect, encoding, &mut control)?;
-        export_sqlite_database(&database, limits, progress).map(|value| IoOutcome { value, diagnostics }).map_err(|error| IoError::from(error.to_string()))
+        attach_sqlite_snapshot_metadata(&mut database, dialect, encoding, &mut control).map_err(IoError::from_value_error)?;
+        export_sqlite_database_controlled(&database, &mut control).map(|value| IoOutcome { value, diagnostics }).map_err(IoError::from_value_error)
     }
 
     /// 📥️ Reconstructs every typed snapshot field directly from its declared relational tables.
     pub async fn io_import_sqlite_snapshot<P: store::ArtifactSqliteSnapshot + 'static>(dialect: &ArtifactDialect, bytes: &[u8], limits: SqliteDatabaseLimits, progress: &mut dyn FnMut(SqliteSnapshotProgress) -> bool) -> IoResult<P> {
         typed_snapshot_codec::<P>(dialect)?;
-        let mut database = import_sqlite_database(bytes, limits, progress).map_err(|error| IoError::from(error.to_string()))?;
-        let (actual, _) = take_sqlite_snapshot_metadata(&mut database)?;
-        if actual != *dialect { return Err("typed SQLite snapshot dialect does not match requested dialect".to_string().into()); }
-        validate_snapshot_schema(&database, P::SQLITE_SCHEMA, limits)?;
         let mut control = SqliteSnapshotControl::new(progress, limits);
-        control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 0, 0)?;
-        let value = P::from_sqlite_database(&database, &mut control)?;
+        let mut database = import_sqlite_database_controlled(bytes, &mut control).map_err(IoError::from_value_error)?;
+        let (actual, _) = take_sqlite_snapshot_metadata_controlled(&mut database, &mut control).map_err(IoError::from_value_error)?;
+        if actual != *dialect { return Err(refusal(ValueRefusalKind::InvalidValue, "typed SQLite snapshot dialect does not match requested dialect")); }
+        validate_snapshot_schema(&database, P::SQLITE_SCHEMA, SqliteSnapshotPhase::ReconstructSnapshot, &mut control).map_err(IoError::from_value_error)?;
+        control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 0, 0).map_err(IoError::from_value_error)?;
+        let value = P::from_sqlite_database(&database, &mut control).map_err(IoError::from_value_error)?;
         let diagnostics = validate_typed_snapshot_subset(dialect, &value, &database, &mut control)?;
         Ok(IoOutcome { value, diagnostics })
     }
 
     fn run_snapshot_hop(snapshots: &NativeSnapshotMap, hop: &IoEntryDescriptor, payload: IoPayload, limits: SqliteDatabaseLimits, progress: &mut dyn FnMut(SqliteSnapshotProgress) -> bool) -> IoResult<IoPayload> {
-        let fail = |message: String| IoError { message, diagnostics: Vec::new() };
         let sqlite = ArtifactDialect::from(SQLITE_SNAPSHOT);
-        SqliteSnapshotControl::new(progress, limits).checkpoint(SqliteSnapshotPhase::DecodeNative, 0, 1).map_err(fail)?;
+        let mut control = SqliteSnapshotControl::new(progress, limits);
+        control.checkpoint(SqliteSnapshotPhase::DecodeNative, 0, 1).map_err(IoError::from_value_error)?;
         if hop.into == sqlite {
             let size = match &payload { IoPayload::Binary(bytes) => bytes.len(), IoPayload::Text(text) => text.len() };
             if size > limits.max_file_bytes || hop.from.to_coordinate().len() > limits.max_value_bytes {
-                return Err(fail("native snapshot exceeds SQLite snapshot limits".to_string()));
+                return Err(refusal(ValueRefusalKind::OwnershipLimit, "native snapshot exceeds SQLite snapshot limits"));
             }
-            let codec = snapshots.get(&hop.from).ok_or_else(|| fail("unregistered native snapshot dialect".to_string()))?;
-            let provider = codec.snapshot_sqlite.as_ref().ok_or_else(|| fail("artifact has no handwritten semantic SQLite provider".to_string()))?;
-            let projected = (provider.export)(&codec.schema, &hop.from, &payload, &mut SqliteSnapshotControl::new(progress, limits))?;
+            let codec = snapshots.get(&hop.from).ok_or_else(|| refusal(ValueRefusalKind::UnsupportedOwner, "unregistered native snapshot dialect"))?;
+            let provider = codec.snapshot_sqlite.as_ref().ok_or_else(|| refusal(ValueRefusalKind::UnsupportedOwner, "artifact has no handwritten semantic SQLite provider"))?;
+            let projected = (provider.export)(&codec.schema, &hop.from, &payload, &mut control)?;
             let mut database = projected.value;
-            validate_snapshot_schema(&database, &provider.schema, limits).map_err(fail)?;
-            SqliteSnapshotControl::new(progress, limits).check_database(&database, SqliteSnapshotPhase::ProjectSnapshot).map_err(fail)?;
+            validate_snapshot_schema(&database, &provider.schema, SqliteSnapshotPhase::ProjectSnapshot, &mut control).map_err(IoError::from_value_error)?;
+            control.check_database(&database, SqliteSnapshotPhase::ProjectSnapshot).map_err(IoError::from_value_error)?;
             let diagnostics = projected.diagnostics;
             let encoding = match payload { IoPayload::Binary(_) => SnapshotEncoding::Binary, IoPayload::Text(_) => SnapshotEncoding::Text };
-            attach_sqlite_snapshot_metadata(&mut database, &hop.from, encoding, &mut SqliteSnapshotControl::new(progress, limits)).map_err(fail)?;
-            return export_sqlite_database(&database, limits, progress).map(|bytes| IoOutcome { value: IoPayload::Binary(bytes), diagnostics }).map_err(|error| fail(error.to_string()));
+            attach_sqlite_snapshot_metadata(&mut database, &hop.from, encoding, &mut control).map_err(IoError::from_value_error)?;
+            return export_sqlite_database_controlled(&database, &mut control).map(|bytes| IoOutcome { value: IoPayload::Binary(bytes), diagnostics }).map_err(IoError::from_value_error);
         }
         let IoPayload::Binary(bytes) = payload else {
-            return Err(fail("SQLite snapshot import requires a binary payload".to_string()));
+            return Err(refusal(ValueRefusalKind::InvalidValue, "SQLite snapshot import requires a binary payload"));
         };
-        let mut database = import_sqlite_database(&bytes, limits, progress).map_err(|error| fail(error.to_string()))?;
-        let (dialect, encoding) = take_sqlite_snapshot_metadata(&mut database).map_err(fail)?;
+        let mut database = import_sqlite_database_controlled(&bytes, &mut control).map_err(IoError::from_value_error)?;
+        let (dialect, encoding) = take_sqlite_snapshot_metadata_controlled(&mut database, &mut control).map_err(IoError::from_value_error)?;
         if dialect != hop.into {
-            return Err(fail("semantic SQLite snapshot dialect does not match requested dialect".to_string()));
+            return Err(refusal(ValueRefusalKind::InvalidValue, "semantic SQLite snapshot dialect does not match requested dialect"));
         }
-        let codec = snapshots.get(&hop.into).ok_or_else(|| fail("unregistered native snapshot dialect".to_string()))?;
-        let provider = codec.snapshot_sqlite.as_ref().ok_or_else(|| fail("artifact has no handwritten semantic SQLite provider".to_string()))?;
-        validate_snapshot_schema(&database, &provider.schema, limits).map_err(fail)?;
-        let reconstructed = (provider.import)(&codec.schema, &hop.into, database, encoding, &mut SqliteSnapshotControl::new(progress, limits))?;
+        let codec = snapshots.get(&hop.into).ok_or_else(|| refusal(ValueRefusalKind::UnsupportedOwner, "unregistered native snapshot dialect"))?;
+        let provider = codec.snapshot_sqlite.as_ref().ok_or_else(|| refusal(ValueRefusalKind::UnsupportedOwner, "artifact has no handwritten semantic SQLite provider"))?;
+        validate_snapshot_schema(&database, &provider.schema, SqliteSnapshotPhase::ReconstructSnapshot, &mut control).map_err(IoError::from_value_error)?;
+        let reconstructed = (provider.import)(&codec.schema, &hop.into, database, encoding, &mut control)?;
         let payload = reconstructed.value;
         let size = match &payload { IoPayload::Binary(bytes) => bytes.len(), IoPayload::Text(text) => text.len() };
-        if size > limits.max_file_bytes { return Err(fail("reconstructed native snapshot exceeds SQLite snapshot limits".to_string())); }
+        if size > limits.max_file_bytes { return Err(refusal(ValueRefusalKind::OwnershipLimit, "reconstructed native snapshot exceeds SQLite snapshot limits")); }
         Ok(IoOutcome { value: payload, diagnostics: reconstructed.diagnostics })
     }
 
@@ -2501,8 +2612,8 @@ pub mod io_mechanism {
         let mut diagnostics = Vec::new();
         for hop in &route.hops {
             let key = (hop.from.clone(), hop.into.clone());
-            let entry = registry.get(&key).ok_or_else(|| IoError { message: format!("io_run: no entry registered for hop {} -> {}", hop.from.to_coordinate(), hop.into.to_coordinate()), diagnostics: Vec::new() })?;
-            let outcome = (entry.run)(&current).map_err(|error| IoError { message: format!("io_run: hop {} -> {} failed: {}", hop.from.to_coordinate(), hop.into.to_coordinate(), error.message), diagnostics: error.diagnostics })?;
+            let entry = registry.get(&key).ok_or_else(|| refusal(ValueRefusalKind::UnsupportedOwner, format!("io_run: no entry registered for hop {} -> {}", hop.from.to_coordinate(), hop.into.to_coordinate())))?;
+            let outcome = (entry.run)(&current).map_err(|error| IoError { cause: ValueError::new(error.cause.kind, format!("io_run: hop {} -> {} failed: {}", hop.from.to_coordinate(), hop.into.to_coordinate(), error.cause.message)), diagnostics: error.diagnostics })?;
             current = outcome.value;
             diagnostics.extend(outcome.diagnostics);
         }
@@ -2510,7 +2621,7 @@ pub mod io_mechanism {
     }
 
     /// 🌉️ Folds `IoEntry::run` along every hop of `route`, accumulating diagnostics; on failure
-    /// the `IoError.message` names which hop (by dialect coordinates) failed.
+    /// the `IoError.cause.message` names which hop (by dialect coordinates) failed.
     pub async fn io_run(route: &IoRoute, payload: IoPayload) -> IoResult<IoPayload> {
         io_run_with_snapshot_control(route, payload, SqliteDatabaseLimits::default(), &mut |_| true).await
     }
@@ -2518,23 +2629,23 @@ pub mod io_mechanism {
     /// 🛑️ Executes I/O with bounded SQLite allocation and page progress; returning false cancels.
     pub async fn io_run_with_snapshot_control(route: &IoRoute, payload: IoPayload, limits: SqliteDatabaseLimits, progress: &mut dyn FnMut(SqliteSnapshotProgress) -> bool) -> IoResult<IoPayload> {
         if route.hops.is_empty() || route.hops.windows(2).any(|pair| pair[0].into != pair[1].from) {
-            return Err(IoError { message: "io_run: route must contain connected hops".to_string(), diagnostics: Vec::new() });
+            return Err(refusal(ValueRefusalKind::InvalidValue, "io_run: route must contain connected hops"));
         }
         let sqlite = ArtifactDialect::from(SQLITE_SNAPSHOT);
         if route.hops.iter().any(|hop| hop.from == sqlite || hop.into == sqlite) {
             if route.hops.len() != 1 || route.fidelity != IoFidelity::Exact {
-                return Err(IoError { message: "io_run: SQLite snapshots are exact endpoint transfers and cannot be intermediate hops".to_string(), diagnostics: Vec::new() });
+                return Err(refusal(ValueRefusalKind::InvalidValue, "io_run: SQLite snapshots are exact endpoint transfers and cannot be intermediate hops"));
             }
             let hop = &route.hops[0];
             let native = if hop.from == sqlite { &hop.into } else { &hop.from };
-            let codec = native_snapshot_registry().read().map_err(|_| IoError { message: "native snapshot registry unavailable".to_string(), diagnostics: Vec::new() })?.get(native).cloned();
+            let codec = native_snapshot_registry().read().map_err(|_| refusal(ValueRefusalKind::InvariantViolated, "native snapshot registry unavailable"))?.get(native).cloned();
             let snapshots = codec.map(|codec| BTreeMap::from([(native.clone(), codec)])).unwrap_or_default();
             if supplemental_snapshot_entry(&snapshots, &hop.from, &hop.into).as_ref() != Some(hop) {
-                return Err(IoError { message: "io_run: inconsistent SQLite snapshot descriptor".to_string(), diagnostics: Vec::new() });
+                return Err(refusal(ValueRefusalKind::InvalidValue, "io_run: inconsistent SQLite snapshot descriptor"));
             }
             return run_snapshot_hop(&snapshots, hop, payload, limits, progress);
         }
-        let registry = io_mechanism_registry().read().map_err(|_| IoError { message: "io mechanism registry unavailable".to_string(), diagnostics: Vec::new() })?.clone();
+        let registry = io_mechanism_registry().read().map_err(|_| refusal(ValueRefusalKind::InvariantViolated, "io mechanism registry unavailable"))?.clone();
         resolve_run(&registry, route, payload).await
     }
     //#endregion 🔖️Route
@@ -2566,13 +2677,13 @@ pub mod io_mechanism {
     pub async fn io_identify_with_snapshot_control(payload: &IoPayload, limits: SqliteDatabaseLimits, progress: &mut dyn FnMut(SqliteSnapshotProgress) -> bool) -> Result<Vec<(ArtifactDialect, Confidence)>, IoError> {
         if let IoPayload::Binary(bytes) = payload {
             if bytes.starts_with(b"SQLite format 3\0") {
-                let mut database = import_sqlite_database(bytes, limits, progress).map_err(|error| IoError { message: error.to_string(), diagnostics: Vec::new() })?;
+                let mut database = import_sqlite_database(bytes, limits, progress).map_err(IoError::from_value_error)?;
                 if take_sqlite_snapshot_metadata(&mut database).is_ok() && !database.tables.is_empty() {
                     return Ok(vec![(ArtifactDialect::from(SQLITE_SNAPSHOT), Confidence::High)]);
                 }
             }
         }
-        let registry = io_mechanism_registry().read().map_err(|_| IoError { message: "io mechanism registry unavailable".to_string(), diagnostics: Vec::new() })?.clone();
+        let registry = io_mechanism_registry().read().map_err(|_| refusal(ValueRefusalKind::InvariantViolated, "io mechanism registry unavailable"))?.clone();
         Ok(resolve_identify(&registry, payload).await)
     }
 
@@ -2601,6 +2712,22 @@ pub mod io_mechanism {
             Err(_) => Vec::new(),
         }
     }
+
+    /// 🛣️ Every registered entry from its native side ([`IoNativeRoute`], registry order) — what `describe` lists as a package's
+    /// import/export rows. The synthesized native ↔ sqlite-snapshot hops of [`io_entries`] are generic, not registered entries.
+    pub fn io_native_routes() -> Vec<IoNativeRoute> {
+        let Ok(registry) = io_mechanism_registry().read() else { return Vec::new() };
+        registry
+            .values()
+            .map(|entry| {
+                let (from, into) = (ArtifactDialect::from(entry.from), ArtifactDialect::from(entry.into));
+                match entry.direction {
+                    IoEntryDirection::Export => IoNativeRoute { native: from, foreign: into, direction: entry.direction },
+                    IoEntryDirection::Import => IoNativeRoute { native: into, foreign: from, direction: entry.direction },
+                }
+            })
+            .collect()
+    }
     //#endregion 🔖️Identify
 
     //#region 🔖️Constructors
@@ -2611,7 +2738,8 @@ pub mod io_mechanism {
     /// `S::decode_pack`, resolved by monomorphization of the inner `run` item — never a runtime
     /// `fn` pointer parameter threaded through a closure, which `IoEntry.run`'s bare-`fn`-pointer
     /// field cannot capture anyway. This is the smallest constructor shape that keeps a plugin from
-    /// ever hand-writing an `IoEntry` literal while never leaking pack/DSL encoding into its code.
+    /// ever hand-writing an `IoEntry` literal while never leaking pack/DSL encoding into its code. A composed head carrier
+    /// ([`native_carrier`]) hands its owned children to the serializer.
     pub fn serializer_entry<S: store::ArtifactPack, T: Serializer<S>>(own: Dialect) -> IoEntry {
         // 🚫️async: E4 fn-pointer slot — `IoEntry.run` is a bare, non-capturing `fn` pointer;
         // `Serializer::serialize` stays `async fn` (a real trait method) and this thunk drives it
@@ -2619,34 +2747,41 @@ pub mod io_mechanism {
         // every codec body here as suspension-free).
         fn run<S: store::ArtifactPack, T: Serializer<S>>(payload: &IoPayload) -> IoResult<IoPayload> {
             let IoPayload::Binary(bytes) = payload else {
-                return Err(IoError { message: "serializer_entry: expected a binary native payload".to_string(), diagnostics: Vec::new() });
+                return Err(refusal(ValueRefusalKind::InvalidValue, "serializer_entry: expected a binary native payload"));
             };
-            let value = S::decode_pack(bytes).map_err(|error| IoError { message: format!("native pack decode failed: {error}"), diagnostics: Vec::new() })?;
-            super::resolve_ready(T::serialize(&value))
+            let (parent, children) = native_carrier(bytes)?;
+            let value = S::decode_pack(&parent).map_err(|error| match error { store::PackError::Refusal(pack::PackRefusal::TextRefusal(error)) => text_refusal(error), error => match error.into_value_error() { Ok(error) => IoError::from_value_error(error.under("native pack decode")), Err(error) => refusal(ValueRefusalKind::InvariantViolated, format!("native pack decode: in-memory decode reported a transport failure: {error}")) } })?;
+            ::semio_framework_async::poll::resolve_ready(T::serialize(&value, &children))
         }
-        IoEntry { from: own, into: T::INTO, fidelity: T::FIDELITY, sniff: None, run: run::<S, T> }
+        IoEntry { from: own, into: T::INTO, fidelity: T::FIDELITY, direction: IoEntryDirection::Export, sniff: None, run: run::<S, T> }
     }
 
     /// 🎹️ `serializer_entry`'s twin for a DSL-text-native `S` (`store::ArtifactDsl` instead of
     /// `store::ArtifactPack`) — together the smallest constructor pair covering both halves of the
-    /// payload law's native encoding (pack XOR DSL).
+    /// payload law's native encoding (pack XOR DSL). A composed head carrier ([`native_carrier`]) whose parent bytes are the
+    /// parent's DSL text hands its owned children to the serializer.
     pub fn serializer_entry_text<S: store::ArtifactDsl, T: Serializer<S>>(own: Dialect) -> IoEntry {
         // 🚫️async: E4 fn-pointer slot — see `serializer_entry`'s twin above.
         fn run<S: store::ArtifactDsl, T: Serializer<S>>(payload: &IoPayload) -> IoResult<IoPayload> {
-            let IoPayload::Text(text) = payload else {
-                return Err(IoError { message: "serializer_entry_text: expected a text native payload".to_string(), diagnostics: Vec::new() });
+            let (value, children) = match payload {
+                IoPayload::Text(text) => (S::parse_dsl(text).map_err(text_refusal)?, ArchiveChildren::empty()),
+                IoPayload::Binary(bytes) if bytes.first() == Some(&store::channel::DOCUMENT_ARCHIVE_VERSION) => {
+                    let (parent, children) = native_carrier(bytes)?;
+                    let text = std::str::from_utf8(&parent).map_err(|_| refusal(ValueRefusalKind::InvalidValue, "serializer_entry_text: the composed carrier's parent is not DSL text"))?;
+                    (S::parse_dsl(text).map_err(text_refusal)?, children)
+                }
+                IoPayload::Binary(_) => return Err(refusal(ValueRefusalKind::InvalidValue, "serializer_entry_text: expected a text native payload or a composed carrier")),
             };
-            let value = S::parse_dsl(text).map_err(|error| IoError { message: format!("native dsl decode failed: {error}"), diagnostics: Vec::new() })?;
-            super::resolve_ready(T::serialize(&value))
+            ::semio_framework_async::poll::resolve_ready(T::serialize(&value, &children))
         }
-        IoEntry { from: own, into: T::INTO, fidelity: T::FIDELITY, sniff: None, run: run::<S, T> }
+        IoEntry { from: own, into: T::INTO, fidelity: T::FIDELITY, direction: IoEntryDirection::Export, sniff: None, run: run::<S, T> }
     }
 
     // 🚫️async: E4 fn-pointer slot — `IoEntry.sniff` is a bare `fn` pointer; `Deserializer::sniff`
     // stays `async fn` (it has a default body and may be overridden with real decode logic) and
     // this thunk resolves it synchronously via `resolve_ready`.
     fn deserializer_sniff<S, T: Deserializer<S>>(payload: &IoPayload) -> Confidence {
-        super::resolve_ready(T::sniff(payload))
+        ::semio_framework_async::poll::resolve_ready(T::sniff(payload))
     }
 
     /// 🎹️ Builds an `IoEntry` from a `Deserializer<S>` impl for a binary-pack-native `S`. Runs
@@ -2658,28 +2793,28 @@ pub mod io_mechanism {
         // already a plain `fn(&S) -> Vec<Diagnostic>` (never async, see `Deserializer`'s own doc
         // comment) so it needs no `resolve_ready` wrapping, only `T::deserialize`.
         fn run<S: store::ArtifactPack, T: Deserializer<S>>(payload: &IoPayload) -> IoResult<IoPayload> {
-            let outcome = super::resolve_ready(T::deserialize(payload))?;
+            let outcome = ::semio_framework_async::poll::resolve_ready(T::deserialize(payload))?;
             let mut diagnostics = outcome.diagnostics;
             if let Some(conformance) = T::CONFORMANCE {
                 diagnostics.extend(conformance(&outcome.value));
             }
             Ok(IoOutcome { value: IoPayload::Binary(outcome.value.encode_pack()), diagnostics })
         }
-        IoEntry { from: T::FROM, into: own, fidelity: T::FIDELITY, sniff: Some(deserializer_sniff::<S, T>), run: run::<S, T> }
+        IoEntry { from: T::FROM, into: own, fidelity: T::FIDELITY, direction: IoEntryDirection::Import, sniff: Some(deserializer_sniff::<S, T>), run: run::<S, T> }
     }
 
     /// 🎹️ `deserializer_entry`'s twin for a DSL-text-native `S`.
     pub fn deserializer_entry_text<S: store::ArtifactDsl, T: Deserializer<S>>(own: Dialect) -> IoEntry {
         // 🚫️async: E4 fn-pointer slot — see `deserializer_entry` above.
         fn run<S: store::ArtifactDsl, T: Deserializer<S>>(payload: &IoPayload) -> IoResult<IoPayload> {
-            let outcome = super::resolve_ready(T::deserialize(payload))?;
+            let outcome = ::semio_framework_async::poll::resolve_ready(T::deserialize(payload))?;
             let mut diagnostics = outcome.diagnostics;
             if let Some(conformance) = T::CONFORMANCE {
                 diagnostics.extend(conformance(&outcome.value));
             }
             Ok(IoOutcome { value: IoPayload::Text(outcome.value.print_dsl()), diagnostics })
         }
-        IoEntry { from: T::FROM, into: own, fidelity: T::FIDELITY, sniff: Some(deserializer_sniff::<S, T>), run: run::<S, T> }
+        IoEntry { from: T::FROM, into: own, fidelity: T::FIDELITY, direction: IoEntryDirection::Import, sniff: Some(deserializer_sniff::<S, T>), run: run::<S, T> }
     }
     //#endregion 🔖️Constructors
 

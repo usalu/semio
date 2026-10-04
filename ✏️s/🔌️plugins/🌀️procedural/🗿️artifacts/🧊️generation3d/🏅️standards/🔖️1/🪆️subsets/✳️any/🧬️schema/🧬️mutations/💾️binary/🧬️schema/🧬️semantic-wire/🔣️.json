@@ -13,8 +13,8 @@
     },
     "cases": {
       "type": "array",
-      "minItems": 10,
-      "maxItems": 10,
+      "minItems": 15,
+      "maxItems": 15,
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -97,7 +97,8 @@
                       "text",
                       "boolean",
                       "point",
-                      "vector"
+                      "vector",
+                      "list"
                     ]
                   }
                 }

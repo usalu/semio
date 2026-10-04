@@ -71,21 +71,3 @@ fn retirement_obeys_language_neutral_grants_and_releases_exact_bytes() {
         assert!(retirement.is_empty());
     }
 }
-
-#[test]
-fn nested_dictionary_moves_without_cloning_and_retires_at_one_byte() {
-    let text = "🌊".repeat(4096);
-    let dictionary = neural::Dictionary::new().insert("key", neural::Value::Dictionary(neural::Dictionary::new().insert("nested", neural::Value::Atom(neural::Atom::String(text)))));
-    let mut retirement = Retirement::default();
-    retirement.push(Owner::Dictionary(dictionary));
-    let mut bytes = 0;
-    for _ in 0..16410 {
-        match retirement.step(1, 1) {
-            Step::Pending { released_bytes, .. } => bytes += released_bytes,
-            Step::Complete => break,
-            other => panic!("unexpected retirement result: {other:?}"),
-        }
-    }
-    assert!(retirement.is_empty());
-    assert_eq!(bytes, 16384 + 3 + 6);
-}

@@ -69,3 +69,7 @@ pub fn subset<PA: crate::ArtifactApps>() -> SubsetDeclaration<PA> {
         examples: examples(),
     }
 }
+
+#[cfg(test)]
+#[path = "🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🚪️io/🦀️.rs"]
+mod sqlite_snapshot_declaration_tests;

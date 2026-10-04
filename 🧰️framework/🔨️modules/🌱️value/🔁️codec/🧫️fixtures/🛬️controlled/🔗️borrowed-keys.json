@@ -1,0 +1,92 @@
+{
+  "unit": "文🌠",
+  "repeat": 20000,
+  "cases": [
+    {
+      "id": "single",
+      "entries": 1,
+      "cancelStage": 1
+    },
+    {
+      "id": "duplicate",
+      "entries": 2,
+      "cancelStage": 1
+    },
+    {
+      "id": "duplicate-equality",
+      "entries": 2,
+      "cancelStage": 3
+    }
+  ],
+  "expectedKind": "canceled",
+  "maximumOwnedBytes": 65536,
+  "indexAuthority": {
+    "storage": "indexedOwnedSlots",
+    "requests": "fullConcreteReplacement",
+    "probes": "boundedFullUtf8Equality",
+    "cases": [
+      {
+        "id": "empty",
+        "keys": [],
+        "unique": true
+      },
+      {
+        "id": "literalOrdered",
+        "keys": [
+          "",
+          "a\u0000b",
+          "文🌠",
+          "é",
+          "é",
+          "Count",
+          "count"
+        ],
+        "unique": true
+      },
+      {
+        "id": "nulDuplicate",
+        "keys": [
+          "a\u0000b",
+          "other",
+          "a\u0000b"
+        ],
+        "unique": false
+      },
+      {
+        "id": "emptyDuplicate",
+        "keys": [
+          "",
+          "文🌠",
+          ""
+        ],
+        "unique": false
+      },
+      {
+        "id": "unicodeDuplicate",
+        "keys": [
+          "é",
+          "é",
+          "文🌠",
+          "é"
+        ],
+        "unique": false
+      }
+    ],
+    "wide": {
+      "prefix": "member/文🌠/",
+      "count": 1024,
+      "duplicateOrdinal": 7
+    }
+  },
+  "canonicalRetirement": {
+    "requestBytes": 0,
+    "releasedBytes": "completeBorrowedCapacityCensus",
+    "sourceCorpus": "intrinsic-media-wire-v1",
+    "depth": 256,
+    "longBranch": {
+      "unit": "文🌠",
+      "repeat": 20000,
+      "utf8Bytes": 140000
+    }
+  }
+}

@@ -220,6 +220,7 @@ function wireInput(root: HTMLElement, canvas: HTMLCanvasElement, transport: Brow
         if (root.ownerDocument.visibilityState === "hidden")
             transport.setHostPageHidden();
     }, options);
+    root.ownerDocument.defaultView?.addEventListener("blur", () => transport.setHostWindowBlur(), options);
     return () => {
         cleanupKeyboard();
         abort.abort();

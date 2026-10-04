@@ -1,0 +1,20 @@
+{
+  "nativeConstruction": {
+    "header": "threeOrderedValueRoots",
+    "values": "flatExclusiveForest",
+    "typedValue": "orderedItems",
+    "root": "inlineNoBacking",
+    "forecast": "paidFrontiersOnly"
+  },
+  "limits": {
+    "semantic": "maxValueBytes",
+    "backing": "maxAllocationBytes",
+    "file": "maxFileBytes"
+  },
+  "nativeRoles": {
+    "owned": "maxAllocationBytes",
+    "semantic": "maxValueBytes",
+    "preflight": "paidFrontiersOnly",
+    "nonfinite": "retainedBinary64"
+  }
+}

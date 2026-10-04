@@ -5,6 +5,9 @@
 use crate::ProgramMutation;
 use crate::ProgramSnapshot;
 
-pub fn inverse(_payload: &super::ReplaceGovernance, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+pub fn inverse(_payload: &super::ReplaceGovernance, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![ProgramMutation::ReplaceGovernance(super::ReplaceGovernance { new_governance: base.governance.clone() })]
+
+    })())
 }

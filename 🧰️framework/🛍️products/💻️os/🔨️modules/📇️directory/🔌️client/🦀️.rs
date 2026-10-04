@@ -26,7 +26,10 @@ use super::schema::{
     DocumentOpenRevalidationV1, DocumentOpenSurfaceRoleV1, DocumentOpenSurfaceV1, DocumentPlanSocketGrantIntentV1, DocumentScope, DocumentView, MemberSpaceViewV1, DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES, DIRECTORY_SESSION_AUTHORITY_MAX_BYTES,
     DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_OPEN_MAX_SAFE_INTEGER,
 };
-use crate::os_dsl::{DslValue, FromValue, ToValue, ValueError};
+use semio_framework_value::DslValue;
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
+use semio_framework_value::ValueError;
 use semio_framework_async::OperationContext;
 use std::sync::Arc;
 
@@ -81,7 +84,7 @@ impl DocumentHttpPortCodeV1 {
 }
 
 /// 📜 Closed owner declaration transported by the existing plugin manifest contribution.
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DocumentHttpPortDeclarationV1 {
     pub schema: String,
@@ -91,7 +94,7 @@ pub struct DocumentHttpPortDeclarationV1 {
 }
 
 /// 📖 One named operation and its published request/response schemas.
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DocumentHttpOperationV1 {
     pub action: String,
@@ -301,7 +304,7 @@ pub type SessionView = DirectorySessionAuthorityV1;
 /// general camelCase convention: this route predates the wave (`🌎️hub/📦️bin.rs`'s
 /// `CreateAuthSessionResponse` has no `rename_all`) and §C2 marks it "unchanged" — the client
 /// matches the ACTUAL wire, not the convention.
-#[derive(Clone, Debug, ToValue, FromValue)]
+#[derive(Clone, Debug, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 pub struct SessionMintResponse {
     pub token: String,
     pub user_id: String,
@@ -477,7 +480,7 @@ impl DirectoryEventPageBootstrapV1 {
     }
 }
 
-#[derive(FromValue)]
+#[derive(semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase", retire_with = "std::mem::drop")]
 pub struct SocketGrantReceiptV1 {
     pub schema: String,
@@ -496,7 +499,7 @@ impl Drop for SocketGrantReceiptV1 {
 /// 📝️ The answer to a document open-plan exchange (`os.directory#/$defs/DocumentSocketGrantReceiptV1`):
 /// the actor the next `semio.session.v1` upgrade of the same credential is admitted as, and until
 /// when. It carries no secret — the upgrade presents the credential itself.
-#[derive(FromValue)]
+#[derive(semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DocumentSocketGrantReceiptV1 {
     pub schema: String,
@@ -602,7 +605,7 @@ pub struct DocumentSocketAdmissionV1 {
 /// 🧬 Local codec expectation plus the complete verified execution-target lease a server-authoritative
 /// open plan must satisfy. There is no partial surface expectation: a locally installed target is
 /// compared through the one shared full-field relation or not at all.
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DocumentSocketExpectationV1 {
     pub artifact_schema: String,
@@ -634,7 +637,7 @@ pub type DocumentSocketAdmissionFuture<'a> = std::pin::Pin<Box<dyn std::future::
 /// choke point every `request_json` response body passes through.
 fn decode_json_bytes<R: FromValue>(bytes: &[u8]) -> Result<R, DirectoryClientError> {
     let text = std::str::from_utf8(bytes).map_err(|error| DirectoryClientError::Decode(error.to_string()))?;
-    crate::os_pack::json::from_json_str(text).map_err(DirectoryClientError::from)
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(DirectoryClientError::from)
 }
 
 fn wipe_string(value: &mut String) -> usize {
@@ -814,15 +817,15 @@ impl Drop for WipeDslValue<'_> {
 
 fn wipe_dsl_value(value: &mut DslValue) -> usize {
     match value {
-        DslValue::String(value) => wipe_string(value),
-        DslValue::Bytes(value) => {
+        semio_framework_value::DslValue::String(value) => wipe_string(value),
+        semio_framework_value::DslValue::Bytes(value) => {
             let len = value.len();
             value.fill(0);
             len
         }
-        DslValue::Array(values) => values.iter_mut().map(wipe_dsl_value).sum(),
-        DslValue::Object(entries) => entries.iter_mut().map(|(key, value)| wipe_string(key) + wipe_dsl_value(value)).sum(),
-        DslValue::Null | DslValue::Bool(_) | DslValue::Number(_) => 0,
+        semio_framework_value::DslValue::Array(values) => values.iter_mut().map(wipe_dsl_value).sum(),
+        semio_framework_value::DslValue::Object(entries) => entries.iter_mut().map(|(key, value)| wipe_string(key) + wipe_dsl_value(value)).sum(),
+        semio_framework_value::DslValue::Null | semio_framework_value::DslValue::Bool(_) | semio_framework_value::DslValue::Number(_) => 0,
     }
 }
 
@@ -843,12 +846,12 @@ fn decode_local_hub_credential(bytes: &[u8], expected_class: &str, observer: Opt
         return Err(DirectoryClientError::Unauthorized);
     }
     let hub_origin = hub_origin.to_string();
-    let DslValue::Object(entries) = &mut decoded.value else { return Err(DirectoryClientError::Unauthorized) };
+    let semio_framework_value::DslValue::Object(entries) = &mut decoded.value else { return Err(DirectoryClientError::Unauthorized) };
     let capability = entries
         .iter_mut()
         .find_map(|(key, value)| (key == "capability").then_some(value))
         .and_then(|value| match value {
-            DslValue::String(value) => Some(std::mem::take(value).into_bytes().into_boxed_slice()),
+            semio_framework_value::DslValue::String(value) => Some(std::mem::take(value).into_bytes().into_boxed_slice()),
             _ => None,
         })
         .ok_or(DirectoryClientError::Unauthorized)?;
@@ -1192,7 +1195,7 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
         }
         let bearer = self.credential.as_ref().map(|credential| credential.capability()).transpose()?;
         let path = format!("/spaces/{}/documents/{}/execution-target/manifest", encode_url_component(&intent.scope.space_id), encode_url_component(&intent.scope.document_id),);
-        let response = self.transport.http(ctx, HttpMethod::Post, &self.url(&path), bearer, Some(crate::os_pack::json::to_json_string(intent).into_bytes())).await?;
+        let response = self.transport.http(ctx, HttpMethod::Post, &self.url(&path), bearer, Some(semio_framework_pack_json::to_json_string(intent).into_bytes())).await?;
         if ctx.cancel.is_cancelled().await {
             return Err(DirectoryClientError::Cancelled);
         }
@@ -1225,7 +1228,7 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
         }
         let bearer = self.credential.as_ref().map(|credential| credential.capability()).transpose()?;
         let path = format!("/spaces/{}/documents/{}/execution-target/component", encode_url_component(&intent.scope.space_id), encode_url_component(&intent.scope.document_id),);
-        let response = self.transport.http(ctx, HttpMethod::Post, &self.url(&path), bearer, Some(crate::os_pack::json::to_json_string(intent).into_bytes())).await?;
+        let response = self.transport.http(ctx, HttpMethod::Post, &self.url(&path), bearer, Some(semio_framework_pack_json::to_json_string(intent).into_bytes())).await?;
         if ctx.cancel.is_cancelled().await {
             return Err(DirectoryClientError::Cancelled);
         }
@@ -1246,7 +1249,7 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
         }
         let bearer = self.credential.as_ref().map(|credential| credential.capability()).transpose()?;
         let path = format!("/spaces/{}/documents/{}/execution-target/descriptor", encode_url_component(&intent.scope.space_id), encode_url_component(&intent.scope.document_id),);
-        let response = self.transport.http(ctx, HttpMethod::Post, &self.url(&path), bearer, Some(crate::os_pack::json::to_json_string(intent).into_bytes())).await?;
+        let response = self.transport.http(ctx, HttpMethod::Post, &self.url(&path), bearer, Some(semio_framework_pack_json::to_json_string(intent).into_bytes())).await?;
         if ctx.cancel.is_cancelled().await {
             return Err(DirectoryClientError::Cancelled);
         }
@@ -1454,7 +1457,7 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
             return Err(DirectoryClientError::Decode("document open intent invalid".into()));
         }
         let prefix = format!("/spaces/{}/documents/{}", encode_url_component(space_id), encode_url_component(document_id));
-        Ok((scope, prefix, crate::os_pack::json::to_json_string(&intent).into_bytes()))
+        Ok((scope, prefix, semio_framework_pack_json::to_json_string(&intent).into_bytes()))
     }
 
     /// 🧾 Admission leg two: binds the answered plan to the local expectation, derives the receipt-free
@@ -1479,7 +1482,7 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
         let credential_origin = self.credential.as_ref().ok_or(DirectoryClientError::Unauthorized)?.hub_origin().trim_end_matches('/');
         let authority = DocumentSocketAuthorityV1::from_plan(credential_origin.to_string(), &plan, expectation, now_ms).map_err(|_| DirectoryClientError::Decode("document open authority invalid".into()))?;
         let exchange = WipeDocumentPlanSocketGrantIntent(DocumentPlanSocketGrantIntentV1 { schema: "semio.hub.document-plan-socket-grant-intent/v1".into(), version: 1, plan_receipt: std::mem::take(&mut plan.receipt) });
-        Ok((authority, WipeBytes { bytes: crate::os_pack::json::to_json_string(&exchange.0).into_bytes(), observer: None }))
+        Ok((authority, WipeBytes { bytes: semio_framework_pack_json::to_json_string(&exchange.0).into_bytes(), observer: None }))
     }
 
     /// 🎟 Admission leg three: the grant receipt, bound to `semio.session.v1` and a hub socket actor,
@@ -1659,7 +1662,7 @@ impl<T: DirectoryTransport + Clone> DirectoryStream<T> {
             let Some(connection) = self.connection.as_mut() else { return self.reconnecting(now_ms) };
             match connection.try_recv_text() {
                 Ok(DirectoryWsPoll::Text(text)) => {
-                    if let Ok(message) = crate::os_pack::json::from_json_str::<DirectoryStreamMessage>(&text) {
+                    if let Ok(message) = semio_framework_pack_json::from_json_str::<DirectoryStreamMessage>(&text, semio_framework_pack_json::JsonMemberPolicy::Reject) {
                         self.track(&message);
                         return DirectoryStreamTurn::Message(message);
                     }
@@ -2042,7 +2045,7 @@ pub mod native {
                 super::encode_url_component(&intent.scope.space_id),
                 super::encode_url_component(&intent.scope.document_id)
             );
-            let request = PoolHttpRequest { method: "POST".to_string(), url, headers: vec![("Authorization".to_string(), format!("Bearer {bearer}"))], body: crate::os_pack::json::to_json_string(intent).into_bytes() };
+            let request = PoolHttpRequest { method: "POST".to_string(), url, headers: vec![("Authorization".to_string(), format!("Bearer {bearer}"))], body: semio_framework_pack_json::to_json_string(intent).into_bytes() };
             self.http_pool.fetch(self.runtime.as_ref(), &self.scope, ctx.clone(), self.package.clone(), self.actor, request).await.map_err(|error| pool_stream_error(ctx, error))
         }
     }

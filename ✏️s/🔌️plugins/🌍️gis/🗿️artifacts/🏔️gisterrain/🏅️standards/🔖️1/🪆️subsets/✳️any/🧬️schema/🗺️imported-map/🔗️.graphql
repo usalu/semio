@@ -1,0 +1,21 @@
+# 🗺️ Full intrinsic value domain; scalar bindings preserve native tags and exact words.
+scalar UInt64
+scalar Int64
+scalar IEEE754Word
+scalar Octets
+union IntrinsicValue = IntrinsicNull | IntrinsicBoolean | IntrinsicUnsigned | IntrinsicSigned | IntrinsicFloat | IntrinsicText | IntrinsicBytes | IntrinsicArray | IntrinsicObject
+type IntrinsicNull { kind: String! }
+type IntrinsicBoolean { value: Boolean! }
+type IntrinsicUnsigned { value: UInt64! }
+type IntrinsicSigned { value: Int64! }
+type IntrinsicFloat { word: IEEE754Word! }
+type IntrinsicText { value: String! }
+type IntrinsicBytes { value: Octets! }
+type IntrinsicArray { items: [IntrinsicValue!]! }
+type IntrinsicObject { members: [IntrinsicMember!]! }
+type IntrinsicMember { name: String! value: IntrinsicValue! }
+type ImportedMap { positions: [IntrinsicObject!]! routes: [IntrinsicObject!]! regions: [IntrinsicObject!]! properties: [IntrinsicMember!]! }
+input ImportedMapInput { positions: [IntrinsicValueInput!]! routes: [IntrinsicValueInput!]! regions: [IntrinsicValueInput!]! properties: [IntrinsicMemberInput!]! }
+input IntrinsicMemberInput { name: String! value: IntrinsicValueInput! }
+input IntrinsicValueInput { kind: String! boolean: Boolean unsigned: UInt64 signed: Int64 word: IEEE754Word text: String octets: Octets items: [IntrinsicValueInput!] members: [IntrinsicMemberInput!] }
+type ImportedMapChange { value: ImportedMap }

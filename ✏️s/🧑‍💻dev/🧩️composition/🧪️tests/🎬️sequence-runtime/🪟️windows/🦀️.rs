@@ -99,7 +99,7 @@ fn sequence_window_ownership_runtime_isolates_restores_and_resets_exact_windows(
                 let document_after = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
                 if document_before.pack != document_after.pack || document_before.spr != document_after.spr { return Err("Sequence window publication changed document bytes".into()); }
                 let packs = app.window_config_packs().await.map_err(|error| format!("{error:?}"))?;
-                app.load_document_pack(&document_before).await.map_err(|error| format!("{error:?}"))?;
+                semio_framework_plugin::artifact_app_laws::load_document(&mut app, &document_before).await.map_err(|error| format!("{error:?}"))?;
                 let cleared = app.window_transient_snapshot(&script_left).map_err(|error| format!("{error:?}"))?.ok_or("Sequence transient owner missing after reload")?;
                 if cleared.get::<SequenceScriptWindowTransientOwner>() != Some(&SequenceScriptWindowTransient::default()) { return Err("Sequence transient survived same-byte reload".into()); }
                 for context in [&main_left, &main_right] {

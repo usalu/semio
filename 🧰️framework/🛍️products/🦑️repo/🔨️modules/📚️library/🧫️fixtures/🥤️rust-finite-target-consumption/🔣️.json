@@ -258,7 +258,7 @@
     },
     {
       "id": "cancelled-symlink-ancestor",
-      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../foreign\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../alias/../foreign\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
       "targets": [
         "foreign/item.json"
       ],
@@ -270,7 +270,7 @@
     },
     {
       "id": "cancelled-missing-directory",
-      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../foreign\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../absent/../foreign\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
       "targets": [
         "foreign/item.json"
       ],
@@ -282,7 +282,7 @@
     },
     {
       "id": "cancelled-opaque-directory",
-      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../foreign\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../compose/../foreign\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
       "targets": [
         "foreign/item.json"
       ],
@@ -294,7 +294,7 @@
     },
     {
       "id": "cancelled-nondirectory-parent",
-      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../foreign\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
+      "source": "pub fn read() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"));\n    for directory in [root.join(\"../not-directory/../foreign\")] {\n        for leaf in [\"item.json\"] {\n            let _ = directory.join(leaf);\n            println!(\"{leaf}\");\n        }\n    }\n}\n",
       "targets": [
         "foreign/item.json"
       ],

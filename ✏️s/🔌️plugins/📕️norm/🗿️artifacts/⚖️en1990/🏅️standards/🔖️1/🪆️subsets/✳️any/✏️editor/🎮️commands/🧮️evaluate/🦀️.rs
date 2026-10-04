@@ -15,7 +15,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Payload
 /// 🧮️ Fieldless — this replaces a bare unit variant, whose wire form (`evaluate` / `01 <ord> 00 00`) a
 /// fieldless `DslRecord` struct reproduces exactly.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "evaluate")]
 pub struct Evaluate {}
 //#endregion 🔖️Payload

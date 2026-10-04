@@ -6,7 +6,7 @@
 
 use crate::{equation_snapshot_with_state, EquationGeometry, EquationGraph, EquationNode, EquationSnapshot};
 use semio_framework::io::io_mechanism::Deserializer;
-use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
+use semio_framework::io_schema::{Dialect, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
 use semio_s_artifact_stdio_csv::{CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
 
@@ -19,10 +19,10 @@ impl Deserializer<EquationSnapshot> for CsvIntoEquation {
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
     async fn deserialize(payload: &IoPayload) -> IoResult<EquationSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
-            return Err(IoError { message: "CsvIntoEquation: expected a binary csv payload".to_string(), diagnostics: Vec::new() });
+            return Err(crate::standards::v1::subsets::any::io::invalid_payload("CsvIntoEquation", "expected a binary csv payload"));
         };
         let _ = STDIO_CSV_DOCUMENT_SCHEMA;
-        let csv = <CsvSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| IoError { message: format!("CsvIntoEquation: csv decode failed: {error}"), diagnostics: Vec::new() })?;
+        let csv = <CsvSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| crate::standards::v1::subsets::any::io::pack_decode_refusal("CsvIntoEquation", error))?;
         let nodes: Vec<EquationNode> = csv
             .records
             .iter()

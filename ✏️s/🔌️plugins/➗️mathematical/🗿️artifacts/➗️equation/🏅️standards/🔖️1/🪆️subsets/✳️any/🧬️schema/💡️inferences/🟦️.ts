@@ -70,7 +70,7 @@ export function parseEquationTopology(value: unknown, at = "$"): EquationTopolog
   const row = equationEquationInferenceGuardObject(value, at);
   return {
     topoOrder: equationEquationInferenceGuardArray(row["topoOrder"], `${at}.topoOrder`).map((item, index) => equationEquationInferenceGuardString(item, `${at}.topoOrder[${index}]`)),
-    depth: equationEquationInferenceGuardObject(row["depth"], `${at}.depth`),
+    depth: Object.fromEntries(Object.entries(equationEquationInferenceGuardObject(row["depth"], `${at}.depth`)).map(([key,value])=>[key,equationEquationInferenceGuardInteger(value,`${at}.depth.${key}`)])),
     cycleFree: equationEquationInferenceGuardBoolean(row["cycleFree"], `${at}.cycleFree`),
     nodeCount: equationEquationInferenceGuardInteger(row["nodeCount"], `${at}.nodeCount`),
   };

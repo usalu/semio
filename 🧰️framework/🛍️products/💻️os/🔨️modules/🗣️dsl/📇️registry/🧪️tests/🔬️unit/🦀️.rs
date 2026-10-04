@@ -1,11 +1,14 @@
 use super::*;
-use crate::os_dsl::schema::{FieldSpec, RecordLayout, RecordSpec, Shape};
+use semio_framework_dsl_record::FieldSpec;
+use semio_framework_dsl_record::RecordLayout;
+use semio_framework_dsl_record::RecordSpec;
+use semio_framework_dsl_record::Shape;
 
 /// 🧬️ A real (not mocked) minimal `RecordSpec` — one `Int` field under `Inline` layout.
 // 🚫️async: E4 fn-pointer slot — passed to `register_schema_spec`/`FullResolver::from_map`,
 // both `fn() -> RecordSpec` (sync, unnameable if async) — see R9/E4.
 fn sample_spec() -> RecordSpec {
-    RecordSpec::new(Some("p2m3-sample"), RecordLayout::Inline, vec![FieldSpec::new(0, "value", Shape::Int)])
+    semio_framework_dsl_record::RecordSpec::new(Some("p2m3-sample"), semio_framework_dsl_record::RecordLayout::Inline, vec![FieldSpec::new(0, "value", Shape::Int)])
 }
 
 #[semio_framework_async_macros::async_test]

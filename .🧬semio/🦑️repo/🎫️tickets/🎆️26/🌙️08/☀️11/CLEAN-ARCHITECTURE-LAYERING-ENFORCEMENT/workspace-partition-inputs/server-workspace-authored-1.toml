@@ -1,0 +1,72 @@
+cargo-features = ["trim-paths"]
+
+[workspace]
+resolver = "2"
+members = ["📦️packages/🦀️rust"]
+exclude = ["**/🏅️standards/**", "**/🔮️oracles/**", "**/👽️guest/**"]
+
+[workspace.metadata.semio.repository]
+schema-version = 1
+member-manifests = ["📦️packages/🦀️rust/Cargo.toml"]
+owner-manifests = []
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.95"
+
+[workspace.dependencies]
+semio-framework-async = { path = "../../🔨️modules/⏳️async/📦️packages/🦀️rust" }
+semio-framework-replication = { path = "../../🔨️modules/📡️replication/📦️packages/🦀️rust" }
+
+[profile.dev]
+debug = false
+incremental = false
+
+[profile.dev.build-override]
+opt-level = 3
+
+[profile.dev.package.semio-framework-hash]
+opt-level = 3
+
+[profile.wasm-dev]
+inherits = "dev"
+codegen-units = 1
+incremental = false
+
+[profile.wasm-dev.package.semio-framework-replication]
+opt-level = 2
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = "debuginfo"
+incremental = false
+trim-paths = "object"
+
+[profile.wasm-release]
+inherits = "release"
+opt-level = "s"
+lto = "thin"
+codegen-units = 1
+strip = "symbols"
+incremental = false
+trim-paths = "object"
+
+[workspace.lints.rust]
+future_incompatible = { level = "warn", priority = -1 }
+rust_2018_idioms = { level = "warn", priority = -1 }
+unsafe_op_in_unsafe_fn = "warn"
+unused_lifetimes = "warn"
+unused_qualifications = "warn"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+cloned_instead_of_copied = "warn"
+inefficient_to_string = "warn"
+map_unwrap_or = "warn"
+needless_pass_by_value = "warn"
+semicolon_if_nothing_returned = "warn"
+unnecessary_wraps = "warn"
+redundant_clone = "warn"

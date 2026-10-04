@@ -17,11 +17,11 @@ impl protocol::MutationKind<Std1StrictSnapshot, Std1StrictMutation> for SetValue
     fn diff(&self, _base: &Std1StrictSnapshot) -> protocol::MutationOutcome<Std1StrictDiff> {
         protocol::MutationOutcome::new(Std1StrictDiff { value: Some(self.value) })
     }
-    fn inverse(&self, base: &Std1StrictSnapshot) -> Vec<Std1StrictMutation> {
-        vec![Std1StrictMutation::SetValue(Self { value: base.value })]
+    fn inverse(&self, base: &Std1StrictSnapshot) -> Result<Vec<Std1StrictMutation>, semio_framework_value::ValueError> {
+        Ok((|| vec![Std1StrictMutation::SetValue(Self { value: base.value })])())
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set value to {}", self.value), &format!("Wert auf {} setzen", self.value))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set value to {}", self.value), &format!("Wert auf {} setzen", self.value))
     }
     fn target(&self) -> Vec<String> {
         vec!["value".into()]

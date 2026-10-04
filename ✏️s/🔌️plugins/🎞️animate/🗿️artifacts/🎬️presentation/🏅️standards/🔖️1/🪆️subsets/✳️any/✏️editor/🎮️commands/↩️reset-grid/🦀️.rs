@@ -15,7 +15,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// Its manifest command id (`resetGrid`) diverges from what the wire keyword (`reset-grid`)
 /// would suggest, which is exactly what `app_commands!`'s `"id" as "wire-key"` two-literal row
 /// exists for — see `crate::editor::animate`'s invocation.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "reset-grid")]
 pub struct ResetGrid {}
 

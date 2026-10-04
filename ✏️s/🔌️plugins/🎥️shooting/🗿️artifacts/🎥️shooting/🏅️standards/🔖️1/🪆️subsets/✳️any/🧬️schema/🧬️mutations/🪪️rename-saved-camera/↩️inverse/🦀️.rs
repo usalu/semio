@@ -4,9 +4,12 @@ use super::RenameSavedCamera;
 use crate::mutations::ShootingMutation;
 use crate::ShootingSnapshot;
 
-pub fn inverse(payload: &RenameSavedCamera, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
+pub fn inverse(payload: &RenameSavedCamera, base: &ShootingSnapshot) -> Result<Vec<ShootingMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.saved_cameras.iter().find(|entry| entry.id == payload.id) {
         Some(entry) => vec![ShootingMutation::RenameSavedCamera(RenameSavedCamera { id: payload.id.clone(), new_label: entry.label.clone() })],
         None => Vec::new(),
     }
+
+    })())
 }

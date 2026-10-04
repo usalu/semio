@@ -53,7 +53,7 @@ async fn deleting_a_group_takes_its_subtree() {
 async fn inverse_restores_the_whole_subtree_at_its_old_address() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_drawing_mutation(&base, &mutation);
+    let inverse = inverse_drawing_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "delete-layer undoes with exactly one create-layer, subtree included");
     let mut snapshot = base.clone();
     apply_drawing_mutation(&mut snapshot, &mutation).expect("forward applies");

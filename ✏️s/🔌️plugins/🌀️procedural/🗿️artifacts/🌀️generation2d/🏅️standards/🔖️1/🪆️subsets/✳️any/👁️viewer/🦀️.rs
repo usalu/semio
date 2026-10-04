@@ -48,12 +48,17 @@ impl protocol::OpBinary for Generation2dViewCommand {
 pub struct Generation2dViewer;
 
 impl ArtifactViewer for Generation2dViewer {
+    /// 📣️ The localized notices of the viewer's refusal codes (design §20.12): the document-level ones.
+    fn fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
+        crate::generation2d_document_fault_notices()
+    }
+
     /// 🧩️ The loaded-parent child projection every archive load and maintenance swap asks for before a
     /// decoded document may replace the store. `Generation2dSnapshot` declares no child slot, so the
     /// projection is honestly empty; without it every replacement faulted with `viewer did not declare
     /// a loaded-parent child projection`.
     fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
-        store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("generation2d.child-projection"), error.to_string()))
+        store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(crate::GENERATION2D_CHILD_PROJECTION), error.to_string()))
     }
 
     type Snapshot = Generation2dSnapshot;

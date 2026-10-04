@@ -2,7 +2,7 @@
 
 use crate::editor::puzzle5d::precompute::geometry::distance_squared;
 use crate::editor::puzzle5d::{engine_grip_kind, puzzle5d_grip_full_id, world_grip_position, Puzzle5dActionCtx, Puzzle5dDocument, Puzzle5dFastener, Puzzle5dFreshIds, Puzzle5dGrip, Puzzle5dPart, PUZZLE5D_PROXIMITY_RADIUS};
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 use std::collections::HashSet;
 
 fn arg_str<'a>(args: Option<&'a Value>, key: &str) -> Option<&'a str> {

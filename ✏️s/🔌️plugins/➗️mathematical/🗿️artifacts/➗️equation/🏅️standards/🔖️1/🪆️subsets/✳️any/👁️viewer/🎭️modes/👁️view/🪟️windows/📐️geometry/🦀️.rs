@@ -8,7 +8,7 @@
 //! editable `set-cell` action: a viewer has no utilities that edit and emits no mutations by
 //! construction (`ViewEmit`).
 
-use crate::{equation_geometry, EquationSnapshot};
+use crate::EquationSnapshot;
 use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, UiAssemblyResult};
 
@@ -31,7 +31,7 @@ pub fn definition() -> semio_framework_plugin::WindowKindDefinition {
 /// artifact-level `equation_geometry` helper the editor's own Geometry window reads, since that
 /// function lives at the ARTIFACT level (outside both surfaces), not behind the editor module.
 pub fn render(document: &EquationSnapshot) -> UiAssemblyResult<BuiltNode> {
-    let geometry = equation_geometry(document);
+    let geometry = document.geometry.clone();
     let view = TableView { columns: vec!["#".into(), "x".into(), "y".into()], rows: geometry.points.iter().enumerate().map(|(index, point)| vec![index.to_string(), format!("{}", point.x), format!("{}", point.y)]).collect() };
     TableWindowKit::render(&view)
 }

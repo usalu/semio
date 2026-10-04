@@ -28,9 +28,12 @@ impl protocol::MutationKind<SemioModelSnapshot, SemioModelMutation> for SetEleme
     fn diff(&self, base: &SemioModelSnapshot) -> protocol::MutationOutcome<<SemioModelMutation as Mutation<SemioModelSnapshot>>::Diff> {
         agg_diff(&SemioModelMutation::SetElement(self.clone()), base)
     }
-    fn inverse(&self, base: &SemioModelSnapshot) -> Vec<SemioModelMutation> {
-        agg_inverse(&SemioModelMutation::SetElement(self.clone()), base)
-    }
+    fn inverse(&self, base: &SemioModelSnapshot) -> Result<Vec<SemioModelMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&SemioModelMutation::SetElement(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set element", "Element setzen")
     }

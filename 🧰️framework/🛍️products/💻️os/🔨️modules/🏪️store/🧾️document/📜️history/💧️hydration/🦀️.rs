@@ -1,10 +1,8 @@
 //! 💧️ Retained typed hydration of one persisted Pack and SPR history into an exact document owner.
 
-use super::{conflict_from_history_conflict, mutation_meta_from_history_op_meta, ErasedSnapshotRetirement, MemberOpenDiagnostic, SnapshotRetirementStep};
+use super::{ErasedSnapshotRetirement, MemberOpenDiagnostic, SnapshotRetirementStep, conflict_from_history_conflict, mutation_meta_from_history_op_meta};
 use crate::os_io::ArtifactRef;
-use crate::os_store::{
-    ArtifactEnvelope, ArtifactPack, ArtifactStore, ArtifactStoreInitializationRuntime, DocumentStoreOwners, EditReplay, OwnerRef, ReplayStep,
-};
+use crate::os_store::{ArtifactEnvelope, ArtifactPack, ArtifactStore, ArtifactStoreInitializationRuntime, DocumentStoreOwners, EditReplay, OwnerRef, ReplayStep};
 use crate::{CompositionPin, Edit, FromValue, Mutation, OpBinary, OpText, ToValue};
 use semio_framework_job::{Generation, OperationId, StepContext};
 use std::mem::ManuallyDrop;
@@ -284,9 +282,7 @@ where
                 let expected = self.expected.as_ref().expect("document identity remains retained");
                 let schema = self.schema.as_ref().expect("document schema remains retained");
                 let Some(composition) = history.composition.as_ref() else { return self.reject(MemberOpenDiagnostic::Identity) };
-                let dialect_matches = composition.dialect.as_ref().is_some_and(|(artifact_kind, standard, subset)| {
-                    artifact_kind == &expected.dialect.artifact_kind && standard == &expected.dialect.standard && subset == &expected.dialect.subset
-                });
+                let dialect_matches = composition.dialect.as_ref().is_some_and(|(artifact_kind, standard, subset)| artifact_kind == &expected.dialect.artifact_kind && standard == &expected.dialect.standard && subset == &expected.dialect.subset);
                 let history_owner = match composition.owner.as_ref() {
                     Some((parent, slot, child_id)) => match ArtifactRef::parse_uri(parent) {
                         Ok(parent) => Some(OwnerRef { parent, slot: slot.clone(), child_id: child_id.clone() }),
@@ -296,6 +292,11 @@ where
                 };
                 if history.doc_id != expected.artifact_id || history.schema != *schema || !dialect_matches || history_owner.as_ref() != self.owner.as_ref() {
                     return self.reject(MemberOpenDiagnostic::Identity);
+                }
+                if let Some((dialect, codec)) = P::native_snapshot_registration() {
+                    if crate::os_io::register_native_snapshot_codec(dialect, codec).is_err() {
+                        return self.reject(MemberOpenDiagnostic::Initialization);
+                    }
                 }
                 let fold = match history.fold() {
                     Ok(fold) => fold,
@@ -341,20 +342,18 @@ where
                 let mut forwards = Vec::new();
                 let mut inverse = Vec::new();
                 let mut mutation_meta = Vec::new();
-                if forwards.try_reserve_exact(source.ops.len()).is_err()
-                    || inverse.try_reserve_exact(source.inverse.len()).is_err()
-                    || mutation_meta.try_reserve_exact(source.meta.as_ref().map_or(0, Vec::len)).is_err()
-                {
+                if forwards.try_reserve_exact(source.ops.len()).is_err() || inverse.try_reserve_exact(source.inverse.len()).is_err() || mutation_meta.try_reserve_exact(source.meta.as_ref().map_or(0, Vec::len)).is_err() {
                     return self.reject(MemberOpenDiagnostic::Capacity);
                 }
-                let edit = Edit { line: source.line.clone(),
+                let edit = Edit {
+                    line: source.line.clone(),
                     id: source.id.clone(),
                     actor: source.actor.clone(),
                     forwards,
                     inverse,
                     mutation_meta,
-                    description: source.description.clone(), verb: source.verb.clone(),
-                    coalesce_key: source.coalesce_key.clone(),
+                    description: source.description.clone(),
+                    verb: source.verb.clone(),
                     sequence_number: self.edit_index as i32 + 1,
                     started_at: source.started_at.clone(),
                     finished_at: source.finished_at.clone(),
@@ -714,7 +713,7 @@ where
     P: Clone + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
     M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
 {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         self.phase = Phase::Rejected;
         self.diagnostic.get_or_insert(MemberOpenDiagnostic::Cancelled);
         if self.terminal {
@@ -729,19 +728,21 @@ where
                     self.active.take();
                     Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
-                SnapshotRetirementStep::Complete => Err("persisted hydration nested owner reported false terminal".into()),
-                SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > 1 || released_bytes > maximum_bytes => Err("persisted hydration nested owner exceeded close grant".into()),
+                SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "persisted hydration nested owner reported false terminal")),
+                SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > 1 || released_bytes > maximum_bytes => {
+                    Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "persisted hydration nested owner exceeded close grant"))
+                }
                 step => Ok(step),
             };
         }
-        let owners = self.owners.as_ref().ok_or("persisted hydration lost its owner catalog")?;
+        let owners = self.owners.as_ref().ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "persisted hydration lost its owner catalog"))?;
         if let Some(runtime) = self.runtime.as_mut() {
             return match runtime.close_step(owners.initial_snapshot_retirement.as_ref(), 1, maximum_bytes)? {
                 SnapshotRetirementStep::Complete if runtime.terminal_is_empty() => {
                     self.runtime.take();
                     Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
-                SnapshotRetirementStep::Complete => Err("persisted hydration runtime reported false terminal".into()),
+                SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "persisted hydration runtime reported false terminal")),
                 step => Ok(step),
             };
         }
@@ -804,7 +805,7 @@ where
                 self.terminal = true;
                 Ok(SnapshotRetirementStep::Complete)
             }
-            SnapshotRetirementStep::Complete => Err("persisted hydration uninstalled disposer reported false terminal".into()),
+            SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "persisted hydration uninstalled disposer reported false terminal")),
             step => Ok(step),
         }
     }

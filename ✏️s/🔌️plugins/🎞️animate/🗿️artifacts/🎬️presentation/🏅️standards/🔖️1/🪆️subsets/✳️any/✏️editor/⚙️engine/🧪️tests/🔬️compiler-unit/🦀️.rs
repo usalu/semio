@@ -17,11 +17,11 @@ mod tests {
         assert!(index.contains("semio_s_plugin_animate.js"));
         let player = fs::read_to_string(output.join("player.js")).expect("player.js");
         assert!(player.contains("sceneClips"));
-        let manifest = dsl::os_pack::json::parse(&fs::read_to_string(output.join("manifest.json")).expect("manifest")).expect("json");
+        let manifest = semio_framework_pack_json::parse(&fs::read_to_string(output.join("manifest.json")).expect("manifest"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("json");
         assert_eq!(manifest.get("schema").and_then(|v| v.as_str()), Some("animate.presentation.site"));
         assert_eq!(manifest.pointer("/player/wasm").and_then(|v| v.as_str()), Some("/animate/plugin/wasm/animate_plugin_bg.wasm"));
-        let deck_value = dsl::os_pack::json::parse(&fs::read_to_string(output.join("deck.json")).expect("deck.json")).expect("json");
-        let deck_file: PresentationSnapshot = dsl::FromValue::from_value(dsl::os_pack::json::to_dsl_value(&deck_value)).expect("deck");
+        let deck_value = semio_framework_pack_json::parse(&fs::read_to_string(output.join("deck.json")).expect("deck.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("json");
+        let deck_file: PresentationSnapshot = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&deck_value)).expect("deck");
         assert_eq!(crate::presentation_working_scene(&deck_file).1.len(), 4);
         let _ = fs::remove_dir_all(&output);
     }

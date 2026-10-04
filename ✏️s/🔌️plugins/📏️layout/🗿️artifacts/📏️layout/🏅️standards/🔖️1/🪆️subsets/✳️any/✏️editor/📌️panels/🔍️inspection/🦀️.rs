@@ -101,7 +101,7 @@ fn document_fields(document: &LayoutSnapshot, labels: &LayoutLabels) -> Vec<Fiel
     vec![
         Field { key: "name", label: labels.name, value: document.name.clone(), kind: InputKind::Text },
         Field { key: "printTarget", label: labels.print_target, value: document.print_target.clone().unwrap_or_default(), kind: InputKind::Text },
-        Field { key: "dataFields", label: labels.data_fields, value: document.data_fields_json.clone().unwrap_or_default(), kind: InputKind::LongText },
+        Field { key: "dataFields", label: labels.data_fields, value: document.data_fields.as_ref().map(semio_framework_pack_json::to_json_string).unwrap_or_default(), kind: InputKind::LongText },
         Field { key: "baselineGrid", label: labels.baseline_grid, value: number(document.grid.baseline_grid), kind: InputKind::Number },
         Field { key: "baselineOffset", label: labels.baseline_offset, value: number(document.grid.baseline_offset), kind: InputKind::Number },
         Field { key: "snapToBaseline", label: labels.snap_to_baseline, value: if document.grid.snap_to_baseline { "true".into() } else { "false".into() }, kind: InputKind::Text },
@@ -183,7 +183,8 @@ fn frame_fields(frame: &Frame, document: &LayoutSnapshot, labels: &LayoutLabels)
 }
 
 
-fn byte_chars(content: &str, byte: usize) -> usize {
+fn byte_chars(content: &str, byte: u64) -> usize {
+    let byte=usize::try_from(byte).unwrap_or(content.len());
     content.get(..byte.min(content.len())).unwrap_or(content).chars().count()
 }
 

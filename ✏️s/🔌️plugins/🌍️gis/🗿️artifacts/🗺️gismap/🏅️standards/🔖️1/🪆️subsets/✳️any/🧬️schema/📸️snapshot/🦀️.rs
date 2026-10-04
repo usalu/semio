@@ -11,12 +11,13 @@
 
 use crate::{gis_map_drawing_child_handle, gis_map_value_child_handle, GisMapDrawingChild, GisMapImageChild, GisMapValueChild, MapFeature};
 use ::semio_framework_schema::ArtifactSchema;
-use dsl::{FromValue, ToValue};
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
 
 //#region 🔹Snapshot
 /// 📸️ Persisted GIS map document snapshot (persistent fields of the artifact).
-#[derive(Clone, Debug, PartialEq, ArtifactSchema, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact_schema(id = "s.gis.gismap")]
 pub struct GisMapSnapshot {
@@ -98,10 +99,10 @@ pub(crate) fn dec_child_opt<S>(s: &str) -> Result<Option<store::ArtifactChild<S>
 /// `Serialize`/`Deserialize`): serialize to JSON, then hex-encode the JSON bytes — same convention
 /// every other text field in this file already uses (`📐️cad`'s `enc_json`/`dec_json`).
 fn enc_json<T: ToValue>(value: &T) -> String {
-    enc_str(&dsl::os_pack::json::to_json_string(value))
+    enc_str(&semio_framework_pack_json::to_json_string(value))
 }
 fn dec_json<T: FromValue>(s: &str) -> Result<T, String> {
-    dsl::os_pack::json::from_json_str(&dec_str(s)?).map_err(|e| e.to_string())
+    semio_framework_pack_json::from_json_str(&dec_str(s)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| e.to_string())
 }
 //#endregion 🔖️CodecPrimitives
 
@@ -185,14 +186,14 @@ pub fn gis_map_identity_report_json(dsl_text: &str) -> Result<String, String> {
     let canonical_again = <GisMapSnapshot as store::ArtifactDsl>::print_dsl(&reparsed);
     let packed = <GisMapSnapshot as store::ArtifactPack>::encode_pack(&reparsed);
     let unpacked = <GisMapSnapshot as store::ArtifactPack>::decode_pack(&packed).map_err(|error| error.to_string())?;
-    let report = dsl::os_pack::json::object([
-        ("parsed".to_string(), dsl::os_pack::json::from_dsl_value(&parsed.to_value())),
-        ("reparsed".to_string(), dsl::os_pack::json::from_dsl_value(&reparsed.to_value())),
-        ("packDecoded".to_string(), dsl::os_pack::json::from_dsl_value(&unpacked.to_value())),
-        ("canonicalText".to_string(), dsl::os_pack::json::Value::from(canonical.as_str())),
-        ("canonicalTextAgain".to_string(), dsl::os_pack::json::Value::from(canonical_again.as_str())),
+    let report = semio_framework_pack_json::object([
+        ("parsed".to_string(), semio_framework_pack_json::from_dsl_value(&parsed.to_value())),
+        ("reparsed".to_string(), semio_framework_pack_json::from_dsl_value(&reparsed.to_value())),
+        ("packDecoded".to_string(), semio_framework_pack_json::from_dsl_value(&unpacked.to_value())),
+        ("canonicalText".to_string(), semio_framework_pack_json::Value::from(canonical.as_str())),
+        ("canonicalTextAgain".to_string(), semio_framework_pack_json::Value::from(canonical_again.as_str())),
     ]);
-    Ok(dsl::os_pack::json::to_string(&report))
+    Ok(semio_framework_pack_json::to_string(&report))
 }
 //#endregion 🌉️IdentityBridge
 

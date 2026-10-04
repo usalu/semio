@@ -256,7 +256,10 @@ fn regenerate_presentation_parts(opc: &mut OpcPackage, presentation: &PptxPresen
     // wave's typed shape tree, not present before because no prior test round-tripped a
     // `build_minimal_pptx` snapshot through `encode_pack`/`decode_pack` twice).
     opc.parts.retain(|p| !p.path.starts_with("ppt/slides/") && p.path != PRESENTATION_PART);
-    opc.relationships.retain(|owner, _| !owner.starts_with("ppt/slides/"));
+    let slide_relationship_owners = opc.relationships.groups().filter(|(owner, _)| owner.starts_with("ppt/slides/")).map(|(owner, _)| owner.clone()).collect::<Vec<_>>();
+    for owner in slide_relationship_owners {
+        opc.relationships.remove_owner(&owner);
+    }
 
     opc.content_types.set_default("rels", semio_s_artifact_stdio_zip::opc::RELS_CONTENT_TYPE);
     opc.content_types.set_default("xml", "application/xml");
@@ -282,9 +285,9 @@ fn regenerate_presentation_parts(opc: &mut OpcPackage, presentation: &PptxPresen
         let xml = slide_to_xml(slide);
         opc.set_part(&path, SLIDE_CONTENT_TYPE, xml_document_to_text(&xml).into_bytes());
         sld_id_entries.push((256 + i as u32, slide_rids[i].clone()));
-        opc.relationships.insert(path, vec![OpcRelationship { id: "rId1".into(), rel_type: REL_TYPE_SLIDE_LAYOUT.into(), target: "../slideLayouts/slideLayout1.xml".into(), target_mode: OpcTargetMode::Internal }]);
+        opc.relationships.replace_owner(path, vec![OpcRelationship { id: "rId1".into(), rel_type: REL_TYPE_SLIDE_LAYOUT.into(), target: "../slideLayouts/slideLayout1.xml".into(), target_mode: OpcTargetMode::Internal }]);
     }
-    opc.relationships.insert(PRESENTATION_PART.to_string(), pres_rels);
+    opc.relationships.replace_owner(PRESENTATION_PART.to_string(), pres_rels);
 
     let presentation_bytes = xml_document_to_text(&presentation_to_xml(&master_rid, &sld_id_entries)).into_bytes();
     opc.set_part(PRESENTATION_PART, PRESENTATION_CONTENT_TYPE, presentation_bytes);
@@ -299,125 +302,10 @@ fn regenerate_presentation_parts(opc: &mut OpcPackage, presentation: &PptxPresen
 /// slide, and a synthesized slideMaster/slideLayout/theme chain real readers expect to exist.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn build_minimal_pptx(presentation: PptxPresentation) -> PptxSnapshot {
-    let draft = PptxSnapshot::from_parts(OpcPackage::empty(), Vec::new(), presentation);
-    let bytes = encode_pptx(&draft).expect("minimal logical pptx materialization");
+    let mut opc = OpcPackage::empty();
+    regenerate_presentation_parts(&mut opc, &presentation);
+    let bytes = semio_s_artifact_stdio_zip::opc::encode_opc_with_package_order(&opc).expect("minimal logical pptx materialization");
     crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx(&bytes).expect("minimal logical pptx decode")
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn xml_document_to_pptx_text(path: &str, document: &XmlDocument) -> String {
-    let mut text = semio_s_artifact_stdio_zip::opc::xml_document_to_opc_text(document);
-    if path == "docProps/app.xml" {
-        text = text.replace("<Template/>", "<Template></Template>");
-    }
-    if path.ends_with(".vml") {
-        text = text.replace(" xmlns:o=", "\r\n xmlns:o=").replace(" xmlns:p=", "\r\n xmlns:p=").replace(" xmlns:oa=", "\r\n xmlns:oa=").replace(" o:preferrelative=", "\r\n  o:preferrelative=");
-        let mut quoted = String::with_capacity(text.len());
-        let mut rest = text.as_str();
-        while let Some(start) = rest.find(" style=\"") {
-            let value_start = start + 8;
-            let Some(end) = rest[value_start..].find('"').map(|offset| value_start + offset) else { break };
-            quoted.push_str(&rest[..start]);
-            quoted.push_str(" style='");
-            quoted.push_str(&rest[value_start..end]);
-            quoted.push('\'');
-            rest = &rest[end + 1..];
-        }
-        quoted.push_str(rest);
-        text = quoted;
-    }
-    text
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn order_pptx_paths(paths: &mut Vec<String>) {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn take(remaining: &mut std::collections::BTreeSet<String>, ordered: &mut Vec<String>, path: &str) {
-        if let Some(path) = remaining.take(path) {
-            ordered.push(path);
-        }
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn take_media(remaining: &mut std::collections::BTreeSet<String>, ordered: &mut Vec<String>, number: u32) {
-        let prefix = format!("ppt/media/image{number}.");
-        if let Some(path) = remaining.iter().find(|path| path.to_ascii_lowercase().starts_with(&prefix)).cloned() {
-            remaining.remove(&path);
-            ordered.push(path);
-        }
-    }
-
-    let mut remaining: std::collections::BTreeSet<String> = paths.drain(..).collect();
-    let mut ordered = Vec::with_capacity(remaining.len());
-    for path in ["[Content_Types].xml", "_rels/.rels", "ppt/presentation.xml", "ppt/slides/_rels/slide22.xml.rels"] {
-        take(&mut remaining, &mut ordered, path);
-    }
-    for number in 1..=62 {
-        take(&mut remaining, &mut ordered, &format!("ppt/slides/slide{number}.xml"));
-    }
-    for number in std::iter::once(23).chain(25..=49).chain(51..=62).chain([50, 24]) {
-        take(&mut remaining, &mut ordered, &format!("ppt/slides/_rels/slide{number}.xml.rels"));
-    }
-    take(&mut remaining, &mut ordered, "ppt/_rels/presentation.xml.rels");
-    for number in 1..=21 {
-        take(&mut remaining, &mut ordered, &format!("ppt/slides/_rels/slide{number}.xml.rels"));
-    }
-    for path in [
-        "ppt/slideMasters/slideMaster1.xml",
-        "ppt/slideLayouts/slideLayout10.xml",
-        "ppt/slideLayouts/_rels/slideLayout1.xml.rels",
-        "ppt/slideMasters/_rels/slideMaster1.xml.rels",
-        "ppt/slideLayouts/slideLayout11.xml",
-        "ppt/slideLayouts/_rels/slideLayout3.xml.rels",
-    ] {
-        take(&mut remaining, &mut ordered, path);
-    }
-    for number in 1..=9 {
-        take(&mut remaining, &mut ordered, &format!("ppt/slideLayouts/slideLayout{number}.xml"));
-    }
-    take(&mut remaining, &mut ordered, "ppt/slideLayouts/_rels/slideLayout2.xml.rels");
-    for number in 4..=11 {
-        take(&mut remaining, &mut ordered, &format!("ppt/slideLayouts/_rels/slideLayout{number}.xml.rels"));
-    }
-    for number in [7, 8] {
-        take_media(&mut remaining, &mut ordered, number);
-    }
-    take(&mut remaining, &mut ordered, "ppt/drawings/vmlDrawing1.vml");
-    for number in 9..=11 {
-        take_media(&mut remaining, &mut ordered, number);
-    }
-    for number in 1..=3 {
-        take(&mut remaining, &mut ordered, &format!("ppt/embeddings/oleObject{number}.bin"));
-    }
-    for number in 12..=18 {
-        take_media(&mut remaining, &mut ordered, number);
-    }
-    for number in 27..=42 {
-        take_media(&mut remaining, &mut ordered, number);
-    }
-    for number in [21, 43, 44] {
-        take_media(&mut remaining, &mut ordered, number);
-    }
-    take(&mut remaining, &mut ordered, "docProps/thumbnail.jpeg");
-    for number in [19, 20, 22, 23, 24, 25] {
-        take_media(&mut remaining, &mut ordered, number);
-    }
-    for path in ["ppt/notesMasters/_rels/notesMaster1.xml.rels", "ppt/notesMasters/notesMaster1.xml"] {
-        take(&mut remaining, &mut ordered, path);
-    }
-    take_media(&mut remaining, &mut ordered, 26);
-    take(&mut remaining, &mut ordered, "ppt/theme/theme1.xml");
-    for number in [1, 2] {
-        take_media(&mut remaining, &mut ordered, number);
-    }
-    take(&mut remaining, &mut ordered, "ppt/theme/theme2.xml");
-    for number in 3..=6 {
-        take_media(&mut remaining, &mut ordered, number);
-    }
-    for path in ["ppt/drawings/_rels/vmlDrawing1.vml.rels", "ppt/presProps.xml", "ppt/tableStyles.xml", "ppt/viewProps.xml", "docProps/core.xml", "docProps/app.xml"] {
-        take(&mut remaining, &mut ordered, path);
-    }
-    ordered.extend(remaining);
-    *paths = ordered;
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -431,7 +319,7 @@ pub fn encode_pptx(snap: &PptxSnapshot) -> Result<Vec<u8>, PptxError> {
         if !xml_paths.insert(part.path.as_str()) {
             return Err(PptxError::Malformed(format!("duplicate logical XML part {}", part.path)));
         }
-        let bytes = xml_document_to_pptx_text(&part.path, &part.document).into_bytes();
+        let bytes = semio_s_artifact_stdio_zip::opc::xml_document_to_opc_text_checked(&part.document).map_err(|detail| PptxError::Xml { part: part.path.clone(), detail })?.into_bytes();
         if opc.content_types.resolve(&part.path) == Some(part.content_type.as_str()) {
             if let Some(existing) = opc.parts.iter_mut().find(|candidate| candidate.path == part.path) {
                 existing.content_type = part.content_type.clone();
@@ -451,12 +339,10 @@ pub fn encode_pptx(snap: &PptxSnapshot) -> Result<Vec<u8>, PptxError> {
             return Err(PptxError::Malformed(format!("part {} has both XML and binary authorities", part.path)));
         }
     }
-    let presentation_path = resolve_office_document_relationship(&opc);
-    let has_authoritative_presentation_xml = presentation_path.as_ref().is_some_and(|path| snap.xml_parts.iter().any(|part| &part.path == path));
-    let presentation_changed = has_authoritative_presentation_xml && crate::standards::v_ecma_376::subsets::base::io::import::deserializers::project_presentation(&snap.opc, &snap.xml_parts)? != snap.presentation;
-    if !has_authoritative_presentation_xml || presentation_changed {
-        regenerate_presentation_parts(&mut opc, &snap.presentation);
-    }
-    Ok(semio_s_artifact_stdio_zip::opc::encode_opc_with_path_order(&opc, order_pptx_paths)?)
+    Ok(semio_s_artifact_stdio_zip::opc::encode_opc_with_package_order(&opc)?)
 }
 //#endregion 🔖️Codec
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

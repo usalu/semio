@@ -66,7 +66,7 @@ pub(crate) mod context {
                     row.insert("name".to_string(), json!(kind.name));
                     if let Some(presentation) = kind.presentation.as_ref().and_then(|value| value.as_object()) {
                         for (key, value) in presentation {
-                            row.insert(key.clone(), serde_json::from_str(&dsl::json::from_dsl_value(value).to_string()).expect("kind presentation JSON"));
+                            row.insert(key.clone(), serde_json::from_str(&semio_framework_pack_json::from_dsl_value(value).to_string()).expect("kind presentation JSON"));
                         }
                     }
                     serde_json::Value::Object(row)

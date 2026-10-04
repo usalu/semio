@@ -39,7 +39,7 @@ fn lists_the_studio_beside_its_sibling() {
 #[test]
 fn undoing_the_admission_restores_before() {
     let base = before();
-    let inverse = <LocalCatalogConfigMutation as protocol::Mutation<LocalCatalog>>::inverse(&mutation(), &base);
+    let inverse = <LocalCatalogConfigMutation as protocol::Mutation<LocalCatalog>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
     assert!(matches!(inverse.as_slice(), [LocalCatalogConfigMutation::RetireLocalDocument(undo)] if undo.document_id == "studio-alpha"), "admit-local-document: the undo of a new admission is exactly one retirement of its id");
     let forward = <LocalCatalogConfigMutation as protocol::Mutation<LocalCatalog>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("forward admit applies");

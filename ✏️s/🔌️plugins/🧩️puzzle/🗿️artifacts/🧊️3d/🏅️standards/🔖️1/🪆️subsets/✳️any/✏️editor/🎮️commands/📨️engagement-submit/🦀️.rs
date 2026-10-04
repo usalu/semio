@@ -4,7 +4,7 @@ use crate::editor::puzzle3d::commands::set_fill_count;
 use crate::editor::puzzle3d::modes::edit::tools::fill as fill_tool;
 use crate::editor::puzzle3d::modes::edit::windows::main::utilities;
 use crate::editor::puzzle3d::{apply_puzzle3d_focus_selection, drive_precompute, Puzzle3dActionCtx, PUZZLE3D_SELECTION_METHOD_LASSO, PUZZLE3D_SELECTION_METHOD_PICK, PUZZLE3D_SELECTION_METHOD_RECTANGLE};
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::strip_engagement_prefix;
 use semio_framework_tool_run::{TOOL_RUN_ARG_TOOL_ID, TOOL_RUN_START_ACTION_ID};

@@ -49,5 +49,5 @@ export const blockBlock2dInferenceTextGuardConstant = <T extends string | number
 //#endregion 🚪️Parsers
 
 export function parseBlock2dInferenceText(value: unknown, at = "$"): Block2dInferenceText {
-  return blockBlock2dInferenceTextGuardObject(value, `${at}`);
+  return blockBlock2dInferenceTextGuardString(value, at);
 }

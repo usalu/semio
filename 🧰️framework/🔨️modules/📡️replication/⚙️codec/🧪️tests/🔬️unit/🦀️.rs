@@ -69,11 +69,11 @@ fn varint_multi_byte_sequence_reads_each_value_in_order() {
 #[test]
 fn varint_read_truncated_input_errors_never_panics() {
     let mut pos = 0usize;
-    assert_eq!(read_varint_u64(&[], &mut pos), Err(PackError::Truncated(0)));
+    assert_eq!(read_varint_u64(&[], &mut pos), Err(PackRefusal::Truncated(0)));
     pos = 0;
-    assert_eq!(read_varint_u64(&[0x80], &mut pos), Err(PackError::Truncated(1)));
+    assert_eq!(read_varint_u64(&[0x80], &mut pos), Err(PackRefusal::Truncated(1)));
     pos = 0;
-    assert_eq!(read_varint_u64(&[0x80, 0x80, 0x80], &mut pos), Err(PackError::Truncated(3)));
+    assert_eq!(read_varint_u64(&[0x80, 0x80, 0x80], &mut pos), Err(PackRefusal::Truncated(3)));
 }
 
 #[test]
@@ -81,7 +81,7 @@ fn varint_read_overlong_eleven_bytes_is_malformed() {
     let overlong = [0x80u8; 11];
     let mut pos = 0usize;
     let result = read_varint_u64(&overlong, &mut pos);
-    assert!(matches!(result, Err(PackError::Malformed { .. })));
+    assert!(matches!(result, Err(PackRefusal::Malformed { .. })));
 }
 
 #[test]
@@ -90,7 +90,7 @@ fn varint_read_tenth_byte_with_extra_bits_is_malformed() {
     bytes.push(0x02);
     let mut pos = 0usize;
     let result = read_varint_u64(&bytes, &mut pos);
-    assert!(matches!(result, Err(PackError::Malformed { .. })));
+    assert!(matches!(result, Err(PackRefusal::Malformed { .. })));
 }
 
 #[test]
@@ -143,14 +143,14 @@ fn byte_reader_writer_round_trip_all_types() {
 fn byte_reader_bounds_checked_reads_never_panic_on_truncated_input() {
     let bytes = [1u8, 2, 3];
     let mut reader = ByteReader::new(&bytes);
-    assert_eq!(reader.read_u32_le(), Err(PackError::Truncated(0)));
+    assert_eq!(reader.read_u32_le(), Err(PackRefusal::Truncated(0)));
     assert_eq!(reader.position(), 0);
     assert!(reader.read_bytes(1).is_ok());
-    assert_eq!(reader.read_u64_le(), Err(PackError::Truncated(1)));
-    assert_eq!(reader.read_array32(), Err(PackError::Truncated(1)));
+    assert_eq!(reader.read_u64_le(), Err(PackRefusal::Truncated(1)));
+    assert_eq!(reader.read_array32(), Err(PackRefusal::Truncated(1)));
     let empty: [u8; 0] = [];
     let mut empty_reader = ByteReader::new(&empty);
-    assert_eq!(empty_reader.read_u8(), Err(PackError::Truncated(0)));
+    assert_eq!(empty_reader.read_u8(), Err(PackRefusal::Truncated(0)));
     assert_eq!(empty_reader.read_bytes(0).unwrap(), &empty[..]);
 }
 //#endregion 🔖️Bytes
@@ -199,7 +199,7 @@ fn no_compression_decompress_rejects_raw_len_over_limit_before_allocating() {
     let codec = NoCompression;
     let stored = vec![0u8; 16];
     let result = codec.decompress(&stored, 1_000_000_000, 1_000);
-    assert!(matches!(result, Err(PackError::LimitExceeded(_))));
+    assert!(matches!(result, Err(PackRefusal::LimitExceeded{kind:ValueRefusalKind::WorkLimit,..})));
 }
 
 #[test]
@@ -207,6 +207,6 @@ fn no_compression_decompress_rejects_stored_len_mismatch() {
     let codec = NoCompression;
     let stored = vec![0u8; 4];
     let result = codec.decompress(&stored, 5, 1_000);
-    assert!(matches!(result, Err(PackError::Malformed { .. })));
+    assert!(matches!(result, Err(PackRefusal::Malformed { .. })));
 }
 //#endregion 🔖️Codec

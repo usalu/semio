@@ -10,7 +10,7 @@ use crate::editor::space_index::config::{SpaceIndexConfig, SpaceIndexConfigMutat
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "copy-invite-link")]
 pub struct CopyInviteLink {
     pub role: String,
@@ -18,7 +18,7 @@ pub struct CopyInviteLink {
 }
 
 pub fn handle(payload: &CopyInviteLink, doc: &ArtifactView<'_, SSpaceSnapshot>, _cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
-    Ok(Emit::effect(Effect::ReplayShellCommand { action_id: "os.directory.share-link".into(), args: Some(pack::json_to_dsl_value(&pack::json!({ "spaceId": doc.snapshot.space_id.clone(), "role": payload.role.clone(), "ttlSecs": payload.ttl_secs }))) }))
+    Ok(Emit::effect(Effect::ReplayShellCommand { action_id: "os.directory.share-link".into(), args: Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "spaceId": doc.snapshot.space_id.clone(), "role": payload.role.clone(), "ttlSecs": payload.ttl_secs }))) }))
 }
 
 //#region 🧪️Tests

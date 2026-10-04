@@ -1,4 +1,4 @@
-//! 📦️ `pack_value` — DSL schema-aware wire encoding/decoding of `crate::os_dsl::schema::RecordValue`
+//! 📦️ `pack_value` — DSL schema-aware wire encoding/decoding of `semio_framework_dsl_record::RecordValue`
 //! documents into the `pack_format` binary container. Implements every wire tag (0x00-0x16),
 //! canonical-mode determinism (sorted field ids, omitted `Absent`, sorted map keys, minimal
 //! varints, exact IEEE words, deterministic string interning, mandatory packed numeric
@@ -10,18 +10,22 @@
 //! `.🧬semio/🦑️repo/🎫️tickets/26/07/27/PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS/contract.md` for the binding
 //! byte layout this module implements against.
 
-use crate::os_dsl::schema::{DslValue, FieldSpec, FieldValue, Number, RecordSpec, RecordSpecProducer, RecordValue, Shape, WireEdgeLabel, WireNode, WireValue};
-use crate::os_pack::{write_varint_i64, write_varint_u64, ByteReader, ChunkId, CodecId, PackError, PackLimits};
+use semio_framework_value::{DslValue,Number,ValueError,ValueRefusalKind};
+use semio_framework_dsl_record::{FieldSpec,FieldValue,RecordLayout,RecordSpec,RecordSpecProducer,RecordValue,Shape,WireEdgeLabel,WireNode,WireValue};
+use crate::os_pack::{write_varint_i64, write_varint_u64, ByteReader, ChunkId, CodecId, PackLimits, PackRefusal};
 use std::collections::{HashMap, HashSet};
 
 #[path = "🛫️encode/🦀️.rs"]
 mod controlled_encoding;
 
 /// 🛫️ Emits a terminal record under caller-owned allocation and interior cancellation.
-pub fn encode_record_body_controlled(spec:&RecordSpec,record:&RecordValue,options:&EncodeOptions,control:&mut protocol::value::native_encoding::NativeEncodeControl<'_>)->Result<Vec<u8>,PackError>{controlled_encoding::record_body(spec,record,options,control)}
+pub fn encode_record_body_controlled(spec:&RecordSpec,record:&RecordValue,options:&EncodeOptions,control:&mut semio_framework_value::native_encoding::NativeEncodeControl<'_>)->Result<Vec<u8>,PackRefusal>{controlled_encoding::record_body(spec,record,options,control)}
+
+/// 🎞️ Encodes a borrowed complete intrinsic value without a synthetic owned record.
+pub fn encode_value_record_body_controlled(field_id:u16,value:&DslValue,options:&EncodeOptions,control:&mut semio_framework_value::native_encoding::NativeEncodeControl<'_>)->Result<Vec<u8>,PackRefusal>{controlled_encoding::value_record_body(field_id,value,options,control)}
 
 /// 📦️ Emits symbols, literal document frames, chunks and footer under one ownership budget.
-pub fn encode_document_controlled(spec:&RecordSpec,record:&RecordValue,options:&EncodeOptions,control:&mut protocol::value::native_encoding::NativeEncodeControl<'_>)->Result<Vec<u8>,PackError>{controlled_encoding::document(spec,record,options,control)}
+pub fn encode_document_controlled(spec:&RecordSpec,record:&RecordValue,options:&EncodeOptions,control:&mut semio_framework_value::native_encoding::NativeEncodeControl<'_>)->Result<Vec<u8>,PackRefusal>{controlled_encoding::document(spec,record,options,control)}
 
 //#region 🔖️Tags
 /// 🕳️ `FieldValue::Absent` — never written at record-field granularity (canonical mode
@@ -111,9 +115,9 @@ fn is_tuple_shape(shape: Option<&Shape>) -> bool {
 }
 
 /// 🛡️ Depth-limit check shared by every recursive encode/decode entry point.
-fn check_depth(max_depth: u16, depth: u16) -> Result<(), PackError> {
+fn check_depth(max_depth: u16, depth: u16) -> Result<(), PackRefusal> {
     if depth > max_depth {
-        return Err(PackError::LimitExceeded("max_depth exceeded"));
+        return Err(PackRefusal::LimitExceeded{kind:ValueRefusalKind::DepthLimit,limit:"max_depth exceeded"});
     }
     Ok(())
 }
@@ -178,8 +182,8 @@ fn encode_string_inline(s: &str, out: &mut Vec<u8>) {
 
 /// 🔗️ Writes a bare symref varint with NO leading tag — the wire rule for `Statements`
 /// keywords and `TableSoA` `Str` columns, both of which are unconditionally interned.
-fn write_symref_forced(ctx: &mut EncCtx<'_>, s: &str, out: &mut Vec<u8>) -> Result<(), PackError> {
-    let idx = *ctx.symbol_index.get(s).ok_or_else(|| PackError::Schema(format!("symbol {s:?} missing from precomputed table")))?;
+fn write_symref_forced(ctx: &mut EncCtx<'_>, s: &str, out: &mut Vec<u8>) -> Result<(), PackRefusal> {
+    let idx = *ctx.symbol_index.get(s).ok_or_else(|| PackRefusal::from(ValueError::new(ValueRefusalKind::InvariantViolated,format!("symbol {s:?} missing from precomputed table"))))?;
     write_varint_u64(out, idx);
     Ok(())
 }
@@ -339,7 +343,7 @@ fn walk_dsl_value_for_symbols(counts: &mut HashMap<String, u64>, v: &DslValue) {
 /// genuinely schema-less context (an unrecognized `Statements` variant, a shape/value mismatch);
 /// fields are then encoded generically. `options.preserve_unknown == false` drops fields whose id
 /// isn't found in `spec` instead of encoding them.
-fn encode_record_fields(ctx: &mut EncCtx<'_>, spec: Option<&RecordSpec>, record: &RecordValue, depth: u16) -> Result<Vec<u8>, PackError> {
+fn encode_record_fields(ctx: &mut EncCtx<'_>, spec: Option<&RecordSpec>, record: &RecordValue, depth: u16) -> Result<Vec<u8>, PackRefusal> {
     check_depth(ctx.options.limits.max_depth, depth)?;
     let preserve_unknown = ctx.options.preserve_unknown;
     let mut ids: Vec<u16> = record.fields.iter().filter(|(_, v)| !matches!(v, FieldValue::Absent)).filter(|(id, _)| preserve_unknown || spec.is_some_and(|s| s.fields.iter().any(|f| f.id == **id))).map(|(id, _)| *id).collect();
@@ -365,7 +369,7 @@ fn encode_record_fields(ctx: &mut EncCtx<'_>, spec: Option<&RecordSpec>, record:
 // self-recursive for `Block`) — every edge in that cycle is `Box::pin(...).await` (R10 residue
 // shape 3): an `async fn`'s own opaque `Future` type cannot embed itself or a cycle-partner's
 // opaque type at an unboxed, unbounded size.
-fn encode_value(ctx: &mut EncCtx<'_>, shape: Option<&Shape>, value: &FieldValue, depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
+fn encode_value(ctx: &mut EncCtx<'_>, shape: Option<&Shape>, value: &FieldValue, depth: u16, out: &mut Vec<u8>) -> Result<(), PackRefusal> {
     check_depth(ctx.options.limits.max_depth, depth)?;
     match value {
         FieldValue::Absent => out.push(TAG_ABSENT),
@@ -421,7 +425,7 @@ fn encode_value(ctx: &mut EncCtx<'_>, shape: Option<&Shape>, value: &FieldValue,
         // pack ≡ dsl holds by construction rather than needing a bespoke binary AST encoding.
         FieldValue::Expr(expr) => {
             out.push(TAG_EXPR);
-            encode_string(ctx, &crate::os_dsl::schema::print_expr(expr), out);
+            encode_string(ctx, &semio_framework_dsl_record::print_expr(expr), out);
         }
     }
     Ok(())
@@ -430,19 +434,19 @@ fn encode_value(ctx: &mut EncCtx<'_>, shape: Option<&Shape>, value: &FieldValue,
 /// 🧱️ Encodes a `Bytes64` payload direct (`TAG_BYTES`) or, once it reaches
 /// `options.chunk_threshold`, split into `options.chunk_size`-sized chunks written through the
 /// live `PackWriter` (`TAG_BYTES_CHUNKED` + the resulting `ChunkId`s).
-fn encode_bytes(ctx: &mut EncCtx<'_>, bytes: &[u8], out: &mut Vec<u8>) -> Result<(), PackError> {
+fn encode_bytes(ctx: &mut EncCtx<'_>, bytes: &[u8], out: &mut Vec<u8>) -> Result<(), PackRefusal> {
     if (bytes.len() as u64) >= ctx.options.chunk_threshold {
         let chunk_size = ctx.options.chunk_size.max(1) as usize;
         let mut ids = Vec::new();
         for piece in bytes.chunks(chunk_size) {
-            let mut chunk = crate::os_io::resolve_ready(ctx.writer.begin_identity_chunk(piece.len()))?;
+            let mut chunk = ::semio_framework_async::poll::resolve_ready(ctx.writer.begin_identity_chunk(piece.len()))?;
             for fragment in piece.chunks(4096) {
-                if let Err(error) = crate::os_io::resolve_ready(chunk.write_fragment(fragment)) {
+                if let Err(error) = ::semio_framework_async::poll::resolve_ready(chunk.write_fragment(fragment)) {
                     chunk.close();
                     return Err(error);
                 }
             }
-            ids.push(crate::os_io::resolve_ready(chunk.finish())?);
+            ids.push(::semio_framework_async::poll::resolve_ready(chunk.finish())?);
         }
         out.push(TAG_BYTES_CHUNKED);
         write_varint_u64(out, ids.len() as u64);
@@ -459,7 +463,7 @@ fn encode_bytes(ctx: &mut EncCtx<'_>, bytes: &[u8], out: &mut Vec<u8>) -> Result
 
 /// 📚️ Encodes a `Tuple`/`List` sequence: the mandatory packed `0x15`/`0x16` form when
 /// every element is the same numeric kind, else the plain self-describing `0x0B`/`0x0C` form.
-fn encode_seq(ctx: &mut EncCtx<'_>, items: &[FieldValue], elem_shape: Option<&Shape>, is_tuple: bool, depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
+fn encode_seq(ctx: &mut EncCtx<'_>, items: &[FieldValue], elem_shape: Option<&Shape>, is_tuple: bool, depth: u16, out: &mut Vec<u8>) -> Result<(), PackRefusal> {
     if let Some(kind) = homogeneous_numeric_kind(items) {
         match kind {
             NumKind::F64 => {
@@ -497,7 +501,7 @@ fn encode_seq(ctx: &mut EncCtx<'_>, items: &[FieldValue], elem_shape: Option<&Sh
 
 /// 🗺️ Encodes `Map`/object entries sorted by key bytes (canonical, always — not just when
 /// `options.canonical`, per the purity LAW), each key using the conditional interning rule.
-fn encode_map(ctx: &mut EncCtx<'_>, entries: &[(String, FieldValue)], inner_shape: Option<&Shape>, depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
+fn encode_map(ctx: &mut EncCtx<'_>, entries: &[(String, FieldValue)], inner_shape: Option<&Shape>, depth: u16, out: &mut Vec<u8>) -> Result<(), PackRefusal> {
     check_depth(ctx.options.limits.max_depth, depth)?;
     out.push(TAG_MAP);
     let mut sorted: Vec<&(String, FieldValue)> = entries.iter().filter(|(_, v)| !matches!(v, FieldValue::Absent)).collect();
@@ -512,7 +516,7 @@ fn encode_map(ctx: &mut EncCtx<'_>, entries: &[(String, FieldValue)], inner_shap
 
 /// 📜️ Encodes `Statements`: `count, (keyword symref, Record-payload)*`. The keyword is
 /// always a bare forced symref (never a self-describing string tag) per the wire contract.
-fn encode_statements(ctx: &mut EncCtx<'_>, variants: Option<&Vec<(String, RecordSpecProducer)>>, items: &[(String, RecordValue)], depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
+fn encode_statements(ctx: &mut EncCtx<'_>, variants: Option<&Vec<(String, RecordSpecProducer)>>, items: &[(String, RecordValue)], depth: u16, out: &mut Vec<u8>) -> Result<(), PackRefusal> {
     check_depth(ctx.options.limits.max_depth, depth)?;
     out.push(TAG_STATEMENTS);
     write_varint_u64(out, items.len() as u64);
@@ -526,14 +530,14 @@ fn encode_statements(ctx: &mut EncCtx<'_>, variants: Option<&Vec<(String, Record
 }
 
 /// 🌱️ Encodes a `DslValue` using the same self-describing tag set recursively; object
-/// entries sorted by key bytes with keys FORCED inline (`encode_string_inline`, never a symref) —
+/// entries retain owner occurrence order with keys FORCED inline (`encode_string_inline`, never a symref) —
 /// the one deliberate carve-out from the general conditional-interning rule.
 ///
 /// `Number` writes its own variant's tag — `TAG_UINT`/`TAG_INT` carry the exact 64-bit magnitude
 /// as a canonical unsigned/zig-zag LEB128, `TAG_F64` the complete little-endian IEEE word. Widening
 /// through `as_f64` is not injective past 2^53, so the tag, not the reader, is what preserves an
 /// integer; see the `🎒️pack-dynamic-integer-v1` corpus under `💻️os/🧫️fixtures`.
-fn encode_dsl_value(ctx: &mut EncCtx<'_>, v: &DslValue, depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
+fn encode_dsl_value(ctx: &mut EncCtx<'_>, v: &DslValue, depth: u16, out: &mut Vec<u8>) -> Result<(), PackRefusal> {
     check_depth(ctx.options.limits.max_depth, depth)?;
     match v {
         DslValue::Null => out.push(TAG_NULL),
@@ -576,7 +580,7 @@ fn encode_dsl_value(ctx: &mut EncCtx<'_>, v: &DslValue, depth: u16, out: &mut Ve
 /// 🕸️ Encodes a `Wire` literal. Wire sub-format (presence bitmask + node layout) is this
 /// crate's own choice — the contract pins only the outer `0x13` tag and the constituent parts
 /// (`from`, optional `to`, `props`); everything here just needs to round-trip, which it does.
-fn encode_wire(ctx: &mut EncCtx<'_>, w: &WireValue, depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
+fn encode_wire(ctx: &mut EncCtx<'_>, w: &WireValue, depth: u16, out: &mut Vec<u8>) -> Result<(), PackRefusal> {
     check_depth(ctx.options.limits.max_depth, depth)?;
     let has_label = !w.edge_label.is_empty();
     let mut presence = 0u8;
@@ -696,9 +700,9 @@ struct RetainedVarint {
 }
 
 impl RetainedVarint {
-    fn admit(&mut self, byte: u8, offset: u64) -> Result<Option<u64>, PackError> {
+    fn admit(&mut self, byte: u8, offset: u64) -> Result<Option<u64>, PackRefusal> {
         if self.bytes >= 10 || (self.bytes == 9 && ((byte & 0x80) != 0 || byte & 0x7f > 1)) {
-            return Err(PackError::RetainedMalformed { what: "retained-varint", offset: offset - self.bytes as u64, detail: "overlong varint" });
+            return Err(PackRefusal::RetainedMalformed { kind: ValueRefusalKind::InvalidValue, what: "retained-varint", offset: offset - self.bytes as u64, detail: "overlong varint" });
         }
         let payload = (byte & 0x7f) as u64;
         self.value |= payload << (self.bytes as u32 * 7);
@@ -707,12 +711,12 @@ impl RetainedVarint {
             return Ok(None);
         }
         if self.bytes > 1 && payload == 0 {
-            return Err(PackError::NonCanonical("non-minimal retained varint"));
+            return Err(PackRefusal::NonCanonical("non-minimal retained varint"));
         }
         Ok(Some(self.value))
     }
 
-    fn preview(self, byte: u8, offset: u64) -> Result<Option<u64>, PackError> {
+    fn preview(self, byte: u8, offset: u64) -> Result<Option<u64>, PackRefusal> {
         let mut cursor = self;
         cursor.admit(byte, offset)
     }
@@ -726,19 +730,19 @@ struct RetainedUtf8 {
 }
 
 impl RetainedUtf8 {
-    fn admit(&mut self, byte: u8, offset: u64) -> Result<Option<char>, PackError> {
+    fn admit(&mut self, byte: u8, offset: u64) -> Result<Option<char>, PackRefusal> {
         if self.remaining == 0 {
             match byte {
                 0x00..=0x7f => return Ok(Some(byte as char)),
                 0xc2..=0xdf => (self.value, self.minimum, self.remaining) = ((byte & 0x1f) as u32, 0x80, 1),
                 0xe0..=0xef => (self.value, self.minimum, self.remaining) = ((byte & 0x0f) as u32, 0x800, 2),
                 0xf0..=0xf4 => (self.value, self.minimum, self.remaining) = ((byte & 7) as u32, 0x10000, 3),
-                _ => return Err(PackError::RetainedMalformed { what: "retained-utf8", offset, detail: "invalid leading byte" }),
+                _ => return Err(PackRefusal::RetainedMalformed { kind: ValueRefusalKind::InvalidValue, what: "retained-utf8", offset, detail: "invalid leading byte" }),
             }
             return Ok(None);
         }
         if byte & 0xc0 != 0x80 {
-            return Err(PackError::RetainedMalformed { what: "retained-utf8", offset, detail: "invalid continuation" });
+            return Err(PackRefusal::RetainedMalformed { kind: ValueRefusalKind::InvalidValue, what: "retained-utf8", offset, detail: "invalid continuation" });
         }
         self.value = (self.value << 6) | (byte & 0x3f) as u32;
         self.remaining -= 1;
@@ -746,12 +750,12 @@ impl RetainedUtf8 {
             return Ok(None);
         }
         if self.value < self.minimum || (0xd800..=0xdfff).contains(&self.value) || self.value > 0x10ffff {
-            return Err(PackError::RetainedMalformed { what: "retained-utf8", offset, detail: "invalid scalar" });
+            return Err(PackRefusal::RetainedMalformed { kind: ValueRefusalKind::InvalidValue, what: "retained-utf8", offset, detail: "invalid scalar" });
         }
-        char::from_u32(self.value).map(Some).ok_or_else(|| PackError::RetainedMalformed { what: "retained-utf8", offset, detail: "invalid scalar" })
+        char::from_u32(self.value).map(Some).ok_or_else(|| PackRefusal::RetainedMalformed { kind: ValueRefusalKind::InvalidValue, what: "retained-utf8", offset, detail: "invalid scalar" })
     }
 
-    fn preview(self, byte: u8, offset: u64) -> Result<Option<char>, PackError> {
+    fn preview(self, byte: u8, offset: u64) -> Result<Option<char>, PackRefusal> {
         let mut cursor = self;
         cursor.admit(byte, offset)
     }
@@ -809,7 +813,7 @@ pub struct RetainedValueCursor {
     offset: u64,
     sealed: bool,
     closing: bool,
-    fault: Option<PackError>,
+    fault: Option<PackRefusal>,
     closed: bool,
 }
 
@@ -822,7 +826,7 @@ pub struct RetainedValueAllocationStep {
 #[derive(Clone, Debug, PartialEq)]
 pub struct RetainedValueAllocationError {
     pub allocated_bytes: usize,
-    pub fault: PackError,
+    pub fault: PackRefusal,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -836,14 +840,13 @@ pub struct RetainedValueProgress {
 }
 
 impl RetainedValueCursor {
-    pub fn try_new(limits: PackLimits, maximum_allocation_bytes: usize) -> Result<Self, PackError> {
-        if limits.max_depth == 0 || limits.max_items == 0 {
-            return Err(PackError::LimitExceeded("retained value credits"));
-        }
-        let maximum_frames = usize::from(limits.max_depth).checked_mul(8).ok_or(PackError::LimitExceeded("retained value stack"))?;
-        let requested = maximum_frames.checked_mul(size_of::<Expect>()).ok_or(PackError::LimitExceeded("retained value stack allocation"))?;
+    pub fn try_new(limits: PackLimits, maximum_allocation_bytes: usize) -> Result<Self, PackRefusal> {
+        if limits.max_depth == 0{return Err(PackRefusal::LimitExceeded{kind:ValueRefusalKind::DepthLimit,limit:"retained value depth credits"});}
+        if limits.max_items == 0{return Err(PackRefusal::LimitExceeded{kind:ValueRefusalKind::WorkLimit,limit:"retained value item credits"});}
+        let maximum_frames = usize::from(limits.max_depth).checked_mul(8).ok_or(PackRefusal::LimitExceeded{kind:ValueRefusalKind::OwnershipLimit,limit:"retained value stack"})?;
+        let requested = maximum_frames.checked_mul(size_of::<Expect>()).ok_or(PackRefusal::LimitExceeded{kind:ValueRefusalKind::OwnershipLimit,limit:"retained value stack allocation"})?;
         if maximum_allocation_bytes == 0 || maximum_allocation_bytes > isize::MAX as usize || requested > maximum_allocation_bytes {
-            return Err(PackError::LimitExceeded("retained value stack allocation credits"));
+            return Err(PackRefusal::LimitExceeded{kind:ValueRefusalKind::OwnershipLimit,limit:"retained value stack allocation credits"});
         }
         Ok(Self {
             limits,
@@ -868,12 +871,12 @@ impl RetainedValueCursor {
         self.stack_allocation_bytes()
     }
 
-    pub fn next_allocation_bytes(&mut self) -> Result<Option<usize>, PackError> {
+    pub fn next_allocation_bytes(&mut self) -> Result<Option<usize>, PackRefusal> {
         if let Some(fault) = self.fault.clone() {
             return Err(fault);
         }
         if self.closed || self.closing {
-            return Err(PackError::RetainedMalformed { what: "retained-value", offset: self.offset, detail: "allocation after close" });
+            return Err(PackRefusal::RetainedMalformed { kind:ValueRefusalKind::InvariantViolated,what: "retained-value", offset: self.offset, detail: "allocation after close" });
         }
         if self.stack.capacity() >= self.maximum_frames {
             return Ok(None);
@@ -882,7 +885,7 @@ impl RetainedValueCursor {
             .checked_mul(size_of::<Expect>())
             .filter(|requested| *requested <= self.maximum_allocation_bytes)
             .map(Some)
-            .ok_or(PackError::LimitExceeded("retained value stack allocation credits"))
+            .ok_or(PackRefusal::LimitExceeded{kind:ValueRefusalKind::OwnershipLimit,limit:"retained value stack allocation credits"})
     }
 
     pub fn reserve_allocation(&mut self, maximum_bytes: usize) -> Result<RetainedValueAllocationStep, RetainedValueAllocationError> {
@@ -892,20 +895,20 @@ impl RetainedValueCursor {
             return Ok(RetainedValueAllocationStep::default());
         }
         if self.stack.try_reserve_exact(self.maximum_frames).is_err() {
-            let fault = PackError::LimitExceeded("retained value stack allocation");
+            let fault = PackRefusal::RetainedAllocation{kind:ValueRefusalKind::AllocationFailed,allocated_bytes:0,what:"retained-value-stack",offset:self.offset,detail:"retained value stack allocation"};
             let first = self.fault.get_or_insert_with(|| fault.clone()).clone();
             return Err(RetainedValueAllocationError { allocated_bytes: 0, fault: first });
         }
         let allocated_bytes = self.stack_allocation_bytes();
         if allocated_bytes > maximum_bytes || allocated_bytes > self.maximum_allocation_bytes {
-            let fault = PackError::LimitExceeded("retained value stack allocation overgrant");
+            let fault = PackRefusal::RetainedAllocation{kind:ValueRefusalKind::OwnershipLimit,allocated_bytes,what:"retained-value-stack",offset:self.offset,detail:"retained value stack allocation overgrant"};
             self.fault.get_or_insert_with(|| fault.clone());
             return Err(RetainedValueAllocationError { allocated_bytes, fault });
         }
         Ok(RetainedValueAllocationStep { progressed: true, allocated_bytes })
     }
 
-    fn initialize_root(&mut self) -> Result<bool, PackError> {
+    fn initialize_root(&mut self) -> Result<bool, PackRefusal> {
         if self.initialized_roots == 2 {
             return Ok(false);
         }
@@ -926,35 +929,34 @@ impl RetainedValueCursor {
         Ok(())
     }
 
-    pub fn seal(&mut self, bytes: u64) -> Result<(), PackError> {
+    pub fn seal(&mut self, bytes: u64) -> Result<(), PackRefusal> {
         if self.closed || self.closing || self.fault.is_some() || self.initialized_roots != 2 || self.pending.is_some() || bytes != self.offset {
-            return Err(PackError::RetainedMalformed { what: "retained-value", offset: self.offset, detail: "seal position mismatch" });
+            return Err(PackRefusal::RetainedMalformed { kind:ValueRefusalKind::InvariantViolated,what: "retained-value", offset: self.offset, detail: "seal position mismatch" });
         }
         self.sealed = true;
         Ok(())
     }
 
-    fn push(&mut self, value: Expect) -> Result<(), PackError> {
-        if self.stack.len() == self.stack.capacity() || self.stack.len() == self.maximum_frames {
-            return Err(PackError::LimitExceeded("retained value owner stack"));
-        }
+    fn push(&mut self, value: Expect) -> Result<(), PackRefusal> {
+        if self.stack.len() == self.maximum_frames { return Err(PackRefusal::LimitExceeded { kind: ValueRefusalKind::WorkLimit, limit: "retained value owner stack" }); }
+        if self.stack.len() == self.stack.capacity() { return Err(PackRefusal::LimitExceeded { kind: ValueRefusalKind::InvariantViolated, limit: "retained value owner stack" }); }
         self.stack.push(value);
         Ok(())
     }
 
-    fn count(&self, count: u64) -> Result<(), PackError> {
+    fn count(&self, count: u64) -> Result<(), PackRefusal> {
         if count > self.limits.max_items {
-            Err(PackError::LimitExceeded("retained value item count"))
+            Err(PackRefusal::LimitExceeded{kind:ValueRefusalKind::WorkLimit,limit:"retained value item count"})
         } else {
             Ok(())
         }
     }
 
-    fn string(&mut self) -> Result<(), PackError> {
+    fn string(&mut self) -> Result<(), PackRefusal> {
         self.push(Expect::StringTag)
     }
 
-    fn control(&mut self, value: Expect) -> Result<Option<RetainedValueToken>, PackError> {
+    fn control(&mut self, value: Expect) -> Result<Option<RetainedValueToken>, PackRefusal> {
         match value {
             Expect::End(kind) => Ok(Some(RetainedValueToken::End(kind))),
             Expect::Finish if self.sealed => Ok(Some(RetainedValueToken::Complete { bytes: self.offset })),
@@ -1011,7 +1013,7 @@ impl RetainedValueCursor {
         }
     }
 
-    fn after(&mut self, value: u64, after: AfterVarint) -> Result<RetainedValueToken, PackError> {
+    fn after(&mut self, value: u64, after: AfterVarint) -> Result<RetainedValueToken, PackRefusal> {
         match after {
             AfterVarint::Record(depth) => {
                 self.count(value)?;
@@ -1021,7 +1023,7 @@ impl RetainedValueCursor {
             }
             AfterVarint::Field => {
                 if value > u16::MAX as u64 {
-                    return Err(PackError::RetainedMalformed { what: "field-id", offset: self.offset, detail: "exceeds u16" });
+                    return Err(PackRefusal::RetainedMalformed { kind: ValueRefusalKind::InvalidValue, what: "field-id", offset: self.offset, detail: "exceeds u16" });
                 }
                 Ok(RetainedValueToken::Unsigned { role: RetainedValueRole::FieldId, value })
             }
@@ -1052,14 +1054,14 @@ impl RetainedValueCursor {
             }
             AfterVarint::String => {
                 if value > self.limits.max_segment_len {
-                    return Err(PackError::LimitExceeded("retained string length"));
+                    return Err(PackRefusal::LimitExceeded { kind: ValueRefusalKind::WorkLimit, limit: "retained string length" });
                 }
                 self.push(Expect::Utf8(value, RetainedUtf8::default()))?;
                 Ok(RetainedValueToken::Unsigned { role: RetainedValueRole::StringLength, value })
             }
             AfterVarint::Bytes => {
                 if value > self.limits.max_segment_len {
-                    return Err(PackError::LimitExceeded("retained bytes length"));
+                    return Err(PackRefusal::LimitExceeded { kind: ValueRefusalKind::WorkLimit, limit: "retained bytes length" });
                 }
                 self.push(Expect::Bytes(value))?;
                 Ok(RetainedValueToken::Unsigned { role: RetainedValueRole::BytesLength, value })
@@ -1083,7 +1085,7 @@ impl RetainedValueCursor {
             }
             AfterVarint::TableField(rows, columns, depth) => {
                 if value > u16::MAX as u64 {
-                    return Err(PackError::RetainedMalformed { what: "table-field", offset: self.offset, detail: "exceeds u16" });
+                    return Err(PackRefusal::RetainedMalformed { kind: ValueRefusalKind::InvalidValue, what: "table-field", offset: self.offset, detail: "exceeds u16" });
                 }
                 self.push(Expect::TablePresence(columns, rows, depth))?;
                 Ok(RetainedValueToken::Unsigned { role: RetainedValueRole::TableField, value })
@@ -1101,15 +1103,15 @@ impl RetainedValueCursor {
         }
     }
 
-    fn tag(&mut self, offset: u64, tag: u8, depth: u16, context: RetainedContext) -> Result<RetainedValueToken, PackError> {
+    fn tag(&mut self, offset: u64, tag: u8, depth: u16, context: RetainedContext) -> Result<RetainedValueToken, PackRefusal> {
         if depth > self.limits.max_depth {
-            return Err(PackError::LimitExceeded("retained value depth"));
+            return Err(PackRefusal::LimitExceeded{kind:ValueRefusalKind::DepthLimit,limit:"retained value depth"});
         }
         if context == RetainedContext::Dsl && !matches!(tag, TAG_FALSE | TAG_TRUE | TAG_INT | TAG_UINT | TAG_F64 | TAG_STR | TAG_STR_INLINE | TAG_LIST | TAG_MAP | TAG_NULL) {
-            return Err(PackError::RetainedMalformed { what: "dsl-value", offset, detail: "field-only tag" });
+            return Err(PackRefusal::RetainedMalformed { kind: ValueRefusalKind::InvalidValue, what: "dsl-value", offset, detail: "field-only tag" });
         }
         if context == RetainedContext::Field && tag == TAG_NULL {
-            return Err(PackError::RetainedMalformed { what: "field-value", offset, detail: "DSL-only null" });
+            return Err(PackRefusal::RetainedMalformed { kind: ValueRefusalKind::InvalidValue, what: "field-value", offset, detail: "DSL-only null" });
         }
         match tag {
             TAG_ABSENT | TAG_FALSE | TAG_TRUE | TAG_NULL => {}
@@ -1134,7 +1136,7 @@ impl RetainedValueCursor {
             TAG_TABLE_SOA => self.push(Expect::Varint(RetainedVarint::default(), AfterVarint::TableRows(depth)))?,
             TAG_PACKED_F64 | TAG_PACKED_VARINT => self.push(Expect::Varint(RetainedVarint::default(), AfterVarint::Packed(if tag == TAG_PACKED_F64 { RetainedValueContainer::PackedF64 } else { RetainedValueContainer::PackedVarint })))?,
             TAG_EXPR => self.string()?,
-            _ => return Err(PackError::RetainedMalformed { what: "retained-tag", offset, detail: "unknown tag" }),
+            _ => return Err(PackRefusal::RetainedMalformed { kind: ValueRefusalKind::InvalidValue, what: "retained-tag", offset, detail: "unknown tag" }),
         }
         if tag == TAG_WIRE {
             Ok(RetainedValueToken::Begin { kind: RetainedValueContainer::Wire, count: 1 })
@@ -1143,7 +1145,7 @@ impl RetainedValueCursor {
         }
     }
 
-    fn grant_inner(&mut self) -> Result<Option<RetainedValueToken>, PackError> {
+    fn grant_inner(&mut self) -> Result<Option<RetainedValueToken>, PackRefusal> {
         let Some(expectation) = self.stack.pop() else { return Ok(None) };
         let control = matches!(
             expectation,
@@ -1165,7 +1167,7 @@ impl RetainedValueCursor {
         }
         let Some((offset, byte)) = self.pending.take() else {
             self.stack.push(expectation);
-            return if self.sealed { Err(PackError::Truncated(self.offset)) } else { Ok(None) };
+            return if self.sealed { Err(PackRefusal::Truncated(self.offset)) } else { Ok(None) };
         };
         self.offset += 1;
         match expectation {
@@ -1179,7 +1181,7 @@ impl RetainedValueCursor {
                     self.push(Expect::Varint(RetainedVarint::default(), AfterVarint::String))?;
                     Ok(Some(RetainedValueToken::Tag { offset, value: byte }))
                 }
-                _ => Err(PackError::RetainedMalformed { what: "retained-string", offset, detail: "expected string tag" }),
+                _ => Err(PackRefusal::RetainedMalformed { kind: ValueRefusalKind::InvalidValue, what: "retained-string", offset, detail: "expected string tag" }),
             },
             Expect::Varint(mut cursor, after) => match cursor.admit(byte, offset)? {
                 Some(value) => self.after(value, after).map(Some),
@@ -1202,7 +1204,7 @@ impl RetainedValueCursor {
                 if remaining > 1 {
                     self.push(Expect::Utf8(remaining - 1, cursor))?;
                 } else if cursor.remaining != 0 {
-                    return Err(PackError::RetainedMalformed { what: "retained-utf8", offset, detail: "truncated scalar" });
+                    return Err(PackRefusal::RetainedMalformed { kind: ValueRefusalKind::InvalidValue, what: "retained-utf8", offset, detail: "truncated scalar" });
                 }
                 Ok(token)
             }
@@ -1214,7 +1216,7 @@ impl RetainedValueCursor {
             }
             Expect::Wire(depth) => {
                 if byte & !7 != 0 || (byte & 2 != 0 && byte & 1 == 0) {
-                    return Err(PackError::RetainedMalformed { what: "wire-presence", offset, detail: "invalid bits" });
+                    return Err(PackRefusal::RetainedMalformed { kind: ValueRefusalKind::InvalidValue, what: "wire-presence", offset, detail: "invalid bits" });
                 }
                 self.push(Expect::Value(depth + 1, RetainedContext::Dsl))?;
                 if byte & 4 != 0 {
@@ -1228,7 +1230,7 @@ impl RetainedValueCursor {
             }
             Expect::WireNode => {
                 if byte & !3 != 0 {
-                    return Err(PackError::RetainedMalformed { what: "wire-node", offset, detail: "invalid bits" });
+                    return Err(PackRefusal::RetainedMalformed { kind: ValueRefusalKind::InvalidValue, what: "wire-node", offset, detail: "invalid bits" });
                 }
                 if byte & 2 != 0 {
                     self.string()?;
@@ -1241,7 +1243,7 @@ impl RetainedValueCursor {
             }
             Expect::WireLabel => {
                 if byte & !3 != 0 {
-                    return Err(PackError::RetainedMalformed { what: "wire-label", offset, detail: "invalid bits" });
+                    return Err(PackRefusal::RetainedMalformed { kind: ValueRefusalKind::InvalidValue, what: "wire-label", offset, detail: "invalid bits" });
                 }
                 if byte & 2 != 0 {
                     self.string()?;
@@ -1255,7 +1257,7 @@ impl RetainedValueCursor {
                 match byte {
                     0 => self.push(Expect::TableElem(rows, rows, columns, depth))?,
                     1 => self.push(Expect::TableBitmap(rows.div_ceil(8), 0, rows, 0, columns, depth))?,
-                    _ => return Err(PackError::RetainedMalformed { what: "table-presence", offset, detail: "expected 0 or 1" }),
+                    _ => return Err(PackRefusal::RetainedMalformed { kind: ValueRefusalKind::InvalidValue, what: "table-presence", offset, detail: "expected 0 or 1" }),
                 }
                 Ok(Some(RetainedValueToken::TablePresence { rows, value: byte }))
             }
@@ -1263,7 +1265,7 @@ impl RetainedValueCursor {
                 let used = (rows - row).min(8) as u8;
                 let mask = if used == 8 { u8::MAX } else { ((1u16 << used) - 1) as u8 };
                 if byte & !mask != 0 {
-                    return Err(PackError::NonCanonical("table bitmap padding bits"));
+                    return Err(PackRefusal::NonCanonical("table bitmap padding bits"));
                 }
                 present += (byte & mask).count_ones() as u64;
                 if bytes > 1 {
@@ -1283,7 +1285,7 @@ impl RetainedValueCursor {
                     ELEM_F64 => Expect::F64s(present),
                     ELEM_STR => Expect::Varints(present, RetainedValueRole::Symbol),
                     ELEM_ENUM => Expect::Varints(present, RetainedValueRole::Enum),
-                    _ => return Err(PackError::RetainedMalformed { what: "table-element", offset, detail: "unknown tag" }),
+                    _ => return Err(PackRefusal::RetainedMalformed { kind: ValueRefusalKind::InvalidValue, what: "table-element", offset, detail: "unknown tag" }),
                 })?;
                 Ok(Some(RetainedValueToken::Tag { offset, value: byte }))
             }
@@ -1291,12 +1293,12 @@ impl RetainedValueCursor {
         }
     }
 
-    pub fn grant(&mut self) -> Result<Option<RetainedValueToken>, PackError> {
+    pub fn grant(&mut self) -> Result<Option<RetainedValueToken>, PackRefusal> {
         if let Some(fault) = self.fault.clone() {
             return Err(fault);
         }
         if self.closed || self.closing {
-            return Err(PackError::RetainedMalformed { what: "retained-value", offset: self.offset, detail: "grant after close" });
+            return Err(PackRefusal::RetainedMalformed { kind:ValueRefusalKind::InvariantViolated,what: "retained-value", offset: self.offset, detail: "grant after close" });
         }
         match self.initialize_root() {
             Ok(true) => return Ok(None),
@@ -1326,7 +1328,7 @@ impl RetainedValueCursor {
         (allocated != 0).then_some(allocated)
     }
 
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<crate::os_pack::format::RetainedPackCloseStep, &'static str> {
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<crate::os_pack::format::RetainedPackCloseStep, PackRefusal> {
         if !self.closed && maximum_items == 0 && maximum_bytes == 0 {
             return Ok(crate::os_pack::format::RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -1435,7 +1437,7 @@ pub struct RetainedRecordBodyCursor {
     sealed: bool,
     value_sealed: bool,
     value: std::mem::ManuallyDrop<Option<RetainedValueCursor>>,
-    fault: Option<PackError>,
+    fault: Option<PackRefusal>,
     closing: bool,
     close_phase: RetainedRecordBodyClosePhase,
 }
@@ -1449,7 +1451,7 @@ pub struct RetainedRecordBodyAllocationStep {
 #[derive(Clone, Debug, PartialEq)]
 pub struct RetainedRecordBodyAllocationError {
     pub allocated_bytes: usize,
-    pub fault: PackError,
+    pub fault: PackRefusal,
 }
 
 #[derive(Clone, Copy)]
@@ -1466,24 +1468,19 @@ impl RetainedRecordBodyCursor {
         maximum_symbol_utf8_bytes: usize,
         maximum_symbol_scalars: usize,
         maximum_allocation_bytes: usize,
-    ) -> Result<Self, PackError> {
+    ) -> Result<Self, PackRefusal> {
         if limits.max_symbols == 0 || limits.max_items == 0 || limits.max_depth == 0 {
-            return Err(PackError::LimitExceeded("retained record-body credits"));
+            return Err(PackRefusal::LimitExceeded { kind: ValueRefusalKind::WorkLimit, limit: "retained record-body credits" });
         }
-        if maximum_symbols > limits.max_symbols as usize
-            || maximum_symbol_utf8_bytes as u64 > limits.max_file_len
-            || maximum_symbol_scalars > maximum_symbol_utf8_bytes
-            || maximum_allocation_bytes == 0
-            || maximum_allocation_bytes > isize::MAX as usize
-        {
-            return Err(PackError::LimitExceeded("retained record-body physical credits"));
-        }
+        if maximum_symbols > limits.max_symbols as usize || maximum_symbol_utf8_bytes as u64 > limits.max_file_len { return Err(PackRefusal::LimitExceeded { kind: ValueRefusalKind::WorkLimit, limit: "retained record-body physical credits" }); }
+        if maximum_symbol_scalars > maximum_symbol_utf8_bytes { return Err(PackRefusal::LimitExceeded { kind: ValueRefusalKind::InvalidValue, limit: "retained record-body physical credits" }); }
+        if maximum_allocation_bytes == 0 || maximum_allocation_bytes > isize::MAX as usize { return Err(PackRefusal::LimitExceeded { kind: ValueRefusalKind::OwnershipLimit, limit: "retained record-body physical credits" }); }
         Ok(Self {
             limits,
             phase: RetainedRecordBodyPhase::SymbolCount(RetainedVarint::default()),
             symbols: std::mem::ManuallyDrop::new(
                 crate::os_pack::format::RetainedPackSymbolTable::try_new(maximum_symbols, maximum_symbol_utf8_bytes, maximum_symbol_scalars, maximum_allocation_bytes)
-                    .map_err(|_| PackError::LimitExceeded("retained record-body symbol credits"))?,
+                    .map_err(|fault| fault.into_pack_refusal("retained-record-body-symbol"))?,
             ),
             maximum_allocation_bytes,
             expected_symbols: 0,
@@ -1516,9 +1513,9 @@ impl RetainedRecordBodyCursor {
         Ok(())
     }
 
-    pub fn seal(&mut self, bytes: u64) -> Result<(), PackError> {
+    pub fn seal(&mut self, bytes: u64) -> Result<(), PackRefusal> {
         if self.closing || self.fault.is_some() || self.pending.is_some() || bytes != self.offset {
-            return Err(PackError::RetainedMalformed { what: "retained-record-body", offset: self.offset, detail: "seal position mismatch" });
+            return Err(PackRefusal::RetainedMalformed { kind: ValueRefusalKind::InvariantViolated, what: "retained-record-body", offset: self.offset, detail: "seal position mismatch" });
         }
         self.sealed = true;
         Ok(())
@@ -1532,15 +1529,15 @@ impl RetainedRecordBodyCursor {
         self.allocated_bytes_checked().unwrap_or(usize::MAX)
     }
 
-    fn allocation_need(&mut self) -> Result<Option<(RetainedRecordBodyAllocationOwner, usize)>, PackError> {
+    fn allocation_need(&mut self) -> Result<Option<(RetainedRecordBodyAllocationOwner, usize)>, PackRefusal> {
         if let Some(fault) = self.fault.clone() {
             return Err(fault);
         }
         if self.closing || matches!(self.phase, RetainedRecordBodyPhase::Closing | RetainedRecordBodyPhase::Closed) {
-            return Err(PackError::RetainedMalformed { what: "retained-record-body", offset: self.offset, detail: "allocation after close" });
+            return Err(PackRefusal::RetainedMalformed { kind: ValueRefusalKind::InvariantViolated, what: "retained-record-body", offset: self.offset, detail: "allocation after close" });
         }
         if self.phase == RetainedRecordBodyPhase::Value {
-            let value = self.value.as_mut().ok_or_else(|| PackError::RetainedMalformed { what: "retained-record-body", offset: self.offset, detail: "value owner missing" })?;
+            let value = self.value.as_mut().ok_or_else(|| PackRefusal::RetainedMalformed { kind: ValueRefusalKind::InvariantViolated, what: "retained-record-body", offset: self.offset, detail: "value owner missing" })?;
             return value.next_allocation_bytes().map(|need| need.map(|bytes| (RetainedRecordBodyAllocationOwner::Value, bytes)));
         }
         let Some((offset, byte)) = self.pending else { return Ok(None) };
@@ -1551,30 +1548,30 @@ impl RetainedRecordBodyCursor {
                     let target = usize::try_from(count)
                         .ok()
                         .filter(|target| *target <= self.symbols.maximum_symbols())
-                        .ok_or(PackError::LimitExceeded("retained record-body symbol count"))?;
+                        .ok_or(PackRefusal::LimitExceeded { kind: ValueRefusalKind::OwnershipLimit, limit: "retained record-body symbol count" })?;
                     self.symbols
                         .next_symbol_allocation_bytes(target, offset)
-                        .map_err(|fault| PackError::RetainedMalformed { what: "retained-record-body-symbol-allocation", offset: fault.offset, detail: fault.code })?
+                        .map_err(|fault| fault.into_pack_refusal("retained-record-body-symbol-allocation"))?
                         .map(|bytes| (RetainedRecordBodyAllocationOwner::SymbolSpans { target, offset }, bytes))
                 }
             },
             RetainedRecordBodyPhase::SymbolLength { cursor, .. } => {
                 if let Some(length) = cursor.preview(byte, offset)? {
-                    let length = usize::try_from(length).map_err(|_| PackError::LimitExceeded("retained record-body symbol bytes"))?;
+                    let length = usize::try_from(length).map_err(|_| PackRefusal::LimitExceeded { kind: ValueRefusalKind::OwnershipLimit, limit: "retained record-body symbol bytes" })?;
                     self.symbol_utf8_bytes
                         .checked_add(length)
                         .filter(|total| *total <= self.symbols.maximum_utf8_bytes())
-                        .ok_or(PackError::LimitExceeded("retained record-body cumulative symbol bytes"))?;
+                        .ok_or(PackRefusal::LimitExceeded { kind: ValueRefusalKind::OwnershipLimit, limit: "retained record-body cumulative symbol bytes" })?;
                 }
                 None
             }
             RetainedRecordBodyPhase::SymbolText { cursor, .. } => match cursor.preview(byte, offset)? {
                 None => None,
                 Some(_) => {
-                    let target = self.symbols.scalar_len().checked_add(1).filter(|target| *target <= self.symbols.maximum_scalars()).ok_or(PackError::LimitExceeded("retained record-body symbol scalars"))?;
+                    let target = self.symbols.scalar_len().checked_add(1).filter(|target| *target <= self.symbols.maximum_scalars()).ok_or(PackRefusal::LimitExceeded { kind: ValueRefusalKind::OwnershipLimit, limit: "retained record-body symbol scalars" })?;
                     self.symbols
                         .next_scalar_allocation_bytes(target, offset)
-                        .map_err(|fault| PackError::RetainedMalformed { what: "retained-record-body-symbol-allocation", offset: fault.offset, detail: fault.code })?
+                        .map_err(|fault| fault.into_pack_refusal("retained-record-body-symbol-allocation"))?
                         .map(|bytes| (RetainedRecordBodyAllocationOwner::SymbolScalars { target, offset }, bytes))
                 }
             },
@@ -1583,7 +1580,7 @@ impl RetainedRecordBodyCursor {
         Ok(need)
     }
 
-    pub fn next_allocation_bytes(&mut self) -> Result<Option<usize>, PackError> {
+    pub fn next_allocation_bytes(&mut self) -> Result<Option<usize>, PackRefusal> {
         let need = match self.allocation_need() {
             Ok(need) => need,
             Err(fault) => {
@@ -1597,7 +1594,7 @@ impl RetainedRecordBodyCursor {
             .and_then(|allocated| allocated.checked_add(requested))
             .filter(|total| *total <= self.maximum_allocation_bytes)
             .map(|_| Some(requested))
-            .ok_or(PackError::LimitExceeded("retained record-body allocation credits"));
+            .ok_or(PackRefusal::LimitExceeded { kind: ValueRefusalKind::OwnershipLimit, limit: "retained record-body allocation credits" });
         if let Err(fault) = &result {
             self.fault.get_or_insert_with(|| fault.clone());
         }
@@ -1624,7 +1621,7 @@ impl RetainedRecordBodyCursor {
                 .map(|step| RetainedRecordBodyAllocationStep { progressed: step.progressed, allocated_bytes: step.allocated_bytes })
                 .map_err(|error| RetainedRecordBodyAllocationError {
                     allocated_bytes: error.allocated_bytes,
-                    fault: PackError::RetainedMalformed { what: "retained-record-body-symbol-allocation", offset: error.fault.offset, detail: error.fault.code },
+                    fault: error.fault.into_pack_refusal("retained-record-body-symbol-allocation"),
                 }),
             RetainedRecordBodyAllocationOwner::SymbolScalars { target, offset } => self
                 .symbols
@@ -1632,14 +1629,14 @@ impl RetainedRecordBodyCursor {
                 .map(|step| RetainedRecordBodyAllocationStep { progressed: step.progressed, allocated_bytes: step.allocated_bytes })
                 .map_err(|error| RetainedRecordBodyAllocationError {
                     allocated_bytes: error.allocated_bytes,
-                    fault: PackError::RetainedMalformed { what: "retained-record-body-symbol-allocation", offset: error.fault.offset, detail: error.fault.code },
+                    fault: error.fault.into_pack_refusal("retained-record-body-symbol-allocation"),
                 }),
             RetainedRecordBodyAllocationOwner::Value => self
                 .value
                 .as_mut()
                 .ok_or_else(|| RetainedRecordBodyAllocationError {
                     allocated_bytes: 0,
-                    fault: PackError::RetainedMalformed { what: "retained-record-body", offset: self.offset, detail: "value owner missing" },
+                    fault: PackRefusal::RetainedMalformed { kind: ValueRefusalKind::InvariantViolated, what: "retained-record-body", offset: self.offset, detail: "value owner missing" },
                 })?
                 .reserve_allocation(maximum_bytes.min(remaining))
                 .map(|step| RetainedRecordBodyAllocationStep { progressed: step.progressed, allocated_bytes: step.allocated_bytes })
@@ -1648,7 +1645,7 @@ impl RetainedRecordBodyCursor {
         match step {
             Ok(step) if self.allocated_bytes() <= self.maximum_allocation_bytes => Ok(step),
             Ok(step) => {
-                let fault = PackError::LimitExceeded("retained record-body allocation overgrant");
+                let fault = PackRefusal::LimitExceeded { kind: ValueRefusalKind::OwnershipLimit, limit: "retained record-body allocation overgrant" };
                 self.fault.get_or_insert_with(|| fault.clone());
                 Err(RetainedRecordBodyAllocationError { allocated_bytes: step.allocated_bytes, fault })
             }
@@ -1659,23 +1656,23 @@ impl RetainedRecordBodyCursor {
         }
     }
 
-    pub fn symbol_chars(&self, symbol: u64) -> Result<usize, PackError> {
-        self.symbols.symbol_chars(symbol).map_err(|_| PackError::RetainedMalformed { what: "retained-record-body-symbol", offset: self.offset, detail: "symbol is outside admitted registry" })
+    pub fn symbol_chars(&self, symbol: u64) -> Result<usize, PackRefusal> {
+        self.symbols.symbol_chars(symbol).map_err(|fault| fault.into_pack_refusal("retained-record-body-symbol"))
     }
 
-    pub fn symbol_char(&self, symbol: u64, index: usize) -> Result<Option<char>, PackError> {
-        self.symbols.symbol_char(symbol, index).map_err(|_| PackError::RetainedMalformed { what: "retained-record-body-symbol", offset: self.offset, detail: "symbol is outside admitted registry" })
+    pub fn symbol_char(&self, symbol: u64, index: usize) -> Result<Option<char>, PackRefusal> {
+        self.symbols.symbol_char(symbol, index).map_err(|fault| fault.into_pack_refusal("retained-record-body-symbol"))
     }
 
-    fn begin_value(&mut self) -> Result<(), PackError> {
+    fn begin_value(&mut self) -> Result<(), PackRefusal> {
         *self.value = Some(RetainedValueCursor::try_new(self.limits.clone(), self.maximum_allocation_bytes)?);
         self.phase = RetainedRecordBodyPhase::Value;
         Ok(())
     }
 
-    fn grant_inner(&mut self) -> Result<Option<RetainedRecordBodyToken>, PackError> {
+    fn grant_inner(&mut self) -> Result<Option<RetainedRecordBodyToken>, PackRefusal> {
         if matches!(self.phase, RetainedRecordBodyPhase::Closing | RetainedRecordBodyPhase::Closed) {
-            return Err(PackError::RetainedMalformed { what: "retained-record-body", offset: self.offset, detail: "grant after close" });
+            return Err(PackRefusal::RetainedMalformed { kind: ValueRefusalKind::InvariantViolated, what: "retained-record-body", offset: self.offset, detail: "grant after close" });
         }
         if self.catalog_complete_pending {
             self.catalog_complete_pending = false;
@@ -1683,12 +1680,12 @@ impl RetainedRecordBodyCursor {
         }
         if self.phase == RetainedRecordBodyPhase::Value {
             if let Some((offset, byte)) = self.pending.take() {
-                let value = self.value.as_mut().ok_or_else(|| PackError::RetainedMalformed { what: "retained-record-body", offset, detail: "value owner missing" })?;
+                let value = self.value.as_mut().ok_or_else(|| PackRefusal::RetainedMalformed { kind: ValueRefusalKind::InvariantViolated, what: "retained-record-body", offset, detail: "value owner missing" })?;
                 if !value.ingress_ready() {
                     self.pending = Some((offset, byte));
                     return Ok(None);
                 }
-                value.admit_byte(self.value_offset, byte).map_err(|_| PackError::RetainedMalformed {
+                value.admit_byte(self.value_offset, byte).map_err(|_| PackRefusal::RetainedMalformed { kind: ValueRefusalKind::InvariantViolated,
                     what: "retained-record-body",
                     offset,
                     detail: "value producer handback",
@@ -1696,13 +1693,13 @@ impl RetainedRecordBodyCursor {
                 self.offset += 1;
                 self.value_offset += 1;
             } else if self.sealed && !self.value_sealed {
-                self.value.as_mut().ok_or_else(|| PackError::RetainedMalformed { what: "retained-record-body", offset: self.offset, detail: "value owner missing" })?.seal(self.value_offset)?;
+                self.value.as_mut().ok_or_else(|| PackRefusal::RetainedMalformed { kind: ValueRefusalKind::InvariantViolated, what: "retained-record-body", offset: self.offset, detail: "value owner missing" })?.seal(self.value_offset)?;
                 self.value_sealed = true;
             }
-            return self.value.as_mut().ok_or_else(|| PackError::RetainedMalformed { what: "retained-record-body", offset: self.offset, detail: "value owner missing" })?.grant().map(|token| token.map(RetainedRecordBodyToken::Value));
+            return self.value.as_mut().ok_or_else(|| PackRefusal::RetainedMalformed { kind: ValueRefusalKind::InvariantViolated, what: "retained-record-body", offset: self.offset, detail: "value owner missing" })?.grant().map(|token| token.map(RetainedRecordBodyToken::Value));
         }
         let Some((offset, byte)) = self.pending.take() else {
-            return if self.sealed { Err(PackError::Truncated(self.offset)) } else { Ok(None) };
+            return if self.sealed { Err(PackRefusal::Truncated(self.offset)) } else { Ok(None) };
         };
         self.offset += 1;
         match self.phase {
@@ -1710,7 +1707,7 @@ impl RetainedRecordBodyCursor {
                 None => self.phase = RetainedRecordBodyPhase::SymbolCount(cursor),
                 Some(symbols) => {
                     if symbols > self.symbols.maximum_symbols() as u64 {
-                        return Err(PackError::LimitExceeded("retained record-body symbol count"));
+                        return Err(PackRefusal::LimitExceeded { kind: ValueRefusalKind::WorkLimit, limit: "retained record-body symbol count" });
                     }
                     self.expected_symbols = symbols;
                     if symbols == 0 {
@@ -1724,20 +1721,19 @@ impl RetainedRecordBodyCursor {
             RetainedRecordBodyPhase::SymbolLength { symbol, mut cursor } => match cursor.admit(byte, offset)? {
                 None => self.phase = RetainedRecordBodyPhase::SymbolLength { symbol, cursor },
                 Some(length) => {
-                    if length > self.limits.max_segment_len || length > usize::MAX as u64 {
-                        return Err(PackError::LimitExceeded("retained record-body symbol length"));
-                    }
+                    if length > self.limits.max_segment_len { return Err(PackRefusal::LimitExceeded { kind: ValueRefusalKind::WorkLimit, limit: "retained record-body symbol length" }); }
+                    if length > usize::MAX as u64 { return Err(PackRefusal::LimitExceeded { kind: ValueRefusalKind::OwnershipLimit, limit: "retained record-body symbol length" }); }
                     let length = length as usize;
                     self.symbol_utf8_bytes = self
                         .symbol_utf8_bytes
                         .checked_add(length)
                         .filter(|total| *total <= self.symbols.maximum_utf8_bytes())
-                        .ok_or(PackError::LimitExceeded("retained record-body cumulative symbol bytes"))?;
+                        .ok_or(PackRefusal::LimitExceeded { kind: ValueRefusalKind::OwnershipLimit, limit: "retained record-body cumulative symbol bytes" })?;
                     if length == 0 {
                         let scalar_start = self.symbols.scalar_len() as u64;
                         self.symbols
                             .push_symbol_reserved(crate::os_pack::format::RetainedPackSymbolSpan { scalar_start, scalar_len: 0, utf8_len: 0 }, offset)
-                            .map_err(|fault| PackError::RetainedMalformed { what: "retained-record-body-symbol", offset: fault.offset, detail: fault.code })?;
+                            .map_err(|fault| fault.into_pack_refusal("retained-record-body-symbol"))?;
                         if symbol + 1 == self.expected_symbols {
                             self.begin_value()?;
                             return Ok(Some(RetainedRecordBodyToken::CatalogComplete));
@@ -1760,23 +1756,23 @@ impl RetainedRecordBodyCursor {
                 if let Some(character) = character {
                     self.symbols
                         .push_scalar_reserved(character, offset)
-                        .map_err(|fault| PackError::RetainedMalformed { what: "retained-record-body-symbol", offset: fault.offset, detail: fault.code })?;
+                        .map_err(|fault| fault.into_pack_refusal("retained-record-body-symbol"))?;
                 }
                 if next == 0 {
                     if cursor.remaining != 0 {
-                        return Err(PackError::RetainedMalformed { what: "retained-record-body-symbol", offset, detail: "truncated UTF-8 scalar" });
+                        return Err(PackRefusal::RetainedMalformed { kind: ValueRefusalKind::InvalidValue, what: "retained-record-body-symbol", offset, detail: "truncated UTF-8 scalar" });
                     }
                     let scalar_len = self
                         .symbols
                         .scalar_len()
                         .checked_sub(scalar_start)
-                        .ok_or_else(|| PackError::RetainedMalformed { what: "retained-record-body-symbol", offset, detail: "scalar span underflow" })?;
+                        .ok_or_else(|| PackRefusal::RetainedMalformed { kind: ValueRefusalKind::InvariantViolated, what: "retained-record-body-symbol", offset, detail: "scalar span underflow" })?;
                     self.symbols
                         .push_symbol_reserved(
                             crate::os_pack::format::RetainedPackSymbolSpan { scalar_start: scalar_start as u64, scalar_len: scalar_len as u64, utf8_len: utf8_len as u64 },
                             offset,
                         )
-                        .map_err(|fault| PackError::RetainedMalformed { what: "retained-record-body-symbol", offset: fault.offset, detail: fault.code })?;
+                        .map_err(|fault| fault.into_pack_refusal("retained-record-body-symbol"))?;
                     if symbol + 1 == self.expected_symbols {
                         self.begin_value()?;
                         self.catalog_complete_pending = character.is_some();
@@ -1798,7 +1794,7 @@ impl RetainedRecordBodyCursor {
         Ok(None)
     }
 
-    pub fn grant(&mut self) -> Result<Option<RetainedRecordBodyToken>, PackError> {
+    pub fn grant(&mut self) -> Result<Option<RetainedRecordBodyToken>, PackRefusal> {
         if let Some(fault) = self.fault.clone() {
             return Err(fault);
         }
@@ -1816,7 +1812,7 @@ impl RetainedRecordBodyCursor {
         }
     }
 
-    pub fn next_release_allocation_bytes(&self) -> Result<Option<usize>, &'static str> {
+    pub fn next_release_allocation_bytes(&self) -> Result<Option<usize>, PackRefusal> {
         if self.pending.is_some() || !self.closing {
             return Ok(None);
         }
@@ -1824,7 +1820,7 @@ impl RetainedRecordBodyCursor {
             RetainedRecordBodyClosePhase::ValuePhysical => {
                 Ok(self.value.as_ref().and_then(RetainedValueCursor::next_release_allocation_bytes))
             }
-            RetainedRecordBodyClosePhase::SymbolsPhysical => self.symbols.next_release_allocation_bytes(),
+            RetainedRecordBodyClosePhase::SymbolsPhysical => self.symbols.next_release_allocation_bytes().map_err(|error|PackRefusal::from_paged_refusal(error,"retained-record-body-symbol-release",self.offset)),
             RetainedRecordBodyClosePhase::ValueLogical | RetainedRecordBodyClosePhase::SymbolsLogical => Ok(None),
         }
     }
@@ -1833,7 +1829,7 @@ impl RetainedRecordBodyCursor {
         &mut self,
         maximum_items: usize,
         maximum_bytes: usize,
-    ) -> Result<crate::os_pack::format::RetainedPackCloseStep, &'static str> {
+    ) -> Result<crate::os_pack::format::RetainedPackCloseStep, PackRefusal> {
         use crate::os_pack::format::RetainedPackCloseStep;
         if self.phase == RetainedRecordBodyPhase::Closed {
             return Ok(RetainedPackCloseStep::Complete);
@@ -1872,11 +1868,11 @@ impl RetainedRecordBodyCursor {
                     self.close_phase = RetainedRecordBodyClosePhase::SymbolsLogical;
                     return Ok(RetainedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
                 }
-                RetainedRecordBodyClosePhase::SymbolsLogical => match self.symbols.close_step(maximum_items, 0)? {
+                RetainedRecordBodyClosePhase::SymbolsLogical => match self.symbols.close_step(maximum_items, 0).map_err(|error|PackRefusal::from_paged_refusal(error,"retained-record-body-symbol-release",self.offset))? {
                     RetainedPackCloseStep::Pending { released_items, released_bytes } if released_items != 0 || released_bytes != 0 => {
                         return Ok(RetainedPackCloseStep::Pending { released_items, released_bytes });
                     }
-                    RetainedPackCloseStep::Pending { .. } if self.symbols.next_release_allocation_bytes()?.is_none() && !self.symbols.terminal_is_empty() => {
+                    RetainedPackCloseStep::Pending { .. } if self.symbols.next_release_allocation_bytes().map_err(|error|PackRefusal::from_paged_refusal(error,"retained-record-body-symbol-release",self.offset))?.is_none() && !self.symbols.terminal_is_empty() => {
                         return Ok(RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
                     }
                     RetainedPackCloseStep::Pending { .. } | RetainedPackCloseStep::Complete => {
@@ -1906,7 +1902,7 @@ impl RetainedRecordBodyCursor {
                     }
                     self.close_phase = RetainedRecordBodyClosePhase::SymbolsPhysical;
                 }
-                RetainedRecordBodyClosePhase::SymbolsPhysical => match self.symbols.close_step(maximum_items, maximum_bytes)? {
+                RetainedRecordBodyClosePhase::SymbolsPhysical => match self.symbols.close_step(maximum_items, maximum_bytes).map_err(|error|PackRefusal::from_paged_refusal(error,"retained-record-body-symbol-release",self.offset))? {
                     RetainedPackCloseStep::Pending { released_items, released_bytes } => {
                         return Ok(RetainedPackCloseStep::Pending { released_items, released_bytes });
                     }
@@ -1971,64 +1967,64 @@ struct DecCtx<'a> {
     materialization: &'a dyn MaterializationAdmission,
 }
 
-/// 🧮️ Logical owned storage: UTF-8 bytes, 32-byte symbol slots, and 64-byte value/map slots.
+/// 🧮️ Cumulative concrete requested storage for owned UTF-8 and typed collection slots.
 struct ValueMaterialization {
     used: std::cell::Cell<u64>,
     maximum: u64,
 }
 
 impl ValueMaterialization {
-    fn charge(&self, bytes: u64) -> Result<(), PackError> {
-        let used = self.used.get().checked_add(bytes).filter(|used| *used <= self.maximum).ok_or(PackError::LimitExceeded("wire value materialization exceeds max_total_alloc"))?;
+    fn charge(&self, bytes: u64) -> Result<(), PackRefusal> {
+        let used = self.used.get().checked_add(bytes).filter(|used| *used <= self.maximum).ok_or(PackRefusal::LimitExceeded { kind: ValueRefusalKind::OwnershipLimit, limit: "wire value materialization exceeds max_total_alloc" })?;
         self.used.set(used);
         Ok(())
     }
 }
 
 trait MaterializationAdmission {
-    fn schema(&self,producer:&RecordSpecProducer)->Result<RecordSpec,PackError>{Ok((producer.ordinary)())}
-    fn charge(&self,bytes:u64)->Result<(),PackError>;
-    fn step(&self)->Result<(),PackError>{Ok(())}
+    fn schema(&self,producer:&RecordSpecProducer)->Result<RecordSpec,PackRefusal>{Ok((producer.ordinary)())}
+    fn charge(&self,bytes:u64)->Result<(),PackRefusal>;
+    fn step(&self)->Result<(),PackRefusal>{Ok(())}
     fn controlled(&self)->bool{false}
-    fn copy_text(&self,text:&str)->Result<String,PackError>{self.charge(text.len() as u64)?;let mut output=String::new();output.try_reserve_exact(text.len()).map_err(|_|PackError::LimitExceeded("decoded string allocation"))?;output.push_str(text);Ok(output)}
-    fn copy_bytes(&self,bytes:&[u8])->Result<Vec<u8>,PackError>{self.charge(bytes.len() as u64)?;let mut output=Vec::new();output.try_reserve_exact(bytes.len()).map_err(|_|PackError::LimitExceeded("decoded octet allocation"))?;output.extend_from_slice(bytes);Ok(output)}
-    fn octet_buffer(&self,count:usize)->Result<Vec<u8>,PackError>{self.charge(count as u64)?;let mut output=Vec::new();output.try_reserve_exact(count).map_err(|_|PackError::LimitExceeded("decoded octet allocation"))?;Ok(output)}
-    fn append_chunk(&self,_file:&crate::os_pack::format::PackFile<&[u8]>,_id:ChunkId,_verification:crate::os_pack::format::VerificationLevel,_output:&mut Vec<u8>)->Result<(),PackError>{Err(PackError::Schema("chunk owner has no controlled admission".into()))}
-    fn expression(&self,text:&str,_maximum_depth:u16)->Result<crate::os_dsl::schema::ExprValue,String>{crate::os_dsl::schema::parse_expr_text(text).map_err(|error|error.message)}
-    fn copy_utf8(&self,bytes:&[u8],offset:u64,what:&'static str)->Result<String,PackError>{let value=std::str::from_utf8(bytes).map_err(|_|PackError::Malformed{what,offset,detail:"invalid utf8".into()})?;self.copy_text(value)}
+    fn copy_text(&self,text:&str)->Result<String,PackRefusal>{self.charge(text.len() as u64)?;let mut output=String::new();output.try_reserve_exact(text.len()).map_err(|_|PackRefusal::LimitExceeded { kind: ValueRefusalKind::AllocationFailed, limit: "decoded string allocation" })?;output.push_str(text);Ok(output)}
+    fn copy_bytes(&self,bytes:&[u8])->Result<Vec<u8>,PackRefusal>{self.charge(bytes.len() as u64)?;let mut output=Vec::new();output.try_reserve_exact(bytes.len()).map_err(|_|PackRefusal::LimitExceeded { kind: ValueRefusalKind::AllocationFailed, limit: "decoded octet allocation" })?;output.extend_from_slice(bytes);Ok(output)}
+    fn octet_buffer(&self,count:usize)->Result<Vec<u8>,PackRefusal>{self.charge(count as u64)?;let mut output=Vec::new();output.try_reserve_exact(count).map_err(|_|PackRefusal::LimitExceeded { kind: ValueRefusalKind::AllocationFailed, limit: "decoded octet allocation" })?;Ok(output)}
+    fn append_chunk(&self,_file:&crate::os_pack::format::PackFile<&[u8]>,_id:ChunkId,_verification:crate::os_pack::format::VerificationLevel,_output:&mut Vec<u8>)->Result<(),PackRefusal>{Err(PackRefusal::from(ValueError::new(ValueRefusalKind::UnsupportedOwner,"chunk owner has no controlled admission")))}
+    fn expression(&self,text:&str,_maximum_depth:u16)->Result<semio_framework_dsl_record::ExprValue,PackRefusal>{semio_framework_dsl_record::parse_expr_text(text).map_err(PackRefusal::from)}
+    fn copy_utf8(&self,bytes:&[u8],offset:u64,what:&'static str)->Result<String,PackRefusal>{let value=std::str::from_utf8(bytes).map_err(|_|PackRefusal::Malformed{ kind: ValueRefusalKind::InvalidValue,what,offset,detail:"invalid utf8".into()})?;self.copy_text(value)}
 }
 
-impl MaterializationAdmission for ValueMaterialization {fn charge(&self,bytes:u64)->Result<(),PackError>{ValueMaterialization::charge(self,bytes)}}
+impl MaterializationAdmission for ValueMaterialization {fn charge(&self,bytes:u64)->Result<(),PackRefusal>{ValueMaterialization::charge(self,bytes)}}
 
-struct ControlledMaterialization<'a,'callback>{control:std::cell::RefCell<&'a mut protocol::value::native_decoding::NativeDecodeControl<'callback>>,maximum:u64}
+struct ControlledMaterialization<'a,'callback>{control:std::cell::RefCell<&'a mut semio_framework_value::native_decoding::NativeDecodeControl<'callback>>,maximum:u64}
 impl ControlledMaterialization<'_,'_>{
-    fn check(&self,bytes:u64)->Result<(),PackError>{if (self.control.borrow().owned_bytes() as u64).checked_add(bytes).filter(|next|*next<=self.maximum).is_none(){return Err(PackError::LimitExceeded("controlled native materialization exceeds max_total_alloc"));}Ok(())}
+    fn check(&self,bytes:u64)->Result<(),PackRefusal>{if (self.control.borrow().owned_bytes() as u64).checked_add(bytes).filter(|next|*next<=self.maximum).is_none(){return Err(PackRefusal::ValueRefusal(ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit,"controlled native materialization exceeds max_total_alloc")));}Ok(())}
 }
 impl MaterializationAdmission for ControlledMaterialization<'_,'_>{
-    fn schema(&self,producer:&RecordSpecProducer)->Result<RecordSpec,PackError>{let maximum=usize::try_from(self.maximum).unwrap_or(usize::MAX);self.control.borrow_mut().scoped_maximum(maximum,|control|producer.decode(control)).map_err(PackError::Schema)}
-    fn charge(&self,bytes:u64)->Result<(),PackError>{self.check(bytes)?;self.control.borrow_mut().charge(usize::try_from(bytes).map_err(|_|PackError::LimitExceeded("native allocation exceeds address space"))?).map_err(PackError::Schema)}
-    fn step(&self)->Result<(),PackError>{self.control.borrow_mut().step().map_err(PackError::Schema)}
+    fn schema(&self,producer:&RecordSpecProducer)->Result<RecordSpec,PackRefusal>{let maximum=usize::try_from(self.maximum).unwrap_or(usize::MAX);self.control.borrow_mut().scoped_maximum(maximum,|control|producer.decode(control)).map_err(PackRefusal::from)}
+    fn charge(&self,bytes:u64)->Result<(),PackRefusal>{self.check(bytes)?;self.control.borrow_mut().charge(usize::try_from(bytes).map_err(|_|PackRefusal::LimitExceeded { kind: ValueRefusalKind::OwnershipLimit, limit: "native allocation exceeds address space" })?).map_err(PackRefusal::from)}
+    fn step(&self)->Result<(),PackRefusal>{self.control.borrow_mut().step().map_err(PackRefusal::from)}
     fn controlled(&self)->bool{true}
-    fn copy_text(&self,text:&str)->Result<String,PackError>{self.check(text.len() as u64)?;self.control.borrow_mut().copy_text(text).map_err(PackError::Schema)}
-    fn copy_bytes(&self,bytes:&[u8])->Result<Vec<u8>,PackError>{self.check(bytes.len() as u64)?;self.control.borrow_mut().copy_bytes(bytes).map_err(PackError::Schema)}
-    fn octet_buffer(&self,count:usize)->Result<Vec<u8>,PackError>{self.check(count as u64)?;self.control.borrow_mut().allocate_vec(count).map_err(PackError::Schema)}
-    fn append_chunk(&self,file:&crate::os_pack::format::PackFile<&[u8]>,id:ChunkId,verification:crate::os_pack::format::VerificationLevel,output:&mut Vec<u8>)->Result<(),PackError>{self.control.borrow_mut().scoped_stage(|control|crate::os_io::resolve_ready(file.append_chunk_controlled(id,verification,output,control)))}
-    fn expression(&self,text:&str,maximum_depth:u16)->Result<crate::os_dsl::schema::ExprValue,String>{let maximum=usize::try_from(self.maximum).unwrap_or(usize::MAX);let mut limits=crate::os_dsl::diagnostic::Limits::default();limits.max_depth=usize::from(maximum_depth);self.control.borrow_mut().scoped_maximum(maximum,|control|crate::os_dsl::schema::parse_expr_text_controlled(text,&limits,control).map_err(|error|error.message))}
-    fn copy_utf8(&self,bytes:&[u8],_offset:u64,_what:&'static str)->Result<String,PackError>{self.check(bytes.len() as u64)?;let mut control=self.control.borrow_mut();if bytes.len()>control.maximum_bytes().saturating_sub(control.owned_bytes()){return Err(PackError::LimitExceeded("native text exceeds caller allowance"));}let value=control.borrow_text(bytes).map_err(PackError::Schema)?;control.copy_text(value).map_err(PackError::Schema)}
+    fn copy_text(&self,text:&str)->Result<String,PackRefusal>{self.check(text.len() as u64)?;self.control.borrow_mut().copy_text(text).map_err(PackRefusal::from)}
+    fn copy_bytes(&self,bytes:&[u8])->Result<Vec<u8>,PackRefusal>{self.check(bytes.len() as u64)?;self.control.borrow_mut().copy_bytes(bytes).map_err(PackRefusal::from)}
+    fn octet_buffer(&self,count:usize)->Result<Vec<u8>,PackRefusal>{self.check(count as u64)?;self.control.borrow_mut().allocate_vec(count).map_err(PackRefusal::from)}
+    fn append_chunk(&self,file:&crate::os_pack::format::PackFile<&[u8]>,id:ChunkId,verification:crate::os_pack::format::VerificationLevel,output:&mut Vec<u8>)->Result<(),PackRefusal>{self.control.borrow_mut().scoped_stage(|control|::semio_framework_async::poll::resolve_ready(file.append_chunk_controlled(id,verification,output,control)))}
+    fn expression(&self,text:&str,maximum_depth:u16)->Result<semio_framework_dsl_record::ExprValue,PackRefusal>{let maximum=usize::try_from(self.maximum).unwrap_or(usize::MAX);let mut limits=semio_framework_diagnostic::Limits::default();limits.max_depth=usize::from(maximum_depth);self.control.borrow_mut().scoped_maximum(maximum,|control|Ok::<_,ValueError>(semio_framework_dsl_record::parse_expr_text_controlled(text,&limits,control).map_err(PackRefusal::from))).map_err(PackRefusal::from)?}
+    fn copy_utf8(&self,bytes:&[u8],_offset:u64,_what:&'static str)->Result<String,PackRefusal>{self.check(bytes.len() as u64)?;let mut control=self.control.borrow_mut();if bytes.len()>control.maximum_bytes().saturating_sub(control.owned_bytes()){return Err(PackRefusal::ValueRefusal(ValueError::new(ValueRefusalKind::OwnershipLimit,"native text exceeds caller allowance")));}let value=control.borrow_text(bytes).map_err(PackRefusal::from)?;control.copy_text(value).map_err(PackRefusal::from)}
 }
 
-fn copy_decoded_string(value:&str,materialization:&dyn MaterializationAdmission)->Result<String,PackError>{materialization.copy_text(value)}
+fn copy_decoded_string(value:&str,materialization:&dyn MaterializationAdmission)->Result<String,PackRefusal>{materialization.copy_text(value)}
 
 impl DecCtx<'_> {
-    fn check_items(&self,n:u64)->Result<(),PackError>{if n>self.limits.max_items{return Err(PackError::LimitExceeded("item count exceeds max_items"));}Ok(())}
-    fn value_slots<T>(&self,count:u64)->Result<Vec<T>,PackError>{self.check_items(count)?;self.materialization.charge(count.checked_mul((size_of::<T>() as u64).max(64)).ok_or(PackError::LimitExceeded("wire value slot overflow"))?)?;let mut output=Vec::new();output.try_reserve_exact(usize::try_from(count).map_err(|_|PackError::LimitExceeded("wire value slot count"))?).map_err(|_|PackError::LimitExceeded("wire value slot allocation"))?;Ok(output)}
-    fn record_slots(&self,record:&mut RecordValue,count:u64)->Result<(),PackError>{self.check_items(count)?;self.materialization.charge(count.checked_mul((size_of::<(u16,FieldValue)>() as u64).max(64)).ok_or(PackError::LimitExceeded("record slot overflow"))?)?;record.fields.try_reserve(usize::try_from(count).map_err(|_|PackError::LimitExceeded("record slot count"))?).map_err(|_|PackError::LimitExceeded("record slot allocation"))?;Ok(())}
+    fn check_items(&self,n:u64)->Result<(),PackRefusal>{if n>self.limits.max_items{return Err(PackRefusal::LimitExceeded { kind: ValueRefusalKind::WorkLimit, limit: "item count exceeds max_items" });}Ok(())}
+    fn value_slots<T>(&self,count:u64)->Result<Vec<T>,PackRefusal>{self.check_items(count)?;self.materialization.charge(count.checked_mul(size_of::<T>() as u64).ok_or(PackRefusal::LimitExceeded { kind: ValueRefusalKind::OwnershipLimit, limit: "wire value slot overflow" })?)?;let mut output=Vec::new();output.try_reserve_exact(usize::try_from(count).map_err(|_|PackRefusal::LimitExceeded { kind: ValueRefusalKind::OwnershipLimit, limit: "wire value slot count" })?).map_err(|_|PackRefusal::LimitExceeded { kind: ValueRefusalKind::AllocationFailed, limit: "wire value slot allocation" })?;Ok(output)}
+    fn record_slots(&self,record:&mut RecordValue,count:u64)->Result<(),PackRefusal>{self.check_items(count)?;let count=usize::try_from(count).map_err(|_|PackRefusal::ValueRefusal(ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit,"record slot count exceeds address space")))?.max(record.fields.len());if count<=record.fields.capacity(){return Ok(());}let bytes=count.checked_mul(size_of::<(u16,FieldValue)>()).ok_or_else(||PackRefusal::ValueRefusal(ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit,"record slot storage overflow")))?;self.materialization.charge(bytes as u64)?;let mut entries=Vec::new();entries.try_reserve_exact(count).map_err(|_|PackRefusal::ValueRefusal(ValueError::new(semio_framework_value::ValueRefusalKind::AllocationFailed,"record slot allocation failed")))?;record.fields.replace_empty_slots(entries);Ok(())}
 }
 
-fn resolve_symref(ctx: &DecCtx<'_>, symref: u64) -> Result<String, PackError> {
+fn resolve_symref(ctx: &DecCtx<'_>, symref: u64) -> Result<String, PackRefusal> {
     let value = match &ctx.source {
         DecSource::File(pack_file) => pack_file.symbol(symref)?,
-        DecSource::Inline { symbols } => symbols.get(usize::try_from(symref).map_err(|_| PackError::LimitExceeded("symbol reference index"))?).map(String::as_str).ok_or_else(|| PackError::Malformed {
+        DecSource::Inline { symbols } => symbols.get(usize::try_from(symref).map_err(|_| PackRefusal::LimitExceeded { kind: ValueRefusalKind::InvalidValue, limit: "symbol reference index" })?).map(String::as_str).ok_or_else(|| PackRefusal::Malformed { kind: ValueRefusalKind::InvalidValue,
             what: "symref",
             offset: 0,
             detail: format!("symref {symref} out of range for inline table of {}", symbols.len()),
@@ -2039,15 +2035,15 @@ fn resolve_symref(ctx: &DecCtx<'_>, symref: u64) -> Result<String, PackError> {
 
 /// 📏️ Reads a `varint` length then that many raw bytes, rejecting an oversized length
 /// against `limits.max_segment_len` BEFORE allocating/slicing.
-fn read_len_prefixed_bytes<'b>(reader: &mut ByteReader<'b>, limits: &PackLimits) -> Result<&'b [u8], PackError> {
+fn read_len_prefixed_bytes<'b>(reader: &mut ByteReader<'b>, limits: &PackLimits) -> Result<&'b [u8], PackRefusal> {
     let len = reader.read_varint_u64()?;
     if len > limits.max_segment_len {
-        return Err(PackError::LimitExceeded("inline blob length exceeds max_segment_len"));
+        return Err(PackRefusal::LimitExceeded { kind: ValueRefusalKind::WorkLimit, limit: "inline blob length exceeds max_segment_len" });
     }
-    reader.read_bytes(usize::try_from(len).map_err(|_| PackError::LimitExceeded("inline blob byte length"))?)
+    reader.read_bytes(usize::try_from(len).map_err(|_| PackRefusal::LimitExceeded { kind: ValueRefusalKind::OwnershipLimit, limit: "inline blob byte length" })?)
 }
 
-fn read_inline_string(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<String, PackError> {
+fn read_inline_string(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<String, PackRefusal> {
     let bytes = read_len_prefixed_bytes(reader, &ctx.limits)?;
     // 🔁️ `reader.position()` is async now; `map_err`'s closure is sync (R10 residue shape 1), so
     // the position is read up front rather than awaited inside the closure.
@@ -2055,45 +2051,45 @@ fn read_inline_string(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<S
     ctx.materialization.copy_utf8(bytes,offset,"text")
 }
 
-fn read_inline_bytes(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<Vec<u8>, PackError> {
+fn read_inline_bytes(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<Vec<u8>, PackRefusal> {
     let bytes=read_len_prefixed_bytes(reader,&ctx.limits)?;
-    if bytes.len()as u64>ctx.limits.max_total_alloc{return Err(PackError::LimitExceeded("decoded octets exceed max_total_alloc"));}
+    if bytes.len()as u64>ctx.limits.max_total_alloc{return Err(PackRefusal::LimitExceeded { kind: ValueRefusalKind::OwnershipLimit, limit: "decoded octets exceed max_total_alloc" });}
     ctx.materialization.copy_bytes(bytes)
 }
 
 /// 🧱️ Reads `count` chunk ids and concatenates their decoded (and, per `verification`,
 /// integrity-checked) content via the open `PackFile`'s chunk table.
-fn read_chunked_bytes(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<Vec<u8>, PackError> {
+fn read_chunked_bytes(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<Vec<u8>, PackRefusal> {
     let count = reader.read_varint_u64()?;
     ctx.check_items(count)?;
     if ctx.materialization.controlled(){
-        let DecSource::File(file)=&ctx.source else{return Err(PackError::Malformed{what:"chunk_id",offset:reader.position() as u64,detail:"chunked octets require an owned chunk catalog".into()});};let mut sizes=reader.fork();let mut length=0u64;
-        for _ in 0..count{ctx.materialization.step()?;let raw_id=sizes.read_varint_u64()?;let id=u32::try_from(raw_id).map_err(|_|PackError::Malformed{what:"chunk_id",offset:sizes.position() as u64,detail:"chunk id exceeds u32".into()})?;let bytes=file.chunk_decoded_len(ChunkId(id))?;if bytes>ctx.limits.max_segment_len{return Err(PackError::LimitExceeded("chunk length exceeds max_segment_len"));}length=length.checked_add(bytes).filter(|length|*length<=ctx.limits.max_total_alloc).ok_or(PackError::LimitExceeded("controlled octet length exceeds caller limits"))?;}
-        let length=usize::try_from(length).map_err(|_|PackError::LimitExceeded("chunk octets exceed address space"))?;let mut output=ctx.materialization.octet_buffer(length)?;
-        for _ in 0..count{ctx.materialization.step()?;let id=u32::try_from(reader.read_varint_u64()?).map_err(|_|PackError::Malformed{what:"chunk_id",offset:reader.position() as u64,detail:"chunk id exceeds u32".into()})?;ctx.materialization.append_chunk(file,ChunkId(id),ctx.verification,&mut output)?;}
-        if output.len()!=length{return Err(PackError::Malformed{what:"chunks",offset:reader.position() as u64,detail:"chunk output differs from admitted length".into()});}return Ok(output);
+        let DecSource::File(file)=&ctx.source else{return Err(PackRefusal::Malformed{ kind: ValueRefusalKind::UnsupportedOwner,what:"chunk_id",offset:reader.position() as u64,detail:"chunked octets require an owned chunk catalog".into()});};let mut sizes=reader.fork();let mut length=0u64;
+        for _ in 0..count{ctx.materialization.step()?;let raw_id=sizes.read_varint_u64()?;let id=u32::try_from(raw_id).map_err(|_|PackRefusal::Malformed{ kind: ValueRefusalKind::InvalidValue,what:"chunk_id",offset:sizes.position() as u64,detail:"chunk id exceeds u32".into()})?;let bytes=file.chunk_decoded_len(ChunkId(id))?;if bytes>ctx.limits.max_segment_len{return Err(PackRefusal::LimitExceeded { kind: ValueRefusalKind::WorkLimit, limit: "chunk length exceeds max_segment_len" });}length=length.checked_add(bytes).filter(|length|*length<=ctx.limits.max_total_alloc).ok_or(PackRefusal::LimitExceeded { kind: ValueRefusalKind::OwnershipLimit, limit: "controlled octet length exceeds caller limits" })?;}
+        let length=usize::try_from(length).map_err(|_|PackRefusal::LimitExceeded { kind: ValueRefusalKind::OwnershipLimit, limit: "chunk octets exceed address space" })?;let mut output=ctx.materialization.octet_buffer(length)?;
+        for _ in 0..count{ctx.materialization.step()?;let id=u32::try_from(reader.read_varint_u64()?).map_err(|_|PackRefusal::Malformed{ kind: ValueRefusalKind::InvalidValue,what:"chunk_id",offset:reader.position() as u64,detail:"chunk id exceeds u32".into()})?;ctx.materialization.append_chunk(file,ChunkId(id),ctx.verification,&mut output)?;}
+        if output.len()!=length{return Err(PackRefusal::Malformed{ kind: ValueRefusalKind::InvariantViolated,what:"chunks",offset:reader.position() as u64,detail:"chunk output differs from admitted length".into()});}return Ok(output);
     }
     let mut out = Vec::new();
     for _ in 0..count {
         let id = reader.read_varint_u64()?;
         if id > u32::MAX as u64 {
-            return Err(PackError::Malformed { what: "chunk_id", offset: reader.position() as u64, detail: "chunk id exceeds u32".to_string() });
+            return Err(PackRefusal::Malformed { kind: ValueRefusalKind::InvalidValue, what: "chunk_id", offset: reader.position() as u64, detail: "chunk id exceeds u32".to_string() });
         }
         let piece = match &ctx.source {
             DecSource::File(pack_file) => {
                 let length=pack_file.chunk_decoded_len(ChunkId(id as u32))?;
-                let total=(out.len()as u64).checked_add(length).ok_or(PackError::LimitExceeded("decoded octet length overflow"))?;
-                if total>ctx.limits.max_total_alloc||usize::try_from(total).is_err(){return Err(PackError::LimitExceeded("decoded octets exceed max_total_alloc"));}
+                let total=(out.len()as u64).checked_add(length).ok_or(PackRefusal::LimitExceeded { kind: ValueRefusalKind::OwnershipLimit, limit: "decoded octet length overflow" })?;
+                if total>ctx.limits.max_total_alloc||usize::try_from(total).is_err(){return Err(PackRefusal::LimitExceeded { kind: ValueRefusalKind::OwnershipLimit, limit: "decoded octets exceed max_total_alloc" });}
                 ctx.materialization.charge(length)?;
-                crate::os_io::resolve_ready(pack_file.read_chunk(ChunkId(id as u32),ctx.verification))?
+                ::semio_framework_async::poll::resolve_ready(pack_file.read_chunk(ChunkId(id as u32),ctx.verification))?
             },
             DecSource::Inline { .. } => {
-                return Err(PackError::Malformed { what: "chunk_id", offset: reader.position() as u64, detail: "chunked bytes are not representable in a container-less record body".to_string() });
+                return Err(PackRefusal::Malformed { kind: ValueRefusalKind::UnsupportedOwner, what: "chunk_id", offset: reader.position() as u64, detail: "chunked bytes are not representable in a container-less record body".to_string() });
             }
         };
-        let next=out.len().checked_add(piece.len()).ok_or(PackError::LimitExceeded("decoded octet length overflow"))?;
-        if next as u64>ctx.limits.max_total_alloc{return Err(PackError::LimitExceeded("decoded octets exceed max_total_alloc"));}
-        out.try_reserve_exact(piece.len()).map_err(|_|PackError::LimitExceeded("decoded octet allocation"))?;
+        let next=out.len().checked_add(piece.len()).ok_or(PackRefusal::LimitExceeded { kind: ValueRefusalKind::OwnershipLimit, limit: "decoded octet length overflow" })?;
+        if next as u64>ctx.limits.max_total_alloc{return Err(PackRefusal::LimitExceeded { kind: ValueRefusalKind::OwnershipLimit, limit: "decoded octets exceed max_total_alloc" });}
+        out.try_reserve_exact(piece.len()).map_err(|_|PackRefusal::LimitExceeded { kind: ValueRefusalKind::AllocationFailed, limit: "decoded octet allocation" })?;
         out.extend_from_slice(&piece);
     }
     Ok(out)
@@ -2102,7 +2098,7 @@ fn read_chunked_bytes(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<V
 /// 📖️ Reads one self-describing string value (`TAG_STR` or `TAG_STR_INLINE`) — used for
 /// `Map`/object keys and `DslValue::String`, where the tag itself (not any external shape) is
 /// what disambiguates interned vs inline.
-fn decode_string(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<String, PackError> {
+fn decode_string(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<String, PackRefusal> {
     let tag = reader.read_u8()?;
     match tag {
         TAG_STR => {
@@ -2110,7 +2106,7 @@ fn decode_string(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<String
             resolve_symref(ctx, idx)
         }
         TAG_STR_INLINE => read_inline_string(reader, ctx),
-        other => Err(PackError::Malformed { what: "string", offset: reader.position() as u64, detail: format!("expected a string tag, found {other:#04x}") }),
+        other => Err(PackRefusal::Malformed { kind: ValueRefusalKind::InvalidValue, what: "string", offset: reader.position() as u64, detail: format!("expected a string tag, found {other:#04x}") }),
     }
 }
 
@@ -2119,24 +2115,24 @@ fn decode_string(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<String
 /// `ctx.unknown_field_ids`; when `ctx.preserve_unknown` is `false` it is still consumed (to stay
 /// byte-aligned) but dropped from the returned `RecordValue`. Every `spec` field not seen on the
 /// wire is inserted as `Absent` — the decode-side half of canonical mode's "omit `Absent`" rule.
-fn decode_record_fields(reader: &mut ByteReader<'_>, spec: Option<&RecordSpec>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<RecordValue, PackError> {
+fn decode_record_fields(reader: &mut ByteReader<'_>, spec: Option<&RecordSpec>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<RecordValue, PackRefusal> {
     ctx.materialization.step()?;
     check_depth(ctx.limits.max_depth, depth)?;
     let count = reader.read_varint_u64()?;
     ctx.check_items(count)?;
     let mut record = RecordValue::default();
-    ctx.record_slots(&mut record, count.max(spec.map_or(0, |spec| spec.fields.len() as u64)))?;
+    ctx.record_slots(&mut record,count)?;
     for _ in 0..count {
         let id_raw = reader.read_varint_u64()?;
         if id_raw > u16::MAX as u64 {
-            return Err(PackError::Malformed { what: "field_id", offset: reader.position() as u64, detail: "field id exceeds u16".to_string() });
+            return Err(PackRefusal::Malformed { kind: ValueRefusalKind::InvalidValue, what: "field_id", offset: reader.position() as u64, detail: "field id exceeds u16".to_string() });
         }
         let id = id_raw as u16;
         let field_shape = spec.and_then(|s| s.fields.iter().find(|f| f.id == id)).map(|f| &f.shape);
         let value = decode_value(reader, field_shape, ctx, depth + 1)?;
         if field_shape.is_none() {
             ctx.materialization.charge(8)?;
-            ctx.unknown_field_ids.try_reserve_exact(1).map_err(|_| PackError::LimitExceeded("unknown field report allocation"))?;
+            ctx.unknown_field_ids.try_reserve_exact(1).map_err(|_| PackRefusal::LimitExceeded { kind: ValueRefusalKind::AllocationFailed, limit: "unknown field report allocation" })?;
             ctx.unknown_field_ids.push(id);
             if ctx.preserve_unknown {
                 record.fields.insert(id, value);
@@ -2146,8 +2142,11 @@ fn decode_record_fields(reader: &mut ByteReader<'_>, spec: Option<&RecordSpec>, 
         }
     }
     if let Some(spec) = spec {
+        let missing=spec.fields.iter().filter(|field|!record.fields.contains_key(&field.id)).count();
+        let count=record.fields.len().checked_add(missing).ok_or_else(||PackRefusal::ValueRefusal(ValueError::new(ValueRefusalKind::OwnershipLimit,"native record default storage overflow")))?;
+        ctx.record_slots(&mut record,count as u64)?;
         for field in &spec.fields {
-            record.fields.entry(field.id).or_insert(FieldValue::Absent);
+            if !record.fields.contains_key(&field.id){record.fields.insert(field.id,FieldValue::Absent);}
         }
     }
     Ok(record)
@@ -2160,7 +2159,7 @@ fn decode_record_fields(reader: &mut ByteReader<'_>, spec: Option<&RecordSpec>, 
 /// which is what makes unknown-field decode possible without the original schema.
 // 🔁️ Mutually recursive with `decode_record_fields`/`decode_seq_body`/`decode_map` (and directly
 // self-recursive for `TAG_BLOCK`) — same `Box::pin(...).await` requirement as `encode_value`.
-fn decode_value(reader: &mut ByteReader<'_>, shape: Option<&Shape>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<FieldValue, PackError> {
+fn decode_value(reader: &mut ByteReader<'_>, shape: Option<&Shape>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<FieldValue, PackRefusal> {
     ctx.materialization.step()?;
     check_depth(ctx.limits.max_depth, depth)?;
     let tag = reader.read_u8()?;
@@ -2207,18 +2206,18 @@ fn decode_value(reader: &mut ByteReader<'_>, shape: Option<&Shape>, ctx: &mut De
             // 🔁️ Same closure constraint as `read_inline_string`: read the position before the
             // sync `map_err` closure, don't `.await` inside it.
             let offset = reader.position() as u64;
-            ctx.materialization.expression(&text,ctx.limits.max_depth).map(FieldValue::Expr).map_err(|detail| PackError::Malformed { what: "expr", offset, detail })
+            ctx.materialization.expression(&text,ctx.limits.max_depth).map(FieldValue::Expr)
         }
         TAG_TABLE_SOA => Ok(FieldValue::List(decode_table_soa(reader, table_spec_of(shape), ctx, depth)?)),
         TAG_PACKED_F64 => decode_packed_f64_body(reader, is_tuple_shape(shape), ctx),
         TAG_PACKED_VARINT => decode_packed_varint_body(reader, elem_shape_of(shape).or(shape.filter(|s| !matches!(s, Shape::Tuple(_, _)))), is_tuple_shape(shape), ctx),
-        TAG_NULL => Err(PackError::Malformed { what: "wire_tag", offset: reader.position() as u64, detail: "TAG_NULL is only valid inside a DslValue".to_string() }),
-        other => Err(PackError::Malformed { what: "wire_tag", offset: reader.position() as u64, detail: format!("unrecognized tag {other:#04x}") }),
+        TAG_NULL => Err(PackRefusal::Malformed { kind: ValueRefusalKind::InvalidValue, what: "wire_tag", offset: reader.position() as u64, detail: "TAG_NULL is only valid inside a DslValue".to_string() }),
+        other => Err(PackRefusal::Malformed { kind: ValueRefusalKind::InvalidValue, what: "wire_tag", offset: reader.position() as u64, detail: format!("unrecognized tag {other:#04x}") }),
     }
 }
 
 /// 📚️ Decodes a plain (non-packed) `Tuple`/`List` body: `count, values*`.
-fn decode_seq_body(reader: &mut ByteReader<'_>, elem_shape: Option<&Shape>, is_tuple: bool, ctx: &mut DecCtx<'_>, depth: u16) -> Result<FieldValue, PackError> {
+fn decode_seq_body(reader: &mut ByteReader<'_>, elem_shape: Option<&Shape>, is_tuple: bool, ctx: &mut DecCtx<'_>, depth: u16) -> Result<FieldValue, PackRefusal> {
     let count = reader.read_varint_u64()?;
     ctx.check_items(count)?;
     let mut items = ctx.value_slots(count)?;
@@ -2228,7 +2227,7 @@ fn decode_seq_body(reader: &mut ByteReader<'_>, elem_shape: Option<&Shape>, is_t
     Ok(if is_tuple { FieldValue::Tuple(items) } else { FieldValue::List(items) })
 }
 
-fn decode_packed_f64_body(reader: &mut ByteReader<'_>, is_tuple: bool, ctx: &DecCtx<'_>) -> Result<FieldValue, PackError> {
+fn decode_packed_f64_body(reader: &mut ByteReader<'_>, is_tuple: bool, ctx: &DecCtx<'_>) -> Result<FieldValue, PackRefusal> {
     let count = reader.read_varint_u64()?;
     let mut items = ctx.value_slots(count)?;
     for _ in 0..count {
@@ -2242,7 +2241,7 @@ fn decode_packed_f64_body(reader: &mut ByteReader<'_>, is_tuple: bool, ctx: &Dec
 /// `Tuple(..)` element shape, when known) picks the reconstruction type; unknown context always
 /// defaults to `Int`, which is also what makes an unknown field's homogeneous-`Int` list
 /// re-encode to the exact same bytes (round-trip preserved even without the original schema).
-fn decode_packed_varint_body(reader: &mut ByteReader<'_>, elem_shape: Option<&Shape>, is_tuple: bool, ctx: &DecCtx<'_>) -> Result<FieldValue, PackError> {
+fn decode_packed_varint_body(reader: &mut ByteReader<'_>, elem_shape: Option<&Shape>, is_tuple: bool, ctx: &DecCtx<'_>) -> Result<FieldValue, PackRefusal> {
     let count = reader.read_varint_u64()?;
     let mut items = ctx.value_slots(count)?;
     for _ in 0..count {
@@ -2251,13 +2250,13 @@ fn decode_packed_varint_body(reader: &mut ByteReader<'_>, elem_shape: Option<&Sh
         let fv = match elem_shape {
             Some(Shape::UInt) => {
                 if v < 0 {
-                    return Err(PackError::Malformed { what: "packed_varint", offset: reader.position() as u64, detail: "negative value under UInt shape".to_string() });
+                    return Err(PackRefusal::Malformed { kind: ValueRefusalKind::InvalidValue, what: "packed_varint", offset: reader.position() as u64, detail: "negative value under UInt shape".to_string() });
                 }
                 FieldValue::UInt(v as u64)
             }
             Some(Shape::Enum(_)) => {
                 if v < 0 {
-                    return Err(PackError::Malformed { what: "packed_varint", offset: reader.position() as u64, detail: "negative value under Enum shape".to_string() });
+                    return Err(PackRefusal::Malformed { kind: ValueRefusalKind::InvalidValue, what: "packed_varint", offset: reader.position() as u64, detail: "negative value under Enum shape".to_string() });
                 }
                 FieldValue::Enum(v as u32)
             }
@@ -2268,7 +2267,7 @@ fn decode_packed_varint_body(reader: &mut ByteReader<'_>, elem_shape: Option<&Sh
     Ok(if is_tuple { FieldValue::Tuple(items) } else { FieldValue::List(items) })
 }
 
-fn decode_map(reader: &mut ByteReader<'_>, inner_shape: Option<&Shape>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<FieldValue, PackError> {
+fn decode_map(reader: &mut ByteReader<'_>, inner_shape: Option<&Shape>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<FieldValue, PackRefusal> {
     check_depth(ctx.limits.max_depth, depth)?;
     let count = reader.read_varint_u64()?;
     ctx.check_items(count)?;
@@ -2281,7 +2280,7 @@ fn decode_map(reader: &mut ByteReader<'_>, inner_shape: Option<&Shape>, ctx: &mu
     Ok(FieldValue::Map(entries))
 }
 
-fn decode_statements(reader: &mut ByteReader<'_>, variants: Option<&Vec<(String, RecordSpecProducer)>>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<FieldValue, PackError> {
+fn decode_statements(reader: &mut ByteReader<'_>, variants: Option<&Vec<(String, RecordSpecProducer)>>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<FieldValue, PackRefusal> {
     check_depth(ctx.limits.max_depth, depth)?;
     let count = reader.read_varint_u64()?;
     ctx.check_items(count)?;
@@ -2297,7 +2296,7 @@ fn decode_statements(reader: &mut ByteReader<'_>, variants: Option<&Vec<(String,
 }
 
 // 🔁️ Self-recursive (`TAG_LIST`/`TAG_MAP` arms) — boxed for the same reason as `decode_value`.
-fn decode_dsl_value(reader: &mut ByteReader<'_>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<DslValue, PackError> {
+fn decode_dsl_value(reader: &mut ByteReader<'_>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<DslValue, PackRefusal> {
     ctx.materialization.step()?;
     check_depth(ctx.limits.max_depth, depth)?;
     let tag = reader.read_u8()?;
@@ -2333,11 +2332,11 @@ fn decode_dsl_value(reader: &mut ByteReader<'_>, ctx: &mut DecCtx<'_>, depth: u1
             }
             Ok(DslValue::Object(entries))
         }
-        other => Err(PackError::Malformed { what: "dsl_value", offset: reader.position() as u64, detail: format!("unexpected tag {other:#04x}") }),
+        other => Err(PackRefusal::Malformed { kind: ValueRefusalKind::InvalidValue, what: "dsl_value", offset: reader.position() as u64, detail: format!("unexpected tag {other:#04x}") }),
     }
 }
 
-fn decode_wire(reader: &mut ByteReader<'_>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<WireValue, PackError> {
+fn decode_wire(reader: &mut ByteReader<'_>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<WireValue, PackRefusal> {
     let presence = reader.read_u8()?;
     let from = decode_wire_node(reader, ctx)?;
     let edge = if presence & 0b01 != 0 {
@@ -2359,7 +2358,7 @@ fn decode_wire(reader: &mut ByteReader<'_>, ctx: &mut DecCtx<'_>, depth: u16) ->
     Ok(WireValue { from, edge, edge_label, properties })
 }
 
-fn decode_wire_node(reader: &mut ByteReader<'_>, ctx: &mut DecCtx<'_>) -> Result<WireNode, PackError> {
+fn decode_wire_node(reader: &mut ByteReader<'_>, ctx: &mut DecCtx<'_>) -> Result<WireNode, PackRefusal> {
     ctx.materialization.step()?;
     let presence = reader.read_u8()?;
     let id = decode_string(reader, ctx)?;
@@ -2399,7 +2398,7 @@ fn elem_tag_for_shape(shape: &Shape) -> u8 {
 /// bitmap unconditionally (simpler than compacting individual bits). `Text` columns are always
 /// interned (forced symrefs, matching `build_symbols`'s pre-pass); every other shape falls back to
 /// self-describing per-present-row values.
-fn encode_table(ctx: &mut EncCtx<'_>, spec_fn: RecordSpecProducer, items: &[FieldValue], depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
+fn encode_table(ctx: &mut EncCtx<'_>, spec_fn: RecordSpecProducer, items: &[FieldValue], depth: u16, out: &mut Vec<u8>) -> Result<(), PackRefusal> {
     check_depth(ctx.options.limits.max_depth, depth)?;
     let element_spec = (spec_fn.ordinary)();
     let mut columns: Vec<&FieldSpec> = element_spec.fields.iter().collect();
@@ -2521,21 +2520,20 @@ fn encode_table(ctx: &mut EncCtx<'_>, spec_fn: RecordSpecProducer, items: &[Fiel
 /// know the table's element `RecordSpec` (`spec_fn` is `Some`), it is threaded into the
 /// fallback (non-primitive) column branch so a nested `Record` column's own `Absent` sub-fields
 /// get backfilled correctly instead of merely reflecting what was present on the wire.
-fn decode_table_soa(reader: &mut ByteReader<'_>, spec_fn: Option<RecordSpecProducer>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<Vec<FieldValue>, PackError> {
+fn decode_table_soa(reader: &mut ByteReader<'_>, spec_fn: Option<RecordSpecProducer>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<Vec<FieldValue>, PackRefusal> {
     check_depth(ctx.limits.max_depth, depth)?;
     let element_spec = spec_fn.map(|producer|ctx.materialization.schema(&producer)).transpose()?;
     let row_count_raw = reader.read_varint_u64()?;
     ctx.check_items(row_count_raw)?;
     let col_count = reader.read_varint_u64()?;
     ctx.check_items(col_count)?;
-    let row_count = usize::try_from(row_count_raw).map_err(|_| PackError::LimitExceeded("table row count"))?;
-    let column_count = usize::try_from(col_count).map_err(|_| PackError::LimitExceeded("table column count"))?;
-    ctx.materialization.charge(row_count_raw.checked_mul(col_count).and_then(|count| count.checked_mul((size_of::<(u16, FieldValue)>() as u64).max(64))).ok_or(PackError::LimitExceeded("table field storage overflow"))?)?;
+    let row_count = usize::try_from(row_count_raw).map_err(|_| PackRefusal::LimitExceeded { kind: ValueRefusalKind::OwnershipLimit, limit: "table row count" })?;
+
     let mut values = ctx.value_slots(row_count_raw)?;
     let mut rows: Vec<RecordValue> = ctx.value_slots(row_count_raw)?;
     for _ in 0..row_count {
         let mut row = RecordValue::default();
-        row.fields.try_reserve(column_count).map_err(|_| PackError::LimitExceeded("table field allocation"))?;
+        ctx.record_slots(&mut row,col_count)?;
         rows.push(row);
     }
     for _ in 0..col_count {
@@ -2616,7 +2614,7 @@ fn decode_table_soa(reader: &mut ByteReader<'_>, spec_fn: Option<RecordSpecProdu
         for i in 0..row_count {
                     ctx.materialization.step()?;
             if !present(i) {
-                rows[i].fields.entry(field_id).or_insert(FieldValue::Absent);
+                if !rows[i].fields.contains_key(&field_id){rows[i].fields.insert(field_id,FieldValue::Absent);}
             }
         }
     }
@@ -2908,13 +2906,13 @@ impl PackSchemaGraph {
     }
 
     /// 🧮️ Hashes the owned graph incrementally without copying a canonical-byte carrier.
-    pub fn hash_controlled<C:crate::os_dsl::NativeSchemaControl>(&self,control:&mut C)->Result<[u8;32],PackError>{controlled_schema::hash_graph(self,control).map_err(PackError::Schema)}
+    pub fn hash_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(&self,control:&mut C)->Result<[u8;32],PackRefusal>{controlled_schema::hash_graph(self,control).map_err(PackRefusal::from)}
 
     /// 🗺️ The language-neutral JSON form of this graph (`🧫️fixtures/🔑️schema-hash`): one array
     /// of field objects per record, each shape `{ "kind": .., payload }`, so any language can
     /// recompute [`Self::canonical_bytes`] and the hash from it.
-    pub fn to_json(&self) -> crate::os_pack::json::Value {
-        use crate::os_pack::json::{object, Value};
+    pub fn to_json(&self) -> semio_framework_pack_json::Value {
+        use semio_framework_pack_json::{object, Value};
         fn shape(value: &PackSchemaShape) -> Value {
             let kind = |name: &str, payload: Vec<(&str, Value)>| object(std::iter::once(("kind".to_string(), Value::from(name))).chain(payload.into_iter().map(|(key, value)| (key.to_string(), value))));
             let edge = |index: &u32| Value::from(*index);
@@ -2999,7 +2997,7 @@ pub fn schema_hash(spec: &RecordSpec) -> [u8; 32] {
     *semio_framework_hash::hash(&PackSchemaGraph::of(spec).canonical_bytes()).as_bytes()
 }
 /// 🧮️ Preserves canonical graph identity under the declared metadata factories and one ownership ceiling.
-pub fn schema_hash_controlled<C:crate::os_dsl::NativeSchemaControl>(spec:&RecordSpec,control:&mut C)->Result<[u8;32],PackError>{controlled_schema::hash(spec,control).map_err(PackError::Schema)}
+pub fn schema_hash_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(spec:&RecordSpec,control:&mut C)->Result<[u8;32],PackRefusal>{controlled_schema::hash(spec,control).map_err(PackRefusal::from)}
 
 //#endregion 🔖️SchemaHash
 
@@ -3055,7 +3053,7 @@ pub struct DecodeReport {
 /// `RecordValue` through. Pre-pass computes the deterministic symbol table, then writes
 /// `Symbols`, one-or-more `Document` frames (split at `options.frame_size`), any `Bytes64` chunks
 /// produced along the way, and finally the `Manifest`/`End`/`Footer` via `PackWriter::finish`.
-pub fn encode_document(spec: &RecordSpec, record: &RecordValue, options: &EncodeOptions) -> Result<Vec<u8>, PackError> {
+pub fn encode_document(spec: &RecordSpec, record: &RecordValue, options: &EncodeOptions) -> Result<Vec<u8>, PackRefusal> {
     let symbols = build_symbols(spec, record);
     let mut symbol_index = HashMap::with_capacity(symbols.len());
     for (i, s) in symbols.iter().enumerate() {
@@ -3063,10 +3061,10 @@ pub fn encode_document(spec: &RecordSpec, record: &RecordValue, options: &Encode
     }
 
     let write_options = crate::os_pack::format::WriteOptions { required_flags: 0, optional_flags: if options.canonical { crate::os_pack::format::OPTIONAL_CANONICAL } else { 0 }, codec: options.codec };
-    let mut writer = crate::os_io::resolve_ready(crate::os_pack::format::PackWriter::begin(Vec::new(), &write_options))?;
+    let mut writer = ::semio_framework_async::poll::resolve_ready(crate::os_pack::format::PackWriter::begin(Vec::new(), &write_options))?;
 
-    let symbols_payload = crate::os_io::resolve_ready(crate::os_pack::format::encode_symbols(&symbols));
-    crate::os_io::resolve_ready(writer.write_segment(crate::KIND_SYMBOLS, &symbols_payload))?;
+    let symbols_payload = ::semio_framework_async::poll::resolve_ready(crate::os_pack::format::encode_symbols(&symbols));
+    ::semio_framework_async::poll::resolve_ready(writer.write_segment(crate::os_pack::KIND_SYMBOLS, &symbols_payload))?;
 
     let field_count = record.fields.values().filter(|v| !matches!(v, FieldValue::Absent)).count() as u64;
     let doc_payload = {
@@ -3075,13 +3073,13 @@ pub fn encode_document(spec: &RecordSpec, record: &RecordValue, options: &Encode
     };
 
     let frame_size = options.frame_size.max(1) as usize;
-    let doc_start = crate::os_io::resolve_ready(writer.position());
+    let doc_start = ::semio_framework_async::poll::resolve_ready(writer.position());
     let mut frame_count: u64 = 0;
     for frame in doc_payload.chunks(frame_size) {
-        crate::os_io::resolve_ready(writer.write_segment(crate::KIND_DOCUMENT, frame))?;
+        ::semio_framework_async::poll::resolve_ready(writer.write_segment(crate::os_pack::KIND_DOCUMENT, frame))?;
         frame_count += 1;
     }
-    let doc_end = crate::os_io::resolve_ready(writer.position());
+    let doc_end = ::semio_framework_async::poll::resolve_ready(writer.position());
 
     let manifest = crate::os_pack::format::Manifest {
         schema_name: String::new(),
@@ -3096,7 +3094,7 @@ pub fn encode_document(spec: &RecordSpec, record: &RecordValue, options: &Encode
         chunk_count: 0,
         symbol_count: symbols.len() as u64,
     };
-    crate::os_io::resolve_ready(writer.finish(&manifest))
+    ::semio_framework_async::poll::resolve_ready(writer.finish(&manifest))
 }
 
 /// 🚪️ The single entry point every other `pack_*`/`vcs`/`dsl_derive` crate decodes a
@@ -3104,15 +3102,15 @@ pub fn encode_document(spec: &RecordSpec, record: &RecordValue, options: &Encode
 /// `Document` frame(s), then decodes the top-level record body against `spec` — self-describing
 /// enough that any field id `spec` doesn't recognize still decodes and is preserved (subject to
 /// `options.preserve_unknown`) and reported.
-pub fn decode_document(bytes: &[u8], spec: &RecordSpec, options: &DecodeOptions) -> Result<(RecordValue, DecodeReport), PackError> {
-    let pack_file = crate::os_io::resolve_ready(crate::os_pack::format::PackFile::open_manifest(bytes, &options.limits, options.verification))?;
-    let manifest = pack_file.manifest().ok_or_else(|| PackError::Schema("manifest not loaded".to_string()))?;
+pub fn decode_document(bytes: &[u8], spec: &RecordSpec, options: &DecodeOptions) -> Result<(RecordValue, DecodeReport), PackRefusal> {
+    let pack_file = ::semio_framework_async::poll::resolve_ready(crate::os_pack::format::PackFile::open_manifest(bytes, &options.limits, options.verification))?;
+    let manifest = pack_file.manifest().ok_or_else(|| PackRefusal::from(ValueError::new(ValueRefusalKind::InvariantViolated,"manifest not loaded")))?;
     let schema_drift = manifest.schema_hash != schema_hash(spec);
-    let body = crate::os_io::resolve_ready(pack_file.body_bytes(options.verification))?;
+    let body = ::semio_framework_async::poll::resolve_ready(pack_file.body_bytes(options.verification))?;
 
     let mut reader = ByteReader::new(&body);
-    let retained=pack_file.owned_catalog_bytes()?.checked_add(body.capacity() as u64).ok_or(PackError::LimitExceeded("document materialization allocation overflow"))?;
-    if retained>options.limits.max_total_alloc{return Err(PackError::LimitExceeded("document materialization exceeds max_total_alloc"));}
+    let retained=pack_file.owned_catalog_bytes()?.checked_add(body.capacity() as u64).ok_or(PackRefusal::LimitExceeded { kind: ValueRefusalKind::OwnershipLimit, limit: "document materialization allocation overflow" })?;
+    if retained>options.limits.max_total_alloc{return Err(PackRefusal::LimitExceeded { kind: ValueRefusalKind::OwnershipLimit, limit: "document materialization exceeds max_total_alloc" });}
     let budget=ValueMaterialization{used:std::cell::Cell::new(retained),maximum:options.limits.max_total_alloc};
     let mut dec_ctx = DecCtx { source: DecSource::File(&pack_file), limits: options.limits.clone(), verification: options.verification, preserve_unknown: options.preserve_unknown, unknown_field_ids: Vec::new(), materialization: &budget };
     let record = decode_record_fields(&mut reader, Some(spec), &mut dec_ctx, 0)?;
@@ -3122,14 +3120,14 @@ pub fn decode_document(bytes: &[u8], spec: &RecordSpec, options: &DecodeOptions)
 }
 
 /// 🛬️ Controls catalog/source/inflation/primitive ownership using the caller's typed-construction budget.
-pub fn decode_document_controlled(bytes:&[u8],spec:&RecordSpec,options:&DecodeOptions,control:&mut protocol::value::native_decoding::NativeDecodeControl<'_>)->Result<(RecordValue,DecodeReport),PackError>{
-    let file=crate::os_io::resolve_ready(crate::os_pack::format::PackFile::open_manifest_controlled(bytes,&options.limits,options.verification,control))?;
-    let manifest=file.manifest().ok_or(PackError::Schema("controlled manifest absent".into()))?;let schema_drift=manifest.schema_hash!=schema_hash_controlled(spec,control)?;
-    let body=crate::os_io::resolve_ready(file.body_bytes_controlled(options.verification,control))?;
-    control.begin_stage(0).map_err(PackError::Schema)?;let materialization=ControlledMaterialization{control:std::cell::RefCell::new(control),maximum:options.limits.max_total_alloc};
+pub fn decode_document_controlled(bytes:&[u8],spec:&RecordSpec,options:&DecodeOptions,control:&mut semio_framework_value::native_decoding::NativeDecodeControl<'_>)->Result<(RecordValue,DecodeReport),PackRefusal>{
+    let file=::semio_framework_async::poll::resolve_ready(crate::os_pack::format::PackFile::open_manifest_controlled(bytes,&options.limits,options.verification,control))?;
+    let manifest=file.manifest().ok_or_else(||PackRefusal::from(ValueError::new(ValueRefusalKind::InvariantViolated,"controlled manifest absent")))?;let schema_drift=manifest.schema_hash!=schema_hash_controlled(spec,control)?;
+    let body=::semio_framework_async::poll::resolve_ready(file.body_bytes_controlled(options.verification,control))?;
+    control.begin_stage(0).map_err(PackRefusal::from)?;let materialization=ControlledMaterialization{control:std::cell::RefCell::new(control),maximum:options.limits.max_total_alloc};
     let mut context=DecCtx{source:DecSource::File(&file),limits:options.limits.clone(),verification:options.verification,preserve_unknown:options.preserve_unknown,unknown_field_ids:Vec::new(),materialization:&materialization};let mut reader=ByteReader::new(&body);
     let record=decode_record_fields(&mut reader,Some(spec),&mut context,0)?;
-    if reader.remaining()!=0{return Err(PackError::Malformed{what:"document",offset:reader.position() as u64,detail:"trailing document body bytes".into()});}
+    if reader.remaining()!=0{return Err(PackRefusal::Malformed{ kind: ValueRefusalKind::InvalidValue,what:"document",offset:reader.position() as u64,detail:"trailing document body bytes".into()});}
     Ok((record,DecodeReport{unknown_field_ids:context.unknown_field_ids,unknown_segments:Vec::new(),schema_drift,verified:options.verification}))
 }
 
@@ -3138,7 +3136,7 @@ pub fn decode_document_controlled(bytes:&[u8],spec:&RecordSpec,options:&DecodeOp
 /// manifest, or footer, and never any `Bytes64` chunking (oversized bytes stay inline via
 /// `TAG_BYTES`). Deterministic by the same purity rules as the document path: byte-identical
 /// output for equal `(spec, record)` regardless of map iteration order.
-pub fn encode_record_body(spec: &RecordSpec, record: &RecordValue, options: &EncodeOptions) -> Result<Vec<u8>, PackError> {
+pub fn encode_record_body(spec: &RecordSpec, record: &RecordValue, options: &EncodeOptions) -> Result<Vec<u8>, PackRefusal> {
     let symbols = build_symbols(spec, record);
     let mut symbol_index = HashMap::with_capacity(symbols.len());
     for (i, s) in symbols.iter().enumerate() {
@@ -3153,7 +3151,7 @@ pub fn encode_record_body(spec: &RecordSpec, record: &RecordValue, options: &Enc
     let mut body_options = options.clone();
     body_options.chunk_threshold = u64::MAX;
     let write_options = crate::os_pack::format::WriteOptions { required_flags: 0, optional_flags: 0, codec: CodecId(0) };
-    let mut writer = crate::os_io::resolve_ready(crate::os_pack::format::PackWriter::begin(Vec::new(), &write_options))?;
+    let mut writer = ::semio_framework_async::poll::resolve_ready(crate::os_pack::format::PackWriter::begin(Vec::new(), &write_options))?;
     let fields = {
         let mut enc_ctx = EncCtx { symbol_index, writer: &mut writer, options: &body_options };
         encode_record_fields(&mut enc_ctx, Some(spec), record, 0)?
@@ -3165,85 +3163,89 @@ pub fn encode_record_body(spec: &RecordSpec, record: &RecordValue, options: &Enc
 /// 🎯️ Decodes an [`encode_record_body`] payload against `spec`. Unknown fields decode,
 /// are preserved (subject to `options.preserve_unknown`), and are reported exactly like the
 /// document path; a `TAG_BYTES_CHUNKED` value is malformed here by construction.
-pub fn decode_record_body(bytes: &[u8], spec: &RecordSpec, options: &DecodeOptions) -> Result<(RecordValue, DecodeReport), PackError> {
+pub fn decode_record_body(bytes: &[u8], spec: &RecordSpec, options: &DecodeOptions) -> Result<(RecordValue, DecodeReport), PackRefusal> {
     decode_record_body_inner(bytes, spec, options, false)
 }
 
 /// 🔒️ Decodes exactly one terminal record body, rejecting unknown fields and trailing bytes.
-pub fn decode_record_body_exact(bytes: &[u8], spec: &RecordSpec, options: &DecodeOptions) -> Result<RecordValue, PackError> {
+pub fn decode_record_body_exact(bytes: &[u8], spec: &RecordSpec, options: &DecodeOptions) -> Result<RecordValue, PackRefusal> {
     decode_record_body_inner(bytes, spec, options, true).map(|(record, _)| record)
 }
 
 /// 🛬️ Parses a terminal container-less record under the same control used by its typed constructor.
-pub fn decode_record_body_exact_controlled(bytes:&[u8],spec:&RecordSpec,options:&DecodeOptions,control:&mut protocol::value::native_decoding::NativeDecodeControl<'_>)->Result<RecordValue,PackError>{
-    if bytes.len() as u64>options.limits.max_file_len{return Err(PackError::LimitExceeded("record body exceeds max_file_len"));}
-    control.begin_stage(0).map_err(PackError::Schema)?;
+pub fn decode_record_body_exact_controlled(bytes:&[u8],spec:&RecordSpec,options:&DecodeOptions,control:&mut semio_framework_value::native_decoding::NativeDecodeControl<'_>)->Result<RecordValue,PackRefusal>{
+    if bytes.len() as u64>options.limits.max_file_len{return Err(PackRefusal::LimitExceeded { kind: ValueRefusalKind::WorkLimit, limit: "record body exceeds max_file_len" });}
+    control.begin_stage(0).map_err(PackRefusal::from)?;
     let mut reader=ByteReader::new(bytes);
     let materialization=ControlledMaterialization{control:std::cell::RefCell::new(control),maximum:options.limits.max_total_alloc};
     let symbols=decode_inline_symbols(&mut reader,&options.limits,&materialization)?;
     let mut ctx=DecCtx{source:DecSource::Inline{symbols},limits:options.limits.clone(),verification:options.verification,preserve_unknown:false,unknown_field_ids:Vec::new(),materialization:&materialization};
     let record=decode_record_fields(&mut reader,Some(spec),&mut ctx,0)?;
-    if reader.position()!=bytes.len(){return Err(PackError::Malformed{what:"record body",offset:reader.position() as u64,detail:"trailing bytes after terminal record".into()});}
-    if !ctx.unknown_field_ids.is_empty(){return Err(PackError::Malformed{what:"record body",offset:reader.position() as u64,detail:"unknown terminal record fields".into()});}
+    if reader.position()!=bytes.len(){return Err(PackRefusal::Malformed{ kind: ValueRefusalKind::InvalidValue,what:"record body",offset:reader.position() as u64,detail:"trailing bytes after terminal record".into()});}
+    if !ctx.unknown_field_ids.is_empty(){return Err(PackRefusal::Malformed{ kind: ValueRefusalKind::InvalidValue,what:"record body",offset:reader.position() as u64,detail:"unknown terminal record fields".into()});}
     Ok(record)
 }
 
-fn decode_inline_symbols(reader: &mut ByteReader<'_>, limits: &PackLimits, materialization: &dyn MaterializationAdmission) -> Result<Vec<String>, PackError> {
+fn decode_inline_symbols(reader: &mut ByteReader<'_>, limits: &PackLimits, materialization: &dyn MaterializationAdmission) -> Result<Vec<String>, PackRefusal> {
     let symbol_count = reader.read_varint_u64()?;
     if symbol_count > u64::from(limits.max_symbols) {
-        return Err(PackError::LimitExceeded("record-body symbol count exceeds max_symbols"));
+        return Err(PackRefusal::LimitExceeded { kind: ValueRefusalKind::WorkLimit, limit: "record-body symbol count exceeds max_symbols" });
     }
-    if size_of::<String>()>32{return Err(PackError::LimitExceeded("wire symbol slot representation"));}
-    materialization.charge(symbol_count.checked_mul(32).ok_or(PackError::LimitExceeded("wire symbol slot overflow"))?)?;
-    let count = usize::try_from(symbol_count).map_err(|_| PackError::LimitExceeded("wire symbol slot count"))?;
+    materialization.charge(symbol_count.checked_mul(size_of::<String>() as u64).ok_or(PackRefusal::LimitExceeded { kind: ValueRefusalKind::OwnershipLimit, limit: "wire symbol slot overflow" })?)?;
+    let count = usize::try_from(symbol_count).map_err(|_| PackRefusal::LimitExceeded { kind: ValueRefusalKind::OwnershipLimit, limit: "wire symbol slot count" })?;
     let mut symbols = Vec::new();
-    symbols.try_reserve_exact(count).map_err(|_| PackError::LimitExceeded("wire symbol slot allocation"))?;
+    symbols.try_reserve_exact(count).map_err(|_| PackRefusal::LimitExceeded { kind: ValueRefusalKind::AllocationFailed, limit: "wire symbol slot allocation" })?;
     for _ in 0..symbol_count {
         materialization.step()?;
         let len = reader.read_varint_u64()?;
         if len > limits.max_segment_len {
-            return Err(PackError::LimitExceeded("record-body symbol length exceeds max_segment_len"));
+            return Err(PackRefusal::LimitExceeded { kind: ValueRefusalKind::WorkLimit, limit: "record-body symbol length exceeds max_segment_len" });
         }
-        let raw = reader.read_bytes(usize::try_from(len).map_err(|_| PackError::LimitExceeded("wire symbol byte length"))?)?;
+        let raw = reader.read_bytes(usize::try_from(len).map_err(|_| PackRefusal::LimitExceeded { kind: ValueRefusalKind::OwnershipLimit, limit: "wire symbol byte length" })?)?;
         let symbol_offset = reader.position() as u64;
         symbols.push(materialization.copy_utf8(raw,symbol_offset,"symbol")?);
     }
     Ok(symbols)
 }
 
-/// 🛡️ Decodes one exact DslValue field with cumulative pre-allocation storage credits.
-/// Credits cover owned UTF-8 bytes, 32 bytes per symbol slot and 64 per list/map slot;
-/// allocator bookkeeping and generic record, expression, table and chunk decoding are excluded.
-pub fn decode_value_record_body_exact(bytes: &[u8], field_id: u16, limits: &PackLimits) -> Result<DslValue, PackError> {
+/// 🛡️ Decodes one exact intrinsic field with cumulative concrete storage admission.
+/// Owned UTF-8 and typed symbol, list and member slots are admitted before allocation.
+pub fn decode_value_record_body_exact(bytes: &[u8], field_id: u16, limits: &PackLimits) -> Result<DslValue, PackRefusal> {
     if bytes.len() as u64 > limits.max_file_len {
-        return Err(PackError::LimitExceeded("wire value exceeds max_file_len"));
+        return Err(PackRefusal::LimitExceeded { kind: ValueRefusalKind::WorkLimit, limit: "wire value exceeds max_file_len" });
     }
     let mut reader = ByteReader::new(bytes);
     let budget = ValueMaterialization { used: std::cell::Cell::new(0), maximum: limits.max_total_alloc };
     let symbols = decode_inline_symbols(&mut reader, limits, &budget)?;
     if reader.read_varint_u64()? != 1 || reader.read_varint_u64()? != u64::from(field_id) || reader.read_u8()? != TAG_VALUE {
-        return Err(PackError::Malformed { what: "wire value", offset: reader.position() as u64, detail: "expected exactly one declared Value field".into() });
+        return Err(PackRefusal::Malformed { kind: ValueRefusalKind::InvalidValue, what: "wire value", offset: reader.position() as u64, detail: "expected exactly one declared Value field".into() });
     }
     let mut ctx = DecCtx { source: DecSource::Inline { symbols }, limits: limits.clone(), verification: crate::os_pack::format::VerificationLevel::Standard, preserve_unknown: false, unknown_field_ids: Vec::new(), materialization: &budget };
     let value = decode_dsl_value(&mut reader, &mut ctx, 0)?;
     if reader.position() != bytes.len() {
-        return Err(PackError::Malformed { what: "wire value", offset: reader.position() as u64, detail: "trailing bytes after the terminal value".into() });
+        return Err(PackRefusal::Malformed { kind: ValueRefusalKind::InvalidValue, what: "wire value", offset: reader.position() as u64, detail: "trailing bytes after the terminal value".into() });
     }
     Ok(value)
 }
 
-fn decode_record_body_inner(bytes: &[u8], spec: &RecordSpec, options: &DecodeOptions, exact: bool) -> Result<(RecordValue, DecodeReport), PackError> {
-    if bytes.len() as u64 > options.limits.max_file_len { return Err(PackError::LimitExceeded("record body exceeds max_file_len")); }
+/// 🎞️ Decodes one terminal intrinsic field under cumulative ownership and cancellation.
+pub fn decode_value_record_body_exact_controlled(bytes:&[u8],field_id:u16,options:&DecodeOptions,control:&mut semio_framework_value::native_decoding::NativeDecodeControl<'_>)->Result<DslValue,PackRefusal>{
+    if bytes.len() as u64>options.limits.max_file_len{return Err(PackRefusal::ValueRefusal(ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"intrinsic wire exceeds max_file_len")));}
+    control.scoped_stage(|control|{control.begin_stage(0).map_err(PackRefusal::ValueRefusal)?;let mut reader=ByteReader::new(bytes);let materialization=ControlledMaterialization{control:std::cell::RefCell::new(control),maximum:options.limits.max_total_alloc};let symbols=decode_inline_symbols(&mut reader,&options.limits,&materialization)?;if reader.read_varint_u64()?!=1||reader.read_varint_u64()?!=u64::from(field_id)||reader.read_u8()?!=TAG_VALUE{return Err(PackRefusal::Malformed{ kind: ValueRefusalKind::InvalidValue,what:"intrinsic wire",offset:reader.position() as u64,detail:"expected exactly one declared Value field".into()});}let mut ctx=DecCtx{source:DecSource::Inline{symbols},limits:options.limits.clone(),verification:options.verification,preserve_unknown:false,unknown_field_ids:Vec::new(),materialization:&materialization};let value=decode_dsl_value(&mut reader,&mut ctx,0)?;if reader.position()!=bytes.len(){return Err(PackRefusal::Malformed{ kind: ValueRefusalKind::InvalidValue,what:"intrinsic wire",offset:reader.position() as u64,detail:"trailing bytes after terminal intrinsic value".into()});}materialization.control.borrow_mut().checkpoint().map_err(PackRefusal::ValueRefusal)?;Ok(value)})
+}
+
+fn decode_record_body_inner(bytes: &[u8], spec: &RecordSpec, options: &DecodeOptions, exact: bool) -> Result<(RecordValue, DecodeReport), PackRefusal> {
+    if bytes.len() as u64 > options.limits.max_file_len { return Err(PackRefusal::LimitExceeded { kind: ValueRefusalKind::WorkLimit, limit: "record body exceeds max_file_len" }); }
     let mut reader = ByteReader::new(bytes);
     let budget = ValueMaterialization { used: std::cell::Cell::new(0), maximum: options.limits.max_total_alloc };
     let symbols = decode_inline_symbols(&mut reader, &options.limits, &budget)?;
     let mut dec_ctx = DecCtx { source: DecSource::Inline { symbols }, limits: options.limits.clone(), verification: options.verification, preserve_unknown: options.preserve_unknown, unknown_field_ids: Vec::new(), materialization: &budget };
     let record = decode_record_fields(&mut reader, Some(spec), &mut dec_ctx, 0)?;
     if exact && reader.position() != bytes.len() {
-        return Err(PackError::Malformed { what: "record body", offset: reader.position() as u64, detail: "trailing bytes after the terminal record".into() });
+        return Err(PackRefusal::Malformed { kind: ValueRefusalKind::InvalidValue, what: "record body", offset: reader.position() as u64, detail: "trailing bytes after the terminal record".into() });
     }
     if exact && !dec_ctx.unknown_field_ids.is_empty() {
-        return Err(PackError::Malformed { what: "record body", offset: reader.position() as u64, detail: format!("{} unknown terminal record fields, first {}", dec_ctx.unknown_field_ids.len(), dec_ctx.unknown_field_ids[0]) });
+        return Err(PackRefusal::Malformed { kind: ValueRefusalKind::InvalidValue, what: "record body", offset: reader.position() as u64, detail: format!("{} unknown terminal record fields, first {}", dec_ctx.unknown_field_ids.len(), dec_ctx.unknown_field_ids[0]) });
     }
     let report = DecodeReport { unknown_field_ids: dec_ctx.unknown_field_ids, unknown_segments: Vec::new(), schema_drift: false, verified: options.verification };
     Ok((record, report))
@@ -3254,4 +3256,7 @@ fn decode_record_body_inner(bytes: &[u8], spec: &RecordSpec, options: &DecodeOpt
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+#[cfg(test)]
+#[path = "../../../../../🔨️modules/🎒️pack/🌱️value/🧪️tests/🎞️intrinsic-media/🦀️.rs"]
+mod intrinsic_media_tests;
 //#endregion 🧪️Tests

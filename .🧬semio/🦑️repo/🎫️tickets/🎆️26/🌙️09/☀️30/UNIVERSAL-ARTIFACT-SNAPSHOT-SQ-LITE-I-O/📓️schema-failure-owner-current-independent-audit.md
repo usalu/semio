@@ -1,0 +1,27 @@
+# Schema Failure Owner Current Independent Audit
+
+Read-only audit in progress. No compiler/tests executed here. Root supplies genuine later Schema1 zero-grant RED: requested46 versus scratch admitted0. This is a returned diagnostic ownership failure, distinct from the earlier flat successful request7218/754 RED. Current firstparty controls preserve nonempty typed ValueError messages; no production API change is needed to classify this measured scope.
+
+## Current stage and unchanged success laws
+
+High physical reports the new Source failureChannel demand is running before fixture/schema/Native pairing. At this readback it is intentionally absent in the closed fixture and Native assertions remain old. This is test-first staging, not a stable integration defect. Final readback remains pending High's coherent completion.
+
+Actual OS schema storage test covers eight specimens flat/nested/nested-inner-field-changed/recursive/every-shape/empty/mutualRecursive/broadRepeatedEdges and both encode/decode controls. Successful `observe_backing`41–45 compares complete semantic digest, actual requested System bytes, exact scratch caller debit, and released Layout bytes. Exact observed allowance46–48 and two-call same-caller cumulative allowance56–59 are unchanged. No refund, ABI estimate, subtraction or threshold lowering is introduced in current successful assertions.
+
+## Required failure-owner observation
+
+Canonical ValueError owns kind plus message:String (Value refusal root14–17). Zero/caller-limit/canceled diagnostics allocate through actual message.into; complete nonempty messages must survive. A meaningful failed observation must resolve the error to actual ValueError inside the existing System observe_backing closure, retain typed kind and actual message.capacity, then drop the entire error before the closure returns. Return only scalar observations. This ensures observed released Layout capacity includes returned diagnostic as well as abandoned schema scratch. For zero scratch admission, actual requests equals actual diagnostic capacity and caller owned_bytes remains0. For short/cumulative-short/cancel paths, actual requests <= monotonic scratch debit + actual returned diagnostic capacity; actual requests equals released capacity. No real request subtraction or guessed UTF8/ABI capacity is justified. Independent UTF8 fixture vectors describe a neutral diagnostic byte owner, not every Rust String capacity.
+
+## Cancellation boundary distinction
+
+Current schema frontier push charges whole new capacity and then checkpoints before try_reserve_exact; a callback can reject a paid reservation before it physically materializes. Index initialization also calls steps after allocation. Therefore caller debit may exceed actual failed scratch requests. Existing initial and owned_bytes>0 cancellation predicates must remain; neither alone proves materialized scratch was dropped. High proposes an additional completed>0 predicate, to authenticate a work-progress boundary with real backing. Its actual request/release observation must demonstrate materialization rather than infer it solely from callback prose or a charge. All error and scratch release must remain inside the observer. A blanket equality between failed scratch requests and debit would reject legitimately charged-before-reserve cancellation.
+
+## Neutral Source contract
+
+Current test-only Source uses independent noble BLAKE3 canonical bytes for five authored schema graphs, and new failure facet uses independent Bun SQLite constraints requested<=admitted+diagnostic and requested=released plus TextEncoder/Buffer UTF8 agreement. It must retain strict AJV closed fixture validation, exact complete expected facet, reject extra/unknown fields and malformed release/debit vectors. Original eight specimen/direction/constants remain. This independent oracle validates the neutral ownership relations and schema semantics; it does not itself prove Rust allocator equality. Pending coherent mounted readback and owning replay must remain separately recorded.
+
+## Coherent mounted followup
+
+High now reports authentic Source missing-facet RED (3 selected,2 pass,1 fail,20 expectations) followed by four-file pairing. Current Native52–69 uses observe_backing for zero/short/cumulative-short/all three cancellation boundaries; converts actual ValueError, captures actual message.capacity, drops error before observer returns, and asserts released==actual. Zero actual==diagnostic and scratch0 remain explicit. Short and cumulative keep exact previous requested-1 grants and monotonic inequalities with checked scratch+diagnostic. Initial/admitted-interior predicates remain and completed>0 is additional; boundary2 proves actual>diagnostic, giving materialized scratch evidence rather than a callback inference. Successful full equality/release, all eight/two directions, exact and cumulative success remain unchanged.
+
+Closed schema72–85 requires failureChannel, all named facets and closed vector keys. Source expected fixture60–69 now includes complete failure facet; AJV negative mutations71 reject unknown facet/vector keys and guessed diagnostic authority. Independent SQLite constraints and UTF8 agreement remain. No production API/storage edits in this stage, no blank message or allocator subtraction found. Source paired replay/Native owning replay receipts remain external/pending, not inferred from this readback.

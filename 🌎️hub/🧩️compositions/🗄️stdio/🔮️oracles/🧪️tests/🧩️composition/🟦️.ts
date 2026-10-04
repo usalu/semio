@@ -5,7 +5,8 @@ import { resolve, sep } from "node:path";
 import Ajv from "ajv";
 import * as toml from "@iarna/toml";
 import { validateJsonSchemaSubset } from "../../../../../../🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts";
-import { inspectRustCargoManifest, inspectRustCompileReferences, inspectRustModuleGraphFacts, inspectRustStructure, rustTokenPairs, rustTokens } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
+import { inspectRustCargoManifest, inspectRustModuleGraphFacts, inspectRustStructure } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
+import { inspectRustCompileReferences, rustTokenPairs, rustTokens } from "../../../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 import { packagesForOwner } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🕸️dependencies/🟨️.mjs";
 import contract from "../../🧫️fixtures/🧩️composition/🔣️.json";
 import selection from "../../🧫️fixtures/🌳️contribution-selection/🔣️.json";
@@ -16,6 +17,7 @@ import development from "../../🧫️fixtures/🧪️development-dependencies/�
 import developmentSchema from "../../🧬️schema/🧪️development-dependencies/🔣️.json";
 import drawing from "../../🧫️fixtures/🖊️drawing-reader/🔣️.json";
 import { originalDrawingSource } from "../🖊️drawing-reader/🧩️preservation/🟦️.ts";
+import { originalPrivateReaderSource } from "../🧫️private-reader/🧩️preservation/🟦️.ts";
 
 const root = resolve(import.meta.dir, "../../../../../..");
 const externalDependencies: Record<string, unknown> = contract.dependencies;
@@ -243,7 +245,7 @@ describe("canonical complete Stdio oracle ownership", () => {
 
   test("all original Rust caller laws retain exact authored content through explicit owned imports", () => {
     for (const row of contract.callers) {
-      const source = originalDrawingSource(row.source, read(row.source));
+      const source = originalPrivateReaderSource(row.source, originalDrawingSource(row.source, read(row.source)));
       expect(source, row.source).not.toContain(contract.retired.library);
       for (const { current } of row.rewrites) expect(source, row.source).toContain(current);
       expect(digest(restored(source, row.rewrites)), row.source).toBe(row.sha256);

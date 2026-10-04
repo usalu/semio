@@ -26,7 +26,8 @@
           "de": "Vollständiges Mesh-Ergebnis; ersetzt das gespeicherte."
         },
         "group": "result",
-        "order": 10
+        "order": 10,
+        "widget": "hidden"
       }
     }
   }

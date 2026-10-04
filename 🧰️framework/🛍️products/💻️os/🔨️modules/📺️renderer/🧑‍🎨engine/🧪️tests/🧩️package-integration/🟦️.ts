@@ -60,7 +60,6 @@ function fakeHandle(overrides: Partial<WgpuPluginHandle> = {}): WgpuPluginHandle
     readAppDocumentArchive: async () => new Uint8Array(),
     readHistory: async () => ({ cursor: 0 }),
     readAppDocumentIdentity: async (instanceId) => ({ appInstanceId: instanceId, parentDocumentId: null }),
-    loadAppDocumentPack: async () => {},
     codec: async () => null,
     ephemeralSnapshot: () => null,
     takeProgressHistoryPatches: () => [],
@@ -529,7 +528,7 @@ describe("framework renderer wgpu generated worker", () => {
     expect(/^ARG BUN_VERSION=(\d+\.\d+\.\d+)$/mu.exec(dockerfile)?.[1]).toBe(pinnedVersion);
     expect(configuration.error).toBeUndefined();
     expect(configuration.config.postCreateCommand).toEqual(["bun", "nx", "run", "workspace:setup"]);
-    expect(JSON.parse(readFileSync(join(repoRoot, "📋️project.json"), "utf8")).targets.setup.dependsOn).toContain("deps-javascript");
+    expect(JSON.parse(readFileSync(join(repoRoot, "📋️project.json"), "utf8")).targets.setup.dependsOn).toContain("deps-js-all");
     expect(dockerfile).not.toContain("bun.sh/install");
     expect(dockerfile).toContain("sha256sum -c -");
     expect([...dockerfile.matchAll(/bun_sha="([0-9a-f]{64})"/gu)]).toHaveLength(2);

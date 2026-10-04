@@ -3,7 +3,7 @@ use super::*;
 use protocol::{MutationLeaf, OpBinary, OpText, SemanticMutation};
 
 fn fixture() -> Value {
-    dsl::os_pack::json::parse(include_str!("../../🧫️fixtures/🔣️mutations.json")).expect("neutral Dag mutation fixture")
+    semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🔣️mutations.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral Dag mutation fixture")
 }
 
 /// 🧾️ The committed wire witness of each direct leaf, in roster order: the Rust `ToValue` of one aggregate operation.
@@ -25,7 +25,7 @@ const WITNESSES: [&str; 14] = [
 ];
 
 fn witness(index: usize) -> Value {
-    dsl::os_pack::json::parse(WITNESSES[index]).expect("committed Dag wire witness")
+    semio_framework_pack_json::parse(WITNESSES[index], semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed Dag wire witness")
 }
 
 fn witness_payload(index: usize) -> Value {
@@ -33,13 +33,13 @@ fn witness_payload(index: usize) -> Value {
 }
 
 /// 🌉️ `T: FromValue` decode of a pack JSON [`Value`] — the in-house `serde_json::from_value` analog.
-fn from_pack_value<T: dsl::FromValue>(value: &Value) -> Result<T, dsl::ValueError> {
-    <T as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(value))
+fn from_pack_value<T: semio_framework_value::FromValue>(value: &Value) -> Result<T, semio_framework_value::ValueError> {
+    <T as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(value))
 }
 
 /// 🌉️ `T: ToValue` encode into a pack JSON [`Value`] — the in-house `serde_json::to_value` analog.
-fn to_pack_value<T: dsl::ToValue>(value: &T) -> Value {
-    dsl::os_pack::json::from_dsl_value(&<T as dsl::ToValue>::to_value(value))
+fn to_pack_value<T: semio_framework_value::ToValue>(value: &T) -> Value {
+    semio_framework_pack_json::from_dsl_value(&<T as semio_framework_value::ToValue>::to_value(value))
 }
 
 fn node(id: &str) -> DagNodeSpec {
@@ -63,8 +63,8 @@ fn apply(base: &DagSnapshot, mutation: &DagMutation) -> DagSnapshot {
 }
 
 fn assert_codecs(mutation: &DagMutation) {
-    let json = dsl::os_pack::json::to_json_string(mutation);
-    assert_eq!(dsl::os_pack::json::from_json_str::<DagMutation>(&json).expect("deserialize direct mutation"), *mutation);
+    let json = semio_framework_pack_json::to_json_string(mutation);
+    assert_eq!(semio_framework_pack_json::from_json_str::<DagMutation>(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("deserialize direct mutation"), *mutation);
     let text = mutation.print_op();
     assert!(text.starts_with(mutation.descriptor().text_opcode.expect("text opcode")));
     assert_eq!(DagMutation::parse_op(&text).expect("direct text decode"), *mutation);
@@ -76,13 +76,13 @@ fn assert_codecs(mutation: &DagMutation) {
 
 pub(crate) fn assert_leaf_contract<T>(index: usize, wrap: fn(T) -> DagMutation, descriptor: &str)
 where
-    T: MutationLeaf + dsl::ToValue + dsl::FromValue,
+    T: MutationLeaf + semio_framework_value::ToValue + semio_framework_value::FromValue,
 {
     let wire = witness(index);
     let payload_value = witness_payload(index);
     let payload = from_pack_value::<T>(&payload_value).expect("neutral direct payload");
     let mutation = wrap(payload);
-    assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&T::DESCRIPTOR)).expect("descriptor JSON"), serde_json::from_str::<serde_json::Value>(descriptor).expect("owned descriptor"));
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&T::DESCRIPTOR)).expect("descriptor JSON"), serde_json::from_str::<serde_json::Value>(descriptor).expect("owned descriptor"));
     assert_eq!(mutation.descriptor(), &T::DESCRIPTOR);
     assert_eq!(mutation.descriptor().binary_tag, Some(u32::try_from(index).expect("small roster index")));
     assert_eq!(to_pack_value(&mutation)["operation"], wire["operation"]);
@@ -110,7 +110,7 @@ where
     assert_codecs(&mutation);
     let before = base();
     let mut restored = apply(&before, &mutation);
-    let inverse = mutation.inverse(&before);
+    let inverse = mutation.inverse(&before).expect("valid retained mutation inverse fixture");
     assert!(!inverse.is_empty());
     for inverse in inverse.into_iter().rev() {
         restored = apply(&restored, &inverse);
@@ -125,7 +125,7 @@ fn direct_leaf_roster_and_codec_contracts() {
     assert_eq!(<DagMutation as Mutation<DagSnapshot>>::DESCRIPTORS.len(), 14);
     for index in 0..WITNESSES.len() {
         let mutation = from_pack_value::<DagMutation>(&witness(index)).expect("committed aggregate wire witness");
-        assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&mutation)).expect("wire JSON"), serde_json::from_str::<serde_json::Value>(WITNESSES[index]).expect("witness JSON"), "the committed wire witness is the canonical Rust wire");
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation)).expect("wire JSON"), serde_json::from_str::<serde_json::Value>(WITNESSES[index]).expect("witness JSON"), "the committed wire witness is the canonical Rust wire");
         assert_eq!(mutation.descriptor().binary_tag, Some(u32::try_from(index).expect("small index")));
         assert_eq!(mutation.descriptor().diff_participation, protocol::MutationDiffParticipation::ApplyOnly);
         assert_codecs(&mutation);
@@ -151,7 +151,7 @@ fn direct_delete_inverse_declares_descending_edges_before_node() {
     let mut before = base();
     before.edges.push(DagHostSnapshotEdge { id: "loop".into(), source: "a@out".into(), target: "a@in".into(), ..Default::default() });
     let mutation = DagMutation::DeleteNode(DeleteNode { id: "a".into() });
-    let inverse = mutation.inverse(&before);
+    let inverse = mutation.inverse(&before).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 4);
     assert!(matches!(&inverse[0], DagMutation::ConnectNodes(value) if value.id == "loop" && value.index == 3));
     assert!(matches!(&inverse[1], DagMutation::ConnectNodes(value) if value.id == "last" && value.index == 2));
@@ -180,7 +180,7 @@ async fn direct_store_undo_restores_incident_edge_order() {
 fn direct_disconnect_inverse_preserves_nonfinal_position() {
     let before = base();
     let mutation = DagMutation::DisconnectNodes(DisconnectNodes { id: "keep".into() });
-    let inverse = mutation.inverse(&before);
+    let inverse = mutation.inverse(&before).expect("valid retained mutation inverse fixture");
     assert!(matches!(&inverse[0], DagMutation::ConnectNodes(value) if value.id == "keep" && value.index == 1));
     assert_eq!(apply(&apply(&before, &mutation), &inverse[0]), before);
 }
@@ -197,7 +197,7 @@ fn direct_rename_preserves_exact_endpoint_suffix() {
         let mutation = DagMutation::RenameNode(RenameNode { id: id.into(), new_id: new_id.into() });
         let after = apply(&before, &mutation);
         assert_eq!(after.edges[0].source, expected);
-        assert_eq!(apply(&after, &mutation.inverse(&before)[0]), before);
+        assert_eq!(apply(&after, &mutation.inverse(&before).expect("valid retained mutation inverse fixture")[0]), before);
     }
 }
 
@@ -230,7 +230,7 @@ fn direct_structural_absorb_is_associative_and_preserves_rejection() {
         for (id, x) in row["x"].as_object().expect("expected positions") {
             assert_eq!(after.nodes.iter().find(|node| node.id == id).expect("position target").x, x.as_f64().expect("x"));
         }
-        assert_eq!(dsl::os_pack::json::from_json_str::<DagDiff>(&dsl::os_pack::json::to_json_string(&left)).expect("diff decode"), left);
+        assert_eq!(semio_framework_pack_json::from_json_str::<DagDiff>(&semio_framework_pack_json::to_json_string(&left), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("diff decode"), left);
     }
     let before = base();
     let mut rejected = DagDiff::from(DagDelta { created_node: Some(node("x")), created_node_at: Some(u64::MAX), ..Default::default() });
@@ -252,12 +252,12 @@ fn direct_wire_indices_are_exact_and_apply_rejects_out_of_range() {
         DagMutation::ConnectNodes(ConnectNodes { id: "x".into(), source: "a@out".into(), target: "b@in".into(), route_style: EdgeRouteStyle::Bezier, properties: PropertyBag::new(), index: u64::MAX }),
     ] {
         assert_codecs(&mutation);
-        assert!(dsl::os_pack::json::to_json_string(&mutation).contains("18446744073709551615"));
+        assert!(semio_framework_pack_json::to_json_string(&mutation).contains("18446744073709551615"));
         assert!(mutation.print_op().contains("18446744073709551615"));
         assert_eq!(mutation.diff(&before).diff().apply(&before).expect_err("out of range").code, "mutation.apply.invalid-index");
-        let json = dsl::os_pack::json::to_json_string(&mutation);
+        let json = semio_framework_pack_json::to_json_string(&mutation);
         for invalid in ["18446744073709551616", "-1", "0.5", "1e21", "null", "\"1\""] {
-            assert!(dsl::os_pack::json::from_json_str::<DagMutation>(&json.replace("18446744073709551615", invalid)).is_err(), "{invalid}");
+            assert!(semio_framework_pack_json::from_json_str::<DagMutation>(&json.replace("18446744073709551615", invalid), semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "{invalid}");
         }
     }
 }
@@ -282,9 +282,9 @@ fn direct_intrinsic_serde_and_selection_are_lossless() {
     let mut app = node("app");
     app.icon = "node-icon".into();
     app.kind = DagNodeKind::AppInstance { instance_id: "instance".into(), plugin_id: "plugin".into(), app_id: "app".into(), icon: "app-icon".into(), inputs: vec![], outputs: vec![] };
-    let encoded = dsl::os_pack::json::to_json_string(&app);
+    let encoded = semio_framework_pack_json::to_json_string(&app);
     assert_eq!(encoded.matches("\"icon\":").count(), 1);
     assert_eq!(encoded.matches("\"appIcon\":").count(), 1);
-    assert_eq!(dsl::os_pack::json::from_json_str::<DagNodeSpec>(&encoded).expect("app round trip"), app);
+    assert_eq!(semio_framework_pack_json::from_json_str::<DagNodeSpec>(&encoded, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("app round trip"), app);
     assert_codecs(&DagMutation::CreateNode(CreateNode { node: app, index: 0 }));
 }

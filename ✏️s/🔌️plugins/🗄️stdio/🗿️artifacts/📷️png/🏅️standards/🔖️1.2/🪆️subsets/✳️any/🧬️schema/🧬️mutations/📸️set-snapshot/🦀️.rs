@@ -23,9 +23,12 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for SetSnapshot {
         protocol::MutationOutcome::new(<PngDiff as DiffAlgebra<PngSnapshot>>::between(base, &self.snapshot))
     }
 
-    fn inverse(&self, base: &PngSnapshot) -> Vec<PngMutation> {
+    fn inverse(&self, base: &PngSnapshot) -> Result<Vec<PngMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![PngMutation::SetSnapshot(Self { snapshot: base.clone() })]
-    }
+
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set snapshot", "Momentaufnahme setzen")

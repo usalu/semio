@@ -8,7 +8,7 @@ use super::*;
 const CORPUS: &str = include_str!("../../🧫️fixtures/🧫️mutation-inputs/🔣️.json");
 
 fn corpus() -> DslValue {
-    dsl::os_pack::json::to_dsl_value(&dsl::os_pack::json::parse(CORPUS).expect("the corpus is JSON"))
+    semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(CORPUS, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the corpus is JSON"))
 }
 
 /// 🧾️ Canonical JSON: object keys sorted, arrays in order, an integral number within the safe range written as an integer.
@@ -20,7 +20,7 @@ fn canonical(value: &DslValue) -> String {
             let value = number.as_f64();
             if value.is_finite() && value.fract() == 0.0 && value.abs() <= 9_007_199_254_740_991.0 { (value as i64).to_string() } else { value.to_string() }
         }
-        DslValue::String(text) => dsl::os_pack::json::to_string(&dsl::os_pack::json::from_dsl_value(&DslValue::String(text.clone()))),
+        DslValue::String(text) => semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&DslValue::String(text.clone()))),
         DslValue::Bytes(bytes) => format!("[{}]", bytes.iter().map(u8::to_string).collect::<Vec<_>>().join(",")),
         DslValue::Array(items) => format!("[{}]", items.iter().map(canonical).collect::<Vec<_>>().join(",")),
         DslValue::Object(entries) => {
@@ -42,7 +42,7 @@ fn every_corpus_case_reads_to_its_canonical_descriptors_or_its_refusal() {
     assert!(cases.len() >= 18, "the corpus covers every reader rule");
     for case in cases {
         let name = case.get("name").and_then(DslValue::as_str).expect("name");
-        let schema = dsl::os_pack::json::to_string(&dsl::os_pack::json::from_dsl_value(case.get("leafSchema").expect("leafSchema")));
+        let schema = semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(case.get("leafSchema").expect("leafSchema")));
         let outcome = mutation_input_defs(&schema, &resolver(&corpus));
         match (case.get("expectedInputs"), case.get("expectedError"), outcome) {
             (Some(expected), None, Ok(inputs)) => assert_eq!(canonical(&DslValue::Array(inputs.iter().map(ToValue::to_value).collect())), canonical(expected), "{name}"),
@@ -61,7 +61,7 @@ fn every_corpus_case_audits_to_every_finding_it_names() {
     let corpus = corpus();
     for case in corpus.get("cases").and_then(DslValue::as_array).expect("cases") {
         let name = case.get("name").and_then(DslValue::as_str).expect("name");
-        let schema = dsl::os_pack::json::to_string(&dsl::os_pack::json::from_dsl_value(case.get("leafSchema").expect("leafSchema")));
+        let schema = semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(case.get("leafSchema").expect("leafSchema")));
         let audit = mutation_input_audit(&schema, &resolver(&corpus));
         let expected: Vec<DslValue> = match (case.get("expectedFindings"), case.get("expectedError")) {
             (Some(DslValue::Array(findings)), _) => findings.clone(),
@@ -80,7 +80,7 @@ fn every_corpus_case_audits_to_every_finding_it_names() {
 fn descriptors_round_trip_through_their_wire_value() {
     let corpus = corpus();
     for case in corpus.get("cases").and_then(DslValue::as_array).expect("cases").iter().filter(|case| case.get("expectedInputs").is_some()) {
-        let schema = dsl::os_pack::json::to_string(&dsl::os_pack::json::from_dsl_value(case.get("leafSchema").expect("leafSchema")));
+        let schema = semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(case.get("leafSchema").expect("leafSchema")));
         for input in mutation_input_defs(&schema, &resolver(&corpus)).expect("declared") {
             assert_eq!(ActionArgDef::from_value(input.to_value()).expect("decodes"), input);
         }
@@ -92,7 +92,7 @@ fn derived_controls_follow_the_annotation_and_the_inference_rules() {
     let corpus = corpus();
     let inputs = |name: &str| {
         let case = corpus.get("cases").and_then(DslValue::as_array).expect("cases").iter().find(|case| case.get("name").and_then(DslValue::as_str) == Some(name)).expect("case");
-        mutation_input_defs(&dsl::os_pack::json::to_string(&dsl::os_pack::json::from_dsl_value(case.get("leafSchema").expect("leafSchema"))), &resolver(&corpus)).expect("declared")
+        mutation_input_defs(&semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(case.get("leafSchema").expect("leafSchema"))), &resolver(&corpus)).expect("declared")
     };
     let drag = inputs("annotated-drag-selection");
     assert!(matches!(drag[0].control(), ActionArgControl::Reference { many: true, ref domain, .. } if domain.as_deref() == Some("vortex")));
@@ -110,6 +110,9 @@ fn derived_controls_follow_the_annotation_and_the_inference_rules() {
     let colors = inputs("color-rgb-and-rgba");
     assert_eq!((colors[0].control(), colors[1].control()), (ActionArgControl::Color { alpha: true }, ActionArgControl::Color { alpha: false }));
     assert!(matches!(inputs("vector-with-grid-facets")[0].control(), ActionArgControl::Vector { dims: 3, min: Some(min), max: Some(max), snap_source: Some(SnapSource::Config { ref key }), precision: Some(2), display_factor: Some(factor), .. } if min == -100.0 && max == 100.0 && key == "gridFactor" && factor == 100.0));
+    let sourced = inputs("option-source-from-the-previewed-document");
+    assert!(matches!(&sourced[1].schema, ArgSchema::String { options, option_source: Some(OptionSource::Snapshot { pointer }), .. } if options.is_empty() && pointer == "/hostSnapshot/widgets/{id}/params"));
+    assert_eq!(sourced[1].control(), ActionArgControl::Select { options: Vec::new() }, "a sourced choice is a select before its options resolve");
 }
 
 #[test]
@@ -155,13 +158,13 @@ fn a_mutation_input_key_decodes_its_pointer_segment() {
 fn a_candidate_payload_regains_the_discriminator_its_leaf_schema_requires() {
     let corpus = corpus();
     let case = corpus.get("cases").and_then(DslValue::as_array).expect("cases").iter().find(|case| case.get("name").and_then(DslValue::as_str) == Some("annotated-drag-selection")).expect("case");
-    let schema = dsl::os_pack::json::to_string(&dsl::os_pack::json::from_dsl_value(case.get("leafSchema").expect("leafSchema")));
+    let schema = semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(case.get("leafSchema").expect("leafSchema")));
     let payload = DslValue::object([("targets".to_string(), DslValue::Array(vec![DslValue::String("n1".to_string())])), ("dx".to_string(), DslValue::float(2.0)), ("dy".to_string(), DslValue::float(-1.0))]);
     let instance = mutation_input_instance(&schema, &resolver(&corpus), &payload).expect("an object payload");
     assert_eq!(instance.get("mutation").and_then(DslValue::as_str), Some("dragSelection"));
     let validator = semio_framework_schema::OwnedJsonSchemaValidator::compile(&schema).expect("the leaf compiles");
-    assert!(validator.is_valid_json(&dsl::os_pack::json::to_string(&dsl::os_pack::json::from_dsl_value(&instance))));
-    assert!(!validator.is_valid_json(&dsl::os_pack::json::to_string(&dsl::os_pack::json::from_dsl_value(&payload))));
+    assert!(validator.is_valid_json(&semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&instance))));
+    assert!(!validator.is_valid_json(&semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&payload))));
     assert!(mutation_input_instance(&schema, &resolver(&corpus), &DslValue::Array(Vec::new())).is_err());
 }
 
@@ -169,11 +172,11 @@ fn a_candidate_payload_regains_the_discriminator_its_leaf_schema_requires() {
 fn a_union_payload_regains_the_constants_of_the_variant_it_names() {
     let corpus = corpus();
     let case = corpus.get("cases").and_then(DslValue::as_array).expect("cases").iter().find(|case| case.get("name").and_then(DslValue::as_str) == Some("discriminated-union-by-const")).expect("case");
-    let schema = dsl::os_pack::json::to_string(&dsl::os_pack::json::from_dsl_value(case.get("leafSchema").expect("leafSchema")));
+    let schema = semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(case.get("leafSchema").expect("leafSchema")));
     let restore = DslValue::object([("phase".to_string(), DslValue::String("restore".to_string())), ("index".to_string(), DslValue::uint(2))]);
     let validator = semio_framework_schema::OwnedJsonSchemaValidator::compile(&schema).expect("the leaf compiles");
     let instance = mutation_input_instance(&schema, &resolver(&corpus), &restore).expect("a restore payload");
-    assert!(validator.is_valid_json(&dsl::os_pack::json::to_string(&dsl::os_pack::json::from_dsl_value(&instance))));
+    assert!(validator.is_valid_json(&semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&instance))));
     assert!(mutation_input_instance(&schema, &resolver(&corpus), &DslValue::object([("index".to_string(), DslValue::uint(2))])).is_err());
     assert!(mutation_input_instance(&schema, &resolver(&corpus), &DslValue::object([("phase".to_string(), DslValue::String("other".to_string()))])).is_err());
     let inputs = mutation_input_defs(&schema, &resolver(&corpus)).expect("a discriminated union");

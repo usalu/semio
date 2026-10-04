@@ -10,24 +10,24 @@ fn fixture() -> serde_json::Value {
 
 pub(crate) fn assert_leaf<T>(sample: usize, wrap: fn(T) -> MapWindowConfigMutation, descriptor: &str)
 where
-    T: MutationLeaf + dsl::ToValue + dsl::FromValue + PartialEq + std::fmt::Debug,
+    T: MutationLeaf + semio_framework_value::ToValue + semio_framework_value::FromValue + PartialEq + std::fmt::Debug,
 {
     let fixture = fixture();
     let envelope = &fixture["valid"][sample]["payload"];
     let mut payload = envelope.clone();
     payload.as_object_mut().unwrap().remove("operation");
-    let value: T = dsl::json::from_json_str(&(payload.clone()).to_string()).expect("leaf payload");
-    assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&value)).unwrap(), payload);
-    assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&T::DESCRIPTOR)).unwrap(), serde_json::from_str::<serde_json::Value>(descriptor).unwrap());
+    let value: T = semio_framework_pack_json::from_json_str(&(payload.clone()).to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("leaf payload");
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&value)).unwrap(), payload);
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&T::DESCRIPTOR)).unwrap(), serde_json::from_str::<serde_json::Value>(descriptor).unwrap());
     assert_eq!(T::PROVENANCE.owner, T::DESCRIPTOR.owner);
     assert_eq!(T::PROVENANCE.source_path, format!("{}/🦀️.rs", T::DESCRIPTOR.owner));
     assert_eq!(T::PROVENANCE.descriptor_path, format!("{}/🔣️.json", T::DESCRIPTOR.owner));
     payload["unknown"] = serde_json::json!(true);
-    assert!(dsl::json::from_json_str::<T>(&(payload).to_string()).is_err());
+    assert!(semio_framework_pack_json::from_json_str::<T>(&(payload).to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
     let operation = wrap(value);
     assert_eq!(operation.descriptor(), &T::DESCRIPTOR);
-    assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&operation)).unwrap(), *envelope);
-    assert_eq!(dsl::json::from_json_str::<MapWindowConfigMutation>(&(envelope.clone()).to_string()).unwrap(), operation);
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&operation)).unwrap(), *envelope);
+    assert_eq!(semio_framework_pack_json::from_json_str::<MapWindowConfigMutation>(&(envelope.clone()).to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(), operation);
     assert_eq!(operation.print_op().split_whitespace().next(), T::DESCRIPTOR.text_opcode);
     assert_eq!(MapWindowConfigMutation::parse_op(&operation.print_op()).unwrap(), operation);
     let bytes = operation.encode_op().expect("binary leaf payload");
@@ -43,15 +43,15 @@ fn neutral_envelopes_share_json_text_binary_and_inverse_contracts() {
     let fixture = fixture();
     assert_eq!(MapWindowConfigMutation::DESCRIPTORS.len(), 6);
     for row in fixture["valid"].as_array().unwrap() {
-        let operation: MapWindowConfigMutation = dsl::json::from_json_str(&(row["payload"].clone()).to_string()).unwrap();
-        assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&operation)).unwrap(), row["payload"]);
+        let operation: MapWindowConfigMutation = semio_framework_pack_json::from_json_str(&(row["payload"].clone()).to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&operation)).unwrap(), row["payload"]);
         assert_eq!(MapWindowConfigMutation::parse_op(&operation.print_op()).unwrap(), operation);
         assert_eq!(MapWindowConfigMutation::decode_op(&operation.encode_op().unwrap()).unwrap(), operation);
         let before = populated();
         assert_eq!(undo(&before, &operation), before);
     }
     for row in fixture["invalid"].as_array().unwrap() {
-        assert!(dsl::json::from_json_str::<MapWindowConfigMutation>(&(row["payload"].clone()).to_string()).is_err(), "{}", row["name"]);
+        assert!(semio_framework_pack_json::from_json_str::<MapWindowConfigMutation>(&(row["payload"].clone()).to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "{}", row["name"]);
     }
     assert!(MapWindowConfigMutation::parse_op("camera {}").is_err());
     assert!(MapWindowConfigMutation::parse_op("unknown").is_err());
@@ -62,16 +62,16 @@ fn neutral_envelopes_share_json_text_binary_and_inverse_contracts() {
 #[test]
 fn neutral_state_cases_match_stored_and_replayed_inverse_order() {
     for row in fixture()["stateCases"].as_array().unwrap() {
-        let before: MapWindowConfig = dsl::json::from_json_str(&(row["before"].clone()).to_string()).unwrap();
+        let before: MapWindowConfig = semio_framework_pack_json::from_json_str(&(row["before"].clone()).to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let operations = row.get("operations").cloned().unwrap_or_else(|| serde_json::json!([row["operation"]]));
         let mut after = before.clone();
         let mut inverses = Vec::new();
         for value in operations.as_array().unwrap() {
-            let operation: MapWindowConfigMutation = dsl::json::from_json_str(&(value.clone()).to_string()).unwrap();
-            inverses.extend(operation.inverse(&after));
+            let operation: MapWindowConfigMutation = semio_framework_pack_json::from_json_str(&(value.clone()).to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+            inverses.extend(operation.inverse(&after).expect("valid retained mutation inverse fixture"));
             let outcome = operation.diff(&after);
             if row["expected"]["outcome"] == "warning" {
-                assert_eq!(outcome.worst_level(), Some(dsl::Severity::Warning));
+                assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Warning));
             }
             after = outcome.diff().apply(&after).unwrap();
         }
@@ -79,17 +79,17 @@ fn neutral_state_cases_match_stored_and_replayed_inverse_order() {
             assert_eq!(after, before);
         }
         if let Some(expected) = row.get("after") {
-            let actual = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&after)).unwrap();
+            let actual = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&after)).unwrap();
             for (key, value) in expected.as_object().unwrap() {
                 assert_eq!(&actual[key], value);
             }
         }
         if let Some(expected) = row.get("inverseStoredOrder") {
-            assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&inverses)).unwrap(), *expected);
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&inverses)).unwrap(), *expected);
         }
         inverses.reverse();
         if let Some(expected) = row.get("inverseReplayOrder") {
-            assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&inverses)).unwrap(), *expected);
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&inverses)).unwrap(), *expected);
         }
         for operation in inverses {
             after = apply(&after, &operation);
@@ -115,7 +115,7 @@ fn apply(base: &MapWindowConfig, operation: &MapWindowConfigMutation) -> MapWind
 }
 
 fn undo(base: &MapWindowConfig, operation: &MapWindowConfigMutation) -> MapWindowConfig {
-    operation.inverse(base).into_iter().rev().fold(apply(base, operation), |state, inverse| apply(&state, &inverse))
+    operation.inverse(base).expect("valid retained mutation inverse fixture").into_iter().rev().fold(apply(base, operation), |state, inverse| apply(&state, &inverse))
 }
 
 #[test]
@@ -124,7 +124,7 @@ fn no_op_preserves_every_populated_field() {
     let operation = MapWindowConfigMutation::SetRenderMode(SetRenderMode { value: base.render_mode.clone() });
     let outcome = operation.diff(&base);
     assert_eq!(outcome.diff(), &MapWindowConfigDiff::default());
-    assert_eq!(outcome.worst_level(), Some(dsl::Severity::Warning));
+    assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Warning));
     assert_eq!(outcome.diff().apply(&base).unwrap(), base);
 }
 //#endregion 🧪️Identity
@@ -172,7 +172,7 @@ fn independent_sparse_writes_compose_and_serde_retains_removal() {
     let clear = MapWindowConfigMutation::SetLayerVisibility(SetLayerVisibility { layer_id: "water".into(), visible: None });
     let mut combined = camera.diff(&base).into_parts().0;
     combined.absorb(clear.diff(&base).into_parts().0);
-    let decoded = dsl::json::from_json_str::<MapWindowConfigDiff>(&(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&combined)).unwrap()).to_string()).unwrap();
+    let decoded = semio_framework_pack_json::from_json_str::<MapWindowConfigDiff>(&(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&combined)).unwrap()).to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let actual = decoded.apply(&base).unwrap();
     assert_eq!(actual, apply(&apply(&base, &camera), &clear));
     assert_eq!(actual.camera_json, "{}");
@@ -195,7 +195,7 @@ fn non_finite_operations_are_rejected_before_persisting_config_diff() {
         let operation = MapWindowConfigMutation::SetLayerStrokeScale(SetLayerStrokeScale { layer_id: "roads".into(), value: Some(value) });
         let base = populated();
         let outcome = operation.diff(&base);
-        assert_eq!(outcome.worst_level(), Some(dsl::Severity::Fatal));
+        assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal));
         assert_eq!(outcome.diff().apply(&base).unwrap(), base);
         let delta = MapWindowConfigDelta { layer_stroke_scale: BTreeMap::from([("roads".into(), Some(value))]), ..Default::default() };
         assert!(serde_json::to_string(&MapWindowConfigDiff::from(delta)).is_err());

@@ -1,0 +1,428 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/s/draw/geometry/path-raster",
+  "title": "Painted Path Raster Input",
+  "type": "object",
+  "required": [
+    "transform",
+    "tolerance",
+    "segments",
+    "width",
+    "height",
+    "origin",
+    "fillRule",
+    "fill",
+    "stroke"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "transform": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "$ref": "#/definitions/coordinate"
+      }
+    },
+    "tolerance": {
+      "type": "number",
+      "minimum": 1e-06,
+      "maximum": 16
+    },
+    "segments": {
+      "type": "array",
+      "maxItems": 65536,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "kind",
+              "to"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "enum": [
+                  "move",
+                  "line"
+                ]
+              },
+              "to": {
+                "$ref": "#/definitions/point"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "kind",
+              "ctrl",
+              "to"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "const": "quad"
+              },
+              "ctrl": {
+                "$ref": "#/definitions/point"
+              },
+              "to": {
+                "$ref": "#/definitions/point"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "kind",
+              "ctrl1",
+              "ctrl2",
+              "to"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "const": "cubic"
+              },
+              "ctrl1": {
+                "$ref": "#/definitions/point"
+              },
+              "ctrl2": {
+                "$ref": "#/definitions/point"
+              },
+              "to": {
+                "$ref": "#/definitions/point"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "kind",
+              "rx",
+              "ry",
+              "rotation",
+              "largeArc",
+              "sweep",
+              "to"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "const": "arc"
+              },
+              "rx": {
+                "$ref": "#/definitions/coordinate"
+              },
+              "ry": {
+                "$ref": "#/definitions/coordinate"
+              },
+              "rotation": {
+                "$ref": "#/definitions/coordinate"
+              },
+              "largeArc": {
+                "type": "boolean"
+              },
+              "sweep": {
+                "type": "boolean"
+              },
+              "to": {
+                "$ref": "#/definitions/point"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "kind"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "const": "close"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "width": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 16384
+    },
+    "height": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 16384
+    },
+    "origin": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "$ref": "#/definitions/coordinate"
+      }
+    },
+    "fillRule": {
+      "enum": [
+        "nonzero",
+        "evenodd"
+      ]
+    },
+    "fill": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "oneOf": [
+            {
+              "type": "object",
+              "required": [
+                "kind",
+                "color"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "solid"
+                },
+                "color": {
+                  "type": "array",
+                  "minItems": 4,
+                  "maxItems": 4,
+                  "items": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  }
+                }
+              }
+            },
+            {
+              "type": "object",
+              "required": [
+                "kind",
+                "x1",
+                "y1",
+                "x2",
+                "y2",
+                "stops"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "linearGradient"
+                },
+                "x1": {
+                  "type": "number",
+                  "minimum": -1000000000,
+                  "maximum": 1000000000
+                },
+                "y1": {
+                  "type": "number",
+                  "minimum": -1000000000,
+                  "maximum": 1000000000
+                },
+                "x2": {
+                  "type": "number",
+                  "minimum": -1000000000,
+                  "maximum": 1000000000
+                },
+                "y2": {
+                  "type": "number",
+                  "minimum": -1000000000,
+                  "maximum": 1000000000
+                },
+                "stops": {
+                  "type": "array",
+                  "maxItems": 4096,
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "offset",
+                      "color"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                      "offset": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "color": {
+                        "type": "array",
+                        "minItems": 4,
+                        "maxItems": 4,
+                        "items": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "type": "object",
+              "required": [
+                "kind",
+                "cx",
+                "cy",
+                "r",
+                "stops"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "radialGradient"
+                },
+                "cx": {
+                  "type": "number",
+                  "minimum": -1000000000,
+                  "maximum": 1000000000
+                },
+                "cy": {
+                  "type": "number",
+                  "minimum": -1000000000,
+                  "maximum": 1000000000
+                },
+                "r": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1000000000.0
+                },
+                "stops": {
+                  "type": "array",
+                  "maxItems": 4096,
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "offset",
+                      "color"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                      "offset": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "color": {
+                        "type": "array",
+                        "minItems": 4,
+                        "maxItems": 4,
+                        "items": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "stroke": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "required": [
+            "color",
+            "width",
+            "cap",
+            "join"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "color": {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            },
+            "width": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1000000000.0
+            },
+            "cap": {
+              "enum": [
+                "butt",
+                "round",
+                "square"
+              ]
+            },
+            "join": {
+              "enum": [
+                "miter",
+                "round",
+                "bevel"
+              ]
+            },
+            "dash": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "array",
+                  "maxItems": 1024,
+                  "items": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1000000000.0
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  "definitions": {
+    "progress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["phase", "completed", "total", "work", "done"],
+      "properties": {
+        "phase": {"enum": ["preparing", "flattening", "contours", "stroke", "strokeCleanup", "fillCoverage", "fillCoverageCleanup", "strokeCoverage", "strokeCoverageCleanup", "painting", "complete"]},
+        "completed": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+        "total": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+        "work": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+        "done": {"type": "boolean"}
+      },
+      "allOf": [{"if": {"properties": {"done": {"const": true}}}, "then": {"properties": {"phase": {"const": "complete"}}}, "else": {"properties": {"phase": {"not": {"const": "complete"}}}}}]
+    },
+    "coordinate": {
+      "type": "number",
+      "minimum": -1000000000,
+      "maximum": 1000000000
+    },
+    "point": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "$ref": "#/definitions/coordinate"
+      }
+    }
+  }
+}

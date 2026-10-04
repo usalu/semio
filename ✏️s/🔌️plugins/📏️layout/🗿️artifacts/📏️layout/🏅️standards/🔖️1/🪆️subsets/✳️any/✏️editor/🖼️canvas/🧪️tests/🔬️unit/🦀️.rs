@@ -139,11 +139,11 @@ async fn canvas_layers_labels_a_linked_pdf_when_it_has_no_proxy() {
 
 #[semio_framework_async_macros::async_test]
 async fn canvas_layers_turns_a_rotated_proxy() {
-    let mut image = semio_s_artifact_stdio_png::PngSnapshot::default();
+    let mut image = semio_s_artifact_stdio_png::io::PngProjection {width:1,height:1,bit_depth:8,color_type:semio_s_artifact_stdio_png::schema::snapshot::PngColorType::Rgba,interlace:false,plte:None,trns:None,gama:None,chrm:None,srgb:None,phys:None,time:None,bkgd:None,text_chunks:Vec::new(),pixels:Vec::new(),chunk_order:Vec::new(),unknown_chunks:Vec::new()};
     image.width = 2;
     image.height = 1;
     image.pixels = vec![255, 0, 0, 255, 0, 0, 255, 255];
-    let png = semio_s_artifact_stdio_png::io::encode_png(&image).expect("png");
+    let png = semio_s_artifact_stdio_png::io::author_png_projection(&image).expect("png");
     let mut doc = crate::standards::v1::subsets::any::schema::default_document();
     doc.links[0].state = Some("ready".into());
     doc.links[0].proxy_data_url = Some(format!("data:image/png;base64,{}", base64_encode(&png)));
@@ -156,7 +156,7 @@ async fn canvas_layers_turns_a_rotated_proxy() {
     assert_eq!(layer["kind"], "image");
     let url = layer["dataUrl"].as_str().expect("data url");
     let payload = url.strip_prefix("data:image/png;base64,").expect("png url");
-    let decoded = semio_s_artifact_stdio_png::io::decode_png(&decode_base64(payload).expect("base64")).expect("png");
+    let decoded = semio_s_artifact_stdio_png::io::project_png(&decode_base64(payload).expect("base64")).expect("png");
     assert_eq!((decoded.width, decoded.height), (1, 2));
     assert_eq!(&decoded.pixels[0..4], &[255, 0, 0, 255], "the left pixel turns to the top");
     assert_eq!(&decoded.pixels[4..8], &[0, 0, 255, 255], "the right pixel turns to the bottom");
@@ -167,11 +167,11 @@ fn canvas_layers_emits_an_embedded_drawing_png() {
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
     let point = |x: f64, y: f64| SemioPoint2 { x, y };
-    let mut encoded = semio_s_artifact_stdio_png::PngSnapshot::default();
+    let mut encoded = semio_s_artifact_stdio_png::io::PngProjection {width:1,height:1,bit_depth:8,color_type:semio_s_artifact_stdio_png::schema::snapshot::PngColorType::Rgba,interlace:false,plte:None,trns:None,gama:None,chrm:None,srgb:None,phys:None,time:None,bkgd:None,text_chunks:Vec::new(),pixels:Vec::new(),chunk_order:Vec::new(),unknown_chunks:Vec::new()};
     encoded.width = 1;
     encoded.height = 1;
     encoded.pixels = vec![255, 0, 0, 255];
-    let bytes = semio_s_artifact_stdio_png::io::encode_png(&encoded).expect("png");
+    let bytes = semio_s_artifact_stdio_png::io::author_png_projection(&encoded).expect("png");
     let content = SemioDrawingSnapshot {
         schema: "stdio.semio.drawing".into(),
         canvas: Default::default(),

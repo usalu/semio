@@ -1,5 +1,6 @@
 syntax = "proto3";
 package semio.s.layout.layout.diff;
+import "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧾️dictionary/🛰️.proto";
 import "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
 import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🛰️.proto";
 message ParagraphStylePatch { optional string name = 1; optional string font_family = 2; optional double font_size = 3; optional uint32 font_weight = 4; optional double leading = 5; optional double tracking = 6; optional string alignment = 7; }
@@ -41,7 +42,9 @@ message LayoutDiff {
   LayoutSpreadsDelta spreads = 10;
   LayoutPagesDelta pages = 11;
   optional string print_target = 12;
-  optional string data_fields_json = 13;
+  optional FormDictionaryChange data_fields = 13;
   semio.s.layout.layout.artifact.LayoutDrawingChild background_drawing = 14;
   semio.os.store.ArtifactLink referenced_model = 15;
 }
+
+message FormDictionaryChange { optional semio.s.forms.forms.dictionary.FormDictionary dictionary = 1; }

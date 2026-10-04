@@ -12,9 +12,9 @@ async fn inference_determinism_law() {
     use protocol::Inference;
 
     let snapshot = EquationSnapshot::default();
-    let inference = EquationInference::infer(&snapshot);
-    assert_eq!(inference, EquationInference::infer(&snapshot));
-    assert_eq!(inference.topology.node_count, crate::equation_graph(&snapshot).nodes.len() as u32);
+    let inference = EquationInference::infer(&snapshot).expect("valid materialized inference fixture");
+    assert_eq!(inference, EquationInference::infer(&snapshot).expect("valid materialized inference fixture"));
+    assert_eq!(inference.topology.node_count, snapshot.graph.nodes.len() as u32);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -23,6 +23,6 @@ async fn inference_default_law() {
     use crate::EquationSnapshot;
     use protocol::Inference;
 
-    assert_eq!(EquationInference::infer(&EquationSnapshot::default()), EquationInference::default());
+    assert_eq!(EquationInference::infer(&EquationSnapshot::default()).expect("valid materialized inference fixture"), EquationInference::default());
 }
 //#endregion 💡️InferenceLaws

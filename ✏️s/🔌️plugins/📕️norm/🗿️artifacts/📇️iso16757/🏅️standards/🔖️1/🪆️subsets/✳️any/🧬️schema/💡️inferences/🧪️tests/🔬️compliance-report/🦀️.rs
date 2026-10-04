@@ -86,7 +86,7 @@ async fn part_number_script_uses_document_limits_and_inputs() {
 #[semio_framework_async_macros::async_test]
 async fn emitted_subject_and_remedy_paths_parse_and_resolve() {
     for doc in [Iso16757Snapshot::default(), Iso16757Snapshot::broken_fixture()] {
-        let tree = dsl::ToValue::to_value(&doc);
+        let tree = semio_framework_value::ToValue::to_value(&doc);
         let report = evaluate(&doc);
         assert!(!report.checks.is_empty());
         for check in &report.checks {
@@ -359,12 +359,12 @@ async fn applying_applicable_fail_remedies_reduces_failures() {
 
     // Apply clearance remedies via setField paths.
     if let Some(gid) = doc.geometry.objects.keys().next().cloned() {
-        let mut tree = dsl::ToValue::to_value(&doc);
+        let mut tree = semio_framework_value::ToValue::to_value(&doc);
         for axis in 0..3usize {
             let path = format!("geometry.objects.{gid}.spaces[id=installation].bounds.max[{axis}]");
-            let _ = crate::app_surface::set_value_at_path(&mut tree, &path, dsl::DslValue::float(1.0));
+            let _ = crate::app_surface::set_value_at_path(&mut tree, &path, semio_framework_value::DslValue::float(1.0));
         }
-        if let Ok(updated) = <Iso16757Snapshot as dsl::FromValue>::from_value(tree) {
+        if let Ok(updated) = <Iso16757Snapshot as semio_framework_value::FromValue>::from_value(tree) {
             doc = updated;
         }
     }
@@ -410,22 +410,22 @@ async fn applying_applicable_fail_remedies_reduces_failures() {
 
 
 
-fn walk_dsl_leaves(prefix: &str, value: &dsl::DslValue, visit: &mut dyn FnMut(&str, &dsl::DslValue)) {
+fn walk_dsl_leaves(prefix: &str, value: &semio_framework_value::DslValue, visit: &mut dyn FnMut(&str, &semio_framework_value::DslValue)) {
     match value {
-        dsl::DslValue::Object(map) => {
+        semio_framework_value::DslValue::Object(map) => {
             for (k, v) in map.iter() {
                 let path = if prefix.is_empty() { k.clone() } else { format!("{prefix}.{k}") };
                 match v {
-                    dsl::DslValue::Object(_) | dsl::DslValue::Array(_) => walk_dsl_leaves(&path, v, visit),
+                    semio_framework_value::DslValue::Object(_) | semio_framework_value::DslValue::Array(_) => walk_dsl_leaves(&path, v, visit),
                     _ => visit(&path, v),
                 }
             }
         }
-        dsl::DslValue::Array(items) => {
+        semio_framework_value::DslValue::Array(items) => {
             for (i, item) in items.iter().enumerate() {
                 let id = match item {
-                    dsl::DslValue::Object(map) => map.iter().find(|(k, _)| *k == "id").and_then(|(_, v)| match v {
-                        dsl::DslValue::String(s) => Some(s.clone()),
+                    semio_framework_value::DslValue::Object(map) => map.iter().find(|(k, _)| *k == "id").and_then(|(_, v)| match v {
+                        semio_framework_value::DslValue::String(s) => Some(s.clone()),
                         _ => None,
                     }),
                     _ => None,
@@ -433,7 +433,7 @@ fn walk_dsl_leaves(prefix: &str, value: &dsl::DslValue, visit: &mut dyn FnMut(&s
                 let seg = id.map(|id| format!("[id={id}]")).unwrap_or_else(|| format!("[{i}]"));
                 let path = format!("{prefix}{seg}");
                 match item {
-                    dsl::DslValue::Object(_) | dsl::DslValue::Array(_) => walk_dsl_leaves(&path, item, visit),
+                    semio_framework_value::DslValue::Object(_) | semio_framework_value::DslValue::Array(_) => walk_dsl_leaves(&path, item, visit),
                     _ => visit(&path, item),
                 }
             }
@@ -462,7 +462,7 @@ fn is_descriptive_name_or_title_leaf(path: &str) -> bool {
 async fn field_meta_covers_every_editable_leaf_on_default_snapshot() {
     use crate::field_meta::iso16757_field_meta;
     let snap = Iso16757Snapshot::default();
-    let value = dsl::ToValue::to_value(&snap);
+    let value = semio_framework_value::ToValue::to_value(&snap);
     let mut missing = Vec::new();
     walk_dsl_leaves("", &value, &mut |path, _| {
         if path.is_empty() {
@@ -506,25 +506,25 @@ fn report_signature(report: &crate::document::CheckReport) -> Vec<(String, Strin
         .collect()
 }
 
-fn perturb_dsl_leaf(path: &str, value: &dsl::DslValue) -> Option<dsl::DslValue> {
+fn perturb_dsl_leaf(path: &str, value: &semio_framework_value::DslValue) -> Option<semio_framework_value::DslValue> {
     match value {
-        dsl::DslValue::Number(n) => {
+        semio_framework_value::DslValue::Number(n) => {
             let v = n.as_f64();
             Some(if n.is_integer() {
                 // Always move integer leaves by ≥1 so small i8/u32 dimensions/cardinalities change.
                 let base = if v < 0.0 { (v as i64).saturating_sub(1) as u64 } else { (v as u64).saturating_add(1) };
-                dsl::DslValue::uint(base.max(0))
+                semio_framework_value::DslValue::uint(base.max(0))
             } else {
                 let next = if v.abs() < 1e-12 { 1.0 } else { v * 1.35 + 0.01 };
-                dsl::DslValue::float(next)
+                semio_framework_value::DslValue::float(next)
             })
         }
-        dsl::DslValue::Bool(b) => Some(dsl::DslValue::Bool(!*b)),
-        dsl::DslValue::String(s) => {
+        semio_framework_value::DslValue::Bool(b) => Some(semio_framework_value::DslValue::Bool(!*b)),
+        semio_framework_value::DslValue::String(s) => {
             use crate::field_meta::iso16757_field_meta;
             if let Some(choices) = iso16757_field_meta(path).and_then(|m| m.choices) {
                 let alt = choices.iter().map(|c| c.value).find(|c| *c != s.as_str()).unwrap_or("x");
-                return Some(dsl::DslValue::String(alt.to_string()));
+                return Some(semio_framework_value::DslValue::String(alt.to_string()));
             }
             let next = if path.ends_with(".source") {
                 format!("{s}\n/*pert*/ 1/(0)")
@@ -533,7 +533,7 @@ fn perturb_dsl_leaf(path: &str, value: &dsl::DslValue) -> Option<dsl::DslValue> 
             } else {
                 format!("{s}__pert")
             };
-            Some(dsl::DslValue::String(next))
+            Some(semio_framework_value::DslValue::String(next))
         }
         _ => None,
     }
@@ -551,7 +551,7 @@ async fn every_editable_leaf_perturbation_changes_a_check() {
     for (label, base) in subjects {
         let base_report = evaluate(&base);
         let base_sig = report_signature(&base_report);
-        let value0 = dsl::ToValue::to_value(&base);
+        let value0 = semio_framework_value::ToValue::to_value(&base);
         let mut leaves = Vec::new();
         walk_dsl_leaves("", &value0, &mut |path, leaf| {
             if path.is_empty() || is_descriptive_name_or_title_leaf(path) {
@@ -561,12 +561,12 @@ async fn every_editable_leaf_perturbation_changes_a_check() {
         });
         for (path, leaf) in leaves {
             let Some(next) = perturb_dsl_leaf(&path, &leaf) else { continue };
-            let mut tree = dsl::ToValue::to_value(&base);
+            let mut tree = semio_framework_value::ToValue::to_value(&base);
             if crate::app_surface::set_value_at_path(&mut tree, &path, next).is_err() {
                 inert.push(format!("{label}:{path} (set failed)"));
                 continue;
             }
-            let Ok(perturbed) = <Iso16757Snapshot as dsl::FromValue>::from_value(tree) else {
+            let Ok(perturbed) = <Iso16757Snapshot as semio_framework_value::FromValue>::from_value(tree) else {
                 continue;
             };
             let report = evaluate(&perturbed);

@@ -5,7 +5,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🧬️Payload
 /// 🔮️ First-party Change Widget payload.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, crate::os_dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, crate::os_dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "change-widget")]
@@ -19,9 +19,12 @@ impl MutationKind<FlowHostSnapshot, FlowMutation> for ChangeWidget {
     fn diff(&self, _base: &FlowHostSnapshot) -> MutationOutcome<FlowDiff> {
         MutationOutcome::new(FlowDiff::from(FlowDelta::Widgets(FlowCollectionDelta { removed: vec![], inserted: vec![], replaced: vec![(self.id.clone(), self.widget.clone())] })))
     }
-    fn inverse(&self, base: &FlowHostSnapshot) -> Vec<FlowMutation> {
+    fn inverse(&self, base: &FlowHostSnapshot) -> Result<Vec<FlowMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         base.widgets.iter().find(|item| item.id() == &self.id).map(|previous| FlowMutation::ChangeWidget(Self { id: self.widget.id().clone(), widget: previous.clone() })).into_iter().collect()
-    }
+    
+    })())
+}
     fn label(&self) -> crate::LocalizedLabel {
         crate::LocalizedLabel::native(&format!("Change widget {}", self.id), &format!("Widget {} ändern", self.id))
     }

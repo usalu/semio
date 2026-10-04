@@ -49,7 +49,7 @@ use crate::db_storage::WalStorage;
 use crate::*;
 use protocol::MutationDiff as _;
 
-use dsl::DslValue;
+use semio_framework_value::DslValue;
 
 //#region 🔖️Ids
 /// 🌉️ `protocol::ArtifactId` → `ArtifactId`, the lossless single-`String` bridge
@@ -150,7 +150,7 @@ async fn decode_pathmap(bytes: &[u8]) -> Result<DslValue, DbError> {
 /// `store::pack_rt`'s binary encoding, not raw JSON text), which is exactly the "wire error:
 /// truncated" bug this function exists to make structurally impossible to repeat.
 pub async fn encode_pathmap_json(value: &serde_json::Value) -> Result<Vec<u8>, DbError> {
-    Ok(encode_pathmap(&DslValue::from(value)).await)
+    Ok(encode_pathmap(&semio_framework_value::DslValue::from(value)).await)
 }
 
 /// 🧰️ Inverse of `encode_pathmap_json` — also the general "read back one stored/queried
@@ -194,7 +194,7 @@ async fn inverse_entries(inverse: &protocol::InverseMutation) -> Result<Vec<(Str
 /// envelope's diff/inverse payloads.
 // 🚫️async: E1 pure accessor, always used as `&entries_to_value(...)` inline into another call — see R9
 fn entries_to_value(entries: &[(String, Option<DslValue>)]) -> DslValue {
-    DslValue::Object(entries.iter().map(|(path, value)| (path.clone(), value.clone().unwrap_or(DslValue::Null))).collect())
+    semio_framework_value::DslValue::Object(entries.iter().map(|(path, value)| (path.clone(), value.clone().unwrap_or(semio_framework_value::DslValue::Null))).collect())
 }
 
 /// 👣️ The `TouchedSet` a set of entries would write — shared by `DocumentState::
@@ -227,13 +227,13 @@ pub async fn envelope_from_operation<P, Op>(
     default_timestamp: protocol::HybridLogicalTimestamp,
 ) -> Result<protocol::MutationEnvelope, DbError>
 where
-    P: dsl::ToValue,
+    P: semio_framework_value::ToValue,
     Op: protocol::Mutation<P>,
 {
     let diff = op.diff(base);
     let post = diff.diff().apply(base).map_err(|error| DbError::InvalidArgument(error.to_string()))?;
-    let forward = DslValue::Object(vec![(path.to_string(), semio_framework_value::ToValue::to_value(&post))]);
-    let backward = DslValue::Object(vec![(path.to_string(), semio_framework_value::ToValue::to_value(base))]);
+    let forward = semio_framework_value::DslValue::Object(vec![(path.to_string(), semio_framework_value::ToValue::to_value(&post))]);
+    let backward = semio_framework_value::DslValue::Object(vec![(path.to_string(), semio_framework_value::ToValue::to_value(base))]);
     let schema = protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string());
     Ok(protocol::MutationEnvelope {
         mutation_id: op.mutation_id().unwrap_or(default_mutation_id),
@@ -298,7 +298,7 @@ async fn grade_conflict_record(record: &db_conflict::ConflictRecord) -> protocol
     match &record.kind {
         db_conflict::ConflictKind::TouchedRegion(regions) => {
             let target: Vec<String> = regions.iter().map(|region| region.path.clone()).collect();
-            protocol::MutationMessage::warn("mutation.clamped", format!("command {} touches region(s) also touched by concurrent command {}", record.command_id.0, record.conflicting_with.0)).at(target)
+            protocol::MutationMessage::warning("mutation.clamped", format!("command {} touches region(s) also touched by concurrent command {}", record.command_id.0, record.conflicting_with.0)).at(target)
         }
         db_conflict::ConflictKind::Constraint(description) => {
             protocol::MutationMessage::fatal("mutation.invariant", format!("command {} violates constraint '{description}' held by concurrent command {}", record.command_id.0, record.conflicting_with.0)).at([description.clone()])
@@ -397,7 +397,7 @@ async fn grade_concurrent_write(written: &db_conflict::CommandTouch, written_tar
     if !targets_overlap(written_target, unseen_target) {
         return Vec::new();
     }
-    vec![protocol::MutationMessage::warn("mutation.clamped", format!("command {} was authored without seeing concurrent command {}, which writes the same part of the document", written.command_id.0, unseen.command_id.0)).at(written_target.to_vec())]
+    vec![protocol::MutationMessage::warning("mutation.clamped", format!("command {} was authored without seeing concurrent command {}, which writes the same part of the document", written.command_id.0, unseen.command_id.0)).at(written_target.to_vec())]
 }
 //#endregion 🔖️Conflict
 
@@ -477,11 +477,11 @@ impl ArtifactDurableGroupRecoveredCheckpointV1 {
     ) -> Result<store::durable_group::DurableOwnedGroupVerifiedThreeEditsV1<ParentMutation, DrawingMutation, ValueMutation>, store::durable_group::DurableOwnedGroupDecisionError>
     where
         ParentP: store::ArtifactPack,
-        ParentMutation: store::ToValue + store::FromValue,
+        ParentMutation: semio_framework_value::ToValue + semio_framework_value::FromValue,
         DrawingP: store::ArtifactPack,
-        DrawingMutation: store::ToValue + store::FromValue,
+        DrawingMutation: semio_framework_value::ToValue + semio_framework_value::FromValue,
         ValueP: store::ArtifactPack,
-        ValueMutation: store::ToValue + store::FromValue,
+        ValueMutation: semio_framework_value::ToValue + semio_framework_value::FromValue,
     {
         self.record.verify_fixed_three_edits::<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>()
     }
@@ -524,12 +524,12 @@ impl ArtifactCommittedDurableGroupDecisionV1 {
         admission: store::durable_group::DurableOwnedMapRecoveryAdmissionV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>,
     ) -> ArtifactCommittedDurableGroupRecoveryV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
     where
-        ParentP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
-        ParentMutation: store::Mutation<ParentP> + Clone + store::ToValue + store::FromValue + Send + 'static,
-        DrawingP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
-        DrawingMutation: store::Mutation<DrawingP> + Clone + store::ToValue + store::FromValue + Send + 'static,
-        ValueP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
-        ValueMutation: store::Mutation<ValueP> + Clone + store::ToValue + store::FromValue + Send + 'static,
+        ParentP: store::ArtifactPack + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + 'static,
+        ParentMutation: store::Mutation<ParentP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + 'static,
+        DrawingP: store::ArtifactPack + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + 'static,
+        DrawingMutation: store::Mutation<DrawingP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + 'static,
+        ValueP: store::ArtifactPack + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + 'static,
+        ValueMutation: store::Mutation<ValueP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + 'static,
     {
         ArtifactCommittedDurableGroupRecoveryV1 { state: std::mem::ManuallyDrop::new(Some(ArtifactCommittedDurableGroupRecoveryStateV1::Admitting { witness: self, admission, last_error: None })) }
     }
@@ -537,12 +537,12 @@ impl ArtifactCommittedDurableGroupDecisionV1 {
 
 enum ArtifactCommittedDurableGroupRecoveryStateV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: Clone + store::ToValue + store::FromValue,
-    ParentMutation: store::Mutation<ParentP> + Clone + store::ToValue + store::FromValue,
-    DrawingP: Clone + store::ToValue + store::FromValue,
-    DrawingMutation: store::Mutation<DrawingP> + Clone + store::ToValue + store::FromValue,
-    ValueP: Clone + store::ToValue + store::FromValue,
-    ValueMutation: store::Mutation<ValueP> + Clone + store::ToValue + store::FromValue,
+    ParentP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    ParentMutation: store::Mutation<ParentP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    DrawingP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    DrawingMutation: store::Mutation<DrawingP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    ValueP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    ValueMutation: store::Mutation<ValueP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
 {
     Admitting {
         witness: ArtifactCommittedDurableGroupDecisionV1,
@@ -566,12 +566,12 @@ where
 #[must_use = "committed recovery must reach one terminal three-Store owner handoff"]
 pub(crate) struct ArtifactCommittedDurableGroupRecoveryV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: Clone + store::ToValue + store::FromValue,
-    ParentMutation: store::Mutation<ParentP> + Clone + store::ToValue + store::FromValue,
-    DrawingP: Clone + store::ToValue + store::FromValue,
-    DrawingMutation: store::Mutation<DrawingP> + Clone + store::ToValue + store::FromValue,
-    ValueP: Clone + store::ToValue + store::FromValue,
-    ValueMutation: store::Mutation<ValueP> + Clone + store::ToValue + store::FromValue,
+    ParentP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    ParentMutation: store::Mutation<ParentP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    DrawingP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    DrawingMutation: store::Mutation<DrawingP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    ValueP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    ValueMutation: store::Mutation<ValueP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
 {
     state: std::mem::ManuallyDrop<Option<ArtifactCommittedDurableGroupRecoveryStateV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>>>,
 }
@@ -586,12 +586,12 @@ pub(crate) enum ArtifactCommittedDurableGroupRecoveryAdvanceV1 {
 
 pub(crate) struct ArtifactCommittedDurableGroupRecoveryTerminalV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: Clone + store::ToValue + store::FromValue,
-    ParentMutation: store::Mutation<ParentP> + Clone + store::ToValue + store::FromValue,
-    DrawingP: Clone + store::ToValue + store::FromValue,
-    DrawingMutation: store::Mutation<DrawingP> + Clone + store::ToValue + store::FromValue,
-    ValueP: Clone + store::ToValue + store::FromValue,
-    ValueMutation: store::Mutation<ValueP> + Clone + store::ToValue + store::FromValue,
+    ParentP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    ParentMutation: store::Mutation<ParentP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    DrawingP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    DrawingMutation: store::Mutation<DrawingP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    ValueP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    ValueMutation: store::Mutation<ValueP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
 {
     pub(crate) document: ArtifactId,
     pub(crate) receipt: store::durable_group::DurableOwnedGroupJournalReceiptV1,
@@ -601,12 +601,12 @@ where
 
 pub(crate) struct ArtifactCommittedDurableGroupRecoveryRejectedTerminalV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: Clone + store::ToValue + store::FromValue,
-    ParentMutation: store::Mutation<ParentP> + Clone + store::ToValue + store::FromValue,
-    DrawingP: Clone + store::ToValue + store::FromValue,
-    DrawingMutation: store::Mutation<DrawingP> + Clone + store::ToValue + store::FromValue,
-    ValueP: Clone + store::ToValue + store::FromValue,
-    ValueMutation: store::Mutation<ValueP> + Clone + store::ToValue + store::FromValue,
+    ParentP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    ParentMutation: store::Mutation<ParentP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    DrawingP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    DrawingMutation: store::Mutation<DrawingP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    ValueP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    ValueMutation: store::Mutation<ValueP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
 {
     pub(crate) document: ArtifactId,
     pub(crate) receipt: store::durable_group::DurableOwnedGroupJournalReceiptV1,
@@ -616,12 +616,12 @@ where
 
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> ArtifactCommittedDurableGroupRecoveryV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
-    ParentMutation: store::Mutation<ParentP> + Clone + store::ToValue + store::FromValue + Send + 'static,
-    DrawingP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
-    DrawingMutation: store::Mutation<DrawingP> + Clone + store::ToValue + store::FromValue + Send + 'static,
-    ValueP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
-    ValueMutation: store::Mutation<ValueP> + Clone + store::ToValue + store::FromValue + Send + 'static,
+    ParentP: store::ArtifactPack + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + 'static,
+    ParentMutation: store::Mutation<ParentP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + 'static,
+    DrawingP: store::ArtifactPack + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + 'static,
+    DrawingMutation: store::Mutation<DrawingP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + 'static,
+    ValueP: store::ArtifactPack + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + 'static,
+    ValueMutation: store::Mutation<ValueP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + 'static,
 {
     pub(crate) fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> ArtifactCommittedDurableGroupRecoveryAdvanceV1 {
         let Some(state) = self.state.take() else {
@@ -727,12 +727,12 @@ where
 
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> Drop for ArtifactCommittedDurableGroupRecoveryV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: Clone + store::ToValue + store::FromValue,
-    ParentMutation: store::Mutation<ParentP> + Clone + store::ToValue + store::FromValue,
-    DrawingP: Clone + store::ToValue + store::FromValue,
-    DrawingMutation: store::Mutation<DrawingP> + Clone + store::ToValue + store::FromValue,
-    ValueP: Clone + store::ToValue + store::FromValue,
-    ValueMutation: store::Mutation<ValueP> + Clone + store::ToValue + store::FromValue,
+    ParentP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    ParentMutation: store::Mutation<ParentP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    DrawingP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    DrawingMutation: store::Mutation<DrawingP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    ValueP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    ValueMutation: store::Mutation<ValueP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
 {
     fn drop(&mut self) {
         assert!(self.state.is_none(), "committed WAL recovery reached Drop before exact three-Store terminal handoff");
@@ -785,12 +785,12 @@ pub(crate) async fn committed_durable_group_decision_from_transaction<S: WalStor
 
 enum ArtifactDurableGroupRecoveryTargetStateV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: Clone + store::ToValue + store::FromValue,
-    ParentMutation: store::Mutation<ParentP> + Clone + store::ToValue + store::FromValue,
-    DrawingP: Clone + store::ToValue + store::FromValue,
-    DrawingMutation: store::Mutation<DrawingP> + Clone + store::ToValue + store::FromValue,
-    ValueP: Clone + store::ToValue + store::FromValue,
-    ValueMutation: store::Mutation<ValueP> + Clone + store::ToValue + store::FromValue,
+    ParentP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    ParentMutation: store::Mutation<ParentP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    DrawingP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    DrawingMutation: store::Mutation<DrawingP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    ValueP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    ValueMutation: store::Mutation<ValueP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
 {
     Admitting(store::durable_group::DurableOwnedMapRecoveryAdmissionV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>),
     Recovering { owner: ArtifactCommittedDurableGroupRecoveryV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>, checkpoint: ArtifactDurableGroupRecoveredCheckpointV1 },
@@ -800,12 +800,12 @@ where
 
 struct ArtifactDurableGroupRecoveryTargetSharedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: Clone + store::ToValue + store::FromValue,
-    ParentMutation: store::Mutation<ParentP> + Clone + store::ToValue + store::FromValue,
-    DrawingP: Clone + store::ToValue + store::FromValue,
-    DrawingMutation: store::Mutation<DrawingP> + Clone + store::ToValue + store::FromValue,
-    ValueP: Clone + store::ToValue + store::FromValue,
-    ValueMutation: store::Mutation<ValueP> + Clone + store::ToValue + store::FromValue,
+    ParentP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    ParentMutation: store::Mutation<ParentP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    DrawingP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    DrawingMutation: store::Mutation<DrawingP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    ValueP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    ValueMutation: store::Mutation<ValueP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
 {
     document: ArtifactId,
     state: std::sync::Mutex<ArtifactDurableGroupRecoveryTargetStateV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>>,
@@ -827,24 +827,24 @@ pub struct ArtifactDurableGroupRecoveryDriverV1 {
 
 struct ArtifactDurableGroupRecoveryTargetDriverV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: Clone + store::ToValue + store::FromValue,
-    ParentMutation: store::Mutation<ParentP> + Clone + store::ToValue + store::FromValue,
-    DrawingP: Clone + store::ToValue + store::FromValue,
-    DrawingMutation: store::Mutation<DrawingP> + Clone + store::ToValue + store::FromValue,
-    ValueP: Clone + store::ToValue + store::FromValue,
-    ValueMutation: store::Mutation<ValueP> + Clone + store::ToValue + store::FromValue,
+    ParentP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    ParentMutation: store::Mutation<ParentP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    DrawingP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    DrawingMutation: store::Mutation<DrawingP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    ValueP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    ValueMutation: store::Mutation<ValueP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
 {
     shared: Arc<ArtifactDurableGroupRecoveryTargetSharedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>>,
 }
 
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> ArtifactDurableGroupRecoveryDriverCoreV1 for ArtifactDurableGroupRecoveryTargetDriverV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
-    ParentMutation: store::Mutation<ParentP> + Clone + store::ToValue + store::FromValue + Send + 'static,
-    DrawingP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
-    DrawingMutation: store::Mutation<DrawingP> + Clone + store::ToValue + store::FromValue + Send + 'static,
-    ValueP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
-    ValueMutation: store::Mutation<ValueP> + Clone + store::ToValue + store::FromValue + Send + 'static,
+    ParentP: store::ArtifactPack + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + 'static,
+    ParentMutation: store::Mutation<ParentP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + 'static,
+    DrawingP: store::ArtifactPack + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + 'static,
+    DrawingMutation: store::Mutation<DrawingP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + 'static,
+    ValueP: store::ArtifactPack + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + 'static,
+    ValueMutation: store::Mutation<ValueP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + 'static,
 {
     fn document(&self) -> &ArtifactId {
         &self.shared.document
@@ -929,12 +929,12 @@ where
 #[must_use = "durable group recovery must return its exact three Store owners"]
 pub struct ArtifactDurableGroupRecoveryOwnerV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: Clone + store::ToValue + store::FromValue,
-    ParentMutation: store::Mutation<ParentP> + Clone + store::ToValue + store::FromValue,
-    DrawingP: Clone + store::ToValue + store::FromValue,
-    DrawingMutation: store::Mutation<DrawingP> + Clone + store::ToValue + store::FromValue,
-    ValueP: Clone + store::ToValue + store::FromValue,
-    ValueMutation: store::Mutation<ValueP> + Clone + store::ToValue + store::FromValue,
+    ParentP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    ParentMutation: store::Mutation<ParentP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    DrawingP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    DrawingMutation: store::Mutation<DrawingP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    ValueP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    ValueMutation: store::Mutation<ValueP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
 {
     shared: Arc<ArtifactDurableGroupRecoveryTargetSharedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>>,
     request: Option<Pin<Box<db_actor::AskFuture<ArtifactMessage, Result<(), DbError>>>>>,
@@ -942,12 +942,12 @@ where
 
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> ArtifactDurableGroupRecoveryOwnerV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
-    ParentMutation: store::Mutation<ParentP> + Clone + store::ToValue + store::FromValue + Send + 'static,
-    DrawingP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
-    DrawingMutation: store::Mutation<DrawingP> + Clone + store::ToValue + store::FromValue + Send + 'static,
-    ValueP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
-    ValueMutation: store::Mutation<ValueP> + Clone + store::ToValue + store::FromValue + Send + 'static,
+    ParentP: store::ArtifactPack + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + 'static,
+    ParentMutation: store::Mutation<ParentP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + 'static,
+    DrawingP: store::ArtifactPack + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + 'static,
+    DrawingMutation: store::Mutation<DrawingP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + 'static,
+    ValueP: store::ArtifactPack + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + 'static,
+    ValueMutation: store::Mutation<ValueP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + 'static,
 {
     fn new(document: ArtifactId, admission: store::durable_group::DurableOwnedMapRecoveryAdmissionV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>) -> (Self, ArtifactDurableGroupRecoveryDriverV1) {
         let shared = Arc::new(ArtifactDurableGroupRecoveryTargetSharedV1 {
@@ -2135,7 +2135,7 @@ impl ArtifactEngine {
             let principal = db_security::Principal::new(envelope.actor.clone(), db_security::TenantId::from("default"), vec!["member".to_string()]);
             self.config.security.admit_commands(&principal, &db_security::TenantId::from("default"), &envelope.document_id, &envelope.diff.schema.0, &[(&envelope.actor, &envelope.mutation_id)], now_ms).await?;
             if let Some(refusal) = self.history_transition_refusal(envelope, &batch.envelopes, &batch_ids) {
-                return Err(DbError::Rejected { policy: options.policy, worst: protocol::Severity::Error, messages: vec![refusal] });
+                return Err(DbError::Rejected { policy: options.policy, worst: semio_framework_diagnostic::Severity::Error, messages: vec![refusal] });
             }
 
             // 🎯️ W5: `WalRecord::Command`'s bytes are `protocol::encode_envelope`'s binary record now
@@ -2563,7 +2563,7 @@ impl ArtifactEngine {
     /// (never touches the WAL), per the contract's preview law. Backed by a real
     /// `db_preview::PreviewStore` this revision (previously a local, minimal stand-in).
     pub async fn publish_preview(&mut self, entries: &[(String, Option<serde_json::Value>)], now_ms: u64) -> Result<db_preview::PreviewId, DbError> {
-        let dsl_entries: Vec<(String, Option<DslValue>)> = entries.iter().map(|(path, value)| (path.clone(), value.as_ref().map(DslValue::from))).collect();
+        let dsl_entries: Vec<(String, Option<DslValue>)> = entries.iter().map(|(path, value)| (path.clone(), value.as_ref().map(semio_framework_value::DslValue::from))).collect();
         let touched = entries_touched(&dsl_entries);
         let envelope = protocol::MutationEnvelope {
             mutation_id: protocol::MutationId(format!("preview-{}", entries.len())),
@@ -2573,7 +2573,7 @@ impl ArtifactEngine {
             observed: None,
             target: Vec::new(),
             diff: protocol::ArtifactDiff { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&entries_to_value(&dsl_entries)).await },
-            inverse: protocol::InverseMutation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&DslValue::Object(vec![])).await },
+            inverse: protocol::InverseMutation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&semio_framework_value::DslValue::Object(vec![])).await },
             timestamp: protocol::HybridLogicalTimestamp::new(0, now_ms),
             transaction: None, verb: None, line: None,
         };
@@ -4807,7 +4807,7 @@ impl store::durable_group::DurableOwnedGroupJournalCommitV1 for ArtifactDurableG
         self.close_started = true;
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         use store::SnapshotRetirementStep;
         if matches!(self.state, ArtifactDurableGroupJournalCommitStateV1::Empty) {
             return Ok(SnapshotRetirementStep::Complete);
@@ -6063,12 +6063,12 @@ impl ArtifactAuthority {
         admission: store::durable_group::DurableOwnedMapRecoveryAdmissionV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>,
     ) -> ArtifactDurableGroupRecoveryOwnerV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
     where
-        ParentP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
-        ParentMutation: store::Mutation<ParentP> + Clone + store::ToValue + store::FromValue + Send + 'static,
-        DrawingP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
-        DrawingMutation: store::Mutation<DrawingP> + Clone + store::ToValue + store::FromValue + Send + 'static,
-        ValueP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
-        ValueMutation: store::Mutation<ValueP> + Clone + store::ToValue + store::FromValue + Send + 'static,
+        ParentP: store::ArtifactPack + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + 'static,
+        ParentMutation: store::Mutation<ParentP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + 'static,
+        DrawingP: store::ArtifactPack + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + 'static,
+        DrawingMutation: store::Mutation<DrawingP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + 'static,
+        ValueP: store::ArtifactPack + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + 'static,
+        ValueMutation: store::Mutation<ValueP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + 'static,
     {
         let (mut owner, driver) = ArtifactDurableGroupRecoveryOwnerV1::new(document, admission);
         owner.request = Some(Box::pin(self.address.ask(Priority::Command, |reply| ArtifactMessage::RecoverDurableGroupDecisions { driver, reply })));
@@ -6080,12 +6080,12 @@ impl ArtifactAuthority {
         owner: &mut ArtifactDurableGroupRecoveryOwnerV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>,
     ) -> Result<(), DbError>
     where
-        ParentP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
-        ParentMutation: store::Mutation<ParentP> + Clone + store::ToValue + store::FromValue + Send + 'static,
-        DrawingP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
-        DrawingMutation: store::Mutation<DrawingP> + Clone + store::ToValue + store::FromValue + Send + 'static,
-        ValueP: store::ArtifactPack + Clone + store::ToValue + store::FromValue + Send + Sync + 'static,
-        ValueMutation: store::Mutation<ValueP> + Clone + store::ToValue + store::FromValue + Send + 'static,
+        ParentP: store::ArtifactPack + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + 'static,
+        ParentMutation: store::Mutation<ParentP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + 'static,
+        DrawingP: store::ArtifactPack + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + 'static,
+        DrawingMutation: store::Mutation<DrawingP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + 'static,
+        ValueP: store::ArtifactPack + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + 'static,
+        ValueMutation: store::Mutation<ValueP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + 'static,
     {
         if owner.request.is_some() || owner.shared.scan_complete.load(std::sync::atomic::Ordering::Acquire) {
             return Err(DbError::Conflict("durable group recovery scan is already active or complete".to_string()));

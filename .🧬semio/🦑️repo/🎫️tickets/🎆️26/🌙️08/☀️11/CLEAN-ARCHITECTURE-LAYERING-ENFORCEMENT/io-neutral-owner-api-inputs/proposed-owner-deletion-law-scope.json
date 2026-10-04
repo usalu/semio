@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "sourceOnly": true,
+  "requiredAbsentTrees": [
+    "🧰️framework/🛍️products/💻️os",
+    "🧰️framework/🛍️products/🦑️repo"
+  ],
+  "generalOwners": [
+    "🚪️io",
+    "🚪️io/🧬️schema",
+    "🚪️io/🪶️sqlite-snapshot",
+    "🎒️pack",
+    "🎒️pack/⚠️error",
+    "🗣️dsl/🧬️schema"
+  ],
+  "requiredCurrentRefusals": [
+    "General facade normal OS kernel dependency",
+    "Neutral IO public OS transaction type",
+    "Neutral snapshot registration containing full OS ArtifactCodec"
+  ],
+  "retainedFixtures": [
+    "🚪️io/🧫️fixtures/🪶️sqlite-snapshot-registration/🔣️.json",
+    "🚪️io/🧪️tests/🪶️transfer/🦀️.rs",
+    "OS store assembly lifetime four compiler cases"
+  ],
+  "requiredSemantics": [
+    "one shared publication barrier",
+    "guards cannot outlive borrowed barrier",
+    "all registry preflight before first mutation",
+    "no fallible operation after first registry mutation",
+    "exact schema/type/function-pointer ownership checks",
+    "native metadata reservation",
+    "Pack TextRefusal diagnostic source",
+    "progress cancellation budget allocation fidelity"
+  ],
+  "runtimeExecuted": false,
+  "nativeExecuted": 0
+}

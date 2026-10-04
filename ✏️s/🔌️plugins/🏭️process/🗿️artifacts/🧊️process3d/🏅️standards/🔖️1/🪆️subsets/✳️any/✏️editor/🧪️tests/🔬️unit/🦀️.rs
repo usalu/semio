@@ -125,7 +125,7 @@ pub(crate) mod context {
                         ("moduleId".to_string(), DslValue::String("wood".to_string())),
                         ("label".to_string(), DslValue::String("Wood".to_string())),
                         ("iconId".to_string(), DslValue::String("beam".to_string())),
-                        ("machinesJson".to_string(), DslValue::String(semio_framework_os_kernel::json::to_json_string(&wood_machines))),
+                        ("machinesJson".to_string(), DslValue::String(semio_framework_pack_json::to_json_string(&wood_machines))),
                     ]),
                 )),
             },
@@ -138,12 +138,12 @@ pub(crate) mod context {
                         ("moduleId".to_string(), DslValue::String("metal".to_string())),
                         ("label".to_string(), DslValue::String("Metal".to_string())),
                         ("iconId".to_string(), DslValue::String("wrench".to_string())),
-                        ("machinesJson".to_string(), DslValue::String(semio_framework_os_kernel::json::to_json_string(&metal_machines))),
+                        ("machinesJson".to_string(), DslValue::String(semio_framework_pack_json::to_json_string(&metal_machines))),
                     ]),
                 )),
             },
         ];
-        let json = dsl::json::to_json_string(&entries);
+        let json = semio_framework_pack_json::to_json_string(&entries);
         // 🧵️ B1: an app's own behaviour dispatches only through the typed command channel —
         // `handle_action` serves the framework-reserved verbs and rejects app command ids.
         dispatch(app, Process3dCommand::SetContributions(set_contributions::SetContributions { json }));
@@ -163,15 +163,15 @@ pub(crate) mod context {
     /// that generation, so a test that swaps a production envelope must start from here; seeding first
     /// bumps the generation and the decode comes back `Fault` instead of `Ready`.
     pub fn unseeded_app_with_registry() -> Process3dApp {
-        let mut app = semio_framework_plugin::resolve_ready(new_app_with_registry_and_members::<EditorApp<Process3dPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(process3d_app_manifest_for_tests));
-        semio_framework_plugin::resolve_ready(PluginApp::bind_instance_id(&mut app, meta("local").instance_id));
+        let mut app = ::semio_framework_async::poll::resolve_ready(new_app_with_registry_and_members::<EditorApp<Process3dPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(process3d_app_manifest_for_tests));
+        ::semio_framework_async::poll::resolve_ready(PluginApp::bind_instance_id(&mut app, meta("local").instance_id));
         Process3dApp(app)
     }
     
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
     pub fn app_with_registry() -> Process3dApp {
-        let mut app = semio_framework_plugin::resolve_ready(new_app_with_registry_and_members::<EditorApp<Process3dPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(process3d_app_manifest_for_tests));
-        semio_framework_plugin::resolve_ready(PluginApp::bind_instance_id(&mut app, meta("local").instance_id));
+        let mut app = ::semio_framework_async::poll::resolve_ready(new_app_with_registry_and_members::<EditorApp<Process3dPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(process3d_app_manifest_for_tests));
+        ::semio_framework_async::poll::resolve_ready(PluginApp::bind_instance_id(&mut app, meta("local").instance_id));
         seed_domain_catalog_contributions(&mut app);
         Process3dApp(app)
     }
@@ -199,7 +199,7 @@ pub(crate) mod context {
         let mut view_state = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
         view_state.active_utility_id = Some(active_utility_id.into());
         let action_meta = ActionMeta { view_state: Some(view_state), ..meta("local") };
-        let mut result = semio_framework_plugin::resolve_ready(app.dispatch_typed(command, &action_meta)).expect("dispatch");
+        let mut result = ::semio_framework_async::poll::resolve_ready(app.dispatch_typed(command, &action_meta)).expect("dispatch");
         let receipt = settle(app);
         result.requested_effects.extend(receipt.effects.iter().cloned());
         (result, receipt)
@@ -212,12 +212,12 @@ pub(crate) mod context {
     /// 🏁️ The settling action bridge — same reason as [`settled_dispatch`]: the host verb's retained
     /// operation publishes after the call answers.
     pub fn settled_action(app: &mut Process3dRawApp, action: &str, args: Option<&DslValue>) -> (InvocationResult, semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt) {
-        let admitted = semio_framework_plugin::resolve_ready(app.handle_action(action, args, &meta("local"))).expect("action dispatch");
+        let admitted = ::semio_framework_async::poll::resolve_ready(app.handle_action(action, args, &meta("local"))).expect("action dispatch");
         // 🛂️ A framework-reserved verb (`interactionSelect`, `interactionHover`, undo/redo, …) is only
         // ADMITTED by `handle_action` — it finishes in a reserved job handed back as an
         // `Effect::SpawnJob`. Without driving that job home the selection never lands in the
         // interaction store and every selection-addressed render still projects the empty state.
-        let mut result = semio_framework_plugin::resolve_ready(semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted)).expect("settle the framework-reserved admission");
+        let mut result = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted)).expect("settle the framework-reserved admission");
         let receipt = settle(app);
         result.requested_effects.extend(receipt.effects.iter().cloned());
         (result, receipt)
@@ -226,7 +226,7 @@ pub(crate) mod context {
     /// 🏁️ Drives every pending typed operation of the bound instance to its publication, the way the
     /// plugin host's continuation does.
     pub fn settle(app: &mut Process3dRawApp) -> semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt {
-        semio_framework_plugin::resolve_ready(semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id)).expect("settle the typed operation")
+        ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id)).expect("settle the typed operation")
     }
     
     /// 🧾️ Whether a settled publication reached the DOCUMENT lane — the mounted app's observable
@@ -246,7 +246,7 @@ pub(crate) mod context {
     /// `ViewModel.tree_windows` is the ONLY way a caller states which containers are open and which
     /// rows the viewport holds.
     pub fn render_with_view(app: &mut Process3dRawApp, body_key: &str, view_state: &ViewModel) -> String {
-        let tree = semio_framework_plugin::resolve_ready(app.render(body_key, None, view_state)).expect("render");
+        let tree = ::semio_framework_async::poll::resolve_ready(app.render(body_key, None, view_state)).expect("render");
         semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("render projection")
     }
     
@@ -263,7 +263,7 @@ pub(crate) mod context {
     }
     
     pub fn main_window_measures(app: &mut Process3dRawApp) -> Vec<WindowMeasure> {
-        semio_framework_plugin::resolve_ready(app.window_measures(&main_window_view())).get(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN).cloned().expect("main window measures")
+        ::semio_framework_async::poll::resolve_ready(app.window_measures(&main_window_view())).get(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN).cloned().expect("main window measures")
     }
 }
 
@@ -490,10 +490,11 @@ fn drive_resumable_work(
     let operation = retained_operation();
     let mut progress = 0;
     loop {
-        match work.step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, history, interaction, hover: &hover, context: None, operation: &operation }).expect("retained work step") {
+        match work.step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, history, interaction, hover: &hover, context: None, operation: &operation }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut 0)).expect("retained work step") {
             ArtifactCommandWorkStep::Replay { .. } | ArtifactCommandWorkStep::Progress { .. } => progress += 1,
             ArtifactCommandWorkStep::Complete(emit) => return (progress, emit),
             ArtifactCommandWorkStep::CompleteWithEphemeral { emit, .. } => return (progress, emit),
+            ArtifactCommandWorkStep::CompleteDownload { .. } => panic!("a process3d document command never completes as a download"),
         }
     }
 }
@@ -579,10 +580,11 @@ fn document_preparation_uses_the_mutations_own_semantics_and_a_fixed_per_turn_gr
     assert!(duplicate.contains("refused by its own vocabulary"), "{duplicate}");
     let missing = prepare_process3d_document(&base, Process3dMutation::DeleteStep(DeleteStep { id: "ghost".into() })).expect_err("a missing target is refused");
     assert!(missing.contains("refused by its own vocabulary"), "{missing}");
-    let footprint = process3d_mutation_footprint(&Process3dMutation::DeleteStep(DeleteStep { id: "step-1".into() })).expect("footprint");
-    assert_eq!(footprint.work_items, 1);
+    let delete = Process3dMutation::DeleteStep(DeleteStep { id: "step-1".into() });
+    let footprint = store::ArtifactStoreOneItemFootprint::for_leaf(&delete, process3d_mutation_retained_bytes(&delete).expect("retained bytes"));
+    assert_eq!(footprint.work_items, store::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS);
     assert!(footprint.is_admissible());
-    let oversized = process3d_mutation_footprint(&Process3dMutation::DeleteStep(DeleteStep { id: "x".repeat(PROCESS3D_DOCUMENT_TEXT_BYTES + 1) }));
+    let oversized = process3d_mutation_retained_bytes(&Process3dMutation::DeleteStep(DeleteStep { id: "x".repeat(PROCESS3D_DOCUMENT_TEXT_BYTES + 1) }));
     assert!(oversized.is_err(), "an id past the text envelope is rejected, never truncated");
 }
 
@@ -615,7 +617,7 @@ async fn retained_resumable_progress_checkpoint_identity_replay_and_close_are_ex
     for _ in 0..11 {
         assert!(matches!(
             uninterrupted
-                .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation })
+                .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut 0))
                 .expect("checkpoint prefix"),
             ArtifactCommandWorkStep::Progress { .. }
         ));
@@ -680,7 +682,7 @@ async fn retained_bounded_and_resumable_maximum_steps_stay_below_eight_milliseco
         loop {
             let started = std::time::Instant::now();
             let step = work
-                .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { command: &command, snapshot: &empty, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation })
+                .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { command: &command, snapshot: &empty, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut 0))
                 .expect("maximum work step");
             assert!(started.elapsed().as_micros() < 8_000, "resumable {} exceeded the interactive step ceiling", command.command_id());
             if matches!(step, ArtifactCommandWorkStep::Complete(_) | ArtifactCommandWorkStep::CompleteWithEphemeral { .. }) {
@@ -764,7 +766,7 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
 /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
 pub(super) fn every_command() -> Vec<Process3dCommand> {
     vec![
-        Process3dCommand::SetDocument(set_snapshot::SetDocument { json: semio_framework_os_kernel::json::to_json_string(&crate::empty_process3d_snapshot()) }),
+        Process3dCommand::SetDocument(set_snapshot::SetDocument { json: semio_framework_pack_json::to_json_string(&crate::empty_process3d_snapshot()) }),
         Process3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: PROCESS3D_EXAMPLE_PLATE.into() }),
         Process3dCommand::AddStep(add_step::AddStep { measure: Some("cut".into()), machine_id: None, capability_id: None, position: Some([1.0, 2.0, 3.0]) }),
         Process3dCommand::AddWorkshopMachine(add_workshop_machine::AddWorkshopMachine { catalog_id: "wood".into(), machine_id: "circularSaw".into() }),
@@ -776,7 +778,7 @@ pub(super) fn every_command() -> Vec<Process3dCommand> {
         Process3dCommand::RemoveSelectedStep(remove_selected_step::RemoveSelectedStep {}),
         Process3dCommand::MoveStep(move_step::MoveStep { id: "cut-1".into(), index: 2 }),
         Process3dCommand::UpdateStep(update_step::UpdateStep {
-            step_json: semio_framework_os_kernel::json::to_json_string(&ProcessStep {
+            step_json: semio_framework_pack_json::to_json_string(&ProcessStep {
                 id: "cut-1".into(),
                 label: "Cut".into(),
                 enabled: true,
@@ -836,7 +838,7 @@ fn host_contributions_resolve_to_the_event_sourced_config_lane() {
         )),
     };
     let foreign = ProgramContributionEntry { plugin_id: "somebody-else".into(), topic_contribution: Some(TopicContribution::new("other.topic", DslValue::object([]))) };
-    let pack = dsl::json::to_json_string(&vec![addressed, foreign]);
+    let pack = semio_framework_pack_json::to_json_string(&vec![addressed, foreign]);
     let distilled = installable_contributions(&pack, PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES);
     assert_ne!(distilled, "[]", "the addressed process.machines entry must survive the lane");
     assert!(distilled.len() < pack.len(), "the foreign entry must be dropped, not retained");
@@ -907,7 +909,7 @@ async fn world_context_menu_exposes_process_commands() {
 #[semio_framework_async_macros::async_test]
 async fn the_context_menu_gates_the_destructive_row_on_the_geometry_selection() {
     let registry = AppActionRegistry::from_definition(&create_process3d_app());
-    let ids = |selected: &[String]| -> Vec<String> { process3d_context_menu_items(&registry, selected).into_iter().map(|item| item.id).collect() };
+    let ids = |selected: &[String]| -> Vec<String> { process3d_context_menu_items(&registry, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), selected).into_iter().map(|item| item.id).collect() };
     let empty = ids(&[]);
     assert!(!empty.iter().any(|id| id == "removeSelectedStep"), "an empty geometry selection must not offer the destructive row: {empty:?}");
     assert!(empty.iter().any(|id| id == "addStep"), "the selection-free rows must survive an empty selection: {empty:?}");
@@ -1195,7 +1197,7 @@ async fn export_brep_out_returns_step_text_structured_payload() {
             assert_eq!(schema, "3d.process");
             assert!(!json.is_empty());
         }
-        MediaPayload::Binary { .. } => panic!("expected a Structured payload"),
+        MediaPayload::Binary { .. } | MediaPayload::Intrinsic { .. } => panic!("expected a Structured payload"),
     }
 }
 
@@ -1244,11 +1246,11 @@ async fn process_machine_contributions_are_configuration_owned() {
                 ("moduleId".to_string(), DslValue::String("hot-catalog".to_string())),
                 ("label".to_string(), DslValue::String("Hot Catalog".to_string())),
                 ("iconId".to_string(), DslValue::String("wrench".to_string())),
-                ("machinesJson".to_string(), DslValue::String(semio_framework_os_kernel::json::to_json_string(&vec![machine]))),
+                ("machinesJson".to_string(), DslValue::String(semio_framework_pack_json::to_json_string(&vec![machine]))),
             ]),
         )),
     };
-    let json = dsl::json::to_json_string(&vec![entry]);
+    let json = semio_framework_pack_json::to_json_string(&vec![entry]);
     assert!(installed_catalogs(&json).iter().any(|catalog| catalog.catalog_id() == "hot-catalog"));
     assert!(!installed_catalogs("[]").iter().any(|catalog| catalog.catalog_id() == "hot-catalog"));
 }
@@ -1293,7 +1295,7 @@ pub(crate) fn demonstrator_contributions_pack() -> String {
                     ("moduleId".to_string(), semio_framework::DslValue::String(catalog.catalog_id().to_string())),
                     ("label".to_string(), semio_framework::DslValue::String(catalog.label().to_string())),
                     ("iconId".to_string(), semio_framework::DslValue::String(catalog.icon_id().to_string())),
-                    ("machinesJson".to_string(), semio_framework::DslValue::String(semio_framework_os_kernel::json::to_json_string(&catalog.machines()))),
+                    ("machinesJson".to_string(), semio_framework::DslValue::String(semio_framework_pack_json::to_json_string(&catalog.machines()))),
                 ]),
             )),
         });
@@ -1314,7 +1316,7 @@ pub(crate) fn demonstrator_contributions_pack() -> String {
             )),
         });
     }
-    semio_framework_os_kernel::json::to_json_string(&entries)
+    semio_framework_pack_json::to_json_string(&entries)
 }
 
 /// ⚖️ The REAL demonstrator pack crosses this app's registered `setContributions` admission, distils
@@ -1328,7 +1330,7 @@ pub(crate) fn demonstrator_contributions_pack() -> String {
 #[test]
 fn the_real_demonstrator_pack_is_admitted_distilled_and_retained() {
     let pack = demonstrator_contributions_pack();
-    let wire = semio_framework_os_kernel::json::to_json_string(&("setContributions", semio_framework::DslValue::object([("json".to_string(), semio_framework::DslValue::String(pack.clone()))])));
+    let wire = semio_framework_pack_json::to_json_string(&("setContributions", semio_framework::DslValue::object([("json".to_string(), semio_framework::DslValue::String(pack.clone()))])));
     println!("[STATS] process3d demonstrator pack packChars={} wireChars={}", pack.len(), wire.len());
     assert!(wire.len() <= semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES, "the real pack's command wire ({} B) must fit the registered admission", wire.len());
     assert!(pack.len() > PROCESS3D_RETAINED_RAW_BYTES, "the real pack is past the gesture envelope — that is the whole point of its own lane");
@@ -1377,13 +1379,13 @@ fn a_pack_with_a_new_catalog_id_appends_one_section_with_its_machines() {
                 ("moduleId".to_string(), semio_framework::DslValue::String("glass".to_string())),
                 ("label".to_string(), semio_framework::DslValue::String("Glass".to_string())),
                 ("iconId".to_string(), semio_framework::DslValue::String("wrench".to_string())),
-                ("machinesJson".to_string(), semio_framework::DslValue::String(semio_framework_os_kernel::json::to_json_string(&vec![machine]))),
+                ("machinesJson".to_string(), semio_framework::DslValue::String(semio_framework_pack_json::to_json_string(&vec![machine]))),
             ]),
         )),
     };
     let mut entries = semio_framework::parse_contributions(&demonstrator_contributions_pack());
     entries.push(entry);
-    let pack = semio_framework_os_kernel::json::to_json_string(&entries);
+    let pack = semio_framework_pack_json::to_json_string(&entries);
     let catalogs = installed_catalogs(&pack);
     let ids: Vec<&str> = catalogs.iter().map(|catalog| catalog.catalog_id()).collect();
     let mut expected: Vec<String> = builtin_installed_catalogs().iter().map(|catalog| catalog.catalog_id().to_string()).collect();
@@ -1420,7 +1422,7 @@ fn the_real_contributions_push_passes_the_host_configuration_output_gate() {
         address: CommandAddress { owner: CommandOwnerAddress::App { plugin_id: "process".into(), app_id: "s.process.process3d@1/*#editor".into() }, command_id: "setContributions".into() },
         arguments: [("json".to_string(), DslValue::String(pack))].into_iter().collect(),
     };
-    semio_framework_plugin::resolve_ready(PluginApp::handle_command(&mut *app, &invocation, None, &semio_framework_plugin::artifact_app_laws::meta("local"))).expect("the host's setContributions command passes the host-configuration output gate");
+    ::semio_framework_async::poll::resolve_ready(PluginApp::handle_command(&mut *app, &invocation, None, &semio_framework_plugin::artifact_app_laws::meta("local"))).expect("the host's setContributions command passes the host-configuration output gate");
 }
 //#endregion 🧩️HostContributionsOutputCap
 
@@ -1429,7 +1431,7 @@ fn the_real_contributions_push_passes_the_host_configuration_output_gate() {
 fn settle_member_less_archive(app: &mut context::Process3dRawApp, operation: u64, parent_pack: Vec<u8>, parent_spr: Vec<u8>) -> protocol::DocumentArchiveLoadStatus {
     PluginApp::begin_document_archive_load(app, operation, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).expect("archive admission");
     for _ in 0..200_000 {
-        let polled = semio_framework_plugin::resolve_ready(PluginApp::poll_document_archive_load(app, operation)).expect("archive status");
+        let polled = ::semio_framework_async::poll::resolve_ready(PluginApp::poll_document_archive_load(app, operation)).expect("archive status");
         if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
             PluginApp::acknowledge_document_archive_load(app, operation).expect("archive acknowledgement");
             return polled;
@@ -1453,7 +1455,7 @@ fn published_example_load(app: &mut context::Process3dRawApp, example: &str) -> 
             break;
         }
         PluginApp::maintenance_step(app, 1, 4_096).expect("example maintenance step");
-        semio_framework_plugin::resolve_ready(app.advance_typed_operation_publication()).expect("example publication");
+        ::semio_framework_async::poll::resolve_ready(app.advance_typed_operation_publication()).expect("example publication");
         if let Some(page) = app.take_typed_operation_result_page(instance) {
             assert!(app.acknowledge_typed_operation_result(page.token).expect("example result ack"));
         }

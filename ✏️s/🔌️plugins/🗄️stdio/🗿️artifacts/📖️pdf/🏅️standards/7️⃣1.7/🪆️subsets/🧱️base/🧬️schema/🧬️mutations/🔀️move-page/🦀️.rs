@@ -23,13 +23,16 @@ impl MutationKind<PdfSnapshot, PdfMutation> for MovePage {
         MutationOutcome::new(diff::diff_move_page(base, self.from, self.to))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         if base.pages.get(self.from).is_none() {
             Vec::new()
         } else {
             vec![PdfMutation::MovePage(MovePage { from: self.to.min(base.pages.len().saturating_sub(1)), to: self.from })]
         }
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Move page {} to {}", self.from, self.to), &format!("Seite {} nach {} verschieben", self.from, self.to))

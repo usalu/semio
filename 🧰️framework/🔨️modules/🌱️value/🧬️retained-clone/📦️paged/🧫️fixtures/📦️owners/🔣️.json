@@ -1,0 +1,32 @@
+{
+  "grant": {
+    "maximumItems": 5,
+    "maximumCopyBytes": 64,
+    "maximumCapacityBytes": 4096,
+    "maximumDepth": 32
+  },
+  "text": {
+    "segment": "retained-🧬️-",
+    "repetitions": 320,
+    "capacityBytes": 8192
+  },
+  "bytes": {
+    "length": 6145,
+    "capacityBytes": 8192,
+    "multiplier": 37,
+    "increment": 11
+  },
+  "map": {
+    "entryCount": 70,
+    "capacityEntries": 128,
+    "keyPrefix": "owner-",
+    "valuePrefix": "payload-"
+  },
+  "expected": {
+    "copyRequiresMultipleTurns": true,
+    "closeRequiresMultipleTurns": true,
+    "singleItemMaximumTurns": 512,
+    "ordered": true,
+    "terminalEmpty": true
+  }
+}

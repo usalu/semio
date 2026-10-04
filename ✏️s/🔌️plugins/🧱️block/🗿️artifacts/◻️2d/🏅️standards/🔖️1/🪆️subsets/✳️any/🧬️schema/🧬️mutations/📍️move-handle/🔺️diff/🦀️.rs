@@ -10,7 +10,7 @@ pub fn diff(payload: &super::MoveHandle, base: &Block2dSnapshot) -> protocol::Mu
     };
     let replacement = Block2dHandleTemplate { angle: payload.new_angle, radius: payload.new_radius, ..existing.clone() };
     if replacement == *existing {
-        return protocol::MutationOutcome::new(Block2dDiff::default()).absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "no changes to apply").at(vec![payload.id.clone()])]);
+        return protocol::MutationOutcome::new(Block2dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(vec![payload.id.clone()])]);
     }
     protocol::MutationOutcome::new(Block2dDiff {
         handles: Some(Block2dHandlesDelta { patched: vec![Block2dHandlesPatchEntry { id: payload.id.clone(), patch: Block2dHandlesPatch { replacement: Some(replacement) } }], ..Default::default() }),

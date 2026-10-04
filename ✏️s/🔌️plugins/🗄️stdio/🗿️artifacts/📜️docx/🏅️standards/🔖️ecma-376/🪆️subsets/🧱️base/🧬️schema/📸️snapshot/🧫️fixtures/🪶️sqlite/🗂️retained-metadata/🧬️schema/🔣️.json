@@ -1,0 +1,67 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "entryKind",
+    "entryFields",
+    "defaults",
+    "overrides",
+    "preservesOrder",
+    "preservesDuplicates"
+  ],
+  "properties": {
+    "entryKind": {
+      "const": "orderedNamedRecord"
+    },
+    "entryFields": {
+      "const": [
+        "name",
+        "contentType"
+      ]
+    },
+    "defaults": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "contentType"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "contentType": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "overrides": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "contentType"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "contentType": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "preservesOrder": {
+      "const": true
+    },
+    "preservesDuplicates": {
+      "const": true
+    }
+  }
+}

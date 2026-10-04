@@ -1,5 +1,5 @@
 //! 🖊️ Typed stroke endings, joins and bounded editable dash patterns.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -14,7 +14,7 @@ impl StrokeCap {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -46,12 +46,13 @@ pub fn parse_stroke_dash(value: &str) -> Result<Option<Vec<f64>>, &'static str> 
 mod tests {
     #[test]
     fn stroke_enums_match_neutral_cases_and_codecs() {
-        use dsl::{FromValue, ToValue};
+        use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
         let cases: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🎚️enums/🔣️.json")).unwrap();
         for case in cases.as_array().unwrap() {
             let value = case["value"].clone();
             let valid = case["valid"] == true;
-            let wire = dsl::json::to_dsl_value(&dsl::json::parse(&value.to_string()).unwrap());
+            let wire = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
             if case["kind"] == "cap" {
                 let parsed = serde_json::from_value::<super::StrokeCap>(value.clone());
                 assert_eq!(parsed.is_ok(), valid, "{case}");

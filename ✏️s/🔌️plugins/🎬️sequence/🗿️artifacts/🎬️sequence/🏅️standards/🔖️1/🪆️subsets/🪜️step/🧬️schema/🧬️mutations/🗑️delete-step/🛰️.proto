@@ -1,6 +1,0 @@
-syntax = "proto3";
-package semio.s.sequence.sequence.mutation;
-
-message DeleteStep {
-  string id = 1;
-}

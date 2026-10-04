@@ -7,7 +7,6 @@
 use super::topology::compute_generation3d_topology;
 use crate::Generation3dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a generation3d snapshot. One field per named inference under
@@ -21,8 +20,11 @@ pub struct Generation3dInference {
 }
 
 impl protocol::Inference<Generation3dSnapshot> for Generation3dInference {
-    fn infer(snapshot: &Generation3dSnapshot) -> Self {
+    fn infer(snapshot: &Generation3dSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { topology: compute_generation3d_topology(snapshot) }
+    
+        })
     }
 }
 
@@ -38,16 +40,6 @@ impl protocol::InferenceSpec<Generation3dSnapshot> for Generation3dInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 💡️ `topology` is a whole-snapshot scalar (see `🧭topology/🦀️.rs`), so the default
-/// `ArtifactInferrer::infer_cached` passthrough (plain `infer`, no `InferenceCache`/`InferenceSession`
-/// involvement) is exactly right — nothing here benefits from per-entity incremental caching.
-impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::Generation3dBuilder {
-    type Snapshot = Generation3dSnapshot;
-    type Inference = Generation3dInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.procedural.generation3d.inference`'s facet leaves into the OS-wide inference

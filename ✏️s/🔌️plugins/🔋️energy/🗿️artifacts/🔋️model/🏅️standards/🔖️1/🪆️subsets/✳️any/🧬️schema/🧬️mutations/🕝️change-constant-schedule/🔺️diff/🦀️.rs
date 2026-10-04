@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeConstantScheduleValue, base: &EnergyModelSnap
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Schedule {} needs a finite value, got {}.", payload.id.0, payload.new_value), [payload.id.0.to_string()]);
     }
     if existing.value == payload.new_value {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Constant schedule {} already carries this value: {}.", payload.id.0, payload.new_value));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Constant schedule {} already carries this value: {}.", payload.id.0, payload.new_value));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.schedules.constants.iter_mut().find(|item| item.id == payload.id) {

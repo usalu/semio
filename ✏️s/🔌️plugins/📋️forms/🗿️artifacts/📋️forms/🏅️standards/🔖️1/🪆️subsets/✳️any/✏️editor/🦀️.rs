@@ -27,7 +27,7 @@ use crate::editor::forms::panels::{catalogue as catalogue_panel, document as doc
 use crate::editor::forms::terminology::{forms_play_labels, FormsLabels};
 use crate::op::FormMutation;
 use crate::{forms_steps, FormQuestion, FormsSnapshot, FORMS_DOCUMENT_SCHEMA, FORM_BUILTIN_KINDS};
-use dsl::os_pack::json::{object, Object, Value};
+use semio_framework_pack_json::{object, Object, Value};
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_plugin::app::{Dialect, InteractionView};
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
@@ -90,7 +90,7 @@ pub fn forms_action(action: &str, args: Option<semio_framework_plugin::UiValue>)
 }
 
 /// 🏷️ Admits display text into a bounded semantic label.
-pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_locale::Label> {
+pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
     value.as_ref().try_into().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "forms label admission failed"))
 }
 
@@ -178,7 +178,7 @@ pub fn try_values_map(transient: &try_window::transient::FormsTryWindowTransient
                 raw.push_str(chunk);
                 raw
             });
-            (key, dsl::os_pack::json::parse(&raw).unwrap_or(Value::Null))
+            (key, semio_framework_pack_json::parse(&raw, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or(Value::Null))
         })
         .collect()
 }
@@ -191,7 +191,7 @@ pub fn effective_try_values(spec: &FormsSnapshot, transient: &try_window::transi
 /// `Value::Null` on malformed or absent JSON — every one of these fields is best-effort text carried
 /// across the wire, not a validated protocol.
 pub fn parse_value_json(value_json: &str) -> Value {
-    dsl::os_pack::json::parse(value_json).unwrap_or(Value::Null)
+    semio_framework_pack_json::parse(value_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or(Value::Null)
 }
 //#endregion 🔖️Values
 
@@ -332,7 +332,7 @@ mod args_bridge {
         out
     }
 
-    fn put(entries: &mut Vec<(String, dsl::DslValue)>, key: &str, value: dsl::DslValue) {
+    fn put(entries: &mut Vec<(String, semio_framework_value::DslValue)>, key: &str, value: semio_framework_value::DslValue) {
         entries.retain(|(existing, _)| existing != key);
         entries.push((key.to_string(), value));
     }
@@ -341,13 +341,13 @@ mod args_bridge {
     /// as `Float(1.0)`), and the `u64`/`i64` codecs decode EXACT integers only — restore the integer
     /// variant for whole, finite floats so the payloads' counters (`generation`, `index`, `input_index`,
     /// `vector_index`, …) decode; `f64` fields accept any `Number` variant, so nothing else changes.
-    fn integral(value: dsl::DslValue) -> dsl::DslValue {
+    fn integral(value: semio_framework_value::DslValue) -> semio_framework_value::DslValue {
         match value {
-            dsl::DslValue::Number(dsl::Number::Float(float)) if float.is_finite() && float.fract() == 0.0 && float.abs() < 9.007_199_254_740_992e15 => {
-                if float >= 0.0 { dsl::DslValue::Number(dsl::Number::UInt(float as u64)) } else { dsl::DslValue::Number(dsl::Number::Int(float as i64)) }
+            semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(float)) if float.is_finite() && float.fract() == 0.0 && float.abs() < 9.007_199_254_740_992e15 => {
+                if float >= 0.0 { semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(float as u64)) } else { semio_framework_value::DslValue::Number(semio_framework_value::Number::Int(float as i64)) }
             }
-            dsl::DslValue::Array(items) => dsl::DslValue::Array(items.into_iter().map(integral).collect()),
-            dsl::DslValue::Object(entries) => dsl::DslValue::Object(entries.into_iter().map(|(key, value)| (key, integral(value))).collect()),
+            semio_framework_value::DslValue::Array(items) => semio_framework_value::DslValue::Array(items.into_iter().map(integral).collect()),
+            semio_framework_value::DslValue::Object(entries) => semio_framework_value::DslValue::Object(entries.into_iter().map(|(key, value)| (key, integral(value))).collect()),
             other => other,
         }
     }
@@ -356,9 +356,9 @@ mod args_bridge {
     /// wire names, the document payloads snake_case; `FromValue` ignores keys it does not know),
     /// applies `aliases` (snake_case source → destination), and prints `json` sources (a snake_case
     /// key holding any JSON value) into their string destination when that field is absent.
-    fn fold(args: Option<&dsl::DslValue>, aliases: &[(&str, &str)], json: &[(&str, &str)]) -> dsl::DslValue {
-        let mut entries: Vec<(String, dsl::DslValue)> = Vec::new();
-        if let Some(dsl::DslValue::Object(object)) = args {
+    fn fold(args: Option<&semio_framework_value::DslValue>, aliases: &[(&str, &str)], json: &[(&str, &str)]) -> semio_framework_value::DslValue {
+        let mut entries: Vec<(String, semio_framework_value::DslValue)> = Vec::new();
+        if let Some(semio_framework_value::DslValue::Object(object)) = args {
             for (key, value) in object {
                 let mut key = snake(key);
                 if let Some((_, to)) = aliases.iter().find(|(from, _)| *from == key) {
@@ -374,19 +374,19 @@ mod args_bridge {
                 continue;
             }
             if let Some((_, value)) = entries.iter().find(|(key, _)| key == from).cloned() {
-                let text = dsl::DslValue::String(dsl::json::to_json_string(&value));
+                let text = semio_framework_value::DslValue::String(semio_framework_pack_json::to_json_string(&value));
                 put(&mut entries, &camel(into), text.clone());
                 put(&mut entries, into, text);
             }
         }
-        dsl::DslValue::Object(entries)
+        semio_framework_value::DslValue::Object(entries)
     }
 
-    fn decode<T: dsl::FromValue>(action: &str, value: dsl::DslValue) -> Result<T, Fault> {
+    fn decode<T: semio_framework_value::FromValue>(action: &str, value: semio_framework_value::DslValue) -> Result<T, Fault> {
         T::from_value(value).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-args"), format!("forms action '{action}' arguments do not decode: {error}")))
     }
 
-    pub fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<FormsCommand, Fault> {
+    pub fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<FormsCommand, Fault> {
         const VALUE_JSON: &[(&str, &str)] = &[("value", "value_json")];
         let plain = || fold(args, &[], &[]);
         Ok(match action {
@@ -416,9 +416,9 @@ mod args_bridge {
                 // 🧱️ The block-list host sends `{blockId, fromStepId, toStepId, index}`; `position` is
                 // only consulted when `index` is absent, so it defaults to "after".
                 let mut folded = fold(args, &[("block_id", "question_id")], &[]);
-                if let dsl::DslValue::Object(entries) = &mut folded {
+                if let semio_framework_value::DslValue::Object(entries) = &mut folded {
                     if !entries.iter().any(|(key, _)| key == "position") {
-                        entries.push(("position".into(), dsl::DslValue::String("after".into())));
+                        entries.push(("position".into(), semio_framework_value::DslValue::String("after".into())));
                     }
                 }
                 FormsCommand::MoveQuestion(decode(action, folded)?)
@@ -489,7 +489,7 @@ semio_framework_plugin::app_commands! {
 /// 🔌️ Forms' typed media I/O surface (`AppDefinition.io`) — the implicit `document:in`/`document:out`
 /// pair (keyed by the `forms.form` document schema) plus the WORKFLOWS-END-TO-END-TYPED-PORTS
 /// `dictionary:out` port: the form's currently-configured default field values (see
-/// `crate::schema::initial_try_values`), re-exported as a `form.dictionary` JSON
+/// `crate::schema::initial_try_values`), re-exported as a typed `form.dictionary` intrinsic
 /// object keyed by question id — the layout app's `fields:in` counterpart. Relocated from the deleted
 /// artifact `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): this is the app's
 /// own IO surface, not artifact behaviour.
@@ -602,6 +602,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<For
     fn step(
         &mut self,
         input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<FormsPlayApp>>,
+    _cx: &mut semio_framework_job::StepContext<'_>,
     ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<FormsPlayApp>>, Fault> {
         use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
         if self.completed || input.command.command_id() != self.tool_id { return Err(Fault::from("forms-window-work-terminal")); }
@@ -779,54 +780,26 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FormsBoundedCommand
 //#endregion 🧵️RetainedCommands
 
 //#region 📬️StorePreparation
-fn forms_next_edit<M>(prefix: &str, forward: M, inverse: Vec<M>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<M> {
-    let id = format!("{prefix}-{}", authority.next_sequence_number());
-    protocol::Edit { line: authority.line_id().map(str::to_owned),
-        id: id.clone(),
-        actor: Some(authority.actor().to_string()),
-        forwards: vec![forward],
-        inverse,
-        mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
-            dependencies: Vec::new(),
-            base_version: authority.base_applied_edit_count() as u64,
-            author_id: Some(protocol::ActorId(authority.actor().to_string())),
-            timestamp: authority.next_clock(),
-            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-            payload_hash: None,
-            semantic_kind: None,
-            label: None,
-            group_id: None,
-            origin: Default::default(),
-            transaction: None,
-        }],
-        description, verb: None,
-        coalesce_key: None,
-        sequence_number: authority.next_sequence_number(),
-        started_at: String::new(),
-        finished_at: None,
-    }
-}
 
 fn forms_store_mutation_retained_bytes<M: protocol::OpBinary>(mutation: &M) -> Result<usize, String> {
     protocol::OpBinary::encode_op(mutation).map(|bytes| bytes.len()).map_err(|_| "forms-store-mutation-encode-failed".to_string())
 }
 
-fn admit_forms_store_mutation<M: protocol::OpBinary>(mutation: &M) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+fn admit_forms_store_mutation<P, M: protocol::OpBinary + protocol::Mutation<P>>(mutation: &M) -> Result<store::ArtifactStoreOneItemFootprint, String> {
     let retained_bytes = forms_store_mutation_retained_bytes(mutation)?;
     if retained_bytes > FORMS_STORE_MUTATION_MAXIMUM_BYTES {
         return Err("forms-store-mutation-envelope".into());
     }
-    Ok(store::ArtifactStoreOneItemFootprint::for_one_invertible_item(retained_bytes))
+    Ok(store::ArtifactStoreOneItemFootprint::for_leaf::<P, M>(mutation, retained_bytes))
 }
 
 fn prepare_forms_store_mutation<P, M>(base: &P, mutation: M) -> Result<(P, Vec<M>, M), String>
 where
     M: protocol::Mutation<P> + protocol::OpBinary,
 {
-    admit_forms_store_mutation(&mutation)?;
-    let inverse = protocol::Mutation::inverse(&mutation, base);
-    if inverse.iter().any(|step| admit_forms_store_mutation(step).is_err()) {
+    admit_forms_store_mutation::<P, M>(&mutation)?;
+    let inverse = protocol::Mutation::inverse(&mutation, base).map_err(semio_framework_value::ValueError::into_message)?;
+    if inverse.iter().any(|step| admit_forms_store_mutation::<P, M>(step).is_err()) {
         return Err("forms-store-inverse-mutation-envelope".into());
     }
     let diff = protocol::Mutation::diff(&mutation, base).into_parts().0;
@@ -867,7 +840,7 @@ where
         if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
             return Err("forms-store-lane-or-description-envelope".into());
         }
-        admit_forms_store_mutation(mutation)
+        admit_forms_store_mutation::<P, M>(mutation)
     }
 
     fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<P, M>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, store::ArtifactStoreOneItemPreparationRequest<P, M>> {
@@ -912,7 +885,7 @@ where
         let mutation = self.mutation.take().ok_or_else(|| "forms-store-mutation-owner-missing".to_string())?;
         let (post, inverse, forward) = prepare_forms_store_mutation(base.get(), mutation)?;
         let authority = self.authority.as_ref().ok_or_else(|| "forms-store-authority-missing".to_string())?;
-        let edit = forms_next_edit(self.prefix, forward, inverse, self.description.take(), authority);
+        let edit = authority.next_edit(forward, inverse);
         let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
         self.prepared = Some(prepared);
@@ -939,7 +912,7 @@ where
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep,semio_framework_value::ValueError> {
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -951,7 +924,7 @@ where
         }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
-                return Err("forms-store-base-retirement-rejected".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"forms-store-base-retirement-rejected"));
             }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -990,9 +963,12 @@ impl ArtifactEditor for FormsPlayApp {
 
     const DIALECT: Dialect = crate::FORMS_DIALECT;
     /// 🧬️ The crate's one loaded-parent child projection (`crate::forms_child_restore_projection`).
-    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {
+ Ok((||{
         crate::forms_genesis_child_pack(snapshot, slot, child_id)
-    }
+    
+})())
+}
 
     fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
         crate::forms_child_restore_projection(snapshot)
@@ -1083,7 +1059,7 @@ impl ArtifactEditor for FormsPlayApp {
             return Ok(None);
         }
         if request.command.command_id() != request.tool_id {
-            return Err(Fault::from("forms-command-tool-mismatch"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "the forms command does not match its exact registered tool"));
         }
         let tool_id = request.command.command_id();
         let maximum_work_items = if tool_id == "exportResponses" { crate::schema::response::export::ResponseExport::work_items(&request.snapshot.responses) } else { 1 };
@@ -1179,7 +1155,7 @@ impl ArtifactEditor for FormsPlayApp {
     /// camelCase argument keys; every `🎮️commands/*` payload derives `FromValue` over its own
     /// snake_case field names, so this boundary folds the keys and decodes — the default trait impl
     /// refuses every app action outright, which left `setActiveExample`/`addStep`/… dead in the shell.
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
         args_bridge::command_from_action(action, args)
     }
 
@@ -1210,17 +1186,20 @@ impl ArtifactEditor for FormsPlayApp {
 
     /// 🕹️ `fields` domain: `HierarchyProvider::Topology` from the document's own step/question nesting —
     /// see `forms_fields_topology`'s doc comment.
-    fn interaction_topology(doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> InteractionTopology {
+    fn interaction_topology(doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<InteractionTopology, semio_framework_value::ValueError> {
+ Ok((||{
         let mut domains = std::collections::BTreeMap::new();
         domains.insert(FORMS_INTERACTION_FIELDS.to_string(), forms_fields_topology(doc.snapshot));
         InteractionTopology { domains }
-    }
+    
+})())
+}
 
     //#region 🔖️Media
     /// 🎞️ WORKFLOWS-END-TO-END-TYPED-PORTS port recipe: `document:out` replicates the trait default
     /// exactly (overriding `export_media` for `dictionary:out` forfeits the default's dispatch);
     /// `dictionary:out` re-exports the form's currently-configured default field values as a
-    /// `form.dictionary` JSON object keyed by question id — no `cfg` parameter reaches this method, so
+    /// typed `form.dictionary` intrinsic object keyed by question id — no `cfg` parameter reaches this method, so
     /// this is the form's authored defaults, not a live in-progress Try-wizard session (which lives
     /// in the exact Try window config and transient owners).
     fn export_media(port: &str, doc: &ArtifactView<'_, FormsSnapshot>) -> Result<semio_framework_plugin::Media, MediaError> {
@@ -1233,9 +1212,8 @@ impl ArtifactEditor for FormsPlayApp {
                 })
             }
             "dictionary:out" => {
-                let values = crate::schema::initial_try_values(doc.snapshot, &Object::new());
-                let json = dsl::os_pack::json::to_string(&Value::Object(values));
-                Ok(semio_framework_plugin::Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: "form.dictionary".into(), json } })
+                let dictionary=crate::schema::configured_dictionary(doc.snapshot).map_err(|error|MediaError::Payload(port.to_string(),error.into_message()))?;
+                Ok(semio_framework_plugin::Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Intrinsic { schema: "form.dictionary".into(), value:dictionary.into_intrinsic() } })
             }
             _ => Err(MediaError::NotImplemented),
         }

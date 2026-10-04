@@ -60,7 +60,7 @@ mod subject {
 
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let kind = ctx.row()?;
-        let restored = vector::inverse(kind, &report(&vector(kind)?)?)?;
+        let restored = vector::inverse(kind, &report(&vector(kind)?)?).expect("valid retained mutation inverse fixture")?;
         Ok(Outcome::with_raw(restored.to_string().into_bytes(), restored))
     }
 }

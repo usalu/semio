@@ -23,10 +23,13 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetDocumentId {
         MutationOutcome::new(diff::diff_set_document_id(base, self.id.clone()))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         let _ = base;
         vec![PdfMutation::SetDocumentId(SetDocumentId { id: base.document_id.clone() })]
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set document-id", "Dokument-ID setzen")

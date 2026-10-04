@@ -52,7 +52,7 @@ export class OwnedDocumentClosure {
       } else if (this.phase === "index") {
         if (this.progress.indexed === source.members.length) { this.phase = "walk"; continue; }
         const member = source.members[this.progress.indexed]!;
-        if (!reference(member.reference) || !reference(member.owner.parent) || !text(member.owner.slot) || member.owner.childId !== member.reference.artifactId) return this.reject("owner");
+        if (!reference(member.reference) || !reference(member.owner.parent) || !text(member.owner.slot) || !text(member.owner.childId)) return this.reject("owner");
         if (member.reference.artifactId === source.root.reference.artifactId || this.index.has(member.reference.artifactId)) return this.reject("duplicate");
         this.index.set(member.reference.artifactId, this.progress.indexed);
         this.progress.indexed += 1;
@@ -66,8 +66,8 @@ export class OwnedDocumentClosure {
         if (parent.children.length > 64) return this.reject("reference-limit");
         if (this.child === parent.children.length) { this.head += 1; this.child = 0; this.progress.visited += 1; continue; }
         const edge = parent.children[this.child++]!;
-        if (!text(edge.slot) || !reference(edge.target) || edge.childId !== edge.target.artifactId) return this.reject("projection");
-        const index = this.index.get(edge.childId);
+        if (!text(edge.slot) || !text(edge.childId) || !reference(edge.target) || parent.children.some((prior, ordinal) => ordinal < this.child - 1 && (prior.childId === edge.childId || prior.target.artifactId === edge.target.artifactId))) return this.reject("projection");
+        const index = this.index.get(edge.target.artifactId);
         if (index === undefined) return this.reject("incomplete");
         const member = source.members[index]!;
         if (!same(member.reference, edge.target) || !same(member.owner.parent, parent.reference) || member.owner.slot !== edge.slot || member.owner.childId !== edge.childId) return this.reject("owner");

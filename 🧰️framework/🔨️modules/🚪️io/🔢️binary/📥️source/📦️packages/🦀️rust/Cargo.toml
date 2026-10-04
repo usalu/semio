@@ -1,0 +1,25 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-io-binary-source"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Bounded encoded byte sources with explicit MIME, private output and cancellation"
+
+[package.metadata.semio]
+role = "framework"
+id = "io-binary-source"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-io-base64 = { path = "../../../../🔤️base64/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+base64 = "0.22.1"
+percent-encoding = "2.3.2"
+serde_json.workspace = true

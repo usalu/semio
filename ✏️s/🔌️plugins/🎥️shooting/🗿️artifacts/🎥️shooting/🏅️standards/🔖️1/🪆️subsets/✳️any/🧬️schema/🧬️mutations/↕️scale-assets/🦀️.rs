@@ -22,9 +22,12 @@ impl MutationKind<ShootingSnapshot, ShootingMutation> for ScaleAssets {
     fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<ShootingMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         match self.asset_ids.len() {
             1 => semio_framework_ui_locale::LocalizedLabel::native("Scale 1 asset", "1 Asset skalieren"),

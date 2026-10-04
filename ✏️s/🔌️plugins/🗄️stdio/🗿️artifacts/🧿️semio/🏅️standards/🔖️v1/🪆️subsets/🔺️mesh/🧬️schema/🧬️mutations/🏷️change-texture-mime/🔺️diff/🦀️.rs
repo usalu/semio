@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeTextureMime, base: &SemioMeshSnapshot) -> pro
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Texture \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if texture.mime == payload.new_mime {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Texture \"{}\" mime type is already \"{}\".", payload.id, payload.new_mime));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Texture \"{}\" mime type is already \"{}\".", payload.id, payload.new_mime));
     }
     protocol::MutationOutcome::new(crate::standards::v1::subsets::mesh::schema::diff::diff_change_texture_mime(base, &payload.id, payload.new_mime.clone()))
 }

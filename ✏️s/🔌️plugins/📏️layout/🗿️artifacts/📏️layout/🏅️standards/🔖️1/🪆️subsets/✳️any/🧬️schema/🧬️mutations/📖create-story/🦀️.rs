@@ -23,9 +23,12 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for CreateStory {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_create_story(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
-        inverse_create_story(self, base)
-    }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok({
+        inverse_create_story(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Create story \"{}\"", self.story.id), &format!("Textfluss \"{}\" erstellen", self.story.id))
     }
@@ -45,7 +48,10 @@ pub fn diff_create_story(payload: &CreateStory, base: &LayoutSnapshot) -> protoc
 //#endregion 📖CreateStory
 
 //#region 📖CreateStory
-pub fn inverse_create_story(payload: &CreateStory, _base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_create_story(payload: &CreateStory, _base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![LayoutMutation::DeleteStory(delete_story::DeleteStory { id: payload.story.id.clone() })]
+
+    })())
 }
 //#endregion 📖CreateStory

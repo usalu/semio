@@ -9,7 +9,7 @@ pub fn diff(payload: &super::MoveSlot, base: &Wfc3dSnapshot) -> protocol::Mutati
     };
     let slot = &base.slots[index];
     if slot.x == payload.x && slot.y == payload.y && slot.z == payload.z {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Slot \"{}\" is already there.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Slot \"{}\" is already there.", payload.id));
     }
     let mut moved = slot.clone();
     moved.x = payload.x;

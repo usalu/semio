@@ -7,7 +7,12 @@
 //! (`state.set`, `state.get`, `math.add`, ...) and the separator is `:`. Built directly on
 //! `crate::os_dsl::lex`, matching `dsl_notation`/`dsl_family_graph`/`dsl_family_catalog`'s pattern.
 
-use crate::os_dsl::{lex, Limits, TextError, TextSpan, TokenKind};
+use semio_framework_dsl::lex;
+use semio_framework_diagnostic::Limits;
+use semio_framework_diagnostic::TextError;
+use semio_framework_value::ValueRefusalKind;
+use semio_framework_diagnostic::TextSpan;
+use semio_framework_dsl::TokenKind;
 
 //#region 🔖️Step
 /// 🪜️ One recipe step: `name: target(arg1 arg2 ...)`. Arguments are positional only in
@@ -21,16 +26,16 @@ pub struct RecipeStep {
 }
 
 struct Cursor {
-    tokens: Vec<crate::os_dsl::SpannedToken>,
+    tokens: Vec<semio_framework_dsl::SpannedToken>,
     pos: usize,
 }
 
 impl Cursor {
-    async fn peek(&self) -> &crate::os_dsl::SpannedToken {
+    async fn peek(&self) -> &semio_framework_dsl::SpannedToken {
         &self.tokens[self.pos.min(self.tokens.len() - 1)]
     }
 
-    async fn advance(&mut self) -> crate::os_dsl::SpannedToken {
+    async fn advance(&mut self) -> semio_framework_dsl::SpannedToken {
         let token = self.tokens[self.pos.min(self.tokens.len() - 1)].clone();
         if self.pos < self.tokens.len() - 1 {
             self.pos += 1;
@@ -38,11 +43,11 @@ impl Cursor {
         token
     }
 
-    async fn expect(&mut self, kind: TokenKind) -> Result<crate::os_dsl::SpannedToken, TextError> {
+    async fn expect(&mut self, kind: TokenKind) -> Result<semio_framework_dsl::SpannedToken, TextError> {
         if self.peek().await.kind == kind {
             Ok(self.advance().await)
         } else {
-            Err(TextError::new(format!("expected {kind:?}, found {:?}", self.peek().await.kind), self.peek().await.span))
+            Err(TextError::new(ValueRefusalKind::InvalidValue, format!("expected {kind:?}, found {:?}", self.peek().await.kind), self.peek().await.span))
         }
     }
 
@@ -51,11 +56,11 @@ impl Cursor {
     }
 }
 
-async fn arg_text(token: &crate::os_dsl::SpannedToken) -> Result<String, TextError> {
+async fn arg_text(token: &semio_framework_dsl::SpannedToken) -> Result<String, TextError> {
     match token.kind {
         TokenKind::Ident | TokenKind::Int | TokenKind::Float => Ok(token.text.as_str().to_string()),
-        TokenKind::Text => Ok(format!("\"{}\"", crate::os_dsl::escape_text(&token.text.as_str()))),
-        other => Err(TextError::new(format!("expected an argument, found {other:?}"), token.span)),
+        TokenKind::Text => Ok(format!("\"{}\"", semio_framework_dsl::escape_text(&token.text.as_str()))),
+        other => Err(TextError::new(ValueRefusalKind::InvalidValue, format!("expected an argument, found {other:?}"), token.span)),
     }
 }
 
@@ -79,7 +84,7 @@ pub async fn parse_step_text(text: &str) -> Result<RecipeStep, TextError> {
     }
     cursor.expect(TokenKind::RParen).await?;
     if cursor.peek().await.kind != TokenKind::Eof {
-        return Err(TextError::new(format!("unexpected trailing {:?} after recipe step", cursor.peek().await.kind), cursor.span().await));
+        return Err(TextError::new(ValueRefusalKind::InvalidValue, format!("unexpected trailing {:?} after recipe step", cursor.peek().await.kind), cursor.span().await));
     }
     Ok(RecipeStep { name, target, args })
 }

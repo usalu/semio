@@ -3,7 +3,10 @@ use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::CreateTargetVolume, _base: &Puzzle5dSnapshot) -> Vec<Puzzle5dMutation> {
+pub fn inverse(payload: &super::CreateTargetVolume, _base: &Puzzle5dSnapshot) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![crate::standards::v1::subsets::any::schema::mutations::delete_target_volume::delete_target_volume(payload.target_volume.id.clone())]
+
+    })())
 }
 //#endregion 🔖️Inverse

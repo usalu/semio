@@ -6,7 +6,7 @@ use crate::editor::cad::{cad_solid_export_effect, cad_spatial_export_effect, cad
 use crate::op::CadMutation;
 use crate::standards::v1::subsets::any::io::{import_cad_object_by_extension, scene_from_spatial_payload, unwrap_spatial_load_payload, CAD_SOLID_EXPORT_DIALECT_OBJ, CAD_SOLID_EXPORT_DIALECT_STEP, CAD_SOLID_EXPORT_DIALECT_STL};
 use crate::CadSnapshot;
-use protocol::DslValue;
+use semio_framework_value::DslValue;
 use semio_framework::kernel::Effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -15,7 +15,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub mod import_cad_file {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "import-cad-file")]
     pub struct ImportCadFile {
         pub name: String,
@@ -25,7 +25,7 @@ pub mod import_cad_file {
     pub fn handle(payload: &ImportCadFile, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut runtime = runtime_of(cfg, &ctx.window_transient);
         let name_lower = payload.name.to_ascii_lowercase();
-        let payload_value: DslValue = protocol::json::from_json_str(&payload.payload).unwrap_or_else(|_| DslValue::String(payload.payload.clone()));
+        let payload_value: DslValue = semio_framework_pack_json::from_json_str(&payload.payload, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| semio_framework_value::DslValue::String(payload.payload.clone()));
         // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: `import_cad_object_by_extension`
         // now returns a `SemioModelElement` (id/placement/`GeometryRef`), the composed-child shape —
         // composing it into a pane's `SemioModelSnapshot` CHILD needs a child-dispatch seam on
@@ -39,7 +39,7 @@ pub mod import_cad_file {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("cad.import-object-unavailable"), format!("importCadFile cannot place the object \"{}\": composed pane models accept no imported object yet", payload.name)));
         }
         let unwrapped = unwrap_spatial_load_payload(&payload_value).unwrap_or(payload_value);
-        let scene = scene_from_spatial_payload(&unwrapped).or_else(|| <CadSnapshot as protocol::FromValue>::from_value(unwrapped).ok());
+        let scene = scene_from_spatial_payload(&unwrapped).or_else(|| <CadSnapshot as semio_framework_value::FromValue>::from_value(unwrapped).ok());
         if let Some(scene) = scene {
             runtime.engagement_session = None;
             publish_engagement(&runtime, ctx);
@@ -54,7 +54,7 @@ pub mod import_cad_file {
 pub mod save_selected {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "save-selected")]
     pub struct SaveSelected {}
 
@@ -71,7 +71,7 @@ pub mod save_selected {
 pub mod save_in_play {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "save-in-play")]
     pub struct SaveInPlay {}
 
@@ -90,7 +90,7 @@ pub mod save_in_play {
 pub mod save_current {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "save-current")]
     pub struct SaveCurrent {
         pub format: Option<String>,
@@ -115,7 +115,7 @@ pub mod save_current {
 pub mod load_raw_request {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "load-raw-request")]
     pub struct LoadRawRequest {}
 
@@ -126,7 +126,7 @@ pub mod load_raw_request {
             read_as: Some("dataUrl".into()),
             import_action: "importCadFile".into(),
             multiple: false,
-        }))
+        args: None, }))
     }
 }
 //#endregion 🔖️LoadRawRequest

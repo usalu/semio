@@ -46,7 +46,7 @@
           "minLength": 1,
           "maxLength": 256,
           "x-semio-ui": {
-            "widget": "text",
+            "widget": "select",
             "role": "value",
             "label": {
               "en": "Input",
@@ -55,6 +55,9 @@
             "description": {
               "en": "The unconnected input of the operator (a text source's `text`).",
               "de": "Der unverbundene Eingang des Operators (bei einer Textquelle `text`)."
+            },
+            "optionSource": {
+              "snapshot": "/hostSnapshot/widgets/{id}/params"
             },
             "group": "target",
             "order": 20
@@ -139,7 +142,7 @@
           "minLength": 1,
           "maxLength": 256,
           "x-semio-ui": {
-            "widget": "text",
+            "widget": "select",
             "role": "value",
             "label": {
               "en": "Input",
@@ -148,6 +151,9 @@
             "description": {
               "en": "The unconnected input of the operator (a text source's `text`).",
               "de": "Der unverbundene Eingang des Operators (bei einer Textquelle `text`)."
+            },
+            "optionSource": {
+              "snapshot": "/hostSnapshot/widgets/{id}/params"
             },
             "group": "target",
             "order": 20
@@ -169,7 +175,7 @@
         },
         "value": {
           "type": "string",
-          "maxLength": 1048576,
+          "maxLength": 16777216,
           "x-semio-ui": {
             "widget": "multiline",
             "role": "value",
@@ -231,7 +237,7 @@
           "minLength": 1,
           "maxLength": 256,
           "x-semio-ui": {
-            "widget": "text",
+            "widget": "select",
             "role": "value",
             "label": {
               "en": "Input",
@@ -240,6 +246,9 @@
             "description": {
               "en": "The unconnected input of the operator (a text source's `text`).",
               "de": "Der unverbundene Eingang des Operators (bei einer Textquelle `text`)."
+            },
+            "optionSource": {
+              "snapshot": "/hostSnapshot/widgets/{id}/params"
             },
             "group": "target",
             "order": 20
@@ -322,7 +331,7 @@
           "minLength": 1,
           "maxLength": 256,
           "x-semio-ui": {
-            "widget": "text",
+            "widget": "select",
             "role": "value",
             "label": {
               "en": "Input",
@@ -331,6 +340,9 @@
             "description": {
               "en": "The unconnected input of the operator (a text source's `text`).",
               "de": "Der unverbundene Eingang des Operators (bei einer Textquelle `text`)."
+            },
+            "optionSource": {
+              "snapshot": "/hostSnapshot/widgets/{id}/params"
             },
             "group": "target",
             "order": 20
@@ -420,7 +432,7 @@
           "minLength": 1,
           "maxLength": 256,
           "x-semio-ui": {
-            "widget": "text",
+            "widget": "select",
             "role": "value",
             "label": {
               "en": "Input",
@@ -429,6 +441,9 @@
             "description": {
               "en": "The unconnected input of the operator (a text source's `text`).",
               "de": "Der unverbundene Eingang des Operators (bei einer Textquelle `text`)."
+            },
+            "optionSource": {
+              "snapshot": "/hostSnapshot/widgets/{id}/params"
             },
             "group": "target",
             "order": 20
@@ -473,6 +488,502 @@
         "label": {
           "en": "Vector",
           "de": "Vektor"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "id",
+        "channel",
+        "type",
+        "value"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeWidgetInput"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Operator",
+              "de": "Operator"
+            },
+            "description": {
+              "en": "The operator (or text source) whose input this value is set on.",
+              "de": "Der Operator (oder die Textquelle), an dessen Eingang dieser Wert gesetzt wird."
+            },
+            "ref": {
+              "kind": "widget",
+              "domain": "graph",
+              "granularity": "node"
+            },
+            "group": "target",
+            "order": 10
+          }
+        },
+        "channel": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "x-semio-ui": {
+            "widget": "select",
+            "role": "value",
+            "label": {
+              "en": "Input",
+              "de": "Eingang"
+            },
+            "description": {
+              "en": "The unconnected input of the operator (a text source's `text`).",
+              "de": "Der unverbundene Eingang des Operators (bei einer Textquelle `text`)."
+            },
+            "optionSource": {
+              "snapshot": "/hostSnapshot/widgets/{id}/params"
+            },
+            "group": "target",
+            "order": 20
+          }
+        },
+        "type": {
+          "const": "numberList",
+          "x-semio-ui": {
+            "role": "discriminator",
+            "label": {
+              "en": "Type",
+              "de": "Typ"
+            },
+            "description": {
+              "en": "The literal type the input declares.",
+              "de": "Der Literaltyp, den der Eingang deklariert."
+            }
+          }
+        },
+        "value": {
+          "type": "array",
+          "maxItems": 1024,
+          "items": {
+            "type": "number"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Items",
+              "de": "Einträge"
+            },
+            "group": "value",
+            "order": 40
+          }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Number List",
+          "de": "Zahlliste"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "id",
+        "channel",
+        "type",
+        "value"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeWidgetInput"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Operator",
+              "de": "Operator"
+            },
+            "description": {
+              "en": "The operator (or text source) whose input this value is set on.",
+              "de": "Der Operator (oder die Textquelle), an dessen Eingang dieser Wert gesetzt wird."
+            },
+            "ref": {
+              "kind": "widget",
+              "domain": "graph",
+              "granularity": "node"
+            },
+            "group": "target",
+            "order": 10
+          }
+        },
+        "channel": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "x-semio-ui": {
+            "widget": "select",
+            "role": "value",
+            "label": {
+              "en": "Input",
+              "de": "Eingang"
+            },
+            "description": {
+              "en": "The unconnected input of the operator (a text source's `text`).",
+              "de": "Der unverbundene Eingang des Operators (bei einer Textquelle `text`)."
+            },
+            "optionSource": {
+              "snapshot": "/hostSnapshot/widgets/{id}/params"
+            },
+            "group": "target",
+            "order": 20
+          }
+        },
+        "type": {
+          "const": "textList",
+          "x-semio-ui": {
+            "role": "discriminator",
+            "label": {
+              "en": "Type",
+              "de": "Typ"
+            },
+            "description": {
+              "en": "The literal type the input declares.",
+              "de": "Der Literaltyp, den der Eingang deklariert."
+            }
+          }
+        },
+        "value": {
+          "type": "array",
+          "maxItems": 1024,
+          "items": {
+            "type": "string",
+            "maxLength": 16777216
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Items",
+              "de": "Einträge"
+            },
+            "group": "value",
+            "order": 40
+          }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Text List",
+          "de": "Textliste"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "id",
+        "channel",
+        "type",
+        "value"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeWidgetInput"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Operator",
+              "de": "Operator"
+            },
+            "description": {
+              "en": "The operator (or text source) whose input this value is set on.",
+              "de": "Der Operator (oder die Textquelle), an dessen Eingang dieser Wert gesetzt wird."
+            },
+            "ref": {
+              "kind": "widget",
+              "domain": "graph",
+              "granularity": "node"
+            },
+            "group": "target",
+            "order": 10
+          }
+        },
+        "channel": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "x-semio-ui": {
+            "widget": "select",
+            "role": "value",
+            "label": {
+              "en": "Input",
+              "de": "Eingang"
+            },
+            "description": {
+              "en": "The unconnected input of the operator (a text source's `text`).",
+              "de": "Der unverbundene Eingang des Operators (bei einer Textquelle `text`)."
+            },
+            "optionSource": {
+              "snapshot": "/hostSnapshot/widgets/{id}/params"
+            },
+            "group": "target",
+            "order": 20
+          }
+        },
+        "type": {
+          "const": "booleanList",
+          "x-semio-ui": {
+            "role": "discriminator",
+            "label": {
+              "en": "Type",
+              "de": "Typ"
+            },
+            "description": {
+              "en": "The literal type the input declares.",
+              "de": "Der Literaltyp, den der Eingang deklariert."
+            }
+          }
+        },
+        "value": {
+          "type": "array",
+          "maxItems": 1024,
+          "items": {
+            "type": "boolean"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Items",
+              "de": "Einträge"
+            },
+            "group": "value",
+            "order": 40
+          }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Switch List",
+          "de": "Schalterliste"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "id",
+        "channel",
+        "type",
+        "value"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeWidgetInput"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Operator",
+              "de": "Operator"
+            },
+            "description": {
+              "en": "The operator (or text source) whose input this value is set on.",
+              "de": "Der Operator (oder die Textquelle), an dessen Eingang dieser Wert gesetzt wird."
+            },
+            "ref": {
+              "kind": "widget",
+              "domain": "graph",
+              "granularity": "node"
+            },
+            "group": "target",
+            "order": 10
+          }
+        },
+        "channel": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "x-semio-ui": {
+            "widget": "select",
+            "role": "value",
+            "label": {
+              "en": "Input",
+              "de": "Eingang"
+            },
+            "description": {
+              "en": "The unconnected input of the operator (a text source's `text`).",
+              "de": "Der unverbundene Eingang des Operators (bei einer Textquelle `text`)."
+            },
+            "optionSource": {
+              "snapshot": "/hostSnapshot/widgets/{id}/params"
+            },
+            "group": "target",
+            "order": 20
+          }
+        },
+        "type": {
+          "const": "pointList",
+          "x-semio-ui": {
+            "role": "discriminator",
+            "label": {
+              "en": "Type",
+              "de": "Typ"
+            },
+            "description": {
+              "en": "The literal type the input declares.",
+              "de": "Der Literaltyp, den der Eingang deklariert."
+            }
+          }
+        },
+        "value": {
+          "type": "array",
+          "maxItems": 1024,
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 3,
+            "maxItems": 3
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Items",
+              "de": "Einträge"
+            },
+            "group": "value",
+            "order": 40
+          }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Point List",
+          "de": "Punktliste"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "id",
+        "channel",
+        "type",
+        "value"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeWidgetInput"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Operator",
+              "de": "Operator"
+            },
+            "description": {
+              "en": "The operator (or text source) whose input this value is set on.",
+              "de": "Der Operator (oder die Textquelle), an dessen Eingang dieser Wert gesetzt wird."
+            },
+            "ref": {
+              "kind": "widget",
+              "domain": "graph",
+              "granularity": "node"
+            },
+            "group": "target",
+            "order": 10
+          }
+        },
+        "channel": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "x-semio-ui": {
+            "widget": "select",
+            "role": "value",
+            "label": {
+              "en": "Input",
+              "de": "Eingang"
+            },
+            "description": {
+              "en": "The unconnected input of the operator (a text source's `text`).",
+              "de": "Der unverbundene Eingang des Operators (bei einer Textquelle `text`)."
+            },
+            "optionSource": {
+              "snapshot": "/hostSnapshot/widgets/{id}/params"
+            },
+            "group": "target",
+            "order": 20
+          }
+        },
+        "type": {
+          "const": "vectorList",
+          "x-semio-ui": {
+            "role": "discriminator",
+            "label": {
+              "en": "Type",
+              "de": "Typ"
+            },
+            "description": {
+              "en": "The literal type the input declares.",
+              "de": "Der Literaltyp, den der Eingang deklariert."
+            }
+          }
+        },
+        "value": {
+          "type": "array",
+          "maxItems": 1024,
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 3,
+            "maxItems": 3
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Items",
+              "de": "Einträge"
+            },
+            "group": "value",
+            "order": 40
+          }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Vector List",
+          "de": "Vektorliste"
         }
       }
     }

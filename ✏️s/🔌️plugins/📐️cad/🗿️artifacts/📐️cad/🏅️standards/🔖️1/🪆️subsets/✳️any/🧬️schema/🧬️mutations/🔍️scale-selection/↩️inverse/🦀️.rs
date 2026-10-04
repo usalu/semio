@@ -5,7 +5,8 @@ use crate::mutations::{cad_selection_inverse_objects, CadMutation, CadObjectScal
 use crate::CadSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &ScaleSelection, base: &CadSnapshot) -> Vec<CadMutation> {
+pub fn inverse(payload: &ScaleSelection, base: &CadSnapshot) -> Result<Vec<CadMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let factors = payload.factors;
     let identity = factors == CAD_IDENTITY_SCALE || factors.iter().any(|factor| !(factor.is_finite() && *factor > 0.0));
     let placements: Vec<CadObjectScale> = cad_selection_inverse_objects(payload.pane, &payload.targets, identity, base, |object| {
@@ -20,5 +21,7 @@ pub fn inverse(payload: &ScaleSelection, base: &CadSnapshot) -> Vec<CadMutation>
         return Vec::new();
     }
     vec![CadMutation::ScaleObjects(ScaleObjects { pane: payload.pane, placements })]
+
+    })())
 }
 //#endregion 🔖️Inverse

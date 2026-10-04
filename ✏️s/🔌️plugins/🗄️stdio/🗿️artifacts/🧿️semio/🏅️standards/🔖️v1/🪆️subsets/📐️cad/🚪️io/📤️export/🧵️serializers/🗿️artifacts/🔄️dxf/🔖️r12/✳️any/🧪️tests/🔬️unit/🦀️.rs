@@ -23,7 +23,7 @@ fn sample_cad() -> SemioCadSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn real_text_round_trip_through_dxf_codec() {
     let cad = sample_cad();
-    let dxf = semio_framework_plugin::resolve_ready(SemioCadToDxf::serialize(&cad)).expect("serialize");
+    let dxf = ::semio_framework_async::poll::resolve_ready(SemioCadToDxf::serialize(&cad)).expect("serialize");
     assert_eq!(dxf.tables.layers.len(), 1);
     assert_eq!(dxf.blocks.len(), 1);
     assert_eq!(dxf.entities.len(), 2);

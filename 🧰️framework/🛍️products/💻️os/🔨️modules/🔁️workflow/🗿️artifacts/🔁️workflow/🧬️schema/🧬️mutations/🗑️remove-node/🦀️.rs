@@ -2,7 +2,7 @@ use super::super::{AddNode, BindInput, BindOutput, BindParameterField, ConnectPo
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "remove-node")]
@@ -18,7 +18,8 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for RemoveNode {
     fn diff(&self, _base: &WorkflowSnapshot) -> protocol::MutationOutcome<WorkflowDiff> {
         protocol::MutationOutcome::new(WorkflowDiff::RemoveNode { node_id: self.node_id.clone() })
     }
-    fn inverse(&self, base: &WorkflowSnapshot) -> Vec<WorkflowMutation> {
+    fn inverse(&self, base: &WorkflowSnapshot) -> Result<Vec<WorkflowMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         {
             let Some(node) = base.graph.nodes.iter().find(|node| node.id == self.node_id) else { return Vec::new() };
             let mut ops: Vec<WorkflowMutation> =
@@ -29,7 +30,9 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for RemoveNode {
             ops.push(WorkflowMutation::AddNode(AddNode { node: node.clone() }));
             ops
         }
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove workflow node {}", self.node_id), &format!("Arbeitsablaufknoten {} entfernen", self.node_id))
     }

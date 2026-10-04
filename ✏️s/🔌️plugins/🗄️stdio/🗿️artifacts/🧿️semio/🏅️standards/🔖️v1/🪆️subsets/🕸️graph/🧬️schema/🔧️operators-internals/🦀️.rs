@@ -406,7 +406,9 @@ where
         if n == u {
             if let Some(v_attrs) = g.node_attrs(v) {
                 let mut merged = v_attrs.clone();
-                merged.extend(attrs);
+                for (key,value) in attrs {
+                if let Some(previous)=merged.insert(key,value){<graph_core::PropertyValue as semio_framework_value::FromValue>::retire_decoded(previous);}
+            }
                 attrs = merged;
             }
         }

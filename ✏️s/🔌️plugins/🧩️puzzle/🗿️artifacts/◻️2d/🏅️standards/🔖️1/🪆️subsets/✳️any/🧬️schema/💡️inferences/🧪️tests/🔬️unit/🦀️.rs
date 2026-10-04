@@ -16,18 +16,18 @@ fn parent_child_snapshot() -> Puzzle2dSnapshot {
 #[test]
 fn inference_determinism_law() {
     let snapshot = parent_child_snapshot();
-    assert_eq!(Puzzle2dInference::infer(&snapshot), Puzzle2dInference::infer(&snapshot));
+    assert_eq!(Puzzle2dInference::infer(&snapshot).expect("valid materialized inference fixture"), Puzzle2dInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
 #[test]
 fn inference_default_law() {
-    assert_eq!(Puzzle2dInference::infer(&Puzzle2dSnapshot::default()), Puzzle2dInference::default());
+    assert_eq!(Puzzle2dInference::infer(&Puzzle2dSnapshot::default()).expect("valid materialized inference fixture"), Puzzle2dInference::default());
 }
 
 #[test]
 fn inference_matches_compute_flat_position_directly() {
     let snapshot = parent_child_snapshot();
-    let inferred = Puzzle2dInference::infer(&snapshot);
+    let inferred = Puzzle2dInference::infer(&snapshot).expect("valid materialized inference fixture");
     assert_eq!(inferred.flat_position, compute_flat_position(&snapshot));
 }
 //#endregion 🧪️InferenceLaws

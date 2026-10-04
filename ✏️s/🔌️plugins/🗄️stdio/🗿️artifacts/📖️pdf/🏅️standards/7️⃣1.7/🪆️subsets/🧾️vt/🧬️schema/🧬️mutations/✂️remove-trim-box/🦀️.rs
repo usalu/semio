@@ -26,9 +26,12 @@ impl MutationKind<PdfSnapshot, PdfVtMutation> for RemoveTrimBox {
         MutationOutcome::new(support::graph_edit_diff(base, next))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfVtMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfVtMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         support::page_objects(base).get(self.page_index).copied().and_then(|page| support::page_box(base, page, "TrimBox")).map(|trim_box| PdfVtMutation::SetTrimBox(SetTrimBox { page_index: self.page_index, trim_box })).into_iter().collect()
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove PDF/VT trim box on page {}", self.page_index), &format!("PDF/VT-TrimBox auf Seite {} entfernen", self.page_index))

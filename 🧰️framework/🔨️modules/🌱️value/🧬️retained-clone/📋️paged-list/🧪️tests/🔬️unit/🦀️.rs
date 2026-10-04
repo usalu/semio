@@ -61,7 +61,7 @@ struct DropProbeCursor {
 }
 
 impl RetainedCloneCursor<DropProbe> for DropProbeCursor {
-    fn advance(&mut self, source: RetainedCloneRef<'_, DropProbe>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, String> {
+    fn advance(&mut self, source: RetainedCloneRef<'_, DropProbe>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
         source.bind(&mut self.source)?;
         if self.output.is_some() {
             return Ok(RetainedCloneStep::Complete(Default::default()));
@@ -84,7 +84,7 @@ impl RetainedCloneCursor<DropProbe> for DropProbeCursor {
         started
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, crate::ValueError> {
         if !self.close.is_empty() {
             return self.close.step(maximum_items, maximum_bytes);
         }
@@ -123,7 +123,7 @@ struct NonconformingChildCursor {
 }
 
 impl RetainedCloneCursor<NonconformingChild> for NonconformingChildCursor {
-    fn advance(&mut self, source: RetainedCloneRef<'_, NonconformingChild>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, String> {
+    fn advance(&mut self, source: RetainedCloneRef<'_, NonconformingChild>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
         source.bind(&mut self.source)?;
         Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: grant.maximum_items.saturating_add(1), copied_bytes: grant.maximum_copy_bytes.saturating_add(1), retained_capacity_bytes: 0 }))
     }
@@ -138,7 +138,7 @@ impl RetainedCloneCursor<NonconformingChild> for NonconformingChildCursor {
         started
     }
 
-    fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, crate::ValueError> {
         self.source = None;
         Ok(SnapshotRetirementStep::Complete)
     }
@@ -173,7 +173,7 @@ struct NonconformingRetirementChildCursor {
 }
 
 impl RetainedCloneCursor<NonconformingRetirementChild> for NonconformingRetirementChildCursor {
-    fn advance(&mut self, source: RetainedCloneRef<'_, NonconformingRetirementChild>, _grant: RetainedCloneGrant) -> Result<RetainedCloneStep, String> {
+    fn advance(&mut self, source: RetainedCloneRef<'_, NonconformingRetirementChild>, _grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
         source.bind(&mut self.source)?;
         self.output = Some(NonconformingRetirementChild);
         Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()))
@@ -189,7 +189,7 @@ impl RetainedCloneCursor<NonconformingRetirementChild> for NonconformingRetireme
         started
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, crate::ValueError> {
         if !self.reported {
             self.reported = true;
             return Ok(SnapshotRetirementStep::Pending { released_items: maximum_items.saturating_add(1), released_bytes: maximum_bytes.saturating_add(1) });
@@ -209,6 +209,77 @@ impl RetainedClone for NonconformingRetirementChild {
     fn retained_clone_cursor() -> Self::Cursor {
         NonconformingRetirementChildCursor { output: None, source: None, closing: false, reported: false }
     }
+}
+
+#[derive(Debug, PartialEq, crate::RetainedClone, crate::RetireOwned)]
+struct OversizedOwner {
+    first: String,
+    second: String,
+    third: String,
+}
+
+#[derive(Clone, Copy, Debug)]
+struct InsufficientScaffoldChild;
+
+impl RetireOwned for InsufficientScaffoldChild {
+    fn retirement(self) -> Box<dyn RetirementCursor> {
+        crate::retirement::leaf(self)
+    }
+}
+
+struct InsufficientScaffoldChildCursor {
+    output: Option<InsufficientScaffoldChild>,
+    source: Option<RetainedCloneBinding>,
+    closing: bool,
+}
+
+impl RetainedCloneCursor<InsufficientScaffoldChild> for InsufficientScaffoldChildCursor {
+    fn advance(&mut self, source: RetainedCloneRef<'_, InsufficientScaffoldChild>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
+        source.bind(&mut self.source)?;
+        if self.output.is_some() {
+            return Ok(RetainedCloneStep::Complete(Default::default()));
+        }
+        if grant.maximum_items == 0 {
+            return Ok(RetainedCloneStep::Progress(Default::default()));
+        }
+        self.output = Some(*source.get());
+        Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
+    }
+
+    fn take(&mut self) -> Option<InsufficientScaffoldChild> {
+        self.output.take()
+    }
+
+    fn begin_close(&mut self) -> bool {
+        let started = !self.closing;
+        self.closing = true;
+        started
+    }
+
+    fn close_step(&mut self, _maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, crate::ValueError> {
+        if maximum_bytes < 128 {
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        self.source = None;
+        Ok(SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.output.is_none() && self.source.is_none()
+    }
+}
+
+impl RetainedClone for InsufficientScaffoldChild {
+    type Cursor = InsufficientScaffoldChildCursor;
+
+    fn retained_clone_cursor() -> Self::Cursor {
+        InsufficientScaffoldChildCursor { output: None, source: None, closing: false }
+    }
+}
+
+#[derive(crate::RetainedClone, crate::RetireOwned)]
+struct DerivedScaffoldOwner {
+    child: InsufficientScaffoldChild,
 }
 
 #[derive(Deserialize)]
@@ -302,6 +373,85 @@ fn retained_paged_list_copy_matches_vec_serde_and_closes_page_by_page() {
 }
 
 #[test]
+fn retained_paged_list_adopts_completed_owner_larger_than_copy_budget() {
+    let expected = OversizedOwner { first: "alpha".into(), second: "beta".into(), third: "gamma".into() };
+    assert!(size_of::<OversizedOwner>() > 64);
+    let mut values = PagedList::<OversizedOwner, 1>::default();
+    while !values.has_reserved_slot() {
+        let required = values.next_allocation_bytes().expect("oversized owner capacity");
+        assert!(values.reserve_one(required).expect("oversized owner reserve").progressed);
+    }
+    values.push_reserved(expected).expect("oversized owner source placement");
+    let source = super::super::RetainedCloneSource::from_owner(values);
+    let mut cursor = PagedList::<OversizedOwner, 1>::retained_clone_cursor();
+    let grant = RetainedCloneGrant { maximum_items: 8, maximum_copy_bytes: 64, maximum_capacity_bytes: 4096, maximum_depth: 64 };
+    let copied = loop {
+        match cursor.advance(source.borrow(), grant).expect("oversized owner retained copy") {
+            RetainedCloneStep::Progress(progress) => assert_ne!(progress, RetainedCloneProgress::default()),
+            RetainedCloneStep::Complete(_) => break cursor.take().expect("oversized owner retained output"),
+        }
+    };
+    assert_eq!(copied.get(0), Some(&OversizedOwner { first: "alpha".into(), second: "beta".into(), third: "gamma".into() }));
+    assert!(cursor.begin_close());
+    while !cursor.terminal_is_empty() {
+        cursor.close_step(8, 4096).expect("oversized owner cursor close");
+    }
+    let mut retirement = crate::retirement::owned_retirement(copied);
+    while !retirement.terminal_is_empty() {
+        retirement.close_step(8, 4096).expect("oversized owner retirement");
+    }
+    drop(source);
+}
+
+#[test]
+fn retained_paged_list_refuses_scaffold_grant_that_cannot_release_owner() {
+    let mut values = PagedList::<InsufficientScaffoldChild, 1>::default();
+    while !values.has_reserved_slot() {
+        let required = values.next_allocation_bytes().expect("insufficient scaffold capacity");
+        assert!(values.reserve_one(required).expect("insufficient scaffold reserve").progressed);
+    }
+    values.push_reserved(InsufficientScaffoldChild).expect("insufficient scaffold source placement");
+    let source = super::super::RetainedCloneSource::from_owner(values);
+    let mut cursor = PagedList::<InsufficientScaffoldChild, 1>::retained_clone_cursor();
+    let grant = RetainedCloneGrant { maximum_items: 8, maximum_copy_bytes: 64, maximum_capacity_bytes: 4096, maximum_depth: 64 };
+    let error = loop {
+        match cursor.advance(source.borrow(), grant) {
+            Ok(RetainedCloneStep::Progress(progress)) => assert_ne!(progress, RetainedCloneProgress::default()),
+            Ok(RetainedCloneStep::Complete(_)) => panic!("insufficient scaffold release must not complete"),
+            Err(error) => break error,
+        }
+    };
+    assert_eq!(error.kind, crate::ValueRefusalKind::WorkLimit);
+    assert!(error.message.contains("cannot progress"));
+    assert!(cursor.begin_close());
+    while !cursor.terminal_is_empty() {
+        cursor.close_step(8, 4096).expect("insufficient scaffold cursor close");
+    }
+    drop(source);
+}
+
+#[test]
+fn retained_derive_refuses_scaffold_grant_that_cannot_release_field() {
+    let source = super::super::RetainedCloneSource::from_owner(DerivedScaffoldOwner { child: InsufficientScaffoldChild });
+    let mut cursor = DerivedScaffoldOwner::retained_clone_cursor();
+    let grant = RetainedCloneGrant { maximum_items: 8, maximum_copy_bytes: 64, maximum_capacity_bytes: 4096, maximum_depth: 64 };
+    let error = loop {
+        match cursor.advance(source.borrow(), grant) {
+            Ok(RetainedCloneStep::Progress(progress)) => assert_ne!(progress, RetainedCloneProgress::default()),
+            Ok(RetainedCloneStep::Complete(_)) => panic!("derived insufficient scaffold release must not complete"),
+            Err(error) => break error,
+        }
+    };
+    assert_eq!(error.kind, crate::ValueRefusalKind::WorkLimit);
+    assert!(error.message.contains("cannot progress"));
+    assert!(cursor.begin_close());
+    while !cursor.terminal_is_empty() {
+        cursor.close_step(8, 4096).expect("derived insufficient scaffold cursor close");
+    }
+    drop(source);
+}
+
+#[test]
 fn retained_paged_list_cancellation_preserves_source_and_retires_partial_pages() {
     let fixture = fixture();
     let source = source(&fixture);
@@ -350,7 +500,7 @@ fn retained_paged_list_refuses_over_budget_child_before_owner_placement() {
             Err(error) => break error,
         }
     };
-    assert!(error.contains("exceeded its retained clone"));
+    assert!(error.message.contains("exceeded its retained clone"));
     assert_eq!(cursor.index, 0);
     assert_eq!(cursor.values.len(), 0);
     assert!(cursor.child_value.is_none());
@@ -380,7 +530,7 @@ fn retained_paged_list_refuses_over_budget_child_retirement_before_owner_placeme
             Ok(RetainedCloneStep::Progress(_)) => {}
             Ok(RetainedCloneStep::Complete(_)) => panic!("over-budget child retirement must be refused before completion"),
             Err(error) => {
-                assert!(error.contains("exceeded its retained retirement"));
+                assert!(error.message.contains("exceeded its retained retirement"));
                 break;
             }
         }

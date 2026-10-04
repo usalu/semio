@@ -19,7 +19,10 @@ pub struct SetPageOverrides {
 impl MutationKind<LayoutSnapshot, LayoutMutation> for SetPageOverrides {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "page-overrides", kind: "set-page-overrides", record: "SetPageOverrides" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> { diff_set_page_overrides(self, base) }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> { inverse_set_page_overrides(self, base) }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok({ inverse_set_page_overrides(self, base)? 
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Set overrides on page \"{}\"", self.id), &format!("Abweichungen von Seite \"{}\" setzen", self.id)) }
     fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }
@@ -46,14 +49,17 @@ pub fn diff_set_page_overrides(payload: &SetPageOverrides, base: &LayoutSnapshot
         return protocol::MutationOutcome::fatal("mutation.invariant", "A page holds at most 64 overrides, each names a frame on its parent page, and each box is finite with a non-negative size.", std::iter::empty::<String>());
     }
     if page.overrides == payload.overrides {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Page overrides are already set to that value.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Page overrides are already set to that value.");
     }
     protocol::MutationOutcome::new(LayoutDiff { pages: Some(LayoutPagesDelta { patched: vec![LayoutPagePatchEntry { id: payload.id.clone(), patch: PagePatch { overrides: Some(payload.overrides.clone()), ..Default::default() } }], ..Default::default() }), ..Default::default() })
 }
 
-pub fn inverse_set_page_overrides(payload: &SetPageOverrides, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_set_page_overrides(payload: &SetPageOverrides, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.id) else { return Vec::new() };
     vec![LayoutMutation::SetPageOverrides(SetPageOverrides { id: page.id.clone(), overrides: page.overrides.clone() })]
+
+    })())
 }
 
 #[cfg(test)]

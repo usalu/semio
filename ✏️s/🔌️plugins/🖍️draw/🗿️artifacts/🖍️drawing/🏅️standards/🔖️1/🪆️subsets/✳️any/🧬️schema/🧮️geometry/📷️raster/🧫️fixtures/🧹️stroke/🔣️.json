@@ -1,0 +1,8 @@
+[
+ {"source":"fill then stroke source over","work":{"native":13,"typescript":12}},
+ {"source":"dashed stroke","work":{"native":13,"typescript":12}},
+ {"source":"zero length round cap","work":{"native":13,"typescript":12}},
+ {"source":"opaque solid rectangle","work":{"native":0,"typescript":0}},
+ {"source":"no appearance","work":{"native":0,"typescript":0}},
+ {"source":"singular affine","work":{"native":0,"typescript":0}}
+]

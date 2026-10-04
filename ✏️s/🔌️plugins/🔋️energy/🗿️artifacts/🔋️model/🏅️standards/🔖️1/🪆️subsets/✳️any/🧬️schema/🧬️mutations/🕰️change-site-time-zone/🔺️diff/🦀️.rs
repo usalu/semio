@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeSiteTimeZone, base: &EnergyModelSnapshot) -> 
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("A site time zone of {} h is not admissible.", payload.new_time_zone_hours), Vec::<String>::new());
     }
     if base.model.site.time_zone_hours == payload.new_time_zone_hours {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("The site time zone is already {} h.", payload.new_time_zone_hours));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("The site time zone is already {} h.", payload.new_time_zone_hours));
     }
     let mut model = base.model.clone();
     model.site.time_zone_hours = payload.new_time_zone_hours;

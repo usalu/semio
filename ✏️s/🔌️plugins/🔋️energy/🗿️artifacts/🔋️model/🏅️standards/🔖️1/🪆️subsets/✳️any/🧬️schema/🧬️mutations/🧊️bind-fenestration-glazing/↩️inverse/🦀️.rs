@@ -6,7 +6,8 @@ use crate::EnergyModelSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ A refused or no-op forward step has nothing to undo, so it answers with no steps at all.
-pub fn inverse(payload: &super::BindFenestrationGlazingConstruction, base: &EnergyModelSnapshot) -> Vec<EnergyModelMutation> {
+pub fn inverse(payload: &super::BindFenestrationGlazingConstruction, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(existing) = base.model.fenestrations.iter().find(|item| item.id == payload.id) else {
         return Vec::new();
     };
@@ -18,5 +19,7 @@ pub fn inverse(payload: &super::BindFenestrationGlazingConstruction, base: &Ener
         Some(previous) => vec![vocabulary::bind_fenestration_glazing_construction(payload.id, previous)],
         None => vec![vocabulary::clear_fenestration_glazing_construction(payload.id)],
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

@@ -26,7 +26,8 @@ impl protocol::MutationKind<JpgSnapshot, JpgMutation> for ReplaceHuffmanTableMut
         let Self { table } = self;
         protocol::MutationOutcome::new(contribute(base, table.clone()))
     }
-    fn inverse(&self, base: &JpgSnapshot) -> Vec<JpgMutation> {
+    fn inverse(&self, base: &JpgSnapshot) -> Result<Vec<JpgMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         let Self { table } = self;
         let outcome = <Self as protocol::MutationKind<JpgSnapshot, JpgMutation>>::diff(self, base);
         if <JpgDiff as protocol::DiffAlgebra<JpgSnapshot>>::is_empty(outcome.diff()) {
@@ -39,7 +40,9 @@ impl protocol::MutationKind<JpgSnapshot, JpgMutation> for ReplaceHuffmanTableMut
                 None => vec![JpgMutation::RemoveHuffmanTable(crate::schema::mutations::RemoveHuffmanTableMutation { key })],
             }
         }
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Replace huffman table", "Huffman-Tabelle ersetzen")
     }
@@ -66,7 +69,7 @@ pub fn contribute(base: &JpgSnapshot, table: JpgHuffmanTable) -> JpgDiff {
 
 #[cfg(test)]
 pub(crate) fn test_case() -> JpgMutation {
-    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🌳️replace-huffman/🎯️direct/🦠️mutation/🔣️.json")).expect("committed replace-huffman-table payload")
+    semio_framework_pack_json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🌳️replace-huffman/🎯️direct/🦠️mutation/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed replace-huffman-table payload")
 }
 #[cfg(test)]
 #[path = "🧪️tests/🎯️direct/🦀️.rs"]

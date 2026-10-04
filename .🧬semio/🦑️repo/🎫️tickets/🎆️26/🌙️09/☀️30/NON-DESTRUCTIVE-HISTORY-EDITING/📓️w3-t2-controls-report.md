@@ -359,3 +359,199 @@ ticket tool called. Scratch: `🗑️generated/s3-controls/`. Status: IN PROGRES
   (the inspector stops re-sending possibly stale sibling values). New law
   `a_history_edit_of_an_earlier_site_press_keeps_a_later_press_of_another_field`. Fixture quintets: placeholders until the Rust
   writer runs (`SEMIO_ENERGY_WRITE_FIXTURES=1`) — blocked by the peer break.
+
+### S3.4 Resume after the 13:05 usage cut + 17:00 reboot (18:40)
+
+- Every S3.3 edit and the §20.1 config-lane press (below) were on disk intact; the energy config-press law was complete
+  (no half edit). Cargo waits on the peer schema-split fix (S3-INFRA): last plugin check (13:0x) red only in
+  `🧰️framework/🔨️modules/🛂️manifest/🦀️.rs:1266-1269` (`semio_framework_schema::{with_schema_export_registry, SchemaFormat,
+  registered_referenced_schema_documents}` missing — peer schema split).
+- **Config-lane press (design §20.1, coordinator item)** in `OS/🔌️plugin/🛠️tool-machine/🦀️.rs`: `settle_press_config` holds a tick's
+  `config_mutations` + `window_config_mutations` per window (each tick replaces; late tick / late release of the press the window
+  closed stays silent; `captureLost`/`blur`/`frozen`/`retired` drop with zero trace); render seams read
+  `config_overlay_or` / `window_config_overlay_or` (4 seams in `PLG`: render, engagements, window measures, tool measures; context
+  menu and poll keep reading what landed); overlays folded with the shared `fold_leaf` and retired through the config store /
+  `WindowConfigOwnerRegistry::preview|retire_preview` (new, `🪟️window/🎚️config/🦀️.rs`); release publishes its own config lanes as
+  ONE config edit with `coalesce_key` cleared; `A::host_configuration_mutation` verbs ride the same press. Test accessors
+  `config_generations`, `rendered_config`. Law (energy):
+  `a_config_press_is_one_config_edit_a_cancel_is_none_and_neither_is_a_history_row`. API note `📓️api-scrub-machine.md` §4.
+- Taxonomy (`verify taxonomy report --scope …/🧬️schema/🧬️mutations`): the 6 non-truncated new leaf dirs are clean except the
+  pre-existing `directory-kind-unresolved` class of every case dir (596 in energy); the 7 path-budget-truncated dirs
+  (`🌡️/🌱️/⛏️change-ground-temperature`, `🛫️/▶️change-run-period-start`, `🛬️/⏹️change-run-period-end`) join the existing
+  `projection-member-unresolved` + `mutation-payload-schema-authority-invalid` class of the 153 truncated energy dirs (S3-TAX
+  structural identity). Fixture dirs report `scenario root is absent` until the Rust writer fills the placeholder quintets.
+- Verification after the resume (no cargo yet — every plugin-crate build queues behind ~15 peer cargos on the shared build-dir):
+
+| Command | Result |
+|---|---|
+| `… vitest run … "Interpreter/🟦️.tsx" -t "continuous presses|interpreted number steppers|scrub protocol"` | **5/5 pass** |
+| `… vitest run … "Interpreter/🟦️.tsx"` (whole suite) | **182/184**; the 2 reds are the known peer Overlay-padding cases |
+| `bun ./📜️script.ts schema mutation-inputs --under ✏️s/🔌️plugins/🔋️energy` | **725/725 inputs of 304 leaves carry a UI descriptor**; 16 findings, all catalogue state: 13 `leafUncatalogued` (new leaves) + 3 `malformed` (deleted leaves still catalogued) → central `schema generate` |
+| Python `ast.parse` of the case's second implementation; JSON parse of oracles, aggregate schema and all 595 descriptor/payload schemas | pass |
+| `cargo test -p semio-framework-ui --features wgpu-engine --lib -- scrub_press control_commit` (private target, 19:18) | **14/14 pass** (incl. the 3 new laws: ring drag + cancel, colour field press, refused-draft release) |
+| `cargo test -p semio-framework-ui --features wgpu-engine --lib` (whole crate) | **768/768 pass** |
+| energy lib-test build (19:01–19:17, 4 attempts) | peer-blocked: lock cycle (cleared by the coordinator), then `🗣️dsl/🦀️.rs:931` `canonicalize` ambiguous (peer, fixed within a minute), then `PLG:3015…39124` `dsl::LanguageSpec` / `preflight_languages` / `register_languages` removed by the peer dsl refactor before its plugin callers were updated — 13 errors, none in my regions |
+
+### S3.5 Open items (19:30)
+
+- **Owed verification (cargo; framework red from the peer DSL crate extraction, coordinator "TREE GREEN" pending):**
+  energy fixture writer (`SEMIO_ENERGY_WRITE_FIXTURES=1 cargo test --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-energy-model --lib --
+  writes_the_committed_vector_when_requested`) then the full energy lib suite (26 new vectors, field-leaf laws, config-press law,
+  scrub laws, structural correspondence) + the case adapter / Python second implementation; `cargo test -p semio-framework-plugin --lib
+  -- tool_machine:: tool_run_tests::` (F-4 colour case, config press compile); forms
+  (`field_transactions change_block_field block_field try_value` + the frozen law's `[DEBUG]` investigation: "did not retire within 30
+  seconds" on the late release), gis terrain/map, playbook crate tests; wasm32-wasip2 checks of the five plugin crates.
+- `a_history_edit_freezes_an_open_press_with_zero_trace` (forms) still carries the predecessor's `[DEBUG]` eprintlns; they leave
+  with the fix.
+- Taxonomy: the 7 truncated energy leaf dirs join S3-TAX's existing `projection-member-unresolved` class (153 in energy).
+- Decision recorded (§S2.4 finding 1): resolved by the coordinator's GO — energy whole-record leaves replaced (S3.3).
+
+### S3.6 Coordinator actions (exact)
+
+1. Central `schema generate`: catalogue the 13 new energy leaf scopes (`s.energy.model.mutation.change-site-{latitude,longitude,
+   elevation,time-zone,north-axis}`, `…change-ground-temperature-{building-surface,shallow,deep}`, `…change-run-period-{start-month,
+   start-day,end-month,end-day,year}`) and drop the 3 deleted (`update-site`, `update-ground-temperature`, `update-run-period`) —
+   clears the 16 `schema mutation-inputs` findings under energy.
+2. `describe` energy (`set-site` args no longer required; config-lane/label changes), playbook (descriptor still carries the old
+   `updatePlaybook` describe text "consecutive edits merge into one undo step"), forms (`change-block-field` roster, if not yet).
+3. S3-CLOSURE: with `Emit.coalesce_key`/`Edit.coalesce_key` deletion remove the `coalesce_key: None` lines of the store `Edit`
+   literals (gis terrain `✏️editor/🦀️.rs:278`, gis map `:593`, forms `:768`, playbook `:332`, energy `~:1992`); the glue's
+   resets are gone (S3.7 note). My trees have no `coalesce_key: Some(…)` left.
+4. S3-NORM (§20.4): norm app-surface `commit_snapshot(_fields)` hand labels (`📇️registry/🧬️contract/🖥️app-surface/🦀️.rs:1582,1590`).
+5. S3-SPATIAL: fem playback can drop `PLAYBACK_COALESCE_KEY` once its hosts send `{gesture, commit}` (config-lane press, S3.4).
+6. Activation before any browser probe of the React/wgpu press changes (colour, ring, NodeGraph sliders, config presses).
+
+### S3.7 Audit `📓️audit-s3-tools.md` C1–C3 (19:55)
+
+- **C1 (energy witnesses)**: the 130 placeholder files are now real quintets, authored by the ticket input script
+  `🧪️s3-controls-energy-field-witnesses.py` from the committed `🔢️change-model-version/⛔️refuses` base (default model "BESTEST 600",
+  version "1"; the 26 leaf-test scenarios now pin `version: "1"` so the Rust writer reproduces the same base) in the Rust writer's
+  exact shape (applied: whole regenerated model + unchanged child handles; refused / no-op: all-null diff, untouched document).
+  Independent checks: `bun ./📜️script.ts schema mutation-payloads --under ✏️s/🔌️plugins/🔋️energy` → **0 findings, 600/600 payloads,
+  301/301 leaves witnessed, 138 negative witnesses rejected**; the case's Python second implementation (loaded with a stub harness)
+  → **26/26 vectors agree** (after-document, status + code, and its own inverse restores the before-document). The Rust leaf laws
+  (forward, inverse, canonical, outcome, diff, absorb) are owed with the energy lib run. A dedicated `{}`-body gate is not added:
+  the payload lint rejects an empty mutation payload and every leaf test decodes all five files.
+- **C2 (forms frozen-press law)**: root cause found by reading the harness — `artifact_app_laws::settle_registered_typed_operation`
+  drained ui scopes but never took a UI-progress frame, so a time-travel `HistoryPatch` left pending by `historyEditExit` (the
+  pump returns as soon as the stage reads `None`, before taking it) kept `time_travel.has_pending_work()` → `has_pending_typed_operations`
+  true for the late release's settle until the 30 s deadline. Fix (S3-W2A region of `PLG`, one loop + docstring): the helper also
+  takes every UI-progress frame like the host does (`receipt.ui_scope` keeps the first real scope). The five `[DEBUG]` eprintlns are
+  removed. WRITTEN, run owed (TREE GREEN).
+- **C3**: `settle_press_config` — a late release and an abort both clear the config lanes and answer `false`; only a live release
+  publishes.
+- Note: a peer (S3-CLOSURE) already deleted the `coalesce_key` resets in my glue; my trees' only remaining `coalesce_key` text is the
+  store `Edit` literals S3-CLOSURE removes with the field.
+
+### S3.8 Owed runs after "TREE GREEN (core)" (2026-10-03 05:47–06:10)
+
+| Command | Result |
+|---|---|
+| on-disk check after the 21:00 cut | 130/130 energy quintet files non-empty (S3.7 C1 complete); forms frozen law has 0 `[DEBUG]` lines; the settle-helper UI-progress loop is in `PLG` |
+| `cargo check -p semio-framework-plugin --lib --features artifact-app-testing` | **pass** (06:08); 0 warnings in `🛠️tool-machine` / my `🪟️window/🎚️config` additions (1 peer warning `🎚️config/🦀️.rs:455`) |
+| `cargo check -p semio-framework-plugin --lib --target wasm32-wasip2` | **pass** (06:09) |
+| `cargo test -p semio-framework-plugin --lib -- tool_machine:: tool_run_tests::` | **peer-blocked** (05:55–06:00): test modules not yet migrated to the DSL crate's `ValueError` (`🧪️tests/🖥️test-app-mutations-document` ×22, `🧪️tests/🧩️composition` ×17, `🔬️app-declarations-fixture` ×10, `🏗️builder/🧪️tests/🔬️schema-stamping` ×8, `🧬️mutation-fixtures-{transaction,surface,dummy}` ×8 each) + `⏪️time-travel/🦀️.rs:2311` (`TimeTravelLabel::MemberEdited`, landed 05:55) — 0 errors in my files |
+| energy / forms crate tests (05:47, 06:01) | **peer-blocked** in their stdio dependencies: `🌦️epw/…/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs` (139 errors) and `🎒️zip/…/🌐️iso21320/🧬️schema/🦀️.rs:207-213` + `🎒️zip/…/🧱️base/…/🪶️sqlite/🦀️.rs` — same `ValueError` migration (reported to `main`); 0 errors in energy/forms sources before the dependency stops the build |
+
+### S3.9 Status at the 10:45 resume
+
+- No interrupted edit: C1 (130/130 quintets non-empty; `schema mutation-payloads --under energy` still **0 findings, 600/600,
+  301/301 witnessed** at 10:43), C2 (0 `[DEBUG]`, settle-helper UI-progress loop on disk), C3 on disk.
+- 06:52 cheap check: the kernel itself was red from the peer DSL `ValueError` migration (`🏪️store/🦀️.rs` ×12, `🚪️io` ×4,
+  `🧬️semio` ×3, `📜️space-history` sqlite ×12, snapshot-capability codecs ×2) — no further polling per the coordinator.
+- **Owed, in order, once the ✏️s workspace compiles** (one gated cargo each): (1) energy lib suite incl. the 26 vectors (the Rust
+  writer must reproduce the authored quintets byte-for-byte modulo key order), `a_history_edit_of_an_earlier_site_press_keeps_a_later_press_of_another_field`,
+  `a_config_press_is_one_config_edit_a_cancel_is_none_and_neither_is_a_history_row`, scrub + F-4 laws; (2) plugin
+  `tool_machine:: tool_run_tests::` (needs the peer's test-module `ValueError` migration); (3) forms
+  `field_transactions change_block_field block_field try_value` (C2 proof); (4) gis terrain/map, playbook, norm registry contract
+  crate tests; (5) wasm32-wasip2 checks of the five plugin crates.
+
+### S3.10 CLOSURE-3 — the release is transactional (2026-10-03 11:00–11:40)
+
+Finding: `settle_tool_operation` settled the config press (hold / release, press marked closed) BEFORE the fallible
+`scrubs.send(..)?` / `child_scrubs.send(..)?`, and `ScrubLedger::send` itself recorded a release as closed even when the scrub
+refused it — a refused release lost the final config value silently. Fix (structural, the audit's "extract one PressLedger"):
+
+- **One press ledger for every lane** (`OS/🔌️plugin/🛠️tool-machine/🦀️.rs`): `ToolMachineRuntime.presses: ScrubLedger<PressLeaf<M,
+  CM>>` with `PressLeaf::{Member, Child, Config, WindowConfig}` replaces `scrubs` + `child_scrubs` + the hand-kept config presses
+  (`ConfigPress`, `config_presses`, `config_closed`, `config_changed`, `hold_config` / `release_config` / `abort_config` /
+  `retain_config_windows`, `settle_press_config` — all deleted). `settle_press` moves every press lane of the emit into ONE
+  `presses.send`; only its `Committed` step hands the lanes back (document lanes stamped with the press's ONE `TransactionRef` —
+  previously the child ledger minted a second ref —, config lanes as ONE config edit, never a history row). A late input is
+  silent on every lane; aborts / freeze / roster retirement are one ledger call each; the document / config / window-config
+  overlays refold from `presses.provisional()`. The host-configuration branch of `dispatch_action` (`PLG`) calls the same
+  `settle_press` (base = live content revision). Net: no fallible step between hold and release, one closed-press memory.
+- **`WindowConfigMutation: Clone`** (`🔌️plugin/🪟️window/🎚️config/🦀️.rs`): the erased value is a private
+  `ErasedWindowConfigMutationValue` (`as_any` / `into_any` / `clone_value`, blanket over `Clone + Send + 'static`; every owner
+  mutation is `Clone` through `protocol::Mutation`), so a press holds window-config leaves; `begin` checks the type before it
+  moves the value, so a mismatch still hands the mutation back.
+- **`ScrubLedger::send` transactional** (Rust `🧰️framework/🔨️modules/🛠️tool-machine/🦀️.rs` + TS twin `🟦️.ts`): the open state is
+  restored and nothing is recorded closed when the scrub refuses; the press stays open until a retry or a host abort decides.
+
+Laws:
+
+| Law | Where | Result |
+|---|---|---|
+| `the_scrub_ledger_never_refuses_and_late_inputs_change_nothing` — exhaustive: every order of ≤ 4 inputs (2 presses × 2 tools × 2 revisions, empty / non-empty ticks, releases, host abort; 137 560 sends) answers a step, never a refusal; a late input leaves the ledger byte-equal; a live release always closes its press | tool-machine unit | **pass** (`cargo test -p semio-framework-tool-machine --lib`: 33/33, 11:20) |
+| TS twin: random ledger inputs across windows, tools and revisions are never refused; a released press answers `idle` to a late tick / release with open state + overlay unchanged (fast-check, 400 runs) | tool-machine conformance | **pass** (`bun test`: 34/34, 11:12) |
+| `every_lane_of_a_press_rides_one_ledger_step` — a tick holds document + config leaves as overlays over untouched committed values; the release commits both lanes in ONE step; a late release is silent on every lane; a config-only press leaves the document overlay empty; an abort leaves zero trace and its late release stays silent | plugin glue (`🔌️plugin/🧪️tests/🧪️scrub`) | WRITTEN — compiles (0 errors in my files); the lib-test target is **peer-blocked** by the test-fixture `ValueError` migration (129 errors in `🧪️tests/🖥️test-app-mutations-document`, `🧩️composition`, `🔬️app-declarations-fixture`, `🧬️mutation-fixtures-*`, `🏗️builder/🧪️tests/🔬️schema-stamping`) |
+
+Note on "a refused release": the scrub chart cannot refuse (every `Tick` lands in `scrubbing`, every `Commit` yields `Commit` as
+its last yield, the ledger only resumes states it persisted) — the exhaustive law pins this, so the refusal arm is the type's
+defensive contract (restore, never close). A release refused DOWNSTREAM of settlement (store admission of the published edit)
+surfaces as the operation's `Fault` with both lanes unpublished — never silent; keeping such a press open would need a two-phase
+release through the publication ladder (open item).
+
+Verification (11:12–11:40): `cargo check -p semio-framework-plugin --lib --tests --features artifact-app-testing` → lib target
+**pass**, 0 warnings in `🛠️tool-machine`, `🧪️scrub`, `🧪️typing` (the typing law now drives `presses`); 1 pre-existing peer warning
+`🎚️config/🦀️.rs:481` (`let mut publication`); `cargo check -p semio-framework-plugin --lib --target wasm32-wasip2` → **pass**
+(11:38). Owed on TREE GREEN: the glue laws above with `tool_machine:: tool_run_tests::` and the energy config-press law
+(end-to-end through the unified ledger).
+
+### S3.11 Owed runs after "TREE GREEN (core tests, 11:38)"
+
+| Command | Result |
+|---|---|
+| `cargo test -p semio-framework-plugin --lib --features artifact-app-testing -- tool_machine:: tool_run_tests::` (11:39–11:45) | **39 passed, 4 failed**. All 7 `tool_machine::` laws pass, incl. the new `every_lane_of_a_press_rides_one_ledger_step` and the typing laws now driving `presses`. The 4 reds are the documented baseline (`📓️w2-a-report.md` §6.4, wp-c13): `tool_run_panel_of_a_running_run_is_the_shell_fixture` (`generation: 0` vs fixture `0.0`), `tool_run_reconfigure_resume…`, `tool_run_settings_changed…`, `tool_run_window_settings_reads…` (the 8-turn budget runs out while 255 tick-overlay retirements are pending). None touches the press path: `set_target` dispatches straight on the config store, and `follow_tool_machines` returns at once with no press open |
+
+Still owed (stdio peer, epw/zip): energy lib suite incl. the config-press law, forms `field_transactions`, gis/playbook/norm crate tests,
+and wasm32 checks of the plugin crates.
+
+### S3.12 Playbook on the child lane (design §20.15; coordinator 11:50) — design
+
+Finding (`parentLeafReadsChild`, 8): `add-step`, `remove-step`, `move-step`, `update-step`, `add-block`, `remove-block`,
+`move-block`, `replace-block` are parent-lane leaves of `PlaybookSnapshot` that read the steps off the `flow` child's local owner
+(`playbook_working_scene`) and re-mint BOTH content-addressed children (`document`, `flow`) on every edit; the parent pack also
+carries the steps as JSON text (`PlaybookPackRecord.steps`) — a materialisation of child content in the parent.
+
+Design (decided, opinionated):
+
+1. **One source of truth, the `flow` child** (`s.stdio.semio@v1/flow`): a step is a node (`id`, `kind = "step"`, `label` = title,
+   params `blocksJson` and, when set, `description`); step order is the chain of `sequence` edges `seq-<a>-<b>` (`next` → `prev`),
+   not the node vector — `insert-node` appends and the inverse of `remove-node` re-appends, so vector order cannot survive an undo;
+   a chain can. Readers walk the chain from its head (nodes outside it follow in vector order).
+2. **The `document` child slot is deleted.** It was a write-only narrative projection (no reader; already stale after every
+   `change-title`); keeping it would need a second child lane per edit. A narrative is a read-side export, composed on read.
+3. **Writers are child-lane leaves.** The verbs emit `ChildEmit::of::<SemioFlowSnapshot>("flow", id, leaves)` with stdio-flow
+   leaves: add step = `insert-node` + chain edges; remove = chain edges + `remove-node`; move = chain rewiring only (node
+   identity kept); block edits = `set-node-param blocksJson` (absolute per step). Retained route: the bounded reducer reads the
+   children from the job context (`ArtifactView::with_children`), publication lane `Child`. The 8 parent-lane leaves, their
+   fixtures, registries (enum, kinds, binary protocol, text grammar ×4, JSON/proto/GraphQL/TS, oracles, case adapter) are deleted;
+   `change-title` stays the one parent-lane leaf.
+4. **Readers compose on read**: `playbook_composed_spec(snapshot, children)` (title + chain steps) feeds every window, the viewer,
+   the interaction topology and `import_media`; an uncomposed child is a named fault, never a local-owner fallback. The working
+   scene (`PlaybookWorkingScene`, `attach_playbook_steps`, `seed_playbook_scene_json`, the scene-owner law) is deleted.
+5. **Stable child ids + genesis catalogue**: the child id is minted once (`playbook-flow` for a new playbook,
+   `playbook-demo-flow` for the demo) and never re-minted; `genesis_child_pack` answers only those ids from the plugin's own
+   catalogue (the empty playbook's flow, the demo's flow DSL asset) — no parent content is read.
+6. **Laws**: child-leaf vectors per verb (exact leaves, applied order, undo of a middle remove restores order), and
+   `composed_reload_law!("playbook", …)` beside the existing G12 law.
+
+Known interim gaps (framework seams owned by S3-AGNOSTIC, pending its gated wave): txt/json export and import serialise the parent
+only (no steps) until serializers receive `ArchiveChildren`; inference sees no steps until it receives the child packs as
+`dependencies` — the same state flow and sequence are in.
+
+
+## Session 4 — 2026-10-04
+
+Continued by S4-TOOLS-B in `📓️s4-tools-b-report.md` (one report for both inherited WPs, fleet rule 34).

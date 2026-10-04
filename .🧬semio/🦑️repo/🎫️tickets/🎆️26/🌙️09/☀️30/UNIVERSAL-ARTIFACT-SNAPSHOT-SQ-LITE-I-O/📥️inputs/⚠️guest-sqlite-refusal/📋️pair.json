@@ -1,0 +1,147 @@
+{
+  "schema": "guest.sqlite.typed-cause-pair/v1",
+  "state": "heldForRuntimeRed",
+  "replacements": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/⚠️refusal/🦀️.rs",
+      "before": "#[derive(Clone, Copy, Debug, PartialEq, Eq)]\npub enum ValueRefusalKind",
+      "after": "#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]\n#[serde(rename_all = \"camelCase\")]\npub enum ValueRefusalKind"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/⚠️refusal/🔁️codec/🦀️.rs",
+      "before": "impl ValueError {",
+      "after": "impl crate::ToValue for ValueRefusalKind {\n    fn to_value(&self) -> DslValue { DslValue::String(self.as_str().into()) }\n    fn to_value_controlled(&self, control: &mut NativeEncodeControl<'_>) -> Result<DslValue, ValueError> { ValueRefusalKind::to_value_controlled(self, control) }\n}\nimpl crate::FromValue for ValueRefusalKind {\n    fn from_value(value: DslValue) -> Result<Self, ValueError> {\n        let DslValue::String(text) = value else { return Err(ValueError::new(ValueRefusalKind::InvalidValue, \"expected refusal kind text\")) };\n        kind(&text)\n    }\n    fn from_value_controlled(value: &DslValue, control: &mut NativeDecodeControl<'_>) -> Result<Self, ValueError> { ValueRefusalKind::from_value_controlled(value, control) }\n}\n\nimpl ValueError {"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🪶️sqlite/🦀️.rs",
+      "before": "pub struct SnapshotRejection {\n    pub message: String,",
+      "after": "#[serde(deny_unknown_fields)]\npub struct SnapshotRejection {\n    pub kind: semio_framework_value::ValueRefusalKind,\n    pub message: String,"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🪶️sqlite/🦀️.rs",
+      "before": "pub fn decode_diagnostics(bytes: &[u8]) -> Result<Vec<semio_framework::Diagnostic>, String> {\n    let value = semio_framework_os_kernel::pack_rt::decode_wire_value(bytes).map_err(|error| error.to_string())?;\n    <Vec<semio_framework::Diagnostic> as semio_framework_value::FromValue>::from_value(value).map_err(|error| error.to_string())\n}",
+      "after": "pub fn decode_diagnostics(bytes: &[u8]) -> Result<Vec<semio_framework::Diagnostic>, semio_framework_value::ValueError> {\n    let value = semio_framework_os_kernel::pack_rt::decode_wire_value(bytes).map_err(|error| error.into_value_error())?;\n    <Vec<semio_framework::Diagnostic> as semio_framework_value::FromValue>::from_value(value)\n}\n\nimpl SnapshotRejection {\n    /// 🚨️ Restores the provider cause and its packed diagnostics without classifying prose.\n    pub fn into_io_error(self) -> Result<semio_framework::io_schema::IoError, semio_framework_value::ValueError> {\n        Ok(semio_framework::io_schema::IoError {\n            cause: semio_framework_value::ValueError::new(self.kind, self.message),\n            diagnostics: decode_diagnostics(&self.diagnostics)?,\n        })\n    }\n}"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🪶️sqlite/🦀️.rs",
+      "before": "SnapshotRejection { message: \"invalid exact subset\".into(),",
+      "after": "SnapshotRejection { kind: semio_framework_value::ValueRefusalKind::InvalidValue, message: \"invalid exact subset\".into(),"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/📜️.wit",
+      "before": "  record snapshot-rejection { message: string, diagnostics: pack }",
+      "after": "  enum value-refusal-kind { invalid-value, canceled, ownership-limit, allocation-failed, work-limit, depth-limit, unsupported-owner, invariant-violated }\n  record snapshot-rejection { kind: value-refusal-kind, message: string, diagnostics: pack }"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+      "before": "SnapshotRejection { message: error.cause.into_message(), diagnostics:",
+      "after": "SnapshotRejection { kind: error.cause.kind, message: error.cause.into_message(), diagnostics:"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+      "before": "SnapshotRejection {\n                                    message: output.message,",
+      "after": "SnapshotRejection {\n                                    kind: $crate::component::wasip2::sqlite_refusal_kind(output.kind),\n                                    message: output.message,"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+      "before": "    pub fn plugin_error(fault: &semio_framework::Fault)",
+      "after": "    /// 🏷️ Projects every canonical cause into the declared codec ABI.\n    pub fn sqlite_refusal_kind(value: semio_framework_value::ValueRefusalKind) -> exports::semio::framework::codec::ValueRefusalKind {\n        use semio_framework_value::ValueRefusalKind as Native;\n        use exports::semio::framework::codec::ValueRefusalKind as Wire;\n        match value { Native::InvalidValue => Wire::InvalidValue, Native::Canceled => Wire::Canceled, Native::OwnershipLimit => Wire::OwnershipLimit, Native::AllocationFailed => Wire::AllocationFailed, Native::WorkLimit => Wire::WorkLimit, Native::DepthLimit => Wire::DepthLimit, Native::UnsupportedOwner => Wire::UnsupportedOwner, Native::InvariantViolated => Wire::InvariantViolated }\n    }\n\n    pub fn plugin_error(fault: &semio_framework::Fault)"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️.rs",
+      "before": "sqlite_wire::SnapshotRejection { message: output.message, diagnostics: output.diagnostics }",
+      "after": "wit_snapshot_rejection(output)"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️.rs",
+      "before": "fn wit_snapshot_limits(value:",
+      "after": "/// 🏷️ Restores the actual codec ABI's complete closed provider authority.\nfn wit_snapshot_rejection(value: actor_bindings::exports::semio::framework::codec::SnapshotRejection) -> sqlite_wire::SnapshotRejection {\n    use actor_bindings::exports::semio::framework::codec::ValueRefusalKind as Wire;\n    use semio_framework_value::ValueRefusalKind as Native;\n    let kind = match value.kind { Wire::InvalidValue => Native::InvalidValue, Wire::Canceled => Native::Canceled, Wire::OwnershipLimit => Native::OwnershipLimit, Wire::AllocationFailed => Native::AllocationFailed, Wire::WorkLimit => Native::WorkLimit, Wire::DepthLimit => Native::DepthLimit, Wire::UnsupportedOwner => Native::UnsupportedOwner, Wire::InvariantViolated => Native::InvariantViolated };\n    sqlite_wire::SnapshotRejection { kind, message: value.message, diagnostics: value.diagnostics }\n}\n\nfn wit_snapshot_limits(value:"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️.rs",
+      "before": "#[cfg(test)]\n#[path = \"🧪️tests/🔬️unit/🦀️.rs\"]\nmod tests;",
+      "after": "#[cfg(test)]\n#[path = \"🧪️tests/🪶️sqlite/⚠️refusal/🦀️.rs\"]\nmod sqlite_refusal_tests;\n\n#[cfg(test)]\n#[path = \"🧪️tests/🔬️unit/🦀️.rs\"]\nmod tests;"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs",
+      "before": "ok_or_else(|| format!(\"no guest SQLite provider for {schema} at {}\", dialect.to_coordinate()).into())",
+      "after": "ok_or_else(|| semio_framework::io_schema::IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, format!(\"no guest SQLite provider for {schema} at {}\", dialect.to_coordinate()))))"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs",
+      "before": "IoError { message: rejection.message, diagnostics: sqlite_wire::decode_diagnostics(&rejection.diagnostics)? }",
+      "after": "rejection.into_io_error().map_err(IoError::from_value_error)?"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs",
+      "before": "diagnostics: sqlite_wire::decode_diagnostics(&file.diagnostics)?",
+      "after": "diagnostics: sqlite_wire::decode_diagnostics(&file.diagnostics).map_err(IoError::from_value_error)?"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs",
+      "before": "diagnostics: sqlite_wire::decode_diagnostics(&payload.diagnostics)?",
+      "after": "diagnostics: sqlite_wire::decode_diagnostics(&payload.diagnostics).map_err(IoError::from_value_error)?"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs",
+      "before": "io::io_mechanism::take_sqlite_snapshot_metadata(&mut database)?",
+      "after": "io::io_mechanism::take_sqlite_snapshot_metadata(&mut database).map_err(IoError::from_value_error)?"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs",
+      "before": "io::io_mechanism::attach_sqlite_snapshot_metadata(&mut database, dialect, encoding, control)?",
+      "after": "io::io_mechanism::attach_sqlite_snapshot_metadata(&mut database, dialect, encoding, control).map_err(IoError::from_value_error)?"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs",
+      "before": "return Err(\"guest SQLite export metadata disagrees with its exact requested snapshot\".to_string().into());",
+      "after": "return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, \"guest SQLite export metadata disagrees with its exact requested snapshot\")));"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs",
+      "before": "return Err(\"guest SQLite import returned a different native encoding\".to_string().into());",
+      "after": "return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, \"guest SQLite import returned a different native encoding\")));"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs",
+      "before": "String::from_utf8(payload.bytes).map_err(|error| IoError::from(error.to_string()))?",
+      "after": "String::from_utf8(payload.bytes).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string())))?"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs",
+      "before": "#[cfg(not(target_arch = \"wasm32\"))]\nfn guest_sqlite_route",
+      "after": "/// 🖥️ Classifies the VM's intrinsic outcome separately from a provider rejection.\n#[cfg(not(target_arch = \"wasm32\"))]\nfn guest_sqlite_turn_error(error: semio_framework_plugin_host::TurnFault) -> semio_framework::io_schema::IoError {\n    use semio_framework_plugin_host::TurnFault;\n    use semio_framework_value::{ValueError, ValueRefusalKind};\n    let kind = match &error {\n        TurnFault::Cancelled => ValueRefusalKind::Canceled,\n        TurnFault::Exhausted | TurnFault::DeadlineExceeded | TurnFault::FuelExhausted => ValueRefusalKind::WorkLimit,\n        TurnFault::Host(_) | TurnFault::Guest(_) | TurnFault::Trapped(_) => ValueRefusalKind::InvariantViolated,\n    };\n    semio_framework::io_schema::IoError::from_value_error(ValueError::new(kind, error.to_string()))\n}\n\n#[cfg(not(target_arch = \"wasm32\"))]\nfn guest_sqlite_route"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs",
+      "before": "    let result = semio_framework_async::block_on(route.runtime.codec_sqlite_export(&route.compiled, &dialect.to_coordinate(), encoding.as_str(), bytes, limits, &headless_codec_budget(), |_, _| { if control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 0).is_err() { cancel.cancel(); } }, &cancel)).map_err(|error| IoError::from(error.to_string()))?;",
+      "after": "    let mut progress_refusal = None;\n    let result = semio_framework_async::block_on(route.runtime.codec_sqlite_export(&route.compiled, &dialect.to_coordinate(), encoding.as_str(), bytes, limits, &headless_codec_budget(), |_, _| { if let Err(cause) = control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 0) { if progress_refusal.is_none() { progress_refusal = Some(cause); } cancel.cancel(); } }, &cancel)).map_err(|error| progress_refusal.take().map(IoError::from_value_error).unwrap_or_else(|| guest_sqlite_turn_error(error)))?;"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs",
+      "before": "    let result = semio_framework_async::block_on(route.runtime.codec_sqlite_import(&route.compiled, &dialect.to_coordinate(), &bytes, limits, &headless_codec_budget(), |_, _| { if control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 0, 0).is_err() { cancel.cancel(); } }, &cancel)).map_err(|error| IoError::from(error.to_string()))?;",
+      "after": "    let mut progress_refusal = None;\n    let result = semio_framework_async::block_on(route.runtime.codec_sqlite_import(&route.compiled, &dialect.to_coordinate(), &bytes, limits, &headless_codec_budget(), |_, _| { if let Err(cause) = control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 0, 0) { if progress_refusal.is_none() { progress_refusal = Some(cause); } cancel.cancel(); } }, &cancel)).map_err(|error| progress_refusal.take().map(IoError::from_value_error).unwrap_or_else(|| guest_sqlite_turn_error(error)))?;"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs",
+      "before": "    let _reactor = hub_socket_reactor().map_err(|error| IoError::from(error.to_string()))?.enter();",
+      "after": "    let _reactor = hub_socket_reactor().map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, error.to_string())))?.enter();"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs",
+      "before": "import_sqlite_database(&file.bytes, limits, &mut |progress| control.checkpoint(progress.phase, progress.completed, progress.total).is_ok()).map_err(|error| IoError::from(error.to_string()))?",
+      "after": "import_sqlite_database(&file.bytes, limits, &mut |progress| control.checkpoint(progress.phase, progress.completed, progress.total).is_ok()).map_err(IoError::from_value_error)?"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs",
+      "before": "export_sqlite_database(&database, limits, &mut |progress| control.checkpoint(progress.phase, progress.completed, progress.total).is_ok()).map_err(|error| IoError::from(error.to_string()))?",
+      "after": "export_sqlite_database(&database, limits, &mut |progress| control.checkpoint(progress.phase, progress.completed, progress.total).is_ok()).map_err(IoError::from_value_error)?"
+    }
+  ],
+  "additions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/🪶️sqlite/⚠️refusal/🦀️.rs",
+      "text": "use crate::*;\n\n#[semio_framework_async_macros::async_test]\nasync fn sqlite_snapshot_guest_refusal_host_preserves_causes_diagnostics_and_actual_vm_cancellation() {\n    use actor_bindings::exports::semio::framework::codec::{SnapshotRejection, ValueRefusalKind as Wire};\n    use semio_framework_value::ValueRefusalKind as Native;\n    let fixture: serde_json::Value = serde_json::from_str(include_str!(\"../../../../🧬️schema/🪶️sqlite/⚠️refusal/🧫️fixtures/🔣️.json\")).unwrap();\n    let diagnostic = &fixture[\"diagnostic\"];\n    let diagnostics = vec![semio_framework::Diagnostic {\n        code: semio_framework::FaultCode::new(diagnostic[\"code\"].as_str().unwrap()),\n        severity: semio_framework::Severity::Error,\n        span: semio_framework::TextSpan::at(u32::try_from(diagnostic[\"line\"].as_u64().unwrap()).unwrap(), u32::try_from(diagnostic[\"column\"].as_u64().unwrap()).unwrap()),\n        message: diagnostic[\"message\"].as_str().unwrap().into(),\n        expected: None,\n        scope: semio_framework::FaultScope::default(),\n    }];\n    let kinds = [(Wire::InvalidValue, Native::InvalidValue), (Wire::Canceled, Native::Canceled), (Wire::OwnershipLimit, Native::OwnershipLimit), (Wire::AllocationFailed, Native::AllocationFailed), (Wire::WorkLimit, Native::WorkLimit), (Wire::DepthLimit, Native::DepthLimit), (Wire::UnsupportedOwner, Native::UnsupportedOwner), (Wire::InvariantViolated, Native::InvariantViolated)];\n    for ((wire, native), expected) in kinds.into_iter().zip(fixture[\"kinds\"].as_array().unwrap()) {\n        assert_eq!(native.as_str(), expected.as_str().unwrap());\n        let rejection = wit_snapshot_rejection(SnapshotRejection { kind: wire, message: fixture[\"message\"].as_str().unwrap().into(), diagnostics: sqlite_wire::encode_diagnostics(&diagnostics) });\n        assert_eq!(rejection.kind, native);\n        let original = rejection.into_io_error().unwrap();\n        assert_eq!(original.cause.kind, native);\n        assert_eq!(original.cause.message, fixture[\"message\"].as_str().unwrap());\n        assert_eq!(original.diagnostics, diagnostics);\n    }\n    let engine = wasmtime::Engine::default();\n    let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));\n    let epoch = EpochDeadlines::new(&engine, &pool);\n    let deadline = EpochDeadlineCell::default();\n    let cancellation = GuestCallCancellation::default();\n    let done = observe_sqlite_guest(async { 7usize }, &epoch, &deadline, |_, _| {}, &cancellation).await.unwrap();\n    assert_eq!(done, 7);\n    cancellation.cancel();\n    assert!(matches!(observe_sqlite_guest(async { 7usize }, &epoch, &deadline, |_, _| {}, &cancellation).await, Err(TurnFault::Cancelled)));\n}\n"
+    }
+  ]
+}

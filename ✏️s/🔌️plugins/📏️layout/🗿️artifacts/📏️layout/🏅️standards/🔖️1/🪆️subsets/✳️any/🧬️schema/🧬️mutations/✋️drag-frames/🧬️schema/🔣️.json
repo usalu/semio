@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/drag-frames/schema.json",
   "title": "DragFrames",
+  "x-semio-inverse-rows": { "perTarget": { "targets": 1 } },
   "description": "The `drag-frames` mutation record — a relative drag of frames of one page by one common offset, read off whatever base it replays on.",
   "type": "object",
   "additionalProperties": false,

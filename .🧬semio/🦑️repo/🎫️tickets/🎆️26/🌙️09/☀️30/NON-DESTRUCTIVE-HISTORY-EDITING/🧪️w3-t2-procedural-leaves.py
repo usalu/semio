@@ -9,6 +9,7 @@ precision, role, ref) and declared `x-semio-invariant`s, and (generation3d) the 
 """
 import json
 import pathlib
+import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[7]
 PLUGIN = "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts"
@@ -277,15 +278,51 @@ def typescript(leaf):
     return "\n".join(lines) + "\n"
 
 
-def main():
+STAMPS = pathlib.Path(__file__).resolve().parent / "🧪️s3-procedural-generator-stamps.json"
+
+
+def guarded_write(targets, arguments):
+    """🛡️ Writes `(path, text)` targets safely (S3 incident, 10-03): a bare run is a DRY RUN; `--write` writes only files
+    whose content differs, and REFUSES any file whose content is not what this generator last wrote there (recorded as a
+    sha256 in `🧪️s3-procedural-generator-stamps.json`) — a peer edit is never overwritten; fold it into the generator and
+    pass `--force` once."""
+    import hashlib
+    unknown = [argument for argument in arguments if argument not in ("--write", "--force")]
+    if unknown:
+        sys.exit(f"unknown argument(s) {unknown}; usage: [--write [--force]]")
+    commit, force = "--write" in arguments, "--force" in arguments
+    stamps = json.loads(STAMPS.read_text(encoding="utf-8")) if STAMPS.exists() else {}
+    digest = lambda text: hashlib.sha256(text.encode("utf-8")).hexdigest()
+    refused = False
+    for path, text in targets:
+        key = str(path.relative_to(ROOT))
+        current = path.read_text(encoding="utf-8") if path.exists() else None
+        if current == text:
+            stamps[key] = digest(text)
+            continue
+        if current is not None and stamps.get(key) != digest(current) and not force:
+            refused = True
+            print(f"refused (not this generator's last output): {key}")
+            continue
+        print(f"{'writes' if commit else 'would write'}: {key}")
+        if commit:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(text, encoding="utf-8")
+            stamps[key] = digest(text)
+    if commit:
+        STAMPS.write_text(json.dumps(dict(sorted(stamps.items())), indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    if refused:
+        sys.exit(1)
+
+
+def main(arguments):
+    targets = []
     for leaf in LEAVES:
         base = ROOT / PLUGIN / ARTIFACTS[leaf["artifact"]] / SUBSET / leaf["dir"]
         owner = f"{PLUGIN}/{ARTIFACTS[leaf['artifact']]}/{SUBSET}/{leaf['dir']}"
-        write(base / "🔣️.json", json.dumps(descriptor(leaf, owner), indent=2, ensure_ascii=False) + "\n")
-        write(base / "🧬️schema" / "🔣️.json", json.dumps(schema(leaf), indent=2, ensure_ascii=False) + "\n")
-        write(base / "🦠️mutation" / "🟦️.ts", typescript(leaf))
-        print(owner)
+        targets += [(base / "🔣️.json", json.dumps(descriptor(leaf, owner), indent=2, ensure_ascii=False) + "\n"), (base / "🧬️schema" / "🔣️.json", json.dumps(schema(leaf), indent=2, ensure_ascii=False) + "\n"), (base / "🦠️mutation" / "🟦️.ts", typescript(leaf))]
+    guarded_write(targets, arguments)
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1:])

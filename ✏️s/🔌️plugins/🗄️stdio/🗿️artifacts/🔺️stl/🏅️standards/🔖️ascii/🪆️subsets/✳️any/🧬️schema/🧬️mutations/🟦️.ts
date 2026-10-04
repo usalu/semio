@@ -1,9 +1,11 @@
 /** 🧬️ StlMutation union — discriminated on `mutation`, mirroring the Rust `StlMutation` enum. */
 
 import type { StlSnapshot, StlTriangle } from '../📸️snapshot/🟦️.ts';
+import type { SnapshotPatch } from '../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts';
 
 export type StlMutation =
   | { mutation: 'setSnapshot'; snapshot: StlSnapshot }
+  | { readonly mutation: 'patchSnapshot'; readonly patch: SnapshotPatch }
   | { mutation: 'setSolidName'; name: string }
   | { mutation: 'insertTriangle'; index: number; triangle: StlTriangle }
   | { mutation: 'removeTriangle'; index: number }

@@ -37,13 +37,13 @@ impl FlowMutationRetirementFrontier {
         }
     }
 
-    pub(super) fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    pub(super) fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         self.close_step_with(maximum_items, maximum_bytes, |frontier, items, bytes| frontier.close_page(items, bytes))
     }
 
     #[cfg(test)]
-    pub(super) fn close_step_with_injected<F>(&mut self, maximum_items: usize, maximum_bytes: usize, close: F) -> Result<SnapshotRetirementStep, String>
-    where F: FnOnce(&mut FlowRetirement, usize, usize) -> Result<SnapshotRetirementStep, String> {
+    pub(super) fn close_step_with_injected<F>(&mut self, maximum_items: usize, maximum_bytes: usize, close: F) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError>
+    where F: FnOnce(&mut FlowRetirement, usize, usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         self.close_step_with(maximum_items, maximum_bytes, close)
     }
 
@@ -51,8 +51,8 @@ impl FlowMutationRetirementFrontier {
     /// domain publishes and grants it out of its own allocation currency, then charges the caller's
     /// payload page only what fits in it. Granting only the caller's page left a five-byte mutation
     /// id unfreeable at grant 1 forever (ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END).
-    fn close_step_with<F>(&mut self, maximum_items: usize, maximum_bytes: usize, close: F) -> Result<SnapshotRetirementStep, String>
-    where F: FnOnce(&mut FlowRetirement, usize, usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step_with<F>(&mut self, maximum_items: usize, maximum_bytes: usize, close: F) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError>
+    where F: FnOnce(&mut FlowRetirement, usize, usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if self.terminal_is_empty() {
             return Ok(SnapshotRetirementStep::Complete);
         }
@@ -63,10 +63,10 @@ impl FlowMutationRetirementFrontier {
             self.handoff(mutation);
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
-        let demand = self.frontier.next_close_byte_demand().map_err(str::to_owned)?;
+        let demand = self.frontier.next_close_byte_demand().map_err(|message|semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,message))?;
         let step = close(&mut self.frontier, maximum_items, maximum_bytes.max(demand))?;
         if matches!(step, SnapshotRetirementStep::Complete) && !self.terminal_is_empty() {
-            return Err("flow mutation retirement frontier reported Complete before terminal-empty".into());
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"flow mutation retirement frontier reported Complete before terminal-empty"));
         }
         Ok(match step {
             SnapshotRetirementStep::Pending { released_items, released_bytes } => SnapshotRetirementStep::Pending { released_items, released_bytes: released_bytes.min(maximum_bytes) },

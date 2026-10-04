@@ -9,5 +9,5 @@ fn sign_out_serializes_like_the_typescript_projection() {
 
 #[test]
 fn signed_out_state_has_no_inverse_step() {
-    assert!(sign_out().inverse(&IdentitySetting::default()).is_empty());
+    assert!(sign_out().inverse(&IdentitySetting::default()).expect("valid retained mutation inverse fixture").is_empty());
 }

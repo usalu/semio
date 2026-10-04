@@ -13,7 +13,7 @@ export interface En1997Snapshot {
   /** @state artifact */
   designApproach: string;
   /** @state artifact */
-  annex: "de" | "en";
+  annex: AnnexChoice;
   /** @state artifact */
   groundwaterLevel: number;
   /** @state artifact */
@@ -128,7 +128,7 @@ export interface UpliftCase {
   totalStress: number;
 }
 
-export const parseEn1997Snapshot: NormWireReader<En1997Snapshot> = normWireObject<En1997Snapshot>({ structureId: normWireRequired(normWireString), geotechnicalCategory: normWireRequired(normWireInteger), designSituation: normWireRequired(normWireString), designApproach: normWireRequired(normWireString), annex: normWireRequired(normWireLiteral("de", "en")), groundwaterLevel: normWireRequired(normWireNumber), investigationDepth: normWireRequired(normWireNumber), layers: normWireRequired(normWireArray(normWireRef(() => parseSoilLayer))), footings: normWireRequired(normWireArray(normWireRef(() => parseSpreadFoundation))), piles: normWireRequired(normWireArray(normWireRef(() => parsePile))), retainingWalls: normWireRequired(normWireArray(normWireRef(() => parseRetainingWall))), slopes: normWireRequired(normWireArray(normWireRef(() => parseSlope))), upliftCases: normWireRequired(normWireArray(normWireRef(() => parseUpliftCase))) });
+export const parseEn1997Snapshot: NormWireReader<En1997Snapshot> = normWireObject<En1997Snapshot>({ structureId: normWireRequired(normWireString), geotechnicalCategory: normWireRequired(normWireInteger), designSituation: normWireRequired(normWireString), designApproach: normWireRequired(normWireString), annex: normWireRequired(normWireRef(() => parseAnnexChoice)), groundwaterLevel: normWireRequired(normWireNumber), investigationDepth: normWireRequired(normWireNumber), layers: normWireRequired(normWireArray(normWireRef(() => parseSoilLayer))), footings: normWireRequired(normWireArray(normWireRef(() => parseSpreadFoundation))), piles: normWireRequired(normWireArray(normWireRef(() => parsePile))), retainingWalls: normWireRequired(normWireArray(normWireRef(() => parseRetainingWall))), slopes: normWireRequired(normWireArray(normWireRef(() => parseSlope))), upliftCases: normWireRequired(normWireArray(normWireRef(() => parseUpliftCase))) });
 export const parseSpreadFoundation: NormWireReader<SpreadFoundation> = normWireObject<SpreadFoundation>({ id: normWireRequired(normWireString), width: normWireRequired(normWireNumber), length: normWireRequired(normWireNumber), embedment: normWireRequired(normWireNumber), baseInclinationDeg: normWireRequired(normWireNumber), settlementLimit: normWireRequired(normWireNumber), loadCases: normWireRequired(normWireArray(normWireRef(() => parseFoundationLoadCase))) });
 export const parseSoilLayer: NormWireReader<SoilLayer> = normWireObject<SoilLayer>({ id: normWireRequired(normWireString), soilType: normWireRequired(normWireString), depthTop: normWireRequired(normWireNumber), depthBottom: normWireRequired(normWireNumber), gamma: normWireRequired(normWireNumber), gammaPrime: normWireRequired(normWireNumber), phiPrimeDeg: normWireRequired(normWireNumber), cohesionEffective: normWireRequired(normWireNumber), cohesionUndrained: normWireRequired(normWireNumber), oedometricModulus: normWireRequired(normWireNumber), poissonRatio: normWireRequired(normWireNumber), cptQc: normWireRequired(normWireNumber), sptN: normWireRequired(normWireNumber) });
 export const parseAnnexChoice: NormWireReader<AnnexChoice> = normWireLiteral("En", "De");

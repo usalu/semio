@@ -1,4 +1,4 @@
-//! Diff for `insert-wind-faces`.
+//! 🔺️ Diff for `insert-wind-faces`.
 use super::InsertWindFaces;
 use crate::artifact_schema::diff::En1991WindFacesList;
 use crate::{En1991Diff, En1991Snapshot};

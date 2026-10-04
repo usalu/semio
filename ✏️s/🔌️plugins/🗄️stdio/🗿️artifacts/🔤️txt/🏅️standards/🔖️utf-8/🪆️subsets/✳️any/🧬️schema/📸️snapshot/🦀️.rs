@@ -16,7 +16,7 @@ mod sqlite_tests;
 /// `f6-recon-report.md`: `DslScalar` is one of the two derive sources for `DslField`, unit
 /// variants only), letting `Option<LineEnding>`/`LineEnding` fields embed in `TxtDiff`/
 /// `TxtSnapshot`/`TxtMutation` below without hand-rolling.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum LineEnding {
     #[default]
@@ -45,7 +45,7 @@ impl LineEnding {
 /// `store::ArtifactPack` below — NOT a replacement. `DslRecord` only gives this type `DslField`
 /// (so it can be carried by direct mutation payloads and storage surfaces), it
 /// does not touch the artifact's own honest line-joined-by-line-ending envelope format.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.txt")]
 pub struct TxtSnapshot {
@@ -113,7 +113,7 @@ impl store::ArtifactDsl for TxtSnapshot {
         "stdio.txt"
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         Ok(Self::from_body(text))
     }
     fn print_dsl(&self) -> String {
@@ -131,16 +131,16 @@ impl store::ArtifactPack for TxtSnapshot {
         let _ = options;
 
         let raw = self.to_body();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error|store::PackError::from(error.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, raw.as_bytes()))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|error|store::PackError::from(error.into_value_error()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let _ = options;
-        let body = String::from_utf8(inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let body = String::from_utf8(inner).map_err(|error|store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error.to_string())))?;
         Ok(Self::from_body(&body))
     }
     /// 🧬️ The structural fingerprint `ArtifactCodec::pack_schema_hash` and the hub's trusted
@@ -153,7 +153,7 @@ impl store::ArtifactPack for TxtSnapshot {
     /// builder refuses as the zero fingerprint (ticket 26/09/18 slice TC4). The body's raw
     /// line-joined pack encoding is unaffected: this hash fingerprints the SNAPSHOT RECORD's
     /// fields, not the pack container.
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }

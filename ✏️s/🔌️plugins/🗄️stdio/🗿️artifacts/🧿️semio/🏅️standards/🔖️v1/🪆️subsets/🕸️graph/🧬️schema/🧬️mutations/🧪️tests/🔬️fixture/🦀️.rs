@@ -16,7 +16,21 @@ mod tests_delete_edge_removes_the_feedback_edge_and_keeps_both_endpoints;
 mod tests_delete_node_removes_the_sink_node_and_severs_the_edge_into_it;
 #[path = "../../📍move-node/🧪️tests/📍️moves/🦀️.rs"]
 mod tests_move_node_moves_the_sink_node_to_a_new_canvas_position;
+#[path = "../../✋️drag-nodes/🧪️tests/✋️drags/🦀️.rs"]
+mod tests_drag_nodes_drags_both_nodes_by_one_relative_offset;
 #[path = "../../🔚remove-node-port/🧪️tests/🔚️detaches/🦀️.rs"]
 mod tests_remove_node_port_detaches_the_trailing_out_port_from_the_source_node;
 #[path = "../../➖remove-node-property/🧪️tests/➖️detaches/🦀️.rs"]
 mod tests_remove_node_property_detaches_the_trailing_weight_property_from_the_source_node;
+#[path = "../../🎛️set-node-property/🧪️tests/🎛️sets/🦀️.rs"]
+mod tests_set_node_property_sets_the_colour_of_the_source_node;
+#[path = "../../📐resize-node/🧪️tests/📐️resizes/🦀️.rs"]
+mod tests_resize_node_resizes_the_sink_node;
+#[path = "../../🏷️rename-node/🧪️tests/🏷️renames/🦀️.rs"]
+mod tests_rename_node_renames_the_source_node_and_its_edge;
+#[path = "../../🎚️set-edge-property/🧪️tests/🎚️sets/🦀️.rs"]
+mod tests_set_edge_property_sets_the_colour_of_the_edge;
+#[path = "../../➕add-edge-property/🧪️tests/⚖️inserts/🦀️.rs"]
+mod tests_add_edge_property_inserts_a_weight_ahead_of_the_colour;
+#[path = "../../➖remove-edge-property/🧪️tests/➖️detaches/🦀️.rs"]
+mod tests_remove_edge_property_detaches_the_trailing_weight;

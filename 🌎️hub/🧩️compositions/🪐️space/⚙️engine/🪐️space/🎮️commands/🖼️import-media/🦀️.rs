@@ -21,7 +21,7 @@ pub fn handle(payload: &ImportMedia, _doc: &ArtifactView<'_, WorkflowSnapshot>, 
     let accept = semio_framework_os::media_accept_filter_kinds(&[format_kind.as_str()]).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.format"), error.to_string()))?;
     Ok(Emit {
         config_mutations: vec![SpaceConfigMutation::SetPendingImport { node_id: Some(payload.node_id.clone()), format: Some(format_kind) }],
-        effects: vec![Effect::RequestFileOpen { req: semio_framework_plugin::RequestId(122), accept, read_as: Some("dataUrl".into()), import_action: "importMediaPayload".into(), multiple: false }],
+        effects: vec![Effect::RequestFileOpen { req: semio_framework_plugin::RequestId(122), accept, read_as: Some("dataUrl".into()), import_action: "importMediaPayload".into(), multiple: false, args: None }],
         ..Default::default()
     })
 }

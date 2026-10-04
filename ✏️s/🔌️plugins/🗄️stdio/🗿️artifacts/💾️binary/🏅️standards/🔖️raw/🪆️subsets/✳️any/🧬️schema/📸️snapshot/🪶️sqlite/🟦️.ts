@@ -30,7 +30,7 @@ export async function binarySnapshotToSqliteDatabase(snapshot: BinarySnapshot, o
     bytes.push({ rowid: id, values: [id, 1n, BigInt(ordinal), BigInt(value)] });
     if ((ordinal + 1) % 256 === 0) await artifactSqliteCheckpoint(options, "projectSnapshot", ordinal + 1, snapshot.bytes.length);
   }
-  const database = artifactSqliteDatabase(BINARY_SQLITE_SCHEMA, [[{ rowid: 1n, values: [1n, snapshot.schema] }], bytes], options);
+  const database = await artifactSqliteDatabase(BINARY_SQLITE_SCHEMA, [[{ rowid: 1n, values: [1n, snapshot.schema] }], bytes], options);
   await artifactSqliteCheckpoint(options, "projectSnapshot", snapshot.bytes.length, snapshot.bytes.length);
   return database;
 }

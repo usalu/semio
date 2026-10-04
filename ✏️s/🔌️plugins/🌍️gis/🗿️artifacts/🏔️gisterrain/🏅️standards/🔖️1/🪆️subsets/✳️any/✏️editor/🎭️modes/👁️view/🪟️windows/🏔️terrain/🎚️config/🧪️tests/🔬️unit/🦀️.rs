@@ -30,7 +30,7 @@ async fn gis3d_config_operation_backwards_restores_the_pre_operation_snapshot() 
     let operation = GisTerrainWindowConfigMutation::SetCamera(SetCamera { camera_json: r#"{"position":[1.0,2.0,3.0]}"#.into() });
     let next = operation.diff(&base).diff().apply(&base).expect("apply");
     assert_eq!(next.camera_json, r#"{"position":[1.0,2.0,3.0]}"#);
-    let backwards = operation.inverse(&base);
+    let backwards = operation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(backwards, vec![GisTerrainWindowConfigMutation::SetCamera(SetCamera { camera_json: base.camera_json.clone() })]);
     assert_eq!(backwards[0].diff(&next).diff().apply(&next).expect("restore"), base);
 }

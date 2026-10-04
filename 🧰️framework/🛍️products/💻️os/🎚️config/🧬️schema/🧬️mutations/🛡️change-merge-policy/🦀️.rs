@@ -45,14 +45,17 @@ impl MutationKind<MergePolicySetting, MergePolicyConfigMutation> for ChangeMerge
 
     fn diff(&self, base: &MergePolicySetting) -> MutationOutcome<MergePolicySetting> {
         if base.policy == self.policy {
-            return MutationOutcome::new(*base).warn("mutation.no-op", format!("Merge policy is already \"{:?}\".", self.policy));
+            return MutationOutcome::new(*base).warning("mutation.no-op", format!("Merge policy is already \"{:?}\".", self.policy));
         }
         MutationOutcome::new(MergePolicySetting { policy: self.policy })
     }
 
-    fn inverse(&self, base: &MergePolicySetting) -> Vec<MergePolicyConfigMutation> {
+    fn inverse(&self, base: &MergePolicySetting) -> Result<Vec<MergePolicyConfigMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![MergePolicyConfigMutation::ChangeMergePolicy(ChangeMergePolicy { policy: base.policy })]
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change merge policy to \"{:?}\"", self.policy), &format!("Zusammenführungsrichtlinie auf \"{:?}\" ändern", self.policy))
@@ -70,23 +73,26 @@ pub fn apply_merge_policy_config_mutation(snapshot: &mut MergePolicySetting, mut
 }
 
 /// ↩️ Computes the mutation's inverse steps from the pre-mutation setting.
-pub fn inverse_merge_policy_config_mutation(snapshot: &MergePolicySetting, mutation: &MergePolicyConfigMutation) -> Vec<MergePolicyConfigMutation> {
-    mutation.inverse(snapshot)
+pub fn inverse_merge_policy_config_mutation(snapshot: &MergePolicySetting, mutation: &MergePolicyConfigMutation) -> Result<Vec<MergePolicyConfigMutation>, semio_framework_value::ValueError> {
+    Ok({
+    mutation.inverse(snapshot)?
+
+    })
 }
 
 /// 📥️ Decodes the internally tagged merge-policy mutation JSON projection.
 pub fn decode_merge_policy_config_mutation_json(text: &str) -> Result<MergePolicyConfigMutation, String> {
-    dsl::os_pack::json::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 
 /// 📤️ Encodes the merge-policy setting to its canonical camel-case JSON projection.
 pub fn encode_merge_policy_setting_json(snapshot: &MergePolicySetting) -> String {
-    dsl::os_pack::json::to_json_string(snapshot)
+    semio_framework_pack_json::to_json_string(snapshot)
 }
 
 /// 📥️ Decodes the canonical merge-policy setting JSON projection.
 pub fn decode_merge_policy_setting_json(text: &str) -> Result<MergePolicySetting, String> {
-    dsl::os_pack::json::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 
 /// ▶️ Applies a mutation and returns its diagnostic `(code, severity)` pairs.
@@ -96,8 +102,11 @@ pub fn apply_merge_policy_config_mutation_reporting(snapshot: &mut MergePolicySe
 }
 
 /// ↩️ Returns the mutation's own inverse steps for an external fixture adapter.
-pub fn inverse_merge_policy_config_mutation_steps(mutation: &MergePolicyConfigMutation, base: &MergePolicySetting) -> Vec<MergePolicyConfigMutation> {
-    mutation.inverse(base)
+pub fn inverse_merge_policy_config_mutation_steps(mutation: &MergePolicyConfigMutation, base: &MergePolicySetting) -> Result<Vec<MergePolicyConfigMutation>, semio_framework_value::ValueError> {
+    Ok({
+    mutation.inverse(base)?
+
+    })
 }
 //#endregion 🔖️Mutation
 

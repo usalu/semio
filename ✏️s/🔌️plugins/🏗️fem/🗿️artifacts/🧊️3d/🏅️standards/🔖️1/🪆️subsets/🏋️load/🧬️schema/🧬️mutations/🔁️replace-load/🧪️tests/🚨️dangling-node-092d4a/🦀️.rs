@@ -18,13 +18,13 @@ const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutat
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔁️replace-load/🚨️dangling-node-092d4a/🎯️outcome/🔣️.json");
 
 fn before() -> Fem3dSnapshot {
-    dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> Fem3dSnapshot {
-    dsl::json::from_json_str(AFTER).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> Fem3dMutation {
-    dsl::json::from_json_str(MUTATION).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 
 /// ▶️ A refused mutation leaves the document byte-identical to the committed `after`, which is the
@@ -47,7 +47,7 @@ fn the_refusal_is_the_declared_diagnostic() {
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "replace-load/dangling-node-092d4a: exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.target-missing", "replace-load/dangling-node-092d4a: the refusal is reported as mutation.target-missing");
-    assert_eq!(messages[0].level, protocol::Severity::Error, "replace-load/dangling-node-092d4a: a missed target is an Error, not the Fatal a duplicate identity raises");
+    assert_eq!(messages[0].level, semio_framework_diagnostic::Severity::Error, "replace-load/dangling-node-092d4a: a missed target is an Error, not the Fatal a duplicate identity raises");
     assert_eq!(messages[0].target, vec!["n7".to_string()], "replace-load/dangling-node-092d4a: the diagnostic addresses exactly \"n7\"");
 }
 
@@ -55,7 +55,7 @@ fn the_refusal_is_the_declared_diagnostic() {
 /// so a refused request still has the undo step its kind emits whenever the target exists.
 #[test]
 fn inverse_has_the_declared_shape() {
-    let inverse = inverse_fem3d_mutation(&before(), &mutation());
+    let inverse = inverse_fem3d_mutation(&before(), &mutation()).expect("valid retained mutation inverse fixture");
     for step in &inverse {
         assert!(matches!(step, Fem3dMutation::ReplaceLoad(_)), "replace-load/dangling-node-092d4a: the inverse of replace-load is a ReplaceLoad, got {step:?}");
     }
@@ -65,12 +65,12 @@ fn inverse_has_the_declared_shape() {
 /// 🎯️ The declared outcome — status, code, level and path — is exactly what the diff builder emits.
 #[test]
 fn declared_outcome_holds() {
-    let outcome: dsl::DslValue = dsl::json::from_json_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(dsl::DslValue::as_str), Some("rejected"), "replace-load/dangling-node-092d4a: this vector declares a rejected outcome");
+    let outcome: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(OUTCOME, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
+    assert_eq!(outcome.get("status").and_then(semio_framework_value::DslValue::as_str), Some("rejected"), "replace-load/dangling-node-092d4a: this vector declares a rejected outcome");
     let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &before());
     let message = produced.messages().first().expect("a rejected outcome carries a diagnostic");
-    assert_eq!(outcome.get("code").and_then(dsl::DslValue::as_str), Some(message.code.0.as_str()), "replace-load/dangling-node-092d4a: the declared code must match the emitted one");
-    let declared_path: Vec<String> = outcome.get("path").and_then(dsl::DslValue::as_array).expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();
+    assert_eq!(outcome.get("code").and_then(semio_framework_value::DslValue::as_str), Some(message.code.0.as_str()), "replace-load/dangling-node-092d4a: the declared code must match the emitted one");
+    let declared_path: Vec<String> = outcome.get("path").and_then(semio_framework_value::DslValue::as_array).expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();
     assert_eq!(declared_path, message.target, "replace-load/dangling-node-092d4a: the declared path must match the emitted target");
 }
 
@@ -78,13 +78,13 @@ fn declared_outcome_holds() {
 #[test]
 fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: Fem3dSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
-        let reencoded = dsl::ToValue::to_value(&decoded);
-        let original: dsl::DslValue = dsl::json::from_json_str(text).expect("snapshot reparses");
+        let decoded: Fem3dSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = semio_framework_value::ToValue::to_value(&decoded);
+        let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot reparses");
         assert_eq!(reencoded, original, "replace-load/dangling-node-092d4a: committed {label} JSON is not canonical");
     }
-    let reencoded = dsl::ToValue::to_value(&mutation());
-    let original: dsl::DslValue = dsl::json::from_json_str(MUTATION).expect("mutation reparses");
+    let reencoded = semio_framework_value::ToValue::to_value(&mutation());
+    let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation reparses");
     assert_eq!(reencoded, original, "replace-load/dangling-node-092d4a: committed mutation JSON is not canonical");
 }
 

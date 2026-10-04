@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "label": "neutral:structured-output",
+  "delayMs": 10200,
+  "budgetMs": 15000,
+  "expectedStdout": "{\"version\":1,\"nodes\":[\"owned-bytes\"]}\n",
+  "expectedChannel": "stderr"
+}

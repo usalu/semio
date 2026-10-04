@@ -2,7 +2,6 @@
 
 use crate::schema::snapshot::GltfSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::super::modules::measurement_contracts::*;
 use super::{adjacency::*, area_volume::*, clearance::*, compactness::*, concavity::*, curvature::*, mass_distribution::*, orientation::*, proportion::*, roughness::*, size::*, symmetry::*, thickness::*, topology::*};
@@ -117,7 +116,7 @@ pub struct GltfInferenceLeafServiceDescriptor {
     /// infallible (unlike the prior `serde_json::from_str(&pack::to_json_string(...))` round trip
     /// through text, which only ever failed if `pack::to_json_string`'s own output couldn't
     /// re-parse, never a real runtime condition), so there is no `Result`/`Error` to carry.
-    pub encode: fn(&GltfEntityIndicators) -> dsl::DslValue,
+    pub encode: fn(&GltfEntityIndicators) -> semio_framework_value::DslValue,
 }
 
 pub const GLTF_INFERENCE_LEAF_SERVICE_DESCRIPTORS: &[GltfInferenceLeafServiceDescriptor] = &[
@@ -297,14 +296,19 @@ pub use super::dag_assembly::compute_gltf_inference;
 
 //#region 🧠️InferenceContract
 impl protocol::Inference<GltfSnapshot> for GltfInference {
-    fn infer(snapshot: &GltfSnapshot) -> Self {
+    fn infer(snapshot: &GltfSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { geometry: compute_gltf_inference(snapshot) }
+    
+        })
     }
 }
 
 impl Default for GltfInference {
     fn default() -> Self {
-        <Self as protocol::Inference<GltfSnapshot>>::infer(&GltfSnapshot::default())
+        let snapshot = &GltfSnapshot::default();
+
+        Self { geometry: compute_gltf_inference(snapshot) }
     }
 }
 
@@ -318,11 +322,6 @@ impl protocol::InferenceSpec<GltfSnapshot> for GltfInference {
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
         GLTF_INFERENCE_FIELDS
     }
-}
-
-impl ArtifactInferrer for crate::standards::v2_0::subsets::any::schema::GltfBuilder {
-    type Snapshot = GltfSnapshot;
-    type Inference = GltfInference;
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

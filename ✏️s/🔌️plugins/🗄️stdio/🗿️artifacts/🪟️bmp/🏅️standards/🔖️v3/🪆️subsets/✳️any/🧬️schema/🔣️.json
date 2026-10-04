@@ -4,100 +4,13 @@
   "title": "BmpArtifact",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "schema",
-    "headerSize",
-    "width",
-    "height",
-    "rowOrder",
-    "planes",
-    "bitsPerPixel",
-    "compression",
-    "imageSize",
-    "xPixelsPerMeter",
-    "yPixelsPerMeter",
-    "colorsUsed",
-    "colorsImportant",
-    "palette",
-    "pixels"
-  ],
+  "required": ["schema", "bytes"],
   "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "headerSize": {
-      "type": "integer",
-      "minimum": 0,
-      "x-semio-state": "artifact"
-    },
-    "width": {
-      "type": "integer",
-      "minimum": 0,
-      "x-semio-state": "artifact"
-    },
-    "height": {
-      "type": "integer",
-      "minimum": 0,
-      "x-semio-state": "artifact"
-    },
-    "rowOrder": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/bmp/v3/any/snapshot.json#/$defs/BmpRowOrder",
-      "x-semio-state": "artifact"
-    },
-    "planes": {
-      "type": "integer",
-      "minimum": 0,
-      "x-semio-state": "artifact"
-    },
-    "bitsPerPixel": {
-      "type": "integer",
-      "minimum": 0,
-      "x-semio-state": "artifact"
-    },
-    "compression": {
-      "type": "integer",
-      "minimum": 0,
-      "x-semio-state": "artifact"
-    },
-    "imageSize": {
-      "type": "integer",
-      "minimum": 0,
-      "x-semio-state": "artifact"
-    },
-    "xPixelsPerMeter": {
-      "type": "integer",
-      "x-semio-state": "artifact"
-    },
-    "yPixelsPerMeter": {
-      "type": "integer",
-      "x-semio-state": "artifact"
-    },
-    "colorsUsed": {
-      "type": "integer",
-      "minimum": 0,
-      "x-semio-state": "artifact"
-    },
-    "colorsImportant": {
-      "type": "integer",
-      "minimum": 0,
-      "x-semio-state": "artifact"
-    },
-    "palette": {
+    "schema": {"type": "string", "const": "stdio.bmp", "x-semio-state": "artifact"},
+    "bytes": {
       "type": "array",
-      "x-semio-state": "artifact",
-      "items": {
-        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/bmp/v3/any/snapshot.json#/$defs/BmpPaletteEntry"
-      }
-    },
-    "pixels": {
-      "type": "array",
-      "x-semio-state": "artifact",
-      "items": {
-        "type": "integer",
-        "minimum": 0,
-        "maximum": 255
-      }
+      "items": {"type": "integer", "minimum": 0, "maximum": 255},
+      "x-semio-state": "artifact"
     }
   }
 }

@@ -14,7 +14,7 @@ async fn nakagin_pack_schema_identity_is_derived_and_keeps_the_graph() {
     let document = parse_dsl(NAKAGIN_EXAMPLE_TEXT).expect("parse nakagin example");
     ::store::os_store::test_support::assert_pack_schema_identity(&document);
     let decoded = decode(&encode(&document)).expect("decode");
-    let (before, after) = (crate::jack_working_scene(&document), crate::jack_working_scene(&decoded));
+    let (before, after) = (crate::jack_working_scene(&document).expect("valid retained Jack child"), crate::jack_working_scene(&decoded).expect("valid retained Jack child"));
     assert!(!before.nodes.is_empty());
     assert_eq!((after.nodes, after.edges), (before.nodes, before.edges));
 }

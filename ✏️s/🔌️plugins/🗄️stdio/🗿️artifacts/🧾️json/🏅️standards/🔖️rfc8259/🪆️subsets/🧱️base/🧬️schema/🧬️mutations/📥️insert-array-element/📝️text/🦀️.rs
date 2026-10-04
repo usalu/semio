@@ -2,9 +2,9 @@
 use super::InsertArrayElementPayload;
 pub const TEXT_OPCODE: &str = "insert-array-element";
 pub fn encode_payload(value: &InsertArrayElementPayload) -> Result<String, String> {
-    Ok(pack::json_to_string(&pack::json_from_dsl_value(&dsl::ToValue::to_value(value))))
+    Ok(semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(value))))
 }
 pub fn decode_payload(value: &str) -> Result<InsertArrayElementPayload, String> {
-    let parsed = pack::parse_json(value).map_err(|error| error.to_string())?;
-    <InsertArrayElementPayload as dsl::FromValue>::from_value(pack::json_to_dsl_value(&parsed)).map_err(|error| error.to_string())
+    let parsed = semio_framework_pack_json::parse(value, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
+    <InsertArrayElementPayload as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|error| error.to_string())
 }

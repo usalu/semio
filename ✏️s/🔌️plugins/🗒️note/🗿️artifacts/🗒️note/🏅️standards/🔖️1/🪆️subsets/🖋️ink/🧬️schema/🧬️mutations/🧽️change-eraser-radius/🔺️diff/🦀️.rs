@@ -11,7 +11,7 @@ pub fn diff(payload: &ChangeEraserRadius, base: &NoteSnapshot) -> protocol::Muta
         }
     }
     if payload.new_radius == base.eraser_radius {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Eraser radius already has this value.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Eraser radius already has this value.");
     }
     protocol::MutationOutcome::new(NoteDiff { eraser_radius: Some(payload.new_radius), ..Default::default() })
 }

@@ -1,6 +1,0 @@
-syntax = "proto3";
-package semio.s.trinity.jack.mutation.create_edge;
-// create-edge / CreateEdge
-import "google/protobuf/struct.proto";
-message CreateEdgeEdge { string id = 1; string kind = 2; string source = 3; string target = 4; map<string, google.protobuf.Value> properties = 5; }
-message CreateEdge { CreateEdgeEdge edge = 1; }

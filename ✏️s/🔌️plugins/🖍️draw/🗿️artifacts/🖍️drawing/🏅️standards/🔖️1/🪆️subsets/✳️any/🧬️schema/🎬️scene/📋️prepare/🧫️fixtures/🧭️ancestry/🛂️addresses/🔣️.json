@@ -1,0 +1,15 @@
+[
+ {"name":"Root Address","sourcePath":[0],"lockedAncestors":0,"valid":true},
+ {"name":"Locked Root Address","sourcePath":[65535],"lockedAncestors":1,"valid":true},
+ {"name":"Deep Unsigned Lock","sourcePath":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"lockedAncestors":2147483648,"valid":true},
+ {"name":"All Deep Locks","sourcePath":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"lockedAncestors":4294967295,"valid":true},
+ {"name":"Empty Address","sourcePath":[],"lockedAncestors":0,"valid":false},
+ {"name":"Excess Depth","sourcePath":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"lockedAncestors":0,"valid":false},
+ {"name":"Negative Index","sourcePath":[-1],"lockedAncestors":0,"valid":false},
+ {"name":"Excess Index","sourcePath":[65536],"lockedAncestors":0,"valid":false},
+ {"name":"Fractional Index","sourcePath":[0.5],"lockedAncestors":0,"valid":false},
+ {"name":"Lock Outside Address","sourcePath":[0],"lockedAncestors":2,"valid":false},
+ {"name":"Negative Mask","sourcePath":[0],"lockedAncestors":-1,"valid":false},
+ {"name":"Excess Mask","sourcePath":[0],"lockedAncestors":4294967296,"valid":false},
+ {"name":"Fractional Mask","sourcePath":[0],"lockedAncestors":0.5,"valid":false}
+]

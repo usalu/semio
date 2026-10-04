@@ -6,7 +6,7 @@ const fn choice(value: &'static str, label_en: &'static str, label_de: &'static 
     NormFieldChoice { value, label_en, label_de }
 }
 
-const ANNEX: &[NormFieldChoice] = &[choice("en", "EN (CEN)", "EN (CEN)"), choice("de", "Germany (DIN)", "Deutschland (DIN)")];
+const ANNEX: &[NormFieldChoice] = &[choice("En", "EN (CEN)", "EN (CEN)"), choice("De", "Germany (DIN)", "Deutschland (DIN)")];
 const MASONRY_CLASS: &[NormFieldChoice] = &[
     choice("class1", "Cat. I + execution A (γ_M=1.5 DE / 1.5 EN)", "Kat. I + Ausführung A (γ_M=1,5 DE / 1,5 EN)"),
     choice("class2", "Cat. I + execution B (γ_M=1.7 DE / 1.7 EN)", "Kat. I + Ausführung B (γ_M=1,7 DE / 1,7 EN)"),

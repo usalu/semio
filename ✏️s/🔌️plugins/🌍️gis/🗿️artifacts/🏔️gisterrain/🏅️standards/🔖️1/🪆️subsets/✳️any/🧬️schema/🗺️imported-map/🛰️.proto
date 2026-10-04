@@ -1,0 +1,8 @@
+syntax = "proto3";
+package semio.s.gis.gisterrain;
+message IntrinsicValue { oneof value { bool null_value=1; bool boolean_value=2; uint64 unsigned_value=3; sint64 signed_value=4; fixed64 float_word=5; string text_value=6; bytes octets=7; IntrinsicArray array=8; IntrinsicObject object=9; } }
+message IntrinsicArray { repeated IntrinsicValue items=1; }
+message IntrinsicMember { string name=1; IntrinsicValue value=2; }
+message IntrinsicObject { repeated IntrinsicMember members=1; }
+message ImportedMap { repeated IntrinsicObject positions=1; repeated IntrinsicObject routes=2; repeated IntrinsicObject regions=3; repeated IntrinsicMember properties=4; }
+message ImportedMapChange { optional ImportedMap value=1; }

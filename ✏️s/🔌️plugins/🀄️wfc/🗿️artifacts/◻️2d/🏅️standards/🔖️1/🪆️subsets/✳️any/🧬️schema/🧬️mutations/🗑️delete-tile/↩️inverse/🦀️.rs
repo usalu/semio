@@ -4,7 +4,8 @@
 use crate::mutations::{create_rule, create_tile, pin_slot, Wfc2dMutation};
 use crate::schema::snapshot::Wfc2dSnapshot;
 
-pub fn inverse(payload: &super::DeleteTile, base: &Wfc2dSnapshot) -> Vec<Wfc2dMutation> {
+pub fn inverse(payload: &super::DeleteTile, base: &Wfc2dSnapshot) -> Result<Vec<Wfc2dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(tile) = base.tiles.iter().find(|tile| tile.id == payload.id) else {
         return Vec::new();
     };
@@ -20,4 +21,6 @@ pub fn inverse(payload: &super::DeleteTile, base: &Wfc2dSnapshot) -> Vec<Wfc2dMu
         }
     }
     restore
+
+    })())
 }

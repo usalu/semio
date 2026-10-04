@@ -69,6 +69,7 @@ Feature: Move a real photographic JPEG across every axis of the T.81 baseline co
       | insert-frame-component |  | {"index":3,"component":{"id":4,"hSampling":1,"vSampling":1,"quantTableId":0}} |
       | remove-frame-component |  | {"id":3} |
       | set-component-sampling | stdio.jpg.baseline.component-sampling | {"id":1,"hSampling":5,"vSampling":1} |
+      | patch-snapshot | stdio.jpg.baseline.sof-marker | {"patch": {"operation": "set", "path": "/sofMarker", "value": 194}} |
 
   @id-inverse
   @level-exhaustive
@@ -91,4 +92,5 @@ Feature: Move a real photographic JPEG across every axis of the T.81 baseline co
       | insert-frame-component |  | {"index":3,"component":{"id":4,"hSampling":1,"vSampling":1,"quantTableId":0}} |
       | remove-frame-component |  | {"id":3} |
       | set-component-sampling | stdio.jpg.baseline.component-sampling | {"id":1,"hSampling":5,"vSampling":1} |
+      | patch-snapshot | stdio.jpg.baseline.sof-marker | {"patch": {"operation": "set", "path": "/sofMarker", "value": 194}} |
 

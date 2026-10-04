@@ -33,7 +33,7 @@ fn op_binary_round_trips_and_agrees_with_text() {
 #[semio_framework_async_macros::async_test]
 async fn fem3d_document_text_round_trips_through_the_store() {
     let fixture = cantilever_fixture();
-    let mut store = semio_framework_plugin::resolve_ready(schema::mutations::Fem3dStore::new(create_document_envelope(crate::FEM_3D_SCHEMA, "fem3d", schema::empty_fem3d_snapshot(), None))).expect("valid store");
+    let mut store = ::semio_framework_async::poll::resolve_ready(schema::mutations::Fem3dStore::new(create_document_envelope(crate::FEM_3D_SCHEMA, "fem3d", schema::empty_fem3d_snapshot(), None))).expect("valid store");
     store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<crate::Fem3dSnapshot, Fem3dMutation>());
     let mutations = vec![
         Fem3dMutation::CreateMaterial(schema::mutations::create_material::CreateMaterial { material: fixture.materials[0].clone() }),

@@ -1,0 +1,9 @@
+# Text Error Constructor Syntax Census
+
+The actual neutral Compiler Rust lexer and paired argument parser inspected the immutable 957 source candidates. This found 950 syntactic constructor calls, 49 struct-literal or definition candidates, and 0 non-call constructor references across 418 files. The exact arity groups are recorded in the generated syntax-site receipt. Rust comments and string literals are atomic or ignored, so text embedded in documentation or source fixtures is not admitted as a live constructor call by this census.
+
+This is a syntax census, not a provider-binding audit. Definitions, imported aliases, generated macro bodies and actual first-party TextError identities still require admission. Each call includes exact arguments, source offsets and context. No source is authored by this census, and the frozen source captures remain unchanged. Controlled propagation must use from_value_error with its real owned ValueError; ordinary authored syntax chooses InvalidValue and actual limit/checkpoint causes choose their concrete kind. The current native source epoch remains held.
+
+## Cause Review Partition
+
+Of the 950 constructor calls, 439 receive a variable, field projection, Display conversion, or other nonliteral first argument. These group into thirteen expression forms and 362 exact source contexts. They are recorded for manual cause/provider review, including existing erasures through error.to_string and error.under(key).to_string. The other 511 literal/format macro expressions also require actual cause review: a literal may describe an allocation or work limit, so this partition assigns no semantic default. The lexer found no TextError-as-alias declarations in the captured sources. Struct-literal candidates include function-return bodies, impl blocks and retirement macros, and are not yet all admitted literals.

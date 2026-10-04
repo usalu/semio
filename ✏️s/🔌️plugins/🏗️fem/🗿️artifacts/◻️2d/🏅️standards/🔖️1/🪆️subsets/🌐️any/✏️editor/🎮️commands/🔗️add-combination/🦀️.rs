@@ -27,7 +27,7 @@ type Fem2dSnapshot = crate::Fem2dSnapshot;
 //#region 🔖️SetSelfWeight
 //#endregion 🔖️SetSelfWeight
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "add-combination")]
 pub struct AddCombination {
     pub name: String,

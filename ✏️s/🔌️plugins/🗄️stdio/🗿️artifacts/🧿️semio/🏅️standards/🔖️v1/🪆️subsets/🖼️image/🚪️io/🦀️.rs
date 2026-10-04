@@ -69,14 +69,14 @@ pub mod derived_composition {
 
     impl SubsetValidator for SemioImageValidator {
         const DIALECT: Dialect = DIALECT;
-        async fn validate(payload: &IoPayload) -> Vec<dsl::Diagnostic> {
+        async fn validate(payload: &IoPayload) -> Vec<semio_framework_diagnostic::Diagnostic> {
             let decoded = match payload {
                 IoPayload::Binary(bytes) => <SemioImageSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
                 IoPayload::Text(text) => <SemioImageSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
             };
             match decoded {
                 Some(_) => Vec::new(),
-                None => vec![dsl::Diagnostic::error("stdio.semio_image.validate-decode-failed", dsl::TextSpan::at(1, 1), "SemioImageValidator: payload did not decode as a SemioImageSnapshot".to_string())],
+                None => vec![semio_framework_diagnostic::Diagnostic::error("stdio.semio_image.validate-decode-failed", semio_framework_diagnostic::TextSpan::at(1, 1), "SemioImageValidator: payload did not decode as a SemioImageSnapshot".to_string())],
             }
         }
     }

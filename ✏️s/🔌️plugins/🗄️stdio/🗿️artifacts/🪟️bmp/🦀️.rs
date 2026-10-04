@@ -108,7 +108,7 @@ pub mod io_registry {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
         let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("BmpComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        semio_framework_plugin::resolve_ready((entry.compose)(sources))
+        ::semio_framework_async::poll::resolve_ready((entry.compose)(sources))
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -183,16 +183,12 @@ pub mod standards {
                         pub use top_level::*;
                         #[path = "🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
                         pub mod binary;
-                        #[path = "🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-header-fields/🦀️.rs"]
-                        pub mod change_header_fields;
-                        #[path = "🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥️insert-palette-entry/🦀️.rs"]
-                        pub mod insert_palette_entry;
-                        #[path = "🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📤️remove-palette-entry/🦀️.rs"]
-                        pub mod remove_palette_entry;
-                        #[path = "🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️replace-palette-entry/🦀️.rs"]
-                        pub mod replace_palette_entry;
-                        #[path = "🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔲️replace-pixel-data/🦀️.rs"]
-                        pub mod replace_pixel_data;
+                        #[path = "🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️paint-indexed-region/🦀️.rs"]
+                        pub mod paint_indexed_region;
+                        #[path = "🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️paint-direct-region/🦀️.rs"]
+                        pub mod paint_direct_region;
+                        #[path = "🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹️patch-snapshot/🦀️.rs"]
+                        pub mod patch_snapshot;
                         #[path = "🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📸️set-snapshot/🦀️.rs"]
                         pub mod set_snapshot;
                         #[path = "🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]

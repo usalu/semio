@@ -92,7 +92,7 @@ pub mod derived_construction {
     #[derive(Clone, Debug, Default)]
     pub struct Ifc2x3BuilderConstruction {
         snapshot: Ifc2x3Snapshot,
-        diagnostics: Vec<dsl::Diagnostic>,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
     }
 
     impl ArtifactBuilder for Ifc2x3BuilderConstruction {
@@ -105,7 +105,7 @@ pub mod derived_construction {
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(Self::from_snapshot(<Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
@@ -119,7 +119,7 @@ pub mod derived_construction {
             self.snapshot = <Ifc2x3Diff as protocol::MutationDiff<Ifc2x3Snapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -194,21 +194,21 @@ pub mod derived_analysis {
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match if text.trim_start().starts_with("ISO-10303-21") {
-                        crate::standards::v2x3::engine::decode_ifc2x3(text.as_bytes()).map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))
+                        crate::standards::v2x3::engine::decode_ifc2x3(text.as_bytes()).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, semio_framework_diagnostic::TextSpan::at(1, 1)))
                     } else {
                         <Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(text)
                     } {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(bytes).or_else(|_| crate::standards::v2x3::engine::decode_ifc2x3(bytes).map_err(store::PackError::Schema)) {
+                    AnalyzeSource::Binary(bytes) => match <Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(bytes).or_else(|_| crate::standards::v2x3::engine::decode_ifc2x3(bytes).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }
@@ -333,55 +333,55 @@ pub fn register_artifact_inferences() {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_pilot_languages() {
     use crate::standards::v2x3::subsets::base::schema::{diff, mutations, snapshot};
-    dsl::register_language(dsl::LanguageSpec {
+    semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.ifc.2x3",
         extension: Some("ifc"),
-        role: dsl::LanguageRole::Document,
+        role: semio_framework_dsl::LanguageRole::Document,
         grammar: Some(snapshot::text::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(snapshot::text::COMPONENT_GRAMMAR_PATH),
         protocol: Some(snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(snapshot::binary::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("stdio.ifc.2x3"),
+        hooks: semio_framework_dsl::passthrough_hooks("stdio.ifc.2x3"),
     });
-    dsl::register_language(dsl::LanguageSpec {
+    semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.ifc.2x3.op",
         extension: None,
-        role: dsl::LanguageRole::Ops,
+        role: semio_framework_dsl::LanguageRole::Ops,
         grammar: Some(mutations::text::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(mutations::text::COMPONENT_GRAMMAR_PATH),
         protocol: Some(mutations::binary::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(mutations::binary::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("stdio.ifc.2x3.op"),
+        hooks: semio_framework_dsl::passthrough_hooks("stdio.ifc.2x3.op"),
     });
-    dsl::register_language(dsl::LanguageSpec {
+    semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.ifc.2x3.diff",
         extension: None,
-        role: dsl::LanguageRole::Diff,
+        role: semio_framework_dsl::LanguageRole::Diff,
         grammar: Some(diff::text::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(diff::text::COMPONENT_GRAMMAR_PATH),
         protocol: None,
         protocol_path: None,
-        hooks: dsl::passthrough_hooks("stdio.ifc.2x3.diff"),
+        hooks: semio_framework_dsl::passthrough_hooks("stdio.ifc.2x3.diff"),
     });
-    dsl::register_language(dsl::LanguageSpec {
+    semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.ifc.2x3.pack",
         extension: None,
-        role: dsl::LanguageRole::Pack,
+        role: semio_framework_dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
         protocol: Some(snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(snapshot::binary::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("stdio.ifc.2x3.pack"),
+        hooks: semio_framework_dsl::passthrough_hooks("stdio.ifc.2x3.pack"),
     });
-    dsl::register_language(dsl::LanguageSpec {
+    semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.ifc.2x3.spr",
         extension: None,
-        role: dsl::LanguageRole::Spr,
+        role: semio_framework_dsl::LanguageRole::Spr,
         grammar: None,
         grammar_path: None,
         protocol: Some(mutations::binary::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(mutations::binary::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("stdio.ifc.2x3.spr"),
+        hooks: semio_framework_dsl::passthrough_hooks("stdio.ifc.2x3.spr"),
     });
 }
 

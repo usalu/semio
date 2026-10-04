@@ -1,0 +1,2165 @@
+[
+  {
+    "name": "empty",
+    "input": {
+      "width": 2,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "tolerance": 0.001,
+      "maxPixels": 64,
+      "nodes": [],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "opaque cropped path",
+    "input": {
+      "width": 2,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "tolerance": 0.001,
+      "maxPixels": 1,
+      "nodes": [
+        {
+          "id": "red",
+          "groups": [],
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "path",
+            "segments": [
+              {
+                "kind": "move",
+                "to": [
+                  1,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  1
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  1,
+                  1
+                ]
+              },
+              {
+                "kind": "close"
+              }
+            ],
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            },
+            "stroke": null
+          }
+        }
+      ],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      0,
+      0,
+      0,
+      0,
+      255,
+      0,
+      0,
+      255
+    ]
+  },
+  {
+    "name": "fill alpha and layer opacity",
+    "input": {
+      "width": 2,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "tolerance": 0.001,
+      "maxPixels": 64,
+      "nodes": [
+        {
+          "id": "red",
+          "groups": [],
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "opacity": 0.5,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "path",
+            "segments": [
+              {
+                "kind": "move",
+                "to": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  1
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  0,
+                  1
+                ]
+              },
+              {
+                "kind": "close"
+              }
+            ],
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                0.5
+              ]
+            },
+            "stroke": null
+          }
+        }
+      ],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      255,
+      0,
+      0,
+      64,
+      255,
+      0,
+      0,
+      64
+    ]
+  },
+  {
+    "name": "overlapping separate layers",
+    "input": {
+      "width": 2,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "tolerance": 0.001,
+      "maxPixels": 64,
+      "nodes": [
+        {
+          "id": "red",
+          "groups": [],
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "path",
+            "segments": [
+              {
+                "kind": "move",
+                "to": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  1
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  0,
+                  1
+                ]
+              },
+              {
+                "kind": "close"
+              }
+            ],
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            },
+            "stroke": null
+          }
+        },
+        {
+          "id": "blue",
+          "groups": [],
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "path",
+            "segments": [
+              {
+                "kind": "move",
+                "to": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  1
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  0,
+                  1
+                ]
+              },
+              {
+                "kind": "close"
+              }
+            ],
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                0,
+                0,
+                1,
+                0.5
+              ]
+            },
+            "stroke": null
+          }
+        }
+      ],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      127,
+      0,
+      128,
+      255,
+      127,
+      0,
+      128,
+      255
+    ]
+  },
+  {
+    "name": "isolated overlap opacity once",
+    "input": {
+      "width": 2,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "tolerance": 0.001,
+      "maxPixels": 64,
+      "nodes": [
+        {
+          "id": "red",
+          "groups": [
+            {
+              "id": "island",
+              "opacity": 0.5,
+              "blendMode": "normal"
+            }
+          ],
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "path",
+            "segments": [
+              {
+                "kind": "move",
+                "to": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  1
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  0,
+                  1
+                ]
+              },
+              {
+                "kind": "close"
+              }
+            ],
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            },
+            "stroke": null
+          }
+        },
+        {
+          "id": "blue",
+          "groups": [
+            {
+              "id": "island",
+              "opacity": 0.5,
+              "blendMode": "normal"
+            }
+          ],
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "path",
+            "segments": [
+              {
+                "kind": "move",
+                "to": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  1
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  0,
+                  1
+                ]
+              },
+              {
+                "kind": "close"
+              }
+            ],
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                0,
+                0,
+                1,
+                1
+              ]
+            },
+            "stroke": null
+          }
+        }
+      ],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      0,
+      0,
+      255,
+      128,
+      0,
+      0,
+      255,
+      128
+    ]
+  },
+  {
+    "name": "isolated group over white",
+    "input": {
+      "width": 2,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "tolerance": 0.001,
+      "maxPixels": 64,
+      "nodes": [
+        {
+          "id": "white",
+          "groups": [],
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "path",
+            "segments": [
+              {
+                "kind": "move",
+                "to": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  1
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  0,
+                  1
+                ]
+              },
+              {
+                "kind": "close"
+              }
+            ],
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                1,
+                1,
+                1
+              ]
+            },
+            "stroke": null
+          }
+        },
+        {
+          "id": "red",
+          "groups": [
+            {
+              "id": "island",
+              "opacity": 0.5,
+              "blendMode": "normal"
+            }
+          ],
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "path",
+            "segments": [
+              {
+                "kind": "move",
+                "to": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  1
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  0,
+                  1
+                ]
+              },
+              {
+                "kind": "close"
+              }
+            ],
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            },
+            "stroke": null
+          }
+        },
+        {
+          "id": "blue",
+          "groups": [
+            {
+              "id": "island",
+              "opacity": 0.5,
+              "blendMode": "normal"
+            }
+          ],
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "path",
+            "segments": [
+              {
+                "kind": "move",
+                "to": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  1
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  0,
+                  1
+                ]
+              },
+              {
+                "kind": "close"
+              }
+            ],
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                0,
+                0,
+                1,
+                1
+              ]
+            },
+            "stroke": null
+          }
+        }
+      ],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      128,
+      128,
+      255,
+      255,
+      128,
+      128,
+      255,
+      255
+    ]
+  },
+  {
+    "name": "nested group opacity",
+    "input": {
+      "width": 2,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "tolerance": 0.001,
+      "maxPixels": 64,
+      "nodes": [
+        {
+          "id": "red",
+          "groups": [
+            {
+              "id": "island",
+              "opacity": 0.5,
+              "blendMode": "normal"
+            },
+            {
+              "id": "inner",
+              "opacity": 0.5,
+              "blendMode": "normal"
+            }
+          ],
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "path",
+            "segments": [
+              {
+                "kind": "move",
+                "to": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  1
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  0,
+                  1
+                ]
+              },
+              {
+                "kind": "close"
+              }
+            ],
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            },
+            "stroke": null
+          }
+        }
+      ],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      255,
+      0,
+      0,
+      64,
+      255,
+      0,
+      0,
+      64
+    ]
+  },
+  {
+    "name": "group closes before following sibling",
+    "input": {
+      "width": 2,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "tolerance": 0.001,
+      "maxPixels": 64,
+      "nodes": [
+        {
+          "id": "red",
+          "groups": [
+            {
+              "id": "island",
+              "opacity": 0.5,
+              "blendMode": "normal"
+            }
+          ],
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "path",
+            "segments": [
+              {
+                "kind": "move",
+                "to": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  1
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  0,
+                  1
+                ]
+              },
+              {
+                "kind": "close"
+              }
+            ],
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            },
+            "stroke": null
+          }
+        },
+        {
+          "id": "blue",
+          "groups": [],
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "path",
+            "segments": [
+              {
+                "kind": "move",
+                "to": [
+                  1,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  1
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  1,
+                  1
+                ]
+              },
+              {
+                "kind": "close"
+              }
+            ],
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                0,
+                0,
+                1,
+                1
+              ]
+            },
+            "stroke": null
+          }
+        }
+      ],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      255,
+      0,
+      0,
+      128,
+      0,
+      0,
+      255,
+      255
+    ]
+  },
+  {
+    "name": "hidden layer",
+    "input": {
+      "width": 2,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "tolerance": 0.001,
+      "maxPixels": 64,
+      "nodes": [
+        {
+          "id": "red",
+          "groups": [],
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": false,
+          "content": {
+            "kind": "path",
+            "segments": [
+              {
+                "kind": "move",
+                "to": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  1
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  0,
+                  1
+                ]
+              },
+              {
+                "kind": "close"
+              }
+            ],
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            },
+            "stroke": null
+          }
+        }
+      ],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "zero opacity layer",
+    "input": {
+      "width": 2,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "tolerance": 0.001,
+      "maxPixels": 64,
+      "nodes": [
+        {
+          "id": "red",
+          "groups": [],
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "opacity": 0,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "path",
+            "segments": [
+              {
+                "kind": "move",
+                "to": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  1
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  0,
+                  1
+                ]
+              },
+              {
+                "kind": "close"
+              }
+            ],
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            },
+            "stroke": null
+          }
+        }
+      ],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "offscreen needs no image allocation",
+    "input": {
+      "width": 2,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "tolerance": 0.001,
+      "maxPixels": 1,
+      "nodes": [
+        {
+          "id": "red",
+          "groups": [],
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "path",
+            "segments": [
+              {
+                "kind": "move",
+                "to": [
+                  20,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  22,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  22,
+                  1
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  20,
+                  1
+                ]
+              },
+              {
+                "kind": "close"
+              }
+            ],
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            },
+            "stroke": null
+          }
+        }
+      ],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "singular path has no area",
+    "input": {
+      "width": 2,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "tolerance": 0.001,
+      "maxPixels": 1,
+      "nodes": [
+        {
+          "id": "red",
+          "groups": [],
+          "transform": [
+            0,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "path",
+            "segments": [
+              {
+                "kind": "move",
+                "to": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  1
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  0,
+                  1
+                ]
+              },
+              {
+                "kind": "close"
+              }
+            ],
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            },
+            "stroke": null
+          }
+        }
+      ],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "reflected path",
+    "input": {
+      "width": 2,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "tolerance": 0.001,
+      "maxPixels": 64,
+      "nodes": [
+        {
+          "id": "red",
+          "groups": [],
+          "transform": [
+            -1,
+            0,
+            0,
+            1,
+            2,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "path",
+            "segments": [
+              {
+                "kind": "move",
+                "to": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  1,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  1,
+                  1
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  0,
+                  1
+                ]
+              },
+              {
+                "kind": "close"
+              }
+            ],
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            },
+            "stroke": null
+          }
+        }
+      ],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      0,
+      0,
+      0,
+      0,
+      255,
+      0,
+      0,
+      255
+    ]
+  },
+  {
+    "name": "fractional canvas origin",
+    "input": {
+      "width": 2,
+      "height": 1,
+      "origin": [
+        0.25,
+        0.5
+      ],
+      "tolerance": 0.001,
+      "maxPixels": 64,
+      "nodes": [
+        {
+          "id": "red",
+          "groups": [],
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "path",
+            "segments": [
+              {
+                "kind": "move",
+                "to": [
+                  0.25,
+                  0.5
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  1.25,
+                  0.5
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  1.25,
+                  1.5
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  0.25,
+                  1.5
+                ]
+              },
+              {
+                "kind": "close"
+              }
+            ],
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            },
+            "stroke": null
+          }
+        }
+      ],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      255,
+      0,
+      0,
+      255,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "layer multiply",
+    "input": {
+      "width": 2,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "tolerance": 0.001,
+      "maxPixels": 64,
+      "nodes": [
+        {
+          "id": "back",
+          "groups": [],
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "path",
+            "segments": [
+              {
+                "kind": "move",
+                "to": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  1
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  0,
+                  1
+                ]
+              },
+              {
+                "kind": "close"
+              }
+            ],
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                0.8,
+                0.4,
+                0.2,
+                1
+              ]
+            },
+            "stroke": null
+          }
+        },
+        {
+          "id": "front",
+          "groups": [],
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "multiply",
+          "visible": true,
+          "content": {
+            "kind": "path",
+            "segments": [
+              {
+                "kind": "move",
+                "to": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  1
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  0,
+                  1
+                ]
+              },
+              {
+                "kind": "close"
+              }
+            ],
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                0.2,
+                0.6,
+                1,
+                1
+              ]
+            },
+            "stroke": null
+          }
+        }
+      ],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      41,
+      61,
+      51,
+      255,
+      41,
+      61,
+      51,
+      255
+    ]
+  },
+  {
+    "name": "isolated group multiply",
+    "input": {
+      "width": 2,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "tolerance": 0.001,
+      "maxPixels": 64,
+      "nodes": [
+        {
+          "id": "back",
+          "groups": [],
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "path",
+            "segments": [
+              {
+                "kind": "move",
+                "to": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  1
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  0,
+                  1
+                ]
+              },
+              {
+                "kind": "close"
+              }
+            ],
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                0.8,
+                0.4,
+                0.2,
+                1
+              ]
+            },
+            "stroke": null
+          }
+        },
+        {
+          "id": "front",
+          "groups": [
+            {
+              "id": "blend",
+              "opacity": 1,
+              "blendMode": "multiply"
+            }
+          ],
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "path",
+            "segments": [
+              {
+                "kind": "move",
+                "to": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  1
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  0,
+                  1
+                ]
+              },
+              {
+                "kind": "close"
+              }
+            ],
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                0.2,
+                0.6,
+                1,
+                1
+              ]
+            },
+            "stroke": null
+          }
+        }
+      ],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      41,
+      61,
+      51,
+      255,
+      41,
+      61,
+      51,
+      255
+    ]
+  },
+  {
+    "name": "decoded pixels in isolated group",
+    "input": {
+      "width": 2,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "tolerance": 0.001,
+      "maxPixels": 64,
+      "nodes": [
+        {
+          "id": "pixels",
+          "groups": [
+            {
+              "id": "island",
+              "opacity": 0.5,
+              "blendMode": "normal"
+            }
+          ],
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "pixels",
+            "image": {
+              "width": 2,
+              "height": 1,
+              "pixels": [
+                255,
+                0,
+                0,
+                255,
+                0,
+                0,
+                255,
+                255
+              ]
+            }
+          }
+        }
+      ],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      255,
+      0,
+      0,
+      128,
+      0,
+      0,
+      255,
+      128
+    ]
+  },
+  {
+    "name": "translated decoded pixels",
+    "input": {
+      "width": 2,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "tolerance": 0.001,
+      "maxPixels": 64,
+      "nodes": [
+        {
+          "id": "pixels",
+          "groups": [],
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            1,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "pixels",
+            "image": {
+              "width": 1,
+              "height": 1,
+              "pixels": [
+                0,
+                255,
+                0,
+                255
+              ]
+            }
+          }
+        }
+      ],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      255,
+      0,
+      255
+    ]
+  },
+  {
+    "name": "transparent ancestor needs no layer pixels",
+    "input": {
+      "width": 2,
+      "height": 1,
+      "origin": [
+        0,
+        0
+      ],
+      "tolerance": 0.001,
+      "maxPixels": 1,
+      "nodes": [
+        {
+          "id": "red",
+          "groups": [
+            {
+              "id": "island",
+              "opacity": 0,
+              "blendMode": "normal"
+            }
+          ],
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "path",
+            "segments": [
+              {
+                "kind": "move",
+                "to": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  1
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  0,
+                  1
+                ]
+              },
+              {
+                "kind": "close"
+              }
+            ],
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                1,
+                0,
+                0,
+                1
+              ]
+            },
+            "stroke": null
+          }
+        },
+        {
+          "id": "blue",
+          "groups": [
+            {
+              "id": "island",
+              "opacity": 0,
+              "blendMode": "normal"
+            }
+          ],
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "content": {
+            "kind": "path",
+            "segments": [
+              {
+                "kind": "move",
+                "to": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  2,
+                  1
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  0,
+                  1
+                ]
+              },
+              {
+                "kind": "close"
+              }
+            ],
+            "fillRule": "nonzero",
+            "fill": {
+              "kind": "solid",
+              "color": [
+                0,
+                0,
+                1,
+                1
+              ]
+            },
+            "stroke": null
+          }
+        }
+      ],
+      "maxSourceBytes": 268439552,
+      "maxBytes": 67108864,
+      "maxChunks": 65536,
+      "assets": []
+    },
+    "expected": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  }
+]

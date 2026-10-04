@@ -19,13 +19,13 @@
       ],
       "properties": {
         "version": {
-          "const": 1
+          "const": 2
         },
         "slots": {
           "const": 64
         },
         "aggregateBytes": {
-          "const": 54001664
+          "const": 58064896
         },
         "staticCountsAgainstAggregate": {
           "const": true

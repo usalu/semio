@@ -34,6 +34,8 @@ pub fn build_run_job(request: ToolRunJobRequest<'_, EditorApp<Puzzle5dPlayApp>>)
         port: request.port,
         trace_keys: request.trace_keys,
         entity_marks: request.entity_marks,
+        children: request.children,
+        member_ops: request.member_ops,
     })?
     .ok_or_else(|| Fault::from("puzzle5d-brush-run-search-missing"))?;
     Ok(Some(Box::new(Puzzle5dPlannerToolRunJob::new(inner, board))))

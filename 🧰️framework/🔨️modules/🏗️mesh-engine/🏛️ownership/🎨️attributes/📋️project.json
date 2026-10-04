@@ -1,0 +1,23 @@
+{
+  "name": "@semio-tech/framework-mesh-attributes-ownership",
+  "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "sharedGlobals",
+        "{projectRoot}/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏗️mesh-engine/🧫️fixtures/🎨️attributes/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏗️mesh-engine/🧬️schema/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏗️mesh-engine/🧪️tests/🔬️mesh-data-from-value-round-trip/🦀️.rs"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏗️mesh-engine/🏛️ownership/🎨️attributes",
+        "command": "bun ./📜️script.ts test"
+      }
+    }
+  }
+}

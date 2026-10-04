@@ -88,7 +88,7 @@ async fn inverse_law_mutation_and_diff_level() {
         // 🔁️ mutation-level: apply then apply every inverse mutation restores base.
         let mut round = base.clone();
         apply_deflate_mutation(&mut round, &m);
-        for inv in m.inverse(&base) {
+        for inv in m.inverse(&base).expect("the admitted mutation has an inverse") {
             apply_deflate_mutation(&mut round, &inv);
         }
         assert_eq!(round, base, "mutation-level inverse failed for {m:?}");

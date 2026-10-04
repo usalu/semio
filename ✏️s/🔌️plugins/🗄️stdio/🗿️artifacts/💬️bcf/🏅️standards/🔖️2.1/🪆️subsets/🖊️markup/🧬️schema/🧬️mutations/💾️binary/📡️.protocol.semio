@@ -37,3 +37,5 @@ record set-viewpoint-components tag=12
 field payload bytes
 record set-viewpoint-snapshot tag=13
 field payload bytes
+record patch-snapshot tag=14
+field payload bytes

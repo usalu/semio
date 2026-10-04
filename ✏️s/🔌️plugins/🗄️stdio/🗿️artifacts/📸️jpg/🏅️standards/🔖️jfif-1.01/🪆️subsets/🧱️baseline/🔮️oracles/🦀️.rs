@@ -103,6 +103,16 @@ pub fn apply(axes: &Axes, kind: &str, params: &Json) -> Result<Axes, String> {
     let mut next = axes.clone();
     match kind {
         "set-snapshot" => next = snapshot_axes(params.get("snapshot").ok_or("set-snapshot carries no snapshot")?)?,
+        "patch-snapshot" => {
+            let patch = params.get("patch").ok_or("patch-snapshot carries no patch")?;
+            let value = Json::Object(vec![("value".to_string(), patch.get("value").cloned().unwrap_or(Json::Null))]);
+            match (patch.str("operation").as_str(), patch.str("path").as_str()) {
+                ("set", "/sofMarker") => next.sof_marker = number(&value, "value")? as u8,
+                ("set", "/frame/precision") => next.precision = number(&value, "value")?,
+                ("set", "/arithmetic") => next.arithmetic = flag(&value, "value"),
+                (operation, path) => return Err(format!("patch-snapshot {operation} {path} addresses no T.81 baseline axis")),
+            }
+        }
         "set-sof-marker" => next.sof_marker = number(params, "marker")? as u8,
         "set-sample-precision" => next.precision = number(params, "precision")?,
         "set-arithmetic" => next.arithmetic = flag(params, "arithmetic"),

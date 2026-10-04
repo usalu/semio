@@ -26,7 +26,8 @@ pub mod derived_construction {
     use crate::schema::snapshot::{DocxDocument, DocxParagraph, DocxRun, DocxXmlPart};
     use crate::standards::v_ecma_376::subsets::strict::schema::{check_strict_conformance, STRICT_REL_BASE};
     use crate::{DocxDiff, DocxMutation, DocxSnapshot};
-    use dsl::{Diagnostic, Severity};
+    use semio_framework_diagnostic::Diagnostic;
+use semio_framework_diagnostic::Severity;
     use semio_framework_plugin::ArtifactBuilder;
     #[cfg(test)]
     use semio_s_artifact_stdio_xml::schema::snapshot::xml_document_to_text;
@@ -51,7 +52,12 @@ pub mod derived_construction {
         opc.content_types.set_default("xml", "application/xml");
         opc.content_types.set_override(MAIN_DOCUMENT_PART, MAIN_DOCUMENT_CONTENT_TYPE);
         opc.add_generated_relationship("", &format!("{STRICT_REL_BASE}/officeDocument"), MAIN_DOCUMENT_PART);
-        DocxSnapshot::from_parts(opc, vec![DocxXmlPart { path: MAIN_DOCUMENT_PART.into(), content_type: MAIN_DOCUMENT_CONTENT_TYPE.into(), document: document_to_strict_xml(&document) }])
+        DocxSnapshot::from_parts(
+            opc,
+            vec![DocxXmlPart::try_from_document(MAIN_DOCUMENT_PART.into(), MAIN_DOCUMENT_CONTENT_TYPE.into(), document_to_strict_xml(&document))
+                .expect("the minimal strict XML document fits retained ownership")],
+        )
+            .expect("the minimal strict DOCX package fits retained OPC ownership")
     }
 
     /// ✍️ Same paragraph/run -> XML shape as the ✳️any subset's `engine::document_to_xml`, just with
@@ -152,7 +158,7 @@ pub mod derived_construction {
             Self { snapshot }
         }
 
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(Self::from_snapshot(<DocxSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
 
@@ -195,7 +201,11 @@ pub use derived_construction::*;
 pub mod derived_analysis {
     use crate::standards::v_ecma_376::subsets::base::schema::{DocxAnalyzer as DocxAnyAnalyzer, DocxParts};
     use crate::{schema::snapshot::DocxXmlPart, DocxSnapshot};
-    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
+    use semio_framework_diagnostic::Diagnostic;
+use semio_framework_diagnostic::FaultCode;
+use semio_framework_diagnostic::FaultScope;
+use semio_framework_diagnostic::Severity;
+use semio_framework_diagnostic::TextSpan;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
     use semio_s_artifact_stdio_zip::opc::resolve_relationship_target;
 
@@ -226,14 +236,17 @@ pub mod derived_analysis {
     /// conformance classes instead of silently failing to find the main part on any strict document.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn main_document_part(snapshot: &DocxSnapshot) -> Option<(&DocxXmlPart, String)> {
-        let rel = snapshot.opc.relationships_for("").iter().find(|relationship| relationship.rel_type.ends_with("/officeDocument"))?;
-        let path = resolve_relationship_target("", &rel.target);
+        let rel = snapshot.opc.relationships_for("")?.iter().find(|relationship| relationship.rel_type.to_string_owner().ends_with("/officeDocument"))?;
+        let path = resolve_relationship_target("", &rel.target.to_string_owner());
         snapshot.xml_part(&path).map(|part| (part, path))
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn part_contains(part: &DocxXmlPart, needle: &str) -> bool {
-        !needle.is_empty() && semio_s_artifact_stdio_xml::schema::snapshot::xml_document_to_text(&part.document).contains(needle)
+        !needle.is_empty()
+            && part
+                .materialize_document_exact()
+                .is_ok_and(|document| semio_s_artifact_stdio_xml::schema::snapshot::xml_document_to_text(&document).contains(needle))
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -282,8 +295,8 @@ pub mod derived_analysis {
         let mut owners: Vec<&String> = opc.relationships.keys().collect();
         owners.sort();
         for owner in owners {
-            for rel in &opc.relationships[owner] {
-                if rel.rel_type.starts_with(TRANSITIONAL_REL_BASE) {
+            for rel in opc.relationships.get(owner).expect("enumerated retained relationship owner").iter() {
+                if rel.rel_type.to_string_owner().starts_with(TRANSITIONAL_REL_BASE) {
                     out.push(hard(CODE_REL_BASE, format!("relationship {} owned by {owner:?} uses the transitional relationship base {TRANSITIONAL_REL_BASE} -- strict conformance requires {STRICT_REL_BASE}", rel.id)));
                 }
             }

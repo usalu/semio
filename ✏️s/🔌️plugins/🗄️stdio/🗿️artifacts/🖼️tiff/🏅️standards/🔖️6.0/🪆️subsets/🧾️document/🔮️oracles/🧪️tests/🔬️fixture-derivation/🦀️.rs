@@ -97,7 +97,7 @@ fn derive_real_world_fixture() {
     let tiny_hex: String = tiny_rgb.as_raw().iter().map(|b| format!("{b:02x}")).collect();
     eprintln!("inline 8x8 real thumbnail hex (insert-ifd pixels): {tiny_hex}");
 
-    // A committed `shared://` binary fixture for `replace-pixels`: the SAME real photo's own
+    // A committed `shared://` raster-replacement reference fixture: the SAME real photo's own
     // pixels, horizontally flipped (still 100% real content, but a genuinely different,
     // provable raster) — full IFD 0 resolution, so it can only reasonably live as a binary
     // fixture, not inline JSON hex.

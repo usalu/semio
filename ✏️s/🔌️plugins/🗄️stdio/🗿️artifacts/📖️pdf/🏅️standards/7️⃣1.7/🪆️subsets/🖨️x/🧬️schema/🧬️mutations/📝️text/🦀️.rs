@@ -62,21 +62,21 @@ fn decode_hex(value: &str) -> Result<Vec<u8>, String> {
         .collect()
 }
 
-fn text_error(detail: impl Into<String>) -> store::TextError {
-    store::TextError::new(detail.into(), dsl::TextSpan::at(1, 1))
+fn text_error(detail: impl Into<String>) -> semio_framework_diagnostic::TextError {
+    semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail.into(), semio_framework_diagnostic::TextSpan::at(1, 1))
 }
 
 impl OpText for PdfXMutation {
     fn print_op(&self) -> String {
-        let payload = pack::json_to_string(&pack::json_from_dsl_value(&dsl::ToValue::to_value(self))).into_bytes();
+        let payload = semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(self))).into_bytes();
         format!("pdf-x-mutation payload={}", encode_hex(&payload))
     }
 
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let payload = line.strip_prefix("pdf-x-mutation payload=").ok_or_else(|| text_error("expected canonical PDF/X mutation aggregate"))?;
         let bytes = decode_hex(payload).map_err(text_error)?;
-        let parsed = pack::parse_json_bytes(&bytes).map_err(|error| text_error(error.to_string()))?;
-        <PdfXMutation as dsl::FromValue>::from_value(pack::json_to_dsl_value(&parsed)).map_err(|error| text_error(error.to_string()))
+        let parsed = semio_framework_pack_json::parse_bytes(&bytes, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| text_error(error.to_string()))?;
+        <PdfXMutation as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|error| text_error(error.to_string()))
     }
 }
 //#endregion 🧱️Framing

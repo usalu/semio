@@ -17,7 +17,7 @@ pub fn diff(payload: &super::ChangeIdealLoadsSystemMaxHeatingCapacity, base: &En
     }
     let value = payload.new_capacity_present.then_some(payload.new_max_heating_capacity_w);
     if existing.max_heating_capacity_w == value {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Ideal loads system {} already has that maximum heating capacity.", payload.id.0));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Ideal loads system {} already has that maximum heating capacity.", payload.id.0));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.ideal_loads.iter_mut().find(|item| item.id == payload.id) {

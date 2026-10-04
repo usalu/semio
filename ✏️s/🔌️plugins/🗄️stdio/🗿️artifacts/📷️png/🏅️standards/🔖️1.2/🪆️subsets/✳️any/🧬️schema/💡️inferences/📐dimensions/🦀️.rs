@@ -2,7 +2,6 @@
 //! pure O(1) read of already-decoded header fields — nothing here is per-entity/incremental, so
 //! this holds only the value type + its pure `compute` fn (no `InferredField`).
 
-use crate::schema::snapshot::PngColorType;
 use crate::PngSnapshot;
 
 //#region 🔖️Dimensions
@@ -21,12 +20,13 @@ pub struct PngDimensions {
 /// 📐️ Computes [`PngDimensions`] from a snapshot's IHDR fields — pure, total, O(1).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn compute_png_dimensions(snapshot: &PngSnapshot) -> PngDimensions {
+    let layout = crate::io::png_layout(snapshot).expect("PngSnapshot invariant");
     PngDimensions {
-        width: snapshot.width,
-        height: snapshot.height,
-        bit_depth: snapshot.bit_depth,
-        has_alpha: matches!(snapshot.color_type, PngColorType::GrayscaleAlpha | PngColorType::Rgba),
-        pixel_count: snapshot.width as u64 * snapshot.height as u64,
+        width: layout.width,
+        height: layout.height,
+        bit_depth: layout.bit_depth,
+        has_alpha: matches!(layout.color_type, crate::schema::snapshot::PngColorType::GrayscaleAlpha | crate::schema::snapshot::PngColorType::Rgba),
+        pixel_count: u64::from(layout.width) * u64::from(layout.height),
     }
 }
 //#endregion 🔖️Dimensions

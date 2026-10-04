@@ -1,0 +1,54 @@
+{
+  "contractId": "compiled-refusal-owned-i32-v1",
+  "owner": "fixture.neutral-host-fixture.snapshot-refusal",
+  "standard": "1",
+  "table": "fixture_refusal",
+  "columns": [
+    "id",
+    "value"
+  ],
+  "identity": 1,
+  "values": [
+    -2147483648,
+    -1,
+    0,
+    1,
+    2147483647
+  ],
+  "rows": [
+    [
+      1,
+      -2147483648
+    ],
+    [
+      1,
+      -1
+    ],
+    [
+      1,
+      0
+    ],
+    [
+      1,
+      1
+    ],
+    [
+      1,
+      2147483647
+    ]
+  ],
+  "subsets": [
+    "invalid-value",
+    "canceled",
+    "ownership-limit",
+    "allocation-failed",
+    "work-limit",
+    "depth-limit",
+    "unsupported-owner",
+    "invariant-violated"
+  ],
+  "encodings": [
+    "text",
+    "binary"
+  ]
+}

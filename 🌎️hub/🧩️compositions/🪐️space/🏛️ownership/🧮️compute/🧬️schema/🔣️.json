@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/compute-consumer/hub-space.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "id",
+    "source",
+    "manifest",
+    "bindings"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "const": "hub-space"
+    },
+    "source": {
+      "type": "string",
+      "minLength": 1,
+      "const": "🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/🦀️.rs"
+    },
+    "manifest": {
+      "type": "string",
+      "minLength": 1,
+      "const": "🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust/Cargo.toml"
+    },
+    "bindings": {
+      "type": "array",
+      "uniqueItems": true,
+      "minItems": 1,
+      "items": {
+        "enum": [
+          "EngineKey",
+          "EngineHandle",
+          "EngineFault",
+          "Engine",
+          "EngineHandles",
+          "EngineCache",
+          "EngineRep"
+        ]
+      },
+      "const": [
+        "EngineHandles"
+      ]
+    }
+  }
+}

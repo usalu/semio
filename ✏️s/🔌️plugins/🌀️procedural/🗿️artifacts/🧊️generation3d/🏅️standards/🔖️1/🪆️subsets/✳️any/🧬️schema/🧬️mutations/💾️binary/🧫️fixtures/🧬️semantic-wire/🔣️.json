@@ -23,9 +23,9 @@
         "targets": [
           "translate"
         ],
-        "dx": 2.0,
-        "dy": -1.0,
-        "dz": 4.0
+        "dx": 2,
+        "dy": -1,
+        "dz": 4
       },
       "expected": {
         "offset": [
@@ -44,9 +44,9 @@
         "targets": [
           "rotate"
         ],
-        "ax": 0.0,
-        "ay": 0.0,
-        "az": 1.0,
+        "ax": 0,
+        "ay": 0,
+        "az": 1,
         "angle": 0.5
       },
       "expected": {
@@ -67,9 +67,9 @@
         "targets": [
           "scale"
         ],
-        "sx": 2.0,
-        "sy": 3.0,
-        "sz": 4.0
+        "sx": 2,
+        "sy": 3,
+        "sz": 4
       },
       "expected": {
         "factor": [
@@ -88,8 +88,8 @@
         "ids": [
           "slider"
         ],
-        "dx": 3.0,
-        "dy": -2.0
+        "dx": 3,
+        "dy": -2
       },
       "expected": {
         "layout": [
@@ -197,6 +197,148 @@
           "x": 1.5,
           "y": -2.25,
           "z": 0.5
+        }
+      }
+    },
+    {
+      "keyword": "change-widget-input",
+      "tag": 19,
+      "source": "🎛️change-widget-input",
+      "mutation": {
+        "mutation": "changeWidgetInput",
+        "id": "shape",
+        "channel": "items",
+        "type": "numberList",
+        "value": [
+          1,
+          2
+        ]
+      },
+      "expected": {
+        "input": {
+          "0": {
+            "$schema": "number",
+            "value": 1
+          },
+          "1": {
+            "$schema": "number",
+            "value": 2
+          },
+          "$schema": "list"
+        }
+      }
+    },
+    {
+      "keyword": "change-widget-input",
+      "tag": 19,
+      "source": "🎛️change-widget-input",
+      "mutation": {
+        "mutation": "changeWidgetInput",
+        "id": "shape",
+        "channel": "items",
+        "type": "textList",
+        "value": [
+          "alpha",
+          "beta"
+        ]
+      },
+      "expected": {
+        "input": {
+          "0": {
+            "$schema": "text",
+            "value": "alpha"
+          },
+          "1": {
+            "$schema": "text",
+            "value": "beta"
+          },
+          "$schema": "list"
+        }
+      }
+    },
+    {
+      "keyword": "change-widget-input",
+      "tag": 19,
+      "source": "🎛️change-widget-input",
+      "mutation": {
+        "mutation": "changeWidgetInput",
+        "id": "shape",
+        "channel": "items",
+        "type": "booleanList",
+        "value": [
+          true,
+          false
+        ]
+      },
+      "expected": {
+        "input": {
+          "0": {
+            "$schema": "boolean",
+            "value": true
+          },
+          "1": {
+            "$schema": "boolean",
+            "value": false
+          },
+          "$schema": "list"
+        }
+      }
+    },
+    {
+      "keyword": "change-widget-input",
+      "tag": 19,
+      "source": "🎛️change-widget-input",
+      "mutation": {
+        "mutation": "changeWidgetInput",
+        "id": "shape",
+        "channel": "items",
+        "type": "pointList",
+        "value": [
+          [
+            1,
+            2,
+            3
+          ]
+        ]
+      },
+      "expected": {
+        "input": {
+          "0": {
+            "$schema": "point",
+            "x": 1,
+            "y": 2,
+            "z": 3
+          },
+          "$schema": "list"
+        }
+      }
+    },
+    {
+      "keyword": "change-widget-input",
+      "tag": 19,
+      "source": "🎛️change-widget-input",
+      "mutation": {
+        "mutation": "changeWidgetInput",
+        "id": "shape",
+        "channel": "items",
+        "type": "vectorList",
+        "value": [
+          [
+            0,
+            1,
+            0
+          ]
+        ]
+      },
+      "expected": {
+        "input": {
+          "0": {
+            "$schema": "vector",
+            "x": 0,
+            "y": 1,
+            "z": 0
+          },
+          "$schema": "list"
         }
       }
     }

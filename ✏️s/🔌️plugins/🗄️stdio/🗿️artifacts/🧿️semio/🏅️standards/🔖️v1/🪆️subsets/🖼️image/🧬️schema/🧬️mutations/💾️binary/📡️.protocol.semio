@@ -35,3 +35,5 @@ record set-metadata-entry tag=10
 field payload bytes
 record remove-metadata-entry tag=11
 field payload bytes
+record patch-snapshot tag=12
+field payload bytes

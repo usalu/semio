@@ -130,9 +130,9 @@ async fn clip_by_value_keeps_only_the_requested_half_plane() {
 }
 
 //#region 🔖️Animation
-use crate::editor::fem2d::modes::edit::windows::results::config::{Fem2dResultsAnimation, Fem2dWaveform};
+use crate::app_surface::{FemResultsAnimation, FemWaveform};
 
-fn animated_scene(animation: Fem2dResultsAnimation, mode: DisplayMode) -> Canvas2dScene {
+fn animated_scene(animation: FemResultsAnimation, mode: DisplayMode) -> Canvas2dScene {
     let doc = crate::standards::v1::subsets::any::schema::default_fem2d_snapshot();
     let window = config::Fem2dResultsWindowConfig { animation, ..config::Fem2dResultsWindowConfig::default() };
     let display = ResultDisplay { source_id: Some("dead".into()), mode };
@@ -145,19 +145,19 @@ fn animated_scene(animation: Fem2dResultsAnimation, mode: DisplayMode) -> Canvas
 /// scene from the zero-crossing at phase 0, and the reaction read-outs ride the same factor.
 #[semio_framework_async_macros::async_test]
 async fn results_window_static_scene_follows_the_playback_phase() {
-    let sine = Fem2dResultsAnimation { waveform: Fem2dWaveform::Sine, ..Fem2dResultsAnimation::default() };
-    let peak = animated_scene(Fem2dResultsAnimation { phase: 0.25, ..sine }, DisplayMode::Static);
-    let rest = animated_scene(Fem2dResultsAnimation { phase: 0.0, ..sine }, DisplayMode::Static);
+    let sine = FemResultsAnimation { waveform: FemWaveform::Sine, ..FemResultsAnimation::default() };
+    let peak = animated_scene(FemResultsAnimation { phase: 0.25, ..sine }, DisplayMode::Static);
+    let rest = animated_scene(FemResultsAnimation { phase: 0.0, ..sine }, DisplayMode::Static);
     assert_ne!(peak.layers_json, rest.layers_json, "phase 0.25 and phase 0 must not draw the same frame");
-    let trough = animated_scene(Fem2dResultsAnimation { phase: 0.75, ..sine }, DisplayMode::Static);
+    let trough = animated_scene(FemResultsAnimation { phase: 0.75, ..sine }, DisplayMode::Static);
     assert_ne!(peak.layers_json, trough.layers_json, "a sine swings through both signs");
 }
 
 /// 🎞️ LAW: the default (still) window draws the FULL deformation — the pre-playback behaviour.
 #[semio_framework_async_macros::async_test]
 async fn results_window_default_animation_draws_the_full_deformation() {
-    let still = animated_scene(Fem2dResultsAnimation::default(), DisplayMode::Static);
-    let full = animated_scene(Fem2dResultsAnimation { phase: 1.0, ..Fem2dResultsAnimation::default() }, DisplayMode::Static);
+    let still = animated_scene(FemResultsAnimation::default(), DisplayMode::Static);
+    let full = animated_scene(FemResultsAnimation { phase: 1.0, ..FemResultsAnimation::default() }, DisplayMode::Static);
     assert_eq!(still.layers_json, full.layers_json);
     assert!(!still.layers_json.contains("playback-caption"), "a still window shows no transport read-out");
 }
@@ -165,7 +165,7 @@ async fn results_window_default_animation_draws_the_full_deformation() {
 /// ⏯️ LAW: a running window carries its own phase/speed read-out.
 #[semio_framework_async_macros::async_test]
 async fn results_window_running_scene_carries_a_transport_caption() {
-    let running = animated_scene(Fem2dResultsAnimation { phase: 0.42, playing: true, ..Fem2dResultsAnimation::default() }, DisplayMode::Static);
+    let running = animated_scene(FemResultsAnimation { phase: 0.42, playing: true, ..FemResultsAnimation::default() }, DisplayMode::Static);
     assert!(running.layers_json.contains("playback-caption"), "{}", running.layers_json);
     assert!(running.layers_json.contains("phase 0.42"), "{}", running.layers_json);
 }
@@ -179,17 +179,17 @@ async fn results_window_running_scene_carries_a_transport_caption() {
 #[semio_framework_async_macros::async_test]
 async fn results_window_mode_shapes_follow_the_playback_phase() {
     let doc = demo();
-    let full = mode_shape_scale(&doc, Fem2dResultsAnimation::default().amplitude());
+    let full = mode_shape_scale(&doc, FemResultsAnimation::default().amplitude());
     assert!(full > 0.0, "the demo has a non-degenerate extent");
-    assert!((mode_shape_scale(&doc, Fem2dResultsAnimation { phase: 0.5, ..Fem2dResultsAnimation::default() }.amplitude()) - full / 2.0).abs() < 1e-9);
-    let trough = Fem2dResultsAnimation { phase: 0.75, waveform: Fem2dWaveform::Sine, ..Fem2dResultsAnimation::default() };
+    assert!((mode_shape_scale(&doc, FemResultsAnimation { phase: 0.5, ..FemResultsAnimation::default() }.amplitude()) - full / 2.0).abs() < 1e-9);
+    let trough = FemResultsAnimation { phase: 0.75, waveform: FemWaveform::Sine, ..FemResultsAnimation::default() };
     assert!(mode_shape_scale(&doc, trough.amplitude()) < 0.0, "a sine trough swings the mode the other way");
 }
 
 /// ⏯️ LAW: a running mode-shape window carries the same transport read-out the static view does.
 #[semio_framework_async_macros::async_test]
 async fn results_window_mode_shapes_carry_the_transport_caption_while_playing() {
-    let running = animated_scene(Fem2dResultsAnimation { phase: 0.42, playing: true, ..Fem2dResultsAnimation::default() }, DisplayMode::Modal(0));
+    let running = animated_scene(FemResultsAnimation { phase: 0.42, playing: true, ..FemResultsAnimation::default() }, DisplayMode::Modal(0));
     assert!(running.layers_json.contains("playback-caption"), "{}", running.layers_json);
     assert!(running.layers_json.contains("modal-caption"), "{}", running.layers_json);
 }

@@ -7,7 +7,7 @@ use crate::standards::v1::subsets::any::schema::diff::Block3dDiff;
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeMetaDescription, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
     if payload.new_description == base.meta.description {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Meta description is unchanged.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Meta description is unchanged.");
     }
     protocol::MutationOutcome::new(Block3dDiff { meta: Some(BlockMeta { description: payload.new_description.clone() }), ..Default::default() })
 }

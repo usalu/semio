@@ -23,3 +23,5 @@ record set-triangle-normal tag=5
 field payload bytes
 record set-triangle-vertices tag=6
 field payload bytes
+record patch-snapshot tag=7
+field payload bytes

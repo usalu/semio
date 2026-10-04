@@ -10,7 +10,7 @@ use std::collections::BTreeMap;
 use std::hash::{Hash, Hasher};
 //#region 🔖️Artifact
 /// 🧬️ drawing document artifact state.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -101,17 +101,6 @@ pub fn drawing_artifact_schema_descriptor() -> semio_framework_schema_registry::
 pub type Construction = semio_framework_plugin::app::SnapshotBuilder<DrawingSnapshot, DrawingMutation>;
 //#endregion 🏗️Construction
 
-//#region 🔖️Inferrer
-/// 💡️ Zero-sized `ArtifactInferrer` anchor for `DrawingInference` (`💡️inferences/🦀️.rs`).
-/// Cannot retarget onto `SnapshotBuilder<DrawingSnapshot, DrawingMutation>` (the old `DrawingBuilderFacets`
-/// cluster's replacement) — `SnapshotBuilder` is a foreign, non-`#[fundamental]` generic struct, so
-/// `impl ArtifactInferrer for SnapshotBuilder<DrawingSnapshot, DrawingMutation>` is an orphan-rule
-/// violation (E0117) regardless of the type parameters being local. `ArtifactInferrer::infer` takes
-/// `&Self::Snapshot`, never `&self`, so the impl target is a pure type-level anchor — a trivial
-/// local marker struct is the correct, and only legal, shape.
-pub struct DrawingInferrer;
-//#endregion 🔖️Inferrer
-
 // 🧬️ The old hand-rolled `derived_construction`/`derived_analysis` modules and the
 // `derive_artifact_facets!(DrawingBuilderFacets { .. })` macro invocation (generated `DrawingBuilder`/
 // `DrawingAnalyzer`/`DrawingComposer`) are deleted outright (design.md §3: all io now goes exclusively
@@ -126,7 +115,7 @@ pub struct DrawingInferrer;
 /// any::schema::*; }` shim keeps that path resolving).
 
 //#region 🔖️SceneTypes
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct DrawingSceneNode {
     pub id: String,
@@ -150,7 +139,7 @@ pub struct DrawingSceneNode {
 }
 
 /// 🧩️ One isolated ancestor compositing scope; leaf matrices already include its transform.
-#[derive(Clone,Debug,PartialEq,dsl::ToValue,dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all="camelCase")]
 pub struct DrawingSceneGroup {
     pub id:String,
@@ -158,14 +147,14 @@ pub struct DrawingSceneGroup {
     pub blend_mode:String,
 }
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct DrawingSceneText {
     pub content: String,
     pub size: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct DrawingSceneImage {
     pub src: String,
@@ -173,7 +162,7 @@ pub struct DrawingSceneImage {
     pub height: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct DrawingCanvasLayerRecord {
     pub id: String,
@@ -216,7 +205,7 @@ pub fn semio_drawing_example_document() -> DrawingSnapshot {
 /// parameters (shared framework machinery, out of scope for this DSL migration) — derives the JSON
 /// from the DSL fixture rather than keeping a second, redundant JSON copy of it on disk.
 pub fn semio_drawing_example_json() -> String {
-    dsl::json::to_json_string(&semio_drawing_example_document())
+    semio_framework_pack_json::to_json_string(&semio_drawing_example_document())
 }
 
 pub fn default_layer_base(name: &str) -> DrawingLayerBase {
@@ -787,7 +776,7 @@ fn insert_layer_in_parent(layers: &mut [DrawingLayerNode], parent_id: &str, inde
     false
 }
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct DrawingLayerLocation {
     #[value(skip_serializing_if = "Option::is_none")]
@@ -913,6 +902,16 @@ pub fn split_path_segments_by_contour(segments: &[PathSegment]) -> Vec<Vec<PathS
 
 #[path = "🧮️geometry/🦀️.rs"]
 pub mod geometry;
+#[path = "🎬️scene/📷️raster/🦀️.rs"]
+pub mod scene_raster;
+#[path = "🎬️scene/📋️prepare/🦀️.rs"]
+pub mod scene_preparation;
+#[path = "🎬️scene/🔀️booleans/🦀️.rs"]
+pub mod scene_booleans;
+#[path = "🎬️scene/🔍️trace/🦀️.rs"]
+pub mod scene_trace;
+#[path = "🎬️scene/🧹️retire/🦀️.rs"]
+pub mod scene_retirement;
 
 pub fn path_segments_bounds(segments: &[PathSegment]) -> Option<(f64, f64, f64, f64)> {
     path_segments_bounds_with_matrix(segments,[1.0,0.0,0.0,1.0,0.0,0.0])
@@ -1077,7 +1076,7 @@ pub fn flatten_segments_to_lines(segments: &[PathSegment]) -> Vec<PathSegment> {
 //#endregion 🔖️SegmentGeometry
 
 //#region 🔖️KernelResolve
-fn to_kernel_segment(segment: &PathSegment) -> semio_framework_2d::PathSegment {
+pub(crate) fn to_kernel_segment(segment: &PathSegment) -> semio_framework_2d::PathSegment {
     use semio_framework_2d::PathSegment as KernelSegment;
     match segment {
         PathSegment::Move { to } => KernelSegment::Move { to: *to },
@@ -1089,7 +1088,7 @@ fn to_kernel_segment(segment: &PathSegment) -> semio_framework_2d::PathSegment {
     }
 }
 
-fn from_kernel_segment(segment: &semio_framework_2d::PathSegment) -> PathSegment {
+pub(crate) fn from_kernel_segment(segment: &semio_framework_2d::PathSegment) -> PathSegment {
     use semio_framework_2d::PathSegment as KernelSegment;
     match segment {
         KernelSegment::Move { to } => PathSegment::Move { to: *to },
@@ -1230,3 +1229,9 @@ pub mod fill;
 
 #[path = "🎨️fill/🌀️rule/🦀️.rs"]
 pub mod fill_rule;
+
+#[path="🎬️scene/🪪️identity/🦀️.rs"]
+pub mod scene_identity;
+
+#[path="🎬️scene/👁️view/🦀️.rs"]
+pub mod scene_view;

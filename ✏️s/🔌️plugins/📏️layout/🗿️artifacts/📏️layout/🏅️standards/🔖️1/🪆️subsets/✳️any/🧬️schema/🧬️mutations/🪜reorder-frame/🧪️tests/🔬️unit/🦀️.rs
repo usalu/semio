@@ -20,7 +20,7 @@ fn reorder_frame_brings_a_frame_forward_and_inverse_sends_it_back() {
     let list = crate::editor::layout::engine::scene::build_display_list_for_page(&mut engine, &next, &next.pages[0], "", &[], None, false);
     let painted: Vec<&str> = list.rects.iter().map(|rect| rect.object_id.as_str()).filter(|id| *id == "frame-1" || *id == "frame-2").collect();
     assert_eq!(painted, vec!["frame-1", "frame-2"]);
-    let restored = mutation.inverse(&base)[0].diff(&next).diff().apply(&next).expect("inverse");
+    let restored = mutation.inverse(&base).expect("valid retained mutation inverse fixture")[0].diff(&next).diff().apply(&next).expect("inverse");
     let restored_ids: Vec<String> = restored.pages[0].frames.iter().map(|frame| frame.id().to_string()).collect();
     assert_eq!(restored_ids, ids);
 }

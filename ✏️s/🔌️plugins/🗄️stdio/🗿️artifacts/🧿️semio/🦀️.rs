@@ -391,9 +391,9 @@ impl RetireOwned for value::SemioValue {
 
 retire_struct!(graph::GraphNodeId { value });
 retire_struct!(graph::GraphEdgeId { value });
-retire_struct!(graph::SemioGraphPort { name, kind });
-retire_struct!(graph::SemioGraphNode { id, kind, label, position, ports, properties });
-retire_struct!(graph::SemioGraphEdge { id, source, target, kind, label });
+retire_struct!(graph::SemioGraphPort { name, kind, category, properties });
+retire_struct!(graph::SemioGraphNode { id, kind, label, position, width, height, ports, properties });
+retire_struct!(graph::SemioGraphEdge { id, source, target, kind, label, source_port, target_port, properties });
 retire_struct!(graph::SemioGraphSnapshot { schema, nodes, edges });
 retire_struct!(image::SemioImageFrame { delay_ms, rgba8 });
 retire_struct!(image::SemioImageMetadataEntry { key, value });
@@ -405,7 +405,7 @@ retire_struct!(kit::SemioKitDesign { id, name, pieces, connections });
 retire_struct!(kit::SemioKitSnapshot { schema, types, designs, objects, models, properties, representations });
 retire_struct!(mesh::SemioPrimitive { id, topology, positions, normals, uvs, colors, indices, material_id });
 retire_struct!(mesh::SemioMesh { id, primitives });
-retire_struct!(mesh::SemioMaterial { id, base_color, metallic, roughness });
+retire_struct!(mesh::SemioMaterial { id, base_color, metallic, roughness, base_color_texture, metallic_roughness_texture, normal_texture, occlusion_texture, emissive_texture });
 retire_struct!(mesh::SemioTexture { id, mime, bytes });
 retire_struct!(mesh::SemioMeshSnapshot { schema, meshes, materials, textures });
 retire_struct!(model::SpatialNode { id, kind, name, parent_id, placement });
@@ -508,6 +508,7 @@ impl RetireOwned for animation_mutation::SemioAnimationMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
             Self::SetSnapshot(payload) => payload.snapshot.retirement(),
+            Self::PatchSnapshot(payload) => payload.patch.retirement(),
             Self::InsertTimeline(animation_mutation::insert_timeline::InsertTimeline { index, timeline }) => seq![index, timeline],
             Self::RemoveTimeline(animation_mutation::remove_timeline::RemoveTimeline { index }) => index.retirement(),
             Self::SetTimelineName(animation_mutation::set_timeline_name::SetTimelineName { index, name }) => seq![index, name],
@@ -527,6 +528,7 @@ impl RetireOwned for audio_mutation::SemioAudioMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
             Self::SetSnapshot(payload) => payload.snapshot.retirement(),
+            Self::PatchSnapshot(payload) => payload.patch.retirement(),
             Self::SetSampleRate(audio_mutation::set_sample_rate::SetSampleRate { sample_rate }) => sample_rate.retirement(),
             Self::SetFormat(audio_mutation::set_format::SetFormat { format }) => format.retirement(),
             Self::InsertChannel(audio_mutation::insert_channel::InsertChannel { index, channel }) => seq![index, channel],
@@ -543,6 +545,7 @@ impl RetireOwned for cad_mutation::SemioCadMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
             Self::SetSnapshot(payload) => payload.snapshot.retirement(),
+            Self::PatchSnapshot(payload) => payload.patch.retirement(),
             Self::AddLayer(cad_mutation::add_layer::AddLayer { layer }) => layer.retirement(),
             Self::RemoveLayer(cad_mutation::remove_layer::RemoveLayer { name }) => name.retirement(),
             Self::SetLayer(cad_mutation::set_layer::SetLayer { name, color_index, line_type, visible }) => seq![name, color_index, line_type, visible],
@@ -565,6 +568,7 @@ impl RetireOwned for document_mutation::SemioDocumentMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
             Self::SetSnapshot(payload) => payload.snapshot.retirement(),
+            Self::PatchSnapshot(payload) => payload.patch.retirement(),
             Self::InsertBlock(document_mutation::insert_block::InsertBlock { path, block }) => seq![path, block],
             Self::SetBlockContent(document_mutation::set_block_content::SetBlockContent { path, block }) => seq![path, block],
             Self::RemoveBlock(document_mutation::remove_block::RemoveBlock { path }) => path.retirement(),
@@ -589,6 +593,7 @@ impl RetireOwned for flow_mutation::SemioFlowMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
             Self::SetSnapshot(payload) => payload.snapshot.retirement(),
+            Self::PatchSnapshot(payload) => payload.patch.retirement(),
             Self::InsertNode(flow_mutation::insert_node::InsertNode { node }) => node.retirement(),
             Self::RemoveNode(flow_mutation::remove_node::RemoveNode { id }) => id.retirement(),
             Self::SetNodeKind(flow_mutation::set_node_kind::SetNodeKind { id, kind }) => seq![id, kind],
@@ -609,6 +614,7 @@ impl RetireOwned for image_mutation::SemioImageMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
             Self::SetSnapshot(payload) => payload.snapshot.retirement(),
+            Self::PatchSnapshot(payload) => payload.patch.retirement(),
             Self::SetDimensions(image_mutation::set_dimensions::SetDimensions { width, height }) => seq![width, height],
             Self::SetColorspace(image_mutation::set_colorspace::SetColorspace { colorspace }) => colorspace.retirement(),
             Self::SetBitDepth(image_mutation::set_bit_depth::SetBitDepth { bit_depth }) => bit_depth.retirement(),
@@ -628,6 +634,7 @@ impl RetireOwned for model_mutation::SemioModelMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
             Self::SetSnapshot(payload) => payload.snapshot.retirement(),
+            Self::PatchSnapshot(payload) => payload.patch.retirement(),
             Self::InsertSpatialNode(model_mutation::insert_spatial_node::InsertSpatialNode { node }) => node.retirement(),
             Self::RemoveSpatialNode(model_mutation::remove_spatial_node::RemoveSpatialNode { id }) => id.retirement(),
             Self::SetSpatialNode(model_mutation::set_spatial_node::SetSpatialNode { id, kind, name, parent_id, placement }) => seq![id, kind, name, parent_id, placement],
@@ -645,6 +652,7 @@ impl RetireOwned for presentation_mutation::SemioPresentationMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
             Self::SetSnapshot(payload) => payload.snapshot.retirement(),
+            Self::PatchSnapshot(payload) => payload.patch.retirement(),
             Self::InsertSlide(presentation_mutation::insert_slide::InsertSlide { index, slide }) => seq![index, slide],
             Self::RemoveSlide(presentation_mutation::remove_slide::RemoveSlide { index }) => index.retirement(),
             Self::SetSlideLayout(presentation_mutation::set_slide_layout::SetSlideLayout { index, layout_id }) => seq![index, layout_id],
@@ -666,6 +674,7 @@ impl RetireOwned for value_mutation::SemioValueMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
             Self::SetSnapshot(payload) => payload.snapshot.retirement(),
+            Self::PatchSnapshot(payload) => payload.patch.retirement(),
             Self::SetValue(value_mutation::set_value::SetValue { path, value }) => seq![path, value],
             Self::SetMapEntry(value_mutation::set_map_entry::SetMapEntry { path, key, value }) => seq![path, key, value],
             Self::RemoveMapEntry(value_mutation::remove_map_entry::RemoveMapEntry { path, key }) => seq![path, key],
@@ -681,6 +690,7 @@ impl RetireOwned for video_mutation::SemioVideoMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
             Self::SetSnapshot(payload) => payload.snapshot.retirement(),
+            Self::PatchSnapshot(payload) => payload.patch.retirement(),
             Self::InsertStream(video_mutation::insert_stream::InsertStream { index, stream }) => seq![index, stream],
             Self::RemoveStream(video_mutation::remove_stream::RemoveStream { index }) => index.retirement(),
             Self::SetStreamMeta(video_mutation::set_stream_meta::SetStreamMeta { index, kind, codec, width, height, rate }) => seq![index, kind, codec, width, height, rate],
@@ -696,6 +706,7 @@ impl RetireOwned for mesh_mutation::SemioMeshMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
             Self::SetSnapshot(value) => value.snapshot.retirement(),
+            Self::PatchSnapshot(value) => value.patch.retirement(),
             Self::CreateMesh(value) => value.mesh.retirement(),
             Self::DeleteMesh(value) => value.id.retirement(),
             Self::CreatePrimitive(value) => seq![value.mesh_id, value.primitive],
@@ -721,6 +732,7 @@ impl RetireOwned for drawing_mutation::SemioDrawingMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
             Self::SetSnapshot(value) => value.snapshot.retirement(),
+            Self::PatchSnapshot(value) => value.patch.retirement(),
             Self::CreateLayer(value) => seq![value.index, value.layer],
             Self::DeleteLayer(value) => value.id.retirement(),
             Self::CreateNode(value) => seq![value.parent, value.index, value.node],
@@ -746,6 +758,7 @@ impl RetireOwned for table_mutation::SemioTableMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
             Self::SetSnapshot(value) => value.snapshot.retirement(),
+            Self::PatchSnapshot(value) => value.patch.retirement(),
             Self::CreateColumn(value) => seq![value.name, value.kind, value.index],
             Self::DeleteColumn(value) => value.name.retirement(),
             Self::RenameColumn(value) => seq![value.name, value.new_name],
@@ -762,6 +775,7 @@ impl RetireOwned for brep_mutation::SemioBrepMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
             Self::SetSnapshot(value) => value.snapshot.retirement(),
+            Self::PatchSnapshot(value) => value.patch.retirement(),
             Self::CreateVertex(value) => seq![value.id, value.point],
             Self::DeleteVertex(value) => value.id.retirement(),
             Self::CreateEdge(value) => seq![value.id, value.start_vertex, value.end_vertex, value.curve],
@@ -783,7 +797,8 @@ impl RetireOwned for graph_mutation::SemioGraphMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
             Self::SetSnapshot(value) => value.snapshot.retirement(),
-            Self::CreateNode(value) => seq![value.id, value.kind, value.label, value.position, value.ports, value.properties],
+            Self::PatchSnapshot(value) => value.patch.retirement(),
+            Self::CreateNode(value) => seq![value.id, value.kind, value.label, value.position, value.width, value.height, value.ports, value.properties, value.at],
             Self::DeleteNode(value) => value.id.retirement(),
             Self::ChangeNodeKind(value) => seq![value.id, value.new_kind],
             Self::ChangeNodeLabel(value) => seq![value.id, value.new_label],
@@ -791,9 +806,16 @@ impl RetireOwned for graph_mutation::SemioGraphMutation {
             Self::AddNodePort(value) => seq![value.node_id, value.index, value.port],
             Self::RemoveNodePort(value) => seq![value.node_id, value.index],
             Self::AddNodeProperty(value) => seq![value.node_id, value.index, value.property],
-            Self::RemoveNodeProperty(value) => seq![value.node_id, value.index],
-            Self::CreateEdge(value) => seq![value.id, value.source, value.target, value.kind, value.label],
+            Self::RemoveNodeProperty(value) => seq![value.node_id, value.key],
+            Self::CreateEdge(value) => seq![value.id, value.source, value.target, value.kind, value.label, value.source_port, value.target_port, value.properties, value.at],
             Self::DeleteEdge(value) => value.id.retirement(),
+            Self::DragNodes(value) => seq![value.targets, value.dx, value.dy],
+            Self::SetNodeProperty(value) => seq![value.node_id, value.key, value.value],
+            Self::ResizeNode(value) => seq![value.id, value.width, value.height],
+            Self::RenameNode(value) => seq![value.id, value.new_id],
+            Self::SetEdgeProperty(value) => seq![value.edge_id, value.key, value.value],
+            Self::AddEdgeProperty(value) => seq![value.edge_id, value.index, value.property],
+            Self::RemoveEdgeProperty(value) => seq![value.edge_id, value.key],
         }
     }
 }
@@ -802,6 +824,7 @@ impl RetireOwned for object_mutation::SemioObjectMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
             Self::SetSnapshot(value) => value.snapshot.retirement(),
+            Self::PatchSnapshot(value) => value.patch.retirement(),
             Self::MoveObject(value) => value.translation.retirement(),
             Self::RotateObject(value) => value.rotation.retirement(),
             Self::ScaleObject(value) => value.scale.retirement(),
@@ -819,6 +842,7 @@ impl RetireOwned for kit_mutation::SemioKitMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
             Self::SetSnapshot(value) => value.snapshot.retirement(),
+            Self::PatchSnapshot(value) => value.patch.retirement(),
             Self::CreateObject(value) => seq![value.child_id, value.target],
             Self::DeleteObject(value) => value.child_id.retirement(),
             Self::CreateModel(value) => seq![value.child_id, value.target],
@@ -842,6 +866,7 @@ impl RetireOwned for text_mutation::SemioTextMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
             Self::SetSnapshot(value) => value.snapshot.retirement(),
+            Self::PatchSnapshot(value) => value.patch.retirement(),
             Self::InsertRun(value) => seq![value.index, value.run],
             Self::RemoveRun(value) => value.index.retirement(),
             Self::EditRun(value) => seq![value.index, value.new_content],
@@ -937,7 +962,7 @@ macro_rules! member_owners {
                 >,
                 maximum_items: usize,
                 maximum_bytes: usize,
-            ) -> Result<dsl::SnapshotRetirementStep, String> {
+            ) -> Result<dsl::SnapshotRetirementStep, semio_framework_value::ValueError> {
                 self.started = true;
                 if maximum_items == 0 {
                     return Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
@@ -949,11 +974,11 @@ macro_rules! member_owners {
                         {
                             Ok(dsl::SnapshotRetirementStep::Pending { released_items, released_bytes })
                         }
-                        dsl::SnapshotRetirementStep::Pending { .. } => Err("semio store nested retirement exceeded its exact item or byte grant".into()),
+                        dsl::SnapshotRetirementStep::Pending { .. } => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"semio store nested retirement exceeded its exact item or byte grant")),
                         dsl::SnapshotRetirementStep::Blocked => Ok(dsl::SnapshotRetirementStep::Blocked),
                         dsl::SnapshotRetirementStep::Complete => {
                             if !active.terminal_is_empty() {
-                                return Err("semio store nested retirement reported Complete without its terminal-empty witness".into());
+                                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"semio store nested retirement reported Complete without its terminal-empty witness"));
                             }
                             drop(self.active.take());
                             Ok(dsl::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
@@ -961,7 +986,7 @@ macro_rules! member_owners {
                     };
                 }
                 match &mut self.phase {
-                    SemioStoreClosePhase::ReturnedLeases => match store.take_returned_snapshot_read_retirement().map_err(|error| error.to_string())? {
+                    SemioStoreClosePhase::ReturnedLeases => match store.take_returned_snapshot_read_retirement().map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,error.to_string()))? {
                         Some(retirement) => {
                             *self.active = Some(retirement);
                             Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
@@ -975,7 +1000,7 @@ macro_rules! member_owners {
                     SemioStoreClosePhase::DisplacedOwners => match store.maintenance_retirements_step(maximum_items, maximum_bytes)? {
                         dsl::SnapshotRetirementStep::Complete => {
                             if !store.maintenance_retirements_terminal_is_empty() {
-                                return Err("semio store displaced retirement reported Complete without its terminal-empty witness".into());
+                                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"semio store displaced retirement reported Complete without its terminal-empty witness"));
                             }
                             self.phase = SemioStoreClosePhase::HistoryMutations { edit_index: store.history_edit_count().checked_sub(1) };
                             Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
@@ -987,7 +1012,7 @@ macro_rules! member_owners {
                             self.phase = SemioStoreClosePhase::HistoryEdits;
                             return Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
                         };
-                        match store.take_history_mutation_at(index).map_err(|error| error.to_string())? {
+                        match store.take_history_mutation_at(index).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,error.to_string()))? {
                             Some(retirement) => {
                                 *self.active = Some(retirement);
                                 Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
@@ -998,7 +1023,7 @@ macro_rules! member_owners {
                             }
                         }
                     }
-                    SemioStoreClosePhase::HistoryEdits => match store.take_last_history_edit_retirement().map_err(|error| error.to_string())? {
+                    SemioStoreClosePhase::HistoryEdits => match store.take_last_history_edit_retirement().map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,error.to_string()))? {
                         Some(retirement) => {
                             *self.active = Some(retirement);
                             Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
@@ -1103,7 +1128,7 @@ macro_rules! member_owners {
                             Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
                         }
                     },
-                    SemioStoreClosePhase::TailSnapshot => match store.take_tail_snapshot_retirement().map_err(|error| error.to_string())? {
+                    SemioStoreClosePhase::TailSnapshot => match store.take_tail_snapshot_retirement().map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,error.to_string()))? {
                         dsl::ArtifactStoreSnapshotRootClose::Empty => {
                             self.phase = SemioStoreClosePhase::CurrentSnapshot;
                             Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
@@ -1117,7 +1142,7 @@ macro_rules! member_owners {
                             Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
                         }
                     },
-                    SemioStoreClosePhase::CurrentSnapshot => match store.take_current_snapshot_retirement().map_err(|error| error.to_string())? {
+                    SemioStoreClosePhase::CurrentSnapshot => match store.take_current_snapshot_retirement().map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,error.to_string()))? {
                         Some(retirement) => {
                             *self.active = Some(retirement);
                             Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
@@ -1151,8 +1176,8 @@ macro_rules! member_owners {
                         self.phase = SemioStoreClosePhase::FinalEnvelope;
                         Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
                     }
-                    SemioStoreClosePhase::StructuralOwners => Err("semio member store structural close reached an owner outside its exact phase cursor".into()),
-                    SemioStoreClosePhase::FinalEnvelope => match store.take_final_envelope_retirement().map_err(|error| error.to_string())? {
+                    SemioStoreClosePhase::StructuralOwners => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"semio member store structural close reached an owner outside its exact phase cursor")),
+                    SemioStoreClosePhase::FinalEnvelope => match store.take_final_envelope_retirement().map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,error.to_string()))? {
                         Some(retirement) => {
                             *self.active = Some(retirement);
                             Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
@@ -1176,8 +1201,8 @@ macro_rules! member_owners {
                 matches!(self.phase, SemioStoreClosePhase::Complete) && self.active.is_none() && store.owned_roots_terminal_is_empty()
             }
 
-            fn close_uninstalled_step(&mut self, maximum_items: usize) -> Result<dsl::SnapshotRetirementStep, String> {
-                if self.started || self.active.is_some() { return Err("installed semio disposer cannot retire as uninstalled".into()); }
+            fn close_uninstalled_step(&mut self, maximum_items: usize) -> Result<dsl::SnapshotRetirementStep, semio_framework_value::ValueError> {
+                if self.started || self.active.is_some() { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"installed semio disposer cannot retire as uninstalled")); }
                 if maximum_items == 0 { return Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
                 self.phase = SemioStoreClosePhase::Complete;
                 Ok(dsl::SnapshotRetirementStep::Complete)
@@ -1264,7 +1289,7 @@ pub mod io_registry {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
         let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("SemioComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        semio_framework_plugin::resolve_ready((entry.compose)(sources))
+        ::semio_framework_async::poll::resolve_ready((entry.compose)(sources))
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -1564,6 +1589,8 @@ pub mod standards {
                         pub use component::*;
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
                         pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🩹️patch-snapshot/🦀️.rs"]
+                        pub mod patch_snapshot;
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/📸️set-snapshot/🦀️.rs"]
                         pub mod set_snapshot;
                         #[path = "."]
@@ -2215,6 +2242,8 @@ pub mod standards {
                         pub use component::*;
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
                         pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🩹️patch-snapshot/🦀️.rs"]
+                        pub mod patch_snapshot;
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/📸️set-snapshot/🦀️.rs"]
                         pub mod set_snapshot;
                         #[path = "."]
@@ -2821,6 +2850,8 @@ pub mod standards {
                         pub use component::*;
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
                         pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🩹️patch-snapshot/🦀️.rs"]
+                        pub mod patch_snapshot;
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/📸️set-snapshot/🦀️.rs"]
                         pub mod set_snapshot;
                         #[path = "."]
@@ -3612,6 +3643,8 @@ pub mod standards {
                         pub use component::*;
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
                         pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/🩹️patch-snapshot/🦀️.rs"]
+                        pub mod patch_snapshot;
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/📸️set-snapshot/🦀️.rs"]
                         pub mod set_snapshot;
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
@@ -3763,6 +3796,8 @@ pub mod standards {
                         pub use component::*;
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
                         pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/🩹️patch-snapshot/🦀️.rs"]
+                        pub mod patch_snapshot;
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/📸️set-snapshot/🦀️.rs"]
                         pub mod set_snapshot;
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
@@ -3938,6 +3973,8 @@ pub mod standards {
                         pub use component::*;
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
                         pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🩹️patch-snapshot/🦀️.rs"]
+                        pub mod patch_snapshot;
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/📸️set-snapshot/🦀️.rs"]
                         pub mod set_snapshot;
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
@@ -4052,6 +4089,76 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                         }
+                        #[path = "."]
+                        pub mod drag_nodes {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/✋️drag-nodes/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/✋️drag-nodes/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/✋️drag-nodes/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod set_node_property {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🎛️set-node-property/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🎛️set-node-property/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🎛️set-node-property/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod resize_node {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/📐resize-node/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/📐resize-node/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/📐resize-node/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod rename_node {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🏷️rename-node/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🏷️rename-node/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🏷️rename-node/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod set_edge_property {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🎚️set-edge-property/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🎚️set-edge-property/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🎚️set-edge-property/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod add_edge_property {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/➕add-edge-property/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/➕add-edge-property/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/➕add-edge-property/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod remove_edge_property {
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/➖remove-edge-property/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/➖remove-edge-property/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/➖remove-edge-property/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
                     }
                 }
                 #[path = "."]
@@ -4116,6 +4223,8 @@ pub mod standards {
                         pub use component::*;
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
                         pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/🩹️patch-snapshot/🦀️.rs"]
+                        pub mod patch_snapshot;
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/📸️set-snapshot/🦀️.rs"]
                         pub mod set_snapshot;
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
@@ -4274,6 +4383,8 @@ pub mod standards {
                         pub use component::*;
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
                         pub mod binary;
+                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🩹️patch-snapshot/🦀️.rs"]
+                        pub mod patch_snapshot;
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/📸️set-snapshot/🦀️.rs"]
                         pub mod set_snapshot;
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]

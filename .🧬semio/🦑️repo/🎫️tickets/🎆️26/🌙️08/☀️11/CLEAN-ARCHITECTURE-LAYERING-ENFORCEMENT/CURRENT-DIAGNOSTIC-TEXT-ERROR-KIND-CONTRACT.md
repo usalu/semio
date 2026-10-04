@@ -1,0 +1,20 @@
+# Mandatory TextError Refusal Kind Contract
+
+Root authorized the existing TextError to carry mandatory owned ValueRefusalKind. No kind default, legacy constructor, implicit ValueError conversion or implicit span is permitted. `new(kind,message,span)` and `expected(kind,message,span,expected)` construct exact authority; `from_value_error(error,span)` retains kind and the complete dotted message. `from_diagnostic(kind,diagnostic)` and `Diagnostic.into_text_error(kind)` require an explicit caller decision. Code and severity do not classify kind.
+
+The ticket-only corpus has 32 positive rows (eight kinds across new, expected, fromValueError and fromDiagnostic), four malformed wire inputs and four explicit existing Limits authorities. Every kind uses the same misleading cancellation prose. The controlled TextError schema requires kind through the canonical Value refusal schema. Existing accepted TextError fixtures require explicit kind. Limits bytes use ownershipLimit; depth uses depthLimit; token and node budgets use workLimit.
+
+The native law will exercise actual constructors, controlled round trips, Diagnostic conversion with misleading code and severity, malformed wire inputs and actual Limits failures. TypeScript will provide an owned TextError/span implementation with the same kind/message/wire/display contract and actual fromValueError retention. Ajv and SQLite independently validate output. This does not claim TypeScript already owns every Rust Diagnostic method or a complete controlled Diagnostic codec.
+
+High owns actual Rust caller/literal bindings and source-positioned Record/Pack boundaries. The control scope returns ValueError while the parser returns its span-carrying TextError as an inner result; only the actual source boundary converts the outer error with its actual span. There is no implicit From<ValueError> for TextError.
+
+All schema/test proposals remain ticket-local while core208 and Record201 are held. Test-only mount and genuine whole Diagnostic missing-kind compiler RED must precede TextError production mutation. Schema, TypeScript, controlled codecs, caller fixtures and native proof will be admitted together.
+
+
+Independent strict Ajv and SQLite authored-corpus oracle executed 2026-10-02T23:44:15.329Z:32 display projections,4 malformed wire laws and4 limit row schemas GREEN. This is fixture validation only; TextError production API remains unchanged and new owner/native/portable tests are unmounted. [Receipt](🗑️generated/value-refusal/text-error-independent-fixture-oracle.json).
+
+Direct kind ownership is settled: no Diagnostic forwarding reexport; all callers name the actual Value-owned identity. High provider census found 97 actual Cargo owners already declare Value. Complete original 12-source capture with 9 original native names and all new-input absences is retained in [full before report](CURRENT-DIAGNOSTIC-TEXT-ERROR-FULL-BEFORE.md). Package route and schema oracle proposals are ticket-only.
+
+Production proposals now exist only in the ticket for Diagnostic root, closed controlled encode/decode, and retirement. Kind decoding matches the schema identity, never display prose; scalar control steps are charged. Retirement ignores the copy-only enum and retains the original bounded owned fields. Original 39-case corpus keeps its complete messages/spans with explicit invalidValue authored at its existing text syntax cases. The exact four Limits constructor sites have individually authored kinds. Existing unchecked trait methods remain a declared staging boundary, carrying kind until the global Value trait retirement. FaultFrom for TextError still projects into the older Fault transport whose schema has no typed refusal authority; this remains a declared incomplete transport boundary.
+
+The actual registered portable test-only route is now mounted and executed RED with precisely one missing canonical owner TS2307. Native holds the fresh finite213 source epoch to establish whole Diagnostic missing-kind RED. Production Rust/TS implementations remain unmounted; the forthcoming production Diagnostic docstring names explicit authority rather than describing a historical API.

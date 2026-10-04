@@ -38,7 +38,7 @@ use semio_repo_test_host::Json;
 /// production-side `kinds_const_matches_enum_variants_in_declaration_order` proves enum, constant
 /// and manifest never drift apart. Declared here rather than in the case adapter so the adapter,
 /// this module's own law tests and the manifest all read ONE list.
-pub const KINDS: &[&str] = &["set-snapshot", "insert-block", "remove-block", "set-block-content", "set-run-text", "replace-xml-node", "set-run-formatting", "insert-style", "remove-style", "set-style-name", "set-style-based-on", "set-part", "remove-part"];
+pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "insert-block", "remove-block", "set-block-content", "set-run-text", "replace-xml-node", "set-run-formatting", "insert-style", "remove-style", "set-style-name", "set-style-based-on", "set-part", "remove-part"];
 //#endregion 🔖️Vocabulary
 
 #[cfg(feature = "oracles")]
@@ -1162,14 +1162,23 @@ mod oracles {
 
     //#region 🔖️Routing
     pub fn apply_mutation(input: &[u8], kind: &str, params: &Json) -> Result<Vec<u8>, String> {
+        if kind == "patch-snapshot" {
+            let patched = semio_s_plugin_stdio_document_test_oracle::ooxml::patched_xml_parts(input, semio_s_plugin_stdio_document_test_oracle::ooxml::XmlPartsShape::Retained, params.get("patch").ok_or("patch-snapshot carries no patch")?)?;
+            return write_package(&read_package(&patched)?);
+        }
         let mut pkg = read_package(input)?;
         apply_kind(&mut pkg, kind, params)?;
         write_package(&pkg)
     }
 
     /// ↩️ Applies `{kind, params}` and then its computed inverse, in sequence, and returns the
-    /// re-serialized result — the caller compares its projection against the ORIGINAL input's own.
+    /// re-serialized result — the caller compares its projection against the ORIGINAL input's own. A `patch-snapshot`'s
+    /// inverse is a whole `set-snapshot` of its base, so its forward result is re-read and the base itself re-written.
     pub fn apply_mutation_inverse(input: &[u8], kind: &str, params: &Json) -> Result<Vec<u8>, String> {
+        if kind == "patch-snapshot" {
+            read_package(&apply_mutation(input, kind, params)?)?;
+            return round_trip(input);
+        }
         let base = read_package(input)?;
         let mut current = apply_mutation(input, kind, params)?;
         for undo in inverse_spec(&base, kind, params)? {

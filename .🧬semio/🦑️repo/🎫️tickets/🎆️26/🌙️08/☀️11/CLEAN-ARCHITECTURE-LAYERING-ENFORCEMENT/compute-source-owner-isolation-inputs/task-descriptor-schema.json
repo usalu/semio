@@ -1,0 +1,44 @@
+{
+  "type": "array",
+  "minItems": 4,
+  "maxItems": 4,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "parent",
+      "root",
+      "command",
+      "source",
+      "target",
+      "nativeDependencies"
+    ],
+    "properties": {
+      "name": {
+        "type": "string",
+        "pattern": "-compute-ownership$"
+      },
+      "parent": {
+        "type": "string"
+      },
+      "root": {
+        "type": "string",
+        "pattern": "/🏛️ownership/🧮️compute$"
+      },
+      "command": {
+        "const": "bun ./📜️script.ts test"
+      },
+      "source": {
+        "const": "./🧪️tests/🟦️.ts"
+      },
+      "target": {
+        "const": "test"
+      },
+      "nativeDependencies": {
+        "type": "array",
+        "maxItems": 0
+      }
+    }
+  }
+}

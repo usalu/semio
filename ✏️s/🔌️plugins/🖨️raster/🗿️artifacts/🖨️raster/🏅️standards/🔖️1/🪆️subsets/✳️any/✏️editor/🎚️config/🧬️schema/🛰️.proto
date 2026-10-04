@@ -34,6 +34,7 @@ message RasterConfig {
   string paint_target = 9;
   uint32 mask_value = 10;
   optional RasterPixelSelection pixel_selection = 11;
+  uint32 fill_tolerance = 12;
   // @state config
 }
 

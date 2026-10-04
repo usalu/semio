@@ -1,0 +1,13 @@
+# Immutable Parent Borrowed Read Revision
+
+The held seven-path revision resolves the conflict between an immutable authentic Store parent and mutable hidden child binding. `ArtifactChild<S>` retains only its declared literal metadata and phantom declared type. It has no `Any`, local scene, embedded read owner or implicit snapshot accessor. Exact child content is obtained explicitly from the captured document/view/context.
+
+`ArtifactChildRead` borrows the Kernel-issued captured entry for the frame lifetime. The frame retains the actual Store read lease. A read cannot become a detached final Arc owner of captured metadata, cannot outlive its frame borrow, and does not clone a child Snapshot or a parent Snapshot. Exact-S construction still checks the actual retained registry payload type, and all full logical/addressed/parent identity checks remain. Owned child edits and inverse/publication still need their actual separately owned domain authority.
+
+Declared child admission is immutable. Option and Vec fields traverse under the same source, and derive-generated admission visits each declared field by reference. The source resolves and checks the exact S against the captured entry under its existing caller control; it stores no materialized state in the parent. The complete typed field roster and nested handwritten Jack/WFC declarations still need individual caller joins.
+
+Capsule: `📥️inputs/global-child-immutable-parent-borrowed-read-and-admission-held-pairs.json`. Seven emit-only parses exited zero in `🗑️generated/global-child-immutable-parent-borrowed-read-and-admission-held-parser.json`. No production was mounted. The older mutable binding/owned-read capsules remain retained historical inputs and must not be mixed into this revision. The current merged 47-region host capsule has not yet been fully rebased to this revision.
+
+This changes read ownership, so actual Rust lifetime/trait compilation and the unchanged full-domain owning laws are mandatory. Existing Rewriting12 (11 passes, one genuine command materialization failure), complete existing-registry lifetime law, and two newly mounted default/override laws remain the behavioral gates. No Source or parser result is presented as lifetime proof.
+
+Remaining atomic joins: all Root/document/context capture return lifetimes; every implicit snapshot/local-owner/genesis consumer; complete nested declarations; edited-child and inverse publication; retained emission failure owners; host-issued fixture contexts; and complete captured root/member retirement. Arc and page scaffold physical backing is still unproved.

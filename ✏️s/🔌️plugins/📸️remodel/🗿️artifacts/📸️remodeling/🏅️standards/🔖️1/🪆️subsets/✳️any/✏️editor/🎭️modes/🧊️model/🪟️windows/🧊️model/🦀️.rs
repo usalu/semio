@@ -185,7 +185,7 @@ pub fn render(scene: &RemodelingSnapshot, config: &RemodelingModelWindowConfig) 
     // `InteractionView`, so this scene payload can no longer embed a live selection; every
     // not-yet-migrated `world3d_selection_json` call site in this repo already passes an empty
     // selection for the same reason.
-    let camera_json = dsl::json::to_json_string(&dsl::ToValue::to_value(&config.camera));
+    let camera_json = semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&config.camera));
     let mut world_scene = world3d_scene(camera_json, world_meshes_json(scene), world_instances_json(config), world3d_selection_json("rectangle", &[], None), &WorldSunConfig::default());
     world_scene.points_json = world_points_json(scene, config);
     semio_framework_plugin::scene_surface(REMODELING_PLAY_SURFACE_MAIN, ContractSurfaceKind::World3d, &world_scene)

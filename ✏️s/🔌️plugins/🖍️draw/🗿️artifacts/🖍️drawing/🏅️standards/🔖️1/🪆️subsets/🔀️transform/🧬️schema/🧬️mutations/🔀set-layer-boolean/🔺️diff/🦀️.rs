@@ -8,7 +8,7 @@ pub fn diff(payload: &super::mutation::SetLayerBooleanOperation, base: &DrawingS
     match find_drawing_layer(base, &payload.layer_id) {
         None => protocol::MutationOutcome::error("mutation.target-missing", format!("Layer \"{}\" does not exist.", payload.layer_id), [payload.layer_id.clone()]),
         Some(DrawingLayerNode::Boolean(boolean)) if boolean.operation == payload.boolean_operation => {
-            protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Layer \"{}\" boolean operation is already \"{}\".", payload.layer_id, payload.boolean_operation))
+            protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Layer \"{}\" boolean operation is already \"{}\".", payload.layer_id, payload.boolean_operation))
         }
         Some(_) => protocol::MutationOutcome::new(diff_set_boolean_operation(&payload.layer_id, &payload.boolean_operation)),
     }

@@ -143,7 +143,7 @@ mod subject {
     /// ↩️ Applies `mutation` to `base` and then `PptxStrictMutation::inverse` of it — the vocabulary's own algebra is the law
     /// under test, never a transcription of it.
     fn applied_and_undone(base: PptxSnapshot, mutation: &PptxStrictMutation) -> PptxSnapshot {
-        let undo = mutation_inverse(mutation, &base);
+        let undo = mutation_inverse(mutation, &base).expect("valid retained mutation inverse fixture");
         let mut snapshot = base;
         apply_pptx_strict_mutation(&mut snapshot, mutation);
         for step in &undo {

@@ -6,7 +6,6 @@
 
 use crate::PptxSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a pptx snapshot. One field per named inference under
@@ -20,8 +19,8 @@ pub struct PptxInference {
 }
 
 impl protocol::Inference<PptxSnapshot> for PptxInference {
-    fn infer(snapshot: &PptxSnapshot) -> Self {
-        Self { outline: PptxOutline::compute(snapshot) }
+    fn infer(snapshot: &PptxSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({ Self { outline: PptxOutline::compute(snapshot)? } })
     }
 }
 
@@ -33,17 +32,10 @@ impl protocol::InferenceSpec<PptxSnapshot> for PptxInference {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec { id: "s.stdio.pptx.inference.outline", reads: &["presentation"] }]
+        &[protocol::InferenceFieldSpec { id: "s.stdio.pptx.inference.outline", reads: &["opc","xmlParts"] }]
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::standards::v_ecma_376::subsets::base::schema::PptxBuilder {
-    type Snapshot = PptxSnapshot;
-    type Inference = PptxInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.pptx.inference`'s facet leaves into the OS-wide inference catalog —
@@ -52,7 +44,9 @@ impl ArtifactInferrer for crate::standards::v_ecma_376::subsets::base::schema::P
 pub fn pptx_artifact_inference_descriptor() -> semio_framework_schema_registry::ArtifactInferenceDescriptor {
     semio_framework_schema_registry::ArtifactInferenceDescriptor {
         id: "s.stdio.pptx.inference",
-        inference: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
+        inference: semio_framework_schema_registry::FacetLeaves {
+            rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto")
+        },
     }
 }
 //#endregion 🔖️Descriptor

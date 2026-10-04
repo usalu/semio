@@ -1,11 +1,10 @@
 //! 🔧️ 🔧️ DAG play app commands command — `remove-node`.
 
 use crate::editor::dag::config::{DagConfig, DagConfigMutation};
-use crate::op::DagMutation;
-use crate::DagSnapshot;
+use crate::{DagMutation, DagSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "remove-node")]
 pub struct RemoveNode {
     pub node_id: String,
@@ -15,11 +14,6 @@ pub struct RemoveNode {
 /// prunes any deleted node id via `DagPlayApp::interaction_topology` (ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM), so no config mutation is needed here at all.
 pub fn handle(payload: &RemoveNode, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
-    let document = doc.snapshot;
-    let removes = crate::schema::remove_nodes_operations(document, std::slice::from_ref(&payload.node_id));
-    if removes.is_empty() {
-        Ok(Emit::default())
-    } else {
-        Ok(Emit::mutations(removes))
-    }
+    let leaves = crate::schema::remove_nodes_leaves(&crate::dag_scene(doc)?, std::slice::from_ref(&payload.node_id));
+    Ok(crate::dag_child_emit(doc.snapshot, &leaves))
 }

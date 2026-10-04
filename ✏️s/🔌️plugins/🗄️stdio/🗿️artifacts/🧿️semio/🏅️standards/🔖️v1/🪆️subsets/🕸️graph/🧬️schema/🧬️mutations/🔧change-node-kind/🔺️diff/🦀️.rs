@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeNodeKind, base: &SemioGraphSnapshot) -> proto
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Node \"{}\" does not exist.", payload.id.value), [payload.id.value.clone()]);
     };
     if node.kind == payload.new_kind {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Node \"{}\" kind is already \"{}\".", payload.id.value, payload.new_kind));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Node \"{}\" kind is already \"{}\".", payload.id.value, payload.new_kind));
     }
     let mut nodes = base.nodes.clone();
     let node = nodes.iter_mut().find(|n| n.id == payload.id).expect("checked above");

@@ -17,9 +17,12 @@ impl protocol::MutationKind<SemioKitSnapshot, SemioKitMutation> for UnbindRepres
     fn diff(&self, base: &SemioKitSnapshot) -> protocol::MutationOutcome<<SemioKitMutation as protocol::Mutation<SemioKitSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioKitSnapshot) -> Vec<SemioKitMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &SemioKitSnapshot) -> Result<Vec<SemioKitMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Unbind representation at #{}", self.index), &format!("Bindung der Repräsentation an #{} aufheben", self.index))
     }

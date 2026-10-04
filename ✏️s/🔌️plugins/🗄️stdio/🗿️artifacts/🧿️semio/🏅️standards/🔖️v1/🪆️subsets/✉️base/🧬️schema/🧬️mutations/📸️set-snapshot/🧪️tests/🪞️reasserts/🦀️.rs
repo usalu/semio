@@ -36,7 +36,7 @@ async fn applies_to_committed_after() {
 async fn inverse_restores_before() {
     let mut snapshot = before();
     apply_semio_mutation(&mut snapshot, &mutation());
-    for step in &inverse_semio_mutation(&mutation(), &before()) {
+    for step in &inverse_semio_mutation(&mutation(), &before()).expect("valid retained mutation inverse fixture") {
         apply_semio_mutation(&mut snapshot, step);
     }
     assert_eq!(snapshot, before(), "semio-base/set-snapshot: inverse did not restore the committed before-envelope");
@@ -55,6 +55,6 @@ async fn committed_json_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let produced = <SemioMutation as protocol::Mutation<SemioSnapshot>>::diff(&mutation(), &before());
-    let produced: serde_json::Value = serde_json::from_str(&dsl::json::to_json_string(produced.diff())).expect("produced envelope diff encodes");
+    let produced: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(produced.diff())).expect("produced envelope diff encodes");
     assert_eq!(produced, serde_json::from_str::<serde_json::Value>(DIFF).expect("committed envelope diff decodes"), "semio-base/set-snapshot: produced diff differs from the committed 🔺️diff/🔣️.json");
 }

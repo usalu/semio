@@ -6,9 +6,12 @@ use crate::ProgramMutation;
 use crate::ProgramSnapshot;
 
 /// ↩️ Undo a delete by recreating the captured row. Missing target ⇒ nothing to undo.
-pub fn inverse(payload: &super::DeleteAccessibilityRequirement, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+pub fn inverse(payload: &super::DeleteAccessibilityRequirement, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.accessibility.iter().find(|row| row.header.id == payload.id) {
         Some(existing) => vec![ProgramMutation::CreateAccessibilityRequirement(super::super::create_accessibility_requirement::CreateAccessibilityRequirement { accessibility_requirement: existing.clone() })],
         None => Vec::new(),
     }
+
+    })())
 }

@@ -76,26 +76,26 @@ pub mod derived_composition {
     /// shared by the registered `SubsetValidator` (wire-payload recheck) and this file's own unit
     /// tests (which exercise it directly against hand-built snapshots).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn check_semio_video_invariants(snapshot: &SemioVideoSnapshot) -> Vec<dsl::Diagnostic> {
+    pub fn check_semio_video_invariants(snapshot: &SemioVideoSnapshot) -> Vec<semio_framework_diagnostic::Diagnostic> {
         let mut out = Vec::new();
         for (stream_index, stream) in snapshot.streams.iter().enumerate() {
             if stream.rate.den == 0 {
-                out.push(dsl::Diagnostic::error("stdio.semio_video.rate-zero-denominator", dsl::TextSpan::at(1, 1), format!("stream {stream_index}: rate denominator is 0 (rate.num={})", stream.rate.num)));
+                out.push(semio_framework_diagnostic::Diagnostic::error("stdio.semio_video.rate-zero-denominator", semio_framework_diagnostic::TextSpan::at(1, 1), format!("stream {stream_index}: rate denominator is 0 (rate.num={})", stream.rate.num)));
             }
             if stream.kind == SemioVideoStreamKind::Video && (stream.width == 0 || stream.height == 0) {
-                out.push(dsl::Diagnostic::error("stdio.semio_video.video-stream-zero-dimension", dsl::TextSpan::at(1, 1), format!("stream {stream_index}: kind=Video but width={} height={}", stream.width, stream.height)));
+                out.push(semio_framework_diagnostic::Diagnostic::error("stdio.semio_video.video-stream-zero-dimension", semio_framework_diagnostic::TextSpan::at(1, 1), format!("stream {stream_index}: kind=Video but width={} height={}", stream.width, stream.height)));
             }
             let mut prev_pts: Option<u64> = None;
             for (sample_index, sample) in stream.samples.iter().enumerate() {
                 if let Some(prev) = prev_pts {
                     if sample.pts < prev {
-                        out.push(dsl::Diagnostic {
-                            code: dsl::FaultCode::new("stdio.semio_video.pts-non-monotonic"),
-                            severity: dsl::Severity::Warning,
-                            span: dsl::TextSpan::at(1, 1),
+                        out.push(semio_framework_diagnostic::Diagnostic {
+                            code: semio_framework_diagnostic::FaultCode::new("stdio.semio_video.pts-non-monotonic"),
+                            severity: semio_framework_diagnostic::Severity::Warning,
+                            span: semio_framework_diagnostic::TextSpan::at(1, 1),
                             message: format!("stream {stream_index} sample {sample_index}: pts {} < previous pts {prev} (allowed — decode order may legitimately differ from presentation order)", sample.pts),
                             expected: None,
-                            scope: dsl::FaultScope::default(),
+                            scope: semio_framework_diagnostic::FaultScope::default(),
                         });
                     }
                 }
@@ -107,14 +107,14 @@ pub mod derived_composition {
 
     impl SubsetValidator for SemioVideoValidator {
         const DIALECT: Dialect = DIALECT;
-        async fn validate(payload: &IoPayload) -> Vec<dsl::Diagnostic> {
+        async fn validate(payload: &IoPayload) -> Vec<semio_framework_diagnostic::Diagnostic> {
             let decoded = match payload {
                 IoPayload::Binary(bytes) => <SemioVideoSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
                 IoPayload::Text(text) => <SemioVideoSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
             };
             match decoded {
                 Some(snapshot) => check_semio_video_invariants(&snapshot),
-                None => vec![dsl::Diagnostic::error("stdio.semio_video.validate-decode-failed", dsl::TextSpan::at(1, 1), "SemioVideoValidator: payload did not decode as a SemioVideoSnapshot".to_string())],
+                None => vec![semio_framework_diagnostic::Diagnostic::error("stdio.semio_video.validate-decode-failed", semio_framework_diagnostic::TextSpan::at(1, 1), "SemioVideoValidator: payload did not decode as a SemioVideoSnapshot".to_string())],
             }
         }
     }

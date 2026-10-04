@@ -1,7 +1,7 @@
 use super::super::{ChangedNodeOperatorKind, DagDelta, DagDiff, DagMutation, DagSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "change-node-operator-kind")]
@@ -18,9 +18,12 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for ChangeNodeOperatorKind
         }
         protocol::MutationOutcome::new(DagDiff::from(DagDelta { changed_node_operator_kind: Some(ChangedNodeOperatorKind { id: self.id.clone(), new_operator_kind: self.new_operator_kind.clone() }), ..Default::default() }))
     }
-    fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {
+    fn inverse(&self, base: &DagSnapshot) -> Result<Vec<DagMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         base.nodes.iter().find(|node| node.id == self.id).map(|node| vec![DagMutation::ChangeNodeOperatorKind(Self { id: self.id.clone(), new_operator_kind: node.operator_kind.clone() })]).unwrap_or_default()
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change node operator kind {}", self.id), &format!("Knotenoperatorart {} ändern", self.id))
     }

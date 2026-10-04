@@ -19,9 +19,12 @@ impl protocol::MutationKind<SvgSnapshot, SvgBasicMutation> for SetViewBox {
     fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<<SvgBasicMutation as Mutation<SvgSnapshot>>::Diff> {
         agg_diff(&SvgBasicMutation::SetViewBox(self.clone()), base)
     }
-    fn inverse(&self, base: &SvgSnapshot) -> Vec<SvgBasicMutation> {
-        agg_inverse(&SvgBasicMutation::SetViewBox(self.clone()), base)
-    }
+    fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<SvgBasicMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&SvgBasicMutation::SetViewBox(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set view box", "ViewBox setzen")
     }

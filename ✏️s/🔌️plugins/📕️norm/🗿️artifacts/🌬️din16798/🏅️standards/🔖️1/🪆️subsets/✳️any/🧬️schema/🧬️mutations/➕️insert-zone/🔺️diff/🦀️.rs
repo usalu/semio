@@ -16,5 +16,5 @@ pub fn diff(payload: &InsertZone, base: &Din16798Snapshot) -> protocol::Mutation
     if index == payload.index {
         return outcome;
     }
-    outcome.warn("mutation.clamped", format!("Position {} is past the end of the zone list; inserted at {index}.", payload.index))
+    outcome.warning("mutation.clamped", format!("Position {} is past the end of the zone list; inserted at {index}.", payload.index))
 }

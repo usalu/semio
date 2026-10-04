@@ -26,6 +26,11 @@ type SemioMaterial {
   baseColor: SemioRgba!
   metallic: Float!
   roughness: Float!
+  baseColorTexture: String
+  metallicRoughnessTexture: String
+  normalTexture: String
+  occlusionTexture: String
+  emissiveTexture: String
 }
 
 type SemioTexture {

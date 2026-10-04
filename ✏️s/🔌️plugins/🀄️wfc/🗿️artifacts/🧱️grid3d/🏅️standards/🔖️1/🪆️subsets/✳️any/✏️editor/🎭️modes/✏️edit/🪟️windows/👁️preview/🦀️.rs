@@ -198,11 +198,11 @@ pub fn status_json(document: &Grid3dSnapshot, satisfiable: bool, instances: &str
     } else {
         "solved"
     };
-    dsl::json::to_string(&dsl::json::object([
-        ("state".to_string(), dsl::json::Value::String(state.to_string())),
-        ("solved".to_string(), dsl::json::Value::from(solved as u64)),
-        ("cells".to_string(), dsl::json::Value::from(cells as u64)),
-        ("seed".to_string(), dsl::json::Value::from(document.seed)),
+    semio_framework_pack_json::to_string(&semio_framework_pack_json::object([
+        ("state".to_string(), semio_framework_pack_json::Value::String(state.to_string())),
+        ("solved".to_string(), semio_framework_pack_json::Value::from(solved as u64)),
+        ("cells".to_string(), semio_framework_pack_json::Value::from(cells as u64)),
+        ("seed".to_string(), semio_framework_pack_json::Value::from(document.seed)),
     ]))
 }
 //#endregion 🔖️Render

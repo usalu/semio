@@ -42,12 +42,12 @@ fn a_drop_payload_keeps_the_native_preview_image() {
     use crate::editor::layout::LayoutPlayApp;
     use semio_framework_plugin::ArtifactEditor;
     let drag = r#"{"kind":"png","artifactRef":"shot","proxyDataUrl":"data:image/png;base64,AA=="}"#;
-    let args = dsl::DslValue::Object(vec![
-        ("dragData".into(), dsl::DslValue::String(drag.into())),
-        ("x".into(), dsl::DslValue::Number(dsl::Number::Float(12.0))),
-        ("y".into(), dsl::DslValue::Number(dsl::Number::Float(24.0))),
-        ("width".into(), dsl::DslValue::Number(dsl::Number::Float(800.0))),
-        ("height".into(), dsl::DslValue::Number(dsl::Number::Float(600.0))),
+    let args = semio_framework_value::DslValue::Object(vec![
+        ("dragData".into(), semio_framework_value::DslValue::String(drag.into())),
+        ("x".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(12.0))),
+        ("y".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(24.0))),
+        ("width".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(800.0))),
+        ("height".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(600.0))),
     ]);
     let command = LayoutPlayApp::command_from_action("canvasDrop", Some(&args)).expect("bridge");
     let crate::editor::layout::LayoutCommand::CanvasDrop(payload) = command else { panic!("drop") };

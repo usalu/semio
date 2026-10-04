@@ -20,8 +20,8 @@ fn laws()->serde_json::Value{serde_json::from_str(include_str!("../../🧫️fix
 fn numeric_semantics(value:serde_json::Value)->serde_json::Value{match value{serde_json::Value::Number(value)=>serde_json::Value::Number(serde_json::Number::from_f64(value.as_f64().unwrap()).unwrap()),serde_json::Value::Array(values)=>serde_json::Value::Array(values.into_iter().map(numeric_semantics).collect()),serde_json::Value::Object(values)=>serde_json::Value::Object(values.into_iter().map(|(key,value)|(key,numeric_semantics(value))).collect()),value=>value}}
 #[test]
 fn sqlite_semantic_run_authored_neutral_json_schema_matches_the_native_public_value_bridge(){
- let fixture=laws();let expected=source();let actual:RunArtifact=store::json::from_json_str(&fixture["snapshot"].to_string()).unwrap();assert_eq!(actual,expected);
- let json:serde_json::Value=serde_json::from_str(&store::json::to_json_string(&actual)).unwrap();assert!(json.get("workflow_ref").is_none());assert_eq!(numeric_semantics(json),numeric_semantics(fixture["snapshot"].clone()));
+ let fixture=laws();let expected=source();let actual:RunArtifact=semio_framework_pack_json::from_json_str(&fixture["snapshot"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();assert_eq!(actual,expected);
+ let json:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&actual)).unwrap();assert!(json.get("workflow_ref").is_none());assert_eq!(numeric_semantics(json),numeric_semantics(fixture["snapshot"].clone()));
 }
 fn database(value:&RunArtifact)->SqliteDatabase{value.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap()}
 fn restore(value:&SqliteDatabase)->RunArtifact{RunArtifact::from_sqlite_database(value,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap()}
@@ -40,7 +40,7 @@ fn sqlite_semantic_run_raw_duration_words_reach_both_erased_native_outputs(){
 }
 #[test]
 fn sqlite_semantic_run_independent_malformed_edits_refuse_all_declared_relationships(){
- let bytes=file(&source());let script=r#"import{Database}from'bun:sqlite';const input=JSON.parse(await Bun.stdin.text());const results=[];for(const sql of input.sql){const db=Database.deserialize(new Uint8Array(input.bytes));db.run('PRAGMA ignore_check_constraints=ON');db.run(sql);results.push(Array.from(db.serialize()));db.close()}await Bun.write(Bun.stdout,JSON.stringify(results));"#;let fixture=laws();let edited:Vec<Vec<u8>>=serde_json::from_slice(&oracle(script,serde_json::json!({"bytes":bytes,"sql":fixture["malformedSql"]}).to_string().as_bytes())).unwrap();assert_eq!(edited.len(),18);for(sql,bytes)in fixture["malformedSql"].as_array().unwrap().iter().zip(edited){assert!(import_sqlite_database(&bytes,SqliteDatabaseLimits::default(),&mut |_|true).map_err(|e|e.to_string()).and_then(|d|RunArtifact::from_sqlite_database(&d,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()))).is_err(),"{sql}")}
+ let bytes=file(&source());let script=r#"import{Database}from'bun:sqlite';const input=JSON.parse(await Bun.stdin.text());const results=[];for(const sql of input.sql){const db=Database.deserialize(new Uint8Array(input.bytes));db.run('PRAGMA ignore_check_constraints=ON');db.run(sql);results.push(Array.from(db.serialize()));db.close()}await Bun.write(Bun.stdout,JSON.stringify(results));"#;let fixture=laws();let edited:Vec<Vec<u8>>=serde_json::from_slice(&oracle(script,serde_json::json!({"bytes":bytes,"sql":fixture["malformedSql"]}).to_string().as_bytes())).unwrap();assert_eq!(edited.len(),18);for(sql,bytes)in fixture["malformedSql"].as_array().unwrap().iter().zip(edited){assert!(import_sqlite_database(&bytes,SqliteDatabaseLimits::default(),&mut |_|true).and_then(|d|RunArtifact::from_sqlite_database(&d,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()))).is_err(),"{sql}")}
 }
 #[test]
 fn sqlite_semantic_run_semantic_limits_admit_exact_rows_and_refuse_tiny_owned_native_frontiers(){
@@ -54,3 +54,5 @@ fn sqlite_semantic_run_long_literal_unicode_cancellation_exposes_interior_owned_
 async fn sqlite_semantic_run_imperative_registration_routes_actual_queryable_files(){
  let codec=store::ArtifactCodec::bare::<RunArtifact,RunMutation>(S_RUN_SCHEMA);store::io::register_native_document_codec(store::io_schema::Dialect{artifact_kind:"os.run",standard:store::io_schema::StandardId("1"),subset:store::io_schema::SubsetId("*")},codec).unwrap();let expected=source();for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let bytes=store::io::io_mechanism::io_export_sqlite_snapshot(&dialect(),&expected,encoding,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value;assert!(bytes.starts_with(b"SQLite format 3\0"));assert_eq!(store::io::io_mechanism::io_import_sqlite_snapshot::<RunArtifact>(&dialect(),&bytes,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value,expected);}
 }
+#[path = "💰️backing/🦀️.rs"]
+mod owned_requests;

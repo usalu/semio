@@ -15,33 +15,34 @@ use crate::app::{
 use crate::ViewModel;
 use protocol::MutationDiff;
 use semio_framework::{action_bus, ActionKind, Fault, IconName, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolOperationSpec};
-use semio_framework_value_derive::{FromValue, ToValue};
-use serde::{Deserialize, Serialize};
 use semio_framework_2d::compute::EngineHandles;
 use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, ToValue, Deserialize, FromValue, dsl::DslArtifact)]
-#[dsl(extension = "testkit-dummy")]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_os_kernel::DslArtifact)]
+#[artifact(extension = "testkit-dummy")]
 pub(crate) struct DummySnapshot {
     count: i32,
 }
 
-
 impl store::ArtifactSqliteSnapshot for DummySnapshot {
     const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
-    fn to_sqlite_database(&self, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, String> {
-        use store::sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteValue, SqliteSnapshotPhase};
+    fn to_sqlite_database(&self, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, semio_framework_value::ValueError> {
+        use store::sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteSnapshotPhase, SqliteValue};
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1)?;
-        let mut database = SqliteDatabase::from_schema(Self::SQLITE_SCHEMA).map_err(|error| error.to_string())?;
+        let mut database = SqliteDatabase::from_schema(Self::SQLITE_SCHEMA)?;
         database.table_mut("dummy_state")?.rows.push(SqliteRow { rowid: 1, values: vec![SqliteValue::Integer(1), SqliteValue::Integer(i64::from(self.count))] });
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 1, 1)?;
         Ok(database)
     }
-    fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, String> {
+    fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
         control.checkpoint(store::sqlite_snapshot::SqliteSnapshotPhase::ReconstructSnapshot, 0, 1)?;
         let rows = &database.table("dummy_state")?.rows;
-        if rows.len() != 1 || rows[0].rowid != 1 || rows[0].integer(0)? != 1 { return Err("dummy_state requires one state row".into()); }
-        let snapshot = Self { count: i32::try_from(rows[0].integer(1)?).map_err(|error| error.to_string())? };
+        if rows.len() != 1 || rows[0].rowid != 1 || rows[0].integer(0)? != 1 {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "dummy_state requires one state row"));
+        }
+        let snapshot = Self { count: i32::try_from(rows[0].integer(1)?).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()))? };
         control.checkpoint(store::sqlite_snapshot::SqliteSnapshotPhase::ReconstructSnapshot, 1, 1)?;
         Ok(snapshot)
     }
@@ -56,11 +57,11 @@ impl semio_framework_schema_composition::ArtifactCompositionFields for DummySnap
 /// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack for SDK test double (artifact coincides with snapshot only in tests).
 impl store::ArtifactDsl for DummySnapshot {
     const EXTENSION: &'static str = "testkit-dummy";
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         if text.trim().is_empty() {
             return Ok(Self::default());
         }
-        serde_json::from_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+        serde_json::from_str(text).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
         serde_json::to_string(self).unwrap_or_default()
@@ -74,13 +75,13 @@ impl store::ArtifactPack for DummySnapshot {
     }
 
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()))
+        serde_json::to_vec(self).map_err(|error| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string())))
     }
     fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         if bytes.is_empty() {
             return Ok(Self::default());
         }
-        serde_json::from_slice(bytes).map_err(|error| store::PackError::Schema(error.to_string()))
+        serde_json::from_slice(bytes).map_err(|error| match (u32::try_from(error.line()), u32::try_from(error.column())) { (Ok(line), Ok(column)) => store::PackError::from(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), semio_framework_diagnostic::TextSpan::at(line, column))), _ => store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit, error.to_string())) })
     }
 }
 
@@ -101,30 +102,30 @@ impl MutationDiff<DummySnapshot> for DummyDiff {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_dsl_record_derive::DslEnum)]
 enum DummyCommand {
     #[dsl(key = "increment")]
     Increment,
 }
 
 impl ::protocol::OpText for DummyCommand {
-    fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
-        let variants = <Self as ::dsl::DslVariants>::variants();
+    fn parse_op(line: &str) -> Result<Self, ::semio_framework_diagnostic::TextError> {
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{keyword} ");
             if line == keyword.as_str() || line.starts_with(&probe) {
                 let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                let record = ::dsl::parse(body, &(spec_fn.ordinary)(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline })?;
-                return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = semio_framework_dsl_record::parse(body, &(spec_fn.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: ::semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?;
+                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown operation line '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
     }
     fn print_op(&self) -> String {
-        let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as ::dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        let body = ::dsl::print(&record, &(spec_fn.ordinary)(), ::dsl::JoinMode::Inline);
+        let body = semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline);
         if body.is_empty() {
             keyword
         } else {
@@ -379,7 +380,7 @@ impl ArtifactApp for DummyApp {
         _engines: &EngineHandles,
     ) -> Result<Emit<DummyMutation>, Fault> {
         match command {
-            DummyCommand::Increment => Ok(Emit { artifact_mutations: vec![SetDummyCount { value: doc.snapshot.count + 1 }.into()], description: Some("increment".into()), ..Default::default() }),
+            DummyCommand::Increment => Ok(Emit { artifact_mutations: vec![SetDummyCount { value: doc.snapshot.count + 1 }.into()], ..Default::default() }),
         }
     }
 
@@ -391,14 +392,14 @@ impl ArtifactApp for DummyApp {
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_loads_the_registered_catalogue_without_a_declared_action() {
     let mut app = new_app::<DummyApp>().await;
-    let args = dsl::DslValue::object([("exampleId".to_string(), dsl::DslValue::String("four".to_string()))]);
+    let args = semio_framework_value::DslValue::object([("exampleId".to_string(), semio_framework_value::DslValue::String("four".to_string()))]);
     let result = app.dispatch_action("setActiveExample", Some(&args), &meta("actor")).await.expect("catalogue load");
     let semio_framework::kernel::Effect::LoadDocument { pack, .. } = result.requested_effects.first().expect("load effect") else {
         panic!("expected LoadDocument");
     };
     let loaded = <DummySnapshot as store::ArtifactPack>::decode_pack(pack).expect("pack");
     assert_eq!(loaded, DummySnapshot { count: 4 });
-    let missing = dsl::DslValue::object([("exampleId".to_string(), dsl::DslValue::String("missing".to_string()))]);
+    let missing = semio_framework_value::DslValue::object([("exampleId".to_string(), semio_framework_value::DslValue::String("missing".to_string()))]);
     let refused = app.dispatch_action("setActiveExample", Some(&missing), &meta("actor")).await.expect_err("unknown example");
     assert_eq!(refused.code.0, "app.example.unknown");
     close_registered_fixture_app(&mut app);

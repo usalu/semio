@@ -18,7 +18,7 @@ pub fn diff(payload: &super::ChangeRefrigerationSystemDefrostSchedule, base: &En
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Schedule {} does not exist.", payload.new_defrost_schedule_id.0), [payload.new_defrost_schedule_id.0.to_string()]);
     }
     if existing.defrost_schedule_id == payload.new_defrost_schedule_id {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Refrigeration system {} already carries this schedule reference: {}.", payload.id.0, payload.new_defrost_schedule_id.0));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Refrigeration system {} already carries this schedule reference: {}.", payload.id.0, payload.new_defrost_schedule_id.0));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.refrigeration_systems.iter_mut().find(|item| item.id == payload.id) {

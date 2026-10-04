@@ -22,7 +22,7 @@ pub fn package_descriptor() -> Result<semio_s_artifact_norm_contract::NormArtifa
 
 // #region 🔖️Types
 /// 🏢️ Building use class for DIN V 18599-10 usage profiles / GEG reference area.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub enum UseClass {
     Residential,
@@ -31,7 +31,7 @@ pub enum UseClass {
 }
 
 /// 🏷️ DIN V 18599-10 Nutzungsprofil for a thermal zone (typed; drives hours / outdoor-air defaults).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub enum UsageProfile {
     WFH,
@@ -40,7 +40,7 @@ pub enum UsageProfile {
 }
 
 /// 🏠️ Residential vs non-residential GEG path (H′T Anlage 2 vs mean-U Anlage 3).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub enum BuildingCategory {
     Residential,
@@ -48,7 +48,7 @@ pub enum BuildingCategory {
 }
 
 /// 🧱 Attachment type for GEG Anlage 2 H′T limit table.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub enum Attachment {
     Detached,
@@ -58,7 +58,7 @@ pub enum Attachment {
 }
 
 /// 🧮 Calculation method — detailed monthly balance (-2) or tabular (-12).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub enum CalculationMethod {
     DetailedMonthly,
@@ -66,7 +66,7 @@ pub enum CalculationMethod {
 }
 
 /// 🎛️ Building automation / BACS class (DIN V 18599-11).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub enum AutomationClass {
     A,
@@ -76,7 +76,7 @@ pub enum AutomationClass {
 }
 
 /// 🧱 Opaque / transparent envelope element kind.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub enum ElementKind {
     Wall,
@@ -87,7 +87,7 @@ pub enum ElementKind {
 }
 
 /// 🌡️ Thermal adjacency for transmission weighting factor.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub enum Adjacency {
     Outdoor,
@@ -97,7 +97,7 @@ pub enum Adjacency {
 }
 
 /// 🗺️ Thermal zone with part-10 usage profile and setpoints.
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -116,7 +116,7 @@ pub struct ThermalZone {
 }
 
 /// 🧱 Envelope element (area, U, orientation, g, Fc, adjacency).
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -136,7 +136,7 @@ pub struct EnvelopeElement {
 }
 
 /// 🔥 Heating system efficiencies and carrier (DIN V 18599-5).
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -149,7 +149,7 @@ pub struct HeatingSystem {
 }
 
 /// 🚿 Domestic hot water system (DIN V 18599-8).
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -161,7 +161,7 @@ pub struct DhwSystem {
 }
 
 /// 🌬️ Ventilation with heat recovery (DIN V 18599-6/-7).
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -172,7 +172,7 @@ pub struct VentilationSystem {
 }
 
 /// ❄️ Cooling plant parameters when installed (DIN V 18599-7).
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -182,7 +182,7 @@ pub struct CoolingPlant {
 }
 
 /// ❄️ Cooling / AC — discriminated via optional plant (absent = no cooling system).
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -208,7 +208,7 @@ impl CoolingSystem {
 }
 
 /// 💡 Building-level lighting control (DIN V 18599-4); installed power lives on zones.
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -217,7 +217,7 @@ pub struct LightingSystem {
 }
 
 /// ☀️ On-site renewables / PV (DIN V 18599-9).
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -227,12 +227,9 @@ pub struct Renewables {
     pub solar_thermal_kwh_a: f64,
 }
 
-/// 📐️ Monthly climate data for balancing. Keeps its `dsl::DslRecord` derive — unlike the snapshot's
-/// own storage (now a composed `s.stdio.semio`/`table` child, see `🔖️Composition` below),
-/// `update-climate`'s mutation PAYLOAD still carries a literal `MonthlyClimate` on the wire (the
-/// payload is real data, never a handle — `📓️migration-recipe.md`'s pattern), so this type still
-/// needs its own `DslField` impl for `Din18599MutationDsl`'s `#[dsl(block)]`-nested encoding.
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+/// 📐️ Monthly climate data for balancing (DIN V 18599-10): parent-owned persisted state of the document and the literal
+/// payload of `update-climate`; the composed `climateTable` child is derived from it (see `🔖️Composition`).
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -250,7 +247,7 @@ impl MonthlyClimate {
         }
     }
 
-    /// 🌤️ German reference climate assessed for this family (Potsdam TRY monthly means).
+    /// 🌦️ German reference climate assessed for this family (Potsdam TRY monthly means).
     pub fn german_reference() -> Self {
         Self::potsdam_reference()
     }
@@ -258,22 +255,21 @@ impl MonthlyClimate {
 
 
 //#region 🔖️Composition
-/// 🧩️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM round 2 (orchestrator-dispatched
-/// correction, `norm→C:table` on `din18599.climate`): the inline `MonthlyClimate` (two twelve-month
-/// arrays) is replaced by a fixed composed `s.stdio.semio`/`table` CHILD slot — twelve rows (one per
-/// calendar month), two columns (`thetaEC`/`gHWM2`). The single `update-climate` mutation triad
-/// keeps its exact public payload/wire shape (`MonthlyClimate` travels on the wire as a literal
-/// value, same as before — only the SNAPSHOT's own storage becomes a composed child) — only the
-/// internal diff/inverse implementation is rewired to mint a fresh content-addressed child handle,
-/// mirroring `➗️mathematical`'s/en1990's equivalent pattern.
+/// 🧩️ Design §20.15 model (a): the climate is parent-owned persisted state (`Din18599Snapshot::climate`); the composed
+/// `s.stdio.semio`/`table` child (`climateTable`, twelve rows — one per calendar month — and the columns `thetaEC`/`gHWM2`)
+/// is a DERIVED content-addressed handle. `update-climate` re-mints the handle together with the climate; the runtime opens
+/// the child from the parent's own state through `genesis_child_pack` (`follow_derivable_children`). No leaf reads child
+/// content, so a decoded, reloaded or remote document folds and evaluates with its own climate.
 //#region 🔖️ChildTypes
 pub type Din18599ClimateChild = store::ArtifactChild<semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot>;
+
+/// 🪆️ Child slot of the derived climate table (the camelCase name of `Din18599Snapshot::climate_table`).
+pub const DIN18599_CLIMATE_TABLE_SLOT: &str = "climateTable";
 //#endregion 🔖️ChildTypes
 
 //#region 🔖️Converters
-/// 🌉 REAL bidirectional converter: `MonthlyClimate`'s two parallel twelve-month arrays <-> `table`
-/// rows — one row per calendar month (index-addressed, month = row index + 1), two columns
-/// (`thetaEC: Float`, `gHWM2: Float`).
+/// 🌉 `MonthlyClimate`'s two parallel twelve-month arrays -> `table` rows: one row per calendar month (month = row index
+/// + 1), two columns (`thetaEC: Float`, `gHWM2: Float`).
 pub fn din18599_climate_table_from_data(climate: &MonthlyClimate) -> semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot {
     use semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
@@ -284,9 +280,8 @@ pub fn din18599_climate_table_from_data(climate: &MonthlyClimate) -> semio_s_art
     }
 }
 
-/// 🌉 Inverse of the converter above — real reconstruction, not a stub. A short/missing row
-/// degrades honestly (`0.0` for the missing month(s)) rather than panicking, since an
-/// externally-composed mismatch is possible in principle.
+/// 🔁️ Inverse of [`din18599_climate_table_from_data`] for a foreign reader of the derived child; a short or non-numeric row
+/// reads `0.0` for the missing month.
 pub fn din18599_climate_data_from_table(table: &semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot) -> MonthlyClimate {
     use semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::SemioTableRow;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
@@ -307,41 +302,27 @@ pub fn din18599_climate_data_from_table(table: &semio_s_artifact_stdio_semio::st
 }
 //#endregion 🔖️Converters
 
-//#region 🔖️WorkingScene
-/// 🌱 Ephemeral representation of one exact DIN 18599 climate child. It is not serialized
-/// and retires with the child owner; equal wire identities never share climate data.
-#[derive(Clone, Debug)]
-pub struct Din18599ClimateWorkingData {
-    pub climate: MonthlyClimate,
+//#region 🌱️DerivedChild
+/// 🏷️ The derived climate table handle: `content_id("din18599-climate", canonical JSON of the climate)`, targeting
+/// `s.stdio.semio@v1/table`. Equal climates name the same child on every replica.
+pub fn din18599_climate_table_child(climate: &MonthlyClimate) -> Din18599ClimateChild {
+    let child_id = store::content_id("din18599-climate", semio_framework_pack_json::to_json_string(climate).as_bytes());
+    let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() } };
+    store::ArtifactChild::new(child_id, target)
 }
 
-fn din18599_climate_scene_id(climate: &MonthlyClimate) -> String {
-    store::content_id("din18599-climate", pack::json::to_json_string(climate).as_bytes())
+/// 🌱️ Initial pack of the derived climate table the snapshot names (`ArtifactApp::genesis_child_pack`); `None` for any
+/// other slot and for a handle that is not the derivation of the snapshot's own climate.
+pub fn genesis_din18599_child_pack(snapshot: &Din18599Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    use store::ArtifactPack;
+    (slot == DIN18599_CLIMATE_TABLE_SLOT && child_id == snapshot.climate_table.child_id && child_id == din18599_climate_table_child(&snapshot.climate).child_id).then(|| din18599_climate_table_from_data(&snapshot.climate).encode_pack())
 }
 
-fn din18599_climate_target(child_id: &str) -> store::os_io::ArtifactRef {
-    store::os_io::ArtifactRef { artifact_id: child_id.into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() } }
+/// 🧬️ Bounded projection of the snapshot's composed child fields for a loaded parent.
+pub fn din18599_child_restore_projection(snapshot: &Din18599Snapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+    store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_framework_plugin::Fault::from(format!("din18599 child projection failed: {error}")))
 }
-
-/// 🏗️ Mints the composed-child handle and transfers the climate into that exact owner.
-pub fn din18599_climate_child_from_data(climate: &MonthlyClimate) -> Din18599ClimateChild {
-    let scene_id = din18599_climate_scene_id(climate);
-    let target = din18599_climate_target(&scene_id);
-    store::ArtifactChild::new(scene_id, target).with_local_owner(std::sync::Arc::new(Din18599ClimateWorkingData { climate: climate.clone() }))
-}
-
-/// 🔎 The live `MonthlyClimate` behind a snapshot's composed child — the single read call site
-/// every energy-balance/compliance/inference/mutation-diff call path in this artifact now uses. A
-/// wire-only child fails soft until its child document is materialized by the host.
-pub fn din18599_climate(snapshot: &Din18599Snapshot) -> MonthlyClimate {
-    snapshot
-        .climate
-        .local_owner::<Din18599ClimateWorkingData>()
-        .map(|data| data.climate.clone())
-        .filter(|climate| climate.g_h_w_m2.iter().any(|g| *g > 0.0))
-        .unwrap_or_else(MonthlyClimate::potsdam_reference)
-}
-//#endregion 🔖️WorkingScene
+//#endregion 🌱️DerivedChild
 //#endregion 🔖️Composition
 
 /// 📋️ Annual energy balancing inputs stored in the persisted snapshot.
@@ -352,10 +333,6 @@ pub type BalancingInputs = Din18599Snapshot;
 /// 🏗 Realistic DIN V 18599 example subjects (compliant + non-compliant).
 pub mod subjects {
     use super::*;
-
-    fn potsdam_climate() -> Din18599ClimateChild {
-        din18599_climate_child_from_data(&MonthlyClimate::potsdam_reference())
-    }
 
     fn base_house(compliant: bool) -> Din18599Snapshot {
         let wall_u = if compliant { 0.20 } else { 0.48 };
@@ -423,7 +400,8 @@ pub mod subjects {
                 control_factor: if compliant { 0.8 } else { 1.0 },
             },
             renewables: Renewables { pv_area_m2: pv, pv_efficiency: 0.18, solar_thermal_kwh_a: if compliant { 1200.0 } else { 0.0 } },
-            climate: potsdam_climate(),
+            climate: MonthlyClimate::potsdam_reference(),
+            climate_table: din18599_climate_table_child(&MonthlyClimate::potsdam_reference()),
         }
     }
 
@@ -559,60 +537,60 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
 /// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring the
 /// `OnceLock`-backed `io_registry::entries()` convention below.
-fn pilot_languages() -> &'static [dsl::LanguageSpec] {
-    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
             vec![
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "din18599.document",
                     extension: Some("din18599"),
-                    role: dsl::LanguageRole::Document,
+                    role: semio_framework_dsl::LanguageRole::Document,
                     grammar: Some(document_dsl::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(document_dsl::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("din18599.document"),
+                    hooks: semio_framework_dsl::passthrough_hooks("din18599.document"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "din18599.op",
                     extension: None,
-                    role: dsl::LanguageRole::Ops,
+                    role: semio_framework_dsl::LanguageRole::Ops,
                     grammar: Some(op::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(op::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("din18599.op"),
+                    hooks: semio_framework_dsl::passthrough_hooks("din18599.op"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "din18599.diff",
                     extension: None,
-                    role: dsl::LanguageRole::Diff,
+                    role: semio_framework_dsl::LanguageRole::Diff,
                     grammar: Some(diff::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
-                    hooks: dsl::passthrough_hooks("din18599.diff"),
+                    hooks: semio_framework_dsl::passthrough_hooks("din18599.diff"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "din18599.pack",
                     extension: None,
-                    role: dsl::LanguageRole::Pack,
+                    role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("din18599.pack"),
+                    hooks: semio_framework_dsl::passthrough_hooks("din18599.pack"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "din18599.spr",
                     extension: None,
-                    role: dsl::LanguageRole::Spr,
+                    role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("din18599.spr"),
+                    hooks: semio_framework_dsl::passthrough_hooks("din18599.spr"),
                 },
             ]
         })

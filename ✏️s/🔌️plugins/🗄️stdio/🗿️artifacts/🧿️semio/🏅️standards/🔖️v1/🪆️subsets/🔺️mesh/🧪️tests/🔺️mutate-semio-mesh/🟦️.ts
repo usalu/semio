@@ -4,7 +4,7 @@
 // #endregion 🧲️Header
 
 /**
- * 🟦️ Independent TypeScript implementation of the `stdio.semio.mesh` carrier and its seventeen-verb
+ * 🟦️ Independent TypeScript implementation of the `stdio.semio.mesh` carrier and its eighteen-verb
  * mutation vocabulary — the differential ORACLE this case is measured against.
  *
  * Ticket 26/08/23/END-TO-END-TESTING-REFACTOR. Two independent producers meet in this file, and each
@@ -36,7 +36,7 @@
  *   The exact field order was DERIVED from that description together with the committed
  *   `📚️examples/🧊️cube` bytes, whose DSL twin pins every field against a readable spelling, and the
  *   derivation is pinned by re-encoding that committed file byte for byte;
- * - the seventeen verbs, their argument lists and their JSON wire form from
+ * - the eighteen verbs, their argument lists and their JSON wire form from
  *   `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`, the committed proto and JSON schema
  *   mirrors, and the committed per-kind `(before, mutation, after)` specification vectors.
  *
@@ -56,7 +56,7 @@ type Uv = { u: number; v: number };
 type Rgba = { r: number; g: number; b: number; a: number };
 type Primitive = { id: string; topology: string; positions: Point3[]; normals: Point3[]; uvs: Uv[]; colors: Rgba[]; indices: number[]; materialId: string | null };
 type Mesh = { id: string; primitives: Primitive[] };
-type Material = { id: string; baseColor: Rgba; metallic: number; roughness: number };
+type Material = { id: string; baseColor: Rgba; metallic: number; roughness: number; baseColorTexture: string | null; metallicRoughnessTexture: string | null; normalTexture: string | null; occlusionTexture: string | null; emissiveTexture: string | null; };
 type Texture = { id: string; mime: string; bytes: number[] };
 type Snapshot = { schema: string; meshes: Mesh[]; materials: Material[]; textures: Texture[] };
 type Mutation = Record<string, Record<string, unknown>>;
@@ -251,12 +251,12 @@ function printMesh(mesh: Mesh): string {
 
 function parseMaterial(text: string): Material {
   const parts = itemsOf(text, "a material");
-  if (parts.length !== 4) throw new Error(`a material carries four leaves, found ${parts.length}`);
-  return { id: textOfHex(parts[0]!), baseColor: parseRgba(parts[1]!), metallic: Math.fround(Number(parts[2])), roughness: Math.fround(Number(parts[3])) };
+  if (parts.length !== 9) throw new Error(`a material carries nine leaves, found ${parts.length}`);
+  return { id: textOfHex(parts[0]!), baseColor: parseRgba(parts[1]!), metallic: Math.fround(Number(parts[2])), roughness: Math.fround(Number(parts[3])), baseColorTexture: parseOptionHex(parts[4]!, "texture"), metallicRoughnessTexture: parseOptionHex(parts[5]!, "texture"), normalTexture: parseOptionHex(parts[6]!, "texture"), occlusionTexture: parseOptionHex(parts[7]!, "texture"), emissiveTexture: parseOptionHex(parts[8]!, "texture") };
 }
 
 function printMaterial(material: Material): string {
-  return `[${hexOfText(material.id)},${printRgba(material.baseColor)},${printF32(material.metallic)},${printF32(material.roughness)}]`;
+  return `[${hexOfText(material.id)},${printRgba(material.baseColor)},${printF32(material.metallic)},${printF32(material.roughness)},${printOptionHex(material.baseColorTexture ?? null)},${printOptionHex(material.metallicRoughnessTexture ?? null)},${printOptionHex(material.normalTexture ?? null)},${printOptionHex(material.occlusionTexture ?? null)},${printOptionHex(material.emissiveTexture ?? null)}]`;
 }
 
 function parseTexture(text: string): Texture {
@@ -365,6 +365,7 @@ class Reader {
   }
 }
 
+function readTextureReference(reader:Reader):string|null{const tag=reader.byte();if(tag===0)return null;if(tag===1)return reader.text();throw Error("invalid material texture reference presence");}
 class Writer {
   private readonly chunks: number[] = [];
 
@@ -463,7 +464,7 @@ export function parsePack(input: Uint8Array): Snapshot {
     meshes.push({ id, primitives });
   }
   const materials: Material[] = [];
-  for (let count = reader.varint(); count > 0; count -= 1) materials.push({ id: reader.text(), baseColor: { r: reader.f32(), g: reader.f32(), b: reader.f32(), a: reader.f32() }, metallic: reader.f32(), roughness: reader.f32() });
+  for (let count = reader.varint(); count > 0; count -= 1) materials.push({ id: reader.text(), baseColor: { r: reader.f32(), g: reader.f32(), b: reader.f32(), a: reader.f32() }, metallic: reader.f32(), roughness: reader.f32(), baseColorTexture: readTextureReference(reader), metallicRoughnessTexture: readTextureReference(reader), normalTexture: readTextureReference(reader), occlusionTexture: readTextureReference(reader), emissiveTexture: readTextureReference(reader) });
   const textures: Texture[] = [];
   for (let count = reader.varint(); count > 0; count -= 1) textures.push({ id: reader.text(), mime: reader.text(), bytes: Array.from(reader.blob()) });
   if (!reader.done) throw new Error(`the pack frame ends ${data.length - reader.offset} bytes before its envelope does`);
@@ -524,6 +525,7 @@ export function packBytes(document: Snapshot): Uint8Array {
     body.f32(material.baseColor.a);
     body.f32(material.metallic);
     body.f32(material.roughness);
+    for(const id of [material.baseColorTexture, material.metallicRoughnessTexture, material.normalTexture, material.occlusionTexture, material.emissiveTexture]){body.byte(id==null?0:1);if(id!=null)body.text(id);}
   }
   body.varint(document.textures.length);
   for (const texture of document.textures) {
@@ -582,6 +584,116 @@ function textureOf(document: Snapshot, id: string, verb: string): Texture {
   return found;
 }
 
+/** 🩹️ One `SnapshotPatch` pointer operation of the vocabulary's `patch-snapshot`, read from RFC 6901 alone. */
+type Patch = { operation: string; path: string; from?: string; value?: unknown; index?: number; key?: string };
+type Container = Record<string, unknown> | unknown[];
+
+function tokensOf(path: string): string[] {
+  if (path === "") return [];
+  if (!path.startsWith("/")) throw new Error(`patch pointer ${path} is not an RFC 6901 pointer`);
+  return path.slice(1).split("/").map((token) => token.replace(/~1/g, "/").replace(/~0/g, "~"));
+}
+
+function located(document: unknown, tokens: string[]): unknown {
+  let node = document;
+  for (const token of tokens) {
+    if (Array.isArray(node) && /^\d+$/.test(token) && Number(token) < node.length) node = node[Number(token)];
+    else if (node !== null && typeof node === "object" && !Array.isArray(node) && Object.hasOwn(node, token)) node = (node as Record<string, unknown>)[token];
+    else throw new Error(`pointer token ${token} is absent`);
+  }
+  return node;
+}
+
+function containerAt(document: unknown, tokens: string[]): Container {
+  const node = located(document, tokens);
+  if (node === null || typeof node !== "object") throw new Error("a patch addresses into a value that is no container");
+  return node as Container;
+}
+
+/** 🔑️ An object rebuilt with `entries` in order, so member order — part of the snapshot — survives an edit. */
+function reordered(target: Record<string, unknown>, entries: [string, unknown][]): void {
+  for (const key of Object.keys(target)) delete target[key];
+  for (const [key, value] of entries) target[key] = value;
+}
+
+function taken(document: unknown, tokens: string[]): unknown {
+  if (tokens.length === 0) throw new Error("a removal addresses the document root");
+  const parent = containerAt(document, tokens.slice(0, -1));
+  const key = tokens[tokens.length - 1]!;
+  if (Array.isArray(parent) && /^\d+$/.test(key) && Number(key) < parent.length) return parent.splice(Number(key), 1)[0];
+  if (!Array.isArray(parent) && Object.hasOwn(parent, key)) {
+    const value = parent[key];
+    reordered(parent, Object.entries(parent).filter(([name]) => name !== key));
+    return value;
+  }
+  throw new Error(`removal target ${key} is absent`);
+}
+
+function inserted(document: unknown, tokens: string[], value: unknown, index: number | undefined): void {
+  if (tokens.length === 0) throw new Error("an insertion addresses the document root");
+  const parent = containerAt(document, tokens.slice(0, -1));
+  const key = tokens[tokens.length - 1]!;
+  if (Array.isArray(parent) && (key === "-" || (/^\d+$/.test(key) && Number(key) <= parent.length))) parent.splice(key === "-" ? parent.length : Number(key), 0, value);
+  else if (!Array.isArray(parent) && !Object.hasOwn(parent, key)) {
+    const entries = Object.entries(parent);
+    entries.splice(index === undefined ? entries.length : Math.min(index, entries.length), 0, [key, value]);
+    reordered(parent, entries);
+  } else throw new Error(`insertion at ${key} needs an absent object member or an array index`);
+}
+
+/** 🩹️ `patch` applied to a clone of `document`: `set`, `insert` (an object member at `index`, an array item at a position or
+ * `-`), `remove`, `move` and `rename`; a pointer the document lacks is an error, and `splice` is outside this oracle. */
+function patchedSnapshot<T>(document: T, patch: Patch): T {
+  const result = clone(document) as unknown;
+  const tokens = tokensOf(patch.path);
+  switch (patch.operation) {
+    case "set": {
+      if (tokens.length === 0) return clone(patch.value) as T;
+      located(result, tokens);
+      const parent = containerAt(result, tokens.slice(0, -1));
+      const key = tokens[tokens.length - 1]!;
+      if (Array.isArray(parent)) parent[Number(key)] = clone(patch.value);
+      else parent[key] = clone(patch.value);
+      return result as T;
+    }
+    case "insert":
+      inserted(result, tokens, clone(patch.value), patch.index);
+      return result as T;
+    case "remove":
+      taken(result, tokens);
+      return result as T;
+    case "move":
+      inserted(result, tokens, taken(result, tokensOf(patch.from ?? "")), patch.index);
+      return result as T;
+    case "rename": {
+      const parent = containerAt(result, tokens.slice(0, -1));
+      const key = tokens[tokens.length - 1]!;
+      if (Array.isArray(parent) || !Object.hasOwn(parent, key) || (patch.key !== key && Object.hasOwn(parent, patch.key!))) throw new Error(`rename of ${key} does not fit its object`);
+      reordered(parent, Object.entries(parent).map(([name, value]) => [name === key ? patch.key! : name, value]));
+      return result as T;
+    }
+    default:
+      throw new Error(`snapshot patch operation ${patch.operation} is outside this oracle`);
+  }
+}
+
+/** ↩️ The exact inverse of one `set`, `insert` or `remove` taken against `document`, the state it applies to. */
+function patchInverse(document: unknown, patch: Patch): Patch {
+  const tokens = tokensOf(patch.path);
+  const parent = tokens.length === 0 ? null : containerAt(document, tokens.slice(0, -1));
+  const key = tokens[tokens.length - 1] ?? "";
+  switch (patch.operation) {
+    case "set":
+      return { operation: "set", path: patch.path, value: clone(located(document, tokens)) };
+    case "insert":
+      return { operation: "remove", path: Array.isArray(parent) && key === "-" ? `${patch.path.slice(0, -1)}${parent.length}` : patch.path };
+    case "remove":
+      return Array.isArray(parent) ? { operation: "insert", path: patch.path, value: clone(located(document, tokens)) } : { operation: "insert", path: patch.path, value: clone(located(document, tokens)), index: Object.keys(parent ?? {}).indexOf(key) };
+    default:
+      throw new Error(`the inverse of a ${patch.operation} patch is outside this oracle`);
+  }
+}
+
 /** 🔑️ An id-keyed pool's `create` arm: replace the member with this id in place, or append it. */
 function upsert<T extends { id: string }>(pool: T[], entry: T): void {
   const at = pool.findIndex((member) => member.id === entry.id);
@@ -602,6 +714,8 @@ export function applyMutation(document: Snapshot, mutation: Mutation): Snapshot 
   const [verb, argument] = verbOf(mutation);
   const result = clone(document);
   switch (verb) {
+    case "PatchSnapshot":
+      return patchedSnapshot(result, argument.patch as Patch);
     case "CreateMesh":
       upsert(result.meshes, clone(argument.mesh as Mesh));
       return result;
@@ -638,7 +752,7 @@ export function applyMutation(document: Snapshot, mutation: Mutation): Snapshot 
       return result;
     case "CreateMaterial": {
       const material = clone(argument.material as Material);
-      upsert(result.materials, { id: material.id, baseColor: { r: Math.fround(material.baseColor.r), g: Math.fround(material.baseColor.g), b: Math.fround(material.baseColor.b), a: Math.fround(material.baseColor.a) }, metallic: Math.fround(material.metallic), roughness: Math.fround(material.roughness) });
+      upsert(result.materials, { ...material, id: material.id, baseColor: { r: Math.fround(material.baseColor.r), g: Math.fround(material.baseColor.g), b: Math.fround(material.baseColor.b), a: Math.fround(material.baseColor.a) }, metallic: Math.fround(material.metallic), roughness: Math.fround(material.roughness), baseColorTexture: material.baseColorTexture ?? null, metallicRoughnessTexture: material.metallicRoughnessTexture ?? null, normalTexture: material.normalTexture ?? null, occlusionTexture: material.occlusionTexture ?? null, emissiveTexture: material.emissiveTexture ?? null });
       return result;
     }
     case "DeleteMaterial":
@@ -661,6 +775,7 @@ export function applyMutation(document: Snapshot, mutation: Mutation): Snapshot 
       return result;
     case "DeleteTexture":
       textureOf(result, argument.id as string, "delete-texture");
+      if(result.materials.some(material=>[material.baseColorTexture,material.metallicRoughnessTexture,material.normalTexture,material.occlusionTexture,material.emissiveTexture].includes(argument.id as string)))throw Error("mutation.target-referenced");
       result.textures = result.textures.filter((texture) => texture.id !== argument.id);
       return result;
     case "ChangeTextureMime":
@@ -677,7 +792,7 @@ export function applyMutation(document: Snapshot, mutation: Mutation): Snapshot 
       return result;
     }
     default:
-      throw new Error(`${verb} is not one of this subset's seventeen declared verbs`);
+      throw new Error(`${verb} is not one of this subset's eighteen declared verbs`);
   }
 }
 
@@ -770,13 +885,13 @@ export function inverseMutation(document: Snapshot, mutation: Mutation): Mutatio
       const previous = document.textures.find((texture) => texture.id === (argument.texture as Texture).id);
       return previous === undefined ? [{ DeleteTexture: { id: (argument.texture as Texture).id } }] : [{ CreateTexture: { texture: clone(previous) } }];
     }
-    case "DeleteTexture":
-      return restorePool(
-        document.textures,
-        argument.id as string,
-        (texture) => ({ CreateTexture: { texture } }),
-        (id) => ({ DeleteTexture: { id } }),
-      );
+    case "DeleteTexture": {
+      const index=document.textures.findIndex(texture=>texture.id===argument.id);
+      if(index<0)throw Error("missing texture");
+      return [{PatchSnapshot:{patch:{operation:"insert",path:`/textures/${index}`,value:clone(document.textures[index])}}}];
+    }
+    case "PatchSnapshot":
+      return [{ PatchSnapshot: { patch: patchInverse(document, argument.patch as Patch) } }];
     case "ChangeTextureMime":
       return [{ ChangeTextureMime: { id: argument.id, new_mime: textureOf(document, argument.id as string, "change-texture-mime").mime } }];
     case "ReplaceTextureBytes":
@@ -789,7 +904,7 @@ export function inverseMutation(document: Snapshot, mutation: Mutation): Mutatio
       return [{ MoveVertex: { mesh_id: argument.mesh_id, primitive_id: argument.primitive_id, vertex_index: index, new_point: clone(point) } }];
     }
     default:
-      throw new Error(`${verb} is not one of this subset's seventeen declared verbs`);
+      throw new Error(`${verb} is not one of this subset's eighteen declared verbs`);
   }
 }
 // #endregion 🧬️Mutations
@@ -849,7 +964,7 @@ export function projectionOf(document: Snapshot): Snapshot {
   return {
     schema: document.schema,
     meshes: document.meshes.map((mesh) => ({ id: mesh.id, primitives: mesh.primitives.map((primitive) => ({ ...clone(primitive), colors: primitive.colors.map(rgba) })) })),
-    materials: document.materials.map((material) => ({ id: material.id, baseColor: rgba(material.baseColor), metallic: Number(printF32(material.metallic)), roughness: Number(printF32(material.roughness)) })),
+    materials: document.materials.map((material) => ({ ...material, id: material.id, baseColor: rgba(material.baseColor), metallic: Number(printF32(material.metallic)), roughness: Number(printF32(material.roughness)) })),
     textures: clone(document.textures),
   };
 }

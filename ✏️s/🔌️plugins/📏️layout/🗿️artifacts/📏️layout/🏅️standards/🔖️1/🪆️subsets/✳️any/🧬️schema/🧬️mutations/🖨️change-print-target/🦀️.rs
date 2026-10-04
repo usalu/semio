@@ -20,9 +20,12 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangePrintTarget {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_change_print_target(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
-        inverse_change_print_target(self, base)
-    }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok({
+        inverse_change_print_target(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&{
         match &self.new_print_target {
@@ -42,14 +45,17 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangePrintTarget {
 //#region 🖨️ChangePrintTarget
 pub fn diff_change_print_target(payload: &ChangePrintTarget, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     if base.print_target == payload.new_print_target {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Print target is already set to that value.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Print target is already set to that value.");
     }
     protocol::MutationOutcome::new(LayoutDiff { print_target: Some(payload.new_print_target.clone()), ..Default::default() })
 }
 //#endregion 🖨️ChangePrintTarget
 
 //#region 🖨️ChangePrintTarget
-pub fn inverse_change_print_target(_payload: &ChangePrintTarget, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_change_print_target(_payload: &ChangePrintTarget, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![LayoutMutation::ChangePrintTarget(ChangePrintTarget { new_print_target: base.print_target.clone() })]
+
+    })())
 }
 //#endregion 🖨️ChangePrintTarget

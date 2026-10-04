@@ -14,6 +14,6 @@ pub fn diff(base: &SemioImageSnapshot, index: usize, frame: SemioImageFrame) -> 
     if clamped == index {
         outcome
     } else {
-        outcome.warn("mutation.clamped", format!("Insert index {index} was past the end; clamped to {clamped}."))
+        outcome.warning("mutation.clamped", format!("Insert index {index} was past the end; clamped to {clamped}."))
     }
 }

@@ -2,6 +2,8 @@
 use super::{PngEditCommand, PngEditor, PngNativeEditCommand};
 use crate::schema::mutations::{PatchPixelsMutation, PngMutation};
 use crate::schema::snapshot::PngSnapshot;
+use crate::io::{png_layout, png_revision, project_png};
+use semio_s_artifact_stdio_contract::editing::raster::{RasterRegion, RasterRegionError, RasterRegionLimits, RasterRegionPlan};
 use semio_framework_job::InteractiveJobCloseStep;
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedWorkCapacity};
 use semio_framework_plugin::ActionArgDef;
@@ -39,14 +41,14 @@ fn fault(code: &'static str, message: impl Into<String>) -> Fault {
     Fault::new(FaultOrigin::App, FaultCode::new(code), message)
 }
 
-fn argument<'a>(args: Option<&'a dsl::DslValue>, name: &str) -> Option<&'a dsl::DslValue> {
-    let Some(dsl::DslValue::Object(fields)) = args else { return None };
+fn argument<'a>(args: Option<&'a semio_framework_value::DslValue>, name: &str) -> Option<&'a semio_framework_value::DslValue> {
+    let Some(semio_framework_value::DslValue::Object(fields)) = args else { return None };
     fields.iter().find(|(key, _)| key == name).map(|(_, value)| value)
 }
 
-fn integer(args: Option<&dsl::DslValue>, name: &'static str, maximum: u64) -> Result<u64, Fault> {
+fn integer(args: Option<&semio_framework_value::DslValue>, name: &'static str, maximum: u64) -> Result<u64, Fault> {
     let value = argument(args, name).ok_or_else(|| fault("stdio.png.pixel-region.missing-argument", format!("Missing {name}")))?;
-    let dsl::DslValue::Number(number) = value else {
+    let semio_framework_value::DslValue::Number(number) = value else {
         return Err(fault("stdio.png.pixel-region.invalid-argument", format!("{name} must be an integer")));
     };
     let value = number.as_u64().ok_or_else(|| fault("stdio.png.pixel-region.invalid-argument", format!("{name} must be a non-negative integer")))?;
@@ -54,7 +56,7 @@ fn integer(args: Option<&dsl::DslValue>, name: &'static str, maximum: u64) -> Re
 }
 
 impl PatchPixelRegion {
-    pub fn from_action(args: Option<&dsl::DslValue>) -> Result<Self, Fault> {
+    pub fn from_action(args: Option<&semio_framework_value::DslValue>) -> Result<Self, Fault> {
         let width = integer(args, "width", u32::MAX.into())?;
         let height = integer(args, "height", u32::MAX.into())?;
         if width == 0 || height == 0 {
@@ -72,93 +74,32 @@ impl PatchPixelRegion {
         })
     }
 
-    fn color(&self) -> [u8; 4] {
-        [self.red, self.green, self.blue, self.alpha]
-    }
-
-    fn validate(&self, snapshot: &PngSnapshot) -> Result<RegionPlan, Fault> {
-        let row_bytes = usize::try_from(snapshot.width).ok().and_then(|width| width.checked_mul(4)).ok_or_else(|| fault("stdio.png.pixel-region.extent-overflow", "PNG row byte count overflows this platform"))?;
-        let expected = row_bytes.checked_mul(snapshot.height as usize).ok_or_else(|| fault("stdio.png.pixel-region.extent-overflow", "PNG raster byte count overflows this platform"))?;
-        if expected != snapshot.pixels.len() {
-            return Err(fault("stdio.png.pixel-region.noncanonical-raster", format!("PNG raster has {} bytes; expected {expected}", snapshot.pixels.len())));
+    fn validate(&self, snapshot: &PngSnapshot) -> Result<RasterRegionPlan, Fault> {
+        let layout = png_layout(snapshot).map_err(|message| fault("stdio.png.pixel-region.invalid-snapshot", message))?;
+        if layout.color_type != crate::schema::snapshot::PngColorType::Rgba || layout.bit_depth != 8 || layout.interlace {
+            return Err(fault("stdio.png.pixel-region.profile-mismatch", "Pixel region painting requires an 8-bit non-interlaced RGBA PNG"));
         }
-        if expected > MAXIMUM_RASTER_BYTES {
-            return Err(fault("stdio.png.pixel-region.raster-too-large", format!("PNG raster exceeds the {MAXIMUM_RASTER_BYTES}-byte RGBA8 interactive editing ceiling (equal to 4096×2160 pixels)")));
-        }
-        let right = self.x.checked_add(self.width).ok_or_else(|| fault("stdio.png.pixel-region.bounds-overflow", "Pixel region x + width overflows"))?;
-        let bottom = self.y.checked_add(self.height).ok_or_else(|| fault("stdio.png.pixel-region.bounds-overflow", "Pixel region y + height overflows"))?;
-        if right > snapshot.width || bottom > snapshot.height {
-            return Err(fault("stdio.png.pixel-region.out-of-bounds", format!("Pixel region {}/{}/{}×{} exceeds image {}×{}", self.x, self.y, self.width, self.height, snapshot.width, snapshot.height)));
-        }
-        let region_row_bytes = self.width as usize * 4;
-        let (kind, patch_count) = if row_bytes <= PATCH_PAYLOAD_BYTES {
-            let rows_per_patch = (PATCH_PAYLOAD_BYTES / row_bytes).max(1);
-            let patch_count = (self.height as usize).div_ceil(rows_per_patch);
-            (RegionPlanKind::Rows { rows_per_patch }, patch_count)
-        } else {
-            let chunks_per_row = region_row_bytes.div_ceil(PATCH_PAYLOAD_BYTES);
-            let patch_count = (self.height as usize).checked_mul(chunks_per_row).ok_or_else(|| fault("stdio.png.pixel-region.patch-count-overflow", "Pixel region patch count overflows"))?;
-            (RegionPlanKind::WideRows { chunks_per_row }, patch_count)
-        };
-        if patch_count == 0 || patch_count > CAPACITY.invertible_items() {
-            return Err(fault("stdio.png.pixel-region.too-many-patches", format!("Pixel region needs {patch_count} patches; maximum is {}", CAPACITY.invertible_items())));
-        }
-        Ok(RegionPlan { row_bytes, region_row_bytes, patch_count, kind })
+        let projection = project_png(&snapshot.bytes).map_err(|message| fault("stdio.png.pixel-region.invalid-snapshot", message))?;
+        RasterRegionPlan::new(layout.width, layout.height, projection.pixels.len(),
+            RasterRegion { x: self.x, y: self.y, width: self.width, height: self.height, color: [self.red, self.green, self.blue, self.alpha] },
+            RasterRegionLimits { maximum_raster_bytes: MAXIMUM_RASTER_BYTES, maximum_patch_bytes: PATCH_PAYLOAD_BYTES, maximum_patches: CAPACITY.invertible_items() }
+        ).map_err(region_fault)
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum RegionPlanKind {
-    Rows { rows_per_patch: usize },
-    WideRows { chunks_per_row: usize },
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-struct RegionPlan {
-    row_bytes: usize,
-    region_row_bytes: usize,
-    patch_count: usize,
-    kind: RegionPlanKind,
-}
-
-impl RegionPlan {
-    fn mutation(&self, command: &PatchPixelRegion, snapshot: &PngSnapshot, ordinal: usize) -> Option<PngMutation> {
-        let color = command.color();
-        let (index, mut pixels) = match self.kind {
-            RegionPlanKind::Rows { rows_per_patch } => {
-                let relative_row = ordinal * rows_per_patch;
-                let rows = rows_per_patch.min(command.height as usize - relative_row);
-                let row = command.y as usize + relative_row;
-                let index = row * self.row_bytes;
-                let mut pixels = snapshot.pixels[index..index + rows * self.row_bytes].to_vec();
-                let left = command.x as usize * 4;
-                for local_row in 0..rows {
-                    let start = local_row * self.row_bytes + left;
-                    for pixel in pixels[start..start + self.region_row_bytes].chunks_exact_mut(4) {
-                        pixel.copy_from_slice(&color);
-                    }
-                }
-                (index, pixels)
-            }
-            RegionPlanKind::WideRows { chunks_per_row } => {
-                let relative_row = ordinal / chunks_per_row;
-                let chunk = ordinal % chunks_per_row;
-                let offset = chunk * PATCH_PAYLOAD_BYTES;
-                let bytes = PATCH_PAYLOAD_BYTES.min(self.region_row_bytes - offset);
-                let index = (command.y as usize + relative_row) * self.row_bytes + command.x as usize * 4 + offset;
-                let mut pixels = vec![0; bytes];
-                for pixel in pixels.chunks_exact_mut(4) {
-                    pixel.copy_from_slice(&color);
-                }
-                (index, pixels)
-            }
-        };
-        let current = &snapshot.pixels[index..index + pixels.len()];
-        if current == pixels {
-            return None;
-        }
-        Some(PngMutation::PatchPixels(PatchPixelsMutation { index: index as u64, remove_count: pixels.len() as u64, pixels: std::mem::take(&mut pixels), move_to: None }))
-    }
+fn region_fault(error: RasterRegionError) -> Fault {
+    let code = match error {
+        RasterRegionError::Empty => "stdio.png.pixel-region.empty",
+        RasterRegionError::InvalidBudget => "stdio.png.pixel-region.invalid-budget",
+        RasterRegionError::ExtentOverflow => "stdio.png.pixel-region.extent-overflow",
+        RasterRegionError::NoncanonicalRaster => "stdio.png.pixel-region.noncanonical-raster",
+        RasterRegionError::RasterTooLarge => "stdio.png.pixel-region.raster-too-large",
+        RasterRegionError::BoundsOverflow => "stdio.png.pixel-region.bounds-overflow",
+        RasterRegionError::OutOfBounds => "stdio.png.pixel-region.out-of-bounds",
+        RasterRegionError::TooManyPatches => "stdio.png.pixel-region.too-many-patches",
+        RasterRegionError::InvalidOrdinal => "stdio.png.pixel-region.invalid-ordinal",
+    };
+    fault(code, format!("Pixel region cannot be applied: {error}"))
 }
 
 fn integer_arg(id: &'static str, en: &'static str, de: &'static str, minimum: f64, maximum: f64, default: u32) -> ActionArgDef {
@@ -191,9 +132,9 @@ pub fn args() -> Vec<ActionArgDef> {
 
 #[derive(Default)]
 pub struct PatchPixelRegionWork {
-    plan: Option<RegionPlan>,
+    plan: Option<RasterRegionPlan>,
+    revision: Option<String>,
     cursor: usize,
-    mutations: Vec<PngMutation>,
     complete: bool,
     closing: bool,
 }
@@ -205,10 +146,10 @@ impl ArtifactCommandWork<EditorApp<PngEditor>> for PatchPixelRegionWork {
 
     fn extent(&self, command: &PngEditCommand, snapshot: &PngSnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<PngEditor>>>) -> Option<usize> {
         let PngEditCommand::Native(PngNativeEditCommand::PatchPixelRegion(command)) = command else { return None };
-        CAPACITY.rows_for_items(command.validate(snapshot).ok()?.patch_count)
+        CAPACITY.rows_for_items(command.validate(snapshot).ok()?.patch_count())
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<PngEditor>>) -> Result<ArtifactCommandWorkStep<EditorApp<PngEditor>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<PngEditor>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<PngEditor>>, Fault> {
         if self.closing || self.complete {
             return Err(fault("stdio.png.pixel-region.work-closed", "Pixel region work is already closed"));
         }
@@ -217,22 +158,27 @@ impl ArtifactCommandWork<EditorApp<PngEditor>> for PatchPixelRegionWork {
         };
         if self.plan.is_none() {
             self.plan = Some(command.validate(input.snapshot)?);
+            self.revision = Some(png_revision(input.snapshot));
             return Ok(ArtifactCommandWorkStep::Progress { stage: "png-pixel-region-prepare", preview: br#"{"en":"Preparing pixel region","de":"Pixelbereich wird vorbereitet"}"# });
         }
         let plan = self.plan.expect("plan was prepared");
-        if self.cursor < plan.patch_count {
-            if let Some(mutation) = plan.mutation(command, input.snapshot, self.cursor) {
-                self.mutations.push(mutation);
-            }
+        if self.cursor < plan.patch_count() {
             self.cursor += 1;
             return Ok(ArtifactCommandWorkStep::Progress { stage: "png-pixel-region-patch", preview: br#"{"en":"Painting pixel region","de":"Pixelbereich wird gemalt"}"# });
         }
         self.complete = true;
-        let mutations = std::mem::take(&mut self.mutations);
-        Ok(ArtifactCommandWorkStep::Complete(Emit {
-            artifact_mutations: mutations,
-            ..Default::default()
-        }))
+        let revision = self.revision.take().expect("revision was prepared");
+        Ok(ArtifactCommandWorkStep::Complete(Emit::mutations(vec![PngMutation::PatchPixels(PatchPixelsMutation {
+            revision,
+            x: command.x,
+            y: command.y,
+            width: command.width,
+            height: command.height,
+            red: command.red,
+            green: command.green,
+            blue: command.blue,
+            alpha: command.alpha,
+        })])))
     }
 
     fn begin_close(&mut self) {
@@ -240,21 +186,14 @@ impl ArtifactCommandWork<EditorApp<PngEditor>> for PatchPixelRegionWork {
     }
 
     fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> InteractiveJobCloseStep {
-        if maximum_items == 0 {
-            return InteractiveJobCloseStep::Blocked;
-        }
-        let released_items = maximum_items.min(self.mutations.len());
-        for _ in 0..released_items {
-            self.mutations.pop();
-        }
-        if !self.mutations.is_empty() {
-            return InteractiveJobCloseStep::Pending { released_items, released_bytes: 0 };
-        }
+        if !self.closing || maximum_items == 0 { return InteractiveJobCloseStep::Blocked; }
         self.plan = None;
+        self.revision = None;
+        self.cursor = 0;
         InteractiveJobCloseStep::Complete
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.plan.is_none() && self.mutations.is_empty()
+        self.closing && self.plan.is_none() && self.revision.is_none() && self.cursor == 0
     }
 }

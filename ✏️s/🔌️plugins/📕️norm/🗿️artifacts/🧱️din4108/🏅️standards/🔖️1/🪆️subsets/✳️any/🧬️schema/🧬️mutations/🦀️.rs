@@ -198,7 +198,7 @@ impl Din4108Mutation {
 mod tests;
 
 pub fn decode_din4108_mutation_json(text: &str) -> Result<Din4108Mutation, String> {
-    pack::json::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 
 pub fn apply_din4108_mutation(base: &Din4108Snapshot, mutation: &Din4108Mutation) -> Result<(Din4108Snapshot, Vec<String>), String> {
@@ -208,8 +208,11 @@ pub fn apply_din4108_mutation(base: &Din4108Snapshot, mutation: &Din4108Mutation
     Ok((applied, messages))
 }
 
-pub fn inverse_din4108_mutation(mutation: &Din4108Mutation, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
-    <Din4108Mutation as protocol::Mutation<Din4108Snapshot>>::inverse(mutation, base)
+pub fn inverse_din4108_mutation(mutation: &Din4108Mutation, base: &Din4108Snapshot) -> Result<Vec<Din4108Mutation>, semio_framework_value::ValueError> {
+    Ok({
+    <Din4108Mutation as protocol::Mutation<Din4108Snapshot>>::inverse(mutation, base)?
+
+    })
 }
 
 #[cfg(test)]

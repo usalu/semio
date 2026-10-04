@@ -21,9 +21,12 @@ impl protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation> for ChangeScript
     fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &Iso16757Snapshot) -> Result<Vec<Iso16757Mutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Update script limits (max-steps={}, max-recursion={}, timeout-ms={})", self.new_max_steps, self.new_max_recursion, self.new_timeout_ms), &format!("Skriptgrenzwerte (Max-Schritte={}, Max-Rekursion={}, Timeout-ms={}) aktualisieren", self.new_max_steps, self.new_max_recursion, self.new_timeout_ms))
     }

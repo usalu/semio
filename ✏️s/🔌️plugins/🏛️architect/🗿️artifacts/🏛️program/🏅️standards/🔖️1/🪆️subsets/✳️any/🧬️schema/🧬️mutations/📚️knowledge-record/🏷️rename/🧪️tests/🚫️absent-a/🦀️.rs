@@ -19,11 +19,11 @@ const ABSENT: &str = include_str!("../../../../../../🧫️fixtures/🧬️muta
 const OUTCOME: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/📚️knowledge-record/🏷️rename/🚫️absent-a/🎯️outcome/🔣️.json");
 
 fn before() -> ProgramSnapshot {
-    dsl::json::from_json_str(BEFORE).expect("rename-knowledge-record/rejects-renaming-absent-knowledge-record-a: before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rename-knowledge-record/rejects-renaming-absent-knowledge-record-a: before snapshot decodes")
 }
 
 fn expected_after() -> ProgramSnapshot {
-    dsl::json::from_json_str(AFTER).expect("rename-knowledge-record/rejects-renaming-absent-knowledge-record-a: after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rename-knowledge-record/rejects-renaming-absent-knowledge-record-a: after snapshot decodes")
 }
 
 fn mutation() -> ProgramMutation {
@@ -43,15 +43,15 @@ async fn rename_knowledge_record_leaves_the_before_snapshot_untouched() {
 #[semio_framework_async_macros::async_test]
 async fn rename_knowledge_record_has_an_empty_inverse() {
     let base = before();
-    assert!(mutation().inverse(&base).is_empty(), "rename-knowledge-record/rejects-renaming-absent-knowledge-record-a: a rejected rename-knowledge-record must record no inverse step");
+    assert!(mutation().inverse(&base).expect("valid retained mutation inverse fixture").is_empty(), "rename-knowledge-record/rejects-renaming-absent-knowledge-record-a: a rejected rename-knowledge-record must record no inverse step");
 }
 
 /// 🔣️ Both committed snapshots and the committed rename-knowledge-record payload are canonical.
 #[semio_framework_async_macros::async_test]
 async fn rename_knowledge_record_committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: ProgramSnapshot = dsl::json::from_json_str(text).expect("rename-knowledge-record/rejects-renaming-absent-knowledge-record-a: snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("rename-knowledge-record/rejects-renaming-absent-knowledge-record-a: snapshot re-encodes");
+        let decoded: ProgramSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rename-knowledge-record/rejects-renaming-absent-knowledge-record-a: snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("rename-knowledge-record/rejects-renaming-absent-knowledge-record-a: snapshot re-encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("rename-knowledge-record/rejects-renaming-absent-knowledge-record-a: snapshot reparses");
         assert_eq!(reencoded, original, "rename-knowledge-record/rejects-renaming-absent-knowledge-record-a: committed {side} snapshot JSON is not canonical");
     }
@@ -67,7 +67,7 @@ async fn rename_knowledge_record_declared_rejection_holds() {
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("rejected"), "rename-knowledge-record/rejects-renaming-absent-knowledge-record-a: this fixture declares a rejected outcome");
     let outcome = mutation().diff(&before());
     let raised =
-        outcome.messages().iter().find(|message| message.level >= protocol::diagnostic::Severity::Error).expect("rename-knowledge-record/rejects-renaming-absent-knowledge-record-a: rename-knowledge-record must raise an Error-level message here");
+        outcome.messages().iter().find(|message| message.level >= semio_framework_diagnostic::Severity::Error).expect("rename-knowledge-record/rejects-renaming-absent-knowledge-record-a: rename-knowledge-record must raise an Error-level message here");
     assert_eq!(raised.code.0, "mutation.target-missing", "rename-knowledge-record/rejects-renaming-absent-knowledge-record-a: rejection code differs from the committed outcome");
     assert_eq!(raised.target, vec!["knowledge-record-a".to_string()], "rename-knowledge-record/rejects-renaming-absent-knowledge-record-a: rejection path differs from the committed outcome");
 }

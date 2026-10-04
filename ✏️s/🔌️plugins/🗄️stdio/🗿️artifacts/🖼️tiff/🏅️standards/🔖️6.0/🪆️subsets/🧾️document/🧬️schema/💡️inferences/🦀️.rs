@@ -20,8 +20,11 @@ pub struct TiffInference {
 }
 
 impl protocol::Inference<TiffSnapshot> for TiffInference {
-    fn infer(snapshot: &TiffSnapshot) -> Self {
+    fn infer(snapshot: &TiffSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { dimensions: compute_tiff_dimensions(snapshot) }
+    
+        })
     }
 }
 
@@ -32,7 +35,9 @@ impl protocol::Inference<TiffSnapshot> for TiffInference {
 /// hand-written `Default` in `📡️spr/🎮️command/🦀️.rs`.
 impl Default for TiffInference {
     fn default() -> Self {
-        <Self as protocol::Inference<TiffSnapshot>>::infer(&TiffSnapshot::default())
+        let snapshot = &TiffSnapshot::default();
+
+        Self { dimensions: compute_tiff_dimensions(snapshot) }
     }
 }
 
@@ -48,15 +53,6 @@ impl protocol::InferenceSpec<TiffSnapshot> for TiffInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 💡️ No `InferredField`s here (a tag lookup is already O(1)) — the default `infer_cached`
-/// passthrough (`ArtifactInferrer::infer_cached`) is exact.
-impl semio_framework_plugin::ArtifactInferrer for crate::standards::v6_0::subsets::document::schema::TiffBuilder {
-    type Snapshot = TiffSnapshot;
-    type Inference = TiffInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.tiff.inference`'s facet leaves into the OS-wide inference catalog — call

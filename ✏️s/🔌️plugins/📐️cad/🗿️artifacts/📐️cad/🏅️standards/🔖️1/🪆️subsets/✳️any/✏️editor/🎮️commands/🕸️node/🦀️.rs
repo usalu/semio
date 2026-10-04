@@ -16,7 +16,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub mod add_node {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "add-node")]
     pub struct AddNode {
         pub kind: String,
@@ -40,7 +40,7 @@ pub mod add_node {
 pub mod rename_node {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "rename-node")]
     pub struct RenameNode {
         pub node_id: String,
@@ -63,7 +63,7 @@ pub mod rename_node {
 pub mod set_node_selection {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "set-node-selection")]
     pub struct SetNodeSelection {
         pub node_ids: Vec<String>,

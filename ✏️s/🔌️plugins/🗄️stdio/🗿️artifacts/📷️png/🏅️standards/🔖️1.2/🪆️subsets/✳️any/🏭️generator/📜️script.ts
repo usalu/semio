@@ -44,27 +44,27 @@ const ORACLE_ID = "png-png-1-2-mutate-reader";
 const ENGINE_FAMILY = "png";
 const ENGINE_VERSION = "0.18.1";
 
-type Recipe = Readonly<{ id: string; directory: string; mutation: string; notes: string }>;
+type Recipe = Readonly<{ id: string; directory: string; mutation?: string; notes: string }>;
 
-/** 🍳️ Mirrors `RECIPE_IDS`/`recipe()` in `🔁️codec/🦀️.rs` verbatim — one entry per declared
- *  `png-1-2-any` kind. All fifteen kinds carry `outcomes: ["applied"]` only in this catalog (no
- *  `no-mutation` baseline and no `rejected` outcome, unlike `avi`), so every recipe is `-applied`. */
+/** 🍳️ Mirrors `RECIPE_IDS`/`recipe()` in `🔁️codec/🦀️.rs` verbatim — one reference pair per chunk-level edit.
+ *  Only a recipe naming a `mutation` witnesses a live `png-1-2-any` kind (`change-gamma`); the rest are reference
+ *  documents for the byte-authoritative vocabulary's inputs. */
 const RECIPES: readonly Recipe[] = [
-  { id: "change-header-applied", directory: "📐️change-header-applied", mutation: "change-header", notes: "Whole-value IHDR replace: width/height change (4x2 -> 6x2), colour type/bit depth/interlace held fixed." },
-  { id: "replace-palette-applied", directory: "🎨️replace-palette-applied", mutation: "replace-palette", notes: "Whole-value PLTE replace over an Indexed base; index bytes (pixels) untouched." },
-  { id: "change-transparency-applied", directory: "👁️change-transparency-applied", mutation: "change-transparency", notes: "tRNS color-key add over an RGB (non-alpha) base." },
+  { id: "change-header-applied", directory: "📐️change-header-applied", notes: "Whole-value IHDR replace: width/height change (4x2 -> 6x2), colour type/bit depth/interlace held fixed." },
+  { id: "replace-palette-applied", directory: "🎨️replace-palette-applied", notes: "Whole-value PLTE replace over an Indexed base; index bytes (pixels) untouched." },
+  { id: "change-transparency-applied", directory: "👁️change-transparency-applied", notes: "tRNS color-key add over an RGB (non-alpha) base." },
   { id: "change-gamma-applied", directory: "🌗️change-gamma-applied", mutation: "change-gamma", notes: "gAMA replace (1/2.2 -> 1.0, scaled x100000)." },
-  { id: "change-chromaticities-applied", directory: "🌈️change-chromaticities-applied", mutation: "change-chromaticities", notes: "cHRM replace (sRGB primaries -> an arbitrary other primary/white-point set)." },
-  { id: "change-srgb-intent-applied", directory: "🖌️change-srgb-intent-applied", mutation: "change-srgb-intent", notes: "sRGB rendering intent replace (Perceptual -> RelativeColorimetric)." },
-  { id: "change-physical-dims-applied", directory: "📏️change-physical-dims-applied", mutation: "change-physical-dims", notes: "pHYs replace (2835x2835 px/m -> 1000x4000, unit Unspecified)." },
-  { id: "change-timestamp-applied", directory: "🕰️change-timestamp-applied", mutation: "change-timestamp", notes: "tIME replace with a FIXED, hand-chosen 7-byte payload — never wall-clock. UNCARRIED: png::Info 0.18.1 has no tIME field." },
-  { id: "change-background-applied", directory: "🖼️change-background-applied", mutation: "change-background", notes: "bKGD replace, written through png::Writer::write_chunk's raw escape hatch (the encoder has no bKGD setter at all)." },
-  { id: "insert-text-chunk-applied", directory: "📥️insert-text-chunk-applied", mutation: "insert-text-chunk", notes: "No tEXt chunk -> one (keyword \"Comment\")." },
-  { id: "remove-text-chunk-applied", directory: "🗑️remove-text-chunk-applied", mutation: "remove-text-chunk", notes: "One tEXt chunk -> none." },
-  { id: "replace-text-chunk-applied", directory: "✏️replace-text-chunk-applied", mutation: "replace-text-chunk", notes: "The one tEXt chunk's text is replaced, keyword held fixed." },
-  { id: "replace-pixels-applied", directory: "🔲️replace-pixels-applied", mutation: "replace-pixels", notes: "Same header, disjoint pixel sample bytes (byte-inverted)." },
-  { id: "insert-unknown-chunk-applied", directory: "📦️insert-unknown-chunk-applied", mutation: "insert-unknown-chunk", notes: "No unrecognised chunk -> one private ancillary chunk (fourcc prVt). UNCARRIED: the decoder skips unrecognised ancillary chunks entirely." },
-  { id: "remove-unknown-chunk-applied", directory: "📤️remove-unknown-chunk-applied", mutation: "remove-unknown-chunk", notes: "One unrecognised chunk -> none. UNCARRIED for the same reason." },
+  { id: "change-chromaticities-applied", directory: "🌈️change-chromaticities-applied", notes: "cHRM replace (sRGB primaries -> an arbitrary other primary/white-point set)." },
+  { id: "change-srgb-intent-applied", directory: "🖌️change-srgb-intent-applied", notes: "sRGB rendering intent replace (Perceptual -> RelativeColorimetric)." },
+  { id: "change-physical-dims-applied", directory: "📏️change-physical-dims-applied", notes: "pHYs replace (2835x2835 px/m -> 1000x4000, unit Unspecified)." },
+  { id: "change-timestamp-applied", directory: "🕰️change-timestamp-applied", notes: "tIME replace with a FIXED, hand-chosen 7-byte payload — never wall-clock. UNCARRIED: png::Info 0.18.1 has no tIME field." },
+  { id: "change-background-applied", directory: "🖼️change-background-applied", notes: "bKGD replace, written through png::Writer::write_chunk's raw escape hatch (the encoder has no bKGD setter at all)." },
+  { id: "insert-text-chunk-applied", directory: "📥️insert-text-chunk-applied", notes: "No tEXt chunk -> one (keyword \"Comment\")." },
+  { id: "remove-text-chunk-applied", directory: "🗑️remove-text-chunk-applied", notes: "One tEXt chunk -> none." },
+  { id: "replace-text-chunk-applied", directory: "✏️replace-text-chunk-applied", notes: "The one tEXt chunk's text is replaced, keyword held fixed." },
+  { id: "replace-pixels-applied", directory: "🔲️replace-pixels-applied", notes: "Same header, disjoint pixel sample bytes (byte-inverted)." },
+  { id: "insert-unknown-chunk-applied", directory: "📦️insert-unknown-chunk-applied", notes: "No unrecognised chunk -> one private ancillary chunk (fourcc prVt). UNCARRIED: the decoder skips unrecognised ancillary chunks entirely." },
+  { id: "remove-unknown-chunk-applied", directory: "📤️remove-unknown-chunk-applied", notes: "One unrecognised chunk -> none. UNCARRIED for the same reason." },
 ];
 //#endregion 🧬️Contract
 
@@ -108,8 +108,7 @@ function generateOne(recipe: Recipe, outDir: string): Record<string, unknown> {
     id: recipe.id,
     class: "third-party-generated",
     target: { artifact: "s.stdio.png", standard: "1.2", subset: "any" },
-    mutation: recipe.mutation,
-    outcome: "applied",
+    ...(recipe.mutation ? { mutation: recipe.mutation, outcome: "applied" } : {}),
     units: { length: "unitless", angle: "degree" },
     files,
     generator: {
@@ -217,8 +216,6 @@ print(kind + ': written')
           id: `chunk-${kind}`,
           class: "third-party-generated",
           target: { artifact: "s.stdio.png", standard: "1.2", subset: "any" },
-          mutation: kind,
-          outcome: "applied",
           units: { length: "unitless", angle: "degree" },
           files,
           provenance: { source: "generated", license: "public-domain (synthetic, no third-party content embedded)" },
@@ -241,7 +238,7 @@ print(kind + ': written')
   for (const recipe of recipes) {
     try {
       manifests.push(generateOne(recipe, outDir));
-      console.error(`[png generator] ${recipe.id} (${recipe.mutation}/applied)`);
+      console.error(`[png generator] ${recipe.id}`);
     } catch (error) {
       // 🧭️A recipe the codec refuses is REPORTED, never dropped — see the avi/mesh/brep generators'
       // own identical rationale.

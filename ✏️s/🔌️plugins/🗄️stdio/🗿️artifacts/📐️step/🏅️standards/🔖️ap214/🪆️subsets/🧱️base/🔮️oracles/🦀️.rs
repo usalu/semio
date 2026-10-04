@@ -96,6 +96,11 @@ mod oracles {
         let index = |key: &str| u64_field(params, key).map(|index| index as usize);
         match kind {
             "set-snapshot" => replace_with_snapshot(exchange, member("snapshot")?),
+            "patch-snapshot" => {
+                let payload = document_snapshot_payload(exchange)?;
+                let patched = semio_repo_test_host::law::patched_snapshot(payload.get("snapshot").ok_or("the reading carries no snapshot")?, member("patch")?)?;
+                replace_with_snapshot(exchange, &patched)
+            }
             "set-file-description" => file_description_record(member("fileDescription")?).map(|record| set_header_record(exchange, record)),
             "set-file-name" => file_name_record(member("fileName")?).map(|record| set_header_record(exchange, record)),
             "set-file-schema" => file_schema_record(member("fileSchema")?).map(|record| set_header_record(exchange, record)),

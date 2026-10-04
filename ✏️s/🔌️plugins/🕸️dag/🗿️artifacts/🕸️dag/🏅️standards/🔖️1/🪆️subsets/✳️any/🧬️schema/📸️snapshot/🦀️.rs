@@ -1,35 +1,12 @@
-//! 🧬️ DAG snapshot schema — artifact-lane fields only.
-//!
-//! Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`: `nodes`/`edges` are gone from this STRUCT —
-//! replaced by a single composed `content: DagContentChild` slot (`s.stdio.semio.graph`). The old
-//! `DagSnapshotDsl`/`DagNodeSpecDsl`/`DagNodeKindDsl` mirror existed only to give the derive engine a
-//! `Box`-wrapped path through `DagNodeSpec.kind`; since that field is now opaque (hidden inside the
-//! composed child, never exposed on this struct), the mirror and its derive are both gone.
-//!
-//! ⚠️ **The WIRE FORMAT still carries the real `nodes`/`edges` data** (JSON-blob-encoded), not just
-//! the opaque handle — matching flow's own `<semio_framework_artifact_flow_flow::FlowHostSnapshot as ArtifactDsl>::parse_dsl(text).map(
-//! Self::from_host_snapshot)` precedent exactly. Reasoning: no `LinkResolver`/child-dispatch seam exists
-//! yet (see `🔖️WorkingScene` in the artifact root), so the exact child's local owner is populated
-//! in-process by whatever call sets the `content` field (a mutation diff, `from_host_snapshot`, …). A
-//! codec that persisted only the bare handle would produce an UNRECOVERABLE snapshot the instant a
-//! fresh process parses it (confirmed by a real test failure during this migration: `default_snapshot
-//! ()` came back with an empty scene on every fresh run, silently vacuous-passing several inverse-law
-//! tests). `parse_dsl`/`decode_pack` therefore mint a fresh self-owned content-addressed child from the
-//! decoded nodes/edges every time (deterministic — same data always re-derives the same handle, so
-//! peers replaying the same bytes converge); `print_dsl`/`encode_pack` read the current owned scene
-//! back out via `dag_working_scene`.
-//!
-//! 🚪️ `impl store::ArtifactDsl`/`impl store::ArtifactPack for DagSnapshot` live in
-//! `🚪️io/📸️snapshot/{📝️text,💾️binary}` and both route through the framework `DagSnapshot` record;
-//! this file keeps only the struct, its pure defaults, and the framework bridge.
-
-use crate::{DagContentChild, DagHostSnapshotEdge, DagNodeSpec};
+//! 🕸️ Persisted DAG marker and its composed `graph` content child handle; the content lives in the child's own store.
+use crate::DagContentChild;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted DAG document snapshot — schema tag plus the composed `graph` content child.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
+#[dsl(id = "dag.dag", layout = "lines")]
 #[artifact_schema(id = "s.dag.dag")]
 pub struct DagSnapshot {
     #[state(artifact)]
@@ -39,20 +16,47 @@ pub struct DagSnapshot {
     pub content: DagContentChild,
 }
 
-impl dsl::FromValue for DagSnapshot {
-    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+impl semio_framework_value::FromValue for DagSnapshot {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         let mut schema = None;
         let mut content = None;
-        for (key, value) in dsl::DslValue::into_object(value)? {
+        for (key, value) in semio_framework_value::DslValue::into_object(value)? {
             match key.as_str() {
-                "schema" if schema.is_none() => schema = Some(dsl::FromValue::from_value(value)?),
-                "content" if content.is_none() => content = Some(dsl::FromValue::from_value(value)?),
-                _ => return Err(dsl::ValueError::new(format!("unknown or duplicate Dag field {key}"))),
+                "schema" if schema.is_none() => schema = Some(semio_framework_value::FromValue::from_value(value)?),
+                "content" if content.is_none() => content = Some(semio_framework_value::FromValue::from_value(value)?),
+                _ => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown or duplicate Dag field {key}"))),
             }
         }
-        let result = Self { schema: schema.ok_or_else(|| dsl::ValueError::new("missing Dag schema"))?, content: content.ok_or_else(|| dsl::ValueError::new("missing Dag content"))? };
-        result.validate().map_err(dsl::ValueError::new)?;
+        let result = Self { schema: schema.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "missing Dag schema"))?, content: content.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "missing Dag content"))? };
+        result.validate().map_err(|message| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message))?;
         Ok(result)
+    }
+    fn from_value_controlled(value: &semio_framework_value::DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
+        let entries = value.object_controlled(control)?;
+        semio_framework_value::DslValue::deny_fields_controlled(entries, &["schema", "content"], control)?;
+        control.charge(std::mem::size_of::<Self>())?;
+        let schema = semio_framework_value::DslValue::field_controlled(entries, "schema", control)?.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "missing Dag schema"))?;
+        let schema = <String as semio_framework_value::FromValue>::from_value_controlled(schema, control)?;
+        let child = semio_framework_value::DslValue::field_controlled(entries, "content", control)?.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "missing Dag content"))?;
+        let child = <DagContentChild as semio_framework_value::FromValue>::from_value_controlled(child, control)?;
+        let result = semio_framework_value::DecodedValue::new(Self { schema, content: child }, Self::retire_decoded);
+        result.get().validate().map_err(|message| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message))?;
+        control.checkpoint()?;
+        Ok(result.take())
+    }
+    fn retire_decoded(self) {
+        let factory = semio_framework_value::retirement::OwnedValueRetirementFactory::<DagContentChild>::default();
+        let mut cursor = store::ArtifactOwnedValueRetirementFactory::retire_owned(&factory, self.content);
+        loop {
+            match cursor.close_step(256, 65536).expect("DAG child closes with its exact owner") {
+                store::SnapshotRetirementStep::Complete => {
+                    assert!(cursor.terminal_is_empty());
+                    break;
+                }
+                store::SnapshotRetirementStep::Pending { .. } => {}
+                store::SnapshotRetirementStep::Blocked => panic!("DAG child retirement blocked"),
+            }
+        }
     }
 }
 
@@ -60,12 +64,13 @@ impl DagSnapshot {
     /// 🪆️ Enforces the document marker and exact owned-child coordinates.
     pub fn validate(&self) -> Result<(), String> {
         use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::child::validate_semio_child_identity;
-        if self.schema != "dag.dag" { return Err("invalid Dag document marker".into()); }
+        if self.schema != "dag.dag" {
+            return Err("invalid Dag document marker".into());
+        }
         validate_semio_child_identity(&self.content.child_id, &self.content.target, "graph")?;
         Ok(())
     }
 }
-
 
 impl Default for DagSnapshot {
     fn default() -> Self {
@@ -75,81 +80,31 @@ impl Default for DagSnapshot {
 
 /// 🌱 Canonical default document used by the play app and examples.
 pub fn default_snapshot() -> DagSnapshot {
-    crate::document_dsl::parse_dsl(crate::examples::demo::PRIMARY_TEXT).expect("bundled dag example DSL must parse")
+    crate::examples::demo::snapshot()
 }
 /// 🫙️ The empty document — schema marker plus an owned `graph` child with no nodes or edges. The
 /// example picker's "no example" selection loads this, so it must satisfy `validate()` exactly the
 /// way `default_snapshot()` does.
 pub fn empty_snapshot() -> DagSnapshot {
-    DagSnapshot { schema: crate::DAG_DOCUMENT_SCHEMA.into(), content: crate::dag_content_child_with_owner(Vec::new(), Vec::new()) }
+    DagSnapshot { schema: crate::DAG_DOCUMENT_SCHEMA.into(), content: crate::dag_content_child_handle(&crate::DagScene::default()) }
 }
 //#endregion 🔖️Snapshot
 
-//#region 🔖️FrameworkBridge
-/// 🌉 `semio_framework_artifact_infinite_dag::DagSnapshot` is the FRAMEWORK's own separate persisted
-/// projection (backs `DagHostSnapshot`/`DagHost`), unrelated to and unaware of this plugin's composed
-/// child — the bridge goes through the working-scene converter, never through `nodes`/`edges` fields
-/// (this struct no longer has any).
-impl From<DagSnapshot> for semio_framework_artifact_infinite_dag::DagSnapshot {
-    fn from(value: DagSnapshot) -> Self {
-        let scene = crate::dag_working_scene(&value);
-        Self { schema: value.schema, nodes: scene.nodes, edges: scene.edges }
-    }
-}
-
-impl From<semio_framework_artifact_infinite_dag::DagSnapshot> for DagSnapshot {
-    fn from(value: semio_framework_artifact_infinite_dag::DagSnapshot) -> Self {
-        let content = crate::dag_content_child_with_owner(value.nodes, value.edges);
-        Self { schema: value.schema, content }
-    }
-}
-
-impl From<&DagSnapshot> for semio_framework_artifact_infinite_dag::DagSnapshot {
-    fn from(value: &DagSnapshot) -> Self {
-        value.clone().into()
-    }
-}
-
-/// 🧾️ Node/edge accessors matching the OLD field-access call-site shape (`document.nodes`), now
-/// reading through the exact child owner. Kept as methods on `DagSnapshot` itself so call sites do
-/// not need to import `dag_working_scene`.
-impl DagSnapshot {
-    pub fn nodes(&self) -> Vec<DagNodeSpec> {
-        crate::dag_working_scene(self).nodes
-    }
-    pub fn edges(&self) -> Vec<DagHostSnapshotEdge> {
-        crate::dag_working_scene(self).edges
-    }
-}
-//#endregion 🔖️FrameworkBridge
 
 //#region 🌉️ExternalCodecBridge
-/// 📤️ Renders a [`DagSnapshot`] as this facet's own camelCase JSON projection — the comparison
-/// surface `🌳️mutate-dag-1`'s scenarios are measured through, and the shape the committed
-/// `../🧫️fixtures/🧬️mutations/<slug>/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️.json`
-/// specification vectors are written in. It carries `content` as a HANDLE, never as a graph, which
-/// is exactly what makes it a usable observability surface here: the handle's `childId` is a digest
-/// of the child's content, so it moves if and only if the working scene moved.
-///
-/// A thin `dsl::json` wrapper (this facet's own first-party `DslValue` JSON codec, used behind
-/// this interface per CLAUDE.md's "external libraries behind an interface" rule).
+/// 📤️ Renders a [`DagSnapshot`] as this facet's own camelCase JSON projection; it carries `content` as a HANDLE, never as a
+/// graph (a thin first-party JSON codec wrapper behind this interface).
 pub fn encode_dag_snapshot_json(snapshot: &DagSnapshot) -> String {
-    dsl::json::to_json_string(snapshot)
+    semio_framework_pack_json::to_json_string(snapshot)
 }
 
-/// 📥️ The inverse of [`encode_dag_snapshot_json`] — decodes those committed specification vectors
-/// into real [`DagSnapshot`] values, so `🌳️mutate-dag-1`'s adapter reads the committed fixture rather
-/// than re-declaring it as a Rust literal beside it. Reaching `serde_json` from that adapter is
-/// impossible: the generated test host links only this crate and `semio-repo-test-host`.
+/// 📥️ The inverse of [`encode_dag_snapshot_json`].
 pub fn decode_dag_snapshot_json(text: &str) -> Result<DagSnapshot, String> {
-    dsl::json::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 
-/// 📝️ Parses `.dag.dsl.semio` text into a [`DagSnapshot`], attaching the working scene to the child
-/// handle it mints — a named, non-async pass-through of this type's own `store::ArtifactDsl` impl,
-/// whose trait and error type are both unnameable outside this crate. This is the only way an
-/// external caller can obtain a dag document whose composed `s.stdio.semio.graph` child actually
-/// resolves, which is what `🌳️mutate-dag-1` needs before any kind can have a visible effect.
+/// 📝️ Parses `.dag.dsl.semio` text into a [`DagSnapshot`] — a named, non-async pass-through of this type's own
+/// `store::ArtifactDsl` impl, whose trait and error type are both unnameable outside this crate.
 pub fn parse_dag_dsl(text: &str) -> Result<DagSnapshot, String> {
     <DagSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
 }
@@ -161,14 +116,11 @@ pub fn print_dag_dsl(snapshot: &DagSnapshot) -> String {
     store::ArtifactDsl::print_dsl(snapshot)
 }
 
-/// 🔎️ The node ids and `source -> target` endpoints the document's composed child currently
-/// resolves to, in scene order — the human-readable half of a divergence message, so a failing
-/// `mutate-<kind>` or `inverse-<kind>` names WHICH node moved rather than only that two content
-/// digests differ.
-pub fn dag_scene_summary(snapshot: &DagSnapshot) -> String {
-    let scene = crate::dag_working_scene(snapshot);
-    let nodes = scene.nodes.iter().map(|node| format!("{}({},{})", node.id, node.x, node.y)).collect::<Vec<_>>().join(" ");
-    let edges = scene.edges.iter().map(|edge| format!("{}:{}->{}", edge.id, edge.source, edge.target)).collect::<Vec<_>>().join(" ");
-    format!("nodes[{nodes}] edges[{edges}]")
-}
 //#endregion 🌉️ExternalCodecBridge
+
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_snapshot_tests;
+
+#[path = "🪶️sqlite/🦀️.rs"]
+mod sqlite;

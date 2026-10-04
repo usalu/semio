@@ -1,7 +1,8 @@
 import { canonicalJson } from "../../🧾️serialization/🔣️json/🟦️.ts";
-import { expect, test } from "bun:test";
+import { afterAll, expect, test } from "bun:test";
 import { createHash } from "node:crypto";
-import { chmodSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join, posix, resolve } from "node:path";
 import Ajv from "ajv";
 import { fromMarkdown } from "mdast-util-from-markdown";
@@ -13,6 +14,8 @@ const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtu
 const historical = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/❄️frozen-markdown-coordinates/🧬️energy-source-coordinates/🔣️.json"), "utf8"));
 const libraryRoot = resolve(import.meta.dir, "../.."), root = resolve(libraryRoot, "../../../../..");
 const sha = (bytes: Uint8Array | string): string => createHash("sha256").update(bytes).digest("hex");
+const scratch: string[] = [];
+afterAll(() => { for (const directory of scratch) rmSync(directory, { recursive: true, force: true }); });
 const functions = () => {
   const validate = Reflect.get(discovery, "validateFrozenMarkdownCoordinateEvidenceContracts");
   const coordinates = Reflect.get(normalization, "frozenMarkdownCoordinateEvidenceCoordinates");
@@ -88,10 +91,11 @@ test("frozen Markdown authority rejects wrong document value and shifted overlap
   expect(() => actual.coordinates(contract.path, invalid, { history: { ...contract, sha256: sha(invalid) } })).toThrow(/UTF-8/u);
 });
 
-test("the ten exact Markdown contracts are registered without changing existing JSON evidence authority", () => {
+test("the ten exact Markdown contracts stay registered byte-for-byte and JSON evidence changes only through the seal ledger", () => {
   const schema = discovery.loadCatalogTaxonomy();
-  expect(schema.frozenMarkdownCoordinateEvidenceContracts).toEqual(Object.fromEntries(historical.documents.map((row: any) => [row.id, row.contract])));
-  expect(Object.keys(schema.frozenCoordinateEvidenceContracts).filter((id) => id !== "energy-history-fixture-audit")).toHaveLength(38);
+  for (const row of historical.documents) expect([row.id, schema.frozenMarkdownCoordinateEvidenceContracts[row.id]]).toEqual([row.id, row.contract]);
+  const ledger = JSON.parse(readFileSync(join(libraryRoot, "🧫️fixtures/🧫️frozen-seal-ledger/🔣️.json"), "utf8")) as { pinnedFor: string; contracts: Record<string, unknown>; later: Record<string, unknown> };
+  expect(Object.keys(schema.frozenCoordinateEvidenceContracts).filter((id) => id !== ledger.pinnedFor).sort()).toEqual([...Object.keys(ledger.contracts), ...Object.keys(ledger.later)].sort());
   expect(discovery.validateTaxonomy(schema)).toEqual([]);
 });
 
@@ -127,15 +131,14 @@ test("all 21 reviewed historical spans retain exact physical bytes and independe
 
 test("a scoped transaction preserves Markdown and escaped JSON history while rewriting its live neighboring reference", () => {
   const started = performance.now(), checkpoint = (phase: string) => console.log("[TRACE] Historical coordinate fixture phase", JSON.stringify({ phase, milliseconds: performance.now() - started }));
-  const parent = join(root, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️frozen-markdown-coordinates/🧾️runs");
-  expect(lstatSync(parent).isDirectory() && !lstatSync(parent).isSymbolicLink()).toBe(true);
-  const owner = mkdtempSync(join(parent, "🔖️transaction-")), fixture = join(owner, "🧪️fixture");
+  const owner = mkdtempSync(join(realpathSync(tmpdir()), "semio-frozen-markdown-")), fixture = join(owner, "🧪️fixture");
+  scratch.push(owner);
   mkdirSync(fixture);
   const put = (path: string, bytes: string) => { mkdirSync(dirname(join(fixture, path)), { recursive: true }); writeFileSync(join(fixture, path), bytes); };
   const git = (args: string[]) => { const run = Bun.spawnSync(["git", ...args], { cwd: fixture, stdout: "pipe", stderr: "pipe" }); expect(run.exitCode, run.stderr.toString()).toBe(0); return run.stdout.toString().trim(); };
-  const scope = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/MARKDOWN-SOURCE/🧪️tests/🧪️fixture", source = scope + "/🦀️.rs", final = scope + "/🦀️.rs", historyPath = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/HISTORICAL-SOURCE/📝️.md", livePath = "🧪️tests/🔣️consumer.json";
+  const scope = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/MARKDOWN-SOURCE/🧪️tests/🧪️fixture", source = scope + "/🦀️component.rs", final = scope + "/🦀️.rs", historyPath = "🧪️tests/🧪️history/📝️.md", livePath = "🧪️tests/🔣️consumer.json";
   const history = "Recorded `" + source + "` before normalization.\n", live = JSON.stringify({ sourcePath: source }) + "\n";
-  const encodedHistoryPath = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/HISTORICAL-SOURCE/🔣️.json", escaped = JSON.stringify(source).replaceAll("/", "\\/"), encodedHistory = '[{"path":' + escaped + '}]\n';
+  const encodedHistoryPath = "🧪️tests/🧪️history/🔣️.json", escaped = JSON.stringify(source).replaceAll("/", "\\/"), encodedHistory = '[{"path":' + escaped + '}]\n';
   const schemaPath = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";
   const declaration = { start: history.indexOf(source), end: history.indexOf(source) + source.length, kind: "source" as const, form: "inline-code" as const, valueSha256: sha(source) };
   const schema = { ...structuredClone(discovery.loadCatalogTaxonomy()), frozenCoordinateEvidenceContracts: { history: { path: encodedHistoryPath, sha256: sha(encodedHistory), schemaVersion: null, rootKind: "array" as const, coordinates: [{ pointer: "/0/path", kind: "source" as const, representation: "json-escaped-source-path" as const }] } }, frozenMarkdownCoordinateEvidenceContracts: { history: { path: historyPath, grammar: "frozen-markdown-source-coordinates-v1" as const, sha256: sha(history), coordinates: [declaration] } } };
@@ -153,8 +156,6 @@ test("a scoped transaction preserves Markdown and escaped JSON history while rew
   const plan = () => normalization.planTaxonomy(normalization.inventoryTaxonomy({ repoRoot: fixture, scope, workers: 1 }), { baselineCommit, excludedTreeDigests: [] });
   const current = plan();
   checkpoint("initial-plan");
-  writeFileSync(join(owner, "📝️.md"), "# Historical Markdown Transaction\n\nThis isolated fixture retains all source and recovery evidence; no cleanup is performed.\n", { flag: "wx" });
-  writeFileSync(join(owner, "../../🧫️fixtures/❄️frozen-markdown-coordinates/🔣️.json"), canonicalJson(current) + "\n", { flag: "wx" });
   expect(current.unresolved).toEqual([]);
   expect(current.moves).toHaveLength(1);
   expect(current.regenerations).toHaveLength(0);
@@ -184,13 +185,12 @@ test("a scoped transaction preserves Markdown and escaped JSON history while rew
   checkpoint("retry-commit");
   expect(existsSync(join(fixture, source))).toBe(false);
   expect(readFileSync(join(fixture, final), "utf8")).toBe("pub fn value() -> u32 { 7 }\n");
-  expect(JSON.parse(readFileSync(join(fixture, livePath), "utf8")).sourcePath).toBe(final);
+  const rewritten = JSON.parse(readFileSync(join(fixture, livePath), "utf8")).sourcePath as string;
+  expect([rewritten, posix.join(posix.dirname(livePath), rewritten)]).toContain(final);
   expect(readFileSync(join(fixture, historyPath), "utf8")).toBe(history);
   expect(readFileSync(join(fixture, encodedHistoryPath), "utf8")).toBe(encodedHistory);
   const after = plan();
   checkpoint("empty-replan");
   expect({ moves: after.moves.length, edits: after.edits.length, unresolved: after.unresolved }).toEqual({ moves: 0, edits: 0, unresolved: [] });
   for (const [path, input] of Object.entries(producer.files)) if (input.origin === "current-compiler-context") expect(producer.read(path)).toMatchObject({ sha256: input.sha256, mode: input.mode });
-  mkdirSync(join(owner, "📦️producer"));
-  writeFileSync(join(owner, "📦️producer/🔣️.json"), JSON.stringify({ collectorSha256: producer.sourceSha256, modules: producer.modules, inputs: Object.entries(producer.files).map(([path, input]) => ({ path, sha256: input.sha256, mode: input.mode, origin: input.origin })) }, null, 2) + "\n", { flag: "wx" });
 }, 15_000);

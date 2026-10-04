@@ -1,34 +1,50 @@
 /** 🎛️ generation3d direct `change-widget-input` payload mirror of `ChangeWidgetInput`, with its closed-schema parser. */
+type Triple = [number, number, number];
+
 export type WidgetInputValue =
   | { type: "number"; value: number }
   | { type: "text"; value: string }
   | { type: "boolean"; value: boolean }
-  | { type: "point"; value: [number, number, number] }
-  | { type: "vector"; value: [number, number, number] };
+  | { type: "point"; value: Triple }
+  | { type: "vector"; value: Triple }
+  | { type: "numberList"; value: number[] }
+  | { type: "textList"; value: string[] }
+  | { type: "booleanList"; value: boolean[] }
+  | { type: "pointList"; value: Triple[] }
+  | { type: "vectorList"; value: Triple[] };
 
 export type ChangeWidgetInput = { id: string; channel: string } & WidgetInputValue;
 
 const finite = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
 
-/** 🔣️ The one typed value the discriminator `type` names, or throws. */
-function parseValue(type: unknown, value: unknown): WidgetInputValue {
+/** 🔣️ One scalar item of the element type `type`, or throws. */
+function parseItem(type: string, value: unknown): unknown {
   switch (type) {
     case "number":
       if (!finite(value)) throw new TypeError("change-widget-input: a number value must be finite");
-      return { type, value };
+      return value;
     case "text":
-      if (typeof value !== "string" || Array.from(value).length > 1048576) throw new TypeError("change-widget-input: a text value is a string of at most 1 MiB");
-      return { type, value };
+      if (typeof value !== "string" || Array.from(value).length > 16777216) throw new TypeError("change-widget-input: a text value is a string of at most 16 MiB");
+      return value;
     case "boolean":
       if (typeof value !== "boolean") throw new TypeError("change-widget-input: a boolean value is true or false");
-      return { type, value };
+      return value;
     case "point":
     case "vector":
       if (!Array.isArray(value) || value.length !== 3 || !value.every(finite)) throw new TypeError(`change-widget-input: a ${type} value is three finite numbers`);
-      return { type, value: [value[0], value[1], value[2]] };
+      return [value[0], value[1], value[2]];
     default:
-      throw new TypeError("change-widget-input: type must be number, text, boolean, point or vector");
+      throw new TypeError("change-widget-input: type must be number, text, boolean, point or vector, or a list of one of them");
   }
+}
+
+/** 🔣️ The one typed value the discriminator `type` names — a scalar, or a list of at most 1024 scalars of one type —
+ * or throws. */
+function parseValue(type: unknown, value: unknown): WidgetInputValue {
+  if (typeof type !== "string") throw new TypeError("change-widget-input: type must be a string");
+  if (!type.endsWith("List")) return { type, value: parseItem(type, value) } as WidgetInputValue;
+  if (!Array.isArray(value) || value.length > 1024) throw new TypeError("change-widget-input: a list value holds at most 1024 items");
+  return { type, value: value.map((item) => parseItem(type.slice(0, -4), item)) } as WidgetInputValue;
 }
 
 /** 🚪️ Parses one `change-widget-input` payload the way its JSON Schema admits it, or throws. */

@@ -1,0 +1,63 @@
+{
+  "cases": [
+    {
+      "op": "scope",
+      "name": "flat-layouts",
+      "expectedRequestedBytes": 57,
+      "operations": [
+        {
+          "op": "allocate",
+          "bytes": 17
+        },
+        {
+          "op": "reallocate",
+          "bytes": 29
+        },
+        {
+          "op": "deallocate"
+        },
+        {
+          "op": "zeroed",
+          "bytes": 11
+        },
+        {
+          "op": "deallocate"
+        }
+      ]
+    },
+    {
+      "op": "scope",
+      "name": "nested-inclusive",
+      "expectedRequestedBytes": 41,
+      "operations": [
+        {
+          "op": "allocate",
+          "bytes": 11
+        },
+        {
+          "op": "deallocate"
+        },
+        {
+          "op": "scope",
+          "name": "nested-child",
+          "expectedRequestedBytes": 30,
+          "operations": [
+            {
+              "op": "allocate",
+              "bytes": 23
+            },
+            {
+              "op": "reallocate",
+              "bytes": 7
+            },
+            {
+              "op": "deallocate"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "unwindProbeBytes": 13,
+  "overflowProbeBytes": 1
+}

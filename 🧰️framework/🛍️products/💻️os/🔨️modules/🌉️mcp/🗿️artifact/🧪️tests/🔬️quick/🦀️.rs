@@ -169,7 +169,7 @@ fn artifact_create_then_open_round_trips_for_real_with_exactly_one_resolvable_pl
 fn artifact_validate_is_a_real_typed_gap_never_a_fabricated_pass() {
     let dir = store::test_support::tempdir().expect("tempdir");
     let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), single_plugin_catalog("test-plugin")).expect("opens");
-    semio_framework::io::resolve_ready(workspace.ensure_probe_artifact("doc-2", serde_json::json!({}))).expect("seed");
+    ::semio_framework_async::poll::resolve_ready(workspace.ensure_probe_artifact("doc-2", serde_json::json!({}))).expect("seed");
     let mut registry = InMemoryToolRegistry::new();
     register_artifact_tools(&mut registry, Some(Arc::new(workspace)), full_principal());
     let result = registry.call("artifact_validate", serde_json::json!({ "artifactId": "doc-2" })).unwrap();
@@ -183,7 +183,7 @@ fn artifact_validate_is_a_real_typed_gap_never_a_fabricated_pass() {
 fn artifact_snapshot_returns_real_bytes_for_the_current_revision_and_rejects_a_stale_one() {
     let dir = store::test_support::tempdir().expect("tempdir");
     let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), single_plugin_catalog("test-plugin")).expect("opens");
-    semio_framework::io::resolve_ready(workspace.ensure_probe_artifact("doc-3", serde_json::json!({ "n": 7 }))).expect("seed");
+    ::semio_framework_async::poll::resolve_ready(workspace.ensure_probe_artifact("doc-3", serde_json::json!({ "n": 7 }))).expect("seed");
     let mut registry = InMemoryToolRegistry::new();
     register_artifact_tools(&mut registry, Some(Arc::new(workspace)), full_principal());
 
@@ -201,7 +201,7 @@ fn artifact_snapshot_returns_real_bytes_for_the_current_revision_and_rejects_a_s
 fn artifact_export_never_fabricates_a_successful_export() {
     let dir = store::test_support::tempdir().expect("tempdir");
     let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), single_plugin_catalog("test-plugin")).expect("opens");
-    semio_framework::io::resolve_ready(workspace.ensure_probe_artifact("doc-4", serde_json::json!({}))).expect("seed");
+    ::semio_framework_async::poll::resolve_ready(workspace.ensure_probe_artifact("doc-4", serde_json::json!({}))).expect("seed");
     let mut registry = InMemoryToolRegistry::new();
     register_artifact_tools(&mut registry, Some(Arc::new(workspace)), full_principal());
     let result = registry.call("artifact_export", serde_json::json!({ "artifactId": "doc-4", "format": "pdf" })).unwrap();
@@ -252,7 +252,7 @@ fn document_authored_content_reaches_an_agent_only_inside_the_untrusted_envelope
     let needles = canary_needles(canary);
     let dir = store::test_support::tempdir().expect("tempdir");
     let workspace = Arc::new(HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), single_plugin_catalog("test-plugin")).expect("opens"));
-    semio_framework::io::resolve_ready(workspace.ensure_probe_artifact("doc-canary", serde_json::json!({ "text": canary }))).expect("seed");
+    ::semio_framework_async::poll::resolve_ready(workspace.ensure_probe_artifact("doc-canary", serde_json::json!({ "text": canary }))).expect("seed");
     let mut registry = InMemoryToolRegistry::new();
     register_artifact_tools(&mut registry, Some(workspace.clone()), full_principal());
     let (pack, spr) = workspace.read_artifact_bytes("doc-canary").expect("reads").expect("exists");

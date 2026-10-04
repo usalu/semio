@@ -1,3 +1,0 @@
-# 🧬️ replace-palette/ReplacePalette
-scalar ReplacePaletteMutationValue
-input ReplacePaletteMutation { plte: ReplacePaletteMutationValue }

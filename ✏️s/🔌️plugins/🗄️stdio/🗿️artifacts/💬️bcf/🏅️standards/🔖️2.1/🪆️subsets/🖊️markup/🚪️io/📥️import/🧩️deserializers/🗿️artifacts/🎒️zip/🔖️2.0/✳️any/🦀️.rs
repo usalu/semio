@@ -11,7 +11,7 @@ pub fn register() {}
 /// 🎒️ Parse ZIP container bytes into a BcfSnapshot.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn deserialize(from: &BinarySnapshot) -> Result<BcfSnapshot, store::PackError> {
-    let mut snap = crate::io::decode_bcf(&from.bytes).map_err(store::PackError::Schema)?;
+    let mut snap = crate::io::decode_bcf(&from.bytes).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))?;
     snap.schema = STDIO_BCF_DOCUMENT_SCHEMA.into();
     Ok(snap)
 }

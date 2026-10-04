@@ -1,0 +1,168 @@
+{
+  "sha256": "b49a2240b7a510e969a02c3feb14ac1ed7162d754fd2c3a7fea22297ebf06db3",
+  "rows": [
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🏛️ownership/🧬️schema/🔣️.json",
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🏛️ownership/🧪️tests/🟦️.ts",
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🏛️ownership/🧪️tests/🦀️.rs",
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🔗️reference/🧫️fixtures/🪆️binding/🔣️.json",
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧫️fixtures/🪆️binding/🔣️.json",
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🔗️reference/🦀️.rs",
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🔗️reference/🧪️tests/🚦️refusals/🦀️.rs",
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🔗️reference/🧪️tests/🏛️ownership/🦀️.rs",
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust/🦀️.rs",
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🪆️binding/🦀️.rs",
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧪️tests/🪆️binding/🦀️.rs",
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🦀️.rs",
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🦀️.rs",
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧊️3d/🧬️schema/🦀️.rs",
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧪️tests/🪟️poses/🦀️.rs",
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧪️tests/📐️projection/🦀️.rs",
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust/Cargo.toml",
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🔗️reference/🧪️tests/🏛️ownership/🟦️.ts",
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧪️tests/🪆️binding/🟦️.ts",
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust/📜️script.ts",
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust/📋️project.json",
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust/📜️script.ts",
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust/📋️project.json",
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust/package.json",
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust/package.json",
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "forward": true,
+      "inverse": true,
+      "current": true
+    }
+  ],
+  "note": "UTF-16 code-unit splice indices; replaces preliminary Python codepoint splice observation."
+}

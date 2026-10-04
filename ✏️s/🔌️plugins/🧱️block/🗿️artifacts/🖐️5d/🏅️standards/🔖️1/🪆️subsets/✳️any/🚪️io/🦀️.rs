@@ -117,3 +117,6 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[path = "🔣️json/🦀️.rs"]
+pub(crate) mod json_native;

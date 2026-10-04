@@ -133,6 +133,7 @@ pub struct Wfc3dSnapshot {
     pub edges: Vec<SlotEdge>,
     #[state(artifact)]
     #[value(default)]
+    #[child(kind = "s.stdio.semio")]
     pub tiles: Vec<Tile>,
     #[state(artifact)]
     #[value(default)]
@@ -200,3 +201,22 @@ mod sqlite_tests;
 
 #[path="🪶️sqlite/🦀️.rs"]
 pub mod sqlite;
+
+/// 🧸️ Projects each tile through its declared media branch.
+impl semio_framework_schema_composition::ChildFieldRefs for Tile {
+ const MANY:bool=false;
+ fn visit_child_field<'a,V:semio_framework_schema_composition::ChildRefVisitor<'a>>(&'a self,slot:&'static str,visitor:&mut V)->Result<(),V::Error>{visitor.step()?;semio_framework_schema_composition::ChildFieldRefs::visit_child_field(&self.media,slot,visitor)}
+}
+/// 🧸️ Inline geometry contributes no child identity.
+impl semio_framework_schema_composition::ChildFieldRefs for TileMedia3d {
+ const MANY:bool=false;
+ fn visit_child_field<'a,V:semio_framework_schema_composition::ChildRefVisitor<'a>>(&'a self,slot:&'static str,visitor:&mut V)->Result<(),V::Error>{visitor.step()?;match self{Self::Mesh{..}=>Ok(()),Self::MeshChild{child}=>semio_framework_schema_composition::ChildFieldRefs::visit_child_field(child,slot,visitor)}}
+}
+/// 👁️ Admits a nested tile media child into the genuine captured source.
+impl<R:semio_framework_schema_composition::ChildReadSource> semio_framework_schema_composition::ChildFieldReadAdmission<R> for Tile {
+ fn admit_child_field(&self,slot:&'static str,source:&mut R)->Result<(),R::Error>{source.step()?;semio_framework_schema_composition::ChildFieldReadAdmission::admit_child_field(&self.media,slot,source)}
+}
+/// 👁️ Retains the exact Semio mesh snapshot type at the source admission.
+impl<R:semio_framework_schema_composition::ChildReadSource> semio_framework_schema_composition::ChildFieldReadAdmission<R> for TileMedia3d {
+ fn admit_child_field(&self,slot:&'static str,source:&mut R)->Result<(),R::Error>{source.step()?;if let Self::MeshChild{child}=self{source.step()?;source.child::<SemioMeshSnapshot>(slot,semio_framework_schema_composition::ChildRefFields{child_id:&child.child_id,artifact_id:&child.target.artifact_id,artifact_kind:&child.target.dialect.artifact_kind,standard:&child.target.dialect.standard,subset:&child.target.dialect.subset})?;}Ok(())}
+}

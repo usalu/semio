@@ -9,7 +9,7 @@ import ownershipSchema from "../../🧬️schema/🔮️ownership/🔣️.json";
 import admissionSchema from "../../../../../../✏️s/🔌️plugins/🪐️space/🫀️core/🧫️fixtures/🧬️schema/🔣️.json";
 import vectors from "../../../../../../✏️s/🔌️plugins/🪐️space/🫀️core/🧫️fixtures/🧫️fixtures/🔣️.json";
 import { validateJsonSchemaSubset } from "../../../../../../🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts";
-import { inspectRustCompileReferences } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
+import { inspectRustCompileReferences } from "../../../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 
 const root = resolve(import.meta.dir, "../../../../../..");
 const read = (path: string) => readFileSync(resolve(root, path), "utf8");

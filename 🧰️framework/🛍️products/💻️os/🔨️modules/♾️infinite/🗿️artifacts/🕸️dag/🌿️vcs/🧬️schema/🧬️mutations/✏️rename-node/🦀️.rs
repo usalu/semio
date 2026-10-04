@@ -1,7 +1,7 @@
 use super::super::{split_dag_endpoint, DagDelta, DagDiff, DagMutation, DagSnapshot, RenamedNode, RewrittenEdgeEndpoint};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "rename-node")]
@@ -31,9 +31,12 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for RenameNode {
             .collect();
         protocol::MutationOutcome::new(DagDiff::from(DagDelta { renamed_node: Some(RenamedNode { id: self.id.clone(), new_id: self.new_id.clone() }), rewritten_edge_endpoints: (!rewrites.is_empty()).then_some(rewrites), ..Default::default() }))
     }
-    fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {
+    fn inverse(&self, base: &DagSnapshot) -> Result<Vec<DagMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         base.nodes.iter().find(|node| node.id == self.id).map(|_| vec![DagMutation::RenameNode(Self { id: self.new_id.clone(), new_id: self.id.clone() })]).unwrap_or_default()
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename node {}", self.id), &format!("Knoten {} umbenennen", self.id))
     }

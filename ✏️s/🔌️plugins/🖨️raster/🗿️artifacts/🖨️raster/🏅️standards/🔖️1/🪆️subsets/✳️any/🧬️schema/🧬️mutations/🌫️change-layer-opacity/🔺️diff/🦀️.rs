@@ -16,7 +16,7 @@ pub fn diff(payload: &super::ChangeLayerOpacity, base: &RasterSnapshot) -> proto
         RasterLayerNode::Pixel { opacity, .. } | RasterLayerNode::Group { opacity, .. } | RasterLayerNode::Adjustment { opacity, .. } => *opacity,
     };
     if opacity == payload.new_opacity {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Layer \"{}\" opacity is already {}.", payload.layer_id, payload.new_opacity));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Layer \"{}\" opacity is already {}.", payload.layer_id, payload.new_opacity));
     }
     protocol::MutationOutcome::new(diff_patch_layer(&payload.layer_id, RasterLayerPatch { opacity: Some(payload.new_opacity), ..Default::default() }))
 }

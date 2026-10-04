@@ -1,0 +1,17 @@
+{
+  "color": [
+    0.0,
+    1.0,
+    0.0,
+    1.0
+  ],
+  "layerId": "paint",
+  "mutation": "fillRegion",
+  "seed": {
+    "x": 4,
+    "y": 2
+  },
+  "selection": null,
+  "target": "pixels",
+  "tolerance": 0
+}

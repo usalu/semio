@@ -10,7 +10,7 @@ pub fn diff(payload: &super::RenameModel, base: &EnergyModelSnapshot) -> protoco
         return protocol::MutationOutcome::fatal("mutation.invariant", "An energy model name must not be blank.", [payload.new_name.clone()]);
     }
     if base.model.name == payload.new_name {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("The energy model is already named \"{}\".", payload.new_name));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("The energy model is already named \"{}\".", payload.new_name));
     }
     let mut model = base.model.clone();
     model.name = payload.new_name.clone();

@@ -3,7 +3,7 @@ mod tests {
 
     #[test]
     fn owned_artifact_kind_formats_survive_host_registry_projection() {
-        let value: semio_framework::DslValue = dsl::os_pack::json::from_json_str(include_str!("../../../../../🔨️modules/🛂️manifest/🧫️fixtures/🗄️artifact-kind-formats.json")).unwrap();
+        let value: semio_framework::DslValue = semio_framework_pack_json::from_json_str(include_str!("../../../../../🔨️modules/🛂️manifest/🧫️fixtures/🗄️artifact-kind-formats.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let spec: ArtifactKindSpec = semio_framework_value::FromValue::from_value(value).unwrap();
         assert_eq!(spec.export_stdio_kinds, ["stdio.svg", "stdio.png"]);
         assert_eq!(spec.import_stdio_kinds, ["stdio.dwg", "stdio.svg"]);
@@ -69,6 +69,7 @@ mod tests {
                 semio_framework::ArtifactPresentation { id: "draw".into(), name: "Draw".into(), dimension: "2d".into(), component_kind: "draw".into() },
             )),
             tutorials: Vec::new(),
+            fault_notices: Vec::new(),
         };
         register_app_io("draw", &app);
         let registration = os_app_registration("draw", "draw").expect("registration");

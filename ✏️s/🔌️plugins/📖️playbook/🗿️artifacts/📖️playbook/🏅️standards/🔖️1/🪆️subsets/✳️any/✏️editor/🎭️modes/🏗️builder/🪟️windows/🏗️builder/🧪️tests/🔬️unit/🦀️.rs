@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::playbook::unit_tests::context::playbook_app;
+use crate::editor::playbook::unit_tests::context::{live_spec, playbook_app};
 use crate::editor::playbook::PLAYBOOK_PLAY_BODY_BUILDER as BODY_BUILDER;
 use semio_framework_plugin::PluginApp;
 
@@ -20,14 +20,14 @@ async fn render_builder_palette_includes_topic_contributed_block_kinds() {
         plugin_id: "playbook-module-procedural".into(),
         topic_contribution: Some(TopicContribution::new(
             "playbook.blockKind",
-            semio_framework_os_kernel::DslValue::object([
-                ("blockKind".to_string(), semio_framework_os_kernel::DslValue::String("buildingComponent".to_string())),
-                ("label".to_string(), semio_framework_os_kernel::DslValue::String("Building Component".to_string())),
-                ("iconId".to_string(), semio_framework_os_kernel::DslValue::String("building".to_string())),
+            semio_framework_value::DslValue::object([
+                ("blockKind".to_string(), semio_framework_value::DslValue::String("buildingComponent".to_string())),
+                ("label".to_string(), semio_framework_value::DslValue::String("Building Component".to_string())),
+                ("iconId".to_string(), semio_framework_value::DslValue::String("building".to_string())),
             ]),
         )),
     };
-    config.contributions_json = protocol::json::to_json_string(&vec![entry]);
+    config.contributions_json = semio_framework_pack_json::to_json_string(&vec![entry]);
     let palette = build_palette(&config);
     assert!(palette.iter().any(|entry| entry.block_kind == "buildingComponent"));
 }
@@ -38,7 +38,7 @@ async fn render_builder_emits_playbook_list_component_scene() {
     let tree = app.render(BODY_BUILDER, None, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("builder surface");
     let semio_framework_ui_contract::Component::Surface(props) = tree.root.component else { panic!("builder must render a semantic surface") };
     let scene: semio_framework_ui_scene::BlockListScene = semio_framework_ui_scene::decode(&props).expect("block-list payload");
-    let expected = app.snapshot().expect("snapshot").as_kernel();
+    let expected = live_spec(&app).await;
     assert_eq!(serde_json::from_str::<serde_json::Value>(&scene.steps_json).unwrap(), serde_json::to_value(&expected.steps).unwrap());
     assert_eq!(serde_json::from_str::<Vec<serde_json::Value>>(&scene.palette_json).unwrap().len(), PLAYBOOK_BUILTIN_KINDS.len());
 }

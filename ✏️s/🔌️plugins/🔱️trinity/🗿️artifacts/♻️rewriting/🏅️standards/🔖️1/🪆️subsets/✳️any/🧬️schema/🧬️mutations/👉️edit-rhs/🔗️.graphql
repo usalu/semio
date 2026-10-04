@@ -1,2 +1,2 @@
-# 🎯️ Direct edit-rhs / EditRhs payload.
-input EditRhsInput { newRhsJson: String! }
+# 🧬️ EditRhsInput owns its declared typed payload.
+input EditRhsInput { newRhs: RhsInput! }

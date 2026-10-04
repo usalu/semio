@@ -16,7 +16,7 @@ import type {
   WindowLayout,
   NamedLayout,
 } from "../🛂️manifest/🟦️.ts";
-import { normalizeManifestExamples } from "../🛂️manifest/🟦️.ts";
+import { faultNoticeText, fillFaultNotice, normalizeManifestExamples, type FaultNoticeDefinition } from "../🛂️manifest/🟦️.ts";
 import type { StoragePort } from "../🖥️platform/🟦️.ts";
 import { ShardClient, type ShardAsset, type ShardBudget, type ShardCapabilityGrant, type ShardEventEnvelope } from "../🎭️actor/📮️shard-client/🟦️.ts";
 import { OwnedResidentLedger } from "../🌱️value/💾️resident/🟦️.ts";
@@ -1149,6 +1149,8 @@ export type Fault = {
   readonly scope: FaultScope;
   readonly span?: TextSpan;
   readonly causes?: readonly FaultCause[];
+  /** 🔣️ The named values a localized notice fills its `{name}` placeholders from (Rust `FaultParams`) — never read from `message`. */
+  readonly params?: Readonly<Record<string, string>>;
   readonly retryable: boolean;
 };
 
@@ -1196,7 +1198,7 @@ export type Effect =
    * as an event-sourced job with progress and cancellation, for a plugin holding {@link MEDIA_VIDEO_RENDER_CAPABILITY}.
    * Twin of Rust `Effect::VideoRenderExport`. */
   | { readonly videoRenderExport: { readonly filename: string; readonly program: VideoRenderProgram } }
-  | { readonly requestFileOpen: { readonly req: number; readonly accept: string; readonly readAs?: string; readonly importAction: string; readonly multiple?: boolean } }
+  | { readonly requestFileOpen: { readonly req: number; readonly accept: string; readonly readAs?: string; readonly importAction: string; readonly args?: unknown; readonly multiple?: boolean } }
   /** 🎞️ Asks the shell to decode a video (file picker, or `payload` bytes already in hand)
    * and re-dispatch `frameAction` once per sampled frame with `{payload: dataUrl(image/jpeg), name,
    * frameIndex, timestampMs, index, total, width, height, ...args}`, then `doneAction` once with
@@ -1969,6 +1971,10 @@ export const HISTORY_NOTICE_LABELS = [
   { code: "toolTransaction.open", en: "A tool is still recording — finish or cancel it first.", de: "Ein Werkzeug zeichnet noch auf — zuerst abschließen oder abbrechen." },
   { code: "toolTransaction.unknown", en: "The tool's recording has already ended.", de: "Die Aufzeichnung des Werkzeugs ist bereits beendet." },
   { code: "history.full", en: "This document's history is full ({n} edits).", de: "Der Verlauf dieses Dokuments ist voll ({n} Bearbeitungen)." },
+  { code: "history.replaying", en: "History is still replaying — wait for it or cancel it first.", de: "Der Verlauf wird noch neu angewendet — abwarten oder zuerst abbrechen." },
+  { code: "document.loading", en: "The document is still loading — wait for it or cancel it first.", de: "Das Dokument wird noch geladen — abwarten oder zuerst abbrechen." },
+  { code: "pure.history-unavailable", en: "This is a head-only evaluation without history — open the document in a live instance to use its history.", de: "Dies ist eine Auswertung nur des aktuellen Stands ohne Verlauf — für den Verlauf das Dokument in einer laufenden Instanz öffnen." },
+  { code: "history.step-blocked", en: "Later mutations would end with errors — fix or withdraw them first.", de: "Spätere Mutationen würden mit Fehlern enden — zuerst beheben oder zurückziehen." },
 ] as const;
 
 /** 🔔️ The `{en, de}` notice of a history-lane refusal `code`; `undefined` for any other code. */
@@ -1977,14 +1983,108 @@ export function historyNotice(code: string): Readonly<{ en: string; de: string }
   return row === undefined ? undefined : { en: row.en, de: row.de };
 }
 
-/** 📡️ The replay a remote history change needs before this replica adopts it, mirrored from Rust `HistoryRemoteReplay`:
- * replayed operations of the total, whether the user paused it, and the code of a refused adoption. */
-export type HistoryRemoteReplay = {
+/** 🏢️ Framework-owned EN/DE notices of the refusal codes any app raises under a framework namespace (`app.command.*`,
+ * `mutation.*`, design §20.12), mirrored from Rust `FRAMEWORK_FAULT_NOTICE_LABELS`; told with the fault's own severity. */
+export const FRAMEWORK_FAULT_NOTICE_LABELS = [
+  { code: "app.command.unsupported", en: "This action is not available here.", de: "Diese Aktion ist hier nicht verfügbar." },
+  { code: "app.command.invalid", en: "This action is not valid.", de: "Diese Aktion ist ungültig." },
+  { code: "app.command.invalid-args", en: "The action's input is not valid.", de: "Die Eingabe der Aktion ist ungültig." },
+  { code: "app.command.invalid-payload", en: "The action's data is not valid.", de: "Die Daten der Aktion sind ungültig." },
+  { code: "app.command.targets-required", en: "Select at least one item first.", de: "Zuerst mindestens ein Element auswählen." },
+  { code: "app.command.kind-unavailable", en: "This kind of item is not available.", de: "Diese Art von Element ist nicht verfügbar." },
+  { code: "app.command.target-in-use", en: "The item is still in use.", de: "Das Element wird noch verwendet." },
+  { code: "app.command.tool-mismatch", en: "This action does not belong to the active tool.", de: "Diese Aktion gehört nicht zum aktiven Werkzeug." },
+  { code: "mutation.target-missing", en: "The target no longer exists.", de: "Das Ziel existiert nicht mehr." },
+  { code: "mutation.target-mismatch", en: "The change does not fit the target's current state.", de: "Die Änderung passt nicht zum aktuellen Zustand des Ziels." },
+  { code: "mutation.too-large", en: "This change is too large to record at once — split it into smaller steps.", de: "Diese Änderung ist zu groß, um sie auf einmal aufzuzeichnen — in kleinere Schritte aufteilen." },
+  { code: "plugin.media.schema-mismatch", en: "This input is a {found} document, but only {expected} documents can be loaded here.", de: "Diese Eingabe ist ein {found}-Dokument, hier lassen sich aber nur {expected}-Dokumente laden." },
+  { code: "plugin.channel-mismatch", en: "This plugin was built for app channel {guest}, but this app speaks app channel {host} — rebuild the plugin.", de: "Dieses Plugin wurde für App-Kanal {guest} gebaut, diese App spricht aber App-Kanal {host} — Plugin neu bauen." },
+  { code: "history-filter.unknown", en: "This history filter is not known — choose one the history panel offers.", de: "Dieser Verlaufsfilter ist unbekannt — einen im Verlaufsbereich angebotenen wählen." },
+  { code: "window-transient.window-required", en: "This needs an open window — focus a window first.", de: "Dafür wird ein offenes Fenster benötigt — zuerst ein Fenster fokussieren." },
+  { code: "window-transient.window-stale", en: "The window is no longer open.", de: "Das Fenster ist nicht mehr geöffnet." },
+  { code: "window-transient.kind-unknown", en: "This window cannot hold this state — use a window of the matching kind.", de: "Dieses Fenster kann diesen Zustand nicht halten — ein Fenster der passenden Art verwenden." },
+] as const;
+
+/** 🪧️ The `{en, de}` notice of a framework-namespace refusal `code`; `undefined` for any other code. */
+export function frameworkFaultNotice(code: string): Readonly<{ en: string; de: string }> | undefined {
+  const row = FRAMEWORK_FAULT_NOTICE_LABELS.find((notice) => notice.code === code);
+  return row === undefined ? undefined : { en: row.en, de: row.de };
+}
+
+/** 📣️ The notice a refused dispatch earns (design §20.12) — TS twin of Rust `kernel::fault_notice`: the fault's own code, then each
+ * cause's, looked up in the framework's tables ({@link HISTORY_NOTICE_LABELS}, {@link FRAMEWORK_FAULT_NOTICE_LABELS}) first and the
+ * refusing app's published `faultNotices` second; the first declared code decides, its `{name}` placeholders filled from
+ * `fault.params` only. `null` when no code is declared or a placeholder has no value — the shell then shows its generic refusal,
+ * never a raw code. */
+export function faultNotice(
+  fault: Readonly<{ code: string; causes?: readonly { readonly code?: string }[]; params?: Readonly<Record<string, string>> }>,
+  notices: readonly FaultNoticeDefinition[],
+  terminology: ShellTerminology,
+  locale: ShellLocale,
+): Readonly<{ code: string; text: string }> | null {
+  const frameworkNotice = (candidate: string): Readonly<{ en: string; de: string }> | undefined => historyNotice(candidate) ?? frameworkFaultNotice(candidate);
+  const code = [fault.code, ...(fault.causes ?? []).map((cause) => cause.code)].find((candidate): candidate is string => candidate !== undefined && (frameworkNotice(candidate) !== undefined || notices.some((notice) => notice.code === candidate)));
+  if (code === undefined) return null;
+  const framework = frameworkNotice(code);
+  const text = framework === undefined ? faultNoticeText(notices, code, fault.params, terminology, locale) : fillFaultNotice(framework[locale], fault.params);
+  return text === null ? null : { code, text };
+}
+
+/** 📡️ Which history change replays before adoption, mirrored from Rust `HistoryReprojectionKind`: another replica's change,
+ * this replica's own deferred history step (interior undo/redo, checkout, alternative switch) or a whole-document load. */
+export type HistoryReprojectionKind = "remote" | "step" | "load";
+
+/** 📡️ The replay a history change needs before this replica adopts it, mirrored from Rust `HistoryReprojection`: its
+ * `kind` (absent = remote), replayed operations of the total, whether the user paused a remote one, and the code of a
+ * refused adoption. */
+export type HistoryReprojection = {
   readonly done: number;
   readonly total: number;
+  readonly kind?: HistoryReprojectionKind;
   readonly paused?: boolean;
   readonly fault?: string;
 };
+
+//#region 🔖️HistoryReprojectionStatus
+/** 📡️ Framework-owned EN/DE copy of a history change replaying before adoption, by `<kind>.<part>` key, mirrored from Rust
+ * `HISTORY_REPROJECTION_LABELS`: every shell announces it in a polite status region outside the History panel and the history
+ * body titles its reprojection section with it. `{done}`/`{total}` are replayed operations, `{reason}` a refusal's notice. */
+export const HISTORY_REPROJECTION_LABELS = [
+  { key: "remote.title", en: "Remote history change", de: "Entfernte Verlaufsänderung" },
+  { key: "remote.progress", en: "Replaying a remote history change: {done} of {total} mutations", de: "Entfernte Verlaufsänderung wird angewendet: {done} von {total} Mutationen" },
+  { key: "remote.paused", en: "Remote history change paused: this replica still shows the history before it", de: "Entfernte Verlaufsänderung pausiert: dieses Replikat zeigt noch den Verlauf davor" },
+  { key: "remote.refused", en: "Remote history change refused: {reason}", de: "Entfernte Verlaufsänderung abgelehnt: {reason}" },
+  { key: "step.title", en: "History step", de: "Verlaufsschritt" },
+  { key: "step.progress", en: "Replaying history: {done} of {total} mutations", de: "Verlauf wird neu angewendet: {done} von {total} Mutationen" },
+  { key: "step.refused", en: "History step refused: {reason}", de: "Verlaufsschritt abgelehnt: {reason}" },
+  { key: "load.title", en: "Document load", de: "Dokument laden" },
+  { key: "load.progress", en: "Loading document: {done} of {total}", de: "Dokument wird geladen: {done} von {total}" },
+  { key: "load.refused", en: "Document load refused: {reason}", de: "Laden des Dokuments abgelehnt: {reason}" },
+  { key: "reason.unnamed", en: "the change could not be applied", de: "die Änderung konnte nicht angewendet werden" },
+] as const;
+
+/** 📢️ What a shell announces while a history change replays before adoption — TS twin of Rust `HistoryReprojectionStatus`. */
+export type HistoryReprojectionStatus = Readonly<{ title: string; text: string; done: number; total: number; paused: boolean; fault: string | null }>;
+
+/** 📢️ The one status copy of a history change replaying before adoption — TS twin of Rust `kernel::history_reprojection_status`:
+ * a refused adoption (a fault with nothing left to replay) reads `<kind>.refused` with the fault's placeholder-free
+ * {@link historyNotice} or `reason.unnamed` (never a raw code); a paused remote change reads `remote.paused` (a step or a load is
+ * never paused); anything else its kind's progress. Terminology-invariant framework copy. */
+export function historyReprojectionStatus(reprojection: HistoryReprojection, _terminology: ShellTerminology, locale: ShellLocale): HistoryReprojectionStatus {
+  const label = (key: string): string => HISTORY_REPROJECTION_LABELS.find((row) => row.key === key)?.[locale] ?? "";
+  const kind = reprojection.kind ?? "remote";
+  const paused = reprojection.paused === true && kind === "remote";
+  const notice = reprojection.fault === undefined ? undefined : historyNotice(reprojection.fault);
+  const reason = notice !== undefined && !notice.en.includes("{") && !notice.de.includes("{") ? notice[locale] : label("reason.unnamed");
+  const text =
+    reprojection.fault !== undefined && reprojection.total === 0
+      ? label(`${kind}.refused`).replaceAll("{reason}", () => reason)
+      : paused
+        ? label("remote.paused")
+        : label(`${kind}.progress`).replaceAll("{done}", () => String(reprojection.done)).replaceAll("{total}", () => String(reprojection.total));
+  return { title: label(`${kind}.title`), text, done: reprojection.done, total: reprojection.total, paused, fault: reprojection.fault ?? null };
+}
+//#endregion 🔖️HistoryReprojectionStatus
 
 /** 🧾️ Ordered history delta carried with an accepted invocation response. */
 export type HistoryPatch = {
@@ -1997,8 +2097,10 @@ export type HistoryPatch = {
   readonly commandFilter?: string;
   /** ⏪️ The live history-edit session in full; absent while none is open. */
   readonly timeTravel?: HistoryTimeTravel;
-  /** 📡️ The remote history change waiting for its replay; absent while none waits. */
-  readonly remoteReplay?: HistoryRemoteReplay;
+  /** 📡️ The history change (remote, or this replica's own step) waiting for its replay; absent while none waits. */
+  readonly reprojection?: HistoryReprojection;
+  /** 🔢️ How many edits the document's history holds — the `{n}` of the `history.full` notice (absent = 0). */
+  readonly editCount?: number;
 };
 
 /**

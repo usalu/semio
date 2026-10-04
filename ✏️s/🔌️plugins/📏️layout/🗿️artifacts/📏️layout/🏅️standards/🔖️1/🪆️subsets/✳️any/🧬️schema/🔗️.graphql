@@ -12,7 +12,7 @@ type LayoutArtifact {
   spreads: [Spread!]! @state(class: ARTIFACT)
   pages: [Page!]! @state(class: ARTIFACT)
   printTarget: String @state(class: ARTIFACT)
-  dataFieldsJson: String @state(class: ARTIFACT)
+  dataFields: FormDictionary @state(class: ARTIFACT)
   backgroundDrawing: LayoutDrawingChild @state(class: ARTIFACT) @child(kind: "s.stdio.semio")
   referencedModel: ArtifactLink @state(class: ARTIFACT) @link(roles: ["model"])
 }

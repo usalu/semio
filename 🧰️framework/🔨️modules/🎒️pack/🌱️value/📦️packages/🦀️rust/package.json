@@ -1,0 +1,19 @@
+{
+  "name": "@semio-tech/framework-pack-record-rs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bundleKind": "library",
+  "scripts": {
+    "test-ownership": "bun nx run @semio-tech/framework-pack-record-rs:test-ownership",
+    "test-native": "bun nx run @semio-tech/framework-pack-record-rs:test-native",
+    "test-refusals": "bun nx run @semio-tech/framework-pack-record-rs:test-refusals",
+    "test-schema-storage-source": "bun nx run @semio-tech/framework-pack-record-rs:test-schema-storage-source"
+  },
+  "nx": {
+    "includedScripts": []
+  },
+  "devDependencies": {
+    "@noble/hashes": "^2.4.0"
+  }
+}

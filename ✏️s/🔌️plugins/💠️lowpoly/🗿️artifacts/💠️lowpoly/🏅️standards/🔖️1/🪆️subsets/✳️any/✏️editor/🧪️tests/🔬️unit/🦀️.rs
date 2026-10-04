@@ -85,7 +85,7 @@ pub(crate) mod context {
     /// `command_from_action` → retained job → settle). Framework-reserved verbs (`interactionSelect`,
     /// `undo`, `redo`) return an admission receipt; their tool job only lands through the reserved settle.
     pub async fn act(app: &mut LowpolyApp, action: &str, args: serde_json::Value) {
-        let args = protocol::DslValue::from(&args);
+        let args = semio_framework_value::DslValue::from(&args);
         let result = app.0.handle_action(action, Some(&args), &action_meta()).await.unwrap_or_else(|fault| panic!("{action} refused: {fault:?}"));
         if matches!(action, "interactionSelect" | "interactionHover" | "undo" | "redo") {
             semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, result).await.unwrap_or_else(|fault| panic!("{action} did not settle its reserved job: {fault:?}"));
@@ -263,7 +263,7 @@ async fn retained_progress_replay_freshness_and_close_are_exact() {
                 hover: &hover,
                 context: Some(&context),
                 operation: &operation
-            })
+            }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut 0))
             .expect("progress"),
         ArtifactCommandWorkStep::Progress { .. }
     ));
@@ -284,7 +284,7 @@ async fn retained_progress_replay_freshness_and_close_are_exact() {
                 hover: &hover,
                 context: Some(&context),
                 operation: &operation
-            })
+            }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut 0))
             .expect("replay"),
         ArtifactCommandWorkStep::Replay { .. }
     ));
@@ -299,14 +299,14 @@ async fn retained_progress_replay_freshness_and_close_are_exact() {
                 hover: &hover,
                 context: Some(&context),
                 operation: &operation
-            })
+            }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut 0))
             .expect("complete"),
         ArtifactCommandWorkStep::Complete(_)
     ));
     let drifted = AppOperationContext { generation: operation.generation + 1, ..operation.clone() };
     let mut rejected = LowpolyRetainedCommandWork::new("toggleShowEdges", LowpolyCommandDisposition::Config, operation.operation_id, operation.generation, operation.canonical_base_revision, context_identity);
     assert!(rejected
-        .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: Some(&context), operation: &drifted })
+        .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: Some(&context), operation: &drifted }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut 0))
         .is_err());
     let drifted_context = retained_context(LowpolyTransient::default(), 20);
     assert!(rejected
@@ -319,7 +319,7 @@ async fn retained_progress_replay_freshness_and_close_are_exact() {
             hover: &hover,
             context: Some(&drifted_context),
             operation: &operation
-        })
+        }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut 0))
         .is_err());
     assert!(matches!(
         rejected
@@ -332,7 +332,7 @@ async fn retained_progress_replay_freshness_and_close_are_exact() {
                 hover: &hover,
                 context: Some(&context),
                 operation: &operation
-            })
+            }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut 0))
             .expect("exact retry"),
         ArtifactCommandWorkStep::Progress { .. }
     ));
@@ -389,7 +389,7 @@ async fn retained_migrated_turns_stay_below_eight_milliseconds() {
                     hover: &hover,
                     context: Some(&context),
                     operation: &operation,
-                });
+                }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut 0));
                 slowest = slowest.max(started.elapsed());
                 match step {
                     Ok(ArtifactCommandWorkStep::Complete(_) | ArtifactCommandWorkStep::CompleteWithEphemeral { .. }) => break,
@@ -593,7 +593,7 @@ async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
 #[semio_framework_async_macros::async_test]
 async fn export_media_mesh_out_produces_mesh_document_payload() {
     let mut a: LowpolyApp = app().await;
-    let media = semio_framework_plugin::resolve_ready(a.export_media("mesh:out")).expect("export mesh:out");
+    let media = ::semio_framework_async::poll::resolve_ready(a.export_media("mesh:out")).expect("export mesh:out");
     assert_eq!(media.media_type, MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh });
     match media.payload {
         MediaPayload::Structured { schema, .. } => assert_eq!(schema, "mesh.document"),

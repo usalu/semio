@@ -2177,24 +2177,24 @@ pub enum PdfPageBox {
 /// byte followed by the container-less pack record body of the same value
 /// (`💾️binary/📡️.protocol.semio`). Both are deterministic and decode back to the identical
 /// `PdfDiff`.
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 struct PdfDiffRecord {
-    value: dsl::DslValue,
+    value: semio_framework_value::DslValue,
 }
 
 impl protocol::DiffCodec for PdfDiff {
     fn print_diff(&self) -> String {
-        let model = PdfDiffRecord { value: dsl::ToValue::to_value(self) };
-        dsl::print(&model.__dsl_to_record(), &PdfDiffRecord::__dsl_spec(), dsl::JoinMode::Inline)
+        let model = PdfDiffRecord { value: semio_framework_value::ToValue::to_value(self) };
+        semio_framework_dsl_record::print(&model.__dsl_to_record(), &PdfDiffRecord::__dsl_spec(), semio_framework_dsl_record::JoinMode::Inline)
     }
-    fn parse_diff(text: &str) -> Result<Self, store::TextError> {
-        let record = dsl::parse(text, &PdfDiffRecord::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 64 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Inline })?;
+    fn parse_diff(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        let record = semio_framework_dsl_record::parse(text, &PdfDiffRecord::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits { max_bytes: 64 * 1024 * 1024, ..semio_framework_diagnostic::Limits::default() }, mode: semio_framework_dsl_record::SourceMode::Inline })?;
         let model = PdfDiffRecord::__dsl_from_record(&record)?;
-        <Self as dsl::FromValue>::from_value(model.value).map_err(|error| store::TextError::new(error.to_string(), dsl::TextSpan::at(1, 1)))
+        <Self as semio_framework_value::FromValue>::from_value(model.value).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT];
-        out.extend_from_slice(&store::pack_rt::encode_wire_value(&dsl::ToValue::to_value(self)));
+        out.extend_from_slice(&store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(self)));
         Ok(out)
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
@@ -2205,7 +2205,7 @@ impl protocol::DiffCodec for PdfDiff {
             None => return Err(malformed("diff format", 0, "empty diff".into())),
         }
         let value = store::pack_rt::decode_wire_value(&bytes[1..]).map_err(|error| malformed("diff body", 1, error.to_string()))?;
-        <Self as dsl::FromValue>::from_value(value).map_err(|error| malformed("diff value", 1, error.to_string()))
+        <Self as semio_framework_value::FromValue>::from_value(value).map_err(|error| malformed("diff value", 1, error.to_string()))
     }
 }
 //#endregion 🔖️DiffCodec

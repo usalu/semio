@@ -4,23 +4,24 @@
   "title": "MoveSlide",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "mutation",
-    "from",
-    "to"
-  ],
+  "required": ["mutation", "address", "destinationIndex"],
   "properties": {
-    "mutation": {
-      "const": "moveSlide",
-      "description": "Aggregate discriminator spliced in by PptxMutation; absent when the payload stands alone."
+    "mutation": { "const": "moveSlide" },
+    "address": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pptx/ecma-376/base/xml-address.json#/$defs/PptxSlideAddress",
+      "x-semio-ui": {
+        "label": { "en": "Slide", "de": "Folie" },
+        "description": { "en": "Revision-bound slide to move.", "de": "Revisionsgebundene zu verschiebende Folie." }
+      }
     },
-    "from": {
+    "destinationIndex": {
       "type": "integer",
-      "minimum": 0
-    },
-    "to": {
-      "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "maximum": 9007199254740991,
+      "x-semio-ui": {
+        "label": { "en": "Destination position", "de": "Zielposition" },
+        "description": { "en": "Zero-based final position of the slide.", "de": "Nullbasierte endgültige Position der Folie." }
+      }
     }
   }
 }

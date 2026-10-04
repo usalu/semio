@@ -23,14 +23,14 @@ use crate::CadSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️InternalPatches
 /// 🩹 Option-bag field delta for [`crate::CadNode`] — INTERNAL diff-construction glue only.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct CadNodePatch {
     pub label: Option<String>,
 }
 
 /// 🩹 Option-bag field delta for [`crate::CadReference`] — INTERNAL diff-construction glue only.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct CadReferencePatch {
     pub source_url: Option<String>,
@@ -53,7 +53,7 @@ pub struct CadReferencePatch {
 /// this data — see `crate::cad_pane_rematerialized_child`). `primitives` is absent on purpose: it is
 /// derived from `solid_handle`, the same way `cad_object_from_model_element` derives it on the READ
 /// side, so the record stays one flat row of scalars.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct CadObjectSpec {
     pub id: String,
@@ -72,7 +72,7 @@ pub struct CadObjectSpec {
 /// 🧱️ One object's exact next origin — `move-objects` carries one row per touched object, ABSOLUTE
 /// rather than a delta so the inverse restores the recorded pose bit-for-bit instead of relying on
 /// `x + d - d` round-tripping through f64.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct CadObjectOrigin {
     pub object_id: String,
@@ -80,7 +80,7 @@ pub struct CadObjectOrigin {
 }
 
 /// 🧱️ One object's exact next orientation quaternion — see [`CadObjectOrigin`] on why it is absolute.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct CadObjectOrientation {
     pub object_id: String,
@@ -88,7 +88,7 @@ pub struct CadObjectOrientation {
 }
 
 /// 🧱️ One object's exact next per-axis scale — see [`CadObjectOrigin`] on why it is absolute.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct CadObjectScale {
     pub object_id: String,
@@ -99,7 +99,7 @@ pub struct CadObjectScale {
 /// it because a `#[dsl(table)]` field cannot nest inside a `#[dsl(block)]` one. The importer authors
 /// slot ids of its own (`…-solid-313`), which a `solid_handle`-derived list would silently rewrite,
 /// so `delete-object`'s inverse has to carry them verbatim.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct CadObjectPrimitive {
     pub slot: String,
@@ -242,9 +242,9 @@ pub(crate) fn cad_selection_diff(
         return protocol::MutationOutcome::error("mutation.target-missing", format!("pane {pane:?} materializes none of the {} target(s)", targets.len()), targets.to_vec());
     };
     let partial: Vec<protocol::MutationMessage> =
-        (!missing.is_empty()).then(|| protocol::MutationMessage::warn("mutation.partial", format!("{} of {} target(s) skipped (not in this pane): {}", missing.len(), targets.len(), missing.join(", "))).at(missing)).into_iter().collect();
+        (!missing.is_empty()).then(|| protocol::MutationMessage::warning("mutation.partial", format!("{} of {} target(s) skipped (not in this pane): {}", missing.len(), targets.len(), missing.join(", "))).at(missing)).into_iter().collect();
     if changed.is_empty() {
-        return protocol::MutationOutcome::new(CadDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warn("mutation.no-op", "no addressed object changes").at(targets.to_vec())]));
+        return protocol::MutationOutcome::new(CadDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "no addressed object changes").at(targets.to_vec())]));
     }
     let mut diff = CadDiff::default();
     crate::cad_pane_child_diff_slot(&mut diff, pane, crate::cad_pane_rematerialized_child(&scene, pane, objects));
@@ -273,7 +273,7 @@ pub(crate) fn cad_selection_inverse_objects(
 /// replace and every generic `Patch*`/`CollectionMutation` variant this facet used to carry are
 /// gone — whole-document replace is not an in-history mutation at all (routed through
 /// `ArtifactStore::reset`, see `CadPlayApp::whole_document_operation` returning `None` now).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslEnum, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = CadSnapshot, diff = CadDiff, schema = "cad.cad")]
 pub enum CadMutation {

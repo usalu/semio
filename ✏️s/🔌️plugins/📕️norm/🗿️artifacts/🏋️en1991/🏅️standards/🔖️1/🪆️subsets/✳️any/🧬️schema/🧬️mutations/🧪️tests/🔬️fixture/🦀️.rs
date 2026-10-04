@@ -5,7 +5,7 @@
 //! @see ../../../../🧪️tests/🏋️mutate-en1991-1/🥒️.feature — the independent Python reference reading the same bundles.
 
 use crate::{En1991Diff, En1991Mutation, En1991Snapshot};
-use dsl::ToValue;
+use semio_framework_value::ToValue;
 use protocol::{Mutation, MutationDiff};
 
 //#region 🧾️Vector
@@ -33,7 +33,7 @@ fn wire<T: ToValue>(value: &T) -> serde_json::Value {
 fn out_of_range(op: &En1991Mutation) -> Option<En1991Mutation> {
     let mut payload = serde_json::Value::from(op.payload_value());
     *payload.get_mut("index")? = serde_json::Value::from(u64::from(u32::MAX));
-    op.with_payload_value(dsl::DslValue::from(&payload)).ok()
+    op.with_payload_value(semio_framework_value::DslValue::from(&payload)).ok()
 }
 
 /// ⚖️ The law every committed vector obeys: the mutation file is the canonical Rust wire of one `kind` op whose binary frame
@@ -48,9 +48,9 @@ pub(crate) fn assert_vector(vector: Vector) {
     assert_eq!(op.descriptor().semantic_kind, kind, "{kind}: the committed mutation is another kind's op");
     let framed = protocol::OpBinary::encode_op(&op).expect("the op encodes to its binary frame");
     assert_eq!(<En1991Mutation as protocol::OpBinary>::decode_op(&framed).expect("its binary frame decodes"), op, "{kind}: the binary frame does not round-trip");
-    let before: En1991Snapshot = pack::json::from_json_str(vector.before).expect("the committed before-snapshot decodes");
-    let after: En1991Snapshot = pack::json::from_json_str(vector.after).expect("the committed after-snapshot decodes");
-    let delta: En1991Diff = pack::json::from_json_str(vector.diff).expect("the committed diff decodes");
+    let before: En1991Snapshot = semio_framework_pack_json::from_json_str(vector.before, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the committed before-snapshot decodes");
+    let after: En1991Snapshot = semio_framework_pack_json::from_json_str(vector.after, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the committed after-snapshot decodes");
+    let delta: En1991Diff = semio_framework_pack_json::from_json_str(vector.diff, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the committed diff decodes");
     assert_eq!(wire(&before), committed(vector.before), "{kind}: the committed before-snapshot is not the canonical wire");
     assert_eq!(wire(&after), committed(vector.after), "{kind}: the committed after-snapshot is not the canonical wire");
     assert_eq!(wire(&delta), committed(vector.diff), "{kind}: the committed diff is not the canonical wire");
@@ -59,20 +59,20 @@ pub(crate) fn assert_vector(vector: Vector) {
     let status = committed(vector.outcome)["status"].as_str().expect("the committed outcome names its status").to_string();
     match status.as_str() {
         "applied" => assert!(outcome.messages().is_empty(), "{kind}: an applied vector raises {:?}", outcome.messages()),
-        "no-op" => assert_ne!(outcome.worst_level(), Some(protocol::Severity::Fatal), "{kind}: a no-op vector is refused"),
-        "rejected" => assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal), "{kind}: a rejected vector is accepted"),
+        "no-op" => assert_ne!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal), "{kind}: a no-op vector is refused"),
+        "rejected" => assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal), "{kind}: a rejected vector is accepted"),
         other => panic!("{kind}: unknown committed outcome status {other:?}"),
     }
     let applied = MutationDiff::apply(outcome.diff(), &before).expect("the produced diff applies to the committed before-snapshot");
     assert_eq!(applied, after, "{kind}: production dispatch does not land on the committed after-snapshot");
     assert_eq!(MutationDiff::apply(&delta, &before).expect("the committed diff applies to the committed before-snapshot"), after, "{kind}: the committed diff does not carry before to after");
     assert_eq!(status == "applied", applied != before, "{kind}: an applied vector must move the document and only an applied one may");
-    let inverse = op.inverse(&before);
+    let inverse = op.inverse(&before).expect("valid retained mutation inverse fixture");
     assert_eq!(status == "applied", !inverse.is_empty(), "{kind}: an applied vector computes a non-empty inverse and only an applied one does");
     let restored = inverse.iter().fold(applied, |current, step| MutationDiff::apply(step.diff(&current).diff(), &current).expect("an inverse step applies"));
     assert_eq!(restored, before, "{kind}: replaying the inverse does not restore the committed before-snapshot");
     let no_op = op.diff(&after).messages().iter().any(|message| message.code.0 == "mutation.no-op");
-    let rejected = out_of_range(&op).is_some_and(|stray| stray.diff(&before).worst_level() >= Some(protocol::Severity::Error));
+    let rejected = out_of_range(&op).is_some_and(|stray| stray.diff(&before).worst_level() >= Some(semio_framework_diagnostic::Severity::Error));
     let reached: Vec<&str> = [(true, status.as_str()), (no_op, "no-op"), (rejected, "rejected")].into_iter().filter_map(|(reached, class)| reached.then_some(class)).collect();
     let declared: Vec<&str> = op.descriptor().outcome_classes.iter().map(|class| class.as_str()).collect();
     assert_eq!(declared, reached, "{kind}: the descriptor's outcome classes are not the ones production dispatch reaches");
@@ -84,15 +84,15 @@ pub(crate) fn assert_vector(vector: Vector) {
 mod change_annex;
 #[path = "../../🗺️change-snow-zone/🧪️tests/✅apply/🦀️.rs"]
 mod change_snow_zone;
-#[path = "../../❄change-altitude/🧪️tests/✅apply/🦀️.rs"]
+#[path = "../../❄️change-altitude/🧪️tests/✅apply/🦀️.rs"]
 mod change_altitude;
 #[path = "../../❄️change-en-sk/🧪️tests/✅apply/🦀️.rs"]
 mod change_en_sk;
-#[path = "../../🏔change-north-german-lowland-snow/🧪️tests/✅apply/🦀️.rs"]
+#[path = "../../🏔️change-north-german-lowland-snow/🧪️tests/✅apply/🦀️.rs"]
 mod change_north_german_lowland_snow;
 #[path = "../../🪁change-wind-zone/🧪️tests/✅apply/🦀️.rs"]
 mod change_wind_zone;
-#[path = "../../🌬change-en-vb/🧪️tests/✅apply/🦀️.rs"]
+#[path = "../../🌬️change-en-vb/🧪️tests/✅apply/🦀️.rs"]
 mod change_en_vb;
 #[path = "../../🏞️change-terrain-category/🧪️tests/✅apply/🦀️.rs"]
 mod change_terrain_category;
@@ -112,37 +112,37 @@ mod change_height;
 mod change_width;
 #[path = "../../💨change-depth/🧪️tests/✅apply/🦀️.rs"]
 mod change_depth;
-#[path = "../../🌡change-assumed-delta-t/🧪️tests/✅apply/🦀️.rs"]
+#[path = "../../🌡️change-assumed-delta-t/🧪️tests/✅apply/🦀️.rs"]
 mod change_assumed_delta_t;
 #[path = "../../🔥change-construction-activity/🧪️tests/✅apply/🦀️.rs"]
 mod change_construction_activity;
-#[path = "../../⚙change-assumed-construction-qk/🧪️tests/✅apply/🦀️.rs"]
+#[path = "../../⚙️change-assumed-construction-qk/🧪️tests/✅apply/🦀️.rs"]
 mod change_assumed_construction_qk;
 #[path = "../../🌉change-structure-kind/🧪️tests/✅apply/🦀️.rs"]
 mod change_structure_kind;
 #[path = "../../🌉change-bridge-lane/🧪️tests/✅apply/🦀️.rs"]
 mod change_bridge_lane;
-#[path = "../../🏗change-bridge-span/🧪️tests/✅apply/🦀️.rs"]
+#[path = "../../🏗️change-bridge-span/🧪️tests/✅apply/🦀️.rs"]
 mod change_bridge_span;
 #[path = "../../↔️change-bridge-lane-width/🧪️tests/✅apply/🦀️.rs"]
 mod change_bridge_lane_width;
 #[path = "../../🌾change-assumed-bridge-tandem/🧪️tests/✅apply/🦀️.rs"]
 mod change_assumed_bridge_tandem;
-#[path = "../../🛣change-assumed-bridge-udl/🧪️tests/✅apply/🦀️.rs"]
+#[path = "../../🛣️change-assumed-bridge-udl/🧪️tests/✅apply/🦀️.rs"]
 mod change_assumed_bridge_udl;
 #[path = "../../🚛change-assumed-bridge-lm2/🧪️tests/✅apply/🦀️.rs"]
 mod change_assumed_bridge_lm2;
 #[path = "../../🚶change-assumed-bridge-footway/🧪️tests/✅apply/🦀️.rs"]
 mod change_assumed_bridge_footway;
-#[path = "../../🏙change-storey-count/🧪️tests/✅apply/🦀️.rs"]
+#[path = "../../🏙️change-storey-count/🧪️tests/✅apply/🦀️.rs"]
 mod change_storey_count;
-#[path = "../../🌡change-t-max/🧪️tests/✅apply/🦀️.rs"]
+#[path = "../../🌡️change-t-max/🧪️tests/✅apply/🦀️.rs"]
 mod change_t_max;
 #[path = "../../🧊change-t-min/🧪️tests/✅apply/🦀️.rs"]
 mod change_t_min;
-#[path = "../../🕰change-initial-temperature/🧪️tests/✅apply/🦀️.rs"]
+#[path = "../../🕰️change-initial-temperature/🧪️tests/✅apply/🦀️.rs"]
 mod change_initial_temperature;
-#[path = "../../🏗change-thermal-element-type/🧪️tests/✅apply/🦀️.rs"]
+#[path = "../../🏗️change-thermal-element-type/🧪️tests/✅apply/🦀️.rs"]
 mod change_thermal_element_type;
 #[path = "../../🌉change-thermal-bridge-type/🧪️tests/✅apply/🦀️.rs"]
 mod change_thermal_bridge_type;
@@ -152,13 +152,13 @@ mod change_linear_temperature_gradient;
 mod change_fire_mode;
 #[path = "../../📉change-fire-curve/🧪️tests/✅apply/🦀️.rs"]
 mod change_fire_curve;
-#[path = "../../⏱change-fire-duration/🧪️tests/✅apply/🦀️.rs"]
+#[path = "../../⏱️change-fire-duration/🧪️tests/✅apply/🦀️.rs"]
 mod change_fire_duration;
-#[path = "../../♨change-assumed-gas-temperature/🧪️tests/✅apply/🦀️.rs"]
+#[path = "../../♨️change-assumed-gas-temperature/🧪️tests/✅apply/🦀️.rs"]
 mod change_assumed_gas_temperature;
 #[path = "../../🔆change-assumed-h-net/🧪️tests/✅apply/🦀️.rs"]
 mod change_assumed_h_net;
-#[path = "../../🗺change-fire-compartment-area/🧪️tests/✅apply/🦀️.rs"]
+#[path = "../../🗺️change-fire-compartment-area/🧪️tests/✅apply/🦀️.rs"]
 mod change_fire_compartment_area;
 #[path = "../../📐change-fire-compartment-height/🧪️tests/✅apply/🦀️.rs"]
 mod change_fire_compartment_height;
@@ -192,11 +192,11 @@ mod change_assumed_crane_wheel;
 mod change_assumed_crane_horizontal;
 #[path = "../../🏭change-silo-claimed/🧪️tests/✅apply/🦀️.rs"]
 mod change_silo_claimed;
-#[path = "../../⚖change-silo-kind/🧪️tests/✅apply/🦀️.rs"]
+#[path = "../../⚖️change-silo-kind/🧪️tests/✅apply/🦀️.rs"]
 mod change_silo_kind;
 #[path = "../../🌾change-silo-bulk-density/🧪️tests/✅apply/🦀️.rs"]
 mod change_silo_bulk_density;
-#[path = "../../🏷change-silo-height/🧪️tests/✅apply/🦀️.rs"]
+#[path = "../../🏷️change-silo-height/🧪️tests/✅apply/🦀️.rs"]
 mod change_silo_height;
 #[path = "../../⭕change-silo-hydraulic-radius/🧪️tests/✅apply/🦀️.rs"]
 mod change_silo_hydraulic_radius;
@@ -216,7 +216,7 @@ mod change_floor_assumed_qk;
 mod change_self_weight_assumed_gk;
 #[path = "../../🌨️change-roof-assumed-sk/🧪️tests/✅apply/🦀️.rs"]
 mod change_roof_assumed_sk;
-#[path = "../../🛡change-wind-face-assumed-wp/🧪️tests/✅apply/🦀️.rs"]
+#[path = "../../🛡️change-wind-face-assumed-wp/🧪️tests/✅apply/🦀️.rs"]
 mod change_wind_face_assumed_wp;
 #[path = "../../🚗change-accidental-assumed-force/🧪️tests/✅apply/🦀️.rs"]
 mod change_accidental_assumed_force;

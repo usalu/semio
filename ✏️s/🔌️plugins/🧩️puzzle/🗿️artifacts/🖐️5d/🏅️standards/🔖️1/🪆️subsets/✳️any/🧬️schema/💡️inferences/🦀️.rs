@@ -10,14 +10,12 @@
 //! unlike puzzle3d's own inference, there is no separate low-level per-edge decomposition exposed
 //! here to drive an incremental `InferredField` chain, so this inference is a plain whole-snapshot
 //! `Inference` impl (per the family root's own "simple whole-snapshot scalars" guidance) that calls
-//! that sibling slug's function directly; `ArtifactInferrer::infer_cached`'s default passthrough
-//! (just calls `infer`) is used as-is, uncached.
+//! that sibling slug's function directly, uncached.
 
 
 use crate::standards::v1::subsets::any::schema::inferences::flat_position::flatten_snapshot;
 use crate::Puzzle5dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 use std::collections::BTreeMap;
 
 //#region 🔖️Inference
@@ -32,8 +30,11 @@ pub struct Puzzle5dInference {
 }
 
 impl protocol::Inference<Puzzle5dSnapshot> for Puzzle5dInference {
-    fn infer(snapshot: &Puzzle5dSnapshot) -> Self {
+    fn infer(snapshot: &Puzzle5dSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { flat_positions: flatten_snapshot(snapshot).into_iter().collect() }
+    
+        })
     }
 }
 
@@ -49,16 +50,6 @@ impl protocol::InferenceSpec<Puzzle5dSnapshot> for Puzzle5dInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 🧠️ Uncached: `flatten_snapshot` recomputes the whole graph in one pass and puzzle5d's engine
-/// exposes no per-edge decomposition to key an `InferredField` chain off of (see the module doc) —
-/// the default `infer_cached` passthrough (just calls `infer`) is exactly right here.
-impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::Puzzle5dBuilder {
-    type Snapshot = Puzzle5dSnapshot;
-    type Inference = Puzzle5dInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.puzzle.puzzle5d.inference`'s facet leaves into the OS-wide inference catalog —

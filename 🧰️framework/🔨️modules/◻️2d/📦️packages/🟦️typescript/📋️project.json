@@ -2,7 +2,16 @@
   "name": "@semio-tech/s-2d-js",
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
   "namedInputs": {
-    "default": ["{projectRoot}/**/*", "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/🧪️tests/🎚️config/🟦️.ts"]
+    "default": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/🧪️tests/🎚️config/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/🛤️path/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/🔍️trace/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/🧹️retire/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/🔀️booleans/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🔲️pixels/🖊️coverage/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/🟦️.ts"
+    ]
   },
   "targets": {
     "test": {

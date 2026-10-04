@@ -32,7 +32,7 @@ async fn shooting_config_operation_backwards_restores_the_pre_operation_snapshot
     let operation = ShootingConfigMutation::SetShotSelection(SetShotSelection { shot_ids: vec!["s2".into()] });
     let forward = operation.diff(&base).into_parts().0;
     assert_eq!(forward.selected_shot_ids, vec!["s2".to_string()]);
-    let backwards = operation.inverse(&base);
+    let backwards = operation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(backwards, vec![ShootingConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })]);
     let restored = backwards[0].diff(&forward).into_parts().0;
     assert_eq!(restored, base);

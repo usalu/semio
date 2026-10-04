@@ -1,0 +1,219 @@
+{
+  "sourceOnly": true,
+  "baseCase": "full-domain",
+  "cases": [
+    {
+      "id": "guide-ticks-zero",
+      "path": [
+        "guides",
+        0,
+        "ticks"
+      ],
+      "value": 0,
+      "expectedValid": false,
+      "normativePath": "$defs.ChartGuide.properties.ticks.minimum"
+    },
+    {
+      "id": "guide-ticks-fractional",
+      "path": [
+        "guides",
+        0,
+        "ticks"
+      ],
+      "value": 1.5,
+      "expectedValid": false,
+      "normativePath": "$defs.ChartGuide.properties.ticks.type"
+    },
+    {
+      "id": "guide-orient-unknown",
+      "path": [
+        "guides",
+        0,
+        "orient"
+      ],
+      "value": "diagonal",
+      "expectedValid": false,
+      "normativePath": "$defs.ChartGuide.properties.orient.enum"
+    },
+    {
+      "id": "scale-nice-zero",
+      "path": [
+        "scales",
+        0,
+        "options",
+        "nice"
+      ],
+      "value": 0,
+      "expectedValid": false,
+      "normativePath": "$defs.ChartScaleOptions.properties.nice.anyOf.number.exclusiveMinimum"
+    },
+    {
+      "id": "scale-nice-negative",
+      "path": [
+        "scales",
+        0,
+        "options",
+        "nice"
+      ],
+      "value": -1,
+      "expectedValid": false,
+      "normativePath": "$defs.ChartScaleOptions.properties.nice.anyOf.number.exclusiveMinimum"
+    },
+    {
+      "id": "scale-padding-negative",
+      "path": [
+        "scales",
+        0,
+        "options",
+        "padding"
+      ],
+      "value": -1,
+      "expectedValid": false,
+      "normativePath": "$defs.ChartScaleOptions.properties.padding.minimum"
+    },
+    {
+      "id": "scale-padding-inner-negative",
+      "path": [
+        "scales",
+        0,
+        "options",
+        "paddingInner"
+      ],
+      "value": -0.1,
+      "expectedValid": false,
+      "normativePath": "$defs.ChartScaleOptions.properties.paddingInner.minimum"
+    },
+    {
+      "id": "scale-padding-inner-above-one",
+      "path": [
+        "scales",
+        0,
+        "options",
+        "paddingInner"
+      ],
+      "value": 1.1,
+      "expectedValid": false,
+      "normativePath": "$defs.ChartScaleOptions.properties.paddingInner.maximum"
+    },
+    {
+      "id": "scale-padding-outer-negative",
+      "path": [
+        "scales",
+        0,
+        "options",
+        "paddingOuter"
+      ],
+      "value": -1,
+      "expectedValid": false,
+      "normativePath": "$defs.ChartScaleOptions.properties.paddingOuter.minimum"
+    },
+    {
+      "id": "scale-align-negative",
+      "path": [
+        "scales",
+        0,
+        "options",
+        "align"
+      ],
+      "value": -0.1,
+      "expectedValid": false,
+      "normativePath": "$defs.ChartScaleOptions.properties.align.minimum"
+    },
+    {
+      "id": "scale-align-above-one",
+      "path": [
+        "scales",
+        0,
+        "options",
+        "align"
+      ],
+      "value": 1.1,
+      "expectedValid": false,
+      "normativePath": "$defs.ChartScaleOptions.properties.align.maximum"
+    },
+    {
+      "id": "scale-base-zero",
+      "path": [
+        "scales",
+        0,
+        "options",
+        "base"
+      ],
+      "value": 0,
+      "expectedValid": false,
+      "normativePath": "$defs.ChartScaleOptions.properties.base.exclusiveMinimum"
+    },
+    {
+      "id": "scale-base-one",
+      "path": [
+        "scales",
+        0,
+        "options",
+        "base"
+      ],
+      "value": 1,
+      "expectedValid": false,
+      "normativePath": "$defs.ChartScaleOptions.properties.base.not.const"
+    },
+    {
+      "id": "scale-constant-zero",
+      "path": [
+        "scales",
+        0,
+        "options",
+        "constant"
+      ],
+      "value": 0,
+      "expectedValid": false,
+      "normativePath": "$defs.ChartScaleOptions.properties.constant.exclusiveMinimum"
+    },
+    {
+      "id": "scale-ticks-zero",
+      "path": [
+        "scales",
+        0,
+        "options",
+        "ticks"
+      ],
+      "value": 0,
+      "expectedValid": false,
+      "normativePath": "$defs.ChartScaleOptions.properties.ticks.exclusiveMinimum"
+    },
+    {
+      "id": "scale-interpolator-unknown",
+      "path": [
+        "scales",
+        0,
+        "options",
+        "interpolator"
+      ],
+      "value": "linear",
+      "expectedValid": false,
+      "normativePath": "$defs.ChartScaleOptions.properties.interpolator.enum"
+    },
+    {
+      "id": "scale-interval-unknown",
+      "path": [
+        "scales",
+        0,
+        "options",
+        "interval"
+      ],
+      "value": "hour",
+      "expectedValid": false,
+      "normativePath": "$defs.ChartScaleOptions.properties.interval.enum"
+    },
+    {
+      "id": "scale-scheme-empty",
+      "path": [
+        "scales",
+        0,
+        "options",
+        "scheme"
+      ],
+      "value": "",
+      "expectedValid": false,
+      "normativePath": "$defs.ChartScaleOptions.properties.scheme.minLength"
+    }
+  ]
+}

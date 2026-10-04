@@ -1,0 +1,43 @@
+{
+  "schema": "ifc.intermediate.雪\u0000",
+  "surrogateOffset": 101,
+  "editReference": "9223372036854775808",
+  "cases": [
+    {
+      "removedId": "0",
+      "remainingIds": [
+        "18446744073709551615"
+      ],
+      "references": [
+        {
+          "literal": "0",
+          "resolved": null
+        },
+        {
+          "literal": "0",
+          "resolved": null
+        }
+      ]
+    },
+    {
+      "removedId": "18446744073709551615",
+      "remainingIds": [
+        "0"
+      ],
+      "references": [
+        {
+          "literal": "0",
+          "resolved": "0"
+        },
+        {
+          "literal": "18446744073709551615",
+          "resolved": null
+        },
+        {
+          "literal": "0",
+          "resolved": "0"
+        }
+      ]
+    }
+  ]
+}

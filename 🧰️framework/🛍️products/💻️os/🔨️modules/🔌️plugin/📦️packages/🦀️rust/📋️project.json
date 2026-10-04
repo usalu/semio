@@ -9,6 +9,14 @@
     "family:os-plugin"
   ],
   "targets": {
+    "test-snapshot-sqlite-admission": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite-admission"
+      }
+    },
     "cooperative-host-check": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -153,6 +161,49 @@
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🏗️fixture-channel-interfaces/**/*"
       ],
       "outputs": []
+    },
+    "test-command-ingress-consumer": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-command-ingress-consumer",
+        "forwardAllArgs": true
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/Cargo.toml",
+        "{workspaceRoot}/package.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/📥️command-ingress/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🏛️ownership/🧪️testing/🧩️consumer/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml"
+      ]
+    },
+    "test-snapshot-sqlite-refusal-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite-refusal source"
+      }
+    },
+    "test-snapshot-sqlite-refusal-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite-refusal native"
+      }
+    },
+    "test-snapshot-sqlite-refusal-host-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite-refusal host-native"
+      }
     }
   }
 }

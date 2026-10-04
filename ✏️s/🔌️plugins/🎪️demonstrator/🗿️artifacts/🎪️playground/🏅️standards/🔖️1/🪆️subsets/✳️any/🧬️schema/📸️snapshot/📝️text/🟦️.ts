@@ -49,5 +49,5 @@ export const demonstratorPlaygroundSnapshotTextGuardConstant = <T extends string
 //#endregion 🚪️Parsers
 
 export function parsePlaygroundSnapshotText(value: unknown, at = "$"): PlaygroundSnapshotText {
-  return demonstratorPlaygroundSnapshotTextGuardObject(value, `${at}`);
+  return demonstratorPlaygroundSnapshotTextGuardString(value, at);
 }

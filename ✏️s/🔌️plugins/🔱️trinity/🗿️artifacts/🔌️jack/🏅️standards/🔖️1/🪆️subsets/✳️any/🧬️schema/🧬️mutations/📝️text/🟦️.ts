@@ -49,5 +49,5 @@ export const trinityJackMutationsTextGuardConstant = <T extends string | number 
 //#endregion 🚪️Parsers
 
 export function parseJackMutationsText(value: unknown, at = "$"): JackMutationsText {
-  return trinityJackMutationsTextGuardObject(value, `${at}`);
+  return trinityJackMutationsTextGuardString(value, `${at}`);
 }

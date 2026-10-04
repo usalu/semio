@@ -10,7 +10,7 @@ fn set_frame_flags_locks_a_frame_and_inverse_unlocks_it() {
     let frame = next.pages.iter().find(|page| page.id == "page-1").unwrap().frames.iter().find(|frame| frame.id() == "frame-1").unwrap();
     assert!(frame.locked());
     assert!(!frame.visible());
-    let restored = mutation.inverse(&base)[0].diff(&next).diff().apply(&next).expect("inverse applies");
+    let restored = mutation.inverse(&base).expect("valid retained mutation inverse fixture")[0].diff(&next).diff().apply(&next).expect("inverse applies");
     let frame = restored.pages.iter().find(|page| page.id == "page-1").unwrap().frames.iter().find(|frame| frame.id() == "frame-1").unwrap();
     assert!(!frame.locked());
     assert!(frame.visible());

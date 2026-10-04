@@ -24,7 +24,7 @@ fn sample_svg() -> SvgSnapshot {
 
 #[semio_framework_async_macros::async_test]
 async fn maps_canvas_shapes_group_transform_and_text() {
-    let drawing = semio_framework_plugin::resolve_ready(SemioDrawingFromSvg::deserialize(&sample_svg())).expect("deserialize");
+    let drawing = ::semio_framework_async::poll::resolve_ready(SemioDrawingFromSvg::deserialize(&sample_svg())).expect("deserialize");
     assert_eq!(drawing.canvas.width, 100.0);
     assert_eq!(drawing.canvas.height, 50.0);
     assert_eq!(drawing.layers.len(), 1);

@@ -14,7 +14,7 @@ pub fn diff(payload: &ReplaceBenchmarkRecord, base: &ProgramSnapshot) -> protoco
         return protocol::MutationOutcome::error("mutation.target-missing", "No benchmark record exists with this id.", [payload.benchmark_record.header.id.0.clone()]);
     };
     if *existing == payload.benchmark_record {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This benchmark record already matches the requested value.").at([payload.benchmark_record.header.id.0.clone()])]);
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This benchmark record already matches the requested value.").at([payload.benchmark_record.header.id.0.clone()])]);
     }
     *existing = payload.benchmark_record.clone();
     protocol::MutationOutcome::new(ProgramDiff { benchmarks_payload: Some(records.clone()), benchmarks: Some(crate::benchmarks_child_from_records(&records)), ..Default::default() })

@@ -1,5 +1,5 @@
 import {parseSchemaRecord} from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
-import {parseBinary64,type Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {type Binary64,parseBinary64Transport} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 export type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 /** 🧬️ Fem2d snapshot schema — artifact-lane fields only. */
 
@@ -128,7 +128,7 @@ const femFem2dSnapshotGuardArray=(v:unknown,at:string,b:{minItems?:number;maxIte
 const femFem2dSnapshotGuardString=(v:unknown,at:string):string=>{if(typeof v!=="string")throw Error(`${at}: text required`);return v};
 const femFem2dSnapshotGuardBoolean=(v:unknown,at:string):boolean=>{if(typeof v!=="boolean")throw Error(`${at}: boolean required`);return v};
 const femFem2dSnapshotGuardMember=<T extends string>(v:unknown,at:string,m:readonly T[]):T=>{if(typeof v!=="string"||!m.includes(v as T))throw Error(`${at}: variant differs`);return v as T};
-const femFem2dSnapshotGuardWord=(v:unknown,at:string):Binary64=>parseBinary64(parseSchemaRecord(v,["bits"],at));
+const femFem2dSnapshotGuardWord=(v:unknown,_at:string):Binary64=>parseBinary64Transport(v);
 
 function parseFemPoint(value: unknown, at: string): [Binary64, Binary64] {
   const point = femFem2dSnapshotGuardArray(value, at, { minItems: 2, maxItems: 2 });

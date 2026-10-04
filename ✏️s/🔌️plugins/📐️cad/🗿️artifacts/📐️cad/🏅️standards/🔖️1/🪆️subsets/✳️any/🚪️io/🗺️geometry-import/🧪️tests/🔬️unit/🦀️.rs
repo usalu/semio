@@ -17,8 +17,8 @@ fn mesh_triangle_area(mesh: &MeshData, triangle_index: usize) -> f32 {
 #[semio_framework_async_macros::async_test]
 async fn forest_wire_chains_reversed_edges_by_vertex_id() {
     let source = include_str!("../../../../📚️examples/🖼️assets/🎮️play/🔣️.json");
-    let root: protocol::os_pack::json::Value = protocol::json::parse(source).expect("fixture");
-    let geometry_value = root.pointer("/models/0/model/geometry").map(protocol::json::to_dsl_value);
+    let root: semio_framework_pack_json::Value = semio_framework_pack_json::parse(source, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture");
+    let geometry_value = root.pointer("/models/0/model/geometry").map(semio_framework_pack_json::to_dsl_value);
     let geometry = parse_geometry(geometry_value.as_ref());
     let edges = edge_map(&geometry);
     let wire = geometry.wires.iter().find(|wire| wire.id == "hexagonal-cut-concrete-forest-left-wire-103").expect("wire");
@@ -38,10 +38,10 @@ async fn forest_wire_chains_reversed_edges_by_vertex_id() {
 #[semio_framework_async_macros::async_test]
 async fn forest_shape_geometry_imports_solid_handle() {
     let source = include_str!("../../../../📚️examples/🖼️assets/🎮️play/🔣️.json");
-    let root: protocol::os_pack::json::Value = protocol::json::parse(source).expect("fixture");
-    let geometry_value = root.pointer("/models/0/model/geometry").map(protocol::json::to_dsl_value);
+    let root: semio_framework_pack_json::Value = semio_framework_pack_json::parse(source, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture");
+    let geometry_value = root.pointer("/models/0/model/geometry").map(semio_framework_pack_json::to_dsl_value);
     let geometry = parse_geometry(geometry_value.as_ref());
-    let objects: Vec<DslValue> = root.pointer("/models/0/model/objects").and_then(|value| value.as_array()).map(|entries| entries.iter().map(protocol::json::to_dsl_value).collect()).unwrap_or_default();
+    let objects: Vec<DslValue> = root.pointer("/models/0/model/objects").and_then(|value| value.as_array()).map(|entries| entries.iter().map(semio_framework_pack_json::to_dsl_value).collect()).unwrap_or_default();
     let mut kernel = Brep::new();
     let imported = objects_from_host_snapshot_model(&mut kernel, &objects, &geometry);
     assert_eq!(imported.len(), 1);
@@ -58,10 +58,10 @@ async fn forest_shape_geometry_imports_solid_handle() {
 #[semio_framework_async_macros::async_test]
 async fn forest_energy_surface_tessellates_at_authored_height() {
     let source = include_str!("../../../../📚️examples/🖼️assets/🎮️play/🔣️.json");
-    let root: protocol::os_pack::json::Value = protocol::json::parse(source).expect("fixture");
-    let geometry_value = root.pointer("/models/2/model/geometry").map(protocol::json::to_dsl_value);
+    let root: semio_framework_pack_json::Value = semio_framework_pack_json::parse(source, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture");
+    let geometry_value = root.pointer("/models/2/model/geometry").map(semio_framework_pack_json::to_dsl_value);
     let geometry = parse_geometry(geometry_value.as_ref());
-    let objects: Vec<DslValue> = root.pointer("/models/2/model/objects").and_then(|value| value.as_array()).map(|entries| entries.iter().map(protocol::json::to_dsl_value).collect()).unwrap_or_default();
+    let objects: Vec<DslValue> = root.pointer("/models/2/model/objects").and_then(|value| value.as_array()).map(|entries| entries.iter().map(semio_framework_pack_json::to_dsl_value).collect()).unwrap_or_default();
     let mut kernel = Brep::new();
     let imported = objects_from_host_snapshot_model(&mut kernel, &objects, &geometry);
     assert_eq!(imported.len(), 1);
@@ -77,10 +77,10 @@ async fn forest_energy_surface_tessellates_at_authored_height() {
 #[semio_framework_async_macros::async_test]
 async fn forest_structure_surface_tessellates_at_authored_height() {
     let source = include_str!("../../../../📚️examples/🖼️assets/🎮️play/🔣️.json");
-    let root: protocol::os_pack::json::Value = protocol::json::parse(source).expect("fixture");
-    let geometry_value = root.pointer("/models/3/model/geometry").map(protocol::json::to_dsl_value);
+    let root: semio_framework_pack_json::Value = semio_framework_pack_json::parse(source, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture");
+    let geometry_value = root.pointer("/models/3/model/geometry").map(semio_framework_pack_json::to_dsl_value);
     let geometry = parse_geometry(geometry_value.as_ref());
-    let objects: Vec<DslValue> = root.pointer("/models/3/model/objects").and_then(|value| value.as_array()).map(|entries| entries.iter().map(protocol::json::to_dsl_value).collect()).unwrap_or_default();
+    let objects: Vec<DslValue> = root.pointer("/models/3/model/objects").and_then(|value| value.as_array()).map(|entries| entries.iter().map(semio_framework_pack_json::to_dsl_value).collect()).unwrap_or_default();
     let mut kernel = Brep::new();
     let imported = objects_from_host_snapshot_model(&mut kernel, &objects, &geometry);
     let slab = imported.iter().find(|object| object.primitives.iter().any(|primitive| primitive.kind == "surface")).expect("surface object");
@@ -92,10 +92,10 @@ async fn forest_structure_surface_tessellates_at_authored_height() {
 #[semio_framework_async_macros::async_test]
 async fn forest_structure_curve_wires_tessellate_as_centerlines() {
     let source = include_str!("../../../../📚️examples/🖼️assets/🎮️play/🔣️.json");
-    let root: protocol::os_pack::json::Value = protocol::json::parse(source).expect("fixture");
-    let geometry_value = root.pointer("/models/3/model/geometry").map(protocol::json::to_dsl_value);
+    let root: semio_framework_pack_json::Value = semio_framework_pack_json::parse(source, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture");
+    let geometry_value = root.pointer("/models/3/model/geometry").map(semio_framework_pack_json::to_dsl_value);
     let geometry = parse_geometry(geometry_value.as_ref());
-    let objects: Vec<DslValue> = root.pointer("/models/3/model/objects").and_then(|value| value.as_array()).map(|entries| entries.iter().map(protocol::json::to_dsl_value).collect()).unwrap_or_default();
+    let objects: Vec<DslValue> = root.pointer("/models/3/model/objects").and_then(|value| value.as_array()).map(|entries| entries.iter().map(semio_framework_pack_json::to_dsl_value).collect()).unwrap_or_default();
     let mut kernel = Brep::new();
     let imported = objects_from_host_snapshot_model(&mut kernel, &objects, &geometry);
     assert!(!imported.is_empty());

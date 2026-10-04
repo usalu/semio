@@ -4,6 +4,9 @@
 use crate::mutations::{delete_tile, Wfc2dMutation};
 use crate::schema::snapshot::Wfc2dSnapshot;
 
-pub fn inverse(payload: &super::CreateTile, _base: &Wfc2dSnapshot) -> Vec<Wfc2dMutation> {
+pub fn inverse(payload: &super::CreateTile, _base: &Wfc2dSnapshot) -> Result<Vec<Wfc2dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![delete_tile(payload.tile.id.clone())]
+
+    })())
 }

@@ -1272,7 +1272,7 @@ impl<T: Topology + Clone> WfcJob<T> {
         self.reset_preview_delta();
         self.preview_units = 0;
         self.last_preview_ms = Some(now_ms);
-        let bytes = semio_framework_os_kernel::json::to_json_string(&preview).into_bytes();
+        let bytes = semio_framework_pack_json::to_json_string(&preview).into_bytes();
         self.publication = Some(Publication::new(PublicationKind::Preview, bytes, Vec::new()));
         Publication::poll(&mut self.publication, context)
     }
@@ -1710,7 +1710,7 @@ impl<T: Topology + Clone + Send> InteractiveJob for WfcRestore<T> {
                 let preview = RestorePreview { sequence, stage: self.stage, completed, total };
                 self.preview_units = 0;
                 self.last_preview_ms = Some(now_ms);
-                let bytes = semio_framework_os_kernel::json::to_json_string(&preview).into_bytes();
+                let bytes = semio_framework_pack_json::to_json_string(&preview).into_bytes();
                 self.publication = Some(Publication::new(PublicationKind::Preview, bytes, Vec::new()));
                 return Publication::poll(&mut self.publication, context);
             }

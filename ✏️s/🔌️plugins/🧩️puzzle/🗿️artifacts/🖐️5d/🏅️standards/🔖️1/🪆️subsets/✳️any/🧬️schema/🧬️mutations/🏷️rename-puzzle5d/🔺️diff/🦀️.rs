@@ -8,7 +8,7 @@ pub fn diff(payload: &super::RenamePuzzle5d, base: &Puzzle5dSnapshot) -> protoco
     // identity — not a catalog member addressed by id, so there is no missing-target or duplicate-id
     // case, only the no-op check applies.
     if payload.new_label == base.label {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Label is unchanged.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Label is unchanged.");
     }
     protocol::MutationOutcome::new(Puzzle5dDiff { label: Some(payload.new_label.clone()), ..Default::default() })
 }

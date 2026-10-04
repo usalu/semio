@@ -1,17 +1,22 @@
 use super::*;
-use crate::{DslValue, FromValue};
-use crate::os_dsl::schema::{parse_exact, print_record, JoinMode, ParseOptions, Writer};
+use semio_framework_value::DslValue;
+use semio_framework_value::FromValue;
+use semio_framework_dsl_record::parse_exact;
+use semio_framework_dsl_record::print_record;
+use semio_framework_dsl_record::JoinMode;
+use semio_framework_dsl_record::ParseOptions;
+use semio_framework_dsl_record::Writer;
 
 fn check<T: DslField + FromValue + PartialEq + std::fmt::Debug>(value: &serde_json::Value) {
-    let pose = <T as FromValue>::from_value(DslValue::from(value.clone())).unwrap();
+    let pose = <T as FromValue>::from_value(semio_framework_value::DslValue::from(value.clone())).unwrap();
     let Shape::Record(spec) = T::shape() else { panic!("viewport record shape"); };
     let spec = (spec.ordinary)();
     let FieldValue::Record(record) = DslField::to_value(&pose) else { panic!("viewport record value"); };
-    for mode in [JoinMode::Inline, JoinMode::Document] {
-        let mut writer = Writer::new();
+    for mode in [semio_framework_dsl_record::JoinMode::Inline, semio_framework_dsl_record::JoinMode::Document] {
+        let mut writer = semio_framework_dsl_record::Writer::new();
         print_record(&record, &spec, &mut writer);
         let text = writer.render(mode);
-        let decoded = parse_exact(&text, &spec, &ParseOptions::default()).unwrap();
+        let decoded = parse_exact(&text, &spec, &semio_framework_dsl_record::ParseOptions::default()).unwrap();
         assert_eq!(<T as DslField>::from_value(&FieldValue::Record(decoded)).unwrap(), pose);
     }
     let packed = crate::os_store::pack_rt::encode_document(&spec, &record, &crate::os_store::PackEncodeOptions::default()).unwrap();

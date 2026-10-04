@@ -23,10 +23,13 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetOpenAction {
         MutationOutcome::new(diff::diff_set_open_action(base, self.action.clone()))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         let _ = base;
         vec![PdfMutation::SetOpenAction(SetOpenAction { action: base.open_action.clone() })]
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set open-action", "Öffnen-Aktion setzen")

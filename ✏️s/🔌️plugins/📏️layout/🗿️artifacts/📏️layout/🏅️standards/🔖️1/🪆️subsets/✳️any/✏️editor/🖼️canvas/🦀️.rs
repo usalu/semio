@@ -73,7 +73,7 @@ fn rotated_proxy_layer(image: &crate::editor::layout::engine::scene::DisplayImag
     let data_url = image.proxy_data_url.as_deref()?;
     let payload = data_url.strip_prefix("data:image/png;base64,")?;
     let bytes = decode_base64(payload).ok()?;
-    let source = semio_s_artifact_stdio_png::io::decode_png(&bytes).ok()?;
+    let source = semio_s_artifact_stdio_png::io::project_png(&bytes).ok()?;
     let expected = (source.width as usize).checked_mul(source.height as usize)?.checked_mul(4)?;
     if source.width == 0 || source.height == 0 || source.pixels.len() != expected {
         return None;
@@ -122,11 +122,11 @@ fn rotated_proxy_layer(image: &crate::editor::layout::engine::scene::DisplayImag
             pixels[to..to + 4].copy_from_slice(&source.pixels[from..from + 4]);
         }
     }
-    let mut encoded = semio_s_artifact_stdio_png::PngSnapshot::default();
+    let mut encoded = semio_s_artifact_stdio_png::io::PngProjection {width:1,height:1,bit_depth:8,color_type:semio_s_artifact_stdio_png::schema::snapshot::PngColorType::Rgba,interlace:false,plte:None,trns:None,gama:None,chrm:None,srgb:None,phys:None,time:None,bkgd:None,text_chunks:Vec::new(),pixels:Vec::new(),chunk_order:Vec::new(),unknown_chunks:Vec::new()};
     encoded.width = out_width;
     encoded.height = out_height;
     encoded.pixels = pixels;
-    let png = semio_s_artifact_stdio_png::io::encode_png(&encoded).ok()?;
+    let png = semio_s_artifact_stdio_png::io::author_png_projection(&encoded).ok()?;
     Some(json!({
         "id": format!("{}.image", image.object_id),
         "kind": "image",

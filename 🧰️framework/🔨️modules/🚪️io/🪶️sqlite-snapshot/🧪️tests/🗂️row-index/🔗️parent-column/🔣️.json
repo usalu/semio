@@ -1,0 +1,12 @@
+{
+ "authority":"literalSelectedParentColumn",
+ "parent":"9007199254740993",
+ "columns":[1,2],
+ "ordinal":3,
+ "rows":[
+  {"id":1,"page":"9007199254740993","parentPage":null,"ordinal":1,"literal":"page second\u0000語"},
+  {"id":2,"page":null,"parentPage":"9007199254740993","ordinal":0,"literal":"parent first🧬"},
+  {"id":3,"page":"9007199254740993","parentPage":null,"ordinal":0,"literal":"page first"},
+  {"id":4,"page":null,"parentPage":"9007199254740993","ordinal":1,"literal":"parent second"}
+ ]
+}

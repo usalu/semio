@@ -53,7 +53,7 @@ impl SubsetRoundtripSpec for En1990AnyRoundtrip {
         en1990_from_dsl_bytes(bytes).map_err(|error| error.to_string())
     }
 
-    async fn infer(snapshot: &Self::Snapshot) -> Self::Inference {
+    async fn infer(snapshot: &Self::Snapshot) -> Result<Self::Inference, semio_framework_value::ValueError> {
         En1990Inference::infer(snapshot)
     }
 

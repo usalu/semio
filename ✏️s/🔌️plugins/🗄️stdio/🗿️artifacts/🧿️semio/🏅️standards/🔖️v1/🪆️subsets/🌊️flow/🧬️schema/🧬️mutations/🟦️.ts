@@ -1,10 +1,12 @@
 /** 🧬️ SemioFlowMutation schema — real facet mirror of `🧬️mutations/🦀️.rs`; that Rust
  * file is the source of truth. Discriminated union on the `mutation` tag. */
 import type {SemioPoint2,PortRef,FlowParam,FlowNode,FlowEdge,SemioFlowSnapshot} from "../📸️snapshot/🟦️.ts";
+import type { SnapshotPatch } from '../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts';
 export type {SemioPoint2,PortRef,FlowParam,FlowNode,FlowEdge,SemioFlowSnapshot} from "../📸️snapshot/🟦️.ts";
 
 export type SemioFlowMutation =
   | { mutation: "setSnapshot"; snapshot: SemioFlowSnapshot }
+  | { readonly mutation: 'patchSnapshot'; readonly patch: SnapshotPatch }
   | { mutation: "insertNode"; node: FlowNode }
   | { mutation: "removeNode"; id: string }
   | { mutation: "setNodeKind"; id: string; kind: string }

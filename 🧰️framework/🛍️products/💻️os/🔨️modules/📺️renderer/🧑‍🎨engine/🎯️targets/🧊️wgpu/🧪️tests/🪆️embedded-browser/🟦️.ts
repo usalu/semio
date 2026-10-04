@@ -80,7 +80,7 @@ export async function runEmbeddedBrowserAcceptance(args: readonly string[]): Pro
         const spec = fixture.roots[index]!; const plugins = config.roots[index]!.plugins;
         const frameWorkerUrl = index === 0 && !mounts[spec.rootId] ? undefined : config.frameWorkerUrl;
         if (mounts[spec.rootId]) stale[spec.rootId] = mounts[spec.rootId];
-        mounts[spec.rootId] = config.renderer === "wgpu" ? await module.bootFrameworkOsWgpu({ rootId: spec.rootId, plugin: spec.plugin, plugins, locks: { locale: spec.locale }, rendererModuleUrl: config.rendererModuleUrl, rendererWasmUrl: config.rendererWasmUrl, frameWorkerUrl, suppressAutoIntroduction: spec.suppressAutoIntroduction }) : await module.mountEmbeddedReactOracle({ ...spec, plugins, sessionFactoryModules: config.sessionFactoryModules });
+        mounts[spec.rootId] = config.renderer === "wgpu" ? await module.bootFrameworkOsWgpu({ rootId: spec.rootId, plugin: spec.plugin, plugins, locks: { locale: spec.locale }, rendererModuleUrl: config.rendererModuleUrl }, { rendererWasmUrl: config.rendererWasmUrl, frameWorkerUrl, suppressAutoIntroduction: spec.suppressAutoIntroduction }) : await module.mountEmbeddedReactOracle({ ...spec, plugins, sessionFactoryModules: config.sessionFactoryModules });
       };
       state.embeddedAcceptance = { mounts, stale, inputs, boot, focusOwner };
       await boot(0); await boot(1);
@@ -167,7 +167,7 @@ export async function runEmbeddedBrowserAcceptance(args: readonly string[]): Pro
       const root = document.createElement("div"); root.id = "iframe-shell"; root.style.cssText = "width:760px;height:880px"; document.body.appendChild(root);
       const module = await import(config.libraryModuleUrl); const spec = fixture.roots[0]!; const plugins = config.roots[0]!.plugins;
       if (config.styleModuleUrl) await import(config.styleModuleUrl);
-      (window as any).iframeMount = config.renderer === "wgpu" ? await module.bootFrameworkOsWgpu({ rootId: root.id, plugin: spec.plugin, plugins, locks: { locale: spec.locale }, rendererModuleUrl: config.rendererModuleUrl, rendererWasmUrl: config.rendererWasmUrl, frameWorkerUrl: config.frameWorkerUrl, suppressAutoIntroduction: false }) : await module.mountEmbeddedReactOracle({ ...spec, rootId: root.id, plugins, sessionFactoryModules: config.sessionFactoryModules, suppressAutoIntroduction: false });
+      (window as any).iframeMount = config.renderer === "wgpu" ? await module.bootFrameworkOsWgpu({ rootId: root.id, plugin: spec.plugin, plugins, locks: { locale: spec.locale }, rendererModuleUrl: config.rendererModuleUrl }, { rendererWasmUrl: config.rendererWasmUrl, frameWorkerUrl: config.frameWorkerUrl, suppressAutoIntroduction: false }) : await module.mountEmbeddedReactOracle({ ...spec, rootId: root.id, plugins, sessionFactoryModules: config.sessionFactoryModules, suppressAutoIntroduction: false });
     }, { config, fixture });
     await iframe.locator("[data-semio-os-ready],[data-shell-ready]").first().waitFor({ timeout: 90_000 });
     await page.waitForTimeout(1500);

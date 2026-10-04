@@ -1,0 +1,33 @@
+{
+  "at": "2026-10-03T11:17:03.123Z",
+  "authority": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/paged-command-ingress/test-phase-route-corrections-4.json",
+  "sourceWrites": 3,
+  "productionWrites": 0,
+  "post": [
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/package.json",
+      "sha256": "0bd360ade711948dd6c607d2d2c93e3580d74ffa19439e867a1fa9b5368e98ae",
+      "exact": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json",
+      "sha256": "5b0f3e70bbf815864b1fce514072ae463a89eeeed1923524d3c79e778b7d01f1",
+      "exact": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🏛️ownership/🧪️tests/🟦️.ts",
+      "sha256": "5ca5144de482b9a98b837d7e3d0d32b26e0f726f25052bd08b4d5d29024067b9",
+      "exact": true
+    }
+  ],
+  "foreignObservedPaths": [
+    "🧰️framework/🔨️modules/🎠️kernel/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+    "🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🔬️app-label/🦀️.rs",
+    "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/📤️file-open-import/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs"
+  ],
+  "productionRebasePending": true,
+  "registeredRed": "pending",
+  "native": false
+}

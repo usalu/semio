@@ -4,7 +4,7 @@
 //!
 //! Contract D6: a rejected vector commits no `🔺️diff/🔣️.json` at all — the empty
 //! `🔺️diff/🚫️.absent` sentinel beside this file stands in its place, so nothing here invents an
-//! empty patch. Snapshot canonicality is measured through `dsl::json`, the encoder this artifact's
+//! empty patch. Snapshot canonicality is measured through `semio_framework_pack_json`, the encoder this artifact's
 //! documents are written with.
 
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
@@ -18,13 +18,13 @@ const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutati
 const DIFF_ABSENT: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌍create-target-region/🚫️rejects/🔺️diff/🚫️.absent");
 
 fn before() -> Puzzle2dSnapshot {
-    dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> Puzzle2dSnapshot {
-    dsl::json::from_json_str(AFTER).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> Puzzle2dMutation {
-    dsl::json::from_json_str(MUTATION).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 
 /// ▶️ A refused `create-target-region` still applies cleanly — its diff is the default one — and leaves the board
@@ -47,14 +47,14 @@ fn the_refusal_is_the_declared_one() {
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "create-target-region/rejects-a-region-id-the-board-already-holds: exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.duplicate-id", "create-target-region/rejects-a-region-id-the-board-already-holds: the refusal code is fixed by this vector");
-    assert_eq!(messages[0].level, protocol::Severity::Fatal, "create-target-region/rejects-a-region-id-the-board-already-holds: the refusal level is fixed by this vector");
+    assert_eq!(messages[0].level, semio_framework_diagnostic::Severity::Fatal, "create-target-region/rejects-a-region-id-the-board-already-holds: the refusal level is fixed by this vector");
     assert_eq!(messages[0].target, vec!["region-1".to_string()], "create-target-region/rejects-a-region-id-the-board-already-holds: the diagnostic addresses exactly what the payload named");
 }
 
 /// ↩️ `create-target-region`'s inverse is PAYLOAD-derived, so a refused create still answers a `delete-target-region` of the id it was asked to create.
 #[test]
 fn inverse_of_a_refusal() {
-    let inverse = inverse_puzzle2d_mutation(&before(), &mutation());
+    let inverse = inverse_puzzle2d_mutation(&before(), &mutation()).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "create-target-region/rejects-a-region-id-the-board-already-holds: got {inverse:?}");
 }
 
@@ -62,8 +62,8 @@ fn inverse_of_a_refusal() {
 #[test]
 fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: Puzzle2dSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: Puzzle2dSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "create-target-region/rejects-a-region-id-the-board-already-holds: committed {label} JSON is not canonical");
     }

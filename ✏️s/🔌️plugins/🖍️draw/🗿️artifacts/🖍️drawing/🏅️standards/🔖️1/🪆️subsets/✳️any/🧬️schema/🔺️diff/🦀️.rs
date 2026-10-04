@@ -11,7 +11,7 @@ use std::collections::BTreeMap;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the drawing artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -36,7 +36,7 @@ pub struct DrawingDiff {
 
 //#region 🔖️DeltaHelpers
 /// 🗂️ Asset-map wrapper so optional map diffs stay scalar across formats.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -45,7 +45,7 @@ pub struct DrawingAssetsDelta {
 }
 
 /// 📋 String-list wrapper so optional list diffs stay scalar across formats.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -54,7 +54,7 @@ pub struct DrawingStringList {
 }
 
 /// 🧩 Identified-collection delta for `layers`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -69,7 +69,7 @@ pub struct DrawingLayersDelta {
 /// can only ever describe a root-level append, which silently dropped nested `create`/`reorder`
 /// targets into group children; `create-layer`/`reorder-layer`'s handcrafted diffs need the real
 /// address to stay sparse instead of falling back to a whole-snapshot capture).
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -82,7 +82,7 @@ pub struct DrawingLayerAddition {
 }
 
 /// 🩹 One patched layer entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -92,7 +92,7 @@ pub struct DrawingLayerPatchEntry {
 }
 
 /// 🩹 Sparse layer field patch (JSON blobs for complex nested values).
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -251,7 +251,7 @@ fn apply_layer_patch_entry(layers: &mut [DrawingLayerNode], entry: &DrawingLayer
 
 fn apply_layer_patch(layer: &mut DrawingLayerNode, patch: &DrawingLayerPatch) -> protocol::MutationApplyResult<()> {
     if let Some(layer_json) = &patch.layer_json {
-        let replacement = dsl::json::from_json_str::<DrawingLayerNode>(layer_json).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-value", format!("layer patch is not valid JSON: {error}")).at(["layerJson"]))?;
+        let replacement = semio_framework_pack_json::from_json_str::<DrawingLayerNode>(layer_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-value", format!("layer patch is not valid JSON: {error}")).at(["layerJson"]))?;
         if crate::schema::layer_id(&replacement) != crate::schema::layer_id(layer) {
             return Err(protocol::MutationApplyError::new("mutation.apply.invalid-target", "layer patch cannot change the target identity").at(["layerJson"]));
         }
@@ -294,13 +294,13 @@ fn apply_layer_patch(layer: &mut DrawingLayerNode, patch: &DrawingLayerPatch) ->
         base.blend_mode = blend_mode.clone();
     }
     if let Some(transform_json) = &patch.transform_json {
-        base.transform = dsl::json::from_json_str(transform_json).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-value", format!("transform is not valid JSON: {error}")).at(["transformJson"]))?;
+        base.transform = semio_framework_pack_json::from_json_str(transform_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-value", format!("transform is not valid JSON: {error}")).at(["transformJson"]))?;
     }
     if let Some(fill_json) = &patch.fill_json {
-        base.attributes.fill = dsl::json::from_json_str::<Option<FillStyle>>(fill_json).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-value", format!("fill is not valid JSON: {error}")).at(["fillJson"]))?;
+        base.attributes.fill = semio_framework_pack_json::from_json_str::<Option<FillStyle>>(fill_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-value", format!("fill is not valid JSON: {error}")).at(["fillJson"]))?;
     }
     if let Some(stroke_json) = &patch.stroke_json {
-        base.attributes.stroke = dsl::json::from_json_str::<Option<StrokeStyle>>(stroke_json).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-value", format!("stroke is not valid JSON: {error}")).at(["strokeJson"]))?;
+        base.attributes.stroke = semio_framework_pack_json::from_json_str::<Option<StrokeStyle>>(stroke_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-value", format!("stroke is not valid JSON: {error}")).at(["strokeJson"]))?;
     }
     if let Some(operation) = &patch.boolean_operation {
         let DrawingLayerNode::Boolean(boolean) = layer else {
@@ -312,7 +312,7 @@ fn apply_layer_patch(layer: &mut DrawingLayerNode, patch: &DrawingLayerPatch) ->
         let DrawingLayerNode::Trace(trace) = layer else {
             return Err(protocol::MutationApplyError::new("mutation.apply.invalid-target", "trace parameters patch requires a trace layer").at(["traceParamsJson"]));
         };
-        trace.params = dsl::json::from_json_str(params_json).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-value", format!("trace parameters are not valid JSON: {error}")).at(["traceParamsJson"]))?;
+        trace.params = semio_framework_pack_json::from_json_str(params_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-value", format!("trace parameters are not valid JSON: {error}")).at(["traceParamsJson"]))?;
     }
     Ok(())
 }
@@ -478,12 +478,12 @@ pub fn diff_set_layer_blend_mode(layer_id: &str, blend_mode: &str) -> DrawingDif
 
 /// ↔️ Layer transform patch.
 pub fn diff_set_layer_transform(layer_id: &str, transform: &crate::DrawingTransform) -> DrawingDiff {
-    layer_base_patch(layer_id, DrawingLayerPatch { transform_json: Some(dsl::json::to_json_string(transform)), ..Default::default() })
+    layer_base_patch(layer_id, DrawingLayerPatch { transform_json: Some(semio_framework_pack_json::to_json_string(transform)), ..Default::default() })
 }
 
 /// ↔️ Several layers' transform patches in one sparse delta, in the given order.
 pub fn diff_set_layer_transforms(entries: impl IntoIterator<Item = (String, crate::DrawingTransform)>) -> DrawingDiff {
-    let patched = entries.into_iter().map(|(id, transform)| DrawingLayerPatchEntry { id, patch: DrawingLayerPatch { transform_json: Some(dsl::json::to_json_string(&transform)), ..Default::default() } }).collect();
+    let patched = entries.into_iter().map(|(id, transform)| DrawingLayerPatchEntry { id, patch: DrawingLayerPatch { transform_json: Some(semio_framework_pack_json::to_json_string(&transform)), ..Default::default() } }).collect();
     DrawingDiff { layers: Some(DrawingLayersDelta { patched, ..Default::default() }), ..Default::default() }
 }
 
@@ -495,12 +495,12 @@ pub fn diff_set_path_geometries(entries: impl IntoIterator<Item = (String, Vec<c
 
 /// 🎨 Layer fill patch.
 pub fn diff_set_fill(layer_id: &str, fill: &Option<FillStyle>) -> DrawingDiff {
-    layer_base_patch(layer_id, DrawingLayerPatch { fill_json: Some(dsl::json::to_json_string(fill)), ..Default::default() })
+    layer_base_patch(layer_id, DrawingLayerPatch { fill_json: Some(semio_framework_pack_json::to_json_string(fill)), ..Default::default() })
 }
 
 /// ✏️ Layer stroke patch.
 pub fn diff_set_stroke(layer_id: &str, stroke: &Option<StrokeStyle>) -> DrawingDiff {
-    layer_base_patch(layer_id, DrawingLayerPatch { stroke_json: Some(dsl::json::to_json_string(stroke)), ..Default::default() })
+    layer_base_patch(layer_id, DrawingLayerPatch { stroke_json: Some(semio_framework_pack_json::to_json_string(stroke)), ..Default::default() })
 }
 
 /// 🔀 Boolean operation patch.
@@ -510,7 +510,7 @@ pub fn diff_set_boolean_operation(layer_id: &str, boolean_operation: &str) -> Dr
 
 /// 🖼️ Trace params patch.
 pub fn diff_set_trace_params(layer_id: &str, params: &crate::DrawingTraceParams) -> DrawingDiff {
-    layer_base_patch(layer_id, DrawingLayerPatch { trace_params_json: Some(dsl::json::to_json_string(params)), ..Default::default() })
+    layer_base_patch(layer_id, DrawingLayerPatch { trace_params_json: Some(semio_framework_pack_json::to_json_string(params)), ..Default::default() })
 }
 
 /// 🌱️ Layer insertion at a real (parent, index) address — root when `parent_id` is `None`.

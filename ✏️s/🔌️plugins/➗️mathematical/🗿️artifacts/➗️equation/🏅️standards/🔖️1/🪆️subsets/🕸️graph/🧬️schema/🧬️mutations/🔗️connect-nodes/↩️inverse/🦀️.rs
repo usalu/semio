@@ -5,10 +5,13 @@ use crate::standards::v1::subsets::graph::schema::mutations::disconnect_nodes;
 use crate::{EquationMutation, EquationSnapshot};
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::ConnectNodes, base: &EquationSnapshot) -> Vec<EquationMutation> {
-    if crate::equation_graph(base).edges.iter().any(|edge| edge.id == payload.id) {
+pub fn inverse(payload: &super::ConnectNodes, base: &EquationSnapshot) -> Result<Vec<EquationMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
+    if base.graph.edges.iter().any(|edge| edge.id == payload.id) {
         return Vec::new();
     }
     vec![EquationMutation::DisconnectNodes(disconnect_nodes::DisconnectNodes { id: payload.id.clone() })]
+
+    })())
 }
 //#endregion 🔖️Inverse

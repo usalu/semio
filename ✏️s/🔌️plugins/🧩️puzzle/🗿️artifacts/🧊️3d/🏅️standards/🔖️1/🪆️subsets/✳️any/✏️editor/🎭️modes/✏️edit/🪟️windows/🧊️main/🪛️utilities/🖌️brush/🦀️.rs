@@ -53,6 +53,7 @@ pub fn run_definition() -> ToolRunDefinition {
         revalidate_job: None,
         settings: ToolRunSettingsReads { config: vec!["/contactTolerance".into(), "/objectKindWeights".into(), "/vortexKindWeights".into()], window_config: Default::default() },
         windows: Vec::new(),
+        member: None,
     }
 }
 
@@ -135,17 +136,17 @@ pub fn run_effects(link: &mut BrushSuggestionsLink, run: Option<&ToolRunView>) -
         (true, None) => {
             link.requested = Some((BrushSuggestionsRequest::Start, identity));
             link.retry = false;
-            vec![run_action(TOOL_RUN_START_ACTION_ID, dsl::DslValue::object([(TOOL_RUN_ARG_TOOL_ID.to_string(), dsl::DslValue::String(UTILITY_ID.into()))]))]
+            vec![run_action(TOOL_RUN_START_ACTION_ID, semio_framework_value::DslValue::object([(TOOL_RUN_ARG_TOOL_ID.to_string(), semio_framework_value::DslValue::String(UTILITY_ID.into()))]))]
         }
         (false, Some(run)) => {
             link.requested = Some((BrushSuggestionsRequest::Abort, identity));
-            vec![run_action(TOOL_RUN_ABORT_ACTION_ID, dsl::DslValue::object([(TOOL_RUN_ARG_RUN_ID.to_string(), dsl::DslValue::String(run.identity.id.run.to_string())), (TOOL_RUN_ARG_GENERATION.to_string(), dsl::DslValue::uint(u64::from(run.identity.generation)))]))]
+            vec![run_action(TOOL_RUN_ABORT_ACTION_ID, semio_framework_value::DslValue::object([(TOOL_RUN_ARG_RUN_ID.to_string(), semio_framework_value::DslValue::String(run.identity.id.run.to_string())), (TOOL_RUN_ARG_GENERATION.to_string(), semio_framework_value::DslValue::uint(u64::from(run.identity.generation)))]))]
         }
         (false, None) => Vec::new(),
     }
 }
 
-fn run_action(action: &str, args: dsl::DslValue) -> Effect {
+fn run_action(action: &str, args: semio_framework_value::DslValue) -> Effect {
     Effect::DispatchAction { req: RequestId(semio_framework_job::allocate_operation_id().0), action: action.into(), args: Some(args), delay_ms: 0 }
 }
 //#endregion 🔖️Run

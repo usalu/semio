@@ -16,6 +16,6 @@ pub struct SetAppRegistrations {
 /// `register_app_io` OS-registry bridge is `engine::apply_app_registrations`; a malformed roster is
 /// refused as `s.space.app-registrations-malformed`.
 pub fn handle(payload: &SetAppRegistrations, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
-    semio_framework_plugin::resolve_ready(crate::engine::space::engine::apply_app_registrations(&payload.json))?;
+    ::semio_framework_async::poll::resolve_ready(crate::engine::space::engine::apply_app_registrations(&payload.json))?;
     Ok(Emit::default())
 }

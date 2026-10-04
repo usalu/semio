@@ -17,7 +17,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 //#endregion 📖️SemioGrammar
 
 /// 📖️ Parses `.en1992` DSL text into a `Document`.
-pub fn parse_dsl(text: &str) -> Result<En1992Snapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<En1992Snapshot, semio_framework_diagnostic::TextError> {
     <En1992Snapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 

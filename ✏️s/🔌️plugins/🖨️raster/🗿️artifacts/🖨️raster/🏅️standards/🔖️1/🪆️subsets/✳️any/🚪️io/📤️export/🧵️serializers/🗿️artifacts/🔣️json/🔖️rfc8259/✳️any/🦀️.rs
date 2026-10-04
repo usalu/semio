@@ -4,14 +4,14 @@
 //! `JsonSnapshot::from_value`/stdio's own real `write_json_pretty` do the structural conversion —
 //! no hand-rolled bridge needed here.
 use crate::RasterSnapshot;
-use dsl::ToValue;
+use semio_framework_value::ToValue;
 use semio_s_artifact_stdio_json::schema::snapshot::{write_json_pretty, JsonSnapshot};
 use semio_s_artifact_stdio_json::STDIO_JSON_DOCUMENT_SCHEMA;
 pub fn register() {}
 
 pub fn serialize(snapshot: &RasterSnapshot) -> Result<JsonSnapshot, String> {
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-    Ok(JsonSnapshot::from_value(dsl::json::from_dsl_value(&snapshot.to_value())))
+    Ok(JsonSnapshot::from_value(semio_framework_pack_json::from_dsl_value(&snapshot.to_value())))
 }
 pub fn serialize_bytes(snapshot: &RasterSnapshot) -> Result<Vec<u8>, String> {
     Ok(write_json_pretty(&serialize(snapshot)?.value).into_bytes())

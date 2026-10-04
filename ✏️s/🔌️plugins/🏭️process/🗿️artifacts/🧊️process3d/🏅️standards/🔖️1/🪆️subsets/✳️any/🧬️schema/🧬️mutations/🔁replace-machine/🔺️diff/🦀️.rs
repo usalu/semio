@@ -11,7 +11,7 @@ pub fn diff(payload: &super::ReplaceMachineCapabilities, base: &Process3dSnapsho
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Machine \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if existing.capabilities == payload.new_capabilities {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Machine \"{}\" capabilities are unchanged.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Machine \"{}\" capabilities are unchanged.", payload.id));
     }
     let mut machines = base.workshop.machines.clone();
     if let Some(machine) = machines.iter_mut().find(|machine| machine.id == payload.id) {

@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeSolarThermalSystemTilt, base: &EnergyModelSna
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Solar thermal system {}: tilt must be a zenith angle in [0, 90] degrees, got {}.", payload.id.0, payload.new_tilt_deg), [payload.id.0.to_string()]);
     }
     if existing.tilt_deg == payload.new_tilt_deg {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Solar thermal system {} already carries this tilt_deg: {}.", payload.id.0, payload.new_tilt_deg));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Solar thermal system {} already carries this tilt_deg: {}.", payload.id.0, payload.new_tilt_deg));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.solar_thermal_systems.iter_mut().find(|item| item.id == payload.id) {

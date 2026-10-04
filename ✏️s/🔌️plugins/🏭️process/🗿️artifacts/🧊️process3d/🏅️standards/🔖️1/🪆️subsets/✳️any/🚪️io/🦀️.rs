@@ -185,8 +185,8 @@ pub fn export_process3d_model(scene: &ProcessWorkingScene, resolved_up_to: Optio
     let Some(handle) = crate::schema::inferences::replay_process(&mut session, scene, resolved_up_to) else {
         return Ok(None);
     };
-    let bytes = semio_framework_plugin::resolve_ready(exporter.export(session.kernel(), &[handle], PROCESS3D_TESSELLATION_TOLERANCE)).map_err(|error| error.to_string())?;
-    let format_kind = semio_framework_plugin::resolve_ready(exporter.format_kind());
+    let bytes = ::semio_framework_async::poll::resolve_ready(exporter.export(session.kernel(), &[handle], PROCESS3D_TESSELLATION_TOLERANCE)).map_err(|error| error.to_string())?;
+    let format_kind = ::semio_framework_async::poll::resolve_ready(exporter.format_kind());
     let descriptor = process_export_format(format_kind)?;
     let extension = descriptor.extensions.first().ok_or_else(|| format!("process export format kind `{format_kind}` has no extension claim"))?;
     let mime_type = descriptor.mimes.first().cloned().ok_or_else(|| format!("process export format kind `{format_kind}` has no MIME claim"))?;
@@ -230,7 +230,7 @@ pub fn import_process3d_model(name: &str, data_url: &str) -> Option<Process3dSna
         return None;
     };
     let mut session = crate::schema::inferences::ProcessKernelReplay::new();
-    let handle = semio_framework_plugin::resolve_ready(importer.import(session.kernel_mut(), &bytes, PROCESS3D_TESSELLATION_TOLERANCE)).ok()?.into_iter().next()?;
+    let handle = ::semio_framework_async::poll::resolve_ready(importer.import(session.kernel_mut(), &bytes, PROCESS3D_TESSELLATION_TOLERANCE)).ok()?.into_iter().next()?;
     let stock = Stock { id: "stock".into(), label: label.into(), solid: WorkingSolid::ImportedSolid { solid_handle: handle.0 }, pose: Pose::default() };
     Some(crate::process_working_scene_to_snapshot(&ProcessWorkingScene { stock, steps: Vec::new() }, Default::default()))
 }

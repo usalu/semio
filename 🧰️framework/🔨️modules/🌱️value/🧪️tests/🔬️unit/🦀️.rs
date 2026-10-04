@@ -136,10 +136,10 @@ fn edit_through_value_matches_a_serde_json_pointer_edit_and_keeps_the_decode_inv
     impl FromValue for Placed {
         fn from_value(value: DslValue) -> Result<Self, ValueError> {
             let mut entries = value.into_object()?.into_iter();
-            let (Some((_, name)), Some((_, offset))) = (entries.next(), entries.next()) else { return Err(ValueError::new("two fields")) };
+            let (Some((_, name)), Some((_, offset))) = (entries.next(), entries.next()) else { return Err(ValueError::new(crate::ValueRefusalKind::InvalidValue, "two fields")) };
             let name = String::from_value(name)?;
             if name.is_empty() {
-                return Err(ValueError::new("a placed value is named"));
+                return Err(ValueError::new(crate::ValueRefusalKind::InvalidValue, "a placed value is named"));
             }
             Ok(Self { name, offset })
         }

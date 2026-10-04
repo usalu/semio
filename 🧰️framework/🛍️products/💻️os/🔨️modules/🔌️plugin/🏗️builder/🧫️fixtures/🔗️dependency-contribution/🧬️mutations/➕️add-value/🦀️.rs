@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 // 🌱️ `Serialize`/`Deserialize` stay for `MutationKind`'s own (untouched) supertrait bound;
 // `ToValue`/`FromValue` are `CompositeMutationKind`'s (see that trait's own doc) — both coexist.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[serde(deny_unknown_fields)]
 #[value(deny_unknown_fields)]
@@ -20,15 +20,17 @@ impl protocol::MutationKind<DependencyTestSnapshot, DependencyTestOp> for AddVal
     fn diff(&self, _base: &DependencyTestSnapshot) -> protocol::MutationOutcome<DependencyTestDiff> {
         protocol::MutationOutcome::new(DependencyTestDiff { deltas: vec![self.delta] })
     }
-    fn inverse(&self, _base: &DependencyTestSnapshot) -> Vec<DependencyTestOp> {
-        if self.delta == i32::MIN {
-            vec![DependencyTestOp::AddValue(Self { delta: 1 }), DependencyTestOp::AddValue(Self { delta: i32::MAX })]
-        } else {
-            vec![DependencyTestOp::AddValue(Self { delta: -self.delta })]
-        }
+    fn inverse(&self, _base: &DependencyTestSnapshot) -> Result<Vec<DependencyTestOp>, semio_framework_value::ValueError> {
+        Ok((|| {
+            if self.delta == i32::MIN {
+                vec![DependencyTestOp::AddValue(Self { delta: 1 }), DependencyTestOp::AddValue(Self { delta: i32::MAX })]
+            } else {
+                vec![DependencyTestOp::AddValue(Self { delta: -self.delta })]
+            }
+        })())
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Add {} to value", self.delta), &format!("{} zu Wert hinzufügen", self.delta))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add {} to value", self.delta), &format!("{} zu Wert hinzufügen", self.delta))
     }
     fn target(&self) -> Vec<String> {
         vec!["value".into()]
@@ -40,7 +42,7 @@ impl protocol::CompositeMutationKind<DependencyTestSnapshot, DependencyTestOp> f
     fn plan(&self, _base: &DependencyTestSnapshot, planner: &mut protocol::Planner<DependencyTestSnapshot, DependencyTestOp>) -> Result<(), protocol::PlanError> {
         planner.call(DependencyTestOp::AddValue(self.clone()))
     }
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         <Self as protocol::MutationKind<DependencyTestSnapshot, DependencyTestOp>>::label(self)
     }
     fn target(&self) -> Vec<String> {

@@ -27,10 +27,7 @@ fn node_row(node: &semio_s_artifact_trinity_jack::Node) -> semio_framework_plugi
 }
 
 pub(crate) fn render(state: &RewritingSnapshot, _cfg: &NoConfig, labels: &TrinityRewritingLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let Some(fixture) = crate::editor::rewriting::parse_fixture_json(&state.before_fixture_json) else {
-        return Err(semio_framework_plugin::PluginAssemblyError::new("trinity.fixture.invalid", "invalid Trinity fixture"));
-    };
-    let nodes = fixture.nodes();
+    let nodes = state.working_graph.nodes().map_err(|error|semio_framework_plugin::PluginAssemblyError::new("trinity.fixture.invalid",error.into_message()))?;
     PanelTreeBuilder::new("trinity-document")?
         .window_section(windows, "trinity-document.nodes", Some(crate::editor::rewriting::ui_label(labels.pieces.as_str())?), true, &nodes, node_row)?
         .interaction_domain(crate::editor::rewriting::TRINITY_REWRITING_PLAY_CONTROLLER_ID, "graph")?

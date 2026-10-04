@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "jack-query-result-valid-table",
+      "name": "QueryResult",
+      "value": {
+        "kind": "table",
+        "columns": [
+          "value"
+        ],
+        "rows": [
+          [
+            1,
+            null,
+            "value",
+            true,
+            {
+              "nested": [
+                "value"
+              ]
+            }
+          ]
+        ]
+      },
+      "accept": true
+    },
+    {
+      "id": "jack-query-result-invalid-kind",
+      "name": "QueryResult",
+      "value": {
+        "kind": "missing",
+        "columns": [],
+        "rows": []
+      },
+      "accept": false
+    },
+    {
+      "id": "jack-query-result-invalid-row",
+      "name": "QueryResult",
+      "value": {
+        "kind": "table",
+        "columns": [],
+        "rows": [
+          1
+        ]
+      },
+      "accept": false
+    }
+  ]
+}

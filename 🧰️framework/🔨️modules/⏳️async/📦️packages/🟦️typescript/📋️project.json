@@ -2,7 +2,10 @@
   "name": "@semio-tech/framework-async",
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
   "namedInputs": {
-    "default": ["{projectRoot}/**/*", "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/🧪️tests/🎚️config/🟦️.ts"]
+    "default": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/🧪️tests/🎚️config/🟦️.ts"
+    ]
   },
   "targets": {
     "info": {
@@ -22,6 +25,17 @@
         "forwardAllArgs": true
       }
     },
+    "test-publication-contract": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test-publication-contract",
+        "forwardAllArgs": true
+      },
+      "cache": false,
+      "outputs": []
+    },
     "twin": {
       "executor": "nx:run-commands",
       "dependsOn": [],
@@ -33,6 +47,32 @@
       "cache": false,
       "outputs": [],
       "description": "Checks live event-loop deadlines and measures chained scheduling on the current host."
+    },
+    "test-api-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "{projectRoot}/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/📏️api/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/🪃️continuation/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/🤖️generated/⏳️async/🟦️.ts"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts test-api-contract",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "single-poll-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts single-poll-check",
+        "cwd": "{projectRoot}"
+      }
     }
   }
 }

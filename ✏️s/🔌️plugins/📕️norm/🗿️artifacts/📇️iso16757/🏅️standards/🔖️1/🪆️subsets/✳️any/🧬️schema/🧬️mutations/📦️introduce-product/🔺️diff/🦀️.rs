@@ -18,7 +18,7 @@ pub fn diff(payload: &IntroduceProduct, base: &Iso16757Snapshot) -> protocol::Mu
     }
     let outcome = protocol::MutationOutcome::new(Iso16757Diff { catalogue: Some(catalogue), ..Default::default() });
     if clamped {
-        outcome.warn("mutation.clamped", format!("Insert index was out of range; appended product \"{}\" at the end instead.", payload.product.id))
+        outcome.warning("mutation.clamped", format!("Insert index was out of range; appended product \"{}\" at the end instead.", payload.product.id))
     } else {
         outcome
     }

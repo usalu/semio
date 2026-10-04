@@ -1,7 +1,7 @@
 use super::super::{DagDelta, DagDiff, DagMutation, DagNodeKind, DagSnapshot, ReplacedNodeKind};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "replace-node-kind")]
@@ -18,9 +18,12 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for ReplaceNodeKind {
         }
         protocol::MutationOutcome::new(DagDiff::from(DagDelta { replaced_node_kind: Some(ReplacedNodeKind { id: self.id.clone(), new_kind: self.new_kind.clone() }), ..Default::default() }))
     }
-    fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {
+    fn inverse(&self, base: &DagSnapshot) -> Result<Vec<DagMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         base.nodes.iter().find(|node| node.id == self.id).map(|node| vec![DagMutation::ReplaceNodeKind(Self { id: self.id.clone(), new_kind: node.kind.clone() })]).unwrap_or_default()
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace node kind {}", self.id), &format!("Knotenart {} ersetzen", self.id))
     }

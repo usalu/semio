@@ -3,7 +3,7 @@
 use crate::io::note_document_bounds;
 use crate::schema::flatten_blocks;
 use crate::{NoteBlockNode, NoteSnapshot};
-use semio_framework::io::io_mechanism::Serializer;
+use semio_framework::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
 use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::io::encode_pdf;
@@ -17,7 +17,7 @@ pub struct NoteIntoPdf;
 impl Serializer<NoteSnapshot> for NoteIntoPdf {
     const INTO: Dialect = PDF_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &NoteSnapshot) -> IoResult<IoPayload> {
+    async fn serialize(from: &NoteSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
         let (w, h) = note_document_bounds(from);
         let mut text = String::new();
         if let Some(title) = &from.title {
@@ -38,7 +38,7 @@ impl Serializer<NoteSnapshot> for NoteIntoPdf {
         let mut page = PageDoc::new(w.max(1) as f64, h.max(1) as f64);
         page.text = text.trim().to_string();
         snapshot.pages = vec![page];
-        let bytes = encode_pdf(&snapshot).map_err(|error| IoError { message: format!("NoteIntoPdf: encode failed: {error}"), diagnostics: Vec::new() })?;
+        let bytes = encode_pdf(&snapshot).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("NoteIntoPdf: encode failed: {error}"))))?;
         Ok(IoOutcome::clean(IoPayload::Binary(bytes)))
     }
 }

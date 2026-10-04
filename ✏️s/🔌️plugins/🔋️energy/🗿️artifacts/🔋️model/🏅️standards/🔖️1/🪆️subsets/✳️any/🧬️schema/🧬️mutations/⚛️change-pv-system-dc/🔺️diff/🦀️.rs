@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangePvSystemDcCapacity, base: &EnergyModelSnapsho
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("PV system {}: DC capacity (W) must be a positive finite value, got {}.", payload.id.0, payload.new_dc_capacity_w), [payload.id.0.to_string()]);
     }
     if existing.dc_capacity_w == payload.new_dc_capacity_w {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("PV system {} already carries this DC capacity (W): {}.", payload.id.0, payload.new_dc_capacity_w));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("PV system {} already carries this DC capacity (W): {}.", payload.id.0, payload.new_dc_capacity_w));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.pv_systems.iter_mut().find(|item| item.id == payload.id) {

@@ -5,10 +5,11 @@ use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::op::DrawingMutation;
 use crate::schema::find_drawing_layer;
 use crate::DrawingSnapshot;
-use dsl::{FromValue, ToValue};
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "toggle-layer-visible")]
 pub struct ToggleLayerVisible {
     pub layer_id: String,

@@ -28,7 +28,7 @@ impl store::ArtifactOwnedValueRetirementFactory<NoTransient> for NoTransientReti
 }
 
 impl store::ErasedSnapshotRetirement for NoTransientRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if self.0.is_none() {
             return Ok(store::SnapshotRetirementStep::Complete);
         }
@@ -53,7 +53,7 @@ impl Drop for NoTransientRetirement {
 }
 
 impl store::ErasedSnapshotRetirement for NoTransientOwnedRetirement {
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if self.0.is_none() {
             return Ok(store::SnapshotRetirementStep::Complete);
         }

@@ -31,7 +31,7 @@ fn round_trip(start: StepSnapshot, mutation: StepCc3Mutation) {
     let outcome = apply_step_cc3_mutation(&mut mutated, &mutation);
     assert!(outcome.messages().is_empty(), "{mutation:?} was rejected: {:?}", outcome.messages());
     assert_ne!(mutated, start, "{mutation:?} changed nothing -- a mutation that is not observable proves nothing");
-    for step in Mutation::inverse(&mutation, &start) {
+    for step in Mutation::inverse(&mutation, &start).expect("valid retained mutation inverse fixture") {
         apply_step_cc3_mutation(&mut mutated, &step);
     }
     assert_eq!(mutated, start, "{mutation:?} then its inverse must restore the base");

@@ -230,7 +230,7 @@ describe("🧬️ mutation input descriptors", () => {
     expect(argControl(read("integer-references")[0]!)).toMatchObject({ kind: "reference", kinds: ["zone"], domain: "energyModel", granularity: "zone", idType: "integer" });
     expect([argControl(read("color-rgb-and-rgba")[0]!), argControl(read("color-rgb-and-rgba")[1]!)]).toEqual([{ kind: "color", alpha: true }, { kind: "color", alpha: false }]);
     expect(argControl(read("vector-with-grid-facets")[0]!)).toMatchObject({ kind: "vector", dims: 3, min: -100, max: 100, step: 0.5, snaps: [0], snapSource: { kind: "config", key: "gridFactor" }, precision: 2, displayUnit: "cm", displayFactor: 100 });
-    expect(argControl(read("inferred-from-glossary").find((input) => input.id === "/layerId")!)).not.toHaveProperty("idType");
+    expect(argControl(read("inferred-from-glossary").find((input) => input.id === "/layerId")!)).not.toHaveProperty("idType");    expect(argControl(read("option-source-from-the-previewed-document")[1]!)).toEqual({ kind: "select", options: [] });
   });
 
   test("a selected id converts to the payload value the corpus' reference id table names, and spells back", () => {

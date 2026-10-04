@@ -1,0 +1,10 @@
+{
+  "mutation": "patchSnapshot",
+  "payload": {
+    "patch": {
+      "operation": "set",
+      "path": "/subset/root/entries/0/value/value",
+      "value": "Envelope Fixture, patched"
+    }
+  }
+}

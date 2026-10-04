@@ -11,7 +11,10 @@
         "schema",
         "cases",
         "budgets",
-        "hostile"
+        "hostile",
+        "leases",
+        "capacityAdmission",
+        "continuation"
       ],
       "properties": {
         "schema": {
@@ -111,6 +114,241 @@
           "uniqueItems": true,
           "items": {
             "type": "string"
+          }
+        },
+        "leases": {
+          "$ref": "#/$defs/SourceLeaseLaw"
+        },
+        "capacityAdmission": {
+          "$ref": "#/$defs/CapacityAdmissionLaw"
+        },
+        "continuation": {
+          "$ref": "#/$defs/ContinuationLaw"
+        }
+      }
+    },
+    "PortableCapacityNumber": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        },
+        {
+          "enum": [
+            "usizeMax",
+            "isizeMax"
+          ]
+        }
+      ]
+    },
+    "SourceLeaseLaw": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text",
+        "orders",
+        "items",
+        "bytes",
+        "canceled",
+        "sourceReleases"
+      ],
+      "properties": {
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "orders": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "uniqueItems": true,
+          "items": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "uniqueItems": true,
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2
+            }
+          }
+        },
+        "items": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "canceled": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "boolean"
+          }
+        },
+        "sourceReleases": {
+          "const": 1
+        }
+      }
+    },
+    "ContinuationLaw": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumBytes",
+        "initialBytes",
+        "finalBytes",
+        "total",
+        "initialUnits",
+        "finalUnits"
+      ],
+      "properties": {
+        "maximumBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "initialBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "finalBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "initialUnits": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "finalUnits": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "CapacityAdmissionLaw": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "sourceBytes",
+        "sourceMultiples",
+        "scaffoldBytes",
+        "maximumBytes",
+        "refusedBytes",
+        "overrunBytes",
+        "cases"
+      ],
+      "properties": {
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sourceMultiples": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "scaffoldBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "refusedBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "overrunBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 12,
+          "maxItems": 12,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "ownedBytes",
+              "sourceBytes",
+              "multiples",
+              "scaffoldBytes",
+              "accepted",
+              "maximumBytes"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "ownedBytes": {
+                "$ref": "#/$defs/PortableCapacityNumber"
+              },
+              "sourceBytes": {
+                "$ref": "#/$defs/PortableCapacityNumber"
+              },
+              "multiples": {
+                "$ref": "#/$defs/PortableCapacityNumber"
+              },
+              "scaffoldBytes": {
+                "$ref": "#/$defs/PortableCapacityNumber"
+              },
+              "accepted": {
+                "type": "boolean"
+              },
+              "maximumBytes": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PortableCapacityNumber"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "accepted": {
+                      "const": true
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "maximumBytes": {
+                      "$ref": "#/$defs/PortableCapacityNumber"
+                    }
+                  }
+                },
+                "else": {
+                  "properties": {
+                    "maximumBytes": {
+                      "type": "null"
+                    }
+                  }
+                }
+              }
+            ]
           }
         }
       }

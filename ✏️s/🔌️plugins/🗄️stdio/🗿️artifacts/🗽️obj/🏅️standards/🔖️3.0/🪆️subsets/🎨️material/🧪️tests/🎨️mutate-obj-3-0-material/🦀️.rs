@@ -31,7 +31,7 @@ mod subject {
         let spec = ctx.doc_json()?;
         let kind = spec.str("kind");
         let forward = wire_operation(&kind, &spec.get("params").cloned().unwrap_or(Json::Null), mutation_from_payload_json, mutation_payload_json)?;
-        let backward = if undo { mutation_inverse(&forward, &snapshot) } else { Vec::new() };
+        let backward = if undo { mutation_inverse(&forward, &snapshot).expect("valid retained mutation inverse fixture") } else { Vec::new() };
         apply_obj_mutation(&mut snapshot, &forward);
         for mutation in &backward {
             apply_obj_mutation(&mut snapshot, mutation);

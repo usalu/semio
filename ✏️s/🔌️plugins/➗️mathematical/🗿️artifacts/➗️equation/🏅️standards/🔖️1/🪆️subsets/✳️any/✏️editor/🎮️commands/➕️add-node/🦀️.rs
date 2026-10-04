@@ -7,7 +7,7 @@ use crate::{EquationGraph, EquationSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "add-node")]
 pub struct AddNode {
     pub x: f64,
@@ -25,5 +25,5 @@ pub(crate) fn add_node_leaves(payload: &AddNode, graph: &EquationGraph) -> Resul
 }
 
 pub fn handle(payload: &AddNode, doc: &ArtifactView<'_, EquationSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<EquationMutation, NoConfigMutation>, Fault> {
-    Ok(Emit::mutations(add_node_leaves(payload, &crate::equation_graph(doc.snapshot))?))
+    Ok(Emit::mutations(add_node_leaves(payload, &doc.snapshot.graph.clone())?))
 }

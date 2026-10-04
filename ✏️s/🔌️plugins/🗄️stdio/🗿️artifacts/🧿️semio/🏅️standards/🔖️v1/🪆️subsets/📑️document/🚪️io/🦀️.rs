@@ -63,20 +63,20 @@ pub mod derived_composition {
     /// references and `based_on` cycles. Recurses through `List`/`Table`/`Quote` nesting so a
     /// reference buried in a table cell or list item is caught too.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn check_document_referential_integrity(snapshot: &SemioDocumentSnapshot) -> Vec<dsl::Diagnostic> {
+    pub fn check_document_referential_integrity(snapshot: &SemioDocumentSnapshot) -> Vec<semio_framework_diagnostic::Diagnostic> {
         let mut diagnostics = Vec::new();
         let known_images: std::collections::HashSet<&str> = snapshot.images.iter().map(|i| i.id.as_str()).collect();
         let known_styles: std::collections::HashSet<&str> = snapshot.styles.iter().map(|s| s.id.as_str()).collect();
 
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-        fn walk(blocks: &[DocBlock], known_images: &std::collections::HashSet<&str>, known_styles: &std::collections::HashSet<&str>, out: &mut Vec<dsl::Diagnostic>) {
+        fn walk(blocks: &[DocBlock], known_images: &std::collections::HashSet<&str>, known_styles: &std::collections::HashSet<&str>, out: &mut Vec<semio_framework_diagnostic::Diagnostic>) {
             for block in blocks {
                 match block {
                     DocBlock::Paragraph { style_id: Some(id), .. } | DocBlock::Heading { style_id: Some(id), .. } if !known_styles.contains(id.as_str()) => {
-                        out.push(dsl::Diagnostic::error("stdio.semio_document.unresolved-style-id", dsl::TextSpan::at(1, 1), format!("SemioDocumentValidator: block references unknown style id {id:?}")));
+                        out.push(semio_framework_diagnostic::Diagnostic::error("stdio.semio_document.unresolved-style-id", semio_framework_diagnostic::TextSpan::at(1, 1), format!("SemioDocumentValidator: block references unknown style id {id:?}")));
                     }
                     DocBlock::Image { image_id, .. } if !known_images.contains(image_id.as_str()) => {
-                        out.push(dsl::Diagnostic::error("stdio.semio_document.unresolved-image-id", dsl::TextSpan::at(1, 1), format!("SemioDocumentValidator: Image block references unknown image id {image_id:?}")));
+                        out.push(semio_framework_diagnostic::Diagnostic::error("stdio.semio_document.unresolved-image-id", semio_framework_diagnostic::TextSpan::at(1, 1), format!("SemioDocumentValidator: Image block references unknown image id {image_id:?}")));
                     }
                     _ => {}
                 }
@@ -106,7 +106,7 @@ pub mod derived_composition {
             seen.insert(style.id.clone());
             loop {
                 if !seen.insert(cursor.clone()) {
-                    diagnostics.push(dsl::Diagnostic::error("stdio.semio_document.based-on-cycle", dsl::TextSpan::at(1, 1), format!("SemioDocumentValidator: style {:?} has a based_on cycle through {cursor:?}", style.id)));
+                    diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.semio_document.based-on-cycle", semio_framework_diagnostic::TextSpan::at(1, 1), format!("SemioDocumentValidator: style {:?} has a based_on cycle through {cursor:?}", style.id)));
                     break;
                 }
                 match snapshot.styles.iter().find(|s| s.id == cursor) {
@@ -115,7 +115,7 @@ pub mod derived_composition {
                         None => break,
                     },
                     None => {
-                        diagnostics.push(dsl::Diagnostic::error("stdio.semio_document.unresolved-based-on", dsl::TextSpan::at(1, 1), format!("SemioDocumentValidator: style {:?} has based_on {cursor:?} which does not resolve", style.id)));
+                        diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.semio_document.unresolved-based-on", semio_framework_diagnostic::TextSpan::at(1, 1), format!("SemioDocumentValidator: style {:?} has based_on {cursor:?} which does not resolve", style.id)));
                         break;
                     }
                 }
@@ -130,14 +130,14 @@ pub mod derived_composition {
 
     impl SubsetValidator for SemioDocumentValidator {
         const DIALECT: Dialect = DIALECT;
-        async fn validate(payload: &IoPayload) -> Vec<dsl::Diagnostic> {
+        async fn validate(payload: &IoPayload) -> Vec<semio_framework_diagnostic::Diagnostic> {
             let decoded = match payload {
                 IoPayload::Binary(bytes) => <SemioDocumentSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
                 IoPayload::Text(text) => <SemioDocumentSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
             };
             match decoded {
                 Some(snapshot) => check_document_referential_integrity(&snapshot),
-                None => vec![dsl::Diagnostic::error("stdio.semio_document.validate-decode-failed", dsl::TextSpan::at(1, 1), "SemioDocumentValidator: payload did not decode as a SemioDocumentSnapshot".to_string())],
+                None => vec![semio_framework_diagnostic::Diagnostic::error("stdio.semio_document.validate-decode-failed", semio_framework_diagnostic::TextSpan::at(1, 1), "SemioDocumentValidator: payload did not decode as a SemioDocumentSnapshot".to_string())],
             }
         }
     }

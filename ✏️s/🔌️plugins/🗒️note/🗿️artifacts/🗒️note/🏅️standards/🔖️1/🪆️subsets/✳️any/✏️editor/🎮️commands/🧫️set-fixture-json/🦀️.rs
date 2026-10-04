@@ -6,7 +6,7 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde_json::Value;
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "set-fixture-json")]
 pub struct SetFixtureJson {
     pub json: String,
@@ -22,7 +22,7 @@ pub fn handle(payload: &SetFixtureJson, _doc: &ArtifactView<'_, NoteSnapshot>, _
         if parsed.get("schema").and_then(|value| value.as_str()) != Some(NOTE_DOCUMENT_SCHEMA) {
             return Ok(Emit::default());
         }
-        let Ok(document) = dsl::os_pack::from_json_str::<NoteSnapshot>(&payload.json) else {
+        let Ok(document) = semio_framework_pack_json::from_json_str::<NoteSnapshot>(&payload.json, semio_framework_pack_json::JsonMemberPolicy::Reject) else {
             return Ok(Emit::default());
         };
         document

@@ -1,0 +1,580 @@
+{
+  "note": "📢️ App fault notices (design §20.12): table validation (code grammar, unique codes, non-blank cells, one placeholder set per notice) and shell resolution (fault code then causes; framework table first, then the app table named by appNotices; {name} filled from Fault.params only). schemaValid is the verdict of the JSON Schema alone ($defs.FaultNoticeTable), which cannot state uniqueness or cross-locale placeholder equality.",
+  "appNotices": "valid table",
+  "tables": [
+    {
+      "id": "valid table",
+      "schemaValid": true,
+      "notices": [
+        {
+          "code": "generation3d.gumball.mesh-missing",
+          "label": {
+            "native": {
+              "en": "The selected mesh no longer exists.",
+              "de": "Das ausgewählte Netz existiert nicht mehr."
+            },
+            "reuse": {
+              "en": "The selected mesh no longer exists.",
+              "de": "Das ausgewählte Netz existiert nicht mehr."
+            }
+          }
+        },
+        {
+          "code": "generation3d.gumball.kind-unavailable",
+          "label": {
+            "native": {
+              "en": "The widget kind {kind} is not available here.",
+              "de": "Die Widget-Art {kind} ist hier nicht verfügbar."
+            },
+            "reuse": {
+              "en": "The widget kind {kind} is not available here.",
+              "de": "Die Widget-Art {kind} ist hier nicht verfügbar."
+            }
+          }
+        },
+        {
+          "code": "generation3d.gumball.no-shape-source",
+          "label": {
+            "native": {
+              "en": "Select a widget that produces a shape.",
+              "de": "Ein Widget auswählen, das eine Form erzeugt."
+            },
+            "reuse": {
+              "en": "Select a component that produces a shape.",
+              "de": "Eine Komponente auswählen, die eine Form erzeugt."
+            }
+          }
+        }
+      ],
+      "errors": []
+    },
+    {
+      "id": "empty table",
+      "schemaValid": true,
+      "notices": [],
+      "errors": []
+    },
+    {
+      "id": "two segments",
+      "schemaValid": false,
+      "notices": [
+        {
+          "code": "generation3d.refused",
+          "label": {
+            "native": {
+              "en": "Refused.",
+              "de": "Abgelehnt."
+            },
+            "reuse": {
+              "en": "Refused.",
+              "de": "Abgelehnt."
+            }
+          }
+        }
+      ],
+      "errors": [
+        {
+          "rule": "syntax",
+          "code": "generation3d.refused"
+        }
+      ]
+    },
+    {
+      "id": "camel case segment",
+      "schemaValid": false,
+      "notices": [
+        {
+          "code": "generation3d.gumball.meshMissing",
+          "label": {
+            "native": {
+              "en": "Missing.",
+              "de": "Fehlt."
+            },
+            "reuse": {
+              "en": "Missing.",
+              "de": "Fehlt."
+            }
+          }
+        }
+      ],
+      "errors": [
+        {
+          "rule": "syntax",
+          "code": "generation3d.gumball.meshMissing"
+        }
+      ]
+    },
+    {
+      "id": "leading digit segment",
+      "schemaValid": false,
+      "notices": [
+        {
+          "code": "3d.gumball.missing",
+          "label": {
+            "native": {
+              "en": "Missing.",
+              "de": "Fehlt."
+            },
+            "reuse": {
+              "en": "Missing.",
+              "de": "Fehlt."
+            }
+          }
+        }
+      ],
+      "errors": [
+        {
+          "rule": "syntax",
+          "code": "3d.gumball.missing"
+        }
+      ]
+    },
+    {
+      "id": "empty segment",
+      "schemaValid": false,
+      "notices": [
+        {
+          "code": "generation3d..missing",
+          "label": {
+            "native": {
+              "en": "Missing.",
+              "de": "Fehlt."
+            },
+            "reuse": {
+              "en": "Missing.",
+              "de": "Fehlt."
+            }
+          }
+        }
+      ],
+      "errors": [
+        {
+          "rule": "syntax",
+          "code": "generation3d..missing"
+        }
+      ]
+    },
+    {
+      "id": "duplicate code",
+      "schemaValid": true,
+      "notices": [
+        {
+          "code": "generation3d.gumball.mesh-missing",
+          "label": {
+            "native": {
+              "en": "The selected mesh no longer exists.",
+              "de": "Das ausgewählte Netz existiert nicht mehr."
+            },
+            "reuse": {
+              "en": "The selected mesh no longer exists.",
+              "de": "Das ausgewählte Netz existiert nicht mehr."
+            }
+          }
+        },
+        {
+          "code": "generation3d.gumball.mesh-missing",
+          "label": {
+            "native": {
+              "en": "Gone.",
+              "de": "Weg."
+            },
+            "reuse": {
+              "en": "Gone.",
+              "de": "Weg."
+            }
+          }
+        }
+      ],
+      "errors": [
+        {
+          "rule": "duplicate",
+          "code": "generation3d.gumball.mesh-missing"
+        }
+      ]
+    },
+    {
+      "id": "empty german text",
+      "schemaValid": false,
+      "notices": [
+        {
+          "code": "generation3d.gumball.list-output",
+          "label": {
+            "native": {
+              "en": "Extract one shape first.",
+              "de": ""
+            },
+            "reuse": {
+              "en": "Extract one shape first.",
+              "de": ""
+            }
+          }
+        }
+      ],
+      "errors": [
+        {
+          "rule": "emptyText",
+          "code": "generation3d.gumball.list-output",
+          "terminology": "native",
+          "locale": "de"
+        },
+        {
+          "rule": "emptyText",
+          "code": "generation3d.gumball.list-output",
+          "terminology": "reuse",
+          "locale": "de"
+        }
+      ]
+    },
+    {
+      "id": "blank reuse english",
+      "schemaValid": false,
+      "notices": [
+        {
+          "code": "generation3d.gumball.list-output",
+          "label": {
+            "native": {
+              "en": "Extract one shape first.",
+              "de": "Zuerst eine einzelne Form extrahieren."
+            },
+            "reuse": {
+              "en": " ",
+              "de": "Zuerst eine einzelne Form extrahieren."
+            }
+          }
+        }
+      ],
+      "errors": [
+        {
+          "rule": "emptyText",
+          "code": "generation3d.gumball.list-output",
+          "terminology": "reuse",
+          "locale": "en"
+        }
+      ]
+    },
+    {
+      "id": "placeholder missing in german",
+      "schemaValid": true,
+      "notices": [
+        {
+          "code": "generation3d.gumball.kind-unavailable",
+          "label": {
+            "native": {
+              "en": "The widget kind {kind} is not available.",
+              "de": "Diese Widget-Art ist nicht verfügbar."
+            },
+            "reuse": {
+              "en": "The widget kind {kind} is not available.",
+              "de": "Diese Widget-Art ist nicht verfügbar."
+            }
+          }
+        }
+      ],
+      "errors": [
+        {
+          "rule": "placeholder",
+          "code": "generation3d.gumball.kind-unavailable",
+          "terminology": "native",
+          "locale": "de"
+        },
+        {
+          "rule": "placeholder",
+          "code": "generation3d.gumball.kind-unavailable",
+          "terminology": "reuse",
+          "locale": "de"
+        }
+      ]
+    },
+    {
+      "id": "unclosed placeholder",
+      "schemaValid": false,
+      "notices": [
+        {
+          "code": "generation3d.gumball.kind-unavailable",
+          "label": {
+            "native": {
+              "en": "The widget kind {kind is not available.",
+              "de": "Die Widget-Art {kind ist nicht verfügbar."
+            },
+            "reuse": {
+              "en": "The widget kind {kind is not available.",
+              "de": "Die Widget-Art {kind ist nicht verfügbar."
+            }
+          }
+        }
+      ],
+      "errors": [
+        {
+          "rule": "placeholder",
+          "code": "generation3d.gumball.kind-unavailable",
+          "terminology": "native",
+          "locale": "en"
+        },
+        {
+          "rule": "placeholder",
+          "code": "generation3d.gumball.kind-unavailable",
+          "terminology": "native",
+          "locale": "de"
+        },
+        {
+          "rule": "placeholder",
+          "code": "generation3d.gumball.kind-unavailable",
+          "terminology": "reuse",
+          "locale": "en"
+        },
+        {
+          "rule": "placeholder",
+          "code": "generation3d.gumball.kind-unavailable",
+          "terminology": "reuse",
+          "locale": "de"
+        }
+      ]
+    },
+    {
+      "id": "invalid placeholder name",
+      "schemaValid": false,
+      "notices": [
+        {
+          "code": "generation3d.gumball.kind-unavailable",
+          "label": {
+            "native": {
+              "en": "The widget kind {Kind} is not available.",
+              "de": "Die Widget-Art {Kind} ist nicht verfügbar."
+            },
+            "reuse": {
+              "en": "The widget kind {Kind} is not available.",
+              "de": "Die Widget-Art {Kind} ist nicht verfügbar."
+            }
+          }
+        }
+      ],
+      "errors": [
+        {
+          "rule": "placeholder",
+          "code": "generation3d.gumball.kind-unavailable",
+          "terminology": "native",
+          "locale": "en"
+        },
+        {
+          "rule": "placeholder",
+          "code": "generation3d.gumball.kind-unavailable",
+          "terminology": "native",
+          "locale": "de"
+        },
+        {
+          "rule": "placeholder",
+          "code": "generation3d.gumball.kind-unavailable",
+          "terminology": "reuse",
+          "locale": "en"
+        },
+        {
+          "rule": "placeholder",
+          "code": "generation3d.gumball.kind-unavailable",
+          "terminology": "reuse",
+          "locale": "de"
+        }
+      ]
+    },
+    {
+      "id": "stray closing brace",
+      "schemaValid": false,
+      "notices": [
+        {
+          "code": "generation3d.gumball.kind-unavailable",
+          "label": {
+            "native": {
+              "en": "Unavailable }.",
+              "de": "Nicht verfügbar }."
+            },
+            "reuse": {
+              "en": "Unavailable }.",
+              "de": "Nicht verfügbar }."
+            }
+          }
+        }
+      ],
+      "errors": [
+        {
+          "rule": "placeholder",
+          "code": "generation3d.gumball.kind-unavailable",
+          "terminology": "native",
+          "locale": "en"
+        },
+        {
+          "rule": "placeholder",
+          "code": "generation3d.gumball.kind-unavailable",
+          "terminology": "native",
+          "locale": "de"
+        },
+        {
+          "rule": "placeholder",
+          "code": "generation3d.gumball.kind-unavailable",
+          "terminology": "reuse",
+          "locale": "en"
+        },
+        {
+          "rule": "placeholder",
+          "code": "generation3d.gumball.kind-unavailable",
+          "terminology": "reuse",
+          "locale": "de"
+        }
+      ]
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "app notice in german",
+      "fault": {
+        "code": "generation3d.gumball.mesh-missing"
+      },
+      "terminology": "native",
+      "locale": "de",
+      "expected": {
+        "code": "generation3d.gumball.mesh-missing",
+        "text": "Das ausgewählte Netz existiert nicht mehr."
+      }
+    },
+    {
+      "id": "app notice in english",
+      "fault": {
+        "code": "generation3d.gumball.mesh-missing"
+      },
+      "terminology": "native",
+      "locale": "en",
+      "expected": {
+        "code": "generation3d.gumball.mesh-missing",
+        "text": "The selected mesh no longer exists."
+      }
+    },
+    {
+      "id": "reuse terminology row",
+      "fault": {
+        "code": "generation3d.gumball.no-shape-source"
+      },
+      "terminology": "reuse",
+      "locale": "de",
+      "expected": {
+        "code": "generation3d.gumball.no-shape-source",
+        "text": "Eine Komponente auswählen, die eine Form erzeugt."
+      }
+    },
+    {
+      "id": "placeholder from params",
+      "fault": {
+        "code": "generation3d.gumball.kind-unavailable",
+        "params": {
+          "kind": "brep.mesh.translate"
+        }
+      },
+      "terminology": "native",
+      "locale": "de",
+      "expected": {
+        "code": "generation3d.gumball.kind-unavailable",
+        "text": "Die Widget-Art brep.mesh.translate ist hier nicht verfügbar."
+      }
+    },
+    {
+      "id": "placeholder never read from the message",
+      "fault": {
+        "code": "generation3d.gumball.kind-unavailable",
+        "message": "widget kind brep.mesh.translate is unavailable"
+      },
+      "terminology": "native",
+      "locale": "en",
+      "expected": null
+    },
+    {
+      "id": "cause code",
+      "fault": {
+        "code": "app.command.failed",
+        "causes": [
+          {
+            "code": "generation3d.gumball.mesh-missing"
+          }
+        ]
+      },
+      "terminology": "native",
+      "locale": "en",
+      "expected": {
+        "code": "generation3d.gumball.mesh-missing",
+        "text": "The selected mesh no longer exists."
+      }
+    },
+    {
+      "id": "framework first",
+      "fault": {
+        "code": "history.replaying",
+        "causes": [
+          {
+            "code": "generation3d.gumball.mesh-missing"
+          }
+        ]
+      },
+      "terminology": "native",
+      "locale": "de",
+      "expected": {
+        "code": "history.replaying",
+        "text": "Der Verlauf wird noch neu angewendet — abwarten oder zuerst abbrechen."
+      }
+    },
+    {
+      "id": "framework placeholder from params",
+      "fault": {
+        "code": "history.full",
+        "params": {
+          "n": "64"
+        }
+      },
+      "terminology": "reuse",
+      "locale": "en",
+      "expected": {
+        "code": "history.full",
+        "text": "This document's history is full (64 edits)."
+      }
+    },
+    {
+      "id": "unlabeled code",
+      "fault": {
+        "code": "generation3d.gumball.host-edit"
+      },
+      "terminology": "native",
+      "locale": "en",
+      "expected": null
+    },
+    {
+      "id": "anonymous message fault",
+      "fault": {
+        "code": "app.message",
+        "message": "select a shape-producing widget"
+      },
+      "terminology": "native",
+      "locale": "de",
+      "expected": null
+    },
+    {
+      "id": "framework namespace code",
+      "fault": {
+        "code": "app.command.unsupported"
+      },
+      "terminology": "native",
+      "locale": "de",
+      "expected": {
+        "code": "app.command.unsupported",
+        "text": "Diese Aktion ist hier nicht verfügbar."
+      }
+    },
+    {
+      "id": "framework too-large cause",
+      "fault": {
+        "code": "app.command.failed",
+        "causes": [{ "code": "mutation.too-large" }]
+      },
+      "terminology": "reuse",
+      "locale": "en",
+      "expected": {
+        "code": "mutation.too-large",
+        "text": "This change is too large to record at once — split it into smaller steps."
+      }
+    }
+  ]
+}

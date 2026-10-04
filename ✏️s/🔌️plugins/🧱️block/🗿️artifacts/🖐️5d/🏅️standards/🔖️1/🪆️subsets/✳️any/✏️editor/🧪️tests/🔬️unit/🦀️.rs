@@ -173,7 +173,7 @@ async fn interaction_topology_nests_grips_under_their_grip_kind() {
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg_snapshot = Block5dConfig::default();
     let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
-    let topology = Block5dPlayApp::interaction_topology(&doc, &cfg);
+    let topology = Block5dPlayApp::interaction_topology(&doc, &cfg).expect("valid retained interaction fixture");
     let domain = topology.domains.get(BLOCK5D_INTERACTION_GRIP).expect("grip domain topology present");
     let grip_node = domain.ordered.iter().find(|node| node.id == format!("grip:{grip_id}")).expect("grip node present");
     assert_eq!(grip_node.parent.as_deref(), Some(format!("gripKind:{kind_id}").as_str()));
@@ -262,7 +262,7 @@ async fn undo_redo_round_trips_through_the_wrapper() {
 async fn export_media_catalog_out_wraps_the_puzzle5d_fragment() {
     let mut app = new_app().await;
     context::dispatch(&mut app, Block5dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK5D_EXAMPLE_FOREST_LEFT.into() })).await;
-    let media = semio_framework_plugin::resolve_ready(app.export_media("catalog:out")).expect("export catalog");
+    let media = ::semio_framework_async::poll::resolve_ready(app.export_media("catalog:out")).expect("export catalog");
     assert_eq!(media.media_type, MediaType { class: MediaClass::Kit, form: MediaForm::Type });
     match media.payload {
         MediaPayload::Structured { schema, json } => {
@@ -278,7 +278,7 @@ async fn export_media_catalog_out_wraps_the_puzzle5d_fragment() {
 async fn command_from_action_bridges_set_active_example() {
     let _app = Block5dPlayApp;
     assert!(
-        matches!(<Block5dPlayApp as ArtifactEditor>::command_from_action("setActiveExample", Some(&dsl::json::to_dsl_value(&dsl::json!({ "exampleId": "forest" })))), Ok(Block5dCommand::SetActiveExample(set_active_example::SetActiveExample { id })) if id == "forest")
+        matches!(<Block5dPlayApp as ArtifactEditor>::command_from_action("setActiveExample", Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "exampleId": "forest" })))), Ok(Block5dCommand::SetActiveExample(set_active_example::SetActiveExample { id })) if id == "forest")
     );
 }
 
@@ -332,3 +332,5 @@ async fn example_swaps_publish_and_keep_live_maintenance_within_its_contract() {
     assert_eq!(app.snapshot().expect("snapshot").part_kind.id, "Hexagonal Cut Concrete Forest Left");
 }
 //#endregion 🔖️LiveMaintenance
+
+semio_framework_plugin::history_edit_acceptance_law!("block", super::Block5dPlayApp, || semio_framework_plugin::App { definition: super::create_block5d_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");

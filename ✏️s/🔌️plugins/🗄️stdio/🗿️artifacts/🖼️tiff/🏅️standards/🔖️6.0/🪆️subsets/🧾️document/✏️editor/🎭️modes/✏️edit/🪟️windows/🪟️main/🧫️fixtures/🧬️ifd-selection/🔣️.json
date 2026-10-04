@@ -1,0 +1,9 @@
+{
+  "$schema": "./🧬️schema/🔣️.json",
+  "pages": [
+    { "width": 1, "height": 1, "rgb": [214, 40, 57] },
+    { "width": 1, "height": 1, "rgb": [31, 111, 235] }
+  ],
+  "selectedIfd": 1,
+  "expectedSelectedRgba": [31, 111, 235, 255]
+}

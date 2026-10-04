@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ReorderNodes, base: &SemioDrawingSnapshot) -> proto
     match node_at(base, &payload.parent) {
         Some(DrawNode::Group { children, .. }) if payload.from < children.len() => {
             if payload.from == payload.to {
-                return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Node #{} in layer #{} is already at position #{}.", payload.from, payload.parent.layer, payload.to));
+                return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Node #{} in layer #{} is already at position #{}.", payload.from, payload.parent.layer, payload.to));
             }
             let item = children[payload.from].clone();
             protocol::MutationOutcome::new(diff_at_path(

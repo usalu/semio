@@ -16,6 +16,20 @@
       "type": "array",
       "items": {
         "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/MotionTrackSummary"
+      },
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "value",
+        "label": {
+          "en": "Motion tracks",
+          "de": "Bewegungsspuren"
+        },
+        "description": {
+          "en": "The tracked motion of the last run; empty clears it.",
+          "de": "Die verfolgte Bewegung des letzten Laufs; leer entfernt sie."
+        },
+        "group": "result",
+        "order": 10
       }
     }
   }

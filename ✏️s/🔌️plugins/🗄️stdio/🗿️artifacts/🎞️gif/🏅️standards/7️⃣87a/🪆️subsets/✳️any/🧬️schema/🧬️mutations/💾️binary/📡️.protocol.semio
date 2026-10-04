@@ -33,3 +33,5 @@ record set-image-pixels tag=9
 field payload bytes
 record set-image-interlace tag=10
 field payload bytes
+record patch-snapshot tag=11
+field payload bytes

@@ -928,7 +928,7 @@ fn tiled_map_hover_leave_publishes_one_empty_owner_transition() {
     assert_eq!(crate::scenes::tiled_map_pointer_leave_into(surface_id, surface_id, controller_id, &mut input), Ok(true));
     let left = crate::collect_fixture_actions(&mut input);
     assert_eq!(left.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["interactionHover"]);
-    let args: Value = serde_json::from_str(&dsl::json::from_dsl_value(left[0].args.as_ref().expect("hover clear args")).to_string()).expect("hover clear args decode");
+    let args: Value = serde_json::from_str(&semio_framework_pack_json::from_dsl_value(left[0].args.as_ref().expect("hover clear args")).to_string()).expect("hover clear args decode");
     assert_eq!(args["targets"], contract["tiledMap"]["hoverLeave"]["emptyTargets"]);
     assert_eq!(crate::scenes::tiled_map_pointer_leave_into(surface_id, surface_id, controller_id, &mut input), Ok(false));
     assert!(crate::collect_fixture_actions(&mut input).is_empty(), "a null witness cannot publish a second leave");

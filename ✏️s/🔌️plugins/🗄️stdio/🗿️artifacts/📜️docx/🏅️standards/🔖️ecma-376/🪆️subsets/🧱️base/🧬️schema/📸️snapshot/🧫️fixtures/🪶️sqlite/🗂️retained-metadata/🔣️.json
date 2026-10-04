@@ -1,0 +1,29 @@
+{
+  "entryKind": "orderedNamedRecord",
+  "entryFields": [
+    "name",
+    "contentType"
+  ],
+  "defaults": [
+    {
+      "name": "xml",
+      "contentType": "a"
+    },
+    {
+      "name": "XML",
+      "contentType": "b"
+    }
+  ],
+  "overrides": [
+    {
+      "name": "/duplicate",
+      "contentType": "x"
+    },
+    {
+      "name": "/duplicate",
+      "contentType": ""
+    }
+  ],
+  "preservesOrder": true,
+  "preservesDuplicates": true
+}

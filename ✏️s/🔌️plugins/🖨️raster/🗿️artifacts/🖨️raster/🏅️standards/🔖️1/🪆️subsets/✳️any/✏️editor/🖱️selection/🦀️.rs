@@ -15,12 +15,12 @@ pub fn layer_topology(layers:&[crate::RasterLayerNode])->semio_framework_plugin:
     semio_framework_plugin::DomainTopology {ordered}
 }
 
-pub fn layer_selection_args(id:&str)->Result<dsl::DslValue,Fault> {
+pub fn layer_selection_args(id:&str)->Result<semio_framework_value::DslValue,Fault> {
     if id.is_empty(){return Err(Fault::from("Layer selection requires an identity"));}
-    let target=dsl::json::object([("granularity".into(),dsl::JsonValue::String(RASTER_INTERACTION_GRANULARITY.into())),("id".into(),dsl::JsonValue::String(id.into()))]);
-    let targets=dsl::json::to_string(&dsl::json::array([target]));
-    let args=dsl::json::object([("domainId".into(),dsl::JsonValue::String(RASTER_INTERACTION_DOMAIN.into())),("targets".into(),dsl::JsonValue::String(targets)),("merge".into(),dsl::JsonValue::String("replace".into())),("method".into(),dsl::JsonValue::String("pick".into()))]);
-    Ok(dsl::json::to_dsl_value(&args))
+    let target=semio_framework_pack_json::object([("granularity".into(),semio_framework_pack_json::Value::String(RASTER_INTERACTION_GRANULARITY.into())),("id".into(),semio_framework_pack_json::Value::String(id.into()))]);
+    let targets=semio_framework_pack_json::to_string(&semio_framework_pack_json::array([target]));
+    let args=semio_framework_pack_json::object([("domainId".into(),semio_framework_pack_json::Value::String(RASTER_INTERACTION_DOMAIN.into())),("targets".into(),semio_framework_pack_json::Value::String(targets)),("merge".into(),semio_framework_pack_json::Value::String("replace".into())),("method".into(),semio_framework_pack_json::Value::String("pick".into()))]);
+    Ok(semio_framework_pack_json::to_dsl_value(&args))
 }
 
 pub fn select_layer_effect(id:&str)->Result<semio_framework::kernel::Effect,Fault> {

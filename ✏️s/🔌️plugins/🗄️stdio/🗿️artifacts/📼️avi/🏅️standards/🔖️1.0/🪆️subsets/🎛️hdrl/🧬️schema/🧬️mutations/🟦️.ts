@@ -1,6 +1,8 @@
+import type { SnapshotPatch } from '../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts';
 /** 🧬️ AviMutation — named-variant vocabulary. Mirrors 🦀️.rs field-for-field. */
 export type AviMutation =
   | { mutation: "setSnapshot"; snapshot: import("../📸️snapshot/🟦️").AviSnapshot }
+  | { readonly mutation: 'patchSnapshot'; readonly patch: SnapshotPatch }
   | { mutation: "setMainHeader"; mainHeader: import("../📸️snapshot/🟦️").AviMainHeader }
   | { mutation: "setIdx1Present"; idx1Present: boolean }
   | { mutation: "insertStream"; index: number; stream: import("../📸️snapshot/🟦️").AviStream }

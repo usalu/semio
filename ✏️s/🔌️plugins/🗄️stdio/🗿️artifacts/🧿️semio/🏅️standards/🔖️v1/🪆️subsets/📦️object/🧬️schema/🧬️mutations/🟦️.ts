@@ -13,6 +13,7 @@
 import type { SetSnapshot } from './📸️set-snapshot/🟦️.ts';
 import type { ArtifactRef } from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts";
 import type { SemioPoint3, SemioQuaternion } from "../../../✉️base/🧬️schema/🧮️geometry/🟦️.ts";
+import type { SnapshotPatch } from '../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts';
 
 export interface MoveObject {
   translation: SemioPoint3;
@@ -58,3 +59,4 @@ export type SemioObjectMutation =
   | { CreateProperties: CreateProperties }
   | { DeleteProperties: DeleteProperties }
   | { SetSnapshot: SetSnapshot };
+  | { readonly PatchSnapshot: { readonly patch: SnapshotPatch } }

@@ -1,0 +1,58 @@
+{
+  "name": "@semio-tech/framework-pack-record-rs",
+  "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "🧰️framework/🔨️modules/🎒️pack/🌱️value",
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🌱️value/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/**/*"
+    ]
+  },
+  "targets": {
+    "test-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "default"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎒️pack/🌱️value/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-ownership"
+      }
+    },
+    "test-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "default"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎒️pack/🌱️value/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-native"
+      }
+    },
+    "test-refusals": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "default"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎒️pack/🌱️value/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-refusals"
+      }
+    },
+    "test-schema-storage-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "default"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎒️pack/🌱️value/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-schema-storage-source"
+      }
+    }
+  }
+}

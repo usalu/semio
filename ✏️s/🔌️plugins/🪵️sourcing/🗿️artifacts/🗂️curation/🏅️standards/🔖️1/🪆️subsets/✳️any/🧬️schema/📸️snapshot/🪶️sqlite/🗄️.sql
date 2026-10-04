@@ -9,8 +9,7 @@ CREATE TABLE curation_catalog (
   artifact_id TEXT NOT NULL,
   artifact_kind TEXT NOT NULL CHECK (artifact_kind = 's.stdio.semio'),
   standard TEXT NOT NULL CHECK (standard = 'v1'),
-  subset TEXT NOT NULL CHECK (subset = 'kit'),
-  CHECK (child_id = artifact_id)
+  subset TEXT NOT NULL CHECK (subset = 'kit')
 );
 CREATE TABLE curation_stock_extra (
   id INTEGER PRIMARY KEY CHECK (id > 0),

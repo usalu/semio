@@ -1,5 +1,5 @@
 ; Direct binary frame: version, descriptor tag, leaf-owned payload.
-; change-header=2, replace-palette=3, change-transparency=4, change-gamma=5, change-chromaticities=6, change-srgb-intent=7, change-physical-dims=8, change-timestamp=9, change-background=10, insert-text-chunk=11, remove-text-chunk=12, replace-text-chunk=13, replace-pixels=14, insert-unknown-chunk=15, remove-unknown-chunk=16, set-snapshot=17, patch-pixels=18
+; change-gamma=5, set-snapshot=17, patch-pixels=18, patch-snapshot=19, paint-native-samples=20
 mutation = %x01 tag *OCTET
-tag = %x02 / %x03 / %x04 / %x05 / %x06 / %x07 / %x08 / %x09 / %x0A / %x0B / %x0C / %x0D / %x0E / %x0F / %x10 / %x11 / %x12
+tag = %x05 / %x11 / %x12 / %x13 / %x14
 OCTET = %x00-FF

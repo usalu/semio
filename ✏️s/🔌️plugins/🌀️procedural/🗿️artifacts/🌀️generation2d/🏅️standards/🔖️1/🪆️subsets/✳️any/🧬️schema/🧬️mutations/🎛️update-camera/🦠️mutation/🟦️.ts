@@ -1,9 +1,6 @@
 /** 📷 generation2d update-camera payload — mirrors `UpdateCamera` (…/🎛️update-camera/🦠️mutation/🦀️.rs:15-17). */
-export interface CameraJson {
-  x: number;
-  y: number;
-  zoom: number;
-}
+import type{CameraJson}from"../../../🟦️.ts";
+export type{CameraJson};
 
 export interface UpdateCamera {
   camera: CameraJson;

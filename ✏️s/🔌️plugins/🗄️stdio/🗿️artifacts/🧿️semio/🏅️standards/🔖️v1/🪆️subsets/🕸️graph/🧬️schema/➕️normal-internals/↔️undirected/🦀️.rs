@@ -27,7 +27,9 @@ impl UndirectedGraph {
             let attrs = view.edge_attrs(edge.id).cloned().unwrap_or_default();
             storage.add_edge_with(edge.u, edge.v, attrs);
         }
-        storage.graph_attrs_mut().extend(view.graph_attrs().clone());
+        for (key,value) in view.graph_attrs().clone() {
+                if let Some(previous)=storage.graph_attrs_mut().insert(key,value){<PropertyValue as semio_framework_value::FromValue>::retire_decoded(previous);}
+            }
         Self(storage)
     }
 }
@@ -286,7 +288,9 @@ impl UndirectedGraph {
                 storage.add_edge_with(edge.v, edge.u, attrs);
             }
         }
-        storage.graph_attrs_mut().extend(self.0.graph_attrs().clone());
+        for (key,value) in self.0.graph_attrs().clone() {
+                if let Some(previous)=storage.graph_attrs_mut().insert(key,value){<PropertyValue as semio_framework_value::FromValue>::retire_decoded(previous);}
+            }
         storage
     }
 
@@ -311,7 +315,9 @@ impl UndirectedGraph {
     pub fn set_node_attributes(&mut self, values: impl IntoIterator<Item = (NodeId, PropertyBag)>) {
         for (node, attrs) in values {
             if let Some(existing) = self.0.node_attrs_mut(node) {
-                existing.extend(attrs);
+                for (key,value) in attrs {
+                if let Some(previous)=existing.insert(key,value){<PropertyValue as semio_framework_value::FromValue>::retire_decoded(previous);}
+            }
             }
         }
     }
@@ -329,7 +335,9 @@ impl UndirectedGraph {
             let edge_id = self.0.edges_between(u, v).next().map(|edge| edge.id);
             if let Some(id) = edge_id {
                 if let Some(existing) = self.0.edge_attrs_mut(id) {
-                    existing.extend(attrs);
+                    for (key,value) in attrs {
+                if let Some(previous)=existing.insert(key,value){<PropertyValue as semio_framework_value::FromValue>::retire_decoded(previous);}
+            }
                 }
             }
         }

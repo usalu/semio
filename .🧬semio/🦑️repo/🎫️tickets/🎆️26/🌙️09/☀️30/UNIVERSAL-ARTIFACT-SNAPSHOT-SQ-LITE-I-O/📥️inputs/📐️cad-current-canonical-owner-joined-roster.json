@@ -1,0 +1,173 @@
+{
+  "rows": [
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🚦️owner/🦀️.rs",
+      "line": 81,
+      "before": "    let mut value = dsl::__rt::DecodedFieldOwner::new(store::ArtifactChild::new(String::new(), store::os_io::ArtifactRef {",
+      "after": "    let mut value = semio_framework_dsl_record::__rt::DecodedFieldOwner::new(store::ArtifactChild::new(String::new(), store::os_io::ArtifactRef {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🚦️owner/🦀️.rs",
+      "line": 97,
+      "before": "    let mut value = dsl::__rt::DecodedFieldOwner::new(CadReference {",
+      "after": "    let mut value = semio_framework_dsl_record::__rt::DecodedFieldOwner::new(CadReference {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🚦️owner/🦀️.rs",
+      "line": 117,
+      "before": "    let mut value = dsl::__rt::DecodedFieldOwner::new(CadSnapshot {",
+      "after": "    let mut value = semio_framework_dsl_record::__rt::DecodedFieldOwner::new(CadSnapshot {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🚦️owner/🦀️.rs",
+      "line": 136,
+      "before": "    let mut index = dsl::__rt::DecodedFieldOwner::new(CadReferenceIndex::owned_slots(groups.len(), control)?, close::<CadReferenceIndex>);",
+      "after": "    let mut index = semio_framework_dsl_record::__rt::DecodedFieldOwner::new(CadReferenceIndex::owned_slots(groups.len(), control)?, close::<CadReferenceIndex>);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🚦️owner/🦀️.rs",
+      "line": 140,
+      "before": "        let key = dsl::__rt::DecodedFieldOwner::new(control.copy_text(group.text(2)?)?, close::<String>);",
+      "after": "        let key = semio_framework_dsl_record::__rt::DecodedFieldOwner::new(control.copy_text(group.text(2)?)?, close::<String>);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🚦️owner/🦀️.rs",
+      "line": 152,
+      "before": "        let mut node = dsl::__rt::DecodedFieldOwner::new(CadNode { id: String::new(), label: String::new(), kind: String::new() }, close::<CadNode>);",
+      "after": "        let mut node = semio_framework_dsl_record::__rt::DecodedFieldOwner::new(CadNode { id: String::new(), label: String::new(), kind: String::new() }, close::<CadNode>);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🚦️owner/🦀️.rs",
+      "line": 170,
+      "before": "fn native_list(value: Option<&dsl::FieldValue>) -> Result<&[dsl::FieldValue], TextError> {",
+      "after": "fn native_list(value: Option<&semio_framework_dsl_record::FieldValue>) -> Result<&[semio_framework_dsl_record::FieldValue], TextError> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🚦️owner/🦀️.rs",
+      "line": 171,
+      "before": "    match value { None | Some(dsl::FieldValue::Absent) => Ok(&[]), Some(dsl::FieldValue::List(value)) => Ok(value), _ => Err(positioned(invalid(\"CAD requires an ordered native collection\"))) }",
+      "after": "    match value { None | Some(semio_framework_dsl_record::FieldValue::Absent) => Ok(&[]), Some(semio_framework_dsl_record::FieldValue::List(value)) => Ok(value), _ => Err(positioned(invalid(\"CAD requires an ordered native collection\"))) }"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🚦️owner/🦀️.rs",
+      "line": 173,
+      "before": "fn native_rows(record: &dsl::RecordValue, native: &mut NativeDecodeControl<'_>, maximum: usize) -> Result<(), TextError> {",
+      "after": "fn native_rows(record: &semio_framework_dsl_record::RecordValue, native: &mut NativeDecodeControl<'_>, maximum: usize) -> Result<(), TextError> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🚦️owner/🦀️.rs",
+      "line": 179,
+      "before": "    for id in [2, 3, 4, 5] { if !matches!(record.fields.get(&id), None | Some(dsl::FieldValue::Absent)) { add(1)?; } }",
+      "after": "    for id in [2, 3, 4, 5] { if !matches!(record.fields.get(&id), None | Some(semio_framework_dsl_record::FieldValue::Absent)) { add(1)?; } }"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🚦️owner/🦀️.rs",
+      "line": 182,
+      "before": "    let groups = match record.fields.get(&7) { None | Some(dsl::FieldValue::Absent) => &[][..], Some(dsl::FieldValue::Map(groups)) => groups.as_slice(), _ => return Err(positioned(invalid(\"CAD requires its literal native reference map\"))) };",
+      "after": "    let groups = match record.fields.get(&7) { None | Some(semio_framework_dsl_record::FieldValue::Absent) => &[][..], Some(semio_framework_dsl_record::FieldValue::Map(groups)) => groups.as_slice(), _ => return Err(positioned(invalid(\"CAD requires its literal native reference map\"))) };"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🚦️owner/🦀️.rs",
+      "line": 236,
+      "before": "            let mut value = dsl::__rt::DecodedFieldOwner::new(Self::__dsl_from_record_controlled(record, native).map_err(positioned)?, close::<Self>);",
+      "after": "            let mut value = semio_framework_dsl_record::__rt::DecodedFieldOwner::new(Self::__dsl_from_record_controlled(record, native).map_err(positioned)?, close::<Self>);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📎️references/🦀️.rs",
+      "line": 3,
+      "before": "use dsl::{DslField, FieldValue, NativeSchemaControl, Shape};",
+      "after": "use semio_framework_dsl_record::{DslField, FieldValue, NativeSchemaControl, Shape};"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📎️references/🦀️.rs",
+      "line": 83,
+      "before": "        control.scoped_depth(64, |control| Ok(Shape::Map(dsl::producer::boxed(<CadReferenceList as DslField>::shape_controlled(control)?, control)?)))",
+      "after": "        control.scoped_depth(64, |control| Ok(Shape::Map(semio_framework_dsl_record::producer::boxed(<CadReferenceList as DslField>::shape_controlled(control)?, control)?)))"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📎️references/🦀️.rs",
+      "line": 88,
+      "before": "        let mut output = dsl::__rt::DecodedFieldOwner::new(Self::new(), close::<Self>);",
+      "after": "        let mut output = semio_framework_dsl_record::__rt::DecodedFieldOwner::new(Self::new(), close::<Self>);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📎️references/🦀️.rs",
+      "line": 90,
+      "before": "            let key = dsl::__rt::DecodedFieldOwner::new(key.clone(), close::<String>);",
+      "after": "            let key = semio_framework_dsl_record::__rt::DecodedFieldOwner::new(key.clone(), close::<String>);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📎️references/🦀️.rs",
+      "line": 103,
+      "before": "            let mut output = dsl::__rt::DecodedFieldOwner::new(Self::owned_slots(entries.len(), control)?, close::<Self>);",
+      "after": "            let mut output = semio_framework_dsl_record::__rt::DecodedFieldOwner::new(Self::owned_slots(entries.len(), control)?, close::<Self>);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📎️references/🦀️.rs",
+      "line": 105,
+      "before": "                let key = dsl::__rt::DecodedFieldOwner::new(control.copy_text(key)?, close::<String>);",
+      "after": "                let key = semio_framework_dsl_record::__rt::DecodedFieldOwner::new(control.copy_text(key)?, close::<String>);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📎️references/🦀️.rs",
+      "line": 116,
+      "before": "            let mut output = dsl::__rt::DecodedFieldOwner::new(control.allocate_vec(self.len())?, close::<Vec<(String, FieldValue)>>);",
+      "after": "            let mut output = semio_framework_dsl_record::__rt::DecodedFieldOwner::new(control.allocate_vec(self.len())?, close::<Vec<(String, FieldValue)>>);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📎️references/🦀️.rs",
+      "line": 118,
+      "before": "                let key = dsl::__rt::DecodedFieldOwner::new(control.copy_text(key)?, close::<String>);",
+      "after": "                let key = semio_framework_dsl_record::__rt::DecodedFieldOwner::new(control.copy_text(key)?, close::<String>);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📎️references/🦀️.rs",
+      "line": 135,
+      "before": "                let key = dsl::__rt::DecodedFieldOwner::new(control.copy_text(key)?, close::<String>);",
+      "after": "                let key = semio_framework_dsl_record::__rt::DecodedFieldOwner::new(control.copy_text(key)?, close::<String>);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📎️references/🦀️.rs",
+      "line": 158,
+      "before": "        let mut output = dsl::__rt::DecodedFieldOwner::new(Self::new(), close::<Self>);",
+      "after": "        let mut output = semio_framework_dsl_record::__rt::DecodedFieldOwner::new(Self::new(), close::<Self>);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📎️references/🦀️.rs",
+      "line": 159,
+      "before": "        let mut input = dsl::__rt::DecodedFieldOwner::new(entries, close::<Vec<(String, DslValue)>>);",
+      "after": "        let mut input = semio_framework_dsl_record::__rt::DecodedFieldOwner::new(entries, close::<Vec<(String, DslValue)>>);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📎️references/🦀️.rs",
+      "line": 161,
+      "before": "            let key = dsl::__rt::DecodedFieldOwner::new(key, close::<String>);",
+      "after": "            let key = semio_framework_dsl_record::__rt::DecodedFieldOwner::new(key, close::<String>);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📎️references/🦀️.rs",
+      "line": 171,
+      "before": "            let mut output = dsl::__rt::DecodedFieldOwner::new(Self::owned_slots(entries.len(), control)?, close::<Self>);",
+      "after": "            let mut output = semio_framework_dsl_record::__rt::DecodedFieldOwner::new(Self::owned_slots(entries.len(), control)?, close::<Self>);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📎️references/🦀️.rs",
+      "line": 173,
+      "before": "                let key = dsl::__rt::DecodedFieldOwner::new(control.copy_text(key)?, close::<String>);",
+      "after": "                let key = semio_framework_dsl_record::__rt::DecodedFieldOwner::new(control.copy_text(key)?, close::<String>);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📎️references/🚦️frontiers/🦀️.rs",
+      "line": 112,
+      "before": "        let mut output = dsl::__rt::DecodedFieldOwner::new(control.allocate_vec(count)?, close::<Vec<T>>);",
+      "after": "        let mut output = semio_framework_dsl_record::__rt::DecodedFieldOwner::new(control.allocate_vec(count)?, close::<Vec<T>>);"
+    }
+  ],
+  "files": [
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🚦️owner/🦀️.rs",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📎️references/🦀️.rs",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📎️references/🚦️frontiers/🦀️.rs"
+  ],
+  "manifestChanged": false,
+  "semanticRepairMounted": false
+}

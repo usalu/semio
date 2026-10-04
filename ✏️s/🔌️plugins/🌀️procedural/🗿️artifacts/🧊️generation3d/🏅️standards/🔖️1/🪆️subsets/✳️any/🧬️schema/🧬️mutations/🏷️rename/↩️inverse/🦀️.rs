@@ -5,6 +5,9 @@ use crate::standards::v1::subsets::any::schema::mutations::rename_generation::Re
 use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
 use crate::Generation3dSnapshot;
 
-pub fn inverse(payload: &RenameGeneration, base: &Generation3dSnapshot) -> Vec<Generation3dMutation> {
+pub fn inverse(payload: &RenameGeneration, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     base.generation.generations.iter().find(|entry| entry.id == payload.id).map(|entry| vec![Generation3dMutation::RenameGeneration(RenameGeneration { id: payload.id.clone(), new_name: entry.name.clone() })]).unwrap_or_default()
+
+    })())
 }

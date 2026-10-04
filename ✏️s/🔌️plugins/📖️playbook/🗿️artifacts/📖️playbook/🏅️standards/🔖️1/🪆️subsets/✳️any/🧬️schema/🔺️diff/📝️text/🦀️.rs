@@ -1,6 +1,5 @@
 //! 🔺️ Playbook artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::playbook::PlaybookStep;
 use crate::schema::diff::PlaybookDiff;
 use crate::schema::snapshot::PlaybookSnapshot;
 use crate::schema::PlaybookArtifact;
@@ -33,9 +32,6 @@ impl PlaybookDiff {
             if let Some(title) = &self.title {
                 next.title = title.clone();
             }
-            if let Some(document) = &self.document {
-                next.document = document.clone();
-            }
             if let Some(flow) = &self.flow {
                 next.flow = flow.clone();
             }
@@ -63,9 +59,6 @@ impl MutationDiff<PlaybookSnapshot> for PlaybookDiff {
             if let Some(title) = &self.title {
                 next.title = title.clone();
             }
-            if let Some(document) = &self.document {
-                next.document = document.clone();
-            }
             if let Some(flow) = &self.flow {
                 next.flow = flow.clone();
             }
@@ -88,7 +81,6 @@ impl MutationDiff<PlaybookSnapshot> for PlaybookDiff {
         take!(id);
         take!(version);
         take!(title);
-        take!(document);
         take!(flow);
     }
 }
@@ -98,17 +90,6 @@ impl MutationDiff<PlaybookSnapshot> for PlaybookDiff {
 /// 📸️ Whole-snapshot replacement diff.
 pub fn diff_set_snapshot(snapshot: &PlaybookSnapshot) -> PlaybookDiff {
     PlaybookDiff { artifact: Some(Box::new(PlaybookArtifact::from_snapshot(snapshot.clone()))), ..Default::default() }
-}
-
-/// 🔺️ Mints new content-addressed `document`+`flow` handles for the whole-scene replacement
-/// `steps` and seeds the working-scene cache with them (`playbook_content_handles`) —
-/// real handcrafted construction, never apply-then-capture. Every one of the nine step/block
-/// mutation triads' `🔺️diff` leaf reads the CURRENT scene off `base` (via `playbook_working_scene`),
-/// applies its own specific semantics to that scene, then calls this shared builder — mirrors
-/// writer's `diff_set_text`/flow's `diff_replace_content`.
-pub fn diff_replace_content(title: Option<&str>, steps: Vec<PlaybookStep>) -> PlaybookDiff {
-    let (document, flow) = crate::playbook_content_handles(title, steps);
-    PlaybookDiff { document: Some(document), flow: Some(flow), ..Default::default() }
 }
 //#endregion 🔖️Builders
 

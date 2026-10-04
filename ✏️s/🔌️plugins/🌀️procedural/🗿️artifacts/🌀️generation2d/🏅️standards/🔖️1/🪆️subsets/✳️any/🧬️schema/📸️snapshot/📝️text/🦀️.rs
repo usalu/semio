@@ -31,7 +31,7 @@ pub const GENERATION2D_EXAMPLE_TEXT: &str = include_str!("../../../📚️exampl
 /// the engine's dynamic `Shape::Value`/`DslValue` escape hatch, which merges `Atom::Integer`/
 /// `Atom::Decimal` into one `Number(f64)` case — a real, observable loss of fidelity `ValueDsl`'s own
 /// mutually-exclusive `Option` fields avoid entirely.
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 pub struct ValueDsl {
     /// 🕳️ Presence-only flag (the payload is never inspected) — `Atom::Null`'s tag.
     null: Option<bool>,
@@ -48,7 +48,7 @@ pub struct ValueDsl {
 /// 🗝️ One `Dictionary`/`Value::Dictionary` entry — a `Vec` of `(key, value)` records rather than a
 /// bare `Shape::Map` (`{ key=value }`): a `Shape::Map` key is a bare identifier, but real `Dictionary`
 /// keys are arbitrary strings — notably `neural_engine::SCHEMA_KEY` (`"$schema"`).
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 pub struct DictEntryDsl {
     key: String,
     #[dsl(block)]
@@ -99,7 +99,7 @@ pub fn value_dsl_entries_to_dictionary(entries: &[DictEntryDsl]) -> Dictionary {
 }
 
 /// 🎥️ Local twin of `semio_framework_artifact_flow_flow::CameraJson`.
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 pub struct CameraJsonDsl {
     x: f64,
     y: f64,
@@ -115,7 +115,7 @@ pub fn camera_from_dsl(camera: &CameraJsonDsl) -> CameraJson {
 }
 
 /// 📍️ Local twin of `semio_framework_artifact_flow_flow::WidgetLayout`.
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 pub struct WidgetLayoutDsl {
     x: f64,
     y: f64,
@@ -131,20 +131,20 @@ pub fn layout_from_dsl(layout: &WidgetLayoutDsl) -> WidgetLayout {
 
 /// 🔗️ Local twin of `semio_framework_artifact_flow_flow::SynapseSpec` — a graph edge (`from@fromPort->to@toPort`) via the
 /// engine's unified `dsl::Wire` shape.
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 pub struct SynapseSpecDsl {
     id: String,
-    wire: dsl::Wire,
+    wire: semio_framework_dsl_record::Wire,
 }
 
 pub fn synapse_to_dsl(synapse: &SynapseSpec) -> SynapseSpecDsl {
     SynapseSpecDsl {
         id: synapse.id.clone(),
-        wire: dsl::Wire(dsl::WireValue {
-            from: dsl::WireNode { id: synapse.from.clone(), kind: None, port: (!synapse.from_port.is_empty()).then(|| synapse.from_port.clone()) },
-            edge: Some((true, dsl::WireNode { id: synapse.to.clone(), kind: None, port: (!synapse.to_port.is_empty()).then(|| synapse.to_port.clone()) })),
-            edge_label: dsl::WireEdgeLabel::default(),
-            properties: dsl::DslValue::Object(Vec::new()),
+        wire: semio_framework_dsl_record::Wire(semio_framework_dsl_record::WireValue {
+            from: semio_framework_dsl_record::WireNode { id: synapse.from.clone(), kind: None, port: (!synapse.from_port.is_empty()).then(|| synapse.from_port.clone()) },
+            edge: Some((true, semio_framework_dsl_record::WireNode { id: synapse.to.clone(), kind: None, port: (!synapse.to_port.is_empty()).then(|| synapse.to_port.clone()) })),
+            edge_label: semio_framework_dsl_record::WireEdgeLabel::default(),
+            properties: semio_framework_value::DslValue::Object(Vec::new()),
         }),
     }
 }
@@ -156,8 +156,8 @@ pub fn synapse_from_dsl(synapse: SynapseSpecDsl) -> SynapseSpec {
 }
 
 /// 🎛️ Local twin of `semio_framework_artifact_flow_flow::Widget` — `Neuron`/`OutputPreview`'s `Dictionary` fields route
-/// through `ValueDsl`; `Cluster`'s `tree`/`flow` are carried as an opaque `dsl::DslValue`.
-#[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
+/// through `ValueDsl`; `Cluster`'s `tree`/`flow` are carried as an opaque `semio_framework_value::DslValue`.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
 pub enum WidgetDsl {
     Neuron {
         id: String,
@@ -206,8 +206,8 @@ pub enum WidgetDsl {
     Cluster {
         id: String,
         name: String,
-        tree: dsl::DslValue,
-        flow: dsl::DslValue,
+        tree: semio_framework_value::DslValue,
+        flow: semio_framework_value::DslValue,
     },
 }
 
@@ -227,7 +227,7 @@ pub fn widget_to_dsl(widget: &Widget) -> WidgetDsl {
     }
 }
 
-pub fn widget_from_dsl(widget: WidgetDsl) -> Result<Widget, store::TextError> {
+pub fn widget_from_dsl(widget: WidgetDsl) -> Result<Widget, semio_framework_diagnostic::TextError> {
     Ok(match widget {
         WidgetDsl::Neuron { id, neuron_kind, preview, input_ports, output_ports, params } => Widget::Neuron { id, neuron_kind, params: value_dsl_entries_to_dictionary(&params), input_ports, output_ports, preview },
         WidgetDsl::InputSlider { id, label, value, min, max, step } => Widget::InputSlider { id, label, value, min, max, step },
@@ -240,18 +240,18 @@ pub fn widget_from_dsl(widget: WidgetDsl) -> Result<Widget, store::TextError> {
         WidgetDsl::Cluster { id, name, tree, flow } => Widget::Cluster {
             id,
             name,
-            tree: semio_framework_value::FromValue::from_value(tree).map_err(|error| store::TextError::new(format!("invalid cluster tree: {error}"), store::TextSpan::at(1, 1)))?,
-            flow: semio_framework_value::FromValue::from_value(flow).map_err(|error| store::TextError::new(format!("invalid cluster flow: {error}"), store::TextSpan::at(1, 1)))?,
+            tree: semio_framework_value::FromValue::from_value(tree).map_err(|error| semio_framework_diagnostic::TextError::new(error.kind, format!("invalid cluster tree: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?,
+            flow: semio_framework_value::FromValue::from_value(flow).map_err(|error| semio_framework_diagnostic::TextError::new(error.kind, format!("invalid cluster flow: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?,
         },
     })
 }
 
 /// 🧬️ Local twin of `semio_framework_artifact_playbook_playbook::FormGeneration`.
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 pub struct FormGenerationDsl {
     id: String,
     name: String,
-    values: BTreeMap<String, dsl::DslValue>,
+    values: BTreeMap<String, semio_framework_value::DslValue>,
 }
 
 pub fn form_generation_to_dsl(generation: &FormGeneration) -> FormGenerationDsl {
@@ -264,7 +264,7 @@ pub fn form_generation_from_dsl(generation: FormGenerationDsl) -> FormGeneration
 
 /// 🧾️ Local twin of `Generation2dSnapshot`, flattening `FlowHostSnapshot`/`GenerationPlayState`'s fields
 /// into one top-level `#[derive(dsl::DslRecord)]` grammar.
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(id = "procedural.generation2d", layout = "lines")]
 struct Generation2dSnapshotDsl {
     schema: String,
@@ -288,16 +288,16 @@ impl store::ArtifactDsl for Generation2dSnapshotDsl {
     fn envelope_id() -> &'static str {
         "procedural.generation2d"
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -306,18 +306,18 @@ impl store::ArtifactDsl for Generation2dSnapshotDsl {
 impl store::ArtifactPack for Generation2dSnapshotDsl {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -338,7 +338,7 @@ fn generation2d_document_to_dsl(document: &Generation2dSnapshot) -> Generation2d
     }
 }
 
-fn generation2d_document_from_dsl(parsed: Generation2dSnapshotDsl) -> Result<Generation2dSnapshot, store::TextError> {
+fn generation2d_document_from_dsl(parsed: Generation2dSnapshotDsl) -> Result<Generation2dSnapshot, semio_framework_diagnostic::TextError> {
     let widgets = parsed.widgets.into_iter().map(widget_from_dsl).collect::<Result<Vec<_>, _>>()?;
     let synapses = parsed.synapses.into_iter().map(synapse_from_dsl).collect();
     let layout = parsed.layout.into_iter().map(|(id, entry)| (id, layout_from_dsl(&entry))).collect();
@@ -352,7 +352,7 @@ fn generation2d_document_from_dsl(parsed: Generation2dSnapshotDsl) -> Result<Gen
 impl store::ArtifactDsl for Generation2dSnapshot {
     const EXTENSION: &'static str = "generation2d";
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let parsed = <Generation2dSnapshotDsl as store::ArtifactDsl>::parse_dsl(text)?;
         generation2d_document_from_dsl(parsed)
     }
@@ -377,21 +377,21 @@ impl store::ArtifactPack for Generation2dSnapshot {
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         if !bytes.starts_with(b"P2D2") {
-            return Err(store::PackError::Schema("generation2d pack discriminator mismatch".into()));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "generation2d pack discriminator mismatch")));
         }
         let (record, _report) = store::pack_rt::decode_document(&bytes[4..], &Generation2dSnapshotDsl::__dsl_spec(), options)?;
         let parsed = Generation2dSnapshotDsl::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)?;
         generation2d_document_from_dsl(parsed).map_err(store::text_error_to_pack_error)
     }
 
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         <Generation2dSnapshotDsl as store::ArtifactPack>::record_spec()
     }
 }
 //#endregion 🔖️DslMirror
 
 /// 📖️ Parses `.generation2d` DSL text into a `Generation2dSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<Generation2dSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<Generation2dSnapshot, semio_framework_diagnostic::TextError> {
     <Generation2dSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
@@ -409,4 +409,11 @@ mod tests;
 //#region 🚚️Carrier
 /// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
 pub type Generation2dSnapshotText = String;
+
+type ControlledSnapshotDsl = Generation2dSnapshotDsl;
+type ControlledSnapshot = Generation2dSnapshot;
+const CONTROLLED_ENVELOPE_ID: &str = "procedural.generation2d";
+const CONTROLLED_PACK_PREFIX: Option<&[u8]> = Some(b"P2D2");
+#[path="../../../../../../../../../🫀️core/🧬️generation/🪶️sqlite/🚦️native/🦀️.rs"]mod controlled;
+pub(crate) use controlled::{decode as decode_sqlite_native,encode as encode_sqlite_native};
 //#endregion 🚚️Carrier

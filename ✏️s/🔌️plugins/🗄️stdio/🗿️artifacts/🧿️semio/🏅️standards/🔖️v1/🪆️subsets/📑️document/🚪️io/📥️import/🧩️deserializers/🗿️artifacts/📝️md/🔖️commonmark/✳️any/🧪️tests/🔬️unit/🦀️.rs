@@ -16,7 +16,7 @@ pub(crate) fn sample_md() -> MdSnapshot {
 
 #[semio_framework_async_macros::async_test]
 async fn maps_headings_lists_code_and_quotes() {
-    let semio = semio_framework_plugin::resolve_ready(SemioDocumentFromMd::deserialize(&sample_md())).expect("deserialize");
+    let semio = ::semio_framework_async::poll::resolve_ready(SemioDocumentFromMd::deserialize(&sample_md())).expect("deserialize");
     assert!(semio.styles.is_empty());
     assert_eq!(semio.blocks.len(), 5);
     assert!(matches!(&semio.blocks[0], DocBlock::Heading { level: 1, runs, .. } if runs[0].text == "Title"));
@@ -32,7 +32,7 @@ async fn inline_image_lifts_to_its_own_block() {
         schema: semio_s_artifact_stdio_md::STDIO_MD_DOCUMENT_SCHEMA.into(),
         blocks: vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "see: ".into() }, MdInline::Image { alt: "a cat".into(), url: "cat.png".into(), title: None }] }],
     };
-    let semio = semio_framework_plugin::resolve_ready(SemioDocumentFromMd::deserialize(&md)).expect("deserialize");
+    let semio = ::semio_framework_async::poll::resolve_ready(SemioDocumentFromMd::deserialize(&md)).expect("deserialize");
     assert_eq!(semio.blocks.len(), 2);
     assert!(matches!(&semio.blocks[1], DocBlock::Image { image_id, alt, .. } if image_id == "cat.png" && alt == "a cat"));
 }

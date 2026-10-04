@@ -1,7 +1,7 @@
 //! 📝️ Imperative text module: string action operators.
 
 use neural_engine::{Atom, ChannelSpec, Dictionary, EvalError, Operator, OperatorImpl, OperatorInfo, Registry, Value};
-use pack::json::{array, object, to_string, Value as JsonValue};
+use semio_framework_pack_json::{array, object, to_string, Value as JsonValue};
 
 // #region 🔖️TextConcat
 pub struct TextConcat;

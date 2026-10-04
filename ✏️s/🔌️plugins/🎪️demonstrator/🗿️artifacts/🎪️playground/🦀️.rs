@@ -44,15 +44,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 type PlaygroundCapabilityRow<'a> = (&'a str, &'a str, &'a str, &'a [(&'a str, &'a str)], Option<(&'a str, &'a str)>);
 
 //#region 🔖️Register
-/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
-/// the old side-effecting `register()`, which called `register_composer_entries`/
-/// `register_artifact_schema_descriptor`/`register_artifact_inference_descriptor`/
-/// `dsl::register_language` (×5) directly from a plugin `.setup()` callback. Playground owns no
-/// `ArtifactApp` (no pane's document schema is `PLAYGROUND_DOCUMENT_SCHEMA`), so there is no
-/// `.document_codec()` call and no app-scope `register_app_schema_descriptor` escape hatch to keep —
-/// every one of playground's §6 registrars fits this declaration with nothing left over. Lives at the
-/// artifact root, not `⚙️engine`, per that ticket's taxonomy pass — `declaration()` describes the
-/// artifact (kind/schema/io/ownership), it is not engine behaviour.
+/// 🔖️ Declares the Playground artifact's owned semantic capabilities.
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
@@ -61,6 +53,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         ("s.demonstrator.playground.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.demonstrator.playground.schema.artifact", "schema", "s.demonstrator.playground", &[("schema", "s.demonstrator.playground")], None),
         ("s.demonstrator.playground.inference.artifact", "inference", "s.demonstrator.playground.inference", &[("schema", "s.demonstrator.playground.inference")], None),
+        ("s.demonstrator.playground.codec.document.v1", "codec", "playground.playground:playground", &[("codec", "playground.playground"), ("codec-extension", "21:playground.playground:playground")], None),
         ("s.demonstrator.playground.composer.native", "composer", "s.demonstrator.playground@1/*", &[("dialect", "s.demonstrator.playground@1/*")], None),
         ("s.demonstrator.playground.composer.format-1", "composer", "s.stdio.zip@2.0/*", &[("dialect", "s.stdio.zip@2.0/*")], None),
         ("s.demonstrator.playground.composer.format-4", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
@@ -89,6 +82,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(standards::v1::subsets::any::schema::playground_artifact_schema_descriptor())
+        .document_codec_bare::<standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot, standards::v1::subsets::any::schema::mutations::PlaygroundMutation>(PLAYGROUND_DOCUMENT_SCHEMA, PLAYGROUND_DIALECT)
         .inferences([standards::v1::subsets::any::schema::inferences::playground_artifact_inference_descriptor()])
         .composers(standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
@@ -99,77 +93,77 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
 /// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`. Private:
 /// `declaration()` above is its only caller (moved here with it from `⚙️engine`, ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g7 revision — kept unexported, not widened).
-fn pilot_languages() -> &'static [dsl::LanguageSpec] {
-    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES.get_or_init(build_pilot_languages).as_slice()
 }
 
-fn build_pilot_languages() -> Vec<dsl::LanguageSpec> {
+fn build_pilot_languages() -> Vec<semio_framework_dsl::LanguageSpec> {
     vec![playground_document_language(), playground_op_language(), playground_diff_language(), playground_pack_language(), playground_spr_language()]
 }
 
-fn playground_document_language() -> dsl::LanguageSpec {
-    dsl::LanguageSpec {
+fn playground_document_language() -> semio_framework_dsl::LanguageSpec {
+    semio_framework_dsl::LanguageSpec {
         id: "playground.document",
         extension: Some("playground"),
-        role: dsl::LanguageRole::Document,
+        role: semio_framework_dsl::LanguageRole::Document,
         grammar: Some(standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
         protocol: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("playground.document"),
+        hooks: semio_framework_dsl::passthrough_hooks("playground.document"),
     }
 }
 
-fn playground_op_language() -> dsl::LanguageSpec {
-    dsl::LanguageSpec {
+fn playground_op_language() -> semio_framework_dsl::LanguageSpec {
+    semio_framework_dsl::LanguageSpec {
         id: "playground.op",
         extension: None,
-        role: dsl::LanguageRole::Ops,
+        role: semio_framework_dsl::LanguageRole::Ops,
         grammar: Some(standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
         protocol: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("playground.op"),
+        hooks: semio_framework_dsl::passthrough_hooks("playground.op"),
     }
 }
 
-fn playground_diff_language() -> dsl::LanguageSpec {
-    dsl::LanguageSpec {
+fn playground_diff_language() -> semio_framework_dsl::LanguageSpec {
+    semio_framework_dsl::LanguageSpec {
         id: "playground.diff",
         extension: None,
-        role: dsl::LanguageRole::Diff,
+        role: semio_framework_dsl::LanguageRole::Diff,
         grammar: Some(standards::v1::subsets::any::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(standards::v1::subsets::any::schema::diff::text::COMPONENT_GRAMMAR_PATH),
         protocol: None,
         protocol_path: None,
-        hooks: dsl::passthrough_hooks("playground.diff"),
+        hooks: semio_framework_dsl::passthrough_hooks("playground.diff"),
     }
 }
 
-fn playground_pack_language() -> dsl::LanguageSpec {
-    dsl::LanguageSpec {
+fn playground_pack_language() -> semio_framework_dsl::LanguageSpec {
+    semio_framework_dsl::LanguageSpec {
         id: "playground.pack",
         extension: None,
-        role: dsl::LanguageRole::Pack,
+        role: semio_framework_dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
         protocol: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("playground.pack"),
+        hooks: semio_framework_dsl::passthrough_hooks("playground.pack"),
     }
 }
 
-fn playground_spr_language() -> dsl::LanguageSpec {
-    dsl::LanguageSpec {
+fn playground_spr_language() -> semio_framework_dsl::LanguageSpec {
+    semio_framework_dsl::LanguageSpec {
         id: "playground.spr",
         extension: None,
-        role: dsl::LanguageRole::Spr,
+        role: semio_framework_dsl::LanguageRole::Spr,
         grammar: None,
         grammar_path: None,
         protocol: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("playground.spr"),
+        hooks: semio_framework_dsl::passthrough_hooks("playground.spr"),
     }
 }
 //#endregion 🔖️Register

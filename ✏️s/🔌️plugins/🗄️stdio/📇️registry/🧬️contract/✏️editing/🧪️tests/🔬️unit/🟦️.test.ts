@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { applyPatch, type Operation } from "fast-json-patch";
 import Ajv from "ajv";
+import Ajv2020 from "ajv/dist/2020";
 import { createHash } from "node:crypto";
 import { snapshotEditSource, snapshotFromEditSource, applySnapshotEdit, SnapshotEditError, type SnapshotEditCodec, type SnapshotEditEvent, type SnapshotValue } from "../../🟦️";
 
@@ -13,6 +14,10 @@ const retainedNativeFixture = await Bun.file(new URL("../../🧫️fixtures/🧵
   documentCopy: { siblingByteLength: number; replacementText: string; replacementRepeats: number; pageBytes: number; cancelAfterTurns: number; minimumCompleteTurns: number };
 };
 const retainedNativeSchema = await Bun.file(new URL("../../🧫️fixtures/🧵️retained-native/🧬️schema/🔣️.json", import.meta.url)).json();
+const sourceDiagnosticFixture = await Bun.file(new URL("../../🧫️fixtures/🩺️source-diagnostic/🔣️.json", import.meta.url)).json() as {
+  cases: { id: string; source: string; expected: { code: string; line: number; column: number; length: number } }[];
+};
+const sourceDiagnosticSchema = await Bun.file(new URL("../../🧫️fixtures/🩺️source-diagnostic/🧬️schema/🔣️.json", import.meta.url)).json();
 
 const fixture = await Bun.file(new URL("../../🧫️fixtures/🪆️snapshot-edits/🔣️patch-cases.json", import.meta.url)).json() as {
   base: SnapshotValue;
@@ -53,6 +58,16 @@ describe("snapshot edit fixture", () => {
     catch (error) { expect(error).toBeInstanceOf(SnapshotEditError); expect((error as SnapshotEditError).code).toBe(row.code); }
     expect(fixture.base).toEqual(before);
   });
+});
+
+test("source diagnostic fixture is schema-valid and every source is independently malformed", () => {
+  expect(new Ajv2020({ strict: true }).compile(sourceDiagnosticSchema)(sourceDiagnosticFixture)).toBe(true);
+  for (const row of sourceDiagnosticFixture.cases) {
+    expect(() => JSON.parse(row.source)).toThrow();
+    expect(row.expected.code).toBe("snapshot-edit.invalid-source");
+    expect(row.expected.line).toBeGreaterThan(0);
+    expect(row.expected.column).toBeGreaterThan(0);
+  }
 });
 
 test("retained native route and cancellation fixture matches the independent oracle", () => {

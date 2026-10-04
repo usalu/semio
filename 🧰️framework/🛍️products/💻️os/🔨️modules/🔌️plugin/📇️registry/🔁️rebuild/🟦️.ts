@@ -15,6 +15,7 @@ import { acquireQueuedResourceLease } from "../../../../../../🔨️modules/�
 import { repoCacheDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { developmentRuntimeRoot, pluginModulesRoot, readActivationReceipt } from "../../../🧑‍💻dev/♻️activation/🟦️.ts";
 import { moduleDirectoryName } from "../📦️deployment/🟦️.ts";
+import { REGISTRY_DIAGNOSTICS_FILE, parseRegistryChannelDiagnosticsV1 } from "../🔎️discovery/🟦️.ts";
 import { readGeneratedCatalogProjection, registryModuleDirectories } from "../📖️catalog-view/🟦️.ts";
 import rebuildSchema from "./🧬️schema/🔣️.json";
 
@@ -142,7 +143,7 @@ export class RebuildAllScript extends BundleScript {
  * and the activation receipt must name ONE build. */
 export type StagedConvergenceRowV1 = Readonly<{ pluginId: string; committed: string; dist: string; staged: string; activated: boolean; missing: readonly string[]; ok: boolean }>;
 
-/** 🔍️ Proves `committed == dist == staged` and full staging for every registry component of one dev variant. */
+/** 🔍️ Proves `committed == dist == staged` and full staging for every registry component of one dev variant; every plugin the dev catalog withholds (§21.4 stale channel) is a refused row. */
 export function stagedConvergence(repoRoot: string, variant: string): Readonly<{ rows: readonly StagedConvergenceRowV1[]; receiptPlugins: number }> {
   const sha = (path: string): string => (existsSync(path) ? createHash("sha256").update(readFileSync(path)).digest("hex") : "-");
   const registry = readGeneratedCatalogProjection(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated")).entries;
@@ -163,7 +164,9 @@ export function stagedConvergence(repoRoot: string, variant: string): Readonly<{
     const ok = committed !== "-" && committed === dist && dist === staged && activated.has(entry.pluginId) && missing.length === 0;
     return Object.freeze({ pluginId: entry.pluginId, committed, dist, staged, activated: activated.has(entry.pluginId), missing: Object.freeze(missing), ok });
   });
-  return Object.freeze({ rows: Object.freeze(rows), receiptPlugins: receipt.plugins.length });
+  const diagnostics = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated", REGISTRY_DIAGNOSTICS_FILE);
+  const withheld = existsSync(diagnostics) ? parseRegistryChannelDiagnosticsV1(readFileSync(diagnostics, "utf8")).map((row) => Object.freeze({ pluginId: row.pluginId, committed: row.code, dist: "-", staged: "-", activated: activated.has(row.pluginId), missing: Object.freeze([]), ok: false })) : [];
+  return Object.freeze({ rows: Object.freeze([...rows, ...withheld]), receiptPlugins: receipt.plugins.length });
 }
 
 /** ✅️ `verify-staged --variant <variant>`: one row per component, the summary line, exit 1 when any component diverged. */

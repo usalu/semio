@@ -22,6 +22,22 @@ export function testDurableOwnedGroupDecisionFixture(): void {
   const validate = ajv.getSchema(`${contract.$id}#/$defs/DurableOwnedGroupDecision`)!;
   assert(validate(fixture), JSON.stringify(validate.errors));
   assert.equal(fixture.version, 1);
+
+  const octets = fixture.recoveryOctets;
+  assert.equal(octets.ownershipBytes, fixture.limits.recoveryPackBytes);
+  assert.equal(octets.wireTag, 8);
+  assert.deepEqual(octets.bindings, [
+    { record: "unbound", fields: ["next-clock-canonical-json", "edit-without-group-canonical-json", "post-snapshot-pack"] },
+    { record: "bound", fields: ["next-clock-canonical-json", "edit-canonical-json", "post-snapshot-pack"] },
+  ]);
+  for (const row of octets.cases) {
+    const actual = Buffer.concat(Array.from({ length: row.repeat }, () => Buffer.from(row.octets)));
+    assert.equal(actual.length, row.length, row.id);
+    assert.equal(actual.toString("base64"), row.base64, row.id);
+    assert.equal(sha256(actual), row.sha256, row.id);
+    assert.deepEqual(Buffer.from(row.base64, "base64"), actual, row.id);
+  }
+
   assert.deepEqual(fixture.limits, {
     participants: 3,
     eventBytes: 491520,
@@ -130,7 +146,7 @@ export function testDurableOwnedGroupDecisionFixture(): void {
     receiptSource: "derived",
     terminalHandoff: "stores-and-ack-once",
   });
-  const source = readFileSync(join(owner, "🦀️.rs"), "utf8");
+  const source = [readFileSync(join(owner, "🦀️.rs"), "utf8"), readFileSync(join(owner, "🧪️tests/🔬️unit/🦀️.rs"), "utf8")].join("\n");
   for (const marker of ["DurableOwnedThreeMemberDecisionV1", "DurableOwnedThreeMemberUnsignedV1", "DurableUnboundOneItemOutcomeV1", "DurableBoundOneItemOutcomeV1", "DurableStorePreparedOutcomeV1", "DurableOwnedThreeStorePreparedV1", "DurableOwnedThreeStoreBoundV1", "DurableOwnedThreeStoreCommitV1", "DurableOwnedMapCommitOperationV1", "DurableOwnedMapCommitHostV1", "DurableOwnedMapCommitOwnersV1", "DurableOwnedMapRecoveryAdmissionV1", "DurableOwnedMapRecoveryHostV1", "DurableOwnedMapRecoveryOwnersV1", "DurableOwnedMapRecoveryRejectedV1", "DurableOwnedMapRecoveryAdvanceV1", "DurableOwnedGroupJournalSinkV1", "DurableOwnedGroupVerifiedThreeEditsV1", "capture_store_owned_three_snapshot", "durable_unbound_outcome", "verify_inverse", "bind_store_owned", "recover_store_owned", "begin_retained_commit", "begin_store_owned_recovery", "restore_untrusted_committed_record", "advance_recovery", "recovery_committed", "mount_map", "acknowledge_retained", "acknowledge_restoration", "take_terminal_owners", "validate_json_budget", "next_clock_canonical_json", "edit_without_group_canonical_json", "parse_canonical_json", "decode_canonical_pack", "admit_canonical", "admit_map", "verify_fixed_three_edits", "DURABLE_OWNED_GROUP_EVENT_MAX_BYTES", "max_total_alloc: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES", "manifest.doc_frame_count != 1", "durable_owned_group_decision_matches_neutral_canonical_hash_and_bounds", "durable_group_journal_record_projects_edits_only_after_all_three_bound_outcomes_verify", "durable_store_prepared_outcome_derives_and_verifies_exact_unbound_bytes", "durable_store_owned_three_member_bind_and_base_recovery_retain_exact_private_owners", "durable_store_private_committed_record_recovers_all_three_stores_without_reappending_journal", "durable_store_group_journal_commit_flips_one_shared_root_then_adopts_exactly_once", "durable_store_group_cancellation_waits_for_trusted_absence_then_restores_all_old_roots", "durable_store_group_stage_error_retains_abort_owner_until_every_root_is_empty", "durable_store_group_uncertain_journal_error_retries_same_owner_without_rebegin_or_visibility_change", "durable_store_group_rejects_foreign_anchor_receipt_before_visibility_and_aborts_only_after_absence", "durable_map_fixed_host_slot_retains_every_live_owner_across_request_error_until_terminal_handoff", "durable_map_fixed_host_slot_cancellation_after_uncertain_io_waits_for_trusted_absence", "durable_json_carriers_preserve_numeric_kinds_and_reject_control_and_resource_excess", "durable_decision_rejects_deflate_expansion_before_document_body_allocation"]) assert(source.includes(marker), `missing durable decision marker ${marker}`);
   assert(!source.includes("pub fn begin_store_owned_recovery"), "committed receipt reconstruction stays Store-private until a per-document DB/Map owner consumes the opaque WAL witness");
   assert(!source.includes("pub(crate) fn seal("), "callers cannot construct durable decisions from supplied hashes or recovery packs");

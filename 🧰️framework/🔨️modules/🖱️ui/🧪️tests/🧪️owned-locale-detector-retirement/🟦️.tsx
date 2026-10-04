@@ -6,6 +6,7 @@ import type { ControlIcon, DockSkeleton, HistoryColumn, IntroductionStepDefiniti
 import type * as Three from "three";
 import panelResizeFixture from "../../🧫️fixtures/↔️panel-resize/🔣️.json" with { type: "json" };
 import panelResizeFixtureSchema from "../../🧬️schema/↔️panel-resize/🔣️.json" with { type: "json" };
+import { colorOracle } from "../../🎨️styling/🛡️verification/🧪️tests/⚖️color-oracle/🟦️.ts";
 
 type TestSource = { readonly directory: string; readonly url: string };
 import paneOwnerFixture from "../../🧫️fixtures/🪪️window-surface-owner/🔣️.json" with { type: "json" };
@@ -407,7 +408,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(celebrateContent).not.toMatch(/:is\(\[data-icon\], \[data-icon-kind\], \[data-slot="tree-icon"\], \[data-slot="drag-handle"\]\)/);
       expect(celebrateContent).not.toMatch(/mix-blend-mode:\s*destination-in/);
       expect(celebrateContent).not.toMatch(/inset:\s*-100%/);
-      expect(celebrateContent).toMatch(/mask-image:\s*var\(--icon-mask, linear-gradient\(#0000 0 0\)/);
+      expect(celebrateContent).toMatch(/mask-image:\s*var\(--icon-mask, linear-gradient\(transparent 0 0\)/);
+      expect(colorOracle.get("transparent")).toEqual(colorOracle.get("#0000"));
+      expect(colorOracle.get("transparent")?.value).toEqual([0, 0, 0, 0]);
       expect(celebrateContent).toMatch(/\[data-icon-kind="themed"\]/);
       expect(celebrateContent).toMatch(/> svg[\s\S]*?visibility:\s*hidden/);
       expect(celebrateContent).toMatch(/:is\(\[data-slot="tree-label"\], \[data-slot="inline-label"\]\)/);
@@ -3688,7 +3691,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(screen.getByText("Tab B")).toBeTruthy();
       const activeButton = container.querySelector('[data-slot="panel-tab-button"][data-active="true"]');
       expect(activeButton?.className).toContain("bg-active-base");
-      expect(activeButton?.className).toContain("text-emphasized");
+      expect(activeButton?.className).toContain("text-active-foreground");
       expect(container.querySelector('[data-slot="panel-tabs"]')?.className).toContain("overflow-x-auto");
       expect(container.querySelector('[data-slot="panel-tabs"]')?.className).toContain("ui-scrollbar-hidden");
       expect(container.querySelector('[data-slot="panel-tabs"]')?.className).toContain("z-40");
@@ -4129,11 +4132,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const stemStyle = (markup: string) => markup.match(/data-slot="tree-branch-stem"[^>]*style="([^"]*)"/)?.[1] ?? "";
       const downStem = stemStyle(downMarkup);
       const upStem = stemStyle(upMarkup);
-      expect(downStem).toContain("top:calc(var(--size-workbench) / 2)");
+      expect(downStem).toContain("top:var(--tree-gutter-center, calc(var(--tree-row-height) / 2))");
       expect(downStem).toContain("bottom:0");
       expect(downStem).not.toContain("top:0");
       expect(upStem).toContain("top:0");
-      expect(upStem).toContain("bottom:calc(var(--size-workbench) / 2)");
+      expect(upStem).toContain("bottom:var(--tree-gutter-center, calc(var(--tree-row-height) / 2))");
       expect(upStem).not.toContain("bottom:0");
     });
 
@@ -4454,7 +4457,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(container.querySelector('[data-slot="tree"]')?.getAttribute("dir")).toBe("auto");
       expect(container.querySelector('[data-slot="tree-item-row"]')?.closest('[data-slot="tree"]')?.getAttribute("dir")).toBe("auto");
       const closedChevron = container.querySelector('[data-slot="tree-item-row"] [data-icon]')?.getAttribute("data-icon");
-      expect(closedChevron).toBe("chevron-right");
+      expect(closedChevron).toBe("chevron-left");
     });
 
     it("FlowProvider defaults to ltr/down and lets nested providers override only what they pass", () => {
@@ -5191,7 +5194,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(inactiveStackTab?.className).not.toContain("border-emphasized");
       expect(inactiveStackTab?.className).not.toContain("border-active-base");
       expect(activeStackTab?.className).toContain("bg-active-base");
-      expect(activeStackTab?.className).toContain("text-emphasized");
+      expect(activeStackTab?.className).toContain("text-active-foreground");
       expect(activeStackTab?.className).toContain("border-0");
       expect(inactiveStackTab?.className).toContain("text-element");
       expect(inactiveStackTab?.className).not.toContain("text-foreground");
@@ -5346,14 +5349,14 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       );
       expect(container.querySelector('[data-slot="mode-dock-stack-body"]')?.getAttribute("data-level")).toBe("base");
       expect(container.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("ui-surface");
-      expect(container.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("p-single");
+      expect(container.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("p-[var(--padding-standard)]");
       expect(screen.getByText("Alpha Body")).toBeTruthy();
       expect(screen.queryByText("Beta Body")).toBeNull();
       expect(container.querySelector('[data-slot="mode-dock-chrome-column"]')).toBeNull();
       expect(container.querySelector('[data-slot="mode-dock-tab-active-cell"]')).toBeNull();
       expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("ui-glass");
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).toContain("bg-active-base");
-      expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).toContain("text-emphasized");
+      expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).toContain("text-active-foreground");
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).toContain("border-0");
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).toContain("z-20");
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-window-id="b"]')?.className).toContain("z-30");
@@ -6661,7 +6664,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(shouldRouteKeysToWindowSearch(text)).toBe(false);
     });
 
-    it("Window keeps bodies edgeless and chrome-aware scroll hosts start below the dead line", () => {
+    it("Window keeps bodies edgeless and chrome-aware scroll hosts preserve the first content", () => {
       const { container } = render(
         <Window id="chrome-aware-window" active search={{ input: { placeholder: uiDataLabel("Action") } }} measures={<div>LOD</div>}>
           <div data-window-content-layout="chrome-aware" className="flex min-h-0 flex-1 flex-col">
@@ -6675,7 +6678,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(body?.className).not.toContain("has-[[data-window-content-layout=chrome-aware]]:pt-");
       const scroller = container.querySelector('[data-slot="scroll-area"]') as HTMLDivElement;
       expect(scroller?.className).toContain("scroll-padding-top:var(--window-content-dead-line)");
-      expect(scroller.scrollTop).toBeGreaterThan(0);
+      expect(scroller.scrollTop).toBe(0);
     });
 
     it("Window edgeless bodies do not apply a dead-line scroll offset", () => {
@@ -6825,15 +6828,17 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(searchZone.querySelector('[data-slot="window-chrome-silhouette-border"]')).toBeTruthy();
       expect(screen.queryByPlaceholderText("Action")).toBeNull();
       expect(screen.queryByText("Idle")).toBeNull();
-      // 🗣️ One engagement bar, two anchored panes: either toggle expands the status readout AND the command
-      // line together, so unfolding "Actions" can never leave the only typed input of the bar unmounted.
       fireEvent.click(container.querySelector('[id="framework.window.engagementWindow.engagement.toggle"]')!);
+      expect(screen.queryByPlaceholderText("Action")).toBeNull();
+      fireEvent.click(container.querySelector('[id="framework.window.engagementWindow.search.toggle"]')!);
       expect(screen.getByText("Idle")).toBeTruthy();
       expect(screen.getByPlaceholderText("Action")).toBeTruthy();
       expect(container.querySelector('[data-slot="window-engagement-body"]')).toBeTruthy();
       expect(container.querySelector('[data-slot="window-search-body"]')).toBeTruthy();
       fireEvent.click(container.querySelector('[id="framework.window.engagementWindow.search.toggle"]')!);
       expect(screen.queryByPlaceholderText("Action")).toBeNull();
+      expect(screen.getByText("Idle")).toBeTruthy();
+      fireEvent.click(container.querySelector('[id="framework.window.engagementWindow.engagement.toggle"]')!);
       expect(screen.queryByText("Idle")).toBeNull();
     });
 
@@ -6921,6 +6926,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       >{field("body")}</Window>);
       try {
         fireEvent.click(view.container.querySelector(`[id="${childElementId("framework.window", owner, "engagement", "toggle")}"]`)!);
+        fireEvent.click(view.container.querySelector(`[id="${childElementId("framework.window", owner, "search", "toggle")}"]`)!);
         fireEvent.click(view.container.querySelector(`[id="${childElementId("framework.window", owner, "measures", "unfold")}"]`)!);
         const inputFor = (kind: string) => view.container.querySelector(kind === "search" ? 'input[placeholder="sequence-search"]' : `input[data-pane-kind="${kind}"]`) as HTMLInputElement;
         let previous: HTMLInputElement | undefined;
@@ -7222,6 +7228,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(screen.queryByText("Idle")).toBeNull();
       fireEvent.click(container.querySelector('[id="framework.window.engagementWindow.engagement.toggle"]')!);
       expect(screen.getByText("Idle")).toBeTruthy();
+      expect(screen.queryByPlaceholderText("Action")).toBeNull();
+      fireEvent.click(container.querySelector('[id="framework.window.engagementWindow.search.toggle"]')!);
       expect(screen.getByPlaceholderText("Action")).toBeTruthy();
       expect(container.querySelector('[id="framework.window.engagementWindow.engagement"]')).toBeTruthy();
       expect(container.querySelector('[id="framework.window.engagementWindow.search"]')).toBeTruthy();
@@ -7659,7 +7667,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(pane().className).not.toContain("flex-col-reverse");
         expect(pane().style.top).toBe("var(--spacing-single)");
         expect(pane().style.maxWidth).toBe("min(100% - (var(--spacing-single) * 2), 300px)");
-        expect(pane().style.maxHeight).toBe("calc(100% - (var(--spacing-single) * 2))");
+        expect(pane().style.maxHeight).toBe("calc(100% - (var(--panel-inset) * 2))");
 
         rerender(
           <PaneHost>
@@ -8369,7 +8377,7 @@ export async function registerTests2(vitest: Pick<typeof import("vitest"), "desc
         expect(treeRowChromeClasses(false, true)).toContain("text-emphasized");
         expect(treeRowChromeClasses(true, true)).toContain("bg-active-base");
         expect(treeRowChromeClasses(true, false)).toContain("bg-active-base");
-        expect(treeRowChromeClasses(true, false)).toContain("text-emphasized");
+        expect(treeRowChromeClasses(true, false)).toContain("text-active-foreground");
         expect(treeRowChromeClasses(true, false)).not.toContain("bg-hover-interactive-fill");
         expect(treeRowChromeClasses(false, false, true)).toContain("opacity-50");
         expect(treeRowChromeClasses(true, false, true)).toContain("opacity-50");
@@ -8439,7 +8447,7 @@ export async function registerTests2(vitest: Pick<typeof import("vitest"), "desc
         );
         expect(markup).toContain("bg-active-base");
         expect(markup).toContain("text-emphasized");
-        expect(markup).not.toContain("text-active-foreground");
+        expect(markup).toContain("text-active-foreground");
         expect(markup).not.toMatch(/data-slot="tree-label"[^>]*text-element/);
       });
   
@@ -8579,7 +8587,7 @@ export async function registerTests2(vitest: Pick<typeof import("vitest"), "desc
         expect(markup).toContain("var(--spacing-double)");
         expect(markup).not.toContain("margin-left:13px");
         expect(markup).toContain('data-slot="tree-branch-elbow"');
-        expect(markup).toContain("calc(var(--size-workbench) / 2)");
+        expect(markup).toContain("var(--tree-gutter-center, calc(var(--tree-row-height) / 2))");
         expect(markup).not.toContain('style="top:50%;left:7px;width:10px"');
       });
   
@@ -8614,7 +8622,7 @@ export async function registerTests2(vitest: Pick<typeof import("vitest"), "desc
         expect(markup).toContain('data-slot="tree-row"');
         expect(markup).toContain('data-tree-row-kind="property"');
         expect(markup).toContain('data-slot="property-row"');
-        expect(markup).toContain("calc(var(--size-workbench) / 2)");
+        expect(markup).toContain("var(--tree-gutter-center, calc(var(--tree-row-height) / 2))");
         expect(markup).not.toContain('style="top:50%;left:7px;width:10px"');
       });
   
@@ -8677,7 +8685,7 @@ export async function registerTests2(vitest: Pick<typeof import("vitest"), "desc
   
         expect(markup).toContain('data-slot="tree-item-control"');
         expect(markup).toContain('data-slot="slider-track"');
-        expect(markup).toContain("grid-template-columns:minmax(0, 1fr) calc(50 * var(--ui-spacing))");
+        expect(markup).toContain("grid-template-columns:minmax(0, 1fr) var(--tree-value-column, calc(50 * var(--ui-spacing)))");
       });
   
       it("keeps leaf inspector controls visible without manual expand", () => {
@@ -8844,7 +8852,7 @@ export async function registerTests2(vitest: Pick<typeof import("vitest"), "desc
         expect(markup).toContain("Capsule J");
         expect(markup).toContain("capsule-j");
         expect(markup).toContain('data-slot="tree-item-row"');
-        expect(markup).toContain("h-workbench");
+        expect(markup).toContain("h-[var(--tree-row-height,var(--size-workbench))]");
         expect(markup).toContain('data-slot="tree-row-layout"');
         expect(markup).toMatch(/data-slot="tree-row-layout"[^>]*class="[^"]*\bh-full\b[^"]*\bw-full\b/);
         expect(markup).toMatch(/data-slot="tree-row-content"[^>]*class="[^"]*\bh-full\b[^"]*\bflex\b[^"]*\bitems-center\b/);
@@ -8910,7 +8918,7 @@ export async function registerTests2(vitest: Pick<typeof import("vitest"), "desc
         expect(markup).toContain("h-full");
         expect(markup).not.toContain("bg-foreground");
         expect(markup).toContain('data-slot="slider-thumb"');
-        expect(markup).toContain("rounded-[9999px]");
+        expect(markup).toContain("rounded-full");
         expect(markup).toContain("hover:bg-emphasized");
         expect(markup).toContain("group-hover:bg-emphasized");
         expect(markup).toContain('data-slot="slider-value"');
@@ -9194,7 +9202,7 @@ export async function registerTests2(vitest: Pick<typeof import("vitest"), "desc
         expect(markup).not.toContain('data-slot="tree-gutter-slot" class="absolute inset-y-0 left-0 flex items-center justify-center"');
         expect(markup).toContain('data-slot="tree-gutter-slot"');
         expect(markup).toContain('data-slot="tree-gutter-slot" class="absolute flex -translate-y-1/2 items-center justify-center"');
-        expect(markup).toContain("calc(var(--size-workbench) / 2)");
+        expect(markup).toContain("var(--tree-gutter-center, calc(var(--tree-row-height) / 2))");
         expect(markup).toContain('data-slot="tree-branch-elbow"');
         expect(markup).not.toContain('style="top:50%;left:7px;width:3px"');
         expect(markup).toContain('data-slot="tree-branch-stem"');
@@ -10291,7 +10299,7 @@ export async function registerTests2(vitest: Pick<typeof import("vitest"), "desc
         expect(markup).toContain('data-icon="chevron-up"');
         const stemStyle = markup.match(/data-slot="tree-branch-stem"[^>]*style="([^"]*)"/)?.[1] ?? "";
         expect(stemStyle).toContain("top:0");
-        expect(stemStyle).toContain("bottom:calc(var(--size-workbench) / 2)");
+        expect(stemStyle).toContain("bottom:var(--tree-gutter-center, calc(var(--tree-row-height) / 2))");
       });
   
       it("stretches full-width measure toggles so active fill spans the tree row", () => {
@@ -11451,7 +11459,7 @@ export async function registerTests2(vitest: Pick<typeof import("vitest"), "desc
         expect(leftRoot.getAttribute("dir")).toBeNull();
         expect(leftRoot.style.top).toBe("50%");
         expect(leftRoot.style.transform).toBe("translateY(-50%)");
-        expect(leftRoot.style.maxHeight).toBe("calc(100% - (var(--spacing-single) * 2))");
+        expect(leftRoot.style.maxHeight).toBe("calc(100% - (var(--panel-inset) * 2))");
         expect(leftContainer.querySelectorAll('[data-slot="panel-resize-handle"]').length).toBe(1);
         expect((leftContainer.querySelector('[data-slot="panel-resize-handle"]') as HTMLElement).className).toContain("right-0");
   

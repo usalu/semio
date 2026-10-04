@@ -1,7 +1,7 @@
 //! 📦️ `pack_cli` — the `pack` binary: `inspect`/`verify`/`hash`/`to-dsl`/`from-dsl`/`diff` over
 //! `.spk` pack files. `inspect`/`verify`/`hash` are schema-less (self-describing decode via
 //! `pack_format`'s manifest/segment framing); `to-dsl`/`from-dsl`/`diff --schema` resolve a
-//! `crate::os_dsl::schema::RecordSpec` against a tiny built-in registry (see `//#region 🔖️Registry`) — this
+//! `semio_framework_dsl_record::RecordSpec` against a tiny built-in registry (see `//#region 🔖️Registry`) — this
 //! crate must not depend on any app crate or on `dsl_derive`, so full schema resolution across
 //! the 49 app document kinds is explicitly out of scope here; see `pack help`.
 //!
@@ -15,28 +15,28 @@ use std::path::Path;
 /// 🧬️ Demonstration-only schema: no keyword, three keyed scalar fields — mirrors `pack`
 /// facade's own `sample_spec` test fixture so a pack file built by any wave-0 crate's tests
 /// round-trips through this CLI unmodified.
-fn sample_spec() -> crate::os_dsl::schema::RecordSpec {
-    crate::os_dsl::schema::RecordSpec::new(
+fn sample_spec() -> semio_framework_dsl_record::RecordSpec {
+    semio_framework_dsl_record::RecordSpec::new(
         None,
-        crate::os_dsl::schema::RecordLayout::Lines,
+        semio_framework_dsl_record::RecordLayout::Lines,
         vec![
-            crate::os_dsl::schema::FieldSpec::new(1, "name", crate::os_dsl::schema::Shape::Text),
-            crate::os_dsl::schema::FieldSpec::new(2, "age", crate::os_dsl::schema::Shape::UInt),
-            crate::os_dsl::schema::FieldSpec::new(3, "active", crate::os_dsl::schema::Shape::Bool),
+            semio_framework_dsl_record::FieldSpec::new(1, "name", semio_framework_dsl_record::Shape::Text),
+            semio_framework_dsl_record::FieldSpec::new(2, "age", semio_framework_dsl_record::Shape::UInt),
+            semio_framework_dsl_record::FieldSpec::new(3, "active", semio_framework_dsl_record::Shape::Bool),
         ],
     )
 }
 
 /// 🧬️ Demonstration-only schema exercising a keyword and a `List` shape, distinct from
 /// `sample_spec` — e.g. `note title="Todo" body="write the CLI" tags=[ "wave0" "pack" ]`.
-fn note_spec() -> crate::os_dsl::schema::RecordSpec {
-    crate::os_dsl::schema::RecordSpec::new(
+fn note_spec() -> semio_framework_dsl_record::RecordSpec {
+    semio_framework_dsl_record::RecordSpec::new(
         Some("note"),
-        crate::os_dsl::schema::RecordLayout::Lines,
+        semio_framework_dsl_record::RecordLayout::Lines,
         vec![
-            crate::os_dsl::schema::FieldSpec::new(1, "title", crate::os_dsl::schema::Shape::Text),
-            crate::os_dsl::schema::FieldSpec::new(2, "body", crate::os_dsl::schema::Shape::Text).optional(),
-            crate::os_dsl::schema::FieldSpec::new(3, "tags", crate::os_dsl::schema::Shape::List(Box::new(crate::os_dsl::schema::Shape::Text))),
+            semio_framework_dsl_record::FieldSpec::new(1, "title", semio_framework_dsl_record::Shape::Text),
+            semio_framework_dsl_record::FieldSpec::new(2, "body", semio_framework_dsl_record::Shape::Text).optional(),
+            semio_framework_dsl_record::FieldSpec::new(3, "tags", semio_framework_dsl_record::Shape::List(Box::new(semio_framework_dsl_record::Shape::Text))),
         ],
     )
 }
@@ -51,7 +51,7 @@ enum SchemaKind {
 }
 
 impl SchemaKind {
-    fn spec(self) -> crate::os_dsl::schema::RecordSpec {
+    fn spec(self) -> semio_framework_dsl_record::RecordSpec {
         match self {
             SchemaKind::Sample => sample_spec(),
             SchemaKind::Note => note_spec(),
@@ -93,7 +93,7 @@ fn registry_names() -> String {
 /// implementation, lives here; the real fan-in implementation is the NEW `dsl_registry` crate
 /// (`🗣️dsl/📇️registry`), which depends on the app `🗣️dsl` crates this crate deliberately does not.
 pub trait SchemaResolver {
-    async fn resolve(&self, schema: &str) -> Option<crate::os_dsl::schema::RecordSpec>;
+    async fn resolve(&self, schema: &str) -> Option<semio_framework_dsl_record::RecordSpec>;
     /// 📇️ Every schema name this resolver knows, for help/error text — default empty so a
     /// resolver that only cares about `resolve` doesn't have to implement it.
     async fn names(&self) -> Vec<String> {
@@ -108,7 +108,7 @@ pub trait SchemaResolver {
 struct BuiltinRegistry;
 
 impl SchemaResolver for BuiltinRegistry {
-    async fn resolve(&self, schema: &str) -> Option<crate::os_dsl::schema::RecordSpec> {
+    async fn resolve(&self, schema: &str) -> Option<semio_framework_dsl_record::RecordSpec> {
         schema_registry().get(schema).copied().map(|kind| kind.spec())
     }
     async fn names(&self) -> Vec<String> {
@@ -118,7 +118,7 @@ impl SchemaResolver for BuiltinRegistry {
     }
 }
 
-async fn resolve_schema(name: &str) -> Option<crate::os_dsl::schema::RecordSpec> {
+async fn resolve_schema(name: &str) -> Option<semio_framework_dsl_record::RecordSpec> {
     BuiltinRegistry.resolve(name).await
 }
 //#endregion 🔖️Registry
@@ -162,6 +162,8 @@ async fn parse_level(flags: &HashMap<String, String>) -> Result<crate::os_pack::
 }
 //#endregion 🔖️Args
 
+use crate::os_pack::control;
+
 //#region 🔖️Format
 async fn hex32(bytes: &[u8; 32]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
@@ -200,13 +202,13 @@ async fn print_manifest(manifest: &crate::os_pack::Manifest, footer: &crate::os_
 /// 🔍️ `pack inspect <file>` — prints header/footer/manifest/segment-span text; never
 /// panics on corrupt input, degrading to a forward-scan recovery summary if the manifest fails
 /// to load.
-async fn cmd_inspect(rest: &[String]) -> i32 {
+async fn cmd_inspect(rest: &[String], context: &crate::os_pack::control::CommandContext) -> i32 {
     let (positional, _flags) = parse_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: pack inspect <file>");
         return 2;
     };
-    let source = match crate::os_pack::FilePackSource::open(Path::new(path)) {
+    let source = match crate::os_pack::FilePackSource::open(Path::new(path), context.transport().clone()) {
         Ok(source) => source,
         Err(error) => {
             eprintln!("pack: cannot open '{path}': {error}");
@@ -268,7 +270,7 @@ async fn cmd_inspect(rest: &[String]) -> i32 {
 /// 🛡️ `pack verify <file> [--level=trusted|standard|full]` — opens the manifest, reads
 /// the document body, and reads every chunk at the requested `VerificationLevel`; prints `OK`/
 /// `FAIL: <reason>` and never panics on corrupt input.
-async fn cmd_verify(rest: &[String]) -> i32 {
+async fn cmd_verify(rest: &[String], context: &crate::os_pack::control::CommandContext) -> i32 {
     let (positional, flags) = parse_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: pack verify <file> [--level=trusted|standard|full]");
@@ -281,7 +283,7 @@ async fn cmd_verify(rest: &[String]) -> i32 {
             return 2;
         }
     };
-    let source = match crate::os_pack::FilePackSource::open(Path::new(path)) {
+    let source = match crate::os_pack::FilePackSource::open(Path::new(path), context.transport().clone()) {
         Ok(source) => source,
         Err(error) => {
             println!("FAIL: cannot open '{path}': {error}");
@@ -314,13 +316,13 @@ async fn cmd_verify(rest: &[String]) -> i32 {
 //#region 🔖️Hash
 /// #⃣ `pack hash <file>` — prints the footer's `content_hash` hex, reading only the
 /// trailing footer bytes via `crate::os_pack::content_hash`.
-async fn cmd_hash(rest: &[String]) -> i32 {
+async fn cmd_hash(rest: &[String], context: &crate::os_pack::control::CommandContext) -> i32 {
     let (positional, _flags) = parse_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: pack hash <file>");
         return 2;
     };
-    let bytes = match std::fs::read(path) {
+    let bytes = match control::read_command_file(Path::new(path), crate::os_pack::PackLimits::default().max_file_len, context).await {
         Ok(bytes) => bytes,
         Err(error) => {
             eprintln!("pack: cannot read '{path}': {error}");
@@ -343,7 +345,7 @@ async fn cmd_hash(rest: &[String]) -> i32 {
 //#region 🔖️ToDsl
 /// 📤️ `pack to-dsl <file> --schema <name>` — decodes against a registry spec and prints
 /// canonical `Document`-mode DSL text to stdout.
-async fn cmd_to_dsl(rest: &[String]) -> i32 {
+async fn cmd_to_dsl(rest: &[String], context: &crate::os_pack::control::CommandContext) -> i32 {
     let (positional, flags) = parse_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: pack to-dsl <file> --schema <name>");
@@ -357,18 +359,18 @@ async fn cmd_to_dsl(rest: &[String]) -> i32 {
         eprintln!("pack: unknown --schema '{schema_name}'; available: {}", registry_names());
         return 2;
     };
-    let bytes = match std::fs::read(path) {
+    let bytes = match control::read_command_file(Path::new(path), crate::os_pack::PackLimits::default().max_file_len, context).await {
         Ok(bytes) => bytes,
         Err(error) => {
             eprintln!("pack: cannot read '{path}': {error}");
             return 1;
         }
     };
-    match crate::os_pack::decode_document(&bytes, &spec, &crate::os_pack::DecodeOptions::default()) {
+    match crate::os_pack::record::decode_document(&bytes, &spec, &crate::os_pack::record::DecodeOptions::default()) {
         Ok((record, report)) => {
-            let mut writer = crate::os_dsl::schema::Writer::new();
-            crate::os_dsl::schema::print_record(&record, &spec, &mut writer);
-            print!("{}", writer.render(crate::os_dsl::schema::JoinMode::Document));
+            let mut writer = semio_framework_dsl_record::Writer::new();
+            semio_framework_dsl_record::print_record(&record, &spec, &mut writer);
+            print!("{}", writer.render(semio_framework_dsl_record::JoinMode::Document));
             if !report.unknown_field_ids.is_empty() {
                 eprintln!("note: unknown field ids not in schema '{schema_name}': {:?}", report.unknown_field_ids);
             }
@@ -388,7 +390,7 @@ async fn cmd_to_dsl(rest: &[String]) -> i32 {
 //#region 🔖️FromDsl
 /// 📥️ `pack from-dsl <file> --schema <name> --out <file>` — parses `<file>`'s DSL text
 /// against a registry spec and encodes+writes the resulting pack file atomically to `--out`.
-async fn cmd_from_dsl(rest: &[String]) -> i32 {
+async fn cmd_from_dsl(rest: &[String], context: &crate::os_pack::control::CommandContext) -> i32 {
     let (positional, flags) = parse_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: pack from-dsl <file> --schema <name> --out <file>");
@@ -406,28 +408,28 @@ async fn cmd_from_dsl(rest: &[String]) -> i32 {
         eprintln!("pack: unknown --schema '{schema_name}'; available: {}", registry_names());
         return 2;
     };
-    let text = match std::fs::read_to_string(path) {
+    let text = match control::read_command_file(Path::new(path), crate::os_pack::PackLimits::default().max_file_len, context).await.and_then(|bytes|bytes.into_text()) {
         Ok(text) => text,
         Err(error) => {
             eprintln!("pack: cannot read '{path}': {error}");
             return 1;
         }
     };
-    let record = match crate::os_dsl::schema::parse(&text, &spec, &crate::os_dsl::schema::ParseOptions::default()) {
+    let record = match semio_framework_dsl_record::parse(&text, &spec, &semio_framework_dsl_record::ParseOptions::default()) {
         Ok(record) => record,
         Err(error) => {
             eprintln!("pack: dsl parse failed: {error}");
             return 1;
         }
     };
-    let bytes = match crate::os_pack::encode_document(&spec, &record, &crate::os_pack::EncodeOptions::default()) {
+    let bytes = match crate::os_pack::record::encode_document(&spec, &record, &crate::os_pack::record::EncodeOptions::default()) {
         Ok(bytes) => bytes,
         Err(error) => {
             eprintln!("pack: encode failed: {error}");
             return 1;
         }
     };
-    match crate::os_pack::write_atomic(Path::new(out_path), &bytes) {
+    match crate::os_pack::write_atomic(Path::new(out_path), &bytes, context.transport()) {
         Ok(()) => {
             println!("wrote {out_path} ({} bytes)", bytes.len());
             0
@@ -443,7 +445,7 @@ async fn cmd_from_dsl(rest: &[String]) -> i32 {
 //#region 🔖️Diff
 /// 🌳️ Field-by-field diff of two decoded records; `+`/`-`/`~` prefix additions,
 /// removals, and changes, keyed by field id ascending.
-async fn diff_records(a: &crate::os_dsl::schema::RecordValue, b: &crate::os_dsl::schema::RecordValue) -> Vec<String> {
+async fn diff_records(a: &semio_framework_dsl_record::RecordValue, b: &semio_framework_dsl_record::RecordValue) -> Vec<String> {
     let mut ids: Vec<u16> = a.fields.keys().chain(b.fields.keys()).copied().collect();
     ids.sort_unstable();
     ids.dedup();
@@ -463,7 +465,7 @@ async fn diff_records(a: &crate::os_dsl::schema::RecordValue, b: &crate::os_dsl:
 /// 🌗️ `pack diff <file-a> <file-b> [--schema <name>]` — structural `RecordValue` diff
 /// when `--schema` resolves, else a raw content-hash/length/first-mismatch summary. Exit code
 /// `0` when identical, `1` when they differ, `2` on a usage/resolution error.
-async fn cmd_diff(rest: &[String]) -> i32 {
+async fn cmd_diff(rest: &[String], context: &crate::os_pack::control::CommandContext) -> i32 {
     let (positional, flags) = parse_args(rest).await;
     if positional.len() < 2 {
         eprintln!("usage: pack diff <file-a> <file-b> [--schema <name>]");
@@ -471,14 +473,14 @@ async fn cmd_diff(rest: &[String]) -> i32 {
     }
     let path_a = &positional[0];
     let path_b = &positional[1];
-    let bytes_a = match std::fs::read(path_a) {
+    let bytes_a = match control::read_command_file(Path::new(path_a), crate::os_pack::PackLimits::default().max_file_len, context).await {
         Ok(bytes) => bytes,
         Err(error) => {
             eprintln!("pack: cannot read '{path_a}': {error}");
             return 1;
         }
     };
-    let bytes_b = match std::fs::read(path_b) {
+    let bytes_b = match control::read_command_file(Path::new(path_b), crate::os_pack::PackLimits::default().max_file_len, context).await {
         Ok(bytes) => bytes,
         Err(error) => {
             eprintln!("pack: cannot read '{path_b}': {error}");
@@ -491,15 +493,15 @@ async fn cmd_diff(rest: &[String]) -> i32 {
             eprintln!("pack: unknown --schema '{schema_name}'; available: {}", registry_names());
             return 2;
         };
-        let options = crate::os_pack::DecodeOptions::default();
-        let record_a = match crate::os_pack::decode_document(&bytes_a, &spec, &options) {
+        let options = crate::os_pack::record::DecodeOptions::default();
+        let record_a = match crate::os_pack::record::decode_document(&bytes_a, &spec, &options) {
             Ok((record, _)) => record,
             Err(error) => {
                 eprintln!("pack: decode '{path_a}' failed: {error}");
                 return 1;
             }
         };
-        let record_b = match crate::os_pack::decode_document(&bytes_b, &spec, &options) {
+        let record_b = match crate::os_pack::record::decode_document(&bytes_b, &spec, &options) {
             Ok((record, _)) => record,
             Err(error) => {
                 eprintln!("pack: decode '{path_b}' failed: {error}");
@@ -558,18 +560,18 @@ async fn print_help() {
 /// 🚪️ The CLI's single testable entry point — `main` is a thin `std::process::exit`
 /// wrapper around this. Never panics on malformed input; every subcommand handler maps errors
 /// to a printed message and a non-zero exit code instead.
-pub async fn main_impl(args: &[String]) -> i32 {
+pub async fn main_impl(args: &[String], context: &crate::os_pack::control::CommandContext) -> i32 {
     let Some((command, rest)) = args.split_first() else {
         print_help().await;
         return 2;
     };
     match command.as_str() {
-        "inspect" => cmd_inspect(rest).await,
-        "verify" => cmd_verify(rest).await,
-        "hash" => cmd_hash(rest).await,
-        "to-dsl" => cmd_to_dsl(rest).await,
-        "from-dsl" => cmd_from_dsl(rest).await,
-        "diff" => cmd_diff(rest).await,
+        "inspect" => cmd_inspect(rest, context).await,
+        "verify" => cmd_verify(rest, context).await,
+        "hash" => cmd_hash(rest, context).await,
+        "to-dsl" => cmd_to_dsl(rest, context).await,
+        "from-dsl" => cmd_from_dsl(rest, context).await,
+        "diff" => cmd_diff(rest, context).await,
         "help" | "--help" | "-h" => {
             print_help().await;
             0

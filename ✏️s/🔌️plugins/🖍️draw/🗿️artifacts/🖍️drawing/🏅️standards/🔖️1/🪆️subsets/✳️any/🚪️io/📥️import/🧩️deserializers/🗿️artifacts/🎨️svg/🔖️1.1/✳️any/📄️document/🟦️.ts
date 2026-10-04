@@ -1,6 +1,6 @@
 /** 📄️ Incrementally construct an editable SVG hierarchy with explicit unsupported-feature failures. */
 import type {DrawingSnapshot} from "../../../../../../../../🧬️schema/📸️snapshot/🟦️.ts";
-import type {DrawingLayerNode,PathSegment} from "../../../../../../../../🧬️schema/🟦️.ts";
+import type {DrawingLayerNode,PathGeometrySegment} from "../../../../../../../../🧬️schema/🟦️.ts";
 import {parseFillRule} from "../../../../../../../../🧬️schema/🎨️fill/🌀️rule/🟦️.ts";
 import {drawingMatrixToTransform,drawingTransformToMatrix} from "../../../../../../../../🧬️schema/🧮️geometry/↗️affine/🟦️.ts";
 import {multiply,segmentBounds,type Matrix,type Point} from "../../../../../../../../🧬️schema/🧮️geometry/🟦️.ts";
@@ -57,9 +57,9 @@ function attributes(style:Style){
   }
   return result;
 }
-function geometry(element:Element):PathSegment[] {
+function geometry(element:Element):PathGeometrySegment[] {
   const tag=element.localName,n=(key:string,fallback=0)=>length(element.hasAttribute(key)?element.getAttribute(key)!:undefined,fallback);
-  const m=(x:number,y:number):PathSegment=>({kind:"move",to:[x,y]}),l=(x:number,y:number):PathSegment=>({kind:"line",to:[x,y]}),close:PathSegment={kind:"close"};
+  const m=(x:number,y:number):PathGeometrySegment=>({kind:"move",to:[x,y]}),l=(x:number,y:number):PathGeometrySegment=>({kind:"line",to:[x,y]}),close:PathGeometrySegment={kind:"close"};
   if(tag==="path")return parseEditableSvgPath(element.getAttribute("d")??"");
   if(tag==="line")return [m(n("x1"),n("y1")),l(n("x2"),n("y2"))];
   if(tag==="rect"){
@@ -67,18 +67,18 @@ function geometry(element:Element):PathSegment[] {
     if(!w||!h)return [];
     const rx=Math.min(w/2,nonnegative(n("rx",n("ry")))),ry=Math.min(h/2,nonnegative(n("ry",n("rx"))));
     if(!rx||!ry)return [m(x,y),l(x+w,y),l(x+w,y+h),l(x,y+h),close];
-    const a=(x:number,y:number):PathSegment=>({kind:"arc",rx,ry,rotation:0,largeArc:false,sweep:true,to:[x,y]});
+    const a=(x:number,y:number):PathGeometrySegment=>({kind:"arc",rx,ry,rotation:0,largeArc:false,sweep:true,to:[x,y]});
     return [m(x+rx,y),l(x+w-rx,y),a(x+w,y+ry),l(x+w,y+h-ry),a(x+w-rx,y+h),l(x+rx,y+h),a(x,y+h-ry),l(x,y+ry),a(x+rx,y),close];
   }
   if(tag==="circle"||tag==="ellipse"){
     const x=n("cx"),y=n("cy"),rx=nonnegative(n(tag==="circle"?"r":"rx")),ry=nonnegative(n(tag==="circle"?"r":"ry"));
     if(!rx||!ry)return [];
-    const a=(x:number):PathSegment=>({kind:"arc",rx,ry,rotation:0,largeArc:false,sweep:true,to:[x,y]});return [m(x+rx,y),a(x-rx),a(x+rx),close];
+    const a=(x:number):PathGeometrySegment=>({kind:"arc",rx,ry,rotation:0,largeArc:false,sweep:true,to:[x,y]});return [m(x+rx,y),a(x-rx),a(x+rx),close];
   }
   if(tag==="polyline"||tag==="polygon"){
     const source=(element.getAttribute("points")??"").trim();if(!source)return [];
     const points=source.split(/[ ,\t\r\n]+/).map(scalar);if(points.length%2)throw new Error("SVG points need coordinate pairs");
-    const segments:PathSegment[]=[];for(let i=0;i<points.length;i+=2)segments.push(i?l(points[i]!,points[i+1]!):m(points[i]!,points[i+1]!));if(tag==="polygon")segments.push(close);return segments;
+    const segments:PathGeometrySegment[]=[];for(let i=0;i<points.length;i+=2)segments.push(i?l(points[i]!,points[i+1]!):m(points[i]!,points[i+1]!));if(tag==="polygon")segments.push(close);return segments;
   }
   throw new Error(`Unsupported SVG element: ${tag}`);
 }
@@ -93,7 +93,7 @@ function viewport(root:Element):{width:number;height:number;matrix:Matrix}{
   if(align!=="none"){sx=sy=mode==="slice"?Math.max(sx,sy):Math.min(sx,sy);const part=(value:string)=>value==="Min"?0:value==="Mid"?.5:1;dx=(width-box[2]!*sx)*part(align.slice(1,4));dy=(height-box[3]!*sy)*part(align.slice(5));}
   return {width,height,matrix:[sx,0,0,sy,dx-box[0]!*sx,dy-box[1]!*sy]};
 }
-function gradientFill(reference:string,definitions:Map<string,Element>,segments:PathSegment[],viewport:[number,number],alpha:number){
+function gradientFill(reference:string,definitions:Map<string,Element>,segments:PathGeometrySegment[],viewport:[number,number],alpha:number){
   const match=/^url\(\s*["']?#([^"'()\s]+)["']?\s*\)$/.exec(reference);if(!match)throw new Error("SVG paint needs a local gradient reference");
   let element=definitions.get(match[1]!);if(!element)throw new Error("Missing SVG gradient");
   if(element.localName!=="linearGradient")throw new Error("Radial SVG gradient import requires an authored gradient coordinate system");
@@ -172,7 +172,7 @@ export class SvgImportJob {
     }else layer={kind:"path",...base,segments:geometry(element)};
     if(style.fill?.startsWith("url(")&&layer.kind!=="group"){
       if(layer.kind!=="path")throw new Error("SVG text gradients need exact text bounds");
-      const fill=gradientFill(style.fill,this.gradients,layer.segments as PathSegment[],this.userViewport,fraction(style["fill-opacity"]));if(fill)base.attributes.fill=fill;
+      const fill=gradientFill(style.fill,this.gradients,layer.segments as PathGeometrySegment[],this.userViewport,fraction(style["fill-opacity"]));if(fill)base.attributes.fill=fill;
     }
     parent.push(layer);
   }

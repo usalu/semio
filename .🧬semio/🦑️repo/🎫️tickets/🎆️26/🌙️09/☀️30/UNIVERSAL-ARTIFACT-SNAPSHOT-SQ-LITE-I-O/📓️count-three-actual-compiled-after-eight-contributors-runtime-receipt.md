@@ -1,0 +1,5 @@
+# Actual Count Compiled Component Replay
+
+Unchanged registered count-component-check actually passed all three separately executed compiled laws; Nx8m56exit0, fresh actual WASIp2 component prerequisite3m33 and compiled host task5m5. First law full fivei32 Text/Binary realcomponent plus independent SQLite physical/fullmetadata checks passed; second real export/import interpreter interior cancellation passed; third selected eight real compiled refusal contributors preserved all8 typedcause kinds/fullNULmessages/diagnostics in Text bothdirections. Original genuine2pass1missing-route before capsule remains retained. Each exact status/stdout/receipt and current component SHA/length are recorded in the generated JSON.
+
+This closes actual compiled3 only. Third negative law is Text bothdirections, not Binary-negative/capacity witness. Authenticated Hub WorkspaceLease actual1 remains a separate next gate. Native Count5 current adapter replay and release/System witnesses also remain separately qualified.

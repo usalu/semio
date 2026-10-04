@@ -21,8 +21,8 @@
 use crate::{Capability, MeasureKind, MeasureRecipe, Pose, Process3dSnapshot, ProcessMeasure, ProcessStep, ProcessWorkingScene, Stock, StockQuantity, WorkingSolid, Workshop, WorkshopMachine};
 use framework_schema::ArtifactSchema;
 use protocol::Inference;
-use semio_framework_os_kernel::{FromValue, ToValue};
-use semio_framework_plugin::ArtifactInferrer;
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
 use semio_framework_3d::brep::engine::{Brep, BrepKernel, GeometryHandle};
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
@@ -35,7 +35,7 @@ const PROCESS3D_KERNEL_MEMO_CAP: usize = 128;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a process3d snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `stockBounds`/`stepCount`, backed by the `📦bounds/` slug dir).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.process.process3d.inference")]
 pub struct Process3dInference {
@@ -49,8 +49,11 @@ pub struct Process3dInference {
 }
 
 impl Inference<Process3dSnapshot> for Process3dInference {
-    fn infer(snapshot: &Process3dSnapshot) -> Self {
+    fn infer(snapshot: &Process3dSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { stock_bounds: BoundingBox { min: snapshot.stock_pose.position, max: snapshot.stock_pose.position }, step_count: 0 }
+    
+        })
     }
 }
 
@@ -59,7 +62,9 @@ impl Inference<Process3dSnapshot> for Process3dInference {
 /// "infer the default snapshot" makes the two definitionally equal.
 impl Default for Process3dInference {
     fn default() -> Self {
-        Self::infer(&Process3dSnapshot::default())
+        let snapshot = &Process3dSnapshot::default();
+
+        Self { stock_bounds: BoundingBox { min: snapshot.stock_pose.position, max: snapshot.stock_pose.position }, step_count: 0 }
     }
 }
 
@@ -76,25 +81,10 @@ impl protocol::InferenceSpec<Process3dSnapshot> for Process3dInference {
 }
 //#endregion 🔖️Inference
 
-//#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::Process3dBuilder {
-    type Snapshot = Process3dSnapshot;
-    type Inference = Process3dInference;
-
-    /// 🎯️ Whole-snapshot scalars — nothing here is per-entity, so the cache/session are unused
-    /// (same "plain `Inference`" shape the family doc calls out as correct for `dimensions`/
-    /// `outline`/`bounds`-style facets).
-    async fn infer_cached(snapshot: &Self::Snapshot, cache: &mut store::InferenceCache, session: &mut store::InferenceSession) -> Self::Inference {
-        let _ = (cache, session);
-        <Process3dInference as Inference<Process3dSnapshot>>::infer(snapshot)
-    }
-}
-//#endregion 🔖️ArtifactInferrer
-
 //#region 🔖️KernelReplay
 fn hash_value<T: ToValue>(value: &T) -> u64 {
     let mut hasher = DefaultHasher::new();
-    semio_framework_os_kernel::json::to_json_string(value).hash(&mut hasher);
+    semio_framework_pack_json::to_json_string(value).hash(&mut hasher);
     hasher.finish()
 }
 
@@ -148,8 +138,8 @@ impl ProcessKernelReplay {
 fn prefix_signature(stock_signature: u64, steps: &[&ProcessStep]) -> u64 {
     let mut hasher = DefaultHasher::new();
     stock_signature.hash(&mut hasher);
-    let value = semio_framework_os_kernel::DslValue::Array(steps.iter().map(|step| ToValue::to_value(*step)).collect());
-    semio_framework_os_kernel::json::to_json_string(&value).hash(&mut hasher);
+    let value = semio_framework_value::DslValue::Array(steps.iter().map(|step| semio_framework_value::ToValue::to_value(*step)).collect());
+    semio_framework_pack_json::to_json_string(&value).hash(&mut hasher);
     hasher.finish()
 }
 

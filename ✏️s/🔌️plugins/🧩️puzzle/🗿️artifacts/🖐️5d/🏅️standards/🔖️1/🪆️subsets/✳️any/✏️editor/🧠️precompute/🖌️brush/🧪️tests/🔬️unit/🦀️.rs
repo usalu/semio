@@ -17,10 +17,10 @@ fn armed_view() -> semio_framework_plugin::ViewModel {
 
 /// 🎣️ Points the armed brush at `grip` (or at nothing) and pumps the refresh effects and host turns until `until`.
 fn target(app: &mut Puzzle5dApp, grip: Option<&str>, what: &str, until: impl Fn(Option<&protocol::PresenceToolRun>) -> bool) {
-    let args = grip.map_or_else(|| dsl::json!({}), |grip| dsl::json!({ "fullId": grip }));
+    let args = grip.map_or_else(|| semio_framework_pack_json::json!({}), |grip| semio_framework_pack_json::json!({ "fullId": grip }));
     dispatch_armed(app, "targetBrushSuggestions", Some(&args), world3d::WINDOW_KIND_ID, UTILITY_ID).expect("targetBrushSuggestions");
     for _ in 0..FILL_RUN_TURNS {
-        for effect in semio_framework::io::resolve_ready(app.pending_effects(Some(&armed_view()))) {
+        for effect in ::semio_framework_async::poll::resolve_ready(app.pending_effects(Some(&armed_view()))) {
             if let Effect::DispatchAction { action, args, .. } = effect {
                 tool_run_action(app, &action, args.as_ref().map_or(serde_json::Value::Null, serde_json::Value::from));
             }
@@ -101,7 +101,7 @@ fn the_grip_suggestion_submenu_searches_without_the_brush_and_accepts_a_candidat
     let projection = projection_of(&app);
     let parts = projection["parts"].as_array().map_or(0, Vec::len);
     let grip = projection["parts"].as_array().and_then(|parts| parts.first()).and_then(|part| Some(puzzle5d_grip_full_id(part["id"].as_str()?, part["grips"].as_array()?.first()?["id"].as_str()?))).expect("a grip");
-    let opened = dispatch_armed(&mut app, "openVortexSuggestions", Some(&dsl::json!({ "fullId": grip.as_str(), "x": 10.0, "y": 20.0, "submenu": true })), world3d::WINDOW_KIND_ID, "select").expect("openVortexSuggestions");
+    let opened = dispatch_armed(&mut app, "openVortexSuggestions", Some(&semio_framework_pack_json::json!({ "fullId": grip.as_str(), "x": 10.0, "y": 20.0, "submenu": true })), world3d::WINDOW_KIND_ID, "select").expect("openVortexSuggestions");
     let starts: Vec<(String, serde_json::Value)> = opened
         .requested_effects
         .iter()
@@ -119,7 +119,7 @@ fn the_grip_suggestion_submenu_searches_without_the_brush_and_accepts_a_candidat
     }
     let mut listed = serde_json::Value::Null;
     for _ in 0..FILL_RUN_TURNS {
-        for effect in semio_framework::io::resolve_ready(app.pending_effects(Some(&select_view()))) {
+        for effect in ::semio_framework_async::poll::resolve_ready(app.pending_effects(Some(&select_view()))) {
             if let Effect::DispatchAction { action, args, .. } = effect {
                 tool_run_action(&mut app, &action, args.as_ref().map_or(serde_json::Value::Null, serde_json::Value::from));
             }
@@ -135,8 +135,8 @@ fn the_grip_suggestion_submenu_searches_without_the_brush_and_accepts_a_candidat
     let rows = listed["candidates"].as_array().cloned().unwrap_or_default();
     assert!(!rows.is_empty(), "the search found free candidates without the brush armed: {listed}; presence {:?}", app.tool_run_presence());
     assert!(rows.iter().all(|row| row["key"].is_u64()), "every row names its trace record: {listed}");
-    dispatch_armed(&mut app, "hoverSuggestion", Some(&dsl::json!({ "index": 0 })), world3d::WINDOW_KIND_ID, "select").expect("hoverSuggestion");
-    dispatch_armed(&mut app, "acceptSuggestion", Some(&dsl::json!({ "index": 0, "fullId": grip.as_str() })), world3d::WINDOW_KIND_ID, "select").expect("acceptSuggestion");
+    dispatch_armed(&mut app, "hoverSuggestion", Some(&semio_framework_pack_json::json!({ "index": 0 })), world3d::WINDOW_KIND_ID, "select").expect("hoverSuggestion");
+    dispatch_armed(&mut app, "acceptSuggestion", Some(&semio_framework_pack_json::json!({ "index": 0, "fullId": grip.as_str() })), world3d::WINDOW_KIND_ID, "select").expect("acceptSuggestion");
     let placed = projection_of(&app);
     assert_eq!(placed["parts"].as_array().map_or(0, Vec::len), parts + 1, "accepting places exactly one part");
     assert!(placed["fasteners"].as_array().is_some_and(|rows| rows.iter().any(|row| row["source"].as_str() == Some(grip.as_str()) || row["target"].as_str() == Some(grip.as_str()))), "the placed part is fastened to the menu's grip");

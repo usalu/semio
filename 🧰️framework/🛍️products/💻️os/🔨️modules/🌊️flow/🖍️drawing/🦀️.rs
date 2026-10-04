@@ -52,15 +52,15 @@ impl DrawingHandle {
 }
 
 /// 🔁️ Hand-written: tuple structs are a shape `#[derive(ToValue, FromValue)]` cannot express.
-impl crate::os_dsl::ToValue for DrawingHandle {
-    fn to_value(&self) -> crate::os_dsl::DslValue {
-        crate::os_dsl::ToValue::to_value(&self.0)
+impl semio_framework_value::ToValue for DrawingHandle {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::ToValue::to_value(&self.0)
     }
 }
 
-impl crate::os_dsl::FromValue for DrawingHandle {
-    fn from_value(value: crate::os_dsl::DslValue) -> Result<Self, crate::os_dsl::ValueError> {
-        Ok(Self(crate::os_dsl::FromValue::from_value(value)?))
+impl semio_framework_value::FromValue for DrawingHandle {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        Ok(Self(semio_framework_value::FromValue::from_value(value)?))
     }
 }
 
@@ -118,15 +118,15 @@ pub enum LineJoin {
 pub struct Affine2D(pub [f64; 6]);
 
 /// 🔁️ Hand-written: tuple structs are a shape `#[derive(ToValue, FromValue)]` cannot express.
-impl crate::os_dsl::ToValue for Affine2D {
-    fn to_value(&self) -> crate::os_dsl::DslValue {
-        crate::os_dsl::ToValue::to_value(&self.0)
+impl semio_framework_value::ToValue for Affine2D {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::ToValue::to_value(&self.0)
     }
 }
 
-impl crate::os_dsl::FromValue for Affine2D {
-    fn from_value(value: crate::os_dsl::DslValue) -> Result<Self, crate::os_dsl::ValueError> {
-        Ok(Self(crate::os_dsl::FromValue::from_value(value)?))
+impl semio_framework_value::FromValue for Affine2D {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        Ok(Self(semio_framework_value::FromValue::from_value(value)?))
     }
 }
 
@@ -898,7 +898,7 @@ impl From<serde_json::Error> for DrawingKernelError {
 
 /// 🌉️ Single-key `{"error": message}` JSON wrapper, shared by every drawing-bridge JSON export.
 fn json_error(message: impl fmt::Display) -> String {
-    crate::os_pack::json::to_string(&crate::os_pack::json::object([("error".to_string(), crate::os_pack::json::Value::String(message.to_string()))]))
+    semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("error".to_string(), semio_framework_pack_json::Value::String(message.to_string()))]))
 }
 
 fn json_kernel_unavailable() -> String {
@@ -907,7 +907,7 @@ fn json_kernel_unavailable() -> String {
 
 /// 🌉️ Single-key `{key: value}` string JSON wrapper, shared by every drawing-bridge JSON export.
 fn json_field(key: &str, value: impl Into<String>) -> String {
-    crate::os_pack::json::to_string(&crate::os_pack::json::object([(key.to_string(), crate::os_pack::json::Value::String(value.into()))]))
+    semio_framework_pack_json::to_string(&semio_framework_pack_json::object([(key.to_string(), semio_framework_pack_json::Value::String(value.into()))]))
 }
 
 /// 🧹️ Retains only drawing handles referenced by the current evaluation outputs.

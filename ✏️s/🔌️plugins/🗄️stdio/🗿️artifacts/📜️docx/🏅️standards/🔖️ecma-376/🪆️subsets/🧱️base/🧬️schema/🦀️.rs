@@ -1,9 +1,9 @@
 //! 🧬️ DocxArtifact schema — full artifact state.
 
-use crate::schema::snapshot::{DocxDocument, DocxXmlPart};
+use crate::schema::snapshot::{DocxDocument, DocxXmlParts};
 use crate::DocxSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_s_artifact_stdio_zip::opc::OpcPackage;
+use semio_s_artifact_stdio_zip::opc::retained::RetainedOpcPackage;
 
 //#region Artifact
 /// 🧬️ Full `stdio.docx` artifact state.
@@ -15,10 +15,10 @@ pub struct DocxArtifact {
     pub schema: String,
     #[state(artifact)]
     #[value(default)]
-    pub opc: OpcPackage,
+    pub opc: RetainedOpcPackage,
     #[state(artifact)]
     #[value(default)]
-    pub xml_parts: Vec<DocxXmlPart>,
+    pub xml_parts: DocxXmlParts,
 }
 //#endregion Artifact
 
@@ -90,7 +90,7 @@ pub mod derived_construction {
     #[derive(Clone, Debug, Default)]
     pub struct DocxBuilderConstruction {
         snapshot: DocxSnapshot,
-        diagnostics: Vec<dsl::Diagnostic>,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
     }
 
     impl ArtifactBuilder for DocxBuilderConstruction {
@@ -103,7 +103,7 @@ pub mod derived_construction {
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(Self::from_snapshot(<DocxSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
@@ -117,7 +117,7 @@ pub mod derived_construction {
             self.snapshot = <DocxDiff as protocol::MutationDiff<DocxSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -218,14 +218,14 @@ pub mod derived_analysis {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <DocxSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }
@@ -272,20 +272,27 @@ pub async fn demo_docx_snapshot() -> DocxSnapshot {
         styles: vec![DocxStyle { id: "Normal".into(), name: "Normal".into(), based_on: None }, DocxStyle { id: "Heading1".into(), name: "heading 1".into(), based_on: Some("Normal".into()) }],
     };
     let mut snap = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_docx(document);
-    snap.xml_parts.push(crate::schema::snapshot::DocxXmlPart {
-        path: "word/numbering.xml".into(),
-        content_type: "application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml".into(),
-        document: semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text("<w:numbering/>").expect("valid demo numbering XML"),
-    });
-    snap.opc.content_types.set_override("word/numbering.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml");
-    snap.xml_parts.sort_by(|left, right| left.path.cmp(&right.path));
+    snap.xml_parts
+        .try_push(
+            crate::schema::snapshot::DocxXmlPart::try_from_document(
+                "word/numbering.xml".into(),
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml".into(),
+                semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text("<w:numbering/>").expect("valid demo numbering XML"),
+            )
+            .expect("valid retained demo numbering XML"),
+        )
+        .expect("demo XML part owner has capacity");
+    snap.opc
+        .content_types
+        .set_override("word/numbering.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml")
+        .expect("the demo content-type override fits retained OPC ownership");
+    snap.xml_parts.sort_unstable_by(|left, right| left.path.cmp(&right.path));
     // 🔤️ Path-ascending is the package NORMAL FORM a decode hands back
     // (`semio_s_artifact_stdio_zip`'s decoder canonicalizes member order), so the demo has to be
     // stated in it: `📜️example.docx` IS `encode_docx(this)`, and `demo_subset_integrated_roundtrip`
     // re-encodes what a decode of that file yields and demands byte-identical output. Appending
     // `word/numbering.xml` after `build_minimal_docx`'s own parts left the demo one step off that
     // normal form, so every content byte round-tripped and the member SEQUENCE did not.
-    snap.opc.parts.sort_by(|left, right| left.path.cmp(&right.path));
     snap
 }
 //#endregion 🔖️DocumentHelpers

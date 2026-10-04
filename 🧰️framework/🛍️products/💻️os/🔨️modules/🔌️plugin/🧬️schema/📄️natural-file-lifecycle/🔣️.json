@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.framework.os.plugin.natural-file-lifecycle/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "formats", "unsupported", "transport", "registeredEditor", "controlledEditor", "browserRead", "lifecycle"],
+  "properties": {
+    "schema": { "const": "semio.framework.os.plugin.natural-file-lifecycle/v1" },
+    "formats": {
+      "type": "array",
+      "minItems": 3,
+      "items": { "$ref": "#/$defs/format" }
+    },
+    "unsupported": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["appId"],
+        "properties": { "appId": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "transport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "octets"],
+      "properties": {
+        "schema": { "type": "string", "minLength": 1 },
+        "octets": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "integer", "minimum": 0, "maximum": 255 }
+        }
+      }
+    },
+    "registeredEditor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["formatKind", "octets", "expectedCount", "accountBytesPerTurn", "cancelAfterAccountedBytes", "oversizedOctetCount"],
+      "properties": {
+        "formatKind": { "const": "semio.testkit-surface-natural/v1" },
+        "octets": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": { "type": "integer", "minimum": 0, "maximum": 255 }
+        },
+        "expectedCount": { "type": "integer", "minimum": 0, "maximum": 2147483647 },
+        "accountBytesPerTurn": { "type": "integer", "minimum": 1 },
+        "cancelAfterAccountedBytes": { "type": "integer", "minimum": 1 },
+        "oversizedOctetCount": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "controlledEditor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["wordCount", "lastWord", "maximumWorkUnitsPerStep", "expectedMinimumTurns", "expectedDecodedItems"],
+      "properties": {
+        "wordCount": { "type": "integer", "minimum": 2 },
+        "lastWord": { "type": "integer", "minimum": -2147483648, "maximum": 2147483647 },
+        "maximumWorkUnitsPerStep": { "type": "integer", "minimum": 1 },
+        "expectedMinimumTurns": { "type": "integer", "minimum": 2 },
+        "expectedDecodedItems": { "type": "integer", "minimum": 2 }
+      }
+    },
+    "browserRead": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["chunkBytes", "maximumBytes", "octets", "expectedProgress", "cancelAfterBytes"],
+      "properties": {
+        "chunkBytes": { "type": "integer", "minimum": 1 },
+        "maximumBytes": { "type": "integer", "minimum": 1 },
+        "octets": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "type": "integer", "minimum": 0, "maximum": 255 }
+        },
+        "expectedProgress": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "type": "integer", "minimum": 0 }
+        },
+        "cancelAfterBytes": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["currentInstanceId", "openedInstanceId", "expected"],
+      "properties": {
+        "currentInstanceId": { "type": "integer", "minimum": 0 },
+        "openedInstanceId": { "type": "integer", "minimum": 0 },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["saveInstanceId", "preservedInstanceId", "openedInstanceId", "openedHistoryEntries"],
+          "properties": {
+            "saveInstanceId": { "type": "integer", "minimum": 0 },
+            "preservedInstanceId": { "type": "integer", "minimum": 0 },
+            "openedInstanceId": { "type": "integer", "minimum": 0 },
+            "openedHistoryEntries": { "const": 1 }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "format": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["appId", "formatKind", "extension", "mediaType", "binary"],
+      "properties": {
+        "appId": { "type": "string", "minLength": 1 },
+        "formatKind": { "type": "string", "minLength": 1 },
+        "extension": { "type": "string", "pattern": "^\\.[A-Za-z0-9]+$" },
+        "mediaType": { "type": "string", "pattern": "^[^/\\s]+/[^/\\s]+$" },
+        "binary": { "type": "boolean" }
+      }
+    }
+  }
+}

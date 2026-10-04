@@ -32,7 +32,7 @@ fn describe<PA: PluginApp>(bundle: Result<Plugin<PA>, PluginAssemblyError>) -> P
     let runtime = PluginRuntime::<PA>::new();
     let bundle = bundle.unwrap_or_else(|error| panic!("[DEBUG] outward component assembly rejected: {error:?}"));
     install_plugin_bundle_result(&runtime, Ok(bundle));
-    let bytes = semio_framework_plugin::app::resolve_ready(semio_framework_plugin::describe::describe_plugin(&runtime));
+    let bytes = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::describe::describe_plugin(&runtime));
     semio_framework_value::FromValue::from_value(semio_framework_os_kernel::pack_rt::decode_wire_value(&bytes).expect("descriptor bytes")).expect("strict descriptor")
 }
 
@@ -250,19 +250,19 @@ fn package_runtime_probe() {
 /// document codecs in the store, composers, formats and subset validators in the io registries. Grammar rows are captured by
 /// the plugin runtime and never published (`PluginRuntimeRegistry::languages`), so no process state answers them.
 fn requirement_is_live(requirement: &ArtifactRuntimeCapabilityRequirement) -> bool {
-    use semio_framework_plugin::resolve_ready;
-    let claims = resolve_ready(requirement.claims());
+    
+    let claims = ::semio_framework_async::poll::resolve_ready(requirement.claims());
     let values = |namespace: &str| claims.iter().filter(|claim| claim.namespace().as_str() == namespace).map(|claim| claim.value().to_string()).collect::<BTreeSet<_>>();
     let value = |namespace: &str| values(namespace).into_iter().next().unwrap_or_default();
-    match resolve_ready(requirement.kind()).as_str() {
+    match ::semio_framework_async::poll::resolve_ready(requirement.kind()).as_str() {
         "schema" => match value("schema-export").split_once('#') {
             Some((scope, export)) => semio_framework_schema_registry::resolve_schema_export(scope, export, semio_framework_schema_registry::SchemaFormat::JsonSchema).is_ok(),
             None => semio_framework_schema_registry::artifact_schema_descriptor_registered(&value("schema")),
         },
         "inference" => semio_framework_schema_registry::artifact_inference_descriptor_registered(&value("schema")),
-        "codec" => resolve_ready(semio_framework_os_kernel::document_codec(&value("codec"))).expect("the document codec registry").is_some(),
-        "composer" => resolve_ready(semio_framework::io::list_composer_entries()).expect("the composer registry").iter().any(|(writes, _)| writes.to_coordinate() == value("dialect")),
-        "subset-validator" => resolve_ready(semio_framework::io::list_registered_subset_validator_dialects()).expect("the subset validator registry").into_iter().any(|dialect| semio_framework::ArtifactDialect::from(dialect).to_coordinate() == value("validated-dialect")),
+        "codec" => ::semio_framework_async::poll::resolve_ready(semio_framework_os_kernel::document_codec(&value("codec"))).expect("the document codec registry").is_some(),
+        "composer" => ::semio_framework_async::poll::resolve_ready(semio_framework::io::list_composer_entries()).expect("the composer registry").iter().any(|(writes, _)| writes.to_coordinate() == value("dialect")),
+        "subset-validator" => ::semio_framework_async::poll::resolve_ready(semio_framework::io::list_registered_subset_validator_dialects()).expect("the subset validator registry").into_iter().any(|dialect| semio_framework::ArtifactDialect::from(dialect).to_coordinate() == value("validated-dialect")),
         "representation" => values("extension").iter().filter_map(|extension| semio_framework::io::format_descriptor(extension.trim_start_matches('.')).expect("the format catalog")).any(|format| format.mimes.iter().cloned().collect::<BTreeSet<_>>() == values("mime") && format.extensions.iter().cloned().collect::<BTreeSet<_>>() == values("extension")),
         "grammar" => true,
         other => panic!("unknown runtime capability category {other}"),

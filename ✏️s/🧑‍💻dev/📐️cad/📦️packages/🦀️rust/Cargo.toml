@@ -17,6 +17,7 @@ crate-type = ["cdylib", "rlib"]
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-pack-json = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-spatial-kernel-semio-session.workspace = true
 semio-s-artifact-stdio-step.workspace = true

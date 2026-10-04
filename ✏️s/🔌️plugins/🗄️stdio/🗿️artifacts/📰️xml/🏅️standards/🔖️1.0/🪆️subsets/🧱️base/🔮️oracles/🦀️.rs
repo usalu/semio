@@ -131,6 +131,23 @@ mod oracles {
         }
     }
 
+    /// 🌳 This module's node as the `XmlNode` wire value [`xnode_from_wire`] reads.
+    fn xnode_to_wire(node: &XNode) -> Json {
+        let text = |kind: &str, text: &str| Json::Object(vec![("kind".to_string(), Json::String(kind.to_string())), ("text".to_string(), Json::String(text.to_string()))]);
+        match node {
+            XNode::Element { name, attrs, children } => Json::Object(vec![
+                ("kind".to_string(), Json::String("element".to_string())),
+                ("name".to_string(), Json::String(name.clone())),
+                ("attrs".to_string(), Json::Array(attrs.iter().map(|(key, value)| Json::Object(vec![("name".to_string(), Json::String(key.clone())), ("value".to_string(), Json::String(value.clone()))])).collect())),
+                ("children".to_string(), Json::Array(children.iter().map(xnode_to_wire).collect())),
+            ]),
+            XNode::Text(value) => text("text", value),
+            XNode::CData(value) => text("cData", value),
+            XNode::Comment(value) => text("comment", value),
+            XNode::Pi { target, data } => Json::Object(vec![("kind".to_string(), Json::String("processingInstruction".to_string())), ("target".to_string(), Json::String(target.clone())), ("data".to_string(), Json::String(data.clone()))]),
+        }
+    }
+
     /// 📄️ An `XmlDeclaration` wire value (`null` = no declaration). The `quote` facet is writer freedom the quick-xml
     /// writer does not model, and the projection never compares it.
     fn declaration_from_wire(value: &Json) -> Option<XDecl> {
@@ -527,6 +544,15 @@ mod oracles {
         match kind {
             "set-declaration" => doc.declaration = declaration_from_wire(&member(params, "declaration")),
             "set-doctype" => doc.doctype = doctype_from_wire(&member(params, "doctype"))?,
+            "patch-snapshot" => {
+                let root = doc.root.as_ref().map(xnode_to_wire).unwrap_or(Json::Null);
+                let reading = Json::Object(vec![("schema".to_string(), Json::String("stdio.xml".to_string())), ("doc".to_string(), Json::Object(vec![("root".to_string(), root)]))]);
+                let patched = semio_repo_test_host::law::patched_snapshot(&reading, &member(params, "patch"))?;
+                doc.root = match member(&member(&patched, "doc"), "root") {
+                    Json::Null => None,
+                    root => Some(xnode_from_wire(&root)?),
+                };
+            }
             "insert-element" => {
                 let path = usize_path(params.array("path"));
                 let index = usize_field(params, "index");
@@ -593,6 +619,7 @@ mod oracles {
         match kind {
             "set-declaration" => doc.declaration = base.declaration.clone(),
             "set-doctype" => doc.doctype = base.doctype.clone(),
+            "patch-snapshot" => doc.root = base.root.clone(),
             "insert-element" => {
                 let XNode::Element { children, .. } = resolve_mut(doc.root.as_mut(), &path).ok_or("inverse insert-element: path does not resolve to an element")? else {
                     return Err("inverse insert-element: path does not address an element".to_string());

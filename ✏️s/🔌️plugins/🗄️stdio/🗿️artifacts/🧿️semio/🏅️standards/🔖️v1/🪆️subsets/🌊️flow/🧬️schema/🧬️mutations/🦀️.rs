@@ -47,6 +47,8 @@ pub mod drag_nodes;
 /// 📐️ Typed content mutation for `s.stdio.semio.flow`. Addresses `nodes`/`edges` by `id` (both
 /// id-keyed collections) and a node's own `params` by `(id, key)`.
 //#region 🔖️Leaves
+#[path = "🩹️patch-snapshot/🦀️.rs"]
+pub mod patch_snapshot;
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 //#endregion 🔖️Leaves
@@ -65,6 +67,7 @@ pub mod set_snapshot;
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioFlowMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
+    PatchSnapshot(patch_snapshot::PatchSnapshot),
     /// ➕️ Inserts `node` (whole payload, already carries its own `id`).
     InsertNode(insert_node::InsertNode),
     /// ➖️ Removes the node with id `id` (and — at the snapshot level, via a real referential
@@ -97,7 +100,7 @@ pub enum SemioFlowMutation {
 /// `tag` ordinal (see [`wire_tag`]), for `parse_flow_mutation`'s keyword match, and for the
 /// `semio-v1-flow` catalog in `../../🔣️oracle.json`. The framework never parses Rust, so
 /// `kinds_match_the_enum_and_the_catalog` below is what keeps all three honest.
-pub const KINDS: &[&str] = &["set-snapshot", "insert-node", "remove-node", "set-node-kind", "set-node-label", "set-node-position", "set-node-param", "remove-node-param", "insert-edge", "remove-edge", "set-edge-endpoints", "set-edge-kind", "drag-nodes"];
+pub const KINDS: &[&str] = &["set-snapshot", "insert-node", "remove-node", "set-node-kind", "set-node-label", "set-node-position", "set-node-param", "remove-node-param", "insert-edge", "remove-edge", "set-edge-endpoints", "set-edge-kind", "drag-nodes", "patch-snapshot"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -116,8 +119,11 @@ pub fn apply_semio_flow_mutation(snapshot: &mut SemioFlowSnapshot, mutation: &Se
 /// [`apply_semio_flow_mutation`] alone cannot. Same shape as `🧰️kit`'s
 /// `inverse_semio_kit_mutation`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse_semio_flow_mutation(mutation: &SemioFlowMutation, base: &SemioFlowSnapshot) -> Vec<SemioFlowMutation> {
-    Mutation::inverse(mutation, base)
+pub fn inverse_semio_flow_mutation(mutation: &SemioFlowMutation, base: &SemioFlowSnapshot) -> Result<Vec<SemioFlowMutation>, semio_framework_value::ValueError> {
+    Ok({
+    Mutation::inverse(mutation, base)?
+
+    })
 }
 
 /// 📥️ Decodes this facet's own internally-tagged (`{"mutation": "<camelCaseVariant>", ...}`) JSON
@@ -127,7 +133,7 @@ pub fn inverse_semio_flow_mutation(mutation: &SemioFlowMutation, base: &SemioFlo
 /// the committed vector instead of re-declaring it as a Rust literal beside it.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_flow_mutation_json(text: &str) -> Result<SemioFlowMutation, String> {
-    pack::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Apply
 
@@ -154,6 +160,7 @@ pub(crate) fn agg_diff(this: &SemioFlowMutation, base: &SemioFlowSnapshot) -> pr
     }
     protocol::MutationOutcome::new(match this {
         SemioFlowMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff_set_snapshot(base, snapshot),
+        SemioFlowMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<SemioFlowSnapshot, SemioFlowMutation>>::diff(patch, base),
         SemioFlowMutation::InsertNode(insert_node::InsertNode { node }) => diff_insert_node(node.clone()),
         SemioFlowMutation::RemoveNode(remove_node::RemoveNode { id }) => diff_remove_node(id),
         SemioFlowMutation::SetNodeKind(set_node_kind::SetNodeKind { id, kind }) => diff_set_node_kind(id, kind),
@@ -176,9 +183,11 @@ pub(crate) fn agg_diff(this: &SemioFlowMutation, base: &SemioFlowSnapshot) -> pr
 /// already inverted into a real opposite mutation (`RemoveNodeParam`/`SetNodeParam`) rather than a
 /// no-op, so only their OWN "node absent" arm changes shape here.
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &SemioFlowMutation, base: &SemioFlowSnapshot) -> Vec<SemioFlowMutation> {
+pub(crate) fn agg_inverse(this: &SemioFlowMutation, base: &SemioFlowSnapshot) -> Result<Vec<SemioFlowMutation>, semio_framework_value::ValueError> {
+    Ok({
     match this {
         SemioFlowMutation::SetSnapshot(_) => vec![SemioFlowMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
+        SemioFlowMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<SemioFlowSnapshot, SemioFlowMutation>>::inverse(patch, base)?),
         SemioFlowMutation::InsertNode(insert_node::InsertNode { node }) => vec![SemioFlowMutation::RemoveNode(remove_node::RemoveNode { id: node.id.clone() })],
         SemioFlowMutation::RemoveNode(remove_node::RemoveNode { id }) => match node_at(base, id) {
             Some(node) => vec![SemioFlowMutation::InsertNode(insert_node::InsertNode { node: node.clone() })],
@@ -219,6 +228,8 @@ pub(crate) fn agg_inverse(this: &SemioFlowMutation, base: &SemioFlowSnapshot) ->
         },
         SemioFlowMutation::DragNodes(drag) => drag.undo(base),
     }
+
+    })
 }
 //#endregion 🔖️MutationTrait
 
@@ -249,6 +260,7 @@ fn dec_semio_flow_snapshot(s: &str) -> Result<SemioFlowSnapshot, String> {
 fn print_flow_mutation(m: &SemioFlowMutation) -> String {
     match m {
         SemioFlowMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", enc_semio_flow_snapshot(snapshot)),
+        SemioFlowMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(patch),
         SemioFlowMutation::InsertNode(insert_node::InsertNode { node }) => format!("insert-node node={}", enc_node(node)),
         SemioFlowMutation::RemoveNode(remove_node::RemoveNode { id }) => format!("remove-node id={}", enc_str(id)),
         SemioFlowMutation::SetNodeKind(set_node_kind::SetNodeKind { id, kind }) => format!("set-node-kind id={} kind={}", enc_str(id), enc_str(kind)),
@@ -265,6 +277,10 @@ fn print_flow_mutation(m: &SemioFlowMutation) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_flow_mutation(line: &str) -> Result<SemioFlowMutation, String> {
+    if let Some(source) = line.strip_prefix("patch-snapshot patch=") {
+        let patch = semio_s_artifact_stdio_contract::editing::snapshot_patch_from_hex(source)?;
+        return Ok(SemioFlowMutation::PatchSnapshot(crate::standards::v1::subsets::flow::schema::mutations::patch_snapshot::PatchSnapshot { patch }));
+    }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
     let args: std::collections::BTreeMap<&str, &str> = rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("flow mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("flow mutation: missing arg '{k}' for '{keyword}'"));
@@ -294,8 +310,8 @@ impl OpText for SemioFlowMutation {
     fn print_op(&self) -> String {
         print_flow_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_flow_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_flow_mutation(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 }
 
@@ -303,6 +319,7 @@ impl OpText for SemioFlowMutation {
 /// 🏷️ Op tags of `SemioFlowMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
 const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
 const TAG_INSERT_NODE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-node");
 const TAG_REMOVE_NODE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-node");
 const TAG_SET_NODE_KIND: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-node-kind");
@@ -321,6 +338,7 @@ const TAG_DRAG_NODES: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "drag-nod
 fn wire_tag(m: &SemioFlowMutation) -> u8 {
     match m {
         SemioFlowMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
+        SemioFlowMutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
         SemioFlowMutation::InsertNode(_) => TAG_INSERT_NODE,
         SemioFlowMutation::RemoveNode(_) => TAG_REMOVE_NODE,
         SemioFlowMutation::SetNodeKind(_) => TAG_SET_NODE_KIND,
@@ -353,6 +371,11 @@ fn print_flow_mutation_args(m: &SemioFlowMutation) -> String {
 /// independent encoding.
 impl OpBinary for SemioFlowMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        if let Self::PatchSnapshot(payload) = self {
+            let mut out = vec![1, TAG_PATCH_SNAPSHOT];
+            out.extend(protocol::OpBinary::encode_op(&payload.patch)?);
+            return Ok(out);
+        }
         const OP_BINARY_FORMAT: u8 = 1;
         let mut out = vec![OP_BINARY_FORMAT, wire_tag(self)];
         out.extend_from_slice(print_flow_mutation_args(self).as_bytes());
@@ -365,6 +388,9 @@ impl OpBinary for SemioFlowMutation {
         }
         if bytes[0] != OP_BINARY_FORMAT {
             return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {}", bytes[0]) });
+        }
+        if bytes[1] == TAG_PATCH_SNAPSHOT {
+            return Ok(Self::PatchSnapshot(crate::standards::v1::subsets::flow::schema::mutations::patch_snapshot::PatchSnapshot { patch: protocol::OpBinary::decode_op(&bytes[2..])? }));
         }
         let tag = bytes[1];
         let keyword = dsl::protocol_record::kind(WIRE_PROTOCOL, u64::from(tag)).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} names no record of 📡️.protocol.semio") })?;
@@ -404,6 +430,7 @@ fn fixture() -> SemioFlowSnapshot {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<SemioFlowMutation> {
     vec![
+        SemioFlowMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         SemioFlowMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: fixture() }),
         SemioFlowMutation::InsertNode(insert_node::InsertNode { node: node("n3", "transform", "T", 5.0, 5.0) }),
         SemioFlowMutation::RemoveNode(remove_node::RemoveNode { id: "n2".into() }),

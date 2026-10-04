@@ -13,7 +13,7 @@ pub fn diff(payload: &ReplaceDocument, base: &ProgramSnapshot) -> protocol::Muta
         return protocol::MutationOutcome::error("mutation.target-missing", "No document exists with this id.", [payload.document.header.id.0.clone()]);
     };
     if existing == &payload.document {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This document already matches the requested value.").at([existing.header.id.0.clone()])]);
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This document already matches the requested value.").at([existing.header.id.0.clone()])]);
     }
     let patch = existing.diff_patch(&payload.document).expect("diff_patch always produces a full patch");
     protocol::MutationOutcome::new(ProgramDiff { artifacts: Some(ProgramArtifactsDelta { patched: vec![ProgramArtifactsPatchEntry { id: payload.document.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })

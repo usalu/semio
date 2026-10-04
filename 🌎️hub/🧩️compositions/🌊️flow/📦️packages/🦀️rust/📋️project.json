@@ -109,6 +109,15 @@
         "{projectRoot}/../../🤖️generated"
       ]
     },
+    "preview-generated": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🌊️flow/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts preview-generated"
+      },
+      "outputs": []
+    },
     "graph-wire-check": {
       "executor": "nx:run-commands",
       "cache": false,

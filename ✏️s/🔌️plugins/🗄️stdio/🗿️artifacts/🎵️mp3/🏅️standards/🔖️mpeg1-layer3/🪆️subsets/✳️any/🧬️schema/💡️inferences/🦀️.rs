@@ -7,7 +7,6 @@
 
 use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::duration::compute_mp3_duration;
 //#region 🔖️Inference
@@ -22,8 +21,11 @@ pub struct Mp3Inference {
 }
 
 impl protocol::Inference<Mp3Snapshot> for Mp3Inference {
-    fn infer(snapshot: &Mp3Snapshot) -> Self {
+    fn infer(snapshot: &Mp3Snapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { duration: compute_mp3_duration(snapshot) }
+    
+        })
     }
 }
 
@@ -31,7 +33,9 @@ impl protocol::Inference<Mp3Snapshot> for Mp3Inference {
 /// `Mp3Snapshot::default()`'s `frames` ever stop being empty.
 impl Default for Mp3Inference {
     fn default() -> Self {
-        <Self as protocol::Inference<Mp3Snapshot>>::infer(&Mp3Snapshot::default())
+        let snapshot = &Mp3Snapshot::default();
+
+        Self { duration: compute_mp3_duration(snapshot) }
     }
 }
 
@@ -47,17 +51,6 @@ impl protocol::InferenceSpec<Mp3Snapshot> for Mp3Inference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 💡️ No `InferredField`s here — `duration` is a single per-frame fold over `frames`, already
-/// O(n) in frame count with no honest per-entity incremental decomposition (a merkle dep-chain
-/// over one flat `Vec<Mp3Frame>` costs more than the fold it would cache) — the default
-/// `infer_cached` passthrough is exact.
-impl ArtifactInferrer for crate::standards::mpeg1_layer3::subsets::any::schema::Mp3Builder {
-    type Snapshot = Mp3Snapshot;
-    type Inference = Mp3Inference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.mp3.inference`'s facet leaves into the OS-wide inference catalog — call

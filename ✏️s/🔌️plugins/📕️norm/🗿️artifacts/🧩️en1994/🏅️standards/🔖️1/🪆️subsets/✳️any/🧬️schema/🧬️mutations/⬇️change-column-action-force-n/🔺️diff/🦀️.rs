@@ -13,7 +13,7 @@ pub fn diff(payload: &ChangeColumnActionForceN, base: &En1994Snapshot) -> protoc
         return protocol::MutationOutcome::error("mutation.target-missing", "action missing", [payload.action_index.to_string()]);
     };
     if (action.n_k_n - payload.new_n_k_n).abs() < f64::EPSILON {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "unchanged");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "unchanged");
     }
     let mut columns = base.columns.clone();
     columns[payload.index].actions[payload.action_index].n_k_n = payload.new_n_k_n;

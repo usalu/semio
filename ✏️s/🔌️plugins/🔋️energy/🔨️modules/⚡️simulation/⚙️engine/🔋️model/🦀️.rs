@@ -1,7 +1,7 @@
 //! 🏗️ Typed building energy model entities, validation, and cross-references.
 
 use crate::error::{Diagnostics, Error, Severity};
-use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
+use semio_framework_value::{DslValue, FromValue, ToValue, ValueError};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
@@ -35,15 +35,15 @@ impl EntityId {
 /// 🔗️ `EntityId` as a mutation-payload field — a bare unsigned number on every surface, so an
 /// `id`-addressed mutation leaf can carry it directly instead of flattening it to `u32` by hand.
 /// Hand-written for the same tuple-struct reason as the `ToValue` pair above.
-impl dsl::DslField for EntityId {
-    fn shape() -> dsl::Shape {
-        dsl::Shape::UInt
+impl semio_framework_dsl_record::DslField for EntityId {
+    fn shape() -> semio_framework_dsl_record::Shape {
+        semio_framework_dsl_record::Shape::UInt
     }
-    fn to_value(&self) -> dsl::FieldValue {
-        dsl::FieldValue::UInt(u64::from(self.0))
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
+        semio_framework_dsl_record::FieldValue::UInt(u64::from(self.0))
     }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
-        <u32 as dsl::DslField>::from_value(value).map(EntityId)
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
+        <u32 as semio_framework_dsl_record::DslField>::from_value(value).map(EntityId)
     }
 }
 // #endregion 🔖️Ids
@@ -96,7 +96,7 @@ impl<K: FromValue, V: FromValue> FromValue for FixedTable<K, V> {
         let field = |key: &str| entries.iter().find(|(k, _)| k == key).map_or(DslValue::Null, |(_, v)| v.clone());
         let slots_array = match field("slots") {
             DslValue::Array(items) => items,
-            other => return Err(ValueError::new(format!("expected an array, found {other:?}")).under("slots")),
+            other => return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an array, found {other:?}")).under("slots")),
         };
         let slots: Vec<Option<(K, V)>> = slots_array
             .into_iter()
@@ -110,7 +110,7 @@ impl<K: FromValue, V: FromValue> FromValue for FixedTable<K, V> {
                         let value = V::from_value(iter.next().expect("checked len == 2")).map_err(|error| error.under("1"))?;
                         Ok(Some((key, value)))
                     }
-                    other => Err(ValueError::new(format!("expected null or a 2-element array, found {other:?}"))),
+                    other => Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected null or a 2-element array, found {other:?}"))),
                 }
                 .map_err(|error| error.under(index))
             })
@@ -286,7 +286,7 @@ pub struct Space {
 
 // #region 🔖️Surface
 /// 🧱️ Surface boundary type.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar)]
 pub enum SurfaceClass {
     ExteriorWall,
     InteriorWall,
@@ -327,7 +327,7 @@ pub enum OutsideBoundary {
 /// surface, and `dsl::DslScalar` binds unit variants only, so a mutation payload names the boundary
 /// through this scalar and carries the partner in its own optional `EntityId` field — the same
 /// parallel-field shape `replace-airflow-network` uses for its `(zone, node)` pairs.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar)]
 pub enum OutsideBoundaryKind {
     OutdoorAir,
     Ground,
@@ -429,7 +429,7 @@ pub struct Fenestration {
 // #region 🔖️Material
 /// 🪨️ Surface roughness class of an exterior face, which scales the forced part of its outside
 /// convection (EnergyPlus `Material` roughness keys).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar)]
 pub enum SurfaceRoughness {
     VeryRough,
     Rough,
@@ -487,7 +487,7 @@ pub struct GlazingMaterial {
 }
 
 /// 🌫️ Fill gas of a glazing gap.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar)]
 pub enum GasKind {
     Air,
     Argon,
@@ -535,15 +535,15 @@ impl FromValue for ScheduleId {
 
 /// 🔗️ `ScheduleId` as a mutation-payload field — the schedule-reference slots every thermostat,
 /// humidistat, gain and setpoint-manager mutation addresses. Hand-written, same reason as above.
-impl dsl::DslField for ScheduleId {
-    fn shape() -> dsl::Shape {
-        dsl::Shape::UInt
+impl semio_framework_dsl_record::DslField for ScheduleId {
+    fn shape() -> semio_framework_dsl_record::Shape {
+        semio_framework_dsl_record::Shape::UInt
     }
-    fn to_value(&self) -> dsl::FieldValue {
-        dsl::FieldValue::UInt(u64::from(self.0))
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
+        semio_framework_dsl_record::FieldValue::UInt(u64::from(self.0))
     }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
-        <u32 as dsl::DslField>::from_value(value).map(ScheduleId)
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
+        <u32 as semio_framework_dsl_record::DslField>::from_value(value).map(ScheduleId)
     }
 }
 // #endregion 🔖️Schedule
@@ -652,7 +652,7 @@ pub struct ZoneEquipmentAssignment {
 }
 
 /// 🏠️ Zone equipment catalog reference.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslScalar)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar)]
 pub enum ZoneEquipmentType {
     Baseboard,
     Radiant,
@@ -688,7 +688,7 @@ pub struct PlantLoopConfig {
 }
 
 /// 🏭️ Plant loop fluid type.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar)]
 pub enum PlantLoopType {
     Heating,
     Cooling,
@@ -837,7 +837,7 @@ pub struct FaultDefinition {
 }
 
 /// ⚠️ Fault type catalog.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar)]
 pub enum FaultType {
     SensorBias,
     CoilFouling,
@@ -855,7 +855,7 @@ pub struct OutputVariableSpec {
 }
 
 /// 📊️ Output reporting frequency.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar)]
 pub enum OutputReportFrequency {
     Timestep,
     Hourly,
@@ -874,7 +874,7 @@ pub struct SizingObject {
 }
 
 /// 📐️ Sizing type.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar)]
 pub enum SizingType {
     Heating,
     Cooling,
@@ -882,7 +882,7 @@ pub enum SizingType {
 }
 
 /// 📐️ Design day type.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar)]
 pub enum DesignDayType {
     Heating,
     Cooling,
@@ -906,7 +906,7 @@ pub struct RoomAirModelAssignment {
 }
 
 /// 🌡️ Room air model type.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar)]
 pub enum RoomAirModelType {
     WellMixed,
     OneNodeDisplacement,

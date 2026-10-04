@@ -3,7 +3,7 @@ use crate::editor::raster::config::{RasterConfig,RasterConfigMutation};
 use crate::{RasterMutation,RasterSnapshot};
 use semio_framework_plugin::{ArtifactView,ConfigView,Emit,Fault};
 use semio_framework_value_derive::{FromValue,ToValue};
-#[derive(Clone,Debug,PartialEq,ToValue,FromValue,dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword="paint-target")]
 pub struct SetPaintTarget {pub value:String}
 pub fn handle(payload:&SetPaintTarget,_doc:&ArtifactView<'_,RasterSnapshot>,_cfg:&ConfigView<'_,RasterConfig>)->Result<Emit<RasterMutation,RasterConfigMutation>,Fault>{

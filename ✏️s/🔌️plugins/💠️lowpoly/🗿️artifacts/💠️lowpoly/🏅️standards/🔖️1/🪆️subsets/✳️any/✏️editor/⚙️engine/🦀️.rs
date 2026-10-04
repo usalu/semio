@@ -16,13 +16,13 @@ use std::collections::HashMap;
 #[derive(Debug)]
 pub enum LowpolyCoreError {
     Mesh(MeshKernelError),
+    Managed(semio_framework_value::ValueError),
     UnknownPrimitive(String),
     LayerIndexOutOfRange,
     NoActiveObject,
     MeshMissing,
     ObjectNotFound,
     /// 🕸️ The session-local `mesh_workspace` cache (`🖌️session::LowpolyScratch`) has no entry for an
-    /// object, or its cached JSON no longer matches the object's persisted `mesh` handle — e.g. after
     /// an undo/redo of a `create-mesh`/`delete-mesh` (store-level undo/redo bypass `ArtifactApp::handle`
     /// entirely, so this cache is never resynced by them). Fails closed rather than silently editing
     /// stale geometry and re-deriving a WRONG handle from it via `sync_meshes_to_snapshot`.
@@ -33,6 +33,7 @@ impl std::fmt::Display for LowpolyCoreError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Mesh(error) => write!(formatter, "{error}"),
+            Self::Managed(error)=>write!(formatter,"{error:?}"),
             Self::UnknownPrimitive(primitive) => write!(formatter, "unknown primitive: {primitive}"),
             Self::LayerIndexOutOfRange => formatter.write_str("layer index out of range"),
             Self::NoActiveObject => formatter.write_str("no active object"),
@@ -77,11 +78,10 @@ pub struct LowpolyDocument {
     /// document in a debug build (the 8 ms interactive-step law), for objects the edit never touched.
     dirty: Vec<bool>,
     next_object_serial: u32,
-    /// 🕸️ Live half-edge-mesh JSON per object id — seeded from the caller's session cache
     /// (`LowpolyScratch::mesh_workspace_map()`), updated in place by `sync_meshes_to_snapshot`/
     /// `add_primitive`, and read back out via `mesh_workspace()` so the caller can merge it back into
     /// its own session cache after a successful edit.
-    mesh_workspace: HashMap<String, String>,
+    mesh_workspace: HashMap<String, crate::LowpolyMeshState>,
 }
 
 fn prepare_paint_mesh(mesh: &mut HalfedgeMesh) {
@@ -89,23 +89,21 @@ fn prepare_paint_mesh(mesh: &mut HalfedgeMesh) {
 }
 
 impl LowpolyDocument {
-    pub fn new(snapshot: LowpolySnapshot, mesh_workspace: HashMap<String, String>) -> Result<Self, LowpolyCoreError> {
+    pub fn new(snapshot: LowpolySnapshot, mesh_workspace: HashMap<String, crate::LowpolyMeshState>) -> Result<Self, LowpolyCoreError> {
         let active_object_id = snapshot.objects.first().map(|object| object.id.clone()).unwrap_or_default();
         Self::with_context(snapshot, active_object_id, LowpolySelection::default(), mesh_workspace)
     }
 
-    pub fn with_context(snapshot: LowpolySnapshot, active_object_id: String, selection: LowpolySelection, mesh_workspace: HashMap<String, String>) -> Result<Self, LowpolyCoreError> {
+    pub fn with_context(snapshot: LowpolySnapshot, active_object_id: String, selection: LowpolySelection, mesh_workspace: HashMap<String, crate::LowpolyMeshState>) -> Result<Self, LowpolyCoreError> {
         let next_object_serial = snapshot.objects.iter().filter_map(|object| object.id.strip_prefix("obj-")?.parse::<u32>().ok()).max().unwrap_or(100);
         let mut doc = Self { snapshot, active_object_id, selection, meshes: Vec::new(), dirty: Vec::new(), next_object_serial, mesh_workspace };
         doc.reload_meshes()?;
         doc.ensure_all_paint_buffers();
         Ok(doc)
     }
-
-    /// 🕸️ The live half-edge-mesh JSON per object id, current as of the last `reload_meshes`/
     /// `sync_meshes_to_snapshot`/`add_primitive` — callers merge this back into their own session
     /// cache (`LowpolyScratch::set_mesh_workspace_map`) after a successful edit.
-    pub fn mesh_workspace(&self) -> &HashMap<String, String> {
+    pub fn mesh_workspace(&self) -> &HashMap<String, crate::LowpolyMeshState> {
         &self.mesh_workspace
     }
 
@@ -147,50 +145,30 @@ impl LowpolyDocument {
         crate::schema::object_mut(&mut self.snapshot, object_id).and_then(|object| object.paint_layers.get_mut(layer_index)).map(|layer| &mut layer.pixels).ok_or(LowpolyCoreError::LayerIndexOutOfRange)
     }
 
-    /// 🕸️ Reloads every object's `HalfedgeMesh` from the session-local `mesh_workspace` cache. An
-    /// object with a `mesh` handle whose cached JSON is missing, or hashes to a DIFFERENT handle
-    /// (`mesh_child_handle`, "the handle IS the change signal" — see that fn's own doc comment) is a
-    /// stale cache (e.g. an undo/redo the session never observed, see `LowpolyCoreError::StaleMeshWorkspace`'s
-    /// own doc comment) and fails closed rather than silently loading the wrong geometry.
-    ///
-    /// The persisted `LowpolyObject::mesh_content` wins whenever it matches the handle — that is what
-    /// keeps undo/redo, reload and import live; the session cache only serves legacy handle-only objects.
+    /// 🕸️ Load actual topology from the persisted managed owner; source text remains independent.
     pub fn reload_meshes(&mut self) -> Result<(), LowpolyCoreError> {
         self.meshes.clear();
         self.dirty.clear();
         for object in &self.snapshot.objects {
-            let matches = |json: &str| object.mesh.as_ref().is_none_or(|handle| crate::mesh_child_handle(&object.id, json) == *handle);
-            let json = if !object.mesh_content.is_empty() && matches(&object.mesh_content) {
-                object.mesh_content.clone()
-            } else {
-                match self.mesh_workspace.get(&object.id) {
-                    Some(json) if matches(json) => json.clone(),
-                    _ => return Err(LowpolyCoreError::StaleMeshWorkspace(object.id.clone())),
-                }
-            };
-            let mesh = HalfedgeMesh::from_json(&json)?;
-            self.mesh_workspace.insert(object.id.clone(), json);
+            let state=object.mesh_state.as_ref().ok_or_else(||LowpolyCoreError::StaleMeshWorkspace(object.id.clone()))?;
+            let mesh=state.clone().into_mesh().map_err(|error|LowpolyCoreError::Managed(error))?;
+            self.mesh_workspace.insert(object.id.clone(),state.clone());
             self.meshes.push(mesh);
             self.dirty.push(false);
         }
         Ok(())
     }
 
-    /// 🕸️ Writes the live kernel geometry back into the session-local `mesh_workspace` cache, then
-    /// (re-)derives the persisted `mesh` CHILD handle from that content via `mesh_child_handle` —
-    /// identical geometry always resolves to the identical handle, so an unchanged mesh produces no
-    /// spurious diff on the handle even though this runs on every sync.
-    /// ✏️ Only the objects an edit reached (`dirty`) are re-encoded; an untouched object's cached JSON,
-    /// handle and persisted content are already exactly what `reload_meshes` resolved them to.
+    /// 🕸️ Publish edited typed state and its managed identity without rewriting literal source text.
     pub fn sync_meshes_to_snapshot(&mut self) -> Result<(), LowpolyCoreError> {
         for ((object, mesh), dirty) in self.snapshot.objects.iter_mut().zip(self.meshes.iter()).zip(self.dirty.iter_mut()) {
             if !*dirty {
                 continue;
             }
-            let json = mesh.to_json()?;
-            object.mesh = Some(crate::mesh_child_handle(&object.id, &json));
-            object.mesh_content.clone_from(&json);
-            self.mesh_workspace.insert(object.id.clone(), json);
+            let state=crate::LowpolyMeshState::from_mesh(mesh.clone());
+            object.mesh=Some(crate::managed_mesh_child_handle(&object.id,&state));
+            object.mesh_state=Some(state.clone());
+            self.mesh_workspace.insert(object.id.clone(),state);
             *dirty = false;
         }
         Ok(())
@@ -325,9 +303,9 @@ impl LowpolyDocument {
         prepare_paint_mesh(&mut mesh);
         self.next_object_serial += 1;
         let id = format!("obj-{}", self.next_object_serial);
-        let mesh_workspace = mesh.to_json()?;
-        let mesh_handle = crate::mesh_child_handle(&id, &mesh_workspace);
-        self.snapshot.objects.push(LowpolyObject { id: id.clone(), name: kind.into(), transform: Default::default(), smooth_shading: false, mesh: Some(mesh_handle), paint_layers: vec![LowpolyPaintLayer::new("Base")], mesh_content: mesh_workspace.clone() });
+        let mesh_workspace=crate::LowpolyMeshState::from_mesh(mesh.clone());
+        let mesh_handle=crate::managed_mesh_child_handle(&id,&mesh_workspace);
+        self.snapshot.objects.push(LowpolyObject { mesh_state:Some(mesh_workspace.clone()), id: id.clone(), name: kind.into(), transform: Default::default(), smooth_shading: false, mesh: Some(mesh_handle), paint_layers: vec![LowpolyPaintLayer::new("Base")], mesh_content:String::new() });
         self.mesh_workspace.insert(id.clone(), mesh_workspace);
         self.meshes.push(mesh);
         self.dirty.push(false);
@@ -421,50 +399,50 @@ impl LowpolyDocument {
         Ok(())
     }
 
-    /// 🌉️ Returns `dsl::DslValue` directly — every call site (the peer-owned
+    /// 🌉️ Returns `semio_framework_value::DslValue` directly — every call site (the peer-owned
     /// `mesh_data_from_transfer` in `🧬️schema/🦀️.rs`, the UV window, and the model window's
-    /// tessellation export) only ever reads keys off it through `dsl::FromValue`/`.get(...)`, so the
+    /// tessellation export) only ever reads keys off it through `semio_framework_value::FromValue`/`.get(...)`, so the
     /// old `serde_json::Value` bridge at the end of this fn was pure overhead, not a real boundary.
-    pub fn tessellate_transfer_json(mesh: &HalfedgeMesh) -> Result<dsl::DslValue, LowpolyCoreError> {
+    pub fn tessellate_transfer_json(mesh: &HalfedgeMesh) -> Result<semio_framework_value::DslValue, LowpolyCoreError> {
         let transfer = mesh.tessellate()?;
-        Ok(dsl::DslValue::object([
-            ("positions".to_string(), dsl::ToValue::to_value(&transfer.positions)),
-            ("normals".to_string(), dsl::ToValue::to_value(&transfer.normals)),
-            ("indices".to_string(), dsl::ToValue::to_value(&transfer.indices)),
-            ("edgePositions".to_string(), dsl::ToValue::to_value(&transfer.edge_positions)),
-            ("faceIds".to_string(), dsl::ToValue::to_value(&transfer.face_ids)),
-            ("vertexIds".to_string(), dsl::ToValue::to_value(&transfer.vertex_ids)),
-            ("edgeIds".to_string(), dsl::ToValue::to_value(&transfer.edge_ids)),
-            ("edgeUvs".to_string(), dsl::ToValue::to_value(&transfer.edge_uvs)),
-            ("edgeIsSeam".to_string(), dsl::ToValue::to_value(&transfer.edge_is_seam)),
-            ("uvs".to_string(), dsl::ToValue::to_value(&transfer.uvs)),
+        Ok(semio_framework_value::DslValue::object([
+            ("positions".to_string(), semio_framework_value::ToValue::to_value(&transfer.positions)),
+            ("normals".to_string(), semio_framework_value::ToValue::to_value(&transfer.normals)),
+            ("indices".to_string(), semio_framework_value::ToValue::to_value(&transfer.indices)),
+            ("edgePositions".to_string(), semio_framework_value::ToValue::to_value(&transfer.edge_positions)),
+            ("faceIds".to_string(), semio_framework_value::ToValue::to_value(&transfer.face_ids)),
+            ("vertexIds".to_string(), semio_framework_value::ToValue::to_value(&transfer.vertex_ids)),
+            ("edgeIds".to_string(), semio_framework_value::ToValue::to_value(&transfer.edge_ids)),
+            ("edgeUvs".to_string(), semio_framework_value::ToValue::to_value(&transfer.edge_uvs)),
+            ("edgeIsSeam".to_string(), semio_framework_value::ToValue::to_value(&transfer.edge_is_seam)),
+            ("uvs".to_string(), semio_framework_value::ToValue::to_value(&transfer.uvs)),
         ]))
     }
 
     pub fn tessellate_all_json(&self) -> Result<String, LowpolyCoreError> {
         let active = self.active_object_id.clone();
-        let mut items: Vec<dsl::DslValue> = Vec::new();
+        let mut items: Vec<semio_framework_value::DslValue> = Vec::new();
         for (idx, object) in self.snapshot.objects.iter().enumerate() {
             let mesh = self.meshes.get(idx).ok_or(LowpolyCoreError::MeshMissing)?;
-            let tessellation: dsl::DslValue = Self::tessellate_transfer_json(mesh)?;
-            items.push(dsl::DslValue::object([
-                ("id".to_string(), dsl::DslValue::String(object.id.clone())),
-                ("index".to_string(), dsl::DslValue::uint(idx as u64)),
-                ("name".to_string(), dsl::DslValue::String(object.name.clone())),
+            let tessellation: semio_framework_value::DslValue = Self::tessellate_transfer_json(mesh)?;
+            items.push(semio_framework_value::DslValue::object([
+                ("id".to_string(), semio_framework_value::DslValue::String(object.id.clone())),
+                ("index".to_string(), semio_framework_value::DslValue::uint(idx as u64)),
+                ("name".to_string(), semio_framework_value::DslValue::String(object.name.clone())),
                 (
                     "transform".to_string(),
-                    dsl::DslValue::object([
-                        ("position".to_string(), dsl::ToValue::to_value(&object.transform.position)),
-                        ("rotation".to_string(), dsl::ToValue::to_value(&object.transform.rotation)),
-                        ("scale".to_string(), dsl::ToValue::to_value(&object.transform.scale)),
+                    semio_framework_value::DslValue::object([
+                        ("position".to_string(), semio_framework_value::ToValue::to_value(&object.transform.position)),
+                        ("rotation".to_string(), semio_framework_value::ToValue::to_value(&object.transform.rotation)),
+                        ("scale".to_string(), semio_framework_value::ToValue::to_value(&object.transform.scale)),
                     ]),
                 ),
-                ("smoothShading".to_string(), dsl::DslValue::Bool(object.smooth_shading)),
-                ("active".to_string(), dsl::DslValue::Bool(object.id == active)),
+                ("smoothShading".to_string(), semio_framework_value::DslValue::Bool(object.smooth_shading)),
+                ("active".to_string(), semio_framework_value::DslValue::Bool(object.id == active)),
                 ("tessellation".to_string(), tessellation),
             ]));
         }
-        Ok(dsl::json::to_json_string(&items))
+        Ok(semio_framework_pack_json::to_json_string(&items))
     }
 
     pub fn composite_layers(&self, object_id: &str) -> Result<Vec<u8>, LowpolyCoreError> {
@@ -502,7 +480,7 @@ impl LowpolyDocument {
 /// `snapshot` by reference now that `LowpolySnapshot` no longer round-trips through `serde_json::Value`
 /// (its `Serialize`/`Deserialize` are `cfg(test)`-only) — the caller already holds the typed snapshot,
 /// so the old JSON encode/decode pair was pure overhead, not a real boundary.
-pub fn lowpoly_mesh_from_document(snapshot: &LowpolySnapshot, mesh_workspace: &HashMap<String, String>) -> Result<MeshData, String> {
+pub fn lowpoly_mesh_from_document(snapshot: &LowpolySnapshot, mesh_workspace: &HashMap<String, crate::LowpolyMeshState>) -> Result<MeshData, String> {
     let loaded = LowpolyDocument::new(snapshot.clone(), mesh_workspace.clone()).map_err(|e| e.to_string())?;
     Ok(loaded.active_mesh().ok().and_then(|mesh| LowpolyDocument::tessellate_transfer_json(mesh).ok()).map(|transfer| crate::schema::mesh_data_from_transfer(&transfer, None)).unwrap_or_default())
 }

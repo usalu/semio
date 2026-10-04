@@ -18,7 +18,7 @@ fn sample_cad() -> SemioCadSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn real_text_round_trip_through_step_codec() {
     let cad = sample_cad();
-    let step = semio_framework_plugin::resolve_ready(SemioCadToStep::serialize(&cad)).expect("serialize");
+    let step = ::semio_framework_async::poll::resolve_ready(SemioCadToStep::serialize(&cad)).expect("serialize");
     assert_eq!(step.header.file_schema.schemas, vec!["AUTOMOTIVE_DESIGN".to_string()]);
     assert_eq!(step.entities.len(), 7, "4 for LINE + 3 for CIRCLE; Text is dropped");
 

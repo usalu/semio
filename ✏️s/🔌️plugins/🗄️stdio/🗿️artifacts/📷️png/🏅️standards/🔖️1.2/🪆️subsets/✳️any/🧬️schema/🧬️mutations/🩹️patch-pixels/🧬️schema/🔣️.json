@@ -4,39 +4,66 @@
   "title": "PatchPixelsMutation",
   "type": "object",
   "additionalProperties": false,
-  "required": ["index", "removeCount", "pixels"],
+  "required": [
+    "revision",
+    "x",
+    "y",
+    "width",
+    "height",
+    "red",
+    "green",
+    "blue",
+    "alpha"
+  ],
   "properties": {
-    "index": { "type": "integer", "minimum": 0 },
-    "removeCount": {
+    "revision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{16}$",
+      "x-semio-ui": {"label": {"en": "Source revision", "de": "Quellrevision"}, "group": "target", "order": 10}
+    },
+    "x": {
       "type": "integer",
       "minimum": 0,
-      "x-semio-ui": {
-        "widget": "stepper",
-        "label": {
-          "en": "Remove count",
-          "de": "Anzahl zu entfernender Elemente"
-        },
-        "description": {
-          "en": "Number of items removed at the index before the new items are inserted.",
-          "de": "Anzahl der Elemente, die am Index vor dem Einfügen der neuen Elemente entfernt werden."
-        }
-      }
+      "x-semio-ui": {"label": {"en": "Left", "de": "Links"}, "group": "region", "order": 20}
     },
-    "pixels": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } },
-    "moveTo": {
-      "type": ["integer", "null"],
+    "y": {
+      "type": "integer",
       "minimum": 0,
-      "x-semio-ui": {
-        "widget": "stepper",
-        "label": {
-          "en": "Move to index",
-          "de": "Verschieben nach Index"
-        },
-        "description": {
-          "en": "Index the patched range is moved to.",
-          "de": "Index, an den der geänderte Bereich verschoben wird."
-        }
-      }
+      "x-semio-ui": {"label": {"en": "Top", "de": "Oben"}, "group": "region", "order": 30}
+    },
+    "width": {
+      "type": "integer",
+      "minimum": 1,
+      "x-semio-ui": {"label": {"en": "Width", "de": "Breite"}, "group": "region", "order": 40}
+    },
+    "height": {
+      "type": "integer",
+      "minimum": 1,
+      "x-semio-ui": {"label": {"en": "Height", "de": "Höhe"}, "group": "region", "order": 50}
+    },
+    "red": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255,
+      "x-semio-ui": {"label": {"en": "Red", "de": "Rot"}, "group": "color", "order": 60}
+    },
+    "green": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255,
+      "x-semio-ui": {"label": {"en": "Green", "de": "Grün"}, "group": "color", "order": 70}
+    },
+    "blue": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255,
+      "x-semio-ui": {"label": {"en": "Blue", "de": "Blau"}, "group": "color", "order": 80}
+    },
+    "alpha": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255,
+      "x-semio-ui": {"label": {"en": "Alpha", "de": "Alpha"}, "group": "color", "order": 90}
     }
   }
 }

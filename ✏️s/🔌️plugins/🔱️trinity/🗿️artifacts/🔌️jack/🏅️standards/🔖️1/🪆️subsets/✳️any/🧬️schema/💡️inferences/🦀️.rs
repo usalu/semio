@@ -13,7 +13,6 @@
 
 use crate::JackSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::flat_position::compute_flat_position;
 use super::topology::compute_topology;
@@ -32,8 +31,11 @@ pub struct JackInference {
 }
 
 impl protocol::Inference<JackSnapshot> for JackInference {
-    fn infer(snapshot: &JackSnapshot) -> Self {
-        Self { topology: compute_topology(snapshot), flat_position: compute_flat_position(snapshot) }
+    fn infer(snapshot: &JackSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
+        Self { topology: compute_topology(snapshot)?, flat_position: compute_flat_position(snapshot)? }
+    
+        })
     }
 }
 
@@ -49,16 +51,6 @@ impl protocol::InferenceSpec<JackSnapshot> for JackInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 🧠️ Uncached: Kahn's algorithm re-runs in one BFS pass over the whole graph — the default
-/// `infer_cached` passthrough (just calls `infer`) is exactly right here, no `InferredField` chain
-/// needed (there is no honest per-node incremental decomposition of a global topological sort).
-impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::JackBuilder {
-    type Snapshot = JackSnapshot;
-    type Inference = JackInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.trinity.jack.inference`'s facet leaves into the OS-wide inference catalog —

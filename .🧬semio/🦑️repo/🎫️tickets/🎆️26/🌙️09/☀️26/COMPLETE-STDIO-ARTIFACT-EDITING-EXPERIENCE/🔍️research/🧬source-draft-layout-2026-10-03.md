@@ -1,0 +1,13 @@
+# Source Draft Width
+
+Preview 35 exposed a Source editor with zero available column width inside an approximately 220px Tree control. The wrapping stack did not grow, so a full-width editor child had no assigned horizontal space. The shared `action_text_draft` producer now marks that wrapping column as growing.
+
+The neutral first-paint fixture specifies the same vertical growing stack for empty, empty-object and populated source text. The native test renders both EN and DE and independently serializes the layout with serde_json. After compile-coherence repairs, `source-draft-layout-red-8.log` reached the actual assertion: `grow` was false instead of true. The repair adds the existing `HasStackLayout` import and `.grow(true)` to the shared wrapper. The complete 96-test contract library is running as `source-draft-layout-green-1.log`; a green result and coherent browser acceptance are still pending.
+
+The fixture/test applies to shared Source and large structured value drafts because they use the same producer. It does not establish every consumer window geometry in a browser. The old preview native component is deliberately not used as evidence for the updated producer.
+
+The first green attempt found that `HasStackLayout` must be imported directly from UI contract, not the plugin facade. The second compiled, but the full library stopped at an older boundary-path test using the public unrevisioned provider renderer; rendering a Source draft correctly refused absent publication authority. Repository search confirmed only tests used this unrevisioned entrypoint. It has been removed, and all 21 test/arena calls now use the existing revisioned renderer with their explicit test revision. Production PNG/WAV callers already use the revisioned entrypoint. Green attempt 3 runs the full library without fail-fast.
+
+Green attempt 3 compiled and executed all 96 tests: **94 passed, 2 failed, 0 skipped**. The Source width law passed in both locales. The remaining failures belong to Source semantic admission/diagnostics: an old test still expected bounded preflight to reject duplicate members, and duplicate-member parsing returned generic invalid-source instead of the fixture’s specific ambiguous-object code. The Media execution lane now owns these two repairs and the full rerun; root released the isolated native slot to that lane. The full suite is not green yet.
+
+The Media execution repair reran the complete contract library as `source-contract-green-4.log`: **96 passed, 0 skipped**, Nx success, cache disabled. Root independently inspected the stored receipt. Source layout and the duplicate-member diagnostic law are now green at this current-source checkpoint. Browser acceptance remains pending the new component build.

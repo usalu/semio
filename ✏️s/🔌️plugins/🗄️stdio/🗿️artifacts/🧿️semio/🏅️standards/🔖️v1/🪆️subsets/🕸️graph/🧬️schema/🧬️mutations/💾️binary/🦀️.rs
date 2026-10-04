@@ -13,7 +13,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 //#endregion 📡️SemioProtocol
 
 /// 🧾️ Each record kind's text-grammar keyword, the head `decode_op` re-prefixes onto the argument tail before `parse_op`.
-const TEXT_KEYWORDS: [(&str, &str); 12] = [
+const TEXT_KEYWORDS: [(&str, &str); 19] = [
     ("set-snapshot", "setSnapshot"),
     ("create-node", "createNode"),
     ("delete-node", "deleteNode"),
@@ -26,12 +26,20 @@ const TEXT_KEYWORDS: [(&str, &str); 12] = [
     ("remove-node-property", "removeNodeProperty"),
     ("create-edge", "createEdge"),
     ("delete-edge", "deleteEdge"),
+    ("drag-nodes", "dragNodes"),
+    ("set-node-property", "setNodeProperty"),
+    ("resize-node", "resizeNode"),
+    ("rename-node", "renameNode"),
+    ("set-edge-property", "setEdgeProperty"),
+    ("add-edge-property", "addEdgeProperty"),
+    ("remove-edge-property", "removeEdgeProperty"),
 ];
 
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `SemioGraphMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = COMPONENT_PROTOCOL_SEMIO;
 const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
 const TAG_CREATE_NODE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "create-node");
 const TAG_DELETE_NODE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "delete-node");
 const TAG_CHANGE_NODE_KIND: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-node-kind");
@@ -43,12 +51,20 @@ const TAG_ADD_NODE_PROPERTY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "a
 const TAG_REMOVE_NODE_PROPERTY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-node-property");
 const TAG_CREATE_EDGE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "create-edge");
 const TAG_DELETE_EDGE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "delete-edge");
+const TAG_DRAG_NODES: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "drag-nodes");
+const TAG_SET_NODE_PROPERTY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-node-property");
+const TAG_RESIZE_NODE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "resize-node");
+const TAG_RENAME_NODE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "rename-node");
+const TAG_SET_EDGE_PROPERTY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-edge-property");
+const TAG_ADD_EDGE_PROPERTY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "add-edge-property");
+const TAG_REMOVE_EDGE_PROPERTY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-edge-property");
 //#endregion 🏷️WireTags
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn wire_tag(m: &SemioGraphMutation) -> u8 {
     match m {
         SemioGraphMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
+        SemioGraphMutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
         SemioGraphMutation::CreateNode(_) => TAG_CREATE_NODE,
         SemioGraphMutation::DeleteNode(_) => TAG_DELETE_NODE,
         SemioGraphMutation::ChangeNodeKind(_) => TAG_CHANGE_NODE_KIND,
@@ -60,6 +76,13 @@ fn wire_tag(m: &SemioGraphMutation) -> u8 {
         SemioGraphMutation::RemoveNodeProperty(_) => TAG_REMOVE_NODE_PROPERTY,
         SemioGraphMutation::CreateEdge(_) => TAG_CREATE_EDGE,
         SemioGraphMutation::DeleteEdge(_) => TAG_DELETE_EDGE,
+        SemioGraphMutation::DragNodes(_) => TAG_DRAG_NODES,
+        SemioGraphMutation::SetNodeProperty(_) => TAG_SET_NODE_PROPERTY,
+        SemioGraphMutation::ResizeNode(_) => TAG_RESIZE_NODE,
+        SemioGraphMutation::RenameNode(_) => TAG_RENAME_NODE,
+        SemioGraphMutation::SetEdgeProperty(_) => TAG_SET_EDGE_PROPERTY,
+        SemioGraphMutation::AddEdgeProperty(_) => TAG_ADD_EDGE_PROPERTY,
+        SemioGraphMutation::RemoveEdgeProperty(_) => TAG_REMOVE_EDGE_PROPERTY,
     }
 }
 
@@ -76,6 +99,11 @@ fn print_op_args(m: &SemioGraphMutation) -> String {
 
 impl protocol::OpBinary for SemioGraphMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        if let Self::PatchSnapshot(payload) = self {
+            let mut out = vec![1, TAG_PATCH_SNAPSHOT];
+            out.extend(protocol::OpBinary::encode_op(&payload.patch)?);
+            return Ok(out);
+        }
         const OP_BINARY_FORMAT: u8 = 1;
         let mut out = vec![OP_BINARY_FORMAT, wire_tag(self)];
         out.extend_from_slice(print_op_args(self).as_bytes());
@@ -89,6 +117,9 @@ impl protocol::OpBinary for SemioGraphMutation {
         }
         if bytes[0] != OP_BINARY_FORMAT {
             return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {}", bytes[0]) });
+        }
+        if bytes[1] == TAG_PATCH_SNAPSHOT {
+            return Ok(Self::PatchSnapshot(crate::standards::v1::subsets::graph::schema::mutations::patch_snapshot::PatchSnapshot { patch: protocol::OpBinary::decode_op(&bytes[2..])? }));
         }
         let tag = bytes[1];
         let kind = dsl::protocol_record::kind(WIRE_PROTOCOL, u64::from(tag)).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} names no record of 📡️.protocol.semio") })?;

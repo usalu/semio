@@ -8,7 +8,7 @@ pub fn diff(payload: &ChangeRhInt, base: &Din4108Snapshot) -> protocol::Mutation
         return protocol::MutationOutcome::fatal("mutation.invariant", "rh_int must be a relative humidity within [0, 1].", Vec::<String>::new());
     }
     if base.rh_int == payload.new_rh_int {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "rh_int already has this value.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "rh_int already has this value.");
     }
     protocol::MutationOutcome::new(Din4108Diff { rh_int: Some(payload.new_rh_int), ..Default::default() })
 }

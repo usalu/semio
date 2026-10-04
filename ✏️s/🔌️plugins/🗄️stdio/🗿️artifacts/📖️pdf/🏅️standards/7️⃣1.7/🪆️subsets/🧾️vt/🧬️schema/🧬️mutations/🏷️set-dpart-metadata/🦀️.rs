@@ -24,12 +24,15 @@ impl MutationKind<PdfSnapshot, PdfVtMutation> for SetDpartMetadata {
         MutationOutcome::new(support::graph_edit_diff(base, next))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfVtMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfVtMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         match support::dpart_job(base) {
             Some(job) => vec![PdfVtMutation::SetDpartMetadata(SetDpartMetadata { job })],
             None => vec![PdfVtMutation::RemoveDpartMetadata(RemoveDpartMetadata {})],
         }
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set PDF/VT partition metadata {}", self.job), &format!("PDF/VT-Partitionsmetadaten {} setzen", self.job))

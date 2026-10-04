@@ -1,7 +1,9 @@
 //! 📦️ Typed LAS snapshot records keep file encoding outside snapshot identity.
 use super::{LasHeader, LasPoint, LasSnapshot, LasVlr};
+#[path="🚦️native/🦀️.rs"]
+pub(super) mod native;
 
-#[derive(dsl::DslRecord)]
+#[derive(semio_framework_dsl_record_derive::DslRecord)]
 struct Header {
     version_major: u8,
     version_minor: u8,
@@ -30,10 +32,10 @@ struct Header {
     min_z_ieee754_bits: u64,
 }
 
-#[derive(dsl::DslRecord)]
+#[derive(semio_framework_dsl_record_derive::DslRecord)]
 struct Rgb { red: u16, green: u16, blue: u16 }
 
-#[derive(dsl::DslRecord)]
+#[derive(semio_framework_dsl_record_derive::DslRecord)]
 struct Point {
     x_ieee754_bits: u64,
     y_ieee754_bits: u64,
@@ -51,7 +53,7 @@ struct Point {
     rgb: Option<Rgb>,
 }
 
-#[derive(dsl::DslRecord)]
+#[derive(semio_framework_dsl_record_derive::DslRecord)]
 struct Snapshot {
     schema: String,
     header: Header,
@@ -126,14 +128,14 @@ impl From<Snapshot> for LasSnapshot {
 impl store::ArtifactDsl for LasSnapshot {
     const EXTENSION: &'static str = "las";
     fn envelope_id() -> &'static str { "stdio.las" }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = store::semio_format::split_text_preamble(text).map(|(_, body)| body).unwrap_or(text);
-        let record = dsl::parse(body, &Snapshot::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        let record = semio_framework_dsl_record::parse(body, &Snapshot::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
         Ok(Snapshot::__dsl_from_record(&record)?.into())
     }
     fn print_dsl(&self) -> String {
         let snapshot = Snapshot::from(self);
-        let body = dsl::print(&snapshot.__dsl_to_record(), &Snapshot::__dsl_spec(), dsl::JoinMode::Document);
+        let body = semio_framework_dsl_record::print(&snapshot.__dsl_to_record(), &Snapshot::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id("stdio.las", store::semio_format::Component::Dsl, 1).expect("valid LAS snapshot identity");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -144,14 +146,14 @@ impl store::ArtifactPack for LasSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let snapshot = Snapshot::from(self);
         let inner = store::pack_rt::encode_document(&Snapshot::__dsl_spec(), &snapshot.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id("stdio.las", store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id("stdio.las", store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if !envelope.matches_identity("stdio.las", store::semio_format::Component::Pack, 1) { return Err(store::PackError::Schema("LAS snapshot pack identity differs".into())); }
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
+        if !envelope.matches_identity("stdio.las", store::semio_format::Component::Pack, 1) { return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "LAS snapshot pack identity differs"))); }
         let (record, _) = store::pack_rt::decode_document(&inner, &Snapshot::__dsl_spec(), options)?;
         Snapshot::__dsl_from_record(&record).map(Into::into).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> { Some(Snapshot::__dsl_spec()) }
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> { Some(Snapshot::__dsl_spec()) }
 }

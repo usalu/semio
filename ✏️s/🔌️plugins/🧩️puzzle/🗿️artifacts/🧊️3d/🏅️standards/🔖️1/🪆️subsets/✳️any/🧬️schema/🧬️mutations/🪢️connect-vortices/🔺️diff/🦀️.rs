@@ -6,7 +6,7 @@ use crate::{Puzzle3dAttraction, Puzzle3dSnapshot};
 //#region 🔖️Diff
 pub fn diff(payload: &super::mutation::ConnectVortices, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
     if base.attractions.iter().any(|entry| entry.id == payload.id) {
-        return protocol::MutationOutcome::new(Puzzle3dDiff::default()).absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "already connected").at(vec![payload.id.clone()])]);
+        return protocol::MutationOutcome::new(Puzzle3dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "already connected").at(vec![payload.id.clone()])]);
     }
     let attraction = Puzzle3dAttraction {
         id: payload.id.clone(),

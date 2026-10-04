@@ -217,7 +217,7 @@ mod subject {
         let mutation = mutation_from_spec(&spec)?;
         let mut snapshot = base.clone();
         apply(&mut snapshot, &mutation)?;
-        for step in mutation_inverse(&mutation, &base) {
+        for step in mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
             apply(&mut snapshot, &step)?;
         }
         let params = spec.get("params").cloned().unwrap_or(Json::Null);

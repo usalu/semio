@@ -7,13 +7,16 @@ use crate::standards::v1::subsets::any::schema::mutations::change_generation_val
 use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
 use crate::Generation3dSnapshot;
 
-pub fn inverse(payload: &ChangeGenerationValue, base: &Generation3dSnapshot) -> Vec<Generation3dMutation> {
+pub fn inverse(payload: &ChangeGenerationValue, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     base.generation
         .generations
         .iter()
         .find(|entry| entry.id == payload.id)
         .map(|entry| {
-            vec![Generation3dMutation::ChangeGenerationValue(ChangeGenerationValue { id: payload.id.clone(), question_id: payload.question_id.clone(), new_value: entry.values.get(&payload.question_id).cloned().unwrap_or(dsl::DslValue::Null) })]
+            vec![Generation3dMutation::ChangeGenerationValue(ChangeGenerationValue { id: payload.id.clone(), question_id: payload.question_id.clone(), new_value: entry.values.get(&payload.question_id).cloned().unwrap_or(semio_framework_value::DslValue::Null) })]
         })
         .unwrap_or_default()
+
+    })())
 }

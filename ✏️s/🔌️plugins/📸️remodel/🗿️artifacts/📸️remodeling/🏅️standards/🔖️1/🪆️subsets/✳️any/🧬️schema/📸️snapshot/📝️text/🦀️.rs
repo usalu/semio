@@ -13,7 +13,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 use crate::RemodelingSnapshot;
 
 /// 📖️ Parses `.remodeling` DSL text into a `RemodelingSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<RemodelingSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<RemodelingSnapshot, semio_framework_diagnostic::TextError> {
     <RemodelingSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 

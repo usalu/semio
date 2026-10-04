@@ -263,3 +263,345 @@ diff --git a/dist/src/tasks-runner/run-command.js b/dist/src/tasks-runner/run-co
      if (nxJson.cacheDirectory) {
          result.cacheDirectory ??= nxJson.cacheDirectory;
      }
+diff --git a/dist/src/project-graph/build-project-graph.js b/dist/src/project-graph/build-project-graph.js
+--- a/dist/src/project-graph/build-project-graph.js
++++ b/dist/src/project-graph/build-project-graph.js
+@@ -50,50 +50,74 @@
+         ? (maybeRustReferences ?? null)
+         : rustReferencesOrAllFiles;
+ }
+-async function buildProjectGraphUsingProjectFileMap(projectRootMap, externalNodes, fileMap, rustReferences, fileMapCache, plugins, sourceMap) {
+-    storedFileMap = fileMap;
+-    storedRustReferences = rustReferences;
+-    const projects = {};
+-    for (const root in projectRootMap) {
+-        const project = projectRootMap[root];
+-        projects[project.name] = project;
+-    }
+-    const errors = [];
+-    const nxJson = (0, configuration_1.readNxJson)();
+-    const projectGraphVersion = '6.0';
+-    try {
+-        (0, assert_workspace_validity_1.assertWorkspaceValidity)(projects, nxJson);
+-    }
+-    catch (e) {
+-        if ((0, error_types_1.isWorkspaceValidityError)(e)) {
+-            errors.push(e);
+-        }
+-    }
+-    const packageJsonDeps = readCombinedDeps();
+-    const rootTsConfig = readRootTsConfig();
+-    const externalNodesHash = hashExternalNodes(externalNodes);
+-    let filesToProcess;
+-    let cachedFileData;
+-    const useCacheData = fileMapCache &&
+-        !(0, nx_deps_cache_1.shouldRecomputeWholeGraph)(fileMapCache, packageJsonDeps, projects, nxJson, rootTsConfig, externalNodesHash);
+-    if (useCacheData) {
+-        const fromCache = (0, nx_deps_cache_1.extractCachedFileData)(fileMap, fileMapCache);
+-        filesToProcess = fromCache.filesToProcess;
+-        cachedFileData = fromCache.cachedFileData;
+-    }
+-    else {
+-        filesToProcess = fileMap;
+-        cachedFileData = {
+-            nonProjectFiles: {},
+-            projectFileMap: {},
+-        };
+-    }
+-    let projectGraph;
+-    let projectFileMapCache;
+-    try {
+-        const context = createContext(projects, nxJson, externalNodes, fileMap, filesToProcess);
+-        projectGraph = await buildProjectGraphUsingContext(externalNodes, context, cachedFileData, projectGraphVersion, plugins, sourceMap);
+-        projectFileMapCache = (0, nx_deps_cache_1.createProjectFileMapCache)(nxJson, packageJsonDeps, fileMap, rootTsConfig, externalNodesHash);
++/** 🏛️ Reads each declared owned dependency authority as a bounded digest, without evaluating import resolution callbacks. */
++async function readDependencyResolutionAuthority(nxJson, projects) {
++    const declarations = Object.entries(nxJson.pluginsConfig ?? {}).filter(([, value]) => value?.dependencyResolutionAuthority).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0);
++    if (!declarations.length) return null;
++    if (declarations.length > 16) throw new Error('Too many dependency resolution authorities');
++    const hash = require('node:crypto').createHash('sha256');
++    for (const [name, options] of declarations) {
++        const descriptor = options.dependencyResolutionAuthority;
++        if (typeof descriptor.module !== 'string' || typeof descriptor.export !== 'string') throw new Error('Invalid dependency resolution authority declaration');
++        const path = path_1.resolve(workspace_root_1.workspaceRoot, descriptor.module), local = path_1.relative(workspace_root_1.workspaceRoot, path);
++        if (path_1.isAbsolute(local) || local === '..' || local.startsWith('..' + path_1.sep)) throw new Error('Dependency resolution authority must belong to the workspace');
++        const owner = await import(require('node:url').pathToFileURL(path).href);
++        if (typeof owner[descriptor.export] !== 'function') throw new Error('Dependency resolution authority is missing its owned interface');
++        const value = await owner[descriptor.export](workspace_root_1.workspaceRoot, projects);
++        if (typeof value !== 'string' || !/^[a-f0-9]{64}$/.test(value)) throw new Error('Invalid dependency resolution authority digest');
++        hash.update(JSON.stringify([name, descriptor.module, descriptor.export, value]));
++    }
++    return hash.digest('hex');
++}
++
++
++async function buildProjectGraphUsingProjectFileMap(projectRootMap, externalNodes, fileMap, rustReferences, fileMapCache, plugins, sourceMap) {
++    storedFileMap = fileMap;
++    storedRustReferences = rustReferences;
++    const projects = {};
++    for (const root in projectRootMap) {
++        const project = projectRootMap[root];
++        projects[project.name] = project;
++    }
++    const errors = [];
++    const nxJson = (0, configuration_1.readNxJson)();
++    const projectGraphVersion = '6.0';
++    try {
++        (0, assert_workspace_validity_1.assertWorkspaceValidity)(projects, nxJson);
++    }
++    catch (e) {
++        if ((0, error_types_1.isWorkspaceValidityError)(e)) {
++            errors.push(e);
++        }
++    }
++    const packageJsonDeps = readCombinedDeps();
++    const rootTsConfig = readRootTsConfig();
++    const externalNodesHash = hashExternalNodes(externalNodes);
++    fileMap = { ...fileMap, projectFileMap: Object.fromEntries(Object.entries(fileMap.projectFileMap).map(([project, files]) => [project, files.map(({ deps, ...file }) => file)])), nonProjectFiles: fileMap.nonProjectFiles.map(({ deps, ...file }) => file) }; storedFileMap = fileMap;
++    const dependencyResolutionAuthority = await readDependencyResolutionAuthority(nxJson, projects);
++    let filesToProcess;
++    let cachedFileData;
++    const useCacheData = fileMapCache &&
++        !(0, nx_deps_cache_1.shouldRecomputeWholeGraph)(fileMapCache, packageJsonDeps, projects, nxJson, rootTsConfig, externalNodesHash, dependencyResolutionAuthority);
++    if (useCacheData) {
++        const fromCache = (0, nx_deps_cache_1.extractCachedFileData)(fileMap, fileMapCache);
++        filesToProcess = fromCache.filesToProcess;
++        cachedFileData = fromCache.cachedFileData;
++    }
++    else {
++        filesToProcess = fileMap;
++        cachedFileData = {
++            nonProjectFiles: {},
++            projectFileMap: {},
++        };
++    }
++    let projectGraph;
++    let projectFileMapCache;
++    try {
++        const context = createContext(projects, nxJson, externalNodes, fileMap, filesToProcess);
++        projectGraph = await buildProjectGraphUsingContext(externalNodes, context, cachedFileData, projectGraphVersion, plugins, sourceMap);
++        if (await readDependencyResolutionAuthority(nxJson, projects) !== dependencyResolutionAuthority) throw new Error("Dependency resolution authority changed during graph construction");
++        projectFileMapCache = (0, nx_deps_cache_1.createProjectFileMapCache)(nxJson, packageJsonDeps, fileMap, rootTsConfig, externalNodesHash, dependencyResolutionAuthority);
+     }
+     catch (e) {
+         // we need to include the workspace validity errors in the final error
+diff --git a/dist/src/project-graph/nx-deps-cache.js b/dist/src/project-graph/nx-deps-cache.js
+--- a/dist/src/project-graph/nx-deps-cache.js
++++ b/dist/src/project-graph/nx-deps-cache.js
+@@ -120,110 +120,112 @@
+     perf_hooks_1.performance.measure('read cache', 'read source-maps:start', 'read source-maps:end');
+     return data ?? null;
+ }
+-function createProjectFileMapCache(nxJson, packageJsonDeps, fileMap, tsConfig, externalNodesHash) {
+-    const nxJsonPlugins = getNxJsonPluginsData(nxJson, packageJsonDeps);
+-    const newValue = {
+-        version: '6.0',
+-        nxVersion: versions_1.nxVersion,
+-        // compilerOptions may not exist, especially for package-based repos
+-        pathMappings: tsConfig?.compilerOptions?.paths || {},
+-        nxJsonPlugins,
+-        pluginsConfig: nxJson?.pluginsConfig,
+-        fileMap,
+-        externalNodesHash,
+-    };
+-    return newValue;
+-}
+-/**
+- * Tracks the mtime of the project graph cache file after the last successful
+- * writeCache() call. Used by writeCacheIfStale() to skip redundant writes
+- * when no external process has modified the cache file since the last write.
+- */
+-let lastWrittenCacheMtimeMs;
+-function writeCache(cache, projectGraph, sourceMaps, errors) {
+-    perf_hooks_1.performance.mark('write cache:start');
+-    let retry = 1;
+-    let done = false;
+-    do {
+-        // write first to a unique temporary filename and then do a
+-        // rename of the file to the correct filename
+-        // this is to avoid any problems with half-written files
+-        // in case of crash and/or partially written files due
+-        // to multiple parallel processes reading and writing this file
+-        const unique = (Math.random().toString(16) + '0000000').slice(2, 10);
+-        const tmpProjectGraphPath = `${exports.nxProjectGraph}~${unique}`;
+-        const tmpFileMapPath = `${exports.nxFileMap}~${unique}`;
+-        const tmpSourceMapPath = `${exports.nxSourceMaps}~${unique}`;
+-        try {
+-            (0, fileutils_1.writeJsonFile)(tmpProjectGraphPath, {
+-                ...projectGraph,
+-                errors,
+-                computedAt: Date.now(),
+-            });
+-            (0, node_fs_1.renameSync)(tmpProjectGraphPath, exports.nxProjectGraph);
+-            (0, fileutils_1.writeJsonFile)(tmpSourceMapPath, sourceMaps);
+-            (0, node_fs_1.renameSync)(tmpSourceMapPath, exports.nxSourceMaps);
+-            // only write the file map if there are no errors
+-            // if there were errors, the errors make the filemap invalid
+-            // TODO: We should be able to keep the valid part of the filemap if the errors being thrown told us which parts of the filemap were invalid
+-            if (errors.length === 0) {
+-                (0, fileutils_1.writeJsonFile)(tmpFileMapPath, cache);
+-                (0, node_fs_1.renameSync)(tmpFileMapPath, exports.nxFileMap);
+-            }
+-            if ((0, is_on_daemon_1.isOnDaemon)()) {
+-                logger_1.serverLogger.log(`Wrote project graph cache to ${exports.nxProjectGraph}${errors.length > 0 ? ' with errors' : ''}`);
+-            }
+-            try {
+-                lastWrittenCacheMtimeMs = (0, node_fs_1.statSync)(exports.nxProjectGraph).mtimeMs;
+-            }
+-            catch {
+-                lastWrittenCacheMtimeMs = undefined;
+-            }
+-            done = true;
+-        }
+-        catch (err) {
+-            if (err instanceof Error) {
+-                console.log(`ERROR (${retry}) when writing \n${err.message}\n${err.stack}`);
+-            }
+-            else {
+-                console.log(`ERROR  (${retry}) unknown error when writing ${exports.nxProjectGraph} and ${exports.nxFileMap}`);
+-            }
+-            ++retry;
+-        }
+-    } while (!done && retry < 5);
+-    if (!done) {
+-        logger_2.logger.warn(`Failed to write project graph cache to ${exports.nxProjectGraph} and ${exports.nxFileMap} after 5 attempts. Continuing without cache.`);
+-        tryRemoveFile(exports.nxProjectGraph);
+-        tryRemoveFile(exports.nxFileMap);
+-        tryRemoveFile(exports.nxSourceMaps);
+-    }
+-    perf_hooks_1.performance.mark('write cache:end');
+-    perf_hooks_1.performance.measure('write cache', 'write cache:start', 'write cache:end');
+-}
+-/**
+- * Writes the cache only if the on-disk cache file has been modified since
+- * this process last wrote it (i.e. an external process overwrote it), or
+- * if this process has never written the cache.
+- *
+- * Use this instead of writeCache() on hot paths where the same graph may
+- * be served multiple times without changing (e.g. the daemon responding
+- * to repeated client requests).
+- */
+-function writeCacheIfStale(cache, projectGraph, sourceMaps, errors) {
+-    if (lastWrittenCacheMtimeMs !== undefined) {
+-        try {
+-            const currentMtimeMs = (0, node_fs_1.statSync)(exports.nxProjectGraph).mtimeMs;
+-            if (currentMtimeMs === lastWrittenCacheMtimeMs) {
+-                return;
+-            }
+-        }
+-        catch {
+-            // File doesn't exist or can't be stat'd — proceed with write
+-        }
+-    }
+-    writeCache(cache, projectGraph, sourceMaps, errors);
+-}
+-function shouldRecomputeWholeGraph(cache, packageJsonDeps, projects, nxJson, tsConfig, externalNodesHash) {
++function createProjectFileMapCache(nxJson, packageJsonDeps, fileMap, tsConfig, externalNodesHash, dependencyResolutionAuthority) {
++    const nxJsonPlugins = getNxJsonPluginsData(nxJson, packageJsonDeps);
++    const newValue = {
++        version: '6.0',
++        nxVersion: versions_1.nxVersion,
++        // compilerOptions may not exist, especially for package-based repos
++        pathMappings: tsConfig?.compilerOptions?.paths || {},
++        nxJsonPlugins,
++        pluginsConfig: nxJson?.pluginsConfig,
++        fileMap,
++        externalNodesHash,
++        dependencyResolutionAuthority,
++    };
++    return newValue;
++}
++/**
++ * Tracks the mtime of the project graph cache file after the last successful
++ * writeCache() call. Used by writeCacheIfStale() to skip redundant writes
++ * when no external process has modified the cache file since the last write.
++ */
++let lastWrittenCacheMtimeMs;
++function writeCache(cache, projectGraph, sourceMaps, errors) {
++    perf_hooks_1.performance.mark('write cache:start');
++    let retry = 1;
++    let done = false;
++    do {
++        // write first to a unique temporary filename and then do a
++        // rename of the file to the correct filename
++        // this is to avoid any problems with half-written files
++        // in case of crash and/or partially written files due
++        // to multiple parallel processes reading and writing this file
++        const unique = (Math.random().toString(16) + '0000000').slice(2, 10);
++        const tmpProjectGraphPath = `${exports.nxProjectGraph}~${unique}`;
++        const tmpFileMapPath = `${exports.nxFileMap}~${unique}`;
++        const tmpSourceMapPath = `${exports.nxSourceMaps}~${unique}`;
++        try {
++            (0, fileutils_1.writeJsonFile)(tmpProjectGraphPath, {
++                ...projectGraph,
++                errors,
++                computedAt: Date.now(),
++            });
++            (0, node_fs_1.renameSync)(tmpProjectGraphPath, exports.nxProjectGraph);
++            (0, fileutils_1.writeJsonFile)(tmpSourceMapPath, sourceMaps);
++            (0, node_fs_1.renameSync)(tmpSourceMapPath, exports.nxSourceMaps);
++            // only write the file map if there are no errors
++            // if there were errors, the errors make the filemap invalid
++            // TODO: We should be able to keep the valid part of the filemap if the errors being thrown told us which parts of the filemap were invalid
++            if (errors.length === 0) {
++                (0, fileutils_1.writeJsonFile)(tmpFileMapPath, cache);
++                (0, node_fs_1.renameSync)(tmpFileMapPath, exports.nxFileMap);
++            }
++            if ((0, is_on_daemon_1.isOnDaemon)()) {
++                logger_1.serverLogger.log(`Wrote project graph cache to ${exports.nxProjectGraph}${errors.length > 0 ? ' with errors' : ''}`);
++            }
++            try {
++                lastWrittenCacheMtimeMs = (0, node_fs_1.statSync)(exports.nxProjectGraph).mtimeMs;
++            }
++            catch {
++                lastWrittenCacheMtimeMs = undefined;
++            }
++            done = true;
++        }
++        catch (err) {
++            if (err instanceof Error) {
++                console.log(`ERROR (${retry}) when writing \n${err.message}\n${err.stack}`);
++            }
++            else {
++                console.log(`ERROR  (${retry}) unknown error when writing ${exports.nxProjectGraph} and ${exports.nxFileMap}`);
++            }
++            ++retry;
++        }
++    } while (!done && retry < 5);
++    if (!done) {
++        logger_2.logger.warn(`Failed to write project graph cache to ${exports.nxProjectGraph} and ${exports.nxFileMap} after 5 attempts. Continuing without cache.`);
++        tryRemoveFile(exports.nxProjectGraph);
++        tryRemoveFile(exports.nxFileMap);
++        tryRemoveFile(exports.nxSourceMaps);
++    }
++    perf_hooks_1.performance.mark('write cache:end');
++    perf_hooks_1.performance.measure('write cache', 'write cache:start', 'write cache:end');
++}
++/**
++ * Writes the cache only if the on-disk cache file has been modified since
++ * this process last wrote it (i.e. an external process overwrote it), or
++ * if this process has never written the cache.
++ *
++ * Use this instead of writeCache() on hot paths where the same graph may
++ * be served multiple times without changing (e.g. the daemon responding
++ * to repeated client requests).
++ */
++function writeCacheIfStale(cache, projectGraph, sourceMaps, errors) {
++    if (lastWrittenCacheMtimeMs !== undefined) {
++        try {
++            const currentMtimeMs = (0, node_fs_1.statSync)(exports.nxProjectGraph).mtimeMs;
++            if (currentMtimeMs === lastWrittenCacheMtimeMs) {
++                return;
++            }
++        }
++        catch {
++            // File doesn't exist or can't be stat'd — proceed with write
++        }
++    }
++    writeCache(cache, projectGraph, sourceMaps, errors);
++}
++function shouldRecomputeWholeGraph(cache, packageJsonDeps, projects, nxJson, tsConfig, externalNodesHash, dependencyResolutionAuthority) {
++    if (cache.dependencyResolutionAuthority !== dependencyResolutionAuthority) return true;
+     if (cache.version !== '6.0') {
+         return true;
+     }

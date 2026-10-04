@@ -130,6 +130,8 @@ pub mod set_encryption;
 pub mod set_catalog_entry;
 #[path = "🧺️remove-catalog-entry/🦀️.rs"]
 pub mod remove_catalog_entry;
+#[path = "🩹️patch-snapshot/🦀️.rs"]
+pub mod patch_snapshot;
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 
@@ -262,6 +264,7 @@ pub enum PdfMutation {
     SetCatalogEntry(SetCatalogEntry),
     RemoveCatalogEntry(RemoveCatalogEntry),
     SetSnapshot(SetSnapshot),
+    PatchSnapshot(patch_snapshot::PatchSnapshot),
 }
 //#endregion 🔖️Aggregate
 

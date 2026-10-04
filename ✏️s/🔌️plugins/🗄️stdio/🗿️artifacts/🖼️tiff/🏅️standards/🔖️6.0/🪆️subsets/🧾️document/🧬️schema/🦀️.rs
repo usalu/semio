@@ -16,9 +16,6 @@ pub struct TiffArtifact {
     #[state(artifact)]
     #[value(default)]
     pub ifds: Vec<TiffIfd>,
-    #[state(artifact)]
-    #[value(default)]
-    pub pixels: Vec<u8>,
 }
 
 impl Default for TiffArtifact {
@@ -30,11 +27,11 @@ impl Default for TiffArtifact {
 impl TiffArtifact {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> TiffSnapshot {
-        TiffSnapshot { schema: self.schema.clone(), byte_order: self.byte_order, ifds: self.ifds.clone(), pixels: self.pixels.clone() }
+        TiffSnapshot { schema: self.schema.clone(), byte_order: self.byte_order, ifds: self.ifds.clone() }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: TiffSnapshot) -> Self {
-        Self { schema: snapshot.schema, byte_order: snapshot.byte_order, ifds: snapshot.ifds, pixels: snapshot.pixels }
+        Self { schema: snapshot.schema, byte_order: snapshot.byte_order, ifds: snapshot.ifds }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_snapshot(&mut self, snapshot: TiffSnapshot) {
@@ -80,7 +77,7 @@ pub mod derived_construction {
     #[derive(Clone, Debug, Default)]
     pub struct TiffBuilderConstruction {
         snapshot: TiffSnapshot,
-        diagnostics: Vec<dsl::Diagnostic>,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
     }
 
     impl ArtifactBuilder for TiffBuilderConstruction {
@@ -93,7 +90,7 @@ pub mod derived_construction {
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(Self::from_snapshot(<TiffSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
@@ -107,7 +104,7 @@ pub mod derived_construction {
             self.snapshot = <TiffDiff as protocol::MutationDiff<TiffSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -189,14 +186,14 @@ pub mod derived_analysis {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <TiffSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }
@@ -234,11 +231,10 @@ semio_framework_plugin::derive_artifact_facets!(
 /// image without `ImageWidth`/`ImageLength` (TIFF 6.0 §8), and a new document must save and reopen as itself.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn blank_tiff_snapshot() -> TiffSnapshot {
-    use crate::standards::v6_0::subsets::document::io::{decode_tiff, encode_tiff};
-    use crate::standards::v6_0::subsets::document::schema::snapshot::{TiffFieldType, TiffTag, TiffValues, TAG_IMAGE_LENGTH, TAG_IMAGE_WIDTH};
-    let geometry = vec![TiffTag { tag: TAG_IMAGE_WIDTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![1]) }, TiffTag { tag: TAG_IMAGE_LENGTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![1]) }];
-    let seed = TiffSnapshot { ifds: vec![TiffIfd { pixels: Vec::new(), entries: geometry }], pixels: vec![255, 255, 255, 255], ..TiffSnapshot::default() };
-    encode_tiff(&seed).and_then(|bytes| decode_tiff(&bytes)).expect("blank_tiff_snapshot: the 1×1 seed round-trips through the real codec")
+    use crate::standards::v6_0::subsets::document::schema::snapshot::*;
+    TiffSnapshot { ifds: vec![TiffIfd { entries: vec![
+        TiffTag { tag: TAG_IMAGE_WIDTH, values: TiffValues::Long(vec![1]) },TiffTag { tag: TAG_IMAGE_LENGTH, values: TiffValues::Long(vec![1]) },TiffTag { tag: TAG_BITS_PER_SAMPLE, values: TiffValues::Short(vec![8,8,8]) },TiffTag { tag: TAG_COMPRESSION, values: TiffValues::Short(vec![1]) },TiffTag { tag: TAG_PHOTOMETRIC, values: TiffValues::Short(vec![2]) },TiffTag { tag: TAG_SAMPLES_PER_PIXEL, values: TiffValues::Short(vec![3]) },TiffTag { tag: TAG_ROWS_PER_STRIP, values: TiffValues::Long(vec![1]) },
+    ], storage: TiffStorage { kind:TiffStorageKind::Strips,offsets_kind:TiffFieldType::Long,byte_counts_kind:TiffFieldType::Long,chunks:vec![vec![255,255,255]] } }], ..TiffSnapshot::default() }
 }
 
 /// 📄️ P2-FG2: the demo `stdio.tiff` document — a genuinely non-trivial `TiffSnapshot` exercising
@@ -257,33 +253,10 @@ pub fn blank_tiff_snapshot() -> TiffSnapshot {
 /// exactly the canonical shape a second `encode_tiff`/`decode_tiff` pass reproduces byte-for-byte.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_tiff_snapshot() -> TiffSnapshot {
-    use crate::standards::v6_0::subsets::document::io::{decode_tiff, encode_tiff};
-    use crate::standards::v6_0::subsets::document::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffTag, TiffValues};
-    use crate::standards::v6_0::subsets::document::schema::snapshot::{TAG_IMAGE_LENGTH, TAG_IMAGE_WIDTH};
-    use crate::TiffSnapshot;
-    use crate::STDIO_TIFF_DOCUMENT_SCHEMA;
-    let (w, h) = (3u32, 2u32);
-    let mut pixels = Vec::with_capacity((w * h * 4) as usize);
-    for y in 0..h {
-        for x in 0..w {
-            let checker = if (x + y) % 2 == 0 { 255u8 } else { 0u8 };
-            pixels.extend_from_slice(&[checker, ((x * 37) % 256) as u8, ((y * 53) % 256) as u8, 255]);
-        }
-    }
-    let seed = TiffSnapshot {
-        schema: STDIO_TIFF_DOCUMENT_SCHEMA.into(),
-        byte_order: TiffByteOrder::LittleEndian,
-        ifds: vec![TiffIfd {
-            pixels: Vec::new(),
-            entries: vec![
-                TiffTag { tag: TAG_IMAGE_WIDTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![w]) },
-                TiffTag { tag: TAG_IMAGE_LENGTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![h]) },
-                TiffTag { tag: 315, kind: TiffFieldType::Ascii, values: TiffValues::Ascii("stdio.tiff demo".into()) },
-            ],
-        }],
-        pixels,
-    };
-    let encoded = encode_tiff(&seed).expect("demo_tiff_snapshot: encode must succeed");
-    decode_tiff(&encoded).expect("demo_tiff_snapshot: decode must succeed")
+    use crate::standards::v6_0::subsets::document::schema::snapshot::*;
+    let (width,height)=(3u32,2u32);let mut rgb=Vec::with_capacity((width*height*3)as usize);for y in 0..height{for x in 0..width{let checker=if(x+y)%2==0{255}else{0};rgb.extend_from_slice(&[checker,((x*37)%256)as u8,((y*53)%256)as u8]);}}
+    TiffSnapshot{schema:crate::STDIO_TIFF_DOCUMENT_SCHEMA.into(),byte_order:TiffByteOrder::LittleEndian,ifds:vec![TiffIfd{entries:vec![
+        TiffTag{tag:TAG_IMAGE_WIDTH,values:TiffValues::Long(vec![width])},TiffTag{tag:TAG_IMAGE_LENGTH,values:TiffValues::Long(vec![height])},TiffTag{tag:TAG_BITS_PER_SAMPLE,values:TiffValues::Short(vec![8,8,8])},TiffTag{tag:TAG_COMPRESSION,values:TiffValues::Short(vec![1])},TiffTag{tag:TAG_PHOTOMETRIC,values:TiffValues::Short(vec![2])},TiffTag{tag:TAG_SAMPLES_PER_PIXEL,values:TiffValues::Short(vec![3])},TiffTag{tag:TAG_ROWS_PER_STRIP,values:TiffValues::Long(vec![height])},TiffTag{tag:315,values:TiffValues::Ascii(b"stdio.tiff demo\0".to_vec())},
+    ],storage:TiffStorage{kind:TiffStorageKind::Strips,offsets_kind:TiffFieldType::Long,byte_counts_kind:TiffFieldType::Long,chunks:vec![rgb]}}]}
 }
 //#endregion 🔖️DocumentHelpers

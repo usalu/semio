@@ -1,4 +1,4 @@
-//! 🧬️ playbook artifact — semantic document mutation dispatch enum. Every variant is a
+//! 🧬️ playbook artifact — semantic parent-lane mutation dispatch enum. Every variant is a
 //! single-field tuple wrapping a handcrafted `protocol::MutationKind` payload (see the
 //! `🧬️mutations/<slug>/` triad leaves); `#[derive(dsl::Mutations)]` generates
 //! `impl protocol::Mutation<PlaybookSnapshot>` and `impl protocol::SemanticMutation<PlaybookSnapshot>`
@@ -22,35 +22,20 @@ use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
-/// 🧮️ Semantic playbook document mutation vocabulary: id-keyed step/block add/remove/move, a
-/// whole-block replace, a step-header update, and the playbook's own title scalar.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslEnum, dsl::Mutations)]
+/// 🧮️ Semantic playbook PARENT-lane mutation vocabulary: the playbook's own title scalar. Steps and blocks are composed content
+/// of the `flow` child and are edited only on that child's lane (stdio flow leaves, design §20.15 of ticket
+/// 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING; see the artifact root's `🔖️ChildLane`).
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = PlaybookSnapshot, diff = PlaybookDiff, schema = "playbook.playbook")]
 pub enum PlaybookMutation {
-    AddStep(AddStep),
-    RemoveStep(RemoveStep),
-    MoveStep(MoveStep),
-    AddBlock(AddBlock),
-    RemoveBlock(RemoveBlock),
-    MoveBlock(MoveBlock),
-    ReplaceBlock(ReplaceBlock),
-    UpdateStep(UpdateStep),
     ChangeTitle(ChangeTitle),
 }
 //#endregion 🔖️Mutations
 
-pub use super::add_block::{add_block_operation, AddBlock};
-pub use super::add_step::{add_step_operation, AddStep};
 pub use super::change_title::{change_title_operation, ChangeTitle};
-pub use super::move_block::{move_block_operation, MoveBlock};
-pub use super::move_step::{move_step_operation, MoveStep};
-pub use super::remove_block::{remove_block_operation, RemoveBlock};
-pub use super::remove_step::{remove_step_operation, RemoveStep};
-pub use super::replace_block::{replace_block_operation, ReplaceBlock};
-pub use super::update_step::{update_step_operation, UpdateStep};
 
 /// ▶️ Applies `mutation` via its diff. External call site: `derived_construction`'s
 /// `ArtifactBuilder::mutate` (`../🦀️.rs`).
@@ -59,17 +44,19 @@ pub fn apply_playbook_mutation(snapshot: &PlaybookSnapshot, mutation: &PlaybookM
 }
 
 /// ↩️ Computes `mutation`'s inverse from the pre-state `snapshot`.
-pub fn inverse_playbook_mutation(snapshot: &PlaybookSnapshot, mutation: &PlaybookMutation) -> Vec<PlaybookMutation> {
-    protocol::Mutation::inverse(mutation, snapshot)
+pub fn inverse_playbook_mutation(snapshot: &PlaybookSnapshot, mutation: &PlaybookMutation) -> Result<Vec<PlaybookMutation>, semio_framework_value::ValueError> {
+    Ok({
+    protocol::Mutation::inverse(mutation, snapshot)?
+
+    })
 }
 
 //#region 🔖️Kinds
 /// 🏷️ Kebab-case spelling of every [`PlaybookMutation`] variant, in declaration order — the vocabulary the
-/// `playbook-1-any` mutation catalog (`../../🔣️oracle.json`) declares and the
-/// exhaustive `mutate-*` case measures itself against (3 step kinds, 4 block kinds, one step-header patch and the document title). The framework never
-/// parses Rust, so `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest
-/// against both the enum and the committed catalog.
-pub const KINDS: &[&str] = &["add-step", "remove-step", "move-step", "add-block", "remove-block", "move-block", "replace-block", "update-step", "change-title"];
+/// `playbook-1-any` mutation catalog (`../../🔮️oracles/🔣️.json`) declares and the exhaustive `mutate-*` case measures itself
+/// against. The framework never parses Rust, so `kinds_match_the_enum_and_the_catalog` keeps this list honest against both the
+/// enum and the committed catalog.
+pub const KINDS: &[&str] = &["change-title"];
 
 /// 🧮️ Applies `mutation` to `base` and hands back the whole `protocol::MutationOutcome`, the
 /// diagnostics included — the shape an external conformance host needs, since a committed
@@ -85,45 +72,31 @@ pub fn apply_playbook_mutation_outcome(snapshot: &mut PlaybookSnapshot, mutation
 /// returns. Reachable from outside this crate, which `protocol::Mutation` itself is not — the
 /// `protocol` extern-crate alias is private to `🦀️.rs`.
 // 🚫️async: E1 pure computation over an in-memory snapshot, consumed from a synchronous external test host — see R9
-pub fn inverse_playbook_mutation_steps(mutation: &PlaybookMutation, base: &PlaybookSnapshot) -> Vec<PlaybookMutation> {
-    <PlaybookMutation as protocol::Mutation<PlaybookSnapshot>>::inverse(mutation, base)
+pub fn inverse_playbook_mutation_steps(mutation: &PlaybookMutation, base: &PlaybookSnapshot) -> Result<Vec<PlaybookMutation>, semio_framework_value::ValueError> {
+    Ok({
+    <PlaybookMutation as protocol::Mutation<PlaybookSnapshot>>::inverse(mutation, base)?
+
+    })
 }
 
 /// 📥️ Decodes the internally-tagged (`{"mutation": "<camelCaseVariant>", …}`) projection the
 /// committed `<slug>/🧪️tests/<fixture>/🦠️mutation/🔣️.json` vectors carry.
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
 pub fn decode_playbook_mutation_json(text: &str) -> Result<PlaybookMutation, String> {
-    protocol::json::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 
 /// 📥️ Decodes a committed `📸️snapshot/{⬅️before,➡️after}/🔣️.json` vector.
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
 pub fn decode_playbook_snapshot_json(text: &str) -> Result<PlaybookSnapshot, String> {
-    protocol::json::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 
 /// 📤️ The snapshot as the same canonical JSON the committed vectors are written in — the
 /// projection an external test host compares through.
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
 pub fn encode_playbook_snapshot_json(snapshot: &PlaybookSnapshot) -> String {
-    protocol::json::to_json_string(snapshot)
-}
-/// 🌱 Attaches the working scene to this snapshot's exact composed `flow` child handle from a
-/// committed `[PlaybookStep]` JSON document, and hands back what it decoded.
-///
-/// This subset's persisted snapshot holds only the child HANDLE; the live rows behind it are an
-/// ephemeral, session-side scene that a fresh process has never populated. A committed
-/// `📸️snapshot/⬅️before/🔣️.json` vector is therefore only HALF of a before-state, and the
-/// other half lives today in each leaf's own `🧪️tests/<fixture>/🦀️.rs` as a Rust literal.
-/// An external conformance host cannot reach that, so this bridge lets the scene half travel as
-/// DATA — the exhaustive `🌾️mutate-playbook-1` case carries it in its own `Examples` table, with the leaf
-/// it was read from cited there. The right long-term fix is to commit the scene beside the snapshot
-/// as a fixture file of its own; until then this is the seam that makes the vectors runnable.
-// 🚫️async: E1 pure computation over an in-memory snapshot, consumed from a synchronous external test host — see R9
-pub fn seed_playbook_scene_json(snapshot: &mut PlaybookSnapshot, steps_json: &str) -> Result<Vec<crate::PlaybookStep>, String> {
-    let steps: Vec<crate::PlaybookStep> = protocol::json::from_json_str(steps_json).map_err(|error| error.to_string())?;
-    crate::attach_playbook_steps(&mut snapshot.flow, steps.clone());
-    Ok(steps)
+    semio_framework_pack_json::to_json_string(snapshot)
 }
 //#endregion 🔖️Kinds
 

@@ -143,14 +143,14 @@ impl crate::ToValue for ArtifactHash {
 impl crate::FromValue for ArtifactHash {
     fn from_value(value: crate::DslValue) -> Result<Self, crate::ValueError> {
         let crate::DslValue::Array(items) = value else {
-            return Err(crate::ValueError::new(format!("expected an array for ArtifactHash, found {value:?}")));
+            return Err(crate::ValueError::new(protocol::value::ValueRefusalKind::InvalidValue,format!("expected an array for ArtifactHash, found {value:?}")));
         };
         if items.len() != 32 {
-            return Err(crate::ValueError::new(format!("expected exactly 32 bytes for ArtifactHash, found {}", items.len())));
+            return Err(crate::ValueError::new(protocol::value::ValueRefusalKind::InvalidValue,format!("expected exactly 32 bytes for ArtifactHash, found {}", items.len())));
         }
         let mut bytes = [0u8; 32];
         for (index, item) in items.into_iter().enumerate() {
-            bytes[index] = item.as_u64().and_then(|value| u8::try_from(value).ok()).ok_or_else(|| crate::ValueError::new(format!("expected an integer byte at ArtifactHash.{index}")))?;
+            bytes[index] = item.as_u64().and_then(|value| u8::try_from(value).ok()).ok_or_else(|| crate::ValueError::new(protocol::value::ValueRefusalKind::InvalidValue,format!("expected an integer byte at ArtifactHash.{index}")))?;
         }
         Ok(Self(bytes))
     }
@@ -274,7 +274,7 @@ pub fn valid_user_preference_record_v1(schema: &str, mutation: &str) -> bool {
     schema_ok
         && mutation.len() >= 2
         && mutation.len() <= USER_PREFERENCE_MUTATION_MAX_BYTES
-        && matches!(crate::os_pack::json::from_json_str::<crate::DslValue>(mutation), Ok(crate::DslValue::Object(_)))
+        && matches!(semio_framework_pack_json::from_json_str::<crate::DslValue>(mutation, semio_framework_pack_json::JsonMemberPolicy::Reject), Ok(crate::DslValue::Object(_)))
 }
 
 #[derive(Clone, Debug, PartialEq, ToValue)]
@@ -323,7 +323,7 @@ fn directory_event_page_has_control(value: &crate::DslValue) -> bool {
 
 /// 🛡️ Admits one fully assigned event into the durable directory log and bounded page protocol.
 pub fn validate_directory_event_page_event(event: &DirectoryEvent) -> Result<(), DirectoryEventPageErrorV1> {
-    let encoded = crate::os_pack::json::to_json_string(event);
+    let encoded = semio_framework_pack_json::to_json_string(event);
     if let DirectoryEventBody::DocumentIndexed { scope, descriptor_digest_v1, entry } = &event.body {
         if !entry.validate() || descriptor_digest_v1.0 == [0; 32] || event.space_id.as_deref() != Some(scope.space_id.as_str()) || event.user_id.as_ref().is_none_or(|author| author.is_empty() || author.len() > 256) {
             return Err(DirectoryEventPageErrorV1::Invalid);
@@ -344,7 +344,7 @@ pub fn validate_directory_event_page_event(event: &DirectoryEvent) -> Result<(),
 impl DirectoryEventPageV1 {
     /// 🧾️ Returns the canonical UTF-8 JSON covered by `receiptSha256`.
     pub fn canonical_unsigned_json(&self) -> String {
-        crate::os_pack::json::to_json_string(&DirectoryEventPageReceiptV1 {
+        semio_framework_pack_json::to_json_string(&DirectoryEventPageReceiptV1 {
             schema: self.schema.clone(),
             session_binding_sha256: self.session_binding_sha256.clone(),
             authorization_generation: self.authorization_generation,
@@ -385,7 +385,7 @@ impl DirectoryEventPageV1 {
         if !self.receipt_matches() {
             return Err(DirectoryEventPageErrorV1::ReceiptMismatch);
         }
-        if crate::os_pack::json::to_json_string(self).len() > DIRECTORY_EVENT_PAGE_MAX_BYTES {
+        if semio_framework_pack_json::to_json_string(self).len() > DIRECTORY_EVENT_PAGE_MAX_BYTES {
             return Err(DirectoryEventPageErrorV1::TooLarge);
         }
         Ok(())
@@ -396,8 +396,8 @@ impl DirectoryEventPageV1 {
         if json.len() > DIRECTORY_EVENT_PAGE_MAX_BYTES {
             return Err(DirectoryEventPageErrorV1::TooLarge);
         }
-        let page: Self = crate::os_pack::json::from_json_str(json).map_err(|_| DirectoryEventPageErrorV1::Invalid)?;
-        if crate::os_pack::json::to_json_string(&page) != json {
+        let page: Self = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| DirectoryEventPageErrorV1::Invalid)?;
+        if semio_framework_pack_json::to_json_string(&page) != json {
             return Err(DirectoryEventPageErrorV1::Invalid);
         }
         page.validate()?;
@@ -614,7 +614,7 @@ pub fn mint_directory_command_request_id() -> String {
 
 /// 🔐️ The one canonical command digest both the hub and every client derive independently.
 pub fn directory_command_sha256(command: &DirectoryCommand) -> String {
-    semio_framework_hash::sha256_hex(crate::os_pack::json::to_json_string(command).as_bytes())
+    semio_framework_hash::sha256_hex(semio_framework_pack_json::to_json_string(command).as_bytes())
 }
 
 impl DirectoryCommandRequestV1 {
@@ -625,7 +625,7 @@ impl DirectoryCommandRequestV1 {
 
     /// 🧾️ Returns the canonical UTF-8 JSON that both peers hash and count bytes over.
     pub fn canonical_json(&self) -> String {
-        crate::os_pack::json::to_json_string(self)
+        semio_framework_pack_json::to_json_string(self)
     }
 
     /// ✅️ Checks the closed envelope, the correlation grammar, and the request byte ceiling.
@@ -644,7 +644,7 @@ impl DirectoryCommandRequestV1 {
         if json.len() > DIRECTORY_COMMAND_REQUEST_MAX_BYTES {
             return Err(DirectoryCommandErrorCodeV1::TooLarge);
         }
-        let request: Self = crate::os_pack::json::from_json_str(json).map_err(|_| DirectoryCommandErrorCodeV1::Invalid)?;
+        let request: Self = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| DirectoryCommandErrorCodeV1::Invalid)?;
         if request.canonical_json() != json {
             return Err(DirectoryCommandErrorCodeV1::Invalid);
         }
@@ -656,7 +656,7 @@ impl DirectoryCommandRequestV1 {
 impl DirectoryCommandReceiptV1 {
     /// 🧾️ Returns the canonical UTF-8 JSON covered by `receiptSha256`.
     pub fn canonical_unsigned_json(&self) -> String {
-        crate::os_pack::json::to_json_string(&DirectoryCommandReceiptUnsignedV1 {
+        semio_framework_pack_json::to_json_string(&DirectoryCommandReceiptUnsignedV1 {
             schema: self.schema.clone(),
             request_id: self.request_id.clone(),
             command_sha256: self.command_sha256.clone(),
@@ -707,7 +707,7 @@ impl DirectoryCommandReceiptV1 {
         if !self.receipt_matches() {
             return Err(DirectoryCommandErrorCodeV1::Invalid);
         }
-        if crate::os_pack::json::to_json_string(self).len() > DIRECTORY_COMMAND_RECEIPT_MAX_BYTES {
+        if semio_framework_pack_json::to_json_string(self).len() > DIRECTORY_COMMAND_RECEIPT_MAX_BYTES {
             return Err(DirectoryCommandErrorCodeV1::TooLarge);
         }
         Ok(())
@@ -718,8 +718,8 @@ impl DirectoryCommandReceiptV1 {
         if json.len() > DIRECTORY_COMMAND_RECEIPT_MAX_BYTES {
             return Err(DirectoryCommandErrorCodeV1::TooLarge);
         }
-        let receipt: Self = crate::os_pack::json::from_json_str(json).map_err(|_| DirectoryCommandErrorCodeV1::Invalid)?;
-        if crate::os_pack::json::to_json_string(&receipt) != json || receipt.request_id != request.request_id || receipt.command_sha256 != directory_command_sha256(&request.command) {
+        let receipt: Self = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| DirectoryCommandErrorCodeV1::Invalid)?;
+        if semio_framework_pack_json::to_json_string(&receipt) != json || receipt.request_id != request.request_id || receipt.command_sha256 != directory_command_sha256(&request.command) {
             return Err(DirectoryCommandErrorCodeV1::Invalid);
         }
         receipt.validate()?;
@@ -1244,7 +1244,7 @@ impl DirectorySpaceAdministrationPageV1 {
                 capabilities: *capabilities,
             },
         };
-        crate::os_pack::json::to_json_string(&receipt)
+        semio_framework_pack_json::to_json_string(&receipt)
     }
 
     /// 🔐️ Verifies the lowercase SHA-256 receipt over the declaration-ordered unsigned page.
@@ -1325,7 +1325,7 @@ impl DirectorySpaceAdministrationPageV1 {
         if !self.receipt_matches() {
             return Err(DirectorySpaceAdministrationPageErrorV1::ReceiptMismatch);
         }
-        if crate::os_pack::json::to_json_string(self).len() > DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES {
+        if semio_framework_pack_json::to_json_string(self).len() > DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES {
             return Err(DirectorySpaceAdministrationPageErrorV1::TooLarge);
         }
         Ok(())
@@ -1336,8 +1336,8 @@ impl DirectorySpaceAdministrationPageV1 {
         if json.len() > DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES {
             return Err(DirectorySpaceAdministrationPageErrorV1::TooLarge);
         }
-        let page: Self = crate::os_pack::json::from_json_str(json).map_err(|_| DirectorySpaceAdministrationPageErrorV1::Invalid)?;
-        if crate::os_pack::json::to_json_string(&page) != json {
+        let page: Self = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| DirectorySpaceAdministrationPageErrorV1::Invalid)?;
+        if semio_framework_pack_json::to_json_string(&page) != json {
             return Err(DirectorySpaceAdministrationPageErrorV1::Invalid);
         }
         page.validate()?;

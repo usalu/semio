@@ -21,7 +21,7 @@ fn the_editor_declares_both_panes_and_a_fifty_fifty_row_layout() {
     let definition = create_grid2d_editor();
     assert!(definition.window_kinds.iter().any(|window| window.id == grid::WINDOW_KIND_ID));
     assert!(definition.window_kinds.iter().any(|window| window.id == preview::WINDOW_KIND_ID));
-    let layout = dsl::json::to_json_string(&edit::layout());
+    let layout = semio_framework_pack_json::to_json_string(&edit::layout());
     assert!(layout.contains(grid::WINDOW_KIND_ID) && layout.contains(preview::WINDOW_KIND_ID), "{layout}");
     assert!(layout.contains("50"), "the two panes share the row evenly: {layout}");
 }
@@ -157,10 +157,10 @@ fn the_example_switcher_resolves_exactly_the_bundled_ids() {
 /// was — re-picking the boot example is not an edit.
 #[test]
 fn switching_example_loads_a_document_instead_of_journalling_an_edit() {
-    let command = <Grid2dEditor as ArtifactEditor>::command_from_action("setActiveExample", Some(&dsl::DslValue::Object(vec![("exampleId".into(), dsl::DslValue::String("terrain".into()))]))).expect("decode");
+    let command = <Grid2dEditor as ArtifactEditor>::command_from_action("setActiveExample", Some(&semio_framework_value::DslValue::Object(vec![("exampleId".into(), semio_framework_value::DslValue::String("terrain".into()))]))).expect("decode");
     assert_eq!(command, Grid2dEditorCommand::SetActiveExample { example_id: "terrain".into() });
     assert_eq!(
-        <Grid2dEditor as ArtifactEditor>::command_from_action("setActiveExample", Some(&dsl::DslValue::Object(vec![("id".into(), dsl::DslValue::String("pipes".into()))]))).expect("decode"),
+        <Grid2dEditor as ArtifactEditor>::command_from_action("setActiveExample", Some(&semio_framework_value::DslValue::Object(vec![("id".into(), semio_framework_value::DslValue::String("pipes".into()))]))).expect("decode"),
         Grid2dEditorCommand::SetActiveExample { example_id: "pipes".into() },
         "the navbar's alternative argument spelling decodes to the same command"
     );
@@ -186,12 +186,12 @@ fn a_canvas_press_on_the_grid_pins_the_cell_under_the_pointer() {
     assert_eq!(
         <Grid2dEditor as ArtifactEditor>::command_from_action(
             "canvasPointerDown",
-            Some(&dsl::DslValue::Object(vec![
-                ("surfaceId".into(), dsl::DslValue::String(grid::SURFACE_ID.into())),
-                ("x".into(), dsl::DslValue::Number(dsl::Number::Float(400.0))),
-                ("y".into(), dsl::DslValue::Number(dsl::Number::Float(300.0))),
-                ("width".into(), dsl::DslValue::Number(dsl::Number::Float(800.0))),
-                ("height".into(), dsl::DslValue::Number(dsl::Number::Float(600.0))),
+            Some(&semio_framework_value::DslValue::Object(vec![
+                ("surfaceId".into(), semio_framework_value::DslValue::String(grid::SURFACE_ID.into())),
+                ("x".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(400.0))),
+                ("y".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(300.0))),
+                ("width".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(800.0))),
+                ("height".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(600.0))),
             ]))
         )
         .expect("decode"),
@@ -204,15 +204,15 @@ fn a_canvas_press_on_the_grid_pins_the_cell_under_the_pointer() {
 /// the action it was admitted under — but they write the same camera.
 #[test]
 fn both_camera_spellings_decode_to_their_own_command() {
-    let nested = dsl::DslValue::Object(vec![(
+    let nested = semio_framework_value::DslValue::Object(vec![(
         "camera".into(),
-        dsl::DslValue::Object(vec![("x".into(), dsl::DslValue::Number(dsl::Number::Float(4.0))), ("y".into(), dsl::DslValue::Number(dsl::Number::Float(5.0))), ("zoom".into(), dsl::DslValue::Number(dsl::Number::Float(2.0)))]),
+        semio_framework_value::DslValue::Object(vec![("x".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(4.0))), ("y".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(5.0))), ("zoom".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(2.0)))]),
     )]);
     assert_eq!(
         <Grid2dEditor as ArtifactEditor>::command_from_action("setCamera", Some(&nested)).expect("decode"),
         Grid2dEditorCommand::SyncCamera { x: 4.0, y: 5.0, zoom: 2.0 }
     );
-    let flat = dsl::DslValue::Object(vec![("x".into(), dsl::DslValue::Number(dsl::Number::Float(4.0))), ("y".into(), dsl::DslValue::Number(dsl::Number::Float(5.0))), ("zoom".into(), dsl::DslValue::Number(dsl::Number::Float(2.0)))]);
+    let flat = semio_framework_value::DslValue::Object(vec![("x".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(4.0))), ("y".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(5.0))), ("zoom".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(2.0)))]);
     assert_eq!(
         <Grid2dEditor as ArtifactEditor>::command_from_action("set-camera", Some(&flat)).expect("decode"),
         Grid2dEditorCommand::SetCamera { x: 4.0, y: 5.0, zoom: 2.0 }
@@ -246,7 +246,7 @@ fn the_solve_command_starts_the_fill_run() {
         emit.effects.iter().any(|effect| match effect {
             semio_framework::kernel::Effect::DispatchAction { action, args: Some(args), .. } => {
                 action == semio_framework_tool_run::TOOL_RUN_START_ACTION_ID
-                    && matches!(args, dsl::DslValue::Object(entries) if entries.iter().any(|(key, value)| key == semio_framework_tool_run::TOOL_RUN_ARG_TOOL_ID && matches!(value, dsl::DslValue::String(text) if text == fill_tool::TOOL_ID)))
+                    && matches!(args, semio_framework_value::DslValue::Object(entries) if entries.iter().any(|(key, value)| key == semio_framework_tool_run::TOOL_RUN_ARG_TOOL_ID && matches!(value, semio_framework_value::DslValue::String(text) if text == fill_tool::TOOL_ID)))
             }
             _ => false,
         }),
@@ -266,7 +266,7 @@ fn the_commit_fill_command_writes_solve_json() {
     let mut view = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     view.window_id = Some("preview-1".into());
     view.window_instances = vec![semio_framework::ViewWindowInstance { id: "preview-1".into(), window_kind_id: preview::WINDOW_KIND_ID.into() }];
-    let solve_json = protocol::json::to_json_string(&commit);
+    let solve_json = semio_framework_pack_json::to_json_string(&commit);
     let emit = Grid2dEditor::dispatch(&Grid2dEditorCommand::CommitFill { solve_json: solve_json.clone() }, &doc, &cfg, Some(&view)).expect("commit-fill writes");
     assert_eq!(emit.window_config_mutations.len(), 1);
 }
@@ -303,3 +303,5 @@ fn the_owned_factory_tool_ids_publication_contracts_and_proofs_are_one_exact_ros
 fn the_editor_declares_the_artifact_kind_it_edits() {
     assert_eq!(create_grid2d_editor().artifact_kinds, vec![crate::artifact_kind()]);
 }
+
+semio_framework_plugin::history_edit_acceptance_law!("wfc", super::Grid2dEditor, || semio_framework_plugin::App { definition: super::create_grid2d_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");

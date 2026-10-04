@@ -1,0 +1,5 @@
+# Bun Inline Exception Validation
+
+During the foreign witness review, two inline Bun research programs ended without their final proof/ready files, despite exit0. Root checked file existence and did not publish or claim success. A direct deliberate throw without require exited1 with an error; after require("fs"), require("crypto") or require("jsonc-parser"), the same inline deliberate throw produced exit0 with no error output in Bun1.3.14 on macOS arm64. An explicit process.exit(7) retained exit7. The observed distinction belongs to these inline eval calls; no conclusion about file-based tasks or bun:test behavior follows from it.
+
+Root switched the admission writer to explicit try/catch logging and process.exit(1/2), and separately confirmed the written ready authority and final emitted check counts. The failed candidates and reasons remain unadmitted; Ready6 was created only after the complete current guard check passed. Research validation requires positive completion evidence and retained artifacts, not a zero exit code alone. No permanent runtime or task code was changed for this observation.

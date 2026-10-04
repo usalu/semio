@@ -9,13 +9,13 @@ const VALIDATE_GRANT: JobBudget = JobBudget { fuel: WORK_UNITS_VALIDATE, deadlin
 // 🚫️async: E1 pure fixture encoder consumed by the sync `format!` call sites below; the payload it
 // encodes has no await of its own.
 fn io_hop_input(source: &str, target: &str, text: &str) -> Vec<u8> {
-    let payload = dsl::os_pack::json::to_json_string(&semio_framework::io_schema::IoPayload::Text(text.to_string()));
+    let payload = semio_framework_pack_json::to_json_string(&semio_framework::io_schema::IoPayload::Text(text.to_string()));
     format!("{{\"source\":\"{source}\",\"target\":\"{target}\",\"payload\":{payload}}}").into_bytes()
 }
 
 // 🚫️async: E1 pure fault reader consumed by every sync assertion below.
 fn fault_code(bytes: &[u8]) -> String {
-    dsl::decode_fault_bytes(bytes).code.0
+    semio_framework_diagnostic::decode_fault_bytes(bytes).code.0
 }
 
 //#region 🔖️PreRewriteParity

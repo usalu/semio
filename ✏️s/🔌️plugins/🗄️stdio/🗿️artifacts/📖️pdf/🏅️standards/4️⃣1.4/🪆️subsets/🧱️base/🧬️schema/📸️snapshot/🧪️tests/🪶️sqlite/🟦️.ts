@@ -5,6 +5,29 @@ import { parsePdfSnapshot } from "../../🟦️.ts";
 import { PDF14_SQLITE_SCHEMA, pdf14SnapshotToSqliteDatabase, pdf14SnapshotFromSqliteDatabase } from "../../🪶️sqlite/🟦️.ts";
 import { exportSqliteDatabase, importSqliteDatabase } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 
+test("PDF1.4 complete concrete backing contract keeps all page words and literal text", async () => {
+  const plan = await Bun.file(new URL("../../🪶️sqlite/🧫️fixtures/🔢ieee.json", import.meta.url)).json();
+  expect(plan.backing).toEqual({ authority: "completeSystemAllocatorRequests", phases: ["projectSnapshot", "reconstructSnapshot"], ceilings: ["zero", "exact", "oneBelow", "cumulative"], cancellation: ["start", "materializedInterior"], diagnosticOwnership: "actualCapacity", retirementRefund: false });
+  const { default: Ajv } = await import("ajv/dist/2020");
+  const schema = await Bun.file(new URL("../../🪶️sqlite/🧫️fixtures/💰️backing/🧬️schema/🔣️.json", import.meta.url)).json();
+  const validate = new Ajv({ strict: true }).compile(schema);
+  expect(validate(plan.backing)).toBe(true);
+  for (const invalid of [{ ...plan.backing, extra: true }, { ...plan.backing, retirementRefund: true }, { ...plan.backing, authority: "estimatedSlots" }, { ...plan.backing, cancellation: ["start"] }]) expect(validate(invalid)).toBe(false);
+  for (const item of plan.binary64) {
+    const raw = BigInt(`0x${item.bits}`);
+    const buffer = Buffer.alloc(8); buffer.writeBigUInt64BE(raw);
+    const decoded = buffer.readDoubleBE();
+    expect(Number.isNaN(decoded) ? "nan" : decoded === Infinity ? "positiveInfinity" : decoded === -Infinity ? "negativeInfinity" : "finite").toBe(item.class);
+    const expected = { schema: "literal\0世界", pages: [{ width: { bits: raw }, height: { bits: raw }, text: "page\0😀" }] };
+    const sql = Database.deserialize(await exportSqliteDatabase(await pdf14SnapshotToSqliteDatabase(expected)), { safeIntegers: true });
+    try {
+      expect(sql.query("PRAGMA foreign_key_check").all()).toEqual([]);
+      expect(sql.query("SELECT ordinal,text,CAST(width_bits AS TEXT) AS bits FROM pdf14_page").get()).toEqual({ ordinal: 0n, text: expected.pages[0]!.text, bits: BigInt.asIntN(64, raw).toString() });
+      expect(await pdf14SnapshotFromSqliteDatabase(await importSqliteDatabase(sql.serialize()))).toEqual(expected);
+    } finally { sql.close(); }
+  }
+});
+
 test("PDF1.4 native-neutral fixture is complete and independently editable", async () => {
   expect(PDF14_SQLITE_SCHEMA).toBe(await Bun.file(new URL("../../🪶️sqlite/🗄️.sql", import.meta.url)).text());
   const snapshot = parsePdfSnapshot(await Bun.file(new URL("../../🪶️sqlite/🧫️fixtures/🔣️.json", import.meta.url)).json());

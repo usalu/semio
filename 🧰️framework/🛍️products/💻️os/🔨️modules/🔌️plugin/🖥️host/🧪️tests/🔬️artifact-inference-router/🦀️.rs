@@ -63,3 +63,50 @@ async fn live_revision_and_generation_change_rejects_the_terminal_candidate() {
         semio_framework_job::CommitValidation::Stale { live_revision: semio_framework_job::RevisionId(8), live_generation: semio_framework_job::Generation(10) }
     ));
 }
+
+/// 🪆️ LAW (design §20.15): a composed document's owned children travel with its inference — the requester's `child:` entries stay
+/// first on the routed request, the `depends_on` results follow, and every dependency request carries the same children.
+#[semio_framework_async_macros::async_test]
+async fn a_composed_documents_children_reach_every_routed_inference_request() {
+    let child = |slot: &str, id: &str, pack: u8| (format!("child:{slot}/{id}"), vec![pack]);
+    let requested = vec![child("content", "c1", 1), child("content", "c2", 2)];
+    let base = InferenceRouteRequest {
+        wire_version: 2,
+        owner: "s.test".into(),
+        artifact_kind: "s.test".into(),
+        artifact_schema: "s.test".into(),
+        artifact_schema_version: 1,
+        inference_schema: "s.test.summary".into(),
+        inference_schema_version: 1,
+        algorithm_version: 1,
+        policy_version: 1,
+        revision: 7,
+        generation: 9,
+        source_dialect: "s.test.standard.v1.dialect.canonical".into(),
+        policy: Vec::new(),
+        budgets: InferenceRouteBudget { allocation_bytes: 128, work_units: 4, recursion_depth: 2 },
+        cancellation_id: "cancel-1".into(),
+        previous_state: None,
+        requested_cache_mode: InferenceRouteCacheMode::Cold,
+        canonical_payload: vec![9],
+        dependencies: requested.clone(),
+    };
+    let dependency = GuestArtifactInferenceMetadata {
+        owner: "s.test".into(),
+        artifact_kind: "s.test".into(),
+        artifact_schema: "s.test".into(),
+        artifact_schema_version: 1,
+        inference_schema: "s.test.outline".into(),
+        inference_schema_version: 1,
+        algorithm_version: 1,
+        policy_version: 1,
+        contributor: None,
+        depends_on: Vec::new(),
+        payload: None,
+    };
+    let dependency_request = build_dependency_inference_request(&base, &dependency).await;
+    assert_eq!(dependency_request.dependencies, requested, "a dependency inference reads the same owned children");
+    let routed = routed_inference_dependencies(base.dependencies.clone(), vec![("s.test.outline".into(), vec![7])]);
+    assert_eq!(routed, vec![child("content", "c1", 1), child("content", "c2", 2), ("s.test.outline".into(), vec![7])]);
+    assert_eq!(routed_inference_dependencies(Vec::new(), vec![("s.test.outline".into(), vec![7])]), vec![("s.test.outline".to_string(), vec![7])], "a non-composed request is unchanged");
+}

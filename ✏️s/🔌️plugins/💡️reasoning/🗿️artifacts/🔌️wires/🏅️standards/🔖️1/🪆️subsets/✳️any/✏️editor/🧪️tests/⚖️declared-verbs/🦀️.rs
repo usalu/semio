@@ -15,5 +15,6 @@ async fn every_declared_wires_verb_honours_its_declaration() {
     let canvas = &relate.windows[0];
     assert_eq!(canvas.arguments.iter().map(|argument| argument.argument.as_str()).collect::<Vec<_>>(), ["sourceId", "targetId", "kind"], "every declared argument is perturbed");
     assert!(declared_verb_wrote_document(&canvas.arguments[2].first) && declared_verb_wrote_document(&canvas.arguments[2].second), "both kinds write an edge");
-    assert_eq!(declared_verb_agent_divergences(&probes), ["setActiveExample"], "the agent lane previews no operation for a LoadDocument example switch");
+    let findings = probes.iter().map(|probe| format!("{}: {:?}", probe.verb, probe.agent)).collect::<Vec<_>>();
+    assert_eq!(declared_verb_agent_divergences(&probes), ["setActiveExample"], "the agent lane previews no operation for a LoadDocument example switch: {findings:#?}");
 }

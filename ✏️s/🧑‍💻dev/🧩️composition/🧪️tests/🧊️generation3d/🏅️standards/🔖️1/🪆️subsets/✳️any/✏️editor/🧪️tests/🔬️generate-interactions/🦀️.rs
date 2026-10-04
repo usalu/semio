@@ -203,7 +203,7 @@ fn the_rename_bridge_reads_every_spelling_the_commit_can_arrive_under() {
     let _serial = serial_execution::lock();
     let fixture = generate_interactions_fixture();
     for spelling in &fixture.rename_commit_argument.guest_reads {
-        let args: dsl::DslValue = serde_json::json!({ "id": "generation-1", spelling.as_str(): "Balcony Study" }).into();
+        let args: semio_framework_value::DslValue = serde_json::json!({ "id": "generation-1", spelling.as_str(): "Balcony Study" }).into();
         let command = <semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action("renameGeneration", Some(&args)).expect("renameGeneration bridges");
         let semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dCommand::RenameGeneration(payload) = command else { panic!("renameGeneration must bridge to its own row") };
         assert_eq!(payload.name, "Balcony Study", "the guest must read the rename text under `{spelling}`");

@@ -3,8 +3,8 @@ use crate::schema::mutations::JsonMutation;
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 pub const TEXT_OPCODES: &[&str] = &["set-member", "remove-member", "insert-array-element", "remove-array-element", "set-scalar", "patch-snapshot"];
-fn error(detail: impl Into<String>) -> store::TextError {
-    store::TextError::new(detail.into(), dsl::TextSpan::at(1, 1))
+fn error(detail: impl Into<String>) -> semio_framework_diagnostic::TextError {
+    semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail.into(), semio_framework_diagnostic::TextSpan::at(1, 1))
 }
 fn encode_hex(bytes: &[u8]) -> String {
     const HEX: &[u8; 16] = b"0123456789abcdef";
@@ -29,14 +29,14 @@ fn decode_hex(value: &str) -> Result<Vec<u8>, String> {
 }
 impl protocol::OpText for JsonMutation {
     fn print_op(&self) -> String {
-        format!("json-mutation payload={}", encode_hex(pack::json_to_string(&pack::json_from_dsl_value(&dsl::ToValue::to_value(self))).as_bytes()))
+        format!("json-mutation payload={}", encode_hex(semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(self))).as_bytes()))
     }
 
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let value = line.strip_prefix("json-mutation payload=").ok_or_else(|| error("expected aggregate payload"))?;
         let bytes = decode_hex(value).map_err(error)?;
         let text = std::str::from_utf8(&bytes).map_err(|cause| error(cause.to_string()))?;
-        let parsed = pack::parse_json(text).map_err(|cause| error(cause.to_string()))?;
-        <Self as dsl::FromValue>::from_value(pack::json_to_dsl_value(&parsed)).map_err(|cause| error(cause.to_string()))
+        let parsed = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|cause| error(cause.to_string()))?;
+        <Self as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|cause| error(cause.to_string()))
     }
 }

@@ -1,5 +1,6 @@
 syntax = "proto3";
 package semio.s.lowpoly.lowpoly.diff;
+import "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🕸️mesh/🛰️.proto";
 import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
 import "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
 
@@ -37,6 +38,7 @@ message LowpolyObjectPatch {
   // ArtifactChild-or-null convention, same as `LowpolyObject.mesh`).
   semio.os.store.ArtifactChild mesh = 4;
   optional string mesh_content = 5;
+  optional LowpolyMeshStateSlot mesh_state = 6;
 }
 
 message LowpolyPaintLayersDelta {
@@ -72,3 +74,5 @@ message PixelRun {
   uint32 offset = 1;
   string bytes = 2;
 }
+
+message LowpolyMeshStateSlot { optional semio.s.lowpoly.lowpoly.artifact.LowpolyMeshState state = 1; }

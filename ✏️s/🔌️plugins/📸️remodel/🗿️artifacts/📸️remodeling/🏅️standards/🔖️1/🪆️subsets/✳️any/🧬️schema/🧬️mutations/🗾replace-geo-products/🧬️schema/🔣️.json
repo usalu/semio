@@ -32,7 +32,8 @@
           "de": "DOM-, DGM- und Orthofoto-Raster; leer entfernt sie."
         },
         "group": "result",
-        "order": 10
+        "order": 10,
+        "widget": "hidden"
       }
     }
   }

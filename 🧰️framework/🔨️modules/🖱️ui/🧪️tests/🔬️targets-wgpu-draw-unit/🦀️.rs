@@ -289,7 +289,7 @@ fn raster_interrupted_upload_close_is_truthful_before_first_and_mid_page() {
         let reservation = RasterTextureReservation { key, witness, content_identity, width: 64, height: 64, bytes: 16 * 1024, staged_index: 53, nonce: 59 };
         let admission = RasterTextureAdmission { key, witness, content_identity, width: 64, height: 64, bytes: 16 * 1024, staged_index: 53, nonce: 59 };
         let claim = RasterTextureStageClaim { reservation, candidate: witness, staged_index: 53, staged_nonce: 59 };
-        let mut close = RasterTextureUploadCloseCursor::new(RasterTextureUploadCursor { admission: Some(admission), row, texture: None, view: None, bind_group: None, allocation_claim: Some(claim), cpu_release: None });
+        let mut close = RasterTextureUploadCloseCursor::new(RasterTextureUploadCursor {mip_levels:1,mip:1,mip_row:0, admission: Some(admission), row, texture: None, view: None, bind_group: None, allocation_claim: Some(claim), cpu_release: None });
         let mut steps = 0;
         loop {
             steps += 1;
@@ -466,7 +466,7 @@ fn mesh_instances_without_lines_are_valid_world_pass() {
         draws: vec![SceneDraw3d {
             mesh_key: "box".into(),
             mesh_version: 1,
-            instances: vec![Instance3d { id: "preview".into(), model: Instance3d::model_from_trs([0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0], [1.0, 1.0, 1.0]), color: [0.7, 0.7, 0.75, 1.0], selected: false, hovered: false, material: Default::default() }],
+            instances: vec![Instance3d { component_source: None, id: "preview".into(), model: Instance3d::model_from_trs([0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0], [1.0, 1.0, 1.0]), color: [0.7, 0.7, 0.75, 1.0], selected: false, hovered: false, material: Default::default() }],
             shadow_role: Default::default(),
         }],
         ..Default::default()
@@ -494,7 +494,7 @@ fn offscreen_shadow_channel_is_measured_and_progressively_retired() {
         shadow_draws: vec![SceneDraw3d {
             mesh_key: "offscreen-caster".into(),
             mesh_version: 7,
-            instances: vec![Instance3d { id: "caster".into(), model: Instance3d::model_from_trs([0.0; 3], [0.0, 0.0, 0.0, 1.0], [1.0; 3]), color: [1.0; 4], selected: false, hovered: false, material: Default::default() }],
+            instances: vec![Instance3d { component_source: None, id: "caster".into(), model: Instance3d::model_from_trs([0.0; 3], [0.0, 0.0, 0.0, 1.0], [1.0; 3]), color: [1.0; 4], selected: false, hovered: false, material: Default::default() }],
             shadow_role: SceneShadowRole3d { casts: true, receives: true },
         }],
         ..Default::default()
@@ -665,7 +665,10 @@ fn every_painted_shader_edit_finds_its_anchor_in_the_lit_shader_once() {
 #[test]
 fn a_native_gpu_context_creates_every_pipeline_without_a_validation_error() {
     match semio_framework_async::block_on(crate::wgpu::gpu::GpuContext::headless(1, 1)) {
-        Ok(_) => {}
+        Ok(_) => {
+            if let Some(root)=std::env::var_os("SEMIO_TEST_ARTIFACT_DIR"){let root=std::path::PathBuf::from(root);std::fs::create_dir_all(&root).unwrap();std::fs::write(root.join("world3d-authored.wgsl"),crate::wgpu::shaders::world3d_authored_shader()).unwrap();std::fs::write(root.join("raster-mip.wgsl"),crate::wgpu::shaders::RASTER_MIP_SHADER).unwrap();}
+            eprintln!("[DEBUG] native GPU created authored pipelines with five texture roles and four alpha/culling combinations");
+        }
         Err(error) => assert!(error.starts_with("offscreen adapter:"), "a native GPU context refused past adapter selection: {error}"),
     }
 }

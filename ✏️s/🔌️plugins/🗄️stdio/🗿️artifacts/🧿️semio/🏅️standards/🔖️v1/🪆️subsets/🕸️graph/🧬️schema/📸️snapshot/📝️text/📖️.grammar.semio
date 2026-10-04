@@ -19,15 +19,15 @@ nodes-line = "nodes" "=" "[" node-list? "]"
 edges-line = "edges" "=" "[" edge-list? "]"
 
 node-list = node {"," node}*
-node = "[" hex "," hex "," hex "," hex "," hex "," "[" port-list? "]" "," "[" property-list? "]" "]"
+node = "[" hex "," hex "," hex "," hex "," hex "," hex "," hex "," "[" port-list? "]" "," "[" property-list? "]" "]"
 port-list = port {"," port}*
-port = "[" hex "," port-kind "]"
+port = "[" hex "," port-kind "," hex "," "[" property-list? "]" "]"
 port-kind = "i" | "o" | "x"
 property-list = property {"," property}*
 property = hex ":" value
 
 edge-list = edge {"," edge}*
-edge = "[" hex "," hex "," hex "," hex "," hex "]"
+edge = "[" hex "," hex "," hex "," hex "," hex "," optional-text "," optional-text "," "[" property-list? "]" "]"
 
 # `value` is the `🔢️value` subset's own `SemioValue` grammar production (tag-prefixed `Z`/`B[...]`/
 # `I[...]`/`F[...]`/`S[...]`/`Y[...]`/`L[...]`/`M[...]`/`R[...]`), reused verbatim by
@@ -43,3 +43,5 @@ bit = "0" | "1"
 # `hex` MACRO (`📖️grammar/🦀️.rs`'s `default_macros`) — every hex-encoded `schema`/node
 # `id`/`kind`/`label`/`x`/`y`/port `name`/property key routes through it. `Symbol::Ref`'s
 # production→macro fallback resolves bare `hex` automatically, with real backtracking.
+
+optional-text = "-" | "[" hex "]"

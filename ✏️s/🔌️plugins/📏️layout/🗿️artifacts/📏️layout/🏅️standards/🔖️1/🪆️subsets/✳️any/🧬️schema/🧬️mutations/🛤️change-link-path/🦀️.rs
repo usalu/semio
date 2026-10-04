@@ -22,9 +22,12 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangeLinkPath {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_change_link_path(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
-        inverse_change_link_path(self, base)
-    }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok({
+        inverse_change_link_path(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change link \"{}\" path", self.id), &format!("Pfad von Verknüpfung \"{}\" ändern", self.id))
     }
@@ -40,7 +43,7 @@ pub fn diff_change_link_path(payload: &ChangeLinkPath, base: &LayoutSnapshot) ->
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Link \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if link.path == payload.new_path {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Link \"{}\" already has path \"{}\".", payload.id, payload.new_path));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Link \"{}\" already has path \"{}\".", payload.id, payload.new_path));
     }
     protocol::MutationOutcome::new(LayoutDiff {
         links: Some(LayoutLinksDelta { patched: vec![LayoutLinkPatchEntry { id: payload.id.clone(), patch: ImageLinkPatch { path: Some(payload.new_path.clone()), ..Default::default() } }], ..Default::default() }),
@@ -50,10 +53,13 @@ pub fn diff_change_link_path(payload: &ChangeLinkPath, base: &LayoutSnapshot) ->
 //#endregion 🔗ChangeLinkPath
 
 //#region 🔗ChangeLinkPath
-pub fn inverse_change_link_path(payload: &ChangeLinkPath, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_change_link_path(payload: &ChangeLinkPath, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.links.iter().find(|link| link.id == payload.id) {
         Some(link) => vec![LayoutMutation::ChangeLinkPath(ChangeLinkPath { id: payload.id.clone(), new_path: link.path.clone() })],
         None => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🔗ChangeLinkPath

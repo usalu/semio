@@ -4,7 +4,7 @@
 
 use crate::editor::ifc4_any::modes::edit;
 use crate::editor::ifc4_any::modes::edit::windows::main;
-use crate::standards::v4::subsets::any::schema::mutations::{set_snapshot as snapshot_edit_set_snapshot, IfcMutation};
+use crate::standards::v4::subsets::any::schema::mutations::{patch_snapshot, set_snapshot as snapshot_edit_set_snapshot, IfcMutation};
 use crate::standards::v4::subsets::any::schema::snapshot::IfcSnapshot;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
@@ -61,11 +61,11 @@ impl protocol::OpBinary for Ifc4AnyEditCommand {
     const TOOL_JOB_IDS: &'static [&'static str] = IFC4_ANY_DOCUMENT_SCHEMA_COMMAND_TOOL_IDS;
 
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(pack::to_json_string(self).into_bytes())
+        Ok(semio_framework_pack_json::to_json_string(self).into_bytes())
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let parsed = pack::parse_json_bytes(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "Ifc4AnyEditCommand", offset: 0, detail: error.to_string() })?;
-        <Self as dsl::FromValue>::from_value(pack::json_to_dsl_value(&parsed)).map_err(|error| protocol::ProtocolError::Malformed { what: "Ifc4AnyEditCommand", offset: 0, detail: error.to_string() })
+        let parsed = semio_framework_pack_json::parse_bytes(bytes, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Malformed { what: "Ifc4AnyEditCommand", offset: 0, detail: error.to_string() })?;
+        <Self as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|error| protocol::ProtocolError::Malformed { what: "Ifc4AnyEditCommand", offset: 0, detail: error.to_string() })
     }
 }
 //#endregion 🔖️Command
@@ -85,12 +85,15 @@ const IFC4_ANY_DOCUMENT_SCHEMA_COMMAND_TOOL_IDS: &[&str] = &[
 const IFC4_ANY_DOCUMENT_SCHEMA_EXAMPLE_SCHEMA: &str = "stdio.ifc.tool-command.v1";
 const IFC4_ANY_DOCUMENT_SCHEMA_EXAMPLE_BYTES: usize = 8_192;
 
-fn ifc4AnyEditor_example_snapshot(example_id: &str) -> IfcSnapshot {
-    if example_id == crate::examples::demo::ID {
-        <IfcSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
-    } else {
-        IfcSnapshot::default()
+fn ifc4AnyEditor_example_snapshot(example_id: &str) -> Result<IfcSnapshot, Fault> {
+    if example_id != crate::examples::ifc4_demo::ID {
+        return Err(Fault::new(semio_framework_diagnostic::FaultOrigin::App, semio_framework_value::ValueRefusalKind::InvalidValue.as_str(), "unknown IFC4 example"));
     }
+    <IfcSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::ifc4_demo::PRIMARY_TEXT).map_err(|error| {
+        let mut fault = Fault::new(semio_framework_diagnostic::FaultOrigin::App, error.kind.as_str(), error.message);
+        fault.span = Some(error.span);
+        fault
+    })
 }
 
 fn ifc4AnyEditor_command_id(command: &Ifc4AnyEditCommand) -> &'static str {
@@ -101,7 +104,7 @@ fn ifc4AnyEditor_command_id(command: &Ifc4AnyEditCommand) -> &'static str {
     }
 }
 
-fn ifc4AnyEditor_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Ifc4AnyEditCommand, Fault> {
+fn ifc4AnyEditor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Ifc4AnyEditCommand, Fault> {
     if editing::is_snapshot_edit_action(action) { return editing::snapshot_edit_event_from_action(action, args).and_then(|event| event.map(|event| Ifc4AnyEditCommand::EditSnapshot { event }).ok_or_else(|| Fault::from(format!("action '{action}' is not a snapshot edit")))); }
     match action {
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(Ifc4AnyEditCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
@@ -125,7 +128,7 @@ fn ifc4AnyEditor_retained_reduce(
 ) -> Result<Emit<IfcMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     match command {
         Ifc4AnyEditCommand::SetActiveExample { example_id } => Ok(Emit {
-            effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&ifc4AnyEditor_example_snapshot(example_id), IFC4_ANY_DOCUMENT_SCHEMA)],
+            effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&ifc4AnyEditor_example_snapshot(example_id)?, IFC4_ANY_DOCUMENT_SCHEMA)],
             ..Default::default()
         }),
         _ => Err(Fault::from("stdio-example-retained-route-mismatch")),
@@ -173,7 +176,7 @@ pub struct Ifc4AnyEditor;
 impl ArtifactEditor for Ifc4AnyEditor {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
     fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
-        vec![crate::examples::demo::source()]
+        vec![crate::examples::ifc4_demo::source()]
     }
     type Snapshot = IfcSnapshot;
     type Mutation = IfcMutation;
@@ -248,7 +251,7 @@ impl ArtifactEditor for Ifc4AnyEditor {
 
     fn command_id(command: &Self::Command) -> &'static str { ifc4AnyEditor_command_id(command) }
 
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> { ifc4AnyEditor_command_from_action(action, args) }
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> { ifc4AnyEditor_command_from_action(action, args) }
 
     fn initial_snapshot() -> IfcSnapshot {
         IfcSnapshot::default()
@@ -266,7 +269,7 @@ impl ArtifactEditor for Ifc4AnyEditor {
         match command {
             Ifc4AnyEditCommand::EditSnapshot { event } => <Self as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, _doc.snapshot),
             Ifc4AnyEditCommand::SetActiveExample { example_id } => Ok(Emit {
-                effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&ifc4AnyEditor_example_snapshot(example_id), IFC4_ANY_DOCUMENT_SCHEMA)],
+                effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&ifc4AnyEditor_example_snapshot(example_id)?, IFC4_ANY_DOCUMENT_SCHEMA)],
                 ..Default::default()
             }),
         }
@@ -275,7 +278,7 @@ impl ArtifactEditor for Ifc4AnyEditor {
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
-            editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details(doc.snapshot, view_state.locale, "s.stdio.ifc@4/*#editor", &semio_framework_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
+            editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details(doc, view_state.locale, "s.stdio.ifc@4/*#editor", &semio_framework_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -288,7 +291,7 @@ impl editing::SnapshotEditingEditor for Ifc4AnyEditor {
         match command { Ifc4AnyEditCommand::EditSnapshot { event } => Some(event), _ => None }
     }
     fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| IfcMutation::SetSnapshot(snapshot_edit_set_snapshot::SetSnapshot { snapshot: snapshot }))
+        editing::snapshot_edit_patch(event, snapshot, |patch| IfcMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| IfcMutation::SetSnapshot(snapshot_edit_set_snapshot::SetSnapshot { snapshot: snapshot })))
     }
 }
 
@@ -296,7 +299,7 @@ impl editing::SnapshotEditingEditor for Ifc4AnyEditor {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_ifc4_any_editor() -> semio_framework_plugin::AppDefinition {
     let builder = Editor::builder(IFC4_ANY_DIALECT).document(["stdio", "ifc4"]).icon_id("box").mode_def(edit::definition()).default_mode_id(edit::IFC4_ANY_EDIT_MODE_ID).window_kind_def(main::definition()).window_kind_def(editing::snapshot_details_window_definition()).default_layout(edit::layout()).action_with(semio_s_artifact_stdio_contract::set_active_example_action())
-        .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(crate::examples::demo::ID, crate::examples::demo::label())], crate::examples::demo::ID))
+        .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(crate::examples::ifc4_demo::ID, crate::examples::ifc4_demo::label())], crate::examples::ifc4_demo::ID))
         .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)
         .action_describe(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_description())
         .action_interactive_job(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, InteractiveJobClassification::Migrated)

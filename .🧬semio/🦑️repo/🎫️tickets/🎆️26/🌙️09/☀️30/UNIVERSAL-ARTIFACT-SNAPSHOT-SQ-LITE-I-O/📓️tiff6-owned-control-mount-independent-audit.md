@@ -1,0 +1,29 @@
+# TIFF6 Owned Control Mount Independent Audit
+
+## Scope and authority
+
+Read-only source audit on 2026-10-03. Read staging record, TIFF document ordinary I/O, controlled decoding/encoding drafts, seventeen-table DDL, Rust projection/reconstruction, cohort native laws, and kernel reconstruction accounting. No Cargo invocation, build, native execution, production edit, Git mutation or worktree. Source 10 laws / 134 assertions and public 10 exports are prior Root-authorized receipts, not newly executed here. Native remains RED until Root reruns. Supplied authentic baseline: Nextest ec40f3f4-9408-42d6-a7fb-9d58e5fe1dc0, 7 passed / 7 failed / 101 outside, 120ms.
+
+Paths below are relative to `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document` unless specified. Concurrent mounting work is intentionally untouched.
+
+## Findings
+
+1. **Required existing RED fix:** `🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs:29` still adds a hidden metadata row at each IFD/tag census in the observed revision. Domain projection contains precisely document + document pixels + two rows per IFD + tag + actual typed values, including one ASCII component. Replace the two `rows+1` checks with `rows`; envelope metadata has its own owner. Mount hooks in the same impl and modules in ordinary I/O after the authentic baseline, as already assigned to implementation lane.
+
+2. **Performance:** `🚪️io/🛬️decoding/🦀️.rs:40` and `🚪️io/🛫️encoding/🦀️.rs:21` sort via insertion swaps. Reverse-ordered maximum TIFF6 directories permit roughly 2.147 billion swaps per directory. Each swap is cancellable, but this regresses ordinary stable `sort_by_key` and violates maximum-performance intent. Prefer an admitted stable O(n log n) merge-sort scratch buffer with bounded checkpoints. Preserve equal-tag order; unstable sorting changes duplicate-tag external behavior. Decoder secondary pointer removal in `read` also repeats `Vec::remove` and can shift quadratic data when many duplicate pointer entries occur; stable retain/compaction with checkpoints avoids that.
+
+3. **Exact native-input row ceiling nuance:** decoder `census` counts all wire tags and typed values before `read` removes secondary StripOffsets/StripByteCounts. It therefore admits wire-domain transient rows, not precisely the returned normalized snapshot rows. With secondary strips, a ceiling equal to returned semantic rows can be rejected. If max_rows intentionally limits wire entries, document that scope explicitly; otherwise census must count retained semantic entries while still validating and budgeting every transient native allocation. Existing fourteen laws do not isolate this edge.
+
+4. **Owned reconstruction memory gap:** `🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs:55-78` creates BTreeSet/BTreeMap indexes, reference vectors, IFD/tag vectors and twelve `collect` vectors without charging their actual backing allocations. Kernel `SqliteSnapshotControl::check_database` in `🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🦀️.rs:145` checks cell payload bytes and reserves scalar bytes; it does not cover map nodes/vector capacity. `reconstruct_text`/`reconstruct_blob` do cumulatively admit actual owned text/blob copies. Thus the controlled external drafts have stronger concrete allocator admission than semantic SQL reconstruction. This is an audit gap, not an observed runtime failure; do not claim aggregate container allocation limits from the fourteen current laws.
+
+## Positive source checks
+
+The authored seventeen tables cover document schema and endian, ordered IFD/tag relationships, independently declared field/value kinds, all twelve actual value variants, separate document RGBA and IFD raw pixels. Projection never infers kind from declared field kind; reconstruction retains duplicate tag numbers and ordered components, validates identities, ownership, zero-based ordinals, exact component shapes and numeric ranges, and restores empty typed vectors. Literal empty/NUL/Unicode schemas are retained. Float/double exact bits and class companions use existing first-party insert/read IEEE helpers; external codec directly reads/writes endian u32/u64 words with from_bits/to_bits, without converting unsigned bit words through numeric float values.
+
+External Text genuinely uses the semio DSL envelope plus hex TIFF; Binary uses the semio Pack envelope plus TIFF. The boundary intentionally normalizes primary raster fields, secondary strip pointers and schema, and does not claim arbitrary owned-state fidelity. The final physical output limit subtracts genuine prefix bytes before hex multiplication and final buffers. Input checks genuine payload bytes. Encoder borrows values and admits directory/entry layout and final buffer; decoder admits snapshot, IFDs, tags, twelve actual value vector widths, bounded lossy UTF-8 text, strip buffers, raster and RGBA. Metadata copy and output writing include real interior stages; there is no ordinary fallback. Local intermediate ownership drops on refusal; no partial snapshot/result escapes.
+
+Rust semantic typed SQLite remains the full owned fidelity boundary. Existing approximate preflight is separate from concrete controlled hooks; fresh Root runtime receipts must establish which public/bare capabilities actually dispatch through newly mounted hooks. Comments and prior staging still say unmounted in this observed revision; those are not runtime authority.
+
+## Needed runtime evidence
+
+Root fourteen-law rerun after mounting; exact returned-row ceiling with secondary strip removal; reverse-sorted duplicate-tag stable ordering/performance; real long Unicode metadata cancellation independently of the outer text hex stage; one-byte-under exact external file limits in both modes; aggregate reconstruction allocation limits if those are claimed. No result above asserts these tests passed.

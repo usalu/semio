@@ -1,0 +1,14 @@
+# 🌱️ Native graph properties retain six semantic variants and exact numeric words.
+union PropertyValue = PropertyNull | PropertyBoolean | PropertyNumber | PropertyString | PropertyArray | PropertyObject
+type PropertyNull { kind: String! }
+type PropertyBoolean { value: Boolean! }
+type PropertyNumber { ieee754Bits: String! }
+type PropertyString { value: String! }
+type PropertyArray { values: [PropertyValue!]! }
+type PropertyObject { values: [PropertyValueEntry!]! }
+type PropertyValueEntry { key: String!, value: PropertyValue! }
+
+# import Binary64WordInput from "🧰️framework/🔨️modules/🌱️value/🧬️schema/🔗️.graphql"
+enum PropertyNullTag { NULL }
+input PropertyValueInput @oneOf { null: PropertyNullTag boolean: Boolean number: Binary64WordInput string: String array: [PropertyValueInput!] object: [PropertyValueEntryInput!] }
+input PropertyValueEntryInput { key: String! value: PropertyValueInput! }

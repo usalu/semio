@@ -19,7 +19,10 @@ pub struct SetPageGuides {
 impl MutationKind<LayoutSnapshot, LayoutMutation> for SetPageGuides {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "page-guides", kind: "set-page-guides", record: "SetPageGuides" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> { diff_set_page_guides(self, base) }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> { inverse_set_page_guides(self, base) }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok({ inverse_set_page_guides(self, base)? 
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Set guides on page \"{}\"", self.id), &format!("Hilfslinien von Seite \"{}\" setzen", self.id)) }
     fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }
@@ -36,14 +39,17 @@ pub fn diff_set_page_guides(payload: &SetPageGuides, base: &LayoutSnapshot) -> p
         return protocol::MutationOutcome::fatal("mutation.invariant", "A page has at most 64 guides, and each guide origin and size must be finite with a non-negative size.", std::iter::empty::<String>());
     }
     if page.guides == payload.guides {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Page guides are already set to that value.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Page guides are already set to that value.");
     }
     protocol::MutationOutcome::new(LayoutDiff { pages: Some(LayoutPagesDelta { patched: vec![LayoutPagePatchEntry { id: payload.id.clone(), patch: PagePatch { guides: Some(payload.guides.clone()), ..Default::default() } }], ..Default::default() }), ..Default::default() })
 }
 
-pub fn inverse_set_page_guides(payload: &SetPageGuides, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_set_page_guides(payload: &SetPageGuides, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.id) else { return Vec::new() };
     vec![LayoutMutation::SetPageGuides(SetPageGuides { id: page.id.clone(), guides: page.guides.clone() })]
+
+    })())
 }
 
 #[cfg(test)]

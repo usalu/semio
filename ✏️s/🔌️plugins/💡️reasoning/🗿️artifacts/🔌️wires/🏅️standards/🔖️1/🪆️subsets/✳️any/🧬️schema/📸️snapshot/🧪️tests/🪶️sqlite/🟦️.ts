@@ -72,3 +72,20 @@ test("Wires admits reconstruction lookup ownership before materializing independ
   await expect(own.wiresSnapshotFromSqliteDatabase(physical,{maxValueBytes:fixture.metadataValueBudget})).rejects.toThrow();
  }finally{independent.close();}
 });
+
+import AjvNativeCensus from "ajv";
+test("Wires native semantic census closed contract agrees with complete independent SQL values",async()=>{
+ const file=Bun.file(new URL("../../🧫️fixtures/🪶️sqlite/🧮️census/🔣️.json",import.meta.url));expect(await file.exists()).toBe(true);
+ const contract=await file.json(),schema=await Bun.file(new URL("./🧮️census/🔣️.json",import.meta.url)).json(),validate=new AjvNativeCensus({strict:true,allErrors:true}).compile(schema);
+ expect(validate(contract)).toBe(true);expect(contract.owner).toBe("wires");expect(validate({...contract,unknown:true})).toBe(false);expect(validate({...contract,scalarBytes:0})).toBe(false);
+ expect(contract.encodings).toEqual(["binary","text"]);expect(contract.directions).toEqual(["decodeNative","encodeNative"]);expect(contract.grants).toEqual(["exact","minusOne","zero"]);
+ for(const word of fixture.floatWords){
+  const complete=snapshot();if(complete.meta.kind!=="array")throw new Error("complete meta fixture");complete.meta.items.push({kind:"float",value:{bits:BigInt("0x"+word)}});
+  const database=await (await import("../../🪶️sqlite/🟦️.ts")).wiresSnapshotToSqliteDatabase(complete),independent=Database.deserialize(await exportSqliteDatabase(database),{safeIntegers:true});
+  try{let expected=0,actual=0;for(const table of database.tables){for(const row of table.rows)for(const value of row.values)expected+=value===null?0:typeof value==="number"||typeof value==="bigint"?8:typeof value==="string"?Buffer.byteLength(value,"utf8"):value.length;
+   const columns=independent.query('PRAGMA table_info("'+table.name.replaceAll('"','""')+'")').all()as{name:string}[];
+   for(const{name}of columns){const identifier='"'+name.replaceAll('"','""')+'"',query='SELECT COALESCE(SUM(CASE typeof('+identifier+') WHEN \'null\' THEN 0 WHEN \'integer\' THEN 8 WHEN \'real\' THEN 8 ELSE length(CAST('+identifier+' AS BLOB)) END),0) AS bytes FROM "'+table.name.replaceAll('"','""')+'"';actual+=Number((independent.query(query).get()as{bytes:number|bigint}).bytes);}}
+   expect(actual).toBe(expected);expect(actual).toBeGreaterThan(1);expect(independent.query("PRAGMA foreign_key_check").all()).toEqual([]);
+  }finally{independent.close();}
+ }
+});

@@ -17,9 +17,12 @@ impl protocol::MutationKind<XlsxSnapshot, XlsxTransitionalMutation> for SetConfo
     fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<<XlsxTransitionalMutation as Mutation<XlsxSnapshot>>::Diff> {
         agg_diff(&XlsxTransitionalMutation::SetConformanceAttribute(self.clone()), base)
     }
-    fn inverse(&self, base: &XlsxSnapshot) -> Vec<XlsxTransitionalMutation> {
-        agg_inverse(&XlsxTransitionalMutation::SetConformanceAttribute(self.clone()), base)
-    }
+    fn inverse(&self, base: &XlsxSnapshot) -> Result<Vec<XlsxTransitionalMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&XlsxTransitionalMutation::SetConformanceAttribute(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set conformance attribute", "Konformitätsattribut setzen")
     }

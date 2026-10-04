@@ -33,15 +33,15 @@ pub fn definition() -> WindowKindDefinition {
 /// to field names a live peer ticket may still be refactoring.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn entity_count(document: &SemioCadSnapshot) -> usize {
-    dsl::ToValue::to_value(document).as_object().map_or(0, |object| object.iter().filter_map(|(_, field)| field.as_array().map(|array| array.len())).max().unwrap_or(0)).clamp(1, 6)
+    semio_framework_value::ToValue::to_value(document).as_object().map_or(0, |object| object.iter().filter_map(|(_, field)| field.as_array().map(|array| array.len())).max().unwrap_or(0)).clamp(1, 6)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn world_instances_json(document: &SemioCadSnapshot) -> String {
     let count = entity_count(document);
-    let instances: Vec<pack::JsonValue> = (0..count)
+    let instances: Vec<semio_framework_pack_json::Value> = (0..count)
         .map(|index| {
-            pack::json!({
+            semio_framework_pack_json::json!({
                 "id": format!("semio_cad-{index}"),
                 "meshId": SEMIO_CAD_VIEW_FALLBACK_MESH_KIND,
                 "position": [index as f64 * 2.0, 0.0, 0.0],
@@ -52,7 +52,7 @@ fn world_instances_json(document: &SemioCadSnapshot) -> String {
             })
         })
         .collect();
-    pack::json_to_string(&pack::JsonValue::Array(instances))
+    semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(instances))
 }
 
 /// 👁️ Pure `SemioCadSnapshot -> BuiltNode` read: default camera (a viewer has no persisted
@@ -60,7 +60,7 @@ fn world_instances_json(document: &SemioCadSnapshot) -> String {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn render(document: &SemioCadSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let mesh_data_value = semio_framework_value::ToValue::to_value(&mesh_from_kind(SEMIO_CAD_VIEW_FALLBACK_MESH_KIND));
-    let meshes_json = pack::json_to_string(&pack::JsonValue::Array(vec![pack::json!({ "id": SEMIO_CAD_VIEW_FALLBACK_MESH_KIND, "data": pack::json_from_dsl_value(&mesh_data_value) })]));
+    let meshes_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(vec![semio_framework_pack_json::json!({ "id": SEMIO_CAD_VIEW_FALLBACK_MESH_KIND, "data": semio_framework_pack_json::from_dsl_value(&mesh_data_value) })]));
     let view = MeshView {
         camera_json: world3d_camera_json(SEMIO_CAD_VIEW_DEFAULT_CAMERA_POSITION, SEMIO_CAD_VIEW_DEFAULT_CAMERA_TARGET, SEMIO_CAD_VIEW_DEFAULT_CAMERA_FOV),
         meshes_json,

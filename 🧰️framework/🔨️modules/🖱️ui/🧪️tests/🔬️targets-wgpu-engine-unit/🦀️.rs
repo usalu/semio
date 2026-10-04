@@ -378,7 +378,7 @@ fn window_clock_keeps_a_noop_candidate_sealed_and_invalidates_it_once_when_hold_
     assert!(ui.window_next_clock_deadline(window_id).is_some_and(|(_, deadline)| deadline.is_some()), "discarding the hidden candidate preserves the accepted hold");
     assert!(ui.surfaces_next_clock_deadline(&accepted).is_some(), "discard preserves the accepted roster deadline");
     let window = ui.windows.get_mut(window_id).expect("clock window");
-    window.presented_tooltip = Some(PresentedTooltip { surface, document_id: UiNodeId(2), label: "Increase".into(), accessibility_generation: window.presented_accessibility_generation, interaction_epoch: window.presented_interaction_epoch });
+    window.presented_tooltip = Some(PresentedTooltip { surface, document_id: UiNodeId(2), label: "Increase".into(), accessibility_generation: window.presented_accessibility_generation, interaction_epoch: window.presented_interaction_epoch, row_action: None });
     assert!(ui.seal_presented_input_candidate(74, &[]));
     assert!(ui.acknowledge_presented_input(74), "accepting an empty visibility roster retires hidden clock owners");
     assert_eq!(ui.window_next_clock_deadline(window_id), Some((surface, None)));
@@ -579,7 +579,7 @@ fn accepted_control_tooltip_reveals_after_dwell_paints_in_overlay_and_dismisses_
     ui.dispatch_pointer_event(window_id, 1, UiEvent::PointerMove { x: 0.0, y: 179.0, modifiers: Default::default() });
     assert!(ui.windows.get(window_id).expect("tooltip window").presented_tooltip.is_none(), "pointer leave dismisses without another clock tick");
     let window = ui.windows.get_mut(window_id).expect("tooltip window");
-    window.presented_tooltip = Some(PresentedTooltip { surface, document_id: UiNodeId(2), label: expected_label.into(), accessibility_generation: window.presented_accessibility_generation, interaction_epoch: window.presented_interaction_epoch });
+    window.presented_tooltip = Some(PresentedTooltip { surface, document_id: UiNodeId(2), label: expected_label.into(), accessibility_generation: window.presented_accessibility_generation, interaction_epoch: window.presented_interaction_epoch, row_action: None });
     assert!(ui.begin_surface_close(surface));
     assert!(ui.windows.get(window_id).expect("closing tooltip window").presented_tooltip.is_none(), "surface close retires the accepted tooltip record");
 }

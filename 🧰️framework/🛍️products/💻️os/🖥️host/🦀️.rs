@@ -10,7 +10,10 @@ pub mod host {
     use crate::space;
     use crate::workflow;
     use protocol::Mutation;
-    use protocol::{DslValue, FromValue, ToValue, ValueError};
+    use semio_framework_value::DslValue;
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
+use semio_framework_value::ValueError;
     use semio_framework::{AppDefinition, PluginManifest, TopicContribution, ViewModel};
     use serde::{Deserialize, Serialize};
     use std::collections::{HashMap, HashSet};
@@ -397,7 +400,7 @@ pub mod host {
             if let Some(backbone) = &self.backbone {
                 fields.push(("backbone".to_string(), backbone.to_value()));
             }
-            DslValue::Object(fields)
+            semio_framework_value::DslValue::Object(fields)
         }
     }
 
@@ -407,8 +410,8 @@ pub mod host {
     /// actually optional on the wire in practice, but this preserves exact prior leniency).
     impl<P: FromValue, Op: FromValue> FromValue for BackboneDocument<P, Op> {
         fn from_value(value: DslValue) -> Result<Self, ValueError> {
-            let DslValue::Object(fields) = value else {
-                return Err(ValueError::new(format!("expected an object for BackboneDocument, found {value:?}")));
+            let semio_framework_value::DslValue::Object(fields) = value else {
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for BackboneDocument, found {value:?}")));
             };
             let mut schema = None;
             let mut id = None;
@@ -432,10 +435,10 @@ pub mod host {
                 }
             }
             Ok(BackboneDocument {
-                schema: schema.ok_or_else(|| ValueError::new("BackboneDocument missing schema"))?,
-                id: id.ok_or_else(|| ValueError::new("BackboneDocument missing id"))?,
-                name: name.ok_or_else(|| ValueError::new("BackboneDocument missing name"))?,
-                vcs: vcs.ok_or_else(|| ValueError::new("BackboneDocument missing vcs"))?,
+                schema: schema.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "BackboneDocument missing schema"))?,
+                id: id.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "BackboneDocument missing id"))?,
+                name: name.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "BackboneDocument missing name"))?,
+                vcs: vcs.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "BackboneDocument missing vcs"))?,
                 transitions: transitions.unwrap_or_default(),
                 edit_messages: edit_messages.unwrap_or_default(),
                 conflicts: conflicts.unwrap_or_default(),
@@ -447,7 +450,8 @@ pub mod host {
     impl<P, Op: Mutation<P>> BackboneDocument<P, Op> {
         /// 🧮️ The edits the event log leaves applied, in fold order — what a projection replays.
         pub fn applied_edit_ids(&self) -> Result<Vec<String>, VcsError> {
-            store::fold_event_log::<P, Op>(&self.id, &self.vcs.edits.iter().collect::<Vec<_>>(), &self.transitions, &self.conflicts).map(|fold| fold.applied)
+            let head = protocol::ViewerHead::canonical_trunk(&protocol::ArtifactId(self.id.clone()));
+            store::fold_event_log::<P, Op>(&self.id, &self.vcs.edits.iter().collect::<Vec<_>>(), &self.transitions, &self.conflicts, &head).map(|fold| fold.applied)
         }
     }
 
@@ -502,6 +506,7 @@ pub mod host {
             migrated_from: None,
             owner: None,
             lanes: std::collections::BTreeMap::new(),
+            viewer_checkpoint_id: None,
             edit_messages: store::ArtifactEditMessageLedger::from_preflighted_entries(document.edit_messages.clone()),
             conflicts: document.conflicts.clone(),
             transitions: document.transitions.clone(),
@@ -621,8 +626,8 @@ pub mod host {
                 true
             } else {
                 conflicts.push(protocol::MutationMessage {
-                    level: dsl::Severity::Warning,
-                    code: dsl::FaultCode::new("workflow/edge-orphaned"),
+                    level: semio_framework_diagnostic::Severity::Warning,
+                    code: semio_framework_diagnostic::FaultCode::new("workflow/edge-orphaned"),
                     message: format!("edge {} references a node or port that no longer exists ({}:{} -> {}:{})", edge.id, edge.source_node_id, edge.source_port_id, edge.target_node_id, edge.target_port_id),
                     target: vec![edge.id.clone()],
                     op_index: None,
@@ -644,8 +649,8 @@ pub mod host {
                 Ok(contract) if contract == edge.contract => true,
                 Ok(_) => {
                     conflicts.push(protocol::MutationMessage {
-                        level: dsl::Severity::Warning,
-                        code: dsl::FaultCode::new("workflow/edge-type-mismatch"),
+                        level: semio_framework_diagnostic::Severity::Warning,
+                        code: semio_framework_diagnostic::FaultCode::new("workflow/edge-type-mismatch"),
                         message: format!("edge {} contract stale: no longer matches negotiated port types", edge.id),
                         target: vec![edge.id.clone()],
                         op_index: None,
@@ -654,8 +659,8 @@ pub mod host {
                 }
                 Err(reason) => {
                     conflicts.push(protocol::MutationMessage {
-                        level: dsl::Severity::Warning,
-                        code: dsl::FaultCode::new("workflow/edge-type-mismatch"),
+                        level: semio_framework_diagnostic::Severity::Warning,
+                        code: semio_framework_diagnostic::FaultCode::new("workflow/edge-type-mismatch"),
                         message: format!("edge {} connects ports whose types no longer match: {reason}", edge.id),
                         target: vec![edge.id.clone()],
                         op_index: None,
@@ -738,8 +743,8 @@ pub mod host {
             let Some(newest_cycle_edge_index) = newest_cycle_edge_index else { break };
             let dropped = edges.remove(newest_cycle_edge_index);
             conflicts.push(protocol::MutationMessage {
-                level: dsl::Severity::Warning,
-                code: dsl::FaultCode::new("workflow/edge-cycle"),
+                level: semio_framework_diagnostic::Severity::Warning,
+                code: semio_framework_diagnostic::FaultCode::new("workflow/edge-cycle"),
                 message: format!("edge {} was dropped to break a cycle in the workflow", dropped.id),
                 target: vec![dropped.id.clone()],
                 op_index: None,
@@ -814,6 +819,7 @@ pub mod host {
                 migrated_from: None,
                 owner: None,
                 lanes: std::collections::BTreeMap::new(),
+                viewer_checkpoint_id: None,
                 edit_messages: store::ArtifactEditMessageLedger::from_preflighted_entries(document.edit_messages),
                 conflicts: document.conflicts,
                 transitions: document.transitions,
@@ -1516,7 +1522,7 @@ pub mod instance {
     //#region 🔖️Schemas
     /// 🔗️ Handle to an app's own `framework/sync`-hosted vcs document — the os document never
     /// embeds app content, only this reference (mirrors `framework/sync`'s `ArtifactActorConfig`).
-    #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, semio_framework_dsl_record_derive::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct OsArtifactRef {
         pub document_id: String,
@@ -1563,7 +1569,7 @@ pub mod instance {
         pub parameter_type: OsParameterType,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_dsl_record_derive::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct OsParameterFieldBinding {
         pub parameter_id: String,
@@ -1580,7 +1586,7 @@ pub mod instance {
         pub field_path: String,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_dsl_record_derive::DslEnum)]
     #[serde(tag = "type", rename_all = "lowercase")]
     pub enum OsParameter {
         Numeric {
@@ -1915,14 +1921,14 @@ pub mod instance {
     /// (`WorkflowNode::config_ref`), which this work package does not wire up (out of scope — see the
     /// master plan's "Config on the node" wave). Always starts from `config_spec`'s own defaults until
     /// that lands.
-    pub fn build_configure_config(node_id: &str, parameters: &[OsParameter], bindings: &[OsParameterFieldBinding], config_spec: &ConfigSpec) -> dsl::DslValue {
-        let mut config = dsl::DslValue::from(&config_spec_default_value(config_spec));
+    pub fn build_configure_config(node_id: &str, parameters: &[OsParameter], bindings: &[OsParameterFieldBinding], config_spec: &ConfigSpec) -> semio_framework_value::DslValue {
+        let mut config = semio_framework_value::DslValue::from(&config_spec_default_value(config_spec));
         let entries = match &mut config {
-            dsl::DslValue::Object(entries) => entries,
+            semio_framework_value::DslValue::Object(entries) => entries,
             _ => {
-                config = dsl::DslValue::Object(vec![]);
+                config = semio_framework_value::DslValue::Object(vec![]);
                 match &mut config {
-                    dsl::DslValue::Object(entries) => entries,
+                    semio_framework_value::DslValue::Object(entries) => entries,
                     _ => unreachable!("config object branch"),
                 }
             }
@@ -1934,7 +1940,7 @@ pub mod instance {
             let Some(parameter) = parameters.iter().find(|entry| entry.id() == binding.parameter_id) else {
                 continue;
             };
-            let value = dsl::DslValue::from(&os_parameter_value(parameter));
+            let value = semio_framework_value::DslValue::from(&os_parameter_value(parameter));
             if let Some((_, slot)) = entries.iter_mut().find(|(key, _)| key == &field.id) {
                 *slot = value;
             } else {
@@ -2266,7 +2272,7 @@ pub mod media_export_simple {
     // #region media_export_simple
     //! 🖼️ Lightweight SVG builders for simple document exports.
 
-    use semio_framework_os_kernel::json::Value;
+    use semio_framework_pack_json::Value;
 
     fn escape_svg_text(value: &str) -> String {
         value.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;")
@@ -2444,7 +2450,7 @@ pub mod workflow {
     /// SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W6.
     fn negotiate_wire_format(source: &OsArtifactDescriptor, target: &OsArtifactDescriptor) -> Result<Option<MediaWireFormat>, String> {
         if !source.schema.is_empty() && source.schema == target.schema {
-            return Ok(Some(MediaWireFormat::Document { schema: source.schema.clone() }));
+            return Ok(Some(MediaWireFormat::Intrinsic { schema: source.schema.clone() }));
         }
         if !source.export_stdio_kinds.is_empty() && !target.import_stdio_kinds.is_empty() {
             for kind in &source.export_stdio_kinds {
@@ -2647,6 +2653,7 @@ pub mod workflow {
     fn workflow_media_contract_payload(contract: &MediaContract) -> Value {
         let wire = match &contract.wire {
             MediaWireFormat::Document { schema } => json!({ "kind": "document", "schema": schema }),
+            MediaWireFormat::Intrinsic { schema } => json!({ "kind": "intrinsic", "schema": schema }),
             MediaWireFormat::Binary { format_kind } => json!({ "kind": "binary", "formatKind": format_kind }),
         };
         json!({
@@ -4829,6 +4836,7 @@ pub mod registry {
             command_grammar: crate::host::resolve_kernel_future(semio_framework::CommandGrammar::empty()),
             io,
             tutorials: Vec::new(),
+            fault_notices: Vec::new(),
         })
     }
 

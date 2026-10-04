@@ -7,9 +7,9 @@
 pub(crate) mod number;
 
 use crate::STDIO_JSON_DOCUMENT_SCHEMA;
-use dsl::TextSpan;
+use semio_framework_diagnostic::TextSpan;
 use framework_schema::ArtifactSchema;
-use store::TextError;
+use semio_framework_diagnostic::TextError;
 
 //#region 🔖️JsonModel
 /// 🍃️ One `object` member, in source order.
@@ -72,21 +72,21 @@ impl From<serde_json::Value> for JsonValue {
 /// (unlike this crate's own arbitrary-precision `Number { lexeme }`), so it round-trips through
 /// `pack::json_to_string` on a lone `Number` value — the exact bytes `pack`'s own writer would
 /// have emitted for that number inline, not a re-implementation of its float/int formatting.
-impl From<pack::JsonValue> for JsonValue {
-    fn from(v: pack::JsonValue) -> Self {
+impl From<semio_framework_pack_json::Value> for JsonValue {
+    fn from(v: semio_framework_pack_json::Value) -> Self {
         JsonValue::from(&v)
     }
 }
 
-impl From<&pack::JsonValue> for JsonValue {
-    fn from(v: &pack::JsonValue) -> Self {
+impl From<&semio_framework_pack_json::Value> for JsonValue {
+    fn from(v: &semio_framework_pack_json::Value) -> Self {
         match v {
-            pack::JsonValue::Null => JsonValue::Null,
-            pack::JsonValue::Bool(b) => JsonValue::Bool { value: *b },
-            pack::JsonValue::Number(n) => JsonValue::Number { lexeme: pack::json_to_string(&pack::JsonValue::Number(*n)) },
-            pack::JsonValue::String(s) => JsonValue::String { value: s.clone() },
-            pack::JsonValue::Array(items) => JsonValue::Array { items: items.iter().map(JsonValue::from).collect() },
-            pack::JsonValue::Object(members) => JsonValue::Object { members: members.iter().map(|(k, v)| JsonMember { key: k.to_string(), value: JsonValue::from(v) }).collect() },
+            semio_framework_pack_json::Value::Null => JsonValue::Null,
+            semio_framework_pack_json::Value::Bool(b) => JsonValue::Bool { value: *b },
+            semio_framework_pack_json::Value::Number(n) => JsonValue::Number { lexeme: semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Number(*n)) },
+            semio_framework_pack_json::Value::String(s) => JsonValue::String { value: s.clone() },
+            semio_framework_pack_json::Value::Array(items) => JsonValue::Array { items: items.iter().map(JsonValue::from).collect() },
+            semio_framework_pack_json::Value::Object(members) => JsonValue::Object { members: members.iter().map(|(k, v)| JsonMember { key: k.to_string(), value: JsonValue::from(v) }).collect() },
         }
     }
 }
@@ -96,15 +96,15 @@ impl From<&pack::JsonValue> for JsonValue {
 /// arbitrary-precision `lexeme` re-parses through `pack::parse_json` (a full round trip through
 /// the exact writer/reader pair `pack::json_to_string`/`pack::parse_json` already exercise
 /// elsewhere in this crate) rather than a second hand-rolled number lexer.
-impl From<&JsonValue> for pack::JsonValue {
+impl From<&JsonValue> for semio_framework_pack_json::Value {
     fn from(v: &JsonValue) -> Self {
         match v {
-            JsonValue::Null => pack::JsonValue::Null,
-            JsonValue::Bool { value } => pack::JsonValue::Bool(*value),
-            JsonValue::Number { lexeme } => pack::parse_json(lexeme).unwrap_or(pack::JsonValue::Null),
-            JsonValue::String { value } => pack::JsonValue::String(value.clone()),
-            JsonValue::Array { items } => pack::JsonValue::Array(items.iter().map(pack::JsonValue::from).collect()),
-            JsonValue::Object { members } => pack::json_object(members.iter().map(|member| (member.key.clone(), pack::JsonValue::from(&member.value)))),
+            JsonValue::Null => semio_framework_pack_json::Value::Null,
+            JsonValue::Bool { value } => semio_framework_pack_json::Value::Bool(*value),
+            JsonValue::Number { lexeme } => semio_framework_pack_json::parse(lexeme, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or(semio_framework_pack_json::Value::Null),
+            JsonValue::String { value } => semio_framework_pack_json::Value::String(value.clone()),
+            JsonValue::Array { items } => semio_framework_pack_json::Value::Array(items.iter().map(semio_framework_pack_json::Value::from).collect()),
+            JsonValue::Object { members } => semio_framework_pack_json::object(members.iter().map(|member| (member.key.clone(), semio_framework_pack_json::Value::from(&member.value)))),
         }
     }
 }
@@ -219,7 +219,7 @@ impl<'a> Parser<'a> {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn err(&self, message: impl Into<String>) -> TextError {
-        TextError::new(message, self.span())
+        TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message, self.span())
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -603,8 +603,8 @@ impl JsonSnapshot {
     /// 🌉️ `to_serde_value`'s first-party analog — for a caller that has stopped depending on
     /// `serde_json` and only wants `pack::json::Value`.
     // 🚫️async: E1 pure inherent-impl helper, same reason as `to_serde_value` above — see R9
-    pub fn to_pack_value(&self) -> pack::JsonValue {
-        pack::JsonValue::from(&self.value)
+    pub fn to_pack_value(&self) -> semio_framework_pack_json::Value {
+        semio_framework_pack_json::Value::from(&self.value)
     }
 }
 //#endregion 🔖️Snapshot

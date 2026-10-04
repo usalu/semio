@@ -34,8 +34,8 @@ async fn conflict_id_is_deterministic_and_content_sensitive() {
 //#region 🔖️Reports
 #[semio_framework_async_macros::async_test]
 async fn dispatch_report_carries_worst_and_messages() {
-    let report = DispatchReport { policy: crate::MergePolicy::Vigilant, worst: Some(crate::diagnostic::Severity::Warning), messages: vec![crate::MutationMessage::warn("mutation.clamped", "value clamped to range")] };
-    assert_eq!(report.worst, Some(crate::diagnostic::Severity::Warning));
+    let report = DispatchReport { policy: crate::MergePolicy::Vigilant, worst: Some(semio_framework_diagnostic::Severity::Warning), messages: vec![crate::MutationMessage::warning("mutation.clamped", "value clamped to range")] };
+    assert_eq!(report.worst, Some(semio_framework_diagnostic::Severity::Warning));
     assert_eq!(report.messages.len(), 1);
 }
 
@@ -49,7 +49,7 @@ async fn merge_report_round_trips_through_to_value() {
         accepted: true,
         insertion_index: 3,
         replayed: vec![EditMessages { edit_id: "e1".into(), messages: vec![crate::MutationMessage::info("mutation.cascade", "cascaded")] }],
-        worst: Some(crate::diagnostic::Severity::Info),
+        worst: Some(semio_framework_diagnostic::Severity::Info),
         conflict: None,
     };
     let value = crate::value::ToValue::to_value(&report);
@@ -75,9 +75,9 @@ fn replay_report_fixture_decodes_round_trips_and_gates_finalize() {
 /// 🚧️ Warnings never block finalize; one Error or Fatal anywhere in the suffix does.
 #[test]
 fn replay_report_blocks_finalize_on_error_or_fatal_only() {
-    let outcome = |worst: Option<crate::diagnostic::Severity>| MutationReplayOutcome { mutation_id: crate::ids::MutationId("op".into()), edit_id: "e".into(), op_index: 0, worst, messages: Vec::new(), superseded: false, withdrawn: false };
+    let outcome = |worst: Option<semio_framework_diagnostic::Severity>| MutationReplayOutcome { mutation_id: crate::ids::MutationId("op".into()), edit_id: "e".into(), op_index: 0, worst, messages: Vec::new(), superseded: false, withdrawn: false };
     assert!(!ReplayReport::default().blocks_finalize());
-    for (worst, blocks) in [(None, false), (Some(crate::diagnostic::Severity::Info), false), (Some(crate::diagnostic::Severity::Warning), false), (Some(crate::diagnostic::Severity::Error), true), (Some(crate::diagnostic::Severity::Fatal), true)] {
+    for (worst, blocks) in [(None, false), (Some(semio_framework_diagnostic::Severity::Info), false), (Some(semio_framework_diagnostic::Severity::Warning), false), (Some(semio_framework_diagnostic::Severity::Error), true), (Some(semio_framework_diagnostic::Severity::Fatal), true)] {
         let report = ReplayReport { from_position: 0, outcomes: vec![outcome(None), outcome(worst)], worst };
         assert_eq!(report.blocks_finalize(), blocks, "{worst:?}");
     }

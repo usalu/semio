@@ -131,7 +131,14 @@
           }
         }
       ]
-    }
+    },
+    {"kind":"float","bits":"0000000000000000"},
+    {"kind":"float","bits":"8000000000000000"},
+    {"kind":"float","bits":"0000000000000001"},
+    {"kind":"float","bits":"3ff0000000000000"},
+    {"kind":"float","bits":"7fefffffffffffff"},
+    {"kind":"float","bits":"7ff0000000000000"},
+    {"kind":"float","bits":"fff0000000000000"}
   ],
   "response": {
     "id": "response",

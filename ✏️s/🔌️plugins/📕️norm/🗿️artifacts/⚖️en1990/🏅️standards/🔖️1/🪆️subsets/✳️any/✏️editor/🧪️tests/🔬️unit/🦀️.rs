@@ -17,7 +17,7 @@ pub(crate) mod context {
     /// ð§¬ï¸ A wrapper carrying the real registry so kind discipline (View-emits-operations rejection) runs.
     pub async fn app_with_registry() -> NormApp {
         let mut app = new_app_with_registry::<EditorApp<En1990PlayApp>>(en1990_manifest_for_tests).await;
-        semio_framework::io::resolve_ready(app.bind_instance_id(meta("local").instance_id));
+        ::semio_framework_async::poll::resolve_ready(app.bind_instance_id(meta("local").instance_id));
         app
     }
 
@@ -229,7 +229,7 @@ async fn report_out_exports_the_computed_check_report() {
     let mut app = context::app_with_registry().await;
     let mut host = NormHost::<En1990Family>::from_artifact(app.snapshot().expect("projection"));
     host.evaluate();
-    let media = semio_framework_plugin::resolve_ready(PluginApp::export_media(&mut app, "report:out")).expect("export report:out");
+    let media = ::semio_framework_async::poll::resolve_ready(PluginApp::export_media(&mut app, "report:out")).expect("export report:out");
     let semio_framework_plugin::MediaPayload::Structured { schema, json } = media.payload else { panic!("expected a structured payload") };
     assert_eq!(schema, crate::app_surface::artifact_kind_id(VARIANT));
     let value: serde_json::Value = serde_json::from_str(&json).expect("report json parses");
@@ -245,10 +245,10 @@ async fn report_out_exports_the_computed_check_report() {
 async fn the_declared_snapshot_argument_carries_the_documents_json() {
     let expected = En1990Snapshot::default();
     let after = crate::standards::v1::subsets::any::schema::snapshot::encode_en1990_snapshot_json(&expected);
-    let args = dsl::json::from_json_str::<dsl::DslValue>(&format!("{{\"snapshot\":{after}}}")).expect("rail arguments");
+    let args = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(&format!("{{\"snapshot\":{after}}}"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rail arguments");
     let command = <En1990PlayApp as ArtifactEditor>::command_from_action("setSnapshot", Some(&args)).expect("setSnapshot converts from the declared argument");
     let En1990Command::ReplaceSnapshot(payload) = &command else { panic!("setSnapshot resolves to ReplaceSnapshot, got {command:?}") };
     let carried = <En1990Snapshot as store::ArtifactDsl>::parse_dsl(&crate::document::unescape_op_text_field(&payload.text)).expect("the payload carries the document's own DSL text");
     assert_eq!(carried, expected, "the rail's JSON document must reach the handler unchanged");
-    assert!(<En1990PlayApp as ArtifactEditor>::command_from_action("setSnapshot", Some(&dsl::json::from_json_str::<dsl::DslValue>(r#"{"text":"x"}"#).unwrap())).is_err(), "only the declared `snapshot` argument is read");
+    assert!(<En1990PlayApp as ArtifactEditor>::command_from_action("setSnapshot", Some(&semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(r#"{"text":"x"}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).is_err(), "only the declared `snapshot` argument is read");
 }

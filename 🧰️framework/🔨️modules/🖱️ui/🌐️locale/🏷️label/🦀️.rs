@@ -8,7 +8,7 @@
 use super::{Locale, Terminology};
 // 🌱️ `ToValue`/`FromValue` are this crate's own first-party analog of `Serialize`/`Deserialize`
 // below, for ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-use semio_framework_value::{DslValue, FromValue, ToValue, ValueError};
+use semio_framework_value::{DslValue, FromValue, ToValue, ValueError, ValueRefusalKind};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 
@@ -214,21 +214,21 @@ impl<'de> Deserialize<'de> for LocalizedLabel {
 impl ToValue for LocalizedLabel {
     fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<DslValue, ValueError> {
         control.scoped_depth(64, |control| control.scoped_stage(|control| {
-            control.begin_stage(Terminology::COUNT).map_err(ValueError::new)?;
+            control.begin_stage(Terminology::COUNT)?;
             let mut outer = DslValue::object_encoding_controlled(Terminology::COUNT, control)?;
             for terminology in Terminology::ALL {
                 let row = control.scoped_depth(64, |control| control.scoped_stage(|control| {
-                    control.begin_stage(Locale::COUNT).map_err(ValueError::new)?;
+                    control.begin_stage(Locale::COUNT)?;
                     let mut inner = DslValue::object_encoding_controlled(Locale::COUNT, control)?;
                     for locale in Locale::ALL {
-                        let text = control.copy_text(self.resolve(terminology, locale)).map(DslValue::String).map_err(ValueError::new)?;
+                        let text = control.copy_text(self.resolve(terminology, locale)).map(DslValue::String)?;
                         DslValue::push_encoding_controlled(inner.get_mut(), locale.as_str(), text, control)?;
-                        control.step().map_err(ValueError::new)?;
+                        control.step()?;
                     }
                     Ok::<DslValue, ValueError>(DslValue::Object(inner.take()))
                 }))?;
                 DslValue::push_encoding_controlled(outer.get_mut(), terminology.as_str(), row, control)?;
-                control.step().map_err(ValueError::new)?;
+                control.step()?;
             }
             Ok(DslValue::Object(outer.take()))
         }))
@@ -248,16 +248,16 @@ impl FromValue for LocalizedLabel {
         Ok(Self { cells: cells.map(|row| row.map(|text| Cow::Owned(text.to_string()))) })
     }
     fn from_value_controlled(value: &DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
-        control.checkpoint().map_err(ValueError::new)?;
+        control.checkpoint()?;
         control.scoped_depth(64, |control| control.scoped_stage(|control| {
-            control.begin_stage(Terminology::COUNT * Locale::COUNT).map_err(ValueError::new)?;
+            control.begin_stage(Terminology::COUNT * Locale::COUNT)?;
             let input = label_cells(value)?;
             let mut cells = std::array::from_fn(|_| std::array::from_fn(|_| Cow::Borrowed("")));
             for terminology in Terminology::ALL {
                 control.scoped_depth(64, |control| {
                     for locale in Locale::ALL {
-                        cells[terminology.index()][locale.index()] = Cow::Owned(control.copy_text(input[terminology.index()][locale.index()]).map_err(ValueError::new)?);
-                        control.step().map_err(ValueError::new)?;
+                        cells[terminology.index()][locale.index()] = Cow::Owned(control.copy_text(input[terminology.index()][locale.index()])?);
+                        control.step()?;
                     }
                     Ok::<(), ValueError>(())
                 })?;
@@ -268,12 +268,12 @@ impl FromValue for LocalizedLabel {
 }
 
 fn label_fields<'a>(value: &'a DslValue, expected: &[&str]) -> Result<&'a [(String, DslValue)], ValueError> {
-    let DslValue::Object(entries) = value else { return Err(ValueError::new("expected an object")); };
+    let DslValue::Object(entries) = value else { return Err(ValueError::new(ValueRefusalKind::InvalidValue, "expected an object")); };
     for (index, (key, _)) in entries.iter().enumerate() {
-        if !expected.contains(&key.as_str()) { return Err(ValueError::new("unknown field")); }
-        if entries[..index].iter().any(|(previous, _)| previous == key) { return Err(ValueError::new("duplicate field").under(key)); }
+        if !expected.contains(&key.as_str()) { return Err(ValueError::new(ValueRefusalKind::InvalidValue, "unknown field")); }
+        if entries[..index].iter().any(|(previous, _)| previous == key) { return Err(ValueError::new(ValueRefusalKind::InvalidValue, "duplicate field").under(key)); }
     }
-    for key in expected { if !entries.iter().any(|(name, _)| name == key) { return Err(ValueError::new("missing field").under(key)); } }
+    for key in expected { if !entries.iter().any(|(name, _)| name == key) { return Err(ValueError::new(ValueRefusalKind::InvalidValue, "missing field").under(key)); } }
     Ok(entries)
 }
 
@@ -285,7 +285,7 @@ fn label_cells(value: &DslValue) -> Result<[[&str; Locale::COUNT]; Terminology::
         let fields = label_fields(row, &Locale::ALL.map(Locale::as_str)).map_err(|error| error.under(terminology.as_str()))?;
         for locale in Locale::ALL {
             let value = &fields.iter().find(|(key, _)| key == locale.as_str()).expect("required locale").1;
-            cells[terminology.index()][locale.index()] = value.as_str().ok_or_else(|| ValueError::new("expected text").under(locale.as_str()).under(terminology.as_str()))?;
+            cells[terminology.index()][locale.index()] = value.as_str().ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue, "expected text").under(locale.as_str()).under(terminology.as_str()))?;
         }
     }
     Ok(cells)

@@ -11,7 +11,7 @@ pub fn diff(payload: &ChangeMemberStirrupSpacing, base: &En1992Snapshot) -> prot
         return protocol::MutationOutcome::error("mutation.target-missing", "Member has no stirrups.", Vec::<String>::new());
     };
     if (s.spacing - payload.new_spacing).abs() < f64::EPSILON {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Value unchanged.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Value unchanged.");
     }
     s.spacing = payload.new_spacing;
     protocol::MutationOutcome::new(En1992Diff { members: Some(En1992MemberList { values: members }), ..Default::default() })

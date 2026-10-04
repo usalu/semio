@@ -40,7 +40,7 @@ pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, se
 fn native_codec() -> store::ArtifactCodec {
     let mut codec = store::ArtifactCodec::of::<TsvSnapshot, TsvMutation>(STDIO_TSV_DOCUMENT_SCHEMA);
     codec.extension = "tsv";
-    codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"));
+    codec.pack_schema_hash = pack::record::schema_hash(&TsvSnapshot::__dsl_spec());
     codec
 }
 
@@ -102,15 +102,15 @@ pub fn register() {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_pilot_languages() {
     use crate::standards::iana::subsets::any::schema::snapshot;
-    dsl::register_language(dsl::LanguageSpec {
+    semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.tsv",
         extension: Some("tsv"),
-        role: dsl::LanguageRole::Document,
+        role: semio_framework_dsl::LanguageRole::Document,
         grammar: Some(snapshot::text::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(snapshot::text::COMPONENT_GRAMMAR_PATH),
         protocol: Some(snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(snapshot::binary::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("stdio.tsv"),
+        hooks: semio_framework_dsl::passthrough_hooks("stdio.tsv"),
     });
 }
 //#endregion 🔖️Register
@@ -131,7 +131,7 @@ pub mod io_registry {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
         let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("TsvComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        semio_framework_plugin::resolve_ready((entry.compose)(sources))
+        ::semio_framework_async::poll::resolve_ready((entry.compose)(sources))
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

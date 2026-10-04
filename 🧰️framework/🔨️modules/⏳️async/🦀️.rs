@@ -2867,3 +2867,13 @@ pub use testkit::ManualRuntime;
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧬️Tests
+
+#[path = "🔂️poll/🦀️.rs"]
+pub mod poll;
+
+#[path = "🔐️publication/🦀️.rs"]
+pub mod publication;
+
+#[cfg(test)]
+#[path = "🔐️publication/🧪️tests/🦀️.rs"]
+mod publication_tests;

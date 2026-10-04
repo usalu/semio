@@ -1,0 +1,10 @@
+{
+  "name": "@semio-tech/framework-ui-viewport-rs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:native": "nx run @semio-tech/framework-ui-viewport-rs:test-native",
+    "test:binding": "nx run @semio-tech/framework-ui-viewport-rs:test-binding"
+  }
+}

@@ -27,6 +27,7 @@ async fn kinds_cover_every_variant() {
     fn kind_of(mutation: &PlyMutation) -> &'static str {
         match mutation {
             PlyMutation::SetSnapshot(..) => "set-snapshot",
+            PlyMutation::PatchSnapshot(_) => "patch-snapshot",
             PlyMutation::SetFormat(..) => "set-format",
             PlyMutation::InsertComment(..) => "insert-comment",
             PlyMutation::RemoveComment(..) => "remove-comment",
@@ -43,6 +44,6 @@ async fn kinds_cover_every_variant() {
     let mut declared: Vec<&str> = KINDS.to_vec();
     declared.sort_unstable();
     assert_eq!(exercised, declared, "KINDS must name exactly the variants demo_mutation_cases() exercises");
-    assert_eq!(KINDS.len(), 9, "ply-1-0-any declares 9 PlyMutation variants");
+    assert_eq!(KINDS.len(), 10, "ply-1-0-any declares 10 PlyMutation variants");
 }
 //#endregion 🔖️KindsCoverageLaw

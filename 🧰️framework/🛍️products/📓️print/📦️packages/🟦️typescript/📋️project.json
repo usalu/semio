@@ -2,6 +2,13 @@
   "name": "@semio-tech/print",
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
+    "check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts check"
+      }
+    },
     "generate": {
       "executor": "nx:run-commands",
       "options": {

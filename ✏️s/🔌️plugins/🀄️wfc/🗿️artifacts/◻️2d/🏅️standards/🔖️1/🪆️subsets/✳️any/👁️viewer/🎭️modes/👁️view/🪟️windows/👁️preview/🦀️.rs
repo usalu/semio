@@ -119,7 +119,7 @@ fn slot_layers(slot: &Wfc2dSlot, tile: Option<&Wfc2dTile>, layers: &mut Vec<Stri
     layers.push(format!(
         "{{\"id\":\"slot-{}\",\"kind\":\"rect\",\"name\":{},\"x\":{:.6},\"y\":{:.6},\"width\":{:.6},\"height\":{:.6}}}",
         slot.id,
-        protocol::json::to_json_string(&name),
+        semio_framework_pack_json::to_json_string(&name),
         slot.x,
         slot.y,
         slot.width,
@@ -131,7 +131,7 @@ fn slot_layers(slot: &Wfc2dSlot, tile: Option<&Wfc2dTile>, layers: &mut Vec<Stri
             "{{\"id\":\"tile-{}-{}-bitmap\",\"kind\":\"image\",\"dataUrl\":{},\"x\":{:.6},\"y\":{:.6},\"width\":{:.6},\"height\":{:.6}}}",
             slot.id,
             tile.id,
-            protocol::json::to_json_string(&data_url),
+            semio_framework_pack_json::to_json_string(&data_url),
             slot.x,
             slot.y,
             slot.width,

@@ -745,3 +745,72 @@ async fn from_json_rejects_invalid_input() {
     let err = HalfedgeMesh::from_json("not json").unwrap_err();
     assert!(matches!(err, MeshKernelError::InvalidInput(_)));
 }
+#[test]
+fn authored_corner_channels_have_owned_codecs_and_strict_cardinality() {
+    use protocol::value::{DslValue, FromValue, ToValue};
+    let mut mesh = HalfedgeMesh::from_faces(&[[0.0,0.0,0.0],[1.0,0.0,0.0],[1.0,1.0,0.0],[0.0,1.0,0.0]], &[vec![0,1,2],vec![0,2,3]]).unwrap();
+    let values = vec![DslValue::Array(vec![DslValue::float(0.0),DslValue::float(0.0),DslValue::float(1.0)]);6];
+    let attribute = MeshAttribute { indices:None, domain:MeshAttributeDomain::Corner, semantic:MeshAttributeSemantic::Normal, interpolation:MeshAttributeInterpolation::Linear, values };
+    mesh.set_attribute("normal".into(), attribute.clone()).unwrap();
+    assert_eq!(mesh.attributes().get("normal"),Some(&attribute));
+    let ours = semio_framework_pack_json::from_dsl_value(&attribute.to_value()).to_string();
+    let oracle = serde_json::to_string(&serde_json::json!({"domain":"corner","semantic":"normal","interpolation":"linear","values":vec![[0.0,0.0,1.0];6]})).unwrap();
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&ours).unwrap(),serde_json::from_str::<serde_json::Value>(&oracle).unwrap());
+    assert_eq!(MeshAttribute::from_value(attribute.to_value()).unwrap(),attribute);
+    let mut invalid = attribute;
+    invalid.values.pop();
+    assert!(mesh.set_attribute("invalid".into(),invalid).is_err());
+    assert!(mesh.attributes().get("invalid").is_none());
+}
+
+#[test]
+fn indexed_corner_attributes_tessellate_with_seams_and_transform_once() {
+    use protocol::value::DslValue;
+    let mut mesh=HalfedgeMesh::from_faces(&[[0.0,0.0,0.0],[1.0,0.0,0.0],[1.0,1.0,0.0],[0.0,1.0,0.0]],&[vec![0,1,2],vec![0,2,3]]).unwrap();
+    let tuple=|values:&[f64]|DslValue::Array(values.iter().map(|value|DslValue::float(*value)).collect());
+    mesh.set_attribute("normal".into(),MeshAttribute {domain:MeshAttributeDomain::Corner,semantic:MeshAttributeSemantic::Normal,interpolation:MeshAttributeInterpolation::Linear,values:vec![tuple(&[2f64.sqrt().recip(),2f64.sqrt().recip(),0.0])],indices:Some(vec![0;6])}).unwrap();
+    mesh.set_attribute("uv".into(),MeshAttribute {domain:MeshAttributeDomain::Corner,semantic:MeshAttributeSemantic::Uv,interpolation:MeshAttributeInterpolation::Linear,values:vec![tuple(&[0.0,0.0]),tuple(&[1.0,0.0]),tuple(&[1.0,1.0]),tuple(&[0.25,0.0]),tuple(&[0.0,1.0])],indices:Some(vec![0,1,2,3,2,4])}).unwrap();
+    let transfer=mesh.tessellate().unwrap();assert_eq!(transfer.attributes["normal"].values.len(),1);assert_eq!(transfer.attributes["normal"].domain_len(),6);assert_ne!(&transfer.uvs[..2],&transfer.uvs[6..8]);
+    let shared=transfer.edge_ids.iter().position(|id|mesh.halfedges[*id as usize].twin.is_some()).unwrap();assert_eq!(transfer.edge_is_seam[shared],1);assert_eq!(&transfer.edge_uvs[shared*4..shared*4+2],&[1.0,1.0]);
+    let mut job=mesh.scale_job(Vec3([2.0,1.0,1.0]),true).unwrap();
+    let scaled=loop {match job.step(1).unwrap() {MeshModelingStep::Done(mesh)=>break mesh,MeshModelingStep::Working(_)=>{},_=>panic!("unexpected cancellation")}};
+    let normal=scaled.attributes()["normal"].value_at(0).unwrap().as_array().unwrap();
+    assert!((normal[0].as_f64().unwrap()-1.0/5f64.sqrt()).abs()<1e-6);assert!((normal[1].as_f64().unwrap()-2.0/5f64.sqrt()).abs()<1e-6);assert_eq!(scaled.attributes()["normal"].values.len(),1);
+    let mut component=mesh.clone();component.scale_vertices(&[VertexId(0)],Vec3([2.0,1.0,1.0]),Vec3::ZERO).unwrap();
+    let channel=&component.attributes()["normal"];assert_eq!(channel.indices.as_ref().unwrap()[0],channel.indices.as_ref().unwrap()[3]);assert_ne!(channel.indices.as_ref().unwrap()[0],channel.indices.as_ref().unwrap()[1]);
+    assert!((channel.value_at(0).unwrap().as_array().unwrap()[0].as_f64().unwrap()-1.0/5f64.sqrt()).abs()<1e-6);assert!((channel.value_at(1).unwrap().as_array().unwrap()[0].as_f64().unwrap()-2f64.sqrt().recip()).abs()<1e-6);
+    let mut cancelled=MeshTessellationJob::new(mesh);while cancelled.progress().phase!="tessellate-attributes" {assert!(matches!(cancelled.step(1).unwrap(),MeshTessellationStep::Working(_)));}cancelled.cancel();assert!(matches!(cancelled.step(1).unwrap(),MeshTessellationStep::Cancelled(_)));
+}
+
+#[test]
+fn orientation_remaps_corner_and_directed_edge_attributes_without_copying_samples() {
+    use protocol::value::DslValue;
+    let mut mesh=HalfedgeMesh::from_faces(&[[0.0,0.0,0.0],[1.0,0.0,0.0],[1.0,1.0,0.0],[0.0,1.0,0.0]],&[vec![0,1,2],vec![0,3,2]]).unwrap();
+    mesh.mark_uv_seam(&[EdgeId(3)],true);let original=mesh.clone();
+    for (name,domain) in [("corners",MeshAttributeDomain::Corner),("edges",MeshAttributeDomain::Edge)] {mesh.set_attribute(name.into(),MeshAttribute {domain,semantic:MeshAttributeSemantic::Custom,interpolation:MeshAttributeInterpolation::Nearest,values:(0..6).map(|id|DslValue::String(format!("sample-{id}"))).collect(),indices:None}).unwrap();}
+    let mut job=mesh.orient_faces_job().unwrap();let output=loop {match job.step(1).unwrap() {MeshModelingStep::Done(mesh)=>break mesh,MeshModelingStep::Working(_)=>{},_=>panic!("unexpected cancellation")}};
+    assert_eq!(output.face_vertex_ids(FaceId(1)).unwrap().iter().map(|vertex|vertex.0).collect::<Vec<_>>(),vec![2,3,0]);
+    for (id,edge) in output.halfedges.iter().enumerate() {
+        let source=original.halfedges.iter().position(|source|source.face==edge.face && source.vertex==edge.vertex).unwrap();
+        assert_eq!(output.attributes()["corners"].value_at(id).unwrap().as_str().unwrap(),format!("sample-{source}"));
+        let end=output.halfedges[edge.next as usize].vertex;
+        let source_edge=if original.halfedges[original.halfedges[source].next as usize].vertex==end {source}else {original.halfedges.iter().position(|source|source.face==edge.face && source.vertex==end).unwrap()};
+        assert_eq!(output.attributes()["edges"].value_at(id).unwrap().as_str().unwrap(),format!("sample-{source_edge}"));
+    }
+    assert_eq!(output.attributes()["corners"].values.len(),6);
+    assert!(output.is_uv_seam(EdgeId(4)));assert_eq!(job.orientation_flip_count(),Some(1));
+}
+
+#[test]
+fn mirror_remaps_owned_channels_and_reflects_corner_capable_normals() {
+    use protocol::value::DslValue;
+    let mut mesh=HalfedgeMesh::from_faces(&[[1.0,0.0,0.0],[1.0,1.0,0.0],[1.0,0.0,1.0]],&[vec![0,1,2]]).unwrap();
+    mesh.set_attribute("normal".into(),MeshAttribute {domain:MeshAttributeDomain::Vertex,semantic:MeshAttributeSemantic::Normal,interpolation:MeshAttributeInterpolation::Linear,values:vec![DslValue::Array(vec![DslValue::float(1.0),DslValue::float(0.0),DslValue::float(0.0)])],indices:Some(vec![0;3])}).unwrap();
+    mesh.set_attribute("uv".into(),MeshAttribute {domain:MeshAttributeDomain::Corner,semantic:MeshAttributeSemantic::Uv,interpolation:MeshAttributeInterpolation::Linear,values:vec![DslValue::Array(vec![DslValue::float(0.0),DslValue::float(0.0)]),DslValue::Array(vec![DslValue::float(1.0),DslValue::float(0.0)]),DslValue::Array(vec![DslValue::float(0.0),DslValue::float(1.0)])],indices:None}).unwrap();
+    mesh.set_attribute("label".into(),MeshAttribute {domain:MeshAttributeDomain::Face,semantic:MeshAttributeSemantic::Custom,interpolation:MeshAttributeInterpolation::Constant,values:vec![DslValue::String("shared".repeat(4096))],indices:None}).unwrap();
+    let mut job=mesh.mirror_job(MirrorAxis::X,0.0).unwrap();let mirrored=loop {match job.step(1).unwrap() {MeshModelingStep::Done(mesh)=>break mesh,MeshModelingStep::Working(_)=>{},_=>panic!("unexpected cancellation")}};
+    assert_eq!(mirrored.face_count(),2);assert_eq!(mirrored.attributes()["label"].values.len(),1);assert_eq!(mirrored.attributes()["label"].indices,Some(vec![0,0]));
+    assert_eq!(mirrored.attributes()["normal"].domain,MeshAttributeDomain::Corner);
+    assert_eq!(mirrored.attributes()["normal"].value_at(0).unwrap().as_array().unwrap()[0].as_f64(),Some(1.0));assert_eq!(mirrored.attributes()["normal"].value_at(3).unwrap().as_array().unwrap()[0].as_f64(),Some(-1.0));
+    assert_eq!(mirrored.attributes()["uv"].indices,Some(vec![0,1,2,2,1,0]));
+}

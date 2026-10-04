@@ -84,6 +84,8 @@ struct PresentedTooltip {
     label: String,
     accessibility_generation: u64,
     interaction_epoch: u64,
+    /// 💬️ The row action whose disabled reason this hint shows, anchored to its icon (audit W1E-1); `None` for a hover tooltip.
+    row_action: Option<usize>,
 }
 
 struct RetainedTooltipPaint {
@@ -285,9 +287,12 @@ fn tooltip_label_in_tree(tree: &UiTree, node: NodeId) -> Option<String> {
 }
 
 fn synchronize_presented_tooltip(window: &mut UiWindow, surface: UiSurfaceToken) -> bool {
+    if let Some(changed) = synchronize_presented_row_reason(window, surface) {
+        return changed;
+    }
     let valid = window.presented_tooltip.as_ref().is_some_and(|tooltip| {
         let revealed = window.presented_tree.document_node(tooltip.document_id);
-        tooltip.surface == surface && tooltip.accessibility_generation == window.presented_accessibility_generation && revealed.is_some() && window.presented_router.revealed_tooltip_node() == revealed
+        tooltip.row_action.is_none() && tooltip.surface == surface && tooltip.accessibility_generation == window.presented_accessibility_generation && revealed.is_some() && window.presented_router.revealed_tooltip_node() == revealed
     });
     if !valid {
         return window.presented_tooltip.take().is_some();
@@ -316,14 +321,28 @@ fn presented_caret(surface: UiSurfaceToken, tree: &UiTree, step: crate::wgpu::ev
     })
 }
 
+/// 💬️ Presents the router's disabled row-action reason hint in place of any hover tooltip, re-stamped with the current interaction
+/// epoch; `None` while the router shows no hint. Answers whether the presented hint changed.
+fn synchronize_presented_row_reason(window: &mut UiWindow, surface: UiSurfaceToken) -> Option<bool> {
+    let (row, index) = window.presented_router.revealed_row_reason()?;
+    let next = match (window.presented_tree.document_id(row), crate::wgpu::events::disabled_row_action_reason(&window.presented_tree, row, index)) {
+        (Some(document_id), Some(label)) => Some(PresentedTooltip { surface, document_id, label: label.to_string(), accessibility_generation: window.presented_accessibility_generation, interaction_epoch: window.presented_interaction_epoch, row_action: Some(index) }),
+        _ => None,
+    };
+    let shown = |tooltip: &PresentedTooltip| (tooltip.document_id, tooltip.label.clone(), tooltip.row_action);
+    let changed = window.presented_tooltip.as_ref().map(shown) != next.as_ref().map(shown);
+    window.presented_tooltip = next;
+    Some(changed)
+}
+
 fn retained_tooltip_paint(window: &mut UiWindow, surface: UiSurfaceToken, atlas: &mut FontAtlas, theme: &Theme) -> Option<RetainedTooltipPaint> {
     let tooltip = window.presented_tooltip.as_ref()?;
     let accepted_node = window.presented_tree.document_node(tooltip.document_id);
-    let valid = tooltip.surface == surface
-        && tooltip.accessibility_generation == window.presented_accessibility_generation
-        && tooltip.interaction_epoch == window.presented_interaction_epoch
-        && accepted_node.is_some()
-        && window.presented_router.revealed_tooltip_node() == accepted_node;
+    let revealed = match tooltip.row_action {
+        Some(index) => accepted_node.is_some() && window.presented_router.revealed_row_reason() == accepted_node.map(|node| (node, index)),
+        None => window.presented_router.revealed_tooltip_node() == accepted_node,
+    };
+    let valid = tooltip.surface == surface && tooltip.accessibility_generation == window.presented_accessibility_generation && tooltip.interaction_epoch == window.presented_interaction_epoch && accepted_node.is_some() && revealed;
     if !valid {
         window.presented_tooltip = None;
         return None;
@@ -331,7 +350,13 @@ fn retained_tooltip_paint(window: &mut UiWindow, surface: UiSurfaceToken, atlas:
     let candidate_node = window.tree.document_node(tooltip.document_id)?;
     let label = tooltip.label.clone();
     let size = tooltip_surface_size(&label, theme, atlas);
-    let placement = resolve_overlay_placement_side(&window.tree, OverlayAnchor::Node(candidate_node), size, window.viewport, OverlayKind::Tooltip.default_placement(), window.router.flow().inline);
+    let placement = match tooltip.row_action {
+        Some(index) => {
+            let icon = window.router.row_action_icon_rect(&window.tree, candidate_node, index)?;
+            ui_contract::resolve_overlay_placement(crate::wgpu::events::overlay_rect(icon), size, window.viewport, OverlayKind::Tooltip.default_placement(), window.router.flow().inline)
+        }
+        None => resolve_overlay_placement_side(&window.tree, OverlayAnchor::Node(candidate_node), size, window.viewport, OverlayKind::Tooltip.default_placement(), window.router.flow().inline),
+    };
     Some(RetainedTooltipPaint { label, x: placement.x, y: placement.y })
 }
 
@@ -1205,6 +1230,11 @@ impl Ui {
             pending_theme: None,
             theme_fault: false,
         }
+    }
+
+    /// 🌐️ Re-sets the language the engine's own chrome strings resolve in — the host's resolved locale changed.
+    pub fn set_locale(&mut self, locale: crate::wgpu::Locale) {
+        self.shell.set_locale(locale);
     }
 
     pub fn set_theme(&mut self, theme: Theme) {
@@ -3468,15 +3498,15 @@ impl Ui {
             window.presented_tooltip.take().is_some()
         } else {
             match step.tooltip {
-                TooltipStep::Reveal(node) => match (window.presented_tree.document_id(node), tooltip_label_in_tree(&window.presented_tree, node)) {
+                TooltipStep::Reveal(node) if window.presented_router.revealed_row_reason().is_none() => match (window.presented_tree.document_id(node), tooltip_label_in_tree(&window.presented_tree, node)) {
                     (Some(document_id), Some(label)) => {
-                        window.presented_tooltip = Some(PresentedTooltip { surface, document_id, label, accessibility_generation: window.presented_accessibility_generation, interaction_epoch: window.presented_interaction_epoch });
+                        window.presented_tooltip = Some(PresentedTooltip { surface, document_id, label, accessibility_generation: window.presented_accessibility_generation, interaction_epoch: window.presented_interaction_epoch, row_action: None });
                         true
                     }
                     _ => window.presented_tooltip.take().is_some(),
                 },
-                TooltipStep::Dismissed => window.presented_tooltip.take().is_some(),
-                TooltipStep::Idle => synchronize_presented_tooltip(window, surface),
+                TooltipStep::Dismissed if window.presented_router.revealed_row_reason().is_none() => window.presented_tooltip.take().is_some(),
+                TooltipStep::Reveal(_) | TooltipStep::Dismissed | TooltipStep::Idle => synchronize_presented_tooltip(window, surface),
             }
         };
         if tooltip_changed {
@@ -3587,6 +3617,23 @@ impl Ui {
     /// 🌲️ Read-only access to `window_id`'s retained tree (root + `Node` arena) for a caller to walk.
     pub fn tree(&self, window_id: &str) -> Option<&UiTree> {
         self.windows.get(window_id).map(|window| if window.presented_ready { &window.presented_tree } else { &window.tree })
+    }
+
+    /// 💬️ The disabled row action whose reason hint `window_id` shows (audit W1E-1) — its row's document id, the action index and
+    /// the reason it shows — read from the router that owns input.
+    pub fn revealed_row_reason(&self, window_id: &str) -> Option<(UiNodeId, usize, String)> {
+        let window = self.windows.get(window_id)?;
+        let (tree, router) = if window.presented_ready { (&window.presented_tree, &window.presented_router) } else { (&window.tree, &window.router) };
+        let (row, index) = router.revealed_row_reason()?;
+        Some((tree.document_id(row)?, index, crate::wgpu::events::disabled_row_action_reason(tree, row, index)?.to_string()))
+    }
+
+    /// 💬️ The absolute rect of `row`'s `index`-th action icon in `window_id` — where a pointer fires or hovers it and its reason
+    /// hint anchors.
+    pub fn row_action_icon_rect(&self, window_id: &str, row: UiNodeId, index: usize) -> Option<crate::wgpu::geometry::Rect> {
+        let window = self.windows.get(window_id)?;
+        let (tree, router) = if window.presented_ready { (&window.presented_tree, &window.presented_router) } else { (&window.tree, &window.router) };
+        router.row_action_icon_rect(tree, tree.document_node(row)?, index)
     }
 
     /// 🥞️ Reports accepted floating content that must remain above browser external hosts.

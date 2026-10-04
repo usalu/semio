@@ -8,7 +8,7 @@ use std::cmp::Ordering;
 use std::fmt;
 // #region 🔖️EntityId
 /// 🆔️ Stable string identity for any program entity or register row.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(transparent)]
 #[cfg_attr(test, serde(transparent))]
@@ -49,34 +49,34 @@ impl PartialOrd for EntityId {
 /// only supports named fields, and `#[derive(dsl::DslScalar)]` only unit-variant enums — so its
 /// `dsl::DslField` binding is written directly, bridging straight to `Shape::Text` like `String`'s
 /// own blanket impl does.
-impl dsl::DslField for EntityId {
-    fn shape() -> dsl::Shape {
-        dsl::Shape::Text
+impl semio_framework_dsl_record::DslField for EntityId {
+    fn shape() -> semio_framework_dsl_record::Shape {
+        semio_framework_dsl_record::Shape::Text
     }
-    fn shape_controlled<C: dsl::NativeSchemaControl>(control: &mut C) -> Result<dsl::Shape, String> {
-        <String as dsl::DslField>::shape_controlled(control)
+    fn shape_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, semio_framework_value::ValueError> {
+        <String as semio_framework_dsl_record::DslField>::shape_controlled(control)
     }
-    fn to_value(&self) -> dsl::FieldValue {
-        dsl::FieldValue::Text(self.0.clone())
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
+        semio_framework_dsl_record::FieldValue::Text(self.0.clone())
     }
-    fn to_value_controlled(&self, control: &mut dsl::NativeEncodeControl<'_>) -> Result<dsl::FieldValue, String> {
-        <String as dsl::DslField>::to_value_controlled(&self.0, control)
+    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::FieldValue, semio_framework_value::ValueError> {
+        <String as semio_framework_dsl_record::DslField>::to_value_controlled(&self.0, control)
     }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
         match value {
-            dsl::FieldValue::Text(s) => Ok(EntityId(s.clone())),
+            semio_framework_dsl_record::FieldValue::Text(s) => Ok(EntityId(s.clone())),
             other => Err(format!("expected Text, found {other:?}")),
         }
     }
-    fn from_value_controlled(value: &dsl::FieldValue, control: &mut dsl::NativeDecodeControl<'_>) -> Result<Self, String> {
-        <String as dsl::DslField>::from_value_controlled(value, control).map(Self)
+    fn from_value_controlled(value: &semio_framework_dsl_record::FieldValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
+        <String as semio_framework_dsl_record::DslField>::from_value_controlled(value, control).map(Self)
     }
 }
 // #endregion
 
 // #region 🔖️Priority
 /// 🎚️ Relative importance band for requirements, relationships, and entities.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -93,7 +93,7 @@ pub enum Priority {
 
 // #region 🔖️LifecycleStatus
 /// 🔄️ Lifecycle and workflow status for register entities.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -119,7 +119,7 @@ pub enum LifecycleStatus {
 
 // #region 🔖️Ownership
 /// 👥️ Ownership and authority roles attached to an entity header.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -133,7 +133,7 @@ pub struct Ownership {
 
 // #region 🔖️Text
 /// 📝️ Rich or plain text payload with optional format hint.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -151,7 +151,7 @@ impl TextField {
 }
 
 /// 🏷️ Tagged free-text note on an entity.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -161,7 +161,7 @@ pub struct TaggedNote {
 }
 
 /// 🕒️ Created/updated audit timestamps on an entity header.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -186,7 +186,7 @@ impl Default for TimestampMeta {
 
 // #region 🔖️EntityHeader
 /// 📋️ Common header shared by all register entities via serde flatten.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -217,7 +217,7 @@ impl EntityHeader {
 
 // #region 🔖️QuantitySpec
 /// 📐️ Numeric quantity with min/max/target bands and unit.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -255,7 +255,7 @@ impl QuantitySpec {
 
 // #region 🔖️Trace
 /// 🔗️ Semantic trace link between two entities for auditability.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -283,7 +283,7 @@ pub enum TraceKind {
 }
 
 /// 🧭️ Directed trace edge stored in the plugin trace register.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -312,7 +312,7 @@ impl protocol::Identified<EntityId> for TraceLink {
 
 // #region 🔖️Diagnostics
 /// ⚠️ Severity band for validation and analysis diagnostics.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -323,7 +323,7 @@ pub enum DiagnosticSeverity {
 }
 
 /// 🩺️ Non-fatal program validation or analysis finding.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -343,7 +343,7 @@ pub struct ProgramDiagnostic {
 
 //#region ⚠️ Errors
 /// 💥️ Fatal program operation or exchange error.
-#[derive(Clone, Debug, PartialEq, Eq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -376,7 +376,7 @@ impl std::error::Error for PluginError {}
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]

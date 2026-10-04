@@ -1,0 +1,25 @@
+# Current Source Row Index Independent Storage Audit
+
+Actual producer: framework SQLite `🧩️artifact/🗂️row/🟦️.ts`; no execution or edit. Root supplied genuine missing-seam Source33/21pass12fail645 expectations; repaired run pending at assignment. No Source runtime pass is inferred here.
+
+## Concrete Correct Storage Joins
+
+words7 allocates checked exact count*4 Uint8Array via the retained supplied operation and creates a view, not a second backing. create47–53 owns prefix starts, consumed bitmap and actual table name index. take57 addresses real bits and identity Map; finish64 scans actual bits. ParentIndex17–29 uses real slots/counts/offsets/positions for every representative/group and strict ordinal placement. Full borrowed bigint parent equality at14 prevents hash collision loss; hash truncation is only bucket selection. Ordinal null preserves source occurrence order. Empty groups return empty arrays; all rows in a table receive strict ordinal validation even if requested parent differs. Typed positions store row+1 sentinel; current max total0xffffffff makes maximum actual row index0xfffffffe representable. Group cache distinguishes each ordinal column and null via -1.
+
+IdentityMap and cache Map are ordinary JS metadata, explicitly present; returned group arrays are ordinary JS arrays. Exact known Uint32 debit is meaningful, but no full JS heap or release-capacity proof follows. No System release observer exists in this Source scope. Failed/canceled typed allocations retain monotonic supplied debit, with no refund. Existing stage64 API demand remains independent.
+
+## Concrete Mutable Borrowed Input Defect
+
+create47 computes total from current table.rows, then awaits reconstructSnapshot callback at48, then table index callbacks before collecting identities at51. It retains original tables reference; row54 later re-reads each current table.rows. A callback can replace the row array with empty after total census. The method then publishes starts terminal0 despite admitted bitmap based on old total; finish sees total0 and accepts, losing all original rows without invalidValue. A callback can also replace a row after identity map creation: row(position) returns the new object, while take rejects it as foreign; cached ParentIndex stores the mutable rows reference and reads live parent cells during probing, making cached slots inconsistent when parent changes. Same supplied caller identity does not prevent this owner mutation.
+
+Meaningful law: author complete input, mutate only from its initial callback (remove/replace/reorder rows and parent/ordinal cell edits), then require either stable captured original semantic result or explicit typed refusal before publication. Do not silently reinterpret the changed graph or normalize expected output. Block2d/3d callers must capture complete owner state before asynchronous callbacks; the row seam itself needs a documented and enforced stable borrowed topology or a reviewed capture. A plain readonly TypeScript type is not runtime immutable authority. Index buffers alone do not pay for full primitive capture.
+
+## Missing Direct Boundary Laws
+
+create46 checks tables.length only against configurable maxTables; unlike table index there is no immediate Uint32 representability ceiling before the borrowed table traversal at47. With an impossible length and permissive maxTables, traversal can begin before words rejects starts length. A no-materialization Proxy demand analogous to the table seam should require WorkLimit before iteration. Parent capacity guarding occurs before its row traversal, but direct exact threshold/invalid lengths should remain tested without giant allocation.
+
+Parent group31 has no final checkpoint/signal check for a short or absent cached group; it returns after awaiting find. grouped59 also relies on names.find initial signal check and conditional work callbacks. A microtask cancellation during these async continuations can be missed when no256-unit frontier occurs. A narrow law should prime a cache, arrange cancellation between name/parent continuation and result publication, and require Canceled for absent and short groups. Existing513-row materialized cancellation proves a real frontier but not these fast paths. Do not add guessed work/storage charges to obtain a callback.
+
+Repeated same object within/across tables is correctly rejected by identitiesMap at51, beyond positional bitmap alone. Existing malformed law covers negative/gap/duplicate ordinal and invalid parent; add parent hash collision with distinct complete bigint values, empty table/null cache, mutation after callbacks and overflow-before-traversal. Requested group results are unconsumed until take; canceled group cannot be presumed to have consumed rows. finish checkpoints before checking bits, preserving caller cancellation authority.
+
+These are exact Source owner/control findings, not native provider or allocator failures. No production repair capsule is supplied; Root/High own current implementations and actual runtime dispatch.

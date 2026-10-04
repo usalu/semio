@@ -22,6 +22,8 @@ pub mod set_line_ending;
 /// csv's/gif89a's hand-rolled paths document; hand-rolling below reuses `TsvDiff`'s
 /// `pub(crate)` grammar primitives instead).
 //#region 🔖️Leaves
+#[path = "🩹️patch-snapshot/🦀️.rs"]
+pub mod patch_snapshot;
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "🔚set-trailing-newline/🦀️.rs"]
@@ -35,6 +37,7 @@ pub mod set_trailing_newline;
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum TsvMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
+    PatchSnapshot(patch_snapshot::PatchSnapshot),
     /// ↩️ Toggles whether the encoded text ends with a line terminator.
     SetTrailingNewline(set_trailing_newline::SetTrailingNewline),
     /// ↩️ Replaces the file's line-ending convention.
@@ -50,7 +53,7 @@ pub enum TsvMutation {
 /// 🧾️ Kebab-case spelling of every `TsvMutation` variant, in declaration order — the exhaustive
 /// mutation catalog `tsv-iana-any` (`../../🔮️oracles/🔣️.json`) is measured against this
 /// exact list. `kinds_match_enum_and_catalog` proves it never drifts from either side.
-pub const KINDS: &[&str] = &["set-snapshot", "set-trailing-newline", "set-line-ending", "insert-row", "remove-row", "set-cell"];
+pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "set-trailing-newline", "set-line-ending", "insert-row", "remove-row", "set-cell"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -75,6 +78,7 @@ pub fn apply_tsv_mutation(snapshot: &mut TsvSnapshot, mutation: &TsvMutation) ->
 pub(crate) fn agg_diff(this: &TsvMutation, base: &TsvSnapshot) -> protocol::MutationOutcome<TsvDiff> {
     protocol::MutationOutcome::new(match this {
         TsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff_set_snapshot(base, snapshot),
+        TsvMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<TsvSnapshot, TsvMutation>>::diff(patch, base),
         TsvMutation::SetTrailingNewline(set_trailing_newline::SetTrailingNewline { trailing_newline }) => TsvDiff { trailing_newline: Some(*trailing_newline), ..TsvDiff::default() },
         TsvMutation::SetLineEnding(set_line_ending::SetLineEnding { line_ending }) => TsvDiff { line_ending: Some(*line_ending), ..TsvDiff::default() },
         TsvMutation::InsertRow(insert_row::InsertRow { index, row }) => TsvDiff { records: Some(TsvRowsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![TsvRowAdded { index: *index, row: row.clone() }] }), ..TsvDiff::default() },
@@ -88,9 +92,11 @@ pub(crate) fn agg_diff(this: &TsvMutation, base: &TsvSnapshot) -> protocol::Muta
 }
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &TsvMutation, base: &TsvSnapshot) -> Vec<TsvMutation> {
+pub(crate) fn agg_inverse(this: &TsvMutation, base: &TsvSnapshot) -> Result<Vec<TsvMutation>, semio_framework_value::ValueError> {
+    Ok({
     match this {
         TsvMutation::SetSnapshot(_) => vec![TsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
+        TsvMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<TsvSnapshot, TsvMutation>>::inverse(patch, base)?),
         TsvMutation::SetTrailingNewline(_) => vec![TsvMutation::SetTrailingNewline(set_trailing_newline::SetTrailingNewline { trailing_newline: base.trailing_newline })],
         TsvMutation::SetLineEnding(_) => vec![TsvMutation::SetLineEnding(set_line_ending::SetLineEnding { line_ending: base.line_ending })],
         TsvMutation::InsertRow(insert_row::InsertRow { index, .. }) => vec![TsvMutation::RemoveRow(remove_row::RemoveRow { index: *index })],
@@ -103,6 +109,8 @@ pub(crate) fn agg_inverse(this: &TsvMutation, base: &TsvSnapshot) -> Vec<TsvMuta
             None => Vec::new(),
         },
     }
+
+    })
 }
 //#endregion 🔖️MutationTrait
 
@@ -128,6 +136,7 @@ fn dec_tsv_snapshot(s: &str) -> Result<TsvSnapshot, String> {
 fn print_tsv_mutation(m: &TsvMutation) -> String {
     match m {
         TsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", enc_tsv_snapshot(snapshot)),
+        TsvMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(patch),
         TsvMutation::SetTrailingNewline(set_trailing_newline::SetTrailingNewline { trailing_newline }) => format!("set-trailing-newline trailing-newline={}", if *trailing_newline { 1 } else { 0 }),
         TsvMutation::SetLineEnding(set_line_ending::SetLineEnding { line_ending }) => format!("set-line-ending line-ending={}", crate::standards::iana::subsets::any::schema::diff::enc_line_ending(*line_ending)),
         TsvMutation::InsertRow(insert_row::InsertRow { index, row }) => format!("insert-row index={index} row={}", enc_row(row)),
@@ -142,6 +151,7 @@ fn parse_tsv_mutation(line: &str) -> Result<TsvMutation, String> {
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("tsv mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
+        "patch-snapshot" => semio_s_artifact_stdio_contract::editing::snapshot_patch_from_text(line).map(|patch| TsvMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch })),
         "set-snapshot" => Ok(TsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_tsv_snapshot(arg("snapshot")?)? })),
         "set-trailing-newline" => Ok(TsvMutation::SetTrailingNewline(set_trailing_newline::SetTrailingNewline { trailing_newline: arg("trailing-newline")? == "1" })),
         "set-line-ending" => Ok(TsvMutation::SetLineEnding(set_line_ending::SetLineEnding { line_ending: crate::standards::iana::subsets::any::schema::diff::dec_line_ending(arg("line-ending")?)? })),
@@ -156,8 +166,8 @@ impl OpText for TsvMutation {
     fn print_op(&self) -> String {
         print_tsv_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_tsv_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_tsv_mutation(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 }
 

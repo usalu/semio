@@ -1,3 +1,6 @@
+import Ajv from "ajv";
+import cohort from "../../🧫️fixtures/🪶️sqlite/🚦️cohort/🔣️.json";
+import cohortSchema from "../../🧫️fixtures/🪶️sqlite/🚦️cohort/🧬️schema/🔣️.json";
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import fixture from "../../🧫️fixtures/🪶️sqlite/🔣️.json";
@@ -38,3 +41,42 @@ test("LAS long projection and reconstruction cancel at bounded semantic checkpoi
     expect(reached).toBe(true);
   }
 },30000);
+
+test("LAS controlled cohort literal fields and every raw word have independent SQLite and DataView identity",async()=>{
+ expect(new Ajv({strict:true}).compile(cohortSchema)(cohort)).toBe(true);
+ const value:LasSnapshot={...snapshot,schema:cohort.literalSchema,header:{...snapshot.header,systemIdentifier:cohort.literalText,generatingSoftware:cohort.literalText,numberOfPointRecords:cohort.unsigned32,creationYear:cohort.unsigned16},vlrs:snapshot.vlrs.map(vlr=>({...vlr,description:cohort.literalText})),points:cohort.word64.map((word,index)=>({...snapshot.points[index%snapshot.points.length]!,x:{bits:BigInt("0x"+word)},intensity:cohort.unsigned16,scanAngleRank:cohort.signed8}))};
+ const native=Database.deserialize(await exportSqliteDatabase(await lasSnapshotToSqliteDatabase(value)));
+ try{expect(native.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(native.query("PRAGMA foreign_key_check").all()).toEqual([]);expect(native.query("SELECT schema FROM las_document").get()).toEqual({schema:cohort.literalSchema});expect(native.query("SELECT system_identifier,generating_software,number_of_point_records,creation_year FROM las_header").get()).toEqual({system_identifier:cohort.literalText,generating_software:cohort.literalText,number_of_point_records:cohort.unsigned32,creation_year:cohort.unsigned16});
+ const rows=native.query("SELECT x_ieee754_bits,intensity,scan_angle_rank FROM las_point ORDER BY ordinal").safeIntegers(true).all() as {x_ieee754_bits:bigint,intensity:bigint,scan_angle_rank:bigint}[];expect(rows.length).toBe(cohort.word64.length);for(const[index,row]of rows.entries()){const view=new DataView(new ArrayBuffer(8));view.setBigInt64(0,row.x_ieee754_bits,true);expect(view.getBigUint64(0,true)).toBe(BigInt("0x"+cohort.word64[index]!));expect(row.intensity).toBe(BigInt(cohort.unsigned16));expect(row.scan_angle_rank).toBe(BigInt(cohort.signed8));}
+ expect(await lasSnapshotFromSqliteDatabase(await importSqliteDatabase(native.serialize()))).toEqual(value);
+ }finally{native.close();}
+});
+test("LAS controlled cohort long literal ownership cancels inside each declared string field",async()=>{
+ for(const field of ["schema","systemIdentifier","generatingSoftware","description"] as const){const text="x".repeat(cohort.copyBytes);const value:LasSnapshot={...snapshot,header:{...snapshot.header},vlrs:snapshot.vlrs.map(vlr=>({...vlr}))};if(field==="schema")value.schema=text;else if(field==="description")value.vlrs[0]!.description=text;else value.header[field]=text;
+ const database=await lasSnapshotToSqliteDatabase(value);for(const phase of ["projectSnapshot","reconstructSnapshot"] as const){let interior=false;const controller=new AbortController();const options={signal:controller.signal,onProgress:(event:{phase:string,completed:number,total:number})=>{if(event.phase===phase&&event.completed>=cohort.copyCancelAfter&&event.completed<event.total){interior=true;controller.abort();}}};await expect(phase==="projectSnapshot"?lasSnapshotToSqliteDatabase(value,options):lasSnapshotFromSqliteDatabase(database,options)).rejects.toMatchObject({kind:"canceled"});expect(interior).toBe(true);}
+ }
+});
+
+test("LAS paid owner contract retains exact declared record slots and independently counted semantic relationships",async()=>{
+ expect(new Ajv({strict:true}).compile(cohortSchema)(cohort)).toBe(true);
+ const contract=(cohort as unknown as {ownership:typeof cohortSchema.properties.ownership.properties}).ownership;
+ expect(contract).toEqual({"authority":"actualLasSnapshot","nativeFields":"directDeclaredRecords","recordSlots":{"snapshot":4,"header":25,"point":14,"rgb":3},"ieee754":"rawBinary64Words","admission":"beforeBacking","retirementRefund":false,"refusalKinds":{"owned":"ownershipLimit","allocator":"allocationFailed","work":"workLimit","cancellation":"canceled"}});
+ const db=Database.deserialize(await exportSqliteDatabase(await lasSnapshotToSqliteDatabase(snapshot)));
+ try{
+  const groups=db.query("SELECT 7+(SELECT count(*) FROM las_vlr)+(SELECT count(*) FROM las_vlr_octet)+(SELECT count(*) FROM las_point)+(SELECT count(*) FROM las_point_gps)+(SELECT count(*) FROM las_point_rgb) AS entities").get() as {entities:number};
+  const semanticRows=db.query("SELECT (SELECT count(*) FROM las_header)+(SELECT count(*) FROM las_return_histogram)+(SELECT count(*) FROM las_vlr)+(SELECT count(*) FROM las_vlr_octet)+(SELECT count(*) FROM las_point)+(SELECT count(*) FROM las_point_gps)+(SELECT count(*) FROM las_point_rgb) AS rows").get() as {rows:number};
+  expect(groups.entities).toBe(semanticRows.rows+1);
+  const text=cohort.literalText.repeat(11);
+  expect(Buffer.byteLength(JSON.stringify(text))).toBeLessThanOrEqual(Buffer.byteLength(text)*6+64);
+  expect(db.query("SELECT count(*) AS n FROM las_header").get()).toEqual({n:1});
+  expect(db.query("SELECT count(*) AS n FROM las_return_histogram").get()).toEqual({n:5});
+ }finally{db.close();}
+});
+
+test("LAS native input ownership allowance remains distinct from semantic SQL value limits",async()=>{
+ expect(new Ajv({strict:true}).validate(cohortSchema,cohort)).toBe(true);
+ const database=await lasSnapshotToSqliteDatabase(snapshot);const independent=Database.deserialize(await exportSqliteDatabase(database));
+ try{const schema=independent.query("SELECT schema FROM las_document").get() as {schema:string};expect(Buffer.byteLength(schema.schema)).toBeGreaterThan(1);expect(independent.query("SELECT count(*) AS n FROM las_return_histogram").get()).toEqual({n:5});}finally{independent.close();}
+ await expect(lasSnapshotToSqliteDatabase(snapshot,{maxValueBytes:1})).rejects.toMatchObject({kind:"ownershipLimit"});
+ await expect(lasSnapshotFromSqliteDatabase(database,{maxValueBytes:1})).rejects.toMatchObject({kind:"ownershipLimit"});
+});

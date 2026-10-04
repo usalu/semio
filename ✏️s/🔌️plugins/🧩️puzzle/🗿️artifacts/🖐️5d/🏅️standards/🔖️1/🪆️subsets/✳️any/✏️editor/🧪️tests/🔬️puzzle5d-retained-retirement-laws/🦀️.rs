@@ -91,7 +91,7 @@ fn import_media_exact_parse_cap_and_plus_one_are_preflighted_under_one_turn_budg
     assert_eq!(maximum_plus_one.len(), PUZZLE5D_IMPORT_MEDIA_BYTES + 1);
     assert!(puzzle5d_decode_import_fragment(&maximum_plus_one).is_err());
 
-    let canonical = dsl::json!({
+    let canonical = semio_framework_pack_json::json!({
         "schema": "manifest",
         "objectKinds": [],
         "vortexKinds": [],
@@ -100,7 +100,7 @@ fn import_media_exact_parse_cap_and_plus_one_are_preflighted_under_one_turn_budg
         "kindCompatibility": [],
     });
     assert!(puzzle5d_import_keys_are(&canonical, &["schema", "objectKinds", "vortexKinds", "cableKinds", "attractionKinds", "kindCompatibility"]));
-    let hostile = dsl::json!({ "objectKinds": [], "legacyRows": [] });
+    let hostile = semio_framework_pack_json::json!({ "objectKinds": [], "legacyRows": [] });
     assert!(!puzzle5d_import_keys_are(&hostile, &["schema", "objectKinds", "vortexKinds", "cableKinds", "attractionKinds", "kindCompatibility"]));
 }
 
@@ -240,9 +240,8 @@ fn close_completion_rejection(owner: &mut Puzzle5dPendingCompletionRejection) ->
                 .as_ref()
                 .map(|owner| match owner.emit.as_ref() {
                     Ok(emit) => format!(
-                        "emit(mutations={} cap={} effects={} cap={} events={} children={} cap={} description={:?} coalesce={:?}) ephemeral(presence={} transient={} window_transient={}) fault(causes={} cap={} message_len={} code_len={} span={})",
+                        "emit(mutations={} cap={} effects={} cap={} events={} children={} cap={}) ephemeral(presence={} transient={} window_transient={}) fault(causes={} cap={} message_len={} code_len={} span={})",
                         emit.artifact_mutations.len(), emit.artifact_mutations.capacity(), emit.effects.len(), emit.effects.capacity(), emit.events.len(), emit.child_emits.len(), emit.child_emits.capacity(),
-                        emit.description.as_ref().map(String::len), emit.coalesce_key.as_ref().map(String::len),
                         owner.ephemeral.presence.len(), owner.ephemeral.transient.len(), owner.ephemeral.window_transient.len(),
                         owner.fault.causes.len(), owner.fault.causes.capacity(), owner.fault.message.len(), owner.fault.code.0.len(), owner.fault.span.is_some()
                     ),

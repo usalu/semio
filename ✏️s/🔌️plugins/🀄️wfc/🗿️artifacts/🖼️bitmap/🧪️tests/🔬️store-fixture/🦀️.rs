@@ -25,7 +25,7 @@ fn a_committed_example_takes_a_whole_edit_session_and_inverts_it() {
     let edits = vec![change_seed(4242), pin_pixel(0, 0, 1), set_input_pixels(0, 0, 2, 2, encode_base64(&[1, 1, 1, 1]))];
     let mut inverses = Vec::new();
     for edit in &edits {
-        inverses.push(crate::mutations::inverse_bitmap_mutation(&snapshot, edit));
+        inverses.push(crate::mutations::inverse_bitmap_mutation(&snapshot, edit).expect("valid retained mutation inverse fixture"));
         apply_bitmap_mutation(&mut snapshot, edit).expect("edit applies");
     }
     assert_ne!(snapshot, base, "the session really moved the document");

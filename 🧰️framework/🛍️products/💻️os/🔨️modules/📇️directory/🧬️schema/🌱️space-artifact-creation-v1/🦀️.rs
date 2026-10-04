@@ -108,7 +108,7 @@ impl SpaceArtifactCreationCatalogV1 {
         if !self.validate() {
             return None;
         }
-        let source = crate::os_pack::json::to_json_string(self);
+        let source = semio_framework_pack_json::to_json_string(self);
         (source.len() <= SPACE_ARTIFACT_CREATION_CATALOG_MAX_BYTES).then_some(source)
     }
 
@@ -117,8 +117,8 @@ impl SpaceArtifactCreationCatalogV1 {
         if source.len() > SPACE_ARTIFACT_CREATION_CATALOG_MAX_BYTES {
             return None;
         }
-        let value: Self = crate::os_pack::json::from_json_str(source).ok()?;
-        (value.validate() && crate::os_pack::json::to_json_string(&value) == source).then_some(value)
+        let value: Self = semio_framework_pack_json::from_json_str(source, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()?;
+        (value.validate() && semio_framework_pack_json::to_json_string(&value) == source).then_some(value)
     }
 }
 
@@ -152,8 +152,8 @@ impl SpaceArtifactCreateV1 {
         if source.len() > SPACE_ARTIFACT_CREATION_MAX_BYTES {
             return None;
         }
-        let value: Self = crate::os_pack::json::from_json_str(source).ok()?;
-        (value.validate() && crate::os_pack::json::to_json_string(&value) == source).then_some(value)
+        let value: Self = semio_framework_pack_json::from_json_str(source, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()?;
+        (value.validate() && semio_framework_pack_json::to_json_string(&value) == source).then_some(value)
     }
 }
 
@@ -279,7 +279,7 @@ impl SpaceArtifactCreationStatusV1 {
         if source.len() > SPACE_ARTIFACT_CREATION_MAX_BYTES {
             return None;
         }
-        let value: Self = crate::os_pack::json::from_json_str(source).ok()?;
-        (value.validate() && crate::os_pack::json::to_json_string(&value) == source).then_some(value)
+        let value: Self = semio_framework_pack_json::from_json_str(source, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()?;
+        (value.validate() && semio_framework_pack_json::to_json_string(&value) == source).then_some(value)
     }
 }

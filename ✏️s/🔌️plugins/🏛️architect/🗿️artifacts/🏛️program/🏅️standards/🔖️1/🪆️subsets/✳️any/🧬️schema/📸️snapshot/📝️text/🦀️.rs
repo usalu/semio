@@ -21,7 +21,7 @@ use crate::ProgramSnapshot;
 pub const ARCHITECT_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
 /// 🗣️ Parses an Architect program from its textual DSL representation.
-pub fn parse(text: &str) -> Result<ProgramSnapshot, store::TextError> {
+pub fn parse(text: &str) -> Result<ProgramSnapshot, semio_framework_diagnostic::TextError> {
     <ProgramSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 

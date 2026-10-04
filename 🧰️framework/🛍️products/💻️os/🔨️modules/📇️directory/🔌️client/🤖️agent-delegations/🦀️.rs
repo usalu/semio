@@ -4,7 +4,7 @@
 //! ShellHost's offer-scope filter; both answer `🤖️delegations/🧫️fixtures/📋️agent-delegation-list.json`.
 
 use super::{encode_url_component, DirectoryClient, DirectoryClientError, DirectoryTransport, HttpMethod};
-use crate::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 use semio_framework_async::OperationContext;
 
 /// 📏️ The hub's own listing page bound (`AGENT_DELEGATION_PAGE_MAX`); rows past it are never read.
@@ -33,7 +33,7 @@ fn safe_ms(row: &Value, key: &str) -> Option<i64> {
 /// 📥️ The principals of the live delegations one listing answer names at `now_ms`, in listing order: a malformed row is
 /// dropped, never the listing, and a revoked or expired row names no principal — exactly what ShellHost's `offerScope` keeps.
 pub fn live_agent_principals(body: &str, now_ms: i64) -> Vec<String> {
-    let Ok(value) = crate::os_pack::json::parse(body) else { return Vec::new() };
+    let Ok(value) = semio_framework_pack_json::parse(body, semio_framework_pack_json::JsonMemberPolicy::Reject) else { return Vec::new() };
     let Some(rows) = value.get("delegations").and_then(Value::as_array) else { return Vec::new() };
     rows.iter()
         .take(AGENT_DELEGATION_PAGE_MAX)

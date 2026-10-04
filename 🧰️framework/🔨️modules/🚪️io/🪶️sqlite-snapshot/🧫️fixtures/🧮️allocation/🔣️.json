@@ -1,0 +1,26 @@
+{
+  "defaultAllocationBytes": 536870912,
+  "maximumBytes": 32,
+  "admissions": [
+    8,
+    16,
+    8
+  ],
+  "refusedBytes": 1,
+  "semanticBytes": 0,
+  "stageNames": [
+    "projectSnapshot",
+    "decodeNative",
+    "reconstructSnapshot"
+  ],
+  "failedStageBytes": 8,
+  "afterFailedStageRemaining": 24,
+  "nativeBridge": {
+    "maximumBytes": 200000,
+    "successBytes": 70000,
+    "cancelBytes": 100000,
+    "cancelAt": 65536,
+    "remainingAfterCancellation": 30000,
+    "refusedBytes": 30001
+  }
+}

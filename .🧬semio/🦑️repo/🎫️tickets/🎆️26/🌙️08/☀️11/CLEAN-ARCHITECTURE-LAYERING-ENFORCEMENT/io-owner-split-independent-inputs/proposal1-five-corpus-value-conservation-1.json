@@ -1,0 +1,83 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧫️fixtures/💰️frontiers/🔣️.json",
+    "allRetainedValuesExact": true,
+    "checks": {
+      "rowFrontier": true,
+      "phases": true,
+      "refusal": true,
+      "sharedProgressRoster": true,
+      "builderSql": true,
+      "builderRows": true
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/🧫️fixtures/💰️frontiers/🔣️.json",
+    "allRetainedValuesExact": true,
+    "checks": {
+      "asciiUnit": true,
+      "asciiLength": true,
+      "asciiFrontier": true,
+      "schemaCommentCharacters": true,
+      "schemaFrontier": true,
+      "domainValueCount": true,
+      "domainRows": true,
+      "rowFrontier": true,
+      "treeFrontier": true,
+      "phases": true,
+      "retainedDebt": true,
+      "pixels": true,
+      "refusal": true,
+      "groupingPassFromFinal": true
+    }
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧫️fixtures/💰️operation/🔣️.json",
+    "allRetainedValuesExact": true,
+    "checks": {
+      "sql": true,
+      "table": true,
+      "labelUnit": true,
+      "repeats": true,
+      "codeUnits": true,
+      "utf8Bytes": true,
+      "measurePhase": true,
+      "decodePhase": true,
+      "measureFrontier": true,
+      "decodeFrontier": true,
+      "payload": true,
+      "tightBytes": true,
+      "permissiveBytes": true,
+      "retainedDebt": true,
+      "refusal": true,
+      "routes": true,
+      "allocationRequestsRebind": true
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/🧫️fixtures/💰️operation/🔣️.json",
+    "allRetainedValuesExact": true,
+    "checks": {
+      "domain": true,
+      "refusal": true
+    }
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧫️fixtures/🔎️frontiers/🔣️.json",
+    "allRetainedValuesExact": true,
+    "checks": {
+      "referenceEntries": true,
+      "referenceFrontier": true,
+      "referenceTypes": true,
+      "referenceParities": true,
+      "nameUnit": true,
+      "nameLength": true,
+      "nameFrontier": true,
+      "nameSuffixes": true,
+      "tableCount": true,
+      "tableFrontier": true,
+      "indexPhase": true,
+      "refusal": true
+    }
+  }
+]

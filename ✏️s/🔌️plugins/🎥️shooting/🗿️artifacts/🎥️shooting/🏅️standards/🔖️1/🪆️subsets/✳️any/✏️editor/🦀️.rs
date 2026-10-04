@@ -334,8 +334,8 @@ mod args_bridge {
     /// accept any `Number` variant, so nothing else changes).
     fn integral(value: DslValue) -> DslValue {
         match value {
-            DslValue::Number(dsl::Number::Float(float)) if float.is_finite() && float.fract() == 0.0 && float.abs() < 9.007_199_254_740_992e15 => {
-                if float >= 0.0 { DslValue::Number(dsl::Number::UInt(float as u64)) } else { DslValue::Number(dsl::Number::Int(float as i64)) }
+            DslValue::Number(semio_framework_value::Number::Float(float)) if float.is_finite() && float.fract() == 0.0 && float.abs() < 9.007_199_254_740_992e15 => {
+                if float >= 0.0 { DslValue::Number(semio_framework_value::Number::UInt(float as u64)) } else { DslValue::Number(semio_framework_value::Number::Int(float as i64)) }
             }
             DslValue::Array(items) => DslValue::Array(items.into_iter().map(integral).collect()),
             DslValue::Object(entries) => DslValue::Object(entries.into_iter().map(|(key, value)| (key, integral(value))).collect()),
@@ -349,7 +349,7 @@ mod args_bridge {
         match value {
             DslValue::String(_) => value,
             DslValue::Null => DslValue::String(String::new()),
-            other => DslValue::String(dsl::json::to_json_string(&other)),
+            other => DslValue::String(semio_framework_pack_json::to_json_string(&other)),
         }
     }
 
@@ -400,7 +400,7 @@ mod args_bridge {
         folded
     }
 
-    fn decode<T: dsl::FromValue>(action: &str, value: DslValue) -> Result<T, Fault> {
+    fn decode<T: semio_framework_value::FromValue>(action: &str, value: DslValue) -> Result<T, Fault> {
         T::from_value(value).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-args"), format!("shooting action '{action}' arguments do not decode: {error}")))
     }
 
@@ -408,8 +408,8 @@ mod args_bridge {
         const IDS: &[(&str, &str)] = &[("ids", "asset_ids"), ("asset_id", "asset_ids")];
         const SHOT_IDS: &[(&str, &str)] = &[("ids", "shot_ids"), ("shot_id", "shot_ids")];
         const PRESSED: &[(&str, &str)] = &[("pressed", "value")];
-        let zero = || DslValue::Number(dsl::Number::Float(0.0));
-        let one = || DslValue::Number(dsl::Number::Float(1.0));
+        let zero = || DslValue::Number(semio_framework_value::Number::Float(0.0));
+        let one = || DslValue::Number(semio_framework_value::Number::Float(1.0));
         let text = |value: &str| DslValue::String(value.into());
         let plain = || fold(args, &[], &[]);
         Ok(match action {
@@ -703,7 +703,7 @@ impl ArtifactEditor for ShootingPlayApp {
             return Ok(None);
         }
         if request.command.command_id() != request.tool_id {
-            return Err(Fault::new(FaultOrigin::App, FaultCode::new("shooting.retained.tool-mismatch"), "Shooting command does not match its exact registered tool"));
+            return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.tool-mismatch"), "Shooting command does not match its exact registered tool"));
         }
         if shooting_bounded_extent(&request.command, &request.snapshot, &request.interaction_state).is_none() {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("shooting.retained.extent"), "Shooting bounded route exceeded its declared work extent"));
@@ -844,10 +844,13 @@ impl ArtifactEditor for ShootingPlayApp {
 
     /// 🕹️ The flat `assets` domain: every asset of the document at `asset` granularity, in document order — without
     /// it the framework's revalidation drops every pick, and an id-less gumball gesture finds no selection to move.
-    fn interaction_topology(doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> semio_framework_plugin::InteractionTopology {
+    fn interaction_topology(doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> Result<semio_framework_plugin::InteractionTopology, semio_framework_value::ValueError> {
+ Ok((||{
         let ordered = doc.snapshot.assets.iter().map(|asset| semio_framework_plugin::TopologyNode { id: asset.id.clone(), granularity: "asset".into(), parent: None }).collect();
         semio_framework_plugin::InteractionTopology { domains: std::collections::BTreeMap::from([(SHOOTING_INTERACTION_DOMAIN.into(), semio_framework_plugin::DomainTopology { ordered })]) }
-    }
+    
+})())
+}
 
     fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<Self::Command, Fault> {
         args_bridge::command_from_action(action, args)
@@ -926,7 +929,7 @@ impl ArtifactEditor for ShootingPlayApp {
 /// dropped without its bounded retirement authority traps the guest on Drop).
 pub fn reset_document_effect(scene: &ShootingSnapshot) -> semio_framework_plugin::Effect {
     let pack = <ShootingSnapshot as store::ArtifactPack>::encode_pack(scene);
-    let spr = semio_framework_plugin::resolve_ready(store::empty_document_spr("shooting", SHOOTING_DOCUMENT_SCHEMA));
+    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr("shooting", SHOOTING_DOCUMENT_SCHEMA));
     semio_framework_plugin::Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️ResetDocument

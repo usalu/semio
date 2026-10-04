@@ -60,7 +60,7 @@ fn solid_slab_doc() -> Fem3dSnapshot {
 fn round_trip(snapshot: &Fem3dSnapshot, operation: &Fem3dMutation) -> Fem3dSnapshot {
     let forward = vcs::apply_mutation(snapshot, operation).expect("valid mutation").0;
     let mut restored = forward.clone();
-    for back in operation.inverse(snapshot) {
+    for back in operation.inverse(snapshot).expect("valid retained mutation inverse fixture") {
         restored = vcs::apply_mutation(&restored, &back).expect("valid inverse mutation").0;
     }
     assert_eq!(&restored, snapshot, "inverse() must restore the pre-mutation document");
@@ -200,9 +200,9 @@ async fn solid_create_replace_and_delete_round_trip() {
 #[semio_framework_async_macros::async_test]
 async fn missing_target_inverse_and_diff_are_no_ops() {
     let base = Fem3dSnapshot::default();
-    assert!(Fem3dMutation::DeleteNode(delete_node::DeleteNode { id: "ghost".into() }).inverse(&base).is_empty());
-    assert!(Fem3dMutation::ReplaceMaterial(replace_material::ReplaceMaterial { id: "ghost".into(), new_material: FemMaterial { id: "ghost".into(), name: "x".into(), e: 1.0, g: 1.0, nu: 0.3, rho: 1.0 } }).inverse(&base).is_empty());
-    assert!(Fem3dMutation::RemoveLoad(remove_load::RemoveLoad { case_id: "ghost".into(), load_id: "ghost".into() }).inverse(&base).is_empty());
+    assert!(Fem3dMutation::DeleteNode(delete_node::DeleteNode { id: "ghost".into() }).inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
+    assert!(Fem3dMutation::ReplaceMaterial(replace_material::ReplaceMaterial { id: "ghost".into(), new_material: FemMaterial { id: "ghost".into(), name: "x".into(), e: 1.0, g: 1.0, nu: 0.3, rho: 1.0 } }).inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
+    assert!(Fem3dMutation::RemoveLoad(remove_load::RemoveLoad { case_id: "ghost".into(), load_id: "ghost".into() }).inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
     assert_eq!(*Fem3dMutation::AddLoad(add_load::AddLoad { case_id: "ghost".into(), load: Box::new(FemLoad::Nodal { id: "l1".into(), node_id: "n1".into(), dof: FemDof::Tz, value: 1.0 }) }).diff(&base).diff(), Fem3dDiff::default());
 }
 // #endregion 🔖️OpRoundTrip
@@ -407,7 +407,7 @@ async fn replace_combination_missing_target_is_error() {
 async fn replace_node_rename_is_a_target_mismatch_error() {
     let (base, ..) = cantilever_fixture();
     let outcome = Fem3dMutation::ReplaceNode(replace_node::ReplaceNode { id: "n1".into(), new_node: FemNode { id: "n9".into(), x: 0.0, y: 0.0, z: 0.0 } }).diff(&base);
-    assert_eq!(outcome.worst_level(), Some(protocol::Severity::Error));
+    assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Error));
     assert_eq!(outcome.messages()[0].code.0, "mutation.target-mismatch");
     assert_eq!(*outcome.diff(), Fem3dDiff::default());
 }
@@ -417,6 +417,6 @@ async fn create_node_duplicate_id_is_fatal() {
     let (base, ..) = cantilever_fixture();
     let outcome = Fem3dMutation::CreateNode(create_node::CreateNode { node: FemNode { id: "n1".into(), x: 0.0, y: 0.0, z: 0.0 } }).diff(&base);
     protocol::os_spr::protocol_laws::assert_fatal_never_applies(&outcome).await;
-    assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+    assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal));
 }
 //#endregion 🔖️OutcomeLaws

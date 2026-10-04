@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "role",
+    "ihdr",
+    "chunkKinds",
+    "edit",
+    "editedRgba",
+    "compressedPixels"
+  ],
+  "properties": {
+    "role": {
+      "const": "exactNativeChunks"
+    },
+    "ihdr": {
+      "const": {
+        "width": 4,
+        "height": 1,
+        "bitDepth": 2,
+        "colorType": 3,
+        "compression": 0,
+        "filter": 0,
+        "interlace": 0
+      }
+    },
+    "chunkKinds": {
+      "const": [
+        "IHDR",
+        "PLTE",
+        "tRNS",
+        "bKGD",
+        "IDAT",
+        "IEND"
+      ]
+    },
+    "edit": {
+      "const": {
+        "table": "png_ihdr",
+        "field": "width",
+        "value": 3
+      }
+    },
+    "editedRgba": {
+      "const": [
+        255,
+        0,
+        0,
+        255,
+        255,
+        0,
+        0,
+        64,
+        0,
+        255,
+        0,
+        128
+      ]
+    },
+    "compressedPixels": {
+      "const": "unclosed"
+    }
+  }
+}

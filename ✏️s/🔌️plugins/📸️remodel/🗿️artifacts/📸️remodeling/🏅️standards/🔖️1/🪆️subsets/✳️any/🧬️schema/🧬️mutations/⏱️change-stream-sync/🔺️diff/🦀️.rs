@@ -14,7 +14,7 @@ pub fn diff(payload: &super::ChangeStreamSync, base: &RemodelingSnapshot) -> pro
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Stream \"{}\" sync offset must be finite, got {}.", payload.id, payload.new_sync_offset_ms), [payload.id.clone()]);
     }
     if existing.sync_offset_ms == payload.new_sync_offset_ms {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Stream \"{}\" sync offset is already {}ms.", payload.id, payload.new_sync_offset_ms));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Stream \"{}\" sync offset is already {}ms.", payload.id, payload.new_sync_offset_ms));
     }
     let mut streams = base.streams.clone();
     if let Some(stream) = streams.iter_mut().find(|stream| stream.id == payload.id) {

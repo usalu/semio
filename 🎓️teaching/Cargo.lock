@@ -729,6 +729,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-diagnostic"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "semio-framework-dispatch-macros"
 version = "0.1.0"
 dependencies = [
@@ -756,10 +765,12 @@ dependencies = [
 name = "semio-framework-replication"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-diagnostic",
  "semio-framework-hash",
  "semio-framework-io-base64",
  "semio-framework-schema-registry",
  "semio-framework-schema-state",
+ "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-derive",
  "serde",

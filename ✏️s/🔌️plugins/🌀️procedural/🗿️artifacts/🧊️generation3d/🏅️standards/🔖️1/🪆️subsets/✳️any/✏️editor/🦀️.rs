@@ -307,16 +307,16 @@ pub struct Generation3dPlayApp;
 /// declared action must bridge from its own id under the shell's staged args alone — the same contract
 /// `parse_preview_camera_json` keeps for `setCamera`. A PRESENT but malformed one still faults: a camera the
 /// graph cannot express must never be silently replaced by one it can.
-fn parse_flow_viewport(args: &dsl::DslValue) -> Result<semio_framework_os_kernel::Viewport2d, Fault> {
+fn parse_flow_viewport(args: &semio_framework_value::DslValue) -> Result<semio_framework_os_kernel::Viewport2d, Fault> {
     let Some(value) = args.get("viewport").cloned() else { return Ok(semio_framework_os_kernel::Viewport2d::default()) };
     semio_framework_value::FromValue::from_value(value).map_err(|error| Fault::from(format!("invalid nodeGraphViewport viewport: {error}")))
 }
 
 /// 🎥️ Parses the 3D preview camera out of `command_from_action`'s JSON args; falls back to the default
 /// camera on any malformed/missing `camera` object.
-fn parse_preview_camera_json(args: &dsl::DslValue) -> crate::editor::generation3d::config::Generation3dPreviewCamera {
+fn parse_preview_camera_json(args: &semio_framework_value::DslValue) -> crate::editor::generation3d::config::Generation3dPreviewCamera {
     if let Some(camera) = args.get("camera") {
-        if let Ok(parsed) = <crate::editor::generation3d::config::Generation3dPreviewCamera as protocol::FromValue>::from_value(camera.clone()) {
+        if let Ok(parsed) = <crate::editor::generation3d::config::Generation3dPreviewCamera as semio_framework_value::FromValue>::from_value(camera.clone()) {
             return parsed;
         }
     }
@@ -372,7 +372,15 @@ pub fn generation3d_render_body(
         generate_preview::GENERATION_3D_PLAY_BODY_GENERATE_PREVIEW => generate_preview::render(&document.host_snapshot, &document.generation, selected_generation_id, preview_eval_text, config, labels, active_utility, marks, session, run),
         artifact_panel::GENERATION_3D_PLAY_BODY_ARTIFACT => artifact_panel::render(document, config, session, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, artifact_panel::GENERATION_3D_PLAY_BODY_ARTIFACT)),
         catalogue_panel::GENERATION_3D_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_framework_plugin::TreeWindows::for_body(view_state, catalogue_panel::GENERATION_3D_PLAY_BODY_CATALOGUE)),
-        inspection_panel::GENERATION_3D_PLAY_BODY_INSPECTION => inspection_panel::render(&document.host_snapshot, &marks.graph_selection_ids(), labels),
+        inspection_panel::GENERATION_3D_PLAY_BODY_INSPECTION => {
+            let evaluation = preview_eval_text.unwrap_or_else(|| session.eval_json());
+            let selected = marks.graph_selection_ids();
+            let export_widget = selected.first().filter(|id| document.host_snapshot.widgets.iter().any(|widget| matches!(widget, semio_framework_artifact_flow_flow::Widget::OutputExport { id: target, .. } if target == *id)));
+            let exported = match export_widget { Some(widget) => export_meshes_from_session(document, config, session, Some(widget.as_str())), None => Ok(Vec::new()) };
+            let export_ready = exported.is_ok();
+            let meshes = exported.unwrap_or_default();
+            inspection_panel::render(&document.host_snapshot, &marks.graph_selection_ids(), labels, &semio_framework_plugin::TreeWindows::for_body(view_state, inspection_panel::GENERATION_3D_PLAY_BODY_INSPECTION), view_state.locale, view_state.terminology, &meshes, evaluation, session.status_json(), export_ready)
+        },
         _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.unknown-body", "fixed UI unknown-body admission failed")),
     }?;
     Ok(semio_framework_plugin::built_to_component_tree(node))
@@ -470,18 +478,6 @@ const GENERATION3D_PREVIEW_TOOL_IDS: &[&str] = &["setActiveExample", "addGenerat
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 const GENERATION3D_RETAINED_CAPACITY: ArtifactRetainedWorkCapacity = ArtifactRetainedWorkCapacity::for_invertible_items(32);
 const GENERATION3D_RETAINED_WORK_ITEMS: usize = GENERATION3D_RETAINED_CAPACITY.work_items();
-/// 🧺️ The ONE fold-contract footprint BOTH durable lanes of all 29 retained routes declare —
-/// artifact and config alike, never a second literal. `store::ArtifactStore::fold_batch_item`
-/// rejects a candidate whose `forwards.len() + inverse.len()` exceeds the gesture-wide footprint
-/// this preflight declared, and every `Generation3dMutation`/`Generation3dConfigMutation` inverse is
-/// at most one row (proved by `fold_contract::…_declares_the_exact_fold_envelope_…`), so the exact
-/// declaration is one forward row plus one inverse row. The `work_items: 1` this used to build
-/// fail-closed EVERY retained command with `batched item candidate failed its exact fixed fold
-/// contract` — the boot-time `setActiveExample` included
-/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-fn generation3d_one_item_footprint(retained_bytes: usize) -> store::ArtifactStoreOneItemFootprint {
-    GENERATION3D_RETAINED_CAPACITY.one_item_footprint(retained_bytes)
-}
 /// 🎒️ Real bound for one Artifact-lane edit: the 8 built-in example DSLs top out around 1.6 KB of text
 /// (`📚️examples/*/🖼️assets/*/🗣️.dsl.semio`), and `setActiveExample`'s full-fixture replacement is the
 /// single largest Artifact mutation any of the 27 tools ever emits — 64 KiB stays a real ceiling, not a
@@ -589,7 +585,7 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dPreview
         GENERATION3D_RETAINED_CAPACITY.rows_for_items(snapshot.host_snapshot.widgets.len().checked_add(2)?)
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation3dPlayApp>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation3dPlayApp>>, Fault> {
         if self.closing || self.complete {
             return Err(Fault::from("generation3d-preview-work-is-terminal"));
         }
@@ -735,7 +731,7 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dFlowEva
         .flatten()
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation3dPlayApp>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation3dPlayApp>>, Fault> {
         if self.complete || self.closing { return Err(Fault::from("generation3d-flow-eval-window-work-terminal")); }
         let turn_started_us = semio_framework_job::default_now_us();
         let (payload_window_id, payload_window_kind_id) = generation3d_flow_eval_window_address(input.command).ok_or_else(|| Fault::from("generation3d-flow-eval-window-command-mismatch"))?;
@@ -790,13 +786,13 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dFlowEva
 /// with every open press's and typing run's provisional leaves (the framework's, as of admission) and every open gumball
 /// gesture (this instance's) folded in — `None` while nothing is open, so the committed snapshot is read as is. The
 /// overlay is retired cold by the caller, never dropped.
-fn generation3d_provisional_snapshot(committed: &Generation3dSnapshot, provisional: &[dsl::DslValue], gumball: &transform_commands::GumballGestures) -> Option<Generation3dSnapshot> {
+fn generation3d_provisional_snapshot(committed: &Generation3dSnapshot, provisional: &[semio_framework_value::DslValue], gumball: &transform_commands::GumballGestures) -> Option<Generation3dSnapshot> {
     if provisional.is_empty() && gumball.is_empty() {
         return None;
     }
     let mut overlay = committed.clone();
     for value in provisional {
-        if let Ok(leaf) = <Generation3dMutation as dsl::FromValue>::from_value(value.clone()) {
+        if let Ok(leaf) = <Generation3dMutation as semio_framework_value::FromValue>::from_value(value.clone()) {
             generation3d_fold_provisional(&mut overlay, leaf);
         }
     }
@@ -819,7 +815,7 @@ fn generation3d_fold_provisional(overlay: &mut Generation3dSnapshot, leaf: Gener
 /// snapshot with every open gesture folded in — the overlay its flow evaluation reads — and the selection carried onto
 /// the operators the gestures splice, so the first grab of a shape keeps painting and selecting the instance the live
 /// evaluation moves. `None` while no gesture is open; the caller retires the overlay cold.
-fn generation3d_gumball_preview(committed: &Generation3dSnapshot, marks: &PreviewInteractionMarks, gumball: &transform_commands::GumballGestures) -> Option<(Generation3dSnapshot, PreviewInteractionMarks)> {
+pub fn generation3d_gumball_preview(committed: &Generation3dSnapshot, marks: &PreviewInteractionMarks, gumball: &transform_commands::GumballGestures) -> Option<(Generation3dSnapshot, PreviewInteractionMarks)> {
     if gumball.is_empty() {
         return None;
     }
@@ -856,8 +852,8 @@ fn generation3d_retained_reduce(
     if let Some(gesture) = generation3d_gumball_gesture(command) {
         let view = context.and_then(|context| context.view_state.as_ref());
         let window = gesture.window.or_else(|| view.and_then(|view| view.window_id.as_deref())).unwrap_or_default();
-        let phase = transform_commands::GumballPhase::parse(gesture.phase, gesture.reason).ok_or_else(|| Fault::from("generation3d-gumball-phase-unknown"))?;
-        if let transform_commands::GumballPhase::Abort(reason) = phase {
+        let phase = semio_framework_tool_machine::GesturePhase::parse(gesture.phase, gesture.reason).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-args"), "the gumball gesture phase or abort reason is unknown"))?;
+        if let semio_framework_tool_machine::GesturePhase::Abort(reason) = phase {
             gumball.abort(window, reason);
             return Ok(Emit::default());
         }
@@ -868,7 +864,7 @@ fn generation3d_retained_reduce(
             return Ok(Emit::default());
         }
         if ids.iter().any(|id| selection::ComponentTarget::parse(id).is_some()) {
-            selection::validate_cached_components(&snapshot.host_snapshot, session, &ids).map_err(Fault::from)?;
+            selection::validate_cached_components(&snapshot.host_snapshot, session, &ids, Some(&operation.canonical_base_revision)).map_err(Fault::from)?;
         }
         return gumball.dispatch(
             transform_commands::GumballDispatch { verb: gesture.verb, window, ids, motion: gesture.motion, phase, authoring_seed: &operation.authoring_seed, base_revision: operation.canonical_base_revision },
@@ -881,10 +877,10 @@ fn generation3d_retained_reduce(
     let component_ids: &[String] = interaction.selection.get(selection::DOMAIN).map_or(&[], |selection| selection.ids.as_slice());
     let graph_ids: &[String] = interaction.selection.get("graph").map_or(&[], |selection| selection.ids.as_slice());
     if let Some(ids) = generation3d_component_targets(command, context.and_then(|context| context.view_state.as_ref()), interaction.active_granularity.get(selection::DOMAIN).map(String::as_str), component_ids, graph_ids).filter(|ids| !ids.is_empty()) {
-        selection::validate_cached_components(&snapshot.host_snapshot, session, ids).map_err(Fault::from)?;
+        selection::validate_cached_components(&snapshot.host_snapshot, session, ids, Some(&operation.canonical_base_revision)).map_err(Fault::from)?;
     }
     match command {
-        Generation3dCommand::EditMeshSelection(payload) => edit_mesh_selection::apply_selected(payload, &doc, interaction.selection.get(selection::DOMAIN).map_or(&[], |selection| selection.ids.as_slice())),
+        Generation3dCommand::EditMeshSelection(payload) => edit_mesh_selection::apply_selected("editMeshSelection", payload, &doc, interaction.selection.get(selection::DOMAIN).map_or(&[], |selection| selection.ids.as_slice())),
         Generation3dCommand::KnifeMeshSelection(payload) => knife_mesh_selection::apply_selected(payload, &doc, interaction.selection.get(selection::DOMAIN).map_or(&[], |selection| selection.ids.as_slice())),
         Generation3dCommand::DeleteSelection(_) if selection::edits_components(context.and_then(|context| context.view_state.as_ref()), interaction.active_granularity.get(selection::DOMAIN).map(String::as_str)) => edit_mesh_selection::delete_selected(&doc, interaction.selection.get(selection::DOMAIN).map_or(&[], |selection| selection.ids.as_slice())),
         Generation3dCommand::DeleteSelection(_payload) => Ok(delete_selection::apply_selected(&doc, &selected())),
@@ -972,7 +968,7 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dSession
         generation3d_bounded_extent(command, snapshot, interaction)
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation3dPlayApp>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation3dPlayApp>>, Fault> {
         if self.consumed {
             return Err(Fault::from("generation3d-session-command-work-repeated"));
         }
@@ -1208,11 +1204,81 @@ struct Generation3dDocumentIoWork {
     tool_id: &'static str,
     instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
     consumed: bool,
+    closing: bool,
+    source_identity: Option<usize>,
+    projection: Option<semio_framework_dsl_record::native_encoding::RetainedFieldProjection<Generation3dSnapshot>>,
+    projected: Option<semio_framework_dsl_record::FieldValue>,
+    writer: Option<semio_framework_dsl_record::RetainedRecordWriter>,
+    text: Option<store::semio_format::RetainedTextEnvelope>,
+    envelope: Option<crate::standards::v1::subsets::any::io::document_io::Generation3dDocumentEnvelope>,
+    candidate: Option<crate::standards::v1::subsets::any::io::Generation3dDocumentExport>,
+    retirement: Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
+    encoding: Option<semio_framework_value::native_encoding::NativeEncodeContinuation>,
+    phase: u8,
 }
 
 impl Generation3dDocumentIoWork {
     fn new(tool_id: &'static str, instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
-        Self { tool_id, instance_owner, consumed: false }
+        Self { tool_id, instance_owner, consumed: false, closing:false, source_identity:None, projection:None, projected:None, writer:None, text:None, envelope:None, candidate:None, retirement:None, encoding:None, phase:0 }
+    }
+
+    fn text_step(&mut self,input:&ArtifactCommandInputs<'_,EditorApp<Generation3dPlayApp>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<ArtifactCommandWorkStep<EditorApp<Generation3dPlayApp>>,Fault>{
+        use semio_framework_value::{NativeEncodeControl,SnapshotRetirementStep};
+        use semio_framework_value::retirement::owned_retirement;
+        let identity=input.snapshot as*const Generation3dSnapshot as usize;
+        if self.source_identity.is_some_and(|source|source!=identity){return Err(Fault::from("generation3d-document-source-changed"))}
+        if cx.is_cancelled(){return Err(Fault::from("generation3d-document-canceled"))}
+        let stage=match self.phase{0|1=>"document-project",2=>"document-physical",3=>"document-envelope",4=>"document-base64",_=>"document-retirement"};
+        cx.set_stage(stage);
+        while !cx.should_yield(){
+            if let Some(retirement)=self.retirement.as_mut(){
+                match retirement.close_step(1,8).map_err(|error|Fault::from(error.to_string()))?{
+                    SnapshotRetirementStep::Complete=>{self.retirement.take();},
+                    SnapshotRetirementStep::Blocked=>break,
+                    SnapshotRetirementStep::Pending{..}=>{},
+                }
+                cx.consume_fuel(1);
+                continue;
+            }
+            let mut accepted=|_|!cx.is_cancelled();
+            let mut control=match self.encoding.take(){Some(receipt)=>NativeEncodeControl::resume(receipt,&mut accepted),None=>Ok(NativeEncodeControl::new(generation3d_document_io_contract().max_output_bytes,&mut accepted))}.map_err(|error|Fault::from(error.to_string()))?;
+            let result=(||->Result<(),semio_framework_value::ValueError>{
+                match self.phase{
+                    0=>{self.source_identity=Some(identity);self.projection=Some(semio_framework_dsl_record::native_encoding::RetainedFieldProjection::new(input.snapshot));self.phase=1;},
+                    1=>if let Some(value)=self.projection.as_mut().unwrap().step(input.snapshot,1,&mut control)?{
+                        self.projected=Some(value);
+                        let spec=crate::standards::v1::subsets::any::schema::snapshot::text::generation3d_document_spec_controlled(&mut control)?;
+                        if !matches!(self.projected,Some(semio_framework_dsl_record::FieldValue::Record(_))){return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"generation3d projection root is not a record"))}
+                        let Some(semio_framework_dsl_record::FieldValue::Record(record))=self.projected.take()else{unreachable!()};
+                        self.writer=Some(semio_framework_dsl_record::RetainedRecordWriter::new(record,spec,semio_framework_dsl_record::JoinMode::Document,generation3d_document_io_contract().max_output_bytes));
+                        self.retirement=Some(owned_retirement(self.projection.take().unwrap()));self.phase=2;
+                    },
+                    2=>if let Some(body)=self.writer.as_mut().unwrap().step(1,&mut control)?{
+                        self.text=Some(store::semio_format::RetainedTextEnvelope::new("procedural.generation3d".into(),store::semio_format::Component::Dsl,1,body));
+                        self.retirement=Some(owned_retirement(self.writer.take().unwrap()));self.phase=3;
+                    },
+                    3=>if let Some(text)=self.text.as_mut().unwrap().step(1,8,&mut control)?{
+                        let row=crate::standards::v1::subsets::any::io::document_io::EXPORT_FORMATS.iter().find(|row|row.id=="txt").unwrap();
+                        self.envelope=Some(crate::standards::v1::subsets::any::io::document_io::Generation3dDocumentEnvelope::new(row,text.into_bytes()));
+                        self.retirement=Some(owned_retirement(self.text.take().unwrap()));self.phase=4;
+                    },
+                    4=>if let Some(export)=self.envelope.as_mut().unwrap().step(1,&mut control).map_err(|error|semio_framework_value::ValueError::new(error.kind,error.message))?{
+                        self.candidate=Some(export);self.retirement=Some(owned_retirement(self.envelope.take().unwrap()));self.phase=5;
+                    },
+                    _=>{},
+                }
+                Ok(())
+            })();
+            self.encoding=Some(control.pause().map_err(|error|Fault::from(error.to_string()))?);
+            result.map_err(|error|Fault::from(error.to_string()))?;
+            cx.consume_fuel(1);
+            if self.phase==5&&self.retirement.is_none(){
+                let export=self.candidate.take().ok_or_else(||Fault::from("generation3d-document-output-missing"))?;
+                self.consumed=true;
+                return Ok(ArtifactCommandWorkStep::Complete(Emit::effect(Effect::DownloadMediaExport{filename:export.filename,mime_type:export.mime_type,data:export.data,encoding:export.encoding})));
+            }
+        }
+        Ok(ArtifactCommandWorkStep::Progress{stage,preview:b"{}"})
     }
 }
 
@@ -1238,20 +1304,19 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dDocumen
         generation3d_bounded_extent(command, snapshot, interaction)
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation3dPlayApp>>, Fault> {
-        if self.consumed {
-            return Err(Fault::from("generation3d-document-io-work-repeated"));
-        }
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation3dPlayApp>>, Fault> {
+        if self.consumed || self.closing { return Err(Fault::from("generation3d-document-io-work-repeated")); }
+        if matches!(input.command,Generation3dCommand::ExportDocument(payload) if payload.format=="txt"){return self.text_step(input,cx)}
         self.consumed = true;
         let doc = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
         let cfg = ConfigView { snapshot: input.config, window: None };
         let emit = match input.command {
-            Generation3dCommand::ImportDocumentRequest(_) => import_document_request::emit()?,
-            // 👁️ The export reads the RETAINED session's already-tessellated preview, never a second
-            // evaluation — see `export_document::retained_preview` and `export_mesh_from_session`.
+            Generation3dCommand::ImportDocumentRequest(payload) => import_document_request::emit(payload, &doc.snapshot.host_snapshot)?,
             Generation3dCommand::ExportDocument(payload) => {
-                let preview = self.instance_owner.with_mut::<Generation3dInstanceOperationOwner, _>(|owner| owner.with_session(|session| export_document::retained_preview(&doc, &cfg, session)))?;
-                export_document::emit(payload, &doc, preview.as_ref())?
+                let meshes = if payload.format == "txt" { None } else {
+                    self.instance_owner.with_mut::<Generation3dInstanceOperationOwner, _>(|owner| owner.with_session(|session| export_document::retained_meshes(&doc, &cfg, session, payload.widget_id.as_deref())))??
+                };
+                export_document::emit(payload, &doc, meshes.as_deref())?
             }
             Generation3dCommand::ImportDocument(payload) => {
                 let windows = generation3d_preview_windows(input.context.and_then(|context| context.view_state.as_ref()));
@@ -1269,6 +1334,30 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dDocumen
         };
         Ok(ArtifactCommandWorkStep::Complete(emit))
     }
+
+    fn begin_close(&mut self){self.closing=true;}
+
+    fn close_step(&mut self,maximum_items:usize,maximum_bytes:usize)->semio_framework_job::InteractiveJobCloseStep{
+        use semio_framework_value::retirement::owned_retirement;
+        use semio_framework_job::InteractiveJobCloseStep;
+        if !self.closing||maximum_items==0||maximum_bytes==0{return InteractiveJobCloseStep::Blocked}
+        if self.retirement.is_none(){
+            if let Some(value)=self.projection.take(){self.retirement=Some(owned_retirement(value));}
+            else if let Some(value)=self.projected.take(){self.retirement=Some(owned_retirement(value));}
+            else if let Some(value)=self.writer.take(){self.retirement=Some(owned_retirement(value));}
+            else if let Some(value)=self.text.take(){self.retirement=Some(owned_retirement(value));}
+            else if let Some(value)=self.envelope.take(){self.retirement=Some(owned_retirement(value));}
+            else if let Some(value)=self.candidate.take(){self.retirement=Some(owned_retirement((value.filename,value.mime_type,value.data,value.encoding)));}
+            else{self.encoding.take();return InteractiveJobCloseStep::Complete}
+        }
+        match self.retirement.as_mut().unwrap().close_step(maximum_items,maximum_bytes){
+            Ok(semio_framework_value::SnapshotRetirementStep::Complete)=>{self.retirement.take();InteractiveJobCloseStep::Pending{released_items:1,released_bytes:0}},
+            Ok(semio_framework_value::SnapshotRetirementStep::Pending{released_items,released_bytes})=>InteractiveJobCloseStep::Pending{released_items,released_bytes},
+            _=>InteractiveJobCloseStep::Blocked,
+        }
+    }
+
+    fn terminal_is_empty(&self)->bool{self.closing&&self.projection.is_none()&&self.projected.is_none()&&self.writer.is_none()&&self.text.is_none()&&self.envelope.is_none()&&self.candidate.is_none()&&self.retirement.is_none()&&self.encoding.is_none()}
 }
 
 struct Generation3dDocumentIoJobFactory {
@@ -1456,7 +1545,7 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dContrib
         generation3d_bounded_extent(command, snapshot, interaction)
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation3dPlayApp>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation3dPlayApp>>, Fault> {
         if self.consumed {
             return Err(Fault::from("generation3d-contributions-work-repeated"));
         }
@@ -1557,36 +1646,6 @@ impl Generation3dContributionsJobFactoryProofs {
 //#endregion 🧩️ContributionsRoute
 
 //#region 📬️ArtifactStorePreparation
-/// 🧬️ Builds one `protocol::Edit<M>` for either lane's `advance()` — the two lanes differ only in `M`
-/// and their id prefix, so this one generic helper replaces two copies of the same ~20-line literal.
-fn generation3d_next_edit<M>(prefix: &str, forward: M, inverse: Vec<M>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<M> {
-    let id = format!("{prefix}-{}", authority.next_sequence_number());
-    protocol::Edit { line: authority.line_id().map(str::to_owned),
-        id: id.clone(),
-        actor: Some(authority.actor().to_string()),
-        forwards: vec![forward],
-        inverse,
-        mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
-            dependencies: Vec::new(),
-            base_version: authority.base_applied_edit_count() as u64,
-            author_id: Some(protocol::ActorId(authority.actor().to_string())),
-            timestamp: authority.next_clock(),
-            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-            payload_hash: None,
-            semantic_kind: None,
-            label: None,
-            group_id: None,
-            origin: Default::default(),
-            transaction: None,
-        }],
-        description, verb: None,
-        coalesce_key: None,
-        sequence_number: authority.next_sequence_number(),
-        started_at: String::new(),
-        finished_at: None,
-    }
-}
 
 fn generation3d_artifact_mutation_retained_bytes(mutation: &Generation3dMutation) -> Result<usize, String> {
     ::protocol::OpBinary::encode_op(mutation).map(|bytes| bytes.len()).map_err(|_| "generation3d-artifact-mutation-encode-failed".to_string())
@@ -1597,7 +1656,7 @@ fn admit_generation3d_artifact_mutation(mutation: &Generation3dMutation) -> Resu
     if retained_bytes > GENERATION3D_ARTIFACT_STORE_MAXIMUM_BYTES {
         return Err("generation3d-artifact-mutation-envelope".into());
     }
-    Ok(generation3d_one_item_footprint(retained_bytes))
+    Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))
 }
 
 /// 🧬️ Raises the mutation's delta, applies it and CLOSES the delta — a `Generation3dDiff` owns the
@@ -1607,7 +1666,7 @@ fn admit_generation3d_artifact_mutation(mutation: &Generation3dMutation) -> Resu
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). Mirrors the `🌀️generation2d` twin exactly.
 fn prepare_generation3d_artifact(base: &Generation3dSnapshot, mutation: Generation3dMutation) -> Result<(Generation3dSnapshot, Vec<Generation3dMutation>, Generation3dMutation), String> {
     admit_generation3d_artifact_mutation(&mutation)?;
-    let inverse = protocol::Mutation::inverse(&mutation, base);
+    let inverse = protocol::Mutation::inverse(&mutation, base).map_err(semio_framework_value::ValueError::into_message)?;
     let diff = protocol::Mutation::diff(&mutation, base).into_parts().0;
     let applied = protocol::MutationDiff::apply(&diff, base);
     diff.retire_cold();
@@ -1677,7 +1736,7 @@ impl store::ArtifactStoreOneItemPreparation<Generation3dSnapshot, Generation3dMu
         let mutation = self.mutation.take().ok_or_else(|| "generation3d-artifact-mutation-owner-missing".to_string())?;
         let (post, inverse, forward) = prepare_generation3d_artifact(base.get(), mutation)?;
         let authority = self.authority.as_ref().ok_or_else(|| "generation3d-artifact-authority-missing".to_string())?;
-        let edit = generation3d_next_edit("generation3d-artifact-retained", forward, inverse, self.description.take(), authority);
+        let edit = authority.next_edit(forward, inverse);
         let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
         self.prepared = Some(prepared);
@@ -1704,7 +1763,7 @@ impl store::ArtifactStoreOneItemPreparation<Generation3dSnapshot, Generation3dMu
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -1716,7 +1775,7 @@ impl store::ArtifactStoreOneItemPreparation<Generation3dSnapshot, Generation3dMu
         }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
-                return Err("generation3d-artifact-base-retirement-rejected".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "generation3d-artifact-base-retirement-rejected"));
             }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -1742,12 +1801,12 @@ fn admit_generation3d_config_mutation(mutation: &Generation3dConfigMutation) -> 
     if retained_bytes > GENERATION3D_CONFIG_STORE_MAXIMUM_BYTES {
         return Err("generation3d-config-mutation-envelope".into());
     }
-    Ok(generation3d_one_item_footprint(retained_bytes))
+    Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))
 }
 
 fn prepare_generation3d_config(base: &Generation3dConfig, mutation: Generation3dConfigMutation) -> Result<(Generation3dConfig, Vec<Generation3dConfigMutation>, Generation3dConfigMutation), String> {
     admit_generation3d_config_mutation(&mutation)?;
-    let inverse = protocol::Mutation::inverse(&mutation, base);
+    let inverse = protocol::Mutation::inverse(&mutation, base).map_err(semio_framework_value::ValueError::into_message)?;
     let diff = protocol::Mutation::diff(&mutation, base).into_parts().0;
     let post = protocol::MutationDiff::apply(&diff, base).map_err(|_| "generation3d-config-diff-apply-failed".to_string())?;
     Ok((post, inverse, mutation))
@@ -1815,7 +1874,7 @@ impl store::ArtifactStoreOneItemPreparation<Generation3dConfig, Generation3dConf
         let mutation = self.mutation.take().ok_or_else(|| "generation3d-config-mutation-owner-missing".to_string())?;
         let (post, inverse, forward) = prepare_generation3d_config(base.get(), mutation)?;
         let authority = self.authority.as_ref().ok_or_else(|| "generation3d-config-authority-missing".to_string())?;
-        let edit = generation3d_next_edit("generation3d-config-retained", forward, inverse, self.description.take(), authority);
+        let edit = authority.next_edit(forward, inverse);
         let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
         self.prepared = Some(prepared);
@@ -1842,7 +1901,7 @@ impl store::ArtifactStoreOneItemPreparation<Generation3dConfig, Generation3dConf
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -1854,7 +1913,7 @@ impl store::ArtifactStoreOneItemPreparation<Generation3dConfig, Generation3dConf
         }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
-                return Err("generation3d-config-base-retirement-rejected".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "generation3d-config-base-retirement-rejected"));
             }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -1880,7 +1939,7 @@ impl ArtifactEditor for Generation3dPlayApp {
     /// projection is honestly empty; without it every replacement faulted with `editor did not declare
     /// a loaded-parent child projection`.
     fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
-        store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("generation3d.child-projection"), error.to_string()))
+        store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new(crate::GENERATION3D_CHILD_PROJECTION), error.to_string()))
     }
 
     /// 🛍️ Publishes the whole registered flow operator catalogue once per app instance on the reserved
@@ -1888,7 +1947,7 @@ impl ArtifactEditor for Generation3dPlayApp {
     /// `UI_FIXED_BYTES` admission it exceeds threefold with the real `brep`/`math` sets installed
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END §3.1).
     fn app_catalogue_json() -> String {
-        semio_framework_os_flow::flow_app_catalogue_json()
+        semio_framework_pack_json::to_json_string(&catalogue_panel::catalogue())
     }
 
     type Snapshot = Generation3dSnapshot;
@@ -1983,15 +2042,26 @@ impl ArtifactEditor for Generation3dPlayApp {
         registry.register::<generate_preview::transient::Generation3dGeneratePreviewWindowTransientOwner>()
     }
 
-    /// 🧭️ The leaf that names each gumball gesture (design §19.1): a first grab's transaction splices the transform operator
-    /// in before its relative leaf, and the history row is still labelled by that leaf.
+    /// 🧭️ The leaf that names each tool's history row (design §19.1): a first grab's transaction splices the transform
+    /// operator in before its relative leaf, and the row is still labelled by that leaf; a mesh edit's row is labelled by the
+    /// `create-widget` of the operator it inserts ("Insert …", audit P4).
     fn tool_intent_kinds(tool: &str) -> &'static [&'static str] {
         match tool.strip_prefix(GENERATION3D_EDITOR_APP_ID).and_then(|verb| verb.strip_prefix('#')) {
             Some("translateSelection") => &["drag-transforms"],
             Some("rotateSelection") => &["rotate-transforms"],
             Some("scaleSelection") => &["scale-transforms"],
+            Some("editMeshSelection" | "knifeMeshSelection" | "deleteSelection") => &["create-widget"],
             _ => &[],
         }
+    }
+
+    /// 📢️ The localized notices of the editor's own refusal codes (design §20.12): the gumball's `generation3d.gumball.*`, the
+    /// preview evaluation's and the document-level ones.
+    fn fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
+        static NOTICES: std::sync::LazyLock<Vec<(&'static str, semio_framework_ui_locale::LocalizedLabel)>> = std::sync::LazyLock::new(|| {
+            transform_commands::gumball_fault_notices().iter().chain(crate::preview_eval::preview_eval_fault_notices()).chain(crate::generation3d_document_fault_notices()).cloned().collect()
+        });
+        NOTICES.as_slice()
     }
 
     /// 🎯️ `flowEvalTick` publishes the evaluation into ONE preview window's retained transient, and
@@ -2039,7 +2109,7 @@ impl ArtifactEditor for Generation3dPlayApp {
             return Ok(None);
         }
         if request.command.command_id() != request.tool_id {
-            return Err(Fault::from("generation3d-command-tool-mismatch"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "the generation 3d command does not match its exact registered tool"));
         }
         let tool_id = request.command.command_id();
         let contributions = GENERATION3D_CONTRIBUTIONS_TOOL_IDS.contains(&tool_id);
@@ -2111,7 +2181,7 @@ impl ArtifactEditor for Generation3dPlayApp {
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
-        Some(semio_framework::io::resolve_ready(generation3d_io()))
+        Some(::semio_framework_async::poll::resolve_ready(generation3d_io()))
     }
 
     /// 📤️ Exports the declared document without evaluating its flow graph.
@@ -2136,12 +2206,12 @@ impl ArtifactEditor for Generation3dPlayApp {
         }
         let mesh = owner.with_mut::<Generation3dInstanceOperationOwner, _>(|owner| {
             owner.with_session(|session| export_mesh_from_session(doc.snapshot, &Generation3dConfig::default(), session))
-        }).map_err(|error| MediaError::Payload(port.into(), error.message))?;
+        }).map_err(|error| MediaError::Payload(port.into(), error.message))?.map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
         crate::standards::v1::subsets::any::io::mesh_bridge::semio_mesh_from_mesh_data(&mesh)
             .map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
         Ok(semio_framework_plugin::Media {
             media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
-            payload: semio_framework_plugin::MediaPayload::Structured { schema: "3d.mesh".into(), json: dsl::json::to_json_string(&mesh) },
+            payload: semio_framework_plugin::MediaPayload::Structured { schema: "3d.mesh".into(), json: semio_framework_pack_json::to_json_string(&mesh) },
         })
     }
 
@@ -2153,7 +2223,7 @@ impl ArtifactEditor for Generation3dPlayApp {
                 let semio_framework_plugin::MediaPayload::Structured { json, .. } = &media.payload else {
                     return Err(MediaError::Payload(port.to_string(), "params:in importer only accepts a Structured JSON object payload".into()));
                 };
-                let parsed = dsl::json::parse(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                let parsed = semio_framework_pack_json::parse(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 let object = parsed.as_object().cloned().ok_or_else(|| MediaError::Payload(port.to_string(), "params:in payload must be a JSON object".into()))?;
                 let host_snapshot = &doc.snapshot.host_snapshot;
                 let operations = object
@@ -2180,8 +2250,8 @@ impl ArtifactEditor for Generation3dPlayApp {
     /// 🎯️ Maps host action id + JSON args onto `Generation3dCommand` — preserved verbatim from the
     /// pre-migration hand-rolled dispatch so React/wgpu callers that still speak the stringly
     /// `{action,args}` wire (rather than `OpBinary` bytes) keep working unchanged.
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
-        let args = args.cloned().unwrap_or(dsl::DslValue::Null);
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
+        let args = args.cloned().unwrap_or(semio_framework_value::DslValue::Null);
         let str_arg = |keys: &[&str]| -> Option<String> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_str()).map(str::to_string)) };
         let string_list = |key: &str| -> Vec<String> { args.get(key).and_then(|value| value.as_array()).map(|rows| rows.iter().filter_map(|row| row.as_str().map(str::to_string)).collect()).unwrap_or_default() };
         let f64_arg = |keys: &[&str]| -> Option<f64> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_f64())) };
@@ -2190,17 +2260,30 @@ impl ArtifactEditor for Generation3dPlayApp {
             "setActiveExample" => Ok(Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: str_arg(&["exampleId", "example_id", "value"]).unwrap_or_default() })),
             "nodeGraphEdit" => {
                 semio_framework_tool_machine::node_graph_edit_rows(&args).map_err(Fault::from)?;
-                Ok(Generation3dCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: args.get("operations").map(dsl::json::to_json_string).unwrap_or_else(|| "[]".into()) }))
+                Ok(Generation3dCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: args.get("operations").map(semio_framework_pack_json::to_json_string).unwrap_or_else(|| "[]".into()) }))
             }
             "deleteSelection" => Ok(Generation3dCommand::DeleteSelection(delete_selection::DeleteSelection {})),
             "removeWidget" => Ok(Generation3dCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: str_arg(&["widgetId", "widget_id", "id"]).unwrap_or_default() })),
             "addWidget" => Ok(Generation3dCommand::AddWidget(add_widget::AddWidget { kind: str_arg(&["kind"]).unwrap_or_else(|| "inputSlider".into()), neuron_kind: str_arg(&["neuronKind"]), format: str_arg(&["format"]), action: str_arg(&["action"]), x: f64_arg(&["x"]), y: f64_arg(&["y"]) })),
-            "setWidgetInput" => Ok(Generation3dCommand::SetWidgetInput(set_widget_input::SetWidgetInput {
+            "setWidgetInput" => {
+                let mesh_source = str_arg(&["facet"]).as_deref() == Some("meshSource");
+                let index = |key: &str| -> Result<Option<u32>, Fault> {
+                    let maximum = if mesh_source && key == "destination" { 599999.0 } else { 1023.0 };
+                    args.get(key).map(|value| value.as_f64().filter(|value| value.is_finite() && *value >= 0.0 && *value <= maximum && value.fract() == 0.0).map(|value| value as u32).ok_or_else(|| Fault::from("Choose an integer within the input bounds"))).transpose()
+                };
+                let operation = args.get("operation").map(|value| value.as_str().filter(|value| matches!(*value,"set"|"add"|"remove"|"move")).map(str::to_string).ok_or_else(|| Fault::from("Unknown list operation"))).transpose()?;
+                Ok(Generation3dCommand::SetWidgetInput(set_widget_input::SetWidgetInput {
                 widget_id: str_arg(&["widgetId"]).ok_or_else(|| Fault::from("Choose a widget"))?,
                 channel: str_arg(&["channel"]).ok_or_else(|| Fault::from("Choose an input"))?,
-                value: args.get("value").map(|value| value.as_str().map(str::to_string).unwrap_or_else(|| dsl::json::to_json_string(value))).ok_or_else(|| Fault::from("Input value is missing"))?,
+                value: args.get("value").map(|value| value.as_str().map(str::to_string).unwrap_or_else(|| semio_framework_pack_json::to_json_string(value))).ok_or_else(|| Fault::from("Input value is missing"))?,
                 component: str_arg(&["component"]),
-            })),
+                operation,
+                index: index("index")?,
+                destination: index("destination")?,
+                facet: args.get("facet").map(|value| value.as_str().filter(|value| matches!(*value, "port" | "variableName" | "variableSchema" | "exportFormat" | "meshSource")).map(str::to_string).ok_or_else(|| Fault::from("Unknown widget facet"))).transpose()?,
+                path: args.get("path").map(|value| value.as_array().filter(|parts| !parts.is_empty() && parts.len() <= 16).ok_or_else(|| Fault::from("Choose a structured mesh field"))?.iter().map(|part| part.as_str().filter(|part| !part.is_empty() && part.chars().count() <= 128).map(str::to_owned).ok_or_else(|| Fault::from("Choose a bounded field name"))).collect::<Result<Vec<_>, _>>()).transpose()?,
+            }))
+            }
             "patchFlowWidgets" => Ok(Generation3dCommand::PatchFlowWidgets(patch_flow_widgets::PatchFlowWidgets {
                 widget_ids: {
                     let mut ids = string_list("widgetIds");
@@ -2213,11 +2296,37 @@ impl ArtifactEditor for Generation3dPlayApp {
                 value: f64_arg(&["value"]),
             })),
             "editMeshSelection" => {
-                let cuts = f64_arg(&["cuts"]).unwrap_or(1.0);
-                if !cuts.is_finite() || cuts.fract() != 0.0 || !(1.0..=256.0).contains(&cuts) { return Err(Fault::from("Cuts must be an integer from 1 to 256")); }
+                let number = |key: &str, default: f64| -> Result<f64, Fault> {
+                    match args.get(key) {
+                        None => Ok(default),
+                        Some(value) => value.as_f64().filter(|value| value.is_finite()).ok_or_else(|| Fault::from(format!("{key} must be a finite number"))),
+                    }
+                };
+                let text = |key: &str, default: &str| -> Result<String, Fault> {
+                    match args.get(key) {
+                        None => Ok(default.into()),
+                        Some(value) => value.as_str().map(str::to_string).ok_or_else(|| Fault::from(format!("{key} must be text"))),
+                    }
+                };
+                let integer = |key: &str, maximum: f64| -> Result<u32, Fault> {
+                    let value = number(key, 1.0)?;
+                    if !value.is_finite() || value.fract() != 0.0 || !(1.0..=maximum).contains(&value) { return Err(Fault::from(format!("{key} must be an integer from 1 to {maximum}"))); }
+                    Ok(value as u32)
+                };
+                let center = match args.get("center") {
+                    None => [0.0; 3],
+                    Some(value) => {
+                        let values = value.as_array().filter(|values| values.len() == 3).ok_or_else(|| Fault::from("Center requires three coordinates"))?;
+                        let mut center = [0.0; 3];
+                        for axis in 0..3 { center[axis] = values[axis].as_f64().filter(|value| value.is_finite()).ok_or_else(|| Fault::from("Center coordinates must be finite"))?; }
+                        center
+                    }
+                };
                 Ok(Generation3dCommand::EditMeshSelection(edit_mesh_selection::EditMeshSelection {
-                    operation: str_arg(&["operation"]).unwrap_or_else(|| "extrude".into()), amount: f64_arg(&["amount"]).unwrap_or(0.1), cuts: cuts as u32,
-                    dx: f64_arg(&["dx"]).unwrap_or(0.0), dy: f64_arg(&["dy"]).unwrap_or(0.0), dz: f64_arg(&["dz"]).unwrap_or(0.0),
+                    operation: text("operation", "extrude")?, amount: number("amount", 0.1)?, cuts: integer("cuts", 256.0)?,
+                    dx: number("dx", 0.0)?, dy: number("dy", 0.0)?, dz: number("dz", 0.0)?,
+                    width: number("width", 0.1)?, segments: integer("segments", 64.0)?, merge_mode: text("mergeMode", "center")?,
+                    tolerance: number("tolerance", 0.0001)?, radius: number("radius", 1.0)?, grid: number("grid", 1.0)?, center,
                 }))
             }
             "knifeMeshSelection" => {
@@ -2279,7 +2388,7 @@ impl ArtifactEditor for Generation3dPlayApp {
             // `🛠️ShellHelpers/🟦️.tsx`), so the row editor dispatches `{id, value}` and never `{id, name}`.
             "renameGeneration" => Ok(Generation3dCommand::RenameGeneration(rename_generation::RenameGeneration { id: str_arg(&["id"]).unwrap_or_default(), name: str_arg(&["name", "value"]).unwrap_or_default() })),
             "updateGenerationValues" => {
-                let value = args.get("value").cloned().unwrap_or(dsl::DslValue::Null);
+                let value = args.get("value").cloned().unwrap_or(semio_framework_value::DslValue::Null);
                 Ok(Generation3dCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues {
                     generation_id: str_arg(&["generationId", "generation_id"]),
                     question_id: str_arg(&["questionId", "question_id"]).unwrap_or_default(),
@@ -2312,7 +2421,7 @@ impl ArtifactEditor for Generation3dPlayApp {
                 node_hash: u64_arg(&["nodeHash", "node_hash"]).unwrap_or_default(),
                 output_json: str_arg(&["outputJson", "output_json"]).unwrap_or_default(),
                 extension_id: str_arg(&["extensionId", "extension_id"]).unwrap_or_default(),
-                ok: args.get("ok").and_then(dsl::DslValue::as_bool).unwrap_or(false),
+                ok: args.get("ok").and_then(semio_framework_value::DslValue::as_bool).unwrap_or(false),
                 fault_code: str_arg(&["faultCode", "fault_code"]).unwrap_or_default(),
                 fault_message: str_arg(&["faultMessage", "fault_message"]).unwrap_or_default(),
             })),
@@ -2330,20 +2439,21 @@ impl ArtifactEditor for Generation3dPlayApp {
                 window_id: str_arg(&["windowId", "window_id"]).unwrap_or_default(),
                 window_kind_id: str_arg(&["windowKindId", "window_kind_id"]).unwrap_or_default(),
                 output_json: str_arg(&["outputJson", "output_json"]).unwrap_or_default(),
-                ok: args.get("ok").and_then(dsl::DslValue::as_bool).unwrap_or(false),
+                ok: args.get("ok").and_then(semio_framework_value::DslValue::as_bool).unwrap_or(false),
             })),
             "setContributions" => Ok(Generation3dCommand::SetContributions(set_contributions::SetContributions {
                 json: str_arg(&["json"]).unwrap_or_default(),
                 page: u64_arg(&["page"]).unwrap_or_default(),
                 page_count: u64_arg(&["pageCount", "page_count"]).unwrap_or(1),
             })),
-            "importDocumentRequest" => Ok(Generation3dCommand::ImportDocumentRequest(import_document_request::ImportDocumentRequest {})),
+            "importDocumentRequest" => Ok(Generation3dCommand::ImportDocumentRequest(import_document_request::ImportDocumentRequest { widget_id: str_arg(&["widgetId"]), channel: str_arg(&["channel"]), texture_id: str_arg(&["textureId"]) })),
             // 📥️ The framework hands the whole picked file (`semio_framework::kernel::ImportStaging`).
             "importDocument" => Ok(Generation3dCommand::ImportDocument(import_document::ImportDocument {
                 name: str_arg(&["name"]).unwrap_or_default(),
                 payload: str_arg(&["payload", "contents"]).unwrap_or_default(),
+                widget_id: str_arg(&["widgetId"]), channel: str_arg(&["channel"]), texture_id: str_arg(&["textureId"]),
             })),
-            "exportDocument" => Ok(Generation3dCommand::ExportDocument(export_document::ExportDocument { format: str_arg(&["format", "value"]).unwrap_or_else(|| "stl".into()) })),
+            "exportDocument" => Ok(Generation3dCommand::ExportDocument(export_document::ExportDocument { format: str_arg(&["format", "value"]).unwrap_or_else(|| "stl".into()), widget_id: str_arg(&["widgetId"]) })),
             other => Err(Fault::from(format!(
                 "action '{other}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
                  app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
@@ -2391,10 +2501,10 @@ impl ArtifactEditor for Generation3dPlayApp {
         with_scratch_session(|session| {
             let component_ids = &interaction.selection(selection::DOMAIN).ids;
             if let Some(ids) = generation3d_component_targets(command, view_state, interaction.active_granularity(selection::DOMAIN), component_ids, &interaction.selection("graph").ids).filter(|ids| !ids.is_empty()) {
-                selection::validate_cached_components(&doc.snapshot.host_snapshot, session, ids).map_err(Fault::from)?;
+                selection::validate_cached_components(&doc.snapshot.host_snapshot, session, ids, doc.operation().ok().map(|operation| &operation.canonical_base_revision)).map_err(Fault::from)?;
             }
             match command {
-            Generation3dCommand::EditMeshSelection(payload) => edit_mesh_selection::apply_selected(payload, doc, &interaction.selection(selection::DOMAIN).ids),
+            Generation3dCommand::EditMeshSelection(payload) => edit_mesh_selection::apply_selected("editMeshSelection", payload, doc, &interaction.selection(selection::DOMAIN).ids),
             Generation3dCommand::KnifeMeshSelection(payload) => knife_mesh_selection::apply_selected(payload, doc, &interaction.selection(selection::DOMAIN).ids),
             Generation3dCommand::DeleteSelection(_) if selection::edits_components(view_state, interaction.active_granularity(selection::DOMAIN)) => edit_mesh_selection::delete_selected(doc, &interaction.selection(selection::DOMAIN).ids),
             Generation3dCommand::DeleteSelection(payload) => delete_selection::apply(payload, doc, cfg, interaction, session),
@@ -2423,7 +2533,8 @@ impl ArtifactEditor for Generation3dPlayApp {
     /// parented to its owning cluster's widget id — the DAG-parent-links transitive-hover source: hovering
     /// a Cluster's own tree item transitively covers every widget nested inside it). Synapses become
     /// "edge" targets, parented to nothing (edges are leaves, not containers).
-    fn interaction_topology(doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>) -> InteractionTopology {
+    fn interaction_topology(doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>) -> Result<InteractionTopology, semio_framework_value::ValueError> {
+ Ok((||{
         fn walk_neuron(neuron: &semio_framework_artifact_flow_flow::neural::Neuron, parent: String, ordered: &mut Vec<TopologyNode>) {
             ordered.push(TopologyNode { id: neuron.id.clone(), granularity: "node".into(), parent: Some(parent) });
             if let Some(tree) = &neuron.tree {
@@ -2453,7 +2564,9 @@ impl ArtifactEditor for Generation3dPlayApp {
         let mut domains = std::collections::BTreeMap::new();
         domains.insert("graph".to_string(), DomainTopology { ordered });
         InteractionTopology { domains }
-    }
+    
+})())
+}
 
     /// ⏯️ Starts, finalizes or wakes the `previewEval` run for the attached preview windows
     /// ([`crate::preview_eval::preview_eval_run_effects`]).
@@ -2512,7 +2625,8 @@ impl ArtifactEditor for Generation3dPlayApp {
             .window::<edit_preview::transient::Generation3dPreviewWindowTransientOwner>()
             .or_else(|| transient.window::<generate_preview::transient::Generation3dGeneratePreviewWindowTransientOwner>())
             .and_then(|state| state.preview_eval_text.as_deref());
-        let marks = PreviewInteractionMarks::from_interaction(interaction);
+        let mut marks = PreviewInteractionMarks::from_interaction(interaction);
+        marks.source_revision = doc.render_operation().map(|operation| operation.canonical_base_revision.iter().map(|byte| format!("{byte:02x}")).collect());
         let previews = matches!(body_key, edit_preview::GENERATION_3D_PLAY_BODY_PREVIEW | generate_preview::GENERATION_3D_PLAY_BODY_GENERATE_PREVIEW);
         owner
             .with_mut::<Generation3dInstanceOperationOwner, _>(|owner| {
@@ -2590,11 +2704,10 @@ impl Generation3dPlayApp {
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
         let labels = generation3d_labels(view_state);
-        let is_de = view_state.locale == semio_framework_ui_locale::Locale::De;
         let (selected_nodes, selected_edges) = marks.graph_selection_domains(&doc.snapshot.host_snapshot);
         let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected_nodes, &selected_edges);
         let has_selection = !nodes.is_empty() || !edges.is_empty();
-        let mut menu = Menu::of(registry).action("reorganize");
+        let mut menu = Menu::of(registry, view_state).action("reorganize");
         if has_selection {
             menu = menu.action("translateSelection").action("rotateSelection").action("scaleSelection");
         }
@@ -2604,10 +2717,7 @@ impl Generation3dPlayApp {
         }
         menu = menu.group("methods", |m| m.action("renameGeneration").action("updateGenerationValues").action("patchFlowWidgets"));
         menu = menu.group(CONTEXT_MENU_TRANSFER_CATEGORY, |m| m.action("importDocumentRequest").action("exportDocument"));
-        if let Some(spec) = node_graph_delete_selection_spec(labels.delete_selection.as_str(), is_de, &nodes, &edges, NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
-            menu = menu.item(spec);
-        }
-        menu.build()
+        menu.item(node_graph_delete_selection_spec(labels.delete_selection.as_str(), view_state, &nodes, &edges, NodeGraphDeleteDispatch::ViaNodeGraphEdit)).build()
     }
 }
 
@@ -2765,12 +2875,29 @@ pub fn create_generation3d_app() -> semio_framework_plugin::AppDefinition {
                     ActionArgOption::new("deleteFaces", LocalizedLabel::native("Delete Faces", "Flächen löschen")),
                     ActionArgOption::new("moveVertices", LocalizedLabel::native("Move Vertices", "Eckpunkte verschieben")),
                     ActionArgOption::new("loopCut", LocalizedLabel::native("Cut Edge Loops", "Kantenschleifen schneiden")),
+                    ActionArgOption::new("bevel", LocalizedLabel::native("Bevel Edges", "Kanten abschrägen")),
+                    ActionArgOption::new("dissolveEdges", LocalizedLabel::native("Dissolve Edges", "Kanten auflösen")),
+                    ActionArgOption::new("dissolveVertices", LocalizedLabel::native("Dissolve Vertices", "Eckpunkte auflösen")),
+                    ActionArgOption::new("mergeVertices", LocalizedLabel::native("Merge Vertices", "Eckpunkte zusammenführen")),
+                    ActionArgOption::new("moveProportional", LocalizedLabel::native("Move Proportionally", "Proportional verschieben")),
+                    ActionArgOption::new("snapVertices", LocalizedLabel::native("Snap Vertices to Grid", "Eckpunkte am Raster ausrichten")),
                 ]).required().default_value(&"extrude"),
                 ActionArgDef::number("amount", LocalizedLabel::native("Distance / Inset", "Abstand / Einzug")).default_value(&0.1),
                 ActionArgDef { schema: semio_framework::ArgSchema::number(Some(1.0), Some(256.0), Some(1.0), true), ..ActionArgDef::number("cuts", LocalizedLabel::native("Loop Cuts", "Schleifenschnitte")).default_value(&1) },
                 ActionArgDef::number("dx", LocalizedLabel::native("Move X", "Verschieben X")).default_value(&0.0),
                 ActionArgDef::number("dy", LocalizedLabel::native("Move Y", "Verschieben Y")).default_value(&0.0),
                 ActionArgDef::number("dz", LocalizedLabel::native("Move Z", "Verschieben Z")).default_value(&0.0),
+                ActionArgDef::number("width", LocalizedLabel::native("Bevel Width", "Fasenbreite")).default_value(&0.1),
+                ActionArgDef { schema: semio_framework::ArgSchema::number(Some(1.0), Some(64.0), Some(1.0), true), ..ActionArgDef::number("segments", LocalizedLabel::native("Bevel Segments", "Fasensegmente")).default_value(&1) },
+                ActionArgDef::select("mergeMode", LocalizedLabel::native("Merge Mode", "Zusammenführungsmodus"), vec![
+                    ActionArgOption::new("first", LocalizedLabel::native("First Vertex", "Erster Eckpunkt")),
+                    ActionArgOption::new("center", LocalizedLabel::native("Center", "Mittelpunkt")),
+                    ActionArgOption::new("distance", LocalizedLabel::native("By Distance", "Nach Abstand")),
+                ]).default_value(&"center"),
+                ActionArgDef::number("tolerance", LocalizedLabel::native("Merge Tolerance", "Zusammenführungstoleranz")).default_value(&0.0001),
+                ActionArgDef::number("radius", LocalizedLabel::native("Proportional Radius", "Proportionaler Radius")).default_value(&1.0),
+                ActionArgDef::number("grid", LocalizedLabel::native("Grid Spacing", "Rasterabstand")).default_value(&1.0),
+                ActionArgDef::vector("center", LocalizedLabel::native("Proportional Center", "Proportionaler Mittelpunkt"), 3).default_value(&[0.0, 0.0, 0.0]),
             ])
             .action_args("knifeMeshSelection", vec![
                 ActionArgDef::vector("start", LocalizedLabel::native("Cut Start", "Schnittanfang"), 3).required().default_value(&[0.0, -1.0, 0.0]),
@@ -2788,16 +2915,22 @@ pub fn create_generation3d_app() -> semio_framework_plugin::AppDefinition {
                 ActionArgDef::text("action", LocalizedLabel::native("Action", "Aktion")),
             ])
             .action_args("setWidgetInput", vec![
+                ActionArgDef::select("facet", LocalizedLabel::native("Widget field", "Elementfeld"), vec![ActionArgOption::new("port", LocalizedLabel::native("Operator input", "Operatoreingang")), ActionArgOption::new("variableName", LocalizedLabel::native("Variable name", "Variablenname")), ActionArgOption::new("variableSchema", LocalizedLabel::native("Variable type", "Variablentyp")), ActionArgOption::new("exportFormat", LocalizedLabel::native("Export format", "Exportformat")), ActionArgOption::new("meshSource", LocalizedLabel::native("Mesh source", "Netzquelle"))]),
                 ActionArgDef::text("widgetId", LocalizedLabel::native("Widget", "Element")).required(),
                 ActionArgDef::text("channel", LocalizedLabel::native("Input", "Eingabe")).required(),
                 ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")).required(),
                 ActionArgDef::text("component", LocalizedLabel::native("Coordinate", "Koordinate")),
+                ActionArgDef::select("operation", LocalizedLabel::native("List Operation", "Listenoperation"), vec![ActionArgOption::new("set",LocalizedLabel::native("Edit Item","Eintrag bearbeiten")),ActionArgOption::new("add",LocalizedLabel::native("Add Item","Eintrag hinzufügen")),ActionArgOption::new("remove",LocalizedLabel::native("Remove Item","Eintrag entfernen")),ActionArgOption::new("move",LocalizedLabel::native("Move Item","Eintrag verschieben"))]),
+                ActionArgDef::number("index", LocalizedLabel::native("Item Index", "Eintragsindex")),
+                ActionArgDef::number("destination", LocalizedLabel::native("Destination Index", "Zielindex")),
+                ActionArgDef::text_list("path", LocalizedLabel::native("Mesh field", "Netzfeld")),
             ])
             // 📤️ One option per `document_io::EXPORT_FORMATS` row, in that table's order — asserted
             // equal to it by `export_document_action_offers_every_declared_format`, so a format this
             // artifact stops claiming cannot linger in the picker.
             .action_args("exportDocument", vec![
                 ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), crate::standards::v1::subsets::any::io::document_io::export_format_options()).required().default_value(&"stl"),
+                ActionArgDef::text("widgetId", LocalizedLabel::native("Export output", "Exportausgabe")),
             ])
             .action_args("setActiveExample", vec![
                 ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
@@ -2965,7 +3098,7 @@ pub fn create_generation3d_app() -> semio_framework_plugin::AppDefinition {
             .keybinding("arrowleft", "selectUpstreamNode")
             .keybinding("arrowright", "selectDownstreamNode")
             .config(Generation3dPlayApp::config_spec())
-            .io(semio_framework::io::resolve_ready(generation3d_io()))
+            .io(::semio_framework_async::poll::resolve_ready(generation3d_io()))
             .action_describe("addGeneration", LocalizedLabel::native("Adds a new generation, a named set of input values for the 3D generator, to the generation list and selects it.", "Fügt der Generationsliste eine neue Generation hinzu, einen benannten Satz von Eingabewerten für den 3D-Generator, und wählt sie aus."))
             .action_describe("selectGeneration", LocalizedLabel::native("Selects the generation with the given id, whose input values the generator then evaluates and shows.", "Wählt die Generation mit der angegebenen Id aus, deren Eingabewerte der Generator dann auswertet und zeigt."))
             .action_describe("renameGeneration", LocalizedLabel::native("Renames one generation of the generation list.", "Benennt eine Generation der Generationsliste um."))
@@ -3081,7 +3214,7 @@ pub async fn generation3d_io() -> semio_framework_plugin::AppIo {
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 pub use crate::preview_eval::{
     apply_show_mode_mesh, decode_preview_mesh_pack, geometry_extension_address, is_brep_geometry_handle, mesh_data_for_preview_handle, mesh_data_for_session_preview_channel, mesh_has_preview_geometry, pending_preview_tessellate_handles, point_marker_mesh, preview_channel_items_for_widget,
-    preview_mesh_role, preview_tolerance, vector_marker_mesh, widget_previews, PreviewChannelItem, PreviewInlineGeometry, GENERATION_3D_GEOMETRY_EXTENSION_ID, PREVIEW_MESH_ROLES, PREVIEW_TESSELLATE_STEP_BUDGET,
+    preview_mesh_role, preview_tolerance, vector_marker_mesh, PreviewChannelItem, PreviewInlineGeometry, GENERATION_3D_GEOMETRY_EXTENSION_ID, PREVIEW_MESH_ROLES, PREVIEW_TESSELLATE_STEP_BUDGET,
 };
 
 /// 📨 Extension invocations that tessellate this surface's pending preview handles — the editor's
@@ -3136,6 +3269,7 @@ pub const GENERATION_3D_INTERACTION_GRANULARITY: &str = "handle";
 /// evaluation-derived so it cannot be declared there.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct PreviewInteractionMarks {
+    pub source_revision: Option<String>,
     pub components: selection::ComponentSelection,
     pub hovered: std::collections::BTreeSet<String>,
     pub selected: std::collections::BTreeSet<String>,
@@ -3145,7 +3279,7 @@ impl PreviewInteractionMarks {
     /// 🕹️ Reads the framework-owned domain: hover off the ephemeral pointer channel, selection off
     /// the persisted interaction store. The app stores neither itself.
     pub fn from_interaction(interaction: &InteractionView<'_>) -> Self {
-        Self { components: selection::ComponentSelection::from_interaction(interaction), hovered: interaction.hover(GENERATION_3D_INTERACTION_DOMAIN, GENERATION_3D_INTERACTION_CHANNEL).ids.iter().cloned().collect(), selected: interaction.selection(GENERATION_3D_INTERACTION_DOMAIN).ids.iter().cloned().collect() }
+        Self { source_revision: None, components: selection::ComponentSelection::from_interaction(interaction), hovered: interaction.hover(GENERATION_3D_INTERACTION_DOMAIN, GENERATION_3D_INTERACTION_CHANNEL).ids.iter().cloned().collect(), selected: interaction.selection(GENERATION_3D_INTERACTION_DOMAIN).ids.iter().cloned().collect() }
     }
 
     fn marked(set: &std::collections::BTreeSet<String>, widget_id: &str, channel: &str, index: usize) -> bool {
@@ -3167,7 +3301,7 @@ impl PreviewInteractionMarks {
             Some((_, ids)) => selection::ComponentSelection { selected: ids.clone(), ..self.components },
             None => self.components,
         };
-        Self { components, hovered: self.hovered, selected: gesture.nodes.iter().cloned().collect() }
+        Self { source_revision: self.source_revision, components, hovered: self.hovered, selected: gesture.nodes.iter().cloned().collect() }
     }
 
     /// 🕸️ The widget id behind any interaction id — `{w}`, `{w}@{c}` and `{w}@{c}#{i}` all resolve
@@ -3235,7 +3369,7 @@ impl PreviewInteractionMarks {
 /// ticks into the guest's open tool transaction and paints the guest's answer — the transform
 /// operator re-evaluated with everything downstream of it — instead of moving the instance locally.
 pub fn preview_selection_json(cfg: &Generation3dConfig, active_utility: &str, payload: &PreviewPayload) -> String {
-    let mut value = dsl::json::parse(&semio_framework_plugin::world3d_selection_json("rectangle", &payload.selected_ids, payload.hovered_id.as_deref())).unwrap_or_else(|_| dsl::json::Value::Object(dsl::json::Object::new()));
+    let mut value = semio_framework_pack_json::parse(&semio_framework_plugin::world3d_selection_json("rectangle", &payload.selected_ids, payload.hovered_id.as_deref()), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| semio_framework_pack_json::Value::Object(semio_framework_pack_json::Object::new()));
     let show_mode = if cfg.show_mode.is_empty() { "shaded" } else { cfg.show_mode.as_str() };
     let (show_edges, selection_mode) = match show_mode {
         "wireframe" => (true, "mesh"),
@@ -3244,21 +3378,21 @@ pub fn preview_selection_json(cfg: &Generation3dConfig, active_utility: &str, pa
         _ => (false, "mesh"),
     };
     if let Some(object) = value.as_object_mut() {
-        object.insert("transformMode", dsl::json::Value::String(active_utility.to_string()));
-        object.insert("gumballActive", dsl::json::Value::Bool(!payload.selected_ids.is_empty() && !active_utility.is_empty()));
-        object.insert("gumballLiveDispatch", dsl::json::Value::Bool(true));
-        object.insert("showEdges", dsl::json::Value::Bool(show_edges));
-        object.insert("selectionMode", dsl::json::Value::String(selection_mode.to_string()));
-        object.insert("granularity", dsl::json::Value::String(selection_mode.to_string()));
-        payload.components.project(&dsl::json::parse(&payload.instances_json).unwrap_or(dsl::json::Value::Null), object);
+        object.insert("transformMode", semio_framework_pack_json::Value::String(active_utility.to_string()));
+        object.insert("gumballActive", semio_framework_pack_json::Value::Bool(!payload.selected_ids.is_empty() && !active_utility.is_empty()));
+        object.insert("gumballLiveDispatch", semio_framework_pack_json::Value::Bool(true));
+        object.insert("showEdges", semio_framework_pack_json::Value::Bool(show_edges));
+        object.insert("selectionMode", semio_framework_pack_json::Value::String(selection_mode.to_string()));
+        object.insert("granularity", semio_framework_pack_json::Value::String(selection_mode.to_string()));
+        payload.components.project(&semio_framework_pack_json::parse(&payload.instances_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or(semio_framework_pack_json::Value::Null), &semio_framework_pack_json::parse(&payload.meshes_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or(semio_framework_pack_json::Value::Null), object);
         if payload.components.active() {
             if let Some(pivot) = payload.component_pivot {
                 object.insert("gumballTarget", vec3_json(pivot));
-                object.insert("gumballActive", dsl::json::Value::Bool(!active_utility.is_empty()));
+                object.insert("gumballActive", semio_framework_pack_json::Value::Bool(!active_utility.is_empty()));
             }
         }
     }
-    dsl::json::to_string(&value)
+    semio_framework_pack_json::to_string(&value)
 }
 
 /// 📈️ The status projection ALL THREE World3d preview windows publish (edit, generate, view) lives
@@ -3298,24 +3432,24 @@ pub fn preview_payload_from_eval(eval_json: &str, host_snapshot: &semio_framewor
 /// channel-qualified ids: a widget with several outputs previews every one of them, not just the
 /// first handle its evaluation happened to expose.
 /// 🧮️ `[f64; 3]` -> a `pack::json` array, for the position/scale fields below.
-fn vec3_json(v: [f64; 3]) -> dsl::json::Value {
-    dsl::json::Value::Array(v.into_iter().map(dsl::json::Value::from).collect())
+fn vec3_json(v: [f64; 3]) -> semio_framework_pack_json::Value {
+    semio_framework_pack_json::Value::Array(v.into_iter().map(semio_framework_pack_json::Value::from).collect())
 }
 
 pub fn preview_payload(eval_json: &str, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, cfg: &Generation3dConfig, session: Option<&FlowEvalSession>, marks: &PreviewInteractionMarks) -> PreviewPayload {
     if eval_json.is_empty() {
         return PreviewPayload::default();
     }
-    if let Ok(parsed) = dsl::json::parse(eval_json) {
-        if parsed.get("error").and_then(dsl::json::Value::as_str).is_some() {
+    if let Ok(parsed) = semio_framework_pack_json::parse(eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject) {
+        if parsed.get("error").and_then(semio_framework_pack_json::Value::as_str).is_some() {
             return PreviewPayload::default();
         }
     }
-    let eval = dsl::json::parse(eval_json).unwrap_or_else(|_| dsl::json::Value::Object(dsl::json::Object::new()));
+    let eval = semio_framework_pack_json::parse(eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| semio_framework_pack_json::Value::Object(semio_framework_pack_json::Object::new()));
     let tolerance = preview_tolerance(&cfg.lod_mode);
     let show_mode = if cfg.show_mode.is_empty() { "solid" } else { cfg.show_mode.as_str() };
-    let mut meshes: Vec<dsl::json::Value> = Vec::new();
-    let mut instances: Vec<dsl::json::Value> = Vec::new();
+    let mut meshes: Vec<semio_framework_pack_json::Value> = Vec::new();
+    let mut instances: Vec<semio_framework_pack_json::Value> = Vec::new();
     // 🔁️ Dedup key is the brep HANDLE, not the widget/channel that emitted it: two channels (even
     // on different widgets) that resolve to the same handle share one tessellated mesh entry and
     // still each get their own instance — see the mesh-id lookup below.
@@ -3328,7 +3462,7 @@ pub fn preview_payload(eval_json: &str, host_snapshot: &semio_framework_artifact
     let mut component_pivot = None;
     for widget in &host_snapshot.widgets {
         let id = crate::widget_id(widget).to_string();
-        let preview = widget_previews(widget);
+        let preview = crate::widget_previews(widget);
         if !preview {
             continue;
         }
@@ -3353,11 +3487,11 @@ pub fn preview_payload(eval_json: &str, host_snapshot: &semio_framework_artifact
                 if let Some(data) = data {
                     let data = apply_show_mode_mesh(data, show_mode);
                     if mesh_has_preview_geometry(&data) {
-                        let mut mesh_object = dsl::json::Object::new();
-                        mesh_object.insert("id", dsl::json::Value::String(mesh_id.clone()));
-                        mesh_object.insert("role", dsl::json::Value::String(preview_mesh_role(inline.as_ref(), &data).to_string()));
-                        mesh_object.insert("data", dsl::json::Value::from(data));
-                        meshes.push(dsl::json::Value::Object(mesh_object));
+                        let mut mesh_object = semio_framework_pack_json::Object::new();
+                        mesh_object.insert("id", semio_framework_pack_json::Value::String(mesh_id.clone()));
+                        mesh_object.insert("role", semio_framework_pack_json::Value::String(preview_mesh_role(inline.as_ref(), &data).to_string()));
+                        mesh_object.insert("data", semio_framework_pack_json::Value::from(data));
+                        meshes.push(semio_framework_pack_json::Value::Object(mesh_object));
                         if !handle.is_empty() {
                             mesh_id_by_handle.insert(handle.clone(), mesh_id.clone());
                         }
@@ -3376,42 +3510,65 @@ pub fn preview_payload(eval_json: &str, host_snapshot: &semio_framework_artifact
                 if hovered && hovered_id.is_none() {
                     hovered_id = Some(instance_id.clone());
                 }
-                let mut instance_object = dsl::json::Object::new();
-                instance_object.insert("id", dsl::json::Value::String(instance_id.clone()));
-                instance_object.insert("meshId", dsl::json::Value::String(mesh_id));
+                let mut instance_object = semio_framework_pack_json::Object::new();
+                instance_object.insert("id", semio_framework_pack_json::Value::String(instance_id.clone()));
+                instance_object.insert("meshId", semio_framework_pack_json::Value::String(mesh_id));
                 instance_object.insert("position", vec3_json([0.0, 0.0, 0.0]));
-                instance_object.insert("rotation", dsl::json::Value::Array(vec![dsl::json::Value::from(0.0), dsl::json::Value::from(0.0), dsl::json::Value::from(0.0), dsl::json::Value::from(1.0)]));
+                instance_object.insert("rotation", semio_framework_pack_json::Value::Array(vec![semio_framework_pack_json::Value::from(0.0), semio_framework_pack_json::Value::from(0.0), semio_framework_pack_json::Value::from(0.0), semio_framework_pack_json::Value::from(1.0)]));
                 instance_object.insert("scale", vec3_json([1.0, 1.0, 1.0]));
-                instance_object.insert("label", dsl::json::Value::String(format!("{id}@{channel}")));
-                instance_object.insert("interactionId", dsl::json::Value::String(if marks.components.active() { instance_id } else { format!("{id}@{channel}") }));
-                instance_object.insert("selected", dsl::json::Value::Bool(selected));
-                instance_object.insert("hovered", dsl::json::Value::Bool(hovered));
-                instances.push(dsl::json::Value::Object(instance_object));
+                instance_object.insert("label", semio_framework_pack_json::Value::String(format!("{id}@{channel}")));
+                instance_object.insert("interactionId", semio_framework_pack_json::Value::String(if marks.components.active() { instance_id } else { format!("{id}@{channel}") }));
+                if let Some(revision) = marks.source_revision.as_ref().filter(|_| inline.is_none() && !handle.is_empty()) {
+                    let mut source = semio_framework_pack_json::Object::new();
+                    source.insert("handle", semio_framework_pack_json::Value::String(handle.clone()));
+                    source.insert("revision", semio_framework_pack_json::Value::String(revision.clone()));
+                    instance_object.insert("componentSource", semio_framework_pack_json::Value::Object(source));
+                }
+                instance_object.insert("selected", semio_framework_pack_json::Value::Bool(selected));
+                instance_object.insert("hovered", semio_framework_pack_json::Value::Bool(hovered));
+                instances.push(semio_framework_pack_json::Value::Object(instance_object));
             }
         }
     }
-    PreviewPayload { components: marks.components.clone(), component_pivot, meshes_json: dsl::json::to_string(&dsl::json::Value::Array(meshes)), instances_json: dsl::json::to_string(&dsl::json::Value::Array(instances)), selected_ids, hovered_id }
+    PreviewPayload { components: marks.components.clone(), component_pivot, meshes_json: semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(meshes)), instances_json: semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(instances)), selected_ids, hovered_id }
 }
 //#endregion 🔖️PreviewPipeline
 
 //#region 🔖️MeshBridge
-/// 📦️ Collects the materialized meshes already present in the owner preview payload.
-fn merged_meshes_from_payload(meshes_json: &str) -> semio_framework_plugin::MeshData {
-    let meshes: Vec<semio_framework_plugin::MeshData> = dsl::json::parse(meshes_json)
-        .ok()
-        .and_then(|value| value.as_array().cloned())
-        .unwrap_or_default()
-        .into_iter()
-        .filter_map(|entry| entry.get("data").cloned())
-        .filter_map(|data| dsl::FromValue::from_value(dsl::json::to_dsl_value(&data)).ok())
-        .collect();
-    crate::standards::v1::subsets::any::io::mesh_bridge::merge_meshes(&meshes)
+/// 👁️ Prepares geometry from the retained evaluation and delivered mesh packs.
+pub fn export_mesh_from_session(snapshot: &Generation3dSnapshot, cfg: &Generation3dConfig, session: &FlowEvalSession) -> Result<semio_framework_plugin::MeshData, semio_framework_diagnostic::TextError> {
+    crate::standards::v1::subsets::any::io::mesh_bridge::merge_meshes(&export_meshes_from_session(snapshot, cfg, session, None)?)
 }
 
-/// 👁️ Prepares geometry from the retained evaluation and delivered mesh packs.
-pub fn export_mesh_from_session(snapshot: &Generation3dSnapshot, cfg: &Generation3dConfig, session: &FlowEvalSession) -> semio_framework_plugin::MeshData {
-    let payload = preview_payload(session.eval_json(), &snapshot.host_snapshot, cfg, Some(session), &PreviewInteractionMarks::default());
-    merged_meshes_from_payload(&payload.meshes_json)
+/// 🎨️ Retains each prepared surface and its authored channel set for format diagnostics and export.
+pub fn export_meshes_from_session(snapshot: &Generation3dSnapshot, _cfg: &Generation3dConfig, session: &FlowEvalSession, widget_id: Option<&str>) -> Result<Vec<semio_framework_plugin::MeshData>, semio_framework_diagnostic::TextError> {
+    export_meshes_from_evaluation(&snapshot.host_snapshot, session, widget_id)
+}
+
+/// 🪪️ Reads exact retained channel packs without display filtering or another kernel evaluation.
+pub fn export_meshes_from_evaluation(snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, session: &FlowEvalSession, widget_id: Option<&str>) -> Result<Vec<semio_framework_plugin::MeshData>, semio_framework_diagnostic::TextError> {
+    use crate::standards::v1::subsets::any::io::mesh_bridge::io_error;
+    if session.preview_chain_status().working || session.preview_eval_status().in_flight > 0 || session.preview_tessellate_status().in_flight > 0 { return Err(io_error("generation3d export is waiting for the current geometry evaluation")); }
+    let sources = crate::standards::v1::subsets::any::io::mesh_bridge::export_source_channels(snapshot, widget_id)?;
+    let eval = semio_framework_pack_json::parse(session.eval_json(), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| io_error(error.to_string()))?;
+    if let Some(error) = eval.get("error").and_then(semio_framework_pack_json::Value::as_str) { return Err(io_error(error)); }
+    let mut meshes = Vec::new();
+    let mut seen = std::collections::BTreeSet::new();
+    for (source, channel) in sources {
+        for item in preview_channel_items_for_widget(&eval, &source).into_iter().filter(|item| channel.as_ref().is_none_or(|channel| *channel == item.channel)) {
+            let key = if item.handle.is_empty() { format!("{source}@{}#{}", item.channel, item.index) } else { item.handle.clone() };
+            if !seen.insert(key) { continue; }
+            let mesh = match item.inline {
+                Some(PreviewInlineGeometry::Point { x, y, z }) => Some(point_marker_mesh(x, y, z)),
+                Some(PreviewInlineGeometry::Vector { .. }) => continue,
+                Some(PreviewInlineGeometry::Mesh { preview, .. }) => decode_preview_mesh_pack(&preview),
+                None => crate::preview_eval::session_preview_mesh(&item.handle, session),
+            }.ok_or_else(|| io_error(format!("generation3d export geometry '{source}@{}' is unavailable", item.channel)))?;
+            meshes.push(mesh);
+        }
+    }
+    if meshes.is_empty() { return Err(io_error("generation3d export has no connected geometry")); }
+    Ok(meshes)
 }
 
 //#endregion 🔖️MeshBridge

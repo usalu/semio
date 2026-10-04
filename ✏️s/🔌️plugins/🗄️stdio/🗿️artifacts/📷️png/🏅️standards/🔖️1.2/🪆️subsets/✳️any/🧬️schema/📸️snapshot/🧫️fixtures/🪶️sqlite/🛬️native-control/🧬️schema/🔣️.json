@@ -1,0 +1,96 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ownedSchema",
+    "fieldText",
+    "bytePattern",
+    "workItems",
+    "copyBytes",
+    "cancelAfter",
+    "copyCancelAfter",
+    "maxAllocationBytes",
+    "lowRows",
+    "unsigned32",
+    "unsigned16",
+    "unsigned8",
+    "preflight",
+    "allocationRole",
+    "allocationFailure"
+  ],
+  "properties": {
+    "ownedSchema": {
+      "const": "PNG Snapshot 世界\u0000 literal"
+    },
+    "fieldText": {
+      "const": "Grüße\t\n🌠"
+    },
+    "bytePattern": {
+      "const": [
+        0,
+        255,
+        1,
+        128
+      ]
+    },
+    "workItems": {
+      "const": 1024
+    },
+    "copyBytes": {
+      "const": 100000
+    },
+    "cancelAfter": {
+      "const": 256
+    },
+    "copyCancelAfter": {
+      "const": 65536
+    },
+    "lowRows": {
+      "const": 1
+    },
+    "unsigned32": {
+      "const": 4294967295
+    },
+    "unsigned16": {
+      "const": 65535
+    },
+    "unsigned8": {
+      "const": 255
+    },
+    "preflight": {
+      "const": {
+        "encodings": [
+          "binary",
+          "text"
+        ],
+        "ownershipBytes": 0,
+        "fixedHuffmanBitsPerOctet": 9,
+        "terminalAllowanceBits": 17,
+        "zlibFramingBytes": 6,
+        "pngSignatureBytes": 8,
+        "chunkFramingBytes": 12,
+        "ihdrBytes": 13,
+        "refusalKinds": {
+          "file": "ownershipLimit",
+          "cancellation": "canceled"
+        },
+        "cancelAt": "firstBorrowedCheckpoint",
+        "retirementRefund": false
+      }
+    },
+    "maxAllocationBytes": {
+      "const": 1
+    },
+    "allocationRole": {
+      "const": "cumulativeOwnedBacking"
+    },
+    "allocationFailure": {
+      "const": {
+        "origin": "allocatorRefusalAfterAdmission",
+        "kind": "allocationFailed",
+        "physicalCeiling": "ownershipLimit"
+      }
+    }
+  }
+}

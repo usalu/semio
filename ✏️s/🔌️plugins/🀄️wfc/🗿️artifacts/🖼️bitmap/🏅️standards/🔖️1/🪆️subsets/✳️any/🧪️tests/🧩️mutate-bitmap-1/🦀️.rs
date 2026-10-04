@@ -31,7 +31,7 @@ mod subject {
 
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let leaves = Leaves::read(ctx)?;
-        let restored = vector::inverse(ctx.row()?, &report(&leaves)?)?;
+        let restored = vector::inverse(ctx.row()?, &report(&leaves)?).expect("valid retained mutation inverse fixture")?;
         Ok(Outcome::with_raw(restored.to_string().into_bytes(), restored))
     }
 

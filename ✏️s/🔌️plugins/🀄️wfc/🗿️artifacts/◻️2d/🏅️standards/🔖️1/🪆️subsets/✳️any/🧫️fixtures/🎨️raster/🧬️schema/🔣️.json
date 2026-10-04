@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "width",
+    "height",
+    "palette",
+    "indices",
+    "rgba"
+  ],
+  "properties": {
+    "width": {
+      "const": 3
+    },
+    "height": {
+      "const": 1
+    },
+    "palette": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "r",
+          "g",
+          "b",
+          "a"
+        ],
+        "properties": {
+          "r": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "g": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "b": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "a": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          }
+        }
+      }
+    },
+    "indices": {
+      "const": [
+        0,
+        1,
+        255
+      ]
+    },
+    "rgba": {
+      "const": [
+        255,
+        0,
+        7,
+        255,
+        2,
+        255,
+        0,
+        4,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  }
+}

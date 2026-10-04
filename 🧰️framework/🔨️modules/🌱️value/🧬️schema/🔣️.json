@@ -45,6 +45,31 @@
       "type": "string",
       "maxLength": 20,
       "pattern": "^([1-9][0-9]{0,18}|1[0-7][0-9]{18}|18[0-3][0-9]{17}|184[0-3][0-9]{16}|1844[0-5][0-9]{15}|18446[0-6][0-9]{14}|184467[0-3][0-9]{13}|1844674[0-3][0-9]{12}|184467440[0-6][0-9]{10}|1844674407[0-2][0-9]{9}|18446744073[0-6][0-9]{8}|1844674407370[0-8][0-9]{6}|18446744073709[0-4][0-9]{5}|184467440737095[0-4][0-9]{4}|18446744073709550[0-9]{3}|18446744073709551[0-5][0-9]{2}|1844674407370955160[0-9]|1844674407370955161[0-4]|18446744073709551615)$"
+    },
+    "Binary64": {
+      "title": "Binary64",
+      "description": "🔢️ One IEEE-754 binary64 number carried exactly as its 64-bit word in 16 lowercase hex digits (`{\"bits\": \"4034000000000000\"}` is 20). Every JSON carrier that round-trips a double bit for bit references this export instead of restating it; the mutation input reader (`manifest::mutation_input_defs`) edits it as a number wherever it appears.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bits"],
+      "properties": {
+        "bits": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{16}$"
+        }
+      }
+    },
+    "Binary64Transport": {
+      "title": "Binary64Transport",
+      "description": "🔢️ A binary64 number as a carrier admits it: its exact word (`Binary64`) or a plain JSON number. The mutation input reader edits it as a number wherever it appears.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Binary64"
+        },
+        {
+          "type": "number"
+        }
+      ]
     }
   }
 }

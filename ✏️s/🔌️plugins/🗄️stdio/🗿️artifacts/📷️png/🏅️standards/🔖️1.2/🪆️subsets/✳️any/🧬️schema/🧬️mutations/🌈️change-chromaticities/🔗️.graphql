@@ -1,3 +1,0 @@
-# 🧬️ change-chromaticities/ChangeChromaticities
-scalar ChangeChromaticitiesMutationValue
-input ChangeChromaticitiesMutation { chrm: ChangeChromaticitiesMutationValue }

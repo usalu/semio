@@ -1,31 +1,31 @@
 {
-  "accidentals": [
-    {
-      "ad": 50000.0,
-      "id": "A-impact"
-    },
-    {
-      "ad": 30000.0,
-      "id": "A-explosion"
-    }
-  ],
-  "altitudeM": null,
   "annex": null,
-  "betaComputed": null,
-  "bridgeSls": null,
+  "projectId": null,
+  "structureKind": null,
+  "altitudeM": null,
   "consequenceClass": null,
+  "reliabilityClass": null,
   "designWorkingLifeCategory": null,
   "designWorkingLifeYears": null,
-  "effects": null,
+  "referencePeriodYears": null,
+  "supervisionLevel": null,
   "inspectionLevel": null,
   "kFiDeclared": null,
-  "members": null,
+  "betaComputed": null,
   "permanents": null,
-  "projectId": null,
-  "referencePeriodYears": null,
-  "reliabilityClass": null,
+  "variables": null,
+  "accidentals": [
+    {
+      "id": "A-impact",
+      "ad": 50000.0
+    },
+    {
+      "id": "A-explosion",
+      "ad": 30000.0
+    }
+  ],
   "seismics": null,
-  "structureKind": null,
-  "supervisionLevel": null,
-  "variables": null
+  "members": null,
+  "bridgeSls": null,
+  "effects": null
 }

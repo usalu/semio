@@ -1,0 +1,26 @@
+{
+  "schema": "semio.os.store.worker.cold-pair-loading.v1",
+  "policy": { "deadlineMs": 1000000, "maximumTurns": 4, "eagerTurns": 1000, "backoffMs": 1, "maximumBackoffMs": 64 },
+  "cursor": { "transferGeneration": 7, "pageIndex": 2, "pageCount": 3 },
+  "cases": [
+    { "id": "applied-at-once", "answers": ["applied"], "expect": { "outcome": "settled", "kind": "applied", "polls": 0, "released": 0, "sleeps": [] } },
+    { "id": "loading-across-turns-then-applied", "answers": ["loading", "loading", "loading", "applied"], "expect": { "outcome": "settled", "kind": "applied", "polls": 3, "released": 3, "sleeps": [] } },
+    { "id": "loading-then-fault", "answers": ["loading", "fault"], "expect": { "outcome": "settled", "kind": "fault", "polls": 1, "released": 1, "sleeps": [] } },
+    { "id": "loading-for-another-page", "answers": ["loading-other-page"], "expect": { "outcome": "refused", "error": "invalid loading receipt", "polls": 0, "released": 1, "sleeps": [] } },
+    { "id": "loading-for-another-transfer", "answers": ["loading", "loading-other-transfer"], "expect": { "outcome": "refused", "error": "invalid loading receipt", "polls": 1, "released": 2, "sleeps": [] } },
+    { "id": "cancelled-while-loading", "answers": ["loading", "loading", "cancel"], "expect": { "outcome": "refused", "error": "owner no longer current", "polls": 2, "released": 2, "sleeps": [] } },
+    { "id": "loading-past-the-turn-cap", "answers": ["loading", "loading", "loading", "loading", "loading"], "expect": { "outcome": "refused", "error": "still loading after 4 turns", "polls": 4, "released": 5, "sleeps": [] } },
+    { "id": "backoff-after-the-eager-turns", "policy": { "maximumTurns": 16, "eagerTurns": 2, "backoffMs": 1, "maximumBackoffMs": 4 }, "answers": ["loading", "loading", "loading", "loading", "loading", "loading", "applied"], "expect": { "outcome": "settled", "kind": "applied", "polls": 6, "released": 6, "sleeps": [1, 2, 4, 4] } },
+    { "id": "loading-past-the-wall-deadline", "policy": { "maximumTurns": 16, "deadlineMs": 10 }, "turnMs": 4, "answers": ["loading", "loading", "loading", "loading", "loading"], "expect": { "outcome": "refused", "error": "still loading after 10 ms (3 turns)", "polls": 3, "released": 4, "sleeps": [] } },
+    { "id": "backoff-never-sleeps-past-the-deadline", "policy": { "maximumTurns": 16, "deadlineMs": 6, "eagerTurns": 0, "backoffMs": 4 }, "answers": ["loading", "loading", "loading", "loading"], "expect": { "outcome": "refused", "error": "still loading after 6 ms (2 turns)", "polls": 2, "released": 3, "sleeps": [4, 2] } }
+  ],
+  "backpressure": [
+    { "id": "accepted-at-once", "answers": ["accepted"], "expect": { "outcome": "settled", "kind": "pageAccepted", "sends": 1, "polls": 0, "released": 0, "sleeps": [] } },
+    { "id": "older-pair-settles-then-accepted", "answers": ["backpressure-older", "backpressure-older", "accepted"], "expect": { "outcome": "settled", "kind": "pageAccepted", "sends": 3, "polls": 2, "released": 4, "sleeps": [] } },
+    { "id": "older-pair-then-last-page-loading", "answers": ["backpressure-older", "loading"], "expect": { "outcome": "settled", "kind": "loading", "sends": 2, "polls": 1, "released": 2, "sleeps": [] } },
+    { "id": "foreign-lifetime-refused", "answers": ["backpressure-foreign"], "expect": { "outcome": "refused", "error": "invalid backpressure receipt", "sends": 1, "polls": 0, "released": 1, "sleeps": [] } },
+    { "id": "refused-past-the-turn-cap", "answers": ["backpressure-older", "backpressure-older", "backpressure-older", "backpressure-older"], "expect": { "outcome": "refused", "error": "still refused after 4 attempts", "sends": 4, "polls": 4, "released": 8, "sleeps": [] } },
+    { "id": "resends-back-off-after-the-eager-turns", "policy": { "maximumTurns": 16, "eagerTurns": 1, "backoffMs": 2, "maximumBackoffMs": 3 }, "answers": ["backpressure-older", "backpressure-older", "backpressure-older", "accepted"], "expect": { "outcome": "settled", "kind": "pageAccepted", "sends": 4, "polls": 3, "released": 6, "sleeps": [2, 3, 3] } },
+    { "id": "refused-past-the-wall-deadline", "policy": { "maximumTurns": 16, "deadlineMs": 5 }, "turnMs": 2, "answers": ["backpressure-older", "backpressure-older", "backpressure-older", "backpressure-older"], "expect": { "outcome": "refused", "error": "still refused after 5 ms (2 attempts)", "sends": 2, "polls": 2, "released": 4, "sleeps": [] } }
+  ]
+}

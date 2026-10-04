@@ -1,0 +1,15 @@
+# Kernel Presence Direct Owner Audit
+
+Full current defining owners, package roots/manifests and44 exact-name lexical source candidates with their import/occurrence observations are retained in `🗑️generated/kernel-presence-independent/source-frames-1.json` (65full frames). No compiler/runtime execution or semantic equivalence was inferred.
+
+The actual Kernel export has12 names, not14: four functions decode_presence_history_edit,decode_presence_peer,encode_presence_history_edit,encode_presence_peer; eight types PresenceHistoryEdit,PresenceHistoryEditStage,PresencePeer,PresenceToolRun,PresenceToolRunState,PresenceUi,PresenceViewKind,PresenceWindowView. All12 are defined in General Replication `📡️wire/🦀️.rs`, not OS or UI. encode/decode peer functions are async; history-edit codecs retain their actual synchronous signatures. Replication package root reexports exact wire::frames declarations through wire and root. OS os_spr reexports protocol::wire::* and root reexports os_spr::*, preserving exact same nominal definitions.
+
+General framework Cargo already declares the normal dependency `replication = { package = "semio-framework-replication", path = "../../🔨️modules/📡️replication/📦️packages/🦀️rust" }`. Therefore the exact direct replacement is `pub use ::replication::{` the same12names `};`; no new provider, feature, wrapper or conversion is needed. The existing General extern alias `protocol` targets OS Kernel, so using protocol would retain the upward dependency. Existing Kernel code already names ::replication::wire::command_ingress.
+
+Kernel is publicly mounted inside General Manifest and Manifest is reexported through framework package root. Exact searches across Framework/S/Hub found no explicit kernel::Presence* or semio_framework::Presence* calls/imports for these12exports; this is a scoped negative search, not proof against unqualified/glob consumer use.44 lexical candidates include real protocol/replication consumers and unrelated public-presence carrier users. Examples: renderer canvas-presence directly imports three nominal types from replication; OS tool-run exposes protocol::PresenceToolRun/State; Hub/bootstrap and Store use the protocol provider. Full source/provider frames retain these distinctions rather than treating every same-name occurrence as a consumer of General Kernel's alias.
+
+Replacing only the reexport provider preserves the public type/function nominal identities and signatures. It does not establish retirement of the other General OS aliases or its broader product dependencies, and does not require deleting downstream presence APIs.
+
+## Exact Live Publication Admission
+
+Independent authority/publication/current review admits kernel-presence-1.json and kernel-presence-published-1.json. Complete hashes/fullpair agree and actual current Kernel source equals published after. The sole literal change replaces OS provider with ::replication on the exact same12names; every other byte is preserved. All6 defining/source/provider contexts remain exact physical bodies/hashes. No Cargo dependency change or native execution; same nominal Replication exports preserve types and function signatures.

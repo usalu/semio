@@ -1,3 +1,4 @@
+use semio_framework_value::{ValueError,ValueRefusalKind};
 use super::*;
 use crate::sqlite_snapshot::{SqliteDatabase, SqliteDatabaseLimits, SqliteRow, SqliteValue, SqliteSnapshotControl, SqliteSnapshotPhase, SnapshotEncoding, artifact::NativeEncodingBound};
 
@@ -10,7 +11,7 @@ impl Drop for RetainedSnapshot {
 
 impl ArtifactDsl for RetainedSnapshot {
     const EXTENSION: &'static str = "retained";
-    fn parse_dsl(text: &str) -> Result<Self, TextError> { Ok(Self { value: text.parse().map_err(|error: std::num::ParseIntError| TextError { message: error.to_string(), span: Default::default(), expected: None })?, retired: false }) }
+    fn parse_dsl(text: &str) -> Result<Self, TextError> { Ok(Self { value: text.parse().map_err(|error: std::num::ParseIntError| TextError { kind: semio_framework_value::ValueRefusalKind::InvalidValue, message: error.to_string(), span: Default::default(), expected: None })?, retired: false }) }
     fn print_dsl(&self) -> String { self.value.to_string() }
 }
 
@@ -27,27 +28,27 @@ fn value_database(value: i64) -> SqliteDatabase {
 
 impl ArtifactSqliteSnapshot for RetainedSnapshot {
     const SQLITE_SCHEMA: &'static str = include_str!("../🧬️schema/🗄️.sql");
-    fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<crate::io_schema::IoPayload,String>{
+    fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<crate::io_schema::IoPayload,ValueError>{
         use semio_framework_value::native_encoding::{NativeEncodeControl,NativeEncodeProgress};
-        let limits=control.limits();let mut callback=|event:NativeEncodeProgress|control.checkpoint(SqliteSnapshotPhase::EncodeNative,event.completed,event.total).is_ok();let mut native=NativeEncodeControl::new(limits.max_value_bytes,&mut callback);native.begin_stage(1)?;let output=match encoding{SnapshotEncoding::Binary=>{if self.value == -2{return Err("owner encoder refusal".into())}crate::io_schema::IoPayload::Binary(native.copy_bytes(&self.value.to_le_bytes())?)},SnapshotEncoding::Text=>{native.charge(20)?;crate::io_schema::IoPayload::Text(self.value.to_string())}};native.step()?;Ok(output)
+        let limits=control.limits();let mut callback=|event:NativeEncodeProgress|control.checkpoint(SqliteSnapshotPhase::EncodeNative,event.completed,event.total).is_ok();let mut native=NativeEncodeControl::new(limits.max_value_bytes,&mut callback);native.begin_stage(1)?;let output=match encoding{SnapshotEncoding::Binary=>{if self.value == -2{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"owner encoder refusal"))}crate::io_schema::IoPayload::Binary(native.copy_bytes(&self.value.to_le_bytes())?)},SnapshotEncoding::Text=>{native.charge(20)?;crate::io_schema::IoPayload::Text(self.value.to_string())}};native.step()?;Ok(output)
     }
-    fn decode_sqlite_snapshot_native(payload:&crate::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,String>{
+    fn decode_sqlite_snapshot_native(payload:&crate::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
         control.checkpoint(SqliteSnapshotPhase::DecodeNative,0,0)?;
         control.check_value_bytes(std::mem::size_of::<Self>())?;
         let length=match payload{crate::io_schema::IoPayload::Binary(bytes)=>bytes.len(),crate::io_schema::IoPayload::Text(text)=>text.len()};
-        if length>control.limits().max_file_bytes{return Err("retained scalar exceeds file byte limit".into());}
+        if length>control.limits().max_file_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"retained scalar exceeds file byte limit"));}
         let value=match payload{
-            crate::io_schema::IoPayload::Binary(bytes)=>i64::from_le_bytes(bytes.as_slice().try_into().map_err(|_|"expected exact integer word")?),
-            crate::io_schema::IoPayload::Text(text)if text.len()<=20=>text.parse::<i64>().map_err(|_|"expected bounded integer text")?,
-            _=>return Err("expected bounded integer text".into()),
+            crate::io_schema::IoPayload::Binary(bytes)=>i64::from_le_bytes(bytes.as_slice().try_into().map_err(|_|ValueError::new(ValueRefusalKind::InvalidValue,"expected exact integer word"))?),
+            crate::io_schema::IoPayload::Text(text)if text.len()<=20=>text.parse::<i64>().map_err(|_|ValueError::new(ValueRefusalKind::InvalidValue,"expected bounded integer text"))?,
+            _=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"expected bounded integer text")),
         };
         Ok(Self{value,retired:false})
     }
     fn retire_sqlite_snapshot(mut self) { self.retired = true; RETIREMENTS.with(|count| count.set(count.get() + 1)); }
-    fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, String> { control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1)?; Ok(value_database(self.value)) }
-    fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self, String> { control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 0, 1)?; Ok(Self { value: database.table("retained_value")?.single_row()?.integer(1)?, retired: false }) }
-    fn preflight_sqlite_snapshot_encoding(&self, _: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), String> { let mut bound = NativeEncodingBound::new(control)?; bound.add(32)?; bound.finish() }
-    fn validate_sqlite_snapshot_subset(&self, dialect: &crate::io_schema::ArtifactDialect, _: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> crate::io_schema::IoResult<()> { control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1)?; if dialect.subset == "reject" { return Err("declared semantic owner refusal".to_string().into()); } Ok(crate::io_schema::IoOutcome::clean(())) }
+    fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase,ValueError> { control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1)?; Ok(value_database(self.value)) }
+    fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self,ValueError> { control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 0, 1)?; Ok(Self { value: database.table("retained_value")?.single_row()?.integer(1)?, retired: false }) }
+    fn preflight_sqlite_snapshot_encoding(&self, _: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(),ValueError> { let mut bound = NativeEncodingBound::new(control)?; bound.add(32)?; bound.finish() }
+    fn validate_sqlite_snapshot_subset(&self, dialect: &crate::io_schema::ArtifactDialect, _: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> crate::io_schema::IoResult<()> { control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1).map_err(crate::io_schema::IoError::from_value_error)?; if dialect.subset == "reject" { return Err(crate::io_schema::IoError::from_value_error(ValueError::new(ValueRefusalKind::InvalidValue,"declared semantic owner refusal"))); } Ok(crate::io_schema::IoOutcome::clean(())) }
 }
 
 #[test]

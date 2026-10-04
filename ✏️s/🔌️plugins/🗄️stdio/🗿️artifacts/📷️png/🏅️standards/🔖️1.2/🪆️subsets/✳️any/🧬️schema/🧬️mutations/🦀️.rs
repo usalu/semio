@@ -1,77 +1,32 @@
-//! 🧬️ Transparent PngMutation aggregate.
+//! 🧬️ Byte-authoritative PNG mutation aggregate.
+
 use crate::schema::diff::PngDiff;
 use crate::PngSnapshot;
 
+pub use super::change_gamma::ChangeGammaMutation;
+pub use super::patch_pixels::PatchPixelsMutation;
+pub use super::paint_native_samples::PaintNativeSamplesMutation;
+pub use super::patch_snapshot::PatchSnapshot;
+pub use super::set_snapshot::SetSnapshot;
 pub use crate::schema::operations::apply_png_mutation;
 
-//#region Owners
-pub use super::change_background::ChangeBackgroundMutation;
-pub use super::change_chromaticities::ChangeChromaticitiesMutation;
-pub use super::change_gamma::ChangeGammaMutation;
-pub use super::change_header::ChangeHeaderMutation;
-pub use super::change_physical_dims::ChangePhysicalDimsMutation;
-pub use super::change_srgb_intent::ChangeSrgbIntentMutation;
-pub use super::change_timestamp::ChangeTimestampMutation;
-pub use super::change_transparency::ChangeTransparencyMutation;
-pub use super::insert_text_chunk::InsertTextChunkMutation;
-pub use super::insert_unknown_chunk::InsertUnknownChunkMutation;
-pub use super::remove_text_chunk::RemoveTextChunkMutation;
-pub use super::remove_unknown_chunk::RemoveUnknownChunkMutation;
-pub use super::replace_palette::ReplacePaletteMutation;
-pub use super::replace_pixels::ReplacePixelsMutation;
-pub use super::patch_pixels::PatchPixelsMutation;
-pub use super::patch_snapshot::PatchSnapshot;
-pub use super::replace_text_chunk::ReplaceTextChunkMutation;
-pub use super::set_snapshot::SetSnapshot;
-//#endregion Owners
-
-//#region Aggregate
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[value(tag = "mutation", content = "payload", rename_all = "kebab-case")]
 #[mutations(snapshot = PngSnapshot, diff = PngDiff, schema = "s.stdio.png")]
 pub enum PngMutation {
     SetSnapshot(SetSnapshot),
     PatchSnapshot(PatchSnapshot),
-    ChangeHeader(ChangeHeaderMutation),
-    ReplacePalette(ReplacePaletteMutation),
-    ChangeTransparency(ChangeTransparencyMutation),
     ChangeGamma(ChangeGammaMutation),
-    ChangeChromaticities(ChangeChromaticitiesMutation),
-    ChangeSrgbIntent(ChangeSrgbIntentMutation),
-    ChangePhysicalDims(ChangePhysicalDimsMutation),
-    ChangeTimestamp(ChangeTimestampMutation),
-    ChangeBackground(ChangeBackgroundMutation),
-    InsertTextChunk(InsertTextChunkMutation),
-    RemoveTextChunk(RemoveTextChunkMutation),
-    ReplaceTextChunk(ReplaceTextChunkMutation),
-    ReplacePixels(ReplacePixelsMutation),
     PatchPixels(PatchPixelsMutation),
-    InsertUnknownChunk(InsertUnknownChunkMutation),
-    RemoveUnknownChunk(RemoveUnknownChunkMutation),
+    PaintNativeSamples(PaintNativeSamplesMutation),
 }
-
-//#endregion Aggregate
 
 #[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<PngMutation> {
     vec![
         PngMutation::SetSnapshot(SetSnapshot { snapshot: PngSnapshot::default() }),
-        crate::schema::mutations::patch_snapshot::test_case(),
-        crate::schema::mutations::change_header::test_case(),
-        crate::schema::mutations::replace_palette::test_case(),
-        crate::schema::mutations::change_transparency::test_case(),
-        crate::schema::mutations::change_gamma::test_case(),
-        crate::schema::mutations::change_chromaticities::test_case(),
-        crate::schema::mutations::change_srgb_intent::test_case(),
-        crate::schema::mutations::change_physical_dims::test_case(),
-        crate::schema::mutations::change_timestamp::test_case(),
-        crate::schema::mutations::change_background::test_case(),
-        crate::schema::mutations::insert_text_chunk::test_case(),
-        crate::schema::mutations::remove_text_chunk::test_case(),
-        crate::schema::mutations::replace_text_chunk::test_case(),
-        crate::schema::mutations::replace_pixels::test_case(),
-        crate::schema::mutations::patch_pixels::test_case(),
-        crate::schema::mutations::insert_unknown_chunk::test_case(),
-        crate::schema::mutations::remove_unknown_chunk::test_case(),
+        super::change_gamma::test_case(),
+        super::patch_pixels::test_case(),
+        super::paint_native_samples::test_case(),
     ]
 }

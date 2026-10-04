@@ -10,7 +10,7 @@ use framework_schema::ArtifactSchema;
 /// 🧪️ F6: `dsl::DslScalar` — a plain unit-variant enum binds as `DslField` directly (no
 /// `DslVariants`/`Statements` needed), so `DeflateSnapshot`'s `compression_level_hint` field and
 /// `DeflateMutation::SetCompressionParams`'s `level_hint` argument can both embed it.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DeflateLevelHint {
     Fastest,
@@ -57,7 +57,7 @@ impl DeflateLevelHint {
 /// `DslRecord` only gives this type `DslField` so it can be embedded as
 /// `DeflateMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot })`'s payload; it does not touch the artifact's own
 /// honest hex-text/raw-binary envelope format.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.deflate")]
 pub struct DeflateSnapshot {
@@ -104,23 +104,23 @@ impl store::ArtifactDsl for DeflateSnapshot {
         "stdio.deflate"
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
         let hex: String = body.chars().filter(|c| !c.is_whitespace()).collect();
         if !hex.len().is_multiple_of(2) {
-            return Err(store::TextError::new("odd hex length", dsl::TextSpan::at(1, 1)));
+            return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "odd hex length", semio_framework_diagnostic::TextSpan::at(1, 1)));
         }
         let mut zlib_bytes = Vec::with_capacity(hex.len() / 2);
         let mut i = 0usize;
         while i < hex.len() {
-            let byte = u8::from_str_radix(&hex[i..i + 2], 16).map_err(|e| store::TextError::new(format!("invalid hex: {e}"), dsl::TextSpan::at(1, 1)))?;
+            let byte = u8::from_str_radix(&hex[i..i + 2], 16).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("invalid hex: {e}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
             zlib_bytes.push(byte);
             i += 2;
         }
-        crate::standards::v_rfc1950::subsets::any::io::decode_deflate_snapshot(&zlib_bytes).map_err(|e| store::TextError::new(format!("zlib decode: {e}"), dsl::TextSpan::at(1, 1)))
+        crate::standards::v_rfc1950::subsets::any::io::decode_deflate_snapshot(&zlib_bytes).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("zlib decode: {e}"), semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
         let zlib_bytes = crate::standards::v_rfc1950::subsets::any::io::encode_deflate_snapshot(self);
@@ -139,17 +139,17 @@ impl store::ArtifactPack for DeflateSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
 
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
         let zlib_bytes = crate::standards::v_rfc1950::subsets::any::io::encode_deflate_snapshot(self);
         Ok(store::semio_format::wrap_binary(&envelope, &zlib_bytes))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let _ = options;
-        crate::standards::v_rfc1950::subsets::any::io::decode_deflate_snapshot(&inner).map_err(store::PackError::Schema)
+        crate::standards::v_rfc1950::subsets::any::io::decode_deflate_snapshot(&inner).map_err(|error|store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error)))
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
@@ -160,3 +160,7 @@ mod sqlite_tests;
 
 #[path = "🪶️sqlite/🦀️.rs"]
 mod sqlite;
+#[path = "🚦️native/🦀️.rs"]
+mod sqlite_native;
+/// 🗜️ Declares the actual cumulative bare RFC1950 producer authority for domain consumers.
+pub use sqlite_native::{compress_zlib,decompress_zlib};

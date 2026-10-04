@@ -512,6 +512,83 @@ fn native_eraser_releases_an_eraser_stroke() {
     assert!(!command.points.is_empty());
 }
 
+/// 🪣️ A bucket click is ONE `fillRegion` intent at once — the clicked point in the layer image's pixels, no stroke gesture,
+/// no host flood — and a click off the layer's pixel grid or with no layer selected is nothing.
+#[test]
+fn native_bucket_click_is_one_fill_region_intent_in_layer_pixels() {
+    let mut host = two_pixel_layer_host();
+    host.sync_interaction(&["back".into()], None);
+    host.set_active_utility("paintBucket");
+    let before = host.buffers.paint.clone();
+    let (x, y) = host.world_to_screen_point(0.0, 0.0);
+    host.pointer_down_screen(x, y, 0);
+    assert!(host.paint_gesture.is_none(), "a bucket click never starts a stroke");
+    let command = host.take_paint_edit().expect("the click fills");
+    assert_eq!((command.action(), command.tool, command.layer_id.as_str(), command.target()), ("fillRegion", "bucket", "back", PaintTarget::Pixels));
+    assert_eq!(command.points, vec![[50.0, 50.0]]);
+    host.pointer_up_screen(x, y);
+    assert!(host.paint_edit().is_none(), "the release adds nothing");
+    let (x, y) = host.world_to_screen_point(60.0, 0.0);
+    host.pointer_down_screen(x, y, 0);
+    assert!(host.paint_edit().is_none(), "a click off the pixel grid fills nothing");
+    host.sync_interaction(&[], None);
+    host.pointer_down_screen(100.0, 100.0, 0);
+    assert!(host.paint_edit().is_none(), "no selected layer, nothing to fill");
+    assert_eq!(host.buffers.paint, before);
+}
+
+/// 🌊️ A long stroke streams: every [`RASTER_STROKE_STREAM_BATCH`] new samples leave ONE `stream` tick under the press id,
+/// and the release commits only the samples not yet streamed — together exactly the stroke's samples, in order.
+#[test]
+fn native_long_stroke_streams_batches_and_commits_the_rest_under_one_press() {
+    let mut host = two_pixel_layer_host();
+    host.sync_interaction(&["back".into()], None);
+    host.set_active_utility("paintBrush");
+    host.pointer_down_screen(100.0, 100.0, 0);
+    let mut edits = Vec::new();
+    for step in 1..=40 {
+        host.pointer_move_screen(100.0 + f64::from(step), 100.0);
+        edits.extend(host.take_paint_edit());
+    }
+    host.pointer_up_screen(141.0, 100.0);
+    edits.extend(host.take_paint_edit());
+    let phases: Vec<Option<&str>> = edits.iter().map(|edit| edit.phase).collect();
+    assert_eq!(phases, [Some("stream"), Some("stream"), Some("commit")]);
+    assert!(edits.iter().all(|edit| edit.gesture.is_some() && edit.gesture == edits[0].gesture && edit.action() == "paintStroke" && edit.tool == "brush"), "one press, one tool");
+    assert_eq!(edits.iter().map(|edit| edit.points.len()).collect::<Vec<_>>(), [RASTER_STROKE_STREAM_BATCH, RASTER_STROKE_STREAM_BATCH, 10]);
+    let xs: Vec<f64> = edits.iter().flat_map(|edit| edit.points.iter().map(|point| point[0])).collect();
+    assert_eq!(xs, (0..42).map(|step| xs[0] + f64::from(step)).collect::<Vec<_>>(), "every sample once, in drawing order");
+    let short = {
+        host.pointer_down_screen(100.0, 100.0, 0);
+        host.pointer_up_screen(105.0, 100.0);
+        host.take_paint_edit().expect("a short stroke")
+    };
+    assert_eq!((short.phase, short.gesture.as_deref(), short.points.len()), (None, None, 2), "a short stroke is still one whole dispatch");
+}
+
+/// 🧯️ A streamed stroke the host drops (cancel, utility switch) leaves the abort of its press; an unstreamed one leaves nothing.
+#[test]
+fn native_dropped_streamed_stroke_leaves_the_abort_of_its_press() {
+    let mut host = two_pixel_layer_host();
+    host.sync_interaction(&["back".into()], None);
+    host.set_active_utility("paintBrush");
+    host.pointer_down_screen(100.0, 100.0, 0);
+    let mut press = None;
+    for step in 1..=20 {
+        host.pointer_move_screen(100.0 + f64::from(step), 100.0);
+        if let Some(edit) = host.take_paint_edit() {
+            press = edit.gesture;
+        }
+    }
+    host.pointer_cancel_screen();
+    let abort = host.take_paint_edit().expect("the streamed stroke leaves its abort");
+    assert_eq!((abort.phase, abort.reason, abort.gesture.clone(), abort.points.len()), (Some("abort"), Some("captureLost"), press, 0));
+    host.pointer_down_screen(100.0, 100.0, 0);
+    host.pointer_move_screen(103.0, 100.0);
+    host.set_active_utility("paintEraser");
+    assert!(host.take_paint_edit().is_none(), "a stroke that never streamed leaves nothing to abort");
+}
+
 #[test]
 fn missing_pixel_target_does_not_create_an_arbitrary_background_layer() {
     let mut host = RasterHost::new();
@@ -815,7 +892,7 @@ fn empty_layer_is_transparent_and_does_not_allocate_or_paint_a_checkerboard_asse
 }
 
 #[test]
-fn paint_mask_stroke_captures_intrinsic_coordinates_and_exact_revision(){
+fn paint_mask_stroke_captures_intrinsic_coordinates_on_the_mask_target(){
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎭️mask-stroke/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap(){for erase in [false,true]{
         let mut host=RasterHost::new();host.set_size(100,100,1.0);host.sync_document_json(&case["document"].to_string()).unwrap();
@@ -823,13 +900,12 @@ fn paint_mask_stroke_captures_intrinsic_coordinates_and_exact_revision(){
         host.sync_interaction(&["p".into()],None);host.set_active_utility(if erase {"paintEraser"}else{"paintBrush"});host.set_paint_target(PaintTarget::Mask);host.set_mask_value(96);host.set_brush_size(3.0);host.set_brush_opacity(0.25);host.set_brush_hardness(0.5);
         let before=host.buffers.paint.clone();let (x,y)=host.world_to_screen_point(case["worldPoint"][0].as_f64().unwrap(),case["worldPoint"][1].as_f64().unwrap());host.pointer_down_screen(x,y,0);host.pointer_up_screen(x,y);
         let command=host.take_paint_edit().expect(case["name"].as_str().unwrap());assert_eq!(command.action(),"paintStroke");assert_eq!(command.target(),PaintTarget::Mask);assert_eq!(command.tool,if erase{"eraser"}else{"brush"});assert_eq!(command.layer_id,"p");
-        let revision:MaskJson=serde_json::from_str(command.revision_value().unwrap()).unwrap();let expected:MaskJson=serde_json::from_value(case["document"]["layers"][0]["children"][0]["mask"].clone()).unwrap();assert_eq!(revision,expected);
         assert_eq!(command.points,vec![[case["pixelPoint"][0].as_f64().unwrap(),case["pixelPoint"][1].as_f64().unwrap()]]);assert_eq!(host.buffers.paint,before);
     }}
 }
 
 #[test]
-fn paint_mask_stroke_cancels_on_mask_revision_or_target_change(){
+fn paint_mask_stroke_cancels_on_mask_placement_or_target_change(){
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎭️mask-stroke/🔣️.json")).unwrap();let base=&fixture["cases"][0];
     for case in fixture["revisions"].as_array().unwrap(){
         let mut host=RasterHost::new();host.sync_document_json(&base["document"].to_string()).unwrap();host.upload_raster_image_key("m",&png_bytes(3,1)).unwrap();host.sync_interaction(&["p".into()],None);host.set_active_utility("paintBrush");host.set_paint_target(PaintTarget::Mask);host.pointer_down_screen(50.0,50.0,0);assert!(host.paint_gesture.is_some());

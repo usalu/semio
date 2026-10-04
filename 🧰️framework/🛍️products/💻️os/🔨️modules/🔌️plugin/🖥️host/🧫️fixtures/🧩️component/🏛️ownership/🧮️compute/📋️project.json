@@ -1,0 +1,24 @@
+{
+  "name": "@semio-tech/framework-plugin-host-fixture-compute-ownership",
+  "$schema": "../../../../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "sharedGlobals",
+        "{projectRoot}/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️testing/📍️consumer/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/🧮️compute/🧬️schema/📍️consumer/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/🏛️ownership/🧮️compute",
+        "command": "bun ./📜️script.ts test"
+      }
+    }
+  }
+}

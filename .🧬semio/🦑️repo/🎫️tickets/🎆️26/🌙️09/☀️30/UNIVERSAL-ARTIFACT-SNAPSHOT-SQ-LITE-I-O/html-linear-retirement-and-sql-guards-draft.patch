@@ -1,0 +1,37 @@
+*** Begin Patch
+*** Update File: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🚦️native/🦀️.rs
+@@
+-fn retire_node(root:HtmlNode){let mut pending=vec![root];while let Some(mut node)=pending.pop(){#[cfg(test)]super::sqlite_lifecycle_tests::retirement_visit();if let HtmlNode::Element{children,..}=&mut node{pending.append(children);}}}
++/// 🪢️ Each continuation owns the vector containing its popped-node spare slot.
++struct HtmlContinuation{work:Vec<HtmlNode>,previous:*mut HtmlContinuation}
++const _:()=assert!(std::mem::size_of::<HtmlContinuation>()==std::mem::size_of::<Vec<HtmlNode>>()+std::mem::size_of::<*mut HtmlContinuation>());
++const _:()=assert!(std::mem::size_of::<HtmlContinuation>()<=std::mem::size_of::<(String,Vec<HtmlAttr>,Vec<HtmlNode>)>());
++const _:()=assert!(std::mem::size_of::<HtmlContinuation>()<=std::mem::size_of::<HtmlNode>()&&std::mem::align_of::<HtmlContinuation>()<=std::mem::align_of::<HtmlNode>());
++pub(super) fn retire_node(root:HtmlNode){
++ #[cfg(test)]super::sqlite_lifecycle_tests::retirement_visit();
++ let HtmlNode::Element{children,..}=root else{return};let mut work=children;let mut previous=std::ptr::null_mut::<HtmlContinuation>();
++ loop{
++  if let Some(node)=work.pop(){
++   #[cfg(test)]super::sqlite_lifecycle_tests::retirement_visit();
++   if let HtmlNode::Element{children,..}=node{let slot=unsafe{work.as_mut_ptr().add(work.len())}.cast::<HtmlContinuation>();let frame=HtmlContinuation{work:std::mem::take(&mut work),previous};unsafe{std::ptr::write(slot,frame)}previous=slot;work=children;}
++  }else if previous.is_null(){return}else{let frame=unsafe{std::ptr::read(previous)};previous=frame.previous;work=frame.work;}
++ }
++}
+*** Update File: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs
+@@
+ const TABLES: [&str; 8] = ["html_document", "html_node", "html_element", "html_text", "html_comment", "html_raw_text", "html_attribute", "html_child"];
++struct OwnedNodeMap(BTreeMap<i64,HtmlNode>);
++impl std::ops::Deref for OwnedNodeMap{type Target=BTreeMap<i64,HtmlNode>;fn deref(&self)->&Self::Target{&self.0}}
++impl std::ops::DerefMut for OwnedNodeMap{fn deref_mut(&mut self)->&mut Self::Target{&mut self.0}}
++impl Drop for OwnedNodeMap{fn drop(&mut self){for node in std::mem::take(&mut self.0).into_values(){super::controlled_native::retire_node(node)}}}
++struct OwnedChildren(Vec<HtmlNode>);
++impl std::ops::Deref for OwnedChildren{type Target=Vec<HtmlNode>;fn deref(&self)->&Self::Target{&self.0}}
++impl std::ops::DerefMut for OwnedChildren{fn deref_mut(&mut self)->&mut Self::Target{&mut self.0}}
++impl Drop for OwnedChildren{fn drop(&mut self){while let Some(node)=self.0.pop(){super::controlled_native::retire_node(node)}}}
+@@
+-        let mut stack = vec![(root, false)]; let mut visited = BTreeSet::new(); let mut built = BTreeMap::new();
++        let mut stack = vec![(root, false)]; let mut visited = BTreeSet::new(); let mut built = OwnedNodeMap(BTreeMap::new());
+@@
+-                "element" => { let mut attrs = Vec::new(); for (_, row) in attributes.remove(&id).unwrap_or_default() { attrs.push(HtmlAttr { name: semio_framework_os_kernel::sqlite_snapshot::artifact::reconstruct_text(control,row.text(3)?)?, value: row.optional_text(4)?.map(|v|semio_framework_os_kernel::sqlite_snapshot::artifact::reconstruct_text(control,v)).transpose()? }); tick(control, SqliteSnapshotPhase::ReconstructSnapshot, &mut checked, total)?; } let mut child_nodes = Vec::new(); for (_, child) in children.remove(&id).unwrap_or_default() { child_nodes.push(built.remove(&child).ok_or("HTML child was not reconstructed")?); tick(control, SqliteSnapshotPhase::ReconstructSnapshot, &mut checked, total)?; } HtmlNode::Element { name: semio_framework_os_kernel::sqlite_snapshot::artifact::reconstruct_text(control,payload.text(1)?)?, attributes: attrs, children: child_nodes } },
++                "element" => { let mut attrs = Vec::new(); for (_, row) in attributes.remove(&id).unwrap_or_default() { attrs.push(HtmlAttr { name: semio_framework_os_kernel::sqlite_snapshot::artifact::reconstruct_text(control,row.text(3)?)?, value: row.optional_text(4)?.map(|v|semio_framework_os_kernel::sqlite_snapshot::artifact::reconstruct_text(control,v)).transpose()? }); tick(control, SqliteSnapshotPhase::ReconstructSnapshot, &mut checked, total)?; } let mut child_nodes = OwnedChildren(Vec::new()); for (_, child) in children.remove(&id).unwrap_or_default() { child_nodes.push(built.remove(&child).ok_or("HTML child was not reconstructed")?); tick(control, SqliteSnapshotPhase::ReconstructSnapshot, &mut checked, total)?; } HtmlNode::Element { name: semio_framework_os_kernel::sqlite_snapshot::artifact::reconstruct_text(control,payload.text(1)?)?, attributes: attrs, children: std::mem::take(&mut child_nodes.0) } },
+*** End Patch

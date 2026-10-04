@@ -15,7 +15,7 @@ use store::ArtifactDsl;
 pub const NAKAGIN_LABEL_CORE_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
 /// 📖️ Parses `.rewriting` DSL text into a `RewritingSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<RewritingSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<RewritingSnapshot, semio_framework_diagnostic::TextError> {
     <RewritingSnapshot as ArtifactDsl>::parse_dsl(text)
 }
 

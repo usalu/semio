@@ -16,9 +16,14 @@ impl ChangeTestConfigSelection {
     const TAG: u8 = 0x73;
 }
 impl OpText for ChangeTestConfigSelection {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let value = line.strip_prefix("change-test-config-selection ").ok_or_else(|| store::TextError::new("expected change-test-config-selection", store::TextSpan::at(1, 1)))?;
-        Ok(Self { selected: serde_json::from_str(value).map_err(|_| store::TextError::new("selection must be a JSON nullable string", store::TextSpan::at(1, 1)))? })
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        let value = line
+            .strip_prefix("change-test-config-selection ")
+            .ok_or_else(|| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected change-test-config-selection", semio_framework_diagnostic::TextSpan::at(1, 1)))?;
+        Ok(Self {
+            selected: serde_json::from_str(value)
+                .map_err(|_| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "selection must be a JSON nullable string", semio_framework_diagnostic::TextSpan::at(1, 1)))?,
+        })
     }
     fn print_op(&self) -> String {
         format!("{} {}", Self::OPCODE, serde_json::to_string(&self.selected).expect("nullable string serializes"))
@@ -64,11 +69,11 @@ impl MutationKind<TestConfig, TestConfigMutation> for ChangeTestConfigSelection 
             Some(value) => TestConfigDiff::Set(value.clone()),
         })
     }
-    fn inverse(&self, base: &TestConfig) -> Vec<TestConfigMutation> {
-        vec![Self { selected: base.selected.clone() }.into()]
+    fn inverse(&self, base: &TestConfig) -> Result<Vec<TestConfigMutation>, semio_framework_value::ValueError> {
+        Ok((|| vec![Self { selected: base.selected.clone() }.into()])())
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(
             &{
                 match &self.selected {
                     None => "Clear test config selection".into(),

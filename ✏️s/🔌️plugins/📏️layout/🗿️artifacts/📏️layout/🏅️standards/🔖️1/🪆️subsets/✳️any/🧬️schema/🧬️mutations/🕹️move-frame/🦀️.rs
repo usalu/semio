@@ -24,9 +24,12 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for MoveFrame {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_move_frame(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
-        inverse_move_frame(self, base)
-    }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok({
+        inverse_move_frame(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Move frame \"{}\"", self.frame_id), &format!("Rahmen \"{}\" verschieben", self.frame_id))
     }
@@ -61,7 +64,8 @@ pub fn diff_move_frame(payload: &MoveFrame, base: &LayoutSnapshot) -> protocol::
 //#endregion 🕹️MoveFrame
 
 //#region 🕹️MoveFrame
-pub fn inverse_move_frame(payload: &MoveFrame, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_move_frame(payload: &MoveFrame, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else {
         return Vec::new();
     };
@@ -70,5 +74,7 @@ pub fn inverse_move_frame(payload: &MoveFrame, base: &LayoutSnapshot) -> Vec<Lay
     };
     let bounds = frame.bounds();
     vec![LayoutMutation::MoveFrame(MoveFrame { page_id: payload.page_id.clone(), frame_id: payload.frame_id.clone(), new_x: bounds.x, new_y: bounds.y })]
+
+    })())
 }
 //#endregion 🕹️MoveFrame

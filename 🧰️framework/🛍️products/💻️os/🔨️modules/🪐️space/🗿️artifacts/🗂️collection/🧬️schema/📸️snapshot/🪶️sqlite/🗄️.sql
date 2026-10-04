@@ -1,0 +1,5 @@
+CREATE TABLE collection_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL, name TEXT NOT NULL);
+CREATE TABLE collection_folder (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES collection_document(id), ordinal INTEGER NOT NULL CHECK(ordinal>=0), folder_id TEXT NOT NULL, parent_folder_id TEXT, name TEXT NOT NULL);
+CREATE TABLE collection_entry (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES collection_document(id), ordinal INTEGER NOT NULL CHECK(ordinal>=0), entry_id TEXT NOT NULL, folder_id TEXT, name TEXT NOT NULL, kind_id TEXT NOT NULL, body_kind TEXT NOT NULL CHECK(body_kind IN ('document','blob')));
+CREATE TABLE collection_document_body (id INTEGER PRIMARY KEY REFERENCES collection_entry(id), schema TEXT NOT NULL, addressed_document_id TEXT NOT NULL);
+CREATE TABLE collection_blob_body (id INTEGER PRIMARY KEY REFERENCES collection_entry(id), hash TEXT NOT NULL, size_high INTEGER NOT NULL CHECK(size_high BETWEEN 0 AND 4294967295), size_low INTEGER NOT NULL CHECK(size_low BETWEEN 0 AND 4294967295), media_type TEXT NOT NULL);

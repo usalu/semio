@@ -95,6 +95,8 @@ pub mod set_sample_precision;
 /// 📐️ Typed conformance-class mutation for `stdio.jpg` under T.81 baseline sequential DCT. Every
 /// variant addresses ONE axis of the class; none addresses document content.
 //#region 🔖️Leaves
+#[path = "🩹️patch-snapshot/🦀️.rs"]
+pub mod patch_snapshot;
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "🏁️set-sof-marker/🦀️.rs"]
@@ -108,6 +110,7 @@ pub mod set_sof_marker;
 #[value(tag = "mutation", content = "payload", rename_all = "kebab-case")]
 pub enum JpgBaselineMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
+    PatchSnapshot(patch_snapshot::PatchSnapshot),
     SetSofMarker(set_sof_marker::SetSofMarker),
     SetSamplePrecision(set_sample_precision::SetSamplePrecision),
     SetArithmetic(set_arithmetic::SetArithmetic),
@@ -123,7 +126,7 @@ pub enum JpgBaselineMutation {
 /// declares and `🟣️mutate-jpg-jfif-1-01-baseline` measures itself against.
 /// `kinds_match_enum_variants_in_declaration_order` below is what keeps the two honest against the
 /// enum, and `kinds_match_the_committed_catalog` against the manifest.
-pub const KINDS: &[&str] = &["set-snapshot", "set-sof-marker", "set-sample-precision", "set-arithmetic", "insert-huffman-table", "remove-huffman-table", "insert-frame-component", "remove-frame-component", "set-component-sampling"];
+pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "set-sof-marker", "set-sample-precision", "set-arithmetic", "insert-huffman-table", "remove-huffman-table", "insert-frame-component", "remove-frame-component", "set-component-sampling"];
 
 crate::impl_serde_op_codec!(JpgBaselineMutation, "jpg-baseline-mutation");
 
@@ -208,6 +211,7 @@ fn huffman<'a>(base: &'a JpgSnapshot, key: &JpgHuffmanTableKey) -> Option<&'a Jp
 pub(crate) fn agg_diff(this: &JpgBaselineMutation, base: &JpgSnapshot) -> protocol::MutationOutcome<JpgDiff> {
     protocol::MutationOutcome::new(match this {
         JpgBaselineMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => crate::standards::v_jfif_1_01::subsets::document::schema::diff::diff_set_snapshot(base, snapshot),
+        JpgBaselineMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<JpgSnapshot, JpgBaselineMutation>>::diff(patch, base),
         JpgBaselineMutation::SetSofMarker(set_sof_marker::SetSofMarker { marker }) => JpgDiff { sof_marker: (base.sof_marker != *marker).then_some(*marker), ..Default::default() },
         JpgBaselineMutation::SetSamplePrecision(set_sample_precision::SetSamplePrecision { precision }) => {
             let unchanged = base.frame.as_ref().is_some_and(|frame| frame.precision == *precision);
@@ -269,19 +273,21 @@ pub(crate) fn agg_diff(this: &JpgBaselineMutation, base: &JpgSnapshot) -> protoc
 }
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &JpgBaselineMutation, base: &JpgSnapshot) -> Vec<JpgBaselineMutation> {
+pub(crate) fn agg_inverse(this: &JpgBaselineMutation, base: &JpgSnapshot) -> Result<Vec<JpgBaselineMutation>, semio_framework_value::ValueError> {
+    Ok({
     vec![match this {
         JpgBaselineMutation::SetSnapshot(_) => JpgBaselineMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
+        JpgBaselineMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<JpgSnapshot, JpgBaselineMutation>>::inverse(patch, base)?),
         JpgBaselineMutation::SetSofMarker(_) => JpgBaselineMutation::SetSofMarker(set_sof_marker::SetSofMarker { marker: base.sof_marker }),
         JpgBaselineMutation::SetSamplePrecision(_) => match &base.frame {
             Some(frame) => JpgBaselineMutation::SetSamplePrecision(set_sample_precision::SetSamplePrecision { precision: frame.precision }),
-            None => return Vec::new(),
+            None => return Ok(Vec::new()),
         },
         JpgBaselineMutation::SetArithmetic(_) => JpgBaselineMutation::SetArithmetic(set_arithmetic::SetArithmetic { arithmetic: base.arithmetic }),
         JpgBaselineMutation::InsertHuffmanTable(insert_huffman_table::InsertHuffmanTable { table, .. }) => {
             let key = JpgHuffmanTableKey { class: table.class, id: table.id };
             match huffman(base, &key) {
-                Some(_) => return Vec::new(),
+                Some(_) => return Ok(Vec::new()),
                 None => JpgBaselineMutation::RemoveHuffmanTable(remove_huffman_table::RemoveHuffmanTable { key }),
             }
         }
@@ -289,21 +295,23 @@ pub(crate) fn agg_inverse(this: &JpgBaselineMutation, base: &JpgSnapshot) -> Vec
         // on the insertion kind precisely so this inverse can name it.
         JpgBaselineMutation::RemoveHuffmanTable(remove_huffman_table::RemoveHuffmanTable { key }) => match base.huffman_tables.iter().position(|table| table.class == key.class && table.id == key.id) {
             Some(at) => JpgBaselineMutation::InsertHuffmanTable(insert_huffman_table::InsertHuffmanTable { index: at, table: base.huffman_tables[at].clone() }),
-            None => return Vec::new(),
+            None => return Ok(Vec::new()),
         },
         JpgBaselineMutation::InsertFrameComponent(insert_frame_component::InsertFrameComponent { component: added, .. }) => match component(base, added.id) {
-            Some(_) => return Vec::new(),
+            Some(_) => return Ok(Vec::new()),
             None => JpgBaselineMutation::RemoveFrameComponent(remove_frame_component::RemoveFrameComponent { id: added.id }),
         },
         JpgBaselineMutation::RemoveFrameComponent(remove_frame_component::RemoveFrameComponent { id }) => match base.frame.as_ref().and_then(|frame| frame.components.iter().position(|found| found.id == *id)) {
             Some(at) => JpgBaselineMutation::InsertFrameComponent(insert_frame_component::InsertFrameComponent { index: at, component: base.frame.as_ref().expect("the frame was just read").components[at] }),
-            None => return Vec::new(),
+            None => return Ok(Vec::new()),
         },
         JpgBaselineMutation::SetComponentSampling(set_component_sampling::SetComponentSampling { id, .. }) => match component(base, *id) {
             Some(found) => JpgBaselineMutation::SetComponentSampling(set_component_sampling::SetComponentSampling { id: *id, h_sampling: found.h_sampling, v_sampling: found.v_sampling }),
-            None => return Vec::new(),
+            None => return Ok(Vec::new()),
         },
     }]
+
+    })
 }
 //#endregion 🔖️MutationTrait
 

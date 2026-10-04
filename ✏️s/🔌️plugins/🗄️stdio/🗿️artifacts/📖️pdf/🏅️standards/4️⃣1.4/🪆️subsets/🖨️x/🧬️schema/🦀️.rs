@@ -33,7 +33,7 @@ pub mod derived_construction {
     #[derive(Clone, Debug, Default)]
     pub struct PdfXBuilderConstruction {
         snapshot: PdfSnapshot,
-        diagnostics: Vec<dsl::Diagnostic>,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
     }
 
     impl ArtifactBuilder for PdfXBuilderConstruction {
@@ -49,7 +49,7 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
 
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
 
@@ -70,7 +70,7 @@ pub mod derived_construction {
         /// 🛡️ Re-runs the honestly-scope-limited PDF/X check -- always SOFT at this schema, so
         /// `build()` never fails; the diagnostics still surface via the analyzer/composer/validator
         /// paths for anyone inspecting them.
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
             let _ = check_pdf_x_conformance(&self.snapshot);
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
@@ -91,7 +91,11 @@ pub use derived_construction::*;
 pub mod derived_analysis {
     use crate::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot;
     use crate::standards::v1_4::subsets::base::schema::{PdfAnalyzer as PdfAnyAnalyzer, PdfParts};
-    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
+    use semio_framework_diagnostic::Diagnostic;
+use semio_framework_diagnostic::FaultCode;
+use semio_framework_diagnostic::FaultScope;
+use semio_framework_diagnostic::Severity;
+use semio_framework_diagnostic::TextSpan;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     /// 🎯️ This subset's dialect coordinate.

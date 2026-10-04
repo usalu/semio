@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json.schemas.assets.semio-tech.com/stdio/xml/retained-document.fixture.schema.json",
+  "xml": "<?xml version='1.0' encoding='UTF-8'?><!--lead--><!DOCTYPE root [<!ENTITY writer \"semio\">]><?before data?><root empty=\"\" unicode=\"🧬\"><child>alpha</child><![CDATA[beta]]><!--inside--><?inner ok?></root><!--tail-->",
+  "expected": {
+    "nodes": 9,
+    "attributes": 2,
+    "prolog": 2,
+    "epilog": 1,
+    "dtdDeclarations": 1,
+    "quickXml": {
+      "elements": 2,
+      "text": 1,
+      "cdata": 1,
+      "comments": 3,
+      "processingInstructions": 2,
+      "declarations": 1,
+      "doctypes": 1
+    }
+  },
+  "grant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 64,
+    "maximumCapacityBytes": 4096,
+    "maximumDepth": 64,
+    "maximumTurns": 100000
+  }
+}

@@ -34,13 +34,13 @@ fn declared_workbook(expr: &str) -> XlsxWorkbook {
 }
 
 fn before() -> XlsxSnapshot {
-    dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> XlsxSnapshot {
-    dsl::json::from_json_str(AFTER).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> XlsxMutation {
-    dsl::json::from_json_str(MUTATION).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 fn workbook(snapshot: &XlsxSnapshot) -> XlsxWorkbook {
     snapshot.project_workbook().expect("the canonical XML parts project a workbook")
@@ -83,7 +83,7 @@ async fn applies_to_committed_after() {
 async fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = <XlsxMutation as protocol::Mutation<XlsxSnapshot>>::inverse(&mutation, &base);
+    let inverse = <XlsxMutation as protocol::Mutation<XlsxSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "set-snapshot/widens-the-total-formula-to-a-third-row: undoing a whole-snapshot replacement is exactly one step");
     assert!(matches!(inverse[0], XlsxMutation::SetSnapshot(_)), "set-snapshot/widens-the-total-formula-to-a-third-row: the undo step must itself be a SetSnapshot carrying the pre-state");
     let mut snapshot = base.clone();
@@ -99,12 +99,12 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: XlsxSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: XlsxSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "set-snapshot/widens-the-total-formula-to-a-third-row: committed {side} JSON is not canonical");
     }
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&mutation())).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "set-snapshot/widens-the-total-formula-to-a-third-row: committed mutation JSON is not canonical");
 }
@@ -122,7 +122,7 @@ async fn declared_outcome_holds() {
         .messages()
         .iter()
         .map(|message| {
-            let level = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&message.level)).expect("severity encodes");
+            let level = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&message.level)).expect("severity encodes");
             (level.as_str().unwrap_or_default().to_string(), message.code.0.clone())
         })
         .collect();
@@ -143,20 +143,24 @@ async fn declared_outcome_holds() {
 async fn produces_committed_diff() {
     let base = before();
     let raised = <XlsxMutation as protocol::Mutation<XlsxSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(raised.diff())).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(raised.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "set-snapshot/widens-the-total-formula-to-a-third-row: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert!(raised.diff().opc.is_none(), "set-snapshot/widens-the-total-formula-to-a-third-row: a formula edit must never reach into the lossless OPC lane");
     let parts = raised.diff().xml_parts.as_ref().expect("set-snapshot/widens-the-total-formula-to-a-third-row: the XML parts diff must be present");
     assert!(parts.removed.is_empty() && parts.added.is_empty(), "set-snapshot/widens-the-total-formula-to-a-third-row: the worksheet is patched in place — no part is added or removed");
-    assert_eq!(parts.modified.iter().map(|part| part.key.clone()).collect::<Vec<_>>(), vec![worksheet_part(&base)], "set-snapshot/widens-the-total-formula-to-a-third-row: only the worksheet part holding the total cell is patched, keyed by its OPC path");
+    assert_eq!(
+        parts.modified.iter().map(|part| part.key.clone()).collect::<Vec<_>>(),
+        vec![worksheet_part(&base)],
+        "set-snapshot/widens-the-total-formula-to-a-third-row: only the worksheet part holding the total cell is patched, keyed by its OPC path"
+    );
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to XlsxDiff.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: XlsxDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
+    let decoded: XlsxDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "set-snapshot/widens-the-total-formula-to-a-third-row: committed diff JSON is not canonical");
     assert_eq!(
@@ -170,7 +174,7 @@ async fn committed_diff_is_canonical() {
 /// a complete description of what this `set-snapshot` changed, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: XlsxDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: XlsxDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let produced = <XlsxDiff as protocol::MutationDiff<XlsxSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "set-snapshot/widens-the-total-formula-to-a-third-row: committed diff did not carry before to after");
 }
@@ -188,10 +192,10 @@ async fn zzz_write_committed_quintet() {
     let mutation = XlsxMutation::SetSnapshot(SetSnapshot { snapshot: after.clone() });
     let raised = <XlsxMutation as protocol::Mutation<XlsxSnapshot>>::diff(&mutation, &before);
     for (path, text) in [
-        ("📸️snapshot/⬅️before/🔣️.json", pretty(dsl::json::to_json_string(&before))),
-        ("📸️snapshot/➡️after/🔣️.json", pretty(dsl::json::to_json_string(&after))),
-        ("🦠️mutation/🔣️.json", pretty(dsl::json::to_json_string(&mutation))),
-        ("🔺️diff/🔣️.json", pretty(dsl::json::to_json_string(raised.diff()))),
+        ("📸️snapshot/⬅️before/🔣️.json", pretty(semio_framework_pack_json::to_json_string(&before))),
+        ("📸️snapshot/➡️after/🔣️.json", pretty(semio_framework_pack_json::to_json_string(&after))),
+        ("🦠️mutation/🔣️.json", pretty(semio_framework_pack_json::to_json_string(&mutation))),
+        ("🔺️diff/🔣️.json", pretty(semio_framework_pack_json::to_json_string(raised.diff()))),
         ("🎯️outcome/🔣️.json", pretty(r#"{"status":"applied"}"#.to_string())),
     ] {
         std::fs::write(root.join(path), text).unwrap_or_else(|error| panic!("write {path}: {error}"));

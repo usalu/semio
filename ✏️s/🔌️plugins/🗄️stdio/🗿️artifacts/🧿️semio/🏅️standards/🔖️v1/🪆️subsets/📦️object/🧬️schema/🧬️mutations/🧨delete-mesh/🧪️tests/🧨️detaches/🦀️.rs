@@ -20,13 +20,13 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧨delete-mesh/🧨️detaches/🎯️outcome/🔣️.json");
 
 fn before() -> SemioObjectSnapshot {
-    dsl::json::from_json_str(BEFORE).expect("delete-mesh before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-mesh before snapshot decodes")
 }
 fn expected_after() -> SemioObjectSnapshot {
-    dsl::json::from_json_str(AFTER).expect("delete-mesh after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-mesh after snapshot decodes")
 }
 fn mutation() -> SemioObjectMutation {
-    dsl::json::from_json_str(MUTATION).expect("delete-mesh mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-mesh mutation decodes")
 }
 
 /// ▶️ The mesh handle is cleared and the sibling brep handle is deliberately left in place — the
@@ -48,7 +48,7 @@ async fn clears_the_mesh_slot_and_leaves_the_brep_slot_alone() {
 async fn the_undo_create_mesh_reattaches_the_captured_handle() {
     let base = before();
     let mutation = mutation();
-    let undo = mutation.inverse(&base);
+    let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "deleting an existing child undoes as exactly one CreateMesh");
     let SemioObjectMutation::CreateMesh(recreate) = &undo[0] else { panic!("delete-mesh must undo as CreateMesh") };
     assert_eq!(recreate.child_id, "kitchen-sink-mesh", "the undo must recapture the ORIGINAL child id from base");
@@ -65,14 +65,14 @@ async fn the_undo_create_mesh_reattaches_the_captured_handle() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioObjectSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: SemioObjectSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "delete-mesh/detaches-the-mesh-child-and-leaves-the-brep-child-alone: committed {label} JSON is not canonical");
     }
     let after_json: serde_json::Value = serde_json::from_str(AFTER).expect("after reparses");
     assert!(after_json.get("mesh").is_none(), "a cleared snapshot slot is an ABSENT key, never an explicit null");
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("delete-mesh mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(mutation()))).expect("delete-mesh mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("delete-mesh mutation reparses");
     assert_eq!(reencoded, original, "delete-mesh/detaches-the-mesh-child-and-leaves-the-brep-child-alone: committed mutation JSON is not canonical");
 }
@@ -94,7 +94,7 @@ async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioObjectMutation as Mutation<SemioObjectSnapshot>>::diff(&mutation(), &base);
     assert!(matches!(outcome.diff().mesh, Some(None)), "the in-memory diff must be Some(None) — write the slot, clear it");
-    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "delete-mesh/detaches-the-mesh-child-and-leaves-the-brep-child-alone: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert!(committed.get("mesh").expect("the committed diff names the mesh slot").is_null(), "a cleared DIFF slot is an explicit null, never an absent key");
@@ -105,10 +105,10 @@ async fn produces_committed_diff() {
 /// "untouched" `None`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_json_decodes_to_the_explicit_clear() {
-    let decoded: SemioObjectDiff = dsl::json::from_json_str(DIFF).expect("committed delete-mesh diff decodes");
+    let decoded: SemioObjectDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed delete-mesh diff decodes");
     assert!(matches!(decoded.mesh, Some(None)), "decoding {{\"mesh\":null}} must yield Some(None) — the clear intent survives the JSON round trip");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
-    assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("re-encode"), committed, "the committed diff is a decode→encode fixed point");
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("re-encode"), committed, "the committed diff is a decode→encode fixed point");
     let authored = SemioObjectDiff { mesh: Some(None), ..Default::default() };
     assert_eq!(decoded, authored, "the decoded diff is exactly the authored Some(None) diff");
 }
@@ -120,7 +120,7 @@ async fn authored_and_decoded_diffs_apply_to_after() {
     let authored = SemioObjectDiff { mesh: Some(None), ..Default::default() };
     let produced = authored.apply(&before()).expect("the Some(None) diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-mesh/detaches-the-mesh-child-and-leaves-the-brep-child-alone: the Some(None) diff did not carry before to after");
-    let decoded: SemioObjectDiff = dsl::json::from_json_str(DIFF).expect("committed delete-mesh diff decodes");
+    let decoded: SemioObjectDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed delete-mesh diff decodes");
     let applied = decoded.apply(&before()).expect("the decoded diff applies to the before-snapshot");
     assert_eq!(applied, expected_after(), "delete-mesh/detaches-the-mesh-child-and-leaves-the-brep-child-alone: the JSON-decoded diff did not carry before to after");
 }

@@ -23,9 +23,12 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for CreateLink {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_create_link(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
-        inverse_create_link(self, base)
-    }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok({
+        inverse_create_link(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Create link \"{}\"", self.link.path), &format!("Verknüpfung \"{}\" erstellen", self.link.path))
     }
@@ -45,7 +48,10 @@ pub fn diff_create_link(payload: &CreateLink, base: &LayoutSnapshot) -> protocol
 //#endregion 🖇️CreateLink
 
 //#region 🖇️CreateLink
-pub fn inverse_create_link(payload: &CreateLink, _base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_create_link(payload: &CreateLink, _base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![LayoutMutation::DeleteLink(delete_link::DeleteLink { id: payload.link.id.clone() })]
+
+    })())
 }
 //#endregion 🖇️CreateLink

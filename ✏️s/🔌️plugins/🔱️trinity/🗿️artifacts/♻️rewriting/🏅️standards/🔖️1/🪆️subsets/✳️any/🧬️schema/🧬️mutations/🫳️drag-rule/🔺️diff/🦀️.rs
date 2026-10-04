@@ -16,9 +16,9 @@ pub fn diff(payload: &super::DragRuleNodes, base: &RewritingSnapshot) -> protoco
         return protocol::MutationOutcome::error("mutation.target-missing", format!("the rule draws none of the {} target node(s)", payload.targets.len()), payload.targets.clone());
     }
     let partial: Vec<protocol::MutationMessage> =
-        (!missing.is_empty()).then(|| protocol::MutationMessage::warn("mutation.partial", format!("{} of {} target(s) skipped (no node of this rule): {}", missing.len(), payload.targets.len(), missing.join(", "))).at(missing)).into_iter().collect();
+        (!missing.is_empty()).then(|| protocol::MutationMessage::warning("mutation.partial", format!("{} of {} target(s) skipped (no node of this rule): {}", missing.len(), payload.targets.len(), missing.join(", "))).at(missing)).into_iter().collect();
     if (payload.dx, payload.dy) == (0.0, 0.0) {
-        return protocol::MutationOutcome::new(RewritingDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warn("mutation.no-op", "a zero offset moves nothing").at(payload.targets.clone())]));
+        return protocol::MutationOutcome::new(RewritingDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "a zero offset moves nothing").at(payload.targets.clone())]));
     }
     let mut layout = MapDelta::default();
     for (id, point) in placed {

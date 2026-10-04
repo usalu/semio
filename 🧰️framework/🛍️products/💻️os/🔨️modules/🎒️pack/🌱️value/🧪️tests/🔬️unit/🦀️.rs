@@ -1,53 +1,55 @@
 use super::*;
 macro_rules! ordinary_fixture_spec {
-    ($spec:path) => { crate::os_dsl::RecordSpecProducer { ordinary: $spec, decoding: |_| Err("ordinary-only test metadata has no controlled construction".into()), encoding: |_| Err("ordinary-only test metadata has no controlled construction".into()) } };
+    ($spec:path) => { semio_framework_dsl_record::RecordSpecProducer { ordinary: $spec, decoding: |_| Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"ordinary-only test metadata has no controlled construction")), encoding: |_| Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"ordinary-only test metadata has no controlled construction")) } };
 }
 
-use crate::os_dsl::schema::{ExprOp, ExprValue};
-use crate::os_dsl::schema::{FieldSpec, RecordLayout};
+use semio_framework_dsl_record::ExprOp;
+use semio_framework_dsl_record::ExprValue;
+use semio_framework_dsl_record::FieldSpec;
+use semio_framework_dsl_record::RecordLayout;
 
 //#region 🔖️Fixtures
 // 🚫️async: E4 fn-pointer slot — passed by name into `Shape::Record`/`Shape::Statements`
 // (`fn() -> RecordSpec`, unnameable if async) — see R9/E4.
 fn nested_spec() -> RecordSpec {
-    RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "a", Shape::Int), FieldSpec::new(2, "b", Shape::Text).optional()])
+    RecordSpec::new(None, semio_framework_dsl_record::RecordLayout::Inline, vec![FieldSpec::new(1, "a", Shape::Int), FieldSpec::new(2, "b", Shape::Text).optional()])
 }
 
 // 🚫️async: E4 fn-pointer slot — see nested_spec above
 fn table_row_spec() -> RecordSpec {
-    RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "id", Shape::UInt), FieldSpec::new(2, "name", Shape::Text), FieldSpec::new(3, "score", Shape::Float), FieldSpec::new(4, "active", Shape::Bool)])
+    RecordSpec::new(None, semio_framework_dsl_record::RecordLayout::Inline, vec![FieldSpec::new(1, "id", Shape::UInt), FieldSpec::new(2, "name", Shape::Text), FieldSpec::new(3, "score", Shape::Float), FieldSpec::new(4, "active", Shape::Bool)])
 }
 
 // 🚫️async: E4 fn-pointer slot — see nested_spec above
 fn header_spec() -> RecordSpec {
-    RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "name", Shape::Text), FieldSpec::new(2, "description", Shape::Text).optional()])
+    RecordSpec::new(None, semio_framework_dsl_record::RecordLayout::Inline, vec![FieldSpec::new(1, "name", Shape::Text), FieldSpec::new(2, "description", Shape::Text).optional()])
 }
 
 // 🚫️async: E4 fn-pointer slot — see nested_spec above
 fn table_row_with_nested_record_spec() -> RecordSpec {
-    RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "id", Shape::UInt), FieldSpec::new(2, "header", Shape::Record(ordinary_fixture_spec!(header_spec)))])
+    RecordSpec::new(None, semio_framework_dsl_record::RecordLayout::Inline, vec![FieldSpec::new(1, "id", Shape::UInt), FieldSpec::new(2, "header", Shape::Record(ordinary_fixture_spec!(header_spec)))])
 }
 
 // 🚫️async: E4 fn-pointer slot — see nested_spec above
 fn table_row_with_tuple_spec() -> RecordSpec {
-    RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "id", Shape::UInt), FieldSpec::new(2, "distortion", Shape::Tuple(Box::new(Shape::Float), Some(5)))])
+    RecordSpec::new(None, semio_framework_dsl_record::RecordLayout::Inline, vec![FieldSpec::new(1, "id", Shape::UInt), FieldSpec::new(2, "distortion", Shape::Tuple(Box::new(Shape::Float), Some(5)))])
 }
 
 // 🚫️async: E4 fn-pointer slot — see nested_spec above
 fn stmt_foo_spec() -> RecordSpec {
-    RecordSpec::new(Some("foo"), RecordLayout::Lines, vec![FieldSpec::new(1, "x", Shape::Int)])
+    RecordSpec::new(Some("foo"), semio_framework_dsl_record::RecordLayout::Lines, vec![FieldSpec::new(1, "x", Shape::Int)])
 }
 
 // 🚫️async: E4 fn-pointer slot — see nested_spec above
 fn stmt_bar_spec() -> RecordSpec {
-    RecordSpec::new(Some("bar"), RecordLayout::Lines, vec![FieldSpec::new(1, "y", Shape::Text)])
+    RecordSpec::new(Some("bar"), semio_framework_dsl_record::RecordLayout::Lines, vec![FieldSpec::new(1, "y", Shape::Text)])
 }
 
 /// 🧬️ One field of every `Shape` variant, exercising every wire tag in a single spec.
 fn full_spec() -> RecordSpec {
     RecordSpec::new(
         None,
-        RecordLayout::Lines,
+        semio_framework_dsl_record::RecordLayout::Lines,
         vec![
             FieldSpec::new(1, "bool_field", Shape::Bool),
             FieldSpec::new(2, "int_field", Shape::Int),
@@ -65,8 +67,8 @@ fn full_spec() -> RecordSpec {
             FieldSpec::new(14, "value_field", Shape::Value),
             FieldSpec::new(15, "table_field", Shape::Table(ordinary_fixture_spec!(table_row_spec))),
             FieldSpec::new(16, "wire_field", Shape::Wire),
-            FieldSpec::new(17, "quantity_field", Shape::Quantity(crate::os_dsl::unit_by_symbol("GPa").unwrap())),
-            FieldSpec::new(18, "angle_field", Shape::Angle(crate::os_dsl::unit_by_symbol("deg").unwrap())),
+            FieldSpec::new(17, "quantity_field", Shape::Quantity(semio_framework_dsl::unit_by_symbol("GPa").unwrap())),
+            FieldSpec::new(18, "angle_field", Shape::Angle(semio_framework_dsl::unit_by_symbol("deg").unwrap())),
             FieldSpec::new(19, "ref_field", Shape::Ref("material")),
             FieldSpec::new(20, "coord_field", Shape::Coord(3)),
             FieldSpec::new(21, "dir_field", Shape::Dir),
@@ -80,7 +82,7 @@ fn full_spec() -> RecordSpec {
 }
 
 fn full_record() -> RecordValue {
-    let mut fields = HashMap::new();
+    let mut fields = RecordValue::default().fields;
     fields.insert(1, FieldValue::Bool(true));
     fields.insert(2, FieldValue::Int(-42));
     fields.insert(3, FieldValue::UInt(9_999_999_999));
@@ -90,14 +92,14 @@ fn full_record() -> RecordValue {
     fields.insert(7, FieldValue::Enum(1));
     fields.insert(8, FieldValue::Tuple(vec![FieldValue::Int(1), FieldValue::Int(2), FieldValue::Int(3)]));
     fields.insert(9, FieldValue::List(vec![FieldValue::Text("x".to_string()), FieldValue::Text("y".to_string())]));
-    let mut nested = HashMap::new();
+    let mut nested = RecordValue::default().fields;
     nested.insert(1, FieldValue::Int(7));
     nested.insert(2, FieldValue::Text("nested".to_string()));
     fields.insert(10, FieldValue::Record(RecordValue { fields: nested }));
     fields.insert(11, FieldValue::Block(Box::new(FieldValue::Int(99))));
-    let mut foo_fields = HashMap::new();
+    let mut foo_fields = RecordValue::default().fields;
     foo_fields.insert(1, FieldValue::Int(5));
-    let mut bar_fields = HashMap::new();
+    let mut bar_fields = RecordValue::default().fields;
     bar_fields.insert(1, FieldValue::Text("statement text".to_string()));
     fields.insert(12, FieldValue::Statements(vec![("foo".to_string(), RecordValue { fields: foo_fields }), ("bar".to_string(), RecordValue { fields: bar_fields })]));
     // `Map`/`DslValue::Object` are `Vec`-backed so `PartialEq` is order-sensitive; since
@@ -107,7 +109,7 @@ fn full_record() -> RecordValue {
     fields.insert(14, FieldValue::Value(DslValue::Object(vec![("arr".to_string(), DslValue::Array(vec![DslValue::Bool(true), DslValue::Null])), ("k".to_string(), DslValue::float(1.0))])));
     let table_rows: Vec<FieldValue> = (0..3)
         .map(|i| {
-            let mut row = HashMap::new();
+            let mut row = RecordValue::default().fields;
             row.insert(1, FieldValue::UInt(i as u64));
             row.insert(2, FieldValue::Text(format!("row{i}")));
             row.insert(3, FieldValue::Float(i as f64 * 1.5));
@@ -135,10 +137,10 @@ fn full_record() -> RecordValue {
     fields.insert(24, FieldValue::UInt(24));
     fields.insert(
         25,
-        FieldValue::Expr(ExprValue::Binary(
-            ExprOp::Add,
-            Box::new(ExprValue::Binary(ExprOp::Mul, Box::new(ExprValue::Num(1.35)), Box::new(ExprValue::Var("G".to_string())))),
-            Box::new(ExprValue::Binary(ExprOp::Mul, Box::new(ExprValue::Num(1.5)), Box::new(ExprValue::Var("Q".to_string())))),
+        FieldValue::Expr(semio_framework_dsl_record::ExprValue::Binary(
+            semio_framework_dsl_record::ExprOp::Add,
+            Box::new(semio_framework_dsl_record::ExprValue::Binary(semio_framework_dsl_record::ExprOp::Mul, Box::new(semio_framework_dsl_record::ExprValue::Num(1.35)), Box::new(semio_framework_dsl_record::ExprValue::Var("G".to_string())))),
+            Box::new(semio_framework_dsl_record::ExprValue::Binary(semio_framework_dsl_record::ExprOp::Mul, Box::new(semio_framework_dsl_record::ExprValue::Num(1.5)), Box::new(semio_framework_dsl_record::ExprValue::Var("Q".to_string())))),
         )),
     );
     fields.insert(26, FieldValue::Text("MATCH (a) RETURN a".to_string()));
@@ -162,7 +164,7 @@ fn round_trips_every_shape_variant_in_one_document() {
 fn round_trips_scalar_edge_cases() {
     let spec = RecordSpec::new(
         None,
-        RecordLayout::Inline,
+        semio_framework_dsl_record::RecordLayout::Inline,
         vec![
             FieldSpec::new(1, "empty_text", Shape::Text),
             FieldSpec::new(2, "nan", Shape::Float),
@@ -175,7 +177,7 @@ fn round_trips_scalar_edge_cases() {
             FieldSpec::new(9, "empty_bytes", Shape::Bytes64),
         ],
     );
-    let mut fields = HashMap::new();
+    let mut fields = RecordValue::default().fields;
     fields.insert(1, FieldValue::Text(String::new()));
     fields.insert(2, FieldValue::Float(f64::NAN));
     fields.insert(3, FieldValue::Float(-0.0));
@@ -209,7 +211,7 @@ fn round_trips_scalar_edge_cases() {
 fn packed_numeric_list_and_tuple_round_trip_and_use_packed_tags() {
     let spec = RecordSpec::new(
         None,
-        RecordLayout::Inline,
+        semio_framework_dsl_record::RecordLayout::Inline,
         vec![
             FieldSpec::new(1, "ints", Shape::List(Box::new(Shape::Int))),
             FieldSpec::new(2, "floats", Shape::List(Box::new(Shape::Float))),
@@ -217,7 +219,7 @@ fn packed_numeric_list_and_tuple_round_trip_and_use_packed_tags() {
             FieldSpec::new(4, "mixed", Shape::List(Box::new(Shape::Value))),
         ],
     );
-    let mut fields = HashMap::new();
+    let mut fields = RecordValue::default().fields;
     fields.insert(1, FieldValue::List(vec![FieldValue::Int(1), FieldValue::Int(-2), FieldValue::Int(3)]));
     fields.insert(2, FieldValue::List(vec![FieldValue::Float(1.5), FieldValue::Float(-2.5)]));
     fields.insert(3, FieldValue::Tuple(vec![FieldValue::UInt(1), FieldValue::UInt(2), FieldValue::UInt(3)]));
@@ -234,17 +236,17 @@ fn packed_numeric_list_and_tuple_round_trip_and_use_packed_tags() {
 
 #[test]
 fn table_soa_round_trips_with_sparse_columns() {
-    let spec = RecordSpec::new(None, RecordLayout::Lines, vec![FieldSpec::new(1, "rows", Shape::Table(ordinary_fixture_spec!(table_row_spec)))]);
-    let mut row0 = HashMap::new();
+    let spec = RecordSpec::new(None, semio_framework_dsl_record::RecordLayout::Lines, vec![FieldSpec::new(1, "rows", Shape::Table(ordinary_fixture_spec!(table_row_spec)))]);
+    let mut row0 = RecordValue::default().fields;
     row0.insert(1, FieldValue::UInt(10));
     row0.insert(2, FieldValue::Text("alpha".to_string()));
     row0.insert(3, FieldValue::Float(1.25));
     row0.insert(4, FieldValue::Bool(true));
-    let mut row1 = HashMap::new();
+    let mut row1 = RecordValue::default().fields;
     row1.insert(1, FieldValue::UInt(20));
     // row1 omits "name" (sparse Text column) and "active" (sparse Bool column).
     row1.insert(3, FieldValue::Float(-9.5));
-    let mut fields = HashMap::new();
+    let mut fields = RecordValue::default().fields;
     fields.insert(1, FieldValue::List(vec![FieldValue::Record(RecordValue { fields: row0 }), FieldValue::Record(RecordValue { fields: row1 })]));
     let record = RecordValue { fields };
 
@@ -267,15 +269,15 @@ fn table_soa_round_trips_with_sparse_columns() {
 /// sub-field as `Absent` instead of leaving it missing from the decoded `RecordValue` map.
 #[test]
 fn table_soa_nested_record_column_backfills_absent_option_subfield() {
-    let spec = RecordSpec::new(None, RecordLayout::Lines, vec![FieldSpec::new(1, "rows", Shape::Table(ordinary_fixture_spec!(table_row_with_nested_record_spec)))]);
-    let mut header_fields = HashMap::new();
+    let spec = RecordSpec::new(None, semio_framework_dsl_record::RecordLayout::Lines, vec![FieldSpec::new(1, "rows", Shape::Table(ordinary_fixture_spec!(table_row_with_nested_record_spec)))]);
+    let mut header_fields = RecordValue::default().fields;
     header_fields.insert(1, FieldValue::Text("Stakeholder A".to_string()));
     // "description" (field 2, Option<Text>) is intentionally omitted from the fixture — it
     // encodes as `Absent` and canonical-mode compaction drops it from the wire entirely.
-    let mut row = HashMap::new();
+    let mut row = RecordValue::default().fields;
     row.insert(1, FieldValue::UInt(1));
     row.insert(2, FieldValue::Record(RecordValue { fields: header_fields }));
-    let mut fields = HashMap::new();
+    let mut fields = RecordValue::default().fields;
     fields.insert(1, FieldValue::List(vec![FieldValue::Record(RecordValue { fields: row })]));
     let record = RecordValue { fields };
 
@@ -296,11 +298,11 @@ fn table_soa_nested_record_column_backfills_absent_option_subfield() {
 /// not a `FieldValue::List` — a `List` fails `[T; N]`'s `DslField::from_value` downstream.
 #[test]
 fn table_soa_tuple_column_round_trips_as_tuple_not_list() {
-    let spec = RecordSpec::new(None, RecordLayout::Lines, vec![FieldSpec::new(1, "rows", Shape::Table(ordinary_fixture_spec!(table_row_with_tuple_spec)))]);
-    let mut row = HashMap::new();
+    let spec = RecordSpec::new(None, semio_framework_dsl_record::RecordLayout::Lines, vec![FieldSpec::new(1, "rows", Shape::Table(ordinary_fixture_spec!(table_row_with_tuple_spec)))]);
+    let mut row = RecordValue::default().fields;
     row.insert(1, FieldValue::UInt(1));
     row.insert(2, FieldValue::Tuple(vec![FieldValue::Float(0.1), FieldValue::Float(0.2), FieldValue::Float(0.3), FieldValue::Float(0.4), FieldValue::Float(0.5)]));
-    let mut fields = HashMap::new();
+    let mut fields = RecordValue::default().fields;
     fields.insert(1, FieldValue::List(vec![FieldValue::Record(RecordValue { fields: row })]));
     let record = RecordValue { fields };
 
@@ -317,8 +319,8 @@ fn table_soa_tuple_column_round_trips_as_tuple_not_list() {
 
 #[test]
 fn wire_literal_round_trips_bare_node_and_undirected_edge() {
-    let spec = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "w", Shape::Wire)]);
-    let mut fields = HashMap::new();
+    let spec = RecordSpec::new(None, semio_framework_dsl_record::RecordLayout::Inline, vec![FieldSpec::new(1, "w", Shape::Wire)]);
+    let mut fields = RecordValue::default().fields;
     fields.insert(1, FieldValue::Wire(WireValue { from: WireNode { id: "solo".to_string(), kind: None, port: None }, edge: None, edge_label: WireEdgeLabel::default(), properties: DslValue::Object(vec![]) }));
     let record = RecordValue { fields };
     let bytes = encode_document(&spec, &record, &EncodeOptions::default()).expect("encode");
@@ -335,7 +337,7 @@ fn canonical_encoding_is_byte_stable_across_shuffled_insertion_order() {
     // Rebuild an equal `RecordValue` by inserting fields in a deliberately different order —
     // `HashMap` insertion order never affects iteration order anyway, but this at minimum
     // proves two independent builds of an equal value encode identically, twice in a row.
-    let mut shuffled_fields = HashMap::new();
+    let mut shuffled_fields = RecordValue::default().fields;
     let mut ids: Vec<u16> = record_a.fields.keys().copied().collect();
     ids.sort_unstable_by(|a, b| b.cmp(a));
     for id in ids {
@@ -354,11 +356,11 @@ fn canonical_encoding_is_byte_stable_across_shuffled_insertion_order() {
 
 #[test]
 fn schema_hash_is_order_independent_and_content_sensitive() {
-    let spec_a = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(2, "b", Shape::Text), FieldSpec::new(1, "a", Shape::Int)]);
-    let spec_b = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "a", Shape::Int), FieldSpec::new(2, "b", Shape::Text)]);
+    let spec_a = RecordSpec::new(None, semio_framework_dsl_record::RecordLayout::Inline, vec![FieldSpec::new(2, "b", Shape::Text), FieldSpec::new(1, "a", Shape::Int)]);
+    let spec_b = RecordSpec::new(None, semio_framework_dsl_record::RecordLayout::Inline, vec![FieldSpec::new(1, "a", Shape::Int), FieldSpec::new(2, "b", Shape::Text)]);
     assert_eq!(schema_hash(&spec_a), schema_hash(&spec_b));
 
-    let spec_c = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "a", Shape::Int), FieldSpec::new(2, "b", Shape::Float)]);
+    let spec_c = RecordSpec::new(None, semio_framework_dsl_record::RecordLayout::Inline, vec![FieldSpec::new(1, "a", Shape::Int), FieldSpec::new(2, "b", Shape::Float)]);
     assert_ne!(schema_hash(&spec_a), schema_hash(&spec_c));
 }
 //#endregion 🔖️Canonical
@@ -374,8 +376,8 @@ fn unknown_field_round_trips_through_decode_then_reencode() {
     record.fields.insert(201, FieldValue::List(vec![FieldValue::Int(1), FieldValue::Int(2), FieldValue::Int(3)]));
 
     let mut widened_fields = full.fields.clone();
-    widened_fields.push(FieldSpec::new(200, "extra", Shape::Text));
-    widened_fields.push(FieldSpec::new(201, "extra_list", Shape::List(Box::new(Shape::Int))));
+    widened_fields.push(semio_framework_dsl_record::FieldSpec::new(200, "extra", Shape::Text));
+    widened_fields.push(semio_framework_dsl_record::FieldSpec::new(201, "extra_list", Shape::List(Box::new(Shape::Int))));
     let widened_spec = RecordSpec::new(full.keyword.as_deref(), full.layout, widened_fields);
 
     let bytes = encode_document(&widened_spec, &record, &EncodeOptions::default()).expect("encode with widened spec");
@@ -401,9 +403,9 @@ fn unknown_field_round_trips_through_decode_then_reencode() {
 
 #[test]
 fn preserve_unknown_false_drops_unknown_fields_from_decoded_value_but_still_reports_them() {
-    let narrow = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "a", Shape::Int)]);
-    let wide = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "a", Shape::Int), FieldSpec::new(2, "b", Shape::Text)]);
-    let mut fields = HashMap::new();
+    let narrow = RecordSpec::new(None, semio_framework_dsl_record::RecordLayout::Inline, vec![FieldSpec::new(1, "a", Shape::Int)]);
+    let wide = RecordSpec::new(None, semio_framework_dsl_record::RecordLayout::Inline, vec![FieldSpec::new(1, "a", Shape::Int), FieldSpec::new(2, "b", Shape::Text)]);
+    let mut fields = RecordValue::default().fields;
     fields.insert(1, FieldValue::Int(1));
     fields.insert(2, FieldValue::Text("dropped on decode".to_string()));
     let record = RecordValue { fields };
@@ -421,9 +423,9 @@ fn preserve_unknown_false_drops_unknown_fields_from_decoded_value_but_still_repo
 //#region 🔖️Chunking
 #[test]
 fn large_bytes_field_is_chunked_and_round_trips() {
-    let spec = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "blob", Shape::Bytes64)]);
+    let spec = RecordSpec::new(None, semio_framework_dsl_record::RecordLayout::Inline, vec![FieldSpec::new(1, "blob", Shape::Bytes64)]);
     let payload: Vec<u8> = (0..600_000u32).map(|i| (i % 256) as u8).collect();
-    let mut fields = HashMap::new();
+    let mut fields = RecordValue::default().fields;
     fields.insert(1, FieldValue::Bytes64(payload.clone()));
     let record = RecordValue { fields };
 
@@ -437,8 +439,8 @@ fn large_bytes_field_is_chunked_and_round_trips() {
 
 #[test]
 fn document_body_splits_across_multiple_frames_when_frame_size_is_small() {
-    let spec = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "text", Shape::Text)]);
-    let mut fields = HashMap::new();
+    let spec = RecordSpec::new(None, semio_framework_dsl_record::RecordLayout::Inline, vec![FieldSpec::new(1, "text", Shape::Text)]);
+    let mut fields = RecordValue::default().fields;
     fields.insert(1, FieldValue::Text("x".repeat(5000)));
     let record = RecordValue { fields };
 
@@ -472,9 +474,9 @@ fn record_body_is_deterministic_for_equal_inputs() {
 
 #[test]
 fn record_body_keeps_oversized_bytes_inline_instead_of_chunking() {
-    let spec = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "blob", Shape::Bytes64)]);
+    let spec = RecordSpec::new(None, semio_framework_dsl_record::RecordLayout::Inline, vec![FieldSpec::new(1, "blob", Shape::Bytes64)]);
     let payload: Vec<u8> = (0..600_000u32).map(|i| (i % 256) as u8).collect();
-    let mut fields = HashMap::new();
+    let mut fields = RecordValue::default().fields;
     fields.insert(1, FieldValue::Bytes64(payload.clone()));
     let record = RecordValue { fields };
 
@@ -487,9 +489,9 @@ fn record_body_keeps_oversized_bytes_inline_instead_of_chunking() {
 
 #[test]
 fn record_body_preserves_and_reports_unknown_fields() {
-    let wide = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "a", Shape::Int), FieldSpec::new(9, "extra", Shape::Text)]);
-    let narrow = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "a", Shape::Int)]);
-    let mut fields = HashMap::new();
+    let wide = RecordSpec::new(None, semio_framework_dsl_record::RecordLayout::Inline, vec![FieldSpec::new(1, "a", Shape::Int), FieldSpec::new(9, "extra", Shape::Text)]);
+    let narrow = RecordSpec::new(None, semio_framework_dsl_record::RecordLayout::Inline, vec![FieldSpec::new(1, "a", Shape::Int)]);
+    let mut fields = RecordValue::default().fields;
     fields.insert(1, FieldValue::Int(3));
     fields.insert(9, FieldValue::Text("kept".to_string()));
     let record = RecordValue { fields };
@@ -876,13 +878,13 @@ fn retained_value_vm_rejects_truncation_utf8_depth_and_counts() {
             Ok(_) => {}
         }
     }
-    assert_eq!(truncation, Some(PackError::Truncated(1)));
+    assert_eq!(truncation, Some(PackRefusal::Truncated(1)));
     close_retained_value(&mut truncated);
     assert!(truncated.terminal_is_empty());
 
     let mut count = retained_value_cursor(limits.clone());
     count.admit_byte(0, 2).expect("count byte");
-    assert!(matches!(count.grant(), Err(PackError::LimitExceeded(_))));
+    assert!(matches!(count.grant(), Err(PackRefusal::LimitExceeded { kind: ValueRefusalKind::WorkLimit, .. })));
     close_retained_value(&mut count);
 
     let mut utf8 = retained_value_cursor(limits);
@@ -897,7 +899,7 @@ fn retained_value_vm_rejects_truncation_utf8_depth_and_counts() {
             }
         }
     }
-    let expected_utf8 = PackError::RetainedMalformed { what: "retained-utf8", offset: 4, detail: "invalid leading byte" };
+    let expected_utf8 = PackRefusal::RetainedMalformed { kind: ValueRefusalKind::InvalidValue, what: "retained-utf8", offset: 4, detail: "invalid leading byte" };
     assert_eq!(invalid_utf8, Some(expected_utf8.clone()));
     assert_eq!(utf8.grant(), Err(expected_utf8));
     assert_eq!(utf8.allocated_bytes(), utf8_allocation);
@@ -909,7 +911,7 @@ fn retained_value_vm_rejects_truncation_utf8_depth_and_counts() {
     for (offset, byte) in [1, 0, TAG_BLOCK, TAG_BLOCK, TAG_TRUE].into_iter().enumerate() {
         depth.admit_byte(offset as u64, byte).expect("depth admission");
         while depth.pending.is_some() {
-            if matches!(depth.grant(), Err(PackError::LimitExceeded(_))) {
+            if matches!(depth.grant(), Err(PackRefusal::LimitExceeded { kind: ValueRefusalKind::DepthLimit, .. })) {
                 depth_failed = true;
                 break;
             }
@@ -931,7 +933,7 @@ fn retained_record_body_fault_is_inline_sticky_and_closes_exactly() {
     admit_retained_record_bytes(&mut cursor, &[1, 1], &mut allocated, &mut tokens);
     cursor.admit_byte(cursor.offset, 0xff).expect("invalid UTF-8 pending byte");
     let before = (cursor.offset, cursor.pending, cursor.allocated_bytes());
-    let expected = PackError::RetainedMalformed { what: "retained-utf8", offset: 2, detail: "invalid leading byte" };
+    let expected = PackRefusal::RetainedMalformed { kind: ValueRefusalKind::InvalidValue, what: "retained-utf8", offset: 2, detail: "invalid leading byte" };
     assert_eq!(cursor.next_allocation_bytes(), Err(expected.clone()));
     assert_eq!((cursor.offset, cursor.pending, cursor.allocated_bytes()), before);
     assert_eq!(cursor.grant(), Err(expected));

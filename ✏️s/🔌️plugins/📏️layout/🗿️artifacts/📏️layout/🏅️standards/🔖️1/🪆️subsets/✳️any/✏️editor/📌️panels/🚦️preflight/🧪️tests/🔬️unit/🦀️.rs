@@ -54,7 +54,7 @@ async fn preflight_reports_all_expected_issue_codes() {
             }],
             "printTarget":"print"
         }"#;
-    let mut doc: LayoutSnapshot = dsl::os_pack::from_json_str(json).expect("preflight fixture");
+    let mut doc: LayoutSnapshot = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("preflight fixture");
     if let Some(story) = doc.stories.iter_mut().find(|story| story.id == "story-overset") {
         story.content = "a".repeat(450);
     }

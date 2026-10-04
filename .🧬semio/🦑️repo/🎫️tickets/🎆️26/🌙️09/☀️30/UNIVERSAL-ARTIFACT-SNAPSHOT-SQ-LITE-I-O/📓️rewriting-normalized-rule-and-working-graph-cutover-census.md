@@ -1,0 +1,35 @@
+# Rewriting Normalized Rule and Working Graph Cutover Census
+
+Read-only preparation; no source changes or Cargo. Owner prefix R is `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any`. Jack prefix J is the sibling `🔌️jack` owner at the same standard/subset. All paths relative to /Users/ueli/Documents/semio.
+
+## Rule authority and concrete taxonomy
+
+R/🧬️schema/🦀️.rs:100 defines Lhs with PatternJson and optional where_clause:String. PatternJson150 has left_var:String, left_kind:String, and independently optional edge_var, edge_kind, right_var, right_kind. Preserve every optional companion; current conversion170 treats the right side as present only when both right variable and kind exist, so relational persistence must not silently drop partial companions.
+
+Rhs126 has ordered create:Vec<PatternJson>, delete:Vec<String>, set:Vec<AssignmentJson>, merge:Vec<PatternJson>, parameters:Vec<ParameterSpec>. AssignmentJson164 owns var:String, prop:String and PropertyValue. ParameterSpec117 owns name:String, kind:String/Number/Boolean enum, default:PropertyValue. Rule143 additionally owns name:String. PropertyValue actual first-party graph manifest49 is Null/Bool/Number(binary64)/String/Array/Object(BTreeMap<String,PropertyValue>); object keys are unique and ordered by the actual BTreeMap owner, not duplicate-preserving JSON object semantics.
+
+Use individually authored taxonomy working-graph, match/pattern, program/create, program/delete, program/assignment, program/merge, program/parameter, binding, and layout. SQL should have explicit owner/ordinal rows for each collection and variant property rows with exact IEEE words. where_clause, query, names and string properties remain actual literal languages/text. This is domain rule modeling, not generic DTO decomposition.
+
+## Complete working graph owner
+
+Current graph-validity mutation helper R/🧬️schema/🧬️mutations/🦀️.rs:160 parses JackSnapshot then constructs Graph. The existing JackSnapshot is J/🧬️schema/📸️snapshot/🦀️.rs:15 and owns eight fields: schema:String, name:String, manifest_id:Option<String>, manifest:Manifest, camera:Camera, content:JackContentChild, root_node_id:Option<String>, query:String. Do not reduce it to only legacy JSON nodes/edges or seed bytes.
+
+JackContentChild is actual ArtifactChild<SemioGraphSnapshot> (Jack root191). It must retain child metadata/binding and complete typed child authority. Actual SemioGraphSnapshot owns schema/nodes/edges; node fields are GraphNodeId, kind, label, exact position, ordered ports, ordered property entries; edge fields are GraphEdgeId, source/target typed node IDs, kind and label. Ports are name and In/Out/InOut kind. Reuse genuine child relational composition/control, not serialize the handle into a carrier column.
+
+Jack Manifest at Jack/🛂️manifest/🦀️.rs:7 owns ordered node_kinds, edge_kinds, port_kinds. NodeKindDef owns name, ordered PropertyDef and ordered port-kind names. EdgeKindDef owns name/properties. PortKindDef owns name, In/Out direction, properties. PropertyDef (framework graph manifest201) owns name, Data/Derived kind, ValueType and optional expr:String. ValueType is Boolean/Integer/Decimal/Text/List(Box<ValueType>)/Schema(String)/Any. Camera at Jack root396 owns x/y/zoom binary64. Existing runtime Node/Port/Edge views additionally expose property bags, node x/y/width/height and endpoint port strings; prove each view conversion preserves actual child and metadata rather than assuming runtime views equal persisted child shape.
+
+## Producers and consumers to cut over together
+
+Current editor add-rule-clause17/18 and delete-rule-clause46 parse LHS/RHS String into these typed owners; node-graph-edit88/93 interprets graph kinds/wires; mutation helpers106/125/146 parse and rewrite nodes/edges/rootNodeId, sorting object keys; working_graph_is_valid160 uses full Jack authority. Viewer rule33/34 and before/LHS/RHS editor panes parse the source bodies. Whole-field edit-before-fixture/edit-lhs/edit-rhs payloads, inverse/diff and retirement all own String today. They must become typed payload/patch/retirement authorities in the same handcrafted cutover; no old JSON field adapter, deprecated API or malformed-string fallback.
+
+Existing graph edits remove dependent edges when deleting a node, clear a removed root, resolve node@port endpoints, refuse/marshal missing targets and avoid duplicate wires. Typed replacements must preserve these actual valid graph and inverse semantics, not just constructor equality. Rename PatternJson/AssignmentJson to domain Pattern/Assignment consistently where their meaning no longer depends on JSON representation.
+
+## Exact cross-language asset closure
+
+R/🧬️schema/🦀️.rs descriptor60 explicitly exports five leaves (Rust, TS, GraphQL, JSON Schema, Proto) for artifact, snapshot, diff and mutations. Handcraft all twenty facets consistently. TS artifact schema currently defines beforeFixtureJson/lhsJson/rhsJson and its parser; snapshot TS only reexports that authority. Update actual schemas, native binary protocol/source assets and serializers, plus SQLite Rust/TS/schema. Update each edit-before-fixture/edit-lhs/edit-rhs mutation's typed payload, inverse/diff and schema leaves, and working connect/disconnect/delete mutations. Viewer/editor schemas and window JSON parsers must consume actual typed owners.
+
+Bounded file read found136 old-field references across Rust/TS/JSON/GraphQL/Proto/Semio assets:49 fixture files and19 test files included; this is a textual asset census, not a compile gate count. Exact test fixture root is R/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json. Its nativeCase16–18 deliberately uses invalid source strings; replace those current-domain witnesses with complete valid typed graph/LHS/RHS fixtures, preserving the literal NUL/Unicode/newline values in actual names, query, expression and PropertyValue::String positions. Do not retain invalid body fields as legacy compatibility. Mutation fixture forests under R/🧫️fixtures/🧬️mutations must be hand-authored with typed before/after/outcome/diff states, preserving inverse laws. No generator subtree was found in this artifact; do not invent a migration generator. Existing generated manifest registry is a separate asset consumer and needs its own authored readback.
+
+## Controls and proof obligations
+
+Full child ownership, recursive ValueType and PropertyValue demand explicit controlled binding/projecting and iterative cold partial retirement. Charge full replacement buffers/index/frontier requests before allocation; preserve cumulative allocation separately from semantic work/depth/SQL value ceilings. Cancellation must reach interior actual graph/AST work and return producer-owned kind, not bootstrap-only or message classifiers. Native fixture9 is source-mounted through registered component-app-assembly route; Root's authentic baseline remains the authorization gate. New closed neutral laws should independently query and edit normalized graph/pattern/RHS rows, verify full child metadata and IEEE words, prove optional/list/variant coverage and valid graph inverse behavior.

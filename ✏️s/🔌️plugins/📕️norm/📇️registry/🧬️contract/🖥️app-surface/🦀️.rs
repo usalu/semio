@@ -179,11 +179,11 @@ pub const NORM_REPORT_SECTION_ID: &str = "norm-report.checks";
 //#endregion 🔖️Ids
 
 /// 📎️ Norm applications own no config or presence facets; Results-window config is registered separately.
-pub fn app_schema_descriptor() -> schema::AppSchemaDescriptor {
-    schema::AppSchemaDescriptor {
+pub fn app_schema_descriptor() -> semio_framework_schema_registry::AppSchemaDescriptor {
+    semio_framework_schema_registry::AppSchemaDescriptor {
         id: "s.norm.norm",
-        config: schema::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "", proto: "" },
-        presence: schema::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "", proto: "" },
+        config: semio_framework_schema_registry::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "", proto: "" },
+        presence: semio_framework_schema_registry::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "", proto: "" },
     }
 }
 
@@ -249,10 +249,10 @@ pub fn report_table_rows(report: &CheckReport, locale: Locale) -> Vec<Vec<String
 
 //#region 🔖️LocaleChrome
 /// 🗣️ Maps the shell [`Locale`] onto the protocol axis [`LocalizedCopy`] resolves against.
-pub fn protocol_locale(locale: Locale) -> protocol::Locale {
+pub fn protocol_locale(locale: Locale) -> Locale {
     match locale {
-        Locale::En => protocol::Locale::En,
-        Locale::De => protocol::Locale::De,
+        Locale::En => Locale::En,
+        Locale::De => Locale::De,
     }
 }
 
@@ -373,18 +373,18 @@ pub fn parse_path(path: &str) -> Result<Vec<PathSegment>, String> {
     Ok(segments)
 }
 
-fn object_id_field(value: &dsl::DslValue) -> Option<&str> {
-    let dsl::DslValue::Object(entries) = value else {
+fn object_id_field(value: &semio_framework_value::DslValue) -> Option<&str> {
+    let semio_framework_value::DslValue::Object(entries) = value else {
         return None;
     };
     entries.iter().find(|(key, _)| key == "id").and_then(|(_, value)| match value {
-        dsl::DslValue::String(raw) => Some(raw.as_str()),
+        semio_framework_value::DslValue::String(raw) => Some(raw.as_str()),
         _ => None,
     })
 }
 
 /// 🧭 Formats a list-element path segment: `[id=…]` when the element has a string `id`, else `[index]`.
-pub fn list_element_selector(item: &dsl::DslValue, index: usize) -> String {
+pub fn list_element_selector(item: &semio_framework_value::DslValue, index: usize) -> String {
     match object_id_field(item).and_then(|id| validate_path_element_id(id).ok().map(|_| id)) {
         Some(id) => format!("[id={id}]"),
         None => format!("[{index}]"),
@@ -392,11 +392,11 @@ pub fn list_element_selector(item: &dsl::DslValue, index: usize) -> String {
 }
 
 /// 🧭 Joins an array path with a list-element selector.
-pub fn list_element_path(array_path: &str, item: &dsl::DslValue, index: usize) -> String {
+pub fn list_element_path(array_path: &str, item: &semio_framework_value::DslValue, index: usize) -> String {
     format!("{array_path}{}", list_element_selector(item, index))
 }
 
-fn resolve_list_index(items: &[dsl::DslValue], segment: &PathSegment, path_hint: &str) -> Result<usize, String> {
+fn resolve_list_index(items: &[semio_framework_value::DslValue], segment: &PathSegment, path_hint: &str) -> Result<usize, String> {
     match segment {
         PathSegment::Index(index) => {
             if *index >= items.len() {
@@ -420,12 +420,12 @@ fn resolve_list_index(items: &[dsl::DslValue], segment: &PathSegment, path_hint:
     }
 }
 
-fn value_at_mut<'a>(root: &'a mut dsl::DslValue, segments: &[PathSegment], path_hint: &str) -> Result<&'a mut dsl::DslValue, String> {
+fn value_at_mut<'a>(root: &'a mut semio_framework_value::DslValue, segments: &[PathSegment], path_hint: &str) -> Result<&'a mut semio_framework_value::DslValue, String> {
     let mut cursor = root;
     for segment in segments {
         match segment {
             PathSegment::Field(name) => {
-                let dsl::DslValue::Object(entries) = cursor else {
+                let semio_framework_value::DslValue::Object(entries) = cursor else {
                     return Err(format!("expected object before field '{name}' in path '{path_hint}'"));
                 };
                 let Some(index) = entries.iter().position(|(key, _)| key == name) else {
@@ -441,12 +441,12 @@ fn value_at_mut<'a>(root: &'a mut dsl::DslValue, segments: &[PathSegment], path_
     Ok(cursor)
 }
 
-fn value_at<'a>(root: &'a dsl::DslValue, segments: &[PathSegment], path_hint: &str) -> Result<&'a dsl::DslValue, String> {
+fn value_at<'a>(root: &'a semio_framework_value::DslValue, segments: &[PathSegment], path_hint: &str) -> Result<&'a semio_framework_value::DslValue, String> {
     let mut cursor = root;
     for segment in segments {
         match segment {
             PathSegment::Field(name) => {
-                let dsl::DslValue::Object(entries) = cursor else {
+                let semio_framework_value::DslValue::Object(entries) = cursor else {
                     return Err(format!("expected object before field '{name}' in path '{path_hint}'"));
                 };
                 let Some((_, value)) = entries.iter().find(|(key, _)| key == name) else {
@@ -463,13 +463,13 @@ fn value_at<'a>(root: &'a dsl::DslValue, segments: &[PathSegment], path_hint: &s
 }
 
 /// 🧭 Resolve `[index]` / `[id=…]` on arrays, or `[id=…]` on map objects keyed by entity id.
-fn resolve_collection_mut<'a>(cursor: &'a mut dsl::DslValue, segment: &PathSegment, path_hint: &str) -> Result<&'a mut dsl::DslValue, String> {
+fn resolve_collection_mut<'a>(cursor: &'a mut semio_framework_value::DslValue, segment: &PathSegment, path_hint: &str) -> Result<&'a mut semio_framework_value::DslValue, String> {
     match cursor {
-        dsl::DslValue::Array(items) => {
+        semio_framework_value::DslValue::Array(items) => {
             let index = resolve_list_index(items, segment, path_hint)?;
             Ok(&mut items[index])
         }
-        dsl::DslValue::Object(entries) => {
+        semio_framework_value::DslValue::Object(entries) => {
             let PathSegment::Id(id) = segment else {
                 return Err(format!("expected array before numeric index in path '{path_hint}'"));
             };
@@ -485,13 +485,13 @@ fn resolve_collection_mut<'a>(cursor: &'a mut dsl::DslValue, segment: &PathSegme
     }
 }
 
-fn resolve_collection<'a>(cursor: &'a dsl::DslValue, segment: &PathSegment, path_hint: &str) -> Result<&'a dsl::DslValue, String> {
+fn resolve_collection<'a>(cursor: &'a semio_framework_value::DslValue, segment: &PathSegment, path_hint: &str) -> Result<&'a semio_framework_value::DslValue, String> {
     match cursor {
-        dsl::DslValue::Array(items) => {
+        semio_framework_value::DslValue::Array(items) => {
             let index = resolve_list_index(items, segment, path_hint)?;
             Ok(&items[index])
         }
-        dsl::DslValue::Object(entries) => {
+        semio_framework_value::DslValue::Object(entries) => {
             let PathSegment::Id(id) = segment else {
                 return Err(format!("expected array before numeric index in path '{path_hint}'"));
             };
@@ -508,13 +508,13 @@ fn resolve_collection<'a>(cursor: &'a dsl::DslValue, segment: &PathSegment, path
 }
 
 /// 🔎 Reads the value at `path` (supports `[index]` and `[id=…]`).
-pub fn get_value_at_path<'a>(root: &'a dsl::DslValue, path: &str) -> Result<&'a dsl::DslValue, String> {
+pub fn get_value_at_path<'a>(root: &'a semio_framework_value::DslValue, path: &str) -> Result<&'a semio_framework_value::DslValue, String> {
     let segments = parse_path(path)?;
     value_at(root, &segments, path)
 }
 
 /// ✏️ Sets the value at `path` inside a camelCase document value tree.
-pub fn set_value_at_path(root: &mut dsl::DslValue, path: &str, value: dsl::DslValue) -> Result<(), String> {
+pub fn set_value_at_path(root: &mut semio_framework_value::DslValue, path: &str, value: semio_framework_value::DslValue) -> Result<(), String> {
     let segments = parse_path(path)?;
     *value_at_mut(root, &segments, path)? = value;
     Ok(())
@@ -523,17 +523,17 @@ pub fn set_value_at_path(root: &mut dsl::DslValue, path: &str, value: dsl::DslVa
 /// ➕ Inserts `value` (or null) into the array at `path` at `index` (append when index ≥ len).
 ///
 /// `path` must address the array itself (not a list element selector).
-pub fn insert_value_at_path(root: &mut dsl::DslValue, path: &str, index: usize, value: Option<dsl::DslValue>) -> Result<(), String> {
+pub fn insert_value_at_path(root: &mut semio_framework_value::DslValue, path: &str, index: usize, value: Option<semio_framework_value::DslValue>) -> Result<(), String> {
     let segments = parse_path(path)?;
     if matches!(segments.last(), Some(PathSegment::Index(_) | PathSegment::Id(_))) {
         return Err(format!("insertItem path '{path}' must address an array, not a list element"));
     }
     let slot = value_at_mut(root, &segments, path)?;
-    let dsl::DslValue::Array(items) = slot else {
+    let semio_framework_value::DslValue::Array(items) = slot else {
         return Err(format!("insertItem path '{path}' must address an array"));
     };
     let insert_at = index.min(items.len());
-    items.insert(insert_at, value.unwrap_or(dsl::DslValue::Null));
+    items.insert(insert_at, value.unwrap_or(semio_framework_value::DslValue::Null));
     Ok(())
 }
 
@@ -541,7 +541,7 @@ pub fn insert_value_at_path(root: &mut dsl::DslValue, path: &str, index: usize, 
 ///
 /// - `path` ends with `[index]` / `[id=…]` → remove that element (the `index` arg is ignored).
 /// - `path` addresses an array → remove at `index`.
-pub fn remove_value_at_path(root: &mut dsl::DslValue, path: &str, index: usize) -> Result<(), String> {
+pub fn remove_value_at_path(root: &mut semio_framework_value::DslValue, path: &str, index: usize) -> Result<(), String> {
     let segments = parse_path(path)?;
     if let Some(PathSegment::Index(_) | PathSegment::Id(_)) = segments.last() {
         let (parent, last) = segments.split_at(segments.len() - 1);
@@ -550,7 +550,7 @@ pub fn remove_value_at_path(root: &mut dsl::DslValue, path: &str, index: usize) 
         } else {
             value_at_mut(root, parent, path)?
         };
-        let dsl::DslValue::Array(items) = slot else {
+        let semio_framework_value::DslValue::Array(items) = slot else {
             return Err(format!("removeItem path '{path}' must address a list element"));
         };
         let remove_at = resolve_list_index(items, &last[0], path)?;
@@ -558,7 +558,7 @@ pub fn remove_value_at_path(root: &mut dsl::DslValue, path: &str, index: usize) 
         return Ok(());
     }
     let slot = value_at_mut(root, &segments, path)?;
-    let dsl::DslValue::Array(items) = slot else {
+    let semio_framework_value::DslValue::Array(items) = slot else {
         return Err(format!("removeItem path '{path}' must address an array"));
     };
     if index >= items.len() {
@@ -686,54 +686,55 @@ fn field_label(path: &str, meta: Option<NormFieldMeta>, locale: Locale) -> Strin
     path.rsplit(['.', '[']).next().unwrap_or(path).trim_end_matches(']').to_string()
 }
 
-/// 📤️ Projects `document` to its camelCase value tree, runs `edit`, decodes back, and commits `from_snapshot` as one undoable edit.
+/// 📤️ Projects `document` to its camelCase value tree, runs `edit`, decodes back, and commits `from_snapshot` as one undoable edit
+/// whose history row is labelled by its leaves (design §20.4).
 ///
 /// 📐️ **SI convention:** snapshot scalar quantity fields MUST store SI (m, N, Pa, …). `applyRemedy` writes
 /// `Remedy.required.value` (already SI) straight into `remedy.target.path`. Family agents must not store mm/kN/MPa
 /// in snapshot fields — display units are UI-only via [`format_quantity`] / [`NormFieldMeta::unit`].
-pub fn commit_value_tree_edit<D, M, F>(document: &D, description: &str, edit: impl FnOnce(&mut dsl::DslValue) -> Result<(), String>, from_snapshot: F) -> Result<Emit<M, NoConfigMutation>, Fault>
+pub fn commit_value_tree_edit<D, M, F>(document: &D, edit: impl FnOnce(&mut semio_framework_value::DslValue) -> Result<(), String>, from_snapshot: F) -> Result<Emit<M, NoConfigMutation>, Fault>
 where
-    D: Clone + dsl::ToValue + dsl::FromValue,
+    D: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
     F: FnOnce(&D, &D) -> Vec<M>,
 {
-    let mut tree = dsl::ToValue::to_value(document);
+    let mut tree = semio_framework_value::ToValue::to_value(document);
     edit(&mut tree).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("norm.value-path"), error))?;
-    let target = dsl::FromValue::from_value(tree).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("norm.value-decode"), error.to_string()))?;
-    commit_snapshot_fields(from_snapshot(document, &target), description)
+    let target = semio_framework_value::FromValue::from_value(tree).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("norm.value-decode"), error.to_string()))?;
+    commit_snapshot_fields(from_snapshot(document, &target))
 }
 
 /// ✏️ Generic `setField` — `{path, value}` over the document value tree.
-pub fn handle_set_field<D, M, F>(document: &D, path: &str, value: dsl::DslValue, from_snapshot: F) -> Result<Emit<M, NoConfigMutation>, Fault>
+pub fn handle_set_field<D, M, F>(document: &D, path: &str, value: semio_framework_value::DslValue, from_snapshot: F) -> Result<Emit<M, NoConfigMutation>, Fault>
 where
-    D: Clone + dsl::ToValue + dsl::FromValue,
+    D: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
     F: FnOnce(&D, &D) -> Vec<M>,
 {
     let path = path.to_string();
-    commit_value_tree_edit(document, "setField", move |tree| set_value_at_path(tree, &path, value), from_snapshot)
+    commit_value_tree_edit(document, move |tree| set_value_at_path(tree, &path, value), from_snapshot)
 }
 
 /// ➕ Generic `insertItem` — `{path, index, value?}`.
-pub fn handle_insert_item<D, M, F>(document: &D, path: &str, index: usize, value: Option<dsl::DslValue>, from_snapshot: F) -> Result<Emit<M, NoConfigMutation>, Fault>
+pub fn handle_insert_item<D, M, F>(document: &D, path: &str, index: usize, value: Option<semio_framework_value::DslValue>, from_snapshot: F) -> Result<Emit<M, NoConfigMutation>, Fault>
 where
-    D: Clone + dsl::ToValue + dsl::FromValue,
+    D: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
     F: FnOnce(&D, &D) -> Vec<M>,
 {
     let path = path.to_string();
-    commit_value_tree_edit(document, "insertItem", move |tree| insert_value_at_path(tree, &path, index, value), from_snapshot)
+    commit_value_tree_edit(document, move |tree| insert_value_at_path(tree, &path, index, value), from_snapshot)
 }
 
 /// ➖ Generic `removeItem` — `{path, index}`.
 pub fn handle_remove_item<D, M, F>(document: &D, path: &str, index: usize, from_snapshot: F) -> Result<Emit<M, NoConfigMutation>, Fault>
 where
-    D: Clone + dsl::ToValue + dsl::FromValue,
+    D: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
     F: FnOnce(&D, &D) -> Vec<M>,
 {
     let path = path.to_string();
-    commit_value_tree_edit(document, "removeItem", move |tree| remove_value_at_path(tree, &path, index), from_snapshot)
+    commit_value_tree_edit(document, move |tree| remove_value_at_path(tree, &path, index), from_snapshot)
 }
 
 /// 🩹 Resolves a remedy on `report` into a path + value write (numeric SI or OneOf option string).
-pub fn apply_remedy_edit(report: &CheckReport, check_id: &str, remedy_index: usize, option_index: usize, tree: &mut dsl::DslValue) -> Result<(), Fault> {
+pub fn apply_remedy_edit(report: &CheckReport, check_id: &str, remedy_index: usize, option_index: usize, tree: &mut semio_framework_value::DslValue) -> Result<(), Fault> {
     let check = report.checks.iter().find(|check| check.id == check_id).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("norm.apply-remedy-missing-check"), format!("check '{check_id}' not in report")))?;
     let remedy = check.remedies.get(remedy_index).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("norm.apply-remedy-missing-remedy"), format!("remedy {remedy_index} missing on '{check_id}'")))?;
     if !remedy.applicable {
@@ -751,38 +752,38 @@ pub fn apply_remedy_edit(report: &CheckReport, check_id: &str, remedy_index: usi
                 .get(option_index)
                 .ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("norm.apply-remedy-missing-option"), format!("option {option_index} missing on OneOf remedy {remedy_index} for '{check_id}'")))?;
             match current {
-                dsl::DslValue::Bool(_) => dsl::DslValue::Bool(option.eq_ignore_ascii_case("true") || option == "1"),
-                dsl::DslValue::Number(dsl::Number::UInt(_)) => {
+                semio_framework_value::DslValue::Bool(_) => semio_framework_value::DslValue::Bool(option.eq_ignore_ascii_case("true") || option == "1"),
+                semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(_)) => {
                     let parsed = option.parse::<u64>().map_err(|_| Fault::new(FaultOrigin::App, FaultCode::new("norm.apply-remedy-option-type"), format!("OneOf option '{option}' is not a u64 for '{path}'")))?;
-                    dsl::DslValue::uint(parsed)
+                    semio_framework_value::DslValue::uint(parsed)
                 }
-                dsl::DslValue::Number(dsl::Number::Int(_)) => {
+                semio_framework_value::DslValue::Number(semio_framework_value::Number::Int(_)) => {
                     let parsed = option.parse::<i64>().map_err(|_| Fault::new(FaultOrigin::App, FaultCode::new("norm.apply-remedy-option-type"), format!("OneOf option '{option}' is not an i64 for '{path}'")))?;
-                    dsl::DslValue::int(parsed)
+                    semio_framework_value::DslValue::int(parsed)
                 }
-                dsl::DslValue::Number(dsl::Number::Float(_)) => {
+                semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(_)) => {
                     let parsed = option.parse::<f64>().map_err(|_| Fault::new(FaultOrigin::App, FaultCode::new("norm.apply-remedy-option-type"), format!("OneOf option '{option}' is not a float for '{path}'")))?;
-                    dsl::DslValue::float(parsed)
+                    semio_framework_value::DslValue::float(parsed)
                 }
-                _ => dsl::DslValue::String(option.clone()),
+                _ => semio_framework_value::DslValue::String(option.clone()),
             }
         }
         _ => match current {
-            dsl::DslValue::Bool(_) => dsl::DslValue::Bool(remedy.required.value >= 0.5),
-            dsl::DslValue::Number(dsl::Number::UInt(_)) => {
+            semio_framework_value::DslValue::Bool(_) => semio_framework_value::DslValue::Bool(remedy.required.value >= 0.5),
+            semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(_)) => {
                 if !remedy.required.value.is_finite() || remedy.required.value < 0.0 {
                     return Err(Fault::new(FaultOrigin::App, FaultCode::new("norm.apply-remedy-uint"), format!("required {} is not a u64 for '{path}'", remedy.required.value)));
                 }
-                dsl::DslValue::uint(remedy.required.value.round() as u64)
+                semio_framework_value::DslValue::uint(remedy.required.value.round() as u64)
             }
-            dsl::DslValue::Number(dsl::Number::Int(_)) => {
+            semio_framework_value::DslValue::Number(semio_framework_value::Number::Int(_)) => {
                 if !remedy.required.value.is_finite() {
                     return Err(Fault::new(FaultOrigin::App, FaultCode::new("norm.apply-remedy-int"), format!("required {} is not an i64 for '{path}'", remedy.required.value)));
                 }
-                dsl::DslValue::int(remedy.required.value.round() as i64)
+                semio_framework_value::DslValue::int(remedy.required.value.round() as i64)
             }
-            dsl::DslValue::String(_) => dsl::DslValue::String(format!("{}", remedy.required.value)),
-            _ => dsl::DslValue::float(remedy.required.value),
+            semio_framework_value::DslValue::String(_) => semio_framework_value::DslValue::String(format!("{}", remedy.required.value)),
+            _ => semio_framework_value::DslValue::float(remedy.required.value),
         },
     };
     set_value_at_path(tree, &path, value).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("norm.value-path"), error))
@@ -792,7 +793,7 @@ pub fn apply_remedy_edit(report: &CheckReport, check_id: &str, remedy_index: usi
 pub fn handle_apply_remedy<F, Map>(document: &F::Document, check_id: &str, remedy_index: usize, from_snapshot: Map) -> Result<Emit<F::Mutation, NoConfigMutation>, Fault>
 where
     F: NormFamily,
-    F::Document: Clone + dsl::ToValue + dsl::FromValue,
+    F::Document: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
     Map: FnOnce(&F::Document, &F::Document) -> Vec<F::Mutation>,
 {
     handle_apply_remedy_with_option::<F, Map>(document, check_id, remedy_index, 0, from_snapshot)
@@ -802,11 +803,11 @@ where
 pub fn handle_apply_remedy_with_option<F, Map>(document: &F::Document, check_id: &str, remedy_index: usize, option_index: usize, from_snapshot: Map) -> Result<Emit<F::Mutation, NoConfigMutation>, Fault>
 where
     F: NormFamily,
-    F::Document: Clone + dsl::ToValue + dsl::FromValue,
+    F::Document: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
     Map: FnOnce(&F::Document, &F::Document) -> Vec<F::Mutation>,
 {
     let report = cached_report_for::<F>(document).unwrap_or_else(|| F::evaluate(document));
-    commit_value_tree_edit(document, "applyRemedy", move |tree| apply_remedy_edit(&report, check_id, remedy_index, option_index, tree).map_err(|fault| format!("{:?}", fault)), from_snapshot)
+    commit_value_tree_edit(document, move |tree| apply_remedy_edit(&report, check_id, remedy_index, option_index, tree).map_err(|fault| format!("{:?}", fault)), from_snapshot)
 }
 //#endregion 🔖️ValuePath
 
@@ -1057,7 +1058,7 @@ fn collection_header(label: &str, count: usize) -> String {
 
 fn render_object_editor(
     path: &str,
-    entries: &[(String, dsl::DslValue)],
+    entries: &[(String, semio_framework_value::DslValue)],
     locale: Locale,
     controller_id: &'static str,
     meta_fn: Option<NormFieldMetaFn>,
@@ -1068,7 +1069,7 @@ fn render_object_editor(
     let section_id = inputs_section_id(path);
     let default_open = path.is_empty();
     let section_label = if path.is_empty() { chrome("Document", "Dokument", locale) } else { label };
-    let pairs: Vec<(&String, &dsl::DslValue)> = entries.iter().map(|(key, child)| (key, child)).collect();
+    let pairs: Vec<(&String, &semio_framework_value::DslValue)> = entries.iter().map(|(key, child)| (key, child)).collect();
     tree_window_section_or_placeholder(
         windows,
         &section_id,
@@ -1085,7 +1086,7 @@ fn render_object_editor(
 
 fn render_array_editor(
     path: &str,
-    items: &[dsl::DslValue],
+    items: &[semio_framework_value::DslValue],
     locale: Locale,
     controller_id: &'static str,
     meta_fn: Option<NormFieldMetaFn>,
@@ -1095,7 +1096,7 @@ fn render_array_editor(
 ) -> UiAssemblyResult<BuiltNode> {
     let section_id = inputs_section_id(path);
     let default_open = false;
-    let indexed: Vec<(usize, &dsl::DslValue)> = items.iter().enumerate().collect();
+    let indexed: Vec<(usize, &semio_framework_value::DslValue)> = items.iter().enumerate().collect();
     let list = tree_window_section_or_placeholder(
         windows,
         &section_id,
@@ -1144,7 +1145,7 @@ fn render_array_editor(
 
 fn render_value_editor(
     path: &str,
-    value: &dsl::DslValue,
+    value: &semio_framework_value::DslValue,
     locale: Locale,
     controller_id: &'static str,
     meta_fn: Option<NormFieldMetaFn>,
@@ -1157,9 +1158,9 @@ fn render_value_editor(
     let meta = resolve_field_meta(path, meta_fn);
     let label = field_label(path, meta, locale);
     match value {
-        dsl::DslValue::Object(entries) => render_object_editor(path, entries, locale, controller_id, meta_fn, windows, depth, label),
-        dsl::DslValue::Array(items) => render_array_editor(path, items, locale, controller_id, meta_fn, windows, depth, label),
-        dsl::DslValue::Bool(flag) => {
+        semio_framework_value::DslValue::Object(entries) => render_object_editor(path, entries, locale, controller_id, meta_fn, windows, depth, label),
+        semio_framework_value::DslValue::Array(items) => render_array_editor(path, items, locale, controller_id, meta_fn, windows, depth, label),
+        semio_framework_value::DslValue::Bool(flag) => {
             let row_id = format!("norm-inputs.{path}");
             let options: Vec<(String, String)> = vec![("true".into(), chrome("True", "Wahr", locale)), ("false".into(), chrome("False", "Falsch", locale))];
             let mut control = ui::select(ui_text(if *flag { "true" } else { "false" })?).try_id(format!("{row_id}.select")).map_err(|_| ui_error("ui.node.id"))?;
@@ -1169,7 +1170,7 @@ fn render_value_editor(
             let args = action_args_map(vec![("path", ui_value_text(path)?)])?;
             control_row(&row_id, &label, bind_change(control, controller_id, "setField", args)?.try_build().map_err(|_| ui_error("ui.node.build"))?)
         }
-        dsl::DslValue::Number(number) => {
+        semio_framework_value::DslValue::Number(number) => {
             let row_id = format!("norm-inputs.{path}");
             let display = if let Some(unit) = meta.and_then(|meta| meta.unit) {
                 format!("{} {unit}", number.as_f64())
@@ -1180,7 +1181,7 @@ fn render_value_editor(
             let args = action_args_map(vec![("path", ui_value_text(path)?)])?;
             control_row(&row_id, &label, bind_change(control, controller_id, "setField", args)?.try_build().map_err(|_| ui_error("ui.node.build"))?)
         }
-        dsl::DslValue::String(raw) => {
+        semio_framework_value::DslValue::String(raw) => {
             let row_id = format!("norm-inputs.{path}");
             if let Some(choices) = meta.and_then(|meta| meta.choices) {
                 let mut control = ui::select(ui_text(raw)?).try_id(format!("{row_id}.select")).map_err(|_| ui_error("ui.node.id"))?;
@@ -1196,26 +1197,26 @@ fn render_value_editor(
                 control_row(&row_id, &label, bind_on(control, Trigger::Commit, controller_id, "setField", args)?.try_build().map_err(|_| ui_error("ui.node.build"))?)
             }
         }
-        dsl::DslValue::Bytes(bytes) => tree_item_desc(format!("norm-inputs.{path}"), norm_ui_label(label)?, Some(format!("{} {}", bytes.len(), chrome("bytes", "Bytes", locale)))),
-        dsl::DslValue::Null => tree_item_desc(format!("norm-inputs.{path}"), norm_ui_label(label)?, Some(chrome("empty", "leer", locale))),
+        semio_framework_value::DslValue::Bytes(bytes) => tree_item_desc(format!("norm-inputs.{path}"), norm_ui_label(label)?, Some(format!("{} {}", bytes.len(), chrome("bytes", "Bytes", locale)))),
+        semio_framework_value::DslValue::Null => tree_item_desc(format!("norm-inputs.{path}"), norm_ui_label(label)?, Some(chrome("empty", "leer", locale))),
     }
 }
 
 /// 📄️ Structured, schema-driven, localized property editor over the document's camelCase value tree.
-pub fn render_document_editor<D: dsl::ToValue>(
+pub fn render_document_editor<D: semio_framework_value::ToValue>(
     document: &D,
     locale: Locale,
     controller_id: &'static str,
     meta_fn: Option<NormFieldMetaFn>,
     windows: &TreeWindows<'_>,
 ) -> UiAssemblyResult<BuiltNode> {
-    let tree = dsl::ToValue::to_value(document);
+    let tree = semio_framework_value::ToValue::to_value(document);
     render_value_editor("", &tree, locale, controller_id, meta_fn, windows, 0)
 }
 
 /// 📄️ Legacy pretty JSON — kept for tests that still project raw text chunks.
-pub fn render_document_json<D: dsl::ToValue>(document: &D) -> UiAssemblyResult<BuiltNode> {
-    let json = pack::json::to_string_pretty(&pack::json::from_dsl_value(&dsl::ToValue::to_value(document)));
+pub fn render_document_json<D: semio_framework_value::ToValue>(document: &D) -> UiAssemblyResult<BuiltNode> {
+    let json = semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(document)));
     render_text_chunks(&json)
 }
 
@@ -1582,7 +1583,7 @@ where
             store_cached_report_for::<F>(document, report.clone());
             report
         });
-        let json = pack::json::to_json_string(&report);
+        let json = semio_framework_pack_json::to_json_string(&report);
         return Ok(Media { media_type: MediaType { class: MediaClass::Computation, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: artifact_kind_id(variant), json } });
     }
     if port != "artifact:out" {
@@ -1603,12 +1604,12 @@ where
 /// replicates the SDK default (decodes the base64 pack).
 pub fn import_media<D, M, F>(port: &str, media: &Media, wrap: F) -> Result<Emit<M, NoConfigMutation>, MediaError>
 where
-    D: Clone + Default + PartialEq + dsl::ToValue + dsl::FromValue + store::ArtifactPack,
+    D: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + store::ArtifactPack,
     F: Fn(D) -> Vec<M>,
 {
     if port == "model:in" {
         if let MediaPayload::Structured { json, .. } = &media.payload {
-            if let Ok(document) = pack::json::from_json_str::<D>(json) {
+            if let Ok(document) = semio_framework_pack_json::from_json_str::<D>(json, semio_framework_pack_json::JsonMemberPolicy::Reject) {
                 return Ok(Emit::mutations(wrap(document)));
             }
         }
@@ -1627,60 +1628,54 @@ where
 //#endregion 🔖️MediaPorts
 
 //#region 🔖️Commands
-/// 📤️ Commits a typed document mutation under its manifest action description.
-pub fn commit_snapshot<M>(mutation: M, description: &str) -> Result<Emit<M, NoConfigMutation>, Fault> {
-    Ok(Emit::commit(vec![mutation], description))
-}
-
-/// 📤️ Commit a bundle of targeted semantic mutations as one described edit — the migrated facets'
-/// replacement for `commit_snapshot`'s old single whole-document-replace commit: a `set-snapshot`
-/// command payload (or a re-evaluation re-commit) decomposes into one `change-<field>` mutation per
-/// persistent field via `XMutation::from_snapshot`, bundled here into a single undo entry.
-pub fn commit_snapshot_fields<M>(mutations: Vec<M>, description: &str) -> Result<Emit<M, NoConfigMutation>, Fault> {
-    Ok(Emit::commit(mutations, description))
+/// 📤️ Commits a bundle of targeted semantic mutations as one edit: a `set-snapshot` command payload (or a value-tree
+/// edit) decomposes into one `change-<field>` mutation per persistent field via `XMutation::from_snapshot`, bundled here
+/// into a single undo entry whose history row is labelled by its leaves' `SemanticMutation::label` (design §20.4, §20.6).
+pub fn commit_snapshot_fields<M>(mutations: Vec<M>) -> Result<Emit<M, NoConfigMutation>, Fault> {
+    Ok(Emit::mutations(mutations))
 }
 
 /// 🎯️ Builds the args-side of an app's `command_from_action` bridge for `selected-check` — the shells
 /// still speak `{action,args}` for chrome actions.
-pub fn selected_check_index_arg(args: Option<&dsl::DslValue>) -> Option<u32> {
-    args.and_then(|value| value.get("index")).and_then(dsl::DslValue::as_u64).map(|value| value as u32)
+pub fn selected_check_index_arg(args: Option<&semio_framework_value::DslValue>) -> Option<u32> {
+    args.and_then(|value| value.get("index")).and_then(semio_framework_value::DslValue::as_u64).map(|value| value as u32)
 }
 
 /// 🎯️ Path argument used by `setField` / `insertItem` / `removeItem`.
-pub fn path_arg(args: Option<&dsl::DslValue>) -> String {
+pub fn path_arg(args: Option<&semio_framework_value::DslValue>) -> String {
     args.and_then(|value| value.get("path"))
-        .and_then(|value| if let dsl::DslValue::String(raw) = value { Some(raw.clone()) } else { Some(dsl::json::to_json_string(value)) })
+        .and_then(|value| if let semio_framework_value::DslValue::String(raw) = value { Some(raw.clone()) } else { Some(semio_framework_pack_json::to_json_string(value)) })
         .unwrap_or_default()
 }
 
 /// 🎯️ Index argument used by `insertItem` / `removeItem` / `applyRemedy.remedyIndex`.
-pub fn index_arg(args: Option<&dsl::DslValue>, key: &str) -> usize {
-    args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_u64).map(|value| value as usize).unwrap_or(0)
+pub fn index_arg(args: Option<&semio_framework_value::DslValue>, key: &str) -> usize {
+    args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_u64).map(|value| value as usize).unwrap_or(0)
 }
 
 /// 🎯️ Optional value argument — host control merges under `value`; absent ⇒ JSON null.
-pub fn value_arg_json(args: Option<&dsl::DslValue>) -> String {
+pub fn value_arg_json(args: Option<&semio_framework_value::DslValue>) -> String {
     match args.and_then(|value| value.get("value")) {
-        Some(value) => dsl::json::to_json_string(value),
+        Some(value) => semio_framework_pack_json::to_json_string(value),
         None => "null".into(),
     }
 }
 
 /// 🎯️ `applyRemedy.checkId` (also accepts `check_id`).
-pub fn check_id_arg(args: Option<&dsl::DslValue>) -> String {
+pub fn check_id_arg(args: Option<&semio_framework_value::DslValue>) -> String {
     args.and_then(|value| value.get("checkId").or_else(|| value.get("check_id")))
-        .and_then(|value| if let dsl::DslValue::String(raw) = value { Some(raw.clone()) } else { Some(dsl::json::to_json_string(value)) })
+        .and_then(|value| if let semio_framework_value::DslValue::String(raw) = value { Some(raw.clone()) } else { Some(semio_framework_pack_json::to_json_string(value)) })
         .unwrap_or_default()
 }
 
-fn dsl_value_from_json(json: &str) -> Result<dsl::DslValue, String> {
-    pack::json::from_json_str::<dsl::DslValue>(json).map_err(|error| error.to_string())
+fn dsl_value_from_json(json: &str) -> Result<semio_framework_value::DslValue, String> {
+    semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 
 /// ✏️ Shared `setField` handler body used by every family's command leaf.
 pub fn dispatch_set_field<D, M, F>(document: &D, path: &str, value_json: &str, from_snapshot: F) -> Result<Emit<M, NoConfigMutation>, Fault>
 where
-    D: Clone + dsl::ToValue + dsl::FromValue,
+    D: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
     F: FnOnce(&D, &D) -> Vec<M>,
 {
     let value = dsl_value_from_json(value_json).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("norm.set-field-value"), error))?;
@@ -1690,7 +1685,7 @@ where
 /// ➕ Shared `insertItem` handler body.
 pub fn dispatch_insert_item<D, M, F>(document: &D, path: &str, index: usize, value_json: Option<&str>, from_snapshot: F) -> Result<Emit<M, NoConfigMutation>, Fault>
 where
-    D: Clone + dsl::ToValue + dsl::FromValue,
+    D: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
     F: FnOnce(&D, &D) -> Vec<M>,
 {
     let value = match value_json {
@@ -1703,7 +1698,7 @@ where
 /// ➖ Shared `removeItem` handler body.
 pub fn dispatch_remove_item<D, M, F>(document: &D, path: &str, index: usize, from_snapshot: F) -> Result<Emit<M, NoConfigMutation>, Fault>
 where
-    D: Clone + dsl::ToValue + dsl::FromValue,
+    D: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
     F: FnOnce(&D, &D) -> Vec<M>,
 {
     handle_remove_item(document, path, index, from_snapshot)
@@ -1713,7 +1708,7 @@ where
 pub fn dispatch_apply_remedy<Fam, Map>(document: &Fam::Document, check_id: &str, remedy_index: usize, from_snapshot: Map) -> Result<Emit<Fam::Mutation, NoConfigMutation>, Fault>
 where
     Fam: NormFamily,
-    Fam::Document: Clone + dsl::ToValue + dsl::FromValue,
+    Fam::Document: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
     Map: FnOnce(&Fam::Document, &Fam::Document) -> Vec<Fam::Mutation>,
 {
     handle_apply_remedy::<Fam, Map>(document, check_id, remedy_index, from_snapshot)
@@ -1750,14 +1745,14 @@ macro_rules! norm_command_from_action {
         /// 🌉️ Resolves the React/wgpu shells' `{action, args}` pair into this editor's typed command,
         /// for the two editors whose `setSnapshot` payload carries DSL TEXT rather than a decoded
         /// snapshot struct.
-        fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<$command, semio_framework_plugin::Fault> {
+        fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<$command, semio_framework_plugin::Fault> {
             match action {
                 "evaluate" => Ok($command::Evaluate(evaluate::Evaluate {})),
                 "setSelectedCheckIndex" => Ok($command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: $crate::app_surface::selected_check_index_arg(args) })),
                 "setActiveExample" => {
                     let example_id = args
                         .and_then(|value| value.get("exampleId").or_else(|| value.get("example_id")).or_else(|| value.get("value")))
-                        .and_then(|value| if let dsl::DslValue::String(raw) = value { Some(raw.clone()) } else { Some(dsl::json::to_json_string(value)) })
+                        .and_then(|value| if let semio_framework_value::DslValue::String(raw) = value { Some(raw.clone()) } else { Some(semio_framework_pack_json::to_json_string(value)) })
                         .unwrap_or_default();
                     Ok($command::SetActiveExample(set_active_example::SetActiveExample { example_id }))
                 }
@@ -1784,7 +1779,7 @@ macro_rules! norm_command_from_action {
                 "setSnapshot" => {
                     let json = args
                         .and_then(|value| value.get("snapshot"))
-                        .and_then(|value| if let dsl::DslValue::String(raw) = value { Some(raw.clone()) } else { Some(dsl::json::to_json_string(value)) })
+                        .and_then(|value| if let semio_framework_value::DslValue::String(raw) = value { Some(raw.clone()) } else { Some(semio_framework_pack_json::to_json_string(value)) })
                         .ok_or_else(|| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("norm.set-snapshot-arg-missing"), "setSnapshot needs a 'snapshot' argument carrying the document's camelCase JSON"))?;
                     let snapshot = $decode(&json).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("norm.set-snapshot-arg-invalid"), error))?;
                     Ok($command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { text: $crate::document::escape_op_text_field(&store::ArtifactDsl::print_dsl(&snapshot)) }))
@@ -1801,14 +1796,14 @@ macro_rules! norm_command_from_action {
         /// 🌉️ Resolves the React/wgpu shells' `{action, args}` pair into this editor's typed command.
         /// `setSnapshot` carries the whole compliance document, so its argument is that document's own
         /// camelCase JSON projection (exactly what the Inputs window renders).
-        fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<$command, semio_framework_plugin::Fault> {
+        fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<$command, semio_framework_plugin::Fault> {
             match action {
                 "evaluate" => Ok($command::Evaluate(evaluate::Evaluate {})),
                 "setSelectedCheckIndex" => Ok($command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: $crate::app_surface::selected_check_index_arg(args) })),
                 "setActiveExample" => {
                     let example_id = args
                         .and_then(|value| value.get("exampleId").or_else(|| value.get("example_id")).or_else(|| value.get("value")))
-                        .and_then(|value| if let dsl::DslValue::String(raw) = value { Some(raw.clone()) } else { Some(dsl::json::to_json_string(value)) })
+                        .and_then(|value| if let semio_framework_value::DslValue::String(raw) = value { Some(raw.clone()) } else { Some(semio_framework_pack_json::to_json_string(value)) })
                         .unwrap_or_default();
                     Ok($command::SetActiveExample(set_active_example::SetActiveExample { example_id }))
                 }
@@ -1835,7 +1830,7 @@ macro_rules! norm_command_from_action {
                 "setSnapshot" => {
                     let text = args
                         .and_then(|value| value.get("snapshot"))
-                        .and_then(|value| if let dsl::DslValue::String(raw) = value { Some(raw.clone()) } else { Some(dsl::json::to_json_string(value)) })
+                        .and_then(|value| if let semio_framework_value::DslValue::String(raw) = value { Some(raw.clone()) } else { Some(semio_framework_pack_json::to_json_string(value)) })
                         .ok_or_else(|| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("norm.set-snapshot-arg-missing"), "setSnapshot needs a 'snapshot' argument carrying the document's camelCase JSON"))?;
                     let snapshot = $decode(&text).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("norm.set-snapshot-arg-invalid"), error))?;
                     Ok($command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot }))
@@ -2000,6 +1995,7 @@ impl<A: NormRetainedEditor> semio_framework_plugin::retained_command::ArtifactCo
     fn step(
         &mut self,
         input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<A>>,
+    _cx: &mut semio_framework_job::StepContext<'_>,
     ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<A>>, Fault> {
         use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
         if self.state.cancelled {
@@ -2069,7 +2065,7 @@ pub fn dispatch_norm_command<A: NormRetainedEditor>(
 ///
 /// 🔁️ `artifact_mutations` is handed back in authored order: the retained publication lane stages the
 /// whole bundle front-to-back into ONE batched edit (`store::begin_apply_batch`), exactly as
-/// `Emit::commit`'s ordinary dispatch applies it. `XMutation::from_snapshot` emits ordered
+/// the ordinary `Emit::mutations` dispatch applies it. `XMutation::from_snapshot` emits ordered
 /// `remove-layer`/`insert-layer` runs, so the published document is identical either way — the LIFO
 /// compensation the old one-mutation-per-turn drain needed is gone with that drain.
 #[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
@@ -2165,11 +2161,8 @@ impl<A: NormRetainedEditor> semio_framework_plugin::ArtifactOwnedToolJobFactory 
 //#region 🔌️EditorOverrides
 /// 📬️ `ArtifactEditor::build_artifact_store_one_item_preparation_factory` for every norm editor —
 /// the framework's own bounded one-item publication authority, the same one trinity, dag and
-/// reasoning bind. Norm used to carry a hand-copied twin of it whose `preflight` declared
-/// `ArtifactStoreOneItemFootprint { work_items: 1, .. }`; a point-invertible item folds TWO staged
-/// rows (`store::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS`), so every `setSnapshot` was
-/// rejected by `ArtifactStore::fold_batch_item`'s fixed fold contract and the document never
-/// published (ticket 26/09/18 slice B2c).
+/// reasoning bind, whose fold footprint every leaf derives from its schema-declared inverse rows
+/// (`ArtifactStoreOneItemFootprint::for_leaf`, design §20.5).
 pub fn norm_artifact_store_preparation<A: NormRetainedEditor>() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<A::Snapshot, A::Mutation>>>
 where
     A::Mutation: Clone + Sync,

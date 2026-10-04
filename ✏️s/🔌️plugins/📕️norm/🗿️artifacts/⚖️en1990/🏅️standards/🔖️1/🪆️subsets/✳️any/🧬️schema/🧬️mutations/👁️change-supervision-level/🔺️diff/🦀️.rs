@@ -7,7 +7,7 @@ use protocol::MutationOutcome;
 
 pub fn diff(mutation: &ChangeSupervisionLevel, base: &En1990Snapshot) -> MutationOutcome<En1990Diff> {
     if &base.supervision_level == &mutation.new_supervision_level {
-        return MutationOutcome::empty().warn("mutation.no-op", "supervision_level already has this value.");
+        return MutationOutcome::empty().warning("mutation.no-op", "supervision_level already has this value.");
     }
     MutationOutcome::new(En1990Diff {
         supervision_level: Some(mutation.new_supervision_level.clone()),

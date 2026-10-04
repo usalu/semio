@@ -74,7 +74,7 @@ pub mod cache {
         /// 🧾️ Records cache metadata on disk.
         pub fn write_index(&self) -> Result<(), VideoError> {
             let index_path = self.root.join("index.json");
-            let payload = dsl::os_pack::json::to_string_pretty(&dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&self.access_order)));
+            let payload = semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&self.access_order)));
             fs::write(index_path, payload).map_err(VideoError::io("cache index"))?;
             Ok(())
         }
@@ -353,8 +353,8 @@ pub mod render {
         let sections = recorded.sections;
         let sections_path = config.output_dir.join("sections.json");
         fs::create_dir_all(&config.output_dir).map_err(VideoError::io("output dir"))?;
-        let sections_value = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&sections));
-        fs::write(&sections_path, dsl::os_pack::json::to_string_pretty(&sections_value)).map_err(VideoError::io("sections write"))?;
+        let sections_value = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&sections));
+        fs::write(&sections_path, semio_framework_pack_json::to_string_pretty(&sections_value)).map_err(VideoError::io("sections write"))?;
 
         let camera = recorded.camera;
         let mut renderer = VelloRenderer::new(config.width, config.height).await?;

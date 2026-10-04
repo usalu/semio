@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "defaultAllocationBytes",
+    "maximumBytes",
+    "admissions",
+    "refusedBytes",
+    "semanticBytes",
+    "stageNames",
+    "failedStageBytes",
+    "afterFailedStageRemaining",
+    "nativeBridge"
+  ],
+  "properties": {
+    "defaultAllocationBytes": {
+      "const": 536870912
+    },
+    "maximumBytes": {
+      "const": 32
+    },
+    "admissions": {
+      "const": [
+        8,
+        16,
+        8
+      ]
+    },
+    "refusedBytes": {
+      "const": 1
+    },
+    "semanticBytes": {
+      "const": 0
+    },
+    "stageNames": {
+      "const": [
+        "projectSnapshot",
+        "decodeNative",
+        "reconstructSnapshot"
+      ]
+    },
+    "failedStageBytes": {
+      "const": 8
+    },
+    "afterFailedStageRemaining": {
+      "const": 24
+    },
+    "nativeBridge": {
+      "const": {
+        "maximumBytes": 200000,
+        "successBytes": 70000,
+        "cancelBytes": 100000,
+        "cancelAt": 65536,
+        "remainingAfterCancellation": 30000,
+        "refusedBytes": 30001
+      }
+    }
+  }
+}

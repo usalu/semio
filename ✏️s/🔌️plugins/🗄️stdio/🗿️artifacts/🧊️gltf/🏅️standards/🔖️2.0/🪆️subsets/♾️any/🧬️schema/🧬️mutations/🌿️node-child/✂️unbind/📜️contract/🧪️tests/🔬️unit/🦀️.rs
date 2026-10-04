@@ -15,10 +15,10 @@ fn canonical_vectors_execute_direct_mutation_and_codec_laws() {
         assert_eq!(mutation::apply(&payload, &base).unwrap(), expected);
         assert_laws(&mutation::UnbindNodeChildMutation::Apply(payload.clone()), &base, &expected);
         let wire = &vector["wire"];
-        let encoded: serde_json::Value = serde_json::from_str(&pack::to_json_string(&payload)).unwrap();
+        let encoded: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&payload)).unwrap();
         assert_eq!(encoded, serde_json::from_str::<serde_json::Value>(wire["mutation"].as_str().unwrap()).unwrap());
         let malformed = wire["malformedPayload"].as_str().unwrap();
-        assert!(pack::from_json_str::<mutation::GltfUnbindNodeChildPayload>(malformed).is_err());
+        assert!(semio_framework_pack_json::from_json_str::<mutation::GltfUnbindNodeChildPayload>(malformed, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
         assert!(serde_json::from_str::<serde_json::Value>(malformed).is_err());
         for key in ["index", "reference"] {
             let rejected = decode(&vector["rejected"][key]);

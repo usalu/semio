@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "owner": "process3d",
+  "valueBudget": "cumulativeSqlStorageClasses",
+  "allocationBudget": "independentOwnedRequests",
+  "scalarBytes": 8,
+  "encodings": [
+    "binary",
+    "text"
+  ],
+  "directions": [
+    "decodeNative",
+    "encodeNative"
+  ],
+  "grants": [
+    "exact",
+    "minusOne",
+    "zero"
+  ]
+}

@@ -1,3 +1,0 @@
-# 🧬️ remove-text-chunk/RemoveTextChunk
-scalar RemoveTextChunkMutationValue
-input RemoveTextChunkMutation { index: Int! }

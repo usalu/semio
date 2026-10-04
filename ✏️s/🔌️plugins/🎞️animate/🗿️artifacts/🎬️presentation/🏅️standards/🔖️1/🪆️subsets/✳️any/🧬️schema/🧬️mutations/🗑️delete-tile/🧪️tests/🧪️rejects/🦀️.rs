@@ -23,13 +23,13 @@ const DIFF_ABSENT: &str = include_str!("../../../../../🧫️fixtures/🧬️mu
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-tile/🧪️rejects/🎯️outcome/🔣️.json");
 
 fn mutation() -> PresentationMutation {
-    dsl::os_pack::from_json_str(MUTATION).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 fn before() -> PresentationSnapshot {
-    dsl::os_pack::from_json_str(BEFORE).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> PresentationSnapshot {
-    dsl::os_pack::from_json_str(AFTER).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 
 /// ▶️ A rejected `delete-tile` leaves the document byte-identical to the committed `after`.
@@ -51,7 +51,7 @@ fn a_missing_tile_is_an_error_target_missing() {
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.target-missing", "a missing tile is reported as target-missing");
-    assert_eq!(messages[0].level, protocol::Severity::Error, "a missing delete target is an Error, never Fatal");
+    assert_eq!(messages[0].level, semio_framework_diagnostic::Severity::Error, "a missing delete target is an Error, never Fatal");
     assert_eq!(messages[0].target, vec!["tiles".to_string(), "t-ghost".to_string()], "the diagnostic addresses the collection and then the one missing id");
 }
 
@@ -67,12 +67,12 @@ fn the_committed_diff_is_declared_absent() {
 #[test]
 fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: PresentationSnapshot = dsl::os_pack::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: PresentationSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "delete-tile/rejects-deleting-a-missing-tile: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&mutation())).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "delete-tile/rejects-deleting-a-missing-tile: committed mutation JSON is not canonical");
 }
@@ -93,7 +93,7 @@ fn declared_outcome_holds() {
 /// index — so a tile that was never in the deck yields NO undo step at all.
 #[test]
 fn inverse_of_a_missing_delete_is_empty() {
-    let inverse = inverse_presentation_mutation(&before(), &mutation());
+    let inverse = inverse_presentation_mutation(&before(), &mutation()).expect("valid retained mutation inverse fixture");
     assert!(inverse.is_empty(), "delete-tile has nothing to re-create when its target is absent, got {inverse:?}");
 }
 

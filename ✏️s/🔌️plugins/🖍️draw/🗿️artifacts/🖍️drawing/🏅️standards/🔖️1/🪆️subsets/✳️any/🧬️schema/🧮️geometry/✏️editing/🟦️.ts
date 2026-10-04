@@ -1,5 +1,5 @@
 /** ✏️ Pure node editing in path-local coordinates. */
-import { parsePathSegment, type PathSegment } from "../../🟦️.ts";
+import { parsePathGeometrySegment, type PathGeometrySegment } from "../../🟦️.ts";
 import { splitCubic, arcGeometry, arcPoint, inverse, type Point, type Matrix } from "../🟦️.ts";
 
 export type PathPoint = "anchor" | "control1" | "control2";
@@ -16,7 +16,7 @@ export type PathEdit =
   | { kind: "reverse" };
 
 /** 🧭 Checks contour boundaries before applying an edit. */
-function contours(segments: PathSegment[]): [number, number][] {
+function contours(segments: PathGeometrySegment[]): [number, number][] {
   const ranges: [number, number][] = [];
   let start = -1;
   for (let index = 0; index < segments.length; index++) {
@@ -34,8 +34,8 @@ function contours(segments: PathSegment[]): [number, number][] {
 }
 
 /** 🪢 Returns a replacement vector; the source remains untouched on failure. */
-export function editPath(source: readonly PathSegment[], operation: PathEdit): PathSegment[] {
-  const segments = source.map(item => parsePathSegment(item));
+export function editPath(source: readonly PathGeometrySegment[], operation: PathEdit): PathGeometrySegment[] {
+  const segments = source.map(item => parsePathGeometrySegment(item));
   const ranges = contours(segments);
   if(operation.kind==="translate") return translatePathPoints(segments,operation.points,operation.delta);
   if (operation.kind === "deletePoints") {
@@ -55,7 +55,7 @@ export function editPath(source: readonly PathSegment[], operation: PathEdit): P
       if (point === "control1") segment.ctrl1=[...previous.to];
       else segment.ctrl2=[...segment.to];
     }
-    const output:PathSegment[]=[];
+    const output:PathGeometrySegment[]=[];
     for (const [start,end] of ranges) {
       const closed=segments[end-1]!.kind==="close";
       let kept=0;
@@ -87,7 +87,7 @@ export function editPath(source: readonly PathSegment[], operation: PathEdit): P
     if (end.kind==="close" || start.kind!=="move") throw new Error("Missing endpoint");
     if (end.to[0]!==start.to[0] || end.to[1]!==start.to[1]) joined.push({kind:"line",to:[...start.to]});
     for(let index=1;index<target.length;index++) joined.push(target[index]!);
-    const output:PathSegment[]=[];
+    const output:PathGeometrySegment[]=[];
     for(const [start,end] of ranges) {
       if(start===Math.min(a[0],b[0])) for(const segment of joined) output.push(segment);
       if(start!==a[0] && start!==b[0]) for(let index=start;index<end;index++) output.push(segments[index]!);
@@ -95,7 +95,7 @@ export function editPath(source: readonly PathSegment[], operation: PathEdit): P
     return output;
   }
   if (operation.kind === "reverse") {
-    const output: PathSegment[] = [];
+    const output: PathGeometrySegment[] = [];
     for (const [start, end] of ranges) {
       const closed = segments[end - 1]!.kind === "close";
       const last = end - (closed ? 2 : 1);
@@ -124,7 +124,7 @@ export function editPath(source: readonly PathSegment[], operation: PathEdit): P
     if (!previous || previous.kind === "close" || item.kind === "move" || item.kind === "close") throw new Error("Select a segment to convert");
     const from = previous.to, to = item.to;
     const mix = (a:[number,number],b:[number,number],t:number):[number,number] => [a[0]*(1-t)+b[0]*t,a[1]*(1-t)+b[1]*t];
-    let curves:PathSegment[];
+    let curves:PathGeometrySegment[];
     if (operation.target === "line") curves=[{kind:"line",to}];
     else if (operation.target !== "cubic") throw new Error("Invalid segment type");
     else if (item.kind === "cubic") curves=[item];
@@ -194,11 +194,11 @@ export function editPath(source: readonly PathSegment[], operation: PathEdit): P
       }
     }
   } else throw new Error("Unknown path operation");
-  return segments.map(item => parsePathSegment(item));
+  return segments.map(item => parsePathGeometrySegment(item));
 }
 
 /** 🖱️ Resolves a world-space drag to an absolute path-local point without changing press offset. */
-export function dragPathPoint(segment: PathSegment,point: PathPoint,matrix: Matrix,start: Point,end: Point,constrained: boolean): Point|null {
+export function dragPathPoint(segment: PathGeometrySegment,point: PathPoint,matrix: Matrix,start: Point,end: Point,constrained: boolean): Point|null {
   const local=point==="anchor"?segment.kind!=="close"?segment.to:null:point==="control1"?segment.kind==="cubic"?segment.ctrl1:segment.kind==="quad"?segment.ctrl:null:point==="control2" && segment.kind==="cubic"?segment.ctrl2:null;
   if(!local || ![...matrix,...start,...end,...local].every(Number.isFinite))return null;
   const inverted=inverse([matrix[0],matrix[1],matrix[2],matrix[3],0,0]);
@@ -210,10 +210,10 @@ export function dragPathPoint(segment: PathSegment,point: PathPoint,matrix: Matr
 }
 
 /** 🩹 Copies only a positioned node and, when needed, its outgoing tangent segment. */
-export function patchPathPoint(segment:PathSegment,next:PathSegment|undefined,point:PathPoint,to:Point):[PathSegment,PathSegment?] {
+export function patchPathPoint(segment:PathGeometrySegment,next:PathGeometrySegment|undefined,point:PathPoint,to:Point):[PathGeometrySegment,PathGeometrySegment?] {
   if(to.length!==2 || !to.every(Number.isFinite))throw new Error("Invalid coordinate");
-  const output=parsePathSegment(segment);
-  let following:PathSegment|undefined;
+  const output=parsePathGeometrySegment(segment);
+  let following:PathGeometrySegment|undefined;
   if(point==="anchor") {
     if(output.kind==="close")throw new Error("Select an anchor");
     const delta:Point=[to[0]-output.to[0],to[1]-output.to[1]];
@@ -227,11 +227,11 @@ export function patchPathPoint(segment:PathSegment,next:PathSegment|undefined,po
   else if(output.kind==="cubic" && point==="control2")output.ctrl2=[...to];
   else if(output.kind==="quad" && point==="control1")output.ctrl=[...to];
   else throw new Error("This node has no selected handle");
-  return [parsePathSegment(output),following?parsePathSegment(following):undefined];
+  return [parsePathGeometrySegment(output),following?parsePathGeometrySegment(following):undefined];
 }
 
 /** 🎯 Returns the nearest anchor or control in world coordinates; anchors win coincident ties. */
-export function pathPointHit(segment:PathSegment,matrix:Matrix,world:Point,tolerance:number):{point:PathPoint;distance:number}|null {
+export function pathPointHit(segment:PathGeometrySegment,matrix:Matrix,world:Point,tolerance:number):{point:PathPoint;distance:number}|null {
   if(tolerance<0 || ![...matrix,...world,tolerance].every(Number.isFinite))return null;
   let nearest:{point:PathPoint;distance:number}|null=null;
   for(const point of ["anchor","control1","control2"] as const) {
@@ -244,7 +244,7 @@ export function pathPointHit(segment:PathSegment,matrix:Matrix,world:Point,toler
 }
 
 /** ↔️ Moves the union of selected coordinates and attached tangents exactly once. */
-function translatePathPoints(segments:PathSegment[],points:readonly PathPointRef[],delta:Point):PathSegment[] {
+function translatePathPoints(segments:PathGeometrySegment[],points:readonly PathPointRef[],delta:Point):PathGeometrySegment[] {
   if(points.length===0)throw new Error("Select at least one path point");
   if(delta.length!==2 || !delta.every(Number.isFinite))throw new Error("Invalid translation");
   const masks=new Uint8Array(segments.length);
@@ -267,12 +267,12 @@ function translatePathPoints(segments:PathSegment[],points:readonly PathPointRef
     if(segment.kind!=="close")segment.to=shift(segment.to,1);
     if(segment.kind==="quad")segment.ctrl=shift(segment.ctrl,2);
     if(segment.kind==="cubic") {segment.ctrl1=shift(segment.ctrl1,2);segment.ctrl2=shift(segment.ctrl2,4);}
-    return parsePathSegment(segment);
+    return parsePathGeometrySegment(segment);
   });
 }
 
 /** 🌍️ Translate selected coordinates in document axes without applying the affine origin. */
-export function translateWorldPathPoints(source:readonly PathSegment[],points:readonly PathPointRef[],matrix:Matrix,delta:Point):PathSegment[] {
+export function translateWorldPathPoints(source:readonly PathGeometrySegment[],points:readonly PathPointRef[],matrix:Matrix,delta:Point):PathGeometrySegment[] {
   const basis=inverse([matrix[0],matrix[1],matrix[2],matrix[3],0,0]);
   if(!basis || !matrix.every(Number.isFinite) || !delta.every(Number.isFinite))throw new Error("Cannot move points through a singular or nonfinite transform");
   return editPath(source,{kind:"translate",points,delta:[basis[0]*delta[0]+basis[2]*delta[1],basis[1]*delta[0]+basis[3]*delta[1]]});

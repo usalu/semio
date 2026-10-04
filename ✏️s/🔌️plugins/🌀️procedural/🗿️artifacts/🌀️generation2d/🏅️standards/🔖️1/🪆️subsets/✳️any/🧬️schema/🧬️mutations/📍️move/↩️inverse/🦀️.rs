@@ -5,9 +5,12 @@
 use crate::standards::v1::subsets::any::schema::mutations::{clear_widget_layout, move_widget, Generation2dMutation};
 use crate::Generation2dSnapshot;
 
-pub fn inverse(payload: &super::MoveWidget, base: &Generation2dSnapshot) -> Vec<Generation2dMutation> {
+pub fn inverse(payload: &super::MoveWidget, base: &Generation2dSnapshot) -> Result<Vec<Generation2dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.host_snapshot.layout.get(&payload.id) {
         Some(previous) => vec![move_widget(payload.id.clone(), previous.clone())],
         None => vec![clear_widget_layout(payload.id.clone())],
     }
+
+    })())
 }

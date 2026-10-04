@@ -9,7 +9,7 @@ pub fn diff(payload: &ChangeGegQpFactor, base: &Din18599Snapshot) -> protocol::M
         return protocol::MutationOutcome::fatal("mutation.invariant", "geg-qp-factor must be a positive finite number.", Vec::<String>::new());
     }
     if base.geg_qp_factor == payload.new_geg_qp_factor {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "geg-qp-factor already has this value.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "geg-qp-factor already has this value.");
     }
     protocol::MutationOutcome::new(Din18599Diff { geg_qp_factor: Some(payload.new_geg_qp_factor), ..Default::default() })
 }

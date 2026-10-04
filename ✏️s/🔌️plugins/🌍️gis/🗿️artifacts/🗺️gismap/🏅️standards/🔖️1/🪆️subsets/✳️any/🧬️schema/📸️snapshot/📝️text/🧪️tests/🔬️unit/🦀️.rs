@@ -19,15 +19,15 @@ async fn print_dsl_reproduces_the_bundled_example_text_verbatim() {
     assert_eq!(parse_dsl(&print_dsl(&document)).expect("reparse"), document);
 }
 
-/// 🧬️ `MapFeature::data` is `dsl::DslValue` (deliberately untyped — see `crate`'s
+/// 🧬️ `MapFeature::data` is `semio_framework_value::DslValue` (deliberately untyped — see `crate`'s
 /// doc comment) — round-trips every shape (nested object/array, bool, null, negative number) the
 /// generic value grammar has to reconstruct. `depth` is kept as a float literal for this fixture;
-/// `dsl::DslValue::Number`'s `UInt`/`Int`/`Float` variants now preserve the same JSON int-vs-float
+/// `semio_framework_value::DslValue::Number`'s `UInt`/`Int`/`Float` variants now preserve the same JSON int-vs-float
 /// distinction `serde_json::Value::Number` does, so this is no longer load-bearing for the
 /// round trip — it stays a float simply because that is the fixture's actual data shape.
 #[semio_framework_async_macros::async_test]
 async fn gis_map_document_dsl_round_trips_synthetic_value_shapes() {
-    let dsl_of = |value: serde_json::Value| dsl::DslValue::from(value);
+    let dsl_of = |value: serde_json::Value| semio_framework_value::DslValue::from(value);
     let document = GisMapSnapshot {
         positions: vec![MapFeature {
             id: "p1".into(),

@@ -3,11 +3,14 @@ use crate::mutations::VcsDemoMutation;
 use crate::VcsSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::AddTag, base: &VcsSnapshot) -> Vec<VcsDemoMutation> {
+pub fn inverse(payload: &super::AddTag, base: &VcsSnapshot) -> Result<Vec<VcsDemoMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     if base.tags.iter().any(|existing| existing == &payload.tag) {
         Vec::new()
     } else {
         vec![super::super::remove_tag::remove_tag(payload.tag.clone())]
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

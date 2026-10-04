@@ -6,7 +6,8 @@ use crate::EnergyModelSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ A refused or no-op forward step has nothing to undo, so it answers with no steps at all.
-pub fn inverse(payload: &super::DeleteMaterial, base: &EnergyModelSnapshot) -> Vec<EnergyModelMutation> {
+pub fn inverse(payload: &super::DeleteMaterial, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(index) = base.model.materials.iter().position(|item| item.id == payload.id) else {
         return Vec::new();
     };
@@ -27,5 +28,7 @@ pub fn inverse(payload: &super::DeleteMaterial, base: &EnergyModelSnapshot) -> V
         existing.solar_absorptance,
         existing.visible_absorptance,
     )]
+
+    })())
 }
 //#endregion 🔖️Inverse

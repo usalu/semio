@@ -13,7 +13,7 @@ pub fn diff(payload: &super::UpdateRigExtrinsic, base: &RemodelingSnapshot) -> p
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Rig extrinsic \"{}\" has a non-finite rotation or translation.", payload.extrinsic.camera_id), [payload.extrinsic.camera_id.clone()]);
     }
     if existing == &payload.extrinsic {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Rig extrinsic \"{}\" is unchanged.", payload.extrinsic.camera_id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Rig extrinsic \"{}\" is unchanged.", payload.extrinsic.camera_id));
     }
     let mut calibration = base.calibration.clone();
     if let Some(existing) = calibration.rig.iter_mut().find(|extrinsic| extrinsic.camera_id == payload.extrinsic.camera_id) {

@@ -1,0 +1,398 @@
+[
+  {
+    "name": "unsupported declared MIME",
+    "input": {
+      "mime": "image/jpeg",
+      "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg==",
+      "maxSourceBytes": 1048576,
+      "maxBytes": 1048576,
+      "maxPixels": 1024,
+      "maxChunks": 4096
+    }
+  },
+  {
+    "name": "MIME mismatch",
+    "input": {
+      "mime": "image/png",
+      "data": "data:image/jpeg;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg==",
+      "maxSourceBytes": 1048576,
+      "maxBytes": 1048576,
+      "maxPixels": 1024,
+      "maxChunks": 4096
+    }
+  },
+  {
+    "name": "missing data URL comma",
+    "input": {
+      "mime": "image/png",
+      "data": "data:image/png;base64",
+      "maxSourceBytes": 1048576,
+      "maxBytes": 1048576,
+      "maxPixels": 1024,
+      "maxChunks": 4096
+    }
+  },
+  {
+    "name": "duplicate base64 flag",
+    "input": {
+      "mime": "image/png",
+      "data": "data:image/png;base64;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg==",
+      "maxSourceBytes": 1048576,
+      "maxBytes": 1048576,
+      "maxPixels": 1024,
+      "maxChunks": 4096
+    }
+  },
+  {
+    "name": "base64 flag before parameter",
+    "input": {
+      "mime": "image/png",
+      "data": "data:image/png;base64;name=a,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg==",
+      "maxSourceBytes": 1048576,
+      "maxBytes": 1048576,
+      "maxPixels": 1024,
+      "maxChunks": 4096
+    }
+  },
+  {
+    "name": "empty media type",
+    "input": {
+      "mime": "image/png",
+      "data": "data:;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg==",
+      "maxSourceBytes": 1048576,
+      "maxBytes": 1048576,
+      "maxPixels": 1024,
+      "maxChunks": 4096
+    }
+  },
+  {
+    "name": "non-parameter metadata",
+    "input": {
+      "mime": "image/png",
+      "data": "data:image/png;what,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg==",
+      "maxSourceBytes": 1048576,
+      "maxBytes": 1048576,
+      "maxPixels": 1024,
+      "maxChunks": 4096
+    }
+  },
+  {
+    "name": "header limit",
+    "input": {
+      "mime": "image/png",
+      "data": "data:image/png;name=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa,",
+      "maxSourceBytes": 1048576,
+      "maxBytes": 1048576,
+      "maxPixels": 1024,
+      "maxChunks": 4096
+    }
+  },
+  {
+    "name": "source limit",
+    "input": {
+      "mime": "image/png",
+      "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg==",
+      "maxSourceBytes": 8,
+      "maxBytes": 1048576,
+      "maxPixels": 1024,
+      "maxChunks": 4096
+    }
+  },
+  {
+    "name": "binary limit",
+    "input": {
+      "mime": "image/png",
+      "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg==",
+      "maxSourceBytes": 1048576,
+      "maxBytes": 8,
+      "maxPixels": 1024,
+      "maxChunks": 4096
+    }
+  },
+  {
+    "name": "pixel limit",
+    "input": {
+      "mime": "image/png",
+      "data": "iVBORw0KGgoAAAANSUhEUgAAAAMAAAACAQAAAAC1D1u3AAAAD0lEQVR4AQEEAPv/AEAAwAGEAQGIxRNmAAAAAElFTkSuQmCC",
+      "maxSourceBytes": 1048576,
+      "maxBytes": 1048576,
+      "maxPixels": 1,
+      "maxChunks": 4096
+    }
+  },
+  {
+    "name": "chunk limit",
+    "input": {
+      "mime": "image/png",
+      "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg==",
+      "maxSourceBytes": 1048576,
+      "maxBytes": 1048576,
+      "maxPixels": 1024,
+      "maxChunks": 2
+    }
+  },
+  {
+    "name": "padding in the middle",
+    "input": {
+      "mime": "image/png",
+      "data": "iVBOYQ==Rw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg==",
+      "maxSourceBytes": 1048576,
+      "maxBytes": 1048576,
+      "maxPixels": 1024,
+      "maxChunks": 4096
+    }
+  },
+  {
+    "name": "invalid alphabet",
+    "input": {
+      "mime": "image/png",
+      "data": "!VBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg==",
+      "maxSourceBytes": 1048576,
+      "maxBytes": 1048576,
+      "maxPixels": 1024,
+      "maxChunks": 4096
+    }
+  },
+  {
+    "name": "length not multiple of four",
+    "input": {
+      "mime": "image/png",
+      "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg=",
+      "maxSourceBytes": 1048576,
+      "maxBytes": 1048576,
+      "maxPixels": 1024,
+      "maxChunks": 4096
+    }
+  },
+  {
+    "name": "noncanonical bits",
+    "input": {
+      "mime": "image/png",
+      "data": "Zh==",
+      "maxSourceBytes": 1048576,
+      "maxBytes": 1048576,
+      "maxPixels": 1024,
+      "maxChunks": 4096
+    }
+  },
+  {
+    "name": "whitespace",
+    "input": {
+      "mime": "image/png",
+      "data": "iVBO\nRw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg==",
+      "maxSourceBytes": 1048576,
+      "maxBytes": 1048576,
+      "maxPixels": 1024,
+      "maxChunks": 4096
+    }
+  },
+  {
+    "name": "URL alphabet",
+    "input": {
+      "mime": "image/png",
+      "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH_e+m+7wAAAABJRU5ErkJggg==",
+      "maxSourceBytes": 1048576,
+      "maxBytes": 1048576,
+      "maxPixels": 1024,
+      "maxChunks": 4096
+    }
+  },
+  {
+    "name": "malformed percent escape",
+    "input": {
+      "mime": "image/png",
+      "data": "data:image/png;base64,%Q0iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg==",
+      "maxSourceBytes": 1048576,
+      "maxBytes": 1048576,
+      "maxPixels": 1024,
+      "maxChunks": 4096
+    }
+  },
+  {
+    "name": "truncated percent escape",
+    "input": {
+      "mime": "image/png",
+      "data": "data:image/png,%",
+      "maxSourceBytes": 1048576,
+      "maxBytes": 1048576,
+      "maxPixels": 1024,
+      "maxChunks": 4096
+    }
+  },
+  {
+    "name": "escaped whitespace",
+    "input": {
+      "mime": "image/png",
+      "data": "data:image/png;base64,%0AiVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg==",
+      "maxSourceBytes": 1048576,
+      "maxBytes": 1048576,
+      "maxPixels": 1024,
+      "maxChunks": 4096
+    }
+  },
+  {
+    "name": "fragment in binary URL",
+    "input": {
+      "mime": "image/png",
+      "data": "data:image/png,#",
+      "maxSourceBytes": 1048576,
+      "maxBytes": 1048576,
+      "maxPixels": 1024,
+      "maxChunks": 4096
+    }
+  },
+  {
+    "name": "raw non-ASCII",
+    "input": {
+      "mime": "image/png",
+      "data": "data:image/png,é",
+      "maxSourceBytes": 1048576,
+      "maxBytes": 1048576,
+      "maxPixels": 1024,
+      "maxChunks": 4096
+    }
+  },
+  {
+    "name": "PNG MIME with other bytes",
+    "input": {
+      "mime": "image/png",
+      "data": "aGVsbG8=",
+      "maxSourceBytes": 1048576,
+      "maxBytes": 1048576,
+      "maxPixels": 1024,
+      "maxChunks": 4096
+    }
+  },
+  {
+    "name": "PNG Adler mismatch",
+    "input": {
+      "mime": "image/png",
+      "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH+DO6OeQAAAABJRU5ErkJggg==",
+      "maxSourceBytes": 1048576,
+      "maxBytes": 1048576,
+      "maxPixels": 1024,
+      "maxChunks": 4096
+    }
+  },
+  {
+    "name": "contract maxSourceBytes 0",
+    "input": {
+      "mime": "image/png",
+      "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg==",
+      "maxSourceBytes": 0,
+      "maxBytes": 1048576,
+      "maxPixels": 1024,
+      "maxChunks": 4096
+    }
+  },
+  {
+    "name": "contract maxSourceBytes 268439553",
+    "input": {
+      "mime": "image/png",
+      "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg==",
+      "maxSourceBytes": 268439553,
+      "maxBytes": 1048576,
+      "maxPixels": 1024,
+      "maxChunks": 4096
+    }
+  },
+  {
+    "name": "contract maxBytes 7",
+    "input": {
+      "mime": "image/png",
+      "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg==",
+      "maxSourceBytes": 1048576,
+      "maxBytes": 7,
+      "maxPixels": 1024,
+      "maxChunks": 4096
+    }
+  },
+  {
+    "name": "contract maxBytes 67108865",
+    "input": {
+      "mime": "image/png",
+      "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg==",
+      "maxSourceBytes": 1048576,
+      "maxBytes": 67108865,
+      "maxPixels": 1024,
+      "maxChunks": 4096
+    }
+  },
+  {
+    "name": "contract maxPixels 0",
+    "input": {
+      "mime": "image/png",
+      "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg==",
+      "maxSourceBytes": 1048576,
+      "maxBytes": 1048576,
+      "maxPixels": 0,
+      "maxChunks": 4096
+    }
+  },
+  {
+    "name": "contract maxPixels 16777217",
+    "input": {
+      "mime": "image/png",
+      "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg==",
+      "maxSourceBytes": 1048576,
+      "maxBytes": 1048576,
+      "maxPixels": 16777217,
+      "maxChunks": 4096
+    }
+  },
+  {
+    "name": "contract maxChunks 0",
+    "input": {
+      "mime": "image/png",
+      "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg==",
+      "maxSourceBytes": 1048576,
+      "maxBytes": 1048576,
+      "maxPixels": 1024,
+      "maxChunks": 0
+    }
+  },
+  {
+    "name": "contract maxChunks 65537",
+    "input": {
+      "mime": "image/png",
+      "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg==",
+      "maxSourceBytes": 1048576,
+      "maxBytes": 1048576,
+      "maxPixels": 1024,
+      "maxChunks": 65537
+    }
+  },
+  {
+    "name": "contract mime 0",
+    "input": {
+      "mime": "",
+      "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg==",
+      "maxSourceBytes": 1048576,
+      "maxBytes": 1048576,
+      "maxPixels": 1024,
+      "maxChunks": 4096
+    }
+  },
+  {
+    "name": "contract mime 129",
+    "input": {
+      "mime": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg==",
+      "maxSourceBytes": 1048576,
+      "maxBytes": 1048576,
+      "maxPixels": 1024,
+      "maxChunks": 4096
+    }
+  },
+  {
+    "name": "contract data empty",
+    "input": {
+      "mime": "image/png",
+      "data": "",
+      "maxSourceBytes": 1048576,
+      "maxBytes": 1048576,
+      "maxPixels": 1024,
+      "maxChunks": 4096
+    }
+  }
+]

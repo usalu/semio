@@ -31,7 +31,6 @@ use crate::standards::v1::subsets::any::schema::inferences::{
     CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC,
 };
 use crate::{artifact_kind, CadCamera, CadPaneId, CadSnapshot, CadWorkingScene, CAD_DOCUMENT_SCHEMA};
-use dsl::json;
 use semio_framework::kernel::Effect;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
@@ -93,7 +92,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 // `serde_json` dependency survives even here (ticket 26/09/01/
 // RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS).
 #[cfg(test)]
-use protocol::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 use std::collections::HashMap;
 use semio_framework_2d::compute::EngineHandles;
 
@@ -261,15 +260,15 @@ impl CadPlayRuntime {
 
 /// 🔁️ Encodes any `ToValue` type to its JSON-text wire form via `protocol::json` — the window transient's
 /// `engagement_session_json` carries real JSON text (not a `DslValue`, which never touches the wire directly).
-fn json_string_of(value: &impl protocol::ToValue) -> String {
-    json::to_json_string(value)
+fn json_string_of(value: &impl semio_framework_value::ToValue) -> String {
+    semio_framework_pack_json::to_json_string(value)
 }
 
 /// 🔁️ The `json_string_of` inverse: parses JSON text straight into `T` via `protocol::json`.
 /// `None` on either a JSON syntax error or a shape mismatch — callers already treat a
 /// missing/invalid persisted session as "no session".
-fn json_string_to<T: protocol::FromValue>(json: &str) -> Option<T> {
-    json::from_json_str::<T>(json).ok()
+fn json_string_to<T: semio_framework_value::FromValue>(json: &str) -> Option<T> {
+    semio_framework_pack_json::from_json_str::<T>(json, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()
 }
 
 /// 🔀️ Unpacks artifact-wide `CadConfig` and the addressed window's engagement transient (design §17.4) into the
@@ -358,7 +357,7 @@ pub fn cad_action(action: &str, args: Option<UiValue>) -> semio_framework_plugin
 }
 
 /// 🪟️ Bridges window chrome, which still carries the retained WGPU action descriptor.
-pub fn cad_window_action(action: &str, args: Option<protocol::DslValue>) -> ActionDescriptor {
+pub fn cad_window_action(action: &str, args: Option<semio_framework_value::DslValue>) -> ActionDescriptor {
     ActionDescriptor { controller_id: CAD_PLAY_CONTROLLER_ID.into(), action: action.into(), args }
 }
 
@@ -632,15 +631,15 @@ pub fn export_solid_modelspace(envelope: &CadPlayView, format: &str) -> Option<C
 /// to the shell (no document mutation, no pending-export runtime slot).
 pub fn cad_solid_export_effect(export: CadSolidExport) -> Effect {
     let data = match export.data {
-        protocol::DslValue::String(text) => text,
-        other => json::to_json_string(&other),
+        semio_framework_value::DslValue::String(text) => text,
+        other => semio_framework_pack_json::to_json_string(&other),
     };
     Effect::DownloadMediaExport { filename: export.filename, mime_type: export.mime_type, data, encoding: export.encoding }
 }
 
 /// ⬇️ Wraps a spatial-JSON export document into a download host effect.
-pub fn cad_spatial_export_effect(value: &protocol::DslValue, filename: &str) -> Effect {
-    Effect::DownloadMediaExport { filename: filename.into(), mime_type: "text/plain".into(), data: json::to_json_string(value), encoding: None }
+pub fn cad_spatial_export_effect(value: &semio_framework_value::DslValue, filename: &str) -> Effect {
+    Effect::DownloadMediaExport { filename: filename.into(), mime_type: "text/plain".into(), data: semio_framework_pack_json::to_json_string(value), encoding: None }
 }
 
 /// ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: exporting per-pane objects as
@@ -648,24 +647,24 @@ pub fn cad_spatial_export_effect(value: &protocol::DslValue, filename: &str) -> 
 /// inside composed `s.stdio.semio.model` CHILD documents (unresolved at this boundary — see
 /// `🔖️Composition` in `🏪️store/🦀️.rs`). Returns an empty `objects` array per pane;
 /// documented reduced-fidelity gap, not silently wrong.
-pub fn export_spatial_json(_envelope: &CadPlayView, mode: &str, pane: Option<CadPaneId>) -> Result<protocol::DslValue, Fault> {
-    let object = |entries: Vec<(&str, protocol::DslValue)>| protocol::DslValue::object(entries.into_iter().map(|(key, value)| (key.to_string(), value)));
-    let text = |value: &str| protocol::DslValue::String(value.to_string());
-    let empty_model = || object(vec![("schema", text("spatial.model")), ("revision", protocol::DslValue::uint(1)), ("objects", protocol::DslValue::Array(Vec::new()))]);
-    let models: Vec<protocol::DslValue> = CadPaneId::all().into_iter().map(|pane| object(vec![("id", text(pane.model_definition_id())), ("model", empty_model())])).collect();
+pub fn export_spatial_json(_envelope: &CadPlayView, mode: &str, pane: Option<CadPaneId>) -> Result<semio_framework_value::DslValue, Fault> {
+    let object = |entries: Vec<(&str, semio_framework_value::DslValue)>| semio_framework_value::DslValue::object(entries.into_iter().map(|(key, value)| (key.to_string(), value)));
+    let text = |value: &str| semio_framework_value::DslValue::String(value.to_string());
+    let empty_model = || object(vec![("schema", text("spatial.model")), ("revision", semio_framework_value::DslValue::uint(1)), ("objects", semio_framework_value::DslValue::Array(Vec::new()))]);
+    let models: Vec<semio_framework_value::DslValue> = CadPaneId::all().into_iter().map(|pane| object(vec![("id", text(pane.model_definition_id())), ("model", empty_model())])).collect();
     Ok(match mode {
         "selected" => {
             let pane = pane.ok_or_else(|| Fault::from("cad.window.invalid: selected export requires an addressed CAD pane"))?;
             let model = empty_model();
             let model_space =
-                object(vec![("schema", text("spatial.modelspace")), ("revision", protocol::DslValue::uint(1)), ("models", protocol::DslValue::Array(vec![object(vec![("id", text(pane.model_definition_id())), ("model", model.clone())])]))]);
+                object(vec![("schema", text("spatial.modelspace")), ("revision", semio_framework_value::DslValue::uint(1)), ("models", semio_framework_value::DslValue::Array(vec![object(vec![("id", text(pane.model_definition_id())), ("model", model.clone())])]))]);
             object(vec![("model", model), ("modelSpace", model_space)])
         }
         "current" => {
             let pane = pane.ok_or_else(|| Fault::from("cad.window.invalid: current export requires an addressed CAD pane"))?;
-            object(vec![("schema", text("spatial.model")), ("revision", protocol::DslValue::uint(1)), ("modelDefinitionId", text(pane.model_definition_id())), ("objects", protocol::DslValue::Array(Vec::new()))])
+            object(vec![("schema", text("spatial.model")), ("revision", semio_framework_value::DslValue::uint(1)), ("modelDefinitionId", text(pane.model_definition_id())), ("objects", semio_framework_value::DslValue::Array(Vec::new()))])
         }
-        _ => object(vec![("schema", text("spatial.modelspace")), ("revision", protocol::DslValue::uint(1)), ("models", protocol::DslValue::Array(models))]),
+        _ => object(vec![("schema", text("spatial.modelspace")), ("revision", semio_framework_value::DslValue::uint(1)), ("models", semio_framework_value::DslValue::Array(models))]),
     })
 }
 
@@ -680,7 +679,7 @@ pub fn reset_document_effect(scene: &CadSnapshot) -> Effect {
     // 🪪️ An edit-free history log, never a throwaway `create_document_envelope`: an envelope dropped
     // without its bounded retirement authority traps (`terminal shell reached Drop …`). The host
     // re-stamps the log's identity with the live store's before archive hydration.
-    let spr = semio_framework_plugin::resolve_ready(store::empty_document_spr(&scene.id, &scene.schema));
+    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr(&scene.id, &scene.schema));
     Effect::LoadDocument { pack, spr }
 }
 
@@ -692,15 +691,15 @@ pub fn reset_document_effect(scene: &CadSnapshot) -> Effect {
 /// fields live inside composed `s.stdio.semio.model` CHILD documents now, whose own mutations are
 /// dispatched against that child directly (no seam for that from here yet; see
 /// `patch_objects_mutations`'s doc comment). Documented no-op.
-pub fn object_field_mutation(_pane: CadPaneId, _object_id: &str, _field: &str, _value: Option<&protocol::DslValue>) -> Option<CadMutation> {
+pub fn object_field_mutation(_pane: CadPaneId, _object_id: &str, _field: &str, _value: Option<&semio_framework_value::DslValue>) -> Option<CadMutation> {
     None
 }
 
-pub fn resolve_number_edit(current: f64, value: Option<&protocol::DslValue>, delta: Option<&protocol::DslValue>) -> Option<f64> {
-    if let Some(absolute) = value.and_then(protocol::DslValue::as_f64) {
+pub fn resolve_number_edit(current: f64, value: Option<&semio_framework_value::DslValue>, delta: Option<&semio_framework_value::DslValue>) -> Option<f64> {
+    if let Some(absolute) = value.and_then(semio_framework_value::DslValue::as_f64) {
         return Some(absolute);
     }
-    delta.and_then(protocol::DslValue::as_f64).map(|delta| current + delta)
+    delta.and_then(semio_framework_value::DslValue::as_f64).map(|delta| current + delta)
 }
 
 pub fn axis3_index(field: &str, base: &str) -> Option<usize> {
@@ -739,7 +738,7 @@ pub fn quat_normalize(q: [f64; 4]) -> [f64; 4] {
 /// `locked`) have no narrow verb of their own — the object is RE-DECLARED at its exact slot as a
 /// `delete-object` + `create-object` pair, which lands as one gesture (one `Emit`, one undo step)
 /// and inverts correctly because each half carries its own inverse.
-pub fn patch_objects_mutations(document: &CadSnapshot, object_ids: &[String], field: &str, value: Option<&protocol::DslValue>, delta: Option<&protocol::DslValue>) -> Vec<CadMutation> {
+pub fn patch_objects_mutations(document: &CadSnapshot, object_ids: &[String], field: &str, value: Option<&semio_framework_value::DslValue>, delta: Option<&semio_framework_value::DslValue>) -> Vec<CadMutation> {
     let mut mutations = Vec::new();
     for (pane, objects) in cad_objects_by_pane(document, object_ids) {
         if field.starts_with("origin.") {
@@ -787,11 +786,11 @@ pub fn patch_objects_mutations(document: &CadSnapshot, object_ids: &[String], fi
                 let Some(index) = live.iter().position(|candidate| candidate.id == object.id) else { continue };
                 let mut next = object.clone();
                 match field {
-                    "label" => next.label = value.and_then(protocol::DslValue::as_str).map(str::to_string).unwrap_or(next.label),
-                    "typology" => next.typology = value.and_then(protocol::DslValue::as_str).map(str::to_string).unwrap_or(next.typology),
-                    "visible" => next.visible = value.and_then(protocol::DslValue::as_bool).unwrap_or(next.visible),
-                    "hidden" => next.visible = value.and_then(protocol::DslValue::as_bool).map_or(next.visible, |hidden| !hidden),
-                    "locked" => next.locked = value.and_then(protocol::DslValue::as_bool).unwrap_or(next.locked),
+                    "label" => next.label = value.and_then(semio_framework_value::DslValue::as_str).map(str::to_string).unwrap_or(next.label),
+                    "typology" => next.typology = value.and_then(semio_framework_value::DslValue::as_str).map(str::to_string).unwrap_or(next.typology),
+                    "visible" => next.visible = value.and_then(semio_framework_value::DslValue::as_bool).unwrap_or(next.visible),
+                    "hidden" => next.visible = value.and_then(semio_framework_value::DslValue::as_bool).map_or(next.visible, |hidden| !hidden),
+                    "locked" => next.locked = value.and_then(semio_framework_value::DslValue::as_bool).unwrap_or(next.locked),
                     _ => continue,
                 }
                 if next == *object {
@@ -980,10 +979,10 @@ pub fn ids_or_selection(ids: &[String], fallback: &[String]) -> Vec<String> {
 /// `DslValue` shape `object_patch_from_field`/`resolve_number_edit` already expect, dispatching
 /// on the same field-name vocabulary those helpers use (bool fields by name, everything else tried as a
 /// number first, falling back to a string).
-pub fn command_value_json(field: &str, value: &str) -> protocol::DslValue {
+pub fn command_value_json(field: &str, value: &str) -> semio_framework_value::DslValue {
     match field {
-        "hidden" | "locked" => value.parse::<bool>().map_or(protocol::DslValue::Null, protocol::DslValue::Bool),
-        _ => value.parse::<f64>().map_or_else(|_| protocol::DslValue::String(value.into()), protocol::DslValue::float),
+        "hidden" | "locked" => value.parse::<bool>().map_or(semio_framework_value::DslValue::Null, semio_framework_value::DslValue::Bool),
+        _ => value.parse::<f64>().map_or_else(|_| semio_framework_value::DslValue::String(value.into()), semio_framework_value::DslValue::float),
     }
 }
 //#endregion 🔖️Helpers
@@ -1110,41 +1109,41 @@ fn cad_flag_value_required(action: &str, flag: &str) -> Fault {
 
 /// 🌉️ Converts the host shell's declared action id and JSON arguments into cad's closed typed
 /// command vocabulary before the app dispatches through the binary command path.
-fn cad_command_from_action(action: &str, args: Option<&protocol::DslValue>) -> Result<CadCommand, Fault> {
-    let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(protocol::DslValue::as_str).map(str::to_string);
-    let f64_field = |key: &str| args.and_then(|value| value.get(key)).and_then(protocol::DslValue::as_f64);
-    let bool_field = |key: &str| args.and_then(|value| value.get(key)).and_then(protocol::DslValue::as_bool);
-    let str_vec_field = |key: &str| -> Vec<String> { args.and_then(|value| value.get(key)).and_then(|value| protocol::FromValue::from_value(value.clone()).ok()).unwrap_or_default() };
+fn cad_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<CadCommand, Fault> {
+    let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_str).map(str::to_string);
+    let f64_field = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_f64);
+    let bool_field = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_bool);
+    let str_vec_field = |key: &str| -> Vec<String> { args.and_then(|value| value.get(key)).and_then(|value| semio_framework_value::FromValue::from_value(value.clone()).ok()).unwrap_or_default() };
     let value_string = || -> Option<String> {
         args.and_then(|value| value.get("value")).and_then(|value| match value {
-            protocol::DslValue::String(text) => Some(text.clone()),
-            protocol::DslValue::Bool(flag) => Some(flag.to_string()),
-            protocol::DslValue::Number(number) => Some(match number {
-                protocol::Number::UInt(number) => number.to_string(),
-                protocol::Number::Int(number) => number.to_string(),
-                protocol::Number::Float(number) => number.to_string(),
+            semio_framework_value::DslValue::String(text) => Some(text.clone()),
+            semio_framework_value::DslValue::Bool(flag) => Some(flag.to_string()),
+            semio_framework_value::DslValue::Number(number) => Some(match number {
+                semio_framework_value::Number::UInt(number) => number.to_string(),
+                semio_framework_value::Number::Int(number) => number.to_string(),
+                semio_framework_value::Number::Float(number) => number.to_string(),
             }),
             _ => None,
         })
     };
-    let position_axis = |index: usize| args.and_then(|value| value.get("position")).and_then(protocol::DslValue::as_array).and_then(|array| array.get(index)).and_then(protocol::DslValue::as_f64);
+    let position_axis = |index: usize| args.and_then(|value| value.get("position")).and_then(semio_framework_value::DslValue::as_array).and_then(|array| array.get(index)).and_then(semio_framework_value::DslValue::as_f64);
     Ok(match action {
         "setActiveExample" => CadCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: str_field("exampleId").unwrap_or_default() }),
         "setDislocateOption" => CadCommand::SetDislocateOption(set_dislocate_option::SetDislocateOption { pane: str_field("pane"), option: str_field("option").unwrap_or_default(), pressed: bool_field("pressed") }),
         "setNodeSelection" => CadCommand::SetNodeSelection(set_node_selection::SetNodeSelection { node_ids: str_vec_field("nodeIds") }),
-        "setCamera" => CadCommand::SetCamera(set_camera::SetCamera { pane: str_field("surfaceId"), camera: args.and_then(|value| value.get("camera")).and_then(|value| protocol::FromValue::from_value(value.clone()).ok()).unwrap_or_default() }),
+        "setCamera" => CadCommand::SetCamera(set_camera::SetCamera { pane: str_field("surfaceId"), camera: args.and_then(|value| value.get("camera")).and_then(|value| semio_framework_value::FromValue::from_value(value.clone()).ok()).unwrap_or_default() }),
         "setProjection" => CadCommand::SetProjection(set_projection::SetProjection {
             pane: str_field("surfaceId"),
             field: str_field("field"),
-            value_str: args.and_then(|value| value.get("value")).and_then(protocol::DslValue::as_str).map(String::from),
-            value_num: args.and_then(|value| value.get("value")).and_then(protocol::DslValue::as_f64),
+            value_str: args.and_then(|value| value.get("value")).and_then(semio_framework_value::DslValue::as_str).map(String::from),
+            value_num: args.and_then(|value| value.get("value")).and_then(semio_framework_value::DslValue::as_f64),
             param: str_field("param"),
         }),
         "setProjectionParam" => CadCommand::SetProjectionParam(set_projection_param::SetProjectionParam {
             pane: str_field("surfaceId"),
             field: str_field("field"),
-            value_str: args.and_then(|value| value.get("value")).and_then(protocol::DslValue::as_str).map(String::from),
-            value_num: args.and_then(|value| value.get("value")).and_then(protocol::DslValue::as_f64),
+            value_str: args.and_then(|value| value.get("value")).and_then(semio_framework_value::DslValue::as_str).map(String::from),
+            value_num: args.and_then(|value| value.get("value")).and_then(semio_framework_value::DslValue::as_f64),
             param: str_field("param"),
         }),
         "translateSelection" => {
@@ -1173,8 +1172,8 @@ fn cad_command_from_action(action: &str, args: Option<&protocol::DslValue>) -> R
         "importCadFile" => {
             let payload = args.and_then(|value| value.get("payload").or_else(|| value.get("modelSpace"))).cloned().or_else(|| args.cloned());
             let payload = match payload {
-                Some(protocol::DslValue::String(text)) => text,
-                Some(other) => json::to_json_string(&other),
+                Some(semio_framework_value::DslValue::String(text)) => text,
+                Some(other) => semio_framework_pack_json::to_json_string(&other),
                 None => String::new(),
             };
             CadCommand::ImportCadFile(import_cad_file::ImportCadFile { name: str_field("name").unwrap_or_default(), payload })
@@ -1460,7 +1459,7 @@ impl ArtifactCommandWork<EditorApp<CadPlayApp>> for CadRetainedCommandWork {
         cad_retained_extent(command, snapshot, interaction)
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<CadPlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<CadPlayApp>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<CadPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<CadPlayApp>>, Fault> {
         if self.consumed {
             return Err(Fault::from("cad-retained-work-repeated"));
         }
@@ -1562,13 +1561,8 @@ fn cad_config_retained_bytes(config: &CadConfig) -> usize {
         .saturating_add(config.contributions_json.len())
 }
 
-/// 🧺️ `work_items` counts staged edit ROWS (forward + inverse), never mutations: every
-/// `CadConfigMutation` inverts to exactly one `Snapshot` row, so a config gesture is ONE invertible
-/// item (`ArtifactStoreOneItemFootprint::for_one_invertible_item`). Declaring `work_items: 1` here
-/// fail-closed every config gesture (`setReferenceSelection`, `setCamera`, …) inside
-/// `ArtifactStore::fold_batch_item` with `batched item candidate failed its exact fixed fold contract`
-/// (ticket 26/09/15/DEV-CAD-REACT-E2E).
-fn admit_cad_config(config: &CadConfig) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+/// 🧺️ Admits a CAD config against its fixed retained item and byte envelope, answering its retained bytes.
+fn admit_cad_config(config: &CadConfig) -> Result<usize, String> {
     if config.selected_node_ids.len() > CAD_CONFIG_STORE_MAXIMUM_ITEMS {
         return Err("CAD config exceeds its fixed retained item envelope".into());
     }
@@ -1576,53 +1570,25 @@ fn admit_cad_config(config: &CadConfig) -> Result<store::ArtifactStoreOneItemFoo
     if retained_bytes > CAD_CONFIG_STORE_MAXIMUM_BYTES {
         return Err("CAD config exceeds its fixed retained byte envelope".into());
     }
-    Ok(store::ArtifactStoreOneItemFootprint::for_one_invertible_item(retained_bytes))
+    Ok(retained_bytes)
 }
 
 fn admit_cad_config_mutation(mutation: &CadConfigMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-    match mutation {
-        CadConfigMutation::Snapshot { config } => admit_cad_config(config),
-        CadConfigMutation::SetContributions { json } if json.len() <= CAD_CONFIG_STORE_MAXIMUM_BYTES => Ok(store::ArtifactStoreOneItemFootprint::for_one_invertible_item(json.len())),
-        CadConfigMutation::SetContributions { .. } => Err("CAD config mutation exceeds its fixed retained byte envelope".into()),
-    }
+    let retained_bytes = match mutation {
+        CadConfigMutation::Snapshot { config } => admit_cad_config(config)?,
+        CadConfigMutation::SetContributions { json } if json.len() <= CAD_CONFIG_STORE_MAXIMUM_BYTES => json.len(),
+        CadConfigMutation::SetContributions { .. } => return Err("CAD config mutation exceeds its fixed retained byte envelope".into()),
+    };
+    Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))
 }
 
 fn prepare_cad_config(base: &CadConfig, mutation: CadConfigMutation) -> Result<(CadConfig, Vec<CadConfigMutation>, CadConfigMutation), String> {
     admit_cad_config(base)?;
     admit_cad_config_mutation(&mutation)?;
-    let inverse = <CadConfigMutation as protocol::Mutation<CadConfig>>::inverse(&mutation, base);
+    let inverse = <CadConfigMutation as protocol::Mutation<CadConfig>>::inverse(&mutation, base).map_err(semio_framework_value::ValueError::into_message)?;
     let post = <CadConfigMutation as protocol::Mutation<CadConfig>>::diff(&mutation, base).into_parts().0;
     admit_cad_config(&post)?;
     Ok((post, inverse, mutation))
-}
-
-fn cad_config_store_edit(forward: CadConfigMutation, inverse: Vec<CadConfigMutation>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<CadConfigMutation> {
-    let id = format!("cad-config-retained-{}", authority.next_sequence_number());
-    protocol::Edit { line: authority.line_id().map(str::to_owned),
-        id: id.clone(),
-        actor: Some(authority.actor().to_string()),
-        forwards: vec![forward],
-        inverse,
-        mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
-            dependencies: Vec::new(),
-            base_version: authority.base_applied_edit_count() as u64,
-            author_id: Some(protocol::ActorId(authority.actor().to_string())),
-            timestamp: authority.next_clock(),
-            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-            payload_hash: None,
-            semantic_kind: None,
-            label: None,
-            group_id: None,
-            origin: Default::default(),
-            transaction: None,
-        }],
-        description, verb: None,
-        coalesce_key: None,
-        sequence_number: authority.next_sequence_number(),
-        started_at: String::new(),
-        finished_at: None,
-    }
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<CadConfig, CadConfigMutation> for CadConfigStorePreparationFactory {
@@ -1670,7 +1636,7 @@ impl store::ArtifactStoreOneItemPreparation<CadConfig, CadConfigMutation> for Ca
         let mutation = self.mutation.take().ok_or_else(|| "CAD config preparation lost its mutation owner".to_string())?;
         let (post, inverse, forward) = prepare_cad_config(base.get(), mutation)?;
         let authority = self.authority.as_ref().ok_or_else(|| "CAD config preparation lost its Store authority".to_string())?;
-        let edit = cad_config_store_edit(forward, inverse, self.description.take(), authority);
+        let edit = authority.next_edit(forward, inverse);
         let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
         self.prepared = Some(prepared);
@@ -1697,7 +1663,7 @@ impl store::ArtifactStoreOneItemPreparation<CadConfig, CadConfigMutation> for Ca
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -1706,7 +1672,7 @@ impl store::ArtifactStoreOneItemPreparation<CadConfig, CadConfigMutation> for Ca
         }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
-                return Err("CAD config preparation could not return its exact base root".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "CAD config preparation could not return its exact base root"));
             }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -1777,63 +1743,32 @@ fn cad_snapshot_items(snapshot: &CadSnapshot) -> usize {
         .saturating_add(snapshot.structure_classic_model.is_some() as usize)
 }
 
-/// 🧺️ Same fold contract as [`admit_cad_config`]: every `CadMutation` inverts to at most one row
-/// (`🧬️mutations/*/↩️inverse`), so an artifact gesture is one invertible item — forward row plus
-/// inverse row.
-fn admit_cad_snapshot(snapshot: &CadSnapshot) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+/// 🧺️ Admits a CAD Artifact against its fixed retained item and byte envelope, answering its retained bytes.
+fn admit_cad_snapshot(snapshot: &CadSnapshot) -> Result<usize, String> {
     let work_items = cad_snapshot_items(snapshot);
     let retained_bytes = cad_snapshot_retained_bytes(snapshot);
     if work_items > CAD_ARTIFACT_STORE_MAXIMUM_ITEMS || retained_bytes > CAD_ARTIFACT_STORE_MAXIMUM_BYTES {
         return Err("CAD Artifact exceeds its fixed retained preparation envelope".into());
     }
-    Ok(store::ArtifactStoreOneItemFootprint::for_one_invertible_item(retained_bytes))
+    Ok(retained_bytes)
 }
 
 fn admit_cad_artifact_mutation(mutation: &CadMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-    let retained_bytes = json::to_json_string(mutation).len();
+    let retained_bytes = semio_framework_pack_json::to_json_string(mutation).len();
     if retained_bytes > CAD_ARTIFACT_STORE_MAXIMUM_BYTES {
         return Err("CAD Artifact mutation exceeds its fixed retained byte envelope".into());
     }
-    Ok(store::ArtifactStoreOneItemFootprint::for_one_invertible_item(retained_bytes))
+    Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))
 }
 
 fn prepare_cad_artifact(base: &CadSnapshot, mutation: CadMutation) -> Result<(CadSnapshot, Vec<CadMutation>, CadMutation), String> {
     admit_cad_snapshot(base)?;
     admit_cad_artifact_mutation(&mutation)?;
-    let inverse = <CadMutation as protocol::Mutation<CadSnapshot>>::inverse(&mutation, base);
+    let inverse = <CadMutation as protocol::Mutation<CadSnapshot>>::inverse(&mutation, base).map_err(semio_framework_value::ValueError::into_message)?;
     let outcome = <CadMutation as protocol::Mutation<CadSnapshot>>::diff(&mutation, base);
     let post = protocol::MutationDiff::apply(outcome.diff(), base).map_err(|error| error.to_string())?;
     admit_cad_snapshot(&post)?;
     Ok((post, inverse, mutation))
-}
-
-fn cad_artifact_store_edit(forward: CadMutation, inverse: Vec<CadMutation>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<CadMutation> {
-    let id = format!("cad-artifact-retained-{}", authority.next_sequence_number());
-    protocol::Edit { line: authority.line_id().map(str::to_owned),
-        id: id.clone(),
-        actor: Some(authority.actor().to_string()),
-        forwards: vec![forward],
-        inverse,
-        mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
-            dependencies: Vec::new(),
-            base_version: authority.base_applied_edit_count() as u64,
-            author_id: Some(protocol::ActorId(authority.actor().to_string())),
-            timestamp: authority.next_clock(),
-            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-            payload_hash: None,
-            semantic_kind: None,
-            label: None,
-            group_id: None,
-            origin: Default::default(),
-            transaction: None,
-        }],
-        description, verb: None,
-        coalesce_key: None,
-        sequence_number: authority.next_sequence_number(),
-        started_at: String::new(),
-        finished_at: None,
-    }
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<CadSnapshot, CadMutation> for CadArtifactStorePreparationFactory {
@@ -1881,7 +1816,7 @@ impl store::ArtifactStoreOneItemPreparation<CadSnapshot, CadMutation> for CadArt
         let mutation = self.mutation.take().ok_or_else(|| "CAD Artifact preparation lost its mutation owner".to_string())?;
         let (post, inverse, forward) = prepare_cad_artifact(base.get(), mutation)?;
         let authority = self.authority.as_ref().ok_or_else(|| "CAD Artifact preparation lost its Store authority".to_string())?;
-        let edit = cad_artifact_store_edit(forward, inverse, self.description.take(), authority);
+        let edit = authority.next_edit(forward, inverse);
         let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
         self.prepared = Some(prepared);
@@ -1908,7 +1843,7 @@ impl store::ArtifactStoreOneItemPreparation<CadSnapshot, CadMutation> for CadArt
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -1917,7 +1852,7 @@ impl store::ArtifactStoreOneItemPreparation<CadSnapshot, CadMutation> for CadArt
         }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
-                return Err("CAD Artifact preparation could not return its exact base root".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "CAD Artifact preparation could not return its exact base root"));
             }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -2013,9 +1948,12 @@ impl ArtifactEditor for CadPlayApp {
     }
 
     /// 🌱️ See [`crate::cad_genesis_child_pack`].
-    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {
+ Ok((||{
         crate::cad_genesis_child_pack(snapshot, slot, child_id)
-    }
+    
+})())
+}
 
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
         Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
@@ -2221,16 +2159,18 @@ impl ArtifactEditor for CadPlayApp {
             MediaForm::Brep => "import.step",
             _ => "import.obj",
         };
+        let structured;
         let payload = match &media.payload {
-            MediaPayload::Structured { json, .. } => protocol::DslValue::String(json.clone()),
-            MediaPayload::Binary { .. } => return Err(MediaError::Payload(port.to_string(), "geometry:in only accepts a Structured payload today".into())),
+            MediaPayload::Structured { json, .. } => { structured = semio_framework_value::DslValue::String(json.clone()); &structured },
+            MediaPayload::Intrinsic { value, .. } => value,
+            MediaPayload::Binary { .. } => return Err(MediaError::Payload(port.to_string(), "geometry:in requires an intrinsic or structured file payload".into())),
         };
         // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: `import_cad_object_by_extension`
         // now returns a `SemioModelElement` (composed-child shape); `create-object` is retired.
         // Composing the imported element into the Shape pane's `SemioModelSnapshot` CHILD needs a
         // child-dispatch seam on `Emit<CadMutation, _>` that does not exist yet
         // (`🔌️plugin/🦀️.rs` framework-kernel surface, W1-owned). Documented no-op.
-        match crate::standards::v1::subsets::any::io::import_cad_object_by_extension(name, &payload) {
+        match crate::standards::v1::subsets::any::io::import_cad_object_by_extension(name, payload) {
             Some(_element) => Ok(Emit::default()),
             None => Err(MediaError::Payload(port.to_string(), "unrecognized geometry payload".into())),
         }
@@ -2258,8 +2198,8 @@ impl ArtifactEditor for CadPlayApp {
             return Err(MediaError::Payload(port.to_string(), "brep export failed".into()));
         };
         let text = match export.data {
-            protocol::DslValue::String(text) => text,
-            other => json::to_json_string(&other),
+            semio_framework_value::DslValue::String(text) => text,
+            other => semio_framework_pack_json::to_json_string(&other),
         };
         Ok(Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep }, payload: MediaPayload::Structured { schema: "3d.cad".into(), json: base64_codec::base64_standard_encode(text.as_bytes()) } })
     }
@@ -2268,12 +2208,12 @@ impl ArtifactEditor for CadPlayApp {
         command.command_id()
     }
 
-    fn command_from_action(action: &str, args: Option<&protocol::DslValue>) -> Result<CadCommand, Fault> {
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<CadCommand, Fault> {
         cad_command_from_action(action, args)
     }
 
-    fn host_configuration_mutation(action: &str, args: Option<&protocol::DslValue>) -> Result<Option<Self::ConfigMutation>, Fault> {
-        Ok((action == "setContributions").then(|| CadConfigMutation::SetContributions { json: args.and_then(|value| value.get("json")).and_then(protocol::DslValue::as_str).unwrap_or("[]").to_string() }))
+    fn host_configuration_mutation(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Option<Self::ConfigMutation>, Fault> {
+        Ok((action == "setContributions").then(|| CadConfigMutation::SetContributions { json: args.and_then(|value| value.get("json")).and_then(semio_framework_value::DslValue::as_str).unwrap_or("[]").to_string() }))
     }
 
     fn handle(
@@ -2352,8 +2292,8 @@ impl ArtifactEditor for CadPlayApp {
     /// time, and the section is what makes the menu discoverable before the first pick. The
     /// `InteractionView` is available here now (via `context_menu_with_request_context`), so gating is
     /// a UX decision this app can revisit — it is no longer an SDK limitation.
-    fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, _view_state: &ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
-        Menu::of(registry).action("translateSelection").action("rotateSelection").action("scaleSelection").action("duplicateObject").destructive("deleteObject").build()
+    fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, view_state: &ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+        Menu::of(registry, view_state).action("translateSelection").action("rotateSelection").action("scaleSelection").action("duplicateObject").destructive("deleteObject").build()
     }
 }
 //#endregion 🔖️PlayApp

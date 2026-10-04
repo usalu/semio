@@ -16,7 +16,7 @@ use protocol::OpText;
 /// ✂️ Local DSL-only mirror of `SourcingMutation` — every real variant flattened into its own
 /// keyworded record, converted at the `store::OpText` boundary only; `SourcingMutation` itself,
 /// and every consumer matching on it, is completely untouched.
-#[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
 enum SourcingMutationDsl {
     CreateCuratedItem {
         #[dsl(block)]
@@ -34,11 +34,11 @@ enum SourcingMutationDsl {
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
 impl OpText for SourcingMutationDsl {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        dsl::variants_text::parse_op(line)
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        semio_framework_dsl_record::variants_text::parse_op(line)
     }
     fn print_op(&self) -> String {
-        dsl::variants_text::print_op(self)
+        semio_framework_dsl_record::variants_text::print_op(self)
     }
 }
 
@@ -69,7 +69,7 @@ fn sourcing_mutation_from_dsl(mutation: SourcingMutationDsl) -> SourcingMutation
 }
 
 impl OpText for SourcingMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         Ok(sourcing_mutation_from_dsl(<SourcingMutationDsl as OpText>::parse_op(line)?))
     }
 

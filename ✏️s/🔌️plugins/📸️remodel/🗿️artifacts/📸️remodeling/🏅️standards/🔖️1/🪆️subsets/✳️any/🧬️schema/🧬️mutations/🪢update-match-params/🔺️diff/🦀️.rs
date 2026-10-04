@@ -10,7 +10,7 @@ pub fn diff(payload: &super::UpdateMatchParams, base: &RemodelingSnapshot) -> pr
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Match ratio test {} must be finite and within (0, 1].", payload.params.ratio_test), Vec::<String>::new());
     }
     if payload.params == base.params.matching {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Matching params are unchanged.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Matching params are unchanged.");
     }
     let mut params = base.params.clone();
     params.matching = payload.params.clone();

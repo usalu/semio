@@ -1,0 +1,5 @@
+Actual live publication is independently current SourceReady:74 unique mounted rows,72 writes/two noops. All durable row frame hashes/fullbefore-after-inverse/forward-reverse patches agree; actual current bodies equal index5 authored source. The74 JSONL entries exactly match the final roster. All evidence hashes and produced Cargo dual-parser tables agree.
+
+Twenty-two provider frame observations retain history. Three early Pack/Error/Replication manifest frames are publisher-owned predecessors, not final-current bodies; they are explicitly associated with their exact later mounted rows. Other current provider/qualified workspace-key observations remain exact. All48 actual current normal/dev/build/target physical edges resolve the expected canonical package identities, including inherited workspace resolution.
+
+Evidence: 🗑️generated/cargo-workspace-general-transfer/pack-live-publication-1/independent-actual-live-seventy-four-publication-current-1.json. Actual workspace compilation/runtime remains required. Proposal112/264GREEN and this source journal are distinct authorities; no broader deletion or consumer runtime claim follows.

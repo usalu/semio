@@ -1,0 +1,373 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/s/draw/scene/raster",
+  "title": "Resolved Painted and Encoded Image Scene Raster Input",
+  "type": "object",
+  "required": [
+    "width",
+    "height",
+    "origin",
+    "tolerance",
+    "maxPixels",
+    "nodes",
+    "maxSourceBytes",
+    "maxBytes",
+    "maxChunks",
+    "assets"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "width": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 16384
+    },
+    "height": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 16384
+    },
+    "origin": {
+      "$ref": "https://semio.tech/s/draw/geometry/path-raster#/definitions/point"
+    },
+    "tolerance": {
+      "type": "number",
+      "minimum": 0.000001,
+      "maximum": 16
+    },
+    "maxPixels": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 67108864
+    },
+    "nodes": {
+      "type": "array",
+      "maxItems": 1024,
+      "items": {
+        "$ref": "#/definitions/node"
+      }
+    },
+    "maxSourceBytes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 268439552
+    },
+    "maxBytes": {
+      "type": "integer",
+      "minimum": 8,
+      "maximum": 67108864
+    },
+    "maxChunks": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 65536
+    },
+    "assets": {
+      "type": "array",
+      "maxItems": 1024,
+      "items": {
+        "$ref": "#/definitions/asset"
+      }
+    }
+  },
+  "definitions": {
+    "blend": {
+      "enum": [
+        "normal",
+        "multiply",
+        "screen",
+        "overlay",
+        "darken",
+        "lighten",
+        "colorDodge",
+        "colorBurn",
+        "hardLight",
+        "softLight",
+        "difference",
+        "exclusion",
+        "hue",
+        "saturation",
+        "color",
+        "luminosity"
+      ]
+    },
+    "group": {
+      "type": "object",
+      "required": [
+        "id",
+        "opacity",
+        "blendMode"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "blendMode": {
+          "$ref": "#/definitions/blend"
+        }
+      }
+    },
+    "node": {
+      "type": "object",
+      "required": [
+        "id",
+        "groups",
+        "transform",
+        "opacity",
+        "blendMode",
+        "visible",
+        "content"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "groups": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/definitions/group"
+          }
+        },
+        "transform": {
+          "$ref": "https://semio.tech/s/draw/geometry/path-raster#/properties/transform"
+        },
+        "opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "blendMode": {
+          "$ref": "#/definitions/blend"
+        },
+        "visible": {
+          "type": "boolean"
+        },
+        "content": {
+          "oneOf": [
+            {
+              "type": "object",
+              "required": [
+                "kind",
+                "segments",
+                "fillRule",
+                "fill",
+                "stroke"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "path"
+                },
+                "segments": {
+                  "$ref": "https://semio.tech/s/draw/geometry/path-raster#/properties/segments"
+                },
+                "fillRule": {
+                  "$ref": "https://semio.tech/s/draw/geometry/path-raster#/properties/fillRule"
+                },
+                "fill": {
+                  "$ref": "https://semio.tech/s/draw/geometry/path-raster#/properties/fill"
+                },
+                "stroke": {
+                  "$ref": "https://semio.tech/s/draw/geometry/path-raster#/properties/stroke"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "required": [
+                "kind",
+                "image"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "pixels"
+                },
+                "image": {
+                  "type": "object",
+                  "required": [
+                    "width",
+                    "height",
+                    "pixels"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "width": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 16384
+                    },
+                    "height": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 16384
+                    },
+                    "pixels": {
+                      "type": "array",
+                      "maxItems": 67108864,
+                      "items": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 255
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "type": "object",
+              "required": [
+                "kind",
+                "asset",
+                "width",
+                "height"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "image"
+                },
+                "asset": {
+                  "$ref": "#/definitions/asset/properties/id"
+                },
+                "width": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000000000
+                },
+                "height": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000000000
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "asset": {
+      "type": "object",
+      "required": [
+        "id",
+        "mime",
+        "data"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "mime": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "data": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 268439552
+        }
+      }
+    },
+    "progress": {
+      "type": "object",
+      "required": [
+        "phase",
+        "nodes",
+        "totalNodes",
+        "pixels",
+        "assets",
+        "totalAssets",
+        "sourceBytes",
+        "decodes",
+        "decoding",
+        "work",
+        "done"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "phase": {
+          "enum": [
+            "assets",
+            "nodes",
+            "source",
+            "bounds",
+            "path",
+            "image",
+            "compositing",
+            "complete"
+          ]
+        },
+        "nodes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1024
+        },
+        "totalNodes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1024
+        },
+        "pixels": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 67108864
+        },
+        "assets": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1024
+        },
+        "totalAssets": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1024
+        },
+        "sourceBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 268439552
+        },
+        "decodes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1024
+        },
+        "decoding": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "https://semio.tech/framework/pixels/image-decoding#/definitions/progress"
+            }
+          ]
+        },
+        "work": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "done": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

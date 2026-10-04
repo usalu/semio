@@ -1,0 +1,15 @@
+# Store Command Canonical Refusal TDD
+
+The actual current ByteReader returns PackRefusal, while CommandDecodeError accepts only ProtocolError and PackError. This leaves the actual command framing '?' joins uncompilable. The existing Text-to-Pack helper still constructs the retired direct TextRefusal variant.
+
+Three test-only Native laws were mounted before the candidate producer change. They consume the existing language-neutral neutral Pack error and positioned Text corpora, demand all eight authored semantic categories and complete reference messages, exact original message/expectation allocation pointers, zero observed allocations during conversion, actual primitive reader refusal, indexed operation identity and the complete std::error::Error source chain. serde_json independently constructs and compares the authored reference output; the actual allocator observer is the existing Kernel test allocator.
+
+The existing registered @semio-tech/framework-os-kernel:test-native target ran with selector command_decode_canonical_pack_refusal under the real repository Cargo test policy, isolated root target/cache and retained artifact policy. Before the producer change it stopped at 326 compiler diagnostics, with zero executed assertions. The actual three guarded producer regions were then mounted. The same registered replay stopped at 302 compiler diagnostics, with zero executed assertions. These receipts demonstrate a compiler prerequisite improvement, not a genuine assertion RED, a passing Native law, or artifact runtime behavior.
+
+The mounted producer pair is narrowly typed: From<PackRefusal> delegates to the existing ProtocolError conversion, Error::source borrows the original Layout/Operation cause, and text_error_to_pack_error delegates to the actual canonical PackError::from(TextError). No current transport cause is converted into semantic text and no PackError variant or compatibility API is restored. The saved guarded producer script reported three mounted regions and fresh source readback matched each region.
+
+Actual logs are retained under 🗑️generated/root-store-command-canonical-refusal-three-law-native-before.log and 🗑️generated/root-store-command-canonical-refusal-three-law-native-after.log. These historical compiler-only receipts remain unchanged.
+
+## Actual Current Native Closure
+
+After guarded typed test authority joins and the concurrent caller-context prerequisite providers, the same registered owning OS native selector executed all three laws successfully. Nextest e95b1454-218d-4053-b35b-33240f48851f:3selected/3passed,1301outside selection,0.026s assertions,1m44s compilation,2m Nx,exit0. DEBUG output confirms primitive reader and indexed operation cause identity, eight semantic categories with zero measured conversion allocations, and all eight original positioned Text causes. Complete output: `🗑️generated/root-store-command-canonical-refusal-native-after-pure-test-authority-closure.log`. The precise bounded compiler joins are recorded in `📓️current-store-native-test-refusal-closure.md`; this proves these selected conversion laws and this native build only.

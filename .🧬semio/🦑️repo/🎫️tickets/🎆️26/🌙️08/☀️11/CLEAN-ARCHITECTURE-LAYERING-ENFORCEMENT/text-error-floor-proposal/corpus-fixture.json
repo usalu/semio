@@ -1,0 +1,783 @@
+{
+  "cases": [
+    {
+      "id": "invalidValue new",
+      "kind": "invalidValue",
+      "operation": "new",
+      "message": "field.3.native decoding canceled",
+      "span": {
+        "line": 7,
+        "column": 3,
+        "length": 2
+      },
+      "expectedWire": {
+        "kind": "invalidValue",
+        "message": "field.3.native decoding canceled",
+        "span": {
+          "line": 7,
+          "column": 3,
+          "length": 2
+        }
+      },
+      "expectedDisplay": "field.3.native decoding canceled at 7:3"
+    },
+    {
+      "id": "invalidValue expected",
+      "kind": "invalidValue",
+      "operation": "expected",
+      "message": "field.3.native decoding canceled",
+      "span": {
+        "line": 7,
+        "column": 3,
+        "length": 2
+      },
+      "expectedWire": {
+        "kind": "invalidValue",
+        "message": "field.3.native decoding canceled",
+        "span": {
+          "line": 7,
+          "column": 3,
+          "length": 2
+        },
+        "expected": "identifier"
+      },
+      "expectedDisplay": "field.3.native decoding canceled at 7:3"
+    },
+    {
+      "id": "invalidValue fromValueError",
+      "kind": "invalidValue",
+      "operation": "fromValueError",
+      "message": "field.3.native decoding canceled",
+      "span": {
+        "line": 7,
+        "column": 3,
+        "length": 2
+      },
+      "expectedWire": {
+        "kind": "invalidValue",
+        "message": "field.3.native decoding canceled",
+        "span": {
+          "line": 7,
+          "column": 3,
+          "length": 2
+        }
+      },
+      "expectedDisplay": "field.3.native decoding canceled at 7:3"
+    },
+    {
+      "id": "invalidValue fromDiagnostic",
+      "kind": "invalidValue",
+      "operation": "fromDiagnostic",
+      "message": "field.3.native decoding canceled",
+      "span": {
+        "line": 7,
+        "column": 3,
+        "length": 2
+      },
+      "expectedWire": {
+        "kind": "invalidValue",
+        "message": "field.3.native decoding canceled",
+        "span": {
+          "line": 7,
+          "column": 3,
+          "length": 2
+        },
+        "expected": "name or type= or ="
+      },
+      "expectedDisplay": "field.3.native decoding canceled at 7:3"
+    },
+    {
+      "id": "canceled new",
+      "kind": "canceled",
+      "operation": "new",
+      "message": "field.3.native decoding canceled",
+      "span": {
+        "line": 7,
+        "column": 3,
+        "length": 2
+      },
+      "expectedWire": {
+        "kind": "canceled",
+        "message": "field.3.native decoding canceled",
+        "span": {
+          "line": 7,
+          "column": 3,
+          "length": 2
+        }
+      },
+      "expectedDisplay": "field.3.native decoding canceled at 7:3"
+    },
+    {
+      "id": "canceled expected",
+      "kind": "canceled",
+      "operation": "expected",
+      "message": "field.3.native decoding canceled",
+      "span": {
+        "line": 7,
+        "column": 3,
+        "length": 2
+      },
+      "expectedWire": {
+        "kind": "canceled",
+        "message": "field.3.native decoding canceled",
+        "span": {
+          "line": 7,
+          "column": 3,
+          "length": 2
+        },
+        "expected": "identifier"
+      },
+      "expectedDisplay": "field.3.native decoding canceled at 7:3"
+    },
+    {
+      "id": "canceled fromValueError",
+      "kind": "canceled",
+      "operation": "fromValueError",
+      "message": "field.3.native decoding canceled",
+      "span": {
+        "line": 7,
+        "column": 3,
+        "length": 2
+      },
+      "expectedWire": {
+        "kind": "canceled",
+        "message": "field.3.native decoding canceled",
+        "span": {
+          "line": 7,
+          "column": 3,
+          "length": 2
+        }
+      },
+      "expectedDisplay": "field.3.native decoding canceled at 7:3"
+    },
+    {
+      "id": "canceled fromDiagnostic",
+      "kind": "canceled",
+      "operation": "fromDiagnostic",
+      "message": "field.3.native decoding canceled",
+      "span": {
+        "line": 7,
+        "column": 3,
+        "length": 2
+      },
+      "expectedWire": {
+        "kind": "canceled",
+        "message": "field.3.native decoding canceled",
+        "span": {
+          "line": 7,
+          "column": 3,
+          "length": 2
+        },
+        "expected": "name or type= or ="
+      },
+      "expectedDisplay": "field.3.native decoding canceled at 7:3"
+    },
+    {
+      "id": "ownershipLimit new",
+      "kind": "ownershipLimit",
+      "operation": "new",
+      "message": "field.3.native decoding canceled",
+      "span": {
+        "line": 7,
+        "column": 3,
+        "length": 2
+      },
+      "expectedWire": {
+        "kind": "ownershipLimit",
+        "message": "field.3.native decoding canceled",
+        "span": {
+          "line": 7,
+          "column": 3,
+          "length": 2
+        }
+      },
+      "expectedDisplay": "field.3.native decoding canceled at 7:3"
+    },
+    {
+      "id": "ownershipLimit expected",
+      "kind": "ownershipLimit",
+      "operation": "expected",
+      "message": "field.3.native decoding canceled",
+      "span": {
+        "line": 7,
+        "column": 3,
+        "length": 2
+      },
+      "expectedWire": {
+        "kind": "ownershipLimit",
+        "message": "field.3.native decoding canceled",
+        "span": {
+          "line": 7,
+          "column": 3,
+          "length": 2
+        },
+        "expected": "identifier"
+      },
+      "expectedDisplay": "field.3.native decoding canceled at 7:3"
+    },
+    {
+      "id": "ownershipLimit fromValueError",
+      "kind": "ownershipLimit",
+      "operation": "fromValueError",
+      "message": "field.3.native decoding canceled",
+      "span": {
+        "line": 7,
+        "column": 3,
+        "length": 2
+      },
+      "expectedWire": {
+        "kind": "ownershipLimit",
+        "message": "field.3.native decoding canceled",
+        "span": {
+          "line": 7,
+          "column": 3,
+          "length": 2
+        }
+      },
+      "expectedDisplay": "field.3.native decoding canceled at 7:3"
+    },
+    {
+      "id": "ownershipLimit fromDiagnostic",
+      "kind": "ownershipLimit",
+      "operation": "fromDiagnostic",
+      "message": "field.3.native decoding canceled",
+      "span": {
+        "line": 7,
+        "column": 3,
+        "length": 2
+      },
+      "expectedWire": {
+        "kind": "ownershipLimit",
+        "message": "field.3.native decoding canceled",
+        "span": {
+          "line": 7,
+          "column": 3,
+          "length": 2
+        },
+        "expected": "name or type= or ="
+      },
+      "expectedDisplay": "field.3.native decoding canceled at 7:3"
+    },
+    {
+      "id": "allocationFailed new",
+      "kind": "allocationFailed",
+      "operation": "new",
+      "message": "field.3.native decoding canceled",
+      "span": {
+        "line": 7,
+        "column": 3,
+        "length": 2
+      },
+      "expectedWire": {
+        "kind": "allocationFailed",
+        "message": "field.3.native decoding canceled",
+        "span": {
+          "line": 7,
+          "column": 3,
+          "length": 2
+        }
+      },
+      "expectedDisplay": "field.3.native decoding canceled at 7:3"
+    },
+    {
+      "id": "allocationFailed expected",
+      "kind": "allocationFailed",
+      "operation": "expected",
+      "message": "field.3.native decoding canceled",
+      "span": {
+        "line": 7,
+        "column": 3,
+        "length": 2
+      },
+      "expectedWire": {
+        "kind": "allocationFailed",
+        "message": "field.3.native decoding canceled",
+        "span": {
+          "line": 7,
+          "column": 3,
+          "length": 2
+        },
+        "expected": "identifier"
+      },
+      "expectedDisplay": "field.3.native decoding canceled at 7:3"
+    },
+    {
+      "id": "allocationFailed fromValueError",
+      "kind": "allocationFailed",
+      "operation": "fromValueError",
+      "message": "field.3.native decoding canceled",
+      "span": {
+        "line": 7,
+        "column": 3,
+        "length": 2
+      },
+      "expectedWire": {
+        "kind": "allocationFailed",
+        "message": "field.3.native decoding canceled",
+        "span": {
+          "line": 7,
+          "column": 3,
+          "length": 2
+        }
+      },
+      "expectedDisplay": "field.3.native decoding canceled at 7:3"
+    },
+    {
+      "id": "allocationFailed fromDiagnostic",
+      "kind": "allocationFailed",
+      "operation": "fromDiagnostic",
+      "message": "field.3.native decoding canceled",
+      "span": {
+        "line": 7,
+        "column": 3,
+        "length": 2
+      },
+      "expectedWire": {
+        "kind": "allocationFailed",
+        "message": "field.3.native decoding canceled",
+        "span": {
+          "line": 7,
+          "column": 3,
+          "length": 2
+        },
+        "expected": "name or type= or ="
+      },
+      "expectedDisplay": "field.3.native decoding canceled at 7:3"
+    },
+    {
+      "id": "workLimit new",
+      "kind": "workLimit",
+      "operation": "new",
+      "message": "field.3.native decoding canceled",
+      "span": {
+        "line": 7,
+        "column": 3,
+        "length": 2
+      },
+      "expectedWire": {
+        "kind": "workLimit",
+        "message": "field.3.native decoding canceled",
+        "span": {
+          "line": 7,
+          "column": 3,
+          "length": 2
+        }
+      },
+      "expectedDisplay": "field.3.native decoding canceled at 7:3"
+    },
+    {
+      "id": "workLimit expected",
+      "kind": "workLimit",
+      "operation": "expected",
+      "message": "field.3.native decoding canceled",
+      "span": {
+        "line": 7,
+        "column": 3,
+        "length": 2
+      },
+      "expectedWire": {
+        "kind": "workLimit",
+        "message": "field.3.native decoding canceled",
+        "span": {
+          "line": 7,
+          "column": 3,
+          "length": 2
+        },
+        "expected": "identifier"
+      },
+      "expectedDisplay": "field.3.native decoding canceled at 7:3"
+    },
+    {
+      "id": "workLimit fromValueError",
+      "kind": "workLimit",
+      "operation": "fromValueError",
+      "message": "field.3.native decoding canceled",
+      "span": {
+        "line": 7,
+        "column": 3,
+        "length": 2
+      },
+      "expectedWire": {
+        "kind": "workLimit",
+        "message": "field.3.native decoding canceled",
+        "span": {
+          "line": 7,
+          "column": 3,
+          "length": 2
+        }
+      },
+      "expectedDisplay": "field.3.native decoding canceled at 7:3"
+    },
+    {
+      "id": "workLimit fromDiagnostic",
+      "kind": "workLimit",
+      "operation": "fromDiagnostic",
+      "message": "field.3.native decoding canceled",
+      "span": {
+        "line": 7,
+        "column": 3,
+        "length": 2
+      },
+      "expectedWire": {
+        "kind": "workLimit",
+        "message": "field.3.native decoding canceled",
+        "span": {
+          "line": 7,
+          "column": 3,
+          "length": 2
+        },
+        "expected": "name or type= or ="
+      },
+      "expectedDisplay": "field.3.native decoding canceled at 7:3"
+    },
+    {
+      "id": "depthLimit new",
+      "kind": "depthLimit",
+      "operation": "new",
+      "message": "field.3.native decoding canceled",
+      "span": {
+        "line": 7,
+        "column": 3,
+        "length": 2
+      },
+      "expectedWire": {
+        "kind": "depthLimit",
+        "message": "field.3.native decoding canceled",
+        "span": {
+          "line": 7,
+          "column": 3,
+          "length": 2
+        }
+      },
+      "expectedDisplay": "field.3.native decoding canceled at 7:3"
+    },
+    {
+      "id": "depthLimit expected",
+      "kind": "depthLimit",
+      "operation": "expected",
+      "message": "field.3.native decoding canceled",
+      "span": {
+        "line": 7,
+        "column": 3,
+        "length": 2
+      },
+      "expectedWire": {
+        "kind": "depthLimit",
+        "message": "field.3.native decoding canceled",
+        "span": {
+          "line": 7,
+          "column": 3,
+          "length": 2
+        },
+        "expected": "identifier"
+      },
+      "expectedDisplay": "field.3.native decoding canceled at 7:3"
+    },
+    {
+      "id": "depthLimit fromValueError",
+      "kind": "depthLimit",
+      "operation": "fromValueError",
+      "message": "field.3.native decoding canceled",
+      "span": {
+        "line": 7,
+        "column": 3,
+        "length": 2
+      },
+      "expectedWire": {
+        "kind": "depthLimit",
+        "message": "field.3.native decoding canceled",
+        "span": {
+          "line": 7,
+          "column": 3,
+          "length": 2
+        }
+      },
+      "expectedDisplay": "field.3.native decoding canceled at 7:3"
+    },
+    {
+      "id": "depthLimit fromDiagnostic",
+      "kind": "depthLimit",
+      "operation": "fromDiagnostic",
+      "message": "field.3.native decoding canceled",
+      "span": {
+        "line": 7,
+        "column": 3,
+        "length": 2
+      },
+      "expectedWire": {
+        "kind": "depthLimit",
+        "message": "field.3.native decoding canceled",
+        "span": {
+          "line": 7,
+          "column": 3,
+          "length": 2
+        },
+        "expected": "name or type= or ="
+      },
+      "expectedDisplay": "field.3.native decoding canceled at 7:3"
+    },
+    {
+      "id": "unsupportedOwner new",
+      "kind": "unsupportedOwner",
+      "operation": "new",
+      "message": "field.3.native decoding canceled",
+      "span": {
+        "line": 7,
+        "column": 3,
+        "length": 2
+      },
+      "expectedWire": {
+        "kind": "unsupportedOwner",
+        "message": "field.3.native decoding canceled",
+        "span": {
+          "line": 7,
+          "column": 3,
+          "length": 2
+        }
+      },
+      "expectedDisplay": "field.3.native decoding canceled at 7:3"
+    },
+    {
+      "id": "unsupportedOwner expected",
+      "kind": "unsupportedOwner",
+      "operation": "expected",
+      "message": "field.3.native decoding canceled",
+      "span": {
+        "line": 7,
+        "column": 3,
+        "length": 2
+      },
+      "expectedWire": {
+        "kind": "unsupportedOwner",
+        "message": "field.3.native decoding canceled",
+        "span": {
+          "line": 7,
+          "column": 3,
+          "length": 2
+        },
+        "expected": "identifier"
+      },
+      "expectedDisplay": "field.3.native decoding canceled at 7:3"
+    },
+    {
+      "id": "unsupportedOwner fromValueError",
+      "kind": "unsupportedOwner",
+      "operation": "fromValueError",
+      "message": "field.3.native decoding canceled",
+      "span": {
+        "line": 7,
+        "column": 3,
+        "length": 2
+      },
+      "expectedWire": {
+        "kind": "unsupportedOwner",
+        "message": "field.3.native decoding canceled",
+        "span": {
+          "line": 7,
+          "column": 3,
+          "length": 2
+        }
+      },
+      "expectedDisplay": "field.3.native decoding canceled at 7:3"
+    },
+    {
+      "id": "unsupportedOwner fromDiagnostic",
+      "kind": "unsupportedOwner",
+      "operation": "fromDiagnostic",
+      "message": "field.3.native decoding canceled",
+      "span": {
+        "line": 7,
+        "column": 3,
+        "length": 2
+      },
+      "expectedWire": {
+        "kind": "unsupportedOwner",
+        "message": "field.3.native decoding canceled",
+        "span": {
+          "line": 7,
+          "column": 3,
+          "length": 2
+        },
+        "expected": "name or type= or ="
+      },
+      "expectedDisplay": "field.3.native decoding canceled at 7:3"
+    },
+    {
+      "id": "invariantViolated new",
+      "kind": "invariantViolated",
+      "operation": "new",
+      "message": "field.3.native decoding canceled",
+      "span": {
+        "line": 7,
+        "column": 3,
+        "length": 2
+      },
+      "expectedWire": {
+        "kind": "invariantViolated",
+        "message": "field.3.native decoding canceled",
+        "span": {
+          "line": 7,
+          "column": 3,
+          "length": 2
+        }
+      },
+      "expectedDisplay": "field.3.native decoding canceled at 7:3"
+    },
+    {
+      "id": "invariantViolated expected",
+      "kind": "invariantViolated",
+      "operation": "expected",
+      "message": "field.3.native decoding canceled",
+      "span": {
+        "line": 7,
+        "column": 3,
+        "length": 2
+      },
+      "expectedWire": {
+        "kind": "invariantViolated",
+        "message": "field.3.native decoding canceled",
+        "span": {
+          "line": 7,
+          "column": 3,
+          "length": 2
+        },
+        "expected": "identifier"
+      },
+      "expectedDisplay": "field.3.native decoding canceled at 7:3"
+    },
+    {
+      "id": "invariantViolated fromValueError",
+      "kind": "invariantViolated",
+      "operation": "fromValueError",
+      "message": "field.3.native decoding canceled",
+      "span": {
+        "line": 7,
+        "column": 3,
+        "length": 2
+      },
+      "expectedWire": {
+        "kind": "invariantViolated",
+        "message": "field.3.native decoding canceled",
+        "span": {
+          "line": 7,
+          "column": 3,
+          "length": 2
+        }
+      },
+      "expectedDisplay": "field.3.native decoding canceled at 7:3"
+    },
+    {
+      "id": "invariantViolated fromDiagnostic",
+      "kind": "invariantViolated",
+      "operation": "fromDiagnostic",
+      "message": "field.3.native decoding canceled",
+      "span": {
+        "line": 7,
+        "column": 3,
+        "length": 2
+      },
+      "expectedWire": {
+        "kind": "invariantViolated",
+        "message": "field.3.native decoding canceled",
+        "span": {
+          "line": 7,
+          "column": 3,
+          "length": 2
+        },
+        "expected": "name or type= or ="
+      },
+      "expectedDisplay": "field.3.native decoding canceled at 7:3"
+    }
+  ],
+  "wireCases": [
+    {
+      "id": "missing mandatory kind",
+      "input": {
+        "message": "bad",
+        "span": {
+          "line": 1,
+          "column": 2,
+          "length": 3
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "unknown kind",
+      "input": {
+        "kind": "cancelled",
+        "message": "bad",
+        "span": {
+          "line": 1,
+          "column": 2,
+          "length": 3
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "kind is number",
+      "input": {
+        "kind": 3,
+        "message": "bad",
+        "span": {
+          "line": 1,
+          "column": 2,
+          "length": 3
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "negative line",
+      "input": {
+        "kind": "invalidValue",
+        "message": "bad",
+        "span": {
+          "line": -1,
+          "column": 2,
+          "length": 3
+        }
+      },
+      "accepted": false
+    }
+  ],
+  "limits": [
+    {
+      "operation": "bytes",
+      "kind": "ownershipLimit",
+      "expectedSpan": {
+        "line": 1,
+        "column": 1,
+        "length": 0
+      }
+    },
+    {
+      "operation": "depth",
+      "kind": "depthLimit",
+      "expectedSpan": {
+        "line": 7,
+        "column": 3,
+        "length": 0
+      }
+    },
+    {
+      "operation": "tokens",
+      "kind": "workLimit",
+      "expectedSpan": {
+        "line": 7,
+        "column": 3,
+        "length": 0
+      }
+    },
+    {
+      "operation": "nodes",
+      "kind": "workLimit",
+      "expectedSpan": {
+        "line": 7,
+        "column": 3,
+        "length": 0
+      }
+    }
+  ]
+}

@@ -5,7 +5,7 @@
     {"component": {"type": "text", "value": "A", "dataAttributes": {"x": "🌊"}}, "bytes": 6},
     {"component": {"type": "button", "icon": "I", "label": "L"}, "bytes": 2},
     {"component": {"type": "separator"}, "bytes": 0},
-    {"component": {"type": "input", "kind": "number", "value": "1", "placeholder": "P", "commit": "C", "accept": "A"}, "bytes": 4},
+    {"component": {"type": "input", "kind": "number", "value": "1", "placeholder": "P", "commit": "C", "accept": "A", "publicationRevision": "18446744073709551615"}, "bytes": 4},
     {"component": {"type": "select", "value": "v", "items": [{"value": "a", "label": "L"}], "placeholder": "P"}, "bytes": 4},
     {"component": {"type": "toggle", "on": true, "icon": "I", "text": "T"}, "bytes": 2},
     {"component": {"type": "keyValueList", "entries": [{"label": "L", "value": "V"}]}, "bytes": 2},

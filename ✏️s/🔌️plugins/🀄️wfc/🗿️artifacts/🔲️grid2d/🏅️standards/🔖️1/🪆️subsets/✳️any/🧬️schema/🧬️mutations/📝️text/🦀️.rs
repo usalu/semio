@@ -30,7 +30,7 @@ use crate::schema::snapshot::text::{rule_from_dsl, rule_to_dsl, tile_from_dsl, t
 use crate::schema::snapshot::WfcTileMedia2d;
 
 //#region 🔖️OpTextMirror
-#[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
 pub enum Grid2dOperationDsl {
     ChangeSeed {
         seed: u64,
@@ -60,7 +60,7 @@ pub enum Grid2dOperationDsl {
     },
     ChangeTileMedia {
         id: String,
-        media: dsl::DslValue,
+        media: semio_framework_value::DslValue,
     },
     CreateRule {
         #[dsl(block)]
@@ -107,7 +107,7 @@ pub fn operation_to_dsl(operation: &Grid2dMutation) -> Grid2dOperationDsl {
     }
 }
 
-pub fn operation_from_dsl(operation: Grid2dOperationDsl) -> Result<Grid2dMutation, store::TextError> {
+pub fn operation_from_dsl(operation: Grid2dOperationDsl) -> Result<Grid2dMutation, semio_framework_diagnostic::TextError> {
     Ok(match operation {
         Grid2dOperationDsl::ChangeSeed { seed } => Grid2dMutation::ChangeSeed(ChangeSeed { seed }),
         Grid2dOperationDsl::ResizeGrid { width, height } => Grid2dMutation::ResizeGrid(ResizeGrid { width, height }),
@@ -118,8 +118,8 @@ pub fn operation_from_dsl(operation: Grid2dOperationDsl) -> Result<Grid2dMutatio
         Grid2dOperationDsl::ChangeTileWeight { id, weight } => Grid2dMutation::ChangeTileWeight(ChangeTileWeight { id, weight }),
         Grid2dOperationDsl::ChangeTileMedia { id, media } => {
             let media: WfcTileMedia2d = match media {
-                dsl::DslValue::Null => WfcTileMedia2d::default(),
-                other => semio_framework_value::FromValue::from_value(other).map_err(|error| store::TextError::new(format!("invalid tile media: {error}"), store::TextSpan::at(1, 1)))?,
+                semio_framework_value::DslValue::Null => WfcTileMedia2d::default(),
+                other => semio_framework_value::FromValue::from_value(other).map_err(|error| semio_framework_diagnostic::TextError::new(error.kind, format!("invalid tile media: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?,
             };
             Grid2dMutation::ChangeTileMedia(ChangeTileMedia { id, media })
         }
@@ -136,28 +136,28 @@ pub fn operation_from_dsl(operation: Grid2dOperationDsl) -> Result<Grid2dMutatio
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ Handcrafted `OpText` — `dsl::DslOps`/`dsl::DslEnum` emit `DslVariants` only.
 impl protocol::OpText for Grid2dOperationDsl {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{keyword} ");
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = semio_framework_dsl_record::parse(line, &(spec_fn.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?;
+                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown grid2d mutation line '{line}'")))
+        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown grid2d mutation line '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
     }
     fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &(spec_fn.ordinary)(), dsl::JoinMode::Inline)
+        semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline)
     }
 }
 
 /// ⚡️ `Grid2dMutation`'s compact single-line op encoding, bridged through the twin above.
 impl protocol::OpText for Grid2dMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         operation_from_dsl(<Grid2dOperationDsl as protocol::OpText>::parse_op(line)?)
     }
 
@@ -168,7 +168,7 @@ impl protocol::OpText for Grid2dMutation {
 //#endregion 🔖️HandcraftedOpCodecs
 
 /// 📖️ Parses one `.wfcgrid2d` mutation line.
-pub fn parse_op(line: &str) -> Result<Grid2dMutation, store::TextError> {
+pub fn parse_op(line: &str) -> Result<Grid2dMutation, semio_framework_diagnostic::TextError> {
     <Grid2dMutation as protocol::OpText>::parse_op(line)
 }
 

@@ -41,37 +41,37 @@ message ChangeSiteNorthAxis {
   double new_north_axis_deg = 1;
 }
 
-message ChangeGroundTemperatureBuildingSurface {
+message ChangeGroundBuilding {
   uint32 month = 1;
   double new_temperature_c = 2;
 }
 
-message ChangeGroundTemperatureShallow {
+message ChangeGroundShallow {
   uint32 month = 1;
   double new_temperature_c = 2;
 }
 
-message ChangeGroundTemperatureDeep {
+message ChangeGroundDeep {
   double new_temperature_c = 1;
 }
 
-message ChangeRunPeriodStartMonth {
+message ChangeRunStartMonth {
   uint32 new_start_month = 1;
 }
 
-message ChangeRunPeriodStartDay {
+message ChangeRunStartDay {
   uint32 new_start_day = 1;
 }
 
-message ChangeRunPeriodEndMonth {
+message ChangeRunEndMonth {
   uint32 new_end_month = 1;
 }
 
-message ChangeRunPeriodEndDay {
+message ChangeRunEndDay {
   uint32 new_end_day = 1;
 }
 
-message ChangeRunPeriodYear {
+message ChangeRunYear {
   uint32 new_year = 1;
 }
 
@@ -1645,14 +1645,14 @@ message EnergyModelMutation {
     ChangeSiteElevation change_site_elevation = 926;
     ChangeSiteTimeZone change_site_time_zone = 927;
     ChangeSiteNorthAxis change_site_north_axis = 928;
-    ChangeGroundTemperatureBuildingSurface change_ground_temperature_building_surface = 929;
-    ChangeGroundTemperatureShallow change_ground_temperature_shallow = 930;
-    ChangeGroundTemperatureDeep change_ground_temperature_deep = 931;
-    ChangeRunPeriodStartMonth change_run_period_start_month = 932;
-    ChangeRunPeriodStartDay change_run_period_start_day = 933;
-    ChangeRunPeriodEndMonth change_run_period_end_month = 934;
-    ChangeRunPeriodEndDay change_run_period_end_day = 935;
-    ChangeRunPeriodYear change_run_period_year = 936;
+    ChangeGroundBuilding change_ground_building = 929;
+    ChangeGroundShallow change_ground_shallow = 930;
+    ChangeGroundDeep change_ground_deep = 931;
+    ChangeRunStartMonth change_run_start_month = 932;
+    ChangeRunStartDay change_run_start_day = 933;
+    ChangeRunEndMonth change_run_end_month = 934;
+    ChangeRunEndDay change_run_end_day = 935;
+    ChangeRunYear change_run_year = 936;
     ReplaceAirflowNetwork replace_airflow_network = 6;
     AddOutputVariable add_output_variable = 7;
     RemoveOutputVariable remove_output_variable = 8;

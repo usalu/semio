@@ -116,10 +116,10 @@ fn select_and_hover_effects_carry_the_framework_wire_contract() {
     };
     assert_eq!(action_id, semio_framework::INTERACTION_SELECT_ACTION_ID);
     let args = args.expect("select args");
-    assert_eq!(args.get("domainId").and_then(dsl::DslValue::as_str), Some(FEM2D_INTERACTION_DOMAIN));
-    assert_eq!(args.get("merge").and_then(dsl::DslValue::as_str), Some("additive"));
-    assert_eq!(args.get("method").and_then(dsl::DslValue::as_str), Some("pick"));
-    let raw = args.get("targets").and_then(dsl::DslValue::as_str).expect("targets json");
+    assert_eq!(args.get("domainId").and_then(semio_framework_value::DslValue::as_str), Some(FEM2D_INTERACTION_DOMAIN));
+    assert_eq!(args.get("merge").and_then(semio_framework_value::DslValue::as_str), Some("additive"));
+    assert_eq!(args.get("method").and_then(semio_framework_value::DslValue::as_str), Some("pick"));
+    let raw = args.get("targets").and_then(semio_framework_value::DslValue::as_str).expect("targets json");
     assert!(raw.contains("\"granularity\":\"node\"") && raw.contains("\"id\":\"n1\""), "targets is a JSON-encoded Vec<InteractionTarget>: {raw}");
 
     let Effect::ReplayShellCommand { action_id, args } = interaction_hover_effect(&targets) else {
@@ -127,11 +127,11 @@ fn select_and_hover_effects_carry_the_framework_wire_contract() {
     };
     assert_eq!(action_id, semio_framework::INTERACTION_HOVER_ACTION_ID);
     let args = args.expect("hover args");
-    assert_eq!(args.get("channel").and_then(dsl::DslValue::as_str), Some(FEM2D_POINTER_CHANNEL));
-    assert!(args.get("targets").and_then(dsl::DslValue::as_str).is_some_and(|raw| raw.contains("\"id\":\"n1\"")));
+    assert_eq!(args.get("channel").and_then(semio_framework_value::DslValue::as_str), Some(FEM2D_POINTER_CHANNEL));
+    assert!(args.get("targets").and_then(semio_framework_value::DslValue::as_str).is_some_and(|raw| raw.contains("\"id\":\"n1\"")));
     let empty: [(&str, String); 0] = [];
     let Effect::ReplayShellCommand { args, .. } = interaction_select_effect(&empty, "replace", "pick") else { panic!("replay") };
-    assert_eq!(args.expect("args").get("targets").and_then(dsl::DslValue::as_str), Some("[]"), "a background click clears with an explicit empty batch");
+    assert_eq!(args.expect("args").get("targets").and_then(semio_framework_value::DslValue::as_str), Some("[]"), "a background click clears with an explicit empty batch");
     let decoded: Vec<protocol::InteractionTarget> = serde_json::from_str(raw).expect("the framework decodes targets with serde_json");
     assert_eq!(decoded.len(), 1);
     assert_eq!(decoded[0].granularity, FEM2D_GRANULARITY_NODE);
@@ -142,13 +142,13 @@ fn select_and_hover_effects_carry_the_framework_wire_contract() {
 fn structure_layers_paint_stable_selected_and_hovered_emphasis() {
     let doc = demo();
     let snapshot = Fem2dInteractionSnapshot { selected_ids: vec!["n1".into(), "e3".into(), "r1".into(), "s1".into(), "l6".into()], hovered_ids: vec!["n2".into()] };
-    let bare = dsl::json::to_string(&dsl::json::Value::Array(model_window::fem2d_structure_layers(&doc, "#38bdf8", "#94a3b8", "#f97316")));
-    let painted = dsl::json::to_string(&dsl::json::Value::Array(model_window::fem2d_structure_layers_with(&doc, "#38bdf8", "#94a3b8", "#f97316", &snapshot)));
+    let bare = semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(model_window::fem2d_structure_layers(&doc, "#38bdf8", "#94a3b8", "#f97316")));
+    let painted = semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(model_window::fem2d_structure_layers_with(&doc, "#38bdf8", "#94a3b8", "#f97316", &snapshot)));
     for id in ["sel-node-n1", "sel-el-e3", "sel-region-r1", "sel-support-s1", "sel-load-l6", "hov-node-n2"] {
         assert!(painted.contains(id), "missing emphasis layer {id}");
         assert!(!bare.contains(id), "the bare structure layers must stay free of interaction state ({id})");
     }
     assert!(painted.contains(model_window::SELECTION_COLOR_2D), "the selected emphasis carries its own colour");
     assert!(painted.contains(model_window::HOVER_COLOR_2D), "the hovered emphasis carries the lighter colour");
-    assert_eq!(dsl::json::to_string(&dsl::json::Value::Array(model_window::fem2d_structure_layers_with(&doc, "#38bdf8", "#94a3b8", "#f97316", &Fem2dInteractionSnapshot::default()))), bare, "an empty interaction snapshot paints exactly the bare layers");
+    assert_eq!(semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(model_window::fem2d_structure_layers_with(&doc, "#38bdf8", "#94a3b8", "#f97316", &Fem2dInteractionSnapshot::default()))), bare, "an empty interaction snapshot paints exactly the bare layers");
 }

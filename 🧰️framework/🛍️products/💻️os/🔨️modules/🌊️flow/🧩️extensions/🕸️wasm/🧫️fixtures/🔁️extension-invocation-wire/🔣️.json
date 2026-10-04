@@ -1,6 +1,6 @@
 {
   "capability": "evaluate",
-  "note": "The `evaluate` capability's WIRE, for every flow extension at once: what a request carries and what one round trip answers. Since 2026-09-12 the answer is a BUDGET ENVELOPE rather than a bare out dictionary — an operator that cannot finish inside the requester's wall allowance answers `done:false` with its progress and is resumed by the next identical request. Language-agnostic: an implementation in any language must answer these rows identically.",
+  "note": "The evaluate capability owns initial input/dependency source once in its existing retained map. Compact resume requests use resume:true, empty inputJson/dependencyJson, and the exact parked operator/node hash/version/cancellation header. Full changed sources are replacement requests. Language-agnostic rows define the ordinary unaddressed wire and retainedAdmission defines bounded addressed admission.",
   "requestFields": [
     "operatorId",
     "inputJson"
@@ -15,6 +15,27 @@
   ],
   "operatorId": "test.echo",
   "outputChannel": "x",
+  "retainedCloseReceipt": {
+    "nodeHash": 8080848,
+    "labelUnit": "original source 😀 雪",
+    "labelRepeats": 128,
+    "maximumUnits": 1,
+    "maximumBytes": 3,
+    "maximumTurns": 100000,
+    "operationId": "sdk-owned-source-close"
+  },
+  "terminalMetadata": {
+    "nodeHash": 8080828,
+    "roundUnits": 1,
+    "maximumTurns": 10000,
+    "rows": [
+      { "name": "ok", "complete": true, "faulted": false },
+      { "name": "empty-output", "complete": true, "faulted": false },
+      { "name": "operator-fault", "complete": true, "faulted": true },
+      { "name": "pending", "complete": false, "faulted": false },
+      { "name": "cancelled", "complete": true, "faulted": false }
+    ]
+  },
   "rows": [
     {
       "name": "ok",
@@ -59,6 +80,63 @@
   "optionalRequestFields": [
     "nodeHash",
     "budget",
-    "wallMicros"
-  ]
+    "wallMicros",
+    "resume"
+  ],
+  "retainedOutput": {
+    "labelUnit": "Größe 😀 雪 \"\\\n",
+    "labelRepeats": 256,
+    "nodeHash": 8080818,
+    "operatorVersion": "output-v1",
+    "cancellationId": "sdk-output-owned",
+    "maximumUnits": 1,
+    "maximumBytes": 3,
+    "ownershipCeiling": 1,
+    "phases": ["output-measure", "output-write", "output-retire", "output-envelope-measure", "output-envelope-write", "output-envelope-retire"]
+  },
+  "retainedAdmission": {
+    "keyUnit": "鍵😀",
+    "keyRepeats": 32,
+    "labelUnit": "Größe 😀 / 雪",
+    "labelRepeats": 128,
+    "maximumUnits": 1,
+    "maximumBytes": 3,
+    "cancelCutoffs": [
+      0,
+      1,
+      31,
+      4096
+    ],
+    "phases": [
+      "input-parse",
+      "input-order",
+      "input-canonical",
+      "dependency-parse",
+      "dependency-order",
+      "dependency-canonical",
+      "input-bind",
+      "identity-canonical",
+      "input-retire"
+    ],
+    "invalidInputText": "{\"nested\":{\"text\":\"Snow 雪\"},\"bad\":[1,2,3]}",
+    "compactResume": {
+      "resume": true,
+      "inputJson": "",
+      "dependencyJson": "",
+      "initialPhase": "input-parse",
+      "cancelPhase": "cancelled",
+      "nodeHash": 8080808,
+      "operatorVersion": "test-v1",
+      "cancellationId": "sdk-input-owned",
+      "replacementPhases": [
+        "retire-invalidated",
+        "restart-admission"
+      ],
+      "replacementVersion": "test-v2",
+      "restartUnits": [
+        0,
+        0
+      ]
+    }
+  }
 }

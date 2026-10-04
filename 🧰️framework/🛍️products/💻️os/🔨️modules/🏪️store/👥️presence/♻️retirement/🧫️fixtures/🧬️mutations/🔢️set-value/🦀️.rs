@@ -2,7 +2,7 @@ use super::{Value, ValueMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -16,9 +16,12 @@ impl crate::os_spr::MutationKind<Value, ValueMutation> for SetValue {
     fn diff(&self, _base: &Value) -> crate::os_spr::MutationOutcome<Value> {
         crate::os_spr::MutationOutcome::new(Value(self.n))
     }
-    fn inverse(&self, base: &Value) -> Vec<ValueMutation> {
+    fn inverse(&self, base: &Value) -> Result<Vec<ValueMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![ValueMutation::SetValue(Self { n: base.0 })]
-    }
+    
+    })())
+}
     fn label(&self) -> crate::LocalizedLabel {
         crate::LocalizedLabel::native("Set Value", "Wert setzen")
     }

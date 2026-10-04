@@ -17,18 +17,18 @@ fn sample_snapshot() -> PresentationSnapshot {
 #[test]
 fn inference_determinism_law() {
     let snapshot = sample_snapshot();
-    assert_eq!(PresentationInference::infer(&snapshot), PresentationInference::infer(&snapshot));
+    assert_eq!(PresentationInference::infer(&snapshot).expect("valid materialized inference fixture"), PresentationInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
 #[test]
 fn inference_default_law() {
-    assert_eq!(PresentationInference::infer(&PresentationSnapshot::default()), PresentationInference::default());
+    assert_eq!(PresentationInference::infer(&PresentationSnapshot::default()).expect("valid materialized inference fixture"), PresentationInference::default());
 }
 
 #[test]
 fn topology_orders_tiles_by_persisted_position() {
     let snapshot = sample_snapshot();
-    let inferred = PresentationInference::infer(&snapshot);
+    let inferred = PresentationInference::infer(&snapshot).expect("valid materialized inference fixture");
     assert_eq!(inferred.topology.topo_order, vec!["tile-1".to_string(), "tile-2".to_string(), "tile-3".to_string()]);
     assert_eq!(inferred.topology.depth.get("tile-2"), Some(&1));
     assert!(inferred.topology.cycle_free);

@@ -7,7 +7,7 @@ use crate::standards::v1::subsets::any::schema::diff::{Block3dAttributesDelta, B
 pub fn diff(payload: &super::AddAttribute, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
     if base.attributes.iter().any(|item| item.key == payload.attribute.key) {
         return protocol::MutationOutcome::new(Block3dDiff::default())
-            .absorb_messages([protocol::MutationMessage::warn("mutation.no-op", format!("{} \"{}\" already present", "attribute", payload.attribute.key)).at(vec![payload.attribute.key.clone()])]);
+            .absorb_messages([protocol::MutationMessage::warning("mutation.no-op", format!("{} \"{}\" already present", "attribute", payload.attribute.key)).at(vec![payload.attribute.key.clone()])]);
     }
     protocol::MutationOutcome::new(Block3dDiff { attributes: Some(Block3dAttributesDelta { added: vec![payload.attribute.clone()], ..Default::default() }), ..Default::default() })
 }

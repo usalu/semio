@@ -56,7 +56,11 @@ async fn surface_context_retains_host_preferences_and_window_identity() {
 #[test]
 fn surface_context_capacity_reuses_closed_windows_without_partial_updates() {
     let mut contexts = SurfaceContexts::default();
-    let mut view = ViewModel { window_instances: vec![semio_framework::ViewWindowInstance { id: "closed".into(), window_kind_id: "graph".into() }], window_id: Some("closed".into()), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let mut view = ViewModel {
+        window_instances: vec![semio_framework::ViewWindowInstance { id: "closed".into(), window_kind_id: "graph".into() }],
+        window_id: Some("closed".into()),
+        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+    };
     for index in 0..semio_framework_ui_contract::UI_RESIDENT_SLOTS {
         contexts.insert(index.to_string(), "graph".into(), view.clone()).unwrap();
     }
@@ -75,7 +79,12 @@ fn surface_context_capacity_reuses_closed_windows_without_partial_updates() {
 #[test]
 fn reserved_section_surfaces_keep_the_unnarrowed_view_and_outlive_their_windows() {
     let mut contexts = SurfaceContexts::default();
-    let view = ViewModel { window_instances: vec![semio_framework::ViewWindowInstance { id: "left".into(), window_kind_id: "graph".into() }], window_id: Some("left".into()), active_tool_id: Some("fill".into()), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let view = ViewModel {
+        window_instances: vec![semio_framework::ViewWindowInstance { id: "left".into(), window_kind_id: "graph".into() }],
+        window_id: Some("left".into()),
+        active_tool_id: Some("fill".into()),
+        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+    };
     contexts.insert("7:left".into(), "graph".into(), view.for_window_instance("left").unwrap()).unwrap();
     for section in UiRefreshSection::ALL {
         contexts.insert(format!("7:{}", section.body_key()), section.body_key().into(), view.clone()).unwrap();

@@ -7,7 +7,7 @@ use framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse durable domain edits and their derived child projections.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, ArtifactSchema)]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.forms.forms")]
 pub struct FormsDiff {
@@ -39,8 +39,8 @@ pub struct FormsDiff {
     pub results: Option<FormsResultsChild>,
 }
 
-impl dsl::FromValue for FormsDiff {
-    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+impl semio_framework_value::FromValue for FormsDiff {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         let mut schema = None;
         let mut id = None;
         let mut version = None;
@@ -49,21 +49,21 @@ impl dsl::FromValue for FormsDiff {
         let mut responses = None;
         let mut structure = None;
         let mut results = None;
-        for (key, value) in dsl::DslValue::into_object(value)? {
+        for (key, value) in semio_framework_value::DslValue::into_object(value)? {
             match key.as_str() {
-                "schema" if schema.is_none() => schema = Some(dsl::FromValue::from_value(value)?),
-                "id" if id.is_none() => id = Some(dsl::FromValue::from_value(value)?),
-                "version" if version.is_none() => version = Some(dsl::FromValue::from_value(value)?),
-                "title" if title.is_none() => title = Some(dsl::FromValue::from_value(value)?),
-                "definition" if definition.is_none() => definition = Some(dsl::FromValue::from_value(value)?),
-                "responses" if responses.is_none() => responses = Some(dsl::FromValue::from_value(value)?),
-                "structure" if structure.is_none() => structure = Some(dsl::FromValue::from_value(value)?),
-                "results" if results.is_none() => results = Some(dsl::FromValue::from_value(value)?),
-                _ => return Err(dsl::ValueError::new(format!("unknown or duplicate Forms field {key}"))),
+                "schema" if schema.is_none() => schema = Some(semio_framework_value::FromValue::from_value(value)?),
+                "id" if id.is_none() => id = Some(semio_framework_value::FromValue::from_value(value)?),
+                "version" if version.is_none() => version = Some(semio_framework_value::FromValue::from_value(value)?),
+                "title" if title.is_none() => title = Some(semio_framework_value::FromValue::from_value(value)?),
+                "definition" if definition.is_none() => definition = Some(semio_framework_value::FromValue::from_value(value)?),
+                "responses" if responses.is_none() => responses = Some(semio_framework_value::FromValue::from_value(value)?),
+                "structure" if structure.is_none() => structure = Some(semio_framework_value::FromValue::from_value(value)?),
+                "results" if results.is_none() => results = Some(semio_framework_value::FromValue::from_value(value)?),
+                _ => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown or duplicate Forms field {key}"))),
             }
         }
         let result = Self { schema, id, version, title, definition, responses, structure, results };
-        result.validate().map_err(dsl::ValueError::new)?;
+        result.validate().map_err(|message| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message))?;
         Ok(result)
     }
 }
@@ -88,14 +88,14 @@ impl FormsDiff {
 
 //#region 🔖️DeltaHelpers
 /// 📋 String-list wrapper so optional list diffs stay scalar across formats.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase", default)]
 pub struct FormsStringList {
     pub values: Vec<String>,
 }
 
 /// 🧩 Identified-collection delta for `steps`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase", default)]
 pub struct FormsStepsDelta {
     pub added: Vec<FormStep>,
@@ -105,7 +105,7 @@ pub struct FormsStepsDelta {
 }
 
 /// 🩹 One patched step entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct FormsStepPatchEntry {
     pub id: String,
@@ -117,7 +117,7 @@ pub struct FormsStepPatchEntry {
 /// replaces a whole bounded sub-collection rather than diffing every element field-by-field), never
 /// a whole-DOCUMENT replacement: every `🧬️mutations/*create-block/*delete-block/*move-block-to-step`
 /// triad leaf builds this by cloning only the touched step(s)' own `blocks` Vec, not `FormsSnapshot`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase", default)]
 pub struct FormsStepPatch {
     pub title: Option<String>,

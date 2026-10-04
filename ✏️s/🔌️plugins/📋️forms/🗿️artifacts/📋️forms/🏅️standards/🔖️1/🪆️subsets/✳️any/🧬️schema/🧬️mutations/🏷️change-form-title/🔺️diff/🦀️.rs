@@ -6,7 +6,7 @@ use crate::{FormsDiff, FormsSnapshot};
 //#region 🔖️Diff
 pub fn diff_change_form_title(payload: &ChangeFormTitle, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
     if payload.new_title == base.title {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Form title already has this value.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Form title already has this value.");
     }
     protocol::MutationOutcome::new(FormsDiff { title: Some(payload.new_title.clone()), ..Default::default() })
 }

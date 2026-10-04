@@ -72,8 +72,8 @@ async fn marquee_drag_commits_on_pointer_up() {
     let emit = pointer_up(view.snapshot, &camera, &model, end.0, end.1, CANVAS_WIDTH, CANVAS_HEIGHT, "replace", false).expect("up");
     let Some(semio_framework::kernel::Effect::ReplayShellCommand { args, .. }) = emit.effects.first() else { panic!("marquee commits through interactionSelect") };
     let args = args.as_ref().expect("args");
-    assert_eq!(args.get("method").and_then(dsl::DslValue::as_str), Some("rectangle"));
-    assert!(args.get("targets").and_then(dsl::DslValue::as_str).is_some_and(|raw| raw.contains("n1") && raw.contains("n2")));
+    assert_eq!(args.get("method").and_then(semio_framework_value::DslValue::as_str), Some("rectangle"));
+    assert!(args.get("targets").and_then(semio_framework_value::DslValue::as_str).is_some_and(|raw| raw.contains("n1") && raw.contains("n2")));
     let _ = (&view, &cfg);
 }
 

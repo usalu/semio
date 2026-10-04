@@ -3,6 +3,19 @@ use std::collections::BTreeMap;
 use crate::value::{DslValue, FromValue, ToValue, ValueError};
 use super::{MutationApplyError, MutationApplyResult};
 
+/// 🗂️ A concrete map owner settles replaced and removed values through its own authority.
+pub trait MapDeltaTarget<V> {
+    fn contains_key(&self,key:&str)->bool;
+    fn set_owned(&mut self,key:String,value:V);
+    fn remove_owned(&mut self,key:&str);
+}
+
+impl<V> MapDeltaTarget<V> for BTreeMap<String,V> {
+    fn contains_key(&self,key:&str)->bool{BTreeMap::contains_key(self,key)}
+    fn set_owned(&mut self,key:String,value:V){self.insert(key,value);}
+    fn remove_owned(&mut self,key:&str){self.remove(key);}
+}
+
 /// 🧭️ Accepted presence of one key in the original base.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum MapPresence { Any, Present, Absent, Never }
@@ -77,7 +90,7 @@ impl<V> MapDelta<V> {
 
 impl<V: Clone> MapDelta<V> {
     /// 🛡️ Validates every original key before changing the first entry.
-    pub fn apply_to(&self, target: &mut BTreeMap<String, V>) -> MutationApplyResult<()> {
+    pub fn apply_to(&self, target: &mut impl MapDeltaTarget<V>) -> MutationApplyResult<()> {
         for (key, entry) in &self.entries {
             if !entry.precondition.accepts(target.contains_key(key)) {
                 let (code, message) = match entry.precondition {
@@ -90,8 +103,8 @@ impl<V: Clone> MapDelta<V> {
         }
         for (key, entry) in &self.entries {
             match &entry.operation {
-                MapEntryOperation::Set(value) => { target.insert(key.clone(), value.clone()); }
-                MapEntryOperation::Remove => { target.remove(key); }
+                MapEntryOperation::Set(value) => { target.set_owned(key.clone(), value.clone()); }
+                MapEntryOperation::Remove => { target.remove_owned(key); }
                 MapEntryOperation::Reject => unreachable!("rejection is checked before any entry is applied"),
             }
         }
@@ -100,12 +113,12 @@ impl<V: Clone> MapDelta<V> {
 }
 
 fn record(value: DslValue, fields: &[&str]) -> Result<BTreeMap<String, DslValue>, ValueError> {
-    let DslValue::Object(values) = value else { return Err(ValueError::new("map delta value must be a record")); };
+    let DslValue::Object(values) = value else { return Err(ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "map delta value must be a record")); };
     let mut result = BTreeMap::new();
     for (key, value) in values {
-        if result.insert(key, value).is_some() { return Err(ValueError::new("duplicate map delta record field")); }
+        if result.insert(key, value).is_some() { return Err(ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "duplicate map delta record field")); }
     }
-    if result.len() != fields.len() || fields.iter().any(|key| !result.contains_key(*key)) { return Err(ValueError::new("map delta record has incorrect fields")); }
+    if result.len() != fields.len() || fields.iter().any(|key| !result.contains_key(*key)) { return Err(ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "map delta record has incorrect fields")); }
     Ok(result)
 }
 
@@ -126,14 +139,14 @@ impl<V: ToValue> ToValue for MapDelta<V> {
 impl<V: FromValue> FromValue for MapDelta<V> {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let mut root = record(value, &["entries"])?;
-        let DslValue::Array(entries) = root.remove("entries").unwrap() else { return Err(ValueError::new("map delta entries must be a list")); };
+        let DslValue::Array(entries) = root.remove("entries").unwrap() else { return Err(ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "map delta entries must be a list")); };
         let mut result = Self::default();
         for value in entries {
             let mut entry = record(value, &["key", "precondition", "operation"])?;
             let key = String::from_value(entry.remove("key").unwrap())?;
             let precondition = match String::from_value(entry.remove("precondition").unwrap())?.as_str() {
                 "any" => MapPresence::Any, "present" => MapPresence::Present, "absent" => MapPresence::Absent, "never" => MapPresence::Never,
-                _ => return Err(ValueError::new("unknown map presence requirement")),
+                _ => return Err(ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "unknown map presence requirement")),
             };
             let raw = entry.remove("operation").unwrap();
             let set = raw.as_object().and_then(|fields| fields.iter().find(|(key, _)| key == "kind").map(|(_, value)| value)).and_then(DslValue::as_str) == Some("set");
@@ -143,10 +156,10 @@ impl<V: FromValue> FromValue for MapDelta<V> {
                 "set" => MapEntryOperation::Set(V::from_value(operation.remove("value").unwrap())?),
                 "remove" => MapEntryOperation::Remove,
                 "reject" => MapEntryOperation::Reject,
-                _ => return Err(ValueError::new("unknown map operation")),
+                _ => return Err(ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "unknown map operation")),
             };
-            if (precondition == MapPresence::Never) != matches!(operation, MapEntryOperation::Reject) { return Err(ValueError::new("unsatisfiable map changes must be explicit rejections")); }
-            if result.entries.insert(key, MapEntryDelta { precondition, operation }).is_some() { return Err(ValueError::new("duplicate map delta key")); }
+            if (precondition == MapPresence::Never) != matches!(operation, MapEntryOperation::Reject) { return Err(ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "unsatisfiable map changes must be explicit rejections")); }
+            if result.entries.insert(key, MapEntryDelta { precondition, operation }).is_some() { return Err(ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "duplicate map delta key")); }
         }
         Ok(result)
     }

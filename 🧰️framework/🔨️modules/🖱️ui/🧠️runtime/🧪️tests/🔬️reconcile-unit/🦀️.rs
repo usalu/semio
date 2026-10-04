@@ -887,6 +887,7 @@ fn tree_window_law_row(section: usize, index: usize) -> crate::TreeNode {
         draggable: None,
         drag_data: None,
         dimmed: None,
+        selected: None,
         window: None,
         granularity: Some(ui_text("object")),
         inline_toolbar: None,
@@ -1076,7 +1077,7 @@ fn census_law_table_row_shaped(index: usize, heavy: bool) -> crate::TreeNode {
     let all_actions = [("folder-open", "openSpace"), ("pencil", "renameSpace"), ("link", "shareSpace"), ("trash-2", "deleteSpace"), ("users", "manageSpace")];
     let mut row_actions = ui_contract::UiFixedList::default();
     for (icon, name) in if heavy { &all_actions[..] } else { &all_actions[..1] } {
-        row_actions.try_push(ui_contract::RowAction { icon: ui_text(icon), label: Some(ui_contract::Label::try_from(*name).expect("bounded fixture label")), verb: ui_text(name), placement: Default::default(), disabled: false }).expect("bounded fixture row action");
+        row_actions.try_push(ui_contract::RowAction { icon: ui_text(icon), label: Some(ui_contract::Label::try_from(*name).expect("bounded fixture label")), verb: ui_text(name), placement: Default::default(), disabled: false, reason: None }).expect("bounded fixture row action");
     }
     let target = ui_contract::RowTarget { scope: ui_text("s.space.home"), version: 1, args, activation: heavy.then(|| ui_text("openSpace")) };
     crate::TreeNode::try_new(&key, ui_contract::Component::TableRow(ui_contract::TableRowProps { cells, row_actions, target: Some(target) })).expect("bounded fixture row")

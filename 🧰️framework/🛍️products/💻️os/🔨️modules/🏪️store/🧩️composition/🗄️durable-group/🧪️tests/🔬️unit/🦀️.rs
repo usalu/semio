@@ -1,5 +1,5 @@
 use super::super::fixture_mutations::demo::{DemoMutation, SetN};
-use super::super::tests::{demo_closable_store_owners, DemoOneItemPreparationFactory, DemoSnapshot};
+use super::super::tests::{DemoOneItemPreparationFactory, DemoSnapshot, demo_closable_store_owners};
 use super::*;
 
 fn fixture() -> serde_json::Value {
@@ -25,14 +25,14 @@ fn revision(value: &str) -> [u8; 32] {
 }
 
 fn reference(value: &serde_json::Value) -> crate::os_io::ArtifactRef {
-    crate::os_pack::json::from_json_str(&serde_json::to_string(value).unwrap()).expect("fixture reference")
+    semio_framework_pack_json::from_json_str(&serde_json::to_string(value).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture reference")
 }
 
 fn member(value: &serde_json::Value) -> DurableOwnedGroupMemberV1 {
     DurableOwnedGroupMemberV1 {
         role: value["role"].as_str().unwrap().into(),
         reference: reference(&value["reference"]),
-        owner: if value["owner"].is_null() { None } else { Some(crate::os_pack::json::from_json_str(&serde_json::to_string(&value["owner"]).unwrap()).expect("fixture owner")) },
+        owner: if value["owner"].is_null() { None } else { Some(semio_framework_pack_json::from_json_str(&serde_json::to_string(&value["owner"]).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture owner")) },
         expected_generation: value["expectedGeneration"].as_u64().unwrap(),
         expected_revision: revision(value["expectedRevisionHex"].as_str().unwrap()),
         recovery_schema: value["recoverySchema"].as_str().unwrap().into(),
@@ -60,7 +60,8 @@ fn prepared_outcome(role: &str, recovery_schema: &str, generation: u64, base_rev
         line: None,
     });
     let edit_id = format!("map-{role}-edit-{ordinal}");
-    let edit = Edit { line: None,
+    let edit = Edit {
+        line: None,
         id: edit_id.clone(),
         actor: Some(actor.clone()),
         forwards: vec![format!("{role}:forward")],
@@ -79,8 +80,8 @@ fn prepared_outcome(role: &str, recovery_schema: &str, generation: u64, base_rev
             origin: Default::default(),
             transaction: None,
         }],
-        description: Some(format!("prepared {role} outcome")), verb: None,
-        coalesce_key: None,
+        description: Some(format!("prepared {role} outcome")),
+        verb: None,
         sequence_number: ordinal as i32 + 10,
         started_at: format!("2026-09-05T00:00:0{ordinal}Z"),
         finished_at: Some(format!("2026-09-05T00:00:1{ordinal}Z")),
@@ -107,7 +108,7 @@ fn decision() -> DurableOwnedThreeMemberDecisionV1 {
     let fixture = fixture();
     let outcomes = outcomes();
     DurableOwnedThreeMemberDecisionV1::seal_fixture(
-        crate::os_pack::json::from_json_str(&serde_json::to_string(&fixture["anchor"]).unwrap()).expect("fixture anchor"),
+        semio_framework_pack_json::from_json_str(&serde_json::to_string(&fixture["anchor"]).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture anchor"),
         member(&fixture["members"]["parent"]),
         member(&fixture["members"]["drawing"]),
         member(&fixture["members"]["value"]),
@@ -141,7 +142,8 @@ fn store_prepared(store: &ArtifactStore<DemoSnapshot, DemoMutation>, ordinal: u6
         line: None,
     });
     let edit_id = format!("map-store-edit-{ordinal}");
-    let edit = Edit { line: None,
+    let edit = Edit {
+        line: None,
         id: edit_id.clone(),
         actor: Some(actor.clone()),
         forwards: vec![DemoMutation::SetN(SetN { n: next })],
@@ -160,8 +162,8 @@ fn store_prepared(store: &ArtifactStore<DemoSnapshot, DemoMutation>, ordinal: u6
             origin: Default::default(),
             transaction: None,
         }],
-        description: Some(format!("durable map member {ordinal}")), verb: None,
-        coalesce_key: None,
+        description: Some(format!("durable map member {ordinal}")),
+        verb: None,
         sequence_number: store.edit_sequence + 1,
         started_at: format!("2026-09-05T00:01:0{ordinal}Z"),
         finished_at: Some(format!("2026-09-05T00:01:1{ordinal}Z")),
@@ -303,7 +305,7 @@ impl DurableOwnedGroupJournalCommitV1 for FakeJournalCommit {
         self.close_started = true;
     }
 
-    fn close_step(&mut self, grant: crate::os_store::ArtifactStoreOneItemGrant) -> Result<crate::os_store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: crate::os_store::ArtifactStoreOneItemGrant) -> Result<crate::os_store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.close_started || !grant.permits_one() {
             return Ok(crate::os_store::SnapshotRetirementStep::Blocked);
         }
@@ -567,20 +569,20 @@ fn durable_store_prepared_outcome_derives_and_verifies_exact_unbound_bytes() {
     assert!(matches!(modified_bytes.verify_inverse::<DslValue, String>(), Err(DurableOwnedGroupDecisionError::InvalidHash)));
 
     let mut reordered = DurableUnboundOneItemOutcomeV1::decode_canonical_pack(&outcome.pack).expect("canonical outcome");
-    let mut reordered_edit: DslValue = crate::os_pack::json::from_json_str(std::str::from_utf8(&reordered.edit_without_group_canonical_json).unwrap()).expect("edit value");
+    let mut reordered_edit: DslValue = semio_framework_pack_json::from_json_str(std::str::from_utf8(&reordered.edit_without_group_canonical_json).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("edit value");
     let DslValue::Object(fields) = &mut reordered_edit else { panic!("edit projection is an object") };
     fields.rotate_left(1);
-    reordered.edit_without_group_canonical_json = crate::os_pack::json::to_json_string(&reordered_edit).into_bytes();
+    reordered.edit_without_group_canonical_json = semio_framework_pack_json::to_json_string(&reordered_edit).into_bytes();
     let reordered_pack = reordered.encode_pack();
     let reordered = DurableStorePreparedOutcomeV1 { recovery_schema: outcome.recovery_schema.clone(), sha256: semio_framework_hash::sha256_hex(&reordered_pack), pack: reordered_pack };
     assert!(matches!(reordered.verify_inverse::<DslValue, String>(), Err(DurableOwnedGroupDecisionError::NonCanonical)));
 
     let mut retagged = DurableUnboundOneItemOutcomeV1::decode_canonical_pack(&outcome.pack).expect("canonical outcome");
-    let mut retagged_edit: DslValue = crate::os_pack::json::from_json_str(std::str::from_utf8(&retagged.edit_without_group_canonical_json).unwrap()).expect("edit value");
+    let mut retagged_edit: DslValue = semio_framework_pack_json::from_json_str(std::str::from_utf8(&retagged.edit_without_group_canonical_json).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("edit value");
     let DslValue::Object(fields) = &mut retagged_edit else { panic!("edit projection is an object") };
     let sequence = fields.iter_mut().find(|(name, _)| name == "sequenceNumber").expect("sequence field");
     sequence.1 = DslValue::float(sequence.1.as_i64().expect("signed sequence") as f64);
-    retagged.edit_without_group_canonical_json = crate::os_pack::json::to_json_string(&retagged_edit).into_bytes();
+    retagged.edit_without_group_canonical_json = semio_framework_pack_json::to_json_string(&retagged_edit).into_bytes();
     let retagged_pack = retagged.encode_pack();
     let retagged = DurableStorePreparedOutcomeV1 { recovery_schema: outcome.recovery_schema, sha256: semio_framework_hash::sha256_hex(&retagged_pack), pack: retagged_pack };
     assert!(retagged.verify_inverse::<DslValue, String>().is_err());
@@ -615,6 +617,27 @@ fn durable_owned_group_decision_rejects_forged_identity_commitment_and_capacity(
     let canonical = decision.canonical_json();
     let unknown = format!("{},\"image\":{{}}}}", canonical.strip_suffix('}').unwrap());
     assert!(DurableOwnedThreeMemberDecisionV1::parse_canonical_json(&unknown).is_err());
+    #[derive(serde::Deserialize)]
+    struct SchemaMember {
+        #[serde(rename = "schema")]
+        _schema: String,
+    }
+    for case in fixture()["carrier"]["jsonMemberCases"].as_array().unwrap() {
+        let source = case["source"].as_str().unwrap();
+        let reference = serde_json::from_str::<SchemaMember>(source).err().unwrap();
+        let category = match reference.classify() {
+            serde_json::error::Category::Data => "data",
+            serde_json::error::Category::Eof => "eof",
+            other => panic!("unexpected JSON reference category {other:?}"),
+        };
+        assert_eq!(category, case["serdeCategory"].as_str().unwrap());
+        let actual = DurableOwnedThreeMemberDecisionV1::parse_canonical_json(source).unwrap_err();
+        match case["expected"].as_str().unwrap() {
+            "non-canonical" => assert_eq!(actual, DurableOwnedGroupDecisionError::NonCanonical),
+            "codec" => assert!(matches!(actual, DurableOwnedGroupDecisionError::Codec(_))),
+            _ => panic!("unknown JSON refusal"),
+        }
+    }
     let duplicate = canonical.replacen("{\"schema\":", "{\"schema\":\"semio.store.durable-owned-three-member-decision.v1\",\"schema\":", 1);
     assert_eq!(DurableOwnedThreeMemberDecisionV1::parse_canonical_json(&duplicate), Err(DurableOwnedGroupDecisionError::NonCanonical));
     let mut stale = DurableOwnedGroupMapFrontiersV1 {
@@ -1067,14 +1090,14 @@ async fn durable_store_group_rejects_foreign_anchor_receipt_before_visibility_an
 fn durable_json_carriers_preserve_numeric_kinds_and_reject_control_and_resource_excess() {
     let fixture = fixture();
     let numeric = DslValue::Object(vec![("u64".into(), DslValue::uint(u64::MAX)), ("i64".into(), DslValue::int(i64::MIN)), ("float".into(), DslValue::float(1.5))]);
-    let encoded = crate::os_pack::json::to_json_string(&numeric);
+    let encoded = semio_framework_pack_json::to_json_string(&numeric);
     for row in fixture["carrier"]["numericCases"].as_array().unwrap() {
         assert!(encoded.contains(row["canonical"].as_str().unwrap()));
     }
     let decoded: DslValue = parse_canonical_json_value(encoded.as_bytes()).expect("typed canonical JSON preserves numeric tags and extrema");
     assert_eq!(decoded, numeric);
     let clock = HybridLogicalTimestamp { actor: u64::MAX, physical_ms: u64::MAX, logical: u64::MAX };
-    let clock_json = crate::os_pack::json::to_json_string(&clock);
+    let clock_json = semio_framework_pack_json::to_json_string(&clock);
     assert!(clock_json.matches("18446744073709551615").count() == 3);
     assert_eq!(parse_canonical_json_value::<HybridLogicalTimestamp>(clock_json.as_bytes()).unwrap(), clock);
 
@@ -1109,4 +1132,84 @@ fn durable_decision_rejects_deflate_expansion_before_document_body_allocation() 
     let framed = crate::os_store::semio_format::wrap_binary(&envelope, &framed_inner);
     assert!(framed.len() <= DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
     assert_eq!(DurableOwnedThreeMemberDecisionV1::decode_canonical_pack(&framed), Err(DurableOwnedGroupDecisionError::NonCanonical));
+}
+
+#[test]
+fn durable_byte_carriers_preserve_octets_under_the_declared_ownership_ceiling() {
+    let fixture = fixture();
+    let contract = &fixture["recoveryOctets"];
+    for binding in contract["bindings"].as_array().unwrap() {
+        let spec = match binding["record"].as_str().unwrap() {
+            "unbound" => DurableUnboundOneItemOutcomeV1::__dsl_spec(),
+            "bound" => DurableBoundOneItemOutcomeV1::__dsl_spec(),
+            _ => panic!("unknown recovery record"),
+        };
+        for key in binding["fields"].as_array().unwrap() {
+            let field = spec.fields.iter().find(|field| field.key == key.as_str().unwrap()).unwrap();
+            assert!(matches!(field.shape, Shape::Bytes64), "{} must retain octets", field.key);
+        }
+    }
+    let options = PackDecodeOptions {
+        verification: PackVerificationLevel::Full,
+        preserve_unknown: false,
+        limits: crate::os_pack::PackLimits {
+            max_file_len: DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64,
+            max_segment_len: DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64,
+            max_symbols: 128,
+            max_depth: 32,
+            max_items: DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64,
+            max_total_alloc: contract["ownershipBytes"].as_u64().unwrap(),
+        },
+    };
+    for case in contract["cases"].as_array().unwrap() {
+        let octets: Vec<u8> = case["octets"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u8).collect();
+        let bytes = octets.repeat(case["repeat"].as_u64().unwrap() as usize);
+        assert_eq!(bytes.len() as u64, case["length"].as_u64().unwrap());
+        assert_eq!(semio_framework_hash::sha256_hex(&bytes), case["sha256"].as_str().unwrap());
+        assert_eq!(semio_framework_value::bytes::encode_base64(&bytes), case["base64"].as_str().unwrap());
+        let unbound = DurableUnboundOneItemOutcomeV1 {
+            schema: DURABLE_OWNED_GROUP_UNBOUND_OUTCOME_SCHEMA_V1.into(),
+            recovery_schema: PARENT_RECOVERY_SCHEMA.into(),
+            operation: 101,
+            base_generation: 7,
+            base_revision: [0; 32],
+            base_applied_edit_count: 1,
+            next_sequence_number: 11,
+            next_clock_canonical_json: bytes.clone(),
+            actor: "owner".into(),
+            edit_without_group_canonical_json: bytes.clone(),
+            post_snapshot_pack: bytes.clone(),
+        };
+        let bound = DurableBoundOneItemOutcomeV1 {
+            schema: DURABLE_OWNED_GROUP_BOUND_OUTCOME_SCHEMA_V1.into(),
+            recovery_schema: PARENT_RECOVERY_SCHEMA.into(),
+            operation: 101,
+            base_generation: 7,
+            base_revision: [0; 32],
+            base_applied_edit_count: 1,
+            next_sequence_number: 11,
+            next_clock_canonical_json: bytes.clone(),
+            actor: "owner".into(),
+            group_id: "0".repeat(64),
+            edit_canonical_json: bytes.clone(),
+            post_snapshot_pack: bytes.clone(),
+            edit_digest: [0; 32],
+            post_generation: 8,
+            post_revision: [0; 32],
+        };
+        for (binding, spec, record) in [(&contract["bindings"][0], DurableUnboundOneItemOutcomeV1::__dsl_spec(), unbound.__dsl_to_record()), (&contract["bindings"][1], DurableBoundOneItemOutcomeV1::__dsl_spec(), bound.__dsl_to_record())] {
+            for key in binding["fields"].as_array().unwrap() {
+                let field = spec.fields.iter().find(|field| field.key == key.as_str().unwrap()).unwrap();
+                assert_eq!(record.get(field.id), Some(&FieldValue::Bytes64(bytes.clone())));
+            }
+        }
+        let unbound_pack = unbound.encode_pack();
+        let bound_pack = bound.encode_pack();
+        let (decoded_unbound, unbound_requested) = crate::test_allocation::observe(|| DurableUnboundOneItemOutcomeV1::decode_pack_with(&unbound_pack, &options).unwrap());
+        let (decoded_bound, bound_requested) = crate::test_allocation::observe(|| DurableBoundOneItemOutcomeV1::decode_pack_with(&bound_pack, &options).unwrap());
+        assert_eq!(decoded_unbound, unbound);
+        assert_eq!(decoded_bound, bound);
+        assert!(unbound_requested <= options.limits.max_total_alloc as usize);
+        assert!(bound_requested <= options.limits.max_total_alloc as usize);
+    }
 }

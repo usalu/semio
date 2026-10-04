@@ -4,11 +4,11 @@ use semio_framework_plugin::ArtifactEditor;
 #[test]
 fn inspection_selection_matches_shared_authoring_vectors() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️authoring.json")).unwrap();
-    let steps: Vec<crate::FormStep> = dsl::json::from_json_str(&fixture["steps"].to_string()).unwrap();
+    let steps: Vec<crate::FormStep> = semio_framework_pack_json::from_json_str(&fixture["steps"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let selected: Vec<String> = serde_json::from_value(case["selected"].clone()).unwrap();
         let actual = inspection_model(&steps, &selected);
-        let oracle: serde_json::Value = serde_json::from_str(&dsl::os_pack::json::to_json_string(&actual)).unwrap();
+        let oracle: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&actual)).unwrap();
         assert_eq!(oracle, case["expected"], "{}", case["name"]);
     }
 }
@@ -16,7 +16,7 @@ fn inspection_selection_matches_shared_authoring_vectors() {
 #[test]
 fn inspection_controls_bind_to_real_typed_commands() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️authoring.json")).unwrap();
-    let steps: Vec<crate::FormStep> = dsl::json::from_json_str(&fixture["steps"].to_string()).unwrap();
+    let steps: Vec<crate::FormStep> = semio_framework_pack_json::from_json_str(&fixture["steps"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let spec = crate::forms_snapshot_with_state(crate::FORMS_DOCUMENT_SCHEMA.into(), "authoring".into(), "1".into(), Some("Authoring".into()), &steps);
     let view = semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     for case in fixture["cases"].as_array().unwrap() {

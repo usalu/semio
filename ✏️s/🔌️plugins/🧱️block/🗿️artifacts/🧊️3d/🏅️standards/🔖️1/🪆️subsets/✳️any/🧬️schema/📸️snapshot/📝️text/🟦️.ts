@@ -49,5 +49,5 @@ export const blockBlock3dSnapshotTextGuardConstant = <T extends string | number 
 //#endregion 🚪️Parsers
 
 export function parseBlock3dSnapshotText(value: unknown, at = "$"): Block3dSnapshotText {
-  return blockBlock3dSnapshotTextGuardObject(value, `${at}`);
+  return blockBlock3dSnapshotTextGuardString(value, at);
 }

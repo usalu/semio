@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format", "owner", "counts", "encodings", "directions", "cases", "requests", "incoming", "diagnostic", "released", "caller", "cancellation", "census"],
+  "properties": {
+    "format": {"const": 1},
+    "owner": {"const": "fixture.neutral-host-fixture.counter"},
+    "counts": {"const": [-2147483648, -1, 0, 1, 2147483647]},
+    "encodings": {"const": ["binary", "text"]},
+    "directions": {"const": ["export", "import"]},
+    "cases": {"const": ["success", "zero", "exact", "short", "cumulative", "start", "materializedInterior"]},
+    "requests": {"const": "fullSystemAllocatorRequests"},
+    "incoming": {"const": "validatedCompleteBorrowedCapacityCensus"},
+    "diagnostic": {"const": "actualCompleteReturnedIoErrorBacking"},
+    "released": {"const": "requestsPlusConsumedIncomingBacking"},
+    "caller": {"const": "sameCallerMonotonicNoRefund"},
+    "cancellation": {"const": "positiveObservedRequestsBeforeMaterializedBoundary"},
+    "census": {
+      "type": "array", "minItems": 4,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["message", "requested", "admitted", "diagnostic", "incoming", "released"],
+        "properties": {
+          "message": {"type": "string"},
+          "requested": {"type": "integer", "minimum": 0},
+          "admitted": {"type": "integer", "minimum": 0},
+          "diagnostic": {"type": "integer", "minimum": 0},
+          "incoming": {"type": "integer", "minimum": 0},
+          "released": {"type": "integer", "minimum": 0}
+        }
+      }
+    }
+  }
+}

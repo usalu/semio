@@ -21,9 +21,12 @@ impl protocol::MutationKind<EpwSnapshot, EpwMutation> for SetRecordField {
     fn diff(&self, base: &EpwSnapshot) -> protocol::MutationOutcome<<EpwMutation as Mutation<EpwSnapshot>>::Diff> {
         agg_diff(&EpwMutation::SetRecordField(self.clone()), base)
     }
-    fn inverse(&self, base: &EpwSnapshot) -> Vec<EpwMutation> {
-        agg_inverse(&EpwMutation::SetRecordField(self.clone()), base)
-    }
+    fn inverse(&self, base: &EpwSnapshot) -> Result<Vec<EpwMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&EpwMutation::SetRecordField(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set record field", "Datensatzfeld setzen")
     }

@@ -89,7 +89,7 @@ async fn publication_requires_a_complete_unique_path_permutation() {
 async fn publication_preserves_explicit_empty_relationship_parts() {
     let fixture = publication_fixture();
     let mut package = sample_package();
-    package.relationships.insert(fixture["emptyRelationshipOwner"].as_str().unwrap().into(), Vec::new());
+    package.relationships.replace_owner(fixture["emptyRelationshipOwner"].as_str().unwrap().into(), Vec::new());
     let bytes = encode_opc(&package).unwrap();
     let mut archive = zip::ZipArchive::new(std::io::Cursor::new(&bytes)).unwrap();
     assert!(archive.by_name(fixture["emptyRelationshipPath"].as_str().unwrap()).is_ok());
@@ -123,7 +123,7 @@ async fn publication_rejects_duplicate_archive_member_names() {
         for offset in offsets {
             bytes[offset..offset + path.len()].copy_from_slice(path.as_bytes());
         }
-        assert!(matches!(decode_opc(&bytes), Err(OpcError::Zip(detail)) if detail.contains("names must be nonempty and unique")), "path={path}");
+        assert!(matches!(decode_opc(&bytes), Err(OpcError::Zip(crate::standards::v2_0::subsets::base::io::ZipError::Malformed(detail))) if detail.contains("names must be nonempty and unique")), "path={path}");
     }
 }
 

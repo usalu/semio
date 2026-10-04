@@ -1,0 +1,200 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "literal",
+    "documentSchema",
+    "nativeEnvelope",
+    "widgetKinds",
+    "chromeKinds",
+    "neuralVariants",
+    "binary64Bits",
+    "signedWords",
+    "work",
+    "tableWidths",
+    "wireText",
+    "recordMapText",
+    "namedFieldText"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string"
+    },
+    "literal": {
+      "type": "string"
+    },
+    "documentSchema": {
+      "const": "flow.host_snapshot"
+    },
+    "nativeEnvelope": {
+      "const": "flow.flow"
+    },
+    "widgetKinds": {
+      "const": [
+        "neuron",
+        "inputSlider",
+        "inputNote",
+        "inputImage",
+        "variable",
+        "outputPreview",
+        "outputAction",
+        "outputExport",
+        "cluster"
+      ]
+    },
+    "chromeKinds": {
+      "const": [
+        "plain",
+        "slider",
+        "note",
+        "image",
+        "variable"
+      ]
+    },
+    "neuralVariants": {
+      "const": [
+        "null",
+        "boolean",
+        "integer",
+        "decimal",
+        "text",
+        "dictionary"
+      ]
+    },
+    "binary64Bits": {
+      "type": "array",
+      "minItems": 9,
+      "items": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{16}$"
+      }
+    },
+    "signedWords": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^-?[0-9]+$"
+      }
+    },
+    "work": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repeat",
+        "interiorBytes",
+        "recursiveDepth"
+      ],
+      "properties": {
+        "repeat": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "interiorBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "recursiveDepth": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "tableWidths": {
+      "type": "object",
+      "minProperties": 37,
+      "maxProperties": 37,
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 1
+      }
+    },
+    "wireText": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "fromPort",
+        "to",
+        "toPort",
+        "canonical"
+      ],
+      "properties": {
+        "from": {
+          "type": "string"
+        },
+        "fromPort": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "toPort": {
+          "type": "string"
+        },
+        "canonical": {
+          "type": "string"
+        }
+      }
+    },
+    "recordMapText": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entries",
+        "canonical"
+      ],
+      "properties": {
+        "canonical": {
+          "type": "string"
+        },
+        "entries": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "key",
+              "field",
+              "literal"
+            ],
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "field": {
+                "type": "string"
+              },
+              "literal": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "namedFieldText": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "value",
+        "canonical"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "boolean"
+        },
+        "canonical": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

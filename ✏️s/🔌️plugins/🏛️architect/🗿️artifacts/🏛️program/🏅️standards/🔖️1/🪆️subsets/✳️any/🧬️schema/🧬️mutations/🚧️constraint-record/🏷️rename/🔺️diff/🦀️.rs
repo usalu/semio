@@ -13,7 +13,7 @@ pub fn diff(payload: &RenameConstraintRecord, base: &ProgramSnapshot) -> protoco
         return protocol::MutationOutcome::error("mutation.target-missing", "No constraint record exists with this id.", [payload.id.0.clone()]);
     };
     if existing.header.name == payload.new_name {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This constraint record already has this name.").at([payload.id.0.clone()])]);
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This constraint record already has this name.").at([payload.id.0.clone()])]);
     }
     let patch = ConstraintRecordPatch { name: Some(payload.new_name.clone()), ..Default::default() };
     protocol::MutationOutcome::new(ProgramDiff { constraints: Some(ProgramConstraintsDelta { patched: vec![ProgramConstraintsPatchEntry { id: payload.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })

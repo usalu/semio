@@ -9,8 +9,7 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct RemoveShape {
-    pub(crate) slide_index: usize,
-    pub(crate) shape_index: usize,
+    pub(crate) address: PptxShapeAddress,
 }
 
 impl protocol::MutationKind<PptxSnapshot, PptxMutation> for RemoveShape {
@@ -19,14 +18,17 @@ impl protocol::MutationKind<PptxSnapshot, PptxMutation> for RemoveShape {
     fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<<PptxMutation as Mutation<PptxSnapshot>>::Diff> {
         agg_diff(&PptxMutation::RemoveShape(self.clone()), base)
     }
-    fn inverse(&self, base: &PptxSnapshot) -> Vec<PptxMutation> {
-        agg_inverse(&PptxMutation::RemoveShape(self.clone()), base)
-    }
+    fn inverse(&self, base: &PptxSnapshot) -> Result<Vec<PptxMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&PptxMutation::RemoveShape(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove shape", "Form entfernen")
     }
     fn target(&self) -> Vec<String> {
-        Vec::new()
+        std::iter::once(self.address.node.part_path.clone()).chain(self.address.node.node_path.iter().map(usize::to_string)).collect()
     }
 }
 //#endregion 🔖️Payload

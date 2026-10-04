@@ -1,6 +1,6 @@
 //! 🎛️ Zone controls: thermostats, humidistats, load prediction, equipment priority.
 
-use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
+use semio_framework_value::{DslValue, FromValue, ToValue, ValueError};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use serde::{Deserialize, Serialize};
 

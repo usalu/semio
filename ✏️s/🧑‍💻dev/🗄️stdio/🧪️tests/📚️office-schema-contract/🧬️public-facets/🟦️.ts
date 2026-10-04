@@ -15,15 +15,12 @@ const opc = { parts: [], contentTypes: { defaults: [], overrides: [] }, relation
 const docx = {
   schema: 's.stdio.docx', opc,
   xmlParts: [{ path: 'custom/document.xml', contentType: 'application/xml', document: {
-    declaration: { version: '1.0', quote: 'single' },
-    prolog: [{ kind: 'comment', text: 'before' }],
-    doctype: { name: 'w:document', prologPosition: 1, declarations: [] },
-    root: { kind: 'element', name: 'w:document', attrs: [], children: [] },
-    epilog: [{ kind: 'processingInstruction', target: 'after', data: 'retained' }],
+    nodes: [], attributes: [], prolog: [], epilog: [], root: null, doctype: null, declaration: null,
   } }],
 } satisfies WithoutEntries<DocxBaseArtifact>;
-const xlsx = { schema: 's.stdio.xlsx', opc, xmlParts: docx.xmlParts } satisfies WithoutEntries<XlsxBaseArtifact>;
-const pptx = { schema: 's.stdio.pptx', opc, xmlParts: docx.xmlParts, presentation: { slides: [] } } satisfies WithoutEntries<PptxBaseArtifact>;
+const treeXmlParts = [{ path: 'custom/document.xml', contentType: 'application/xml', document: { prolog: [], epilog: [] } }];
+const xlsx = { schema: 's.stdio.xlsx', opc, xmlParts: treeXmlParts } satisfies WithoutEntries<XlsxBaseArtifact>;
+const pptx = { schema: 's.stdio.pptx', opc, xmlParts: treeXmlParts } satisfies WithoutEntries<PptxBaseArtifact>;
 
 /** 🧪️ Materialized public artifacts accepted identically by every ECMA-376 subset facet. */
 export const officeArtifactFacetTypeProof: readonly [DocxStrictArtifact, DocxTransitionalArtifact, XlsxStrictArtifact, XlsxTransitionalArtifact, PptxStrictArtifact, PptxTransitionalArtifact] = [docx, docx, xlsx, xlsx, pptx, pptx];

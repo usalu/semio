@@ -4,7 +4,10 @@ use crate::standards::v1::subsets::any::schema::mutations::{delete_combination, 
 use crate::Fem2dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &CreateCombination, _base: &Fem2dSnapshot) -> Vec<Fem2dMutation> {
+pub fn inverse(payload: &CreateCombination, _base: &Fem2dSnapshot) -> Result<Vec<Fem2dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![Fem2dMutation::DeleteCombination(delete_combination::DeleteCombination { id: payload.combination.id.clone() })]
+
+    })())
 }
 //#endregion 🔖️Inverse

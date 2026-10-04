@@ -19,7 +19,7 @@ async fn unconfirmed_delete_emits_the_confirm_dialog_and_never_the_command() {
         other => panic!("expected OpenDialog, got {other:?}"),
     };
     assert_eq!(dialog_id, "deleteSpace");
-    let args_value: pack::JsonValue = pack::json_from_dsl_value(&args.expect("pre-seeded args"));
+    let args_value: semio_framework_pack_json::Value = semio_framework_pack_json::from_dsl_value(&args.expect("pre-seeded args"));
     assert_eq!(args_value["spaceId"], "sp-1");
     assert_eq!(args_value["confirmed"], true);
     assert!(!emit.effects.iter().any(|e| matches!(e, Effect::ReplayShellCommand { .. })), "the confirm dialog must be emitted BEFORE any command");
@@ -37,7 +37,7 @@ async fn confirmed_delete_emits_the_replay_shell_command() {
         })
         .expect("a ReplayShellCommand effect");
     assert_eq!(action_id, "os.directory.delete-space");
-    let args_value: pack::JsonValue = pack::json_from_dsl_value(&args.expect("args"));
+    let args_value: semio_framework_pack_json::Value = semio_framework_pack_json::from_dsl_value(&args.expect("args"));
     assert_eq!(args_value["spaceId"], "sp-1");
     assert!(!emit.effects.iter().any(|e| matches!(e, Effect::OpenDialog { .. })), "a confirmed dispatch never re-opens the dialog");
 }

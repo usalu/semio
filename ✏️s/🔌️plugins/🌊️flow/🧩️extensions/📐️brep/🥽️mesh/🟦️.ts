@@ -1,6 +1,8 @@
 /** 🥽️ Portable indexed-polygon contract and geometric analysis. */
 export type MeshPoint = [number, number, number];
-export interface PolygonMesh { vertices: MeshPoint[]; faces: number[][] }
+export type MeshAttributeValue = null | boolean | number | string | MeshAttributeValue[] | { [key: string]: MeshAttributeValue };
+export interface MeshAttribute { domain: "vertex" | "corner" | "face" | "edge"; semantic: "normal" | "uv" | "color" | "material" | "custom"; interpolation: "linear" | "nearest" | "constant"; values: MeshAttributeValue[]; indices?: number[] }
+export interface PolygonMesh { vertices: MeshPoint[]; faces: number[][]; attributes?: Record<string, MeshAttribute>; materials?: Record<string, Record<string, MeshAttributeValue>>; textures?: Record<string, { mime: string; bytes: number[] }> }
 export interface MeshAnalysis { vertices: number; faces: number; edges: number; triangles: number; boundaryEdges: number; nonManifoldEdges: number; inconsistentEdges: number; degenerateTriangles: number; area: number; volume?: number; minimum: MeshPoint; maximum: MeshPoint }
 const sub = (a: MeshPoint, b: MeshPoint): MeshPoint => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
 const cross = (a: MeshPoint, b: MeshPoint): MeshPoint => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
@@ -10,7 +12,7 @@ const dot = (a: MeshPoint, b: MeshPoint) => a.reduce((sum, value, axis) => sum +
 export function parsePolygonMesh(text: string): PolygonMesh {
   if (text.length > 16_000_000) throw new Error("mesh input exceeds 16 MB");
   const mesh = JSON.parse(text) as PolygonMesh;
-  if (!mesh || Object.keys(mesh).some(key => key !== "vertices" && key !== "faces")) throw new Error("unknown mesh field");
+  if (!mesh || Object.keys(mesh).some(key => !["vertices", "faces", "attributes", "materials", "textures"].includes(key))) throw new Error("unknown mesh field");
   if (!Array.isArray(mesh.vertices) || mesh.vertices.length < 3 || mesh.vertices.length > 100_000 || !Array.isArray(mesh.faces) || !mesh.faces.length || mesh.faces.length > 100_000) throw new Error("invalid mesh size");
   for (const point of mesh.vertices) if (!Array.isArray(point) || point.length !== 3 || point.some(value => typeof value !== "number" || !Number.isFinite(Math.fround(value)))) throw new Error("vertex must have three finite coordinates");
   let corners = 0;
@@ -19,7 +21,55 @@ export function parsePolygonMesh(text: string): PolygonMesh {
     corners += face.length;
     if (corners > 600_000) throw new Error("mesh exceeds 600000 polygon corners");
   }
+  validateMeshAttributes(mesh, corners);
   return mesh;
+}
+
+/** 🎨️ Checks declared domains, finite interpolation values and owned material/texture references. */
+function validateMeshAttributes(mesh: PolygonMesh, corners: number): void {
+  const record = (value: unknown): value is Record<string, unknown> => !!value && typeof value === "object" && !Array.isArray(value);
+  const entries = <T>(value: Record<string, T> | undefined, limit: number): [string, T][] => {
+    if (value === undefined) return [];
+    if (!record(value)) throw new Error("mesh channel declarations must be objects");
+    const result = Object.entries(value);
+    if (result.length > limit || result.some(([name]) => !name.length || name.length > 256 || [...name].length > 128)) throw new Error("mesh channel declaration limit exceeded");
+    return result;
+  };
+  const finite = (value: unknown): value is number => typeof value === "number" && Number.isFinite(Math.fround(value));
+  const numeric = (value: unknown): value is number | number[] => finite(value) || (Array.isArray(value) && value.length > 0 && value.length <= 16 && value.every(finite));
+  const tuple = (value: unknown, width: number): value is number[] => Array.isArray(value) && value.length === width && value.every(finite);
+  let textureBytes = 0;
+  for (const [, texture] of entries(mesh.textures, 256)) {
+    if (!record(texture) || Object.keys(texture).some(key => key !== "mime" && key !== "bytes") || typeof texture.mime !== "string" || !texture.mime.length || (texture.mime.length > 256 || [...texture.mime].length > 128) || !Array.isArray(texture.bytes) || texture.bytes.length > 16_000_000 || texture.bytes.some(value => !Number.isInteger(value) || value < 0 || value > 255)) throw new Error("invalid owned mesh texture");
+    textureBytes += texture.bytes.length; if (textureBytes > 16_000_000) throw new Error("owned mesh textures exceed 16 MB");
+  }
+  for (const [, material] of entries(mesh.materials, 10_000)) {
+    if (!record(material)) throw new Error("invalid owned mesh material");
+    if (material.baseColor !== undefined && (!tuple(material.baseColor, 4) || material.baseColor.some(value => value < 0 || value > 1))) throw new Error("invalid material base color");
+    for (const field of ["metallic", "roughness", "occlusionStrength"]) if (material[field] !== undefined && (!finite(material[field]) || (material[field] as number) < 0 || (material[field] as number) > 1)) throw new Error("invalid material coefficient");
+    if (material.alphaCutoff !== undefined && (!finite(material.alphaCutoff) || material.alphaCutoff < 0)) throw new Error("invalid material alpha cutoff");
+    if (material.emissive !== undefined && (!tuple(material.emissive, 3) || material.emissive.some(value => value < 0))) throw new Error("invalid material emissive");
+    if (material.alphaMode !== undefined && !["OPAQUE", "MASK", "BLEND"].includes(material.alphaMode as string)) throw new Error("invalid material alpha mode");
+    if (material.normalScale !== undefined && !(finite(material.normalScale) || Array.isArray(material.normalScale) && material.normalScale.length === 2 && material.normalScale.every(finite))) throw new Error("invalid material normal scale");
+    if (material.textureCoordinates !== undefined && (!record(material.textureCoordinates) || Object.entries(material.textureCoordinates).some(([field,set]) => !["baseColorTexture","metallicRoughnessTexture","normalTexture","occlusionTexture","emissiveTexture"].includes(field) || !Number.isInteger(set) || (set as number)<0 || (set as number)>63))) throw new Error("invalid material UV selection");
+    if (material.textureSamplers !== undefined && (!record(material.textureSamplers) || Object.entries(material.textureSamplers).some(([field,sampler])=>!["baseColorTexture","metallicRoughnessTexture","normalTexture","occlusionTexture","emissiveTexture"].includes(field) || !record(sampler) || Object.entries(sampler).some(([field,value])=>!({wrapS:[33071,33648,10497],wrapT:[33071,33648,10497],magFilter:[9728,9729],minFilter:[9728,9729,9984,9985,9986,9987]} as Record<string,number[]>)[field]?.includes(value as number))))) throw new Error("invalid material texture sampler");
+    if (material.doubleSided !== undefined && typeof material.doubleSided !== "boolean") throw new Error("invalid material sidedness");
+    for (const [field, value] of Object.entries(material)) if (field.endsWith("Texture") && (typeof value !== "string" || !mesh.textures || !Object.hasOwn(mesh.textures, value))) throw new Error("undefined mesh material texture");
+  }
+  for (const [name, attribute] of entries(mesh.attributes, 64)) {
+    if (!record(attribute) || Object.keys(attribute).some(key => !["domain", "semantic", "interpolation", "values", "indices"].includes(key)) || !["vertex", "corner", "face", "edge"].includes(attribute.domain) || !["normal", "uv", "color", "material", "custom"].includes(attribute.semantic) || !["linear", "nearest", "constant"].includes(attribute.interpolation) || !Array.isArray(attribute.values)) throw new Error("invalid mesh attribute declaration");
+    const length = attribute.domain === "vertex" ? mesh.vertices.length : attribute.domain === "face" ? mesh.faces.length : corners;
+    if (attribute.values.length > 600_000 || (attribute.indices === undefined ? attribute.values.length !== length : !Array.isArray(attribute.indices) || attribute.indices.length !== length || attribute.indices.some(index => !Number.isInteger(index) || index < 0 || index >= attribute.values.length))) throw new Error("mesh attribute cardinality does not match its domain");
+    if (attribute.interpolation === "linear") {
+      const width = Array.isArray(attribute.values[0]) ? attribute.values[0].length : 0;
+      if (attribute.values.some(value => !numeric(value) || (Array.isArray(value) ? value.length : 0) !== width)) throw new Error("linear mesh attribute requires compatible finite numeric values");
+    }
+    const width = attribute.semantic === "normal" ? 3 : attribute.semantic === "uv" ? 2 : attribute.semantic === "color" ? 4 : 0;
+    if (width && (!["vertex", "corner", "face"].includes(attribute.domain) || attribute.values.some(value => !tuple(value, width)))) throw new Error("invalid mesh attribute semantic domain or dimensions");
+    if (name === "tangent" && (attribute.semantic !== "custom" || !["vertex", "corner", "face"].includes(attribute.domain) || attribute.values.some(value => !tuple(value, 4) || (value as number[]).slice(0, 3).every(coordinate => coordinate === 0) || ![-1, 1].includes((value as number[])[3])))) throw new Error("invalid canonical tangent basis");
+    if (attribute.semantic === "normal" && attribute.values.some(value => (value as number[]).every(coordinate => coordinate === 0))) throw new Error("mesh normal cannot be zero");
+    if (attribute.semantic === "material" && (attribute.domain !== "face" || attribute.interpolation === "linear" || attribute.values.some(value => typeof value !== "string" || !mesh.materials || !Object.hasOwn(mesh.materials, value)))) throw new Error("undefined mesh face material");
+  }
 }
 
 /** ✂️ Ear-clips planar simple polygons, including concave faces, with original winding. */
@@ -95,6 +145,35 @@ export function transformMeshComponents(input: PolygonMesh, transform: MeshCompo
       : pivot[coordinate] + (transform.operation === "scale" ? relative[coordinate] * vector[coordinate] : relative[coordinate] * cosine + normal[coordinate] * sine + axis[coordinate] * projection * (1 - cosine)))) as MeshPoint;
     if (output.some(value => !Number.isFinite(value))) throw new Error("component transform exceeds mesh coordinate range");
     mesh.vertices[id] = output;
+  }
+  if (transform.operation !== "translate") {
+    const selected = new Set(ids), corners = mesh.faces.flat();
+    for (const [name, attribute] of Object.entries(mesh.attributes ?? {})) {
+      const tangent = name === "tangent" && attribute.semantic === "custom";
+      if (attribute.semantic !== "normal" && !tangent) continue;
+      const values: MeshAttributeValue[] = [], indices: number[] = [], samples = new Map<string, number>();
+      const count = attribute.domain === "vertex" ? mesh.vertices.length : attribute.domain === "face" ? mesh.faces.length : corners.length;
+      for (let domain = 0; domain < count; domain++) {
+        const source = attribute.indices?.[domain] ?? domain;
+        const affected = attribute.domain === "face" ? selected.has(mesh.faces[domain][0]) : selected.has(attribute.domain === "vertex" ? domain : corners[domain]);
+        if (attribute.domain === "face" && mesh.faces[domain].some(vertex => selected.has(vertex) !== affected)) throw new Error("face direction cannot represent a mixed component transform");
+        const key = `${source}:${affected}`;
+        let sample = samples.get(key);
+        if (sample === undefined) {
+          const normal = attribute.values[source] as MeshPoint;
+          let output = normal;
+          if (affected) {
+            const perpendicular = cross(axis, normal), projection = dot(axis, normal);
+            output = [0, 1, 2].map(coordinate => transform.operation === "scale" ? (tangent ? normal[coordinate] * vector[coordinate] : normal[coordinate] / vector[coordinate]) : normal[coordinate] * cosine + perpendicular[coordinate] * sine + axis[coordinate] * projection * (1 - cosine)) as MeshPoint;
+            const magnitude = Math.hypot(...output); output = output.map(value => Math.fround(value / magnitude)) as MeshPoint;
+            if (output.some(value => !Number.isFinite(value))) throw new Error("component normal transform exceeds mesh range");
+          }
+          sample = values.length; values.push(tangent && affected ? [...output, (normal as number[])[3] * (transform.operation === "scale" ? Math.sign(vector[0] * vector[1] * vector[2]) : 1)] : output); samples.set(key, sample);
+        }
+        indices.push(sample);
+      }
+      attribute.values = values; attribute.indices = indices;
+    }
   }
   return mesh;
 }

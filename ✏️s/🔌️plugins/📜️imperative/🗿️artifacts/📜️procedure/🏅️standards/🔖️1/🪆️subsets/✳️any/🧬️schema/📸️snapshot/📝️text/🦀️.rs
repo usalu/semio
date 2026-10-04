@@ -1,11 +1,12 @@
 //! 🗣️ Imperative artifact — textual document grammar surface + laws (constitutional: dsl).
 //!
-//! `Value`/`Atom`/`Dictionary`/`Step`/`Path` are all defined in `neural_engine`/`imperative_engine`
-//! (foreign kernel crates out of scope for this conversion), so none of them can carry a
+//! The parent text carries only the two composed child handles (design §20.15): the program lives in the `flow` child and
+//! the seed in the `text` child, so no step or seed literal is ever printed here.
+//!
+//! `Value`/`Atom`/`Dictionary` are defined in `neural_engine` (a foreign kernel crate), so none of them can carry a
 //! `#[derive(dsl::Dsl...)]` themselves — Rust's orphan rule requires the impl target type to live in the
-//! crate that also owns the trait or the type, and neither is true for a foreign type receiving a foreign
-//! derive. `ValueDsl`/`StepNodeDsl`/`PathDsl` below are local structural twins that the real types convert
-//! to/from right at the `parse_dsl`/`print_dsl`/`parse_op`/`print_op` boundary.
+//! crate that also owns the trait or the type. `ValueDsl` below is the local structural twin command payloads
+//! (`🎮️commands/🎚️set-step-params`) convert to/from.
 //!
 //! `ValueDsl` deliberately does NOT route through `dsl_schema`'s built-in `Shape::Value`/`DslValue`
 //! dynamic-literal primitive: even now that `DslValue::Number` wraps a typed `UInt`/`Int`/`Float`
@@ -26,12 +27,12 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::{Dictionary, Path, ProcedureSnapshot, Step};
+use crate::{Dictionary, ProcedureSnapshot};
 use neural_engine::{Atom, Value};
 use std::collections::BTreeMap;
 
 //#region 🔖️Value
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct ValueDsl {
     /// 🕳️ Presence-only flag (the payload is never inspected) — `Atom::Null`'s tag.
     null: Option<bool>,
@@ -88,63 +89,15 @@ pub fn value_dsl_map_to_dictionary(entries: &BTreeMap<String, ValueDsl>) -> Dict
     entries.iter().fold(Dictionary::new(), |dict, (key, value)| dict.insert(key.clone(), value_dsl_to_value(value)))
 }
 
-/// 📦️ `None` when `dict` is empty, mirroring the old printer's "omit an empty dictionary section".
-pub fn dictionary_to_option_dsl_map(dict: &Dictionary) -> Option<BTreeMap<String, ValueDsl>> {
-    (!dict.is_empty()).then(|| dictionary_to_value_dsl_map(dict))
-}
-
-pub fn option_dsl_map_to_dictionary(entries: Option<BTreeMap<String, ValueDsl>>) -> Dictionary {
-    entries.map(|entries| value_dsl_map_to_dictionary(&entries)).unwrap_or_default()
-}
 //#endregion 🔖️Value
 
-//#region 🔖️Step
-/// 👣️ `Step`'s recursive `bodies: BTreeMap<String, Path>` mirrors through `Path`'s own single field —
-/// `StepNodeDsl` is a one-variant `DslEnum` (not a plain `DslRecord`) purely so the mutual recursion with
-/// `PathDsl` goes through `dsl::DslVariants`'s LAZY `fn() -> RecordSpec` pointers: building `PathDsl`'s
-/// `RecordSpec` needs `StepNodeDsl`'s variant table, and vice versa, and only the lazy pointer indirection
-/// keeps that finite instead of recursing forever just to construct the schema.
-#[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
-pub enum StepNodeDsl {
-    Step {
-        #[dsl(positional)]
-        id: String,
-        kind: String,
-        params: Option<BTreeMap<String, ValueDsl>>,
-        bodies: BTreeMap<String, PathDsl>,
-    },
-}
-
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
-pub struct PathDsl {
-    #[dsl(statements, block)]
-    steps: Vec<StepNodeDsl>,
-}
-
-pub fn step_to_step_node_dsl(step: &Step) -> StepNodeDsl {
-    StepNodeDsl::Step { id: step.id.clone(), kind: step.kind.clone(), params: dictionary_to_option_dsl_map(&step.params), bodies: step.bodies.iter().map(|(slot, path)| (slot.clone(), path_to_path_dsl(path))).collect() }
-}
-
-pub fn step_node_dsl_to_step(node: StepNodeDsl) -> Step {
-    let StepNodeDsl::Step { id, kind, params, bodies } = node;
-    Step { id, kind, params: option_dsl_map_to_dictionary(params), bodies: bodies.into_iter().map(|(slot, path)| (slot, path_dsl_to_path(path))).collect() }
-}
-
-pub fn path_to_path_dsl(path: &Path) -> PathDsl {
-    PathDsl { steps: path.steps.iter().map(step_to_step_node_dsl).collect() }
-}
-
-pub fn path_dsl_to_path(path_dsl: PathDsl) -> Path {
-    Path { steps: path_dsl.steps.into_iter().map(step_node_dsl_to_step).collect() }
-}
-//#endregion 🔖️Step
 
 //#region 🔖️Api
 /// 📄️ The default `imperative` document, handcrafted in the `.imperative` DSL.
 pub const PROCEDURE_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
 /// 📖️ Parses `.imperative` DSL text into an `ProcedureSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<ProcedureSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<ProcedureSnapshot, semio_framework_diagnostic::TextError> {
     <ProcedureSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 

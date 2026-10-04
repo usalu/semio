@@ -1,0 +1,199 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/raster/raster/mutation/fill-selection/schema.json",
+  "title": "FillSelection",
+  "x-semio-inverse-rows": { "bounded": 3 },
+  "description": "One fill of a layer's pixels or of its mask over the pixel selection (the whole image without one), stated as its intent: the layer, the target, the fill colour and the selection. Every application fills through the shared pixel engine and files the filled image as a new content-addressed asset; a fill that changes no pixel is `mutation.no-op`, a missing layer or image is `mutation.target-missing`, a locked layer, a layer without pixels, a mask target without a mask or a selection past the image is `mutation.target-mismatch`.",
+  "x-semio-invariant": [
+    {
+      "id": "ordered-selection-runs",
+      "description": {
+        "en": "Selection runs are ordered by their first pixel and do not overlap.",
+        "de": "Auswahlläufe sind nach ihrem ersten Pixel geordnet und überlappen nicht."
+      }
+    }
+  ],
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "layerId",
+    "target",
+    "color",
+    "selection"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "fillSelection"
+    },
+    "layerId": {
+      "type": "string",
+      "minLength": 1,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Layer",
+          "de": "Ebene"
+        },
+        "description": {
+          "en": "The layer the fill paints on.",
+          "de": "Die Ebene, auf die die Füllung malt."
+        },
+        "ref": {
+          "kind": "layer",
+          "domain": "layers",
+          "granularity": "layer"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "target": {
+      "type": "string",
+      "enum": [
+        "pixels",
+        "mask"
+      ],
+      "x-semio-ui": {
+        "widget": "segmented",
+        "role": "value",
+        "label": {
+          "en": "Paint target",
+          "de": "Malziel"
+        },
+        "description": {
+          "en": "Whether the fill paints the layer's own pixels or the coverage of its mask.",
+          "de": "Ob die Füllung die eigenen Pixel der Ebene oder die Deckung ihrer Maske malt."
+        },
+        "options": {
+          "pixels": {
+            "en": "Layer pixels",
+            "de": "Ebenenpixel"
+          },
+          "mask": {
+            "en": "Mask",
+            "de": "Maske"
+          }
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "color": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "x-semio-ui": {
+        "widget": "color",
+        "role": "value",
+        "label": {
+          "en": "Colour",
+          "de": "Farbe"
+        },
+        "description": {
+          "en": "Straight-alpha sRGB colour the selection is filled with; on a mask its grey level is the coverage filled, at its alpha.",
+          "de": "sRGB-Farbe mit nicht vormultipliziertem Alpha, mit der die Auswahl gefüllt wird; auf einer Maske ist ihre Graustufe die gefüllte Deckung, mit ihrem Alpha."
+        },
+        "group": "fill",
+        "order": 10
+      }
+    },
+    "selection": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "title": "RasterSelectionSpan",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "start",
+          "length",
+          "coverage"
+        ],
+        "properties": {
+          "start": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 16777215,
+            "x-semio-ui": {
+              "widget": "stepper",
+              "role": "value",
+              "label": {
+                "en": "First pixel",
+                "de": "Erstes Pixel"
+              },
+              "description": {
+                "en": "Row-major index of the run's first pixel.",
+                "de": "Zeilenweiser Index des ersten Pixels des Laufs."
+              },
+              "step": 1,
+              "precision": 0,
+              "order": 10
+            }
+          },
+          "length": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 16777216,
+            "x-semio-ui": {
+              "widget": "stepper",
+              "role": "value",
+              "label": {
+                "en": "Pixels",
+                "de": "Pixel"
+              },
+              "description": {
+                "en": "How many consecutive pixels the run covers.",
+                "de": "Wie viele aufeinanderfolgende Pixel der Lauf abdeckt."
+              },
+              "step": 1,
+              "precision": 0,
+              "order": 20
+            }
+          },
+          "coverage": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255,
+            "x-semio-ui": {
+              "widget": "slider",
+              "role": "value",
+              "label": {
+                "en": "Coverage",
+                "de": "Abdeckung"
+              },
+              "description": {
+                "en": "How strongly the run is selected, out of 255.",
+                "de": "Wie stark der Lauf ausgewählt ist, von 255."
+              },
+              "step": 1,
+              "precision": 0,
+              "order": 30
+            }
+          }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Selection",
+          "de": "Auswahl"
+        },
+        "description": {
+          "en": "The pixel selection the fill covers, as ordered disjoint runs whose coverage blends the fill; none fills the whole image.",
+          "de": "Die Pixelauswahl, die die Füllung abdeckt, als geordnete disjunkte Läufe, deren Abdeckung die Füllung mischt; ohne Auswahl wird das ganze Bild gefüllt."
+        },
+        "group": "fill",
+        "order": 20
+      }
+    }
+  }
+}

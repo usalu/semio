@@ -15,9 +15,10 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
+import Ajv from "ajv";
 
 type LabelRow = { readonly nativeEn: string; readonly nativeDe: string; readonly reuseEn: string; readonly reuseDe: string };
-type TerminologyFixture = { readonly identicalByDesign: readonly string[]; readonly labels: Readonly<Record<string, LabelRow>> };
+type TerminologyFixture = { readonly identicalByDesign: readonly string[]; readonly labels: Readonly<Record<string, LabelRow>>; readonly portLabels: Readonly<Record<string,string>>; readonly catalogueLabels: Readonly<Record<string,string>> };
 
 const LOCALE_KEYS = ["nativeEn", "nativeDe", "reuseEn", "reuseDe"] as const;
 
@@ -28,6 +29,17 @@ export function generation3dTerminologySelfTests(): number {
   const rows = Object.entries(fixture.labels);
   assert(rows.length > 0, "the roster is not empty");
   let checks = 1;
+  const validate = new Ajv({strict:true}).compile({type:"object",minProperties:1,additionalProperties:{type:"string",enum:rows.map(([field])=>field)}});
+  for (const mappings of [fixture.portLabels,fixture.catalogueLabels]) {
+    assert.equal(validate(mappings),true,JSON.stringify(validate.errors));
+    assert.equal(validate({...mappings,invalid:"undeclared_label"}),false);
+    for (const [id,field] of Object.entries(mappings)) {
+      assert.notEqual(id.trim(),"");
+      assert.equal(Object.hasOwn(fixture.labels,field),true,id);
+      checks+=2;
+    }
+    checks+=2;
+  }
 
   for (const [field, row] of rows) {
     for (const key of LOCALE_KEYS) {

@@ -1,0 +1,108 @@
+{
+  "at": "2026-10-03T14:05:01.599Z",
+  "sourceWrites": 20,
+  "after": [
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🏛️ownership/🧪️testing/🧩️consumer/🟦️.ts",
+      "expected": "770457a10ba0dc080e3991219ea7a84c2e265db542ec55d037496980bd36f091",
+      "actual": "770457a10ba0dc080e3991219ea7a84c2e265db542ec55d037496980bd36f091"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎠️kernel/🏛️ownership/📥️command-ingress/🧬️schema/🔣️.json",
+      "expected": "ab44640586cc34cc15b7846553db971a585f033e2c944fde0ff3fd766f27513a",
+      "actual": "ab44640586cc34cc15b7846553db971a585f033e2c944fde0ff3fd766f27513a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎠️kernel/🏛️ownership/📥️command-ingress/🧫️fixtures/🔣️.json",
+      "expected": "192093f3fb0407ac6733c791c2ae18a4b9a0be886f2f66dbf8224775831144a4",
+      "actual": "192093f3fb0407ac6733c791c2ae18a4b9a0be886f2f66dbf8224775831144a4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎠️kernel/🏛️ownership/📥️command-ingress/🧪️tests/🟦️.ts",
+      "expected": "1b12a9b129890d287b26f151e4476c0af97a67f18c5dcf44f4408cfa04a46794",
+      "actual": "1b12a9b129890d287b26f151e4476c0af97a67f18c5dcf44f4408cfa04a46794"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🦀️rust/📋️project.json",
+      "expected": "8c92e2000f1ce97236b65a8320fd5f6bff48395602a130bcfe1c82bcc2e3f69d",
+      "actual": "8c92e2000f1ce97236b65a8320fd5f6bff48395602a130bcfe1c82bcc2e3f69d"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🦀️rust/📜️script.ts",
+      "expected": "f0d10b2602460250a4cad4b681c4bde52329ec7c1fb187d745932ebc372f0b0c",
+      "actual": "f0d10b2602460250a4cad4b681c4bde52329ec7c1fb187d745932ebc372f0b0c"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🦀️rust/package.json",
+      "expected": "e07fb4ff9460b6cff228a9d46f02a42245d564190d3912cfdc4226d0cf1061c5",
+      "actual": "e07fb4ff9460b6cff228a9d46f02a42245d564190d3912cfdc4226d0cf1061c5"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🏛️ownership/📥️command-ingress/🧬️schema/🔣️.json",
+      "expected": "57cc1edd1fb72f4233c4b73d2620a89f549c7f28da52291b87aa7417b2dc59e4",
+      "actual": "57cc1edd1fb72f4233c4b73d2620a89f549c7f28da52291b87aa7417b2dc59e4"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🏛️ownership/📥️command-ingress/🧫️fixtures/🔣️.json",
+      "expected": "cd579ba33e0ac407312831ef5903d13df01d907faf990e9cd8a7a5e545646056",
+      "actual": "cd579ba33e0ac407312831ef5903d13df01d907faf990e9cd8a7a5e545646056"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🏛️ownership/📥️command-ingress/🧪️tests/🟦️.ts",
+      "expected": "d5700cbf269055e7a3c49a94bba54dbcc9a0320998ead272c120dfc78dae01a8",
+      "actual": "d5700cbf269055e7a3c49a94bba54dbcc9a0320998ead272c120dfc78dae01a8"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📋️project.json",
+      "expected": "a3284316848190a55f8d45aa26a0857b49d3e4adc7ef44302f47a424e4013c4c",
+      "actual": "a3284316848190a55f8d45aa26a0857b49d3e4adc7ef44302f47a424e4013c4c"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+      "expected": "740e362827503d3d6dd49dea0a18bb2146855bf741169f1ddad0351565b0546f",
+      "actual": "740e362827503d3d6dd49dea0a18bb2146855bf741169f1ddad0351565b0546f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/package.json",
+      "expected": "7aeb0121846f4400502b0c7494091e8995820437e5ffd0a94ca82836342f3d98",
+      "actual": "7aeb0121846f4400502b0c7494091e8995820437e5ffd0a94ca82836342f3d98"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/📥️command-ingress/🧬️schema/🔣️.json",
+      "expected": "1a2ae57d1a1d4056dfdfbc9ae3229c7cb833d7cc51981ef9047233a619592730",
+      "actual": "1a2ae57d1a1d4056dfdfbc9ae3229c7cb833d7cc51981ef9047233a619592730"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/📥️command-ingress/🧫️fixtures/🔣️.json",
+      "expected": "f9c3b3647923232a8f583468ab69a648f7d10443882187fa47c84318cb234c03",
+      "actual": "f9c3b3647923232a8f583468ab69a648f7d10443882187fa47c84318cb234c03"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/📥️command-ingress/🧪️tests/🟦️.ts",
+      "expected": "55adcee649c8669f83cf7c47507511ba44993256b1e6b52de01d5d5060eab9a4",
+      "actual": "55adcee649c8669f83cf7c47507511ba44993256b1e6b52de01d5d5060eab9a4"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📋️project.json",
+      "expected": "f7391d28aefad61546c156121173a43acd8c954202531813fa3cabe01383a5f6",
+      "actual": "f7391d28aefad61546c156121173a43acd8c954202531813fa3cabe01383a5f6"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📜️script.ts",
+      "expected": "c7a68d1394d4a11b9bf3aabcee02fad6d75fbbc3faf8037bec4ac62bcff88f74",
+      "actual": "c7a68d1394d4a11b9bf3aabcee02fad6d75fbbc3faf8037bec4ac62bcff88f74"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/package.json",
+      "expected": "77272733463491d8910b9262f8c2869f5f332fe4c9b62aa92e9a9477995493a0",
+      "actual": "77272733463491d8910b9262f8c2869f5f332fe4c9b62aa92e9a9477995493a0"
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "expected": "74a9ea62c251c4b3995115b1e9a43530338da9e6ced74c1b1332226114afd1c1",
+      "actual": "74a9ea62c251c4b3995115b1e9a43530338da9e6ced74c1b1332226114afd1c1"
+    }
+  ],
+  "registeredRuntime": false,
+  "native": false
+}

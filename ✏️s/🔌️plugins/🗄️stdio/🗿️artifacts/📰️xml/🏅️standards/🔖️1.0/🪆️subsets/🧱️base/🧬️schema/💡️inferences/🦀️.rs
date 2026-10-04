@@ -6,7 +6,6 @@
 
 use crate::XmlSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from an xml snapshot. One field per named inference under
@@ -20,8 +19,11 @@ pub struct XmlInference {
 }
 
 impl protocol::Inference<XmlSnapshot> for XmlInference {
-    fn infer(snapshot: &XmlSnapshot) -> Self {
+    fn infer(snapshot: &XmlSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { outline: XmlOutline::compute(snapshot) }
+    
+        })
     }
 }
 
@@ -37,13 +39,6 @@ impl protocol::InferenceSpec<XmlSnapshot> for XmlInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::standards::v1_0::subsets::base::schema::XmlBuilder {
-    type Snapshot = XmlSnapshot;
-    type Inference = XmlInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.xml.inference`'s facet leaves into the OS-wide inference catalog — call

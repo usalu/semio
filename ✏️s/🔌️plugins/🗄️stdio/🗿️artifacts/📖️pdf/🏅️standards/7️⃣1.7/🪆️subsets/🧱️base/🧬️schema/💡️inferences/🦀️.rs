@@ -6,7 +6,6 @@
 
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a pdf (1.7) snapshot. One field per named inference under
@@ -20,8 +19,11 @@ pub struct Pdf17Inference {
 }
 
 impl protocol::Inference<PdfSnapshot> for Pdf17Inference {
-    fn infer(snapshot: &PdfSnapshot) -> Self {
+    fn infer(snapshot: &PdfSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { outline: Pdf17Outline::compute(snapshot) }
+    
+        })
     }
 }
 
@@ -37,13 +39,6 @@ impl protocol::InferenceSpec<PdfSnapshot> for Pdf17Inference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::standards::v1_7::subsets::base::schema::PdfBuilder {
-    type Snapshot = PdfSnapshot;
-    type Inference = Pdf17Inference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.pdf.1.7.inference`'s facet leaves into the OS-wide inference catalog —

@@ -9,6 +9,7 @@
   },
   "scripts": {
     "verify-architect-window-ownership": "bun nx run @semio-tech/architect-program-rs:verify-architect-window-ownership",
-    "verify-program-document-contract": "bun nx run @semio-tech/architect-program-rs:verify-program-document-contract"
+    "verify-program-document-contract": "bun nx run @semio-tech/architect-program-rs:verify-program-document-contract",
+    "test-snapshot-sqlite-source-profile": "nx run @semio-tech/architect-program-rs:test-snapshot-sqlite-source-profile"
   }
 }

@@ -1,5 +1,526 @@
 {
   "version": 1,
+  "collections": [
+    {
+      "id": "number-set",
+      "types": [
+        "number"
+      ],
+      "cardinality": "*",
+      "current": {
+        "0": {
+          "$schema": "number",
+          "value": 1
+        },
+        "1": {
+          "$schema": "number",
+          "value": 2
+        },
+        "$schema": "list"
+      },
+      "command": {
+        "operation": "set",
+        "index": 1,
+        "value": "3.5"
+      },
+      "expected": {
+        "type": "numberList",
+        "value": [
+          1,
+          3.5
+        ]
+      }
+    },
+    {
+      "id": "number-add",
+      "types": [
+        "number"
+      ],
+      "cardinality": "*",
+      "current": {
+        "0": {
+          "$schema": "number",
+          "value": 1
+        },
+        "1": {
+          "$schema": "number",
+          "value": 2
+        },
+        "$schema": "list"
+      },
+      "command": {
+        "operation": "add",
+        "index": 1,
+        "value": "4"
+      },
+      "expected": {
+        "type": "numberList",
+        "value": [
+          1,
+          4,
+          2
+        ]
+      }
+    },
+    {
+      "id": "text-set",
+      "types": [
+        "text"
+      ],
+      "cardinality": "*",
+      "current": {
+        "0": {
+          "$schema": "text",
+          "value": "true"
+        },
+        "$schema": "list"
+      },
+      "command": {
+        "operation": "set",
+        "index": 0,
+        "value": "hello"
+      },
+      "expected": {
+        "type": "textList",
+        "value": [
+          "hello"
+        ]
+      }
+    },
+    {
+      "id": "boolean-set",
+      "types": [
+        "boolean"
+      ],
+      "cardinality": "*",
+      "current": {
+        "0": {
+          "$schema": "boolean",
+          "value": true
+        },
+        "$schema": "list"
+      },
+      "command": {
+        "operation": "set",
+        "index": 0,
+        "value": "false"
+      },
+      "expected": {
+        "type": "booleanList",
+        "value": [
+          false
+        ]
+      }
+    },
+    {
+      "id": "point-coordinate",
+      "types": [
+        "point"
+      ],
+      "cardinality": "*",
+      "current": {
+        "0": {
+          "$schema": "point",
+          "x": 1,
+          "y": 2,
+          "z": 3
+        },
+        "$schema": "list"
+      },
+      "command": {
+        "operation": "set",
+        "index": 0,
+        "component": "z",
+        "value": "4"
+      },
+      "expected": {
+        "type": "pointList",
+        "value": [
+          [
+            1,
+            2,
+            4
+          ]
+        ]
+      }
+    },
+    {
+      "id": "vector-coordinate",
+      "types": [
+        "vector"
+      ],
+      "cardinality": "*",
+      "current": {
+        "0": {
+          "$schema": "vector",
+          "x": 0,
+          "y": 0,
+          "z": 1
+        },
+        "$schema": "list"
+      },
+      "command": {
+        "operation": "set",
+        "index": 0,
+        "component": "y",
+        "value": "2"
+      },
+      "expected": {
+        "type": "vectorList",
+        "value": [
+          [
+            0,
+            2,
+            1
+          ]
+        ]
+      }
+    },
+    {
+      "id": "empty-point-add",
+      "types": [
+        "point"
+      ],
+      "cardinality": "*",
+      "current": {
+        "$schema": "list"
+      },
+      "command": {
+        "operation": "add",
+        "index": 0,
+        "value": ""
+      },
+      "expected": {
+        "type": "pointList",
+        "value": [
+          [
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    {
+      "id": "absent-number-add",
+      "types": [
+        "number"
+      ],
+      "cardinality": "*",
+      "current": null,
+      "command": {
+        "operation": "add",
+        "index": 0,
+        "value": ""
+      },
+      "expected": {
+        "type": "numberList",
+        "value": [
+          0
+        ]
+      }
+    },
+    {
+      "id": "number-remove",
+      "types": [
+        "number"
+      ],
+      "cardinality": "*",
+      "current": {
+        "0": {
+          "$schema": "number",
+          "value": 1
+        },
+        "1": {
+          "$schema": "number",
+          "value": 2
+        },
+        "$schema": "list"
+      },
+      "command": {
+        "operation": "remove",
+        "index": 0,
+        "value": ""
+      },
+      "expected": {
+        "type": "numberList",
+        "value": [
+          2
+        ]
+      }
+    },
+    {
+      "id": "boolean-remove-empty",
+      "types": [
+        "boolean"
+      ],
+      "cardinality": "*",
+      "current": {
+        "0": {
+          "$schema": "boolean",
+          "value": true
+        },
+        "$schema": "list"
+      },
+      "command": {
+        "operation": "remove",
+        "index": 0,
+        "value": ""
+      },
+      "expected": {
+        "type": "booleanList",
+        "value": []
+      }
+    },
+    {
+      "id": "number-move",
+      "types": [
+        "number"
+      ],
+      "cardinality": "*",
+      "current": {
+        "0": {
+          "$schema": "number",
+          "value": 1
+        },
+        "1": {
+          "$schema": "number",
+          "value": 2
+        },
+        "2": {
+          "$schema": "number",
+          "value": 3
+        },
+        "$schema": "list"
+      },
+      "command": {
+        "operation": "move",
+        "index": 0,
+        "destination": 2,
+        "value": ""
+      },
+      "expected": {
+        "type": "numberList",
+        "value": [
+          2,
+          3,
+          1
+        ]
+      }
+    },
+    {
+      "id": "fixed-cardinality-set",
+      "types": [
+        "number"
+      ],
+      "cardinality": "2",
+      "current": {
+        "0": {
+          "$schema": "number",
+          "value": 1
+        },
+        "1": {
+          "$schema": "number",
+          "value": 2
+        },
+        "$schema": "list"
+      },
+      "command": {
+        "operation": "set",
+        "index": 0,
+        "value": "5"
+      },
+      "expected": {
+        "type": "numberList",
+        "value": [
+          5,
+          2
+        ]
+      }
+    },
+    {
+      "id": "fixed-cardinality-add-rejected",
+      "types": [
+        "number"
+      ],
+      "cardinality": "2",
+      "current": {
+        "0": {
+          "$schema": "number",
+          "value": 1
+        },
+        "1": {
+          "$schema": "number",
+          "value": 2
+        },
+        "$schema": "list"
+      },
+      "command": {
+        "operation": "add",
+        "index": 2,
+        "value": ""
+      },
+      "error": true
+    },
+    {
+      "id": "nonempty-remove-rejected",
+      "types": [
+        "number"
+      ],
+      "cardinality": "+",
+      "current": {
+        "0": {
+          "$schema": "number",
+          "value": 1
+        },
+        "$schema": "list"
+      },
+      "command": {
+        "operation": "remove",
+        "index": 0,
+        "value": ""
+      },
+      "error": true
+    },
+    {
+      "id": "bad-index",
+      "types": [
+        "number"
+      ],
+      "cardinality": "*",
+      "current": {
+        "$schema": "list"
+      },
+      "command": {
+        "operation": "set",
+        "index": 0,
+        "value": "1"
+      },
+      "error": true
+    },
+    {
+      "id": "bad-destination",
+      "types": [
+        "text"
+      ],
+      "cardinality": "*",
+      "current": {
+        "0": {
+          "$schema": "text",
+          "value": "a"
+        },
+        "$schema": "list"
+      },
+      "command": {
+        "operation": "move",
+        "index": 0,
+        "destination": 1,
+        "value": ""
+      },
+      "error": true
+    },
+    {
+      "id": "heterogeneous-rejected",
+      "types": [
+        "number",
+        "text"
+      ],
+      "cardinality": "*",
+      "current": {
+        "0": {
+          "$schema": "number",
+          "value": 1
+        },
+        "1": {
+          "$schema": "text",
+          "value": "a"
+        },
+        "$schema": "list"
+      },
+      "command": {
+        "operation": "remove",
+        "index": 0,
+        "value": ""
+      },
+      "error": true
+    },
+    {
+      "id": "sparse-list-rejected",
+      "types": [
+        "number"
+      ],
+      "cardinality": "*",
+      "current": {
+        "2": {
+          "$schema": "number",
+          "value": 1
+        },
+        "$schema": "list"
+      },
+      "command": {
+        "operation": "remove",
+        "index": 0,
+        "value": ""
+      },
+      "error": true
+    },
+    {
+      "id": "wrong-port-type",
+      "types": [
+        "point"
+      ],
+      "cardinality": "*",
+      "current": {
+        "0": {
+          "$schema": "number",
+          "value": 1
+        },
+        "$schema": "list"
+      },
+      "command": {
+        "operation": "set",
+        "index": 0,
+        "value": "2"
+      },
+      "error": true
+    },
+    {
+      "id": "invalid-number",
+      "types": [
+        "number"
+      ],
+      "cardinality": "*",
+      "current": {
+        "0": {
+          "$schema": "number",
+          "value": 1
+        },
+        "$schema": "list"
+      },
+      "command": {
+        "operation": "set",
+        "index": 0,
+        "value": "NaN"
+      },
+      "error": true
+    },
+    {
+      "id": "unsupported-collection",
+      "types": [
+        "geometry"
+      ],
+      "cardinality": "*",
+      "current": {
+        "$schema": "list"
+      },
+      "command": {
+        "operation": "add",
+        "index": 0,
+        "value": ""
+      },
+      "error": true
+    }
+  ],
   "cases": [
     {
       "id": "number",
@@ -25,7 +546,7 @@
       "value": "-3",
       "expected": {
         "$schema": "number",
-        "value": -3.0
+        "value": -3
       }
     },
     {
@@ -79,7 +600,7 @@
       "value": "-2",
       "expected": {
         "$schema": "vector",
-        "x": -2.0,
+        "x": -2,
         "y": 0,
         "z": 1
       }
@@ -176,5 +697,4074 @@
       "value": "1",
       "error": true
     }
-  ]
+  ],
+  "facets": [
+    {
+      "id": "variable-name",
+      "widget": {
+        "kind": "variable",
+        "id": "parameter",
+        "name": "height",
+        "schema": "number"
+      },
+      "command": {
+        "facet": "variableName",
+        "channel": "name",
+        "value": "  Width  "
+      },
+      "expected": {
+        "kind": "variable",
+        "id": "parameter",
+        "name": "Width",
+        "schema": "number"
+      },
+      "widgets": [
+        {
+          "kind": "inputSlider",
+          "id": "source",
+          "label": "Source",
+          "value": 1,
+          "min": 0,
+          "max": 10,
+          "step": 1
+        },
+        {
+          "kind": "outputPreview",
+          "id": "preview",
+          "preview": {},
+          "expanded": []
+        }
+      ],
+      "synapses": [
+        {
+          "id": "incoming",
+          "from": "source",
+          "to": "parameter",
+          "fromPort": "number",
+          "toPort": "height"
+        },
+        {
+          "id": "outgoing",
+          "from": "parameter",
+          "to": "preview",
+          "fromPort": "height",
+          "toPort": ""
+        }
+      ],
+      "expectedSynapses": [
+        {
+          "id": "incoming",
+          "from": "source",
+          "to": "parameter",
+          "fromPort": "number",
+          "toPort": "Width"
+        },
+        {
+          "id": "outgoing",
+          "from": "parameter",
+          "to": "preview",
+          "fromPort": "Width",
+          "toPort": ""
+        }
+      ]
+    },
+    {
+      "id": "variable-schema",
+      "widget": {
+        "kind": "variable",
+        "id": "parameter",
+        "name": "height",
+        "schema": "number"
+      },
+      "command": {
+        "facet": "variableSchema",
+        "channel": "schema",
+        "value": "point"
+      },
+      "expected": {
+        "kind": "variable",
+        "id": "parameter",
+        "name": "height",
+        "schema": "point"
+      }
+    },
+    {
+      "id": "empty-variable-name",
+      "widget": {
+        "kind": "variable",
+        "id": "parameter",
+        "name": "height",
+        "schema": "number"
+      },
+      "command": {
+        "facet": "variableName",
+        "channel": "name",
+        "value": " "
+      },
+      "error": true,
+      "schemaValid": false
+    },
+    {
+      "id": "unknown-variable-schema",
+      "widget": {
+        "kind": "variable",
+        "id": "parameter",
+        "name": "height",
+        "schema": "number"
+      },
+      "command": {
+        "facet": "variableSchema",
+        "channel": "schema",
+        "value": "does-not-exist"
+      },
+      "error": true
+    },
+    {
+      "id": "export-format",
+      "widget": {
+        "kind": "outputExport",
+        "id": "download",
+        "format": "stl"
+      },
+      "command": {
+        "facet": "exportFormat",
+        "channel": "format",
+        "value": "obj"
+      },
+      "expected": {
+        "kind": "outputExport",
+        "id": "download",
+        "format": "obj"
+      }
+    },
+    {
+      "id": "unknown-export-format",
+      "widget": {
+        "kind": "outputExport",
+        "id": "download",
+        "format": "stl"
+      },
+      "command": {
+        "facet": "exportFormat",
+        "channel": "format",
+        "value": "does-not-exist"
+      },
+      "error": true
+    },
+    {
+      "id": "wrong-widget-facet",
+      "widget": {
+        "kind": "outputExport",
+        "id": "download",
+        "format": "stl"
+      },
+      "command": {
+        "facet": "variableName",
+        "channel": "name",
+        "value": "Width"
+      },
+      "error": true
+    },
+    {
+      "id": "connected-type-refused",
+      "widget": {
+        "kind": "variable",
+        "id": "parameter",
+        "name": "height",
+        "schema": "number"
+      },
+      "widgets": [
+        {
+          "kind": "inputSlider",
+          "id": "source",
+          "label": "Source",
+          "value": 1,
+          "min": 0,
+          "max": 10,
+          "step": 1
+        }
+      ],
+      "synapses": [
+        {
+          "id": "incoming",
+          "from": "source",
+          "to": "parameter",
+          "fromPort": "number",
+          "toPort": "height"
+        }
+      ],
+      "connectedTypes": [
+        [
+          "number"
+        ]
+      ],
+      "command": {
+        "facet": "variableSchema",
+        "channel": "schema",
+        "value": "point"
+      },
+      "error": true
+    },
+    {
+      "id": "connected-alternative-type",
+      "widget": {
+        "kind": "variable",
+        "id": "parameter",
+        "name": "origin",
+        "schema": "vector"
+      },
+      "widgets": [
+        {
+          "kind": "neuron",
+          "id": "curve",
+          "neuronKind": "brep.curve.line",
+          "params": {},
+          "inputPorts": [
+            "start",
+            "end"
+          ],
+          "outputPorts": [
+            "curve"
+          ],
+          "preview": true
+        }
+      ],
+      "synapses": [
+        {
+          "id": "outgoing",
+          "from": "parameter",
+          "to": "curve",
+          "fromPort": "origin",
+          "toPort": "start"
+        }
+      ],
+      "connectedTypes": [
+        [
+          "point",
+          "vector"
+        ]
+      ],
+      "command": {
+        "facet": "variableSchema",
+        "channel": "schema",
+        "value": "point"
+      },
+      "expected": {
+        "kind": "variable",
+        "id": "parameter",
+        "name": "origin",
+        "schema": "point"
+      }
+    }
+  ],
+  "runtimeCollections": [
+    {
+      "id": "set",
+      "command": {
+        "operation": "set",
+        "index": 1,
+        "component": "y",
+        "value": "2"
+      },
+      "expected": [
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          2,
+          2,
+          0
+        ],
+        [
+          3,
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "id": "add",
+      "command": {
+        "operation": "add",
+        "index": 1,
+        "value": ""
+      },
+      "expected": [
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          3,
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "id": "remove",
+      "command": {
+        "operation": "remove",
+        "index": 1,
+        "value": ""
+      },
+      "expected": [
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          3,
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "id": "move",
+      "command": {
+        "operation": "move",
+        "index": 0,
+        "destination": 2,
+        "value": ""
+      },
+      "expected": [
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          3,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ]
+      ]
+    }
+  ],
+  "runtimeInput": {
+    "0": {
+      "$schema": "point",
+      "x": 1,
+      "y": 0,
+      "z": 0
+    },
+    "1": {
+      "$schema": "point",
+      "x": 2,
+      "y": 1,
+      "z": 0
+    },
+    "2": {
+      "$schema": "point",
+      "x": 3,
+      "y": 0,
+      "z": 0
+    },
+    "$schema": "list"
+  },
+  "meshSource": {
+    "mesh": {
+      "vertices": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          2,
+          2,
+          0
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          1,
+          2
+        ]
+      ],
+      "attributes": {
+        "label": {
+          "domain": "vertex",
+          "semantic": "custom",
+          "interpolation": "nearest",
+          "values": [
+            "A",
+            "B",
+            "C",
+            "D"
+          ]
+        },
+        "uv": {
+          "domain": "corner",
+          "semantic": "uv",
+          "interpolation": "linear",
+          "values": [
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              0
+            ],
+            [
+              0,
+              1
+            ]
+          ]
+        }
+      },
+      "materials": {
+        "paint": {
+          "baseColor": [
+            1,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "textures": {
+        "pixel": {
+          "mime": "image/png",
+          "bytes": [
+            1,
+            2,
+            3
+          ]
+        }
+      }
+    },
+    "cases": [
+      {
+        "id": "vertex-coordinate",
+        "command": {
+          "path": [
+            "vertices",
+            "1",
+            "0"
+          ],
+          "value": "2"
+        },
+        "expected": {
+          "path": [
+            "vertices",
+            "1",
+            "0"
+          ],
+          "value": 2
+        }
+      },
+      {
+        "id": "face-index",
+        "command": {
+          "path": [
+            "faces",
+            "0",
+            "2"
+          ],
+          "value": "3"
+        },
+        "expected": {
+          "path": [
+            "faces",
+            "0",
+            "2"
+          ],
+          "value": 3
+        }
+      },
+      {
+        "id": "custom-text",
+        "command": {
+          "path": [
+            "attributes",
+            "label",
+            "values",
+            "1"
+          ],
+          "value": "New"
+        },
+        "expected": {
+          "path": [
+            "attributes",
+            "label",
+            "values",
+            "1"
+          ],
+          "value": "New"
+        }
+      },
+      {
+        "id": "uv-coordinate",
+        "command": {
+          "path": [
+            "attributes",
+            "uv",
+            "values",
+            "1",
+            "0"
+          ],
+          "value": "0.5"
+        },
+        "expected": {
+          "path": [
+            "attributes",
+            "uv",
+            "values",
+            "1",
+            "0"
+          ],
+          "value": 0.5
+        }
+      },
+      {
+        "id": "out-of-range-index",
+        "command": {
+          "path": [
+            "faces",
+            "0",
+            "2"
+          ],
+          "value": "999"
+        },
+        "error": true
+      },
+      {
+        "id": "duplicate-index",
+        "command": {
+          "path": [
+            "faces",
+            "0",
+            "1"
+          ],
+          "value": "0"
+        },
+        "error": true
+      },
+      {
+        "id": "nonfinite-coordinate",
+        "command": {
+          "path": [
+            "vertices",
+            "1",
+            "0"
+          ],
+          "value": "NaN"
+        },
+        "error": true
+      },
+      {
+        "id": "unsupported-root",
+        "command": {
+          "path": [
+            "unsupported",
+            "paint",
+            "baseColor",
+            "0"
+          ],
+          "value": "0"
+        },
+        "error": true,
+        "schemaValid": false
+      },
+      {
+        "id": "tuple-shape-refusal",
+        "command": {
+          "path": [
+            "vertices",
+            "0",
+            "3"
+          ],
+          "value": "0"
+        },
+        "error": true
+      },
+      {
+        "id": "append-vertex-preserves-vertex-attributes",
+        "command": {
+          "path": [
+            "vertices"
+          ],
+          "operation": "add",
+          "value": ""
+        },
+        "expectedMesh": {
+          "vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              2,
+              2,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "faces": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "attributes": {
+            "label": {
+              "domain": "vertex",
+              "semantic": "custom",
+              "interpolation": "nearest",
+              "values": [
+                "A",
+                "B",
+                "C",
+                "D",
+                ""
+              ]
+            },
+            "uv": {
+              "domain": "corner",
+              "semantic": "uv",
+              "interpolation": "linear",
+              "values": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  0
+                ],
+                [
+                  0,
+                  1
+                ]
+              ]
+            }
+          },
+          "materials": {
+            "paint": {
+              "baseColor": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "textures": {
+            "pixel": {
+              "mime": "image/png",
+              "bytes": [
+                1,
+                2,
+                3
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": "remove-unused-vertex-preserves-vertex-attributes",
+        "command": {
+          "path": [
+            "vertices",
+            "3"
+          ],
+          "operation": "remove",
+          "value": ""
+        },
+        "expectedMesh": {
+          "vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ]
+          ],
+          "faces": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "attributes": {
+            "label": {
+              "domain": "vertex",
+              "semantic": "custom",
+              "interpolation": "nearest",
+              "values": [
+                "A",
+                "B",
+                "C"
+              ]
+            },
+            "uv": {
+              "domain": "corner",
+              "semantic": "uv",
+              "interpolation": "linear",
+              "values": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  0
+                ],
+                [
+                  0,
+                  1
+                ]
+              ]
+            }
+          },
+          "materials": {
+            "paint": {
+              "baseColor": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "textures": {
+            "pixel": {
+              "mime": "image/png",
+              "bytes": [
+                1,
+                2,
+                3
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": "move-vertex-remaps-face-indices-and-attributes",
+        "command": {
+          "path": [
+            "vertices",
+            "0"
+          ],
+          "operation": "move",
+          "destination": 3,
+          "value": ""
+        },
+        "expectedMesh": {
+          "vertices": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              2,
+              2,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "faces": [
+            [
+              3,
+              0,
+              1
+            ]
+          ],
+          "attributes": {
+            "label": {
+              "domain": "vertex",
+              "semantic": "custom",
+              "interpolation": "nearest",
+              "values": [
+                "B",
+                "C",
+                "D",
+                "A"
+              ]
+            },
+            "uv": {
+              "domain": "corner",
+              "semantic": "uv",
+              "interpolation": "linear",
+              "values": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  0
+                ],
+                [
+                  0,
+                  1
+                ]
+              ]
+            }
+          },
+          "materials": {
+            "paint": {
+              "baseColor": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "textures": {
+            "pixel": {
+              "mime": "image/png",
+              "bytes": [
+                1,
+                2,
+                3
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": "append-face-preserves-corner-attributes",
+        "command": {
+          "path": [
+            "faces"
+          ],
+          "operation": "add",
+          "value": ""
+        },
+        "expectedMesh": {
+          "vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              2,
+              2,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ]
+          ],
+          "faces": [
+            [
+              0,
+              1,
+              2
+            ],
+            [
+              4,
+              5,
+              6
+            ]
+          ],
+          "attributes": {
+            "label": {
+              "domain": "vertex",
+              "semantic": "custom",
+              "interpolation": "nearest",
+              "values": [
+                "A",
+                "B",
+                "C",
+                "D",
+                "",
+                "",
+                ""
+              ]
+            },
+            "uv": {
+              "domain": "corner",
+              "semantic": "uv",
+              "interpolation": "linear",
+              "values": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  0
+                ],
+                [
+                  0,
+                  1
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ]
+              ]
+            }
+          },
+          "materials": {
+            "paint": {
+              "baseColor": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "textures": {
+            "pixel": {
+              "mime": "image/png",
+              "bytes": [
+                1,
+                2,
+                3
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": "append-face-corner-preserves-corner-attributes",
+        "command": {
+          "path": [
+            "faces",
+            "0"
+          ],
+          "operation": "add",
+          "value": ""
+        },
+        "expectedMesh": {
+          "vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              2,
+              2,
+              0
+            ]
+          ],
+          "faces": [
+            [
+              0,
+              1,
+              3,
+              2
+            ]
+          ],
+          "attributes": {
+            "label": {
+              "domain": "vertex",
+              "semantic": "custom",
+              "interpolation": "nearest",
+              "values": [
+                "A",
+                "B",
+                "C",
+                "D"
+              ]
+            },
+            "uv": {
+              "domain": "corner",
+              "semantic": "uv",
+              "interpolation": "linear",
+              "values": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  1
+                ]
+              ]
+            }
+          },
+          "materials": {
+            "paint": {
+              "baseColor": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "textures": {
+            "pixel": {
+              "mime": "image/png",
+              "bytes": [
+                1,
+                2,
+                3
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": "refuse-remove-referenced-vertex",
+        "command": {
+          "path": [
+            "vertices",
+            "0"
+          ],
+          "operation": "remove",
+          "value": ""
+        },
+        "error": true
+      },
+      {
+        "id": "refuse-remove-last-face",
+        "command": {
+          "path": [
+            "faces",
+            "0"
+          ],
+          "operation": "remove",
+          "value": ""
+        },
+        "error": true
+      },
+      {
+        "id": "refuse-edit-coordinate-cardinality",
+        "command": {
+          "path": [
+            "vertices",
+            "0"
+          ],
+          "operation": "add",
+          "value": ""
+        },
+        "error": true
+      },
+      {
+        "id": "create-vertex-color-attribute",
+        "command": {
+          "path": [
+            "attributes",
+            "color"
+          ],
+          "operation": "add",
+          "value": "color"
+        },
+        "expectedMesh": {
+          "vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              2,
+              2,
+              0
+            ]
+          ],
+          "faces": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "attributes": {
+            "label": {
+              "domain": "vertex",
+              "semantic": "custom",
+              "interpolation": "nearest",
+              "values": [
+                "A",
+                "B",
+                "C",
+                "D"
+              ]
+            },
+            "uv": {
+              "domain": "corner",
+              "semantic": "uv",
+              "interpolation": "linear",
+              "values": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  0
+                ],
+                [
+                  0,
+                  1
+                ]
+              ]
+            },
+            "color": {
+              "domain": "vertex",
+              "semantic": "color",
+              "interpolation": "linear",
+              "values": [
+                [
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                [
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                [
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                [
+                  1,
+                  1,
+                  1,
+                  1
+                ]
+              ]
+            }
+          },
+          "materials": {
+            "paint": {
+              "baseColor": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "textures": {
+            "pixel": {
+              "mime": "image/png",
+              "bytes": [
+                1,
+                2,
+                3
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": "rename-custom-attribute-preserves-samples",
+        "command": {
+          "path": [
+            "attributes",
+            "label",
+            "name"
+          ],
+          "value": "category"
+        },
+        "expectedMesh": {
+          "vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              2,
+              2,
+              0
+            ]
+          ],
+          "faces": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "attributes": {
+            "uv": {
+              "domain": "corner",
+              "semantic": "uv",
+              "interpolation": "linear",
+              "values": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  0
+                ],
+                [
+                  0,
+                  1
+                ]
+              ]
+            },
+            "category": {
+              "domain": "vertex",
+              "semantic": "custom",
+              "interpolation": "nearest",
+              "values": [
+                "A",
+                "B",
+                "C",
+                "D"
+              ]
+            }
+          },
+          "materials": {
+            "paint": {
+              "baseColor": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "textures": {
+            "pixel": {
+              "mime": "image/png",
+              "bytes": [
+                1,
+                2,
+                3
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": "remove-custom-attribute-preserves-other-data",
+        "command": {
+          "path": [
+            "attributes",
+            "label"
+          ],
+          "operation": "remove",
+          "value": ""
+        },
+        "expectedMesh": {
+          "vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              2,
+              2,
+              0
+            ]
+          ],
+          "faces": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "attributes": {
+            "uv": {
+              "domain": "corner",
+              "semantic": "uv",
+              "interpolation": "linear",
+              "values": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  0
+                ],
+                [
+                  0,
+                  1
+                ]
+              ]
+            }
+          },
+          "materials": {
+            "paint": {
+              "baseColor": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "textures": {
+            "pixel": {
+              "mime": "image/png",
+              "bytes": [
+                1,
+                2,
+                3
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": "refuse-duplicate-attribute-name",
+        "command": {
+          "path": [
+            "attributes",
+            "label"
+          ],
+          "operation": "add",
+          "value": "text"
+        },
+        "error": true
+      },
+      {
+        "id": "refuse-unknown-attribute-type",
+        "command": {
+          "path": [
+            "attributes",
+            "sample"
+          ],
+          "operation": "add",
+          "value": "object"
+        },
+        "error": true,
+        "schemaValid": false
+      },
+      {
+        "id": "attribute-identifier-preserves-prototype-named-member",
+        "command": {
+          "path": [
+            "attributes",
+            "label",
+            "name"
+          ],
+          "value": "__proto__"
+        },
+        "expectedMesh": {
+          "vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              2,
+              2,
+              0
+            ]
+          ],
+          "faces": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "attributes": {
+            "uv": {
+              "domain": "corner",
+              "semantic": "uv",
+              "interpolation": "linear",
+              "values": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  0
+                ],
+                [
+                  0,
+                  1
+                ]
+              ]
+            },
+            "__proto__": {
+              "domain": "vertex",
+              "semantic": "custom",
+              "interpolation": "nearest",
+              "values": [
+                "A",
+                "B",
+                "C",
+                "D"
+              ]
+            }
+          },
+          "materials": {
+            "paint": {
+              "baseColor": [
+                1,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "textures": {
+            "pixel": {
+              "mime": "image/png",
+              "bytes": [
+                1,
+                2,
+                3
+              ]
+            }
+          }
+        }
+      }
+    ]
+  },
+  "meshAssets": {
+    "mesh": {
+      "vertices": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          2,
+          2,
+          0
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          1,
+          2
+        ]
+      ],
+      "attributes": {
+        "label": {
+          "domain": "vertex",
+          "semantic": "custom",
+          "interpolation": "nearest",
+          "values": [
+            "A",
+            "B",
+            "C",
+            "D"
+          ]
+        },
+        "uv": {
+          "domain": "corner",
+          "semantic": "uv",
+          "interpolation": "linear",
+          "values": [
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              0
+            ],
+            [
+              0,
+              1
+            ]
+          ]
+        },
+        "material": {
+          "domain": "face",
+          "semantic": "material",
+          "interpolation": "nearest",
+          "values": [
+            "paint"
+          ]
+        }
+      },
+      "materials": {
+        "paint": {
+          "baseColor": [
+            1,
+            0.5,
+            0.25,
+            1
+          ],
+          "metallic": 0.2,
+          "roughness": 0.7,
+          "baseColorTexture": "image",
+          "metallicRoughnessTexture": "image",
+          "normalTexture": "image",
+          "occlusionTexture": "image",
+          "emissiveTexture": "image"
+        }
+      },
+      "textures": {
+        "image": {
+          "mime": "image/png",
+          "bytes": [
+            137,
+            80,
+            78,
+            71
+          ]
+        }
+      }
+    },
+    "cases": [
+      {
+        "id": "material-coefficient",
+        "command": {
+          "path": [
+            "materials",
+            "paint",
+            "metallic"
+          ],
+          "value": "0.65"
+        },
+        "expectedMesh": {
+          "vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              2,
+              2,
+              0
+            ]
+          ],
+          "faces": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "attributes": {
+            "label": {
+              "domain": "vertex",
+              "semantic": "custom",
+              "interpolation": "nearest",
+              "values": [
+                "A",
+                "B",
+                "C",
+                "D"
+              ]
+            },
+            "uv": {
+              "domain": "corner",
+              "semantic": "uv",
+              "interpolation": "linear",
+              "values": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  0
+                ],
+                [
+                  0,
+                  1
+                ]
+              ]
+            },
+            "material": {
+              "domain": "face",
+              "semantic": "material",
+              "interpolation": "nearest",
+              "values": [
+                "paint"
+              ]
+            }
+          },
+          "materials": {
+            "paint": {
+              "baseColor": [
+                1,
+                0.5,
+                0.25,
+                1
+              ],
+              "metallic": 0.65,
+              "roughness": 0.7,
+              "baseColorTexture": "image",
+              "metallicRoughnessTexture": "image",
+              "normalTexture": "image",
+              "occlusionTexture": "image",
+              "emissiveTexture": "image"
+            }
+          },
+          "textures": {
+            "image": {
+              "mime": "image/png",
+              "bytes": [
+                137,
+                80,
+                78,
+                71
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": "material-missing-option",
+        "command": {
+          "path": [
+            "materials",
+            "paint",
+            "alphaMode"
+          ],
+          "value": "MASK"
+        },
+        "expectedMesh": {
+          "vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              2,
+              2,
+              0
+            ]
+          ],
+          "faces": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "attributes": {
+            "label": {
+              "domain": "vertex",
+              "semantic": "custom",
+              "interpolation": "nearest",
+              "values": [
+                "A",
+                "B",
+                "C",
+                "D"
+              ]
+            },
+            "uv": {
+              "domain": "corner",
+              "semantic": "uv",
+              "interpolation": "linear",
+              "values": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  0
+                ],
+                [
+                  0,
+                  1
+                ]
+              ]
+            },
+            "material": {
+              "domain": "face",
+              "semantic": "material",
+              "interpolation": "nearest",
+              "values": [
+                "paint"
+              ]
+            }
+          },
+          "materials": {
+            "paint": {
+              "baseColor": [
+                1,
+                0.5,
+                0.25,
+                1
+              ],
+              "metallic": 0.2,
+              "roughness": 0.7,
+              "baseColorTexture": "image",
+              "metallicRoughnessTexture": "image",
+              "normalTexture": "image",
+              "occlusionTexture": "image",
+              "emissiveTexture": "image",
+              "alphaMode": "MASK"
+            }
+          },
+          "textures": {
+            "image": {
+              "mime": "image/png",
+              "bytes": [
+                137,
+                80,
+                78,
+                71
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": "material-invalid-coefficient",
+        "command": {
+          "path": [
+            "materials",
+            "paint",
+            "roughness"
+          ],
+          "value": "2"
+        },
+        "error": true
+      },
+      {
+        "id": "material-default-creation",
+        "command": {
+          "path": [
+            "materials",
+            "new"
+          ],
+          "value": "",
+          "operation": "add"
+        },
+        "expectedMesh": {
+          "vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              2,
+              2,
+              0
+            ]
+          ],
+          "faces": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "attributes": {
+            "label": {
+              "domain": "vertex",
+              "semantic": "custom",
+              "interpolation": "nearest",
+              "values": [
+                "A",
+                "B",
+                "C",
+                "D"
+              ]
+            },
+            "uv": {
+              "domain": "corner",
+              "semantic": "uv",
+              "interpolation": "linear",
+              "values": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  0
+                ],
+                [
+                  0,
+                  1
+                ]
+              ]
+            },
+            "material": {
+              "domain": "face",
+              "semantic": "material",
+              "interpolation": "nearest",
+              "values": [
+                "paint"
+              ]
+            }
+          },
+          "materials": {
+            "paint": {
+              "baseColor": [
+                1,
+                0.5,
+                0.25,
+                1
+              ],
+              "metallic": 0.2,
+              "roughness": 0.7,
+              "baseColorTexture": "image",
+              "metallicRoughnessTexture": "image",
+              "normalTexture": "image",
+              "occlusionTexture": "image",
+              "emissiveTexture": "image"
+            },
+            "new": {
+              "baseColor": [
+                1,
+                1,
+                1,
+                1
+              ],
+              "metallic": 0,
+              "roughness": 1,
+              "emissive": [
+                0,
+                0,
+                0
+              ],
+              "normalScale": [
+                1,
+                1
+              ],
+              "occlusionStrength": 1,
+              "alphaMode": "OPAQUE",
+              "alphaCutoff": 0.5,
+              "doubleSided": false
+            }
+          },
+          "textures": {
+            "image": {
+              "mime": "image/png",
+              "bytes": [
+                137,
+                80,
+                78,
+                71
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": "material-rename-assignment",
+        "command": {
+          "path": [
+            "materials",
+            "paint",
+            "name"
+          ],
+          "value": "coating"
+        },
+        "expectedMesh": {
+          "vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              2,
+              2,
+              0
+            ]
+          ],
+          "faces": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "attributes": {
+            "label": {
+              "domain": "vertex",
+              "semantic": "custom",
+              "interpolation": "nearest",
+              "values": [
+                "A",
+                "B",
+                "C",
+                "D"
+              ]
+            },
+            "uv": {
+              "domain": "corner",
+              "semantic": "uv",
+              "interpolation": "linear",
+              "values": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  0
+                ],
+                [
+                  0,
+                  1
+                ]
+              ]
+            },
+            "material": {
+              "domain": "face",
+              "semantic": "material",
+              "interpolation": "nearest",
+              "values": [
+                "coating"
+              ]
+            }
+          },
+          "materials": {
+            "coating": {
+              "baseColor": [
+                1,
+                0.5,
+                0.25,
+                1
+              ],
+              "metallic": 0.2,
+              "roughness": 0.7,
+              "baseColorTexture": "image",
+              "metallicRoughnessTexture": "image",
+              "normalTexture": "image",
+              "occlusionTexture": "image",
+              "emissiveTexture": "image"
+            }
+          },
+          "textures": {
+            "image": {
+              "mime": "image/png",
+              "bytes": [
+                137,
+                80,
+                78,
+                71
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": "material-remove-in-use",
+        "command": {
+          "path": [
+            "materials",
+            "paint"
+          ],
+          "value": "",
+          "operation": "remove"
+        },
+        "error": true
+      },
+      {
+        "id": "texture-rename-all-roles",
+        "command": {
+          "path": [
+            "textures",
+            "image",
+            "name"
+          ],
+          "value": "albedo"
+        },
+        "expectedMesh": {
+          "vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              2,
+              2,
+              0
+            ]
+          ],
+          "faces": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "attributes": {
+            "label": {
+              "domain": "vertex",
+              "semantic": "custom",
+              "interpolation": "nearest",
+              "values": [
+                "A",
+                "B",
+                "C",
+                "D"
+              ]
+            },
+            "uv": {
+              "domain": "corner",
+              "semantic": "uv",
+              "interpolation": "linear",
+              "values": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  0
+                ],
+                [
+                  0,
+                  1
+                ]
+              ]
+            },
+            "material": {
+              "domain": "face",
+              "semantic": "material",
+              "interpolation": "nearest",
+              "values": [
+                "paint"
+              ]
+            }
+          },
+          "materials": {
+            "paint": {
+              "baseColor": [
+                1,
+                0.5,
+                0.25,
+                1
+              ],
+              "metallic": 0.2,
+              "roughness": 0.7,
+              "baseColorTexture": "albedo",
+              "metallicRoughnessTexture": "albedo",
+              "normalTexture": "albedo",
+              "occlusionTexture": "albedo",
+              "emissiveTexture": "albedo"
+            }
+          },
+          "textures": {
+            "albedo": {
+              "mime": "image/png",
+              "bytes": [
+                137,
+                80,
+                78,
+                71
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": "texture-remove-in-use",
+        "command": {
+          "path": [
+            "textures",
+            "image"
+          ],
+          "value": "",
+          "operation": "remove"
+        },
+        "error": true
+      },
+      {
+        "id": "texture-bytes-not-fields",
+        "command": {
+          "path": [
+            "textures",
+            "image",
+            "bytes",
+            "0"
+          ],
+          "value": "0"
+        },
+        "error": true
+      },
+      {
+        "id": "texture-role-invalid-reference",
+        "command": {
+          "path": [
+            "materials",
+            "paint",
+            "normalTexture"
+          ],
+          "value": "missing"
+        },
+        "error": true
+      },
+      {
+        "id": "texture-clear-role",
+        "command": {
+          "path": [
+            "materials",
+            "paint",
+            "normalTexture"
+          ],
+          "value": ""
+        },
+        "expectedMesh": {
+          "vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              2,
+              2,
+              0
+            ]
+          ],
+          "faces": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "attributes": {
+            "label": {
+              "domain": "vertex",
+              "semantic": "custom",
+              "interpolation": "nearest",
+              "values": [
+                "A",
+                "B",
+                "C",
+                "D"
+              ]
+            },
+            "uv": {
+              "domain": "corner",
+              "semantic": "uv",
+              "interpolation": "linear",
+              "values": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  0
+                ],
+                [
+                  0,
+                  1
+                ]
+              ]
+            },
+            "material": {
+              "domain": "face",
+              "semantic": "material",
+              "interpolation": "nearest",
+              "values": [
+                "paint"
+              ]
+            }
+          },
+          "materials": {
+            "paint": {
+              "baseColor": [
+                1,
+                0.5,
+                0.25,
+                1
+              ],
+              "metallic": 0.2,
+              "roughness": 0.7,
+              "baseColorTexture": "image",
+              "metallicRoughnessTexture": "image",
+              "occlusionTexture": "image",
+              "emissiveTexture": "image"
+            }
+          },
+          "textures": {
+            "image": {
+              "mime": "image/png",
+              "bytes": [
+                137,
+                80,
+                78,
+                71
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": "texture-selected-uv",
+        "command": {
+          "path": [
+            "materials",
+            "paint",
+            "textureCoordinates",
+            "normalTexture"
+          ],
+          "value": "1"
+        },
+        "expectedMesh": {
+          "vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              2,
+              2,
+              0
+            ]
+          ],
+          "faces": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "attributes": {
+            "label": {
+              "domain": "vertex",
+              "semantic": "custom",
+              "interpolation": "nearest",
+              "values": [
+                "A",
+                "B",
+                "C",
+                "D"
+              ]
+            },
+            "uv": {
+              "domain": "corner",
+              "semantic": "uv",
+              "interpolation": "linear",
+              "values": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  0
+                ],
+                [
+                  0,
+                  1
+                ]
+              ]
+            },
+            "material": {
+              "domain": "face",
+              "semantic": "material",
+              "interpolation": "nearest",
+              "values": [
+                "paint"
+              ]
+            }
+          },
+          "materials": {
+            "paint": {
+              "baseColor": [
+                1,
+                0.5,
+                0.25,
+                1
+              ],
+              "metallic": 0.2,
+              "roughness": 0.7,
+              "baseColorTexture": "image",
+              "metallicRoughnessTexture": "image",
+              "normalTexture": "image",
+              "occlusionTexture": "image",
+              "emissiveTexture": "image",
+              "textureCoordinates": {
+                "normalTexture": 1
+              }
+            }
+          },
+          "textures": {
+            "image": {
+              "mime": "image/png",
+              "bytes": [
+                137,
+                80,
+                78,
+                71
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": "texture-sampler",
+        "command": {
+          "path": [
+            "materials",
+            "paint",
+            "textureSamplers",
+            "normalTexture",
+            "minFilter"
+          ],
+          "value": "9987"
+        },
+        "expectedMesh": {
+          "vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              2,
+              2,
+              0
+            ]
+          ],
+          "faces": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "attributes": {
+            "label": {
+              "domain": "vertex",
+              "semantic": "custom",
+              "interpolation": "nearest",
+              "values": [
+                "A",
+                "B",
+                "C",
+                "D"
+              ]
+            },
+            "uv": {
+              "domain": "corner",
+              "semantic": "uv",
+              "interpolation": "linear",
+              "values": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  0
+                ],
+                [
+                  0,
+                  1
+                ]
+              ]
+            },
+            "material": {
+              "domain": "face",
+              "semantic": "material",
+              "interpolation": "nearest",
+              "values": [
+                "paint"
+              ]
+            }
+          },
+          "materials": {
+            "paint": {
+              "baseColor": [
+                1,
+                0.5,
+                0.25,
+                1
+              ],
+              "metallic": 0.2,
+              "roughness": 0.7,
+              "baseColorTexture": "image",
+              "metallicRoughnessTexture": "image",
+              "normalTexture": "image",
+              "occlusionTexture": "image",
+              "emissiveTexture": "image",
+              "textureSamplers": {
+                "normalTexture": {
+                  "minFilter": 9987
+                }
+              }
+            }
+          },
+          "textures": {
+            "image": {
+              "mime": "image/png",
+              "bytes": [
+                137,
+                80,
+                78,
+                71
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": "custom-vertex",
+        "command": {
+          "path": [
+            "attributes",
+            "temperature"
+          ],
+          "value": "number/vertex",
+          "operation": "add"
+        },
+        "expectedMesh": {
+          "vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              2,
+              2,
+              0
+            ]
+          ],
+          "faces": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "attributes": {
+            "label": {
+              "domain": "vertex",
+              "semantic": "custom",
+              "interpolation": "nearest",
+              "values": [
+                "A",
+                "B",
+                "C",
+                "D"
+              ]
+            },
+            "uv": {
+              "domain": "corner",
+              "semantic": "uv",
+              "interpolation": "linear",
+              "values": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  0
+                ],
+                [
+                  0,
+                  1
+                ]
+              ]
+            },
+            "material": {
+              "domain": "face",
+              "semantic": "material",
+              "interpolation": "nearest",
+              "values": [
+                "paint"
+              ]
+            },
+            "temperature": {
+              "domain": "vertex",
+              "semantic": "custom",
+              "interpolation": "linear",
+              "values": [
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          },
+          "materials": {
+            "paint": {
+              "baseColor": [
+                1,
+                0.5,
+                0.25,
+                1
+              ],
+              "metallic": 0.2,
+              "roughness": 0.7,
+              "baseColorTexture": "image",
+              "metallicRoughnessTexture": "image",
+              "normalTexture": "image",
+              "occlusionTexture": "image",
+              "emissiveTexture": "image"
+            }
+          },
+          "textures": {
+            "image": {
+              "mime": "image/png",
+              "bytes": [
+                137,
+                80,
+                78,
+                71
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": "custom-face",
+        "command": {
+          "path": [
+            "attributes",
+            "temperature"
+          ],
+          "value": "number/face",
+          "operation": "add"
+        },
+        "expectedMesh": {
+          "vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              2,
+              2,
+              0
+            ]
+          ],
+          "faces": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "attributes": {
+            "label": {
+              "domain": "vertex",
+              "semantic": "custom",
+              "interpolation": "nearest",
+              "values": [
+                "A",
+                "B",
+                "C",
+                "D"
+              ]
+            },
+            "uv": {
+              "domain": "corner",
+              "semantic": "uv",
+              "interpolation": "linear",
+              "values": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  0
+                ],
+                [
+                  0,
+                  1
+                ]
+              ]
+            },
+            "material": {
+              "domain": "face",
+              "semantic": "material",
+              "interpolation": "nearest",
+              "values": [
+                "paint"
+              ]
+            },
+            "temperature": {
+              "domain": "face",
+              "semantic": "custom",
+              "interpolation": "linear",
+              "values": [
+                0
+              ]
+            }
+          },
+          "materials": {
+            "paint": {
+              "baseColor": [
+                1,
+                0.5,
+                0.25,
+                1
+              ],
+              "metallic": 0.2,
+              "roughness": 0.7,
+              "baseColorTexture": "image",
+              "metallicRoughnessTexture": "image",
+              "normalTexture": "image",
+              "occlusionTexture": "image",
+              "emissiveTexture": "image"
+            }
+          },
+          "textures": {
+            "image": {
+              "mime": "image/png",
+              "bytes": [
+                137,
+                80,
+                78,
+                71
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": "custom-edge",
+        "command": {
+          "path": [
+            "attributes",
+            "temperature"
+          ],
+          "value": "number/edge",
+          "operation": "add"
+        },
+        "expectedMesh": {
+          "vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              2,
+              2,
+              0
+            ]
+          ],
+          "faces": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "attributes": {
+            "label": {
+              "domain": "vertex",
+              "semantic": "custom",
+              "interpolation": "nearest",
+              "values": [
+                "A",
+                "B",
+                "C",
+                "D"
+              ]
+            },
+            "uv": {
+              "domain": "corner",
+              "semantic": "uv",
+              "interpolation": "linear",
+              "values": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  0
+                ],
+                [
+                  0,
+                  1
+                ]
+              ]
+            },
+            "material": {
+              "domain": "face",
+              "semantic": "material",
+              "interpolation": "nearest",
+              "values": [
+                "paint"
+              ]
+            },
+            "temperature": {
+              "domain": "edge",
+              "semantic": "custom",
+              "interpolation": "linear",
+              "values": [
+                0,
+                0,
+                0
+              ]
+            }
+          },
+          "materials": {
+            "paint": {
+              "baseColor": [
+                1,
+                0.5,
+                0.25,
+                1
+              ],
+              "metallic": 0.2,
+              "roughness": 0.7,
+              "baseColorTexture": "image",
+              "metallicRoughnessTexture": "image",
+              "normalTexture": "image",
+              "occlusionTexture": "image",
+              "emissiveTexture": "image"
+            }
+          },
+          "textures": {
+            "image": {
+              "mime": "image/png",
+              "bytes": [
+                137,
+                80,
+                78,
+                71
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": "custom-corner",
+        "command": {
+          "path": [
+            "attributes",
+            "temperature"
+          ],
+          "value": "number/corner",
+          "operation": "add"
+        },
+        "expectedMesh": {
+          "vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              2,
+              2,
+              0
+            ]
+          ],
+          "faces": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "attributes": {
+            "label": {
+              "domain": "vertex",
+              "semantic": "custom",
+              "interpolation": "nearest",
+              "values": [
+                "A",
+                "B",
+                "C",
+                "D"
+              ]
+            },
+            "uv": {
+              "domain": "corner",
+              "semantic": "uv",
+              "interpolation": "linear",
+              "values": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  0
+                ],
+                [
+                  0,
+                  1
+                ]
+              ]
+            },
+            "material": {
+              "domain": "face",
+              "semantic": "material",
+              "interpolation": "nearest",
+              "values": [
+                "paint"
+              ]
+            },
+            "temperature": {
+              "domain": "corner",
+              "semantic": "custom",
+              "interpolation": "linear",
+              "values": [
+                0,
+                0,
+                0
+              ]
+            }
+          },
+          "materials": {
+            "paint": {
+              "baseColor": [
+                1,
+                0.5,
+                0.25,
+                1
+              ],
+              "metallic": 0.2,
+              "roughness": 0.7,
+              "baseColorTexture": "image",
+              "metallicRoughnessTexture": "image",
+              "normalTexture": "image",
+              "occlusionTexture": "image",
+              "emissiveTexture": "image"
+            }
+          },
+          "textures": {
+            "image": {
+              "mime": "image/png",
+              "bytes": [
+                137,
+                80,
+                78,
+                71
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": "material-assignment-preset",
+        "command": {
+          "path": [
+            "attributes",
+            "assigned"
+          ],
+          "value": "material/paint",
+          "operation": "add"
+        },
+        "expectedMesh": {
+          "vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              2,
+              2,
+              0
+            ]
+          ],
+          "faces": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "attributes": {
+            "label": {
+              "domain": "vertex",
+              "semantic": "custom",
+              "interpolation": "nearest",
+              "values": [
+                "A",
+                "B",
+                "C",
+                "D"
+              ]
+            },
+            "uv": {
+              "domain": "corner",
+              "semantic": "uv",
+              "interpolation": "linear",
+              "values": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  0
+                ],
+                [
+                  0,
+                  1
+                ]
+              ]
+            },
+            "material": {
+              "domain": "face",
+              "semantic": "material",
+              "interpolation": "nearest",
+              "values": [
+                "paint"
+              ]
+            },
+            "assigned": {
+              "domain": "face",
+              "semantic": "material",
+              "interpolation": "nearest",
+              "values": [
+                "paint"
+              ]
+            }
+          },
+          "materials": {
+            "paint": {
+              "baseColor": [
+                1,
+                0.5,
+                0.25,
+                1
+              ],
+              "metallic": 0.2,
+              "roughness": 0.7,
+              "baseColorTexture": "image",
+              "metallicRoughnessTexture": "image",
+              "normalTexture": "image",
+              "occlusionTexture": "image",
+              "emissiveTexture": "image"
+            }
+          },
+          "textures": {
+            "image": {
+              "mime": "image/png",
+              "bytes": [
+                137,
+                80,
+                78,
+                71
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": "alpha-cutoff-above-one",
+        "command": {
+          "path": [
+            "materials",
+            "paint",
+            "alphaCutoff"
+          ],
+          "value": "1.5"
+        },
+        "expected": {
+          "path": [
+            "materials",
+            "paint",
+            "alphaCutoff"
+          ],
+          "value": 1.5
+        }
+      },
+      {
+        "id": "alpha-cutoff-negative-refused",
+        "command": {
+          "path": [
+            "materials",
+            "paint",
+            "alphaCutoff"
+          ],
+          "value": "-0.1"
+        },
+        "error": true
+      }
+    ]
+  },
+  "textureImport": {
+    "name": "paint.png",
+    "mime": "image/png",
+    "payload": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP43+DwHwAHAAK/2adEEAAAAABJRU5ErkJggg==",
+    "bytes": [
+      137,
+      80,
+      78,
+      71,
+      13,
+      10,
+      26,
+      10,
+      0,
+      0,
+      0,
+      13,
+      73,
+      72,
+      68,
+      82,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      1,
+      8,
+      6,
+      0,
+      0,
+      0,
+      31,
+      21,
+      196,
+      137,
+      0,
+      0,
+      0,
+      13,
+      73,
+      68,
+      65,
+      84,
+      120,
+      1,
+      99,
+      248,
+      223,
+      224,
+      240,
+      31,
+      0,
+      7,
+      0,
+      2,
+      191,
+      217,
+      167,
+      68,
+      16,
+      0,
+      0,
+      0,
+      0,
+      73,
+      69,
+      78,
+      68,
+      174,
+      66,
+      96,
+      130
+    ],
+    "pixel": [
+      255,
+      128,
+      64,
+      255
+    ],
+    "target": {
+      "widgetId": "construct",
+      "channel": "data",
+      "textureId": "image"
+    }
+  },
+  "textureJpegImport": {
+    "name": "paint.jpg",
+    "mime": "image/jpeg",
+    "payload": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAIBAQEBAQIBAQECAgICAgQDAgICAgUEBAMEBgUGBgYFBgYGBwkIBgcJBwYGCAsICQoKCgoKBggLDAsKDAkKCgr/2wBDAQICAgICAgUDAwUKBwYHCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgr/wAARCAABAAEDAREAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD3yv4rP9FD/9k=",
+    "bytes": [
+      255,
+      216,
+      255,
+      224,
+      0,
+      16,
+      74,
+      70,
+      73,
+      70,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      0,
+      0,
+      255,
+      219,
+      0,
+      67,
+      0,
+      2,
+      1,
+      1,
+      1,
+      1,
+      1,
+      2,
+      1,
+      1,
+      1,
+      2,
+      2,
+      2,
+      2,
+      2,
+      4,
+      3,
+      2,
+      2,
+      2,
+      2,
+      5,
+      4,
+      4,
+      3,
+      4,
+      6,
+      5,
+      6,
+      6,
+      6,
+      5,
+      6,
+      6,
+      6,
+      7,
+      9,
+      8,
+      6,
+      7,
+      9,
+      7,
+      6,
+      6,
+      8,
+      11,
+      8,
+      9,
+      10,
+      10,
+      10,
+      10,
+      10,
+      6,
+      8,
+      11,
+      12,
+      11,
+      10,
+      12,
+      9,
+      10,
+      10,
+      10,
+      255,
+      219,
+      0,
+      67,
+      1,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      5,
+      3,
+      3,
+      5,
+      10,
+      7,
+      6,
+      7,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      255,
+      192,
+      0,
+      17,
+      8,
+      0,
+      1,
+      0,
+      1,
+      3,
+      1,
+      17,
+      0,
+      2,
+      17,
+      1,
+      3,
+      17,
+      1,
+      255,
+      196,
+      0,
+      31,
+      0,
+      0,
+      1,
+      5,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      255,
+      196,
+      0,
+      181,
+      16,
+      0,
+      2,
+      1,
+      3,
+      3,
+      2,
+      4,
+      3,
+      5,
+      5,
+      4,
+      4,
+      0,
+      0,
+      1,
+      125,
+      1,
+      2,
+      3,
+      0,
+      4,
+      17,
+      5,
+      18,
+      33,
+      49,
+      65,
+      6,
+      19,
+      81,
+      97,
+      7,
+      34,
+      113,
+      20,
+      50,
+      129,
+      145,
+      161,
+      8,
+      35,
+      66,
+      177,
+      193,
+      21,
+      82,
+      209,
+      240,
+      36,
+      51,
+      98,
+      114,
+      130,
+      9,
+      10,
+      22,
+      23,
+      24,
+      25,
+      26,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      67,
+      68,
+      69,
+      70,
+      71,
+      72,
+      73,
+      74,
+      83,
+      84,
+      85,
+      86,
+      87,
+      88,
+      89,
+      90,
+      99,
+      100,
+      101,
+      102,
+      103,
+      104,
+      105,
+      106,
+      115,
+      116,
+      117,
+      118,
+      119,
+      120,
+      121,
+      122,
+      131,
+      132,
+      133,
+      134,
+      135,
+      136,
+      137,
+      138,
+      146,
+      147,
+      148,
+      149,
+      150,
+      151,
+      152,
+      153,
+      154,
+      162,
+      163,
+      164,
+      165,
+      166,
+      167,
+      168,
+      169,
+      170,
+      178,
+      179,
+      180,
+      181,
+      182,
+      183,
+      184,
+      185,
+      186,
+      194,
+      195,
+      196,
+      197,
+      198,
+      199,
+      200,
+      201,
+      202,
+      210,
+      211,
+      212,
+      213,
+      214,
+      215,
+      216,
+      217,
+      218,
+      225,
+      226,
+      227,
+      228,
+      229,
+      230,
+      231,
+      232,
+      233,
+      234,
+      241,
+      242,
+      243,
+      244,
+      245,
+      246,
+      247,
+      248,
+      249,
+      250,
+      255,
+      196,
+      0,
+      31,
+      1,
+      0,
+      3,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      255,
+      196,
+      0,
+      181,
+      17,
+      0,
+      2,
+      1,
+      2,
+      4,
+      4,
+      3,
+      4,
+      7,
+      5,
+      4,
+      4,
+      0,
+      1,
+      2,
+      119,
+      0,
+      1,
+      2,
+      3,
+      17,
+      4,
+      5,
+      33,
+      49,
+      6,
+      18,
+      65,
+      81,
+      7,
+      97,
+      113,
+      19,
+      34,
+      50,
+      129,
+      8,
+      20,
+      66,
+      145,
+      161,
+      177,
+      193,
+      9,
+      35,
+      51,
+      82,
+      240,
+      21,
+      98,
+      114,
+      209,
+      10,
+      22,
+      36,
+      52,
+      225,
+      37,
+      241,
+      23,
+      24,
+      25,
+      26,
+      38,
+      39,
+      40,
+      41,
+      42,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      67,
+      68,
+      69,
+      70,
+      71,
+      72,
+      73,
+      74,
+      83,
+      84,
+      85,
+      86,
+      87,
+      88,
+      89,
+      90,
+      99,
+      100,
+      101,
+      102,
+      103,
+      104,
+      105,
+      106,
+      115,
+      116,
+      117,
+      118,
+      119,
+      120,
+      121,
+      122,
+      130,
+      131,
+      132,
+      133,
+      134,
+      135,
+      136,
+      137,
+      138,
+      146,
+      147,
+      148,
+      149,
+      150,
+      151,
+      152,
+      153,
+      154,
+      162,
+      163,
+      164,
+      165,
+      166,
+      167,
+      168,
+      169,
+      170,
+      178,
+      179,
+      180,
+      181,
+      182,
+      183,
+      184,
+      185,
+      186,
+      194,
+      195,
+      196,
+      197,
+      198,
+      199,
+      200,
+      201,
+      202,
+      210,
+      211,
+      212,
+      213,
+      214,
+      215,
+      216,
+      217,
+      218,
+      226,
+      227,
+      228,
+      229,
+      230,
+      231,
+      232,
+      233,
+      234,
+      242,
+      243,
+      244,
+      245,
+      246,
+      247,
+      248,
+      249,
+      250,
+      255,
+      218,
+      0,
+      12,
+      3,
+      1,
+      0,
+      2,
+      17,
+      3,
+      17,
+      0,
+      63,
+      0,
+      247,
+      202,
+      254,
+      43,
+      63,
+      209,
+      67,
+      255,
+      217
+    ],
+    "pixel": [
+      255,
+      128,
+      65,
+      255
+    ],
+    "oracle": "Pillow 11.3.0 JPEG decode",
+    "target": {
+      "widgetId": "construct",
+      "channel": "data",
+      "textureId": "image"
+    }
+  },
+  "measurementPublication": {
+    "kind": "brep.prim3d.box",
+    "output": "solid",
+    "params": {
+      "width": 2,
+      "depth": 1.5,
+      "height": 1
+    },
+    "cases": [
+      {
+        "kind": "brep.measure.length",
+        "output": "length",
+        "value": 18
+      },
+      {
+        "kind": "brep.measure.area",
+        "output": "area",
+        "value": 13
+      },
+      {
+        "kind": "brep.measure.volume",
+        "output": "volume",
+        "value": 3
+      }
+    ]
+  },
+  "liveAnalyticPublication": {
+    "source": "solid",
+    "componentGranularity": "face",
+    "group": 0,
+    "operation": "shell",
+    "amount": 0.1,
+    "feature": "solid__shell",
+    "selector": "solid__selected",
+    "consumer": "volume",
+    "sourceHandle": "from rendered componentSource",
+    "label": "from rendered componentReferences",
+    "revision": "from rendered componentSource",
+    "history": [
+      "undo",
+      "redo"
+    ]
+  }
 }

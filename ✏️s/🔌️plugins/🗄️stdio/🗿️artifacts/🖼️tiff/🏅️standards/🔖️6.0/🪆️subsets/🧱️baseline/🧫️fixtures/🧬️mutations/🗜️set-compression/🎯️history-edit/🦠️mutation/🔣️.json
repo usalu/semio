@@ -1,0 +1,6 @@
+{
+  "mutation": "set-compression",
+  "payload": {
+    "compression": 5
+  }
+}

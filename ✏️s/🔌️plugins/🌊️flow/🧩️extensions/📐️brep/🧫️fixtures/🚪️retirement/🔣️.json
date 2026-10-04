@@ -15,5 +15,34 @@
     65536
   ],
   "steps": 100000,
-  "geometrySchema": "geometry"
+  "geometrySchema": "geometry",
+  "bypassIdentity": {
+    "nodeHashes": [700021,700022],
+    "cancellationGroup": "shared-bypass-cancellation-group",
+    "roundUnits": 1,
+    "compactHops": 8,
+    "cacheMode": "bypass",
+    "complete": false
+  },
+  "exactCancellation": {
+    "nodeHashLiteral": "18446744073709551613",
+    "roundUnits": 1,
+    "retired": 1,
+    "pending": true,
+    "malformed": [
+      "{\"operatorId\":\"brep.prim3d.box\",\"nodeHash\":-1}",
+      "{\"operatorId\":\"brep.prim3d.box\",\"nodeHash\":1.5}",
+      "{\"operatorId\":\"brep.prim3d.box\"}",
+      "{\"nodeHash\":700011}"
+    ],
+    "faultCode": "extension.evaluate-cancel.bad-request"
+  },
+  "ownerIsolation": {
+    "sharedNodeHash": 700011,
+    "roundUnits": 1,
+    "maximumTurns": 100000,
+    "halfExtents": [0.5,0.5,0.5],
+    "liveOwnerMustRemainPendingAfterOtherClose": true,
+    "originalReaderHops": 8
+  }
 }

@@ -1,0 +1,90 @@
+{
+  "format": 1,
+  "cases": [
+    {
+      "id": "record",
+      "mode": "Record",
+      "members": [
+        "__dsl_spec",
+        "__dsl_spec_controlled",
+        "__dsl_spec_producer",
+        "__dsl_to_record",
+        "__dsl_to_record_controlled",
+        "__dsl_from_record",
+        "__dsl_from_record_controlled"
+      ],
+      "traits": [
+        "DslField"
+      ]
+    },
+    {
+      "id": "projection",
+      "mode": "Projection",
+      "names": {
+        "spec": "shape",
+        "to": "emit",
+        "from": "bind"
+      },
+      "members": [
+        "shape",
+        "emit",
+        "bind"
+      ],
+      "traits": []
+    },
+    {
+      "id": "scalar",
+      "mode": "Scalar",
+      "members": [],
+      "traits": [
+        "DslField"
+      ]
+    },
+    {
+      "id": "variants",
+      "mode": "Variants",
+      "members": [
+        "__dsl_variant_spec_0",
+        "__dsl_variant_spec_0_controlled",
+        "__dsl_variant_spec_0_producer",
+        "__dsl_variant_spec_1",
+        "__dsl_variant_spec_1_controlled",
+        "__dsl_variant_spec_1_producer"
+      ],
+      "traits": [
+        "DslVariants"
+      ]
+    },
+    {
+      "id": "empty-record",
+      "mode": "Record",
+      "members": [
+        "__dsl_spec",
+        "__dsl_spec_controlled",
+        "__dsl_spec_producer",
+        "__dsl_to_record",
+        "__dsl_to_record_controlled",
+        "__dsl_from_record",
+        "__dsl_from_record_controlled"
+      ],
+      "traits": [
+        "DslField"
+      ],
+      "declaration": "struct Example {}"
+    }
+  ],
+  "ownedFronts": [
+    "DslRecord",
+    "DslScalar",
+    "DslEnum",
+    "record_binding",
+    "record_projection",
+    "variant_binding"
+  ],
+  "higherFronts": [
+    "DslArtifact",
+    "DslDiff",
+    "MutationLeaf",
+    "Mutations"
+  ]
+}

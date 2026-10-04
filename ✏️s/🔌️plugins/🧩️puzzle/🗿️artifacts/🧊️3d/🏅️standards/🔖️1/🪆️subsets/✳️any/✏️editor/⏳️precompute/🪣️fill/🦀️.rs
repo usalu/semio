@@ -10,7 +10,7 @@ use crate::editor::puzzle3d::precompute::brush::{
     BrushFillVortexTarget, BrushFixtureView, TargetVortexWorld,
 };
 use crate::editor::puzzle3d::precompute::geometry::{
-    pose_isometry, world_bounds, world_volumes_contain_aabb, CollisionAabb, CollisionBody, CollisionIndexMutation, CollisionStepContext, CollisionIndexOwner, CollisionIndexRejectedOwner,
+    pose_isometry, precompute_work, world_bounds, world_volumes_contain_aabb, CollisionAabb, CollisionBody, CollisionIndexMutation, CollisionStepContext, CollisionIndexOwner, CollisionIndexRejectedOwner,
     CollisionIndexRemoval, CollisionMutationStep, CollisionPenetrationState, CollisionQueryCursor, CollisionQueryStep, CollisionSpatialIndex, CollisionStepResult, FixedOwnerMap, FixedOwnerMapInsert, FixedOwnerSet, FixedOwnerSetInsert, FixedOwnerVec,
     Pose3d, DOCUMENT_ATTRACTION_SLOTS, DOCUMENT_CANDIDATE_SLOTS, DOCUMENT_KIND_SLOTS, DOCUMENT_OBJECT_SLOTS, DOCUMENT_VOLUME_SLOTS, DOCUMENT_VORTEX_SLOTS,
 };
@@ -110,8 +110,8 @@ pub(crate) enum FillRunEvent {
 }
 
 /// 📏️ Uniform trace scale of an object scale value: a number, the first component of a vector, else 1.
-fn fill_run_scale(scale: &Option<dsl::DslValue>) -> f32 {
-    scale.as_ref().and_then(|value| value.as_f64().or_else(|| value.as_array().and_then(|values| values.first()).and_then(dsl::DslValue::as_f64))).map_or(1.0, |value| value as f32)
+fn fill_run_scale(scale: &Option<semio_framework_value::DslValue>) -> f32 {
+    scale.as_ref().and_then(|value| value.as_f64().or_else(|| value.as_array().and_then(|values| values.first()).and_then(semio_framework_value::DslValue::as_f64))).map_or(1.0, |value| value as f32)
 }
 
 /// 🧱️ One already-placed object's collision footprint, kept alongside the plan so each new fill step
@@ -554,27 +554,27 @@ fn retire_option_string(value: &mut Option<String>) -> bool {
     false
 }
 
-fn retire_dsl_one(value: &mut dsl::DslValue, depth: usize) -> bool {
+fn retire_dsl_one(value: &mut semio_framework_value::DslValue, depth: usize) -> bool {
     if depth > 16 {
         return false;
     }
     match value {
-        dsl::DslValue::String(string) => {
+        semio_framework_value::DslValue::String(string) => {
             if !retire_string(string) {
                 return false;
             }
-            *value = dsl::DslValue::Null;
+            *value = semio_framework_value::DslValue::Null;
             false
         }
-        dsl::DslValue::Bytes(bytes) => {
+        semio_framework_value::DslValue::Bytes(bytes) => {
             if bytes.capacity() != 0 {
                 drop(std::mem::take(bytes));
                 return false;
             }
-            *value = dsl::DslValue::Null;
+            *value = semio_framework_value::DslValue::Null;
             false
         }
-        dsl::DslValue::Array(values) => {
+        semio_framework_value::DslValue::Array(values) => {
             if let Some(child) = values.last_mut() {
                 if !retire_dsl_one(child, depth + 1) {
                     return false;
@@ -586,10 +586,10 @@ fn retire_dsl_one(value: &mut dsl::DslValue, depth: usize) -> bool {
                 drop(std::mem::take(values));
                 return false;
             }
-            *value = dsl::DslValue::Null;
+            *value = semio_framework_value::DslValue::Null;
             false
         }
-        dsl::DslValue::Object(values) => {
+        semio_framework_value::DslValue::Object(values) => {
             if let Some((key, child)) = values.last_mut() {
                 if !retire_string(key) || !retire_dsl_one(child, depth + 1) {
                     return false;
@@ -601,14 +601,14 @@ fn retire_dsl_one(value: &mut dsl::DslValue, depth: usize) -> bool {
                 drop(std::mem::take(values));
                 return false;
             }
-            *value = dsl::DslValue::Null;
+            *value = semio_framework_value::DslValue::Null;
             false
         }
-        dsl::DslValue::Null | dsl::DslValue::Bool(_) | dsl::DslValue::Number(_) => true,
+        semio_framework_value::DslValue::Null | semio_framework_value::DslValue::Bool(_) | semio_framework_value::DslValue::Number(_) => true,
     }
 }
 
-fn retire_option_dsl(value: &mut Option<dsl::DslValue>) -> bool {
+fn retire_option_dsl(value: &mut Option<semio_framework_value::DslValue>) -> bool {
     let Some(dsl) = value.as_mut() else { return true };
     if !retire_dsl_one(dsl, 0) {
         return false;
@@ -1273,7 +1273,7 @@ impl FillBuilder {
         let mut fixture = empty_fixture();
         if let Some(roots) = self.preparation_roots.as_ref() {
             if let Some(catalogs) = roots.scene.kind_catalogs.as_ref() {
-                fixture.meta.kind_catalogs = Some(dsl::ToValue::to_value(catalogs));
+                fixture.meta.kind_catalogs = Some(semio_framework_value::ToValue::to_value(catalogs));
             }
         }
         fixture
@@ -1282,12 +1282,12 @@ impl FillBuilder {
     fn label_peers(&self) -> Vec<Puzzle3dObject> {
         let mut peers = Vec::new();
         for object in self.base.objects.iter() {
-            if let Ok(peer) = dsl::FromValue::from_value(dsl::ToValue::to_value(object)) {
+            if let Ok(peer) = semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(object)) {
                 peers.push(peer);
             }
         }
         for object in self.appended_objects.iter().take(self.appended_objects.len().saturating_sub(1)) {
-            if let Ok(peer) = dsl::FromValue::from_value(dsl::ToValue::to_value(object)) {
+            if let Ok(peer) = semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(object)) {
                 peers.push(peer);
             }
         }
@@ -2328,6 +2328,7 @@ impl FillBuilder {
             FillJobStage::Complete(_) => return self.complete(),
         };
         self.transition_count += 1;
+        precompute_work(1);
         if stage != FillJobStage::TestCollision {
             context.consume_fuel(1);
         }
@@ -2401,7 +2402,7 @@ pub(crate) fn fill_run_entity(object_id: &str) -> u64 {
 /// 🧬️ The two `OpBinary` document ops one placement contributes, in append order.
 pub(crate) fn fill_run_ops(object: &FixtureObject, attraction: &AttractionProps, peers: &[Puzzle3dObject], catalog_fixture: &Puzzle3dFixture) -> Option<[Vec<u8>; 2]> {
     use crate::standards::v1::subsets::any::schema::mutations::{binary::encode_op, connect_vortices, create_object};
-    let mut document: crate::Puzzle3dObject = dsl::FromValue::from_value(dsl::ToValue::to_value(object)).ok()?;
+    let mut document: crate::Puzzle3dObject = semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(object)).ok()?;
     let kind_id = object.object_kind.as_deref().unwrap_or("object");
     if document.label.as_deref().map(str::is_empty).unwrap_or(true) {
         document.label = Some(puzzle3d_next_object_label(peers, catalog_fixture, kind_id));
@@ -2422,7 +2423,7 @@ pub(crate) fn fill_run_placements(provisional: &[crate::standards::v1::subsets::
         .enumerate()
         .map(|(index, pair)| {
             let [Puzzle3dMutation::CreateObject(create), Puzzle3dMutation::ConnectVortices(connect)] = pair else { return None };
-            let object = <FixtureObject as dsl::FromValue>::from_value(dsl::ToValue::to_value(&create.object)).ok()?;
+            let object = <FixtureObject as semio_framework_value::FromValue>::from_value(semio_framework_value::ToValue::to_value(&create.object)).ok()?;
             let mesh = object.mesh_url.as_ref().and_then(|url| mesh_lane.iter().position(|entry| entry == url)).unwrap_or(0) as u32;
             let subject = ToolRunTraceSubject::Instance3d { mesh, position: object.origin.map(|value| value as f32), rotation: object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]).map(|value| value as f32), scale: fill_run_scale(&object.scale) };
             let attraction = AttractionProps { id: connect.id.clone(), attracting: connect.attracting.clone(), attracted: connect.attracted.clone(), gap: connect.gap, shift: connect.shift, rise: connect.rise, rotation: connect.rotation, turn: connect.turn, tilt: connect.tilt, x: connect.x, y: connect.y };
@@ -3214,14 +3215,14 @@ impl FillRevalidateJob {
         };
         let mut catalog_fixture = empty_fixture();
         if let Some(catalogs) = self.scene.kind_catalogs.as_ref() {
-            catalog_fixture.meta.kind_catalogs = Some(dsl::ToValue::to_value(catalogs));
+            catalog_fixture.meta.kind_catalogs = Some(semio_framework_value::ToValue::to_value(catalogs));
         }
         let mut peers: Vec<Puzzle3dObject> = self
             .scene
             .fixture
             .objects
             .iter()
-            .filter_map(|object| dsl::FromValue::from_value(dsl::ToValue::to_value(object)).ok())
+            .filter_map(|object| semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(object)).ok())
             .collect();
         let mut ops = Vec::new();
         let mut entities = Vec::new();
@@ -3229,7 +3230,7 @@ impl FillRevalidateJob {
             let Some([create, connect]) = fill_run_ops(&placement.object, &placement.attraction, &peers, &catalog_fixture) else {
                 return StepOutcome::Fault(JobFault { detail: FillStepContext::fault_payload(context, b"fill-revalidate-op-encode") });
             };
-            if let Ok(mut peer) = <Puzzle3dObject as dsl::FromValue>::from_value(dsl::ToValue::to_value(&placement.object)) {
+            if let Ok(mut peer) = <Puzzle3dObject as semio_framework_value::FromValue>::from_value(semio_framework_value::ToValue::to_value(&placement.object)) {
                 let kind_id = placement.object.object_kind.as_deref().unwrap_or("object");
                 peer.label = Some(puzzle3d_next_object_label(&peers, &catalog_fixture, kind_id));
                 peers.push(peer);

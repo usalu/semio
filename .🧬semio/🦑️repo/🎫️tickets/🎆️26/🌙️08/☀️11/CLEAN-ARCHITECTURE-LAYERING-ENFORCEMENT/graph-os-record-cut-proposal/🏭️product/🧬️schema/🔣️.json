@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/dsl/derive/product-record-cut.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "exports", "functions", "retired", "valueSymbols"],
+  "properties": {
+    "version": {"const": 1},
+    "exports": {
+      "type": "object", "additionalProperties": false,
+      "required": ["version", "facadeExports", "registeredDerives", "traitOnly"],
+      "properties": {
+        "version": {"const": 1},
+        "facadeExports": {"const": ["DslArtifact", "DslDiff", "MutationLeaf", "Mutations"]},
+        "registeredDerives": {"const": ["CompositeMutation", "DslArtifact", "DslDiff", "MutationLeaf", "Mutations"]},
+        "traitOnly": {"const": []}
+      }
+    },
+    "functions": {
+      "type": "array", "minItems": 2, "maxItems": 2,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["name", "required", "forbidden"],
+        "properties": {
+          "name": {"enum": ["expand_dsl_document", "expand_dsl_diff"]},
+          "required": {"type": "array", "minItems": 2, "uniqueItems": true, "items": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z_0-9]*$"}},
+          "forbidden": {"type": "array", "minItems": 2, "uniqueItems": true, "items": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z_0-9]*$"}}
+        }
+      }
+    },
+    "retired": {"const": ["expand_dsl_record", "expand_dsl_scalar", "expand_dsl_enum", "expand_dsl_ops", "record_codegen", "dsl_variants_codegen"]},
+    "valueSymbols": {"const": ["DslValue", "FromValue", "ToValue", "ValueError", "ValueRefusalKind"]}
+  }
+}

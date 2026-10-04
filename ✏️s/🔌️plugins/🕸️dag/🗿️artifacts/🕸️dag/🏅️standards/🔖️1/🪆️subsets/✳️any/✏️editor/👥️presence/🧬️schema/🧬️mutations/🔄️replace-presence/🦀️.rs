@@ -2,7 +2,7 @@
 
 use super::{DagPresence, DagPresenceMutation};
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
@@ -18,9 +18,12 @@ impl protocol::MutationKind<DagPresence, DagPresenceMutation> for ReplacePresenc
     fn diff(&self, _base: &DagPresence) -> protocol::MutationOutcome<DagPresence> {
         protocol::MutationOutcome::new(self.presence.clone())
     }
-    fn inverse(&self, base: &DagPresence) -> Vec<DagPresenceMutation> {
+    fn inverse(&self, base: &DagPresence) -> Result<Vec<DagPresenceMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![DagPresenceMutation::ReplacePresence(ReplacePresence { presence: base.clone() })]
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Replace Presence", "Präsenz ersetzen")
     }

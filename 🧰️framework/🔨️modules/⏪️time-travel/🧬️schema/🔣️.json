@@ -828,7 +828,8 @@
         "replayFaulted",
         "commitFailed",
         "outcomeIntroduced",
-        "refusalMemberGone"
+        "refusalMemberGone",
+        "memberEdited"
       ]
     },
     "LifecycleLawFixture": {
@@ -1241,8 +1242,8 @@
         },
         "labels": {
           "type": "array",
-          "minItems": 36,
-          "maxItems": 36,
+          "minItems": 37,
+          "maxItems": 37,
           "items": {
             "type": "object",
             "additionalProperties": false,

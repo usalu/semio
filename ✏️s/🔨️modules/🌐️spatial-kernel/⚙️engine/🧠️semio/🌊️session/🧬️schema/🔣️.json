@@ -233,22 +233,36 @@
         },
         "groups": {
           "type": "array",
-          "minItems": 3,
-          "maxItems": 3,
+          "minItems": 4,
+          "maxItems": 4,
           "items": {
             "type": "object",
             "additionalProperties": false,
             "required": [
               "target",
-              "directory",
+              "source",
               "laws"
             ],
             "properties": {
               "target": {
-                "type": "string"
-              },
-              "directory": {
-                "type": "string"
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "name"
+                ],
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "test",
+                      "lib"
+                    ]
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
               },
               "laws": {
                 "type": "array",
@@ -257,6 +271,10 @@
                 "items": {
                   "type": "string"
                 }
+              },
+              "source": {
+                "type": "string",
+                "minLength": 1
               }
             }
           }
@@ -506,6 +524,37 @@
       "x-semio-formats": [
         "🔣️jsonschema"
       ]
+    },
+    "SemioTopologySelection": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "edgeLabels": {
+          "$ref": "#/$defs/SemioComponentLabels"
+        },
+        "faceLabels": {
+          "$ref": "#/$defs/SemioComponentLabels"
+        },
+        "sourceHandle": {
+          "type": "string",
+          "pattern": "^([0-9a-f]{64})?$",
+          "default": ""
+        }
+      },
+      "required": [
+        "edgeLabels",
+        "faceLabels",
+        "sourceHandle"
+      ]
+    },
+    "SemioComponentLabels": {
+      "type": "array",
+      "maxItems": 600000,
+      "items": {
+        "type": "string",
+        "pattern": "^[1-9][0-9]{0,19}$",
+        "description": "Exact positive uint64 decimal persistent label, scoped to the source topology."
+      }
     }
   }
 }

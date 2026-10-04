@@ -16,32 +16,32 @@ struct ComposedParentSnapshot {
 
 impl store::ArtifactSqliteSnapshot for ComposedParentSnapshot {
     const SQLITE_SCHEMA: &'static str = include_str!("🪴️parent.sql");
-    fn to_sqlite_database(&self, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, String> {
+    fn to_sqlite_database(&self, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, semio_framework_value::ValueError> {
         use store::sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteValue, SqliteSnapshotPhase};
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1)?;
-        let mut database = SqliteDatabase::from_schema(Self::SQLITE_SCHEMA).map_err(|error| error.to_string())?;
+        let mut database = SqliteDatabase::from_schema(Self::SQLITE_SCHEMA)?;
         let mut values = vec![SqliteValue::Integer(1), SqliteValue::Integer(i64::from(self.revision))];
         values.extend(match &self.slot { Some(child) => vec![SqliteValue::Text(child.target.artifact_id.clone()), SqliteValue::Text(child.target.dialect.artifact_kind.clone()), SqliteValue::Text(child.target.dialect.standard.clone()), SqliteValue::Text(child.target.dialect.subset.clone())], None => vec![SqliteValue::Null; 4] });
         database.table_mut("parent_state")?.rows.push(SqliteRow { rowid: 1, values });
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 1, 1)?;
         Ok(database)
     }
-    fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, String> {
+    fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
         use store::sqlite_snapshot::{SqliteValue, SqliteSnapshotPhase};
         control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 0, 1)?;
         let rows = &database.table("parent_state")?.rows;
-        if rows.len() != 1 || rows[0].rowid != 1 || rows[0].integer(0)? != 1 { return Err("parent_state requires one state row".into()); }
+        if rows.len() != 1 || rows[0].rowid != 1 || rows[0].integer(0)? != 1 { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "parent_state requires one state row")); }
         let row = &rows[0];
-        let child = match row.values.get(2..).ok_or_else(|| "parent state row is truncated".to_string())? {
+        let child = match row.values.get(2..).ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "parent state row is truncated"))? {
             [SqliteValue::Null, SqliteValue::Null, SqliteValue::Null, SqliteValue::Null] => None,
             [SqliteValue::Text(id), SqliteValue::Text(kind), SqliteValue::Text(standard), SqliteValue::Text(subset)] => {
                 let target = store::os_io::ArtifactRef { artifact_id: id.clone(), dialect: store::os_io::ArtifactDialect { artifact_kind: kind.clone(), standard: standard.clone(), subset: subset.clone() } };
-                let target = store::os_io::ArtifactRef::parse_uri(&target.to_uri())?;
+                let target = store::os_io::ArtifactRef::parse_uri(&target.to_uri()).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error))?;
                 Some(store::ArtifactChild::new(target.artifact_id.clone(), target))
             }
-            _ => return Err("optional child identity must have all four fields or none".into()),
+            _ => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "optional child identity must have all four fields or none")),
         };
-        let snapshot = Self { revision: i32::try_from(row.integer(1)?).map_err(|error| error.to_string())?, slot: child };
+        let snapshot = Self { revision: i32::try_from(row.integer(1)?).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()))?, slot: child };
         control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 1, 1)?;
         Ok(snapshot)
     }
@@ -65,9 +65,9 @@ impl protocol::OpText for RecursiveFixtureMutation {
     fn parse_op(line: &str) -> Result<Self, TextError> {
         let value = line
             .strip_prefix("set-recursive-value ")
-            .ok_or_else(|| TextError::new("expected set-recursive-value", TextSpan::at(1, 1)))?
+            .ok_or_else(|| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected set-recursive-value", TextSpan::at(1, 1)))?
             .parse()
-            .map_err(|_| TextError::new("recursive value must be i32", TextSpan::at(1, 1)))?;
+            .map_err(|_| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "recursive value must be i32", TextSpan::at(1, 1)))?;
         Ok(Self { value })
     }
 
@@ -130,17 +130,20 @@ impl Mutation<ComposedParentSnapshot> for RecursiveFixtureMutation {
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[RECURSIVE_FIXTURE_MUTATION_DESCRIPTOR];
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { &RECURSIVE_FIXTURE_MUTATION_DESCRIPTOR }
     fn diff(&self, _base: &ComposedParentSnapshot) -> protocol::MutationOutcome<Self::Diff> { protocol::MutationOutcome::new(ComposedParentDiff { revision: Some(self.value) }) }
-    fn inverse(&self, base: &ComposedParentSnapshot) -> Vec<Self> { vec![Self { value: base.revision }] }
+    fn inverse(&self, base: &ComposedParentSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+    Ok((|| { vec![Self { value: base.revision }] 
+    })())
+}
 }
 
 impl store::ArtifactDsl for ComposedParentSnapshot {
     const EXTENSION: &'static str = "composed-parent-test";
     fn parse_dsl(text: &str) -> Result<Self, TextError> {
-        let value = serde_json::from_str::<Value>(text).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))?;
-        <Self as protocol::FromValue>::from_value(value.into()).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))
+        let value = serde_json::from_str::<Value>(text).map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), TextSpan::at(1, 1)))?;
+        <Self as semio_framework_value::FromValue>::from_value(value.into()).map_err(|error| TextError::from_value_error(error, TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
-        store::os_pack::json::to_json_string(self)
+        semio_framework_pack_json::to_json_string(self)
     }
 }
 
@@ -151,18 +154,18 @@ impl ArtifactPack for ComposedParentSnapshot {
     }
 
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        Ok(store::os_pack::json::to_json_string(self).into_bytes())
+        Ok(semio_framework_pack_json::to_json_string(self).into_bytes())
     }
     fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let value = serde_json::from_slice::<Value>(bytes).map_err(|error| store::PackError::Schema(error.to_string()))?;
-        <Self as protocol::FromValue>::from_value(value.into()).map_err(|error| store::PackError::Schema(error.to_string()))
+        let value = serde_json::from_slice::<Value>(bytes).map_err(|error| match (u32::try_from(error.line()), u32::try_from(error.column())) { (Ok(line), Ok(column)) => store::PackError::from(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), semio_framework_diagnostic::TextSpan::at(line, column))), _ => store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit, error.to_string())) })?;
+        <Self as semio_framework_value::FromValue>::from_value(value.into()).map_err(|error| store::PackError::from(error))
     }
 }
 
 struct ComposedParentOwnedRetirement<T: Send + 'static>(Option<T>);
 
 impl<T: Send + 'static> store::ErasedSnapshotRetirement for ComposedParentOwnedRetirement<T> {
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -566,32 +569,32 @@ struct RecursiveBranchSnapshot {
 
 impl store::ArtifactSqliteSnapshot for RecursiveBranchSnapshot {
     const SQLITE_SCHEMA: &'static str = include_str!("🌿️branch.sql");
-    fn to_sqlite_database(&self, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, String> {
+    fn to_sqlite_database(&self, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, semio_framework_value::ValueError> {
         use store::sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteValue, SqliteSnapshotPhase};
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1)?;
-        let mut database = SqliteDatabase::from_schema(Self::SQLITE_SCHEMA).map_err(|error| error.to_string())?;
+        let mut database = SqliteDatabase::from_schema(Self::SQLITE_SCHEMA)?;
         let mut values = vec![SqliteValue::Integer(1), SqliteValue::Integer(i64::from(self.count)), SqliteValue::Text(self.label.clone())];
         values.extend(match &self.nested { Some(child) => vec![SqliteValue::Text(child.target.artifact_id.clone()), SqliteValue::Text(child.target.dialect.artifact_kind.clone()), SqliteValue::Text(child.target.dialect.standard.clone()), SqliteValue::Text(child.target.dialect.subset.clone())], None => vec![SqliteValue::Null; 4] });
         database.table_mut("branch_state")?.rows.push(SqliteRow { rowid: 1, values });
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 1, 1)?;
         Ok(database)
     }
-    fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, String> {
+    fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
         use store::sqlite_snapshot::{SqliteValue, SqliteSnapshotPhase};
         control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 0, 1)?;
         let rows = &database.table("branch_state")?.rows;
-        if rows.len() != 1 || rows[0].rowid != 1 || rows[0].integer(0)? != 1 { return Err("branch_state requires one state row".into()); }
+        if rows.len() != 1 || rows[0].rowid != 1 || rows[0].integer(0)? != 1 { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "branch_state requires one state row")); }
         let row = &rows[0];
-        let child = match row.values.get(3..).ok_or_else(|| "branch state row is truncated".to_string())? {
+        let child = match row.values.get(3..).ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "branch state row is truncated"))? {
             [SqliteValue::Null, SqliteValue::Null, SqliteValue::Null, SqliteValue::Null] => None,
             [SqliteValue::Text(id), SqliteValue::Text(kind), SqliteValue::Text(standard), SqliteValue::Text(subset)] => {
                 let target = store::os_io::ArtifactRef { artifact_id: id.clone(), dialect: store::os_io::ArtifactDialect { artifact_kind: kind.clone(), standard: standard.clone(), subset: subset.clone() } };
-                let target = store::os_io::ArtifactRef::parse_uri(&target.to_uri())?;
+                let target = store::os_io::ArtifactRef::parse_uri(&target.to_uri()).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error))?;
                 Some(store::ArtifactChild::new(target.artifact_id.clone(), target))
             }
-            _ => return Err("optional child identity must have all four fields or none".into()),
+            _ => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "optional child identity must have all four fields or none")),
         };
-        let snapshot = Self { count: i32::try_from(row.integer(1)?).map_err(|error| error.to_string())?, label: row.text(2)?.to_string(), nested: child };
+        let snapshot = Self { count: i32::try_from(row.integer(1)?).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()))?, label: row.text(2)?.to_string(), nested: child };
         control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 1, 1)?;
         Ok(snapshot)
     }
@@ -623,7 +626,10 @@ impl Mutation<RecursiveBranchSnapshot> for RecursiveFixtureMutation {
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[RECURSIVE_FIXTURE_MUTATION_DESCRIPTOR];
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { &RECURSIVE_FIXTURE_MUTATION_DESCRIPTOR }
     fn diff(&self, _base: &RecursiveBranchSnapshot) -> protocol::MutationOutcome<Self::Diff> { protocol::MutationOutcome::new(RecursiveBranchDiff { count: Some(self.value) }) }
-    fn inverse(&self, base: &RecursiveBranchSnapshot) -> Vec<Self> { vec![Self { value: base.count }] }
+    fn inverse(&self, base: &RecursiveBranchSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+    Ok((|| { vec![Self { value: base.count }] 
+    })())
+}
 }
 
 const RECURSIVE_FIXTURE_SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "recursive-value", kind: "set-recursive-value", record: "RecursiveValueSet" };
@@ -635,8 +641,8 @@ impl protocol::SemanticMutation<RecursiveBranchSnapshot> for RecursiveFixtureMut
     fn semantics(&self) -> &'static protocol::SemanticDescriptor {
         &RECURSIVE_FIXTURE_SEMANTICS
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set recursive value to {}", self.value), &format!("Rekursiven Wert auf {} setzen", self.value))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set recursive value to {}", self.value), &format!("Rekursiven Wert auf {} setzen", self.value))
     }
     fn target(&self) -> Vec<String> {
         Vec::new()
@@ -650,7 +656,7 @@ impl protocol::SemanticMutation<ComposedParentSnapshot> for RecursiveFixtureMuta
     fn semantics(&self) -> &'static protocol::SemanticDescriptor {
         &RECURSIVE_FIXTURE_SEMANTICS
     }
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         <Self as protocol::SemanticMutation<RecursiveBranchSnapshot>>::label(self)
     }
     fn target(&self) -> Vec<String> {
@@ -750,7 +756,7 @@ impl store::MemberSnapshotOpenOperation for RecursiveBranchSnapshotOpen {
 }
 
 impl store::ErasedSnapshotRetirement for RecursiveBranchSnapshotOpen {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if self.terminal {
             return Ok(store::SnapshotRetirementStep::Complete);
         }
@@ -764,9 +770,9 @@ impl store::ErasedSnapshotRetirement for RecursiveBranchSnapshotOpen {
                     drop(self.active.take());
                     Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
-                store::SnapshotRetirementStep::Complete => Err("recursive snapshot retirement returned false terminal".into()),
+                store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "recursive snapshot retirement returned false terminal")),
                 store::SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > 1 || released_bytes > maximum_bytes => {
-                    Err("recursive snapshot retirement exceeded its exact grant".into())
+                    Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "recursive snapshot retirement exceeded its exact grant"))
                 }
                 step => Ok(step),
             };
@@ -781,7 +787,7 @@ impl store::ErasedSnapshotRetirement for RecursiveBranchSnapshotOpen {
                     drop(self.request.take());
                     Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
-                store::SnapshotRetirementStep::Complete => Err("recursive snapshot request returned false terminal".into()),
+                store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "recursive snapshot request returned false terminal")),
                 step => Ok(step),
             };
         }
@@ -815,19 +821,19 @@ macro_rules! recursive_fixture_snapshot {
         impl store::ArtifactDsl for $snapshot {
             const EXTENSION: &'static str = $extension;
             fn parse_dsl(text: &str) -> Result<Self, TextError> {
-                let value = serde_json::from_str::<Value>(text).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))?;
-                <Self as protocol::FromValue>::from_value(value.into()).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))
+                let value = serde_json::from_str::<Value>(text).map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), TextSpan::at(1, 1)))?;
+                <Self as semio_framework_value::FromValue>::from_value(value.into()).map_err(|error| TextError::from_value_error(error, TextSpan::at(1, 1)))
             }
-            fn print_dsl(&self) -> String { store::os_pack::json::to_json_string(self) }
+            fn print_dsl(&self) -> String { semio_framework_pack_json::to_json_string(self) }
         }
 
         impl ArtifactPack for $snapshot {
             fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-                Ok(store::os_pack::json::to_json_string(self).into_bytes())
+                Ok(semio_framework_pack_json::to_json_string(self).into_bytes())
             }
             fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-                let value = serde_json::from_slice::<Value>(bytes).map_err(|error| store::PackError::Schema(error.to_string()))?;
-                <Self as protocol::FromValue>::from_value(value.into()).map_err(|error| store::PackError::Schema(error.to_string()))
+                let value = serde_json::from_slice::<Value>(bytes).map_err(|error| match (u32::try_from(error.line()), u32::try_from(error.column())) { (Ok(line), Ok(column)) => store::PackError::from(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), semio_framework_diagnostic::TextSpan::at(line, column))), _ => store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit, error.to_string())) })?;
+                <Self as semio_framework_value::FromValue>::from_value(value.into()).map_err(|error| store::PackError::from(error))
             }
         }
 
@@ -1096,7 +1102,7 @@ impl crate::app::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, Re
 
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
         if let Some(candidate) = self.candidate.as_mut() {
-            return match candidate.close_owned_step(maximum_items, maximum_bytes).map_err(Fault::from)? {
+            return match candidate.close_owned_step(maximum_items, maximum_bytes).map_err(|error| Fault::new(semio_framework::FaultOrigin::Framework, error.kind.as_str(), error.into_message()))? {
                 store::SnapshotRetirementStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
                 store::SnapshotRetirementStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "composed parent initializer candidate is externally retained" }),
                 store::SnapshotRetirementStep::Complete if candidate.close_owned_terminal_is_empty() => {
@@ -1107,7 +1113,7 @@ impl crate::app::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, Re
             };
         }
         if let Some(retirement) = self.retirement.as_mut() {
-            return match retirement.close_step(maximum_items, maximum_bytes).map_err(Fault::from)? {
+            return match retirement.close_step(maximum_items, maximum_bytes).map_err(|error| Fault::new(semio_framework::FaultOrigin::Framework, error.kind.as_str(), error.into_message()))? {
                 store::SnapshotRetirementStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
                 store::SnapshotRetirementStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "composed parent initializer retirement is blocked" }),
                 store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
@@ -1119,7 +1125,7 @@ impl crate::app::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, Re
         }
         if let Some(runtime) = self.runtime.as_mut() {
             let factory = ComposedParentOwnedRetirementFactory::<ComposedParentSnapshot>::default();
-            return match runtime.close_step(&factory, maximum_items, maximum_bytes).map_err(Fault::from)? {
+            return match runtime.close_step(&factory, maximum_items, maximum_bytes).map_err(|error| Fault::new(semio_framework::FaultOrigin::Framework, error.kind.as_str(), error.into_message()))? {
                 store::SnapshotRetirementStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
                 store::SnapshotRetirementStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "composed parent runtime retirement is blocked" }),
                 store::SnapshotRetirementStep::Complete if runtime.terminal_is_empty() => {
@@ -2169,3 +2175,14 @@ async fn one_reactor_turn_pumps_the_envelope_decode_worker_to_its_terminal_poll(
     close_member_admission_app(&mut app);
 }
 //#endregion 📨️EnvelopeDecodeLadder
+
+#[test]
+fn declared_child_projection_override_preserves_authored_refusal() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧩️composition/🔎️projection/🧫️fixtures/🔣️.json"))).expect("closed projection fixture");
+    let refusal = &fixture["overrideRefusal"];
+    let snapshot = ComposedParentSnapshot { slot: None, revision: refusal["revision"].as_i64().expect("revision") as i32 };
+    assert!(store::ChildRestoreProjection::from_snapshot(&snapshot).expect("structural leaf").is_empty());
+    let actual = <ComposedParentApp<false> as ArtifactApp>::child_restore_projection(&snapshot).expect_err("authored nested override must be selected");
+    assert_eq!(actual.code.0, refusal["code"].as_str().expect("original code"));
+    assert_eq!(actual.message, refusal["message"].as_str().expect("original message"));
+}

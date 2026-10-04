@@ -15,7 +15,7 @@ mod tests {
     /// do NOT start with the pack magic header.
     #[test]
     fn export_via_io_mechanism_writes_raw_bytes_not_a_pack_container() {
-        use semio_framework::io::io_mechanism::{IoEntry, io_register};
+        use semio_framework::io::io_mechanism::{IoEntry, IoEntryDirection, io_register};
         use semio_framework::io_schema::{CARRIER_BINARY, IoFidelity, IoOutcome, IoPayload as NewIoPayload};
 
         const TEST_KIND: &str = "3d.__w1b_export_bug_proof";
@@ -38,7 +38,7 @@ mod tests {
         // copied into an array) -- `IoEntry` derives no `Copy`/`Clone`, so moving a value OUT of
         // a separate `static` to build `[ENTRY]` would not compile; a single constant-expression
         // array literal has no such move.
-        static ENTRIES: [IoEntry; 1] = [IoEntry { from: TEST_DIALECT, into: CARRIER_BINARY, fidelity: IoFidelity::Exact, sniff: None, run }];
+        static ENTRIES: [IoEntry; 1] = [IoEntry { from: TEST_DIALECT, into: CARRIER_BINARY, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run }];
         // 📌️ Idempotent re-registration (nextest runs this file's tests in one process) -- a
         // second run of this same test binary registering the identical static entry must not error.
         io_register(&ENTRIES).ok();

@@ -7,7 +7,10 @@ use crate::GisMapSnapshot;
 //#region 🔹Inverse
 /// ↩️ Undo removes the feature this mutation created, addressed by its own id (captured from the
 /// payload itself, not from `base` — a `create` has nothing to look up in pre-state).
-pub fn inverse(payload: &CreatePosition, _base: &GisMapSnapshot) -> Vec<GisMapMutation> {
+pub fn inverse(payload: &CreatePosition, _base: &GisMapSnapshot) -> Result<Vec<GisMapMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![GisMapMutation::DeletePosition(DeletePosition { id: payload.item.id.clone() })]
+
+    })())
 }
 //#endregion 🔹Inverse

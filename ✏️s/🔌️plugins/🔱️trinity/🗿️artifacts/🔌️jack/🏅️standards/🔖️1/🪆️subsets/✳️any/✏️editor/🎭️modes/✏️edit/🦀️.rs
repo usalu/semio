@@ -20,7 +20,7 @@ pub const TRINITY_JACK_MODE_EDIT: &str = "edit";
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::jack::create_trinity_jack_app`.
 pub fn definition() -> ModeDefinition {
-    ModeDefinition { id: TRINITY_JACK_MODE_EDIT.into(), label: LocalizedLabel::native("Explore", "Erkunden"), icon_id: "focus".into(), tools: vec![semio_framework::io::resolve_ready(ToolRef::new(reorganize::TOOL_ID))], layout_id: None, commands: Vec::new() }
+    ModeDefinition { id: TRINITY_JACK_MODE_EDIT.into(), label: LocalizedLabel::native("Explore", "Erkunden"), icon_id: "focus".into(), tools: vec![::semio_framework_async::poll::resolve_ready(ToolRef::new(reorganize::TOOL_ID))], layout_id: None, commands: Vec::new() }
 }
 
 /// 🪟️ One quadrant of the layout: a stack holding a single window kind.

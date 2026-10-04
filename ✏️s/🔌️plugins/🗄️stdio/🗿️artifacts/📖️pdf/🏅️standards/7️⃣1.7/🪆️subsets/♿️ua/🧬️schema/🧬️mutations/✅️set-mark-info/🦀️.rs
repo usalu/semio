@@ -26,12 +26,15 @@ impl MutationKind<PdfSnapshot, PdfUaMutation> for SetMarkInfo {
         MutationOutcome::new(support::graph_edit_diff(base, next))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfUaMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfUaMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         match support::catalog_flag(base, "MarkInfo", "Marked") {
             Some(marked) => vec![PdfUaMutation::SetMarkInfo(SetMarkInfo { marked })],
             None => vec![PdfUaMutation::RemoveMarkInfo(RemoveMarkInfo {})],
         }
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set PDF/UA marked flag to {}", self.marked), &format!("PDF/UA-Markierungskennung auf {} setzen", self.marked))

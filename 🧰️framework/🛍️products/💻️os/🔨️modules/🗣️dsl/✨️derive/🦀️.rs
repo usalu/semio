@@ -1,15 +1,4 @@
-//! 🧬️ `dsl_derive` — compiles `#[dsl(...)]`-annotated struct/enum declarations into
-//! `dsl::DslField`/`dsl::DslVariants` bindings (nested usage composes through), so a technology
-//! declares its grammar instead of hand-writing a parser/printer. Analyze → IR → emit.
-//!
-//! P6: `DslArtifact`/`DslOps` no longer emit `ArtifactDsl`/`ArtifactPack`/`OpText`/`OpBinary` —
-//! those traits are handcrafted per artifact. `DslRecord` stays for field helpers only.
-//!
-//! Whole crate is sync (E3): a proc-macro entry point's signature is language-fixed to
-//! `fn(TokenStream) -> TokenStream` and rustc rejects an `async fn` here outright (a proc macro
-//! runs inside rustc at compile time, where there is no executor to poll it). Bounded, no-follow
-//! source-authority reads occur during expansion; every helper remains sync because there is no
-//! executor to poll.
+//! 🏭️ Product artifact envelopes, OS diff codecs, and source-authorized mutation derives.
 
 use proc_macro::TokenStream;
 use quote::quote;
@@ -492,11 +481,12 @@ mod mutation_leaf_json_tests;
 
 //#region 🪪️MutationLeaf
 #[derive(Debug)]
-struct MutationLeafAttrs { contract: syn::Path, payload: Option<syn::Ident> }
+struct MutationLeafAttrs { contract: syn::Path, payload: Option<syn::Ident>, input_schema: Option<syn::Path> }
 
 fn parse_mutation_leaf_attrs(input: &DeriveInput) -> syn::Result<MutationLeafAttrs> {
     let mut contract = None;
     let mut payload = None;
+    let mut input_schema = None;
     let mut found = false;
     for attribute in &input.attrs {
         if !attribute.path().is_ident("mutation_leaf") { continue; }
@@ -507,6 +497,11 @@ fn parse_mutation_leaf_attrs(input: &DeriveInput) -> syn::Result<MutationLeafAtt
             if meta.path.is_ident("payload") {
                 if payload.is_some() { return Err(meta.error("duplicate mutation_leaf payload")); }
                 payload = Some(meta.value()?.parse::<syn::Ident>()?);
+                return Ok(());
+            }
+            if meta.path.is_ident("input_schema") {
+                if input_schema.is_some() { return Err(meta.error("duplicate mutation_leaf input_schema")); }
+                input_schema = Some(meta.value()?.parse::<syn::Path>()?);
                 return Ok(());
             }
             if !meta.path.is_ident("contract") { return Err(meta.error("unsupported mutation_leaf attribute")); }
@@ -523,8 +518,9 @@ fn parse_mutation_leaf_attrs(input: &DeriveInput) -> syn::Result<MutationLeafAtt
         let Data::Enum(data) = &input.data else { return Err(syn::Error::new_spanned(variant, "mutation_leaf payload names a variant of an enum leaf")); };
         let wraps_one = data.variants.iter().find(|candidate| candidate.ident == *variant).is_some_and(|candidate| matches!(&candidate.fields, Fields::Unnamed(fields) if fields.unnamed.len() == 1));
         if !wraps_one { return Err(syn::Error::new_spanned(variant, "mutation_leaf payload names a variant that wraps exactly one payload")); }
+        if let Some(path) = &input_schema { return Err(syn::Error::new_spanned(path, "mutation_leaf input_schema and payload are exclusive: a wrapped leaf's input schema is its payload variant's")); }
     }
-    Ok(MutationLeafAttrs { contract, payload })
+    Ok(MutationLeafAttrs { contract, payload, input_schema })
 }
 
 fn mutation_leaf_portable_path(path: &Path) -> Result<String, String> { path.to_str().map(|path| path.replace('\\', "/")).filter(|path| !path.is_empty()).ok_or_else(|| "metadata path is not UTF-8".to_string()) }
@@ -564,6 +560,7 @@ pub fn expand_mutation_leaf(input: TokenStream) -> TokenStream {
     let descriptor_path = match mutation_authority_relative(&authority.workspace_root, &authority.descriptor_path) { Ok(path) => path, Err(error) => return syn::Error::new_spanned(&input, error).to_compile_error().into() };
     let taxonomy_path = match mutation_authority_relative(&authority.workspace_root, &authority.taxonomy_path) { Ok(path) => path, Err(error) => return syn::Error::new_spanned(&input, error).to_compile_error().into() };
     let payload_schema_path = match mutation_leaf_payload_schema_path(&authority, &descriptor.payload_schema) { Ok(path) => path, Err(error) => return syn::Error::new_spanned(&input, format!("MutationLeaf payload schema failed: {error}")).to_compile_error().into() };
+    let inverse_rows = match mutation_leaf_inverse_rows(&payload_schema_path) { Ok(rows) => rows, Err(error) => return syn::Error::new_spanned(&input, format!("MutationLeaf x-semio-inverse-rows failed: {error}")).to_compile_error().into() };
     let referenced_documents = match mutation_leaf_referenced_documents(&payload_schema_path).and_then(|paths| paths.iter().map(|path| mutation_leaf_include_path(path)).collect::<Result<Vec<_>, _>>()) { Ok(paths) => paths, Err(error) => return syn::Error::new_spanned(&input, format!("MutationLeaf referenced schema documents failed: {error}")).to_compile_error().into() };
     let dependency_paths = [authority.taxonomy_path.clone(), authority.descriptor_path.clone(), payload_schema_path];
     let dependency_paths: Result<Vec<_>, _> = dependency_paths.iter().map(|path| mutation_leaf_include_path(path)).collect();
@@ -575,19 +572,25 @@ pub fn expand_mutation_leaf(input: TokenStream) -> TokenStream {
         fn input_schema(&self) -> ::core::option::Option<&'static str> {
             match self { Self::#variant(_) => ::core::option::Option::Some(<Self as #contract::MutationLeaf>::PAYLOAD_SCHEMA), _ => ::core::option::Option::None }
         }
-        fn input_value(&self) -> #contract::DslValue {
-            match self { Self::#variant(payload) => #contract::ToValue::to_value(payload), _ => #contract::ToValue::to_value(self) }
+        fn input_value(&self) -> ::semio_framework_value::DslValue {
+            match self { Self::#variant(payload) => ::semio_framework_value::ToValue::to_value(payload), _ => ::semio_framework_value::ToValue::to_value(self) }
         }
-        fn with_input_value(&self, value: #contract::DslValue) -> ::core::result::Result<Self, #contract::ValueError> {
+        fn with_input_value(&self, value: ::semio_framework_value::DslValue) -> ::core::result::Result<Self, ::semio_framework_value::ValueError> {
             match self {
-                Self::#variant(_) => #contract::FromValue::from_value(value).map(Self::#variant),
-                _ => ::core::result::Result::Err(#contract::ValueError::new(::std::format!("{} is editable only as {}", ::core::stringify!(#name), ::core::stringify!(#variant)))),
+                Self::#variant(_) => ::semio_framework_value::FromValue::from_value(value).map(Self::#variant),
+                _ => ::core::result::Result::Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,::std::format!("{} is editable only as {}", ::core::stringify!(#name), ::core::stringify!(#variant)))),
             }
         }
-        fn from_input_value(value: #contract::DslValue) -> ::core::result::Result<Self, #contract::ValueError> {
-            #contract::FromValue::from_value(value).map(Self::#variant)
+        fn from_input_value(value: ::semio_framework_value::DslValue) -> ::core::result::Result<Self, ::semio_framework_value::ValueError> {
+            ::semio_framework_value::FromValue::from_value(value).map(Self::#variant)
         }
     });
+    let instance_schema = attrs.input_schema.as_ref().map(|path| quote! {
+        fn input_schema(&self) -> ::core::option::Option<&'static str> {
+            #path(self)
+        }
+    });
+    let inverse_rows = mutation_leaf_inverse_rows_body(&inverse_rows, attrs.payload.as_ref());
     let owner = &authority.owner;
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
     let descriptor = emit_mutation_leaf_descriptor(contract, &descriptor);
@@ -601,8 +604,74 @@ pub fn expand_mutation_leaf(input: TokenStream) -> TokenStream {
             const PAYLOAD_SCHEMA: &'static str = ::core::include_str!(#payload_schema_dependency);
             const PAYLOAD_SCHEMA_DOCUMENTS: &'static [&'static str] = &[#(::core::include_str!(#referenced_documents)),*];
             #editable
+            #instance_schema
+            fn inverse_rows(&self) -> usize {
+                #inverse_rows
+            }
         }
     }.into()
+}
+
+/// 🧾️ A leaf payload schema's `x-semio-inverse-rows` (design §20.5): `fixed` rows plus `perTarget` rows per item of each named
+/// array field, or one `bounded` constant; absent, one row.
+struct MutationLeafInverseRows {
+    fixed: usize,
+    per_target: Vec<(String, usize)>,
+}
+
+/// 📖️ Reads `x-semio-inverse-rows` from the root of the payload schema at `payload_schema`.
+fn mutation_leaf_inverse_rows(payload_schema: &Path) -> Result<MutationLeafInverseRows, String> {
+    let raw = fs::read(payload_schema).map_err(|error| error.to_string())?;
+    let value: serde_json::Value = serde_json::from_slice(&raw).map_err(|error| format!("malformed payload schema: {error}"))?;
+    let Some(rows) = value.get("x-semio-inverse-rows") else { return Ok(MutationLeafInverseRows { fixed: 1, per_target: Vec::new() }) };
+    let object = rows.as_object().filter(|object| !object.is_empty()).ok_or_else(|| "x-semio-inverse-rows must be a nonempty object".to_string())?;
+    if object.keys().any(|key| !["fixed", "perTarget", "bounded"].contains(&key.as_str())) { return Err("x-semio-inverse-rows admits only fixed, perTarget and bounded".to_string()); }
+    if object.contains_key("bounded") && object.len() != 1 { return Err("x-semio-inverse-rows bounded excludes fixed and perTarget".to_string()); }
+    let count = |key: &str| object.get(key).map(|value| value.as_u64().map(|count| count as usize).ok_or_else(|| format!("x-semio-inverse-rows {key} must be a nonnegative integer"))).transpose();
+    let fixed = count("bounded")?.or(count("fixed")?).unwrap_or(0);
+    let per_target = match object.get("perTarget") {
+        None => Vec::new(),
+        Some(fields) => fields
+            .as_object()
+            .filter(|fields| !fields.is_empty())
+            .ok_or_else(|| "x-semio-inverse-rows perTarget must be a nonempty object".to_string())?
+            .iter()
+            .map(|(field, rows)| rows.as_u64().filter(|rows| *rows >= 1).map(|rows| (to_snake_ascii(field), rows as usize)).ok_or_else(|| format!("x-semio-inverse-rows perTarget {field} must be a positive integer")))
+            .collect::<Result<_, _>>()?,
+    };
+    Ok(MutationLeafInverseRows { fixed, per_target })
+}
+
+/// 🐍️ The Rust field a camelCase payload property names.
+fn to_snake_ascii(value: &str) -> String {
+    let mut out = String::with_capacity(value.len() + 4);
+    for character in value.chars() {
+        if character.is_ascii_uppercase() {
+            out.push('_');
+            out.push(character.to_ascii_lowercase());
+        } else {
+            out.push(character);
+        }
+    }
+    out
+}
+
+/// 🧮️ The generated `MutationLeaf::inverse_rows` body: the fixed rows plus each `perTarget` field's length times its rows, read
+/// from the leaf itself or from its `payload` variant (any other variant declares the fixed rows).
+fn mutation_leaf_inverse_rows_body(rows: &MutationLeafInverseRows, payload: Option<&syn::Ident>) -> proc_macro2::TokenStream {
+    let fixed = proc_macro2::Literal::usize_unsuffixed(rows.fixed);
+    if rows.per_target.is_empty() {
+        return quote! { #fixed };
+    }
+    let terms = rows.per_target.iter().map(|(field, count)| {
+        let field = syn::Ident::new(field, proc_macro2::Span::call_site());
+        let count = proc_macro2::Literal::usize_unsuffixed(*count);
+        quote! { + #count * payload.#field.len() }
+    });
+    match payload {
+        None => quote! { let payload = self; #fixed #(#terms)* },
+        Some(variant) => quote! { match self { Self::#variant(payload) => #fixed #(#terms)*, _ => #fixed } },
+    }
 }
 
 /// 🧬️ The descriptor's `payloadSchema`, resolved beside the descriptor: a normalized relative path of portable
@@ -710,1187 +779,64 @@ fn mutation_schema_document_references(path: &Path) -> Result<(Option<String>, V
 #[path = "🧪️tests/🔬️mutation-leaf-derive/🦀️.rs"]
 mod mutation_leaf_derive_tests;
 
-//#region 🔖️Attrs
-#[derive(Default, Clone)]
-struct ContainerAttrs {
-    extension: Option<String>,
-    id: Option<String>,
-    keyword: Option<String>,
-    lines_layout: bool,
-    retire_with: Option<syn::Path>,
-}
-
-#[derive(Default, Clone)]
-struct FieldAttrs {
-    key: Option<String>,
-    positional: bool,
-    list: bool,
-    tuple: bool,
-    statements: bool,
-    block: bool,
-    base64: bool,
-    flatten: bool,
-    table: bool,
-    /// `#[dsl(unit = "GPa")]` — a scalar `f64`/`f32` field prints/parses as `Shape::Quantity`
-    /// (glued unit suffix) instead of plain `Shape::Float`.
-    unit: Option<String>,
-    /// `#[dsl(angle = "deg")]` — same mechanism as `unit`, `Shape::Angle` instead.
-    angle: Option<String>,
-    /// `#[dsl(refs = "material")]` — a scalar `String`/`Option<String>` field prints/parses as
-    /// `Shape::Ref(kind)` instead of plain `Shape::Text`.
-    refs: Option<String>,
-    /// `#[dsl(defines = "material")]` — the anchor side of `refs`: this field's `FieldSpec.defines`
-    /// is set so `LanguageService::validate` knows which field, in a record of this kind, other
-    /// records' `Shape::Ref("material")` fields are expected to resolve against.
-    defines: Option<String>,
-    /// `#[dsl(lang = "jack")]` — a scalar `String` field prints/parses as `Shape::Embed(lang)`
-    /// (fenced verbatim in Document mode) instead of plain `Shape::Text`.
-    lang: Option<String>,
-    /// `#[dsl(lang_from = "language_id")]` — fence language from a sibling Text field at print/parse time.
-    lang_from: Option<String>,
-    /// `#[dsl(coord)]` — a `[f64; 3]` (or any `DslField` array) field prints/parses as
-    /// `Shape::Coord(3)` (`@x,y,z`) instead of a bare comma tuple.
-    coord: bool,
-    /// `#[dsl(dir)]` — same mechanism as `coord`, `Shape::Dir` (`^x,y,z`) instead.
-    dir: bool,
-}
-
-// 🚫️async: E1 pure accessor consumed by external-trait/E3 proc-macro entry points — see R9
-fn parse_container_attrs(input: &DeriveInput) -> ContainerAttrs {
-    let mut out = ContainerAttrs::default();
-    for attr in &input.attrs {
-        if !attr.path().is_ident("dsl") {
-            continue;
-        }
-        let _ = attr.parse_nested_meta(|meta| {
-            if meta.path.is_ident("extension") {
-                let value: syn::LitStr = meta.value()?.parse()?;
-                out.extension = Some(value.value());
-            } else if meta.path.is_ident("id") {
-                let value: syn::LitStr = meta.value()?.parse()?;
-                out.id = Some(value.value());
-            } else if meta.path.is_ident("keyword") {
-                let value: syn::LitStr = meta.value()?.parse()?;
-                out.keyword = Some(value.value());
-            } else if meta.path.is_ident("layout") {
-                let value: syn::LitStr = meta.value()?.parse()?;
-                out.lines_layout = value.value() == "lines";
-            } else if meta.path.is_ident("retire_with") {
-                let value: syn::LitStr = meta.value()?.parse()?;
-                out.retire_with = Some(value.parse()?);
-            }
-            Ok(())
-        });
-    }
-    out
-}
-
-// 🚫️async: E1 pure accessor consumed by external-trait/E3 proc-macro entry points — see R9
-fn parse_field_attrs(attrs: &[syn::Attribute]) -> FieldAttrs {
-    let mut out = FieldAttrs::default();
-    for attr in attrs {
-        if !attr.path().is_ident("dsl") {
-            continue;
-        }
-        let _ = attr.parse_nested_meta(|meta| {
-            if meta.path.is_ident("key") {
-                let value: syn::LitStr = meta.value()?.parse()?;
-                out.key = Some(value.value());
-            } else if meta.path.is_ident("positional") {
-                out.positional = true;
-            } else if meta.path.is_ident("list") {
-                out.list = true;
-            } else if meta.path.is_ident("tuple") {
-                out.tuple = true;
-            } else if meta.path.is_ident("statements") {
-                out.statements = true;
-            } else if meta.path.is_ident("block") {
-                out.block = true;
-            } else if meta.path.is_ident("base64") {
-                out.base64 = true;
-            } else if meta.path.is_ident("flatten") {
-                out.flatten = true;
-            } else if meta.path.is_ident("table") {
-                out.table = true;
-            } else if meta.path.is_ident("unit") {
-                let value: syn::LitStr = meta.value()?.parse()?;
-                out.unit = Some(value.value());
-            } else if meta.path.is_ident("angle") {
-                let value: syn::LitStr = meta.value()?.parse()?;
-                out.angle = Some(value.value());
-            } else if meta.path.is_ident("refs") {
-                let value: syn::LitStr = meta.value()?.parse()?;
-                out.refs = Some(value.value());
-            } else if meta.path.is_ident("defines") {
-                let value: syn::LitStr = meta.value()?.parse()?;
-                out.defines = Some(value.value());
-            } else if meta.path.is_ident("lang") {
-                let value: syn::LitStr = meta.value()?.parse()?;
-                out.lang = Some(value.value());
-            } else if meta.path.is_ident("lang_from") {
-                let value: syn::LitStr = meta.value()?.parse()?;
-                out.lang_from = Some(value.value());
-            } else if meta.path.is_ident("coord") {
-                out.coord = true;
-            } else if meta.path.is_ident("dir") {
-                out.dir = true;
-            }
-            Ok(())
-        });
-    }
-    out
-}
-//#endregion 🔖️Attrs
-
-//#region 🔖️TypeShape
-enum FieldKind {
-    Scalar,
-    OptionScalar(Box<Type>),
-    VecList(Box<Type>),
-    VecTuple(Box<Type>),
-    VecStatements(Box<Type>),
-    /// `#[dsl(statements, block)]` — same tagged-variant collection as `VecStatements`, but wrapped
-    /// in `{ ... }` so it can sit anywhere in field order (not just as an unbounded trailing field).
-    VecBlockStatements(Box<Type>),
-    /// `BTreeMap<String, V>` — `V` must itself implement `DslField`; keys print sorted.
-    MapField(Box<Type>),
-    /// `#[dsl(statements)] Option<T>` — a "sum type" scalar field (`fill: Option<FillStyle>`,
-    /// exactly one of several keyword-tagged variants, or none) rather than a collection. Reuses
-    /// `Shape::Statements`/`DslVariants` at 0-or-1 length instead of a new shape: a record isn't
-    /// allowed more than one *bare* `Statements` field, but two `Option<T>` fields of this kind can
-    /// coexist because each is dispatched by its own field key (always paired with `#[dsl(block)]`
-    /// in practice, since an un-blocked one would hit that same one-per-record limit).
-    OptionStatements(Box<Type>),
-    /// `#[dsl(statements)] Box<T>` (or bare `T`) — exactly one required tagged value (`layer:
-    /// Box<DrawLayerNode>` on an `AddLayer` operation), the non-optional counterpart of
-    /// `OptionStatements`: same `Shape::Statements` reuse, but errors if the count isn't exactly 1
-    /// rather than treating 0 as `None`.
-    RequiredStatements(Box<Type>),
-    Bytes64,
-    /// `#[dsl(table)] Vec<T>` (`T: DslRecord`) — Structure-of-Arrays columnar `Shape::Table`.
-    /// `to_value`/`from_value` are identical to `VecList` (both produce `FieldValue::List(Vec<
-    /// FieldValue::Record>)`) — only the `Shape` differs, so every binder/diff path downstream
-    /// keeps working unchanged.
-    VecTable(Box<Type>),
-}
-
-/// 🪆️ Strips `macro_rules!`-introduced invisible-delimiter `Type::Group` wrappers so a type
-/// captured through a `:ty` metavariable — then re-emitted through another technology-local
-/// declarative macro (e.g. an `entity_input!`-style struct-generating macro) before ever reaching
-/// this derive — still structurally matches `Type::Path` here exactly like directly-written source.
-/// Without this, `Option<T>`/`Vec<T>`/`Box<T>`/`BTreeMap<..>` fields declared through such a wrapping
-/// macro silently fall through to plain `FieldKind::Scalar` instead of being classified as
-/// optional/list/map, since the wrapper hides the outer `Path` segment from a bare `matches!`.
-// 🚫️async: E1 pure accessor consumed by external-trait/E3 proc-macro entry points — see R9
-fn strip_groups(ty: &Type) -> &Type {
-    let mut ty = ty;
-    while let Type::Group(group) = ty {
-        ty = &group.elem;
-    }
-    ty
-}
-
-// 🚫️async: E1 pure accessor consumed by external-trait/E3 proc-macro entry points — see R9
-fn inner_of(ty: &Type, wrapper: &str) -> Option<Type> {
-    let Type::Path(path) = strip_groups(ty) else { return None };
-    let segment = path.path.segments.last()?;
-    if segment.ident != wrapper {
-        return None;
-    }
-    let syn::PathArguments::AngleBracketed(args) = &segment.arguments else { return None };
-    args.args.iter().find_map(|arg| match arg {
-        syn::GenericArgument::Type(t) => Some(t.clone()),
-        _ => None,
-    })
-}
-
-// 🚫️async: E1 pure accessor consumed by external-trait/E3 proc-macro entry points — see R9
-fn is_vec_u8(ty: &Type) -> bool {
-    inner_of(ty, "Vec").is_some_and(|inner| matches!(strip_groups(&inner), Type::Path(p) if p.path.is_ident("u8")))
-}
-
-/// 🗺️ Extracts `V` from `BTreeMap<String, V>` — `None` for any other type, including a
-/// `BTreeMap` keyed by something other than `String` (the engine's `Shape::Map` is string-keyed
-/// only, matching every hand-rolled `{ key=value }` grammar it replaces).
-// 🚫️async: E1 pure accessor consumed by external-trait/E3 proc-macro entry points — see R9
-fn btreemap_string_value(ty: &Type) -> Option<Type> {
-    let Type::Path(path) = strip_groups(ty) else { return None };
-    let segment = path.path.segments.last()?;
-    if segment.ident != "BTreeMap" {
-        return None;
-    }
-    let syn::PathArguments::AngleBracketed(args) = &segment.arguments else { return None };
-    let types: Vec<&Type> = args
-        .args
-        .iter()
-        .filter_map(|arg| match arg {
-            syn::GenericArgument::Type(t) => Some(t),
-            _ => None,
-        })
-        .collect();
-    let [key, value] = types.as_slice() else { return None };
-    matches!(strip_groups(key), Type::Path(p) if p.path.is_ident("String")).then(|| (*value).clone())
-}
-
-// 🚫️async: E1 pure accessor consumed by external-trait/E3 proc-macro entry points — see R9
-fn classify_field(ty: &Type, attrs: &FieldAttrs) -> (FieldKind, Type) {
-    if let Some(inner) = inner_of(ty, "Option") {
-        if attrs.statements {
-            return (FieldKind::OptionStatements(Box::new(inner.clone())), inner);
-        }
-        return (FieldKind::OptionScalar(Box::new(inner.clone())), inner);
-    }
-    if attrs.base64 && is_vec_u8(ty) {
-        return (FieldKind::Bytes64, ty.clone());
-    }
-    if attrs.statements {
-        if let Some(inner) = inner_of(ty, "Box") {
-            return (FieldKind::RequiredStatements(Box::new(inner.clone())), inner);
-        }
-    }
-    if let Some(value_ty) = btreemap_string_value(ty) {
-        return (FieldKind::MapField(Box::new(value_ty.clone())), value_ty);
-    }
-    if let Some(inner) = inner_of(ty, "Vec") {
-        if attrs.statements {
-            let kind = if attrs.block { FieldKind::VecBlockStatements(Box::new(inner.clone())) } else { FieldKind::VecStatements(Box::new(inner.clone())) };
-            return (kind, inner);
-        }
-        if attrs.tuple {
-            return (FieldKind::VecTuple(Box::new(inner.clone())), inner);
-        }
-        if attrs.table {
-            return (FieldKind::VecTable(Box::new(inner.clone())), inner);
-        }
-        return (FieldKind::VecList(Box::new(inner.clone())), inner);
-    }
-    (FieldKind::Scalar, ty.clone())
-}
-//#endregion 🔖️TypeShape
-
-//#region 🔖️RecordCodegen
-struct FieldPlan {
-    ident: syn::Ident,
-    id: u16,
-    key: String,
-    positional: Option<u16>,
-    optional: bool,
-    kind: FieldKind,
-    elem_ty: Type,
-    /// `#[dsl(block)]` on a field whose `FieldKind` doesn't already imply its own `{ }` wrapping
-    /// (`VecBlockStatements` handles that itself) — wraps whatever shape that kind would otherwise
-    /// produce in `Shape::Block`, e.g. a single nested `#[derive(DslRecord)]` field printed as a
-    /// bare `camera { x=0 y=0 zoom=1 }` line instead of a `camera=...` attribute.
-    block: bool,
-    /// `#[dsl(unit = "...")]`, only meaningful for `FieldKind::Scalar`/`OptionScalar`.
-    unit: Option<String>,
-    /// `#[dsl(angle = "...")]`, only meaningful for `FieldKind::Scalar`/`OptionScalar`.
-    angle: Option<String>,
-    /// `#[dsl(refs = "...")]`, only meaningful for `FieldKind::Scalar`/`OptionScalar`.
-    refs: Option<String>,
-    /// `#[dsl(defines = "...")]` — sets `FieldSpec.defines`, independent of `Shape`.
-    defines: Option<String>,
-    /// `#[dsl(lang = "...")]`, only meaningful for `FieldKind::Scalar`/`OptionScalar`.
-    lang: Option<String>,
-    lang_from: Option<String>,
-    /// `#[dsl(coord)]`, only meaningful for `FieldKind::Scalar`/`OptionScalar` on an array type.
-    coord: bool,
-    /// `#[dsl(dir)]`, ditto.
-    dir: bool,
-}
-
-// 🚫️async: E1 pure accessor consumed by external-trait/E3 proc-macro entry points — see R9
-fn plan_fields(fields: &Fields) -> Vec<FieldPlan> {
-    let mut positional_counter: u16 = 0;
-    let mut out = Vec::new();
-    for (index, field) in fields.iter().enumerate() {
-        let attrs = parse_field_attrs(&field.attrs);
-        let ident = field.ident.clone().expect("dsl_derive only supports named fields");
-        let (kind, elem_ty) = classify_field(&field.ty, &attrs);
-        let key = attrs.key.clone().unwrap_or_else(|| to_kebab(&ident.to_string()));
-        let optional = matches!(kind, FieldKind::OptionScalar(_) | FieldKind::OptionStatements(_));
-        let positional = if attrs.positional {
-            let p = positional_counter;
-            positional_counter += 1;
-            Some(p)
-        } else {
-            None
-        };
-        let block = attrs.block && !matches!(kind, FieldKind::VecBlockStatements(_));
-        out.push(FieldPlan {
-            ident,
-            id: index as u16,
-            key,
-            positional,
-            optional,
-            kind,
-            elem_ty,
-            block,
-            unit: attrs.unit.clone(),
-            angle: attrs.angle.clone(),
-            refs: attrs.refs.clone(),
-            defines: attrs.defines.clone(),
-            lang: attrs.lang.clone(),
-            lang_from: attrs.lang_from.clone(),
-            coord: attrs.coord,
-            dir: attrs.dir,
-        });
-    }
-    out
-}
-
-/// 🏗️ Builds the three code fragments shared by `DslRecord`/`DslArtifact`/`DslOps` variant
-/// bodies: the `RecordSpec` field-spec expressions, the struct→`RecordValue` conversion, and the
-/// `RecordValue`→struct conversion.
-// 🚫️async: E1 pure accessor consumed by external-trait/E3 proc-macro entry points — see R9
-fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_macro2::TokenStream>, Vec<proc_macro2::TokenStream>, Vec<syn::Ident>) {
-    let plans = plan_fields(fields);
-    let mut spec_exprs = Vec::new();
-    let mut to_value_stmts = Vec::new();
-    let mut from_value_stmts = Vec::new();
-    let mut field_idents = Vec::new();
-
-    for plan in &plans {
-        let FieldPlan { ident, id, key, positional, optional, kind, elem_ty, block, unit, angle, refs, defines, lang, lang_from, coord, dir } = plan;
-        // A `#[dsl(unit = "...")]`/`#[dsl(angle = "...")]` scalar field's Shape is resolved at
-        // spec-build time via `dsl::__rt::unit_for_derive` — same lazy-per-call pattern every other
-        // `fn() -> RecordSpec`-backed Shape in this engine already uses, so an unknown unit symbol
-        // surfaces as a panic the first time the generated spec runs (caught by that app's own
-        // RecordSpec-law tests), never silently.
-        let quantity_shape_override: Option<proc_macro2::TokenStream> = if let Some(symbol) = unit {
-            Some(quote! { ::dsl::Shape::Quantity(::dsl::__rt::unit_for_derive(#symbol)) })
-        } else if let Some(symbol) = angle {
-            Some(quote! { ::dsl::Shape::Angle(::dsl::__rt::unit_for_derive(#symbol)) })
-        } else if let Some(kind) = refs {
-            Some(quote! { ::dsl::Shape::Ref(#kind) })
-        } else if let Some(from) = lang_from {
-            let embed_lang_key = plans.iter().find(|p| p.ident == from.as_str()).map_or_else(|| to_kebab(from), |p| p.key.clone());
-            Some(quote! { ::dsl::Shape::EmbedFrom(#embed_lang_key) })
-        } else if let Some(l) = lang {
-            Some(quote! { ::dsl::Shape::Embed(#l) })
-        } else if *coord {
-            Some(quote! { ::dsl::Shape::Coord(3) })
-        } else if *dir {
-            Some(quote! { ::dsl::Shape::Dir })
-        } else {
-            None
-        };
-        let defines_expr = match defines {
-            Some(kind) => quote! { .defines(#kind) },
-            None => quote! {},
-        };
-        field_idents.push(ident.clone());
-        let pos_expr = match positional {
-            Some(p) => quote! { .positional(#p as u8) },
-            None => quote! {},
-        };
-        let opt_expr = if *optional {
-            quote! { .optional() }
-        } else {
-            quote! {}
-        };
-
-        // `DslField::shape`/`DslVariants::variants` are E4 (sync, fn-pointer transitivity — see
-        // R9), so `shape_expr` never needs `.await`. `DslField::to_value`/`from_value` and
-        // `DslVariants::to_named_record`/`from_named_record` stay `async`, so every value-level
-        // call below is `.await`ed; a `Vec`/`Map` field can't `.await` per-element inside
-        // `Iterator::map` (R10 residue shape 1), so those go through a sequential loop instead of
-        // `.map().collect()`.
-        let (shape_expr, to_value_expr, from_value_expr): (proc_macro2::TokenStream, proc_macro2::TokenStream, proc_macro2::TokenStream) = match kind {
-            FieldKind::Scalar => (
-                quantity_shape_override.clone().unwrap_or_else(|| quote! { <#elem_ty as ::dsl::DslField>::shape() }),
-                quote! { ::dsl::DslField::to_value(&self.#ident) },
-                quote! { <#elem_ty as ::dsl::DslField>::from_value(value).map_err(::dsl::__rt::field_error)? },
-            ),
-            FieldKind::Bytes64 => (
-                quote! { ::dsl::Shape::Bytes64 },
-                quote! { ::dsl::FieldValue::Bytes64(self.#ident.clone()) },
-                quote! {
-                    match value {
-                        ::dsl::FieldValue::Bytes64(bytes) => bytes.clone(),
-                        other => return Err(::dsl::__rt::field_error(format!("expected Bytes64, found {other:?}"))),
-                    }
-                },
-            ),
-            FieldKind::OptionScalar(inner) => (
-                quantity_shape_override.clone().unwrap_or_else(|| quote! { <#inner as ::dsl::DslField>::shape() }),
-                quote! {
-                    match &self.#ident {
-                        Some(v) => ::dsl::DslField::to_value(v),
-                        None => ::dsl::FieldValue::Absent,
-                    }
-                },
-                quote! {
-                    match value {
-                        ::dsl::FieldValue::Absent => None,
-                        other => Some(<#inner as ::dsl::DslField>::from_value(other).map_err(::dsl::__rt::field_error)?),
-                    }
-                },
-            ),
-            FieldKind::VecList(inner) => (
-                quote! { ::dsl::Shape::List(Box::new(<#inner as ::dsl::DslField>::shape())) },
-                quote! {
-                    {
-                        let mut __items = Vec::with_capacity(self.#ident.len());
-                        for v in self.#ident.iter() { __items.push(::dsl::DslField::to_value(v)); }
-                        ::dsl::FieldValue::List(__items)
-                    }
-                },
-                quote! {
-                    match value {
-                        ::dsl::FieldValue::List(items) => {
-                            let mut __out = Vec::with_capacity(items.len());
-                            for v in items.iter() { __out.push(<#inner as ::dsl::DslField>::from_value(v).map_err(::dsl::__rt::field_error)?); }
-                            __out
-                        }
-                        other => return Err(::dsl::__rt::field_error(format!("expected List, found {other:?}"))),
-                    }
-                },
-            ),
-            // Same `to_value`/`from_value` as `VecList` (both produce `FieldValue::List(Record)`)
-            // — only the `Shape` differs (`Table` vs `List(Record)`), which is what makes the
-            // printer emit compact SoA instead of verbose AoS for this field.
-            FieldKind::VecTable(inner) => (
-                quote! { ::dsl::Shape::Table(<#inner>::__dsl_spec_producer()) },
-                quote! {
-                    {
-                        let mut __items = Vec::with_capacity(self.#ident.len());
-                        for v in self.#ident.iter() { __items.push(::dsl::DslField::to_value(v)); }
-                        ::dsl::FieldValue::List(__items)
-                    }
-                },
-                quote! {
-                    match value {
-                        ::dsl::FieldValue::List(items) => {
-                            let mut __out = Vec::with_capacity(items.len());
-                            for v in items.iter() { __out.push(<#inner as ::dsl::DslField>::from_value(v).map_err(::dsl::__rt::field_error)?); }
-                            __out
-                        }
-                        other => return Err(::dsl::__rt::field_error(format!("expected List, found {other:?}"))),
-                    }
-                },
-            ),
-            FieldKind::VecTuple(inner) => (
-                quote! { ::dsl::Shape::Tuple(Box::new(<#inner as ::dsl::DslField>::shape()), None) },
-                quote! {
-                    {
-                        let mut __items = Vec::with_capacity(self.#ident.len());
-                        for v in self.#ident.iter() { __items.push(::dsl::DslField::to_value(v)); }
-                        ::dsl::FieldValue::Tuple(__items)
-                    }
-                },
-                quote! {
-                    match value {
-                        ::dsl::FieldValue::Tuple(items) => {
-                            let mut __out = Vec::with_capacity(items.len());
-                            for v in items.iter() { __out.push(<#inner as ::dsl::DslField>::from_value(v).map_err(::dsl::__rt::field_error)?); }
-                            __out
-                        }
-                        other => return Err(::dsl::__rt::field_error(format!("expected Tuple, found {other:?}"))),
-                    }
-                },
-            ),
-            FieldKind::VecStatements(inner) => (
-                quote! { ::dsl::Shape::Statements(<#inner as ::dsl::DslVariants>::variants()) },
-                quote! {
-                    {
-                        let mut __items = Vec::with_capacity(self.#ident.len());
-                        for v in self.#ident.iter() { __items.push(::dsl::DslVariants::to_named_record(v)); }
-                        ::dsl::FieldValue::Statements(__items)
-                    }
-                },
-                quote! {
-                    match value {
-                        ::dsl::FieldValue::Statements(items) => {
-                            let mut __out = Vec::with_capacity(items.len());
-                            for (keyword, record) in items.iter() { __out.push(<#inner as ::dsl::DslVariants>::from_named_record(keyword, record)?); }
-                            __out
-                        }
-                        other => return Err(::dsl::__rt::field_error(format!("expected Statements, found {other:?}"))),
-                    }
-                },
-            ),
-            FieldKind::VecBlockStatements(inner) => (
-                quote! { ::dsl::Shape::Block(Box::new(::dsl::Shape::Statements(<#inner as ::dsl::DslVariants>::variants()))) },
-                quote! {
-                    {
-                        let mut __items = Vec::with_capacity(self.#ident.len());
-                        for v in self.#ident.iter() { __items.push(::dsl::DslVariants::to_named_record(v)); }
-                        ::dsl::FieldValue::Block(Box::new(::dsl::FieldValue::Statements(__items)))
-                    }
-                },
-                quote! {
-                    match value {
-                        ::dsl::FieldValue::Block(inner_value) => match inner_value.as_ref() {
-                            ::dsl::FieldValue::Statements(items) => {
-                                let mut __out = Vec::with_capacity(items.len());
-                                for (keyword, record) in items.iter() { __out.push(<#inner as ::dsl::DslVariants>::from_named_record(keyword, record)?); }
-                                __out
-                            }
-                            other => return Err(::dsl::__rt::field_error(format!("expected Statements inside Block, found {other:?}"))),
-                        },
-                        other => return Err(::dsl::__rt::field_error(format!("expected Block, found {other:?}"))),
-                    }
-                },
-            ),
-            FieldKind::MapField(inner) => (
-                quote! { ::dsl::Shape::Map(Box::new(<#inner as ::dsl::DslField>::shape())) },
-                quote! {
-                    {
-                        let mut __entries = Vec::with_capacity(self.#ident.len());
-                        for (k, v) in self.#ident.iter() { __entries.push((k.clone(), ::dsl::DslField::to_value(v))); }
-                        ::dsl::FieldValue::Map(__entries)
-                    }
-                },
-                quote! {
-                    match value {
-                        ::dsl::FieldValue::Map(entries) => {
-                            let mut __out = ::std::collections::BTreeMap::new();
-                            for (k, v) in entries.iter() { __out.insert(k.clone(), <#inner as ::dsl::DslField>::from_value(v).map_err(::dsl::__rt::field_error)?); }
-                            __out
-                        }
-                        other => return Err(::dsl::__rt::field_error(format!("expected Map, found {other:?}"))),
-                    }
-                },
-            ),
-            FieldKind::OptionStatements(inner) => (
-                quote! { ::dsl::Shape::Statements(<#inner as ::dsl::DslVariants>::variants()) },
-                quote! {
-                    ::dsl::FieldValue::Statements(match &self.#ident {
-                        Some(v) => vec![::dsl::DslVariants::to_named_record(v)],
-                        None => vec![],
-                    })
-                },
-                quote! {
-                    match value {
-                        ::dsl::FieldValue::Absent => None,
-                        ::dsl::FieldValue::Statements(items) if items.is_empty() => None,
-                        ::dsl::FieldValue::Statements(items) if items.len() == 1 => {
-                            Some(<#inner as ::dsl::DslVariants>::from_named_record(&items[0].0, &items[0].1)?)
-                        }
-                        other => return Err(::dsl::__rt::field_error(format!("expected 0 or 1 tagged values, found {other:?}"))),
-                    }
-                },
-            ),
-            FieldKind::RequiredStatements(inner) => (
-                quote! { ::dsl::Shape::Statements(<#inner as ::dsl::DslVariants>::variants()) },
-                quote! { ::dsl::FieldValue::Statements(vec![::dsl::DslVariants::to_named_record(self.#ident.as_ref())]) },
-                quote! {
-                    match value {
-                        ::dsl::FieldValue::Statements(items) if items.len() == 1 => {
-                            Box::new(<#inner as ::dsl::DslVariants>::from_named_record(&items[0].0, &items[0].1)?)
-                        }
-                        other => return Err(::dsl::__rt::field_error(format!("expected exactly 1 tagged value, found {other:?}"))),
-                    }
-                },
-            ),
-        };
-
-        // `#[dsl(block)]` on a field whose own `FieldKind` doesn't already imply `{ }` wrapping
-        // (`VecBlockStatements` does that itself) — generically wraps whatever shape the match
-        // above produced, e.g. turning a nested `#[derive(DslRecord)]` scalar field into a bare
-        // `camera { x=0 y=0 zoom=1 }` line instead of a `camera=...` attribute.
-        //
-        // `FieldValue::Absent` (an `Option<T>` field's `None`) is deliberately NOT wrapped: an
-        // empty `stroke { }` would reparse as "a record whose every field is absent", not "no
-        // record at all" — `StrokeStyle`'s own non-optional fields would then fail with "expected
-        // a 4-item Tuple, found Absent" instead of the field itself just being omitted, exactly
-        // like an ordinary (non-block) optional field already is.
-        let (shape_expr, to_value_expr, from_value_expr) = if *block {
-            (
-                quote! { ::dsl::Shape::Block(Box::new(#shape_expr)) },
-                quote! {
-                    match #to_value_expr {
-                        ::dsl::FieldValue::Absent => ::dsl::FieldValue::Absent,
-                        other => ::dsl::FieldValue::Block(Box::new(other)),
-                    }
-                },
-                quote! {
-                    match value {
-                        ::dsl::FieldValue::Block(inner) => { let value = inner.as_ref(); #from_value_expr },
-                        ::dsl::FieldValue::Absent => { let value = &::dsl::FieldValue::Absent; #from_value_expr },
-                        other => return Err(::dsl::__rt::field_error(format!("expected Block, found {other:?}"))),
-                    }
-                },
-            )
-        } else {
-            (shape_expr, to_value_expr, from_value_expr)
-        };
-
-        spec_exprs.push(quote! {
-            ::dsl::FieldSpec::new(#id, #key, #shape_expr) #pos_expr #opt_expr #defines_expr
-        });
-        to_value_stmts.push(quote! {
-            record.fields.insert(#id, #to_value_expr);
-        });
-        let local = field_local(ident);
-        from_value_stmts.push(quote! {
-            let #local = {
-                let value = record.get(#id).ok_or_else(|| ::dsl::__rt::field_error(format!("missing field '{}'", #key)))?;
-                #from_value_expr
-            };
-        });
-    }
-
-    (spec_exprs, to_value_stmts, from_value_stmts, field_idents)
-}
-
-/// 🏭️ Emits declared field metadata without borrowing an ordinary allocating shape factory.
-fn schema_record_codegen(fields:&Fields)->Vec<proc_macro2::TokenStream>{
-    let plans=plan_fields(fields);
-    plans.iter().map(|plan|{
-        let FieldPlan{id,key,positional,optional,kind,elem_ty,block,unit,angle,refs,defines,lang,lang_from,coord,dir,..}=plan;
-        let refinement=if let Some(symbol)=unit{Some(quote!{::dsl::Shape::Quantity(::dsl::__rt::unit_for_derive(#symbol))})}else if let Some(symbol)=angle{Some(quote!{::dsl::Shape::Angle(::dsl::__rt::unit_for_derive(#symbol))})}else if let Some(kind)=refs{Some(quote!{::dsl::Shape::Ref(#kind)})}else if let Some(from)=lang_from{let key=plans.iter().find(|plan|plan.ident==from.as_str()).map_or_else(||to_kebab(from),|plan|plan.key.clone());Some(quote!{::dsl::Shape::EmbedFrom(#key)})}else if let Some(language)=lang{Some(quote!{::dsl::Shape::Embed(#language)})}else if *coord{Some(quote!{::dsl::Shape::Coord(3)})}else if *dir{Some(quote!{::dsl::Shape::Dir})}else{None};
-        let shape=match kind{
-            FieldKind::Scalar=>refinement.unwrap_or_else(||quote!{<#elem_ty as ::dsl::DslField>::shape_controlled(control)?}),
-            FieldKind::OptionScalar(inner)=>refinement.unwrap_or_else(||quote!{<#inner as ::dsl::DslField>::shape_controlled(control)?}),
-            FieldKind::Bytes64=>quote!{::dsl::Shape::Bytes64},
-            FieldKind::VecList(inner)=>quote!{::dsl::Shape::List(::dsl::schema::producer::boxed(<#inner as ::dsl::DslField>::shape_controlled(control)?,control)?)},
-            FieldKind::VecTuple(inner)=>quote!{::dsl::Shape::Tuple(::dsl::schema::producer::boxed(<#inner as ::dsl::DslField>::shape_controlled(control)?,control)?,None)},
-            FieldKind::VecTable(inner)=>quote!{::dsl::Shape::Table(<#inner>::__dsl_spec_producer())},
-            FieldKind::MapField(inner)=>quote!{::dsl::Shape::Map(::dsl::schema::producer::boxed(<#inner as ::dsl::DslField>::shape_controlled(control)?,control)?)},
-            FieldKind::VecStatements(inner)|FieldKind::OptionStatements(inner)|FieldKind::RequiredStatements(inner)=>quote!{::dsl::Shape::Statements(<#inner as ::dsl::DslVariants>::variants_controlled(control)?)},
-            FieldKind::VecBlockStatements(inner)=>quote!{::dsl::Shape::Block(::dsl::schema::producer::boxed(::dsl::Shape::Statements(<#inner as ::dsl::DslVariants>::variants_controlled(control)?),control)?)},
-        };
-        let shape=if *block{quote!{::dsl::Shape::Block(::dsl::schema::producer::boxed(#shape,control)? )}}else{shape};
-        let position=positional.map(|position|quote!{.positional(#position as u8)});let optional=if *optional{quote!{.optional()}}else{quote!{}};let defines=defines.as_ref().map(|kind|quote!{.defines(#kind)});
-        quote!{let field=::dsl::schema::producer::field(#id,#key,#shape,control)? #position #optional #defines;fields.push(field);control.step()?;}
-    }).collect()
-}
-//#endregion 🔖️RecordCodegen
-
-/// 🛬️ Generates explicit controlled bindings from the same authored field plans.
-fn controlled_record_codegen(fields:&Fields)->Vec<proc_macro2::TokenStream>{
-    plan_fields(fields).iter().map(|plan|{
-        let FieldPlan{ident,id,key,kind,elem_ty,block,..}=plan;
-        let expression=match kind {
-            FieldKind::Scalar=>quote!{control.scoped_stage(|control|<#elem_ty as ::dsl::DslField>::from_value_controlled(value,control)).map_err(::dsl::__rt::field_error)?},
-            FieldKind::Bytes64=>quote!{match value{::dsl::FieldValue::Bytes64(bytes)=>{control.step().map_err(::dsl::__rt::field_error)?;control.copy_bytes(bytes).map_err(::dsl::__rt::field_error)?},_=>return Err(::dsl::__rt::field_error("expected Bytes64"))}},
-            FieldKind::OptionScalar(inner)=>quote!{match value{::dsl::FieldValue::Absent=>{control.step().map_err(::dsl::__rt::field_error)?;None},other=>Some(control.scoped_stage(|control|<#inner as ::dsl::DslField>::from_value_controlled(other,control)).map_err(::dsl::__rt::field_error)?)}},
-            FieldKind::VecList(inner)|FieldKind::VecTable(inner)=>quote!{match value{::dsl::FieldValue::List(items)=>::dsl::__rt::decode_list_controlled::<#inner>(items,control).map_err(::dsl::__rt::field_error)?,_=>return Err(::dsl::__rt::field_error("expected List"))}},
-            FieldKind::VecTuple(inner)=>quote!{match value{::dsl::FieldValue::Tuple(items)=>::dsl::__rt::decode_list_controlled::<#inner>(items,control).map_err(::dsl::__rt::field_error)?,_=>return Err(::dsl::__rt::field_error("expected Tuple"))}},
-            FieldKind::MapField(inner)=>quote!{control.scoped_stage(|control|<::std::collections::BTreeMap<String,#inner> as ::dsl::DslField>::from_value_controlled(value,control)).map_err(::dsl::__rt::field_error)?},
-            FieldKind::VecStatements(inner)=>controlled_statements(inner),
-            FieldKind::VecBlockStatements(inner)=>{let expression=controlled_statements(inner);quote!{match value{::dsl::FieldValue::Block(inner)=>{let value=inner.as_ref();#expression},_=>return Err(::dsl::__rt::field_error("expected Block"))}}},
-            FieldKind::OptionStatements(inner)=>quote!{match value{::dsl::FieldValue::Absent=>None,::dsl::FieldValue::Statements(items) if items.is_empty()=>None,::dsl::FieldValue::Statements(items) if items.len()==1=>Some(control.scoped_stage(|control|<#inner as ::dsl::DslVariants>::from_named_record_controlled(&items[0].0,&items[0].1,control))?),_=>return Err(::dsl::__rt::field_error("expected0or1 tagged values"))}},
-            FieldKind::RequiredStatements(inner)=>quote!{match value{::dsl::FieldValue::Statements(items) if items.len()==1=>{control.charge(::std::mem::size_of::<#inner>()).map_err(::dsl::__rt::field_error)?;Box::new(control.scoped_stage(|control|<#inner as ::dsl::DslVariants>::from_named_record_controlled(&items[0].0,&items[0].1,control))?)},_=>return Err(::dsl::__rt::field_error("expected exactly1 tagged value"))}},
-        };
-        let expression=if *block {quote!{match value{::dsl::FieldValue::Block(inner)=>{let value=inner.as_ref();#expression},::dsl::FieldValue::Absent=>{let value=&::dsl::FieldValue::Absent;#expression},_=>return Err(::dsl::__rt::field_error("expected Block"))}}}else{expression};
-        let retire=retire_field_codegen(plan,quote!{value});
-        let ident=field_local(ident);
-        quote!{let #ident=::dsl::__rt::DecodedFieldOwner::new(control.scoped_stage(|control|{let value=record.get(#id).ok_or_else(||::dsl::__rt::field_error(format!("missing field '{}'",#key)))?;Ok::<_,::dsl::TextError>(#expression)})?,|value|{#retire});}
-    }).collect()
-}
-
-/// 🛫️ Projects explicit declared fields with cumulative ownership and known workloads.
-fn encoding_record_codegen(fields:&Fields,bindings:bool)->Vec<proc_macro2::TokenStream>{
-    plan_fields(fields).iter().map(|plan|{
-        let FieldPlan{ident,id,kind,elem_ty,block,..}=plan;
-        let source=if bindings{let local=field_local(ident);quote!{#local}}else{quote!{&self.#ident}};
-        let projection=match kind{
-            FieldKind::Scalar=>quote!{<#elem_ty as ::dsl::DslField>::to_value_controlled(value,control)?},
-            FieldKind::Bytes64=>quote!{::dsl::FieldValue::Bytes64(control.copy_bytes(value)?)},
-            FieldKind::OptionScalar(inner)=>quote!{match value{Some(value)=><#inner as ::dsl::DslField>::to_value_controlled(value,control)?,None=>::dsl::FieldValue::Absent}},
-            FieldKind::VecList(_)|FieldKind::VecTable(_)=>quote!{::dsl::FieldValue::List(::dsl::native_encoding::project_list(value,control)?)},
-            FieldKind::VecTuple(_)=>quote!{::dsl::FieldValue::Tuple(::dsl::native_encoding::project_list(value,control)?)},
-            FieldKind::MapField(_)=>quote!{::dsl::native_encoding::project_map(value,control)?},
-            FieldKind::VecStatements(_)=>quote!{::dsl::native_encoding::project_statements(value,control)?},
-            FieldKind::VecBlockStatements(_)=>quote!{{control.charge(::std::mem::size_of::<::dsl::FieldValue>())?;::dsl::FieldValue::Block(Box::new(::dsl::native_encoding::project_statements(value,control)?))}},
-            FieldKind::OptionStatements(_)=>quote!{match value{Some(value)=>::dsl::native_encoding::project_statements(::std::slice::from_ref(value),control)?,None=>::dsl::FieldValue::Statements(Vec::new())}},
-            FieldKind::RequiredStatements(_)=>quote!{::dsl::native_encoding::project_statements(::std::slice::from_ref(value.as_ref()),control)?},
-        };
-        let projection=if *block{quote!{match #projection{::dsl::FieldValue::Absent=>::dsl::FieldValue::Absent,value=>{let value=::dsl::__rt::DecodedFieldOwner::new(value,::dsl::native_encoding::retire_field);control.charge(::std::mem::size_of::<::dsl::FieldValue>())?;::dsl::FieldValue::Block(Box::new(value.take()))}}}}else{projection};
-        quote!{let field=control.scoped_stage(|control|{control.begin_stage(0)?;let value=#source;Ok::<_,String>(#projection)}).map_err(::dsl::__rt::field_error)?;record.insert(#id,field);control.step().map_err(::dsl::__rt::field_error)?;}
-    }).collect()
-}
-
-/// 🧹️ Delegates each completed field to its declared field or variant retirement.
-fn retire_field_codegen(plan:&FieldPlan,value:proc_macro2::TokenStream)->proc_macro2::TokenStream{
-    let FieldPlan{kind,elem_ty,..}=plan;
-    match kind {
-        FieldKind::Scalar=>quote!{<#elem_ty as ::dsl::DslField>::retire_decoded(#value);},
-        FieldKind::Bytes64=>quote!{drop(#value);},
-        FieldKind::OptionScalar(inner)=>quote!{if let Some(value)=#value{<#inner as ::dsl::DslField>::retire_decoded(value);}},
-        FieldKind::VecList(inner)|FieldKind::VecTable(inner)|FieldKind::VecTuple(inner)=>quote!{for value in #value{<#inner as ::dsl::DslField>::retire_decoded(value);}},
-        FieldKind::MapField(inner)=>quote!{<::std::collections::BTreeMap<String,#inner> as ::dsl::DslField>::retire_decoded(#value);},
-        FieldKind::VecStatements(inner)|FieldKind::VecBlockStatements(inner)=>quote!{for value in #value{<#inner as ::dsl::DslVariants>::retire_decoded_variant(value);}},
-        FieldKind::OptionStatements(inner)=>quote!{if let Some(value)=#value{<#inner as ::dsl::DslVariants>::retire_decoded_variant(value);}},
-        FieldKind::RequiredStatements(inner)=>quote!{<#inner as ::dsl::DslVariants>::retire_decoded_variant(*#value);},
-    }
-}
-
-/// 🌲️ Builds record retirement from explicit field plans or an authored domain lifecycle.
-fn record_retirement_codegen(fields:&Fields,retire_with:Option<&syn::Path>)->proc_macro2::TokenStream{
-    if let Some(owner)=retire_with{return quote!{#owner(self);};}
-    let plans=plan_fields(fields);let idents=field_inits(&plans.iter().map(|plan|plan.ident.clone()).collect::<Vec<_>>());
-    let retirements=plans.iter().map(|plan|{let ident=field_local(&plan.ident);retire_field_codegen(plan,quote!{#ident})});
-    quote!{let Self{#(#idents),*}=self;#(#retirements)*}
-}
-
-/// 🌿️ Builds a controlled tagged-list binding without borrowing an unchecked constructor.
-fn controlled_statements(inner:&Type)->proc_macro2::TokenStream{
-    quote!{match value{::dsl::FieldValue::Statements(items)=>::dsl::__rt::decode_statements_controlled::<#inner>(items,control)?,_=>return Err(::dsl::__rt::field_error("expected Statements"))}}
-}
-
-//#region 🔖️DslRecord
-pub fn expand_dsl_record(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
-    let name = input.ident.clone();
-    let container = parse_container_attrs(&input);
-    let Data::Struct(data) = &input.data else {
-        return syn::Error::new_spanned(&input, "DslRecord only supports structs").to_compile_error().into();
-    };
-    let (spec_exprs, to_value_stmts, from_value_stmts, field_idents) = record_codegen(&data.fields);
-    let field_initializers = field_inits(&field_idents);
-    let controlled_stmts=controlled_record_codegen(&data.fields);
-    let schema_stmts=schema_record_codegen(&data.fields);let schema_count=schema_stmts.len();
-    let encoding_stmts=encoding_record_codegen(&data.fields,false);
-    let encoding_count=encoding_stmts.len();
-    let controlled_fields=field_idents.iter().map(|ident|{let local=field_local(ident);quote!{#ident:#local.take()}});
-    let retirement=record_retirement_codegen(&data.fields,container.retire_with.as_ref());
-    let schema_keyword_expr=match &container.keyword{Some(keyword)=>quote!{Some(#keyword)},None=>quote!{None}};
-    let keyword_expr = match &container.keyword {
-        Some(k) => quote! { Some(#k.to_string()) },
-        None => quote! { None },
-    };
-    let layout_expr = if container.lines_layout {
-        quote! { ::dsl::RecordLayout::Lines }
-    } else {
-        quote! { ::dsl::RecordLayout::Inline }
-    };
-
-    let expanded = quote! {
-        impl #name {
-            // 🚫️async: E4 — its VALUE is stored as the fn pointer in `Shape::Record(Self::__dsl_spec)`
-            // below (`DslField::shape` is itself E4 for the same reason — see R9), and `spec_exprs`
-            // (built from the now-sync `DslField::shape`/`DslVariants::variants`) needs no executor.
-            pub fn __dsl_spec() -> ::dsl::RecordSpec {
-                ::dsl::RecordSpec::new_owned(#keyword_expr, #layout_expr, vec![ #(#spec_exprs),* ])
-            }
-            /// 🏭️ Owns exactly the declared metadata fields under either native control.
-            pub fn __dsl_spec_controlled<C: ::dsl::NativeSchemaControl>(control:&mut C)->Result<::dsl::RecordSpec,String>{
-                control.scoped_depth(64,|control|control.scoped_stage(|control|{control.begin_stage(#schema_count)?;let mut fields=control.allocate_vec(#schema_count)?;#(#schema_stmts)*::dsl::schema::producer::record(#schema_keyword_expr,#layout_expr,fields,control)}))
-            }
-            /// 🪆️ Retains lazy owner factories without constructing their metadata.
-            pub fn __dsl_spec_producer()->::dsl::RecordSpecProducer{::dsl::RecordSpecProducer{ordinary:Self::__dsl_spec,decoding:|control|Self::__dsl_spec_controlled(control),encoding:|control|Self::__dsl_spec_controlled(control)}}
-            pub fn __dsl_to_record(&self) -> ::dsl::RecordValue {
-                let mut record = ::dsl::RecordValue::default();
-                #(#to_value_stmts)*
-                record
-            }
-            /// 🛫️ Projects complete named fields under caller-owned output admission.
-            pub fn __dsl_to_record_controlled(&self,control:&mut ::dsl::NativeEncodeControl<'_>)->Result<::dsl::RecordValue,::dsl::TextError>{
-                control.scoped_depth(64,|control|control.scoped_stage(|control|{control.begin_stage(#encoding_count).map_err(::dsl::__rt::field_error)?;let mut record=::dsl::native_encoding::EncodedRecord::new(#encoding_count,control).map_err(::dsl::__rt::field_error)?;#(#encoding_stmts)*Ok::<_,::dsl::TextError>(record.take())}).map_err(|error|error.message)).map_err(::dsl::__rt::field_error)
-            }
-            pub fn __dsl_from_record(record: &::dsl::RecordValue) -> Result<Self, ::dsl::TextError> {
-                #(#from_value_stmts)*
-                Ok(Self { #(#field_initializers),* })
-            }
-            /// 🛬️ Binds owned typed fields with cumulative allocation and interior cancellation.
-            pub fn __dsl_from_record_controlled(record:&::dsl::RecordValue,control:&mut ::dsl::NativeDecodeControl<'_>)->Result<Self,::dsl::TextError>{
-                control.checkpoint().map_err(::dsl::__rt::field_error)?;
-                #(#controlled_stmts)*
-                Ok(Self{#(#controlled_fields),*})
-            }
-        }
-
-        impl ::dsl::DslField for #name {
-            fn retire_decoded(self){#retirement}
-            // 🚫️async: E4 — see `DslField::shape`'s tag on the trait.
-            fn shape() -> ::dsl::Shape {
-                ::dsl::Shape::Record(Self::__dsl_spec_producer())
-            }
-            fn shape_controlled<C: ::dsl::NativeSchemaControl>(control:&mut C)->Result<::dsl::Shape,String>{control.checkpoint()?;Ok(::dsl::Shape::Record(Self::__dsl_spec_producer()))}
-            fn to_value(&self) -> ::dsl::FieldValue {
-                ::dsl::FieldValue::Record(self.__dsl_to_record())
-            }
-            fn from_value(value: &::dsl::FieldValue) -> Result<Self, String> {
-                match value {
-                    ::dsl::FieldValue::Record(record) => Self::__dsl_from_record(record).map_err(|e| e.message),
-                    other => Err(format!("expected Record, found {other:?}")),
-                }
-            }
-            fn from_value_controlled(value:&::dsl::FieldValue,control:&mut ::dsl::NativeDecodeControl<'_>)->Result<Self,String>{
-                match value{::dsl::FieldValue::Record(record)=>Self::__dsl_from_record_controlled(record,control).map_err(|error|error.message),_=>Err("expected Record".into())}
-            }
-            fn from_record_controlled(record:&::dsl::RecordValue,control:&mut ::dsl::NativeDecodeControl<'_>)->Result<Self,String>{Self::__dsl_from_record_controlled(record,control).map_err(|error|error.message)}
-            fn to_value_controlled(&self,control:&mut ::dsl::NativeEncodeControl<'_>)->Result<::dsl::FieldValue,String>{Self::__dsl_to_record_controlled(self,control).map(::dsl::FieldValue::Record).map_err(|error|error.message)}
-            fn to_record_controlled(&self,control:&mut ::dsl::NativeEncodeControl<'_>)->Result<::dsl::RecordValue,String>{Self::__dsl_to_record_controlled(self,control).map_err(|error|error.message)}
-        }
-    };
-    expanded.into()
-}
-//#endregion 🔖️DslRecord
-
-//#region 🔖️DslArtifact
+/// ✉️ Owns artifact envelope metadata independently from canonical Record fields.
 pub fn expand_dsl_document(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    let name = input.ident.clone();
-    let container = parse_container_attrs(&input);
-    let envelope_id = match container.id.clone().or_else(|| container.extension.clone()) {
-        Some(id) => id,
-        None => {
-            return syn::Error::new_spanned(&input, "DslArtifact requires #[dsl(id = \"plugin.artifact\")] or #[dsl(extension = \"...\")]").to_compile_error().into();
-        }
-    };
-    let extension_suffix = container.extension.as_deref().unwrap_or_else(|| envelope_id.rsplit('.').next().unwrap_or(&envelope_id));
-    let envelope_id_lit = envelope_id.as_str();
-    let extension_suffix_lit = extension_suffix;
-    let Data::Struct(data) = &input.data else {
+    if !matches!(input.data, Data::Struct(_)) {
         return syn::Error::new_spanned(&input, "DslArtifact only supports structs").to_compile_error().into();
+    }
+    let mut id: Option<String> = None;
+    let mut extension: Option<String> = None;
+    for attribute in &input.attrs {
+        if !attribute.path().is_ident("artifact") { continue; }
+        if let Err(error) = attribute.parse_nested_meta(|meta| {
+            let target = if meta.path.is_ident("id") { &mut id } else if meta.path.is_ident("extension") { &mut extension } else { return Err(meta.error("unsupported artifact attribute")); };
+            if target.is_some() { return Err(meta.error("duplicate artifact attribute")); }
+            let value: syn::LitStr = meta.value()?.parse()?;
+            *target = Some(value.value());
+            Ok(())
+        }) { return error.to_compile_error().into(); }
+    }
+    let envelope_id = match id.or_else(|| extension.clone()) {
+        Some(id) => id,
+        None => return syn::Error::new_spanned(&input, "DslArtifact requires #[artifact(id = \"plugin.artifact\")] or #[artifact(extension = \"...\")]").to_compile_error().into(),
     };
-    let (spec_exprs, to_value_stmts, from_value_stmts, field_idents) = record_codegen(&data.fields);
-    let field_initializers = field_inits(&field_idents);
-    let controlled_stmts=controlled_record_codegen(&data.fields);
-    let schema_stmts=schema_record_codegen(&data.fields);let schema_count=schema_stmts.len();
-    let encoding_stmts=encoding_record_codegen(&data.fields,false);
-    let encoding_count=encoding_stmts.len();
-    let controlled_fields=field_idents.iter().map(|ident|{let local=field_local(ident);quote!{#ident:#local.take()}});
-    let retirement=record_retirement_codegen(&data.fields,container.retire_with.as_ref());
-    let schema_keyword_expr=match &container.keyword{Some(keyword)=>quote!{Some(#keyword)},None=>quote!{None}};
-    let keyword_expr = match &container.keyword {
-        Some(k) => quote! { Some(#k.to_string()) },
-        None => quote! { None },
-    };
-    let layout_expr = if container.lines_layout {
-        quote! { ::dsl::RecordLayout::Lines }
-    } else {
-        quote! { ::dsl::RecordLayout::Inline }
-    };
-
-    let expanded = quote! {
+    let suffix = extension.as_deref().unwrap_or_else(|| envelope_id.rsplit('.').next().unwrap_or(&envelope_id));
+    let name = &input.ident;
+    quote! {
         impl #name {
-            // 🚫️async: E4 — see `DslRecord`'s `__dsl_spec` above; identical reasoning.
-            pub fn __dsl_spec() -> ::dsl::RecordSpec {
-                ::dsl::RecordSpec::new_owned(#keyword_expr, #layout_expr, vec![ #(#spec_exprs),* ])
-            }
-            /// 🏭️ Owns exactly the declared metadata fields under either native control.
-            pub fn __dsl_spec_controlled<C: ::dsl::NativeSchemaControl>(control:&mut C)->Result<::dsl::RecordSpec,String>{
-                control.scoped_depth(64,|control|control.scoped_stage(|control|{control.begin_stage(#schema_count)?;let mut fields=control.allocate_vec(#schema_count)?;#(#schema_stmts)*::dsl::schema::producer::record(#schema_keyword_expr,#layout_expr,fields,control)}))
-            }
-            /// 🪆️ Retains lazy owner factories without constructing their metadata.
-            pub fn __dsl_spec_producer()->::dsl::RecordSpecProducer{::dsl::RecordSpecProducer{ordinary:Self::__dsl_spec,decoding:|control|Self::__dsl_spec_controlled(control),encoding:|control|Self::__dsl_spec_controlled(control)}}
-            pub fn __dsl_to_record(&self) -> ::dsl::RecordValue {
-                let mut record = ::dsl::RecordValue::default();
-                #(#to_value_stmts)*
-                record
-            }
-            /// 🛫️ Projects complete named fields under caller-owned output admission.
-            pub fn __dsl_to_record_controlled(&self,control:&mut ::dsl::NativeEncodeControl<'_>)->Result<::dsl::RecordValue,::dsl::TextError>{
-                control.scoped_depth(64,|control|control.scoped_stage(|control|{control.begin_stage(#encoding_count).map_err(::dsl::__rt::field_error)?;let mut record=::dsl::native_encoding::EncodedRecord::new(#encoding_count,control).map_err(::dsl::__rt::field_error)?;#(#encoding_stmts)*Ok::<_,::dsl::TextError>(record.take())}).map_err(|error|error.message)).map_err(::dsl::__rt::field_error)
-            }
-            pub fn __dsl_from_record(record: &::dsl::RecordValue) -> Result<Self, ::store::TextError> {
-                #(#from_value_stmts)*
-                Ok(Self { #(#field_initializers),* })
-            }
-            /// 🛬️ Binds owned typed fields with cumulative allocation and interior cancellation.
-            pub fn __dsl_from_record_controlled(record:&::dsl::RecordValue,control:&mut ::dsl::NativeDecodeControl<'_>)->Result<Self,::dsl::TextError>{
-                control.checkpoint().map_err(::dsl::__rt::field_error)?;
-                #(#controlled_stmts)*
-                Ok(Self{#(#controlled_fields),*})
-            }
-            /// ✉️ Envelope constants for handcrafted ArtifactDsl/ArtifactPack wiring (P6: derive no longer emits those traits).
-            pub const __DSL_ENVELOPE_ID: &'static str = #envelope_id_lit;
-            pub const __DSL_EXTENSION: &'static str = #extension_suffix_lit;
+            pub const __DSL_ENVELOPE_ID: &'static str = #envelope_id;
+            pub const __DSL_EXTENSION: &'static str = #suffix;
         }
-
-        // A document type can also be nested as an ordinary field (e.g. a "whole document
-        // snapshot" operation variant), so it needs `DslField` too, not just `store::ArtifactDsl`.
-        impl ::dsl::DslField for #name {
-            fn retire_decoded(self){#retirement}
-            // 🚫️async: E4 — see `DslField::shape`'s tag on the trait.
-            fn shape() -> ::dsl::Shape {
-                ::dsl::Shape::Record(Self::__dsl_spec_producer())
-            }
-            fn shape_controlled<C: ::dsl::NativeSchemaControl>(control:&mut C)->Result<::dsl::Shape,String>{control.checkpoint()?;Ok(::dsl::Shape::Record(Self::__dsl_spec_producer()))}
-            fn to_value(&self) -> ::dsl::FieldValue {
-                ::dsl::FieldValue::Record(self.__dsl_to_record())
-            }
-            fn from_value(value: &::dsl::FieldValue) -> Result<Self, String> {
-                match value {
-                    ::dsl::FieldValue::Record(record) => Self::__dsl_from_record(record).map_err(|e| e.message),
-                    other => Err(format!("expected Record, found {other:?}")),
-                }
-            }
-            fn from_value_controlled(value:&::dsl::FieldValue,control:&mut ::dsl::NativeDecodeControl<'_>)->Result<Self,String>{
-                match value{::dsl::FieldValue::Record(record)=>Self::__dsl_from_record_controlled(record,control).map_err(|error|error.message),_=>Err("expected Record".into())}
-            }
-            fn from_record_controlled(record:&::dsl::RecordValue,control:&mut ::dsl::NativeDecodeControl<'_>)->Result<Self,String>{Self::__dsl_from_record_controlled(record,control).map_err(|error|error.message)}
-            fn to_value_controlled(&self,control:&mut ::dsl::NativeEncodeControl<'_>)->Result<::dsl::FieldValue,String>{Self::__dsl_to_record_controlled(self,control).map(::dsl::FieldValue::Record).map_err(|error|error.message)}
-            fn to_record_controlled(&self,control:&mut ::dsl::NativeEncodeControl<'_>)->Result<::dsl::RecordValue,String>{Self::__dsl_to_record_controlled(self,control).map_err(|error|error.message)}
-        }
-
-    };
-    expanded.into()
+    }.into()
 }
-//#endregion 🔖️DslArtifact
 
-//#region 🔖️DslDiff
+/// 🧩 Owns OS diff transport semantics over canonical Record projection and construction.
 pub fn expand_dsl_diff(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    let name = input.ident.clone();
-    let container = parse_container_attrs(&input);
-    let Data::Struct(data) = &input.data else {
+    if !matches!(input.data, Data::Struct(_)) {
         return syn::Error::new_spanned(&input, "DslDiff only supports structs").to_compile_error().into();
-    };
-    let (spec_exprs, to_value_stmts, from_value_stmts, field_idents) = record_codegen(&data.fields);
-    let field_initializers = field_inits(&field_idents);
-    let keyword_expr = match &container.keyword {
-        Some(k) => quote! { Some(#k.to_string()) },
-        None => quote! { None },
-    };
-    let layout_expr = if container.lines_layout {
-        quote! { ::dsl::RecordLayout::Lines }
-    } else {
-        quote! { ::dsl::RecordLayout::Inline }
-    };
-
-    let expanded = quote! {
-        impl #name {
-            // 🚫️async: E1 pure accessor consumed by the same `spec_exprs` shape `DslRecord`'s
-            // `__dsl_spec` uses — E4-transitively sync, see R9.
-            pub fn __dsl_diff_spec() -> ::dsl::RecordSpec {
-                ::dsl::RecordSpec::new_owned(#keyword_expr, #layout_expr, vec![ #(#spec_exprs),* ])
-            }
-            pub fn __dsl_diff_to_record(&self) -> ::dsl::RecordValue {
-                let mut record = ::dsl::RecordValue::default();
-                #(#to_value_stmts)*
-                record
-            }
-            pub fn __dsl_diff_from_record(record: &::dsl::RecordValue) -> Result<Self, ::dsl::TextError> {
-                #(#from_value_stmts)*
-                Ok(Self { #(#field_initializers),* })
-            }
-        }
-
+    }
+    let name = &input.ident;
+    quote! {
         impl ::semio_framework_os_kernel::DiffCodec for #name {
             fn print_diff(&self) -> String {
-                ::dsl::print(&self.__dsl_diff_to_record(), &Self::__dsl_diff_spec(), ::dsl::JoinMode::Inline)
+                ::semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), ::semio_framework_dsl_record::JoinMode::Inline)
             }
-            fn parse_diff(line: &str) -> Result<Self, ::dsl::TextError> {
-                let record = ::dsl::parse(line, &Self::__dsl_diff_spec(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline })?;
-                Self::__dsl_diff_from_record(&record)
+            fn parse_diff(line: &str) -> Result<Self, ::semio_framework_diagnostic::TextError> {
+                let record = ::semio_framework_dsl_record::parse(line, &Self::__dsl_spec(), &::semio_framework_dsl_record::ParseOptions { limits: ::semio_framework_diagnostic::Limits::default(), mode: ::semio_framework_dsl_record::SourceMode::Inline })?;
+                Self::__dsl_from_record(&record)
             }
             fn encode_diff(&self) -> Result<Vec<u8>, ::semio_framework_os_kernel::ProtocolError> {
-                ::store::pack_rt::encode_document(&Self::__dsl_diff_spec(), &self.__dsl_diff_to_record(), &::store::PackEncodeOptions::default()).map_err(::semio_framework_os_kernel::ProtocolError::from)
+                ::semio_framework_os_kernel::os_store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), &::semio_framework_os_kernel::os_store::PackEncodeOptions::default()).map_err(::semio_framework_os_kernel::ProtocolError::from)
             }
             fn decode_diff(bytes: &[u8]) -> Result<Self, ::semio_framework_os_kernel::ProtocolError> {
-                let (record, _report) = ::store::pack_rt::decode_document(bytes, &Self::__dsl_diff_spec(), &::store::PackDecodeOptions::default()).map_err(::semio_framework_os_kernel::ProtocolError::from)?;
-                Self::__dsl_diff_from_record(&record).map_err(|error| ::semio_framework_os_kernel::ProtocolError::Malformed { what: "diff record", offset: 0, detail: error.to_string() })
+                let (record, _report) = ::semio_framework_os_kernel::os_store::pack_rt::decode_document(bytes, &Self::__dsl_spec(), &::semio_framework_os_kernel::os_store::PackDecodeOptions::default()).map_err(::semio_framework_os_kernel::ProtocolError::from)?;
+                Self::__dsl_from_record(&record).map_err(|error| ::semio_framework_os_kernel::ProtocolError::Malformed { what: "diff record", offset: 0, detail: error.to_string() })
             }
         }
-    };
-    expanded.into()
+    }.into()
 }
-//#endregion 🔖️DslDiff
-
-//#region 🔖️DslScalar
-pub fn expand_dsl_scalar(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
-    let name = input.ident.clone();
-    let Data::Enum(data) = &input.data else {
-        return syn::Error::new_spanned(&input, "DslScalar only supports unit-variant enums").to_compile_error().into();
-    };
-    let mut variant_tags = Vec::new();
-    let mut schema_tags=Vec::new();
-    let mut match_to_ordinal = Vec::new();
-    let mut match_from_ordinal = Vec::new();
-    for (ordinal, variant) in data.variants.iter().enumerate() {
-        if !matches!(variant.fields, Fields::Unit) {
-            return syn::Error::new_spanned(variant, "DslScalar only supports unit variants").to_compile_error().into();
-        }
-        let attrs = parse_field_attrs(&variant.attrs);
-        let variant_ident = variant.ident.clone();
-        let tag = attrs.key.unwrap_or_else(|| to_kebab(&variant_ident.to_string()));
-        let ordinal = ordinal as u32;
-        variant_tags.push(quote! { (#tag.to_string(), #ordinal) });
-        schema_tags.push(quote!{variants.push((control.copy_text(#tag)?,#ordinal));control.step()?;});
-        match_to_ordinal.push(quote! { #name::#variant_ident => #ordinal });
-        match_from_ordinal.push(quote! { #ordinal => Ok(#name::#variant_ident) });
-    }
-
-    let schema_count=schema_tags.len();
-    let expanded = quote! {
-        impl ::dsl::DslField for #name {
-            // 🚫️async: E4 — see `DslField::shape`'s tag on the trait.
-            fn shape() -> ::dsl::Shape {
-                ::dsl::Shape::Enum(vec![ #(#variant_tags),* ])
-            }
-            fn shape_controlled<C: ::dsl::NativeSchemaControl>(control:&mut C)->Result<::dsl::Shape,String>{control.scoped_stage(|control|{control.begin_stage(#schema_count)?;let mut variants=control.allocate_vec(#schema_count)?;#(#schema_tags)*Ok(::dsl::Shape::Enum(variants))})}
-            fn to_value(&self) -> ::dsl::FieldValue {
-                ::dsl::FieldValue::Enum(match self { #(#match_to_ordinal),* })
-            }
-            fn from_value(value: &::dsl::FieldValue) -> Result<Self, String> {
-                match value {
-                    ::dsl::FieldValue::Enum(ordinal) => match *ordinal {
-                        #(#match_from_ordinal,)*
-                        other => Err(format!("unknown enum ordinal {other}")),
-                    },
-                    other => Err(format!("expected Enum, found {other:?}")),
-                }
-            }
-            fn from_value_controlled(value:&::dsl::FieldValue,control:&mut ::dsl::NativeDecodeControl<'_>)->Result<Self,String>{control.step()?;if matches!(value,::dsl::FieldValue::Enum(_)){<Self as ::dsl::DslField>::from_value(value)}else{Err("expected declared Enum".into())}}
-            fn to_value_controlled(&self,control:&mut ::dsl::NativeEncodeControl<'_>)->Result<::dsl::FieldValue,String>{control.step()?;Ok(::dsl::FieldValue::Enum(match self{#(#match_to_ordinal),*}))}
-        }
-    };
-    expanded.into()
-}
-//#endregion 🔖️DslScalar
-
-//#region 🔖️DslOps
-/// 🌿️ Builds the `impl ::dsl::DslVariants for #name` block shared by `DslEnum` (data-only
-/// tagged enums, e.g. a recursive block tree) and `DslOps` (operation enums, which additionally get
-/// `store::OpText` on top of this same `DslVariants` foundation).
-// 🚫️async: E1 pure accessor consumed by external-trait/E3 proc-macro entry points — see R9
-fn dsl_variants_codegen(name: &syn::Ident, data: &syn::DataEnum, retire_with:Option<&syn::Path>) -> proc_macro2::TokenStream {
-    let mut variants_exprs = Vec::new();
-    let mut schema_variant_stmts=Vec::new();
-    let mut schema_methods=Vec::new();
-    let mut to_named_arms = Vec::new();
-    let mut encoding_arms=Vec::new();
-    let mut from_named_arms = Vec::new();
-    let mut controlled_arms=Vec::new();
-    let mut retirement_arms=Vec::new();
-
-    for (variant_index,variant) in data.variants.iter().enumerate() {
-        let attrs = parse_field_attrs(&variant.attrs);
-        let variant_ident = variant.ident.clone();
-        let keyword = attrs.key.clone().unwrap_or_else(|| to_kebab(&variant_ident.to_string()));
-        let fields = &variant.fields;
-
-        // A single-field tuple variant (`Shape(DrawShapeBody)`) delegates entirely to its inner
-        // type's own `DslField` impl — its `RecordSpec` IS the inner type's, not a wrapper with one
-        // positional field, so a body already declared with `#[derive(DslRecord)]` (its own keyword,
-        // its own fields) prints/parses completely unchanged whether reached through the enum or on
-        // its own.
-        if let Fields::Unnamed(unnamed) = fields {
-            if unnamed.unnamed.len() == 1 {
-                let inner_ty = &unnamed.unnamed[0].ty;
-                variants_exprs.push(quote!{(#keyword.to_string(),::dsl::__rt::newtype_variant_producer::<#inner_ty>())});
-                schema_variant_stmts.push(quote!{variants.push((control.copy_text(#keyword)?,::dsl::__rt::newtype_variant_producer::<#inner_ty>()));control.step()?;});
-                to_named_arms.push(quote! {
-                    #name::#variant_ident(inner) => (#keyword.to_string(), ::dsl::__rt::newtype_variant_to_record(inner))
-                });
-                from_named_arms.push(quote! {
-                    #keyword => Ok(#name::#variant_ident(::dsl::__rt::newtype_variant_from_record::<#inner_ty>(record)?))
-                });
-                encoding_arms.push(quote!{#name::#variant_ident(inner)=>{let keyword=control.copy_text(#keyword).map_err(::dsl::__rt::field_error)?;let record=<#inner_ty as ::dsl::DslField>::to_record_controlled(inner,control).map_err(::dsl::__rt::field_error)?;Ok((keyword,record))}});
-                controlled_arms.push(quote!{#keyword=>Ok(#name::#variant_ident(control.scoped_stage(|control|<#inner_ty as ::dsl::DslField>::from_record_controlled(record,control)).map_err(::dsl::__rt::field_error)?))});
-                retirement_arms.push(quote!{#name::#variant_ident(inner)=><#inner_ty as ::dsl::DslField>::retire_decoded(inner)});
-                continue;
-            }
-        }
-
-        let (spec_exprs, _to_value_stmts, from_value_stmts, field_idents) = record_codegen(fields);
-        let controlled_stmts=controlled_record_codegen(fields);
-        let controlled_fields=field_idents.iter().map(|ident|{let local=field_local(ident);quote!{#ident:#local.take()}});
-
-        let schema_name=quote::format_ident!("__dsl_variant_spec_{}",variant_index);let controlled_name=quote::format_ident!("__dsl_variant_spec_{}_controlled",variant_index);let producer_name=quote::format_ident!("__dsl_variant_spec_{}_producer",variant_index);
-        let schema_stmts=schema_record_codegen(fields);let schema_count=schema_stmts.len();
-        schema_methods.push(quote!{
-            fn #schema_name()->::dsl::RecordSpec{::dsl::RecordSpec::new_owned(Some(#keyword.to_string()),::dsl::RecordLayout::Inline,vec![#(#spec_exprs),*])}
-            fn #controlled_name<C: ::dsl::NativeSchemaControl>(control:&mut C)->Result<::dsl::RecordSpec,String>{control.scoped_depth(64,|control|control.scoped_stage(|control|{control.begin_stage(#schema_count)?;let mut fields=control.allocate_vec(#schema_count)?;#(#schema_stmts)*::dsl::schema::producer::record(Some(#keyword),::dsl::RecordLayout::Inline,fields,control)}))}
-            fn #producer_name()->::dsl::RecordSpecProducer{::dsl::RecordSpecProducer{ordinary:Self::#schema_name,decoding:|control|Self::#controlled_name(control),encoding:|control|Self::#controlled_name(control)}}
-        });
-        variants_exprs.push(quote!{(#keyword.to_string(),Self::#producer_name())});
-        schema_variant_stmts.push(quote!{variants.push((control.copy_text(#keyword)?,Self::#producer_name()));control.step()?;});
-
-        // Build a per-variant to-record conversion using the field bindings from a `match` on
-        // `self`, since (unlike `DslRecord`) the fields live inside an enum variant, not `self.field`.
-        // A true unit variant (`Variant`, no braces at all) needs a bare match pattern — `Variant {}`
-        // is only valid Rust for a variant that was itself declared with (empty) braces.
-        let field_binds: Vec<proc_macro2::TokenStream> = field_idents.iter().map(|f| { let local = field_local(f); quote! { #f: #local } }).collect();
-        let to_value_stmts_for_variant: Vec<proc_macro2::TokenStream> = record_codegen_to_value_from_bindings(fields);
-        let is_unit = matches!(fields, Fields::Unit);
-        let match_pattern = if is_unit {
-            quote! { #name::#variant_ident }
-        } else {
-            quote! { #name::#variant_ident { #(#field_binds),* } }
-        };
-        let construct_expr = if is_unit {
-            quote! { #name::#variant_ident }
-        } else {
-            let inits = field_inits(&field_idents);
-            quote! { #name::#variant_ident { #(#inits),* } }
-        };
-        to_named_arms.push(quote! {
-            #match_pattern => {
-                let mut record = ::dsl::RecordValue::default();
-                #(#to_value_stmts_for_variant)*
-                (#keyword.to_string(), record)
-            }
-        });
-        from_named_arms.push(quote! {
-            #keyword => {
-                #(#from_value_stmts)*
-                Ok(#construct_expr)
-            }
-        });
-        let encoding_stmts=encoding_record_codegen(fields,true);let encoding_count=encoding_stmts.len();
-        encoding_arms.push(quote!{#match_pattern=>{control.begin_stage(#encoding_count).map_err(::dsl::__rt::field_error)?;let mut record=::dsl::native_encoding::EncodedRecord::new(#encoding_count,control).map_err(::dsl::__rt::field_error)?;#(#encoding_stmts)*let keyword=control.copy_text(#keyword).map_err(::dsl::__rt::field_error)?;Ok((keyword,record.take()))}});
-        let controlled_construct=if is_unit{quote!{#name::#variant_ident}}else{quote!{#name::#variant_ident{#(#controlled_fields),*}}};
-        controlled_arms.push(quote!{#keyword=>{#(#controlled_stmts)* Ok(#controlled_construct)}});
-        let plans=plan_fields(fields);let retirements=plans.iter().map(|plan|{let ident=field_local(&plan.ident);retire_field_codegen(plan,quote!{#ident})});
-        retirement_arms.push(quote!{#match_pattern=>{#(#retirements)*}});
-    }
-
-    let retirement=if let Some(owner)=retire_with{quote!{#owner(self);}}else{quote!{match self{#(#retirement_arms),*}}};
-
-    let schema_variant_count=schema_variant_stmts.len();
-    quote! {
-        impl #name{#(#schema_methods)*}
-        impl ::dsl::DslVariants for #name {
-            fn retire_decoded_variant(self){#retirement}
-            // 🚫️async: E4 — see `DslVariants::variants`'s tag on the trait.
-            fn variants() -> Vec<(String, ::dsl::RecordSpecProducer)> {
-                vec![ #(#variants_exprs),* ]
-            }
-            fn variants_controlled<C: ::dsl::NativeSchemaControl>(control:&mut C)->Result<Vec<(String,::dsl::RecordSpecProducer)>,String>{control.scoped_stage(|control|{control.begin_stage(#schema_variant_count)?;let mut variants=control.allocate_vec(#schema_variant_count)?;#(#schema_variant_stmts)*Ok(variants)})}
-            fn to_named_record(&self) -> (String, ::dsl::RecordValue) {
-                match self { #(#to_named_arms),* }
-            }
-            fn to_named_record_controlled(&self,control:&mut ::dsl::NativeEncodeControl<'_>)->Result<(String,::dsl::RecordValue),String>{
-                control.scoped_depth(64,|control|control.scoped_stage(|control|{let result=(||->Result<_,::dsl::TextError>{match self{#(#encoding_arms),*}})();result.map_err(|error|error.message)}))
-            }
-            fn from_named_record(keyword: &str, record: &::dsl::RecordValue) -> Result<Self, ::dsl::TextError> {
-                match keyword {
-                    #(#from_named_arms,)*
-                    other => Err(::dsl::__rt::field_error(format!("unknown keyword '{other}'"))),
-                }
-            }
-            fn from_named_record_controlled(keyword:&str,record:&::dsl::RecordValue,control:&mut ::dsl::NativeDecodeControl<'_>)->Result<Self,::dsl::TextError>{
-                control.step().map_err(::dsl::__rt::field_error)?;
-                match keyword{#(#controlled_arms,)*_=>Err(::dsl::__rt::field_error("unknown declared keyword"))}
-            }
-        }
-    }
-}
-
-pub fn expand_dsl_ops(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
-    let name = input.ident.clone();
-    let Data::Enum(data) = &input.data else {
-        return syn::Error::new_spanned(&input, "DslOps only supports enums").to_compile_error().into();
-    };
-    let container=parse_container_attrs(&input);
-    let variants_impl = dsl_variants_codegen(&name, data,container.retire_with.as_ref());
-
-    // P6: DslOps emits DslVariants only — OpText/OpBinary must be handcrafted per artifact.
-    variants_impl.into()
-}
-//#endregion 🔖️DslOps
-
-//#region 🔖️DslEnum
-pub fn expand_dsl_enum(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
-    let name = input.ident.clone();
-    let Data::Enum(data) = &input.data else {
-        return syn::Error::new_spanned(&input, "DslEnum only supports enums").to_compile_error().into();
-    };
-    let container=parse_container_attrs(&input);
-    dsl_variants_codegen(&name, data,container.retire_with.as_ref()).into()
-}
-//#endregion 🔖️DslEnum
 
 //#region 🔖️Mutations
 /// 🗣️ `#[mutations(snapshot = ..., diff = ..., schema = "..." [, retire_cold = path])]` container
@@ -2032,6 +978,7 @@ fn expand_mutations(input: &DeriveInput, authority: &MutationAggregateSourceAuth
     let mut may_emit_foreign_steps_arms = Vec::new();
     let mut foreign_steps_arms = Vec::new();
     let mut input_schema_arms = Vec::new();
+    let mut inverse_rows_arms = Vec::new();
     let mut payload_value_arms = Vec::new();
     let mut with_payload_value_arms = Vec::new();
     let mut from_payload_value_arms = Vec::new();
@@ -2072,6 +1019,7 @@ fn expand_mutations(input: &DeriveInput, authority: &MutationAggregateSourceAuth
         may_emit_foreign_steps_arms.push(quote! { Self::#variant_ident(payload) => #kind::may_emit_foreign_steps(payload) });
         foreign_steps_arms.push(quote! { Self::#variant_ident(payload) => #kind::foreign_steps(payload, base) });
         input_schema_arms.push(quote! { Self::#variant_ident(payload) => #leaf::input_schema(payload) });
+        inverse_rows_arms.push(quote! { Self::#variant_ident(payload) => #leaf::inverse_rows(payload) });
         payload_value_arms.push(quote! { Self::#variant_ident(payload) => #leaf::input_value(payload) });
         with_payload_value_arms.push(quote! { Self::#variant_ident(payload) => #leaf::with_input_value(payload, value).map(Self::#variant_ident) });
         from_payload_value_arms.push(quote! { if kind == #kind::SEMANTICS.kind { return #leaf::from_input_value(value).map(Self::#variant_ident); } });
@@ -2140,7 +1088,7 @@ fn expand_mutations(input: &DeriveInput, authority: &MutationAggregateSourceAuth
                 let _ = <Self as ::semio_framework_os_kernel::Mutation<#snapshot_ty>>::DESCRIPTORS;
                 match self { #(#diff_arms),* }
             }
-            fn inverse(&self, base: &#snapshot_ty) -> Vec<Self> {
+            fn inverse(&self, base: &#snapshot_ty) -> Result<Vec<Self>, ::semio_framework_value::ValueError> {
                 let _ = <Self as ::semio_framework_os_kernel::Mutation<#snapshot_ty>>::DESCRIPTORS;
                 match self { #(#inverse_arms),* }
             }
@@ -2160,20 +1108,23 @@ fn expand_mutations(input: &DeriveInput, authority: &MutationAggregateSourceAuth
                 let _ = <Self as ::semio_framework_os_kernel::Mutation<#snapshot_ty>>::DESCRIPTORS;
                 match self { #(#foreign_steps_arms),* }
             }
+            fn inverse_rows(&self) -> usize {
+                match self { #(#inverse_rows_arms),* }
+            }
             const INPUT_SCHEMAS: &'static [&'static str] = &[#(#input_schemas),*];
             const INPUT_SCHEMA_DOCUMENTS: &'static [&'static [&'static str]] = &[#(#input_schema_documents),*];
             fn input_schema(&self) -> ::core::option::Option<&'static str> {
                 match self { #(#input_schema_arms),* }
             }
-            fn payload_value(&self) -> ::semio_framework_os_kernel::DslValue {
+            fn payload_value(&self) -> ::semio_framework_value::DslValue {
                 match self { #(#payload_value_arms),* }
             }
-            fn with_payload_value(&self, value: ::semio_framework_os_kernel::DslValue) -> ::core::result::Result<Self, ::semio_framework_os_kernel::ValueError> {
+            fn with_payload_value(&self, value: ::semio_framework_value::DslValue) -> ::core::result::Result<Self, ::semio_framework_value::ValueError> {
                 match self { #(#with_payload_value_arms),* }
             }
-            fn from_payload_value(kind: &str, value: ::semio_framework_os_kernel::DslValue) -> ::core::result::Result<Self, ::semio_framework_os_kernel::ValueError> {
+            fn from_payload_value(kind: &str, value: ::semio_framework_value::DslValue) -> ::core::result::Result<Self, ::semio_framework_value::ValueError> {
                 #(#from_payload_value_arms)*
-                ::core::result::Result::Err(::semio_framework_os_kernel::ValueError::new(::std::format!("{kind} is no leaf kind of {}", ::core::stringify!(#name))))
+                ::core::result::Result::Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,::std::format!("{kind} is no leaf kind of {}", ::core::stringify!(#name))))
             }
             #retire_cold
         }
@@ -2199,7 +1150,7 @@ fn expand_mutations(input: &DeriveInput, authority: &MutationAggregateSourceAuth
 
         /// 🪪️ Registers the validated leaf roster during owner startup.
         pub fn #register_fn_ident #impl_generics (
-            state_class: ::semio_framework_os_kernel::StateClass,
+            state_class: ::semio_framework_schema_state::StateClass,
         ) -> ::core::result::Result<(), ::semio_framework_os_kernel::MutationDescriptorError> #where_clause {
             let _ = <#aggregate_ty as ::semio_framework_os_kernel::Mutation<#snapshot_ty>>::DESCRIPTORS;
             let descriptors = [#(#register_calls),*];
@@ -2215,8 +1166,12 @@ fn expand_mutations(input: &DeriveInput, authority: &MutationAggregateSourceAuth
 /// aggregate's owner directory (the one holding its `🧬️schema`) that decodes as the aggregate and, when the aggregate's own file
 /// defines a top-level `demo_mutation_cases() -> Vec<Aggregate>`, every demo case is labelled in every locale
 /// (`mutation_label_failures`) and rebuilds itself from its own editable payload or, when inert, refuses to
-/// (`mutation_payload_round_trip_failures`). Nothing is emitted when the owner directory cannot be addressed from the compiling
-/// crate.
+/// (`mutation_payload_round_trip_failures`), every operation answers its schema-declared inverse rows and every `perTarget` leaf
+/// is admitted at the one-item ceiling and refused past it as `mutation.too-large` (`mutation_inverse_rows_declaration_failures`),
+/// and every fixture case's inverse fits the leaf's declared rows
+/// (`mutation_inverse_rows_failures`, design §20.5) — walked over every subset of the owner's standard, since a subset's
+/// fixtures replay through the aggregate too. Nothing is emitted when the owner directory cannot be addressed from the
+/// compiling crate.
 fn mutation_payload_law_test(name: &syn::Ident, snapshot_ty: &syn::Type, authority: &MutationAggregateSourceAuthority, generics: &syn::Generics) -> proc_macro2::TokenStream {
     if !generics.params.is_empty() {
         return quote! {};
@@ -2228,6 +1183,8 @@ fn mutation_payload_law_test(name: &syn::Ident, snapshot_ty: &syn::Type, authori
     };
     let (Some(owner), Ok(manifest)) = (owner, std::env::var("CARGO_MANIFEST_DIR")) else { return quote! {} };
     let Some(relative) = mutation_relative_path(Path::new(&manifest), owner) else { return quote! {} };
+    let subsets = owner.parent().filter(|subsets| subsets.file_name().and_then(|segment| segment.to_str()) == Some("🪆️subsets")).unwrap_or(owner);
+    let Some(footprint_relative) = mutation_relative_path(Path::new(&manifest), subsets) else { return quote! {} };
     let source = fs::read_to_string(authority.mutation_root.join(&authority.source_filename)).unwrap_or_default();
     let signature = format!("demo_mutation_cases() -> Vec<{name}>");
     let demo_cases = source.lines().any(|line| ["fn ", "pub fn ", "pub(crate) fn "].iter().any(|prefix| line.strip_prefix(prefix).is_some_and(|rest| rest.starts_with(&signature)))).then(|| quote! { ops.extend(demo_mutation_cases()); });
@@ -2242,8 +1199,11 @@ fn mutation_payload_law_test(name: &syn::Ident, snapshot_ty: &syn::Type, authori
             let count = ops.len();
             let mut failures = ::semio_framework_os_kernel::mutation_input_schema_failures::<#snapshot_ty, #name>();
             failures.extend(::semio_framework_os_kernel::mutation_label_failures::<#snapshot_ty, #name>(&ops));
+            failures.extend(::semio_framework_os_kernel::mutation_inverse_rows_declaration_failures::<#snapshot_ty, #name>(&ops));
             failures.extend(::semio_framework_os_kernel::mutation_payload_round_trip_failures::<#snapshot_ty, #name>(ops));
-            assert!(failures.is_empty(), "{} breaches of the editable-payload law over {} {} operations: {:#?}", failures.len(), count, ::core::stringify!(#name), failures);
+            let (footprint_failures, cases) = ::semio_framework_os_kernel::mutation_inverse_rows_failures::<#snapshot_ty, #name>(&::std::path::Path::new(::core::env!("CARGO_MANIFEST_DIR")).join(#footprint_relative));
+            failures.extend(footprint_failures);
+            assert!(failures.is_empty(), "{} breaches of the editable-payload and fold-footprint laws over {} {} operations and {} fixture cases: {:#?}", failures.len(), count, ::core::stringify!(#name), cases, failures);
         }
     }
 }
@@ -2332,7 +1292,7 @@ fn expand_composite_mutation(input: &DeriveInput) -> syn::Result<proc_macro2::To
             fn diff(&self, base: &#snapshot_ty) -> ::semio_framework_os_kernel::MutationOutcome<<#op_ty as ::semio_framework_os_kernel::Mutation<#snapshot_ty>>::Diff> {
                 ::semio_framework_os_kernel::fold_plan_diff(self, base)
             }
-            fn inverse(&self, base: &#snapshot_ty) -> Vec<#op_ty> {
+            fn inverse(&self, base: &#snapshot_ty) -> Result<Vec<#op_ty>, ::semio_framework_value::ValueError> {
                 ::semio_framework_os_kernel::fold_plan_inverse(self, base)
             }
             fn label(&self) -> ::semio_framework_ui_locale::LocalizedLabel {
@@ -2402,93 +1362,8 @@ fn to_kebab(name: &str) -> String {
     out
 }
 
-/// 🔒️ Reserved local for one authored field: generated statements bind authored fields only under
-/// `__semio_field_<name>`, so no authored name (`field`, `record`, `control`, `value`, …) can shadow a
-/// generated local or be captured by one. Law: `🗣️dsl/🧪️tests/🧪️hygienic-bindings`.
-fn field_local(ident: &syn::Ident) -> syn::Ident {
-    quote::format_ident!("__semio_field_{}", ident)
-}
-
-/// 🧷️ Struct/variant initializers `name: __semio_field_name` over the reserved locals.
-fn field_inits(idents: &[syn::Ident]) -> Vec<proc_macro2::TokenStream> {
-    idents.iter().map(|ident| { let local = field_local(ident); quote! { #ident: #local } }).collect()
-}
-
-/// 🏗️ Like the `to_value` half of `record_codegen`, but reading from bare local bindings
-/// (`ident`) instead of `self.ident` — what a `match self { Variant { fields... } => ... }` arm
-/// needs, since enum variant fields aren't reached through `self.field` syntax.
-// 🚫️async: E1 pure accessor consumed by external-trait/E3 proc-macro entry points — see R9
-fn record_codegen_to_value_from_bindings(fields: &Fields) -> Vec<proc_macro2::TokenStream> {
-    let plans = plan_fields(fields);
-    plans
-        .iter()
-        .map(|plan| {
-            let FieldPlan { ident, id, kind, block, .. } = plan;
-            let ident = &field_local(ident);
-            let to_value_expr: proc_macro2::TokenStream = match kind {
-                FieldKind::Scalar => quote! { ::dsl::DslField::to_value(#ident) },
-                FieldKind::Bytes64 => quote! { ::dsl::FieldValue::Bytes64(#ident.clone()) },
-                FieldKind::OptionScalar(_) => quote! {
-                    match #ident {
-                        Some(v) => ::dsl::DslField::to_value(v),
-                        None => ::dsl::FieldValue::Absent,
-                    }
-                },
-                FieldKind::VecList(_) | FieldKind::VecTable(_) => quote! {
-                    {
-                        let mut __items = Vec::with_capacity(#ident.len());
-                        for v in #ident.iter() { __items.push(::dsl::DslField::to_value(v)); }
-                        ::dsl::FieldValue::List(__items)
-                    }
-                },
-                FieldKind::VecTuple(_) => quote! {
-                    {
-                        let mut __items = Vec::with_capacity(#ident.len());
-                        for v in #ident.iter() { __items.push(::dsl::DslField::to_value(v)); }
-                        ::dsl::FieldValue::Tuple(__items)
-                    }
-                },
-                FieldKind::VecStatements(_) => quote! {
-                    {
-                        let mut __items = Vec::with_capacity(#ident.len());
-                        for v in #ident.iter() { __items.push(::dsl::DslVariants::to_named_record(v)); }
-                        ::dsl::FieldValue::Statements(__items)
-                    }
-                },
-                FieldKind::VecBlockStatements(_) => quote! {
-                    {
-                        let mut __items = Vec::with_capacity(#ident.len());
-                        for v in #ident.iter() { __items.push(::dsl::DslVariants::to_named_record(v)); }
-                        ::dsl::FieldValue::Block(Box::new(::dsl::FieldValue::Statements(__items)))
-                    }
-                },
-                FieldKind::MapField(_) => quote! {
-                    {
-                        let mut __entries = Vec::with_capacity(#ident.len());
-                        for (k, v) in #ident.iter() { __entries.push((k.clone(), ::dsl::DslField::to_value(v))); }
-                        ::dsl::FieldValue::Map(__entries)
-                    }
-                },
-                FieldKind::OptionStatements(_) => quote! {
-                    ::dsl::FieldValue::Statements(match #ident {
-                        Some(v) => vec![::dsl::DslVariants::to_named_record(v)],
-                        None => vec![],
-                    })
-                },
-                FieldKind::RequiredStatements(_) => quote! { ::dsl::FieldValue::Statements(vec![::dsl::DslVariants::to_named_record(#ident.as_ref())]) },
-            };
-            let to_value_expr = if *block {
-                quote! {
-                    match #to_value_expr {
-                        ::dsl::FieldValue::Absent => ::dsl::FieldValue::Absent,
-                        other => ::dsl::FieldValue::Block(Box::new(other)),
-                    }
-                }
-            } else {
-                to_value_expr
-            };
-            quote! { record.fields.insert(#id, #to_value_expr); }
-        })
-        .collect()
-}
 //#endregion 🔖️VariantHelpers
+
+#[cfg(test)]
+#[path = "🧪️tests/🪆️record-owner/🦀️.rs"]
+mod canonical_product_macro_tests;

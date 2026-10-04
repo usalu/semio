@@ -23,9 +23,12 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Crea
         crate::standards::v1::subsets::any::schema::mutations::create_generation::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Generation3dSnapshot) -> Vec<Generation3dMutation> {
-        crate::standards::v1::subsets::any::schema::mutations::create_generation::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
+    Ok({
+        crate::standards::v1::subsets::any::schema::mutations::create_generation::inverse::inverse(self, base)?
+    
+    })
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Create generation \"{}\"", self.generation.name), &format!("Erzeugung \"{}\" erstellen", self.generation.name))

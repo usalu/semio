@@ -6,7 +6,8 @@ use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDr
 
 //#region 🔖️Inverse
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(payload: &super::ReorderNodes, base: &SemioDrawingSnapshot) -> Vec<SemioDrawingMutation> {
+pub fn inverse(payload: &super::ReorderNodes, base: &SemioDrawingSnapshot) -> Result<Vec<SemioDrawingMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match node_at(base, &payload.parent) {
         Some(DrawNode::Group { children, .. }) if !children.is_empty() && payload.from < children.len() => {
             let landed_at = payload.to.min(children.len() - 1);
@@ -14,5 +15,7 @@ pub fn inverse(payload: &super::ReorderNodes, base: &SemioDrawingSnapshot) -> Ve
         }
         _ => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

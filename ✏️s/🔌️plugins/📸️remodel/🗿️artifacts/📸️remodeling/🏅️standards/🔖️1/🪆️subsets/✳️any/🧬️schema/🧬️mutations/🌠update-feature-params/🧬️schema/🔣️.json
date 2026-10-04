@@ -25,5 +25,14 @@
         "order": 10
       }
     }
-  }
+  },
+  "x-semio-invariant": [
+    {
+      "id": "positive-feature-budget",
+      "description": {
+        "en": "Feature detection aims for at least one keypoint per frame and keeps a finite, non-negative edge threshold.",
+        "de": "Die Merkmalserkennung strebt mindestens ein Merkmal pro Bild an und hält eine endliche, nicht negative Kantenschwelle."
+      }
+    }
+  ]
 }

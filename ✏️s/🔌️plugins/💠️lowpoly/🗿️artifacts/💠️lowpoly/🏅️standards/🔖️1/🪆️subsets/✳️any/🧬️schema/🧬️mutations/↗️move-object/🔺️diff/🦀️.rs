@@ -16,7 +16,7 @@ pub fn diff(payload: &MoveObject, base: &LowpolySnapshot) -> protocol::MutationO
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Object \"{}\" position must be finite, got {:?}.", payload.id, payload.new_position), [payload.id.clone()]);
     }
     if existing.transform.position == payload.new_position {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Object \"{}\" is already at position {:?}.", payload.id, payload.new_position));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Object \"{}\" is already at position {:?}.", payload.id, payload.new_position));
     }
     let transform = LowpolyTransform { position: payload.new_position, ..existing.transform.clone() };
     protocol::MutationOutcome::new(diff_objects_patch(payload.id.clone(), LowpolyObjectPatch { transform: Some(transform), ..LowpolyObjectPatch::default() }))

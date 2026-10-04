@@ -479,17 +479,6 @@
               "directoryName": "🎯️direct"
             }
           ]
-        },
-        {
-          "mutationId": "replace-pixels",
-          "sourceMutationDirectoryName": "🔲️replace-pixels",
-          "mutationDirectoryName": "🔲️replace-pixels",
-          "scenarios": [
-            {
-              "id": "direct-behavior",
-              "directoryName": "🎯️direct"
-            }
-          ]
         }
       ],
       "kinds": [
@@ -498,7 +487,7 @@
         "remove-ifd",
         "replace-tag",
         "remove-tag",
-        "replace-pixels",
+        "paint-region",
         "set-snapshot",
         "patch-snapshot"
       ]
@@ -545,6 +534,27 @@
             "operation": "insert-ifd",
             "bridgeVersion": 1,
             "variant": "InsertIfd"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "tiff-6-0-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "image-tiff-6-0-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "paint-region",
+          "capability": "tiff-6-0-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "paint-region",
+            "bridgeVersion": 1,
+            "variant": "PaintRegion"
           },
           "oracleRequirements": [
             {
@@ -608,26 +618,6 @@
             "operation": "remove-tag",
             "bridgeVersion": 1,
             "variant": "RemoveTag"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "tiff-6-0-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "image-tiff-6-0-mutate-reader"
-            }
-          ]
-        },
-        {
-          "id": "replace-pixels",
-          "capability": "tiff-6-0-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "replace-pixels",
-            "bridgeVersion": 1,
-            "variant": "ReplacePixels"
           },
           "oracleRequirements": [
             {
@@ -895,8 +885,6 @@
         "standard": "6.0",
         "subset": "document"
       },
-      "mutation": "replace-pixels",
-      "outcome": "applied",
       "units": {
         "length": "unitless",
         "angle": "degree"
@@ -1006,15 +994,15 @@
           "role": "expected-before",
           "path": "../🧫️fixtures/📸️set-snapshot-applied/⬅️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:8b159511103f338c8bc1a0e1831cc455348ab0ed21e84b48e089e347ec96c80a",
-          "bytes": 1428
+          "sha256": "sha256:75b54452bd92b92257be5282c120888b67628335a5c93a6f91385a4e3483ab01",
+          "bytes": 1630
         },
         {
           "role": "expected-after",
           "path": "../🧫️fixtures/📸️set-snapshot-applied/➡️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:2eb00d1fb47b9da9fa75f98978ba44ee731d0934d161767fef2f557296e1010e",
-          "bytes": 1428
+          "sha256": "sha256:abf9575d51bdaedd87d7a9dff1320d2612290470d0d4737075d01372eb503cbd",
+          "bytes": 1630
         }
       ],
       "provenance": {
@@ -1049,15 +1037,15 @@
           "role": "expected-before",
           "path": "../🧫️fixtures/🩹️patch-snapshot-applied/⬅️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:8b159511103f338c8bc1a0e1831cc455348ab0ed21e84b48e089e347ec96c80a",
-          "bytes": 1428
+          "sha256": "sha256:75b54452bd92b92257be5282c120888b67628335a5c93a6f91385a4e3483ab01",
+          "bytes": 1630
         },
         {
           "role": "expected-after",
           "path": "../🧫️fixtures/🩹️patch-snapshot-applied/➡️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:e655ab0f499d93903e82d1851fa3bbe724f1dcde8918d407410c4e975bc9c8ea",
-          "bytes": 1425
+          "sha256": "sha256:01e99497541e747f031bfc7691d6cdb2d87db91b5b936796857c8772e6e5607d",
+          "bytes": 1627
         }
       ],
       "provenance": {
@@ -1070,7 +1058,7 @@
       "comparisonProfile": "ordered-json-v1",
       "reproducible": true,
       "family": "tiff-carrier",
-      "notes": "PatchSnapshot{edits:[set /byteOrder = bigEndian]} is the editor's compact path-addressed patch: the file header's byte order flips and every IFD keeps its typed values."
+      "notes": "PatchSnapshot{set /byteOrder = bigEndian} is the editor's compact path-addressed patch: the file header's byte order flips and every IFD keeps its typed values."
     }
   ],
   "comparisonProfiles": [

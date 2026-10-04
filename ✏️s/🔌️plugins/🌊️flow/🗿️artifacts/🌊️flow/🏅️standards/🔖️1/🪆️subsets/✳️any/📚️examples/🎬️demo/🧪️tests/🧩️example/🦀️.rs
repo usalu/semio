@@ -57,13 +57,13 @@ async fn inference_determinism_law() {
     use protocol::Inference;
     let text = include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
     let snapshot = crate::examples::demo::snapshot_from_text(text).expect("demo fixture parses");
-    let inference = crate::standards::v1::subsets::any::schema::inferences::FlowInference::infer(&snapshot);
-    assert_eq!(inference, crate::standards::v1::subsets::any::schema::inferences::FlowInference::infer(&snapshot));
+    let inference = crate::standards::v1::subsets::any::schema::inferences::FlowInference::infer(&snapshot).expect("valid materialized inference fixture");
+    assert_eq!(inference, crate::standards::v1::subsets::any::schema::inferences::FlowInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
     use protocol::Inference;
-    assert_eq!(crate::standards::v1::subsets::any::schema::inferences::FlowInference::infer(&crate::FlowSnapshot::default()), crate::standards::v1::subsets::any::schema::inferences::FlowInference::default(),);
+    assert_eq!(crate::standards::v1::subsets::any::schema::inferences::FlowInference::infer(&crate::FlowSnapshot::default()).expect("valid materialized inference fixture"), crate::standards::v1::subsets::any::schema::inferences::FlowInference::default(),);
 }
 //#endregion 🧪️InferenceLaws

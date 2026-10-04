@@ -1,4 +1,1 @@
-/** 🧬️ change-gamma direct payload. */
-export interface ChangeGammaMutation {
-  readonly gama?: number | null;
-}
+export interface ChangeGammaMutation { readonly revision: string; readonly gama?: number | null; }

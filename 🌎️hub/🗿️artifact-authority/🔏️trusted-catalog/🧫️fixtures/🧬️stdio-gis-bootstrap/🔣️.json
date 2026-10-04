@@ -32,7 +32,7 @@
         "componentBlake3": "1212121212121212121212121212121212121212121212121212121212121212",
         "descriptorSha256": "1313131313131313131313131313131313131313131313131313131313131313",
         "executionProtocol": {
-          "appChannelVersion": 20
+          "appChannelVersion": 21
         },
         "browserActor": {
           "kind": "closed-browser-actor",
@@ -68,7 +68,7 @@
         "componentBlake3": "2222222222222222222222222222222222222222222222222222222222222222",
         "descriptorSha256": "2323232323232323232323232323232323232323232323232323232323232323",
         "executionProtocol": {
-          "appChannelVersion": 20
+          "appChannelVersion": 21
         },
         "browserActor": {
           "kind": "none"

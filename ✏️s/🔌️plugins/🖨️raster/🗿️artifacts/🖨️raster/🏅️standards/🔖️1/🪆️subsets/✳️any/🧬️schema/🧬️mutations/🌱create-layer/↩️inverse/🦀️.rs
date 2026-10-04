@@ -6,7 +6,8 @@ use crate::standards::v1::subsets::any::schema::{find_layer, layer_node_id};
 use crate::{RasterLayerNode, RasterSnapshot};
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::CreateLayer, base: &RasterSnapshot) -> Vec<RasterMutation> {
+pub fn inverse(payload: &super::CreateLayer, base: &RasterSnapshot) -> Result<Vec<RasterMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let new_id = layer_node_id(&payload.layer);
     // 🚫️ A REFUSED create applied NOTHING — `🔺️diff` faults on a duplicate id or a non-group parent
     // and LAW 1 forces `MutationOutcome::fatal` to carry the empty diff — so its inverse must delete
@@ -22,5 +23,7 @@ pub fn inverse(payload: &super::CreateLayer, base: &RasterSnapshot) -> Vec<Raste
         }
     }
     vec![RasterMutation::DeleteLayer(delete_layer::DeleteLayer { layer_id: new_id.to_string() })]
+
+    })())
 }
 //#endregion 🔖️Inverse

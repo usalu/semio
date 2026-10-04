@@ -38,6 +38,6 @@ fn the_document_round_trips_through_its_own_dsl_and_pack_codecs() {
 #[test]
 fn the_document_round_trips_through_json() {
     let document = Grid2dSnapshot { seed: 11, width: 4, height: 4, ..Default::default() };
-    let json = dsl::json::to_json_string(&document);
-    assert_eq!(dsl::json::from_json_str::<Grid2dSnapshot>(&json).expect("json decodes"), document);
+    let json = semio_framework_pack_json::to_json_string(&document);
+    assert_eq!(semio_framework_pack_json::from_json_str::<Grid2dSnapshot>(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("json decodes"), document);
 }

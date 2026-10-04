@@ -1,21 +1,21 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/fem/2d/results-window/transient/schema.json",
-  "title": "Fem2dResultsWindowTransient",
-  "description": "The running playback clock of one FEM 2D results window — present only while the window plays; the transport settings and the resting phase live in the window config.",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/fem/results-window/transient/schema.json",
+  "title": "FemResultsWindowTransient",
+  "description": "The running playback clock of one FEM results window — present only while the window plays; the transport settings and the resting phase live in the window config.",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "clock": {
       "anyOf": [
-        { "$ref": "#/$defs/Fem2dPlaybackClock" },
+        { "$ref": "#/$defs/FemPlaybackClock" },
         { "type": "null" }
       ],
       "x-semio-state": "ephemeral-local-window"
     }
   },
   "$defs": {
-    "Fem2dPlaybackClock": {
+    "FemPlaybackClock": {
       "type": "object",
       "additionalProperties": false,
       "required": ["phase", "reverse"],

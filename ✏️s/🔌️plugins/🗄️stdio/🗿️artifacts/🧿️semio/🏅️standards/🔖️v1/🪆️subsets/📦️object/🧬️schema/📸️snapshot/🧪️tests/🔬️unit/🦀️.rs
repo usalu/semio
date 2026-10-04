@@ -15,10 +15,10 @@ async fn minimal_schema_valid_json_defaults_optional_children() {
     let minimal_text = minimal.to_string();
     let snapshot = decode_semio_object_snapshot_json(&minimal_text).expect("schema-valid minimal Object snapshot");
     assert!(snapshot.brep.is_none() && snapshot.mesh.is_none() && snapshot.properties.is_none());
-    assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&snapshot)).expect("snapshot reencodes"), minimal);
-    let artifact: crate::standards::v1::subsets::object::schema::SemioObjectArtifact = dsl::json::from_json_str(&minimal_text).expect("schema-valid minimal Object artifact");
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&snapshot)).expect("snapshot reencodes"), minimal);
+    let artifact: crate::standards::v1::subsets::object::schema::SemioObjectArtifact = semio_framework_pack_json::from_json_str(&minimal_text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("schema-valid minimal Object artifact");
     assert!(artifact.brep.is_none() && artifact.mesh.is_none() && artifact.properties.is_none());
-    assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&artifact)).expect("artifact reencodes"), minimal);
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&artifact)).expect("artifact reencodes"), minimal);
     let mut malformed = minimal;
     malformed.as_object_mut().expect("minimal Object is an object").insert("brep".into(), serde_json::Value::Null);
     assert!(decode_semio_object_snapshot_json(&malformed.to_string()).is_err());

@@ -1,6 +1,9 @@
 # import DslValue from "🧰️framework/🔨️modules/🌱️value/🧬️schema/🔗️.graphql"
 # import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
+# import EquationGraph, EquationGeometry from "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔗️.graphql"
 type EquationDiff {
+  graph: EquationGraph @state(class: ARTIFACT)
+  geometry: EquationGeometry @state(class: ARTIFACT)
   notation: ArtifactChild @state(class: ARTIFACT)
   results: ArtifactChild @state(class: ARTIFACT)
   computed: ArtifactChild @state(class: ARTIFACT)

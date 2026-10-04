@@ -218,8 +218,10 @@ describe("launch configuration identity", () => {
   it("registers a launch row for every canonical root lifecycle command", async () => {
     const launch = await launchOutput();
     const commands = new Set(launch.configurations.map((entry) => String(entry.command ?? "")));
+    const generator = JSON.parse(readFileSync(new URL("../../🚀️launch/🧫️fixtures/🏭️generate/🔣️.json", import.meta.url), "utf8"));
     for (const command of ["setup", "start", "dev", "generate", "lint", "format", "test", "build", "publish"]) {
-      expect([...commands].some((row) => row === `bun nx run workspace:${command}` || row.startsWith(`bun nx run workspace:${command} `)), command).toBe(true);
+      const route = command === "generate" ? generator.target : `workspace:${command}`;
+      expect([...commands].some((row) => row === `bun nx run ${route}` || row.startsWith(`bun nx run ${route} `)), command).toBe(true);
     }
   });
 });

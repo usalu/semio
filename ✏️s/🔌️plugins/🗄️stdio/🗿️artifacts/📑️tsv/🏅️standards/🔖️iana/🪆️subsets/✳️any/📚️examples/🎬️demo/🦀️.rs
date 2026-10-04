@@ -19,6 +19,8 @@ pub fn label() -> LocalizedLabel {
 }
 pub const ICON: &str = "file";
 pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/🗣️.dsl.semio");
+/// 🎒️ The complete logical owner emitted by its canonical Pack producer.
+pub const PACK_BYTES: &[u8] = include_bytes!("🖼️assets/🎒️.pack.semio");
 /// 📊️ The authored TSV file this example IS — the authority `🗣️.dsl.semio` is printed from.
 pub const RAW_TSV: &str = include_str!("🖼️assets/📊️.tsv");
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

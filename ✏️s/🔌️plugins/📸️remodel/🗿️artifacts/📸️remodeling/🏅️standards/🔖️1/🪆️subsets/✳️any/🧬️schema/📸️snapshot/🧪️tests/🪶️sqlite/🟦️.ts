@@ -20,6 +20,7 @@ test("SQLite remodeling accepts consistent edited surrogate aliases and independ
 test("SQLite remodeling refuses independently edited orphan and IEEE mismatches",async()=>{const snapshot=owner.decodeRemodelingSnapshot(laws.snapshotJson),bytes=await exportSqliteDatabase(await owner.remodelingSnapshotToSqliteDatabase(snapshot));for(const sql of["UPDATE remodel_camera_distortion SET camera_id=999","UPDATE remodel_float_sample SET sample_class='finite' WHERE ordinal=6","UPDATE remodel_frame SET ordinal=1","UPDATE remodel_watertight_report SET mesh_id=999 WHERE mesh_id IS NOT NULL"]){const oracle=Database.deserialize(bytes);try{oracle.run("PRAGMA foreign_keys=OFF");oracle.run(sql);expect(oracle.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});await expect(owner.remodelingSnapshotFromSqliteDatabase(await importSqliteDatabase(oracle.serialize()))).rejects.toThrow();}finally{oracle.close()}}},15000);
 
 import documentSchema from "../../../🔣️.json";
+import valueSchema from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json";
 import {remodelingSnapshotFromDslText} from "../../../../🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🟦️.ts";
 test("SQLite remodeling exact document words obey the independent authored JSON schema",()=>{
  const validator=new Ajv({strict:false,validateFormats:false}).compile(documentSchema);
@@ -45,7 +46,7 @@ test("SQLite remodeling declared Text retains primitive exact words and signed64
 
 test("SQLite remodeling declared mutation schemas share exact words and raw octets",()=>{
  const schemaRoot=new URL("../../../",import.meta.url),schemas=[['⏱️change-stream-sync',{mutation:'changeStreamSync',id:'s',newSyncOffsetMs:{bits:'7ff0000000000001'}}],['📦append-content',{mutation:'appendContent',contentId:'c',kind:'sparse',mime:null,width:0,height:0,first:'18446744073709551615',chunks: laws.byteChunks}],['🔪remove-content',{mutation:'removeContent',contentId:'c',from:'18446744073709551615'}]] as const;
- const ajv=new Ajv({strict:false,validateFormats:false});ajv.addSchema(documentSchema);
+ const ajv=new Ajv({strict:false,validateFormats:false});ajv.addSchema(documentSchema);ajv.addSchema(valueSchema);
  for(const[slug,value]of schemas){const json=JSON.parse(readFileSync(new URL('🧬️mutations/'+slug+'/🧬️schema/🔣️.json',schemaRoot),'utf8'));const valid=ajv.compile(json);expect(valid(value)).toBe(true)}
 });
 test("SQLite remodeling declared Text owns tagged buffers octets and literal references",()=>{

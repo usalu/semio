@@ -79,5 +79,14 @@
     "depth": 8192,
     "stackBytes": 65536,
     "schemaBytes": 100000
-  }
+  },
+  "nodeWidthBits": [
+    "4008000000000000",
+    "8000000000000000"
+  ],
+  "nodeHeightBits": [
+    "3ff0000000000000",
+    "4000000000000000"
+  ],
+  "portCategory": "category\\0世界"
 }

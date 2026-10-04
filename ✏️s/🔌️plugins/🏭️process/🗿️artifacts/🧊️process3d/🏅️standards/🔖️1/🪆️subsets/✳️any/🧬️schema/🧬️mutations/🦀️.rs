@@ -127,32 +127,32 @@ pub const KINDS: &[&str] = &[
 /// @see ../../🔮️oracles/🔣️.json — the catalog and the recorded no-oracle decision.
 pub fn process3d_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
     let decode_snapshot = |text: &str| -> Result<Process3dSnapshot, String> {
-        let decoded: Process3dSnapshot = semio_framework_os_kernel::json::from_json_str(text).map_err(|error| error.to_string())?;
+        let decoded: Process3dSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
         Ok(decoded)
     };
     let base = decode_snapshot(base_json)?;
     let expected = decode_snapshot(after_json)?;
-    let mutation: Process3dMutation = semio_framework_os_kernel::json::from_json_str(mutation_json).map_err(|error| error.to_string())?;
+    let mutation: Process3dMutation = semio_framework_pack_json::from_json_str(mutation_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
     let mut applied = base.clone();
     let forward = <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::diff(&mutation, &base).apply_to(&mut applied);
-    let inverse = <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::inverse(&mutation, &base);
+    let inverse = <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?;
     let mut undone = applied.clone();
     let mut inverse_messages = Vec::new();
     for step in &inverse {
         let outcome = <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::diff(step, &undone).apply_to(&mut undone);
         inverse_messages.extend(outcome.messages().iter().cloned());
     }
-    let report = semio_framework_os_kernel::json::object([
-        ("base".to_string(), semio_framework_os_kernel::json::from_dsl_value(&semio_framework_os_kernel::ToValue::to_value(&base))),
-        ("expectedSnapshot".to_string(), semio_framework_os_kernel::json::from_dsl_value(&semio_framework_os_kernel::ToValue::to_value(&expected))),
-        ("snapshot".to_string(), semio_framework_os_kernel::json::from_dsl_value(&semio_framework_os_kernel::ToValue::to_value(&applied))),
-        ("diff".to_string(), semio_framework_os_kernel::json::from_dsl_value(&semio_framework_os_kernel::ToValue::to_value(forward.diff()))),
-        ("messages".to_string(), semio_framework_os_kernel::json::from_dsl_value(&semio_framework_os_kernel::ToValue::to_value(&forward.messages().to_vec()))),
-        ("inverseSteps".to_string(), semio_framework_os_kernel::json::from_dsl_value(&semio_framework_os_kernel::ToValue::to_value(&inverse))),
-        ("inverseSnapshot".to_string(), semio_framework_os_kernel::json::from_dsl_value(&semio_framework_os_kernel::ToValue::to_value(&undone))),
-        ("inverseMessages".to_string(), semio_framework_os_kernel::json::from_dsl_value(&semio_framework_os_kernel::ToValue::to_value(&inverse_messages))),
+    let report = semio_framework_pack_json::object([
+        ("base".to_string(), semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&base))),
+        ("expectedSnapshot".to_string(), semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&expected))),
+        ("snapshot".to_string(), semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&applied))),
+        ("diff".to_string(), semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(forward.diff()))),
+        ("messages".to_string(), semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&forward.messages().to_vec()))),
+        ("inverseSteps".to_string(), semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&inverse))),
+        ("inverseSnapshot".to_string(), semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&undone))),
+        ("inverseMessages".to_string(), semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&inverse_messages))),
     ]);
-    Ok(semio_framework_os_kernel::json::to_string(&report))
+    Ok(semio_framework_pack_json::to_string(&report))
 }
 //#endregion 🌉️TestBridge
 

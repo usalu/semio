@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "owner": "wires",
+  "valueBudget": "cumulativeSqlStorageClasses",
+  "allocationBudget": "independentOwnedRequests",
+  "scalarBytes": 8,
+  "encodings": [
+    "binary",
+    "text"
+  ],
+  "directions": [
+    "decodeNative",
+    "encodeNative"
+  ],
+  "grants": [
+    "exact",
+    "minusOne",
+    "zero"
+  ]
+}

@@ -23,7 +23,7 @@
     },
     "expectedCss": {
       "position": "relative",
-      "padding": "0.2rem 0.4rem 0.8rem 1.2000000000000002rem",
+      "padding": "calc(1 * var(--ui-spacing)) calc(2 * var(--ui-spacing)) calc(4 * var(--ui-spacing)) calc(6 * var(--ui-spacing))",
       "inset": ""
     },
     "expectedRect": { "x": 0.0, "y": 0.0, "width": 200.0, "height": 35.2 }
@@ -34,7 +34,7 @@
   },
   "absolute": {
     "layout": { "kind": "absolute", "sizingWidth": { "fixed": "xxl" }, "sizingHeight": { "fixed": "xl" } },
-    "expectedCss": { "position": "absolute", "width": "2.4000000000000004rem", "height": "1.6rem" },
+    "expectedCss": { "position": "absolute", "width": "calc(12 * var(--ui-spacing))", "height": "calc(8 * var(--ui-spacing))" },
     "expectedRect": { "x": 0.0, "y": 0.0, "width": 38.4, "height": 25.6 }
   },
   "following": {

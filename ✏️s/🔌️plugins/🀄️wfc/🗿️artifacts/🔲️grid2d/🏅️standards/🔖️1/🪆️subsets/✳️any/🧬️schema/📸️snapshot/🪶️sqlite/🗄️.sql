@@ -11,7 +11,7 @@ CREATE TABLE wfc_grid2d_tile (
  weight_ieee754_bits INTEGER NOT NULL, weight_numeric_class TEXT NOT NULL CHECK(weight_numeric_class IN ('finite','positiveInfinity','negativeInfinity','nan'))
 );
 CREATE TABLE wfc_grid2d_bitmap (
- id INTEGER PRIMARY KEY REFERENCES wfc_grid2d_tile(id), width INTEGER NOT NULL CHECK(width BETWEEN 0 AND 4294967295), height INTEGER NOT NULL CHECK(height BETWEEN 0 AND 4294967295), palette_indices_base64 TEXT NOT NULL
+ id INTEGER PRIMARY KEY REFERENCES wfc_grid2d_tile(id), width INTEGER NOT NULL CHECK(width BETWEEN 0 AND 4294967295), height INTEGER NOT NULL CHECK(height BETWEEN 0 AND 4294967295), storage_kind TEXT NOT NULL CHECK(storage_kind IN ('indices','literal'))
 );
 CREATE TABLE wfc_grid2d_palette (
  id INTEGER PRIMARY KEY, bitmap_id INTEGER NOT NULL REFERENCES wfc_grid2d_bitmap(id), ordinal INTEGER NOT NULL CHECK(ordinal>=0),
@@ -48,4 +48,10 @@ CREATE TABLE wfc_grid2d_pin (
 CREATE TABLE wfc_grid2d_mask (
  id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES wfc_grid2d_document(id), ordinal INTEGER NOT NULL CHECK(ordinal>=0),
  x INTEGER NOT NULL CHECK(x BETWEEN 0 AND 4294967295), y INTEGER NOT NULL CHECK(y BETWEEN 0 AND 4294967295)
+);
+CREATE TABLE wfc_grid2d_bitmap_pixel (
+ id INTEGER PRIMARY KEY, bitmap_id INTEGER NOT NULL REFERENCES wfc_grid2d_bitmap(id), ordinal INTEGER NOT NULL CHECK(ordinal>=0), palette_index INTEGER NOT NULL CHECK(palette_index BETWEEN 0 AND 255)
+);
+CREATE TABLE wfc_grid2d_bitmap_literal_scalar (
+ id INTEGER PRIMARY KEY, bitmap_id INTEGER NOT NULL REFERENCES wfc_grid2d_bitmap(id), ordinal INTEGER NOT NULL CHECK(ordinal>=0), scalar_text TEXT NOT NULL
 );

@@ -1,0 +1,35 @@
+{
+  "name": "@semio-tech/compiler-syntax-rust-ts",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/**/*",
+        "sharedGlobals"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "test-absence": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/**/*",
+        "sharedGlobals"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test-absence",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

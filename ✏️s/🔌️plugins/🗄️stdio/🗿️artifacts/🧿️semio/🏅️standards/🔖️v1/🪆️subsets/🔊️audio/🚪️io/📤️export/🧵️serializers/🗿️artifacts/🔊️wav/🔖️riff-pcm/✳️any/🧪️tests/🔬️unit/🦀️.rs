@@ -20,11 +20,11 @@ fn real_world_audio_no_tags() -> SemioAudioSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn audio_to_wav_to_audio_round_trips_losslessly_for_samples_and_rate() {
     let original = real_world_audio_no_tags();
-    let wav = semio_framework_plugin::resolve_ready(SemioAudioToWav::serialize(&original)).expect("serialize");
+    let wav = ::semio_framework_async::poll::resolve_ready(SemioAudioToWav::serialize(&original)).expect("serialize");
     assert_eq!(wav.fmt.channels, 2);
     assert_eq!(wav.fmt.sample_rate, 44_100);
     assert_eq!(wav.fmt.audio_format, 3);
-    let back = semio_framework_plugin::resolve_ready(SemioAudioFromWav::deserialize(&wav)).expect("deserialize");
+    let back = ::semio_framework_async::poll::resolve_ready(SemioAudioFromWav::deserialize(&wav)).expect("deserialize");
     assert_eq!(back.sample_rate, original.sample_rate);
     assert_eq!(back.channels, original.channels);
     assert_eq!(back.format, SemioAudioFormat::Float32); // normalized, documented
@@ -34,16 +34,16 @@ async fn audio_to_wav_to_audio_round_trips_losslessly_for_samples_and_rate() {
 async fn tags_are_intentionally_dropped_on_export_documented_lossy() {
     let mut snap = real_world_audio_no_tags();
     snap.tags = vec![SemioAudioTag { key: "title".into(), value: "clean".into() }];
-    let wav = semio_framework_plugin::resolve_ready(SemioAudioToWav::serialize(&snap)).expect("serialize");
+    let wav = ::semio_framework_async::poll::resolve_ready(SemioAudioToWav::serialize(&snap)).expect("serialize");
     assert!(wav.other_chunks.is_empty());
-    let back = semio_framework_plugin::resolve_ready(SemioAudioFromWav::deserialize(&wav)).expect("deserialize");
+    let back = ::semio_framework_async::poll::resolve_ready(SemioAudioFromWav::deserialize(&wav)).expect("deserialize");
     assert!(back.tags.is_empty());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn mismatched_channel_lengths_pad_shorter_channel_with_silence_not_panic() {
     let snap = SemioAudioSnapshot { channels: vec![SemioAudioChannel { samples: vec![1.0, 2.0, 3.0] }, SemioAudioChannel { samples: vec![1.0] }], ..real_world_audio_no_tags() };
-    let wav = semio_framework_plugin::resolve_ready(SemioAudioToWav::serialize(&snap)).expect("serialize");
+    let wav = ::semio_framework_async::poll::resolve_ready(SemioAudioToWav::serialize(&snap)).expect("serialize");
     match &wav.data {
         WavData::Float32(v) => assert_eq!(v.len(), 6),
         other => panic!("expected Float32, got {other:?}"),

@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeAirLoopSupplyNode, base: &EnergyModelSnapshot
         return protocol::MutationOutcome::fatal("mutation.invariant", "A supply node id must be at least one.".to_string(), [payload.id.0.to_string()]);
     }
     if existing.supply_node_id == payload.new_supply_node_id {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Air loop {} already has that supply node.", payload.id.0));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Air loop {} already has that supply node.", payload.id.0));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.air_loops.iter_mut().find(|item| item.id == payload.id) {

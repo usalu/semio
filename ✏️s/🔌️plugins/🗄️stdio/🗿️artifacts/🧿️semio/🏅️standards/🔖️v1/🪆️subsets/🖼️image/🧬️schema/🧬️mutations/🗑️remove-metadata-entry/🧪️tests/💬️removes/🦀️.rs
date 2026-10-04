@@ -25,13 +25,13 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-metadata-entry/💬️removes/🎯️outcome/🔣️.json");
 
 fn before() -> SemioImageSnapshot {
-    dsl::json::from_json_str(BEFORE).expect("remove-metadata-entry before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("remove-metadata-entry before snapshot decodes")
 }
 fn expected_after() -> SemioImageSnapshot {
-    dsl::json::from_json_str(AFTER).expect("remove-metadata-entry after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("remove-metadata-entry after snapshot decodes")
 }
 fn mutation() -> SemioImageMutation {
-    dsl::json::from_json_str(MUTATION).expect("remove-metadata-entry mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("remove-metadata-entry mutation decodes")
 }
 fn leaf_outcome() -> protocol::MutationOutcome<SemioImageDiff> {
     let SemioImageMutation::RemoveMetadataEntry(remove_metadata_entry::RemoveMetadataEntry { key }) = mutation() else {
@@ -60,7 +60,7 @@ async fn removes_only_the_comment_entry() {
 async fn the_undo_set_metadata_entry_restores_the_captured_comment() {
     let base = before();
     let mutation = mutation();
-    let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base);
+    let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key: "Comment".to_string(), value: "draft".to_string() })], "the undo must recapture the removed entry's value from base");
     let mut current = before();
     apply_semio_image_mutation(&mut current, &mutation);
@@ -74,12 +74,12 @@ async fn the_undo_set_metadata_entry_restores_the_captured_comment() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioImageSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: SemioImageSnapshot = semio_framework_pack_json::from_json_str(text,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "remove-metadata-entry/removes-the-comment-entry-and-keeps-the-author-entry: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("remove-metadata-entry mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(mutation()))).expect("remove-metadata-entry mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("remove-metadata-entry mutation reparses");
     assert_eq!(reencoded, original, "remove-metadata-entry/removes-the-comment-entry-and-keeps-the-author-entry: committed mutation JSON is not canonical");
 }
@@ -96,7 +96,7 @@ async fn declared_outcome_holds_with_no_guard_branch_firing() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = leaf_outcome();
-    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "remove-metadata-entry/removes-the-comment-entry-and-keeps-the-author-entry: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -104,13 +104,13 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff is a decode→encode fixed point and is scoped as narrowly as the leaf builds it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
-    let decoded: SemioImageDiff = dsl::json::from_json_str(DIFF).expect("committed remove-metadata-entry diff decodes");
+    let decoded: SemioImageDiff = semio_framework_pack_json::from_json_str(DIFF,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed remove-metadata-entry diff decodes");
 
     let metadata = decoded.metadata.as_ref().expect("remove-metadata-entry must write the metadata slot");
     assert_eq!(metadata.removed, vec!["Comment".to_string()], "the removal is addressed by name key");
     assert!(metadata.modified.is_empty() && metadata.added.is_empty(), "a removal neither modifies nor adds");
     assert!(decoded.frames.is_none() && decoded.width.is_none(), "no other slot may be touched");
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "remove-metadata-entry/removes-the-comment-entry-and-keeps-the-author-entry: committed diff JSON is not canonical");
 }
@@ -118,7 +118,7 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioImageDiff = dsl::json::from_json_str(DIFF).expect("committed remove-metadata-entry diff decodes");
+    let decoded: SemioImageDiff = semio_framework_pack_json::from_json_str(DIFF,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed remove-metadata-entry diff decodes");
     let produced = decoded.apply(&before()).expect("committed remove-metadata-entry diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "remove-metadata-entry/removes-the-comment-entry-and-keeps-the-author-entry: committed diff did not carry before to after");
 }

@@ -1,0 +1,584 @@
+{
+  "schemaVersion": 1,
+  "producer": "🧪️s4-tools-b-playbook-child-leaves.py",
+  "cases": [
+    {
+      "name": "add-step appends a node and its chain edge",
+      "base": [
+        {
+          "id": "s",
+          "title": "Steps",
+          "blocks": []
+        }
+      ],
+      "verb": {
+        "kind": "add-step",
+        "step": {
+          "id": "n",
+          "title": "Imported",
+          "blocks": [
+            {
+              "id": "n1",
+              "label": "n1",
+              "kind": "note"
+            }
+          ]
+        }
+      },
+      "leaves": [
+        "insert-node",
+        "insert-edge"
+      ],
+      "after": [
+        {
+          "id": "s",
+          "title": "Steps",
+          "blocks": []
+        },
+        {
+          "id": "n",
+          "title": "Imported",
+          "blocks": [
+            {
+              "id": "n1",
+              "label": "n1",
+              "kind": "note"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "add-step refuses a present step id",
+      "base": [
+        {
+          "id": "a",
+          "title": "A",
+          "blocks": [
+            {
+              "id": "a1",
+              "label": "a1",
+              "kind": "text"
+            },
+            {
+              "id": "a2",
+              "label": "a2",
+              "kind": "number"
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "title": "B",
+          "blocks": []
+        },
+        {
+          "id": "c",
+          "title": "C",
+          "blocks": [
+            {
+              "id": "c1",
+              "label": "c1",
+              "kind": "text"
+            }
+          ]
+        }
+      ],
+      "verb": {
+        "kind": "add-step",
+        "step": {
+          "id": "b",
+          "title": "B",
+          "blocks": []
+        }
+      },
+      "refusal": "playbook.step.duplicate"
+    },
+    {
+      "name": "remove-step bridges the chain over a middle step",
+      "base": [
+        {
+          "id": "a",
+          "title": "A",
+          "blocks": [
+            {
+              "id": "a1",
+              "label": "a1",
+              "kind": "text"
+            },
+            {
+              "id": "a2",
+              "label": "a2",
+              "kind": "number"
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "title": "B",
+          "blocks": []
+        },
+        {
+          "id": "c",
+          "title": "C",
+          "blocks": [
+            {
+              "id": "c1",
+              "label": "c1",
+              "kind": "text"
+            }
+          ]
+        }
+      ],
+      "verb": {
+        "kind": "remove-step",
+        "stepId": "b"
+      },
+      "leaves": [
+        "remove-edge",
+        "remove-edge",
+        "insert-edge",
+        "remove-node"
+      ],
+      "after": [
+        {
+          "id": "a",
+          "title": "A",
+          "blocks": [
+            {
+              "id": "a1",
+              "label": "a1",
+              "kind": "text"
+            },
+            {
+              "id": "a2",
+              "label": "a2",
+              "kind": "number"
+            }
+          ]
+        },
+        {
+          "id": "c",
+          "title": "C",
+          "blocks": [
+            {
+              "id": "c1",
+              "label": "c1",
+              "kind": "text"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "move-step rewires the chain only",
+      "base": [
+        {
+          "id": "a",
+          "title": "A",
+          "blocks": [
+            {
+              "id": "a1",
+              "label": "a1",
+              "kind": "text"
+            },
+            {
+              "id": "a2",
+              "label": "a2",
+              "kind": "number"
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "title": "B",
+          "blocks": []
+        },
+        {
+          "id": "c",
+          "title": "C",
+          "blocks": [
+            {
+              "id": "c1",
+              "label": "c1",
+              "kind": "text"
+            }
+          ]
+        }
+      ],
+      "verb": {
+        "kind": "move-step",
+        "stepId": "c",
+        "index": 0
+      },
+      "leaves": [
+        "remove-edge",
+        "insert-edge"
+      ],
+      "after": [
+        {
+          "id": "c",
+          "title": "C",
+          "blocks": [
+            {
+              "id": "c1",
+              "label": "c1",
+              "kind": "text"
+            }
+          ]
+        },
+        {
+          "id": "a",
+          "title": "A",
+          "blocks": [
+            {
+              "id": "a1",
+              "label": "a1",
+              "kind": "text"
+            },
+            {
+              "id": "a2",
+              "label": "a2",
+              "kind": "number"
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "title": "B",
+          "blocks": []
+        }
+      ]
+    },
+    {
+      "name": "remove-step refuses a missing step",
+      "base": [
+        {
+          "id": "a",
+          "title": "A",
+          "blocks": [
+            {
+              "id": "a1",
+              "label": "a1",
+              "kind": "text"
+            },
+            {
+              "id": "a2",
+              "label": "a2",
+              "kind": "number"
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "title": "B",
+          "blocks": []
+        },
+        {
+          "id": "c",
+          "title": "C",
+          "blocks": [
+            {
+              "id": "c1",
+              "label": "c1",
+              "kind": "text"
+            }
+          ]
+        }
+      ],
+      "verb": {
+        "kind": "remove-step",
+        "stepId": "x"
+      },
+      "refusal": "playbook.step.missing"
+    },
+    {
+      "name": "add-block appends one absolute blocks set",
+      "base": [
+        {
+          "id": "a",
+          "title": "A",
+          "blocks": [
+            {
+              "id": "a1",
+              "label": "a1",
+              "kind": "text"
+            },
+            {
+              "id": "a2",
+              "label": "a2",
+              "kind": "number"
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "title": "B",
+          "blocks": []
+        },
+        {
+          "id": "c",
+          "title": "C",
+          "blocks": [
+            {
+              "id": "c1",
+              "label": "c1",
+              "kind": "text"
+            }
+          ]
+        }
+      ],
+      "verb": {
+        "kind": "add-block",
+        "stepId": "b",
+        "block": {
+          "id": "b1",
+          "label": "Width",
+          "kind": "slider"
+        }
+      },
+      "leaves": [
+        "set-node-param"
+      ],
+      "after": [
+        {
+          "id": "a",
+          "title": "A",
+          "blocks": [
+            {
+              "id": "a1",
+              "label": "a1",
+              "kind": "text"
+            },
+            {
+              "id": "a2",
+              "label": "a2",
+              "kind": "number"
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "title": "B",
+          "blocks": [
+            {
+              "id": "b1",
+              "label": "Width",
+              "kind": "slider"
+            }
+          ]
+        },
+        {
+          "id": "c",
+          "title": "C",
+          "blocks": [
+            {
+              "id": "c1",
+              "label": "c1",
+              "kind": "text"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "remove-block sets the step's remaining blocks",
+      "base": [
+        {
+          "id": "a",
+          "title": "A",
+          "blocks": [
+            {
+              "id": "a1",
+              "label": "a1",
+              "kind": "text"
+            },
+            {
+              "id": "a2",
+              "label": "a2",
+              "kind": "number"
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "title": "B",
+          "blocks": []
+        },
+        {
+          "id": "c",
+          "title": "C",
+          "blocks": [
+            {
+              "id": "c1",
+              "label": "c1",
+              "kind": "text"
+            }
+          ]
+        }
+      ],
+      "verb": {
+        "kind": "remove-block",
+        "stepId": "a",
+        "blockId": "a1"
+      },
+      "leaves": [
+        "set-node-param"
+      ],
+      "after": [
+        {
+          "id": "a",
+          "title": "A",
+          "blocks": [
+            {
+              "id": "a2",
+              "label": "a2",
+              "kind": "number"
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "title": "B",
+          "blocks": []
+        },
+        {
+          "id": "c",
+          "title": "C",
+          "blocks": [
+            {
+              "id": "c1",
+              "label": "c1",
+              "kind": "text"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "remove-block refuses a block its step does not hold",
+      "base": [
+        {
+          "id": "a",
+          "title": "A",
+          "blocks": [
+            {
+              "id": "a1",
+              "label": "a1",
+              "kind": "text"
+            },
+            {
+              "id": "a2",
+              "label": "a2",
+              "kind": "number"
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "title": "B",
+          "blocks": []
+        },
+        {
+          "id": "c",
+          "title": "C",
+          "blocks": [
+            {
+              "id": "c1",
+              "label": "c1",
+              "kind": "text"
+            }
+          ]
+        }
+      ],
+      "verb": {
+        "kind": "remove-block",
+        "stepId": "b",
+        "blockId": "a1"
+      },
+      "refusal": "playbook.block.missing"
+    },
+    {
+      "name": "move-block across steps sets both steps' blocks",
+      "base": [
+        {
+          "id": "a",
+          "title": "A",
+          "blocks": [
+            {
+              "id": "a1",
+              "label": "a1",
+              "kind": "text"
+            },
+            {
+              "id": "a2",
+              "label": "a2",
+              "kind": "number"
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "title": "B",
+          "blocks": []
+        },
+        {
+          "id": "c",
+          "title": "C",
+          "blocks": [
+            {
+              "id": "c1",
+              "label": "c1",
+              "kind": "text"
+            }
+          ]
+        }
+      ],
+      "verb": {
+        "kind": "move-block",
+        "blockId": "a2",
+        "fromStepId": "a",
+        "toStepId": "c",
+        "index": 0
+      },
+      "leaves": [
+        "set-node-param",
+        "set-node-param"
+      ],
+      "after": [
+        {
+          "id": "a",
+          "title": "A",
+          "blocks": [
+            {
+              "id": "a1",
+              "label": "a1",
+              "kind": "text"
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "title": "B",
+          "blocks": []
+        },
+        {
+          "id": "c",
+          "title": "C",
+          "blocks": [
+            {
+              "id": "a2",
+              "label": "a2",
+              "kind": "number"
+            },
+            {
+              "id": "c1",
+              "label": "c1",
+              "kind": "text"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

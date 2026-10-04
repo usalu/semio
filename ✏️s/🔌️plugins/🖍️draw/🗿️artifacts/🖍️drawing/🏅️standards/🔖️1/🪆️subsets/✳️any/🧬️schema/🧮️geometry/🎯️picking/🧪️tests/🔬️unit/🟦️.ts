@@ -2,12 +2,12 @@
 import {expect,test} from "bun:test";
 import {ShapeUtils,Vector2,Line3,Vector3,CubicBezierCurve,Matrix3} from "three";
 import {PathHitCursor} from "../../🟦️.ts";
-import type {PathSegment} from "../../../../🟦️.ts";
+import type {PathGeometrySegment} from "../../../../🟦️.ts";
 import type {Matrix,Point} from "../../../🟦️.ts";
 import cases from "../../🧫️fixtures/🔣️.json";
 for(const sample of cases)test(`painted path hit: ${sample.name}`,()=>{
   const cursor=new PathHitCursor(sample.point as Point,sample.matrix as Matrix,sample.radius,.001);
-  let steps=0;while(!cursor.step(sample.segments as PathSegment[])){expect(++steps).toBeLessThan(100000);}
+  let steps=0;while(!cursor.step(sample.segments as PathGeometrySegment[])){expect(++steps).toBeLessThan(100000);}
   expect(cursor.contains(sample.fill,sample.stroke)).toBe(sample.expected);
   expect(cursor.maximumDepth).toBeLessThanOrEqual(33);
   if(sample.name.startsWith("concave")){
@@ -32,7 +32,7 @@ for(const sample of cases)test(`painted path hit: ${sample.name}`,()=>{
 });
 
 test("curve picking yields with bounded storage and refuses unresolved geometry",()=>{
-  const segments:PathSegment[]=[{kind:"move",to:[0,0]},{kind:"cubic",ctrl1:[0,1e100],ctrl2:[1e100,1e100],to:[1e100,0]}];
+  const segments:PathGeometrySegment[]=[{kind:"move",to:[0,0]},{kind:"cubic",ctrl1:[0,1e100],ctrl2:[1e100,1e100],to:[1e100,0]}];
   const cursor=new PathHitCursor([0,0],[1,0,0,1,0,0],1,.001);
   for(let index=0;index<16;index++)expect(cursor.step(segments)).toBe(false);
   let steps=16;while(!cursor.step(segments))expect(++steps).toBeLessThan(100);

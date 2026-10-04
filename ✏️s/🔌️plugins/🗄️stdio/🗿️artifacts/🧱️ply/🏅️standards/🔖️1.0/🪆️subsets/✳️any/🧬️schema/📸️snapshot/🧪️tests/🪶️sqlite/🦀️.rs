@@ -13,7 +13,7 @@ fn sqlite_snapshot_ply_declaration_count_patch_and_set_snapshot_retain_unsigned_
 
 use semio_framework_os_kernel::{sqlite_snapshot::{export_sqlite_database, import_sqlite_database, SqliteDatabaseLimits, SqliteSnapshotControl, SqliteValue}, ArtifactSqliteSnapshot};
 
-fn fixture() -> PlySnapshot { pack::json::from_json_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap() }
+fn fixture() -> PlySnapshot { semio_framework_pack_json::from_json_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap() }
 
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_ply_actual_declaration_typed_and_erased_io_mount(){
@@ -39,7 +39,7 @@ fn sqlite_snapshot_ply_typed_properties_scalar_cells_and_list_items_roundtrip() 
     let database = import_sqlite_database(&bytes, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
     let restored = PlySnapshot::from_sqlite_database(&database, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();
     assert_eq!(restored, snapshot);
-    let oracle: serde_json::Value = serde_json::from_str(&pack::json::to_json_string(&protocol::ToValue::to_value(&restored))).unwrap();
+    let oracle: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&restored))).unwrap();
     let expected: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap();
     assert_eq!(oracle, expected);
     assert_eq!(<PlySnapshot as store::ArtifactPack>::encode_pack(&restored), <PlySnapshot as store::ArtifactPack>::encode_pack(&snapshot));
@@ -93,7 +93,7 @@ fn sqlite_snapshot_ieee754_native_domain_through_independent_sqlite() {
         let script="import{Database}from'bun:sqlite';const d=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()));d.run(\"UPDATE ply_value SET real_value=NULL,real_value_ieee754_bits=0,real_value_numeric_class='nan'\");if(d.query('PRAGMA integrity_check').get().integrity_check!=='ok'||d.query('PRAGMA foreign_key_check').all().length)throw Error('malformed oracle');await Bun.write(Bun.stdout,d.serialize());d.close();";
         let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&bytes).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));
         let malformed=import_sqlite_database(&output.stdout,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();
-        assert!(PlySnapshot::from_sqlite_database(&malformed,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap_err().contains("IEEE"));
+        assert!(PlySnapshot::from_sqlite_database(&malformed,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap_err().message.contains("IEEE"));
     }
     println!("[DEBUG] geometry full native binary64 domain survives independent SQLite");
 }
@@ -176,7 +176,7 @@ fn sqlite_snapshot_ply_declaration_counts_and_count_scalar_kinds_are_independent
 fn sqlite_snapshot_ply_independent_vectors_and_recursive_heterogeneous_values(){
  use std::{io::Write,process::{Command,Stdio}};
  let corpus=include_str!("../../🧫️fixtures/🪶️sqlite/🧩️independent-values.json").replace("\"18446744073709551615\"","18446744073709551615").replace("\"0\"","0");
- let snapshot:PlySnapshot=pack::json::from_json_str(&corpus).unwrap();assert!(snapshot.elements[0].rows[0].values.is_empty());assert_eq!(snapshot.elements[1].properties.len(),0);
+ let snapshot:PlySnapshot=semio_framework_pack_json::from_json_str(&corpus, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();assert!(snapshot.elements[0].rows[0].values.is_empty());assert_eq!(snapshot.elements[1].properties.len(),0);
  let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();
  let bytes=export_sqlite_database(&database,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();
  let script="import{Database}from'bun:sqlite';const d=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()));if(d.query('PRAGMA integrity_check').get().integrity_check!=='ok'||d.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');if(d.query('SELECT COUNT(*) AS count FROM ply_value WHERE kind=\"list\"').get().count!==3)throw Error('recursive values');await Bun.write(Bun.stdout,d.serialize());d.close();";
@@ -200,13 +200,36 @@ fn sqlite_snapshot_ply_whole_native_controls_deep_values_and_exact_payload_retir
 #[test]
 fn sqlite_snapshot_ply_unreachable_owned_cycle_rejects_independent_valid_sqlite(){
  use std::{io::Write,process::{Command,Stdio}};
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🧱️topology-laws.json")).unwrap();let a=corpus["unreachableCycle"][0].as_u64().unwrap();let b=corpus["unreachableCycle"][1].as_u64().unwrap();let database=PlySnapshot::default().to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();let bytes=export_sqlite_database(&database,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();let script=format!("import{{Database}}from'bun:sqlite';const d=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()));d.run(\"INSERT INTO ply_value(id,kind) VALUES ({a},'list'),({b},'list')\");d.run('INSERT INTO ply_list_item(id,list_id,ordinal,value_id) VALUES (1,{a},0,{b}),(2,{b},0,{a})');if(d.query('PRAGMA integrity_check').get().integrity_check!=='ok'||d.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');await Bun.write(Bun.stdout,d.serialize());d.close();");let mut child=Command::new("bun").args(["-e",&script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&bytes).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));let database=import_sqlite_database(&output.stdout,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();assert!(PlySnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap_err().contains("unreachable"));
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🧱️topology-laws.json")).unwrap();let a=corpus["unreachableCycle"][0].as_u64().unwrap();let b=corpus["unreachableCycle"][1].as_u64().unwrap();let database=PlySnapshot::default().to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();let bytes=export_sqlite_database(&database,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();let script=format!("import{{Database}}from'bun:sqlite';const d=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()));d.run(\"INSERT INTO ply_value(id,kind) VALUES ({a},'list'),({b},'list')\");d.run('INSERT INTO ply_list_item(id,list_id,ordinal,value_id) VALUES (1,{a},0,{b}),(2,{b},0,{a})');if(d.query('PRAGMA integrity_check').get().integrity_check!=='ok'||d.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');await Bun.write(Bun.stdout,d.serialize());d.close();");let mut child=Command::new("bun").args(["-e",&script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&bytes).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));let database=import_sqlite_database(&output.stdout,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();assert!(PlySnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap_err().message.contains("unreachable"));
 }
 
 #[test]
 fn sqlite_snapshot_ply_controlled_native_output_retains_deep_values_and_cancels_inside_unicode(){
  use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotPhase};
  let f:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🧱️topology-laws.json")).unwrap();let depth=f["depth"].as_u64().unwrap()as usize;let bits=u64::from_str_radix(f["binary64Bits"].as_str().unwrap(),16).unwrap();let mut value=PlyValue::Double(f64::from_bits(bits));for _ in 0..depth{value=PlyValue::List(vec![value]);}
- let mut snapshot=dsl::__rt::DecodedFieldOwner::new(PlySnapshot{schema:"世界 🪐".repeat(30000),format:PlyFormat::BinaryBigEndian,comments:vec!["independent metadata".into()],elements:vec![PlyElement{name:"independent".into(),count:u64::MAX,properties:vec![PlyProperty::List{name:"unrelated declaration".into(),count_kind:PlyScalarType::Double,value_kind:PlyScalarType::Float}],rows:vec![PlyRow{values:vec![value,PlyValue::Float(f32::from_bits(0xff800123))]}]}]},super::native_pack::retire);let schema_length=snapshot.as_mut().schema.len();let limits=SqliteDatabaseLimits::default();let expected=snapshot.as_mut().to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();
- for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=snapshot.as_mut().encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).expect("PLY actual controlled native output owner");let mut restored=dsl::__rt::DecodedFieldOwner::new(PlySnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),super::native_pack::retire);assert_eq!(restored.as_mut().to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),expected);let mut interior=false;assert!(snapshot.as_mut().encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |event|{if event.phase==SqliteSnapshotPhase::EncodeNative&&event.total==schema_length&&event.completed>=65536&&event.completed<event.total{interior=true;false}else{true}},limits)).is_err());assert!(interior);for limited in[SqliteDatabaseLimits{max_rows:30,..limits},SqliteDatabaseLimits{max_value_bytes:128,..limits}]{assert!(snapshot.as_mut().encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limited)).is_err());}}
+ let mut snapshot=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(PlySnapshot{schema:"世界 🪐".repeat(30000),format:PlyFormat::BinaryBigEndian,comments:vec!["independent metadata".into()],elements:vec![PlyElement{name:"independent".into(),count:u64::MAX,properties:vec![PlyProperty::List{name:"unrelated declaration".into(),count_kind:PlyScalarType::Double,value_kind:PlyScalarType::Float}],rows:vec![PlyRow{values:vec![value,PlyValue::Float(f32::from_bits(0xff800123))]}]}]},super::native_pack::retire);let schema_length=snapshot.as_mut().schema.len();let limits=SqliteDatabaseLimits::default();let expected=snapshot.as_mut().to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();
+ for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=snapshot.as_mut().encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).expect("PLY actual controlled native output owner");let mut restored=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(PlySnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),super::native_pack::retire);assert_eq!(restored.as_mut().to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),expected);let mut interior=false;assert!(snapshot.as_mut().encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |event|{if event.phase==SqliteSnapshotPhase::EncodeNative&&event.total==schema_length&&event.completed>=65536&&event.completed<event.total{interior=true;false}else{true}},limits)).is_err());assert!(interior);for limited in[SqliteDatabaseLimits{max_rows:30,..limits},SqliteDatabaseLimits{max_value_bytes:128,..limits}]{assert!(snapshot.as_mut().encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limited)).is_err());}}
+}
+
+#[test]
+fn sqlite_snapshot_ply_controlled_native_retains_refusal_categories(){
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🧱️topology-laws.json")).unwrap();
+ let cases=&fixture["controlledRefusals"];let source=PlySnapshot::default();
+ let canceled=super::native_pack::record_controlled(&source,&mut semio_framework_value::NativeEncodeControl::new(usize::MAX,&mut |_|false),usize::MAX).err().expect("canceled projection");
+ assert_eq!(canceled.kind.as_str(),cases["cancellation"].as_str().unwrap());
+ let limited=super::native_pack::record_controlled(&source,&mut semio_framework_value::NativeEncodeControl::new(usize::MAX,&mut |_|true),0).err().expect("row admission");
+ assert_eq!(limited.kind.as_str(),cases["rowAdmission"].as_str().unwrap());
+ let mut record=super::native_pack::record_controlled(&source,&mut semio_framework_value::NativeEncodeControl::new(usize::MAX,&mut |_|true),usize::MAX).unwrap();record.fields.remove(&3);
+ let malformed=super::native_pack::reconstruct_record_controlled(&record,&mut semio_framework_value::NativeDecodeControl::new(usize::MAX,&mut |_|true),usize::MAX).err().expect("malformed record");
+ assert_eq!(malformed.kind.as_str(),cases["malformedRecord"].as_str().unwrap());
+ let source_case=&fixture["controlledTextSource"];let expected_span=semio_framework_diagnostic::TextSpan{line:source_case["span"]["line"].as_u64().unwrap()as u32,column:source_case["span"]["column"].as_u64().unwrap()as u32,length:source_case["span"]["length"].as_u64().unwrap()as u32};
+ let spec=super::native_pack::spec();
+ let text_error=semio_framework_dsl_record::parse_exact_controlled(source_case["source"].as_str().unwrap(),&spec,&semio_framework_dsl_record::ParseOptions::default(),&mut semio_framework_value::NativeDecodeControl::new(usize::MAX,&mut |_|true)).err().expect("actual malformed Text source");
+ assert_eq!(text_error.kind.as_str(),cases["malformedRecord"].as_str().unwrap());
+ assert_eq!(text_error.span,expected_span);
+ let io_error=store::io_schema::IoError::from_text_error_controlled(text_error,&mut semio_framework_value::NativeEncodeControl::new(usize::MAX,&mut |_|true)).unwrap();
+ assert_eq!(io_error.cause.kind.as_str(),cases["malformedRecord"].as_str().unwrap());
+ assert_eq!(io_error.diagnostics.len(),1);
+ assert_eq!(io_error.diagnostics[0].span,expected_span);
+ eprintln!("[DEBUG] PLY controlled refusal categories cancellation={} admission={} malformed={}",canceled.kind.as_str(),limited.kind.as_str(),malformed.kind.as_str());
 }

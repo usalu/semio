@@ -1,0 +1,144 @@
+{
+  "contractId": "rewriting-full-child-frame-lifetime",
+  "slot": "workingGraph",
+  "target": {
+    "artifactId": "actual !@/\u0000引用😀",
+    "dialect": {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "graph"
+    }
+  },
+  "publications": [
+    {
+      "parentGeneration": 7,
+      "parentRevision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "childRevision": "1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    {
+      "parentGeneration": 8,
+      "parentRevision": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "childRevision": "2222222222222222222222222222222222222222222222222222222222222222"
+    }
+  ],
+  "nextLiteral": "next !@/\u0000引用😀",
+  "retainedTailBytes": 65536,
+  "borrowedCaptureAllocationBytes": 0,
+  "closeGrants": [
+    0,
+    1
+  ],
+  "refusals": [
+    "wrongParent",
+    "missingSlot",
+    "missingTarget",
+    "wrongDialect"
+  ],
+  "intrinsicKinds": [
+    "bool",
+    "bytes",
+    "float",
+    "int",
+    "list",
+    "map",
+    "null",
+    "ref",
+    "str"
+  ],
+  "intrinsicValues": [
+    {
+      "key": "owner-null",
+      "value": {
+        "kind": "null"
+      }
+    },
+    {
+      "key": "owner-bool",
+      "value": {
+        "kind": "bool",
+        "value": false
+      }
+    },
+    {
+      "key": "owner-int",
+      "value": {
+        "kind": "int",
+        "lexeme": "18446744073709551615"
+      }
+    },
+    {
+      "key": "owner-float",
+      "value": {
+        "kind": "float",
+        "lexeme": "1.25"
+      }
+    },
+    {
+      "key": "owner-str",
+      "value": {
+        "kind": "str",
+        "value": "owned !@/\u0000引用😀"
+      }
+    },
+    {
+      "key": "owner-bytes",
+      "value": {
+        "kind": "bytes",
+        "value": [
+          0,
+          255,
+          128,
+          13,
+          10
+        ]
+      }
+    },
+    {
+      "key": "owner-list",
+      "value": {
+        "kind": "list",
+        "items": [
+          {
+            "kind": "int",
+            "lexeme": "-9223372036854775808"
+          },
+          {
+            "kind": "null"
+          }
+        ]
+      }
+    },
+    {
+      "key": "owner-map",
+      "value": {
+        "kind": "map",
+        "entries": [
+          {
+            "key": "literal !@/\u0000引用😀",
+            "value": {
+              "kind": "str",
+              "value": "first"
+            }
+          },
+          {
+            "key": "literal !@/\u0000引用😀",
+            "value": {
+              "kind": "str",
+              "value": "second"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "key": "owner-ref",
+      "value": {
+        "kind": "ref",
+        "id": {
+          "value": "a"
+        }
+      }
+    }
+  ],
+  "childId": "logical !@/\u0000引用😀"
+}

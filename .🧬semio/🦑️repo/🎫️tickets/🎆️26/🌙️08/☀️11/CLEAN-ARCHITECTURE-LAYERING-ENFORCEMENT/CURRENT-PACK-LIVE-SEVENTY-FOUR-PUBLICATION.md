@@ -1,0 +1,11 @@
+# Pack Live Seventy-Four Publication
+
+The complete 74-row Pack/Replication boundary cohort is now published in the actual workspace. Canonical Nx session 45334 completed with exit 0: 72 written files and two exact current noops. The terminal authority is `🗑️generated/cargo-workspace-general-transfer/pack-live-publication-1/publication.json`; its 74 JSONL entries reference individually retained full before/after/inverse frames and exact hashes.
+
+Publication follows genuine proposal epoch 6 whole Pack 112/112 and whole Replication 264/264 passing laws, zero skips, independent combined source/compiler admission, and Native's explicit release in session 19892. Those proposal results remain distinct from the upcoming actual-workspace runtime results.
+
+The publisher validates the immutable index and preflight, both whole runtime receipts, released checkpoint, proof/plan/metadata hashes, and the plan's exact index identity before creating publication output. Each produced Cargo body passes Bun and @iarna. Every source receives an immediate current guard, exact owned patch or already-authored noop, durable source pair before writing, and immediate published-body verification. All 18 actual provider identities, literal library associations, and required normal/dev/build/target declaration roles are checked. Inherited dependencies resolve the actual owning workspace key to its canonical physical provider; an immediate qualified-key reread preserves unrelated Root tables.
+
+Native exclusively owns unchanged actual-workspace whole Pack and Replication preparation, compiler/runtime, and paired current-source receipts. Dependency test laws are not selected by those package routes: the defining Error owner's 16 laws require their own actual whole route, and remain explicitly distinct from the previously passing proposal Native16 epoch. No actual-workspace GREEN is claimed by this publication receipt.
+
+The coherent 356-row current consumer/OS source union is separately admitted but unmounted. Generated writer 17 test rows and 58 production rows remain the next owning TDD phase after the Pack boundary checkpoint. Ureq and the broader OS helper closure retain their stated coverage limitations.

@@ -9,7 +9,7 @@ pub fn diff(payload: &ChangeHeatedVolumeM3, base: &Din18599Snapshot) -> protocol
         return protocol::MutationOutcome::fatal("mutation.invariant", "heated-volume must be a positive finite number.", Vec::<String>::new());
     }
     if base.heated_volume_m3 == payload.new_heated_volume_m3 {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "heated-volume already has this value.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "heated-volume already has this value.");
     }
     protocol::MutationOutcome::new(Din18599Diff { heated_volume_m3: Some(payload.new_heated_volume_m3), ..Default::default() })
 }

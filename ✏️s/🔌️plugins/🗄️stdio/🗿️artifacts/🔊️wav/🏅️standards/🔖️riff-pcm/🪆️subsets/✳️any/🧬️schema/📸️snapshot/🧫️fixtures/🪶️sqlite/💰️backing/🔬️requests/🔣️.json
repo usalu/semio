@@ -1,0 +1,13 @@
+{
+  "phases": [
+    "projectSnapshot",
+    "reconstructSnapshot"
+  ],
+  "requestExtent": "fullConcreteRequests",
+  "reallocation": "completeReplacement",
+  "exactReplay": true,
+  "denial": "oneByteBelowObserved",
+  "retirementRefund": false,
+  "refusalKind": "ownershipLimit",
+  "tableCount": 12
+}

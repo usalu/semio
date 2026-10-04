@@ -7,7 +7,7 @@ use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Mutation
 /// 🔄️ `rotate-selection3d` payload — part and target-volume ids, the world axis and the angle in radians (right-handed about the axis).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
@@ -26,9 +26,12 @@ impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for RotateSelect
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Puzzle5dSnapshot) -> Vec<Puzzle5dMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &Puzzle5dSnapshot) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let (degrees_en, degrees_de) = puzzle5d_selection_number(self.angle.to_degrees());
         let (en, de) = puzzle5d_selection_items(self.targets.len());

@@ -22,5 +22,5 @@ pub fn diff(payload: &InsertElement, base: &Din4108Snapshot) -> protocol::Mutati
     if index == payload.index {
         return outcome;
     }
-    outcome.warn("mutation.clamped", format!("Position {} is past the end of the envelope element list; inserted at {index}.", payload.index))
+    outcome.warning("mutation.clamped", format!("Position {} is past the end of the envelope element list; inserted at {index}.", payload.index))
 }

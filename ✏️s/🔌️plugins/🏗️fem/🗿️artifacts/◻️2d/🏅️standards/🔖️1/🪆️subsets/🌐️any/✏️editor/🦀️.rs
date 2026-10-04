@@ -24,7 +24,7 @@ use crate::editor::fem2d::modes::edit::windows::results as results_window;
 use crate::model::{Dof, ElementResult};
 use crate::standards::v1::subsets::any::schema::mutations::text::Fem2dMutation;
 use crate::Fem2dSnapshot;
-use dsl::json::Value;
+use semio_framework_pack_json::Value;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::app::{Dialect, InteractionView};
 use semio_framework_plugin::built_text_node;
@@ -290,16 +290,6 @@ struct Fem2dRetainedWork {
     consumed: bool,
 }
 
-/// 🫧️ The clock the runtime captured for a playback command, or a fault when the tick's declared window authority is
-/// missing or belongs to another window.
-fn fem2d_captured_clock(context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Fem2dPlayApp>>>, window_id: &str) -> Result<Option<results_window::transient::Fem2dPlaybackClock>, Fault> {
-    let snapshot = context.and_then(|context| context.window_transient.as_ref()).ok_or_else(|| Fault::from("fem2d.result-animation-tick.window-transient-required"))?;
-    if snapshot.window_id() != window_id || snapshot.window_kind_id() != results_window::transient::WINDOW_KIND_ID {
-        return Err(Fault::from("fem2d.result-animation-tick.window-transient-mismatch"));
-    }
-    Ok(results_window::transient::captured_clock(Some(snapshot), window_id))
-}
-
 impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Fem2dPlayApp>> for Fem2dRetainedWork {
     fn tool_id(&self) -> &'static str {
         self.tool_id
@@ -309,7 +299,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Fem
         fem2d_retained_extent(command, snapshot, interaction)
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Fem2dPlayApp>>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Fem2dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Fem2dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Fem2dPlayApp>>, Fault> {
         use crate::editor::fem2d::interaction::gumball::Fem2dGumballMotion;
         if self.consumed {
             return Err(Fault::from("fem2d-retained-work-repeated"));
@@ -324,14 +314,15 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Fem
             Fem2dCommand::ResultAnimationTick(payload) => {
                 let cfg = ConfigView { snapshot: config, window: context.and_then(|context| context.window_config.as_ref()) };
                 let view = context.and_then(|context| context.view_state.as_ref()).ok_or_else(|| Fault::from("fem2d.result-animation-tick.window-context-required"))?;
-                let step = result_animation_tick::step(payload, &cfg, view, fem2d_captured_clock(context, &payload.window_id)?)?;
+                let clock = results_window::transient::required_clock::<results_window::transient::Fem2dResultsWindowTransientOwner>(context.and_then(|context| context.window_transient.as_ref()), &payload.window_id)?;
+                let step = result_animation_tick::result_animation_tick_step::<set_result_animation::Fem2dResultsPlayback>(payload, &cfg, view, clock)?;
                 Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::CompleteWithEphemeral { emit: step.emit, ephemeral: semio_framework_plugin::EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: step.window_transient } })
             }
             Fem2dCommand::SetResultAnimation(payload) => {
                 let cfg = ConfigView { snapshot: config, window: context.and_then(|context| context.window_config.as_ref()) };
                 let view = context.and_then(|context| context.view_state.as_ref()).ok_or_else(|| Fault::from("fem2d.result-animation.window-context-required"))?;
-                let clock = payload.window_id.as_deref().filter(|id| !id.is_empty()).and_then(|id| context.and_then(|context| results_window::transient::captured_clock(context.window_transient.as_ref(), id)));
-                let step = set_result_animation::step(payload, &cfg, view, clock)?;
+                let clock = payload.window_id.as_deref().filter(|id| !id.is_empty()).and_then(|id| context.and_then(|context| results_window::transient::captured_clock::<results_window::transient::Fem2dResultsWindowTransientOwner>(context.window_transient.as_ref(), id)));
+                let step = set_result_animation::set_result_animation_step::<set_result_animation::Fem2dResultsPlayback>(payload, &cfg, view, clock)?;
                 Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::CompleteWithEphemeral { emit: step.emit, ephemeral: semio_framework_plugin::EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: step.window_transient } })
             }
             _ => fem2d_retained_reduce(command, snapshot, config, history, interaction, hover, context, operation).map(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete),
@@ -411,16 +402,13 @@ struct Fem2dArtifactPreparation {
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<Fem2dSnapshot, Fem2dMutation> for Fem2dArtifactPreparationFactory {
-    /// 🧺️ One forward row plus its inverse rows: one per record a `move-selection` restores — the upper bound its
-    /// payload proves without the base — and exactly one for every other kind.
+    /// 🧺️ One forward row plus the inverse rows the leaf's payload schema declares (`x-semio-inverse-rows`: one per node
+    /// and region a `move-selection` restores, one for every other kind).
     fn preflight(&self, mutation: &Fem2dMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
             return Err("fem2d-artifact-lane-or-description-envelope".into());
         }
-        Ok(match mutation {
-            Fem2dMutation::MoveSelection(leaf) => store::ArtifactStoreOneItemFootprint::for_one_item(leaf.node_ids.len() + leaf.region_ids.len(), store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES),
-            _ => store::ArtifactStoreOneItemFootprint::for_one_invertible_item(store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES),
-        })
+        Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
 
     fn begin(
@@ -462,35 +450,10 @@ impl store::ArtifactStoreOneItemPreparation<Fem2dSnapshot, Fem2dMutation> for Fe
         }
         let base = self.base.as_ref().ok_or_else(|| "fem2d-artifact-base-owner-missing".to_string())?;
         let mutation = self.mutation.take().ok_or_else(|| "fem2d-artifact-mutation-owner-missing".to_string())?;
-        let inverse = mutation.inverse(base.get());
+        let inverse = mutation.inverse(base.get()).map_err(semio_framework_value::ValueError::into_message)?;
         let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
         let authority = self.authority.as_ref().ok_or_else(|| "fem2d-artifact-authority-missing".to_string())?;
-        let id = format!("fem2d-retained-{}", authority.next_sequence_number());
-        let edit = protocol::Edit { line: authority.line_id().map(str::to_owned),
-            id: id.clone(),
-            actor: Some(authority.actor().to_string()),
-            forwards: vec![mutation],
-            inverse,
-            mutation_meta: vec![protocol::MutationMeta {
-                mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
-                dependencies: Vec::new(),
-                base_version: authority.base_applied_edit_count() as u64,
-                author_id: Some(protocol::ActorId(authority.actor().to_string())),
-                timestamp: authority.next_clock(),
-                undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-                payload_hash: None,
-                semantic_kind: None,
-                label: None,
-                group_id: None,
-                origin: Default::default(),
-                transaction: None,
-            }],
-            description: self.description.take(), verb: None,
-            coalesce_key: None,
-            sequence_number: authority.next_sequence_number(),
-            started_at: String::new(),
-            finished_at: None,
-        };
+        let edit = authority.next_edit(mutation, inverse);
         let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
         self.prepared = Some(prepared);
@@ -513,7 +476,7 @@ impl store::ArtifactStoreOneItemPreparation<Fem2dSnapshot, Fem2dMutation> for Fe
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Blocked);
         }
@@ -522,7 +485,7 @@ impl store::ArtifactStoreOneItemPreparation<Fem2dSnapshot, Fem2dMutation> for Fe
         }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
-                return Err("fem2d-artifact-base-retirement-rejected".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "fem2d-artifact-base-retirement-rejected"));
             }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -557,41 +520,41 @@ fn config_result_display(cfg: &results_window::config::Fem2dResultsWindowConfig)
 
 /// 🎨️ Manual `crate::model::StaticResult` -> JSON bridge for `"results:out"` (see `export_media` below)
 /// — `crate::model::StaticResult`/`ElementResult`/`Dof` don't derive `Serialize` (out of this ticket's
-/// scope: `🫀️core` is a shared crate), so this hand-rolls the same shape `dsl::json::to_json_string` would
+/// scope: `🫀️core` is a shared crate), so this hand-rolls the same shape `semio_framework_pack_json::to_json_string` would
 /// have produced, using `Dof`'s existing `{:?}` formatting (already used for the reaction-label layers
 /// in the results window's render).
 fn dof_json(dof: Dof) -> Value {
-    dsl::json!(format!("{dof:?}"))
+    semio_framework_pack_json::json!(format!("{dof:?}"))
 }
 
 fn element_result_json(result: &ElementResult) -> Value {
     match result {
-        ElementResult::Bar { n } => dsl::json!({ "kind": "bar", "n": n }),
+        ElementResult::Bar { n } => semio_framework_pack_json::json!({ "kind": "bar", "n": n }),
         ElementResult::Beam { stations } => {
-            dsl::json!({ "kind": "beam", "stations": stations.iter().map(|s| dsl::json!({ "x": s.x, "n": s.n, "v": s.v, "m": s.m })).collect::<Vec<_>>() })
+            semio_framework_pack_json::json!({ "kind": "beam", "stations": stations.iter().map(|s| semio_framework_pack_json::json!({ "x": s.x, "n": s.n, "v": s.v, "m": s.m })).collect::<Vec<_>>() })
         }
         ElementResult::Plane { gauss } => {
-            dsl::json!({ "kind": "plane", "gauss": gauss.iter().map(|g| dsl::json!({ "sxx": g.sxx, "syy": g.syy, "sxy": g.sxy, "vonMises": g.von_mises })).collect::<Vec<_>>() })
+            semio_framework_pack_json::json!({ "kind": "plane", "gauss": gauss.iter().map(|g| semio_framework_pack_json::json!({ "sxx": g.sxx, "syy": g.syy, "sxy": g.sxy, "vonMises": g.von_mises })).collect::<Vec<_>>() })
         }
         ElementResult::Plate { gauss } => {
-            dsl::json!({ "kind": "plate", "gauss": gauss.iter().map(|g| dsl::json!({ "mx": g.mx, "my": g.my, "mxy": g.mxy })).collect::<Vec<_>>() })
+            semio_framework_pack_json::json!({ "kind": "plate", "gauss": gauss.iter().map(|g| semio_framework_pack_json::json!({ "mx": g.mx, "my": g.my, "mxy": g.mxy })).collect::<Vec<_>>() })
         }
-        ElementResult::Solid { gauss } => dsl::json!({
+        ElementResult::Solid { gauss } => semio_framework_pack_json::json!({
             "kind": "solid",
-            "gauss": gauss.iter().map(|g| dsl::json!({ "sxx": g.sxx, "syy": g.syy, "szz": g.szz, "sxy": g.sxy, "syz": g.syz, "sxz": g.sxz, "vonMises": g.von_mises })).collect::<Vec<_>>(),
+            "gauss": gauss.iter().map(|g| semio_framework_pack_json::json!({ "sxx": g.sxx, "syy": g.syy, "szz": g.szz, "sxy": g.sxy, "syz": g.syz, "sxz": g.sxz, "vonMises": g.von_mises })).collect::<Vec<_>>(),
         }),
-        ElementResult::Shell { gauss } => dsl::json!({
+        ElementResult::Shell { gauss } => semio_framework_pack_json::json!({
             "kind": "shell",
-            "gauss": gauss.iter().map(|g| dsl::json!({ "nxx": g.nxx, "nyy": g.nyy, "nxy": g.nxy, "mxx": g.mxx, "myy": g.myy, "mxy": g.mxy, "vonMisesTop": g.von_mises_top, "vonMisesBottom": g.von_mises_bottom })).collect::<Vec<_>>(),
+            "gauss": gauss.iter().map(|g| semio_framework_pack_json::json!({ "nxx": g.nxx, "nyy": g.nyy, "nxy": g.nxy, "mxx": g.mxx, "myy": g.myy, "mxy": g.mxy, "vonMisesTop": g.von_mises_top, "vonMisesBottom": g.von_mises_bottom })).collect::<Vec<_>>(),
         }),
     }
 }
 
 fn static_result_json(result: &crate::model::StaticResult) -> Value {
-    dsl::json!({
-        "displacements": result.displacements.iter().map(|d| dsl::json!({ "nodeId": d.node_id, "values": d.values })).collect::<Vec<_>>(),
-        "reactions": result.reactions.iter().map(|r| dsl::json!({ "nodeId": r.node_id, "dof": dof_json(r.dof), "value": r.value })).collect::<Vec<_>>(),
-        "elements": result.elements.iter().map(|(id, element_result)| dsl::json!({ "id": id, "result": element_result_json(element_result) })).collect::<Vec<_>>(),
+    semio_framework_pack_json::json!({
+        "displacements": result.displacements.iter().map(|d| semio_framework_pack_json::json!({ "nodeId": d.node_id, "values": d.values })).collect::<Vec<_>>(),
+        "reactions": result.reactions.iter().map(|r| semio_framework_pack_json::json!({ "nodeId": r.node_id, "dof": dof_json(r.dof), "value": r.value })).collect::<Vec<_>>(),
+        "elements": result.elements.iter().map(|(id, element_result)| semio_framework_pack_json::json!({ "id": id, "result": element_result_json(element_result) })).collect::<Vec<_>>(),
         "checks": { "residualNorm": result.checks.residual_norm, "reactionSum": result.checks.reaction_sum },
     })
 }
@@ -684,6 +647,11 @@ fn fem2d_dofs(value: Option<&str>) -> Vec<crate::FemDof> {
 pub struct Fem2dPlayApp;
 
 impl ArtifactEditor for Fem2dPlayApp {
+    /// 📢️ The localized notices of the gumball and canvas refusals (design §20.12).
+    fn fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
+        crate::editor::fem2d::commands::gumball::fem_fault_notices()
+    }
+
     type Snapshot = Fem2dSnapshot;
     type Mutation = Fem2dMutation;
     type Config = NoConfig;
@@ -835,7 +803,7 @@ impl ArtifactEditor for Fem2dPlayApp {
             return Ok(None);
         }
         if request.command.command_id() != request.tool_id {
-            return Err(Fault::from("fem2d-command-tool-mismatch"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "fem2d retained command does not match its exact registered tool"));
         }
         let tool_id = request.command.command_id();
         let work = Box::new(Fem2dRetainedWork { tool_id, consumed: false });
@@ -946,10 +914,10 @@ impl ArtifactEditor for Fem2dPlayApp {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
                     return Err(MediaError::Payload(port.to_string(), "geometry:in only accepts a Structured JSON payload".into()));
                 };
-                let value = dsl::json::parse(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                let outline: Vec<[f64; 2]> = dsl::FromValue::from_value(dsl::json::to_dsl_value(&value.get("outline").cloned().unwrap_or(Value::Null))).map_err(|error| MediaError::Payload(port.to_string(), format!("outline: {error}")))?;
+                let value = semio_framework_pack_json::parse(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                let outline: Vec<[f64; 2]> = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&value.get("outline").cloned().unwrap_or(Value::Null))).map_err(|error| MediaError::Payload(port.to_string(), format!("outline: {error}")))?;
                 let holes: Vec<Vec<[f64; 2]>> = match value.get("holes").cloned() {
-                    Some(holes_value) => dsl::FromValue::from_value(dsl::json::to_dsl_value(&holes_value)).map_err(|error| MediaError::Payload(port.to_string(), format!("holes: {error}")))?,
+                    Some(holes_value) => semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&holes_value)).map_err(|error| MediaError::Payload(port.to_string(), format!("holes: {error}")))?,
                     None => Vec::new(),
                 };
                 let material_id = doc.snapshot.materials.first().map_or_else(|| "unassigned".into(), |material| material.id.clone());
@@ -972,15 +940,15 @@ impl ArtifactEditor for Fem2dPlayApp {
     /// the trait's default rejects every app action outright, so without this bridge none of fem2d's
     /// nineteen declared actions can reach `dispatch`. Every key here is the `ActionArgDef.id` declared
     /// for that action in `🔖️Manifest` below.
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
-        let text = |key: &str| args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_str).map(str::to_string);
-        let number = |key: &str| args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_f64);
-        let flag = |key: &str| args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_bool);
-        let list = |key: &str| args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_array).map(|items| items.iter().filter_map(dsl::DslValue::as_str).map(str::to_string).collect::<Vec<_>>());
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
+        let text = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_str).map(str::to_string);
+        let number = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_f64);
+        let flag = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_bool);
+        let list = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_array).map(|items| items.iter().filter_map(semio_framework_value::DslValue::as_str).map(str::to_string).collect::<Vec<_>>());
         // 🧵️ `samples: [[x, y], …]` — every well-formed 2-number pair in order; malformed entries are skipped.
         let point_list = |key: &str| {
             args.and_then(|value| value.get(key))
-                .and_then(dsl::DslValue::as_array)
+                .and_then(semio_framework_value::DslValue::as_array)
                 .map(|items| {
                     items
                         .iter()
@@ -996,8 +964,8 @@ impl ArtifactEditor for Fem2dPlayApp {
         // bool for toggles, text for selects/inputs); every patch command carries it as text.
         let scalar_text = |key: &str| {
             args.and_then(|value| value.get(key)).and_then(|value| match value {
-                dsl::DslValue::String(text) => Some(text.clone()),
-                dsl::DslValue::Bool(flag) => Some(flag.to_string()),
+                semio_framework_value::DslValue::String(text) => Some(text.clone()),
+                semio_framework_value::DslValue::Bool(flag) => Some(flag.to_string()),
                 other => other.as_f64().map(|number| number.to_string()),
             })
         };
@@ -1225,7 +1193,7 @@ impl Fem2dPlayApp {
     /// three dock panels. While a gumball gesture is open both canvas windows paint its `preview` (the committed
     /// document with the open transaction applied, never history); the panels keep the committed document. The results
     /// window draws its transport with the running playback `clock` folded in while it plays.
-    fn render_body(body_key: &str, doc: &ArtifactView<'_, Fem2dSnapshot>, preview: Option<&Fem2dSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &ViewModel, interaction: Fem2dInteractionSnapshot, clock: Option<results_window::transient::Fem2dPlaybackClock>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render_body(body_key: &str, doc: &ArtifactView<'_, Fem2dSnapshot>, preview: Option<&Fem2dSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &ViewModel, interaction: Fem2dInteractionSnapshot, clock: Option<results_window::transient::FemPlaybackClock>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let labels = fem2d_labels(view_state);
         let canvas = preview.unwrap_or(doc.snapshot);
         match body_key {
@@ -1254,7 +1222,7 @@ impl Fem2dPlayApp {
             }
             artifact_panel::BODY_KEY => artifact_panel::render(doc.snapshot, &interaction, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, artifact_panel::BODY_KEY)),
             inspection_panel::BODY_KEY => inspection_panel::render(doc.snapshot, &interaction, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, inspection_panel::BODY_KEY)),
-            results_panel::BODY_KEY => results_panel::render(doc.snapshot, results_window::config::captured(cfg).as_ref(), &results_window_instance_id(view_state).unwrap_or_default(), labels),
+            results_panel::BODY_KEY => results_panel::render(doc.snapshot, results_window::config::captured(cfg).as_ref(), clock.as_ref(), &results_window_instance_id(view_state).unwrap_or_default(), labels),
             _ => built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "fem2d unknown-body label admission failed")),
         }
         .map(semio_framework_plugin::built_to_component_tree)
@@ -1280,7 +1248,7 @@ pub fn fem2d_action(action: &str, args: Option<semio_framework_plugin::UiValue>)
 
 /// 🎛️ Window-measure action binding — same controller scope as [`fem2d_action`], without the UI assembly envelope.
 pub fn fem2d_measure_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: FEM2D_PLAY_CONTROLLER_ID.into(), action: action.into(), args: args.map(|value| dsl::json::to_dsl_value(&value)) }
+    ActionDescriptor { controller_id: FEM2D_PLAY_CONTROLLER_ID.into(), action: action.into(), args: args.map(|value| semio_framework_pack_json::to_dsl_value(&value)) }
 }
 
 /// 🪟️ The first results-window instance of the layout — the one the results panel addresses when
@@ -1308,7 +1276,7 @@ pub fn results_window_instance_id(view_state: &ViewModel) -> Option<String> {
 /// The spr is a fresh, edit-free op-log for `scene` — a genesis envelope with no history to encode.
 pub fn reset_document_effect(scene: &Fem2dSnapshot) -> semio_framework::kernel::Effect {
     let pack = <Fem2dSnapshot as store::ArtifactPack>::encode_pack(scene);
-    let spr = semio_framework_plugin::resolve_ready(store::empty_document_spr("fem2d", crate::FEM_2D_SCHEMA));
+    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr("fem2d", crate::FEM_2D_SCHEMA));
     semio_framework::kernel::Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️ResetDocument

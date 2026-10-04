@@ -1,0 +1,32 @@
+{
+  "header": {
+    "nodeKey": "stdio-table-headers",
+    "offset": 0,
+    "rows": 2
+  },
+  "body": {
+    "nodeKey": "csv-data",
+    "offset": 0,
+    "rows": 32
+  },
+  "shiftedBody": {
+    "nodeKey": "csv-data",
+    "offset": 16,
+    "rows": 32
+  },
+  "headerViewportRows": 2,
+  "bodyViewportRows": 30,
+  "mergedKeys": [
+    "csv-data",
+    "stdio-table-headers"
+  ],
+  "remainingKeys": [
+    "stdio-table-headers"
+  ],
+  "disclosure": {
+    "body": "details",
+    "node": "source",
+    "opened": true,
+    "closed": false
+  }
+}

@@ -61,14 +61,19 @@ pub fn measure(config: &RasterConfig, labels: &RasterPlayLabels) -> WindowMeasur
                 disabled: None,
                 on_change: raster_measure_action("setBrushHardness"),
             },
-            WindowMeasure::Select {
-                id: "raster-paintBrush-color".into(),
-                label: Some(labels.foreground.as_str().to_string()),
-                value: config.brush_color.clone(),
-                items: std::iter::once(config.brush_color.as_str()).chain(["#000000", "#ffffff", "#808080", "#e63946", "#e07020", "#ffd166", "#06d6a0", "#2878dc", "#8338ec", "#ff006e"].into_iter().filter(|value| *value != config.brush_color)).map(|value| semio_framework_plugin::MeasureSelectItem { id: value.into(), value: value.into(), label: value.into() }).collect(),
-                on_change: raster_measure_action("setBrushColor"),
-            },
+            foreground_measure(config, labels, "raster-paintBrush-color"),
         ],
+    }
+}
+
+/// 🎨️ The session foreground picker every colour-painting utility shows (the brush and the bucket share one colour).
+pub(crate) fn foreground_measure(config: &RasterConfig, labels: &RasterPlayLabels, id: &str) -> WindowMeasure {
+    WindowMeasure::Select {
+        id: id.into(),
+        label: Some(labels.foreground.as_str().to_string()),
+        value: config.brush_color.clone(),
+        items: std::iter::once(config.brush_color.as_str()).chain(["#000000", "#ffffff", "#808080", "#e63946", "#e07020", "#ffd166", "#06d6a0", "#2878dc", "#8338ec", "#ff006e"].into_iter().filter(|value| *value != config.brush_color)).map(|value| semio_framework_plugin::MeasureSelectItem { id: value.into(), value: value.into(), label: value.into() }).collect(),
+        on_change: raster_measure_action("setBrushColor"),
     }
 }
 //#endregion 🔖️Measure

@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.semio.tech/json/member-policy/v1",
+  "title": "JSON Member Policy",
+  "type": "string",
+  "enum": ["Reject", "Replace"]
+}

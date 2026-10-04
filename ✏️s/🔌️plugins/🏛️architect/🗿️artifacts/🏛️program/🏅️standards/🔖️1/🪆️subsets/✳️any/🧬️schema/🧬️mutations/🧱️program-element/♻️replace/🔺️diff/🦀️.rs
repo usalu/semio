@@ -13,7 +13,7 @@ pub fn diff(payload: &ReplaceProgramElement, base: &ProgramSnapshot) -> protocol
         return protocol::MutationOutcome::error("mutation.target-missing", "No program element exists with this id.", [payload.program_element.header.id.0.clone()]);
     };
     if existing == &payload.program_element {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This program element already matches the requested value.").at([existing.header.id.0.clone()])]);
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This program element already matches the requested value.").at([existing.header.id.0.clone()])]);
     }
     let patch = existing.diff_patch(&payload.program_element).expect("diff_patch always produces a full patch");
     protocol::MutationOutcome::new(ProgramDiff { elements: Some(ProgramElementsDelta { patched: vec![ProgramElementsPatchEntry { id: payload.program_element.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })

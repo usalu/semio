@@ -4,7 +4,8 @@
 use crate::mutations::{mask_cell, pin_cell, resize_grid, Grid2dMutation};
 use crate::schema::snapshot::Grid2dSnapshot;
 
-pub fn inverse(payload: &super::ResizeGrid, base: &Grid2dSnapshot) -> Vec<Grid2dMutation> {
+pub fn inverse(payload: &super::ResizeGrid, base: &Grid2dSnapshot) -> Result<Vec<Grid2dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     if base.width == payload.width && base.height == payload.height {
         return Vec::new();
     }
@@ -13,4 +14,6 @@ pub fn inverse(payload: &super::ResizeGrid, base: &Grid2dSnapshot) -> Vec<Grid2d
     restore.extend(base.masked.iter().filter(|cell| outside(cell.x, cell.y)).map(|cell| mask_cell(cell.x, cell.y)));
     restore.extend(base.pinned.iter().filter(|cell| outside(cell.x, cell.y)).map(|cell| pin_cell(cell.x, cell.y, cell.tile_id.clone())));
     restore
+
+    })())
 }

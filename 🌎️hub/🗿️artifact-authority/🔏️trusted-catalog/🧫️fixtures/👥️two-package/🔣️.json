@@ -48,7 +48,7 @@
         "packageId": "semio:fixture-editor",
         "version": "1.2.3",
         "role": "plugin",
-        "executionProtocol": { "appChannelVersion": 20 },
+        "executionProtocol": { "appChannelVersion": 21 },
         "dependencies": [
           { "pluginId": "fixture.base", "packageId": "semio:fixture-base", "version": "1.0.0" }
         ],
@@ -112,7 +112,7 @@
         "packageId": "semio:fixture-base",
         "version": "1.0.0",
         "role": "plugin",
-        "executionProtocol": { "appChannelVersion": 20 },
+        "executionProtocol": { "appChannelVersion": 21 },
         "dependencies": [],
         "component": {
           "path": "components/base.wasm",

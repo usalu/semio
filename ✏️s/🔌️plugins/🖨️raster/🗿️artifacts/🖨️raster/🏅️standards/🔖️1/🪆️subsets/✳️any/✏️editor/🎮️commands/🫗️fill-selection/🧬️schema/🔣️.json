@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Fill Selection",
+  "description": "One selection fill from the editing menu: the layer. Target, colour (the mask value at the brush opacity when filling the mask) and pixel selection are the session's; without a selection the whole image fills.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "layerId"
+  ],
+  "properties": {
+    "layerId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    }
+  }
+}

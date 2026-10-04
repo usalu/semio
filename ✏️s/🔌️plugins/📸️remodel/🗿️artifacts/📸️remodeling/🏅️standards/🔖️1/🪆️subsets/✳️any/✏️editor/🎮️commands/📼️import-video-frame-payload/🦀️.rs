@@ -9,6 +9,7 @@
 use crate::editor::remodeling::commands::import_frame_payload;
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::editor::remodeling::engine::images as remodeling_image;
+use crate::editor::remodeling::engine::reconstruction::{blur_gate_admits, sharpness_score, BLUR_GATE_ROLLING_WINDOW};
 #[cfg(test)]
 use crate::editor::remodeling::engine::video as remodeling_video;
 use crate::editor::remodeling::payload_from_data_url;
@@ -17,9 +18,8 @@ use crate::mutations::{add_stream_frame, create_asset, create_stream};
 use crate::op::RemodelingMutation;
 use crate::schema::mint_remodeling_id;
 use crate::{FrameRef, ImageAsset, MediaKind, MediaStream, RemodelingSnapshot};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
-use std::collections::VecDeque;
 
 //#region 🧾️ImportTransaction
 /// 🪪️ The tool every import transaction is stamped with: `<appId>#import`.
@@ -31,103 +31,6 @@ pub fn import_transaction(stream_id: &str) -> protocol::TransactionRef {
     protocol::TransactionRef::mint(&protocol::ActorId(stream_id.to_string()), &protocol::HybridLogicalTimestamp { actor: 0, physical_ms: 0, logical: 0 }, REMODELING_IMPORT_TOOL_ID)
 }
 //#endregion 🧾️ImportTransaction
-
-//#region 🔖️VideoImportScratch
-/// 📥️ Rolling blur-gate scratch for one in-progress `importVideoFramePayload`/`importVideoBytesPayload`
-/// batch — mirrors the reconstruction engine's own relative-sharpness gate (not reusable directly: that
-/// gate lives inside a whole `FrameSource`, this one only needs the rolling-median scratch itself).
-#[derive(Clone, Debug, Default, PartialEq)]
-struct VideoImportScratch {
-    rolling_scores: VecDeque<f32>,
-}
-
-const BLUR_GATE_ROLLING_WINDOW: usize = 15;
-const BLUR_GATE_MIN_SAMPLES: usize = 3;
-
-/// 🧭️ Gradient-energy sharpness proxy — a local mirror of the reconstruction engine's private
-/// `sharpness_score` (not exported by that topic file), reused here so import-time frame gating uses
-/// the identical signal.
-fn local_sharpness_score(image: &remodeling_image::ImageRgba8) -> f32 {
-    let gray = remodeling_image::ImageGray::from_rgba8_luma(image);
-    let grad = remodeling_image::scharr_gradients(&gray);
-    if grad.gx.is_empty() {
-        return 0.0;
-    }
-    let sum_sq: f32 = grad.gx.iter().zip(grad.gy.iter()).map(|(&gx, &gy)| gx * gx + gy * gy).sum();
-    sum_sq / grad.gx.len() as f32
-}
-
-fn local_rolling_median(scores: &VecDeque<f32>) -> f32 {
-    let mut v: Vec<f32> = scores.iter().copied().collect();
-    v.sort_by(f32::total_cmp);
-    v[v.len() / 2]
-}
-
-/// 🚦️ Whether the sample should be rejected by the relative blur gate, given `scratch`'s rolling window
-/// and `min_sharpness` (a fraction of the rolling median); also records the sample if accepted.
-fn blur_gate_reject(scratch: &mut VideoImportScratch, score: f32, min_sharpness: f32) -> bool {
-    if scratch.rolling_scores.len() >= BLUR_GATE_MIN_SAMPLES {
-        let median = local_rolling_median(&scratch.rolling_scores);
-        if score < min_sharpness * median {
-            return true;
-        }
-    }
-    if scratch.rolling_scores.len() >= BLUR_GATE_ROLLING_WINDOW {
-        scratch.rolling_scores.pop_front();
-    }
-    scratch.rolling_scores.push_back(score);
-    false
-}
-
-/// 🧩️ Pure reconstruction of the blur-gate rolling window from `stream_id`'s already-persisted frames
-/// (most recent `BLUR_GATE_ROLLING_WINDOW` first, then scored oldest-to-newest so the window fills in
-/// the same order the original per-tick `RefCell` scratch would have) — the pure-trait replacement
-/// for carrying `VideoImportScratch` as hidden interior-mutable state across `ImportVideoFramePayload`
-/// ticks.
-fn rebuild_video_import_scratch(scene: &RemodelingSnapshot, stream_id: &str) -> VideoImportScratch {
-    let mut scratch = VideoImportScratch::default();
-    let Some(stream) = scene.streams.iter().find(|stream| stream.id == stream_id) else { return scratch };
-    let mut recent: Vec<&FrameRef> = stream.frames.iter().rev().take(BLUR_GATE_ROLLING_WINDOW).collect();
-    recent.reverse();
-    for frame in recent {
-        let Some(source) = crate::remodeling_asset_chunk_source(scene, &frame.asset_id) else { continue };
-        let Ok(rope) = remodeling_image::CompressedChunkRope::from_leaves(source.leaves, 1_114_112) else { continue };
-        let mut decoder = remodeling_image::BoundedStillDecoder::new(&source.mime, rope);
-        let image = loop {
-            match decoder.advance() {
-                remodeling_image::BoundedDecodeProgress::Working => {}
-                remodeling_image::BoundedDecodeProgress::Complete(image) => break Some(image),
-                remodeling_image::BoundedDecodeProgress::Failed(_) => break None,
-            }
-        };
-        let Some(image) = image else { continue };
-        scratch.rolling_scores.push_back(local_sharpness_score(&image));
-    }
-    scratch
-}
-
-//#endregion 🔖️VideoImportScratch
-
-//#region 🔖️ImportFramePayload
-//#endregion 🔖️ImportFramePayload
-
-//#region 🔖️ImportVideoFramePayload
-//#endregion 🔖️ImportVideoFramePayload
-
-//#region 🔖️ImportVideoDone
-//#endregion 🔖️ImportVideoDone
-
-//#region 🔖️ImportVideoBytesPayload
-//#endregion 🔖️ImportVideoBytesPayload
-
-//#region 🔖️AddStream
-//#endregion 🔖️AddStream
-
-//#region 🔖️RemoveStream
-//#endregion 🔖️RemoveStream
-
-//#region 🔖️SetStreamSync
-//#endregion 🔖️SetStreamSync
 
 //#region 🧪️UnitTests
 /// 📥️ Imports `n` checker frames as one new image-sequence stream via `ImportFramePayload`, mirroring
@@ -183,7 +86,7 @@ fn checker_image(w: u32, h: u32, cell: u32) -> remodeling_image::ImageRgba8 {
 }
 //#endregion 🧪️UnitTests
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "import-video-frame-payload")]
 pub struct ImportVideoFramePayload {
     pub payload: String,
@@ -194,12 +97,16 @@ pub struct ImportVideoFramePayload {
 }
 
 /// 🎞️ Host-decoded video frame tick through the importing window's tool state `window`: decodes the sampled JPEG, runs it
-/// through the relative blur gate (rebuilt from the stream's frames each tick — see `rebuild_video_import_scratch`) and
-/// streams it into the import's open transaction; the emission and the window's next partition.
+/// through the engine's one relative blur gate over the import's own rolling scores (kept in `window`, so a tick costs one decode) and
+/// streams it into the import's open transaction; the emission and the window's next partition. Tick `0` while this
+/// window's earlier import still streams is refused (`remodeling.import.open`): one window imports one stream at a time.
 pub fn handle_in_window(payload: &ImportVideoFramePayload, doc: &ArtifactView<'_, RemodelingSnapshot>, window: &RemodelingWindowTransient) -> Result<(Emit<RemodelingMutation, NoConfigMutation>, RemodelingWindowTransient), Fault> {
     let scene = doc.snapshot;
     let started = match payload.index {
-        0 => Some(RemodelingImport::default()),
+        0 => {
+            refuse_while_streaming(scene, window)?;
+            Some(RemodelingImport::default())
+        }
         _ => window.import.clone(),
     };
     let Some(mut import) = started else { return Ok((Emit::default(), window.clone())) };
@@ -210,8 +117,7 @@ pub fn handle_in_window(payload: &ImportVideoFramePayload, doc: &ArtifactView<'_
     let accepted = payload_from_data_url(&payload.payload).and_then(|(_mime, bytes)| remodeling_image::decode_jpeg(&bytes).ok().map(|image| (bytes, image)));
     let Some((bytes, image)) = accepted else { return Ok((Emit::default(), RemodelingWindowTransient { import: Some(import) })) };
     let stream_id = import.stream_id.clone().unwrap_or_else(|| mint_remodeling_id(doc.operation_optional(), "stream"));
-    let mut scratch = rebuild_video_import_scratch(scene, &stream_id);
-    if blur_gate_reject(&mut scratch, local_sharpness_score(&image), scene.params.ingest.min_sharpness) {
+    if !blur_gate_admits(&mut import.rolling_scores, BLUR_GATE_ROLLING_WINDOW, sharpness_score(&image), scene.params.ingest.min_sharpness) {
         return Ok((Emit::default(), RemodelingWindowTransient { import: Some(import) }));
     }
     let asset_key = format!("{stream_id}-frame-{}", payload.frame_index);
@@ -233,7 +139,21 @@ pub fn handle(payload: &ImportVideoFramePayload, doc: &ArtifactView<'_, Remodeli
     let (emit, next) = handle_in_window(payload, doc, &resting)?;
     match next == resting {
         true => Ok(emit),
-        false => Err(Fault::from("remodeling-import-window-required")),
+        false => Err(import_window_required()),
+    }
+}
+
+/// 🪟️ The refusal of a streamed import dispatched without a window: its tool state lives in the importing window.
+pub(crate) fn import_window_required() -> Fault {
+    Fault::new(FaultOrigin::App, FaultCode::new("remodeling.import.window-required"), "A streamed import keeps its progress in the window that starts it; dispatch it from a window.")
+}
+
+/// 🚧️ Refuses a new import in a window whose earlier import still streams into an open transaction (its stream is in the
+/// document): that import commits or aborts first.
+pub(crate) fn refuse_while_streaming(scene: &RemodelingSnapshot, window: &RemodelingWindowTransient) -> Result<(), Fault> {
+    match window.import.as_ref().and_then(|import| import.stream_id.as_ref()).is_some_and(|stream_id| scene.streams.iter().any(|stream| stream.id == *stream_id)) {
+        true => Err(Fault::new(FaultOrigin::App, FaultCode::new("remodeling.import.open"), "This window is still importing; finish or cancel that import first.")),
+        false => Ok(()),
     }
 }
 

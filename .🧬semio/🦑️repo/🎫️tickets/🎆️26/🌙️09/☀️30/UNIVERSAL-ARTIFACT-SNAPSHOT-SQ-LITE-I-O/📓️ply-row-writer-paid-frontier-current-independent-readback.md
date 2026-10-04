@@ -1,0 +1,13 @@
+# PLY RowWriter Paid Frontier: Bounded Current Readback
+
+Read-only source audit of High Physical's current repair. No compilation or test execution here. High supplied Source64/64 and parser7/7 receipts; owning Native remains Root's gate.
+
+Actual shared `framework/sqlite-snapshot/artifact/rows/🦀️.rs` was read completely. Borrowed admission is a semantic cell census separate from physical allocation. It includes the identity's eight bytes, actual scalar/text/octet bytes, exact IEEE bits/class companions and full row/column counts. NaN subtracts the REAL query's semantic eight bytes because SQL query storage is NULL; this is not subtraction of System requests. Float32 query storage is also eight SQL bytes (`artifact/🦀️.rs:51`), with its raw word companion preserved. Width and duplicate companion checks remain explicit. Phase and caller control are retained through every checkpoint.
+
+Actual PLY visitor `snapshot/sqlite/🦀️.rs:59–72` was read completely. It preserves schema/format, ordered comments/elements/property declarations, declared u64 count high/low words, rows/cells and all nested list occurrence relationships. Breadth-first pending references now use RowWriter.allocate_frontier/push_frontier; no copied PLY value tree is created for census. Shared transfer reserve/grow (`sqlite-snapshot/transfer/🦀️.rs:9–15`) checks concrete Vec slot bytes/isize bounds, admits the complete replacement capacity before allocation, moves prior entries with bounded callbacks and keeps debits monotonic. PLY's frontier entries are borrowed references, so cancellation during move does not retire source values or forge a replacement source snapshot.
+
+Borrowed RowWriter's generated IDs are census counters rather than materialized per-table identity IDs. This changes intermediate integer values but not their semantic byte widths; the borrowed result is never exported as a database. The real owned writer continues to generate actual relational table identities. No output carrier or production identity loss is inferred from that distinction.
+
+PLY controlled native decode guards the typed decoded owner before borrowed census (:108), so census refusal/cancellation retains real retirement authority. Native encode runs census before the shared record factory (:107). Existing SQL reconstruction ordinary maps/frontiers and its allocating retirement remain separate physical debt; this review does not claim whole-owner request equality or zero-allocation drop.
+
+No concrete new defect was found in this bounded current RowWriter/PLY visitor join. Remaining requested ZIP/XML/OBJ/STL region review and owning numerical receipts are explicitly outside this readback.

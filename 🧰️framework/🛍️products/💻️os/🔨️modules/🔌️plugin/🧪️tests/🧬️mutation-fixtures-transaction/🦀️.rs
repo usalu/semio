@@ -16,34 +16,35 @@ use crate::app::{
 use crate::ViewModel;
 use protocol::MutationDiff;
 use semio_framework::{action_bus, ActionKind, Fault, IconName, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolOperationSpec};
+use semio_framework_2d::compute::EngineHandles;
+use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
-use semio_framework_2d::compute::EngineHandles;
 use store::{Backbone, BackboneMessage, MemoryBackbone};
-use semio_framework_ui_locale::LocalizedLabel;
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, ToValue, Deserialize, FromValue, dsl::DslArtifact)]
-#[dsl(extension = "testkit-txn")]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_os_kernel::DslArtifact)]
+#[artifact(extension = "testkit-txn")]
 pub(crate) struct TxnSnapshot {
     count: i32,
 }
 
-
 impl store::ArtifactSqliteSnapshot for TxnSnapshot {
     const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
-    fn to_sqlite_database(&self, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, String> {
-        use store::sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteValue, SqliteSnapshotPhase};
+    fn to_sqlite_database(&self, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, semio_framework_value::ValueError> {
+        use store::sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteSnapshotPhase, SqliteValue};
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1)?;
-        let mut database = SqliteDatabase::from_schema(Self::SQLITE_SCHEMA).map_err(|error| error.to_string())?;
+        let mut database = SqliteDatabase::from_schema(Self::SQLITE_SCHEMA)?;
         database.table_mut("transaction_state")?.rows.push(SqliteRow { rowid: 1, values: vec![SqliteValue::Integer(1), SqliteValue::Integer(i64::from(self.count))] });
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 1, 1)?;
         Ok(database)
     }
-    fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, String> {
+    fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
         control.checkpoint(store::sqlite_snapshot::SqliteSnapshotPhase::ReconstructSnapshot, 0, 1)?;
         let rows = &database.table("transaction_state")?.rows;
-        if rows.len() != 1 || rows[0].rowid != 1 || rows[0].integer(0)? != 1 { return Err("transaction_state requires one state row".into()); }
-        let snapshot = Self { count: i32::try_from(rows[0].integer(1)?).map_err(|error| error.to_string())? };
+        if rows.len() != 1 || rows[0].rowid != 1 || rows[0].integer(0)? != 1 {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "transaction_state requires one state row"));
+        }
+        let snapshot = Self { count: i32::try_from(rows[0].integer(1)?).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()))? };
         control.checkpoint(store::sqlite_snapshot::SqliteSnapshotPhase::ReconstructSnapshot, 1, 1)?;
         Ok(snapshot)
     }
@@ -57,11 +58,11 @@ impl semio_framework_schema_composition::ArtifactCompositionFields for TxnSnapsh
 
 impl store::ArtifactDsl for TxnSnapshot {
     const EXTENSION: &'static str = "testkit-txn";
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         if text.trim().is_empty() {
             return Ok(Self::default());
         }
-        serde_json::from_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+        serde_json::from_str(text).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
         serde_json::to_string(self).unwrap_or_default()
@@ -75,13 +76,13 @@ impl store::ArtifactPack for TxnSnapshot {
     }
 
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()))
+        serde_json::to_vec(self).map_err(|error| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string())))
     }
     fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         if bytes.is_empty() {
             return Ok(Self::default());
         }
-        serde_json::from_slice(bytes).map_err(|error| store::PackError::Schema(error.to_string()))
+        serde_json::from_slice(bytes).map_err(|error| match (u32::try_from(error.line()), u32::try_from(error.column())) { (Ok(line), Ok(column)) => store::PackError::from(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), semio_framework_diagnostic::TextSpan::at(line, column))), _ => store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit, error.to_string())) })
     }
 }
 
@@ -101,34 +102,34 @@ impl MutationDiff<TxnSnapshot> for TxnDiff {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_dsl_record_derive::DslEnum)]
 enum TxnCommand {
     #[dsl(key = "increment")]
     Increment,
-    #[dsl(key = "coalesced-increment")]
-    CoalescedIncrement,
+    #[dsl(key = "streamed-increment")]
+    StreamedIncrement,
     #[dsl(key = "increment-and-notify")]
     IncrementAndNotify,
 }
 
 impl ::protocol::OpText for TxnCommand {
-    fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
-        let variants = <Self as ::dsl::DslVariants>::variants();
+    fn parse_op(line: &str) -> Result<Self, ::semio_framework_diagnostic::TextError> {
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{keyword} ");
             if line == keyword.as_str() || line.starts_with(&probe) {
                 let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                let record = ::dsl::parse(body, &(spec_fn.ordinary)(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline })?;
-                return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = semio_framework_dsl_record::parse(body, &(spec_fn.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: ::semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?;
+                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown operation line '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
     }
     fn print_op(&self) -> String {
-        let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as ::dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        let body = ::dsl::print(&record, &(spec_fn.ordinary)(), ::dsl::JoinMode::Inline);
+        let body = semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline);
         if body.is_empty() {
             keyword
         } else {
@@ -138,7 +139,7 @@ impl ::protocol::OpText for TxnCommand {
 }
 
 impl ::protocol::OpBinary for TxnCommand {
-    const TOOL_JOB_IDS: &'static [&'static str] = &["increment", "coalesced-increment", "increment-and-notify"];
+    const TOOL_JOB_IDS: &'static [&'static str] = &["increment", "streamed-increment", "increment-and-notify"];
 
     fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
         ::dsl::variants_binary::encode_op(self)
@@ -149,8 +150,13 @@ impl ::protocol::OpBinary for TxnCommand {
 }
 
 //#region 🧪️TransactionRegisteredFactory
+/// 🌊️ The one tool transaction every `streamed-increment` tick grows (design §15).
+fn txn_stream_transaction() -> protocol::TransactionRef {
+    protocol::TransactionRef { id: "tx-00000000000005ac".into(), tool: "s.testkit.txn#streamed-increment".into() }
+}
+
 const TXN_PAYLOAD_SCHEMA: &str = "semio.testkit-txn.command.v1";
-const TXN_TOOL_IDS: [&str; 3] = ["increment", "coalesced-increment", "increment-and-notify"];
+const TXN_TOOL_IDS: [&str; 3] = ["increment", "streamed-increment", "increment-and-notify"];
 
 struct TxnFixtureJob {
     command: Option<Box<TxnCommand>>,
@@ -182,9 +188,9 @@ impl semio_framework_job::InteractiveJob for TxnFixtureJob {
         };
         let value = self.count + 1;
         let emit = match command {
-            TxnCommand::Increment => Emit { artifact_mutations: vec![SetTransactionCountWithoutPreflight { value }.into()], description: Some("increment".into()), ..Default::default() },
-            TxnCommand::CoalescedIncrement => Emit { artifact_mutations: vec![SetTransactionCountWithoutPreflight { value }.into()], description: Some("coalesced-increment".into()), coalesce_key: Some("counter".into()), ..Default::default() },
-            TxnCommand::IncrementAndNotify => Emit { artifact_mutations: vec![SetTransactionCountAndNotify { value }.into()], description: Some("increment-and-notify".into()), ..Default::default() },
+            TxnCommand::Increment => Emit { artifact_mutations: vec![SetTransactionCountWithoutPreflight { value }.into()], ..Default::default() },
+            TxnCommand::StreamedIncrement => Emit::stream_transaction(txn_stream_transaction(), vec![SetTransactionCountWithoutPreflight { value }.into()]),
+            TxnCommand::IncrementAndNotify => Emit { artifact_mutations: vec![SetTransactionCountAndNotify { value }.into()], ..Default::default() },
         };
         self.completion.as_ref().expect("transaction fixture completion").complete(Ok(emit), crate::app::EphemeralEmit::default()).expect("one exact transaction completion");
         semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
@@ -270,7 +276,7 @@ impl ArtifactOwnedToolJobFactory for TxnFixtureFactory {
     const DOCUMENT_SCHEMA: &'static str = TxnApp::DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
         ArtifactToolPublicationContract { tool_id: "increment", lanes: &[ArtifactToolPublicationLane::Artifact] },
-        ArtifactToolPublicationContract { tool_id: "coalesced-increment", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "streamed-increment", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "increment-and-notify", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ];
     fn latest_wins_target(_command: &TxnCommand) -> Option<&str> {
@@ -318,7 +324,7 @@ impl ArtifactApp for TxnApp {
     crate::bounded_first_step_tool_proofs! {
         owner: TxnApp, owner_file: "plugin/🧪️tests/🧬️mutation-fixtures-transaction/🦀️.rs", controller: "s.test.transaction@1/*#editor", artifact_schema: "semio.testkit-txn/v1",
         factory: "TxnFixtureFactory", factory_type: TxnFixtureFactory,
-        contract: ToolExecutionContract::resumable(4_096, 1, 1, 4_096, 500, 1, 1), tools: ["increment", "coalesced-increment", "increment-and-notify"]
+        contract: ToolExecutionContract::resumable(4_096, 1, 1, 4_096, 500, 1, 1), tools: ["increment", "streamed-increment", "increment-and-notify"]
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, Self>) -> Result<(), Fault> {
@@ -336,7 +342,7 @@ impl ArtifactApp for TxnApp {
     async fn command_id(command: &TxnCommand) -> &'static str {
         match command {
             TxnCommand::Increment => TXN_TOOL_IDS[0],
-            TxnCommand::CoalescedIncrement => TXN_TOOL_IDS[1],
+            TxnCommand::StreamedIncrement => TXN_TOOL_IDS[1],
             TxnCommand::IncrementAndNotify => TXN_TOOL_IDS[2],
         }
     }
@@ -355,11 +361,9 @@ impl ArtifactApp for TxnApp {
         _engines: &EngineHandles,
     ) -> Result<Emit<TxnMutation>, Fault> {
         match command {
-            TxnCommand::Increment => Ok(Emit { artifact_mutations: vec![SetTransactionCountWithoutPreflight { value: doc.snapshot.count + 1 }.into()], description: Some("increment".into()), ..Default::default() }),
-            TxnCommand::CoalescedIncrement => {
-                Ok(Emit { artifact_mutations: vec![SetTransactionCountWithoutPreflight { value: doc.snapshot.count + 1 }.into()], description: Some("coalesced-increment".into()), coalesce_key: Some("counter".into()), ..Default::default() })
-            }
-            TxnCommand::IncrementAndNotify => Ok(Emit { artifact_mutations: vec![SetTransactionCountAndNotify { value: doc.snapshot.count + 1 }.into()], description: Some("increment-and-notify".into()), ..Default::default() }),
+            TxnCommand::Increment => Ok(Emit { artifact_mutations: vec![SetTransactionCountWithoutPreflight { value: doc.snapshot.count + 1 }.into()], ..Default::default() }),
+            TxnCommand::StreamedIncrement => Ok(Emit::stream_transaction(txn_stream_transaction(), vec![SetTransactionCountWithoutPreflight { value: doc.snapshot.count + 1 }.into()])),
+            TxnCommand::IncrementAndNotify => Ok(Emit { artifact_mutations: vec![SetTransactionCountAndNotify { value: doc.snapshot.count + 1 }.into()], ..Default::default() }),
         }
     }
 
@@ -465,16 +469,16 @@ async fn command_cache_inputs_share_immutable_arcs() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn amended_edit_extends_cached_history_in_place() {
+async fn a_streamed_tick_extends_cached_history_in_place() {
     let mut app = new_registered_app::<TxnApp, _>(transaction_manifest()).await;
-    dispatch_settled(&mut app, TxnCommand::CoalescedIncrement, "local").await.expect("first increment");
+    dispatch_settled(&mut app, TxnCommand::StreamedIncrement, "local").await.expect("first increment");
     let history_ptr = std::sync::Arc::as_ptr(&app.cache.as_ref().expect("first history cache").3);
-    dispatch_settled(&mut app, TxnCommand::CoalescedIncrement, "local").await.expect("second increment");
+    dispatch_settled(&mut app, TxnCommand::StreamedIncrement, "local").await.expect("second increment");
     app.refresh_cache().await.expect("extend history cache");
     let history = &app.cache.as_ref().expect("extended history cache").3;
-    assert_eq!(std::sync::Arc::as_ptr(history), history_ptr, "an amend must update the uniquely-owned history allocation in place");
-    assert_eq!(app.store.envelope().vcs.edits.len(), 1, "coalesced increments stay one undo edit");
-    assert_eq!(history.commands.len(), 1, "coalesced increments stay one command row");
+    assert_eq!(std::sync::Arc::as_ptr(history), history_ptr, "a streamed tick must update the uniquely-owned history allocation in place");
+    assert_eq!(app.store.envelope().vcs.edits.len(), 1, "streamed increments stay one open edit");
+    assert_eq!(history.commands.len(), 1, "streamed increments stay one command row");
     assert_eq!(history.commands[0].op_lines.len(), 2, "only the new operation tail is appended to cached history");
     close_transaction_store_roots(&mut app);
 }
@@ -483,7 +487,7 @@ async fn amended_edit_extends_cached_history_in_place() {
 async fn commit_produces_exactly_one_edit_with_group_id_and_origin() {
     let mut app = new_registered_app::<TxnApp, _>(transaction_manifest()).await;
     let origin = protocol::MutationOrigin::Transaction { initiator: protocol::ForeignTarget { artifact_id: "initiator-doc".into(), artifact_kind: "s.testkit.txn".into(), dialect: None } };
-    let edit_id = assert_transaction_commits_as_one_edit(&mut app, "txn-1", vec![SetTransactionCount { value: 7 }.into()], "peer-write", origin).await;
+    let edit_id = assert_transaction_commits_as_one_edit(&mut app, "txn-1", vec![SetTransactionCount { value: 7 }.into()], origin).await;
     assert_eq!(app.snapshot().unwrap().count, 7);
     assert!(!edit_id.is_empty());
     assert!(app.transaction_commit("txn-1", &meta("local")).await.is_err(), "committing an already-committed txn_id must fail, not double-apply");
@@ -494,7 +498,7 @@ async fn commit_produces_exactly_one_edit_with_group_id_and_origin() {
 async fn rollback_leaves_state_untouched() {
     let mut app = new_registered_app::<TxnApp, _>(transaction_manifest()).await;
     dispatch_settled(&mut app, TxnCommand::Increment, "local").await.expect("increment");
-    assert_transaction_rollback_leaves_state_untouched(&mut app, "txn-2", vec![SetTransactionCount { value: 99 }.into()], "peer-write").await;
+    assert_transaction_rollback_leaves_state_untouched(&mut app, "txn-2", vec![SetTransactionCount { value: 99 }.into()]).await;
     assert_eq!(app.snapshot().unwrap().count, 1, "rollback must leave the earlier state exactly as it was");
     close_transaction_store_roots(&mut app);
 }
@@ -528,7 +532,7 @@ async fn generation_mismatch_is_rejected_with_the_frozen_code() {
     let operations = protocol::encode_envelopes(&envelopes);
 
     let mut app = new_registered_app::<TxnApp, _>(transaction_manifest()).await;
-    let outcome = app.transaction_prepare("txn-3", "", &[], &[::protocol::OpBinary::encode_op(&TxnMutation::from(SetTransactionCount { value: 5 })).expect("encode")], &[], "peer-write", Some(protocol::MutationOrigin::Owner)).await;
+    let outcome = app.transaction_prepare("txn-3", "", &[], &[::protocol::OpBinary::encode_op(&TxnMutation::from(SetTransactionCount { value: 5 })).expect("encode")], &[], Some(protocol::MutationOrigin::Owner)).await;
     assert!(outcome.rejection.is_none());
     app.ingest_operations(&operations).await.expect("a remote edit lands while the transaction is pending");
     let error = app.transaction_commit("txn-3", &meta("local")).await.expect_err("commit must reject a stale generation");
@@ -543,9 +547,9 @@ async fn generation_mismatch_is_rejected_with_the_frozen_code() {
 #[semio_framework_async_macros::async_test]
 async fn second_prepare_while_pending_is_rejected_instance_busy() {
     let mut app = new_registered_app::<TxnApp, _>(transaction_manifest()).await;
-    let first = app.transaction_prepare("txn-4a", "", &[], &[::protocol::OpBinary::encode_op(&TxnMutation::from(SetTransactionCount { value: 1 })).expect("encode")], &[], "first", Some(protocol::MutationOrigin::Owner)).await;
+    let first = app.transaction_prepare("txn-4a", "", &[], &[::protocol::OpBinary::encode_op(&TxnMutation::from(SetTransactionCount { value: 1 })).expect("encode")], &[], Some(protocol::MutationOrigin::Owner)).await;
     assert!(first.rejection.is_none());
-    let second = app.transaction_prepare("txn-4b", "", &[], &[::protocol::OpBinary::encode_op(&TxnMutation::from(SetTransactionCount { value: 2 })).expect("encode")], &[], "second", Some(protocol::MutationOrigin::Owner)).await;
+    let second = app.transaction_prepare("txn-4b", "", &[], &[::protocol::OpBinary::encode_op(&TxnMutation::from(SetTransactionCount { value: 2 })).expect("encode")], &[], Some(protocol::MutationOrigin::Owner)).await;
     let rejection = second.rejection.expect("second prepare while pending must be rejected");
     assert_eq!(rejection.code.0, "transaction.instance-busy");
     close_transaction_store_roots(&mut app);
@@ -557,7 +561,7 @@ async fn second_prepare_while_pending_is_rejected_instance_busy() {
 #[semio_framework_async_macros::async_test]
 async fn a_mutating_command_while_pending_is_rejected_but_reads_still_work() {
     let mut app = new_registered_app::<TxnApp, _>(transaction_manifest()).await;
-    let prepared = app.transaction_prepare("txn-5", "", &[], &[::protocol::OpBinary::encode_op(&TxnMutation::from(SetTransactionCount { value: 1 })).expect("encode")], &[], "peer-write", Some(protocol::MutationOrigin::Owner)).await;
+    let prepared = app.transaction_prepare("txn-5", "", &[], &[::protocol::OpBinary::encode_op(&TxnMutation::from(SetTransactionCount { value: 1 })).expect("encode")], &[], Some(protocol::MutationOrigin::Owner)).await;
     assert!(prepared.rejection.is_none());
     let blocked = dispatch_settled(&mut app, TxnCommand::Increment, "local").await;
     assert!(blocked.is_err(), "a command emitting artifact mutations must be rejected while a transaction is pending");
@@ -569,7 +573,7 @@ async fn a_mutating_command_while_pending_is_rejected_but_reads_still_work() {
 #[semio_framework_async_macros::async_test]
 async fn undo_and_redo_by_group() {
     let mut app = new_registered_app::<TxnApp, _>(transaction_manifest()).await;
-    assert_transaction_commits_as_one_edit(&mut app, "txn-6", vec![SetTransactionCount { value: 42 }.into()], "peer-write", protocol::MutationOrigin::Owner).await;
+    assert_transaction_commits_as_one_edit(&mut app, "txn-6", vec![SetTransactionCount { value: 42 }.into()], protocol::MutationOrigin::Owner).await;
     assert_eq!(app.snapshot().unwrap().count, 42);
     app.transaction_undo("txn-6").await.expect("undo the group");
     assert_eq!(app.snapshot().unwrap().count, 0, "undo must revert the transaction's edit");

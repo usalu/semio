@@ -1,36 +1,408 @@
 {
-  "purpose":"Exact owned procedural host, cluster UI/tree, intrinsic generation values; planning/test input only",
-  "integerWords":{"minimum":"-9223372036854775808","maximum":"9223372036854775807"},
-  "words":["8000000000000000","7ff0000000000000","fff0000000000000","7ff0000000000001","fff8000000000042","0000000000000001","3ff0000000000000"],
-  "hostSnapshot":{
-    "schema":"flow.host_snapshot\u0000日本語",
-    "camera":{"x":0.0,"y":1.0,"zoom":2.0},
-    "widgets":[
-      {"kind":"neuron","id":"neuron","neuronKind":"math.加算","params":{"null":null,"bool":true,"int":-9223372036854775808,"float":1.5,"text":"\u0000€","dict":{"nested":false}},"inputPorts":["","a","a"],"outputPorts":["sum"],"preview":false},
-      {"kind":"inputSlider","id":"slider","label":"","value":1.0,"min":0.0,"max":2.0,"step":0.5},
-      {"kind":"inputNote","id":"note","text":"line1\nline2\u0000"},
-      {"kind":"inputImage","id":"image","src":"data:image/png;base64,AA=="},
-      {"kind":"variable","id":"variable","name":"变量","schema":"任意"},
-      {"kind":"outputPreview","id":"preview","preview":{"answer":42},"expanded":["","a","a.b"]},
-      {"kind":"outputAction","id":"action","action":"{an authored scalar}"},
-      {"kind":"outputExport","id":"export","format":"named/custom"},
-      {"kind":"cluster","id":"cluster","name":"nested","tree":{"neurons":[{"id":"outer","kind":"cluster","params":{"factor":2.5},"tree":{"neurons":[{"id":"inner","kind":"literal","params":{"value":9223372036854775807},"tree":null}],"synapses":[{"id":"inner-edge","from":"inner","to":"unresolved","fromPort":"","toPort":"input"}]}},{"id":"leaf","kind":"input","params":{},"tree":null}],"synapses":[{"id":"edge","from":"outer","to":"leaf","fromPort":"value","toPort":""}]},"flow":{"camera":{"x":3.0,"y":4.0,"zoom":5.0},"nodes":{"plain":{"layout":{"x":1.0,"y":2.0},"chrome":{"kind":"plain","preview":false}},"slider":{"layout":{"x":3.0,"y":4.0},"chrome":{"kind":"slider","label":"UI","min":0.0,"max":10.0,"step":0.5,"value":2.5}},"note":{"layout":{"x":5.0,"y":6.0},"chrome":{"kind":"note","text":""}},"image":{"layout":{"x":7.0,"y":8.0},"chrome":{"kind":"image","src":"asset:exact"}},"variable":{"layout":{"x":9.0,"y":10.0},"chrome":{"kind":"variable","name":"","schema":"dictionary"}}},"previews":[{"id":"none","source":null,"mode":"text","preview":{},"expanded":[],"layout":null},{"id":"present","source":{"neuron":"","channel":""},"mode":"custom","preview":{"nested":{"x":1.25}},"expanded":["","root.child"],"layout":{"x":11.0,"y":12.0}}]}}
-    ],
-    "synapses":[{"id":"s1","from":"slider","to":"neuron","fromPort":"number","toPort":"a"},{"id":"s2","from":"neuron","to":"preview","fromPort":"sum","toPort":""}],
-    "layout":{"orphan-native-key":{"x":1.0,"y":2.0},"neuron":{"x":3.0,"y":4.0}}
+  "purpose": "Exact owned procedural host, cluster UI/tree, intrinsic generation values; planning/test input only",
+  "integerWords": {
+    "minimum": "-9223372036854775808",
+    "maximum": "9223372036854775807"
   },
-  "generation":{"generations":[{"id":"","name":"","values":{}},{"id":"preset","name":"Unicode 日本","values":{"initial":true}}],"selectedGenerationId":"","previewText":""},
-  "answers":[
-    {"key":"null","kind":"null"},
-    {"key":"boolean","kind":"boolean","value":false},
-    {"key":"unsigned","kind":"unsigned","value":"18446744073709551615"},
-    {"key":"integer","kind":"integer","value":"-9223372036854775808"},
-    {"key":"positive-integer","kind":"integer","value":"9223372036854775807"},
-    {"key":"float","kind":"float","bits":"7ff0000000000001"},
-    {"key":"string","kind":"string","value":"\u0000exact\n€"},
-    {"key":"bytes","kind":"bytes","hex":"0001ff7f"},
-    {"key":"array","kind":"array","values":[{"kind":"unsigned","value":"0"},{"kind":"float","bits":"8000000000000000"},{"kind":"object","members":[{"key":"same","value":{"kind":"null"}},{"key":"same","value":{"kind":"bytes","hex":"ff"}}]}]},
-    {"key":"object","kind":"object","members":[{"key":"","value":{"kind":"boolean","value":true}},{"key":"β","value":{"kind":"string","value":""}}]}
+  "words": [
+    "8000000000000000",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff0000000000001",
+    "fff8000000000042",
+    "0000000000000001",
+    "3ff0000000000000"
   ],
-  "expected":{"widgets":9,"sliderCount":1,"clusterCount":1,"guiChromeKinds":["plain","slider","note","image","variable"],"presets":2,"answers":10,"words":["8000000000000000","7ff0000000000000","fff0000000000000","7ff0000000000001","fff8000000000042","0000000000000001"]}
+  "hostSnapshot": {
+    "schema": "flow.host_snapshot\u0000日本語",
+    "camera": {
+      "x": 0,
+      "y": 1,
+      "zoom": 2
+    },
+    "widgets": [
+      {
+        "kind": "neuron",
+        "id": "neuron",
+        "neuronKind": "math.加算",
+        "params": {
+          "null": null,
+          "bool": true,
+          "int": 0,
+          "float": 1.5,
+          "text": "\u0000€",
+          "dict": {
+            "nested": false
+          }
+        },
+        "inputPorts": [
+          "",
+          "a",
+          "a"
+        ],
+        "outputPorts": [
+          "sum"
+        ],
+        "preview": false
+      },
+      {
+        "kind": "inputSlider",
+        "id": "slider",
+        "label": "",
+        "value": 1,
+        "min": 0,
+        "max": 2,
+        "step": 0.5
+      },
+      {
+        "kind": "inputNote",
+        "id": "note",
+        "text": "line1\nline2\u0000"
+      },
+      {
+        "kind": "inputImage",
+        "id": "image",
+        "src": "data:image/png;base64,AA=="
+      },
+      {
+        "kind": "variable",
+        "id": "variable",
+        "name": "变量",
+        "schema": "任意"
+      },
+      {
+        "kind": "outputPreview",
+        "id": "preview",
+        "preview": {
+          "answer": 42
+        },
+        "expanded": [
+          "",
+          "a",
+          "a.b"
+        ]
+      },
+      {
+        "kind": "outputAction",
+        "id": "action",
+        "action": "{an authored scalar}"
+      },
+      {
+        "kind": "outputExport",
+        "id": "export",
+        "format": "named/custom"
+      },
+      {
+        "kind": "cluster",
+        "id": "cluster",
+        "name": "nested",
+        "tree": {
+          "neurons": [
+            {
+              "id": "outer",
+              "kind": "cluster",
+              "params": {
+                "factor": 2.5
+              },
+              "tree": {
+                "neurons": [
+                  {
+                    "id": "inner",
+                    "kind": "literal",
+                    "params": {
+                      "value": 0
+                    },
+                    "tree": null
+                  }
+                ],
+                "synapses": [
+                  {
+                    "id": "inner-edge",
+                    "from": "inner",
+                    "to": "unresolved",
+                    "fromPort": "",
+                    "toPort": "input"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "leaf",
+              "kind": "input",
+              "params": {},
+              "tree": null
+            }
+          ],
+          "synapses": [
+            {
+              "id": "edge",
+              "from": "outer",
+              "to": "leaf",
+              "fromPort": "value",
+              "toPort": ""
+            }
+          ]
+        },
+        "flow": {
+          "camera": {
+            "x": 3,
+            "y": 4,
+            "zoom": 5
+          },
+          "nodes": {
+            "plain": {
+              "layout": {
+                "x": 1,
+                "y": 2
+              },
+              "chrome": {
+                "kind": "plain",
+                "preview": false
+              }
+            },
+            "slider": {
+              "layout": {
+                "x": 3,
+                "y": 4
+              },
+              "chrome": {
+                "kind": "slider",
+                "label": "UI",
+                "min": 0,
+                "max": 10,
+                "step": 0.5,
+                "value": 2.5
+              }
+            },
+            "note": {
+              "layout": {
+                "x": 5,
+                "y": 6
+              },
+              "chrome": {
+                "kind": "note",
+                "text": ""
+              }
+            },
+            "image": {
+              "layout": {
+                "x": 7,
+                "y": 8
+              },
+              "chrome": {
+                "kind": "image",
+                "src": "asset:exact"
+              }
+            },
+            "variable": {
+              "layout": {
+                "x": 9,
+                "y": 10
+              },
+              "chrome": {
+                "kind": "variable",
+                "name": "",
+                "schema": "dictionary"
+              }
+            }
+          },
+          "previews": [
+            {
+              "id": "none",
+              "source": null,
+              "mode": "text",
+              "preview": {},
+              "expanded": [],
+              "layout": null
+            },
+            {
+              "id": "present",
+              "source": {
+                "neuron": "",
+                "channel": ""
+              },
+              "mode": "custom",
+              "preview": {
+                "nested": {
+                  "x": 1.25
+                }
+              },
+              "expanded": [
+                "",
+                "root.child"
+              ],
+              "layout": {
+                "x": 11,
+                "y": 12
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "synapses": [
+      {
+        "id": "s1",
+        "from": "slider",
+        "to": "neuron",
+        "fromPort": "number",
+        "toPort": "a"
+      },
+      {
+        "id": "s2",
+        "from": "neuron",
+        "to": "preview",
+        "fromPort": "sum",
+        "toPort": ""
+      }
+    ],
+    "layout": {
+      "orphan-native-key": {
+        "x": 1,
+        "y": 2
+      },
+      "neuron": {
+        "x": 3,
+        "y": 4
+      }
+    }
+  },
+  "generation": {
+    "generations": [
+      {
+        "id": "",
+        "name": "",
+        "values": {}
+      },
+      {
+        "id": "preset",
+        "name": "Unicode 日本",
+        "values": {
+          "initial": true
+        }
+      }
+    ],
+    "selectedGenerationId": "",
+    "previewText": ""
+  },
+  "answers": [
+    {
+      "key": "null",
+      "kind": "null"
+    },
+    {
+      "key": "boolean",
+      "kind": "boolean",
+      "value": false
+    },
+    {
+      "key": "unsigned",
+      "kind": "unsigned",
+      "value": "18446744073709551615"
+    },
+    {
+      "key": "integer",
+      "kind": "integer",
+      "value": "-9223372036854775808"
+    },
+    {
+      "key": "positive-integer",
+      "kind": "integer",
+      "value": "9223372036854775807"
+    },
+    {
+      "key": "float",
+      "kind": "float",
+      "bits": "7ff0000000000001"
+    },
+    {
+      "key": "string",
+      "kind": "string",
+      "value": "\u0000exact\n€"
+    },
+    {
+      "key": "bytes",
+      "kind": "bytes",
+      "hex": "0001ff7f"
+    },
+    {
+      "key": "array",
+      "kind": "array",
+      "values": [
+        {
+          "kind": "unsigned",
+          "value": "0"
+        },
+        {
+          "kind": "float",
+          "bits": "8000000000000000"
+        },
+        {
+          "kind": "object",
+          "members": [
+            {
+              "key": "same",
+              "value": {
+                "kind": "null"
+              }
+            },
+            {
+              "key": "same",
+              "value": {
+                "kind": "bytes",
+                "hex": "ff"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "object",
+      "kind": "object",
+      "members": [
+        {
+          "key": "",
+          "value": {
+            "kind": "boolean",
+            "value": true
+          }
+        },
+        {
+          "key": "β",
+          "value": {
+            "kind": "string",
+            "value": ""
+          }
+        }
+      ]
+    }
+  ],
+  "expected": {
+    "widgets": 9,
+    "sliderCount": 1,
+    "clusterCount": 1,
+    "guiChromeKinds": [
+      "plain",
+      "slider",
+      "note",
+      "image",
+      "variable"
+    ],
+    "presets": 2,
+    "answers": 10,
+    "words": [
+      "8000000000000000",
+      "7ff0000000000000",
+      "fff0000000000000",
+      "7ff0000000000001",
+      "fff8000000000042",
+      "0000000000000001"
+    ]
+  },
+  "usizeWords": [
+    "0",
+    "9007199254740993",
+    "18446744073709551615"
+  ]
 }

@@ -8,7 +8,7 @@ pub fn diff(payload: &super::ChangeCellSize, base: &Grid2dSnapshot) -> protocol:
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Cell size must be finite and positive, got {} × {}.", payload.cell_width, payload.cell_height), ["cell-size".to_string()]);
     }
     if base.cell_width == payload.cell_width && base.cell_height == payload.cell_height {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Cell size is already {} × {}.", payload.cell_width, payload.cell_height));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Cell size is already {} × {}.", payload.cell_width, payload.cell_height));
     }
     protocol::MutationOutcome::new(Grid2dDiff { cell_width: Some(payload.cell_width), cell_height: Some(payload.cell_height), ..Default::default() })
 }

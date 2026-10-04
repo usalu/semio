@@ -1,0 +1,20 @@
+{
+  "mutation": "insertCell",
+  "address": {
+    "worksheet": {
+      "partPath": "xl/worksheets/sheet1.xml",
+      "nodePath": [
+        1
+      ],
+      "namespaceUri": "http://schemas.openxmlformats.org/spreadsheetml/2006/main",
+      "localName": "sheetData",
+      "revision": "7985741d54001585"
+    },
+    "row": 2,
+    "column": 1
+  },
+  "value": {
+    "kind": "number",
+    "value": 42
+  }
+}

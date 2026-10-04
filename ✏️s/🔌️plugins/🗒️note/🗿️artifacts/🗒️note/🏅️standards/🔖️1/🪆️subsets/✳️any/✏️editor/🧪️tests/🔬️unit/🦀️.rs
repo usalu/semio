@@ -250,8 +250,8 @@ async fn optional_field_rows_keep_their_pre_migration_bytes() {
 async fn command_from_action_round_trips_every_command_id() {
     for command in every_command() {
         let id = command.command_id();
-        let payload = match dsl::ToValue::to_value(&command) {
-            dsl::DslValue::Object(entries) if entries.len() == 1 => entries[0].1.clone(),
+        let payload = match semio_framework_value::ToValue::to_value(&command) {
+            semio_framework_value::DslValue::Object(entries) if entries.len() == 1 => entries[0].1.clone(),
             other => other,
         };
         let bridged = NotePlayApp::command_from_action(id, Some(&camel_case_keys(&payload))).unwrap_or_else(|error| panic!("action {id} failed to bridge: {}", error.message));
@@ -261,9 +261,9 @@ async fn command_from_action_round_trips_every_command_id() {
 }
 
 /// 🐫️ The shell's spelling of the payload keys.
-fn camel_case_keys(value: &dsl::DslValue) -> dsl::DslValue {
+fn camel_case_keys(value: &semio_framework_value::DslValue) -> semio_framework_value::DslValue {
     match value {
-        dsl::DslValue::Object(entries) => dsl::DslValue::Object(
+        semio_framework_value::DslValue::Object(entries) => semio_framework_value::DslValue::Object(
             entries
                 .iter()
                 .map(|(key, value)| {
@@ -291,7 +291,7 @@ fn camel_case_keys(value: &dsl::DslValue) -> dsl::DslValue {
 /// gesture payload, flat camera poses, shell window keys) reach the same rows.
 #[semio_framework_async_macros::async_test]
 async fn command_from_action_bridges_host_control_contracts() {
-    let args = |json: serde_json::Value| dsl::os_pack::json_to_dsl_value(&dsl::os_pack::json::parse(&json.to_string()).expect("fixture JSON"));
+    let args = |json: serde_json::Value| semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(&json.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture JSON"));
     assert_eq!(
         NotePlayApp::command_from_action("addBlock", Some(&args(serde_json::json!({ "kind": "math" })))).expect("panel quick-add"),
         NoteCommand::AddBlock(add_block::AddBlock { kind: "math".into(), x: 0.0, y: 0.0 })
@@ -348,7 +348,7 @@ async fn every_note_verb_that_reads_arguments_declares_them() {
 async fn the_block_verbs_decode_from_exactly_their_declared_arguments() {
     let definition = create_note_app();
     let declared = |verb: &str| definition.actions.iter().find(|action| action.id == verb).map(|action| action.args.iter().map(|arg| arg.id.clone()).collect::<Vec<_>>()).unwrap_or_default();
-    let args = |json: serde_json::Value| dsl::os_pack::json_to_dsl_value(&dsl::os_pack::json::parse(&json.to_string()).expect("agent arguments"));
+    let args = |json: serde_json::Value| semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(&json.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("agent arguments"));
     assert_eq!(declared("deleteBlock"), ["blockId"]);
     assert_eq!(declared("duplicateBlock"), ["blockId"]);
     assert_eq!(declared("moveBlock"), ["blockId", "targetRowId", "dropPosition"]);
@@ -392,7 +392,7 @@ async fn the_block_verbs_refuse_what_they_cannot_apply() {
     assert_eq!(code(move_block::handle(&move_block::MoveBlock { block_id: "no-such-block".into(), target_row_id: String::new(), drop_position: "inside".into() }, &doc, &cfg, &mut ctx)), "mutation.target-missing");
     let emit = patch_blocks::handle(&patch(&[&target], "textContent", "Hello agent"), &doc, &cfg, &mut ctx).expect("a valid patch applies");
     let next = emit.artifact_mutations.iter().try_fold(document.clone(), |current, mutation| apply_note_mutation(&current, mutation)).expect("apply patch");
-    assert!(dsl::os_pack::to_json_string(&next).contains("Hello agent"), "the patched text is in the document");
+    assert!(semio_framework_pack_json::to_json_string(&next).contains("Hello agent"), "the patched text is in the document");
 }
 //#endregion 🔖️ActionBridge
 
@@ -450,7 +450,7 @@ async fn interaction_topology_walks_group_nesting_into_parent_links() {
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
     let cfg = ConfigView { snapshot: &config, window: None };
-    let topology = NotePlayApp::interaction_topology(&doc, &cfg);
+    let topology = NotePlayApp::interaction_topology(&doc, &cfg).expect("valid retained interaction fixture");
     let blocks = topology.domains.get(NOTE_INTERACTION_BLOCKS).expect("blocks domain present in topology");
     assert!(!blocks.ordered.is_empty(), "the semio example document must produce a non-empty blocks topology");
     assert_eq!(blocks.ordered.len(), crate::schema::flatten_blocks(&document.blocks).len(), "topology must cover every block, nested or not");
@@ -465,7 +465,7 @@ async fn interaction_topology_is_empty_for_a_document_with_no_blocks() {
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
     let cfg = ConfigView { snapshot: &config, window: None };
-    let topology = NotePlayApp::interaction_topology(&doc, &cfg);
+    let topology = NotePlayApp::interaction_topology(&doc, &cfg).expect("valid retained interaction fixture");
     assert!(topology.domains.get(NOTE_INTERACTION_BLOCKS).expect("blocks domain present in topology").ordered.is_empty());
 }
 
@@ -575,7 +575,7 @@ async fn note_empty_config_owner_exact_composite_window_transient_isolates_reset
         drop((transient_a, transient_b));
 
         let document = app.document_pack().await.expect("document pack before reset");
-        app.load_document_pack(&document).await.expect("reload document and reset window transient");
+        semio_framework_plugin::artifact_app_laws::load_document(&mut app, &document).await.expect("reload document and reset window transient");
         let reset_a = app.window_transient_snapshot(&view_a).expect("reset window a transient").expect("reset window a owner");
         assert_eq!(reset_a.get::<window::NoteCompositeWindowTransientOwner>().map(|value| value.engagement_input.as_str()), Some(""));
         assert_eq!(app.window_transient_generation(&view_a).expect("reset window a generation"), Some(0));
@@ -590,7 +590,7 @@ async fn note_empty_config_owner_exact_composite_window_transient_isolates_reset
             .expect("start retained transient command");
         assert!(pending.mutations.is_empty());
         assert!(app.has_pending_typed_operations(), "retained transient command must remain owned before publication advances");
-        app.load_document_pack(&document).await.expect("replacement cancels captured transient publication authority");
+        semio_framework_plugin::artifact_app_laws::load_document(&mut app, &document).await.expect("replacement cancels captured transient publication authority");
         let cancelled = app.window_transient_snapshot(&view_a).expect("cancelled window a transient").expect("cancelled window a owner");
         assert_eq!(cancelled.get::<window::NoteCompositeWindowTransientOwner>().map(|value| value.engagement_input.as_str()), Some(""));
         drop(cancelled);

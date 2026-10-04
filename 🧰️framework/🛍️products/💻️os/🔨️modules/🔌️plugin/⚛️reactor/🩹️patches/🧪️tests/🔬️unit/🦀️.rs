@@ -477,6 +477,7 @@ fn mounted_document_tree_publishes_nested_interactive_rows() {
                     verb: ui_contract::UiText::try_from_str(name).unwrap(),
                     placement: ui_contract::RowActionPlacement::Row,
                     disabled: false,
+                    reason: None,
                 })
                 .ok()
                 .unwrap();

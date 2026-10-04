@@ -12,7 +12,7 @@ async fn inference_determinism_law() {
     use protocol::Inference;
 
     let snapshot = ShootingSnapshot::default();
-    assert_eq!(ShootingInference::infer(&snapshot), ShootingInference::infer(&snapshot));
+    assert_eq!(ShootingInference::infer(&snapshot).expect("valid materialized inference fixture"), ShootingInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -21,6 +21,6 @@ async fn inference_default_law() {
     use crate::ShootingSnapshot;
     use protocol::Inference;
 
-    assert_eq!(ShootingInference::infer(&ShootingSnapshot::default()), ShootingInference::default());
+    assert_eq!(ShootingInference::infer(&ShootingSnapshot::default()).expect("valid materialized inference fixture"), ShootingInference::default());
 }
 //#endregion 🧪️InferenceLaws

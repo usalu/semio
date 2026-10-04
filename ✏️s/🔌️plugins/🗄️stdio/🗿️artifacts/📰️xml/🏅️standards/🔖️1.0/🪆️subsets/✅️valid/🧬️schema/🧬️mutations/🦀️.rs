@@ -78,6 +78,8 @@ pub mod set_internal_subset;
 /// 📐️ Typed content mutation for `stdio.xml` 1.0/✳️valid. The snapshot type is the `✳️any` subset's
 /// own `XmlSnapshot` verbatim; only the vocabulary is this subset's.
 //#region 🔖️Leaves
+#[path = "🩹️patch-snapshot/🦀️.rs"]
+pub mod patch_snapshot;
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "🏳️set-standalone/🦀️.rs"]
@@ -92,6 +94,7 @@ pub mod set_text;
 pub enum XmlValidMutation {
     /// 🔁 Replaces the whole document, REJECTED when the replacement carries a hard §2.8 violation.
     SetSnapshot(set_snapshot::SetSnapshot),
+    PatchSnapshot(patch_snapshot::PatchSnapshot),
     /// 📜️ Installs (or replaces) the document type declaration, its Name taken from the actual
     /// document element so §2.8 cannot be violated. REJECTED when there is no document element to
     /// take a Name from. Existing internal `<!ENTITY>` declarations are carried across.
@@ -124,7 +127,7 @@ pub enum XmlValidMutation {
 /// `kinds` list `../../🔮️oracles/🔣️.json`'s `mutationCatalogs` entry declares. The framework
 /// never parses this enum; `kinds_matches_enum_variants_in_declaration_order` below is what keeps
 /// the two declarations honest against each other.
-pub const KINDS: &[&str] = &["set-snapshot", "declare-doctype", "rename-document-element", "set-external-subset", "set-standalone", "declare-entity", "set-internal-subset", "set-text"];
+pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "declare-doctype", "rename-document-element", "set-external-subset", "set-standalone", "declare-entity", "set-internal-subset", "set-text"];
 
 crate::impl_serde_op_codec!(XmlValidMutation, "xml-valid-mutation");
 
@@ -134,6 +137,7 @@ crate::impl_serde_op_codec!(XmlValidMutation, "xml-valid-mutation");
 pub fn kind_of(mutation: &XmlValidMutation) -> &'static str {
     match mutation {
         XmlValidMutation::SetSnapshot(_) => "set-snapshot",
+        XmlValidMutation::PatchSnapshot(_) => "patch-snapshot",
         XmlValidMutation::DeclareDoctype(_) => "declare-doctype",
         XmlValidMutation::RenameDocumentElement(_) => "rename-document-element",
         XmlValidMutation::SetExternalSubset(_) => "set-external-subset",
@@ -164,7 +168,7 @@ pub fn document_element_name(snapshot: &XmlSnapshot) -> Option<&str> {
 /// never block — the same Error/Fatal split `XmlValidBuilder::build` itself gates on.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn blocked_snapshot_violation(candidate: &XmlSnapshot) -> Option<String> {
-    check_valid_conformance(candidate).into_iter().find(|d| matches!(d.severity, dsl::Severity::Error | dsl::Severity::Fatal)).map(|d| format!("{} — {}", d.code.0, d.message))
+    check_valid_conformance(candidate).into_iter().find(|d| matches!(d.severity, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)).map(|d| format!("{} — {}", d.code.0, d.message))
 }
 
 /// 🔎️ The position of the internal-subset entity declaration named `name`, if it is declared.
@@ -209,6 +213,7 @@ fn rejected(message: String) -> protocol::MutationOutcome<XmlDiff> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn agg_diff(this: &XmlValidMutation, base: &XmlSnapshot) -> protocol::MutationOutcome<XmlDiff> {
     match this {
+        XmlValidMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<XmlSnapshot, XmlValidMutation>>::diff(patch, base),
         XmlValidMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => match blocked_snapshot_violation(snapshot) {
             Some(message) => rejected(format!("set-snapshot: the replacement document is not XML 1.0 valid — {message}")),
             None => protocol::MutationOutcome::new(diff_set_snapshot(base, snapshot)),
@@ -266,9 +271,11 @@ pub(crate) fn agg_diff(this: &XmlValidMutation, base: &XmlSnapshot) -> protocol:
 /// migration, used to carry this case as a no-op sentinel; there is nothing to undo, so there is
 /// nothing to return).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn agg_inverse(this: &XmlValidMutation, base: &XmlSnapshot) -> Vec<XmlValidMutation> {
+pub(crate) fn agg_inverse(this: &XmlValidMutation, base: &XmlSnapshot) -> Result<Vec<XmlValidMutation>, semio_framework_value::ValueError> {
+    Ok({
     match this {
         XmlValidMutation::SetSnapshot(_) => vec![XmlValidMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
+        XmlValidMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<XmlSnapshot, XmlValidMutation>>::inverse(patch, base)?),
         XmlValidMutation::DeclareDoctype(_) => match base.doc.doctype.as_ref() {
             Some(doctype) => vec![XmlValidMutation::DeclareDoctype(declare_doctype::DeclareDoctype { external_id: doctype.external_id.clone() })],
             None => vec![XmlValidMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
@@ -303,6 +310,8 @@ pub(crate) fn agg_inverse(this: &XmlValidMutation, base: &XmlSnapshot) -> Vec<Xm
             vec![XmlValidMutation::SetText(set_text::SetText { path: path.clone(), text: prior })]
         }
     }
+
+    })
 }
 //#endregion 🔖️MutationTrait
 

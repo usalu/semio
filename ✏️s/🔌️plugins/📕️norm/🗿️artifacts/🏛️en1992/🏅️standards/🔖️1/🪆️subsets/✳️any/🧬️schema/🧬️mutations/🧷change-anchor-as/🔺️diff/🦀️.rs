@@ -8,7 +8,7 @@ pub fn diff(payload: &ChangeAnchorAs, base: &En1992Snapshot) -> protocol::Mutati
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Anchor {} not found.", payload.anchor_id), Vec::<String>::new());
     };
     if (a.a_s - payload.new_value).abs() < f64::EPSILON {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Value unchanged.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Value unchanged.");
     }
     a.a_s = payload.new_value;
     protocol::MutationOutcome::new(En1992Diff { anchors: Some(En1992AnchorList { values: anchors }), ..Default::default() })

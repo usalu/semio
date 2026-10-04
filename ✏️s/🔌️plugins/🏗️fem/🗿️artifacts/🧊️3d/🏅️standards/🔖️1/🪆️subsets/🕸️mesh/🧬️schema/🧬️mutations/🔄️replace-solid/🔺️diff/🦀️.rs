@@ -13,7 +13,7 @@ pub fn diff(payload: &ReplaceSolid, base: &Fem3dSnapshot) -> protocol::MutationO
         return target_mismatch("Solid", &payload.id, &payload.new_solid.id);
     }
     if existing == &payload.new_solid {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Solid \"{}\" already has that value.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Solid \"{}\" already has that value.", payload.id));
     }
     if !base.materials.iter().any(|material| material.id == payload.new_solid.material_id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Material \"{}\" does not exist.", payload.new_solid.material_id), [payload.new_solid.material_id.clone()]);

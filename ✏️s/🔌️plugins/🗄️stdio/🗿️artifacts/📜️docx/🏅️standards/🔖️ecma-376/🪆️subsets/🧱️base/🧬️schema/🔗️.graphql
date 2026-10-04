@@ -1,8 +1,5 @@
-type DocxEntry {
-  name: String!
-  data: [Int!]!
-}
 type DocxArtifact {
   schema: String! @state(class: ARTIFACT)
-  entries: [DocxEntry!]! @state(class: ARTIFACT)
+  opc: DocxOpcPackage! @state(class: ARTIFACT)
+  xmlParts: [DocxXmlPart!]! @state(class: ARTIFACT)
 }

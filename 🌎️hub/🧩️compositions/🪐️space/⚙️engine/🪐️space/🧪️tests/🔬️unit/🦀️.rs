@@ -168,12 +168,12 @@ use super::*;
 #[test]
 fn retained_config_preparation_matches_the_json_oracle_and_rejects_maximum_plus_one() {
     let base = SpaceConfig::default();
-    let base_value = pack::json_from_dsl_value(&dsl::ToValue::to_value(&base));
-    let mut expected: serde_json::Value = serde_json::from_str(&pack::json_to_string(&base_value)).expect("third-party JSON decode");
+    let base_value = semio_framework_pack_json::from_dsl_value(&dsl::ToValue::to_value(&base));
+    let mut expected: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_string(&base_value)).expect("third-party JSON decode");
     expected["workflowEngagementInput"] = serde_json::json!("draft");
     let (post, inverse, _) = prepare_space_config(&base, SpaceConfigMutation::SetWorkflowEngagementInput { value: "draft".into() }).expect("bounded config candidate");
-    let post_value = pack::json_from_dsl_value(&dsl::ToValue::to_value(&post));
-    let post_oracle: serde_json::Value = serde_json::from_str(&pack::json_to_string(&post_value)).expect("third-party JSON decode");
+    let post_value = semio_framework_pack_json::from_dsl_value(&dsl::ToValue::to_value(&post));
+    let post_oracle: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_string(&post_value)).expect("third-party JSON decode");
     assert_eq!(post_oracle, expected);
     assert!(matches!(inverse, SpaceConfigMutation::SetWorkflowEngagementInput { value } if value == base.workflow_engagement_input));
     assert!(space_config_mutation_bytes(&SpaceConfigMutation::SetWorkflowEngagementInput { value: "x".repeat(SPACE_CONFIG_TEXT_BYTES) }).is_ok());
@@ -221,25 +221,25 @@ struct SerdeJsonSpaceRetainedCatalogOracle;
 
 impl SpaceRetainedCatalogOracle for SerdeJsonSpaceRetainedCatalogOracle {
     fn summarize(&self, fixture: &str) -> SpaceRetainedCatalogSummary {
-        let document: pack::JsonValue = pack::parse_json(fixture).expect("language-neutral retained catalog fixture");
-        let routes = document.get("routes").and_then(pack::JsonValue::as_array).expect("routes array");
+        let document: semio_framework_pack_json::Value = semio_framework_pack_json::parse(fixture, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-neutral retained catalog fixture");
+        let routes = document.get("routes").and_then(semio_framework_pack_json::Value::as_array).expect("routes array");
         let bounded_ids = routes
             .iter()
-            .filter(|route| route.get("execution").and_then(pack::JsonValue::as_str) == Some("bounded"))
-            .filter_map(|route| route.get("id").and_then(pack::JsonValue::as_str).map(str::to_string))
+            .filter(|route| route.get("execution").and_then(semio_framework_pack_json::Value::as_str) == Some("bounded"))
+            .filter_map(|route| route.get("id").and_then(semio_framework_pack_json::Value::as_str).map(str::to_string))
             .collect::<std::collections::BTreeSet<_>>();
-        let batch = routes.iter().filter(|route| route.get("execution").and_then(pack::JsonValue::as_str) == Some("batch")).count();
+        let batch = routes.iter().filter(|route| route.get("execution").and_then(semio_framework_pack_json::Value::as_str) == Some("batch")).count();
         let migrated_ids =
-            routes.iter().filter(|route| route.get("status").and_then(pack::JsonValue::as_str) == Some("Migrated")).filter_map(|route| route.get("id").and_then(pack::JsonValue::as_str).map(str::to_string)).collect::<std::collections::BTreeSet<_>>();
+            routes.iter().filter(|route| route.get("status").and_then(semio_framework_pack_json::Value::as_str) == Some("Migrated")).filter_map(|route| route.get("id").and_then(semio_framework_pack_json::Value::as_str).map(str::to_string)).collect::<std::collections::BTreeSet<_>>();
         let host_only_ids = document
             .get("publicationContracts")
-            .and_then(pack::JsonValue::as_array)
+            .and_then(semio_framework_pack_json::Value::as_array)
             .expect("publication contracts array")
             .iter()
-            .filter(|contract| contract.get("lanes").and_then(pack::JsonValue::as_array).is_some_and(|lanes| lanes.as_slice() == [pack::JsonValue::String("HostOnly".into())]))
-            .filter_map(|contract| contract.get("toolId").and_then(pack::JsonValue::as_str).map(str::to_string))
+            .filter(|contract| contract.get("lanes").and_then(semio_framework_pack_json::Value::as_array).is_some_and(|lanes| lanes.as_slice() == [semio_framework_pack_json::Value::String("HostOnly".into())]))
+            .filter_map(|contract| contract.get("toolId").and_then(semio_framework_pack_json::Value::as_str).map(str::to_string))
             .collect::<std::collections::BTreeSet<_>>();
-        let ids = routes.iter().filter_map(|route| route.get("id").and_then(pack::JsonValue::as_str)).collect::<std::collections::BTreeSet<_>>();
+        let ids = routes.iter().filter_map(|route| route.get("id").and_then(semio_framework_pack_json::Value::as_str)).collect::<std::collections::BTreeSet<_>>();
         SpaceRetainedCatalogSummary { routes: routes.len(), bounded: bounded_ids.len(), batch, migrated: migrated_ids.len(), unique: ids.len() == routes.len(), bounded_ids, migrated_ids, host_only_ids }
     }
 }
@@ -343,7 +343,7 @@ async fn commit_checkpoint_round_trips_projection() {
     let mut app = context::app_with_registry().await;
     context::dispatch_settled(&mut app, SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: context::test_surface_id("draw").await, x: 80.0, y: 80.0 })).await;
     let before = app.snapshot().expect("projection").graph.nodes.len();
-    let commit_args = pack::json_to_dsl_value(&pack::json!({ "message": "snapshot" }));
+    let commit_args = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "message": "snapshot" }));
     let admitted = app.handle_action("commitCheckpoint", Some(&commit_args), &plugin_laws::meta("local")).await.expect("commit");
     semio_framework_plugin::app::settle_framework_reserved_admission(&mut app, admitted).await.expect("commit publication");
     assert_eq!(app.snapshot().expect("projection").graph.nodes.len(), before);
@@ -360,7 +360,7 @@ async fn checkout_checkpoint_restores_projection() {
     let mut app = context::app_with_registry().await;
     let before = app.snapshot().expect("projection").graph.nodes.len();
     context::dispatch_settled(&mut app, SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: context::test_surface_id("draw").await, x: 80.0, y: 80.0 })).await;
-    let commit_args = pack::json_to_dsl_value(&pack::json!({ "message": "after-first-spawn" }));
+    let commit_args = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "message": "after-first-spawn" }));
     let admitted = app.handle_action("commitCheckpoint", Some(&commit_args), &plugin_laws::meta("local")).await.expect("commit");
     semio_framework_plugin::app::settle_framework_reserved_admission(&mut app, admitted).await.expect("commit publication");
     let after_first = app.snapshot().expect("projection").graph.nodes.len();
@@ -371,7 +371,7 @@ async fn checkout_checkpoint_restores_projection() {
     store::os_store::test_support::retire_parsed_document(parsed);
     context::dispatch_settled(&mut app, SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: context::test_surface_id("draw").await, x: 80.0, y: 80.0 })).await;
     assert!(app.snapshot().expect("projection").graph.nodes.len() > after_first);
-    let checkout_args = pack::json_to_dsl_value(&pack::json!({ "checkpointId": checkpoint_id }));
+    let checkout_args = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "checkpointId": checkpoint_id }));
     let admitted = app.handle_action("checkoutCheckpoint", Some(&checkout_args), &plugin_laws::meta("local")).await.expect("checkout");
     semio_framework_plugin::app::settle_framework_reserved_admission(&mut app, admitted).await.expect("checkout publication");
     assert_eq!(app.snapshot().expect("projection").graph.nodes.len(), after_first);

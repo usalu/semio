@@ -43,7 +43,7 @@ fn inference_catalog_projection_requires_exact_scope_package_and_declared_servic
             at[path.last().unwrap().as_str().unwrap()] = case["value"].clone();
         }
         let scope = DocumentScope::new(row["scope"]["spaceId"].as_str().unwrap(), row["scope"]["documentId"].as_str().unwrap());
-        let descriptor: DocumentDescriptor = directory::os_pack::json::from_json_str(&row["descriptor"].to_string()).unwrap();
+        let descriptor: DocumentDescriptor = semio_framework_pack_json::from_json_str(&row["descriptor"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let services: Vec<ContributedInferenceMetadata> = serde_json::from_value(row["services"].clone()).unwrap();
         let package = &row["package"];
         let projection = PackageProjection {

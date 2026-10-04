@@ -1,0 +1,113 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/pixels/image-decoding",
+  "title": "ImageDecodeInput",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mime",
+    "data",
+    "maxSourceBytes",
+    "maxBytes",
+    "maxPixels",
+    "maxChunks"
+  ],
+  "properties": {
+    "mime": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "data": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 268439552
+    },
+    "maxSourceBytes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 268439552
+    },
+    "maxBytes": {
+      "type": "integer",
+      "minimum": 8,
+      "maximum": 67108864
+    },
+    "maxPixels": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 16777216
+    },
+    "maxChunks": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 65536
+    }
+  },
+  "definitions": {
+    "progress": {
+      "type": "object",
+      "required": [
+        "phase",
+        "sourceCompleted",
+        "sourceTotal",
+        "bytes",
+        "totalBytes",
+        "pixels",
+        "totalPixels",
+        "work",
+        "done"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "phase": {
+          "enum": [
+            "header",
+            "validate",
+            "decode",
+            "png",
+            "complete"
+          ]
+        },
+        "sourceCompleted": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 536879104
+        },
+        "sourceTotal": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 536879104
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 67108864
+        },
+        "totalBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 67108864
+        },
+        "pixels": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 16777216
+        },
+        "totalPixels": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 16777216
+        },
+        "work": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "done": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

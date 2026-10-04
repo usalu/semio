@@ -4,8 +4,8 @@
     "check": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts check",
-        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83d\udda5\ufe0fhost/\ud83e\uddeb\ufe0ffixtures/\ud83e\udde9\ufe0fcomponent/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust"
+        "command": "bun ./📜️script.ts check",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/📦️packages/🦀️rust"
       },
       "metadata": {
         "workspaceCommand": [
@@ -18,8 +18,8 @@
     "component-dev": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts component-dev",
-        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83d\udda5\ufe0fhost/\ud83e\uddeb\ufe0ffixtures/\ud83e\udde9\ufe0fcomponent/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust"
+        "command": "bun ./📜️script.ts component-dev",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/📦️packages/🦀️rust"
       },
       "metadata": {
         "workspaceCommand": [
@@ -31,10 +31,37 @@
       "outputs": [
         "{projectRoot}/dist/component-dev"
       ]
+    },
+    "test-snapshot-sqlite-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite-source",
+        "forwardAllArgs": true
+      }
+    },
+    "test-snapshot-sqlite-release-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite-release-native",
+        "forwardAllArgs": true
+      }
+    },
+    "test-snapshot-sqlite-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite-native",
+        "forwardAllArgs": true
+      }
     }
   },
-  "root": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83d\udda5\ufe0fhost/\ud83e\uddeb\ufe0ffixtures/\ud83e\udde9\ufe0fcomponent/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
-  "sourceRoot": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udd0c\ufe0fplugin/\ud83d\udda5\ufe0fhost/\ud83e\uddeb\ufe0ffixtures/\ud83e\udde9\ufe0fcomponent",
+  "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/📦️packages/🦀️rust",
+  "sourceRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component",
   "projectType": "library",
   "tags": [
     "lang:rust",

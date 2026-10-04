@@ -19,9 +19,12 @@ impl protocol::MutationKind<StepSnapshot, StepMutation> for SetFileDescription {
     fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<<StepMutation as Mutation<StepSnapshot>>::Diff> {
         agg_diff(&StepMutation::SetFileDescription(self.clone()), base)
     }
-    fn inverse(&self, base: &StepSnapshot) -> Vec<StepMutation> {
-        agg_inverse(&StepMutation::SetFileDescription(self.clone()), base)
-    }
+    fn inverse(&self, base: &StepSnapshot) -> Result<Vec<StepMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&StepMutation::SetFileDescription(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set file description", "Dateibeschreibung setzen")
     }

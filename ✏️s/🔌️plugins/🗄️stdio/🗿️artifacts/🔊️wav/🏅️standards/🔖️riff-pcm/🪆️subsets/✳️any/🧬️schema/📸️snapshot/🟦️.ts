@@ -1,4 +1,4 @@
-import {parseBinary32,type Binary32} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {type Binary32,parseBinary32Transport} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 /** 🎚️ Typed primary WAV format chunk. */
 export type WavFmt = Readonly<{
   audioFormat: number;
@@ -18,7 +18,7 @@ export type WavData =
   | Readonly<{ kind: "raw"; value: readonly number[] }>;
 
 /** 📦️ Verbatim auxiliary or duplicate canonical RIFF chunk. */
-export type RiffChunk = Readonly<{ fourcc: string; data: readonly number[]; padByte?: number }>;
+export type RiffChunk = Readonly<{ fourcc: string; data: readonly number[]; padByte: number }>;
 
 /** 🧭️ One position in the complete top-level RIFF/WAVE chunk sequence. */
 export type WavChunkRef =
@@ -31,8 +31,8 @@ export type WavSnapshot = Readonly<{
   schema: string;
   fmt: WavFmt;
   data: WavData;
-  fmtPadByte?: number;
-  dataPadByte?: number;
+  fmtPadByte: number;
+  dataPadByte: number;
   otherChunks: readonly RiffChunk[];
   chunkOrder: readonly WavChunkRef[];
 }>;
@@ -77,14 +77,14 @@ export const parseWavData = (value: unknown, at: string): WavData => {
   const values = array(row.value, `${at}.value`);
   if (kind === "pcm16") return { kind, value: values.map((item, index) => integer(item, `${at}.value[${index}]`, -32_768, 32_767)) };
   if (kind === "pcm8" || kind === "raw") return { kind, value: bytes(values, `${at}.value`) };
-  if (kind === "float32") return { kind, value: values.map((item, index) => parseBinary32(item)) };
+  if (kind === "float32") return { kind, value: values.map((item, index) => parseBinary32Transport(item)) };
   return reject(`${at}.kind`, "unknown WAV data kind");
 };
 
 export const parseRiffChunk = (value: unknown, at: string): RiffChunk => {
   const row = object(value, at);
   const fourcc = string(row.fourcc, `${at}.fourcc`);
-  return { fourcc, data: bytes(row.data, `${at}.data`), ...(row.padByte === undefined ? {} : { padByte: integer(row.padByte, `${at}.padByte`, 0, 255) }) };
+  return { fourcc, data: bytes(row.data, `${at}.data`), padByte: integer(row.padByte === undefined ? 0 : row.padByte, `${at}.padByte`, 0, 255) };
 };
 
 export const parseWavChunkRef = (value: unknown, at: string): WavChunkRef => {
@@ -100,12 +100,12 @@ export function validateWavSerialization(snapshot: WavSnapshot, at = "$"): WavSn
   if (snapshot.schema !== "stdio.wav") reject(`${at}.schema`, "native WAV wire requires stdio.wav identity");
   if (snapshot.fmt.ext !== undefined && snapshot.fmt.ext.length > MAXIMUM_FMT_EXTENSION_BYTES) reject(`${at}.fmt.ext`, `native fmt extension exceeds ${MAXIMUM_FMT_EXTENSION_BYTES} bytes`);
   const fmtPayloadIsOdd = snapshot.fmt.ext !== undefined && snapshot.fmt.ext.length % 2 === 1;
-  if ((snapshot.fmtPadByte ?? 0) !== 0 && !fmtPayloadIsOdd) reject(`${at}.fmtPadByte`, "nonzero pad byte requires an odd serialized fmt payload length");
+  if (snapshot.fmtPadByte !== 0 && !fmtPayloadIsOdd) reject(`${at}.fmtPadByte`, "nonzero pad byte requires an odd serialized fmt payload length");
   const dataPayloadIsOdd = (snapshot.data.kind === "pcm8" || snapshot.data.kind === "raw") && snapshot.data.value.length % 2 === 1;
-  if ((snapshot.dataPadByte ?? 0) !== 0 && !dataPayloadIsOdd) reject(`${at}.dataPadByte`, "nonzero pad byte requires an odd serialized data payload length");
+  if (snapshot.dataPadByte !== 0 && !dataPayloadIsOdd) reject(`${at}.dataPadByte`, "nonzero pad byte requires an odd serialized data payload length");
   snapshot.otherChunks.forEach((chunk, index) => {
     if (!/^[ -~]{4}$/u.test(chunk.fourcc)) reject(`${at}.otherChunks[${index}].fourcc`, "native fourcc requires four printable ASCII bytes");
-    if ((chunk.padByte ?? 0) !== 0 && chunk.data.length % 2 === 0) reject(`${at}.otherChunks[${index}].padByte`, "nonzero pad byte requires an odd chunk payload length");
+    if (chunk.padByte !== 0 && chunk.data.length % 2 === 0) reject(`${at}.otherChunks[${index}].padByte`, "nonzero pad byte requires an odd chunk payload length");
   });
   return snapshot;
 }
@@ -116,8 +116,8 @@ export function parseWavSnapshot(value: unknown, at = "$"): WavSnapshot {
     schema: string(row.schema, `${at}.schema`),
     fmt: parseWavFmt(row.fmt, `${at}.fmt`),
     data: parseWavData(row.data, `${at}.data`),
-    ...(row.fmtPadByte === undefined ? {} : { fmtPadByte: integer(row.fmtPadByte, `${at}.fmtPadByte`, 0, 255) }),
-    ...(row.dataPadByte === undefined ? {} : { dataPadByte: integer(row.dataPadByte, `${at}.dataPadByte`, 0, 255) }),
+    fmtPadByte: integer(row.fmtPadByte === undefined ? 0 : row.fmtPadByte, `${at}.fmtPadByte`, 0, 255),
+    dataPadByte: integer(row.dataPadByte === undefined ? 0 : row.dataPadByte, `${at}.dataPadByte`, 0, 255),
     otherChunks: array(row.otherChunks, `${at}.otherChunks`).map((item, index) => parseRiffChunk(item, `${at}.otherChunks[${index}]`)),
     chunkOrder: array(row.chunkOrder, `${at}.chunkOrder`).map((item, index) => parseWavChunkRef(item, `${at}.chunkOrder[${index}]`)),
   };

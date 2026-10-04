@@ -29,7 +29,7 @@ fn puzzle3d_delta_ops_round_trip_and_stay_granular() {
     let mut forward = before.clone();
     let mut inverses = Vec::new();
     for operation in &operations {
-        inverses.extend(Mutation::<Value>::inverse(operation, &forward));
+        inverses.extend(Mutation::<Value>::inverse(operation, &forward).expect("valid retained mutation inverse fixture"));
         forward = Mutation::<Value>::diff(operation, &forward).diff().apply(&forward).expect("valid mutation diff");
     }
     assert_eq!(forward, canonical(&after));
@@ -42,8 +42,8 @@ fn puzzle3d_delta_ops_round_trip_and_stay_granular() {
 //#region 🔖️MutationLaws
 use protocol::os_spr::protocol_laws::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
 
-#[test]
-fn move_object_diff_absorb_law() {
+#[semio_framework_async_macros::async_test]
+async fn move_object_diff_absorb_law() {
     use crate::Puzzle3dObject;
     let base = empty();
     let object = Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false };
@@ -51,25 +51,25 @@ fn move_object_diff_absorb_law() {
     let d1 = move_object("o1".into(), [10.0, 10.0, 10.0]).diff(&with_object).into_parts().0;
     let mid = MutationDiff::<Puzzle3dSnapshot>::apply(&d1, &with_object).expect("valid mutation diff");
     let d2 = move_object("o1".into(), [20.0, 30.0, 40.0]).diff(&mid).into_parts().0;
-    semio_framework::io::resolve_ready(assert_mutation_diff_absorb_law(&with_object, d1, d2));
+    (assert_mutation_diff_absorb_law(&with_object, d1, d2)).await;
 }
 
 fn empty() -> Puzzle3dSnapshot {
     Puzzle3dSnapshot::default()
 }
 
-#[test]
-fn create_delete_object_inverse_law() {
+#[semio_framework_async_macros::async_test]
+async fn create_delete_object_inverse_law() {
     use crate::Puzzle3dObject;
     let base = empty();
     let object = Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false };
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&base, &create_object(object.clone(), None)));
+    (assert_mutation_inverse_law(&base, &create_object(object.clone(), None))).await;
     let with_object = MutationDiff::<Puzzle3dSnapshot>::apply(create_object(object, None).diff(&base).diff(), &base).expect("valid mutation diff");
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_object, &delete_object("o1".into())));
+    (assert_mutation_inverse_law(&with_object, &delete_object("o1".into()))).await;
 }
 
-#[test]
-fn object_field_mutations_inverse_law() {
+#[semio_framework_async_macros::async_test]
+async fn object_field_mutations_inverse_law() {
     use crate::{Puzzle3dObject, Puzzle3dObjectAnchor, Puzzle3dScale, Puzzle3dVortex};
     let base = empty();
     let object = Puzzle3dObject {
@@ -86,28 +86,28 @@ fn object_field_mutations_inverse_law() {
         locked: false,
     };
     let with_object = MutationDiff::<Puzzle3dSnapshot>::apply(create_object(object, None).diff(&base).diff(), &base).expect("valid mutation diff");
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_object, &move_object("o1".into(), [1.0, 2.0, 3.0])));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_object, &rotate_object("o1".into(), Some([0.0, 0.0, 0.0, 1.0]))));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_object, &scale_object("o1".into(), Some(Puzzle3dScale::Uniform(2.0)))));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_object, &change_object_mesh("o1".into(), Some("mesh://a".into()))));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_object, &edit_object_label("o1".into(), Some("Label".into()))));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_object, &change_object_kind("o1".into(), Some("core.capsule".into()))));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_object, &change_object_anchor("o1".into(), Puzzle3dObjectAnchor::Derived)));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_object, &change_object_hidden("o1".into(), true)));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_object, &change_object_locked("o1".into(), true)));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(
+    (assert_mutation_inverse_law(&with_object, &move_object("o1".into(), [1.0, 2.0, 3.0]))).await;
+    (assert_mutation_inverse_law(&with_object, &rotate_object("o1".into(), Some([0.0, 0.0, 0.0, 1.0])))).await;
+    (assert_mutation_inverse_law(&with_object, &scale_object("o1".into(), Some(Puzzle3dScale::Uniform(2.0))))).await;
+    (assert_mutation_inverse_law(&with_object, &change_object_mesh("o1".into(), Some("mesh://a".into())))).await;
+    (assert_mutation_inverse_law(&with_object, &edit_object_label("o1".into(), Some("Label".into())))).await;
+    (assert_mutation_inverse_law(&with_object, &change_object_kind("o1".into(), Some("core.capsule".into())))).await;
+    (assert_mutation_inverse_law(&with_object, &change_object_anchor("o1".into(), Puzzle3dObjectAnchor::Derived))).await;
+    (assert_mutation_inverse_law(&with_object, &change_object_hidden("o1".into(), true))).await;
+    (assert_mutation_inverse_law(&with_object, &change_object_locked("o1".into(), true))).await;
+    (assert_mutation_inverse_law(
         &with_object,
         &add_object_vortex("o1".into(), Puzzle3dVortex { id: "v2".into(), vortex_kind: None, label: None, position: [0.0, 0.0, 0.0], direction: None, radius: None, hidden: false, locked: false }, None),
-    ));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_object, &remove_object_vortex("o1".into(), "v1".into())));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(
+    )).await;
+    (assert_mutation_inverse_law(&with_object, &remove_object_vortex("o1".into(), "v1".into()))).await;
+    (assert_mutation_inverse_law(
         &with_object,
         &replace_object_vortex("o1".into(), "v1".into(), Puzzle3dVortex { id: "v1".into(), vortex_kind: Some("k".into()), label: None, position: [1.0, 1.0, 1.0], direction: None, radius: None, hidden: false, locked: false }),
-    ));
+    )).await;
 }
 
-#[test]
-fn connect_disconnect_vortices_inverse_law_and_cascade() {
+#[semio_framework_async_macros::async_test]
+async fn connect_disconnect_vortices_inverse_law_and_cascade() {
     use crate::{Puzzle3dObject, Puzzle3dVortex};
     let base = empty();
     let object_a = Puzzle3dObject {
@@ -139,53 +139,53 @@ fn connect_disconnect_vortices_inverse_law_and_cascade() {
     let mut projection = base;
     projection = MutationDiff::<Puzzle3dSnapshot>::apply(create_object(object_a, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
     projection = MutationDiff::<Puzzle3dSnapshot>::apply(create_object(object_b, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&projection, &connect_vortices("t1".into(), "a:va".into(), "b:vb".into(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)));
+    (assert_mutation_inverse_law(&projection, &connect_vortices("t1".into(), "a:va".into(), "b:vb".into(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0))).await;
     let connected = MutationDiff::<Puzzle3dSnapshot>::apply(connect_vortices("t1".into(), "a:va".into(), "b:vb".into(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0).diff(&projection).diff(), &projection).expect("valid mutation diff");
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&connected, &disconnect_vortices("t1".into())));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(
+    (assert_mutation_inverse_law(&connected, &disconnect_vortices("t1".into()))).await;
+    (assert_mutation_inverse_law(
         &connected,
         &replace_attraction_geometry(ReplaceAttractionGeometry { id: "t1".into(), new_gap: 1.0, new_shift: 2.0, new_rise: 3.0, new_rotation: 4.0, new_turn: 5.0, new_tilt: 6.0, new_x: 7.0, new_y: 8.0 }),
-    ));
+    )).await;
     let deleted = delete_object("a".into());
     let after_delete = MutationDiff::<Puzzle3dSnapshot>::apply(deleted.diff(&connected).diff(), &connected).expect("valid mutation diff");
     assert!(!after_delete.attractions.iter().any(|attraction| attraction.id == "t1"), "delete-object must sever attractions touching its vortices");
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&connected, &deleted));
+    (assert_mutation_inverse_law(&connected, &deleted)).await;
 }
 
-#[test]
-fn target_volume_and_reference_inverse_law() {
+#[semio_framework_async_macros::async_test]
+async fn target_volume_and_reference_inverse_law() {
     use crate::{Puzzle3dReference, Puzzle3dReferenceSource, Puzzle3dTargetVolume};
     let base = empty();
     let volume = Puzzle3dTargetVolume { id: "tv1".into(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, hidden: false, locked: false };
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&base, &create_target_volume(volume.clone(), None)));
+    (assert_mutation_inverse_law(&base, &create_target_volume(volume.clone(), None))).await;
     let with_volume = MutationDiff::<Puzzle3dSnapshot>::apply(create_target_volume(volume, None).diff(&base).diff(), &base).expect("valid mutation diff");
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_volume, &move_target_volume("tv1".into(), [1.0, 2.0, 3.0])));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_volume, &rotate_target_volume("tv1".into(), Some([0.0, 0.0, 0.0, 1.0]))));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_volume, &scale_target_volume("tv1".into(), None)));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_volume, &change_target_volume_hidden("tv1".into(), true)));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_volume, &change_target_volume_locked("tv1".into(), true)));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_volume, &delete_target_volume("tv1".into())));
+    (assert_mutation_inverse_law(&with_volume, &move_target_volume("tv1".into(), [1.0, 2.0, 3.0]))).await;
+    (assert_mutation_inverse_law(&with_volume, &rotate_target_volume("tv1".into(), Some([0.0, 0.0, 0.0, 1.0])))).await;
+    (assert_mutation_inverse_law(&with_volume, &scale_target_volume("tv1".into(), None))).await;
+    (assert_mutation_inverse_law(&with_volume, &change_target_volume_hidden("tv1".into(), true))).await;
+    (assert_mutation_inverse_law(&with_volume, &change_target_volume_locked("tv1".into(), true))).await;
+    (assert_mutation_inverse_law(&with_volume, &delete_target_volume("tv1".into()))).await;
 
     let reference = Puzzle3dReference { id: "r1".into(), source: Puzzle3dReferenceSource::default(), origin: [0.0, 0.0, 0.0], width_world: 1.0, locked: false, hidden: false };
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&base, &create_reference(reference.clone(), None)));
+    (assert_mutation_inverse_law(&base, &create_reference(reference.clone(), None))).await;
     let with_reference = MutationDiff::<Puzzle3dSnapshot>::apply(create_reference(reference, None).diff(&base).diff(), &base).expect("valid mutation diff");
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_reference, &move_reference("r1".into(), [1.0, 2.0, 3.0])));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_reference, &resize_reference("r1".into(), 4.0)));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_reference, &replace_reference_source("r1".into(), Puzzle3dReferenceSource { url: "/x.png".into(), media_kind: Some("image".into()) })));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_reference, &change_reference_hidden("r1".into(), true)));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_reference, &change_reference_locked("r1".into(), true)));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_reference, &delete_reference("r1".into())));
+    (assert_mutation_inverse_law(&with_reference, &move_reference("r1".into(), [1.0, 2.0, 3.0]))).await;
+    (assert_mutation_inverse_law(&with_reference, &resize_reference("r1".into(), 4.0))).await;
+    (assert_mutation_inverse_law(&with_reference, &replace_reference_source("r1".into(), Puzzle3dReferenceSource { url: "/x.png".into(), media_kind: Some("image".into()) }))).await;
+    (assert_mutation_inverse_law(&with_reference, &change_reference_hidden("r1".into(), true))).await;
+    (assert_mutation_inverse_law(&with_reference, &change_reference_locked("r1".into(), true))).await;
+    (assert_mutation_inverse_law(&with_reference, &delete_reference("r1".into()))).await;
 }
 
-#[test]
-fn document_scalar_mutations_inverse_law() {
+#[semio_framework_async_macros::async_test]
+async fn document_scalar_mutations_inverse_law() {
     use crate::{Puzzle3dCompatSpecificity, Puzzle3dKindCatalogs};
     let base = empty();
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&base, &change_domain("mechanical".into())));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&base, &connect_kind_compatibility("a".into(), "b".into(), true, false, Puzzle3dCompatSpecificity::Vortex)));
+    (assert_mutation_inverse_law(&base, &change_domain("mechanical".into()))).await;
+    (assert_mutation_inverse_law(&base, &connect_kind_compatibility("a".into(), "b".into(), true, false, Puzzle3dCompatSpecificity::Vortex))).await;
     let connected = MutationDiff::<Puzzle3dSnapshot>::apply(connect_kind_compatibility("a".into(), "b".into(), true, false, Puzzle3dCompatSpecificity::Vortex).diff(&base).diff(), &base).expect("valid mutation diff");
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&connected, &disconnect_kind_compatibility("a".into(), "b".into())));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&base, &replace_kind_catalogs(Some(Puzzle3dKindCatalogs::default()))));
+    (assert_mutation_inverse_law(&connected, &disconnect_kind_compatibility("a".into(), "b".into()))).await;
+    (assert_mutation_inverse_law(&base, &replace_kind_catalogs(Some(Puzzle3dKindCatalogs::default())))).await;
 }
 
 #[test]
@@ -203,27 +203,27 @@ fn dispatch_registers_semantic_descriptors() {
 // `📓️w3-f-block-puzzle-report.md` for the `assert_outcome_policy_matrix` pending-helper note.
 use protocol::os_spr::protocol_laws::{assert_fatal_never_applies, assert_missing_target_is_error};
 
-#[test]
-fn missing_target_is_error_per_verb_family() {
+#[semio_framework_async_macros::async_test]
+async fn missing_target_is_error_per_verb_family() {
     let base = empty();
-    semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &delete_object("missing".into()))); // delete
-    semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &remove_object_vortex("missing".into(), "v0".into()))); // remove
-    semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &change_object_hidden("missing".into(), true))); // change/set/update
-    semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &move_object("missing".into(), [1.0, 1.0, 1.0]))); // move/drag/rotate/scale/resize
-    semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &edit_object_label("missing".into(), Some("x".into())))); // edit/replace
-    semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &disconnect_vortices("missing".into())));
+    (assert_missing_target_is_error(&base, &delete_object("missing".into()))).await; // delete
+    (assert_missing_target_is_error(&base, &remove_object_vortex("missing".into(), "v0".into()))).await; // remove
+    (assert_missing_target_is_error(&base, &change_object_hidden("missing".into(), true))).await; // change/set/update
+    (assert_missing_target_is_error(&base, &move_object("missing".into(), [1.0, 1.0, 1.0]))).await; // move/drag/rotate/scale/resize
+    (assert_missing_target_is_error(&base, &edit_object_label("missing".into(), Some("x".into())))).await; // edit/replace
+    (assert_missing_target_is_error(&base, &disconnect_vortices("missing".into()))).await;
     // disconnect/unbind
 }
 
-#[test]
-fn create_duplicate_id_is_fatal_and_never_applies() {
+#[semio_framework_async_macros::async_test]
+async fn create_duplicate_id_is_fatal_and_never_applies() {
     use crate::Puzzle3dObject;
     let mut base = empty();
     let object = Puzzle3dObject { id: "o0".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false };
     base.objects.push(object.clone());
     let outcome = create_object(object, None).diff(&base);
-    semio_framework::io::resolve_ready(assert_fatal_never_applies(&outcome));
-    assert_eq!(outcome.worst_level(), Some(dsl::Severity::Fatal));
+    (assert_fatal_never_applies(&outcome)).await;
+    assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal));
     assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.duplicate-id"));
 }
 //#endregion 🔖️OutcomeLaws
@@ -271,12 +271,12 @@ fn selection_labels_are_localized() {
 }
 
 /// 🚨️ A selection leaf whose every target is absent is the Error-level `mutation.target-missing`.
-#[test]
-fn selection_missing_targets_are_errors() {
+#[semio_framework_async_macros::async_test]
+async fn selection_missing_targets_are_errors() {
     let base = empty();
-    semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &drag_selection(vec!["missing".into()], [1.0, 0.0, 0.0])));
-    semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &rotate_selection(vec!["missing".into()], [0.0, 0.0, 1.0], 1.0)));
-    semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &scale_selection(vec!["missing".into()], [2.0, 2.0, 2.0])));
+    (assert_missing_target_is_error(&base, &drag_selection(vec!["missing".into()], [1.0, 0.0, 0.0]))).await;
+    (assert_missing_target_is_error(&base, &rotate_selection(vec!["missing".into()], [0.0, 0.0, 1.0], 1.0))).await;
+    (assert_missing_target_is_error(&base, &scale_selection(vec!["missing".into()], [2.0, 2.0, 2.0]))).await;
 }
 
 /// ✏️ Each selection leaf is editable through its payload value: the input schema is declared, and
@@ -285,7 +285,7 @@ fn selection_missing_targets_are_errors() {
 fn selection_leaves_are_editable_through_their_payload_value() {
     let drag = drag_selection(vec!["o1".into()], [1.0, 0.0, 0.0]);
     assert!(Mutation::<Puzzle3dSnapshot>::input_schema(&drag).is_some_and(|schema| schema.contains("\"offset\"")));
-    let edited = Mutation::<Puzzle3dSnapshot>::with_payload_value(&drag, dsl::DslValue::from(&serde_json::json!({ "targets": ["o1"], "offset": [4.0, 0.0, 0.0] }))).expect("an edited payload value decodes");
+    let edited = Mutation::<Puzzle3dSnapshot>::with_payload_value(&drag, semio_framework_value::DslValue::from(&serde_json::json!({ "targets": ["o1"], "offset": [4.0, 0.0, 0.0] }))).expect("an edited payload value decodes");
     assert_eq!(edited, drag_selection(vec!["o1".into()], [4.0, 0.0, 0.0]));
 }
 

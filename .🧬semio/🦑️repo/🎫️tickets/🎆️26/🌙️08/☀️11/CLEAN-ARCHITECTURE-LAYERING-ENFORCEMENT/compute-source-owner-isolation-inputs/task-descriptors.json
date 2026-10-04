@@ -1,0 +1,38 @@
+[
+  {
+    "name": "@semio-tech/puzzle-3d-rs-compute-ownership",
+    "parent": "@semio-tech/puzzle-3d-rs",
+    "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏛️ownership/🧮️compute",
+    "command": "bun ./📜️script.ts test",
+    "source": "./🧪️tests/🟦️.ts",
+    "target": "test",
+    "nativeDependencies": []
+  },
+  {
+    "name": "@semio-tech/framework-plugin-compute-ownership",
+    "parent": "@semio-tech/framework-plugin",
+    "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧮️compute",
+    "command": "bun ./📜️script.ts test",
+    "source": "./🧪️tests/🟦️.ts",
+    "target": "test",
+    "nativeDependencies": []
+  },
+  {
+    "name": "@semio-tech/framework-plugin-host-fixture-compute-ownership",
+    "parent": "@semio-tech/framework-plugin-host-fixture",
+    "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/🏛️ownership/🧮️compute",
+    "command": "bun ./📜️script.ts test",
+    "source": "./🧪️tests/🟦️.ts",
+    "target": "test",
+    "nativeDependencies": []
+  },
+  {
+    "name": "@semio-tech/space-plugin-compute-ownership",
+    "parent": "@semio-tech/space-plugin",
+    "root": "🌎️hub/🧩️compositions/🪐️space/🏛️ownership/🧮️compute",
+    "command": "bun ./📜️script.ts test",
+    "source": "./🧪️tests/🟦️.ts",
+    "target": "test",
+    "nativeDependencies": []
+  }
+]

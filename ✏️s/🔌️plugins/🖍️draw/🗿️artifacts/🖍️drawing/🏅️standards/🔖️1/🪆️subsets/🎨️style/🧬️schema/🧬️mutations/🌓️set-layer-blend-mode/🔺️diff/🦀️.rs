@@ -12,7 +12,7 @@ pub fn diff(payload: &super::mutation::SetLayerBlendMode, base: &DrawingSnapshot
         return protocol::MutationOutcome::fatal("mutation.invariant", "Unsupported blend mode.", [payload.layer_id.clone()]);
     }
     if layer_base(layer).blend_mode == payload.blend_mode {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Layer \"{}\" blend mode is already \"{}\".", payload.layer_id, payload.blend_mode));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Layer \"{}\" blend mode is already \"{}\".", payload.layer_id, payload.blend_mode));
     }
     protocol::MutationOutcome::new(diff_set_layer_blend_mode(&payload.layer_id, &payload.blend_mode))
 }

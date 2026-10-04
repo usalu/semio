@@ -5,7 +5,7 @@ use crate::standards::v1::subsets::presentation::schema::snapshot::SemioPresenta
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff(base: &SemioPresentationSnapshot, snapshot: &SemioPresentationSnapshot) -> protocol::MutationOutcome<SemioPresentationDiff> {
     if base == snapshot {
-        return protocol::MutationOutcome::new(SemioPresentationDiff::default()).warn("mutation.no-op", "set-snapshot: new snapshot is identical to the current one");
+        return protocol::MutationOutcome::new(SemioPresentationDiff::default()).warning("mutation.no-op", "set-snapshot: new snapshot is identical to the current one");
     }
     protocol::MutationOutcome::new(diff_set_snapshot(base, snapshot))
 }

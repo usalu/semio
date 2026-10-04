@@ -294,10 +294,10 @@ mod kinds_catalog;
 
 //#region 🌉️ExternalCodecBridge
 pub fn decode_en1994_mutation_json(text: &str) -> Result<En1994Mutation, String> {
-    pack::json::from_json_str(text).map_err(|e| e.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| e.to_string())
 }
 pub fn encode_en1994_mutation_json(mutation: &En1994Mutation) -> String {
-    pack::json::to_json_string(mutation)
+    semio_framework_pack_json::to_json_string(mutation)
 }
 /// 🎯️ Applies one mutation to `base` through production dispatch, returning the next snapshot and every raised diagnostic as `level:code`.
 pub fn apply_en1994_mutation(base: &En1994Snapshot, mutation: &En1994Mutation) -> Result<(En1994Snapshot, Vec<String>), String> {
@@ -307,8 +307,11 @@ pub fn apply_en1994_mutation(base: &En1994Snapshot, mutation: &En1994Mutation) -
     Ok((applied, messages))
 }
 /// ↩️ The inverse steps production dispatch computes for `mutation` against `base`.
-pub fn inverse_en1994_mutation(mutation: &En1994Mutation, base: &En1994Snapshot) -> Vec<En1994Mutation> {
-    <En1994Mutation as protocol::Mutation<En1994Snapshot>>::inverse(mutation, base)
+pub fn inverse_en1994_mutation(mutation: &En1994Mutation, base: &En1994Snapshot) -> Result<Vec<En1994Mutation>, semio_framework_value::ValueError> {
+    Ok({
+    <En1994Mutation as protocol::Mutation<En1994Snapshot>>::inverse(mutation, base)?
+
+    })
 }
 //#endregion 🌉️ExternalCodecBridge
 

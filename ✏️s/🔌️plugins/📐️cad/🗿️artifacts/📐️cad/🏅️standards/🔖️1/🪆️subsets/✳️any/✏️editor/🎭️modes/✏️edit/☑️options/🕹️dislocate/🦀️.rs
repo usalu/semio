@@ -5,8 +5,8 @@ use crate::editor::cad::config::CadDislocateOptions;
 use crate::editor::cad::{cad_window_action, CAD_DISLOCATE_UTILITY_ID};
 use semio_framework_plugin::WindowMeasure;
 
-fn dislocate_option_args(option: &str) -> protocol::DslValue {
-    protocol::DslValue::object([("option".to_string(), protocol::DslValue::String(option.to_string()))])
+fn dislocate_option_args(option: &str) -> semio_framework_value::DslValue {
+    semio_framework_value::DslValue::object([("option".to_string(), semio_framework_value::DslValue::String(option.to_string()))])
 }
 
 /// 🎛️ Move and Rotate handle groups shown only while this window owns the Dislocate utility.

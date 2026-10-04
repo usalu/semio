@@ -20,9 +20,12 @@ impl protocol::MutationKind<SemioAudioSnapshot, SemioAudioMutation> for SetTagVa
     fn diff(&self, base: &SemioAudioSnapshot) -> protocol::MutationOutcome<<SemioAudioMutation as Mutation<SemioAudioSnapshot>>::Diff> {
         agg_diff(&SemioAudioMutation::SetTagValue(self.clone()), base)
     }
-    fn inverse(&self, base: &SemioAudioSnapshot) -> Vec<SemioAudioMutation> {
-        agg_inverse(&SemioAudioMutation::SetTagValue(self.clone()), base)
-    }
+    fn inverse(&self, base: &SemioAudioSnapshot) -> Result<Vec<SemioAudioMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&SemioAudioMutation::SetTagValue(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set tag value", "Tagwert setzen")
     }

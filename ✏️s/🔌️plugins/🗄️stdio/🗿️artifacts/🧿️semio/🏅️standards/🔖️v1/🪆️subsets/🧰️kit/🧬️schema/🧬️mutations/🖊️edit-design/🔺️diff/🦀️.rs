@@ -10,7 +10,7 @@ pub fn diff(payload: &super::EditDesign, base: &SemioKitSnapshot) -> protocol::M
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Design \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if existing.pieces == payload.pieces && existing.connections == payload.connections {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Design \"{}\" already has that content.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Design \"{}\" already has that content.", payload.id));
     }
     let mut designs = base.designs.clone();
     if let Some(d) = designs.iter_mut().find(|d| d.id == payload.id) {

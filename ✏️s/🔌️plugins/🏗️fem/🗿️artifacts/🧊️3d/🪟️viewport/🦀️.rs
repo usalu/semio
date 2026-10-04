@@ -6,5 +6,5 @@ pub const INITIAL: crate::Viewport3dOrbit = crate::Viewport3dOrbit { position: [
 
 /// 🎬️ Encodes the exact retained pose at the current world-scene wire boundary.
 pub fn scene_camera_json(camera: &crate::Viewport3dOrbit) -> String {
-    dsl::json::to_json_string(&dsl::ToValue::to_value(camera))
+    semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(camera))
 }

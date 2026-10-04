@@ -66,13 +66,13 @@ async fn manifest_lists_math_operators_and_schemas() {
 #[semio_framework_async_macros::async_test]
 async fn evaluate_json_adds_numbers() {
     let reg = neural_engine::ColdOwner::new(module_registry());
-    let json_number = |value: f64| pack::json::object([("$schema".to_string(), pack::json::Value::from("number")), ("value".to_string(), pack::json::Value::from(value))]);
-    let input_json = pack::json::to_string(&pack::json::object([("a".to_string(), json_number(2.0)), ("b".to_string(), json_number(1.0))]));
+    let json_number = |value: f64| semio_framework_pack_json::object([("$schema".to_string(), semio_framework_pack_json::Value::from("number")), ("value".to_string(), semio_framework_pack_json::Value::from(value))]);
+    let input_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("a".to_string(), json_number(2.0)), ("b".to_string(), json_number(1.0))]));
     let out_json = evaluate_json(&reg, "math.add", &input_json);
-    let out = pack::json::parse(&out_json).unwrap();
+    let out = semio_framework_pack_json::parse(&out_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let sum = out.get("sum").expect("sum channel");
-    assert_eq!(sum.get("$schema").and_then(pack::json::Value::as_str), Some("number"));
-    assert_eq!(sum.get("value").and_then(pack::json::Value::as_f64), Some(3.0));
+    assert_eq!(sum.get("$schema").and_then(semio_framework_pack_json::Value::as_str), Some("number"));
+    assert_eq!(sum.get("value").and_then(semio_framework_pack_json::Value::as_f64), Some(3.0));
 }
 
 #[semio_framework_async_macros::async_test]

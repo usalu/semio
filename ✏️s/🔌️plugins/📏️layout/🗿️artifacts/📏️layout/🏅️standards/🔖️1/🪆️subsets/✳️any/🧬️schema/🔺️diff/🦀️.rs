@@ -35,7 +35,7 @@ pub struct LayoutDiff {
     #[state(artifact)]
     pub print_target: Option<Option<String>>,
     #[state(artifact)]
-    pub data_fields_json: Option<Option<String>>,
+    pub data_fields: Option<FormDictionaryChange>,
     /// 🖇️ Optional composed-child slot: outer `Option` = "did the presence/identity change", inner
     /// `Option` = "is it now present" — the same double-`Option` shape `✳️object`'s own `mesh` diff
     /// already established, per the migration recipe's §8 diff-shape convention.
@@ -48,6 +48,11 @@ pub struct LayoutDiff {
 //#endregion 🔖️Diff
 
 //#region 🔖️DeltaHelpers
+/// 🧾️ A present change distinguishes clearing ownership from replacing it with an empty dictionary.
+#[derive(Clone,Debug,PartialEq,ToValue,FromValue)]
+#[value(deny_unknown_fields)]
+pub struct FormDictionaryChange {pub dictionary:Option<crate::FormDictionary>}
+
 /// 📋 String-list wrapper so optional list diffs stay scalar across formats.
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

@@ -33,7 +33,6 @@ fn the_unmounted_route_commits_one_relative_leaf_and_refuses_a_stream() {
     let view = ArtifactView::new(&doc, &history);
     let cfg = ConfigView { snapshot: &NoConfig::default(), window: None };
     let emit = translate_selection::handle(&translate_selection::TranslateSelection { ids: vec!["n20_l1".into()], dx: 0.5, dy: -0.25, dz: 0.0, phase: None, reason: None }, &view, &cfg).expect("emit");
-    assert!(emit.coalesce_key.is_none(), "a gumball gesture never amends");
     let [Fem3dMutation::MoveSelection(leaf)] = emit.artifact_mutations.as_slice() else { panic!("one relative leaf: {:?}", emit.artifact_mutations) };
     assert_eq!((leaf.node_ids.clone(), leaf.dx, leaf.dy), (vec!["n20_l1".to_string()], 0.5, -0.25));
     let UiDirtyScope::Partial { window_bodies, .. } = &emit.ui_scope else { panic!("partial scope") };
@@ -148,7 +147,7 @@ async fn the_world3d_gumball_live_protocol_lands_as_its_guest_edits() {
         for dispatch in case["steps"].as_array().expect("steps").iter().map(|step| &step["dispatch"]).filter(|dispatch| !dispatch.is_null()) {
             let mut args = dispatch["args"].clone();
             args["ids"] = serde_json::json!(["n20_l1"]);
-            let args: dsl::DslValue = dsl::json::from_json_str(&args.to_string()).expect("wire args parse");
+            let args: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(&args.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("wire args parse");
             let action = dispatch["action"].as_str().expect("action");
             let command = <EditorApp<Fem3dPlayApp> as semio_framework_plugin::ArtifactApp>::command_from_action(action, Some(&args)).await.unwrap_or_else(|fault| panic!("{name}: {action} decodes from the host's wire args: {}", fault.message));
             edits += dispatch_rows(&mut app, command).await.len();

@@ -592,6 +592,7 @@
       ],
       "kinds": [
         "set-snapshot",
+        "patch-snapshot",
         "add-layer",
         "remove-layer",
         "set-layer",
@@ -631,6 +632,44 @@
             "operation": "set-snapshot",
             "bridgeVersion": 1,
             "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-cad-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "dxf-crate-cad-r12-read"
+            },
+            {
+              "capability": "semio-v1-cad-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "ruststep-cad-line-circle-read"
+            }
+          ],
+          "carriers": [
+            "dxf",
+            "step"
+          ],
+          "invariants": {
+            "local": [
+              "entity-graph-agrees-across-every-registered-carrier"
+            ],
+            "enclosing": [
+              "carrier-that-cannot-encode-the-change-reports-unsupported-not-ok"
+            ]
+          }
+        },
+        {
+          "id": "patch-snapshot",
+          "capability": "semio-v1-cad-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#PatchSnapshot",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "patch-snapshot",
+            "bridgeVersion": 1,
+            "variant": "PatchSnapshot"
           },
           "oracleRequirements": [
             {

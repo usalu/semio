@@ -47,7 +47,7 @@ fn wire_spec(kind: &str, params: Json) -> Json {
 /// model itself, read by `ruststep`.
 fn inverse_spec(kind: &str, input: &[u8]) -> Result<Json, String> {
     Ok(match kind {
-        "set-snapshot" => wire_spec("set-snapshot", oracle_snapshot_payload(input)?),
+        "set-snapshot" | "patch-snapshot" => wire_spec("set-snapshot", oracle_snapshot_payload(input)?),
         "upsert-instance" => wire_spec("upsert-instance", parse_json(ORIGINAL_COLUMN)?),
         "remove-instance" => wire_spec("upsert-instance", parse_json(ORIGINAL_WALL)?),
         "set-header" => wire_spec("set-header", parse_json(ORIGINAL_HEADER)?),
@@ -204,7 +204,7 @@ mod subject {
         let operation = operation_of(&ctx.doc_json()?)?;
         let base = decode_ifc2x3(&input)?;
         let mutated = encoded(&input, &applied(base.clone(), std::slice::from_ref(&operation))?)?;
-        outcome(encode_ifc2x3(&applied(decode_ifc2x3(&mutated)?, &mutation_inverse(&operation, &base))?)?)
+        outcome(encode_ifc2x3(&applied(decode_ifc2x3(&mutated)?, &mutation_inverse(&operation, &base).expect("valid retained mutation inverse fixture"))?)?)
     }
 
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {

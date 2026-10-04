@@ -48,6 +48,15 @@ pub struct EdgeGroup {
     pub entity_id: String,
 }
 
+/// 📍️ Original topology vertex range in the preview point buffer.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(crate = "::protocol::value")]
+pub struct VertexGroup {
+    pub start: u32,
+    pub count: u32,
+    pub entity_id: String,
+}
+
 /// 🏄️ Analytic surface family behind a tessellated face.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(crate = "::protocol::value")]
@@ -101,6 +110,8 @@ pub struct MeshTransfer {
     pub edges: Vec<f32>,
     #[value(default)]
     pub points: Vec<f32>,
+    #[value(default)]
+    pub vertex_groups: Vec<VertexGroup>,
     pub face_groups: Vec<FaceGroup>,
     #[value(default)]
     pub edge_groups: Vec<EdgeGroup>,

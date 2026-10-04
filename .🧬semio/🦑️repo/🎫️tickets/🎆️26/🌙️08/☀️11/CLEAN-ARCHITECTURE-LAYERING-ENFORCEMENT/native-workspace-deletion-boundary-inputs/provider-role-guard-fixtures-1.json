@@ -1,0 +1,104 @@
+[
+  {
+    "name": "runtime-normal",
+    "path": "root.rs",
+    "role": "normal",
+    "normal": [
+      "record"
+    ],
+    "dev": [],
+    "required": [
+      "record"
+    ],
+    "accepted": true
+  },
+  {
+    "name": "runtime-dev-only",
+    "path": "root.rs",
+    "role": "normal",
+    "normal": [],
+    "dev": [
+      "record"
+    ],
+    "required": [
+      "record"
+    ],
+    "accepted": false
+  },
+  {
+    "name": "physical-test-dev",
+    "path": "tests/test.rs",
+    "role": "dev",
+    "normal": [],
+    "dev": [
+      "record"
+    ],
+    "required": [
+      "record"
+    ],
+    "accepted": true
+  },
+  {
+    "name": "physical-test-normal",
+    "path": "tests/test.rs",
+    "role": "dev",
+    "normal": [
+      "record"
+    ],
+    "dev": [],
+    "required": [
+      "record"
+    ],
+    "accepted": true
+  },
+  {
+    "name": "root-cfg-test-conservative",
+    "path": "root.rs",
+    "role": "normal",
+    "normal": [],
+    "dev": [
+      "record"
+    ],
+    "required": [
+      "record"
+    ],
+    "accepted": false
+  },
+  {
+    "name": "root-cfg-attr-test-conservative",
+    "path": "root.rs",
+    "role": "normal",
+    "normal": [],
+    "dev": [
+      "record"
+    ],
+    "required": [
+      "record"
+    ],
+    "accepted": false
+  },
+  {
+    "name": "unknown-role",
+    "path": "new.rs",
+    "role": null,
+    "normal": [
+      "record"
+    ],
+    "dev": [],
+    "required": [
+      "record"
+    ],
+    "accepted": false
+  },
+  {
+    "name": "missing-provider",
+    "path": "tests/test.rs",
+    "role": "dev",
+    "normal": [],
+    "dev": [],
+    "required": [
+      "record"
+    ],
+    "accepted": false
+  }
+]

@@ -28,7 +28,7 @@ fn step_with_conditional_block() -> FormsSnapshot {
                 }
             ]
         }"#;
-    let spec = dsl::os_pack::json::from_json_str::<semio_framework_artifact_playbook_playbook::PlaybookSpec>(json).expect("valid playbook spec json");
+    let spec = semio_framework_pack_json::from_json_str::<semio_framework_artifact_playbook_playbook::PlaybookSpec>(json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("valid playbook spec json");
     crate::forms_snapshot_with_state(spec.schema, spec.id, spec.version, spec.title, &spec.steps)
 }
 //#endregion 🧸️Fixtures
@@ -37,18 +37,18 @@ fn step_with_conditional_block() -> FormsSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
     let snapshot = step_with_conditional_block();
-    assert_eq!(FormsInference::infer(&snapshot), FormsInference::infer(&snapshot));
+    assert_eq!(FormsInference::infer(&snapshot).expect("valid materialized inference fixture"), FormsInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
-    assert_eq!(FormsInference::infer(&FormsSnapshot::default()), FormsInference::default());
+    assert_eq!(FormsInference::infer(&FormsSnapshot::default()).expect("valid materialized inference fixture"), FormsInference::default());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn topology_orders_the_conditioned_block_after_its_dependency() {
     let snapshot = step_with_conditional_block();
-    let inferred = FormsInference::infer(&snapshot);
+    let inferred = FormsInference::infer(&snapshot).expect("valid materialized inference fixture");
     let size_index = inferred.topology.topo_order.iter().position(|id| id == "team-size").unwrap();
     let name_index = inferred.topology.topo_order.iter().position(|id| id == "team-name").unwrap();
     assert!(size_index < name_index, "team-name's condition reads team-size, so team-size must precede it");
@@ -58,7 +58,7 @@ async fn topology_orders_the_conditioned_block_after_its_dependency() {
 #[semio_framework_async_macros::async_test]
 async fn empty_steps_produce_empty_topology() {
     let snapshot = FormsSnapshot::default();
-    let inferred = FormsInference::infer(&snapshot);
+    let inferred = FormsInference::infer(&snapshot).expect("valid materialized inference fixture");
     assert!(inferred.topology.topo_order.is_empty());
     assert_eq!(inferred.topology.node_count, 0);
     assert!(inferred.topology.cycle_free);

@@ -10,7 +10,7 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot:
 //#region 🔖️Artifact
 /// 🧬️ curation document artifact state. `catalog`/
 /// `stock_extra` mirror `CurationSnapshot`'s own composed-child split (see that struct's doc comment).
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.sourcing.curation")]
 pub struct CurationArtifact {
@@ -22,9 +22,9 @@ pub struct CurationArtifact {
     #[state(artifact)]
     pub curated: Vec<CuratedItem>,
 }
-impl dsl::FromValue for CurationArtifact {
-    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
-        <CurationSnapshot as dsl::FromValue>::from_value(value).map(Self::from_snapshot)
+impl semio_framework_value::FromValue for CurationArtifact {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        <CurationSnapshot as semio_framework_value::FromValue>::from_value(value).map(Self::from_snapshot)
     }
 }
 //#endregion 🔖️Artifact
@@ -95,7 +95,7 @@ pub fn curation_artifact_schema_descriptor() -> semio_framework_schema_registry:
 
 //#region 🔖️Typology
 /// 🌳️ One node in a module's typology tree — object kinds reference a node by its path of segment ids.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct TypologyNode {
     pub id: String,
@@ -215,13 +215,13 @@ pub fn kind_world_mesh_id(kind: &ObjectKind) -> String {
 }
 
 /// 🧊️ One `{ id, url }` mesh atom for the world3d host.
-pub fn glb_mesh_json(url: &str) -> dsl::DslValue {
+pub fn glb_mesh_json(url: &str) -> semio_framework_value::DslValue {
     let id = world3d_mesh_id_from_url(url);
-    dsl::DslValue::object([("id".to_string(), dsl::DslValue::String(id)), ("url".to_string(), dsl::DslValue::String(url.to_string()))])
+    semio_framework_value::DslValue::object([("id".to_string(), semio_framework_value::DslValue::String(id)), ("url".to_string(), semio_framework_value::DslValue::String(url.to_string()))])
 }
 
 /// 🌐️ Registers every mesh atom `kinds` need in a grid/preview scene (unit box is separate).
-pub fn append_kind_scene_meshes(meshes: &mut Vec<dsl::DslValue>, seen: &mut std::collections::BTreeSet<String>, kind: &ObjectKind) {
+pub fn append_kind_scene_meshes(meshes: &mut Vec<semio_framework_value::DslValue>, seen: &mut std::collections::BTreeSet<String>, kind: &ObjectKind) {
     if box_parts(&kind.geometry).is_some() {
         return;
     }
@@ -302,10 +302,10 @@ pub fn preview_kind_bounds(kind: &ObjectKind) -> Option<([f64; 3], [f64; 3])> {
 //#region 🔖️World3d
 /// 🌐️ Mesh atom for a stock kind's realized geometry — shared by the preview and grid windows (two
 /// consumers, hence schema-owned per this taxonomy's "more than one consumer" rule). Callers
-/// serialize with `dsl::json::to_json_string` rather than `serde_json::json!`: ticket
+/// serialize with `semio_framework_pack_json::to_json_string` rather than `serde_json::json!`: ticket
 /// `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS` — `MeshData` carries only
 /// the first-party `ToValue`/`FromValue` codec in production, `Serialize` is test-only.
-pub fn kind_mesh_json(kind: &ObjectKind) -> dsl::DslValue {
+pub fn kind_mesh_json(kind: &ObjectKind) -> semio_framework_value::DslValue {
     mesh_json(&kind.id, &mesh_spec_for(&kind.geometry))
 }
 
@@ -313,20 +313,20 @@ pub fn kind_mesh_json(kind: &ObjectKind) -> dsl::DslValue {
 pub const SOURCING_UNIT_BOX_MESH_ID: &str = "sourcing.unit-box";
 
 /// 🧊️ The unit cube behind [`SOURCING_UNIT_BOX_MESH_ID`].
-pub fn unit_box_mesh_json() -> dsl::DslValue {
+pub fn unit_box_mesh_json() -> semio_framework_value::DslValue {
     mesh_json(SOURCING_UNIT_BOX_MESH_ID, &box_mesh_spec(1.0, 1.0, 1.0))
 }
 
-fn mesh_json(id: &str, spec: &MeshDataSpec) -> dsl::DslValue {
+fn mesh_json(id: &str, spec: &MeshDataSpec) -> semio_framework_value::DslValue {
     let mesh = semio_framework::mesh_from_indexed(&spec.positions, &spec.normals, &spec.indices);
-    dsl::DslValue::object([("id".to_string(), dsl::DslValue::String(id.to_string())), ("data".to_string(), dsl::ToValue::to_value(&mesh))])
+    semio_framework_value::DslValue::object([("id".to_string(), semio_framework_value::DslValue::String(id.to_string())), ("data".to_string(), semio_framework_value::ToValue::to_value(&mesh))])
 }
 
 /// 🌐️ The instances drawing `kind` centered at `origin`, uniformly scaled by `scale`: one
 /// [`SOURCING_UNIT_BOX_MESH_ID`] instance per [`box_parts`] entry, or one instance of the kind's own
 /// [`kind_mesh_json`] for a free-form `Mesh`. A scene therefore carries geometry once, however much
 /// stock it lays out.
-pub fn kind_instances_json(kind: &ObjectKind, origin: [f64; 3], scale: f64, selected: bool) -> Vec<dsl::DslValue> {
+pub fn kind_instances_json(kind: &ObjectKind, origin: [f64; 3], scale: f64, selected: bool) -> Vec<semio_framework_value::DslValue> {
     let Some(parts) = box_parts(&kind.geometry) else {
         let mesh_id = kind_world_mesh_id(kind);
         return vec![instance_json(&kind.id, &mesh_id, &kind.name, origin, [scale; 3], selected)];
@@ -343,22 +343,22 @@ pub fn kind_instances_json(kind: &ObjectKind, origin: [f64; 3], scale: f64, sele
         .collect()
 }
 
-fn instance_json(id: &str, mesh_id: &str, label: &str, position: [f64; 3], scale: [f64; 3], selected: bool) -> dsl::DslValue {
-    dsl::DslValue::object([
-        ("id".to_string(), dsl::DslValue::String(id.to_string())),
-        ("meshId".to_string(), dsl::DslValue::String(mesh_id.to_string())),
-        ("position".to_string(), dsl::ToValue::to_value(&position)),
-        ("rotation".to_string(), dsl::ToValue::to_value(&[0.0, 0.0, 0.0, 1.0])),
-        ("scale".to_string(), dsl::ToValue::to_value(&scale)),
-        ("label".to_string(), dsl::DslValue::String(label.to_string())),
-        ("selected".to_string(), dsl::DslValue::Bool(selected)),
-        ("hovered".to_string(), dsl::DslValue::Bool(false)),
+fn instance_json(id: &str, mesh_id: &str, label: &str, position: [f64; 3], scale: [f64; 3], selected: bool) -> semio_framework_value::DslValue {
+    semio_framework_value::DslValue::object([
+        ("id".to_string(), semio_framework_value::DslValue::String(id.to_string())),
+        ("meshId".to_string(), semio_framework_value::DslValue::String(mesh_id.to_string())),
+        ("position".to_string(), semio_framework_value::ToValue::to_value(&position)),
+        ("rotation".to_string(), semio_framework_value::ToValue::to_value(&[0.0, 0.0, 0.0, 1.0])),
+        ("scale".to_string(), semio_framework_value::ToValue::to_value(&scale)),
+        ("label".to_string(), semio_framework_value::DslValue::String(label.to_string())),
+        ("selected".to_string(), semio_framework_value::DslValue::Bool(selected)),
+        ("hovered".to_string(), semio_framework_value::DslValue::Bool(false)),
     ])
 }
 
 /// 🔢️ Appends unit-box voxels spelling `count` in a 3×5 dot matrix beside `anchor` — used by the
 /// sourcing grid's representative-with-count display mode.
-pub fn append_grid_count_glyph_instances(instances: &mut Vec<dsl::DslValue>, object_id: &str, count: u32, anchor: [f64; 3], cell: f64) {
+pub fn append_grid_count_glyph_instances(instances: &mut Vec<semio_framework_value::DslValue>, object_id: &str, count: u32, anchor: [f64; 3], cell: f64) {
     if count == 0 {
         return;
     }
@@ -855,10 +855,10 @@ fn contributed_sourcing_modules(contributions_json: &str) -> Vec<ContributedSour
         if !sourcing_json_envelope_is_bounded(&typology_json) || !sourcing_json_envelope_is_bounded(&kinds_json) {
             continue;
         }
-        let Ok(typology) = dsl::json::from_json_str::<TypologyNode>(&typology_json) else {
+        let Ok(typology) = semio_framework_pack_json::from_json_str::<TypologyNode>(&typology_json, semio_framework_pack_json::JsonMemberPolicy::Reject) else {
             continue;
         };
-        let Ok(kinds) = dsl::json::from_json_str::<Vec<ObjectKind>>(&kinds_json) else {
+        let Ok(kinds) = semio_framework_pack_json::from_json_str::<Vec<ObjectKind>>(&kinds_json, semio_framework_pack_json::JsonMemberPolicy::Reject) else {
             continue;
         };
         if kinds.len() > SOURCING_JSON_MAX_ITEMS {
@@ -925,13 +925,13 @@ pub fn installable_contributions(contributions_json: &str, maximum_bytes: usize)
             continue;
         }
         kept.push(entry);
-        if dsl::json::to_json_string(&kept).len() > maximum_bytes {
+        if semio_framework_pack_json::to_json_string(&kept).len() > maximum_bytes {
             kept.pop();
             continue;
         }
         installed.push(module_id);
     }
-    if kept.is_empty() { empty } else { dsl::json::to_json_string(&kept) }
+    if kept.is_empty() { empty } else { semio_framework_pack_json::to_json_string(&kept) }
 }
 
 /// 🔎️ Looks up a single module by id.

@@ -20,6 +20,34 @@ test("Binary rejects independently edited invalid flags and ordinal gaps", async
 });
 
 
+test("binary borrowed native preflight contract has literal octet and refusal authorities", async()=>{
+ const validate=new Ajv2020({strict:true,allErrors:true}).compile(controlSchema);
+ expect(validate(controlFixture)).toBe(true);
+ const policy=controlFixture.preflight;
+ expect(policy).toEqual({"encodings":["binary","text"],"ownershipBytes":0,"byteAuthority":"actualLiteralOutputUTF8OrOctets","refusalKinds":{"file":"ownershipLimit","cancellation":"canceled"},"cancelAt":"firstBorrowedCheckpoint","retirementRefund":false});
+ expect(validate({...controlFixture,preflight:{...policy,ownershipBytes:1}})).toBe(false);
+ expect(validate({...controlFixture,preflight:{...policy,refusalKinds:{...policy.refusalKinds,file:"workLimit"}}})).toBe(false);
+ const literal=controlFixture.fieldText,octets=Buffer.from(literal,"utf8");
+ expect(Buffer.byteLength(literal,"utf8")).toBe(new TextEncoder().encode(literal).length);
+ expect(octets.toString("utf8")).toBe(literal);
+ const independent=new Database(":memory:");
+ try{independent.run("CREATE TABLE literal_output(value TEXT NOT NULL)");independent.run("INSERT INTO literal_output VALUES(?)",[literal]);expect(independent.query("SELECT length(CAST(value AS BLOB)) AS bytes FROM literal_output").get()).toEqual({bytes:octets.byteLength});}finally{independent.close();}
+ expect(policy.ownershipBytes).toBe(0);expect(policy.retirementRefund).toBe(false);
+ expect(controlFixture.allocationRole).toBe("cumulativeOwnedBacking");
+ expect(controlFixture.maxAllocationBytes).toBe(1);
+ expect(validate({...controlFixture,allocationRole:"semanticValueBytes"})).toBe(false);
+ const primitive=Buffer.from(controlFixture.bytePattern.slice(0,controlFixture.maxAllocationBytes+1));
+ expect(primitive.byteLength).toBe(controlFixture.maxAllocationBytes+1);
+ const ownership=new BudgetAllocationControl({maxAllocationBytes:controlFixture.maxAllocationBytes});
+ await expect(ownership.stage(maximum=>new BudgetDecodeControl(maximum,()=>true),native=>native.copyBytes(primitive))).rejects.toMatchObject({kind:"ownershipLimit"});
+ expect(ownership.remainingBytes()).toBe(controlFixture.maxAllocationBytes);
+ const semanticLimits={maxAllocationBytes:primitive.byteLength,maxValueBytes:0};const semantic=new BudgetAllocationControl(semanticLimits);
+ const copied=await semantic.stage(maximum=>new BudgetDecodeControl(maximum,()=>true),native=>native.copyBytes(primitive));
+ expect(Buffer.from(copied)).toEqual(primitive);expect(semantic.remainingBytes()).toBe(0);
+
+});
+
+
 test("Binary semantic SQLite schema, native roundtrip and independent SQL edit", async () => {
   expect(BINARY_SQLITE_SCHEMA).toBe(await Bun.file(new URL("../../🪶️sqlite/🗄️.sql", import.meta.url)).text());
   const input = fixture;
@@ -58,7 +86,7 @@ test("Binary projection and reconstruction cancellation", async () => {
   for (const direction of ["project", "reconstruct"]) {
     const controller = new AbortController();
     const options = { signal: controller.signal, onProgress: () => controller.abort() };
-    await expect(direction === "project" ? binarySnapshotToSqliteDatabase(input, options) : binarySnapshotFromSqliteDatabase(database, options)).rejects.toMatchObject({ name: "AbortError" });
+    await expect(direction === "project" ? binarySnapshotToSqliteDatabase(input, options) : binarySnapshotFromSqliteDatabase(database, options)).rejects.toMatchObject({ kind: "canceled" });
   }
 });
 
@@ -67,3 +95,17 @@ test("Binary snapshot typed boundary requires integer byte arrays", () => {
   for (const byte of [-1, 256, 1.5, "0"]) expect(() => parseBinarySnapshot({ schema: fixture.schema, bytes: [byte] })).toThrow();
   expect(() => parseBinarySnapshot({ schema: fixture.schema, bytes: "00ff" })).toThrow();
 });
+
+import controlFixture from "../../🧫️fixtures/🪶️sqlite/🛬️native-control/🔣️.json";
+import controlSchema from "../../🧫️fixtures/🪶️sqlite/🛬️native-control/🧬️schema/🔣️.json";
+import Ajv2020 from "ajv/dist/2020";
+test("Binary native control corpus retains complete literal owned fields independently of external format",async()=>{
+ expect(new Ajv2020({allErrors:true,strict:true}).compile(controlSchema)(controlFixture)).toBe(true);
+ const owned={schema:controlFixture.ownedSchema,bytes:Array.from({length:controlFixture.workItems},(_,i)=>controlFixture.bytePattern[i%4]!)};
+ const database=await binarySnapshotToSqliteDatabase(owned);const file=await exportSqliteDatabase(database);const independent=Database.deserialize(file);expect(database.tables.reduce((sum,table)=>sum+table.rows.length,0)).toBe(controlFixture.expectedRows);
+ try{expect(independent.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(independent.query("PRAGMA foreign_key_check").all()).toEqual([]);expect(independent.query("SELECT schema FROM binary_document").get()).toEqual({schema:controlFixture.ownedSchema});}finally{independent.close();}
+ expect(await binarySnapshotFromSqliteDatabase(await importSqliteDatabase(file))).toEqual(owned);
+});
+
+import {NativeDecodeControl as BudgetDecodeControl} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🟦️.ts";
+import {SqliteAllocationControl as BudgetAllocationControl} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";

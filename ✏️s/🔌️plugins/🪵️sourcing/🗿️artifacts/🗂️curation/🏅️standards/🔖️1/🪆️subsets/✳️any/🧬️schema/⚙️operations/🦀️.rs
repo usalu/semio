@@ -44,7 +44,7 @@ pub const KINDS: &[&str] = &["create-curated-item", "delete-curated-item", "chan
 /// `semio-repo-test-host` and this crate) and cannot name this crate's private `protocol`/`store`
 /// extern-crate aliases either, so the bridge belongs here rather than there.
 pub fn decode_sourcing_mutation_json(text: &str) -> Result<SourcingMutation, String> {
-    dsl::json::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 
 /// ▶️ Applies `mutation` in place and returns every diagnostic it raised as `(code, severity)`
@@ -57,8 +57,11 @@ pub fn apply_sourcing_mutation_reporting(snapshot: &mut CurationSnapshot, mutati
 
 /// ↩️ The mutation's OWN computed undo steps, which is what an `inverse-<kind>` scenario has to
 /// apply for the metamorphic law to mean anything.
-pub fn inverse_sourcing_mutation_steps(mutation: &SourcingMutation, base: &CurationSnapshot) -> Vec<SourcingMutation> {
-    <SourcingMutation as protocol::Mutation<CurationSnapshot>>::inverse(mutation, base)
+pub fn inverse_sourcing_mutation_steps(mutation: &SourcingMutation, base: &CurationSnapshot) -> Result<Vec<SourcingMutation>, semio_framework_value::ValueError> {
+    Ok({
+    <SourcingMutation as protocol::Mutation<CurationSnapshot>>::inverse(mutation, base)?
+
+    })
 }
 //#endregion 🌉️ExternalCodecBridge
 

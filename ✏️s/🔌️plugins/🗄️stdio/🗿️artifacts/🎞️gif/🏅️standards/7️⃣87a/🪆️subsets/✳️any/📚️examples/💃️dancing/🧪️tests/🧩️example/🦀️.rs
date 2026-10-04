@@ -80,14 +80,14 @@ async fn analyzer_builder_round_trip_matches() {
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
     let snapshot = decode_gif(DANCING_GIF_BYTES).expect("decode real fixture");
-    assert_eq!(GifInference::infer(&snapshot), GifInference::infer(&snapshot));
+    assert_eq!(GifInference::infer(&snapshot).expect("valid materialized inference fixture"), GifInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
 /// 🧪️ (e) `infer(&GifSnapshot::default())` matches `GifInference::default()` — the hand-written
 /// `Default` impl (`💡️inferences/🦀️.rs`) must stay in lockstep with `infer` itself.
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
-    assert_eq!(GifInference::infer(&GifSnapshot::default()), GifInference::default());
+    assert_eq!(GifInference::infer(&GifSnapshot::default()).expect("valid materialized inference fixture"), GifInference::default());
 }
 
 /// 🧪️ `dimensions` on the real animated fixture matches the independently-verified 800x800
@@ -96,7 +96,7 @@ async fn inference_default_law() {
 #[semio_framework_async_macros::async_test]
 async fn dimensions_matches_real_fixture_geometry() {
     let snapshot = decode_gif(DANCING_GIF_BYTES).expect("decode real fixture");
-    let inferred = GifInference::infer(&snapshot);
+    let inferred = GifInference::infer(&snapshot).expect("valid materialized inference fixture");
     assert_eq!(inferred.dimensions.width, 800);
     assert_eq!(inferred.dimensions.height, 800);
     assert_eq!(inferred.dimensions.pixel_count, 800 * 800);

@@ -258,8 +258,26 @@ mod imp {
     /// ▶️ Performs one mutation kind against `drawing` in place — the forward half both
     /// `oracle_apply_mutation` and `oracle_apply_mutation_inverse` share (the latter calls it twice:
     /// the mutation, then its own computed inverse).
+    /// 🩹️ A `patch-snapshot` row as the declared kind its one pointer operation is in this oracle's reading: replacing one
+    /// `headerVars` member names the variable it sets (`set-header-var`); any other pointer has no reading here.
+    fn patch_as_kind(params: &Json) -> Result<(String, Json), String> {
+        let patch = member(params, "patch")?;
+        let path = patch.str("path");
+        match (patch.str("operation").as_str(), path.strip_prefix("/headerVars/").is_some_and(|index| !index.is_empty() && index.bytes().all(|byte| byte.is_ascii_digit()))) {
+            ("set", true) => {
+                let header_var = member(&patch, "value")?;
+                Ok(("set-header-var".to_string(), obj(vec![("name", Json::String(header_var.str("name"))), ("headerVar", header_var)])))
+            }
+            (operation, _) => Err(format!("dxf oracle: patch-snapshot {operation} {path} has no reading")),
+        }
+    }
+
     fn apply_kind(drawing: &mut Drawing, kind: &str, params: &Json) -> Result<(), String> {
         match kind {
+            "patch-snapshot" => {
+                let (kind, params) = patch_as_kind(params)?;
+                apply_kind(drawing, &kind, &params)
+            }
             "set-snapshot" => {
                 *drawing = snapshot_drawing(&member(params, "snapshot")?)?;
                 Ok(())
@@ -468,6 +486,10 @@ mod imp {
         let insbase = |name: String| obj(vec![("name", Json::String(name.clone())), ("headerVar", obj(vec![("name", Json::String(name)), ("groupCode", Json::Number(10.0)), ("value", obj(vec![("kind", Json::String("point".to_string())), ("value", point_json(&base.header.insertion_base))]))]))]);
         match kind {
             "set-snapshot" => Ok(Undo::Original),
+            "patch-snapshot" => {
+                let (kind, params) = patch_as_kind(params)?;
+                inverse_of(base, &kind, &params)
+            }
 
             "set-header-var" | "remove-header-var" => match name.as_str() {
                 "$INSBASE" => apply("set-header-var", insbase(name)),

@@ -12,11 +12,11 @@ use protocol::Inference;
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
     let snapshot = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 42 };
-    assert_eq!(SHomeInference::infer(&snapshot), SHomeInference::infer(&snapshot));
+    assert_eq!(SHomeInference::infer(&snapshot).expect("valid materialized inference fixture"), SHomeInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
-    assert_eq!(SHomeInference::infer(&SHomeSnapshot::default()), SHomeInference::default());
+    assert_eq!(SHomeInference::infer(&SHomeSnapshot::default()).expect("valid materialized inference fixture"), SHomeInference::default());
 }
 //#endregion 🧪️InferenceLaws

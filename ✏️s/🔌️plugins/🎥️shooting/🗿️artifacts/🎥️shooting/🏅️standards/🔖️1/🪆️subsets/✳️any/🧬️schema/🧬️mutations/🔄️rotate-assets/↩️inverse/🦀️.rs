@@ -4,6 +4,9 @@ use super::RotateAssets;
 use crate::mutations::ShootingMutation;
 use crate::ShootingSnapshot;
 
-pub fn inverse(payload: &RotateAssets, _base: &ShootingSnapshot) -> Vec<ShootingMutation> {
+pub fn inverse(payload: &RotateAssets, _base: &ShootingSnapshot) -> Result<Vec<ShootingMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![ShootingMutation::RotateAssets(RotateAssets { asset_ids: payload.asset_ids.clone(), ax: payload.ax, ay: payload.ay, az: payload.az, angle: -payload.angle })]
+
+    })())
 }

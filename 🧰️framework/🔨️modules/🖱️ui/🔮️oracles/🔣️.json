@@ -141,6 +141,102 @@
       "rationale": "Judges `easeInOutCubic` of 🥞️layered-overview-geometry in `🧪️tests/🔬️unit`: the 500 ms reveal/open glide must ease exactly like d3-ease's `easeCubicInOut` at 257 samples of [0, 1], next to the fixture's exact samples."
     },
     {
+      "id": "ui-color-input-color-string",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "color-string",
+      "version": "1.9.1",
+      "engine": {
+        "family": "color-string",
+        "implementation": "color-string get.rgb()",
+        "version": "1.9.1"
+      },
+      "capabilities": [
+        "ui.color-input.hex-codec"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://github.com/Qix-/color-string",
+      "rationale": "Judges `ui_color_hex`/`parse_ui_color_hex` in `🧬️contract/🧪️tests/🧪️color-input` over `🧫️fixtures/🧫️color-input`: color-string parses every accepted text to the same channels and alpha, refuses every refused one and prints the same hex, so the colour input commits the colour the user typed."
+    },
+    {
+      "id": "ui-number-controls-d3-scale",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "d3-scale",
+      "version": "4.0.2",
+      "engine": {
+        "family": "d3-scale",
+        "implementation": "d3-scale scaleLog()/scaleLinear()",
+        "version": "4.0.2"
+      },
+      "capabilities": [
+        "ui.number-controls.axis"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "ISC",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://d3js.org/d3-scale",
+      "rationale": "Judges the number controls in `🧬️contract/🧪️tests/🧪️number-controls` (design §18) over `🧫️fixtures/🧫️number-controls`: d3-scale's `scaleLog`/`scaleLinear` are the independent slider axis (position and inverse) and display-factor oracles."
+    },
+    {
+      "id": "ui-text-splice-fast-check",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "fast-check",
+      "version": "3.23.2",
+      "engine": {
+        "family": "fast-check",
+        "implementation": "fast-check fc.assert",
+        "version": "3.23.2"
+      },
+      "capabilities": [
+        "ui.scene.text-splice"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://fast-check.dev",
+      "rationale": "Generates concurrent insert-only typing workloads for `🎬️scene/🧪️tests/✂️text-splice`: folded in hub order, no workload may lose a typed scalar."
+    },
+    {
+      "id": "ui-number-controls-decimal-js",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "decimal.js",
+      "version": "10.6.0",
+      "engine": {
+        "family": "decimal-js",
+        "implementation": "decimal.js Decimal",
+        "version": "10.6.0"
+      },
+      "capabilities": [
+        "ui.number-controls.rounding"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://mikemcl.github.io/decimal.js",
+      "rationale": "The independent rounding and ladder oracle of `🧬️contract/🧪️tests/🧪️number-controls` over `🧫️fixtures/🧫️number-controls`: it rounds the EXACT binary expansion of every value half away from zero, so a twin that rounded the shortest decimal would disagree on `1.005`/`2.675`."
+    },
+    {
       "id": "three-damp",
       "kind": "third-party-library",
       "ecosystem": "javascript",

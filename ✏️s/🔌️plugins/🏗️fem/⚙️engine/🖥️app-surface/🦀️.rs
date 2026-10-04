@@ -6,6 +6,9 @@
 #[path = "🧬️schema/👁️result-mode/🦀️.rs"]
 mod result_mode;
 pub use result_mode::ResultMode;
+#[path = "🧬️schema/🔣️results-animation/🦀️.rs"]
+mod results_animation;
+pub use results_animation::{FemLoopMode, FemResultsAnimation, FemWaveform};
 
 use crate::model::Dof;
 use semio_framework_plugin::ActionArgDef;
@@ -84,6 +87,75 @@ pub fn von_mises_color(value: f64, min: f64, max: f64) -> &'static str {
     VON_MISES_BANDS[index]
 }
 //#endregion 🔖️Shared
+
+//#region ⏯️Playback
+/// ⏱️ The playback frame delta, in milliseconds. A wasm guest has no monotonic clock it may read
+/// inside a command, so the tick advances the phase by a FIXED delta and the host's
+/// `Effect::DispatchAction { delay_ms }` is what keeps that delta honest (~30 fps).
+pub const ANIMATION_TICK_MS: u64 = 33;
+
+/// ⏲️ [`ANIMATION_TICK_MS`] in seconds — `speed` is stated in cycles per second.
+pub const ANIMATION_TICK_SECONDS: f64 = ANIMATION_TICK_MS as f64 / 1_000.0;
+
+/// 🐢️ Slowest playback the transport admits, in cycles per second.
+pub const ANIMATION_SPEED_MINIMUM: f64 = 0.05;
+
+/// 🐇️ Fastest playback the transport admits, in cycles per second.
+pub const ANIMATION_SPEED_MAXIMUM: f64 = 4.0;
+
+/// ⏭️ One transport step — a twenty-fourth of a cycle, the classic film frame.
+pub const ANIMATION_PHASE_STEP: f64 = 1.0 / 24.0;
+
+impl Default for FemResultsAnimation {
+    /// 🎞️ A still results window sits at phase 1 — the FULL deformed shape, exactly what the window
+    /// drew before playback existed. Phase 0 would open every results window on an undeformed
+    /// structure, so the resting pose is the end of the ramp, not its start.
+    fn default() -> Self {
+        Self { phase: 1.0, playing: false, speed: 0.5, loop_mode: FemLoopMode::Loop, waveform: FemWaveform::Ramp, reverse: false }
+    }
+}
+
+impl FemResultsAnimation {
+    /// 〰️ The signed factor the solved displacement field is scaled by this frame. `Sine` returns
+    /// negative values on purpose: the structure swings through both signs instead of only growing.
+    pub fn amplitude(&self) -> f64 {
+        match self.waveform {
+            FemWaveform::Ramp => self.phase,
+            FemWaveform::Sine => (std::f64::consts::TAU * self.phase).sin(),
+        }
+    }
+
+    /// ▶️ Arms playback: a `Once` run that already sits at its end rewinds, so the play button is
+    /// never a control that visibly does nothing.
+    pub fn start(&mut self) {
+        if self.loop_mode == FemLoopMode::Once && self.phase >= 1.0 {
+            self.phase = 0.0;
+        }
+        self.playing = true;
+    }
+}
+
+impl FemLoopMode {
+    /// 🔑️ The wire key a transport select control carries.
+    pub fn key(self) -> &'static str {
+        match self {
+            Self::Loop => "loop",
+            Self::PingPong => "pingPong",
+            Self::Once => "once",
+        }
+    }
+}
+
+impl FemWaveform {
+    /// 🗝️ The wire key a transport select control carries.
+    pub fn key(self) -> &'static str {
+        match self {
+            Self::Ramp => "ramp",
+            Self::Sine => "sine",
+        }
+    }
+}
+//#endregion ⏯️Playback
 
 //#region 🔖️ResultDisplay
 /// 👁️ Render projection of the persisted configuration of one exact results window.

@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/mutation/rotate-selection3d/schema.json",
   "title": "RotateSelection3d",
+  "x-semio-inverse-rows": { "perTarget": { "targets": 1 } },
   "description": "The `rotate-selection3d` mutation record — a relative turn of parts and target volumes, each about its own origin; internally tagged `\"mutation\": \"rotateSelection3d\"`, the one branch the aggregate `../🔣️.json` union carries for this kind.",
   "type": "object",
   "additionalProperties": false,

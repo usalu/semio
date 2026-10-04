@@ -1,44 +1,30 @@
 use super::*;
 use crate::standards::v1::subsets::image::schema::snapshot::{SemioImageFrame, SemioImageMetadataEntry};
 
-// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sample_semio() -> SemioImageSnapshot {
     SemioImageSnapshot {
-        width: 2,
-        height: 1,
-        colorspace: SemioColorspace::Rgba,
-        bit_depth: 8,
+        width: 2, height: 1, colorspace: crate::standards::v1::subsets::image::schema::snapshot::SemioColorspace::Rgba, bit_depth: 8,
         frames: vec![SemioImageFrame { delay_ms: 0, rgba8: vec![255, 0, 0, 255, 0, 255, 0, 255] }],
-        icc: None,
-        metadata: vec![SemioImageMetadataEntry { key: "Title".into(), value: "semio fixture".into() }],
+        icc: None, metadata: vec![SemioImageMetadataEntry { key: "Title".into(), value: "semio fixture".into() }],
         ..SemioImageSnapshot::default()
     }
 }
 
 #[semio_framework_async_macros::async_test]
-async fn maps_pixels_and_metadata_to_png() {
+async fn authors_a_valid_rgba8_png_with_metadata() {
     let semio = sample_semio();
-    let png = semio_framework_plugin::resolve_ready(SemioImageToPng::serialize(&semio)).expect("serialize");
-    assert_eq!(png.width, 2);
-    assert_eq!(png.height, 1);
-    assert_eq!(png.pixels, semio.frames[0].rgba8);
-    assert_eq!(png.text_chunks.len(), 1);
-    assert_eq!(png.text_chunks[0].keyword, "Title");
+    let png = ::semio_framework_async::poll::resolve_ready(SemioImageToPng::serialize(&semio)).unwrap();
+    let projection = semio_s_artifact_stdio_png::io::project_png(&png.bytes).unwrap();
+    assert_eq!((projection.width, projection.height, projection.bit_depth, projection.color_type), (2, 1, 8, PngColorType::Rgba));
+    assert_eq!(projection.pixels, semio.frames[0].rgba8);
+    assert_eq!((projection.text_chunks[0].keyword.as_str(), projection.text_chunks[0].value.as_str()), ("Title", "semio fixture"));
+    assert_eq!(semio_s_artifact_stdio_png::io::encode_png(&png).unwrap(), png.bytes);
 }
 
-/// 🧪️ Real round trip: semio → (this leaf) → `PngSnapshot` → (png's own real codec) → bytes →
-/// (png's own real codec) → `PngSnapshot` — proves the serializer produces a genuinely
-/// encodable/decodable PNG, not just a plausible-looking struct.
 #[semio_framework_async_macros::async_test]
-async fn real_byte_round_trip_through_png_codec() {
-    let semio = sample_semio();
-    let png = semio_framework_plugin::resolve_ready(SemioImageToPng::serialize(&semio)).expect("serialize");
-    let bytes = semio_s_artifact_stdio_png::engine::encode_png(&png).expect("encode real png bytes");
-    let decoded = semio_s_artifact_stdio_png::engine::decode_png(&bytes).expect("decode real png bytes");
-    assert_eq!(decoded.pixels, semio.frames[0].rgba8);
-    assert_eq!(decoded.width, semio.width);
-    assert_eq!(decoded.height, semio.height);
-    assert_eq!(decoded.text_chunks.len(), 1);
-    assert_eq!(decoded.text_chunks[0].keyword, "Title");
-    assert_eq!(decoded.text_chunks[0].value, "semio fixture");
+async fn refuses_unrepresentable_animation_and_icc() {
+    let mut animated = sample_semio(); animated.frames.push(animated.frames[0].clone());
+    assert!(::semio_framework_async::poll::resolve_ready(SemioImageToPng::serialize(&animated)).is_err());
+    let mut profiled = sample_semio(); profiled.icc = Some(vec![1, 2, 3]);
+    assert!(::semio_framework_async::poll::resolve_ready(SemioImageToPng::serialize(&profiled)).is_err());
 }

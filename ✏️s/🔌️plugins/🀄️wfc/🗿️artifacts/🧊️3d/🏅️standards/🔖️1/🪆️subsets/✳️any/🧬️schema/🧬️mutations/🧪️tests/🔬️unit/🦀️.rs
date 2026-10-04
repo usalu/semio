@@ -98,7 +98,7 @@ fn every_mutation_inverse_restores_its_own_base_exactly() {
     for (mutation_dir, case, base, mutation) in fixture_cases() {
         let (forward, _) = apply_mutation(&base, &mutation).unwrap_or_else(|error| panic!("{mutation_dir}/{case}: forward apply failed: {error}"));
         let mut restored = forward.clone();
-        for back in mutation.inverse(&base) {
+        for back in mutation.inverse(&base).expect("valid retained mutation inverse fixture") {
             restored = apply_mutation(&restored, &back).unwrap_or_else(|error| panic!("{mutation_dir}/{case}: inverse apply failed: {error}")).0;
         }
         assert_eq!(restored, base, "{mutation_dir}/{case}: inverse() must restore the pre-mutation document");
@@ -180,16 +180,16 @@ fn regenerate_committed_fixture_quintets() {
             .messages()
             .iter()
             .map(|message| {
-                let level = dsl::json::to_json_string(&message.level);
-                format!("{{\"level\":{level},\"code\":{}}}", dsl::json::to_json_string(&message.code.0))
+                let level = semio_framework_pack_json::to_json_string(&message.level);
+                format!("{{\"level\":{level},\"code\":{}}}", semio_framework_pack_json::to_json_string(&message.code.0))
             })
             .collect();
         let outcome = if messages.is_empty() { "{\"status\":\"applied\"}".to_string() } else { format!("{{\"status\":\"applied\",\"messages\":[{}]}}", messages.join(",")) };
 
-        std::fs::write(directory.join("📸️snapshot/⬅️before/🔣️.json"), dsl::json::to_json_string(&base)).expect("write before");
-        std::fs::write(directory.join("📸️snapshot/➡️after/🔣️.json"), dsl::json::to_json_string(&after)).expect("write after");
-        std::fs::write(directory.join("🦠️mutation/🔣️.json"), dsl::json::to_json_string(&mutation)).expect("write mutation");
-        std::fs::write(directory.join("🔺️diff/🔣️.json"), dsl::json::to_json_string(raised.diff())).expect("write diff");
+        std::fs::write(directory.join("📸️snapshot/⬅️before/🔣️.json"), semio_framework_pack_json::to_json_string(&base)).expect("write before");
+        std::fs::write(directory.join("📸️snapshot/➡️after/🔣️.json"), semio_framework_pack_json::to_json_string(&after)).expect("write after");
+        std::fs::write(directory.join("🦠️mutation/🔣️.json"), semio_framework_pack_json::to_json_string(&mutation)).expect("write mutation");
+        std::fs::write(directory.join("🔺️diff/🔣️.json"), semio_framework_pack_json::to_json_string(raised.diff())).expect("write diff");
         std::fs::write(directory.join("🎯️outcome/🔣️.json"), outcome).expect("write outcome");
     }
 }

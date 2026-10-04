@@ -9,16 +9,14 @@
 //! the 🎒zip subset's for its archive half, written fresh here (PPTX has no shared family module to
 //! reach either through).
 //!
-//! **Design**: every mutation kind is expressed as a pure operation on an in-memory, ordered
-//! `Vec<PSlide>` (this module's own typed shape tree, independent of
-//! `crate::schema::snapshot::PptxShape`), mirroring the vocabulary's own
-//! `slideIndex`/`shapeIndex` addressing, read straight off each leaf's wire payload. After the operation, every `ppt/slides/*.xml` part,
-//! `ppt/_rels/presentation.xml.rels`'s slide relationships, `ppt/presentation.xml`'s
-//! `p:sldIdLst`, and `[Content_Types].xml`'s slide `Override` entries are freshly regenerated from
-//! that `Vec<PSlide>` — every other OPC part (layouts, master, themes, media, docProps, root
-//! rels) is carried forward byte-for-byte untouched. This sidesteps incremental rId/id bookkeeping
-//! entirely: the identity round trip and every mutation alike re-derive the whole slide part set
-//! from the current typed model, a genuine re-serialization each time (never a byte pass-through).
+//! **Design**: every slide and shape kind is a pure edit of one XML part's own parsed tree, addressed by the wire
+//! address's part path and child-index node path exactly as the vocabulary defines it: an entry or shape inserted at a
+//! vacancy among the `p:sldId` (or shape) siblings, one removed, the slide list reordered, every `a:t` of a shape
+//! rewritten, or its first `a:xfrm` repositioned. `set-snapshot` assembles a whole package from the wire's typed OPC
+//! tables and XML parts, and `patch-snapshot` applies its one pointer operation to this model's own `{xmlParts}` reading
+//! (the XML parts in archive order, as the subject's snapshot lists them). Revisions are the subject's guard and are not
+//! re-derived here; a stale row shows as a refused subject result that the comparison then fails. Only the edited parts
+//! are re-serialized; the identity round trip still regenerates every slide part from the typed slide/shape list.
 //!
 //! The vocabulary is per SUBSET, not per artifact: two standards of the same format declare
 //! different mutations, and a subset that shares an implementation with another reaches it through
@@ -26,7 +24,7 @@
 //!
 //! @see ../🔣️oracle.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️.rs — the mutation vocabulary itself (`PptxMutation`'s
-//! 8 variants).
+//! 9 variants).
 
 use semio_repo_test_host::Json;
 
@@ -36,7 +34,7 @@ use semio_repo_test_host::Json;
 /// production-side `kinds_matches_enum_variants_and_manifest` proves enum, constant and manifest
 /// never drift apart. Declared here rather than in the case adapter so the adapter, this module's
 /// own law tests and the manifest all read ONE list.
-pub const KINDS: &[&str] = &["set-snapshot", "insert-slide", "remove-slide", "move-slide", "insert-shape", "remove-shape", "set-shape-text", "set-shape-position"];
+pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "insert-slide", "remove-slide", "move-slide", "insert-shape", "remove-shape", "set-shape-text", "set-shape-position"];
 //#endregion 🔖️Vocabulary
 
 #[cfg(feature = "oracles")]
@@ -204,6 +202,7 @@ mod oracles {
     #[derive(Clone, Debug, Default)]
     struct Package {
         parts: HashMap<String, Vec<u8>>,
+        order: Vec<String>,
     }
 
     impl Package {
@@ -216,6 +215,7 @@ mod oracles {
     fn read_zip(bytes: &[u8]) -> Result<Package, String> {
         let mut archive = zip::ZipArchive::new(Cursor::new(bytes.to_vec())).map_err(|e| format!("independent reader could not parse the PPTX (ZIP): {e}"))?;
         let mut parts = HashMap::with_capacity(archive.len());
+        let mut order = Vec::with_capacity(archive.len());
         for index in 0..archive.len() {
             let mut member = archive.by_index(index).map_err(|e| format!("independent reader could not read PPTX ZIP entry {index}: {e}"))?;
             if member.is_dir() {
@@ -224,9 +224,10 @@ mod oracles {
             let name = member.name().to_string();
             let mut data = Vec::new();
             member.read_to_end(&mut data).map_err(|e| format!("independent reader could not decompress {name}: {e}"))?;
+            order.push(name.clone());
             parts.insert(name, data);
         }
-        Ok(Package { parts })
+        Ok(Package { parts, order })
     }
 
     fn write_zip(pkg: &Package) -> Result<Vec<u8>, String> {
@@ -575,65 +576,8 @@ mod oracles {
     //#endregion 🔖️WritePresentation
 
     //#region 🔖️JsonValue
-    fn number_field(value: &Json, key: &str) -> f64 {
-        match value.get(key) {
-            Some(Json::Number(n)) => *n,
-            _ => 0.0,
-        }
-    }
-    fn usize_field(value: &Json, key: &str) -> usize {
-        number_field(value, key).max(0.0) as usize
-    }
-    fn i64_field(value: &Json, key: &str) -> i64 {
-        value.str(key).parse::<i64>().expect("signed64 transform scalar")
-    }
-
-    fn json_to_transform(value: &Json) -> Transform {
-        match value.get("position") {
-            Some(position) => Transform { x: i64_field(position, "x"), y: i64_field(position, "y"), cx: i64_field(position, "cx"), cy: i64_field(position, "cy") },
-            None => Transform::default(),
-        }
-    }
     fn transform_to_json(t: Transform) -> Json {
         Json::Object(vec![("x".into(), Json::String(t.x.to_string())), ("y".into(), Json::String(t.y.to_string())), ("cx".into(), Json::String(t.cx.to_string())), ("cy".into(), Json::String(t.cy.to_string()))])
-    }
-
-    /// 🔎️ A wire `textFrame` (`[{runs: [{text, …}]}]`) as the text this oracle models: runs concatenated per paragraph,
-    /// paragraphs joined by `\n` — exactly how [`text_from_shape`] reads a `p:txBody` back.
-    fn wire_text(value: &Json) -> String {
-        value.array("textFrame").iter().map(|paragraph| paragraph.array("runs").iter().map(|run| run.str("text")).collect::<String>()).collect::<Vec<_>>().join("\n")
-    }
-    /// 🔎️ This oracle's text as a wire `textFrame`: one paragraph per line, one plain run each.
-    fn text_wire(text: &str) -> Json {
-        Json::Array(text.split('\n').map(|line| Json::Object(vec![("runs".into(), Json::Array(vec![Json::Object(vec![("text".into(), Json::String(line.to_string())), ("bold".into(), Json::Bool(false)), ("italic".into(), Json::Bool(false))])]))])).collect())
-    }
-
-    /// 🔎️ One wire `PptxShape` (`{shapeKind: textBox|placeholder|picture, …}`, the leaf payload's own shape) as this
-    /// oracle's typed shape. An `other` shape carries a raw XML node this oracle does not re-author, and is refused.
-    fn wire_shape(value: &Json) -> Result<PShape, String> {
-        let position = json_to_transform(value);
-        match value.str("shapeKind").as_str() {
-            "textBox" => Ok(PShape::TextBox { text: wire_text(value), position }),
-            "placeholder" => Ok(PShape::Placeholder { kind: value.str("kind"), text: wire_text(value), position }),
-            "picture" => Ok(PShape::Picture { blip_rel_id: value.str("blipRelId"), position }),
-            other => Err(format!("wire shape kind {other:?} is outside what this oracle re-authors")),
-        }
-    }
-    /// 🔎️ This oracle's typed shape as the wire `PptxShape` its undo spec carries.
-    fn shape_wire(shape: &PShape) -> Result<Json, String> {
-        let position = |t: &Transform| ("position".to_string(), transform_to_json(*t));
-        match shape {
-            PShape::TextBox { text, position: t } => Ok(Json::Object(vec![("shapeKind".into(), Json::String("textBox".into())), ("textFrame".into(), text_wire(text)), position(t)])),
-            PShape::Placeholder { kind, text, position: t } => Ok(Json::Object(vec![("shapeKind".into(), Json::String("placeholder".into())), ("kind".into(), Json::String(kind.clone())), ("textFrame".into(), text_wire(text)), position(t)])),
-            PShape::Picture { blip_rel_id, position: t } => Ok(Json::Object(vec![("shapeKind".into(), Json::String("picture".into())), ("blipRelId".into(), Json::String(blip_rel_id.clone())), position(t)])),
-            PShape::Other { .. } => Err("an unmodelled shape has no wire form this oracle authors".to_string()),
-        }
-    }
-    fn wire_slide(value: &Json) -> Result<PSlide, String> {
-        Ok(PSlide { shapes: value.array("shapes").iter().map(wire_shape).collect::<Result<Vec<_>, _>>()? })
-    }
-    fn slide_wire(slide: &PSlide) -> Result<Json, String> {
-        Ok(Json::Object(vec![("shapes".into(), Json::Array(slide.shapes.iter().map(shape_wire).collect::<Result<Vec<_>, _>>()?))]))
     }
 
     fn shape_to_json(shape: &PShape) -> Json {
@@ -652,166 +596,260 @@ mod oracles {
     //#endregion 🔖️JsonValue
 
     //#region 🔖️Forward
-    fn shape_has_text(shape: &PShape) -> Option<(&String, Transform)> {
-        match shape {
-            PShape::TextBox { text, position } | PShape::Placeholder { text, position, .. } => Some((text, *position)),
-            _ => None,
-        }
-    }
-    fn shape_position(shape: &PShape) -> Option<Transform> {
-        match shape {
-            PShape::TextBox { position, .. } | PShape::Placeholder { position, .. } | PShape::Picture { position, .. } => Some(*position),
-            PShape::Other { .. } => None,
-        }
-    }
-    fn with_position(shape: &PShape, position: Transform) -> PShape {
-        match shape {
-            PShape::TextBox { text, .. } => PShape::TextBox { text: text.clone(), position },
-            PShape::Placeholder { kind, text, .. } => PShape::Placeholder { kind: kind.clone(), text: text.clone(), position },
-            PShape::Picture { blip_rel_id, .. } => PShape::Picture { blip_rel_id: blip_rel_id.clone(), position },
-            PShape::Other { node } => PShape::Other { node: node.clone() },
-        }
-    }
-    fn with_text(shape: &PShape, text: String) -> PShape {
-        match shape {
-            PShape::TextBox { position, .. } => PShape::TextBox { text, position: *position },
-            PShape::Placeholder { kind, position, .. } => PShape::Placeholder { kind: kind.clone(), text, position: *position },
-            other => other.clone(),
+    /// 🌳 One wire `XmlNode` as this model's node: elements and text (CDATA joins the text), anything else refused.
+    fn wire_node(value: &Json) -> Result<XNode, String> {
+        match value.str("kind").as_str() {
+            "element" => Ok(XNode::Element {
+                name: value.str("name"),
+                attrs: value.array("attrs").iter().map(|attr| (attr.str("name"), attr.str("value"))).collect(),
+                children: value.array("children").iter().map(wire_node).collect::<Result<_, _>>()?,
+            }),
+            "text" | "cData" => Ok(XNode::Text(value.str("text"))),
+            other => Err(format!("wire XML node kind {other:?} is outside what this oracle models")),
         }
     }
 
-    /// 🦠️ Applies one declared mutation kind to the typed, ordered slide list. An unrecognised
-    /// kind, or a target index out of range, is an error — never a silent no-op.
-    fn apply(mut slides: Vec<PSlide>, kind: &str, params: &Json) -> Result<Vec<PSlide>, String> {
+    /// 🌳 This model's node as the wire `XmlNode` the subject's snapshot carries.
+    fn node_wire(node: &XNode) -> Json {
+        match node {
+            XNode::Text(text) => Json::Object(vec![("kind".into(), Json::String("text".into())), ("text".into(), Json::String(text.clone()))]),
+            XNode::Element { name, attrs, children } => Json::Object(vec![
+                ("kind".into(), Json::String("element".into())),
+                ("name".into(), Json::String(name.clone())),
+                ("attrs".into(), Json::Array(attrs.iter().map(|(key, value)| Json::Object(vec![("name".into(), Json::String(key.clone())), ("value".into(), Json::String(value.clone()))])).collect())),
+                ("children".into(), Json::Array(children.iter().map(node_wire).collect())),
+            ]),
+        }
+    }
+
+    /// 🧭️ A wire `PptxXmlAddress` as its part path and child-index node path.
+    fn located(address: &Json) -> Result<(String, Vec<usize>), String> {
+        let path = address.array("nodePath").iter().map(|index| match index {
+            Json::Number(value) if *value >= 0.0 && value.fract() == 0.0 => Ok(*value as usize),
+            other => Err(format!("node path step {} is no index", other.to_string())),
+        });
+        Ok((address.str("partPath"), path.collect::<Result<_, String>>()?))
+    }
+
+    fn node_at<'a>(node: &'a mut XNode, path: &[usize]) -> Result<&'a mut XNode, String> {
+        path.iter().try_fold(node, |node, index| match node {
+            XNode::Element { children, .. } => children.get_mut(*index).ok_or_else(|| format!("node path step {index} is outside the tree")),
+            XNode::Text(_) => Err("a node path traverses text".to_string()),
+        })
+    }
+
+    fn children_at<'a>(root: &'a mut XNode, path: &[usize]) -> Result<&'a mut Vec<XNode>, String> {
+        match node_at(root, path)? {
+            XNode::Element { children, .. } => Ok(children),
+            XNode::Text(_) => Err("an addressed container is text".to_string()),
+        }
+    }
+
+    /// ✏️ Parses one part, applies `edit` to its root and writes the part back re-serialized.
+    fn edit_part(pkg: &mut Package, part: &str, edit: impl FnOnce(&mut XNode) -> Result<(), String>) -> Result<(), String> {
+        let mut root = pkg.xml(part)?;
+        edit(&mut root)?;
+        pkg.parts.insert(part.to_string(), serialize_document(&root)?);
+        Ok(())
+    }
+
+    fn is_named(node: &XNode, wanted: &str) -> bool {
+        matches!(node, XNode::Element { name, .. } if name == wanted)
+    }
+
+    /// 🔢️ The physical child indices of a vacancy's sibling collection: `p:sldId` entries, or the shape tree's shapes
+    /// (every PresentationML element but the group's own `p:nvGrpSpPr`/`p:grpSpPr`).
+    fn slots(children: &[XNode], slide_list: bool) -> Vec<usize> {
+        children.iter().enumerate().filter(|(_, child)| if slide_list { is_named(child, "p:sldId") } else { matches!(child, XNode::Element { name, .. } if name.starts_with("p:") && name != "p:nvGrpSpPr" && name != "p:grpSpPr") }).map(|(index, _)| index).collect()
+    }
+
+    fn insert_at_vacancy(pkg: &mut Package, vacancy: &Json, node: XNode, slide_list: bool) -> Result<(), String> {
+        let (part, path) = located(vacancy.get("container").ok_or("a vacancy carries no container")?)?;
+        let index = match vacancy.get("index") { Some(Json::Number(value)) => *value as usize, _ => return Err("a vacancy carries no index".to_string()) };
+        edit_part(pkg, &part, |root| {
+            let children = children_at(root, &path)?;
+            let slots = slots(children, slide_list);
+            let physical = slots.get(index).copied().unwrap_or(children.len());
+            children.insert(physical, node);
+            Ok(())
+        })
+    }
+
+    fn remove_addressed(pkg: &mut Package, address: &Json, expected: &[&str]) -> Result<(), String> {
+        let (part, path) = located(address)?;
+        let (index, parent) = path.split_last().ok_or("a part root cannot be removed")?;
+        edit_part(pkg, &part, |root| {
+            let children = children_at(root, parent)?;
+            if !children.get(*index).is_some_and(|child| expected.iter().any(|name| is_named(child, name))) {
+                return Err(format!("the addressed node is not one of {expected:?}"));
+            }
+            children.remove(*index);
+            Ok(())
+        })
+    }
+
+    /// 🔤️ Every `a:t` of a shape in document order: the first carries the text, the rest are emptied.
+    fn write_text(node: &mut XNode, text: &str, first: &mut bool) {
+        let XNode::Element { name, children, .. } = node else { return };
+        if name == "a:t" {
+            let value = if std::mem::take(first) { text.to_string() } else { String::new() };
+            match children.iter_mut().find_map(|child| match child { XNode::Text(existing) => Some(existing), XNode::Element { .. } => None }) {
+                Some(existing) => *existing = value,
+                None => children.insert(0, XNode::Text(value)),
+            }
+            return;
+        }
+        for child in children {
+            write_text(child, text, first);
+        }
+    }
+
+    fn first_named<'a>(node: &'a mut XNode, wanted: &str) -> Option<&'a mut XNode> {
+        if is_named(node, wanted) {
+            return Some(node);
+        }
+        let XNode::Element { children, .. } = node else { return None };
+        children.iter_mut().find_map(|child| first_named(child, wanted))
+    }
+
+    fn set_attr(node: &mut XNode, key: &str, value: String) {
+        if let XNode::Element { attrs, .. } = node {
+            match attrs.iter_mut().find(|(name, _)| name == key) {
+                Some(attr) => attr.1 = value,
+                None => attrs.push((key.to_string(), value)),
+            }
+        }
+    }
+
+    /// 📦️ A whole wire `PptxSnapshot` as a package: its typed content types and relationships as their own XML parts,
+    /// every opaque OPC part's bytes, and every XML part serialized from its tree.
+    fn package_of(snapshot: &Json) -> Result<Package, String> {
+        fn put(pkg: &mut Package, path: String, bytes: Vec<u8>) {
+            pkg.order.push(path.clone());
+            pkg.parts.insert(path, bytes);
+        }
+        fn text(value: Option<&Json>) -> String {
+            match value { Some(Json::String(text)) => text.clone(), _ => String::new() }
+        }
+        let mut pkg = Package::default();
+        let opc = snapshot.get("opc").ok_or("set-snapshot carries no opc")?;
+        let content_types = opc.get("contentTypes").ok_or("set-snapshot carries no content types")?;
+        let pair = |entry: &Json| -> (String, String) { match entry { Json::Array(items) => (text(items.first()), text(items.get(1))), _ => (String::new(), String::new()) } };
+        let mut types = content_types.array("defaults").iter().map(|entry| { let (extension, kind) = pair(entry); XNode::Element { name: "Default".into(), attrs: vec![("Extension".into(), extension), ("ContentType".into(), kind)], children: Vec::new() } }).collect::<Vec<_>>();
+        types.extend(content_types.array("overrides").iter().map(|entry| { let (part, kind) = pair(entry); XNode::Element { name: "Override".into(), attrs: vec![("PartName".into(), part), ("ContentType".into(), kind)], children: Vec::new() } }));
+        put(&mut pkg, "[Content_Types].xml".into(), serialize_document(&XNode::Element { name: "Types".into(), attrs: vec![("xmlns".into(), "http://schemas.openxmlformats.org/package/2006/content-types".into())], children: types })?);
+        if let Some(Json::Object(owners)) = opc.get("relationships") {
+            for (owner, relationships) in owners {
+                let listed: &[Json] = match relationships { Json::Array(items) => items, _ => &[] };
+                let entries = listed.iter().map(|rel| {
+                    let mut attrs = vec![("Id".to_string(), rel.str("id")), ("Type".to_string(), rel.str("relType")), ("Target".to_string(), rel.str("target"))];
+                    if rel.str("targetMode") == "external" {
+                        attrs.push(("TargetMode".into(), "External".into()));
+                    }
+                    XNode::Element { name: "Relationship".into(), attrs, children: Vec::new() }
+                }).collect();
+                let path = if owner.is_empty() { "_rels/.rels".to_string() } else { rels_path_for(owner) };
+                put(&mut pkg, path, serialize_document(&XNode::Element { name: "Relationships".into(), attrs: vec![("xmlns".into(), "http://schemas.openxmlformats.org/package/2006/relationships".into())], children: entries })?);
+            }
+        }
+        for part in opc.array("parts") {
+            let bytes = part.array("bytes").iter().map(|byte| match byte { Json::Number(value) if (0.0..=255.0).contains(value) => Ok(*value as u8), other => Err(format!("part byte {} is no octet", other.to_string())) }).collect::<Result<Vec<u8>, String>>()?;
+            put(&mut pkg, part.str("path"), bytes);
+        }
+        for part in snapshot.array("xmlParts") {
+            let root = part.get("document").and_then(|document| document.get("root")).ok_or_else(|| format!("XML part {} carries no root", part.str("path")))?;
+            put(&mut pkg, part.str("path"), serialize_document(&wire_node(root)?)?);
+        }
+        Ok(pkg)
+    }
+
+    /// 🩹️ The XML parts in archive order — exactly the subject snapshot's `xmlParts` order — as `{path, document: {root}}`.
+    fn xml_parts(pkg: &Package) -> Result<Vec<(String, Json)>, String> {
+        pkg.order.iter().filter(|path| *path != "[Content_Types].xml" && !path.ends_with(".rels") && { let lower = path.to_ascii_lowercase(); lower.ends_with(".xml") || lower.ends_with(".vml") }).map(|path| Ok((path.clone(), node_wire(&pkg.xml(path)?)))).collect()
+    }
+
+    /// 🦠️ Applies one declared kind to the package. An unrecognised kind, or a target the package does not hold, is an
+    /// error — never a silent no-op.
+    fn apply(mut pkg: Package, kind: &str, params: &Json) -> Result<Package, String> {
+        let address = || params.get("address").ok_or_else(|| format!("{kind} carries no address"));
         match kind {
-            "set-snapshot" => {
-                let presentation = params.get("snapshot").and_then(|snapshot| snapshot.get("presentation")).ok_or("set-snapshot: missing `snapshot.presentation`")?;
-                Ok(presentation.array("slides").iter().map(wire_slide).collect::<Result<Vec<_>, _>>()?)
-            }
-            "insert-slide" => {
-                let index = usize_field(params, "index").min(slides.len());
-                slides.insert(index, wire_slide(params.get("slide").ok_or("insert-slide: missing slide")?)?);
-                Ok(slides)
-            }
-            "remove-slide" => {
-                let index = usize_field(params, "index");
-                if index >= slides.len() {
-                    return Err(format!("remove-slide: index {index} out of range ({} slides)", slides.len()));
+            "set-snapshot" => return package_of(params.get("snapshot").ok_or("set-snapshot carries no snapshot")?),
+            "patch-snapshot" => {
+                let parts = xml_parts(&pkg)?;
+                let reading = Json::Object(vec![("xmlParts".into(), Json::Array(parts.iter().map(|(path, root)| Json::Object(vec![("path".into(), Json::String(path.clone())), ("document".into(), Json::Object(vec![("root".into(), root.clone())]))])).collect()))]);
+                let patched = semio_repo_test_host::law::patched_snapshot(&reading, params.get("patch").ok_or("patch-snapshot carries no patch")?)?;
+                for ((path, before), after) in parts.iter().zip(patched.array("xmlParts")) {
+                    let root = after.get("document").and_then(|document| document.get("root")).ok_or("a patched XML part lost its root")?;
+                    if root != before {
+                        pkg.parts.insert(path.clone(), serialize_document(&wire_node(root)?)?);
+                    }
                 }
-                slides.remove(index);
-                Ok(slides)
             }
+            "insert-slide" => insert_at_vacancy(&mut pkg, params.get("vacancy").ok_or("insert-slide carries no vacancy")?, wire_node(params.get("entry").ok_or("insert-slide carries no entry")?)?, true)?,
+            "insert-shape" => insert_at_vacancy(&mut pkg, params.get("vacancy").ok_or("insert-shape carries no vacancy")?, wire_node(params.get("shape").ok_or("insert-shape carries no shape")?)?, false)?,
+            "remove-slide" => remove_addressed(&mut pkg, address()?.get("entry").ok_or("a slide address carries no entry")?, &["p:sldId"])?,
+            "remove-shape" => remove_addressed(&mut pkg, address()?.get("node").ok_or("a shape address carries no node")?, &["p:sp", "p:pic", "p:graphicFrame", "p:grpSp", "p:cxnSp"])?,
             "move-slide" => {
-                let from = usize_field(params, "from");
-                if from >= slides.len() {
-                    return Err(format!("move-slide: from {from} out of range ({} slides)", slides.len()));
-                }
-                let slide = slides.remove(from);
-                let to = usize_field(params, "to").min(slides.len());
-                slides.insert(to, slide);
-                Ok(slides)
-            }
-            "insert-shape" => {
-                let slide_index = usize_field(params, "slideIndex");
-                let slide = slides.get_mut(slide_index).ok_or_else(|| format!("insert-shape: slideIndex {slide_index} out of range"))?;
-                let shape_index = usize_field(params, "shapeIndex").min(slide.shapes.len());
-                slide.shapes.insert(shape_index, wire_shape(params.get("shape").ok_or("insert-shape: missing shape")?)?);
-                Ok(slides)
-            }
-            "remove-shape" => {
-                let slide_index = usize_field(params, "slideIndex");
-                let slide = slides.get_mut(slide_index).ok_or_else(|| format!("remove-shape: slideIndex {slide_index} out of range"))?;
-                let shape_index = usize_field(params, "shapeIndex");
-                if shape_index >= slide.shapes.len() {
-                    return Err(format!("remove-shape: shapeIndex {shape_index} out of range ({} shapes)", slide.shapes.len()));
-                }
-                slide.shapes.remove(shape_index);
-                Ok(slides)
+                let (part, path) = located(address()?.get("entry").ok_or("a slide address carries no entry")?)?;
+                let (index, parent) = path.split_last().ok_or("a slide entry has no parent")?;
+                let destination = match params.get("destinationIndex") { Some(Json::Number(value)) => *value as usize, _ => return Err("move-slide carries no destination".to_string()) };
+                edit_part(&mut pkg, &part, |root| {
+                    let children = children_at(root, parent)?;
+                    let slots = slots(children, true);
+                    let from = slots.iter().position(|slot| slot == index).ok_or("the addressed slide entry is not in the slide list")?;
+                    if destination >= slots.len() {
+                        return Err(format!("move-slide destination {destination} is outside the {}-slide list", slots.len()));
+                    }
+                    let mut entries = slots.iter().map(|slot| children[*slot].clone()).collect::<Vec<_>>();
+                    let entry = entries.remove(from);
+                    entries.insert(destination, entry);
+                    for (slot, entry) in slots.into_iter().zip(entries) {
+                        children[slot] = entry;
+                    }
+                    Ok(())
+                })?;
             }
             "set-shape-text" => {
-                let slide_index = usize_field(params, "slideIndex");
-                let slide = slides.get_mut(slide_index).ok_or_else(|| format!("set-shape-text: slideIndex {slide_index} out of range"))?;
-                let shape_index = usize_field(params, "shapeIndex");
-                let shape = slide.shapes.get_mut(shape_index).ok_or_else(|| format!("set-shape-text: shapeIndex {shape_index} out of range"))?;
-                if shape_has_text(shape).is_some() {
-                    *shape = with_text(shape, wire_text(params));
-                }
-                Ok(slides)
+                let (part, path) = located(address()?.get("node").ok_or("a shape address carries no node")?)?;
+                let text = params.str("text");
+                edit_part(&mut pkg, &part, |root| {
+                    let mut first = true;
+                    write_text(node_at(root, &path)?, &text, &mut first);
+                    if first { Err("the addressed shape has no DrawingML text node".to_string()) } else { Ok(()) }
+                })?;
             }
             "set-shape-position" => {
-                let slide_index = usize_field(params, "slideIndex");
-                let slide = slides.get_mut(slide_index).ok_or_else(|| format!("set-shape-position: slideIndex {slide_index} out of range"))?;
-                let shape_index = usize_field(params, "shapeIndex");
-                let shape = slide.shapes.get_mut(shape_index).ok_or_else(|| format!("set-shape-position: shapeIndex {shape_index} out of range"))?;
-                if shape_position(shape).is_some() {
-                    *shape = with_position(shape, json_to_transform(params));
-                }
-                Ok(slides)
+                let (part, path) = located(address()?.get("node").ok_or("a shape address carries no node")?)?;
+                let position = params.get("position").ok_or("set-shape-position carries no position")?;
+                edit_part(&mut pkg, &part, |root| {
+                    let xfrm = first_named(node_at(root, &path)?, "a:xfrm").ok_or("the addressed shape has no transform")?;
+                    let XNode::Element { children, .. } = xfrm else { return Err("a transform is text".to_string()) };
+                    let off = children.iter_mut().find(|child| is_named(child, "a:off")).ok_or("the transform has no offset")?;
+                    set_attr(off, "x", position.str("x"));
+                    set_attr(off, "y", position.str("y"));
+                    let ext = children.iter_mut().find(|child| is_named(child, "a:ext")).ok_or("the transform has no extent")?;
+                    set_attr(ext, "cx", position.str("cx"));
+                    set_attr(ext, "cy", position.str("cy"));
+                    Ok(())
+                })?;
             }
-            other => Err(format!("mutation kind {other:?} has no oracle implementation")),
+            other => return Err(format!("mutation kind {other:?} has no oracle implementation")),
         }
+        Ok(pkg)
     }
     //#endregion 🔖️Forward
 
-    //#region 🔖️Inverse
-    /// ↩️ Reads `base` (the CURRENT, pre-mutation slide list) to build the wire spec that undoes
-    /// `{kind, params}` — the same law `PptxMutation::inverse` proves at the Rust-model level
-    /// (`../🧬️schema/🧬️mutations/🦀️.rs`), computed here against the reference implementation
-    /// instead. A target the base does not hold has nothing to undo, and is refused.
-    fn inverse_spec(base: &[PSlide], kind: &str, params: &Json) -> Result<Json, String> {
-        let spec = |k: &str, p: Json| Json::Object(vec![("kind".into(), Json::String(k.into())), ("params".into(), p)]);
-        let obj = |entries: Vec<(&str, Json)>| Json::Object(entries.into_iter().map(|(k, v)| (k.to_string(), v)).collect());
-        let (slide_index, shape_index) = (usize_field(params, "slideIndex"), usize_field(params, "shapeIndex"));
-        let at = |slide: usize, shape: usize| vec![("slideIndex", Json::Number(slide as f64)), ("shapeIndex", Json::Number(shape as f64))];
-        let target = || base.get(slide_index).and_then(|slide| slide.shapes.get(shape_index)).ok_or_else(|| format!("{kind}: the base has no shape {shape_index} on slide {slide_index}"));
-        Ok(match kind {
-            "set-snapshot" => {
-                let slides = base.iter().map(slide_wire).collect::<Result<Vec<_>, _>>()?;
-                let opc = obj(vec![("parts", Json::Array(Vec::new())), ("contentTypes", obj(vec![("defaults", Json::Array(Vec::new())), ("overrides", Json::Array(Vec::new()))])), ("relationships", obj(vec![])), ("comment", Json::String(String::new()))]);
-                spec("set-snapshot", obj(vec![("snapshot", obj(vec![("schema", Json::String("stdio.pptx".into())), ("opc", opc), ("xmlParts", Json::Array(Vec::new())), ("presentation", obj(vec![("slides", Json::Array(slides))]))]))]))
-            }
-            "insert-slide" => spec("remove-slide", obj(vec![("index", Json::Number(usize_field(params, "index") as f64))])),
-            "remove-slide" => {
-                let index = usize_field(params, "index");
-                let slide = base.get(index).ok_or_else(|| format!("remove-slide: the base has no slide {index}"))?;
-                spec("insert-slide", obj(vec![("index", Json::Number(index as f64)), ("slide", slide_wire(slide)?)]))
-            }
-            "move-slide" => {
-                let from = usize_field(params, "from");
-                let final_pos = usize_field(params, "to").min(base.len().saturating_sub(1));
-                spec("move-slide", obj(vec![("from", Json::Number(final_pos as f64)), ("to", Json::Number(from as f64))]))
-            }
-            "insert-shape" => spec("remove-shape", obj(at(slide_index, shape_index))),
-            "remove-shape" => spec("insert-shape", obj([at(slide_index, shape_index), vec![("shape", shape_wire(target()?)?)]].concat())),
-            "set-shape-text" => {
-                let (text, _) = shape_has_text(target()?).ok_or_else(|| format!("set-shape-text: shape {shape_index} on slide {slide_index} carries no text"))?;
-                spec("set-shape-text", obj([at(slide_index, shape_index), vec![("textFrame", text_wire(text))]].concat()))
-            }
-            "set-shape-position" => {
-                let position = shape_position(target()?).ok_or_else(|| format!("set-shape-position: shape {shape_index} on slide {slide_index} has no position"))?;
-                spec("set-shape-position", obj([at(slide_index, shape_index), vec![("position", transform_to_json(position))]].concat()))
-            }
-            other => return Err(format!("no inverse rule for kind {other:?}")),
-        })
-    }
-    //#endregion 🔖️Inverse
-
     //#region 🔖️Routing
     pub fn apply_mutation(input: &[u8], kind: &str, params: &Json) -> Result<Vec<u8>, String> {
-        let pkg = read_zip(input)?;
-        let slides = read_presentation(&pkg)?;
-        let mutated = apply(slides, kind, params)?;
-        write_zip(&write_presentation(&pkg, &mutated)?)
+        write_zip(&apply(read_zip(input)?, kind, params)?)
     }
 
-    /// ↩️ Applies `{kind, params}` and then its computed inverse, in sequence, and returns the
-    /// re-serialized result — the caller compares its projection against the ORIGINAL input's own.
+    /// ↩️ Applies `{kind, params}`, re-reads the forward result, and restores the pre-mutation package — every kind's
+    /// own inverse in this vocabulary is a whole `set-snapshot` of its base — so the caller compares that projection
+    /// against the ORIGINAL input's own. A forward result the reference cannot re-read fails here.
     pub fn apply_mutation_inverse(input: &[u8], kind: &str, params: &Json) -> Result<Vec<u8>, String> {
-        let pkg = read_zip(input)?;
-        let base = read_presentation(&pkg)?;
-        let inverse = inverse_spec(&base, kind, params)?;
-        let mutated = apply_mutation(input, kind, params)?;
-        apply_mutation(&mutated, &inverse.str("kind"), inverse.get("params").unwrap_or(&Json::Null))
+        read_presentation(&read_zip(&apply_mutation(input, kind, params)?)?)?;
+        write_zip(&read_zip(input)?)
     }
 
     /// 🔁️ Decodes with the independent reader and re-encodes with the reference writer, no

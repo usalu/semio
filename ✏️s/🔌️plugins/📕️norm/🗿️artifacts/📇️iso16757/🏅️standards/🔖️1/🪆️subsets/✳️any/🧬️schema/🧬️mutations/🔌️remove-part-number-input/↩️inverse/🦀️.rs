@@ -6,10 +6,13 @@ use crate::mutations::change_part_number_input;
 use crate::{Iso16757Mutation, Iso16757Snapshot};
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &RemovePartNumberInput, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
+pub fn inverse(payload: &RemovePartNumberInput, base: &Iso16757Snapshot) -> Result<Vec<Iso16757Mutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.part_number_inputs.get(&payload.key) {
         Some(old_value) => vec![Iso16757Mutation::ChangePartNumberInput(change_part_number_input::mutation::ChangePartNumberInput { key: payload.key.clone(), new_value: old_value.clone() })],
         None => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

@@ -2,19 +2,53 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/graph/mutation/remove-node-property/schema.json",
   "title": "RemoveNodeProperty",
+  "description": "The `remove-node-property` mutation record: the property entry carrying a key is detached from a node.",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "node_id",
-    "index"
+    "key"
   ],
   "properties": {
     "node_id": {
-      "$ref": "#/$defs/GraphNodeId"
+      "$ref": "#/$defs/GraphNodeId",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "Node the property is detached from.",
+          "de": "Knoten, von dem die Eigenschaft gelöst wird."
+        },
+        "ref": {
+          "kind": "node",
+          "domain": "graph",
+          "granularity": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
-    "index": {
-      "type": "integer",
-      "minimum": 0
+    "key": {
+      "type": "string",
+      "minLength": 1,
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "target",
+        "label": {
+          "en": "Property",
+          "de": "Eigenschaft"
+        },
+        "description": {
+          "en": "Key of the node property that is detached.",
+          "de": "Schlüssel der Knoteneigenschaft, die gelöst wird."
+        },
+        "group": "target",
+        "order": 20
+      }
     }
   },
   "$defs": {

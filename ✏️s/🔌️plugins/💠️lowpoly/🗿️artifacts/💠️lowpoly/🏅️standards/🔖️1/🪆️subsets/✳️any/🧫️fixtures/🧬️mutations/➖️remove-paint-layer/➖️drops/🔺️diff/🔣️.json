@@ -18,7 +18,8 @@
           "meshContent": null,
           "name": null,
           "smoothShading": null,
-          "transform": null
+          "transform": null,
+          "meshState": null
         }
       }
     ],

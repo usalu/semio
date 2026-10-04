@@ -18,7 +18,7 @@ use crate::{LowpolyObject, LowpolyObjectPatch, LowpolySelection, LowpolySnapshot
 use machine::Command;
 use protocol::Mutation;
 use semio_framework_plugin::Emit;
-use semio_framework_tool_machine::{ToolAbortReason, ToolMachineRunner, ToolRefusal, ToolStep, ToolTransaction, ToolTransactionState, ToolYield};
+use semio_framework_tool_machine::{GesturePhase, GestureTool, ToolAbortReason, ToolMachineRunner, ToolRefusal, ToolStep, ToolTransaction, ToolTransactionState, ToolYield};
 use std::collections::{BTreeMap, HashMap};
 use std::sync::Arc;
 use store::ArtifactPack;
@@ -56,13 +56,14 @@ pub fn object_patch_diff(before: &LowpolyObject, after: &LowpolyObject) -> Lowpo
         transform: (before.transform != after.transform).then(|| after.transform.clone()),
         mesh: (before.mesh != after.mesh).then(|| after.mesh.clone()),
         mesh_content: (before.mesh_content != after.mesh_content).then(|| after.mesh_content.clone()),
+        mesh_state: (before.mesh_state != after.mesh_state).then(|| after.mesh_state.clone()),
     }
 }
 
 /// 🎯️ Maps an `object_patch_diff` result (plus the edit's before/after `mesh_workspace` content) to the one semantic
 /// `LowpolyMutation` it represents — a kernel mesh edit changes exactly one facet per commit (name XOR smooth-shading
 /// XOR one transform axis XOR mesh), so the first populated field wins.
-pub fn semantic_mutation_for_patch(id: String, before_transform: &crate::LowpolyTransform, patch: &LowpolyObjectPatch, before_mesh_workspace: &str, after_mesh_workspace: &str) -> Option<LowpolyMutation> {
+pub fn semantic_mutation_for_patch(id: String, before_transform: &crate::LowpolyTransform, patch: &LowpolyObjectPatch, before_mesh_workspace: Option<&crate::LowpolyMeshState>, after_mesh_workspace: Option<&crate::LowpolyMeshState>) -> Option<LowpolyMutation> {
     if let Some(new_name) = &patch.name {
         return Some(LowpolyMutation::RenameObject(crate::mutations::rename_object::RenameObject { id, new_name: new_name.clone() }));
     }
@@ -81,11 +82,12 @@ pub fn semantic_mutation_for_patch(id: String, before_transform: &crate::Lowpoly
         }
     }
     if before_mesh_workspace != after_mesh_workspace {
-        if after_mesh_workspace.is_empty() {
+        if after_mesh_workspace.is_none() {
             return Some(LowpolyMutation::DeleteMesh(crate::mutations::delete_mesh::DeleteMesh { id }));
         }
-        let handle = crate::mesh_child_handle(&id, after_mesh_workspace);
-        return Some(LowpolyMutation::CreateMesh(crate::mutations::create_mesh::CreateMesh { id, child_id: handle.child_id, target: handle.target, mesh_workspace: after_mesh_workspace.to_string() }));
+        let state=after_mesh_workspace.expect("populated typed mesh state");
+        let handle = crate::managed_mesh_child_handle(&id, state);
+        return Some(LowpolyMutation::CreateMesh(crate::mutations::create_mesh::CreateMesh { id, child_id: handle.child_id, target: handle.target, mesh_workspace: String::new(), mesh_state:Some(state.clone()) }));
     }
     None
 }
@@ -111,7 +113,6 @@ fn fnv1a_u64(mut hash: u64, bytes: &[u8]) -> u64 {
 
 /// 🔧️ Runs a kernel mesh edit against a compute session built from the projection + config, then returns the
 /// resulting single semantic mutation. Takes `ctx` because the compute session's live `mesh_workspace` content for a
-/// legacy handle-only object lives session-side; building the doc and reading back its post-edit content both need
 /// the cache.
 ///
 /// 🔊️ Every refusal is an `Err` naming its cause — a session that cannot be built, an edit the kernel rejects, an
@@ -124,14 +125,14 @@ pub fn mesh_edit(projection: &LowpolySnapshot, config: &LowpolyConfig, ctx: &mut
     // 🕸️ The "before" geometry is the DOCUMENT's — `reload_meshes` just resolved every object from its persisted
     // `mesh_content`, so the compute session's cache is authoritative here and a stale transient is not.
     ctx.set_mesh_workspace_map(doc.mesh_workspace().clone());
-    let before_mesh_workspace = ctx.mesh_workspace(&object_id).to_string();
+    let before_mesh_workspace = ctx.mesh_workspace(&object_id).cloned();
     edit(&mut doc).map_err(|error| format!("lowpoly mesh edit on {object_id} (selection {:?}): {error}", doc.selection()))?;
     doc.sync_meshes_to_snapshot().map_err(|error| format!("lowpoly mesh edit: sync meshes: {error}"))?;
     ctx.set_mesh_workspace_map(doc.mesh_workspace().clone());
     let after = doc.snapshot().objects.iter().find(|object| object.id == object_id).cloned().ok_or_else(|| format!("lowpoly mesh edit: active object {object_id} vanished from the edited document"))?;
-    let after_mesh_workspace = ctx.mesh_workspace(&object_id).to_string();
+    let after_mesh_workspace = ctx.mesh_workspace(&object_id).cloned();
     let patch = object_patch_diff(&before, &after);
-    Ok(match semantic_mutation_for_patch(object_id, &before.transform, &patch, &before_mesh_workspace, &after_mesh_workspace) {
+    Ok(match semantic_mutation_for_patch(object_id, &before.transform, &patch, before_mesh_workspace.as_ref(), after_mesh_workspace.as_ref()) {
         Some(mutation) => Emit::mutations(vec![mutation]),
         None => Emit::default(),
     })
@@ -148,12 +149,11 @@ pub struct PaintTextureLut {
 }
 
 /// 🖌️ The dispatch context every `🎮️commands/*` handler receives: the session-local `mesh_workspace` cache (live
-/// half-edge-mesh JSON per object id, the fallback for a legacy handle-only object whose content the document does not
 /// persist), the dispatch's mesh-domain selection, the paint texture cache and the window paint gestures the
 /// transient carries, passed through untouched so a republished cache never drops an open stroke.
 pub struct LowpolyScratch {
     texture_cache: PaintTextureLut,
-    mesh_workspace: HashMap<String, String>,
+    mesh_workspace: HashMap<String, crate::LowpolyMeshState>,
     current_selection: LowpolySelection,
     selection_object_id: Option<String>,
     selected_object_ids: Vec<String>,
@@ -193,19 +193,17 @@ impl LowpolyScratch {
     pub fn selection_object_id(&self) -> Option<&str> {
         self.selection_object_id.as_deref()
     }
-
-    /// 🕸️ The live half-edge-mesh JSON cached for `object_id`, or `""` when this session has no working content for it.
-    pub fn mesh_workspace(&self, object_id: &str) -> &str {
-        self.mesh_workspace.get(object_id).map(String::as_str).unwrap_or_default()
+    pub fn mesh_workspace(&self, object_id: &str) -> Option<&crate::LowpolyMeshState> {
+        self.mesh_workspace.get(object_id)
     }
 
     /// 🕸️ A clone of the full session-local mesh-workspace cache — `LowpolyDocument::with_context`'s input.
-    pub fn mesh_workspace_map(&self) -> HashMap<String, String> {
+    pub fn mesh_workspace_map(&self) -> HashMap<String, crate::LowpolyMeshState> {
         self.mesh_workspace.clone()
     }
 
     /// 🕸️ Replaces the whole session-local mesh-workspace cache after a successful edit.
-    pub fn set_mesh_workspace_map(&mut self, map: HashMap<String, String>) {
+    pub fn set_mesh_workspace_map(&mut self, map: HashMap<String, crate::LowpolyMeshState>) {
         self.mesh_workspace = map;
     }
 
@@ -263,7 +261,7 @@ pub struct LowpolyPaintGesture {
 //#region 🔖️Transient
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct LowpolyTransientState {
-    mesh_workspace: Arc<BTreeMap<String, String>>,
+    mesh_workspace: Arc<BTreeMap<String, crate::LowpolyMeshState>>,
     paint: BTreeMap<String, LowpolyPaintGesture>,
 }
 
@@ -274,22 +272,22 @@ impl Default for LowpolyTransientState {
 }
 
 struct LowpolyTransientStateRef<'a> {
-    mesh_workspace: &'a BTreeMap<String, String>,
+    mesh_workspace: &'a BTreeMap<String, crate::LowpolyMeshState>,
     paint: &'a BTreeMap<String, LowpolyPaintGesture>,
 }
 
 /// 🌉️ Hand-written, not derived: the reference fields would need `ToValue` for reference types, which the codec
 /// deliberately never provides; each field converts through its owned type's impl, in the derive's camelCase shape.
-impl<'a> dsl::ToValue for LowpolyTransientStateRef<'a> {
-    fn to_value(&self) -> dsl::DslValue {
-        dsl::DslValue::Object(vec![("meshWorkspace".to_string(), dsl::ToValue::to_value(self.mesh_workspace)), ("paint".to_string(), dsl::ToValue::to_value(self.paint))])
+impl<'a> semio_framework_value::ToValue for LowpolyTransientStateRef<'a> {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::Object(vec![("meshWorkspace".to_string(), semio_framework_value::ToValue::to_value(self.mesh_workspace)), ("paint".to_string(), semio_framework_value::ToValue::to_value(self.paint))])
     }
 }
 
 #[derive(value_derive::FromValue, value_derive::ToValue)]
 #[value(rename_all = "camelCase")]
 struct LowpolyTransientStateWire {
-    mesh_workspace: BTreeMap<String, String>,
+    mesh_workspace: BTreeMap<String, crate::LowpolyMeshState>,
     #[value(default)]
     paint: BTreeMap<String, LowpolyPaintGesture>,
 }
@@ -311,7 +309,9 @@ impl LowpolyTransient {
     #[cfg(test)]
     pub(crate) fn with_test_workspace_bytes(bytes: usize) -> Self {
         let mut state = LowpolyTransientState::default();
-        Arc::make_mut(&mut state.mesh_workspace).insert("test-padding".into(), "x".repeat(bytes));
+        let mut padding=crate::LowpolyMeshState::empty();
+        padding.materials.push(crate::LowpolyMeshMaterial{name:"padding".into(),value:semio_framework_value::DslValue::String("x".repeat(bytes))});
+        Arc::make_mut(&mut state.mesh_workspace).insert("test-padding".into(),padding);
         Self { state: Arc::new(state) }
     }
 
@@ -339,136 +339,28 @@ impl LowpolyTransient {
 
 /// 🔀️ Hand-written, not derived: `state` is an `Arc<LowpolyTransientState>` whose mesh root is itself shared; bridges
 /// through `LowpolyTransientStateRef`/`LowpolyTransientStateWire`.
-impl dsl::ToValue for LowpolyTransient {
-    fn to_value(&self) -> dsl::DslValue {
-        dsl::ToValue::to_value(&LowpolyTransientStateRef { mesh_workspace: &self.state.mesh_workspace, paint: &self.state.paint })
+impl semio_framework_value::ToValue for LowpolyTransient {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::ToValue::to_value(&LowpolyTransientStateRef { mesh_workspace: &self.state.mesh_workspace, paint: &self.state.paint })
     }
 }
 
-impl dsl::FromValue for LowpolyTransient {
-    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
-        let wire: LowpolyTransientStateWire = dsl::FromValue::from_value(value)?;
+impl semio_framework_value::FromValue for LowpolyTransient {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        let wire: LowpolyTransientStateWire = semio_framework_value::FromValue::from_value(value)?;
         Ok(Self { state: Arc::new(LowpolyTransientState { mesh_workspace: Arc::new(wire.mesh_workspace), paint: wire.paint }) })
     }
 }
 
-impl store::ArtifactDsl for LowpolyTransient {
-    const EXTENSION: &'static str = "lowpoly.transient";
-    fn envelope_id() -> &'static str {
-        "lowpoly.transient"
-    }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        if body.trim().is_empty() {
-            return Ok(Self::default());
-        }
-        dsl::json::from_json_str(body).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
-    }
-    fn print_dsl(&self) -> String {
-        let body = dsl::json::to_json_string(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid lowpoly transient envelope");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
-}
-
-impl ArtifactPack for LowpolyTransient {
-    fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let inner = dsl::json::to_json_string(self).into_bytes();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::Schema(error.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &inner))
-    }
-
-    fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        if bytes.is_empty() {
-            return Ok(Self::default());
-        }
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::Schema(error.to_string()))?;
-        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
-        }
-        let text = std::str::from_utf8(&inner).map_err(|error| store::PackError::Schema(error.to_string()))?;
-        dsl::json::from_json_str(text).map_err(|error| store::PackError::Schema(error.to_string()))
-    }
-}
-
-impl protocol::MutationDiff<LowpolyTransient> for LowpolyTransient {
-    fn apply(&self, _base: &LowpolyTransient) -> protocol::MutationApplyResult<LowpolyTransient> {
-        Ok(self.clone())
-    }
-
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
-pub enum LowpolyTransientMutation {
-    Snapshot { transient: LowpolyTransient },
-}
-
-impl Mutation<LowpolyTransient> for LowpolyTransientMutation {
-    type Diff = LowpolyTransient;
-
-    /// 🧷️ Per-variant leaf metadata for this hand-written (non-derived) aggregate — one entry for the sole `Snapshot`
-    /// variant.
-    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
-        schema_version: 1,
-        owner: "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/🖌️set-snapshot",
-        semantic_kind: "set-snapshot",
-        display_name: "Set Snapshot",
-        emoji: "🖌️",
-        aggregate_variant: "Snapshot",
-        payload_schema: "🧬️schema/🔣️.json",
-        text_opcode: None,
-        binary_tag: None,
-        invertibility: protocol::MutationInvertibility::ExplicitMutation,
-        diff_participation: protocol::MutationDiffParticipation::Detect,
-        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
-        composition: protocol::MutationComposition::Atomic,
-        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
-    }];
-
-    fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
-        match self {
-            LowpolyTransientMutation::Snapshot { .. } => &Self::DESCRIPTORS[0],
-        }
-    }
-
-    fn diff(&self, _base: &LowpolyTransient) -> protocol::MutationOutcome<LowpolyTransient> {
-        protocol::MutationOutcome::new(match self {
-            Self::Snapshot { transient } => transient.clone(),
-        })
-    }
-
-    fn inverse(&self, base: &LowpolyTransient) -> Vec<Self> {
-        vec![Self::Snapshot { transient: base.clone() }]
-    }
-}
-
-impl protocol::OpText for LowpolyTransientMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let body = line.strip_prefix("snapshot ").ok_or_else(|| store::TextError::new("expected Lowpoly transient snapshot", store::TextSpan::at(1, 1)))?;
-        dsl::json::from_json_str(body).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
-    }
-
-    fn print_op(&self) -> String {
-        format!("snapshot {}", dsl::json::to_json_string(self))
-    }
-}
-
-impl protocol::OpBinary for LowpolyTransientMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(dsl::json::to_json_string(self).into_bytes())
-    }
-
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))?;
-        dsl::json::from_json_str(text).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
-    }
+semio_framework_plugin::transient_root! {
+    state: LowpolyTransient,
+    mutation: LowpolyTransientMutation,
+    owner: "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/🖌️set-snapshot",
+    kind: "set-snapshot",
+    display_name: "Set Snapshot",
+    payload_schema: "🧬️schema/🔣️.json",
+    envelope: "lowpoly.transient",
+    extension: "lowpoly.transient",
 }
 
 impl LowpolyScratch {
@@ -498,6 +390,9 @@ pub const LOWPOLY_TOOL_APP_ID: &str = "s.lowpoly.lowpoly@1/*#editor";
 
 /// 🔑️ The transaction key of a streamed gesture's one leaf; a one-shot keys its leaves `"leaf:<index>"`.
 pub const LOWPOLY_TOOL_STREAM_KEY: &str = "stream:0";
+
+/// 🖍️ The paint gesture's verb: the one streamed tool of a lowpoly window, stamped `<appId>#paint`.
+pub const LOWPOLY_PAINT_VERB: &str = "paint";
 
 /// 📨️ One tool event's leaves: a one-shot's whole set, or a stream tick's single leaf (none for a bare release).
 #[derive(Clone, Debug)]
@@ -602,15 +497,11 @@ impl machine::Host<lowpoly_tool::LowpolyTool> for LowpolyToolHost {
     }
 }
 
-fn lowpoly_tool_clock() -> protocol::HybridLogicalTimestamp {
-    protocol::HybridLogicalTimestamp { actor: 0, physical_ms: semio_framework_job::default_now_ms().unwrap_or(0), logical: 0 }
-}
-
 /// 🛠️ Runs one gesture through a lowpoly tool at rest as ONE transaction of `<appId>#<verb>`, its ref minted from the
 /// admission's `authoring_seed` and the host clock. `None` when the gesture yields nothing: zero trace.
 pub fn lowpoly_tool_once(verb: &str, authoring_seed: &str, leaves: Vec<LowpolyMutation>) -> Option<(protocol::TransactionRef, Vec<LowpolyMutation>)> {
     let mut runner = ToolMachineRunner::<lowpoly_tool::LowpolyTool, LowpolyToolHost>::start(format!("{LOWPOLY_TOOL_APP_ID}#{verb}"), protocol::ActorId(authoring_seed.to_string()), LowpolyToolContext::default(), LowpolyToolHost).ok()?;
-    match runner.send(lowpoly_tool::Event::Once(LowpolyToolRequest { leaves }), lowpoly_tool_clock()).ok()? {
+    match runner.send(lowpoly_tool::Event::Once(LowpolyToolRequest { leaves }), semio_framework_tool_machine::authoring_clock(0)).ok()? {
         ToolStep::Committed(transaction, mutations) => Some((transaction, mutations)),
         _ => None,
     }
@@ -627,30 +518,6 @@ pub fn lowpoly_tool_emit(verb: &str, doc: &semio_framework_plugin::ArtifactView<
     }
 }
 
-/// 🎚️ Where one paint dispatch sits in its gesture: a one-shot `Once`, a `Stream` tick into the window's open
-/// transaction, the `Commit` that ends it, or a host `Abort` with its reason.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum LowpolyToolPhase {
-    Once,
-    Stream,
-    Commit,
-    Abort(ToolAbortReason),
-}
-
-impl LowpolyToolPhase {
-    /// 🧩️ Reads a paint verb's `phase` (`stream` | `commit` | `abort`, absent = one-shot) and an abort's `reason`
-    /// (`blur`, `captureLost`, `baseMoved`, `frozen`, `retired`; absent = `tool`); `None` for an unknown one.
-    pub fn parse(phase: Option<&str>, reason: Option<&str>) -> Option<Self> {
-        match phase {
-            None => Some(Self::Once),
-            Some("stream") => Some(Self::Stream),
-            Some("commit") => Some(Self::Commit),
-            Some("abort") => reason.map_or(Some(ToolAbortReason::Tool), ToolAbortReason::parse).map(Self::Abort),
-            Some(_) => None,
-        }
-    }
-}
-
 /// 🛠️ One window's paint tool for one dispatch, a `🛠️tool-machine` runner scoped `<appId>#paint`, started at rest or
 /// resumed from the gesture its window persisted.
 struct LowpolyPaintTool {
@@ -661,10 +528,16 @@ struct LowpolyPaintTool {
 
 impl LowpolyPaintTool {
     fn tool_id() -> String {
-        format!("{LOWPOLY_TOOL_APP_ID}#paint")
+        format!("{LOWPOLY_TOOL_APP_ID}#{LOWPOLY_PAINT_VERB}")
     }
+}
 
-    fn start(authoring_seed: &str, base_revision: &str) -> Result<Self, ToolRefusal> {
+impl GestureTool for LowpolyPaintTool {
+    type Gesture = LowpolyPaintGesture;
+    type Tick = LowpolyMutation;
+    type Mutation = LowpolyMutation;
+
+    fn start(_verb: &str, authoring_seed: &str, base_revision: &str) -> Result<Self, ToolRefusal> {
         let runner = ToolMachineRunner::start(Self::tool_id(), protocol::ActorId(authoring_seed.to_string()), LowpolyToolContext::default(), LowpolyToolHost)?;
         Ok(Self { runner, authoring_seed: authoring_seed.to_string(), base_revision: base_revision.to_string() })
     }
@@ -678,15 +551,27 @@ impl LowpolyPaintTool {
         Ok(Self { runner, authoring_seed: gesture.authoring_seed.clone(), base_revision: gesture.base_revision.clone() })
     }
 
-    fn send(&mut self, phase: LowpolyToolPhase, tick: Option<LowpolyMutation>) -> Result<ToolStep<LowpolyMutation>, ToolRefusal> {
+    fn verb(&self) -> &str {
+        LOWPOLY_PAINT_VERB
+    }
+
+    fn base_revision(&self) -> &str {
+        &self.base_revision
+    }
+
+    fn abort(&mut self, reason: ToolAbortReason) {
+        self.runner.abort(reason);
+    }
+
+    fn send(&mut self, phase: GesturePhase, tick: Option<LowpolyMutation>) -> Result<ToolStep<LowpolyMutation>, ToolRefusal> {
         let request = LowpolyToolRequest { leaves: tick.into_iter().collect() };
         let event = match phase {
-            LowpolyToolPhase::Stream => lowpoly_tool::Event::Stream(request),
-            LowpolyToolPhase::Commit if !self.runner.at_rest() => lowpoly_tool::Event::Finish(request),
-            LowpolyToolPhase::Abort(_) => lowpoly_tool::Event::Cancel,
-            LowpolyToolPhase::Once | LowpolyToolPhase::Commit => lowpoly_tool::Event::Once(request),
+            GesturePhase::Stream => lowpoly_tool::Event::Stream(request),
+            GesturePhase::Commit if !self.runner.at_rest() => lowpoly_tool::Event::Finish(request),
+            GesturePhase::Abort(_) => lowpoly_tool::Event::Cancel,
+            GesturePhase::Once | GesturePhase::Commit => lowpoly_tool::Event::Once(request),
         };
-        self.runner.send(event, lowpoly_tool_clock())
+        self.runner.send(event, semio_framework_tool_machine::authoring_clock(0))
     }
 
     fn persist(self) -> Option<LowpolyPaintGesture> {
@@ -704,42 +589,11 @@ pub struct LowpolyPaintDrive {
     pub transient: Option<LowpolyTransient>,
 }
 
-/// 🛠️ Drives `window`'s paint tool through ONE dispatch. `Once` commits `tick` as one transaction; `Stream` upserts it
-/// into the window's open transaction (opening it on the first tick), `Commit` folds it in and commits the whole
-/// gesture, `Abort` drops the open gesture with zero trace. An open gesture a one-shot interrupts is aborted
-/// `captureLost`; one whose base moved under it is aborted `baseMoved`, and a stream tick or commit that found it is
-/// dropped with it.
-pub fn lowpoly_paint_drive(transient: &LowpolyTransient, window: &str, phase: LowpolyToolPhase, tick: Option<LowpolyMutation>, authoring_seed: &str, base_revision: &str) -> LowpolyPaintDrive {
-    let persisted = transient.paint(window);
-    let open = persisted.and_then(|gesture| LowpolyPaintTool::resume(gesture).ok());
-    let dropped = LowpolyPaintDrive { committed: None, transient: persisted.map(|_| transient.with_paint(window, None)) };
-    let open = match (open, phase) {
-        (Some(mut tool), LowpolyToolPhase::Abort(reason)) => {
-            tool.runner.abort(reason);
-            return dropped;
-        }
-        (None, LowpolyToolPhase::Abort(_)) => return dropped,
-        (Some(mut tool), _) if tool.base_revision != base_revision => {
-            tool.runner.abort(ToolAbortReason::BaseMoved);
-            if phase != LowpolyToolPhase::Once {
-                return dropped;
-            }
-            None
-        }
-        (Some(mut tool), LowpolyToolPhase::Once) => {
-            tool.runner.abort(ToolAbortReason::CaptureLost);
-            None
-        }
-        (open, _) => open,
-    };
-    let Some(mut tool) = open.or_else(|| LowpolyPaintTool::start(authoring_seed, base_revision).ok()) else { return dropped };
-    let step = tool.send(phase, tick);
-    let next = transient.with_paint(window, tool.persist());
-    let changed = (next != *transient).then_some(next);
-    match step {
-        Ok(ToolStep::Committed(reference, mutations)) => LowpolyPaintDrive { committed: Some((reference, mutations)), transient: changed },
-        Ok(_) | Err(_) => LowpolyPaintDrive { committed: None, transient: changed },
-    }
+/// 🛞️ Drives `window`'s paint tool through ONE dispatch on the shared streamed-gesture runner
+/// ([`semio_framework_tool_machine::drive_gesture`]) against the gesture this transient holds for that window.
+pub fn lowpoly_paint_drive(transient: &LowpolyTransient, window: &str, phase: GesturePhase, tick: Option<LowpolyMutation>, authoring_seed: &str, base_revision: &str) -> LowpolyPaintDrive {
+    let drive = semio_framework_tool_machine::drive_gesture::<LowpolyPaintTool>(transient.paint(window), LOWPOLY_PAINT_VERB, phase, tick, authoring_seed, base_revision);
+    LowpolyPaintDrive { committed: drive.committed, transient: drive.next.map(|gesture| transient.with_paint(window, gesture)) }
 }
 //#endregion 🛠️Tool
 

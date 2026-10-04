@@ -14,10 +14,8 @@
 //!
 //! [`OracleDoc`] is a WHOLE PNG document, not just its raster: PLTE, the five typed ancillary
 //! chunks the crate models (gAMA, cHRM, sRGB, pHYs, bKGD), the tEXt chunks it models, plus tIME and
-//! any private/unregistered chunk, which it does not. A raster-only model was the real defect here:
-//! fifteen of this subset's seventeen kinds touch nothing but those chunks, so a decode that threw
-//! them away made every one of them re-encode to the same bytes as an unchanged round trip and pass for that
-//! reason alone.
+//! any private/unregistered chunk, which it does not, so a kind whose effect lands outside the raster
+//! still moves the projection.
 //!
 //! `png::Info` is the reference reader for everything the crate models. tIME and unknown chunks
 //! come from [`scan_extra_chunks`], a fixed-grammar walk over §5.3's `length/type/data/crc` layout:
@@ -25,29 +23,20 @@
 //! recognise, so those two are unreadable through the high-level API. Writing them back is the same
 //! story in reverse — `Writer::write_chunk` is the crate's own escape hatch for exactly this.
 //!
-//! # The two kinds that genuinely cannot be observed, and why they are not stubs
+//! # The vocabulary
 //!
-//! * `change-header` — this subset's own `encode_png` emits IHDR `[8, 6, 0, 0, 0]` unconditionally
-//!   (its `🚫️EncodeScopeNote`), because `PngSnapshot::pixels` is a canonical 8-bit RGBA buffer and
-//!   IHDR must describe the IDAT that follows it. `bit_depth`, `color_type` and `interlace` are
-//!   therefore fields the model carries and the serialization cannot; `width`/`height` cannot move
-//!   either, because `SetHeader` does not resize `pixels` and `encode_png` rejects a snapshot whose
-//!   buffer no longer matches its dimensions. The oracle mirrors that exactly.
-//! * `change-transparency` — §11.3.3 forbids tRNS alongside colour types 4 and 6, and colour type 6 is
-//!   what both encoders always produce. Setting `Some(_)` would emit a file the reference decoder
-//!   rejects outright (`png` 0.18 `decoder/stream.rs` `ColorWithBadTrns`); the fixture carries no
-//!   tRNS, so removing is a no-op on a chunk that was never there. Both are stated in the feature
-//!   file, and both are named in the adapter's observability-law exemption list rather than left to
-//!   pass silently.
-//!
-//! Every other kind — including the three the earlier revision of this module returned unchanged
-//! (`remove-text-chunk`, `replace-text-chunk`, `remove-unknown-chunk`) — moves the projection. Those
-//! three needed a target to remove, which the real fixture does not carry; [`oracle_arrange`] puts
-//! one there first, through this same independent implementation, following the OOXML conformance
-//! cases' own `conformance_arrange` precedent rather than inventing a second convention.
+//! `PngSnapshot` is byte-authoritative (`{schema, bytes}`, the file's own octets). `set-snapshot`
+//! installs a whole file, `patch-snapshot` is one pointer operation on the `{schema, bytes}` reading,
+//! `change-gamma` sets or removes gAMA, `patch-pixels` paints one RGBA8 colour into an 8-bit
+//! non-interlaced RGBA source, and `paint-native-samples` paints one native sample tuple. The three
+//! guarded kinds name the revision they were authored against (64-bit FNV-1a over the schema text and
+//! then the octets), which this module recomputes and refuses on mismatch, as the subject does; the
+//! paint it compares against `paint-native-samples`' carried `result` is its own. Every inverse is
+//! the untouched original, because the vocabulary's own inverse of each kind is a whole
+//! `set-snapshot` of its base.
 //!
 //! @see ../🔣️oracle.json — the mutation catalog this module is measured against.
-//! @see ../🧬️schema/🧬️mutations/🦀️.rs — the mutation vocabulary itself (`KINDS`).
+//! @see ../🧬️schema/🧬️mutations/🦀️.rs — the mutation vocabulary itself (`PngMutation`).
 
 use semio_repo_test_host::Json;
 
@@ -65,18 +54,6 @@ mod oracles {
             _ => None,
         }
     }
-    fn as_bool(params: &Json, key: &str) -> Option<bool> {
-        match params.get(key) {
-            Some(Json::Bool(value)) => Some(*value),
-            _ => None,
-        }
-    }
-    fn as_arr(value: &Json) -> &[Json] {
-        match value {
-            Json::Array(items) => items,
-            _ => &[],
-        }
-    }
     /// 🔢️ A byte-array member of a wire value.
     fn bytes_of(params: &Json, key: &str) -> Result<Vec<u8>, String> {
         match params.get(key) {
@@ -84,15 +61,8 @@ mod oracles {
             other => Err(format!("`{key}` must be a byte array, not {}", other.map(Json::to_string).unwrap_or_else(|| "nothing".to_string()))),
         }
     }
-    /// 🔎️ An `Option` member of a wire value: `None` when it is absent or `null`.
-    fn present<'a>(params: &'a Json, key: &str) -> Option<&'a Json> {
-        params.get(key).filter(|value| !matches!(value, Json::Null))
-    }
     fn empty_params() -> Json {
         Json::Object(Vec::new())
-    }
-    fn index_of(params: &Json) -> usize {
-        num(params, "index").unwrap_or(0.0).max(0.0) as usize
     }
     //#endregion 🔖️Json
 
@@ -128,8 +98,7 @@ mod oracles {
     //#region 🔖️ChunkScan
     /// 🔍️ Walks §5.3's `length | type | data | crc` chain and returns the tIME payload plus every
     /// chunk this reference reader does not model. `png::Info` has no `tIME` field and no accessor
-    /// for unrecognised types, so this is the only way to see either — and seeing them is what makes
-    /// `change-timestamp`, `insert-unknown-chunk` and `remove-unknown-chunk` observable at all.
+    /// for unrecognised types, so this is the only way to see either.
     fn scan_extra_chunks(data: &[u8]) -> Result<(Option<[u8; 7]>, Vec<([u8; 4], Vec<u8>)>), String> {
         if data.len() < 8 || data[0..8] != [0x89, b'P', b'N', b'G', 0x0D, 0x0A, 0x1A, 0x0A] {
             return Err("not a PNG byte stream".to_string());
@@ -171,7 +140,8 @@ mod oracles {
     /// observability law, which failed `mutate-change-gamma` and `mutate-change-chromaticities` because
     /// the values written on the way out were invisible on the way back in.
     pub fn decode(input: &[u8]) -> Result<OracleDoc, String> {
-        let decoder = png::Decoder::new(std::io::Cursor::new(input));
+        let mut decoder = png::Decoder::new(std::io::Cursor::new(input));
+        decoder.set_transformations(png::Transformations::ALPHA | png::Transformations::STRIP_16);
         let mut reader = decoder.read_info().map_err(|error| format!("independent reader could not parse the PNG: {error}"))?;
         let mut buffer = vec![0; reader.output_buffer_size().unwrap_or(0)];
         let frame = reader.next_frame(&mut buffer).map_err(|error| format!("independent reader could not decode the PNG: {error}"))?;
@@ -234,6 +204,34 @@ mod oracles {
             }
         }
     }
+    /// 🧪️ The independent reader's source profile and normalized RGBA8 samples.
+    pub struct SourceProjection {
+        pub width: u32,
+        pub height: u32,
+        pub bit_depth: u8,
+        pub color_type: u8,
+        pub interlaced: bool,
+        pub rgba: Vec<u8>,
+    }
+
+    /// 🔬️ Reads source metadata before applying the crate's own lossless color8 transformation.
+    pub fn inspect_source(input: &[u8]) -> Result<SourceProjection, String> {
+        let mut metadata_reader = png::Decoder::new(std::io::Cursor::new(input))
+            .read_info()
+            .map_err(|error| format!("independent reader could not parse the PNG: {error}"))?;
+        let info = metadata_reader.info();
+        let (width, height, bit_depth, color_type, interlaced) = (
+            info.width,
+            info.height,
+            info.bit_depth as u8,
+            info.color_type as u8,
+            info.interlaced,
+        );
+        let mut metadata_buffer = vec![0; metadata_reader.output_buffer_size().unwrap_or(0)];
+        metadata_reader.next_frame(&mut metadata_buffer).map_err(|error| format!("independent reader could not decode the source PNG: {error}"))?;
+        let normalized = decode(input)?;
+        Ok(SourceProjection { width, height, bit_depth, color_type, interlaced, rgba: normalized.rgba })
+    }
     //#endregion 🔖️Decode
 
     //#region 🔖️Encode
@@ -288,269 +286,133 @@ mod oracles {
     //#endregion 🔖️Encode
 
     //#region 🔖️Forward
-    /// 📝️ A `PngTextChunk` wire value as this model's `(keyword, value)` tEXt pair. `png::Info` writes only
-    /// uncompressed Latin-1 tEXt here, so a zTXt/iTXt chunk or a compressed one is refused rather than downgraded.
-    fn text_chunk_from(params: &Json) -> Result<(String, String), String> {
-        let chunk = params.get("chunk").ok_or("a text-chunk mutation carries no chunk")?;
-        if chunk.get("compressed") == Some(&Json::Bool(true)) || !matches!(chunk.str("kind").as_str(), "" | "text") || !chunk.str("languageTag").is_empty() || !chunk.str("translatedKeyword").is_empty() {
-            return Err("this oracle writes uncompressed tEXt chunks only".to_string());
+    /// 🔖️ The revision a guarded kind must name: 64-bit FNV-1a over the `schema` text `stdio.png`, then the file's octets.
+    fn revision(input: &[u8]) -> String {
+        let hash = b"stdio.png".iter().chain(input).fold(0xcbf2_9ce4_8422_2325u64, |hash, byte| (hash ^ u64::from(*byte)).wrapping_mul(0x0100_0000_01b3));
+        format!("{hash:016x}")
+    }
+
+    /// 🔲️ A paint rectangle (`{x, y, width, height}`, `y` counted from the image top); empty or out of bounds is refused.
+    fn region(doc: &OracleDoc, rectangle: &Json) -> Result<(usize, usize, usize, usize), String> {
+        let [x, y, width, height] = ["x", "y", "width", "height"].map(|key| num(rectangle, key).unwrap_or(0.0) as usize);
+        if width == 0 || height == 0 || x + width > doc.width as usize || y + height > doc.height as usize {
+            return Err(format!("paint region {x},{y} {width}x{height} is empty or leaves the {}x{} image", doc.width, doc.height));
         }
-        Ok((chunk.str("keyword"), chunk.str("value")))
+        Ok((x, y, width, height))
     }
 
-    /// 🗃️ A `PngChunk` wire value — its four chunk-type bytes and its payload bytes.
-    fn unknown_chunk_from(params: &Json) -> Result<([u8; 4], Vec<u8>), String> {
-        let chunk = params.get("chunk").ok_or("an unknown-chunk mutation carries no chunk")?;
-        let kind: [u8; 4] = bytes_of(chunk, "kind")?.try_into().map_err(|_| "a chunk type is exactly four bytes".to_string())?;
-        Ok((kind, bytes_of(chunk, "data")?))
-    }
-
-    /// 🦠️ Applies one declared kind to the document model in place. Out-of-range text/unknown-chunk
-    /// indices degrade to a no-op rather than erroring — the same documented behaviour as
-    /// `PngMutation::diff` (`../🧬️schema/🧬️mutations/🦀️.rs`), which this independent
-    /// implementation deliberately mirrors rather than diverging from without reason.
-    fn apply_kind(doc: &mut OracleDoc, kind: &str, params: &Json) -> Result<(), String> {
-        match kind {
-            "change-header" => {}
-            "replace-palette" => doc.palette = present(params, "plte").map(|entries| as_arr(entries).iter().flat_map(|entry| ["r", "g", "b"].map(|channel| num(entry, channel).unwrap_or(0.0) as u8)).collect()),
-            "change-transparency" => {}
-            "change-gamma" => doc.gama = num(params, "gama").map(|value| value as u32),
-            "change-chromaticities" => doc.chrm = present(params, "chrm").map(|chrm| ["whiteX", "whiteY", "redX", "redY", "greenX", "greenY", "blueX", "blueY"].map(|key| num(chrm, key).unwrap_or(0.0) as u32)),
-            "change-srgb-intent" => {
-                doc.srgb = match present(params, "srgb") {
-                    None => None,
-                    Some(Json::String(intent)) => Some(match intent.as_str() {
-                        "perceptual" => 0,
-                        "relativeColorimetric" => 1,
-                        "saturation" => 2,
-                        "absoluteColorimetric" => 3,
-                        other => return Err(format!("{other:?} is no sRGB rendering intent")),
-                    }),
-                    Some(other) => return Err(format!("`srgb` must be an intent name, not {}", other.to_string())),
-                }
+    /// 🖌️ Writes one RGBA8 colour into every pixel of a rectangle of the decoded raster.
+    fn fill(doc: &mut OracleDoc, rectangle: &Json, color: [u8; 4]) -> Result<(), String> {
+        let (x, y, width, height) = region(doc, rectangle)?;
+        let stride = doc.width as usize;
+        for row in y..y + height {
+            for column in x..x + width {
+                let at = (row * stride + column) * 4;
+                doc.rgba[at..at + 4].copy_from_slice(&color);
             }
-            "change-physical-dims" => doc.phys = present(params, "phys").map(|phys| (num(phys, "ppuX").unwrap_or(0.0) as u32, num(phys, "ppuY").unwrap_or(0.0) as u32, as_bool(phys, "unitIsMeter").unwrap_or(false))),
-            "change-timestamp" => {
-                doc.time = present(params, "time").map(|time| {
-                    let mut bytes = [0u8; 7];
-                    bytes[0..2].copy_from_slice(&(num(time, "year").unwrap_or(0.0) as u16).to_be_bytes());
-                    for (slot, key) in ["month", "day", "hour", "minute", "second"].iter().enumerate() {
-                        bytes[2 + slot] = num(time, key).unwrap_or(0.0) as u8;
-                    }
-                    bytes
-                });
-            }
-            "change-background" => {
-                doc.bkgd = match present(params, "bkgd") {
-                    None => None,
-                    Some(bkgd) if bkgd.str("colorType") == "rgb" => Some(["r", "g", "b"].map(|channel| num(bkgd, channel).unwrap_or(0.0) as u16)),
-                    Some(bkgd) => return Err(format!("this oracle writes the 6-byte RGB bKGD form only, not {:?}", bkgd.str("colorType"))),
-                }
-            }
-            "insert-text-chunk" => {
-                let at = index_of(params).min(doc.text_chunks.len());
-                doc.text_chunks.insert(at, text_chunk_from(params)?);
-            }
-            "remove-text-chunk" => {
-                let at = index_of(params);
-                if at < doc.text_chunks.len() {
-                    doc.text_chunks.remove(at);
-                }
-            }
-            "replace-text-chunk" => {
-                let at = index_of(params);
-                if at < doc.text_chunks.len() {
-                    doc.text_chunks[at] = text_chunk_from(params)?;
-                }
-            }
-            "replace-pixels" => {
-                let rgba = bytes_of(params, "pixels")?;
-                if rgba.len() != doc.width as usize * doc.height as usize * 4 {
-                    return Err(format!("replace-pixels carries {} bytes, not the {}x{} RGBA raster", rgba.len(), doc.width, doc.height));
-                }
-                doc.rgba = rgba;
-            }
-            "insert-unknown-chunk" => {
-                let at = index_of(params).min(doc.unknown_chunks.len());
-                doc.unknown_chunks.insert(at, unknown_chunk_from(params)?);
-            }
-            "remove-unknown-chunk" => {
-                let at = index_of(params);
-                if at < doc.unknown_chunks.len() {
-                    doc.unknown_chunks.remove(at);
-                }
-            }
-            "set-snapshot" => *doc = from_snapshot(params.get("snapshot").ok_or("set-snapshot carries no snapshot")?)?,
-            "patch-snapshot" => {
-                for (member, value) in patch_members(params)? {
-                    let kind = CHUNK_MEMBER_KINDS.iter().find(|(name, _)| *name == member).map(|(_, kind)| *kind).ok_or_else(|| format!("patch-snapshot sets `{member}`, which this oracle does not model as a chunk member"))?;
-                    apply_kind(doc, kind, &Json::Object(vec![(member, value)]))?;
-                }
-            }
-            "patch-pixels" => doc.rgba = patched_pixels(&doc.rgba, params)?,
-            other => return Err(format!("mutation kind {other:?} has no oracle implementation")),
         }
         Ok(())
     }
 
-    /// 🧩️ The top-level `PngSnapshot` members this model keeps as one ancillary chunk each, and the kind that writes it
-    /// — `patch-snapshot` edits and `set-snapshot` documents reach those members through the same independent parsers.
-    const CHUNK_MEMBER_KINDS: [(&str, &str); 7] = [("plte", "replace-palette"), ("gama", "change-gamma"), ("chrm", "change-chromaticities"), ("srgb", "change-srgb-intent"), ("phys", "change-physical-dims"), ("time", "change-timestamp"), ("bkgd", "change-background")];
-
-    /// 📸️ A whole `PngSnapshot` wire document as this model: the canonical RGBA raster (`width`×`height`×4 bytes),
-    /// every ancillary chunk member through its own kind's parser, the tEXt chunks and the verbatim unknown chunks.
-    fn from_snapshot(snapshot: &Json) -> Result<OracleDoc, String> {
-        let (width, height) = (num(snapshot, "width").unwrap_or(0.0) as u32, num(snapshot, "height").unwrap_or(0.0) as u32);
-        let rgba = bytes_of(snapshot, "pixels")?;
-        if rgba.len() != width as usize * height as usize * 4 {
-            return Err(format!("set-snapshot carries {} pixel bytes, not the {width}x{height} RGBA raster", rgba.len()));
+    /// 🎨️ The RGBA8 colour a native-sample paint means on an 8-bit source, read through the reference reader's own
+    /// header, palette and tRNS: the profile must be the source's, a palette index must address an entry.
+    fn native_color(input: &[u8], paint: &Json) -> Result<[u8; 4], String> {
+        let reader = png::Decoder::new(std::io::Cursor::new(input)).read_info().map_err(|error| format!("independent reader could not parse the PNG: {error}"))?;
+        let info = reader.info();
+        if info.bit_depth != png::BitDepth::Eight {
+            return Err("this oracle paints native samples of 8-bit sources only".to_string());
         }
-        let mut doc = OracleDoc { width, height, rgba, palette: None, gama: None, chrm: None, srgb: None, phys: None, time: None, bkgd: None, text_chunks: Vec::new(), unknown_chunks: Vec::new() };
-        for (_, kind) in CHUNK_MEMBER_KINDS {
-            apply_kind(&mut doc, kind, snapshot)?;
+        let profile = match info.color_type {
+            png::ColorType::Indexed => "indexed",
+            png::ColorType::Grayscale => "grayscale",
+            png::ColorType::GrayscaleAlpha => "grayscale-alpha",
+            png::ColorType::Rgb => "rgb",
+            png::ColorType::Rgba => "rgba",
+        };
+        if paint.str("profile") != profile {
+            return Err(format!("native paint profile {:?} is not the source's {profile}", paint.str("profile")));
         }
-        for chunk in snapshot.array("textChunks") {
-            doc.text_chunks.push(text_chunk_from(&Json::Object(vec![("chunk".to_string(), chunk)]))?);
+        let [first, second, third, fourth] = ["first", "second", "third", "fourth"].map(|key| num(paint, key).unwrap_or(0.0) as usize);
+        if [first, second, third, fourth].iter().any(|sample| *sample > 255) {
+            return Err("a native sample exceeds 255 for an 8-bit source".to_string());
         }
-        for chunk in snapshot.array("unknownChunks") {
-            doc.unknown_chunks.push(unknown_chunk_from(&Json::Object(vec![("chunk".to_string(), chunk)]))?);
-        }
-        Ok(doc)
-    }
-
-    /// 🩹️ The `(member, value)` pairs of a `SnapshotPatch` whose every edit sets (or inserts, when absent) one top-level member — the only
-    /// edits this model has a slot for; any other path or operation is refused, never skipped.
-    fn patch_members(params: &Json) -> Result<Vec<(String, Json)>, String> {
-        params.get("patch").map(|patch| patch.array("edits")).unwrap_or_default().into_iter().map(|edit| {
-            let path = edit.array("path");
-            let operation = edit.get("edit").cloned().unwrap_or(Json::Null);
-            match (path.as_slice(), operation.str("operation").as_str()) {
-                ([Json::String(member)], "set" | "insert") => Ok((member.clone(), operation.get("value").cloned().unwrap_or(Json::Null))),
-                (other, operation) => Err(format!("patch-snapshot {operation} at {} has no oracle implementation", Json::Array(other.to_vec()).to_string())),
+        let sample = |value: usize| value as u8;
+        Ok(match profile {
+            "indexed" => {
+                let palette = info.palette.as_deref().unwrap_or(&[]);
+                let entry = palette.get(first * 3..first * 3 + 3).ok_or_else(|| format!("palette index {first} exceeds {} entries", palette.len() / 3))?;
+                [entry[0], entry[1], entry[2], info.trns.as_deref().and_then(|alpha| alpha.get(first).copied()).unwrap_or(255)]
             }
-        }).collect()
+            "grayscale" => [sample(first), sample(first), sample(first), 255],
+            "grayscale-alpha" => [sample(first), sample(first), sample(first), sample(second)],
+            "rgb" => [sample(first), sample(second), sample(third), 255],
+            _ => [sample(first), sample(second), sample(third), sample(fourth)],
+        })
     }
 
-    /// 🩹️ `patch-pixels` over the canonical RGBA raster: replaces `removeCount` bytes at `index` with `pixels`, or moves
-    /// the byte at `index` to `moveTo`. PNG's image data holds exactly `height` scanlines of `width` pixels, so a patch
-    /// that would change the raster's byte length is refused.
-    fn patched_pixels(rgba: &[u8], params: &Json) -> Result<Vec<u8>, String> {
-        let index = num(params, "index").unwrap_or(f64::MAX) as usize;
-        let mut next = rgba.to_vec();
-        match num(params, "moveTo") {
-            Some(to) => {
-                let to = to as usize;
-                if index >= next.len() || to >= next.len() || num(params, "removeCount").unwrap_or(0.0) != 0.0 || !bytes_of(params, "pixels")?.is_empty() {
-                    return Err("patch-pixels move is outside the raster or carries replacement data".to_string());
+    /// 🦠️ One declared kind applied to the real artifact, independently of the subject: the revision guard and every
+    /// effect are recomputed here from their definitions, and the result is re-encoded by the reference writer.
+    fn apply_kind(input: &[u8], kind: &str, params: &Json) -> Result<Vec<u8>, String> {
+        if matches!(kind, "change-gamma" | "patch-pixels" | "paint-native-samples") && params.str("revision") != revision(input) {
+            return Err(format!("{kind} names revision {:?}, not this document's {}", params.str("revision"), revision(input)));
+        }
+        let mut doc = decode(input)?;
+        match kind {
+            "set-snapshot" => {
+                let snapshot = params.get("snapshot").ok_or("set-snapshot carries no snapshot")?;
+                if snapshot.str("schema") != "stdio.png" {
+                    return Err(format!("set-snapshot installs schema {:?}, not stdio.png", snapshot.str("schema")));
                 }
-                let byte = next.remove(index);
-                next.insert(to, byte);
+                doc = decode(&bytes_of(snapshot, "bytes")?)?;
             }
-            None => {
-                let end = index.checked_add(num(params, "removeCount").unwrap_or(0.0) as usize).filter(|end| *end <= next.len() && index <= next.len()).ok_or("patch-pixels range is outside the raster")?;
-                next.splice(index..end, bytes_of(params, "pixels")?);
+            "patch-snapshot" => {
+                let reading = Json::Object(vec![("schema".to_string(), Json::String("stdio.png".to_string())), ("bytes".to_string(), Json::Array(input.iter().map(|byte| Json::Number(f64::from(*byte))).collect()))]);
+                let patched = semio_repo_test_host::law::patched_snapshot(&reading, params.get("patch").ok_or("patch-snapshot carries no patch")?)?;
+                doc = decode(&bytes_of(&patched, "bytes")?)?;
             }
+            "change-gamma" => {
+                doc.gama = num(params, "gama").map(|value| value as u32);
+                if doc.gama == Some(0) {
+                    return Err("gAMA must be nonzero".to_string());
+                }
+            }
+            "patch-pixels" => {
+                let source = inspect_source(input)?;
+                if (source.color_type, source.bit_depth, source.interlaced) != (6, 8, false) {
+                    return Err("patch-pixels paints 8-bit non-interlaced RGBA sources only".to_string());
+                }
+                let color = ["red", "green", "blue", "alpha"].map(|key| num(params, key).unwrap_or(0.0) as u8);
+                fill(&mut doc, params, color)?;
+            }
+            "paint-native-samples" => {
+                let color = native_color(input, params.get("paint").ok_or("paint-native-samples carries no paint")?)?;
+                fill(&mut doc, params.get("region").ok_or("paint-native-samples carries no region")?, color)?;
+            }
+            "" => return Err("mutation spec carries no `kind`".to_string()),
+            other => return Err(format!("mutation kind {other:?} has no oracle implementation")),
         }
-        (next.len() == rgba.len()).then_some(next).ok_or_else(|| "patch-pixels would change the raster's byte length".to_string())
+        encode(&doc)
     }
     //#endregion 🔖️Forward
 
     //#region 🔖️Dispatch
-    /// 🎬️ Prepares the input a kind needs its target to be present in. The real committed fixture is
-    /// an 8-bit indexed floor plan whose only chunks are IHDR/PLTE/IDAT/IEND — verified by walking
-    /// the file, and stated in the feature — so the three kinds that address an EXISTING text or
-    /// unknown chunk are exercised on the real document after this same independent implementation
-    /// has inserted their target. Every other kind reads the committed bytes untouched.
-    pub fn arrange(input: &[u8], forward: &Json) -> Result<Vec<u8>, String> {
-        let seeded = |kind: &str, params: Vec<(&str, Json)>| -> Result<Vec<u8>, String> {
-            let mut doc = decode(input)?;
-            apply_kind(&mut doc, kind, &Json::Object(params.into_iter().map(|(key, value)| (key.to_string(), value)).collect()))?;
-            encode(&doc)
-        };
-        // 🎯️ The seeded target's content is deliberately NOT the row's own params: seeding with the
-        // same keyword and value the row then sets would make `replace-text-chunk` replace a chunk with
-        // its own twin, which is a mutation nothing can observe.
-        let object = |members: Vec<(&str, Json)>| Json::Object(members.into_iter().map(|(key, value)| (key.to_string(), value)).collect());
-        let bytes = |text: &str| Json::Array(text.bytes().map(|byte| Json::Number(f64::from(byte))).collect());
-        let text = || vec![("index", Json::Number(0.0)), ("chunk", object(vec![("keyword", Json::String("Source".to_string())), ("value", Json::String("arranged target, present only so a removal has something to remove".to_string())), ("compressed", Json::Bool(false)), ("kind", Json::String("text".to_string())), ("languageTag", Json::String(String::new())), ("translatedKeyword", Json::String(String::new()))]))];
-        let unknown = || vec![("index", Json::Number(0.0)), ("chunk", object(vec![("kind", bytes("seEd")), ("data", bytes("arranged target"))]))];
-        match forward.str("kind").as_str() {
-            "remove-text-chunk" | "replace-text-chunk" => seeded("insert-text-chunk", text()),
-            "remove-unknown-chunk" => seeded("insert-unknown-chunk", unknown()),
-            _ => Ok(input.to_vec()),
-        }
-    }
-
     /// 🦠️ Applies one declared mutation kind to a real artifact and returns the re-serialized
     /// bytes. An unrecognised kind is an error, never a silent no-op: a mutation that is quietly
     /// skipped reports as a passing test.
     pub fn apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
-        let kind = spec.str("kind");
-        if kind.is_empty() {
-            return Err("mutation spec carries no `kind`".to_string());
-        }
-        let params = spec.get("params").cloned().unwrap_or_else(empty_params);
-        let mut doc = decode(input)?;
-        apply_kind(&mut doc, &kind, &params)?;
-        encode(&doc)
+        apply_kind(input, &spec.str("kind"), &spec.get("params").cloned().unwrap_or_else(empty_params))
     }
 
-    /// ↩️ The `inverse-<kind>` scenarios' oracle: the reference's OWN inverse, computed by reading
-    /// the pre-mutation state out of `base` through this same independent implementation and
-    /// applied to the forward mutation's real output. `PngMutation::inverse` (the vocabulary's own
-    /// algebraic law) is defined, per variant, as "restore `base`'s own value for the field this
-    /// kind touches"; every arm below is that rule reimplemented here, never that function called.
+    /// ↩️ The `inverse-<kind>` scenarios' oracle: every kind of this vocabulary is undone by restoring the pre-mutation
+    /// document, re-encoded by the reference writer. Routing through `mutated` first is what gives the law teeth: a
+    /// forward result the independent reader cannot re-parse fails here instead of passing as `inverse-<kind>`.
     pub fn undo_mutation(original_input: &[u8], spec: &Json, mutated: &[u8]) -> Result<Vec<u8>, String> {
-        let kind = spec.str("kind");
-        if kind.is_empty() {
-            return Err("mutation spec carries no `kind`".to_string());
+        decode(mutated)?;
+        match spec.str("kind").as_str() {
+            "set-snapshot" | "patch-snapshot" | "change-gamma" | "patch-pixels" | "paint-native-samples" => encode(&decode(original_input)?),
+            "" => Err("mutation spec carries no `kind`".to_string()),
+            other => Err(format!("mutation kind {other:?} has no oracle inverse")),
         }
-        let params = spec.get("params").cloned().unwrap_or_else(empty_params);
-        let original = decode(original_input)?;
-        let mut doc = decode(mutated)?;
-        match kind.as_str() {
-            "change-header" | "change-transparency" => {}
-            "replace-palette" => doc.palette = original.palette,
-            "change-gamma" => doc.gama = original.gama,
-            "change-chromaticities" => doc.chrm = original.chrm,
-            "change-srgb-intent" => doc.srgb = original.srgb,
-            "change-physical-dims" => doc.phys = original.phys,
-            "change-timestamp" => doc.time = original.time,
-            "change-background" => doc.bkgd = original.bkgd,
-            "replace-pixels" => doc.rgba = original.rgba,
-            "insert-text-chunk" => {
-                let at = index_of(&params).min(original.text_chunks.len());
-                if at < doc.text_chunks.len() {
-                    doc.text_chunks.remove(at);
-                }
-            }
-            "remove-text-chunk" | "replace-text-chunk" => doc.text_chunks = original.text_chunks,
-            "insert-unknown-chunk" => {
-                let at = index_of(&params).min(original.unknown_chunks.len());
-                if at < doc.unknown_chunks.len() {
-                    doc.unknown_chunks.remove(at);
-                }
-            }
-            "remove-unknown-chunk" => doc.unknown_chunks = original.unknown_chunks,
-            "set-snapshot" => doc = original,
-            "patch-pixels" => doc.rgba = original.rgba,
-            "patch-snapshot" => {
-                for (member, _) in patch_members(&params)? {
-                    match member.as_str() {
-                        "plte" => doc.palette = original.palette.clone(),
-                        "gama" => doc.gama = original.gama,
-                        "chrm" => doc.chrm = original.chrm,
-                        "srgb" => doc.srgb = original.srgb,
-                        "phys" => doc.phys = original.phys,
-                        "time" => doc.time = original.time,
-                        "bkgd" => doc.bkgd = original.bkgd,
-                        other => return Err(format!("patch-snapshot member `{other}` has no oracle inverse")),
-                    }
-                }
-            }
-            other => return Err(format!("mutation kind {other:?} has no oracle inverse")),
-        }
-        encode(&doc)
     }
     //#endregion 🔖️Dispatch
 
@@ -581,12 +443,9 @@ mod oracles {
     /// 👁️ The surface every `mutate-<kind>`/`inverse-<kind>`/`identity-round-trip` scenario compares
     /// oracle against subject through, read back by THIS module's own independent [`decode`].
     ///
-    /// The earlier revision reported geometry and a sample digest only, which meant fifteen of the
-    /// seventeen declared kinds could not move it — every ancillary-chunk mutation projected exactly
-    /// like the untouched input, and its scenario passed for that reason. Everything a kind can
-    /// reach is reported here instead: the palette, the five typed ancillary chunks, the timestamp,
-    /// the background, the text chunks by keyword and value, and the unknown chunks by type and
-    /// payload digest.
+    /// Everything a kind can reach is reported: the palette, the five typed ancillary chunks, the
+    /// timestamp, the background, the text chunks by keyword and value, the unknown chunks by type and
+    /// payload digest, and a digest of the decoded samples.
     pub fn project(bytes: &[u8]) -> Result<Json, String> {
         let doc = decode(bytes)?;
         let text: Vec<Json> = doc.text_chunks.iter().map(|(keyword, value)| Json::Object(vec![("keyword".to_string(), Json::String(keyword.clone())), ("value".to_string(), Json::String(value.clone()))])).collect();
@@ -616,14 +475,16 @@ mod oracles {
 
 //#region 🔖️Dispatch
 #[cfg(feature = "oracles")]
-pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
-    oracles::apply_mutation(input, spec)
+pub use oracles::SourceProjection as PngSourceOracleProjection;
+
+#[cfg(feature = "oracles")]
+pub fn project_png_source(input: &[u8]) -> Result<PngSourceOracleProjection, String> {
+    oracles::inspect_source(input)
 }
 
-/// 🎬️ The pre-state a kind needs to have something to act on. @see `oracles::arrange`.
 #[cfg(feature = "oracles")]
-pub fn oracle_arrange(input: &[u8], forward: &Json) -> Result<Vec<u8>, String> {
-    oracles::arrange(input, forward)
+pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
+    oracles::apply_mutation(input, spec)
 }
 
 #[cfg(feature = "oracles")]
@@ -642,11 +503,6 @@ pub fn project_png_mutation(bytes: &[u8]) -> Result<Json, String> {
 /// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
 #[cfg(not(feature = "oracles"))]
 pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
-
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_arrange(_input: &[u8], _forward: &Json) -> Result<Vec<u8>, String> {
     Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 

@@ -5,7 +5,9 @@
 /// payload codecs. `out`/`input` follow `crate::codec::ByteWriter`/`ByteReader` conventions exactly
 /// (they take `&mut crate::codec::ByteWriter` / `&mut crate::codec::ByteReader<'_>` directly — no
 /// reimplementation of the varint/byte primitives).
-use crate::codec::{ByteReader, ByteWriter, PackError};
+use crate::codec::{ByteReader, ByteWriter};
+use semio_framework_pack_error::PackRefusal;
+use semio_framework_value::ValueRefusalKind;
 
 //#region 🔖️Timestamp
 // Timestamp tag: 0 = raw string (len varint + utf8), 1 = epoch-ms varint (iff reprint is
@@ -47,7 +49,7 @@ pub fn write_timestamp(out: &mut ByteWriter, raw: &str, prev_epoch_ms: Option<i6
 
 /// ⏱️ Reads one tagged timestamp, returning the reconstructed string and, iff tag 1/2,
 /// the `epoch_ms` to feed back in as `prev_epoch_ms` for the next call.
-pub fn read_timestamp(input: &mut ByteReader<'_>, prev_epoch_ms: Option<i64>) -> Result<(String, Option<i64>), PackError> {
+pub fn read_timestamp(input: &mut ByteReader<'_>, prev_epoch_ms: Option<i64>) -> Result<(String, Option<i64>), PackRefusal> {
     let tag = input.read_u8()?;
     match tag {
         0 => {
@@ -232,7 +234,7 @@ fn civil_from_days(z: i64) -> (i64, i64, i64) {
 /// 🪪️ Writes `id` using the most compact of the four id tags that preserves it exactly.
 // ✏️ `intern` is `FnMut` because dictionary insertion mutates its captured builder;
 // `resolve` is a plain `Fn` over an immutable reader.
-pub fn write_id(out: &mut ByteWriter, id: &str, mut intern: impl FnMut(&str) -> u32, edit_ordinal_of: impl Fn(&str) -> Option<u64>) -> Result<(), PackError> {
+pub fn write_id(out: &mut ByteWriter, id: &str, mut intern: impl FnMut(&str) -> u32, edit_ordinal_of: impl Fn(&str) -> Option<u64>) -> Result<(), PackRefusal> {
     if let Some(ordinal) = edit_ordinal_of(id) {
         out.write_u8(3);
         out.write_varint_u64(ordinal);
@@ -250,7 +252,7 @@ pub fn write_id(out: &mut ByteWriter, id: &str, mut intern: impl FnMut(&str) -> 
 }
 
 /// 🪪️ Reads one tagged id, resolving dictrefs/ordinals through the supplied closures.
-pub fn read_id<'r>(input: &mut ByteReader<'_>, resolve: impl Fn(u32) -> Result<&'r str, PackError>, ordinal_to_id: impl Fn(u64) -> Result<&'r str, PackError>) -> Result<String, PackError> {
+pub fn read_id<'r>(input: &mut ByteReader<'_>, resolve: impl Fn(u32) -> Result<&'r str, PackRefusal>, ordinal_to_id: impl Fn(u64) -> Result<&'r str, PackRefusal>) -> Result<String, PackRefusal> {
     let tag = input.read_u8()?;
     match tag {
         0 => {
@@ -342,15 +344,15 @@ fn format_uuid(bytes: &[u8; 16]) -> String {
 //#endregion 🔖️Id
 
 //#region 🔖️Shared
-fn utf8(bytes: &[u8], offset: u64) -> Result<&str, PackError> {
+fn utf8(bytes: &[u8], offset: u64) -> Result<&str, PackRefusal> {
     match std::str::from_utf8(bytes) {
         Ok(s) => Ok(s),
         Err(_) => Err(malformed("utf8", offset, "invalid utf-8")),
     }
 }
 
-fn malformed(what: &'static str, offset: u64, detail: &str) -> PackError {
-    PackError::Malformed { what, offset, detail: detail.to_string() }
+fn malformed(what: &'static str, offset: u64, detail: &str) -> PackRefusal {
+    PackRefusal::Malformed { kind: ValueRefusalKind::InvalidValue, what, offset, detail: detail.to_string() }
 }
 //#endregion 🔖️Shared
 

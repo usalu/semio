@@ -21,10 +21,10 @@ async fn document_tree_lists_active_object() {
 }
 
 //#region 🪟️WindowLaws
-fn object(index: usize, mesh_json: Option<&str>) -> LowpolyObject {
+fn object(index: usize, mesh_state: Option<&crate::LowpolyMeshState>) -> LowpolyObject {
     let id = format!("obj-{index}");
-    let mesh = mesh_json.map(|json| crate::mesh_child_handle(&id, json));
-    LowpolyObject { id, name: format!("Object {index}"), transform: LowpolyTransform::default(), smooth_shading: false, mesh, paint_layers: Vec::new(), mesh_content: String::new() }
+    let mesh = mesh_state.map(|state| crate::managed_mesh_child_handle(&id, state));
+    LowpolyObject { id, name: format!("Object {index}"), transform: LowpolyTransform::default(), smooth_shading: false, mesh, paint_layers: Vec::new(), mesh_content: String::new(), mesh_state: mesh_state.cloned() }
 }
 
 /// 🪟️ A document of `objects` objects whose ACTIVE first one carries a several-hundred-element mesh (an
@@ -35,7 +35,7 @@ fn object(index: usize, mesh_json: Option<&str>) -> LowpolyObject {
 /// buffer per object it holds, and the panel reads a missing object's counts as zero anyway — which is
 /// exactly the "many cheap siblings, one dense subject" shape these laws need.
 fn oversized(objects: usize) -> (LowpolySnapshot, LowpolyConfig, LowpolyDocument) {
-    let dense = HalfedgeMesh::ico_sphere_prim(1.0, 3).expect("ico sphere").to_json().expect("dense mesh json");
+    let dense = crate::LowpolyMeshState::from_mesh(HalfedgeMesh::ico_sphere_prim(1.0, 3).expect("ico sphere"));
     let loaded = LowpolySnapshot { objects: vec![object(0, Some(&dense))], ..Default::default() };
     let snapshot = LowpolySnapshot { objects: (0..objects).map(|index| object(index, None)).collect(), ..Default::default() };
     let workspace = HashMap::from([("obj-0".to_string(), dense)]);

@@ -4,9 +4,12 @@ use super::ReorderAssets;
 use crate::mutations::ShootingMutation;
 use crate::ShootingSnapshot;
 
-pub fn inverse(payload: &ReorderAssets, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
+pub fn inverse(payload: &ReorderAssets, base: &ShootingSnapshot) -> Result<Vec<ShootingMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.assets.iter().position(|asset| asset.id == payload.id) {
         Some(original_index) => vec![ShootingMutation::ReorderAssets(ReorderAssets { id: payload.id.clone(), to_index: original_index })],
         None => Vec::new(),
     }
+
+    })())
 }

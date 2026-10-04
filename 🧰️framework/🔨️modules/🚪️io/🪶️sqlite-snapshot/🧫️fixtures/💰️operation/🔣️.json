@@ -1,0 +1,31 @@
+{
+  "sql": "CREATE TABLE authored_scalar (id INTEGER PRIMARY KEY, label TEXT NOT NULL, payload BLOB NOT NULL)",
+  "table": "authored_scalar",
+  "labelUnit": "世界😀\u0000",
+  "repeats": 20000,
+  "codeUnits": 100000,
+  "utf8Bytes": 220000,
+  "measurePhase": "measureValues",
+  "decodePhase": "decodeValues",
+  "measureFrontier": 16384,
+  "decodeFrontier": 65536,
+  "payload": [
+    0,
+    255,
+    65,
+    0
+  ],
+  "tightBytes": 0,
+  "permissiveBytes": 1048576,
+  "retainedDebt": 7,
+  "refusal": "ownershipLimit",
+  "routes": [
+    "artifactProjection",
+    "physicalExport",
+    "physicalImport"
+  ],
+  "allocationRequests": [
+    4,
+    4
+  ]
+}

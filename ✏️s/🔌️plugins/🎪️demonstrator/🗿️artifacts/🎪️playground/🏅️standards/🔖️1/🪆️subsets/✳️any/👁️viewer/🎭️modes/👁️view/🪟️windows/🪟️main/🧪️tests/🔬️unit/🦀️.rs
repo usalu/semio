@@ -13,8 +13,8 @@ fn definition_declares_a_read_only_text_window() {
 fn render_carries_the_schema_field_as_read_only_text() {
     let document = PlaygroundSnapshot { schema: "playground.custom".into() };
     let node = render(&document).expect("render");
-    let Component::Surface(props) = node.component else { panic!("expected a retained text surface") };
-    let scene: semio_framework_ui_scene::TextEditorScene = semio_framework_ui_scene::decode(&props).expect("decode text scene");
+    assert!(matches!(&node.component, Component::Surface(_)), "expected a retained text surface");
+    let scene: semio_framework_ui_scene::TextEditorScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(&node).expect("decode text scene with its buffer lane");
     assert_eq!(scene.buffer, "playground.custom");
     assert_eq!(scene.language.as_deref(), Some("playground"));
     assert_eq!(scene.settings_json.as_deref(), Some("{\"readOnly\":true}"));

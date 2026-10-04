@@ -145,7 +145,7 @@ impl ArtifactSerializer for SemioMeshToPng {
     const INTO: Dialect = INTO_DIALECT;
 
     async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        SemioDrawingToPng::serialize(&mesh_view_drawing(from).map_err(store::PackError::Schema)?).await
+        SemioDrawingToPng::serialize(&mesh_view_drawing(from).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))?).await
     }
 }
 //#endregion 🔖️Serializer

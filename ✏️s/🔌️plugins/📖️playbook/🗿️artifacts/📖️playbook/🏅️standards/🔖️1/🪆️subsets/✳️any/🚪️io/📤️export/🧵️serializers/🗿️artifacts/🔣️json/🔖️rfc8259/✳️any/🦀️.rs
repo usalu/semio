@@ -12,9 +12,9 @@ use semio_s_artifact_stdio_json::schema::snapshot::{write_json_pretty, JsonSnaps
 use semio_s_artifact_stdio_json::STDIO_JSON_DOCUMENT_SCHEMA;
 pub fn register() {}
 
-pub fn serialize(snapshot: &PlaybookSnapshot) -> Result<JsonSnapshot, store::TextError> {
+pub fn serialize(snapshot: &PlaybookSnapshot) -> Result<JsonSnapshot, semio_framework_diagnostic::TextError> {
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-    let value = protocol::json::from_dsl_value(&protocol::ToValue::to_value(snapshot));
+    let value = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(snapshot));
     Ok(JsonSnapshot::from_value(value))
 }
 pub fn serialize_bytes(snapshot: &PlaybookSnapshot) -> Result<Vec<u8>, String> {

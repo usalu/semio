@@ -1,6 +1,0 @@
-{
-  "mutation": "connectWorkingPorts",
-  "source": "c@out",
-  "target": "a@in",
-  "kind": "Connection"
-}

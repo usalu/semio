@@ -1,0 +1,33 @@
+{
+  "format": 1,
+  "cases": [
+    {
+      "id": "ready-number",
+      "state": "Ready",
+      "value": 42,
+      "expected": {
+        "state": "Ready",
+        "value": 42,
+        "polls": 1
+      }
+    },
+    {
+      "id": "ready-null",
+      "state": "Ready",
+      "value": null,
+      "expected": {
+        "state": "Ready",
+        "value": null,
+        "polls": 1
+      }
+    },
+    {
+      "id": "pending",
+      "state": "Pending",
+      "expected": {
+        "state": "Pending",
+        "polls": 1
+      }
+    }
+  ]
+}

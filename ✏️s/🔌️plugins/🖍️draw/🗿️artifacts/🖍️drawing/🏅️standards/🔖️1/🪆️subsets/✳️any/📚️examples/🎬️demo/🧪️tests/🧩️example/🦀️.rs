@@ -10,7 +10,7 @@ async fn inference_determinism_law() {
     use crate::DrawingSnapshot;
     use protocol::Inference;
     let snapshot = DrawingSnapshot::default();
-    assert_eq!(DrawingInference::infer(&snapshot), DrawingInference::infer(&snapshot));
+    assert_eq!(DrawingInference::infer(&snapshot).expect("valid materialized inference fixture"), DrawingInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -18,5 +18,5 @@ async fn inference_default_law() {
     use crate::schema::inferences::DrawingInference;
     use crate::DrawingSnapshot;
     use protocol::Inference;
-    assert_eq!(DrawingInference::infer(&DrawingSnapshot::default()), DrawingInference::default());
+    assert_eq!(DrawingInference::infer(&DrawingSnapshot::default()).expect("valid materialized inference fixture"), DrawingInference::default());
 }

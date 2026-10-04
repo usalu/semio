@@ -20,14 +20,26 @@ impl Deserializer<DrawingSnapshot> for JsonIntoDraw {
     async fn deserialize(payload: &IoPayload) -> IoResult<DrawingSnapshot> {
         let text = match payload {
             IoPayload::Text(text) => text.clone(),
-            IoPayload::Binary(bytes) => std::str::from_utf8(bytes).map_err(|error| IoError { message: format!("JsonIntoDraw: not valid utf-8: {error}"), diagnostics: Vec::new() })?.to_string(),
+            IoPayload::Binary(bytes) => std::str::from_utf8(bytes).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("JsonIntoDraw: not valid utf-8: {error}"))))?.to_string(),
         };
-        let value = parse_json_text(&text).map_err(|error| IoError { message: format!("JsonIntoDraw: {error}"), diagnostics: Vec::new() })?;
+        let value = parse_json_text(&text).map_err(json_parse_error)?;
         let from = JsonSnapshot::from_value(value);
-        let mut snap: DrawingSnapshot = dsl::FromValue::from_value(dsl::json::to_dsl_value(&from.to_pack_value())).map_err(|error| IoError { message: format!("JsonIntoDraw: {error}"), diagnostics: Vec::new() })?;
+        let mut snap: DrawingSnapshot = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&from.to_pack_value())).map_err(|error: semio_framework_value::ValueError| IoError::from_value_error(error.under("JsonIntoDraw")))?;
         if snap.schema.is_empty() {
             snap.schema = DRAWING_DOCUMENT_SCHEMA.into();
         }
         Ok(IoOutcome::clean(snap))
+    }
+}
+
+/// 📍️ Retains the authored JSON source position and semantic refusal kind.
+fn json_parse_error(error: semio_framework_diagnostic::TextError) -> IoError {
+    use semio_framework_diagnostic::{Diagnostic,ExpectedSet,FaultCode,FaultScope,Severity};
+    IoError {
+        cause: semio_framework_value::ValueError::new(error.kind,format!("JsonIntoDraw: {}",error.message)),
+        diagnostics: vec![Diagnostic {
+            code: FaultCode::new("draw.json.parse"), severity: Severity::Error, span: error.span,
+            message: error.message, expected: error.expected.map(|token|ExpectedSet {tokens:vec![token],keywords:Vec::new(),keys:Vec::new()}), scope:FaultScope::default(),
+        }],
     }
 }

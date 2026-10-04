@@ -69,6 +69,7 @@ Feature: Apply every typed PLY 1.0 mutation to a real-world document
       | insert-row         | {"elementName": "vertex", "index": 8449, "row": {"values": [{"kind": "float", "value": 0.5}, {"kind": "float", "value": 0.5}, {"kind": "float", "value": 0.5}, {"kind": "float", "value": 0}, {"kind": "float", "value": 0}, {"kind": "float", "value": 1}, {"kind": "float", "value": 0.5}, {"kind": "float", "value": 0.5}]}} |
       | remove-row         | {"elementName": "vertex", "index": 8448} |
       | set-row-property   | {"elementName": "vertex", "rowIndex": 0, "propertyName": "x", "value": {"kind": "float", "value": 42}} |
+      | patch-snapshot | {"patch": {"operation": "set", "path": "/comments/0", "value": "patched pattern-sphere comment"}} |
 
   @id-inverse
   @level-exhaustive
@@ -92,6 +93,7 @@ Feature: Apply every typed PLY 1.0 mutation to a real-world document
       | insert-row         | {"elementName": "vertex", "index": 8449, "row": {"values": [{"kind": "float", "value": 0.5}, {"kind": "float", "value": 0.5}, {"kind": "float", "value": 0.5}, {"kind": "float", "value": 0}, {"kind": "float", "value": 0}, {"kind": "float", "value": 1}, {"kind": "float", "value": 0.5}, {"kind": "float", "value": 0.5}]}} |
       | remove-row         | {"elementName": "vertex", "index": 8448} |
       | set-row-property   | {"elementName": "vertex", "rowIndex": 0, "propertyName": "x", "value": {"kind": "float", "value": 42}} |
+      | patch-snapshot | {"patch": {"operation": "set", "path": "/comments/0", "value": "patched pattern-sphere comment"}} |
 
   @id-identity-round-trip
   @level-long

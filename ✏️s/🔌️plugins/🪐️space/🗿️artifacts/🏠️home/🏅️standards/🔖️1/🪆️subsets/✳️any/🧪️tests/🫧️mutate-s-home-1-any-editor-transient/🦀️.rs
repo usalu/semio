@@ -48,7 +48,7 @@ mod subject {
         let id = ctx.row()?;
         let committed = vector(id)?;
         let report = home_transient_mutation_report_json(committed.before, committed.mutation, committed.after)?;
-        let restored = vector::inverse(id, &report)?;
+        let restored = vector::inverse(id, &report).expect("valid retained mutation inverse fixture")?;
         Ok(Outcome::with_raw(restored.to_string().into_bytes(), restored))
     }
 }

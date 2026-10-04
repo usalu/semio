@@ -12,6 +12,7 @@ use crate::{SequenceHostSnapshot, SequenceSnapshot, SequenceStep, StepParams, SE
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
+use semio_framework_value::{ValueError, ValueRefusalKind};
 use semio_s_artifact_stdio_csv::{CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
 
 pub const CSV_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.csv", standard: StandardId("rfc4180"), subset: SubsetId::ANY };
@@ -23,10 +24,10 @@ impl Deserializer<SequenceSnapshot> for CsvIntoSequence {
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
     async fn deserialize(payload: &IoPayload) -> IoResult<SequenceSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
-            return Err(IoError { message: "CsvIntoSequence: expected a binary csv payload".to_string(), diagnostics: Vec::new() });
+            return Err(IoError::from_value_error(ValueError::new(ValueRefusalKind::InvalidValue, "CsvIntoSequence: expected a binary csv payload".to_string())));
         };
         let _ = STDIO_CSV_DOCUMENT_SCHEMA;
-        let csv = <CsvSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| IoError { message: format!("CsvIntoSequence: csv decode failed: {error}"), diagnostics: Vec::new() })?;
+        let csv = <CsvSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| IoError::from_value_error(match error.into_value_error() { Ok(error) => error.under("CsvIntoSequence"), Err(error) => ValueError::new(ValueRefusalKind::InvariantViolated, format!("CsvIntoSequence: in-memory decode reported a transport failure: {error}")) }))?;
         let steps = csv
             .records
             .iter()
@@ -37,7 +38,7 @@ impl Deserializer<SequenceSnapshot> for CsvIntoSequence {
                 SequenceStep {
                     id,
                     kind: "computation.import".into(),
-                    params: StepParams::new().insert("value", neural_engine::Value::Atom(neural_engine::Atom::String(dsl::os_pack::to_json_string(&values)))),
+                    params: StepParams::new().insert("value", neural_engine::Value::Atom(neural_engine::Atom::String(semio_framework_pack_json::to_json_string(&values)))),
                     x: index as f64 * 280.0,
                     y: 0.0,
                     slot: None,

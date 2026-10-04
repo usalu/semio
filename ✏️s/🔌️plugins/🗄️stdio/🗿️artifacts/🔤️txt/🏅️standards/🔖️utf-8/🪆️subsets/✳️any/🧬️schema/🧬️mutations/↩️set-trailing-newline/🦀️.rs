@@ -18,7 +18,7 @@ pub struct SetTrailingNewlineMutation {
 
 pub type SetTrailingNewlinePayload = SetTrailingNewlineMutation;
 
-pub fn decode_set_trailing_newline_payload(value: &dsl::DslValue) -> Result<SetTrailingNewlinePayload, String> {
+pub fn decode_set_trailing_newline_payload(value: &semio_framework_value::DslValue) -> Result<SetTrailingNewlinePayload, String> {
     let fields = crate::schema::mutation_support::txt_required_object(value, &["value"])?;
     let value = fields[0].1.as_bool().ok_or_else(|| "payload field `value` must be boolean".to_string())?;
     Ok(SetTrailingNewlinePayload { value })
@@ -42,13 +42,16 @@ impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for SetTrailingNewl
         protocol::MutationOutcome::new(if base.trailing_newline == self.value { TxtDiff::default() } else { TxtDiff { trailing_newline: Some(self.value), ..Default::default() } })
     }
 
-    fn inverse(&self, base: &TxtSnapshot) -> Vec<super::TxtMutation> {
+    fn inverse(&self, base: &TxtSnapshot) -> Result<Vec<super::TxtMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         let outcome = self.diff(base);
         if !outcome.messages().is_empty() || outcome.diff().trailing_newline.is_none() {
             return Vec::new();
         }
         vec![super::TxtMutation::SetTrailingNewline(Self { value: base.trailing_newline })]
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set Trailing Newline", "Abschließenden Zeilenumbruch setzen")

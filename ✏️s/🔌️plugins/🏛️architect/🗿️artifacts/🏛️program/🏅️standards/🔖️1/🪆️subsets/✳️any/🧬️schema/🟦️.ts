@@ -2,7 +2,7 @@
 
 import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 import { parseSchemaRecord } from "../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
-import { parseBinary64, type Binary64 } from "../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {type Binary64,parseBinary64Transport} from "../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 export { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 
 //#region 🔖️Entities
@@ -1908,7 +1908,7 @@ export const architectProgramArtifactGuardUnsigned64 = (value:unknown,at:string)
 /** 🧮️ Canonical native doubles own exact words independently of JSON numeric transport. */
 export function architectProgramArtifactGuardBinary64(value:unknown,at:string):Binary64 {
   const row=architectProgramArtifactGuardExactObject(value,at,["bits"]);
-  try{return parseBinary64(row);}catch{return architectProgramArtifactGuardReject(at,"value is not an exact unsigned binary64 word");}
+  try{return parseBinary64Transport(row);}catch{return architectProgramArtifactGuardReject(at,"value is neither an exact binary64 word nor a number");}
 }
 function nullableBinary64(value:unknown,at:string):Binary64|null{return value===null?null:architectProgramArtifactGuardBinary64(value,at);}
 /** 📏️ Admit each literal quantity field as a bit-backed optional native double. */

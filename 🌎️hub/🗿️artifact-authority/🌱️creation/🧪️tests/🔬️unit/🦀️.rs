@@ -61,14 +61,14 @@ impl super::super::AuthorityOperationControl for GenesisControl {
 #[tokio::test]
 async fn genesis_materialization_binds_exact_zero_history_and_independent_sha256() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️artifact-genesis-v1/🔣️.json")).unwrap();
-    let descriptor: DocumentDescriptor = directory::os_pack::json::from_json_str(&fixture["expected"]["descriptor"].to_string()).unwrap();
-    let expected: ArtifactCheckpoint = directory::os_pack::json::from_json_str(&fixture["expected"]["checkpoint"].to_string()).unwrap();
+    let descriptor: DocumentDescriptor = semio_framework_pack_json::from_json_str(&fixture["expected"]["descriptor"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let expected: ArtifactCheckpoint = semio_framework_pack_json::from_json_str(&fixture["expected"]["checkpoint"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let open: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json")).unwrap();
-    let valid_plan: directory::os_directory::DocumentOpenPlanV1 = directory::os_pack::json::from_json_str(&open["validPlan"].to_string()).unwrap();
+    let valid_plan: directory::os_directory::DocumentOpenPlanV1 = semio_framework_pack_json::from_json_str(&open["validPlan"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let valid_lease = directory::os_directory::lease_fields_from_plan_v1(&valid_plan, 1, 1, None).unwrap();
     for row in open["checkpointPresenceCases"].as_array().unwrap() {
         let mut plan = open["validPlan"].clone();
-        let mut lease: serde_json::Value = serde_json::from_str(&directory::os_pack::json::to_json_string(&valid_lease)).unwrap();
+        let mut lease: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&valid_lease)).unwrap();
         for value in [&mut plan, &mut lease] {
             match row["kind"].as_str().unwrap() {
                 "missing" => {
@@ -79,15 +79,15 @@ async fn genesis_materialization_binds_exact_zero_history_and_independent_sha256
                 _ => panic!("unknown checkpoint presence case"),
             }
         }
-        assert_eq!(directory::os_pack::json::from_json_str::<directory::os_directory::DocumentOpenPlanV1>(&plan.to_string()).is_ok(), row["accepted"].as_bool().unwrap());
-        assert_eq!(directory::os_pack::json::from_json_str::<directory::os_directory::DocumentExecutionTargetLeaseFieldsV1>(&lease.to_string()).is_ok(), row["accepted"].as_bool().unwrap());
+        assert_eq!(semio_framework_pack_json::from_json_str::<directory::os_directory::DocumentOpenPlanV1>(&plan.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).is_ok(), row["accepted"].as_bool().unwrap());
+        assert_eq!(semio_framework_pack_json::from_json_str::<directory::os_directory::DocumentExecutionTargetLeaseFieldsV1>(&lease.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).is_ok(), row["accepted"].as_bool().unwrap());
     }
     for row in fixture["frontiers"].as_array().unwrap() {
-        let scope: DocumentScope = directory::os_pack::json::from_json_str(&row["scope"].to_string()).unwrap();
-        let frontier: ArtifactFrontier = directory::os_pack::json::from_json_str(&row["frontier"].to_string()).unwrap();
+        let scope: DocumentScope = semio_framework_pack_json::from_json_str(&row["scope"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let frontier: ArtifactFrontier = semio_framework_pack_json::from_json_str(&row["frontier"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         assert_eq!(frontier.is_genesis_for(&scope), row["genesis"].as_bool().unwrap(), "{}", row["id"]);
         assert_eq!(frontier.is_edited_for(&scope), row["edited"].as_bool().unwrap(), "{}", row["id"]);
-        let mut plan: directory::os_directory::DocumentOpenPlanV1 = directory::os_pack::json::from_json_str(&open["validPlan"].to_string()).unwrap();
+        let mut plan: directory::os_directory::DocumentOpenPlanV1 = semio_framework_pack_json::from_json_str(&open["validPlan"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         plan.scope = scope;
         plan.checkpoint.baseline_frontier = frontier;
         let accepted = row["genesis"].as_bool().unwrap() || row["edited"].as_bool().unwrap();
@@ -115,7 +115,7 @@ async fn genesis_materialization_binds_exact_zero_history_and_independent_sha256
         }
         let control = GenesisControl { cancelled: case == "cancelled", now: if case == "expired" { 2000 } else { 1000 }, stages: std::sync::Mutex::new(Vec::new()) };
         let context = OperationContext::new(2000, limits, &control);
-        let dialect = directory::os_pack::json::from_json_str(&fixture["dialect"].to_string()).unwrap();
+        let dialect = semio_framework_pack_json::from_json_str(&fixture["dialect"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let result = materialize_selected_genesis(&codec, request, identity, dialect, &context).await;
         assert_eq!(result.is_ok(), case == "exact", "{case}");
         if let Ok(actual) = result {
@@ -208,9 +208,9 @@ impl TrustedArtifactCatalog for SlowGenesisCodec {
 #[tokio::test]
 async fn creation_genesis_is_bounded_by_stalling_and_not_by_the_calendar() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️artifact-genesis-v1/🔣️.json")).unwrap();
-    let descriptor: DocumentDescriptor = directory::os_pack::json::from_json_str(&fixture["expected"]["descriptor"].to_string()).unwrap();
-    let expected: ArtifactCheckpoint = directory::os_pack::json::from_json_str(&fixture["expected"]["checkpoint"].to_string()).unwrap();
-    let dialect: ArtifactDialect = directory::os_pack::json::from_json_str(&fixture["dialect"].to_string()).unwrap();
+    let descriptor: DocumentDescriptor = semio_framework_pack_json::from_json_str(&fixture["expected"]["descriptor"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let expected: ArtifactCheckpoint = semio_framework_pack_json::from_json_str(&fixture["expected"]["checkpoint"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let dialect: ArtifactDialect = semio_framework_pack_json::from_json_str(&fixture["dialect"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for (label, checkpoints, admitted) in [("an interpreter that keeps stepping", true, true), ("an interpreter that is wedged", false, false)] {
         let identity = TrustedArtifactIdentity::from_descriptor(&descriptor);
         let clock = std::sync::Arc::new(std::sync::atomic::AtomicU64::new(1_000));
@@ -238,7 +238,7 @@ async fn creation_genesis_is_bounded_by_stalling_and_not_by_the_calendar() {
 fn directory_document_index_is_ordered_idempotent_and_backend_descriptor_bound() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/📇️document-index-v1/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
-        let events: Vec<directory::os_directory::DirectoryEvent> = directory::os_pack::json::from_json_str(&row["events"].to_string()).unwrap();
+        let events: Vec<directory::os_directory::DirectoryEvent> = semio_framework_pack_json::from_json_str(&row["events"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let client = events.iter().fold(directory::os_directory::DirectoryReadModel::default(), directory::os_directory::fold);
         assert_eq!(client.spaces["space-fixture"].indexed_documents.len(), row["clientRows"].as_u64().unwrap() as usize, "{}", row["id"]);
         let mut backend = crate::directory::MemoryArtifactProjection::default();
@@ -262,7 +262,7 @@ fn creation_contract_matches_neutral_intents_and_ready_only_coordinates() {
         assert_eq!(actual.is_some(), accepted, "{}", row["id"]);
         if let Some(actual) = actual {
             assert_eq!(Some(&actual), independent.as_ref());
-            assert_eq!(directory::os_pack::json::to_json_string(&actual), source);
+            assert_eq!(semio_framework_pack_json::to_json_string(&actual), source);
             assert!(SpaceArtifactCreateV1::parse_canonical_json(&format!("{source}\n")).is_none());
             assert!(SpaceArtifactCreateV1::parse_canonical_json(&source.replacen("{", "{\"schema\":\"duplicate\",", 1)).is_none());
         }

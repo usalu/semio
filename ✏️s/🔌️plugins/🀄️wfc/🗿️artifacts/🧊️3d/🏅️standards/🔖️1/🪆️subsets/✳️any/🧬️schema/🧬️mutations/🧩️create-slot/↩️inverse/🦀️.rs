@@ -4,6 +4,9 @@
 use crate::mutations::{delete_slot, Wfc3dMutation};
 use crate::schema::snapshot::Wfc3dSnapshot;
 
-pub fn inverse(payload: &super::CreateSlot, _base: &Wfc3dSnapshot) -> Vec<Wfc3dMutation> {
+pub fn inverse(payload: &super::CreateSlot, _base: &Wfc3dSnapshot) -> Result<Vec<Wfc3dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![delete_slot(payload.slot.id.clone())]
+
+    })())
 }

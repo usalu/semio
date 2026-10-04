@@ -1,16 +1,10 @@
 //! 🧠️ Wires artifact — the document entity this plugin's one app (🔌️wires) edits.
 //!
-//! Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (`reasoning/dag→C:graph`): the old inline
-//! `board_fixture` field (a `DslValue` blob duplicating a neutral node/edge graph model) is replaced
-//! by a composed `s.stdio.semio.graph` CHILD slot (`🔖️ContentBridge` below) — this plugin no longer
-//! defines its own persisted node/edge graph model, it composes stdio's neutral `graph` subset
-//! instead. `meta` (kind-catalog/allowed-identity configuration) remains document state while each
-//! concrete canvas owns its own camera. `wires_fixture`'s own shape (identities/relationships semantic layer, incl.
-//! its pre-existing internal `board` mirror) is UNCHANGED by this migration — it's a separate,
-//! narrower duplication concern this pass doesn't touch (see `📓️wave4-reports/reasoning-report.md`).
-//! `⚙️engine`/`🖱️commands`/`🔧️op` still address board nodes/edges generically by id
-//! (`array_mut`/`entity_id`/JSON-patch-style ops) via [`wires_working_board`], the single accessor
-//! every call site that used to read `snapshot.board_fixture` now goes through.
+//! The board (nodes and edges) lives ONLY in the composed `s.stdio.semio@v1/graph` child `content` (ticket
+//! 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING design §12, §20.15): every board edit is a child-lane graph leaf in that child's
+//! store, the parent owns no leaf (`WiresMutation` is uninhabited), and every reader composes the parent's `wires_fixture`
+//! (identities) with the child on read ([`wires_composed`]). A decoded, reloaded or remote parent therefore needs no
+//! materialization step.
 
 
 #[path = "🤖️generated/📇️registry/🦀️.rs"]
@@ -24,7 +18,7 @@ extern crate semio_framework_os_kernel as store;
 mod art_wires_demo_tests;
 extern crate semio_framework_schema as framework_schema;
 
-use dsl::DslValue;
+use semio_framework_value::DslValue;
 use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 
 //#region 🔖️Constants
@@ -45,6 +39,10 @@ pub const MINDMAP_WIRES_SCHEMA: &str = "reasoning.wires.fixture";
 /// (`infinite_board_normal_undirected`) as an undirected graph, distinct from puzzle's directed
 /// `puzzle.2d.fixture` board.
 pub const MINDMAP_BOARD_SCHEMA: &str = "reasoning.mindmap.fixture";
+/// 🧩️ The composed-child slot the board lives in.
+pub const WIRES_CONTENT_SLOT: &str = "content";
+/// 🔗️ The edge property carrying the wires relationship an edge expresses: its `kind` and the identities of its endpoints.
+pub const WIRES_RELATIONSHIP_PROPERTY: &str = "relationship";
 //#endregion 🔖️Constants
 
 //#region 🔖️Types
@@ -54,155 +52,170 @@ pub use crate::schema::WiresArtifact;
 //#endregion 🔖️Types
 
 //#region 🔖️EmptyFixtures
-/// 📭️ Empty `reasoning.mindmap.fixture` board blob for tests and fresh documents.
-pub fn empty_board_fixture() -> DslValue {
-    DslValue::object([
-        ("schema".into(), DslValue::String(MINDMAP_BOARD_SCHEMA.into())),
-        ("camera".into(), DslValue::object([("x".into(), DslValue::float(0.0)), ("y".into(), DslValue::float(0.0)), ("zoom".into(), DslValue::float(1.0))])),
-        ("nodes".into(), DslValue::Array(vec![])),
-        ("edges".into(), DslValue::Array(vec![])),
-        ("wires".into(), DslValue::Array(vec![])),
-    ])
-}
-
-/// 📭️ Empty `reasoning.wires.fixture` blob for tests and fresh documents.
+/// 📭️ Empty `reasoning.wires.fixture` blob: the parent's identity layer, no identity yet.
 pub fn empty_wires_fixture() -> DslValue {
-    DslValue::object([("schema".into(), DslValue::String(MINDMAP_WIRES_SCHEMA.into())), ("identities".into(), DslValue::Array(vec![])), ("relationships".into(), DslValue::Array(vec![])), ("board".into(), empty_board_fixture())])
+    DslValue::object([("schema".into(), DslValue::String(MINDMAP_WIRES_SCHEMA.into())), ("identities".into(), DslValue::Array(vec![]))])
 }
 
-/// 📭️ `{x:0, y:0, zoom:1}` used only by legacy board-shaped render projections.
+/// 📭️ `{x:0, y:0, zoom:1}`, the neutral viewport a composed board carries (each canvas window owns its camera).
 pub fn empty_camera() -> DslValue {
     DslValue::object([("x".into(), DslValue::float(0.0)), ("y".into(), DslValue::float(0.0)), ("zoom".into(), DslValue::float(1.0))])
 }
 
-/// 📭️ Fresh wires snapshot with empty fixtures.
+/// 📭️ The empty board content.
+pub fn empty_wires_content() -> SemioGraphSnapshot {
+    SemioGraphSnapshot { schema: STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA.into(), nodes: Vec::new(), edges: Vec::new() }
+}
+
+/// 📭️ Fresh wires snapshot: no identity, the empty board child.
 pub fn empty_wires_snapshot() -> WiresSnapshot {
-    WiresSnapshot { wires_fixture: empty_wires_fixture(), content: wires_content_child_with_owner(Vec::new(), Vec::new()), meta: DslValue::Null }
+    WiresSnapshot { wires_fixture: empty_wires_fixture(), content: wires_content_handle(&empty_wires_content()), meta: DslValue::Null }
 }
 //#endregion 🔖️EmptyFixtures
 
 //#region 🔖️ContentBridge
-/// 🕸️ Owned CHILD handle type for the composed `s.stdio.semio.graph` document — the wires board's
-/// nodes/edges now live in this composed child rather than inline on `WiresSnapshot`.
+/// 🕸️ Owned CHILD handle type for the composed `s.stdio.semio@v1/graph` board.
 pub type WiresContentChild = store::ArtifactChild<SemioGraphSnapshot>;
 
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId as SemioGraphEdgeId, GraphNodeId as SemioGraphNodeId, SemioGraphEdge, SemioGraphNode, SemioGraphSnapshot, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry};
+pub use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
+pub use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphEdge, SemioGraphNode, SemioGraphSnapshot, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
+pub use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry};
 
-/// 🏷️ `wires.node` is the honest string boundary carrying the FULL raw board node `DslValue` (every
-/// key a board node can dynamically carry — `nodeKind`/`shape`/`radius`/`width`/`height`/`text`/
-/// `root`/`🐙️handles`/... — this app's board nodes are an untyped `DslValue` object, not a fixed Rust
-/// struct, so no fixed field list could ever be exhaustive) as JSON. `id`/`label`(=`text`)/
-/// `kind`(=`nodeKind`)/`position`(=`x`,`y`) are ALSO projected onto the composed `SemioGraphNode`'s
-/// own native fields for genuine graph-shape tooling that only understands the neutral subset — but
-/// the JSON blob is the round-trip SOURCE OF TRUTH on decode (matches `dag`'s own `dag.node`
-/// precedent, `📓️wave4-reports/dag-report.md`).
-const WIRES_NODE_JSON_PROPERTY: &str = "wires.node";
+/// 🧾️ Board-node keys the graph node carries natively; every other board key is one keyed node property.
+const WIRES_NATIVE_NODE_KEYS: &[&str] = &["id", "nodeKind", "text", "x", "y", "width", "height"];
+/// 🧾️ Board-edge keys the graph edge carries natively; every other board key is one keyed edge property.
+const WIRES_NATIVE_EDGE_KEYS: &[&str] = &["id", "source", "target", "edgeKind"];
 
-fn semio_node_from_board_node(node: &DslValue) -> SemioGraphNode {
-    let (x, y) = schema::node_position(node);
+/// 🔤️ One board value as a typed graph value (numbers keep their lexeme, objects their key order).
+pub fn semio_value_from_dsl(value: &DslValue) -> SemioValue {
+    match value {
+        DslValue::Null => SemioValue::Null,
+        DslValue::Bool(value) => SemioValue::Bool { value: *value },
+        DslValue::Number(semio_framework_value::Number::UInt(value)) => SemioValue::Int { lexeme: value.to_string() },
+        DslValue::Number(semio_framework_value::Number::Int(value)) => SemioValue::Int { lexeme: value.to_string() },
+        DslValue::Number(semio_framework_value::Number::Float(value)) => SemioValue::Float { lexeme: value.to_string() },
+        DslValue::String(value) => SemioValue::Str { value: value.clone() },
+        DslValue::Bytes(value) => SemioValue::Bytes { value: value.clone() },
+        DslValue::Array(items) => SemioValue::List { items: items.iter().map(semio_value_from_dsl).collect() },
+        DslValue::Object(entries) => SemioValue::Map { entries: entries.iter().map(|(key, value)| SemioValueEntry { key: key.clone(), value: semio_value_from_dsl(value) }).collect() },
+    }
+}
+
+/// 🔤️ [`semio_value_from_dsl`]'s inverse on every value it produces; a graph value reference reads as null on the board.
+pub fn dsl_from_semio_value(value: &SemioValue) -> DslValue {
+    match value {
+        SemioValue::Null | SemioValue::Ref { .. } => DslValue::Null,
+        SemioValue::Bool { value } => DslValue::Bool(*value),
+        SemioValue::Int { lexeme } => lexeme.parse::<u64>().map(|value| DslValue::Number(semio_framework_value::Number::UInt(value))).or_else(|_| lexeme.parse::<i64>().map(|value| DslValue::Number(semio_framework_value::Number::Int(value)))).unwrap_or_else(|_| DslValue::String(lexeme.clone())),
+        SemioValue::Float { lexeme } => lexeme.parse::<f64>().map(DslValue::float).unwrap_or_else(|_| DslValue::String(lexeme.clone())),
+        SemioValue::Str { value } => DslValue::String(value.clone()),
+        SemioValue::Bytes { value } => DslValue::Bytes(value.clone()),
+        SemioValue::List { items } => DslValue::Array(items.iter().map(dsl_from_semio_value).collect()),
+        SemioValue::Map { entries } => DslValue::Object(entries.iter().map(|entry| (entry.key.clone(), dsl_from_semio_value(&entry.value))).collect()),
+    }
+}
+
+/// 🧾️ The keyed properties of a board entity: every key it carries beyond `native`, ascending.
+fn wires_properties(entity: &DslValue, native: &[&str]) -> Vec<SemioValueEntry> {
+    let DslValue::Object(entries) = canonical_board_value(entity) else { return Vec::new() };
+    entries.into_iter().filter(|(key, _)| !native.contains(&key.as_str())).map(|(key, value)| SemioValueEntry { key, value: semio_value_from_dsl(&value) }).collect()
+}
+
+/// 🌉️ One board node as the composed graph node: native identity, kind, label, position and extent, the rest as properties.
+pub fn wires_graph_node(node: &DslValue) -> SemioGraphNode {
+    let text = |key: &str| node.get(key).and_then(DslValue::as_str).unwrap_or("").to_string();
+    let number = |key: &str| node.get(key).and_then(DslValue::as_f64).unwrap_or(0.0);
     SemioGraphNode {
-        id: SemioGraphNodeId::new(schema::entity_id(node, "id").unwrap_or("").to_string()),
-        kind: node.get("nodeKind").and_then(|value| value.as_str()).unwrap_or("").to_string(),
-        label: node.get("text").and_then(|value| value.as_str()).unwrap_or("").to_string(),
-        position: SemioPoint2 { x, y },
+        id: GraphNodeId::new(text("id")),
+        kind: text("nodeKind"),
+        label: text("text"),
+        position: SemioPoint2 { x: number("x"), y: number("y") },
+        width: number("width"),
+        height: number("height"),
         ports: Vec::new(),
-        properties: vec![SemioValueEntry { key: WIRES_NODE_JSON_PROPERTY.into(), value: SemioValue::Str { value: schema::fixture_json_string(node) } }],
+        properties: wires_properties(node, WIRES_NATIVE_NODE_KEYS),
     }
 }
 
-/// 🌉 Inverse of [`semio_node_from_board_node`] — falls back to a minimal node built from the
-/// graph-native `id`/`label`/`position` fields only if the property is missing (content authored
-/// outside this plugin, e.g. by a hand-written `graph` doc) — never panics.
-fn board_node_from_semio_node(node: &SemioGraphNode) -> DslValue {
-    for property in &node.properties {
-        if property.key == WIRES_NODE_JSON_PROPERTY {
-            if let SemioValue::Str { value } = &property.value {
-                if let Ok(restored) = dsl::os_pack::json::from_json_str::<DslValue>(value) {
-                    return restored;
-                }
-            }
-        }
-    }
-    DslValue::object([
-        ("id".into(), DslValue::String(node.id.value.clone())),
-        ("nodeKind".into(), DslValue::String(node.kind.clone())),
-        ("shape".into(), DslValue::String("circle".into())),
-        ("x".into(), DslValue::float(node.position.x)),
-        ("y".into(), DslValue::float(node.position.y)),
-        ("text".into(), DslValue::String(node.label.clone())),
-        ("handles".into(), DslValue::Array(vec![])),
-    ])
-}
-
-/// 🏷️ `SemioGraphEdge` has no `properties` slot (unlike `SemioGraphNode`) — its `label` field (which
-/// this app's own board edges never populate on their own behalf) is repurposed to carry the FULL raw
-/// board edge `DslValue` as JSON, the round-trip source of truth on decode. `source`/`target` are also
-/// projected onto their native fields, and `kind` from `edgeKind` when present, for genuine
-/// graph-shape tooling.
-fn semio_edge_from_board_edge(edge: &DslValue) -> SemioGraphEdge {
+/// 🌉️ One board edge as the composed graph edge: native identity, endpoints and kind, the rest (its relationship) as properties.
+pub fn wires_graph_edge(edge: &DslValue) -> SemioGraphEdge {
+    let text = |key: &str| edge.get(key).and_then(DslValue::as_str).unwrap_or("").to_string();
     SemioGraphEdge {
-        id: SemioGraphEdgeId::new(schema::entity_id(edge, "id").unwrap_or("").to_string()),
-        source: SemioGraphNodeId::new(edge.get("source").and_then(|value| value.as_str()).unwrap_or("").to_string()),
-        target: SemioGraphNodeId::new(edge.get("target").and_then(|value| value.as_str()).unwrap_or("").to_string()),
-        kind: edge.get("edgeKind").and_then(|value| value.as_str()).unwrap_or("").to_string(),
-        label: schema::fixture_json_string(edge),
+        id: GraphEdgeId::new(text("id")),
+        source: GraphNodeId::new(text("source")),
+        target: GraphNodeId::new(text("target")),
+        kind: text("edgeKind"),
+        label: String::new(),
+        source_port: None,
+        target_port: None,
+        properties: wires_properties(edge, WIRES_NATIVE_EDGE_KEYS),
     }
 }
 
-/// 🌉 Inverse of [`semio_edge_from_board_edge`] — falls back to a bare node-id edge if `label` isn't
-/// valid JSON (content authored outside this plugin) — never panics.
-fn board_edge_from_semio_edge(edge: &SemioGraphEdge) -> DslValue {
-    if let Ok(restored) = dsl::os_pack::json::from_json_str::<DslValue>(&edge.label) {
-        return restored;
-    }
-    DslValue::object([("id".into(), DslValue::String(edge.id.value.clone())), ("source".into(), DslValue::String(edge.source.value.clone())), ("target".into(), DslValue::String(edge.target.value.clone()))])
+/// 🌉️ [`wires_graph_node`]'s inverse: the board node a graph node reads as, keys ascending (an empty kind or label and a zero
+/// extent are absent keys).
+pub fn wires_board_node(node: &SemioGraphNode) -> DslValue {
+    let mut entries: Vec<(String, DslValue)> = vec![("id".into(), DslValue::String(node.id.value.clone())), ("x".into(), DslValue::float(node.position.x)), ("y".into(), DslValue::float(node.position.y))];
+    entries.extend((!node.kind.is_empty()).then(|| ("nodeKind".to_string(), DslValue::String(node.kind.clone()))));
+    entries.extend((!node.label.is_empty()).then(|| ("text".to_string(), DslValue::String(node.label.clone()))));
+    entries.extend((node.width != 0.0).then(|| ("width".to_string(), DslValue::float(node.width))));
+    entries.extend((node.height != 0.0).then(|| ("height".to_string(), DslValue::float(node.height))));
+    entries.extend(node.properties.iter().map(|entry| (entry.key.clone(), dsl_from_semio_value(&entry.value))));
+    canonical_board_value(&DslValue::Object(entries))
 }
 
-/// 🌉 REAL bidirectional converter between the app's live board node/edge `DslValue` editing state and
-/// the composed child's own `SemioGraphSnapshot` node/edge graph (the "ModelBridge"/"DocumentBridge"
-/// pattern from `📓️wave3-reports/cad-report.md` and `📓️wave4-reports/flow-report.md`/`dag-report.md`).
-pub fn wires_content_snapshot_from_scene(nodes: &[DslValue], edges: &[DslValue]) -> SemioGraphSnapshot {
-    SemioGraphSnapshot { schema: STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA.into(), nodes: nodes.iter().map(semio_node_from_board_node).collect(), edges: edges.iter().map(semio_edge_from_board_edge).collect() }
+/// 🌉️ [`wires_graph_edge`]'s inverse: the board edge a graph edge reads as, keys ascending.
+pub fn wires_board_edge(edge: &SemioGraphEdge) -> DslValue {
+    let mut entries: Vec<(String, DslValue)> = vec![("id".into(), DslValue::String(edge.id.value.clone())), ("source".into(), DslValue::String(edge.source.value.clone())), ("target".into(), DslValue::String(edge.target.value.clone()))];
+    entries.extend((!edge.kind.is_empty()).then(|| ("edgeKind".to_string(), DslValue::String(edge.kind.clone()))));
+    entries.extend(edge.properties.iter().map(|entry| (entry.key.clone(), dsl_from_semio_value(&entry.value))));
+    canonical_board_value(&DslValue::Object(entries))
 }
 
-/// 🌉 Inverse of [`wires_content_snapshot_from_scene`].
-pub fn scene_from_wires_content_snapshot(content: &SemioGraphSnapshot) -> (Vec<DslValue>, Vec<DslValue>) {
-    (content.nodes.iter().map(board_node_from_semio_node).collect(), content.edges.iter().map(board_edge_from_semio_edge).collect())
+/// 🌉️ The graph content of a board roster.
+pub fn wires_content_snapshot(nodes: &[DslValue], edges: &[DslValue]) -> SemioGraphSnapshot {
+    SemioGraphSnapshot { schema: STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA.into(), nodes: nodes.iter().map(wires_graph_node).collect(), edges: edges.iter().map(wires_graph_edge).collect() }
 }
 
-/// 🕸️ Deterministic content-addressed CHILD handle for the wires board content — same
-/// `(child_id, target)` for identical `(nodes, edges)`, a different pair once the content actually
-/// changes; mirrors `dag`'s `dag_content_child_handle`/writer's `document_child_handle`.
-pub fn wires_content_child_handle(nodes: &[DslValue], edges: &[DslValue]) -> WiresContentChild {
-    let snapshot = wires_content_snapshot_from_scene(nodes, edges);
-    let content_json = dsl::os_pack::json::to_json_string(&snapshot);
-    let child_id = store::content_id("wires-content", content_json.as_bytes());
+/// 🕸️ The content-addressed handle of the child minted from `content`: equal content, equal `(child_id, target)`. Once
+/// minted the id names that child's store for good; its content then moves only through child leaves.
+pub fn wires_content_handle(content: &SemioGraphSnapshot) -> WiresContentChild {
+    let child_id = store::content_id("wires-content", &<SemioGraphSnapshot as store::ArtifactPack>::encode_pack(content));
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "graph".into() };
-    let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
-    store::ArtifactChild::new(child_id, target)
+    store::ArtifactChild::new(child_id.clone(), store::os_io::ArtifactRef { artifact_id: child_id, dialect })
+}
+
+/// 🪪️ The child id the demo's parent asset names for its bundled board.
+pub const WIRES_DEMO_CONTENT_ID: &str = "metabolism-content";
+
+/// 📚️ The board contents this artifact ships, by the child id a parent names them with: the empty board under its content
+/// address and the demo's committed child asset under [`WIRES_DEMO_CONTENT_ID`] — the only contents a parent-only load can
+/// compose its child from.
+pub fn wires_bundled_contents() -> &'static [(String, SemioGraphSnapshot)] {
+    static CONTENTS: std::sync::OnceLock<Vec<(String, SemioGraphSnapshot)>> = std::sync::OnceLock::new();
+    CONTENTS
+        .get_or_init(|| {
+            let demo = <SemioGraphSnapshot as store::ArtifactDsl>::parse_dsl(examples::demo::CONTENT_TEXT).expect("the demo's committed wires board parses");
+            vec![(wires_content_handle(&empty_wires_content()).child_id, empty_wires_content()), (WIRES_DEMO_CONTENT_ID.to_string(), demo)]
+        })
+        .as_slice()
+}
+
+/// 🌱️ Mints the composed `content` child's pack for a load that ships the parent alone (genesis store, `setActiveExample`,
+/// a parent-only archive): the bundled content the parent names. A child a saved document carries arrives as an archive
+/// member instead.
+pub fn genesis_wires_child_pack(snapshot: &WiresSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    if slot != WIRES_CONTENT_SLOT || child_id != snapshot.content.child_id {
+        return None;
+    }
+    wires_bundled_contents().iter().find(|(id, _)| id == child_id).map(|(_, content)| <SemioGraphSnapshot as store::ArtifactPack>::encode_pack(content))
 }
 //#endregion 🔖️ContentBridge
 
-//#region 🔖️WorkingScene
-/// 🌱 Ephemeral representation of one composed child's live nodes and edges. The value is attached
-/// to the exact `ArtifactChild`; it is never persisted, never global, and is retired with that owner.
-#[derive(Clone, Debug, Default)]
-pub struct WiresWorkingScene {
-    pub nodes: Vec<DslValue>,
-    pub edges: Vec<DslValue>,
-}
-
-/// 🔤 Rewrites one free-form board value into the DSL's CANONICAL form: object keys ascending, every
-/// nesting level. The document-text printer sorts object keys (`🗣️dsl/🧬️schema`'s `print_dsl_value`,
-/// since 21fbcd3538), while `DslValue`'s own `PartialEq` compares entries positionally — so an object
-/// minted in declaration order (`{id, nodeKind, shape, x, y, radius, text, handles}`) is NOT the value
-/// the store reads back from its own printed line, and the framework's `assert_op_line_round_trip`
-/// identity fails. Worse, the composed `content` child's id is a hash over these very values, so the
-/// same board minted twice in two different key orders addressed two different children and an
-/// inverse could not restore its base snapshot. Every board node/edge therefore enters the document
-/// through this normalizer.
+//#region 🔖️Composed
+/// 🔤 Rewrites one free-form board value into the DSL's CANONICAL form: object keys ascending at every nesting level, the
+/// form the document-text printer emits, so a board value compares equal to its own printed line.
 pub fn canonical_board_value(value: &DslValue) -> DslValue {
     match value {
         DslValue::Array(items) => DslValue::Array(items.iter().map(canonical_board_value).collect()),
@@ -215,84 +228,65 @@ pub fn canonical_board_value(value: &DslValue) -> DslValue {
     }
 }
 
-/// 🔤 [`canonical_board_value`] over a whole node/edge roster.
-pub fn canonical_board_values(values: Vec<DslValue>) -> Vec<DslValue> {
-    values.iter().map(canonical_board_value).collect()
+/// 🪆️ The wires document every reader works on (§20.15): `fixture` is the parent's identity layer with the relationships the
+/// child's edges carry; `board` the legacy board shape (`schema`/`camera`/`nodes`/
+/// `edges`/`meta`?/`wires`) the canvases, panels and layout read.
+#[derive(Clone, Debug, PartialEq)]
+pub struct WiresComposed {
+    pub fixture: DslValue,
+    pub board: DslValue,
 }
 
-/// 📝 Transfers a decoded or test-provided scene into one exact child owner.
-pub fn materialize_wires_content(handle: &mut WiresContentChild, nodes: Vec<DslValue>, edges: Vec<DslValue>) {
-    handle.set_local_owner(std::sync::Arc::new(WiresWorkingScene { nodes: canonical_board_values(nodes), edges: canonical_board_values(edges) }));
+/// 🪆️ Composes `snapshot` with its board content.
+pub fn wires_composed(snapshot: &WiresSnapshot, content: &SemioGraphSnapshot) -> WiresComposed {
+    let nodes: Vec<DslValue> = content.nodes.iter().map(wires_board_node).collect();
+    let edges: Vec<DslValue> = content.edges.iter().map(wires_board_edge).collect();
+    let relationships = edges
+        .iter()
+        .filter_map(|edge| {
+            let DslValue::Object(fields) = edge.get(WIRES_RELATIONSHIP_PROPERTY)? else { return None };
+            let mut row = fields.clone();
+            row.push(("edgeId".into(), edge.get("id")?.clone()));
+            Some(canonical_board_value(&DslValue::Object(row)))
+        })
+        .collect();
+    let identities = schema::wires_identities(&snapshot.wires_fixture).to_vec();
+    let fixture = DslValue::object([("schema".into(), DslValue::String(MINDMAP_WIRES_SCHEMA.into())), ("identities".into(), DslValue::Array(identities)), ("relationships".into(), DslValue::Array(relationships))]);
+    let mut board: Vec<(String, DslValue)> = vec![("schema".into(), DslValue::String(MINDMAP_BOARD_SCHEMA.into())), ("camera".into(), empty_camera()), ("nodes".into(), DslValue::Array(nodes)), ("edges".into(), DslValue::Array(edges))];
+    board.extend((!matches!(snapshot.meta, DslValue::Null)).then(|| ("meta".to_string(), snapshot.meta.clone())));
+    board.push(("wires".into(), DslValue::Array(vec![])));
+    WiresComposed { fixture, board: DslValue::Object(board) }
 }
 
-/// 🔎 Retains this exact child's typed working owner. A wire-only handle fails soft until the host
-/// materializes its child document.
-pub fn wires_working_scene_for_handle(handle: &WiresContentChild) -> WiresWorkingScene {
-    handle.local_owner::<WiresWorkingScene>().map(|scene| scene.as_ref().clone()).unwrap_or_default()
+/// 🔖️ A composed read that found no exact board child: named and localized through `ReasoningWiresPlayApp::fault_notices`.
+pub fn wires_content_fault(code: &'static str, message: String) -> semio_framework_plugin::Fault {
+    semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(code), message)
 }
 
-/// 🔎 Reads the current document's live nodes/edges off its `content` child handle, recovering from
-/// the document's OWN persisted board when that handle arrived without its working scene.
-///
-/// 🩹️ A `WiresWorkingScene` is an in-process owner attached to one exact `ArtifactChild`: it rides
-/// the pack and DSL codecs (both mint it on decode) but it is NOT part of `WiresSnapshot`'s value
-/// projection, whose `content` is just the `(child_id, target)` pair. A document that reaches this
-/// app through any transport that does not run one of those two codecs therefore arrives with
-/// `wires_fixture` fully populated and `content` empty — which is exactly what the play pane showed
-/// on 2026-09-22: the Artifact panel listed all seven IDENTITIES (read off `wires_fixture`) while
-/// RELATIONSHIPS was empty and the canvas drew nothing but its grid, because both of those read the
-/// board through this accessor. `wires_fixture.board` is a plain persisted `DslValue` that survives
-/// every one of those transports, so an unmaterialized handle falls back to it.
-///
-/// ⚠️ Only a handle with NO owner at all falls back. Every in-session edit installs one (a mutation's
-/// diff carries `content: Some(wires_content_child_with_owner(..))`), so an owner that exists and is
-/// empty means the user really did empty the board and is honoured verbatim — the fallback can never
-/// resurrect content the document no longer has.
-pub fn wires_working_scene(snapshot: &WiresSnapshot) -> WiresWorkingScene {
-    if let Some(scene) = snapshot.content.local_owner::<WiresWorkingScene>() {
-        return scene.as_ref().clone();
+/// 🧸️ The board content `snapshot` names, read through its live composed children (exact `s.stdio.semio@v1/graph` dialect).
+pub fn wires_content<'a>(snapshot: &WiresSnapshot, children: &'a semio_framework_plugin::app::ChildContentView) -> Result<impl std::ops::Deref<Target = SemioGraphSnapshot> + 'a, semio_framework_plugin::Fault> {
+    let child_id = &snapshot.content.child_id;
+    let dialect = children.dialect(WIRES_CONTENT_SLOT, child_id).ok_or_else(|| wires_content_fault("wires.content.unavailable", format!("the wires board child \"{child_id}\" is not composed")))?;
+    if dialect.artifact_kind != "s.stdio.semio" || dialect.standard != "v1" || dialect.subset != "graph" {
+        return Err(wires_content_fault("wires.content.dialect", format!("the wires board child \"{child_id}\" is {}@{}/{}, not s.stdio.semio@v1/graph", dialect.artifact_kind, dialect.standard, dialect.subset)));
     }
-    let board = snapshot.wires_fixture.get("board");
-    let nodes = board.and_then(|board| board.get("nodes")).and_then(|value| value.as_array()).map(|items| items.to_vec()).unwrap_or_default();
-    let edges = board.and_then(|board| board.get("edges")).and_then(|value| value.as_array()).map(|items| items.to_vec()).unwrap_or_default();
-    WiresWorkingScene { nodes: canonical_board_values(nodes), edges: canonical_board_values(edges) }
+    children.typed_read::<SemioGraphSnapshot>(WIRES_CONTENT_SLOT, child_id)
 }
 
-/// 🏗️ Mints one content-addressed child and transfers its immutable working scene into that exact
-/// local owner. No matching identity in another snapshot can observe the payload.
-pub fn wires_content_child_with_owner(nodes: Vec<DslValue>, edges: Vec<DslValue>) -> WiresContentChild {
-    let (nodes, edges) = (canonical_board_values(nodes), canonical_board_values(edges));
-    let handle = wires_content_child_handle(&nodes, &edges);
-    handle.with_local_owner(std::sync::Arc::new(WiresWorkingScene { nodes, edges }))
+/// 🪆️ [`wires_composed`] over the board content `children` holds for `snapshot`.
+pub fn wires_composed_from_children(snapshot: &WiresSnapshot, children: &semio_framework_plugin::app::ChildContentView) -> Result<WiresComposed, semio_framework_plugin::Fault> {
+    let content = wires_content(snapshot, children)?;
+    Ok(wires_composed(snapshot, &*content))
 }
 
-/// 🌱️ Mints the composed `content` child's own pack for the archive-load genesis roster. The react
-/// shell's `loadDocumentPair` sends `members: []`, so a whole-document load derives every `#[child]`
-/// slot through this hook; without it the archive closure completes `Incomplete` and the host answers
-/// `document archive replacement failed closure, authority, or retained publication validation`.
-pub fn genesis_wires_child_pack(snapshot: &WiresSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
-    use store::ArtifactPack;
-    (slot == "content" && child_id == snapshot.content.child_id).then(|| {
-        let scene = wires_working_scene(snapshot);
-        <SemioGraphSnapshot as ArtifactPack>::encode_pack(&wires_content_snapshot_from_scene(&scene.nodes, &scene.edges))
-    })
-}
-
-/// 🔎 Reconstructs the FULL legacy board-shaped `DslValue`
-/// (`schema`/`camera`/`nodes`/`edges`/`meta`?/`wires`) from the working scene plus the snapshot's
-/// `meta` field and a neutral viewport — the single accessor every render/panel/command call site that used to read
-/// `snapshot.board_fixture` directly now goes through. `meta` is omitted entirely when absent
-/// (`DslValue::Null`), matching the old `BoardFixtureDsl.meta`'s `skip_serializing_if` behavior.
-pub fn wires_working_board(snapshot: &WiresSnapshot) -> DslValue {
-    let scene = wires_working_scene(snapshot);
-    let mut entries: Vec<(String, DslValue)> = vec![("schema".into(), DslValue::String(MINDMAP_BOARD_SCHEMA.into())), ("camera".into(), empty_camera()), ("nodes".into(), DslValue::Array(scene.nodes)), ("edges".into(), DslValue::Array(scene.edges))];
-    if !matches!(snapshot.meta, DslValue::Null) {
-        entries.push(("meta".into(), snapshot.meta.clone()));
+/// 🌱️ Publishes graph leaves as ONE edit of the exact composed board child; no leaf is the empty emission.
+pub fn wires_child_emit<C, D>(snapshot: &WiresSnapshot, leaves: &[SemioGraphMutation]) -> semio_framework_plugin::Emit<WiresMutation, C, D> {
+    if leaves.is_empty() {
+        return semio_framework_plugin::Emit::default();
     }
-    entries.push(("wires".into(), DslValue::Array(vec![])));
-    DslValue::Object(entries)
+    semio_framework_plugin::Emit { child_emits: vec![semio_framework_plugin::app::ChildEmit::of::<SemioGraphSnapshot, _>(WIRES_CONTENT_SLOT, &snapshot.content.child_id, leaves)], ..semio_framework_plugin::Emit::default() }
 }
-//#endregion 🔖️WorkingScene
+//#endregion 🔖️Composed
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
@@ -444,162 +438,6 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "."]
-                        pub mod create_node {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🧪️tests/🧪️rejects/🦀️.rs"]
-                            mod tests_rejects_a_node_id_the_board_already_holds;
-                        }
-                        #[path = "."]
-                        pub mod delete_node {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/🧪️rejects/🦀️.rs"]
-                            mod tests_rejects_deleting_a_node_the_board_never_held;
-                        }
-                        #[path = "."]
-                        pub mod move_node {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭move-node/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭move-node/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭move-node/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭move-node/🧪️tests/🧪️reports/🦀️.rs"]
-                            mod tests_reports_a_no_op_when_a_y_less_node_is_moved_to_y_zero;
-                        }
-                        #[path = "."]
-                        pub mod move_nodes {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-nodes/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-nodes/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-nodes/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-nodes/🧪️tests/🧪️reports/🦀️.rs"]
-                            mod tests_reports_a_no_op_when_the_drag_offset_is_zero;
-                        }
-                        #[path = "."]
-                        pub mod set_node_positions {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️set-node-positions/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️set-node-positions/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️set-node-positions/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️set-node-positions/🧪️tests/🧪️reports/🦀️.rs"]
-                            mod tests_reports_a_no_op_when_every_node_already_sits_there;
-                        }
-                        #[path = "."]
-                        pub mod resize_node {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-node/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-node/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-node/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-node/🧪️tests/🧪️reports/🦀️.rs"]
-                            mod tests_reports_a_no_op_when_the_radius_already_matches;
-                        }
-                        #[path = "."]
-                        pub mod change_node_kind {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-node-kind/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-node-kind/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-node-kind/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-node-kind/🧪️tests/🧪️reports/🦀️.rs"]
-                            mod tests_reports_a_no_op_when_the_kind_already_reads_topic;
-                        }
-                        #[path = "."]
-                        pub mod change_node_shape {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔷change-node-shape/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔷change-node-shape/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔷change-node-shape/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔷change-node-shape/🧪️tests/🧪️reports/🦀️.rs"]
-                            mod tests_reports_a_no_op_when_the_shape_already_reads_circle;
-                        }
-                        #[path = "."]
-                        pub mod edit_node_text {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-node-text/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-node-text/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-node-text/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-node-text/🧪️tests/🧪️reports/🦀️.rs"]
-                            mod tests_reports_a_no_op_when_the_label_is_retyped_verbatim;
-                        }
-                        #[path = "."]
-                        pub mod set_node_root {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚩set-node-root/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚩set-node-root/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚩set-node-root/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚩set-node-root/🧪️tests/🧪️reports/🦀️.rs"]
-                            mod tests_reports_a_no_op_when_an_unflagged_node_is_set_to_not_root;
-                        }
-                        #[path = "."]
-                        pub mod connect_nodes {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝️connect-nodes/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝️connect-nodes/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝️connect-nodes/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝️connect-nodes/🧪️tests/🧪️rejects/🦀️.rs"]
-                            mod tests_rejects_an_edge_whose_source_node_is_absent;
-                        }
-                        #[path = "."]
-                        pub mod disconnect_nodes {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-nodes/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-nodes/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-nodes/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-nodes/🧪️tests/🧪️rejects/🦀️.rs"]
-                            mod tests_rejects_cutting_an_edge_the_board_never_carried;
-                        }
                     }
                 }
                 #[path = "."]
@@ -612,21 +450,6 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/💾️binary/🦀️.rs"]
                         pub mod binary;
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/📝️text/🦀️.rs"]
-                        pub mod text;
-                    }
-                    #[path = "."]
-                    pub mod diff {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔺️diff/📝️text/🦀️.rs"]
-                        pub mod text;
-                        pub use text::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔺️diff/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                    }
-                    #[path = "."]
-                    pub mod mutations {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/📝️text/🦀️.rs"]
                         pub mod text;
                     }
                     #[path = "."]
@@ -708,52 +531,17 @@ pub mod standards {
     }
 }
 
-// ---- Shims: keep pre-migration module paths resolving for external callers ----
 pub mod schema {
     pub use super::standards::v1::subsets::any::schema::*;
 }
 pub mod io {
     pub use super::standards::v1::subsets::any::io::*;
 }
-pub mod op {
-    pub use crate::standards::v1::subsets::any::io::mutations::text::*;
-}
 pub mod document_dsl {
     pub use crate::standards::v1::subsets::any::io::snapshot::text::*;
 }
-pub mod spr {
-    pub use crate::standards::v1::subsets::any::io::mutations::binary::*;
-}
-pub mod diff {
-    pub use crate::standards::v1::subsets::any::io::diff::text::*;
-    pub use crate::standards::v1::subsets::any::schema::diff::*;
-    pub mod schema {
-        pub use crate::standards::v1::subsets::any::schema::diff::*;
-    }
-    pub mod text {
-        pub use crate::standards::v1::subsets::any::io::diff::text::*;
-    }
-    pub mod pack {
-        pub use crate::standards::v1::subsets::any::io::diff::binary::*;
-    }
-    pub mod binary {
-        pub use crate::standards::v1::subsets::any::io::diff::binary::*;
-    }
-}
 pub mod mutations {
     pub use crate::standards::v1::subsets::any::schema::mutations::*;
-    pub mod schema {
-        pub use crate::standards::v1::subsets::any::schema::mutations::*;
-    }
-    pub mod text {
-        pub use crate::standards::v1::subsets::any::io::mutations::text::*;
-    }
-    pub mod pack {
-        pub use crate::standards::v1::subsets::any::io::mutations::binary::*;
-    }
-    pub mod binary {
-        pub use crate::standards::v1::subsets::any::io::mutations::binary::*;
-    }
 }
 pub mod snapshot {
     pub use crate::standards::v1::subsets::any::schema::snapshot::*;
@@ -888,6 +676,6 @@ pub mod viewer {
 /// refuses it (`… did not declare a loaded-parent child projection`), and since PX1 the live envelope load
 /// asks for it before the decoded document may replace the store, so an undeclared app fails every live load.
 pub fn wires_child_restore_projection(snapshot: &crate::WiresSnapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
-    store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wires.child-projection"), error.to_string()))
+    store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wires.child.projection"), error.to_string()))
 }
 //#endregion 🧬️ChildRestoreProjection

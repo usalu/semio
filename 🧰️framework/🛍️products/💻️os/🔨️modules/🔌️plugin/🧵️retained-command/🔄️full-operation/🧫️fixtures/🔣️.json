@@ -11,49 +11,42 @@
     {
       "name": "empty",
       "description": "",
-      "coalesceKey": "",
       "expectedBytes": 1,
       "accepted": true
     },
     {
       "name": "single",
-      "description": "a",
-      "coalesceKey": "b",
+      "description": "ab",
       "expectedBytes": 3,
       "accepted": true
     },
     {
       "name": "maximum",
       "description": "abcdefghijklmno",
-      "coalesceKey": "",
       "expectedBytes": 16,
       "accepted": true
     },
     {
       "name": "maximum-plus-one",
       "description": "abcdefghijklmnop",
-      "coalesceKey": "",
       "expectedBytes": 17,
       "accepted": false
     },
     {
       "name": "unicode-maximum",
-      "description": "🧭🧭🧭",
-      "coalesceKey": "éa",
+      "description": "🧭🧭🧭éa",
       "expectedBytes": 16,
       "accepted": true
     },
     {
       "name": "unicode-plus-one",
       "description": "🧭🧭🧭🧭",
-      "coalesceKey": "",
       "expectedBytes": 17,
       "accepted": false
     },
     {
       "name": "escaped-text-semantic-bytes",
-      "description": "\"\n\\",
-      "coalesceKey": ",",
+      "description": "\"\n\\,",
       "expectedBytes": 5,
       "accepted": true
     }
@@ -368,5 +361,19 @@
       "maximumItems": 1,
       "terminal": true
     }
-  ]
+  ],
+  "download": {
+    "wireBytes": 16384,
+    "payloadBytes": 16433,
+    "chunkBytes": 4096,
+    "retirementBytes": 3,
+    "replies": [
+      "progress",
+      "download"
+    ],
+    "busyRetainsOwner": true,
+    "canceledDownloads": 0,
+    "queueSlots": 5,
+    "vectorMetadataWords": 3
+  }
 }

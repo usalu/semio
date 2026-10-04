@@ -11,7 +11,7 @@ class WorkflowSqliteTestScript extends BundleScript{
  async run(segments:string[]):Promise<void>{
   const mode=segments[0];if(segments.length>1||(mode!==undefined&&mode!=="source"&&mode!=="native"))throw Error("Unknown Workflow SQLite test mode");
   if(mode!=="source")await runArtifactRustTests("semio-framework-artifact-workflow-workflow",this.repoRoot,["--lib","sqlite_","--no-fail-fast"]);
-  if(mode!=="native")await runRepositoryTestCommand(process.execPath,["test",resolve(this.root,"../../🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts")],{cwd:this.repoRoot});
+  if(mode!=="native")await runRepositoryTestCommand(process.execPath,["test",resolve(this.root,"../../🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts")],{cwd:this.repoRoot,budgetMs:60000});
  }
 }
 /** 🔎️ Verifies the Workflow source facade with strict public types. */

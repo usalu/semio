@@ -47,14 +47,14 @@ pub struct FlattenedNode {
 /// `DslValue`; this one keeps `ToValue`/`FromValue` and bridges TO serde.
 impl serde::Serialize for FlattenedNode {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serde_json::Value::from(&<Self as store::ToValue>::to_value(self)).serialize(serializer)
+        serde_json::Value::from(&<Self as semio_framework_value::ToValue>::to_value(self)).serialize(serializer)
     }
 }
 
 impl<'de> serde::Deserialize<'de> for FlattenedNode {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let json = serde_json::Value::deserialize(deserializer)?;
-        <Self as store::FromValue>::from_value(store::DslValue::from(json)).map_err(serde::de::Error::custom)
+        <Self as semio_framework_value::FromValue>::from_value(semio_framework_value::DslValue::from(json)).map_err(serde::de::Error::custom)
     }
 }
 //#endregion 🌉️SerdeBridge

@@ -32,7 +32,7 @@ fn fixture() -> SemioDrawingSnapshot {
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn round_trip(base: &SemioDrawingSnapshot, operation: &SemioDrawingMutation) -> SemioDrawingSnapshot {
     let forward = operation.diff(base).diff().apply(base).expect("apply must succeed for a well-formed fixture");
-    let backwards = operation.inverse(base);
+    let backwards = operation.inverse(base).expect("valid retained mutation inverse fixture");
     let mut restored = forward.clone();
     for back in &backwards {
         restored = back.diff(&restored).diff().apply(&restored).expect("apply must succeed for a well-formed fixture");
@@ -67,7 +67,7 @@ async fn create_delete_layer_round_trip() {
 async fn delete_layer_of_an_absent_id_has_an_empty_inverse() {
     let base = fixture();
     let delete = SemioDrawingMutation::DeleteLayer(delete_layer::DeleteLayer { id: "missing".into() });
-    assert!(delete.inverse(&base).is_empty());
+    assert!(delete.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
     assert_eq!(delete.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
 }
 
@@ -98,7 +98,7 @@ async fn move_and_drag_nodes_round_trip() {
 
     let path_path = NodePath { layer: 0, path: vec![1] };
     let no_op_move = SemioDrawingMutation::MoveNode(move_node::MoveNode { at: path_path, new_origin: SemioPoint2 { x: 1.0, y: 1.0 } });
-    assert!(no_op_move.inverse(&base).is_empty(), "Path has no origin field; move must be a no-op");
+    assert!(no_op_move.inverse(&base).expect("valid retained mutation inverse fixture").is_empty(), "Path has no origin field; move must be a no-op");
     assert_eq!(no_op_move.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
 
     let drag = SemioDrawingMutation::DragNodes(drag_nodes::DragNodes { ats: vec![text_path], offset: SemioPoint2 { x: 3.0, y: -2.0 } });
@@ -146,7 +146,7 @@ async fn group_refuses_non_contiguous_indices() {
     let base = fixture();
     let root_path = NodePath { layer: 0, path: vec![] };
     let m = SemioDrawingMutation::GroupNodes(group_nodes::GroupNodes { parent: root_path, indices: vec![0, 2], transform: SemioTransform::identity() });
-    assert!(m.inverse(&base).is_empty());
+    assert!(m.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
     assert_eq!(m.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
 }
 
@@ -169,7 +169,7 @@ async fn flatten_refuses_a_non_identity_descendant_group() {
     transform.translation.x = 5.0;
     let root_path = NodePath { layer: 0, path: vec![] };
     let m = SemioDrawingMutation::FlattenNode(flatten_node::FlattenNode { at: root_path });
-    assert!(m.inverse(&base).is_empty());
+    assert!(m.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
     assert_eq!(m.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
 }
 
@@ -199,7 +199,7 @@ async fn replace_fill_and_change_stroke_round_trip() {
     assert_eq!(after_width.styles[0].stroke_width, Some(5.0));
 
     let absent_m = SemioDrawingMutation::ChangeStrokeWidth(change_stroke_width::ChangeStrokeWidth { style_name: "missing".into(), new_width: Some(1.0) });
-    assert!(absent_m.inverse(&base).is_empty());
+    assert!(absent_m.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
     assert_eq!(absent_m.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
 }
 

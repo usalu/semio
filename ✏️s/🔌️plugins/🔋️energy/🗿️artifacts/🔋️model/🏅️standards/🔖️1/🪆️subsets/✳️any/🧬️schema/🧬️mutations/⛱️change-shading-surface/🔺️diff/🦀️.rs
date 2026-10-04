@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeShadingSurfaceTransmittanceSchedule, base: &E
         return protocol::MutationOutcome::error("mutation.target-missing", "The named transmittance schedule is not defined by this model.", [payload.id.0.to_string()]);
     }
     if existing.transmittance_schedule_id == payload.new_transmittance_schedule_id {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Shading surface {} already has this transmittance schedule.", payload.id.0));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Shading surface {} already has this transmittance schedule.", payload.id.0));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.shading_surfaces.iter_mut().find(|item| item.id == payload.id) {

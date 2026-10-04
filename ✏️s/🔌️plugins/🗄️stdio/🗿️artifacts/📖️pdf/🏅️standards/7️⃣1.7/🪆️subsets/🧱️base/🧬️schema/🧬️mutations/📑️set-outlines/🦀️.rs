@@ -23,10 +23,13 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetOutlines {
         MutationOutcome::new(diff::diff_set_outlines(base, &self.outlines))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         let _ = base;
         vec![PdfMutation::SetOutlines(SetOutlines { outlines: base.outlines.clone() })]
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set {} outline items", self.outlines.len()), &format!("{} Lesezeichen setzen", self.outlines.len()))

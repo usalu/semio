@@ -17,3 +17,5 @@ async fn editor_declares_the_main_window() {
     let def = create_zip_any_editor();
     assert!(def.window_kinds.iter().any(|window| window.id == main::WINDOW_KIND_ID));
 }
+
+semio_framework_plugin::history_edit_acceptance_law!("stdio", super::ZipAnyEditor, || semio_framework_plugin::App { definition: super::create_zip_any_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️2.0/🪆️subsets/🧱️base");

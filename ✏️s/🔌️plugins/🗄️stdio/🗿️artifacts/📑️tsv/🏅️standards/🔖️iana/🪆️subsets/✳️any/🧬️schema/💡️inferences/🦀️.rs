@@ -6,7 +6,6 @@
 
 use crate::TsvSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a tsv snapshot. One field per named inference under
@@ -20,8 +19,11 @@ pub struct TsvInference {
 }
 
 impl protocol::Inference<TsvSnapshot> for TsvInference {
-    fn infer(snapshot: &TsvSnapshot) -> Self {
+    fn infer(snapshot: &TsvSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { outline: TsvOutline::compute(snapshot) }
+    
+        })
     }
 }
 
@@ -37,13 +39,6 @@ impl protocol::InferenceSpec<TsvSnapshot> for TsvInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::standards::iana::subsets::any::schema::TsvBuilder {
-    type Snapshot = TsvSnapshot;
-    type Inference = TsvInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.tsv.inference`'s facet leaves into the OS-wide inference catalog — call

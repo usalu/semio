@@ -55,7 +55,7 @@ impl ArtifactDeserializer for SemioDrawingFromDwg {
     const INTO: Dialect = INTO_DIALECT;
 
     async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        let drawing: DwgDrawing = from.drawing.to_native().map_err(store::PackError::Schema)?;
+        let drawing: DwgDrawing = from.drawing.to_native().map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))?;
         let layers = drawing
             .layers
             .iter()

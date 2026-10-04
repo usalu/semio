@@ -117,6 +117,7 @@
       ],
       "kinds": [
         "set-snapshot",
+        "patch-snapshot",
         "set-screen-size",
         "set-global-color-table",
         "set-background-color-index",
@@ -150,6 +151,38 @@
             "operation": "set-snapshot",
             "bridgeVersion": 1,
             "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gif-87a-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "gif-87a-any-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "gif"
+          ],
+          "invariants": {
+            "local": [
+              "replacement-snapshot-reproduces-exactly-or-reports-no-op"
+            ],
+            "enclosing": [
+              "gif-reencode-round-trip-agrees-with-reference-decoder"
+            ]
+          }
+        },
+        {
+          "id": "patch-snapshot",
+          "capability": "gif-87a-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#PatchSnapshot",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "patch-snapshot",
+            "bridgeVersion": 1,
+            "variant": "PatchSnapshot"
           },
           "oracleRequirements": [
             {

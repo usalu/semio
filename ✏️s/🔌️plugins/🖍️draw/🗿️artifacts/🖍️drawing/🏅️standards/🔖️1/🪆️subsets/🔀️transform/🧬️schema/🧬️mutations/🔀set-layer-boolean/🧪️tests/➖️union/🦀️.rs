@@ -57,7 +57,7 @@ async fn only_the_boolean_variants_operation_changes() {
 async fn inverse_restores_the_previous_operation() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_drawing_mutation(&base, &mutation);
+    let inverse = inverse_drawing_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "a boolean layer undoes with exactly one counter-set (a non-boolean target would yield none)");
     let mut snapshot = base.clone();
     apply_drawing_mutation(&mut snapshot, &mutation).expect("forward applies");

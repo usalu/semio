@@ -10,7 +10,7 @@ pub fn diff(payload: &super::SetPrimitiveMaterial, base: &SemioMeshSnapshot) -> 
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Primitive \"{}\" does not exist in mesh \"{}\".", payload.primitive_id, payload.mesh_id), [payload.primitive_id.clone()]);
     };
     if primitive.material_id == payload.material_id {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Primitive \"{}\" material is unchanged.", payload.primitive_id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Primitive \"{}\" material is unchanged.", payload.primitive_id));
     }
     protocol::MutationOutcome::new(crate::standards::v1::subsets::mesh::schema::diff::diff_set_primitive_material(base, &payload.mesh_id, &payload.primitive_id, payload.material_id.clone()))
 }

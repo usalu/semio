@@ -2,7 +2,7 @@
 use crate::{GraphManifest, PortDirection, PropertyDef};
 
 /// 🔺️ Trinity-shaped manifest projection for jack/ram consumers.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Manifest {
     #[value(default)]
@@ -13,7 +13,7 @@ pub struct Manifest {
     pub port_kinds: Vec<PortKindDef>,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct NodeKindDef {
     pub name: String,
@@ -23,7 +23,7 @@ pub struct NodeKindDef {
     pub port_kinds: Vec<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct EdgeKindDef {
     pub name: String,
@@ -31,7 +31,7 @@ pub struct EdgeKindDef {
     pub properties: Vec<PropertyDef>,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct PortKindDef {
     pub name: String,

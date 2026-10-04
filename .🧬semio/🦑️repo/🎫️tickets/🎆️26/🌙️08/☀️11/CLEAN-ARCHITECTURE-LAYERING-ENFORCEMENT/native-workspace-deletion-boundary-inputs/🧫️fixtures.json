@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "CurrentFullWorkspace",
+      "mandatoryMembers": 116,
+      "missingMembers": 0,
+      "specificDependencies": 8,
+      "membershipAdmitted": true,
+      "generalClosureAdmitted": false
+    },
+    {
+      "id": "PhysicalSpecificDeletionWithOldMembership",
+      "mandatoryMembers": 116,
+      "missingMembers": 53,
+      "specificDependencies": 8,
+      "membershipAdmitted": false,
+      "generalClosureAdmitted": false
+    },
+    {
+      "id": "GeneralMembershipOnly",
+      "mandatoryMembers": 63,
+      "missingMembers": 0,
+      "specificDependencies": 8,
+      "membershipAdmitted": true,
+      "generalClosureAdmitted": false
+    },
+    {
+      "id": "GeneralMembershipAndCanonicalDependencyCut",
+      "mandatoryMembers": 63,
+      "missingMembers": 0,
+      "specificDependencies": 0,
+      "membershipAdmitted": true,
+      "generalClosureAdmitted": true
+    }
+  ]
+}

@@ -12,6 +12,7 @@
 import type { SetSnapshot } from './📸️set-snapshot/🟦️.ts';
 import type { GraphNodeId, GraphEdgeId, SemioGraphPort, SemioGraphNode } from "../📸️snapshot/🟦️.ts";
 import type {SemioValueEntry} from "../../../🔢️value/🧬️schema/📸️snapshot/🟦️.ts";
+import type { SnapshotPatch } from '../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts';
 export type {SemioValueEntry} from "../../../🔢️value/🧬️schema/📸️snapshot/🟦️.ts";
 
 export type SemioPoint2 = SemioGraphNode["position"];
@@ -21,8 +22,11 @@ export interface CreateNode {
   kind?: string;
   label?: string;
   position?: SemioPoint2;
+  width: number;
+  height: number;
   ports?: SemioGraphPort[];
   properties?: SemioValueEntry[];
+  at?: number;
 }
 
 export interface DeleteNode {
@@ -63,7 +67,7 @@ export interface AddNodeProperty {
 
 export interface RemoveNodeProperty {
   node_id: GraphNodeId;
-  index: number;
+  key: string;
 }
 
 export interface CreateEdge {
@@ -72,10 +76,54 @@ export interface CreateEdge {
   target: GraphNodeId;
   kind?: string;
   label?: string;
+  source_port: string | null;
+  target_port: string | null;
+  properties: SemioValueEntry[];
+  at?: number;
 }
 
 export interface DeleteEdge {
   id: GraphEdgeId;
+}
+
+export interface DragNodes {
+  targets: GraphNodeId[];
+  dx: number;
+  dy: number;
+}
+
+export interface SetNodeProperty {
+  node_id: GraphNodeId;
+  key: string;
+  value: SemioValueEntry["value"];
+}
+
+export interface ResizeNode {
+  id: GraphNodeId;
+  width: number;
+  height: number;
+}
+
+export interface RenameNode {
+  id: GraphNodeId;
+  new_id: GraphNodeId;
+}
+
+export interface SetEdgeProperty {
+  edge_id: GraphEdgeId;
+  key: string;
+  value: SemioValueEntry["value"];
+}
+
+export interface AddEdgeProperty {
+  edge_id: GraphEdgeId;
+  index: number;
+  property: SemioValueEntry;
+}
+
+export interface RemoveEdgeProperty {
+  edge_id: GraphEdgeId;
+  key: string;
 }
 
 export type SemioGraphMutation =
@@ -90,4 +138,12 @@ export type SemioGraphMutation =
   | { RemoveNodeProperty: RemoveNodeProperty }
   | { CreateEdge: CreateEdge }
   | { DeleteEdge: DeleteEdge }
-  | { SetSnapshot: SetSnapshot };
+  | { SetSnapshot: SetSnapshot }
+  | { readonly PatchSnapshot: { readonly patch: SnapshotPatch } }
+  | { DragNodes: DragNodes }
+  | { SetNodeProperty: SetNodeProperty }
+  | { ResizeNode: ResizeNode }
+  | { RenameNode: RenameNode }
+  | { SetEdgeProperty: SetEdgeProperty }
+  | { AddEdgeProperty: AddEdgeProperty }
+  | { RemoveEdgeProperty: RemoveEdgeProperty };

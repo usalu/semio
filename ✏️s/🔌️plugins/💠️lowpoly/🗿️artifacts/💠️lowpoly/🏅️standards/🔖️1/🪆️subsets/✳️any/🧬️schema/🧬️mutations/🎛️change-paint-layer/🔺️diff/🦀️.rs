@@ -15,7 +15,7 @@ pub fn diff(payload: &ChangePaintLayerBlendMode, base: &LowpolySnapshot) -> prot
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Paint layer {} does not exist on object \"{}\".", payload.index, payload.object_id), [payload.object_id.clone()]);
     };
     if layer.blend_mode == payload.new_blend_mode {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Paint layer {} blend mode is already \"{}\".", payload.index, payload.new_blend_mode));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Paint layer {} blend mode is already \"{}\".", payload.index, payload.new_blend_mode));
     }
     protocol::MutationOutcome::new(diff_patch_paint_layer(payload.object_id.clone(), payload.index, LowpolyPaintLayerPatch { blend_mode: Some(payload.new_blend_mode.clone()), ..LowpolyPaintLayerPatch::default() }))
 }

@@ -19,9 +19,12 @@ impl protocol::MutationKind<SemioBrepSnapshot, SemioBrepMutation> for MoveVertex
     fn diff(&self, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<<SemioBrepMutation as protocol::Mutation<SemioBrepSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioBrepSnapshot) -> Vec<SemioBrepMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &SemioBrepSnapshot) -> Result<Vec<SemioBrepMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Move vertex \"{}\" to ({}, {}, {})", self.vertex_id, self.new_point.x, self.new_point.y, self.new_point.z), &format!("Vertex \"{}\" nach ({}, {}, {}) verschieben", self.vertex_id, self.new_point.x, self.new_point.y, self.new_point.z))
     }

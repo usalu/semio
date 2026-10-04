@@ -6,8 +6,8 @@ macro_rules! __semio_plugin_descriptor_fresh_test {
         #[test]
         fn descriptor_is_fresh() {
             __semio_install_plugin_bundle();
-            let plugin_id = __SEMIO_PLUGIN_RUNTIME.with(|runtime| $crate::app::resolve_ready($crate::plugin_runtime::plugin_manifest(runtime))).plugin_id;
-            let assembled = __SEMIO_PLUGIN_RUNTIME.with(|runtime| $crate::app::resolve_ready($describe(runtime)));
+            let plugin_id = __SEMIO_PLUGIN_RUNTIME.with(|runtime| ::semio_framework_async::poll::resolve_ready($crate::plugin_runtime::plugin_manifest(runtime))).plugin_id;
+            let assembled = __SEMIO_PLUGIN_RUNTIME.with(|runtime| ::semio_framework_async::poll::resolve_ready($describe(runtime)));
             $crate::plugin_runtime::extension_dispose_cold().expect("cold descriptor inspection retires any installed extension");
             assert!($crate::plugin_runtime::extension_terminal_is_empty());
             let expected_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🛂️.descriptor.semio");

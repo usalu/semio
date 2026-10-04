@@ -25,7 +25,7 @@ pub fn definition() -> ModeDefinition {
         id: GENERATION3D_VIEW_MODE_VIEW.into(),
         label: LocalizedLabel::native("View", "Ansicht"),
         icon_id: "eye".into(),
-        tools: vec![semio_framework::io::resolve_ready(ToolRef::new(crate::preview_eval::PREVIEW_EVAL_TOOL_ID))],
+        tools: vec![::semio_framework_async::poll::resolve_ready(ToolRef::new(crate::preview_eval::PREVIEW_EVAL_TOOL_ID))],
         layout_id: None,
         commands: Vec::new(),
     }

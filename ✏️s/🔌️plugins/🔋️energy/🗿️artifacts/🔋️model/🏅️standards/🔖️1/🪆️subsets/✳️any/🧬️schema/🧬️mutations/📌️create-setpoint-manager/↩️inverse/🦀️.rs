@@ -6,7 +6,8 @@ use crate::EnergyModelSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ A refused or no-op forward step has nothing to undo, so it answers with no steps at all.
-pub fn inverse(payload: &super::CreateSetpointManager, base: &EnergyModelSnapshot) -> Vec<EnergyModelMutation> {
+pub fn inverse(payload: &super::CreateSetpointManager, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     if (base.model.setpoint_managers.iter().any(|item| item.id == payload.id))
         || (payload.name.trim().is_empty())
         || (base.model.setpoint_managers.iter().any(|item| item.name == payload.name))
@@ -24,5 +25,7 @@ pub fn inverse(payload: &super::CreateSetpointManager, base: &EnergyModelSnapsho
         return Vec::new();
     }
     vec![vocabulary::delete_setpoint_manager(payload.id)]
+
+    })())
 }
 //#endregion 🔖️Inverse

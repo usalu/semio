@@ -6,9 +6,8 @@ use crate::mutations::SequenceMutation;
 use crate::{SequenceCamera, SequenceSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
-use dsl::os_pack::json::{self, Value};
-use semio_framework_plugin::app::ChildEmit;
-use semio_framework_tool_machine::{node_drag_commit, NodeDragRecord, NodeGraphEditRow};
+use semio_framework_pack_json::{self as json, Value};
+use semio_framework_tool_machine::{node_drag_emit, NodeDragRecord, NodeGraphEditRow};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
 
@@ -16,7 +15,7 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot
 pub mod node_graph_edit {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "node-graph-edit")]
     pub struct NodeGraphEdit {
         pub operations_json: String,
@@ -27,7 +26,7 @@ pub mod node_graph_edit {
 
     /// 🧾️ Decodes one host row through the ONE shared node-graph row decoder of `🛠️tool-machine`; the `setSlider` and
     /// `insertPort` rows a sequence has no widget for are refused by name, so the whole batch is refused.
-    pub(crate) fn sequence_node_graph_row(row: &dsl::DslValue) -> Result<NodeGraphEditRow, Fault> {
+    pub(crate) fn sequence_node_graph_row(row: &semio_framework_value::DslValue) -> Result<NodeGraphEditRow, Fault> {
         match NodeGraphEditRow::from_row(row).map_err(|reason| Fault::from(format!("sequence nodeGraphEdit refusal: {reason}")))? {
             NodeGraphEditRow::SetSlider { .. } | NodeGraphEditRow::InsertPort { .. } => Err(Fault::from("sequence nodeGraphEdit refusal: a sequence has no sliders and no variadic ports")),
             row => Ok(row),
@@ -40,7 +39,7 @@ pub mod node_graph_edit {
     ///   `drag-nodes`; a drag commits through the ONE node-drag machine as ONE composed-child tool transaction (design §12);
     /// - `connect`, `disconnect`, `delete` — one-shot structural edits of the steps and edges they name.
     pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<SequenceMutation, NoConfigMutation>, Fault> {
-        let rows: Vec<NodeGraphEditRow> = match json::parse(&payload.operations_json) {
+        let rows: Vec<NodeGraphEditRow> = match json::parse(&payload.operations_json, json::JsonMemberPolicy::Reject) {
             Ok(Value::Array(rows)) => rows.iter().map(|row| sequence_node_graph_row(&json::to_dsl_value(row))).collect::<Result<_, _>>()?,
             _ => return Err(Fault::from("sequence nodeGraphEdit operations must be a JSON array")),
         };
@@ -84,10 +83,8 @@ pub mod node_graph_edit {
             return Ok(sequence_child_leaves_emit(doc.snapshot, &leaves));
         }
         let Some(gesture) = records.first().map(|record| record.gesture_id.as_str()) else { return Ok(sequence_child_leaves_emit(doc.snapshot, &leaves)) };
-        let clock = protocol::HybridLogicalTimestamp { actor: 0, physical_ms: semio_framework_job::default_now_ms().unwrap_or(0), logical: 0 };
-        let Some((transaction, leaves)) = node_drag_commit(format!("{SEQUENCE_PLAY_APP_ID}#{NODE_GRAPH_EDIT_VERB}"), protocol::ActorId(authoring_seed.to_string()), gesture, leaves, clock) else { return Ok(Emit::default()) };
-        let child = ChildEmit::of::<SemioFlowSnapshot, _>("content", &doc.snapshot.content.child_id, &leaves);
-        Ok(Emit { ui_scope: semio_framework::kernel::UiDirtyScope::Full, ..Emit::commit_child_transaction(transaction, vec![child]) })
+        let drag = node_drag_emit(SEQUENCE_PLAY_APP_ID, NODE_GRAPH_EDIT_VERB, authoring_seed, gesture, leaves);
+        Ok(Emit { ui_scope: semio_framework::kernel::UiDirtyScope::Full, ..Emit::node_drag_child::<SemioFlowSnapshot, _>(drag, "content", &doc.snapshot.content.child_id) })
     }
 }
 //#endregion 🔖️NodeGraphEdit
@@ -96,7 +93,7 @@ pub mod node_graph_edit {
 pub mod set_viewport {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "set-viewport")]
     pub struct SetViewport {
         #[dsl(block)]
@@ -113,4 +110,8 @@ pub mod set_viewport {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️history/🦀️.rs"]
+mod history_tests;
 //#endregion 🧪️Tests

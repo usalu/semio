@@ -81,6 +81,7 @@ describe("🎨️ primitive-local GLB material carriage", () => {
         depthWrite: material.depthWrite,
         vertexColors: material.vertexColors,
         mapColorSpace: material.map?.colorSpace ?? null,
+        normalScale:material.normalScale.toArray(),occlusionStrength:material.aoMapIntensity,textureCoordinates:Object.fromEntries(["map","metalnessMap","roughnessMap","normalMap","aoMap","emissiveMap"].filter(role=>(material as any)[role]).map(role=>[role,(material as any)[role].channel])),
       }, record.id).toEqual(record.expectedThree);
       expect(color ? { itemSize: color.itemSize, normalized: color.normalized, bytes: [...color.array] } : null, record.id).toEqual(record.vertexColor);
       expect(material.map ? {
@@ -90,6 +91,15 @@ describe("🎨️ primitive-local GLB material carriage", () => {
         magFilter: filterNames.get(material.map.magFilter),
         minFilter: filterNames.get(material.map.minFilter),
       } : null, record.id).toEqual(record.texture);
+      if (index === 1) {
+        expect([...mesh.geometry.getAttribute("tangent").array]).toEqual([0,1,0,-1,0,1,0,-1,0,1,0,-1]);
+        for (const [role,colorSpace] of Object.entries(fixture.textureRoles)) {
+          const texture = material[role as keyof MeshStandardMaterial] as import("three").Texture;
+          expect(texture, role).toBeTruthy();expect(texture.colorSpace,role).toBe(colorSpace);
+        }
+        expect(material.metalnessMap!.channel).toBe(material.roughnessMap!.channel);expect(material.metalnessMap!.image).toBe(material.roughnessMap!.image);
+        expect(material.map).toBe(material.emissiveMap);
+      }
       if (material.map) expect(material.map.colorSpace).toBe(SRGBColorSpace);
     }
   });

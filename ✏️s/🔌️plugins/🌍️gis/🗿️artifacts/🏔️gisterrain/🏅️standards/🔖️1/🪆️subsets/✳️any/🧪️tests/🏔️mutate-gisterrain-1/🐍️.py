@@ -10,7 +10,7 @@ from semio_repo_test import Adapter, Context, Outcome
 
 
 # region 🔖️Vocabulary
-FIELDS = ("exaggeration", "importedFeaturesJson", "mesh")
+FIELDS = ("exaggeration", "importedMap", "mesh")
 """🗂️ The persisted fields `GisTerrainSnapshot` declares — and the cross-language projection."""
 
 KINDS = ("change-exaggeration", "change-imported-features")
@@ -19,7 +19,7 @@ KINDS = ("change-exaggeration", "change-imported-features")
 TAGS = {"change-exaggeration": "ChangeExaggeration", "change-imported-features": "ChangeImportedFeatures"}
 """🔤️ The externally tagged wire name of each kind, as the committed vectors spell it."""
 
-ARGUMENTS = {"change-exaggeration": "newExaggeration", "change-imported-features": "newImportedFeaturesJson"}
+ARGUMENTS = {"change-exaggeration": "newExaggeration", "change-imported-features": "newImportedMap"}
 """🔤️ The single argument each verb carries, as the committed vectors spell it."""
 
 # endregion 🔖️Vocabulary
@@ -27,16 +27,27 @@ ARGUMENTS = {"change-exaggeration": "newExaggeration", "change-imported-features
 
 # region 🔖️Document
 def validate(document):
-    """✅️ Holds the document to the committed JSON Schema: a double and a string, both required."""
+    """✅️ Holds the document to the committed JSON Schema: an exaggeration number and an optional complete imported map."""
     if not isinstance(document.get("exaggeration"), (int, float)) or isinstance(document.get("exaggeration"), bool):
         raise AssertionError("exaggeration must be a number, found %r" % document.get("exaggeration"))
-    if not isinstance(document.get("importedFeaturesJson"), str):
-        raise AssertionError("importedFeaturesJson must be a string, found %r" % document.get("importedFeaturesJson"))
+    if "importedMap" in document:
+        imported = document["importedMap"]
+        if not isinstance(imported, dict) or set(imported) != {"positions", "routes", "regions", "properties"}:
+            raise AssertionError("complete imported map required")
+        for role in ("positions", "routes", "regions"):
+            if not isinstance(imported[role], list) or any(not isinstance(record, dict) for record in imported[role]):
+                raise AssertionError("ordered complete object records required")
+        if not isinstance(imported["properties"], list):
+            raise AssertionError("ordered root properties required")
+        for member in imported["properties"]:
+            if set(member) != {"name", "value"} or not isinstance(member["name"], str) or member["name"] in ("positions", "routes", "regions"):
+                raise AssertionError("literal nonreserved root member required")
 
 
 def document_of(payload):
     """📥️ Reads the declared scalar fields and exact mesh handle from the snapshot."""
-    document = {"exaggeration": float(payload["exaggeration"]), "importedFeaturesJson": payload["importedFeaturesJson"], "mesh": payload.get("mesh")}
+    document = {key: payload[key] for key in FIELDS if key in payload}
+    document["exaggeration"] = float(payload["exaggeration"])
     validate(document)
     return document
 
@@ -58,15 +69,18 @@ def kind_of(mutation):
 
 def field_of(kind):
     """🗂️ The one field a kind writes — the grammar names one verb per persisted field."""
-    return "exaggeration" if kind == "change-exaggeration" else "importedFeaturesJson"
+    return "exaggeration" if kind == "change-exaggeration" else "importedMap"
 
 
 def apply_mutation(document, mutation):
     """🧬️ Applies one typed mutation, returning the resulting document."""
     kind = kind_of(mutation)
-    value = mutation[TAGS[kind]][ARGUMENTS[kind]]
+    value = mutation[TAGS[kind]].get(ARGUMENTS[kind])
     result = dict(document)
-    result[field_of(kind)] = float(value) if kind == "change-exaggeration" else value
+    if kind == "change-imported-features" and value is None:
+        result.pop("importedMap", None)
+    else:
+        result[field_of(kind)] = float(value) if kind == "change-exaggeration" else value
     validate(result)
     return result
 
@@ -74,7 +88,7 @@ def apply_mutation(document, mutation):
 def inverse_mutation(document, mutation):
     """↩️ The mutation that undoes one application: the same setter carrying the previous value."""
     kind = kind_of(mutation)
-    return {TAGS[kind]: {ARGUMENTS[kind]: document[field_of(kind)]}}
+    return {TAGS[kind]: {ARGUMENTS[kind]: document[field_of(kind)]} if field_of(kind) in document else {}}
 
 
 # endregion 🔖️Mutations
@@ -92,23 +106,23 @@ def observable(kind, before, after):
 def independent(kind, before, after):
     """🔀️ The two setters are independent: writing one field must leave the OTHER exactly as it was.
     An implementation that reset a sibling field on every edit passes a field-only check."""
-    other = "importedFeaturesJson" if field_of(kind) == "exaggeration" else "exaggeration"
-    if before[other] != after[other]:
-        raise AssertionError("mutate-%s: writing %s also moved %s, from %r to %r" % (kind, field_of(kind), other, before[other], after[other]))
+    other = "importedMap" if field_of(kind) == "exaggeration" else "exaggeration"
+    if before.get(other) != after.get(other):
+        raise AssertionError("mutate-%s: writing %s also moved %s, from %r to %r" % (kind, field_of(kind), other, before.get(other), after.get(other)))
 
 
 def restores(kind, restored, original):
     """↩️ The metamorphic inverse law, reported by the field that failed to come back."""
     for name in FIELDS:
-        if restored[name] != original[name]:
-            raise AssertionError("inverse-%s: %s came back as %r, not %r" % (kind, name, restored[name], original[name]))
+        if restored.get(name) != original.get(name):
+            raise AssertionError("inverse-%s: %s came back as %r, not %r" % (kind, name, restored.get(name), original.get(name)))
 
 
 def equals_committed(kind, produced, committed):
     """🎯️ The committed after-snapshot claim, over the complete persisted field projection."""
     for name in FIELDS:
-        if produced[name] != committed[name]:
-            raise AssertionError("spec-vector-%s: %s is %r, the committed after-snapshot says %r" % (kind, name, produced[name], committed[name]))
+        if produced.get(name) != committed.get(name):
+            raise AssertionError("spec-vector-%s: %s is %r, the committed after-snapshot says %r" % (kind, name, produced.get(name), committed.get(name)))
 
 
 # endregion 🔖️Laws
@@ -213,7 +227,7 @@ def identity_handler(ctx):
     """
     payload = json_fixture(ctx, "🔣️.snapshot.json")
     document = document_of(payload)
-    imported = json.loads(document["importedFeaturesJson"])
+    imported = document["importedMap"]
     identifiers = [feature["id"] for feature in imported["positions"]]
     if identifiers != ["p_institut_de_botanique_ulg_liege", "p_lycee_block_3000"]:
         raise AssertionError("identity-round-trip: the imported descriptor must carry the two real Liège positions, found %r" % identifiers)

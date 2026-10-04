@@ -6,7 +6,9 @@
 //! control also names the FIELD it changes (`{field, value}`), because the host merges a control's own
 //! scalar under the single key `value` — a slider has one binding and no other way to say what moved.
 
-use crate::editor::fem2d::modes::edit::windows::results::config::{Fem2dLoopMode, Fem2dResultsWindowConfig, Fem2dWaveform, ANIMATION_PHASE_STEP, ANIMATION_SPEED_MAXIMUM, ANIMATION_SPEED_MINIMUM};
+use crate::app_surface::{ANIMATION_PHASE_STEP, ANIMATION_SPEED_MAXIMUM, ANIMATION_SPEED_MINIMUM};
+use crate::editor::fem2d::modes::edit::windows::results::config::Fem2dResultsWindowConfig;
+use crate::editor::fem2d::modes::edit::windows::results::transient::FemPlaybackClock;
 use crate::editor::fem2d::terminology::Fem2dLabels;
 use crate::editor::fem2d::{fem2d_action, ui_label};
 use crate::Fem2dSnapshot;
@@ -165,11 +167,12 @@ fn result_sources(doc: &Fem2dSnapshot) -> Vec<(String, String)> {
 /// `None` when the projection captured a different pane: the controls then show defaults, the play
 /// button is a bare play/pause toggle (its state cannot be read), and a hint row says which pane to
 /// focus for live readouts — a panel projection binds to the focused window, and nothing else can read
-/// another window's configuration.
-pub fn render(doc: &Fem2dSnapshot, window: Option<&Fem2dResultsWindowConfig>, window_id: &str, labels: &Fem2dLabels) -> UiAssemblyResult<BuiltNode> {
+/// another window's configuration. `clock` is that window's running playback clock, so the phase
+/// slider follows the animation while it plays and rests where it paused.
+pub fn render(doc: &Fem2dSnapshot, window: Option<&Fem2dResultsWindowConfig>, clock: Option<&FemPlaybackClock>, window_id: &str, labels: &Fem2dLabels) -> UiAssemblyResult<BuiltNode> {
     let live = window.is_some();
-    let defaults = Fem2dResultsWindowConfig::default();
-    let window = window.unwrap_or(&defaults);
+    let window = crate::editor::fem2d::modes::edit::windows::results::config::effective(window.unwrap_or(&Fem2dResultsWindowConfig::default()), clock);
+    let window = &window;
     let animation = &window.animation;
     let sources = result_sources(doc);
     let source = window.result_source_id.clone().or_else(|| sources.first().map(|(id, _)| id.clone())).unwrap_or_default();
@@ -180,15 +183,8 @@ pub fn render(doc: &Fem2dSnapshot, window: Option<&Fem2dResultsWindowConfig>, wi
         ("once".to_owned(), labels.once.as_str().to_owned()),
     ];
     let waveforms = [("ramp".to_owned(), labels.ramp.as_str().to_owned()), ("sine".to_owned(), labels.sine.as_str().to_owned())];
-    let loop_value = match animation.loop_mode {
-        Fem2dLoopMode::Loop => "loop",
-        Fem2dLoopMode::PingPong => "pingPong",
-        Fem2dLoopMode::Once => "once",
-    };
-    let waveform_value = match animation.waveform {
-        Fem2dWaveform::Ramp => "ramp",
-        Fem2dWaveform::Sine => "sine",
-    };
+    let loop_value = animation.loop_mode.key();
+    let waveform_value = animation.waveform.key();
     let transport = ui::row()
         .try_id("fem2d-play-results.transport.controls")
         .map_err(|_| error("ui.row.id"))?

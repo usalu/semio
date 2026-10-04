@@ -8,6 +8,6 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::{encode_d
 
 pub fn register() {}
 
-pub fn serialize_bytes(snapshot: &Puzzle2dSnapshot) -> Result<Vec<u8>, store::TextError> {
-    encode_drawing(&puzzle2d_board_drawing(snapshot), SemioDrawingFormat::Svg).map_err(|error| store::TextError::new(format!("puzzle2d→svg: {error}"), dsl::TextSpan::at(1, 1)))
+pub fn serialize_bytes(snapshot: &Puzzle2dSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
+    encode_drawing(&puzzle2d_board_drawing(snapshot), SemioDrawingFormat::Svg).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("puzzle2d→svg: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))
 }

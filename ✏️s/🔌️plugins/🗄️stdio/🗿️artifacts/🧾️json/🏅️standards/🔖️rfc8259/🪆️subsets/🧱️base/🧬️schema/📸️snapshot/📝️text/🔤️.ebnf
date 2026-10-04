@@ -1,23 +1,23 @@
-(* ISO-14977-style EBNF for RFC8259 JSON text (the `stdio.json` snapshot's on-disk body). *)
-document = header, body ;
-header = 'schema', space, 'stdio.json', newline ;
-body = value ;
-
-value = object | array | string | number | 'true' | 'false' | 'null' ;
-
-object = '{', [ member, { ',', member } ], '}' ;
-member = string, ':', value ;
-
-array = '[', [ value, { ',', value } ], ']' ;
-
-string = '"', { unescaped | escape }, '"' ;
-unescaped = ? any unicode character except '"' or '\' or a control character ? ;
-escape = '\', ( '"' | '\' | '/' | 'b' | 'f' | 'n' | 'r' | 't' | ( 'u', hex digit, hex digit, hex digit, hex digit ) ) ;
-
-number = [ '-' ], int, [ frac ], [ exp ] ;
-int = '0' | ( digit excl zero, { digit } ) ;
-frac = '.', digit, { digit } ;
-exp = ( 'e' | 'E' ), [ '+' | '-' ], digit, { digit } ;
-digit = '0' | digit excl zero ;
-digit excl zero = '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' ;
-hex digit = digit | 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'A' | 'B' | 'C' | 'D' | 'E' | 'F' ;
+(* 🧾️ Literal owned JSON records in the semio stdio.json DSL envelope. *)
+document = [ envelope ], snapshot ;
+envelope = 'semio', 'stdio.json.dsl', 'v1' ;
+snapshot = 'schema', '=', text, 'nodes', '=', '[', { node }, ']' ;
+node = '{', 'kind', '=', kind, { node field }, '}' ;
+kind = 'null' | 'boolean' | 'number' | 'string' | 'array' | 'object' ;
+node field = 'boolean', '=', boolean
+           | 'number-lexeme', '=', text
+           | 'string-value', '=', text
+           | 'items', '=', '[', { unsigned integer }, ']'
+           | 'members', '=', '[', { member }, ']' ;
+member = '{', 'key', '=', text, 'value', '=', unsigned integer, '}' ;
+boolean = 'true' | 'false' ;
+text = bare identifier | quoted text ;
+bare identifier = identifier start, { identifier continuation } ;
+identifier start = ? Unicode alphabetic character or '_' ? ;
+identifier continuation = identifier start | ? Unicode numeric character ? | '-' | '.' | '/' ;
+unsigned integer = decimal digit, { decimal digit } ;
+decimal digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' ;
+quoted text = '"', { unescaped | escape }, '"' ;
+unescaped = ? Unicode character except '"', '\', or a control character ? ;
+escape = '\', ( '"' | '\' | 'n' | 'r' | 't' | ( 'u', '{', hexadecimal digit, { hexadecimal digit }, '}' ) ) ;
+hexadecimal digit = decimal digit | 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'A' | 'B' | 'C' | 'D' | 'E' | 'F' ;

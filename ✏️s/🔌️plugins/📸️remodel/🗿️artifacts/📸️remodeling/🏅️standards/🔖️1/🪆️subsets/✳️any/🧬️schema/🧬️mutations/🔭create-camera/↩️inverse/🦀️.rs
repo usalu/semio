@@ -4,10 +4,13 @@ use crate::mutations::RemodelingMutation;
 use crate::RemodelingSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::CreateCameraCalibration, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
+pub fn inverse(payload: &super::CreateCameraCalibration, base: &RemodelingSnapshot) -> Result<Vec<RemodelingMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     if base.calibration.cameras.iter().any(|camera| camera.id == payload.camera.id) {
         return Vec::new();
     }
     vec![crate::mutations::delete_camera_calibration::delete_camera_calibration(payload.camera.id.clone())]
+
+    })())
 }
 //#endregion 🔖️Inverse

@@ -11,7 +11,7 @@ fn operation(delta: i32) -> DependencyTestOp {
 }
 
 pub(super) fn assert_add_value_contract(descriptor: &str) {
-    assert_eq!(serde_json::Value::from(protocol::ToValue::to_value(&AddValue::DESCRIPTOR)), serde_json::from_str::<serde_json::Value>(descriptor).expect("owned descriptor JSON"));
+    assert_eq!(serde_json::Value::from(semio_framework_value::ToValue::to_value(&AddValue::DESCRIPTOR)), serde_json::from_str::<serde_json::Value>(descriptor).expect("owned descriptor JSON"));
     assert!(AddValue::DESCRIPTOR.validate().is_ok());
     assert_eq!(operation(5).descriptor(), &AddValue::DESCRIPTOR);
     assert_eq!(<DependencyTestOp as Mutation<DependencyTestSnapshot>>::DESCRIPTORS.len(), 1);
@@ -51,7 +51,7 @@ fn exact_i32_inverse_and_boundary_laws() {
         let mut rejected = false;
         for value in row["deltas"].as_array().expect("deltas") {
             let mutation = operation(i32::try_from(value.as_i64().expect("delta")).expect("i32"));
-            inverse.extend(mutation.inverse(&current));
+            inverse.extend(mutation.inverse(&current).expect("valid retained mutation inverse fixture"));
             match mutation.diff(&current).diff().apply(&current) {
                 Ok(next) => current = next,
                 Err(error) => {
@@ -103,10 +103,10 @@ fn contribution_plan_matches_direct_leaf() {
     let folded = protocol::fold_plan_diff(&leaf, &base).diff().apply(&base).expect("contribution result");
     assert_eq!(direct, folded);
     assert_eq!(<AddValue as protocol::CompositeMutationKind<DependencyTestSnapshot, DependencyTestOp>>::SEMANTICS.kind, "add-value");
-    assert_eq!(<AddValue as protocol::CompositeMutationKind<DependencyTestSnapshot, DependencyTestOp>>::label(&leaf), protocol::LocalizedLabel::native("Add 5 to value", "5 zu Wert hinzufügen"));
+    assert_eq!(<AddValue as protocol::CompositeMutationKind<DependencyTestSnapshot, DependencyTestOp>>::label(&leaf), semio_framework_ui_locale::LocalizedLabel::native("Add 5 to value", "5 zu Wert hinzufügen"));
     let minimum = AddValue { delta: i32::MIN };
     let zero = DependencyTestSnapshot { value: 0 };
-    assert_eq!(protocol::fold_plan_inverse(&minimum, &zero), vec![operation(1), operation(i32::MAX)]);
+    assert_eq!(protocol::fold_plan_inverse(&minimum, &zero).expect("valid retained mutation inverse fixture"), vec![operation(1), operation(i32::MAX)]);
     assert!(protocol::plan_of::<DependencyTestSnapshot, DependencyTestOp, AddValue>(&AddValue { delta: 1 }, &DependencyTestSnapshot { value: i32::MAX }).is_err());
 }
 
@@ -137,7 +137,7 @@ fn strict_payload_and_all_codecs() {
 fn keyword_owned_record_codec_is_forwarded_once() {
     let spec = AddValue::__dsl_spec();
     assert_eq!(spec.keyword.as_deref(), Some("add-value"));
-    let variants = <DependencyTestOp as dsl::DslVariants>::variants();
+    let variants = <DependencyTestOp as semio_framework_dsl_record::DslVariants>::variants();
     assert_eq!((variants[0].1.ordinary)().keyword, spec.keyword);
     let rows: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔗️dependency-contribution/🔤️keywords/🔣️.json")).unwrap();
     for row in rows.as_array().unwrap() {

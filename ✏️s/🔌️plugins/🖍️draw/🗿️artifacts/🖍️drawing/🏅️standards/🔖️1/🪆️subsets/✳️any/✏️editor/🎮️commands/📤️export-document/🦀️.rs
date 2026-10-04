@@ -4,14 +4,15 @@
 
 use crate::op::DrawingMutation;
 use crate::DrawingSnapshot;
-use dsl::{FromValue, ToValue};
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
 use semio_framework_plugin::kernel::MEDIA_EXPORT_BASE64_ENCODING;
 use semio_framework_plugin::{kernel::Effect, ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, NoConfig, NoConfigMutation};
 
 /// 📄️ The default when the palette dispatches the verb without arguments.
 pub const DEFAULT_EXPORT_FORMAT: &str = "pdf";
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "export-document")]
 pub struct ExportDocument {
     pub format: String,

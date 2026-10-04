@@ -7,29 +7,45 @@ pub(super) struct MediaOwner {
 }
 
 impl ArtifactInstanceOperationOwner for MediaOwner {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any { self }
-    fn maintenance_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> Result<PluginCloseStep, Fault> { Ok(PluginCloseStep::Complete) }
+    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+        self
+    }
+    fn maintenance_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+        Ok(PluginCloseStep::Complete)
+    }
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
-        if !self.closed && (maximum_items == 0 || maximum_bytes < self.label.capacity()) { return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }); }
+        if !self.closed && (maximum_items == 0 || maximum_bytes < self.label.capacity()) {
+            return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        }
         self.label = String::new();
         self.closed = true;
         Ok(PluginCloseStep::Complete)
     }
-    fn terminal_is_empty(&self) -> bool { self.closed && self.label.is_empty() }
+    fn terminal_is_empty(&self) -> bool {
+        self.closed && self.label.is_empty()
+    }
 }
 
-pub(super) fn owner(label: &str) -> Box<dyn ArtifactInstanceOperationOwner> { Box::new(MediaOwner { label: label.into(), closed: false }) }
+pub(super) fn owner(label: &str) -> Box<dyn ArtifactInstanceOperationOwner> {
+    Box::new(MediaOwner { label: label.into(), closed: false })
+}
 
 pub(super) fn export(owner: &ArtifactInstanceOperationOwnerHandle, port: &str, doc: &ArtifactView<'_, SurfaceSnapshot>) -> Result<Media, MediaError> {
-    owner.with_mut::<MediaOwner, _>(|owner| {
-        if owner.closed { return Err(Fault::new(FaultOrigin::Framework, semio_framework::FaultCode::new("media.owner-closed"), "media owner is closed")); }
-        let json = serde_json::json!({"owner": owner.label, "count": doc.snapshot.count}).to_string();
-        Ok(Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: "semio.test.media-owner-context/v1".into(), json } })
-    }).map_err(|error| MediaError::Payload(port.into(), error.message))
+    owner
+        .with_mut::<MediaOwner, _>(|owner| {
+            if owner.closed {
+                return Err(Fault::new(FaultOrigin::Framework, semio_framework::FaultCode::new("media.owner-closed"), "media owner is closed"));
+            }
+            let json = serde_json::json!({"owner": owner.label, "count": doc.snapshot.count}).to_string();
+            Ok(Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: "semio.test.media-owner-context/v1".into(), json } })
+        })
+        .map_err(|error| MediaError::Payload(port.into(), error.message))
 }
 
 fn payload(media: Media) -> serde_json::Value {
-    let MediaPayload::Structured { schema, json } = media.payload else { panic!("structured fixture media"); };
+    let MediaPayload::Structured { schema, json } = media.payload else {
+        panic!("structured fixture media");
+    };
     assert_eq!(schema, "semio.test.media-owner-context/v1");
     serde_json::from_str(&json).unwrap()
 }
@@ -60,7 +76,9 @@ async fn media_export_request_context_preserves_exact_supplied_owner() {
         assert!(<EditorApp<SurfaceEditorFixture> as ArtifactApp>::export_media_with_request_context(&supplied, context_port, &doc, &transient).await.unwrap_err().to_string().contains("closed"));
         assert!(<ViewerApp<SurfaceViewerFixture> as ArtifactApp>::export_media_with_request_context(&supplied, context_port, &doc, &transient).await.unwrap_err().to_string().contains("closed"));
     }
-    for invalid in fixture["invalid"].as_array().unwrap() { assert!(validator.validate_json(&invalid.to_string()).is_err()); }
+    for invalid in fixture["invalid"].as_array().unwrap() {
+        assert!(validator.validate_json(&invalid.to_string()).is_err());
+    }
     let foreign = ArtifactInstanceOperationOwnerHandle::new(Box::new(crate::app::EmptyArtifactInstanceOperationOwner));
     assert!(<EditorApp<SurfaceEditorFixture> as ArtifactApp>::export_media_with_request_context(&foreign, context_port, &doc, &transient).await.unwrap_err().to_string().contains("type"));
     assert!(<ViewerApp<SurfaceViewerFixture> as ArtifactApp>::export_media_with_request_context(&foreign, context_port, &doc, &transient).await.unwrap_err().to_string().contains("type"));
@@ -72,7 +90,9 @@ async fn media_export_request_context_preserves_exact_supplied_owner() {
     let expected_pack = store::pack_rt::pack_value_to_base64(&store::ArtifactPack::encode_pack(&snapshot));
     for media in [default_editor, default_viewer] {
         assert_eq!(media.media_type, MediaType { class: MediaClass::Data, form: MediaForm::Value });
-        let MediaPayload::Structured { schema, json } = media.payload else { panic!("default document pack"); };
+        let MediaPayload::Structured { schema, json } = media.payload else {
+            panic!("default document pack");
+        };
         assert_eq!(schema, "semio.testkit-surface/v1");
         assert_eq!(json, expected_pack);
     }
@@ -81,8 +101,20 @@ async fn media_export_request_context_preserves_exact_supplied_owner() {
     supplied.close_step(1, 4096).unwrap();
     let mut editor = new_app::<EditorApp<SurfaceEditorFixture>>().await;
     let mut viewer = new_viewer::<SurfaceViewerFixture>().await;
-    editor.instance_operation_owner.with_mut::<MediaOwner, _>(|owner| { owner.label = "vcs-editor".into(); Ok(()) }).unwrap();
-    viewer.instance_operation_owner.with_mut::<MediaOwner, _>(|owner| { owner.label = "vcs-viewer".into(); Ok(()) }).unwrap();
+    editor
+        .instance_operation_owner
+        .with_mut::<MediaOwner, _>(|owner| {
+            owner.label = "vcs-editor".into();
+            Ok(())
+        })
+        .unwrap();
+    viewer
+        .instance_operation_owner
+        .with_mut::<MediaOwner, _>(|owner| {
+            owner.label = "vcs-viewer".into();
+            Ok(())
+        })
+        .unwrap();
     assert_eq!(payload(editor.export_media(context_port).await.unwrap()), serde_json::json!({"owner":"vcs-editor","count":0}));
     assert_eq!(payload(viewer.export_media(context_port).await.unwrap()), serde_json::json!({"owner":"vcs-viewer","count":0}));
     assert_eq!(editor.snapshot().unwrap().count, 0);

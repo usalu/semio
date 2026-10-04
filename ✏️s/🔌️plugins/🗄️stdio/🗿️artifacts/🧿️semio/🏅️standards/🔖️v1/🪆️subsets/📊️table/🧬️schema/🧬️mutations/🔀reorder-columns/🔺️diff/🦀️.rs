@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ReorderColumns, base: &SemioTableSnapshot) -> proto
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Column \"{}\" does not exist.", payload.name), [payload.name.clone()]);
     };
     if from == payload.to_index {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Column \"{}\" is already at position #{}.", payload.name, payload.to_index));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Column \"{}\" is already at position #{}.", payload.name, payload.to_index));
     }
     let mut columns = base.columns.clone();
     let mut rows = base.rows.clone();

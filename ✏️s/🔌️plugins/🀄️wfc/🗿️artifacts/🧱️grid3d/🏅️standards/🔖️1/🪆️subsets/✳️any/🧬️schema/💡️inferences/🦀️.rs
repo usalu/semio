@@ -495,7 +495,7 @@ impl Grid3dInferenceJob {
             return Ok(false);
         }
         if let Some(row) = self.assignments.pop() {
-            let row = protocol::json::to_json_string(&row);
+            let row = semio_framework_pack_json::to_json_string(&row);
             if self.encoded_entries != 0 {
                 page.write(b",").map_err(|_| "grid3d-inference-output-page")?;
             }
@@ -744,7 +744,7 @@ impl semio_framework::ToolJobFactory for Grid3dInferenceJobFactory {
 
     fn create_job_from_wire(&mut self, operation: semio_framework_job::Operation, payload: &[u8], checkpoint: Option<Vec<u8>>) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
         let payload_text = std::str::from_utf8(payload).map_err(|error| semio_framework::ToolJobFactoryError::new(format!("grid3d-inference-wire-decode:{error}")))?;
-        let mut request: Grid3dInferenceRequest = protocol::json::from_json_str(payload_text).map_err(|error| semio_framework::ToolJobFactoryError::new(format!("grid3d-inference-wire-decode:{error}")))?;
+        let mut request: Grid3dInferenceRequest = semio_framework_pack_json::from_json_str(payload_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework::ToolJobFactoryError::new(format!("grid3d-inference-wire-decode:{error}")))?;
         if checkpoint.is_some() {
             request.checkpoint = checkpoint;
         }
@@ -814,7 +814,7 @@ pub fn solve_with_clock(snapshot: &Grid3dSnapshot, now_us: fn() -> Option<u64>) 
             semio_framework_job::StepOutcome::Complete(candidate) => Some(
                 std::str::from_utf8(&payload_bytes(&candidate.output))
                     .map_err(|error| format!("grid3d-invalid-commit:{error}"))
-                    .and_then(|text| protocol::json::from_json_str::<Grid3dInferenceCommit>(text).map_err(|error| format!("grid3d-invalid-commit:{error}"))),
+                    .and_then(|text| semio_framework_pack_json::from_json_str::<Grid3dInferenceCommit>(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("grid3d-invalid-commit:{error}"))),
             ),
             semio_framework_job::StepOutcome::Cancelled => Some(Err("grid3d-inference-cancelled".into())),
             semio_framework_job::StepOutcome::Fault(fault) => Some(Err(String::from_utf8_lossy(&payload_bytes(&fault.detail)).into_owned())),
@@ -873,7 +873,7 @@ impl store::InferredField<Grid3dSnapshot> for Grid3dSolve {
         vec![store::InferenceStep { key: "grid3d".to_string(), parents: Vec::new() }]
     }
     fn dep_input(snapshot: &Grid3dSnapshot, _key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
-        protocol::json::to_json_string(snapshot).into_bytes()
+        semio_framework_pack_json::to_json_string(snapshot).into_bytes()
     }
     fn compute(snapshot: &Grid3dSnapshot, _key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
         match solve_with_job(snapshot) {
@@ -903,7 +903,7 @@ impl store::InferredField<Grid3dSnapshot> for Grid3dContradiction {
         vec![store::InferenceStep { key: "grid3d".to_string(), parents: Vec::new() }]
     }
     fn dep_input(snapshot: &Grid3dSnapshot, _key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
-        protocol::json::to_json_string(snapshot).into_bytes()
+        semio_framework_pack_json::to_json_string(snapshot).into_bytes()
     }
     fn compute(snapshot: &Grid3dSnapshot, _key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
         solve_with_job(snapshot).is_ok_and(|commit| commit.satisfiable)

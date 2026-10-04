@@ -51,7 +51,7 @@ const HOME_VIEW_RETAINED_PAYLOAD_SCHEMA: &str = "space.home.view-tool-command.v1
 /// s13 §6 #16). A transient item is not a document mutation — the artifact lane stays unreachable by construction.
 ///
 /// 🔒️ Row order is the binary variant ordinal: appending is safe, reordering is a wire break.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 pub enum HomeViewCommand {
     /// 📄️ Canonical `DirectoryEventPageV1` JSON the authenticated hub returned, sealed by its receipt.
     #[dsl(key = "apply-directory-event-page")]
@@ -225,10 +225,10 @@ impl ArtifactViewer for HomeViewer {
             return Ok(None);
         }
         if request.command.action_id() != request.tool_id {
-            return Err(Fault::from("space-home-view-command-tool-mismatch"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "space home view command does not match its exact registered tool"));
         }
         if home_view_retained_extent(&request.command, &request.snapshot, &request.interaction_state).is_none() {
-            return Err(Fault::from("space-home-view-command-payload-too-large"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("mutation.too-large"), "space home view command payload exceeds its bounded retained extent"));
         }
         let tool_id = request.command.action_id();
         let work = Box::new(HomeDirectoryPageWork::<ViewerApp<Self>>::new(tool_id, home_view_page_json));

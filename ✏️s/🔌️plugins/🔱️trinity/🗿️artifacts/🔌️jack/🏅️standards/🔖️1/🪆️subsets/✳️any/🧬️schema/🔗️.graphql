@@ -1,5 +1,6 @@
 # 🧬️ Jack artifact schema with one composed graph-content identity.
 # import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
+# import Manifest, Camera from "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔗️.graphql"
 type JackArtifact {
   schema: String! @state(class: ARTIFACT)
   name: String! @state(class: ARTIFACT)
@@ -10,7 +11,3 @@ type JackArtifact {
   rootNodeId: String @state(class: ARTIFACT)
   query: String! @state(class: ARTIFACT)
 }
-type Camera { x: Float! y: Float! zoom: Float! }
-type Manifest { nodeKinds: [ManifestKind!]! edgeKinds: [ManifestKind!]! portKinds: [ManifestPortKind!]! }
-type ManifestKind { name: String! }
-type ManifestPortKind { name: String! direction: String! }

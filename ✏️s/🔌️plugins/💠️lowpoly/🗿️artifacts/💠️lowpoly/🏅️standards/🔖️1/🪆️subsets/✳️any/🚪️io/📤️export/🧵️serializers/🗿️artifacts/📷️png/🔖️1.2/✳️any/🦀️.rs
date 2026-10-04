@@ -11,7 +11,7 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot
 
 pub fn register() {}
 
-pub fn serialize_bytes(snapshot: &LowpolySnapshot) -> Result<Vec<u8>, store::TextError> {
+pub fn serialize_bytes(snapshot: &LowpolySnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
     let meshes = world_parts("png", snapshot)?
         .into_iter()
         .map(|part| SemioMesh {
@@ -28,5 +28,5 @@ pub fn serialize_bytes(snapshot: &LowpolySnapshot) -> Result<Vec<u8>, store::Tex
             }],
         })
         .collect();
-    encode_mesh(&SemioMeshSnapshot { meshes, ..SemioMeshSnapshot::default() }, SemioMeshFormat::Png).map_err(|error| store::TextError::new(format!("lowpoly->png: {error}"), dsl::TextSpan::at(1, 1)))
+    encode_mesh(&SemioMeshSnapshot { meshes, ..SemioMeshSnapshot::default() }, SemioMeshFormat::Png).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("lowpoly->png: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))
 }

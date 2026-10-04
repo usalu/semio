@@ -1,6 +1,5 @@
 import { runOwnedCommand } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
 import { buildBudgetMs, cmdBudgetMs } from "../../../🏃️process/⏱️budget/🟦️.ts";
-import { runCargoTestsV1, runCargoLintV1, readCargoTestPolicyV1 } from "../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
 import { resolveTestLevel } from "../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🏃️ Graph generator command composition. */
 import { existsSync, readFileSync } from "node:fs";
@@ -26,7 +25,8 @@ export class PreviewGeneratedScript extends BundleScript {
   async run(): Promise<void> {
     const root = this.repoRoot;
     const outDir = join(this.root, "..", "..", "🤖️generated");
-    const rendered = renderGraphArtifacts(root, outDir, readGraphOutputCatalog(join(this.root,"../../🛂️manifest/📇️outputs.json")),false);
+    const catalog = readGraphOutputCatalog(join(this.root,"../../🛂️manifest/📇️outputs.json"));
+    const rendered = renderGraphArtifacts(root, outDir, catalog, false);
     const rootPath = relative(root, outDir).replaceAll("\\", "/").normalize("NFC");
     const nodes = [
       { bytesBase64: "", mode: 0o755, nodeKind: "directory" as const, path: rootPath },
@@ -38,7 +38,7 @@ export class PreviewGeneratedScript extends BundleScript {
       .filter((entry) => expected.get(entry.path) !== entry.nodeKind)
       .map((entry) => `${rootPath}/${entry.path.normalize("NFC")}`)
       .sort((left, right) => Buffer.from(left).compare(Buffer.from(right)));
-    process.stdout.write(`${JSON.stringify({ contractId: "graph-catalog", nodes, schemaVersion: 1, staleRemovals })}\n`);
+    process.stdout.write(`${JSON.stringify({ contractId: catalog.contractId, nodes, schemaVersion: 1, staleRemovals })}\n`);
   }
 }
 
@@ -59,6 +59,7 @@ export class CheckGeneratedScript extends BundleScript {
 
 export class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    const { runCargoTestsV1, readCargoTestPolicyV1 } = await import("../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts");
     const { rest } = resolveTestLevel(segments);
     await runOwnedCommand("bun", ["test", resolve(this.root, "../../🧪️tests/🧩️suite/🟦️.ts")], this.repoRoot, "tool:owner", cmdBudgetMs(), {env: process.env});
     await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-graph"], cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env));
@@ -68,6 +69,7 @@ export class TestScript extends BundleScript {
 /** 🧹️Zero-warning clippy gate: `cargo clippy -p semio-framework-graph --all-targets -- -D warnings`. */
 export class LintScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    const { runCargoLintV1, readCargoTestPolicyV1 } = await import("../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts");
     await runCargoLintV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-graph"],cwd:this.root,extraArgs:segments},readCargoTestPolicyV1(process.env));
   }
 }

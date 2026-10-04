@@ -41,8 +41,8 @@ pub(crate) mod context {
     semio_framework_plugin::history_edit_acceptance_law!("fem", Fem2dPlayApp, manifest, "../..");
 
     pub fn fem2d_app() -> Fem2dApp {
-        let mut app = semio_framework_plugin::resolve_ready(new_app_with_registry::<EditorApp<Fem2dPlayApp>>(manifest));
-        semio_framework_plugin::resolve_ready(app.bind_instance_id(FEM2D_TEST_INSTANCE));
+        let mut app = ::semio_framework_async::poll::resolve_ready(new_app_with_registry::<EditorApp<Fem2dPlayApp>>(manifest));
+        ::semio_framework_async::poll::resolve_ready(app.bind_instance_id(FEM2D_TEST_INSTANCE));
         Fem2dApp(app)
     }
 
@@ -66,7 +66,7 @@ pub(crate) mod context {
     /// the empty snapshot).
     pub fn fem2d_empty_app() -> Fem2dApp {
         let mut app = fem2d_app();
-        semio_framework_plugin::resolve_ready(dispatch(&mut app, Fem2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "empty".into() })));
+        ::semio_framework_async::poll::resolve_ready(dispatch(&mut app, Fem2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "empty".into() })));
         assert!(app.snapshot().expect("snapshot").nodes.is_empty(), "the empty example must load an empty document");
         app
     }
@@ -93,7 +93,7 @@ pub(crate) mod context {
         for effect in &result.requested_effects {
             if let semio_framework_plugin::Effect::LoadDocument { pack, spr } = effect {
                 let files = store::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
-                app.load_document_pack(&files).await.expect("test host applies load-document effect");
+                semio_framework_plugin::artifact_app_laws::load_document(app, &files).await.expect("test host applies load-document effect");
             }
         }
         result
@@ -131,7 +131,7 @@ pub(crate) mod context {
 
     pub fn render(app: &mut Fem2dApp, body_key: &str) -> String {
         let kind = if body_key == crate::editor::fem2d::modes::edit::windows::model::BODY_KEY { crate::editor::fem2d::modes::edit::windows::model::WINDOW_KIND_ID } else { crate::editor::fem2d::modes::edit::windows::results::WINDOW_KIND_ID };
-        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::resolve_ready(app.render(body_key, None, &view(kind))).expect("render")).expect("fixture projection")
+        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(::semio_framework_async::poll::resolve_ready(app.render(body_key, None, &view(kind))).expect("render")).expect("fixture projection")
     }
 }
 
@@ -298,7 +298,7 @@ async fn every_route_declares_the_lane_its_handler_emits() {
             Fem2dCommand::CanvasPointerUp(payload) => canvas_pointer_up::handle_window(payload, &doc, &cfg, &view("model-law", model_window::WINDOW_KIND_ID)),
             Fem2dCommand::FocusEntity(payload) => focus_entity::handle_window(payload, &doc, &cfg, &view("model-law", model_window::WINDOW_KIND_ID)),
             Fem2dCommand::SetResultAnimation(payload) => set_result_animation::handle_window(payload, &doc, &cfg, &view("results-law", results_window::WINDOW_KIND_ID)),
-            Fem2dCommand::ResultAnimationTick(payload) => result_animation_tick::step(payload, &cfg, &view("results-left", results_window::WINDOW_KIND_ID), None).map(|step| step.emit),
+            Fem2dCommand::ResultAnimationTick(payload) => result_animation_tick::result_animation_tick_step::<set_result_animation::Fem2dResultsPlayback>(payload, &cfg, &view("results-left", results_window::WINDOW_KIND_ID), None).map(|step| step.emit),
             Fem2dCommand::SetTransformGumballFlag(payload) => crate::editor::fem2d::commands::gumball::set_transform_gumball_flag::handle_window(payload, &view("model-law", model_window::WINDOW_KIND_ID)),
             _ => command.dispatch(&doc, &cfg),
         }
@@ -324,7 +324,7 @@ async fn every_route_declares_the_lane_its_handler_emits() {
 /// path from a rendered button to `dispatch`.
 #[semio_framework_async_macros::async_test]
 async fn command_from_action_resolves_every_declared_action() {
-    let args = dsl::DslValue::Object(vec![("x".into(), dsl::DslValue::float(1.0)), ("y".into(), dsl::DslValue::float(2.0)), ("exampleId".into(), dsl::DslValue::String(crate::examples::demo::ID.into()))]);
+    let args = semio_framework_value::DslValue::Object(vec![("x".into(), semio_framework_value::DslValue::float(1.0)), ("y".into(), semio_framework_value::DslValue::float(2.0)), ("exampleId".into(), semio_framework_value::DslValue::String(crate::examples::demo::ID.into()))]);
     for tool_id in FEM2D_RETAINED_TOOL_IDS {
         let command = <Fem2dPlayApp as ArtifactEditor>::command_from_action(*tool_id, Some(&args)).unwrap_or_else(|error| panic!("action {tool_id} must resolve: {error:?}"));
         assert_eq!(command.command_id(), *tool_id);
@@ -339,23 +339,23 @@ async fn command_from_action_resolves_every_declared_action() {
 /// `canvasPointerUp` without `cancelled` is a real release.
 #[semio_framework_async_macros::async_test]
 async fn canvas_pointer_wire_defaults_samples_and_cancelled() {
-    let f = dsl::DslValue::float;
-    let legacy = dsl::DslValue::Object(vec![("x".into(), f(5.0)), ("y".into(), f(6.0)), ("width".into(), f(640.0)), ("height".into(), f(480.0))]);
+    let f = semio_framework_value::DslValue::float;
+    let legacy = semio_framework_value::DslValue::Object(vec![("x".into(), f(5.0)), ("y".into(), f(6.0)), ("width".into(), f(640.0)), ("height".into(), f(480.0))]);
     let Fem2dCommand::CanvasPointerMove(moved) = <Fem2dPlayApp as ArtifactEditor>::command_from_action("canvasPointerMove", Some(&legacy)).expect("legacy move") else { panic!("move") };
     assert_eq!(moved.samples, vec![[5.0, 6.0]], "an absent `samples` is the single (x, y)");
     assert_eq!(moved.samples_or_last(), vec![(5.0, 6.0)]);
 
-    let empty = dsl::DslValue::Object(vec![("x".into(), f(5.0)), ("y".into(), f(6.0)), ("samples".into(), dsl::DslValue::Array(Vec::new()))]);
+    let empty = semio_framework_value::DslValue::Object(vec![("x".into(), f(5.0)), ("y".into(), f(6.0)), ("samples".into(), semio_framework_value::DslValue::Array(Vec::new()))]);
     let Fem2dCommand::CanvasPointerMove(moved) = <Fem2dPlayApp as ArtifactEditor>::command_from_action("canvasPointerMove", Some(&empty)).expect("empty move") else { panic!("move") };
     assert_eq!(moved.samples, vec![[5.0, 6.0]], "an empty `samples` is the single (x, y)");
 
-    let pair = |x: f64, y: f64| dsl::DslValue::Array(vec![f(x), f(y)]);
-    let batched = dsl::DslValue::Object(vec![
+    let pair = |x: f64, y: f64| semio_framework_value::DslValue::Array(vec![f(x), f(y)]);
+    let batched = semio_framework_value::DslValue::Object(vec![
         ("x".into(), f(3.0)),
         ("y".into(), f(4.0)),
         ("width".into(), f(640.0)),
         ("height".into(), f(480.0)),
-        ("samples".into(), dsl::DslValue::Array(vec![pair(1.0, 1.5), pair(2.0, 2.5), dsl::DslValue::String("junk".into()), pair(3.0, 4.0)])),
+        ("samples".into(), semio_framework_value::DslValue::Array(vec![pair(1.0, 1.5), pair(2.0, 2.5), semio_framework_value::DslValue::String("junk".into()), pair(3.0, 4.0)])),
     ]);
     let Fem2dCommand::CanvasPointerMove(moved) = <Fem2dPlayApp as ArtifactEditor>::command_from_action("canvasPointerMove", Some(&batched)).expect("batched move") else { panic!("move") };
     assert_eq!(moved.samples, vec![[1.0, 1.5], [2.0, 2.5], [3.0, 4.0]], "every well-formed pair, in order; malformed entries are skipped");
@@ -363,7 +363,7 @@ async fn canvas_pointer_wire_defaults_samples_and_cancelled() {
 
     let Fem2dCommand::CanvasPointerUp(released) = <Fem2dPlayApp as ArtifactEditor>::command_from_action("canvasPointerUp", Some(&legacy)).expect("release") else { panic!("up") };
     assert!(!released.cancelled, "an absent `cancelled` is a real release");
-    let cancelled = dsl::DslValue::Object(vec![("x".into(), f(5.0)), ("y".into(), f(6.0)), ("cancelled".into(), dsl::DslValue::Bool(true))]);
+    let cancelled = semio_framework_value::DslValue::Object(vec![("x".into(), f(5.0)), ("y".into(), f(6.0)), ("cancelled".into(), semio_framework_value::DslValue::Bool(true))]);
     let Fem2dCommand::CanvasPointerUp(released) = <Fem2dPlayApp as ArtifactEditor>::command_from_action("canvasPointerUp", Some(&cancelled)).expect("cancel") else { panic!("up") };
     assert!(released.cancelled);
 }
@@ -372,7 +372,7 @@ async fn canvas_pointer_wire_defaults_samples_and_cancelled() {
 //#region 🔖️ManifestSanity
 #[semio_framework_async_macros::async_test]
 async fn the_manifest_stitches_every_taxonomy_node() {
-    let json = dsl::json::to_json_string(&create_fem2d_app());
+    let json = semio_framework_pack_json::to_json_string(&create_fem2d_app());
     for id in [model_window::WINDOW_KIND_ID, results_window::WINDOW_KIND_ID] {
         assert!(json.contains(id), "window kind {id} missing from the manifest: {json}");
     }
@@ -537,7 +537,7 @@ async fn export_media_results_out_returns_json_with_every_case_and_combination()
     match media.payload {
         MediaPayload::Structured { schema, json } => {
             assert_eq!(schema, "computation.fem2d");
-            let value = dsl::json::parse(&json).expect("results:out payload is valid JSON");
+            let value = semio_framework_pack_json::parse(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("results:out payload is valid JSON");
             for case_id in ["dead", "live", "uls"] {
                 let result = value.get(case_id).unwrap_or_else(|| panic!("missing {case_id} in results:out payload: {value}"));
                 assert!(result.get("displacements").is_some());
@@ -545,7 +545,7 @@ async fn export_media_results_out_returns_json_with_every_case_and_combination()
                 assert!(result.get("checks").is_some());
             }
         }
-        MediaPayload::Binary { .. } => panic!("expected a Structured payload"),
+        MediaPayload::Binary { .. } | MediaPayload::Intrinsic { .. } => panic!("expected a Structured payload"),
     }
 }
 
@@ -578,7 +578,7 @@ async fn import_media_geometry_in_builds_a_new_region_from_the_first_material() 
     snapshot.materials.push(crate::FemMaterial { id: "steel".into(), name: "Steel".into(), e: 2.1e11, nu: 0.3, rho: 7850.0 });
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
-    let payload = dsl::json::to_string(&dsl::json!({ "outline": [[0.0, 0.0], [4.0, 0.0], [4.0, 2.0], [0.0, 2.0]], "holes": [] }));
+    let payload = semio_framework_pack_json::to_string(&semio_framework_pack_json::json!({ "outline": [[0.0, 0.0], [4.0, 0.0], [4.0, 2.0], [0.0, 2.0]], "holes": [] }));
     let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "geometry".into(), json: payload } };
     let emit = Fem2dPlayApp::import_media("geometry:in", &media, &doc).expect("geometry:in imports");
     assert_eq!(emit.artifact_mutations.len(), 1);
@@ -598,7 +598,7 @@ async fn import_media_geometry_in_falls_back_to_unassigned_material_when_none_ex
     let snapshot = crate::standards::v1::subsets::any::schema::empty_fem2d_snapshot();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
-    let payload = dsl::json::to_string(&dsl::json!({ "outline": [[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]] }));
+    let payload = semio_framework_pack_json::to_string(&semio_framework_pack_json::json!({ "outline": [[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]] }));
     let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "geometry".into(), json: payload } };
     let emit = Fem2dPlayApp::import_media("geometry:in", &media, &doc).expect("geometry:in imports");
     match &emit.artifact_mutations[0] {

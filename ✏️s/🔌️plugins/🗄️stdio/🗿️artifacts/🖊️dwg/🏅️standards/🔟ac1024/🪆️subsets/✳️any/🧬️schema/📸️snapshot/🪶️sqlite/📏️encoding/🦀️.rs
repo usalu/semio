@@ -1,20 +1,21 @@
 //! 📏️ Borrowed DWG domain bounds before native Binary/Text ownership and printing.
+use semio_framework_value::ValueError;
 use super::super::*;
 use semio_framework_os_kernel::sqlite_snapshot::{SqliteSnapshotControl,artifact::NativeEncodingBound};
 type Bound<'c,'p>=NativeEncodingBound<'c,'p>;
-fn text(value:&str,b:&mut Bound<'_,'_>)->Result<(),String>{b.add(64)?;b.repeated(value.len(),6)}
-fn optional_text(value:&Option<String>,b:&mut Bound<'_,'_>)->Result<(),String>{if let Some(value)=value{text(value,b)?;}Ok(())}
-fn reals(values:&[f64],b:&mut Bound<'_,'_>)->Result<(),String>{b.add(64)?;for _ in values{b.add(1164)?;}Ok(())}
-fn handles(values:&[u64],b:&mut Bound<'_,'_>)->Result<(),String>{b.add(64)?;for _ in values{b.add(96)?;}Ok(())}
-fn integers(values:&[u32],b:&mut Bound<'_,'_>)->Result<(),String>{b.add(64)?;for _ in values{b.add(96)?;}Ok(())}
-fn color(value:&DwgComplexColor,b:&mut Bound<'_,'_>)->Result<(),String>{b.add(1024)?;optional_text(&value.name,b)?;optional_text(&value.book_name,b)}
-fn xrecord(value:&DwgXRecordValue,b:&mut Bound<'_,'_>)->Result<(),String>{b.add(512)?;match value{DwgXRecordValue::String{value,..}=>text(value,b),DwgXRecordValue::Real{..}=>b.add(1100),DwgXRecordValue::Point3d{..}=>b.add(3300),DwgXRecordValue::Binary{octets,..}=>b.repeated(octets.len(),8),DwgXRecordValue::Boolean{..}|DwgXRecordValue::Integer8{..}|DwgXRecordValue::Integer16{..}|DwgXRecordValue::Integer32{..}|DwgXRecordValue::Integer64{..}|DwgXRecordValue::Handle{..}|DwgXRecordValue::ObjectId{..}=>Ok(())}}
-fn expression(value:&DwgEvaluationExpression,b:&mut Bound<'_,'_>)->Result<(),String>{b.add(1024)?;match &value.value{DwgEvaluationExpressionValue::Empty|DwgEvaluationExpressionValue::Integer32(_)|DwgEvaluationExpressionValue::Integer16(_)|DwgEvaluationExpressionValue::ObjectReference(_)=>Ok(()),DwgEvaluationExpressionValue::Double(_)=>b.add(1100),DwgEvaluationExpressionValue::String(value)=>text(value,b),DwgEvaluationExpressionValue::PointGroup10(values)|DwgEvaluationExpressionValue::PointGroup11(values)=>reals(values,b)}}
-fn dependency(value:&DwgAssociativeDependency,b:&mut Bound<'_,'_>)->Result<(),String>{b.add(2048)?;optional_text(&value.name,b)}
-fn action(value:&DwgAssociativeAction,b:&mut Bound<'_,'_>)->Result<(),String>{b.add(1024)?;for _ in &value.dependencies{b.add(256)?;}Ok(())}
-fn common(value:&DwgEntityCommon,b:&mut Bound<'_,'_>)->Result<(),String>{b.add(4096)?;optional_text(&value.color.name,b)?;optional_text(&value.color.book_name,b)}
-fn dimension(value:&DwgDimensionEntityCommon,b:&mut Bound<'_,'_>)->Result<(),String>{b.add(12288)?;common(&value.common,b)?;text(&value.user_text,b)?;for values in [&value.extrusion,&value.text_midpoint,&value.insertion_scale,&value.clone_insertion_point]{reals(values,b)?;}Ok(())}
-fn entity(value:&DwgEntityBody,b:&mut Bound<'_,'_>)->Result<(),String>{b.add(512)?;match value{
+fn text(value:&str,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.add(64)?;b.repeated(value.len(),6)}
+fn optional_text(value:&Option<String>,b:&mut Bound<'_,'_>)->Result<(),ValueError>{if let Some(value)=value{text(value,b)?;}Ok(())}
+fn reals(values:&[f64],b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.add(64)?;for _ in values{b.add(1164)?;}Ok(())}
+fn handles(values:&[u64],b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.add(64)?;for _ in values{b.add(96)?;}Ok(())}
+fn integers(values:&[u32],b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.add(64)?;for _ in values{b.add(96)?;}Ok(())}
+fn color(value:&DwgComplexColor,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.add(1024)?;optional_text(&value.name,b)?;optional_text(&value.book_name,b)}
+fn xrecord(value:&DwgXRecordValue,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.add(512)?;match value{DwgXRecordValue::String{value,..}=>text(value,b),DwgXRecordValue::Real{..}=>b.add(1100),DwgXRecordValue::Point3d{..}=>b.add(3300),DwgXRecordValue::Binary{octets,..}=>b.repeated(octets.len(),8),DwgXRecordValue::Boolean{..}|DwgXRecordValue::Integer8{..}|DwgXRecordValue::Integer16{..}|DwgXRecordValue::Integer32{..}|DwgXRecordValue::Integer64{..}|DwgXRecordValue::Handle{..}|DwgXRecordValue::ObjectId{..}=>Ok(())}}
+fn expression(value:&DwgEvaluationExpression,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.add(1024)?;match &value.value{DwgEvaluationExpressionValue::Empty|DwgEvaluationExpressionValue::Integer32(_)|DwgEvaluationExpressionValue::Integer16(_)|DwgEvaluationExpressionValue::ObjectReference(_)=>Ok(()),DwgEvaluationExpressionValue::Double(_)=>b.add(1100),DwgEvaluationExpressionValue::String(value)=>text(value,b),DwgEvaluationExpressionValue::PointGroup10(values)|DwgEvaluationExpressionValue::PointGroup11(values)=>reals(values,b)}}
+fn dependency(value:&DwgAssociativeDependency,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.add(2048)?;optional_text(&value.name,b)}
+fn action(value:&DwgAssociativeAction,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.add(1024)?;for _ in &value.dependencies{b.add(256)?;}Ok(())}
+fn common(value:&DwgEntityCommon,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.add(4096)?;optional_text(&value.color.name,b)?;optional_text(&value.color.book_name,b)}
+fn dimension(value:&DwgDimensionEntityCommon,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.add(12288)?;common(&value.common,b)?;text(&value.user_text,b)?;for values in [&value.extrusion,&value.text_midpoint,&value.insertion_scale,&value.clone_insertion_point]{reals(values,b)?;}Ok(())}
+fn entity(value:&DwgEntityBody,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.add(512)?;match value{
  DwgEntityBody::Line(v)=>{b.add(2048)?;common(&v.common,b)?;reals(&v.start,b)?;reals(&v.end,b)?;reals(&v.extrusion,b)},
  DwgEntityBody::Arc(v)=>{b.add(6144)?;common(&v.common,b)?;reals(&v.center,b)?;reals(&v.extrusion,b)},
  DwgEntityBody::LwPolyline(v)=>{b.add(6144)?;common(&v.common,b)?;reals(&v.extrusion,b)?;for vertex in &v.vertices{b.add(4096)?;reals(&vertex.point,b)?;}Ok(())},
@@ -31,9 +32,9 @@ fn entity(value:&DwgEntityBody,b:&mut Bound<'_,'_>)->Result<(),String>{b.add(512
  DwgEntityBody::Polyline3d(v)=>{b.add(1024)?;common(&v.common,b)?;handles(&v.vertex_handles,b)},DwgEntityBody::PolyfaceMesh(v)=>{b.add(1024)?;common(&v.common,b)?;handles(&v.vertex_handles,b)},
  DwgEntityBody::Vertex(v)=>{common(&v.common,b)?;reals(&v.point,b)},DwgEntityBody::PolyfaceFace(v)=>{common(&v.common,b)?;for _ in &v.indices{b.add(96)?;}Ok(())}
 }}
-fn control_body(value:&DwgTableControlBody,b:&mut Bound<'_,'_>)->Result<(),String>{b.add(2048)?;for _ in value.entry_handles(){b.add(192)?;}if let DwgTableControlBody::DimensionStyle(value)=value{handles(&value.additional_handles,b)?;}Ok(())}
-fn table_common(value:&DwgTableRecordCommon,b:&mut Bound<'_,'_>)->Result<(),String>{b.add(512)?;text(&value.name,b)}
-fn table_record(value:&DwgTableRecordBody,b:&mut Bound<'_,'_>)->Result<(),String>{b.add(512)?;match value{
+fn control_body(value:&DwgTableControlBody,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.add(2048)?;for _ in value.entry_handles(){b.add(192)?;}if let DwgTableControlBody::DimensionStyle(value)=value{handles(&value.additional_handles,b)?;}Ok(())}
+fn table_common(value:&DwgTableRecordCommon,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.add(512)?;text(&value.name,b)}
+fn table_record(value:&DwgTableRecordBody,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.add(512)?;match value{
  DwgTableRecordBody::RegisteredApplication(v)=>table_common(&v.common,b),
  DwgTableRecordBody::TextStyle(v)=>{b.add(6144)?;table_common(&v.common,b)?;text(&v.font_file,b)?;text(&v.big_font_file,b)},
  DwgTableRecordBody::Layer(v)=>{b.add(2048)?;table_common(&v.common,b)?;color(&v.color,b)},
@@ -42,20 +43,20 @@ fn table_record(value:&DwgTableRecordBody,b:&mut Bound<'_,'_>)->Result<(),String
  DwgTableRecordBody::Viewport(v)=>{b.add(65536)?;table_common(&v.common,b)?;color(&v.ambient_color,b)},
  DwgTableRecordBody::DimensionStyle(v)=>{b.add(49152)?;table_common(&v.common,b)?;for value in [&v.dimension_postfix,&v.alternate_postfix,&v.r2010.alternate_measurement_suffix,&v.r2010.measurement_suffix]{text(value,b)?;}for value in [&v.fill_color,&v.text.dimension_line_color,&v.text.extension_line_color,&v.text.text_color]{color(value,b)?;}Ok(())}
 }}
-fn properties(values:&[DwgBlockParameterProperty],b:&mut Bound<'_,'_>)->Result<(),String>{for property in values{b.add(128)?;for connection in &property.connections{b.add(256)?;text(&connection.name,b)?;}}Ok(())}
-fn node_reference(value:&DwgNamedEvaluationNodeReference,b:&mut Bound<'_,'_>)->Result<(),String>{b.add(256)?;text(&value.expression_name,b)}
-fn element(value:&DwgBlockElement,b:&mut Bound<'_,'_>)->Result<(),String>{b.add(256)?;expression(&value.evaluation_expression,b)?;text(&value.name,b)}
-fn grip(value:&DwgBlockGrip,b:&mut Bound<'_,'_>)->Result<(),String>{b.add(1024)?;element(&value.element,b)?;reals(&value.location,b)?;node_reference(&value.updated_x,b)?;node_reference(&value.updated_y,b)}
-fn two_point(value:&DwgBlockTwoPointParameter,b:&mut Bound<'_,'_>)->Result<(),String>{b.add(1024)?;element(&value.element,b)?;reals(&value.definition_base,b)?;reals(&value.definition_end,b)?;properties(&value.properties,b)?;for _ in &value.property_expression_references{b.add(256)?;}Ok(())}
-fn block_action(value:&DwgBlockAction,b:&mut Bound<'_,'_>)->Result<(),String>{b.add(1024)?;expression(&value.evaluation_expression,b)?;text(&value.name,b)?;reals(&value.display_location,b)?;for _ in &value.dependencies{b.add(192)?;}integers(&value.action_node_ids,b)}
-fn connection(value:&DwgBlockActionConnection,b:&mut Bound<'_,'_>)->Result<(),String>{b.add(256)?;text(&value.name,b)}
-fn cell_border(value:&DwgCellBorder,b:&mut Bound<'_,'_>)->Result<(),String>{b.add(3072)?;color(&value.color,b)}
-fn cell_style(value:&DwgCellStyle,b:&mut Bound<'_,'_>)->Result<(),String>{b.add(16384)?;color(&value.background_color,b)?;color(&value.content_format.content_color,b)?;text(&value.content_format.value_format_string,b)?;for border in [&value.borders.top,&value.borders.horizontal_inside,&value.borders.bottom,&value.borders.left,&value.borders.vertical_inside,&value.borders.right]{if let Some(border)=border{cell_border(border,b)?;}}Ok(())}
-fn material_map(value:&DwgMaterialMap,b:&mut Bound<'_,'_>)->Result<(),String>{b.add(2048)?;reals(&value.transform,b)}
-fn constraint_core(value:&DwgConstraintNodeCore,b:&mut Bound<'_,'_>)->Result<(),String>{b.add(256)?;integers(&value.connected_node_ids,b)}
-fn geometric(value:&DwgGeometricConstraint,b:&mut Bound<'_,'_>)->Result<(),String>{b.add(512)?;constraint_core(&value.node,b)}
-fn constraint_geometry(value:&DwgConstraintGeometry,b:&mut Bound<'_,'_>)->Result<(),String>{b.add(512)?;constraint_core(&value.node,b)}
-fn constraint(value:&DwgConstraintNode,b:&mut Bound<'_,'_>)->Result<(),String>{b.add(256)?;match value{
+fn properties(values:&[DwgBlockParameterProperty],b:&mut Bound<'_,'_>)->Result<(),ValueError>{for property in values{b.add(128)?;for connection in &property.connections{b.add(256)?;text(&connection.name,b)?;}}Ok(())}
+fn node_reference(value:&DwgNamedEvaluationNodeReference,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.add(256)?;text(&value.expression_name,b)}
+fn element(value:&DwgBlockElement,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.add(256)?;expression(&value.evaluation_expression,b)?;text(&value.name,b)}
+fn grip(value:&DwgBlockGrip,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.add(1024)?;element(&value.element,b)?;reals(&value.location,b)?;node_reference(&value.updated_x,b)?;node_reference(&value.updated_y,b)}
+fn two_point(value:&DwgBlockTwoPointParameter,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.add(1024)?;element(&value.element,b)?;reals(&value.definition_base,b)?;reals(&value.definition_end,b)?;properties(&value.properties,b)?;for _ in &value.property_expression_references{b.add(256)?;}Ok(())}
+fn block_action(value:&DwgBlockAction,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.add(1024)?;expression(&value.evaluation_expression,b)?;text(&value.name,b)?;reals(&value.display_location,b)?;for _ in &value.dependencies{b.add(192)?;}integers(&value.action_node_ids,b)}
+fn connection(value:&DwgBlockActionConnection,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.add(256)?;text(&value.name,b)}
+fn cell_border(value:&DwgCellBorder,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.add(3072)?;color(&value.color,b)}
+fn cell_style(value:&DwgCellStyle,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.add(16384)?;color(&value.background_color,b)?;color(&value.content_format.content_color,b)?;text(&value.content_format.value_format_string,b)?;for border in [&value.borders.top,&value.borders.horizontal_inside,&value.borders.bottom,&value.borders.left,&value.borders.vertical_inside,&value.borders.right]{if let Some(border)=border{cell_border(border,b)?;}}Ok(())}
+fn material_map(value:&DwgMaterialMap,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.add(2048)?;reals(&value.transform,b)}
+fn constraint_core(value:&DwgConstraintNodeCore,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.add(256)?;integers(&value.connected_node_ids,b)}
+fn geometric(value:&DwgGeometricConstraint,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.add(512)?;constraint_core(&value.node,b)}
+fn constraint_geometry(value:&DwgConstraintGeometry,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.add(512)?;constraint_core(&value.node,b)}
+fn constraint(value:&DwgConstraintNode,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.add(256)?;match value{
  DwgConstraintNode::ConstrainedImplicitPoint(v)=>{b.add(512)?;constraint_geometry(&v.geometry,b)?;if let Some(point)=&v.point{reals(point,b)?;}Ok(())},
  DwgConstraintNode::PointCurveConstraint(v)|DwgConstraintNode::PointCoincidenceConstraint(v)|DwgConstraintNode::PerpendicularConstraint(v)|DwgConstraintNode::ParallelConstraint(v)|DwgConstraintNode::MidPointConstraint(v)|DwgConstraintNode::EqualLengthConstraint(v)|DwgConstraintNode::ColinearConstraint(v)|DwgConstraintNode::FixedConstraint(v)=>geometric(v,b),
  DwgConstraintNode::ConstrainedBoundedLine(v)=>{b.add(256)?;constraint_geometry(&v.geometry,b)?;for values in [&v.origin,&v.direction,&v.start_point,&v.end_point]{reals(values,b)?;}Ok(())},
@@ -63,7 +64,7 @@ fn constraint(value:&DwgConstraintNode,b:&mut Bound<'_,'_>)->Result<(),String>{b
  DwgConstraintNode::HorizontalConstraint(v)|DwgConstraintNode::VerticalConstraint(v)=>{b.add(256)?;geometric(&v.geometric,b)},
  DwgConstraintNode::ConstrainedDatumLine(v)=>{constraint_geometry(&v.geometry,b)?;reals(&v.origin,b)?;reals(&v.direction,b)}
 }}
-fn body(value:&DwgLogicalObjectBody,b:&mut Bound<'_,'_>)->Result<(),String>{b.add(512)?;match value{
+fn body(value:&DwgLogicalObjectBody,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.add(512)?;match value{
  DwgLogicalObjectBody::Dictionary(v)=>{b.add(1024)?;for entry in &v.entries{b.add(256)?;text(&entry.name,b)?;}Ok(())},
  DwgLogicalObjectBody::TableControl(v)=>control_body(v,b),DwgLogicalObjectBody::TableRecord(v)=>table_record(v,b),DwgLogicalObjectBody::Entity(v)=>entity(v,b),
  DwgLogicalObjectBody::XRecord(v)=>{b.add(256)?;for value in &v.values{xrecord(value,b)?;}handles(&v.object_id_handles,b)},
@@ -96,8 +97,8 @@ fn body(value:&DwgLogicalObjectBody,b:&mut Bound<'_,'_>)->Result<(),String>{b.ad
  DwgLogicalObjectBody::BlockVerticalConstraintParameter(v)|DwgLogicalObjectBody::BlockHorizontalConstraintParameter(v)=>{b.add(2048)?;two_point(&v.parameter,b)?;text(&v.expression_name,b)?;text(&v.expression_description,b)?;reals(&v.allowed_values.values,b)},
  DwgLogicalObjectBody::Layout(v)=>{b.add(12288)?;for value in [&v.page_setup_name,&v.printer_configuration,&v.canonical_media_name,&v.stylesheet,&v.name]{text(value,b)?;}for values in [&v.margins,&v.paper_size,&v.plot_origin,&v.plot_window_lower_left,&v.plot_window_upper_right,&v.paper_image_origin,&v.insertion_base,&v.limits_minimum,&v.limits_maximum,&v.ucs_origin,&v.ucs_x_axis,&v.ucs_y_axis,&v.extents_minimum,&v.extents_maximum]{reals(values,b)?;}handles(&v.viewport_handles,b)}
 }}
-fn space(value:&DwgHeaderSpaceGeometry,b:&mut Bound<'_,'_>)->Result<(),String>{b.add(2048)?;for values in [&value.insertion_base,&value.extents_minimum,&value.extents_maximum,&value.limits_minimum,&value.limits_maximum,&value.ucs_origin,&value.ucs_x_axis,&value.ucs_y_axis,&value.ucs_origin_top,&value.ucs_origin_bottom,&value.ucs_origin_left,&value.ucs_origin_right,&value.ucs_origin_front,&value.ucs_origin_back]{reals(values,b)?;}Ok(())}
-pub(super) fn preflight(value:&DwgSnapshot,control:&mut SqliteSnapshotControl<'_>)->Result<(),String>{
+fn space(value:&DwgHeaderSpaceGeometry,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.add(2048)?;for values in [&value.insertion_base,&value.extents_minimum,&value.extents_maximum,&value.limits_minimum,&value.limits_maximum,&value.ucs_origin,&value.ucs_x_axis,&value.ucs_y_axis,&value.ucs_origin_top,&value.ucs_origin_bottom,&value.ucs_origin_left,&value.ucs_origin_right,&value.ucs_origin_front,&value.ucs_origin_back]{reals(values,b)?;}Ok(())}
+pub(super) fn preflight(value:&DwgSnapshot,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
  let mut b=Bound::new(control)?;b.add(1024)?;text(&value.schema,&mut b)?;text(&value.version,&mut b)?;
  for layer in &value.drawing.layers{b.add(256)?;text(&layer.name,&mut b)?;}reals(&value.drawing.extmin,&mut b)?;reals(&value.drawing.extmax,&mut b)?;
  for object in &value.drawing.objects{b.add(2048)?;text(&object.class_name,&mut b)?;handles(&object.reactor_handles,&mut b)?;handles(&object.referenced_handles,&mut b)?;for data in &object.extended_data{b.add(256)?;for field in &data.values{xrecord(field,&mut b)?;}}if let Some(value)=&object.body{body(value,&mut b)?;}}

@@ -21,9 +21,12 @@ impl protocol::MutationKind<CsvSnapshot, CsvMutation> for SetSnapshot {
     fn diff(&self, base: &CsvSnapshot) -> protocol::MutationOutcome<<CsvMutation as protocol::Mutation<CsvSnapshot>>::Diff> {
         crate::schema::mutations::agg_diff(&CsvMutation::SetSnapshot(SetSnapshot { snapshot: self.snapshot.clone() }), base)
     }
-    fn inverse(&self, base: &CsvSnapshot) -> Vec<CsvMutation> {
-        crate::schema::mutations::agg_inverse(&CsvMutation::SetSnapshot(SetSnapshot { snapshot: self.snapshot.clone() }), base)
-    }
+    fn inverse(&self, base: &CsvSnapshot) -> Result<Vec<CsvMutation>, semio_framework_value::ValueError> {
+    Ok({
+        crate::schema::mutations::agg_inverse(&CsvMutation::SetSnapshot(SetSnapshot { snapshot: self.snapshot.clone() }), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set snapshot", "Momentaufnahme setzen")
     }

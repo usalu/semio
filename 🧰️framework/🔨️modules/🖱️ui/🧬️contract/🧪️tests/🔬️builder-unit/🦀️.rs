@@ -79,6 +79,25 @@ fn on_with_carries_args() {
     let node = input(crate::InputKind::Text).try_on_with(crate::Trigger::Change, action, crate::UiValue::Text(value.clone())).unwrap_or_else(|_| panic!("bounded binding")).try_build().unwrap_or_else(|_| panic!("input build"));
     assert_eq!(node.bindings.get(0).expect("first binding").args, Some(crate::UiValue::Text(value)));
 }
+
+#[test]
+fn input_builder_carries_opaque_draft_target() {
+    let node = input(crate::InputKind::Text)
+        .draft_target(ui_text("fixture.controller/row/name/set-cell"))
+        .try_build()
+        .unwrap_or_else(|_| panic!("input build"));
+    let crate::Component::Input(props) = &node.component else { panic!("an input") };
+    assert_eq!(props.draft_target.as_ref().map(crate::UiText::as_str), Some("fixture.controller/row/name/set-cell"));
+    assert_eq!(serde_json::to_value(&node.component).expect("component wire")["draftTarget"], "fixture.controller/row/name/set-cell");
+}
+
+#[test]
+fn input_builder_carries_native_publication_revision() {
+    let node = input(crate::InputKind::Text).value(ui_text("B")).publication_revision(crate::UiPublicationRevision(u64::MAX)).try_build().expect("publication revision input");
+    let crate::Component::Input(props) = &node.component else { panic!("input") };
+    assert_eq!(props.publication_revision, Some(crate::UiPublicationRevision(u64::MAX)));
+    assert_eq!(serde_json::to_value(&node.component).expect("component wire")["publicationRevision"], "18446744073709551615");
+}
 //#endregion 🔖️Bindings
 
 //#region 🔖️Accessibility

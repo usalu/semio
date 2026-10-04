@@ -30,9 +30,9 @@ use semio_framework_ui::wgpu::SurfaceKind;
 //#region 🔖️Helpers
 /// 🧱️ A schema-authored neutral package exercises retained catalog and inference discovery.
 pub fn catalog_contract_descriptor() -> (PackageDescriptor, Vec<u8>) {
-    use semio_framework_os_kernel::ToValue;
+    use semio_framework_value::ToValue;
     let json = include_str!("../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/📦️catalog-package/🔣️.json");
-    let descriptor: PackageDescriptor = semio_framework_os_kernel::os_pack::json::from_json_str(json).expect("catalog package contract");
+    let descriptor: PackageDescriptor = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("catalog package contract");
     assert_eq!(descriptor, serde_json::from_str::<PackageDescriptor>(json).expect("independent catalog package parser"));
     let bytes = semio_framework_os_kernel::os_store::pack_rt::encode_wire_value(&descriptor.to_value());
     (descriptor, bytes)
@@ -46,7 +46,7 @@ fn string_array_arg(id: &str, en: &str, de: &str) -> ActionArgDef {
     ActionArgDef {
         id: id.to_string(),
         label: LocalizedLabel::native(en, de),
-        schema: ArgSchema::Array { items: Box::new(ArgSchema::String { options: Vec::new(), min_len: None, max_len: None, pattern: None, format: None }), min_items: None, max_items: None },
+        schema: ArgSchema::Array { items: Box::new(ArgSchema::String { options: Vec::new(), option_source: None, min_len: None, max_len: None, pattern: None, format: None }), min_items: None, max_items: None },
         presentation: None,
         required: false,
         nullable: false,
@@ -210,6 +210,7 @@ pub fn cad_app() -> AppDefinition {
         config: Default::default(),
         command_grammar: Default::default(),
         io: Default::default(),
+        fault_notices: Vec::new(),
     }
 }
 
@@ -323,6 +324,7 @@ pub fn note_app() -> AppDefinition {
         config: Default::default(),
         command_grammar: Default::default(),
         io: Default::default(),
+        fault_notices: Vec::new(),
     }
 }
 
@@ -396,6 +398,7 @@ fn colliding_app(controller_id: &str) -> AppDefinition {
         config: Default::default(),
         command_grammar: Default::default(),
         io: Default::default(),
+        fault_notices: Vec::new(),
     }
 }
 
@@ -539,6 +542,7 @@ pub fn draw_app() -> AppDefinition {
         config: Default::default(),
         command_grammar: Default::default(),
         io: Default::default(),
+        fault_notices: Vec::new(),
     }
 }
 

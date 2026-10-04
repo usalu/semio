@@ -2,7 +2,7 @@
 
 use crate::editor::flow::host_from_snapshot;
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
-use crate::{op::FlowMutation, FlowSnapshot};
+use crate::{FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
@@ -23,10 +23,10 @@ const FLOW_EVAL_HOP_REQUEST: u64 = 107;
 /// 🪟️ The one argument object every hop carries, on the redispatch and on the extension request
 /// alike — `reactor::extension_response_args` echoes an invocation request's own fields onto the
 /// response action, so `flowEvalResolve` finds the window its answer belongs to.
-pub fn window_args(window_id: &str, window_kind_id: &str) -> dsl::DslValue {
-    dsl::DslValue::object([
-        ("windowId".to_string(), dsl::DslValue::String(window_id.to_string())),
-        ("windowKindId".to_string(), dsl::DslValue::String(window_kind_id.to_string())),
+pub fn window_args(window_id: &str, window_kind_id: &str) -> semio_framework_value::DslValue {
+    semio_framework_value::DslValue::object([
+        ("windowId".to_string(), semio_framework_value::DslValue::String(window_id.to_string())),
+        ("windowKindId".to_string(), semio_framework_value::DslValue::String(window_kind_id.to_string())),
     ])
 }
 
@@ -63,7 +63,7 @@ pub fn may_rearm(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSna
 /// latch, and `FlowPlayApp::pending_effects` re-armed on the unchanged snapshot at the host's own
 /// refresh cadence — 2015 `transient read registry is busy or exhausted` lines in ~3 s, measured on
 /// :6016 (ticket 26/09/18 §5.3).
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct FlowEvalTick {
     pub window_id: String,
     pub window_kind_id: String,
@@ -83,18 +83,23 @@ pub(crate) fn tick_result(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig
     let more = session.tick(&mut host, None);
     let parked = host.take_pending_extension_evals();
     let servable = may_rearm(&host.host_snapshot);
+    let mut dependencies: std::collections::BTreeMap<_, _> = parked.iter().filter(|pending|!session.has_evaluation_progress(pending.node_hash)).map(|pending| (pending.neuron_id.clone(), flow::flow_inference_dependency_json(&host.host_snapshot, &pending.neuron_id))).collect();
     // 🧹️ The tick host owns a layout `OrderedMap` root that aborts the guest on a bare drop.
     host.retire_cold();
     let mut extension_invocations = Vec::new();
     // 🌊️ ONE WAVE, ONE HOP — every request the walk parked is independent of the others by
     // construction, so the whole dependency level crosses to its plugin on this one tick.
     for pending in parked {
-        let request_json = dsl::json::to_json_string(&dsl::DslValue::object([
-            ("operatorId".to_string(), dsl::DslValue::String(pending.operator_id.clone())),
-            ("inputJson".to_string(), dsl::DslValue::String(pending.input_json.clone())),
-            ("nodeHash".to_string(), dsl::DslValue::uint(pending.node_hash)),
-            ("windowId".to_string(), dsl::DslValue::String(window_id.to_string())),
-            ("windowKindId".to_string(), dsl::DslValue::String(window_kind_id.to_string())),
+        let resume=session.has_evaluation_progress(pending.node_hash);
+        let request_json = semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::object([
+            ("operatorId".to_string(), semio_framework_value::DslValue::String(pending.operator_id.clone())),
+            ("inputJson".to_string(), semio_framework_value::DslValue::String(if resume {String::new()}else{pending.input_json})),
+            ("dependencyJson".to_string(), semio_framework_value::DslValue::String(if resume {String::new()}else{dependencies.remove(&pending.neuron_id).unwrap()})),
+            ("operatorVersion".to_string(), semio_framework_value::DslValue::String(format!("registry:{};geometry:1;policy:1", flow::flow_extension_registry_generation()))),
+            ("nodeHash".to_string(), semio_framework_value::DslValue::uint(pending.node_hash)),
+            ("resume".to_string(),semio_framework_value::DslValue::Bool(resume)),
+            ("windowId".to_string(), semio_framework_value::DslValue::String(window_id.to_string())),
+            ("windowKindId".to_string(), semio_framework_value::DslValue::String(window_kind_id.to_string())),
         ]));
         extension_invocations.push(ExtensionInvocation::new(pending.extension_id, "evaluate", request_json, "flowEvalResolve"));
     }

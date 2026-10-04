@@ -20,7 +20,7 @@ fn base_snapshot() -> SemioAudioSnapshot {
 fn round_trips(base: &SemioAudioSnapshot, mutation: SemioAudioMutation) {
     let diff = mutation.diff(base);
     let mutated = <SemioAudioDiff as protocol::MutationDiff<SemioAudioSnapshot>>::apply(diff.diff(), base).expect("apply must succeed for a well-formed fixture");
-    let inverses = mutation.inverse(base);
+    let inverses = mutation.inverse(base).expect("valid retained mutation inverse fixture");
     let mut restored = mutated.clone();
     for inv in &inverses {
         let inv_diff = inv.diff(&restored);

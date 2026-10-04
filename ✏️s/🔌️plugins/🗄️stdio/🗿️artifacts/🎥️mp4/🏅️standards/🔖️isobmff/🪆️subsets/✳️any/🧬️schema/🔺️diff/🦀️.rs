@@ -229,7 +229,7 @@ pub fn absorb_indexed<T: Clone, D: Clone>(d1: &mut IndexedDiff<T, D>, d2: Indexe
 //#endregion 🔖️IndexedTriple
 
 //#region 🔖️Sample
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Mp4SampleDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -275,30 +275,30 @@ fn absorb_sample_diff(a: &mut Mp4SampleDiff, b: Mp4SampleDiff) {
 //#region 🔖️Track
 pub type Mp4SamplesDiff = IndexedDiff<Mp4Sample, Mp4SampleDiff>;
 
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 struct Mp4SampleModifiedRecord {
     index: usize,
     diff: Mp4SampleDiff,
 }
 
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 struct Mp4SampleAddedRecord {
     index: usize,
     item: Mp4Sample,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 struct Mp4SamplesDiffRecord {
     removed: Vec<usize>,
     modified: Vec<Mp4SampleModifiedRecord>,
     added: Vec<Mp4SampleAddedRecord>,
 }
 
-impl dsl::DslField for Mp4SamplesDiff {
-    fn shape() -> dsl::Shape {
-        <Mp4SamplesDiffRecord as dsl::DslField>::shape()
+impl semio_framework_dsl_record::DslField for Mp4SamplesDiff {
+    fn shape() -> semio_framework_dsl_record::Shape {
+        <Mp4SamplesDiffRecord as semio_framework_dsl_record::DslField>::shape()
     }
-    fn to_value(&self) -> dsl::FieldValue {
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
         Mp4SamplesDiffRecord {
             removed: self.removed.clone(),
             modified: self.modified.iter().map(|entry| Mp4SampleModifiedRecord { index: entry.index, diff: entry.diff.clone() }).collect(),
@@ -306,8 +306,8 @@ impl dsl::DslField for Mp4SamplesDiff {
         }
         .to_value()
     }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
-        let record = <Mp4SamplesDiffRecord as dsl::DslField>::from_value(value)?;
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
+        let record = <Mp4SamplesDiffRecord as semio_framework_dsl_record::DslField>::from_value(value)?;
         Ok(Self {
             removed: record.removed,
             modified: record.modified.into_iter().map(|entry| IndexedModified { index: entry.index, diff: entry.diff }).collect(),
@@ -316,7 +316,7 @@ impl dsl::DslField for Mp4SamplesDiff {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Mp4TrackDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -402,30 +402,30 @@ fn absorb_track_diff(a: &mut Mp4TrackDiff, b: Mp4TrackDiff) {
 //#region 🔖️Diff
 pub type Mp4TracksDiff = IndexedDiff<Mp4Track, Mp4TrackDiff>;
 
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 struct Mp4TrackModifiedRecord {
     index: usize,
     diff: Mp4TrackDiff,
 }
 
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 struct Mp4TrackAddedRecord {
     index: usize,
     item: Mp4Track,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 struct Mp4TracksDiffRecord {
     removed: Vec<usize>,
     modified: Vec<Mp4TrackModifiedRecord>,
     added: Vec<Mp4TrackAddedRecord>,
 }
 
-impl dsl::DslField for Mp4TracksDiff {
-    fn shape() -> dsl::Shape {
-        <Mp4TracksDiffRecord as dsl::DslField>::shape()
+impl semio_framework_dsl_record::DslField for Mp4TracksDiff {
+    fn shape() -> semio_framework_dsl_record::Shape {
+        <Mp4TracksDiffRecord as semio_framework_dsl_record::DslField>::shape()
     }
-    fn to_value(&self) -> dsl::FieldValue {
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
         Mp4TracksDiffRecord {
             removed: self.removed.clone(),
             modified: self.modified.iter().map(|entry| Mp4TrackModifiedRecord { index: entry.index, diff: entry.diff.clone() }).collect(),
@@ -433,8 +433,8 @@ impl dsl::DslField for Mp4TracksDiff {
         }
         .to_value()
     }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
-        let record = <Mp4TracksDiffRecord as dsl::DslField>::from_value(value)?;
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
+        let record = <Mp4TracksDiffRecord as semio_framework_dsl_record::DslField>::from_value(value)?;
         Ok(Self {
             removed: record.removed,
             modified: record.modified.into_iter().map(|entry| IndexedModified { index: entry.index, diff: entry.diff }).collect(),
@@ -442,7 +442,7 @@ impl dsl::DslField for Mp4TracksDiff {
         })
     }
 }
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslDiff)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslDiff)]
 #[value(rename_all = "camelCase")]
 pub struct Mp4Diff {
     #[value(default, skip_serializing_if = "Option::is_none")]

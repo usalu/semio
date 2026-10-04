@@ -6,7 +6,10 @@ use crate::mutations::Process3dMutation;
 use crate::Process3dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::DeleteStep, base: &Process3dSnapshot) -> Vec<Process3dMutation> {
+pub fn inverse(payload: &super::DeleteStep, base: &Process3dSnapshot) -> Result<Vec<Process3dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     base.step_payloads.iter().position(|step| step.id == payload.id).map(|index| vec![Process3dMutation::CreateStep(CreateStep { index, step: base.step_payloads[index].clone() })]).unwrap_or_default()
+
+    })())
 }
 //#endregion 🔖️Inverse

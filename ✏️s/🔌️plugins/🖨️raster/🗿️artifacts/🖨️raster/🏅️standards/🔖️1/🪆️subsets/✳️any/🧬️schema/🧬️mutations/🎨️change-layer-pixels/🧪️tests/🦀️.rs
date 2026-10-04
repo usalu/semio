@@ -6,14 +6,14 @@ use protocol::{Mutation, MutationDiff, OpBinary, OpText};
 fn change_layer_pixels_matches_independent_json_and_round_trips() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️.json")).unwrap();
     let before_json = fixture["before"].to_string();
-    let base: RasterSnapshot = dsl::os_pack::json::from_json_str(&before_json).unwrap();
-    let mutation: RasterMutation = dsl::os_pack::json::from_json_str(&fixture["mutation"].to_string()).unwrap();
-    let inverse = mutation.inverse(&base);
+    let base: RasterSnapshot = semio_framework_pack_json::from_json_str(&before_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let mutation: RasterMutation = semio_framework_pack_json::from_json_str(&fixture["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let inverse = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     let mut expected = fixture["before"].clone();
     for key in ["imageKey", "width", "height"] { expected["layers"][0][key] = fixture["mutation"]["content"][key].clone(); }
     let (diff, _) = mutation.diff(&base).into_parts();
     let actual = diff.apply(&base).unwrap();
-    let rendered: serde_json::Value = serde_json::from_str(&dsl::os_pack::json::to_string(&dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&actual)))).unwrap();
+    let rendered: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&actual)))).unwrap();
     assert_eq!(json_numbers(rendered), json_numbers(expected));
     assert_eq!(RasterMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
     assert_eq!(RasterMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);

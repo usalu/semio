@@ -1,0 +1,17 @@
+# Semio Image Ordered Sample Physical Owner TDD
+
+Root mounted three exact additive Source and closed neutral/schema pairs from the independent finite audit. Original laws remain exact prefixes. Complete, empty, partial and overflowing byte arrays retain the actual legal native parser and owner domain. Independent AJV and BunSQLite query/edit/full Snapshot equality require ordered channel/sample entities; the full frame cannot remain an opaque pixel buffer authority. Production is unchanged and the genuine registered Source before is pending. The held Native pair will be mounted after its shape is inspected.
+
+## Actual Source Before
+
+The registered Semio source route executed 49 actual laws across five selections: 48 passed, the additive image sample witness alone failed (307 expectations, Nx29.5s). The new law validated its strict neutral schema and independent physical integrity/FKs, then SQLite refused no such table: semio_image_sample. Original25 laws in the final eight-file selection passed. Later Semio owner selections were not reached. The two composite layers contain20 references to this one actual route (one project and nineteen aliases); all20 now cite its actual partial run with the qualification. The initial generic two-reference guard refused before writing the composite and was corrected to its validated actual20-reference shape.
+
+Root also mounted the exact additive Native owning pair from the same closed corpus. Both erased encodings compare complete typed Snapshot fields before and after independent SQLite sample query/edit, including legal partial/overflow byte arrays. Parser exit0; production remains unchanged; actual Native before is queued.
+
+## Coherent Full Image Owner Cutover
+
+Actual Native before: 197 selected laws, 196 passed and the one additive full-owner ordered-sample law failed independently with missing semio_image_sample; 2177 skipped. Complete 2×1 frames and empty, partial three-octet and overflow nine-octet states remain literal native-authorized arrays. Mounted six guarded schema-first pairs: frame identity/delay, sample ordinal/channel/u8 scalar, ICC nullable literal profile and ordered duplicate metadata. The dimension renderer is independent of snapshot representability. Rust reconstruction uses admitted output and relationship frontiers, validates every parent/id/ordinal/channel and rejects unconsumed samples; Source uses the shared consumed-row index. Physical channel corruption replaces obsolete byte-extent negative assertions while all scalar, parent, ordering, budget and cancellation predicates remain. Compiler and after runtime still pending; native wrapper/backing and caller capture obligations remain qualified.
+
+Actual first after leaf runtime:4 selected,1 passed/3 failed/8 expectations because the physical SQLite writer explicitly refuses schemas requiring secondary indexes. Removed the three secondary UNIQUE index declarations from both declared schema implementations; reconstruction still enforces exact unique contiguous occurrence relations and primary row identities. No ignored or discarded physical index added. Replay pending.
+
+Actual supported-schema scoped Source after:4/4 GREEN,42 expectations,312ms Bun. Full independent physical SQLite original/readback/sample edit across complete/empty/partial/overflow corpus passed; scalar/ICC/parent/channel/ordinal/budget/cancel negatives are awaited. Native erased replay remains pending behind current shared Pack ownership/error interface compiler prerequisites.

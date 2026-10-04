@@ -1,0 +1,19 @@
+{
+  "$schema": "s.stdio.bmp.command.paint-region.fixture.v1",
+  "cases": [
+    {
+      "name": "indexed duplicate-color identity",
+      "action": "paint-indexed-region",
+      "payload": { "x": 1, "y": 0, "width": 2, "height": 1, "paletteIndex": 1 }
+    },
+    {
+      "name": "direct opaque red region",
+      "action": "paint-direct-region",
+      "payload": { "x": 0, "y": 1, "width": 2, "height": 1, "red": 255, "green": 0, "blue": 0, "alpha": 255 }
+    }
+  ],
+  "invalid": [
+    { "name": "zero width", "action": "paint-direct-region", "payload": { "x": 0, "y": 0, "width": 0, "height": 1, "red": 0, "green": 0, "blue": 0, "alpha": 255 } },
+    { "name": "unbounded rows", "action": "paint-indexed-region", "payload": { "x": 0, "y": 0, "width": 1, "height": 65537, "paletteIndex": 0 } }
+  ]
+}

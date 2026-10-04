@@ -1,4 +1,0 @@
-syntax = "proto3";
-package semio.s.trinity.rewriting.mutation.patch_working_nodes;
-// patch-working-nodes / PatchWorkingNodes
-message PatchWorkingNodes { repeated string targets = 1; string field = 2; string value = 3; }

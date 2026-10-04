@@ -17,6 +17,24 @@ use crate::retained::{FlowOwner, FlowRetirement};
 use crate::os_spr::{Identified, MutationApplyError, MutationApplyResult, MutationDiff, Patchable};
 use crate::os_store::{ArtifactEnvelope, ArtifactOwnedValueRetirementFactory, ArtifactStore, ArtifactStoreCursorDisposer, ErasedSnapshotRetirement, MemberStoreOwner, DocumentStoreOwners, SnapshotRetirementFactory, SnapshotRetirementStep};
 
+#[path = "📸️snapshot/🪶️native/🛫️encoding/🦀️.rs"]
+mod flow_native_encoding;
+#[path = "📸️snapshot/🪶️native/🛬️decoding/🦀️.rs"]
+mod flow_native_decoding;
+#[path = "📸️snapshot/🪶️native/♻️retirement/🦀️.rs"]
+mod flow_native_retirement;
+#[path = "📸️snapshot/🪶️native/🛂️carrier/🦀️.rs"]
+mod flow_native_carrier;
+
+#[path = "📸️snapshot/🪶️native/📏️bound/🦀️.rs"]
+mod flow_native_bound;
+#[path = "📸️snapshot/🪶️native/🛂️capability/🦀️.rs"]
+mod flow_snapshot_capability;
+#[path = "../🧬️schema/📸️snapshot/🪶️sqlite/🛫️projection/🦀️.rs"]
+mod flow_sql_projection;
+#[path = "../🧬️schema/📸️snapshot/🪶️sqlite/🛬️reconstruction/🦀️.rs"]
+mod flow_sql_reconstruction;
+
 pub const FLOW_DOCUMENT_SCHEMA: &str = "flow.host_snapshot";
 
 //#region 🔖️CollectionSupport
@@ -124,7 +142,7 @@ fn apply_flow_collection_delta<'a, T: Identified<String>>(items: &mut Vec<&'a T>
 
 //#region 🔖️Mutations
 /// 📍️ One layout assignment; absent or null layout removes the existing entry.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, crate::os_dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct FlowLayoutEntry {
@@ -206,7 +224,7 @@ pub fn flow_host_snapshot_operations(before: &FlowHostSnapshot, after: &FlowHost
 /// `parse_dsl`/`print_dsl`/`parse_op`/`print_op` boundary — mirroring `imperative_core::ValueDsl`'s
 /// identical fix for the same foreign-`Dictionary`/`Value`/`Atom` problem one-for-one (same crate,
 /// same shapes).
-#[derive(Clone, Debug, PartialEq, crate::os_dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 struct ValueDsl {
     /// 🕳️ Presence-only flag (the payload is never inspected) — `Atom::Null`'s tag.
     null: Option<bool>,
@@ -288,7 +306,7 @@ fn vec_to_ordered_set(items: Vec<String>) -> crate::OrderedSet {
 /// `imperative_core::PathDsl`/`StepNodeDsl`, so `neurons` goes through `NeuronNodeDsl`'s
 /// `crate::os_dsl::DslVariants` lazy `fn() -> RecordSpec` pointer instead of `TreeDsl` and `NeuronNodeDsl`
 /// eagerly recursing into each other just to construct the schema.
-#[derive(Clone, Debug, PartialEq, crate::os_dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 struct TreeDsl {
     #[dsl(statements, block)]
     neurons: Vec<NeuronNodeDsl>,
@@ -298,7 +316,7 @@ struct TreeDsl {
 
 /// 🔵️ Local twin of `neural::Neuron` — a one-variant `crate::os_dsl::DslEnum` (not a plain `DslRecord`) purely
 /// for the mutual-recursion reason documented on `TreeDsl`.
-#[derive(Clone, Debug, PartialEq, crate::os_dsl::DslEnum)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
 enum NeuronNodeDsl {
     Neuron {
         id: String,
@@ -317,20 +335,20 @@ enum NeuronNodeDsl {
 /// plus `tree_to_tree_dsl`/`tree_dsl_to_tree` for the nested neural-tree case); `SynapseSpec`
 /// itself (JSON shape, `tree_from_host_snapshot`, `flow_host_snapshot_operations`, every other consumer
 /// matching on its `from`/`to`/`from_port`/`to_port` fields) is completely untouched.
-#[derive(Clone, Debug, PartialEq, crate::os_dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 struct SynapseDsl {
     id: String,
-    link: crate::os_dsl::Wire,
+    link: semio_framework_dsl_record::Wire,
 }
 
 fn synapse_to_dsl(synapse: &SynapseSpec) -> SynapseDsl {
-    let from = crate::os_dsl::WireNode { id: synapse.from.clone(), kind: None, port: (!synapse.from_port.is_empty()).then(|| synapse.from_port.clone()) };
-    let to = crate::os_dsl::WireNode { id: synapse.to.clone(), kind: None, port: (!synapse.to_port.is_empty()).then(|| synapse.to_port.clone()) };
-    SynapseDsl { id: synapse.id.clone(), link: crate::os_dsl::Wire(crate::os_dsl::WireValue { from, edge: Some((true, to)), edge_label: crate::os_dsl::WireEdgeLabel::default(), properties: crate::os_dsl::DslValue::Object(Vec::new()) }) }
+    let from = semio_framework_dsl_record::WireNode { id: synapse.from.clone(), kind: None, port: (!synapse.from_port.is_empty()).then(|| synapse.from_port.clone()) };
+    let to = semio_framework_dsl_record::WireNode { id: synapse.to.clone(), kind: None, port: (!synapse.to_port.is_empty()).then(|| synapse.to_port.clone()) };
+    SynapseDsl { id: synapse.id.clone(), link: semio_framework_dsl_record::Wire(semio_framework_dsl_record::WireValue { from, edge: Some((true, to)), edge_label: semio_framework_dsl_record::WireEdgeLabel::default(), properties: semio_framework_value::DslValue::Object(Vec::new()) }) }
 }
 
 fn synapse_from_dsl(synapse: SynapseDsl) -> Result<SynapseSpec, String> {
-    let crate::os_dsl::WireValue { from, edge, .. } = synapse.link.0;
+    let semio_framework_dsl_record::WireValue { from, edge, .. } = synapse.link.0;
     let (directed, to) = edge.ok_or_else(|| "synapse wire literal must have a target".to_string())?;
     if !directed {
         return Err("synapse wire literal must be directed".into());
@@ -372,7 +390,7 @@ fn neuron_node_dsl_to_neuron(node: NeuronNodeDsl) -> Result<Neuron, String> {
 /// comment) that never feeds neural evaluation — `tree_from_host_snapshot`'s `Cluster` handling reads only
 /// `tree`, never `flow` — the same "derived read-view, not a DSL-typed field" reasoning `FlowArtifact`
 /// itself gets relative to `FlowHostSnapshot`, just one level further in.
-#[derive(Clone, Debug, PartialEq, crate::os_dsl::DslEnum)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
 enum WidgetDsl {
     Neuron {
         id: String,
@@ -421,7 +439,7 @@ enum WidgetDsl {
         name: String,
         #[dsl(block)]
         tree: TreeDsl,
-        flow: crate::os_dsl::DslValue,
+        flow: semio_framework_value::DslValue,
     },
 }
 
@@ -431,17 +449,17 @@ enum WidgetDsl {
 /// values; this hand impl reuses the exact same "exactly one tagged statement" idiom
 /// `process_3d::SolidSpec` uses for the identical shape, so those fields stay a bare `WidgetDsl`
 /// rather than a `Box<WidgetDsl>`.
-impl crate::os_dsl::DslField for WidgetDsl {
-    fn shape_controlled<C:crate::os_dsl::NativeSchemaControl>(control:&mut C)->Result<crate::os_dsl::Shape,String>{Ok(crate::os_dsl::Shape::Statements(<Self as crate::os_dsl::DslVariants>::variants_controlled(control)?))}
-    fn shape() -> crate::os_dsl::Shape {
-        crate::os_dsl::Shape::Statements(<WidgetDsl as crate::os_dsl::DslVariants>::variants())
+impl semio_framework_dsl_record::DslField for WidgetDsl {
+    fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{Ok(semio_framework_dsl_record::Shape::Statements(<Self as semio_framework_dsl_record::DslVariants>::variants_controlled(control)?))}
+    fn shape() -> semio_framework_dsl_record::Shape {
+        semio_framework_dsl_record::Shape::Statements(<WidgetDsl as semio_framework_dsl_record::DslVariants>::variants())
     }
-    fn to_value(&self) -> crate::os_dsl::FieldValue {
-        crate::os_dsl::FieldValue::Statements(vec![<WidgetDsl as crate::os_dsl::DslVariants>::to_named_record(self)])
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
+        semio_framework_dsl_record::FieldValue::Statements(vec![<WidgetDsl as semio_framework_dsl_record::DslVariants>::to_named_record(self)])
     }
-    fn from_value(value: &crate::os_dsl::FieldValue) -> Result<Self, String> {
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
         match value {
-            crate::os_dsl::FieldValue::Statements(items) if items.len() == 1 => <WidgetDsl as crate::os_dsl::DslVariants>::from_named_record(&items[0].0, &items[0].1).map_err(|e| e.message),
+            semio_framework_dsl_record::FieldValue::Statements(items) if items.len() == 1 => <WidgetDsl as semio_framework_dsl_record::DslVariants>::from_named_record(&items[0].0, &items[0].1).map_err(|e| e.message),
             other => Err(format!("expected exactly 1 tagged widget value, found {other:?}")),
         }
     }
@@ -482,8 +500,8 @@ fn widget_dsl_to_widget(widget: WidgetDsl) -> Result<Widget, String> {
 /// `#[derive(crate::os_dsl::DslArtifact)]`. `FlowArtifact` (the derived read-view built by
 /// `FlowHostSnapshot::to_artifact()`) deliberately does NOT get this treatment — it's a computed
 /// snapshot for rendering, never itself round-tripped through DSL text.
-#[derive(Clone, Debug, PartialEq, crate::os_dsl::DslArtifact)]
-#[dsl(id = "flow.flow")]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, crate::os_dsl::DslArtifact)]
+#[artifact(id = "flow.flow")]
 #[dsl(layout = "lines")]
 struct FlowHostSnapshotDsl {
     schema: String,
@@ -526,11 +544,11 @@ impl crate::os_store::ArtifactDsl for FlowHostSnapshotDsl {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let record = crate::os_dsl::parse(body, &Self::__dsl_spec(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document })?;
+        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
-        let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
+        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
         let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         crate::os_store::semio_format::wrap_text(&envelope, &body)
     }
@@ -541,18 +559,18 @@ impl crate::os_store::ArtifactPack for FlowHostSnapshotDsl {
     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
         let inner = crate::os_store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope =
-            crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1).map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
+            crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1).map_err(|e| crate::os_store::PackError::from(e.into_value_error()))?;
         Ok(crate::os_store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
-        let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|e| crate::os_store::PackError::from(e.into_value_error()))?;
         if !envelope.matches_identity(<Self as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1) {
-            return Err(crate::os_store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as crate::os_store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(crate::os_store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as crate::os_store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = crate::os_store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(crate::os_store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<crate::os_dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -566,7 +584,7 @@ impl crate::os_store::ArtifactDsl for FlowHostSnapshot {
 
     fn parse_dsl(text: &str) -> Result<Self, crate::os_store::TextError> {
         let dsl_fixture = <FlowHostSnapshotDsl as crate::os_store::ArtifactDsl>::parse_dsl(text)?;
-        flow_host_snapshot_dsl_to_host_snapshot(dsl_fixture).map_err(|message| crate::os_store::TextError::new(message, crate::os_store::TextSpan::at(1, 1)))
+        flow_host_snapshot_dsl_to_host_snapshot(dsl_fixture).map_err(|message| crate::os_store::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message, crate::os_store::TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
@@ -580,49 +598,52 @@ impl crate::os_store::ArtifactDsl for FlowHostSnapshot {
 /// same `flow_host_snapshot_to_dsl`/`flow_host_snapshot_dsl_to_host_snapshot` mirror instead of `__dsl_to_record`/
 /// `__dsl_from_record`.
 impl crate::os_store::ArtifactPack for FlowHostSnapshot {
+    fn sqlite_snapshot_codec() -> Option<crate::os_store::ArtifactSqliteSnapshotCodec> { Some(<Self as crate::os_store::ArtifactSqliteSnapshot>::sqlite_codec()) }
     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
         <FlowHostSnapshotDsl as crate::os_store::ArtifactPack>::encode_pack_with(&flow_host_snapshot_to_dsl(self), options)
     }
 
     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
         let dsl_fixture = <FlowHostSnapshotDsl as crate::os_store::ArtifactPack>::decode_pack_with(bytes, options)?;
-        flow_host_snapshot_dsl_to_host_snapshot(dsl_fixture).map_err(|message| crate::os_store::text_error_to_pack_error(crate::os_store::TextError::new(message, crate::os_store::TextSpan::at(1, 1))))
+        flow_host_snapshot_dsl_to_host_snapshot(dsl_fixture).map_err(|message| crate::os_store::text_error_to_pack_error(crate::os_store::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message, crate::os_store::TextSpan::at(1, 1))))
     }
 
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         <FlowHostSnapshotDsl as crate::os_store::ArtifactPack>::record_spec()
     }
 }
 //#endregion 🔖️Dsl
 
 /// 🎛️ Actual widget payloads share the intrinsic widget DSL lowering.
-impl crate::os_dsl::DslField for Widget {
-    fn shape_controlled<C:crate::os_dsl::NativeSchemaControl>(control:&mut C)->Result<crate::os_dsl::Shape,String>{<WidgetDsl as crate::os_dsl::DslField>::shape_controlled(control)}
-    fn shape() -> crate::os_dsl::Shape { <WidgetDsl as crate::os_dsl::DslField>::shape() }
-    fn to_value(&self) -> crate::os_dsl::FieldValue { <WidgetDsl as crate::os_dsl::DslField>::to_value(&widget_to_widget_dsl(self)) }
-    fn from_value(value: &crate::os_dsl::FieldValue) -> Result<Self, String> {
-        widget_dsl_to_widget(<WidgetDsl as crate::os_dsl::DslField>::from_value(value)?)
+impl semio_framework_dsl_record::DslField for Widget {
+    fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{<WidgetDsl as semio_framework_dsl_record::DslField>::shape_controlled(control)}
+    fn shape() -> semio_framework_dsl_record::Shape { <WidgetDsl as semio_framework_dsl_record::DslField>::shape() }
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue { <WidgetDsl as semio_framework_dsl_record::DslField>::to_value(&widget_to_widget_dsl(self)) }
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
+        widget_dsl_to_widget(<WidgetDsl as semio_framework_dsl_record::DslField>::from_value(value)?)
     }
 }
 
 /// 🔌️ Actual synapse payloads reuse the intrinsic wire-literal lowering.
-impl crate::os_dsl::DslField for SynapseSpec {
-    fn shape_controlled<C:crate::os_dsl::NativeSchemaControl>(control:&mut C)->Result<crate::os_dsl::Shape,String>{<SynapseDsl as crate::os_dsl::DslField>::shape_controlled(control)}
-    fn shape() -> crate::os_dsl::Shape { <SynapseDsl as crate::os_dsl::DslField>::shape() }
-    fn to_value(&self) -> crate::os_dsl::FieldValue { <SynapseDsl as crate::os_dsl::DslField>::to_value(&synapse_to_dsl(self)) }
-    fn from_value(value: &crate::os_dsl::FieldValue) -> Result<Self, String> {
-        synapse_from_dsl(<SynapseDsl as crate::os_dsl::DslField>::from_value(value)?)
+impl semio_framework_dsl_record::DslField for SynapseSpec {
+    fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{<SynapseDsl as semio_framework_dsl_record::DslField>::shape_controlled(control)}
+    fn shape() -> semio_framework_dsl_record::Shape { <SynapseDsl as semio_framework_dsl_record::DslField>::shape() }
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue { <SynapseDsl as semio_framework_dsl_record::DslField>::to_value(&synapse_to_dsl(self)) }
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
+        synapse_from_dsl(<SynapseDsl as semio_framework_dsl_record::DslField>::from_value(value)?)
     }
 }
 
 /// 📄️ Explicit import payloads share the artifact's intrinsic DSL schema.
-impl crate::os_dsl::DslField for FlowHostSnapshot {
-    fn shape() -> crate::os_dsl::Shape { crate::os_dsl::Shape::Record(FlowHostSnapshotDsl::__dsl_spec_producer()) }
-    fn shape_controlled<C:crate::os_dsl::NativeSchemaControl>(control:&mut C)->Result<crate::os_dsl::Shape,String>{control.checkpoint()?;Ok(crate::os_dsl::Shape::Record(FlowHostSnapshotDsl::__dsl_spec_producer()))}
-    fn to_value(&self) -> crate::os_dsl::FieldValue { crate::os_dsl::FieldValue::Record(flow_host_snapshot_to_dsl(self).__dsl_to_record()) }
-    fn from_value(value: &crate::os_dsl::FieldValue) -> Result<Self, String> {
+impl semio_framework_dsl_record::DslField for FlowHostSnapshot {
+    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::FieldValue, semio_framework_value::ValueError> { flow_native_carrier::encode_field(self, control) }
+    fn from_value_controlled(value: &semio_framework_dsl_record::FieldValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> { flow_native_carrier::decode_field(value, control) }
+    fn shape() -> semio_framework_dsl_record::Shape { semio_framework_dsl_record::Shape::Record(FlowHostSnapshotDsl::__dsl_spec_producer()) }
+    fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{control.checkpoint()?;Ok(semio_framework_dsl_record::Shape::Record(FlowHostSnapshotDsl::__dsl_spec_producer()))}
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue { semio_framework_dsl_record::FieldValue::Record(flow_host_snapshot_to_dsl(self).__dsl_to_record()) }
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
         match value {
-            crate::os_dsl::FieldValue::Record(record) => flow_host_snapshot_dsl_to_host_snapshot(FlowHostSnapshotDsl::__dsl_from_record(record).map_err(|error| error.message)?),
+            semio_framework_dsl_record::FieldValue::Record(record) => flow_host_snapshot_dsl_to_host_snapshot(FlowHostSnapshotDsl::__dsl_from_record(record).map_err(|error| error.message)?),
             other => Err(format!("expected Flow fixture record, found {other:?}")),
         }
     }
@@ -648,11 +669,11 @@ impl ErasedSnapshotRetirement for FlowHostSnapshotRetirement {
     /// demand its frontier publishes out of its own allocation currency and charges the caller's
     /// payload page only what fits in it. The demand is republished below so a driver that CAN pay
     /// it from its own page does (ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END).
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 || maximum_bytes == 0 {
             return Ok(SnapshotRetirementStep::Blocked);
         }
-        let demand = self.retirement.next_close_byte_demand().map_err(str::to_owned)?;
+        let demand = self.retirement.next_close_byte_demand().map_err(|message|semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,message))?;
         Ok(match self.retirement.close_page(maximum_items, maximum_bytes.max(demand))? {
             SnapshotRetirementStep::Pending { released_items, released_bytes } => SnapshotRetirementStep::Pending { released_items, released_bytes: released_bytes.min(maximum_bytes) },
             step => step,
@@ -688,7 +709,7 @@ impl SnapshotRetirementFactory<FlowHostSnapshot> for FlowSnapshotRetirementFacto
 pub struct FlowSnapshotRetirementFactory;
 
 impl ErasedSnapshotRetirement for FlowSnapshotRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if self.snapshot.is_some() && maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -704,7 +725,7 @@ impl ErasedSnapshotRetirement for FlowSnapshotRetirement {
         let step = retirement.close_step(maximum_items, maximum_bytes)?;
         if matches!(step, SnapshotRetirementStep::Complete) {
             if !retirement.terminal_is_empty() {
-                return Err("flow snapshot host document reported Complete before terminal-empty".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"flow snapshot host document reported Complete before terminal-empty"));
             }
             self.host_snapshot = None;
         }
@@ -743,7 +764,7 @@ struct FlowMutationRetirement {
 mod flow_mutation_retirement;
 
 impl ErasedSnapshotRetirement for FlowMutationRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         self.frontier.close_step(maximum_items, maximum_bytes)
     }
 

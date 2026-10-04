@@ -1,0 +1,251 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/compiler/syntax/rust",
+  "$defs": {
+    "reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "path",
+        "line"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "include",
+            "include_str",
+            "include_bytes",
+            "path"
+          ]
+        },
+        "path": {
+          "type": "string"
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "base": {
+          "enum": [
+            "manifest",
+            "generated"
+          ]
+        },
+        "modulePath": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "inlineBase": {
+          "type": "string"
+        },
+        "directory": {
+          "const": true
+        },
+        "expansion": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "macro",
+            "definitionLine",
+            "invocationLine",
+            "definitionOffset",
+            "templateOffset",
+            "invocationOffset",
+            "scope"
+          ],
+          "properties": {
+            "kind": {
+              "const": "local-macro"
+            },
+            "macro": {
+              "type": "string"
+            },
+            "definitionLine": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "invocationLine": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "definitionOffset": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "templateOffset": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "invocationOffset": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "scope": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "kind",
+                    "modulePath"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "const": "module"
+                    },
+                    "modulePath": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "kind",
+                    "startOffset",
+                    "endOffset"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "const": "local-block"
+                    },
+                    "startOffset": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "endOffset": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "compilerAttributes": {
+                      "type": "array",
+                      "items": {
+                        "enum": [
+                          "test",
+                          "doc"
+                        ]
+                      },
+                      "uniqueItems": true
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "scope": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "modulePath"
+          ],
+          "properties": {
+            "kind": {
+              "const": "module"
+            },
+            "modulePath": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "startOffset",
+            "endOffset"
+          ],
+          "properties": {
+            "kind": {
+              "const": "local-block"
+            },
+            "startOffset": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "endOffset": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "compilerAttributes": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "test",
+                  "doc"
+                ]
+              },
+              "uniqueItems": true
+            }
+          }
+        }
+      ]
+    },
+    "span": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "end"
+      ],
+      "properties": {
+        "start": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "token": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "text",
+        "start",
+        "end"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "identifier",
+            "string",
+            "number",
+            "punctuation"
+          ]
+        },
+        "text": {
+          "type": "string"
+        },
+        "start": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

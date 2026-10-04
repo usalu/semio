@@ -29,6 +29,7 @@ const publicCases: readonly PublicOfficeCase[] = [
 ];
 
 const json = (path: string): Json => JSON.parse(readFileSync(path, 'utf8')) as Json;
+const wireJson = (value: unknown): Json => JSON.parse(JSON.stringify(value, (_key, item) => typeof item === 'bigint' ? item.toString() : item)) as Json;
 const valid = (validate: ValidateFunction, value: Json, label: string): void => assert(validate(value), `${label}: ${JSON.stringify(validate.errors)}`);
 const invalid = (validate: ValidateFunction, value: Json, label: string): void => assert(!validate(value), `${label}: stale stub unexpectedly passed`);
 
@@ -80,7 +81,7 @@ export function testStdioOfficeSchemaContracts(repoRoot = getWorkspaceRoot()): v
   const validateXmlDiff = semioSchemaAjvV1().addSchema(xmlSnapshotSchema).compile(xmlDiffSchema);
   for (const diff of sparse.valid) {
     valid(validateXmlDiff, diff, 'XML sparse triple');
-    assert.deepEqual(JSON.parse(JSON.stringify(parseXmlDiff(diff))), diff);
+    assert.deepEqual(wireJson(parseXmlDiff(diff)), diff);
   }
   for (const diff of sparse.invalid) {
     invalid(validateXmlDiff, diff, 'XML null triple');
@@ -99,7 +100,7 @@ export function testStdioOfficeSchemaContracts(repoRoot = getWorkspaceRoot()): v
     for (const state of ['⬅️before', '➡️after']) valid(validateSnapshot, json(join(fixture, '📸️snapshot', state, '🔣️.json')), `${row.artifact} ${state}`);
     const diff = json(join(fixture, '🔺️diff/🔣️.json'));
     valid(validateDiff, diff, `${row.artifact} diff`);
-    assert.deepEqual(JSON.parse(JSON.stringify(row.parse(diff))), diff, `${row.artifact} TypeScript guard`);
+    assert.deepEqual(wireJson(row.parse(diff)), diff, `${row.artifact} TypeScript guard`);
     invalid(validateSnapshot, { schema: `s.stdio.${row.artifact}`, entries: [] }, `${row.artifact} legacy snapshot`);
     invalid(validateDiff, { schema: `s.stdio.${row.artifact}.diff`, bytes: [] }, `${row.artifact} legacy diff`);
   }
@@ -115,6 +116,8 @@ export function testStdioOfficeSchemaContracts(repoRoot = getWorkspaceRoot()): v
     }
   }
   const docx = join(artifacts, '📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base');
+  const emptyParagraphs = join(docx, '🧫️fixtures/✍️empty-paragraphs');
+  valid(semioSchemaAjvV1().compile(json(join(emptyParagraphs, '🧬️schema/🔣️.json'))), json(join(emptyParagraphs, '🔣️.json')), 'DOCX empty paragraph authoring fixture');
   const docxDiffSchema = json(join(docx, '🧬️schema/🔺️diff/🔣️.json')) as { $id: string } & Json;
   const optionalClear = json(join(artifacts, '📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🧫️fixtures/🏳️optional-clear/🔣️.json')) as { cases: { name: string; diff: Json }[] };
   const docxAjv = semioSchemaAjvV1().addSchema(xmlSnapshotSchema).addSchema(xmlDiffSchema).addSchema(docxDiffSchema);
@@ -122,7 +125,7 @@ export function testStdioOfficeSchemaContracts(repoRoot = getWorkspaceRoot()): v
   for (const row of optionalClear.cases) {
     const diff = { xmlParts: { modified: [{ key: 'custom/document.xml', diff: { document: row.diff } }] } };
     valid(validateDocxDiff, diff, `DOCX canonical XML ${row.name}`);
-    assert.deepEqual(JSON.parse(JSON.stringify(parseDocxDiff(diff))), diff);
+    assert.deepEqual(wireJson(parseDocxDiff(diff)), diff);
   }
   const xmlChildren = {
     removed: [],
@@ -133,35 +136,37 @@ export function testStdioOfficeSchemaContracts(repoRoot = getWorkspaceRoot()): v
   for (const name of propertyNodes) {
     const diff = { xmlParts: { modified: [{ key: 'custom/document.xml', diff: { document: { root: { kind: 'element', name, children: xmlChildren } } } }] } };
     valid(validateDocxDiff, diff, `DOCX canonical XML property ${name}`);
-    assert.deepEqual(JSON.parse(JSON.stringify(parseDocxDiff(diff))), diff);
+    assert.deepEqual(wireJson(parseDocxDiff(diff)), diff);
   }
   invalid(validateDocxDiff, { document: { body: {} } }, 'DOCX semantic shadow diff');
   const base = join(artifacts, '📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base');
+  const literalXmlExport = join(base, '🧫️fixtures/🔤️literal-xml-export');
+  valid(semioSchemaAjvV1().compile(json(join(literalXmlExport, '🧬️schema/🔣️.json'))), json(join(literalXmlExport, '🔣️.json')), 'PPTX literal XML export fixture');
   const schema = json(join(base, '🧬️schema/🔺️diff/🔣️.json')) as { $id: string } & Json;
   const fixture = json(join(base, '🧬️schema/🔺️diff/🧫️fixtures/🏷️placeholder-kind/🔣️.json')) as { expectedDiff: Json };
-  const ajv = semioSchemaAjvV1().addSchema(schema);
-  const validateShape = ajv.compile({ $ref: `${schema.$id}#/$defs/PptxShapeDiff` });
-  valid(validateShape, fixture.expectedDiff, 'PPTX placeholder kind diff');
-  const parsed = parsePptxDiff({ presentation: { slides: { modified: [{ index: 0, diff: { shapes: { modified: [{ index: 0, diff: fixture.expectedDiff }] } } }] } } }).presentation?.slides?.modified?.[0]?.diff.shapes?.modified?.[0]?.diff;
-  assert.deepEqual(JSON.parse(JSON.stringify(parsed)), fixture.expectedDiff);
+  const snapshotSchema = json(join(base, '🧬️schema/📸️snapshot/🔣️.json'));
+  const ajv = semioSchemaAjvV1().addSchema(xmlSnapshotSchema).addSchema(xmlDiffSchema).addSchema(snapshotSchema).addSchema(schema);
+  valid(ajv.getSchema(schema.$id)!, fixture.expectedDiff, 'PPTX canonical placeholder kind diff');
+  assert.deepEqual(wireJson(parsePptxDiff(fixture.expectedDiff)), fixture.expectedDiff);
+  assert.throws(() => parsePptxDiff({ presentation: {} }));
   const boundary = json(join(base, '🧫️fixtures/🧭️xml-document-boundaries/🔣️.json')) as { snapshot: Json; diff: Json; setSnapshot: { snapshot: Json } & Json; invalidXmlAttribute: Json };
-  const validatePptxSnapshot = ajv.compile(json(join(base, '🧬️schema/📸️snapshot/🔣️.json')));
+  const validatePptxSnapshot = ajv.compile(snapshotSchema);
   const validatePptxReplacement = ajv.compile(json(join(base, '🧬️schema/🧬️mutations/📸️set-snapshot/🧬️schema/🔣️.json')));
   valid(validatePptxSnapshot, boundary.snapshot, 'PPTX XML document boundary snapshot');
   valid(ajv.getSchema(schema.$id)!, boundary.diff, 'PPTX XML document boundary diff');
   valid(validatePptxReplacement, boundary.setSnapshot, 'PPTX XML document boundary replacement');
-  assert.deepEqual(JSON.parse(JSON.stringify(parsePptxSnapshot(boundary.snapshot))), boundary.snapshot);
-  assert.deepEqual(JSON.parse(JSON.stringify(parsePptxDiff(boundary.diff))), boundary.diff);
-  assert.deepEqual(JSON.parse(JSON.stringify(parsePptxSetSnapshotMutation(boundary.setSnapshot).snapshot)), boundary.setSnapshot.snapshot);
+  assert.deepEqual(wireJson(parsePptxSnapshot(boundary.snapshot)), boundary.snapshot);
+  assert.deepEqual(wireJson(parsePptxDiff(boundary.diff)), boundary.diff);
+  assert.deepEqual(wireJson(parsePptxSetSnapshotMutation(boundary.setSnapshot).snapshot), boundary.setSnapshot.snapshot);
   const invalidBoundary = parsePptxSnapshot(boundary.snapshot);
-  invalidBoundary.xmlParts[0].document.doctype!.prologPosition = 3;
+  invalidBoundary.xmlParts[0].document.doctype!.prologPosition = 3n;
   assert.throws(() => parsePptxSnapshot(invalidBoundary));
   assert.throws(() => parsePptxDiff({ xmlParts: invalidBoundary.xmlParts }));
   assert.throws(() => parsePptxSetSnapshotMutation({ snapshot: invalidBoundary }));
   const baseline = parsePptxSnapshot(boundary.snapshot);
   const invalidPart = { ...baseline.xmlParts[0], document: { ...baseline.xmlParts[0].document, root: { kind: 'element', name: 'p:presentation', attrs: [boundary.invalidXmlAttribute], children: [] } } };
-  const invalidAttributeSnapshot = JSON.parse(JSON.stringify({ ...baseline, xmlParts: [invalidPart] })) as Json;
-  const invalidAttributeDiff = JSON.parse(JSON.stringify({ xmlParts: [invalidPart] })) as Json;
+  const invalidAttributeSnapshot = wireJson({ ...baseline, xmlParts: [invalidPart] });
+  const invalidAttributeDiff = wireJson({ xmlParts: [invalidPart] });
   const invalidAttributeReplacement = { mutation: 'setSnapshot', snapshot: invalidAttributeSnapshot };
   invalid(validatePptxSnapshot, invalidAttributeSnapshot, 'PPTX misplaced XML attribute field snapshot');
   invalid(ajv.getSchema(schema.$id)!, invalidAttributeDiff, 'PPTX misplaced XML attribute field diff');

@@ -3,9 +3,52 @@
   "root": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust",
   "sourceRoot": "🧰️framework/🛍️products/📓️print",
   "projectType": "library",
-  "tags": ["lang:rust", "role:product", "family:print"],
+  "tags": [
+    "lang:rust",
+    "role:product",
+    "family:print"
+  ],
   "targets": {
-    "test": { "executor": "nx:run-commands", "options": { "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test" } },
-    "build": { "executor": "nx:run-commands", "options": { "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust", "command": "bun ./📜️script.ts build" } }
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts build"
+      }
+    },
+    "test-snapshot-sqlite": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite",
+        "forwardAllArgs": false
+      }
+    },
+    "test-snapshot-sqlite-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite native",
+        "forwardAllArgs": false
+      }
+    },
+    "test-snapshot-sqlite-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+        "forwardAllArgs": false
+      }
+    }
   }
 }

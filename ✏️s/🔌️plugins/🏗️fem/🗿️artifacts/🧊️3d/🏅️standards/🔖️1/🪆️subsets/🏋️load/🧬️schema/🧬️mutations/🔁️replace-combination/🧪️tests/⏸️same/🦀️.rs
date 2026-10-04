@@ -19,13 +19,13 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔁️replace-combination/⏸️same/🎯️outcome/🔣️.json");
 
 fn before() -> Fem3dSnapshot {
-    dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> Fem3dSnapshot {
-    dsl::json::from_json_str(AFTER).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> Fem3dMutation {
-    dsl::json::from_json_str(MUTATION).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 
 /// ▶️ A no-op still APPLIES; it simply writes nothing, so `after` is the committed `before` again.
@@ -39,7 +39,7 @@ fn applies_to_committed_after() {
 }
 
 /// ⚠️ The branch this vector pins: a Warning `mutation.no-op` with an EMPTY diff and no target
-/// address — `MutationOutcome::empty().warn(..)` is the 2-arg builder, which attaches none.
+/// address — `MutationOutcome::empty().warning(..)` is the 2-arg builder, which attaches none.
 #[test]
 fn a_redundant_write_is_a_warning_not_a_rejection() {
     let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &before());
@@ -47,7 +47,7 @@ fn a_redundant_write_is_a_warning_not_a_rejection() {
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "replace-combination/same-combination-4f8781: exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.no-op", "replace-combination/same-combination-4f8781: a redundant write is reported as no-op, never as target-missing");
-    assert_eq!(messages[0].level, protocol::Severity::Warning, "replace-combination/same-combination-4f8781: a no-op is a Warning — the mutation still applies");
+    assert_eq!(messages[0].level, semio_framework_diagnostic::Severity::Warning, "replace-combination/same-combination-4f8781: a no-op is a Warning — the mutation still applies");
     assert!(messages[0].target.is_empty(), "replace-combination/same-combination-4f8781: the 2-arg warn builder attaches no target address");
 }
 
@@ -56,7 +56,7 @@ fn a_redundant_write_is_a_warning_not_a_rejection() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_fem3d_mutation(&base, &mutation);
+    let inverse = inverse_fem3d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
     let mut snapshot = base.clone();
     apply_fem3d_mutation(&mut snapshot, &mutation).expect("forward applies");
     for step in &inverse {
@@ -68,37 +68,37 @@ fn inverse_restores_before() {
 /// 🎯️ The declared outcome holds, code and level together.
 #[test]
 fn declared_outcome_holds() {
-    let outcome: dsl::DslValue = dsl::json::from_json_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(dsl::DslValue::as_str), Some("no-op"), "replace-combination/same-combination-4f8781: a no-op declares a no-op outcome");
-    let declared = outcome.get("messages").and_then(dsl::DslValue::as_array).expect("the declared outcome carries messages");
+    let outcome: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(OUTCOME, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
+    assert_eq!(outcome.get("status").and_then(semio_framework_value::DslValue::as_str), Some("no-op"), "replace-combination/same-combination-4f8781: a no-op declares a no-op outcome");
+    let declared = outcome.get("messages").and_then(semio_framework_value::DslValue::as_array).expect("the declared outcome carries messages");
     let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &before());
     assert_eq!(declared.len(), produced.messages().len(), "replace-combination/same-combination-4f8781: the declared diagnostic count must match the emitted one");
-    assert_eq!(declared[0].get("code").and_then(dsl::DslValue::as_str), Some(produced.messages()[0].code.0.as_str()), "replace-combination/same-combination-4f8781: the declared code must match the emitted one");
-    assert_eq!(declared[0].get("level").and_then(dsl::DslValue::as_str), Some("warning"), "replace-combination/same-combination-4f8781: the declared level must name the Warning the builder raises");
+    assert_eq!(declared[0].get("code").and_then(semio_framework_value::DslValue::as_str), Some(produced.messages()[0].code.0.as_str()), "replace-combination/same-combination-4f8781: the declared code must match the emitted one");
+    assert_eq!(declared[0].get("level").and_then(semio_framework_value::DslValue::as_str), Some("warning"), "replace-combination/same-combination-4f8781: the declared level must name the Warning the builder raises");
 }
 
 /// 🔺️ The produced delta is exactly the committed all-null `🔺️diff/🔣️.json`.
 #[test]
 fn produces_committed_diff() {
     let outcome = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &before());
-    let produced = dsl::ToValue::to_value(outcome.diff());
-    let committed: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let produced = semio_framework_value::ToValue::to_value(outcome.diff());
+    let committed: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert_eq!(produced, committed, "replace-combination/same-combination-4f8781: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: crate::standards::v1::subsets::any::schema::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    let reencoded = dsl::ToValue::to_value(&decoded);
-    let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
+    let decoded: crate::standards::v1::subsets::any::schema::diff::Fem3dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let reencoded = semio_framework_value::ToValue::to_value(&decoded);
+    let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff reparses");
     assert_eq!(reencoded, original, "replace-combination/same-combination-4f8781: committed diff JSON is not canonical");
 }
 
 /// 🩹 Replaying the committed identity delta on `before` reproduces the committed `after`.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: crate::standards::v1::subsets::any::schema::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: crate::standards::v1::subsets::any::schema::diff::Fem3dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let produced = <crate::standards::v1::subsets::any::schema::diff::Fem3dDiff as protocol::MutationDiff<Fem3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "replace-combination/same-combination-4f8781: committed diff did not carry before to after");
 }
@@ -107,13 +107,13 @@ fn committed_diff_applies_to_after() {
 #[test]
 fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: Fem3dSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
-        let reencoded = dsl::ToValue::to_value(&decoded);
-        let original: dsl::DslValue = dsl::json::from_json_str(text).expect("snapshot reparses");
+        let decoded: Fem3dSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = semio_framework_value::ToValue::to_value(&decoded);
+        let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot reparses");
         assert_eq!(reencoded, original, "replace-combination/same-combination-4f8781: committed {label} JSON is not canonical");
     }
-    let reencoded = dsl::ToValue::to_value(&mutation());
-    let original: dsl::DslValue = dsl::json::from_json_str(MUTATION).expect("mutation reparses");
+    let reencoded = semio_framework_value::ToValue::to_value(&mutation());
+    let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation reparses");
     assert_eq!(reencoded, original, "replace-combination/same-combination-4f8781: committed mutation JSON is not canonical");
 }
 

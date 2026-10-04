@@ -176,10 +176,88 @@
               "directoryName": "➖️detaches"
             }
           ]
+        },
+        {
+          "mutationId": "drag-nodes",
+          "sourceMutationDirectoryName": "✋️drag-nodes",
+          "mutationDirectoryName": "✋️drag-nodes",
+          "scenarios": [
+            {
+              "id": "drags-both-nodes-by-one-relative-offset",
+              "directoryName": "✋️drags"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-node-property",
+          "sourceMutationDirectoryName": "🎛️set-node-property",
+          "mutationDirectoryName": "🎛️set-node-property",
+          "scenarios": [
+            {
+              "id": "sets-the-colour-of-the-source-node",
+              "directoryName": "🎛️sets"
+            }
+          ]
+        },
+        {
+          "mutationId": "resize-node",
+          "sourceMutationDirectoryName": "📐resize-node",
+          "mutationDirectoryName": "📐resize-node",
+          "scenarios": [
+            {
+              "id": "resizes-the-sink-node",
+              "directoryName": "📐️resizes"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-node",
+          "sourceMutationDirectoryName": "🏷️rename-node",
+          "mutationDirectoryName": "🏷️rename-node",
+          "scenarios": [
+            {
+              "id": "renames-the-source-node-and-its-edge",
+              "directoryName": "🏷️renames"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-edge-property",
+          "sourceMutationDirectoryName": "🎚️set-edge-property",
+          "mutationDirectoryName": "🎚️set-edge-property",
+          "scenarios": [
+            {
+              "id": "sets-the-colour-of-the-edge",
+              "directoryName": "🎚️sets"
+            }
+          ]
+        },
+        {
+          "mutationId": "add-edge-property",
+          "sourceMutationDirectoryName": "➕add-edge-property",
+          "mutationDirectoryName": "➕add-edge-property",
+          "scenarios": [
+            {
+              "id": "inserts-a-weight-ahead-of-the-colour",
+              "directoryName": "⚖️inserts"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-edge-property",
+          "sourceMutationDirectoryName": "➖remove-edge-property",
+          "mutationDirectoryName": "➖remove-edge-property",
+          "scenarios": [
+            {
+              "id": "detaches-the-trailing-weight",
+              "directoryName": "➖️detaches"
+            }
+          ]
         }
       ],
       "kinds": [
         "set-snapshot",
+        "patch-snapshot",
         "create-node",
         "delete-node",
         "change-node-kind",
@@ -190,7 +268,14 @@
         "add-node-property",
         "remove-node-property",
         "create-edge",
-        "delete-edge"
+        "delete-edge",
+        "drag-nodes",
+        "set-node-property",
+        "resize-node",
+        "rename-node",
+        "set-edge-property",
+        "add-edge-property",
+        "remove-edge-property"
       ]
     }
   ],
@@ -368,6 +453,27 @@
           ]
         },
         {
+          "id": "drag-nodes",
+          "capability": "semio-v1-graph-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "drag-nodes",
+            "bridgeVersion": 1,
+            "variant": "DragNodes"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-graph-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
           "id": "move-node",
           "capability": "semio-v1-graph-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
@@ -441,6 +547,152 @@
             "operation": "set-snapshot",
             "bridgeVersion": 1,
             "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-graph-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "patch-snapshot",
+          "capability": "semio-v1-graph-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "patch-snapshot",
+            "bridgeVersion": 1,
+            "variant": "PatchSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-graph-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "set-node-property",
+          "capability": "semio-v1-graph-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-node-property",
+            "bridgeVersion": 1,
+            "variant": "SetNodeProperty"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-graph-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "resize-node",
+          "capability": "semio-v1-graph-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "resize-node",
+            "bridgeVersion": 1,
+            "variant": "ResizeNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-graph-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "rename-node",
+          "capability": "semio-v1-graph-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "rename-node",
+            "bridgeVersion": 1,
+            "variant": "RenameNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-graph-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "set-edge-property",
+          "capability": "semio-v1-graph-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-edge-property",
+            "bridgeVersion": 1,
+            "variant": "SetEdgeProperty"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-graph-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "add-edge-property",
+          "capability": "semio-v1-graph-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "add-edge-property",
+            "bridgeVersion": 1,
+            "variant": "AddEdgeProperty"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-graph-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-edge-property",
+          "capability": "semio-v1-graph-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-edge-property",
+            "bridgeVersion": 1,
+            "variant": "RemoveEdgeProperty"
           },
           "oracleRequirements": [
             {

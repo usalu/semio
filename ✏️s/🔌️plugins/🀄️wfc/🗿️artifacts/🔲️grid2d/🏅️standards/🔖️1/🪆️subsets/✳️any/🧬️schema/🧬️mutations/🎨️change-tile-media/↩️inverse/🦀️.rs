@@ -3,9 +3,12 @@
 use crate::mutations::{change_tile_media, Grid2dMutation};
 use crate::schema::snapshot::Grid2dSnapshot;
 
-pub fn inverse(payload: &super::ChangeTileMedia, base: &Grid2dSnapshot) -> Vec<Grid2dMutation> {
+pub fn inverse(payload: &super::ChangeTileMedia, base: &Grid2dSnapshot) -> Result<Vec<Grid2dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.tiles.iter().find(|tile| tile.id == payload.id) {
         Some(tile) => vec![change_tile_media(payload.id.clone(), tile.media.clone())],
         None => Vec::new(),
     }
+
+    })())
 }

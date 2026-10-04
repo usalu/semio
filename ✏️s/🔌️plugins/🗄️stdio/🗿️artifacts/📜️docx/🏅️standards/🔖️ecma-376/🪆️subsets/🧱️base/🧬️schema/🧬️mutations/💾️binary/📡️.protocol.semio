@@ -47,3 +47,5 @@ record insert-xml-node tag=16
 field payload bytes
 record remove-xml-node tag=17
 field payload bytes
+record patch-snapshot tag=18
+field payload bytes

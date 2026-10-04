@@ -1,5 +1,5 @@
 use super::Puzzle2dSnapshot;
-fn fixture()->Puzzle2dSnapshot{let laws:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap();store::json::from_json_str(&laws["snapshot"].to_string()).unwrap()}
+fn fixture()->Puzzle2dSnapshot{let laws:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap();semio_framework_pack_json::from_json_str(&laws["snapshot"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
 fn words(snapshot:&Puzzle2dSnapshot)->Vec<u64>{
  let mut values=vec![snapshot.camera.x,snapshot.camera.y,snapshot.camera.zoom];
  for row in &snapshot.nodes{values.extend([row.x,row.y]);values.extend(row.radius);values.extend(row.width);values.extend(row.height);values.extend(row.scale);for h in &row.handles{values.push(h.angle);values.extend(h.radius);values.extend(h.scale);}}
@@ -59,7 +59,7 @@ fn sqlite_snapshot_puzzle2d_independent_queries_and_surrogate_edits_retain_liter
 }
 #[test]
 fn sqlite_snapshot_puzzle2d_independent_malformed_owned_relations_refuse(){
- let bytes=file(&fixture());let script=r#"import{Database}from'bun:sqlite';const input=JSON.parse(await Bun.stdin.text());const results=[];for(const sql of input.sql){const db=Database.deserialize(new Uint8Array(input.bytes));db.run('PRAGMA ignore_check_constraints=ON');db.run(sql);results.push(Array.from(db.serialize()));db.close()}await Bun.write(Bun.stdout,JSON.stringify(results));"#;let laws=laws();let edited:Vec<Vec<u8>>=serde_json::from_slice(&oracle(script,serde_json::json!({"bytes":bytes,"sql":laws["malformedSql"]}).to_string().as_bytes())).unwrap();for(sql,bytes)in laws["malformedSql"].as_array().unwrap().iter().zip(edited){assert!(import_sqlite_database(&bytes,SqliteDatabaseLimits::default(),&mut |_|true).map_err(|e|e.to_string()).and_then(|d|Puzzle2dSnapshot::from_sqlite_database(&d,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()))).is_err(),"{sql}")}
+ let bytes=file(&fixture());let script=r#"import{Database}from'bun:sqlite';const input=JSON.parse(await Bun.stdin.text());const results=[];for(const sql of input.sql){const db=Database.deserialize(new Uint8Array(input.bytes));db.run('PRAGMA ignore_check_constraints=ON');db.run(sql);results.push(Array.from(db.serialize()));db.close()}await Bun.write(Bun.stdout,JSON.stringify(results));"#;let laws=laws();let edited:Vec<Vec<u8>>=serde_json::from_slice(&oracle(script,serde_json::json!({"bytes":bytes,"sql":laws["malformedSql"]}).to_string().as_bytes())).unwrap();for(sql,bytes)in laws["malformedSql"].as_array().unwrap().iter().zip(edited){assert!(import_sqlite_database(&bytes,SqliteDatabaseLimits::default(),&mut |_|true).map_err(|e|e.to_string()).and_then(|d|Puzzle2dSnapshot::from_sqlite_database(&d,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).map_err(|e|e.to_string())).is_err(),"{sql}")}
 }
 #[test]
 fn sqlite_snapshot_puzzle2d_exact_owned_rows_and_tiny_native_admission(){

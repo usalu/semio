@@ -1,4 +1,5 @@
 /** 🎨️ Owned fill edits shared by inspector controls and gradient handles. */
+import {GradientRamp} from "./🎨️sampling/🟦️.ts";
 export type Color = [number,number,number,number];
 export interface Stop { offset:number; color:Color }
 export type Fill = {kind:"solid";color:Color} | {kind:"linearGradient";x1:number;y1:number;x2:number;y2:number;stops:Stop[]} | {kind:"radialGradient";cx:number;cy:number;r:number;stops:Stop[]};
@@ -37,9 +38,9 @@ export function editFill(source:Fill|null, edit:FillEdit):Fill|null {
       const offset=unit(edit.offset),items=stops();
       if(!items.length || items.length>=64) invalid("Cannot add another gradient stop");
       items.sort((a,b)=>a.offset-b.offset);
+      const color=new GradientRamp(items).sample(offset);
       let right=items.findIndex(stop=>stop.offset>offset); if(right<0) right=items.length;
-      const left=items[Math.max(0,right-1)]!,next=items[Math.min(right,items.length-1)]!,t=next.offset>left.offset ? Math.max(0,Math.min(1,(offset-left.offset)/(next.offset-left.offset))) : 0;
-      items.splice(right,0,{offset,color:left.color.map((value,index)=>value+(next.color[index]!-value)*t) as Color}); break;
+      items.splice(right,0,{offset,color}); break;
     }
   }
   return fill;

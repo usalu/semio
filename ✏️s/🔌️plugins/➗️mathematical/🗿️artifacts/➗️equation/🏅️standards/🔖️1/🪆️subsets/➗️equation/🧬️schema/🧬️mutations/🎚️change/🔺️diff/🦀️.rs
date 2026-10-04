@@ -23,7 +23,7 @@ pub fn diff(payload: &super::ChangeCoefficient, base: &EquationSnapshot) -> prot
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Coefficient {} cannot have a zero denominator.", payload.label.0), [payload.label.0.to_string()]);
     }
     if current_numer == payload.numer && current_denom == payload.denom {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Coefficient {} is already {}/{}.", payload.label.0, payload.numer, payload.denom));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Coefficient {} is already {}/{}.", payload.label.0, payload.numer, payload.denom));
     }
     let new_kind = if payload.denom == "1" { EquationNodeKind::Integer { lexeme: payload.numer.clone() } } else { EquationNodeKind::Rational { numer: payload.numer.clone(), denom: payload.denom.clone() } };
     equation.replace(payload.label, &new_kind);

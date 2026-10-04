@@ -25,7 +25,7 @@ pub fn diff(payload: &ReplaceCombination, base: &Fem2dSnapshot) -> protocol::Mut
         return rejection;
     }
     if *existing == payload.new_combination {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Combination \"{}\" is already equal to the replacement value.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Combination \"{}\" is already equal to the replacement value.", payload.id));
     }
     protocol::MutationOutcome::new(Fem2dDiff { combinations: Some(Fem2dCombinationsDelta { patched: vec![Fem2dCombinationsPatchEntry { id: payload.id.clone(), item: payload.new_combination.clone() }], ..Default::default() }), ..Default::default() })
 }

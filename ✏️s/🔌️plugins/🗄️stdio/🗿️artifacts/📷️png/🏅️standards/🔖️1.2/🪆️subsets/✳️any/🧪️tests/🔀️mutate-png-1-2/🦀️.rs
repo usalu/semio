@@ -14,38 +14,20 @@
 //! real document into the typed `PngSnapshot` and re-serializes from it — never splices bytes.
 
 use semio_s_artifact_stdio_png_test_oracle::standards::v1_2::subsets::any::oracle_identity_round_trip;
-use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_artifact_stdio_png_test_oracle::standards::v1_2::subsets::any::{oracle_apply_mutation, oracle_arrange, oracle_undo_mutation, project_png_mutation};
+use semio_repo_test_host::{Adapter, Context, Outcome};
+use semio_s_artifact_stdio_png_test_oracle::standards::v1_2::subsets::any::{oracle_apply_mutation, oracle_undo_mutation, project_png_mutation};
 use semio_repo_test_host::law;
 
 
 //#region 🔖️Input
 /// 🧫️ Copies the immutable document the scenario's own `Given` names into the work directory and returns the
 /// mutable copy's bytes — the committed 250 KB, 2334x2560, 8-bit COLORMAP architectural floor plan
-/// (`rathaus-ahlen-grundriss.png`), or for the raster outlines the small COLORMAP document a whole-raster wire
-/// payload fits in. Neither is ever written to.
+/// (`rathaus-ahlen-grundriss.png`), the small COLORMAP document, or the small RGBA swatch. None is ever written to.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
     let input = ctx.step_fixture_uris().into_iter().next().ok_or_else(|| format!("scenario {} names no input document", ctx.scenario.id))?;
     let copy = ctx.copy_fixture(&input, Some("input.png"))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
-
-/// 🎬️ The document a kind actually acts on. The committed floor plan carries exactly
-/// IHDR/PLTE/IDAT/IEND — no text chunk, no private chunk, no tRNS — so the three kinds that address
-/// an EXISTING text or unknown chunk are handed the real document with their target inserted first,
-/// by the reference implementation. Every other kind gets the committed bytes untouched.
-fn arranged_input(ctx: &Context, spec: &Json) -> Result<Vec<u8>, String> {
-    oracle_arrange(&mutable_input(ctx)?, spec)
-}
-
-/// 🚫️ The two kinds this subset's serialization genuinely cannot show, each for a reason stated in
-/// the oracle module, in `encode_png`'s own `🚫️EncodeScopeNote` and in the feature description:
-/// `change-header` (IHDR must describe the canonical RGBA IDAT that follows it, and `SetHeader` does
-/// not resize `pixels`, so no field of it can reach the bytes) and `change-transparency` (§11.3.3
-/// forbids tRNS at colour type 6, which is the only colour type either encoder writes). Naming them
-/// here is what keeps the other fifteen honest: the law below fails any kind not on this list that
-/// leaves the projection untouched.
-const UNOBSERVABLE: &[&str] = &["change-header", "change-transparency"];
 //#endregion 🔖️Input
 
 //#region 🔖️Oracle
@@ -55,11 +37,11 @@ const UNOBSERVABLE: &[&str] = &["change-header", "change-transparency"];
 /// its projection reported geometry and a sample digest alone.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let spec = ctx.doc_json()?;
-    let base = arranged_input(ctx, &spec)?;
+    let base = mutable_input(ctx)?;
     let before = project_png_mutation(&base)?;
     let bytes = oracle_apply_mutation(&base, &spec)?;
     let projection = project_png_mutation(&bytes)?;
-    law::mutation_is_observable(&spec.str("kind"), &projection, &before, UNOBSERVABLE)?;
+    law::mutation_is_observable(&spec.str("kind"), &projection, &before, &[])?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 
@@ -70,7 +52,7 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
 /// whenever the reference crate re-encoded the untouched fixture without erroring.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let spec = ctx.doc_json()?;
-    let base = arranged_input(ctx, &spec)?;
+    let base = mutable_input(ctx)?;
     let before = project_png_mutation(&base)?;
     let mutated = oracle_apply_mutation(&base, &spec)?;
     let bytes = oracle_undo_mutation(&base, &spec, &mutated)?;
@@ -97,7 +79,8 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{arranged_input, mutable_input};
+    use super::mutable_input;
+    use semio_repo_test_host::law;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_png_test_oracle::standards::v1_2::subsets::any::project_png_mutation;
     use semio_s_artifact_stdio_png::ArtifactDsl;
@@ -118,7 +101,7 @@ mod subject {
     //#region 🔖️Handlers
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let spec = ctx.doc_json()?;
-        let mut snapshot = decode_png(&arranged_input(ctx, &spec)?).map_err(|error| format!("decode_png failed: {error}"))?;
+        let mut snapshot = decode_png(&mutable_input(ctx)?).map_err(|error| format!("decode_png failed: {error}"))?;
         let _ = apply_png_mutation(&mut snapshot, &mutation_from_spec(&spec)?);
         let bytes = encode_png(&snapshot).map_err(|error| format!("encode_png failed: {error}"))?;
         let projection = project_png_mutation(&bytes)?;
@@ -130,11 +113,11 @@ mod subject {
     /// `base`) — the real production undo pipeline, not a hand-derived counter-mutation.
     pub fn undo(ctx: &Context) -> Result<Outcome, String> {
         let spec = ctx.doc_json()?;
-        let base = decode_png(&arranged_input(ctx, &spec)?).map_err(|error| format!("decode_png failed: {error}"))?;
+        let base = decode_png(&mutable_input(ctx)?).map_err(|error| format!("decode_png failed: {error}"))?;
         let mutation = mutation_from_spec(&spec)?;
         let mut snapshot = base.clone();
         let _ = apply_png_mutation(&mut snapshot, &mutation);
-        for inverse in mutation_inverse(&mutation, &base) {
+        for inverse in mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
             let _ = apply_png_mutation(&mut snapshot, &inverse);
         }
         let bytes = encode_png(&snapshot).map_err(|error| format!("encode_png failed: {error}"))?;
@@ -142,18 +125,16 @@ mod subject {
         Ok(Outcome::with_raw(bytes, projection))
     }
 
-    /// 🚫️ The no-byte-pass-through tripwire: `decode_png` → `print_dsl` (the subset's own text
-    /// codec) → `parse_dsl` → `encode_png` is the ONLY channel from input to output; identical
-    /// output bytes would mean the input was smuggled through rather than parsed.
+    /// 🔁️ `decode_png` → `print_dsl` (the subset's own text codec) → `parse_dsl` → `encode_png` is the ONLY channel
+    /// from input to output, and `PngSnapshot` is byte-authoritative, so the law is EXACT bytes: a byte that moves is a
+    /// codec defect, and one that survives did so by being modelled.
     pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
         let snapshot = decode_png(&input).map_err(|error| format!("decode_png failed: {error}"))?;
         let text = <PngSnapshot as ArtifactDsl>::print_dsl(&snapshot);
         let reparsed = <PngSnapshot as ArtifactDsl>::parse_dsl(&text).map_err(|error| format!("parse_dsl failed: {error:?}"))?;
         let output = encode_png(&reparsed).map_err(|error| format!("encode_png failed: {error}"))?;
-        if output == input {
-            return Err("byte pass-through: output is bit-identical to the input".into());
-        }
+        law::carrier_is_exact(&output, &input)?;
         let projection = project_png_mutation(&output)?;
         Ok(Outcome::with_raw(output, projection))
     }

@@ -2,7 +2,7 @@
 
 use crate::editor::puzzle5d::modes::edit::windows::board2d::utilities::brush;
 use crate::editor::puzzle5d::Puzzle5dActionCtx;
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 
 /// 🎣️ Points the brush suggestions run at the grip the armed brush is over (`fullId`, else the first selected
 /// grip), or at nothing once the brush is disarmed or the pointer left every grip. It only writes the instance's

@@ -150,6 +150,33 @@ impl std::fmt::Display for ZipError {
 }
 
 impl std::error::Error for ZipError {}
+impl ZipError {
+    /// 🧷️ Unsupported methods, extra fields, multi-disk and ZIP64 writes are unsupported owners; every other archive refusal is invalid input.
+    pub const fn refusal_kind(&self) -> semio_framework_value::ValueRefusalKind {
+        match self {
+            Self::UnsupportedMethod { .. } | Self::UnsupportedExtraField { .. } | Self::UnsupportedMultiDisk | Self::UnsupportedZip64Write => semio_framework_value::ValueRefusalKind::UnsupportedOwner,
+            _ => semio_framework_value::ValueRefusalKind::InvalidValue,
+        }
+    }
+}
+/// 🪢️ Moves the archive refusal into the canonical Value refusal with its own kind.
+impl From<ZipError> for semio_framework_value::ValueError {
+    fn from(error: ZipError) -> Self {
+        Self::new(error.refusal_kind(), error.to_string())
+    }
+}
+
+impl ZipError {
+    /// 🧭️ Preserves the authored ZIP failure category at typed artifact boundaries.
+    pub fn into_value_error(self) -> semio_framework_value::ValueError {
+        use semio_framework_value::ValueRefusalKind;
+        let kind = match &self {
+            Self::UnsupportedMethod { .. } | Self::UnsupportedExtraField { .. } | Self::UnsupportedMultiDisk | Self::UnsupportedZip64Write => ValueRefusalKind::UnsupportedOwner,
+            Self::Truncated(_) | Self::BadSignature { .. } | Self::Utf8 { .. } | Self::Crc32Mismatch { .. } | Self::MethodMismatch { .. } | Self::DataDescriptorMismatch { .. } | Self::Malformed(_) => ValueRefusalKind::InvalidValue,
+        };
+        semio_framework_value::ValueError::new(kind, self.to_string())
+    }
+}
 //#endregion Error
 
 //#region ByteReaders
@@ -1042,10 +1069,10 @@ pub fn document_archive_member<S: store::ArtifactDsl>() -> String {
 /// the hop is `IoFidelity::Exact` — the shared zip carrier every artifact whose own shape is its
 /// archive content uses, instead of each owner restating it.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_document_archive<S: store::ArtifactDsl + dsl::ToValue>(document: &S) -> Result<Vec<u8>, ZipError> {
+pub fn encode_document_archive<S: store::ArtifactDsl + semio_framework_value::ToValue>(document: &S) -> Result<Vec<u8>, ZipError> {
     let entries = vec![
         ZipEntry { name: document_archive_member::<S>(), data: document.print_dsl().into_bytes(), ..Default::default() },
-        ZipEntry { name: "snapshot.json".into(), data: dsl::os_pack::json::to_json_string(document).into_bytes(), ..Default::default() },
+        ZipEntry { name: "snapshot.json".into(), data: semio_framework_pack_json::to_json_string(document).into_bytes(), ..Default::default() },
     ];
     encode_zip(&ZipSnapshot { entries, ..ZipSnapshot::default() })
 }

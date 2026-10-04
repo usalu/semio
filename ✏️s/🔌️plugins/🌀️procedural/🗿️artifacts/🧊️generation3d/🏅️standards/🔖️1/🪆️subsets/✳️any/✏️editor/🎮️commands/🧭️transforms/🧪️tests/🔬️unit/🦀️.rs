@@ -86,61 +86,35 @@ fn the_motion_algebra_composes_within_one_family() {
     }
 }
 
-/// ⚖️ LAW: the `World3dHost` live protocol's phases: absent = one-shot, `stream`, `commit`, `abort` with its reason (absent
-/// = `tool`); an unknown phase or abort reason is refused.
+/// 🚂️ LAW (audit F5): the gumball rides the shared streamed-gesture runner (`drive_gesture`): a stream persists between
+/// dispatches as ONE open transaction of the net leaf and the selection it opened on, a resumed gesture keeps that selection,
+/// the release resumes it and commits the net motion under the ref minted at the first tick, and a base moved under it drops
+/// it with zero trace; `continues` reads exactly the runner's continuation rule.
 #[test]
-fn the_host_phases_parse_exactly() {
-    assert_eq!(GumballPhase::parse(None, None), Some(GumballPhase::Once));
-    assert_eq!(GumballPhase::parse(Some("stream"), None), Some(GumballPhase::Stream));
-    assert_eq!(GumballPhase::parse(Some("commit"), None), Some(GumballPhase::Commit));
-    assert_eq!(GumballPhase::parse(Some("abort"), Some("blur")), Some(GumballPhase::Abort(ToolAbortReason::Blur)));
-    assert_eq!(GumballPhase::parse(Some("abort"), None), Some(GumballPhase::Abort(ToolAbortReason::Tool)));
-    assert_eq!(GumballPhase::parse(Some("abort"), Some("sideways")), None);
-    assert_eq!(GumballPhase::parse(Some("drag"), None), None);
-}
-
-/// 🎚️ One streamed (or released) gumball tick of `extrude` in window `preview-1`, as the live `World3dHost` sends it.
-fn streamed(phase: GumballPhase, offset: [f64; 3]) -> GumballDispatch<'static> {
-    GumballDispatch { verb: "translateSelection", window: "preview-1", ids: vec!["extrude".into()], motion: GumballMotion::Translate(offset), phase, authoring_seed: "seed", base_revision: [0; 32] }
-}
-
-/// ⚖️ LAW (live consumer): while the first grab of a shape streams, the previews paint exactly what its release commits —
-/// the overlay splices the transform operator in place of the shape with the NET offset, the marks follow the selection
-/// onto that operator, the committed snapshot stays untouched — and a host abort leaves nothing to paint.
-#[test]
-fn an_open_gesture_previews_exactly_what_its_release_commits() {
-    use crate::standards::v1::subsets::any::schema::{example_snapshot, mutations::apply_generation3d_mutation, PROCEDURAL_EXAMPLE_HEX_COLUMN};
-    let committed = example_snapshot(PROCEDURAL_EXAMPLE_HEX_COLUMN).expect("the hexagonal column example");
-    let operator = "extrude__gumball_translate";
-    let marks = super::super::PreviewInteractionMarks { selected: ["extrude".to_string()].into(), ..Default::default() };
-    let mut gestures = GumballGestures::default();
-    for offset in [[1.0, 0.0, 0.0], [0.5, 2.0, 0.0]] {
-        assert!(gestures.dispatch(streamed(GumballPhase::Stream, offset), &committed.host_snapshot).expect("a tick streams").artifact_mutations.is_empty(), "a tick is provisional");
-    }
-    let (overlay, following) = super::super::generation3d_gumball_preview(&committed, &marks, &gestures).expect("an open gesture paints");
-    let previews = |snapshot: &crate::Generation3dSnapshot, id: &str| snapshot.host_snapshot.widgets.iter().find(|widget| crate::widget_id(widget) == id).map(|widget| matches!(widget, Widget::Neuron { preview: true, .. }));
-    assert_eq!((previews(&overlay, operator), previews(&overlay, "extrude")), (Some(true), Some(false)), "the operator is painted in place of the shape");
-    assert_eq!(previews(&committed, operator), None, "the committed snapshot never sees the open gesture");
-    assert_eq!(following.selected, [operator.to_string()].into(), "the marks follow the selection onto the operator");
-    let released = gestures.dispatch(streamed(GumballPhase::Commit, [0.0; 3]), &committed.host_snapshot).expect("the release commits");
-    assert!(released.transaction.is_some(), "the release is ONE tool transaction");
-    let mut landed = committed.clone();
-    for row in released.artifact_mutations {
-        apply_generation3d_mutation(&mut landed, &row).expect("the committed rows apply");
-        row.retire_cold();
-    }
-    assert_eq!(landed, overlay, "the preview painted exactly what the release committed");
-    assert!(super::super::generation3d_gumball_preview(&committed, &marks, &gestures).is_none(), "a released gesture paints nothing more");
-    gestures.dispatch(streamed(GumballPhase::Stream, [1.0, 0.0, 0.0]), &committed.host_snapshot).expect("a second gesture opens");
-    assert!(gestures.abort("preview-1", ToolAbortReason::Blur));
-    assert!(super::super::generation3d_gumball_preview(&committed, &marks, &gestures).is_none(), "an aborted gesture leaves nothing to paint");
-    for snapshot in [landed, overlay, committed] {
-        snapshot.retire_cold();
-    }
+fn the_gumball_rides_the_shared_gesture_runner() {
+    let tick = |ids: &str, offset: [f64; 3]| GumballTick { ids: vec![ids.to_string()], record: translate(&["t"], offset) };
+    let first = drive_gesture::<Generation3dGumballTool>(None, "translateSelection", GesturePhase::Stream, Some(tick("a", [1.0, 0.0, 0.0])), "seed", "base");
+    assert!(first.committed.is_none());
+    let open = first.next.flatten().expect("the stream opens a persisted gesture");
+    assert_eq!(open.ids, vec!["a".to_string()]);
+    assert!(open.continues("translateSelection", GesturePhase::Commit, "base") && open.continues("translateSelection", GesturePhase::Stream, "base"));
+    assert!(!open.continues("translateSelection", GesturePhase::Once, "base") && !open.continues("rotateSelection", GesturePhase::Stream, "base") && !open.continues("translateSelection", GesturePhase::Stream, "moved"));
+    let open = drive_gesture::<Generation3dGumballTool>(Some(&open), "translateSelection", GesturePhase::Stream, Some(tick("b", [0.5, 2.0, 0.0])), "seed", "base").next.flatten().expect("the tick keeps the gesture open");
+    assert_eq!(open.ids, vec!["a".to_string()], "a resumed gesture keeps the selection it opened on");
+    assert_eq!(open.leaf(), Some(&Generation3dMutation::DragTransforms(DragTransforms { targets: vec!["t".into()], dx: 1.5, dy: 2.0, dz: 0.0 })), "ONE net entry");
+    let release = drive_gesture::<Generation3dGumballTool>(Some(&open), "translateSelection", GesturePhase::Commit, Some(tick("a", [0.5, 0.0, -1.0])), "seed", "base");
+    let (reference, leaves) = release.committed.expect("the release commits");
+    assert_eq!(reference, open.transaction, "the ref is the one minted at the first tick");
+    assert_eq!(leaves, vec![Generation3dMutation::DragTransforms(DragTransforms { targets: vec!["t".into()], dx: 2.0, dy: 2.0, dz: -1.0 })]);
+    assert_eq!(release.next, Some(None), "the committed gesture is cleared");
+    let moved = drive_gesture::<Generation3dGumballTool>(Some(&open), "translateSelection", GesturePhase::Commit, Some(tick("a", [0.5, 0.0, 0.0])), "seed", "moved");
+    assert!(moved.committed.is_none(), "a base moved under the gesture commits nothing");
+    assert_eq!(moved.next, Some(None), "and drops the gesture with zero trace");
 }
 
 /// ⚖️ LAW (design §19.1): every gumball tool declares exactly the kind of the relative leaf its motion yields as its intent,
-/// so a first grab's history row (the operator splice, then the leaf) is labelled by that leaf; other tools declare none.
+/// so a first grab's history row (the operator splice, then the leaf) is labelled by that leaf; every mesh edit tool declares
+/// the `create-widget` of the operator it inserts (audit P4); other tools declare none.
 #[test]
 fn every_gumball_tool_declares_the_leaf_it_yields_as_its_intent() {
     use semio_framework_plugin::ArtifactEditor;
@@ -151,5 +125,75 @@ fn every_gumball_tool_declares_the_leaf_it_yields_as_its_intent() {
         let kind = <Generation3dMutation as protocol::SemanticMutation<crate::Generation3dSnapshot>>::semantics(&leaf).kind;
         assert_eq!(<Editor as ArtifactEditor>::tool_intent_kinds(&tool), &[kind], "{tool}");
     }
+    for verb in ["editMeshSelection", "knifeMeshSelection", "deleteSelection"] {
+        assert_eq!(<Editor as ArtifactEditor>::tool_intent_kinds(&format!("{}#{verb}", crate::editor::generation3d::GENERATION3D_EDITOR_APP_ID)), &["create-widget"], "a mesh edit's row reads the operator it inserts: {verb}");
+    }
     assert!(<Editor as ArtifactEditor>::tool_intent_kinds(&format!("{}#nodeGraphEdit", crate::editor::generation3d::GENERATION3D_EDITOR_APP_ID)).is_empty());
+}
+
+/// ⚖️ LAW (audit S4): every gumball refusal is its own NAMED fault code under `generation3d.gumball.` — the code a shell
+/// localizes — and the fault it becomes carries that code, never the generic `app.message`; a component set that changed
+/// mid-gesture is refused by name.
+#[test]
+fn every_gumball_refusal_is_a_named_fault_code() {
+    let refusals = [
+        GumballRefusal::UnknownOperation,
+        GumballRefusal::NoShapeSource,
+        GumballRefusal::KindUnavailable("k".into()),
+        GumballRefusal::NoShapeOutput,
+        GumballRefusal::ListOutput,
+        GumballRefusal::IdentifierOccupied,
+        GumballRefusal::TransformUnavailable("t".into()),
+        GumballRefusal::MeshMissing,
+        GumballRefusal::NotIndexedMesh,
+        GumballRefusal::SelectionChanged,
+        GumballRefusal::ComponentSelection("c".into()),
+        GumballRefusal::HostEdit("h".into()),
+    ];
+    let codes: std::collections::BTreeSet<&str> = refusals.iter().map(GumballRefusal::code).collect();
+    assert_eq!(codes.len(), refusals.len(), "one code per refusal");
+    assert!(codes.iter().all(|code| code.starts_with("generation3d.gumball.")), "{codes:?}");
+    for refusal in refusals {
+        assert_eq!(Fault::from(refusal.clone()).code.0, refusal.code());
+    }
+    let snapshot = FlowHostSnapshot::default();
+    let changed = validate_component_gesture(&snapshot, &["shape@meshOut#0.face.0".into()], &["shape@meshOut#0.face.1".into()]).expect_err("another component set");
+    assert_eq!(changed.code.0, "generation3d.gumball.selection-changed");
+    snapshot.retire_cold();
+}
+
+/// ⚖️ LAW (design §20.12): the editor declares a localized notice for EVERY gumball refusal code — the table passes the
+/// framework's validation (code grammar, unique codes, every locale × terminology cell, one placeholder set) — and a
+/// refusal that names a kind fills `{kind}` from the fault's param, never from its English developer detail.
+#[test]
+fn every_gumball_refusal_code_has_a_localized_notice() {
+    use semio_framework_plugin::ArtifactEditor;
+    use semio_framework_ui_locale::{Locale, Terminology};
+    type Editor = crate::editor::generation3d::Generation3dPlayApp;
+    let notices = semio_framework::fault_notice_definitions(<Editor as ArtifactEditor>::fault_notices());
+    assert_eq!(semio_framework::validate_fault_notices(&notices), Vec::new(), "the gumball notice table is a valid table");
+    let refusals = [
+        GumballRefusal::UnknownOperation,
+        GumballRefusal::NoShapeSource,
+        GumballRefusal::KindUnavailable("brep.mesh.box".into()),
+        GumballRefusal::NoShapeOutput,
+        GumballRefusal::ListOutput,
+        GumballRefusal::IdentifierOccupied,
+        GumballRefusal::TransformUnavailable("brep.xform.rotate".into()),
+        GumballRefusal::MeshMissing,
+        GumballRefusal::NotIndexedMesh,
+        GumballRefusal::SelectionChanged,
+        GumballRefusal::ComponentSelection("an English developer detail".into()),
+        GumballRefusal::HostEdit("an English developer detail".into()),
+    ];
+    assert_eq!(notices.len(), refusals.len(), "one notice per refusal code");
+    for refusal in refusals {
+        let fault = Fault::from(refusal.clone());
+        for (locale, terminology) in [(Locale::En, Terminology::Native), (Locale::De, Terminology::Native), (Locale::En, Terminology::Reuse), (Locale::De, Terminology::Reuse)] {
+            let text = semio_framework::fault_notice_text(&notices, refusal.code(), fault.params.as_deref(), terminology, locale).unwrap_or_else(|| panic!("{} has a complete notice in {locale:?}", refusal.code()));
+            assert!(!text.contains('{') && !text.contains("developer detail"), "{text}");
+        }
+    }
+    let kind = semio_framework::fault_notice_text(&notices, "generation3d.gumball.kind-unavailable", Fault::from(GumballRefusal::KindUnavailable("brep.mesh.box".into())).params.as_deref(), Terminology::Native, Locale::De);
+    assert_eq!(kind.as_deref(), Some("Die Knotenart brep.mesh.box ist hier nicht verfügbar."));
 }

@@ -5,25 +5,32 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "newJson": {
-      "type": [
-        "string",
-        "null"
+    "newFields": {
+      "anyOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/dictionary.json"
+        },
+        {
+          "type": "null"
+        }
       ],
       "x-semio-ui": {
-        "widget": "multiline",
+        "widget": "dictionary",
         "role": "value",
         "label": {
-          "en": "Data fields (JSON)",
-          "de": "Datenfelder (JSON)"
+          "en": "Data fields",
+          "de": "Datenfelder"
         },
         "description": {
-          "en": "JSON object of the document's data fields; empty clears them.",
-          "de": "JSON-Objekt der Datenfelder des Dokuments; leer entfernt sie."
+          "en": "Typed question values; absence clears the dictionary.",
+          "de": "Typisierte Fragewerte; Abwesenheit entfernt das Wörterbuch."
         },
         "group": "data",
         "order": 10
       }
     }
-  }
+  },
+  "required": [
+    "newFields"
+  ]
 }

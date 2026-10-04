@@ -19,9 +19,12 @@ impl protocol::MutationKind<SemioSnapshot, SemioMutation> for ApplyPresentation 
     fn diff(&self, base: &SemioSnapshot) -> protocol::MutationOutcome<<SemioMutation as Mutation<SemioSnapshot>>::Diff> {
         agg_diff(&SemioMutation::ApplyPresentation(self.clone()), base)
     }
-    fn inverse(&self, base: &SemioSnapshot) -> Vec<SemioMutation> {
-        agg_inverse(&SemioMutation::ApplyPresentation(self.clone()), base)
-    }
+    fn inverse(&self, base: &SemioSnapshot) -> Result<Vec<SemioMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&SemioMutation::ApplyPresentation(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         protocol::SemanticMutation::label(&self.mutation)
     }

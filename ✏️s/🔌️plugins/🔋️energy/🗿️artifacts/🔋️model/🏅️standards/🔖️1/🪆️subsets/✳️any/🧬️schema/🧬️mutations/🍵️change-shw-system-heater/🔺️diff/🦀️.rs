@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeShwSystemHeaterCapacity, base: &EnergyModelSn
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Service hot water system {}: heater capacity (W) must be a positive finite value, got {}.", payload.id.0, payload.new_heater_capacity_w), [payload.id.0.to_string()]);
     }
     if existing.heater_capacity_w == payload.new_heater_capacity_w {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Service hot water system {} already carries this heater capacity (W): {}.", payload.id.0, payload.new_heater_capacity_w));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Service hot water system {} already carries this heater capacity (W): {}.", payload.id.0, payload.new_heater_capacity_w));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.shw_systems.iter_mut().find(|item| item.id == payload.id) {

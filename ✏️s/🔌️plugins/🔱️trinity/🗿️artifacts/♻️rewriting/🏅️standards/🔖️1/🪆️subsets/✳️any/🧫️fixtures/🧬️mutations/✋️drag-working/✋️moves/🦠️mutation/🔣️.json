@@ -1,8 +1,0 @@
-{
-  "mutation": "dragWorkingNodes",
-  "targets": [
-    "b"
-  ],
-  "dx": 20.0,
-  "dy": -10.0
-}

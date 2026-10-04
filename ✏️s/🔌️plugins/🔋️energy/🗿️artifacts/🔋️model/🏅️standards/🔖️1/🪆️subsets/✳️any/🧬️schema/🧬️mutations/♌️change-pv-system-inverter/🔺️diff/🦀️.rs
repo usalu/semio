@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangePvSystemInverterEfficiency, base: &EnergyMode
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("PV system {}: inverter efficiency must be a fraction in (0, 1], got {}.", payload.id.0, payload.new_inverter_efficiency), [payload.id.0.to_string()]);
     }
     if existing.inverter_efficiency == payload.new_inverter_efficiency {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("PV system {} already carries this inverter efficiency: {}.", payload.id.0, payload.new_inverter_efficiency));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("PV system {} already carries this inverter efficiency: {}.", payload.id.0, payload.new_inverter_efficiency));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.pv_systems.iter_mut().find(|item| item.id == payload.id) {

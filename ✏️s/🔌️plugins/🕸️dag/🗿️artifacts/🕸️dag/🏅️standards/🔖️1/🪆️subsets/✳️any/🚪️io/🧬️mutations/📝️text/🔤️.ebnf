@@ -1,3 +1,0 @@
-(* ebnf dag.dag.mutations *)
-document = header, body ;
-header = 'schema', space, 'dag.dag.mutations', newline ;

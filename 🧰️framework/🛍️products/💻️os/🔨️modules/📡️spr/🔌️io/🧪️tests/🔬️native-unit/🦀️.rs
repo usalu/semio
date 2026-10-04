@@ -1,5 +1,7 @@
 mod tests {
     use super::*;
+    fn test_command_context()->crate::os_pack::control::CommandContext{let token=semio_framework_async::CancelToken::root_now();let transport=crate::os_pack::control::admit_command_transport(1048576,token.clone(),|_|{}).unwrap();crate::os_pack::control::CommandContext::try_new(transport,1048576,token,|_|{}).unwrap()}
+
     use crate::os_spr::history::HistoryTransitionRecord;
     use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -21,7 +23,6 @@ mod tests {
             actor: Some("actor-1".to_string()),
             started_at: "2026-07-27T00:00:00Z".to_string(),
             finished_at: Some("2026-07-27T00:00:01Z".to_string()),
-            coalesce_key: None,
             description: Some("a sample edit".to_string()), verb: None,
             ops: vec![crate::os_spr::history::OpPayload { text: Some("set x 1".to_string()), binary: None }],
             inverse: Vec::new(),
@@ -36,13 +37,13 @@ mod tests {
         let dir = scratch_dir("create_append").await;
         let path = dir.join("doc.spr");
 
-        let mut file = HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default()).await.unwrap();
+        let mut file = HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default(), &test_command_context()).await.unwrap();
         assert_eq!(file.resume_state().await.last_commit_seq, 0);
         file.appender().await.append_edit(&sample_edit("edit-1").await).await.unwrap();
         file.appender().await.append_edit(&sample_edit("edit-2").await).await.unwrap();
         file.appender().await.commit().await.unwrap();
 
-        let read_only = HistoryFile::open_read_only(&path, &ProtocolLimits::default()).await.unwrap();
+        let read_only = HistoryFile::open_read_only(&path, &ProtocolLimits::default(), &test_command_context()).await.unwrap();
         assert_eq!(read_only.resume_state().await.last_commit_seq, 1);
         assert!(read_only.resume_state().await.end_offset > HEADER_SIZE as u64);
 
@@ -58,8 +59,8 @@ mod tests {
     async fn appender_panics_on_a_read_only_handle() {
         let dir = scratch_dir("read_only_panic").await;
         let path = dir.join("doc.spr");
-        HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default()).await.unwrap();
-        let mut read_only = HistoryFile::open_read_only(&path, &ProtocolLimits::default()).await.unwrap();
+        HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default(), &test_command_context()).await.unwrap();
+        let mut read_only = HistoryFile::open_read_only(&path, &ProtocolLimits::default(), &test_command_context()).await.unwrap();
         let _ = read_only.appender().await;
     }
 
@@ -67,12 +68,12 @@ mod tests {
     async fn open_read_only_never_writes_to_the_file() {
         let dir = scratch_dir("read_only_no_write").await;
         let path = dir.join("doc.spr");
-        let mut file = HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default()).await.unwrap();
+        let mut file = HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default(), &test_command_context()).await.unwrap();
         file.appender().await.append_edit(&sample_edit("edit-1").await).await.unwrap();
         file.appender().await.commit().await.unwrap();
         let before = std::fs::read(&path).unwrap();
 
-        let _read_only = HistoryFile::open_read_only(&path, &ProtocolLimits::default()).await.unwrap();
+        let _read_only = HistoryFile::open_read_only(&path, &ProtocolLimits::default(), &test_command_context()).await.unwrap();
         let after = std::fs::read(&path).unwrap();
         assert_eq!(before, after, "open_read_only must never mutate the file on disk");
     }
@@ -83,12 +84,12 @@ mod tests {
         let path = dir.join("doc.spr");
 
         {
-            let mut file = HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default()).await.unwrap();
+            let mut file = HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default(), &test_command_context()).await.unwrap();
             file.appender().await.append_edit(&sample_edit("edit-1").await).await.unwrap();
             file.appender().await.commit().await.unwrap();
         }
         {
-            let mut file = HistoryFile::open_append(&path, &ProtocolLimits::default()).await.unwrap();
+            let mut file = HistoryFile::open_append(&path, &ProtocolLimits::default(), &test_command_context()).await.unwrap();
             assert_eq!(file.resume_state().await.last_commit_seq, 1, "the replay-commit during resume is itself commit #1 of a fresh generation");
             file.appender().await.append_edit(&sample_edit("edit-2").await).await.unwrap();
             file.appender().await.commit().await.unwrap();
@@ -105,7 +106,7 @@ mod tests {
         let dir = scratch_dir("open_append_torn").await;
         let path = dir.join("doc.spr");
         {
-            let mut file = HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default()).await.unwrap();
+            let mut file = HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default(), &test_command_context()).await.unwrap();
             file.appender().await.append_edit(&sample_edit("edit-1").await).await.unwrap();
             file.appender().await.commit().await.unwrap();
         }
@@ -116,7 +117,7 @@ mod tests {
             f.write_all(&[0xDE, 0xAD, 0xBE, 0xEF, 0x00, 0x01, 0x02]).unwrap();
         }
 
-        let mut file = HistoryFile::open_append(&path, &ProtocolLimits::default()).await.unwrap();
+        let mut file = HistoryFile::open_append(&path, &ProtocolLimits::default(), &test_command_context()).await.unwrap();
         file.appender().await.append_edit(&sample_edit("edit-2").await).await.unwrap();
         file.appender().await.commit().await.unwrap();
 
@@ -134,20 +135,20 @@ mod tests {
         let body_hash = [0xABu8; 32];
         let pack_bytes = b"a complete .spk pack file, opaque to this crate";
 
-        write_sidecar(&protocol_path, &body_hash, pack_bytes).await.unwrap();
+        write_sidecar(&protocol_path, &body_hash, pack_bytes, &test_command_context()).await.unwrap();
         let expected_path = dir.join("doc.abababab.sprc");
         assert!(expected_path.exists());
 
-        let read_back = read_sidecar(&protocol_path, &body_hash).await.unwrap();
-        assert_eq!(read_back, pack_bytes);
+        let read_back = read_sidecar(&protocol_path, &body_hash, &ProtocolLimits::default(), &test_command_context()).await.unwrap();
+        assert_eq!(&*read_back, pack_bytes.as_slice());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn read_sidecar_missing_file_is_an_io_error() {
         let dir = scratch_dir("sidecar_missing").await;
         let protocol_path = dir.join("doc.spr");
-        let result = read_sidecar(&protocol_path, &[0u8; 32]);
-        assert!(matches!(result.await, Err(ProtocolError::Io(_))));
+        let limits=ProtocolLimits::default();let context=test_command_context();let result = read_sidecar(&protocol_path, &[0u8; 32], &limits, &context);
+        let ProtocolError::Pack(crate::os_pack::PackError::TransportFailure(error))=result.await.unwrap_err()else{panic!("missing sidecar retains genuine native failure")};assert!(std::error::Error::source(&error).unwrap().downcast_ref::<std::io::Error>().is_some());
     }
     //#endregion 🔖️Sidecar
 
@@ -156,12 +157,12 @@ mod tests {
     async fn recover_file_reports_the_committed_record_count() {
         let dir = scratch_dir("recover").await;
         let path = dir.join("doc.spr");
-        let mut file = HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default()).await.unwrap();
+        let mut file = HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default(), &test_command_context()).await.unwrap();
         file.appender().await.append_edit(&sample_edit("edit-1").await).await.unwrap();
         file.appender().await.append_edit(&sample_edit("edit-2").await).await.unwrap();
         file.appender().await.commit().await.unwrap();
 
-        let report = recover_file(&path, &ProtocolLimits::default(), RecoveryMode::LastCommit).await.unwrap();
+        let report = recover_file(&path, &ProtocolLimits::default(), RecoveryMode::LastCommit, &test_command_context()).await.unwrap();
         assert_eq!(report.last_commit_seq, 1);
         assert_eq!(report.torn_tail_bytes, 0);
         // At least REC_DOC + 2x REC_EDIT + REC_COMMIT; may include extra REC_STR_DICT delta
@@ -176,11 +177,11 @@ mod tests {
     async fn tail_follower_polls_new_edits_across_multiple_commits_and_advances_its_ordinal() {
         let dir = scratch_dir("tail").await;
         let path = dir.join("doc.spr");
-        let mut file = HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default()).await.unwrap();
+        let mut file = HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default(), &test_command_context()).await.unwrap();
         file.appender().await.append_edit(&sample_edit("edit-1").await).await.unwrap();
         file.appender().await.commit().await.unwrap();
 
-        let mut follower = TailFollower::open(&path, 0).await.unwrap();
+        let mut follower = TailFollower::open(&path, 0, &ProtocolLimits::default(), &test_command_context()).await.unwrap();
         let first = follower.poll().await.unwrap();
         assert_eq!(first.iter().map(|e| e.id.as_str()).collect::<Vec<_>>(), vec!["edit-1"]);
         assert_eq!(follower.last_edit_ordinal().await, 1);
@@ -201,12 +202,12 @@ mod tests {
     async fn tail_follower_open_from_a_nonzero_ordinal_skips_already_known_edits() {
         let dir = scratch_dir("tail_from_ordinal").await;
         let path = dir.join("doc.spr");
-        let mut file = HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default()).await.unwrap();
+        let mut file = HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default(), &test_command_context()).await.unwrap();
         file.appender().await.append_edit(&sample_edit("edit-1").await).await.unwrap();
         file.appender().await.append_edit(&sample_edit("edit-2").await).await.unwrap();
         file.appender().await.commit().await.unwrap();
 
-        let mut follower = TailFollower::open(&path, 1).await.unwrap();
+        let mut follower = TailFollower::open(&path, 1, &ProtocolLimits::default(), &test_command_context()).await.unwrap();
         let polled = follower.poll().await.unwrap();
         assert_eq!(polled.iter().map(|e| e.id.as_str()).collect::<Vec<_>>(), vec!["edit-2"]);
     }
@@ -217,7 +218,7 @@ mod tests {
     async fn compact_preserves_every_edit_and_records_a_compaction_provenance_marker() {
         let dir = scratch_dir("compact").await;
         let path = dir.join("doc.spr");
-        let mut file = HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default()).await.unwrap();
+        let mut file = HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default(), &test_command_context()).await.unwrap();
         file.appender().await.append_edit(&sample_edit("edit-1").await).await.unwrap();
         file.appender().await.append_edit(&sample_edit("edit-2").await).await.unwrap();
         let commit = crate::os_spr::HistoryTransition::Commit(crate::os_spr::TransitionCheckpoint {
@@ -256,7 +257,7 @@ mod tests {
         assert_eq!(before.conflicts.len(), 1, "fixture carries a conflict record");
         assert!(before.composition.is_some(), "fixture carries a composition overlay");
 
-        compact(&path, &CompactOptions { drop_ephemeral: true, keep_snapshots: KeepSnapshots::LatestN(3) }, &ProtocolLimits::default()).await.unwrap();
+        compact(&path, &CompactOptions { drop_ephemeral: true, keep_snapshots: KeepSnapshots::LatestN(3) }, &ProtocolLimits::default(), &test_command_context()).await.unwrap();
 
         let after_bytes = std::fs::read(&path).unwrap();
         let after = decode_history(&after_bytes, &DecodeOptions::default()).await.unwrap();
@@ -277,7 +278,7 @@ mod tests {
         assert_eq!(compaction_payload[2], 2, "keep_snapshots tag 2 = LatestN");
 
         // The commit chain genuinely restarted: exactly one commit, seq 1.
-        let report = recover_file(&path, &ProtocolLimits::default(), RecoveryMode::LastCommit).await.unwrap();
+        let report = recover_file(&path, &ProtocolLimits::default(), RecoveryMode::LastCommit, &test_command_context()).await.unwrap();
         assert_eq!(report.last_commit_seq, 1);
     }
 
@@ -285,15 +286,33 @@ mod tests {
     async fn compact_on_an_already_minimal_file_is_a_harmless_no_op_content_wise() {
         let dir = scratch_dir("compact_minimal").await;
         let path = dir.join("doc.spr");
-        let mut file = HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default()).await.unwrap();
+        let mut file = HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default(), &test_command_context()).await.unwrap();
         file.appender().await.commit().await.unwrap();
         drop(file);
 
-        compact(&path, &CompactOptions { drop_ephemeral: false, keep_snapshots: KeepSnapshots::All }, &ProtocolLimits::default()).await.unwrap();
+        compact(&path, &CompactOptions { drop_ephemeral: false, keep_snapshots: KeepSnapshots::All }, &ProtocolLimits::default(), &test_command_context()).await.unwrap();
 
         let log = decode_history(&std::fs::read(&path).unwrap(), &DecodeOptions::default()).await.unwrap();
         assert_eq!(log.doc_id, "doc-1");
         assert!(log.edits.is_empty());
     }
     //#endregion 🔖️Compact
+    #[semio_framework_async_macros::async_test]
+    async fn retained_history_and_tail_follow_caller_cancellation_after_original_context_drops(){
+        let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🎒️pack/🚦️control/🧫️fixtures/🔣️.json")).unwrap();
+        let token=semio_framework_async::CancelToken::root_now();let maximum=fixture["maximumTransportBytes"].as_u64().unwrap();
+        let observed=std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));let events=observed.clone();
+        let transport=crate::os_pack::control::admit_command_transport(maximum,token.clone(),move|_|{events.fetch_add(1,Ordering::Relaxed);}).unwrap();
+        let context=crate::os_pack::control::CommandContext::try_new(transport,maximum,token.clone(),|_|{}).unwrap();
+        let dir=std::path::PathBuf::from(std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").expect("caller test artifacts")).join("retained-spr-command-context");
+        std::fs::create_dir_all(&dir).unwrap();let path=dir.join("doc.spr");
+        let mut file=HistoryFile::create(&path,"caller-doc","caller-schema",&WriteOptions::default(),&context).await.unwrap();
+        file.appender().await.append_edit(&sample_edit("retained-edit").await).await.unwrap();file.appender().await.commit().await.unwrap();
+        let mut follower=TailFollower::open(&path,0,&ProtocolLimits::default(),&context).await.unwrap();
+        let before=observed.load(Ordering::Relaxed);drop(context);token.cancel_now();
+        let error=follower.poll().await.unwrap_err();let ProtocolError::Pack(crate::os_pack::PackError::Refusal(refusal))=error else{panic!("retained caller cancellation")};assert_eq!(refusal.kind(),semio_framework_value::ValueRefusalKind::Canceled);
+        let error=file.appender().await.append_edit(&sample_edit("denied-edit").await).await.unwrap_err();let ProtocolError::Pack(crate::os_pack::PackError::Refusal(refusal))=error else{panic!("retained writer cancellation")};assert_eq!(refusal.kind(),semio_framework_value::ValueRefusalKind::Canceled);
+        assert!(before>0);println!("[DEBUG] retained HistoryFile and TailFollower observed original caller cancellation after command handle Drop");
+    }
+
 }

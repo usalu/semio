@@ -11,7 +11,7 @@ pub fn diff(payload: &super::ChangeMachineIcon, base: &Process3dSnapshot) -> pro
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Machine \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if existing.icon_id == payload.new_icon_id {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Machine \"{}\" icon is already \"{}\".", payload.id, payload.new_icon_id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Machine \"{}\" icon is already \"{}\".", payload.id, payload.new_icon_id));
     }
     let mut machines = base.workshop.machines.clone();
     if let Some(machine) = machines.iter_mut().find(|machine| machine.id == payload.id) {

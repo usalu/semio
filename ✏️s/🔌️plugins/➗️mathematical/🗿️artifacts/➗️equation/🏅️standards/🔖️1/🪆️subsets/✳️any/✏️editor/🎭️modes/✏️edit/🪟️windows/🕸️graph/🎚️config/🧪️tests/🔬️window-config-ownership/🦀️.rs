@@ -122,20 +122,20 @@ fn equation_graph_window_config_retained_publications_isolate_and_reload_two_win
 #[test]
 fn equation_graph_window_config_mutations_follow_the_neutral_trace_and_restore() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window-config-ownership/🔣️.json")).unwrap();
-    let base: EquationGraphWindowConfig = dsl::json::from_json_str(&fixture["base"].to_string()).unwrap();
+    let base: EquationGraphWindowConfig = semio_framework_pack_json::from_json_str(&fixture["base"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut windows = std::collections::BTreeMap::from([(fixture["leftWindowId"].as_str().unwrap().to_string(), base.clone()), (fixture["rightWindowId"].as_str().unwrap().to_string(), base)]);
     for row in fixture["cases"].as_array().unwrap() {
         let id = row["windowId"].as_str().unwrap();
-        let mutation: EquationGraphWindowConfigMutation = dsl::json::from_json_str(&row["mutation"].to_string()).unwrap();
+        let mutation: EquationGraphWindowConfigMutation = semio_framework_pack_json::from_json_str(&row["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let before = windows[id].clone();
         let after = mutation.diff(&before).diff().apply(&before).unwrap();
-        let restored = mutation.inverse(&before).into_iter().fold(after.clone(), |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
+        let restored = mutation.inverse(&before).expect("valid retained mutation inverse fixture").into_iter().fold(after.clone(), |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
         assert_eq!(restored, before);
         assert_eq!(EquationGraphWindowConfigMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
         assert_eq!(EquationGraphWindowConfigMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
         windows.insert(id.into(), after);
         for (window_id, state) in &windows {
-            let expected: EquationGraphWindowConfig = dsl::json::from_json_str(&row["expected"][window_id].to_string()).unwrap();
+            let expected: EquationGraphWindowConfig = semio_framework_pack_json::from_json_str(&row["expected"][window_id].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
             assert_eq!(state, &expected);
         }
     }

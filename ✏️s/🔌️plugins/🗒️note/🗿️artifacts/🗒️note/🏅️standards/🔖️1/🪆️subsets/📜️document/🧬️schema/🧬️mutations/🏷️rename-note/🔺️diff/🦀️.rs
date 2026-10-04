@@ -6,7 +6,7 @@ use crate::NoteSnapshot;
 //#region 🔖️Diff
 pub fn diff(payload: &RenameNote, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
     if base.title == payload.new_title {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Note title is already {:?}.", payload.new_title));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Note title is already {:?}.", payload.new_title));
     }
     protocol::MutationOutcome::new(NoteDiff { title: Some(payload.new_title.clone()), ..Default::default() })
 }

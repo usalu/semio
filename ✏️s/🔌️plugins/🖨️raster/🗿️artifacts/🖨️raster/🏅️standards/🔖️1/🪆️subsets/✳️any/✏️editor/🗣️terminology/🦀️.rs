@@ -58,6 +58,8 @@ semio_framework_ui_locale::app_labels! {
         paint_pixels: native_en "Pixels", native_de "Pixel", reuse_en "Pixels", reuse_de "Pixel";
         paint_mask: native_en "Mask", native_de "Maske", reuse_en "Mask", reuse_de "Maske";
         mask_value: native_en "Mask value", native_de "Maskenwert", reuse_en "Mask value", reuse_de "Maskenwert";
+        bucket: native_en "Bucket", native_de "Farbeimer", reuse_en "Bucket", reuse_de "Farbeimer";
+        fill_tolerance: native_en "Tolerance", native_de "Toleranz", reuse_en "Tolerance", reuse_de "Toleranz";
         brush_hardness: native_en "Hardness", native_de "Härte", reuse_en "Hardness", reuse_de "Härte";
         foreground: native_en "Foreground", native_de "Vordergrund", reuse_en "Foreground", reuse_de "Vordergrund";
         inspection: native_en "Inspection", native_de "Inspektion", reuse_en "Inspection", reuse_de "Inspektion";

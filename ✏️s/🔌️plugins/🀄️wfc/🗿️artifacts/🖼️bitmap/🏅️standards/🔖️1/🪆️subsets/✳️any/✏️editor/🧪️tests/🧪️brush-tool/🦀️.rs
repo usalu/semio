@@ -30,17 +30,17 @@ const SEED: &str = "authoring-seed-brush";
 //#region 🛠️Tool
 #[test]
 fn the_phase_protocol_reads_every_host_spelling() {
-    assert_eq!(BitmapStrokePhase::parse(None, None), Some(BitmapStrokePhase::Once));
-    assert_eq!(BitmapStrokePhase::parse(Some("stream"), None), Some(BitmapStrokePhase::Stream));
-    assert_eq!(BitmapStrokePhase::parse(Some("commit"), None), Some(BitmapStrokePhase::Commit));
-    assert_eq!(BitmapStrokePhase::parse(Some("abort"), Some("blur")), Some(BitmapStrokePhase::Abort(ToolAbortReason::Blur)));
-    assert_eq!(BitmapStrokePhase::parse(Some("abort"), None), Some(BitmapStrokePhase::Abort(ToolAbortReason::Tool)));
-    assert_eq!(BitmapStrokePhase::parse(Some("sideways"), None), None);
+    assert_eq!(GesturePhase::parse(None, None), Some(GesturePhase::Once));
+    assert_eq!(GesturePhase::parse(Some("stream"), None), Some(GesturePhase::Stream));
+    assert_eq!(GesturePhase::parse(Some("commit"), None), Some(GesturePhase::Commit));
+    assert_eq!(GesturePhase::parse(Some("abort"), Some("blur")), Some(GesturePhase::Abort(ToolAbortReason::Blur)));
+    assert_eq!(GesturePhase::parse(Some("abort"), None), Some(GesturePhase::Abort(ToolAbortReason::Tool)));
+    assert_eq!(GesturePhase::parse(Some("sideways"), None), None);
 }
 
 #[test]
 fn a_one_shot_stroke_is_one_committed_transaction_of_one_leaf() {
-    let (committed, transient) = bitmap_brush_dispatch(BitmapStrokePhase::Once, request(&[(0, 0), (3, 2)], 1), &BitmapInputWindowTransient::default(), SEED);
+    let (committed, transient) = bitmap_brush_dispatch(GesturePhase::Once, request(&[(0, 0), (3, 2)], 1), &BitmapInputWindowTransient::default(), SEED);
     let (reference, mutations) = committed.expect("the stroke commits");
     assert!(reference.id.starts_with("tx-"), "{reference:?}");
     assert_eq!(reference.tool, "s.wfc.bitmap@1/*#editor#paint-stroke");
@@ -50,13 +50,13 @@ fn a_one_shot_stroke_is_one_committed_transaction_of_one_leaf() {
 
 #[test]
 fn a_streamed_stroke_is_one_transaction_across_dispatches() {
-    let (none, open) = bitmap_brush_dispatch(BitmapStrokePhase::Stream, request(&[(0, 0)], 1), &BitmapInputWindowTransient::default(), SEED);
+    let (none, open) = bitmap_brush_dispatch(GesturePhase::Stream, request(&[(0, 0)], 1), &BitmapInputWindowTransient::default(), SEED);
     assert!(none.is_none(), "a tick publishes nothing");
     let first = open.brush.as_ref().expect("the window holds the open stroke").transaction.clone();
-    let (none, open) = bitmap_brush_dispatch(BitmapStrokePhase::Stream, request(&[(2, 0), (2, 2)], 0), &open, SEED);
+    let (none, open) = bitmap_brush_dispatch(GesturePhase::Stream, request(&[(2, 0), (2, 2)], 0), &open, SEED);
     assert!(none.is_none());
     assert_eq!(open.brush.as_ref().expect("still open").transaction, first, "every tick joins the transaction minted at the first");
-    let (committed, rest) = bitmap_brush_dispatch(BitmapStrokePhase::Commit, request(&[(3, 2)], 0), &open, SEED);
+    let (committed, rest) = bitmap_brush_dispatch(GesturePhase::Commit, request(&[(3, 2)], 0), &open, SEED);
     let (reference, mutations) = committed.expect("the release commits");
     assert_eq!(reference, first, "the commit publishes under the ref minted at the first tick");
     assert_eq!(mutations, vec![paint_input_stroke(vec![point(0, 0), point(2, 0), point(2, 2), point(3, 2)], 1)], "ONE net leaf in the colour the stroke opened with");
@@ -66,52 +66,52 @@ fn a_streamed_stroke_is_one_transaction_across_dispatches() {
 #[test]
 fn every_host_abort_leaves_zero_trace() {
     for reason in [ToolAbortReason::Blur, ToolAbortReason::CaptureLost, ToolAbortReason::Frozen, ToolAbortReason::Retired, ToolAbortReason::Tool] {
-        let (_, open) = bitmap_brush_dispatch(BitmapStrokePhase::Stream, request(&[(0, 0), (1, 1)], 1), &BitmapInputWindowTransient::default(), SEED);
+        let (_, open) = bitmap_brush_dispatch(GesturePhase::Stream, request(&[(0, 0), (1, 1)], 1), &BitmapInputWindowTransient::default(), SEED);
         assert!(open.brush.is_some());
-        let (committed, rest) = bitmap_brush_dispatch(BitmapStrokePhase::Abort(reason), request(&[], 1), &open, SEED);
+        let (committed, rest) = bitmap_brush_dispatch(GesturePhase::Abort(reason), request(&[], 1), &open, SEED);
         assert!(committed.is_none() && rest.brush.is_none(), "{reason:?} must leave nothing");
     }
-    let (committed, rest) = bitmap_brush_dispatch(BitmapStrokePhase::Abort(ToolAbortReason::Blur), request(&[], 1), &BitmapInputWindowTransient::default(), SEED);
+    let (committed, rest) = bitmap_brush_dispatch(GesturePhase::Abort(ToolAbortReason::Blur), request(&[], 1), &BitmapInputWindowTransient::default(), SEED);
     assert!(committed.is_none() && rest == BitmapInputWindowTransient::default(), "an abort at rest is a silent no-op");
 }
 
 #[test]
 fn two_strokes_are_two_transactions() {
-    let (first, _) = bitmap_brush_dispatch(BitmapStrokePhase::Once, request(&[(0, 0)], 1), &BitmapInputWindowTransient::default(), "seed-one");
-    let (second, _) = bitmap_brush_dispatch(BitmapStrokePhase::Once, request(&[(1, 1)], 1), &BitmapInputWindowTransient::default(), "seed-two");
+    let (first, _) = bitmap_brush_dispatch(GesturePhase::Once, request(&[(0, 0)], 1), &BitmapInputWindowTransient::default(), "seed-one");
+    let (second, _) = bitmap_brush_dispatch(GesturePhase::Once, request(&[(1, 1)], 1), &BitmapInputWindowTransient::default(), "seed-two");
     assert_ne!(first.expect("first commits").0, second.expect("second commits").0);
 }
 
 #[test]
 fn a_stroke_that_paints_no_cell_leaves_zero_trace() {
-    let (committed, rest) = bitmap_brush_dispatch(BitmapStrokePhase::Once, request(&[(9, 9), (12, 9)], 1), &BitmapInputWindowTransient::default(), SEED);
+    let (committed, rest) = bitmap_brush_dispatch(GesturePhase::Once, request(&[(9, 9), (12, 9)], 1), &BitmapInputWindowTransient::default(), SEED);
     assert!(committed.is_none() && rest.brush.is_none());
-    let (_, open) = bitmap_brush_dispatch(BitmapStrokePhase::Stream, request(&[(9, 9)], 1), &BitmapInputWindowTransient::default(), SEED);
+    let (_, open) = bitmap_brush_dispatch(GesturePhase::Stream, request(&[(9, 9)], 1), &BitmapInputWindowTransient::default(), SEED);
     assert!(open.brush.is_some(), "a stream may start outside the sample and enter it later");
-    let (committed, rest) = bitmap_brush_dispatch(BitmapStrokePhase::Commit, request(&[(10, 9)], 1), &open, SEED);
+    let (committed, rest) = bitmap_brush_dispatch(GesturePhase::Commit, request(&[(10, 9)], 1), &open, SEED);
     assert!(committed.is_none() && rest.brush.is_none(), "a released stroke that never entered the sample commits nothing");
 }
 
 #[test]
 fn a_one_shot_interrupts_an_open_stroke() {
-    let (_, open) = bitmap_brush_dispatch(BitmapStrokePhase::Stream, request(&[(0, 0)], 1), &BitmapInputWindowTransient::default(), SEED);
-    let (committed, rest) = bitmap_brush_dispatch(BitmapStrokePhase::Once, request(&[(3, 0)], 1), &open, SEED);
+    let (_, open) = bitmap_brush_dispatch(GesturePhase::Stream, request(&[(0, 0)], 1), &BitmapInputWindowTransient::default(), SEED);
+    let (committed, rest) = bitmap_brush_dispatch(GesturePhase::Once, request(&[(3, 0)], 1), &open, SEED);
     assert_eq!(committed.expect("the one-shot commits").1, vec![paint_input_stroke(vec![point(3, 0)], 1)], "the interrupted stroke contributes nothing");
     assert!(rest.brush.is_none());
 }
 
 #[test]
 fn a_tampered_persisted_stroke_is_dropped_with_zero_trace() {
-    let (_, mut open) = bitmap_brush_dispatch(BitmapStrokePhase::Stream, request(&[(0, 0)], 1), &BitmapInputWindowTransient::default(), SEED);
+    let (_, mut open) = bitmap_brush_dispatch(GesturePhase::Stream, request(&[(0, 0)], 1), &BitmapInputWindowTransient::default(), SEED);
     open.brush.as_mut().expect("open").states = vec!["no-such-state".to_string()];
-    let (committed, rest) = bitmap_brush_dispatch(BitmapStrokePhase::Commit, request(&[(1, 0)], 1), &open, SEED);
+    let (committed, rest) = bitmap_brush_dispatch(GesturePhase::Commit, request(&[(1, 0)], 1), &open, SEED);
     assert_eq!(committed.expect("the commit runs from rest as a one-shot").1, vec![paint_input_stroke(vec![point(1, 0)], 1)]);
     assert!(rest.brush.is_none());
 }
 
 #[test]
 fn the_window_previews_committed_plus_the_open_stroke() {
-    let (_, open) = bitmap_brush_dispatch(BitmapStrokePhase::Stream, request(&[(0, 0), (3, 2)], 1), &BitmapInputWindowTransient::default(), SEED);
+    let (_, open) = bitmap_brush_dispatch(GesturePhase::Stream, request(&[(0, 0), (3, 2)], 1), &BitmapInputWindowTransient::default(), SEED);
     let preview = bitmap_brush_preview(&base(), &open).expect("an open stroke previews");
     let mut expected = base();
     crate::mutations::apply_bitmap_mutation(&mut expected, &paint_input_stroke(vec![point(0, 0), point(3, 2)], 1)).expect("the leaf applies");
@@ -121,7 +121,7 @@ fn the_window_previews_committed_plus_the_open_stroke() {
 
 #[test]
 fn the_brush_state_round_trips_the_window_transient_codecs() {
-    let (_, open) = bitmap_brush_dispatch(BitmapStrokePhase::Stream, request(&[(0, 0), (1, 2)], 1), &BitmapInputWindowTransient::default(), SEED);
+    let (_, open) = bitmap_brush_dispatch(GesturePhase::Stream, request(&[(0, 0), (1, 2)], 1), &BitmapInputWindowTransient::default(), SEED);
     let text = <BitmapInputWindowTransient as store::ArtifactDsl>::print_dsl(&open);
     assert_eq!(<BitmapInputWindowTransient as store::ArtifactDsl>::parse_dsl(&text).expect("text parses"), open);
     let packed = <BitmapInputWindowTransient as store::ArtifactPack>::encode_pack(&open);
@@ -144,20 +144,20 @@ fn a_hover_a_stray_release_and_a_secondary_press_mean_nothing_to_the_brush() {
 fn pointer_samples_map_to_clamped_cells_with_repeats_collapsed() {
     let (width, height) = (base().input.width, base().input.height);
     let down = bitmap_brush_pointer_stroke(&BitmapBrushPointer::Down { world: Some([0.9, 0.1]), button: 0 }, width, height, true).expect("a primary press opens");
-    assert_eq!((down.phase, down.points, down.interrupt), (BitmapStrokePhase::Stream, vec![point(0, 0)], true), "a press drops a stroke a lost release left open");
+    assert_eq!((down.phase, down.points, down.interrupt), (GesturePhase::Stream, vec![point(0, 0)], true), "a press drops a stroke a lost release left open");
     let drag = bitmap_brush_pointer_stroke(&BitmapBrushPointer::Move { samples: vec![[0.2, 0.2], [1.2, 0.4], [1.8, 0.6], [-3.0, -2.0], [99.0, 1.0]] }, width, height, true).expect("a drag streams");
     assert_eq!(drag.points, vec![point(0, 0), point(1, 0), point(0, 0), point(width - 1, 1)], "repeats collapse and a drag past an edge clamps onto it");
     let release = bitmap_brush_pointer_stroke(&BitmapBrushPointer::Up { world: Some([2.5, 1.5]), cancelled: false }, width, height, true).expect("a release commits");
-    assert_eq!((release.phase, release.points), (BitmapStrokePhase::Commit, vec![point(2, 1)]));
+    assert_eq!((release.phase, release.points), (GesturePhase::Commit, vec![point(2, 1)]));
     let cancel = bitmap_brush_pointer_stroke(&BitmapBrushPointer::Up { world: None, cancelled: true }, width, height, true).expect("a cancel aborts");
-    assert_eq!(cancel.phase, BitmapStrokePhase::Abort(ToolAbortReason::CaptureLost));
+    assert_eq!(cancel.phase, GesturePhase::Abort(ToolAbortReason::CaptureLost));
 }
 
 #[test]
 fn a_streamed_stroke_never_repeats_a_cell_across_ticks() {
-    let (_, open) = bitmap_brush_dispatch(BitmapStrokePhase::Stream, request(&[(1, 1)], 1), &BitmapInputWindowTransient::default(), SEED);
-    let (_, open) = bitmap_brush_dispatch(BitmapStrokePhase::Stream, request(&[(1, 1), (1, 1), (2, 1)], 1), &open, SEED);
-    let (committed, _) = bitmap_brush_dispatch(BitmapStrokePhase::Commit, request(&[(2, 1)], 1), &open, SEED);
+    let (_, open) = bitmap_brush_dispatch(GesturePhase::Stream, request(&[(1, 1)], 1), &BitmapInputWindowTransient::default(), SEED);
+    let (_, open) = bitmap_brush_dispatch(GesturePhase::Stream, request(&[(1, 1), (1, 1), (2, 1)], 1), &open, SEED);
+    let (committed, _) = bitmap_brush_dispatch(GesturePhase::Commit, request(&[(2, 1)], 1), &open, SEED);
     assert_eq!(committed.expect("the release commits").1, vec![paint_input_stroke(vec![point(1, 1), point(2, 1)], 1)]);
 }
 //#endregion 🖱️Pointer
@@ -292,7 +292,7 @@ fn two_mounted_strokes_are_two_transactions() {
 fn pointer(app: &mut BitmapApp, action: &str, args: serde_json::Value) -> InvocationResult {
     let mut args = args;
     args["surfaceId"] = serde_json::Value::from(format!("window:{WFC_BITMAP_WINDOW_INPUT}"));
-    let command = <BitmapEditor as semio_framework_plugin::ArtifactEditor>::command_from_action(action, Some(&dsl::DslValue::from(&args))).expect("the canvas verb bridges");
+    let command = <BitmapEditor as semio_framework_plugin::ArtifactEditor>::command_from_action(action, Some(&semio_framework_value::DslValue::from(&args))).expect("the canvas verb bridges");
     let meta = input_meta();
     let result = block_on(app.dispatch_typed(command, &meta));
     settle(app, result)

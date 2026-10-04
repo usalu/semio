@@ -1,0 +1,275 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/replication/wire/command/ingress/ownership",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "owner",
+    "exports",
+    "laws",
+    "fixture",
+    "closure",
+    "paths",
+    "bounds",
+    "sourceCases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "owner": {
+      "const": "🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress"
+    },
+    "exports": {
+      "const": {
+        "types": [
+          "FixedCommandPage",
+          "CommandPageSet",
+          "PagedCommand",
+          "PagedCommandReader",
+          "CommandEnvelope",
+          "CommandBatch",
+          "CommandEnvelopeSet",
+          "RejectedCommandBuild",
+          "RejectedCommandBuildRegistry",
+          "CommandBatchProgress",
+          "CommandBatchDriver",
+          "CommandDriverRegistry",
+          "CommandPageCursor",
+          "CommandIngressStatus"
+        ],
+        "constants": [
+          "COMMAND_PAGE_MAXIMUM_BYTES",
+          "COMMAND_MAXIMUM_BYTES",
+          "COMMAND_MAXIMUM_PAGES",
+          "COMMAND_BATCH_MAXIMUM_ITEMS",
+          "INVOCATION_RESULT_PACK_MAXIMUM_BYTES"
+        ]
+      }
+    },
+    "laws": {
+      "const": [
+        "retained_batch_descriptor_has_no_destructor",
+        "the_command_ingress_authorities_are_derived_from_the_guest_memory_budget",
+        "every_command_ingress_row_reassembles_to_the_exact_bytes_it_was_cut_from",
+        "every_command_ingress_refusal_answers_a_fault_and_keeps_its_page"
+      ]
+    },
+    "fixture": {
+      "const": {
+        "path": "🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🧫️fixtures/📄️pages/🔣️.json",
+        "digest": "ac37b2f7b212cc9394be352b5634dce345fde961e6eb5e79edb85a376ae1f503"
+      }
+    },
+    "closure": {
+      "const": [
+        {
+          "package": "semio-framework-trace",
+          "manifest": "🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust/Cargo.toml",
+          "edges": []
+        },
+        {
+          "package": "semio-framework-diagnostic",
+          "manifest": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust/Cargo.toml",
+          "edges": [
+            {
+              "scope": "normal",
+              "name": "semio-framework-value",
+              "manifest": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml"
+            }
+          ]
+        },
+        {
+          "package": "semio-framework-value-derive",
+          "manifest": "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/Cargo.toml",
+          "edges": []
+        },
+        {
+          "package": "semio-framework-value",
+          "manifest": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+          "edges": [
+            {
+              "scope": "normal",
+              "name": "semio-framework-io-base64",
+              "manifest": "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/Cargo.toml"
+            },
+            {
+              "scope": "normal",
+              "name": "semio-framework-value-derive",
+              "manifest": "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/Cargo.toml"
+            }
+          ]
+        },
+        {
+          "package": "semio-framework-replication",
+          "manifest": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/Cargo.toml",
+          "edges": [
+            {
+              "scope": "normal",
+              "name": "semio-framework-deflate",
+              "manifest": "🧰️framework/🔨️modules/🗜️deflate/📦️packages/🦀️rust/Cargo.toml"
+            },
+            {
+              "scope": "normal",
+              "name": "semio-framework-diagnostic",
+              "manifest": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust/Cargo.toml"
+            },
+            {
+              "scope": "normal",
+              "name": "semio-framework-hash",
+              "manifest": "🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust/Cargo.toml"
+            },
+            {
+              "scope": "normal",
+              "name": "semio-framework-io-base64",
+              "manifest": "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/Cargo.toml"
+            },
+            {
+              "scope": "normal",
+              "name": "semio-framework-schema-registry",
+              "manifest": "🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust/Cargo.toml"
+            },
+            {
+              "scope": "normal",
+              "name": "semio-framework-schema-state",
+              "manifest": "🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust/Cargo.toml"
+            },
+            {
+              "scope": "normal",
+              "name": "semio-framework-trace",
+              "manifest": "🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust/Cargo.toml"
+            },
+            {
+              "scope": "normal",
+              "name": "semio-framework-value",
+              "manifest": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml"
+            },
+            {
+              "scope": "normal",
+              "name": "semio-framework-value-derive",
+              "manifest": "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/Cargo.toml"
+            }
+          ]
+        },
+        {
+          "package": "semio-framework-hash",
+          "manifest": "🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust/Cargo.toml",
+          "edges": []
+        },
+        {
+          "package": "semio-framework-deflate",
+          "manifest": "🧰️framework/🔨️modules/🗜️deflate/📦️packages/🦀️rust/Cargo.toml",
+          "edges": [
+            {
+              "scope": "normal",
+              "name": "semio-framework-value",
+              "manifest": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml"
+            }
+          ]
+        },
+        {
+          "package": "semio-framework-schema-registry",
+          "manifest": "🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust/Cargo.toml",
+          "edges": []
+        },
+        {
+          "package": "semio-framework-schema-state",
+          "manifest": "🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust/Cargo.toml",
+          "edges": [
+            {
+              "scope": "normal",
+              "name": "semio-framework-value",
+              "manifest": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml"
+            }
+          ]
+        },
+        {
+          "package": "semio-framework-io-base64",
+          "manifest": "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/Cargo.toml",
+          "edges": []
+        }
+      ]
+    },
+    "paths": {
+      "const": {
+        "entry": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/🦀️.rs",
+        "manifest": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/Cargo.toml",
+        "neutralTests": "🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🧪️tests/🔬️unit/🦀️.rs"
+      }
+    },
+    "bounds": {
+      "const": {
+        "COMMAND_PAGE_MAXIMUM_BYTES": "4_096",
+        "COMMAND_MAXIMUM_BYTES": "semio_framework_trace::GUEST_HOST_ANSWER_CEILING_BYTES",
+        "COMMAND_MAXIMUM_PAGES": "COMMAND_MAXIMUM_BYTES/COMMAND_PAGE_MAXIMUM_BYTES",
+        "COMMAND_BATCH_MAXIMUM_ITEMS": "64",
+        "INVOCATION_RESULT_PACK_MAXIMUM_BYTES": "COMMAND_MAXIMUM_BYTES"
+      }
+    },
+    "sourceCases": {
+      "const": [
+        {
+          "id": "private-extension",
+          "accepted": true
+        },
+        {
+          "id": "formatting",
+          "accepted": true
+        },
+        {
+          "id": "public-owner",
+          "accepted": false
+        },
+        {
+          "id": "public-type",
+          "accepted": false
+        },
+        {
+          "id": "constant",
+          "accepted": false
+        },
+        {
+          "id": "missing-law",
+          "accepted": false
+        },
+        {
+          "id": "disabled-law",
+          "accepted": false
+        },
+        {
+          "id": "disabled-test-mount",
+          "accepted": false
+        },
+        {
+          "id": "disabled-public-owner",
+          "accepted": false
+        },
+        {
+          "id": "disabled-public-facade",
+          "accepted": false
+        },
+        {
+          "id": "disabled-public-type",
+          "accepted": false
+        },
+        {
+          "id": "disabled-constant",
+          "accepted": false
+        },
+        {
+          "id": "disabled-parent-wire",
+          "accepted": false
+        },
+        {
+          "id": "disabled-law-container",
+          "accepted": false
+        },
+        {
+          "id": "hostile-dependency",
+          "accepted": false
+        }
+      ]
+    }
+  }
+}

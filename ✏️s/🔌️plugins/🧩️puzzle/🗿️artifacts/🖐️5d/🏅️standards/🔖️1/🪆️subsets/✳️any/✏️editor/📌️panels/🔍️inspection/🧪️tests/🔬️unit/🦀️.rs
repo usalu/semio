@@ -6,7 +6,7 @@ use crate::editor::puzzle5d::unit_tests::context::*;
 use semio_framework_plugin::{TreeWindowRequest, ViewModel};
 
 fn labels() -> &'static Puzzle5dLabels {
-    puzzle5d_labels(&ViewModel::new(protocol::Locale::En, protocol::Terminology::Native)).expect("an admitted host label axis")
+    puzzle5d_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("an admitted host label axis")
 }
 
 fn drain() {

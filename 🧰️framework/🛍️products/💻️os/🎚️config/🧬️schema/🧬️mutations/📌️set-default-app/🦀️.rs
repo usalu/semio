@@ -29,19 +29,22 @@ impl MutationKind<OpeningPreferences, OpeningConfigMutation> for SetDefaultApp {
     fn diff(&self, base: &OpeningPreferences) -> MutationOutcome<OpeningPreferences> {
         if base.defaults.iter().any(|entry| entry.dialect == self.dialect && entry.role == self.role && entry.app == self.app) {
             let role = role_name(self.role);
-            return MutationOutcome::new(base.clone()).warn("mutation.no-op", format!("\"{}\" is already the default {} for \"{}\".", self.app.app_id, role, self.dialect.to_coordinate()));
+            return MutationOutcome::new(base.clone()).warning("mutation.no-op", format!("\"{}\" is already the default {} for \"{}\".", self.app.app_id, role, self.dialect.to_coordinate()));
         }
         let mut defaults: Vec<DefaultApp> = base.defaults.iter().filter(|entry| !(entry.dialect == self.dialect && entry.role == self.role)).cloned().collect();
         defaults.push(DefaultApp { dialect: self.dialect.clone(), role: self.role, app: self.app.clone() });
         MutationOutcome::new(OpeningPreferences { defaults })
     }
 
-    fn inverse(&self, base: &OpeningPreferences) -> Vec<OpeningConfigMutation> {
+    fn inverse(&self, base: &OpeningPreferences) -> Result<Vec<OpeningConfigMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         match base.defaults.iter().find(|entry| entry.dialect == self.dialect && entry.role == self.role) {
             Some(prior) => vec![OpeningConfigMutation::SetDefaultApp(SetDefaultApp { dialect: self.dialect.clone(), role: self.role, app: prior.app.clone() })],
             None => vec![OpeningConfigMutation::ClearDefaultApp(ClearDefaultApp { dialect: self.dialect.clone(), role: self.role })],
         }
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set default {} for \"{}\"", role_name(self.role), self.dialect.to_coordinate()), &format!("Standard-{} für \"{}\" festlegen", role_name_de(self.role), self.dialect.to_coordinate()))

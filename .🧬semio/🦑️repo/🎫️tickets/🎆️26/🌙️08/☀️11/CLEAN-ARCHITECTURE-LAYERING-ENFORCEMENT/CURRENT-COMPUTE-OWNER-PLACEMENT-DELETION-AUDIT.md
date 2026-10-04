@@ -1,0 +1,13 @@
+# Compute owner-placement and deletion boundary
+
+[Current full sources and fixture partitions](compute-owner-placement-audit-inputs/full-current-owners-and-fixture-splits-1.json) retain sixteen bodies/hashes and proposed data partitions. No production edits or test execution occurred.
+
+Neutral compute retains its seven-type family, six original native law names/unit identity and cache semantics. Its fixture/schema should contain only version/source/unit/retainedUnitSha256/family/laws/cacheBehavior, preserving exact values and additionalProperties:false. Keep Node's independent unit digest and TOML's neutral package/direct dependency oracle. Remove the required removed/consumers/constructorPolicy fields from this neutral envelope, not optionalize them.
+
+Three Repo policy tests transfer intact: canonical constructor roster, Node path-containment predicate, and recreated legacy-debt-path scanner. Repo fixture/schema owns the exact two allowed owners and eleven vectors; sourceAccess remains Repo-owned. The neutral owner must neither import that helper nor read root Repo policy source. Preserve all positive/hostile path vectors and scanner error categories.
+
+The higher-consumer test's five concrete witnesses are OS-flow drawing; s/puzzle brush cache; OS plugin SDK; OS host-component fixture; and hub-space. Each reads actual source and Cargo manifest. These belong separate owner integration gates: OS-flow, puzzle, plugin, host fixture and hub respectively. Preserve their exact Engine-family binding lists, direct semio-framework-2d dependency checks and forbidden old OS aliases. A Repo aggregate may orchestrate those owner gates; neutral compute cannot require their physical presence. Never skip a missing named consumer inside its declared present-owner gate.
+
+The current TOML law also reads OS-kernel and asserts no os_engine export. Transfer that exact assertion, together with historical old-OS-engine removal evidence, to OS's owned integration gate. Neutral package checks remain exact and need no OS source read. Deleting an entire OS/s/hub owner must leave neutral tests operational; deleting or breaking a required reader inside a present owner must fail that owner's gate.
+
+Fixture/schema partitions are explicit in the retained JSON. Integration schemas should keep each owner roster closed/exact rather than place all five specific readers back in a general required fixture. Every moved test needs actual permanent script/project/package/GUI registration in its owner; registered neutral tests retain only own files and dependencies. Physical deletion runtime proof is still distinct from this source-placement recommendation.

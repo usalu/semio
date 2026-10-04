@@ -2,7 +2,7 @@ use super::super::{RemoveInput, WorkflowDiff, WorkflowInput, WorkflowMutation, W
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "add-input")]
@@ -17,9 +17,12 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for AddInput {
     fn diff(&self, _base: &WorkflowSnapshot) -> protocol::MutationOutcome<WorkflowDiff> {
         protocol::MutationOutcome::new(WorkflowDiff::DeclareInput { input: self.input.clone() })
     }
-    fn inverse(&self, _base: &WorkflowSnapshot) -> Vec<WorkflowMutation> {
+    fn inverse(&self, _base: &WorkflowSnapshot) -> Result<Vec<WorkflowMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![WorkflowMutation::RemoveInput(RemoveInput { input_id: self.input.id.clone() })]
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Add workflow input {}", self.input.id), &format!("Arbeitsablaufeingabe {} hinzufügen", self.input.id))
     }

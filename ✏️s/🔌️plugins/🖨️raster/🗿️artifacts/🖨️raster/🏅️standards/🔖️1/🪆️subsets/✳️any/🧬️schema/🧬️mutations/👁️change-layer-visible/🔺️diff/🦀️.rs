@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeLayerVisible, base: &RasterSnapshot) -> proto
         RasterLayerNode::Pixel { visible, .. } | RasterLayerNode::Group { visible, .. } | RasterLayerNode::Adjustment { visible, .. } => *visible,
     };
     if visible == payload.new_visible {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Layer \"{}\" visible is already {}.", payload.layer_id, payload.new_visible));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Layer \"{}\" visible is already {}.", payload.layer_id, payload.new_visible));
     }
     protocol::MutationOutcome::new(diff_patch_layer(&payload.layer_id, RasterLayerPatch { visible: Some(payload.new_visible), ..Default::default() }))
 }

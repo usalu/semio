@@ -1,0 +1,24 @@
+{
+  "encodings": [
+    "binary",
+    "text"
+  ],
+  "forecastCeilings": [
+    "maxValueBytes",
+    "maxFileBytes"
+  ],
+  "ownedAllowance": "maxAllocationBytes",
+  "scratchOwnership": "paidFrontiersOnly",
+  "rowCeiling": "maxRows",
+  "literalUtf8Bytes": 140000,
+  "cancelPhase": "encodeNative",
+  "refusalKinds": {
+    "ceiling": "ownershipLimit",
+    "rows": "workLimit",
+    "cancellation": "canceled"
+  },
+  "copiedOwnerFields": false,
+  "tableCount": 30,
+  "censusAuthority": "allStoredRows",
+  "literalGrowthRequestDelta": 0
+}

@@ -46,7 +46,7 @@ async fn appends_the_new_pick_at_the_tail() {
 async fn deleting_the_new_pick_restores_before() {
     let base = before();
     let mut snapshot = protocol::MutationDiff::apply(built_outcome().diff(), &base).expect("forward create-curated-item applies");
-    let inverse = <SourcingMutation as protocol::Mutation<CurationSnapshot>>::inverse(&mutation(), &base);
+    let inverse = <SourcingMutation as protocol::Mutation<CurationSnapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "create-curated-item/appends-a-steel-plate-to-the-curation: the inverse of one create is exactly one delete");
     for step in &inverse {
         let undo = <SourcingMutation as protocol::Mutation<CurationSnapshot>>::diff(step, &snapshot);

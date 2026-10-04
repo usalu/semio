@@ -5,11 +5,10 @@
 
 use crate::io::note_document_bounds;
 use crate::NoteSnapshot;
-use semio_framework::io::io_mechanism::Serializer;
+use semio_framework::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
-use semio_s_artifact_stdio_png::io::encode_png;
-use semio_s_artifact_stdio_png::schema::blank_png_snapshot;
+use semio_framework_pixels::{encode_png, RasterImage};
 
 pub const PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId::ANY };
 
@@ -18,7 +17,7 @@ pub struct NoteIntoPng;
 impl Serializer<NoteSnapshot> for NoteIntoPng {
     const INTO: Dialect = PNG_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &NoteSnapshot) -> IoResult<IoPayload> {
+    async fn serialize(from: &NoteSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
         let (w, h) = note_document_bounds(from);
         let width = w.max(1);
         let height = h.max(1);
@@ -26,11 +25,7 @@ impl Serializer<NoteSnapshot> for NoteIntoPng {
         for px in rgba.chunks_mut(4) {
             px[3] = 255;
         }
-        let mut snapshot = blank_png_snapshot();
-        snapshot.width = width;
-        snapshot.height = height;
-        snapshot.pixels = rgba;
-        let bytes = encode_png(&snapshot).map_err(|error| IoError { message: format!("NoteIntoPng: {error}"), diagnostics: Vec::new() })?;
+        let bytes = encode_png(&RasterImage { width, height, pixels: rgba }).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("NoteIntoPng: {error}"))))?;
         Ok(IoOutcome::clean(IoPayload::Binary(bytes)))
     }
 }

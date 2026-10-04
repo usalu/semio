@@ -6,7 +6,7 @@ use framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the program artifact.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[artifact_schema(id = "s.architect.program")]
 pub struct ProgramDiff {
@@ -167,7 +167,7 @@ pub struct ProgramDiff {
 
 //#region 🔖️DeltaHelpers
 /// 📋 String-list wrapper so optional list diffs stay scalar across formats.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -176,7 +176,7 @@ pub struct ProgramStringList {
 }
 
 /// 🧩 Identified-collection delta for `stakeholders`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -188,7 +188,7 @@ pub struct ProgramStakeholdersDelta {
 }
 
 /// 🩹 One patched `Stakeholder` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -198,7 +198,7 @@ pub struct ProgramStakeholdersPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `users`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -210,7 +210,7 @@ pub struct ProgramUsersDelta {
 }
 
 /// 🩹 One patched `UserProfile` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -220,7 +220,7 @@ pub struct ProgramUsersPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `activities`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -232,7 +232,7 @@ pub struct ProgramActivitiesDelta {
 }
 
 /// 🩹 One patched `Activity` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -242,7 +242,7 @@ pub struct ProgramActivitiesPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `functions`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -254,7 +254,7 @@ pub struct ProgramFunctionsDelta {
 }
 
 /// 🩹 One patched `Function` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -264,7 +264,7 @@ pub struct ProgramFunctionsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `elements`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -276,7 +276,7 @@ pub struct ProgramElementsDelta {
 }
 
 /// 🩹 One patched `ProgramElement` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -286,7 +286,7 @@ pub struct ProgramElementsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `quantities`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -298,7 +298,7 @@ pub struct ProgramQuantitiesDelta {
 }
 
 /// 🩹 One patched `QuantityRequirement` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -308,7 +308,7 @@ pub struct ProgramQuantitiesPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `relationships`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -320,7 +320,7 @@ pub struct ProgramRelationshipsDelta {
 }
 
 /// 🩹 One patched `Relationship` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -330,7 +330,7 @@ pub struct ProgramRelationshipsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `adjacencies`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -342,7 +342,7 @@ pub struct ProgramAdjacenciesDelta {
 }
 
 /// 🩹 One patched `Adjacency` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -352,7 +352,7 @@ pub struct ProgramAdjacenciesPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `processes`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -364,7 +364,7 @@ pub struct ProgramProcessesDelta {
 }
 
 /// 🩹 One patched `Process` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -374,7 +374,7 @@ pub struct ProgramProcessesPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `flows`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -386,7 +386,7 @@ pub struct ProgramFlowsDelta {
 }
 
 /// 🩹 One patched `FlowRequirement` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -396,7 +396,7 @@ pub struct ProgramFlowsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `access_rules`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -408,7 +408,7 @@ pub struct ProgramAccessRulesDelta {
 }
 
 /// 🩹 One patched `AccessRule` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -418,7 +418,7 @@ pub struct ProgramAccessRulesPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `operations`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -430,7 +430,7 @@ pub struct ProgramOperationsDelta {
 }
 
 /// 🩹 One patched `OperationalRequirement` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -440,7 +440,7 @@ pub struct ProgramOperationsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `equipment`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -452,7 +452,7 @@ pub struct ProgramEquipmentDelta {
 }
 
 /// 🩹 One patched `Equipment` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -462,7 +462,7 @@ pub struct ProgramEquipmentPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `resources`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -474,7 +474,7 @@ pub struct ProgramResourcesDelta {
 }
 
 /// 🩹 One patched `Resource` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -484,7 +484,7 @@ pub struct ProgramResourcesPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `storage`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -496,7 +496,7 @@ pub struct ProgramStorageDelta {
 }
 
 /// 🩹 One patched `StorageRequirement` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -506,7 +506,7 @@ pub struct ProgramStoragePatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `environmental`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -518,7 +518,7 @@ pub struct ProgramEnvironmentalDelta {
 }
 
 /// 🩹 One patched `EnvironmentalRequirement` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -528,7 +528,7 @@ pub struct ProgramEnvironmentalPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `human_factors`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -540,7 +540,7 @@ pub struct ProgramHumanFactorsDelta {
 }
 
 /// 🩹 One patched `HumanFactorRequirement` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -550,7 +550,7 @@ pub struct ProgramHumanFactorsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `accessibility`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -562,7 +562,7 @@ pub struct ProgramAccessibilityDelta {
 }
 
 /// 🩹 One patched `AccessibilityRequirement` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -572,7 +572,7 @@ pub struct ProgramAccessibilityPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `privacy`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -584,7 +584,7 @@ pub struct ProgramPrivacyDelta {
 }
 
 /// 🩹 One patched `PrivacyRequirement` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -594,7 +594,7 @@ pub struct ProgramPrivacyPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `safety`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -606,7 +606,7 @@ pub struct ProgramSafetyDelta {
 }
 
 /// 🩹 One patched `SafetyRequirement` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -616,7 +616,7 @@ pub struct ProgramSafetyPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `security`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -628,7 +628,7 @@ pub struct ProgramSecurityDelta {
 }
 
 /// 🩹 One patched `SecurityRequirement` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -638,7 +638,7 @@ pub struct ProgramSecurityPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `regulatory`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -650,7 +650,7 @@ pub struct ProgramRegulatoryDelta {
 }
 
 /// 🩹 One patched `RegulatoryRequirement` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -660,7 +660,7 @@ pub struct ProgramRegulatoryPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `site_context`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -672,7 +672,7 @@ pub struct ProgramSiteContextDelta {
 }
 
 /// 🩹 One patched `SiteContext` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -682,7 +682,7 @@ pub struct ProgramSiteContextPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `organizational`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -694,7 +694,7 @@ pub struct ProgramOrganizationalDelta {
 }
 
 /// 🩹 One patched `OrganizationalRequirement` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -704,7 +704,7 @@ pub struct ProgramOrganizationalPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `services`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -716,7 +716,7 @@ pub struct ProgramServicesDelta {
 }
 
 /// 🩹 One patched `ServiceRequirement` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -726,7 +726,7 @@ pub struct ProgramServicesPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `infrastructure`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -738,7 +738,7 @@ pub struct ProgramInfrastructureDelta {
 }
 
 /// 🩹 One patched `InfrastructureRequirement` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -748,7 +748,7 @@ pub struct ProgramInfrastructurePatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `information`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -760,7 +760,7 @@ pub struct ProgramInformationDelta {
 }
 
 /// 🩹 One patched `InformationRequirement` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -770,7 +770,7 @@ pub struct ProgramInformationPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `communication`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -782,7 +782,7 @@ pub struct ProgramCommunicationDelta {
 }
 
 /// 🩹 One patched `CommunicationRequirement` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -792,7 +792,7 @@ pub struct ProgramCommunicationPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `wayfinding`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -804,7 +804,7 @@ pub struct ProgramWayfindingDelta {
 }
 
 /// 🩹 One patched `WayfindingRequirement` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -814,7 +814,7 @@ pub struct ProgramWayfindingPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `schedules`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -826,7 +826,7 @@ pub struct ProgramSchedulesDelta {
 }
 
 /// 🩹 One patched `ScheduleRequirement` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -836,7 +836,7 @@ pub struct ProgramSchedulesPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `flexibility`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -848,7 +848,7 @@ pub struct ProgramFlexibilityDelta {
 }
 
 /// 🩹 One patched `FlexibilityRequirement` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -858,7 +858,7 @@ pub struct ProgramFlexibilityPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `growth`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -870,7 +870,7 @@ pub struct ProgramGrowthDelta {
 }
 
 /// 🩹 One patched `GrowthPlan` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -880,7 +880,7 @@ pub struct ProgramGrowthPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `sustainability`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -892,7 +892,7 @@ pub struct ProgramSustainabilityDelta {
 }
 
 /// 🩹 One patched `SustainabilityRequirement` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -902,7 +902,7 @@ pub struct ProgramSustainabilityPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `resilience`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -914,7 +914,7 @@ pub struct ProgramResilienceDelta {
 }
 
 /// 🩹 One patched `ResilienceRequirement` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -924,7 +924,7 @@ pub struct ProgramResiliencePatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `costs`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -936,7 +936,7 @@ pub struct ProgramCostsDelta {
 }
 
 /// 🩹 One patched `CostRequirement` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -946,7 +946,7 @@ pub struct ProgramCostsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `delivery`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -958,7 +958,7 @@ pub struct ProgramDeliveryDelta {
 }
 
 /// 🩹 One patched `DeliveryConstraint` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -968,7 +968,7 @@ pub struct ProgramDeliveryPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `risks`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -980,7 +980,7 @@ pub struct ProgramRisksDelta {
 }
 
 /// 🩹 One patched `Risk` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -990,7 +990,7 @@ pub struct ProgramRisksPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `conflicts`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1002,7 +1002,7 @@ pub struct ProgramConflictsDelta {
 }
 
 /// 🩹 One patched `Conflict` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1012,7 +1012,7 @@ pub struct ProgramConflictsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `requirements`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1024,7 +1024,7 @@ pub struct ProgramRequirementsDelta {
 }
 
 /// 🩹 One patched `Requirement` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1034,7 +1034,7 @@ pub struct ProgramRequirementsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `priorities`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1046,7 +1046,7 @@ pub struct ProgramPrioritiesDelta {
 }
 
 /// 🩹 One patched `PriorityRecord` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1056,7 +1056,7 @@ pub struct ProgramPrioritiesPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `scenarios`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1068,7 +1068,7 @@ pub struct ProgramScenariosDelta {
 }
 
 /// 🩹 One patched `Scenario` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1078,7 +1078,7 @@ pub struct ProgramScenariosPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `options`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1090,7 +1090,7 @@ pub struct ProgramOptionsDelta {
 }
 
 /// 🩹 One patched `OptionEvaluation` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1100,7 +1100,7 @@ pub struct ProgramOptionsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `decisions`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1112,7 +1112,7 @@ pub struct ProgramDecisionsDelta {
 }
 
 /// 🩹 One patched `Decision` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1122,7 +1122,7 @@ pub struct ProgramDecisionsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `validations`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1134,7 +1134,7 @@ pub struct ProgramValidationsDelta {
 }
 
 /// 🩹 One patched `ValidationRecord` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1144,7 +1144,7 @@ pub struct ProgramValidationsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `performance`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1156,7 +1156,7 @@ pub struct ProgramPerformanceDelta {
 }
 
 /// 🩹 One patched `PerformanceCriterion` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1166,7 +1166,7 @@ pub struct ProgramPerformancePatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `quality`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1178,7 +1178,7 @@ pub struct ProgramQualityDelta {
 }
 
 /// 🩹 One patched `QualityRecord` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1188,7 +1188,7 @@ pub struct ProgramQualityPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `documents`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1200,7 +1200,7 @@ pub struct ProgramArtifactsDelta {
 }
 
 /// 🩹 One patched `ArtifactRecord` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1210,7 +1210,7 @@ pub struct ProgramArtifactsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `assumptions`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1222,7 +1222,7 @@ pub struct ProgramAssumptionsDelta {
 }
 
 /// 🩹 One patched `Assumption` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1232,7 +1232,7 @@ pub struct ProgramAssumptionsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `constraints`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1244,7 +1244,7 @@ pub struct ProgramConstraintsDelta {
 }
 
 /// 🩹 One patched `ConstraintRecord` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1254,7 +1254,7 @@ pub struct ProgramConstraintsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `compliance_records`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1266,7 +1266,7 @@ pub struct ProgramComplianceRecordsDelta {
 }
 
 /// 🩹 One patched `ComplianceRecord` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1276,7 +1276,7 @@ pub struct ProgramComplianceRecordsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `approvals`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1288,7 +1288,7 @@ pub struct ProgramApprovalsDelta {
 }
 
 /// 🩹 One patched `ApprovalRecord` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1298,7 +1298,7 @@ pub struct ProgramApprovalsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `meetings`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1310,7 +1310,7 @@ pub struct ProgramMeetingsDelta {
 }
 
 /// 🩹 One patched `MeetingRecord` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1320,7 +1320,7 @@ pub struct ProgramMeetingsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `changes`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1332,7 +1332,7 @@ pub struct ProgramChangesDelta {
 }
 
 /// 🩹 One patched `ChangeRecord` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1342,7 +1342,7 @@ pub struct ProgramChangesPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `collaboration`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1354,7 +1354,7 @@ pub struct ProgramCollaborationDelta {
 }
 
 /// 🩹 One patched `CollaborationRecord` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1364,7 +1364,7 @@ pub struct ProgramCollaborationPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `analyses`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1376,7 +1376,7 @@ pub struct ProgramAnalysesDelta {
 }
 
 /// 🩹 One patched `AnalysisRecord` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1386,7 +1386,7 @@ pub struct ProgramAnalysesPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `reports`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1398,7 +1398,7 @@ pub struct ProgramReportsDelta {
 }
 
 /// 🩹 One patched `ReportRecord` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1408,7 +1408,7 @@ pub struct ProgramReportsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `search_filters`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1420,7 +1420,7 @@ pub struct ProgramSearchFiltersDelta {
 }
 
 /// 🩹 One patched `SearchFilter` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1430,7 +1430,7 @@ pub struct ProgramSearchFiltersPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `status_records`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1442,7 +1442,7 @@ pub struct ProgramStatusRecordsDelta {
 }
 
 /// 🩹 One patched `StatusRecord` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1452,7 +1452,7 @@ pub struct ProgramStatusRecordsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `workshops`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1464,7 +1464,7 @@ pub struct ProgramWorkshopsDelta {
 }
 
 /// 🩹 One patched `Workshop` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1474,7 +1474,7 @@ pub struct ProgramWorkshopsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `surveys`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1486,7 +1486,7 @@ pub struct ProgramSurveysDelta {
 }
 
 /// 🩹 One patched `Survey` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1496,7 +1496,7 @@ pub struct ProgramSurveysPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `issues`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1508,7 +1508,7 @@ pub struct ProgramIssuesDelta {
 }
 
 /// 🩹 One patched `Issue` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1518,7 +1518,7 @@ pub struct ProgramIssuesPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `audit_events`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1530,7 +1530,7 @@ pub struct ProgramAuditEventsDelta {
 }
 
 /// 🩹 One patched `AuditEvent` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1540,7 +1540,7 @@ pub struct ProgramAuditEventsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `templates`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1552,7 +1552,7 @@ pub struct ProgramTemplatesDelta {
 }
 
 /// 🩹 One patched `TemplateRecord` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1562,7 +1562,7 @@ pub struct ProgramTemplatesPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `traces`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1574,7 +1574,7 @@ pub struct ProgramTracesDelta {
 }
 
 /// 🩹 One patched `TraceLink` entry.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]

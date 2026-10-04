@@ -12,7 +12,7 @@ use crate::Din18599Snapshot;
 pub const DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
 /// 📖️ Parses DIN V 18599 DSL text into a `Document`.
-pub fn parse_dsl(text: &str) -> Result<Din18599Snapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<Din18599Snapshot, semio_framework_diagnostic::TextError> {
     <Din18599Snapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 

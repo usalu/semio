@@ -1,8 +1,8 @@
 use crate::standards::v1::subsets::any::io as io_root;
 use crate::RemodelingSnapshot;
-use semio_framework::io::io_mechanism::Serializer;
+use semio_framework::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
-use semio_framework_plugin::{resolve_ready, ArtifactSerializer};
+use semio_framework_plugin::{ ArtifactSerializer};
 use semio_framework_plugin::{StandardId, SubsetId};
 use semio_s_artifact_stdio_gltf::standards::v2_0::engine::encode_glb;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::gltf::v2_0::any::SemioMeshToGltf;
@@ -20,10 +20,10 @@ pub struct RemodelingIntoGltf;
 impl Serializer<RemodelingSnapshot> for RemodelingIntoGltf {
     const INTO: Dialect = GLTF_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &RemodelingSnapshot) -> IoResult<IoPayload> {
-        let semio = io_root::scene_mesh_semio(from).map_err(|reason| IoError { message: format!("remodeling→gltf: nothing to export: {reason}"), diagnostics: Vec::new() })?;
-        let gltf = resolve_ready(SemioMeshToGltf::serialize(&semio)).map_err(|error| IoError { message: format!("remodeling→gltf: {error}"), diagnostics: Vec::new() })?;
-        let bytes = encode_glb(&gltf).map_err(|error| IoError { message: format!("remodeling→gltf: {error}"), diagnostics: Vec::new() })?;
+    async fn serialize(from: &RemodelingSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+        let semio = io_root::scene_mesh_semio(from).map_err(|reason| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("remodeling→gltf: nothing to export: {reason}"))))?;
+        let gltf = ::semio_framework_async::poll::resolve_ready(SemioMeshToGltf::serialize(&semio)).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("remodeling→gltf: {error}"))))?;
+        let bytes = encode_glb(&gltf).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("remodeling→gltf: {error}"))))?;
         Ok(IoOutcome::clean(IoPayload::Binary(bytes)))
     }
 }

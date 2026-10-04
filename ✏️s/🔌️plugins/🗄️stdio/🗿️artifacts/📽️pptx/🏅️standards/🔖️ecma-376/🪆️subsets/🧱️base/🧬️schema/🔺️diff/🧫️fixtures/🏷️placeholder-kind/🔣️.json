@@ -2,7 +2,169 @@
   "beforeKind": "title",
   "afterKind": "body",
   "expectedDiff": {
-    "shapeKind": "placeholder",
-    "kind": "body"
+    "xmlParts": [
+      {
+        "path": "ppt/slides/slide1.xml",
+        "contentType": "application/vnd.openxmlformats-officedocument.presentationml.slide+xml",
+        "document": {
+          "root": {
+            "kind": "element",
+            "name": "p:sld",
+            "attrs": [
+              {
+                "name": "xmlns:p",
+                "value": "http://schemas.openxmlformats.org/presentationml/2006/main"
+              },
+              {
+                "name": "xmlns:a",
+                "value": "http://schemas.openxmlformats.org/drawingml/2006/main"
+              }
+            ],
+            "children": [
+              {
+                "kind": "element",
+                "name": "p:cSld",
+                "attrs": [],
+                "children": [
+                  {
+                    "kind": "element",
+                    "name": "p:spTree",
+                    "attrs": [],
+                    "children": [
+                      {
+                        "kind": "element",
+                        "name": "p:nvGrpSpPr",
+                        "attrs": [],
+                        "children": [
+                          {
+                            "kind": "element",
+                            "name": "p:cNvPr",
+                            "attrs": [
+                              {
+                                "name": "id",
+                                "value": "1"
+                              },
+                              {
+                                "name": "name",
+                                "value": ""
+                              }
+                            ],
+                            "children": []
+                          },
+                          {
+                            "kind": "element",
+                            "name": "p:cNvGrpSpPr",
+                            "attrs": [],
+                            "children": []
+                          },
+                          {
+                            "kind": "element",
+                            "name": "p:nvPr",
+                            "attrs": [],
+                            "children": []
+                          }
+                        ]
+                      },
+                      {
+                        "kind": "element",
+                        "name": "p:grpSpPr",
+                        "attrs": [],
+                        "children": []
+                      },
+                      {
+                        "kind": "element",
+                        "name": "p:sp",
+                        "attrs": [],
+                        "children": [
+                          {
+                            "kind": "element",
+                            "name": "p:nvSpPr",
+                            "attrs": [],
+                            "children": [
+                              {
+                                "kind": "element",
+                                "name": "p:cNvPr",
+                                "attrs": [
+                                  {
+                                    "name": "id",
+                                    "value": "2"
+                                  },
+                                  {
+                                    "name": "name",
+                                    "value": "Content Placeholder"
+                                  }
+                                ],
+                                "children": []
+                              },
+                              {
+                                "kind": "element",
+                                "name": "p:cNvSpPr",
+                                "attrs": [],
+                                "children": []
+                              },
+                              {
+                                "kind": "element",
+                                "name": "p:nvPr",
+                                "attrs": [],
+                                "children": [
+                                  {
+                                    "kind": "element",
+                                    "name": "p:ph",
+                                    "attrs": [
+                                      {
+                                        "name": "type",
+                                        "value": "body"
+                                      }
+                                    ],
+                                    "children": []
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "kind": "element",
+                            "name": "p:spPr",
+                            "attrs": [],
+                            "children": []
+                          },
+                          {
+                            "kind": "element",
+                            "name": "p:txBody",
+                            "attrs": [],
+                            "children": [
+                              {
+                                "kind": "element",
+                                "name": "a:bodyPr",
+                                "attrs": [],
+                                "children": []
+                              },
+                              {
+                                "kind": "element",
+                                "name": "a:lstStyle",
+                                "attrs": [],
+                                "children": []
+                              },
+                              {
+                                "kind": "element",
+                                "name": "a:p",
+                                "attrs": [],
+                                "children": []
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "prolog": [],
+          "epilog": []
+        }
+      }
+    ]
   }
 }

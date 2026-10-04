@@ -10,7 +10,7 @@ async fn set_visibility_relays_the_directory_command() {
     match &result.requested_effects[0] {
         Effect::ReplayShellCommand { action_id, args } => {
             assert_eq!(action_id, "os.directory.set-visibility");
-            let args = pack::json_from_dsl_value(&args.clone().unwrap());
+            let args = semio_framework_pack_json::from_dsl_value(&args.clone().unwrap());
             assert_eq!(args.get("visibility").and_then(|v| v.as_str()), Some("public"));
         }
         other => panic!("expected ReplayShellCommand, got {other:?}"),

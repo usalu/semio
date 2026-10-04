@@ -356,17 +356,14 @@ mod reference {
         write_movie(&movie)
     }
 
-    /// 🧭️ One `SnapshotPatch` edit as `(path segments, operation, edit object)`.
+    /// 🧭️ The one `SnapshotPatch` operation as `(decoded pointer segments, operation, patch object)`.
     fn patch_edits(params: &Json) -> Vec<(Vec<String>, String, Json)> {
         params
             .get("patch")
-            .map(|patch| patch.array("edits"))
-            .unwrap_or_default()
             .into_iter()
-            .map(|edit| {
-                let path = edit.array("path").iter().map(|segment| if let Json::String(text) = segment { text.clone() } else { String::new() }).collect();
-                let operation = edit.get("edit").cloned().unwrap_or(Json::Null);
-                (path, operation.str("operation"), operation)
+            .map(|patch| {
+                let path = patch.str("path").split('/').skip(1).map(|segment| segment.replace("~1", "/").replace("~0", "~")).collect();
+                (path, patch.str("operation"), patch.clone())
             })
             .collect()
     }
@@ -564,3 +561,15 @@ mod reference {
     //#endregion 🔖️Project
 }
 //#endregion 🔖️Reference
+
+#[cfg(all(test, feature = "oracles"))]
+mod tests {
+    use super::project_mp4_mutation;
+
+    #[test]
+    fn independent_reader_accepts_the_exact_playback_fixture() {
+        let projection = project_mp4_mutation(include_bytes!("../🧫️fixtures/🎬️.mp4")).expect("mp4 0.14 independently parses the playback bytes");
+        assert_eq!(projection.str("majorBrand"), "isom");
+        assert!(projection.get("tracks").is_some(), "independent projection includes typed tracks");
+    }
+}

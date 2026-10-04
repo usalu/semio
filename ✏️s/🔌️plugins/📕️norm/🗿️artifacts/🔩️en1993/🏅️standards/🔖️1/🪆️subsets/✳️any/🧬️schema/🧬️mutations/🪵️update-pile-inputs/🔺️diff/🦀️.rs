@@ -9,7 +9,7 @@ pub fn diff(payload: &UpdatePileInputs, base: &En1993Snapshot) -> protocol::Muta
     let mut values = base.piles.clone();
     if let Some(idx) = values.iter().position(|x| x.id == payload.pile.id) {
         if values[idx] == payload.pile {
-            return protocol::MutationOutcome::empty().warn("mutation.no-op", "Entity already has this value.");
+            return protocol::MutationOutcome::empty().warning("mutation.no-op", "Entity already has this value.");
         }
         values[idx] = payload.pile.clone();
     } else {

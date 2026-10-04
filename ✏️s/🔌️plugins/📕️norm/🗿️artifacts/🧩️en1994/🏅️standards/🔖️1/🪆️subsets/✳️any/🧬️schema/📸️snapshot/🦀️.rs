@@ -13,7 +13,7 @@ mod sqlite_tests;
 
 //#region 🔖️Snapshot
 
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -117,12 +117,12 @@ impl En1994Snapshot {
 //#region 🌉️ExternalCodecBridge
 /// 📤️ Canonical JSON projection of [`En1994Snapshot`].
 pub fn encode_en1994_snapshot_json(snapshot: &En1994Snapshot) -> String {
-    pack::json::to_json_string(snapshot)
+    semio_framework_pack_json::to_json_string(snapshot)
 }
 
 /// 📥️ Inverse of [`encode_en1994_snapshot_json`].
 pub fn decode_en1994_snapshot_json(text: &str) -> Result<En1994Snapshot, String> {
-    pack::json::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 
 /// 📖️ Parses committed `.dsl.semio` into [`En1994Snapshot`].

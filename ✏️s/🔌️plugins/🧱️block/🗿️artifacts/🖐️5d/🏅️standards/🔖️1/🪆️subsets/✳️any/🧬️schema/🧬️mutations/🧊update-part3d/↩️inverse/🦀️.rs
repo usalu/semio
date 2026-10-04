@@ -4,7 +4,10 @@ use crate::Block5dSnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::Block5dMutation;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &super::UpdatePart3d, base: &Block5dSnapshot) -> Vec<Block5dMutation> {
+pub fn inverse(_payload: &super::UpdatePart3d, base: &Block5dSnapshot) -> Result<Vec<Block5dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![super::super::update_part_3d::update_part_3d(base.part_3d.orientation, base.part_3d.scale)]
+
+    })())
 }
 //#endregion 🔖️Inverse

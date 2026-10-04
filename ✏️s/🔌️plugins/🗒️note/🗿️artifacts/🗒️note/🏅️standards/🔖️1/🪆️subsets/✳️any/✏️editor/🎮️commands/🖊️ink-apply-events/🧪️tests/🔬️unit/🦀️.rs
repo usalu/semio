@@ -21,9 +21,9 @@ async fn ink_wire_text_block_round_trips_into_the_composed_text_record() {
     let block = create_block_by_kind(&mut ids, "text", 10.0, 10.0);
     let wire = ink_wire_block(&block);
     assert!(wire.get("content").is_none() && wire["paragraphs"].is_array(), "the host reads bare paragraphs: {wire}");
-    let mut value = dsl::os_pack::json_to_dsl_value(&dsl::os_pack::json::parse(&wire.to_string()).expect("wire JSON"));
+    let mut value = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(&wire.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("wire JSON"));
     crate::note_block_value_from_ink_wire(&mut value).expect("wire block");
-    assert_eq!(<NoteBlockNode as dsl::FromValue>::from_value(value).expect("note block"), block);
+    assert_eq!(<NoteBlockNode as semio_framework_value::FromValue>::from_value(value).expect("note block"), block);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -158,8 +158,8 @@ async fn a_block_drag_commits_one_relative_drag_blocks_leaf() {
     let drag = &rows[1];
     assert_eq!(drag.op_lines.len(), 1, "one relative leaf: {:?}", drag.op_lines);
     assert!(drag.op_lines[0].starts_with("drag-blocks"), "{:?}", drag.op_lines);
-    assert_eq!(drag.label.resolve(protocol::Terminology::Native, protocol::Locale::En), "Drag 2 blocks by (30, 15)");
-    assert_eq!(drag.label.resolve(protocol::Terminology::Native, protocol::Locale::De), "2 Blöcke um (30; 15) ziehen");
+    assert_eq!(drag.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Drag 2 blocks by (30, 15)");
+    assert_eq!(drag.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "2 Blöcke um (30; 15) ziehen");
 }
 
 /// ⌨️ LAW (design §5): a keyboard nudge is ONE transaction of ONE `drag-blocks` over every unlocked selected block —

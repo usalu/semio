@@ -1,0 +1,10 @@
+{
+  "bilinear": false,
+  "height": 8,
+  "layerId": "paint",
+  "mutation": "transformImage",
+  "operation": "resize",
+  "width": 12,
+  "x": 0,
+  "y": 0
+}

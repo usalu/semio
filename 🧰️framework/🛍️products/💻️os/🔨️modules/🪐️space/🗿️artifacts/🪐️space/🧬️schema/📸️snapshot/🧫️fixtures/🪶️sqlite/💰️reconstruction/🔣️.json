@@ -1,0 +1,23 @@
+{
+  "owner": "os.space",
+  "authority": "system-request-layouts",
+  "admission": "callerAllocationLedger",
+  "retainAdmission": true,
+  "table": "space_document",
+  "column": "name",
+  "textUnit": "\u0000引用😀",
+  "repeat": 32768,
+  "utf8Bytes": 360448,
+  "cancelAt": 4096,
+  "rows": 10,
+  "budgetCases": [
+    "exact",
+    "oneLess",
+    "zero",
+    "cumulative"
+  ],
+  "refusalKinds": [
+    "ownershipLimit",
+    "canceled"
+  ]
+}

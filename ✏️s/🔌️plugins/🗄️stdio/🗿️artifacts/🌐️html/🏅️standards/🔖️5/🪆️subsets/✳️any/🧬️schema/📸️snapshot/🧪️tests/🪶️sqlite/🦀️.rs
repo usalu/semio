@@ -3,7 +3,7 @@ use semio_framework_os_kernel::{sqlite_snapshot::*, ArtifactSqliteSnapshot};
 
 fn fixture() -> HtmlSnapshot { let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap(); parse_html_document(fixture["htmlText"].as_str().unwrap()).unwrap() }
 fn project(snapshot: &HtmlSnapshot) -> SqliteDatabase { snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap() }
-fn restore(database: &SqliteDatabase) -> Result<HtmlSnapshot, String> { HtmlSnapshot::from_sqlite_database(database, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())) }
+fn restore(database: &SqliteDatabase) -> Result<HtmlSnapshot, ValueError> { HtmlSnapshot::from_sqlite_database(database, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())) }
 
 #[test]
 fn sqlite_snapshot_html_owned_dialect_guard_requires_its_declared_coordinate() {
@@ -86,3 +86,6 @@ fn sqlite_snapshot_html_erased_native_preflight_admission_and_limits() {
     assert!(large.preflight_sqlite_snapshot_encoding(SnapshotEncoding::Text, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits { max_value_bytes: 4096, ..SqliteDatabaseLimits::default() })).is_err());
     assert!(large.preflight_sqlite_snapshot_encoding(SnapshotEncoding::Binary, &mut SqliteSnapshotControl::new(&mut |p| p.phase != SqliteSnapshotPhase::EncodeNative, SqliteDatabaseLimits::default())).is_err());
 }
+
+#[path = "🚦️cohort/🦀️.rs"]
+mod complete_public_cohort;

@@ -268,7 +268,7 @@ fn las_native_receipt_binds_canonical_graph_and_independent_blake3() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../📇️publication/🧫️fixtures/🧬️trusted-stdio-catalog/🔣️.json"))).unwrap();
     let spec = <semio_s_artifact_stdio_las::LasSnapshot as semio_framework_os_kernel::ArtifactPack>::record_spec().unwrap();
     let graph = semio_framework_os_kernel::os_pack::PackSchemaGraph::of(&spec);
-    let json: serde_json::Value = serde_json::from_str(&semio_framework_os_kernel::os_pack::json::to_string(&graph.to_json())).unwrap();
+    let json: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_string(&graph.to_json())).unwrap();
     let records = json.as_array().unwrap();
     let mut independent = Vec::new();
     varint(&mut independent, records.len() as u64);
@@ -298,7 +298,7 @@ fn las_native_receipt_binds_canonical_graph_and_independent_blake3() {
 #[semio_framework_async_macros::async_test]
 async fn text_document_codecs_compile_their_neutral_fixture_through_the_linked_receipts() {
     fn neutral<T: semio_framework_os_kernel::ToValue>(snapshot: T) -> serde_json::Value {
-        serde_json::from_str(&pack::json_to_string(&pack::json_from_dsl_value(&snapshot.to_value()))).unwrap()
+        serde_json::from_str(&semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&snapshot.to_value()))).unwrap()
     }
     let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../📇️catalog/🧫️fixtures/📇️native-text-codecs/🔣️.json"))).unwrap();
     assert_eq!(fixture["schema"], "semio.stdio.native-text-codecs/v1");

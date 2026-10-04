@@ -6,13 +6,12 @@
 
 use crate::ProcedureSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::topology::compute_procedure_topology;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from an imperative snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `topology`, backed by the `🧭topology/` slug dir).
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.imperative.procedure.inference")]
 pub struct ProcedureInference {
@@ -21,9 +20,9 @@ pub struct ProcedureInference {
 }
 
 impl protocol::Inference<ProcedureSnapshot> for ProcedureInference {
-    fn infer(snapshot: &ProcedureSnapshot) -> Self {
-        let path = crate::procedure_working_scene(snapshot).path;
-        Self { topology: compute_procedure_topology(&path) }
+    fn infer(snapshot: &ProcedureSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        let scene = crate::procedure_derivable_scene(snapshot).unwrap_or_default();
+        Ok(Self { topology: compute_procedure_topology(&scene.path) })
     }
 }
 
@@ -35,7 +34,8 @@ impl protocol::Inference<ProcedureSnapshot> for ProcedureInference {
 /// in this fan-out consistent regardless of which artifacts' defaults are trivial.
 impl Default for ProcedureInference {
     fn default() -> Self {
-        <Self as protocol::Inference<ProcedureSnapshot>>::infer(&ProcedureSnapshot::default())
+        let scene = crate::procedure_derivable_scene(&ProcedureSnapshot::default()).unwrap_or_default();
+        Self { topology: compute_procedure_topology(&scene.path) }
     }
 }
 
@@ -51,13 +51,6 @@ impl protocol::InferenceSpec<ProcedureSnapshot> for ProcedureInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::ProcedureBuilder {
-    type Snapshot = ProcedureSnapshot;
-    type Inference = ProcedureInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.imperative.procedure.inference`'s facet leaves into the OS-wide inference

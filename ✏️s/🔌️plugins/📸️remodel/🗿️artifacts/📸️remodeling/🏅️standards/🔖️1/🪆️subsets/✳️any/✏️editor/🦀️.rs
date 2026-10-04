@@ -128,7 +128,7 @@ pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framew
 /// ☑️ A window-measure/`ActionDescriptor` action — `WindowMeasure` is the RETAINED (`ui_wgpu`) vocabulary
 /// and takes a plain `ActionDescriptor { controller_id, action, args }`, not the fallible
 /// `(ActionId, Option<UiValue>)` pair `remodeling_action` builds for semantic-contract chrome.
-pub fn remodeling_window_action(action: &str, args: Option<dsl::DslValue>) -> semio_framework_plugin::ActionDescriptor {
+pub fn remodeling_window_action(action: &str, args: Option<semio_framework_value::DslValue>) -> semio_framework_plugin::ActionDescriptor {
     semio_framework_plugin::ActionDescriptor { controller_id: REMODELING_PLAY_APP_ID.into(), action: action.into(), args }
 }
 
@@ -310,29 +310,29 @@ use crate::editor::remodeling::commands::{set_dense_params, set_feature_params, 
 mod args_bridge {
     use super::*;
 
-    fn field<'a>(args: Option<&'a dsl::DslValue>, key: &str) -> Option<&'a dsl::DslValue> {
+    fn field<'a>(args: Option<&'a semio_framework_value::DslValue>, key: &str) -> Option<&'a semio_framework_value::DslValue> {
         args?.get(key)
     }
 
     /// 🔤️ A string arg — also accepts a number, so a select whose option ids are numeric (`textureSize`)
     /// reads the same whether the host sends `"2048"` or `2048`.
-    fn text(args: Option<&dsl::DslValue>, key: &str) -> Option<String> {
+    fn text(args: Option<&semio_framework_value::DslValue>, key: &str) -> Option<String> {
         let value = field(args, key)?;
         value.as_str().map(str::to_owned).or_else(|| value.as_u64().map(|number| number.to_string())).or_else(|| value.as_i64().map(|number| number.to_string())).or_else(|| value.as_f64().map(|number| number.to_string()))
     }
 
     /// 🔢️ A numeric arg — also accepts a numeric string, which is how select-sourced numbers arrive.
-    fn number(args: Option<&dsl::DslValue>, key: &str) -> Option<f64> {
+    fn number(args: Option<&semio_framework_value::DslValue>, key: &str) -> Option<f64> {
         let value = field(args, key)?;
         value.as_f64().or_else(|| value.as_str()?.parse().ok())
     }
 
-    fn flag(args: Option<&dsl::DslValue>, key: &str) -> Option<bool> {
+    fn flag(args: Option<&semio_framework_value::DslValue>, key: &str) -> Option<bool> {
         let value = field(args, key)?;
         value.as_bool().or_else(|| value.as_str()?.parse().ok())
     }
 
-    fn vec3(args: Option<&dsl::DslValue>, key: &str) -> Option<[f64; 3]> {
+    fn vec3(args: Option<&semio_framework_value::DslValue>, key: &str) -> Option<[f64; 3]> {
         let items = field(args, key)?.as_array()?;
         Some([items.first()?.as_f64()?, items.get(1)?.as_f64()?, items.get(2)?.as_f64()?])
     }
@@ -342,7 +342,7 @@ mod args_bridge {
     }
 
     #[allow(clippy::too_many_lines)]
-    pub fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<RemodelingCommand, Fault> {
+    pub fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<RemodelingCommand, Fault> {
         let text_or = |key: &str, fallback: &str| text(args, key).unwrap_or_else(|| fallback.to_string());
         let f64_or = |key: &str, fallback: f64| number(args, key).unwrap_or(fallback);
         let f32_or = |key: &str, fallback: f32| number(args, key).map_or(fallback, |value| value as f32);
@@ -687,6 +687,7 @@ impl ArtifactCommandWork<EditorApp<RemodelingPlayApp>> for RemodelingWindowComma
     fn step(
         &mut self,
         input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<RemodelingPlayApp>>,
+    _cx: &mut semio_framework_job::StepContext<'_>,
     ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<RemodelingPlayApp>>, Fault> {
         if self.completed || input.command.command_id() != self.tool_id {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("remodeling.retained.route"), "the bounded Remodeling work rejects an undeclared or completed route"));
@@ -694,12 +695,12 @@ impl ArtifactCommandWork<EditorApp<RemodelingPlayApp>> for RemodelingWindowComma
         let window = input.context.and_then(|context| context.window_config.as_ref());
         let config_view = ConfigView { snapshot: input.config, window };
         let document = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
-        let resting = transient::current(input.context.and_then(|context| context.window_transient.as_ref()));
+        let resting = transient::from_snapshot(input.context.and_then(|context| context.window_transient.as_ref()));
         if let Some(imported) = input.command.import_in_window(&document, &config_view, &resting) {
             let (emit, next) = imported?;
             let window_transient = match next == resting {
                 true => Vec::new(),
-                false => vec![transient::addressed(input.context.and_then(|context| context.view_state.as_ref()).ok_or_else(|| Fault::from("remodeling-import-window-required"))?, next)?],
+                false => vec![transient::addressed(input.context.and_then(|context| context.view_state.as_ref()).ok_or_else(crate::editor::remodeling::commands::import_video_frame_payload::import_window_required)?, next)?],
             };
             self.completed = true;
             return Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral: EphemeralEmit { window_transient, ..Default::default() } });
@@ -775,6 +776,21 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for RemodelingRetainedC
 
 
 impl ArtifactEditor for RemodelingPlayApp {
+    /// 📢️ The localized notices of this editor's user-reachable refusals (design §20.12).
+    fn fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
+        use semio_framework_ui_locale::LocalizedLabel;
+        static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 5]> = std::sync::LazyLock::new(|| {
+            [
+            ("remodeling.import.open", LocalizedLabel::native("An import is still running in this window.", "In diesem Fenster läuft noch ein Import.")),
+            ("remodeling.import.window-required", LocalizedLabel::native("A streamed import needs an open window.", "Ein gestreamter Import braucht ein geöffnetes Fenster.")),
+            ("remodeling.stream.unknown-camera", LocalizedLabel::native("This camera is not calibrated in the document.", "Diese Kamera ist im Dokument nicht kalibriert.")),
+            ("remodeling.qc-report.missing", LocalizedLabel::native("There is no quality report to export yet.", "Es gibt noch keinen Qualitätsbericht zum Exportieren.")),
+            ("remodeling.retained.extent", LocalizedLabel::native("The document is too large for this action.", "Das Dokument ist für diese Aktion zu groß.")),
+            ]
+        });
+        &*NOTICES
+    }
+
     type Snapshot = RemodelingSnapshot;
     type Mutation = RemodelingMutation;
     type Config = NoConfig;
@@ -905,7 +921,7 @@ impl ArtifactEditor for RemodelingPlayApp {
             return Ok(None);
         }
         if request.command.command_id() != request.tool_id {
-            return Err(Fault::new(FaultOrigin::App, FaultCode::new("remodeling.retained.tool-mismatch"), "Remodeling command does not match its exact registered tool"));
+            return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.tool-mismatch"), "Remodeling command does not match its exact registered tool"));
         }
         if remodeling_retained_extent(&request.command, &request.snapshot, &request.interaction_state).is_none() {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("remodeling.retained.extent"), "Remodeling bounded route exceeded its declared work extent"));
@@ -1027,7 +1043,7 @@ impl ArtifactEditor for RemodelingPlayApp {
     /// i.e. the whole manifest surface was dead from the host's side. Arg keys are the camelCase ids
     /// declared in `🔖️Manifest`; each is read leniently (missing → the manifest's own default) because
     /// `effective_action_args` stages defaults before dispatch and select-typed args arrive as strings.
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<RemodelingCommand, Fault> {
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<RemodelingCommand, Fault> {
         args_bridge::command_from_action(action, args)
     }
 

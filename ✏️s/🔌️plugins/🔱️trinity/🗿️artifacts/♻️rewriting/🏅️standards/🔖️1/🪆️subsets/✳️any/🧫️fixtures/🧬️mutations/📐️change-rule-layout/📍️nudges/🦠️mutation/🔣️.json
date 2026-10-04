@@ -2,7 +2,7 @@
   "mutation": "changeRuleLayoutPoint",
   "key": "c",
   "newPoint": {
-    "x": 24.0,
-    "y": 16.5
+    "x": {"bits": "4038000000000000"},
+    "y": {"bits": "4030800000000000"}
   }
 }

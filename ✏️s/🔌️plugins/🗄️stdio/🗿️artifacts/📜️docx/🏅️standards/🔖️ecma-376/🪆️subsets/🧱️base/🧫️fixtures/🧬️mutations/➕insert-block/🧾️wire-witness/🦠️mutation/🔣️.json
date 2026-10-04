@@ -1,0 +1,15 @@
+{
+  "mutation": "insertBlock",
+  "path": {
+    "segments": [],
+    "index": 1
+  },
+  "block": {
+    "kind": "paragraph",
+    "runs": [
+      {
+        "text": "History witness"
+      }
+    ]
+  }
+}

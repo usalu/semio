@@ -29,3 +29,7 @@ record remove-shared-string tag=8
 field payload bytes
 record set-shared-string tag=9
 field payload bytes
+record patch-snapshot tag=10
+field payload bytes
+record insert-cell tag=11
+field payload bytes

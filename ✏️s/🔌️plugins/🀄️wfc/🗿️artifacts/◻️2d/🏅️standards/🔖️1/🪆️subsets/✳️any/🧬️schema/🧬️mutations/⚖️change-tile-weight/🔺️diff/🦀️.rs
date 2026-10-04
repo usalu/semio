@@ -12,7 +12,7 @@ pub fn diff(payload: &super::ChangeTileWeight, base: &Wfc2dSnapshot) -> protocol
     }
     let tile = &base.tiles[index];
     if tile.weight == payload.weight {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Tile \"{}\" already has that weight.", payload.tile_id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Tile \"{}\" already has that weight.", payload.tile_id));
     }
     let reweighted = crate::schema::snapshot::Wfc2dTile { weight: payload.weight, ..tile.clone() };
     protocol::MutationOutcome::new(Wfc2dDiff { tiles_upserted: vec![(index, reweighted)], ..Default::default() })

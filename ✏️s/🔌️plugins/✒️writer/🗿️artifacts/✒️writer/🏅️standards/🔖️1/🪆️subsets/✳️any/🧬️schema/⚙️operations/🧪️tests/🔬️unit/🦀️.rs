@@ -33,8 +33,8 @@ async fn rename_writer_and_edit_text_invert_to_the_prior_field_value() {
     // `EditText { text: "" }`. `writer_snapshot_with_text` keeps the field and the content-addressed
     // handle in step, which is the only shape a real document ever has.
     let snapshot = crate::writer_snapshot_with_text(crate::WRITER_DOCUMENT_SCHEMA, "old-id", "plaintext", "writer://old-id", "old text");
-    assert_eq!(WriterMutation::RenameWriter(RenameWriter { new_id: "new-id".into() }).inverse(&snapshot), vec![WriterMutation::RenameWriter(RenameWriter { new_id: "old-id".into() })]);
-    assert_eq!(WriterMutation::EditText(EditText { text: "new text".into() }).inverse(&snapshot), vec![WriterMutation::EditText(EditText { text: "old text".into() })]);
+    assert_eq!(WriterMutation::RenameWriter(RenameWriter { new_id: "new-id".into() }).inverse(&snapshot).expect("valid retained mutation inverse fixture"), vec![WriterMutation::RenameWriter(RenameWriter { new_id: "old-id".into() })]);
+    assert_eq!(WriterMutation::EditText(EditText { text: "new text".into() }).inverse(&snapshot).expect("valid retained mutation inverse fixture"), vec![WriterMutation::EditText(EditText { text: "old text".into() })]);
 }
 
 #[semio_framework_async_macros::async_test]

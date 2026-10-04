@@ -7,7 +7,7 @@
 
 use crate::diff::En1990Diff;
 use crate::{En1990Mutation, En1990Snapshot};
-use dsl::ToValue;
+use semio_framework_value::ToValue;
 use protocol::{Mutation, MutationDiff};
 
 //#region 🧾️Vector
@@ -35,7 +35,7 @@ fn wire<T: ToValue>(value: &T) -> serde_json::Value {
 fn out_of_range(op: &En1990Mutation) -> Option<En1990Mutation> {
     let mut payload = serde_json::Value::from(op.payload_value());
     *payload.get_mut("index")? = serde_json::Value::from(u64::from(u32::MAX));
-    op.with_payload_value(dsl::DslValue::from(&payload)).ok()
+    op.with_payload_value(semio_framework_value::DslValue::from(&payload)).ok()
 }
 
 /// 🏷️ A committed outcome's messages as `(level, code)` pairs.
@@ -58,8 +58,8 @@ pub(crate) fn assert_vector(vector: Vector) {
     assert_eq!(op.descriptor().semantic_kind, kind, "{kind}: the committed mutation is another kind's op");
     let framed = protocol::OpBinary::encode_op(&op).expect("the op encodes to its binary frame");
     assert_eq!(<En1990Mutation as protocol::OpBinary>::decode_op(&framed).expect("its binary frame decodes"), op, "{kind}: the binary frame does not round-trip");
-    let before: En1990Snapshot = pack::json::from_json_str(vector.before).expect("the committed before-snapshot decodes");
-    let after: En1990Snapshot = pack::json::from_json_str(vector.after).expect("the committed after-snapshot decodes");
+    let before: En1990Snapshot = semio_framework_pack_json::from_json_str(vector.before, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the committed before-snapshot decodes");
+    let after: En1990Snapshot = semio_framework_pack_json::from_json_str(vector.after, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the committed after-snapshot decodes");
     assert_eq!(wire(&before), committed(vector.before), "{kind}: the committed before-snapshot is not the canonical wire");
     assert_eq!(wire(&after), committed(vector.after), "{kind}: the committed after-snapshot is not the canonical wire");
     let outcome = op.diff(&before);
@@ -68,11 +68,11 @@ pub(crate) fn assert_vector(vector: Vector) {
     assert!(["applied", "no-op", "rejected"].contains(&status.as_str()), "{kind}: unknown committed outcome status {status:?}");
     let raised: Vec<(String, String)> = outcome.messages().iter().map(|message| (format!("{:?}", message.level).to_lowercase(), message.code.0.clone())).collect();
     assert_eq!(raised, committed_messages(&committed_outcome), "{kind}: production dispatch raises other messages than the committed outcome");
-    let refused = outcome.worst_level() >= Some(protocol::Severity::Error);
+    let refused = outcome.worst_level() >= Some(semio_framework_diagnostic::Severity::Error);
     assert_eq!(refused, status == "rejected", "{kind}: a vector is refused exactly when its committed outcome is rejected");
     assert_eq!(vector.diff.is_none(), refused, "{kind}: a vector commits a diff exactly when dispatch does not refuse it");
     if let Some(diff) = vector.diff {
-        let delta: En1990Diff = pack::json::from_json_str(diff).expect("the committed diff decodes");
+        let delta: En1990Diff = semio_framework_pack_json::from_json_str(diff, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the committed diff decodes");
         assert_eq!(wire(&delta), committed(diff), "{kind}: the committed diff is not the canonical wire");
         assert_eq!(wire(outcome.diff()), committed(diff), "{kind}: production dispatch produces another diff than the committed one");
         assert_eq!(MutationDiff::apply(&delta, &before).expect("the committed diff applies to the committed before-snapshot"), after, "{kind}: the committed diff does not carry before to after");
@@ -81,14 +81,14 @@ pub(crate) fn assert_vector(vector: Vector) {
     assert_eq!(applied, after, "{kind}: production dispatch does not land on the committed after-snapshot");
     assert_eq!(status == "applied", applied != before, "{kind}: an applied vector must move the document and only an applied one may");
     if status == "applied" {
-        let inverse = op.inverse(&before);
+        let inverse = op.inverse(&before).expect("valid retained mutation inverse fixture");
         assert!(!inverse.is_empty(), "{kind}: an applied vector computes a non-empty inverse");
         let restored = inverse.iter().fold(applied, |current, step| MutationDiff::apply(step.diff(&current).diff(), &current).expect("an inverse step applies"));
         assert_eq!(restored, before, "{kind}: replaying the inverse does not restore the committed before-snapshot");
     }
     let again = op.diff(&after);
     let no_op = again.messages().iter().any(|message| message.code.0 == "mutation.no-op");
-    let rejected = again.worst_level() >= Some(protocol::Severity::Error) || out_of_range(&op).is_some_and(|stray| stray.diff(&before).worst_level() >= Some(protocol::Severity::Error));
+    let rejected = again.worst_level() >= Some(semio_framework_diagnostic::Severity::Error) || out_of_range(&op).is_some_and(|stray| stray.diff(&before).worst_level() >= Some(semio_framework_diagnostic::Severity::Error));
     let reached: Vec<&str> = [(true, status.as_str()), (no_op, "no-op"), (rejected, "rejected")].into_iter().filter_map(|(reached, class)| reached.then_some(class)).collect();
     let declared: Vec<&str> = op.descriptor().outcome_classes.iter().map(|class| class.as_str()).collect();
     if status == "applied" {

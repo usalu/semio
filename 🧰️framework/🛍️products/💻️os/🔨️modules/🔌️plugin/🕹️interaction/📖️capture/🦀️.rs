@@ -112,7 +112,7 @@ impl ErasedSnapshotRetirement for CapturedRootRetirement {
     /// 🧹️ Hands the captured lease back to its exact registry. The registry's ACCEPTANCE is the
     /// witness; reclaiming the accepted slot into an owned-value retirement belongs to the Store's
     /// own one-slot-per-step cursor, which this owner must never wait on.
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if self.terminal_is_empty() {
             return Ok(SnapshotRetirementStep::Complete);
         }
@@ -122,7 +122,7 @@ impl ErasedSnapshotRetirement for CapturedRootRetirement {
         if let Some(root) = self.owned.root.take() {
             if let Some(mut root) = Arc::into_inner(root) {
                 if !root.read.take().is_some_and(SnapshotRead::return_to_registry) {
-                    return Err("local-interaction.capture-read-return".into());
+                    return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "local-interaction.capture-read-return"));
                 }
             }
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
@@ -182,7 +182,7 @@ impl LocalInteractionCaptureCursor {
     pub(crate) fn begin_close(&mut self) {
         self.reader.begin_close();
     }
-    pub(crate) fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String> {
+    pub(crate) fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         self.reader.close_step(grant)
     }
     pub(crate) fn terminal_is_empty(&self) -> bool {

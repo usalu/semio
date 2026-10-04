@@ -4,7 +4,10 @@ use crate::standards::v1::subsets::any::schema::mutations::{change_parameter_bin
 use crate::RewritingSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::RemoveParameterBinding, base: &RewritingSnapshot) -> Vec<RewriteRuleMutation> {
+pub fn inverse(payload: &super::RemoveParameterBinding, base: &RewritingSnapshot) -> Result<Vec<RewriteRuleMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     base.parameter_bindings.get(&payload.key).map(|old| vec![change_parameter_binding(payload.key.clone(), old.clone())]).unwrap_or_default()
+
+    })())
 }
 //#endregion 🔖️Inverse

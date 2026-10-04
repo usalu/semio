@@ -18,7 +18,7 @@ pub struct RemoveLineMutation {
 
 pub type RemoveLinePayload = RemoveLineMutation;
 
-pub fn decode_remove_line_payload(value: &dsl::DslValue) -> Result<RemoveLinePayload, String> {
+pub fn decode_remove_line_payload(value: &semio_framework_value::DslValue) -> Result<RemoveLinePayload, String> {
     let fields = crate::schema::mutation_support::txt_required_object(value, &["index"])?;
     Ok(RemoveLinePayload { index: crate::schema::mutation_support::txt_graphql_u32_variable(fields[0].1)? })
 }
@@ -46,14 +46,17 @@ impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for RemoveLineMutat
         protocol::MutationOutcome::new(TxtDiff { lines: Some(TxtLinesDiff { removed: vec![index], modified: vec![], added: vec![] }), ..Default::default() })
     }
 
-    fn inverse(&self, base: &TxtSnapshot) -> Vec<super::TxtMutation> {
+    fn inverse(&self, base: &TxtSnapshot) -> Result<Vec<super::TxtMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         let outcome = self.diff(base);
         if !outcome.messages().is_empty() || outcome.diff().lines.is_none() {
             return Vec::new();
         }
         let index = txt_u32_to_usize(self.index).expect("a non-empty diff has a representable line index");
         vec![super::TxtMutation::InsertLine(super::InsertLineMutation { index: self.index, text: base.lines[index].clone() })]
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove Line", "Zeile entfernen")

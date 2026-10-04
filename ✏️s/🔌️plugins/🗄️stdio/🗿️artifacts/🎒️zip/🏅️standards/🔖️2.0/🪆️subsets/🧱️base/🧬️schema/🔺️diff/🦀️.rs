@@ -323,31 +323,31 @@ pub fn diff_set_entry_data(name: &str, data: Vec<u8>) -> ZipDiff {
 //#endregion 🔖️Builders
 
 //#region 🔖️Codec
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 struct ZipDiffRecord {
-    value: dsl::DslValue,
+    value: semio_framework_value::DslValue,
 }
 
 impl protocol::DiffCodec for ZipDiff {
     fn print_diff(&self) -> String {
-        let model = ZipDiffRecord { value: dsl::ToValue::to_value(self) };
-        dsl::print(&model.__dsl_to_record(), &ZipDiffRecord::__dsl_spec(), dsl::JoinMode::Document)
+        let model = ZipDiffRecord { value: semio_framework_value::ToValue::to_value(self) };
+        semio_framework_dsl_record::print(&model.__dsl_to_record(), &ZipDiffRecord::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document)
     }
 
-    fn parse_diff(text: &str) -> Result<Self, store::TextError> {
-        let record = dsl::parse(text, &ZipDiffRecord::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 64 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Document })?;
+    fn parse_diff(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        let record = semio_framework_dsl_record::parse(text, &ZipDiffRecord::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits { max_bytes: 64 * 1024 * 1024, ..semio_framework_diagnostic::Limits::default() }, mode: semio_framework_dsl_record::SourceMode::Document })?;
         let model = ZipDiffRecord::__dsl_from_record(&record)?;
-        <Self as dsl::FromValue>::from_value(model.value).map_err(|error| store::TextError::new(error.to_string(), dsl::TextSpan::at(1, 1)))
+        <Self as semio_framework_value::FromValue>::from_value(model.value).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let value = dsl::ToValue::to_value(self);
+        let value = semio_framework_value::ToValue::to_value(self);
         Ok(store::pack_rt::encode_wire_value(&value))
     }
 
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "zip diff", offset: 0, detail: error.to_string() })?;
-        <Self as dsl::FromValue>::from_value(value).map_err(|error| protocol::ProtocolError::Malformed { what: "zip diff", offset: 0, detail: error.to_string() })
+        <Self as semio_framework_value::FromValue>::from_value(value).map_err(|error| protocol::ProtocolError::Malformed { what: "zip diff", offset: 0, detail: error.to_string() })
     }
 }
 //#endregion 🔖️Codec

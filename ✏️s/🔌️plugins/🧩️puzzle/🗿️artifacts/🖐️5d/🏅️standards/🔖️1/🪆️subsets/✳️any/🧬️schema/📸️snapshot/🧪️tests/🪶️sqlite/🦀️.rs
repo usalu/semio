@@ -17,7 +17,7 @@ fn complete(word:u64)->Puzzle5dSnapshot{
   target_volumes:vec![Puzzle5dTargetVolume{id:String::new(),origin:[value;3],orientation:None,scale:Some(Puzzle5dScale::Vec3([value;3])),hidden:false,locked:true}]}
 }
 fn project(s:&Puzzle5dSnapshot)->SqliteDatabase{s.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap()}
-fn restore(d:&SqliteDatabase)->Result<Puzzle5dSnapshot,String>{Puzzle5dSnapshot::from_sqlite_database(d,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()))}
+fn restore(d:&SqliteDatabase)->Result<Puzzle5dSnapshot,semio_framework_value::ValueError>{Puzzle5dSnapshot::from_sqlite_database(d,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()))}
 
 #[test]
 fn sqlite_snapshot_puzzle5d_all_entities_and_words_cross_real_physical_files(){
@@ -107,13 +107,13 @@ fn sqlite_snapshot_puzzle5d_controlled_native_scale_preserves_both_exact_variant
  for hex in laws()["binary64Bits"].as_array().unwrap(){
   let bits=u64::from_str_radix(hex.as_str().unwrap(),16).unwrap();let value=f64::from_bits(bits);
   for expected in [crate::Puzzle5dScale::Uniform(value),crate::Puzzle5dScale::Vec3([value;3])]{
-   let mut accepted=|_|true;let mut encoding=dsl::NativeEncodeControl::new(4096,&mut accepted);
-   let shape=<crate::Puzzle5dScale as dsl::DslField>::shape_controlled(&mut encoding).expect("Scale requires genuine controlled metadata");assert!(matches!(shape,dsl::Shape::List(_)));
-   let field=<crate::Puzzle5dScale as dsl::DslField>::to_value_controlled(&expected,&mut encoding).expect("Scale requires genuine controlled output");
-   let mut accepted_decode=|_|true;let mut decoding=dsl::NativeDecodeControl::new(4096,&mut accepted_decode);let actual=<crate::Puzzle5dScale as dsl::DslField>::from_value_controlled(&field,&mut decoding).expect("Scale requires genuine controlled input");
+   let mut accepted=|_|true;let mut encoding=semio_framework_value::NativeEncodeControl::new(4096,&mut accepted);
+   let shape=<crate::Puzzle5dScale as semio_framework_dsl_record::DslField>::shape_controlled(&mut encoding).expect("Scale requires genuine controlled metadata");assert!(matches!(shape,semio_framework_dsl_record::Shape::List(_)));
+   let field=<crate::Puzzle5dScale as semio_framework_dsl_record::DslField>::to_value_controlled(&expected,&mut encoding).expect("Scale requires genuine controlled output");
+   let mut accepted_decode=|_|true;let mut decoding=semio_framework_value::NativeDecodeControl::new(4096,&mut accepted_decode);let actual=<crate::Puzzle5dScale as semio_framework_dsl_record::DslField>::from_value_controlled(&field,&mut decoding).expect("Scale requires genuine controlled input");
    match(expected,actual){(crate::Puzzle5dScale::Uniform(_),crate::Puzzle5dScale::Uniform(actual))=>assert_eq!(actual.to_bits(),bits),(crate::Puzzle5dScale::Vec3(_),crate::Puzzle5dScale::Vec3(actual))=>assert_eq!(actual.map(f64::to_bits),[bits;3]),_=>panic!("Scale variant changed")}
   }
  }
- let mut cancelled=|_|false;let mut encoding=dsl::NativeEncodeControl::new(4096,&mut cancelled);assert!(<crate::Puzzle5dScale as dsl::DslField>::to_value_controlled(&crate::Puzzle5dScale::Uniform(0.0),&mut encoding).is_err());
- let mut accepted=|_|true;let mut decoding=dsl::NativeDecodeControl::new(0,&mut accepted);assert!(<crate::Puzzle5dScale as dsl::DslField>::from_value_controlled(&dsl::FieldValue::List(vec![dsl::FieldValue::Float(0.0)]),&mut decoding).is_err());
+ let mut cancelled=|_|false;let mut encoding=semio_framework_value::NativeEncodeControl::new(4096,&mut cancelled);assert!(<crate::Puzzle5dScale as semio_framework_dsl_record::DslField>::to_value_controlled(&crate::Puzzle5dScale::Uniform(0.0),&mut encoding).is_err());
+ let mut accepted=|_|true;let mut decoding=semio_framework_value::NativeDecodeControl::new(0,&mut accepted);assert!(<crate::Puzzle5dScale as semio_framework_dsl_record::DslField>::from_value_controlled(&semio_framework_dsl_record::FieldValue::List(vec![semio_framework_dsl_record::FieldValue::Float(0.0)]),&mut decoding).is_err());
 }

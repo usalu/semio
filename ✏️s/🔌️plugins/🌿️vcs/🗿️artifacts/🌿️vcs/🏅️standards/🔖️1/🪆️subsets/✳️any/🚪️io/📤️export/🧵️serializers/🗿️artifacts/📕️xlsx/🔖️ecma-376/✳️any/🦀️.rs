@@ -3,7 +3,7 @@
 //! (`build_minimal_xlsx`), and stdio's xlsx codec writes them.
 use crate::standards::v1::subsets::any::io::{vcs_record, VCS_RECORD_COLUMNS};
 use crate::VcsSnapshot;
-use semio_framework::io::io_mechanism::Serializer;
+use semio_framework::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{Dialect, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
 use semio_s_artifact_stdio_xlsx::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook};
@@ -17,7 +17,7 @@ pub struct VcsIntoXlsx;
 impl Serializer<VcsSnapshot> for VcsIntoXlsx {
     const INTO: Dialect = XLSX_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &VcsSnapshot) -> IoResult<IoPayload> {
+    async fn serialize(from: &VcsSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
         let rows = [VCS_RECORD_COLUMNS.map(String::from), vcs_record(from)];
         let cells = rows.iter().enumerate().flat_map(|(row, values)| values.iter().enumerate().filter(|(_, value)| !value.is_empty()).map(move |(col, value)| XlsxCell { row: row as u32 + 1, col: col as u32, value: XlsxCellValue::InlineString(value.clone()) })).collect();
         let snapshot = build_minimal_xlsx(XlsxWorkbook { sheets: vec![XlsxSheet { name: "Vcs".into(), cells }], shared_strings: Vec::new() });

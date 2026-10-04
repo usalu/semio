@@ -398,12 +398,33 @@ fn the_marketplace_leaf_offers_reacts_install_reload_and_uninstall_verbs() {
     assert_eq!(shell.plugins.len(), 1, "🛍️ and the roster is untouched");
 }
 
-/// 🚫️ **The disabled row action law** (U6 × WG11): the retained accessibility projection announces the session program's
-/// Uninstall as the virtual button `<row>::row-action::1` with `disabled == true` — present, never actionable.
+/// 🚫️ **The disabled row action law** (U6 × WG11, W1E-1): the retained accessibility projection announces the session program's
+/// Uninstall as the virtual button `<row>::row-action::1` with `disabled == true` — present, never actionable, still focusable
+/// and described by its localized reason (en/de), while its enabled sibling carries none.
 #[test]
 fn the_marketplace_announces_a_disabled_uninstall_as_a_disabled_row_action_button() {
+    for (locale, reason) in [("en", "The open document uses this plugin."), ("de", "Das geöffnete Dokument verwendet dieses Plugin.")] {
+        let mut shell = display_shell();
+        shell.locale_id = locale.into();
+        let nodes = marketplace_accessibility_nodes(&mut shell);
+        let uninstall = nodes.iter().find(|node| node.key == format!("{FRAMEWORK_MARKETPLACE_TAB_ID}/framework.marketplace.plugin.space::row-action::1")).expect("the Uninstall row action");
+        assert!(uninstall.disabled && uninstall.focusable && uninstall.description.as_deref() == Some(reason), "💬️ {locale}: a disabled row action names its reason and stays reachable: {uninstall:?}");
+        let reload = nodes.iter().find(|node| node.key == format!("{FRAMEWORK_MARKETPLACE_TAB_ID}/framework.marketplace.plugin.space::row-action::0")).expect("the Reload row action");
+        assert_eq!(reload.description, None, "💬️ {locale}: an enabled row action carries no reason");
+    }
     let mut shell = display_shell();
-    marketplace_window_at(&mut shell, "space");
+    let nodes = marketplace_accessibility_nodes(&mut shell);
+    let uninstall_key = format!("{FRAMEWORK_MARKETPLACE_TAB_ID}/framework.marketplace.plugin.space::row-action::1");
+    let uninstall = nodes.iter().find(|node| node.key == uninstall_key).unwrap_or_else(|| panic!("🚫️ the Uninstall row action is announced: {:?}", nodes.iter().map(|node| node.key.as_str()).collect::<Vec<_>>()));
+    assert_eq!(uninstall.role, "button");
+    assert!(uninstall.disabled && !uninstall.actionable, "🚫️ a disabled row action announces disabled and is never actionable");
+    let reload = nodes.iter().find(|node| node.key == format!("{FRAMEWORK_MARKETPLACE_TAB_ID}/framework.marketplace.plugin.space::row-action::0")).expect("the Reload row action");
+    assert!(!reload.disabled && reload.actionable, "🔁️ the enabled sibling stays actionable");
+}
+
+/// ♿️ The mounted Marketplace's retained accessibility projection, with the session program's row in view.
+fn marketplace_accessibility_nodes(shell: &mut ShellState) -> Vec<ui_contract::AccessibilityProjectionNode> {
+    marketplace_window_at(shell, "space");
     let records = panel_ui_records(FRAMEWORK_MARKETPLACE_TAB_ID, &shell.build_marketplace_ui()).expect("the marketplace body projects");
     let mut document = ui_wgpu::wgpu::tree::UiDocumentTree::new(ui_contract::UiDocumentLeaseHeader {
         generation: 1,
@@ -421,13 +442,7 @@ fn the_marketplace_announces_a_disabled_uninstall_as_a_disabled_row_action_butto
     assert!(engine.publish_document(FRAMEWORK_MARKETPLACE_TAB_ID, document));
     let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
     settle_tree_surface(&mut engine, &mut atlas, FRAMEWORK_MARKETPLACE_TAB_ID, 1);
-    let nodes = ui_wgpu::wgpu::accessibility::accessibility_projection(engine.tree(FRAMEWORK_MARKETPLACE_TAB_ID).expect("the mounted Marketplace"));
-    let uninstall_key = format!("{FRAMEWORK_MARKETPLACE_TAB_ID}/framework.marketplace.plugin.space::row-action::1");
-    let uninstall = nodes.iter().find(|node| node.key == uninstall_key).unwrap_or_else(|| panic!("🚫️ the Uninstall row action is announced: {:?}", nodes.iter().map(|node| node.key.as_str()).collect::<Vec<_>>()));
-    assert_eq!(uninstall.role, "button");
-    assert!(uninstall.disabled && !uninstall.actionable, "🚫️ a disabled row action announces disabled and is never actionable");
-    let reload = nodes.iter().find(|node| node.key == format!("{FRAMEWORK_MARKETPLACE_TAB_ID}/framework.marketplace.plugin.space::row-action::0")).expect("the Reload row action");
-    assert!(!reload.disabled && reload.actionable, "🔁️ the enabled sibling stays actionable");
+    ui_wgpu::wgpu::accessibility::accessibility_projection(engine.tree(FRAMEWORK_MARKETPLACE_TAB_ID).expect("the mounted Marketplace"))
 }
 
 /// 🪟️ **The windowed roster law** (P5 × U6): the roster is ONE windowed Tree section — whatever its length it projects inside

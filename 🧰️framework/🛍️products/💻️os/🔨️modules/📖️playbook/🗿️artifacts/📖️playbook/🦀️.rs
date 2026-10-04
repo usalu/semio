@@ -9,10 +9,8 @@ extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as store;
 use semio_framework_os_kernel::os_store;
 
-use dsl::DslValue;
-use dsl::{FromValue, ToValue};
+use semio_framework_value::{DslValue, FromValue, ToValue};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 pub const PLAYBOOK_DOCUMENT_SCHEMA: &str = "playbook.program";
 
@@ -31,7 +29,7 @@ pub use generation_forms::{
 };
 
 //#region 🔖️Domain
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct PlaybookStep {
@@ -43,7 +41,7 @@ pub struct PlaybookStep {
     pub blocks: Vec<PlaybookBlock>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct PlaybookBlock {
@@ -104,7 +102,7 @@ pub struct PlaybookBlock {
     pub condition: Option<PlaybookExpr>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct PlaybookVectorField {
@@ -117,29 +115,11 @@ pub struct PlaybookVectorField {
     pub value: Option<f64>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct PlaybookBlockOption {
-    #[serde(alias = "id")]
     pub value: String,
     pub label: String,
-}
-
-/// 🔀️ Hand-written, not derived: `value` accepts either wire key `"value"` or the legacy `"id"`
-/// alias on decode (mirrors `#[serde(alias = "id")]` above, which `#[derive(FromValue)]` does not
-/// support — see the fan-out playbook's attribute-coverage table).
-impl ToValue for PlaybookBlockOption {
-    fn to_value(&self) -> DslValue {
-        DslValue::object([("value".to_string(), ToValue::to_value(&self.value)), ("label".to_string(), ToValue::to_value(&self.label))])
-    }
-}
-impl FromValue for PlaybookBlockOption {
-    fn from_value(value: DslValue) -> Result<Self, ::semio_framework_os_kernel::ValueError> {
-        let entries = value.into_object()?;
-        let value_field = entries.iter().find(|(k, _)| k == "value" || k == "id").ok_or_else(|| ::semio_framework_os_kernel::ValueError::new("missing field `value`")).and_then(|(_, v)| FromValue::from_value(v.clone()))?;
-        let label = entries.iter().find(|(k, _)| k == "label").ok_or_else(|| ::semio_framework_os_kernel::ValueError::new("missing field `label`")).and_then(|(_, v)| FromValue::from_value(v.clone()))?;
-        Ok(Self { value: value_field, label })
-    }
 }
 
 /// 🧮️ Recursive boolean/comparison expression tree, self-referential via `Box` (`Eq`/`Truthy`) and
@@ -148,9 +128,10 @@ impl FromValue for PlaybookBlockOption {
 /// `DslField` impl (only named `DslRecord`/`DslScalar`/`DslEnum` types do), so every `Box`/`Vec<Self>`
 /// field routes through `#[dsl(statements, block)]` (tagged-variant dispatch, wrapped in its own
 /// `{ }` so `Eq`'s two boxed fields don't collide as two bare "the record's one Statements field").
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslEnum)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum)]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[value(tag = "kind", rename_all = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase", retire_with = "retire_playbook_expr")]
+#[dsl(retire_with = "retire_playbook_expr")]
 pub enum PlaybookExpr {
     Const {
         value: DslValue,
@@ -178,6 +159,20 @@ pub enum PlaybookExpr {
     },
 }
 
+/// ♻️ Retires detached expression trees and intrinsic constants without recursive drops.
+pub fn retire_playbook_expr(value: PlaybookExpr) {
+    let mut pending = vec![value];
+    while let Some(value) = pending.pop() {
+        match value {
+            PlaybookExpr::Const { value } => <DslValue as FromValue>::retire_decoded(value),
+            PlaybookExpr::Var { .. } => {},
+            PlaybookExpr::Eq { left, right } => { pending.push(*left); pending.push(*right); },
+            PlaybookExpr::And { items } | PlaybookExpr::Or { items } => pending.extend(items),
+            PlaybookExpr::Truthy { expr } => pending.push(*expr),
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
@@ -192,10 +187,11 @@ pub fn is_extension_block_kind(kind: &str) -> bool {
     !PLAYBOOK_BUILTIN_KINDS.contains(&kind)
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslArtifact)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_os_kernel::DslArtifact)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
-#[dsl(id = "playbook.playbook", layout = "lines")]
+#[artifact(id = "playbook.playbook")]
+#[dsl(layout = "lines")]
 pub struct PlaybookSpec {
     pub schema: String,
     pub id: String,
@@ -225,7 +221,11 @@ pub fn find_block_location<'a>(spec: &'a PlaybookSpec, block_id: &str) -> Option
     None
 }
 
-pub type PlaybookValues = HashMap<String, DslValue>;
+pub type PlaybookValues = semio_framework_value::ordered::OrderedMap<DslValue>;
+
+fn retire_displaced_playbook_value(value: Option<std::sync::Arc<DslValue>>) {
+    if let Some(value) = value.and_then(std::sync::Arc::into_inner) { FromValue::retire_decoded(value); }
+}
 
 fn dsl_object_nonempty(value: &DslValue) -> bool {
     matches!(value, DslValue::Object(entries) if !entries.is_empty())
@@ -305,11 +305,11 @@ pub fn can_advance(step: &PlaybookStep, values: &PlaybookValues) -> bool {
 pub fn initial_values(spec: &PlaybookSpec, overrides: &PlaybookValues) -> PlaybookValues {
     let mut values = PlaybookValues::new();
     for block in flatten_playbook_blocks(spec) {
-        values.insert(block.id.clone(), default_value_for_block(block));
+        retire_displaced_playbook_value(values.insert(block.id.clone(), default_value_for_block(block)));
     }
     for (key, value) in overrides {
         if values.contains_key(key) {
-            values.insert(key.clone(), value.clone());
+            retire_displaced_playbook_value(values.insert(key.clone(), value.clone()));
         }
     }
     values
@@ -330,16 +330,16 @@ impl store::ArtifactDsl for PlaybookSpec {
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -348,18 +348,18 @@ impl store::ArtifactDsl for PlaybookSpec {
 impl store::ArtifactPack for PlaybookSpec {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -373,7 +373,6 @@ pub mod generation_forms {
     //! it is typed end-to-end on `PlaybookSpec`/`PlaybookBlock`, i.e. playbook-domain code, not SDK code.
 
     use super::{default_value_for_block, flatten_playbook_blocks, is_block_visible, DslValue, FromValue, PlaybookBlock, PlaybookSpec, PlaybookValues, ToValue};
-    use serde::{Deserialize, Serialize};
     use ui_wgpu::wgpu::build_text_editor_scene;
     use ui_wgpu::wgpu::ui_stack_vertical;
     use ui_wgpu::wgpu::ui_text;
@@ -399,8 +398,7 @@ pub mod generation_forms {
     use ui_wgpu::wgpu::UiTreeSectionNode;
 
     //#region 🔖️Types
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
     #[value(rename_all = "camelCase")]
     pub struct FormGeneration {
         pub id: String,
@@ -408,17 +406,13 @@ pub mod generation_forms {
         pub values: PlaybookValues,
     }
 
-    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
     #[value(rename_all = "camelCase")]
     pub struct GenerationPlayState {
-        #[serde(default)]
         #[value(default)]
         pub generations: Vec<FormGeneration>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
         #[value(default, skip_serializing_if = "Option::is_none")]
         pub selected_generation_id: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
         #[value(default, skip_serializing_if = "Option::is_none")]
         pub preview_text: Option<String>,
     }
@@ -436,7 +430,7 @@ pub mod generation_forms {
     pub fn initial_generation_values(spec: &PlaybookSpec) -> PlaybookValues {
         let mut values = PlaybookValues::new();
         for question in flatten_playbook_blocks(spec) {
-            values.insert(question.id.clone(), default_value_for_block(question));
+            super::retire_displaced_playbook_value(values.insert(question.id.clone(), default_value_for_block(question)));
         }
         values
     }
@@ -450,7 +444,10 @@ pub mod generation_forms {
     }
 
     pub fn remove_generation(state: &mut GenerationPlayState, generation_id: &str) {
-        state.generations.retain(|entry| entry.id != generation_id);
+        let mut index = 0;
+        while index < state.generations.len() {
+            if state.generations[index].id == generation_id { FromValue::retire_decoded(state.generations.remove(index)); } else { index += 1; }
+        }
         if state.selected_generation_id.as_deref() == Some(generation_id) {
             state.selected_generation_id = state.generations.first().map(|entry| entry.id.clone());
         }
@@ -480,7 +477,7 @@ pub mod generation_forms {
 
     pub fn update_generation_values(state: &mut GenerationPlayState, generation_id: &str, question_id: &str, value: DslValue) {
         if let Some(entry) = state.generations.iter_mut().find(|entry| entry.id == generation_id) {
-            entry.values.insert(question_id.to_string(), value);
+            super::retire_displaced_playbook_value(entry.values.insert(question_id.to_string(), value));
         }
     }
 
@@ -529,8 +526,7 @@ pub mod generation_forms {
     /// 🧬️ Typed, invertible Generate-mode operation vocabulary. WS-F embeds this as a variant in
     /// `forms/module/procedural`'s own `Mutation` enum so generation edits flow through the document store with
     /// true inverses (replacing the in-place-mutating CRUD helpers as the document mutation surface).
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-    #[serde(tag = "kind", rename_all = "camelCase")]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
     #[value(tag = "kind", rename_all = "camelCase")]
     pub enum GenerationMutation {
         Add { generation: FormGeneration },
@@ -626,6 +622,7 @@ pub mod generation_forms {
                     action: generation_action(controller_id, "removeGeneration", Some(DslValue::object([("id".to_string(), DslValue::String(generation.id.clone()))]))),
                     placement: Some(UiTreeActionPlacement::Menu),
                     disabled: false,
+                    reason: None,
                 }];
                 actions.insert(
                     0,
@@ -635,6 +632,7 @@ pub mod generation_forms {
                         action: generation_action(controller_id, "renameGeneration", Some(DslValue::object([("id".to_string(), DslValue::String(generation.id.clone())), ("name".to_string(), DslValue::String(format!("{} copy", generation.name)))]))),
                         placement: Some(UiTreeActionPlacement::Menu),
                         disabled: false,
+                        reason: None,
                     },
                 );
                 UiTreeItemNode { window: None, granularity: None,
@@ -845,7 +843,7 @@ pub mod generation_forms {
             _ => UiControlNode::Input(UiInputNode {
                 id: format!("{field_id}.input"),
                 input_kind: "text".into(),
-                value: dsl::os_pack::json::to_json_string(&value),
+                value: semio_framework_pack_json::to_json_string(&value),
                 placeholder: question.placeholder.clone().map(Label::data),
                 accessibility_label: None,
                 commit: None,

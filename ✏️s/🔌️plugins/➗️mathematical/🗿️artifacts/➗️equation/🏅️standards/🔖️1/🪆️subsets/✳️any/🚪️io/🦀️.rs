@@ -20,6 +20,21 @@
 //! identical documented deviation; the underlying codec impls these would point at are unchanged
 //! and independently tested either way.
 
+//#region 🔖️IoRefusal
+/// 🚫️ The io refusal of an in-memory foreign pack decode under `context`: its refusal's own kind, or — a transport failure an
+/// in-memory decode cannot report by contract — `InvariantViolated` with the transport display (the framework
+/// `serializer_entry` mapping, `📓️s4-packfix-report.md`).
+pub(crate) fn pack_decode_refusal(context: &str, error: store::PackError) -> semio_framework::io_schema::IoError {
+    let cause = error.into_value_error().unwrap_or_else(|transport| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, format!("in-memory decode reported a transport failure: {transport}")));
+    semio_framework::io_schema::IoError::from_value_error(cause.under(context))
+}
+
+/// 🚫️ An `InvalidValue` io refusal `message` under `context`.
+pub(crate) fn invalid_payload(context: &str, message: &str) -> semio_framework::io_schema::IoError {
+    semio_framework::io_schema::IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message).under(context))
+}
+//#endregion 🔖️IoRefusal
+
 //#region 🔖️IoDeclaration
 pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
     use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export;

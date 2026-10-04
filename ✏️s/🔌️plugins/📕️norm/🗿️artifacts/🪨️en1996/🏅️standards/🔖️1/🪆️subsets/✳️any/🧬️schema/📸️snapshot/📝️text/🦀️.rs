@@ -15,7 +15,7 @@ use crate::En1996Snapshot;
 pub const EN1996_LOADBEARING_WALL_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🧱️loadbearing-wall/🧱️loadbearing-wall/🗣️.dsl.semio");
 
 /// 📖️ Parses `.en1996` DSL text into a `En1996Snapshot`.
-pub fn parse_dsl(text: &str) -> Result<En1996Snapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<En1996Snapshot, semio_framework_diagnostic::TextError> {
     <En1996Snapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 

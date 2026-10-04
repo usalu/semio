@@ -4,7 +4,10 @@ use crate::standards::v1::subsets::any::schema::mutations::{delete_load_case, Fe
 use crate::Fem3dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &CreateLoadCase, _base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {
+pub fn inverse(payload: &CreateLoadCase, _base: &Fem3dSnapshot) -> Result<Vec<Fem3dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![Fem3dMutation::DeleteLoadCase(delete_load_case::DeleteLoadCase { id: payload.load_case.id.clone() })]
+
+    })())
 }
 //#endregion 🔖️Inverse

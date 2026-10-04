@@ -213,7 +213,7 @@ export function uiAccessibilityProjectionNodeV1(record: UiNodeRecord, depth: num
   const componentLabel =
     record.component.type === "text"
       ? record.component.value
-      : record.component.type === "button" || record.component.type === "treeItem" || record.component.type === "table" || (record.component.type === "container" && (record.component.role === "section" || record.component.role === "group"))
+      : record.component.type === "button" || record.component.type === "treeSection" || record.component.type === "treeItem" || record.component.type === "table" || (record.component.type === "container" && (record.component.role === "section" || record.component.role === "group"))
         ? record.component.label
         : null;
   const treeItem = record.component.type === "treeItem" ? record.component : null;

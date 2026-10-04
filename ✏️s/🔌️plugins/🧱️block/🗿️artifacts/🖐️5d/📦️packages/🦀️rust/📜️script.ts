@@ -14,13 +14,16 @@ class OwnedVerifyScript extends BundleScript {
     const visit = (dir: string): void => {
       for (const item of readdirSync(dir, { withFileTypes: true })) {
         const path = resolve(dir, item.name);
-        if (item.isDirectory() && path !== resolve(this.root,"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests")) visit(path);
+        if (item.isDirectory() && (item.name !== "🧪️tests" || path.includes("📸️snapshot"))) visit(path);
         else if (item.name.endsWith(".ts")) roots.push(path);
       }
     };
     visit(resolve(this.root, "../../🏅️standards/🔖️1/🪆️subsets/✳️any"));
+    visit(resolve(this.root, "../../../◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any"));
+    visit(resolve(this.root, "../../../🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any"));
+    roots.push(resolve(this.root,"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🧩️suite/🟦️.ts"),resolve(this.root,"../../../◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🧩️suite/🟦️.ts"));
     runCmd("bun", [resolve(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--resolveJsonModule", "--esModuleInterop", "--skipLibCheck", ...roots], { cwd: this.repoRoot });
   }
 }
 
-await runArtifactRustPackageMain(import.meta.dir,"semio-s-artifact-block-5d",{commands:{verify:OwnedVerifyScript},snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"]});
+await runArtifactRustPackageMain(import.meta.dir,"semio-s-artifact-block-5d",{commands:{verify:OwnedVerifyScript},snapshotSqliteTestFeatures:[],snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts","../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🧩️suite/🟦️.ts","../../../◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🧩️suite/🟦️.ts"]});

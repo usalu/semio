@@ -32,7 +32,7 @@ fn text(value: &str) -> UiAssemblyResult<UiText> { UiText::try_from_str(value).o
 fn value(layer: &RasterLayerNode, field: &str, document: &RasterDocument) -> String {
     match field {
         "name" => layer_name(layer).into(),
-        "brightness" | "contrast" => if let RasterLayerNode::Adjustment {params,..}=layer {params.get(field).and_then(dsl::DslValue::as_f64).unwrap_or(0.0).to_string()} else {String::new()},
+        "brightness" | "contrast" => if let RasterLayerNode::Adjustment {params,..}=layer {params.get(field).and_then(semio_framework_value::DslValue::as_f64).unwrap_or(0.0).to_string()} else {String::new()},
         "visible" => layer_visible(layer).to_string(),
         "locked" => layer_locked(layer).to_string(),
         "opacity" => layer_opacity(layer).to_string(),

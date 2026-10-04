@@ -20,7 +20,7 @@ fn sample_semio() -> SemioImageSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn real_byte_round_trip_through_tiff_codec() {
     let semio = sample_semio();
-    let tiff = semio_framework_plugin::resolve_ready(SemioImageToTiff::serialize(&semio)).expect("serialize");
+    let tiff = ::semio_framework_async::poll::resolve_ready(SemioImageToTiff::serialize(&semio)).expect("serialize");
     let bytes = semio_s_artifact_stdio_tiff::engine::encode_tiff(&tiff).expect("encode real tiff bytes");
     let decoded = semio_s_artifact_stdio_tiff::engine::decode_tiff(&bytes).expect("decode real tiff bytes");
     assert_eq!(decoded.width(), Some(2));

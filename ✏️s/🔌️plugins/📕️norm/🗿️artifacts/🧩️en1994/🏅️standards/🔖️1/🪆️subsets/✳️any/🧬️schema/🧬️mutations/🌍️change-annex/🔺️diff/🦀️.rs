@@ -6,7 +6,7 @@ pub fn diff(payload: &ChangeAnnex, base: &En1994Snapshot) -> protocol::MutationO
         return protocol::MutationOutcome::fatal("mutation.invariant", "invalid value", Vec::<String>::new());
     }
     if base.annex == payload.new_annex {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "unchanged");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "unchanged");
     }
     protocol::MutationOutcome::new(En1994Diff { annex: Some(payload.new_annex), ..Default::default() })
 }

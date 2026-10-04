@@ -1,0 +1,7 @@
+# Plugin I/O Declared Terminal Prerequisites
+
+2026-10-03. The next TIFF19 owning attempt passed the measured parenthesized const macro gate, then stopped on five plugin IoError.message consumers after the canonical cause API changed. Receipt: 🗑️generated/root-authentic-tiff19-typed-producer-reactor-expression-current.log,42.4s uncached Nx, compiler5errors/143warnings,0feature assertions.
+
+Root inspected the actual terminal declarations before porting them. SnapshotRejection explicitly owns message:String and diagnostics:Vec<u8>; plugin_internal_fault and job fault explicitly accept String messages. The five affected calls now read or consume cause.message at those declared terminals. Export/import rejection diagnostics still use the exact existing encode_diagnostics path. Typed causes remain intact throughout the shared I/O and owner pipeline before these declared prose terminals; no String classifier or compatibility conversion was introduced.
+
+Changed files are plugin root Rust source at snapshot export/import functions and reactor/jobs Rust source at run_io_run. Two parser-only receipts exit0 under 🗑️generated/root-plugin-io-terminal-0-parsed.rs and root-plugin-io-terminal-1-parsed.rs. Existing terminal fault/rejection types do not transmit a typed refusal kind, and this narrow compile prerequisite does not claim a new typed wire contract. The owning run must verify the changed consumers.

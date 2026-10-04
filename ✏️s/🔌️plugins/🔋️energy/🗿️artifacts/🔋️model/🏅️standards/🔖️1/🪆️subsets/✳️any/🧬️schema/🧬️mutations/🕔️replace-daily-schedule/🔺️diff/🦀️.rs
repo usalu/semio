@@ -16,7 +16,7 @@ pub fn diff(payload: &super::ReplaceDailyScheduleHourlyValues, base: &EnergyMode
         return protocol::MutationOutcome::fatal("mutation.invariant", "Every hourly schedule value must be finite.", [payload.id.0.to_string()]);
     }
     if existing.hourly_values.as_slice() == payload.new_hourly_values.as_slice() {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Daily schedule {} already carries this hourly_values: {:?}.", payload.id.0, payload.new_hourly_values));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Daily schedule {} already carries this hourly_values: {:?}.", payload.id.0, payload.new_hourly_values));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.schedules.daily.iter_mut().find(|item| item.id == payload.id) {

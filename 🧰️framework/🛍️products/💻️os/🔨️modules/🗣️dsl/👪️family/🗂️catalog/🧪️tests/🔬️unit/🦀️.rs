@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_dsl_record::notation::{EdgeNode, print_edge};
 
 #[semio_framework_async_macros::async_test]
 async fn parses_and_prints_a_slash_path() {
@@ -44,7 +45,7 @@ async fn rejects_bare_x_with_no_digits() {
 
 #[semio_framework_async_macros::async_test]
 async fn compat_pair_reuses_the_edge_grammar_directly() {
-    let value = crate::os_dsl::notation::parse_edge_text("b-l--b-s").expect("parse_edge_text");
+    let value = semio_framework_dsl_record::notation::parse_edge_text("b-l--b-s").expect("parse_edge_text");
     assert_eq!(value.from, EdgeNode { id: "b-l".to_string(), kind: None, port: None });
     let printed = print_edge(&value);
     let link = value.link.expect("link");
@@ -57,7 +58,7 @@ async fn compat_pair_reuses_the_edge_grammar_directly() {
 #[semio_framework_async_macros::async_test]
 async fn grammar_file_is_syntactically_valid() {
     let source = include_str!("../../📖️.grammar.semio");
-    let grammar = crate::os_dsl::grammar::parse_grammar(source).expect("family-catalog.grammar must parse");
+    let grammar = semio_framework_dsl::grammar::parse_grammar(source).expect("family-catalog.grammar must parse");
     assert_eq!(grammar.id, "family-catalog");
     assert!(grammar.productions.len() > 5, "family-catalog should cover stock, slash-path, compat");
 }

@@ -3,7 +3,10 @@ use crate::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
 use crate::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::DeleteArtifact, base: &SSpaceSnapshot) -> Vec<SSpaceMutation> {
+pub fn inverse(payload: &super::DeleteArtifact, base: &SSpaceSnapshot) -> Result<Vec<SSpaceMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     base.artifacts.iter().find(|row| row.id == payload.id).map(|row| vec![super::super::create_artifact::create_artifact(row.clone())]).unwrap_or_default()
+
+    })())
 }
 //#endregion 🔖️Inverse

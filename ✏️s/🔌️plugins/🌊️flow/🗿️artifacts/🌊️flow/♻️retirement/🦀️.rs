@@ -1,7 +1,6 @@
 //! 🗃️ Shared document ownership for Flow scenes, snapshots and mutations.
 
-use crate::op::FlowMutation;
-use crate::{FlowSnapshot, FlowWorkingScene};
+use crate::{FlowMutation, FlowSnapshot, FlowWorkingScene};
 use semio_framework_artifact_flow_flow::retained::{FlowOwner, FlowRetirement};
 use std::{mem::ManuallyDrop, sync::Arc};
 use store::{ErasedSnapshotRetirement, SnapshotRetirementStep};
@@ -24,42 +23,9 @@ pub(crate) fn retire_scene(scene: FlowWorkingScene) -> FlowRetirement {
     retirement
 }
 
+/// 🕳️ The parent vocabulary is uninhabited (design §20.15), so no parent operation ever reaches retirement.
 pub(crate) fn retire_mutation(mutation: FlowMutation) -> FlowRetirement {
-    let mut retirement = FlowRetirement::default();
-    match mutation {
-        FlowMutation::CreateWidget(value) => retirement.push(FlowOwner::Widget(value.widget)),
-        FlowMutation::DeleteWidget(value) => retirement.text(value.id),
-        FlowMutation::ReorderWidgets(value) => retirement.text(value.id),
-        FlowMutation::ReplaceWidget(value) => {
-            retirement.text(value.id);
-            retirement.push(FlowOwner::Widget(value.widget));
-        }
-        FlowMutation::ConnectWidgets(value) => {
-            retirement.text(value.id);
-            retirement.text(value.from);
-            retirement.text(value.to);
-            retirement.text(value.from_port);
-            retirement.text(value.to_port);
-        }
-        FlowMutation::DisconnectWidgets(value) => retirement.text(value.id),
-        FlowMutation::ReorderSynapses(value) => retirement.text(value.id),
-        FlowMutation::UpdateSynapseEndpoints(value) => {
-            retirement.text(value.id);
-            retirement.text(value.from);
-            retirement.text(value.to);
-            retirement.text(value.from_port);
-            retirement.text(value.to_port);
-        }
-        FlowMutation::MoveWidgets(value) => retirement.push(FlowOwner::Layout(value.entries)),
-        FlowMutation::DuplicateWidget(value) => {
-            retirement.text(value.source_id);
-            retirement.text(value.new_id);
-            retirement.text(value.synapse_id);
-            retirement.text(value.from_port);
-            retirement.text(value.to_port);
-        }
-    }
-    retirement
+    match mutation {}
 }
 
 /// 📏️ Drives ONE bounded close step of a typed Flow frontier at the physical minimum that frontier
@@ -78,13 +44,13 @@ pub(crate) fn retire_mutation(mutation: FlowMutation) -> FlowRetirement {
 /// framework's own selected-copy cursor does. `debt` carries the part that does not fit in the
 /// caller's page, so the caller's grant is never exceeded AND the total reported over the close
 /// still equals the total physically freed — the accounting is amortized, the free is not delayed.
-pub(crate) fn close_frontier_page(domain: &mut FlowRetirement, debt: &mut usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+pub(crate) fn close_frontier_page(domain: &mut FlowRetirement, debt: &mut usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
     if *debt > 0 {
         let paid = (*debt).min(maximum_bytes);
         *debt -= paid;
         return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: paid });
     }
-    let demand = domain.next_close_byte_demand().map_err(str::to_owned)?;
+    let demand = domain.next_close_byte_demand().map_err(|message|semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,message))?;
     let step = domain.close_page(1, maximum_bytes.max(demand))?;
     let SnapshotRetirementStep::Pending { released_items, released_bytes } = step else {
         return Ok(step);
@@ -113,7 +79,7 @@ impl<T> RootRetirement<T> {
 }
 
 impl<T: Send + Sync> ErasedSnapshotRetirement for RootRetirement<T> {
-    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if items == 0 || bytes == 0 {
             return Ok(SnapshotRetirementStep::Blocked);
         }
@@ -142,15 +108,6 @@ impl<T> Drop for RootRetirement<T> {
         if !std::thread::panicking() {
             assert!(self.is_empty(), "Flow document ownership must reach terminal emptiness");
         }
-    }
-}
-
-/// 🌐️ Returns a captured scene through its exact domain owner, preserving other readers.
-pub struct SceneRetirementFactory;
-
-impl store::SnapshotRetirementFactory<FlowWorkingScene> for SceneRetirementFactory {
-    fn retire(&self, scene: Arc<FlowWorkingScene>) -> Box<dyn ErasedSnapshotRetirement> {
-        Box::new(RootRetirement::new(Some(scene), None, retire_scene))
     }
 }
 

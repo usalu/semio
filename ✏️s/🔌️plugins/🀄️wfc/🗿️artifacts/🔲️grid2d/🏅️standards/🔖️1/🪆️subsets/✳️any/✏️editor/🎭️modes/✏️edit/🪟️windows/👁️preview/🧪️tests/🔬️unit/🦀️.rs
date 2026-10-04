@@ -30,7 +30,7 @@ fn an_unsolved_pane_draws_one_outline_per_unmasked_cell() {
 fn a_solved_vector_pane_draws_one_path_layer_per_connector() {
     let document = crate::examples::grid2d::pipes::document();
     let commit = solve_with_clock(&document, semio_framework_job::logical_now_us).expect("the example solves");
-    let config = Grid2dWindowConfig { solve_json: protocol::json::to_json_string(&commit), ..Default::default() };
+    let config = Grid2dWindowConfig { solve_json: semio_framework_pack_json::to_json_string(&commit), ..Default::default() };
     let rendered = layers(&document, &config);
     assert!(!rendered.is_empty());
     assert!(rendered.iter().any(|layer| layer.get("segments").is_some()), "a vector tile must reach the canvas as a real path");
@@ -49,7 +49,7 @@ fn a_solved_vector_pane_draws_one_path_layer_per_connector() {
 fn a_solved_bitmap_pane_stays_inside_the_surface_budget() {
     let document = crate::examples::grid2d::terrain::document();
     let commit = solve_with_clock(&document, semio_framework_job::logical_now_us).expect("the example solves");
-    let config = Grid2dWindowConfig { solve_json: protocol::json::to_json_string(&commit), ..Default::default() };
+    let config = Grid2dWindowConfig { solve_json: semio_framework_pack_json::to_json_string(&commit), ..Default::default() };
     let rendered = layers(&document, &config);
     assert_eq!(rendered.len(), 64, "64 assigned cells, one swatch each — the 1 024-rect form overflows the surface");
     assert!(rendered.iter().all(|layer| layer["color"].as_str().is_some_and(|color| color.starts_with('#'))), "a bounds layer's colour must be a css hex or the host falls back to a hue ramp");
@@ -68,7 +68,7 @@ fn a_small_bitmap_board_still_draws_one_rect_per_pixel() {
     document.pinned.retain(|cell| cell.x < 2 && cell.y < 2);
     document.masked.retain(|cell| cell.x < 2 && cell.y < 2);
     let commit = solve_with_clock(&document, semio_framework_job::logical_now_us).expect("the trimmed example solves");
-    let config = Grid2dWindowConfig { solve_json: protocol::json::to_json_string(&commit), ..Default::default() };
+    let config = Grid2dWindowConfig { solve_json: semio_framework_pack_json::to_json_string(&commit), ..Default::default() };
     assert_eq!(layers(&document, &config).len(), 4 * 16, "4 cells × a 4×4 bitmap each");
 }
 
@@ -76,7 +76,7 @@ fn a_small_bitmap_board_still_draws_one_rect_per_pixel() {
 fn a_cached_commit_that_contradicts_falls_back_to_the_bare_grid() {
     let document = crate::examples::grid2d::pipes::document();
     let contradicted = Grid2dInferenceCommit { assignments: Vec::new(), contradiction: true, entropy: Vec::new() };
-    let config = Grid2dWindowConfig { solve_json: protocol::json::to_json_string(&contradicted), ..Default::default() };
+    let config = Grid2dWindowConfig { solve_json: semio_framework_pack_json::to_json_string(&contradicted), ..Default::default() };
     assert_eq!(layers(&document, &config).len(), 35);
 }
 
@@ -97,7 +97,7 @@ fn a_cache_from_another_document_is_dropped_rather_than_painted() {
     let pipes = crate::examples::grid2d::pipes::document();
     let terrain = crate::examples::grid2d::terrain::document();
     let solved = solve_with_clock(&pipes, semio_framework_job::logical_now_us).expect("pipes solves");
-    let config = Grid2dWindowConfig { solve_json: protocol::json::to_json_string(&solved), ..Default::default() };
+    let config = Grid2dWindowConfig { solve_json: semio_framework_pack_json::to_json_string(&solved), ..Default::default() };
     assert!(cached_commit(&pipes, &config).is_some(), "its own document keeps the cache");
     assert!(cached_commit(&terrain, &config).is_none(), "a foreign document drops it");
     let painted = layers(&terrain, &config);

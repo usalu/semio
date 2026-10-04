@@ -42,7 +42,7 @@ from __future__ import annotations
 import json
 import struct
 
-from semio_repo_test import Adapter, Context, Outcome, digest
+from semio_repo_test import Adapter, Context, Outcome, digest, patched_snapshot
 
 # endregion 🔖️Imports
 
@@ -681,6 +681,7 @@ def pack_bytes(document: dict) -> bytes:
 TAG_TO_KIND = {
     "noMutation": "no-mutation",
     "setSnapshot": "set-snapshot",
+    "patchSnapshot": "patch-snapshot",
     "insertSlide": "insert-slide",
     "removeSlide": "remove-slide",
     "setSlideLayout": "set-slide-layout",
@@ -701,7 +702,7 @@ def kind_of(mutation: dict) -> str:
     """🏷️ The kebab-case kind a wire payload names, refusing anything outside the vocabulary."""
     tag = mutation.get("mutation")
     if tag not in TAG_TO_KIND:
-        raise AssertionError("%r is not one of this subset's fifteen declared verbs" % (tag,))
+        raise AssertionError("%r is not one of this subset's sixteen declared verbs" % (tag,))
     return TAG_TO_KIND[tag]
 
 
@@ -743,6 +744,8 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
     """
     kind = kind_of(mutation)
     result = clone(document)
+    if kind == "patch-snapshot":
+        return patched_snapshot(document, mutation["patch"])
     if kind == "no-mutation":
         return result
     if kind == "set-snapshot":
@@ -826,6 +829,8 @@ def inverse_mutation(document: dict, mutation: dict) -> dict:
     kind = kind_of(mutation)
     if kind == "no-mutation":
         return {"mutation": "noMutation"}
+    if kind == "patch-snapshot":
+        return {"mutation": "setSnapshot", "snapshot": clone(document)}
     if kind == "set-snapshot":
         return {"mutation": "setSnapshot", "snapshot": clone(document)}
     if kind == "insert-slide":

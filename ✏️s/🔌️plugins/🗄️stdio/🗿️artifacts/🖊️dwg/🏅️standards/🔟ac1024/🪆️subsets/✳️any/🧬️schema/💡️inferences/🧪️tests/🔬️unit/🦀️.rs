@@ -4,10 +4,10 @@ use protocol::Inference;
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
     let snapshot = DwgSnapshot::default();
-    assert_eq!(DwgInference::infer(&snapshot), DwgInference::infer(&snapshot));
+    assert_eq!(DwgInference::infer(&snapshot).expect("valid materialized inference fixture"), DwgInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
-    assert_eq!(DwgInference::infer(&DwgSnapshot::default()), DwgInference::default());
+    assert_eq!(DwgInference::infer(&DwgSnapshot::default()).expect("valid materialized inference fixture"), DwgInference::default());
 }

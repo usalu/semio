@@ -2,7 +2,7 @@
 use crate::schema::diff::{diff_at_path, SvgAttrAdded, SvgAttrModified, SvgAttributesDiff, SvgDiff, SvgElementDiff, SvgNodeDiff};
 use crate::schema::snapshot::node_at;
 use crate::SvgSnapshot;
-use semio_s_artifact_stdio_xml::schema::snapshot::{validate_xml_document_boundaries, XmlDocument, XmlNode};
+use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDocument, XmlNode};
 
 pub fn attribute_diff_at_path(base: &SvgSnapshot, path: &[usize], name: &str, value: Option<String>) -> SvgDiff {
     let target = node_at(&base.doc, path).ok();
@@ -48,7 +48,6 @@ pub(crate) fn decode_snapshot(value: &str) -> Result<SvgSnapshot, String> {
         schema: dec_str(schema)?,
         doc: XmlDocument { root: decode_option(root, dec_xml_node)?, doctype: decode_option(doctype, dec_doctype)?, declaration: decode_option(declaration, dec_declaration)?, prolog: dec_prolog(prolog)?, epilog: dec_prolog(epilog)? },
     };
-    validate_xml_document_boundaries(&snapshot.doc)?;
     Ok(snapshot)
 }
 
@@ -80,6 +79,5 @@ pub(crate) fn decode_snapshot_binary(reader: &mut store::ByteReader<'_>) -> Resu
     let prolog = dec_prolog_bin(reader)?;
     let epilog = dec_prolog_bin(reader)?;
     let snapshot = SvgSnapshot { schema, doc: XmlDocument { root, doctype, declaration, prolog, epilog } };
-    validate_xml_document_boundaries(&snapshot.doc)?;
     Ok(snapshot)
 }

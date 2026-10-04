@@ -6,7 +6,8 @@ use crate::mutations::RemodelingMutation;
 use crate::RemodelingSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::RemoveStreamFrame, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
+pub fn inverse(payload: &super::RemoveStreamFrame, base: &RemodelingSnapshot) -> Result<Vec<RemodelingMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(stream) = base.streams.iter().find(|stream| stream.id == payload.id) else {
         return Vec::new();
     };
@@ -14,5 +15,7 @@ pub fn inverse(payload: &super::RemoveStreamFrame, base: &RemodelingSnapshot) ->
         return Vec::new();
     };
     vec![crate::mutations::add_stream_frame::add_stream_frame(payload.id.clone(), frame.clone(), stream.kind)]
+
+    })())
 }
 //#endregion 🔖️Inverse

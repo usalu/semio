@@ -8,9 +8,9 @@ import { BundleScript } from "../../../../../../🔨️modules/🏃️process/�
 import { declaredProjectTargets, generateLaunchJson, LAUNCH_OUTPUT_REL_PATH } from "../🚀️launch/🟦️.ts";
 import { MODULE_BRIDGE_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName } from "../📦️deployment/🟦️.ts";
 import { validateDescriptors } from "../🛂️descriptor-verification/🟦️.ts";
-import { ON_ARTIFACT_KIND_PREFIX, PLUGIN_AREAS, PLUGIN_AREAS_STATE, DeployedRegistryEntryV1, TAXONOMY, generatePluginRegistry } from "../🔎️discovery/🟦️.ts";
+import { ON_ARTIFACT_KIND_PREFIX, PLUGIN_AREAS, PLUGIN_AREAS_STATE, DeployedRegistryEntryV1, REGISTRY_DIAGNOSTICS_FILE, type RegistryChannelDiagnosticV1, TAXONOMY, generatePluginRegistry, generatePluginRegistryReport } from "../🔎️discovery/🟦️.ts";
 import { FrameworkPackageEntry, emitFrameworkPackagesTypeScript, generateFrameworkPackageRegistry } from "../🧰️framework-catalog/🟦️.ts";
-import { AssetSpecRow, PlaygroundEntry, generatePlaygroundRegistry } from "../🎮️playground/🔎️discovery/🟦️.ts";
+import { AssetSpecRow, PlaygroundEntry, generatePlaygroundRegistry, generateWithheldPlaygroundRegistry } from "../🎮️playground/🔎️discovery/🟦️.ts";
 import { buildPlaygroundSession } from "../🎮️playground/🧭️session/🟦️.ts";
 import { type GeneratedCatalogProjection, filterProjectedPluginRegistry, readGeneratedCatalogProjection, registryModuleDirectories } from "../📖️catalog-view/🟦️.ts";
 import { findNewContractPluginRoots, validatePlaygroundRegistry, validateTaxonomyTree } from "../🗿️taxonomy-validation/🟦️.ts";
@@ -290,18 +290,23 @@ ${rows}
 
 /** 🗂️ The full generated catalog, rendered in memory once and consumed by both `generate`
  * (writes) and `check` (byte-compares) so the two can never disagree about what belongs in
- * `🤖️generated/`. */
-export function renderCatalogFiles(repoRoot: string, view: RegistryCatalogInputView = registryCatalogInputView(repoRoot, TAXONOMY)): { files: Record<string, string>; entries: DeployedRegistryEntryV1[]; playgrounds: PlaygroundEntry[]; frameworkPackages: FrameworkPackageEntry[] } {
+ * `🤖️generated/`. `staleChannel: "exclude"` (dev generation, §21.4) withholds stale-channel plugins
+ * with a diagnostic; `launchPlaygrounds` keeps their source rows so `.vscode/launch.json` never moves. */
+export function renderCatalogFiles(repoRoot: string, view: RegistryCatalogInputView = registryCatalogInputView(repoRoot, TAXONOMY), staleChannel: "refuse" | "exclude" = "refuse"): { files: Record<string, string>; entries: DeployedRegistryEntryV1[]; diagnostics: RegistryChannelDiagnosticV1[]; playgrounds: PlaygroundEntry[]; launchPlaygrounds: PlaygroundEntry[]; frameworkPackages: FrameworkPackageEntry[] } {
   const packages = discoverCatalogPackages(repoRoot, TAXONOMY, view);
-  const entries = generatePluginRegistry(repoRoot, { packages, view });
-  const playgrounds = generatePlaygroundRegistry(repoRoot, { packages, view });
+  const { entries, diagnostics } = generatePluginRegistryReport(repoRoot, { packages, view, staleChannel });
+  const playgrounds = generatePlaygroundRegistry(repoRoot, { packages, view, staleChannel });
+  const launchPlaygrounds = [...playgrounds, ...generateWithheldPlaygroundRegistry(repoRoot, diagnostics, view)].sort((a, b) => a.variant.localeCompare(b.variant));
   const frameworkPackages = generateFrameworkPackageRegistry(repoRoot, packages);
   return {
     entries,
+    diagnostics,
     playgrounds,
+    launchPlaygrounds,
     frameworkPackages,
     files: {
       "🔌️plugins.json": `${JSON.stringify(entries, null, 2)}\n`,
+      [REGISTRY_DIAGNOSTICS_FILE]: `${JSON.stringify(diagnostics, null, 2)}\n`,
       "🧩️plugins/🟦️.ts": emitTypeScript(entries),
       "🎠️playgrounds.json": `${JSON.stringify(playgrounds, null, 2)}\n`,
       "🎮️playgrounds/🟦️.ts": emitPlaygroundsTypeScript(playgrounds),
@@ -344,7 +349,7 @@ export function catalogOutputInventory(outDir: string): { directories: string[];
 export class GenerateScript extends BundleScript {
   run(_segments: string[]): void {
     const repoRoot = getWorkspaceRoot();
-    const { files, entries, playgrounds, frameworkPackages } = renderCatalogFiles(repoRoot);
+    const { files, entries, diagnostics, playgrounds, launchPlaygrounds, frameworkPackages } = renderCatalogFiles(repoRoot, undefined, "exclude");
     const outDir = join(this.root, "🤖️generated");
     mkdirSync(outDir, { recursive: true });
     const expected = catalogOutputShape(files), actual = catalogOutputInventory(outDir);
@@ -354,11 +359,15 @@ export class GenerateScript extends BundleScript {
     for (const path of expected.directories) mkdirSync(join(outDir, path), { recursive: true });
     for (const [name, content] of Object.entries(files)) { mkdirSync(dirname(join(outDir, name)), { recursive: true }); writeFileSync(join(outDir, name), content); }
     console.log(`plugin registry catalog refreshed (${entries.length} plugin crates, ${playgrounds.length} playgrounds, ${frameworkPackages.length} framework packages) -> ${outDir}`);
+    if (diagnostics.length) {
+      console.warn(`plugin registry withheld ${diagnostics.length} plugin(s) until re-described (see 🤖️generated/${REGISTRY_DIAGNOSTICS_FILE}):`);
+      for (const row of diagnostics) console.warn(`  - ${row.pluginId}: ${row.code === "stale-channel" ? `descriptor app channel ${JSON.stringify(row.descriptorChannel)} ≠ host ${row.hostChannel}` : `runtime dependency ${row.dependency} is withheld`}`);
+    }
     // 🖥️ `.vscode/launch.json` is the second consumer of the very same playground catalog, so it is
     // regenerated here rather than from a separate entry point — `check` enforces its freshness. Written
     // last so a seed/devLaunchers problem can never leave the catalog itself unwritten.
     const launchPath = join(repoRoot, LAUNCH_OUTPUT_REL_PATH);
-    writeFileSync(launchPath, generateLaunchJson(repoRoot, playgrounds, declaredProjectTargets(repoRoot)));
+    writeFileSync(launchPath, generateLaunchJson(repoRoot, launchPlaygrounds, declaredProjectTargets(repoRoot)));
     console.log(`${LAUNCH_OUTPUT_REL_PATH} regenerated -> ${launchPath}`);
   }
 }
@@ -402,7 +411,7 @@ export class PreviewGeneratedScript extends BundleScript {
       payload = Buffer.concat(chunks).toString("utf8");
     }
     const view = protocol ? registryCatalogProjectedInputView(repoRoot, TAXONOMY, parseRegistryCatalogProjection(payload, TAXONOMY), base) : base;
-    const { files, playgrounds } = renderCatalogFiles(repoRoot, view);
+    const { files, launchPlaygrounds } = renderCatalogFiles(repoRoot, view, "exclude");
     const outDir = join(this.root, "🤖️generated");
     const rootPath = relative(repoRoot, outDir).replaceAll("\\", "/").normalize("NFC");
     const launchPath = join(repoRoot, LAUNCH_OUTPUT_REL_PATH);
@@ -411,7 +420,7 @@ export class PreviewGeneratedScript extends BundleScript {
       { bytesBase64: "", mode: 0o755, nodeKind: "directory" as const, path: rootPath },
       ...expected.directories.map((path) => ({ bytesBase64: "", mode: 0o755, nodeKind: "directory" as const, path: `${rootPath}/${path.normalize("NFC")}` })),
       ...Object.entries(files).map(([name, content]) => ({ bytesBase64: Buffer.from(content).toString("base64"), mode: 0o644, nodeKind: "file" as const, path: `${rootPath}/${name.normalize("NFC")}` })),
-      { bytesBase64: Buffer.from(generateLaunchJson(repoRoot, playgrounds, declaredProjectTargets(repoRoot, view), (path) => view.readText(path))).toString("base64"), mode: 0o644, nodeKind: "file" as const, path: relative(repoRoot, launchPath).replaceAll("\\", "/").normalize("NFC") },
+      { bytesBase64: Buffer.from(generateLaunchJson(repoRoot, launchPlaygrounds, declaredProjectTargets(repoRoot, view), (path) => view.readText(path))).toString("base64"), mode: 0o644, nodeKind: "file" as const, path: relative(repoRoot, launchPath).replaceAll("\\", "/").normalize("NFC") },
     ].sort((left, right) => Buffer.from(left.path).compare(Buffer.from(right.path)));
     const expectedPaths = new Set([...expected.directories, ...expected.files]);
     const staleRemovals = [...actual.directories, ...actual.files].filter((path) => !expectedPaths.has(path)).map((path) => `${rootPath}/${path.normalize("NFC")}`).sort((left, right) => Buffer.from(left).compare(Buffer.from(right)));
@@ -425,14 +434,14 @@ export class PreviewGeneratedScript extends BundleScript {
 export class CheckGeneratedScript extends BundleScript {
   run(_segments: string[]): void {
     const repoRoot = getWorkspaceRoot();
-    const { files, playgrounds } = renderCatalogFiles(repoRoot);
+    const { files, launchPlaygrounds } = renderCatalogFiles(repoRoot, undefined, "exclude");
     const outDir = join(this.root, "🤖️generated");
     const expected = catalogOutputShape(files), actual = catalogOutputInventory(outDir);
     const stale = Object.entries(files).filter(([name, content]) => !existsSync(join(outDir, name)) || readFileSync(join(outDir, name), "utf8") !== content).map(([name]) => name);
     const expectedPaths = new Set([...expected.directories, ...expected.files]);
     stale.push(...[...actual.directories, ...actual.files].filter((path) => !expectedPaths.has(path)));
     const launchPath = join(repoRoot, LAUNCH_OUTPUT_REL_PATH);
-    if (!existsSync(launchPath) || readFileSync(launchPath, "utf8") !== generateLaunchJson(repoRoot, playgrounds, declaredProjectTargets(repoRoot))) stale.push(LAUNCH_OUTPUT_REL_PATH);
+    if (!existsSync(launchPath) || readFileSync(launchPath, "utf8") !== generateLaunchJson(repoRoot, launchPlaygrounds, declaredProjectTargets(repoRoot))) stale.push(LAUNCH_OUTPUT_REL_PATH);
     if (stale.length) throw new Error(`Generated registry output is stale: ${stale.join(", ")}`);
     console.log("plugin registry generated catalog and launch bytes are fresh.");
   }

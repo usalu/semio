@@ -10,7 +10,7 @@ use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "copy-invite-link")]
 pub struct CopyInviteLink {
     pub space_id: String,
@@ -24,7 +24,7 @@ pub struct CopyInviteLink {
 pub fn handle(payload: &CopyInviteLink, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
     let role = if payload.role.trim().is_empty() { "spectator".to_string() } else { payload.role.clone() };
     let ttl_secs = if payload.ttl_secs == 0 { 3600 } else { payload.ttl_secs };
-    let args = Some(pack::json_to_dsl_value(&pack::json!({ "spaceId": payload.space_id.clone(), "role": role, "ttlSecs": ttl_secs })));
+    let args = Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "spaceId": payload.space_id.clone(), "role": role, "ttlSecs": ttl_secs })));
     Ok(Emit::effect(Effect::ReplayShellCommand { action_id: "os.directory.share-link".into(), args }))
 }
 //#endregion 🔖️Handle

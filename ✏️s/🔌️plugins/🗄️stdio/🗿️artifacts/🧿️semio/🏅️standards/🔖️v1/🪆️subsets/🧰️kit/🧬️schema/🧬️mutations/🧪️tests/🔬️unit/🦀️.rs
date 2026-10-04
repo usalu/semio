@@ -20,9 +20,9 @@ fn ref_with(kind: &str, standard: &str, subset: &str, id: &str) -> store::os_io:
 // 🚫️async: E1 pure assertion helper — see R9
 fn assert_create_rejected(base: &SemioKitSnapshot, mutation: &SemioKitMutation) {
     let outcome = mutation.diff(base);
-    assert_eq!(outcome.worst_level(), Some(protocol::os_dsl::Severity::Fatal));
+    assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal));
     assert!(outcome.diff().is_empty_diff(), "a rejected create must carry no applicable diff");
-    assert!(mutation.inverse(base).is_empty(), "a rejected create must carry no inverse");
+    assert!(mutation.inverse(base).expect("valid retained mutation inverse fixture").is_empty(), "a rejected create must carry no inverse");
 }
 
 /// 🔧️ Each inverse's diff must be computed against the CURRENT (`restored`) state, not the
@@ -31,7 +31,7 @@ fn assert_create_rejected(base: &SemioKitSnapshot, mutation: &SemioKitMutation) 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn round_trip(base: &SemioKitSnapshot, operation: &SemioKitMutation) -> SemioKitSnapshot {
     let forward = operation.diff(base).diff().apply(base).expect("apply must succeed for a well-formed fixture");
-    let backwards = operation.inverse(base);
+    let backwards = operation.inverse(base).expect("valid retained mutation inverse fixture");
     let mut restored = forward.clone();
     for back in &backwards {
         restored = back.diff(&restored).diff().apply(&restored).expect("apply must succeed for a well-formed fixture");
@@ -79,7 +79,7 @@ async fn create_delete_object_round_trips() {
 async fn delete_object_of_an_absent_id_has_an_empty_inverse() {
     let base = fixture();
     let delete = SemioKitMutation::DeleteObject(delete_object::DeleteObject { child_id: "does-not-exist".into() });
-    assert!(delete.inverse(&base).is_empty());
+    assert!(delete.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
     assert_eq!(delete.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
 }
 
@@ -146,7 +146,7 @@ async fn bind_unbind_representation_round_trips() {
 async fn unbind_representation_of_an_out_of_range_index_has_an_empty_inverse() {
     let base = fixture();
     let unbind = SemioKitMutation::UnbindRepresentation(unbind_representation::UnbindRepresentation { index: 99 });
-    assert!(unbind.inverse(&base).is_empty());
+    assert!(unbind.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
     assert_eq!(unbind.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
 }
 

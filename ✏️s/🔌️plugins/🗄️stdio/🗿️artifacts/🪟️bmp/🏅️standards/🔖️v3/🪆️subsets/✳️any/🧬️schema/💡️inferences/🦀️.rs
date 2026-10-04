@@ -20,8 +20,11 @@ pub struct BmpInference {
 }
 
 impl protocol::Inference<BmpSnapshot> for BmpInference {
-    fn infer(snapshot: &BmpSnapshot) -> Self {
+    fn infer(snapshot: &BmpSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { dimensions: compute_bmp_dimensions(snapshot) }
+    
+        })
     }
 }
 
@@ -32,7 +35,9 @@ impl protocol::Inference<BmpSnapshot> for BmpInference {
 /// `📡️spr/🎮️command/🦀️.rs`.
 impl Default for BmpInference {
     fn default() -> Self {
-        <Self as protocol::Inference<BmpSnapshot>>::infer(&BmpSnapshot::default())
+        let snapshot = &BmpSnapshot::default();
+
+        Self { dimensions: compute_bmp_dimensions(snapshot) }
     }
 }
 
@@ -48,15 +53,6 @@ impl protocol::InferenceSpec<BmpSnapshot> for BmpInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 💡️ No `InferredField`s here (a header-field read is already O(1)) — the default
-/// `infer_cached` passthrough (`ArtifactInferrer::infer_cached`) is exact.
-impl semio_framework_plugin::ArtifactInferrer for crate::standards::v_v3::subsets::any::schema::BmpBuilder {
-    type Snapshot = BmpSnapshot;
-    type Inference = BmpInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.bmp.inference`'s facet leaves into the OS-wide inference catalog — call

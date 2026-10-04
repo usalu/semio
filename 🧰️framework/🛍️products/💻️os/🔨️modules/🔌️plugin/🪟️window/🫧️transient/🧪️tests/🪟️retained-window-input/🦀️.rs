@@ -52,7 +52,11 @@ fn retained_window_input_replacement_rejects_old_authority_and_publication() {
     let expected = &fixture["documentReplacement"];
     let mut old = WindowTransientOwnerRegistry::default();
     old.register::<ReplacementWindow>().unwrap();
-    let view = |id: &str| ViewModel { window_id: Some(id.into()), window_instances: ["canvas-left", "canvas-right"].map(|id| semio_framework::ViewWindowInstance { id: id.into(), window_kind_id: "canvas".into() }).into(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let view = |id: &str| ViewModel {
+        window_id: Some(id.into()),
+        window_instances: ["canvas-left", "canvas-right"].map(|id| semio_framework::ViewWindowInstance { id: id.into(), window_kind_id: "canvas".into() }).into(),
+        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+    };
     let mutation = |id: &str, revision| WindowTransientMutation::of::<ReplacementWindow>(id, crate::publication_fixture::ChangePublicationTransient { revision }.into());
     let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 4096 };
     for (id, revision) in expected["before"].as_object().unwrap() {
@@ -167,7 +171,11 @@ fn retained_window_input_refresh_admits_live_generation_after_a_committed_write(
     let expected = &fixture["liveWriteGeneration"];
     let mut registry = WindowTransientOwnerRegistry::default();
     registry.register::<ReplacementWindow>().unwrap();
-    let view = ViewModel { window_id: Some("canvas-left".into()), window_instances: vec![semio_framework::ViewWindowInstance { id: "canvas-left".into(), window_kind_id: "canvas".into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let view = ViewModel {
+        window_id: Some("canvas-left".into()),
+        window_instances: vec![semio_framework::ViewWindowInstance { id: "canvas-left".into(), window_kind_id: "canvas".into() }],
+        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+    };
     let mutation = |revision| WindowTransientMutation::of::<ReplacementWindow>("canvas-left", crate::publication_fixture::ChangePublicationTransient { revision }.into());
     let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 4096 };
     let publish = |registry: &mut WindowTransientOwnerRegistry, authority: &WindowTransientAuthority, revision: u64| {

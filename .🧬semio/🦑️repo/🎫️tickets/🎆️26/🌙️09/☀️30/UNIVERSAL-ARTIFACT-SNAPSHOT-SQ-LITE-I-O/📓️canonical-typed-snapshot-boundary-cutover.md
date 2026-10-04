@@ -1,0 +1,13 @@
+# Canonical Typed Snapshot Boundary Cutover
+
+The actual TIFF owning compiler stopped before assertions: the first canonical paired attempt reported 11 kernel errors, including three Semio kind imports, missing actual protocol Pack mappings, two SpaceHistory borrowed value mismatches, and the IO TextRefusal terminal. This is compiler evidence, not feature RED or runtime GREEN.
+
+The Store ArtifactSqliteSnapshot five hooks now return ValueError. Unsupported defaults identify UnsupportedOwner; controlled errors remain typed through erased import/export until IoError::from_value_error. The subset terminal also stores a structured cause and diagnostics. Shared native record decoding/encoding keeps controller allocation stages and maps physical Pack and envelope enums through their canonical producers. Controlled envelope output framing returns ValueError directly. SemioError maps nested DecodingControl unchanged and intrinsic closed enum cases explicitly.
+
+The Store Pack producer is protocol::PackError in framework replication codec, distinct from the standalone pack error facet. Both now have exhaustive into_value_error. The active protocol enum retains ValueRefusal and TextRefusal and preserves nested kinds. Controlled physical Pack, value materialization, schema production, expression parsing, output, and Deflate paths now use those variants. Store TextError forwarding preserves TextRefusal. Schema(String) remains an intrinsic ordinary schema variant; it is not used to classify a controlled refusal in these paths. Broad ordinary Schema producer retirement requires its own exact census.
+
+This lane pairs Space, Collection, and SpaceHistory mounted SQL/native consumers and TIFF native endpoint conversion. Root pairs JSON and Markdown; the physical lane pairs TIFF SQL/construction, HTML, STEP, and ZIP. No missing owner capability was mounted. No fixture limit, allocation ledger, cold retirement, envelope identity, or literal semantic payload obligation was relaxed.
+
+Validation: the initial 12 source facets parsed successfully. The active Pack producer increment and corrected Semio/SpaceHistory files now parse 8/8 with rustfmt invoked through Bun, emitting stdout without changing files. Receipt: 🗑️generated/canonical-actual-pack-typed-producer-parser.json. Root alone runs Cargo and owning runtime selectors; no runtime success is claimed here.
+
+Remaining consumer proof: the read-only census found 131 lexical implementation files, not a verified mounted owner registry. Root is running the next owning compiler; kernel admission fixtures still need paired five-hook and IoError.cause updates. Framework Flow eight-law staging and adjacent provider drafts remain unmounted pending its genuine Native baseline.

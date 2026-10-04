@@ -17,7 +17,7 @@
 //! @see ../../🔣️oracle.json — the mutation catalog `KINDS` is measured against.
 //! @see ../🦀️.rs — this subset's conformance check, one axis per variant below.
 
-use crate::standards::v_ecma_376::subsets::base::schema::diff::{NamedModified, PptxDiff, PptxOpcDiff, PptxOpcRelDiff, PptxOpcRelListDiff, PptxOpcRelationshipsDiff};
+use crate::standards::v_ecma_376::subsets::base::schema::diff::PptxDiff;
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{PptxSnapshot, PptxXmlPart};
 use protocol::command::DiffAlgebra;
 use protocol::Mutation;
@@ -149,7 +149,7 @@ fn declared_pair_member(base: &PptxSnapshot, pair: [&str; 2]) -> Option<String> 
 /// 🔎️ The relationship-type base the deck's own relationships are built on.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn declared_relationship_base(base: &PptxSnapshot, pair: [&str; 2]) -> Option<String> {
-    pair.into_iter().find(|candidate| base.opc.relationships.values().flatten().any(|relationship| relationship.rel_type.starts_with(candidate))).map(str::to_string)
+    pair.into_iter().find(|candidate| base.opc.relationships.groups().map(|(_, relationships)| relationships).flatten().any(|relationship| relationship.rel_type.starts_with(candidate))).map(str::to_string)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -192,7 +192,7 @@ pub fn stamp_conformance_class(mut snapshot: PptxSnapshot, strict: bool) -> Pptx
         retarget_namespace(root, &DRAWING_NAMESPACES, DRAWING_NAMESPACES[index]);
         retarget_namespace(root, &RELATIONSHIP_NAMESPACES, RELATIONSHIP_NAMESPACES[index]);
     }
-    for relationships in snapshot.opc.relationships.values_mut() {
+    for relationships in snapshot.opc.relationships.groups_mut().map(|(_, relationships)| relationships) {
         for relationship in relationships.iter_mut() {
             let Some(prefix) = RELATIONSHIP_NAMESPACES.into_iter().find(|prefix| relationship.rel_type.starts_with(prefix)) else { continue };
             relationship.rel_type = format!("{}{}", RELATIONSHIP_NAMESPACES[index], &relationship.rel_type[prefix.len()..]);
@@ -235,28 +235,23 @@ fn diff_retarget_namespace(base: &PptxSnapshot, from: [&str; 2], to: &str) -> Pp
 /// 🔺️ The diff of retargeting the `officeDocument` relationship TYPE base, owner by owner.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn diff_retarget_relationship_base(base: &PptxSnapshot, from: [&str; 2], to: &str) -> PptxDiff {
-    let mut owners: Vec<&String> = base.opc.relationships.keys().collect();
-    owners.sort();
-    let mut modified = Vec::new();
-    for owner in owners {
-        let mut entries = Vec::new();
-        for relationship in &base.opc.relationships[owner] {
+    let mut opc = base.opc.clone();
+    let mut changed = false;
+    for relationships in opc.relationships.groups_mut().map(|(_, relationships)| relationships) {
+        for relationship in relationships {
             let Some(prefix) = from.into_iter().find(|prefix| relationship.rel_type.starts_with(prefix)) else { continue };
             let retargeted = format!("{to}{}", &relationship.rel_type[prefix.len()..]);
             if retargeted == relationship.rel_type {
                 continue;
             }
-            entries.push(NamedModified { key: relationship.id.clone(), diff: PptxOpcRelDiff { rel_type: Some(retargeted), target: None, target_mode: None } });
+            relationship.rel_type = retargeted;
+            changed = true;
         }
-        if entries.is_empty() {
-            continue;
-        }
-        modified.push(NamedModified { key: owner.clone(), diff: PptxOpcRelListDiff { modified: entries, ..Default::default() } });
     }
-    if modified.is_empty() {
+    if !changed {
         return PptxDiff::default();
     }
-    PptxDiff { opc: Some(PptxOpcDiff { comment: None, content_types: None, parts: None, relationships: Some(PptxOpcRelationshipsDiff { modified, ..Default::default() }) }), ..Default::default() }
+    PptxDiff { opc: Some(opc), ..Default::default() }
 }
 
 /// 🔺️ The diff of setting — or removing — the main part's root `conformance` attribute.
@@ -287,7 +282,8 @@ pub(crate) fn agg_diff(this: &PptxTransitionalMutation, base: &PptxSnapshot) -> 
 }
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &PptxTransitionalMutation, base: &PptxSnapshot) -> Vec<PptxTransitionalMutation> {
+pub(crate) fn agg_inverse(this: &PptxTransitionalMutation, base: &PptxSnapshot) -> Result<Vec<PptxTransitionalMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![match this {
         PptxTransitionalMutation::SetSnapshot(_) => PptxTransitionalMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
         PptxTransitionalMutation::SetMainNamespace(_) => match declared_pair_member(base, MAIN_NAMESPACES) {
@@ -311,6 +307,8 @@ pub(crate) fn agg_inverse(this: &PptxTransitionalMutation, base: &PptxSnapshot) 
             None => return Vec::new(),
         },
     }]
+
+    })())
 }
 //#endregion 🔖️MutationTrait
 

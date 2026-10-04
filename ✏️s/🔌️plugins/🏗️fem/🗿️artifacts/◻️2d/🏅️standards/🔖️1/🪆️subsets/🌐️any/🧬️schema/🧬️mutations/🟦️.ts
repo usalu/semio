@@ -4,7 +4,6 @@ import type {Binary64} from "../📸️snapshot/🟦️.ts";
 import type {FemNode,FemDof,FemElement,FemMaterial,FemSection,FemSupport,FemLoad,FemLoadCase,FemRegion,FemCombinationTerm,FemCombination,FemAnalysisSettings} from "../📸️snapshot/🟦️.ts";
 export type {FemNode,FemDof,FemElement,FemMaterial,FemSection,FemSupport,FemLoad,FemLoadCase,FemRegion,FemCombinationTerm,FemCombination,FemAnalysisSettings} from "../📸️snapshot/🟦️.ts";
 
-
 //#region 🔖️Mutations
 /** 🌱⚪️ Brings a new structural node into existence. */
 export interface CreateNode {

@@ -1,0 +1,30 @@
+{
+  "command": "bun ./📜️script.ts test typescript",
+  "cwd": "🧰️framework/🔨️modules/🔲️pixels",
+  "inputPaths": [
+    "default",
+    "^default",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🗜️deflate/**/*",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🔤️base64/**/*",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🔢️binary/📥️source/**/*",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🪉️supplement/⚖️medium/🔤️outline.ttf",
+    "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/🌍️world/🔤️fonts/⌨️LibertinusMono-Regular.otf",
+    "commandSources0"
+  ],
+  "commandSourcePaths": [
+    "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/⏱️budget/🟦️.ts",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/⏱️budget/🧬️schema/🔣️.json",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🔲️pixels/📜️script.ts",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🔲️pixels/🧪️testing/🧭️ownership/🔣️.json",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🔲️pixels/🧪️testing/🧭️ownership/🟦️.ts"
+  ],
+  "nativeWrapperPresent": false,
+  "nativePreparationPresent": false,
+  "oracle": "actual Nx projected project plus node:assert exact source ownership law",
+  "projectSha256": "6e8eae7ca970a3f3f50379af9a43da9bb7b811440768fcb7bef621b278132ab5",
+  "cargoExecuted": false
+}

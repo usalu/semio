@@ -12,7 +12,7 @@ pub fn diff(payload: &ChangeStepDescription, base: &FormsSnapshot) -> protocol::
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Step \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if existing.description == payload.new_description {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Step \"{}\" description is already unchanged.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Step \"{}\" description is already unchanged.", payload.id));
     }
     let patch = FormsStepPatch { description: Some(payload.new_description.clone()), ..Default::default() };
     protocol::MutationOutcome::new(forms_diff_from_delta(&FormsStepsDelta { patched: vec![FormsStepPatchEntry { id: payload.id.clone(), patch }], ..Default::default() }, base))

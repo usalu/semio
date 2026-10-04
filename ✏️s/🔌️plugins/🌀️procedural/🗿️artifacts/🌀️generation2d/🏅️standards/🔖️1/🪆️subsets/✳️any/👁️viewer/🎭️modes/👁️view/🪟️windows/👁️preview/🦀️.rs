@@ -52,20 +52,20 @@ pub fn definition() -> WindowKindDefinition {
 /// editor-dispatch-time concept a stateless viewer render never has access to).
 pub fn render(document: &Generation2dSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let fixture = &document.host_snapshot;
-    let layers: Vec<dsl::DslValue> = fixture
+    let layers: Vec<semio_framework_value::DslValue> = fixture
         .widgets
         .iter()
         .map(|widget| {
             let id = widget_id(widget).to_string();
             let (x, y) = fixture.layout.get(&id).map_or((48.0, 240.0), |layout| (layout.x, layout.y));
-            dsl::DslValue::object([
-                ("id".to_string(), dsl::DslValue::String(format!("widget-{id}"))),
-                ("kind".to_string(), dsl::DslValue::String("node".to_string())),
-                ("name".to_string(), dsl::DslValue::String(id)),
-                ("x".to_string(), dsl::DslValue::float(x)),
-                ("y".to_string(), dsl::DslValue::float(y)),
-                ("width".to_string(), dsl::DslValue::float(96.0)),
-                ("height".to_string(), dsl::DslValue::float(48.0)),
+            semio_framework_value::DslValue::object([
+                ("id".to_string(), semio_framework_value::DslValue::String(format!("widget-{id}"))),
+                ("kind".to_string(), semio_framework_value::DslValue::String("node".to_string())),
+                ("name".to_string(), semio_framework_value::DslValue::String(id)),
+                ("x".to_string(), semio_framework_value::DslValue::float(x)),
+                ("y".to_string(), semio_framework_value::DslValue::float(y)),
+                ("width".to_string(), semio_framework_value::DslValue::float(96.0)),
+                ("height".to_string(), semio_framework_value::DslValue::float(48.0)),
             ])
         })
         .collect();
@@ -73,7 +73,7 @@ pub fn render(document: &Generation2dSnapshot) -> semio_framework_plugin::UiAsse
     crate::scene_surface(
         SURFACE_ID,
         semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::Canvas2d,
-        &Canvas2dScene { framing: None, camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: dsl::json::to_json_string(&dsl::DslValue::Array(layers)), snapshot: None, tool_run_trace: None, lanes: Vec::new() },
+        &Canvas2dScene { framing: None, camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Array(layers)), snapshot: None, tool_run_trace: None, lanes: Vec::new() },
     )
 }
 //#endregion 🔖️Render

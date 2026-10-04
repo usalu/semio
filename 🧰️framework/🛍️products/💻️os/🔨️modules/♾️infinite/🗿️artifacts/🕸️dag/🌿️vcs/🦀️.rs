@@ -4,11 +4,8 @@ use ::graph::manifest::PropertyBag;
 #[cfg(test)]
 use ::graph::manifest::PropertyValue;
 #[cfg(test)]
-#[cfg(test)]
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 use semio_framework_value_derive::{FromValue, ToValue};
-#[cfg(test)]
-use std::collections::BTreeSet;
 use std::collections::HashSet;
 
 // #region 🔖️ArtifactVcs
@@ -30,14 +27,17 @@ fn dag_artifact_schema() -> String {
 
 /// 🧾️ The persistent DAG projection — nodes and edges only. Camera/viewport and selection are
 /// ephemeral view state kept in the plugin runtime, never recorded in the document's undo history.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact)]
 #[value(rename_all = "camelCase")]
+#[dsl(layout="lines")]
+#[artifact(id="dag.dag")]
 pub struct DagSnapshot {
     #[value(default = "dag_artifact_schema")]
     pub schema: String,
     #[value(default)]
     pub nodes: Vec<DagNodeSpec>,
     #[value(default)]
+    #[dsl(table)]
     pub edges: Vec<DagHostSnapshotEdge>,
 }
 
@@ -144,7 +144,7 @@ impl Patchable<DagNodePatch> for DagNodeSpec {
 }
 
 /// 🩹️ Sparse patch of a {@link DagHostSnapshotEdge}'s endpoints.
-#[derive(Clone, Debug, Default, PartialEq, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 pub struct DagEdgePatch {
     pub source: Option<String>,
     pub target: Option<String>,
@@ -181,14 +181,14 @@ pub fn dag_index_to_wire(index: usize) -> u64 {
 
 /// 🏷️ `id` → `new_id` — `rename-node`'s delta. `id` is the node's identity field (its display `name`
 /// has its own `ChangedNodeName`), so this also drives every `"<id>@<port>"` edge endpoint rewrite.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct RenamedNode {
     pub id: String,
     pub new_id: String,
 }
 
 /// ↔️ `move-node`'s delta — FINAL-state absolute `(x, y)`.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct MovedNode {
     pub id: String,
     pub x: f64,
@@ -196,7 +196,7 @@ pub struct MovedNode {
 }
 
 /// 📐️ `resize-node`'s delta — FINAL-state absolute `(width, height)`.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct ResizedNode {
     pub id: String,
     pub width: f64,
@@ -204,21 +204,21 @@ pub struct ResizedNode {
 }
 
 /// 🔤️ `change-node-name`'s delta — the node's display label (distinct from its `id`).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct ChangedNodeName {
     pub id: String,
     pub new_name: String,
 }
 
 /// 🖼️ `change-node-icon`'s delta.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct ChangedNodeIcon {
     pub id: String,
     pub new_icon: String,
 }
 
 /// 🔡️ `change-node-abbreviation`'s delta.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct ChangedNodeAbbreviation {
     pub id: String,
     pub new_abbreviation: String,
@@ -226,7 +226,7 @@ pub struct ChangedNodeAbbreviation {
 
 /// 🧮️ `change-node-operator-kind`'s delta — a single (non-nested) `Option<String>`, since the delta
 /// struct's own presence on {@link DagDiff} already distinguishes "untouched" from "touched".
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct ChangedNodeOperatorKind {
     pub id: String,
     pub new_operator_kind: Option<String>,
@@ -243,7 +243,7 @@ pub struct ReplacedNodeKind {
 
 /// 🗃️ `replace-node-properties`'s delta — whole-value swap of the node's `PropertyBag` (no piecewise
 /// per-property editing gesture exists on this board).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct ReplacedNodeProperties {
     pub id: String,
     pub new_properties: PropertyBag,
@@ -251,7 +251,7 @@ pub struct ReplacedNodeProperties {
 
 /// ↩️ `rename-node`'s edge-endpoint cascade — one entry per edge whose `source`/`target` string
 /// referenced the renamed id. `None` means that side of the edge wasn't touched.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct RewrittenEdgeEndpoint {
     pub id: String,
     pub new_source: Option<String>,
@@ -496,316 +496,58 @@ fn close_dag_test_store(mut store: DagStore) {
 }
 
 //#region 🔖️Dsl
-// 🧬️ `.dag` document DSL via the `crate::os_dsl::` derive engine (see `🔖️DslMirror` below) — every persisted
-// type (`DagSnapshot`/`DagNodeSpec`/`DagNodeKind`/`DagHostSnapshotEdge`/`IoPortSpec`/`DagMedia`/
-// `DagPreviewContent`/`PortShape`/`EdgeRouteStyle`/`DagMediaKind`/patches) either derives a
-// `dsl::Dsl*` macro directly or, where the real Rust field shape can't satisfy the derive engine
-// (a bare tagged-enum field where the engine requires `Box<T>`), converts through a small local
-// mirror type at the `parse_dsl`/`print_dsl`/`parse_op`/`print_op` boundary. This replaces the old
-// hand-rolled `graph::dsl` wire-literal-based printer/parser that used to live in this
-// region (deleted; `dag_host_snapshot_to_wire_literal`/`dag_host_snapshot_execution_rows` near {@link DagHost}
-// still use the wire-literal grammar directly for their own, unrelated purpose and are untouched).
-
-//#region 🔖️DslMirror
-// 🧬️ `DagNodeKind` is `#[serde(flatten)]`-merged onto `DagNodeSpec` at the JSON level, and its own
-// `Preview` variant carries a nested tagged enum (`DagPreviewContent`). The crate::os_dsl:: derive engine
-// represents "exactly one nested tagged value" via `#[dsl(statements)] Box<T>` (`RequiredStatements`),
-// which needs a `Box` wrapper the REAL `DagNodeKind`/`DagNodeSpec` fields deliberately don't carry
-// (dozens of call sites here and in `dag-plugin`/`framework/surface/node-graph`/`flow/core` destructure
-// `node.kind`/`DagNodeKind::Preview { content, .. }` directly — boxing those fields would ripple far
-// outside this crate's ownership). So, exactly like `imperative/core/rs`'s `ProcedureMutationDsl`
-// mirror, `DagNodeKindDsl`/`DagNodeSpecDsl`/`DagSnapshotDsl` are
-// LOCAL structural twins that box only where the derive requires it; the real domain types keep their
-// original unboxed shape and never leave this crate — conversion happens right at this boundary.
-#[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
-pub enum DagNodeKindDsl {
-    Computation {
-        #[dsl(table)]
-        inputs: Vec<IoPortSpec>,
-        #[dsl(table)]
-        outputs: Vec<IoPortSpec>,
-        variadic_inputs: bool,
-        variadic_outputs: bool,
-    },
-    Slider {
-        min: f64,
-        max: f64,
-        step: f64,
-        value: f64,
-        output: IoPortSpec,
-    },
-    Select {
-        options: Vec<String>,
-        selected: u64,
-        output: IoPortSpec,
-    },
-    Screen {
-        media: Option<DagMedia>,
-        input: IoPortSpec,
-    },
-    Note {
-        text: String,
-        output: IoPortSpec,
-    },
-    Image {
-        src: String,
-        output: IoPortSpec,
-    },
-    Preview {
-        #[dsl(statements)]
-        content: Box<DagPreviewContent>,
-        expanded: Vec<String>,
-        input: IoPortSpec,
-    },
-    Action {
-        label: String,
-        input: IoPortSpec,
-    },
-    Export {
-        label: String,
-        format: String,
-        input: IoPortSpec,
-    },
-    Cluster {
-        #[dsl(table)]
-        inputs: Vec<IoPortSpec>,
-        #[dsl(table)]
-        outputs: Vec<IoPortSpec>,
-    },
-    AppInstance {
-        instance_id: String,
-        plugin_id: String,
-        app_id: String,
-        icon: String,
-        #[dsl(table)]
-        inputs: Vec<IoPortSpec>,
-        #[dsl(table)]
-        outputs: Vec<IoPortSpec>,
-    },
-}
-
-fn dag_node_kind_to_dsl(kind: &DagNodeKind) -> DagNodeKindDsl {
-    match kind {
-        DagNodeKind::Computation { inputs, outputs, variadic_inputs, variadic_outputs } => DagNodeKindDsl::Computation { inputs: inputs.clone(), outputs: outputs.clone(), variadic_inputs: *variadic_inputs, variadic_outputs: *variadic_outputs },
-        DagNodeKind::Slider { min, max, step, value, output } => DagNodeKindDsl::Slider { min: *min, max: *max, step: *step, value: *value, output: output.clone() },
-        DagNodeKind::Select { options, selected, output } => DagNodeKindDsl::Select { options: options.clone(), selected: *selected, output: output.clone() },
-        DagNodeKind::Screen { media, input } => DagNodeKindDsl::Screen { media: media.clone(), input: input.clone() },
-        DagNodeKind::Note { text, output } => DagNodeKindDsl::Note { text: text.clone(), output: output.clone() },
-        DagNodeKind::Image { src, output } => DagNodeKindDsl::Image { src: src.clone(), output: output.clone() },
-        DagNodeKind::Preview { content, expanded, input } => DagNodeKindDsl::Preview { content: Box::new(content.clone()), expanded: expanded.iter().cloned().collect(), input: input.clone() },
-        DagNodeKind::Action { label, input } => DagNodeKindDsl::Action { label: label.clone(), input: input.clone() },
-        DagNodeKind::Export { label, format, input } => DagNodeKindDsl::Export { label: label.clone(), format: format.clone(), input: input.clone() },
-        DagNodeKind::Cluster { inputs, outputs } => DagNodeKindDsl::Cluster { inputs: inputs.clone(), outputs: outputs.clone() },
-        DagNodeKind::AppInstance { instance_id, plugin_id, app_id, icon, inputs, outputs } => {
-            DagNodeKindDsl::AppInstance { instance_id: instance_id.clone(), plugin_id: plugin_id.clone(), app_id: app_id.clone(), icon: icon.clone(), inputs: inputs.clone(), outputs: outputs.clone() }
-        }
-    }
-}
-
-fn dag_node_kind_from_dsl(kind: DagNodeKindDsl) -> DagNodeKind {
-    match kind {
-        DagNodeKindDsl::Computation { inputs, outputs, variadic_inputs, variadic_outputs } => DagNodeKind::Computation { inputs, outputs, variadic_inputs, variadic_outputs },
-        DagNodeKindDsl::Slider { min, max, step, value, output } => DagNodeKind::Slider { min, max, step, value, output },
-        DagNodeKindDsl::Select { options, selected, output } => DagNodeKind::Select { options, selected, output },
-        DagNodeKindDsl::Screen { media, input } => DagNodeKind::Screen { media, input },
-        DagNodeKindDsl::Note { text, output } => DagNodeKind::Note { text, output },
-        DagNodeKindDsl::Image { src, output } => DagNodeKind::Image { src, output },
-        DagNodeKindDsl::Preview { content, expanded, input } => DagNodeKind::Preview { content: *content, expanded: expanded.into_iter().collect(), input },
-        DagNodeKindDsl::Action { label, input } => DagNodeKind::Action { label, input },
-        DagNodeKindDsl::Export { label, format, input } => DagNodeKind::Export { label, format, input },
-        DagNodeKindDsl::Cluster { inputs, outputs } => DagNodeKind::Cluster { inputs, outputs },
-        DagNodeKindDsl::AppInstance { instance_id, plugin_id, app_id, icon, inputs, outputs } => DagNodeKind::AppInstance { instance_id, plugin_id, app_id, icon, inputs, outputs },
-    }
-}
-
-/// 🧬️ Mirror of {@link DagNodeSpec} — every field identical except `kind`, boxed only here (see the
-/// region's opening doc comment).
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
-pub struct DagNodeSpecDsl {
-    id: String,
-    name: String,
-    abbreviation: String,
-    icon: String,
-    x: f64,
-    y: f64,
-    width: f64,
-    height: f64,
-    operator_kind: Option<String>,
-    properties: PropertyBag,
-    #[dsl(statements)]
-    kind: Box<DagNodeKindDsl>,
-}
-
-fn dag_node_spec_to_dsl(node: &DagNodeSpec) -> DagNodeSpecDsl {
-    DagNodeSpecDsl {
-        id: node.id.clone(),
-        name: node.name.clone(),
-        abbreviation: node.abbreviation.clone(),
-        icon: node.icon.clone(),
-        x: node.x,
-        y: node.y,
-        width: node.width,
-        height: node.height,
-        operator_kind: node.operator_kind.clone(),
-        properties: node.properties.clone(),
-        kind: Box::new(dag_node_kind_to_dsl(&node.kind)),
-    }
-}
-
-fn dag_node_spec_from_dsl(mirror: DagNodeSpecDsl) -> DagNodeSpec {
-    DagNodeSpec {
-        id: mirror.id,
-        name: mirror.name,
-        abbreviation: mirror.abbreviation,
-        icon: mirror.icon,
-        x: mirror.x,
-        y: mirror.y,
-        width: mirror.width,
-        height: mirror.height,
-        operator_kind: mirror.operator_kind,
-        properties: mirror.properties,
-        kind: dag_node_kind_from_dsl(*mirror.kind),
-    }
-}
-
-impl dsl::DslField for DagNodeKind {
-    fn shape() -> dsl::Shape {
-        dsl::Shape::Statements(<DagNodeKindDsl as dsl::DslVariants>::variants())
-    }
-    fn to_value(&self) -> dsl::FieldValue {
-        dsl::FieldValue::Statements(vec![<DagNodeKindDsl as dsl::DslVariants>::to_named_record(&dag_node_kind_to_dsl(self))])
-    }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
-        match value {
-            dsl::FieldValue::Statements(items) if items.len() == 1 => <DagNodeKindDsl as dsl::DslVariants>::from_named_record(&items[0].0, &items[0].1).map(dag_node_kind_from_dsl).map_err(|error| error.to_string()),
-            other => Err(format!("expected exactly one DagNodeKind statement, found {other:?}")),
-        }
-    }
-}
-
-impl dsl::DslField for DagNodeSpec {
-    fn shape() -> dsl::Shape {
-        <DagNodeSpecDsl as dsl::DslField>::shape()
-    }
-    fn to_value(&self) -> dsl::FieldValue {
-        <DagNodeSpecDsl as dsl::DslField>::to_value(&dag_node_spec_to_dsl(self))
-    }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
-        <DagNodeSpecDsl as dsl::DslField>::from_value(value).map(dag_node_spec_from_dsl)
-    }
-}
-
-/// 🧬️ Document lowering shares the intrinsic node record representation with mutation payloads.
-#[derive(Clone, Debug, PartialEq, dsl::DslArtifact)]
-#[dsl(id = "dag.dag")]
-#[dsl(layout = "lines")]
-struct DagSnapshotDsl {
-    schema: String,
-    nodes: Vec<DagNodeSpecDsl>,
-    #[dsl(table)]
-    edges: Vec<DagHostSnapshotEdge>,
-}
-
-fn dag_snapshot_to_dsl(document: &DagSnapshot) -> DagSnapshotDsl {
-    DagSnapshotDsl { schema: document.schema.clone(), nodes: document.nodes.iter().map(dag_node_spec_to_dsl).collect(), edges: document.edges.clone() }
-}
-
-fn dag_snapshot_from_dsl(mirror: DagSnapshotDsl) -> DagSnapshot {
-    DagSnapshot { schema: mirror.schema, nodes: mirror.nodes.into_iter().map(dag_node_spec_from_dsl).collect(), edges: mirror.edges }
-}
-
-/// 📜️ Handcrafted ArtifactDsl (P6): derive no longer emits ArtifactDsl/ArtifactPack.
-impl crate::os_store::ArtifactDsl for DagSnapshotDsl {
-    const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    fn envelope_id() -> &'static str {
-        Self::__DSL_ENVELOPE_ID
-    }
-    fn parse_dsl(text: &str) -> Result<Self, crate::os_store::TextError> {
-        let body = match crate::os_store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
-        Self::__dsl_from_record(&record)
-    }
-    fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
-        let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
-        crate::os_store::semio_format::wrap_text(&envelope, &body)
-    }
-}
-
-/// 📦️ Handcrafted ArtifactPack (P6).
-impl crate::os_store::ArtifactPack for DagSnapshotDsl {
-    fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
-        let inner = crate::os_store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope =
-            crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1).map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
-        Ok(crate::os_store::semio_format::wrap_binary(&envelope, &inner))
-    }
-    fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
-        let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
-        if !envelope.matches_identity(<Self as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1) {
-            return Err(crate::os_store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as crate::os_store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
-        }
-        let (record, _report) = crate::os_store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(crate::os_store::text_error_to_pack_error)
-    }
-    fn record_spec() -> Option<dsl::RecordSpec> {
-        Some(Self::__dsl_spec())
-    }
-}
-
+/// 📜️ The actual persisted owner uses its own literal record factories.
 impl crate::os_store::ArtifactDsl for DagSnapshot {
-    const EXTENSION: &'static str = "dag";
-
-    fn parse_dsl(text: &str) -> Result<Self, crate::os_store::TextError> {
-        Ok(dag_snapshot_from_dsl(<DagSnapshotDsl as crate::os_store::ArtifactDsl>::parse_dsl(text)?))
-    }
-
-    fn print_dsl(&self) -> String {
-        <DagSnapshotDsl as crate::os_store::ArtifactDsl>::print_dsl(&dag_snapshot_to_dsl(self))
-    }
+ const EXTENSION:&'static str=Self::__DSL_EXTENSION;
+ fn envelope_id()->&'static str{Self::__DSL_ENVELOPE_ID}
+ fn parse_dsl(text:&str)->Result<Self,crate::os_store::TextError>{
+  let body=match crate::os_store::semio_format::split_text_preamble(text){Ok((_,rest))=>rest,Err(_)=>text};
+  let record=semio_framework_dsl_record::parse(body,&Self::__dsl_spec(),&semio_framework_dsl_record::ParseOptions{limits:semio_framework_diagnostic::Limits::default(),mode:semio_framework_dsl_record::SourceMode::Document})?;
+  Self::__dsl_from_record(&record)
+ }
+ fn print_dsl(&self)->String{
+  let body=semio_framework_dsl_record::print(&self.__dsl_to_record(),&Self::__dsl_spec(),semio_framework_dsl_record::JoinMode::Document);
+  let envelope=crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as crate::os_store::ArtifactDsl>::envelope_id(),crate::os_store::semio_format::Component::Dsl,1).expect("valid actual DAG envelope");
+  crate::os_store::semio_format::wrap_text(&envelope,&body)
+ }
 }
-
-/// 📦️ Binary counterpart of the `ArtifactDsl` impl above — `DagSnapshot` can't `#[derive(crate::os_dsl::
-/// DslArtifact)]` directly (see this region's opening doc comment), so `ArtifactPack` is hand-routed
-/// through the same `DagSnapshotDsl` mirror, which does derive it.
+/// 📦️ Direct actual persisted fields provide ordinary and paid native endpoints.
 impl crate::os_store::ArtifactPack for DagSnapshot {
-    fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
-        <DagSnapshotDsl as crate::os_store::ArtifactPack>::encode_pack_with(&dag_snapshot_to_dsl(self), options)
-    }
-
-    fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
-        Ok(dag_snapshot_from_dsl(<DagSnapshotDsl as crate::os_store::ArtifactPack>::decode_pack_with(bytes, options)?))
-    }
-
-    fn record_spec() -> Option<dsl::RecordSpec> {
-        <DagSnapshotDsl as crate::os_store::ArtifactPack>::record_spec()
-    }
+ fn sqlite_snapshot_codec()->Option<crate::os_store::ArtifactSqliteSnapshotCodec>{Some(<Self as crate::os_store::ArtifactSqliteSnapshot>::sqlite_codec())}
+ fn encode_pack_with(&self,options:&crate::os_store::PackEncodeOptions)->Result<Vec<u8>,crate::os_store::PackError>{
+  let inner=crate::os_store::pack_rt::encode_document(&Self::__dsl_spec(),&self.__dsl_to_record(),options)?;
+  let envelope=crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as crate::os_store::ArtifactDsl>::envelope_id(),crate::os_store::semio_format::Component::Pack,1).map_err(|error| crate::os_store::PackError::from(error.into_value_error()))?;
+  Ok(crate::os_store::semio_format::wrap_binary(&envelope,&inner))
+ }
+ fn decode_pack_with(bytes:&[u8],options:&crate::os_store::PackDecodeOptions)->Result<Self,crate::os_store::PackError>{
+  let(envelope,inner)=crate::os_store::semio_format::unwrap_binary(bytes).map_err(|error| crate::os_store::PackError::from(error.into_value_error()))?;
+  if !envelope.matches_identity(<Self as crate::os_store::ArtifactDsl>::envelope_id(),crate::os_store::semio_format::Component::Pack,1){return Err(crate::os_store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "actual DAG pack envelope mismatch")))}
+  let(record,_)=crate::os_store::pack_rt::decode_document(&inner,&Self::__dsl_spec(),options)?;
+  Self::__dsl_from_record(&record).map_err(crate::os_store::text_error_to_pack_error)
+ }
+ fn record_spec()->Option<semio_framework_dsl_record::RecordSpec>{Some(Self::__dsl_spec())}
 }
-//#endregion 🔖️DslMirror
 //#endregion 🔖️Dsl
 
 //#region 🔖️OpText
 impl crate::os_spr::OpText for DagMutation {
     fn parse_op(line: &str) -> Result<Self, crate::os_store::TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = semio_framework_dsl_record::parse(line, &(spec_fn.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?;
+                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown operation line '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
     }
 
     fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(name, _)| name == &keyword).map(|(_, spec)| *spec).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &(spec_fn.ordinary)(), dsl::JoinMode::Inline)
+        semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline)
     }
 }
 

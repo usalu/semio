@@ -139,7 +139,7 @@ mod subject {
     fn applied_and_undone(base: &DocxSnapshot, mutation: &DocxMutation) -> DocxSnapshot {
         let mut snapshot = base.clone();
         apply_docx_mutation(&mut snapshot, mutation);
-        for undo in mutation_inverse(mutation, base) {
+        for undo in mutation_inverse(mutation, base).expect("valid retained mutation inverse fixture") {
             apply_docx_mutation(&mut snapshot, &undo);
         }
         snapshot

@@ -296,7 +296,7 @@ fn remote_approval_history_retains_opaque_authority_in_its_private_session_port(
     adapter.bind_history_undo_port(port.clone());
     let session = SessionHandle::new("sess_owner");
     let scope = semio_framework_os_kernel::os_directory::DocumentScope::new("space-a", "document-a");
-    let authority=semio_framework_os_kernel::os_pack::json::from_json_str::<semio_framework_os_kernel::DslValue>(r#"{"ownerReceipt":"opaque-authority"}"#).unwrap();
+    let authority=semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(r#"{"ownerReceipt":"opaque-authority"}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let token = adapter
         .retain_hub_inference_approval_undo(&session, "https://hub.invalid", &scope, "inference/document", &authority, 7)
         .expect("Hub receipt mints one private undo token");
@@ -384,7 +384,7 @@ fn instance_busy_retries_then_precondition_failed() {
 
     let _ = channel
         .clone()
-        .exchange(0, vec![AppCommand::TransactionPrepare { txn_id: "external".into(), ops: PreparedOps::default(), label: "external".into(), origin: MutationOrigin::Agent { principal: "someone-else".into(), invocation_id: "x".into() } }]);
+        .exchange(0, vec![AppCommand::TransactionPrepare { txn_id: "external".into(), ops: PreparedOps::default(), origin: MutationOrigin::Agent { principal: "someone-else".into(), invocation_id: "x".into() } }]);
 
     let prepared = adapter.prepare(&catalog, &principal, &session, "cad.editor.translateSelection", serde_json::json!({"dx": 1.0, "dy": 0.0, "dz": 0.0, "objectIds": ["a"]}), 0, 0).unwrap();
     let error = adapter.invoke(&catalog, &principal, &session, InvokeRequest { prepared_handle: Some(prepared.prepared_handle), ..Default::default() }, 0, 1).unwrap_err();

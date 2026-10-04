@@ -13,7 +13,7 @@ pub fn diff(payload: &RenameSurvey, base: &ProgramSnapshot) -> protocol::Mutatio
         return protocol::MutationOutcome::error("mutation.target-missing", "No survey exists with this id.", [payload.id.0.clone()]);
     };
     if existing.header.name == payload.new_name {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This survey already has this name.").at([payload.id.0.clone()])]);
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This survey already has this name.").at([payload.id.0.clone()])]);
     }
     let patch = SurveyPatch { name: Some(payload.new_name.clone()), ..Default::default() };
     protocol::MutationOutcome::new(ProgramDiff { surveys: Some(ProgramSurveysDelta { patched: vec![ProgramSurveysPatchEntry { id: payload.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })

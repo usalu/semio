@@ -1,8 +1,8 @@
 use super::*;
-use semio_framework_os_kernel::{FromValue,ToValue};
+use semio_framework_value::{FromValue,ToValue};
 use semio_framework_async::{CancelToken,TraceId};
 fn fixture()->serde_json::Value {serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
-fn value(input:&serde_json::Value)->DslValue {semio_framework_os_kernel::os_pack::json::from_json_str(&input.to_string()).unwrap()}
+fn value(input:&serde_json::Value)->DslValue {semio_framework_pack_json::from_json_str(&input.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
 fn declaration()->DocumentHttpPortDeclarationV1 {DocumentHttpPortDeclarationV1::from_value(value(&fixture()["declaration"])).unwrap()}
 fn encode(_action:&str,payload:&DslValue)->Result<DslValue,InferenceRouteErrorV1> {Ok(payload.clone())}
 fn receipt(payload:DslValue)->Result<DslValue,InferenceRouteErrorV1> {Ok(payload)}
@@ -21,7 +21,7 @@ impl InferenceHubTransport for Transport {
 #[test]
 fn installed_protocol_revokes_actual_calls_and_reinstallation_creates_fresh_authority() {
     let law=fixture();let owned=value(&law);
-    let independent:serde_json::Value=serde_json::from_str(&semio_framework_os_kernel::os_pack::json::to_json_string(&owned)).unwrap();
+    let independent:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&owned)).unwrap();
     assert_eq!(independent,law);
     for hostile in law["hostilePayloads"].as_array().unwrap() {
         let payload=match hostile["kind"].as_str().unwrap() {

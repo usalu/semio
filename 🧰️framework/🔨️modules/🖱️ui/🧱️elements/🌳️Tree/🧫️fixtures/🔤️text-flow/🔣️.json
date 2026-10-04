@@ -1,5 +1,9 @@
 {
   "version": 1,
+  "root": {
+    "direction": "auto",
+    "rowInline": "ltr"
+  },
   "flows": [
     "ltr",
     "rtl"
@@ -37,4 +41,3 @@
     }
   ]
 }
-

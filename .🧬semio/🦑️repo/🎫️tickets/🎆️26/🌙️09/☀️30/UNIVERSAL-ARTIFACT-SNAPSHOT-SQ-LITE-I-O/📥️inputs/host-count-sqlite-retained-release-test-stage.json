@@ -1,0 +1,21 @@
+{
+  "state": "test-only-mounted-after-genuine-source-red-green",
+  "selector": "@semio-tech/framework-plugin-host-fixture:test-snapshot-sqlite-release-native",
+  "nativeFilter": "sqlite_retained_host_count_erased_requests_diagnostics_and_full_release",
+  "candidateCount": 1,
+  "originalSelector": "@semio-tech/framework-plugin-host-fixture:test-snapshot-sqlite-native",
+  "originalCandidateCount": 5,
+  "nativeLeaf": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/💰️release/🦀️.rs",
+  "sha256": "8a4984945a82d54a559754c6e46326d7c4a6cdab83d31f48a5e8b5067bfaa7c3",
+  "fixtureIncludeVerified": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/💰️release/🔣️.json",
+  "source": {
+    "red": "6 selected / 5 passed / 1 failed / 199 expectations",
+    "green": "6 selected / 6 passed / 219 expectations",
+    "redReceipt": "🗑️generated/host-count-retained-release-source-red.log",
+    "greenReceipt": "🗑️generated/host-count-retained-release-source-green.log"
+  },
+  "nativeReceipt": null,
+  "productionFailureRepair": "held until distinct actual selected assertion RED",
+  "canonicalErrorType": "store::io_schema::IoError",
+  "compilerPrerequisiteReceipt": "🗑️generated/root-host-count-five-stack-poll-varint-paid-native-replay.log"
+}

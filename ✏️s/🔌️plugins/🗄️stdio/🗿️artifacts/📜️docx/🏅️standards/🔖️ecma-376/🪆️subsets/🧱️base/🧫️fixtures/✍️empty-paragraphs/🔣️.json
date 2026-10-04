@@ -1,0 +1,34 @@
+{
+  "schema": "semio.stdio.docx.empty-paragraph-edit.v1",
+  "replacement": " Hello 文字 ",
+  "cases": [
+    {
+      "id": "transitional-properties-and-comments",
+      "xml": "<w:document xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:body><w:p><w:pPr><w:jc w:val=\"center\"/></w:pPr><!--retain--></w:p></w:body></w:document>",
+      "blocks": [[""]],
+      "paths": [[[0, 0]]],
+      "targetBlock": 0,
+      "targetItem": 0,
+      "preserved": ["w:pPr", "w:jc", "<!--retain-->"]
+    },
+    {
+      "id": "strict-default-namespace-in-table",
+      "xml": "<document xmlns=\"http://purl.oclc.org/ooxml/wordprocessingml/main\"><body><tbl><tr><tc><p/><p><r><t>existing</t></r></p></tc></tr></tbl></body></document>",
+      "blocks": [["", "existing"]],
+      "paths": [[[0, 0, 0, 0, 0], [0, 0, 0, 0, 1, 0]]],
+      "targetBlock": 0,
+      "targetItem": 0,
+      "preserved": ["<tbl>", "<t>existing</t>"]
+    },
+    {
+      "id": "aliased-with-foreign-run",
+      "xml": "<a:document xmlns:a=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\" xmlns:f=\"urn:foreign\"><a:body><a:p><f:r keep=\"yes\"/></a:p><a:p><a:hyperlink><a:r><a:t>linked</a:t></a:r></a:hyperlink></a:p></a:body></a:document>",
+      "blocks": [[""], ["linked"]],
+      "paths": [[[0, 0]], [[0, 1, 0, 0]]],
+      "targetBlock": 0,
+      "targetItem": 0,
+      "preserved": ["<a:t>linked</a:t>"],
+      "preservedElements": [{"namespace": "urn:foreign", "localName": "r", "attributes": {"keep": "yes"}}]
+    }
+  ]
+}

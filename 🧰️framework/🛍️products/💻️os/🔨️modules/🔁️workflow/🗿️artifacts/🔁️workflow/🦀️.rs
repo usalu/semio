@@ -164,179 +164,182 @@ fn media_form_variants() -> Vec<(String, u32)> {
 }
 
 // 🚫️async: E4 fn-pointer slot — value goes into `dsl::Shape::Record(fn() -> RecordSpec)`.
-fn workflow_enum_shape_controlled<C:dsl::NativeSchemaControl>(labels:&[(&str,u32)],control:&mut C)->Result<dsl::Shape,String>{
-    control.scoped_stage(|control|{control.begin_stage(labels.len())?;let mut values=control.allocate_vec::<(String,u32)>(labels.len())?;for(label,ordinal)in labels{values.push((control.copy_text(label)?,*ordinal));control.step()?;}Ok(dsl::Shape::Enum(values))})
+fn workflow_enum_shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(labels:&[(&str,u32)],control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{
+    control.scoped_stage(|control|{control.begin_stage(labels.len())?;let mut values=control.allocate_vec::<(String,u32)>(labels.len())?;for(label,ordinal)in labels{values.push((control.copy_text(label)?,*ordinal));control.step()?;}Ok(semio_framework_dsl_record::Shape::Enum(values))})
 }
 const MEDIA_CLASS_LABELS:&[(&str,u32)]=&[("twoD",0),("threeD",1),("text",2),("data",3),("graph",4),("kit",5),("computation",6),("presentation",7)];
 const MEDIA_FORM_LABELS:&[(&str,u32)]=&[("any",0),("vector",1),("raster",2),("brep",3),("mesh",4),("document",5),("value",6),("dag",7),("trinity",8),("type",9),("design",10),("kit",11),("flow",12),("sequence",13),("procedure",14),("deck",15)];
 const MEDIA_DIRECTION_LABELS:&[(&str,u32)]=&[("in",0),("out",1)];
 const MEDIA_MULTIPLICITY_LABELS:&[(&str,u32)]=&[("one",0),("many",1)];
 
-fn workflow_native_field<T:dsl::DslField>(record:&dsl::RecordValue,id:u16,control:&mut dsl::NativeDecodeControl<'_>)->Result<T,String>{
- let value=record.get(id).unwrap_or(&dsl::FieldValue::Absent);let value=control.scoped_stage(|control|{control.begin_stage(0)?;T::from_value_controlled(value,control)})?;control.step()?;Ok(value)
+/// 🚫️ Declared-schema refusal of the controlled Workflow lane, typed at its actual failure site.
+fn workflow_invalid(message:impl Into<String>)->semio_framework_value::ValueError{semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,message)}
+fn workflow_native_field<T:semio_framework_dsl_record::DslField>(record:&semio_framework_dsl_record::RecordValue,id:u16,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<T,semio_framework_value::ValueError>{
+ let value=record.get(id).unwrap_or(&semio_framework_dsl_record::FieldValue::Absent);let value=control.scoped_stage(|control|{control.begin_stage(0)?;T::from_value_controlled(value,control)})?;control.step()?;Ok(value)
 }
-fn workflow_native_optional_field<T:dsl::DslField>(record:&dsl::RecordValue,id:u16,control:&mut dsl::NativeDecodeControl<'_>)->Result<Option<T>,String>{
- match record.get(id){None|Some(dsl::FieldValue::Absent)=>{control.step()?;Ok(None)},Some(_)=>workflow_native_field(record,id,control).map(Some)}
+fn workflow_native_optional_field<T:semio_framework_dsl_record::DslField>(record:&semio_framework_dsl_record::RecordValue,id:u16,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Option<T>,semio_framework_value::ValueError>{
+ match record.get(id){None|Some(semio_framework_dsl_record::FieldValue::Absent)=>{control.step()?;Ok(None)},Some(_)=>workflow_native_field(record,id,control).map(Some)}
 }
-fn workflow_native_enum<T>(record:&dsl::RecordValue,id:u16,bind:fn(u32)->Result<T,String>,control:&mut dsl::NativeDecodeControl<'_>)->Result<T,String>{
- control.step()?;match record.get(id){Some(dsl::FieldValue::Enum(ordinal))=>bind(*ordinal),_=>Err("expected declared workflow enum".into())}
+fn workflow_native_enum<T>(record:&semio_framework_dsl_record::RecordValue,id:u16,bind:fn(u32)->Result<T,String>,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<T,semio_framework_value::ValueError>{
+ control.step()?;match record.get(id){Some(semio_framework_dsl_record::FieldValue::Enum(ordinal))=>bind(*ordinal).map_err(workflow_invalid),_=>Err(workflow_invalid("expected declared workflow enum"))}
 }
-fn workflow_native_optional_enum(record:&dsl::RecordValue,id:u16,control:&mut dsl::NativeDecodeControl<'_>)->Result<Option<MediaForm>,String>{
- control.step()?;match record.get(id){None|Some(dsl::FieldValue::Absent)=>Ok(None),Some(dsl::FieldValue::Enum(ordinal))=>media_form_from_ordinal(*ordinal).map(Some),_=>Err("expected optional workflow media form".into())}
+fn workflow_native_optional_enum(record:&semio_framework_dsl_record::RecordValue,id:u16,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Option<MediaForm>,semio_framework_value::ValueError>{
+ control.step()?;match record.get(id){None|Some(semio_framework_dsl_record::FieldValue::Absent)=>Ok(None),Some(semio_framework_dsl_record::FieldValue::Enum(ordinal))=>media_form_from_ordinal(*ordinal).map(Some).map_err(workflow_invalid),_=>Err(workflow_invalid("expected optional workflow media form"))}
 }
-fn workflow_native_project<T:dsl::DslField>(record:&mut dsl::native_encoding::EncodedRecord,id:u16,value:&T,control:&mut dsl::NativeEncodeControl<'_>)->Result<(),String>{
- let value=control.scoped_stage(|control|{control.begin_stage(0)?;value.to_value_controlled(control)})?;record.insert(id,value);control.step()
+fn workflow_native_project<T:semio_framework_dsl_record::DslField>(record:&mut semio_framework_dsl_record::native_encoding::EncodedRecord,id:u16,value:&T,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),semio_framework_value::ValueError>{
+ let value=control.scoped_stage(|control|{control.begin_stage(0)?;value.to_value_controlled(control)})?;record.insert(id,value)?;control.step()
 }
-fn workflow_native_project_optional<T:dsl::DslField>(record:&mut dsl::native_encoding::EncodedRecord,id:u16,value:&Option<T>,control:&mut dsl::NativeEncodeControl<'_>)->Result<(),String>{
- match value{Some(value)=>workflow_native_project(record,id,value,control),None=>{record.insert(id,dsl::FieldValue::Absent);control.step()}}
+fn workflow_native_project_optional<T:semio_framework_dsl_record::DslField>(record:&mut semio_framework_dsl_record::native_encoding::EncodedRecord,id:u16,value:&Option<T>,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),semio_framework_value::ValueError>{
+ match value{Some(value)=>workflow_native_project(record,id,value,control),None=>{record.insert(id,semio_framework_dsl_record::FieldValue::Absent)?;control.step()}}
 }
-fn media_contract_to_record_controlled(value:&MediaContract,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::RecordValue,String>{
- control.scoped_stage(|control|{control.begin_stage(8)?;let mut record=dsl::native_encoding::EncodedRecord::new(8,control)?;
- workflow_native_project(&mut record,0,&value.kind_id,control)?;record.insert(1,dsl::FieldValue::Enum(media_class_ordinal(value.media_type.class)));control.step()?;record.insert(2,dsl::FieldValue::Enum(media_form_ordinal(value.media_type.form)));control.step()?;
+fn media_contract_to_record_controlled(value:&MediaContract,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::RecordValue,semio_framework_value::ValueError>{
+ control.scoped_stage(|control|{control.begin_stage(8)?;let mut record=semio_framework_dsl_record::native_encoding::EncodedRecord::new(8,control)?;
+ workflow_native_project(&mut record,0,&value.kind_id,control)?;record.insert(1,semio_framework_dsl_record::FieldValue::Enum(media_class_ordinal(value.media_type.class)))?;control.step()?;record.insert(2,semio_framework_dsl_record::FieldValue::Enum(media_form_ordinal(value.media_type.form)))?;control.step()?;
  match &value.wire{
- MediaWireFormat::Binary{format_kind}=>{record.insert(3,dsl::FieldValue::Text(control.copy_text("binary")?));control.step()?;workflow_native_project(&mut record,4,format_kind,control)?;record.insert(5,dsl::FieldValue::Absent);control.step()?;},
- MediaWireFormat::Document{schema}=>{record.insert(3,dsl::FieldValue::Text(control.copy_text("document")?));control.step()?;record.insert(4,dsl::FieldValue::Absent);control.step()?;workflow_native_project(&mut record,5,schema,control)?;}
+ MediaWireFormat::Binary{format_kind}=>{record.insert(3,semio_framework_dsl_record::FieldValue::Text(control.copy_text("binary")?))?;control.step()?;workflow_native_project(&mut record,4,format_kind,control)?;record.insert(5,semio_framework_dsl_record::FieldValue::Absent)?;control.step()?;},
+ MediaWireFormat::Document{schema}|MediaWireFormat::Intrinsic{schema}=>{let kind=if matches!(&value.wire,MediaWireFormat::Intrinsic{..}){"intrinsic"}else{"document"};record.insert(3,semio_framework_dsl_record::FieldValue::Text(control.copy_text(kind)?))?;control.step()?;record.insert(4,semio_framework_dsl_record::FieldValue::Absent)?;control.step()?;workflow_native_project(&mut record,5,schema,control)?;}
  }
- match value.conversion{Some((from,to))=>{record.insert(6,dsl::FieldValue::Enum(media_form_ordinal(from)));record.insert(7,dsl::FieldValue::Enum(media_form_ordinal(to)));},None=>{record.insert(6,dsl::FieldValue::Absent);record.insert(7,dsl::FieldValue::Absent);}}control.step()?;control.step()?;Ok(record.take())})
+ match value.conversion{Some((from,to))=>{record.insert(6,semio_framework_dsl_record::FieldValue::Enum(media_form_ordinal(from)))?;record.insert(7,semio_framework_dsl_record::FieldValue::Enum(media_form_ordinal(to)))?;},None=>{record.insert(6,semio_framework_dsl_record::FieldValue::Absent)?;record.insert(7,semio_framework_dsl_record::FieldValue::Absent)?;}}control.step()?;control.step()?;Ok(record.take())})
 }
-fn media_contract_from_record_controlled(record:&dsl::RecordValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<MediaContract,String>{
+fn media_contract_from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<MediaContract,semio_framework_value::ValueError>{
  control.scoped_stage(|control|{control.begin_stage(8)?;let kind_id=workflow_native_field(record,0,control)?;let class=workflow_native_enum(record,1,media_class_from_ordinal,control)?;let form=workflow_native_enum(record,2,media_form_from_ordinal,control)?;
- control.step()?;let kind=match record.get(3){Some(dsl::FieldValue::Text(value))=>value.as_str(),_=>return Err("expected workflow wire kind".into())};let format_kind:Option<String>=workflow_native_optional_field(record,4,control)?;let schema:Option<String>=workflow_native_optional_field(record,5,control)?;
- let wire=match(kind,format_kind,schema){("binary",Some(format_kind),None)=>MediaWireFormat::Binary{format_kind},("document",None,Some(schema))=>MediaWireFormat::Document{schema},_=>return Err("invalid workflow wire fields".into())};
- let from=workflow_native_optional_enum(record,6,control)?;let to=workflow_native_optional_enum(record,7,control)?;let conversion=match(from,to){(Some(from),Some(to))=>Some((from,to)),(None,None)=>None,_=>return Err("workflow conversion needs both forms".into())};Ok(MediaContract{kind_id,media_type:MediaType{class,form},wire,conversion})})
+ control.step()?;let kind=match record.get(3){Some(semio_framework_dsl_record::FieldValue::Text(value))=>value.as_str(),_=>return Err(workflow_invalid("expected workflow wire kind"))};let format_kind:Option<String>=workflow_native_optional_field(record,4,control)?;let schema:Option<String>=workflow_native_optional_field(record,5,control)?;
+ let wire=match(kind,format_kind,schema){("binary",Some(format_kind),None)=>MediaWireFormat::Binary{format_kind},("document",None,Some(schema))=>MediaWireFormat::Document{schema},("intrinsic",None,Some(schema))=>MediaWireFormat::Intrinsic{schema},_=>return Err(workflow_invalid("invalid workflow wire fields"))};
+ let from=workflow_native_optional_enum(record,6,control)?;let to=workflow_native_optional_enum(record,7,control)?;let conversion=match(from,to){(Some(from),Some(to))=>Some((from,to)),(None,None)=>None,_=>return Err(workflow_invalid("workflow conversion needs both forms"))};Ok(MediaContract{kind_id,media_type:MediaType{class,form},wire,conversion})})
 }
-fn workflow_media_port_to_record_controlled(value:&WorkflowMediaPort,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::RecordValue,String>{
- control.scoped_stage(|control|{control.begin_stage(9)?;let mut record=dsl::native_encoding::EncodedRecord::new(9,control)?;workflow_native_project(&mut record,0,&value.id,control)?;workflow_native_project(&mut record,1,&value.spec.id,control)?;workflow_native_project(&mut record,2,&value.spec.label,control)?;record.insert(3,dsl::FieldValue::Enum(media_port_direction_ordinal(value.spec.direction)));control.step()?;record.insert(4,dsl::FieldValue::Enum(media_class_ordinal(value.spec.media_type.class)));control.step()?;record.insert(5,dsl::FieldValue::Enum(media_form_ordinal(value.spec.media_type.form)));control.step()?;workflow_native_project_optional(&mut record,6,&value.spec.kind_id,control)?;workflow_native_project(&mut record,7,&value.spec.required,control)?;record.insert(8,dsl::FieldValue::Enum(port_multiplicity_ordinal(value.spec.multiplicity)));control.step()?;Ok(record.take())})
+fn workflow_media_port_to_record_controlled(value:&WorkflowMediaPort,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::RecordValue,semio_framework_value::ValueError>{
+ control.scoped_stage(|control|{control.begin_stage(9)?;let mut record=semio_framework_dsl_record::native_encoding::EncodedRecord::new(9,control)?;workflow_native_project(&mut record,0,&value.id,control)?;workflow_native_project(&mut record,1,&value.spec.id,control)?;workflow_native_project(&mut record,2,&value.spec.label,control)?;record.insert(3,semio_framework_dsl_record::FieldValue::Enum(media_port_direction_ordinal(value.spec.direction)))?;control.step()?;record.insert(4,semio_framework_dsl_record::FieldValue::Enum(media_class_ordinal(value.spec.media_type.class)))?;control.step()?;record.insert(5,semio_framework_dsl_record::FieldValue::Enum(media_form_ordinal(value.spec.media_type.form)))?;control.step()?;workflow_native_project_optional(&mut record,6,&value.spec.kind_id,control)?;workflow_native_project(&mut record,7,&value.spec.required,control)?;record.insert(8,semio_framework_dsl_record::FieldValue::Enum(port_multiplicity_ordinal(value.spec.multiplicity)))?;control.step()?;Ok(record.take())})
 }
-fn workflow_media_port_from_record_controlled(record:&dsl::RecordValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<WorkflowMediaPort,String>{
+fn workflow_media_port_from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<WorkflowMediaPort,semio_framework_value::ValueError>{
  control.scoped_stage(|control|{control.begin_stage(9)?;let id=workflow_native_field(record,0,control)?;let port_id=workflow_native_field(record,1,control)?;let label=workflow_native_field(record,2,control)?;let direction=workflow_native_enum(record,3,media_port_direction_from_ordinal,control)?;let class=workflow_native_enum(record,4,media_class_from_ordinal,control)?;let form=workflow_native_enum(record,5,media_form_from_ordinal,control)?;let kind_id=workflow_native_optional_field(record,6,control)?;let required=workflow_native_field(record,7,control)?;let multiplicity=workflow_native_enum(record,8,port_multiplicity_from_ordinal,control)?;Ok(WorkflowMediaPort{id,spec:MediaPortSpec{id:port_id,label,direction,media_type:MediaType{class,form},kind_id,required,multiplicity}})})
 }
-fn workflow_input_to_record_controlled(value:&WorkflowInput,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::RecordValue,String>{
- control.scoped_stage(|control|{control.begin_stage(5)?;let mut record=dsl::native_encoding::EncodedRecord::new(5,control)?;workflow_native_project(&mut record,0,&value.id,control)?;workflow_native_project(&mut record,1,&value.kind_id,control)?;workflow_native_project(&mut record,2,&value.selector,control)?;workflow_native_project(&mut record,3,&value.required,control)?;record.insert(4,dsl::FieldValue::Enum(port_multiplicity_ordinal(value.multiplicity)));control.step()?;Ok(record.take())})
+fn workflow_input_to_record_controlled(value:&WorkflowInput,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::RecordValue,semio_framework_value::ValueError>{
+ control.scoped_stage(|control|{control.begin_stage(5)?;let mut record=semio_framework_dsl_record::native_encoding::EncodedRecord::new(5,control)?;workflow_native_project(&mut record,0,&value.id,control)?;workflow_native_project(&mut record,1,&value.kind_id,control)?;workflow_native_project(&mut record,2,&value.selector,control)?;workflow_native_project(&mut record,3,&value.required,control)?;record.insert(4,semio_framework_dsl_record::FieldValue::Enum(port_multiplicity_ordinal(value.multiplicity)))?;control.step()?;Ok(record.take())})
 }
-fn workflow_input_from_record_controlled(record:&dsl::RecordValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<WorkflowInput,String>{
+fn workflow_input_from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<WorkflowInput,semio_framework_value::ValueError>{
  control.scoped_stage(|control|{control.begin_stage(5)?;let id=workflow_native_field(record,0,control)?;let kind_id=workflow_native_field(record,1,control)?;let selector=workflow_native_field(record,2,control)?;let required=workflow_native_field(record,3,control)?;let multiplicity=workflow_native_enum(record,4,port_multiplicity_from_ordinal,control)?;Ok(WorkflowInput{id,kind_id,selector,required,multiplicity})})
 }
 
-fn media_contract_spec_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::RecordSpec,String>{
-    control.scoped_stage(|control|{control.begin_stage(8)?;let mut fields=control.allocate_vec::<dsl::FieldSpec>(8)?;
-        let shape=dsl::Shape::Text;fields.push(dsl::schema::producer::field(0,"kind_id",shape,control)?);control.step()?;
-        let shape=workflow_enum_shape_controlled(MEDIA_CLASS_LABELS,control)?;fields.push(dsl::schema::producer::field(1,"class",shape,control)?);control.step()?;
-        let shape=workflow_enum_shape_controlled(MEDIA_FORM_LABELS,control)?;fields.push(dsl::schema::producer::field(2,"form",shape,control)?);control.step()?;
-        let shape=dsl::Shape::Text;fields.push(dsl::schema::producer::field(3,"wire_kind",shape,control)?);control.step()?;
-        let shape=dsl::Shape::Text;fields.push(dsl::schema::producer::field(4,"wire_format",shape,control)?.optional());control.step()?;
-        let shape=dsl::Shape::Text;fields.push(dsl::schema::producer::field(5,"wire_schema",shape,control)?.optional());control.step()?;
-        let shape=workflow_enum_shape_controlled(MEDIA_FORM_LABELS,control)?;fields.push(dsl::schema::producer::field(6,"conversion_from",shape,control)?.optional());control.step()?;
-        let shape=workflow_enum_shape_controlled(MEDIA_FORM_LABELS,control)?;fields.push(dsl::schema::producer::field(7,"conversion_to",shape,control)?.optional());control.step()?;
-        dsl::schema::producer::record(None,dsl::RecordLayout::Inline,fields,control)
+fn media_contract_spec_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::RecordSpec,semio_framework_value::ValueError>{
+    control.scoped_stage(|control|{control.begin_stage(8)?;let mut fields=control.allocate_vec::<semio_framework_dsl_record::FieldSpec>(8)?;
+        let shape=semio_framework_dsl_record::Shape::Text;fields.push(semio_framework_dsl_record::producer::field(0,"kind_id",shape,control)?);control.step()?;
+        let shape=workflow_enum_shape_controlled(MEDIA_CLASS_LABELS,control)?;fields.push(semio_framework_dsl_record::producer::field(1,"class",shape,control)?);control.step()?;
+        let shape=workflow_enum_shape_controlled(MEDIA_FORM_LABELS,control)?;fields.push(semio_framework_dsl_record::producer::field(2,"form",shape,control)?);control.step()?;
+        let shape=semio_framework_dsl_record::Shape::Text;fields.push(semio_framework_dsl_record::producer::field(3,"wire_kind",shape,control)?);control.step()?;
+        let shape=semio_framework_dsl_record::Shape::Text;fields.push(semio_framework_dsl_record::producer::field(4,"wire_format",shape,control)?.optional());control.step()?;
+        let shape=semio_framework_dsl_record::Shape::Text;fields.push(semio_framework_dsl_record::producer::field(5,"wire_schema",shape,control)?.optional());control.step()?;
+        let shape=workflow_enum_shape_controlled(MEDIA_FORM_LABELS,control)?;fields.push(semio_framework_dsl_record::producer::field(6,"conversion_from",shape,control)?.optional());control.step()?;
+        let shape=workflow_enum_shape_controlled(MEDIA_FORM_LABELS,control)?;fields.push(semio_framework_dsl_record::producer::field(7,"conversion_to",shape,control)?.optional());control.step()?;
+        semio_framework_dsl_record::producer::record(None,semio_framework_dsl_record::RecordLayout::Inline,fields,control)
     })
 }
-fn media_contract_spec_producer()->dsl::RecordSpecProducer{dsl::RecordSpecProducer{ordinary:media_contract_spec,decoding:|control|media_contract_spec_controlled(control),encoding:|control|media_contract_spec_controlled(control)}}
+fn media_contract_spec_producer()->semio_framework_dsl_record::RecordSpecProducer{semio_framework_dsl_record::RecordSpecProducer{ordinary:media_contract_spec,decoding:|control|media_contract_spec_controlled(control),encoding:|control|media_contract_spec_controlled(control)}}
 
-fn media_contract_spec() -> dsl::RecordSpec {
-    dsl::RecordSpec::new(
+fn media_contract_spec() -> semio_framework_dsl_record::RecordSpec {
+    semio_framework_dsl_record::RecordSpec::new(
         None,
-        dsl::RecordLayout::Inline,
+        semio_framework_dsl_record::RecordLayout::Inline,
         vec![
-            dsl::FieldSpec::new(0, "kind_id", dsl::Shape::Text),
-            dsl::FieldSpec::new(1, "class", dsl::Shape::Enum(media_class_variants())),
-            dsl::FieldSpec::new(2, "form", dsl::Shape::Enum(media_form_variants())),
-            dsl::FieldSpec::new(3, "wire_kind", dsl::Shape::Text),
-            dsl::FieldSpec::new(4, "wire_format", dsl::Shape::Text).optional(),
-            dsl::FieldSpec::new(5, "wire_schema", dsl::Shape::Text).optional(),
-            dsl::FieldSpec::new(6, "conversion_from", dsl::Shape::Enum(media_form_variants())).optional(),
-            dsl::FieldSpec::new(7, "conversion_to", dsl::Shape::Enum(media_form_variants())).optional(),
+            semio_framework_dsl_record::FieldSpec::new(0, "kind_id", semio_framework_dsl_record::Shape::Text),
+            semio_framework_dsl_record::FieldSpec::new(1, "class", semio_framework_dsl_record::Shape::Enum(media_class_variants())),
+            semio_framework_dsl_record::FieldSpec::new(2, "form", semio_framework_dsl_record::Shape::Enum(media_form_variants())),
+            semio_framework_dsl_record::FieldSpec::new(3, "wire_kind", semio_framework_dsl_record::Shape::Text),
+            semio_framework_dsl_record::FieldSpec::new(4, "wire_format", semio_framework_dsl_record::Shape::Text).optional(),
+            semio_framework_dsl_record::FieldSpec::new(5, "wire_schema", semio_framework_dsl_record::Shape::Text).optional(),
+            semio_framework_dsl_record::FieldSpec::new(6, "conversion_from", semio_framework_dsl_record::Shape::Enum(media_form_variants())).optional(),
+            semio_framework_dsl_record::FieldSpec::new(7, "conversion_to", semio_framework_dsl_record::Shape::Enum(media_form_variants())).optional(),
         ],
     )
 }
 
-fn media_contract_to_record(contract: &MediaContract) -> dsl::RecordValue {
-    let mut record = dsl::RecordValue::default();
-    record.fields.insert(0, dsl::FieldValue::Text(contract.kind_id.clone()));
-    record.fields.insert(1, dsl::FieldValue::Enum(media_class_ordinal(contract.media_type.class)));
-    record.fields.insert(2, dsl::FieldValue::Enum(media_form_ordinal(contract.media_type.form)));
+fn media_contract_to_record(contract: &MediaContract) -> semio_framework_dsl_record::RecordValue {
+    let mut record = semio_framework_dsl_record::RecordValue::default();
+    record.fields.insert(0, semio_framework_dsl_record::FieldValue::Text(contract.kind_id.clone()));
+    record.fields.insert(1, semio_framework_dsl_record::FieldValue::Enum(media_class_ordinal(contract.media_type.class)));
+    record.fields.insert(2, semio_framework_dsl_record::FieldValue::Enum(media_form_ordinal(contract.media_type.form)));
     match &contract.wire {
         MediaWireFormat::Binary { format_kind } => {
-            record.fields.insert(3, dsl::FieldValue::Text("binary".to_string()));
-            record.fields.insert(4, dsl::FieldValue::Text(format_kind.clone()));
-            record.fields.insert(5, dsl::FieldValue::Absent);
+            record.fields.insert(3, semio_framework_dsl_record::FieldValue::Text("binary".to_string()));
+            record.fields.insert(4, semio_framework_dsl_record::FieldValue::Text(format_kind.clone()));
+            record.fields.insert(5, semio_framework_dsl_record::FieldValue::Absent);
         }
-        MediaWireFormat::Document { schema } => {
-            record.fields.insert(3, dsl::FieldValue::Text("document".to_string()));
-            record.fields.insert(4, dsl::FieldValue::Absent);
-            record.fields.insert(5, dsl::FieldValue::Text(schema.clone()));
+        MediaWireFormat::Document { schema } | MediaWireFormat::Intrinsic { schema } => {
+            let kind=if matches!(&contract.wire,MediaWireFormat::Intrinsic{..}){"intrinsic"}else{"document"};
+            record.fields.insert(3, semio_framework_dsl_record::FieldValue::Text(kind.to_string()));
+            record.fields.insert(4, semio_framework_dsl_record::FieldValue::Absent);
+            record.fields.insert(5, semio_framework_dsl_record::FieldValue::Text(schema.clone()));
         }
     }
     match contract.conversion {
         Some((from, to)) => {
-            record.fields.insert(6, dsl::FieldValue::Enum(media_form_ordinal(from)));
-            record.fields.insert(7, dsl::FieldValue::Enum(media_form_ordinal(to)));
+            record.fields.insert(6, semio_framework_dsl_record::FieldValue::Enum(media_form_ordinal(from)));
+            record.fields.insert(7, semio_framework_dsl_record::FieldValue::Enum(media_form_ordinal(to)));
         }
         None => {
-            record.fields.insert(6, dsl::FieldValue::Absent);
-            record.fields.insert(7, dsl::FieldValue::Absent);
+            record.fields.insert(6, semio_framework_dsl_record::FieldValue::Absent);
+            record.fields.insert(7, semio_framework_dsl_record::FieldValue::Absent);
         }
     }
     record
 }
 
-fn media_contract_from_record(record: &dsl::RecordValue) -> Result<MediaContract, store::TextError> {
+fn media_contract_from_record(record: &semio_framework_dsl_record::RecordValue) -> Result<MediaContract, semio_framework_diagnostic::TextError> {
     let kind_id = match record.get(0) {
-        Some(dsl::FieldValue::Text(s)) => s.clone(),
-        other => return Err(dsl::__rt::field_error(format!("expected kind_id, found {other:?}"))),
+        Some(semio_framework_dsl_record::FieldValue::Text(s)) => s.clone(),
+        other => return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("expected kind_id, found {other:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1))),
     };
     let class = match record.get(1) {
-        Some(dsl::FieldValue::Enum(ordinal)) => media_class_from_ordinal(*ordinal).map_err(dsl::__rt::field_error)?,
-        other => return Err(dsl::__rt::field_error(format!("expected class, found {other:?}"))),
+        Some(semio_framework_dsl_record::FieldValue::Enum(ordinal)) => media_class_from_ordinal(*ordinal).map_err(|message| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message.to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))?,
+        other => return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("expected class, found {other:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1))),
     };
     let form = match record.get(2) {
-        Some(dsl::FieldValue::Enum(ordinal)) => media_form_from_ordinal(*ordinal).map_err(dsl::__rt::field_error)?,
-        other => return Err(dsl::__rt::field_error(format!("expected form, found {other:?}"))),
+        Some(semio_framework_dsl_record::FieldValue::Enum(ordinal)) => media_form_from_ordinal(*ordinal).map_err(|message| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message.to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))?,
+        other => return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("expected form, found {other:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1))),
     };
     let wire_kind = match record.get(3) {
-        Some(dsl::FieldValue::Text(s)) => s.clone(),
-        other => return Err(dsl::__rt::field_error(format!("expected wire_kind, found {other:?}"))),
+        Some(semio_framework_dsl_record::FieldValue::Text(s)) => s.clone(),
+        other => return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("expected wire_kind, found {other:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1))),
     };
     let wire = match wire_kind.as_str() {
         "binary" => {
             let format_word = match record.get(4) {
-                Some(dsl::FieldValue::Text(s)) => s.clone(),
-                other => return Err(dsl::__rt::field_error(format!("expected wire_format, found {other:?}"))),
+                Some(semio_framework_dsl_record::FieldValue::Text(s)) => s.clone(),
+                other => return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("expected wire_format, found {other:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1))),
             };
             MediaWireFormat::Binary { format_kind: format_word }
         }
-        "document" => {
+        "document" | "intrinsic" => {
             let schema = match record.get(5) {
-                Some(dsl::FieldValue::Text(s)) => s.clone(),
-                other => return Err(dsl::__rt::field_error(format!("expected wire_schema, found {other:?}"))),
+                Some(semio_framework_dsl_record::FieldValue::Text(s)) => s.clone(),
+                other => return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("expected wire_schema, found {other:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1))),
             };
-            MediaWireFormat::Document { schema }
+            if wire_kind=="intrinsic"{MediaWireFormat::Intrinsic{schema}}else{MediaWireFormat::Document { schema }}
         }
-        other => return Err(dsl::__rt::field_error(format!("unknown wire kind '{other}'"))),
+        other => return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown wire kind '{other}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1))),
     };
     let conversion = match (record.get(6), record.get(7)) {
-        (Some(dsl::FieldValue::Enum(from)), Some(dsl::FieldValue::Enum(to))) => Some((media_form_from_ordinal(*from).map_err(dsl::__rt::field_error)?, media_form_from_ordinal(*to).map_err(dsl::__rt::field_error)?)),
+        (Some(semio_framework_dsl_record::FieldValue::Enum(from)), Some(semio_framework_dsl_record::FieldValue::Enum(to))) => Some((media_form_from_ordinal(*from).map_err(|message| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message.to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))?, media_form_from_ordinal(*to).map_err(|message| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message.to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))?)),
         _ => None,
     };
     Ok(MediaContract { kind_id, media_type: MediaType { class, form }, wire, conversion })
 }
 
-impl dsl::DslField for MediaContract {
-    fn to_value_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::FieldValue,String>{media_contract_to_record_controlled(self,control).map(dsl::FieldValue::Record)}
-    fn to_record_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::RecordValue,String>{media_contract_to_record_controlled(self,control)}
-    fn from_value_controlled(value:&dsl::FieldValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{control.checkpoint()?;match value{dsl::FieldValue::Record(record)=>media_contract_from_record_controlled(record,control),_=>Err("expected declared record".into())}}
-    fn from_record_controlled(record:&dsl::RecordValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{media_contract_from_record_controlled(record,control)}
+impl semio_framework_dsl_record::DslField for MediaContract {
+    fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,semio_framework_value::ValueError>{media_contract_to_record_controlled(self,control).map(semio_framework_dsl_record::FieldValue::Record)}
+    fn to_record_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::RecordValue,semio_framework_value::ValueError>{media_contract_to_record_controlled(self,control)}
+    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{control.checkpoint()?;match value{semio_framework_dsl_record::FieldValue::Record(record)=>media_contract_from_record_controlled(record,control),_=>Err(workflow_invalid("expected declared record"))}}
+    fn from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{media_contract_from_record_controlled(record,control)}
     // 🚫️async: E4 fn-pointer transitivity — see `DslField::shape`'s tag (R9).
-    fn shape() -> dsl::Shape {
-        dsl::Shape::Record(media_contract_spec_producer())
+    fn shape() -> semio_framework_dsl_record::Shape {
+        semio_framework_dsl_record::Shape::Record(media_contract_spec_producer())
     }
-    fn shape_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::Shape,String>{control.checkpoint()?;Ok(dsl::Shape::Record(media_contract_spec_producer()))}
-    fn to_value(&self) -> dsl::FieldValue {
-        dsl::FieldValue::Record(media_contract_to_record(self))
+    fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{control.checkpoint()?;Ok(semio_framework_dsl_record::Shape::Record(media_contract_spec_producer()))}
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
+        semio_framework_dsl_record::FieldValue::Record(media_contract_to_record(self))
     }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
         match value {
-            dsl::FieldValue::Record(record) => media_contract_from_record(record).map_err(|e| e.message),
+            semio_framework_dsl_record::FieldValue::Record(record) => media_contract_from_record(record).map_err(|e| e.message),
             other => Err(format!("expected Record, found {other:?}")),
         }
     }
@@ -347,26 +350,26 @@ impl dsl::DslField for MediaContract {
 /// `dsl::DslField` above) — bridged directly as a two-element `DslValue::Array`. `kind_id`/
 /// `media_type`/`wire` reuse their own `ToValue`/`FromValue` impls (`MediaType`/`MediaWireFormat`
 /// gained them in `🛂️manifest/🦀️.rs`).
-impl ::semio_framework_os_kernel::ToValue for MediaContract {
-    fn to_value(&self) -> ::semio_framework_os_kernel::DslValue {
-        ::semio_framework_os_kernel::DslValue::object([
-            ("kindId".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.kind_id)),
-            ("mediaType".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.media_type)),
-            ("wire".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.wire)),
+impl semio_framework_value::ToValue for MediaContract {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::object([
+            ("kindId".to_string(), semio_framework_value::ToValue::to_value(&self.kind_id)),
+            ("mediaType".to_string(), semio_framework_value::ToValue::to_value(&self.media_type)),
+            ("wire".to_string(), semio_framework_value::ToValue::to_value(&self.wire)),
             (
                 "conversion".to_string(),
                 match &self.conversion {
-                    Some((from, to)) => ::semio_framework_os_kernel::DslValue::Array(vec![::semio_framework_os_kernel::ToValue::to_value(from), ::semio_framework_os_kernel::ToValue::to_value(to)]),
-                    None => ::semio_framework_os_kernel::DslValue::Null,
+                    Some((from, to)) => semio_framework_value::DslValue::Array(vec![semio_framework_value::ToValue::to_value(from), semio_framework_value::ToValue::to_value(to)]),
+                    None => semio_framework_value::DslValue::Null,
                 },
             ),
         ])
     }
 }
-impl ::semio_framework_os_kernel::FromValue for MediaContract {
-    fn from_value(value: ::semio_framework_os_kernel::DslValue) -> Result<Self, ::semio_framework_os_kernel::ValueError> {
-        let ::semio_framework_os_kernel::DslValue::Object(fields) = value else {
-            return Err(::semio_framework_os_kernel::ValueError::new(format!("expected an object for MediaContract, found {value:?}")));
+impl semio_framework_value::FromValue for MediaContract {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        let semio_framework_value::DslValue::Object(fields) = value else {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for MediaContract, found {value:?}")));
         };
         let mut kind_id = None;
         let mut media_type = None;
@@ -374,31 +377,31 @@ impl ::semio_framework_os_kernel::FromValue for MediaContract {
         let mut conversion = None;
         for (key, entry) in fields {
             match key.as_str() {
-                "kindId" => kind_id = Some(<String as ::semio_framework_os_kernel::FromValue>::from_value(entry).map_err(|e| e.under("kindId"))?),
-                "mediaType" => media_type = Some(<MediaType as ::semio_framework_os_kernel::FromValue>::from_value(entry).map_err(|e| e.under("mediaType"))?),
-                "wire" => wire = Some(<MediaWireFormat as ::semio_framework_os_kernel::FromValue>::from_value(entry).map_err(|e| e.under("wire"))?),
+                "kindId" => kind_id = Some(<String as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("kindId"))?),
+                "mediaType" => media_type = Some(<MediaType as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("mediaType"))?),
+                "wire" => wire = Some(<MediaWireFormat as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("wire"))?),
                 "conversion" => {
                     conversion = Some(match entry {
-                        ::semio_framework_os_kernel::DslValue::Null => None,
-                        ::semio_framework_os_kernel::DslValue::Array(items) => {
+                        semio_framework_value::DslValue::Null => None,
+                        semio_framework_value::DslValue::Array(items) => {
                             let mut iter = items.into_iter();
-                            let from = iter.next().ok_or_else(|| ::semio_framework_os_kernel::ValueError::new("MediaContract.conversion missing from"))?;
-                            let to = iter.next().ok_or_else(|| ::semio_framework_os_kernel::ValueError::new("MediaContract.conversion missing to"))?;
+                            let from = iter.next().ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "MediaContract.conversion missing from"))?;
+                            let to = iter.next().ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "MediaContract.conversion missing to"))?;
                             Some((
-                                <MediaForm as ::semio_framework_os_kernel::FromValue>::from_value(from).map_err(|e| e.under("conversion.0"))?,
-                                <MediaForm as ::semio_framework_os_kernel::FromValue>::from_value(to).map_err(|e| e.under("conversion.1"))?,
+                                <MediaForm as semio_framework_value::FromValue>::from_value(from).map_err(|e| e.under("conversion.0"))?,
+                                <MediaForm as semio_framework_value::FromValue>::from_value(to).map_err(|e| e.under("conversion.1"))?,
                             ))
                         }
-                        other => return Err(::semio_framework_os_kernel::ValueError::new(format!("expected array or null for MediaContract.conversion, found {other:?}"))),
+                        other => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected array or null for MediaContract.conversion, found {other:?}"))),
                     });
                 }
                 _ => {}
             }
         }
         Ok(MediaContract {
-            kind_id: kind_id.ok_or_else(|| ::semio_framework_os_kernel::ValueError::new("MediaContract missing kindId"))?,
-            media_type: media_type.ok_or_else(|| ::semio_framework_os_kernel::ValueError::new("MediaContract missing mediaType"))?,
-            wire: wire.ok_or_else(|| ::semio_framework_os_kernel::ValueError::new("MediaContract missing wire"))?,
+            kind_id: kind_id.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "MediaContract missing kindId"))?,
+            media_type: media_type.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "MediaContract missing mediaType"))?,
+            wire: wire.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "MediaContract missing wire"))?,
             conversion: conversion.unwrap_or(None),
         })
     }
@@ -464,120 +467,120 @@ fn port_multiplicity_variants() -> Vec<(String, u32)> {
 }
 
 // 🚫️async: E4 fn-pointer slot — value goes into `dsl::Shape::Record(fn() -> RecordSpec)`.
-fn workflow_media_port_spec_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::RecordSpec,String>{
-    control.scoped_stage(|control|{control.begin_stage(9)?;let mut fields=control.allocate_vec::<dsl::FieldSpec>(9)?;
-        let shape=dsl::Shape::Text;fields.push(dsl::schema::producer::field(0,"id",shape,control)?);control.step()?;
-        let shape=dsl::Shape::Text;fields.push(dsl::schema::producer::field(1,"port_id",shape,control)?);control.step()?;
-        let shape=dsl::Shape::Text;fields.push(dsl::schema::producer::field(2,"label",shape,control)?);control.step()?;
-        let shape=workflow_enum_shape_controlled(MEDIA_DIRECTION_LABELS,control)?;fields.push(dsl::schema::producer::field(3,"direction",shape,control)?);control.step()?;
-        let shape=workflow_enum_shape_controlled(MEDIA_CLASS_LABELS,control)?;fields.push(dsl::schema::producer::field(4,"class",shape,control)?);control.step()?;
-        let shape=workflow_enum_shape_controlled(MEDIA_FORM_LABELS,control)?;fields.push(dsl::schema::producer::field(5,"form",shape,control)?);control.step()?;
-        let shape=dsl::Shape::Text;fields.push(dsl::schema::producer::field(6,"kind_id",shape,control)?.optional());control.step()?;
-        let shape=dsl::Shape::Bool;fields.push(dsl::schema::producer::field(7,"required",shape,control)?);control.step()?;
-        let shape=workflow_enum_shape_controlled(MEDIA_MULTIPLICITY_LABELS,control)?;fields.push(dsl::schema::producer::field(8,"multiplicity",shape,control)?);control.step()?;
-        dsl::schema::producer::record(None,dsl::RecordLayout::Inline,fields,control)
+fn workflow_media_port_spec_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::RecordSpec,semio_framework_value::ValueError>{
+    control.scoped_stage(|control|{control.begin_stage(9)?;let mut fields=control.allocate_vec::<semio_framework_dsl_record::FieldSpec>(9)?;
+        let shape=semio_framework_dsl_record::Shape::Text;fields.push(semio_framework_dsl_record::producer::field(0,"id",shape,control)?);control.step()?;
+        let shape=semio_framework_dsl_record::Shape::Text;fields.push(semio_framework_dsl_record::producer::field(1,"port_id",shape,control)?);control.step()?;
+        let shape=semio_framework_dsl_record::Shape::Text;fields.push(semio_framework_dsl_record::producer::field(2,"label",shape,control)?);control.step()?;
+        let shape=workflow_enum_shape_controlled(MEDIA_DIRECTION_LABELS,control)?;fields.push(semio_framework_dsl_record::producer::field(3,"direction",shape,control)?);control.step()?;
+        let shape=workflow_enum_shape_controlled(MEDIA_CLASS_LABELS,control)?;fields.push(semio_framework_dsl_record::producer::field(4,"class",shape,control)?);control.step()?;
+        let shape=workflow_enum_shape_controlled(MEDIA_FORM_LABELS,control)?;fields.push(semio_framework_dsl_record::producer::field(5,"form",shape,control)?);control.step()?;
+        let shape=semio_framework_dsl_record::Shape::Text;fields.push(semio_framework_dsl_record::producer::field(6,"kind_id",shape,control)?.optional());control.step()?;
+        let shape=semio_framework_dsl_record::Shape::Bool;fields.push(semio_framework_dsl_record::producer::field(7,"required",shape,control)?);control.step()?;
+        let shape=workflow_enum_shape_controlled(MEDIA_MULTIPLICITY_LABELS,control)?;fields.push(semio_framework_dsl_record::producer::field(8,"multiplicity",shape,control)?);control.step()?;
+        semio_framework_dsl_record::producer::record(None,semio_framework_dsl_record::RecordLayout::Inline,fields,control)
     })
 }
-fn workflow_media_port_spec_producer()->dsl::RecordSpecProducer{dsl::RecordSpecProducer{ordinary:workflow_media_port_spec,decoding:|control|workflow_media_port_spec_controlled(control),encoding:|control|workflow_media_port_spec_controlled(control)}}
+fn workflow_media_port_spec_producer()->semio_framework_dsl_record::RecordSpecProducer{semio_framework_dsl_record::RecordSpecProducer{ordinary:workflow_media_port_spec,decoding:|control|workflow_media_port_spec_controlled(control),encoding:|control|workflow_media_port_spec_controlled(control)}}
 
-fn workflow_media_port_spec() -> dsl::RecordSpec {
-    dsl::RecordSpec::new(
+fn workflow_media_port_spec() -> semio_framework_dsl_record::RecordSpec {
+    semio_framework_dsl_record::RecordSpec::new(
         None,
-        dsl::RecordLayout::Inline,
+        semio_framework_dsl_record::RecordLayout::Inline,
         vec![
-            dsl::FieldSpec::new(0, "id", dsl::Shape::Text),
-            dsl::FieldSpec::new(1, "port_id", dsl::Shape::Text),
-            dsl::FieldSpec::new(2, "label", dsl::Shape::Text),
-            dsl::FieldSpec::new(3, "direction", dsl::Shape::Enum(media_port_direction_variants())),
-            dsl::FieldSpec::new(4, "class", dsl::Shape::Enum(media_class_variants())),
-            dsl::FieldSpec::new(5, "form", dsl::Shape::Enum(media_form_variants())),
-            dsl::FieldSpec::new(6, "kind_id", dsl::Shape::Text).optional(),
-            dsl::FieldSpec::new(7, "required", dsl::Shape::Bool),
-            dsl::FieldSpec::new(8, "multiplicity", dsl::Shape::Enum(port_multiplicity_variants())),
+            semio_framework_dsl_record::FieldSpec::new(0, "id", semio_framework_dsl_record::Shape::Text),
+            semio_framework_dsl_record::FieldSpec::new(1, "port_id", semio_framework_dsl_record::Shape::Text),
+            semio_framework_dsl_record::FieldSpec::new(2, "label", semio_framework_dsl_record::Shape::Text),
+            semio_framework_dsl_record::FieldSpec::new(3, "direction", semio_framework_dsl_record::Shape::Enum(media_port_direction_variants())),
+            semio_framework_dsl_record::FieldSpec::new(4, "class", semio_framework_dsl_record::Shape::Enum(media_class_variants())),
+            semio_framework_dsl_record::FieldSpec::new(5, "form", semio_framework_dsl_record::Shape::Enum(media_form_variants())),
+            semio_framework_dsl_record::FieldSpec::new(6, "kind_id", semio_framework_dsl_record::Shape::Text).optional(),
+            semio_framework_dsl_record::FieldSpec::new(7, "required", semio_framework_dsl_record::Shape::Bool),
+            semio_framework_dsl_record::FieldSpec::new(8, "multiplicity", semio_framework_dsl_record::Shape::Enum(port_multiplicity_variants())),
         ],
     )
 }
 
-fn workflow_media_port_to_record(port: &WorkflowMediaPort) -> dsl::RecordValue {
-    let mut record = dsl::RecordValue::default();
-    record.fields.insert(0, dsl::FieldValue::Text(port.id.clone()));
-    record.fields.insert(1, dsl::FieldValue::Text(port.spec.id.clone()));
-    record.fields.insert(2, dsl::FieldValue::Text(port.spec.label.clone()));
-    record.fields.insert(3, dsl::FieldValue::Enum(media_port_direction_ordinal(port.spec.direction)));
-    record.fields.insert(4, dsl::FieldValue::Enum(media_class_ordinal(port.spec.media_type.class)));
-    record.fields.insert(5, dsl::FieldValue::Enum(media_form_ordinal(port.spec.media_type.form)));
+fn workflow_media_port_to_record(port: &WorkflowMediaPort) -> semio_framework_dsl_record::RecordValue {
+    let mut record = semio_framework_dsl_record::RecordValue::default();
+    record.fields.insert(0, semio_framework_dsl_record::FieldValue::Text(port.id.clone()));
+    record.fields.insert(1, semio_framework_dsl_record::FieldValue::Text(port.spec.id.clone()));
+    record.fields.insert(2, semio_framework_dsl_record::FieldValue::Text(port.spec.label.clone()));
+    record.fields.insert(3, semio_framework_dsl_record::FieldValue::Enum(media_port_direction_ordinal(port.spec.direction)));
+    record.fields.insert(4, semio_framework_dsl_record::FieldValue::Enum(media_class_ordinal(port.spec.media_type.class)));
+    record.fields.insert(5, semio_framework_dsl_record::FieldValue::Enum(media_form_ordinal(port.spec.media_type.form)));
     match &port.spec.kind_id {
-        Some(kind_id) => record.fields.insert(6, dsl::FieldValue::Text(kind_id.clone())),
-        None => record.fields.insert(6, dsl::FieldValue::Absent),
+        Some(kind_id) => record.fields.insert(6, semio_framework_dsl_record::FieldValue::Text(kind_id.clone())),
+        None => record.fields.insert(6, semio_framework_dsl_record::FieldValue::Absent),
     };
-    record.fields.insert(7, dsl::FieldValue::Bool(port.spec.required));
-    record.fields.insert(8, dsl::FieldValue::Enum(port_multiplicity_ordinal(port.spec.multiplicity)));
+    record.fields.insert(7, semio_framework_dsl_record::FieldValue::Bool(port.spec.required));
+    record.fields.insert(8, semio_framework_dsl_record::FieldValue::Enum(port_multiplicity_ordinal(port.spec.multiplicity)));
     record
 }
 
-fn workflow_media_port_from_record(record: &dsl::RecordValue) -> Result<WorkflowMediaPort, store::TextError> {
+fn workflow_media_port_from_record(record: &semio_framework_dsl_record::RecordValue) -> Result<WorkflowMediaPort, semio_framework_diagnostic::TextError> {
     let id = match record.get(0) {
-        Some(dsl::FieldValue::Text(s)) => s.clone(),
-        other => return Err(dsl::__rt::field_error(format!("expected id, found {other:?}"))),
+        Some(semio_framework_dsl_record::FieldValue::Text(s)) => s.clone(),
+        other => return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("expected id, found {other:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1))),
     };
     let port_id = match record.get(1) {
-        Some(dsl::FieldValue::Text(s)) => s.clone(),
-        other => return Err(dsl::__rt::field_error(format!("expected port_id, found {other:?}"))),
+        Some(semio_framework_dsl_record::FieldValue::Text(s)) => s.clone(),
+        other => return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("expected port_id, found {other:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1))),
     };
     let label = match record.get(2) {
-        Some(dsl::FieldValue::Text(s)) => s.clone(),
-        other => return Err(dsl::__rt::field_error(format!("expected label, found {other:?}"))),
+        Some(semio_framework_dsl_record::FieldValue::Text(s)) => s.clone(),
+        other => return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("expected label, found {other:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1))),
     };
     let direction = match record.get(3) {
-        Some(dsl::FieldValue::Enum(ordinal)) => media_port_direction_from_ordinal(*ordinal).map_err(dsl::__rt::field_error)?,
-        other => return Err(dsl::__rt::field_error(format!("expected direction, found {other:?}"))),
+        Some(semio_framework_dsl_record::FieldValue::Enum(ordinal)) => media_port_direction_from_ordinal(*ordinal).map_err(|message| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message.to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))?,
+        other => return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("expected direction, found {other:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1))),
     };
     let class = match record.get(4) {
-        Some(dsl::FieldValue::Enum(ordinal)) => media_class_from_ordinal(*ordinal).map_err(dsl::__rt::field_error)?,
-        other => return Err(dsl::__rt::field_error(format!("expected class, found {other:?}"))),
+        Some(semio_framework_dsl_record::FieldValue::Enum(ordinal)) => media_class_from_ordinal(*ordinal).map_err(|message| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message.to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))?,
+        other => return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("expected class, found {other:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1))),
     };
     let form = match record.get(5) {
-        Some(dsl::FieldValue::Enum(ordinal)) => media_form_from_ordinal(*ordinal).map_err(dsl::__rt::field_error)?,
-        other => return Err(dsl::__rt::field_error(format!("expected form, found {other:?}"))),
+        Some(semio_framework_dsl_record::FieldValue::Enum(ordinal)) => media_form_from_ordinal(*ordinal).map_err(|message| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message.to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))?,
+        other => return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("expected form, found {other:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1))),
     };
     let kind_id = match record.get(6) {
-        Some(dsl::FieldValue::Text(s)) => Some(s.clone()),
+        Some(semio_framework_dsl_record::FieldValue::Text(s)) => Some(s.clone()),
         _ => None,
     };
     let required = match record.get(7) {
-        Some(dsl::FieldValue::Bool(b)) => *b,
-        other => return Err(dsl::__rt::field_error(format!("expected required, found {other:?}"))),
+        Some(semio_framework_dsl_record::FieldValue::Bool(b)) => *b,
+        other => return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("expected required, found {other:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1))),
     };
     let multiplicity = match record.get(8) {
-        Some(dsl::FieldValue::Enum(ordinal)) => port_multiplicity_from_ordinal(*ordinal).map_err(dsl::__rt::field_error)?,
-        other => return Err(dsl::__rt::field_error(format!("expected multiplicity, found {other:?}"))),
+        Some(semio_framework_dsl_record::FieldValue::Enum(ordinal)) => port_multiplicity_from_ordinal(*ordinal).map_err(|message| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message.to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))?,
+        other => return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("expected multiplicity, found {other:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1))),
     };
     Ok(WorkflowMediaPort { id, spec: MediaPortSpec { id: port_id, label, direction, media_type: MediaType { class, form }, kind_id, required, multiplicity } })
 }
 
-impl dsl::DslField for WorkflowMediaPort {
-    fn to_value_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::FieldValue,String>{workflow_media_port_to_record_controlled(self,control).map(dsl::FieldValue::Record)}
-    fn to_record_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::RecordValue,String>{workflow_media_port_to_record_controlled(self,control)}
-    fn from_value_controlled(value:&dsl::FieldValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{control.checkpoint()?;match value{dsl::FieldValue::Record(record)=>workflow_media_port_from_record_controlled(record,control),_=>Err("expected declared record".into())}}
-    fn from_record_controlled(record:&dsl::RecordValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{workflow_media_port_from_record_controlled(record,control)}
+impl semio_framework_dsl_record::DslField for WorkflowMediaPort {
+    fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,semio_framework_value::ValueError>{workflow_media_port_to_record_controlled(self,control).map(semio_framework_dsl_record::FieldValue::Record)}
+    fn to_record_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::RecordValue,semio_framework_value::ValueError>{workflow_media_port_to_record_controlled(self,control)}
+    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{control.checkpoint()?;match value{semio_framework_dsl_record::FieldValue::Record(record)=>workflow_media_port_from_record_controlled(record,control),_=>Err(workflow_invalid("expected declared record"))}}
+    fn from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{workflow_media_port_from_record_controlled(record,control)}
     // 🚫️async: E4 fn-pointer transitivity — see `DslField::shape`'s tag (R9).
-    fn shape() -> dsl::Shape {
-        dsl::Shape::Record(workflow_media_port_spec_producer())
+    fn shape() -> semio_framework_dsl_record::Shape {
+        semio_framework_dsl_record::Shape::Record(workflow_media_port_spec_producer())
     }
-    fn shape_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::Shape,String>{control.checkpoint()?;Ok(dsl::Shape::Record(workflow_media_port_spec_producer()))}
-    fn to_value(&self) -> dsl::FieldValue {
-        dsl::FieldValue::Record(workflow_media_port_to_record(self))
+    fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{control.checkpoint()?;Ok(semio_framework_dsl_record::Shape::Record(workflow_media_port_spec_producer()))}
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
+        semio_framework_dsl_record::FieldValue::Record(workflow_media_port_to_record(self))
     }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
         match value {
-            dsl::FieldValue::Record(record) => workflow_media_port_from_record(record).map_err(|e| e.message),
+            semio_framework_dsl_record::FieldValue::Record(record) => workflow_media_port_from_record(record).map_err(|e| e.message),
             other => Err(format!("expected Record, found {other:?}")),
         }
     }
 }
 //#endregion 🔖️WorkflowMediaPort
 
-#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct WorkflowPosition {
     pub x: f64,
@@ -587,7 +590,7 @@ pub struct WorkflowPosition {
 }
 
 /// 🧷️ A node IS the app-instance now — see the `🔖️InstanceIdentity` region at the top of this file.
-#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct WorkflowNode {
     pub id: String,
@@ -605,7 +608,7 @@ pub struct WorkflowNode {
     pub outputs: Vec<WorkflowMediaPort>,
 }
 
-#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct WorkflowEdge {
     pub id: String,
@@ -617,9 +620,10 @@ pub struct WorkflowEdge {
     pub contract: MediaContract,
 }
 
-#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_os_kernel::DslArtifact)]
 #[value(rename_all = "camelCase")]
-#[dsl(extension = "workflow", layout = "lines")]
+#[dsl(layout = "lines")]
+#[artifact(extension = "workflow")]
 pub struct Workflow {
     pub schema: String,
     pub nodes: Vec<WorkflowNode>,
@@ -725,7 +729,7 @@ pub async fn validate_workflow(graph: &Workflow) -> WorkflowValidation {
 //#endregion 🔖️WorkflowValidator
 
 //#region 🔖️WorkflowPlanner
-#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct WorkflowDelivery {
     pub edge_id: String,
@@ -793,9 +797,9 @@ pub async fn plan_workflow(graph: &Workflow, dirty_node_ids: &HashSet<String>) -
 /// `plan_workflow` must produce for them. Ships as a `dsl`+`pack` document — see
 /// `framework/product/os/core/fixtures/*.dsl`/`*.spk` and `README.md` — so the fixture corpus itself
 /// proves the dsl≡pack law instead of riding untyped JSON.
-#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_os_kernel::DslArtifact)]
 #[value(rename_all = "camelCase")]
-#[dsl(extension = "workflow-fixture")]
+#[artifact(extension = "workflow-fixture")]
 pub struct WorkflowFixture {
     pub name: String,
     #[dsl(block)]
@@ -812,17 +816,17 @@ impl store::ArtifactDsl for WorkflowFixture {
         Self::__DSL_ENVELOPE_ID
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
 
     fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -831,14 +835,14 @@ impl store::ArtifactDsl for WorkflowFixture {
 impl store::ArtifactPack for WorkflowFixture {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::from(error.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::from(error.into_value_error()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         match Self::__dsl_from_record(&record) {
@@ -847,7 +851,7 @@ impl store::ArtifactPack for WorkflowFixture {
         }
     }
 
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -885,7 +889,7 @@ pub enum WorkflowParameterType {
 
 /// 🎯️ `field_path` names a field `id` in the target node's app's declared `ConfigSpec` —
 /// see `validate_workflow_parameter_config_binding` (type-checks against the field's `ArgSchema`).
-#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct WorkflowParameterBinding {
     pub parameter_id: String,
@@ -893,7 +897,7 @@ pub struct WorkflowParameterBinding {
     pub field_path: String,
 }
 
-#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslEnum)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 #[value(tag = "type", rename_all = "lowercase")]
 pub enum WorkflowParameter {
     Numeric { id: String, name: String, value: f64, min: Option<f64>, max: Option<f64>, step: Option<f64> },
@@ -902,7 +906,7 @@ pub enum WorkflowParameter {
     Text { id: String, name: String, value: String },
 }
 
-pub type WorkflowParameterPatch = dsl::DslValue;
+pub type WorkflowParameterPatch = semio_framework_value::DslValue;
 
 // 🚫️async: E1 transitive — consumed by std Iterator/Option combinators (external traits) in
 // sync closures; pure, no I/O (R9).
@@ -922,12 +926,12 @@ pub fn workflow_parameter_name(parameter: &WorkflowParameter) -> String {
 
 // 🚫️async: E1 transitive — consumed by std Iterator/Option combinators (external traits) in
 // sync closures; pure, no I/O (R9).
-pub fn workflow_parameter_value(parameter: &WorkflowParameter) -> dsl::DslValue {
+pub fn workflow_parameter_value(parameter: &WorkflowParameter) -> semio_framework_value::DslValue {
     match parameter {
-        WorkflowParameter::Numeric { value, .. } => dsl::ToValue::to_value(value),
-        WorkflowParameter::Categorical { value, .. } => dsl::ToValue::to_value(value),
-        WorkflowParameter::Toggle { value, .. } => dsl::ToValue::to_value(value),
-        WorkflowParameter::Text { value, .. } => dsl::ToValue::to_value(value),
+        WorkflowParameter::Numeric { value, .. } => semio_framework_value::ToValue::to_value(value),
+        WorkflowParameter::Categorical { value, .. } => semio_framework_value::ToValue::to_value(value),
+        WorkflowParameter::Toggle { value, .. } => semio_framework_value::ToValue::to_value(value),
+        WorkflowParameter::Text { value, .. } => semio_framework_value::ToValue::to_value(value),
     }
 }
 
@@ -968,7 +972,7 @@ async fn clamp_workflow_numeric_value(value: f64, min: Option<f64>, max: Option<
 
 /// 🎛️ Applies a partial patch to a workflow parameter, enforcing type constraints. Ported
 /// verbatim from os-core's `patch_os_parameter`.
-pub async fn patch_workflow_parameter(parameter: &WorkflowParameter, patch: &dsl::DslValue) -> WorkflowParameter {
+pub async fn patch_workflow_parameter(parameter: &WorkflowParameter, patch: &semio_framework_value::DslValue) -> WorkflowParameter {
     let name = patch.get("name").and_then(|v| v.as_str()).map_or_else(|| workflow_parameter_name(parameter), str::to_string);
     let patch_type = patch.get("type").and_then(|v| v.as_str());
     let use_numeric = patch_type == Some("numeric") || (patch_type.is_none() && matches!(parameter, WorkflowParameter::Numeric { .. }));
@@ -1043,8 +1047,8 @@ pub async fn validate_workflow_parameter_config_binding(binding: &WorkflowParame
     let uri = format!("{}#{}", binding.node_id, binding.field_path);
     let Some(field) = config_spec.fields.iter().find(|field| field.id == binding.field_path) else {
         return Err(protocol::MutationMessage {
-            level: dsl::Severity::Warning,
-            code: dsl::FaultCode::new("workflow/parameter-binding-invalid"),
+            level: semio_framework_diagnostic::Severity::Warning,
+            code: semio_framework_diagnostic::FaultCode::new("workflow/parameter-binding-invalid"),
             message: format!("binding targets config field '{}', which the app's ConfigSpec does not declare", binding.field_path),
             target: vec![uri],
             op_index: None,
@@ -1060,8 +1064,8 @@ pub async fn validate_workflow_parameter_config_binding(binding: &WorkflowParame
         Ok(())
     } else {
         Err(protocol::MutationMessage {
-            level: dsl::Severity::Warning,
-            code: dsl::FaultCode::new("workflow/parameter-binding-invalid"),
+            level: semio_framework_diagnostic::Severity::Warning,
+            code: semio_framework_diagnostic::FaultCode::new("workflow/parameter-binding-invalid"),
             message: format!("parameter type {parameter_type:?} cannot drive config field '{}' ({:?})", binding.field_path, field.schema),
             target: vec![uri],
             op_index: None,
@@ -1152,28 +1156,28 @@ pub struct WorkflowInput {
 }
 
 // 🚫️async: E4 fn-pointer slot — value goes into `dsl::Shape::Record(fn() -> RecordSpec)`.
-fn workflow_input_spec_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::RecordSpec,String>{
-    control.scoped_stage(|control|{control.begin_stage(5)?;let mut fields=control.allocate_vec::<dsl::FieldSpec>(5)?;
-        let shape=dsl::Shape::Text;fields.push(dsl::schema::producer::field(0,"id",shape,control)?);control.step()?;
-        let shape=dsl::Shape::Text;fields.push(dsl::schema::producer::field(1,"kind_id",shape,control)?);control.step()?;
-        let shape=dsl::Shape::Text;fields.push(dsl::schema::producer::field(2,"selector",shape,control)?);control.step()?;
-        let shape=dsl::Shape::Bool;fields.push(dsl::schema::producer::field(3,"required",shape,control)?);control.step()?;
-        let shape=workflow_enum_shape_controlled(MEDIA_MULTIPLICITY_LABELS,control)?;fields.push(dsl::schema::producer::field(4,"multiplicity",shape,control)?);control.step()?;
-        dsl::schema::producer::record(None,dsl::RecordLayout::Inline,fields,control)
+fn workflow_input_spec_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::RecordSpec,semio_framework_value::ValueError>{
+    control.scoped_stage(|control|{control.begin_stage(5)?;let mut fields=control.allocate_vec::<semio_framework_dsl_record::FieldSpec>(5)?;
+        let shape=semio_framework_dsl_record::Shape::Text;fields.push(semio_framework_dsl_record::producer::field(0,"id",shape,control)?);control.step()?;
+        let shape=semio_framework_dsl_record::Shape::Text;fields.push(semio_framework_dsl_record::producer::field(1,"kind_id",shape,control)?);control.step()?;
+        let shape=semio_framework_dsl_record::Shape::Text;fields.push(semio_framework_dsl_record::producer::field(2,"selector",shape,control)?);control.step()?;
+        let shape=semio_framework_dsl_record::Shape::Bool;fields.push(semio_framework_dsl_record::producer::field(3,"required",shape,control)?);control.step()?;
+        let shape=workflow_enum_shape_controlled(MEDIA_MULTIPLICITY_LABELS,control)?;fields.push(semio_framework_dsl_record::producer::field(4,"multiplicity",shape,control)?);control.step()?;
+        semio_framework_dsl_record::producer::record(None,semio_framework_dsl_record::RecordLayout::Inline,fields,control)
     })
 }
-fn workflow_input_spec_producer()->dsl::RecordSpecProducer{dsl::RecordSpecProducer{ordinary:workflow_input_spec,decoding:|control|workflow_input_spec_controlled(control),encoding:|control|workflow_input_spec_controlled(control)}}
+fn workflow_input_spec_producer()->semio_framework_dsl_record::RecordSpecProducer{semio_framework_dsl_record::RecordSpecProducer{ordinary:workflow_input_spec,decoding:|control|workflow_input_spec_controlled(control),encoding:|control|workflow_input_spec_controlled(control)}}
 
-fn workflow_input_spec() -> dsl::RecordSpec {
-    dsl::RecordSpec::new(
+fn workflow_input_spec() -> semio_framework_dsl_record::RecordSpec {
+    semio_framework_dsl_record::RecordSpec::new(
         None,
-        dsl::RecordLayout::Inline,
+        semio_framework_dsl_record::RecordLayout::Inline,
         vec![
-            dsl::FieldSpec::new(0, "id", dsl::Shape::Text),
-            dsl::FieldSpec::new(1, "kind_id", dsl::Shape::Text),
-            dsl::FieldSpec::new(2, "selector", dsl::Shape::Text),
-            dsl::FieldSpec::new(3, "required", dsl::Shape::Bool),
-            dsl::FieldSpec::new(4, "multiplicity", dsl::Shape::Enum(port_multiplicity_variants())),
+            semio_framework_dsl_record::FieldSpec::new(0, "id", semio_framework_dsl_record::Shape::Text),
+            semio_framework_dsl_record::FieldSpec::new(1, "kind_id", semio_framework_dsl_record::Shape::Text),
+            semio_framework_dsl_record::FieldSpec::new(2, "selector", semio_framework_dsl_record::Shape::Text),
+            semio_framework_dsl_record::FieldSpec::new(3, "required", semio_framework_dsl_record::Shape::Bool),
+            semio_framework_dsl_record::FieldSpec::new(4, "multiplicity", semio_framework_dsl_record::Shape::Enum(port_multiplicity_variants())),
         ],
     )
 }
@@ -1182,45 +1186,45 @@ fn workflow_input_spec() -> dsl::RecordSpec {
 /// is a foreign type this crate can't derive `DslField` for under the orphan rule, same reasoning as
 /// `WorkflowMediaPort`/`MediaContract` above; reuses their `port_multiplicity_ordinal`/`_from_ordinal`/
 /// `_variants` helpers directly.
-impl dsl::DslField for WorkflowInput {
-    fn to_value_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::FieldValue,String>{workflow_input_to_record_controlled(self,control).map(dsl::FieldValue::Record)}
-    fn to_record_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::RecordValue,String>{workflow_input_to_record_controlled(self,control)}
-    fn from_value_controlled(value:&dsl::FieldValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{control.checkpoint()?;match value{dsl::FieldValue::Record(record)=>workflow_input_from_record_controlled(record,control),_=>Err("expected declared record".into())}}
-    fn from_record_controlled(record:&dsl::RecordValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{workflow_input_from_record_controlled(record,control)}
+impl semio_framework_dsl_record::DslField for WorkflowInput {
+    fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,semio_framework_value::ValueError>{workflow_input_to_record_controlled(self,control).map(semio_framework_dsl_record::FieldValue::Record)}
+    fn to_record_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::RecordValue,semio_framework_value::ValueError>{workflow_input_to_record_controlled(self,control)}
+    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{control.checkpoint()?;match value{semio_framework_dsl_record::FieldValue::Record(record)=>workflow_input_from_record_controlled(record,control),_=>Err(workflow_invalid("expected declared record"))}}
+    fn from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{workflow_input_from_record_controlled(record,control)}
     // 🚫️async: E4 fn-pointer transitivity — see `DslField::shape`'s tag (R9).
-    fn shape() -> dsl::Shape {
-        dsl::Shape::Record(workflow_input_spec_producer())
+    fn shape() -> semio_framework_dsl_record::Shape {
+        semio_framework_dsl_record::Shape::Record(workflow_input_spec_producer())
     }
-    fn shape_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::Shape,String>{control.checkpoint()?;Ok(dsl::Shape::Record(workflow_input_spec_producer()))}
-    fn to_value(&self) -> dsl::FieldValue {
-        let mut record = dsl::RecordValue::default();
-        record.fields.insert(0, dsl::FieldValue::Text(self.id.clone()));
-        record.fields.insert(1, dsl::FieldValue::Text(self.kind_id.clone()));
-        record.fields.insert(2, dsl::FieldValue::Text(self.selector.clone()));
-        record.fields.insert(3, dsl::FieldValue::Bool(self.required));
-        record.fields.insert(4, dsl::FieldValue::Enum(port_multiplicity_ordinal(self.multiplicity)));
-        dsl::FieldValue::Record(record)
+    fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{control.checkpoint()?;Ok(semio_framework_dsl_record::Shape::Record(workflow_input_spec_producer()))}
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
+        let mut record = semio_framework_dsl_record::RecordValue::default();
+        record.fields.insert(0, semio_framework_dsl_record::FieldValue::Text(self.id.clone()));
+        record.fields.insert(1, semio_framework_dsl_record::FieldValue::Text(self.kind_id.clone()));
+        record.fields.insert(2, semio_framework_dsl_record::FieldValue::Text(self.selector.clone()));
+        record.fields.insert(3, semio_framework_dsl_record::FieldValue::Bool(self.required));
+        record.fields.insert(4, semio_framework_dsl_record::FieldValue::Enum(port_multiplicity_ordinal(self.multiplicity)));
+        semio_framework_dsl_record::FieldValue::Record(record)
     }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
-        let dsl::FieldValue::Record(record) = value else { return Err(format!("expected Record, found {value:?}")) };
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
+        let semio_framework_dsl_record::FieldValue::Record(record) = value else { return Err(format!("expected Record, found {value:?}")) };
         let id = match record.get(0) {
-            Some(dsl::FieldValue::Text(s)) => s.clone(),
+            Some(semio_framework_dsl_record::FieldValue::Text(s)) => s.clone(),
             other => return Err(format!("expected id, found {other:?}")),
         };
         let kind_id = match record.get(1) {
-            Some(dsl::FieldValue::Text(s)) => s.clone(),
+            Some(semio_framework_dsl_record::FieldValue::Text(s)) => s.clone(),
             other => return Err(format!("expected kind_id, found {other:?}")),
         };
         let selector = match record.get(2) {
-            Some(dsl::FieldValue::Text(s)) => s.clone(),
+            Some(semio_framework_dsl_record::FieldValue::Text(s)) => s.clone(),
             other => return Err(format!("expected selector, found {other:?}")),
         };
         let required = match record.get(3) {
-            Some(dsl::FieldValue::Bool(b)) => *b,
+            Some(semio_framework_dsl_record::FieldValue::Bool(b)) => *b,
             other => return Err(format!("expected required, found {other:?}")),
         };
         let multiplicity = match record.get(4) {
-            Some(dsl::FieldValue::Enum(ordinal)) => port_multiplicity_from_ordinal(*ordinal)?,
+            Some(semio_framework_dsl_record::FieldValue::Enum(ordinal)) => port_multiplicity_from_ordinal(*ordinal)?,
             other => return Err(format!("expected multiplicity, found {other:?}")),
         };
         Ok(WorkflowInput { id, kind_id, selector, required, multiplicity })
@@ -1228,7 +1232,7 @@ impl dsl::DslField for WorkflowInput {
 }
 
 /// 🔗️ Binds a declared [`WorkflowInput`] slot onto one node's in-port.
-#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct WorkflowInputBinding {
     pub input_id: String,
@@ -1238,7 +1242,7 @@ pub struct WorkflowInputBinding {
 
 /// 📤️ Names where a node's out-port materializes in the output collection — `path_template` like
 /// `"renders/{node}/{input.stem}.{ext}"` (resolved at run time by W5's `SpaceRunner`).
-#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct WorkflowOutputBinding {
     pub node_id: String,
@@ -1250,8 +1254,8 @@ pub struct WorkflowOutputBinding {
 /// its parameters/bindings, and its declared collection-level inputs/outputs. Absorbs os-core's
 /// dissolved `OsSnapshot` (`programs` moved to `space::SpaceSnapshot`, `active_plugin_id`/
 /// `active_alternative_id` become space-app session state — see `## The inversion` in the plan).
-#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslArtifact)]
-#[dsl(id = "os.workflow")]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_os_kernel::DslArtifact)]
+#[artifact(id = "os.workflow")]
 pub struct WorkflowSnapshot {
     pub schema: String,
     #[dsl(block)]
@@ -1283,16 +1287,16 @@ impl store::ArtifactDsl for WorkflowSnapshot {
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -1303,13 +1307,13 @@ impl store::ArtifactPack for WorkflowSnapshot {
     fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> { Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec()) }
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         match Self::__dsl_from_record(&record) {
@@ -1317,7 +1321,7 @@ impl store::ArtifactPack for WorkflowSnapshot {
             Err(error) => Err(store::text_error_to_pack_error(error)),
         }
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -1658,23 +1662,23 @@ impl protocol::MutationDiff<WorkflowSnapshot> for WorkflowDiff {
 
 //#region 🔖️WorkflowMutationOpText
 impl protocol::OpText for WorkflowMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = semio_framework_dsl_record::parse(line, &(spec_fn.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?;
+                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
+        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown mutation line '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
     }
 
     fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(candidate, _)| candidate == &keyword).map(|(_, spec)| *spec).expect("variant spec");
-        dsl::print(&record, &(spec_fn.ordinary)(), dsl::JoinMode::Inline)
+        semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline)
     }
 }
 

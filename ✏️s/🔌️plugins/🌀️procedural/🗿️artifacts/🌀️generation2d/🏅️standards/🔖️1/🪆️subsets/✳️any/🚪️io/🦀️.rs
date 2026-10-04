@@ -185,12 +185,12 @@ pub fn semio_drawing_from_scenes(scenes_json: &[String]) -> Result<semio_s_artif
     use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::export::serializers::artifacts::png::v1_2::any::{flatten_segments, transformed_segments};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
     let p = |x: f64, y: f64| SemioPoint2 { x, y };
-    let point = |value: &dsl::json::Value| -> Option<SemioPoint2> {
+    let point = |value: &semio_framework_pack_json::Value| -> Option<SemioPoint2> {
         let pair = value.as_array()?;
         Some(p(pair.first()?.as_f64()?, pair.get(1)?.as_f64()?))
     };
-    let number = |value: &dsl::json::Value, key: &str| value.get(key).and_then(|v| v.as_f64());
-    let colour = |value: Option<&dsl::json::Value>, opacity: f64| -> Option<SemioRgba> {
+    let number = |value: &semio_framework_pack_json::Value, key: &str| value.get(key).and_then(|v| v.as_f64());
+    let colour = |value: Option<&semio_framework_pack_json::Value>, opacity: f64| -> Option<SemioRgba> {
         let channels = value?.as_array()?;
         let at = |i: usize| channels.get(i).and_then(|c| c.as_f64()).unwrap_or(1.0) as f32;
         Some(SemioRgba { r: at(0), g: at(1), b: at(2), a: at(3) * opacity as f32 })
@@ -206,7 +206,7 @@ pub fn semio_drawing_from_scenes(scenes_json: &[String]) -> Result<semio_s_artif
     let mut styles = Vec::new();
     let mut children = Vec::new();
     for scene_json in scenes_json {
-        let scene = dsl::json::parse(scene_json).map_err(|error| error.to_string())?;
+        let scene = semio_framework_pack_json::parse(scene_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
         if let Some(error) = scene.get("error") {
             return Err(format!("the drawing kernel refused the scene: {error:?}"));
         }
@@ -296,7 +296,7 @@ pub fn semio_drawing_from_scenes(scenes_json: &[String]) -> Result<semio_s_artif
 #[cfg(feature = "component-app-assembly")]
 pub fn generation2d_drawing(snapshot: &crate::Generation2dSnapshot) -> Result<semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot, String> {
     let eval_json = crate::standards::v1::subsets::any::schema::with_host(&snapshot.host_snapshot, |host| host.evaluate().unwrap_or_default());
-    let outputs = dsl::json::parse(&eval_json).map_err(|error| error.to_string())?;
+    let outputs = semio_framework_pack_json::parse(&eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
     let handles = crate::standards::v1::subsets::any::schema::output_drawing_handles(&snapshot.host_snapshot, &outputs);
     semio_drawing_from_scenes(&handles.iter().map(|handle| semio_framework_os_flow::render_scene_json(handle)).collect::<Vec<_>>())
 }

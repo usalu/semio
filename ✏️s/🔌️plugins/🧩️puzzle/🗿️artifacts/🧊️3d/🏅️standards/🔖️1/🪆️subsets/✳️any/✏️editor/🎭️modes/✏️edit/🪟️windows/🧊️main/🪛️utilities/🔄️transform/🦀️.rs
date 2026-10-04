@@ -11,13 +11,14 @@
 //! `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/📋️design.md` §5, §8). Both hosts
 //! paint the gesture locally and dispatch it ONCE on release, so every gesture is a one-shot transaction.
 
+use semio_framework_pack_json::json;
 use crate::editor::puzzle3d::config::Puzzle3dRuntime;
 use crate::editor::puzzle3d::terminology::Puzzle3dLabels;
 use crate::editor::puzzle3d::{derive_attraction_params, puzzle3d_action, puzzle3d_vortex_full_id, PUZZLE3D_PLAY_CONTROLLER_ID};
 use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle3d_mutation, connect_vortices, drag_selection, rotate_selection, scale_selection, Puzzle3dMutation};
 use crate::Puzzle3dSnapshot;
-use dsl::json;
-use dsl::os_pack::json::Value;
+
+use semio_framework_pack_json::Value;
 use machine::Command;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::UtilityDefinition;
@@ -328,12 +329,6 @@ impl machine::Host<transform_tool::TransformTool> for TransformToolHost {
     fn now_ms(&self) -> u64 {
         semio_framework_job::default_now_ms().unwrap_or(0)
     }
-}
-
-/// ⏰️ The host clock a transform-tool event runs on: the host's wall time, so a transaction id minted at an
-/// upsert is unique per admission AND per moment.
-pub fn puzzle3d_transform_tool_clock() -> protocol::HybridLogicalTimestamp {
-    protocol::HybridLogicalTimestamp { actor: 0, physical_ms: semio_framework_job::default_now_ms().unwrap_or(0), logical: 0 }
 }
 
 /// 🛠️ Runs `records` through a transform tool at rest as ONE transaction on `clock` — the ref minted from the

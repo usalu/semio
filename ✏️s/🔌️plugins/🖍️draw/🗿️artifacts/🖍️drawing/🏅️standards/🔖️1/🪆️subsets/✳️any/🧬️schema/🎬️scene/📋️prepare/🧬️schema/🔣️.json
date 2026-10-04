@@ -1,0 +1,638 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "https://semio.tech/s/draw/scene/prepare",
+ "title": "Complete Drawing Document Scene Plan",
+ "type": "object",
+ "required": [
+  "assets",
+  "nodes"
+ ],
+ "additionalProperties": false,
+ "properties": {
+  "assets": {
+   "$ref": "https://semio.tech/s/draw/scene/raster#/properties/assets"
+  },
+  "nodes": {
+   "type": "array",
+   "maxItems": 1024,
+   "items": {
+    "$ref": "#/definitions/node"
+   }
+  }
+ },
+ "definitions": {
+  "node": {
+   "type": "object",
+   "required": [
+    "id",
+    "groups",
+    "sourcePath",
+    "lockedAncestors",
+    "transform",
+    "opacity",
+    "blendMode",
+    "visible",
+    "content"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "id": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 4096
+    },
+    "groups": {
+     "$ref": "https://semio.tech/s/draw/scene/raster#/definitions/node/properties/groups"
+    },
+    "sourcePath": {
+     "description": "Authored root-to-leaf layer indices captured from this exact scene source, including ordinary groups.",
+     "type": "array",
+     "minItems": 1,
+     "maxItems": 32,
+     "items": {"type": "integer", "minimum": 0, "maximum": 65535}
+    },
+    "lockedAncestors": {
+     "description": "Unsigned lock mask: bit zero names the root, each next bit the next authored ancestor, including this layer. Bits beyond sourcePath must be zero.",
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 4294967295
+    },
+    "transform": {
+     "$ref": "https://semio.tech/s/draw/geometry/path-raster#/properties/transform"
+    },
+    "opacity": {
+     "type": "number",
+     "minimum": 0,
+     "maximum": 1
+    },
+    "blendMode": {
+     "$ref": "https://semio.tech/s/draw/scene/raster#/definitions/blend"
+    },
+    "visible": {
+     "type": "boolean"
+    },
+    "content": {
+     "oneOf": [
+      {
+       "type": "object",
+       "required": [
+        "kind",
+        "segments",
+        "fillRule",
+        "fill",
+        "stroke"
+       ],
+       "additionalProperties": false,
+       "properties": {
+        "kind": {
+         "const": "path"
+        },
+        "segments": {
+         "$ref": "https://semio.tech/s/draw/geometry/path-raster#/properties/segments"
+        },
+        "fillRule": {
+         "$ref": "https://semio.tech/s/draw/geometry/path-raster#/properties/fillRule"
+        },
+        "fill": {
+         "$ref": "https://semio.tech/s/draw/geometry/path-raster#/properties/fill"
+        },
+        "stroke": {
+         "$ref": "https://semio.tech/s/draw/geometry/path-raster#/properties/stroke"
+        }
+       }
+      },
+      {
+       "type": "object",
+       "required": [
+        "kind",
+        "asset",
+        "width",
+        "height"
+       ],
+       "additionalProperties": false,
+       "properties": {
+        "kind": {
+         "const": "image"
+        },
+        "asset": {
+         "type": "string",
+         "minLength": 1,
+         "maxLength": 4096
+        },
+        "width": {
+         "type": "number",
+         "exclusiveMinimum": 0,
+         "maximum": 1000000000
+        },
+        "height": {
+         "type": "number",
+         "exclusiveMinimum": 0,
+         "maximum": 1000000000
+        }
+       }
+      },
+      {
+       "type": "object",
+       "required": [
+        "kind",
+        "children",
+        "isolation"
+       ],
+       "additionalProperties": false,
+       "properties": {
+        "kind": {
+         "const": "group"
+        },
+        "children": {
+         "type": "array",
+         "maxItems": 1024,
+         "items": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+         }
+        },
+        "isolation": {
+         "type": "boolean"
+        }
+       }
+      },
+      {
+       "type": "object",
+       "required": [
+        "kind",
+        "content",
+        "x",
+        "y",
+        "size",
+        "fillRule",
+        "fill",
+        "stroke"
+       ],
+       "additionalProperties": false,
+       "properties": {
+        "kind": {
+         "const": "text"
+        },
+        "content": {
+         "type": "string",
+         "maxLength": 65536
+        },
+        "x": {
+         "$ref": "https://semio.tech/s/draw/geometry/path-raster#/definitions/coordinate"
+        },
+        "y": {
+         "$ref": "https://semio.tech/s/draw/geometry/path-raster#/definitions/coordinate"
+        },
+        "size": {
+         "type": "number",
+         "exclusiveMinimum": 0,
+         "maximum": 1000000000
+        },
+        "fillRule": {
+         "$ref": "https://semio.tech/s/draw/geometry/path-raster#/properties/fillRule"
+        },
+        "fill": {
+         "$ref": "https://semio.tech/s/draw/geometry/path-raster#/properties/fill"
+        },
+        "stroke": {
+         "$ref": "https://semio.tech/s/draw/geometry/path-raster#/properties/stroke"
+        }
+       }
+      },
+      {
+       "type": "object",
+       "required": [
+        "kind",
+        "operation",
+        "children",
+        "fillRule",
+        "fill",
+        "stroke",
+        "referenceTransform"
+       ],
+       "additionalProperties": false,
+       "properties": {
+        "kind": {
+         "const": "boolean"
+        },
+        "operation": {
+         "enum": [
+          "union",
+          "difference",
+          "intersection",
+          "xor"
+         ]
+        },
+        "children": {
+         "type": "array",
+         "maxItems": 1024,
+         "items": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+         }
+        },
+        "fillRule": {
+         "$ref": "https://semio.tech/s/draw/geometry/path-raster#/properties/fillRule"
+        },
+        "fill": {
+         "$ref": "https://semio.tech/s/draw/geometry/path-raster#/properties/fill"
+        },
+        "stroke": {
+         "$ref": "https://semio.tech/s/draw/geometry/path-raster#/properties/stroke"
+        },
+        "referenceTransform": {
+         "$ref": "https://semio.tech/s/draw/geometry/path-raster#/properties/transform",
+         "description": "World matrix of the result parent; operands resolve in this reference space before the independently authored result transform."
+        }
+       }
+      },
+      {
+       "type": "object",
+       "required": [
+        "kind",
+        "source",
+        "threshold",
+        "simplifyEpsilon",
+        "fillRule",
+        "fill",
+        "stroke"
+       ],
+       "additionalProperties": false,
+       "properties": {
+        "kind": {
+         "const": "trace"
+        },
+        "source": {
+         "type": "string",
+         "minLength": 1,
+         "maxLength": 4096
+        },
+        "threshold": {
+         "type": "number",
+         "minimum": 0,
+         "maximum": 1
+        },
+        "simplifyEpsilon": {
+         "type": "number",
+         "minimum": 0,
+         "maximum": 1000000000
+        },
+        "fillRule": {
+         "$ref": "https://semio.tech/s/draw/geometry/path-raster#/properties/fillRule"
+        },
+        "fill": {
+         "$ref": "https://semio.tech/s/draw/geometry/path-raster#/properties/fill"
+        },
+        "stroke": {
+         "$ref": "https://semio.tech/s/draw/geometry/path-raster#/properties/stroke"
+        }
+       }
+      }
+     ]
+    }
+   }
+  },
+  "limits": {
+   "type": "object",
+   "required": [
+    "maxNodes",
+    "maxDepth",
+    "maxSegments",
+    "maxReferences",
+    "maxSourceBytes"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "maxNodes": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 1024
+    },
+    "maxDepth": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 32
+    },
+    "maxSegments": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 65536
+    },
+    "maxReferences": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 32768
+    },
+    "maxSourceBytes": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 268439552
+    }
+   }
+  },
+  "progress": {
+   "type": "object",
+   "required": [
+    "phase",
+    "layers",
+    "assets",
+    "segments",
+    "references",
+    "sourceBytes",
+    "work",
+    "done"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "phase": {
+     "enum": [
+      "assets",
+      "layers",
+      "paint",
+      "geometry",
+      "references",
+      "validation",
+      "cycles",
+      "complete"
+     ]
+    },
+    "layers": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 1024
+    },
+    "assets": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 1024
+    },
+    "segments": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 65536
+    },
+    "references": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 32768
+    },
+    "sourceBytes": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 268439552
+    },
+    "work": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "done": {
+     "type": "boolean"
+    }
+   }
+  },
+  "rasterProgress": {
+   "type": "object",
+   "required": [
+    "phase",
+    "preparation",
+    "raster",
+    "nodes",
+    "work",
+    "done",
+    "resolution",
+    "tracing"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "phase": {
+     "enum": [
+      "preparing",
+      "tracing",
+      "algorithms",
+      "resolving",
+      "raster",
+      "complete"
+     ]
+    },
+    "preparation": {
+     "$ref": "#/definitions/progress"
+    },
+    "raster": {
+     "oneOf": [
+      {
+       "type": "null"
+      },
+      {
+       "$ref": "https://semio.tech/s/draw/scene/raster#/definitions/progress"
+      }
+     ]
+    },
+    "nodes": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 1024
+    },
+    "work": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "done": {
+     "type": "boolean"
+    },
+    "resolution": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "$ref": "https://semio.tech/s/draw/scene/booleans#/definitions/progress"
+      }
+     ]
+    },
+    "tracing": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "$ref": "https://semio.tech/s/draw/scene/trace#/definitions/progress"
+      }
+     ]
+    }
+   }
+  },
+  "algorithmLimits": {
+   "type": "object",
+   "required": [
+    "booleans",
+    "trace",
+    "maxWork"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "booleans": {
+     "$ref": "https://semio.tech/s/draw/scene/booleans#/definitions/limits"
+    },
+    "trace": {
+     "$ref": "https://semio.tech/s/draw/scene/trace#/definitions/limits"
+    },
+    "maxWork": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 1000000000,
+     "description": "Total preparation, encoded-source trace, Boolean and raster work before private publication."
+    }
+   }
+  },
+  "vectorNode": {
+   "allOf": [
+    {
+     "$ref": "#/definitions/node"
+    },
+    {
+     "type": "object",
+     "properties": {
+      "content": {
+       "type": "object",
+       "required": [
+        "kind"
+       ],
+       "properties": {
+        "kind": {
+         "enum": [
+          "path",
+          "image",
+          "group",
+          "text"
+         ]
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  "vectorPlan": {
+   "type": "object",
+   "required": [
+    "assets",
+    "nodes"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "assets": {
+     "$ref": "https://semio.tech/s/draw/scene/raster#/properties/assets"
+    },
+    "nodes": {
+     "type": "array",
+     "maxItems": 1024,
+     "items": {
+      "$ref": "#/definitions/vectorNode"
+     }
+    }
+   }
+  },
+  "vectorProgress": {
+   "type": "object",
+   "required": [
+    "phase",
+    "preparation",
+    "work",
+    "done",
+    "resolution",
+    "tracing"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "phase": {
+     "enum": [
+      "preparing",
+      "tracing",
+      "algorithms",
+      "complete"
+     ]
+    },
+    "preparation": {
+     "$ref": "#/definitions/progress"
+    },
+    "work": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "done": {
+     "type": "boolean"
+    },
+    "resolution": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "$ref": "https://semio.tech/s/draw/scene/booleans#/definitions/progress"
+      }
+     ]
+    },
+    "tracing": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "$ref": "https://semio.tech/s/draw/scene/trace#/definitions/progress"
+      }
+     ]
+    }
+   }
+  },
+  "retirementProgress": {
+   "description": "Private preparation/vector ownership drains under logical work grants. Complete output transfers unchanged. Native vector completion makes its genuine SnapshotRead available for explicit handback; terminal emptiness also requires that handback. Structural work is not allocator byte credit.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "phase",
+    "work",
+    "done"
+   ],
+   "properties": {
+    "phase": {
+     "enum": [
+      "closing",
+      "complete"
+     ]
+    },
+    "work": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "done": {
+     "type": "boolean"
+    }
+   },
+   "oneOf": [
+    {
+     "properties": {
+      "phase": {
+       "const": "closing"
+      },
+      "done": {
+       "const": false
+      }
+     }
+    },
+    {
+     "properties": {
+      "phase": {
+       "const": "complete"
+      },
+      "done": {
+       "const": true
+      }
+     }
+    }
+   ]
+  }
+ }
+}

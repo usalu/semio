@@ -9,11 +9,10 @@ async fn definition_declares_the_table_kind() {
 #[semio_framework_async_macros::async_test]
 async fn render_produces_a_table_scene_with_one_row_per_point() {
     let document = EquationSnapshot::default();
-    let points = equation_geometry(&document).points;
+    let points = document.geometry.points.clone();
     assert!(!points.is_empty());
     let node = render(&document).expect("table surface");
-    let semio_framework_plugin::plugin_app_close_prelude::Component::Surface(props) = node.component else { panic!("viewer must render a table surface") };
-    let scene: semio_framework_ui_scene::TableScene = semio_framework_ui_scene::decode(&props).expect("table payload");
+    let scene = semio_framework_plugin::artifact_app_laws::built_surface_scene::<semio_framework_ui_scene::TableScene>(&node).expect("the assembled table scene: the spine with its column/row lanes merged back in");
     // 📊️ `TableWindowKit::render` emits the renderer table contract both hosts read: `columnsJson` as
     // `{id, label}` records and `rowsJson` as `{id, "<column index>": cell}` records — no longer bare
     // strings and bare cell arrays. What this law proves (one row per point, `#`/`x`/`y` columns,

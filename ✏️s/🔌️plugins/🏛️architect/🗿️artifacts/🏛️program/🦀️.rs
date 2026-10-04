@@ -54,7 +54,7 @@ pub fn benchmark_table_from_records(records: &[BenchmarkRecord]) -> semio_s_arti
         columns: vec![SemioTableColumn { name: "id".into(), kind: SemioTableCellKind::Str }, SemioTableColumn { name: "name".into(), kind: SemioTableCellKind::Str }, SemioTableColumn { name: "json".into(), kind: SemioTableCellKind::Str }],
         rows: records
             .iter()
-            .map(|record| SemioTableRow { cells: vec![SemioValue::Str { value: record.header.id.0.clone() }, SemioValue::Str { value: record.header.name.clone() }, SemioValue::Str { value: dsl::json::to_json_string(record) }] })
+            .map(|record| SemioTableRow { cells: vec![SemioValue::Str { value: record.header.id.0.clone() }, SemioValue::Str { value: record.header.name.clone() }, SemioValue::Str { value: semio_framework_pack_json::to_json_string(record) }] })
             .collect(),
     }
 }
@@ -69,7 +69,7 @@ pub fn benchmark_records_from_table(table: &semio_s_artifact_stdio_semio::standa
         .rows
         .iter()
         .filter_map(|row| match row.cells.get(2) {
-            Some(SemioValue::Str { value }) => dsl::json::from_json_str(value).ok(),
+            Some(SemioValue::Str { value }) => semio_framework_pack_json::from_json_str(value, semio_framework_pack_json::JsonMemberPolicy::Reject).ok(),
             _ => None,
         })
         .collect()
@@ -85,7 +85,7 @@ pub struct ProgramBenchmarksWorkingTable {
 }
 
 fn program_benchmarks_scene_id(records: &[BenchmarkRecord]) -> String {
-    let content_json = dsl::json::to_json_string(&records.to_vec());
+    let content_json = semio_framework_pack_json::to_json_string(&records.to_vec());
     store::content_id("architect-benchmarks", content_json.as_bytes())
 }
 
@@ -126,7 +126,7 @@ pub fn knowledge_table_from_records(records: &[KnowledgeRecord]) -> semio_s_arti
         columns: vec![SemioTableColumn { name: "id".into(), kind: SemioTableCellKind::Str }, SemioTableColumn { name: "name".into(), kind: SemioTableCellKind::Str }, SemioTableColumn { name: "json".into(), kind: SemioTableCellKind::Str }],
         rows: records
             .iter()
-            .map(|record| SemioTableRow { cells: vec![SemioValue::Str { value: record.header.id.0.clone() }, SemioValue::Str { value: record.header.name.clone() }, SemioValue::Str { value: dsl::json::to_json_string(record) }] })
+            .map(|record| SemioTableRow { cells: vec![SemioValue::Str { value: record.header.id.0.clone() }, SemioValue::Str { value: record.header.name.clone() }, SemioValue::Str { value: semio_framework_pack_json::to_json_string(record) }] })
             .collect(),
     }
 }
@@ -137,7 +137,7 @@ pub fn knowledge_records_from_table(table: &semio_s_artifact_stdio_semio::standa
         .rows
         .iter()
         .filter_map(|row| match row.cells.get(2) {
-            Some(SemioValue::Str { value }) => dsl::json::from_json_str(value).ok(),
+            Some(SemioValue::Str { value }) => semio_framework_pack_json::from_json_str(value, semio_framework_pack_json::JsonMemberPolicy::Reject).ok(),
             _ => None,
         })
         .collect()
@@ -152,7 +152,7 @@ pub struct ProgramKnowledgeWorkingTable {
 }
 
 fn program_knowledge_scene_id(records: &[KnowledgeRecord]) -> String {
-    let content_json = dsl::json::to_json_string(&records.to_vec());
+    let content_json = semio_framework_pack_json::to_json_string(&records.to_vec());
     store::content_id("architect-knowledge", content_json.as_bytes())
 }
 

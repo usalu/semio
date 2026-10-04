@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeOutdoorAirSystemMinOaFlow, base: &EnergyModel
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("A minimum outdoor air flow must be a non-negative finite number, got {}.", payload.new_min_oa_flow_m3_s), [payload.id.0.to_string()]);
     }
     if existing.min_oa_flow_m3_s == payload.new_min_oa_flow_m3_s {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Outdoor air system {} already has that minimum outdoor air flow.", payload.id.0));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Outdoor air system {} already has that minimum outdoor air flow.", payload.id.0));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.outdoor_air_systems.iter_mut().find(|item| item.id == payload.id) {

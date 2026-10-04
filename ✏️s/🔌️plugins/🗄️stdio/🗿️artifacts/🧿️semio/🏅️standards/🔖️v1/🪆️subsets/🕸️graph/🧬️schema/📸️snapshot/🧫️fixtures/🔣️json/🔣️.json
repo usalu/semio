@@ -1,0 +1,92 @@
+{
+  "contractId": "semio-graph-public-word-json",
+  "properties": [
+    {
+      "key": "nil",
+      "value": {
+        "kind": "null"
+      }
+    },
+    {
+      "key": "boolean",
+      "value": {
+        "kind": "bool",
+        "value": false
+      }
+    },
+    {
+      "key": "integer",
+      "value": {
+        "kind": "int",
+        "lexeme": "18446744073709551615"
+      }
+    },
+    {
+      "key": "float",
+      "value": {
+        "kind": "float",
+        "lexeme": "nan64_7ff8000000000011"
+      }
+    },
+    {
+      "key": "literal\u0000😀",
+      "value": {
+        "kind": "str",
+        "value": "literal\u0000引用😀"
+      }
+    },
+    {
+      "key": "octets",
+      "value": {
+        "kind": "bytes",
+        "value": [
+          0,
+          255,
+          17
+        ]
+      }
+    },
+    {
+      "key": "list",
+      "value": {
+        "kind": "list",
+        "items": [
+          {
+            "kind": "str",
+            "value": "\u0000😀"
+          }
+        ]
+      }
+    },
+    {
+      "key": "map",
+      "value": {
+        "kind": "map",
+        "entries": [
+          {
+            "key": "same",
+            "value": {
+              "kind": "null"
+            }
+          },
+          {
+            "key": "same",
+            "value": {
+              "kind": "bool",
+              "value": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "key": "reference",
+      "value": {
+        "kind": "ref",
+        "id": {
+          "value": "unresolved!@/\u0000😀"
+        }
+      }
+    }
+  ]
+}

@@ -4,7 +4,9 @@ import { resolveTestLevel } from "../../🔨️modules/🏃️process/🧪️tes
 import { strict as assert } from "node:assert";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { runBunx, runVitest } from "../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runVitestV1, readVitestPolicyV1 } from "../../🔨️modules/🏃️process/🧪️testing/🧪️vitest/🟦️.ts";
+import { runOwnedCommand } from "../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import { cmdBudgetMs } from "../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
@@ -352,18 +354,34 @@ function retainedUiNativeStripOnly(): void {
   console.log(`retained UI native strip-only oracle: ${result.laws} fixture laws, ${result.grants} grants, ${result.retired} one-time retirements, ${result.cancellations} table cancellation, ${result.validationCancellations} validation cancellations, ${result.hashBytes} hash bytes in ${result.hashChunks} chunks over ${result.hashCalls} advances, ${result.hashCancellations} hash cancellations, ${result.readCancellations} read cancellations, ${result.readCaptures} read captures/releases, ${result.readCancelTurns} cancel turns, ${result.readRetirementTurns} publish-retirement turns, ${result.readCloseTurns} final read close turns`);
 }
 
+/** 📏️ Executes the closed general command-owner boundary. */
+class ScriptBoundaryScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    if (args.length) throw Error("test-script-boundary accepts no arguments");
+    await runOwnedCommand(process.execPath, ["test", fileURLToPath(new URL("../../📏️script-boundary/🧪️tests/🟦️.ts", import.meta.url))], this.root, "framework:script-boundary", 30_000);
+  }
+}
+
+/** 🔗️ Executes literal artifact-reference admission against the independent SQLite oracle. */
+class ArtifactReferenceScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    if (args.length) throw Error("test-artifact-reference accepts no arguments");
+    await runOwnedCommand(process.execPath, ["test", fileURLToPath(new URL("../../🔨️modules/🚪️io/🧬️schema/🔗️reference/🧪️tests/🟦️.ts", import.meta.url))], this.root, "framework:artifact-reference", cmdBudgetMs(process.env));
+  }
+}
+
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
     retainedUiNativeStripOnly();
-    await runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
+    await runVitestV1(readVitestPolicyV1(process.env, this.root), rest, "../../🧪️tests/🎚️config/🟦️.ts", process.env);
   }
 }
 
 /** 🔎️ Type-checks every `🧰️framework/🔨️modules/**` and `🧰️framework/📦️packages/**` source file against `tsconfig.json`. */
 class TypecheckScript extends BundleScript {
-  run(segments: string[]): void {
-    runBunx(["tsc", "--noEmit", "-p", "tsconfig.json", ...segments], this.root);
+  async run(segments: string[]): Promise<void> {
+    await runOwnedCommand(process.execPath, [Bun.resolveSync("typescript/bin/tsc", this.root), "--noEmit", "-p", "tsconfig.json", ...segments], this.root, "framework:typescript", cmdBudgetMs(process.env));
   }
 }
 
@@ -376,6 +394,6 @@ class InstallationIdentityScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("typecheck", TypecheckScript).register("installation-identity-check", InstallationIdentityScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("typecheck", TypecheckScript).register("installation-identity-check", InstallationIdentityScript).register("test-script-boundary", ScriptBoundaryScript).register("test-artifact-reference", ArtifactReferenceScript);
 
 await runScriptMain(router, { defaultCommand: "test" });

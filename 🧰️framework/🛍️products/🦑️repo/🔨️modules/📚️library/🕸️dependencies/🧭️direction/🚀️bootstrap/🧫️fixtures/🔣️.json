@@ -92,7 +92,7 @@
       "test"
     ],
     "owner": "🧰️framework/example",
-    "nextRole": "framework-modules",
+    "nextRole": "framework-neutral",
     "nextExports": [
       ".",
       "./fresh"

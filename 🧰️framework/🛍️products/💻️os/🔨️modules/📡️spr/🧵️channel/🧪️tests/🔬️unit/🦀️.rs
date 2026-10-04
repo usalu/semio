@@ -1,9 +1,5 @@
 use super::*;
 
-#[test]
-fn retained_batch_descriptor_has_no_destructor() {
-    assert!(!std::mem::needs_drop::<CommandBatchEntry>());
-}
 
 //#region 🧸️Fixtures
 async fn sample_envelope(id: &str) -> crate::os_spr::causal::MutationEnvelope {
@@ -93,9 +89,17 @@ async fn app_command_apply_envelopes_round_trips() {
     assert_command_round_trips(&AppCommand::ApplyEnvelopes { seq: 7, envelopes: vec![sample_envelope("op-1").await, sample_envelope("op-2").await] }).await;
 }
 
+/// 🕳️ Tag 6 (the retired whole-document `LoadDocument`) stays unassigned: a frame that still carries it is refused as an
+/// unknown tag by both decoders, never misread as another command (design §20.7, `📓️api-stepped-document-load.md` §5).
 #[semio_framework_async_macros::async_test]
-async fn app_command_load_document_round_trips() {
-    assert_command_round_trips(&AppCommand::LoadDocument { seq: 8, pack: vec![1], spr: vec![2] }).await;
+async fn app_command_tag_six_stays_unassigned() {
+    let err = decode_app_command(&[6, 8, 1, 1, 1, 2]).await.unwrap_err();
+    assert!(matches!(err, crate::os_spr::ProtocolError::Malformed { what: "channel app-command tag", .. }));
+    let mut pages = CommandPageSet::try_new(1).expect("one fixed page");
+    pages.try_push(FixedCommandPage::try_copy_from(&[6, 8, 1, 1, 1, 2]).expect("retired tag page")).unwrap_or_else(|(fault, _page)| panic!("admit retired tag page: {fault:?}"));
+    let command = PagedCommand::try_from_pages(pages).unwrap_or_else(|(fault, _pages)| panic!("admit retired tag command: {fault:?}"));
+    let fault = PagedAppCommandDecodeCursor::new(command).step().expect_err("the retired tag is refused");
+    assert_eq!(fault.code.0, "plugin.command-route-state-machine-required");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -160,16 +164,17 @@ async fn app_command_media_fingerprint_round_trips() {
 
 #[semio_framework_async_macros::async_test]
 async fn app_command_pure_command_round_trips() {
-    assert_command_round_trips(&AppCommand::PureCommand { seq: 18, command: vec![1], document: vec![2], document_spr: vec![3], config: vec![4], config_spr: vec![5], draft: vec![6], draft_spr: vec![7] }).await;
+    assert_command_round_trips(&AppCommand::PureCommand { seq: 18, command: vec![1], head: vec![2] }).await;
+    assert_command_round_trips(&AppCommand::PureCommand { seq: 19, command: vec![1], head: Vec::new() }).await;
 }
 
 //#region 🔖️Transaction
 #[semio_framework_async_macros::async_test]
 async fn app_command_transaction_prepare_round_trips_owner_and_preplanned_forms() {
-    assert_command_round_trips(&AppCommand::TransactionPrepare { seq: 1, txn_id: "t".to_string(), mutation_id: "m".to_string(), payload: vec![9], prepared_ops: Vec::new(), label: String::new(), origin: Vec::new(), prepared_child_ops: Vec::new() }).await;
-    assert_command_round_trips(&AppCommand::TransactionPrepare { seq: 2, txn_id: "t".to_string(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: vec![vec![1], vec![2, 2]], label: "l".to_string(), origin: vec![9], prepared_child_ops: Vec::new() }).await;
-    assert_command_round_trips(&AppCommand::TransactionPrepare { seq: 7, txn_id: "t".to_string(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: vec![vec![1]], label: "l".to_string(), origin: vec![9], prepared_child_ops: vec![5, 6] }).await;
-    assert_command_round_trips(&AppCommand::TransactionPrepare { seq: 8, txn_id: "t".to_string(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: Vec::new(), label: "l".to_string(), origin: vec![9], prepared_child_ops: vec![5, 6] }).await;
+    assert_command_round_trips(&AppCommand::TransactionPrepare { seq: 1, txn_id: "t".to_string(), mutation_id: "m".to_string(), payload: vec![9], prepared_ops: Vec::new(), origin: Vec::new(), prepared_child_ops: Vec::new() }).await;
+    assert_command_round_trips(&AppCommand::TransactionPrepare { seq: 2, txn_id: "t".to_string(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: vec![vec![1], vec![2, 2]], origin: vec![9], prepared_child_ops: Vec::new() }).await;
+    assert_command_round_trips(&AppCommand::TransactionPrepare { seq: 7, txn_id: "t".to_string(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: vec![vec![1]], origin: vec![9], prepared_child_ops: vec![5, 6] }).await;
+    assert_command_round_trips(&AppCommand::TransactionPrepare { seq: 8, txn_id: "t".to_string(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: Vec::new(), origin: vec![9], prepared_child_ops: vec![5, 6] }).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -222,9 +227,9 @@ async fn paged_ingress_admits_every_media_route() {
 
 #[semio_framework_async_macros::async_test]
 async fn paged_ingress_admits_every_transaction_route() {
-    assert_paged_route_admits(&AppCommand::TransactionPrepare { seq: 1, txn_id: "t".to_string(), mutation_id: "m".to_string(), payload: vec![9], prepared_ops: Vec::new(), label: String::new(), origin: Vec::new(), prepared_child_ops: Vec::new() }).await;
-    assert_paged_route_admits(&AppCommand::TransactionPrepare { seq: 2, txn_id: "t".to_string(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: vec![vec![1], vec![2, 2]], label: "l".to_string(), origin: vec![9], prepared_child_ops: Vec::new() }).await;
-    assert_paged_route_admits(&AppCommand::TransactionPrepare { seq: 7, txn_id: "t".to_string(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: vec![vec![1]], label: "l".to_string(), origin: vec![9], prepared_child_ops: vec![5, 6] }).await;
+    assert_paged_route_admits(&AppCommand::TransactionPrepare { seq: 1, txn_id: "t".to_string(), mutation_id: "m".to_string(), payload: vec![9], prepared_ops: Vec::new(), origin: Vec::new(), prepared_child_ops: Vec::new() }).await;
+    assert_paged_route_admits(&AppCommand::TransactionPrepare { seq: 2, txn_id: "t".to_string(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: vec![vec![1], vec![2, 2]], origin: vec![9], prepared_child_ops: Vec::new() }).await;
+    assert_paged_route_admits(&AppCommand::TransactionPrepare { seq: 7, txn_id: "t".to_string(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: vec![vec![1]], origin: vec![9], prepared_child_ops: vec![5, 6] }).await;
     assert_paged_route_admits(&AppCommand::TransactionCommit { seq: 3, txn_id: "t".to_string() }).await;
     assert_paged_route_admits(&AppCommand::TransactionRollback { seq: 4, txn_id: "t".to_string() }).await;
     assert_paged_route_admits(&AppCommand::TransactionUndo { seq: 5, group_id: "g".to_string() }).await;
@@ -463,12 +468,29 @@ async fn child_pack_commands_round_trip() {
     assert_command_round_trips(&AppCommand::ReadChildren { seq: 21 }).await;
     assert_command_round_trips(&AppCommand::ReadHistory { seq: 22 }).await;
 }
+
+/// 🪆️ `ReadChildHeads` → `ChildHeads` round-trips through both the flat codec and the guest's paged ingress, a head list keeps
+/// every entry (an empty head pack included), and a declared count past the member authority is refused before it reserves.
+#[semio_framework_async_macros::async_test]
+async fn child_head_commands_and_frames_round_trip() {
+    assert_command_round_trips(&AppCommand::ReadChildHeads { seq: 23 }).await;
+    assert_paged_route_admits(&AppCommand::ReadChildHeads { seq: 24 }).await;
+    let entries = vec![
+        ChildHeadPackEntry { slot: "mesh".to_string(), child_id: "child-1".to_string(), dialect: "s.stdio.mesh@1/*".to_string(), head_pack: vec![7, 8, 9] },
+        ChildHeadPackEntry { slot: "brep".to_string(), child_id: "child-2".to_string(), dialect: "s.stdio.brep@1/*".to_string(), head_pack: Vec::new() },
+    ];
+    assert_frame_round_trips(&AppFrame::ChildHeads { in_reply_to: 23, entries }).await;
+    assert_frame_round_trips(&AppFrame::ChildHeads { in_reply_to: 24, entries: Vec::new() }).await;
+    let mut oversized = vec![32, 1];
+    crate::os_spr::write_varint_u64(&mut oversized, DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS as u64 + 1);
+    assert!(matches!(decode_app_frame(&oversized).await, Err(crate::os_spr::ProtocolError::Malformed { what: "channel child heads", .. })));
+}
 //#endregion 🔖️Children
 
 //#region 🔖️Transaction
 #[semio_framework_async_macros::async_test]
 async fn app_frame_transaction_proposal_round_trips() {
-    assert_frame_round_trips(&AppFrame::TransactionProposal { in_reply_to: 1, proposal_id: "p".to_string(), local_ops: vec![vec![1]], description: "d".to_string(), coalesce_key: "k".to_string(), foreign: Vec::new() }).await;
+    assert_frame_round_trips(&AppFrame::TransactionProposal { in_reply_to: 1, proposal_id: "p".to_string(), local_ops: vec![vec![1]], foreign: Vec::new() }).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -527,6 +549,8 @@ async fn app_frame_operation_completed_matches_shared_cross_language_json_vector
     assert_eq!(hex_encode(&encode_app_frame(&frame).await).await, fixture["OperationCompleted"].as_str().expect("frame fixture hex"));
     let wide = AppFrame::OperationCompleted { operation: 7, revision: 0xfedc_ba98_7654_3210, ui_scope: vec![1], history_patch: vec![2] };
     assert_eq!(hex_encode(&encode_app_frame(&wide).await).await, fixture["OperationCompletedWideRevision"].as_str().expect("wide frame fixture hex"));
+    let wide_operation = AppFrame::OperationCompleted { operation: u64::MAX, revision: 5, ui_scope: vec![1], history_patch: vec![2] };
+    assert_eq!(hex_encode(&encode_app_frame(&wide_operation).await).await, fixture["OperationCompletedWideOperation"].as_str().expect("wide operation fixture hex"));
 }
 //#endregion 🔖️UiPatch
 //#endregion 🔖️AppFrame
@@ -629,7 +653,6 @@ async fn paged_generic_decoder_admits_document_config_and_projection_commands_us
     // earlier uniform four-turn budget could never reach, which is why this law read red from the
     // day the archive rows were admitted into it.
     let commands = vec![
-        (AppCommand::LoadDocument { seq: 1, pack: vec![1, 2], spr: vec![3] }, 3),
         (AppCommand::ReadDocument { seq: 2 }, 2),
         (AppCommand::LoadDocumentArchive { seq: 10, archive: sample_document_archive() }, 28),
         (AppCommand::ReadDocumentArchive { seq: 11 }, 2),
@@ -807,7 +830,6 @@ async fn channel_command_fixture_corpus() -> Vec<(&'static str, AppCommand)> {
         ("ContextMenu", AppCommand::ContextMenu { seq: 1, request: vec![1] }),
         ("ArtifactCommand", AppCommand::ArtifactCommand { seq: 1, command: vec![1] }),
         ("ApplyEnvelopes", AppCommand::ApplyEnvelopes { seq: 1, envelopes: Vec::new() }),
-        ("LoadDocument", AppCommand::LoadDocument { seq: 1, pack: vec![1], spr: vec![2] }),
         ("ReadDocument", AppCommand::ReadDocument { seq: 1 }),
         ("LoadConfig", AppCommand::LoadConfig { seq: 1, pack: vec![1], spr: vec![2] }),
         ("ReadConfig", AppCommand::ReadConfig { seq: 1 }),
@@ -816,13 +838,14 @@ async fn channel_command_fixture_corpus() -> Vec<(&'static str, AppCommand)> {
         ("MediaIn", AppCommand::MediaIn { seq: 1, port: "p".to_string(), descriptor: vec![1], data: vec![2] }),
         ("MediaOut", AppCommand::MediaOut { seq: 1, port: "p".to_string(), request: vec![1] }),
         ("MediaFingerprint", AppCommand::MediaFingerprint { seq: 1, port: "p".to_string() }),
-        ("PureCommand", AppCommand::PureCommand { seq: 1, command: vec![1], document: vec![2], document_spr: vec![3], config: vec![4], config_spr: vec![5], draft: vec![6], draft_spr: vec![7] }),
+        ("PureCommand", AppCommand::PureCommand { seq: 1, command: vec![1], head: vec![2] }),
         ("LoadChildren", AppCommand::LoadChildren { seq: 1, entries: vec![ChildPackEntry { slot: "s".to_string(), child_id: "c".to_string(), dialect: "d".to_string(), envelope_pack: vec![1] }] }),
         ("ReadChildren", AppCommand::ReadChildren { seq: 1 }),
+        ("ReadChildHeads", AppCommand::ReadChildHeads { seq: 1 }),
         ("ReadHistory", AppCommand::ReadHistory { seq: 1 }),
-        ("TransactionPrepareOwner", AppCommand::TransactionPrepare { seq: 1, txn_id: "t".to_string(), mutation_id: "m".to_string(), payload: vec![9], prepared_ops: Vec::new(), label: String::new(), origin: Vec::new(), prepared_child_ops: Vec::new() }),
-        ("TransactionPreparePrePlanned", AppCommand::TransactionPrepare { seq: 2, txn_id: "t".to_string(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: vec![vec![1], vec![2, 2]], label: "l".to_string(), origin: vec![9], prepared_child_ops: Vec::new() }),
-        ("TransactionPreparePrePlannedChildren", AppCommand::TransactionPrepare { seq: 7, txn_id: "t".to_string(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: vec![vec![1]], label: "l".to_string(), origin: vec![9], prepared_child_ops: vec![5, 6] }),
+        ("TransactionPrepareOwner", AppCommand::TransactionPrepare { seq: 1, txn_id: "t".to_string(), mutation_id: "m".to_string(), payload: vec![9], prepared_ops: Vec::new(), origin: Vec::new(), prepared_child_ops: Vec::new() }),
+        ("TransactionPreparePrePlanned", AppCommand::TransactionPrepare { seq: 2, txn_id: "t".to_string(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: vec![vec![1], vec![2, 2]], origin: vec![9], prepared_child_ops: Vec::new() }),
+        ("TransactionPreparePrePlannedChildren", AppCommand::TransactionPrepare { seq: 7, txn_id: "t".to_string(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: vec![vec![1]], origin: vec![9], prepared_child_ops: vec![5, 6] }),
         ("TransactionCommit", AppCommand::TransactionCommit { seq: 3, txn_id: "t".to_string() }),
         ("TransactionRollback", AppCommand::TransactionRollback { seq: 4, txn_id: "t".to_string() }),
         ("TransactionUndo", AppCommand::TransactionUndo { seq: 5, group_id: "g".to_string() }),
@@ -866,7 +889,7 @@ async fn channel_frame_fixture_corpus() -> Vec<(&'static str, AppFrame)> {
         ("Children", AppFrame::Children { in_reply_to: 1, entries: vec![ChildPackEntry { slot: "s".to_string(), child_id: "c".to_string(), dialect: "d".to_string(), envelope_pack: vec![1] }] }),
         ("Ephemeral", AppFrame::Ephemeral { presence: vec![1, 2], presence_generation: 3, transient_generation: 4, interaction: vec![7], tool_run: vec![8], history_edit: vec![9] }),
         ("HistorySnapshot", AppFrame::HistorySnapshot { in_reply_to: 1, history_patch: vec![1] }),
-        ("TransactionProposal", AppFrame::TransactionProposal { in_reply_to: 1, proposal_id: "p".to_string(), local_ops: vec![vec![1]], description: "d".to_string(), coalesce_key: "k".to_string(), foreign: Vec::new() }),
+        ("TransactionProposal", AppFrame::TransactionProposal { in_reply_to: 1, proposal_id: "p".to_string(), local_ops: vec![vec![1]], foreign: Vec::new() }),
         ("TransactionPrepared", AppFrame::TransactionPrepared { txn_id: "t".to_string(), foreign: vec![vec![1]], rejection: Vec::new() }),
         ("TransactionCommitted", AppFrame::TransactionCommitted { txn_id: "t".to_string(), edit_id: "e".to_string() }),
         ("TransactionRolledBack", AppFrame::TransactionRolledBack { txn_id: "t".to_string() }),
@@ -875,6 +898,7 @@ async fn channel_frame_fixture_corpus() -> Vec<(&'static str, AppFrame)> {
         ("UiPatch", AppFrame::UiPatch { in_reply_to: Some(1), surface: "1:body".to_string(), kind: "window".to_string(), revision: 2, base_revision: 1, ops: vec![3] }),
         ("UiSnapshotEnd", AppFrame::UiSnapshotEnd { revision: 4 }),
         ("OperationCompleted", AppFrame::OperationCompleted { operation: 7, revision: 5, ui_scope: vec![1], history_patch: vec![2] }),
+        ("ChildHeads", AppFrame::ChildHeads { in_reply_to: 1, entries: vec![ChildHeadPackEntry { slot: "s".to_string(), child_id: "c".to_string(), dialect: "d".to_string(), head_pack: vec![1] }] }),
     ]
 }
 
@@ -890,7 +914,6 @@ async fn channel_command_fixture_hex(label: &str) -> &'static str {
         "ContextMenu" => "03010101",
         "ArtifactCommand" => "04010101",
         "ApplyEnvelopes" => "050100",
-        "LoadDocument" => "060101010102",
         "ReadDocument" => "0701",
         "LoadConfig" => "080101010102",
         "ReadConfig" => "0901",
@@ -899,13 +922,14 @@ async fn channel_command_fixture_hex(label: &str) -> &'static str {
         "MediaIn" => "0a01017001010102",
         "MediaOut" => "0b0101700101",
         "MediaFingerprint" => "0c010170",
-        "PureCommand" => "0d010101010201030104010501060107",
+        "PureCommand" => "0d0101010102",
         "LoadChildren" => "0e01010173016301640101",
         "ReadChildren" => "0f01",
+        "ReadChildHeads" => "2a01",
         "ReadHistory" => "1001",
-        "TransactionPrepareOwner" => "11010174016d010900000000",
-        "TransactionPreparePrePlanned" => "110201740000020101020202016c010900",
-        "TransactionPreparePrePlannedChildren" => "110701740000010101016c0109020506",
+        "TransactionPrepareOwner" => "11010174016d0109000000",
+        "TransactionPreparePrePlanned" => "110201740000020101020202010900",
+        "TransactionPreparePrePlannedChildren" => "1107017400000101010109020506",
         "TransactionCommit" => "12030174",
         "TransactionRollback" => "13040174",
         "TransactionUndo" => "14050167",
@@ -942,7 +966,7 @@ async fn channel_frame_fixture_hex(label: &str) -> &'static str {
         "Children" => "0c01010173016301640101",
         "Ephemeral" => "0d0201020304010701080109",
         "HistorySnapshot" => "0e010101",
-        "TransactionProposal" => "0f0101700101010164016b00",
+        "TransactionProposal" => "0f01017001010100",
         "TransactionPrepared" => "10017401010100",
         "TransactionCommitted" => "1101740165",
         "TransactionRolledBack" => "120174",
@@ -951,6 +975,7 @@ async fn channel_frame_fixture_hex(label: &str) -> &'static str {
         "UiPatch" => "15010106313a626f64790677696e646f7702010103",
         "UiSnapshotEnd" => "1604",
         "OperationCompleted" => "19070501010102",
+        "ChildHeads" => "2001010173016301640101",
         other => panic!("channel_frame_fixture_hex: no golden hex registered for label {other:?}"),
     }
 }
@@ -1013,6 +1038,28 @@ async fn channel_version_matches_the_shared_cross_language_pin() {
     let pin: serde_json::Value = serde_json::from_str(json).expect("🔖️channel-version.json must parse");
     let pinned = pin.get("channelVersion").and_then(serde_json::Value::as_u64).expect("🔖️channel-version.json must carry channelVersion");
     assert_eq!(u64::from(CHANNEL_VERSION), pinned, "CHANNEL_VERSION and the shared cross-language pin disagree — bump both, plus APP_CHANNEL_VERSION in 🟦️.ts");
+}
+
+/// 🤝️ LAW (`🧫️fixtures/🧫️channel-handshake/🔣️.json`): a host admits a guest only at its own app-channel version — older and
+/// newer guests are refused with `plugin.channel-mismatch`, naming both versions as notice placeholders. The TS twin
+/// (`admitGuestChannelVersion`) replays the same corpus.
+#[semio_framework_async_macros::async_test]
+async fn a_host_admits_only_a_guest_of_its_own_channel_version() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️channel-handshake/🔣️.json")).unwrap();
+    assert_eq!(law["code"].as_str(), Some(CHANNEL_MISMATCH_CODE));
+    for case in law["cases"].as_array().unwrap() {
+        let name = case["name"].as_str().unwrap();
+        let guest = u32::try_from(i64::from(CHANNEL_VERSION) + case["guestOffset"].as_i64().unwrap()).unwrap();
+        match admit_guest_channel_version(guest, CHANNEL_VERSION) {
+            Ok(()) => assert!(case["admitted"].as_bool().unwrap(), "{name}: admitted a guest the law refuses"),
+            Err(fault) => {
+                assert!(!case["admitted"].as_bool().unwrap(), "{name}: refused a guest the law admits");
+                assert_eq!(fault.code.0, CHANNEL_MISMATCH_CODE, "{name}");
+                assert_eq!(fault.param("guest"), Some(guest.to_string().as_str()), "{name}");
+                assert_eq!(fault.param("host"), Some(CHANNEL_VERSION.to_string().as_str()), "{name}");
+            }
+        }
+    }
 }
 
 /// 🔗️ Cross-language drift guard for the M2 transaction variants (tags 17-21/15-18): the
@@ -1090,137 +1137,10 @@ async fn channel_merge_fixtures_match_shared_cross_language_json_vectors() {
 }
 //#endregion 🔖️Corpus
 
-//#region 📥️CommandIngressPages
-/// 📥️ The cross-language paged command-ingress contract — the same rows the TypeScript host writer's
-/// twin reads (`🎭️actor/📮️shard-client/🧪️tests/📥️command-ingress-pages/🟦️.ts`).
-#[derive(serde::Deserialize)]
-struct CommandIngressPagesFixture {
-    #[serde(rename = "pageBytes")]
-    page_bytes: usize,
-    #[serde(rename = "commandMaximumBytes")]
-    command_maximum_bytes: usize,
-    #[serde(rename = "maximumPages")]
-    maximum_pages: usize,
-    rows: Vec<CommandIngressPagesRow>,
-    refusals: Vec<CommandIngressPagesRefusal>,
-}
-
-#[derive(serde::Deserialize)]
-struct CommandIngressPagesRow {
-    name: String,
-    bytes: usize,
-    pages: usize,
-}
-
-#[derive(serde::Deserialize)]
-struct CommandIngressPagesRefusal {
-    name: String,
-    bytes: usize,
-}
-
-fn command_ingress_pages_fixture() -> CommandIngressPagesFixture {
-    serde_json::from_str(include_str!("../../../../../../../🔨️modules/🎭️actor/🧫️fixtures/📥️command-ingress-pages/🔣️.json")).expect("📥️command-ingress-pages fixture parses")
-}
-
-/// 🧱️ A deterministic command body — every byte a function of its offset, so a reassembly that
-/// duplicates, drops or reorders one page cannot compare equal.
-fn command_ingress_body(bytes: usize) -> Vec<u8> {
-    (0..bytes).map(|offset| (offset % 251 + 1) as u8).collect()
-}
-
-/// ⚖️ LAW: the transport's page and byte authorities are DERIVED from the guest linear-memory budget,
-/// and the spine that assembles a ceiling-sized command stays inside one guest growth unit.
-///
-/// 🧨️ This is the law the 64-page constant failed on both sides at once: it refused a 272 089-byte
-/// contributions pack outright, and the reservation it bought was 262 272 contiguous bytes — four
-/// times what a fragmented guest can be relied on to serve (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-#[test]
-fn the_command_ingress_authorities_are_derived_from_the_guest_memory_budget() {
-    let fixture = command_ingress_pages_fixture();
-    assert_eq!(COMMAND_PAGE_MAXIMUM_BYTES, fixture.page_bytes);
-    assert_eq!(COMMAND_MAXIMUM_BYTES, fixture.command_maximum_bytes);
-    assert_eq!(COMMAND_MAXIMUM_PAGES, fixture.maximum_pages);
-    assert_eq!(COMMAND_MAXIMUM_BYTES, semio_framework_trace::GUEST_HOST_ANSWER_CEILING_BYTES, "a command is an assembled host answer and is bound by that budget, not by one of its own");
-    assert_eq!(COMMAND_MAXIMUM_PAGES, COMMAND_MAXIMUM_BYTES / COMMAND_PAGE_MAXIMUM_BYTES);
-    assert!(
-        CommandPageSet::reservation_bytes(COMMAND_MAXIMUM_PAGES) <= semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES,
-        "a ceiling-sized page authority reserves {} B — over the {} B a routine per-command guest path may ask a fixed linear memory for",
-        CommandPageSet::reservation_bytes(COMMAND_MAXIMUM_PAGES),
-        semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES
-    );
-    eprintln!(
-        "command ingress authorities: pages={COMMAND_MAXIMUM_PAGES} bytes={COMMAND_MAXIMUM_BYTES} slot={} B spine={} B ceiling={} B",
-        size_of::<FixedCommandPage>(),
-        CommandPageSet::reservation_bytes(COMMAND_MAXIMUM_PAGES),
-        semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES
-    );
-    assert!(
-        size_of::<FixedCommandPage>() < COMMAND_PAGE_MAXIMUM_BYTES,
-        "a page slot must be a handle to its block, never the block — an inline page is what forced a fixed page ceiling"
-    );
-}
-
-/// ⚖️ LAW: every fixture row splits into exactly the pages it declares and reassembles to the EXACT
-/// bytes it was cut from, with no page of a multi-page command left short of the page extent.
-#[test]
-fn every_command_ingress_row_reassembles_to_the_exact_bytes_it_was_cut_from() {
-    let fixture = command_ingress_pages_fixture();
-    for row in &fixture.rows {
-        let body = command_ingress_body(row.bytes);
-        let cut: Vec<&[u8]> = body.chunks(COMMAND_PAGE_MAXIMUM_BYTES).collect();
-        assert_eq!(cut.len(), row.pages, "row {} cuts into {} pages, not the {} it declares", row.name, cut.len(), row.pages);
-        let mut pages = CommandPageSet::try_new(row.pages).unwrap_or_else(|fault| panic!("row {} declares a page authority: {fault:?}", row.name));
-        assert!(
-            CommandPageSet::reservation_bytes(row.pages) <= semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES,
-            "row {} reserves {} B for its spine",
-            row.name,
-            CommandPageSet::reservation_bytes(row.pages)
-        );
-        for (index, chunk) in cut.iter().enumerate() {
-            assert!(index + 1 == cut.len() || chunk.len() == COMMAND_PAGE_MAXIMUM_BYTES, "row {} left a nonterminal page short", row.name);
-            pages.try_push(FixedCommandPage::try_copy_from(chunk).expect("a cut page")).unwrap_or_else(|(fault, _)| panic!("row {} admits page {index}: {fault:?}", row.name));
-        }
-        let command = PagedCommand::try_from_pages(pages).unwrap_or_else(|(fault, _)| panic!("row {} assembles: {fault:?}", row.name));
-        assert_eq!(command.page_len(), row.pages);
-        assert_eq!(command.byte_len(), row.bytes);
-        assert_eq!(command.kind(), body[0]);
-        let mut reader = PagedCommandReader::new(command);
-        let mut read = Vec::with_capacity(row.bytes);
-        for offset in 0..row.bytes {
-            read.push(reader.read_byte().unwrap_or_else(|fault| panic!("row {} ends inside byte {offset}: {fault:?}", row.name)));
-        }
-        assert_eq!(read, body, "row {} did not reassemble to its own bytes", row.name);
-        assert!(reader.terminal_is_empty(), "row {} left pages behind after its last byte", row.name);
-        assert_eq!(reader.read_byte().expect_err("a fully read command has no further byte").code.0, "plugin.command-decode-truncated");
-    }
-}
-
-/// ⚖️ LAW: an over-declaration and an over-push are refused with a `Fault` the host can display, and
-/// the page a saturated authority refuses is handed BACK rather than dropped.
-#[test]
-fn every_command_ingress_refusal_answers_a_fault_and_keeps_its_page() {
-    let fixture = command_ingress_pages_fixture();
-    for refusal in &fixture.refusals {
-        let declared = refusal.bytes.div_ceil(COMMAND_PAGE_MAXIMUM_BYTES);
-        assert_eq!(
-            CommandPageSet::try_new(declared).expect_err(&format!("refusal {} has no page authority", refusal.name)).code.0,
-            "plugin.command-page-count",
-            "refusal {} must be refused by the declaration, before one page is copied",
-            refusal.name
-        );
-    }
-    let mut pages = CommandPageSet::try_new(2).expect("a two-page authority");
-    for _ in 0..2 {
-        pages.try_push(FixedCommandPage::try_copy_from(&[7; COMMAND_PAGE_MAXIMUM_BYTES]).expect("a full page")).expect("the declared pages are admitted");
-    }
-    let (fault, returned) = pages.try_push(FixedCommandPage::try_copy_from(b"third").expect("a page")).expect_err("a third page is over the declared authority");
-    assert_eq!(fault.code.0, "plugin.command-page-count");
-    assert_eq!(returned.as_slice(), b"third", "a refused page is handed back, never dropped");
-}
-
 #[semio_framework_async_macros::async_test]
-async fn media_export_wire_matches_the_language_neutral_v19_fixture_above_number_safe_range() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️fixtures/🎬️media-export-wire-v19/🔣️.json")).expect("media export wire fixture parses");
+async fn media_export_wire_matches_the_language_neutral_fixture_above_number_safe_range() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️fixtures/🎬️media-export-wire/🔣️.json")).expect("media export wire fixture parses");
+    assert_eq!(fixture["channelVersion"].as_u64().unwrap(), CHANNEL_VERSION as u64);
     let handle = MediaExportHandleWire {
         app_instance_id: 42,
         parent_document_id: "doc-α".into(),
@@ -1259,13 +1179,12 @@ async fn media_export_wire_matches_the_language_neutral_v19_fixture_above_number
         assert_eq!(decode_app_frame(&bytes).await.expect("media export frame decodes"), frame);
     }
 }
-//#endregion 📥️CommandIngressPages
 
 
 /// 🪪️ The scalar owner query roundtrips the shared wire vectors without a document archive.
 #[semio_framework_async_macros::async_test]
-async fn document_identity_wire_matches_the_language_neutral_v20_fixture() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️fixtures/🪪️document-identity-wire-v20/🔣️.json")).unwrap();
+async fn document_identity_wire_matches_the_language_neutral_fixture() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️fixtures/🪪️document-identity-wire/🔣️.json")).unwrap();
     assert_eq!(fixture["channelVersion"].as_u64().unwrap(), CHANNEL_VERSION as u64);
     assert!(serde_json::from_value::<AppDocumentIdentity>(serde_json::json!({ "appInstanceId": 17 })).is_err());
     assert!(serde_json::from_value::<AppDocumentIdentity>(serde_json::json!({ "appInstanceId": 17, "parentDocumentId": null, "claimedControllerId": "foreign" })).is_err());
@@ -1294,3 +1213,110 @@ async fn document_identity_wire_matches_the_language_neutral_v20_fixture() {
     let oversized = AppFrame::DocumentIdentity { in_reply_to: 0, identity: AppDocumentIdentity { app_instance_id: 0, parent_document_id: Some("x".repeat(513)) } };
     assert!(decode_app_frame(&encode_app_frame(&oversized).await).await.is_err());
 }
+
+//#region 🗃️DocumentArchiveLoadHost
+/// 🗃️ LAW (`🧫️fixtures/🧫️document-archive-load-host/🔣️.json`): the host half of the stepped whole-document load sends exactly the
+/// scripted commands — one admission, polls, at most one cancel, acknowledgements — every later command naming the admission's own
+/// sequence, and no other command. It hands every polled status back for the host's progress, and it ends in
+/// the scripted outcome. Every scripted status keeps `completed <= total`, monotonic within its case. A load the guest admitted
+/// itself (`admittedByGuest`, the media import of a whole document) is driven from its first poll under the next sequence.
+#[test]
+fn the_document_archive_load_host_sends_the_scripted_commands_and_ends_in_the_scripted_outcome() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️document-archive-load-host/🔣️.json")).unwrap();
+    let first = law["firstSequence"].as_u64().unwrap();
+    let state = |name: &str| match name {
+        "pending" => DocumentArchiveLoadState::Pending,
+        "running" => DocumentArchiveLoadState::Running,
+        "ready" => DocumentArchiveLoadState::Ready,
+        "cancelled" => DocumentArchiveLoadState::Cancelled,
+        "fault" => DocumentArchiveLoadState::Fault,
+        other => panic!("unknown scripted state {other}"),
+    };
+    let fault = |answer: &serde_json::Value| answer["fault"].as_str().unwrap_or_default().as_bytes().to_vec();
+    let text = |bytes: Vec<u8>| String::from_utf8(bytes).expect("scripted faults are UTF-8");
+    for case in law["cases"].as_array().unwrap() {
+        let name = case["name"].as_str().unwrap();
+        let exchanges = case["exchanges"].as_array().unwrap();
+        let cancel_before = case["cancel"]["beforeStep"].as_u64();
+        let cancel_in_flight = case["cancel"]["whileStepInFlight"].as_u64();
+        let admitted_by_guest = case["admittedByGuest"].as_bool().unwrap_or(false);
+        let mut host = if admitted_by_guest { DocumentArchiveLoadHost::admitted(first) } else { DocumentArchiveLoadHost::new(DocumentArchivePack { parent_pack: vec![7], parent_spr: vec![9], members: Vec::new() }) };
+        let mut seq = if admitted_by_guest { first + 1 } else { first };
+        let mut refusal = None;
+        let mut statuses: Vec<(u64, u64)> = Vec::new();
+        for (index, exchange) in exchanges.iter().enumerate() {
+            if cancel_before == Some(index as u64) {
+                host.request_cancel();
+            }
+            let command = match host.step(|| seq) {
+                DocumentArchiveLoadStep::Send { seq: stamped, command } => {
+                    assert_eq!(stamped, seq, "{name}: step {index} is stamped with the minted sequence");
+                    command
+                }
+                finished => panic!("{name}: step {index} finished early with {finished:?}"),
+            };
+            let (sends, operation) = match &command {
+                AppCommand::LoadDocumentArchive { seq: sent, archive } => {
+                    assert_eq!((*sent, archive.parent_pack.as_slice(), archive.parent_spr.as_slice(), archive.members.len()), (seq, &[7u8][..], &[9u8][..], 0), "{name}: the admission carries the archive under its own sequence");
+                    ("loadDocumentArchive", first)
+                }
+                AppCommand::PollDocumentArchiveLoad { seq: sent, operation } => {
+                    assert_eq!(*sent, seq, "{name}");
+                    ("pollDocumentArchiveLoad", *operation)
+                }
+                AppCommand::CancelDocumentArchiveLoad { seq: sent, operation } => {
+                    assert_eq!(*sent, seq, "{name}");
+                    ("cancelDocumentArchiveLoad", *operation)
+                }
+                AppCommand::AcknowledgeDocumentArchiveLoad { seq: sent, operation } => {
+                    assert_eq!(*sent, seq, "{name}");
+                    ("acknowledgeDocumentArchiveLoad", *operation)
+                }
+                other => panic!("{name}: step {index} sent {other:?}, which no archive load sends"),
+            };
+            assert_eq!(sends, exchange["sends"].as_str().unwrap(), "{name}: step {index}");
+            assert_eq!((operation, host.operation()), (first, Some(first)), "{name}: step {index} names the admission's own sequence");
+            if cancel_in_flight == Some(index as u64) {
+                host.request_cancel();
+            }
+            let answer = &exchange["answer"];
+            let frame = match answer["kind"].as_str().unwrap() {
+                "done" => AppFrame::Done { in_reply_to: seq },
+                "error" => AppFrame::Error { in_reply_to: Some(seq), fault: fault(answer), report: Vec::new() },
+                kind => AppFrame::DocumentArchiveLoad {
+                    in_reply_to: seq,
+                    status: DocumentArchiveLoadStatus {
+                        operation: if kind == "foreignStatus" { first + 1_000 } else { first },
+                        state: state(answer["state"].as_str().unwrap()),
+                        completed: answer["completed"].as_u64().unwrap(),
+                        total: answer["total"].as_u64().unwrap(),
+                        fault: fault(answer),
+                    },
+                },
+            };
+            match host.answer(seq, &frame) {
+                Ok(Some(status)) => {
+                    assert!(matches!(&frame, AppFrame::DocumentArchiveLoad { status: answered, .. } if *answered == status), "{name}: the host hands back the polled status");
+                    statuses.push((status.completed, status.total));
+                }
+                Ok(None) => {}
+                Err(DocumentArchiveLoadRefusal::Refused(bytes)) => refusal = Some(serde_json::json!({ "kind": "refused", "fault": text(bytes) })),
+                Err(DocumentArchiveLoadRefusal::Unanswered) => refusal = Some(serde_json::json!({ "kind": "unanswered" })),
+            }
+            assert!(refusal.is_none() || index + 1 == exchanges.len(), "{name}: the load stops at its first refusal");
+            seq += 1;
+        }
+        if cancel_before == Some(exchanges.len() as u64) {
+            host.request_cancel();
+        }
+        let outcome = refusal.unwrap_or_else(|| match host.step(|| panic!("{name}: a finished load mints no sequence")) {
+            DocumentArchiveLoadStep::Finished(DocumentArchiveLoadOutcome::Ready) => serde_json::json!({ "kind": "ready" }),
+            DocumentArchiveLoadStep::Finished(DocumentArchiveLoadOutcome::Cancelled) => serde_json::json!({ "kind": "cancelled" }),
+            DocumentArchiveLoadStep::Finished(DocumentArchiveLoadOutcome::Fault(bytes)) => serde_json::json!({ "kind": "fault", "fault": text(bytes) }),
+            DocumentArchiveLoadStep::Send { command, .. } => panic!("{name}: the host still sends {command:?} after the script ended"),
+        });
+        assert_eq!(outcome, case["outcome"], "{name}");
+        assert!(statuses.iter().all(|(completed, total)| completed <= total) && statuses.windows(2).all(|pair| pair[0].0 <= pair[1].0 && pair[0].1 == pair[1].1), "{name}: scripted progress {statuses:?} is monotonic and bounded");
+    }
+}
+//#endregion 🗃️DocumentArchiveLoadHost

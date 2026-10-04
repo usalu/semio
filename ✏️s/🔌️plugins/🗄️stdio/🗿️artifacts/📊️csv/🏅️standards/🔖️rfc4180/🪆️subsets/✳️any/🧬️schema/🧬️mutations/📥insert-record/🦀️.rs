@@ -18,9 +18,12 @@ impl protocol::MutationKind<CsvSnapshot, CsvMutation> for InsertRecord {
     fn diff(&self, base: &CsvSnapshot) -> protocol::MutationOutcome<<CsvMutation as Mutation<CsvSnapshot>>::Diff> {
         agg_diff(&CsvMutation::InsertRecord(self.clone()), base)
     }
-    fn inverse(&self, base: &CsvSnapshot) -> Vec<CsvMutation> {
-        agg_inverse(&CsvMutation::InsertRecord(self.clone()), base)
-    }
+    fn inverse(&self, base: &CsvSnapshot) -> Result<Vec<CsvMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&CsvMutation::InsertRecord(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert record", "Datensatz einfügen")
     }

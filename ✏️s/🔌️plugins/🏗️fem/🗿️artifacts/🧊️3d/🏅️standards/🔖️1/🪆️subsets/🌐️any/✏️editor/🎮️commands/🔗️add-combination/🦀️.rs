@@ -7,7 +7,7 @@ use crate::Fem3dSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "add-combination")]
 pub struct AddCombination {
     pub name: String,
@@ -20,7 +20,7 @@ pub struct AddCombination {
 
 pub fn handle(payload: &AddCombination, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
     let snapshot = doc.snapshot;
-    match dsl::json::from_json_str::<Vec<(String, f64)>>(&payload.terms) {
+    match semio_framework_pack_json::from_json_str::<Vec<(String, f64)>>(&payload.terms, semio_framework_pack_json::JsonMemberPolicy::Reject) {
         Ok(parsed) => {
             let terms: std::collections::BTreeMap<String, f64> = parsed.into_iter().collect();
             let id = crate::app_surface::next_id(snapshot.combinations.iter().map(|c| c.id.clone()), "c");

@@ -394,11 +394,12 @@ pub fn brep_schema() -> Schema {
         module: "brep".into(),
         name: "Brep".into(),
         icon: "emoji:🧊️".into(),
-        summary: "Construct, deconstruct, or modify a brep from vertices, edges, and faces".into(),
+        summary: "Construct, deconstruct, or modify a brep from vertices, edges, faces, and shells".into(),
         fields: vec![
             FieldSpec::new("vertex", ValueType::List(Box::new(ValueType::Schema("vertex".into())))).with_default(empty_list_value()),
             FieldSpec::new("edge", ValueType::List(Box::new(ValueType::Schema("edge".into())))).with_default(empty_list_value()),
             FieldSpec::new("face", ValueType::List(Box::new(ValueType::Schema("face".into())))).with_default(empty_list_value()),
+            FieldSpec::new("shell", ValueType::List(Box::new(ValueType::Schema("shell".into())))).with_default(empty_list_value()),
         ],
     }
 }
@@ -410,7 +411,48 @@ pub fn topology_list(schema: &str, handles: Vec<GeometryHandle>) -> Dictionary {
         .fold(Dictionary::with_schema("list"), |list, (index, handle)| list.insert(index.to_string(), Value::Dictionary(Dictionary::with_schema(schema).insert("handle", Value::Atom(Atom::String(handle.as_str().to_string()))))))
 }
 
+/// 🎯️ Resolves exact decimal labels exclusively within one deconstructed source domain.
+fn selected_topology(kernel: &Brep, input: &Dictionary, key: &str, handles: &[GeometryHandle]) -> Result<Vec<GeometryHandle>, EvalError> {
+    let value = input.get(key).ok_or_else(|| EvalError::MissingInput(key.into()))?;
+    let text = value.as_dictionary().and_then(|value| value.get("value")).and_then(Value::as_atom).and_then(Atom::as_str).ok_or_else(|| EvalError::InvalidInput(format!("{key} must contain a text label array")))?;
+    if text.len() > 16_000_000 { return Err(EvalError::InvalidInput("component label selection exceeds its byte limit".into())); }
+    let value = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| EvalError::InvalidInput(format!("{key} must contain a label array")))?;
+    let values = value.as_array().filter(|values| values.len() <= 600_000).ok_or_else(|| EvalError::InvalidInput(format!("{key} must contain a bounded label array")))?;
+    let mut labels = BTreeSet::new();
+    for value in values {
+        let label = value.as_str().filter(|label| !label.is_empty() && !label.starts_with('0') && label.bytes().all(|byte| byte.is_ascii_digit())).and_then(|label| label.parse::<u64>().ok()).ok_or_else(|| EvalError::InvalidInput("component labels must be exact positive uint64 decimal text".into()))?;
+        labels.insert(label);
+    }
+    let mut found = BTreeMap::new();
+    for handle in handles {
+        let label = kernel.label(handle).ok_or_else(|| EvalError::InvalidInput("source component has no persistent label".into()))?;
+        if labels.contains(&label) && found.insert(label,handle.clone()).is_some() { return Err(EvalError::InvalidInput("component label is ambiguous within its source topology".into())); }
+    }
+    labels.into_iter().map(|label| found.remove(&label).ok_or_else(|| EvalError::InvalidInput(format!("component label {label} no longer exists in the selected source topology")))).collect()
+}
+
 pub struct BrepDeconstruct(pub SessionCapture);
+
+/// 🪪️ Resolves one current collection leaf by its captured handle and reports its current index.
+fn scoped_brep_source(input: &Dictionary) -> Result<(GeometryHandle, u32), EvalError> {
+    let captured = read_text(input, "sourceHandle")?;
+    if !captured.is_empty() && (captured.len() != 64 || !captured.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))) { return Err(EvalError::InvalidInput("sourceHandle must be an exact geometry handle".into())); }
+    let source = input.get("brep").and_then(Value::as_dictionary).ok_or_else(|| EvalError::MissingInput("brep".into()))?;
+    if source.schema() != Some("list") {
+        let shape = read_geometry(input, "brep")?;
+        if !captured.is_empty() && shape.as_str() != captured { return Err(EvalError::InvalidInput("selected source geometry has changed".into())); }
+        return Ok((shape, 0));
+    }
+    if captured.is_empty() || source.len() > 600_001 { return Err(EvalError::InvalidInput("a bounded source collection requires a captured geometry handle".into())); }
+    let mut found = None;
+    for (key, value) in source.iter() {
+        if key == neural_engine::SCHEMA_KEY { continue; }
+        let index = key.parse::<u32>().ok().filter(|index| index.to_string() == *key).ok_or_else(|| EvalError::InvalidInput("source collection indices must be canonical integers".into()))?;
+        let handle = value.as_dictionary().and_then(|value| value.get("handle")).and_then(Value::as_atom).and_then(Atom::as_str).ok_or_else(|| EvalError::InvalidInput("source collection must contain geometry leaves".into()))?;
+        if handle == captured && found.replace(index).is_some() { return Err(EvalError::InvalidInput("selected source geometry is ambiguous in its collection".into())); }
+    }
+    found.map(|index| (GeometryHandle(captured), index)).ok_or_else(|| EvalError::InvalidInput("selected source geometry no longer exists in its collection".into()))
+}
 
 impl Operator for BrepDeconstruct {
     fn retirement_is_empty(&self) -> bool { self.0.terminal_is_empty() }
@@ -420,13 +462,19 @@ impl Operator for BrepDeconstruct {
     fn retire_cold(mut self:Box<Self>) { self.0.retire_cold(); }
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         self.0.with_kernel(|kernel| {
-            let shape = read_geometry(input, "brep")?;
+            let (shape, source_index) = scoped_brep_source(input)?;
             let topology = kernel.deconstruct(&shape).map_err(|error| map_kernel_error(&error))?;
+            let selected_edges = selected_topology(kernel,input,"edgeLabels",&topology.edges)?;
+            let selected_faces = selected_topology(kernel,input,"faceLabels",&topology.faces)?;
             Ok(Dictionary::new()
                 .insert(neural_engine::produced_channel_id("brep"), Value::Dictionary(geometry_dict(kernel, &shape)?))
                 .insert("vertex", Value::Dictionary(topology_list("vertex", topology.vertices)))
                 .insert("edge", Value::Dictionary(topology_list("edge", topology.edges)))
                 .insert("face", Value::Dictionary(topology_list("face", topology.faces)))
+                .insert("shell", Value::Dictionary(topology_list("shell", topology.shells)))
+                .insert("selectedEdges", Value::Dictionary(topology_list("edge", selected_edges)))
+                .insert("selectedFaces", Value::Dictionary(topology_list("face", selected_faces)))
+                .insert("sourceIndex", Value::Dictionary(number_dictionary(f64::from(source_index))))
                 .insert("errors", Value::Dictionary(Dictionary::with_schema("list"))))
         })
     }
@@ -576,8 +624,8 @@ struct TessellationJobRegistry {
 
 // 🚫️async: E1 pure codec helper (no I/O), consumed from sync envelope call sites — see R9
 fn failed_envelope_json(code: &str, message: &str) -> String {
-    use semio_framework_os_flow::os_pack::json::{object, Value};
-    semio_framework_os_flow::os_pack::json::to_string(&object([
+    use semio_framework_pack_json::{object, Value};
+    semio_framework_pack_json::to_string(&object([
         ("done".to_string(), Value::Bool(true)),
         ("cancellable".to_string(), Value::Bool(false)),
         ("phase".to_string(), Value::String("failed".to_string())),
@@ -603,7 +651,7 @@ pub fn export_glb_via_tessellation(kernel: &Brep, shapes: &[GeometryHandle], def
     let mut merged = semio_framework::MeshData::default();
     for shape in shapes {
         let transfer = kernel.tessellate(shape, deflection)?;
-        let mesh = semio_framework_3d::brep::engine::mesh_data_from_mesh_transfer(&transfer);
+        let mesh = semio_framework_3d::brep::engine::mesh_data_from_mesh_transfer(&transfer)?;
         let offset = (merged.positions.len() / 3) as u32;
         merged.positions.extend(mesh.positions);
         merged.normals.extend(mesh.normals);
@@ -627,31 +675,31 @@ pub fn import_glb_via_tessellation(kernel: &mut Brep, bytes: &[u8], tolerance: f
 /// 🌉️ `brep_invoke` argument/result JSON shape: `{"error": "..."}` on failure, otherwise one of
 /// `{"handle": "..."}` / `{"handles": [...]}` / `{"value": ...}` / a raw `MeshTransfer` object /
 /// `{"vertices": [...], "edges": [...], "faces": [...], "shells": [...]}` for `deconstruct`.
-fn invoke_args(args_json: &str) -> Result<semio_framework_os_flow::os_pack::json::Value, BrepModuleError> {
-    semio_framework_os_flow::os_pack::json::parse(args_json).map_err(|error| BrepModuleError::InvalidArgs(error.to_string()))
+fn invoke_args(args_json: &str) -> Result<semio_framework_pack_json::Value, BrepModuleError> {
+    semio_framework_pack_json::parse(args_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| BrepModuleError::InvalidArgs(error.to_string()))
 }
 
-fn arg_f64(args: &semio_framework_os_flow::os_pack::json::Value, key: &str) -> Result<f64, BrepModuleError> {
+fn arg_f64(args: &semio_framework_pack_json::Value, key: &str) -> Result<f64, BrepModuleError> {
     args.get(key).and_then(|value| value.as_f64()).ok_or_else(|| BrepModuleError::InvalidArgs(format!("missing number {key}")))
 }
 
-fn arg_f64_or(args: &semio_framework_os_flow::os_pack::json::Value, key: &str, fallback: f64) -> f64 {
+fn arg_f64_or(args: &semio_framework_pack_json::Value, key: &str, fallback: f64) -> f64 {
     args.get(key).and_then(|value| value.as_f64()).unwrap_or(fallback)
 }
 
-fn arg_usize(args: &semio_framework_os_flow::os_pack::json::Value, key: &str) -> Result<usize, BrepModuleError> {
+fn arg_usize(args: &semio_framework_pack_json::Value, key: &str) -> Result<usize, BrepModuleError> {
     args.get(key).and_then(|value| value.as_u64()).map(|value| value as usize).ok_or_else(|| BrepModuleError::InvalidArgs(format!("missing integer {key}")))
 }
 
-fn arg_bool_or(args: &semio_framework_os_flow::os_pack::json::Value, key: &str, fallback: bool) -> bool {
+fn arg_bool_or(args: &semio_framework_pack_json::Value, key: &str, fallback: bool) -> bool {
     args.get(key).and_then(|value| value.as_bool()).unwrap_or(fallback)
 }
 
-fn arg_string(args: &semio_framework_os_flow::os_pack::json::Value, key: &str) -> Result<String, BrepModuleError> {
+fn arg_string(args: &semio_framework_pack_json::Value, key: &str) -> Result<String, BrepModuleError> {
     args.get(key).and_then(|value| value.as_str()).map(str::to_string).ok_or_else(|| BrepModuleError::InvalidArgs(format!("missing string {key}")))
 }
 
-fn value_vec3(value: &semio_framework_os_flow::os_pack::json::Value) -> Result<Vec3, BrepModuleError> {
+fn value_vec3(value: &semio_framework_pack_json::Value) -> Result<Vec3, BrepModuleError> {
     let items = value.as_array().ok_or_else(|| BrepModuleError::InvalidArgs("expected a 3-number array".to_string()))?;
     if items.len() != 3 {
         return Err(BrepModuleError::InvalidArgs("expected a 3-number array".to_string()));
@@ -660,55 +708,55 @@ fn value_vec3(value: &semio_framework_os_flow::os_pack::json::Value) -> Result<V
     Ok([axis(0)?, axis(1)?, axis(2)?])
 }
 
-fn arg_vec3(args: &semio_framework_os_flow::os_pack::json::Value, key: &str) -> Result<Vec3, BrepModuleError> {
+fn arg_vec3(args: &semio_framework_pack_json::Value, key: &str) -> Result<Vec3, BrepModuleError> {
     let value = args.get(key).ok_or_else(|| BrepModuleError::InvalidArgs(format!("missing point {key}")))?;
     value_vec3(value)
 }
 
-fn arg_points(args: &semio_framework_os_flow::os_pack::json::Value, key: &str) -> Result<Vec<Vec3>, BrepModuleError> {
+fn arg_points(args: &semio_framework_pack_json::Value, key: &str) -> Result<Vec<Vec3>, BrepModuleError> {
     let items = args.get(key).and_then(|value| value.as_array()).ok_or_else(|| BrepModuleError::InvalidArgs(format!("missing point array {key}")))?;
     items.iter().map(value_vec3).collect()
 }
 
-fn arg_handle(args: &semio_framework_os_flow::os_pack::json::Value, key: &str) -> Result<GeometryHandle, BrepModuleError> {
+fn arg_handle(args: &semio_framework_pack_json::Value, key: &str) -> Result<GeometryHandle, BrepModuleError> {
     arg_string(args, key).map(GeometryHandle)
 }
 
-fn arg_handles(args: &semio_framework_os_flow::os_pack::json::Value, key: &str) -> Result<Vec<GeometryHandle>, BrepModuleError> {
+fn arg_handles(args: &semio_framework_pack_json::Value, key: &str) -> Result<Vec<GeometryHandle>, BrepModuleError> {
     let items = args.get(key).and_then(|value| value.as_array()).ok_or_else(|| BrepModuleError::InvalidArgs(format!("missing handle array {key}")))?;
     items.iter().map(|item| item.as_str().map(|text| GeometryHandle(text.to_string())).ok_or_else(|| BrepModuleError::InvalidArgs(format!("{key} entries must be strings")))).collect()
 }
 
-fn handle_result(handle: GeometryHandle) -> semio_framework_os_flow::os_pack::json::Value {
-    semio_framework_os_flow::os_pack::json::object([("handle".to_string(), semio_framework_os_flow::os_pack::json::Value::String(handle.0))])
+fn handle_result(handle: GeometryHandle) -> semio_framework_pack_json::Value {
+    semio_framework_pack_json::object([("handle".to_string(), semio_framework_pack_json::Value::String(handle.0))])
 }
 
-fn handles_result(handles: Vec<GeometryHandle>) -> semio_framework_os_flow::os_pack::json::Value {
-    semio_framework_os_flow::os_pack::json::object([("handles".to_string(), semio_framework_os_flow::os_pack::json::array(handles.into_iter().map(|handle| semio_framework_os_flow::os_pack::json::Value::String(handle.0))))])
+fn handles_result(handles: Vec<GeometryHandle>) -> semio_framework_pack_json::Value {
+    semio_framework_pack_json::object([("handles".to_string(), semio_framework_pack_json::array(handles.into_iter().map(|handle| semio_framework_pack_json::Value::String(handle.0))))])
 }
 
-fn number_result(value: f64) -> semio_framework_os_flow::os_pack::json::Value {
-    semio_framework_os_flow::os_pack::json::object([("value".to_string(), semio_framework_os_flow::os_pack::json::Value::Number(semio_framework_os_flow::os_pack::json::Number::Float(value)))])
+fn number_result(value: f64) -> semio_framework_pack_json::Value {
+    semio_framework_pack_json::object([("value".to_string(), semio_framework_pack_json::Value::Number(semio_framework_pack_json::Number::Float(value)))])
 }
 
-fn vec3_result(value: Vec3) -> semio_framework_os_flow::os_pack::json::Value {
-    semio_framework_os_flow::os_pack::json::object([(
+fn vec3_result(value: Vec3) -> semio_framework_pack_json::Value {
+    semio_framework_pack_json::object([(
         "value".to_string(),
-        semio_framework_os_flow::os_pack::json::array(value.into_iter().map(semio_framework_os_flow::os_pack::json::Number::Float).map(semio_framework_os_flow::os_pack::json::Value::Number)),
+        semio_framework_pack_json::array(value.into_iter().map(semio_framework_pack_json::Number::Float).map(semio_framework_pack_json::Value::Number)),
     )])
 }
 
-fn string_result(value: String) -> semio_framework_os_flow::os_pack::json::Value {
-    semio_framework_os_flow::os_pack::json::object([("value".to_string(), semio_framework_os_flow::os_pack::json::Value::String(value))])
+fn string_result(value: String) -> semio_framework_pack_json::Value {
+    semio_framework_pack_json::object([("value".to_string(), semio_framework_pack_json::Value::String(value))])
 }
 
-fn unit_result() -> semio_framework_os_flow::os_pack::json::Value {
-    semio_framework_os_flow::os_pack::json::object([])
+fn unit_result() -> semio_framework_pack_json::Value {
+    semio_framework_pack_json::object([])
 }
 
-fn topology_result(topology: semio_framework_3d::brep::engine::BrepTopology) -> semio_framework_os_flow::os_pack::json::Value {
-    let handle_array = |handles: Vec<GeometryHandle>| semio_framework_os_flow::os_pack::json::array(handles.into_iter().map(|handle| semio_framework_os_flow::os_pack::json::Value::String(handle.0)));
-    semio_framework_os_flow::os_pack::json::object([
+fn topology_result(topology: semio_framework_3d::brep::engine::BrepTopology) -> semio_framework_pack_json::Value {
+    let handle_array = |handles: Vec<GeometryHandle>| semio_framework_pack_json::array(handles.into_iter().map(|handle| semio_framework_pack_json::Value::String(handle.0)));
+    semio_framework_pack_json::object([
         ("vertices".to_string(), handle_array(topology.vertices)),
         ("edges".to_string(), handle_array(topology.edges)),
         ("faces".to_string(), handle_array(topology.faces)),
@@ -716,8 +764,8 @@ fn topology_result(topology: semio_framework_3d::brep::engine::BrepTopology) -> 
     ])
 }
 
-fn mesh_result(mesh: &semio_framework_3d::brep::engine::MeshTransfer) -> semio_framework_os_flow::os_pack::json::Value {
-    semio_framework_os_flow::os_pack::json::from_dsl_value(&semio_framework_os_flow::os_dsl::ToValue::to_value(mesh))
+fn mesh_result(mesh: &semio_framework_3d::brep::engine::MeshTransfer) -> semio_framework_pack_json::Value {
+    semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(mesh))
 }
 
 /// 🌉️ Dispatches one `BrepKernel` method by name over `os_pack::json` args (see `handle_result`
@@ -827,7 +875,7 @@ impl Drop for SessionCapture {
 pub trait GeometryOperations: Send + Sync {
     fn export(&self, _: &Brep, format: &str, _: &[GeometryHandle], _: f64) -> Result<(String,bool),BrepModuleError> { Err(BrepModuleError::UnsupportedExportFormat(format.into())) }
     fn import(&self, _: &mut Brep, format: &str, _: &str, _: f64) -> Result<Vec<GeometryHandle>,BrepModuleError> { Err(BrepModuleError::UnsupportedImportFormat(format.into())) }
-    fn invoke(&self, _: &mut Brep, method: &str, _: &semio_framework_os_flow::os_pack::json::Value) -> Result<semio_framework_os_flow::os_pack::json::Value,BrepModuleError> { Err(BrepModuleError::UnknownMethod(method.into())) }
+    fn invoke(&self, _: &mut Brep, method: &str, _: &semio_framework_pack_json::Value) -> Result<semio_framework_pack_json::Value,BrepModuleError> { Err(BrepModuleError::UnknownMethod(method.into())) }
 }
 impl GeometryOperations for () {}
 
@@ -859,8 +907,7 @@ struct RetiredMeshes(BTreeMap<(String,u64),semio_framework::MeshData>);
 impl RetirementFrontier for RetiredMeshes {
     fn advance(&mut self,payloads:&mut PayloadRetirement) -> bool {
         if let Some(((handle,_),mesh)) = self.0.pop_first() {
-            payloads.text(handle); payloads.pod(mesh.positions); payloads.pod(mesh.normals); payloads.pod(mesh.colors); payloads.pod(mesh.indices); payloads.pod(mesh.uvs); payloads.pod(mesh.face_ids); payloads.pod(mesh.vertex_ids); payloads.pod(mesh.edge_positions); payloads.pod(mesh.edge_ids); payloads.pod(mesh.edge_uvs); payloads.pod(mesh.edge_is_seam);
-            if let Some(texture) = mesh.paint_texture_base64 { payloads.text(texture); }
+            payloads.text(handle);payloads.owned(mesh);
         }
         self.0.is_empty()
     }
@@ -989,6 +1036,19 @@ pub fn with_kernel_read<T>(&self, f: impl FnOnce(&Brep) -> Result<T, EvalError>)
     if self.is_closed() { return Err(EvalError::InvalidInput("geometry.session-closed".into())); }
     f(&guard)
 }
+/// 📦 Advances an owned mesh import and admits exactly its final published handle.
+pub fn step_mesh_import(&self,cursor:&mut semio_framework_3d::brep::engine::MeshImportCursor,budget:usize)->Result<Option<GeometryHandle>,EvalError> {
+    self.close_mesh_import(cursor,budget,4096)
+}
+/// 🎟️ Uses exact retained import and rollback byte credit within this authority.
+pub fn close_mesh_import(&self,cursor:&mut semio_framework_3d::brep::engine::MeshImportCursor,budget:usize,bytes:usize)->Result<Option<GeometryHandle>,EvalError> {
+    let mut claims=self.state.claims.lock().map_err(|_|EvalError::InvalidInput("geometry claims lock poisoned".into()))?;
+    let mut guard=self.kernel().write().map_err(|_|EvalError::InvalidInput("brep kernel lock poisoned".into()))?;
+    if self.is_closed() {return Err(EvalError::InvalidInput("geometry.session-closed".into()));}
+    let result=guard.close_mesh_import_sync(cursor,budget,bytes).map_err(|error|map_kernel_error(&error))?;
+    if let Some(handle)=&result {claims.entry(self.state.authority).or_default().insert(handle.as_str().to_string());}
+    Ok(result)
+}
 pub fn retain_geometry_handles(&self, live: &[String]) {
     let mut claims = self.state.claims.lock().expect("geometry claims");
     if self.is_closed() { return; }
@@ -1111,7 +1171,7 @@ pub fn tessellate_step(&self, handle: &str, tolerance: f64, budget: usize) -> Te
             let Some((transfer, _report)) = retained.job.into_mesh() else {
                 return TessellationStepOutcome::Failed { message: "finished tessellation job produced no mesh".to_string() };
             };
-            let mesh = semio_framework_3d::brep::engine::mesh_data_from_mesh_transfer(&transfer);
+            let mesh = match semio_framework_3d::brep::engine::mesh_data_from_mesh_transfer(&transfer) {Ok(mesh)=>mesh,Err(error)=>return TessellationStepOutcome::Failed {message:error.to_string()}};
             if let Ok(mut cache) = self.mesh_cache().lock() {
                 cache.insert(key, mesh.clone());
             }
@@ -1134,7 +1194,7 @@ pub fn tessellate_geometry(&self, handle: &str, tolerance: f64) -> Result<semio_
     }
 }
 pub fn tessellate_step_envelope_json(&self, handle: &str, tolerance: f64, budget: usize, wall_micros: u64, chunk: usize) -> String {
-    use semio_framework_os_flow::os_pack::json::{object, Value};
+    use semio_framework_pack_json::{object, Value};
     let deadline = semio_framework_job::default_now_us().map(|now| now.saturating_add(wall_micros));
     let mut outcome = self.tessellate_step(handle, tolerance, budget);
     while matches!(outcome, TessellationStepOutcome::Working { .. }) {
@@ -1184,12 +1244,12 @@ pub fn tessellate_step_envelope_json(&self, handle: &str, tolerance: f64, budget
         ]),
         TessellationStepOutcome::Failed { message } => return failed_envelope_json("tessellate.failed", &message),
     };
-    semio_framework_os_flow::os_pack::json::to_string(&envelope)
+    semio_framework_pack_json::to_string(&envelope)
 }
 pub fn tessellate_geometry_json_for_wasm(&self, handle: &str, tolerance: f64) -> String {
     match self.tessellate_geometry(handle, tolerance) {
-        Ok(mesh) => semio_framework_os_flow::os_pack::json::to_json_string(&mesh),
-        Err(error) => semio_framework_os_flow::os_pack::json::to_string(&semio_framework_os_flow::os_pack::json::object([("error".to_string(), semio_framework_os_flow::os_pack::json::Value::String(error))])),
+        Ok(mesh) => semio_framework_pack_json::to_json_string(&mesh),
+        Err(error) => semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("error".to_string(), semio_framework_pack_json::Value::String(error))])),
     }
 }
 pub fn dispose_geometry(&self, handle: &str) -> Result<(), String> {
@@ -1217,12 +1277,12 @@ pub fn export_solid_json(&self, handles: &[String], format: &str, deflection: f6
         }
     });
     match outcome {
-        Ok((data, binary)) => semio_framework_os_flow::os_pack::json::to_string(&semio_framework_os_flow::os_pack::json::object([
-            ("data".to_string(), semio_framework_os_flow::os_pack::json::Value::String(data)),
-            ("binary".to_string(), semio_framework_os_flow::os_pack::json::Value::Bool(binary)),
-            ("format".to_string(), semio_framework_os_flow::os_pack::json::Value::String(format.to_string())),
+        Ok((data, binary)) => semio_framework_pack_json::to_string(&semio_framework_pack_json::object([
+            ("data".to_string(), semio_framework_pack_json::Value::String(data)),
+            ("binary".to_string(), semio_framework_pack_json::Value::Bool(binary)),
+            ("format".to_string(), semio_framework_pack_json::Value::String(format.to_string())),
         ])),
-        Err(error) => semio_framework_os_flow::os_pack::json::to_string(&semio_framework_os_flow::os_pack::json::object([("error".to_string(), semio_framework_os_flow::os_pack::json::Value::String(error.to_string()))])),
+        Err(error) => semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("error".to_string(), semio_framework_pack_json::Value::String(error.to_string()))])),
     }
 }
 pub fn import_solid_json(&self, format: &str, data: &str, tolerance: f64) -> String {
@@ -1240,11 +1300,11 @@ pub fn import_solid_json(&self, format: &str, data: &str, tolerance: f64) -> Str
     });
     if let Ok(handles) = &outcome { claims.entry(self.state.authority).or_default().extend(handles.iter().cloned()); }
     match outcome {
-        Ok(handles) => semio_framework_os_flow::os_pack::json::to_string(&semio_framework_os_flow::os_pack::json::object([("handles".to_string(), semio_framework_os_flow::os_pack::json::from_dsl_value(&semio_framework_os_flow::os_dsl::ToValue::to_value(&handles)))])),
-        Err(error) => semio_framework_os_flow::os_pack::json::to_string(&semio_framework_os_flow::os_pack::json::object([("error".to_string(), semio_framework_os_flow::os_pack::json::Value::String(error.to_string()))])),
+        Ok(handles) => semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("handles".to_string(), semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&handles)))])),
+        Err(error) => semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("error".to_string(), semio_framework_pack_json::Value::String(error.to_string()))])),
     }
 }
-fn brep_invoke_inner(&self, method: &str, args_json: &str) -> Result<semio_framework_os_flow::os_pack::json::Value, BrepModuleError> {
+fn brep_invoke_inner(&self, method: &str, args_json: &str) -> Result<semio_framework_pack_json::Value, BrepModuleError> {
     let mut claims = self.state.claims.lock().map_err(|_| BrepModuleError::LockPoisoned)?;
     if self.is_closed() { return Err(BrepModuleError::InvalidArgs("geometry.session-closed".into())); }
     let args = invoke_args(args_json)?;
@@ -1446,7 +1506,7 @@ fn brep_invoke_inner(&self, method: &str, args_json: &str) -> Result<semio_frame
         },
     };
     if let Ok(value) = &result {
-        fn gather(value: &semio_framework_os_flow::os_pack::json::Value, handles: &mut BTreeSet<String>) {
+        fn gather(value: &semio_framework_pack_json::Value, handles: &mut BTreeSet<String>) {
             if let Some(handle) = value.get("handle").and_then(|value| value.as_str()) { handles.insert(handle.into()); }
             for key in ["handles", "vertices", "edges", "faces", "shells"] {
                 if let Some(values) = value.get(key).and_then(|value| value.as_array()) { handles.extend(values.iter().filter_map(|value| value.as_str().map(str::to_string))); }
@@ -1458,8 +1518,8 @@ fn brep_invoke_inner(&self, method: &str, args_json: &str) -> Result<semio_frame
 }
 pub fn brep_invoke_json(&self, method: &str, args_json: &str) -> String {
     match self.brep_invoke_inner(method, args_json) {
-        Ok(value) => semio_framework_os_flow::os_pack::json::to_string(&value),
-        Err(error) => semio_framework_os_flow::os_pack::json::to_string(&semio_framework_os_flow::os_pack::json::object([("error".to_string(), semio_framework_os_flow::os_pack::json::Value::String(error.to_string()))])),
+        Ok(value) => semio_framework_pack_json::to_string(&value),
+        Err(error) => semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("error".to_string(), semio_framework_pack_json::Value::String(error.to_string()))])),
     }
 }
 }
@@ -1525,8 +1585,30 @@ mod browser {
                 Ok(neural_engine::ValueRetirementStep::Blocked) => "{\"phase\":\"blocked\",\"items\":0,\"bytes\":0}".into(),
                 Ok(neural_engine::ValueRetirementStep::Complete) => "{\"phase\":\"complete\",\"items\":0,\"bytes\":0}".into(),
                 Ok(neural_engine::ValueRetirementStep::Pending { released_items,released_bytes }) => format!("{{\"phase\":\"pending\",\"items\":{released_items},\"bytes\":{released_bytes}}}"),
-                Err(error) => semio_framework_os_flow::os_pack::json::to_string(&semio_framework_os_flow::os_pack::json::object([("error".into(),semio_framework_os_flow::os_pack::json::Value::String(error))])),
+                Err(error) => semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("error".into(),semio_framework_pack_json::Value::String(error))])),
             }
         }
     }
+}
+
+/// 🧹️ Cached analytic labels pay the same explicit item and byte retirement grants.
+#[cfg(test)]
+#[test]
+fn retired_analytic_mesh_metadata_obeys_exact_byte_grants() {
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧫️fixtures/🎯️component-picking/🔣️.json")).unwrap();
+    let grants=&fixture["retirement"];
+    let count=grants["labels"].as_u64().unwrap() as usize;
+    let label_bytes=grants["labelBytes"].as_u64().unwrap() as usize;
+    let items=grants["itemsPerTurn"].as_u64().unwrap() as usize;
+    let bytes=grants["bytesPerTurn"].as_u64().unwrap() as usize;
+    let mesh=semio_framework::MeshData{component_references:BTreeMap::from([(String::from("face"),vec!["x".repeat(label_bytes);count])]),..Default::default()};
+    let mut payloads=PayloadRetirement::default();
+    payloads.frontier(RetiredMeshes(BTreeMap::from([((String::from("mesh"),0),mesh)])));
+    let(mut turns,mut released)=(0,0);
+    while !payloads.terminal_is_empty() {
+        turns+=1;assert!(turns<=grants["maximumSteps"].as_u64().unwrap() as usize);
+        match payloads.close_step(items,bytes) {semio_framework_3d::brep::engine::retirement::NativeRetirementStep::Pending{released_items,released_bytes}=>{assert!(released_items<=items && released_bytes<=bytes);released+=released_bytes;},semio_framework_3d::brep::engine::retirement::NativeRetirementStep::Complete=>{},other=>panic!("unexpected retirement {other:?}")}
+    }
+    assert!(released>=count*label_bytes,"metadata label bytes were dropped without explicit grants: {released}");
+    println!("[DEBUG] Analytic metadata labels={count} exactByteGrant={bytes} releasedBytes={released} turns={turns}");
 }

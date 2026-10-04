@@ -5,10 +5,13 @@ use super::ChangeGeometryParameters;
 use crate::{Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &ChangeGeometryParameters, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
+pub fn inverse(payload: &ChangeGeometryParameters, base: &Vdi3805Snapshot) -> Result<Vec<Vdi3805Mutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(geometry) = base.geometry.get(&payload.id) else {
         return Vec::new();
     };
     vec![Vdi3805Mutation::ChangeGeometryParameters(ChangeGeometryParameters { id: payload.id.clone(), new_parameters: geometry.parameters.clone() })]
+
+    })())
 }
 //#endregion 🔖️Inverse

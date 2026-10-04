@@ -1,6 +1,6 @@
 //! 🧪️ Typed reader byte parity, exact Arc ownership, cancellation, and worker laws.
 
-use super::super::borrowed_tests::{fixture, MapLifetime, MapMutation, MapRetirementFactory};
+use super::super::borrowed_tests::{MapLifetime, MapMutation, MapRetirementFactory, fixture};
 use super::*;
 use std::sync::atomic::Ordering;
 
@@ -8,7 +8,7 @@ use std::sync::atomic::Ordering;
 struct RootRetirementFactory;
 struct EmptyRetirement;
 impl ErasedSnapshotRetirement for EmptyRetirement {
-    fn close_step(&mut self, _items: usize, _bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, _items: usize, _bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         Ok(SnapshotRetirementStep::Complete)
     }
     fn terminal_is_empty(&self) -> bool {
@@ -173,12 +173,14 @@ fn canonical_reader_unclosed_drop_preserves_owned_root_and_does_not_double_panic
     assert_eq!(lifetime.root_drops.load(Ordering::SeqCst), 0);
     assert!(lifetime.active_iterators.load(Ordering::SeqCst) > 0);
     let (reader, _, lifetime) = make_reader();
-    assert!(std::thread::spawn(move || {
-        let _reader = reader;
-        panic!("primary reader failure");
-    })
-    .join()
-    .is_err());
+    assert!(
+        std::thread::spawn(move || {
+            let _reader = reader;
+            panic!("primary reader failure");
+        })
+        .join()
+        .is_err()
+    );
     assert_eq!(lifetime.root_drops.load(Ordering::SeqCst), 0);
 }
 //#endregion 🧪️ReaderLifecycle
@@ -336,14 +338,15 @@ fn canonical_reader_sealer_failed_prefix_is_accounted_without_minting_authority(
             oracle.forwards.push(serde_json::json!([fixture["text"], null]).into());
             let expected = serde_json::to_string(&test_support::SerdeValue(&oracle.to_value())).unwrap();
             let prefix = &expected.as_bytes()[..expected.find("null]").unwrap()];
-            let edit = Edit { line: oracle.line,
+            let edit = Edit {
+                line: oracle.line,
                 id: oracle.id,
                 actor: oracle.actor,
                 forwards: vec![ErrorRoot { text: fixture["text"].as_str().unwrap().into(), borrowed, error: ErrorLeaf }],
                 inverse: Vec::new(),
                 mutation_meta: oracle.mutation_meta,
-                description: oracle.description, verb: oracle.verb,
-                coalesce_key: oracle.coalesce_key,
+                description: oracle.description,
+                verb: oracle.verb,
                 sequence_number: oracle.sequence_number,
                 started_at: oracle.started_at,
                 finished_at: oracle.finished_at,

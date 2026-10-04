@@ -1,0 +1,13 @@
+# GIS/Layout Canonical Prerequisite Capsule
+
+Read-only source preparation, 2026-10-04. No production files changed and no compiler/Source/Native execution. Exact current before/after strings are in `🗑️generated/independent-gis-layout-canonical-prerequisite-capsule.json` in this ticket. This supplies namespace/dependency pairings only; semantic repairs and all owning assertions remain unchanged.
+
+The capsule contains nine file entries: five GIS Rust files (32 changed-line replacements: 5 imported-map, 1 SQLite provider, 8 Pack owner, 7 controlled Pack encoder, 11 SQLite tests); one Layout Rust file (1 changed-line replacement); and three Cargo manifests (one dependency-anchor replacement each, adding two named dependencies). Total: 36 replacement entries. Every replacement has exact before, after and expected occurrence count. Manifest rows require rechecking absence of both dependencies before applying; concurrent bindings must not be duplicated.
+
+Value domain/control qualifications go directly to `semio_framework_value`; Record grammar/spec/field/producer qualifications go directly to `semio_framework_dsl_record`; DslRecord derive goes directly to `semio_framework_dsl_record_derive`. No alias or compatibility export is introduced. Existing function structure, scalar variants, bytes, IEEE bit comparisons, ordered object/duplicate occurrences, child identities, budgets and assertions remain intact.
+
+GIS Pack parse_dsl's three removed helper origins and Layout mutation text's one origin use `semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message, semio_framework_diagnostic::TextSpan::at(1, 1))`. The actual current constructor signature is Diagnostic/🦀️.rs:67; TextSpan::at is the canonical start-position constructor. The three GIS diagnostic messages and Layout formatted message are preserved literally. The map-validation function-pointer conversion becomes an explicit closure to supply kind/span, with no fallback. These are whole-input identity/validation errors; no existing more precise parser span is discarded by these four source substitutions.
+
+The obsolete ignored GIS internal `dsl(extension)` annotation is deliberately outside this minimal compiler prerequisite capsule. No product DslArtifact or retired DslOps is added. Canonical Record dependency bindings are prepared for GIS/Layout/CAD only; CAD references-owner namespace work remains separately identified in the readiness report.
+
+Root must read current production strings before mounting and rerun authentic unchanged owning gates afterward. This capsule is not evidence of successful compilation or runtime behavior.

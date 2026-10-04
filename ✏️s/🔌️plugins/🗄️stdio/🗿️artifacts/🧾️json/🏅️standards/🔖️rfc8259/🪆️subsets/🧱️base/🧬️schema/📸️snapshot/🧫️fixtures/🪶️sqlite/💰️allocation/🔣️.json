@@ -1,0 +1,8 @@
+{
+  "schema": "owned JSON 世界\u0000",
+  "schemaRepeat": 10000,
+  "literal": "文🌠\u0000",
+  "semanticBytes": 1,
+  "maximumAllocationBytes": 16777216,
+  "tinyAllocationBytes": 1
+}

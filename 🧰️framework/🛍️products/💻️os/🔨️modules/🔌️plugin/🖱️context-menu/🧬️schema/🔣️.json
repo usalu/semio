@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.plugin.context-menu-selection/v1",
+  "title": "Context-menu selection glossary and phrase cases",
+  "description": "🗣️ The selection-kind words a context-menu count phrase names (CLDR cardinal `one`/`other` per locale), the framework's delete-selection labels, and the language-agnostic phrase and delete-row cases every implementation must reproduce.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "kinds", "labels", "cases", "deleteRows"],
+  "properties": {
+    "schema": { "const": "semio.plugin.context-menu-selection/v1" },
+    "kinds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["node", "edge", "frame", "item", "part"],
+      "properties": {
+        "node": { "$ref": "#/$defs/kindWords" },
+        "edge": { "$ref": "#/$defs/kindWords" },
+        "frame": { "$ref": "#/$defs/kindWords" },
+        "item": { "$ref": "#/$defs/kindWords" },
+        "part": { "$ref": "#/$defs/kindWords" }
+      }
+    },
+    "labels": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["deleteSelection", "nothingSelected"],
+      "properties": {
+        "deleteSelection": { "$ref": "#/$defs/localized" },
+        "nothingSelected": { "$ref": "#/$defs/localized" }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "locale", "counts", "expected"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "locale": { "$ref": "#/$defs/locale" },
+          "counts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["count", "kind"],
+              "properties": {
+                "count": { "type": "integer", "minimum": 0 },
+                "kind": { "$ref": "#/$defs/kind" }
+              }
+            }
+          },
+          "expected": { "type": ["string", "null"], "minLength": 1 }
+        }
+      }
+    },
+    "deleteRows": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "locale", "nodes", "edges", "label", "reason"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "locale": { "$ref": "#/$defs/locale" },
+          "nodes": { "type": "integer", "minimum": 0 },
+          "edges": { "type": "integer", "minimum": 0 },
+          "label": { "type": "string", "minLength": 1 },
+          "reason": { "type": ["string", "null"], "minLength": 1 }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "locale": { "enum": ["en", "de"] },
+    "kind": { "enum": ["node", "edge", "frame", "item", "part"] },
+    "forms": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["one", "other"],
+      "properties": {
+        "one": { "type": "string", "minLength": 1 },
+        "other": { "type": "string", "minLength": 1 }
+      }
+    },
+    "kindWords": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["en", "de"],
+      "properties": {
+        "en": { "$ref": "#/$defs/forms" },
+        "de": { "$ref": "#/$defs/forms" }
+      }
+    },
+    "localized": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["en", "de"],
+      "properties": {
+        "en": { "type": "string", "minLength": 1 },
+        "de": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

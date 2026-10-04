@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/transform/mutation/drag-path-points/schema.json",
   "title": "DragPathPoints",
+  "x-semio-inverse-rows": { "perTarget": { "targets": 1 } },
   "description": "The `drag-path-points` mutation record — a relative, parametric drag of path anchors and handles by one world-space offset, applied through each path's own world transform; an anchor carries its attached tangents. Internally tagged `\"mutation\": \"dragPathPoints\"`.",
   "type": "object",
   "additionalProperties": false,

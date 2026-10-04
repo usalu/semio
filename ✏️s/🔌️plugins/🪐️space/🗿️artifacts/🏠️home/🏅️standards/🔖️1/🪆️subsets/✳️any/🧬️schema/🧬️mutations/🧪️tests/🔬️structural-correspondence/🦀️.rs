@@ -6,11 +6,11 @@ fn direct_owner_descriptor_surfaces_and_catalog_correspond() {
     let mutation_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
     let owner = mutation_root.join("🔢️change-catalog-generation");
     let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
-    let descriptor: pack::JsonValue = pack::parse_json(&std::fs::read_to_string(owner.join("🔣️.json")).expect("direct descriptor")).expect("valid descriptor");
-    let catalog: pack::JsonValue = pack::parse_json(&std::fs::read_to_string(mutation_root.join("../../🔮️oracles/🔣️.json")).expect("language-neutral catalog")).expect("valid catalog");
+    let descriptor: semio_framework_pack_json::Value = semio_framework_pack_json::parse(&std::fs::read_to_string(owner.join("🔣️.json")).expect("direct descriptor"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("valid descriptor");
+    let catalog: semio_framework_pack_json::Value = semio_framework_pack_json::parse(&std::fs::read_to_string(mutation_root.join("../../🔮️oracles/🔣️.json")).expect("language-neutral catalog"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("valid catalog");
     let mutation_catalog = &catalog["mutationCatalogs"][0];
     assert_eq!(<SHomeMutation as protocol::SemanticMutation<SHomeSnapshot>>::kinds()[0].kind, "change-catalog-generation");
-    assert_eq!(mutation_catalog["kinds"], pack::json!(["change-catalog-generation"]));
+    assert_eq!(mutation_catalog["kinds"], semio_framework_pack_json::json!(["change-catalog-generation"]));
     assert!(source.contains("MutationKind") && source.contains("SEMANTICS"));
     assert!(!source.contains(concat!("::", "mutation::")));
     assert_eq!(descriptor["semanticKind"], "change-catalog-generation");
@@ -18,8 +18,8 @@ fn direct_owner_descriptor_surfaces_and_catalog_correspond() {
     assert_eq!(descriptor["payloadSchema"], "🧬️schema/🔣️.json");
     assert_eq!(descriptor["textOpcode"], "change-catalog-generation");
     assert_eq!(descriptor["binaryTag"], 0);
-    assert_eq!(descriptor["outcomeClasses"], pack::json!(["applied", "no-op"]));
-    assert_eq!(descriptor["requiredLanguageSurfaces"], pack::json!(["rust", "typescript", "graphql", "protobuf", "json-schema", "text", "binary"]));
+    assert_eq!(descriptor["outcomeClasses"], semio_framework_pack_json::json!(["applied", "no-op"]));
+    assert_eq!(descriptor["requiredLanguageSurfaces"], semio_framework_pack_json::json!(["rust", "typescript", "graphql", "protobuf", "json-schema", "text", "binary"]));
     {
         assert!(owner.join("🧬️schema/🔣️.json").is_file());
     }

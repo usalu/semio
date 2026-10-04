@@ -23,10 +23,13 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetForm {
         MutationOutcome::new(diff::diff_set_form(base, self.form.clone()))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         let _ = base;
         match base.forms.iter().find(|item| item.id == self.form.id) { Some(previous) => vec![PdfMutation::SetForm(SetForm { form: previous.clone() })], None => vec![PdfMutation::RemoveForm(super::remove_form::RemoveForm { id: self.form.id.clone() })] }
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set form {}", self.form.id), &format!("Formular {} setzen", self.form.id))

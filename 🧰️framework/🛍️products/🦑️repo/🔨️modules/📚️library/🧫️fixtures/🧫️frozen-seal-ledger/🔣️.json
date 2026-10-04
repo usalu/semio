@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "contract": "frozen-seal-ledger-v1",
+  "pinnedAt": "9b605a4550f",
+  "pinnedFor": "energy-history-fixture-audit",
+  "contracts": {
+    "cad-draw-projection-vectors-v1": { "seal": "2da20ce17ebe0db9f12f20eb02bbb4c28964e219cb1f9aeb495f1afc833f534a", "coordinatesSha256": "5417dfd5c840977e53d86531147c9680d7dc6132dcdf43ce6fe83067b6dbe25d", "reseals": [
+      { "seal": "036c10f738537a4acecf429e6e6e60f2a91a24e2bd74ad5448874cb702375647", "coordinates": "changed", "coordinatesSha256": "51393583b5a086a5b73119895d571fdc898ad499bc37c19a2ac5e43054c7dd52", "recordedBy": "13163ff3ae2", "reason": "Golden re-authored for the Draw `🖍️drawing` artifact rename and the 229-member CAD model catalog: coordinate pointers and values changed, `liveBindings` introduced." },
+      { "seal": "d09828ca39594693b6b849fc34993664f46bcaae84188d68901916d0fb76bafd", "coordinates": "unchanged", "coordinatesSha256": "51393583b5a086a5b73119895d571fdc898ad499bc37c19a2ac5e43054c7dd52", "recordedBy": "3eeee4f9119", "reason": "`liveBindings` rebound to 7 renamed CAD carriers." },
+      { "seal": "838125bd676e82b0ca1aa5c5241b3685a12cdc98ec991c60baf2b258fe932d77", "coordinates": "unchanged", "coordinatesSha256": "51393583b5a086a5b73119895d571fdc898ad499bc37c19a2ac5e43054c7dd52", "recordedBy": "25bb77059d6", "reason": "`liveBindings` rebound to 43 REPO-PATH-BUDGET carrier renames." },
+      { "seal": "9fcae9b81ab088b27b15665751b706d3827aa5b76b23765486845d2b50cbe2bf", "coordinates": "unchanged", "coordinatesSha256": "51393583b5a086a5b73119895d571fdc898ad499bc37c19a2ac5e43054c7dd52", "recordedBy": "2026/09/30/NON-DESTRUCTIVE-HISTORY-EDITING", "reason": "`liveBindings` moved out of the sealed golden into the unsealed `🧫️cad-draw-live-bindings` fixture, so carrier renames never touch sealed bytes again." }
+    ] },
+    "draw-evidence-async-test-attr-scan-repo-wide": { "seal": "9281e8148ef06f5d30eb94d44459ef8639fcf2f73983fec5264b04194750c6ca" },
+    "draw-evidence-coordinator-official-tool-jobs-live-2026-08-26": { "seal": "118d381cdef29629a814d56c7032f542f288d70817b38f5aa99d3ba63761aac2" },
+    "draw-evidence-coordinator-writer-set-locale-tool-jobs": { "seal": "7016a45cc696f63985e08e07de5b3f429666c077622771296da7dc0e6c691d27" },
+    "draw-evidence-p2d-tool-jobs-a": { "seal": "37113aace8ab198ed495f26a68a5c472a0fb2fb3b92f41e2e8532e65b40bbcbd" },
+    "draw-evidence-p2d-tool-jobs-b": { "seal": "e2359422128915dd56321b80d0833e3c27dd1c0814c9fec5f767ad2f50fad369" },
+    "draw-evidence-p6g-tool-jobs-a": { "seal": "570dd8f9b083ff8e2b698a55b4b1fd3e5d145ad6eafd364ed8f9be042e7f3b3d" },
+    "draw-evidence-p6g-tool-jobs-b": { "seal": "839d3ed5987dd787d2737f49d1e0e2c5adbc7b554d2b5e40546701ba150e1257" },
+    "draw-evidence-p6g-tool-jobs-repair": { "seal": "d4c02c407da0983634e5c1c285aaf04feffe7ca897f5dbf7fc853c1e454975c4" },
+    "draw-evidence-puzzle-tool-jobs-after-mounted-fill": { "seal": "cd8c6c4103fdb33ac8121bc9bba706951ad0e0a55b3de26c3ea961b53d3078d2" },
+    "draw-evidence-sol-draw-envelope-peer-roots-2026-08-26": { "seal": "efae54bfa3518dfe3bb3c17ef8ef5f045d0c9d216e9698d03ae800d25f4b5cc3" },
+    "draw-evidence-sol-draw-instance-owner-preview-final-2-2026-08-26": { "seal": "ba2cac13e200aadd96d5b4d4b7731d3354a9a3049a16311e463dadea8eb290d9" },
+    "draw-evidence-sol-draw-instance-owner-preview-final-2026-08-26": { "seal": "1f9e9e42e5a18f4e16e9c2d2b9f308c4b57ad03d537c8cf94f27d624391e48a3" },
+    "draw-evidence-sol-draw-instance-owner-preview-official-2026-08-26": { "seal": "e90313c7cc555b79939aabc90751b319dc5e9e36f3072866dc242eaf366f05e5" },
+    "draw-evidence-sol-draw-real-owner-checkpoint-2026-08-26": { "seal": "e7f53ce8ea27003f5df828772fea98f1edcade11a2d43548a5c4ae92447171a7" },
+    "draw-evidence-sol-draw-semantic-honesty-final-2026-08-26": { "seal": "be808ecfb183ae0575bafd724ec8f6c4cc8332af938493b7b655222a356d743e" },
+    "draw-evidence-sol-envelope-peer-roots-final-2026-08-26": { "seal": "af16388d20dd2105c80b19a8aacb982c07c101b5f0fd4b02f2b323e72f608d55" },
+    "draw-evidence-sol-fem2d-mounted-final-2026-08-26": { "seal": "f10c516947e4e1fbdf509bfd0be266f5408a90b1a9410ea106f8de2538a88edf" },
+    "draw-evidence-sol-fixed-operation-language-neutral-draw-honesty-2026-08-26": { "seal": "e9fd254cb3295e23aa1cd135cf1352c9108a55d451dfc998aa59c39cfc1a9ef1" },
+    "draw-evidence-sol-fixed-operation-registry-foundation-2026-08-26": { "seal": "cac2efc383277e47039a5b31d9dba90b11838b8b08aebe3ecaaa3ebef4fc295b" },
+    "draw-evidence-sol-fixed-operation-registry-qualified-final-2026-08-26": { "seal": "c7d40096db089d068a12b3a26a4b88f757a15a0b43478e52aefe745e34deb5aa" },
+    "draw-evidence-sol-fleet-s1": { "seal": "265a0d6ce0211ae51264da1e77b93fb3fdd7be7a2bd2f0bf39cb3d8fc7778347" },
+    "draw-evidence-sol-global-payload-inventory-2026-08-26": { "seal": "4ba812096bee2b1a238b844be9ddf173401013acd949f8abe52d85067d5d8436" },
+    "draw-evidence-sol-global-payload-inventory-live-2026-08-26": { "seal": "a2ea1e6f0653e4e6080a38024ea09828354a348b8d085a1548a8cef9993599ba" },
+    "draw-evidence-sol-global-payload-owner-local-1-2026-08-26": { "seal": "7f95f67f5a0bbf7a089f70f605072b9fb5c649de01b1e9491477874521f519e9" },
+    "draw-evidence-sol-media-mounted-after-2026-08-26": { "seal": "fa3e28fcc2784b3ed3d2be37209ed6c4508d2c74be9ca5ba18d2e871189e1527" },
+    "draw-evidence-sol-member-owner-final-2026-08-26": { "seal": "1974539b1ae16278b117d48596676ad0dc2622829a032a8eab68e0993ebf6b11" },
+    "draw-evidence-sol-present-writer-envelope-2026-08-26": { "seal": "e77e3b91058e138229cb21fa7753a8703a9d3e45e04d11d15615d423034aaf69" },
+    "draw-evidence-sol-structural-universal-final-2-2026-08-26": { "seal": "c70ecf1edfea457accfbd7c22e26b8e2a73706ca305d254fd017d479aca57585" },
+    "draw-evidence-sol-structural-universal-final-2026-08-26": { "seal": "0102a5668007a771567d64c1462c86895a5dc4a11a1c8935011acc94359b2d8c" },
+    "draw-evidence-sol-structural-universal-final-3-2026-08-26": { "seal": "60b9fccf63b710bf0f1023b4660cb135ee8a6ce8090b8256329111d7b294c854" },
+    "draw-evidence-sol-universal-media-final-2026-08-26": { "seal": "f247bf2bb721741c9d3b515fe402168667b88f3d9e32ca6e5fe9ae37696424e0" },
+    "draw-evidence-sol-universal-paged-after-2026-08-26": { "seal": "159bd82202fd9108abdd766bf5d8602adc5a2d5e84a8d736ba2e70efb55ac910" },
+    "draw-evidence-sol-universal-retained-after-2026-08-26": { "seal": "480a3f76e10e8db4aa67db1998aa81b11811fb9e551214976751230757e5a817" },
+    "draw-evidence-sol-universal-retained-baseline-2026-08-26": { "seal": "c2ff72b0829fe06d0a3f8a64456b5fca855ef102b1e0fefc2206b6483352bb61" },
+    "draw-evidence-writer-official-tool-jobs-2026-08-26": { "seal": "3cdf3bad8c13a0dc33e778a46adb68c56dd574bee5bc71bbef23ef43a01e3411" },
+    "readme-authored-correction-vector-v1": { "seal": "1044f4a170f113d5c07314bcf6de9e54d324614d00952e9267c0e17e838fb6e8" },
+    "readme-current-source-revision-input": { "seal": "b0e8738bb09a05691270e20d79d7c2791e071ae17b939399ef0a5169c77f18ce", "coordinatesSha256": "fcb1623ad9c52f9d0b6e4b8b0c73b9b9aedbebadf3e5acd9e5e1b4bed8fdb6a6", "reseals": [
+      { "seal": "391975e42f0fdf2b3210b184bf3260478d789a8cff8864be220fe25f489a2157", "coordinates": "unchanged", "coordinatesSha256": "fcb1623ad9c52f9d0b6e4b8b0c73b9b9aedbebadf3e5acd9e5e1b4bed8fdb6a6", "recordedBy": "ebbace9b320", "reason": "License-owner catalog and testing-readme expectations moved from `🧫️fixtures` to `🖼️assets`; input paths and digests re-pinned." },
+      { "seal": "4e9e941da04772c48096c4bc94980058653e1aa6a7c1c313d7398b65cfdb8ffa", "coordinates": "unchanged", "coordinatesSha256": "fcb1623ad9c52f9d0b6e4b8b0c73b9b9aedbebadf3e5acd9e5e1b4bed8fdb6a6", "recordedBy": "8add1df1473", "reason": "Fixture-input manifest and license-owner catalog digests re-pinned after their upstream edits." }
+    ] },
+    "readme-reviewed-expectation-input": { "seal": "9cd32b7ec16ebcfb30b537da157add640847dd434fa496bac8950da806497ff4", "coordinatesSha256": "e7661a51daf71137f83ee440721e969bb8f58be1396047598d37a2c007a44995", "reseals": [
+      { "seal": "1d587dbf013d3462143e20f5f459964e33ace67697bbd59f451d1f8428d6907e", "coordinates": "unchanged", "coordinatesSha256": "e7661a51daf71137f83ee440721e969bb8f58be1396047598d37a2c007a44995", "recordedBy": "ebbace9b320", "reason": "License-owner catalog moved from `🧫️fixtures` to `🖼️assets`; its path re-pinned." },
+      { "seal": "952d2ea05c4f68fc94dadd0a782652e7b6c79ce79b985c546341e9e6f6d7fe1e", "coordinates": "unchanged", "coordinatesSha256": "e7661a51daf71137f83ee440721e969bb8f58be1396047598d37a2c007a44995", "recordedBy": "8add1df1473", "reason": "License-owner catalog digest re-pinned after its upstream edit." }
+    ] },
+    "remaining-package-purity-history-v1": { "seal": "b256184d693ca982f19364c6b17a717a17eab24eb66257130f613f88338341c3", "reseals": [
+      { "seal": "9d425633770529af52e49bf3a740355cbb84bcff727900c1bb3adb6107fea41f", "coordinates": "changed", "coordinatesSha256": "ca3f7d4566573c79e62b51219a703f3c7ecf2cabc249b428a6600087caffb39b", "recordedBy": "cd96692e52f", "reason": "Census source-set digest re-pinned; the bytes sealed at the pin are not recoverable from history, so the coordinates are not claimed unchanged." }
+    ] }
+  },
+  "later": {},
+  "catalogs": {
+    "nested-cargo-packages-v1": { "family": "semanticPackageProjectionContracts", "seal": "9445dea9437059bf41cbc40487e4e0c1b66b7ba5f79dfb0ada9af0c10bec38af", "sealedBy": "8add1df1473", "reseals": [
+      { "seal": "21b8e001c04ee5c44692e56b347877df6b6b75c2922969e5ad44f9e490582512", "recordedBy": "2026/09/30/NON-DESTRUCTIVE-HISTORY-EDITING", "evidence": { "revision": "fe7c8a8f8bd", "date": "2026-09-05" }, "reason": "The 09-05 member-emoji pass renamed seven wgpu target member directories in `members-of-wgpu-target`; the catalog's destination-side directory segments follow it. Source-side file names keep their historical spelling.", "renames": [
+        { "from": "🧵️browser-boot", "to": "🚀️browser-boot" },
+        { "from": "🧵️browser-frame-transport", "to": "🚚️browser-frame-transport" },
+        { "from": "🧵️browser-interactive-job-port", "to": "🔌️browser-interactive-job-port" },
+        { "from": "🧵️browser-worker", "to": "🌐️browser-worker" },
+        { "from": "🧵️frame-worker", "to": "🎞️frame-worker" },
+        { "from": "🧵️interactive-job-registry", "to": "📇️interactive-job-registry" },
+        { "from": "🧊️renderer-boot", "to": "🎬️renderer-boot" }
+      ] },
+      { "seal": "0b43c775ed020418f913cc56ac276cc871472f3467ccb4b37573237c79bc47e7", "recordedBy": "2026/09/30/NON-DESTRUCTIVE-HISTORY-EDITING", "evidence": { "revision": "fe7c8a8f8bd", "date": "2026-09-05" }, "reason": "The 09-05 emoji-presentation pass moved the renderer engine directory from `🧑️‍🎨️engine` (U+FE0F inside the ZWJ sequence) to `🧑‍🎨engine` (115 tracked files before, 123 after, none left at the old spelling); every catalog path under it follows, so the wgpu and jco roots name the live directory again.", "renames": [
+        { "from": "🧑️‍🎨️engine", "to": "🧑‍🎨engine" }
+      ] }
+    ] },
+    "readme-license-owner-leaves-v1": { "family": "semanticOwnedFileProjectionContracts", "seal": "b60f16acbde34545d29abfeb50a55d5db6115b2d316b33011db07da34ca7afe9", "sealedBy": "8add1df1473" }
+  }
+}

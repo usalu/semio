@@ -28,9 +28,12 @@ impl MutationKind<Grid3dSnapshot, Grid3dMutation> for ChangePeriodicity {
     fn diff(&self, base: &Grid3dSnapshot) -> protocol::MutationOutcome<Grid3dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Grid3dSnapshot) -> Vec<Grid3dMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &Grid3dSnapshot) -> Result<Vec<Grid3dMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change periodicity to {}/{}/{}", self.periodic_x, self.periodic_y, self.periodic_z), &format!("Periodizität auf {}/{}/{} ändern", self.periodic_x, self.periodic_y, self.periodic_z))
     }

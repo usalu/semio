@@ -56,20 +56,19 @@ fn trace_bitmap_errors_on_short_buffer() {
 }
 
 #[test]
-fn trace_bitmap_errors_when_no_pixels_above_threshold() {
+fn trace_bitmap_returns_empty_geometry_when_no_pixels_above_threshold() {
     let mask = vec![0_u8; 16];
-    let err = trace_bitmap_paths(4, 4, &mask, 0.5, 0.5).unwrap_err();
-    assert!(matches!(err, DrawingError::Operation(message) if message.contains("no contours")));
+    assert!(trace_bitmap_paths(4, 4, &mask, 0.5, 0.5).unwrap().is_empty());
 }
 
 #[test]
-fn douglas_peucker_returns_points_unchanged_when_epsilon_is_non_positive() {
-    let points: Vec<Vec2> = vec![[0.0, 0.0], [1.0, 5.0], [2.0, 0.0]];
-    assert_eq!(douglas_peucker(&points, 0.0), points);
+fn trace_bitmap_rejects_invalid_parameters() {
+    assert!(trace_bitmap_paths(1, 1, &[255], f64::NAN, 0.0).is_err());
+    assert!(trace_bitmap_paths(1, 1, &[255], 0.5, -1.0).is_err());
 }
 
 #[test]
 fn perpendicular_distance_handles_degenerate_zero_length_line() {
-    let dist = perpendicular_distance([3.0, 4.0], [0.0, 0.0], [0.0, 0.0]);
+    let dist = distance([3.0, 4.0], [0.0, 0.0], [0.0, 0.0]);
     assert!((dist - 5.0).abs() < 1e-9);
 }

@@ -1,3 +1,0 @@
-# 🧬️ change-timestamp/ChangeTimestamp
-scalar ChangeTimestampMutationValue
-input ChangeTimestampMutation { time: ChangeTimestampMutationValue }

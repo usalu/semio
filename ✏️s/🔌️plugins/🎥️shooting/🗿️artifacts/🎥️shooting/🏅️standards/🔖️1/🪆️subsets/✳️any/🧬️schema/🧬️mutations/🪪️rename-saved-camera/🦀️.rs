@@ -20,9 +20,12 @@ impl MutationKind<ShootingSnapshot, ShootingMutation> for RenameSavedCamera {
     fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<ShootingMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename saved camera to \"{}\"", self.new_label), &format!("Gespeicherte Kamera in \"{}\" umbenennen", self.new_label))
     }

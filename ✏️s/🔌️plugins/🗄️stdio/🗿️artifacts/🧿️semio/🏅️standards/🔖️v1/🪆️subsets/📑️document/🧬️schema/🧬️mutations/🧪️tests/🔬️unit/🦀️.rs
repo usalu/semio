@@ -28,7 +28,7 @@ async fn insert_then_remove_block_apply_and_inverse() {
     assert_eq!(after.blocks.len(), 3);
     assert_eq!(after.blocks[1], DocBlock::paragraph("inserted"));
 
-    let inverses = Mutation::inverse(&insert, &base);
+    let inverses = Mutation::inverse(&insert, &base).expect("valid retained mutation inverse fixture");
     let mut restored = after.clone();
     for inv in &inverses {
         apply_semio_document_mutation(&mut restored, inv);
@@ -49,7 +49,7 @@ async fn nested_quote_and_list_path_addressing_apply_and_inverse() {
     let DocBlock::Quote { blocks } = &after.blocks[2] else { panic!("quote") };
     let DocBlock::Paragraph { runs, .. } = &blocks[0] else { panic!("paragraph") };
     assert_eq!(runs[0].text, "changed quote");
-    for inv in Mutation::inverse(&mutation, &base) {
+    for inv in Mutation::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
         apply_semio_document_mutation(&mut after, &inv);
     }
     assert_eq!(after, base);
@@ -61,7 +61,7 @@ async fn nested_quote_and_list_path_addressing_apply_and_inverse() {
     let DocBlock::List { items, .. } = &after2.blocks[3] else { panic!("list") };
     let DocBlock::Paragraph { runs, .. } = &items[0].blocks[0] else { panic!("paragraph") };
     assert_eq!(runs[0].text, "changed item");
-    for inv in Mutation::inverse(&list_mutation, &base) {
+    for inv in Mutation::inverse(&list_mutation, &base).expect("valid retained mutation inverse fixture") {
         apply_semio_document_mutation(&mut after2, &inv);
     }
     assert_eq!(after2, base);
@@ -77,7 +77,7 @@ async fn table_path_addressing_sets_nested_cell_content() {
     apply_semio_document_mutation(&mut after, &mutation);
     let DocBlock::Table { rows } = &after.blocks[2] else { panic!("table") };
     assert_eq!(rows[0].cells[0].blocks[0], DocBlock::paragraph("changed cell"));
-    for inv in Mutation::inverse(&mutation, &base) {
+    for inv in Mutation::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
         apply_semio_document_mutation(&mut after, &inv);
     }
     assert_eq!(after, base);
@@ -90,7 +90,7 @@ async fn style_and_image_mutations_apply_and_inverse() {
     let mut after = base.clone();
     apply_semio_document_mutation(&mut after, &insert);
     assert_eq!(after.styles.len(), 2);
-    for inv in Mutation::inverse(&insert, &base) {
+    for inv in Mutation::inverse(&insert, &base).expect("valid retained mutation inverse fixture") {
         apply_semio_document_mutation(&mut after, &inv);
     }
     assert_eq!(after, base);
@@ -103,7 +103,7 @@ async fn style_and_image_mutations_apply_and_inverse() {
     let mut after2 = with_img.clone();
     apply_semio_document_mutation(&mut after2, &set_bytes);
     assert_eq!(after2.images[0].mime, "image/jpeg");
-    for inv in Mutation::inverse(&set_bytes, &with_img) {
+    for inv in Mutation::inverse(&set_bytes, &with_img).expect("valid retained mutation inverse fixture") {
         apply_semio_document_mutation(&mut after2, &inv);
     }
     assert_eq!(after2, with_img);
@@ -116,7 +116,7 @@ async fn style_and_image_mutations_apply_and_inverse() {
 /// parses Rust, so this is what makes the declaration honest.
 #[test]
 fn kinds_match_the_enum_and_the_catalog() {
-    assert_eq!(KINDS.len(), 17, "KINDS must name exactly one entry per declared SemioDocumentMutation variant");
+    assert_eq!(KINDS.len(), 18, "KINDS must name exactly one entry per declared SemioDocumentMutation variant");
     let mut seen = vec![false; KINDS.len()];
     for m in demo_mutation_cases() {
         let keyword = print_document_mutation(&m).split(' ').next().expect("printed op is never empty").to_string();
@@ -168,6 +168,7 @@ fn sweep_b() -> SemioDocumentSnapshot {
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sample_mutations() -> Vec<SemioDocumentMutation> {
     vec![
+        SemioDocumentMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         SemioDocumentMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: sweep_b() }),
         SemioDocumentMutation::InsertBlock(insert_block::InsertBlock { path: DocBlockPath::top(1), block: DocBlock::paragraph("x") }),
         SemioDocumentMutation::RemoveBlock(remove_block::RemoveBlock { path: DocBlockPath::top(0) }),
@@ -222,7 +223,7 @@ async fn inverse_law() {
 
         let mut round_tripped = base.clone();
         apply_semio_document_mutation(&mut round_tripped, &mutation);
-        for inverse_mutation in <SemioDocumentMutation as Mutation<SemioDocumentSnapshot>>::inverse(&mutation, &base) {
+        for inverse_mutation in <SemioDocumentMutation as Mutation<SemioDocumentSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
             apply_semio_document_mutation(&mut round_tripped, &inverse_mutation);
         }
         assert_eq!(round_tripped, base, "inverse_law (mutation-level).await failed for {mutation:?}");

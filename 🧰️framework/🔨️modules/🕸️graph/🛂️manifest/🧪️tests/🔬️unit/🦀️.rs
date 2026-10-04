@@ -27,7 +27,7 @@ fn block_on_test<F: std::future::Future>(fut: F) -> F::Output {
 #[test]
 fn validator_rejects_unknown_node_kind() {
     block_on_test(async {
-        let m = <Manifest as dsl_core::FromValue>::from_value(dsl_core::json::to_dsl_value(&dsl_core::json::parse(r#"{"schema":"manifest","id":"neutral.validation","nodeKinds":[{"id":"Entry"}]}"#).unwrap())).unwrap();
+        let m = <Manifest as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(r#"{"schema":"manifest","id":"neutral.validation","nodeKinds":[{"id":"Entry"}]}"#,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).unwrap();
         let v = ManifestValidator::new(&m);
         assert!(v.validate_node_kind("NoSuchNode").is_err());
     });
@@ -41,21 +41,20 @@ fn property_value_dsl_field_round_trips_nested_array_and_object() {
         // 🌳️ Nested case: an Object containing an Array containing an Object — proves the
         // `dsl_core::DslField` bridge (via `dsl_core::DslValue`) recurses correctly at every depth, not just
         // for a flat value.
-        let mut inner_obj = std::collections::BTreeMap::new();
+        let mut inner_obj = PropertyBag::new();
         inner_obj.insert("flag".to_string(), PropertyValue::Bool(true));
         inner_obj.insert("label".to_string(), PropertyValue::String("leaf".to_string()));
 
         let array_of_objects = PropertyValue::Array(vec![PropertyValue::Number(1.0), PropertyValue::Object(inner_obj), PropertyValue::Null]);
 
-        let mut root = std::collections::BTreeMap::new();
+        let mut root = PropertyBag::new();
         root.insert("id".to_string(), PropertyValue::String("root".to_string()));
         root.insert("count".to_string(), PropertyValue::Number(3.0));
         root.insert("items".to_string(), array_of_objects);
         let value = PropertyValue::Object(root);
 
-        let field_value = <PropertyValue as ::dsl_core::DslField>::to_value(&value);
-        let round_tripped = <PropertyValue as ::dsl_core::DslField>::from_value(&field_value).expect("round trip must succeed");
+        let field_value = <PropertyValue as semio_framework_dsl_record::DslField>::to_value(&value);
+        let round_tripped = <PropertyValue as semio_framework_dsl_record::DslField>::from_value(&field_value).expect("round trip must succeed");
         assert_eq!(round_tripped, value, "PropertyValue dsl_core::DslField round trip diverged for a nested Object/Array/Object value");
     });
 }
-

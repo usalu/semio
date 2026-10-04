@@ -17,6 +17,7 @@ fn document(root: XmlNode) -> SvgSnapshot {
 fn kinds_matches_enum_variants_and_manifest() {
     let every = vec![
         SvgTinyMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: SvgSnapshot::default() }),
+        SvgTinyMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         SvgTinyMutation::StampBaseProfile(stamp_base_profile::StampBaseProfile { base_profile: None, version: None }),
         SvgTinyMutation::InsertTinyElement(insert_tiny_element::InsertTinyElement { parent: Vec::new(), index: 0, node: elem("rect", vec![], vec![]) }),
         SvgTinyMutation::RemoveElement(remove_element::RemoveElement { parent: Vec::new(), index: 0 }),
@@ -40,7 +41,7 @@ fn kinds_matches_enum_variants_and_manifest() {
 #[test]
 fn blocklists_agree_with_the_subset_conformance_checker() {
     use crate::standards::v1_1::subsets::tiny::schema::check_svg_tiny_conformance;
-    let hard = |snapshot: &SvgSnapshot| check_svg_tiny_conformance(snapshot).into_iter().any(|d| matches!(d.severity, dsl::Severity::Error | dsl::Severity::Fatal));
+    let hard = |snapshot: &SvgSnapshot| check_svg_tiny_conformance(snapshot).into_iter().any(|d| matches!(d.severity, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal));
     let root = |children: Vec<XmlNode>| document(elem("svg", vec![("baseProfile", "tiny"), ("version", "1.1")], children));
     let excluded_elements: Vec<&str> = BLOCKED_ELEMENTS.iter().copied().chain(["feGaussianBlur"]).collect();
     for name in excluded_elements {
@@ -91,7 +92,7 @@ fn strip_non_tiny_is_invertible_through_its_own_inverse() {
     let base = document(elem("svg", vec![], vec![elem("g", vec![("style", "fill:#000")], vec![])]));
     let mut snapshot = base.clone();
     let mutation = SvgTinyMutation::StripNonTiny(strip_non_tiny::StripNonTiny {});
-    let undo = Mutation::inverse(&mutation, &base);
+    let undo = Mutation::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     apply_svg_tiny_mutation(&mut snapshot, &mutation);
     for step in &undo {
         apply_svg_tiny_mutation(&mut snapshot, step);
@@ -104,7 +105,7 @@ fn stamp_base_profile_is_invertible_when_the_root_declared_neither_attribute() {
     let base = document(elem("svg", vec![("id", "Layer_1")], vec![]));
     let mut snapshot = base.clone();
     let mutation = SvgTinyMutation::StampBaseProfile(stamp_base_profile::StampBaseProfile { base_profile: Some("tiny".into()), version: Some("1.1".into()) });
-    let undo = Mutation::inverse(&mutation, &base);
+    let undo = Mutation::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     apply_svg_tiny_mutation(&mut snapshot, &mutation);
     assert_eq!(element_attr(snapshot.doc.root.as_ref().unwrap(), "baseProfile"), Some("tiny"));
     for step in &undo {

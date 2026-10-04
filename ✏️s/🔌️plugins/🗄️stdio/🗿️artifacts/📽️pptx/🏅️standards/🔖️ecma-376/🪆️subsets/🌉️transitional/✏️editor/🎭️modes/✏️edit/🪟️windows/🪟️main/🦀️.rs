@@ -5,14 +5,13 @@
 //! only (see the surface root's `PptxTransitionalEditorCommand::SetPage` for the honest
 //! multi-shape scope note).
 
-use crate::schema::snapshot::{PptxParagraph, PptxShape};
 use crate::PptxSnapshot;
 use semio_framework_plugin::app::{DocumentWindowKit, EditableDocumentPage, EditableDocumentView, WindowKit};
 use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::TreeWindows;
 use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::LocalizedLabel;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = DocumentWindowKit::KIND_ID;
@@ -30,37 +29,27 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn paragraph_text(paragraph: &PptxParagraph) -> String {
-    paragraph.runs.iter().map(|run| run.text.as_str()).collect::<Vec<_>>().join("")
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn shape_text(shape: &PptxShape) -> Option<String> {
-    match shape {
-        PptxShape::TextBox { text_frame, .. } | PptxShape::Placeholder { text_frame, .. } => Some(text_frame.iter().map(paragraph_text).collect::<Vec<_>>().join("\n")),
-        PptxShape::Picture { .. } | PptxShape::Other { .. } => None,
-    }
-}
-
 /// ✏️ Builds one faithfully addressed draft per text-bearing slide shape.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn editable_pages(document: &PptxSnapshot) -> Vec<EditableDocumentPage> {
-    document
-        .presentation
-        .slides
+fn editable_pages(document: &PptxSnapshot) -> Result<Vec<EditableDocumentPage>, String> {
+    Ok(crate::schema::mutations::xml_address::pptx_slides(document)?
         .iter()
         .enumerate()
-        .flat_map(|(page_index, slide)| slide.shapes.iter().enumerate().filter_map(move |(item_index, shape)| shape_text(shape).map(|text| EditableDocumentPage::new(page_index as u32, item_index as u32, text))))
-        .collect()
+        .flat_map(|(page_index, slide)| slide.shapes.iter().enumerate().filter_map(move |(item_index, shape)| shape.text.clone().map(|text| EditableDocumentPage::new(page_index as u32, item_index as u32, text))))
+        .collect())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &PptxSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    DocumentWindowKit::render_editable_windowed(&EditableDocumentView { pages: editable_pages(document) }, &TreeWindows::unhosted(), Locale::En)
+pub fn render(document: &PptxSnapshot, publication_revision: semio_framework_plugin::UiPublicationRevision) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    DocumentWindowKit::render_editable_windowed(
+        &EditableDocumentView { pages: editable_pages(document).map_err(|error| semio_framework_plugin::PluginAssemblyError::new("pptx.projection", error))?, publication_revision },
+        &TreeWindows::unhosted(),
+        Locale::En,
+    )
 }
 
-pub fn render_windowed(document: &PptxSnapshot, windows: &TreeWindows<'_>, locale: Locale) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    DocumentWindowKit::render_editable_windowed(&EditableDocumentView { pages: editable_pages(document) }, windows, locale)
+pub fn render_windowed(document: &PptxSnapshot, windows: &TreeWindows<'_>, locale: Locale, publication_revision: semio_framework_plugin::UiPublicationRevision) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    DocumentWindowKit::render_editable_windowed(&EditableDocumentView { pages: editable_pages(document).map_err(|error| semio_framework_plugin::PluginAssemblyError::new("pptx.projection", error))?, publication_revision }, windows, locale)
 }
 //#endregion 🔖️Render
 

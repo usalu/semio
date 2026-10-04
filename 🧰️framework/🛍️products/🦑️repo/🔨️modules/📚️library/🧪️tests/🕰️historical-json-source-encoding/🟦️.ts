@@ -12,6 +12,16 @@ const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtu
 const historical = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🕰️historical-json-source-encoding/🧬️energy-source-coordinates/🔣️.json"), "utf8"));
 const sha = (value: string) => createHash("sha256").update(value).digest("hex");
 const libraryRoot = resolve(import.meta.dir, "../.."), root = resolve(libraryRoot, "../../../../..");
+type LedgerReseal = { seal: string; coordinates: "changed" | "unchanged"; coordinatesSha256: string; recordedBy: string; reason: string };
+type CatalogDeletion = { path: string; reason: string; revision: string; packageId: string; index: number; row: { destinationPath: string } };
+type CatalogReseal = { seal: string; recordedBy: string; evidence: { revision: string; date: string }; reason: string; renames?: { from: string; to: string }[]; moves?: { from: string; to: string; revision: string }[]; deletions?: CatalogDeletion[] };
+const ledger = JSON.parse(readFileSync(join(libraryRoot, "🧫️fixtures/🧫️frozen-seal-ledger/🔣️.json"), "utf8")) as { pinnedAt: string; pinnedFor: string; contracts: Record<string, { seal: string; coordinatesSha256?: string; reseals?: LedgerReseal[] }>; later: Record<string, { recordedBy: string; reason: string }>; catalogs: Record<string, { family: string; seal: string; sealedBy: string; reseals?: CatalogReseal[] }> };
+
+/** 🧷️ The digest of the coordinates a live sealed document resolves: canonical JSON of `{pointer, kind, value}` in document order. */
+function sealedCoordinatesSha256(id: string, contract: Parameters<typeof frozenCoordinateEvidenceSeal>[0][string]): string {
+  const { retired: _retired, ...live } = contract;
+  return sha(canonicalJson(frozenCoordinateEvidenceCoordinates(live.path, readFileSync(join(root, live.path)), { [id]: live })!.map(({ pointer, kind, value }) => ({ pointer, kind, value }))));
+}
 
 test("historical escaped-source vectors bind one JSON string layer and an explicit root", () => {
   const validate = new Ajv().compile({ type: "object", required: ["schemaVersion", "contract", "semantics", "cases"], properties: { schemaVersion: { const: 1 }, contract: { const: "historical-json-escaped-source-coordinates-v1" }, cases: { type: "array", minItems: 15, items: { type: "object", required: ["id", "source", "pointer", "accepted"] } } } });
@@ -67,13 +77,70 @@ test("escaped-source authority retains exact representation root digest and sele
   expect(() => run({ ...contract, sha256: sha(object) }, Buffer.from(object))).toThrow(/root/u);
 });
 
+test("the frozen seal ledger satisfies its schema (Ajv) and pins the contracts present when the historical source was registered", () => {
+  const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(libraryRoot, "🧬️schema/🔣️frozen-seal-ledger/🔣️.json"), "utf8")));
+  expect(validate(ledger), JSON.stringify(validate.errors)).toBe(true);
+  expect(ledger.pinnedFor).toBe(historical.id);
+  expect(ledger.contracts[historical.id]).toBeUndefined();
+  const tampered = structuredClone(ledger);
+  delete (Object.values(tampered.contracts).find((entry) => entry.reseals) as { reseals?: unknown[] }).reseals![0]!.reason;
+  expect(validate(tampered)).toBe(false);
+});
+
 test("one exact encoded historical source is registered without changing the previous JSON contracts", () => {
   const contracts = loadCatalogTaxonomy().frozenCoordinateEvidenceContracts;
   expect(frozenCoordinateEvidenceSeal(contracts)[historical.id]).toEqual(historical.contract);
   expect(validateFrozenCoordinateEvidenceContracts(contracts)).toEqual([]);
-  const original = Object.fromEntries(Object.entries(frozenCoordinateEvidenceSeal(contracts)).filter(([id]) => id !== historical.id));
-  expect(Object.keys(original)).toHaveLength(historical.originalContracts.count);
-  expect(sha(canonicalJson(original))).toBe(historical.originalContracts.canonicalSha256);
+  const seal = frozenCoordinateEvidenceSeal(contracts);
+  for (const id of Object.keys(seal).filter((id) => id !== historical.id)) expect([id, id in ledger.contracts || id in ledger.later]).toEqual([id, true]);
+  for (const [id, entry] of Object.entries(ledger.contracts)) {
+    expect([id, id in seal]).toEqual([id, true]);
+    const recorded = entry.reseals?.at(-1)?.seal ?? entry.seal;
+    expect([id, sha(canonicalJson(seal[id]!))]).toEqual([id, recorded]);
+    let previous = entry.coordinatesSha256;
+    for (const reseal of entry.reseals ?? []) {
+      if (reseal.coordinates === "unchanged") expect([id, reseal.recordedBy, reseal.coordinatesSha256]).toEqual([id, reseal.recordedBy, previous]);
+      previous = reseal.coordinatesSha256;
+    }
+    if (entry.reseals && contracts[id]!.retired === undefined) expect([id, sealedCoordinatesSha256(id, contracts[id]!)]).toEqual([id, previous]);
+  }
+});
+
+test("every pinned authority catalog matches its ledger: reversing each recorded deletion, exact-path move and directory rename reproduces the previous seal byte for byte", () => {
+  const taxonomy = loadCatalogTaxonomy();
+  const pinned = [
+    ...Object.entries(taxonomy.semanticPackageProjectionContracts).map(([id, contract]) => [id, "semanticPackageProjectionContracts", contract.authorityCatalogPath, contract.authorityCatalogSha256] as const),
+    ...Object.entries(taxonomy.semanticOwnedFileProjectionContracts).flatMap(([id, contract]) => ("authorityCatalogPath" in contract ? [[id, "semanticOwnedFileProjectionContracts", contract.authorityCatalogPath, contract.authorityCatalogSha256] as const] : [])),
+  ];
+  expect(pinned.map(([id]) => id).sort()).toEqual(Object.keys(ledger.catalogs).sort());
+  const escape = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+  for (const [id, family, path, digest] of pinned) {
+    const entry = ledger.catalogs[id]!;
+    expect([id, entry.family, entry.reseals?.at(-1)?.seal ?? entry.seal]).toEqual([id, family, digest]);
+    let text = readFileSync(join(root, path), "utf8");
+    expect(sha(text)).toBe(digest);
+    for (const [index, reseal] of [...(entry.reseals ?? [])].entries().toArray().reverse()) {
+      expect([id, reseal.recordedBy, (reseal.renames?.length ?? 0) + (reseal.moves?.length ?? 0) + (reseal.deletions?.length ?? 0) > 0]).toEqual([id, reseal.recordedBy, true]);
+      if (reseal.deletions?.length) {
+        const value = JSON.parse(text) as { packages: { id: string; mappings: unknown[] }[] };
+        expect([id, reseal.recordedBy, JSON.stringify(value, null, 2) + "\n" === text]).toEqual([id, reseal.recordedBy, true]);
+        for (const deletion of [...reseal.deletions].sort((left, right) => left.index - right.index)) {
+          expect([id, deletion.path, text.includes(JSON.stringify(deletion.path)), deletion.row.destinationPath]).toEqual([id, deletion.path, false, deletion.path]);
+          value.packages.find((row) => row.id === deletion.packageId)!.mappings.splice(deletion.index, 0, deletion.row);
+        }
+        text = JSON.stringify(value, null, 2) + "\n";
+      }
+      for (const { from, to } of reseal.moves ?? []) {
+        expect([id, from, text.includes(JSON.stringify(from)), text.includes(JSON.stringify(to))]).toEqual([id, from, false, true]);
+        text = text.replaceAll(JSON.stringify(to), JSON.stringify(from));
+      }
+      for (const { from, to } of reseal.renames ?? []) {
+        expect([id, reseal.recordedBy, text.includes(from + "/")]).toEqual([id, reseal.recordedBy, false]);
+        text = text.replace(new RegExp(`${escape(to)}(?=/)`, "gu"), from);
+      }
+      expect([id, reseal.recordedBy, sha(text)]).toEqual([id, reseal.recordedBy, index === 0 ? entry.seal : entry.reseals![index - 1]!.seal]);
+    }
+  }
 });
 
 test("retirement is recorded evidence: every retired contract names its ticket and is genuinely gone", () => {

@@ -1,0 +1,27 @@
+{
+  "state": "MountedTestOnlyBeforeActualNativeAssertionBaseline",
+  "selector": "declared_child_projection_",
+  "prospectiveCount": 2,
+  "pairs": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs",
+      "beforeSha256": "a4f02ecd0b6243fc317c4b4cb9c2dc83c47b6d11355f48e995b822722c94c154",
+      "regions": [
+        {
+          "before": "    //#region 🗝️RegisteredKeyedDispatchFixture\n",
+          "after": "    #[test]\n    fn declared_child_projection_default_preserves_empty_and_full_literal_references() {\n        let fixture: Value = serde_json::from_str(include_str!(concat!(env!(\"CARGO_MANIFEST_DIR\"), \"/../../🧩️composition/🔎️projection/🧫️fixtures/🔣️.json\"))).expect(\"closed projection fixture\");\n        for case in fixture[\"cases\"].as_array().expect(\"projection cases\") {\n            let rows = case[\"rows\"].as_array().expect(\"declared rows\");\n            let text = |row: &Value, name: &str| row[name].as_str().expect(\"literal child field\").to_string();\n            let snapshot = TestSnapshot { count: i32::MIN, label: \"parent\\0引用😀\".into(), slot: rows.iter().map(|row| store::ArtifactChild::new(text(row, \"childId\"), ArtifactRef { artifact_id: text(row, \"artifactId\"), dialect: ArtifactDialect { artifact_kind: text(row, \"kind\"), standard: text(row, \"standard\"), subset: text(row, \"subset\") } })).collect() };\n            let projected = <KeyedTestApp as ArtifactApp>::child_restore_projection(&snapshot).expect(\"default projects the actual declared snapshot\");\n            assert_eq!(projected.len(), rows.len());\n            assert_eq!(projected.is_empty(), rows.is_empty());\n            for (index, row) in rows.iter().enumerate() {\n                let (slot, actual) = projected.get(index).expect(\"full child occurrence\");\n                assert_eq!(slot, row[\"slot\"].as_str().expect(\"slot\"));\n                assert_eq!(actual.child_id, row[\"childId\"].as_str().expect(\"logical\"));\n                assert_eq!(actual.artifact_id, row[\"artifactId\"].as_str().expect(\"addressed\"));\n                assert_eq!(actual.artifact_kind, row[\"kind\"].as_str().expect(\"kind\"));\n                assert_eq!(actual.standard, row[\"standard\"].as_str().expect(\"standard\"));\n                assert_eq!(actual.subset, row[\"subset\"].as_str().expect(\"subset\"));\n            }\n            let structural = store::ChildRestoreProjection::from_snapshot(&snapshot).expect(\"independent declared structural projection\");\n            projected.admit_complete((0..structural.len()).map(|index| structural.get(index).expect(\"declared row\"))).expect(\"complete declared set\");\n            if !rows.is_empty() { assert!(projected.admit_complete(std::iter::empty()).is_err()); }\n        }\n    }\n\n    //#region 🗝️RegisteredKeyedDispatchFixture\n"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🦀️.rs",
+      "beforeSha256": "728ac4090a5bfd063e22f395463f586c22deab1bcb48e301008cb96ddb05d5d2",
+      "regions": [
+        {
+          "before": "//#endregion 📨️EnvelopeDecodeLadder\n",
+          "after": "//#endregion 📨️EnvelopeDecodeLadder\n\n#[test]\nfn declared_child_projection_override_preserves_authored_refusal() {\n    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!(\"CARGO_MANIFEST_DIR\"), \"/../../🧩️composition/🔎️projection/🧫️fixtures/🔣️.json\"))).expect(\"closed projection fixture\");\n    let refusal = &fixture[\"overrideRefusal\"];\n    let snapshot = ComposedParentSnapshot { slot: None, revision: refusal[\"revision\"].as_i64().expect(\"revision\") as i32 };\n    assert!(store::ChildRestoreProjection::from_snapshot(&snapshot).expect(\"structural leaf\").is_empty());\n    let actual = <ComposedParentApp<false> as ArtifactApp>::child_restore_projection(&snapshot).expect_err(\"authored nested override must be selected\");\n    assert_eq!(actual.code.0, refusal[\"code\"].as_str().expect(\"original code\"));\n    assert_eq!(actual.message, refusal[\"message\"].as_str().expect(\"original message\"));\n}\n"
+        }
+      ]
+    }
+  ]
+}

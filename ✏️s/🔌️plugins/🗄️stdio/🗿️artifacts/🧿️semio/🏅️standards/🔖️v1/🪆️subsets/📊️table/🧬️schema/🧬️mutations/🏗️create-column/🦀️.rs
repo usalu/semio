@@ -21,9 +21,12 @@ impl protocol::MutationKind<SemioTableSnapshot, SemioTableMutation> for CreateCo
     fn diff(&self, base: &SemioTableSnapshot) -> protocol::MutationOutcome<<SemioTableMutation as protocol::Mutation<SemioTableSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioTableSnapshot) -> Vec<SemioTableMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &SemioTableSnapshot) -> Result<Vec<SemioTableMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Create column {}", self.name), &format!("Spalte {} erstellen", self.name))
     }

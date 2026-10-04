@@ -15,7 +15,7 @@ pub const PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT: &str = include_str!("../../../�
 pub const PUZZLE3D_NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🏢️tower/🗣️.dsl.semio");
 
 /// 📖️ Parses `.puzzle3d` DSL text into a `Puzzle3dSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<Puzzle3dSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<Puzzle3dSnapshot, semio_framework_diagnostic::TextError> {
     <Puzzle3dSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 

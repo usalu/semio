@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "preflight",
+    "ownedSchema",
+    "fieldText",
+    "bytePattern",
+    "workItems",
+    "copyBytes",
+    "cancelAfter",
+    "copyCancelAfter",
+    "maxAllocationBytes",
+    "lowRows",
+    "expectedRows",
+    "copyTextUnit",
+    "copyTextRepeat",
+    "copyTextBytes",
+    "copyTextBoundary",
+    "copyTextCancelAfter",
+    "allocationRole"
+  ],
+  "properties": {
+    "preflight": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "encodings",
+        "ownershipBytes",
+        "byteAuthority",
+        "refusalKinds",
+        "cancelAt",
+        "retirementRefund"
+      ],
+      "properties": {
+        "encodings": {
+          "const": [
+            "binary",
+            "text"
+          ]
+        },
+        "ownershipBytes": {
+          "const": 0
+        },
+        "byteAuthority": {
+          "const": "actualLiteralOutputUTF8OrOctets"
+        },
+        "refusalKinds": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "file",
+            "cancellation"
+          ],
+          "properties": {
+            "file": {
+              "const": "ownershipLimit"
+            },
+            "cancellation": {
+              "const": "canceled"
+            }
+          }
+        },
+        "cancelAt": {
+          "const": "firstBorrowedCheckpoint"
+        },
+        "retirementRefund": {
+          "const": false
+        }
+      }
+    },
+    "ownedSchema": {
+      "type": "string"
+    },
+    "fieldText": {
+      "type": "string"
+    },
+    "bytePattern": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    },
+    "workItems": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000000
+    },
+    "copyBytes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000000
+    },
+    "cancelAfter": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000000
+    },
+    "copyCancelAfter": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000000
+    },
+    "lowRows": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000000
+    },
+    "expectedRows": {
+      "type": "integer",
+      "const": 1030
+    },
+    "copyTextUnit": {
+      "const": "文🌠"
+    },
+    "copyTextRepeat": {
+      "const": 20000
+    },
+    "copyTextBytes": {
+      "const": 140000
+    },
+    "copyTextBoundary": {
+      "const": 65534
+    },
+    "copyTextCancelAfter": {
+      "const": 65530
+    },
+    "maxAllocationBytes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000000
+    },
+    "allocationRole": {
+      "const": "cumulativeOwnedBacking"
+    }
+  }
+}

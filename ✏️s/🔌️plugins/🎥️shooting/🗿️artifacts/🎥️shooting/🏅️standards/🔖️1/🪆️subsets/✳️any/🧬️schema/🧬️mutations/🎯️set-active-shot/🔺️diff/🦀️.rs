@@ -13,7 +13,7 @@ pub fn diff(payload: &SetActiveShot, base: &ShootingSnapshot) -> protocol::Mutat
         }
     }
     if base.active_shot_id == next {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Active shot is unchanged.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Active shot is unchanged.");
     }
     protocol::MutationOutcome::new(ShootingDiff { active_shot_id: Some(next), ..Default::default() })
 }

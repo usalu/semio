@@ -16,7 +16,7 @@ pub fn diff(payload: &super::ReplaceTimeSeriesScheduleValues, base: &EnergyModel
         return protocol::MutationOutcome::fatal("mutation.invariant", "Every time series value must be finite.", [payload.id.0.to_string()]);
     }
     if existing.values == payload.new_values {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Time series schedule {} already carries this values: {:?}.", payload.id.0, payload.new_values));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Time series schedule {} already carries this values: {:?}.", payload.id.0, payload.new_values));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.schedules.time_series.iter_mut().find(|item| item.id == payload.id) {

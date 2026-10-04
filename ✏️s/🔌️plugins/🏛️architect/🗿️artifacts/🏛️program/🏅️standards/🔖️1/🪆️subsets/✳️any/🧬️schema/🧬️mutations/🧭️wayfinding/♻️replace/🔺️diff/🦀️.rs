@@ -13,7 +13,7 @@ pub fn diff(payload: &ReplaceWayfindingRequirement, base: &ProgramSnapshot) -> p
         return protocol::MutationOutcome::error("mutation.target-missing", "No wayfinding requirement exists with this id.", [payload.wayfinding_requirement.header.id.0.clone()]);
     };
     if existing == &payload.wayfinding_requirement {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This wayfinding requirement already matches the requested value.").at([existing.header.id.0.clone()])]);
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This wayfinding requirement already matches the requested value.").at([existing.header.id.0.clone()])]);
     }
     let patch = existing.diff_patch(&payload.wayfinding_requirement).expect("diff_patch always produces a full patch");
     protocol::MutationOutcome::new(ProgramDiff { wayfinding: Some(ProgramWayfindingDelta { patched: vec![ProgramWayfindingPatchEntry { id: payload.wayfinding_requirement.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })

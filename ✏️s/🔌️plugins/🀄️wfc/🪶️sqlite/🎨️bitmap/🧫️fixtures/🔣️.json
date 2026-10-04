@@ -1,0 +1,184 @@
+{
+  "contractId": "wfc-indexed-bitmap-sql",
+  "version": 1,
+  "branches": [
+    "indices",
+    "literal"
+  ],
+  "edit": {
+    "ordinal": 1,
+    "paletteIndex": 255
+  },
+  "cases": [
+    {
+      "id": "empty",
+      "mode": "indices",
+      "width": 0,
+      "height": 0,
+      "text": "",
+      "indices": [],
+      "gridPrefix": []
+    },
+    {
+      "id": "one",
+      "mode": "indices",
+      "width": 1,
+      "height": 1,
+      "text": "AA==",
+      "indices": [
+        0
+      ],
+      "gridPrefix": [
+        0
+      ]
+    },
+    {
+      "id": "two",
+      "mode": "indices",
+      "width": 2,
+      "height": 1,
+      "text": "AAE=",
+      "indices": [
+        0,
+        1
+      ],
+      "gridPrefix": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "three-unknown-index",
+      "mode": "indices",
+      "width": 3,
+      "height": 1,
+      "text": "AAH/",
+      "indices": [
+        0,
+        1,
+        255
+      ],
+      "gridPrefix": [
+        0,
+        1,
+        255
+      ]
+    },
+    {
+      "id": "short-extent",
+      "mode": "indices",
+      "width": 3,
+      "height": 2,
+      "text": "AA==",
+      "indices": [
+        0
+      ],
+      "gridPrefix": [
+        0
+      ]
+    },
+    {
+      "id": "long-extent",
+      "mode": "indices",
+      "width": 1,
+      "height": 1,
+      "text": "AAH/",
+      "indices": [
+        0,
+        1,
+        255
+      ],
+      "gridPrefix": [
+        0,
+        1,
+        255
+      ]
+    },
+    {
+      "id": "noncanonical-bits",
+      "mode": "literal",
+      "width": 1,
+      "height": 1,
+      "text": "AB==",
+      "indices": [],
+      "gridPrefix": [
+        0
+      ]
+    },
+    {
+      "id": "unpadded",
+      "mode": "literal",
+      "width": 1,
+      "height": 1,
+      "text": "AA",
+      "indices": [],
+      "gridPrefix": [
+        0
+      ]
+    },
+    {
+      "id": "one-sextet",
+      "mode": "literal",
+      "width": 1,
+      "height": 1,
+      "text": "B",
+      "indices": [],
+      "gridPrefix": [
+        4
+      ]
+    },
+    {
+      "id": "whitespace",
+      "mode": "literal",
+      "width": 1,
+      "height": 1,
+      "text": " A\tA\r\n== ",
+      "indices": [],
+      "gridPrefix": [
+        0
+      ]
+    },
+    {
+      "id": "extra-equals",
+      "mode": "literal",
+      "width": 1,
+      "height": 1,
+      "text": "A=A==",
+      "indices": [],
+      "gridPrefix": [
+        0
+      ]
+    },
+    {
+      "id": "invalid-prefix",
+      "mode": "literal",
+      "width": 1,
+      "height": 1,
+      "text": "AAH/!",
+      "indices": [],
+      "gridPrefix": [
+        0,
+        1,
+        255
+      ]
+    },
+    {
+      "id": "literal-nul-unicode",
+      "mode": "literal",
+      "width": 1,
+      "height": 1,
+      "text": "\u0000引用😀",
+      "indices": [],
+      "gridPrefix": []
+    },
+    {
+      "id": "padding-only",
+      "mode": "literal",
+      "width": 0,
+      "height": 1,
+      "text": "====",
+      "indices": [],
+      "gridPrefix": []
+    }
+  ]
+}

@@ -71,7 +71,7 @@ pub fn bitmap_layers_json(prefix: &str, width: u32, height: u32, palette: &[Bitm
     let mut block = 1u32;
     loop {
         let layers = bitmap_layers_at_block(prefix, width, height, palette, indices, pins, block);
-        let text = pack::json_to_string(&pack::json_array(layers));
+        let text = semio_framework_pack_json::to_string(&semio_framework_pack_json::array(layers));
         if text.len() <= BITMAP_LAYERS_JSON_BUDGET_BYTES || block >= width.max(height).max(1) {
             return text;
         }
@@ -79,22 +79,22 @@ pub fn bitmap_layers_json(prefix: &str, width: u32, height: u32, palette: &[Bitm
     }
 }
 
-fn bitmap_rect_layer(id: &str, x: f64, y: f64, w: f64, h: f64, color: [f64; 4]) -> pack::JsonValue {
-    let segments = pack::json_array(vec![
-        pack::json_object([("kind".to_string(), pack::JsonValue::from("move")), ("to".to_string(), pack::json_array(vec![pack::JsonValue::from(x), pack::JsonValue::from(y)]))]),
-        pack::json_object([("kind".to_string(), pack::JsonValue::from("line")), ("to".to_string(), pack::json_array(vec![pack::JsonValue::from(x + w), pack::JsonValue::from(y)]))]),
-        pack::json_object([("kind".to_string(), pack::JsonValue::from("line")), ("to".to_string(), pack::json_array(vec![pack::JsonValue::from(x + w), pack::JsonValue::from(y + h)]))]),
-        pack::json_object([("kind".to_string(), pack::JsonValue::from("line")), ("to".to_string(), pack::json_array(vec![pack::JsonValue::from(x), pack::JsonValue::from(y + h)]))]),
-        pack::json_object([("kind".to_string(), pack::JsonValue::from("close"))]),
+fn bitmap_rect_layer(id: &str, x: f64, y: f64, w: f64, h: f64, color: [f64; 4]) -> semio_framework_pack_json::Value {
+    let segments = semio_framework_pack_json::array(vec![
+        semio_framework_pack_json::object([("kind".to_string(), semio_framework_pack_json::Value::from("move")), ("to".to_string(), semio_framework_pack_json::array(vec![semio_framework_pack_json::Value::from(x), semio_framework_pack_json::Value::from(y)]))]),
+        semio_framework_pack_json::object([("kind".to_string(), semio_framework_pack_json::Value::from("line")), ("to".to_string(), semio_framework_pack_json::array(vec![semio_framework_pack_json::Value::from(x + w), semio_framework_pack_json::Value::from(y)]))]),
+        semio_framework_pack_json::object([("kind".to_string(), semio_framework_pack_json::Value::from("line")), ("to".to_string(), semio_framework_pack_json::array(vec![semio_framework_pack_json::Value::from(x + w), semio_framework_pack_json::Value::from(y + h)]))]),
+        semio_framework_pack_json::object([("kind".to_string(), semio_framework_pack_json::Value::from("line")), ("to".to_string(), semio_framework_pack_json::array(vec![semio_framework_pack_json::Value::from(x), semio_framework_pack_json::Value::from(y + h)]))]),
+        semio_framework_pack_json::object([("kind".to_string(), semio_framework_pack_json::Value::from("close"))]),
     ]);
-    let fill = pack::json_object([
-        ("kind".to_string(), pack::JsonValue::from("solid")),
-        ("color".to_string(), pack::json_array(color.iter().map(|channel| pack::JsonValue::from(*channel)).collect::<Vec<_>>())),
+    let fill = semio_framework_pack_json::object([
+        ("kind".to_string(), semio_framework_pack_json::Value::from("solid")),
+        ("color".to_string(), semio_framework_pack_json::array(color.iter().map(|channel| semio_framework_pack_json::Value::from(*channel)).collect::<Vec<_>>())),
     ]);
-    pack::json_object([("id".to_string(), pack::JsonValue::from(id)), ("kind".to_string(), pack::JsonValue::from("path")), ("segments".to_string(), segments), ("fill".to_string(), fill)])
+    semio_framework_pack_json::object([("id".to_string(), semio_framework_pack_json::Value::from(id)), ("kind".to_string(), semio_framework_pack_json::Value::from("path")), ("segments".to_string(), segments), ("fill".to_string(), fill)])
 }
 
-fn bitmap_layers_at_block(prefix: &str, width: u32, height: u32, palette: &[BitmapColor], indices: &[u8], pins: &[BitmapPinnedPixel], block: u32) -> Vec<pack::JsonValue> {
+fn bitmap_layers_at_block(prefix: &str, width: u32, height: u32, palette: &[BitmapColor], indices: &[u8], pins: &[BitmapPinnedPixel], block: u32) -> Vec<semio_framework_pack_json::Value> {
     let mut layers = vec![bitmap_rect_layer(&format!("{prefix}-extent"), 0.0, 0.0, f64::from(width), f64::from(height), [0.09, 0.10, 0.12, 1.0])];
     let cells = (width as usize) * (height as usize);
     if indices.len() == cells {
@@ -185,50 +185,50 @@ pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
 /// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`. The index order
 /// `[document, op, pack, spr]` is the one `io()` reads its `NativeCodecs` slots from.
-pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
-    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+pub fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
             vec![
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "wfc.bitmap",
                     extension: Some("wfcbitmap"),
-                    role: dsl::LanguageRole::Document,
+                    role: semio_framework_dsl::LanguageRole::Document,
                     grammar: Some(standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("wfc.bitmap"),
+                    hooks: semio_framework_dsl::passthrough_hooks("wfc.bitmap"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "wfc.bitmap.op",
                     extension: None,
-                    role: dsl::LanguageRole::Ops,
+                    role: semio_framework_dsl::LanguageRole::Ops,
                     grammar: Some(standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("wfc.bitmap.op"),
+                    hooks: semio_framework_dsl::passthrough_hooks("wfc.bitmap.op"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "wfc.bitmap.pack",
                     extension: None,
-                    role: dsl::LanguageRole::Pack,
+                    role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("wfc.bitmap.pack"),
+                    hooks: semio_framework_dsl::passthrough_hooks("wfc.bitmap.pack"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "wfc.bitmap.spr",
                     extension: None,
-                    role: dsl::LanguageRole::Spr,
+                    role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("wfc.bitmap.spr"),
+                    hooks: semio_framework_dsl::passthrough_hooks("wfc.bitmap.spr"),
                 },
             ]
         })

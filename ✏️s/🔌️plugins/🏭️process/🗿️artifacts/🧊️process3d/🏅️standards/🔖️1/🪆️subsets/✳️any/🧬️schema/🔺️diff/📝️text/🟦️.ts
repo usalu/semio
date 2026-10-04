@@ -49,5 +49,5 @@ export const processProcess3dDiffTextGuardConstant = <T extends string | number 
 //#endregion 🚪️Parsers
 
 export function parseProcess3dDiffText(value: unknown, at = "$"): Process3dDiffText {
-  return processProcess3dDiffTextGuardObject(value, `${at}`);
+  return processProcess3dDiffTextGuardString(value, `${at}`);
 }

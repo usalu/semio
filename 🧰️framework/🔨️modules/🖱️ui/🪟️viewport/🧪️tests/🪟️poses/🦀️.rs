@@ -1,5 +1,5 @@
 use super::*;
-use protocol::value::{Number, ToValue};
+use semio_framework_value::{Number, ToValue};
 
 #[derive(Debug, PartialEq, serde::Deserialize)]
 struct PlanarOracle { x: f64, y: f64, zoom: f64 }
@@ -17,6 +17,7 @@ fn viewport_ownership_neutral_admission_and_serde_round_trip() {
             let serde_decoded = serde_json::from_value::<Viewport2d>(row["value"].clone());
             assert_eq!(decoded.is_ok(), valid, "{}", row["name"]);
             assert_eq!(serde_decoded.is_ok(), valid, "{} serde", row["name"]);
+            if let Err(error) = &decoded { assert_eq!(error.kind, semio_framework_value::ValueRefusalKind::InvalidValue); }
             if let Ok(pose) = decoded {
                 assert_eq!(serde_decoded.unwrap(), pose);
                 let expected: PlanarOracle = serde_json::from_value(row["value"].clone()).unwrap();
@@ -33,6 +34,7 @@ fn viewport_ownership_neutral_admission_and_serde_round_trip() {
             let serde_decoded = serde_json::from_value::<Viewport3dOrbit>(row["value"].clone());
             assert_eq!(decoded.is_ok(), valid, "{}", row["name"]);
             assert_eq!(serde_decoded.is_ok(), valid, "{} serde", row["name"]);
+            if let Err(error) = &decoded { assert_eq!(error.kind, semio_framework_value::ValueRefusalKind::InvalidValue); }
             if let Ok(pose) = decoded {
                 assert_eq!(serde_decoded.unwrap(), pose);
                 let expected: OrbitOracle = serde_json::from_value(row["value"].clone()).unwrap();

@@ -10,7 +10,7 @@ use semio_framework_os_kernel::os_spr::protocol_laws::{assert_mutation_diff_abso
 fn round_trip(base: &Block5dSnapshot, mutation: &Block5dMutation) -> Block5dSnapshot {
     let forward = mutation.diff(base).diff().apply(base).expect("valid mutation diff");
     let mut restored = forward.clone();
-    let mut backward = mutation.inverse(base);
+    let mut backward = mutation.inverse(base).expect("valid retained mutation inverse fixture");
     backward.reverse();
     for undo in &backward {
         restored = undo.diff(&restored).diff().apply(&restored).expect("valid mutation diff");
@@ -246,7 +246,7 @@ async fn create_duplicate_id_is_fatal_and_never_applies() {
     base.grip_kinds.push(grip_kind.clone());
     let outcome = create_grip_kind(grip_kind).diff(&base);
     assert_fatal_never_applies(&outcome).await;
-    assert_eq!(outcome.worst_level(), Some(dsl::Severity::Fatal));
+    assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal));
     assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.duplicate-id"));
 }
 //#endregion 🔖️OutcomeLaws

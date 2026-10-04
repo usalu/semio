@@ -26,6 +26,8 @@ pub mod set_chunk_keyframe;
 pub mod set_idx1_present;
 #[path = "🎬set-main-header/🦀️.rs"]
 pub mod set_main_header;
+#[path = "🩹️patch-snapshot/🦀️.rs"]
+pub mod patch_snapshot;
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "🎨set-stream-format/🦀️.rs"]
@@ -42,6 +44,7 @@ pub mod set_stream_header;
 #[mutations(snapshot = AviSnapshot, diff = AviDiff, schema = "AviMutation")]
 pub enum AviMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
+    PatchSnapshot(patch_snapshot::PatchSnapshot),
     SetMainHeader(set_main_header::SetMainHeader),
     SetIdx1Present(set_idx1_present::SetIdx1Present),
     InsertStream(insert_stream::InsertStream),
@@ -60,7 +63,7 @@ pub enum AviMutation {
 /// (`kinds_const_matches_enum_variants_in_declaration_order` below is what keeps that honest; the
 /// framework never parses Rust to check it itself).
 pub const KINDS: &[&str] =
-    &["set-snapshot", "set-main-header", "set-idx1-present", "insert-stream", "remove-stream", "set-stream-header", "set-stream-format", "insert-chunk", "remove-chunk", "set-chunk-keyframe", "add-unknown-chunk", "remove-unknown-chunk"];
+    &["set-snapshot", "patch-snapshot", "set-main-header", "set-idx1-present", "insert-stream", "remove-stream", "set-stream-header", "set-stream-format", "insert-chunk", "remove-chunk", "set-chunk-keyframe", "add-unknown-chunk", "remove-unknown-chunk"];
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn stream_diff_for(stream_index: usize, inner: AviStreamDiff) -> AviDiff {
@@ -77,6 +80,7 @@ fn chunk_diff_for(stream_index: usize, chunks: IndexedDiff<AviChunk, AviChunkDif
 pub(crate) fn agg_diff(this: &AviMutation, base: &AviSnapshot) -> protocol::MutationOutcome<AviDiff> {
     protocol::MutationOutcome::new(match this {
         AviMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => <AviDiff as protocol::command::DiffAlgebra<AviSnapshot>>::between(base, snapshot),
+        AviMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<AviSnapshot, AviMutation>>::diff(patch, base),
         AviMutation::SetMainHeader(set_main_header::SetMainHeader { main_header }) => AviDiff { main_header: Some(main_header.clone()), ..AviDiff::default() },
         AviMutation::SetIdx1Present(set_idx1_present::SetIdx1Present { idx1_present }) => AviDiff { idx1_present: Some(*idx1_present), ..AviDiff::default() },
         AviMutation::InsertStream(insert_stream::InsertStream { index, stream }) => AviDiff { streams: Some(IndexedDiff { removed: vec![], modified: vec![], added: vec![IndexedAdded { index: *index, item: stream.clone() }] }), ..AviDiff::default() },
@@ -96,9 +100,11 @@ pub(crate) fn agg_diff(this: &AviMutation, base: &AviSnapshot) -> protocol::Muta
 }
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &AviMutation, base: &AviSnapshot) -> Vec<AviMutation> {
+pub(crate) fn agg_inverse(this: &AviMutation, base: &AviSnapshot) -> Result<Vec<AviMutation>, semio_framework_value::ValueError> {
+    Ok({
     match this {
         AviMutation::SetSnapshot(_) => vec![AviMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
+        AviMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<AviSnapshot, AviMutation>>::inverse(patch, base)?),
         AviMutation::SetMainHeader(_) => vec![AviMutation::SetMainHeader(set_main_header::SetMainHeader { main_header: base.main_header.clone() })],
         AviMutation::SetIdx1Present(_) => vec![AviMutation::SetIdx1Present(set_idx1_present::SetIdx1Present { idx1_present: base.idx1_present })],
         AviMutation::InsertStream(insert_stream::InsertStream { index, .. }) => vec![AviMutation::RemoveStream(remove_stream::RemoveStream { index: *index })],
@@ -129,6 +135,8 @@ pub(crate) fn agg_inverse(this: &AviMutation, base: &AviSnapshot) -> Vec<AviMuta
             None => Vec::new(),
         },
     }
+
+    })
 }
 //#endregion 🔖️MutationTrait
 
@@ -151,12 +159,12 @@ pub fn apply_avi_mutation(snapshot: &mut AviSnapshot, mutation: &AviMutation) ->
 /// 🎙️ Handcrafted `OpText`/`OpBinary` — plain `pack::json` round-trip (see mp4's identical
 /// module-doc rationale: f6-final-summary.md §4.4, no generic collection-diff `DslField` bridge).
 impl OpText for AviMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let parsed = pack::parse_json(line).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
-        <Self as dsl::FromValue>::from_value(pack::json_to_dsl_value(&parsed)).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        let parsed = semio_framework_pack_json::parse(line, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| semio_framework_diagnostic::TextError::from_value_error(e.into_value_error(), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
+        <Self as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|e| semio_framework_diagnostic::TextError::from_value_error(e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
     fn print_op(&self) -> String {
-        pack::json_to_string(&pack::json_from_dsl_value(&dsl::ToValue::to_value(self)))
+        semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(self)))
     }
 }
 

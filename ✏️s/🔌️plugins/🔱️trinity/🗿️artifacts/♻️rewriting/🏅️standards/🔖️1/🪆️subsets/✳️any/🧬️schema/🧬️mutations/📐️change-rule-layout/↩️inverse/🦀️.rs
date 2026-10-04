@@ -4,10 +4,13 @@ use crate::standards::v1::subsets::any::schema::mutations::{change_rule_layout_p
 use crate::RewritingSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::ChangeRuleLayoutPoint, base: &RewritingSnapshot) -> Vec<RewriteRuleMutation> {
+pub fn inverse(payload: &super::ChangeRuleLayoutPoint, base: &RewritingSnapshot) -> Result<Vec<RewriteRuleMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.rule_layout.get(&payload.key) {
         Some(old) => vec![change_rule_layout_point(payload.key.clone(), *old)],
         None => vec![remove_rule_layout_point(payload.key.clone())],
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

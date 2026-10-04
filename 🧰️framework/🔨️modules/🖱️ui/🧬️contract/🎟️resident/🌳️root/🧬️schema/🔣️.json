@@ -34,7 +34,7 @@
       ],
       "properties": {
         "version": {
-          "const": 1
+          "const": 2
         },
         "surfaces": {
           "const": 9
@@ -95,7 +95,7 @@
           "const": 8388608
         },
         "pressureAggregateBytes": {
-          "const": 54001664
+          "const": 58064896
         },
         "slotReuseRequiresTypedTerminal": {
           "const": true

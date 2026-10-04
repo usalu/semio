@@ -11,7 +11,7 @@
 //! Oracle: every materialised control's bound pointer resolves in the document through serde_json's RFC 6901
 //! `pointer` (third-party) — an insert binds its parent — so a shortened window never binds a row that is not there.
 
-use semio_framework_os_kernel::{DslValue, Number};
+use semio_framework_value::{DslValue, Number};
 use semio_framework_plugin::take_arena_unbuilt_rows;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_plugin::Component;
@@ -20,7 +20,7 @@ use semio_framework_plugin::TreeWindows;
 use semio_framework_plugin::UiMapBuilder;
 use semio_framework_plugin::UiValue;
 use semio_framework_ui_contract as ui;
-use semio_s_artifact_stdio_contract::editing::{render_snapshot_details_provider, SnapshotDetailPathSegment, SnapshotDetailValue, SnapshotDetailsProvider};
+use semio_s_artifact_stdio_contract::editing::{render_snapshot_details_provider_revisioned, SnapshotDetailPathSegment, SnapshotDetailValue, SnapshotDetailsProvider};
 
 /// 📊️ A csv-shaped snapshot: `records[r].fields[c] = {value, quoted}`, typed (schema-bound collections) or untyped.
 struct Document {
@@ -131,7 +131,7 @@ fn drain() {
 fn complete_cost(document: &Document, locale: Locale, controller: &str) -> usize {
     drain();
     let before = ui::ui_value_headroom().collections;
-    let complete = render_snapshot_details_provider(document, locale, controller, &TreeWindows::unhosted()).expect("a render on an idle arena succeeds");
+    let complete = render_snapshot_details_provider_revisioned(document, semio_framework_ui_contract::UiPublicationRevision(1), locale, controller, &TreeWindows::unhosted()).expect("a render on an idle arena succeeds");
     let cost = before - ui::ui_value_headroom().collections;
     drop(complete);
     drain();
@@ -209,7 +209,7 @@ fn details_render_a_shorter_window_when_the_arena_is_short_and_recover_when_it_i
         for (locale, tag) in locales {
             drain();
             let _ = take_arena_unbuilt_rows();
-            let complete = render_snapshot_details_provider(&document, locale, controller, &TreeWindows::unhosted()).unwrap_or_else(|error| panic!("{id}/{tag}: a render on an idle arena succeeds: {} {}", error.code, error.message));
+            let complete = render_snapshot_details_provider_revisioned(&document, semio_framework_ui_contract::UiPublicationRevision(1), locale, controller, &TreeWindows::unhosted()).unwrap_or_else(|error| panic!("{id}/{tag}: a render on an idle arena succeeds: {} {}", error.code, error.message));
             let (complete_rows, complete_total) = census(&complete, section);
             assert!(complete_rows > 0, "{id}/{tag}: the idle arena materialises detail rows");
             assert_eq!(take_arena_unbuilt_rows(), 0, "{id}/{tag}: an idle arena leaves no row unbuilt");
@@ -220,7 +220,7 @@ fn details_render_a_shorter_window_when_the_arena_is_short_and_recover_when_it_i
             assert!(cost > 0, "{id}/{tag}: a complete render holds arena collections");
             let free = free_collections(case["headroom"].as_str().expect("headroom share"), cost);
             let held = hold_until(free);
-            let short = render_snapshot_details_provider(&document, locale, controller, &TreeWindows::unhosted()).unwrap_or_else(|error| panic!("{id}/{tag}: a short arena shortens the window instead of refusing: {} {}", error.code, error.message));
+            let short = render_snapshot_details_provider_revisioned(&document, semio_framework_ui_contract::UiPublicationRevision(1), locale, controller, &TreeWindows::unhosted()).unwrap_or_else(|error| panic!("{id}/{tag}: a short arena shortens the window instead of refusing: {} {}", error.code, error.message));
             let (short_rows, short_total) = census(&short, section);
             assert_eq!(short_total, complete_total, "{id}/{tag}: the section stamps its full extent");
             match case["expect"].as_str().unwrap() {
@@ -238,7 +238,7 @@ fn details_render_a_shorter_window_when_the_arena_is_short_and_recover_when_it_i
             drop(short);
             drop(held);
             drain();
-            let recovered = render_snapshot_details_provider(&document, locale, controller, &TreeWindows::unhosted()).unwrap_or_else(|error| panic!("{id}/{tag}: the returned credit renders again: {} {}", error.code, error.message));
+            let recovered = render_snapshot_details_provider_revisioned(&document, semio_framework_ui_contract::UiPublicationRevision(1), locale, controller, &TreeWindows::unhosted()).unwrap_or_else(|error| panic!("{id}/{tag}: the returned credit renders again: {} {}", error.code, error.message));
             assert_eq!(census(&recovered, section).0, complete_rows, "{id}/{tag}: the complete window returns with the credit");
             assert_eq!(take_arena_unbuilt_rows(), 0, "{id}/{tag}: the returned credit leaves no row unbuilt");
         }

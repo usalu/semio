@@ -1,7 +1,0 @@
-{
-  "mutation": "reorderNodes",
-  "order": [
-    "node-a",
-    "node-a"
-  ]
-}

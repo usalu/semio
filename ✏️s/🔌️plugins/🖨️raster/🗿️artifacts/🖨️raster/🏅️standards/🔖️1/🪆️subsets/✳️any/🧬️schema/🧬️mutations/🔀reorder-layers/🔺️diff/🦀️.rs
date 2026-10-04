@@ -32,7 +32,7 @@ pub fn diff(payload: &super::ReorderLayers, base: &RasterSnapshot) -> protocol::
     }
     if let Some((current_parent, current_index)) = locate(&base.layers, None, &payload.layer_id) {
         if current_parent == payload.parent_id && current_index == payload.index {
-            return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Layer \"{}\" is already at that position.", payload.layer_id));
+            return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Layer \"{}\" is already at that position.", payload.layer_id));
         }
     }
     protocol::MutationOutcome::new(diff_move_layer(&payload.layer_id, payload.parent_id.clone(), payload.index))

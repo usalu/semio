@@ -1,58 +1,82 @@
-//! 🎬️ Sequence semantic mutation aggregate and leaf detection registry.
+//! 🎬️ Sequence parent mutation vocabulary — empty by design (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING design §12,
+//! §20.15): a sequence's steps and edges live in its composed `content` child (`s.stdio.semio@v1/flow`), so every content
+//! edit is a child-lane leaf in that child's store (`drag-nodes`, `insert-node`, `set-node-param`, …) and the parent owns no
+//! leaf that could read the child. Editors publish those child leaves (`crate::editor::sequence::sequence_content_leaves`).
 
 use crate::diff::SequenceDiff;
 use crate::SequenceSnapshot;
 
 pub use crate::schema::operations::*;
-pub use crate::standards::v1::subsets::dependency::schema::mutations::connect_steps::{connect_steps, ConnectSteps};
-pub use crate::standards::v1::subsets::dependency::schema::mutations::disconnect_steps::{disconnect_steps, DisconnectSteps};
-pub use crate::standards::v1::subsets::step::schema::mutations::change_step_collapsed::{change_step_collapsed, ChangeStepCollapsed};
-pub use crate::standards::v1::subsets::step::schema::mutations::create_step::{create_step, CreateStep};
-pub use crate::standards::v1::subsets::step::schema::mutations::delete_step::{delete_step, DeleteStep};
-pub use crate::standards::v1::subsets::step::schema::mutations::duplicate_step::{duplicate_step, DuplicateStep};
-pub use crate::standards::v1::subsets::step::schema::mutations::edit_step_params::{edit_step_params, EditStepParams};
-pub use crate::standards::v1::subsets::step::schema::mutations::move_step::{move_step, MoveStep};
 
 //#region 🔖️Aggregate
-/// 🧮️ Closed sequence mutation vocabulary backed by direct semantic owners.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslEnum, dsl::Mutations)]
-#[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = SequenceSnapshot, diff = SequenceDiff, schema = "sequence.sequence")]
-pub enum SequenceMutation {
-    CreateStep(CreateStep),
-    DeleteStep(DeleteStep),
-    MoveStep(MoveStep),
-    EditStepParams(EditStepParams),
-    ChangeStepCollapsed(ChangeStepCollapsed),
-    ConnectSteps(ConnectSteps),
-    DisconnectSteps(DisconnectSteps),
-    DuplicateStep(DuplicateStep),
+/// 🕳️ The uninhabited parent vocabulary of a document whose whole content is its composed child.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+pub enum SequenceMutation {}
+
+impl protocol::Mutation<SequenceSnapshot> for SequenceMutation {
+    type Diff = SequenceDiff;
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[];
+
+    fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
+        match *self {}
+    }
+    fn diff(&self, _base: &SequenceSnapshot) -> protocol::MutationOutcome<SequenceDiff> {
+        match *self {}
+    }
+    fn inverse(&self, _base: &SequenceSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+    Ok((|| {
+        match *self {}
+    
+    })())
 }
+}
+
+/// 🏷️ No parent kind exists, so no parent operation is ever labelled; child leaves label their own rows.
+impl protocol::SemanticMutation<SequenceSnapshot> for SequenceMutation {
+    fn kinds() -> &'static [protocol::SemanticDescriptor] {
+        &[]
+    }
+    fn semantics(&self) -> &'static protocol::SemanticDescriptor {
+        match *self {}
+    }
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        match *self {}
+    }
+    fn target(&self) -> Vec<String> {
+        match *self {}
+    }
+}
+
+/// 📝️ No parent operation line exists.
+impl protocol::OpText for SequenceMutation {
+    fn parse_op(_line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "a sequence has no parent-lane mutation; content edits are child-lane leaves", semio_framework_diagnostic::TextSpan::at(1, 1)))
+    }
+    fn print_op(&self) -> String {
+        match *self {}
+    }
+}
+
+/// 💾️ No parent operation record exists.
+impl protocol::OpBinary for SequenceMutation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        match *self {}
+    }
+    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        Err(protocol::ProtocolError::Malformed { what: "sequence-mutation", offset: 0, detail: "a sequence has no parent-lane mutation; content edits are child-lane leaves".into() })
+    }
+}
+
+/// 🧊️ Nothing to retire: the vocabulary is uninhabited.
 impl neural_engine::ColdRetire for SequenceMutation {
     fn retire_cold(self) {
-        match self {
-            Self::CreateStep(value) => value.step.retire_cold(),
-            Self::EditStepParams(value) => value.params.retire_cold(),
-            Self::DeleteStep(_) | Self::MoveStep(_) | Self::ChangeStepCollapsed(_) | Self::ConnectSteps(_) | Self::DisconnectSteps(_) | Self::DuplicateStep(_) => {}
-        }
+        match self {}
     }
 }
 //#endregion 🔖️Aggregate
 
-//#region 🔎️DetectionRegistry
-pub const DETECTORS: &[SequenceMutationDetector] = &[
-    crate::standards::v1::subsets::step::schema::mutations::create_step::detect,
-    crate::standards::v1::subsets::step::schema::mutations::delete_step::detect,
-    crate::standards::v1::subsets::step::schema::mutations::move_step::detect,
-    crate::standards::v1::subsets::step::schema::mutations::edit_step_params::detect,
-    crate::standards::v1::subsets::step::schema::mutations::change_step_collapsed::detect,
-    crate::standards::v1::subsets::dependency::schema::mutations::connect_steps::detect,
-    crate::standards::v1::subsets::dependency::schema::mutations::disconnect_steps::detect,
-];
-//#endregion 🔎️DetectionRegistry
-
-//#region 🧪️StructuralCorrespondence
+//#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🔬️structural-correspondence/🦀️.rs"]
-mod structural_correspondence_tests;
-//#endregion 🧪️StructuralCorrespondence
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+//#endregion 🧪️Tests

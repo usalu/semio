@@ -6,11 +6,12 @@ pub mod set_adjacency_field {
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::op::ProgramMutation;
     use crate::{EntityId, ProgramSnapshot};
-    use dsl::DslValue as Value;
-    use dsl::{FromValue, ToValue};
+    use semio_framework_value::DslValue as Value;
+    use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "set-adjacency-field")]
     pub struct SetAdjacencyField {
         pub entity_id: String,
@@ -21,12 +22,12 @@ pub mod set_adjacency_field {
     /// ↔️ Sets one field of one adjacency row; an unparsable value, an unnamed field or an unknown
     /// adjacency is refused by name.
     pub fn handle(payload: &SetAdjacencyField, doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
-        let value = dsl::json::from_json_str::<Value>(&payload.value_json).map_err(|_| Fault::new(FaultOrigin::App, FaultCode::new("architect.adjacency-value-invalid"), format!("setAdjacencyField needs a JSON value, got {}", payload.value_json)))?;
+        let value = semio_framework_pack_json::from_json_str::<Value>(&payload.value_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| Fault::new(FaultOrigin::App, FaultCode::new("architect.adjacency-value-invalid"), format!("setAdjacencyField needs a JSON value, got {}", payload.value_json)))?;
         if payload.field.is_empty() {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("architect.adjacency-field-missing"), "setAdjacencyField needs a field name"));
         }
         let patch = vec![(payload.field.clone(), value)];
-        let operation = patch_register_item_operation(doc.snapshot, "adjacencies", &EntityId(payload.entity_id.clone()), &Value::Object(patch))
+        let operation = patch_register_item_operation(doc.snapshot, "adjacencies", &EntityId(payload.entity_id.clone()), &semio_framework_value::DslValue::Object(patch))
             .ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("mutation.target-missing"), format!("setAdjacencyField cannot set \"{}\" to {} on adjacency \"{}\"", payload.field, payload.value_json, payload.entity_id)))?;
         Ok(Emit::mutations(vec![operation]))
     }
@@ -38,10 +39,11 @@ pub mod set_adjacency_kind {
     use crate::op::ProgramMutation;
     use crate::schema::mutations as leaves;
     use crate::{EntityId, ProgramSnapshot};
-    use dsl::{FromValue, ToValue};
+    use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "set-adjacency-kind")]
     pub struct SetAdjacencyKind {
         pub element_a_id: String,
@@ -94,10 +96,11 @@ pub mod set_adjacency_filter {
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::op::ProgramMutation;
     use crate::ProgramSnapshot;
-    use dsl::{FromValue, ToValue};
+    use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "set-adjacency-filter")]
     pub struct SetAdjacencyFilter {
         pub kind: Option<String>,

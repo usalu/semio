@@ -6,7 +6,7 @@ import fixture from"../../🧫️fixtures/🪶️sqlite/🔣️.json";
 import schema from"../../🔣️.json";
 import xmlSchema from"../../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🔣️.json";
 import{XLSX_SQLITE_SCHEMA,xlsxSnapshotToSqliteDatabase,xlsxSnapshotFromSqliteDatabase}from"../../../../../../../../🟦️.ts";
-import type{XlsxSnapshot}from"../../../../../../../../🟦️.ts";
+import type{OpcPackage,XlsxSnapshot}from"../../../../../../../../🟦️.ts";
 import{exportSqliteDatabase,importSqliteDatabase}from"@semio-tech/framework";
 import{parseXmlDocument}from"../../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts";
 import{validateXlsxSnapshotProfile}from"../../../../../../../../🟦️.ts";
@@ -24,7 +24,7 @@ test("XLSX exact profile policies match independently queried namespaces and rel
 });
 test("XLSX exact profile diagnostics expose long-field interior cancellation and caller bounds",async()=>{
  const snapshot=profileSnapshot(profiles.cases[0]!);if(snapshot.xmlParts[0]!.document.root?.kind!=="element")throw new Error("workbook");snapshot.xmlParts[0]!.document.root.attrs[0]!.value="x".repeat(profiles.largeTextCharacters);
- const controller=new AbortController();let reached=false;await expect(validateXlsxSnapshotProfile(snapshot,"strict",{signal:controller.signal,onProgress:event=>{if(event.total>=profiles.largeTextCharacters&&event.completed>=profiles.cancelAfter&&event.completed<event.total){reached=true;controller.abort();}}})).rejects.toHaveProperty("name","AbortError");expect(reached).toBe(true);await expect(validateXlsxSnapshotProfile(snapshot,"strict",{maxValueBytes:profiles.smallValueBudget})).rejects.toThrow();
+ const controller=new AbortController();let reached=false;await expect(validateXlsxSnapshotProfile(snapshot,"strict",{signal:controller.signal,onProgress:event=>{if(event.total>=profiles.largeTextCharacters&&event.completed>=profiles.cancelAfter&&event.completed<event.total){reached=true;controller.abort();}}})).rejects.toHaveProperty("kind","canceled");expect(reached).toBe(true);await expect(validateXlsxSnapshotProfile(snapshot,"strict",{maxValueBytes:profiles.smallValueBudget})).rejects.toThrow();
 });
 test("XLSX all owned OPC/XML fields expose independent relational identities",async()=>{
  const ajv=new Ajv({strict:false}).addSchema(xmlSchema);const admitted=ajv.validate(schema,fixture);expect(admitted,JSON.stringify(ajv.errors)).toBe(true);expect(XLSX_SQLITE_SCHEMA).toBe(await Bun.file(new URL("../../🪶️sqlite/🗄️.sql",import.meta.url)).text());
@@ -36,7 +36,7 @@ test("XLSX all owned OPC/XML fields expose independent relational identities",as
 test("XLSX aggregate domain rows include package and XML ownership exactly",async()=>{const db=await xlsxSnapshotToSqliteDatabase(input);const count=db.tables.reduce((total,table)=>total+table.rows.length,0);expect(await xlsxSnapshotFromSqliteDatabase(await xlsxSnapshotToSqliteDatabase(input,{maxRows:count}),{maxRows:count})).toEqual(input);await expect(xlsxSnapshotToSqliteDatabase(input,{maxRows:count-1})).rejects.toThrow();});
 
 test("XLSX dangling references and shared OPC/XML owners are refused",async()=>{const database=await xlsxSnapshotToSqliteDatabase(input);for(const[name,row,column,value]of[["xlsx_document",0,2,2n],["xlsx_xml_part",1,4,1n],["xlsx_relationship",0,1,99n],["xlsx_default_content_type",0,2,99n],["xlsx_relationship_owner",1,2,""]]as const){const edited={tables:database.tables.map(table=>table.name!==name?table:{...table,rows:table.rows.map((entry,index)=>index!==row?entry:{...entry,values:entry.values.map((cell,at)=>at===column?value:cell)})})};await expect(xlsxSnapshotFromSqliteDatabase(edited),name).rejects.toThrow();}});
-test("XLSX intrinsic large-part copies have interior ownership cancellation",async()=>{const snapshot=structuredClone(input);snapshot.opc.parts[0]!.bytes=new Array(100000).fill(0x97);const database=await xlsxSnapshotToSqliteDatabase(snapshot);for(const phase of["projectSnapshot","reconstructSnapshot"]as const){const controller=new AbortController();let reached=false;const options={signal:controller.signal,onProgress:(event:{phase:string;completed:number;total:number})=>{if(event.phase===phase&&event.total===100000&&event.completed>=65536&&event.completed<event.total){reached=true;controller.abort();}}};await expect(phase==="projectSnapshot"?xlsxSnapshotToSqliteDatabase(snapshot,options):xlsxSnapshotFromSqliteDatabase(database,options)).rejects.toHaveProperty("name","AbortError");expect(reached).toBe(true);}});
+test("XLSX intrinsic large-part copies have interior ownership cancellation",async()=>{const snapshot=structuredClone(input);snapshot.opc.parts[0]!.bytes=new Array(100000).fill(0x97);const database=await xlsxSnapshotToSqliteDatabase(snapshot);for(const phase of["projectSnapshot","reconstructSnapshot"]as const){const controller=new AbortController();let reached=false;const options={signal:controller.signal,onProgress:(event:{phase:string;completed:number;total:number})=>{if(event.phase===phase&&event.total===100000&&event.completed>=65536&&event.completed<event.total){reached=true;controller.abort();}}};await expect(phase==="projectSnapshot"?xlsxSnapshotToSqliteDatabase(snapshot,options):xlsxSnapshotFromSqliteDatabase(database,options)).rejects.toHaveProperty("kind","canceled");expect(reached).toBe(true);}});
 
 import opcNative from "../../../../../../../../../🎒️zip/📦️opc/🧩️native/🧫️fixtures/🔣️.json";
 import opcNativeSchema from "../../../../../../../../../🎒️zip/📦️opc/🧩️native/🧫️fixtures/🧬️schema/🔣️.json";
@@ -56,7 +56,37 @@ test("XLSX complete native literal fixture has independent envelope and empty pa
 });
 test("OPC native component fixture exposes literal duplicated defaults and independent octets",async()=>{
  expect(new Ajv2020({strict:true}).validate(opcNativeSchema,opcNative)).toBe(true);
- const p=opcNative.package;const hex=(text:string)=>Buffer.from(text,"utf8").toString("hex");const list=(items:readonly string[])=>`[${items.join(",")}]`;const text=list([list(p.parts.map(part=>list([hex(part.path),hex(part.contentType),Buffer.from(part.bytes).toString("hex")]))),list(p.contentTypes.defaults.map(([key,value])=>list([hex(key!),hex(value!)]))),list(p.contentTypes.overrides.map(([key,value])=>list([hex(key!),hex(value!)]))),list(Object.entries(p.relationships).map(([owner,relationships])=>list([hex(owner),list(relationships.map(rel=>list([hex(rel.id),hex(rel.relType),hex(rel.target),rel.targetMode==="external"?"1":"0"])))]))),hex(p.comment)]);expect(text).toBe(opcNative.text);
+ const p=opcNative.package as unknown as OpcPackage;const hex=(text:string)=>Buffer.from(text,"utf8").toString("hex");const list=(items:readonly string[])=>`[${items.join(",")}]`;const text=list([list(p.parts.map(part=>list([hex(part.path),hex(part.contentType),Buffer.from(part.bytes).toString("hex")]))),list(p.contentTypes.defaults.map(([key,value])=>list([hex(key!),hex(value!)]))),list(p.contentTypes.overrides.map(([key,value])=>list([hex(key!),hex(value!)]))),list(Object.entries(p.relationships).map(([owner,relationships])=>list([hex(owner),list(relationships.map(rel=>list([hex(rel.id),hex(rel.relType),hex(rel.target),rel.targetMode==="external"?"1":"0"])))]))),hex(p.comment)]);expect(text).toBe(opcNative.text);
  const bytes:number[]=[];const scalar=(input:Uint8Array)=>{expect(input.length).toBeLessThan(128);bytes.push(input.length,...input);};bytes.push(p.parts.length);for(const part of p.parts){scalar(Buffer.from(part.path));scalar(Buffer.from(part.contentType));scalar(Buffer.from(part.bytes));}for(const pairs of[p.contentTypes.defaults,p.contentTypes.overrides]){bytes.push(pairs.length);for(const[key,value]of pairs){scalar(Buffer.from(key!));scalar(Buffer.from(value!));}}bytes.push(Object.keys(p.relationships).length);for(const[owner,relationships]of Object.entries(p.relationships)){scalar(Buffer.from(owner));bytes.push(relationships.length);for(const rel of relationships){scalar(Buffer.from(rel.id));scalar(Buffer.from(rel.relType));scalar(Buffer.from(rel.target));bytes.push(rel.targetMode==="external"?1:0);}}scalar(Buffer.from(p.comment));expect(bytes).toEqual(opcNative.binary);
  const model={schema:"literal OPC cursor",opc:p,xmlParts:[]}as unknown as XlsxSnapshot;const database=await xlsxSnapshotToSqliteDatabase(model);expect(database.tables.reduce((sum,table)=>sum+table.rows.length,0)).toBe(opcNative.rows+1);const sql=Database.deserialize(await exportSqliteDatabase(database));try{expect(sql.query("SELECT extension,content_type FROM xlsx_default_content_type ORDER BY ordinal").all()).toEqual([{extension:"XML",content_type:"a"},{extension:"XML",content_type:"b"}]);expect(sql.query("SELECT data AS bytes FROM xlsx_binary_part").get()).toEqual({bytes:Uint8Array.of(0,255)});}finally{sql.close();}
+});
+
+import paidOwner from"../../🧫️fixtures/🪶️sqlite/💰️backing/🔣️.json";
+import requestSettlement from"../../🧫️fixtures/🪶️sqlite/💰️backing/🔬️requests/🔣️.json";
+import requestSettlementSchema from"../../🧫️fixtures/🪶️sqlite/💰️backing/🔬️requests/🧬️schema/🔣️.json";
+import paidOwnerSchema from"../../🧫️fixtures/🪶️sqlite/💰️backing/🧬️schema/🔣️.json";
+test("XLSX neutral ownership roles retain independently measured full fields",async()=>{
+ expect(new Ajv({strict:true}).validate(paidOwnerSchema,paidOwner)).toBe(true);
+ expect(Object.keys(input)).toEqual(["schema","opc","xmlParts"]);
+ const literal="Grüße\t\n\0🌠";expect(Buffer.from(literal,"utf8").toString("hex")).toBe("4772c3bcc39f65090a00f09f8ca0");
+ const owned=xlsxSnapshotToSqliteDatabase;const database=await owned(input);expect(database.tables.length).toBe(21);
+ const sql=Database.deserialize(await exportSqliteDatabase(database));try{
+ expect(sql.query("SELECT hex(CAST(? AS BLOB)) AS word").get(literal)).toEqual({word:"4772C3BCC39F65090A00F09F8CA0"});
+ expect(sql.query("SELECT count(*) AS n FROM xlsx_xml_part").get()).toEqual({n:input.xmlParts.length});
+ expect(sql.query("SELECT schema FROM xlsx_document").get()).toEqual({schema:input.schema});
+ expect(sql.query("PRAGMA foreign_key_check").all()).toEqual([]);
+ }finally{sql.close();}
+});
+
+test("XLSX full request settlement preserves independently inspected enclosing ownership",async()=>{
+ expect(new Ajv({strict:true}).validate(requestSettlementSchema,requestSettlement)).toBe(true);
+ const database=await xlsxSnapshotToSqliteDatabase(input);
+ const sql=Database.deserialize(await exportSqliteDatabase(database));
+ try{
+  expect(sql.query("SELECT count(*) AS n FROM sqlite_schema WHERE type='table'").get()).toEqual({n:21});
+  expect(sql.query("SELECT count(*) AS n FROM xlsx_xml_part").get()).toEqual({n:input.xmlParts.length});
+  expect(sql.query("SELECT owner_path FROM xlsx_relationship_owner ORDER BY owner_path").all()).toEqual(Object.keys(input.opc.relationships).sort().map(owner_path=>({owner_path})));
+  expect(sql.query("PRAGMA foreign_key_check").all()).toEqual([]);
+  expect(await xlsxSnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(sql.serialize())))).toEqual(input);
+ }finally{sql.close();}
 });

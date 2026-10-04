@@ -13,7 +13,7 @@ pub fn diff(payload: &ReplaceSearchFilter, base: &ProgramSnapshot) -> protocol::
         return protocol::MutationOutcome::error("mutation.target-missing", "No search filter exists with this id.", [payload.search_filter.header.id.0.clone()]);
     };
     if existing == &payload.search_filter {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This search filter already matches the requested value.").at([existing.header.id.0.clone()])]);
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This search filter already matches the requested value.").at([existing.header.id.0.clone()])]);
     }
     let patch = existing.diff_patch(&payload.search_filter).expect("diff_patch always produces a full patch");
     protocol::MutationOutcome::new(ProgramDiff { search_filters: Some(ProgramSearchFiltersDelta { patched: vec![ProgramSearchFiltersPatchEntry { id: payload.search_filter.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })

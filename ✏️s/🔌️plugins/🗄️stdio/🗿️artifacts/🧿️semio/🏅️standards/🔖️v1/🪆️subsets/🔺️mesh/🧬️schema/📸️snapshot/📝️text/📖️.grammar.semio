@@ -28,7 +28,7 @@ primitive = "[" hex "," topology "," "[" point3-list? "]" "," "[" point3-list? "
 
 materials-line = "materials" "=" "[" material-list? "]"
 material-list = material {"," material}*
-material = "[" hex "," rgba "," number "," number "]"
+material = "[" hex "," rgba "," number "," number  "," option-hex "," option-hex "," option-hex "," option-hex "," option-hex "]"
 
 textures-line = "textures" "=" "[" texture-list? "]"
 texture-list = texture {"," texture}*

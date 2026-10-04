@@ -2,7 +2,7 @@
 
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
-use crate::{op::FlowMutation, FlowSnapshot};
+use crate::{FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::app::ChildEmit;
@@ -15,7 +15,7 @@ use serde_json::json;
 /// ➕️ The add-node gesture record of a flow canvas (design §13.3): the widget kind with the descriptor fields a catalogue
 /// row carries (operator kind, slider label, action, export format) and the world position it lands at. The owner mints
 /// the widget id.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct AddWidget {
     pub kind: String,
     pub neuron_kind: Option<String>,
@@ -43,7 +43,7 @@ fn child_add_widget_mutation_from_descriptor(content: &SemioFlowSnapshot, descri
 }
 
 fn child_add_widget_mutation(content: &SemioFlowSnapshot, descriptor_json: &str, x: f64, y: f64) -> Result<SemioFlowMutation, Fault> {
-    let descriptor: semio_framework_artifact_flow_flow::WidgetDescriptor = flow::os_pack::json::from_json_str(descriptor_json).map_err(|error| child_add_widget_fault(error.to_string()))?;
+    let descriptor: semio_framework_artifact_flow_flow::WidgetDescriptor = semio_framework_pack_json::from_json_str(descriptor_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| child_add_widget_fault(error.to_string()))?;
     let registry = flow::flow_extension_registry();
     let kind_info = match &descriptor {
         semio_framework_artifact_flow_flow::WidgetDescriptor::Neuron { neuron_kind, .. } => registry.operator_info(neuron_kind),

@@ -7,7 +7,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 /// ✂️ One typed run as its host saw it (`semio.ui.scene.text-splice.v1`), the host's run sequence `seq`, and the selection the
 /// host shows after the run (`anchor`/`caret`, UTF-8 byte offsets of the editor session).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "text-splice")]
 pub struct TextSplice {
     pub start: u32,

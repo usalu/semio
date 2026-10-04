@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/bmp/v3/any/mutation/paint-indexed-region/schema.json",
+  "title": "PaintIndexedRegion",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["revision", "x", "y", "width", "height", "paletteIndex"],
+  "properties": {
+    "revision": {"type": "string", "x-semio-ui": {"label": {"en": "Revision", "de": "Revision"}, "group": "target", "order": 10}},
+    "x": {"type": "integer", "minimum": 0, "x-semio-ui": {"label": {"en": "Left", "de": "Links"}, "group": "region", "order": 20}},
+    "y": {"type": "integer", "minimum": 0, "x-semio-ui": {"label": {"en": "Top", "de": "Oben"}, "group": "region", "order": 30}},
+    "width": {"type": "integer", "minimum": 1, "x-semio-ui": {"label": {"en": "Width", "de": "Breite"}, "group": "region", "order": 40}},
+    "height": {"type": "integer", "minimum": 1, "x-semio-ui": {"label": {"en": "Height", "de": "Höhe"}, "group": "region", "order": 50}},
+    "paletteIndex": {"type": "integer", "minimum": 0, "maximum": 255, "x-semio-ui": {"label": {"en": "Palette index", "de": "Palettenindex"}, "group": "paint", "order": 60}}
+  }
+}

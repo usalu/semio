@@ -8,6 +8,6 @@ export interface SynapseSpec {
 }
 
 export interface ConnectSynapse {
-  index: number;
+  index: bigint;
   synapse: SynapseSpec;
 }

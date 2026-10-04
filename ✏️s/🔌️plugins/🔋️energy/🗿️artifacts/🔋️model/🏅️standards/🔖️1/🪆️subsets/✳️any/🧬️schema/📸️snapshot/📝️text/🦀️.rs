@@ -12,7 +12,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 pub const SEMIO_ENERGY_MODEL_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
 /// 📖️ Parses `.energy` DSL text into an `EnergyModelSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<EnergyModelSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<EnergyModelSnapshot, semio_framework_diagnostic::TextError> {
     <EnergyModelSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 

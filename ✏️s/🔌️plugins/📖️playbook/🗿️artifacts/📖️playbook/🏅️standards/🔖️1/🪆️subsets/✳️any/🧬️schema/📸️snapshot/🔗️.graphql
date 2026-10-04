@@ -5,6 +5,5 @@ type PlaybookSnapshot {
   id: String!
   version: String!
   title: String
-  document: ArtifactChild!
   flow: ArtifactChild!
 }

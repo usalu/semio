@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.dev/framework/pack/error/cause/paged",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["cases"],
+  "properties": {
+    "cases": {
+      "type": "array", "minItems": 9, "maxItems": 9,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "factory", "kind", "reason", "allocatedBytes", "expectedKind"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "factory": {"enum": ["refusal", "allocation"]},
+          "kind": {"enum": ["ownershipLimit", "allocationFailed", "invariantViolated"]},
+          "reason": {"const": "same deliberately misleading cancellation/limit prose"},
+          "allocatedBytes": {"type": ["integer", "null"], "minimum": 0},
+          "expectedKind": {"enum": ["ownershipLimit", "allocationFailed", "invariantViolated"]}
+        },
+        "allOf": [
+          {"if": {"properties": {"factory": {"const": "refusal"}}}, "then": {"properties": {"allocatedBytes": {"type": "null"}}}, "else": {"properties": {"allocatedBytes": {"type": "integer"}}}},
+          {"if": {"properties": {"kind": {"const": "ownershipLimit"}}}, "then": {"properties": {"expectedKind": {"const": "ownershipLimit"}}}},
+          {"if": {"properties": {"kind": {"const": "allocationFailed"}}}, "then": {"properties": {"expectedKind": {"const": "allocationFailed"}}}},
+          {"if": {"properties": {"kind": {"const": "invariantViolated"}}}, "then": {"properties": {"expectedKind": {"const": "invariantViolated"}}}}
+        ]
+      }
+    }
+  }
+}

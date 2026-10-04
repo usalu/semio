@@ -269,33 +269,33 @@ fn instance_record_fingerprint(object: &Puzzle3dObject, mesh_id: &str, provision
 /// Floats go in by `to_bits`, so the key is exact rather than format-dependent, and an object's keys
 /// are hashed in their authored order (the order `ToValue` emits, which is what the previous JSON
 /// hash was sensitive to as well).
-pub fn hash_dsl_value<H: Hasher>(value: &dsl::DslValue, hasher: &mut H) {
+pub fn hash_dsl_value<H: Hasher>(value: &semio_framework_value::DslValue, hasher: &mut H) {
     match value {
-        dsl::DslValue::Null => 0_u8.hash(hasher),
-        dsl::DslValue::Bool(flag) => {
+        semio_framework_value::DslValue::Null => 0_u8.hash(hasher),
+        semio_framework_value::DslValue::Bool(flag) => {
             1_u8.hash(hasher);
             flag.hash(hasher);
         }
-        dsl::DslValue::Number(number) => {
+        semio_framework_value::DslValue::Number(number) => {
             2_u8.hash(hasher);
             match number {
-                dsl::Number::UInt(value) => value.hash(hasher),
-                dsl::Number::Int(value) => value.hash(hasher),
-                dsl::Number::Float(value) => value.to_bits().hash(hasher),
+                semio_framework_value::Number::UInt(value) => value.hash(hasher),
+                semio_framework_value::Number::Int(value) => value.hash(hasher),
+                semio_framework_value::Number::Float(value) => value.to_bits().hash(hasher),
             }
         }
-        dsl::DslValue::String(text) => {
+        semio_framework_value::DslValue::String(text) => {
             3_u8.hash(hasher);
             text.hash(hasher);
         }
-        dsl::DslValue::Array(items) => {
+        semio_framework_value::DslValue::Array(items) => {
             4_u8.hash(hasher);
             items.len().hash(hasher);
             for item in items {
                 hash_dsl_value(item, hasher);
             }
         }
-        dsl::DslValue::Object(entries) => {
+        semio_framework_value::DslValue::Object(entries) => {
             5_u8.hash(hasher);
             entries.len().hash(hasher);
             for (key, item) in entries {
@@ -303,7 +303,7 @@ pub fn hash_dsl_value<H: Hasher>(value: &dsl::DslValue, hasher: &mut H) {
                 hash_dsl_value(item, hasher);
             }
         }
-        dsl::DslValue::Bytes(bytes) => {
+        semio_framework_value::DslValue::Bytes(bytes) => {
             6_u8.hash(hasher);
             bytes.hash(hasher);
         }
@@ -549,7 +549,7 @@ fn hash_axes<H: Hasher>(axes: &[f64], hasher: &mut H) {
     }
 }
 
-fn hash_optional_dsl_value<H: Hasher>(value: Option<&dsl::DslValue>, hasher: &mut H) {
+fn hash_optional_dsl_value<H: Hasher>(value: Option<&semio_framework_value::DslValue>, hasher: &mut H) {
     match value {
         Some(value) => {
             1_u8.hash(hasher);

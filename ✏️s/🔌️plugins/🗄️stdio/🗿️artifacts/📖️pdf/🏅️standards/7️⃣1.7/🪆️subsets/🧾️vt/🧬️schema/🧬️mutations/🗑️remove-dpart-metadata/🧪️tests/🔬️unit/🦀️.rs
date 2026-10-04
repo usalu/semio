@@ -10,5 +10,5 @@ fn changes_the_owned_conformance_axis_and_plans_its_inverse() {
     let outcome = <RemoveDpartMetadata as MutationKind<PdfSnapshot, PdfVtMutation>>::diff(&mutation, &base);
     let next = outcome.diff().apply(&base).unwrap();
     assert!(support::dpart_job(&next).is_none());
-    assert_eq!(<RemoveDpartMetadata as MutationKind<PdfSnapshot, PdfVtMutation>>::inverse(&mutation, &base), vec![PdfVtMutation::SetDpartMetadata(SetDpartMetadata { job: "run 4711".to_string() })]);
+    assert_eq!(<RemoveDpartMetadata as MutationKind<PdfSnapshot, PdfVtMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture"), vec![PdfVtMutation::SetDpartMetadata(SetDpartMetadata { job: "run 4711".to_string() })]);
 }

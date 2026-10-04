@@ -16,8 +16,8 @@ use crate::standards::v1::subsets::any::schema::mutations::move_selection::MoveS
 use crate::standards::v1::subsets::any::schema::mutations::text::Fem3dMutation;
 use crate::{element_id, Fem3dSnapshot, FemLoad};
 use machine::Command;
-use semio_framework_tool_machine::{ToolAbortReason, ToolMachineRunner, ToolRefusal, ToolStep, ToolTransaction, ToolYield};
-use semio_s_artifact_fem_2d::editor::fem2d::transient::{FemGumballGesture, FemGumballPhase, FemGumballTool};
+use semio_framework_tool_machine::{GesturePhase, GestureTool, ToolAbortReason, ToolMachineRunner, ToolRefusal, ToolStep, ToolTransaction, ToolYield};
+use semio_s_artifact_fem_2d::editor::fem2d::transient::FemGumballGesture;
 use std::collections::HashSet;
 
 //#region 🔖️Targets
@@ -267,8 +267,9 @@ pub struct Fem3dGumballTool {
     base_revision: String,
 }
 
-impl FemGumballTool for Fem3dGumballTool {
-    type Leaf = MoveSelection;
+impl GestureTool for Fem3dGumballTool {
+    type Gesture = FemGumballGesture;
+    type Tick = MoveSelection;
     type Mutation = Fem3dMutation;
 
     fn start(verb: &str, authoring_seed: &str, base_revision: &str) -> Result<Self, ToolRefusal> {
@@ -295,23 +296,20 @@ impl FemGumballTool for Fem3dGumballTool {
         &self.base_revision
     }
 
-    fn at_rest(&self) -> bool {
-        self.runner.at_rest()
-    }
 
     fn abort(&mut self, reason: ToolAbortReason) {
         self.runner.abort(reason);
     }
 
-    fn send(&mut self, phase: FemGumballPhase, tick: Option<MoveSelection>) -> Result<ToolStep<Fem3dMutation>, ToolRefusal> {
+    fn send(&mut self, phase: GesturePhase, tick: Option<MoveSelection>) -> Result<ToolStep<Fem3dMutation>, ToolRefusal> {
         let request = Fem3dGumballRequest { tick };
         let event = match phase {
-            FemGumballPhase::Stream => gumball_tool::Event::Stream(request),
-            FemGumballPhase::Commit if !self.runner.at_rest() => gumball_tool::Event::Finish(request),
-            FemGumballPhase::Abort(_) => gumball_tool::Event::Cancel,
-            FemGumballPhase::Once | FemGumballPhase::Commit => gumball_tool::Event::Records(request),
+            GesturePhase::Stream => gumball_tool::Event::Stream(request),
+            GesturePhase::Commit if !self.runner.at_rest() => gumball_tool::Event::Finish(request),
+            GesturePhase::Abort(_) => gumball_tool::Event::Cancel,
+            GesturePhase::Once | GesturePhase::Commit => gumball_tool::Event::Records(request),
         };
-        self.runner.send(event, protocol::HybridLogicalTimestamp { actor: 0, physical_ms: semio_framework_job::default_now_ms().unwrap_or(0), logical: 0 })
+        self.runner.send(event, semio_framework_tool_machine::authoring_clock(0))
     }
 
     fn persist(self) -> Option<FemGumballGesture> {
@@ -337,20 +335,20 @@ pub fn fem3d_gumball_active(doc: &Fem3dSnapshot, interaction: &Fem3dInteractionS
 /// windows while the results window re-solves it, and the release commits it as ONE edit.
 pub fn fem3d_selection_json(doc: &Fem3dSnapshot, interaction: &Fem3dInteractionSnapshot, transform_armed: bool, config: &Fem3dGumballConfig) -> String {
     let hovered = interaction.hovered_ids.first().map(String::as_str);
-    let mut value: dsl::json::Value = dsl::json::parse(&semio_framework_plugin::world3d_selection_json_with_granularity("rectangle", &interaction.selected_ids, hovered, Some(FEM3D_GRANULARITY_NODE))).unwrap_or_else(|_| dsl::json!({}));
+    let mut value: semio_framework_pack_json::Value = semio_framework_pack_json::parse(&semio_framework_plugin::world3d_selection_json_with_granularity("rectangle", &interaction.selected_ids, hovered, Some(FEM3D_GRANULARITY_NODE)), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| semio_framework_pack_json::json!({}));
     if let Some(object) = value.as_object_mut() {
-        object.insert("selectionMode", dsl::json!("object"));
-        object.insert("targets", dsl::json!({ "mesh": true, "vertex": false, "edge": false, "face": false }));
+        object.insert("selectionMode", semio_framework_pack_json::json!("object"));
+        object.insert("targets", semio_framework_pack_json::json!({ "mesh": true, "vertex": false, "edge": false, "face": false }));
         if let Some(id) = interaction.selected_ids.first() {
-            object.insert("activeObjectId", dsl::json!(id));
+            object.insert("activeObjectId", semio_framework_pack_json::json!(id));
         }
         let active = fem3d_gumball_active(doc, interaction, transform_armed, config);
-        object.insert("gumballActive", dsl::json!(active));
+        object.insert("gumballActive", semio_framework_pack_json::json!(active));
         if transform_armed {
-            object.insert("transformMode", dsl::json!("transform"));
+            object.insert("transformMode", semio_framework_pack_json::json!("transform"));
             object.insert(
                 "gumballConfig",
-                dsl::json!({
+                semio_framework_pack_json::json!({
                     "moveAxes": config.move_axes,
                     "movePlanes": config.move_planes,
                     "rotate": config.rotate,
@@ -359,15 +357,15 @@ pub fn fem3d_selection_json(doc: &Fem3dSnapshot, interaction: &Fem3dInteractionS
                     "scaleUniform": config.scale_uniform,
                 }),
             );
-            object.insert("gumballLiveDispatch", dsl::json!(true));
+            object.insert("gumballLiveDispatch", semio_framework_pack_json::json!(true));
             if active {
                 if let Some(pivot) = fem3d_transform_pivot(doc, &fem3d_transform_targets(doc, &interaction.selected_ids)) {
-                    object.insert("gumballTarget", dsl::json!(pivot));
+                    object.insert("gumballTarget", semio_framework_pack_json::json!(pivot));
                 }
             }
         }
     }
-    dsl::json::to_string(&value)
+    semio_framework_pack_json::to_string(&value)
 }
 //#endregion 🔖️SelectionRecord
 

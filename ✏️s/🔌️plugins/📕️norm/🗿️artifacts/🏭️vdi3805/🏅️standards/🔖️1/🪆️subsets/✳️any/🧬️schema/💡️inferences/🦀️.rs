@@ -6,7 +6,6 @@
 
 use crate::Vdi3805Snapshot;
 use ::framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a vdi3805 snapshot. One field per named inference under
@@ -23,8 +22,11 @@ pub struct Vdi3805Inference {
 }
 
 impl protocol::Inference<Vdi3805Snapshot> for Vdi3805Inference {
-    fn infer(snapshot: &Vdi3805Snapshot) -> Self {
+    fn infer(snapshot: &Vdi3805Snapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { outline: Vdi3805Outline::compute(snapshot) }
+    
+        })
     }
 }
 
@@ -40,13 +42,6 @@ impl protocol::InferenceSpec<Vdi3805Snapshot> for Vdi3805Inference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for standards::v1::subsets::any::schema::Vdi3805Builder {
-    type Snapshot = Vdi3805Snapshot;
-    type Inference = Vdi3805Inference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.norm.vdi3805.inference`'s facet leaves into the OS-wide inference catalog — call once at

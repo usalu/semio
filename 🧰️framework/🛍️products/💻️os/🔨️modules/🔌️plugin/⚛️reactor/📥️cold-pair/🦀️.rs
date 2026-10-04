@@ -131,6 +131,31 @@ impl ColdDocumentPairLoad {
     }
 }
 
+/// 🛬️ The archive operation id a cold pair's stepped document load runs under: the transfer generation with the high
+/// bit set, so it never collides with a host-chosen archive load sequence.
+pub(crate) const COLD_PAIR_DOCUMENT_LOAD_OPERATION: u64 = 1 << 63;
+
+/// 🛬️ A verified cold pair whose document loads through the stepped document archive load (`📓️api-stepped-document-load.md`
+/// §8): the claimed load, the archive operation and the last page's cursor every `Loading` answer carries.
+pub(crate) struct ColdPairDocumentLoad {
+    pub(crate) load: ColdDocumentPairLoad,
+    pub(crate) operation: u64,
+    pub(crate) cursor: ColdDocumentPairCursor,
+    pub(crate) superseded: bool,
+}
+
+impl ColdPairDocumentLoad {
+    pub(crate) fn new(load: ColdDocumentPairLoad, transfer_generation: u64, cursor: ColdDocumentPairCursor) -> Self {
+        Self { load, operation: COLD_PAIR_DOCUMENT_LOAD_OPERATION | transfer_generation, cursor, superseded: false }
+    }
+
+    /// 🧬️ The whole-document archive of the verified pair: its pack and spr, no members.
+    pub(crate) fn archive(&self) -> store::DocumentArchivePack {
+        let files = self.load.files();
+        store::DocumentArchivePack { parent_pack: files.pack.clone(), parent_spr: files.spr.clone(), members: Vec::new() }
+    }
+}
+
 impl Drop for ColdDocumentPairLoad {
     fn drop(&mut self) {
         if !self.finished {
@@ -194,6 +219,16 @@ impl<const N: usize> ColdDocumentPairIngressRegistry<N> {
         let index = Self::slot_index(page.header.lifetime);
         if self.closes[index].is_some() {
             return Self::fault(cursor, "cold-pair.not-live");
+        }
+        let superseded = self.slots[index]
+            .as_ref()
+            .map(|owner| owner.borrow())
+            .filter(|owner| owner.header.lifetime == page.header.lifetime && owner.header.transfer_generation < page.header.transfer_generation && !matches!(owner.phase, ColdDocumentPairPhase::Loading))
+            .map(|owner| owner.cursor());
+        if let Some(stale) = superseded {
+            if !self.close_step(page.header.lifetime).closed {
+                return ColdPairIngressStatus::Backpressure(stale);
+            }
         }
         let owner = if let Some(owner) = &self.slots[index] {
             if owner.borrow().header.lifetime != page.header.lifetime {

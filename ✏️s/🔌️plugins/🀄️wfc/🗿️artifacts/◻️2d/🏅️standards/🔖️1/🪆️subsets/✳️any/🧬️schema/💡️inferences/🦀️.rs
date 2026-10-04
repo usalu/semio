@@ -337,7 +337,7 @@ impl Wfc2dInferenceJob {
                     }
                     self.cursor += 1;
                 } else if self.snapshot.slots.is_empty() || self.raw_weights.is_empty() {
-                    self.commit_bytes = protocol::json::to_json_string(&self.commit).into_bytes();
+                    self.commit_bytes = semio_framework_pack_json::to_json_string(&self.commit).into_bytes();
                     self.stage = Wfc2dInferenceStage::EncodeCommit;
                 } else {
                     self.relation_names.sort();
@@ -444,7 +444,7 @@ impl Wfc2dInferenceJob {
         for slot in &self.snapshot.slots {
             self.commit.entropy.insert(slot.id.clone(), slot_entropy(&self.snapshot, slot));
         }
-        self.commit_bytes = protocol::json::to_json_string(&self.commit).into_bytes();
+        self.commit_bytes = semio_framework_pack_json::to_json_string(&self.commit).into_bytes();
         self.commit_cursor = 0;
         self.stage = Wfc2dInferenceStage::EncodeCommit;
     }
@@ -461,7 +461,7 @@ impl Wfc2dInferenceJob {
         } else {
             self.child_commit = None;
             self.commit.contradiction = false;
-            self.commit_bytes = protocol::json::to_json_string(&self.commit).into_bytes();
+            self.commit_bytes = semio_framework_pack_json::to_json_string(&self.commit).into_bytes();
             if self.commit_bytes.len() > MAX_WFC_2D_OUTPUT_BYTES {
                 return Err("wfc2d-inference-output-admission-exceeded".into());
             }
@@ -730,7 +730,7 @@ impl semio_framework::ToolJobFactory for Wfc2dInferenceJobFactory {
 
     fn create_job_from_wire(&mut self, operation: semio_framework_job::Operation, payload: &[u8], checkpoint: Option<Vec<u8>>) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
         let payload_text = std::str::from_utf8(payload).map_err(|error| semio_framework::ToolJobFactoryError::new(format!("wfc2d-inference-wire-decode:{error}")))?;
-        let mut request: Wfc2dInferenceRequest = protocol::json::from_json_str(payload_text).map_err(|error| semio_framework::ToolJobFactoryError::new(format!("wfc2d-inference-wire-decode:{error}")))?;
+        let mut request: Wfc2dInferenceRequest = semio_framework_pack_json::from_json_str(payload_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework::ToolJobFactoryError::new(format!("wfc2d-inference-wire-decode:{error}")))?;
         if checkpoint.is_some() {
             request.checkpoint = checkpoint;
         }
@@ -794,7 +794,7 @@ pub fn solve_with_clock(snapshot: &Wfc2dSnapshot, now_us: fn() -> Option<u64>) -
             semio_framework_job::StepOutcome::Complete(candidate) => Some(
                 std::str::from_utf8(&payload_bytes(&candidate.output))
                     .map_err(|error| format!("wfc2d-invalid-commit:{error}"))
-                    .and_then(|text| protocol::json::from_json_str::<Wfc2dInferenceCommit>(text).map_err(|error| format!("wfc2d-invalid-commit:{error}"))),
+                    .and_then(|text| semio_framework_pack_json::from_json_str::<Wfc2dInferenceCommit>(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("wfc2d-invalid-commit:{error}"))),
             ),
             semio_framework_job::StepOutcome::Cancelled => Some(Err("wfc2d-inference-cancelled".into())),
             semio_framework_job::StepOutcome::Fault(fault) => Some(Err(String::from_utf8_lossy(&payload_bytes(&fault.detail)).into_owned())),
@@ -845,7 +845,7 @@ impl store::InferredField<Wfc2dSnapshot> for Wfc2dSolve {
         vec![store::InferenceStep { key: "wfc2d".to_string(), parents: Vec::new() }]
     }
     fn dep_input(snapshot: &Wfc2dSnapshot, _key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
-        protocol::json::to_json_string(snapshot).into_bytes()
+        semio_framework_pack_json::to_json_string(snapshot).into_bytes()
     }
     fn compute(snapshot: &Wfc2dSnapshot, _key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
         match solve_with_job(snapshot) {
@@ -875,7 +875,7 @@ impl store::InferredField<Wfc2dSnapshot> for Wfc2dContradiction {
         vec![store::InferenceStep { key: "wfc2d".to_string(), parents: Vec::new() }]
     }
     fn dep_input(snapshot: &Wfc2dSnapshot, _key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
-        protocol::json::to_json_string(snapshot).into_bytes()
+        semio_framework_pack_json::to_json_string(snapshot).into_bytes()
     }
     fn compute(snapshot: &Wfc2dSnapshot, _key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
         solve_with_job(snapshot).map_or(true, |commit| commit.contradiction)

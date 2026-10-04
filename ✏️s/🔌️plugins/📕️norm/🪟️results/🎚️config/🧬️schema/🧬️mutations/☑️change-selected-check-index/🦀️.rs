@@ -2,7 +2,7 @@
 
 use crate::results_window_config::{NormResultsWindowConfig, NormResultsWindowConfigMutation};
 
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[dsl(keyword = "change-selected-check-index")]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -15,14 +15,17 @@ impl protocol::MutationKind<NormResultsWindowConfig, NormResultsWindowConfigMuta
 
     fn diff(&self, base: &NormResultsWindowConfig) -> protocol::MutationOutcome<NormResultsWindowConfig> {
         if base.selected_check_index == self.index {
-            return protocol::MutationOutcome::new(base.clone()).warn("mutation.no-op", "Selected check index is already this value.");
+            return protocol::MutationOutcome::new(base.clone()).warning("mutation.no-op", "Selected check index is already this value.");
         }
         protocol::MutationOutcome::new(NormResultsWindowConfig { selected_check_index: self.index })
     }
 
-    fn inverse(&self, base: &NormResultsWindowConfig) -> Vec<NormResultsWindowConfigMutation> {
+    fn inverse(&self, base: &NormResultsWindowConfig) -> Result<Vec<NormResultsWindowConfigMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![Self { index: base.selected_check_index }.into()]
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&{

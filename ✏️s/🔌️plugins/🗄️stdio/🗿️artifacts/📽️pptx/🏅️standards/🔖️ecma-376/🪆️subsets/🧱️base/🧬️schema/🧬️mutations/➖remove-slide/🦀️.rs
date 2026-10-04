@@ -8,7 +8,7 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct RemoveSlide {
-    pub(crate) index: usize,
+    pub(crate) address: PptxSlideAddress,
 }
 
 impl protocol::MutationKind<PptxSnapshot, PptxMutation> for RemoveSlide {
@@ -17,14 +17,17 @@ impl protocol::MutationKind<PptxSnapshot, PptxMutation> for RemoveSlide {
     fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<<PptxMutation as Mutation<PptxSnapshot>>::Diff> {
         agg_diff(&PptxMutation::RemoveSlide(self.clone()), base)
     }
-    fn inverse(&self, base: &PptxSnapshot) -> Vec<PptxMutation> {
-        agg_inverse(&PptxMutation::RemoveSlide(self.clone()), base)
-    }
+    fn inverse(&self, base: &PptxSnapshot) -> Result<Vec<PptxMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&PptxMutation::RemoveSlide(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove slide", "Folie entfernen")
     }
     fn target(&self) -> Vec<String> {
-        Vec::new()
+        std::iter::once(self.address.entry.part_path.clone()).chain(self.address.entry.node_path.iter().map(usize::to_string)).collect()
     }
 }
 //#endregion 🔖️Payload

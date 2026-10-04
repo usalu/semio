@@ -13,7 +13,7 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️PatchObject
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[dsl(keyword = "patch-object")]
 pub struct PatchObject {
@@ -24,7 +24,7 @@ pub struct PatchObject {
 
 pub fn handle(payload: &PatchObject, doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
     let projection = doc.snapshot;
-    let value = payload.value_json.as_deref().and_then(|json| dsl::json::from_json_str::<dsl::DslValue>(json).ok());
+    let value = payload.value_json.as_deref().and_then(|json| semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(json, semio_framework_pack_json::JsonMemberPolicy::Reject).ok());
     let Some(object) = projection.objects.iter().find(|object| object.id == payload.object_id) else { return Ok(Emit::default()) };
     let mutation = match payload.field.as_str() {
         "name" => value.as_ref().and_then(|entry| entry.as_str()).map(|new_name| LowpolyMutation::RenameObject(RenameObject { id: payload.object_id.clone(), new_name: new_name.to_string() })),

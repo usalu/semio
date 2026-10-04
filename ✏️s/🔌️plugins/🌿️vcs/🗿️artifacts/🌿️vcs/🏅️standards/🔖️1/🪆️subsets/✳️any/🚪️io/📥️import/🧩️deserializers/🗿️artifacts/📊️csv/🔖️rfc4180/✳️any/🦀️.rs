@@ -15,7 +15,7 @@ impl Deserializer<VcsSnapshot> for CsvIntoVcs {
     const FROM: Dialect = CSV_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
     async fn deserialize(payload: &IoPayload) -> IoResult<VcsSnapshot> {
-        let error = |message: String| IoError { message: format!("CsvIntoVcs: {message}"), diagnostics: Vec::new() };
+        let error = |message: String| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("CsvIntoVcs: {message}")));
         let IoPayload::Binary(bytes) = payload else {
             return Err(error("expected a binary csv payload".into()));
         };

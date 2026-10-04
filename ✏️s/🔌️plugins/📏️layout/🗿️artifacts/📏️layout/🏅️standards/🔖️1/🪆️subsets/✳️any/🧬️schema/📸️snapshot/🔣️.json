@@ -90,8 +90,8 @@
       ],
       "x-semio-state": "artifact"
     },
-    "dataFieldsJson": {
-      "type": "string",
+    "dataFields": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/dictionary.json",
       "x-semio-state": "artifact"
     },
     "backgroundDrawing": {

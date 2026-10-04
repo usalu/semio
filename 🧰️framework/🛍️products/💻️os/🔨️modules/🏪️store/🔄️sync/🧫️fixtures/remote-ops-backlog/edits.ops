@@ -1,4 +1,4 @@
-edit backlog-1 started="0" actor=peer
+edit backlog-1 started="0" actor=peer line=[]
   set-n n=2
-edit backlog-2 started="0" actor=peer
+edit backlog-2 started="0" actor=peer line=[]
   set-n n=3

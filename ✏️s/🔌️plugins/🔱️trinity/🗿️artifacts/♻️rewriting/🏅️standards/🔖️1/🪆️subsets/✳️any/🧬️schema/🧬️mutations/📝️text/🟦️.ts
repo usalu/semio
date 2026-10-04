@@ -49,5 +49,5 @@ export const trinityRewritingMutationsTextGuardConstant = <T extends string | nu
 //#endregion 🚪️Parsers
 
 export function parseRewritingMutationsText(value: unknown, at = "$"): RewritingMutationsText {
-  return trinityRewritingMutationsTextGuardObject(value, `${at}`);
+  return trinityRewritingMutationsTextGuardString(value, `${at}`);
 }

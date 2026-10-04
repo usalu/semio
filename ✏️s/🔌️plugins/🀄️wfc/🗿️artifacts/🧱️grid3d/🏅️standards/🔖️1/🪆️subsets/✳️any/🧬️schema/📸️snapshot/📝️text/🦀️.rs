@@ -18,7 +18,7 @@ pub const GRID3D_EXAMPLE_PIPES_TEXT: &str = include_str!("../../../📚️exampl
 //#endregion 🔖️Examples
 
 /// 📖️ Parses `.wfcgrid3d` DSL text into a `Grid3dSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<Grid3dSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<Grid3dSnapshot, semio_framework_diagnostic::TextError> {
     <Grid3dSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 

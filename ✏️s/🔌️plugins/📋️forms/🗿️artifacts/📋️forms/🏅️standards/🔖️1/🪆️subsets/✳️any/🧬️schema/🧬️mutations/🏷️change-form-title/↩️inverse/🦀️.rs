@@ -5,7 +5,10 @@ use super::mutation::ChangeFormTitle;
 use crate::{FormMutation, FormsSnapshot};
 
 //#region 🔖️Inverse
-pub fn inverse_change_form_title(_payload: &ChangeFormTitle, base: &FormsSnapshot) -> Vec<FormMutation> {
+pub fn inverse_change_form_title(_payload: &ChangeFormTitle, base: &FormsSnapshot) -> Result<Vec<FormMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![FormMutation::ChangeFormTitle(ChangeFormTitle { new_title: base.title.clone() })]
+
+    })())
 }
 //#endregion 🔖️Inverse

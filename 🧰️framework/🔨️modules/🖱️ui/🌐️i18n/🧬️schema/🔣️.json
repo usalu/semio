@@ -35,7 +35,16 @@
             "enum": [
               "ui.host.documentPlaceholder",
               "ui.host.languageDocument",
-              "ui.mutation.history.foreignTransition"
+              "ui.mutation.history.foreignTransition",
+              "ui.windowFault.title",
+              "ui.windowFault.abiMismatch",
+              "ui.windowFault.interactiveCeiling",
+              "ui.windowFault.clock",
+              "ui.windowFault.pluginInternal",
+              "ui.windowFault.installFailed",
+              "ui.windowFault.unknown",
+              "ui.host.inputDraftConflict",
+              "ui.host.inputDraftDiscard"
             ]
           },
           "options": {

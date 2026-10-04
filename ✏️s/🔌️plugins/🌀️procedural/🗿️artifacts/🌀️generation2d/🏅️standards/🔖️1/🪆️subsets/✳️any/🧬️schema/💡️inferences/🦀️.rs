@@ -7,7 +7,6 @@
 use super::topology::compute_generation2d_topology;
 use crate::Generation2dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a generation2d snapshot. One field per named inference under
@@ -21,8 +20,11 @@ pub struct Generation2dInference {
 }
 
 impl protocol::Inference<Generation2dSnapshot> for Generation2dInference {
-    fn infer(snapshot: &Generation2dSnapshot) -> Self {
+    fn infer(snapshot: &Generation2dSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { topology: compute_generation2d_topology(snapshot) }
+    
+        })
     }
 }
 
@@ -33,7 +35,9 @@ impl protocol::Inference<Generation2dSnapshot> for Generation2dInference {
 /// (`🧰️framework/…/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/💡️inferences/🦀️.rs`).
 impl Default for Generation2dInference {
     fn default() -> Self {
-        <Self as protocol::Inference<Generation2dSnapshot>>::infer(&Generation2dSnapshot::default())
+        let snapshot = &Generation2dSnapshot::default();
+
+        Self { topology: compute_generation2d_topology(snapshot) }
     }
 }
 
@@ -49,16 +53,6 @@ impl protocol::InferenceSpec<Generation2dSnapshot> for Generation2dInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 💡️ `topology` is a whole-snapshot scalar (see `🧭topology/🦀️.rs`), so the default
-/// `ArtifactInferrer::infer_cached` passthrough (plain `infer`, no `InferenceCache`/`InferenceSession`
-/// involvement) is exactly right — nothing here benefits from per-entity incremental caching.
-impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::Generation2dBuilder {
-    type Snapshot = Generation2dSnapshot;
-    type Inference = Generation2dInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.procedural.generation2d.inference`'s facet leaves into the OS-wide inference

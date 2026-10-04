@@ -11,7 +11,7 @@ pub fn diff(payload: &CreateEnergyModel, base: &CadSnapshot) -> protocol::Mutati
         Err(reason) => return protocol::MutationOutcome::fatal("mutation.invariant", reason, [payload.child_id.clone()]),
     };
     if base.energy_model.as_ref() == Some(&candidate) {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Energy-model child is already {}.", payload.child_id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Energy-model child is already {}.", payload.child_id));
     }
     protocol::MutationOutcome::new(CadDiff { energy_model: Some(Some(candidate)), ..Default::default() })
 }

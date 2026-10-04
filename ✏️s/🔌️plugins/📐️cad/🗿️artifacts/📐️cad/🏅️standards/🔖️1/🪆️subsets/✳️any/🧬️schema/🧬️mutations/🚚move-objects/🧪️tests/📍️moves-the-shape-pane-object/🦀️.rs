@@ -47,7 +47,7 @@ async fn remints_the_pane_child_handle() {
 async fn inverse_restores_the_pre_move_pose() {
     let base = base();
     let mutation = move_a();
-    let inverse = mutation.inverse(&base);
+    let inverse = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "move-objects inverts to exactly one step");
     match &inverse[0] {
         CadMutation::MoveObjects(step) => assert_eq!(step.placements[0].new_origin, [0.0, 0.0, 0.0], "the inverse must carry the pre-move origin"),
@@ -69,5 +69,5 @@ async fn unmaterialized_and_unchanged_poses_are_no_ops() {
     assert!(unchanged.diff(&base).messages().iter().any(|message| message.code.0 == "mutation.no-op"), "re-declaring the current origin must be a no-op");
     let elsewhere = CadMutation::MoveObjects(MoveObjects { pane: CadPaneId::Energy, placements: vec![CadObjectOrigin { object_id: "object-a".into(), new_origin: [1.0, 1.0, 1.0] }] });
     assert!(elsewhere.diff(&base).messages().iter().any(|message| message.code.0 == "mutation.no-op"), "a pane with no materialized child must be a no-op");
-    assert!(elsewhere.inverse(&base).is_empty(), "a no-op move has no inverse step");
+    assert!(elsewhere.inverse(&base).expect("valid retained mutation inverse fixture").is_empty(), "a no-op move has no inverse step");
 }

@@ -167,15 +167,6 @@ impl NoteCommandWork {
     }
 
     fn append(&mut self, mut emit: Emit<crate::op::NoteMutation, semio_framework_plugin::NoConfigMutation>) -> Result<(), Fault> {
-        if self.accumulated.description.is_some() && emit.description.is_some() && self.accumulated.description != emit.description {
-            return Err(Fault::new(FaultOrigin::App, FaultCode::new("note.retained.description"), "Note semantic units produced incompatible edit descriptions"));
-        }
-        if emit.coalesce_key.is_some() {
-            return Err(Fault::new(FaultOrigin::App, FaultCode::new("note.retained.coalesce"), "a Note semantic unit never amends an earlier edit"));
-        }
-        if self.accumulated.description.is_none() {
-            self.accumulated.description = emit.description.take();
-        }
         if let Some(transaction) = emit.transaction.take() {
             if self.accumulated.transaction.is_some() || self.units.len() != 1 {
                 return Err(Fault::new(FaultOrigin::App, FaultCode::new("note.retained.transaction"), "a Note tool transaction is exactly one semantic unit"));
@@ -208,7 +199,6 @@ impl NoteCommandWork {
             || self.ephemeral.presence.pop().is_some()
             || self.ephemeral.transient.pop().is_some()
             || self.ephemeral.window_transient.pop().is_some()
-            || self.accumulated.description.take().is_some()
             || self.accumulated.transaction.take().is_some()
         {
             return true;
@@ -233,7 +223,7 @@ impl ArtifactCommandWork<EditorApp<NotePlayApp>> for NoteCommandWork {
         Some(self.units.len())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<NotePlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<NotePlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<NotePlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<NotePlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command: _command, snapshot, config, history, interaction: _interaction, hover: _hover, context, operation } = *input;
         if self.complete || self.cursor >= self.units.len() {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("note.retained.repeated"), "Note retained work was stepped after completion"));
@@ -350,7 +340,6 @@ impl ArtifactCommandWork<EditorApp<NotePlayApp>> for NoteCommandWork {
             && self.ephemeral.presence.is_empty()
             && self.ephemeral.transient.is_empty()
             && self.ephemeral.window_transient.is_empty()
-            && self.accumulated.description.is_none()
             && self.accumulated.transaction.is_none()
             && self.projection.is_none()
             && self.id_owner.is_none()
@@ -427,7 +416,7 @@ pub fn build(request: ArtifactOwnedToolJobRequest<EditorApp<NotePlayApp>>) -> Re
         return Ok(None);
     }
     if request.command.command_id() != request.tool_id {
-        return Err(Fault::new(FaultOrigin::App, FaultCode::new("note.retained.tool-mismatch"), "Note command does not match its exact registered tool"));
+        return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.tool-mismatch"), "Note command does not match its exact registered tool"));
     }
     let operation = AppOperationContext {
         app_instance_id: request.app_instance_id,

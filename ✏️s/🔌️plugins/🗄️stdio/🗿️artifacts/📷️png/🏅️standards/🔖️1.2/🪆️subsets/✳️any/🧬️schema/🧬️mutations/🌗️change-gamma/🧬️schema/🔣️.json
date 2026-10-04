@@ -4,30 +4,30 @@
   "title": "ChangeGammaMutation",
   "type": "object",
   "additionalProperties": false,
+  "required": [
+    "revision"
+  ],
   "properties": {
-    "gama": {
-      "anyOf": [
-        {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 4294967295
-        },
-        {
-          "type": "null"
-        }
-      ],
+    "revision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{16}$",
       "x-semio-ui": {
-        "widget": "stepper",
-        "label": {
-          "en": "Gamma (gAMA)",
-          "de": "Gamma (gAMA)"
-        },
-        "description": {
-          "en": "Image gamma times 100000.",
-          "de": "Bildgamma mal 100000."
-        },
-        "displayFactor": 1e-05,
-        "precision": 5
+        "label": {"en": "Source revision", "de": "Quellrevision"},
+        "group": "target",
+        "order": 10
+      }
+    },
+    "gama": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1,
+      "maximum": 4294967295,
+      "x-semio-ui": {
+        "label": {"en": "PNG gamma", "de": "PNG-Gamma"},
+        "group": "metadata",
+        "order": 20
       }
     }
   }

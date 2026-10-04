@@ -29,11 +29,11 @@ fn records_become_one_relative_leaf_each_over_the_nodes_the_flow_holds() {
 fn a_release_commits_one_transaction_with_prepared_leaves_first() {
     let base = content();
     let label = SemioFlowMutation::SetNodeLabel(SetNodeLabel { id: "a".into(), label: "A".into() });
-    let (transaction, leaves) = flow_drag_tool_commit("nodeGraphEdit", "seed-1", &base, vec![label.clone()], &[record(&["b"], 10.0, 0.0)]).expect("the release commits");
+    let (transaction, leaves) = flow_drag_tool("nodeGraphEdit", "seed-1", &base, vec![label.clone()], &[record(&["b"], 10.0, 0.0)]).committed().expect("the release commits");
     assert_eq!(transaction.tool, format!("{FLOW_EDITOR_APP_ID}#nodeGraphEdit"));
     assert!(transaction.id.starts_with("tx-"), "{}", transaction.id);
     assert_eq!(leaves, vec![label, SemioFlowMutation::DragNodes(DragNodes { targets: vec!["b".into()], dx: 10.0, dy: 0.0 })]);
-    assert!(flow_drag_tool_commit("nodeGraphEdit", "seed-1", &base, Vec::new(), &[record(&["b"], 0.0, 0.0), record(&["ghost"], 3.0, 3.0)]).is_none(), "a release that moves nothing leaves zero trace");
+    assert!(flow_drag_tool("nodeGraphEdit", "seed-1", &base, Vec::new(), &[record(&["b"], 0.0, 0.0), record(&["ghost"], 3.0, 3.0)]).committed().is_none(), "a release that moves nothing leaves zero trace");
 }
 
 /// ⚖️ LAW (design §12): a seeded release is a composed-child tool transaction — one `content` child, its ops labelled

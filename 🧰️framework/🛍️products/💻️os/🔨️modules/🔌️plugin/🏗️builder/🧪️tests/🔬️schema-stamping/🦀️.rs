@@ -175,26 +175,28 @@ fn routed_inference_is_frozen_into_the_plugin_roster_without_a_sync_service() {
         .try_build()
         .expect("metadata-only routed inference must assemble");
     let bytes = plugin.wire_list_artifact_inference_services();
-    let roster: Vec<WireArtifactInferenceMetadata> = protocol::json::from_json_str(std::str::from_utf8(&bytes).expect("roster UTF-8")).expect("frozen roster decodes");
+    let roster: Vec<WireArtifactInferenceMetadata> = semio_framework_pack_json::from_json_str(std::str::from_utf8(&bytes).expect("roster UTF-8"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("frozen roster decodes");
     assert_eq!(roster, vec![metadata.into()]);
     assert!(artifact_inference_service(metadata.artifact_kind, metadata.inference_schema).expect("global service lookup").is_none(), "route must not manufacture a synchronous service facade");
 }
 
 impl store::ArtifactSqliteSnapshot for NoConfig {
     const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
-    fn to_sqlite_database(&self, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, String> {
-        use store::sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteValue, SqliteSnapshotPhase};
+    fn to_sqlite_database(&self, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, semio_framework_value::ValueError> {
+        use store::sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteSnapshotPhase, SqliteValue};
         control.check_rows(1)?;
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1)?;
-        let mut database = SqliteDatabase::from_schema(Self::SQLITE_SCHEMA).map_err(|error| error.to_string())?;
+        let mut database = SqliteDatabase::from_schema(Self::SQLITE_SCHEMA)?;
         database.table_mut("empty_artifact_state")?.rows.push(SqliteRow { rowid: 1, values: vec![SqliteValue::Integer(1)] });
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 1, 1)?;
         Ok(database)
     }
-    fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, String> {
+    fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
         control.checkpoint(store::sqlite_snapshot::SqliteSnapshotPhase::ReconstructSnapshot, 0, 1)?;
         let rows = &database.table("empty_artifact_state")?.rows;
-        if rows.len() != 1 || rows[0].rowid != 1 || rows[0].integer(0)? != 1 || rows[0].values.len() != 1 { return Err("empty artifact requires one identity row".into()); }
+        if rows.len() != 1 || rows[0].rowid != 1 || rows[0].integer(0)? != 1 || rows[0].values.len() != 1 {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "empty artifact requires one identity row"));
+        }
         control.checkpoint(store::sqlite_snapshot::SqliteSnapshotPhase::ReconstructSnapshot, 1, 1)?;
         Ok(Self {})
     }

@@ -539,6 +539,13 @@ function applyToSession(session: Board2dWasmSession | null, action: (session: Bo
   }
 }
 
+/** 🔗️ Forwards what an open time-travel draft references (`Board2dScene.highlightedIdsJson`) to the board session — `[]`
+ * when the scene carries none — exactly as the wgpu board sync does (`sync_board_engine`, `⚙️EngineCanvas/🎯️targets/🧊️wgpu`).
+ * A fixture re-parse keeps the engine's highlight, so only a changed id list is forwarded again. */
+export function applyBoard2dHighlightedIds(session: Board2dWasmSession | null, scene: Pick<Board2dScene, "highlightedIdsJson">): void {
+  applyToSession(session, (live) => live.setHighlightedIdsJson?.(scene.highlightedIdsJson ?? "[]"));
+}
+
 /** 🔁️ Re-parses the fixture and silently re-applies selection/camera, since `parseFixtureJson` resets both to the fixture's own defaults. */
 function applyFixtureToSession(session: Board2dWasmSession, scene: Board2dScene): boolean {
   const parsed = session.parseFixtureJson(scene.fixtureJson);
@@ -1214,7 +1221,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
 
   useEffect(() => {
     if (!scene) return;
-    applyToSession(sessionRef.current, (session) => session.setHighlightedIdsJson?.(scene.highlightedIdsJson ?? "[]"));
+    applyBoard2dHighlightedIds(sessionRef.current, scene);
   }, [sessionEpoch, scene?.highlightedIdsJson]);
 
   useEffect(() => {

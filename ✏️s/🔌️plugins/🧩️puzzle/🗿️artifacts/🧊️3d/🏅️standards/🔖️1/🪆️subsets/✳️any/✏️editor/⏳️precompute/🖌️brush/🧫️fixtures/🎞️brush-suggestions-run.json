@@ -44,6 +44,6 @@
   ],
   "laws": {
     "parryOracle": { "documents": [{ "document": "concrete-forest", "targets": 4096 }, { "document": "nakagin", "targets": 3 }] },
-    "interactive": { "document": "nakagin", "targets": 12, "runs": 5, "budgetUs": 2000 }
+    "interactive": { "document": "nakagin", "targets": 12, "budgetWork": 1000, "stepWorkCeiling": 100000 }
   }
 }

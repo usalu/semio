@@ -109,12 +109,12 @@ fn brush_preview_state_converts_into_a_placement_payload() {
         mesh_url: "/mesh.glb".into(),
         origin: [1.0, 2.0, 3.0],
         orientation: [0.0, 0.0, 0.0, 1.0],
-        scale: Some(dsl::DslValue::float(2.0)),
+        scale: Some(semio_framework_value::DslValue::float(2.0)),
     };
     let payload = BrushPlacePayload::from(preview);
     assert_eq!(payload.target_vortex_full_id, "host:v0");
     assert_eq!(payload.object_kind_id, "Kind");
     assert_eq!(payload.source_vortex_index, 2);
     assert_eq!(payload.origin, [1.0, 2.0, 3.0]);
-    assert_eq!(payload.scale, Some(dsl::DslValue::float(2.0)));
+    assert_eq!(payload.scale, Some(semio_framework_value::DslValue::float(2.0)));
 }

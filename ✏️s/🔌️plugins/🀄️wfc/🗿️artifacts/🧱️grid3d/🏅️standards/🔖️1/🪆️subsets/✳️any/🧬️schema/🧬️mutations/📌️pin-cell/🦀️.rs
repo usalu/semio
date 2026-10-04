@@ -27,9 +27,12 @@ impl MutationKind<Grid3dSnapshot, Grid3dMutation> for PinCell {
     fn diff(&self, base: &Grid3dSnapshot) -> protocol::MutationOutcome<Grid3dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Grid3dSnapshot) -> Vec<Grid3dMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &Grid3dSnapshot) -> Result<Vec<Grid3dMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Pin cell {} to tile \"{}\"", cell_key(self.pinned.x, self.pinned.y, self.pinned.z), self.pinned.tile_id), &format!("Zelle {} auf Kachel \"{}\" fixieren", cell_key(self.pinned.x, self.pinned.y, self.pinned.z), self.pinned.tile_id))
     }

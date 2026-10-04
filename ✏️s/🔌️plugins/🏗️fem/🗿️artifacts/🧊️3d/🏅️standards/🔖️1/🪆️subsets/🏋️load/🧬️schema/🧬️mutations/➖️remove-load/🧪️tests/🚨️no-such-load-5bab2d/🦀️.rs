@@ -22,13 +22,13 @@ const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutat
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➖️remove-load/🚨️no-such-load-5bab2d/🎯️outcome/🔣️.json");
 
 fn before() -> Fem3dSnapshot {
-    dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> Fem3dSnapshot {
-    dsl::json::from_json_str(AFTER).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> Fem3dMutation {
-    dsl::json::from_json_str(MUTATION).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 
 /// ▶️ A refused mutation leaves the document byte-identical to the committed `after`, which is the
@@ -51,26 +51,26 @@ fn the_refusal_is_the_declared_diagnostic() {
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "remove-load/no-such-load-5bab2d: exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.target-missing", "remove-load/no-such-load-5bab2d: the refusal is reported as mutation.target-missing");
-    assert_eq!(messages[0].level, protocol::Severity::Error, "remove-load/no-such-load-5bab2d: a missed target is an Error, not the Fatal a duplicate identity raises");
+    assert_eq!(messages[0].level, semio_framework_diagnostic::Severity::Error, "remove-load/no-such-load-5bab2d: a missed target is an Error, not the Fatal a duplicate identity raises");
     assert_eq!(messages[0].target, vec!["ld_wx_0".to_string()], "remove-load/no-such-load-5bab2d: the diagnostic addresses exactly the identity that could not be resolved");
 }
 
 /// ↩️ A BASE-derived inverse reads the record it must restore out of `before`; with nothing there to read, it collapses to no steps at all.
 #[test]
 fn inverse_has_the_declared_shape() {
-    let inverse = inverse_fem3d_mutation(&before(), &mutation());
+    let inverse = inverse_fem3d_mutation(&before(), &mutation()).expect("valid retained mutation inverse fixture");
     assert!(inverse.is_empty(), "remove-load/no-such-load-5bab2d: a base-derived inverse of a missing target has nothing to restore, got {inverse:?}");
 }
 
 /// 🎯️ The declared outcome — status, code, level and path — is exactly what the diff builder emits.
 #[test]
 fn declared_outcome_holds() {
-    let outcome: dsl::DslValue = dsl::json::from_json_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(dsl::DslValue::as_str), Some("rejected"), "remove-load/no-such-load-5bab2d: this vector declares a rejected outcome");
+    let outcome: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(OUTCOME, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
+    assert_eq!(outcome.get("status").and_then(semio_framework_value::DslValue::as_str), Some("rejected"), "remove-load/no-such-load-5bab2d: this vector declares a rejected outcome");
     let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &before());
     let message = produced.messages().first().expect("a rejected outcome carries a diagnostic");
-    assert_eq!(outcome.get("code").and_then(dsl::DslValue::as_str), Some(message.code.0.as_str()), "remove-load/no-such-load-5bab2d: the declared code must match the emitted one");
-    let declared_path: Vec<String> = outcome.get("path").and_then(dsl::DslValue::as_array).expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();
+    assert_eq!(outcome.get("code").and_then(semio_framework_value::DslValue::as_str), Some(message.code.0.as_str()), "remove-load/no-such-load-5bab2d: the declared code must match the emitted one");
+    let declared_path: Vec<String> = outcome.get("path").and_then(semio_framework_value::DslValue::as_array).expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();
     assert_eq!(declared_path, message.target, "remove-load/no-such-load-5bab2d: the declared path must match the emitted target");
 }
 
@@ -78,13 +78,13 @@ fn declared_outcome_holds() {
 #[test]
 fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: Fem3dSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
-        let reencoded = dsl::ToValue::to_value(&decoded);
-        let original: dsl::DslValue = dsl::json::from_json_str(text).expect("snapshot reparses");
+        let decoded: Fem3dSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = semio_framework_value::ToValue::to_value(&decoded);
+        let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot reparses");
         assert_eq!(reencoded, original, "remove-load/no-such-load-5bab2d: committed {label} JSON is not canonical");
     }
-    let reencoded = dsl::ToValue::to_value(&mutation());
-    let original: dsl::DslValue = dsl::json::from_json_str(MUTATION).expect("mutation reparses");
+    let reencoded = semio_framework_value::ToValue::to_value(&mutation());
+    let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation reparses");
     assert_eq!(reencoded, original, "remove-load/no-such-load-5bab2d: committed mutation JSON is not canonical");
 }
 

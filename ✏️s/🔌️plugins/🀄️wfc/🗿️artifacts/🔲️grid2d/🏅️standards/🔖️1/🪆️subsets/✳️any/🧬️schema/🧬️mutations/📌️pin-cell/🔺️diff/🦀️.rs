@@ -18,7 +18,7 @@ pub fn diff(payload: &super::PinCell, base: &Grid2dSnapshot) -> protocol::Mutati
     }
     let cell = WfcPinnedCell2d { x: payload.x, y: payload.y, tile_id: payload.tile_id.clone() };
     match base.pinned.iter().position(|existing| existing.x == payload.x && existing.y == payload.y) {
-        Some(index) if base.pinned[index] == cell => protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Cell ({}, {}) is already pinned to \"{}\".", payload.x, payload.y, payload.tile_id)),
+        Some(index) if base.pinned[index] == cell => protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Cell ({}, {}) is already pinned to \"{}\".", payload.x, payload.y, payload.tile_id)),
         Some(index) => protocol::MutationOutcome::new(Grid2dDiff { pinned_upserted: vec![(index, cell)], ..Default::default() }),
         None => {
             let at = ordered_cell_index(&base.pinned, payload.x, payload.y, |existing| (existing.y, existing.x));

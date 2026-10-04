@@ -86,7 +86,7 @@ async fn duplicate_member_id_fails_integrity() {
 async fn every_emitted_subject_path_parses_and_resolves() {
     let doc = En1990Snapshot::default();
     let report = evaluate(&doc);
-    let root = dsl::ToValue::to_value(&doc);
+    let root = semio_framework_value::ToValue::to_value(&doc);
     let mut seen = 0usize;
     for check in &report.checks {
         for path in std::iter::once(check.subject.path.as_str()).chain(check.remedies.iter().map(|r| r.target.path.as_str())) {
@@ -222,9 +222,9 @@ print('ok', d['name'], ed, rust)
 }
 
 fn apply_path(doc: &mut En1990Snapshot, path: &str, value: f64) {
-    let mut root = dsl::ToValue::to_value(&*doc);
-    crate::app_surface::set_value_at_path(&mut root, path, dsl::DslValue::float(value)).unwrap_or_else(|e| panic!("set {path}: {e}"));
-    *doc = dsl::FromValue::from_value(root).expect("from_value");
+    let mut root = semio_framework_value::ToValue::to_value(&*doc);
+    crate::app_surface::set_value_at_path(&mut root, path, semio_framework_value::DslValue::float(value)).unwrap_or_else(|e| panic!("set {path}: {e}"));
+    *doc = semio_framework_value::FromValue::from_value(root).expect("from_value");
 }
 
 #[semio_framework_async_macros::async_test]

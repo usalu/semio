@@ -59,7 +59,7 @@ async fn every_generation_row_verb_is_reachable_from_the_rendered_tree() {
 /// the empty string.
 #[test]
 fn an_inline_rename_commit_carries_its_typed_text_as_value() {
-    let args: dsl::DslValue = serde_json::json!({ "id": "generation-1", "value": "Balcony Study" }).into();
+    let args: semio_framework_value::DslValue = serde_json::json!({ "id": "generation-1", "value": "Balcony Study" }).into();
     let command = <semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action("renameGeneration", Some(&args)).expect("renameGeneration bridges");
     let Generation3dCommand::RenameGeneration(payload) = command else { panic!("renameGeneration must bridge to its own command row") };
     assert_eq!(payload, rename_generation::RenameGeneration { id: "generation-1".into(), name: "Balcony Study".into() });
@@ -122,7 +122,7 @@ async fn generation_row_affordances_are_localized_in_german() {
 async fn add_generation_lands_a_row_under_every_renderer_argument_shape() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let mut app = app().await;
-    let shapes: Vec<(&str, Option<dsl::DslValue>)> = vec![
+    let shapes: Vec<(&str, Option<semio_framework_value::DslValue>)> = vec![
         ("react-none", None),
         ("empty-object", Some(serde_json::json!({}).into())),
         ("host-envelope", Some(serde_json::json!({ "surfaceId": "window:generation3d-generations", "windowId": "generation3d-generations" }).into())),

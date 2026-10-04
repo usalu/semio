@@ -204,7 +204,7 @@ mod subject {
         let mut current = base.clone();
         apply(&mut current, &mutation, ctx.scenario.id.as_str())?;
         let mutated = snapshot_json(&current);
-        for step in &inverse_semio_audio_mutation(&mutation, &base) {
+        for step in &inverse_semio_audio_mutation(&mutation, &base).expect("valid retained mutation inverse fixture") {
             apply(&mut current, step, ctx.scenario.id.as_str())?;
         }
         if current != base {

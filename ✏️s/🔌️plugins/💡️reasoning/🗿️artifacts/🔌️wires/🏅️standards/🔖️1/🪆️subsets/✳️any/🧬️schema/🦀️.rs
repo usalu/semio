@@ -1,7 +1,7 @@
 //! 🧬️ Wires artifact schema — every field of the artifact with its state class.
 
-use dsl::os_pack::json::Value;
-use dsl::DslValue;
+use semio_framework_pack_json::Value;
+use semio_framework_value::DslValue;
 use framework_schema::ArtifactSchema;
 
 #[path = "♻️retirement/🦀️.rs"]
@@ -9,7 +9,7 @@ pub mod retirement;
 
 //#region 🔖️Artifact
 /// 🧬️ Shared wires artifact content.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.reasoning.wires")]
 pub struct WiresArtifact {
@@ -26,7 +26,7 @@ pub struct WiresArtifact {
 //#region 🔖️Conversions
 impl Default for WiresArtifact {
     fn default() -> Self {
-        Self { wires_fixture: crate::empty_wires_fixture(), content: crate::wires_content_child_with_owner(Vec::new(), Vec::new()), meta: DslValue::Null }
+        Self::from_snapshot(crate::empty_wires_snapshot())
     }
 }
 
@@ -88,7 +88,7 @@ pub fn wires_artifact_schema_descriptor() -> semio_framework_schema_registry::Ar
 /// freshly-minted, content-addressed handle (`empty_wires_snapshot()`'s
 /// `wires_content_child_with_owner`), not a blanket zero value. This is the same class of
 /// "the generic doesn't fit, keep the hand-rolled type" finding as `📓️w4-sequence-report.md`
-/// `## recipeGaps` #1 (there for `ArtifactInferrer`, here for `ArtifactBuilder`). No current caller
+/// `## recipeGaps` #1. No current caller
 /// exercises `ArtifactBuilder` for this subset (confirmed: zero references outside this module,
 /// `derive_artifact_facets!`'s deleted generated wrapper, and the deleted `io_registry`) — kept as
 /// real, correctly-typed SDK equipment matching the fan-out's established `Construction` convention,
@@ -103,7 +103,7 @@ pub mod derived_construction {
     #[derive(Clone, Debug)]
     pub struct WiresBuilderConstruction {
         snapshot: WiresSnapshot,
-        diagnostics: Vec<dsl::Diagnostic>,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
     }
 
     impl ArtifactBuilder for WiresBuilderConstruction {
@@ -116,7 +116,7 @@ pub mod derived_construction {
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(Self::from_snapshot(<WiresSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
@@ -126,7 +126,7 @@ pub mod derived_construction {
             let outcome = <WiresMutation as protocol::Mutation<WiresSnapshot>>::diff(&mutation, &self.snapshot);
             match protocol::MutationDiff::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("build.apply", dsl::TextSpan::at(1, 1), error.to_string())),
+                Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
@@ -135,7 +135,7 @@ pub mod derived_construction {
             self.snapshot = snapshot;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -150,32 +150,51 @@ pub use derived_construction::*;
 //#region 🔖️DocumentHelpers
 /// 🧬️ Pure helpers over `DslValue`-shaped documents — dissolved from the former `⚙️engine` (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): every fn here is generic over document shape
-/// (never `WiresSnapshot`, never an app type) so it has no home more specific than the artifact schema.
-/// Reads that DO take `&WiresSnapshot` (`find_board_node`/`find_board_edge`/`find_relationship`) live
-/// in `💡️inferences/` instead — see that file's `🔖️LookupHelpers` region.
+/// (never `WiresSnapshot`, never an app type) so it has no home more specific than the artifact schema; the
+/// composed board they read comes from `crate::wires_composed`.
 pub fn array_mut<'a>(fixture: &'a mut DslValue, key: &str) -> &'a mut Vec<DslValue> {
     if !matches!(fixture, DslValue::Object(_)) {
-        *fixture = DslValue::Object(vec![]);
+        *fixture = semio_framework_value::DslValue::Object(vec![]);
     }
-    let DslValue::Object(entries) = fixture else {
+    let semio_framework_value::DslValue::Object(entries) = fixture else {
         unreachable!("fixture coerced to object above");
     };
     if let Some(idx) = entries.iter().position(|(entry_key, _)| entry_key == key) {
         let value = &mut entries[idx].1;
         if !matches!(value, DslValue::Array(_)) {
-            *value = DslValue::Array(vec![]);
+            *value = semio_framework_value::DslValue::Array(vec![]);
         }
         match value {
-            DslValue::Array(items) => items,
+            semio_framework_value::DslValue::Array(items) => items,
             _ => unreachable!("array coerced above"),
         }
     } else {
-        entries.push((key.to_string(), DslValue::Array(vec![])));
+        entries.push((key.to_string(), semio_framework_value::DslValue::Array(vec![])));
         match &mut entries.last_mut().expect("just pushed").1 {
-            DslValue::Array(items) => items,
+            semio_framework_value::DslValue::Array(items) => items,
             _ => unreachable!("just pushed array"),
         }
     }
+}
+
+/// 🧬️ Sets one field on the board node `node_id` inside a composed `board` in place (a render-time preview, never an edit).
+pub fn set_node_field(board: &mut DslValue, node_id: &str, key: &str, value: DslValue) {
+    if let Some(DslValue::Object(entries)) = array_mut(board, "nodes").iter_mut().find(|node| entity_id(node, "id") == Some(node_id)) {
+        match entries.iter_mut().find(|(entry_key, _)| entry_key.as_str() == key) {
+            Some((_, slot)) => *slot = value,
+            None => entries.push((key.to_string(), value)),
+        }
+    }
+}
+
+/// 🔎️ The board node `node_id` of a composed `board`.
+pub fn board_node<'a>(board: &'a DslValue, node_id: &str) -> Option<&'a DslValue> {
+    fixture_nodes(board).iter().find(|node| entity_id(node, "id") == Some(node_id))
+}
+
+/// 🔎️ The board edge `edge_id` of a composed `board`.
+pub fn board_edge<'a>(board: &'a DslValue, edge_id: &str) -> Option<&'a DslValue> {
+    fixture_edges(board).iter().find(|edge| entity_id(edge, "id") == Some(edge_id))
 }
 
 pub fn entity_id<'a>(entity: &'a DslValue, key: &str) -> Option<&'a str> {
@@ -193,11 +212,11 @@ pub fn dsl_id(value: Option<&DslValue>) -> Option<u64> {
 }
 
 pub fn dsl_to_json(value: &DslValue) -> Value {
-    dsl::os_pack::json::from_dsl_value(value)
+    semio_framework_pack_json::from_dsl_value(value)
 }
 
 pub fn fixture_json_string(fixture: &DslValue) -> String {
-    dsl::os_pack::json::to_json_string(fixture)
+    semio_framework_pack_json::to_json_string(fixture)
 }
 
 pub fn fixture_camera(fixture: &DslValue) -> (f64, f64, f64) {
@@ -275,22 +294,22 @@ pub fn wires_canvas_layers(board: &DslValue, wires: &DslValue) -> Vec<Value> {
             ("y1".to_string(), DslValue::float(target.1)),
         ];
         entries.extend(name.map(|name| ("name".to_string(), name)));
-        dsl_to_json(&DslValue::Object(entries))
+        dsl_to_json(&semio_framework_value::DslValue::Object(entries))
     };
     let mut layers: Vec<Value> = nodes
         .iter()
         .map(|node| {
             let (_, _, width, height) = node_box(node);
             let mut entries: Vec<(String, DslValue)> = match node {
-                DslValue::Object(entries) => entries.iter().filter(|(key, _)| !CANVAS_LAYER_RESERVED_KEYS.contains(&key.as_str())).cloned().collect(),
+                semio_framework_value::DslValue::Object(entries) => entries.iter().filter(|(key, _)| !CANVAS_LAYER_RESERVED_KEYS.contains(&key.as_str())).cloned().collect(),
                 _ => Vec::new(),
             };
             let kind = if node.get("shape").and_then(|value| value.as_str()) == Some("circle") { "circle" } else { "rect" };
-            entries.push(("kind".to_string(), DslValue::String(kind.into())));
-            entries.push(("width".to_string(), DslValue::float(width)));
-            entries.push(("height".to_string(), DslValue::float(height)));
+            entries.push(("kind".to_string(), semio_framework_value::DslValue::String(kind.into())));
+            entries.push(("width".to_string(), semio_framework_value::DslValue::float(width)));
+            entries.push(("height".to_string(), semio_framework_value::DslValue::float(height)));
             entries.extend(node.get("text").cloned().map(|text| ("name".to_string(), text)));
-            dsl_to_json(&DslValue::Object(entries))
+            dsl_to_json(&semio_framework_value::DslValue::Object(entries))
         })
         .collect();
     for edge in fixture_edges(board) {

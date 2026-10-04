@@ -18,7 +18,7 @@ async fn build_terrain_scene_json_roundtrips_descriptor_fields() {
 #[semio_framework_async_macros::async_test]
 async fn terrain_descriptor_json_defaults_exaggeration_and_positions_when_absent() {
     let json = r#"{"schema":"gis.terrain","projectOrigin":{"lon":1.0,"lat":2.0}}"#;
-    let descriptor: TerrainDescriptorJson = dsl::json::from_json_str(json).expect("valid descriptor json");
+    let descriptor: TerrainDescriptorJson = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("valid descriptor json");
     assert_eq!(descriptor.exaggeration, 1.0);
     assert!(descriptor.positions.is_empty());
 }
@@ -26,7 +26,7 @@ async fn terrain_descriptor_json_defaults_exaggeration_and_positions_when_absent
 #[semio_framework_async_macros::async_test]
 async fn terrain_position_data_omits_none_fields_when_serialized() {
     let position = TerrainPositionData { id: "p2".to_string(), lon: 1.0, lat: 2.0, label: None, icon: Some("pin".to_string()) };
-    let json = dsl::json::to_json_string(&position);
+    let json = semio_framework_pack_json::to_json_string(&position);
     assert!(!json.contains("label"));
     assert!(json.contains("\"icon\":\"pin\""));
 }

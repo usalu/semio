@@ -6,7 +6,6 @@
 
 use crate::TxtSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a txt snapshot. One field per named inference under
@@ -20,8 +19,11 @@ pub struct TxtInference {
 }
 
 impl protocol::Inference<TxtSnapshot> for TxtInference {
-    fn infer(snapshot: &TxtSnapshot) -> Self {
+    fn infer(snapshot: &TxtSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { outline: TxtOutline::compute(snapshot) }
+    
+        })
     }
 }
 
@@ -37,13 +39,6 @@ impl protocol::InferenceSpec<TxtSnapshot> for TxtInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::standards::v_utf_8::subsets::any::schema::TxtBuilder {
-    type Snapshot = TxtSnapshot;
-    type Inference = TxtInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.txt.inference`'s facet leaves into the OS-wide inference catalog — call

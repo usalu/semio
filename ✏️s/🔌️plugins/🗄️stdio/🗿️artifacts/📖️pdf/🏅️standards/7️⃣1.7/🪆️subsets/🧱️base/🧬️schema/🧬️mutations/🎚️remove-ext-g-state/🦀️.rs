@@ -23,10 +23,13 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveExtGState {
         MutationOutcome::new(diff::diff_remove_ext_g_state(base, &self.id))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         let _ = base;
         base.ext_g_states.iter().find(|item| item.id == self.id).map(|item| PdfMutation::SetExtGState(super::set_ext_g_state::SetExtGState { state: item.clone() })).into_iter().collect()
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove ext-g-state {}", self.id), &format!("ExtGState {} entfernen", self.id))

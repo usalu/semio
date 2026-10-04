@@ -15,7 +15,7 @@ pub(crate) mod context {
     /// ð§¬ï¸ A wrapper carrying the real registry so kind discipline (View-emits-operations rejection) runs.
     pub async fn app_with_registry() -> NormApp {
         let mut app = new_app_with_registry::<EditorApp<En1993PlayApp>>(en1993_manifest_for_tests).await;
-        semio_framework::io::resolve_ready(app.bind_instance_id(meta("local").instance_id));
+        ::semio_framework_async::poll::resolve_ready(app.bind_instance_id(meta("local").instance_id));
         app
     }
 
@@ -228,10 +228,10 @@ async fn report_out_exports_the_computed_check_report() {
     let mut app = context::app_with_registry().await;
     context::dispatch(&mut app, En1993Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: En1993Snapshot::default() })).await;
     context::dispatch(&mut app, En1993Command::Evaluate(evaluate::Evaluate {})).await;
-    let media = semio_framework_plugin::resolve_ready(PluginApp::export_media(&mut app, "report:out")).expect("export report:out");
+    let media = ::semio_framework_async::poll::resolve_ready(PluginApp::export_media(&mut app, "report:out")).expect("export report:out");
     let semio_framework_plugin::MediaPayload::Structured { schema, json } = media.payload else { panic!("expected a structured payload") };
     assert_eq!(schema, crate::app_surface::artifact_kind_id(VARIANT));
-    let report: crate::document::CheckReport = pack::json::from_json_str(&json).expect("report json parses");
+    let report: crate::document::CheckReport = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("report json parses");
     assert!(
         report.checks.iter().any(|c| c.id.contains("en1993")),
         "report:out must include at least one en1993 check id, got count={}",
@@ -240,3 +240,5 @@ async fn report_out_exports_the_computed_check_report() {
     context::close(&mut app);
 }
 //#endregion ðï¸Behavior
+
+semio_framework_plugin::history_edit_acceptance_law!("norm", super::En1993PlayApp, || semio_framework_plugin::App { definition: super::create_en1993_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");

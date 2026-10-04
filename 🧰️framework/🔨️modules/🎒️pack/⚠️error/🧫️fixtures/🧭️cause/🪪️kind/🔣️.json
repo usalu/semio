@@ -1,0 +1,13 @@
+[
+ {"kind":"refusal","refusalKind":"invalidValue"},
+ {"kind":"refusal","refusalKind":"canceled"},
+ {"kind":"refusal","refusalKind":"ownershipLimit"},
+ {"kind":"refusal","refusalKind":"allocationFailed"},
+ {"kind":"refusal","refusalKind":"workLimit"},
+ {"kind":"refusal","refusalKind":"depthLimit"},
+ {"kind":"refusal","refusalKind":"unsupportedOwner"},
+ {"kind":"refusal","refusalKind":"invariantViolated"},
+ {"kind":"transport","category":"nativeIo"},
+ {"kind":"transport","category":"httpRequest"},
+ {"kind":"transport","category":"httpBody"}
+]

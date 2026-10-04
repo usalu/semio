@@ -1,0 +1,118 @@
+{
+  "at": "2026-10-03T11:05:17.024Z",
+  "authority": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/paged-command-ingress/guarded-unmounted-execution-inputs-3.json",
+  "sourceWrites": 7,
+  "productionWrites": 0,
+  "checks": [
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🦀️.rs",
+      "phase": "production",
+      "sha256": null,
+      "exact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🦀️.rs",
+      "phase": "production",
+      "sha256": "d8387a7924c561b2bd4d878194f9866558d103d9feec52c36e91d99d3c60b6f3",
+      "exact": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎠️kernel/🦀️.rs",
+      "phase": "production",
+      "sha256": "b920368e7c56b0af56d18e18bd6aeb49f371a1ac89ff7271ec50ad3b33897803",
+      "exact": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/🦀️.rs",
+      "phase": "production",
+      "sha256": "6ada55a91cfd8da559280967e166d361e289f2ba94f9ec39a5dcd50c1cfb3c7d",
+      "exact": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/Cargo.toml",
+      "phase": "production",
+      "sha256": "4501c4bf584cfc1928d7c97608ca1356270f1aadc1a73f1db26637bdba6f3ffd",
+      "exact": true
+    },
+    {
+      "path": "🧰️framework/📦️packages/🦀️rust/Cargo.toml",
+      "phase": "production",
+      "sha256": "ba881b8da04ce7ac5457475d8834696957a98abaa2acfacefe5ce4865cda8d8b",
+      "exact": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🧪️tests/🔬️unit/🦀️.rs",
+      "phase": "production",
+      "sha256": null,
+      "exact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🧪️tests/🔬️unit/🦀️.rs",
+      "phase": "production",
+      "sha256": "0cb50eaa7d4016ca2ec36c15512a43f42e0a197269e4a3e4dceb3d86c9002cbc",
+      "exact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🦀️.rs",
+      "phase": "production",
+      "sha256": "61729c4e6062e44ed345f353702c036333893358b422c0718ea7881b0efc722f",
+      "exact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+      "phase": "production",
+      "sha256": "d4a2bfb74b726b3bce2eb140b12cc959728fd756a897981145a9311fdf4fb88c",
+      "exact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+      "phase": "production",
+      "sha256": "adcfd766ea4c369d2c343dca01d5b1ff1b76d9ac763c75664803f37312ed823d",
+      "exact": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🧬️schema/🔣️.json",
+      "phase": "test-only",
+      "sha256": "c87a44d4ea43105872181d99d6eef42c48acd7f12a78bf9a9038eecc0257a397",
+      "exact": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🧫️fixtures/🔣️.json",
+      "phase": "test-only",
+      "sha256": "c0a15e441ed7fdfee2989d3a37939cbb4e653e5a96d10f4e54f3c6f5694f4ab0",
+      "exact": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🏛️ownership/🧪️tests/🟦️.ts",
+      "phase": "test-only",
+      "sha256": "dcd312432c90ae7655f01093a8700feeac57701ba7b1ce8c329d30781fd5adba",
+      "exact": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts",
+      "phase": "test-only",
+      "sha256": "7cec9bd285e42575cd3849a4bdf54c910b78de3ba1b2a5a78c47b75e82bd0463",
+      "exact": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json",
+      "phase": "test-only",
+      "sha256": "c437167f8be7829268bf96bf721a4a10f981c50fbef3684513e7c13144694153",
+      "exact": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/package.json",
+      "phase": "test-only",
+      "sha256": "8f82af810a91e0cd1faa0d976a4489a4e046bc6b07d3c5bee219a1691ecf2190",
+      "exact": true
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "phase": "test-only",
+      "sha256": "a1636b068e7d62f301d30c1e14a8a0755ce41a5db0d6546f237f1ac026350ea5",
+      "exact": true
+    }
+  ],
+  "registeredRed": "pending",
+  "native": false
+}

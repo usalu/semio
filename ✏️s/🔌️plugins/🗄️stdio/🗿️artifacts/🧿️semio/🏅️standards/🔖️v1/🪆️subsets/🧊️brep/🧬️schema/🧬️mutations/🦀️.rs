@@ -67,6 +67,7 @@ use super::set_snapshot::SetSnapshot;
 #[mutations(snapshot = SemioBrepSnapshot, diff = SemioBrepDiff, schema = "s.stdio.semio.brep")]
 pub enum SemioBrepMutation {
     SetSnapshot(SetSnapshot),
+    PatchSnapshot(super::patch_snapshot::PatchSnapshot),
     CreateVertex(create_vertex::CreateVertex),
     DeleteVertex(delete_vertex::DeleteVertex),
     CreateEdge(create_edge::CreateEdge),
@@ -87,7 +88,7 @@ pub enum SemioBrepMutation {
 /// `🧊️mutate-semio-brep`'s exhaustive test case measures itself against. `kinds_match_the_enum_and_
 /// the_catalog` below is what keeps this list honest against the enum, since the framework never
 /// parses Rust.
-pub const KINDS: &[&str] = &["set-snapshot", "create-vertex", "delete-vertex", "create-edge", "delete-edge", "create-face", "delete-face", "create-shell", "delete-shell", "create-solid", "delete-solid", "replace-curve", "replace-surface", "move-vertex"];
+pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "create-vertex", "delete-vertex", "create-edge", "delete-edge", "create-face", "delete-face", "create-shell", "delete-shell", "create-solid", "delete-solid", "replace-curve", "replace-surface", "move-vertex"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -106,9 +107,12 @@ pub fn apply_semio_brep_mutation(snapshot: &mut SemioBrepSnapshot, mutation: &Se
 /// need a mutation's own computed inverse) can still reach the inverse law that
 /// [`apply_semio_brep_mutation`] alone cannot. Same shape as `🧰️kit`'s `inverse_semio_kit_mutation`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse_semio_brep_mutation(mutation: &SemioBrepMutation, base: &SemioBrepSnapshot) -> Vec<SemioBrepMutation> {
+pub fn inverse_semio_brep_mutation(mutation: &SemioBrepMutation, base: &SemioBrepSnapshot) -> Result<Vec<SemioBrepMutation>, semio_framework_value::ValueError> {
+    Ok({
     use protocol::Mutation;
-    <SemioBrepMutation as Mutation<SemioBrepSnapshot>>::inverse(mutation, base)
+    <SemioBrepMutation as Mutation<SemioBrepSnapshot>>::inverse(mutation, base)?
+
+    })
 }
 
 /// 📥️ Decodes this facet's own externally-tagged (`{"<VariantName>": {<snake_case payload>}}`)
@@ -118,7 +122,7 @@ pub fn inverse_semio_brep_mutation(mutation: &SemioBrepMutation, base: &SemioBre
 /// committed vectors use, so a decoded mutation is directly comparable with the vector it came from.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_brep_mutation_json(text: &str) -> Result<SemioBrepMutation, String> {
-    pack::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Apply
 
@@ -135,7 +139,8 @@ fn hex_decode(value: &str) -> Result<Vec<u8>, String> {
 
 fn print_brep_mutation(m: &SemioBrepMutation) -> String {
     match m {
-        SemioBrepMutation::SetSnapshot(p) => format!("set-snapshot snapshot={}", hex_encode(pack::to_json_string(&p.snapshot).as_bytes())),
+        SemioBrepMutation::PatchSnapshot(payload) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(&payload.patch),
+        SemioBrepMutation::SetSnapshot(p) => format!("set-snapshot snapshot={}", hex_encode(semio_framework_pack_json::to_json_string(&p.snapshot).as_bytes())),
         SemioBrepMutation::CreateVertex(p) => format!("create-vertex id={} point={} tol={}", enc_str(&p.id), enc_point3(&p.point), NativeF64(p.tol)),
         SemioBrepMutation::DeleteVertex(p) => format!("delete-vertex id={}", enc_str(&p.id)),
         SemioBrepMutation::CreateEdge(p) => format!("create-edge id={} start={} end={} curve={} tol={}", enc_str(&p.id), enc_str(&p.start_vertex), enc_str(&p.end_vertex), enc_curve(&p.curve), NativeF64(p.tol)),
@@ -155,11 +160,15 @@ fn print_brep_mutation(m: &SemioBrepMutation) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_brep_mutation(line: &str) -> Result<SemioBrepMutation, String> {
+    if let Some(source) = line.strip_prefix("patch-snapshot patch=") {
+        let patch = semio_s_artifact_stdio_contract::editing::snapshot_patch_from_hex(source)?;
+        return Ok(SemioBrepMutation::PatchSnapshot(crate::standards::v1::subsets::brep::schema::mutations::patch_snapshot::PatchSnapshot { patch }));
+    }
     if let Some(payload) = line.strip_prefix("set-snapshot snapshot=") {
         let bytes = hex_decode(payload)?;
         let json = String::from_utf8(bytes).map_err(|error| error.to_string())?;
-        let parsed = pack::parse_json(&json).map_err(|error| error.to_string())?;
-        let snapshot = dsl::FromValue::from_value(pack::json_to_dsl_value(&parsed)).map_err(|error| error.to_string())?;
+        let parsed = semio_framework_pack_json::parse(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
+        let snapshot = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|error| error.to_string())?;
         return Ok(SemioBrepMutation::SetSnapshot(SetSnapshot { snapshot }));
     }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
@@ -196,8 +205,8 @@ impl OpText for SemioBrepMutation {
     fn print_op(&self) -> String {
         print_brep_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_brep_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_brep_mutation(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 }
 //#endregion 🔖️OpText
@@ -206,6 +215,7 @@ impl OpText for SemioBrepMutation {
 /// 🏷️ Op tags of `SemioBrepMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
 const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
 const TAG_CREATE_VERTEX: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "create-vertex");
 const TAG_DELETE_VERTEX: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "delete-vertex");
 const TAG_CREATE_EDGE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "create-edge");
@@ -225,6 +235,7 @@ const TAG_MOVE_VERTEX: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "move-ve
 fn wire_tag(m: &SemioBrepMutation) -> u8 {
     match m {
         SemioBrepMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
+        SemioBrepMutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
         SemioBrepMutation::CreateVertex(_) => TAG_CREATE_VERTEX,
         SemioBrepMutation::DeleteVertex(_) => TAG_DELETE_VERTEX,
         SemioBrepMutation::CreateEdge(_) => TAG_CREATE_EDGE,
@@ -257,6 +268,11 @@ fn print_brep_mutation_args(m: &SemioBrepMutation) -> String {
 /// independent encoding.
 impl OpBinary for SemioBrepMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        if let Self::PatchSnapshot(payload) = self {
+            let mut out = vec![1, TAG_PATCH_SNAPSHOT];
+            out.extend(protocol::OpBinary::encode_op(&payload.patch)?);
+            return Ok(out);
+        }
         const OP_BINARY_FORMAT: u8 = 1;
         let mut out = vec![OP_BINARY_FORMAT, wire_tag(self)];
         out.extend_from_slice(print_brep_mutation_args(self).as_bytes());
@@ -269,6 +285,9 @@ impl OpBinary for SemioBrepMutation {
         }
         if bytes[0] != OP_BINARY_FORMAT {
             return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {}", bytes[0]) });
+        }
+        if bytes[1] == TAG_PATCH_SNAPSHOT {
+            return Ok(Self::PatchSnapshot(crate::standards::v1::subsets::brep::schema::mutations::patch_snapshot::PatchSnapshot { patch: protocol::OpBinary::decode_op(&bytes[2..])? }));
         }
         let tag = bytes[1];
         let keyword = dsl::protocol_record::kind(WIRE_PROTOCOL, u64::from(tag)).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} names no record of 📡️.protocol.semio") })?;
@@ -304,6 +323,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioBrepMutation> {
     use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
     use crate::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, BrepShellFace, BrepSolidShell, BrepSurface};
     vec![
+        SemioBrepMutation::PatchSnapshot(super::patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         SemioBrepMutation::CreateVertex(create_vertex::CreateVertex { id: "v-new".into(), point: SemioPoint3 { x: 9.0, y: 9.0, z: 9.0 }, tol: 2e-7 }),
         SemioBrepMutation::DeleteVertex(delete_vertex::DeleteVertex { id: "v1".into() }),
         SemioBrepMutation::CreateEdge(create_edge::CreateEdge {

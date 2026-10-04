@@ -7,7 +7,7 @@ use crate::standards::v1::subsets::any::schema::diff::Block2dDiff;
 pub fn diff(payload: &super::UpdatePresentation, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
     let presentation = Block2dPresentation { shape: payload.new_shape.clone(), radius: payload.new_radius, width: payload.new_width, height: payload.new_height, color: payload.new_color.clone(), icon_kind: payload.new_icon_kind.clone() };
     if presentation == base.presentation {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Presentation is unchanged.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Presentation is unchanged.");
     }
     protocol::MutationOutcome::new(Block2dDiff { presentation: Some(presentation), ..Default::default() })
 }

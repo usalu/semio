@@ -8,7 +8,8 @@ pub fn print(value: &TiffMutation) -> Option<String> {
     let TiffMutation::InsertIfd(InsertIfdMutation { index, ifd }) = value else { return None };
     Some(format!("insert-ifd index={index} ifd={}", enc_ifd(ifd)))
 }
-pub fn parse(line: &str) -> Result<TiffMutation, String> {
+pub fn parse(line: &str) -> Result<TiffMutation, semio_framework_diagnostic::TextError> {
+    let parse = || -> Result<TiffMutation, String> {
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
     if keyword != TEXT_OPCODE {
         return Err(format!("expected {TEXT_OPCODE}"));
@@ -17,4 +18,6 @@ pub fn parse(line: &str) -> Result<TiffMutation, String> {
     let arg = |key: &str| args.get(key).copied().ok_or_else(|| format!("missing {key}"));
     let usize_arg = |key: &str| -> Result<usize, String> { arg(key)?.parse().map_err(|error: std::num::ParseIntError| error.to_string()) };
     Ok(TiffMutation::InsertIfd(InsertIfdMutation { index: usize_arg("index")?, ifd: dec_ifd(arg("ifd")?)? }))
+};
+    parse().map_err(|message| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message,semio_framework_diagnostic::TextSpan::at(1,1)))
 }

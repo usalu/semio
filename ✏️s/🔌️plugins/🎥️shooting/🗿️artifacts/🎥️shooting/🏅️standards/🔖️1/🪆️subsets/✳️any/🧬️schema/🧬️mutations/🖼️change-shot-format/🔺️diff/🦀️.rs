@@ -11,7 +11,7 @@ pub fn diff(payload: &ChangeShotFormat, base: &ShootingSnapshot) -> protocol::Mu
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Shot \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if existing.format == payload.new_format {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Shot \"{}\" already has format \"{}\".", payload.id, payload.new_format));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Shot \"{}\" already has format \"{}\".", payload.id, payload.new_format));
     }
     protocol::MutationOutcome::new(ShootingDiff {
         shots: Some(ShootingShotsDelta { patched: vec![ShootingShotPatchEntry { id: payload.id.clone(), patch: ShootingShotPatch { format: Some(payload.new_format.clone()), ..Default::default() } }], ..Default::default() }),

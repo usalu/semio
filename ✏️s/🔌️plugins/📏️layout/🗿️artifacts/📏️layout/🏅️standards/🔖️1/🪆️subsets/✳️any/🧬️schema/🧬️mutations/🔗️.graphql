@@ -134,7 +134,7 @@ type ChangePrintTarget {
 }
 
 type ChangeDataFields {
-  newJson: String
+  newFields: FormDictionaryInput
 }
 
 type CreatePage {

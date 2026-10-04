@@ -1,0 +1,134 @@
+{
+  "format": "tiff-6.0-owned-snapshot-sqlite",
+  "dialect": {
+    "artifactKind": "s.stdio.tiff",
+    "standard": "6.0",
+    "subset": "*"
+  },
+  "literalSchemas": [
+    "",
+    "TIFF literal \u0000 Grüße 🌠"
+  ],
+  "domainRows": 52,
+  "tableRowCounts": {
+    "tiff_document": 1,
+    "tiff_ifd": 2,
+    "tiff_tag": 13,
+    "tiff_byte_value": 2,
+    "tiff_ascii_value": 1,
+    "tiff_short_value": 2,
+    "tiff_long_value": 2,
+    "tiff_rational_value": 2,
+    "tiff_signed_byte_value": 2,
+    "tiff_undefined_value": 2,
+    "tiff_signed_short_value": 2,
+    "tiff_signed_long_value": 2,
+    "tiff_signed_rational_value": 2,
+    "tiff_float_value": 7,
+    "tiff_double_value": 7,
+    "tiff_document_pixels": 1,
+    "tiff_ifd_pixels": 2
+  },
+  "float32Words": [
+    "00000000",
+    "80000000",
+    "00000001",
+    "00800000",
+    "7f7fffff",
+    "7f800000",
+    "ff800000",
+    "7fc00011",
+    "7f800007"
+  ],
+  "float64Words": [
+    "0000000000000000",
+    "8000000000000000",
+    "0000000000000001",
+    "0010000000000000",
+    "7fefffffffffffff",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff8000000000011",
+    "7ff0000000000007"
+  ],
+  "largeAscii": {
+    "unit": "文🌠",
+    "repeat": 20000
+  },
+  "largePixels": 100000,
+  "sqliteSignature": "53514c69746520666f726d6174203300",
+  "externalRaster": {
+    "width": 1,
+    "height": 1,
+    "rgba": [
+      1,
+      2,
+      3,
+      255
+    ],
+    "byteOrders": [
+      "littleEndian",
+      "bigEndian"
+    ],
+    "envelopeId": "stdio.tiff",
+    "wireHex": [
+      "49492a0008000000090000010400010000000100000001010400010000000100000002010300030000007a00000003010300010000000100000006010300010000000200000011010400010000008000000015010300010000000300000016010400010000000100000017010400010000000300000000000000080008000800010203",
+      "4d4d002a00000008000901000004000000010000000101010004000000010000000101020003000000030000007a01030003000000010001000001060003000000010002000001110004000000010000008001150003000000010003000001160004000000010000000101170004000000010000000300000000000800080008010203"
+    ]
+  },
+  "laws": [
+    "semantic-file",
+    "exact-domain-row-bound",
+    "native-input-owner",
+    "native-input-controls",
+    "native-output-owner",
+    "native-output-controls"
+  ],
+  "controlAudit": {
+    "reverseTags": 1024,
+    "firstMetadataTag": 40000,
+    "duplicateCount": 2,
+    "sortWorkFactor": 8,
+    "secondaryPixels": [
+      21,
+      22,
+      23
+    ],
+    "secondaryLength": 1
+  },
+  "constructionAudit": {
+    "schema": "",
+    "byteOrder": "littleEndian",
+    "tag": 40000,
+    "values": [
+      0,
+      1,
+      2,
+      4294967295
+    ],
+    "ifdCount": 1,
+    "tagCount": 1,
+    "valueCount": 4,
+    "domainRows": 9,
+    "retainedPixelBytes": 0,
+    "minimumValueBackingBytes": 16,
+    "refusedBackingBytes": 1
+  },
+  "allocationBridge": {
+    "maximumBytes": 16777216,
+    "refusedBytes": 1,
+    "copyBytes": 100000,
+    "cancelAt": 65536,
+    "passes": 2,
+    "textDecodeStages": {
+      "borrowedHexValidation": {
+        "start": 1,
+        "admittedByteCopies": 0
+      },
+      "ownedHexMaterialization": {
+        "start": 2,
+        "admittedByteCopies": 1
+      }
+    }
+  }
+}

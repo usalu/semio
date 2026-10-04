@@ -7,7 +7,7 @@ fn canonical_json_bytes_matches_the_portable_byte_array_contract() {
         let bytes: Vec<u8> = serde_json::from_value(row["bytes"].clone()).unwrap();
         let expected = row["canonical"].as_str().unwrap();
         let mut actual = String::new();
-        write_canonical_json(&dsl::DslValue::Bytes(bytes.clone()), &mut actual).unwrap();
+        write_canonical_json(&semio_framework_value::DslValue::Bytes(bytes.clone()), &mut actual).unwrap();
         assert_eq!(actual, expected, "{}", row["id"]);
         assert_eq!(actual, serde_json::to_string(&bytes).unwrap());
     }
@@ -25,7 +25,7 @@ async fn canonical_leaf_roundtrip_is_id_bound() {
         quality: "exact".into(),
         diagnostic_ids: Vec::new(),
         provenance: vec!["scene-world".into()],
-        value: dsl::DslValue::float(1.5),
+        value: semio_framework_value::DslValue::float(1.5),
     };
     let encoded = encode_gltf_inference_leaf_text(&value).unwrap();
     assert_eq!(decode_gltf_inference_leaf_text(&encoded).unwrap(), value);
@@ -35,7 +35,7 @@ async fn canonical_leaf_roundtrip_is_id_bound() {
     // `pack::json`'s lexer reads an integer literal back as an integer carrier. That folding is
     // the canonical form's own contract, and this asserts it rather than leaving it implicit --
     // which is why the round-trip law above is stated on a non-integral float.
-    let integral = GltfInferenceLeafEnvelope { value: dsl::DslValue::float(1.0), ..value.clone() };
-    let folded = GltfInferenceLeafEnvelope { value: dsl::DslValue::uint(1), ..value.clone() };
+    let integral = GltfInferenceLeafEnvelope { value: semio_framework_value::DslValue::float(1.0), ..value.clone() };
+    let folded = GltfInferenceLeafEnvelope { value: semio_framework_value::DslValue::uint(1), ..value.clone() };
     assert_eq!(decode_gltf_inference_leaf_text(&encode_gltf_inference_leaf_text(&integral).unwrap()).unwrap(), folded);
 }

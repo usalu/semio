@@ -59,21 +59,21 @@ pub mod derived_composition {
     /// every `CadEntity::Insert.block_name` must name a real `CadBlock` and must not name its OWN
     /// containing block (a self-referential insert is an infinite-recursion cycle, not valid content).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn cad_referential_diagnostics(snapshot: &SemioCadSnapshot) -> Vec<dsl::Diagnostic> {
+    fn cad_referential_diagnostics(snapshot: &SemioCadSnapshot) -> Vec<semio_framework_diagnostic::Diagnostic> {
         let mut diagnostics = Vec::new();
         let layer_names: std::collections::BTreeSet<&str> = snapshot.layers.iter().map(|l| l.name.as_str()).collect();
         let block_names: std::collections::BTreeSet<&str> = snapshot.blocks.iter().map(|b| b.name.as_str()).collect();
 
-        let check_record = |diagnostics: &mut Vec<dsl::Diagnostic>, owning_block: Option<&str>, rec: &crate::standards::v1::subsets::cad::schema::snapshot::CadEntityRecord| {
+        let check_record = |diagnostics: &mut Vec<semio_framework_diagnostic::Diagnostic>, owning_block: Option<&str>, rec: &crate::standards::v1::subsets::cad::schema::snapshot::CadEntityRecord| {
             if !layer_names.contains(rec.layer.as_str()) {
-                diagnostics.push(dsl::Diagnostic::error("stdio.semio_cad.dangling-layer", dsl::TextSpan::at(1, 1), format!("entity {:?} (handle {:?}) references undefined layer {:?}", owning_block.unwrap_or("<top-level>"), rec.handle, rec.layer)));
+                diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.semio_cad.dangling-layer", semio_framework_diagnostic::TextSpan::at(1, 1), format!("entity {:?} (handle {:?}) references undefined layer {:?}", owning_block.unwrap_or("<top-level>"), rec.handle, rec.layer)));
             }
             if let CadEntity::Insert { block_name, .. } = &rec.entity {
                 if !block_names.contains(block_name.as_str()) {
-                    diagnostics.push(dsl::Diagnostic::error("stdio.semio_cad.dangling-block-insert", dsl::TextSpan::at(1, 1), format!("entity handle {:?} inserts undefined block {:?}", rec.handle, block_name)));
+                    diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.semio_cad.dangling-block-insert", semio_framework_diagnostic::TextSpan::at(1, 1), format!("entity handle {:?} inserts undefined block {:?}", rec.handle, block_name)));
                 }
                 if owning_block == Some(block_name.as_str()) {
-                    diagnostics.push(dsl::Diagnostic::error("stdio.semio_cad.self-referential-insert", dsl::TextSpan::at(1, 1), format!("block {:?} contains an Insert of itself (handle {:?}) -- infinite recursion", block_name, rec.handle)));
+                    diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.semio_cad.self-referential-insert", semio_framework_diagnostic::TextSpan::at(1, 1), format!("block {:?} contains an Insert of itself (handle {:?}) -- infinite recursion", block_name, rec.handle)));
                 }
             }
         };
@@ -93,14 +93,14 @@ pub mod derived_composition {
 
     impl SubsetValidator for SemioCadValidator {
         const DIALECT: Dialect = DIALECT;
-        async fn validate(payload: &IoPayload) -> Vec<dsl::Diagnostic> {
+        async fn validate(payload: &IoPayload) -> Vec<semio_framework_diagnostic::Diagnostic> {
             let decoded = match payload {
                 IoPayload::Binary(bytes) => <SemioCadSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
                 IoPayload::Text(text) => <SemioCadSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
             };
             match decoded {
                 Some(snapshot) => cad_referential_diagnostics(&snapshot),
-                None => vec![dsl::Diagnostic::error("stdio.semio_cad.validate-decode-failed", dsl::TextSpan::at(1, 1), "SemioCadValidator: payload did not decode as a SemioCadSnapshot".to_string())],
+                None => vec![semio_framework_diagnostic::Diagnostic::error("stdio.semio_cad.validate-decode-failed", semio_framework_diagnostic::TextSpan::at(1, 1), "SemioCadValidator: payload did not decode as a SemioCadSnapshot".to_string())],
             }
         }
     }

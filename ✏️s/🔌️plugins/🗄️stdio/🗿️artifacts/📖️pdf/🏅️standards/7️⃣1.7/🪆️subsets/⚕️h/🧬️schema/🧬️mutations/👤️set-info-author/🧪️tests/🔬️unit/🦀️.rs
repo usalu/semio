@@ -9,5 +9,5 @@ fn sets_and_can_restore_the_document_author() {
     let outcome = <SetInfoAuthor as MutationKind<PdfSnapshot, PdfHMutation>>::diff(&mutation, &base);
     let next = outcome.diff().apply(&base).unwrap();
     assert_eq!(next.info.author.as_deref(), Some("after"));
-    assert_eq!(<SetInfoAuthor as MutationKind<PdfSnapshot, PdfHMutation>>::inverse(&mutation, &base), vec![PdfHMutation::SetInfoAuthor(SetInfoAuthor { author: "before".to_string() })]);
+    assert_eq!(<SetInfoAuthor as MutationKind<PdfSnapshot, PdfHMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture"), vec![PdfHMutation::SetInfoAuthor(SetInfoAuthor { author: "before".to_string() })]);
 }

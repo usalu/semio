@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.framework.retained-input.queued-acknowledgements",
+  "type": "object",
+  "required": [
+    "target",
+    "nextTarget",
+    "base",
+    "first",
+    "second",
+    "revisionBefore",
+    "revisionAfterFirst",
+    "revisionAfterSecond",
+    "commandsWhileFirstPending",
+    "commandsAfterFirstCompletes",
+    "commandsAfterRefusal",
+    "normalizedNumber",
+    "admission",
+    "button"
+  ],
+  "properties": {
+    "target": {
+      "type": "string",
+      "minLength": 1
+    },
+    "nextTarget": {
+      "type": "string",
+      "minLength": 1
+    },
+    "base": {
+      "type": "string"
+    },
+    "first": {
+      "type": "string"
+    },
+    "second": {
+      "type": "string"
+    },
+    "revisionBefore": {
+      "type": "string",
+      "minLength": 1
+    },
+    "revisionAfterFirst": {
+      "type": "string",
+      "minLength": 1
+    },
+    "revisionAfterSecond": {
+      "type": "string",
+      "minLength": 1
+    },
+    "commandsWhileFirstPending": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "commandsAfterFirstCompletes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "commandsAfterRefusal": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "normalizedNumber": {
+      "type": "object",
+      "required": [
+        "base",
+        "typed",
+        "published"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "base": {
+          "type": "string"
+        },
+        "typed": {
+          "type": "string"
+        },
+        "published": {
+          "type": "string"
+        }
+      }
+    },
+    "admission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maxPending",
+        "overflowDraft",
+        "recoveredDraft"
+      ],
+      "properties": {
+        "maxPending": {
+          "const": 64
+        },
+        "overflowDraft": {
+          "type": "string",
+          "minLength": 1
+        },
+        "recoveredDraft": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "button": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "label",
+        "pendingDispatches",
+        "settledDispatches"
+      ],
+      "properties": {
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "pendingDispatches": {
+          "const": 1
+        },
+        "settledDispatches": {
+          "const": 2
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,7 +1,8 @@
 //! ✏️ Schema-erased, typed snapshot editing shared by every stdio artifact editor.
 
-use crate::{kernel, pack, value_derive};
-use kernel::{ArtifactDsl, DslValue, FromValue, Mutation, MutationDiff, OpBinary, ToValue};
+use crate::{kernel, value_derive};
+use kernel::{ArtifactDsl, Mutation, MutationDiff, OpBinary};
+use semio_framework_value::{DslValue, FromValue, ToValue};
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, ArtifactRetainedWorkCapacity, BoundedArtifactCommandWork};
 use semio_framework_plugin::ActionArgDef;
 use semio_framework_plugin::ActionDefinition;
@@ -9,22 +10,30 @@ use semio_framework_plugin::ActionKind;
 use semio_framework_plugin::Fault;
 use semio_framework_plugin::FaultCode;
 use semio_framework_plugin::FaultOrigin;
-use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::{
     AppOperationContext, ArtifactBoundedFirstStepProof, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, Dialect, EditorApp, Emit,
     InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, ToolOperationSpec,
 };
+use semio_framework_ui_locale::LocalizedLabel;
 use std::collections::{BTreeMap, BTreeSet};
 
+#[path = "🧵️bytes/🦀️.rs"]
+pub mod bytes;
 #[path = "🪟️details/🦀️.rs"]
 pub mod details;
 #[path = "🩹️patch/🦀️.rs"]
 pub mod patch;
+#[path = "🖼️raster/🦀️.rs"]
+pub mod raster;
 pub use details::{
-    render_file_source_editor, render_snapshot_details, render_snapshot_details_provider, snapshot_details_split_layout, snapshot_details_window_definition, DslSnapshotDetailsProvider, SnapshotDetailPathSegment, SnapshotDetailPresentation,
-    SnapshotDetailValue, SnapshotDetailsProvider, SNAPSHOT_DETAILS_BODY_KEY, SNAPSHOT_DETAILS_WINDOW_KIND_ID,
+    render_file_source_editor, render_snapshot_details, render_snapshot_details_provider_revisioned, snapshot_details_split_layout, snapshot_details_window_definition, DslSnapshotDetailsProvider,
+    SnapshotDetailPathSegment, SnapshotDetailPresentation, SnapshotDetailValue, SnapshotDetailsProvider, SNAPSHOT_DETAILS_BODY_KEY, SNAPSHOT_DETAILS_WINDOW_KIND_ID,
 };
-pub use patch::{apply_snapshot_patch, apply_snapshot_patch_for_dialect, inverse_snapshot_patch, prepare_snapshot_patch, SnapshotPatch, SnapshotPatchEdit, SnapshotValuePatch, SNAPSHOT_PATCH_MAX_BYTES};
+pub use patch::{
+    apply_snapshot_patch, apply_snapshot_patch_checked, apply_snapshot_patch_for_dialect, inverse_snapshot_patch, inverse_snapshot_patches, inverse_snapshot_patches_within, prepare_snapshot_patch, snapshot_patch_from_bytes,
+    snapshot_patch_from_hex, snapshot_patch_from_text, snapshot_patch_hex, snapshot_patch_input_schema, snapshot_patch_input_schema_text, snapshot_patch_label, snapshot_patch_text, snapshot_schema_location, SnapshotPatch,
+    SnapshotSchemaLocation, SnapshotSchemaResolver, SNAPSHOT_PATCH_MAX_BYTES, SNAPSHOT_PATCH_MAX_INVERSE_PARTS, SNAPSHOT_PATCH_MAX_SEGMENTS,
+};
 
 pub const SET_SNAPSHOT_VALUE_ACTION_ID: &str = "setSnapshotValue";
 pub const INSERT_SNAPSHOT_VALUE_ACTION_ID: &str = "insertSnapshotValue";
@@ -56,36 +65,36 @@ pub enum SnapshotEditingCommand<C> {
     Edit(SnapshotEditEvent),
 }
 
-pub trait SnapshotEditingNativeCommand: kernel::OpBinary {
+pub trait SnapshotEditingNativeCommand: OpBinary {
     const ALL_TOOL_JOB_IDS: &'static [&'static str];
 }
 
-impl<C: kernel::OpBinary> kernel::OpText for SnapshotEditingCommand<C> {
+impl<C: OpBinary> kernel::OpText for SnapshotEditingCommand<C> {
     fn print_op(&self) -> String {
         match self {
             Self::Native(command) => format!("native {}", hex_encode(&command.encode_op().unwrap_or_default())),
-            Self::Edit(event) => format!("edit {}", hex_encode(&<SnapshotEditEvent as kernel::OpBinary>::encode_op(event).unwrap_or_default())),
+            Self::Edit(event) => format!("edit {}", hex_encode(&<SnapshotEditEvent as OpBinary>::encode_op(event).unwrap_or_default())),
         }
     }
 
     fn parse_op(line: &str) -> Result<Self, kernel::TextError> {
-        let (channel, payload) = line.split_once(' ').ok_or_else(|| kernel::TextError::new("snapshot editing command requires a channel", kernel::TextSpan::at(1, 1)))?;
-        let bytes = hex_decode(payload).map_err(|error| kernel::TextError::new(error, kernel::TextSpan::at(1, 1)))?;
+        let (channel, payload) = line.split_once(' ').ok_or_else(|| kernel::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "snapshot editing command requires a channel", kernel::TextSpan::at(1, 1)))?;
+        let bytes = hex_decode(payload).map_err(|error| kernel::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, kernel::TextSpan::at(1, 1)))?;
         match channel {
-            "native" => C::decode_op(&bytes).map(Self::Native).map_err(|error| kernel::TextError::new(error.to_string(), kernel::TextSpan::at(1, 1))),
-            "edit" => <SnapshotEditEvent as kernel::OpBinary>::decode_op(&bytes).map(Self::Edit).map_err(|error| kernel::TextError::new(error.to_string(), kernel::TextSpan::at(1, 1))),
-            _ => Err(kernel::TextError::new(format!("unknown snapshot editing command channel '{channel}'"), kernel::TextSpan::at(1, 1))),
+            "native" => C::decode_op(&bytes).map(Self::Native).map_err(|error| kernel::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), kernel::TextSpan::at(1, 1))),
+            "edit" => <SnapshotEditEvent as OpBinary>::decode_op(&bytes).map(Self::Edit).map_err(|error| kernel::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), kernel::TextSpan::at(1, 1))),
+            _ => Err(kernel::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown snapshot editing command channel '{channel}'"), kernel::TextSpan::at(1, 1))),
         }
     }
 }
 
-impl<C: SnapshotEditingNativeCommand> kernel::OpBinary for SnapshotEditingCommand<C> {
+impl<C: SnapshotEditingNativeCommand> OpBinary for SnapshotEditingCommand<C> {
     const TOOL_JOB_IDS: &'static [&'static str] = C::ALL_TOOL_JOB_IDS;
 
     fn encode_op(&self) -> Result<Vec<u8>, kernel::ProtocolError> {
         let (channel, payload) = match self {
             Self::Native(command) => (0, command.encode_op()?),
-            Self::Edit(event) => (1, <SnapshotEditEvent as kernel::OpBinary>::encode_op(event)?),
+            Self::Edit(event) => (1, <SnapshotEditEvent as OpBinary>::encode_op(event)?),
         };
         let mut encoded = Vec::with_capacity(payload.len() + 1);
         encoded.push(channel);
@@ -99,7 +108,7 @@ impl<C: SnapshotEditingNativeCommand> kernel::OpBinary for SnapshotEditingComman
         };
         match channel {
             0 => C::decode_op(payload).map(Self::Native),
-            1 => <SnapshotEditEvent as kernel::OpBinary>::decode_op(payload).map(Self::Edit),
+            1 => <SnapshotEditEvent as OpBinary>::decode_op(payload).map(Self::Edit),
             _ => Err(kernel::ProtocolError::Malformed { what: "snapshot editing command", offset: 0, detail: format!("unknown channel {channel}") }),
         }
     }
@@ -160,15 +169,15 @@ impl SnapshotEditEvent {
 
 impl kernel::OpText for SnapshotEditEvent {
     fn print_op(&self) -> String {
-        pack::json::to_json_string(self)
+        semio_framework_pack_json::to_json_string(self)
     }
 
     fn parse_op(line: &str) -> Result<Self, kernel::TextError> {
-        pack::json::from_json_str(line).map_err(|error| kernel::TextError::new(error.to_string(), kernel::TextSpan::at(1, 1)))
+        semio_framework_pack_json::from_json_str(line, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| kernel::TextError::from_value_error(error, kernel::TextSpan::at(1, 1)))
     }
 }
 
-impl kernel::OpBinary for SnapshotEditEvent {
+impl OpBinary for SnapshotEditEvent {
     const TOOL_JOB_IDS: &'static [&'static str] = SNAPSHOT_EDIT_ACTION_IDS;
 
     fn encode_op(&self) -> Result<Vec<u8>, kernel::ProtocolError> {
@@ -186,22 +195,40 @@ pub struct SnapshotEditError {
     pub code: &'static str,
     pub path: String,
     pub message: String,
+    pub span: Option<semio_framework_diagnostic::TextSpan>,
 }
 
 impl SnapshotEditError {
-    fn new(code: &'static str, path: impl Into<String>, message: impl Into<String>) -> Self {
-        Self { code, path: path.into(), message: message.into() }
+    /// 🧾️ A refusal with one of the module's `snapshot-edit.*` codes (`snapshot-edit.schema-invalid`, …) at the pointer `path`.
+    pub fn new(code: &'static str, path: impl Into<String>, message: impl Into<String>) -> Self {
+        Self { code, path: path.into(), message: message.into(), span: None }
+    }
+
+    /// 📍️ Locates a source refusal at its exact one-based text span.
+    pub fn with_span(mut self, span: semio_framework_diagnostic::TextSpan) -> Self {
+        self.span = Some(span);
+        self
     }
 
     /// ⚖️ The frozen mutation outcome code this refusal reports as (`📡️replication/🎮️mutation/🧫️fixtures/🧫️outcome-code`):
     /// an address the snapshot lacks is `target-missing`, a key it already holds `duplicate-id`, an edit the snapshot's
     /// current shape contradicts `target-mismatch`, and a patch malformed or out of bounds on its own `invariant`.
-    pub fn outcome_code(&self) -> &'static str {
+    pub fn outcome_code(&self) -> kernel::OutcomeCode {
         match self.code {
-            "snapshot-edit.path-missing" | "snapshot-edit.index-out-of-bounds" => "mutation.target-missing",
-            "snapshot-edit.key-exists" => "mutation.duplicate-id",
-            "snapshot-edit.ambiguous-object" | "snapshot-edit.not-container" | "snapshot-edit.not-object" | "snapshot-edit.descendant-move" | "snapshot-edit.invalid-move" | "snapshot-edit.schema-invalid" | "snapshot-edit.lossy-conversion" | "snapshot-edit.constraint-invalid" => "mutation.target-mismatch",
-            _ => "mutation.invariant",
+            "snapshot-edit.path-missing" | "snapshot-edit.index-out-of-bounds" => kernel::OutcomeCode::TargetMissing,
+            "snapshot-edit.key-exists" => kernel::OutcomeCode::DuplicateId,
+            "snapshot-edit.ambiguous-object"
+            | "snapshot-edit.not-container"
+            | "snapshot-edit.not-object"
+            | "snapshot-edit.descendant-move"
+            | "snapshot-edit.invalid-move"
+            | "snapshot-edit.schema-invalid"
+            | "snapshot-edit.lossy-conversion"
+            | "snapshot-edit.constraint-invalid"
+            | "snapshot-edit.splice-mismatch"
+            | "snapshot-edit.char-boundary"
+            | "snapshot-edit.inverse-limit" => kernel::OutcomeCode::TargetMismatch,
+            _ => kernel::OutcomeCode::Invariant,
         }
     }
 }
@@ -372,46 +399,49 @@ fn rename_key(root: &mut DslValue, path: &str, key: &str) -> Result<(), Snapshot
 
 /// 🧾️ Prints every typed snapshot detail without passing through a native file encoder.
 pub fn snapshot_edit_source<S: ToValue>(snapshot: &S) -> String {
-    pack::json::to_string_pretty(&pack::json::from_dsl_value(&snapshot.to_value()))
+    semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&snapshot.to_value()))
 }
 
-fn validate_source_keys(source: &str) -> Result<(), SnapshotEditError> {
-    use pack::json::Token;
-    let mut lexer = pack::json::Lexer::new(source);
-    let mut scopes: Vec<Option<(bool, BTreeSet<String>)>> = Vec::new();
-    while let Some(token) = lexer.next_token().map_err(|error| SnapshotEditError::new("snapshot-edit.invalid-source", "", error.to_string()))? {
-        match token {
-            Token::ObjectStart => scopes.push(Some((true, BTreeSet::new()))),
-            Token::ArrayStart => scopes.push(None),
-            Token::ObjectEnd | Token::ArrayEnd => {
-                scopes.pop();
-            }
-            Token::Comma => {
-                if let Some(Some((key, _))) = scopes.last_mut() {
-                    *key = true;
-                }
-            }
-            Token::String(name) => {
-                if let Some(Some((key, names))) = scopes.last_mut() {
-                    if *key && !names.insert(name.clone()) {
-                        return Err(SnapshotEditError::new("snapshot-edit.ambiguous-object", "", format!("source repeats object key '{name}'")));
-                    }
-                    *key = false;
-                }
-            }
-            _ => {}
-        }
-        if scopes.len() > 128 {
-            return Err(SnapshotEditError::new("snapshot-edit.depth-exceeded", "", "snapshot nesting exceeds 128 levels"));
-        }
+fn json_error_offset(error: &semio_framework_pack_json::JsonError, source_len: usize) -> Option<usize> {
+    match error {
+        semio_framework_pack_json::JsonError::UnexpectedEof => Some(source_len),
+        semio_framework_pack_json::JsonError::UnexpectedByte { offset, .. }
+        | semio_framework_pack_json::JsonError::ControlCharacterInString { offset, .. }
+        | semio_framework_pack_json::JsonError::DuplicateMember { offset, .. } => Some(*offset),
+        semio_framework_pack_json::JsonError::InvalidNumber(offset)
+        | semio_framework_pack_json::JsonError::InvalidEscape(offset)
+        | semio_framework_pack_json::JsonError::InvalidUnicodeEscape(offset)
+        | semio_framework_pack_json::JsonError::UnpairedSurrogate(offset)
+        | semio_framework_pack_json::JsonError::TrailingData(offset) => Some(*offset),
+        semio_framework_pack_json::JsonError::Native(_) | semio_framework_pack_json::JsonError::InvalidUtf8 | semio_framework_pack_json::JsonError::MaxDepthExceeded(_) => None,
     }
-    Ok(())
+}
+
+fn source_span(source: &str, offset: usize) -> semio_framework_diagnostic::TextSpan {
+    let mut end = offset.min(source.len());
+    while end > 0 && !source.is_char_boundary(end) {
+        end -= 1;
+    }
+    let prefix = &source[..end];
+    let line = u32::try_from(prefix.bytes().filter(|byte| *byte == b'\n').count().saturating_add(1)).unwrap_or(u32::MAX);
+    let column = u32::try_from(prefix.rsplit_once('\n').map_or(prefix, |(_, tail)| tail).chars().count().saturating_add(1)).unwrap_or(u32::MAX);
+    semio_framework_diagnostic::TextSpan::with_length(line, column, u32::from(end < source.len()))
+}
+
+fn parse_snapshot_json(source: &str) -> Result<DslValue, SnapshotEditError> {
+    semio_framework_pack_json::parse(source, semio_framework_pack_json::JsonMemberPolicy::Reject)
+        .map(|value| semio_framework_pack_json::to_dsl_value(&value))
+        .map_err(|error| {
+            let span = json_error_offset(&error, source.len()).map(|offset| source_span(source, offset));
+            let code = if matches!(&error, semio_framework_pack_json::JsonError::DuplicateMember { .. }) { "snapshot-edit.ambiguous-object" } else { "snapshot-edit.invalid-source" };
+            let error = SnapshotEditError::new(code, "", error.to_string());
+            span.map_or(error.clone(), |span| error.with_span(span))
+        })
 }
 
 /// 🔬️ Decodes complete snapshot JSON and refuses any normalized or discarded detail.
 pub fn snapshot_from_edit_source<S: FromValue + ToValue>(source: &str) -> Result<S, SnapshotEditError> {
-    validate_source_keys(source)?;
-    let value: DslValue = pack::json::from_json_str(source).map_err(|error| SnapshotEditError::new("snapshot-edit.invalid-source", "", error.to_string()))?;
+    let value = parse_snapshot_json(source)?;
     validate_value(&value, "")?;
     let decoded = S::from_value(value.clone()).map_err(|error| SnapshotEditError::new("snapshot-edit.schema-invalid", "", error.to_string()))?;
     if !values_equivalent(&decoded.to_value(), &value) {
@@ -491,7 +521,7 @@ pub fn validate_snapshot_value_against_schema(value: &DslValue, schema: &str) ->
 }
 
 fn validate_snapshot_value_with_validator(value: &DslValue, validator: &semio_framework_schema::OwnedJsonSchemaValidator) -> Result<(), SnapshotEditError> {
-    let source = pack::json::to_string(&pack::json::from_dsl_value(value));
+    let source = semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(value));
     validator.validate_json(&source).map(|_| ()).map_err(|error| {
         let message = match error {
             semio_framework_schema::SchemaError::Validation(message) => message,
@@ -576,7 +606,7 @@ fn validate_value_at_depth(value: &DslValue, path: &str, depth: usize) -> Result
         return Err(SnapshotEditError::new("snapshot-edit.depth-exceeded", path, "snapshot nesting exceeds 128 levels"));
     }
     match value {
-        DslValue::Number(kernel::Number::Float(value)) if !value.is_finite() => Err(SnapshotEditError::new("snapshot-edit.non-finite-number", path, "snapshot numbers must be finite")),
+        DslValue::Number(semio_framework_value::Number::Float(value)) if !value.is_finite() => Err(SnapshotEditError::new("snapshot-edit.non-finite-number", path, "snapshot numbers must be finite")),
         DslValue::Array(items) => items.iter().enumerate().try_for_each(|(index, item)| validate_value_at_depth(item, &format!("{path}/{index}"), depth + 1)),
         DslValue::Object(entries) => {
             let mut keys = BTreeSet::new();
@@ -611,10 +641,10 @@ fn values_equivalent(left: &DslValue, right: &DslValue) -> bool {
             }
         }
         (DslValue::Array(left), DslValue::Array(right)) => left.len() == right.len() && left.iter().zip(right).all(|(left, right)| values_equivalent(left, right)),
-        (DslValue::Number(kernel::Number::Float(float)), DslValue::Number(kernel::Number::UInt(integer))) | (DslValue::Number(kernel::Number::UInt(integer)), DslValue::Number(kernel::Number::Float(float))) => {
+        (DslValue::Number(semio_framework_value::Number::Float(float)), DslValue::Number(semio_framework_value::Number::UInt(integer))) | (DslValue::Number(semio_framework_value::Number::UInt(integer)), DslValue::Number(semio_framework_value::Number::Float(float))) => {
             *integer <= 9_007_199_254_740_991 && *float == *integer as f64
         }
-        (DslValue::Number(kernel::Number::Float(float)), DslValue::Number(kernel::Number::Int(integer))) | (DslValue::Number(kernel::Number::Int(integer)), DslValue::Number(kernel::Number::Float(float))) => {
+        (DslValue::Number(semio_framework_value::Number::Float(float)), DslValue::Number(semio_framework_value::Number::Int(integer))) | (DslValue::Number(semio_framework_value::Number::Int(integer)), DslValue::Number(semio_framework_value::Number::Float(float))) => {
             integer.unsigned_abs() <= 9_007_199_254_740_991 && *float == *integer as f64
         }
         _ => left == right,
@@ -623,6 +653,15 @@ fn values_equivalent(left: &DslValue, right: &DslValue) -> bool {
 
 fn edit_fault(code: &'static str, message: impl Into<String>) -> Fault {
     Fault::new(FaultOrigin::App, FaultCode::new(code), message)
+}
+
+fn snapshot_edit_fault(error: SnapshotEditError) -> Fault {
+    let mut fault = Fault::new(FaultOrigin::App, FaultCode::new(error.code), error.message);
+    if !error.path.is_empty() {
+        fault = fault.with_param("path", error.path);
+    }
+    fault.span = error.span;
+    fault
 }
 
 fn argument<'a>(args: Option<&'a DslValue>, key: &str) -> Result<&'a DslValue, Fault> {
@@ -687,8 +726,7 @@ pub fn snapshot_edit_event_from_action(action: &str, args: Option<&DslValue>) ->
         let value = argument(args, "value")?;
         if matches!(argument(args, "valueEncoding"), Ok(DslValue::String(encoding)) if encoding == "json") {
             let DslValue::String(source) = value else { return Err(edit_fault("snapshot-edit.argument-type", "a JSON-encoded control value must be text")) };
-            validate_source_keys(source).map_err(|error| edit_fault(error.code, error.to_string()))?;
-            return pack::json::from_json_str(source).map_err(|error| edit_fault("snapshot-edit.value-json-invalid", error.to_string()));
+            return parse_snapshot_json(source).map_err(snapshot_edit_fault);
         }
         Ok(value.clone())
     };
@@ -791,8 +829,8 @@ pub trait SnapshotEditingEditor: ArtifactEditor {
 
 /// 🎯️ The generic in-place snapshot patch of one edit — the default of [`SnapshotEditingEditor::snapshot_edit_expected`].
 pub fn generic_snapshot_edit_expected<E: SnapshotEditingEditor>(event: &SnapshotEditEvent, snapshot: &E::Snapshot) -> Result<E::Snapshot, Fault> {
-    let patch = prepare_snapshot_patch(snapshot, event).map_err(|error| edit_fault(error.code, error.to_string()))?;
-    apply_snapshot_patch_for_dialect(snapshot, &patch, E::DIALECT, E::DOCUMENT_SCHEMA).map_err(|error| edit_fault(error.code, error.to_string()))
+    let patch = prepare_snapshot_patch(snapshot, event).map_err(snapshot_edit_fault)?;
+    apply_snapshot_patch_for_dialect(snapshot, &patch, E::DIALECT, E::DOCUMENT_SCHEMA).map_err(snapshot_edit_fault)
 }
 
 /// 🧵️ Supplies native mutations to the same retained, cancelable execution lane as snapshot edits.
@@ -1238,7 +1276,7 @@ pub fn snapshot_edit_value_is_admitted<S: ToValue>(event: &SnapshotEditEvent, sn
         }
         *remaining -= 1;
         match value {
-            DslValue::Number(kernel::Number::Float(value)) => value.is_finite(),
+            DslValue::Number(semio_framework_value::Number::Float(value)) => value.is_finite(),
             DslValue::Array(items) => items.iter().all(|item| value_is_admitted(item, remaining, depth + 1)),
             DslValue::Object(entries) => {
                 let mut keys = BTreeSet::new();
@@ -1254,15 +1292,15 @@ pub fn snapshot_edit_value_is_admitted<S: ToValue>(event: &SnapshotEditEvent, sn
         let segments = decode_pointer(path).ok()?;
         (segments.len() <= 128).then_some(segments)
     }
-    fn shape<S: ToValue>(snapshot: &S, path: &[String]) -> Option<kernel::ValueShape> {
+    fn shape<S: ToValue>(snapshot: &S, path: &[String]) -> Option<semio_framework_value::ValueShape> {
         let segments = path.iter().map(String::as_str).collect::<Vec<_>>();
         snapshot.value_shape_at_path(&segments).ok()
     }
     fn insertion_parent_is_admitted<S: ToValue>(snapshot: &S, path: &[String], pointer: &str) -> bool {
         let Some((last, parent)) = path.split_last() else { return false };
         match shape(snapshot, parent) {
-            Some(kernel::ValueShape::Array { len }) => array_index(last, len, pointer, true).is_ok(),
-            Some(kernel::ValueShape::Object { .. }) => true,
+            Some(semio_framework_value::ValueShape::Array { len }) => array_index(last, len, pointer, true).is_ok(),
+            Some(semio_framework_value::ValueShape::Object { .. }) => true,
             _ => false,
         }
     }
@@ -1293,24 +1331,19 @@ pub fn snapshot_edit_value_is_admitted<S: ToValue>(event: &SnapshotEditEvent, sn
             }
             let Some(path) = path(pointer) else { return false };
             let Some((_, parent)) = path.split_last() else { return false };
-            matches!(shape(snapshot, parent), Some(kernel::ValueShape::Object { .. })) && shape(snapshot, &path).is_some()
+            matches!(shape(snapshot, parent), Some(semio_framework_value::ValueShape::Object { .. })) && shape(snapshot, &path).is_some()
         }
-        SnapshotEditEvent::ReplaceSource { source } => {
-            if validate_source_keys(source).is_err() {
-                return false;
-            }
-            let Ok(value) = pack::json::from_json_str::<DslValue>(source) else { return false };
-            value_is_admitted(&value, &mut remaining, 0)
-        }
+        SnapshotEditEvent::ReplaceSource { source } => source.len() <= SNAPSHOT_EDIT_MAXIMUM_RAW_BYTES,
     }
 }
 
-pub fn snapshot_edit_set_snapshot<S, M, C, D>(event: &SnapshotEditEvent, snapshot: &S, wrap: fn(S) -> M) -> Result<Emit<M, C, D>, Fault>
+/// 📸️ The whole-source replacement edit as the replaced snapshot itself (the `ReplaceSource` branch of [`snapshot_edit_patch`]).
+fn snapshot_edit_set_snapshot<S, M, C, D>(event: &SnapshotEditEvent, snapshot: &S, wrap: fn(S) -> M) -> Result<Emit<M, C, D>, Fault>
 where
     S: ArtifactDsl + ToValue + FromValue,
 {
-    let next = apply_snapshot_edit(snapshot, event).map_err(|error| edit_fault(error.code, error.to_string()))?;
-    Ok(Emit { artifact_mutations: vec![wrap(next)], description: Some("Edit document details".into()), ..Default::default() })
+    let next = apply_snapshot_edit(snapshot, event).map_err(snapshot_edit_fault)?;
+    Ok(Emit { artifact_mutations: vec![wrap(next)], ..Default::default() })
 }
 
 /// 🧮️ One snapshot edit as the artifact's own domain leaves (design §20.3 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): the
@@ -1321,14 +1354,70 @@ pub fn snapshot_edit_net<S, M, C, D>(event: &SnapshotEditEvent, snapshot: &S, ne
 where
     S: ArtifactDsl + ToValue + FromValue,
 {
-    let next = apply_snapshot_edit(snapshot, event).map_err(|error| edit_fault(error.code, error.to_string()))?;
+    let next = apply_snapshot_edit(snapshot, event).map_err(snapshot_edit_fault)?;
     Ok(Emit { artifact_mutations: net(snapshot, &next), ..Default::default() })
 }
 
-/// 🩹️ Prepares a compact native mutation for the validated snapshot-edit reducer.
-pub fn snapshot_edit_patch<S: ToValue + FromValue + Clone, M, C, D>(event: &SnapshotEditEvent, snapshot: &S, wrap: fn(SnapshotPatch) -> M) -> Result<Emit<M, C, D>, Fault> {
-    let patch = prepare_snapshot_patch(snapshot, event).map_err(|error| edit_fault(error.code, error.to_string()))?;
-    Ok(Emit { artifact_mutations: vec![wrap(patch)], description: Some("Edit document details".into()), ..Default::default() })
+/// 🩹️ One snapshot edit as the artifact's leaves (design §20.3 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): every path-scoped
+/// event publishes ONE `patch-snapshot` leaf (`patch`) — its row is labelled by the leaf and time travel edits the value at its pointer
+/// through the snapshot sub-schema there. A whole-source replacement, the one genuine whole-document intent, publishes the replaced
+/// snapshot through `replace` when the aggregate has a whole-snapshot leaf (no path-patch item bound caps it), else a root `set` patch.
+pub fn snapshot_edit_patch<S, M, C, D>(event: &SnapshotEditEvent, snapshot: &S, patch: fn(SnapshotPatch) -> M, replace: Option<fn(S) -> M>) -> Result<Emit<M, C, D>, Fault>
+where
+    S: ArtifactDsl + ToValue + FromValue + Clone,
+{
+    if let (SnapshotEditEvent::ReplaceSource { .. }, Some(replace)) = (event, replace) {
+        return snapshot_edit_set_snapshot(event, snapshot, replace);
+    }
+    let prepared = prepare_snapshot_patch(snapshot, event).map_err(snapshot_edit_fault)?;
+    Ok(Emit { artifact_mutations: vec![patch(prepared)], ..Default::default() })
+}
+
+/// 🩹️ Implements one artifact's path-scoped `patch-snapshot` leaf (`{patch: SnapshotPatch}`): its diff applies the patch
+/// and diffs the result (refusing a patch whose prior value has no exact inverse within the bounded parts), its inverse is the
+/// exact inverse in at most [`SNAPSHOT_PATCH_MAX_INVERSE_PARTS`] parts, its label names operation and pointer in every locale,
+/// its conflict target is the pointer, and `input_schema_at_path` (wired by `#[mutation_leaf(input_schema = …)]`) types the
+/// edited value by the snapshot sub-schema at the pointer, falling back to the leaf's own structural payload schema. An
+/// optional `check: <fn(&Snapshot) -> Result<(), impl Display>>` refuses patched snapshots the artifact's own whole-snapshot
+/// invariant rejects ([`apply_snapshot_patch_checked`]).
+#[macro_export]
+macro_rules! snapshot_patch_leaf {
+    (leaf: $leaf:ident, snapshot: $snapshot:ty, mutation: $mutation:ident, diff: $diff:ty, snapshot_schema: $schema:literal $(,)?) => {
+        $crate::snapshot_patch_leaf! { leaf: $leaf, snapshot: $snapshot, mutation: $mutation, diff: $diff, snapshot_schema: $schema, check: |_: &$snapshot| ::core::result::Result::<(), ::std::convert::Infallible>::Ok(()) }
+    };
+    (leaf: $leaf:ident, snapshot: $snapshot:ty, mutation: $mutation:ident, diff: $diff:ty, snapshot_schema: $schema:literal, check: $check:expr $(,)?) => {
+        impl $leaf {
+            /// 🧬️ The input schema of this operation: the snapshot sub-schema at its pointer, else the leaf payload schema.
+            pub fn input_schema_at_path(&self) -> ::core::option::Option<&'static str> {
+                ::core::option::Option::Some($crate::editing::snapshot_patch_input_schema($schema, &self.patch).unwrap_or(<Self as $crate::kernel::MutationLeaf>::PAYLOAD_SCHEMA))
+            }
+        }
+
+        impl $crate::kernel::MutationKind<$snapshot, $mutation> for $leaf {
+            const SEMANTICS: $crate::kernel::SemanticDescriptor = $crate::kernel::SemanticDescriptor { verb: "edit", entity: "snapshot", kind: "patch-snapshot", record: "PatchSnapshot" };
+
+            fn diff(&self, base: &$snapshot) -> $crate::kernel::MutationOutcome<<$mutation as $crate::kernel::Mutation<$snapshot>>::Diff> {
+                match $crate::editing::apply_snapshot_patch_checked(base, &self.patch, $check).and_then(|next| $crate::editing::inverse_snapshot_patches(base, &self.patch).map(|_| next)) {
+                    ::core::result::Result::Ok(next) => $crate::kernel::MutationOutcome::new(<$diff as $crate::kernel::DiffAlgebra<$snapshot>>::between(base, &next)),
+                    ::core::result::Result::Err(error) => $crate::kernel::MutationOutcome::refuse(error.outcome_code(), ::std::format!("{}: {}", error.code, error.message), [error.path]),
+                }
+            }
+
+            fn inverse(&self, base: &$snapshot) -> Result<::std::vec::Vec<$mutation>, semio_framework_value::ValueError> {
+                $crate::editing::inverse_snapshot_patches(base, &self.patch)
+                    .map(|parts| parts.into_iter().map(|patch| $mutation::PatchSnapshot(Self { patch })).collect())
+                    .map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, ::std::format!("{}: {}", error.code, error.message)))
+            }
+
+            fn label(&self) -> $crate::locale::LocalizedLabel {
+                $crate::editing::snapshot_patch_label(&self.patch)
+            }
+
+            fn target(&self) -> ::std::vec::Vec<::std::string::String> {
+                self.patch.target()
+            }
+        }
+    };
 }
 
 pub fn snapshot_edit_execution_contract() -> ToolExecutionContract {
@@ -1408,7 +1497,7 @@ fn snapshot_edit_extent<E: SnapshotEditingEditor>(command: &E::Command, _snapsho
 fn validate_snapshot_edit_publication<S: Clone + PartialEq, M: Mutation<S> + OpBinary>(snapshot: &S, expected: &S, mutations: &[M]) -> Result<(), Fault> {
     let mut base = snapshot.clone();
     for mutation in mutations {
-        let inverses = mutation.inverse(&base);
+        let inverses = mutation.inverse(&base).map_err(|error| edit_fault("snapshot-edit.inverse-refused", error.into_message()))?;
         for operation in std::iter::once(mutation).chain(inverses.iter()) {
             let bytes = operation.encode_op().map_err(|error| edit_fault("snapshot-edit.publication-codec", error.to_string()))?;
             if bytes.len() > kernel::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES {

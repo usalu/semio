@@ -129,13 +129,13 @@ pub fn stamp_conformance_class_mutation(base: &DocxSnapshot, strict: bool) -> Do
 /// verbatim would silently fail to find the main part of a genuinely Strict package.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn main_part_path(base: &DocxSnapshot) -> Option<String> {
-    let relationship = base.opc.relationships_for("").iter().find(|relationship| relationship.rel_type.ends_with("/officeDocument"))?;
-    Some(resolve_relationship_target("", &relationship.target))
+    let relationship = base.opc.relationships_for("")?.iter().find(|relationship| relationship.rel_type.to_string_owner().ends_with("/officeDocument"))?;
+    Some(resolve_relationship_target("", &relationship.target.to_string_owner()))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_part(part: &DocxXmlPart) -> Option<XmlDocument> {
-    Some(part.document.clone())
+    part.materialize_document_exact().ok()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -177,7 +177,7 @@ fn declared_pair_member(base: &DocxSnapshot, pair: [&str; 2]) -> Option<String> 
 /// 🔎️ The relationship-type base the package's own relationships are built on.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn declared_relationship_base(base: &DocxSnapshot, pair: [&str; 2]) -> Option<String> {
-    pair.into_iter().find(|candidate| base.opc.relationships.values().flatten().any(|relationship| relationship.rel_type.starts_with(candidate))).map(str::to_string)
+    pair.into_iter().find(|candidate| base.opc.relationships.values().flat_map(|relationships| relationships.iter()).any(|relationship| relationship.rel_type.to_string_owner().starts_with(candidate))).map(str::to_string)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -207,6 +207,14 @@ fn set_root_attribute(document: &mut XmlDocument, name: &str, value: Option<&str
     true
 }
 
+fn edit_part(part: &mut DocxXmlPart, edit: impl FnOnce(&mut XmlDocument) -> bool) -> bool {
+    let Ok(mut document) = part.materialize_document_exact() else { return false };
+    if !edit(&mut document) {
+        return false;
+    }
+    part.replace_document(document).is_ok()
+}
+
 /// 🏅️ Stamps a whole snapshot into one conformance class: both namespace families, the
 /// `officeDocument` relationship base, and the main part's own `conformance` attribute. Bijective by
 /// construction, so stamping back is an exact inverse — which is what makes `SetSnapshot` invertible
@@ -215,19 +223,21 @@ fn set_root_attribute(document: &mut XmlDocument, name: &str, value: Option<&str
 pub fn stamp_conformance_class(mut snapshot: DocxSnapshot, strict: bool) -> DocxSnapshot {
     let index = usize::from(strict);
     for part in &mut snapshot.xml_parts {
-        let Some(root) = part.document.root.as_mut() else { continue };
-        retarget_namespace(root, &MAIN_NAMESPACES, MAIN_NAMESPACES[index]);
-        retarget_namespace(root, &RELATIONSHIP_NAMESPACES, RELATIONSHIP_NAMESPACES[index]);
+        edit_part(part, |document| {
+            let Some(root) = document.root.as_mut() else { return false };
+            retarget_namespace(root, &MAIN_NAMESPACES, MAIN_NAMESPACES[index]) | retarget_namespace(root, &RELATIONSHIP_NAMESPACES, RELATIONSHIP_NAMESPACES[index])
+        });
     }
     for relationships in snapshot.opc.relationships.values_mut() {
-        for relationship in relationships {
-            let Some(prefix) = RELATIONSHIP_NAMESPACES.into_iter().find(|prefix| relationship.rel_type.starts_with(prefix)) else { continue };
-            relationship.rel_type = format!("{}{}", RELATIONSHIP_NAMESPACES[index], &relationship.rel_type[prefix.len()..]);
+        for relationship in relationships.iter_mut() {
+            let current = relationship.rel_type.to_string_owner();
+            let Some(prefix) = RELATIONSHIP_NAMESPACES.into_iter().find(|prefix| current.starts_with(prefix)) else { continue };
+            relationship.rel_type = semio_s_artifact_stdio_zip::opc::retained::RetainedOpcText::try_from_str(&format!("{}{}", RELATIONSHIP_NAMESPACES[index], &current[prefix.len()..])).expect("conformance relationship type fits retained OPC text ownership");
         }
     }
     if let Some(path) = main_part_path(&snapshot) {
         if let Some(part) = snapshot.xml_part_mut(&path) {
-            set_root_attribute(&mut part.document, "conformance", strict.then_some("strict"));
+            edit_part(part, |document| set_root_attribute(document, "conformance", strict.then_some("strict")));
         }
     }
     snapshot
@@ -248,8 +258,7 @@ fn opc_diff(parts: Option<DocxOpcPartsDiff>, content_types: Option<DocxOpcConten
 fn diff_retarget_namespace(base: &DocxSnapshot, from: [&str; 2], to: &str) -> DocxDiff {
     let mut next = base.clone();
     for part in &mut next.xml_parts {
-        let Some(root) = part.document.root.as_mut() else { continue };
-        retarget_namespace(root, &from, to);
+        edit_part(part, |document| document.root.as_mut().is_some_and(|root| retarget_namespace(root, &from, to)));
     }
     <DocxDiff as DiffAlgebra<DocxSnapshot>>::between(base, &next)
 }
@@ -262,13 +271,14 @@ fn diff_retarget_relationship_base(base: &DocxSnapshot, from: [&str; 2], to: &st
     let mut modified = Vec::new();
     for owner in owners {
         let mut entries = Vec::new();
-        for relationship in &base.opc.relationships[owner] {
-            let Some(prefix) = from.into_iter().find(|prefix| relationship.rel_type.starts_with(prefix)) else { continue };
-            let retargeted = format!("{to}{}", &relationship.rel_type[prefix.len()..]);
-            if retargeted == relationship.rel_type {
+        for relationship in base.opc.relationships.get(owner).expect("enumerated retained relationship owner").iter() {
+            let current = relationship.rel_type.to_string_owner();
+            let Some(prefix) = from.into_iter().find(|prefix| current.starts_with(prefix)) else { continue };
+            let retargeted = format!("{to}{}", &current[prefix.len()..]);
+            if retargeted == current {
                 continue;
             }
-            entries.push(NamedModified { key: relationship.id.clone(), diff: DocxOpcRelDiff { rel_type: Some(retargeted), target: None, target_mode: None } });
+            entries.push(NamedModified { key: relationship.id.to_string_owner(), diff: DocxOpcRelDiff { rel_type: Some(retargeted), target: None, target_mode: None } });
         }
         if entries.is_empty() {
             continue;
@@ -287,7 +297,7 @@ fn diff_conformance_attribute(base: &DocxSnapshot, value: Option<&str>) -> DocxD
     let Some(path) = main_part_path(base) else { return DocxDiff::default() };
     let mut next = base.clone();
     let Some(part) = next.xml_part_mut(&path) else { return DocxDiff::default() };
-    if !set_root_attribute(&mut part.document, "conformance", value) {
+    if !edit_part(part, |document| set_root_attribute(document, "conformance", value)) {
         return DocxDiff::default();
     }
     <DocxDiff as DiffAlgebra<DocxSnapshot>>::between(base, &next)
@@ -309,9 +319,12 @@ fn diff_insert_vml_part(base: &DocxSnapshot, path: &str, markup: &str) -> DocxDi
     }
     let Ok(document) = xml_document_from_text(markup) else { return DocxDiff::default() };
     let mut next = base.clone();
-    next.opc.content_types.set_override(&path, VML_CONTENT_TYPE);
-    next.xml_parts.push(DocxXmlPart { path, content_type: VML_CONTENT_TYPE.into(), document });
-    next.xml_parts.sort_by(|left, right| left.path.cmp(&right.path));
+    next.opc.content_types.set_override(&path, VML_CONTENT_TYPE).expect("VML override fits retained OPC ownership");
+    let Ok(part) = DocxXmlPart::try_from_document(path, VML_CONTENT_TYPE.into(), document) else { return DocxDiff::default() };
+    if next.xml_parts.try_push(part).is_err() {
+        return DocxDiff::default();
+    }
+    next.xml_parts.sort_unstable_by(|left, right| left.path.cmp(&right.path));
     <DocxDiff as DiffAlgebra<DocxSnapshot>>::between(base, &next)
 }
 
@@ -324,7 +337,7 @@ fn diff_remove_vml_part(base: &DocxSnapshot, path: &str) -> DocxDiff {
     }
     let mut next = base.clone();
     next.xml_parts.retain(|part| part.path != path);
-    next.opc.content_types.overrides.retain(|(name, _)| name.trim_start_matches('/') != path);
+    next.opc.edit_package(|package| package.content_types.overrides.retain(|(name, _)| name.trim_start_matches('/') != path)).expect("VML override removal preserves retained OPC ownership");
     <DocxDiff as DiffAlgebra<DocxSnapshot>>::between(base, &next)
 }
 
@@ -362,8 +375,10 @@ fn diff_strip_alternate_content(base: &DocxSnapshot, path: &str) -> DocxDiff {
 fn diff_root_children(base: &DocxSnapshot, path: &str, edit: impl FnOnce(&mut Vec<XmlNode>) -> bool) -> DocxDiff {
     let mut next = base.clone();
     let Some(part) = next.xml_part_mut(path) else { return DocxDiff::default() };
-    let Some(XmlNode::Element { children, .. }) = part.document.root.as_mut() else { return DocxDiff::default() };
-    if !edit(children) {
+    if !edit_part(part, |document| {
+        let Some(XmlNode::Element { children, .. }) = document.root.as_mut() else { return false };
+        edit(children)
+    }) {
         return DocxDiff::default();
     }
     <DocxDiff as DiffAlgebra<DocxSnapshot>>::between(base, &next)
@@ -387,7 +402,8 @@ pub(crate) fn agg_diff(this: &DocxStrictMutation, base: &DocxSnapshot) -> protoc
 }
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &DocxStrictMutation, base: &DocxSnapshot) -> Vec<DocxStrictMutation> {
+pub(crate) fn agg_inverse(this: &DocxStrictMutation, base: &DocxSnapshot) -> Result<Vec<DocxStrictMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![match this {
         DocxStrictMutation::SetSnapshot(_) => DocxStrictMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
         DocxStrictMutation::SetMainNamespace(_) => match declared_pair_member(base, MAIN_NAMESPACES) {
@@ -414,6 +430,8 @@ pub(crate) fn agg_inverse(this: &DocxStrictMutation, base: &DocxSnapshot) -> Vec
         DocxStrictMutation::InsertAlternateContent(insert_alternate_content::InsertAlternateContent { path }) => DocxStrictMutation::RemoveAlternateContent(remove_alternate_content::RemoveAlternateContent { path: path.clone() }),
         DocxStrictMutation::RemoveAlternateContent(remove_alternate_content::RemoveAlternateContent { path }) => DocxStrictMutation::InsertAlternateContent(insert_alternate_content::InsertAlternateContent { path: path.clone() }),
     }]
+
+    })())
 }
 //#endregion 🔖️MutationTrait
 

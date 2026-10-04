@@ -6,7 +6,7 @@ use store::{create_document_envelope, ArtifactCommand};
 
 fn round_trip(document: &GisMapSnapshot, operation: &GisMapMutation) -> GisMapSnapshot {
     let (forward, _messages) = vcs::apply_mutation(document, operation).expect("valid mutation");
-    let backwards = operation.inverse(document);
+    let backwards = operation.inverse(document).expect("valid retained mutation inverse fixture");
     let mut restored = forward.clone();
     for back in &backwards {
         let (next, _messages) = vcs::apply_mutation(&restored, back).expect("valid inverse mutation");
@@ -16,8 +16,8 @@ fn round_trip(document: &GisMapSnapshot, operation: &GisMapMutation) -> GisMapSn
     forward
 }
 
-fn dsl_of(value: &serde_json::Value) -> dsl::DslValue {
-    dsl::DslValue::from(value)
+fn dsl_of(value: &serde_json::Value) -> semio_framework_value::DslValue {
+    semio_framework_value::DslValue::from(value)
 }
 
 fn feature(id: &str) -> crate::MapFeature {
@@ -45,9 +45,9 @@ async fn positions_reorder_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn delete_and_replace_of_a_missing_id_invert_to_nothing() {
     let document = GisMapSnapshot::default();
-    assert!(GisMapMutation::DeletePosition(delete_position::DeletePosition { id: "gone".into() }).inverse(&document).is_empty());
-    assert!(GisMapMutation::ReplacePositionData(replace_position_data::ReplacePositionData { id: "gone".into(), new_data: dsl::DslValue::Null }).inverse(&document).is_empty());
-    assert!(GisMapMutation::ReorderPositions(reorder_positions::ReorderPositions { id: "gone".into(), to_index: 0 }).inverse(&document).is_empty());
+    assert!(GisMapMutation::DeletePosition(delete_position::DeletePosition { id: "gone".into() }).inverse(&document).expect("valid retained mutation inverse fixture").is_empty());
+    assert!(GisMapMutation::ReplacePositionData(replace_position_data::ReplacePositionData { id: "gone".into(), new_data: semio_framework_value::DslValue::Null }).inverse(&document).expect("valid retained mutation inverse fixture").is_empty());
+    assert!(GisMapMutation::ReorderPositions(reorder_positions::ReorderPositions { id: "gone".into(), to_index: 0 }).inverse(&document).expect("valid retained mutation inverse fixture").is_empty());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -135,7 +135,7 @@ async fn reorder_positions_missing_target_is_error() {
 #[semio_framework_async_macros::async_test]
 async fn replace_route_data_missing_target_is_error() {
     let base = GisMapSnapshot::default();
-    let mutation = GisMapMutation::ReplaceRouteData(replace_route_data::ReplaceRouteData { id: "gone".into(), new_data: dsl::DslValue::Null });
+    let mutation = GisMapMutation::ReplaceRouteData(replace_route_data::ReplaceRouteData { id: "gone".into(), new_data: semio_framework_value::DslValue::Null });
     protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &mutation).await;
 }
 

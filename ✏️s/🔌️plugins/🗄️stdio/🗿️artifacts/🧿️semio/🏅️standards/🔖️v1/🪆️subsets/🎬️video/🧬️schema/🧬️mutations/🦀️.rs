@@ -37,6 +37,8 @@ pub mod set_sample_flags;
 /// `Vec<SemioVideoStream>`-of-`Vec<SemioVideoSample>` nesting the diff side's own doc comment
 /// documents as blocking a derive attempt; `OpText`/`OpBinary` are hand-rolled below instead.
 //#region 🔖️Leaves
+#[path = "🩹️patch-snapshot/🦀️.rs"]
+pub mod patch_snapshot;
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "📋set-stream-meta/🦀️.rs"]
@@ -48,6 +50,7 @@ pub mod set_stream_meta;
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioVideoMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
+    PatchSnapshot(patch_snapshot::PatchSnapshot),
     /// ➕️ Inserts `stream` at `index` (FINAL state).
     InsertStream(insert_stream::InsertStream),
     /// ➖️ Removes the stream at `index` (BASE-state index).
@@ -68,7 +71,7 @@ pub enum SemioVideoMutation {
 /// order — what the `🎥️mutate-semio-video` case's completeness gate counts against and what
 /// `../../🔣️oracle.json`'s catalog repeats. The framework never parses Rust, so
 /// `kinds_match_the_enum_and_the_catalog` below is what keeps this declaration honest.
-pub const KINDS: &[&str] = &["set-snapshot", "insert-stream", "remove-stream", "set-stream-meta", "insert-sample", "remove-sample", "set-sample-data", "set-sample-flags"];
+pub const KINDS: &[&str] = &["set-snapshot", "insert-stream", "remove-stream", "set-stream-meta", "insert-sample", "remove-sample", "set-sample-data", "set-sample-flags", "patch-snapshot"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -87,8 +90,11 @@ pub fn apply_semio_video_mutation(snapshot: &mut SemioVideoSnapshot, mutation: &
 /// generated test host being the concrete case. Paired with [`apply_semio_video_mutation`] it makes the
 /// undo law reachable without importing a trait the caller cannot name.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse_semio_video_mutation(mutation: &SemioVideoMutation, base: &SemioVideoSnapshot) -> Vec<SemioVideoMutation> {
-    <SemioVideoMutation as Mutation<SemioVideoSnapshot>>::inverse(mutation, base)
+pub fn inverse_semio_video_mutation(mutation: &SemioVideoMutation, base: &SemioVideoSnapshot) -> Result<Vec<SemioVideoMutation>, semio_framework_value::ValueError> {
+    Ok({
+    <SemioVideoMutation as Mutation<SemioVideoSnapshot>>::inverse(mutation, base)?
+
+    })
 }
 
 /// 📥️ Decodes this subset's internally tagged (`{"mutation": "<camelCaseVariant>", ...}`) wire value — the shape
@@ -97,7 +103,7 @@ pub fn inverse_semio_video_mutation(mutation: &SemioVideoMutation, base: &SemioV
 /// re-declaring it field by field beside it.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_video_mutation_json(text: &str) -> Result<SemioVideoMutation, String> {
-    pack::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Apply
 
@@ -121,6 +127,7 @@ fn sample_at(base: &SemioVideoSnapshot, stream_index: usize, index: usize) -> Op
 pub(crate) fn agg_diff(this: &SemioVideoMutation, base: &SemioVideoSnapshot) -> protocol::MutationOutcome<SemioVideoDiff> {
     protocol::MutationOutcome::new(match this {
         SemioVideoMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff_set_snapshot(base, snapshot),
+        SemioVideoMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<SemioVideoSnapshot, SemioVideoMutation>>::diff(patch, base),
         SemioVideoMutation::InsertStream(insert_stream::InsertStream { index, stream }) => diff_insert_stream(*index, stream.clone()),
         SemioVideoMutation::RemoveStream(remove_stream::RemoveStream { index }) => diff_remove_stream(*index),
         SemioVideoMutation::SetStreamMeta(set_stream_meta::SetStreamMeta { index, kind, codec, width, height, rate }) => match stream_at(base, *index) {
@@ -141,32 +148,36 @@ pub(crate) fn agg_diff(this: &SemioVideoMutation, base: &SemioVideoSnapshot) -> 
 }
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &SemioVideoMutation, base: &SemioVideoSnapshot) -> Vec<SemioVideoMutation> {
+pub(crate) fn agg_inverse(this: &SemioVideoMutation, base: &SemioVideoSnapshot) -> Result<Vec<SemioVideoMutation>, semio_framework_value::ValueError> {
+    Ok({
     vec![match this {
         SemioVideoMutation::SetSnapshot(_) => SemioVideoMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
+        SemioVideoMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<SemioVideoSnapshot, SemioVideoMutation>>::inverse(patch, base)?),
         SemioVideoMutation::InsertStream(insert_stream::InsertStream { index, .. }) => SemioVideoMutation::RemoveStream(remove_stream::RemoveStream { index: *index }),
         SemioVideoMutation::RemoveStream(remove_stream::RemoveStream { index }) => match stream_at(base, *index) {
             Some(stream) => SemioVideoMutation::InsertStream(insert_stream::InsertStream { index: *index, stream: stream.clone() }),
-            None => return Vec::new(),
+            None => return Ok(Vec::new()),
         },
         SemioVideoMutation::SetStreamMeta(set_stream_meta::SetStreamMeta { index, .. }) => match stream_at(base, *index) {
             Some(stream) => SemioVideoMutation::SetStreamMeta(set_stream_meta::SetStreamMeta { index: *index, kind: stream.kind, codec: stream.codec.clone(), width: stream.width, height: stream.height, rate: stream.rate }),
-            None => return Vec::new(),
+            None => return Ok(Vec::new()),
         },
         SemioVideoMutation::InsertSample(insert_sample::InsertSample { stream_index, index, .. }) => SemioVideoMutation::RemoveSample(remove_sample::RemoveSample { stream_index: *stream_index, index: *index }),
         SemioVideoMutation::RemoveSample(remove_sample::RemoveSample { stream_index, index }) => match sample_at(base, *stream_index, *index) {
             Some(sample) => SemioVideoMutation::InsertSample(insert_sample::InsertSample { stream_index: *stream_index, index: *index, sample: sample.clone() }),
-            None => return Vec::new(),
+            None => return Ok(Vec::new()),
         },
         SemioVideoMutation::SetSampleData(set_sample_data::SetSampleData { stream_index, index, .. }) => match sample_at(base, *stream_index, *index) {
             Some(sample) => SemioVideoMutation::SetSampleData(set_sample_data::SetSampleData { stream_index: *stream_index, index: *index, data: sample.data.clone() }),
-            None => return Vec::new(),
+            None => return Ok(Vec::new()),
         },
         SemioVideoMutation::SetSampleFlags(set_sample_flags::SetSampleFlags { stream_index, index, .. }) => match sample_at(base, *stream_index, *index) {
             Some(sample) => SemioVideoMutation::SetSampleFlags(set_sample_flags::SetSampleFlags { stream_index: *stream_index, index: *index, pts: sample.pts, key: sample.key }),
-            None => return Vec::new(),
+            None => return Ok(Vec::new()),
         },
     }]
+
+    })
 }
 //#endregion 🔖️MutationTrait
 
@@ -191,6 +202,7 @@ fn dec_semio_video_snapshot(s: &str) -> Result<SemioVideoSnapshot, String> {
 fn print_semio_video_mutation(m: &SemioVideoMutation) -> String {
     match m {
         SemioVideoMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", enc_semio_video_snapshot(snapshot)),
+        SemioVideoMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(patch),
         SemioVideoMutation::InsertStream(insert_stream::InsertStream { index, stream }) => format!("insert-stream index={} stream={}", index, enc_stream(stream)),
         SemioVideoMutation::RemoveStream(remove_stream::RemoveStream { index }) => format!("remove-stream index={index}"),
         SemioVideoMutation::SetStreamMeta(set_stream_meta::SetStreamMeta { index, kind, codec, width, height, rate }) => {
@@ -204,6 +216,10 @@ fn print_semio_video_mutation(m: &SemioVideoMutation) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_semio_video_mutation(line: &str) -> Result<SemioVideoMutation, String> {
+    if let Some(source) = line.strip_prefix("patch-snapshot patch=") {
+        let patch = semio_s_artifact_stdio_contract::editing::snapshot_patch_from_hex(source)?;
+        return Ok(SemioVideoMutation::PatchSnapshot(crate::standards::v1::subsets::video::schema::mutations::patch_snapshot::PatchSnapshot { patch }));
+    }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
     let args: std::collections::BTreeMap<&str, &str> =
         rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("semio video mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
@@ -238,8 +254,8 @@ impl OpText for SemioVideoMutation {
     fn print_op(&self) -> String {
         print_semio_video_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_semio_video_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_semio_video_mutation(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 }
 
@@ -247,6 +263,7 @@ impl OpText for SemioVideoMutation {
 /// 🏷️ Op tags of `SemioVideoMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
 const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
 const TAG_INSERT_STREAM: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-stream");
 const TAG_REMOVE_STREAM: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-stream");
 const TAG_SET_STREAM_META: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-stream-meta");
@@ -260,6 +277,7 @@ const TAG_SET_SAMPLE_FLAGS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "se
 fn wire_tag(m: &SemioVideoMutation) -> u8 {
     match m {
         SemioVideoMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
+        SemioVideoMutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
         SemioVideoMutation::InsertStream(_) => TAG_INSERT_STREAM,
         SemioVideoMutation::RemoveStream(_) => TAG_REMOVE_STREAM,
         SemioVideoMutation::SetStreamMeta(_) => TAG_SET_STREAM_META,
@@ -288,6 +306,11 @@ fn print_semio_video_mutation_args(m: &SemioVideoMutation) -> String {
 /// `parse_semio_video_mutation` text codec rather than re-deriving a second independent encoding.
 impl OpBinary for SemioVideoMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        if let Self::PatchSnapshot(payload) = self {
+            let mut out = vec![1, TAG_PATCH_SNAPSHOT];
+            out.extend(protocol::OpBinary::encode_op(&payload.patch)?);
+            return Ok(out);
+        }
         const OP_BINARY_FORMAT: u8 = 1;
         let mut out = vec![OP_BINARY_FORMAT, wire_tag(self)];
         out.extend_from_slice(print_semio_video_mutation_args(self).as_bytes());
@@ -300,6 +323,9 @@ impl OpBinary for SemioVideoMutation {
         }
         if bytes[0] != OP_BINARY_FORMAT {
             return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {}", bytes[0]) });
+        }
+        if bytes[1] == TAG_PATCH_SNAPSHOT {
+            return Ok(Self::PatchSnapshot(crate::standards::v1::subsets::video::schema::mutations::patch_snapshot::PatchSnapshot { patch: protocol::OpBinary::decode_op(&bytes[2..])? }));
         }
         let tag = bytes[1];
         let keyword = dsl::protocol_record::kind(WIRE_PROTOCOL, u64::from(tag)).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} names no record of 📡️.protocol.semio") })?;

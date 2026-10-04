@@ -1,0 +1,7 @@
+# Semio Base Native Local Wrapper Backlog
+
+Fresh source read confirms the actual shared dedicated-subset wrapper at ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🛬️native/🦀️.rs6–14. It creates NativeDecodeControl using limits.max_value_bytes, bridges caller checkpoints with is_ok, and returns the typed owned result without allocation_stage or actual owned_bytes settlement. This is separate from Store's canonical controlled record helper. The latter already uses allocation_stage with the physical allocation remainder independent of semantic byte limits.
+
+The current SqliteSnapshotControl checkpoint has only callback-origin Canceled refusal; therefore no other current checkpoint refusal kind loss is asserted from is_ok alone. The actual local wrapper still loses the physical caller allocation ledger and couples the native backing authority to semantic max_value_bytes. Fresh maximum allocation and full System request/refusal/cumulative/cancel Native witnesses are required before repairing that producer. Each Semio owner's semantic row/value census remains independently required; do not replace physical allocation authority with an inferred semantic charge or refund failed construction.
+
+Root's current dedicated-owner/Source receipts do not prove this wrapper's full allocation closure. No wrapper implementation, tests or hooks were changed by this backlog read. The global real parent/typed child/frame work remains this lane's priority.

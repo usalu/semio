@@ -254,9 +254,9 @@ impl ArtifactCanonicalEditEncoder {
         self.started && self.depth == 0
     }
 
-    pub(super) fn reset(&mut self) -> Result<(), String> {
+    pub(super) fn reset(&mut self) -> Result<(), semio_framework_value::ValueError> {
         if self.depth != 0 {
-            return Err("canonical-edit.borrowed-reset-before-retirement".into());
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "canonical-edit.borrowed-reset-before-retirement"));
         }
         self.root_address = 0;
         self.started = false;
@@ -267,7 +267,7 @@ impl ArtifactCanonicalEditEncoder {
         self.depth == 0 && self.root_address == 0 && !self.started
     }
 
-    pub(super) fn close_step(&mut self) -> Result<SnapshotRetirementStep, String> {
+    pub(super) fn close_step(&mut self) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if self.depth != 0 {
             self.depth -= 1;
             self.frames[self.depth] = None;

@@ -14,7 +14,6 @@
 use crate::ProgramSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::Inference;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::topology::compute_topology;
 //#region 🔖️DerivedComputeImports
@@ -36,7 +35,7 @@ use std::collections::{HashMap, HashSet};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from an architect program snapshot. One field per named inference
 /// under `💡️inferences/` (currently: `topology`, backed by the `🧭topology/` slug dir).
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -47,8 +46,11 @@ pub struct ProgramInference {
 }
 
 impl Inference<ProgramSnapshot> for ProgramInference {
-    fn infer(snapshot: &ProgramSnapshot) -> Self {
+    fn infer(snapshot: &ProgramSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { topology: compute_topology(&snapshot.elements) }
+    
+        })
     }
 }
 
@@ -58,7 +60,9 @@ impl Inference<ProgramSnapshot> for ProgramInference {
 /// derive one, and to make the "default == infer(default snapshot)" law explicit at this level too.
 impl Default for ProgramInference {
     fn default() -> Self {
-        Self::infer(&ProgramSnapshot::default())
+        let snapshot = &ProgramSnapshot::default();
+
+        Self { topology: compute_topology(&snapshot.elements) }
     }
 }
 
@@ -81,21 +85,6 @@ impl protocol::InferenceSpec<ProgramSnapshot> for ProgramInference {
 }
 //#endregion 🔖️Inference
 
-//#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::ProgramBuilder {
-    type Snapshot = ProgramSnapshot;
-    type Inference = ProgramInference;
-
-    /// 🎯️ Whole-snapshot scalar — nothing here is per-entity, so the cache/session are unused
-    /// (same "plain `Inference`" shape the family doc calls out as correct for `dimensions`/
-    /// `outline`/`bounds`-style facets).
-    async fn infer_cached(snapshot: &Self::Snapshot, cache: &mut store::InferenceCache, session: &mut store::InferenceSession) -> Self::Inference {
-        let _ = (cache, session);
-        <ProgramInference as Inference<ProgramSnapshot>>::infer(snapshot)
-    }
-}
-//#endregion 🔖️ArtifactInferrer
-
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.architect.program.inference`'s facet leaves into the OS-wide inference catalog
 /// — call once at plugin init, alongside `program_artifact_schema_descriptor`'s registration.
@@ -109,7 +98,7 @@ pub fn program_artifact_inference_descriptor() -> semio_framework_schema_registr
 
 //#region 🔀️AdjacencyViews
 /// 🔢️ Dense lower-triangle adjacency matrix keyed by element id order.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -119,7 +108,7 @@ pub struct AdjacencyMatrix {
 }
 
 /// 🟦️ One matrix cell summarizing the undirected link between two elements.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -157,7 +146,7 @@ pub fn undirected_edges(program: &ProgramSnapshot) -> Vec<(EntityId, EntityId, f
 
 //#region ⚡️AdjacencyConflicts
 /// ⚡️ Adjacency pair ids that violate required/prohibited or separation rules.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -653,7 +642,7 @@ mod tests_validate;
 
 //#region 🎁️Outputs
 /// 📦️ Abstract output kind for architectural program deliverables.
-#[derive(Clone, Copy, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -681,7 +670,7 @@ pub enum OutputKind {
 }
 
 /// 📄️ Structured abstract output payload.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -846,7 +835,7 @@ mod tests_outputs;
 
 //#region 📄️Report
 /// 📑️ Structured report payload for export and program rendering.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -859,7 +848,7 @@ pub struct ProgramReport {
 }
 
 /// 📎️ One titled section within a plugin report.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1183,7 +1172,7 @@ mod tests_report;
 
 //#region 📊️StatusSummary
 /// 📈️ Aggregated status histogram across all header-bearing registers.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1198,7 +1187,7 @@ pub struct StatusSummary {
 }
 
 /// 📁️ Per-register entity count and dominant status.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1348,7 +1337,7 @@ mod tests_status_summary;
 
 //#region 🔍️Search
 /// 🎯️ Ad-hoc search query with optional structured filters.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1386,7 +1375,7 @@ pub struct SearchQuery {
 }
 
 /// 📌️ One search hit with register kind and display name.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1551,7 +1540,7 @@ mod tests_search;
 
 //#region 🔬️Analyze
 /// 📈️ Structured output from `run_analysis`.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1566,7 +1555,7 @@ pub struct AnalysisResult {
 }
 
 /// 📊️ Named numeric metric from an analysis run.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1970,7 +1959,7 @@ mod tests_analyze;
 const REGISTER_ROW_COLUMNS: [&str; 7] = ["register", "id", "name", "status", "priority", "tags", "source"];
 
 /// 📊️ One CSV/TSV row representing a register entity for spreadsheet round-trip.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -2001,12 +1990,12 @@ impl RegisterCsvRow {
 
 /// 📤️ Serializes a plugin to pretty JSON.
 pub fn export_json(program: &ProgramSnapshot) -> Result<String, PluginError> {
-    Ok(dsl::json::to_string_pretty(&dsl::json::from_dsl_value(&dsl::ToValue::to_value(program))))
+    Ok(semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(program))))
 }
 
 /// 📥️ Deserializes a plugin from JSON with schema validation.
 pub fn import_json(json: &str) -> Result<ProgramSnapshot, PluginError> {
-    let program: ProgramSnapshot = dsl::json::from_json_str(json).map_err(|e| PluginError::Deserialize(e.to_string()))?;
+    let program: ProgramSnapshot = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| PluginError::Deserialize(e.to_string()))?;
     if program.schema != ARCHITECT_PROGRAM_SCHEMA {
         return Err(PluginError::InvalidSchema { expected: ARCHITECT_PROGRAM_SCHEMA.into(), actual: program.schema });
     }
@@ -2158,7 +2147,7 @@ mod tests_exchange;
 
 //#region 🧭️TraceReads
 /// 📜️ Filtered audit trail slice.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]

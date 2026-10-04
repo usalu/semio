@@ -1,0 +1,260 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.semio.tech/pack/producer-authority-proposal",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "status",
+    "cases"
+  ],
+  "properties": {
+    "status": {
+      "const": "unmounted source-authority proposal"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "variant",
+          "kind",
+          "message",
+          "what",
+          "offset",
+          "retry",
+          "upstreamKind",
+          "allocatedBytes",
+          "expectedKind",
+          "display",
+          "authority",
+          "witness",
+          "source"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "variant": {
+            "enum": [
+              "BadMagic",
+              "UnsupportedVersion",
+              "UnknownRequiredFlags",
+              "Truncated",
+              "ChecksumMismatch",
+              "ContentHashMismatch",
+              "NonCanonical",
+              "UnsupportedCodec",
+              "LimitExceeded",
+              "RetainedMalformed",
+              "Malformed",
+              "ValueRefusal",
+              "TextRefusal",
+              "Io",
+              "RetainedAllocation"
+            ]
+          },
+          "kind": {
+            "enum": [
+              null,
+              "invalidValue",
+              "canceled",
+              "ownershipLimit",
+              "allocationFailed",
+              "workLimit",
+              "depthLimit",
+              "unsupportedOwner",
+              "invariantViolated"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "what": {
+            "type": "string"
+          },
+          "offset": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]*)$"
+          },
+          "retry": {
+            "enum": [
+              null,
+              "never",
+              "transient"
+            ]
+          },
+          "upstreamKind": {
+            "enum": [
+              null,
+              "invalidValue",
+              "canceled",
+              "ownershipLimit",
+              "allocationFailed",
+              "workLimit",
+              "depthLimit",
+              "unsupportedOwner",
+              "invariantViolated"
+            ]
+          },
+          "allocatedBytes": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "expectedKind": {
+            "enum": [
+              "invalidValue",
+              "canceled",
+              "ownershipLimit",
+              "allocationFailed",
+              "workLimit",
+              "depthLimit",
+              "unsupportedOwner",
+              "invariantViolated"
+            ]
+          },
+          "display": {
+            "type": "string"
+          },
+          "authority": {
+            "enum": [
+              "intrinsicContract",
+              "sourcePredicate",
+              "originalTypedCause",
+              "injectedTransportPolicy"
+            ]
+          },
+          "witness": {
+            "enum": [
+              "draftProjectionOnly",
+              "sourceContractOnly"
+            ]
+          },
+          "source": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "sha256",
+              "predicate"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "predicate": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "variant": {
+                  "enum": [
+                    "LimitExceeded",
+                    "RetainedMalformed",
+                    "Malformed",
+                    "ValueRefusal",
+                    "TextRefusal",
+                    "Io",
+                    "RetainedAllocation"
+                  ]
+                }
+              },
+              "required": [
+                "variant"
+              ]
+            },
+            "then": {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "invalidValue",
+                    "canceled",
+                    "ownershipLimit",
+                    "allocationFailed",
+                    "workLimit",
+                    "depthLimit",
+                    "unsupportedOwner",
+                    "invariantViolated"
+                  ]
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "kind": {
+                  "const": null
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "variant": {
+                  "const": "Io"
+                }
+              },
+              "required": [
+                "variant"
+              ]
+            },
+            "then": {
+              "properties": {
+                "retry": {
+                  "enum": [
+                    "never",
+                    "transient"
+                  ]
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "retry": {
+                  "const": null
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "variant": {
+                  "const": "RetainedAllocation"
+                }
+              },
+              "required": [
+                "variant"
+              ]
+            },
+            "then": {
+              "properties": {
+                "allocatedBytes": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

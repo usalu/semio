@@ -1,10 +1,16 @@
 fn verify_empty_state<T>()
 where
-    T: dsl::FromValue + store::ArtifactDsl + store::ArtifactPack + Default + PartialEq + std::fmt::Debug,
+    T: semio_framework_value::FromValue + store::ArtifactDsl + store::ArtifactPack + Default + PartialEq + std::fmt::Debug,
 {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚫️empty-state/🔣️.json")).expect("empty-state fixture");
     for row in fixture["json"].as_array().expect("JSON vectors") {
-        assert_eq!(dsl::json::from_json_str::<T>(&row["value"].to_string()).is_ok(), row["accepted"].as_bool().expect("acceptance"), "{}: JSON {}", std::any::type_name::<T>(), row["value"]);
+        assert_eq!(
+            semio_framework_pack_json::from_json_str::<T>(&row["value"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).is_ok(),
+            row["accepted"].as_bool().expect("acceptance"),
+            "{}: JSON {}",
+            std::any::type_name::<T>(),
+            row["value"]
+        );
     }
     for row in fixture["text"].as_array().expect("text vectors") {
         assert_eq!(T::parse_dsl(row["value"].as_str().expect("text")).is_ok(), row["accepted"].as_bool().expect("acceptance"), "{}: text {}", std::any::type_name::<T>(), row["value"]);

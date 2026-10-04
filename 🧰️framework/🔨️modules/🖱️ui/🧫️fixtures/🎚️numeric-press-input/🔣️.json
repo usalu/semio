@@ -1,0 +1,12 @@
+{
+  "lifecycle": { "offeredCommit": false, "releasedCommit": true, "releasedActions": 1, "sequenceStep": 1 },
+  "cases": [
+    { "name": "increment provisional", "input": { "value": 0.006, "gesture": "settings.tolerance:42:1", "commit": false }, "accepted": true },
+    { "name": "decrement provisional", "input": { "value": 0.004, "gesture": "settings.tolerance:42:2", "commit": false }, "accepted": true },
+    { "name": "same press committed", "input": { "value": 0.006, "gesture": "settings.tolerance:42:1", "commit": true }, "accepted": true },
+    { "name": "bare numeric value refused", "input": 0.006, "accepted": false },
+    { "name": "missing press serial refused", "input": { "value": 0.006, "gesture": "settings.tolerance:42", "commit": false }, "accepted": false },
+    { "name": "missing commit refused", "input": { "value": 0.006, "gesture": "settings.tolerance:42:1" }, "accepted": false },
+    { "name": "foreign metadata refused", "input": { "value": 0.006, "gesture": "settings.tolerance:42:1", "commit": false, "unknown": true }, "accepted": false }
+  ]
+}

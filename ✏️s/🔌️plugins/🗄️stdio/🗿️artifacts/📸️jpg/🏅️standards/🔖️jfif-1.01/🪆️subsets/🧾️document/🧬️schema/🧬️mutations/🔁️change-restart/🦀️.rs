@@ -26,13 +26,16 @@ impl protocol::MutationKind<JpgSnapshot, JpgMutation> for ChangeRestartIntervalM
         let Self { restart_interval } = self;
         protocol::MutationOutcome::new(contribute(base, *restart_interval))
     }
-    fn inverse(&self, base: &JpgSnapshot) -> Vec<JpgMutation> {
+    fn inverse(&self, base: &JpgSnapshot) -> Result<Vec<JpgMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         let outcome = <Self as protocol::MutationKind<JpgSnapshot, JpgMutation>>::diff(self, base);
         if <JpgDiff as protocol::DiffAlgebra<JpgSnapshot>>::is_empty(outcome.diff()) {
             return Vec::new();
         }
         vec![JpgMutation::ChangeRestartInterval(ChangeRestartIntervalMutation { restart_interval: base.restart_interval })]
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Change restart interval", "Neustartintervall ändern")
     }
@@ -47,7 +50,7 @@ pub fn contribute(base: &JpgSnapshot, restart_interval: Option<u16>) -> JpgDiff 
 
 #[cfg(test)]
 pub(crate) fn test_case() -> JpgMutation {
-    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🔁️change-restart/🎯️direct/🦠️mutation/🔣️.json")).expect("committed change-restart-interval payload")
+    semio_framework_pack_json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🔁️change-restart/🎯️direct/🦠️mutation/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-restart-interval payload")
 }
 #[cfg(test)]
 #[path = "🧪️tests/🎯️direct/🦀️.rs"]

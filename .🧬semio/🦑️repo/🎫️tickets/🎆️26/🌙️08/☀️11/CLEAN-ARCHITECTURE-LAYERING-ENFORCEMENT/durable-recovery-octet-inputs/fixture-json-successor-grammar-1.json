@@ -1,0 +1,19 @@
+{
+  "at": "2026-10-03T07:42:31.084Z",
+  "rows": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs",
+      "before": [],
+      "after": [],
+      "introduced": []
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs",
+      "before": [],
+      "after": [],
+      "introduced": []
+    }
+  ],
+  "grammarOnly": true,
+  "macroBodiesOpaque": true
+}

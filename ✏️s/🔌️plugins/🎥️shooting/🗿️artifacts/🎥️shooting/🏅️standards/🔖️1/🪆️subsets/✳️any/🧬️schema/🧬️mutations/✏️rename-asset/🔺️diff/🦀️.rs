@@ -11,7 +11,7 @@ pub fn diff(payload: &RenameAsset, base: &ShootingSnapshot) -> protocol::Mutatio
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Asset \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if existing.name == payload.new_name {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Asset \"{}\" already has name \"{}\".", payload.id, payload.new_name));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Asset \"{}\" already has name \"{}\".", payload.id, payload.new_name));
     }
     protocol::MutationOutcome::new(ShootingDiff {
         assets: Some(ShootingAssetsDelta { patched: vec![ShootingAssetPatchEntry { id: payload.id.clone(), patch: ShootingAssetPatch { name: Some(payload.new_name.clone()), ..Default::default() } }], ..Default::default() }),

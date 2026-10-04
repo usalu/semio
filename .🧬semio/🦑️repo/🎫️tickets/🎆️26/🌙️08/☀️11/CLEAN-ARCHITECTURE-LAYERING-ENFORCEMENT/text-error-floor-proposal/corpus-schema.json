@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/diagnostic/text-error-refusal-corpus",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases",
+    "wireCases",
+    "limits"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 32,
+      "maxItems": 32,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "operation",
+          "message",
+          "span",
+          "expectedWire",
+          "expectedDisplay"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "https://semio.tech/schema/value/refusal#/$defs/kind"
+          },
+          "operation": {
+            "enum": [
+              "new",
+              "expected",
+              "fromValueError",
+              "fromDiagnostic"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "span": {
+            "$ref": "https://semio.tech/schema/diagnostic/controlled#/$defs/TextSpan"
+          },
+          "expectedWire": {
+            "$ref": "https://semio.tech/schema/diagnostic/controlled#/$defs/TextError"
+          },
+          "expectedDisplay": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "wireCases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "input",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "input": {},
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "limits": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "operation",
+          "kind",
+          "expectedSpan"
+        ],
+        "properties": {
+          "operation": {
+            "enum": [
+              "bytes",
+              "depth",
+              "tokens",
+              "nodes"
+            ]
+          },
+          "kind": {
+            "$ref": "https://semio.tech/schema/value/refusal#/$defs/kind"
+          },
+          "expectedSpan": {
+            "$ref": "https://semio.tech/schema/diagnostic/controlled#/$defs/TextSpan"
+          }
+        }
+      }
+    }
+  }
+}

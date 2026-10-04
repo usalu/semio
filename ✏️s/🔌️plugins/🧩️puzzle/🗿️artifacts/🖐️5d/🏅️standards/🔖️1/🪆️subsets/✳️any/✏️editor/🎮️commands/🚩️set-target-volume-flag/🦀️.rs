@@ -2,7 +2,7 @@
 //! (`setTargetVolumeHidden`, `setTargetVolumeLocked`).
 
 use crate::editor::puzzle5d::Puzzle5dActionCtx;
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 
 /// 🚩️ One flag of one target volume by name. An unknown flag name writes nothing, so a stale caller cannot corrupt the
 /// other flag.

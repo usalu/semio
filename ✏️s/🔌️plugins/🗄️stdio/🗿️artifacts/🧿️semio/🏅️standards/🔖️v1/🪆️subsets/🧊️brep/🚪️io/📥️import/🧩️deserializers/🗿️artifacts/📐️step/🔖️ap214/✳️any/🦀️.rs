@@ -301,7 +301,7 @@ const SEMIO_BREP_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", st
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn step_err(message: &str) -> store::PackError {
-    store::PackError::Schema(format!("semio brep <- step: {message}"))
+    store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("semio brep <- step: {message}")))
 }
 
 /// 🧩️ `s.stdio.step/ap214/✳️any` -> `s.stdio.semio/v1/brep`. Real entity-graph walk (module doc

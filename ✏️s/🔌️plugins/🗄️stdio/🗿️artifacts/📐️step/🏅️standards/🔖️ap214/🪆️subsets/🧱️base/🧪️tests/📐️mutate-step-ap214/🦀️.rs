@@ -32,7 +32,7 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
 /// `ruststep`.
 fn inverse_spec(kind: &str, input: &[u8]) -> Result<Json, String> {
     let spec = match kind {
-        "set-snapshot" => return Ok(Json::Object(vec![("kind".to_string(), Json::String(kind.to_string())), ("params".to_string(), oracle_snapshot_payload(input)?)])),
+        "set-snapshot" | "patch-snapshot" => return Ok(Json::Object(vec![("kind".to_string(), Json::String("set-snapshot".to_string())), ("params".to_string(), oracle_snapshot_payload(input)?)])),
         "set-file-description" => r#"{"kind": "set-file-description", "params": {"fileDescription": {"description": [""], "implementationLevel": "2;1"}}}"#,
         "set-file-name" => r#"{"kind": "set-file-name", "params": {"fileName": {"name": "hexagonal-cut-concrete-forest-left", "timestamp": "2026-06-06T18:37:11+02:00", "author": [""], "organization": [""], "preprocessorVersion": "ST-DEVELOPER v19.2", "originatingSystem": "Rhino 8.31", "authorization": ""}}}"#,
         "set-file-schema" => r#"{"kind": "set-file-schema", "params": {"fileSchema": {"schemas": ["AUTOMOTIVE_DESIGN"]}}}"#,
@@ -202,7 +202,7 @@ mod subject {
         let operation = operation_of(&ctx.doc_json()?)?;
         let base = decoded(&input)?;
         let mutated = encoded(&input, &applied(base.clone(), std::slice::from_ref(&operation))?)?;
-        outcome(write_part21(&applied(decoded(&mutated)?, &mutation_inverse(&operation, &base))?.to_part21_document()).into_bytes())
+        outcome(write_part21(&applied(decoded(&mutated)?, &mutation_inverse(&operation, &base).expect("valid retained mutation inverse fixture"))?.to_part21_document()).into_bytes())
     }
 
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {

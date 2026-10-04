@@ -371,6 +371,10 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
             record[field_index] = value;
             encode_doc(&doc)
         }
+        "patch-snapshot" => {
+            let patched = semio_repo_test_host::law::patched_snapshot(&epw_snapshot_wire(input)?, params.get("patch").ok_or("patch-snapshot: missing `patch`")?)?;
+            oracle_apply_mutation(input, &json_object(vec![("kind", Json::String("set-snapshot".to_string())), ("params", json_object(vec![("snapshot", patched)]))]))
+        }
         kind => Err(format!("mutation kind {kind:?} has no oracle implementation ({} input byte(s))", input.len())),
     }
 }

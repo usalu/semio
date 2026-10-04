@@ -88,3 +88,6 @@ export function parseIoRoute(value: unknown): IoRoute {
   if (!Array.isArray(row.hops)) throw new Error("IO route hops must be an array");
   return { hops: row.hops.map(parseIoEntryDescriptor), fidelity: parseIoFidelity(row.fidelity) };
 }
+
+/** ⚠️ Exposes the single controlled IO cause owner through the neutral vocabulary. */
+export {IoError,encodeIoErrorControlled,decodeIoErrorControlled} from "./⚠️refusal/🟦️.ts";

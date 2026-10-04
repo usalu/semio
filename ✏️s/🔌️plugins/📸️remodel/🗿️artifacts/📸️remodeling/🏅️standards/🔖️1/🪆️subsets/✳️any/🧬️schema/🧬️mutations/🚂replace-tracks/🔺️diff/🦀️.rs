@@ -6,7 +6,7 @@ use crate::RemodelingSnapshot;
 //#region 🔖️Diff
 pub fn diff(payload: &super::ReplaceTracks, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
     if payload.tracks == base.results.tracks {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Tracks already have this value.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Tracks already have this value.");
     }
     let mut results = base.results.clone();
     results.tracks = payload.tracks.clone();

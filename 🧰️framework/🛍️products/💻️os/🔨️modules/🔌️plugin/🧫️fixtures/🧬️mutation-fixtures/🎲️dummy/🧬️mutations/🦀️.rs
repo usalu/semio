@@ -10,7 +10,7 @@ pub(crate) enum DummyMutation {
     SetDummyCount(SetDummyCount),
 }
 impl protocol::OpText for DummyMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         Ok(SetDummyCount::parse_op(line)?.into())
     }
     fn print_op(&self) -> String {

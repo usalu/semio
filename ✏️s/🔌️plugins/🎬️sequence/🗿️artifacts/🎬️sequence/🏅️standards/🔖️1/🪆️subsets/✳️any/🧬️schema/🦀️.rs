@@ -9,7 +9,7 @@ use store::ArtifactDsl;
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (`sequence→C:flow`): `steps`/`edges` are replaced
 /// by the same composed `content` CHILD slot `SequenceSnapshot` carries, mirroring `WriterArtifact`/
 /// `FlowArtifact`'s precedent so `to_snapshot`/`from_snapshot`/`set_snapshot` stay consistent.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.sequence.sequence")]
 pub struct SequenceArtifact {
@@ -87,7 +87,7 @@ pub fn sequence_artifact_schema_descriptor() -> semio_framework_schema_registry:
 pub fn sequence_example_json() -> String {
     let seed = neural_engine::ColdOwner::new(default_snapshot());
     let fixture = neural_engine::ColdOwner::new(<SequenceSnapshot as ArtifactDsl>::parse_dsl(&seed.print_dsl()).expect("default_snapshot round-trips through its own DSL"));
-    dsl::os_pack::to_json_string(&*fixture)
+    semio_framework_pack_json::to_json_string(&*fixture)
 }
 //#endregion 🔖️Example
 

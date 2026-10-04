@@ -94,7 +94,7 @@ pub mod derived_construction {
     #[derive(Clone, Debug, Default)]
     pub struct GltfBuilderConstruction {
         snapshot: GltfSnapshot,
-        diagnostics: Vec<dsl::Diagnostic>,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
     }
 
     impl ArtifactBuilder for GltfBuilderConstruction {
@@ -107,7 +107,7 @@ pub mod derived_construction {
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(Self::from_snapshot(<GltfSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
@@ -115,15 +115,15 @@ pub mod derived_construction {
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = protocol::Mutation::diff(&mutation, &self.snapshot);
-            if outcome.worst_level().is_some_and(|level| level >= dsl::Severity::Error) {
-                self.diagnostics.push(dsl::Diagnostic::error("stdio.gltf.mutation-rejected", dsl::TextSpan::at(1, 1), format!("{:?}", outcome.messages())));
+            if outcome.worst_level().is_some_and(|level| level >= semio_framework_diagnostic::Severity::Error) {
+                self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.gltf.mutation-rejected", semio_framework_diagnostic::TextSpan::at(1, 1), format!("{:?}", outcome.messages())));
             }
             match <GltfDiff as protocol::MutationDiff<GltfSnapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => {
                     self.snapshot = snapshot;
                 }
                 Err(error) => {
-                    self.diagnostics.push(dsl::Diagnostic::error("stdio.gltf.mutation-rejected", dsl::TextSpan::at(1, 1), error.to_string()));
+                    self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.gltf.mutation-rejected", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string()));
                 }
             }
             (self, outcome)
@@ -132,7 +132,7 @@ pub mod derived_construction {
             self.snapshot = <GltfDiff as protocol::MutationDiff<GltfSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -346,7 +346,7 @@ pub mod derived_analysis {
         if !trimmed.starts_with('{') {
             return false;
         }
-        match pack::parse_json(trimmed) {
+        match semio_framework_pack_json::parse(trimmed, semio_framework_pack_json::JsonMemberPolicy::Reject) {
             Ok(value) => value.get("asset").and_then(|a| a.get("version")).and_then(|v| v.as_str()).is_some(),
             Err(_) => false,
         }
@@ -395,7 +395,7 @@ pub mod derived_analysis {
                             Ok(snapshot) => parts.snapshot = Some(snapshot),
                             Err(err) => {
                                 confidence = IoConfidence::Low;
-                                diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err));
+                                diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err));
                             }
                         }
                     }
@@ -408,7 +408,7 @@ pub mod derived_analysis {
                             Ok(snapshot) => parts.snapshot = Some(snapshot),
                             Err(err) => {
                                 confidence = IoConfidence::Low;
-                                diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err));
+                                diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err));
                             }
                         }
                     }

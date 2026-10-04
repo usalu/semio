@@ -1,0 +1,71 @@
+{
+  "scope": "ControlledMaterialization.copy_utf8 native caller allowance",
+  "envelope": "ValueRefusal",
+  "kind": "ownershipLimit",
+  "message": "native text exceeds caller allowance",
+  "cases": [
+    {
+      "id": "empty-exact",
+      "bytes": "0",
+      "maximum": "0",
+      "owned": "0",
+      "refused": false
+    },
+    {
+      "id": "positive-exact",
+      "bytes": "4",
+      "maximum": "9",
+      "owned": "5",
+      "refused": false
+    },
+    {
+      "id": "one-short",
+      "bytes": "4",
+      "maximum": "8",
+      "owned": "5",
+      "refused": true
+    },
+    {
+      "id": "no-allowance",
+      "bytes": "1",
+      "maximum": "0",
+      "owned": "0",
+      "refused": true
+    },
+    {
+      "id": "spent-exact",
+      "bytes": "0",
+      "maximum": "9",
+      "owned": "9",
+      "refused": false
+    },
+    {
+      "id": "overdrawn-empty",
+      "bytes": "0",
+      "maximum": "9",
+      "owned": "10",
+      "refused": false
+    },
+    {
+      "id": "overdrawn-positive",
+      "bytes": "1",
+      "maximum": "9",
+      "owned": "10",
+      "refused": true
+    },
+    {
+      "id": "wide-exact",
+      "bytes": "4294967296",
+      "maximum": "8589934592",
+      "owned": "4294967296",
+      "refused": false
+    },
+    {
+      "id": "wide-one-short",
+      "bytes": "4294967296",
+      "maximum": "8589934591",
+      "owned": "4294967296",
+      "refused": true
+    }
+  ]
+}

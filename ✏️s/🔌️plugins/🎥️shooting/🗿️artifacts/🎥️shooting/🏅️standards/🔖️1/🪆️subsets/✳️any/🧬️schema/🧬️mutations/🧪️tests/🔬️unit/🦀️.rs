@@ -13,7 +13,7 @@ fn sample_shot(id: &str) -> ShootingShot {
 
 fn round_trip(snapshot: &ShootingSnapshot, operation: &ShootingMutation) -> ShootingSnapshot {
     let forward = store::apply_mutation(snapshot, operation).expect("valid mutation").0;
-    let backwards = operation.inverse(snapshot);
+    let backwards = operation.inverse(snapshot).expect("valid retained mutation inverse fixture");
     let mut restored = forward.clone();
     for back in &backwards {
         restored = store::apply_mutation(&restored, back).expect("valid inverse mutation").0;
@@ -85,7 +85,7 @@ async fn reorder_assets_round_trips() {
 async fn delete_asset_of_a_missing_id_has_an_empty_inverse() {
     let snapshot = crate::empty_shooting_snapshot();
     let delete = ShootingMutation::DeleteAsset(super::super::delete_asset::DeleteAsset { id: "nope".into() });
-    assert!(delete.inverse(&snapshot).is_empty(), "deleting an absent id has nothing to undo");
+    assert!(delete.inverse(&snapshot).expect("valid retained mutation inverse fixture").is_empty(), "deleting an absent id has nothing to undo");
 }
 //#endregion 📦assets
 
@@ -330,7 +330,7 @@ async fn create_asset_duplicate_id_is_fatal() {
     let base = representative_snapshot();
     let outcome = ShootingMutation::CreateAsset(super::super::create_asset::CreateAsset { asset: sample_asset("a1"), index: None }).diff(&base);
     assert_fatal_never_applies(&outcome).await;
-    assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+    assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -368,7 +368,7 @@ async fn scale_assets_non_finite_is_fatal() {
     let base = representative_snapshot();
     let outcome = ShootingMutation::ScaleAssets(super::super::scale_assets::ScaleAssets { asset_ids: vec!["a1".into()], sx: f64::NAN, sy: 1.0, sz: 1.0 }).diff(&base);
     assert_fatal_never_applies(&outcome).await;
-    assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+    assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -376,7 +376,7 @@ async fn rotate_assets_non_finite_is_fatal() {
     let base = representative_snapshot();
     let outcome = ShootingMutation::RotateAssets(super::super::rotate_assets::RotateAssets { asset_ids: vec!["a1".into()], ax: f64::NAN, ay: 0.0, az: 1.0, angle: 1.0 }).diff(&base);
     assert_fatal_never_applies(&outcome).await;
-    assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+    assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -396,7 +396,7 @@ async fn create_shot_duplicate_id_is_fatal() {
     let base = representative_snapshot();
     let outcome = ShootingMutation::CreateShot(super::super::create_shot::CreateShot { shot: sample_shot("s1"), index: None }).diff(&base);
     assert_fatal_never_applies(&outcome).await;
-    assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+    assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal));
 }
 
 #[semio_framework_async_macros::async_test]

@@ -16,7 +16,7 @@ fn canonical_vectors_execute_direct_mutation_and_codec_laws() {
         assert_laws(&mutation::CreateSceneMutation::Apply(payload.clone()), &base, &expected);
         if let Some(malformed) = vector.get("malformedPayload") {
             let text = malformed["encoded"].as_str().unwrap();
-            assert!(pack::from_json_str::<mutation::GltfCreateScenePayload>(text).is_err());
+            assert!(semio_framework_pack_json::from_json_str::<mutation::GltfCreateScenePayload>(text, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
             assert!(serde_json::from_str::<serde_json::Value>(text).is_err());
         }
         for key in ["outOfRangePosition", "invalidDefaultReference"] {

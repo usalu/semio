@@ -87,21 +87,21 @@ impl crate::value::ToValue for ConflictKind {
 impl crate::value::FromValue for ConflictKind {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(format!("expected an object for ConflictKind, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for ConflictKind, found {value:?}")));
         };
         let get = |key: &str| fields.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
         let kind = match get("kind") {
             Some(crate::value::DslValue::String(s)) => s,
-            _ => return Err(crate::value::ValueError::new("ConflictKind missing kind")),
+            _ => return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "ConflictKind missing kind")),
         };
         match kind.as_str() {
             "quarantined" => Ok(ConflictKind::Quarantined {
-                envelopes: <Vec<crate::MutationEnvelope> as crate::value::FromValue>::from_value(get("envelopes").ok_or_else(|| crate::value::ValueError::new("ConflictKind.quarantined missing envelopes"))?).map_err(|e| e.under("envelopes"))?,
+                envelopes: <Vec<crate::MutationEnvelope> as crate::value::FromValue>::from_value(get("envelopes").ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "ConflictKind.quarantined missing envelopes"))?).map_err(|e| e.under("envelopes"))?,
             }),
             "degraded" => Ok(ConflictKind::Degraded {
-                edit_ids: <Vec<String> as crate::value::FromValue>::from_value(get("editIds").ok_or_else(|| crate::value::ValueError::new("ConflictKind.degraded missing editIds"))?).map_err(|e| e.under("editIds"))?,
+                edit_ids: <Vec<String> as crate::value::FromValue>::from_value(get("editIds").ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "ConflictKind.degraded missing editIds"))?).map_err(|e| e.under("editIds"))?,
             }),
-            other => Err(crate::value::ValueError::new(format!("unknown ConflictKind kind `{other}`"))),
+            other => Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("unknown ConflictKind kind `{other}`"))),
         }
     }
 }
@@ -139,9 +139,9 @@ impl crate::value::FromValue for ConflictStatus {
                 "open" => Ok(ConflictStatus::Open),
                 "accepted" => Ok(ConflictStatus::Accepted),
                 "discarded" => Ok(ConflictStatus::Discarded),
-                other => Err(crate::value::ValueError::new(format!("unknown ConflictStatus variant `{other}`"))),
+                other => Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("unknown ConflictStatus variant `{other}`"))),
             },
-            other => Err(crate::value::ValueError::new(format!("expected a string, found {other:?}"))),
+            other => Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected a string, found {other:?}"))),
         }
     }
 }
@@ -165,9 +165,9 @@ impl crate::value::FromValue for ConflictResolution {
             crate::value::DslValue::String(s) => match s.as_str() {
                 "accept" => Ok(ConflictResolution::Accept),
                 "discard" => Ok(ConflictResolution::Discard),
-                other => Err(crate::value::ValueError::new(format!("unknown ConflictResolution variant `{other}`"))),
+                other => Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("unknown ConflictResolution variant `{other}`"))),
             },
-            other => Err(crate::value::ValueError::new(format!("expected a string, found {other:?}"))),
+            other => Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected a string, found {other:?}"))),
         }
     }
 }
@@ -202,7 +202,7 @@ impl crate::value::ToValue for Conflict {
 impl crate::value::FromValue for Conflict {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(format!("expected an object for Conflict, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for Conflict, found {value:?}")));
         };
         let mut id = None;
         let mut kind = None;
@@ -222,12 +222,12 @@ impl crate::value::FromValue for Conflict {
             }
         }
         Ok(Conflict {
-            id: id.ok_or_else(|| crate::value::ValueError::new("Conflict missing id"))?,
-            kind: kind.ok_or_else(|| crate::value::ValueError::new("Conflict missing kind"))?,
-            status: status.ok_or_else(|| crate::value::ValueError::new("Conflict missing status"))?,
-            messages: messages.ok_or_else(|| crate::value::ValueError::new("Conflict missing messages"))?,
-            actors: actors.ok_or_else(|| crate::value::ValueError::new("Conflict missing actors"))?,
-            timestamp: timestamp.ok_or_else(|| crate::value::ValueError::new("Conflict missing timestamp"))?,
+            id: id.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "Conflict missing id"))?,
+            kind: kind.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "Conflict missing kind"))?,
+            status: status.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "Conflict missing status"))?,
+            messages: messages.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "Conflict missing messages"))?,
+            actors: actors.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "Conflict missing actors"))?,
+            timestamp: timestamp.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "Conflict missing timestamp"))?,
         })
     }
 }
@@ -251,7 +251,7 @@ impl crate::value::ToValue for EditMessages {
 impl crate::value::FromValue for EditMessages {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(format!("expected an object for EditMessages, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for EditMessages, found {value:?}")));
         };
         let mut edit_id = None;
         let mut messages = None;
@@ -263,8 +263,8 @@ impl crate::value::FromValue for EditMessages {
             }
         }
         Ok(EditMessages {
-            edit_id: edit_id.ok_or_else(|| crate::value::ValueError::new("EditMessages missing editId"))?,
-            messages: messages.ok_or_else(|| crate::value::ValueError::new("EditMessages missing messages"))?,
+            edit_id: edit_id.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "EditMessages missing editId"))?,
+            messages: messages.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "EditMessages missing messages"))?,
         })
     }
 }
@@ -274,7 +274,7 @@ impl crate::value::FromValue for EditMessages {
 #[derive(Clone, Debug, PartialEq)]
 pub struct DispatchReport {
     pub policy: crate::MergePolicy,
-    pub worst: Option<crate::diagnostic::Severity>,
+    pub worst: Option<semio_framework_diagnostic::Severity>,
     pub messages: Vec<crate::MutationMessage>,
 }
 
@@ -291,7 +291,7 @@ impl crate::value::ToValue for DispatchReport {
 impl crate::value::FromValue for DispatchReport {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(format!("expected an object for DispatchReport, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for DispatchReport, found {value:?}")));
         };
         let mut policy = None;
         let mut worst = None;
@@ -299,15 +299,15 @@ impl crate::value::FromValue for DispatchReport {
         for (key, entry) in fields {
             match key.as_str() {
                 "policy" => policy = Some(<crate::MergePolicy as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("policy"))?),
-                "worst" => worst = <Option<crate::diagnostic::Severity> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("worst"))?,
+                "worst" => worst = <Option<semio_framework_diagnostic::Severity> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("worst"))?,
                 "messages" => messages = Some(<Vec<crate::MutationMessage> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("messages"))?),
                 _ => {}
             }
         }
         Ok(DispatchReport {
-            policy: policy.ok_or_else(|| crate::value::ValueError::new("DispatchReport missing policy"))?,
+            policy: policy.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "DispatchReport missing policy"))?,
             worst,
-            messages: messages.ok_or_else(|| crate::value::ValueError::new("DispatchReport missing messages"))?,
+            messages: messages.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "DispatchReport missing messages"))?,
         })
     }
 }
@@ -324,7 +324,7 @@ pub struct MergeReport {
     pub accepted: bool,
     pub insertion_index: u32,
     pub replayed: Vec<EditMessages>,
-    pub worst: Option<crate::diagnostic::Severity>,
+    pub worst: Option<semio_framework_diagnostic::Severity>,
     pub conflict: Option<ConflictId>,
 }
 
@@ -344,7 +344,7 @@ impl crate::value::ToValue for MergeReport {
 impl crate::value::FromValue for MergeReport {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(format!("expected an object for MergeReport, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for MergeReport, found {value:?}")));
         };
         let mut policy = None;
         let mut accepted = None;
@@ -358,16 +358,16 @@ impl crate::value::FromValue for MergeReport {
                 "accepted" => accepted = Some(<bool as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("accepted"))?),
                 "insertionIndex" => insertion_index = Some(<u32 as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("insertionIndex"))?),
                 "replayed" => replayed = Some(<Vec<EditMessages> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("replayed"))?),
-                "worst" => worst = <Option<crate::diagnostic::Severity> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("worst"))?,
+                "worst" => worst = <Option<semio_framework_diagnostic::Severity> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("worst"))?,
                 "conflict" => conflict = <Option<ConflictId> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("conflict"))?,
                 _ => {}
             }
         }
         Ok(MergeReport {
-            policy: policy.ok_or_else(|| crate::value::ValueError::new("MergeReport missing policy"))?,
-            accepted: accepted.ok_or_else(|| crate::value::ValueError::new("MergeReport missing accepted"))?,
-            insertion_index: insertion_index.ok_or_else(|| crate::value::ValueError::new("MergeReport missing insertionIndex"))?,
-            replayed: replayed.ok_or_else(|| crate::value::ValueError::new("MergeReport missing replayed"))?,
+            policy: policy.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "MergeReport missing policy"))?,
+            accepted: accepted.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "MergeReport missing accepted"))?,
+            insertion_index: insertion_index.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "MergeReport missing insertionIndex"))?,
+            replayed: replayed.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "MergeReport missing replayed"))?,
             worst,
             conflict,
         })
@@ -383,7 +383,7 @@ pub struct MutationReplayOutcome {
     pub mutation_id: crate::ids::MutationId,
     pub edit_id: String,
     pub op_index: u32,
-    pub worst: Option<crate::diagnostic::Severity>,
+    pub worst: Option<semio_framework_diagnostic::Severity>,
     pub messages: Vec<crate::MutationMessage>,
     pub superseded: bool,
     pub withdrawn: bool,
@@ -405,7 +405,7 @@ impl crate::value::ToValue for MutationReplayOutcome {
 impl crate::value::FromValue for MutationReplayOutcome {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(format!("expected an object for MutationReplayOutcome, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for MutationReplayOutcome, found {value:?}")));
         };
         let mut mutation_id = None;
         let mut edit_id = None;
@@ -419,7 +419,7 @@ impl crate::value::FromValue for MutationReplayOutcome {
                 "mutationId" => mutation_id = Some(<crate::ids::MutationId as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("mutationId"))?),
                 "editId" => edit_id = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("editId"))?),
                 "opIndex" => op_index = Some(<u32 as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("opIndex"))?),
-                "worst" => worst = <Option<crate::diagnostic::Severity> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("worst"))?,
+                "worst" => worst = <Option<semio_framework_diagnostic::Severity> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("worst"))?,
                 "messages" => messages = Some(<Vec<crate::MutationMessage> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("messages"))?),
                 "superseded" => superseded = Some(<bool as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("superseded"))?),
                 "withdrawn" => withdrawn = Some(<bool as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("withdrawn"))?),
@@ -427,13 +427,13 @@ impl crate::value::FromValue for MutationReplayOutcome {
             }
         }
         Ok(MutationReplayOutcome {
-            mutation_id: mutation_id.ok_or_else(|| crate::value::ValueError::new("MutationReplayOutcome missing mutationId"))?,
-            edit_id: edit_id.ok_or_else(|| crate::value::ValueError::new("MutationReplayOutcome missing editId"))?,
-            op_index: op_index.ok_or_else(|| crate::value::ValueError::new("MutationReplayOutcome missing opIndex"))?,
+            mutation_id: mutation_id.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "MutationReplayOutcome missing mutationId"))?,
+            edit_id: edit_id.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "MutationReplayOutcome missing editId"))?,
+            op_index: op_index.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "MutationReplayOutcome missing opIndex"))?,
             worst,
-            messages: messages.ok_or_else(|| crate::value::ValueError::new("MutationReplayOutcome missing messages"))?,
-            superseded: superseded.ok_or_else(|| crate::value::ValueError::new("MutationReplayOutcome missing superseded"))?,
-            withdrawn: withdrawn.ok_or_else(|| crate::value::ValueError::new("MutationReplayOutcome missing withdrawn"))?,
+            messages: messages.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "MutationReplayOutcome missing messages"))?,
+            superseded: superseded.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "MutationReplayOutcome missing superseded"))?,
+            withdrawn: withdrawn.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "MutationReplayOutcome missing withdrawn"))?,
         })
     }
 }
@@ -444,7 +444,7 @@ impl crate::value::FromValue for MutationReplayOutcome {
 pub struct ReplayReport {
     pub from_position: u32,
     pub outcomes: Vec<MutationReplayOutcome>,
-    pub worst: Option<crate::diagnostic::Severity>,
+    pub worst: Option<semio_framework_diagnostic::Severity>,
 }
 
 impl ReplayReport {
@@ -467,7 +467,7 @@ impl crate::value::ToValue for ReplayReport {
 impl crate::value::FromValue for ReplayReport {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(format!("expected an object for ReplayReport, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for ReplayReport, found {value:?}")));
         };
         let mut from_position = None;
         let mut outcomes = None;
@@ -476,13 +476,13 @@ impl crate::value::FromValue for ReplayReport {
             match key.as_str() {
                 "fromPosition" => from_position = Some(<u32 as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("fromPosition"))?),
                 "outcomes" => outcomes = Some(<Vec<MutationReplayOutcome> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("outcomes"))?),
-                "worst" => worst = <Option<crate::diagnostic::Severity> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("worst"))?,
+                "worst" => worst = <Option<semio_framework_diagnostic::Severity> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("worst"))?,
                 _ => {}
             }
         }
         Ok(ReplayReport {
-            from_position: from_position.ok_or_else(|| crate::value::ValueError::new("ReplayReport missing fromPosition"))?,
-            outcomes: outcomes.ok_or_else(|| crate::value::ValueError::new("ReplayReport missing outcomes"))?,
+            from_position: from_position.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "ReplayReport missing fromPosition"))?,
+            outcomes: outcomes.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "ReplayReport missing outcomes"))?,
             worst,
         })
     }

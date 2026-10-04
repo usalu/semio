@@ -6,7 +6,6 @@
 
 use crate::NoteSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 //#region 🔖️Inference
@@ -24,8 +23,11 @@ pub struct NoteInference {
 }
 
 impl protocol::Inference<NoteSnapshot> for NoteInference {
-    fn infer(snapshot: &NoteSnapshot) -> Self {
+    fn infer(snapshot: &NoteSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { outline: NoteOutline::compute(snapshot) }
+    
+        })
     }
 }
 
@@ -33,7 +35,9 @@ impl protocol::Inference<NoteSnapshot> for NoteInference {
 /// `NoteSnapshot::default()`'s `blocks` field ever stops being empty.
 impl Default for NoteInference {
     fn default() -> Self {
-        <Self as protocol::Inference<NoteSnapshot>>::infer(&NoteSnapshot::default())
+        let snapshot = &NoteSnapshot::default();
+
+        Self { outline: NoteOutline::compute(snapshot) }
     }
 }
 
@@ -49,20 +53,6 @@ impl protocol::InferenceSpec<NoteSnapshot> for NoteInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 🎯️ Zero-sized marker type — `ArtifactInferrer::infer` takes `&Self::Snapshot`, never `&self`,
-/// so the impl target is a pure type-level anchor with no live callers of the type itself
-/// (`📓️w4-sequence-report.md` recipeGap #1: implementing this trait directly on
-/// `semio_framework_plugin::app::SnapshotBuilder<S, M>` is a real orphan-rule violation, E0117 —
-/// `SnapshotBuilder` is a foreign, non-`#[fundamental]` generic struct).
-pub struct NoteInferrer;
-
-impl ArtifactInferrer for NoteInferrer {
-    type Snapshot = NoteSnapshot;
-    type Inference = NoteInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.note.note.inference`'s facet leaves into the OS-wide inference catalog — call

@@ -14,8 +14,7 @@ async fn facade_generator_example_pack_round_trips() {
     let document = super::super::text::parse_dsl(super::super::text::FACADE_GENERATOR_EXAMPLE_TEXT).expect("parse example");
     let decoded = decode(&encode(&document)).expect("decode");
     assert_eq!(decoded, document);
-    assert!(!decoded.steps().is_empty(), "the steps the flow handle owns travel through pack");
-    assert_eq!(decoded.steps(), document.steps(), "pack carries every step and block exactly");
+    assert_eq!(decoded.flow.child_id, crate::examples::demo::FLOW_ID, "the pack carries the flow child's coordinate, never its steps");
 }
 
 #[semio_framework_async_macros::async_test]

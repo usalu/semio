@@ -1,0 +1,54 @@
+{
+  "nativeCases": [
+    {
+      "body": "",
+      "lines": [],
+      "trailingNewline": false,
+      "lineEnding": "lf"
+    },
+    {
+      "body": "\n",
+      "lines": [
+        ""
+      ],
+      "trailingNewline": true,
+      "lineEnding": "lf"
+    },
+    {
+      "body": "A 🌠\n\nGrüße\u0000Lesesaal",
+      "lines": [
+        "A 🌠",
+        "",
+        "Grüße\u0000Lesesaal"
+      ],
+      "trailingNewline": false,
+      "lineEnding": "lf"
+    },
+    {
+      "body": "A 🌠\r\n\r\nGrüße\u0000Lesesaal\r\n",
+      "lines": [
+        "A 🌠",
+        "",
+        "Grüße\u0000Lesesaal"
+      ],
+      "trailingNewline": true,
+      "lineEnding": "crLf"
+    }
+  ],
+  "literalSchemas": [
+    "",
+    "stdio.txt",
+    "任意\u0000{literal}",
+    "{\"schema\":\"not an envelope\"}"
+  ],
+  "controls": {
+    "longText": "文",
+    "longRepeat": 60000,
+    "cancelAtBytes": 65536,
+    "wideLines": 600,
+    "domainRows": 4,
+    "finalRows": 5,
+    "smallValueBytes": 4096,
+    "rootIdentity": 1001
+  }
+}

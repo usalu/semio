@@ -21,9 +21,12 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for DeleteStory {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_delete_story(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
-        inverse_delete_story(self, base)
-    }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok({
+        inverse_delete_story(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete story \"{}\"", self.id), &format!("Textfluss \"{}\" löschen", self.id))
     }
@@ -43,10 +46,13 @@ pub fn diff_delete_story(payload: &DeleteStory, base: &LayoutSnapshot) -> protoc
 //#endregion 🗑️DeleteStory
 
 //#region 🗑️DeleteStory
-pub fn inverse_delete_story(payload: &DeleteStory, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_delete_story(payload: &DeleteStory, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.stories.iter().position(|story| story.id == payload.id) {
         Some(index) => vec![LayoutMutation::CreateStory(create_story::CreateStory { story: base.stories[index].clone(), index: Some(index) })],
         None => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🗑️DeleteStory

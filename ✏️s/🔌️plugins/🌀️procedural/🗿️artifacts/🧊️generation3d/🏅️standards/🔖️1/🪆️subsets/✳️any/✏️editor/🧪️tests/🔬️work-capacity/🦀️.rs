@@ -5,14 +5,15 @@ fn generation3d_declares_one_work_capacity_for_extent_footprint_and_preflight() 
     let capacity = GENERATION3D_RETAINED_CAPACITY;
     assert_eq!(capacity.work_items(), GENERATION3D_RETAINED_WORK_ITEMS, "the preflight ceiling IS the declared capacity");
     assert_eq!(capacity.rows_for_items(1), Some(store::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS), "one durable item is one forward row plus one inverse row");
-    assert_eq!(generation3d_one_item_footprint(0).work_items, capacity.rows_for_items(1).expect("one item fits the route capacity"), "the footprint a preflight declares and the extent a work answers are the SAME quantity");
-    assert!(capacity.admits(generation3d_one_item_footprint(0).work_items), "a route whose footprint is N rows must admit an extent of N");
+    let footprint = admit_generation3d_artifact_mutation(&Generation3dMutation::ChangeSchema(crate::standards::v1::subsets::any::schema::mutations::change_schema::ChangeSchema { new_schema: "x".into() })).expect("admissible");
+    assert_eq!(footprint.work_items, capacity.rows_for_items(1).expect("one item fits the route capacity"), "the footprint a preflight declares and the extent a work answers are the SAME quantity");
+    assert!(capacity.admits(footprint.work_items), "a route whose footprint is N rows must admit an extent of N");
     eprintln!(
         "generation3d work capacity: items={} work_items={} one-item rows={} footprint rows={}",
         capacity.invertible_items(),
         capacity.work_items(),
         capacity.rows_for_items(1).expect("one item fits"),
-        generation3d_one_item_footprint(0).work_items
+        footprint.work_items
     );
 }
 
@@ -27,10 +28,10 @@ async fn every_bounded_retained_route_answers_an_admissible_extent() {
         if tool_id == "flowEvalTick" {
             continue;
         }
-        let args = (tool_id == "setWidgetInput").then(|| dsl::DslValue::object([
-            ("widgetId".into(), dsl::DslValue::String("shape".into())),
-            ("channel".into(), dsl::DslValue::String("width".into())),
-            ("value".into(), dsl::DslValue::String("2".into())),
+        let args = (tool_id == "setWidgetInput").then(|| semio_framework_value::DslValue::object([
+            ("widgetId".into(), semio_framework_value::DslValue::String("shape".into())),
+            ("channel".into(), semio_framework_value::DslValue::String("width".into())),
+            ("value".into(), semio_framework_value::DslValue::String("2".into())),
         ]));
         let command = <Generation3dPlayApp as ArtifactEditor>::command_from_action(tool_id, args.as_ref()).unwrap_or_else(|_| panic!("{tool_id} decodes from its own action id"));
         let extent = if GENERATION3D_PREVIEW_TOOL_IDS.contains(&tool_id) {

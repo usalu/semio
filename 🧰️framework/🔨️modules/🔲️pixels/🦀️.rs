@@ -935,6 +935,10 @@ pub fn encode_png(image: &RasterImage) -> Result<Vec<u8>, RasterError> {
 
 #[path = "📷️png/✍️encode/🦀️.rs"]
 pub mod png_encoding;
+#[path = "📷️png/📥️decode/🦀️.rs"]
+pub mod png_decoding;
+#[path = "🖼️image/📥️decode/🦀️.rs"]
+pub mod image_decoding;
 
 /// 📤️ Encodes row-major big-endian 16-bit grayscale samples as a 16-bit grayscale PNG (color
 /// type 0), for lossless heightfield/DSM-style export.
@@ -979,108 +983,15 @@ fn assemble_png(width: u32, height: u32, color_type: u8, bit_depth: u8, compress
     out
 }
 
-/// 📥️ Decodes a PNG byte stream into canonical 8-bit RGBA — every color type (grayscale,
-/// truecolor, indexed, grayscale+alpha, truecolor+alpha), every bit depth (1/2/4/8/16), and
-/// Adam7 interlacing.
+/// 📥️ Synchronously reconstructs canonical RGBA with the bounded PNG candidate decoder.
+/// Use [png_decoding::PngDecodeJob] for caller-scheduled progress and cancellation.
 pub fn decode_png(data: &[u8]) -> Result<RasterImage, RasterError> {
-    let chunks = read_chunks(data).map_err(RasterError::Codec)?;
-    let mut ihdr: Option<Ihdr> = None;
-    let mut palette: Vec<[u8; 3]> = Vec::new();
-    let mut palette_alpha: Vec<u8> = Vec::new();
-    let mut gray_trans: Option<u32> = None;
-    let mut rgb_trans: Option<(u32, u32, u32)> = None;
-    let mut idat = Vec::new();
-    let mut seen_idat = false;
-
-    for &(ty, chunk) in &chunks {
-        if ty == *b"IHDR" {
-            ihdr = Some(parse_ihdr(chunk).map_err(RasterError::Codec)?);
-        } else if ty == *b"PLTE" {
-            if chunk.len() % 3 != 0 {
-                return Err(RasterError::Codec("png PLTE: length not a multiple of 3".into()));
-            }
-            palette = chunk.as_chunks::<3>().0.to_vec();
-        } else if ty == *b"tRNS" {
-            let color_type = ihdr.as_ref().ok_or_else(|| RasterError::Codec("png: tRNS before IHDR".into()))?.color_type;
-            match color_type {
-                0 => {
-                    if chunk.len() != 2 {
-                        return Err(RasterError::Codec("png tRNS: expected 2 bytes for grayscale".into()));
-                    }
-                    gray_trans = Some(u16::from_be_bytes([chunk[0], chunk[1]]) as u32);
-                }
-                2 => {
-                    if chunk.len() != 6 {
-                        return Err(RasterError::Codec("png tRNS: expected 6 bytes for truecolor".into()));
-                    }
-                    let r = u16::from_be_bytes([chunk[0], chunk[1]]) as u32;
-                    let g = u16::from_be_bytes([chunk[2], chunk[3]]) as u32;
-                    let b = u16::from_be_bytes([chunk[4], chunk[5]]) as u32;
-                    rgb_trans = Some((r, g, b));
-                }
-                3 => {
-                    palette_alpha = chunk.to_vec();
-                }
-                _ => {}
-            }
-        } else if ty == *b"IDAT" {
-            idat.extend_from_slice(chunk);
-            seen_idat = true;
-        } else if ty == *b"IEND" {
-            // 🚫️ terminal marker, no payload to fold in
-        } else if ty[0].is_ascii_uppercase() {
-            return Err(RasterError::Codec(format!("png: unsupported critical chunk {}", String::from_utf8_lossy(&ty))));
-        }
+    if data.len() > 67108864 {
+        return Err(RasterError::Codec("PNG byte limit exceeded".into()));
     }
-
-    let ihdr = ihdr.ok_or_else(|| RasterError::Codec("png: missing IHDR".into()))?;
-    if !seen_idat {
-        return Err(RasterError::Codec("png: missing IDAT".into()));
-    }
-    if ihdr.color_type == 3 && palette.is_empty() {
-        return Err(RasterError::Codec("png: color type 3 requires PLTE".into()));
-    }
-
-    let raw = deflate::zlib_decompress(&idat).map_err(RasterError::Codec)?;
-    let spp = samples_per_pixel(ihdr.color_type);
-    let bpp = bpp_bytes(&ihdr);
-    let mut rgba = vec![0u8; ihdr.width as usize * ihdr.height as usize * 4];
-
-    let mut put_row = |samples: &[u32], row_width: usize, base_x: u32, base_y: u32, step_x: u32| -> Result<(), String> {
-        for i in 0..row_width {
-            let px = pixel_to_rgba(&samples[i * spp..i * spp + spp], &ihdr, &palette, &palette_alpha, gray_trans, rgb_trans)?;
-            let x = base_x + i as u32 * step_x;
-            let idx = (base_y as usize * ihdr.width as usize + x as usize) * 4;
-            rgba[idx..idx + 4].copy_from_slice(&px);
-        }
-        Ok(())
-    };
-
-    if ihdr.interlace == 0 {
-        let row_bytes = packed_row_bytes(ihdr.width, ihdr.color_type, ihdr.bit_depth);
-        let (rows, _) = defilter_pass(&raw, 0, ihdr.height, row_bytes, bpp).map_err(RasterError::Codec)?;
-        for (y, row) in rows.iter().enumerate() {
-            let samples = unpack_samples(row, ihdr.width as usize, spp, ihdr.bit_depth);
-            put_row(&samples, ihdr.width as usize, 0, y as u32, 1).map_err(RasterError::Codec)?;
-        }
-    } else {
-        let mut pos = 0usize;
-        for (pass, &(sx, sy, stx, sty)) in ADAM7.iter().enumerate() {
-            let (pw, ph) = adam7_pass_dims(ihdr.width, ihdr.height, pass);
-            if pw == 0 || ph == 0 {
-                continue;
-            }
-            let row_bytes = packed_row_bytes(pw, ihdr.color_type, ihdr.bit_depth);
-            let (rows, new_pos) = defilter_pass(&raw, pos, ph, row_bytes, bpp).map_err(RasterError::Codec)?;
-            pos = new_pos;
-            for (j, row) in rows.iter().enumerate() {
-                let samples = unpack_samples(row, pw as usize, spp, ihdr.bit_depth);
-                put_row(&samples, pw as usize, sx, sy + j as u32 * sty, stx).map_err(RasterError::Codec)?;
-            }
-        }
-    }
-
-    Ok(RasterImage { width: ihdr.width, height: ihdr.height, pixels: rgba })
+    let mut job = png_decoding::PngDecodeJob::new(png_decoding::PngDecodeInput { data: std::sync::Arc::new(data.to_vec()), max_pixels: 16777216, max_bytes: 67108864, max_chunks: 65536 }).map_err(|e| RasterError::Codec(e.to_string()))?;
+    while !job.advance(4096).map_err(|e| RasterError::Codec(e.to_string()))?.done {}
+    job.into_result().map_err(|e| RasterError::Codec(e.to_string()))
 }
 //#endregion PngCodec
 

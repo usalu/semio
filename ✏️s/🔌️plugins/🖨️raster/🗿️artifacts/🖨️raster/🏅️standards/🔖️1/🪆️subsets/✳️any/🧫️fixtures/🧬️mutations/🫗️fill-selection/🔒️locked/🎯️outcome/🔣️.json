@@ -1,0 +1,7 @@
+{
+  "code": "mutation.target-mismatch",
+  "path": [
+    "paint"
+  ],
+  "status": "rejected"
+}

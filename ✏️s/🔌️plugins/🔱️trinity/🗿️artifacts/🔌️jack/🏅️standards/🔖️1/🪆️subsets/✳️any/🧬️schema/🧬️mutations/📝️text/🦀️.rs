@@ -9,23 +9,13 @@ pub use crate::standards::v1::subsets::any::schema::operations::{
 
 //#region 🧾️DerivedRegistry
 /// 🧾️ Direct-owner text opcodes in aggregate declaration order.
-pub const TEXT_OPCODE_REGISTRY: &[(&str, &str)] = &[
-    ("CreateNode", super::create_node::text::TEXT_OPCODE),
-    ("DeleteNode", super::delete_node::text::TEXT_OPCODE),
-    ("CreateEdge", super::create_edge::text::TEXT_OPCODE),
-    ("DeleteEdge", super::delete_edge::text::TEXT_OPCODE),
-    ("RenameNode", super::rename_node::text::TEXT_OPCODE),
-    ("MoveNode", super::move_node::text::TEXT_OPCODE),
-    ("ChangeDataProperty", super::change_data_property::text::TEXT_OPCODE),
-    ("RemoveDataProperty", super::remove_data_property::text::TEXT_OPCODE),
-    ("SetQuery", super::set_query::text::TEXT_OPCODE),
-];
+pub const TEXT_OPCODE_REGISTRY: &[(&str, &str)] = &[("SetQuery", super::set_query::text::TEXT_OPCODE)];
 //#endregion 🧾️DerivedRegistry
 
 //#region 🌉️ExternalCodecBridge
 /// 📥️ Decodes the internally tagged JSON projection.
 pub fn decode_trinity_graph_mutation_json(text: &str) -> Result<TrinityGraphMutation, String> {
-    pack::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 
 /// ▶️ Applies one mutation and returns its diagnostic code/severity pairs.
@@ -35,8 +25,11 @@ pub fn apply_trinity_graph_mutation_reporting(snapshot: &mut JackSnapshot, mutat
 }
 
 /// ↩️ Computes the mutation's own undo steps.
-pub fn inverse_trinity_graph_mutation_steps(mutation: &TrinityGraphMutation, base: &JackSnapshot) -> Vec<TrinityGraphMutation> {
-    <TrinityGraphMutation as protocol::Mutation<JackSnapshot>>::inverse(mutation, base)
+pub fn inverse_trinity_graph_mutation_steps(mutation: &TrinityGraphMutation, base: &JackSnapshot) -> Result<Vec<TrinityGraphMutation>, semio_framework_value::ValueError> {
+    Ok({
+    <TrinityGraphMutation as protocol::Mutation<JackSnapshot>>::inverse(mutation, base)?
+
+    })
 }
 //#endregion 🌉️ExternalCodecBridge
 

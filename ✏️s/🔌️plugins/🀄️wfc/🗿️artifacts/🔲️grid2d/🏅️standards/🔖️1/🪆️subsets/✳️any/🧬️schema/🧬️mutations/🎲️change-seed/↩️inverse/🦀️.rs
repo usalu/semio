@@ -3,6 +3,9 @@
 use crate::mutations::{change_seed, Grid2dMutation};
 use crate::schema::snapshot::Grid2dSnapshot;
 
-pub fn inverse(_payload: &super::ChangeSeed, base: &Grid2dSnapshot) -> Vec<Grid2dMutation> {
+pub fn inverse(_payload: &super::ChangeSeed, base: &Grid2dSnapshot) -> Result<Vec<Grid2dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![change_seed(base.seed)]
+
+    })())
 }

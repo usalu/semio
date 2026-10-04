@@ -4,6 +4,9 @@
 use crate::mutations::{change_seed, Wfc2dMutation};
 use crate::schema::snapshot::Wfc2dSnapshot;
 
-pub fn inverse(_payload: &super::ChangeSeed, base: &Wfc2dSnapshot) -> Vec<Wfc2dMutation> {
+pub fn inverse(_payload: &super::ChangeSeed, base: &Wfc2dSnapshot) -> Result<Vec<Wfc2dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![change_seed(base.seed)]
+
+    })())
 }

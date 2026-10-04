@@ -60,7 +60,7 @@ impl ArtifactDeserializer for SemioDocumentFromDocx {
     const INTO: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("document") };
 
     async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        let document = from.project_document().map_err(|error| store::PackError::Schema(error.to_string()))?;
+        let document = from.project_document().map_err(|error| store::PackError::from(semio_framework_value::ValueError::from(error)))?;
         Ok(SemioDocumentSnapshot {
             schema: STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(),
             styles: document.styles.iter().map(|s| DocStyle { id: s.id.clone(), name: s.name.clone(), based_on: s.based_on.clone() }).collect(),

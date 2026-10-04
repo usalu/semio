@@ -1,0 +1,19 @@
+syntax = "proto3";
+package semio.fem.results_animation;
+enum FemLoopMode {
+  FEM_LOOP_MODE_LOOP = 0;
+  FEM_LOOP_MODE_PING_PONG = 1;
+  FEM_LOOP_MODE_ONCE = 2;
+}
+enum FemWaveform {
+  FEM_WAVEFORM_RAMP = 0;
+  FEM_WAVEFORM_SINE = 1;
+}
+message FemResultsAnimation {
+  double phase = 1;
+  bool playing = 2;
+  double speed = 3;
+  FemLoopMode loop_mode = 4;
+  FemWaveform waveform = 5;
+  bool reverse = 6;
+}

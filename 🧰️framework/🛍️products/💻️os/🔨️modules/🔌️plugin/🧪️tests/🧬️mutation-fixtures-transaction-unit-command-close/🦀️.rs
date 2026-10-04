@@ -25,7 +25,7 @@ struct Case {
 #[serde(rename_all = "kebab-case")]
 enum Command {
     Increment,
-    CoalescedIncrement,
+    StreamedIncrement,
     IncrementAndNotify,
 }
 
@@ -82,7 +82,7 @@ fn check(id: &str) {
     let case = document.cases.into_iter().find(|case| case.id == id).expect("exact named command-close case");
     let command = Box::new(match case.command {
         Command::Increment => TxnCommand::Increment,
-        Command::CoalescedIncrement => TxnCommand::CoalescedIncrement,
+        Command::StreamedIncrement => TxnCommand::StreamedIncrement,
         Command::IncrementAndNotify => TxnCommand::IncrementAndNotify,
     });
     let command_bytes = size_of_val(command.as_ref());

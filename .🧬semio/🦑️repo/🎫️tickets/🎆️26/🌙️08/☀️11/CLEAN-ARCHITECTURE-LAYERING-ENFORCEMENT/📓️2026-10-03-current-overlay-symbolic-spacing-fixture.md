@@ -1,0 +1,7 @@
+# Current Overlay Symbolic Spacing Fixture
+
+A new closed lower UI fixture schema and registered generic UI oracle reached genuine test-first RED0/1 against the original three fixed-rem CSS expectations. Ajv rejected exactly Overlay padding and Absolute width/height. The fixture now handcrafts only those three CSS strings using canonical customizable --ui-spacing. Its original layout inputs, all numeric rectangles and viewport dimensions remain exact; the full original bytes and three offset inverses are retained.
+
+Registered lower schema oracle is actual GREEN1/1 (including foreign root/rectangle refusal). Whole original Interpreter in-source file is actual GREEN187/187, 15.23s Vitest/18.8s Nx, preserving every prior187 identity: missing0/added0. Both original Overlay/Absolute laws remain unchanged and independently inspect mounted CSSStyleDeclaration. The original Rust geometry laws were not executed in this bounded TS epoch; their required future full UI replay remains explicit.
+
+The new schema/test, existing generic UI test-config additive registration and fixture are outside held core208/Record201. No Rust or Cargo source changed. Full roster/source receipt is generated/current-native-worker/overlay-symbolic-original-interpreter-full-1-roster-binding.json; full original fixture and config inverses are adjacent. No whole renderer GREEN claim follows from this complete-file proof.

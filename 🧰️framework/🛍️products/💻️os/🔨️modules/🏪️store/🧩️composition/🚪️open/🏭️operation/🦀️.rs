@@ -54,7 +54,7 @@ impl<P: Send> MemberSnapshotOpenOperation for UnsupportedMemberSnapshotOpen<P> {
 }
 
 impl<P: Send> ErasedSnapshotRetirement for UnsupportedMemberSnapshotOpen<P> {
-    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         self.diagnostic.get_or_insert(MemberOpenDiagnostic::Cancelled);
         let Some(request) = self.request.as_mut() else {
             return Ok(SnapshotRetirementStep::Complete);
@@ -64,8 +64,10 @@ impl<P: Send> ErasedSnapshotRetirement for UnsupportedMemberSnapshotOpen<P> {
                 self.request.take();
                 Ok(SnapshotRetirementStep::Complete)
             }
-            SnapshotRetirementStep::Complete => Err("unsupported member decoder returned false terminal".into()),
-            SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > items || released_bytes > bytes => Err("unsupported member decoder exceeded retirement grant".into()),
+            SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "unsupported member decoder returned false terminal")),
+            SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > items || released_bytes > bytes => {
+                Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "unsupported member decoder exceeded retirement grant"))
+            }
             step => Ok(step),
         }
     }
@@ -172,7 +174,7 @@ impl<P: ArtifactPack + semio_framework_value::retirement::RetireOwned> MemberSna
 }
 
 impl<P: semio_framework_value::retirement::RetireOwned> ErasedSnapshotRetirement for PackMemberSnapshotOpen<P> {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if self.terminal {
             return Ok(SnapshotRetirementStep::Complete);
         }
@@ -186,8 +188,10 @@ impl<P: semio_framework_value::retirement::RetireOwned> ErasedSnapshotRetirement
                     drop(self.active.take());
                     Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
-                SnapshotRetirementStep::Complete => Err("pack member decoder snapshot retirement returned false terminal".into()),
-                SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > 1 || released_bytes > maximum_bytes => Err("pack member decoder snapshot retirement exceeded its exact grant".into()),
+                SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "pack member decoder snapshot retirement returned false terminal")),
+                SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > 1 || released_bytes > maximum_bytes => {
+                    Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "pack member decoder snapshot retirement exceeded its exact grant"))
+                }
                 step => Ok(step),
             };
         }
@@ -201,7 +205,7 @@ impl<P: semio_framework_value::retirement::RetireOwned> ErasedSnapshotRetirement
                     drop(self.request.take());
                     Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
-                SnapshotRetirementStep::Complete => Err("pack member decoder input returned false terminal".into()),
+                SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "pack member decoder input returned false terminal")),
                 step => Ok(step),
             };
         }
@@ -250,7 +254,7 @@ impl<M: Send> MemberOpenOperation for UnsupportedMemberFactoryOpen<M> {
         }
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         self.snapshot.close_step(maximum_items, maximum_bytes)
     }
 
@@ -638,11 +642,7 @@ where
                 cx.set_stage("member-open.history.hydrate");
                 let hydration = self.hydration.as_mut().expect("member persisted hydration remains retained");
                 match hydration.step(cx) {
-                    crate::os_store::PersistedDocumentHydrationStep::Pending(progress) => MemberOpenStep::Pending(MemberOpenProgress {
-                        phase: MemberOpenPhase::Replay,
-                        completed: progress.completed,
-                        total: progress.total,
-                    }),
+                    crate::os_store::PersistedDocumentHydrationStep::Pending(progress) => MemberOpenStep::Pending(MemberOpenProgress { phase: MemberOpenPhase::Replay, completed: progress.completed, total: progress.total }),
                     crate::os_store::PersistedDocumentHydrationStep::Rejected(diagnostic) => self.reject(diagnostic),
                     crate::os_store::PersistedDocumentHydrationStep::Ready(crate::os_store::PersistedDocumentHydrationOutput::Store(member)) => {
                         let hydration = self.hydration.take().expect("terminal member persisted hydration remains present");
@@ -712,7 +712,7 @@ where
     P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<M> + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
     M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
 {
-    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         self.phase = Phase::Rejected;
         self.diagnostic.get_or_insert(MemberOpenDiagnostic::Cancelled);
         if let Some(active) = self.active.as_mut() {
@@ -721,8 +721,10 @@ where
                     self.active.take();
                     Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
                 }
-                SnapshotRetirementStep::Complete => Err("member-open child returned false terminal".into()),
-                SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > items || released_bytes > bytes => Err("member-open child exceeded retirement grant".into()),
+                SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "member-open child returned false terminal")),
+                SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > items || released_bytes > bytes => {
+                    Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "member-open child exceeded retirement grant"))
+                }
                 step => Ok(step),
             };
         }
@@ -732,8 +734,10 @@ where
                     self.hydration.take();
                     Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
-                SnapshotRetirementStep::Complete => Err("member-open persisted hydration returned false terminal".into()),
-                SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > items.min(1) || released_bytes > bytes => Err("member-open persisted hydration exceeded its close grant".into()),
+                SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "member-open persisted hydration returned false terminal")),
+                SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > items.min(1) || released_bytes > bytes => {
+                    Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "member-open persisted hydration exceeded its close grant"))
+                }
                 step => Ok(step),
             };
         }
@@ -751,7 +755,7 @@ where
             if let Some(decoder) = self.history_decoder.take() {
                 if !decoder.terminal_is_empty() {
                     *self.history_decoder = Some(decoder);
-                    return Err("member-open history decoder retained an untransferred owner".into());
+                    return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "member-open history decoder retained an untransferred owner"));
                 }
                 drop(decoder);
             }
@@ -801,7 +805,7 @@ where
                     self.owners.take();
                     return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
                 }
-                SnapshotRetirementStep::Complete => return Err("member-open uninstalled disposer returned false terminal".into()),
+                SnapshotRetirementStep::Complete => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "member-open uninstalled disposer returned false terminal")),
                 step => return Ok(step),
             }
         }
@@ -825,7 +829,7 @@ where
         self.step_store(cx)
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         ErasedSnapshotRetirement::close_step(self, maximum_items, maximum_bytes)
     }
 
@@ -843,9 +847,6 @@ where
     /// 💣️ A panic already unwinding through a live open must not become a double panic that aborts the
     /// whole process; the drop bomb still fires for every non-unwinding drop.
     fn drop(&mut self) {
-        assert!(
-            std::thread::panicking() || self.ownership_is_empty(),
-            "member-open operation dropped before exact member handoff or bounded close"
-        );
+        assert!(std::thread::panicking() || self.ownership_is_empty(), "member-open operation dropped before exact member handoff or bounded close");
     }
 }

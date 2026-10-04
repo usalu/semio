@@ -6,13 +6,12 @@
 
 use crate::{forms_steps, FormsSnapshot};
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::topology::compute_forms_topology;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a forms snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `topology`, backed by the `🧭topology/` slug dir).
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.forms.forms.inference")]
 pub struct FormsInference {
@@ -22,13 +21,18 @@ pub struct FormsInference {
 
 impl Default for FormsInference {
     fn default() -> Self {
-        <Self as protocol::Inference<FormsSnapshot>>::infer(&FormsSnapshot::default())
+        let snapshot = &FormsSnapshot::default();
+
+        Self { topology: compute_forms_topology(&forms_steps(snapshot)) }
     }
 }
 
 impl protocol::Inference<FormsSnapshot> for FormsInference {
-    fn infer(snapshot: &FormsSnapshot) -> Self {
+    fn infer(snapshot: &FormsSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { topology: compute_forms_topology(&forms_steps(snapshot)) }
+    
+        })
     }
 }
 
@@ -44,20 +48,6 @@ impl protocol::InferenceSpec<FormsSnapshot> for FormsInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 🎯️ Ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM: `ArtifactInferrer::infer` takes
-/// `&Self::Snapshot` (never `&self`), so the impl target is a pure type-level anchor — a local
-/// zero-sized marker, not the deleted `derive_artifact_facets!`-generated `FormsBuilder`
-/// (retargeting onto `semio_framework_plugin::app::SnapshotBuilder<S, M>` is an orphan-rule
-/// violation: it is a foreign, non-`#[fundamental]` generic struct — confirmed by the
-/// `🎬️sequence` fan-out pass, `📓️w4-sequence-report.md` `## recipeGaps` #1).
-pub struct FormsInferrer;
-impl ArtifactInferrer for FormsInferrer {
-    type Snapshot = FormsSnapshot;
-    type Inference = FormsInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.forms.forms.inference`'s facet leaves into the OS-wide inference catalog — call

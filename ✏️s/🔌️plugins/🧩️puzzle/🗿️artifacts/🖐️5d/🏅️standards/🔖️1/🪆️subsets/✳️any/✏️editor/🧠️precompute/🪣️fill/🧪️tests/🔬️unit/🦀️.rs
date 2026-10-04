@@ -97,6 +97,8 @@ fn job(document: &Puzzle5dDocument, requested: u32, purpose: ToolRunJobPurpose, 
         port: ToolRunJobPort::default(),
         trace_keys: ToolRunTraceKeys::default(),
         entity_marks: &[],
+        children: semio_framework_plugin::ChildContentView::default(),
+        member_ops: &[],
     };
     fill_run_job(request).expect("the fill job builds").expect("the fill tool has a run job")
 }
@@ -317,6 +319,8 @@ fn fill_run_job_matches_the_language_neutral_fill_run_fixture() {
             port: ToolRunJobPort::default(),
             trace_keys: ToolRunTraceKeys::default(),
             entity_marks: &[],
+            children: semio_framework_plugin::ChildContentView::default(),
+            member_ops: &[],
         })
         .expect("the planner job builds")
         .expect("the planner has a run job");
@@ -468,13 +472,13 @@ fn fill_run_job_step_stays_below_the_interactive_ceiling_on_the_largest_examples
 //#region ⏯️App
 pub(crate) fn host_turn(app: &mut Puzzle5dApp) {
     PluginApp::maintenance_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("maintenance step");
-    semio_framework::io::resolve_ready(app.advance_typed_operation_publication()).expect("advance one typed operation publication unit");
+    ::semio_framework_async::poll::resolve_ready(app.advance_typed_operation_publication()).expect("advance one typed operation publication unit");
     if let Some(page) = app.take_typed_operation_result_page(1) {
         assert_ne!(page.lane, semio_framework_plugin::app::TypedOperationResultLane::Fault, "retained operation faulted: {}", String::from_utf8_lossy(page.bytes()));
         app.acknowledge_typed_operation_result(page.token).expect("acknowledge one presented result page");
     }
     let _ = app.take_typed_operation_event();
-    let _ = semio_framework::io::resolve_ready(app.take_typed_operation_completion());
+    let _ = ::semio_framework_async::poll::resolve_ready(app.take_typed_operation_completion());
     let _ = app.take_typed_operation_effect();
     let _ = app.take_typed_operation_ui_scope();
 }
@@ -484,8 +488,8 @@ pub(crate) fn world_meta() -> ActionMeta {
 }
 
 pub(crate) fn tool_run_action(app: &mut Puzzle5dApp, action: &str, args: serde_json::Value) -> serde_json::Value {
-    let args = dsl::DslValue::from(&args);
-    let result = semio_framework::io::resolve_ready(app.handle_action(action, Some(&args), &world_meta())).unwrap_or_else(|fault| panic!("{action} faulted: {fault:?}"));
+    let args = semio_framework_value::DslValue::from(&args);
+    let result = ::semio_framework_async::poll::resolve_ready(app.handle_action(action, Some(&args), &world_meta())).unwrap_or_else(|fault| panic!("{action} faulted: {fault:?}"));
     serde_json::Value::from(&result.output)
 }
 
@@ -511,7 +515,7 @@ fn pump(app: &mut Puzzle5dApp, what: &str, until: impl Fn(&protocol::PresenceToo
 /// 🧭️ The live fill run's `{runId, generation}` exactly as the world window's Escape binding carries it.
 fn escape_identity(app: &mut Puzzle5dApp) -> Option<serde_json::Value> {
     let view = window_view(world3d_window::WINDOW_KIND_ID, world3d_window::WINDOW_KIND_ID);
-    let engagements = semio_framework::io::resolve_ready(app.window_engagements(&view));
+    let engagements = ::semio_framework_async::poll::resolve_ready(app.window_engagements(&view));
     let abort = engagements.get(world3d_window::WINDOW_KIND_ID)?.input.as_ref()?.on_abort.clone()?;
     (abort.action == TOOL_RUN_ABORT_ACTION_ID).then(|| serde_json::Value::from(abort.args.as_ref().expect("a tool run abort carries its identity")))
 }
@@ -527,7 +531,7 @@ fn provisional_instances(app: &mut Puzzle5dApp) -> (usize, usize) {
 }
 
 fn set_fill_count(app: &mut Puzzle5dApp, count: u64) {
-    dispatch(app, "setFillCount", Some(&dsl::json!({ "value": count })), Some(board2d::WINDOW_KIND_ID)).expect("setFillCount");
+    dispatch(app, "setFillCount", Some(&semio_framework_pack_json::json!({ "value": count })), Some(board2d::WINDOW_KIND_ID)).expect("setFillCount");
 }
 
 /// ⏯️ LAW (start → complete → finalize = one undo entry): the tool declares its run through the manifest; a

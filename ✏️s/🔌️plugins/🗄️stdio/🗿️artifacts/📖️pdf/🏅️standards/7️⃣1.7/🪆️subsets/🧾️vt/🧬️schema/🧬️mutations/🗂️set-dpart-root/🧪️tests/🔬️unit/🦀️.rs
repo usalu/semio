@@ -10,5 +10,5 @@ fn changes_the_owned_conformance_axis_and_plans_its_inverse() {
     let next = outcome.diff().apply(&base).unwrap();
     assert!(support::catalog_entry(&next, "DPartRoot").is_some());
     assert_eq!(support::dpart_job(&next).as_deref(), Some("run 4711"));
-    assert_eq!(<SetDpartRoot as MutationKind<PdfSnapshot, PdfVtMutation>>::inverse(&mutation, &base), vec![PdfVtMutation::RemoveDpartRoot(RemoveDpartRoot {})]);
+    assert_eq!(<SetDpartRoot as MutationKind<PdfSnapshot, PdfVtMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture"), vec![PdfVtMutation::RemoveDpartRoot(RemoveDpartRoot {})]);
 }

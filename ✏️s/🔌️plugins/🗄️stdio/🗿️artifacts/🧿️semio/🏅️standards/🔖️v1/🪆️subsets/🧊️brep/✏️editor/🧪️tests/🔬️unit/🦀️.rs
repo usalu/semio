@@ -116,7 +116,7 @@ async fn registered_set_vertex_publishes_refuses_a_missing_target_and_undoes_red
     let original = one_vertex_snapshot();
     let mut app = artifact_app_laws::new_registered_app::<EditorApp<SemioBrepEditor>, _>(async { semio_framework_plugin::App { definition: create_semio_brep_editor(), examples: Vec::new() } }).await;
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&original, SEMIO_BREP_DOCUMENT_SCHEMA) else { panic!("B-rep fixture produces a document load") };
-    app.load_document_pack(&store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.unwrap();
+    semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.unwrap();
     let meta = artifact_app_laws::meta("local");
     let arguments = |vertex_id: &str, point: [f64; 3]| DslValue::object([("vertexId".into(), DslValue::String(vertex_id.into())), ("point".into(), DslValue::Array(point.into_iter().map(DslValue::float).collect()))]);
 
@@ -130,11 +130,11 @@ async fn registered_set_vertex_publishes_refuses_a_missing_target_and_undoes_red
     assert_eq!(app.snapshot().unwrap().vertices[0].point, SemioPoint3 { x: 3.0, y: 4.0, z: 5.0 });
 
     let missing = arguments("missing", [7.0, 8.0, 9.0]);
-    let history_before = semio_framework::io::resolve_ready(app.history_snapshot()).expect("history before refused edit").upserts.len();
+    let history_before = ::semio_framework_async::poll::resolve_ready(app.history_snapshot()).expect("history before refused edit").upserts.len();
     app.handle_action("set-vertex", Some(&missing), &meta).await.unwrap();
     assert!(artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id).await.is_err());
     assert_eq!(app.snapshot().unwrap().vertices[0].point, SemioPoint3 { x: 3.0, y: 4.0, z: 5.0 });
-    assert_eq!(semio_framework::io::resolve_ready(app.history_snapshot()).expect("history after refused edit").upserts.len(), history_before);
+    assert_eq!(::semio_framework_async::poll::resolve_ready(app.history_snapshot()).expect("history after refused edit").upserts.len(), history_before);
     artifact_app_laws::close_registered_fixture_app(&mut app);
 }
 
@@ -146,14 +146,14 @@ async fn registered_set_vertex_refuses_duplicate_ids_without_history() {
     duplicate.vertices.push(duplicate.vertices[0].clone());
     let mut app = artifact_app_laws::new_registered_app::<EditorApp<SemioBrepEditor>, _>(async { semio_framework_plugin::App { definition: create_semio_brep_editor(), examples: Vec::new() } }).await;
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&duplicate, SEMIO_BREP_DOCUMENT_SCHEMA) else { panic!("B-rep fixture produces a document load") };
-    app.load_document_pack(&store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.unwrap();
+    semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.unwrap();
     let meta = artifact_app_laws::meta("local");
-    let history_before = semio_framework::io::resolve_ready(app.history_snapshot()).expect("initial history").upserts.len();
+    let history_before = ::semio_framework_async::poll::resolve_ready(app.history_snapshot()).expect("initial history").upserts.len();
     let args = DslValue::object([("vertexId".into(), DslValue::String("v1".into())), ("point".into(), DslValue::Array(vec![DslValue::float(1.0), DslValue::float(2.0), DslValue::float(3.0)]))]);
     app.handle_action("set-vertex", Some(&args), &meta).await.unwrap();
     assert!(artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id).await.is_err());
     assert_eq!(app.snapshot().unwrap(), duplicate);
-    assert_eq!(semio_framework::io::resolve_ready(app.history_snapshot()).expect("history after duplicate refusal").upserts.len(), history_before);
+    assert_eq!(::semio_framework_async::poll::resolve_ready(app.history_snapshot()).expect("history after duplicate refusal").upserts.len(), history_before);
     artifact_app_laws::close_registered_fixture_app(&mut app);
 }
 //#endregion 🧪️SetVertex

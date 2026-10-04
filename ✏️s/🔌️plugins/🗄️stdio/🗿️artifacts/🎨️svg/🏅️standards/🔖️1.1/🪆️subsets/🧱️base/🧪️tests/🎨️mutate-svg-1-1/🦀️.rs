@@ -141,7 +141,7 @@ mod subject {
         let base = SvgSnapshot::import_utf8(&mutable_input(ctx)?).map_err(|error| format!("import_utf8 failed: {error}"))?;
         let spec = ctx.doc_json()?;
         let mutation = mutation_from_spec(&spec)?;
-        let undo = mutation_inverse(&mutation, &base);
+        let undo = mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
         let original = project_svg_1_1(&base.export_utf8().map_err(|error| format!("export_utf8 failed: {error}"))?)?;
         let mut snapshot = base;
         let forward = apply_svg_mutation(&mut snapshot, &mutation);

@@ -331,7 +331,9 @@ impl DirectedGraph {
             let mut attrs = self.0.edge_attrs(e.id).cloned().unwrap_or_default();
             if backward {
                 if let Some(rev) = self.get_edge_data(e.v, e.u) {
-                    attrs.extend(rev.clone());
+                    for (key,value) in rev.clone() {
+                if let Some(previous)=attrs.insert(key,value){<PropertyValue as semio_framework_value::FromValue>::retire_decoded(previous);}
+            }
                 }
             }
             out.add_edge_with(e.u, e.v, attrs);

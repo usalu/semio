@@ -522,8 +522,8 @@ impl Wfc3dInferenceJob {
             return Ok(false);
         }
         if let Some((slot, tile)) = self.assignments.pop_first() {
-            let slot = protocol::json::to_json_string(&slot);
-            let tile = protocol::json::to_json_string(&tile);
+            let slot = semio_framework_pack_json::to_json_string(&slot);
+            let tile = semio_framework_pack_json::to_json_string(&tile);
             if self.encoded_entries != 0 {
                 page.write(b",").map_err(|_| "wfc3d-inference-output-page")?;
             }
@@ -817,7 +817,7 @@ impl semio_framework::ToolJobFactory for Wfc3dInferenceJobFactory {
 
     fn create_job_from_wire(&mut self, operation: semio_framework_job::Operation, payload: &[u8], checkpoint: Option<Vec<u8>>) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
         let payload_text = std::str::from_utf8(payload).map_err(|error| semio_framework::ToolJobFactoryError::new(format!("wfc3d-inference-wire-decode:{error}")))?;
-        let mut request: Wfc3dInferenceRequest = protocol::json::from_json_str(payload_text).map_err(|error| semio_framework::ToolJobFactoryError::new(format!("wfc3d-inference-wire-decode:{error}")))?;
+        let mut request: Wfc3dInferenceRequest = semio_framework_pack_json::from_json_str(payload_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework::ToolJobFactoryError::new(format!("wfc3d-inference-wire-decode:{error}")))?;
         if checkpoint.is_some() {
             request.checkpoint = checkpoint;
         }
@@ -887,7 +887,7 @@ pub(crate) fn solve_with_clock(snapshot: &Wfc3dSnapshot, now_us: fn() -> Option<
             semio_framework_job::StepOutcome::Complete(candidate) => Some(
                 std::str::from_utf8(&payload_bytes(&candidate.output))
                     .map_err(|error| format!("wfc3d-invalid-commit:{error}"))
-                    .and_then(|text| protocol::json::from_json_str::<Wfc3dInferenceCommit>(text).map_err(|error| format!("wfc3d-invalid-commit:{error}"))),
+                    .and_then(|text| semio_framework_pack_json::from_json_str::<Wfc3dInferenceCommit>(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("wfc3d-invalid-commit:{error}"))),
             ),
             semio_framework_job::StepOutcome::Cancelled => Some(Err("wfc3d-inference-cancelled".into())),
             semio_framework_job::StepOutcome::Fault(fault) => Some(Err(String::from_utf8_lossy(&payload_bytes(&fault.detail)).into_owned())),
@@ -938,7 +938,7 @@ impl store::InferredField<Wfc3dSnapshot> for Wfc3dSolve {
         vec![store::InferenceStep { key: "wfc3d".to_string(), parents: Vec::new() }]
     }
     fn dep_input(snapshot: &Wfc3dSnapshot, _key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
-        protocol::json::to_json_string(snapshot).into_bytes()
+        semio_framework_pack_json::to_json_string(snapshot).into_bytes()
     }
     fn compute(snapshot: &Wfc3dSnapshot, _key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
         match solve_with_job(snapshot) {
@@ -974,7 +974,7 @@ impl store::InferredField<Wfc3dSnapshot> for Wfc3dContradiction {
         vec![store::InferenceStep { key: "wfc3d".to_string(), parents: Vec::new() }]
     }
     fn dep_input(snapshot: &Wfc3dSnapshot, _key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
-        protocol::json::to_json_string(snapshot).into_bytes()
+        semio_framework_pack_json::to_json_string(snapshot).into_bytes()
     }
     fn compute(snapshot: &Wfc3dSnapshot, _key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
         solve_with_job(snapshot).is_ok()

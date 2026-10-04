@@ -11,7 +11,7 @@ pub fn diff(payload: &super::InsertRun, base: &SemioTextSnapshot) -> protocol::M
     runs.insert(at, payload.run.clone());
     let outcome = protocol::MutationOutcome::new(SemioTextDiff { runs: Some(SemioTextRunList { values: runs }) });
     if at != payload.index {
-        outcome.warn("mutation.clamped", format!("Insert index {} was out of range; inserted at #{} instead.", payload.index, at))
+        outcome.warning("mutation.clamped", format!("Insert index {} was out of range; inserted at #{} instead.", payload.index, at))
     } else {
         outcome
     }

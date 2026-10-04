@@ -1,0 +1,9 @@
+# Mounted Block Neutral Prerequisite Audit
+
+The genuine first Source baseline stopped before assertions because the demand referenced three absent properties in the existing native corpus. That was an authored test prerequisite error, not a provider RED. Existing Block2d keys are dialect/binary64Bits/nativeCase; Block3d additionally catalogAddresses. All nativeCase literal/unresolved names used by the specimen exist exactly; the prior actual typed parser probe covered them with full equality.
+
+Held exact six-file before/after correction is `📥️inputs/block-two-three-mounted-neutral-prerequisite-pairs.json`. Only the three missing contract references move from laws to the existing separate closed Source facet. Existing binary64Bits/nativeCase authority and every original operation/assertion remain. The facet is Ajv-validated before top-level corpus consumption, and its strict schema requires exact authored wordSchema/tableRowCounts/malformedSql via const. No producer outputs supplied expectations.
+
+Authored table counts follow complete test specimen and SQL declarations: all ten Block2d tables have one row; all thirteen Block3d tables have one row except its two ordered representation tags. Optional presence is already in the complete specimen. Independent malformed cases explicitly exercise removed singleton roots/metadata/camera, orphan ownership, negative/noncontiguous/duplicate ordinals, invalid bool, raw-word/query/class mismatch, partial optional float, and Block3d tag ownership/catalog absence. Their precise native constraints are ValueCells boolean135/float142/optional_float163, entity orphan204, ordinal211–239, singleton228 in the existing individual provider. No source provider or compatibility implementation is invented.
+
+No changed permanent files or dispatch occurred. Root must read before hashes, mount the held test-only pair and execute the genuine missing-provider assertion baseline. No current Source success is claimed.

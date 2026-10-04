@@ -1,0 +1,7 @@
+{
+  "qualification": "Held test-only canonical carrier pair; not executed; independent neutral Text specimen/schema addition still recommended",
+  "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+  "sha256": "10aa018d2a03dc261aa9bae6c13a6fd0219eea4b7c7791501d3a9ac9b140c3b4",
+  "before": " assert_eq!(malformed.span,semio_framework_diagnostic::TextSpan::at(1,1));",
+  "after": " let spec=super::native_pack::spec();\n let text_error=semio_framework_dsl_record::parse_exact_controlled(\"?\",&spec,&semio_framework_dsl_record::ParseOptions::default(),&mut semio_framework_value::NativeDecodeControl::new(usize::MAX,&mut |_|true)).err().expect(\"actual malformed Text source\");\n assert_eq!(text_error.kind.as_str(),cases[\"malformedRecord\"].as_str().unwrap());\n assert_eq!(text_error.span,semio_framework_diagnostic::TextSpan::at(1,1));\n let io_error=store::io_schema::IoError::from_text_error_controlled(text_error,&mut semio_framework_value::NativeEncodeControl::new(usize::MAX,&mut |_|true)).unwrap();\n assert_eq!(io_error.cause.kind.as_str(),cases[\"malformedRecord\"].as_str().unwrap());\n assert_eq!(io_error.diagnostics.len(),1);\n assert_eq!(io_error.diagnostics[0].span,semio_framework_diagnostic::TextSpan::at(1,1));"
+}

@@ -9,6 +9,48 @@ use crate::standards::v_ecma_376::subsets::base::io::{
 use semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text;
 use semio_s_artifact_stdio_zip::opc::{self, OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 
+fn construction_fidelity_fixture() -> serde_json::Value {
+    serde_json::from_str(include_str!("../../../🧫️fixtures/🏗️typed-construction-fidelity/🔣️.json")).expect("schema-first typed-construction fixture")
+}
+
+fn construction_fidelity_snapshot(fixture: &serde_json::Value) -> PptxSnapshot {
+    let text = |key: &str| fixture[key].as_str().expect("fixture text");
+    let mut opc = OpcPackage::empty();
+    opc.comment = text("archiveComment").into();
+    opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
+    opc.content_types.set_default("xml", "application/xml");
+    opc.set_part(PRESENTATION_PART, PRESENTATION_CONTENT_TYPE, text("presentationXml").as_bytes().to_vec());
+    opc.set_part("ppt/slides/slide3.xml", SLIDE_CONTENT_TYPE, text("slideXml").as_bytes().to_vec());
+    opc.set_part("ppt/slideMasters/slideMaster9.xml", "application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml", text("masterXml").as_bytes().to_vec());
+    opc.set_part("ppt/slideLayouts/slideLayout9.xml", "application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml", text("layoutXml").as_bytes().to_vec());
+    opc.set_part("ppt/notesSlides/notesSlide1.xml", "application/vnd.openxmlformats-officedocument.presentationml.notesSlide+xml", text("notesXml").as_bytes().to_vec());
+    opc.set_part("ppt/theme/theme9.xml", "application/vnd.openxmlformats-officedocument.theme+xml", text("themeXml").as_bytes().to_vec());
+    opc.set_part(text("customPartPath"), "application/xml", text("customXml").as_bytes().to_vec());
+    opc.add_relationship("", "rId3", REL_TYPE_OFFICE_DOCUMENT_STRICT, PRESENTATION_PART);
+    opc.add_relationship(PRESENTATION_PART, "rId9", "http://purl.oclc.org/ooxml/officeDocument/relationships/slideMaster", "slideMasters/slideMaster9.xml");
+    opc.add_relationship(PRESENTATION_PART, "rId7", "http://purl.oclc.org/ooxml/officeDocument/relationships/slide", "slides/slide3.xml");
+    opc.add_relationship(PRESENTATION_PART, "rId2", "http://purl.oclc.org/ooxml/officeDocument/relationships/notesMaster", "notesMasters/notesMaster1.xml");
+    opc.add_relationship("ppt/slides/slide3.xml", "rId12", "http://purl.oclc.org/ooxml/officeDocument/relationships/slideLayout", "../slideLayouts/slideLayout9.xml");
+    opc.add_relationship("ppt/slides/slide3.xml", "rId13", "http://purl.oclc.org/ooxml/officeDocument/relationships/notesSlide", "../notesSlides/notesSlide1.xml");
+    opc.add_relationship("ppt/slideMasters/slideMaster9.xml", "rId4", "http://purl.oclc.org/ooxml/officeDocument/relationships/slideLayout", "../slideLayouts/slideLayout9.xml");
+    opc.add_relationship("ppt/slideMasters/slideMaster9.xml", "rId6", "http://purl.oclc.org/ooxml/officeDocument/relationships/theme", "../theme/theme9.xml");
+    opc.add_relationship("ppt/slideLayouts/slideLayout9.xml", "rId8", "http://purl.oclc.org/ooxml/officeDocument/relationships/slideMaster", "../slideMasters/slideMaster9.xml");
+    opc.add_relationship("ppt/notesSlides/notesSlide1.xml", "rId1", "http://purl.oclc.org/ooxml/officeDocument/relationships/slide", "../slides/slide3.xml");
+    decode_pptx(&opc::encode_opc(&opc).expect("fixture OPC encode")).expect("fixture PPTX decode")
+}
+
+fn xml_part<'a>(snapshot: &'a PptxSnapshot, path: &str) -> &'a crate::schema::snapshot::PptxXmlPart {
+    snapshot.xml_parts.iter().find(|part| part.path == path).unwrap_or_else(|| panic!("missing retained XML part {path}"))
+}
+
+fn descendant_local<'a>(node: &'a semio_s_artifact_stdio_xml::schema::snapshot::XmlNode, local: &str) -> Option<&'a semio_s_artifact_stdio_xml::schema::snapshot::XmlNode> {
+    let semio_s_artifact_stdio_xml::schema::snapshot::XmlNode::Element { name, children, .. } = node else { return None };
+    if name.rsplit_once(':').map_or(name.as_str(), |(_, local)| local) == local {
+        return Some(node);
+    }
+    children.iter().find_map(|child| descendant_local(child, local))
+}
+
 async fn sample_presentation() -> PptxPresentation {
     PptxPresentation {
         slides: vec![
@@ -37,11 +79,101 @@ async fn builder_produces_minimal_valid_package_that_decodes_back() {
     assert!(opc::sniff_opc_bytes(&bytes));
     assert!(sniff_pptx_bytes(&bytes));
     let decoded = decode_pptx(&bytes).expect("decode minimal package");
-    assert_eq!(decoded.presentation, sample_presentation().await);
+    assert_eq!(decoded.presentation().expect("derived PresentationML view"), sample_presentation().await);
     // The synthesized boilerplate chain must actually be present — a real reader needs it.
     assert!(decoded.xml_parts.iter().any(|part| part.path == SLIDE_MASTER_PART));
     assert!(decoded.xml_parts.iter().any(|part| part.path == SLIDE_LAYOUT_PART));
     assert!(decoded.xml_parts.iter().any(|part| part.path == THEME_PART));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn typed_construction_appends_to_imported_canonical_package_without_rebuilding_it() {
+    use quick_xml::{events::Event, reader::Reader, XmlVersion};
+    use semio_framework_plugin::ArtifactBuilder;
+    use std::io::{Cursor, Read};
+
+    let fixture = construction_fidelity_fixture();
+    let imported = construction_fidelity_snapshot(&fixture);
+    let original_slide = xml_part(&imported, "ppt/slides/slide3.xml").document.clone();
+    let original_opc = imported.opc.clone();
+    let paragraph_text = fixture["paragraphText"].as_str().expect("paragraph text");
+    let with_paragraph = PptxBuilderConstruction::from_snapshot(imported.clone()).add_text_paragraph(paragraph_text).await.build().expect("append paragraph to imported package");
+
+    assert_eq!(with_paragraph.opc, original_opc, "paragraph construction must not rebuild OPC metadata or binary authority");
+    for path in ["ppt/presentation.xml", "ppt/slideMasters/slideMaster9.xml", "ppt/slideLayouts/slideLayout9.xml", "ppt/notesSlides/notesSlide1.xml", "ppt/theme/theme9.xml", fixture["customPartPath"].as_str().unwrap()] {
+        assert_eq!(xml_part(&with_paragraph, path), xml_part(&imported, path), "unrelated retained part changed: {path}");
+    }
+    let old_tx_body = descendant_local(original_slide.root.as_ref().expect("old slide root"), "txBody").expect("old text body");
+    let new_tx_body = descendant_local(xml_part(&with_paragraph, "ppt/slides/slide3.xml").document.root.as_ref().expect("new slide root"), "txBody").expect("new text body");
+    let (semio_s_artifact_stdio_xml::schema::snapshot::XmlNode::Element { children: old_children, .. }, semio_s_artifact_stdio_xml::schema::snapshot::XmlNode::Element { children: new_children, .. }) = (old_tx_body, new_tx_body) else { panic!("text body elements") };
+    assert_eq!(&new_children[..old_children.len()], old_children, "existing text subtree must remain an exact structural prefix");
+    assert_eq!(new_children.len(), old_children.len() + 1, "construction appends exactly one paragraph");
+    let semio_s_artifact_stdio_xml::schema::snapshot::XmlNode::Element { name: appended_paragraph_name, .. } = new_children.last().expect("appended paragraph") else { panic!("appended paragraph element") };
+    assert_eq!(appended_paragraph_name, "ink:p", "paragraph must use the DrawingML prefix in scope at the text body");
+
+    let with_slide = PptxBuilderConstruction::from_snapshot(with_paragraph.clone()).add_slide().await.build().expect("append slide to imported package");
+    for path in ["ppt/slides/slide3.xml", "ppt/slideMasters/slideMaster9.xml", "ppt/slideLayouts/slideLayout9.xml", "ppt/notesSlides/notesSlide1.xml", "ppt/theme/theme9.xml", fixture["customPartPath"].as_str().unwrap()] {
+        assert_eq!(xml_part(&with_slide, path), xml_part(&with_paragraph, path), "existing part changed while appending slide: {path}");
+    }
+    let presentation_relationships = with_slide.opc.relationships_for(PRESENTATION_PART);
+    assert_eq!(&presentation_relationships[..original_opc.relationships_for(PRESENTATION_PART).len()], original_opc.relationships_for(PRESENTATION_PART), "existing presentation relationship order and identities must be a prefix");
+    let added_relationship = presentation_relationships.last().expect("new slide relationship");
+    assert_eq!(added_relationship.id, "rId1");
+    assert_eq!(added_relationship.rel_type, "http://purl.oclc.org/ooxml/officeDocument/relationships/slide");
+    assert_eq!(added_relationship.target, "slides/slide1.xml");
+    let added_slide = xml_part(&with_slide, "ppt/slides/slide1.xml");
+    let added_slide_text = semio_s_artifact_stdio_zip::opc::xml_document_to_opc_text(&added_slide.document);
+    assert!(added_slide_text.starts_with("<deck:sld "));
+    assert!(added_slide_text.contains("xmlns:draw=\"http://purl.oclc.org/ooxml/drawingml/main\""));
+    assert_eq!(with_slide.opc.relationships_for("ppt/slides/slide1.xml"), &[semio_s_artifact_stdio_zip::opc::OpcRelationship { id: "rId1".into(), rel_type: "http://purl.oclc.org/ooxml/officeDocument/relationships/slideLayout".into(), target: "../slideLayouts/slideLayout9.xml".into(), target_mode: semio_s_artifact_stdio_zip::opc::OpcTargetMode::Internal }]);
+
+    let bytes = encode_pptx(&with_slide).expect("save retained construction");
+    let mut archive = zip::ZipArchive::new(Cursor::new(&bytes)).expect("independent ZIP reopen");
+    assert_eq!(archive.comment(), fixture["archiveComment"].as_str().unwrap().as_bytes());
+    let mut presentation_xml = String::new();
+    archive.by_name(PRESENTATION_PART).expect("presentation member").read_to_string(&mut presentation_xml).expect("presentation UTF-8");
+    assert!(presentation_xml.contains(r#"<slot:sldId id="256" link:id="rId1"/>"#), "slide identity must use the namespaces in scope at the locally shadowed slide list");
+    let mut custom_xml = String::new();
+    archive.by_name(fixture["customPartPath"].as_str().unwrap()).expect("custom member").read_to_string(&mut custom_xml).expect("custom UTF-8");
+    assert_eq!(custom_xml, fixture["customXml"].as_str().unwrap());
+    let mut reader = Reader::from_str(&presentation_xml);
+    let mut slide_ids = Vec::new();
+    let mut size = None;
+    loop {
+        match reader.read_event().expect("independent presentation XML parse") {
+            Event::Start(event) | Event::Empty(event) if event.local_name().as_ref() == "sldId" => {
+                let id = event.attributes().map(Result::unwrap).find(|attribute| attribute.key.local_name().as_ref() == "id").expect("slide id").normalized_value(XmlVersion::Explicit1_0).unwrap().into_owned();
+                slide_ids.push(id);
+            }
+            Event::Start(event) | Event::Empty(event) if event.local_name().as_ref() == "sldSz" => {
+                let attrs = event.attributes().map(Result::unwrap).map(|attribute| (attribute.key.local_name().as_ref().to_string(), attribute.normalized_value(XmlVersion::Explicit1_0).unwrap().into_owned())).collect::<std::collections::BTreeMap<_, _>>();
+                size = Some(attrs);
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+    }
+    assert_eq!(slide_ids, vec!["319", "256"]);
+    let size = size.expect("retained presentation dimensions");
+    assert_eq!(size.get("cx").map(String::as_str), fixture["presentationSize"]["cx"].as_str());
+    assert_eq!(size.get("cy").map(String::as_str), fixture["presentationSize"]["cy"].as_str());
+    assert_eq!(size.get("type").map(String::as_str), fixture["presentationSize"]["type"].as_str());
+    drop(archive);
+    let reopened = decode_pptx(&bytes).expect("own reopen after independent oracles");
+    assert_eq!(reopened, with_slide);
+
+    let fresh = PptxBuilderConstruction::empty()
+        .add_slide()
+        .await
+        .add_text_paragraph("Fresh authority")
+        .await
+        .build()
+        .expect("minimal construction from genuinely empty authority");
+    let fresh_presentation = fresh.presentation().expect("fresh derived PresentationML view");
+    assert_eq!(fresh_presentation.slides.len(), 1);
+    assert_eq!(fresh_presentation.slides[0].shapes.len(), 1);
+    let fresh_bytes = encode_pptx(&fresh).expect("save fresh construction");
+    assert_eq!(decode_pptx(&fresh_bytes).expect("reopen fresh construction"), fresh);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -84,8 +216,8 @@ async fn decode_resolves_real_hand_built_package_with_shape_boundaries_and_posit
     let bytes = opc::encode_opc(&opc).expect("encode hand-built package");
     let decoded = decode_pptx(&bytes).expect("decode hand-built pptx");
 
-    assert_eq!(decoded.presentation.slides.len(), 1);
-    let shapes = &decoded.presentation.slides[0].shapes;
+    assert_eq!(decoded.presentation().expect("derived PresentationML view").slides.len(), 1);
+    let shapes = &decoded.presentation().expect("derived PresentationML view").slides[0].shapes;
     assert_eq!(shapes.len(), 2, "two DIRECT shapes must be recovered as two distinct PptxShape entries, not flattened");
     let PptxShape::Placeholder { kind, text_frame, position } = &shapes[0] else { panic!("expected placeholder shape") };
     assert_eq!(kind, "title");
@@ -132,15 +264,15 @@ async fn decode_preserves_unmodeled_shape_kinds_as_logical_other() {
 
     let bytes = opc::encode_opc(&opc).expect("encode");
     let decoded = decode_pptx(&bytes).expect("decode");
-    assert_eq!(decoded.presentation.slides[0].shapes.len(), 1);
-    let PptxShape::Other { node } = &decoded.presentation.slides[0].shapes[0] else { panic!("expected Other shape") };
+    assert_eq!(decoded.presentation().expect("derived PresentationML view").slides[0].shapes.len(), 1);
+    let PptxShape::Other { node } = &decoded.presentation().expect("derived PresentationML view").slides[0].shapes[0] else { panic!("expected Other shape") };
     let node_model = format!("{node:?}");
     assert!(node_model.contains("p:graphicFrame") && node_model.contains("Table 1"));
 
     // Re-encode -> re-decode: the logical XML node must survive the round trip.
     let re_encoded = encode_pptx(&decoded).expect("re-encode");
     let re_decoded = decode_pptx(&re_encoded).expect("re-decode");
-    assert_eq!(re_decoded.presentation, decoded.presentation);
+    assert_eq!(re_decoded.presentation().expect("derived PresentationML view"), decoded.presentation().expect("derived PresentationML view"));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -167,7 +299,7 @@ async fn decode_resolves_strict_office_document_relationship_too() {
     let bytes = opc::encode_opc(&opc).expect("encode hand-built Strict package");
     assert!(sniff_pptx_bytes(&bytes), "Strict-relationship-typed package must still sniff as pptx");
     let decoded = decode_pptx(&bytes).expect("decode Strict-relationship-typed package");
-    assert_eq!(decoded.presentation.slides.len(), 0);
+    assert_eq!(decoded.presentation().expect("derived PresentationML view").slides.len(), 0);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -198,7 +330,7 @@ async fn unmodeled_slide_master_survives_decode_encode_logically() {
     let re_encoded = encode_pptx(&decoded).expect("re-encode must not clobber an already-present slide master");
     let re_decoded = decode_pptx(&re_encoded).expect("re-decode");
     assert_eq!(re_decoded.part_text(SLIDE_MASTER_PART).as_deref(), Some(marker));
-    assert_eq!(re_decoded.presentation, sample_presentation().await);
+    assert_eq!(re_decoded.presentation().expect("derived PresentationML view"), sample_presentation().await);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -206,10 +338,10 @@ async fn analyzer_builder_round_trip() {
     let original = build_minimal_pptx(sample_presentation().await);
     let bytes = encode_pptx(&original).expect("encode");
     let analyzed = decode_pptx(&bytes).expect("decode");
-    let rebuilt = build_minimal_pptx(analyzed.presentation.clone());
+    let rebuilt = build_minimal_pptx(analyzed.presentation().expect("derived PresentationML view").clone());
     let rebuilt_bytes = encode_pptx(&rebuilt).expect("encode rebuilt");
     let reanalyzed = decode_pptx(&rebuilt_bytes).expect("decode rebuilt");
-    assert_eq!(reanalyzed.presentation, analyzed.presentation);
+    assert_eq!(reanalyzed.presentation().expect("derived PresentationML view"), analyzed.presentation().expect("derived PresentationML view"));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -219,10 +351,10 @@ async fn shrinking_slide_count_drops_stale_slide_parts_and_relationships() {
     assert!(!snap_wide.opc.relationships_for("ppt/slides/slide2.xml").is_empty());
 
     wide.slides.truncate(1);
-    let bytes = encode_pptx(&PptxSnapshot::from_parts(snap_wide.opc, snap_wide.xml_parts, wide)).expect("encode narrower presentation");
+    let bytes = encode_pptx(&build_minimal_pptx(wide)).expect("encode freshly authored narrower presentation");
     let decoded = decode_pptx(&bytes).expect("decode");
     assert!(decoded.opc.relationships_for("ppt/slides/slide2.xml").is_empty(), "stale second slide's relationships must be dropped too");
-    assert_eq!(decoded.presentation.slides.len(), 1);
+    assert_eq!(decoded.presentation().expect("derived PresentationML view").slides.len(), 1);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -348,14 +480,12 @@ async fn assert_exact_export(snapshot: &PptxSnapshot, expected: &[u8]) {
     }
 }
 
-fn first_positioned_shape(snapshot: &PptxSnapshot) -> (usize, usize, PptxTransform) {
-    for (slide_index, slide) in snapshot.presentation.slides.iter().enumerate() {
-        for (shape_index, shape) in slide.shapes.iter().enumerate() {
-            let position = match shape {
-                PptxShape::TextBox { position, .. } | PptxShape::Picture { position, .. } | PptxShape::Placeholder { position, .. } => *position,
-                PptxShape::Other { .. } => continue,
-            };
-            return (slide_index, shape_index, position);
+fn first_positioned_shape(snapshot: &PptxSnapshot) -> (crate::schema::mutations::PptxShapeAddress, PptxTransform) {
+    for slide in crate::schema::mutations::xml_address::pptx_slides(snapshot).expect("retained slide authorities") {
+        for shape in slide.shapes {
+            if let Some(position) = shape.position {
+                return (shape.address, position);
+            }
         }
     }
     panic!("exact fixture has no positioned shape");
@@ -369,7 +499,7 @@ async fn fixture_survives_logical_io_persistence_diff_and_mutation_pipelines() {
     use semio_framework_plugin::{AnalyzeSource, ArtifactAnalysis, ArtifactComposition, ComposeSource};
 
     let snapshot = decode_pptx(&exact_pptx_bytes().await).expect("import exact fixture");
-    assert_eq!(snapshot.presentation.slides.len(), 7);
+    assert_eq!(snapshot.presentation().expect("derived fixture presentation").slides.len(), 7);
     assert!(!snapshot.xml_parts.is_empty());
     let xml_paths: std::collections::HashSet<&str> = snapshot.xml_parts.iter().map(|part| part.path.as_str()).collect();
     assert_eq!(xml_paths.len(), snapshot.xml_parts.len(), "every logical XML part must have one authority");
@@ -383,7 +513,7 @@ async fn fixture_survives_logical_io_persistence_diff_and_mutation_pipelines() {
         }),
         "fixture binary parts must be genuine media or embedded object payloads"
     );
-    let relationship_parts = snapshot.opc.relationships.values().filter(|relationships| !relationships.is_empty()).count();
+    let relationship_parts = snapshot.opc.relationships.groups().map(|(_, relationships)| relationships).filter(|relationships| !relationships.is_empty()).count();
     assert_eq!(1 + relationship_parts + snapshot.xml_parts.len() + snapshot.opc.parts.len(), 55, "every native member must map to exactly one logical authority");
     let mut duplicate_authority = snapshot.clone();
     let duplicated = duplicate_authority.xml_parts.first().expect("fixture XML part");
@@ -427,23 +557,23 @@ async fn fixture_survives_logical_io_persistence_diff_and_mutation_pipelines() {
     assert!(self_diff.is_empty());
     assert_exact_export(&self_diff.apply(&snapshot).unwrap(), &exact_bytes).await;
 
-    // 🧭️ `NoMutation` was dropped by the mutation-leaf migration (26/08/29/S-END-TO-END); an
-    // out-of-range `SetShapeText` is this subset's own documented no-op (`diff_set_shape_text`
-    // returns `PptxDiff::default()` when the addressed slide doesn't exist), so it stands in
-    // for the removed unit variant here.
-    let mut no_op = snapshot.clone();
-    let no_op_diff = crate::schema::mutations::apply_pptx_mutation(&mut no_op, &PptxMutation::SetShapeText(set_shape_text::SetShapeText { slide_index: usize::MAX, shape_index: usize::MAX, text_frame: Vec::new() }));
-    assert!(no_op_diff.diff().is_empty());
-    assert_exact_export(&no_op, &exact_bytes).await;
+    let (address, position) = first_positioned_shape(&snapshot);
+    let mut missing = address.clone();
+    missing.node.part_path = "ppt/slides/missing.xml".into();
+    let mut rejected = snapshot.clone();
+    let refusal = crate::schema::mutations::apply_pptx_mutation(&mut rejected, &PptxMutation::SetShapeText(set_shape_text::SetShapeText { address: missing, text: String::new() }));
+    assert!(refusal.diff().is_empty());
+    assert!(!refusal.messages().is_empty());
+    assert_eq!(rejected, snapshot);
+    assert_exact_export(&rejected, &exact_bytes).await;
 
-    let (slide_index, shape_index, position) = first_positioned_shape(&snapshot);
     let changed_x = if position.x == i64::MAX { position.x - 1 } else { position.x + 1 };
-    let mutation = PptxMutation::SetShapePosition(set_shape_position::SetShapePosition { slide_index, shape_index, position: PptxTransform { x: changed_x, ..position } });
+    let mutation = PptxMutation::SetShapePosition(set_shape_position::SetShapePosition { address, position: PptxTransform { x: changed_x, ..position } });
     let mut changed = snapshot.clone();
     let forward = crate::schema::mutations::apply_pptx_mutation(&mut changed, &mutation);
     assert_ne!(changed, snapshot);
     assert_ne!(encode_pptx(&changed).expect("encode mutated presentation"), exact_bytes);
-    for inverse in mutation.inverse(&snapshot) {
+    for inverse in mutation.inverse(&snapshot).expect("valid retained mutation inverse fixture") {
         crate::schema::mutations::apply_pptx_mutation(&mut changed, &inverse);
     }
     assert_eq!(changed, snapshot);
@@ -503,29 +633,33 @@ mod conformance_laws {
     #[semio_framework_async_macros::async_test]
     async fn committed_facet_files_parse() {
         for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
-            let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
-            assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
+            let grammar = semio_framework_dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
+            assert_eq!(grammar.dialect, semio_framework_dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
         }
         for (label, text) in [("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO)] {
-            dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
+            semio_framework_dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
         }
     }
 
     /// 🧾️ The native Text grammar recognizes the complete owned logical presentation.
     #[semio_framework_async_macros::async_test]
     async fn grammar_conformance_law() {
-        let grammar=dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).unwrap();
-        let text=store::ArtifactDsl::print_dsl(&demo_pptx_snapshot().await);
-        let(envelope,body)=store::semio_format::split_text_preamble(&text).unwrap();
-        assert!(dsl::Recognizer::compile(&grammar).recognize(&format!("{}\n{body}",envelope.envelope_id())).unwrap());
+        let grammar = semio_framework_dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).unwrap();
+        let text = store::ArtifactDsl::print_dsl(&demo_pptx_snapshot().await);
+        let (envelope, body) = store::semio_format::split_text_preamble(&text).unwrap();
+        assert!(semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros())
+            .expect("selected grammar fragments")
+            .recognize(&format!("{}\n{body}", envelope.envelope_id()))
+            .unwrap());
     }
 
     /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
     /// output for every `PptxMutation` variant (`mutations::demo_mutation_cases()`).
     #[semio_framework_async_macros::async_test]
     async fn ops_grammar_conformance_law() {
-        let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
-        let recognizer = dsl::Recognizer::compile(&grammar);
+        let grammar = semio_framework_dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
+        let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros())
+            .expect("selected grammar fragments");
         for mutation in mutations::demo_mutation_cases() {
             let printed = mutation.print_op();
             assert!(recognizer.recognize(&printed).unwrap_or(false), "mutations grammar did not recognize {printed:?} (from {mutation:?})");
@@ -536,8 +670,9 @@ mod conformance_laws {
     /// for every representative `PptxDiff` (`diff::demo_diff_cases()`).
     #[semio_framework_async_macros::async_test]
     async fn diff_grammar_conformance_law() {
-        let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
-        let recognizer = dsl::Recognizer::compile(&grammar);
+        let grammar = semio_framework_dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
+        let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros())
+            .expect("selected grammar fragments");
         for d in diff::demo_diff_cases() {
             let printed = d.print_diff();
             assert!(recognizer.recognize(&printed).unwrap_or(false), "diff grammar did not recognize {printed:?} (from {d:?})");
@@ -547,24 +682,24 @@ mod conformance_laws {
     /// 🧭️ The literal native protocol consumes every snapshot, mutation and diff byte.
     #[semio_framework_async_macros::async_test]
     async fn protocol_walk_law() {
-        let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
+        let pack_spec = semio_framework_dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
         let demo = demo_pptx_snapshot().await;
         let packed = store::ArtifactPack::encode_pack(&demo);
         let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
-        let trace = dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
+        let trace = semio_framework_dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
         assert_eq!(trace.consumed, inner.len(), "pack walk must consume every literal snapshot byte");
 
-        let op_spec = dsl::parse_protocol(mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
+        let op_spec = semio_framework_dsl::parse_protocol(mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
         for mutation in mutations::demo_mutation_cases() {
             let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
-            let trace = dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
+            let trace = semio_framework_dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
             assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");
         }
 
-        let diff_spec = dsl::parse_protocol(diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
+        let diff_spec = semio_framework_dsl::parse_protocol(diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
         for d in diff::demo_diff_cases() {
             let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
-            let trace = dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
+            let trace = semio_framework_dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
             assert_eq!(trace.consumed, bytes.len(), "diff walk did not consume every byte for {d:?}");
         }
     }
@@ -589,7 +724,5 @@ mod conformance_laws {
         assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_pptx_snapshot().await");
         assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_pptx_snapshot().await) drifted from the shipped .pack.semio fixture");
     }
-
-
 }
 //#endregion 🔖️ConformanceLaws

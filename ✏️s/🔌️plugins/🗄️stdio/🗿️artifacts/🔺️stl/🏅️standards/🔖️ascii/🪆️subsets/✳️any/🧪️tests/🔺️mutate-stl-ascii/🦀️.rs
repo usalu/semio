@@ -138,7 +138,7 @@ mod subject {
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let mut snapshot = decode(ctx)?;
         let forward = mutation_of(&ctx.doc_json()?)?;
-        let backward = mutation_inverse(&forward, &snapshot);
+        let backward = mutation_inverse(&forward, &snapshot).expect("valid retained mutation inverse fixture");
         apply_stl_mutation(&mut snapshot, &forward);
         for mutation in &backward {
             apply_stl_mutation(&mut snapshot, mutation);

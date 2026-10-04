@@ -6,7 +6,7 @@
 //! `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`'s `TopicContribution`
 //! seam), so `serde`/`serde_json` are fully gone from this crate.
 
-use pack::json::{self, Value as JsonValue};
+use semio_framework_pack_json::{self as json, Value as JsonValue};
 use semio_framework::DslValue;
 use semio_framework_plugin::{ExecutionMode, ExtensionBundle};
 use std::collections::BTreeMap;

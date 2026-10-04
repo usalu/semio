@@ -18,9 +18,9 @@ impl Deserializer<NoteSnapshot> for DxfIntoNote {
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
     async fn deserialize(payload: &IoPayload) -> IoResult<NoteSnapshot> {
         let IoPayload::Text(text) = payload else {
-            return Err(IoError { message: "DxfIntoNote: expected a text dxf payload".to_string(), diagnostics: Vec::new() });
+            return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "DxfIntoNote: expected a text dxf payload".to_string())));
         };
-        let dxf = parse_dxf_document(text).map_err(|error| IoError { message: format!("DxfIntoNote: {error}"), diagnostics: Vec::new() })?;
+        let dxf = parse_dxf_document(text).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("DxfIntoNote: {error}"))))?;
         let mut ids = NoteIdOwner::new(format!("dxf-import:{}", text.len()), 0);
         let mut snap = empty_note_snapshot();
         snap.id = create_note_id(&mut ids, "dxf-import");

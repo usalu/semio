@@ -269,121 +269,121 @@
           ]
         },
         {
-          "mutationId": "change-ground-temperature-building-surface",
-          "sourceMutationDirectoryName": "🌡️change-ground-temperature",
-          "mutationDirectoryName": "🌡️change-ground-temperature",
+          "mutationId": "change-ground-building",
+          "sourceMutationDirectoryName": "🌡️change-ground-building",
+          "mutationDirectoryName": "🌡️change-ground-building",
           "scenarios": [
             {
-              "id": "change-ground-temperature-building-surface-sets",
+              "id": "change-ground-building-sets",
               "directoryName": "✅️sets"
             },
             {
-              "id": "change-ground-temperature-building-surface-refuses",
+              "id": "change-ground-building-refuses",
               "directoryName": "⛔️refuses"
             }
           ]
         },
         {
-          "mutationId": "change-ground-temperature-shallow",
-          "sourceMutationDirectoryName": "🌱️change-ground-temperature",
-          "mutationDirectoryName": "🌱️change-ground-temperature",
+          "mutationId": "change-ground-shallow",
+          "sourceMutationDirectoryName": "🌱️change-ground-shallow",
+          "mutationDirectoryName": "🌱️change-ground-shallow",
           "scenarios": [
             {
-              "id": "change-ground-temperature-shallow-sets",
+              "id": "change-ground-shallow-sets",
               "directoryName": "✅️sets"
             },
             {
-              "id": "change-ground-temperature-shallow-refuses",
+              "id": "change-ground-shallow-refuses",
               "directoryName": "⛔️refuses"
             }
           ]
         },
         {
-          "mutationId": "change-ground-temperature-deep",
-          "sourceMutationDirectoryName": "⛏️change-ground-temperature",
-          "mutationDirectoryName": "⛏️change-ground-temperature",
+          "mutationId": "change-ground-deep",
+          "sourceMutationDirectoryName": "⛏️change-ground-deep",
+          "mutationDirectoryName": "⛏️change-ground-deep",
           "scenarios": [
             {
-              "id": "change-ground-temperature-deep-sets",
+              "id": "change-ground-deep-sets",
               "directoryName": "✅️sets"
             },
             {
-              "id": "change-ground-temperature-deep-refuses",
+              "id": "change-ground-deep-refuses",
               "directoryName": "⛔️refuses"
             }
           ]
         },
         {
-          "mutationId": "change-run-period-start-month",
-          "sourceMutationDirectoryName": "🛫️change-run-period-start",
-          "mutationDirectoryName": "🛫️change-run-period-start",
+          "mutationId": "change-run-start-month",
+          "sourceMutationDirectoryName": "🛫️change-run-start-month",
+          "mutationDirectoryName": "🛫️change-run-start-month",
           "scenarios": [
             {
-              "id": "change-run-period-start-month-sets",
+              "id": "change-run-start-month-sets",
               "directoryName": "✅️sets"
             },
             {
-              "id": "change-run-period-start-month-refuses",
+              "id": "change-run-start-month-refuses",
               "directoryName": "⛔️refuses"
             }
           ]
         },
         {
-          "mutationId": "change-run-period-start-day",
-          "sourceMutationDirectoryName": "▶️change-run-period-start",
-          "mutationDirectoryName": "▶️change-run-period-start",
+          "mutationId": "change-run-start-day",
+          "sourceMutationDirectoryName": "▶️change-run-start-day",
+          "mutationDirectoryName": "▶️change-run-start-day",
           "scenarios": [
             {
-              "id": "change-run-period-start-day-sets",
+              "id": "change-run-start-day-sets",
               "directoryName": "✅️sets"
             },
             {
-              "id": "change-run-period-start-day-refuses",
+              "id": "change-run-start-day-refuses",
               "directoryName": "⛔️refuses"
             }
           ]
         },
         {
-          "mutationId": "change-run-period-end-month",
-          "sourceMutationDirectoryName": "🛬️change-run-period-end",
-          "mutationDirectoryName": "🛬️change-run-period-end",
+          "mutationId": "change-run-end-month",
+          "sourceMutationDirectoryName": "🛬️change-run-end-month",
+          "mutationDirectoryName": "🛬️change-run-end-month",
           "scenarios": [
             {
-              "id": "change-run-period-end-month-sets",
+              "id": "change-run-end-month-sets",
               "directoryName": "✅️sets"
             },
             {
-              "id": "change-run-period-end-month-refuses",
+              "id": "change-run-end-month-refuses",
               "directoryName": "⛔️refuses"
             }
           ]
         },
         {
-          "mutationId": "change-run-period-end-day",
-          "sourceMutationDirectoryName": "⏹️change-run-period-end",
-          "mutationDirectoryName": "⏹️change-run-period-end",
+          "mutationId": "change-run-end-day",
+          "sourceMutationDirectoryName": "⏹️change-run-end-day",
+          "mutationDirectoryName": "⏹️change-run-end-day",
           "scenarios": [
             {
-              "id": "change-run-period-end-day-sets",
+              "id": "change-run-end-day-sets",
               "directoryName": "✅️sets"
             },
             {
-              "id": "change-run-period-end-day-refuses",
+              "id": "change-run-end-day-refuses",
               "directoryName": "⛔️refuses"
             }
           ]
         },
         {
-          "mutationId": "change-run-period-year",
-          "sourceMutationDirectoryName": "📅️change-run-period-year",
-          "mutationDirectoryName": "📅️change-run-period-year",
+          "mutationId": "change-run-year",
+          "sourceMutationDirectoryName": "📅️change-run-year",
+          "mutationDirectoryName": "📅️change-run-year",
           "scenarios": [
             {
-              "id": "change-run-period-year-sets",
+              "id": "change-run-year-sets",
               "directoryName": "✅️sets"
             },
             {
-              "id": "change-run-period-year-refuses",
+              "id": "change-run-year-refuses",
               "directoryName": "⛔️refuses"
             }
           ]
@@ -4627,14 +4627,14 @@
         "change-site-elevation",
         "change-site-time-zone",
         "change-site-north-axis",
-        "change-ground-temperature-building-surface",
-        "change-ground-temperature-shallow",
-        "change-ground-temperature-deep",
-        "change-run-period-start-month",
-        "change-run-period-start-day",
-        "change-run-period-end-month",
-        "change-run-period-end-day",
-        "change-run-period-year",
+        "change-ground-building",
+        "change-ground-shallow",
+        "change-ground-deep",
+        "change-run-start-month",
+        "change-run-start-day",
+        "change-run-end-month",
+        "change-run-end-day",
+        "change-run-year",
         "replace-airflow-network",
         "add-output-variable",
         "remove-output-variable",
@@ -5077,7 +5077,7 @@
           ]
         },
         {
-          "id": "change-ground-temperature-building-surface",
+          "id": "change-ground-building",
           "capability": "energy-model-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -5086,9 +5086,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-ground-temperature-building-surface",
+            "operation": "change-ground-building",
             "bridgeVersion": 1,
-            "variant": "ChangeGroundTemperatureBuildingSurface"
+            "variant": "ChangeGroundBuilding"
           },
           "oracleRequirements": [
             {
@@ -5098,7 +5098,7 @@
           ]
         },
         {
-          "id": "change-ground-temperature-shallow",
+          "id": "change-ground-shallow",
           "capability": "energy-model-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -5107,9 +5107,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-ground-temperature-shallow",
+            "operation": "change-ground-shallow",
             "bridgeVersion": 1,
-            "variant": "ChangeGroundTemperatureShallow"
+            "variant": "ChangeGroundShallow"
           },
           "oracleRequirements": [
             {
@@ -5119,7 +5119,7 @@
           ]
         },
         {
-          "id": "change-ground-temperature-deep",
+          "id": "change-ground-deep",
           "capability": "energy-model-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -5128,9 +5128,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-ground-temperature-deep",
+            "operation": "change-ground-deep",
             "bridgeVersion": 1,
-            "variant": "ChangeGroundTemperatureDeep"
+            "variant": "ChangeGroundDeep"
           },
           "oracleRequirements": [
             {
@@ -5140,7 +5140,7 @@
           ]
         },
         {
-          "id": "change-run-period-start-month",
+          "id": "change-run-start-month",
           "capability": "energy-model-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -5149,9 +5149,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-run-period-start-month",
+            "operation": "change-run-start-month",
             "bridgeVersion": 1,
-            "variant": "ChangeRunPeriodStartMonth"
+            "variant": "ChangeRunStartMonth"
           },
           "oracleRequirements": [
             {
@@ -5161,7 +5161,7 @@
           ]
         },
         {
-          "id": "change-run-period-start-day",
+          "id": "change-run-start-day",
           "capability": "energy-model-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -5170,9 +5170,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-run-period-start-day",
+            "operation": "change-run-start-day",
             "bridgeVersion": 1,
-            "variant": "ChangeRunPeriodStartDay"
+            "variant": "ChangeRunStartDay"
           },
           "oracleRequirements": [
             {
@@ -5182,7 +5182,7 @@
           ]
         },
         {
-          "id": "change-run-period-end-month",
+          "id": "change-run-end-month",
           "capability": "energy-model-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -5191,9 +5191,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-run-period-end-month",
+            "operation": "change-run-end-month",
             "bridgeVersion": 1,
-            "variant": "ChangeRunPeriodEndMonth"
+            "variant": "ChangeRunEndMonth"
           },
           "oracleRequirements": [
             {
@@ -5203,7 +5203,7 @@
           ]
         },
         {
-          "id": "change-run-period-end-day",
+          "id": "change-run-end-day",
           "capability": "energy-model-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -5212,9 +5212,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-run-period-end-day",
+            "operation": "change-run-end-day",
             "bridgeVersion": 1,
-            "variant": "ChangeRunPeriodEndDay"
+            "variant": "ChangeRunEndDay"
           },
           "oracleRequirements": [
             {
@@ -5224,7 +5224,7 @@
           ]
         },
         {
-          "id": "change-run-period-year",
+          "id": "change-run-year",
           "capability": "energy-model-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -5233,9 +5233,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-run-period-year",
+            "operation": "change-run-year",
             "bridgeVersion": 1,
-            "variant": "ChangeRunPeriodYear"
+            "variant": "ChangeRunYear"
           },
           "oracleRequirements": [
             {

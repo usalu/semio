@@ -91,6 +91,7 @@ Feature: Apply every typed semio DOCUMENT mutation to the real committed memo, a
       | insert-image        | {"mutation":"insertImage","image":{"id":"img2","mime":"image/jpeg","bytes":[255,216,255]}}                                                                                                                                                                                                           |
       | remove-image        | {"mutation":"removeImage","id":"img1"}                                                                                                                                                                                                                                                               |
       | set-image-bytes     | {"mutation":"setImageBytes","id":"img1","mime":"image/gif","bytes":[71,73,70]}                                                                                                                                                                                                                       |
+      | patch-snapshot | {"mutation": "patchSnapshot", "patch": {"operation": "set", "path": "/styles/0/name", "value": "Patched style"}} |
 
   @id-no-mutation-baseline-mutate
   @level-exhaustive
@@ -132,6 +133,7 @@ Feature: Apply every typed semio DOCUMENT mutation to the real committed memo, a
       | insert-image        | {"mutation":"insertImage","image":{"id":"img2","mime":"image/jpeg","bytes":[255,216,255]}}                                                                                                                                                                                                           |
       | remove-image        | {"mutation":"removeImage","id":"img1"}                                                                                                                                                                                                                                                               |
       | set-image-bytes     | {"mutation":"setImageBytes","id":"img1","mime":"image/gif","bytes":[71,73,70]}                                                                                                                                                                                                                       |
+      | patch-snapshot | {"mutation": "patchSnapshot", "patch": {"operation": "set", "path": "/styles/0/name", "value": "Patched style"}} |
 
   @id-no-mutation-baseline-inverse
   @level-exhaustive

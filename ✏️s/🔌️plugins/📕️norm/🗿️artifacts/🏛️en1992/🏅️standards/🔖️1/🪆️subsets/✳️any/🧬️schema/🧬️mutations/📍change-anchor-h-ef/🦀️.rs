@@ -17,7 +17,10 @@ pub struct ChangeAnchorHEf {
 impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeAnchorHEf {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "anchor-h-ef", kind: "change-anchor-h-ef", record: "ChangedChangeAnchorHEf" };
     fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> { super::diff::diff(self, base) }
-    fn inverse(&self, base: &En1992Snapshot) -> Vec<En1992Mutation> { super::inverse::inverse(self, base) }
+    fn inverse(&self, base: &En1992Snapshot) -> Result<Vec<En1992Mutation>, semio_framework_value::ValueError> {
+    Ok({ super::inverse::inverse(self, base)? 
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change effective embedment depth of anchor {}", self.anchor_id), &format!("Effektive Verankerungstiefe von Dübel {} ändern", self.anchor_id))
     }

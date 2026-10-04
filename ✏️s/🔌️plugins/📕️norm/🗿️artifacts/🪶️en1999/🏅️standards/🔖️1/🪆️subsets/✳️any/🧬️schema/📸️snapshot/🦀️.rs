@@ -6,7 +6,7 @@ use framework_schema::ArtifactSchema;
 //#region 🔖️SubjectEntities
 
 /// 🔩 Alloy temper catalogue entry (EN 1999-1-1 Table 3.2 properties resolved at evaluate).
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -17,7 +17,7 @@ pub struct AluminiumMaterial {
 }
 
 /// 🧱 Plate element of an extruded section (b/t classification input).
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -38,7 +38,7 @@ pub struct PlateElement {
 }
 
 /// 📐 Extruded aluminium cross-section.
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -66,7 +66,7 @@ pub struct AluminiumSection {
 ///
 /// Either `source = "udl"` (line loads converted via span/support) or `source = "external"`
 /// (characteristic internal forces from structural analysis).
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -94,8 +94,30 @@ pub struct MemberAction {
     pub m_z_k: f64,
 }
 
+/// 📍️ Support idealisation of a member for characteristic → internal force derivation and the effective buckling length.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub enum SupportCondition {
+    SimplySupported,
+    Continuous,
+    Cantilever,
+}
+
+impl SupportCondition {
+    /// 🏷️ The wire value (`simplySupported` | `continuous` | `cantilever`).
+    pub fn code(self) -> &'static str {
+        match self {
+            Self::SimplySupported => "simplySupported",
+            Self::Continuous => "continuous",
+            Self::Cantilever => "cantilever",
+        }
+    }
+}
+
 /// 🏗️ Aluminium member with buckling lengths and restraints.
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -105,8 +127,7 @@ pub struct AluminiumMember {
     pub material_id: String,
     /// System length L [m] (span for UDL conversion; default L_cr when buckling lengths ≤ 0).
     pub length: f64,
-    /// simplySupported | continuous | cantilever
-    pub support: String,
+    pub support: SupportCondition,
     pub buckling_length_y: f64,
     pub buckling_length_z: f64,
     pub buckling_length_t: f64,
@@ -118,7 +139,7 @@ pub struct AluminiumMember {
 }
 
 /// 🔩 Bolted connection parameters (EN 1999-1-1 §8.5).
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -134,7 +155,7 @@ pub struct BoltGroup {
 }
 
 /// 🔥️ Fillet weld parameters (EN 1999-1-1 §8.6).
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -147,7 +168,7 @@ pub struct WeldGroup {
 }
 
 /// 🔗 Connection (bolted and/or welded) with design forces.
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -165,7 +186,7 @@ pub struct AluminiumConnection {
 }
 
 /// 🔥️ Fire assessment scenario (EN 1999-1-2).
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -177,7 +198,7 @@ pub struct FireScenario {
 }
 
 /// 🔄️ Fatigue detail (EN 1999-1-3).
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -200,7 +221,7 @@ pub struct FatigueDetail {
 }
 
 /// 📄 Cold-formed aluminium sheeting (EN 1999-1-4).
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -219,7 +240,7 @@ pub struct ColdFormedSheet {
 }
 
 /// 🫙 Aluminium shell of revolution (EN 1999-1-5).
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -240,7 +261,7 @@ pub struct AluminiumShell {
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted EN 1999 aluminium-structure subject.
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -363,7 +384,7 @@ impl En1999Snapshot {
                 section_id: "sec-i120".into(),
                 material_id: "mat-6082".into(),
                 length: 6.0,
-                support: "simplySupported".into(),
+                support: SupportCondition::SimplySupported,
                 buckling_length_y: 1.5,
                 buckling_length_z: 1.5,
                 buckling_length_t: 1.5,
@@ -394,7 +415,7 @@ impl En1999Snapshot {
                 section_id: "sec-chs168".into(),
                 material_id: "mat-6082".into(),
                 length: 3.0,
-                support: "cantilever".into(),
+                support: SupportCondition::Cantilever,
                 buckling_length_y: 3.0,
                 buckling_length_z: 3.0,
                 buckling_length_t: 3.0,
@@ -517,7 +538,7 @@ impl En1999Snapshot {
                 section_id: "sec-weak".into(),
                 material_id: "mat-6060".into(),
                 length: 8.0,
-                support: "simplySupported".into(),
+                support: SupportCondition::SimplySupported,
                 buckling_length_y: 8.0,
                 buckling_length_z: 8.0,
                 buckling_length_t: 8.0,
@@ -672,11 +693,11 @@ impl En1999Snapshot {
 
 //#region 🌉️ExternalCodecBridge
 pub fn encode_en1999_snapshot_json(snapshot: &En1999Snapshot) -> String {
-    pack::json::to_json_string(snapshot)
+    semio_framework_pack_json::to_json_string(snapshot)
 }
 
 pub fn decode_en1999_snapshot_json(text: &str) -> Result<En1999Snapshot, String> {
-    pack::json::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 
 pub fn decode_en1999_dsl(text: &str) -> Result<En1999Snapshot, String> {

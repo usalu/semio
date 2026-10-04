@@ -48,8 +48,8 @@ pub(crate) mod context {
     /// actually settles into the stores. It boots on whatever `Fem3dPlayApp::initial_snapshot`
     /// boots on (the `concrete-forest` example); [`fem3d_demo_app`] loads the `demo` fixture.
     pub fn fem3d_app() -> Fem3dApp {
-        let mut app = semio_framework_plugin::resolve_ready(new_app_with_registry::<EditorApp<Fem3dPlayApp>>(manifest));
-        semio_framework_plugin::resolve_ready(app.bind_instance_id(FEM3D_TEST_INSTANCE));
+        let mut app = ::semio_framework_async::poll::resolve_ready(new_app_with_registry::<EditorApp<Fem3dPlayApp>>(manifest));
+        ::semio_framework_async::poll::resolve_ready(app.bind_instance_id(FEM3D_TEST_INSTANCE));
         Fem3dApp(app)
     }
 
@@ -104,7 +104,7 @@ pub(crate) mod context {
         for effect in &result.requested_effects {
             if let semio_framework_plugin::Effect::LoadDocument { pack, spr } = effect {
                 let files = store::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
-                app.load_document_pack(&files).await.expect("test host applies load-document effect");
+                semio_framework_plugin::artifact_app_laws::load_document(app, &files).await.expect("test host applies load-document effect");
             }
         }
         result
@@ -141,7 +141,7 @@ pub(crate) mod context {
 
     pub fn render(app: &mut Fem3dApp, body_key: &str) -> String {
         let kind = if body_key == edit::windows::model::FEM3D_BODY_MODEL { edit::windows::model::FEM3D_WINDOW_MODEL } else { edit::windows::results::FEM3D_WINDOW_RESULTS };
-        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::resolve_ready(app.render(body_key, None, &view(kind))).expect("render")).expect("fixture projection")
+        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(::semio_framework_async::poll::resolve_ready(app.render(body_key, None, &view(kind))).expect("render")).expect("fixture projection")
     }
 }
 
@@ -150,7 +150,7 @@ use super::*;
 //#region 🧪️RetainedCommandEnvelope
 #[test]
 fn fem3d_window_config_retained_command_fixture_matches_exact_routes_and_value_codec_boundaries() {
-    let fixture: dsl::DslValue = dsl::json::from_json_str(include_str!("../../🧫️fixtures/🚧️retained-command-limits/🔣️.json")).expect("language-neutral retained fixture");
+    let fixture: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(include_str!("../../🧫️fixtures/🚧️retained-command-limits/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-neutral retained fixture");
     let migrated: Vec<&str> = fixture["routes"].as_array().expect("routes").iter().filter(|row| row["disposition"].as_str() == Some("Migrated")).map(|row| row["id"].as_str().expect("route id")).collect();
     assert_eq!(migrated, FEM3D_RETAINED_TOOL_IDS);
     assert_eq!(FEM3D_RETAINED_PUBLICATION_CONTRACTS.len(), migrated.len());
@@ -443,7 +443,7 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
 //#region 🔖️ManifestSanity
 #[semio_framework_async_macros::async_test]
 async fn the_manifest_stitches_every_taxonomy_node() {
-    let json = dsl::json::to_json_string(&create_fem3d_app());
+    let json = semio_framework_pack_json::to_json_string(&create_fem3d_app());
     for id in [window_model::FEM3D_WINDOW_MODEL, window_results::FEM3D_WINDOW_RESULTS] {
         assert!(json.contains(id), "window kind {id} missing from the manifest: {json}");
     }
@@ -529,7 +529,7 @@ async fn export_media_results_out_returns_solved_json_for_every_case_3d() {
     assert_eq!(media.media_type.form, MediaForm::Value);
     let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected a Structured payload") };
     assert_eq!(schema, "computation.fem3d");
-    let value = dsl::json::parse(&json).expect("results:out payload is valid JSON");
+    let value = semio_framework_pack_json::parse(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("results:out payload is valid JSON");
     assert!(value.get("dead").is_some(), "expected the example fixture's dead case in the results map: {json}");
     assert!(value["dead"].get("displacements").is_some(), "expected a displacements array: {json}");
 }
@@ -553,7 +553,7 @@ async fn import_media_geometry_in_adds_a_new_solid_3d() {
     let snapshot = app.snapshot().expect("snapshot");
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
-    let json = dsl::json!({
+    let json = semio_framework_pack_json::json!({
         "outline": [[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]],
         "holes": [],
         "baseZ": 0.5,
@@ -616,10 +616,10 @@ async fn fem3d_io_declares_geometry_in_and_results_out_ports() {
 #[semio_framework_async_macros::async_test]
 async fn fem3d_camera_scene_encoding_preserves_the_typed_pose() {
     let camera = crate::viewport::INITIAL;
-    let decoded = dsl::json::from_json_str::<crate::Viewport3dOrbit>(&crate::viewport::scene_camera_json(&camera)).unwrap();
+    let decoded = semio_framework_pack_json::from_json_str::<crate::Viewport3dOrbit>(&crate::viewport::scene_camera_json(&camera), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(decoded, camera);
     let custom = crate::Viewport3dOrbit { position: [8.0, -3.0, 5.0], target: [0.0; 3], zoom: 1.25, up: None };
-    assert_eq!(dsl::json::from_json_str::<crate::Viewport3dOrbit>(&crate::viewport::scene_camera_json(&custom)).unwrap(), custom);
+    assert_eq!(semio_framework_pack_json::from_json_str::<crate::Viewport3dOrbit>(&crate::viewport::scene_camera_json(&custom), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(), custom);
 }
 //#endregion 🎬️SceneRender
 use store::ArtifactStoreOneItemPreparationFactory;

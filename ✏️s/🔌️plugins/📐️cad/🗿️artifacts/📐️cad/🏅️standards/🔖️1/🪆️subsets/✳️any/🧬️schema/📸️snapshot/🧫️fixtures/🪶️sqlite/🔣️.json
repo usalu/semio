@@ -222,11 +222,72 @@
     "UPDATE cad_node SET ordinal=0 WHERE ordinal=1",
     "ALTER TABLE cad_node ADD COLUMN accidental_state TEXT"
   ],
+  "ownership": {
+    "semanticBudget": "completeSqlScalarBytes",
+    "backingBudget": "cumulativeSystemAllocatorRequests",
+    "phases": [
+      "projectSnapshot",
+      "reconstructSnapshot"
+    ],
+    "checkpointRows": 256,
+    "refusedBackingBytes": 0,
+    "callerOptions": "capturedOnce",
+    "malformedRefusal": "invalidValue"
+  },
   "control": {
     "collectionLength": 2048,
     "largeCharacters": 65537,
     "maxOwnedBytes": 200000,
     "tinyFileBytes": 4096,
     "cancelAt": 256
+  },
+  "referenceIndex": {
+    "nativeMapShape": "mapOfOrderedReferences",
+    "keyComparison": "literalUtf8Bytes",
+    "duplicateKeyRefusal": "invalidValue",
+    "aliasRole": "localRelationshipOnly",
+    "keys": [
+      "😀",
+      "",
+      "2",
+      "10",
+      "\u0000",
+      "__proto__",
+      ""
+    ],
+    "orderedKeys": [
+      "",
+      "\u0000",
+      "10",
+      "2",
+      "__proto__",
+      "",
+      "😀"
+    ]
+  },
+  "intrinsicGeometry": {
+    "accepted": [
+      "structuredText",
+      "intrinsicText",
+      "intrinsicBytes"
+    ],
+    "refused": [
+      "intrinsicNull",
+      "addressedBinary"
+    ],
+    "childPublication": "unavailable",
+    "positionCount": 6,
+    "bounds": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        3,
+        3,
+        2
+      ]
+    ]
   }
 }

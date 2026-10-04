@@ -1,0 +1,37 @@
+{
+  "at": "2026-10-03T19:18:22.593Z",
+  "results": [
+    {
+      "name": "@semio-tech/puzzle-3d-rs-compute-ownership",
+      "code": 0,
+      "stdoutCallbacks": 10,
+      "stderrCallbacks": 1,
+      "pass": 3,
+      "fail": 0
+    },
+    {
+      "name": "@semio-tech/framework-plugin-compute-ownership",
+      "code": 0,
+      "stdoutCallbacks": 9,
+      "stderrCallbacks": 2,
+      "pass": 3,
+      "fail": 0
+    },
+    {
+      "name": "@semio-tech/framework-plugin-host-fixture-compute-ownership",
+      "code": 0,
+      "stdoutCallbacks": 9,
+      "stderrCallbacks": 4,
+      "pass": 3,
+      "fail": 0
+    },
+    {
+      "name": "@semio-tech/space-plugin-compute-ownership",
+      "code": 0,
+      "stdoutCallbacks": 10,
+      "stderrCallbacks": 1,
+      "pass": 3,
+      "fail": 0
+    }
+  ]
+}

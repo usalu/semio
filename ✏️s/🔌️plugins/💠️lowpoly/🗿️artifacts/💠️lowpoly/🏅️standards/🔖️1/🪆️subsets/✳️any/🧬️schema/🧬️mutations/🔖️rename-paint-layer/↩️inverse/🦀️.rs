@@ -4,10 +4,13 @@ use super::RenamePaintLayer;
 use crate::{LowpolyMutation, LowpolySnapshot};
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &RenamePaintLayer, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {
+pub fn inverse(payload: &RenamePaintLayer, base: &LowpolySnapshot) -> Result<Vec<LowpolyMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(layer) = base.objects.iter().find(|object| object.id == payload.object_id).and_then(|object| object.paint_layers.get(payload.index)) else {
         return Vec::new();
     };
     vec![LowpolyMutation::RenamePaintLayer(RenamePaintLayer { object_id: payload.object_id.clone(), index: payload.index, new_name: layer.name.clone() })]
+
+    })())
 }
 //#endregion 🔖️Inverse

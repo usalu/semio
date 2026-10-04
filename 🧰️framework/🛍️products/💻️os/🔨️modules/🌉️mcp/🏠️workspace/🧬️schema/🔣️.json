@@ -148,7 +148,7 @@
           "type": "object",
           "additionalProperties": false,
           "required": ["appChannelVersion"],
-          "properties": { "appChannelVersion": { "const": 20 } }
+          "properties": { "appChannelVersion": { "const": 21 } }
         }
       }
     },
@@ -209,8 +209,8 @@
       }
     },
     "SessionActivationPhaseV1": {
-      "description": "One phase of activating a plugin session and reading its document: the component is resolved, read, content-hashed, its compiled code loaded or compiled in an isolated worker, its guest opened, then the document read. Every job that activates a session reports these (inference_run's artifact binding, artifact_create). A phase a warm session already passed is skipped, never reported twice; every phase is interruptible.",
-      "enum": ["resolving-component", "reading-component", "hashing-component", "loading-compiled-code", "compiling-component", "opening-guest", "reading-document"]
+      "description": "One phase of activating a plugin session and reading its document: the component is resolved, read, content-hashed, its compiled code loaded or compiled in an isolated worker, its guest opened, a bound hub document loaded into it through the stepped archive load (its polled completed/total is the phase fraction), then the document read. Every job that activates a session reports these (inference_run's artifact binding, artifact_create). A phase a warm session already passed is skipped, never reported twice; every phase is interruptible.",
+      "enum": ["resolving-component", "reading-component", "hashing-component", "loading-compiled-code", "compiling-component", "opening-guest", "loading-document", "reading-document"]
     },
     "SessionActivationPhaseRowV1": {
       "type": "object",
@@ -223,8 +223,8 @@
     },
     "SessionActivationPhasesV1": {
       "type": "array",
-      "minItems": 7,
-      "maxItems": 7,
+      "minItems": 8,
+      "maxItems": 8,
       "items": { "$ref": "#/$defs/SessionActivationPhaseRowV1" }
     },
     "ComponentCompileCancellationLawV1": {

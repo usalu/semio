@@ -274,8 +274,8 @@
         },
         {
           "mutationId": "insert-tank",
-          "sourceMutationDirectoryName": "🛢insert-tank",
-          "mutationDirectoryName": "🛢insert-tank",
+          "sourceMutationDirectoryName": "🛢️insert-tank",
+          "mutationDirectoryName": "🛢️insert-tank",
           "scenarios": [
             {
               "id": "apply",

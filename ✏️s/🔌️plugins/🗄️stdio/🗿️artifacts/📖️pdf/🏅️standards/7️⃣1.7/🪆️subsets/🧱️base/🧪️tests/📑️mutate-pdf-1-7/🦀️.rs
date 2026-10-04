@@ -147,7 +147,7 @@ mod subject {
         let base = decode_pdf(&input).map_err(|error| format!("decode_pdf failed: {error:?}"))?;
         let spec = ctx.doc_json()?;
         let mutation = mutation_from_spec(&spec)?;
-        let undo = mutation_inverse(&mutation, &base);
+        let undo = mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
         let mut snapshot = base;
         apply_pdf_mutation(&mut snapshot, &mutation);
         for operation in undo {

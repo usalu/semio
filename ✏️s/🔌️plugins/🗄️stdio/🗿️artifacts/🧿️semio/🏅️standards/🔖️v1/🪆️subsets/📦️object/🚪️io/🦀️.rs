@@ -56,11 +56,11 @@ pub mod derived_composition {
     pub struct SemioObjectValidator;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn wrong_kind(field: &str, expected_subset: &str, target: &store::os_io::ArtifactRef) -> Option<dsl::Diagnostic> {
+    fn wrong_kind(field: &str, expected_subset: &str, target: &store::os_io::ArtifactRef) -> Option<semio_framework_diagnostic::Diagnostic> {
         if target.dialect.artifact_kind != "s.stdio.semio" || target.dialect.subset != expected_subset {
-            Some(dsl::Diagnostic::error(
+            Some(semio_framework_diagnostic::Diagnostic::error(
                 "stdio.semio_object.validate-child-kind-mismatch",
-                dsl::TextSpan::at(1, 1),
+                semio_framework_diagnostic::TextSpan::at(1, 1),
                 format!("SemioObjectValidator: `{field}` handle targets {}@{}/{}, expected kind s.stdio.semio subset {expected_subset}", target.dialect.artifact_kind, target.dialect.standard, target.dialect.subset),
             ))
         } else {
@@ -70,13 +70,13 @@ pub mod derived_composition {
 
     impl SubsetValidator for SemioObjectValidator {
         const DIALECT: Dialect = DIALECT;
-        async fn validate(payload: &IoPayload) -> Vec<dsl::Diagnostic> {
+        async fn validate(payload: &IoPayload) -> Vec<semio_framework_diagnostic::Diagnostic> {
             let decoded = match payload {
                 IoPayload::Binary(bytes) => <SemioObjectSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
                 IoPayload::Text(text) => <SemioObjectSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
             };
             let Some(snapshot) = decoded else {
-                return vec![dsl::Diagnostic::error("stdio.semio_object.validate-decode-failed", dsl::TextSpan::at(1, 1), "SemioObjectValidator: payload did not decode as a SemioObjectSnapshot".to_string())];
+                return vec![semio_framework_diagnostic::Diagnostic::error("stdio.semio_object.validate-decode-failed", semio_framework_diagnostic::TextSpan::at(1, 1), "SemioObjectValidator: payload did not decode as a SemioObjectSnapshot".to_string())];
             };
             let mut diagnostics = Vec::new();
             if let Some(brep) = &snapshot.brep {

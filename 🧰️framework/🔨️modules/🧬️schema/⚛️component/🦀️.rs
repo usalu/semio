@@ -1,13 +1,11 @@
 //! 📋️ Canonical schema versions, document projection and owned JSON validation.
 
 use crate::SchemaError;
-use pack::json::{parse as parse_json, to_string as json_to_string, JsonError, Value};
+use semio_framework_pack_json::{parse as parse_json, to_string as json_to_string, JsonError, Value};
 use pack::{content_hash, ContentHash};
 use std::collections::HashMap;
 
-pub use semio_framework_schema_state::StateClass;
-use semio_framework_schema_state::parse_state_class_kebab;
-pub use semio_framework_schema_composition::{ArtifactCompositionFields, ChildFieldRefs, ChildRefVisitor, ChildSlotSpec, LinkSlotSpec};
+use semio_framework_schema_state::{StateClass, parse_state_class_kebab};
 pub use semio_framework_schema_derive::ArtifactSchema;
 use semio_framework_schema_registry::{
     ArtifactSchemaDescriptor, ArtifactInferenceDescriptor, AppSchemaDescriptor, with_artifact_schema_catalog, with_artifact_inference_catalog, with_app_schema_catalog, register_referenced_schema_documents, register_scope_facet_leaves, register_scope_schema_exports, registered_referenced_schema_documents, resolve_schema_export, schema_export_catalog_entries, scope_schema_exports_registered, scope_schema_facets_registered, with_schema_export_registry, FacetLeaves, SchemaExport, SchemaExportEntries, SchemaExportEntry, SchemaExportRegistry,
@@ -130,7 +128,7 @@ pub struct SchemaVersion(pub ContentHash);
 
 /// 🧬️ Computes a whitespace-independent version from an owned-parser canonical JSON leaf.
 pub fn schema_version(body: &str) -> Result<SchemaVersion, JsonError> {
-    let canonical = if body.trim().is_empty() { String::new() } else { json_to_string(&canonical_schema_value(parse_json(body)?)) };
+    let canonical = if body.trim().is_empty() { String::new() } else { json_to_string(&canonical_schema_value(parse_json(body, semio_framework_pack_json::JsonMemberPolicy::Reject)?)) };
     Ok(SchemaVersion(content_hash(canonical.as_bytes())))
 }
 
@@ -140,7 +138,7 @@ fn canonical_schema_value(value: Value) -> Value {
         Value::Object(object) => {
             let mut entries: Vec<_> = object.iter().map(|(key, value)| (key.to_string(), canonical_schema_value(value.clone()))).collect();
             entries.sort_by(|left, right| left.0.cmp(&right.0));
-            pack::json::object(entries)
+            semio_framework_pack_json::object(entries)
         }
         value => value,
     }
@@ -166,7 +164,7 @@ pub fn config_schema_version(descriptor: &AppSchemaDescriptor) -> Result<SchemaV
 pub fn presence_schema_version(descriptor: &AppSchemaDescriptor) -> Result<SchemaVersion, JsonError> { schema_version(descriptor.presence.json_schema) }
 
 fn parse_normative_json_leaf(descriptor_id: &str, facet: &str, body: &str) -> Value {
-    parse_json(body).unwrap_or_else(|error| panic!("{descriptor_id}: {facet} json_schema parse: {error}"))
+    parse_json(body, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|error| panic!("{descriptor_id}: {facet} json_schema parse: {error}"))
 }
 
 fn graphql_leaf_with_preamble(body: &str) -> String {
@@ -251,7 +249,7 @@ pub async fn validate_registered_app_descriptor(descriptor: &AppSchemaDescriptor
         if leaves.json_schema.trim().is_empty() {
             continue;
         }
-        let schema = parse_json(leaves.json_schema).unwrap_or_else(|error| panic!("{}: {facet} json_schema parse: {error}", descriptor.id));
+        let schema = parse_json(leaves.json_schema, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|error| panic!("{}: {facet} json_schema parse: {error}", descriptor.id));
         assert_eq!(schema.get("type").and_then(Value::as_str), Some("object"), "{}: {facet} must be an object schema", descriptor.id);
         let properties = schema.get("properties").and_then(Value::as_object).unwrap_or_else(|| panic!("{}: {facet} properties object required", descriptor.id));
         for (name, prop) in properties {
@@ -292,7 +290,7 @@ pub fn structural_validator_in(registry: &SchemaExportRegistry, scope: &str, exp
     let mut documents: std::collections::BTreeMap<String, &'static str> = std::collections::BTreeMap::new();
     for entry in registry.entries().filter(|entry| entry.format == SchemaFormat::JsonSchema) {
         let Ok(sibling) = registry.resolve(entry.scope, entry.export, SchemaFormat::JsonSchema) else { continue };
-        let Some(id) = parse_json(sibling).ok().and_then(|document| document.get("$id").and_then(Value::as_str).map(str::to_string)) else { continue };
+        let Some(id) = parse_json(sibling, semio_framework_pack_json::JsonMemberPolicy::Reject).ok().and_then(|document| document.get("$id").and_then(Value::as_str).map(str::to_string)) else { continue };
         match documents.insert(id.clone(), sibling) {
             Some(established) if established != sibling => return Err(SchemaBoundaryError::Schema(SchemaError::Validation(format!("two schema leaves declare `$id` {id}")))),
             _ => {}

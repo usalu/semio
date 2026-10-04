@@ -13,6 +13,6 @@ fn set_frame_layer_moves_a_frame_and_inverse_restores_it() {
     assert_eq!(frame.layer_id(), "layer-2");
     assert!(next.pages[0].layers.iter().find(|layer| layer.id == "layer-2").unwrap().object_ids.iter().any(|id| id == "frame-1"));
     assert!(next.pages[0].layers.iter().find(|layer| layer.id == "layer-1").unwrap().object_ids.iter().all(|id| id != "frame-1"));
-    let restored = mutation.inverse(&created)[0].diff(&next).diff().apply(&next).expect("inverse");
+    let restored = mutation.inverse(&created).expect("valid retained mutation inverse fixture")[0].diff(&next).diff().apply(&next).expect("inverse");
     assert_eq!(restored.pages[0].frames.iter().find(|frame| frame.id() == "frame-1").unwrap().layer_id(), "layer-1");
 }

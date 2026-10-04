@@ -6,7 +6,8 @@ use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 
 //#region 🔖️Inverse
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(payload: &super::MoveVertex, base: &SemioMeshSnapshot) -> Vec<SemioMeshMutation> {
+pub fn inverse(payload: &super::MoveVertex, base: &SemioMeshSnapshot) -> Result<Vec<SemioMeshMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(primitive) = primitive_at(base, &payload.mesh_id, &payload.primitive_id) else {
         return Vec::new();
     };
@@ -14,5 +15,7 @@ pub fn inverse(payload: &super::MoveVertex, base: &SemioMeshSnapshot) -> Vec<Sem
         return Vec::new();
     };
     vec![SemioMeshMutation::MoveVertex(super::MoveVertex { mesh_id: payload.mesh_id.clone(), primitive_id: payload.primitive_id.clone(), vertex_index: payload.vertex_index, new_point: old_point })]
+
+    })())
 }
 //#endregion 🔖️Inverse

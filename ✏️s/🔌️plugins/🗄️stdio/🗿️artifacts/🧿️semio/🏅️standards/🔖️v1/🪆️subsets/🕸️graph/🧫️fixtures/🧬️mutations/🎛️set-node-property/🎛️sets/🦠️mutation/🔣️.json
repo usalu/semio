@@ -1,0 +1,12 @@
+{
+  "SetNodeProperty": {
+    "node_id": {
+      "value": "a"
+    },
+    "key": "colour",
+    "value": {
+      "kind": "str",
+      "value": "blue"
+    }
+  }
+}

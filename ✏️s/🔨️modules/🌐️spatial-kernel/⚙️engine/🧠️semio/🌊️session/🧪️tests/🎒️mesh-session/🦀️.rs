@@ -25,7 +25,7 @@ fn a_real_tessellated_sphere_halves_the_wire_at_every_lod() {
                 other => panic!("unexpected tessellation outcome: {other:?}"),
             }
         };
-        let json_bytes = semio_framework_os_flow::os_pack::json::to_json_string(&mesh).len();
+        let json_bytes = semio_framework_pack_json::to_json_string(&mesh).len();
         let body = encode_mesh_pack(&mesh).expect("encode");
         let base64 = encode_base64(&body);
         let chunks = chunk_mesh_base64(&base64);

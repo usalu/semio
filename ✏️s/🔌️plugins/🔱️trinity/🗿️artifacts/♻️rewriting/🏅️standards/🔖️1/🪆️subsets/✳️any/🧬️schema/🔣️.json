@@ -1,36 +1,124 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/trinity/rewriting/artifact.json",
-  "title": "RewritingArtifact",
+  "title": "Rewriting Artifact",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "beforeFixtureJson",
-    "lhsJson",
-    "rhsJson",
+    "workingGraph",
+    "lhs",
+    "rhs",
     "parameterBindings",
     "ruleLayout"
   ],
   "properties": {
-    "beforeFixtureJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
+    "workingGraph": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/jack/snapshot.json",
+      "x-semio-state": "artifact",
+      "x-semio-child-kind": "s.stdio.semio"
+    },
+    "lhs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pattern"
+      ],
+      "properties": {
+        "pattern": {
+          "$ref": "#/$defs/Pattern"
+        },
+        "whereClause": {
+          "type": "string"
+        }
+      },
       "x-semio-state": "artifact"
     },
-    "lhsJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
-      "x-semio-state": "artifact"
-    },
-    "rhsJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
+    "rhs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "create",
+        "delete",
+        "set",
+        "merge",
+        "parameters"
+      ],
+      "properties": {
+        "create": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Pattern"
+          }
+        },
+        "delete": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "set": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "var",
+              "prop",
+              "value"
+            ],
+            "properties": {
+              "var": {
+                "type": "string"
+              },
+              "prop": {
+                "type": "string"
+              },
+              "value": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/graph/manifest/property-value.json"
+              }
+            }
+          }
+        },
+        "merge": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Pattern"
+          }
+        },
+        "parameters": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "kind",
+              "default"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "string",
+                  "number",
+                  "boolean"
+                ]
+              },
+              "default": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/graph/manifest/property-value.json"
+              }
+            }
+          }
+        }
+      },
       "x-semio-state": "artifact"
     },
     "parameterBindings": {
       "type": "object",
       "additionalProperties": {
-        "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/DslValue"
+        "$ref": "https://json.schemas.assets.semio-tech.com/framework/graph/manifest/property-value.json"
       },
       "x-semio-state": "artifact"
     },
@@ -43,8 +131,35 @@
     }
   },
   "$defs": {
+    "Pattern": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "leftVar",
+        "leftKind"
+      ],
+      "properties": {
+        "leftVar": {
+          "type": "string"
+        },
+        "leftKind": {
+          "type": "string"
+        },
+        "edgeVar": {
+          "type": "string"
+        },
+        "edgeKind": {
+          "type": "string"
+        },
+        "rightVar": {
+          "type": "string"
+        },
+        "rightKind": {
+          "type": "string"
+        }
+      }
+    },
     "LayoutPoint": {
-      "title": "LayoutPoint",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -53,12 +168,23 @@
       ],
       "properties": {
         "x": {
-          "type": "number",
-          "format": "double"
+          "$ref": "#/$defs/Binary64"
         },
         "y": {
-          "type": "number",
-          "format": "double"
+          "$ref": "#/$defs/Binary64"
+        }
+      }
+    },
+    "Binary64": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bits"
+      ],
+      "properties": {
+        "bits": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{16}$"
         }
       }
     }

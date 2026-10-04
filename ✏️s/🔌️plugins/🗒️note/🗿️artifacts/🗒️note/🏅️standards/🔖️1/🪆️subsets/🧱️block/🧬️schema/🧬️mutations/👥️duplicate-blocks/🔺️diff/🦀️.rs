@@ -31,7 +31,7 @@ pub fn diff(payload: &DuplicateBlocks, base: &NoteSnapshot) -> protocol::Mutatio
     if missing_sources.is_empty() {
         outcome
     } else {
-        outcome.absorb_messages([protocol::MutationMessage::warn("mutation.partial", format!("{} of {} source block(s) did not exist and were skipped.", missing_sources.len(), payload.source_ids.len())).at(missing_sources)])
+        outcome.absorb_messages([protocol::MutationMessage::warning("mutation.partial", format!("{} of {} source block(s) did not exist and were skipped.", missing_sources.len(), payload.source_ids.len())).at(missing_sources)])
     }
 }
 //#endregion 🔖️Diff

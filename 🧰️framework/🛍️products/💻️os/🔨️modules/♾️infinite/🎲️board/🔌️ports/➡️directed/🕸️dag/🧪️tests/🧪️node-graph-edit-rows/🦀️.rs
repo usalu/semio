@@ -42,9 +42,9 @@ fn every_journal_edit_encodes_as_the_row_the_fixture_accepts() {
     let journalled: Vec<Value> = fixture["accepted"].as_array().expect("accepted rows").iter().map(|case| case["row"].clone()).filter(|row| journal_edit(row).is_some()).collect();
     assert_eq!(journalled.len(), 6, "connect, disconnect, move, setSlider and both port sides");
     let edits: Vec<DagGraphEdit> = journalled.iter().filter_map(journal_edit).collect();
-    let encoded: Value = serde_json::from_str(&dag_graph_edit_rows_json(edits)).expect("rows json");
+    let encoded: Value = serde_json::from_str(&dag_graph_edit_rows_json(&edits, None)).expect("rows json");
     assert_eq!(normalized(&encoded), normalized(&serde_json::json!({ "operations": journalled })));
-    assert_eq!(dag_graph_edit_rows_json(Vec::new()), r#"{"operations":[]}"#, "an empty journal is no row");
+    assert_eq!(dag_graph_edit_rows_json(&[], None), r#"{"operations":[]}"#, "an empty journal is no row");
 }
 
 fn node(id: &str, x: f64, y: f64) -> DagNodeSpec {
@@ -65,7 +65,8 @@ fn host(nodes: Vec<DagNodeSpec>) -> DagHost {
 fn moves_since_a_press_are_one_record_per_distinct_offset() {
     let mut host = host(vec![node("a", 0.0, 0.0), node("b", 100.0, 0.0), node("c", 200.0, 0.0), node("d", 300.0, 0.0)]);
     let baseline = host.node_positions();
-    assert!(host.journal_moves_since("node-drag:1", &baseline) && host.take_graph_edits().is_empty(), "nothing moved");
+    host.journal_moves_since("node-drag:1", &baseline).expect("unchanged gesture fits the journal");
+    assert!(host.take_graph_edits().is_empty(), "nothing moved");
     let moved = [("a", 10.0, 5.0), ("b", 110.0, 5.0), ("c", 200.0, -40.0)];
     for (id, x, y) in moved {
         let node = host.host_snapshot.nodes.iter_mut().find(|node| node.id == id).expect("node");
@@ -73,7 +74,7 @@ fn moves_since_a_press_are_one_record_per_distinct_offset() {
     }
     let without_d: Vec<(String, f64, f64)> = baseline.into_iter().filter(|(id, _, _)| id != "d").collect();
     host.host_snapshot.nodes.iter_mut().find(|node| node.id == "d").expect("d").x = 999.0;
-    assert!(host.journal_moves_since("node-drag:2", &without_d));
+    host.journal_moves_since("node-drag:2", &without_d).expect("moved gesture fits the journal");
     assert_eq!(
         host.take_graph_edits(),
         vec![
@@ -87,7 +88,53 @@ fn moves_since_a_press_are_one_record_per_distinct_offset() {
 #[test]
 fn an_inserted_port_is_journalled_once() {
     let mut host = host(vec![node("a", 0.0, 0.0)]);
-    assert!(host.journal_port_insert("a".into(), DagPortSide::Input, 2));
-    assert!(host.journal_port_insert("a".into(), DagPortSide::Input, 2), "a duplicate is accepted and dropped");
+    host.journal_port_insert("a".into(), DagPortSide::Input, 2);
+    host.journal_port_insert("a".into(), DagPortSide::Input, 2);
+    assert_eq!(host.take_journal_refusal(), None, "a duplicate is accepted and dropped");
     assert_eq!(host.take_graph_edits(), vec![DagGraphEdit::InsertPort { node_id: "a".into(), side: DagPortSide::Input, index: 2 }]);
+}
+
+/// 🪜️ `count` nodes in a row, each to be moved by its own offset — what an align of `count` nodes journals.
+fn spread_and_move(count: usize) -> (DagHost, Vec<(String, f64, f64)>) {
+    let mut host = host((0..count).map(|index| node(&format!("n{index}"), index as f64 * 100.0, 0.0)).collect());
+    let baseline = host.node_positions();
+    for (index, node) in host.host_snapshot.nodes.iter_mut().enumerate() {
+        node.y = index as f64 + 1.0;
+    }
+    (host, baseline)
+}
+
+/// ⚖️ LAW (audit F1): a 200-node align — 200 distinct offsets — journals whole as 200 `move` rows in one answer; a gesture
+/// whose rows outgrow one dispatch ([`DAG_GRAPH_EDIT_CAPACITY`]) is refused whole: nothing is journalled (not even the
+/// press's port row), the refusal is answered, and restoring the baseline puts every node back — no row is ever dropped.
+#[test]
+fn a_two_hundred_node_gesture_journals_whole_and_an_oversized_one_is_refused_whole() {
+    let (mut fits, baseline) = spread_and_move(200);
+    fits.journal_moves_since("node-drag:7", &baseline).expect("200 rows fit one dispatch");
+    let edits = fits.take_graph_edits();
+    assert_eq!(edits.len(), 200, "one row per distinct offset");
+    let answer: Value = serde_json::from_str(&dag_graph_edit_rows_json(&edits, None)).expect("rows json");
+    assert_eq!(answer["operations"].as_array().map(Vec::len), Some(200));
+    let (mut oversized, baseline) = spread_and_move(DAG_GRAPH_EDIT_CAPACITY);
+    oversized.journal_port_insert("n0".into(), DagPortSide::Input, 0);
+    let refusal = DagJournalRefusal { rows: DAG_GRAPH_EDIT_CAPACITY + 1, limit: DAG_GRAPH_EDIT_CAPACITY };
+    assert_eq!(oversized.journal_moves_since("node-drag:8", &baseline), Err(refusal));
+    assert!(oversized.take_graph_edits().is_empty(), "a refused gesture journals nothing");
+    assert_eq!(oversized.take_journal_refusal(), Some(refusal), "the refusal is answered once");
+    assert_eq!(oversized.take_journal_refusal(), None);
+    oversized.restore_node_positions(&baseline);
+    assert_eq!(oversized.node_positions(), baseline, "the refused gesture leaves every node where it stood");
+    let refused: Value = serde_json::from_str(&dag_graph_edit_rows_json(&[], Some(refusal))).expect("refusal json");
+    assert_eq!(normalized(&refused), normalized(&serde_json::json!({ "operations": [], "refused": { "rows": 257, "limit": 256 } })));
+}
+
+/// ⚖️ LAW (audit F2): the string census a bounded writer prices its credits from names every field and text value the row
+/// encoder writes, in writing order.
+#[test]
+fn the_row_string_census_names_every_written_field_and_text() {
+    let edits = vec![
+        DagGraphEdit::Move { gesture_id: "node-drag:1".into(), node_ids: vec!["a".into(), "b".into()], dx: 1.0, dy: 2.0 },
+        DagGraphEdit::InsertPort { node_id: "a".into(), side: DagPortSide::Output, index: 3 },
+    ];
+    assert_eq!(dag_graph_edit_row_strings(&edits), vec!["operation", "move", "gestureId", "node-drag:1", "nodeIds", "a", "b", "dx", "dy", "operation", "insertPort", "nodeId", "a", "side", "output", "index"]);
 }

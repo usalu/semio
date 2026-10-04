@@ -4,7 +4,10 @@ use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
 use crate::Generation2dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &CreateGeneration, _base: &Generation2dSnapshot) -> Vec<Generation2dMutation> {
+pub fn inverse(payload: &CreateGeneration, _base: &Generation2dSnapshot) -> Result<Vec<Generation2dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![crate::standards::v1::subsets::any::schema::mutations::delete_generation::delete_generation(payload.generation.id.clone())]
+
+    })())
 }
 //#endregion 🔖️Inverse

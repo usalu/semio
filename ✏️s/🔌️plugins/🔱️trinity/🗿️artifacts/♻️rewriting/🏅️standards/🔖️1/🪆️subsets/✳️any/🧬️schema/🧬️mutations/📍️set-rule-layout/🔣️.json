@@ -7,7 +7,7 @@
   "aggregateVariant": "SetRuleLayoutPoints",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-rule-layout-points",
-  "binaryTag": 10,
+  "binaryTag": 8,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

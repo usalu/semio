@@ -4,7 +4,8 @@
 use crate::mutations::{set_slot_positions, Wfc3dMutation, Wfc3dSlotPosition};
 use crate::schema::snapshot::Wfc3dSnapshot;
 
-pub fn inverse(payload: &super::DragSlots, base: &Wfc3dSnapshot) -> Vec<Wfc3dMutation> {
+pub fn inverse(payload: &super::DragSlots, base: &Wfc3dSnapshot) -> Result<Vec<Wfc3dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     if !payload.holds_invariants() || payload.is_zero() {
         return Vec::new();
     }
@@ -13,4 +14,6 @@ pub fn inverse(payload: &super::DragSlots, base: &Wfc3dSnapshot) -> Vec<Wfc3dMut
         true => Vec::new(),
         false => vec![set_slot_positions(positions)],
     }
+
+    })())
 }

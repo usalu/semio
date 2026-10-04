@@ -72,41 +72,41 @@ pub mod compiler {
     /// unchanged `fs::write`s).
     pub fn compile_presentation_site(deck: &PresentationSnapshot, output_dir: &Path) -> Result<()> {
         fs::create_dir_all(output_dir).map_err(|error| PresentationCompileError::new(error.to_string()))?;
-        let deck_value = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(deck));
-        let deck_json = dsl::os_pack::json::to_string_pretty(&deck_value);
+        let deck_value = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(deck));
+        let deck_json = semio_framework_pack_json::to_string_pretty(&deck_value);
         fs::write(output_dir.join("deck.json"), &deck_json).map_err(|error| PresentationCompileError::new(error.to_string()))?;
         let index_snapshot = index_html_snapshot(&deck_json);
         let index_text = semio_s_artifact_stdio_html::standards::v5::subsets::any::schema::snapshot::write_html_document(&index_snapshot);
         fs::write(output_dir.join("🌐️.html"), index_text).map_err(|error| PresentationCompileError::new(error.to_string()))?;
         fs::write(output_dir.join("styles.css"), styles_css()).map_err(|error| PresentationCompileError::new(error.to_string()))?;
-        fs::write(output_dir.join("manifest.json"), dsl::os_pack::json::to_string_pretty(&site_manifest(deck))).map_err(|error| PresentationCompileError::new(error.to_string()))?;
+        fs::write(output_dir.join("manifest.json"), semio_framework_pack_json::to_string_pretty(&site_manifest(deck))).map_err(|error| PresentationCompileError::new(error.to_string()))?;
         fs::write(output_dir.join("player.js"), player_boot_js()).map_err(|error| PresentationCompileError::new(error.to_string()))?;
         Ok(())
     }
 
-    fn site_manifest(deck: &PresentationSnapshot) -> dsl::os_pack::json::Value {
+    fn site_manifest(deck: &PresentationSnapshot) -> semio_framework_pack_json::Value {
         let (_, tiles) = crate::presentation_working_scene(deck);
-        dsl::os_pack::json::object([
-            ("schema".to_string(), dsl::os_pack::json::Value::from("animate.presentation.site")),
-            ("deckSchema".to_string(), dsl::os_pack::json::Value::from(deck.schema.clone())),
-            ("title".to_string(), dsl::os_pack::json::Value::from(tiles.first().map_or("Animate Presentation", |tile| tile.name.as_str()))),
-            ("tileCount".to_string(), dsl::os_pack::json::Value::from(tiles.len())),
+        semio_framework_pack_json::object([
+            ("schema".to_string(), semio_framework_pack_json::Value::from("animate.presentation.site")),
+            ("deckSchema".to_string(), semio_framework_pack_json::Value::from(deck.schema.clone())),
+            ("title".to_string(), semio_framework_pack_json::Value::from(tiles.first().map_or("Animate Presentation", |tile| tile.name.as_str()))),
+            ("tileCount".to_string(), semio_framework_pack_json::Value::from(tiles.len())),
             (
                 "player".to_string(),
-                dsl::os_pack::json::object([
-                    ("kind".to_string(), dsl::os_pack::json::Value::from("wgpu")),
-                    ("wasm".to_string(), dsl::os_pack::json::Value::from("/animate/plugin/wasm/animate_plugin_bg.wasm")),
-                    ("js".to_string(), dsl::os_pack::json::Value::from("/animate/plugin/wasm/semio_s_plugin_animate.js")),
-                    ("boot".to_string(), dsl::os_pack::json::Value::from("/animate/plugin/wasm/🟨️boot.js")),
+                semio_framework_pack_json::object([
+                    ("kind".to_string(), semio_framework_pack_json::Value::from("wgpu")),
+                    ("wasm".to_string(), semio_framework_pack_json::Value::from("/animate/plugin/wasm/animate_plugin_bg.wasm")),
+                    ("js".to_string(), semio_framework_pack_json::Value::from("/animate/plugin/wasm/semio_s_plugin_animate.js")),
+                    ("boot".to_string(), semio_framework_pack_json::Value::from("/animate/plugin/wasm/🟨️boot.js")),
                 ]),
             ),
             (
                 "assets".to_string(),
-                dsl::os_pack::json::object([
-                    ("deck".to_string(), dsl::os_pack::json::Value::from("deck.json")),
-                    ("styles".to_string(), dsl::os_pack::json::Value::from("styles.css")),
-                    ("player".to_string(), dsl::os_pack::json::Value::from("player.js")),
-                    ("scenes".to_string(), dsl::os_pack::json::Value::from("scenes")),
+                semio_framework_pack_json::object([
+                    ("deck".to_string(), semio_framework_pack_json::Value::from("deck.json")),
+                    ("styles".to_string(), semio_framework_pack_json::Value::from("styles.css")),
+                    ("player".to_string(), semio_framework_pack_json::Value::from("player.js")),
+                    ("scenes".to_string(), semio_framework_pack_json::Value::from("scenes")),
                 ]),
             ),
         ])

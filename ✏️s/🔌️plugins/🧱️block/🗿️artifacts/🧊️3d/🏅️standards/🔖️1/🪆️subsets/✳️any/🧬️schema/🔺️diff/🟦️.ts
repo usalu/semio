@@ -1,3 +1,7 @@
+import type {Block3dVortexKind,Block3dWindowView} from "../../../../../../🟦️.ts";
+import * as root from "../../../../../../🟦️.ts";
+import type {BlockKindIdentity,BlockRepresentation,Block3dVortexTemplate,BlockCompatibilityRule,BlockAttribute,BlockAuthor,BlockCamera3d,BlockMeta,Block3dArtifact} from "../🟦️.ts";
+import * as model from "../🟦️.ts";
 /** 🧬️ Block3d diff schema — sparse field delta. */
 
 export interface Block3dDiff {
@@ -25,25 +29,15 @@ export interface Block3dDiff {
   meta?: BlockMeta;
 }
 
-export interface BlockKindIdentity { [key: string]: unknown; }
 
-export interface BlockRepresentation { [key: string]: unknown; }
 
-export interface Block3dVortexKind { [key: string]: unknown; }
 
-export interface Block3dVortexTemplate { [key: string]: unknown; }
 
-export interface BlockCompatibilityRule { [key: string]: unknown; }
 
-export interface BlockAttribute { [key: string]: unknown; }
 
-export interface BlockAuthor { [key: string]: unknown; }
 
-export interface BlockCamera3d { [key: string]: unknown; }
 
-export interface BlockMeta { [key: string]: unknown; }
 
-export interface Block3dWindowView { [key: string]: unknown; }
 
 
 export interface Block3dStringList {
@@ -138,7 +132,6 @@ export interface Block3dWindowsList {
   values: Block3dWindowView[];
 }
 
-export interface Block3dArtifact { [key: string]: unknown; }
 
 //#region 🚪️Parsers
 /** 🚪️ Refusal of one instance position, the shape every `parse<Export>` below rejects with. */
@@ -233,3 +226,18 @@ export function parseBlock3dAttributesPatchEntry(value: unknown, at = "$"): Bloc
     patch: parseBlock3dAttributesPatch(row["patch"], `${at}.patch`),
   };
 }
+
+/** 🧩️ Admit the canonical literal replacement record. */
+export function parseBlock3dRepresentationsPatch(value:unknown,at="$"):Block3dRepresentationsPatch{const row=blockBlock3dDiffGuardObject(value,at);return{...(row.replacement===undefined?{}:{replacement:model.parseBlockRepresentation(row.replacement)})}}
+
+/** 🧩️ Admit the canonical literal replacement record. */
+export function parseBlock3dVortexKindsPatch(value:unknown,at="$"):Block3dVortexKindsPatch{const row=blockBlock3dDiffGuardObject(value,at);return{...(row.replacement===undefined?{}:{replacement:root.parseBlock3dVortexKind(row.replacement)})}}
+
+/** 🧩️ Admit the canonical literal replacement record. */
+export function parseBlock3dVorticesPatch(value:unknown,at="$"):Block3dVorticesPatch{const row=blockBlock3dDiffGuardObject(value,at);return{...(row.replacement===undefined?{}:{replacement:model.parseBlock3dVortexTemplate(row.replacement)})}}
+
+/** 🧩️ Admit the canonical literal replacement record. */
+export function parseBlock3dCompatibilityPatch(value:unknown,at="$"):Block3dCompatibilityPatch{const row=blockBlock3dDiffGuardObject(value,at);return{...(row.replacement===undefined?{}:{replacement:model.parseBlockCompatibilityRule(row.replacement)})}}
+
+/** 🧩️ Admit the canonical literal replacement record. */
+export function parseBlock3dAttributesPatch(value:unknown,at="$"):Block3dAttributesPatch{const row=blockBlock3dDiffGuardObject(value,at);return{...(row.replacement===undefined?{}:{replacement:model.parseBlockAttribute(row.replacement)})}}

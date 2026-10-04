@@ -1,0 +1,100 @@
+{
+  "cases": [
+    {
+      "id": "empty ceiling",
+      "operation": "nextEmpty",
+      "expected": {
+        "kind": "ownershipLimit",
+        "reason": "fixed list logical capacity exhausted"
+      }
+    },
+    {
+      "id": "requested capacity",
+      "operation": "capacity",
+      "expected": {
+        "kind": "ownershipLimit",
+        "reason": "fixed list logical capacity exhausted"
+      }
+    },
+    {
+      "id": "addressable counter",
+      "operation": "counter",
+      "expected": {
+        "kind": "ownershipLimit",
+        "reason": "fixed list allocation counter exceeds addressable ownership"
+      }
+    },
+    {
+      "id": "metadata allocator refusal",
+      "operation": "failMetadata",
+      "expected": {
+        "kind": "allocationFailed",
+        "reason": "fixed list metadata allocation failed"
+      }
+    },
+    {
+      "id": "payload allocator refusal",
+      "operation": "failPayload",
+      "expected": {
+        "kind": "allocationFailed",
+        "reason": "fixed list payload allocation failed"
+      }
+    },
+    {
+      "id": "metadata admission invariant",
+      "operation": "extraMetadata",
+      "expected": {
+        "kind": "invariantViolated",
+        "reason": "fixed list metadata allocation exceeded admission; owner retained"
+      }
+    },
+    {
+      "id": "payload admission invariant",
+      "operation": "extraPayload",
+      "expected": {
+        "kind": "invariantViolated",
+        "reason": "fixed list payload allocation exceeded admission; owner retained"
+      }
+    },
+    {
+      "id": "metadata signed ownership",
+      "operation": "signedMetadata",
+      "expected": {
+        "kind": "ownershipLimit",
+        "reason": "fixed list actual allocation exceeds addressable ownership; owner retained"
+      }
+    },
+    {
+      "id": "payload signed ownership",
+      "operation": "signedPayload",
+      "expected": {
+        "kind": "ownershipLimit",
+        "reason": "fixed list actual allocation exceeds addressable ownership; owner retained"
+      }
+    },
+    {
+      "id": "extraRelease",
+      "operation": "extraRelease",
+      "expected": {
+        "kind": "invariantViolated",
+        "reason": "fixed list payload must retire before its page"
+      }
+    },
+    {
+      "id": "extraReleaseNext",
+      "operation": "extraReleaseNext",
+      "expected": {
+        "kind": "invariantViolated",
+        "reason": "fixed list payload must retire before its page"
+      }
+    },
+    {
+      "id": "extraRetireEmpty",
+      "operation": "extraRetireEmpty",
+      "expected": {
+        "kind": "invariantViolated",
+        "reason": "fixed list has no retired payload"
+      }
+    }
+  ]
+}

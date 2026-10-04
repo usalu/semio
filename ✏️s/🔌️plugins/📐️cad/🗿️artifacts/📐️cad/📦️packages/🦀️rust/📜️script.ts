@@ -12,6 +12,11 @@ import { runRepositoryCommand } from "../../../../../../../🧰️framework/🛍
 /** 🧪️ Executes the contracts owned by this component. */
 class OwnedVerifyScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if (segments.length === 1 && segments[0] === "reference-owner-syntax") {
+      const tests = resolve(this.root, "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📎️references/🧪️tests/🟦️.ts");
+      await runRepositoryCommand(process.execPath, ["test", tests], this.repoRoot, "cad-unmounted-reference-owner-syntax");
+      return;
+    }
     if (segments.length === 1 && segments[0] === "snapshot-sqlite-source") {
       const snapshot = resolve(this.root, "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot");
       await runRepositoryCommand(process.execPath, [resolve(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--resolveJsonModule", "--esModuleInterop", "--skipLibCheck", resolve(snapshot, "🟦️.ts"), resolve(snapshot, "🧪️tests/🪶️sqlite/🟦️.ts")], this.repoRoot, "cad-snapshot-sqlite-public-types");

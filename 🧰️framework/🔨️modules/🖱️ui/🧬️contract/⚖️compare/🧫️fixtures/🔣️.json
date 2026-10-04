@@ -11,6 +11,7 @@
   "contendedProgress": false,
   "frame": {"logicalDepth":256,"pageCount":1792,"maximumTextBytes":512,"maximumPosition":1024,"none":65535,"bytes":8,"maximumCursorBytes":4096,"littleEndian":"ff06000000040000"},
   "cases": [
+    {"left": {"type":"input","kind":"number","value":"1","publicationRevision":"18446744073709551615"}, "right": {"type":"input","kind":"number","value":"1","publicationRevision":"18446744073709551614"}, "equal":false},
     {"left": {"type":"text","value":"same"}, "right": {"type":"text","value":"same"}, "equal":true},
     {"left": {"type":"text","value":"same"}, "right": {"type":"text","value":"diff"}, "equal":false},
     {"left": {"type":"text","value":"same"}, "right": {"type":"button","icon":"","label":"same"}, "equal":false},

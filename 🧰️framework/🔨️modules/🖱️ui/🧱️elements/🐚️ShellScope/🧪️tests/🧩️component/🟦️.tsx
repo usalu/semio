@@ -78,10 +78,10 @@ function resolveColor(value: string, colors: Record<string, string>, aliases: Re
   let current = value.trim();
   for (let hop = 0; hop < 8; hop++) {
     if (current.startsWith("#")) return current;
-    const match = /^var\(\s*(--[a-z0-9-]+)\s*\)$/.exec(current);
+    const match = /^var\(\s*(--[a-z0-9-]+)(?:,\s*([\s\S]+))?\s*\)$/.exec(current);
     if (!match) throw new Error(`unresolvable color ${value}`);
     const name = match[1]!;
-    current = aliases[name] ?? colors[name.replace("--color-", "")] ?? "";
+    current = aliases[name] ?? colors[name.replace("--color-", "")] ?? match[2]?.trim() ?? "";
     if (!current) throw new Error(`unknown token ${name}`);
   }
   throw new Error(`color alias cycle at ${value}`);
@@ -143,7 +143,7 @@ interface FloatingSurfacePaint {
 function floatingSurfacePaint(appearance: "light" | "dark"): FloatingSurfacePaint {
   const ui = styleSheet("ui");
   const colors = paletteColors();
-  const base = cssBlock(ui, appearance === "light" ? ":root {" : ".dark {", "--base:");
+  const base = cssBlock(ui, appearance === "light" ? ":root," : ".dark {", "--base:");
   const aliases: Record<string, string> = { "--base": declaration(base, "--base"), "--foreground": declaration(base, "--foreground") };
   const menu = cssBlock(ui, '[data-level="menu"] {', "--surface-bg:");
   const theme = cssBlock(ui, "@theme inline {", "--color-popover-foreground:");

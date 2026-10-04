@@ -3,7 +3,7 @@
 use std::cell::Cell;
 use std::collections::{BTreeSet, HashMap, HashSet, LinkedList};
 
-use dsl::DslValue;
+use semio_framework_value::DslValue;
 use semio_framework_artifact_infinite_dag::*;
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -57,14 +57,14 @@ impl std::error::Error for DagError {
     }
 }
 
-impl From<os_pack::json::JsonError> for DagError {
-    fn from(error: os_pack::json::JsonError) -> Self {
+impl From<semio_framework_pack_json::JsonError> for DagError {
+    fn from(error: semio_framework_pack_json::JsonError) -> Self {
         Self::Json(error.to_string())
     }
 }
 
-impl From<dsl::ValueError> for DagError {
-    fn from(error: dsl::ValueError) -> Self {
+impl From<semio_framework_value::ValueError> for DagError {
+    fn from(error: semio_framework_value::ValueError) -> Self {
         Self::Json(error.to_string())
     }
 }
@@ -321,23 +321,23 @@ fn clamp_preview_image_size(w: f64, h: f64) -> (f64, f64) {
 
 fn preview_tree_collapsed_summary(value: &DslValue) -> String {
     match value {
-        DslValue::Object(entries) => format!("{{{} keys}}", entries.len()),
-        DslValue::Array(arr) => format!("[{} items]", arr.len()),
-        DslValue::String(s) => format!("\"{s}\""),
-        DslValue::Bytes(bytes) => format!("<{} bytes>", bytes.len()),
-        DslValue::Number(n) => match n {
-            dsl::Number::UInt(v) => v.to_string(),
-            dsl::Number::Int(v) => v.to_string(),
-            dsl::Number::Float(v) => v.to_string(),
+        semio_framework_value::DslValue::Object(entries) => format!("{{{} keys}}", entries.len()),
+        semio_framework_value::DslValue::Array(arr) => format!("[{} items]", arr.len()),
+        semio_framework_value::DslValue::String(s) => format!("\"{s}\""),
+        semio_framework_value::DslValue::Bytes(bytes) => format!("<{} bytes>", bytes.len()),
+        semio_framework_value::DslValue::Number(n) => match n {
+            semio_framework_value::Number::UInt(v) => v.to_string(),
+            semio_framework_value::Number::Int(v) => v.to_string(),
+            semio_framework_value::Number::Float(v) => v.to_string(),
         },
-        DslValue::Bool(b) => b.to_string(),
-        DslValue::Null => "null".into(),
+        semio_framework_value::DslValue::Bool(b) => b.to_string(),
+        semio_framework_value::DslValue::Null => "null".into(),
     }
 }
 
 fn preview_tree_scalar_display(value: &DslValue) -> String {
     match value {
-        DslValue::String(s) => format!("\"{s}\""),
+        semio_framework_value::DslValue::String(s) => format!("\"{s}\""),
         other => preview_tree_collapsed_summary(other),
     }
 }
@@ -398,10 +398,10 @@ fn hit_byte_in_note_line(line: &str, world_x: f64, line_origin_x: f64, font_px: 
     line.len()
 }
 
-fn preview_tree_rows(json: &DslValue, expanded: &BTreeSet<String>, path: &str, depth: usize) -> Vec<PreviewTreeRow> {
+fn preview_tree_rows(json: &DslValue, expanded: &DagExpandedPaths, path: &str, depth: usize) -> Vec<PreviewTreeRow> {
     let mut rows = Vec::new();
     match json {
-        DslValue::Object(entries) => {
+        semio_framework_value::DslValue::Object(entries) => {
             for (key, val) in entries {
                 let row_path = if path.is_empty() { key.clone() } else { format!("{path}.{key}") };
                 let has_children = matches!(val, DslValue::Object(_) | DslValue::Array(_));
@@ -413,7 +413,7 @@ fn preview_tree_rows(json: &DslValue, expanded: &BTreeSet<String>, path: &str, d
                 }
             }
         }
-        DslValue::Array(arr) => {
+        semio_framework_value::DslValue::Array(arr) => {
             for (i, val) in arr.iter().enumerate() {
                 let key = format!("[{i}]");
                 let row_path = if path.is_empty() { key.clone() } else { format!("{path}{key}") };
@@ -432,7 +432,7 @@ fn preview_tree_rows(json: &DslValue, expanded: &BTreeSet<String>, path: &str, d
 }
 
 /// 📐️ Measures preview content size in world units.
-pub fn measure_preview_content(content: &DagPreviewContent, expanded: &BTreeSet<String>) -> (f64, f64) {
+pub fn measure_preview_content(content: &DagPreviewContent, expanded: &DagExpandedPaths) -> (f64, f64) {
     match content {
         DagPreviewContent::Empty => (DAG_PREVIEW_MIN_SIZE, DAG_PREVIEW_MIN_SIZE),
         DagPreviewContent::Scalar { text } => {
@@ -459,7 +459,7 @@ pub fn measure_preview_content(content: &DagPreviewContent, expanded: &BTreeSet<
     }
 }
 
-fn preview_content_node_size(content: &DagPreviewContent, expanded: &BTreeSet<String>) -> (f64, f64) {
+fn preview_content_node_size(content: &DagPreviewContent, expanded: &DagExpandedPaths) -> (f64, f64) {
     let (_, ch) = measure_preview_content(content, expanded);
     (DAG_COMPONENT_WIDTH, ch + DAG_PREVIEW_PAD * 2.0)
 }
@@ -479,11 +479,11 @@ pub fn image_widget_size(src: &str) -> (f64, f64) {
 }
 
 /// 📐️ Preview node size from typed content and fold state.
-pub fn preview_widget_size(content: &DagPreviewContent, expanded: &BTreeSet<String>) -> (f64, f64) {
+pub fn preview_widget_size(content: &DagPreviewContent, expanded: &DagExpandedPaths) -> (f64, f64) {
     preview_content_node_size(content, expanded)
 }
 
-fn preview_tree_row_layouts(node: &DagNodeSpec, json: &DslValue, expanded: &BTreeSet<String>) -> Vec<PreviewTreeRowLayout> {
+fn preview_tree_row_layouts(node: &DagNodeSpec, json: &DslValue, expanded: &DagExpandedPaths) -> Vec<PreviewTreeRowLayout> {
     let (x0, y0, x1, _y1) = preview_content_bounds(node);
     preview_tree_rows(json, expanded, "", 0)
         .into_iter()
@@ -1110,7 +1110,7 @@ fn buchheim_third_walk(nodes: &mut [BuchheimNode], v: usize, n: f64) {
 mod tidy_tree_tests;
 //#endregion 🌳️TidyTree
 
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 
 /// 🧭️ Tree layout flow direction for layered DAG positions.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, ToValue, FromValue)]
@@ -1325,22 +1325,6 @@ fn dag_lod_resolve_zoom(zoom: f64) -> f64 {
     (zoom - DAG_LOD_ZOOM_SHIFT).max(0.05)
 }
 
-/// 🩺️ Names the live pointer interaction for the port-press diagnostic line — a wire drawn inside a
-/// Worker leaves no other trace, and `draw-edge(reconnect)` vs `draw-edge(new)` is the difference
-/// between a gesture that can cut a wire and one that cannot.
-fn dag_interaction_label(interaction: &InteractionMode) -> &'static str {
-    match interaction {
-        InteractionMode::Idle => "idle",
-        InteractionMode::DrawEdge { reconnecting: Some(_), .. } => "draw-edge(reconnect)",
-        InteractionMode::DrawEdge { .. } => "draw-edge(new)",
-        InteractionMode::DragNode { .. } => "drag-node",
-        InteractionMode::DragNodes { .. } => "drag-nodes",
-        InteractionMode::SelectionPending { .. } => "selection-pending",
-        InteractionMode::AreaSelect { .. } => "area-select",
-        InteractionMode::Pan { .. } => "pan",
-    }
-}
-
 fn dag_lod_index(zoom: f64) -> usize {
     DAG_LOD_SCALE.resolve_index(dag_lod_resolve_zoom(zoom))
 }
@@ -1523,22 +1507,12 @@ pub fn dag_lod_scale_json() -> String {
         .iter()
         .map(|lod| {
             let max_zoom = if lod.max_zoom.is_finite() { lod.max_zoom + DAG_LOD_ZOOM_SHIFT } else { lod.max_zoom };
-            os_pack::json::object([("id".to_string(), Value::from(lod.id)), ("name".to_string(), Value::from(lod.name)), ("description".to_string(), Value::from(lod.description)), ("maxZoom".to_string(), lod_max_zoom_json(max_zoom))])
+            semio_framework_pack_json::object([("id".to_string(), Value::from(lod.id)), ("name".to_string(), Value::from(lod.name)), ("description".to_string(), Value::from(lod.description)), ("maxZoom".to_string(), lod_max_zoom_json(max_zoom))])
         })
         .collect();
-    os_pack::json::to_string(&Value::Array(rows))
+    semio_framework_pack_json::to_string(&Value::Array(rows))
 }
 // #endregion 🔖️Lod
-
-// 🌉️ `target_arch = "wasm32"` is TRUE for `wasm32-wasip2` too, but wasip2 has real stderr (WASI),
-// so it takes the `eprintln!` arm rather than the browser `console.log` one — case (b): wasip2 gets
-// its own implementation via the existing native path, not a browser bridge.
-fn dag_debug_log(msg: &str) {
-    #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-    web_sys::console::log_1(&msg.into());
-    #[cfg(any(not(target_arch = "wasm32"), target_env = "p2"))]
-    eprintln!("{msg}");
-}
 
 //#region 🔖️Grid
 const GRID_WORLD_LARGE: f64 = ui_styling::metrics::board::GRID_WORLD_LARGE;
@@ -2034,7 +2008,6 @@ pub struct DagHost {
     edge_route_style: HashMap<EdgeId, EdgeRouteStyle>,
     widget_drag: Option<usize>,
     pending_port_insert: Option<(DagPortSide, String, usize)>,
-    last_logged_lod: Cell<i8>,
     dimmed: HashSet<NodeId>,
     wheel_zoom_active: bool,
     wheel_zoom_render_lod: Option<DagDrawLod>,
@@ -2066,6 +2039,9 @@ pub struct DagHost {
     /// 🔗️ Wire edits this host performed on its OWN geometry since the last drain, for a renderer to
     /// forward to the guest that owns the graph — see [`DagGraphEdit`].
     pending_graph_edits: Vec<DagGraphEdit>,
+    /// 🚫️ Why the last gesture was refused whole instead of journalled — its moves outgrew one dispatch — until a renderer
+    /// drains it ([`Self::take_journal_refusal`]).
+    journal_refusal: Option<DagJournalRefusal>,
 }
 
 /// 🔗️ One graph edit a completed gesture performed on this host's own graph, in the guest's own `nodeGraphEdit` row
@@ -2082,19 +2058,154 @@ pub enum DagGraphEdit {
     InsertPort { node_id: String, side: DagPortSide, index: usize },
 }
 
-/// 🧾️ `edits` as the `nodeGraphEdit` arguments a renderer dispatches, `{"operations":[…]}` in the row vocabulary of
-/// [`DagGraphEdit`]: `connect {sourceNodeId, sourcePortId, targetNodeId, targetPortId}`, `disconnect {synapseId}`,
-/// `move {gestureId, nodeIds, dx, dy}`, `setSlider {widgetId, value}`, `insertPort {nodeId, side, index}`.
-pub fn dag_graph_edit_rows_json(edits: Vec<DagGraphEdit>) -> String {
-    let row = |operation: &str, fields: Vec<(&str, Value)>| os_pack::json::object(std::iter::once(("operation".to_string(), Value::from(operation))).chain(fields.into_iter().map(|(field, value)| (field.to_string(), value))));
-    let rows = edits.into_iter().map(|edit| match edit {
-        DagGraphEdit::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => row("connect", vec![("sourceNodeId", Value::from(source_node_id)), ("sourcePortId", Value::from(source_port_id)), ("targetNodeId", Value::from(target_node_id)), ("targetPortId", Value::from(target_port_id))]),
-        DagGraphEdit::Disconnect { synapse_id } => row("disconnect", vec![("synapseId", Value::from(synapse_id))]),
-        DagGraphEdit::Move { gesture_id, node_ids, dx, dy } => row("move", vec![("gestureId", Value::from(gesture_id)), ("nodeIds", os_pack::json::array(node_ids.into_iter().map(Value::from))), ("dx", Value::from(dx)), ("dy", Value::from(dy))]),
-        DagGraphEdit::SetSlider { node_id, value } => row("setSlider", vec![("widgetId", Value::from(node_id)), ("value", Value::from(value))]),
-        DagGraphEdit::InsertPort { node_id, side, index } => row("insertPort", vec![("nodeId", Value::from(node_id)), ("side", Value::from(side.as_str())), ("index", Value::from(index))]),
-    });
-    os_pack::json::to_string(&os_pack::json::object([("operations".to_string(), os_pack::json::array(rows))]))
+/// 🚫️ A gesture refused whole because its rows (`rows`) outgrow one `nodeGraphEdit` dispatch (`limit`,
+/// [`DAG_GRAPH_EDIT_CAPACITY`]): nothing was journalled and the embedding host restores the gesture's baseline.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct DagJournalRefusal {
+    pub rows: usize,
+    pub limit: usize,
+}
+
+/// ✍️ Where the ONE row encoder ([`write_dag_graph_edit_rows`]) writes a row: a JSON answer for React and the flow wasm
+/// session ([`dag_graph_edit_rows_json`]), the bounded action builder for wgpu, a string census for credit pricing.
+pub trait DagGraphEditRowSink<'a> {
+    type Error;
+    fn begin_row(&mut self) -> Result<(), Self::Error>;
+    fn text(&mut self, field: &'static str, value: &'a str) -> Result<(), Self::Error>;
+    fn number(&mut self, field: &'static str, value: f64) -> Result<(), Self::Error>;
+    fn integer(&mut self, field: &'static str, value: u64) -> Result<(), Self::Error>;
+    fn texts(&mut self, field: &'static str, values: &'a [String]) -> Result<(), Self::Error>;
+    fn end_row(&mut self) -> Result<(), Self::Error>;
+}
+
+/// 🧾️ THE node-graph row encoder (design §13.3): writes every edit as its `nodeGraphEdit` row into `sink` — the one
+/// place a row's operation, fields and their order are spelled: `connect {sourceNodeId, sourcePortId, targetNodeId,
+/// targetPortId}`, `disconnect {synapseId}`, `move {gestureId, nodeIds, dx, dy}`, `setSlider {widgetId, value}`,
+/// `insertPort {nodeId, side, index}`.
+pub fn write_dag_graph_edit_rows<'a, S: DagGraphEditRowSink<'a>>(edits: &'a [DagGraphEdit], sink: &mut S) -> Result<(), S::Error> {
+    for edit in edits {
+        sink.begin_row()?;
+        match edit {
+            DagGraphEdit::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => {
+                sink.text("operation", "connect")?;
+                sink.text("sourceNodeId", source_node_id)?;
+                sink.text("sourcePortId", source_port_id)?;
+                sink.text("targetNodeId", target_node_id)?;
+                sink.text("targetPortId", target_port_id)?;
+            }
+            DagGraphEdit::Disconnect { synapse_id } => {
+                sink.text("operation", "disconnect")?;
+                sink.text("synapseId", synapse_id)?;
+            }
+            DagGraphEdit::Move { gesture_id, node_ids, dx, dy } => {
+                sink.text("operation", "move")?;
+                sink.text("gestureId", gesture_id)?;
+                sink.texts("nodeIds", node_ids)?;
+                sink.number("dx", *dx)?;
+                sink.number("dy", *dy)?;
+            }
+            DagGraphEdit::SetSlider { node_id, value } => {
+                sink.text("operation", "setSlider")?;
+                sink.text("widgetId", node_id)?;
+                sink.number("value", *value)?;
+            }
+            DagGraphEdit::InsertPort { node_id, side, index } => {
+                sink.text("operation", "insertPort")?;
+                sink.text("nodeId", node_id)?;
+                sink.text("side", side.as_str())?;
+                sink.integer("index", *index as u64)?;
+            }
+        }
+        sink.end_row()?;
+    }
+    Ok(())
+}
+
+/// 🧾️ The JSON sink of [`write_dag_graph_edit_rows`].
+#[derive(Default)]
+struct DagGraphEditJsonRows {
+    rows: Vec<Value>,
+    row: Vec<(String, Value)>,
+}
+
+impl<'a> DagGraphEditRowSink<'a> for DagGraphEditJsonRows {
+    type Error = std::convert::Infallible;
+    fn begin_row(&mut self) -> Result<(), Self::Error> {
+        self.row.clear();
+        Ok(())
+    }
+    fn text(&mut self, field: &'static str, value: &'a str) -> Result<(), Self::Error> {
+        self.row.push((field.to_string(), Value::from(value)));
+        Ok(())
+    }
+    fn number(&mut self, field: &'static str, value: f64) -> Result<(), Self::Error> {
+        self.row.push((field.to_string(), Value::from(value)));
+        Ok(())
+    }
+    fn integer(&mut self, field: &'static str, value: u64) -> Result<(), Self::Error> {
+        self.row.push((field.to_string(), Value::from(value)));
+        Ok(())
+    }
+    fn texts(&mut self, field: &'static str, values: &'a [String]) -> Result<(), Self::Error> {
+        self.row.push((field.to_string(), semio_framework_pack_json::array(values.iter().map(|value| Value::from(value.as_str())))));
+        Ok(())
+    }
+    fn end_row(&mut self) -> Result<(), Self::Error> {
+        self.rows.push(semio_framework_pack_json::object(std::mem::take(&mut self.row)));
+        Ok(())
+    }
+}
+
+/// 🧮️ The string census sink of [`write_dag_graph_edit_rows`]: every field name and text value a row carries.
+#[derive(Default)]
+struct DagGraphEditRowStrings<'a>(Vec<&'a str>);
+
+impl<'a> DagGraphEditRowSink<'a> for DagGraphEditRowStrings<'a> {
+    type Error = std::convert::Infallible;
+    fn begin_row(&mut self) -> Result<(), Self::Error> {
+        Ok(())
+    }
+    fn text(&mut self, field: &'static str, value: &'a str) -> Result<(), Self::Error> {
+        self.0.extend([field, value]);
+        Ok(())
+    }
+    fn number(&mut self, field: &'static str, _value: f64) -> Result<(), Self::Error> {
+        self.0.push(field);
+        Ok(())
+    }
+    fn integer(&mut self, field: &'static str, _value: u64) -> Result<(), Self::Error> {
+        self.0.push(field);
+        Ok(())
+    }
+    fn texts(&mut self, field: &'static str, values: &'a [String]) -> Result<(), Self::Error> {
+        self.0.push(field);
+        self.0.extend(values.iter().map(String::as_str));
+        Ok(())
+    }
+    fn end_row(&mut self) -> Result<(), Self::Error> {
+        Ok(())
+    }
+}
+
+/// 🧮️ Every field name and text value the rows of `edits` carry, for a bounded writer to price its string credits before
+/// it builds them.
+pub fn dag_graph_edit_row_strings(edits: &[DagGraphEdit]) -> Vec<&str> {
+    let mut strings = DagGraphEditRowStrings::default();
+    if let Err(never) = write_dag_graph_edit_rows(edits, &mut strings) {
+        match never {}
+    }
+    strings.0
+}
+
+/// 🧾️ A gesture's journal answer as the JSON a renderer reads: the `nodeGraphEdit` arguments `{"operations":[…]}` it
+/// dispatches, plus `"refused": {"rows", "limit"}` when the gesture was refused whole ([`DagJournalRefusal`]).
+pub fn dag_graph_edit_rows_json(edits: &[DagGraphEdit], refused: Option<DagJournalRefusal>) -> String {
+    let mut rows = DagGraphEditJsonRows::default();
+    if let Err(never) = write_dag_graph_edit_rows(edits, &mut rows) {
+        match never {}
+    }
+    let refused = refused.map(|refusal| ("refused".to_string(), semio_framework_pack_json::object([("rows".to_string(), Value::from(refusal.rows)), ("limit".to_string(), Value::from(refusal.limit))])));
+    semio_framework_pack_json::to_string(&semio_framework_pack_json::object(std::iter::once(("operations".to_string(), semio_framework_pack_json::array(rows.rows))).chain(refused)))
 }
 
 /// 🆔️ The gesture id of the drag a press began: `node-drag:<press>`, unique per host for the press's projection revision.
@@ -2102,10 +2213,11 @@ pub fn dag_drag_gesture_id(press: u64) -> String {
     format!("node-drag:{press}")
 }
 
-/// 📏️ How many graph edits one drain may carry. A single pointer gesture completes at most one wire
-/// (plus the edge it replaced), but ONE drag moves every selected node, so the bound is the widest
-/// multi-select drag a single `nodeGraphEdit` reports rather than a per-wire number.
-pub const DAG_GRAPH_EDIT_CAPACITY: usize = 64;
+/// 📏️ How many rows one drain may carry: the rows one `nodeGraphEdit` dispatch admits (`NODE_GRAPH_EDIT_MAX_ROWS` of
+/// `🛠️tool-machine`). A press journals at most one wire (and the edge it replaced), one slider value and one port; only the
+/// moves of a release or an align grow with the graph (one row per distinct offset), so those are reserved whole or the
+/// gesture is refused ([`DagJournalRefusal`]) — the journal never drops a row.
+pub const DAG_GRAPH_EDIT_CAPACITY: usize = 256;
 
 /// 🧮️ One retained retirement turn; `credited_bytes` never exceeds the current grant,
 /// while `released_bytes` is the physical backing freed after enough credits were retained.
@@ -2128,7 +2240,7 @@ enum DagRetirementOwner {
     Port(IoPortSpec),
     Ports { values: Vec<IoPortSpec>, remaining_backing_bytes: usize },
     Strings { values: Vec<String>, remaining_backing_bytes: usize },
-    Expanded(BTreeSet<String>),
+    Expanded(crate::DagExpandedPaths),
     Preview(DagPreviewContent),
     NodeKind(DagNodeKind),
     FixtureNode(DagNodeSpec),
@@ -2258,11 +2370,11 @@ impl DagPayloadRetirement {
             }
             DagRetirementOwner::Dsl(value) => {
                 match value {
-                    DslValue::String(value) => self.text(value),
-                    DslValue::Bytes(value) => self.bytes(value),
-                    DslValue::Array(values) => self.dsl_values(values),
-                    DslValue::Object(values) => self.dsl_entries(values),
-                    DslValue::Null | DslValue::Bool(_) | DslValue::Number(_) => {}
+                    semio_framework_value::DslValue::String(value) => self.text(value),
+                    semio_framework_value::DslValue::Bytes(value) => self.bytes(value),
+                    semio_framework_value::DslValue::Array(values) => self.dsl_values(values),
+                    semio_framework_value::DslValue::Object(values) => self.dsl_entries(values),
+                    semio_framework_value::DslValue::Null | semio_framework_value::DslValue::Bool(_) | semio_framework_value::DslValue::Number(_) => {}
                 }
                 DagRetirementStep::Pending { released_items: 1, credited_bytes: 0, released_bytes: 0 }
             }
@@ -2309,7 +2421,7 @@ impl DagPayloadRetirement {
                 DagRetirementStep::Pending { released_items: 1, credited_bytes: 0, released_bytes: 0 }
             }
             DagRetirementOwner::Properties(mut values) => {
-                if let Some((key, value)) = values.pop_first() {
+                if let Some((key, value)) = values.pop_last() {
                     if !values.is_empty() {
                         self.push(DagRetirementOwner::Properties(values));
                     }
@@ -2389,7 +2501,7 @@ impl DagPayloadRetirement {
                 DagRetirementStep::Pending { released_items: 1, credited_bytes, released_bytes: if released_backing { released_backing_bytes } else { 0 } }
             }
             DagRetirementOwner::Expanded(mut values) => {
-                if let Some(value) = values.pop_first() {
+                if let Some(value) = values.pop_last() {
                     if !values.is_empty() {
                         self.push(DagRetirementOwner::Expanded(values));
                     }
@@ -2721,7 +2833,6 @@ impl DagHostRetirement {
             edge_route_style,
             widget_drag: _,
             pending_port_insert,
-            last_logged_lod: _,
             dimmed,
             wheel_zoom_active: _,
             wheel_zoom_render_lod: _,
@@ -2751,6 +2862,7 @@ impl DagHostRetirement {
             minimap_widget_hovered: _,
             minimap_widget_drag: _,
             pending_graph_edits,
+            journal_refusal: _,
         } = host;
         Self {
             state: std::mem::ManuallyDrop::new(DagHostRetirementState {
@@ -3145,7 +3257,6 @@ impl DagHost {
             edge_route_style: HashMap::new(),
             widget_drag: None,
             pending_port_insert: None,
-            last_logged_lod: Cell::new(-1),
             dimmed: HashSet::new(),
             wheel_zoom_active: false,
             wheel_zoom_render_lod: None,
@@ -3175,6 +3286,7 @@ impl DagHost {
             minimap_widget_hovered: false,
             minimap_widget_drag: None,
             pending_graph_edits: Vec::new(),
+            journal_refusal: None,
         };
         host.rebuild_engine_with_layout(apply_layout);
         host
@@ -3505,7 +3617,7 @@ impl DagHost {
             handles: Vec<String>,
         }
         let handles: Vec<String> = self.selected_channels().into_iter().map(|channel| format!("{}@{}", channel.widget_id, channel.port)).collect();
-        os_pack::json::to_json_string(&Domains { nodes: self.selected_node_ids(), edges: self.selected_edge_ids(), handles })
+        semio_framework_pack_json::to_json_string(&Domains { nodes: self.selected_node_ids(), edges: self.selected_edge_ids(), handles })
     }
 
     fn apply_selection_domains(&mut self, nodes: &[String], edges: &[String], handles: &[String]) {
@@ -3542,11 +3654,11 @@ impl DagHost {
             edges: Vec<String>,
             handles: Vec<String>,
         }
-        if let Ok(domains) = os_pack::json::from_json_str::<Domains>(json) {
+        if let Ok(domains) = semio_framework_pack_json::from_json_str::<Domains>(json, semio_framework_pack_json::JsonMemberPolicy::Reject) {
             self.apply_selection_domains(&domains.nodes, &domains.edges, &domains.handles);
             return;
         }
-        let ids: Vec<String> = os_pack::json::from_json_str(json).unwrap_or_default();
+        let ids: Vec<String> = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_default();
         self.set_selection(&ids);
     }
 
@@ -3603,7 +3715,7 @@ impl DagHost {
 
     /// 🔌️ Selected fixture channels as JSON.
     pub fn selected_channels_json(&self) -> String {
-        os_pack::json::to_json_string(&self.selected_channels())
+        semio_framework_pack_json::to_json_string(&self.selected_channels())
     }
 
     /// 🚫️ The refusal a live wire drag is hovering, as JSON, or `null` — the port pair the declared
@@ -3622,10 +3734,10 @@ impl DagHost {
         let types = |handle_id: u64| self.engine.handles.get(&handle_id).map(|handle| handle.value_types.clone()).unwrap_or_default();
         format!(
             "{{\"source\":{},\"sourceTypes\":{},\"target\":{},\"targetTypes\":{}}}",
-            os_pack::json::to_json_string(source_key),
-            os_pack::json::to_json_string(&types(source_hid)),
-            os_pack::json::to_json_string(target_key),
-            os_pack::json::to_json_string(&types(target_hid))
+            semio_framework_pack_json::to_json_string(source_key),
+            semio_framework_pack_json::to_json_string(&types(source_hid)),
+            semio_framework_pack_json::to_json_string(target_key),
+            semio_framework_pack_json::to_json_string(&types(target_hid))
         )
     }
 
@@ -3637,9 +3749,9 @@ impl DagHost {
         match (self.hovered_channel(), refusal.as_str()) {
             (None, "null") => "null".into(),
             (None, _) => format!("{{\"refusal\":{refusal}}}"),
-            (Some(channel), "null") => os_pack::json::to_json_string(&channel),
+            (Some(channel), "null") => semio_framework_pack_json::to_json_string(&channel),
             (Some(channel), _) => {
-                let encoded = os_pack::json::to_json_string(&channel);
+                let encoded = semio_framework_pack_json::to_json_string(&channel);
                 format!("{}{}{}", &encoded[..encoded.len().saturating_sub(1)], format_args!(",\"refusal\":{refusal}"), "}")
             }
         }
@@ -3661,10 +3773,10 @@ impl DagHost {
                 None => None,
             };
             let body_json = body.map_or_else(|| "null".to_string(), |(x, y)| format!("[{x:.1},{y:.1}]"));
-            rows.push(format!("{{\"kind\":\"node\",\"id\":{},\"body\":{body_json},\"geometry\":{}}}", os_pack::json::to_json_string(&node.id), self.entity_screen_json("node", &node.id)));
+            rows.push(format!("{{\"kind\":\"node\",\"id\":{},\"body\":{body_json},\"geometry\":{}}}", semio_framework_pack_json::to_json_string(&node.id), self.entity_screen_json("node", &node.id)));
             for (port, direction) in node.inputs().iter().map(|port| (port, "in")).chain(node.outputs().iter().map(|port| (port, "out"))) {
                 let channel = format!("{}@{}", node.id, port.id);
-                rows.push(format!("{{\"kind\":\"handle\",\"direction\":\"{direction}\",\"id\":{},\"geometry\":{}}}", os_pack::json::to_json_string(&channel), self.entity_screen_json("handle", &channel)));
+                rows.push(format!("{{\"kind\":\"handle\",\"direction\":\"{direction}\",\"id\":{},\"geometry\":{}}}", semio_framework_pack_json::to_json_string(&channel), self.entity_screen_json("handle", &channel)));
             }
         }
         let panel = [0.0, 0.0, self.width as f64, self.height as f64];
@@ -3676,15 +3788,15 @@ impl DagHost {
     /// 🗺️ The screen rect [`Self::entity_screen_json`] reports for one entity, or `None` when it is
     /// off screen — the typed read the census needs before it can scan inside it.
     fn entity_screen_rect(&self, domain: &str, id: &str) -> Option<[f64; 4]> {
-        let value = os_pack::json::parse(&self.entity_screen_json(domain, id)).ok()?;
-        if value.get("visible").and_then(os_pack::json::Value::as_bool) != Some(true) {
+        let value = semio_framework_pack_json::parse(&self.entity_screen_json(domain, id), semio_framework_pack_json::JsonMemberPolicy::Reject).ok()?;
+        if value.get("visible").and_then(semio_framework_pack_json::Value::as_bool) != Some(true) {
             return None;
         }
         let rect = value.get("rect")?.as_array()?;
         if rect.len() < 4 {
             return None;
         }
-        let read = |index: usize| rect.get(index).and_then(os_pack::json::Value::as_f64);
+        let read = |index: usize| rect.get(index).and_then(semio_framework_pack_json::Value::as_f64);
         Some([read(0)?, read(1)?, read(2)?, read(3)?])
     }
 
@@ -3737,7 +3849,7 @@ impl DagHost {
                 row
             })
             .collect();
-        os_pack::json::to_json_string(&rows)
+        semio_framework_pack_json::to_json_string(&rows)
     }
 
     /// ✅️ Replaces node selection from fixture widget ids.
@@ -3760,7 +3872,7 @@ impl DagHost {
     /// 🧿️ Screen-space marquee overlay points for the shared selection overlay.
     pub fn selection_preview_points_json(&self) -> String {
         let points: Vec<[f64; 2]> = self.engine.selection_preview_points().iter().map(|p| [p.x, p.y]).collect();
-        os_pack::json::to_json_string(&points)
+        semio_framework_pack_json::to_json_string(&points)
     }
 
     pub fn selection_preview_crossing(&self) -> bool {
@@ -3919,7 +4031,7 @@ impl DagHost {
     fn minimap_widget_json(&self) -> Option<Value> {
         let layout = self.minimap_widget_layout(self.width, self.height)?;
         let (x0, y0, x1, y1) = layout.panel;
-        Some(os_pack::json::object([
+        Some(semio_framework_pack_json::object([
             ("x".to_string(), Value::from(x0)),
             ("y".to_string(), Value::from(y0)),
             ("width".to_string(), Value::from(x1 - x0)),
@@ -4012,7 +4124,7 @@ impl DagHost {
         let viewport = Viewport { width: self.width.max(1), height: self.height.max(1), dpr: self.dpr.max(1.0) };
         let tl = world_to_screen(&cam, &viewport, Point::new(bounds.min_x, bounds.min_y));
         let br = world_to_screen(&cam, &viewport, Point::new(bounds.max_x, bounds.max_y));
-        os_pack::json::to_string(&os_pack::json::object([
+        semio_framework_pack_json::to_string(&semio_framework_pack_json::object([
             ("x".to_string(), Value::from(tl.x)),
             ("y".to_string(), Value::from(tl.y)),
             ("width".to_string(), Value::from((br.x - tl.x).max(1.0))),
@@ -4112,28 +4224,28 @@ impl DagHost {
             }
             "edge" => {
                 let edge = if id == "*" { self.host_snapshot.edges.first() } else { self.host_snapshot.edges.iter().find(|edge| edge.id == id) };
-                let Some(edge) = edge else { return os_pack::json::to_json_string(&unresolved) };
-                let Some((source_widget, source_port)) = edge.source.split_once('@') else { return os_pack::json::to_json_string(&unresolved) };
-                let Some((target_widget, target_port)) = edge.target.split_once('@') else { return os_pack::json::to_json_string(&unresolved) };
-                let Some(source_bounds) = handle_world_bounds(source_widget, source_port) else { return os_pack::json::to_json_string(&unresolved) };
-                let Some(target_bounds) = handle_world_bounds(target_widget, target_port) else { return os_pack::json::to_json_string(&unresolved) };
+                let Some(edge) = edge else { return semio_framework_pack_json::to_json_string(&unresolved) };
+                let Some((source_widget, source_port)) = edge.source.split_once('@') else { return semio_framework_pack_json::to_json_string(&unresolved) };
+                let Some((target_widget, target_port)) = edge.target.split_once('@') else { return semio_framework_pack_json::to_json_string(&unresolved) };
+                let Some(source_bounds) = handle_world_bounds(source_widget, source_port) else { return semio_framework_pack_json::to_json_string(&unresolved) };
+                let Some(target_bounds) = handle_world_bounds(target_widget, target_port) else { return semio_framework_pack_json::to_json_string(&unresolved) };
                 let (_, source_center) = world_rect_to_screen(source_bounds.0, source_bounds.1, source_bounds.2, source_bounds.3);
                 let (_, target_center) = world_rect_to_screen(target_bounds.0, target_bounds.1, target_bounds.2, target_bounds.3);
                 let midpoint = ((source_center.0 + target_center.0) * 0.5, (source_center.1 + target_center.1) * 0.5);
                 if !self.screen_point_is_on_surface(midpoint) {
-                    return os_pack::json::to_json_string(&unresolved);
+                    return semio_framework_pack_json::to_json_string(&unresolved);
                 }
-                return os_pack::json::to_json_string(&EntityGeometry { visible: true, x: Some(midpoint.0), y: Some(midpoint.1), rect: None, polyline: Some(vec![[source_center.0, source_center.1], [target_center.0, target_center.1]]) });
+                return semio_framework_pack_json::to_json_string(&EntityGeometry { visible: true, x: Some(midpoint.0), y: Some(midpoint.1), rect: None, polyline: Some(vec![[source_center.0, source_center.1], [target_center.0, target_center.1]]) });
             }
             _ => None,
         };
 
-        let Some(bounds) = bounds_result else { return os_pack::json::to_json_string(&unresolved) };
+        let Some(bounds) = bounds_result else { return semio_framework_pack_json::to_json_string(&unresolved) };
         let (rect, center) = world_rect_to_screen(bounds.0, bounds.1, bounds.2, bounds.3);
         if !self.screen_point_is_on_surface(center) {
-            return os_pack::json::to_json_string(&unresolved);
+            return semio_framework_pack_json::to_json_string(&unresolved);
         }
-        os_pack::json::to_json_string(&EntityGeometry { visible: true, x: Some(center.0), y: Some(center.1), rect: Some(rect), polyline: None })
+        semio_framework_pack_json::to_json_string(&EntityGeometry { visible: true, x: Some(center.0), y: Some(center.1), rect: Some(rect), polyline: None })
     }
 
     /// 👁️ Whether the point a caller would AIM at is actually on the surface this geometry is
@@ -4334,7 +4446,7 @@ impl DagHost {
 
     /// 🔌️ Replaces channel handle selection from fixture channel JSON, falling back to node selection below channel LOD.
     pub fn set_selected_channels_json(&mut self, json: &str) {
-        let channels: Vec<DagChannelRef> = os_pack::json::from_json_str(json).unwrap_or_default();
+        let channels: Vec<DagChannelRef> = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_default();
         if self.draw_lod_for_frame().uses_channel_row_pick() {
             let mut selection = Selection::default();
             for channel in channels {
@@ -4388,7 +4500,7 @@ impl DagHost {
         self.computing_stale.clear();
         self.node_eval_status.clear();
         self.unresolved_input_ports.clear();
-        let Ok(value) = os_pack::json::parse(json) else {
+        let Ok(value) = semio_framework_pack_json::parse(json, semio_framework_pack_json::JsonMemberPolicy::Reject) else {
             return;
         };
         let Some(map) = value.as_object() else {
@@ -4703,7 +4815,7 @@ impl DagHost {
     }
 
     pub fn load_host_snapshot_json(json: &str) -> Result<Self, DagError> {
-        let host_snapshot: DagHostSnapshot = os_pack::json::from_json_str(json)?;
+        let host_snapshot: DagHostSnapshot = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject)?;
         if host_snapshot.schema != "dag.host_snapshot" {
             return Err(DagError::SchemaMismatch);
         }
@@ -4711,14 +4823,14 @@ impl DagHost {
     }
 
     pub fn host_snapshot_json(&self) -> Result<String, DagError> {
-        Ok(os_pack::json::to_json_string(&self.host_snapshot))
+        Ok(semio_framework_pack_json::to_json_string(&self.host_snapshot))
     }
 
     /// 🌳️ Recomputes node positions from the current graph using layered tree layout.
     pub fn reorganize(&mut self, opts: &DagLayoutOptions) -> Result<(), DagError> {
-        let mut fixture_value = os_pack::json::from_dsl_value(&<DagHostSnapshot as dsl::ToValue>::to_value(&self.host_snapshot));
+        let mut fixture_value = semio_framework_pack_json::from_dsl_value(&<DagHostSnapshot as semio_framework_value::ToValue>::to_value(&self.host_snapshot));
         apply_dag_layout_to_host_snapshot_v1_value(&mut fixture_value, opts)?;
-        self.host_snapshot = <DagHostSnapshot as dsl::FromValue>::from_value(os_pack::json::to_dsl_value(&fixture_value))?;
+        self.host_snapshot = <DagHostSnapshot as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&fixture_value))?;
         self.rebuild_engine_with_layout(false);
         Ok(())
     }
@@ -4740,9 +4852,9 @@ impl DagHost {
         let (cx, cy, zoom) = (self.host_snapshot.camera.x, self.host_snapshot.camera.y, self.host_snapshot.camera.zoom);
         self.engine.set_camera(cx, cy, zoom);
         if apply_layout {
-            let mut fixture_value = os_pack::json::from_dsl_value(&<DagHostSnapshot as dsl::ToValue>::to_value(&self.host_snapshot));
+            let mut fixture_value = semio_framework_pack_json::from_dsl_value(&<DagHostSnapshot as semio_framework_value::ToValue>::to_value(&self.host_snapshot));
             let _ = apply_dag_layout_to_host_snapshot_v1_value(&mut fixture_value, &DagLayoutOptions::default());
-            if let Ok(updated) = <DagHostSnapshot as dsl::FromValue>::from_value(os_pack::json::to_dsl_value(&fixture_value)) {
+            if let Ok(updated) = <DagHostSnapshot as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&fixture_value)) {
                 self.host_snapshot = updated;
             }
         }
@@ -4898,33 +5010,16 @@ impl DagHost {
         let mut wired = false;
         for event in events {
             match event {
-                BoardEvent::NodeMoved { id, x, y } => {
-                    moved = true;
-                    dag_debug_log(&format!("[TRACE] dag node moved id={id} x={x:.1} y={y:.1}"));
-                }
-                BoardEvent::EdgeConnected { id, source, target } => {
+                BoardEvent::NodeMoved { .. } => moved = true,
+                BoardEvent::EdgeConnected { source, target, .. } => {
                     wired = true;
-                    dag_debug_log(&format!("[TRACE] dag edge connected id={id} source={source} target={target}"));
                     self.journal_connect(source, target);
                 }
                 BoardEvent::EdgeRemoved { id } => {
                     wired = true;
-                    dag_debug_log(&format!("[TRACE] dag edge removed id={id}"));
                     self.journal_disconnect(id);
                 }
-                BoardEvent::SelectionChanged { node_ids, .. } => {
-                    let ids: Vec<String> = node_ids.iter().filter_map(|&nid| self.widget_id_for_node_id(nid)).collect();
-                    dag_debug_log(&format!("[TRACE] dag selection changed: {}", ids.join(", ")));
-                }
-                BoardEvent::PreselectChanged { node_ids, removed_node_ids, .. } => {
-                    let ids: Vec<String> = node_ids.iter().filter_map(|&nid| self.widget_id_for_node_id(nid)).collect();
-                    let removed: Vec<String> = removed_node_ids.iter().filter_map(|&nid| self.widget_id_for_node_id(nid)).collect();
-                    dag_debug_log(&format!("[TRACE] dag preselect ids=[{}] removed=[{}]", ids.join(", "), removed.join(", ")));
-                }
-                BoardEvent::HoverChanged { id } => {
-                    let label = id.and_then(|nid| self.widget_id_for_node_id(nid).or_else(|| self.engine.handles.get(&nid).and_then(|handle| self.widget_id_for_node_id(handle.node_id))));
-                    dag_debug_log(&format!("[TRACE] dag hover changed: {}", label.as_deref().unwrap_or("—")));
-                }
+                BoardEvent::SelectionChanged { .. } | BoardEvent::PreselectChanged { .. } | BoardEvent::HoverChanged { .. } => {}
             }
         }
         if moved {
@@ -4958,13 +5053,13 @@ impl DagHost {
         self.push_graph_edit(DagGraphEdit::Disconnect { synapse_id });
     }
 
-    /// 🔗️ Bounded push: the journal never grows past [`DAG_GRAPH_EDIT_CAPACITY`], and a duplicate of
-    /// an edit already pending is dropped rather than dispatched twice.
+    /// 🔗️ Journals one edit a press performed (a wire, a slider value, a port); an edit already pending is the same edit
+    /// and is not journalled twice. A press journals a bounded handful, so these never compete with
+    /// [`DAG_GRAPH_EDIT_CAPACITY`]; only moves grow with the graph and are reserved whole ([`Self::journal_moves`]).
     fn push_graph_edit(&mut self, edit: DagGraphEdit) {
-        if self.pending_graph_edits.len() >= DAG_GRAPH_EDIT_CAPACITY || self.pending_graph_edits.contains(&edit) {
-            return;
+        if !self.pending_graph_edits.contains(&edit) {
+            self.pending_graph_edits.push(edit);
         }
-        self.pending_graph_edits.push(edit);
     }
 
     /// 🔗️ Drains the wire edits this host performed since the last call — the renderer's one read
@@ -4973,15 +5068,41 @@ impl DagHost {
         std::mem::take(&mut self.pending_graph_edits)
     }
 
-    /// ✋️ Journals a released drag the embedding host previewed as ONE gesture record (design §13.3): the press, the moved
-    /// node ids and their ONE relative offset — this journal is the renderer's one read point. `false`, journalling
-    /// nothing, when the bounded journal ([`DAG_GRAPH_EDIT_CAPACITY`]) is full.
-    pub fn journal_drag(&mut self, gesture_id: String, node_ids: Vec<String>, dx: f64, dy: f64) -> bool {
-        if self.pending_graph_edits.len() >= DAG_GRAPH_EDIT_CAPACITY {
-            return false;
+    /// 🚫️ Drains why the last gesture was refused whole, if it was.
+    pub fn take_journal_refusal(&mut self) -> Option<DagJournalRefusal> {
+        self.journal_refusal.take()
+    }
+
+    /// 🚫️ Keeps a refusal the embedding host carried across rebuilding this host from the gesture's baseline.
+    pub fn carry_journal_refusal(&mut self, refusal: DagJournalRefusal) {
+        self.journal_refusal = Some(refusal);
+    }
+
+    /// ✋️ Journals what a gesture moved — `displacements` of `(node id, dx, dy)` in node order — as node-graph gesture records
+    /// of `gesture_id` (design §13.3): one record per distinct offset, the nodes of each in order; a zero offset moved
+    /// nothing. All or nothing: when the records do not fit the journal ([`DAG_GRAPH_EDIT_CAPACITY`]) the whole gesture is
+    /// refused — the journal is emptied, the refusal kept for the renderer — and the embedding host restores the gesture's
+    /// baseline, so neither the document nor the host keeps any of it.
+    pub fn journal_moves(&mut self, gesture_id: &str, displacements: impl IntoIterator<Item = (String, f64, f64)>) -> Result<(), DagJournalRefusal> {
+        let mut drags: Vec<(f64, f64, Vec<String>)> = Vec::new();
+        for (id, dx, dy) in displacements {
+            if (dx, dy) == (0.0, 0.0) {
+                continue;
+            }
+            match drags.iter_mut().find(|(known_x, known_y, _)| (*known_x, *known_y) == (dx, dy)) {
+                Some((_, _, ids)) => ids.push(id),
+                None => drags.push((dx, dy, vec![id])),
+            }
         }
-        self.push_graph_edit(DagGraphEdit::Move { gesture_id, node_ids, dx, dy });
-        true
+        let rows = self.pending_graph_edits.len() + drags.len();
+        if rows > DAG_GRAPH_EDIT_CAPACITY {
+            let refusal = DagJournalRefusal { rows, limit: DAG_GRAPH_EDIT_CAPACITY };
+            self.pending_graph_edits.clear();
+            self.journal_refusal = Some(refusal);
+            return Err(refusal);
+        }
+        self.pending_graph_edits.extend(drags.into_iter().map(|(dx, dy, node_ids)| DagGraphEdit::Move { gesture_id: gesture_id.to_string(), node_ids, dx, dy }));
+        Ok(())
     }
 
     /// 📍️ Every node's id and centre, in node order — the baseline an embedding host records at a press so
@@ -4990,33 +5111,25 @@ impl DagHost {
         self.host_snapshot.nodes.iter().map(|node| (node.id.clone(), node.x, node.y)).collect()
     }
 
-    /// ✋️ Journals every node that moved since `baseline` ([`Self::node_positions`] at the press) as node-graph gesture
-    /// records of `gesture_id` (design §13.3): one record per distinct offset (a grid snap or an align lands nodes on
-    /// different offsets), the nodes of each in node order. `false` when the bounded journal could not take them all.
-    pub fn journal_moves_since(&mut self, gesture_id: &str, baseline: &[(String, f64, f64)]) -> bool {
-        let mut drags: Vec<(f64, f64, Vec<String>)> = Vec::new();
-        for node in &self.host_snapshot.nodes {
-            let Some((_, x, y)) = baseline.iter().find(|(id, _, _)| *id == node.id) else { continue };
-            let (dx, dy) = (node.x - x, node.y - y);
-            if (dx, dy) == (0.0, 0.0) {
-                continue;
-            }
-            match drags.iter_mut().find(|(known_x, known_y, _)| (*known_x, *known_y) == (dx, dy)) {
-                Some((_, _, ids)) => ids.push(node.id.clone()),
-                None => drags.push((dx, dy, vec![node.id.clone()])),
-            }
-        }
-        drags.into_iter().all(|(dx, dy, node_ids)| self.journal_drag(gesture_id.to_string(), node_ids, dx, dy))
+    /// ✋️ Journals every node that moved since `baseline` ([`Self::node_positions`] at the press) — a drag's release or an
+    /// align — through [`Self::journal_moves`]; a node the baseline does not know is not narrated.
+    pub fn journal_moves_since(&mut self, gesture_id: &str, baseline: &[(String, f64, f64)]) -> Result<(), DagJournalRefusal> {
+        let displacements: Vec<(String, f64, f64)> = self.host_snapshot.nodes.iter().filter_map(|node| baseline.iter().find(|(id, _, _)| *id == node.id).map(|(_, x, y)| (node.id.clone(), node.x - x, node.y - y))).collect();
+        self.journal_moves(gesture_id, displacements)
     }
 
-    /// 🔌️ Journals a variadic port the embedding host inserted on node `node_id` at `index` of `side`. `false`, journalling
-    /// nothing, when the bounded journal is full.
-    pub fn journal_port_insert(&mut self, node_id: String, side: DagPortSide, index: usize) -> bool {
-        if self.pending_graph_edits.len() >= DAG_GRAPH_EDIT_CAPACITY {
-            return false;
+    /// ↩️ Puts every node `baseline` names back where it stood — the zero trace of a gesture refused whole.
+    pub fn restore_node_positions(&mut self, baseline: &[(String, f64, f64)]) {
+        for (id, x, y) in baseline {
+            let Some(index) = self.host_snapshot.nodes.iter().position(|node| node.id == *id) else { continue };
+            (self.host_snapshot.nodes[index].x, self.host_snapshot.nodes[index].y) = (*x, *y);
+            self.sync_fixture_node_center_to_engine(index);
         }
+    }
+
+    /// 🔌️ Journals a variadic port the embedding host inserted on node `node_id` at `index` of `side`.
+    pub fn journal_port_insert(&mut self, node_id: String, side: DagPortSide, index: usize) {
         self.push_graph_edit(DagGraphEdit::InsertPort { node_id, side, index });
-        true
     }
 
     /// 🖱️ Whether a screen-space interaction only `pointer_*_screen` implements is already in flight
@@ -5067,7 +5180,7 @@ impl DagHost {
     /// went across a wasm boundary that carries no Rust types.
     pub fn screen_hit_json(&self, sx: f64, sy: f64) -> String {
         let hit = self.screen_hit(sx, sy);
-        os_pack::json::to_json_string(&DagScreenHitJson {
+        semio_framework_pack_json::to_json_string(&DagScreenHitJson {
             node: hit.node_id.clone(),
             draggable: hit.is_draggable_body(),
             handle: hit.channel.as_ref().map(|channel| format!("{}@{}", channel.widget_id, channel.port)),
@@ -5528,17 +5641,11 @@ impl DagHost {
         };
         match kind {
             WidgetPointerKind::SliderDrag => {
-                let node_id = self.host_snapshot.nodes[idx].id.clone();
                 self.widget_drag = Some(idx);
-                if let Some(value) = set_slider_value_from_x(&mut self.host_snapshot.nodes[idx], world_x) {
-                    dag_debug_log(&format!("[TRACE] dag slider value id={node_id} value={value:.3}"));
-                }
+                set_slider_value_from_x(&mut self.host_snapshot.nodes[idx], world_x);
             }
             WidgetPointerKind::SelectClick => {
-                let node_id = self.host_snapshot.nodes[idx].id.clone();
-                if let Some(label) = advance_select_option(&mut self.host_snapshot.nodes[idx]) {
-                    dag_debug_log(&format!("[TRACE] dag select option id={node_id} label={label}"));
-                }
+                advance_select_option(&mut self.host_snapshot.nodes[idx]);
             }
             WidgetPointerKind::PreviewToggle(path) => {
                 Self::toggle_preview_tree_path(&mut self.host_snapshot.nodes[idx], &path);
@@ -5594,7 +5701,6 @@ impl DagHost {
                     self.set_camera(wx, wy, zoom);
                     self.minimap_widget_drag = Some((0.0, 0.0));
                 }
-                dag_debug_log(&format!("[TRACE] minimap widget pointer down sx={sx:.1} sy={sy:.1} on_viewport={on_viewport}"));
                 return;
             }
         }
@@ -5635,7 +5741,6 @@ impl DagHost {
         let (hit_x, hit_y) = self.connection_hit_world(world.x, world.y);
         if self.world_hits_handle(hit_x, hit_y) {
             self.engine.pointer_down_screen(sx, sy, hit_x, hit_y, button, shift, ctrl_or_meta, alt);
-            dag_debug_log(&format!("[TRACE] dag port press port={:?} interaction={}", self.engine.hover.and_then(|hid| self.handle_key_map.get(&hid).cloned()), dag_interaction_label(&self.engine.interaction)));
             self.process_engine_events();
             self.sync_camera_from_engine();
             return;
@@ -5702,9 +5807,7 @@ impl DagHost {
         self.last_screen_y = sy;
         let world = self.screen_to_world_point(sx, sy);
         if let Some(idx) = self.widget_drag {
-            if let Some(value) = set_slider_value_from_x(&mut self.host_snapshot.nodes[idx], world.x) {
-                dag_debug_log(&format!("[TRACE] dag slider value id={} value={value:.3}", self.host_snapshot.nodes[idx].id));
-            }
+            set_slider_value_from_x(&mut self.host_snapshot.nodes[idx], world.x);
             return;
         }
         let (hit_x, hit_y) = self.connection_hit_world_while_wiring(world.x, world.y);
@@ -5787,17 +5890,17 @@ impl DagHost {
                 DagMediaKind::Pdf => "pdf",
                 DagMediaKind::Video => "video",
             };
-            overlays.push(os_pack::json::object([
+            overlays.push(semio_framework_pack_json::object([
                 ("id".to_string(), Value::from(node.id.clone())),
                 ("mediaKind".to_string(), Value::from(media_kind)),
                 ("src".to_string(), Value::from(media.src.clone())),
                 (
                     "rect".to_string(),
-                    os_pack::json::object([("x".to_string(), Value::from(tl.x)), ("y".to_string(), Value::from(tl.y)), ("w".to_string(), Value::from((br.x - tl.x).max(1.0))), ("h".to_string(), Value::from((br.y - tl.y).max(1.0)))]),
+                    semio_framework_pack_json::object([("x".to_string(), Value::from(tl.x)), ("y".to_string(), Value::from(tl.y)), ("w".to_string(), Value::from((br.x - tl.x).max(1.0))), ("h".to_string(), Value::from((br.y - tl.y).max(1.0)))]),
                 ),
             ]));
         }
-        Ok(os_pack::json::to_string(&Value::Array(overlays)))
+        Ok(semio_framework_pack_json::to_string(&Value::Array(overlays)))
     }
 
     fn handle_cap_peak(&self, center: canvas::Point, outward: canvas::Vec2, radius: f64, shape: PortShape) -> canvas::Point {
@@ -5914,7 +6017,7 @@ impl DagHost {
             } else {
                 node.width
             };
-            labels.push(os_pack::json::object([
+            labels.push(semio_framework_pack_json::object([
                 ("id".to_string(), Value::from(node.id.clone())),
                 ("text".to_string(), Value::from(text)),
                 ("layout".to_string(), Value::from(layout)),
@@ -5968,7 +6071,7 @@ impl DagHost {
             }
             let world_y = port_center_y(node, i, inputs.len());
             let world_x = if computation { computation_input_label_x(node) } else { node.x - hw + handle_inset };
-            rows.push(os_pack::json::object([
+            rows.push(semio_framework_pack_json::object([
                 ("id".to_string(), Value::from(node.id.clone())),
                 ("kind".to_string(), Value::from("port")),
                 ("text".to_string(), Value::from(label)),
@@ -5999,7 +6102,7 @@ impl DagHost {
                 let (label_w, _) = label_extent(&label, port_layout_px);
                 (node.x + hw - handle_inset, label_w / zoom.max(0.05))
             };
-            rows.push(os_pack::json::object([
+            rows.push(semio_framework_pack_json::object([
                 ("id".to_string(), Value::from(node.id.clone())),
                 ("kind".to_string(), Value::from("port")),
                 ("text".to_string(), Value::from(label)),
@@ -6035,7 +6138,7 @@ impl DagHost {
                 continue;
             };
             let (x0, y0, x1, y1) = slider_track_bounds(&node);
-            sliders.push(os_pack::json::object([
+            sliders.push(semio_framework_pack_json::object([
                 ("widgetId".to_string(), Value::from(fixture_node.id.clone())),
                 ("label".to_string(), Value::from(node.name.clone())),
                 ("value".to_string(), Value::from(*value)),
@@ -6050,8 +6153,8 @@ impl DagHost {
                 ("gapScreenPx".to_string(), Value::from(DAG_LABEL_SCREEN_PX * ui_styling::metrics::label::DAG_LABEL_GAP_RATIO)),
             ]));
         }
-        Ok(os_pack::json::to_string(&os_pack::json::object([
-            ("camera".to_string(), os_pack::json::object([("x".to_string(), Value::from(cam.x)), ("y".to_string(), Value::from(cam.y)), ("zoom".to_string(), Value::from(cam.zoom))])),
+        Ok(semio_framework_pack_json::to_string(&semio_framework_pack_json::object([
+            ("camera".to_string(), semio_framework_pack_json::object([("x".to_string(), Value::from(cam.x)), ("y".to_string(), Value::from(cam.y)), ("zoom".to_string(), Value::from(cam.zoom))])),
             ("width".to_string(), Value::from(self.width)),
             ("height".to_string(), Value::from(self.height)),
             ("sliders".to_string(), Value::Array(sliders)),
@@ -6073,8 +6176,8 @@ impl DagHost {
             labels.extend(Self::label_overlay_rows_for_node(ghost, lod, cam.zoom, lod_index, true, None, &self.unresolved_input_ports));
         }
         let minimap_widget = self.minimap_widget_json();
-        Ok(os_pack::json::to_string(&os_pack::json::object([
-            ("camera".to_string(), os_pack::json::object([("x".to_string(), Value::from(cam.x)), ("y".to_string(), Value::from(cam.y)), ("zoom".to_string(), Value::from(cam.zoom))])),
+        Ok(semio_framework_pack_json::to_string(&semio_framework_pack_json::object([
+            ("camera".to_string(), semio_framework_pack_json::object([("x".to_string(), Value::from(cam.x)), ("y".to_string(), Value::from(cam.y)), ("zoom".to_string(), Value::from(cam.zoom))])),
             ("lod".to_string(), Value::from(lod.label())),
             ("width".to_string(), Value::from(self.width)),
             ("height".to_string(), Value::from(self.height)),
@@ -6228,7 +6331,7 @@ impl DagHost {
         viewport: &canvas::camera::Viewport,
         node: &DagNodeSpec,
         content: &DagPreviewContent,
-        expanded: &BTreeSet<String>,
+        expanded: &DagExpandedPaths,
         paint_px: f64,
         label_fill: canvas::Color,
         label_halo: canvas::Color,
@@ -6692,12 +6795,6 @@ impl DagHost {
         let aff = camera_content_affine(&cam, &viewport);
         let lod = self.draw_lod_for_frame();
         let lod_index = dag_lod_index(cam.zoom);
-        let lod_index_i8 = lod_index as i8;
-        let prev_lod = self.last_logged_lod.get();
-        if prev_lod != lod_index_i8 {
-            self.last_logged_lod.set(lod_index_i8);
-            dag_debug_log(&format!("[TRACE] dag draw lod={} zoom={:.3} icon={} label={:?}", lod.label(), cam.zoom, lod.node_icon_visible(), lod.node_label()));
-        }
         self.paint_lod_grid(scene, &cam, &viewport, lod);
         let snap = self.engine.render_snapshot();
         let edge_stroke = dag_world_stroke(lod.edge_stroke_screen_px(), cam.zoom);
@@ -6973,7 +7070,7 @@ mod wasm_session {
 
         #[wasm_bindgen(js_name = reorganize)]
         pub fn reorganize(&self, options_json: &str) -> Result<(), JsValue> {
-            let opts = if options_json.trim().is_empty() { DagLayoutOptions::default() } else { dsl::os_pack::json::from_json_str(options_json).unwrap_or_default() };
+            let opts = if options_json.trim().is_empty() { DagLayoutOptions::default() } else { semio_framework_pack_json::from_json_str(options_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_default() };
             self.state.borrow_mut().host.reorganize(&opts).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 

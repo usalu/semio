@@ -49,5 +49,5 @@ export const blockBlock3dInferenceTextGuardConstant = <T extends string | number
 //#endregion 🚪️Parsers
 
 export function parseBlock3dInferenceText(value: unknown, at = "$"): Block3dInferenceText {
-  return blockBlock3dInferenceTextGuardObject(value, `${at}`);
+  return blockBlock3dInferenceTextGuardString(value, at);
 }

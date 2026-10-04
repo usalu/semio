@@ -23,7 +23,7 @@ fn round_trip(projection: &Generation3dSnapshot, operation: &Generation3dMutatio
     let mut forward = crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead::new(projection.clone());
     apply_generation3d_mutation(&mut forward, operation).expect("valid mutation");
     let mut restored = crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead::new((*forward).clone());
-    for back in operation.inverse(projection) {
+    for back in operation.inverse(projection).expect("valid retained mutation inverse fixture") {
         apply_generation3d_mutation(&mut restored, &back).expect("valid inverse mutation");
     }
     assert_eq!(restored, *projection, "inverse(base) must restore the pre-operation document");
@@ -154,7 +154,7 @@ fn update_widget_round_trip_replaces_existing_widget_by_id() {
 #[test]
 fn inverse_delete_widget_when_missing_returns_empty() {
     let projection = default_generation3d_snapshot();
-    assert!(Generation3dMutation::DeleteWidget(DeleteWidget { id: "ghost".into() }).inverse(&projection).is_empty());
+    assert!(Generation3dMutation::DeleteWidget(DeleteWidget { id: "ghost".into() }).inverse(&projection).expect("valid retained mutation inverse fixture").is_empty());
 }
 
 #[test]
@@ -170,7 +170,7 @@ fn update_synapse_round_trip_replaces_existing_synapse_by_id() {
 #[test]
 fn inverse_disconnect_synapse_when_missing_returns_empty() {
     let projection = default_generation3d_snapshot();
-    assert!(Generation3dMutation::DisconnectSynapse(DisconnectSynapse { id: "ghost".into() }).inverse(&projection).is_empty());
+    assert!(Generation3dMutation::DisconnectSynapse(DisconnectSynapse { id: "ghost".into() }).inverse(&projection).expect("valid retained mutation inverse fixture").is_empty());
 }
 
 /// 📍️ `move-widget` addresses a widget that must already exist — the position map is an override
@@ -207,7 +207,7 @@ fn move_widget_on_a_missing_widget_is_rejected_and_leaves_the_projection_untouch
     let mut projection = crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead::new(default_generation3d_snapshot());
     let mutation = Generation3dMutation::MoveWidget(MoveWidget { id: "ghost".into(), layout: WidgetLayout { x: 1.0, y: 2.0 } });
     let refused = apply_generation3d_mutation(&mut projection, &mutation).expect_err("a missing move target must be rejected");
-    assert_eq!(refused.iter().map(|message| (message.code.0.as_str(), message.level)).collect::<Vec<_>>(), [("mutation.target-missing", protocol::Severity::Error)]);
+    assert_eq!(refused.iter().map(|message| (message.code.0.as_str(), message.level)).collect::<Vec<_>>(), [("mutation.target-missing", semio_framework_diagnostic::Severity::Error)]);
     assert_eq!(*projection, default_generation3d_snapshot());
 }
 
@@ -229,7 +229,7 @@ fn checked_apply_propagates_the_vocabulary_outcome_unchanged() {
                 assert!(refused.iter().all(|message| protocol::outcome_code_level(&message.code.0) == Some(message.level)), "{refused:?}");
                 assert_eq!(*projection, base);
             }
-            Ok(()) => assert!(expected.iter().all(|message| !matches!(message.level, protocol::Severity::Error | protocol::Severity::Fatal)), "{mutation:?}"),
+            Ok(()) => assert!(expected.iter().all(|message| !matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)), "{mutation:?}"),
         }
     }
     base.retire_cold();
@@ -239,8 +239,8 @@ fn checked_apply_propagates_the_vocabulary_outcome_unchanged() {
 fn delete_widget_position_inverse_present_restores_move_widget_missing_returns_empty() {
     let mut projection = default_generation3d_snapshot();
     projection.host_snapshot.layout.insert("extrude".into(), WidgetLayout { x: 1.0, y: 2.0 });
-    assert_eq!(Generation3dMutation::DeleteWidgetPosition(DeleteWidgetPosition { id: "extrude".into() }).inverse(&projection), vec![Generation3dMutation::MoveWidget(MoveWidget { id: "extrude".into(), layout: WidgetLayout { x: 1.0, y: 2.0 } })]);
-    assert!(Generation3dMutation::DeleteWidgetPosition(DeleteWidgetPosition { id: "ghost".into() }).inverse(&projection).is_empty());
+    assert_eq!(Generation3dMutation::DeleteWidgetPosition(DeleteWidgetPosition { id: "extrude".into() }).inverse(&projection).expect("valid retained mutation inverse fixture"), vec![Generation3dMutation::MoveWidget(MoveWidget { id: "extrude".into(), layout: WidgetLayout { x: 1.0, y: 2.0 } })]);
+    assert!(Generation3dMutation::DeleteWidgetPosition(DeleteWidgetPosition { id: "ghost".into() }).inverse(&projection).expect("valid retained mutation inverse fixture").is_empty());
     projection.retire_cold();
 }
 

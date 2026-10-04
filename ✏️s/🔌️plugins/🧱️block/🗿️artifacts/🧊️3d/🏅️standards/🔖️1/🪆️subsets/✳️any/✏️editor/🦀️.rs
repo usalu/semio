@@ -65,7 +65,7 @@ use semio_framework::{
     ToolFactoryKey, ToolJobFactoryError, TopologyNode,
 };
 use semio_framework_plugin::app::{Dialect, InteractionView};
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 use std::collections::{BTreeMap, HashMap};
 use semio_framework_2d::compute::EngineHandles;
 
@@ -97,7 +97,7 @@ pub fn block3d_action(action: &str, args: Option<semio_framework_plugin::UiValue
 
 /// 🪟️ Bridges window chrome (`☑️options/*`'s [`semio_framework_plugin::WindowMeasure`]s), which still
 /// carries the retained WGPU action descriptor rather than a contract action binding.
-pub fn block3d_window_action(action: &str, args: Option<dsl::DslValue>) -> ActionDescriptor {
+pub fn block3d_window_action(action: &str, args: Option<semio_framework_value::DslValue>) -> ActionDescriptor {
     ActionDescriptor { controller_id: BLOCK3D_PLAY_APP_ID.into(), action: action.into(), args }
 }
 
@@ -170,8 +170,8 @@ fn window_id_from_args(args: Option<&Value>) -> String {
 /// (`Kit×Type`, matching the `"3d.block"` artifact kind) plus the `"catalog:out"` port: the puzzle3d
 /// seam that gives `puzzle3d_catalog_fragment` a real caller (see `export_media` below).
 pub fn block3d_io() -> semio_framework_plugin::AppIo {
-    semio_framework::io::resolve_ready(
-        semio_framework::io::resolve_ready(semio_framework_plugin::AppIo::from_artifact(
+    ::semio_framework_async::poll::resolve_ready(
+        ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::AppIo::from_artifact(
             BLOCK_3D_SCHEMA,
             MediaType { class: MediaClass::Kit, form: MediaForm::Type },
             semio_framework_plugin::ArtifactPresentation { id: "3d.block".into(), name: "Object Kind".into(), dimension: "3d".into(), component_kind: "block3d".into() },
@@ -347,7 +347,7 @@ impl ArtifactCommandWork<EditorApp<Block3dPlayApp>> for Block3dWindowPreviewWork
         (targets_world && command.command_id() == self.tool_id).then_some(1)
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Block3dPlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<Block3dPlayApp>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Block3dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Block3dPlayApp>>, Fault> {
         if self.consumed {
             return Err(Fault::from("block3d-window-preview-work-repeated"));
         }
@@ -440,36 +440,6 @@ impl ArtifactOwnedToolJobFactory for Block3dRetainedCommandJobFactory {
 //#endregion 🧵️RetainedCommands
 
 //#region 📬️StorePreparation
-/// 🧬️ Builds one `protocol::Edit<M>` for either lane's `advance()` — the artifact and config lanes
-/// differ only in `M` and their id prefix, so one generic helper replaces two copies of the same body.
-fn block3d_next_edit<M>(prefix: &str, forward: M, inverse: Vec<M>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<M> {
-    let id = format!("{prefix}-{}", authority.next_sequence_number());
-    protocol::Edit { line: authority.line_id().map(str::to_owned),
-        id: id.clone(),
-        actor: Some(authority.actor().to_string()),
-        forwards: vec![forward],
-        inverse,
-        mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
-            dependencies: Vec::new(),
-            base_version: authority.base_applied_edit_count() as u64,
-            author_id: Some(protocol::ActorId(authority.actor().to_string())),
-            timestamp: authority.next_clock(),
-            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-            payload_hash: None,
-            semantic_kind: None,
-            label: None,
-            group_id: None,
-            origin: Default::default(),
-            transaction: None,
-        }],
-        description, verb: None,
-        coalesce_key: None,
-        sequence_number: authority.next_sequence_number(),
-        started_at: String::new(),
-        finished_at: None,
-    }
-}
 
 fn block3d_artifact_mutation_retained_bytes(mutation: &Block3dMutation) -> Result<usize, String> {
     ::protocol::OpBinary::encode_op(mutation).map(|bytes| bytes.len()).map_err(|_| "block3d-artifact-mutation-encode-failed".to_string())
@@ -480,7 +450,7 @@ fn admit_block3d_artifact_mutation(mutation: &Block3dMutation) -> Result<store::
     if retained_bytes > BLOCK3D_ARTIFACT_STORE_MAXIMUM_BYTES {
         return Err("block3d-artifact-mutation-envelope".into());
     }
-    Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes })
+    Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))
 }
 
 struct Block3dArtifactStorePreparationFactory;
@@ -544,10 +514,10 @@ impl store::ArtifactStoreOneItemPreparation<Block3dSnapshot, Block3dMutation> fo
         }
         let base = self.base.as_ref().ok_or_else(|| "block3d-artifact-base-owner-missing".to_string())?;
         let mutation = self.mutation.take().ok_or_else(|| "block3d-artifact-mutation-owner-missing".to_string())?;
-        let inverse = mutation.inverse(base.get());
+        let inverse = mutation.inverse(base.get()).map_err(semio_framework_value::ValueError::into_message)?;
         let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
         let authority = self.authority.as_ref().ok_or_else(|| "block3d-artifact-authority-missing".to_string())?;
-        let edit = block3d_next_edit("block3d-artifact-retained", mutation, inverse, self.description.take(), authority);
+        let edit = authority.next_edit(mutation, inverse);
         let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
         self.prepared = Some(prepared);
@@ -570,7 +540,7 @@ impl store::ArtifactStoreOneItemPreparation<Block3dSnapshot, Block3dMutation> fo
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -582,7 +552,7 @@ impl store::ArtifactStoreOneItemPreparation<Block3dSnapshot, Block3dMutation> fo
         }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
-                return Err("block3d-artifact-base-retirement-rejected".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "block3d-artifact-base-retirement-rejected"));
             }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -606,7 +576,7 @@ fn admit_block3d_config_mutation(mutation: &Block3dConfigMutation) -> Result<sto
     if retained_bytes > BLOCK3D_CONFIG_STORE_MAXIMUM_BYTES {
         return Err("block3d-config-mutation-envelope".into());
     }
-    Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes })
+    Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))
 }
 
 struct Block3dConfigStorePreparationFactory;
@@ -670,10 +640,10 @@ impl store::ArtifactStoreOneItemPreparation<Block3dConfig, Block3dConfigMutation
         }
         let base = self.base.as_ref().ok_or_else(|| "block3d-config-base-owner-missing".to_string())?;
         let mutation = self.mutation.take().ok_or_else(|| "block3d-config-mutation-owner-missing".to_string())?;
-        let inverse = mutation.inverse(base.get());
+        let inverse = mutation.inverse(base.get()).map_err(semio_framework_value::ValueError::into_message)?;
         let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
         let authority = self.authority.as_ref().ok_or_else(|| "block3d-config-authority-missing".to_string())?;
-        let edit = block3d_next_edit("block3d-config-retained", mutation, inverse, self.description.take(), authority);
+        let edit = authority.next_edit(mutation, inverse);
         let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
         self.prepared = Some(prepared);
@@ -696,7 +666,7 @@ impl store::ArtifactStoreOneItemPreparation<Block3dConfig, Block3dConfigMutation
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -708,7 +678,7 @@ impl store::ArtifactStoreOneItemPreparation<Block3dConfig, Block3dConfigMutation
         }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
-                return Err("block3d-config-base-retirement-rejected".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "block3d-config-base-retirement-rejected"));
             }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -892,8 +862,8 @@ impl ArtifactEditor for Block3dPlayApp {
     /// 🎯️ Maps host action id + JSON args onto `Block3dCommand` — React/wgpu still speak the stringly
     /// `{action,args}` wire; this is the typed-command bridge until those call sites send `OpBinary`
     /// bytes directly.
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
-        let args = args.map(dsl::os_pack::json::from_dsl_value);
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
+        let args = args.map(semio_framework_pack_json::from_dsl_value);
         let args = args.as_ref();
         let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
         match action {
@@ -972,7 +942,8 @@ impl ArtifactEditor for Block3dPlayApp {
     /// declaring `Topology` rather than `Flat` lets `validate_state` prune stale selection/hover ids
     /// the moment a representation or vortex is removed — see `HierarchyProvider::Flat`'s doc comment
     /// on why `Flat` domains are never auto-pruned).
-    fn interaction_topology(doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> InteractionTopology {
+    fn interaction_topology(doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<InteractionTopology, semio_framework_value::ValueError> {
+ Ok((||{
         let mut ordered: Vec<TopologyNode> = Vec::new();
         for representation in &doc.snapshot.representations {
             ordered.push(TopologyNode { id: format!("surface:{}", representation.id), granularity: BLOCK3D_GRANULARITY_SURFACE.into(), parent: None });
@@ -983,7 +954,9 @@ impl ArtifactEditor for Block3dPlayApp {
         let mut domains = BTreeMap::new();
         domains.insert(BLOCK3D_INTERACTION_VORTEX.to_string(), DomainTopology { ordered });
         InteractionTopology { domains }
-    }
+    
+})())
+}
 
     fn window_measures(doc: &ArtifactView<'_, Block3dSnapshot>, cfg: &ConfigView<'_, Block3dConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<semio_framework_plugin::WindowMeasure>> {
         let labels = block3d_labels(view_state);

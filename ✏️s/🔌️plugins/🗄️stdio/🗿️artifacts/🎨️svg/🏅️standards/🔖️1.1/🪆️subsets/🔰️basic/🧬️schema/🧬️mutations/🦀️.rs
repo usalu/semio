@@ -42,6 +42,8 @@ pub mod set_clip_path_reference;
 /// paths are addressed by their `id`, because that is how a `clip-path="url(#id)"` reference names
 /// them and the profile's whole clip-path rule is about what a reference resolves to.
 //#region 🔖️Leaves
+#[path = "🩹️patch-snapshot/🦀️.rs"]
+pub mod patch_snapshot;
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "✍️set-text/🦀️.rs"]
@@ -60,6 +62,7 @@ pub mod stamp_base_profile;
 #[mutations(snapshot = SvgSnapshot, diff = SvgDiff, schema = "SvgBasicMutation")]
 pub enum SvgBasicMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
+    PatchSnapshot(patch_snapshot::PatchSnapshot),
     /// 🏷️ Sets (or, with `None`, clears) the root's `baseProfile`/`version` declaration.
     StampBaseProfile(stamp_base_profile::StampBaseProfile),
     /// ➕️ Inserts `node` as child `index` of the element at `parent`, REJECTED when the subtree
@@ -88,7 +91,7 @@ pub enum SvgBasicMutation {
 
 /// 📇️ Kebab-case spelling of every `SvgBasicMutation` variant, in declaration order — the exact
 /// `kinds` list `../../🔣️oracle.json`'s `mutationCatalogs` entry declares.
-pub const KINDS: &[&str] = &["set-snapshot", "stamp-base-profile", "insert-basic-element", "remove-element", "set-basic-attribute", "set-clip-path-reference", "insert-clip-path-shape", "set-text", "set-view-box", "set-transform"];
+pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "stamp-base-profile", "insert-basic-element", "remove-element", "set-basic-attribute", "set-clip-path-reference", "insert-clip-path-shape", "set-text", "set-view-box", "set-transform"];
 
 crate::impl_serde_op_codec!(SvgBasicMutation, "svg-basic-mutation");
 
@@ -96,6 +99,7 @@ crate::impl_serde_op_codec!(SvgBasicMutation, "svg-basic-mutation");
 pub fn kind_of(mutation: &SvgBasicMutation) -> &'static str {
     match mutation {
         SvgBasicMutation::SetSnapshot(_) => "set-snapshot",
+        SvgBasicMutation::PatchSnapshot(_) => "patch-snapshot",
         SvgBasicMutation::StampBaseProfile(_) => "stamp-base-profile",
         SvgBasicMutation::InsertBasicElement(_) => "insert-basic-element",
         SvgBasicMutation::RemoveElement(_) => "remove-element",
@@ -256,6 +260,7 @@ pub fn apply_svg_basic_mutation(snapshot: &mut SvgSnapshot, mutation: &SvgBasicM
 pub(crate) fn agg_diff(this: &SvgBasicMutation, base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
     match this {
         SvgBasicMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => protocol::MutationOutcome::new(diff_set_snapshot(base, snapshot)),
+        SvgBasicMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<SvgSnapshot, SvgBasicMutation>>::diff(patch, base),
         SvgBasicMutation::StampBaseProfile(stamp_base_profile::StampBaseProfile { base_profile, version }) => protocol::MutationOutcome::new(attributes_diff_at_path(base, &[], &[("baseProfile", base_profile.clone()), ("version", version.clone())])),
         SvgBasicMutation::InsertBasicElement(insert_basic_element::InsertBasicElement { parent, index, node }) => match subtree_profile_violation(node) {
             Some(message) => protocol::MutationOutcome::error(CODE_REJECTED, message, Vec::<String>::new()),
@@ -301,9 +306,11 @@ pub(crate) fn agg_diff(this: &SvgBasicMutation, base: &SvgSnapshot) -> protocol:
 }
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &SvgBasicMutation, base: &SvgSnapshot) -> Vec<SvgBasicMutation> {
+pub(crate) fn agg_inverse(this: &SvgBasicMutation, base: &SvgSnapshot) -> Result<Vec<SvgBasicMutation>, semio_framework_value::ValueError> {
+    Ok({
     match this {
         SvgBasicMutation::SetSnapshot(_) => vec![SvgBasicMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
+        SvgBasicMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<SvgSnapshot, SvgBasicMutation>>::inverse(patch, base)?),
         SvgBasicMutation::StampBaseProfile(_) => vec![SvgBasicMutation::StampBaseProfile(stamp_base_profile::StampBaseProfile { base_profile: prior_attribute(base, &[], "baseProfile"), version: prior_attribute(base, &[], "version") })],
         SvgBasicMutation::InsertBasicElement(insert_basic_element::InsertBasicElement { parent, index, .. }) => vec![SvgBasicMutation::RemoveElement(remove_element::RemoveElement { parent: parent.clone(), index: *index })],
         SvgBasicMutation::RemoveElement(remove_element::RemoveElement { parent, index }) => match node_at(&base.doc, parent) {
@@ -337,6 +344,8 @@ pub(crate) fn agg_inverse(this: &SvgBasicMutation, base: &SvgSnapshot) -> Vec<Sv
             vec![SvgBasicMutation::SetTransform(set_transform::SetTransform { path: path.clone(), transform: prior_attribute(base, path, "transform").and_then(|v| parse_transform_list(&v).ok()) })]
         }
     }
+
+    })
 }
 //#endregion 🔖️MutationTrait
 

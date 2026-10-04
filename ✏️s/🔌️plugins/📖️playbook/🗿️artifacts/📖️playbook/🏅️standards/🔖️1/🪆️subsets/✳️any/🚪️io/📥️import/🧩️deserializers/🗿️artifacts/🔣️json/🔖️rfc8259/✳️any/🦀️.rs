@@ -13,7 +13,7 @@ use semio_s_artifact_stdio_json::STDIO_JSON_DOCUMENT_SCHEMA;
 pub fn register() {}
 
 pub fn deserialize(from: &JsonSnapshot) -> Result<PlaybookSnapshot, String> {
-    let mut snap: PlaybookSnapshot = protocol::FromValue::from_value(protocol::DslValue::from(&from.to_serde_value())).map_err(|e| e.to_string())?;
+    let mut snap: PlaybookSnapshot = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(&from.to_serde_value())).map_err(|e| e.to_string())?;
     if snap.schema.is_empty() {
         snap.schema = PLAYBOOK_DOCUMENT_SCHEMA.into();
     }

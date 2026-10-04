@@ -42,13 +42,16 @@ export function dependencyDirectionWorkspacePackages(root: string, excludedPaths
     try { entry = lstatSync(owner); } catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") continue; throw error; }
     if (entry.isDirectory()) lstatSync(join(owner, "package.json"));
   }
-  const workspaces = membership.packages;
+  const workspaces = membership.packages, names = new Map<string,string>();
   return workspaces.filter((path) => !pathMatches(excludedPaths, path)).flatMap((owner) => {
     let directory;
     try { directory = lstatSync(join(root, owner)); } catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return []; throw error; }
     if (!directory.isDirectory()) throw new Error(`Dependency direction workspace owner must be a directory: ${owner}`);
     const manifest = JSON.parse(readFileSync(join(root, owner, "package.json"), "utf8"));
     if (typeof manifest.name !== "string" || !manifest.name) throw new Error(`Dependency direction requires an authored package name: ${owner}`);
+    const previous = names.get(manifest.name);
+    if (previous !== undefined && previous !== owner) throw new Error("Dependency direction package name has distinct owners: "+manifest.name+" ("+previous+", "+owner+")");
+    names.set(manifest.name,owner);
     const exports = manifest.exports && typeof manifest.exports === "object" && !Array.isArray(manifest.exports) && Object.keys(manifest.exports).some((key) => key.startsWith(".")) ? Object.keys(manifest.exports).filter((key) => manifest.exports[key] !== null) : ["."];
     return [{ name: manifest.name, owner, exports }];
   });

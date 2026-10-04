@@ -1,0 +1,100 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/geometry/mutation/set-point-positions/schema.json",
+  "title": "SetPointPositions",
+  "description": "The `set-point-positions` mutation record — absolute canvas positions of a set of points in one row, addressed by base index: the exact undo of a `move-points` drag.",
+  "x-semio-inverse-rows": {
+    "fixed": 1
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "positions"
+  ],
+  "properties": {
+    "positions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "index",
+          "x",
+          "y"
+        ],
+        "properties": {
+          "index": {
+            "type": "integer",
+            "minimum": 0,
+            "x-semio-ui": {
+              "widget": "reference",
+              "role": "target",
+              "label": {
+                "en": "Point",
+                "de": "Punkt"
+              },
+              "description": {
+                "en": "The base index of the point placed at this position.",
+                "de": "Der Basisindex des Punkts, der an dieser Position platziert wird."
+              },
+              "ref": {
+                "kind": "point"
+              },
+              "order": 10
+            }
+          },
+          "x": {
+            "type": "number",
+            "x-semio-ui": {
+              "widget": "stepper",
+              "role": "value",
+              "label": {
+                "en": "Position X",
+                "de": "Position X"
+              },
+              "step": 1,
+              "precision": 2,
+              "order": 20
+            }
+          },
+          "y": {
+            "type": "number",
+            "x-semio-ui": {
+              "widget": "stepper",
+              "role": "value",
+              "label": {
+                "en": "Position Y",
+                "de": "Position Y"
+              },
+              "step": 1,
+              "precision": 2,
+              "order": 30
+            }
+          }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Positions",
+          "de": "Positionen"
+        },
+        "description": {
+          "en": "One absolute canvas position per point; each point at most once.",
+          "de": "Eine absolute Zeichenflächenposition pro Punkt; jeder Punkt höchstens einmal."
+        },
+        "group": "target",
+        "order": 10
+      }
+    }
+  },
+  "x-semio-invariant": [
+    {
+      "id": "unique-point-indices",
+      "description": {
+        "en": "Every position names a different point.",
+        "de": "Jede Position nennt einen anderen Punkt."
+      }
+    }
+  ]
+}

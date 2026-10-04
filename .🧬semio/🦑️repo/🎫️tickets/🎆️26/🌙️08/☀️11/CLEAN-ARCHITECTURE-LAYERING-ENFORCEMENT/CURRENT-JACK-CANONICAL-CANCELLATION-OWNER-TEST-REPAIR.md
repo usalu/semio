@@ -1,0 +1,7 @@
+# Jack Canonical Cancellation Owner Laws
+
+Actual complete owner suite35726 compiled/built the public package and passed36 snapshot tests, but two existing interior-work cancellation laws still asserted platform AbortError. The actual first-party SQLite transfer correctly answered ValueError with the language-neutral refusal kind canceled. Forms independent owner suite10731 passed29 tests with build/public resolution/strict declarations.
+
+Root hand-repaired the two Jack assertions to require the explicitly exported first-party ValueError class and exact canceled kind. Each promise executes once; both assertions inspect the same refusal. Actual progress-triggered abort, deep1024 retained nodes, largeUnicode work, independentSQLite oracles and all other existing checks remain intact. No runtime cancellation fallback, wrapper, legacy identity or weaker prose match was added. Full before/authored/inverse and four canonical schema/runtime/corpus contexts are retained in canonical-cancellation-owner-inputs/jack-reviewed-before-1.json; exact posthash is retained in jack-mounted-1.json. Actual complete owner rerun is pending.
+
+Actual complete owner rerun33610 is terminalGREEN exit0:38snapshot laws+2wirelaws,257expectations,10runtimeexports, bothsuitesran afterpublicbuild/strictconsumer checks. Canonicaldeep/Unicode cancellation cases bothPASS. Previous36/2RED isretained. NoRuntimeSource orfallback changed.

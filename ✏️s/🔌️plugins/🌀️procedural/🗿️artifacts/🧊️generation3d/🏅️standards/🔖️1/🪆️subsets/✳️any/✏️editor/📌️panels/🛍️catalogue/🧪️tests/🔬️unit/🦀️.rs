@@ -3,7 +3,7 @@ use super::*;
 #[test]
 fn every_catalogue_row_activates_the_exact_drag_descriptor() {
     let _serial = crate::test_serial::lock();
-    let sections = semio_framework_os_flow::flow_palette_catalogue_sections();
+    let sections = catalogue().sections;
     let mut keys = std::collections::BTreeSet::new();
     for item in sections.iter().flat_map(|section| &section.items) {
         let node = catalogue_row(&Generation3dLabels::NATIVE_EN, item).expect("catalogue row");
@@ -23,4 +23,14 @@ fn every_catalogue_row_activates_the_exact_drag_descriptor() {
         assert!(keys.insert(node.key.as_str().to_owned()), "catalogue row identity is unique");
         semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::app::built_to_component_tree(node)).expect("retire row");
     }
+}
+
+#[test]
+fn generation3d_catalogue_exports_only_its_own_codec_roster() {
+    let _serial = crate::test_serial::lock();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🎮️commands/🧩️add-widget/🧫️fixtures/🔣️.json")).unwrap();
+    let catalogue = catalogue();
+    let formats = catalogue.sections.iter().flat_map(|section| &section.items).filter(|item| item.kind == "outputExport").map(|item| item.format.as_deref().unwrap()).collect::<Vec<_>>();
+    let expected = fixture["exportFormats"].as_array().unwrap().iter().map(|value| value.as_str().unwrap()).collect::<Vec<_>>();
+    assert_eq!(formats, expected);
 }

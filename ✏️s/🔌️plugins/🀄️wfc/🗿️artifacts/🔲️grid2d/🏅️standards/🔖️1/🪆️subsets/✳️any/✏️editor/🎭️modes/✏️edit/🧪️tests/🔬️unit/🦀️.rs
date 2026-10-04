@@ -12,7 +12,7 @@ fn the_mode_is_localized_and_carries_no_unreferenced_tool() {
 
 #[test]
 fn the_layout_places_the_grid_beside_the_preview() {
-    let json = dsl::json::to_json_string(&layout());
+    let json = semio_framework_pack_json::to_json_string(&layout());
     assert!(json.contains(grid::WINDOW_KIND_ID), "{json}");
     assert!(json.contains(preview::WINDOW_KIND_ID), "{json}");
 }

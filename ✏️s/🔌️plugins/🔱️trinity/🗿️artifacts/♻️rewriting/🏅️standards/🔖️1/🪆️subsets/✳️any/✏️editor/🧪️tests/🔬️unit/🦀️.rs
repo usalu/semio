@@ -17,6 +17,8 @@ fn trinity_rewriting_manifest_for_tests() -> App {
 }
 
 semio_framework_plugin::history_edit_acceptance_law!("trinity", TrinityRewritingPlayApp, trinity_rewriting_manifest_for_tests, "../..");
+semio_framework_plugin::composed_reload_law!("trinity", TrinityRewritingPlayApp, trinity_rewriting_manifest_for_tests, "../..");
+semio_framework_plugin::composed_child_history_law!("trinity", TrinityRewritingPlayApp, trinity_rewriting_manifest_for_tests, [("patchNodes", r#"{"nodeIds":["7dc5b737-3b6b-4068-b315-b7bacc91c2e1"],"field":"name","value":"Renamed core"}"#)]);
 
 fn meta(actor: &str) -> semio_framework_plugin::ActionMeta {
     artifact_app_laws::meta(actor)
@@ -55,17 +57,17 @@ async fn trinity_rewriting_command_text_and_binary_round_trip() {
 /// 🔚 Self-closing: the store's `Drop` demands the terminal-empty witness, so the guard retires the
 /// app through the framework's exact close loop (skipped while unwinding).
 async fn new_app() -> RewritingTestApp {
-    let mut app = artifact_app_laws::new_app_with_registry::<EditorApp<TrinityRewritingPlayApp>>(trinity_rewriting_manifest_for_tests).await;
+    let mut app = artifact_app_laws::new_app_with_registry_and_members::<EditorApp<TrinityRewritingPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(trinity_rewriting_manifest_for_tests).await;
     app.bind_instance_id(REWRITING_TEST_INSTANCE).await;
     RewritingTestApp(app)
 }
 
 const REWRITING_TEST_INSTANCE: u32 = 1;
 
-pub(crate) struct RewritingTestApp(VcsArtifactApp<EditorApp<TrinityRewritingPlayApp>>);
+pub(crate) struct RewritingTestApp(VcsArtifactApp<EditorApp<TrinityRewritingPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>);
 
 impl std::ops::Deref for RewritingTestApp {
-    type Target = VcsArtifactApp<EditorApp<TrinityRewritingPlayApp>>;
+    type Target = VcsArtifactApp<EditorApp<TrinityRewritingPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
     fn deref(&self) -> &Self::Target {
         &self.0
     }
@@ -107,8 +109,8 @@ async fn render(app: &mut RewritingTestApp, body_key: &str, view: &ViewModel) ->
 /// replacement for the deleted `TrinityRewritingCommand::SetSelection`. On a mounted app the verb is
 /// admitted as a framework-reserved job and publishes later, so both are settled here.
 async fn select_graph(app: &mut RewritingTestApp, ids: &[&str]) {
-    let targets: Vec<pack::JsonValue> = ids.iter().map(|id| pack::json!({ "granularity": "node", "id": id })).collect();
-    let args = pack::json_to_dsl_value(&pack::json!({ "domainId": "graph", "targets": pack::to_json_string(&targets) }));
+    let targets: Vec<semio_framework_pack_json::Value> = ids.iter().map(|id| semio_framework_pack_json::json!({ "granularity": "node", "id": id })).collect();
+    let args = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "domainId": "graph", "targets": semio_framework_pack_json::to_json_string(&targets) }));
     let admitted = app.handle_action("interactionSelect", Some(&args), &meta("local")).await.expect("interactionSelect");
     semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.expect("interactionSelect reserved-job commit");
     settle(app).await;
@@ -156,7 +158,7 @@ async fn compiles_jack_query_from_rule() {
 #[semio_framework_async_macros::async_test]
 async fn apply_rewriting_changes_after_fixture() {
     let state = default_rule_state();
-    assert_ne!(state.before_fixture_json, after_fixture_json(&state));
+    assert_ne!(state.working_graph, after_fixture(&state).expect("valid typed rule"));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -190,15 +192,15 @@ async fn add_and_delete_rhs_set_clause() {
     let mut app = new_app().await;
     app.dispatch_typed(TrinityRewritingCommand::AddRuleClause { kind: "set".into() }, &meta("local")).await.expect("add clause");
     settle(&mut app).await;
-    let rhs: Rhs = pack::from_json_str(&app.snapshot().unwrap().rhs_json).unwrap();
+    let rhs: Rhs = app.snapshot().unwrap().rhs;
     assert_eq!(rhs.set.len(), 2);
     let result = app
-        .dispatch_typed(TrinityRewritingCommand::NodeGraphEdit { surface_id: TRINITY_REWRITING_PLAY_SURFACE_RHS.into(), operations_json: pack::json!([{ "operation": "delete", "nodeIds": ["rhs-set-1"], "synapseIds": [] }]).to_string() }, &meta("local"))
+        .dispatch_typed(TrinityRewritingCommand::NodeGraphEdit { surface_id: TRINITY_REWRITING_PLAY_SURFACE_RHS.into(), operations_json: semio_framework_pack_json::json!([{ "operation": "delete", "nodeIds": ["rhs-set-1"], "synapseIds": [] }]).to_string() }, &meta("local"))
         .await
         .expect("delete the clause node");
     let receipt = settle(&mut app).await;
     assert!(!result.mutations.is_empty() || receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact), "a delete row must publish an artifact mutation: {:?}", receipt.lanes);
-    let rhs: Rhs = pack::from_json_str(&app.snapshot().unwrap().rhs_json).unwrap();
+    let rhs: Rhs = app.snapshot().unwrap().rhs;
     assert_eq!(rhs.set.len(), 1);
 }
 
@@ -306,15 +308,15 @@ async fn trinity_rewriting_labels_translate_panels_in_german() {
 #[semio_framework_async_macros::async_test]
 async fn set_lhs_json_undo_redo_round_trip() {
     let mut app = new_app().await;
-    let original = app.snapshot().unwrap().lhs_json;
+    let original = app.snapshot().unwrap().lhs;
     let next_lhs = r#"{"pattern":{"leftVar":"x","leftKind":"Piece","edgeVar":"r","edgeKind":"Connection","rightVar":"y","rightKind":"Piece"}}"#;
     app.dispatch_typed(TrinityRewritingCommand::SetLhsJson { value: next_lhs.into() }, &meta("local")).await.expect("set lhs");
     settle(&mut app).await;
-    assert_eq!(app.snapshot().unwrap().lhs_json, next_lhs);
+    assert_eq!(app.snapshot().unwrap().lhs, semio_framework_pack_json::from_json_str::<crate::standards::v1::subsets::any::schema::Lhs>(next_lhs, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("typed match input"));
     history(&mut app, "undo").await;
-    assert_eq!(app.snapshot().unwrap().lhs_json, original);
+    assert_eq!(app.snapshot().unwrap().lhs, original);
     history(&mut app, "redo").await;
-    assert_eq!(app.snapshot().unwrap().lhs_json, next_lhs);
+    assert_eq!(app.snapshot().unwrap().lhs, semio_framework_pack_json::from_json_str::<crate::standards::v1::subsets::any::schema::Lhs>(next_lhs, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("typed match input"));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -324,8 +326,8 @@ async fn export_media_graph_out_reflects_rule_applied_fixture() {
     let MediaPayload::Structured { json, .. } = graph_out.payload else { panic!("structured payload") };
     let bytes = store::pack_rt::pack_value_from_base64(&json).expect("decode base64");
     let fixture = <JackSnapshot as ArtifactPack>::decode_pack(&bytes).expect("decode pack");
-    let expected = JackSnapshot::from_json(&after_fixture_json(&app.snapshot().unwrap())).unwrap();
-    assert_eq!(fixture.nodes().len(), expected.nodes().len());
+    let expected = after_fixture(&composed_state(&app).await).expect("valid typed rule");
+    assert_eq!(fixture.nodes().expect("valid retained Jack child").len(), expected.nodes().expect("valid retained Jack child").len());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -343,62 +345,101 @@ async fn rewriting_io_declares_graph_in_and_graph_out_ports() {
 async fn reset_document_ownership_rewriting_preserves_pack_with_an_edit_free_history() {
     use store::ArtifactPack;
     let expected: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/♻️reset-document.json")).unwrap();
-    let source = RewritingSnapshot { before_fixture_json: "{}".into(), lhs_json: "{}".into(), rhs_json: "{}".into(), parameter_bindings: BTreeMap::new(), rule_layout: BTreeMap::new() };
-    let before = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&source)).unwrap();
+    let source = default_rule_state();
+    let before = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&source)).unwrap();
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = reset_document_effect(&source) else { panic!("reset must load a document"); };
     let decoded = <RewritingSnapshot as ArtifactPack>::decode_pack(&pack).unwrap();
-    assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&decoded)).unwrap(), before);
-    assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&source)).unwrap(), before);
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).unwrap(), before);
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&source)).unwrap(), before);
     let history = store::os_spr::decode_history(&spr, &store::os_spr::DecodeOptions::default()).await.unwrap();
     let actual = serde_json::json!({ "documentId": history.doc_id, "schema": history.schema, "edits": history.edits.len(), "transitions": history.transitions.len(), "conflicts": history.conflicts.len() });
     assert_eq!(actual, expected);
 }
 
 //#region 🩹️RailVerbLaws
-fn working_graph_node_ids(state: &RewritingSnapshot) -> Vec<String> {
-    semio_s_artifact_trinity_jack::JackSnapshot::from_json(&state.before_fixture_json).expect("the working graph decodes").nodes().into_iter().map(|node| node.id).collect()
+/// 🧸️ The live `workingGraph` member — the working graph's single truth (design §20.15), never the parent's genesis owner.
+async fn live_working(app: &RewritingTestApp) -> semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+    use store::{ArtifactPack, SpaceMember};
+    let snapshot = app.snapshot().expect("rewriting parent projection");
+    let bytes = app.child_store(crate::content::WORKING_CHILD_SLOT, &snapshot.working_graph.content.child_id).await.expect("working child").document_pack_bytes().await.expect("working child pack");
+    SemioGraphSnapshot::decode_pack(&bytes).expect("working child snapshot")
 }
 
-fn working_graph_node_name(state: &RewritingSnapshot, id: &str) -> String {
-    semio_s_artifact_trinity_jack::JackSnapshot::from_json(&state.before_fixture_json).expect("the working graph decodes").nodes().into_iter().find(|node| node.id == id).map(|node| node.name).expect("node")
+/// 🧩️ The parent projection composed with its live working child, as every reader sees the rule.
+async fn composed_state(app: &RewritingTestApp) -> RewritingSnapshot {
+    let mut state = app.snapshot().expect("rewriting parent projection");
+    semio_s_artifact_trinity_jack::materialize_jack_snapshot(&mut state.working_graph.content, live_working(app).await);
+    state
+}
+
+async fn working_node_ids(app: &RewritingTestApp) -> Vec<String> {
+    live_working(app).await.nodes.iter().map(|node| node.id.value.clone()).collect()
+}
+
+async fn working_node_label(app: &RewritingTestApp, id: &str) -> String {
+    live_working(app).await.nodes.iter().find(|node| node.id.value == id).map(|node| node.label.clone()).expect("node")
+}
+
+/// 🕹️ Dispatches one rail press and settles its retained job; a refusal surfaces as the fault.
+async fn dispatch_rail(app: &mut RewritingTestApp, action: &str, args: &[(&str, &str)]) -> Result<artifact_app_laws::TypedOperationFixtureReceipt, Fault> {
+    let args = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::Value::Object(args.iter().map(|(key, value)| ((*key).to_string(), semio_framework_pack_json::Value::String((*value).to_string()))).collect()));
+    app.handle_action(action, Some(&args), &meta("local")).await?;
+    artifact_app_laws::settle_registered_typed_operation(&mut app.0, REWRITING_TEST_INSTANCE).await
+}
+
+/// 🕸️ Dispatches one `nodeGraphEdit` batch on `surface` and settles it.
+async fn graph_edit(app: &mut RewritingTestApp, surface: &str, rows: semio_framework_pack_json::Value) -> Result<artifact_app_laws::TypedOperationFixtureReceipt, Fault> {
+    let args = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "surfaceId": surface, "operations": rows.to_string() }));
+    app.handle_action("nodeGraphEdit", Some(&args), &meta("local")).await?;
+    artifact_app_laws::settle_registered_typed_operation(&mut app.0, REWRITING_TEST_INSTANCE).await
+}
+
+/// 📜️ The edited history rows of the document.
+async fn edit_rows(app: &mut RewritingTestApp) -> usize {
+    use semio_framework_plugin::PluginApp;
+    app.history_snapshot().await.expect("history").upserts.into_iter().filter(|row| row.edit_id.is_some()).count()
+}
+
+fn child_lane(receipt: &artifact_app_laws::TypedOperationFixtureReceipt) -> bool {
+    receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Child)
 }
 
 /// ⚖️ LAW: `patchNodes` pressed from the rail with an EMPTY `nodeIds` patches the selected nodes of the
-/// working graph, and a comma list in the text field names several nodes (S15: the verb "moved nothing").
+/// working graph, and a comma list in the text field names several nodes (S15: the verb "moved nothing") — each press ONE edit of
+/// the composed `workingGraph` child (design §20.15).
 #[semio_framework_async_macros::async_test]
 async fn patch_nodes_from_the_rail_patches_the_selection_or_the_listed_nodes() {
     let mut app = new_app().await;
-    let ids = working_graph_node_ids(&app.snapshot().expect("projection"));
+    let ids = working_node_ids(&app).await;
     select_graph(&mut app, &[&ids[0]]).await;
-    let rail = |pairs: &[(&str, &str)]| pack::json_to_dsl_value(&pack::JsonValue::Object(pairs.iter().map(|(key, value)| ((*key).to_string(), pack::JsonValue::String((*value).to_string()))).collect()));
-    app.handle_action("patchNodes", Some(&rail(&[("field", "name"), ("value", "S15 Selected")])), &meta("local")).await.expect("an empty nodeIds patches the selection");
-    settle(&mut app).await;
-    assert_eq!(working_graph_node_name(&app.snapshot().expect("projection"), &ids[0]), "S15 Selected");
-    app.handle_action("patchNodes", Some(&rail(&[("nodeIds", &format!("{} {}", ids[0], ids[1])), ("field", "name"), ("value", "S15 Listed")])), &meta("local")).await.expect("a listed nodeIds patches both nodes");
-    settle(&mut app).await;
-    let state = app.snapshot().expect("projection");
-    assert_eq!((working_graph_node_name(&state, &ids[0]), working_graph_node_name(&state, &ids[1])), ("S15 Listed".to_string(), "S15 Listed".to_string()));
+    let receipt = dispatch_rail(&mut app, "patchNodes", &[("field", "name"), ("value", "S15 Selected")]).await.expect("an empty nodeIds patches the selection");
+    assert!(child_lane(&receipt), "patchNodes edits the working child: lanes {:?}", receipt.lanes);
+    assert_eq!(working_node_label(&app, &ids[0]).await, "S15 Selected");
+    dispatch_rail(&mut app, "patchNodes", &[("nodeIds", &format!("{} {}", ids[0], ids[1])), ("field", "name"), ("value", "S15 Listed")]).await.expect("a listed nodeIds patches both nodes");
+    assert_eq!((working_node_label(&app, &ids[0]).await, working_node_label(&app, &ids[1]).await), ("S15 Listed".to_string(), "S15 Listed".to_string()));
 }
 
 /// ⚖️ LAW: a `patchNodes` that cannot move the document is refused by name — an unknown id is
 /// `mutation.target-missing`, no id and no selection is `app.command.targets-required` (the precondition an agent,
-/// which has no selection, meets by naming `nodeIds`), an unsupported field or an empty value is
-/// `app.command.invalid-args`. It used to answer an empty emit that read as an accepted edit.
+/// which has no selection, meets by naming `nodeIds`), an unsupported field, an empty value or a kind the manifest does not
+/// declare is `app.command.invalid-args` — and every refusal leaves the working child untouched.
 #[semio_framework_async_macros::async_test]
 async fn patch_nodes_refuses_what_it_cannot_apply() {
-    let state = default_rule_state();
-    let first = working_graph_node_ids(&state)[0].clone();
-    let code = |result: Result<Emit<RewriteRuleMutation, NoConfigMutation>, Fault>| result.err().expect("refused").code.0;
-    assert_eq!(code(crate::editor::rewriting::commands::patch_nodes(&state, &["no-such-node".into()], &[], "name", "x")), "mutation.target-missing");
-    assert_eq!(code(crate::editor::rewriting::commands::patch_nodes(&state, &[], &[], "name", "x")), "app.command.targets-required");
-    assert_eq!(code(crate::editor::rewriting::commands::patch_nodes(&state, &[first.clone()], &[], "colour", "x")), "app.command.invalid-args");
-    assert_eq!(code(crate::editor::rewriting::commands::patch_nodes(&state, &[first.clone()], &[], "kind", " ")), "app.command.invalid-args");
-    assert_eq!(code(crate::editor::rewriting::commands::patch_nodes(&state, &[first.clone()], &[], "kind", "NoSuchKind")), "app.command.invalid-args", "a kind the manifest does not declare is refused, not written");
-    assert!(!crate::editor::rewriting::commands::patch_nodes(&state, &[], &[first], "name", "Beam").expect("the selection is the target").artifact_mutations.is_empty());
+    let mut app = new_app().await;
+    let first = working_node_ids(&app).await[0].clone();
+    let before = live_working(&app).await;
+    let refusal = |result: Result<artifact_app_laws::TypedOperationFixtureReceipt, Fault>| result.err().expect("refused").code.0;
+    assert_eq!(refusal(dispatch_rail(&mut app, "patchNodes", &[("nodeIds", "no-such-node"), ("field", "name"), ("value", "x")]).await), "mutation.target-missing");
+    assert_eq!(refusal(dispatch_rail(&mut app, "patchNodes", &[("field", "name"), ("value", "x")]).await), "app.command.targets-required");
+    assert_eq!(refusal(dispatch_rail(&mut app, "patchNodes", &[("nodeIds", first.as_str()), ("field", "colour"), ("value", "x")]).await), "app.command.invalid-args");
+    assert_eq!(refusal(dispatch_rail(&mut app, "patchNodes", &[("nodeIds", first.as_str()), ("field", "kind"), ("value", " ")]).await), "app.command.invalid-args");
+    assert_eq!(refusal(dispatch_rail(&mut app, "patchNodes", &[("nodeIds", first.as_str()), ("field", "kind"), ("value", "NoSuchKind")]).await), "app.command.invalid-args", "a kind the manifest does not declare is refused, not written");
+    assert_eq!(live_working(&app).await, before, "every refusal leaves the working child untouched");
 }
 
-/// 🚫️ LAW: `addRuleClause` refuses what it cannot add — a second WHERE clause, an unknown clause kind, a rule whose
-/// own JSON no longer decodes — instead of an empty emit (S15: `kind=where` on the default rule journalled a row and
+/// 🚫️ LAW: `addRuleClause` refuses what it cannot add — a second WHERE clause, an unknown clause kind, an input whose
+/// typed match variable is not text — instead of an empty emit (S15: `kind=where` on the default rule journalled a row and
 /// changed nothing).
 #[semio_framework_async_macros::async_test]
 async fn add_rule_clause_refuses_what_it_cannot_add() {
@@ -407,8 +448,7 @@ async fn add_rule_clause_refuses_what_it_cannot_add() {
     let code = |result: Result<Emit<RewriteRuleMutation, NoConfigMutation>, Fault>| result.err().expect("refused").code.0;
     assert_eq!(code(add(&state, "where")), "app.command.invalid-args", "the default rule already has a WHERE clause");
     assert_eq!(code(add(&state, "optional")), "app.command.invalid-args");
-    let broken = RewritingSnapshot { lhs_json: "{".into(), ..state.clone() };
-    assert_eq!(code(add(&broken, "create")), "trinity.rewriting.rule-undecodable");
+    assert_eq!(code(crate::editor::rewriting::commands::set_lhs(&state, r#"{"pattern":{"leftVar":42,"leftKind":"Piece"}}"#)), "app.command.invalid-args", "the declared input rejects a nontext match variable");
 }
 
 /// ⏪️ LAW: a rail `addRuleClause kind=create` is ONE undoable edit that rewrites only the RHS — undo restores the
@@ -419,16 +459,16 @@ async fn a_rail_add_rule_clause_rewrites_only_the_rhs_and_round_trips() {
     let before = app.snapshot().expect("projection");
     let emit = crate::editor::rewriting::commands::add_rule_clause_command(&before, "create").expect("create clause");
     assert!(!emit.artifact_mutations.is_empty() && emit.artifact_mutations.iter().all(|mutation| matches!(mutation, RewriteRuleMutation::EditRhs(_))), "only the RHS changes: {:?}", emit.artifact_mutations);
-    let rail = pack::json_to_dsl_value(&pack::json!({ "kind": "create" }));
+    let rail = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "kind": "create" }));
     app.handle_action("addRuleClause", Some(&rail), &meta("local")).await.expect("addRuleClause");
     settle(&mut app).await;
     let after = app.snapshot().expect("projection");
-    assert_ne!(after.rhs_json, before.rhs_json, "the clause is added");
-    assert_eq!(after.lhs_json, before.lhs_json, "the LHS is untouched");
+    assert_ne!(after.rhs, before.rhs, "the clause is added");
+    assert_eq!(after.lhs, before.lhs, "the LHS is untouched");
     history(&mut app, "undo").await;
-    assert_eq!(app.snapshot().expect("projection").rhs_json, before.rhs_json, "undo restores the RHS");
+    assert_eq!(app.snapshot().expect("projection").rhs, before.rhs, "undo restores the RHS");
     history(&mut app, "redo").await;
-    assert_eq!(app.snapshot().expect("projection").rhs_json, after.rhs_json, "redo adds the clause again");
+    assert_eq!(app.snapshot().expect("projection").rhs, after.rhs, "redo adds the clause again");
 }
 
 /// ⚖️ LAW: `nodeGraphEdit` is the node-graph host's gesture verb (a `surfaceId` plus an `operations`
@@ -464,12 +504,12 @@ async fn the_editor_declares_the_artifact_kind_it_edits() {
 }
 
 //#region 🕹️NodeDragLaws
-fn working_graph_positions(state: &RewritingSnapshot) -> Vec<(String, f64, f64)> {
-    semio_s_artifact_trinity_jack::JackSnapshot::from_json(&state.before_fixture_json).expect("the working graph decodes").nodes().into_iter().map(|node| (node.id, node.x, node.y)).collect()
+async fn working_positions(app: &RewritingTestApp) -> Vec<(String, f64, f64)> {
+    live_working(app).await.nodes.iter().map(|node| (node.id.value.clone(), node.position.x, node.position.y)).collect()
 }
 
-fn drag_row(gesture: &str, node_ids: &[&str], dx: f64, dy: f64) -> pack::JsonValue {
-    pack::json!({ "operation": "move", "gestureId": gesture, "nodeIds": node_ids, "dx": dx, "dy": dy })
+fn drag_row(gesture: &str, node_ids: &[&str], dx: f64, dy: f64) -> semio_framework_pack_json::Value {
+    semio_framework_pack_json::json!({ "operation": "move", "gestureId": gesture, "nodeIds": node_ids, "dx": dx, "dy": dy })
 }
 
 fn applied(state: &RewritingSnapshot, leaves: &[RewriteRuleMutation]) -> RewritingSnapshot {
@@ -480,36 +520,32 @@ fn applied(state: &RewritingSnapshot, leaves: &[RewriteRuleMutation]) -> Rewriti
     next
 }
 
-/// ⚖️ LAW: a released working-graph drag (the hosts' `move` gesture record) is ONE tool transaction of `<appId>#nodeGraphEdit`
-/// holding ONE relative `drag-working-nodes {targets, dx, dy}` — every target moves by the offset, every other node stays — and
-/// ONE inverse row restores the graph; two gestures are two transactions, a seedless view publishes the leaf plainly, and a
-/// release that moves nothing leaves zero trace.
-#[test]
-fn a_released_working_graph_drag_is_one_tool_transaction_of_one_relative_leaf() {
-    let state = default_rule_state();
-    let ids = working_graph_node_ids(&state);
+/// ⚖️ LAW: a released working-graph drag (the hosts' `move` gesture record) is ONE edit of the composed `workingGraph` child holding
+/// ONE relative `drag-nodes {targets, dx, dy}` (design §20.15) — every target moves by the offset, every other node stays — and ONE
+/// undo restores the graph; two gestures are two rows, a release that moves nothing leaves zero trace, and a malformed record is
+/// refused by name.
+#[semio_framework_async_macros::async_test]
+async fn a_released_working_graph_drag_is_one_tool_transaction_of_one_relative_leaf() {
+    let mut app = new_app().await;
+    let before = working_positions(&app).await;
+    let ids = working_node_ids(&app).await;
     let (first, second) = (ids[0].as_str(), ids[1].as_str());
-    let operations = pack::JsonValue::Array(vec![drag_row("g-1", &[first, second], 24.0, -8.0)]).to_string();
-    let emit = crate::editor::rewriting::commands::node_graph_edit(&state, TRINITY_REWRITING_PLAY_SURFACE_BEFORE, &operations, "seed").expect("a drag row is admitted");
-    let transaction = emit.transaction.clone().expect("the release is a tool transaction");
-    assert!(transaction.id.starts_with("tx-") && transaction.tool == "s.trinity.rewriting@1/*#editor#nodeGraphEdit", "{transaction:?}");
-    assert!(emit.coalesce_key.is_none(), "a committed transaction is a plain edit");
-    assert!(matches!(emit.artifact_mutations.as_slice(), [RewriteRuleMutation::DragWorkingNodes(leaf)] if leaf.targets == vec![first.to_string(), second.to_string()] && (leaf.dx, leaf.dy) == (24.0, -8.0)), "{:?}", emit.artifact_mutations);
-    let moved = applied(&state, &emit.artifact_mutations);
-    for ((id, x, y), (_, before_x, before_y)) in working_graph_positions(&moved).into_iter().zip(working_graph_positions(&state)) {
+    let rows = edit_rows(&mut app).await;
+    let receipt = graph_edit(&mut app, TRINITY_REWRITING_PLAY_SURFACE_BEFORE, semio_framework_pack_json::Value::Array(vec![drag_row("g-1", &[first, second], 24.0, -8.0)])).await.expect("a drag row is admitted");
+    assert!(child_lane(&receipt), "the drag edits the working child: lanes {:?}", receipt.lanes);
+    for ((id, x, y), (_, before_x, before_y)) in working_positions(&app).await.into_iter().zip(before.iter().cloned()) {
         let expected = if id == first || id == second { (before_x + 24.0, before_y - 8.0) } else { (before_x, before_y) };
         assert_eq!((x, y), expected, "node {id}");
     }
-    let inverse = crate::inverse_rewrite_rule_mutation(&state, &emit.artifact_mutations[0]);
-    assert!(matches!(inverse.as_slice(), [RewriteRuleMutation::EditBeforeFixture(_)]), "one inverse row: {inverse:?}");
-    assert_eq!(applied(&moved, &inverse), state, "the inverse row restores the working graph");
-    let again = crate::editor::rewriting::commands::node_graph_edit(&state, TRINITY_REWRITING_PLAY_SURFACE_BEFORE, &pack::JsonValue::Array(vec![drag_row("g-2", &[first], 1.0, 0.0)]).to_string(), "seed").expect("a second drag");
-    assert_ne!(again.transaction.expect("second ref").id, transaction.id, "two gestures are two transactions");
-    let plain = crate::editor::rewriting::commands::node_graph_edit(&state, TRINITY_REWRITING_PLAY_SURFACE_BEFORE, &operations, "").expect("a seedless drag");
-    assert!(plain.transaction.is_none() && plain.artifact_mutations.len() == 1, "a view without command authority publishes the leaf plainly");
-    let idle = crate::editor::rewriting::commands::node_graph_edit(&state, TRINITY_REWRITING_PLAY_SURFACE_BEFORE, &pack::JsonValue::Array(vec![drag_row("g-3", &[first], 0.0, 0.0)]).to_string(), "seed").expect("a zero drag");
-    assert!(idle.artifact_mutations.is_empty() && idle.transaction.is_none(), "a release that moved nothing leaves zero trace");
-    let malformed = crate::editor::rewriting::commands::node_graph_edit(&state, TRINITY_REWRITING_PLAY_SURFACE_BEFORE, &pack::json!([{ "operation": "move", "gestureId": "g", "nodeIds": [], "dx": 1.0, "dy": 0.0 }]).to_string(), "seed");
+    assert_eq!(edit_rows(&mut app).await, rows + 1, "one drag, one row");
+    graph_edit(&mut app, TRINITY_REWRITING_PLAY_SURFACE_BEFORE, semio_framework_pack_json::Value::Array(vec![drag_row("g-2", &[first], 1.0, 0.0)])).await.expect("a second drag");
+    assert_eq!(edit_rows(&mut app).await, rows + 2, "two gestures are two rows");
+    graph_edit(&mut app, TRINITY_REWRITING_PLAY_SURFACE_BEFORE, semio_framework_pack_json::Value::Array(vec![drag_row("g-3", &[first], 0.0, 0.0)])).await.expect("a zero drag");
+    assert_eq!(edit_rows(&mut app).await, rows + 2, "a release that moved nothing leaves zero trace");
+    history(&mut app, "undo").await;
+    history(&mut app, "undo").await;
+    assert_eq!(working_positions(&app).await, before, "the undo rows restore the working graph");
+    let malformed = graph_edit(&mut app, TRINITY_REWRITING_PLAY_SURFACE_BEFORE, semio_framework_pack_json::json!([{ "operation": "move", "gestureId": "g", "nodeIds": [], "dx": 1.0, "dy": 0.0 }])).await;
     assert!(malformed.is_err_and(|fault| fault.code.0 == "trinity.rewriting.node-graph.row"), "a malformed gesture record is refused by name");
 }
 
@@ -520,66 +556,60 @@ fn a_released_working_graph_drag_is_one_tool_transaction_of_one_relative_leaf() 
 fn a_rule_node_drag_moves_each_clause_from_where_it_sits_and_undoes_in_one_row() {
     let mut state = default_rule_state();
     state.rule_layout.insert("lhs-where".into(), LayoutPoint { x: 300.0, y: 90.0 });
-    let operations = pack::JsonValue::Array(vec![drag_row("g-lhs", &["lhs-match", "lhs-where"], 30.0, 10.0)]).to_string();
-    let emit = crate::editor::rewriting::commands::node_graph_edit(&state, TRINITY_REWRITING_PLAY_SURFACE_LHS, &operations, "seed").expect("a rule-node drag");
+    let operations = semio_framework_pack_json::Value::Array(vec![drag_row("g-lhs", &["lhs-match", "lhs-where"], 30.0, 10.0)]).to_string();
+    let emit = crate::editor::rewriting::commands::node_graph_edit(&state, &semio_framework_plugin::app::ChildContentView::EMPTY, TRINITY_REWRITING_PLAY_SURFACE_LHS, &operations, "seed").expect("a rule-node drag");
     assert!(matches!(emit.artifact_mutations.as_slice(), [RewriteRuleMutation::DragRuleNodes(_)]), "{:?}", emit.artifact_mutations);
     let moved = applied(&state, &emit.artifact_mutations);
     assert_eq!(moved.rule_layout.get("lhs-match"), Some(&LayoutPoint { x: 30.0, y: 10.0 }), "the match moves from its default slot");
     assert_eq!(moved.rule_layout.get("lhs-where"), Some(&LayoutPoint { x: 330.0, y: 100.0 }), "the WHERE clause moves from its layout point");
-    let inverse = crate::inverse_rewrite_rule_mutation(&state, &emit.artifact_mutations[0]);
+    let inverse = crate::inverse_rewrite_rule_mutation(&state, &emit.artifact_mutations[0]).expect("valid retained mutation inverse fixture");
     assert!(matches!(inverse.as_slice(), [RewriteRuleMutation::SetRuleLayoutPoints(undo)] if undo.cleared == vec!["lhs-match".to_string()] && undo.points.len() == 1), "one exact inverse row: {inverse:?}");
     assert_eq!(applied(&moved, &inverse), state);
 }
 
-/// ⚖️ LAW (fixture `🧫️fixtures/🧫️node-graph-edit-rows`): every accepted row of the shared node-graph record vocabulary maps to an
-/// intent leaf on the working graph — `connect` draws ONE `connect-working-ports` carrying the graph's edge kind, `disconnect` cuts
-/// ONE `disconnect-working-edges` — every refused row refuses the whole batch by name, `setSlider`/`insertPort` are refused (the
-/// graph has neither), and a rule side draws or cuts no wire alone.
-#[test]
-fn the_shared_node_graph_rows_map_to_intent_leaves() {
+/// ⚖️ LAW (fixture `🧫️fixtures/🧫️node-graph-edit-rows`): every accepted row of the shared node-graph record vocabulary maps to a
+/// child-lane leaf on the working graph — `connect` draws ONE `create-edge` carrying the graph's edge kind and the `source->target`
+/// id, `disconnect` cuts ONE `delete-edge`, each undone by ONE row — every refused row refuses the whole batch by name,
+/// `setSlider`/`insertPort` are refused (the graph has neither), and a rule side draws or cuts no wire alone.
+#[semio_framework_async_macros::async_test]
+async fn the_shared_node_graph_rows_map_to_intent_leaves() {
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../🧰️framework/🔨️modules/🛠️tool-machine/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json")).expect("node-graph-edit-rows fixture");
-    let state = default_rule_state();
-    let edit = |surface: &str, rows: serde_json::Value| crate::editor::rewriting::commands::node_graph_edit(&state, surface, &rows.to_string(), "seed");
+    let mut app = new_app().await;
+    let row = |value: &serde_json::Value| semio_framework_pack_json::parse(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("corpus row");
     for refused in corpus["refused"].as_array().expect("refused rows") {
-        let emit = edit(TRINITY_REWRITING_PLAY_SURFACE_BEFORE, serde_json::json!([refused["row"]]));
+        let emit = graph_edit(&mut app, TRINITY_REWRITING_PLAY_SURFACE_BEFORE, semio_framework_pack_json::Value::Array(vec![row(&refused["row"])])).await;
         assert!(emit.is_err_and(|fault| fault.code.0 == "trinity.rewriting.node-graph.row"), "refused row {} is refused by name", refused["id"]);
     }
-    let graph = semio_s_artifact_trinity_jack::JackSnapshot::from_json(&state.before_fixture_json).expect("the working graph decodes");
-    let (nodes, edges) = (graph.nodes(), graph.edges());
-    let connect = serde_json::json!([{ "operation": "connect", "sourceNodeId": nodes[0].id, "sourcePortId": "out", "targetNodeId": nodes[1].id, "targetPortId": "in" }]);
-    let drawn = edit(TRINITY_REWRITING_PLAY_SURFACE_BEFORE, connect.clone()).expect("a connect row");
-    let (source, target) = (format!("{}@out", nodes[0].id), format!("{}@in", nodes[1].id));
-    assert!(drawn.transaction.is_none() && matches!(drawn.artifact_mutations.as_slice(), [RewriteRuleMutation::ConnectWorkingPorts(leaf)] if leaf.source == source && leaf.target == target && leaf.kind == edges[0].kind), "{:?}", drawn.artifact_mutations);
-    let wired = applied(&state, &drawn.artifact_mutations);
-    let after = semio_s_artifact_trinity_jack::JackSnapshot::from_json(&wired.before_fixture_json).expect("the wired graph decodes");
-    assert_eq!(after.edges().len(), edges.len() + 1, "one wire is drawn");
-    assert!(after.edges().iter().any(|edge| edge.source == source && edge.target == target && edge.id == format!("{source}->{target}")));
-    let inverse = crate::inverse_rewrite_rule_mutation(&state, &drawn.artifact_mutations[0]);
-    assert!(matches!(inverse.as_slice(), [RewriteRuleMutation::EditBeforeFixture(_)]), "one inverse row: {inverse:?}");
-    assert_eq!(applied(&wired, &inverse), state, "the inverse row restores the working graph");
-    let cut = edit(TRINITY_REWRITING_PLAY_SURFACE_BEFORE, serde_json::json!([{ "operation": "disconnect", "synapseId": edges[0].id }])).expect("a disconnect row");
-    assert!(matches!(cut.artifact_mutations.as_slice(), [RewriteRuleMutation::DisconnectWorkingEdges(leaf)] if leaf.targets == vec![edges[0].id.clone()]), "{:?}", cut.artifact_mutations);
-    let severed = semio_s_artifact_trinity_jack::JackSnapshot::from_json(&applied(&state, &cut.artifact_mutations).before_fixture_json).expect("the cut graph decodes");
-    assert_eq!((severed.nodes().len(), severed.edges().len()), (nodes.len(), edges.len() - 1), "one wire is cut, every node stays");
-    for row in [serde_json::json!({ "operation": "setSlider", "widgetId": "w", "value": 1.0 }), serde_json::json!({ "operation": "insertPort", "nodeId": nodes[0].id, "side": "input", "index": 0 })] {
-        assert!(edit(TRINITY_REWRITING_PLAY_SURFACE_BEFORE, serde_json::json!([row])).is_err_and(|fault| fault.code.0 == "trinity.rewriting.node-graph.row"), "{row} is refused by name");
+    let before = live_working(&app).await;
+    let (source_node, target_node) = (before.nodes[0].id.value.clone(), before.nodes[1].id.value.clone());
+    let connect = semio_framework_pack_json::json!([{ "operation": "connect", "sourceNodeId": source_node, "sourcePortId": "out", "targetNodeId": target_node, "targetPortId": "in" }]);
+    let drawn = graph_edit(&mut app, TRINITY_REWRITING_PLAY_SURFACE_BEFORE, connect.clone()).await.expect("a connect row");
+    assert!(child_lane(&drawn), "the wire edits the working child: lanes {:?}", drawn.lanes);
+    let wired = live_working(&app).await;
+    let id = format!("{source_node}@out->{target_node}@in");
+    assert_eq!(wired.edges.len(), before.edges.len() + 1, "one wire is drawn");
+    assert!(wired.edges.iter().any(|edge| edge.id.value == id && edge.source.value == source_node && edge.target.value == target_node && edge.source_port.as_deref() == Some("out") && edge.target_port.as_deref() == Some("in") && edge.kind == before.edges[0].kind), "{:?}", wired.edges);
+    history(&mut app, "undo").await;
+    assert_eq!(live_working(&app).await, before, "one undo row restores the working graph");
+    graph_edit(&mut app, TRINITY_REWRITING_PLAY_SURFACE_BEFORE, semio_framework_pack_json::json!([{ "operation": "disconnect", "synapseId": before.edges[0].id.value }])).await.expect("a disconnect row");
+    let severed = live_working(&app).await;
+    assert_eq!((severed.nodes.len(), severed.edges.len()), (before.nodes.len(), before.edges.len() - 1), "one wire is cut, every node stays");
+    for rejected in [semio_framework_pack_json::json!({ "operation": "setSlider", "widgetId": "w", "value": 1.0 }), semio_framework_pack_json::json!({ "operation": "insertPort", "nodeId": source_node, "side": "input", "index": 0 })] {
+        assert!(graph_edit(&mut app, TRINITY_REWRITING_PLAY_SURFACE_BEFORE, semio_framework_pack_json::Value::Array(vec![rejected.clone()])).await.is_err_and(|fault| fault.code.0 == "trinity.rewriting.node-graph.row"), "{rejected} is refused by name");
     }
-    assert!(edit(TRINITY_REWRITING_PLAY_SURFACE_LHS, connect).is_err_and(|fault| fault.code.0 == "trinity.rewriting.node-graph.row"), "a rule side draws no wire alone");
+    assert!(graph_edit(&mut app, TRINITY_REWRITING_PLAY_SURFACE_LHS, connect).await.is_err_and(|fault| fault.code.0 == "trinity.rewriting.node-graph.row"), "a rule side draws no wire alone");
 }
 
-/// ⚖️ LAW: one canvas drag through the shell is ONE edit and ONE history row labelled from its leaf in every language, and ONE
-/// undo moves the nodes back.
+/// ⚖️ LAW: one canvas drag through the shell is ONE edit and ONE history row labelled from its `drag-nodes` leaf in every language,
+/// and ONE undo moves the nodes back.
 #[semio_framework_async_macros::async_test]
 async fn one_canvas_drag_is_one_history_row_labelled_from_its_leaf() {
     use semio_framework_plugin::PluginApp;
     let mut app = new_app().await;
-    let before = app.snapshot().expect("projection");
-    let ids = working_graph_node_ids(&before);
-    let rows_before = app.history_snapshot().await.expect("history").upserts.into_iter().filter(|row| row.edit_id.is_some()).count();
-    let operations = pack::JsonValue::Array(vec![drag_row("g-shell", &[ids[0].as_str(), ids[1].as_str()], 24.0, -8.0)]).to_string();
-    let args = pack::json_to_dsl_value(&pack::json!({ "surfaceId": TRINITY_REWRITING_PLAY_SURFACE_BEFORE, "operations": operations }));
-    app.handle_action("nodeGraphEdit", Some(&args), &meta("local")).await.expect("the drag is admitted");
-    settle(&mut app).await;
+    let before = working_positions(&app).await;
+    let ids = working_node_ids(&app).await;
+    let rows_before = edit_rows(&mut app).await;
+    graph_edit(&mut app, TRINITY_REWRITING_PLAY_SURFACE_BEFORE, semio_framework_pack_json::Value::Array(vec![drag_row("g-shell", &[ids[0].as_str(), ids[1].as_str()], 24.0, -8.0)])).await.expect("the drag is admitted");
     let rows: Vec<_> = app.history_snapshot().await.expect("history").upserts.into_iter().filter(|row| row.edit_id.is_some()).collect();
     assert_eq!(rows.len(), rows_before + 1, "one drag, one edit, one row");
     let row = rows.iter().max_by_key(|row| row.seq).expect("the drag's row");
@@ -587,37 +617,103 @@ async fn one_canvas_drag_is_one_history_row_labelled_from_its_leaf() {
     assert_eq!(row.mutations[0].label.resolve(Terminology::Native, Locale::En), "Drag 2 nodes by (24, -8)");
     assert_eq!(row.mutations[0].label.resolve(Terminology::Native, Locale::De), "2 Knoten um (24; -8) ziehen");
     history(&mut app, "undo").await;
-    assert_eq!(working_graph_positions(&app.snapshot().expect("projection")), working_graph_positions(&before), "one undo moves the nodes back");
+    assert_eq!(working_positions(&app).await, before, "one undo moves the nodes back");
 }
 
-/// ⚖️ LAW: a `delete` row on the working graph is ONE relative `delete-working-nodes` of its nodes — every edge touching them goes
-/// with them — followed by ONE `disconnect-working-edges` of the wires it names apart from those; each undoes with ONE row, and a
-/// node the graph does not hold is skipped (`mutation.partial`), never a whole-graph write.
-#[test]
-fn a_deleted_working_graph_selection_is_relative_leaves() {
-    use semio_s_artifact_trinity_jack::port_node_id;
-    let state = default_rule_state();
-    let graph = semio_s_artifact_trinity_jack::JackSnapshot::from_json(&state.before_fixture_json).expect("the working graph decodes");
-    let touches = |edge: &semio_s_artifact_trinity_jack::Edge, id: &str| port_node_id(&edge.source).unwrap_or(&edge.source) == id || port_node_id(&edge.target).unwrap_or(&edge.target) == id;
-    let doomed = graph.nodes().into_iter().map(|node| node.id).find(|id| graph.edges().iter().any(|edge| touches(edge, id))).expect("a node with an edge");
-    let touching: Vec<String> = graph.edges().iter().filter(|edge| touches(edge, &doomed)).map(|edge| edge.id.clone()).collect();
-    let apart = graph.edges().into_iter().find(|edge| !touches(edge, &doomed)).map(|edge| edge.id);
-    let synapses: Vec<String> = touching.iter().take(1).cloned().chain(apart.clone()).collect();
-    let delete = serde_json::json!([{ "operation": "delete", "nodeIds": [doomed, "absent"], "synapseIds": synapses }]).to_string();
-    let emit = crate::editor::rewriting::commands::node_graph_edit(&state, TRINITY_REWRITING_PLAY_SURFACE_BEFORE, &delete, "seed").expect("a delete");
-    match apart.clone() {
-        Some(apart) => assert!(matches!(emit.artifact_mutations.as_slice(), [RewriteRuleMutation::DeleteWorkingNodes(nodes), RewriteRuleMutation::DisconnectWorkingEdges(wires)] if nodes.targets == vec![doomed.clone(), "absent".to_string()] && wires.targets == vec![apart.clone()]), "{:?}", emit.artifact_mutations),
-        None => assert!(matches!(emit.artifact_mutations.as_slice(), [RewriteRuleMutation::DeleteWorkingNodes(_)]), "{:?}", emit.artifact_mutations),
-    }
-    let deleted = applied(&state, &emit.artifact_mutations);
-    let after = semio_s_artifact_trinity_jack::JackSnapshot::from_json(&deleted.before_fixture_json).expect("the deleted graph decodes");
-    assert!(after.nodes().iter().all(|node| node.id != doomed) && after.nodes().len() + 1 == graph.nodes().len(), "only the named node the graph holds is gone");
-    assert_eq!(after.edges().len() + touching.len() + usize::from(apart.is_some()), graph.edges().len(), "every edge touching it and the named wire apart are gone, every other edge stays");
-    let outcome = <RewriteRuleMutation as protocol::Mutation<RewritingSnapshot>>::diff(&emit.artifact_mutations[0], &state);
-    assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.partial"), "the node the graph lacks is skipped: {:?}", outcome.messages());
-    let inverse = crate::inverse_rewrite_rule_mutation(&state, &emit.artifact_mutations[0]);
-    assert!(matches!(inverse.as_slice(), [RewriteRuleMutation::EditBeforeFixture(_)]), "one inverse row: {inverse:?}");
-    let rule = crate::editor::rewriting::commands::node_graph_edit(&state, TRINITY_REWRITING_PLAY_SURFACE_LHS, &serde_json::json!([{ "operation": "delete", "nodeIds": [], "synapseIds": ["lhs-wire"] }]).to_string(), "seed");
+/// ⚖️ LAW: a `delete` row on the working graph is ONE edit of the composed `workingGraph` child: the `delete-edge` of every wire
+/// touching each named node, then its `delete-node`, then the `delete-edge` of every wire it names apart from those — a node the graph
+/// does not hold is skipped, never a whole-graph write — and ONE undo restores the graph.
+#[semio_framework_async_macros::async_test]
+async fn a_deleted_working_graph_selection_is_relative_leaves() {
+    let mut app = new_app().await;
+    let before = live_working(&app).await;
+    let touches = |edge: &semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphEdge, id: &str| edge.source.value == id || edge.target.value == id;
+    let doomed = before.nodes.iter().map(|node| node.id.value.clone()).find(|id| before.edges.iter().any(|edge| touches(edge, id))).expect("a node with an edge");
+    let touching = before.edges.iter().filter(|edge| touches(edge, &doomed)).count();
+    let apart = before.edges.iter().find(|edge| !touches(edge, &doomed)).map(|edge| edge.id.value.clone());
+    let synapses: Vec<String> = before.edges.iter().filter(|edge| touches(edge, &doomed)).take(1).map(|edge| edge.id.value.clone()).chain(apart.clone()).collect();
+    let receipt = graph_edit(&mut app, TRINITY_REWRITING_PLAY_SURFACE_BEFORE, semio_framework_pack_json::json!([{ "operation": "delete", "nodeIds": [doomed, "absent"], "synapseIds": synapses }])).await.expect("a delete");
+    assert!(child_lane(&receipt), "the delete edits the working child: lanes {:?}", receipt.lanes);
+    let after = live_working(&app).await;
+    assert!(after.nodes.iter().all(|node| node.id.value != doomed) && after.nodes.len() + 1 == before.nodes.len(), "only the named node the graph holds is gone");
+    assert_eq!(after.edges.len() + touching + usize::from(apart.is_some()), before.edges.len(), "every edge touching it and the named wire apart are gone, every other edge stays");
+    history(&mut app, "undo").await;
+    assert_eq!(live_working(&app).await, before, "one undo row restores the working graph");
+    let rule = graph_edit(&mut app, TRINITY_REWRITING_PLAY_SURFACE_LHS, semio_framework_pack_json::json!([{ "operation": "delete", "nodeIds": [], "synapseIds": ["lhs-wire"] }])).await;
     assert!(rule.is_err_and(|fault| fault.code.0 == "trinity.rewriting.node-graph.row"), "a rule wire is cut with its clause, never alone");
 }
+/// ⚖️ LAW (audit T1/T2): the guest's own add-node verb is ONE `create-node` of the composed `workingGraph` child carrying the first
+/// free `n<k>` id, the graph's node kind, the id as name and the requested position — it lands exactly that node, a second add
+/// takes the next free id and its given name, a non-finite position is refused by name before any child is read — and ONE undo
+/// removes the added node.
+#[semio_framework_async_macros::async_test]
+async fn the_add_node_verb_is_one_relative_leaf_and_canonical_graphs_undo_relatively() {
+    let mut app = new_app().await;
+    let before = live_working(&app).await;
+    let add = |pairs: &[(&str, semio_framework_pack_json::Value)]| semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::Value::Object(pairs.iter().map(|(key, value)| ((*key).to_string(), value.clone())).collect()));
+    app.handle_action("addWorkingNode", Some(&add(&[("x", semio_framework_pack_json::json!(40.0)), ("y", semio_framework_pack_json::json!(-20.0))])), &meta("local")).await.expect("an add");
+    assert!(child_lane(&settle(&mut app).await), "the add edits the working child");
+    let added = live_working(&app).await;
+    assert_eq!(added.nodes.len(), before.nodes.len() + 1, "exactly one node lands");
+    let first = added.nodes.iter().find(|node| before.nodes.iter().all(|held| held.id != node.id)).expect("the added node").clone();
+    assert!(first.id.value.starts_with('n') && first.label == first.id.value && (first.position.x, first.position.y) == (40.0, -20.0), "{first:?}");
+    app.handle_action("addWorkingNode", Some(&add(&[("kind", semio_framework_pack_json::json!(first.kind)), ("name", semio_framework_pack_json::json!("Second")), ("x", semio_framework_pack_json::json!(0.0)), ("y", semio_framework_pack_json::json!(0.0))])), &meta("local")).await.expect("a second add");
+    settle(&mut app).await;
+    let again = live_working(&app).await;
+    let second = again.nodes.iter().find(|node| added.nodes.iter().all(|held| held.id != node.id)).expect("the second node");
+    assert!(second.id != first.id && second.label == "Second", "{second:?}");
+    let nan = crate::editor::rewriting::commands::add_working_node_command(&default_rule_state(), &semio_framework_plugin::app::ChildContentView::EMPTY, None, None, f64::NAN, 0.0);
+    assert!(nan.is_err_and(|fault| fault.code.0 == "app.command.invalid-args"), "a non-finite position is refused by name");
+    history(&mut app, "undo").await;
+    assert_eq!(live_working(&app).await, added, "one undo removes the second node");
+}
+/// ⚖️ LAW (Binary64 transport): a time-travel edit of a binary64 input — the `/dx` offset of a released rule-node drag's
+/// `drag-rule-nodes` — validates against its leaf schema (`Binary64Transport`: the exact word or a plain number, the form
+/// `payload_value` and the history editor carry) and replays: the overwrite moves the dragged clause by the edited offset.
+#[semio_framework_async_macros::async_test]
+async fn a_history_edit_of_a_binary64_offset_validates_and_replays() {
+    use semio_framework::kernel::HistoryTimeTravelStage;
+    use semio_framework_plugin::PluginApp;
+    let mut app = new_app().await;
+    graph_edit(&mut app, TRINITY_REWRITING_PLAY_SURFACE_LHS, semio_framework_pack_json::Value::Array(vec![drag_row("g-history", &["lhs-match"], 24.0, -8.0)])).await.expect("the drag is admitted");
+    assert_eq!(app.snapshot().expect("dragged").rule_layout.get("lhs-match"), Some(&LayoutPoint { x: 24.0, y: -8.0 }), "the match moves from its default slot");
+    let rows = app.history_snapshot().await.expect("history").upserts;
+    let mutation_id = rows.iter().filter(|row| row.edit_id.is_some()).max_by_key(|row| row.seq).and_then(|row| row.mutations.first()).map(|mutation| mutation.mutation_id.clone()).expect("the drag's leaf");
+    async fn stage(app: &mut RewritingTestApp) -> Option<HistoryTimeTravelStage> {
+        app.history_snapshot().await.expect("history").time_travel.map(|status| status.stage)
+    }
+    let verbs = [
+        ("historyEditBegin", semio_framework_pack_json::json!({ "mutationId": mutation_id })),
+        ("historyEditInput", semio_framework_pack_json::json!({ "path": "/dx", "value": 50.0 })),
+        ("historyEditAccept", semio_framework_pack_json::json!({})),
+    ];
+    for (verb, args) in verbs {
+        let result = app.handle_action(verb, Some(&semio_framework_pack_json::to_dsl_value(&args)), &meta("local")).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
+        assert!(result.output.get("rejected").is_none(), "{verb} was refused: {:?}", result.output);
+    }
+    for _ in 0..10_000 {
+        if stage(&mut app).await != Some(HistoryTimeTravelStage::Replaying) {
+            break;
+        }
+        app.0.advance_typed_operation_publication().await.expect("a driver turn");
+        while app.0.take_typed_operation_ui_progress().is_some() {}
+    }
+    assert_eq!(stage(&mut app).await, Some(HistoryTimeTravelStage::Reviewing), "the edited offset replays to a clean review");
+    for (verb, args) in [("historyEditFinalize", semio_framework_pack_json::json!({})), ("historyEditCommit", semio_framework_pack_json::json!({ "choice": "overwrite" }))] {
+        let result = app.handle_action(verb, Some(&semio_framework_pack_json::to_dsl_value(&args)), &meta("local")).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
+        assert!(result.output.get("rejected").is_none(), "{verb} was refused: {:?}", result.output);
+    }
+    for _ in 0..10_000 {
+        if stage(&mut app).await.is_none() {
+            break;
+        }
+        app.0.advance_typed_operation_publication().await.expect("a driver turn");
+        while app.0.take_typed_operation_ui_progress().is_some() {}
+    }
+    assert_eq!(app.snapshot().expect("edited head").rule_layout.get("lhs-match"), Some(&LayoutPoint { x: 50.0, y: -8.0 }), "the overwrite replays the edited offset");
+}
+
 //#endregion 🕹️NodeDragLaws
+
+#[path = "../🪆️child-frame/🦀️.rs"]
+mod full_child_frame_laws;

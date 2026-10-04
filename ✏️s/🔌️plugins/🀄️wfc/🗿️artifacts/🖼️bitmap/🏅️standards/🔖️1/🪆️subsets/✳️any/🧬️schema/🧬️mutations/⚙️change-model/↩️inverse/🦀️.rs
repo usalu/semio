@@ -4,6 +4,9 @@
 use crate::mutations::{change_model, BitmapMutation};
 use crate::schema::snapshot::BitmapSnapshot;
 
-pub fn inverse(_payload: &super::ChangeModel, base: &BitmapSnapshot) -> Vec<BitmapMutation> {
+pub fn inverse(_payload: &super::ChangeModel, base: &BitmapSnapshot) -> Result<Vec<BitmapMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![change_model(base.model.pattern_size, base.model.symmetry, base.model.periodic_input, base.model.ground)]
+
+    })())
 }

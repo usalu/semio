@@ -11,7 +11,7 @@ pub fn diff(payload: &super::ChangeRoomAirModel, base: &EnergyModelSnapshot) -> 
     };
 
     if existing.model == payload.new_model {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Room air model assignment for zone {} already has that room air model.", payload.zone_id.0));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Room air model assignment for zone {} already has that room air model.", payload.zone_id.0));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.room_air_models.iter_mut().find(|item| item.zone_id == payload.zone_id) {

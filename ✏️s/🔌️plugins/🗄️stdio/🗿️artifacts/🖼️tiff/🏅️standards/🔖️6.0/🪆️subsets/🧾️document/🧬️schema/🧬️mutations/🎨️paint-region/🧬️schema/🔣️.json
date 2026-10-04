@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/mutation/paint-region/schema.json",
+  "title": "PaintRegionMutation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["revision", "ifdIndex", "x", "y", "width", "height", "red", "green", "blue", "alpha"],
+  "properties": {
+    "revision": { "type": "string", "minLength": 1, "x-semio-ui": { "label": { "en": "Revision", "de": "Revision" }, "group": "target", "order": 10 } },
+    "ifdIndex": { "type": "integer", "minimum": 0, "x-semio-ui": { "label": { "en": "Image page", "de": "Bildseite" }, "group": "target", "order": 20 } },
+    "x": { "type": "integer", "minimum": 0, "maximum": 4294967295, "x-semio-ui": { "label": { "en": "Left", "de": "Links" }, "group": "region", "order": 30 } },
+    "y": { "type": "integer", "minimum": 0, "maximum": 4294967295, "x-semio-ui": { "label": { "en": "Top", "de": "Oben" }, "group": "region", "order": 40 } },
+    "width": { "type": "integer", "minimum": 1, "maximum": 4294967295, "x-semio-ui": { "label": { "en": "Width", "de": "Breite" }, "group": "region", "order": 50 } },
+    "height": { "type": "integer", "minimum": 1, "maximum": 65536, "x-semio-ui": { "label": { "en": "Height", "de": "Höhe" }, "group": "region", "order": 60 } },
+    "red": { "type": "integer", "minimum": 0, "maximum": 255, "x-semio-ui": { "label": { "en": "Red", "de": "Rot" }, "group": "color", "order": 70 } },
+    "green": { "type": "integer", "minimum": 0, "maximum": 255, "x-semio-ui": { "label": { "en": "Green", "de": "Grün" }, "group": "color", "order": 80 } },
+    "blue": { "type": "integer", "minimum": 0, "maximum": 255, "x-semio-ui": { "label": { "en": "Blue", "de": "Blau" }, "group": "color", "order": 90 } },
+    "alpha": { "type": "integer", "minimum": 0, "maximum": 255, "x-semio-ui": { "label": { "en": "Alpha", "de": "Alpha" }, "group": "color", "order": 100 } }
+  }
+}

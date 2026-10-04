@@ -230,7 +230,7 @@ describe("build output write authority", () => {
       put(resolve(sandbox, "📥️input/🧊️model.glb"), fixture.payload);
       put(resolve(sandbox, "📥️input/🖼️icon.ico"), fixture.payload);
       put(resolve(sandbox, SEMIO_ASSET_ROOT, "🔤️fonts/🔤️font.ttf"), fixture.payload);
-      put(resolve(sandbox, ".🧬semio/🗺️map/tiles/0/0/0.png"), fixture.payload);
+      put(resolve(sandbox, "tiles/0/0/0.png"), fixture.payload);
       put(resolve(sandbox, "📇️catalog.json"), JSON.stringify({ $schema: "../🧬️schema/🔣️.json", version: 1, collections: [], entries: [{ url: "/mesh/🧊️model.glb", source: "📥️input/🧊️model.glb", path: "🧊️model.glb" }] }));
       for (const mode of fixture.modes) {
         const brand = semioBrandHtmlVitePlugins(sandbox, { windowTitle: "fixture", logoSvg: fixture.markup, faviconIcoPath: "📥️input/🖼️icon.ico", cnameHost: fixture.cname });
@@ -240,7 +240,7 @@ describe("build output write authority", () => {
           markers: { plugin: brand.find(plugin => plugin.name === "static-deploy-markers")!, expected: { ".nojekyll": "", CNAME: fixture.cname + "\n" } },
           html: { plugin: semioEmojiIndexHtmlVitePlugin(sandbox), expected: { "🌐️.html": fixture.html, "index.html": fixture.html, "404.html": fixture.html } },
           assets: { plugin: semioAssetsVitePlugin(sandbox)[1]!, expected: { "🖼️assets/🔤️fonts/🔤️font.ttf": fixture.payload } },
-          tile: { plugin: tileProxyVitePlugin(sandbox, { kind: "tile-proxy", route: "/tiles", cache: "tiles", upstream: "https://example.invalid/{z}/{x}/{y}.png" }, "bundle")[1]!, expected: { "tiles/0/0/0.png": fixture.payload } },
+          tile: { plugin: tileProxyVitePlugin(sandbox, { kind: "tile-proxy", route: "/tiles", cache: "tiles", upstream: "https://example.invalid/{z}/{x}/{y}.png", userAgent: "Fixture/1" }, "bundle")[1]!, expected: { "tiles/0/0/0.png": fixture.payload } },
           static: { plugin: staticDirVitePlugin(sandbox, { kind: "static-dir", route: "/fixture", root: "📥️input" })[1]!, expected: { "fixture/🧊️model.glb": fixture.payload, "fixture/🖼️icon.ico": fixture.payload } },
         };
         expect(Object.keys(hooks)).toEqual(fixture.hooks);

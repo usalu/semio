@@ -6,9 +6,12 @@ use crate::ProgramMutation;
 use crate::ProgramSnapshot;
 
 /// ↩️ Undo by reconnecting the captured edge. Missing target ⇒ nothing to undo.
-pub fn inverse(payload: &super::DisconnectTrace, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+pub fn inverse(payload: &super::DisconnectTrace, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.traces.iter().find(|row| row.id == payload.id) {
         Some(existing) => vec![ProgramMutation::ConnectTrace(super::super::connect_trace::ConnectTrace { trace: existing.clone() })],
         None => Vec::new(),
     }
+
+    })())
 }

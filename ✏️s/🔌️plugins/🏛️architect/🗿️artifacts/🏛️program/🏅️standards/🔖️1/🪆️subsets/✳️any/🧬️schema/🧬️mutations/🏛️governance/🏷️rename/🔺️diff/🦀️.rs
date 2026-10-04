@@ -10,7 +10,7 @@ use crate::ProgramSnapshot;
 /// unchanged.
 pub fn diff(payload: &RenameGovernance, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     if base.governance.framework == payload.new_framework {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "Governance framework already has this value.").at([base.governance.id.0.clone()])]);
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "Governance framework already has this value.").at([base.governance.id.0.clone()])]);
     }
     let mut value = base.governance.clone();
     value.framework = payload.new_framework.clone();

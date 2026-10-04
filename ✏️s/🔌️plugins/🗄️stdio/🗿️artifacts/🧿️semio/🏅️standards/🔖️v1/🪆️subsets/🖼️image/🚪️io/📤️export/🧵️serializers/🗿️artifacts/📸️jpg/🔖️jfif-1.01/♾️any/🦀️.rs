@@ -29,9 +29,9 @@ impl ArtifactSerializer for SemioImageToJpg {
     const INTO: Dialect = INTO_DIALECT;
 
     async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        let frame = from.frames.first().ok_or_else(|| store::PackError::Schema("semio/image→jpg: no frames to export".into()))?;
+        let frame = from.frames.first().ok_or_else(|| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "semio/image→jpg: no frames to export")))?;
         if frame.rgba8.len() != (from.width as usize) * (from.height as usize) * 4 {
-            return Err(store::PackError::Schema("semio/image→jpg: frame pixel length does not match width*height*4".into()));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "semio/image→jpg: frame pixel length does not match width*height*4")));
         }
         let other_segments = from.metadata.iter().filter(|m| m.key == "comment").map(|m| JpgSegment { marker: COM_MARKER, data: m.value.clone().into_bytes() }).collect();
         Ok(JpgSnapshot { schema: semio_s_artifact_stdio_jpg::STDIO_JPG_DOCUMENT_SCHEMA.into(), width: from.width, height: from.height, pixels: frame.rgba8.clone(), other_segments, ..JpgSnapshot::default() })

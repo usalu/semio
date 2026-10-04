@@ -14,7 +14,7 @@ impl ArtifactDsl for PublicationTransient {
     const EXTENSION: &'static str = "publication-transient";
 
     fn parse_dsl(text: &str) -> Result<Self, TextError> {
-        serde_json::from_str(text).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))
+        serde_json::from_str(text).map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
@@ -24,11 +24,11 @@ impl ArtifactDsl for PublicationTransient {
 
 impl ArtifactPack for PublicationTransient {
     fn encode_pack_with(&self, _options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
-        serde_json::to_vec(self).map_err(|error| PackError::Schema(error.to_string()))
+        serde_json::to_vec(self).map_err(|error| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string())))
     }
 
     fn decode_pack_with(bytes: &[u8], _options: &PackDecodeOptions) -> Result<Self, PackError> {
-        serde_json::from_slice(bytes).map_err(|error| PackError::Schema(error.to_string()))
+        serde_json::from_slice(bytes).map_err(|error| match (u32::try_from(error.line()), u32::try_from(error.column())) { (Ok(line), Ok(column)) => store::PackError::from(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), semio_framework_diagnostic::TextSpan::at(line, column))), _ => store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit, error.to_string())) })
     }
 }
 

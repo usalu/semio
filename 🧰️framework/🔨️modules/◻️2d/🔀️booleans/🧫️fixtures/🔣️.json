@@ -1,0 +1,4123 @@
+[
+  {
+    "name": "overlapping union",
+    "input": {
+      "operation": "union",
+      "operands": [
+        {
+          "contours": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                10,
+                0
+              ],
+              [
+                10,
+                10
+              ],
+              [
+                0,
+                10
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        },
+        {
+          "contours": [
+            [
+              [
+                5,
+                5
+              ],
+              [
+                15,
+                5
+              ],
+              [
+                15,
+                15
+              ],
+              [
+                5,
+                15
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        }
+      ],
+      "epsilon": 1e-8,
+      "maxEdges": 65536,
+      "maxParameters": 262144,
+      "maxAtomicEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "area": 175,
+      "contours": 1,
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            10,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            10,
+            5
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            15,
+            5
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            15,
+            15
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            5,
+            15
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            5,
+            10
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            0,
+            10
+          ]
+        },
+        {
+          "kind": "close"
+        }
+      ]
+    }
+  },
+  {
+    "name": "overlapping difference",
+    "input": {
+      "operation": "difference",
+      "operands": [
+        {
+          "contours": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                10,
+                0
+              ],
+              [
+                10,
+                10
+              ],
+              [
+                0,
+                10
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        },
+        {
+          "contours": [
+            [
+              [
+                5,
+                5
+              ],
+              [
+                15,
+                5
+              ],
+              [
+                15,
+                15
+              ],
+              [
+                5,
+                15
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        }
+      ],
+      "epsilon": 1e-8,
+      "maxEdges": 65536,
+      "maxParameters": 262144,
+      "maxAtomicEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "area": 75,
+      "contours": 1
+    }
+  },
+  {
+    "name": "overlapping intersection",
+    "input": {
+      "operation": "intersection",
+      "operands": [
+        {
+          "contours": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                10,
+                0
+              ],
+              [
+                10,
+                10
+              ],
+              [
+                0,
+                10
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        },
+        {
+          "contours": [
+            [
+              [
+                5,
+                5
+              ],
+              [
+                15,
+                5
+              ],
+              [
+                15,
+                15
+              ],
+              [
+                5,
+                15
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        }
+      ],
+      "epsilon": 1e-8,
+      "maxEdges": 65536,
+      "maxParameters": 262144,
+      "maxAtomicEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "area": 25,
+      "contours": 1
+    }
+  },
+  {
+    "name": "overlapping xor",
+    "input": {
+      "operation": "xor",
+      "operands": [
+        {
+          "contours": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                10,
+                0
+              ],
+              [
+                10,
+                10
+              ],
+              [
+                0,
+                10
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        },
+        {
+          "contours": [
+            [
+              [
+                5,
+                5
+              ],
+              [
+                15,
+                5
+              ],
+              [
+                15,
+                15
+              ],
+              [
+                5,
+                15
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        }
+      ],
+      "epsilon": 1e-8,
+      "maxEdges": 65536,
+      "maxParameters": 262144,
+      "maxAtomicEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "area": 150,
+      "contours": 2
+    }
+  },
+  {
+    "name": "disjoint union",
+    "input": {
+      "operation": "union",
+      "operands": [
+        {
+          "contours": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                2,
+                2
+              ],
+              [
+                0,
+                2
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        },
+        {
+          "contours": [
+            [
+              [
+                4,
+                0
+              ],
+              [
+                6,
+                0
+              ],
+              [
+                6,
+                2
+              ],
+              [
+                4,
+                2
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        }
+      ],
+      "epsilon": 1e-8,
+      "maxEdges": 65536,
+      "maxParameters": 262144,
+      "maxAtomicEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "area": 8,
+      "contours": 2
+    }
+  },
+  {
+    "name": "edge touching union",
+    "input": {
+      "operation": "union",
+      "operands": [
+        {
+          "contours": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                2,
+                2
+              ],
+              [
+                0,
+                2
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        },
+        {
+          "contours": [
+            [
+              [
+                2,
+                0
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                4,
+                2
+              ],
+              [
+                2,
+                2
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        }
+      ],
+      "epsilon": 1e-8,
+      "maxEdges": 65536,
+      "maxParameters": 262144,
+      "maxAtomicEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "area": 8,
+      "contours": 1
+    }
+  },
+  {
+    "name": "corner touching union",
+    "input": {
+      "operation": "union",
+      "operands": [
+        {
+          "contours": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                2,
+                2
+              ],
+              [
+                0,
+                2
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        },
+        {
+          "contours": [
+            [
+              [
+                2,
+                2
+              ],
+              [
+                4,
+                2
+              ],
+              [
+                4,
+                4
+              ],
+              [
+                2,
+                4
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        }
+      ],
+      "epsilon": 1e-8,
+      "maxEdges": 65536,
+      "maxParameters": 262144,
+      "maxAtomicEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "area": 8,
+      "contours": 2
+    }
+  },
+  {
+    "name": "contained difference creates hole",
+    "input": {
+      "operation": "difference",
+      "operands": [
+        {
+          "contours": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                10,
+                0
+              ],
+              [
+                10,
+                10
+              ],
+              [
+                0,
+                10
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        },
+        {
+          "contours": [
+            [
+              [
+                2,
+                2
+              ],
+              [
+                8,
+                2
+              ],
+              [
+                8,
+                8
+              ],
+              [
+                2,
+                8
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        }
+      ],
+      "epsilon": 1e-8,
+      "maxEdges": 65536,
+      "maxParameters": 262144,
+      "maxAtomicEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "area": 64,
+      "contours": 2
+    }
+  },
+  {
+    "name": "nonzero authored hole",
+    "input": {
+      "operation": "union",
+      "operands": [
+        {
+          "contours": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                10,
+                0
+              ],
+              [
+                10,
+                10
+              ],
+              [
+                0,
+                10
+              ]
+            ],
+            [
+              [
+                2,
+                8
+              ],
+              [
+                8,
+                8
+              ],
+              [
+                8,
+                2
+              ],
+              [
+                2,
+                2
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        }
+      ],
+      "epsilon": 1e-8,
+      "maxEdges": 65536,
+      "maxParameters": 262144,
+      "maxAtomicEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "area": 64,
+      "contours": 2
+    }
+  },
+  {
+    "name": "evenodd same direction hole",
+    "input": {
+      "operation": "union",
+      "operands": [
+        {
+          "contours": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                10,
+                0
+              ],
+              [
+                10,
+                10
+              ],
+              [
+                0,
+                10
+              ]
+            ],
+            [
+              [
+                2,
+                2
+              ],
+              [
+                8,
+                2
+              ],
+              [
+                8,
+                8
+              ],
+              [
+                2,
+                8
+              ]
+            ]
+          ],
+          "fillRule": "evenodd"
+        }
+      ],
+      "epsilon": 1e-8,
+      "maxEdges": 65536,
+      "maxParameters": 262144,
+      "maxAtomicEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "area": 64,
+      "contours": 2
+    }
+  },
+  {
+    "name": "nonzero same direction filled interior",
+    "input": {
+      "operation": "union",
+      "operands": [
+        {
+          "contours": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                10,
+                0
+              ],
+              [
+                10,
+                10
+              ],
+              [
+                0,
+                10
+              ]
+            ],
+            [
+              [
+                2,
+                2
+              ],
+              [
+                8,
+                2
+              ],
+              [
+                8,
+                8
+              ],
+              [
+                2,
+                8
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        }
+      ],
+      "epsilon": 1e-8,
+      "maxEdges": 65536,
+      "maxParameters": 262144,
+      "maxAtomicEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "area": 100,
+      "contours": 1
+    }
+  },
+  {
+    "name": "opposite winding cancellation",
+    "input": {
+      "operation": "union",
+      "operands": [
+        {
+          "contours": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                10,
+                0
+              ],
+              [
+                10,
+                10
+              ],
+              [
+                0,
+                10
+              ]
+            ],
+            [
+              [
+                0,
+                10
+              ],
+              [
+                10,
+                10
+              ],
+              [
+                10,
+                0
+              ],
+              [
+                0,
+                0
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        }
+      ],
+      "epsilon": 1e-8,
+      "maxEdges": 65536,
+      "maxParameters": 262144,
+      "maxAtomicEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "area": 0,
+      "contours": 0
+    }
+  },
+  {
+    "name": "evenodd repeated contour cancels",
+    "input": {
+      "operation": "union",
+      "operands": [
+        {
+          "contours": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                10,
+                0
+              ],
+              [
+                10,
+                10
+              ],
+              [
+                0,
+                10
+              ]
+            ],
+            [
+              [
+                0,
+                0
+              ],
+              [
+                10,
+                0
+              ],
+              [
+                10,
+                10
+              ],
+              [
+                0,
+                10
+              ]
+            ]
+          ],
+          "fillRule": "evenodd"
+        }
+      ],
+      "epsilon": 1e-8,
+      "maxEdges": 65536,
+      "maxParameters": 262144,
+      "maxAtomicEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "area": 0,
+      "contours": 0
+    }
+  },
+  {
+    "name": "nonzero repeated contour remains filled",
+    "input": {
+      "operation": "union",
+      "operands": [
+        {
+          "contours": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                10,
+                0
+              ],
+              [
+                10,
+                10
+              ],
+              [
+                0,
+                10
+              ]
+            ],
+            [
+              [
+                0,
+                0
+              ],
+              [
+                10,
+                0
+              ],
+              [
+                10,
+                10
+              ],
+              [
+                0,
+                10
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        }
+      ],
+      "epsilon": 1e-8,
+      "maxEdges": 65536,
+      "maxParameters": 262144,
+      "maxAtomicEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "area": 100,
+      "contours": 1
+    }
+  },
+  {
+    "name": "intersection inside authored hole is empty",
+    "input": {
+      "operation": "intersection",
+      "operands": [
+        {
+          "contours": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                10,
+                0
+              ],
+              [
+                10,
+                10
+              ],
+              [
+                0,
+                10
+              ]
+            ],
+            [
+              [
+                2,
+                8
+              ],
+              [
+                8,
+                8
+              ],
+              [
+                8,
+                2
+              ],
+              [
+                2,
+                2
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        },
+        {
+          "contours": [
+            [
+              [
+                3,
+                3
+              ],
+              [
+                4,
+                3
+              ],
+              [
+                4,
+                4
+              ],
+              [
+                3,
+                4
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        }
+      ],
+      "epsilon": 1e-8,
+      "maxEdges": 65536,
+      "maxParameters": 262144,
+      "maxAtomicEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "area": 0,
+      "contours": 0
+    }
+  },
+  {
+    "name": "empty operand union",
+    "input": {
+      "operation": "union",
+      "operands": [
+        {
+          "contours": [],
+          "fillRule": "nonzero"
+        },
+        {
+          "contours": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                10,
+                0
+              ],
+              [
+                10,
+                10
+              ],
+              [
+                0,
+                10
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        }
+      ],
+      "epsilon": 1e-8,
+      "maxEdges": 65536,
+      "maxParameters": 262144,
+      "maxAtomicEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "area": 100,
+      "contours": 1
+    }
+  },
+  {
+    "name": "empty operand intersection",
+    "input": {
+      "operation": "intersection",
+      "operands": [
+        {
+          "contours": [],
+          "fillRule": "nonzero"
+        },
+        {
+          "contours": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                10,
+                0
+              ],
+              [
+                10,
+                10
+              ],
+              [
+                0,
+                10
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        }
+      ],
+      "epsilon": 1e-8,
+      "maxEdges": 65536,
+      "maxParameters": 262144,
+      "maxAtomicEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "area": 0,
+      "contours": 0
+    }
+  },
+  {
+    "name": "empty difference minuend",
+    "input": {
+      "operation": "difference",
+      "operands": [
+        {
+          "contours": [],
+          "fillRule": "nonzero"
+        },
+        {
+          "contours": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                10,
+                0
+              ],
+              [
+                10,
+                10
+              ],
+              [
+                0,
+                10
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        }
+      ],
+      "epsilon": 1e-8,
+      "maxEdges": 65536,
+      "maxParameters": 262144,
+      "maxAtomicEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "area": 0,
+      "contours": 0
+    }
+  },
+  {
+    "name": "empty difference subtractor",
+    "input": {
+      "operation": "difference",
+      "operands": [
+        {
+          "contours": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                10,
+                0
+              ],
+              [
+                10,
+                10
+              ],
+              [
+                0,
+                10
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        },
+        {
+          "contours": [],
+          "fillRule": "nonzero"
+        }
+      ],
+      "epsilon": 1e-8,
+      "maxEdges": 65536,
+      "maxParameters": 262144,
+      "maxAtomicEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "area": 100,
+      "contours": 1
+    }
+  },
+  {
+    "name": "identical xor is empty",
+    "input": {
+      "operation": "xor",
+      "operands": [
+        {
+          "contours": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                10,
+                0
+              ],
+              [
+                10,
+                10
+              ],
+              [
+                0,
+                10
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        },
+        {
+          "contours": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                10,
+                0
+              ],
+              [
+                10,
+                10
+              ],
+              [
+                0,
+                10
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        }
+      ],
+      "epsilon": 1e-8,
+      "maxEdges": 65536,
+      "maxParameters": 262144,
+      "maxAtomicEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "area": 0,
+      "contours": 0
+    }
+  },
+  {
+    "name": "three input difference keeps hole",
+    "input": {
+      "operation": "difference",
+      "operands": [
+        {
+          "contours": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                10,
+                0
+              ],
+              [
+                10,
+                10
+              ],
+              [
+                0,
+                10
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        },
+        {
+          "contours": [
+            [
+              [
+                2,
+                2
+              ],
+              [
+                8,
+                2
+              ],
+              [
+                8,
+                8
+              ],
+              [
+                2,
+                8
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        },
+        {
+          "contours": [
+            [
+              [
+                4,
+                -2
+              ],
+              [
+                6,
+                -2
+              ],
+              [
+                6,
+                0
+              ],
+              [
+                4,
+                0
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        }
+      ],
+      "epsilon": 1e-8,
+      "maxEdges": 65536,
+      "maxParameters": 262144,
+      "maxAtomicEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "area": 64,
+      "contours": 2
+    }
+  },
+  {
+    "name": "xor recovers after cancellation",
+    "input": {
+      "operation": "xor",
+      "operands": [
+        {
+          "contours": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                10,
+                0
+              ],
+              [
+                10,
+                10
+              ],
+              [
+                0,
+                10
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        },
+        {
+          "contours": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                10,
+                0
+              ],
+              [
+                10,
+                10
+              ],
+              [
+                0,
+                10
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        },
+        {
+          "contours": [
+            [
+              [
+                20,
+                0
+              ],
+              [
+                22,
+                0
+              ],
+              [
+                22,
+                2
+              ],
+              [
+                20,
+                2
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        }
+      ],
+      "epsilon": 1e-8,
+      "maxEdges": 65536,
+      "maxParameters": 262144,
+      "maxAtomicEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "area": 4,
+      "contours": 1
+    }
+  },
+  {
+    "name": "collinear degenerate contour",
+    "input": {
+      "operation": "union",
+      "operands": [
+        {
+          "contours": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                5,
+                0
+              ],
+              [
+                10,
+                0
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        }
+      ],
+      "epsilon": 1e-8,
+      "maxEdges": 65536,
+      "maxParameters": 262144,
+      "maxAtomicEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "area": 0,
+      "contours": 0
+    }
+  },
+  {
+    "name": "self crossing contour regularized",
+    "input": {
+      "operation": "union",
+      "operands": [
+        {
+          "contours": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                10,
+                10
+              ],
+              [
+                0,
+                10
+              ],
+              [
+                10,
+                0
+              ]
+            ]
+          ],
+          "fillRule": "evenodd"
+        },
+        {
+          "contours": [
+            [
+              [
+                20,
+                0
+              ],
+              [
+                22,
+                0
+              ],
+              [
+                22,
+                2
+              ],
+              [
+                20,
+                2
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        }
+      ],
+      "epsilon": 1e-8,
+      "maxEdges": 65536,
+      "maxParameters": 262144,
+      "maxAtomicEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "area": 54,
+      "contours": 3
+    }
+  },
+  {
+    "name": "duplicated point and closing point",
+    "input": {
+      "operation": "union",
+      "operands": [
+        {
+          "contours": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                5,
+                0
+              ],
+              [
+                5,
+                0
+              ],
+              [
+                5,
+                5
+              ],
+              [
+                0,
+                5
+              ],
+              [
+                0,
+                0
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        },
+        {
+          "contours": [
+            [
+              [
+                10,
+                0
+              ],
+              [
+                12,
+                0
+              ],
+              [
+                12,
+                2
+              ],
+              [
+                10,
+                2
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        }
+      ],
+      "epsilon": 1e-8,
+      "maxEdges": 65536,
+      "maxParameters": 262144,
+      "maxAtomicEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "area": 29,
+      "contours": 2
+    }
+  },
+  {
+    "name": "translated mixed axis preserves geometry",
+    "input": {
+      "operation": "union",
+      "operands": [
+        {
+          "contours": [
+            [
+              [
+                999999999970,
+                0
+              ],
+              [
+                999999999980,
+                0
+              ],
+              [
+                999999999980,
+                10
+              ],
+              [
+                999999999970,
+                10
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        },
+        {
+          "contours": [
+            [
+              [
+                999999999975,
+                5
+              ],
+              [
+                999999999985,
+                5
+              ],
+              [
+                999999999985,
+                15
+              ],
+              [
+                999999999975,
+                15
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        }
+      ],
+      "epsilon": 0.01,
+      "maxEdges": 65536,
+      "maxParameters": 262144,
+      "maxAtomicEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "area": 175,
+      "contours": 1
+    }
+  },
+  {
+    "name": "tiny separate regions",
+    "input": {
+      "operation": "union",
+      "operands": [
+        {
+          "contours": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                0.000001,
+                0
+              ],
+              [
+                0.000001,
+                0.000001
+              ],
+              [
+                0,
+                0.000001
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        },
+        {
+          "contours": [
+            [
+              [
+                0.000002,
+                0
+              ],
+              [
+                0.000003,
+                0
+              ],
+              [
+                0.000003,
+                0.000001
+              ],
+              [
+                0.000002,
+                0.000001
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        }
+      ],
+      "epsilon": 1e-12,
+      "maxEdges": 65536,
+      "maxParameters": 262144,
+      "maxAtomicEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "area": 2e-12,
+      "contours": 2
+    }
+  },
+  {
+    "name": "spatially scattered contours",
+    "input": {
+      "operation": "union",
+      "operands": [
+        {
+          "contours": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                0,
+                1
+              ]
+            ],
+            [
+              [
+                3,
+                0
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                4,
+                1
+              ],
+              [
+                3,
+                1
+              ]
+            ],
+            [
+              [
+                6,
+                0
+              ],
+              [
+                7,
+                0
+              ],
+              [
+                7,
+                1
+              ],
+              [
+                6,
+                1
+              ]
+            ],
+            [
+              [
+                9,
+                0
+              ],
+              [
+                10,
+                0
+              ],
+              [
+                10,
+                1
+              ],
+              [
+                9,
+                1
+              ]
+            ],
+            [
+              [
+                12,
+                0
+              ],
+              [
+                13,
+                0
+              ],
+              [
+                13,
+                1
+              ],
+              [
+                12,
+                1
+              ]
+            ],
+            [
+              [
+                15,
+                0
+              ],
+              [
+                16,
+                0
+              ],
+              [
+                16,
+                1
+              ],
+              [
+                15,
+                1
+              ]
+            ],
+            [
+              [
+                18,
+                0
+              ],
+              [
+                19,
+                0
+              ],
+              [
+                19,
+                1
+              ],
+              [
+                18,
+                1
+              ]
+            ],
+            [
+              [
+                21,
+                0
+              ],
+              [
+                22,
+                0
+              ],
+              [
+                22,
+                1
+              ],
+              [
+                21,
+                1
+              ]
+            ],
+            [
+              [
+                24,
+                0
+              ],
+              [
+                25,
+                0
+              ],
+              [
+                25,
+                1
+              ],
+              [
+                24,
+                1
+              ]
+            ],
+            [
+              [
+                27,
+                0
+              ],
+              [
+                28,
+                0
+              ],
+              [
+                28,
+                1
+              ],
+              [
+                27,
+                1
+              ]
+            ],
+            [
+              [
+                30,
+                0
+              ],
+              [
+                31,
+                0
+              ],
+              [
+                31,
+                1
+              ],
+              [
+                30,
+                1
+              ]
+            ],
+            [
+              [
+                33,
+                0
+              ],
+              [
+                34,
+                0
+              ],
+              [
+                34,
+                1
+              ],
+              [
+                33,
+                1
+              ]
+            ],
+            [
+              [
+                36,
+                0
+              ],
+              [
+                37,
+                0
+              ],
+              [
+                37,
+                1
+              ],
+              [
+                36,
+                1
+              ]
+            ],
+            [
+              [
+                39,
+                0
+              ],
+              [
+                40,
+                0
+              ],
+              [
+                40,
+                1
+              ],
+              [
+                39,
+                1
+              ]
+            ],
+            [
+              [
+                42,
+                0
+              ],
+              [
+                43,
+                0
+              ],
+              [
+                43,
+                1
+              ],
+              [
+                42,
+                1
+              ]
+            ],
+            [
+              [
+                45,
+                0
+              ],
+              [
+                46,
+                0
+              ],
+              [
+                46,
+                1
+              ],
+              [
+                45,
+                1
+              ]
+            ],
+            [
+              [
+                0,
+                3
+              ],
+              [
+                1,
+                3
+              ],
+              [
+                1,
+                4
+              ],
+              [
+                0,
+                4
+              ]
+            ],
+            [
+              [
+                3,
+                3
+              ],
+              [
+                4,
+                3
+              ],
+              [
+                4,
+                4
+              ],
+              [
+                3,
+                4
+              ]
+            ],
+            [
+              [
+                6,
+                3
+              ],
+              [
+                7,
+                3
+              ],
+              [
+                7,
+                4
+              ],
+              [
+                6,
+                4
+              ]
+            ],
+            [
+              [
+                9,
+                3
+              ],
+              [
+                10,
+                3
+              ],
+              [
+                10,
+                4
+              ],
+              [
+                9,
+                4
+              ]
+            ],
+            [
+              [
+                12,
+                3
+              ],
+              [
+                13,
+                3
+              ],
+              [
+                13,
+                4
+              ],
+              [
+                12,
+                4
+              ]
+            ],
+            [
+              [
+                15,
+                3
+              ],
+              [
+                16,
+                3
+              ],
+              [
+                16,
+                4
+              ],
+              [
+                15,
+                4
+              ]
+            ],
+            [
+              [
+                18,
+                3
+              ],
+              [
+                19,
+                3
+              ],
+              [
+                19,
+                4
+              ],
+              [
+                18,
+                4
+              ]
+            ],
+            [
+              [
+                21,
+                3
+              ],
+              [
+                22,
+                3
+              ],
+              [
+                22,
+                4
+              ],
+              [
+                21,
+                4
+              ]
+            ],
+            [
+              [
+                24,
+                3
+              ],
+              [
+                25,
+                3
+              ],
+              [
+                25,
+                4
+              ],
+              [
+                24,
+                4
+              ]
+            ],
+            [
+              [
+                27,
+                3
+              ],
+              [
+                28,
+                3
+              ],
+              [
+                28,
+                4
+              ],
+              [
+                27,
+                4
+              ]
+            ],
+            [
+              [
+                30,
+                3
+              ],
+              [
+                31,
+                3
+              ],
+              [
+                31,
+                4
+              ],
+              [
+                30,
+                4
+              ]
+            ],
+            [
+              [
+                33,
+                3
+              ],
+              [
+                34,
+                3
+              ],
+              [
+                34,
+                4
+              ],
+              [
+                33,
+                4
+              ]
+            ],
+            [
+              [
+                36,
+                3
+              ],
+              [
+                37,
+                3
+              ],
+              [
+                37,
+                4
+              ],
+              [
+                36,
+                4
+              ]
+            ],
+            [
+              [
+                39,
+                3
+              ],
+              [
+                40,
+                3
+              ],
+              [
+                40,
+                4
+              ],
+              [
+                39,
+                4
+              ]
+            ],
+            [
+              [
+                42,
+                3
+              ],
+              [
+                43,
+                3
+              ],
+              [
+                43,
+                4
+              ],
+              [
+                42,
+                4
+              ]
+            ],
+            [
+              [
+                45,
+                3
+              ],
+              [
+                46,
+                3
+              ],
+              [
+                46,
+                4
+              ],
+              [
+                45,
+                4
+              ]
+            ],
+            [
+              [
+                0,
+                6
+              ],
+              [
+                1,
+                6
+              ],
+              [
+                1,
+                7
+              ],
+              [
+                0,
+                7
+              ]
+            ],
+            [
+              [
+                3,
+                6
+              ],
+              [
+                4,
+                6
+              ],
+              [
+                4,
+                7
+              ],
+              [
+                3,
+                7
+              ]
+            ],
+            [
+              [
+                6,
+                6
+              ],
+              [
+                7,
+                6
+              ],
+              [
+                7,
+                7
+              ],
+              [
+                6,
+                7
+              ]
+            ],
+            [
+              [
+                9,
+                6
+              ],
+              [
+                10,
+                6
+              ],
+              [
+                10,
+                7
+              ],
+              [
+                9,
+                7
+              ]
+            ],
+            [
+              [
+                12,
+                6
+              ],
+              [
+                13,
+                6
+              ],
+              [
+                13,
+                7
+              ],
+              [
+                12,
+                7
+              ]
+            ],
+            [
+              [
+                15,
+                6
+              ],
+              [
+                16,
+                6
+              ],
+              [
+                16,
+                7
+              ],
+              [
+                15,
+                7
+              ]
+            ],
+            [
+              [
+                18,
+                6
+              ],
+              [
+                19,
+                6
+              ],
+              [
+                19,
+                7
+              ],
+              [
+                18,
+                7
+              ]
+            ],
+            [
+              [
+                21,
+                6
+              ],
+              [
+                22,
+                6
+              ],
+              [
+                22,
+                7
+              ],
+              [
+                21,
+                7
+              ]
+            ],
+            [
+              [
+                24,
+                6
+              ],
+              [
+                25,
+                6
+              ],
+              [
+                25,
+                7
+              ],
+              [
+                24,
+                7
+              ]
+            ],
+            [
+              [
+                27,
+                6
+              ],
+              [
+                28,
+                6
+              ],
+              [
+                28,
+                7
+              ],
+              [
+                27,
+                7
+              ]
+            ],
+            [
+              [
+                30,
+                6
+              ],
+              [
+                31,
+                6
+              ],
+              [
+                31,
+                7
+              ],
+              [
+                30,
+                7
+              ]
+            ],
+            [
+              [
+                33,
+                6
+              ],
+              [
+                34,
+                6
+              ],
+              [
+                34,
+                7
+              ],
+              [
+                33,
+                7
+              ]
+            ],
+            [
+              [
+                36,
+                6
+              ],
+              [
+                37,
+                6
+              ],
+              [
+                37,
+                7
+              ],
+              [
+                36,
+                7
+              ]
+            ],
+            [
+              [
+                39,
+                6
+              ],
+              [
+                40,
+                6
+              ],
+              [
+                40,
+                7
+              ],
+              [
+                39,
+                7
+              ]
+            ],
+            [
+              [
+                42,
+                6
+              ],
+              [
+                43,
+                6
+              ],
+              [
+                43,
+                7
+              ],
+              [
+                42,
+                7
+              ]
+            ],
+            [
+              [
+                45,
+                6
+              ],
+              [
+                46,
+                6
+              ],
+              [
+                46,
+                7
+              ],
+              [
+                45,
+                7
+              ]
+            ],
+            [
+              [
+                0,
+                9
+              ],
+              [
+                1,
+                9
+              ],
+              [
+                1,
+                10
+              ],
+              [
+                0,
+                10
+              ]
+            ],
+            [
+              [
+                3,
+                9
+              ],
+              [
+                4,
+                9
+              ],
+              [
+                4,
+                10
+              ],
+              [
+                3,
+                10
+              ]
+            ],
+            [
+              [
+                6,
+                9
+              ],
+              [
+                7,
+                9
+              ],
+              [
+                7,
+                10
+              ],
+              [
+                6,
+                10
+              ]
+            ],
+            [
+              [
+                9,
+                9
+              ],
+              [
+                10,
+                9
+              ],
+              [
+                10,
+                10
+              ],
+              [
+                9,
+                10
+              ]
+            ],
+            [
+              [
+                12,
+                9
+              ],
+              [
+                13,
+                9
+              ],
+              [
+                13,
+                10
+              ],
+              [
+                12,
+                10
+              ]
+            ],
+            [
+              [
+                15,
+                9
+              ],
+              [
+                16,
+                9
+              ],
+              [
+                16,
+                10
+              ],
+              [
+                15,
+                10
+              ]
+            ],
+            [
+              [
+                18,
+                9
+              ],
+              [
+                19,
+                9
+              ],
+              [
+                19,
+                10
+              ],
+              [
+                18,
+                10
+              ]
+            ],
+            [
+              [
+                21,
+                9
+              ],
+              [
+                22,
+                9
+              ],
+              [
+                22,
+                10
+              ],
+              [
+                21,
+                10
+              ]
+            ],
+            [
+              [
+                24,
+                9
+              ],
+              [
+                25,
+                9
+              ],
+              [
+                25,
+                10
+              ],
+              [
+                24,
+                10
+              ]
+            ],
+            [
+              [
+                27,
+                9
+              ],
+              [
+                28,
+                9
+              ],
+              [
+                28,
+                10
+              ],
+              [
+                27,
+                10
+              ]
+            ],
+            [
+              [
+                30,
+                9
+              ],
+              [
+                31,
+                9
+              ],
+              [
+                31,
+                10
+              ],
+              [
+                30,
+                10
+              ]
+            ],
+            [
+              [
+                33,
+                9
+              ],
+              [
+                34,
+                9
+              ],
+              [
+                34,
+                10
+              ],
+              [
+                33,
+                10
+              ]
+            ],
+            [
+              [
+                36,
+                9
+              ],
+              [
+                37,
+                9
+              ],
+              [
+                37,
+                10
+              ],
+              [
+                36,
+                10
+              ]
+            ],
+            [
+              [
+                39,
+                9
+              ],
+              [
+                40,
+                9
+              ],
+              [
+                40,
+                10
+              ],
+              [
+                39,
+                10
+              ]
+            ],
+            [
+              [
+                42,
+                9
+              ],
+              [
+                43,
+                9
+              ],
+              [
+                43,
+                10
+              ],
+              [
+                42,
+                10
+              ]
+            ],
+            [
+              [
+                45,
+                9
+              ],
+              [
+                46,
+                9
+              ],
+              [
+                46,
+                10
+              ],
+              [
+                45,
+                10
+              ]
+            ],
+            [
+              [
+                0,
+                12
+              ],
+              [
+                1,
+                12
+              ],
+              [
+                1,
+                13
+              ],
+              [
+                0,
+                13
+              ]
+            ],
+            [
+              [
+                3,
+                12
+              ],
+              [
+                4,
+                12
+              ],
+              [
+                4,
+                13
+              ],
+              [
+                3,
+                13
+              ]
+            ],
+            [
+              [
+                6,
+                12
+              ],
+              [
+                7,
+                12
+              ],
+              [
+                7,
+                13
+              ],
+              [
+                6,
+                13
+              ]
+            ],
+            [
+              [
+                9,
+                12
+              ],
+              [
+                10,
+                12
+              ],
+              [
+                10,
+                13
+              ],
+              [
+                9,
+                13
+              ]
+            ],
+            [
+              [
+                12,
+                12
+              ],
+              [
+                13,
+                12
+              ],
+              [
+                13,
+                13
+              ],
+              [
+                12,
+                13
+              ]
+            ],
+            [
+              [
+                15,
+                12
+              ],
+              [
+                16,
+                12
+              ],
+              [
+                16,
+                13
+              ],
+              [
+                15,
+                13
+              ]
+            ],
+            [
+              [
+                18,
+                12
+              ],
+              [
+                19,
+                12
+              ],
+              [
+                19,
+                13
+              ],
+              [
+                18,
+                13
+              ]
+            ],
+            [
+              [
+                21,
+                12
+              ],
+              [
+                22,
+                12
+              ],
+              [
+                22,
+                13
+              ],
+              [
+                21,
+                13
+              ]
+            ],
+            [
+              [
+                24,
+                12
+              ],
+              [
+                25,
+                12
+              ],
+              [
+                25,
+                13
+              ],
+              [
+                24,
+                13
+              ]
+            ],
+            [
+              [
+                27,
+                12
+              ],
+              [
+                28,
+                12
+              ],
+              [
+                28,
+                13
+              ],
+              [
+                27,
+                13
+              ]
+            ],
+            [
+              [
+                30,
+                12
+              ],
+              [
+                31,
+                12
+              ],
+              [
+                31,
+                13
+              ],
+              [
+                30,
+                13
+              ]
+            ],
+            [
+              [
+                33,
+                12
+              ],
+              [
+                34,
+                12
+              ],
+              [
+                34,
+                13
+              ],
+              [
+                33,
+                13
+              ]
+            ],
+            [
+              [
+                36,
+                12
+              ],
+              [
+                37,
+                12
+              ],
+              [
+                37,
+                13
+              ],
+              [
+                36,
+                13
+              ]
+            ],
+            [
+              [
+                39,
+                12
+              ],
+              [
+                40,
+                12
+              ],
+              [
+                40,
+                13
+              ],
+              [
+                39,
+                13
+              ]
+            ],
+            [
+              [
+                42,
+                12
+              ],
+              [
+                43,
+                12
+              ],
+              [
+                43,
+                13
+              ],
+              [
+                42,
+                13
+              ]
+            ],
+            [
+              [
+                45,
+                12
+              ],
+              [
+                46,
+                12
+              ],
+              [
+                46,
+                13
+              ],
+              [
+                45,
+                13
+              ]
+            ],
+            [
+              [
+                0,
+                15
+              ],
+              [
+                1,
+                15
+              ],
+              [
+                1,
+                16
+              ],
+              [
+                0,
+                16
+              ]
+            ],
+            [
+              [
+                3,
+                15
+              ],
+              [
+                4,
+                15
+              ],
+              [
+                4,
+                16
+              ],
+              [
+                3,
+                16
+              ]
+            ],
+            [
+              [
+                6,
+                15
+              ],
+              [
+                7,
+                15
+              ],
+              [
+                7,
+                16
+              ],
+              [
+                6,
+                16
+              ]
+            ],
+            [
+              [
+                9,
+                15
+              ],
+              [
+                10,
+                15
+              ],
+              [
+                10,
+                16
+              ],
+              [
+                9,
+                16
+              ]
+            ],
+            [
+              [
+                12,
+                15
+              ],
+              [
+                13,
+                15
+              ],
+              [
+                13,
+                16
+              ],
+              [
+                12,
+                16
+              ]
+            ],
+            [
+              [
+                15,
+                15
+              ],
+              [
+                16,
+                15
+              ],
+              [
+                16,
+                16
+              ],
+              [
+                15,
+                16
+              ]
+            ],
+            [
+              [
+                18,
+                15
+              ],
+              [
+                19,
+                15
+              ],
+              [
+                19,
+                16
+              ],
+              [
+                18,
+                16
+              ]
+            ],
+            [
+              [
+                21,
+                15
+              ],
+              [
+                22,
+                15
+              ],
+              [
+                22,
+                16
+              ],
+              [
+                21,
+                16
+              ]
+            ],
+            [
+              [
+                24,
+                15
+              ],
+              [
+                25,
+                15
+              ],
+              [
+                25,
+                16
+              ],
+              [
+                24,
+                16
+              ]
+            ],
+            [
+              [
+                27,
+                15
+              ],
+              [
+                28,
+                15
+              ],
+              [
+                28,
+                16
+              ],
+              [
+                27,
+                16
+              ]
+            ],
+            [
+              [
+                30,
+                15
+              ],
+              [
+                31,
+                15
+              ],
+              [
+                31,
+                16
+              ],
+              [
+                30,
+                16
+              ]
+            ],
+            [
+              [
+                33,
+                15
+              ],
+              [
+                34,
+                15
+              ],
+              [
+                34,
+                16
+              ],
+              [
+                33,
+                16
+              ]
+            ],
+            [
+              [
+                36,
+                15
+              ],
+              [
+                37,
+                15
+              ],
+              [
+                37,
+                16
+              ],
+              [
+                36,
+                16
+              ]
+            ],
+            [
+              [
+                39,
+                15
+              ],
+              [
+                40,
+                15
+              ],
+              [
+                40,
+                16
+              ],
+              [
+                39,
+                16
+              ]
+            ],
+            [
+              [
+                42,
+                15
+              ],
+              [
+                43,
+                15
+              ],
+              [
+                43,
+                16
+              ],
+              [
+                42,
+                16
+              ]
+            ],
+            [
+              [
+                45,
+                15
+              ],
+              [
+                46,
+                15
+              ],
+              [
+                46,
+                16
+              ],
+              [
+                45,
+                16
+              ]
+            ],
+            [
+              [
+                0,
+                18
+              ],
+              [
+                1,
+                18
+              ],
+              [
+                1,
+                19
+              ],
+              [
+                0,
+                19
+              ]
+            ],
+            [
+              [
+                3,
+                18
+              ],
+              [
+                4,
+                18
+              ],
+              [
+                4,
+                19
+              ],
+              [
+                3,
+                19
+              ]
+            ],
+            [
+              [
+                6,
+                18
+              ],
+              [
+                7,
+                18
+              ],
+              [
+                7,
+                19
+              ],
+              [
+                6,
+                19
+              ]
+            ],
+            [
+              [
+                9,
+                18
+              ],
+              [
+                10,
+                18
+              ],
+              [
+                10,
+                19
+              ],
+              [
+                9,
+                19
+              ]
+            ],
+            [
+              [
+                12,
+                18
+              ],
+              [
+                13,
+                18
+              ],
+              [
+                13,
+                19
+              ],
+              [
+                12,
+                19
+              ]
+            ],
+            [
+              [
+                15,
+                18
+              ],
+              [
+                16,
+                18
+              ],
+              [
+                16,
+                19
+              ],
+              [
+                15,
+                19
+              ]
+            ],
+            [
+              [
+                18,
+                18
+              ],
+              [
+                19,
+                18
+              ],
+              [
+                19,
+                19
+              ],
+              [
+                18,
+                19
+              ]
+            ],
+            [
+              [
+                21,
+                18
+              ],
+              [
+                22,
+                18
+              ],
+              [
+                22,
+                19
+              ],
+              [
+                21,
+                19
+              ]
+            ],
+            [
+              [
+                24,
+                18
+              ],
+              [
+                25,
+                18
+              ],
+              [
+                25,
+                19
+              ],
+              [
+                24,
+                19
+              ]
+            ],
+            [
+              [
+                27,
+                18
+              ],
+              [
+                28,
+                18
+              ],
+              [
+                28,
+                19
+              ],
+              [
+                27,
+                19
+              ]
+            ],
+            [
+              [
+                30,
+                18
+              ],
+              [
+                31,
+                18
+              ],
+              [
+                31,
+                19
+              ],
+              [
+                30,
+                19
+              ]
+            ],
+            [
+              [
+                33,
+                18
+              ],
+              [
+                34,
+                18
+              ],
+              [
+                34,
+                19
+              ],
+              [
+                33,
+                19
+              ]
+            ],
+            [
+              [
+                36,
+                18
+              ],
+              [
+                37,
+                18
+              ],
+              [
+                37,
+                19
+              ],
+              [
+                36,
+                19
+              ]
+            ],
+            [
+              [
+                39,
+                18
+              ],
+              [
+                40,
+                18
+              ],
+              [
+                40,
+                19
+              ],
+              [
+                39,
+                19
+              ]
+            ],
+            [
+              [
+                42,
+                18
+              ],
+              [
+                43,
+                18
+              ],
+              [
+                43,
+                19
+              ],
+              [
+                42,
+                19
+              ]
+            ],
+            [
+              [
+                45,
+                18
+              ],
+              [
+                46,
+                18
+              ],
+              [
+                46,
+                19
+              ],
+              [
+                45,
+                19
+              ]
+            ],
+            [
+              [
+                0,
+                21
+              ],
+              [
+                1,
+                21
+              ],
+              [
+                1,
+                22
+              ],
+              [
+                0,
+                22
+              ]
+            ],
+            [
+              [
+                3,
+                21
+              ],
+              [
+                4,
+                21
+              ],
+              [
+                4,
+                22
+              ],
+              [
+                3,
+                22
+              ]
+            ],
+            [
+              [
+                6,
+                21
+              ],
+              [
+                7,
+                21
+              ],
+              [
+                7,
+                22
+              ],
+              [
+                6,
+                22
+              ]
+            ],
+            [
+              [
+                9,
+                21
+              ],
+              [
+                10,
+                21
+              ],
+              [
+                10,
+                22
+              ],
+              [
+                9,
+                22
+              ]
+            ],
+            [
+              [
+                12,
+                21
+              ],
+              [
+                13,
+                21
+              ],
+              [
+                13,
+                22
+              ],
+              [
+                12,
+                22
+              ]
+            ],
+            [
+              [
+                15,
+                21
+              ],
+              [
+                16,
+                21
+              ],
+              [
+                16,
+                22
+              ],
+              [
+                15,
+                22
+              ]
+            ],
+            [
+              [
+                18,
+                21
+              ],
+              [
+                19,
+                21
+              ],
+              [
+                19,
+                22
+              ],
+              [
+                18,
+                22
+              ]
+            ],
+            [
+              [
+                21,
+                21
+              ],
+              [
+                22,
+                21
+              ],
+              [
+                22,
+                22
+              ],
+              [
+                21,
+                22
+              ]
+            ],
+            [
+              [
+                24,
+                21
+              ],
+              [
+                25,
+                21
+              ],
+              [
+                25,
+                22
+              ],
+              [
+                24,
+                22
+              ]
+            ],
+            [
+              [
+                27,
+                21
+              ],
+              [
+                28,
+                21
+              ],
+              [
+                28,
+                22
+              ],
+              [
+                27,
+                22
+              ]
+            ],
+            [
+              [
+                30,
+                21
+              ],
+              [
+                31,
+                21
+              ],
+              [
+                31,
+                22
+              ],
+              [
+                30,
+                22
+              ]
+            ],
+            [
+              [
+                33,
+                21
+              ],
+              [
+                34,
+                21
+              ],
+              [
+                34,
+                22
+              ],
+              [
+                33,
+                22
+              ]
+            ],
+            [
+              [
+                36,
+                21
+              ],
+              [
+                37,
+                21
+              ],
+              [
+                37,
+                22
+              ],
+              [
+                36,
+                22
+              ]
+            ],
+            [
+              [
+                39,
+                21
+              ],
+              [
+                40,
+                21
+              ],
+              [
+                40,
+                22
+              ],
+              [
+                39,
+                22
+              ]
+            ],
+            [
+              [
+                42,
+                21
+              ],
+              [
+                43,
+                21
+              ],
+              [
+                43,
+                22
+              ],
+              [
+                42,
+                22
+              ]
+            ],
+            [
+              [
+                45,
+                21
+              ],
+              [
+                46,
+                21
+              ],
+              [
+                46,
+                22
+              ],
+              [
+                45,
+                22
+              ]
+            ]
+          ],
+          "fillRule": "nonzero"
+        }
+      ],
+      "epsilon": 1e-8,
+      "maxEdges": 65536,
+      "maxParameters": 262144,
+      "maxAtomicEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 200000
+    },
+    "expected": {
+      "area": 128,
+      "contours": 128,
+      "maxPairs": 512,
+      "maxWork": 200000
+    }
+  },
+  {
+    "name": "subnormal contour does not poison filled region",
+    "input": {
+      "operation": "union",
+      "operands": [
+        {
+          "fillRule": "nonzero",
+          "contours": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                1e-310,
+                0
+              ],
+              [
+                1e-310,
+                1e-310
+              ],
+              [
+                0,
+                1e-310
+              ]
+            ]
+          ]
+        },
+        {
+          "fillRule": "nonzero",
+          "contours": [
+            [
+              [
+                0,
+                -1
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                0,
+                1
+              ]
+            ]
+          ]
+        }
+      ],
+      "epsilon": 1e-8,
+      "maxEdges": 65536,
+      "maxParameters": 262144,
+      "maxAtomicEdges": 65536,
+      "maxSegments": 65536,
+      "maxWork": 10000000
+    },
+    "expected": {
+      "area": 4,
+      "contours": 1
+    }
+  }
+]

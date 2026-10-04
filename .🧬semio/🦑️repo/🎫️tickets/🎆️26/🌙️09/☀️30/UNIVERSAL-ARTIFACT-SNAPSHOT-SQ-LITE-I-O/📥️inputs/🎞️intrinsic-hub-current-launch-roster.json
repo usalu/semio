@@ -1,0 +1,60 @@
+{
+  "entries": [
+    {
+      "name": "🧪️test🎒️pack🌱️value🎞️intrinsic🦀️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-kernel:test-native --skip-nx-cache --args='quick intrinsic_media_wire_ --no-fail-fast'",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_TEST_LEVEL": "quick",
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      },
+      "presentation": {
+        "group": "9_gates",
+        "order": 408.78101
+      }
+    },
+    {
+      "name": "🧪️test🧰️os🔌️plugin🎞️intrinsic🦀️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-plugin:test --skip-nx-cache --args='quick intrinsic_media_wire_ --no-fail-fast'",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_TEST_LEVEL": "quick",
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      },
+      "presentation": {
+        "group": "9_gates",
+        "order": 408.78102
+      }
+    },
+    {
+      "name": "🧪️test🎒️pack🌱️value🌎️hub🦀️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub:test --skip-nx-cache --args='quick --lib artifact_authority::trusted_catalog::tests::trusted_descriptor_wire_materialization_matches_neutral_boundaries -- --exact --nocapture'",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_TEST_LEVEL": "quick",
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      },
+      "presentation": {
+        "group": "9_gates",
+        "order": 408.78103
+      }
+    }
+  ],
+  "paths": [
+    "/Users/ueli/Documents/semio/.vscode/🧩️launch.seed.jsonc",
+    "/Users/ueli/Documents/semio/.vscode/launch.json"
+  ],
+  "basis": "Current absent selectors verified by independent read-only audit; preserve authored refusal anchor and live JSONC launch generation seed"
+}

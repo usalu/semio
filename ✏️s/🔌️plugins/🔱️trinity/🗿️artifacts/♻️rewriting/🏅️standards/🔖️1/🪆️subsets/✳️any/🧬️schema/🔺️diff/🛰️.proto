@@ -1,17 +1,6 @@
 syntax = "proto3";
 package semio.s.trinity.rewriting.diff;
+import "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🛰️.proto";
+import "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
 import "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧬️schema/🛰️.proto";
-
-// 🔺️ Each map value is decoded by its owning Rewriting field schema.
-message RewritingDiff {
-  // @state artifact
-  optional string before_fixture_json = 1;
-  // @state artifact
-  optional string lhs_json = 2;
-  // @state artifact
-  optional string rhs_json = 3;
-  // @state artifact
-  semio.framework.replication.mutation.map.MapDelta parameter_bindings = 4;
-  // @state artifact
-  semio.framework.replication.mutation.map.MapDelta rule_layout = 5;
-}
+message RewritingDiff { semio.s.trinity.jack.snapshot.JackSnapshot working_graph = 1; semio.s.trinity.rewriting.artifact.Lhs lhs = 2; semio.s.trinity.rewriting.artifact.Rhs rhs = 3; semio.framework.replication.mutation.map.MapDelta parameter_bindings = 4; semio.framework.replication.mutation.map.MapDelta rule_layout = 5; }

@@ -101,7 +101,7 @@ async fn artifact_creation_facts(txn: &mut Txn, request_key: &str) -> DirectoryR
     let mut result = txn.execute(query("MATCH (:ArtifactCreationRequest {key: $key})-[:HAS_FACT]->(f:ArtifactCreationFact) RETURN f.payload AS payload ORDER BY f.revision LIMIT 4").param("key", request_key)).await.map_err(backend)?;
     let mut facts = Vec::new();
     while let Some(row) = result.next(txn.handle()).await.map_err(backend)? {
-        facts.push(directory::os_pack::json::from_json_str(&row.get::<String>("payload").map_err(backend)?).map_err(backend)?);
+        facts.push(semio_framework_pack_json::from_json_str(&row.get::<String>("payload").map_err(backend)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(backend)?);
     }
     Ok(facts)
 }
@@ -138,7 +138,7 @@ async fn validate_artifact_creation_authority(txn: &mut Txn, actor: &ArtifactCre
 }
 
 async fn insert_artifact_creation_fact(txn: &mut Txn, request_key: &str, intent: &ArtifactCreationIntentV1, fact: &ArtifactCreationFactV1) -> DirectoryResult<()> {
-    let payload = directory::os_pack::json::to_json_string(fact);
+    let payload = semio_framework_pack_json::to_json_string(fact);
     if payload.len() > 8 * 1024 * 1024 {
         return Err(DirectoryError::Conflict("artifact creation fact exceeds its bounded envelope".into()));
     }
@@ -637,7 +637,7 @@ impl Neo4jDirectory {
                     query("CREATE (:ArtifactAuthorityEvent {eventSeq: $event_seq, scopeCheckpointKey: $key, payload: $payload})")
                         .param("event_seq", sequence)
                         .param("key", checkpoint_key.clone())
-                        .param("payload", directory::os_pack::json::to_json_string(checkpoint)),
+                        .param("payload", semio_framework_pack_json::to_json_string(checkpoint)),
                 )
                 .await
                 .map_err(backend)?;
@@ -912,7 +912,7 @@ impl Neo4jDirectory {
         txn.run(query("CREATE (e:DirectoryEvent {seq: $seq, id: $id, hlcPhysical: $hlc_physical, hlcLogical: $hlc_logical, actorKind: $actor_kind, actorId: $actor_id, spaceId: $space_id, userId: $user_id, kind: $kind, payload: $payload, recordedAt: $recorded_at})")
             .param("seq", seq).param("id", id.clone()).param("hlc_physical", event.hlc.physical_ms).param("hlc_logical", i64::from(event.hlc.logical)).param("actor_kind", actor_kind_to_str(event.actor.kind)).param("actor_id", event.actor.id.clone()).param("space_id", event.space_id.clone()).param("user_id", event.user_id.clone()).param("kind", kind).param("payload", payload_value.to_string()).param("recorded_at", recorded_at_ms)).await.map_err(backend)?;
         txn.run(
-            query("CREATE (:ArtifactAuthorityEvent {eventSeq: $event_seq, scopeCheckpointKey: $key, payload: $payload})").param("event_seq", seq).param("key", scope_key.clone()).param("payload", directory::os_pack::json::to_json_string(checkpoint)),
+            query("CREATE (:ArtifactAuthorityEvent {eventSeq: $event_seq, scopeCheckpointKey: $key, payload: $payload})").param("event_seq", seq).param("key", scope_key.clone()).param("payload", semio_framework_pack_json::to_json_string(checkpoint)),
         )
         .await
         .map_err(backend)?;
@@ -1250,7 +1250,7 @@ impl Neo4jDirectory {
             .param("space_id", checkpoint.scope.space_id.clone())
             .param("document_id", checkpoint.scope.document_id.clone())
             .param("event_seq", i64::try_from(event.seq).map_err(backend)?)
-            .param("payload", directory::os_pack::json::to_json_string(checkpoint)),
+            .param("payload", semio_framework_pack_json::to_json_string(checkpoint)),
         )
         .await
         .map_err(backend)?;
@@ -1360,7 +1360,7 @@ impl Neo4jDirectory {
                         .param("space_id", descriptor.space_id.clone())
                         .param("scope_key", scope_key)
                         .param("document_id", descriptor.document_id.clone())
-                        .param("descriptor", directory::os_pack::json::to_json_string(descriptor))
+                        .param("descriptor", semio_framework_pack_json::to_json_string(descriptor))
                         .param("announced_at", event.recorded_at_ms),
                 )
                 .await
@@ -1372,9 +1372,9 @@ impl Neo4jDirectory {
                 let row = result.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::NotFound("indexed document descriptor".into()))?;
                 let descriptor_json: String = row.get("descriptor").map_err(backend)?;
                 drop(result);
-                let descriptor: DocumentDescriptor = directory::os_pack::json::from_json_str(&descriptor_json).map_err(backend)?;
+                let descriptor: DocumentDescriptor = semio_framework_pack_json::from_json_str(&descriptor_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(backend)?;
                 let indexed = crate::directory::document_index_projection_v1(event, &descriptor)?;
-                let payload = directory::os_pack::json::to_json_string(&indexed);
+                let payload = semio_framework_pack_json::to_json_string(&indexed);
                 let mut previous = txn.execute(query("MATCH (i:DocumentIndex {scopeKey: $scope_key}) RETURN i.payload AS payload").param("scope_key", scope_key.clone())).await.map_err(backend)?;
                 if let Some(row) = previous.next(txn.handle()).await.map_err(backend)? {
                     let stored: String = row.get("payload").map_err(backend)?;
@@ -1398,18 +1398,18 @@ impl Neo4jDirectory {
                 let scope_key = document_scope_key_v1(&checkpoint.scope);
                 let mut descriptors = txn.execute(query("MATCH (d:DocumentDescriptor {scopeKey: $scope_key}) RETURN d.descriptor AS descriptor").param("scope_key", scope_key.clone())).await.map_err(backend)?;
                 let descriptor_row = descriptors.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::NotFound("checkpoint document descriptor".into()))?;
-                let descriptor: DocumentDescriptor = directory::os_pack::json::from_json_str(&descriptor_row.get::<String>("descriptor").map_err(backend)?).map_err(backend)?;
+                let descriptor: DocumentDescriptor = semio_framework_pack_json::from_json_str(&descriptor_row.get::<String>("descriptor").map_err(backend)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(backend)?;
                 drop(descriptors);
                 let mut indexes = txn.execute(query("MATCH (i:DocumentIndex {scopeKey: $scope_key}) RETURN i.payload AS payload").param("scope_key", scope_key.clone())).await.map_err(backend)?;
                 let index: Option<directory::os_directory::DirectoryIndexedDocumentViewV1> = match indexes.next(txn.handle()).await.map_err(backend)? {
-                    Some(row) => Some(directory::os_pack::json::from_json_str(&row.get::<String>("payload").map_err(backend)?).map_err(backend)?),
+                    Some(row) => Some(semio_framework_pack_json::from_json_str(&row.get::<String>("payload").map_err(backend)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(backend)?),
                     None => None,
                 };
                 drop(indexes);
                 crate::directory::validate_checkpoint_index_v1(index.as_ref(), &descriptor, checkpoint)?;
                 let mut heads = txn.execute(query("MATCH (:DocumentDescriptor {scopeKey: $scope_key})-[:ACTIVE_CHECKPOINT]->(c:ArtifactCheckpoint) RETURN c.payload AS payload").param("scope_key", scope_key.clone())).await.map_err(backend)?;
                 let active: Option<PublishedArtifactCheckpoint> = match heads.next(txn.handle()).await.map_err(backend)? {
-                    Some(row) => Some(directory::os_pack::json::from_json_str(&row.get::<String>("payload").map_err(backend)?).map_err(backend)?),
+                    Some(row) => Some(semio_framework_pack_json::from_json_str(&row.get::<String>("payload").map_err(backend)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(backend)?),
                     None => None,
                 };
                 drop(heads);
@@ -1418,7 +1418,7 @@ impl Neo4jDirectory {
                 drop(counts);
                 crate::directory::validate_published_checkpoint_lineage(&descriptor, active.as_ref(), u64::try_from(count).map_err(backend)?, checkpoint)?;
                 let checkpoint_key = checkpoint_key_v1(&checkpoint.scope, checkpoint.checkpoint_id);
-                let payload = directory::os_pack::json::to_json_string(checkpoint);
+                let payload = semio_framework_pack_json::to_json_string(checkpoint);
                 txn.run(
                     query(
                         "MATCH (d:DocumentDescriptor {scopeKey: $scope_key})
@@ -1469,7 +1469,7 @@ impl Neo4jDirectory {
             DirectoryEventBody::ArtifactRetentionAdvanced { retention } => {
                 let scope_key = document_scope_key_v1(&retention.scope);
                 let checkpoint_key = checkpoint_key_v1(&retention.scope, retention.retained_checkpoint_id);
-                let payload = directory::os_pack::json::to_json_string(retention);
+                let payload = semio_framework_pack_json::to_json_string(retention);
                 txn.run(
                     query(
                         "MATCH (d:DocumentDescriptor {scopeKey: $scope_key}), (c:ArtifactCheckpoint {scopeCheckpointKey: $checkpoint_key})
@@ -1520,7 +1520,7 @@ impl HubDirectory for Neo4jDirectory {
         let mut result = self.graph.execute(query("MATCH (:ArtifactCreationRequest {key: $key})-[:HAS_FACT]->(f:ArtifactCreationFact) RETURN f.payload AS payload ORDER BY f.revision LIMIT 4").param("key", key)).await.map_err(backend)?;
         let mut facts = Vec::new();
         while let Some(row) = result.next().await.map_err(backend)? {
-            facts.push(directory::os_pack::json::from_json_str(&row.get::<String>("payload").map_err(backend)?).map_err(backend)?);
+            facts.push(semio_framework_pack_json::from_json_str(&row.get::<String>("payload").map_err(backend)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(backend)?);
         }
         Ok(facts)
     }
@@ -1569,7 +1569,7 @@ impl HubDirectory for Neo4jDirectory {
             .map_err(backend)?;
         let mut intents = Vec::new();
         while let Some(row) = result.next().await.map_err(backend)? {
-            let fact: ArtifactCreationFactV1 = directory::os_pack::json::from_json_str(&row.get::<String>("payload").map_err(backend)?).map_err(backend)?;
+            let fact: ArtifactCreationFactV1 = semio_framework_pack_json::from_json_str(&row.get::<String>("payload").map_err(backend)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(backend)?;
             let ArtifactCreationFactBodyV1::Accepted { intent } = fact.body else {
                 return Err(DirectoryError::Backend("artifact creation recovery row is not accepted".into()));
             };
@@ -2040,7 +2040,7 @@ impl HubDirectory for Neo4jDirectory {
         let mut result = self.graph.execute(query("MATCH (d:DocumentDescriptor {scopeKey: $scope_key}) RETURN d.descriptor AS descriptor").param("scope_key", scope_key)).await.map_err(backend)?;
         let Some(row) = result.next().await.map_err(backend)? else { return Ok(None) };
         let encoded: String = row.get("descriptor").map_err(backend)?;
-        directory::os_pack::json::from_json_str(&encoded).map(Some).map_err(backend)
+        semio_framework_pack_json::from_json_str(&encoded, semio_framework_pack_json::JsonMemberPolicy::Reject).map(Some).map_err(backend)
     }
 
     async fn list_document_descriptors(&self, space_id: &str) -> DirectoryResult<Vec<DocumentDescriptor>> {
@@ -2048,7 +2048,7 @@ impl HubDirectory for Neo4jDirectory {
         let mut descriptors = Vec::new();
         while let Some(row) = result.next().await.map_err(backend)? {
             let encoded: String = row.get("descriptor").map_err(backend)?;
-            descriptors.push(directory::os_pack::json::from_json_str(&encoded).map_err(backend)?);
+            descriptors.push(semio_framework_pack_json::from_json_str(&encoded, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(backend)?);
         }
         Ok(descriptors)
     }
@@ -2075,7 +2075,7 @@ impl HubDirectory for Neo4jDirectory {
         let mut descriptors = Vec::new();
         while let Some(row) = result.next().await.map_err(backend)? {
             let encoded: String = row.get("descriptor").map_err(backend)?;
-            descriptors.push(directory::os_pack::json::from_json_str(&encoded).map_err(backend)?);
+            descriptors.push(semio_framework_pack_json::from_json_str(&encoded, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(backend)?);
         }
         Ok(descriptors)
     }
@@ -2084,14 +2084,14 @@ impl HubDirectory for Neo4jDirectory {
         let mut result = self.graph.execute(query("MATCH (c:ArtifactCheckpoint {scopeCheckpointKey: $key}) RETURN c.payload AS payload").param("key", checkpoint_key_v1(scope, checkpoint_id))).await.map_err(backend)?;
         let Some(row) = result.next().await.map_err(backend)? else { return Ok(None) };
         let payload: String = row.get("payload").map_err(backend)?;
-        directory::os_pack::json::from_json_str(&payload).map(Some).map_err(backend)
+        semio_framework_pack_json::from_json_str(&payload, semio_framework_pack_json::JsonMemberPolicy::Reject).map(Some).map_err(backend)
     }
 
     async fn get_verified_artifact_checkpoint(&self, scope: &DocumentScope, checkpoint_id: ArtifactHash) -> DirectoryResult<Option<ArtifactCheckpoint>> {
         let mut result = self.graph.execute(query("MATCH (p:ArtifactCheckpointPrivate {scopeCheckpointKey: $key}) RETURN p.payload AS payload").param("key", checkpoint_key_v1(scope, checkpoint_id))).await.map_err(backend)?;
         let Some(row) = result.next().await.map_err(backend)? else { return Ok(None) };
         let payload: String = row.get("payload").map_err(backend)?;
-        directory::os_pack::json::from_json_str(&payload).map(Some).map_err(backend)
+        semio_framework_pack_json::from_json_str(&payload, semio_framework_pack_json::JsonMemberPolicy::Reject).map(Some).map_err(backend)
     }
 
     async fn get_active_artifact_checkpoint(&self, scope: &DocumentScope) -> DirectoryResult<Option<PublishedArtifactCheckpoint>> {
@@ -2099,14 +2099,14 @@ impl HubDirectory for Neo4jDirectory {
             self.graph.execute(query("MATCH (:DocumentDescriptor {scopeKey: $scope_key})-[:ACTIVE_CHECKPOINT]->(c:ArtifactCheckpoint) RETURN c.payload AS payload").param("scope_key", document_scope_key_v1(scope))).await.map_err(backend)?;
         let Some(row) = result.next().await.map_err(backend)? else { return Ok(None) };
         let payload: String = row.get("payload").map_err(backend)?;
-        directory::os_pack::json::from_json_str(&payload).map(Some).map_err(backend)
+        semio_framework_pack_json::from_json_str(&payload, semio_framework_pack_json::JsonMemberPolicy::Reject).map(Some).map_err(backend)
     }
 
     async fn get_artifact_retention(&self, scope: &DocumentScope) -> DirectoryResult<Option<ArtifactRetention>> {
         let mut result = self.graph.execute(query("MATCH (r:ArtifactRetention {scopeKey: $scope_key}) RETURN r.payload AS payload").param("scope_key", document_scope_key_v1(scope))).await.map_err(backend)?;
         let Some(row) = result.next().await.map_err(backend)? else { return Ok(None) };
         let payload: String = row.get("payload").map_err(backend)?;
-        directory::os_pack::json::from_json_str(&payload).map(Some).map_err(backend)
+        semio_framework_pack_json::from_json_str(&payload, semio_framework_pack_json::JsonMemberPolicy::Reject).map(Some).map_err(backend)
     }
 
     async fn artifact_checkpoint_count(&self, scope: &DocumentScope) -> DirectoryResult<u64> {
@@ -2131,7 +2131,7 @@ impl HubDirectory for Neo4jDirectory {
         let mut checkpoints = Vec::new();
         while let Some(row) = result.next().await.map_err(backend)? {
             let payload: String = row.get("payload").map_err(backend)?;
-            checkpoints.push(directory::os_pack::json::from_json_str(&payload).map_err(backend)?);
+            checkpoints.push(semio_framework_pack_json::from_json_str(&payload, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(backend)?);
         }
         Ok(checkpoints)
     }
@@ -3245,7 +3245,7 @@ impl HubDirectory for Neo4jDirectory {
                     let row = private.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend(format!("missing private authority journal for checkpoint event {}", event.seq)))?;
                     let payload: String = row.get("payload").map_err(backend)?;
                     drop(private);
-                    let checkpoint: ArtifactCheckpoint = directory::os_pack::json::from_json_str(&payload).map_err(backend)?;
+                    let checkpoint: ArtifactCheckpoint = semio_framework_pack_json::from_json_str(&payload, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(backend)?;
                     self.project_verified_checkpoint(&mut txn, event, &checkpoint).await?;
                 }
                 replayed += 1;

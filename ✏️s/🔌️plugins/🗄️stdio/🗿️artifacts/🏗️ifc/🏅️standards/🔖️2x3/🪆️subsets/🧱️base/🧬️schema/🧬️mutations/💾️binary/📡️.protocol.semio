@@ -19,3 +19,5 @@ record remove-instance tag=3
 field payload bytes
 record set-header tag=4
 field payload bytes
+record patch-snapshot tag=5
+field payload bytes

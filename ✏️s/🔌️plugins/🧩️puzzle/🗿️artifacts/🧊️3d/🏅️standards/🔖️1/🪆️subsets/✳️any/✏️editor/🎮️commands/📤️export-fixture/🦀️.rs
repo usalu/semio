@@ -2,7 +2,7 @@
 
 use crate::editor::puzzle3d::{puzzle3d_projection_value, Puzzle3dActionCtx, Puzzle3dFixture};
 use crate::retained_command::PUZZLE_COMMAND_OUTPUT_BYTES;
-use dsl::os_pack::json::to_json_string;
+use semio_framework_pack_json::to_json_string;
 use semio_framework_plugin::app::{ArtifactDownloadOutput, ArtifactOutputChunks};
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::Fault;
@@ -35,7 +35,7 @@ pub const fn puzzle3d_export_inline_budget_bytes() -> usize {
 
 /// 📤 The exported bytes of one fixture — the same projection `importFixture` round-trips.
 pub fn puzzle3d_export_json(fixture: &Puzzle3dFixture) -> String {
-    to_json_string(&puzzle3d_projection_value(dsl::ToValue::to_value(fixture)))
+    to_json_string(&puzzle3d_projection_value(semio_framework_value::ToValue::to_value(fixture)))
 }
 
 /// 📤 One inline host download. Only legal at or under [`puzzle3d_export_inline_budget_bytes`].

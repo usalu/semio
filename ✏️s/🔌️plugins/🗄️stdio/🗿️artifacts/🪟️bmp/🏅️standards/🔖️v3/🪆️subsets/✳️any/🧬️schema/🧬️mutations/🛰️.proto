@@ -1,9 +1,23 @@
 syntax = "proto3";
-package stdio.bmp.mutation;
-import "📐️change-header-fields/🛰️.proto";
-import "📥️insert-palette-entry/🛰️.proto";
-import "📤️remove-palette-entry/🛰️.proto";
-import "🎨️replace-palette-entry/🛰️.proto";
-import "🔲️replace-pixel-data/🛰️.proto";
-import "📸️set-snapshot/🛰️.proto";
-message BmpMutation { oneof mutation { ChangeHeaderFieldsMutation change_header_fields = 2; InsertPaletteEntryMutation insert_palette_entry = 3; RemovePaletteEntryMutation remove_palette_entry = 4; ReplacePaletteEntryMutation replace_palette_entry = 5; ReplacePixelDataMutation replace_pixel_data = 6; SetSnapshot set_snapshot = 7; } }
+package semio.s_stdio_bmp.mutations;
+
+message PaintIndexedRegion {
+  string revision = 1;
+  uint32 x = 2;
+  uint32 y = 3;
+  uint32 width = 4;
+  uint32 height = 5;
+  uint32 palette_index = 6;
+}
+
+message PaintDirectRegion {
+  string revision = 1;
+  uint32 x = 2;
+  uint32 y = 3;
+  uint32 width = 4;
+  uint32 height = 5;
+  uint32 red = 6;
+  uint32 green = 7;
+  uint32 blue = 8;
+  uint32 alpha = 9;
+}

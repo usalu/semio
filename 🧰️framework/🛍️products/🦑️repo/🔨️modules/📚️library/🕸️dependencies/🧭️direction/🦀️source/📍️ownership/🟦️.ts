@@ -1,6 +1,7 @@
 import {requireRecord,requireString,requireStringArray,requireExactKeys} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import {inspectRustBindingFacts,rustExternProviders,type RustBindingFacts} from "../🔗️binding/🟦️.ts";
-import {projectCargoProviderManifest,rustModuleScopeProof,rustTokens,rustTokenPairs,rustIdentifierSymbol,type RustModuleGraph,type RustToken} from "../../../../🔍️discovery/🟦️.ts";
+import { projectCargoProviderManifest, rustModuleScopeProof, type RustModuleGraph } from "../../../../🔍️discovery/🟦️.ts";
+import { rustTokens, rustTokenPairs, rustIdentifierSymbol, type RustToken } from "../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 import {rustSourceTargets,rustSourceTargetProblem,type RustSourceInputInventory} from "../🟦️.ts";
 
 export const COMPUTE_OWNERSHIP_CONTRACT_PATH="🧰️framework/🔨️modules/◻️2d/🧮️compute/🧫️fixtures/📍️binding-origin/🔣️.json";

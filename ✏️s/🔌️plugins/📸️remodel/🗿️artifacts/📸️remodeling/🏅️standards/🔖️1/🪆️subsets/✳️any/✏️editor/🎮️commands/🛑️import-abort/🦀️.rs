@@ -12,7 +12,7 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, No
 use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 🛑️ `reason` names a host abort (`retired`); `None` is a user cancel.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "import-abort")]
 pub struct ImportAbort {
     pub reason: Option<String>,

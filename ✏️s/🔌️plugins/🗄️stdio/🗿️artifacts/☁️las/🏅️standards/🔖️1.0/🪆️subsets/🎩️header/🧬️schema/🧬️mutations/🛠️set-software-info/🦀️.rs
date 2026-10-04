@@ -20,9 +20,12 @@ impl protocol::MutationKind<LasSnapshot, LasMutation> for SetSoftwareInfo {
     fn diff(&self, base: &LasSnapshot) -> protocol::MutationOutcome<<LasMutation as Mutation<LasSnapshot>>::Diff> {
         agg_diff(&LasMutation::SetSoftwareInfo(self.clone()), base)
     }
-    fn inverse(&self, base: &LasSnapshot) -> Vec<LasMutation> {
-        agg_inverse(&LasMutation::SetSoftwareInfo(self.clone()), base)
-    }
+    fn inverse(&self, base: &LasSnapshot) -> Result<Vec<LasMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&LasMutation::SetSoftwareInfo(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set software info", "Softwareinfo setzen")
     }

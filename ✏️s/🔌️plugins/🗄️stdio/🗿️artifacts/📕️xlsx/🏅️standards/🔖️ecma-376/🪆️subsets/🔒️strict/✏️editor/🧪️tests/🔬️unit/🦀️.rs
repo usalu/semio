@@ -3,10 +3,7 @@ use super::*;
 fn fixture() -> XlsxSnapshot {
     use crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx;
     use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxCell, XlsxSheet, XlsxWorkbook};
-    build_minimal_xlsx(XlsxWorkbook {
-        sheets: vec![XlsxSheet { name: "Sheet 1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Boolean(true) }] }],
-        ..Default::default()
-    })
+    build_minimal_xlsx(XlsxWorkbook { sheets: vec![XlsxSheet { name: "Sheet 1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Boolean(true) }] }], ..Default::default() })
 }
 
 #[semio_framework_async_macros::async_test]
@@ -21,11 +18,11 @@ async fn strict_editor_declares_its_dialect_and_main_window() {
 #[semio_framework_async_macros::async_test]
 async fn strict_cell_action_preserves_unicode_and_requires_a_complete_address() {
     let fixture = serde_json::json!({ "sheetName": "Tabelle %20", "row": 4, "column": 2, "revision": "0123456789abcdef", "value": "Grüße\n\\s %20" });
-    let arguments = dsl::json::from_json_str::<dsl::DslValue>(&fixture.to_string()).unwrap();
+    let arguments = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(&fixture.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let command = XlsxStrictEditor::command_from_action("set-cell", Some(&arguments)).unwrap();
     let encoded = protocol::OpBinary::encode_op(&command).unwrap();
     assert_eq!(<semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand<XlsxStrictEditorCommand> as protocol::OpBinary>::decode_op(&encoded).unwrap(), command);
-    let incomplete = dsl::json::from_json_str::<dsl::DslValue>(r#"{"row":4,"column":2,"value":"x"}"#).unwrap();
+    let incomplete = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(r#"{"row":4,"column":2,"value":"x"}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert!(XlsxStrictEditor::command_from_action("set-cell", Some(&incomplete)).is_err());
 }
 
@@ -44,3 +41,5 @@ fn command_revision(command: &XlsxStrictEditorCommand) -> String {
     let XlsxStrictEditorCommand::SetCell { revision, .. } = command;
     revision.clone()
 }
+
+semio_framework_plugin::history_edit_acceptance_law!("stdio", super::XlsxStrictEditor, || semio_framework_plugin::App { definition: super::create_xlsx_strict_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict");

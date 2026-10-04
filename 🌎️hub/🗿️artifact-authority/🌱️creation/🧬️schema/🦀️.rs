@@ -248,7 +248,7 @@ pub fn artifact_creation_command_digest_v1(space_id: &str, request: &SpaceArtifa
     if !text(space_id) || !request.validate() {
         return Err(rejected("artifact creation intent is invalid"));
     }
-    let canonical = directory::os_pack::json::to_json_string(request);
+    let canonical = semio_framework_pack_json::to_json_string(request);
     let mut digest = Sha256::new();
     digest.update(b"semio.hub.artifact-creation-intent.v1\0");
     for bytes in [space_id.as_bytes(), canonical.as_bytes()] {

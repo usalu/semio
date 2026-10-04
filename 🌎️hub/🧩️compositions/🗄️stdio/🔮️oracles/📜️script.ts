@@ -22,6 +22,26 @@ class DrawingReaderTestScript extends BundleScript {
   }
 }
 
+/** 🧫️ Checks exact private reader ownership and unchanged frozen caller content. */
+class PrivateReaderTestScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const { rest } = resolveTestLevel(segments);
+    await runRepositoryTestCommand(process.execPath, ["test", "--timeout", "30000", "./🧪️tests/🧫️private-reader/🟦️.ts", ...rest], { cwd: this.root, budgetMs: 120_000 });
+  }
+}
+
+/** 🖊️ Executes the complete additive lower Drawing cohort with its original oracle feature and budget. */
+class NativeDrawingReaderTestScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const { rest } = resolveTestLevel(segments);
+    if (rest.length) throw new Error("The complete lower Drawing native gate accepts no scenario filter.");
+    const family = contract.families.find(({ module }) => module === "drawing");
+    if (!family) throw new Error("The original lower Drawing cohort is not registered.");
+    const root = resolve(this.root, "../../../..");
+    await runRepositoryTestCommand("cargo", ["test", "--manifest-path", resolve(root, family.package.path, "Cargo.toml"), "--features", "oracles"], { cwd: root, budgetMs: 900_000 });
+  }
+}
+
 /** 🦀️ Executes every original provider, family, neutral-law and full assembly unit cohort. */
 class NativeOracleTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -37,5 +57,13 @@ class NativeOracleTestScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test-composition", CompositionTestScript).register("test-drawing-reader", DrawingReaderTestScript).register("test-native-oracles", NativeOracleTestScript);
+/** 🏷️ Checks the exact preserved cross-owner type law and corpus composition. */
+class TypeOwnershipTestScript extends BundleScript {
+ async run(args: string[]): Promise<void> {
+  if (args.length) throw Error("Expected test-type-ownership");
+  await runRepositoryTestCommand(process.execPath, ["test", "./🧪️tests/🏷️type/🟦️.ts"], {cwd: this.root, budgetMs: 30000});
+ }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("test-type-ownership", TypeOwnershipTestScript).register("test-private-reader", PrivateReaderTestScript).register("test-composition", CompositionTestScript).register("test-drawing-reader", DrawingReaderTestScript).register("test-native-drawing-reader", NativeDrawingReaderTestScript).register("test-native-oracles", NativeOracleTestScript);
 if (import.meta.main) await runScriptMain(router, { defaultCommand: "test-composition" });

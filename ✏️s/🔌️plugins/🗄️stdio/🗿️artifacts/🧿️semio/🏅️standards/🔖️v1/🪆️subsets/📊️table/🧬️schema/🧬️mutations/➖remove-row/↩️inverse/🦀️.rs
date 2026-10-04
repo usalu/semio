@@ -5,10 +5,13 @@ use crate::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
 
 //#region 🔖️Inverse
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(payload: &super::RemoveRow, base: &SemioTableSnapshot) -> Vec<SemioTableMutation> {
+pub fn inverse(payload: &super::RemoveRow, base: &SemioTableSnapshot) -> Result<Vec<SemioTableMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.rows.get(payload.index) {
         Some(row) => vec![SemioTableMutation::InsertRow(insert_row::InsertRow { index: payload.index, row: row.clone() })],
         None => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

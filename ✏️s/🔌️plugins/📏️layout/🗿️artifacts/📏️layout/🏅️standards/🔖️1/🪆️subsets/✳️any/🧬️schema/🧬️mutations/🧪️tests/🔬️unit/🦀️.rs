@@ -5,7 +5,7 @@ use protocol::{Mutation, MutationDiff, SemanticMutation};
 const SAMPLE: &str = r#"{"schema":"layout.layout","name":"t","grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":true},"paragraphStyles":[],"characterStyles":[],"stories":[{"id":"story-1","content":"Hello","styleRuns":[]}],"links":[{"id":"link-1","path":"a.png","hash":"h","width":10,"height":10,"dpi":300}],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":200,"height":200,"margins":{"top":0,"right":0,"bottom":0,"left":0},"columns":{"count":1,"gutter":0},"guides":[],"layerIds":["layer-1"],"layers":[{"id":"layer-1","name":"Content","visible":true,"locked":false,"objectIds":["frame-1"]}],"frames":[{"id":"frame-1","layerId":"layer-1","kind":"rect","bounds":{"x":10,"y":10,"w":40,"h":40,"rotation":0},"fill":[1,1,1,1]}],"overrides":[]}],"printTarget":null}"#;
 
 fn sample_doc() -> LayoutSnapshot {
-    dsl::os_pack::from_json_str(SAMPLE).expect("sample doc")
+    semio_framework_pack_json::from_json_str(SAMPLE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("sample doc")
 }
 
 fn new_rect(id: &str) -> Frame {
@@ -29,7 +29,7 @@ fn new_text(id: &str) -> Frame {
 
 fn round_trip(doc: &LayoutSnapshot, operation: &LayoutMutation) -> LayoutSnapshot {
     let forward = operation.diff(doc).diff().apply(doc).expect("valid mutation diff");
-    let backs = operation.inverse(doc);
+    let backs = operation.inverse(doc).expect("valid retained mutation inverse fixture");
     let mut restored = forward.clone();
     for back in &backs {
         restored = back.diff(&restored).diff().apply(&restored).expect("valid mutation diff");
@@ -50,10 +50,10 @@ async fn document_scalar_mutations_round_trip() {
     let cleared = round_trip(&with_target, &LayoutMutation::ChangePrintTarget(change_print_target::ChangePrintTarget { new_print_target: None }));
     assert!(cleared.print_target.is_none());
 
-    let with_fields = round_trip(&doc, &LayoutMutation::ChangeDataFields(change_data_fields::ChangeDataFields { new_json: Some(r#"{"key":"value"}"#.into()) }));
-    assert_eq!(with_fields.data_fields_json.as_deref(), Some(r#"{"key":"value"}"#));
-    let cleared_fields = round_trip(&with_fields, &LayoutMutation::ChangeDataFields(change_data_fields::ChangeDataFields { new_json: None }));
-    assert!(cleared_fields.data_fields_json.is_none());
+    let with_fields = round_trip(&doc, &LayoutMutation::ChangeDataFields(change_data_fields::ChangeDataFields { new_fields: Some(crate::FormDictionary{entries:vec![crate::FormDictionaryEntry{question_id:"key".into(),value:semio_framework_value::DslValue::String("value".into())}]}) }));
+    assert_eq!(with_fields.data_fields,Some(crate::FormDictionary{entries:vec![crate::FormDictionaryEntry{question_id:"key".into(),value:semio_framework_value::DslValue::String("value".into())}]}));
+    let cleared_fields = round_trip(&with_fields, &LayoutMutation::ChangeDataFields(change_data_fields::ChangeDataFields { new_fields: None }));
+    assert!(cleared_fields.data_fields.is_none());
 }
 //#endregion ✏️🖨️🧾document-scalars
 
@@ -109,7 +109,7 @@ async fn reorder_pages_round_trips() {
 async fn delete_page_of_a_missing_id_has_an_empty_inverse() {
     let doc = sample_doc();
     let delete = LayoutMutation::DeletePage(delete_page::DeletePage { id: "no-page".into() });
-    assert!(delete.inverse(&doc).is_empty());
+    assert!(delete.inverse(&doc).expect("valid retained mutation inverse fixture").is_empty());
 }
 //#endregion 📄pages
 
@@ -205,7 +205,7 @@ async fn text_frame_wrap_mode_and_columns_round_trip_and_ignore_rect_fields() {
     let fill_on_text = LayoutMutation::ChangeFrameFill(change_frame_fill::ChangeFrameFill { page_id: "page-1".into(), frame_id: "frame-text".into(), new_fill: Some([1.0, 0.0, 0.0, 1.0]) });
     let unchanged = fill_on_text.diff(&columned).diff().apply(&columned).expect("valid mutation diff");
     assert_eq!(unchanged, columned, "fill patch on a text frame must be a no-op");
-    assert!(fill_on_text.inverse(&columned).is_empty());
+    assert!(fill_on_text.inverse(&columned).expect("valid retained mutation inverse fixture").is_empty());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -223,19 +223,19 @@ async fn frame_mutations_are_no_ops_when_target_missing() {
 
     let missing_page_delete = LayoutMutation::DeleteFrame(delete_frame::DeleteFrame { page_id: "no-page".into(), frame_id: "frame-1".into() });
     assert_eq!(apply(&missing_page_delete), doc);
-    assert!(missing_page_delete.inverse(&doc).is_empty());
+    assert!(missing_page_delete.inverse(&doc).expect("valid retained mutation inverse fixture").is_empty());
 
     let missing_frame_delete = LayoutMutation::DeleteFrame(delete_frame::DeleteFrame { page_id: "page-1".into(), frame_id: "no-frame".into() });
     assert_eq!(apply(&missing_frame_delete), doc);
-    assert!(missing_frame_delete.inverse(&doc).is_empty());
+    assert!(missing_frame_delete.inverse(&doc).expect("valid retained mutation inverse fixture").is_empty());
 
     let missing_page_move = LayoutMutation::MoveFrame(move_frame::MoveFrame { page_id: "no-page".into(), frame_id: "frame-1".into(), new_x: 1.0, new_y: 1.0 });
     assert_eq!(apply(&missing_page_move), doc);
-    assert!(missing_page_move.inverse(&doc).is_empty());
+    assert!(missing_page_move.inverse(&doc).expect("valid retained mutation inverse fixture").is_empty());
 
     let missing_frame_resize = LayoutMutation::ResizeFrame(resize_frame::ResizeFrame { page_id: "page-1".into(), frame_id: "no-frame".into(), new_width: 1.0, new_height: 1.0 });
     assert_eq!(apply(&missing_frame_resize), doc);
-    assert!(missing_frame_resize.inverse(&doc).is_empty());
+    assert!(missing_frame_resize.inverse(&doc).expect("valid retained mutation inverse fixture").is_empty());
 }
 //#endregion ➕➖🕹️📏🎨🖊️🔤🔢frames
 
@@ -394,7 +394,7 @@ async fn create_page_duplicate_id_is_fatal() {
     let duplicate = base.pages[0].clone();
     let outcome = LayoutMutation::CreatePage(create_page::CreatePage { page: duplicate, index: None }).diff(&base);
     protocol::os_spr::protocol_laws::assert_fatal_never_applies(&outcome).await;
-    assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+    assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal));
 }
 //#endregion 🔖️OutcomeLaws
 
@@ -484,7 +484,7 @@ async fn frame_selection_labels_are_localized() {
 async fn frame_selection_leaves_are_editable_through_their_payload_value() {
     let drag = drag_frames(&["frame-1"], 1.0, 0.0);
     assert!(Mutation::<LayoutSnapshot>::input_schema(&drag).is_some_and(|schema| schema.contains("\"targets\"") && schema.contains("x-semio-ui")));
-    let edited = Mutation::<LayoutSnapshot>::with_payload_value(&drag, dsl::DslValue::from(&serde_json::json!({ "pageId": "page-1", "targets": ["frame-1"], "dx": 6.0, "dy": -1.0 }))).expect("an edited payload value decodes");
+    let edited = Mutation::<LayoutSnapshot>::with_payload_value(&drag, semio_framework_value::DslValue::from(&serde_json::json!({ "pageId": "page-1", "targets": ["frame-1"], "dx": 6.0, "dy": -1.0 }))).expect("an edited payload value decodes");
     assert_eq!(edited, drag_frames(&["frame-1"], 6.0, -1.0));
 }
 
@@ -527,7 +527,7 @@ async fn a_drag_edited_in_history_replays_its_downstream() {
     assert_eq!((rotated.width, rotated.height), (80.0, 80.0), "the downstream scaling lands on the edited frame");
 }
 
-/// 🧺️ Every committed quintet's inverse fits the fold footprint its leaf declares (`layout_mutation_inverse_rows`) — the
+/// 🧺️ Every committed quintet's inverse fits the fold footprint its leaf schema declares (`x-semio-inverse-rows`) — the
 /// Artifact lane admits the forward row plus exactly that many inverse rows, so an under-declared leaf fail-closes its
 /// gesture — and a multi-frame drag, turn and scaling declare exactly the rows they restore.
 #[test]
@@ -538,7 +538,7 @@ fn every_committed_inverse_fits_its_declared_fold_footprint() {
         for case in std::fs::read_dir(leaf.path()).expect("the leaf's cases").flatten() {
             let (Ok(before), Ok(payload)) = (std::fs::read_to_string(case.path().join("📸️snapshot/⬅️before/🔣️.json")), std::fs::read_to_string(case.path().join("🦠️mutation/🔣️.json"))) else { continue };
             let (base, mutation) = bridge_decode_pair(&before, &payload).expect("the committed quintet decodes");
-            let (rows, declared) = (mutation.inverse(&base).len(), layout_mutation_inverse_rows(&mutation));
+            let (rows, declared) = (mutation.inverse(&base).expect("valid retained mutation inverse fixture").len(), mutation.inverse_rows());
             assert!(rows <= declared, "{}: inverts to {rows} rows but declares {declared}", case.path().display());
             checked += 1;
         }
@@ -547,7 +547,7 @@ fn every_committed_inverse_fits_its_declared_fold_footprint() {
     let mut document = sample_doc();
     document.pages[0].frames.push(new_rect("frame-2"));
     for mutation in [drag_frames(&["frame-1", "frame-2"], 3.0, 4.0), rotate_frames(&["frame-1", "frame-2"], (5.0, 5.0), 0.5), scale_frames(&["frame-1", "frame-2"], (5.0, 5.0), 2.0, 3.0)] {
-        assert_eq!(mutation.inverse(&document).len(), layout_mutation_inverse_rows(&mutation), "{mutation:?} declares exactly the rows it restores");
+        assert_eq!(mutation.inverse(&document).expect("valid retained mutation inverse fixture").len(), mutation.inverse_rows(), "{mutation:?} declares exactly the rows it restores");
     }
 }
 //#endregion 🖼️FrameSelectionLaws

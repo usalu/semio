@@ -17,9 +17,12 @@ impl protocol::MutationKind<SemioImageSnapshot, SemioImageMutation> for RemoveFr
     fn diff(&self, base: &SemioImageSnapshot) -> protocol::MutationOutcome<<SemioImageMutation as Mutation<SemioImageSnapshot>>::Diff> {
         agg_diff(&SemioImageMutation::RemoveFrame(self.clone()), base)
     }
-    fn inverse(&self, base: &SemioImageSnapshot) -> Vec<SemioImageMutation> {
-        agg_inverse(&SemioImageMutation::RemoveFrame(self.clone()), base)
-    }
+    fn inverse(&self, base: &SemioImageSnapshot) -> Result<Vec<SemioImageMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&SemioImageMutation::RemoveFrame(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove frame", "Einzelbild entfernen")
     }

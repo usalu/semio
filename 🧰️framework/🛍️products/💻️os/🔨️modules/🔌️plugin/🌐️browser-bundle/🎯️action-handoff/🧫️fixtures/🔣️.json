@@ -6,7 +6,7 @@
       "documentId": "map-a"
     },
     "verifiedSurfaceId": "s.gis.gismap@1/*#editor",
-    "appChannelVersion": 20,
+    "appChannelVersion": 21,
     "activationGeneration": "41",
     "instanceId": 0,
     "surfaceRevision": 3,
@@ -28,13 +28,17 @@
       "documentId": "map-a"
     },
     "verifiedSurfaceId": "s.gis.gismap@1/*#editor",
-    "appChannelVersion": 20,
+    "appChannelVersion": 21,
     "activationGeneration": "41",
     "instanceId": 0,
     "surfaceRevision": 3,
     "actionSequence": 9,
     "outcome": "guest-applied",
     "mutationCount": 1,
+    "commit": {
+      "operation": "18446744073709551615",
+      "revision": "18364758544493064720"
+    },
     "hostEffects": [],
     "historyPatches": []
   },
@@ -45,13 +49,14 @@
       "documentId": "map-a"
     },
     "verifiedSurfaceId": "s.gis.gismap@1/*#editor",
-    "appChannelVersion": 20,
+    "appChannelVersion": 21,
     "activationGeneration": "41",
     "instanceId": 0,
     "surfaceRevision": 3,
     "actionSequence": 9,
     "outcome": "rejected",
     "mutationCount": 0,
+    "commit": null,
     "reason": "action-refused",
     "hostEffects": [],
     "historyPatches": []
@@ -64,13 +69,17 @@
         "documentId": "map-a"
       },
       "verifiedSurfaceId": "s.gis.gismap@1/*#editor",
-      "appChannelVersion": 20,
+      "appChannelVersion": 21,
       "activationGeneration": "41",
       "instanceId": 0,
       "surfaceRevision": 3,
       "actionSequence": 9,
       "outcome": "guest-applied",
       "mutationCount": 1,
+      "commit": {
+        "operation": "18446744073709551615",
+        "revision": "18364758544493064720"
+      },
       "hostEffects": [],
       "historyPatches": []
     },
@@ -81,13 +90,17 @@
         "documentId": "map-a"
       },
       "verifiedSurfaceId": "s.gis.gismap@1/*#editor",
-      "appChannelVersion": 20,
+      "appChannelVersion": 21,
       "activationGeneration": "42",
       "instanceId": 0,
       "surfaceRevision": 3,
       "actionSequence": 9,
       "outcome": "guest-applied",
       "mutationCount": 1,
+      "commit": {
+        "operation": "18446744073709551615",
+        "revision": "18364758544493064720"
+      },
       "hostEffects": [],
       "historyPatches": []
     },
@@ -98,13 +111,17 @@
         "documentId": "map-a"
       },
       "verifiedSurfaceId": "s.gis.gismap@1/*#editor",
-      "appChannelVersion": 20,
+      "appChannelVersion": 21,
       "activationGeneration": "41",
       "instanceId": 0,
       "surfaceRevision": 4,
       "actionSequence": 9,
       "outcome": "guest-applied",
       "mutationCount": 1,
+      "commit": {
+        "operation": "18446744073709551615",
+        "revision": "18364758544493064720"
+      },
       "hostEffects": [],
       "historyPatches": []
     },
@@ -115,13 +132,17 @@
         "documentId": "map-a"
       },
       "verifiedSurfaceId": "s.gis.gismap@1/*#editor",
-      "appChannelVersion": 20,
+      "appChannelVersion": 21,
       "activationGeneration": "41",
       "instanceId": 0,
       "surfaceRevision": 3,
       "actionSequence": 10,
       "outcome": "guest-applied",
       "mutationCount": 1,
+      "commit": {
+        "operation": "18446744073709551615",
+        "revision": "18364758544493064720"
+      },
       "hostEffects": [],
       "historyPatches": []
     }
@@ -162,7 +183,7 @@
       "documentId": "map-a"
     },
     "verifiedSurfaceId": "s.gis.gismap@1/*#editor",
-    "appChannelVersion": 20,
+    "appChannelVersion": 21,
     "activationGeneration": "41",
     "instanceId": 0,
     "surfaceRevision": 3,

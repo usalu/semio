@@ -43,6 +43,7 @@ use super::set_snapshot::SetSnapshot;
 #[mutations(snapshot = SemioTableSnapshot, diff = SemioTableDiff, schema = "s.stdio.semio.table")]
 pub enum SemioTableMutation {
     SetSnapshot(SetSnapshot),
+    PatchSnapshot(super::patch_snapshot::PatchSnapshot),
     CreateColumn(create_column::CreateColumn),
     DeleteColumn(delete_column::DeleteColumn),
     RenameColumn(rename_column::RenameColumn),
@@ -58,7 +59,7 @@ pub enum SemioTableMutation {
 /// `📊️mutate-semio-table`'s exhaustive test case measures itself against. `kinds_match_the_enum_and_
 /// the_catalog` below is what keeps this list honest against the enum, since the framework never
 /// parses Rust.
-pub const KINDS: &[&str] = &["set-snapshot", "create-column", "delete-column", "rename-column", "reorder-columns", "insert-row", "remove-row", "reorder-rows", "edit-cell"];
+pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "create-column", "delete-column", "rename-column", "reorder-columns", "insert-row", "remove-row", "reorder-rows", "edit-cell"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -77,9 +78,12 @@ pub fn apply_semio_table_mutation(snapshot: &mut SemioTableSnapshot, mutation: &
 /// need a mutation's own computed inverse) can still reach the inverse law that
 /// [`apply_semio_table_mutation`] alone cannot. Same shape as `🧰️kit`'s `inverse_semio_kit_mutation`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse_semio_table_mutation(mutation: &SemioTableMutation, base: &SemioTableSnapshot) -> Vec<SemioTableMutation> {
+pub fn inverse_semio_table_mutation(mutation: &SemioTableMutation, base: &SemioTableSnapshot) -> Result<Vec<SemioTableMutation>, semio_framework_value::ValueError> {
+    Ok({
     use protocol::Mutation;
-    <SemioTableMutation as Mutation<SemioTableSnapshot>>::inverse(mutation, base)
+    <SemioTableMutation as Mutation<SemioTableSnapshot>>::inverse(mutation, base)?
+
+    })
 }
 
 /// 📥️ Decodes this facet's own externally-tagged (`{"<VariantName>": {<snake_case payload>}}`)
@@ -89,7 +93,7 @@ pub fn inverse_semio_table_mutation(mutation: &SemioTableMutation, base: &SemioT
 /// address names — decoding keeps those two addressing modes exactly as the vector states them.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_table_mutation_json(text: &str) -> Result<SemioTableMutation, String> {
-    pack::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Apply
 

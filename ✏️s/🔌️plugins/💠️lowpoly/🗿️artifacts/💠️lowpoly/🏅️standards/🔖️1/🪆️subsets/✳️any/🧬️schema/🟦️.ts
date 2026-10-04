@@ -1,6 +1,8 @@
 /** 🧬️ Lowpoly artifact schema — every field with its state class. */
 import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
-import {parseBinary32,type Binary32} from "../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {type Binary32,parseBinary32Transport} from "../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {parseLowpolyMeshState,type LowpolyMeshState}from"./🕸️mesh/🟦️.ts";
+export *from"./🕸️mesh/🟦️.ts";
 
 export interface LowpolyArtifact {
   /** @state artifact */
@@ -45,8 +47,10 @@ export interface LowpolyObject {
   /** `null` when the object owns no mesh yet — confirmed against the `create-object` mutation fixture. */
   mesh: ArtifactChild | null;
   paintLayers: LowpolyPaintLayer[];
-  /** Half-edge-mesh JSON the `mesh` handle hashes; `""` in legacy handle-only documents. */
+  /** 📄️ Independent authored source text remains literal even when no managed mesh exists. */
   meshContent: string;
+  /** 🕸️ Complete managed mesh state is independent of source and child handles. */
+  meshState: LowpolyMeshState|null;
 }
 
 //#region 🚪️Parsers
@@ -113,12 +117,13 @@ export function parseLowpolyObject(value: unknown, at = "$"): LowpolyObject {
     smoothShading: lowpolyLowpolyArtifactGuardBoolean(row["smoothShading"], `${at}.smoothShading`),
     mesh: row["mesh"] === null ? null : parseArtifactChild(row["mesh"]),
     paintLayers: lowpolyLowpolyArtifactGuardArray(row["paintLayers"], `${at}.paintLayers`).map((item, index) => parseLowpolyPaintLayer(item, `${at}.paintLayers[${index}]`)),
-    meshContent: row["meshContent"] === undefined ? "" : lowpolyLowpolyArtifactGuardString(row["meshContent"], `${at}.meshContent`),
+    meshContent: lowpolyLowpolyArtifactGuardString(row["meshContent"], `${at}.meshContent`),
+    meshState: row["meshState"]===null?null:parseLowpolyMeshState(row["meshState"]),
   };
 }
 
 /** 📐️ Exact three-component native binary32 vector. */
-export function parseLowpolyVector(value:unknown,at="$"):[Binary32,Binary32,Binary32]{const row=lowpolyLowpolyArtifactGuardArray(value,at,{minItems:3,maxItems:3});return[parseBinary32(row[0]),parseBinary32(row[1]),parseBinary32(row[2])];}
+export function parseLowpolyVector(value:unknown,at="$"):[Binary32,Binary32,Binary32]{const row=lowpolyLowpolyArtifactGuardArray(value,at,{minItems:3,maxItems:3});return[parseBinary32Transport(row[0]),parseBinary32Transport(row[1]),parseBinary32Transport(row[2])];}
 /** 🎨️ Intrinsic persisted pixel octets, independent of any wire encoding. */
 export function parseLowpolyPixels(value:unknown):Uint8Array{if(!(value instanceof Uint8Array))throw Error("Lowpoly pixels require owned octets");return value.slice();}
 export function parseLowpolyTransform(value: unknown, at = "$"): LowpolyTransform {
@@ -135,7 +140,7 @@ export function parseLowpolyPaintLayer(value: unknown, at = "$"): LowpolyPaintLa
   return {
     name: lowpolyLowpolyArtifactGuardString(row["name"], `${at}.name`),
     visible: lowpolyLowpolyArtifactGuardBoolean(row["visible"], `${at}.visible`),
-    opacity: parseBinary32(row["opacity"]),
+    opacity: parseBinary32Transport(row["opacity"]),
     blendMode: lowpolyLowpolyArtifactGuardString(row["blendMode"], `${at}.blendMode`),
     pixels: parseLowpolyPixels(row["pixels"]),
   };

@@ -1,0 +1,18 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["kindUnit", "repeat", "utf8Bytes", "unicodeScalars", "cancelAfterBytes", "phase", "encodings", "cancellationKind", "completedValidationKind", "ownedScanBytes", "validationAfterCensus"],
+  "properties": {
+    "kindUnit": {"const": " \u2003\t"},
+    "repeat": {"const": 40000},
+    "utf8Bytes": {"const": 200000},
+    "unicodeScalars": {"const": 120000},
+    "cancelAfterBytes": {"const": 65536},
+    "phase": {"const": "encodeNative"},
+    "encodings": {"const": ["binary", "text"]},
+    "cancellationKind": {"const": "canceled"},
+    "completedValidationKind": {"const": "invalidValue"},
+    "ownedScanBytes": {"const": 0},
+    "validationAfterCensus": {"const": true}
+  }
+}

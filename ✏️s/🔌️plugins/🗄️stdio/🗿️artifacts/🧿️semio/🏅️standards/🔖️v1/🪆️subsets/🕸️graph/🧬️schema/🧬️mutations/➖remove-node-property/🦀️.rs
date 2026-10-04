@@ -1,15 +1,17 @@
-//! ➖ `remove-node-property` — detaches one property entry from a node, addressed by BASE-state
-//! `{node_id, index}` — exactly mirrors `remove-node-port` on `properties`.
+//! ➖ `remove-node-property` — detaches the property entry carrying `key` from a node (keyed like
+//! `set-node-property`, so a history edit of an earlier row never re-targets it; the inverse restores the entry at its
+//! BASE index, byte-exact).
 
 use crate::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
 use crate::standards::v1::subsets::graph::schema::snapshot::{GraphNodeId, SemioGraphSnapshot};
 
 //#region 🔖️Payload
+/// ➖ `remove-node-property` payload — the node and the key of the entry it detaches.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct RemoveNodeProperty {
     pub node_id: GraphNodeId,
-    pub index: usize,
+    pub key: String,
 }
 
 impl protocol::MutationKind<SemioGraphSnapshot, SemioGraphMutation> for RemoveNodeProperty {
@@ -18,14 +20,14 @@ impl protocol::MutationKind<SemioGraphSnapshot, SemioGraphMutation> for RemoveNo
     fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<SemioGraphMutation as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioGraphSnapshot) -> Vec<SemioGraphMutation> {
-        super::inverse::inverse(self, base)
+    fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<SemioGraphMutation>, semio_framework_value::ValueError> {
+        Ok(super::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove property #{} from node \"{}\"", self.index, self.node_id.value), &format!("Eigenschaft #{} aus Knoten \"{}\" entfernen", self.index, self.node_id.value))
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove property \"{}\" from node \"{}\"", self.key, self.node_id.value), &format!("Eigenschaft \"{}\" aus Knoten \"{}\" entfernen", self.key, self.node_id.value))
     }
     fn target(&self) -> Vec<String> {
-        vec![self.node_id.value.clone(), self.index.to_string()]
+        vec![self.node_id.value.clone(), self.key.clone()]
     }
 }
 //#endregion 🔖️Payload

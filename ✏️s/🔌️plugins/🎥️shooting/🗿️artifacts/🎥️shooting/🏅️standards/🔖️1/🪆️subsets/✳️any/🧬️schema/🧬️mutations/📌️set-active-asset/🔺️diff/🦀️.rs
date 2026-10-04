@@ -13,7 +13,7 @@ pub fn diff(payload: &SetActiveAsset, base: &ShootingSnapshot) -> protocol::Muta
         }
     }
     if base.active_asset_id == next {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Active asset is unchanged.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Active asset is unchanged.");
     }
     protocol::MutationOutcome::new(ShootingDiff { active_asset_id: Some(next), ..Default::default() })
 }

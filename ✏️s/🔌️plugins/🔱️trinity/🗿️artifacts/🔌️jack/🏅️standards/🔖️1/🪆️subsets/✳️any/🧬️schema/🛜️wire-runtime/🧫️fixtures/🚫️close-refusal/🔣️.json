@@ -1,0 +1,158 @@
+{
+  "version": 1,
+  "closeRefusals": [
+    {
+      "kind": "invalidValue",
+      "message": "invalid value",
+      "expected": {
+        "origin": "framework",
+        "code": "invalidValue",
+        "severity": "error",
+        "message": "invalid value",
+        "scope": {},
+        "retryable": false
+      }
+    },
+    {
+      "kind": "canceled",
+      "message": "abgebrochen — 🌍",
+      "expected": {
+        "origin": "framework",
+        "code": "canceled",
+        "severity": "error",
+        "message": "abgebrochen — 🌍",
+        "scope": {},
+        "retryable": false
+      }
+    },
+    {
+      "kind": "ownershipLimit",
+      "message": "owned\u0000bytes",
+      "expected": {
+        "origin": "framework",
+        "code": "ownershipLimit",
+        "severity": "error",
+        "message": "owned\u0000bytes",
+        "scope": {},
+        "retryable": false
+      }
+    },
+    {
+      "kind": "allocationFailed",
+      "message": "allocation\nfailed",
+      "expected": {
+        "origin": "framework",
+        "code": "allocationFailed",
+        "severity": "error",
+        "message": "allocation\nfailed",
+        "scope": {},
+        "retryable": false
+      }
+    },
+    {
+      "kind": "workLimit",
+      "message": "work limit",
+      "expected": {
+        "origin": "framework",
+        "code": "workLimit",
+        "severity": "error",
+        "message": "work limit",
+        "scope": {},
+        "retryable": false
+      }
+    },
+    {
+      "kind": "depthLimit",
+      "message": "depth limit",
+      "expected": {
+        "origin": "framework",
+        "code": "depthLimit",
+        "severity": "error",
+        "message": "depth limit",
+        "scope": {},
+        "retryable": false
+      }
+    },
+    {
+      "kind": "unsupportedOwner",
+      "message": "unsupported owner",
+      "expected": {
+        "origin": "framework",
+        "code": "unsupportedOwner",
+        "severity": "error",
+        "message": "unsupported owner",
+        "scope": {},
+        "retryable": false
+      }
+    },
+    {
+      "kind": "invariantViolated",
+      "message": "exact invariant",
+      "expected": {
+        "origin": "framework",
+        "code": "invariantViolated",
+        "severity": "error",
+        "message": "exact invariant",
+        "scope": {},
+        "retryable": false
+      }
+    }
+  ],
+  "borrowedFaults": [
+    {
+      "message": "borrowed bytes",
+      "expectedBytes": [
+        98,
+        111,
+        114,
+        114,
+        111,
+        119,
+        101,
+        100,
+        32,
+        98,
+        121,
+        116,
+        101,
+        115
+      ]
+    },
+    {
+      "message": "Größe — 🌍",
+      "expectedBytes": [
+        71,
+        114,
+        195,
+        182,
+        195,
+        159,
+        101,
+        32,
+        226,
+        128,
+        148,
+        32,
+        240,
+        159,
+        140,
+        141
+      ]
+    },
+    {
+      "message": "owned\u0000tail",
+      "expectedBytes": [
+        111,
+        119,
+        110,
+        101,
+        100,
+        0,
+        116,
+        97,
+        105,
+        108
+      ]
+    }
+  ]
+}

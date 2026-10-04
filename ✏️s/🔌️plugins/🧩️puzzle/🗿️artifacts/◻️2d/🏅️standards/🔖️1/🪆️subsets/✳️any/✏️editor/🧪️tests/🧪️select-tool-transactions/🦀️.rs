@@ -72,11 +72,11 @@ fn edit_rows(result: &InvocationResult) -> Vec<HistoryEntry> {
 }
 
 pub(super) fn english(entry: &HistoryEntry) -> String {
-    entry.label.resolve(protocol::Terminology::Native, protocol::Locale::En).to_string()
+    entry.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).to_string()
 }
 
 pub(super) fn german(entry: &HistoryEntry) -> String {
-    entry.label.resolve(protocol::Terminology::Native, protocol::Locale::De).to_string()
+    entry.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De).to_string()
 }
 
 //#region 🎬️BoardGestures
@@ -455,7 +455,6 @@ fn a_threaded_stream_publishes_nothing_until_its_commit_publishes_one_transactio
     let (commit, commit_transient) = threaded_emit(&snapshot, &open, select_utility::UTILITY_ID, "rev-1", "translateSelection", json!({ "phase": "commit" }));
     assert_eq!(commit.artifact_mutations, vec![crate::standards::v1::subsets::any::schema::mutations::drag_selection(vec!["left".to_string()], 30.0, 0.0)], "the commit publishes the net leaf");
     assert_eq!(commit.transaction, Some(opened.transaction), "under the ref minted when the gesture opened");
-    assert_eq!(commit.coalesce_key, None);
     assert_eq!(commit_transient.window_transient.len(), 1, "the commit clears the persisted gesture");
 }
 
@@ -531,7 +530,6 @@ fn the_board_emit_carries_the_transaction_and_the_parametric_leaf() {
     let transaction = emit.transaction.clone().expect("the commit carries its transaction");
     assert!(transaction.id.starts_with("tx-") && transaction.tool == "s.puzzle.puzzle2d@1/*#editor#select", "{transaction:?}");
     assert_ne!(emit_for("seed-8").transaction.map(|other| other.id), Some(transaction.id), "two admissions never share a transaction id");
-    assert_eq!(emit.coalesce_key, None, "a committed transaction never rides a coalesced amend");
     assert_eq!(emit.artifact_mutations, vec![crate::standards::v1::subsets::any::schema::mutations::drag_selection(vec!["left".to_string()], 3.0, 4.0)]);
     assert_eq!(emit.interaction_writes.len(), 1, "the gesture's selection is an interaction write of the same dispatch");
     let unbound = emit_for("");

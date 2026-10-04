@@ -11,7 +11,7 @@ mod sqlite_tests;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted EN 1991 subject: site + building geometry + design load assumptions (SI: m, Pa, N, K, kg/m³).
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -314,12 +314,12 @@ accidental_cases: vec![],
 //#region 🌉️ExternalCodecBridge
 /// 📤️ Canonical JSON projection of [`En1991Snapshot`].
 pub fn encode_en1991_snapshot_json(snapshot: &En1991Snapshot) -> String {
-    pack::json::to_json_string(snapshot)
+    semio_framework_pack_json::to_json_string(snapshot)
 }
 
 /// 📥️ Inverse of [`encode_en1991_snapshot_json`].
 pub fn decode_en1991_snapshot_json(text: &str) -> Result<En1991Snapshot, String> {
-    pack::json::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 
 /// 📖️ Parse committed `.dsl.semio` into [`En1991Snapshot`].

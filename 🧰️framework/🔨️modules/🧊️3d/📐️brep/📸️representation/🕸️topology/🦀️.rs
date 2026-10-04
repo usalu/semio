@@ -500,6 +500,7 @@ pub mod history {
     #[derive(Clone, Debug, Default)]
     pub struct OpRecorder {
         delta: OpDelta,
+        owned: Vec<super::EntityRef>,
     }
 
     impl OpRecorder {
@@ -530,6 +531,56 @@ pub mod history {
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn into_delta(self) -> OpDelta {
             self.delta
+        }
+/// 🧱️ Appends newly generated disjoint provenance without scanning older labels.
+        pub fn append_disjoint(&mut self, mut other: Self) {
+            assert!(other.delta.modified.is_empty() && other.delta.deleted.is_empty());
+            self.delta.generated.append(&mut other.delta.generated);
+            self.owned.append(&mut other.owned);
+        }
+        /// 🧱️ Retains exact private triangle entities for reverse bounded retirement.
+        pub fn own_triangle(&mut self, body: &super::Body, face_id: super::FaceId) {
+            use super::EntityRef;
+            let face = body.faces.get(face_id).expect("created triangle");
+            self.owned.push(EntityRef::Surface(face.surface));
+            let loop_id = face.outer.expect("created triangle outer");
+            let first = body.loops.get(loop_id).expect("created triangle loop").first;
+            let mut next = first;
+            for _ in 0..3 {
+                let coedge = body.coedges.get(next).expect("created triangle coedge");
+                let edge = body.edges.get(coedge.edge).expect("created triangle edge");
+                self.owned.extend([EntityRef::Vertex(edge.v0), EntityRef::Vertex(edge.v1), EntityRef::Curve3(edge.curve), EntityRef::Edge(coedge.edge)]);
+                if let Some(pcurve) = coedge.pcurve { self.owned.push(EntityRef::Curve2(pcurve)); }
+                self.owned.push(EntityRef::Coedge(next));
+                next = coedge.next;
+            }
+            assert_eq!(next,first);
+            self.owned.extend([EntityRef::Loop(loop_id), EntityRef::Face(face_id)]);
+        }
+        /// 🧱️ Includes a newly created shell or solid in this operation's retirement authority.
+        pub fn own_entity(&mut self, entity: super::EntityRef) { self.owned.push(entity); }
+        /// 🎟️ Bytes of POD provenance and owned-ID allocations retained through final publication.
+        pub fn retirement_bytes(&self)->usize {self.owned.capacity()*std::mem::size_of::<super::EntityRef>()+self.delta.generated.capacity()*std::mem::size_of::<PersistentLabel>()}
+        /// 🛑️ Removes only this recorder's owned entities, in reverse bounded steps.
+        pub fn retire_step(&mut self, body: &mut super::Body, budget: usize,payloads:&mut crate::brep::engine::retirement::PayloadRetirement) -> bool {
+            use super::EntityRef;
+            for _ in 0..budget {
+                if let Some(entity) = self.owned.pop() {
+                    match entity {
+                        EntityRef::Vertex(id) => { body.vertices.remove(id); }
+                        EntityRef::Edge(id) => { body.edges.remove(id); }
+                        EntityRef::Coedge(id) => { body.coedges.remove(id); }
+                        EntityRef::Loop(id) => { body.loops.remove(id); }
+                        EntityRef::Face(id) => { body.faces.remove(id); }
+                        EntityRef::Shell(id) => { if let Some(shell)=body.shells.remove(id) {payloads.pod(shell.faces);} }
+                        EntityRef::Solid(id) => { if let Some(solid)=body.solids.remove(id) {payloads.pod(solid.inners);} }
+                        EntityRef::Curve3(id) => { body.curves3.remove(id); }
+                        EntityRef::Curve2(id) => { body.curves2.remove(id); }
+                        EntityRef::Surface(id) => { body.surfaces.remove(id); }
+                    }
+                } else {payloads.pod(std::mem::take(&mut self.owned));payloads.pod(std::mem::take(&mut self.delta.generated));return true;}
+            }
+            self.owned.is_empty() && self.delta.generated.is_empty() && self.owned.capacity()==0 && self.delta.generated.capacity()==0
         }
     }
 

@@ -4,10 +4,13 @@ use crate::schema::mutations::NoteMutation;
 use crate::NoteSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &ChangeBlockVisible, base: &NoteSnapshot) -> Vec<NoteMutation> {
+pub fn inverse(payload: &ChangeBlockVisible, base: &NoteSnapshot) -> Result<Vec<NoteMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match crate::schema::find_block(&base.blocks, &payload.id) {
         Some(block) => vec![NoteMutation::ChangeBlockVisible(ChangeBlockVisible { id: payload.id.clone(), new_visible: crate::schema::block_visible(block) })],
         None => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

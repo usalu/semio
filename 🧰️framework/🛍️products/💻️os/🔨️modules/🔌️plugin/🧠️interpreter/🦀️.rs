@@ -528,6 +528,8 @@ pub const SEMIO_OWNED_CANCEL_JOB_EXPORT: &str = "semio_owned_cancel_job_v1";
 pub const SEMIO_OWNED_START_JOB_EXPORT: &str = "semio_owned_start_job_v1";
 pub const SEMIO_OWNED_STEP_JOB_EXPORT: &str = "semio_owned_step_job_v1";
 pub const SEMIO_OWNED_POLL_EXPORT: &str = "semio_owned_poll_v1";
+/// 🤝️ The owned twin of `reactor.channel-version`: the guest's compiled app-channel version, which a host admits before any frame.
+pub const SEMIO_OWNED_CHANNEL_VERSION_EXPORT: &str = "semio_owned_channel_version_v1";
 /// 🧬️ OS-HUB-COLLABORATION-AI-END-TO-END (TC3b): the owned twin of `world actor`'s `codec`
 /// interface — the four pure document-kind functions a headless host calls on a package whose Rust
 /// codec it does not link.
@@ -589,6 +591,7 @@ pub enum OwnedSemioExport {
     Checkpoint,
     Restore,
     Describe,
+    ChannelVersion,
     CancelJob,
     StartJob,
     StepJob,
@@ -604,12 +607,13 @@ pub enum OwnedSemioExport {
 }
 
 impl OwnedSemioExport {
-    pub const ALL: [Self; 17] = [
+    pub const ALL: [Self; 18] = [
         Self::Allocate,
         Self::Deallocate,
         Self::Checkpoint,
         Self::Restore,
         Self::Describe,
+        Self::ChannelVersion,
         Self::CancelJob,
         Self::StartJob,
         Self::StepJob,
@@ -631,6 +635,7 @@ impl OwnedSemioExport {
             Self::Checkpoint => SEMIO_OWNED_CHECKPOINT_EXPORT,
             Self::Restore => SEMIO_OWNED_RESTORE_EXPORT,
             Self::Describe => SEMIO_OWNED_DESCRIBE_EXPORT,
+            Self::ChannelVersion => SEMIO_OWNED_CHANNEL_VERSION_EXPORT,
             Self::CancelJob => SEMIO_OWNED_CANCEL_JOB_EXPORT,
             Self::StartJob => SEMIO_OWNED_START_JOB_EXPORT,
             Self::StepJob => SEMIO_OWNED_STEP_JOB_EXPORT,
@@ -650,7 +655,7 @@ impl OwnedSemioExport {
         match self {
             Self::Allocate => FunctionType { parameters: vec![ValueType::I32], results: vec![ValueType::I32] },
             Self::Deallocate => FunctionType { parameters: vec![ValueType::I32, ValueType::I32], results: vec![] },
-            Self::Checkpoint | Self::Describe => FunctionType { parameters: vec![], results: vec![ValueType::I64] },
+            Self::Checkpoint | Self::Describe | Self::ChannelVersion => FunctionType { parameters: vec![], results: vec![ValueType::I64] },
             Self::Restore | Self::CancelJob | Self::StartJob | Self::StepJob | Self::Poll | Self::PackSchemaHash | Self::Genesis | Self::PrintMirror | Self::ApplyOps | Self::ReplayEnvelopes | Self::SqliteSchema | Self::SqliteExport | Self::SqliteImport => {
                 FunctionType { parameters: vec![ValueType::I32, ValueType::I32], results: vec![ValueType::I64] }
             }

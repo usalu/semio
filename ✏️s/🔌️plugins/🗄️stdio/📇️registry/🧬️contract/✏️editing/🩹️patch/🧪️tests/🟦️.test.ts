@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import Ajv from "ajv";
-import { applyPatch, type Operation } from "fast-json-patch";
+import { applyPatch, getValueByPointer, type Operation } from "fast-json-patch";
 import { type SnapshotEditEvent, type SnapshotValue } from "../../🟦️";
-import { prepareSnapshotPatch, applySnapshotPatch, inverseSnapshotPatch } from "../🟦️";
+import { prepareSnapshotPatch, applySnapshotPatch, inverseSnapshotPatch, inverseSnapshotPatches, parseSnapshotPatch, snapshotSchemaLocation, type SnapshotPatch } from "../🟦️";
 import { semioSchemaAjvV1 } from "../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 
 const fixture = await Bun.file(new URL("../🧫️fixtures/🔣️.json", import.meta.url)).json() as {
@@ -16,6 +16,9 @@ const fixture = await Bun.file(new URL("../🧫️fixtures/🔣️.json", import
   large: { bytes: number; fill: number; metadataPath: string; value: string; maximumPatchBytes: number };
   payload: { before: number[]; cases: { id: string; event: SnapshotEditEvent; expected: number[] }[] };
   shiftedParent: { schema: object; before: SnapshotValue; event: SnapshotEditEvent; oracle: Operation[]; expected: SnapshotValue };
+  patches: Record<string, { patch: SnapshotPatch; inverse: SnapshotPatch }>;
+  chunkedInverses: { budget: number; cases: { id: string; base: SnapshotValue; patch: SnapshotPatch; parts: SnapshotPatch[] }[] };
+  locations: { snapshot: string; documents: { $id: string }[]; instance: SnapshotValue; cases: { id: string; path: string; insert?: boolean; expected: string | null; valid?: SnapshotValue; invalid?: SnapshotValue }[] };
   nativePilots: Record<string, {
     directory: string;
     tagging: "adjacent" | "internal";
@@ -33,10 +36,50 @@ const registry = await Bun.file(new URL("../../../../🧬️schema/🔣️.json"
 const patchRef = `${registry.$id}#/$defs/SnapshotPatch`;
 const validate = semioSchemaAjvV1({ strict: true }).addSchema(registry).getSchema(patchRef)!;
 
+const escape = (segment: string): string => segment.replaceAll("~", "~0").replaceAll("/", "~1");
+
+/** 🔁️ The RFC 6902 operations one part performs on `document` (a splice as removals plus additions, a text splice as the replaced
+ * text), so fast-json-patch replays the parts independently of the twin. */
+function rfc6902(document: SnapshotValue, original: SnapshotPatch): Operation[] {
+  const part = structuredClone(original);
+  if (part.operation === "set") return [{ op: "replace", path: part.path, value: part.value }];
+  if (part.operation === "insert") return [{ op: "add", path: part.path, value: part.value }];
+  if (part.operation !== "splice") throw new Error(`pointer-only part ${part.operation}`);
+  const container = part.path === "" ? document : getValueByPointer(document, part.path) as SnapshotValue;
+  if (Array.isArray(container)) return [...Array.from({ length: part.remove }, (): Operation => ({ op: "remove", path: `${part.path}/${part.offset}` })), ...(part.value as SnapshotValue[]).map((item, position): Operation => ({ op: "add", path: `${part.path}/${part.offset + position}`, value: item }))];
+  if (typeof container === "string") {
+    const bytes = new TextEncoder().encode(container);
+    const text = new TextDecoder().decode(new Uint8Array([...bytes.slice(0, part.offset), ...new TextEncoder().encode(part.value as string), ...bytes.slice(part.offset + part.remove)]));
+    return [{ op: "replace", path: part.path, value: text }];
+  }
+  const keys = Object.keys(container as object).slice(part.offset, part.offset + part.remove);
+  return [...keys.map((key): Operation => ({ op: "remove", path: `${part.path}/${escape(key)}` })), ...Object.entries(part.value as object).map(([key, member]): Operation => ({ op: "add", path: `${part.path}/${escape(key)}`, value: member }))];
+}
+
 describe("compact snapshot patches", () => {
+  for (const row of fixture.chunkedInverses.cases) test(`chunked exact inverse ${row.id} matches the Rust planner and replays through fast-json-patch`, () => {
+    const { budget } = fixture.chunkedInverses;
+    const parts = inverseSnapshotPatches(row.base, row.patch, budget);
+    expect(parts).toEqual(row.parts);
+    const after = applySnapshotPatch(row.base, row.patch);
+    expect(JSON.stringify(parts.reduce(applySnapshotPatch, after))).toBe(JSON.stringify(row.base));
+    let oracle = structuredClone(after);
+    for (const part of parts) oracle = applyPatch(oracle, rfc6902(oracle, part), true, true, false).newDocument;
+    expect(oracle).toEqual(row.base);
+    for (const [position, part] of parts.entries()) {
+      expect(validate(part), JSON.stringify(validate.errors)).toBe(true);
+      expect(parseSnapshotPatch(JSON.parse(JSON.stringify(part)))).toEqual(part);
+      expect(new TextEncoder().encode(JSON.stringify(part)).length).toBeLessThanOrEqual(budget);
+      expect(part.operation !== "splice" || (part.continued === true) === (position < parts.length - 1)).toBe(true);
+    }
+  });
+  test("an inverse needing more parts than its bound is refused, never truncated", () => {
+    const base = { words: Array.from({ length: 4000 }, (_, position) => `word-${String(position).padStart(5, "0")}`) };
+    expect(() => inverseSnapshotPatches(base, { operation: "set", path: "/words", value: [] }, 160)).toThrow(/bounded number of parts/u);
+  });
   test("intrinsic object ordering preserves numeric keys and exact inverse values", () => {
     for (const row of fixture.intrinsicObjectOrder) {
-      const patch = { edits: [{ path: [row.key], edit: { operation: "insertAt" as const, value: "Inserted", index: row.index } }] };
+      const patch: SnapshotPatch = { operation: "insert", path: `/${row.key}`, value: "Inserted", index: row.index };
       const after = applySnapshotPatch(row.before, patch);
       expect(Object.keys(after as object)).toEqual(row.expectedKeys);
       expect(after).toEqual(applyPatch(structuredClone(row.before), [{ op: "add", path: `/${row.key}`, value: "Inserted" }]).newDocument);
@@ -74,15 +117,15 @@ describe("compact snapshot patches", () => {
 
   test("positioned object insertion preserves the authored key order and rejects invalid positions", () => {
     for (const row of fixture.positionedInsertions) {
-      const patch = { edits: [{ path: ["metadata", row.key], edit: { operation: "insertAt" as const, value: "Inserted", index: row.index } }] };
+      const patch: SnapshotPatch = { operation: "insert", path: `/metadata/${row.key}`, value: "Inserted", index: row.index };
       expect(validate(patch)).toBe(true);
       const after = applySnapshotPatch(fixture.base, patch) as Record<string, SnapshotValue>;
       expect(Object.keys(after.metadata as object)).toEqual(row.keys);
       expect(after).toEqual(applyPatch(structuredClone(fixture.base), [{ op: "add", path: `/metadata/${row.key}`, value: "Inserted" }]).newDocument);
       expect(JSON.stringify(applySnapshotPatch(after, inverseSnapshotPatch(fixture.base, patch)))).toBe(JSON.stringify(fixture.base));
     }
-    for (const index of fixture.invalidPositions) expect(() => applySnapshotPatch(fixture.base, { edits: [{ path: ["metadata", "bad"], edit: { operation: "insertAt", value: "Rejected", index } }] })).toThrow();
-    expect(() => applySnapshotPatch(fixture.base, { edits: [{ path: ["list", "0"], edit: { operation: "insertAt", value: "Rejected", index: 0 } }] })).toThrow();
+    for (const index of fixture.invalidPositions) expect(() => applySnapshotPatch(fixture.base, { operation: "insert", path: "/metadata/bad", value: "Rejected", index })).toThrow();
+    expect(() => applySnapshotPatch(fixture.base, { operation: "insert", path: "/list/0", value: "Rejected", index: 0 })).toThrow();
   });
   test("moves resolve the destination parent after removal", () => {
     const row = fixture.shiftedParent;
@@ -96,10 +139,10 @@ describe("compact snapshot patches", () => {
   for (const row of fixture.payload.cases) test(row.id, () => {
     const patch = prepareSnapshotPatch(fixture.payload.before, row.event);
     const result = applySnapshotPatch(fixture.payload.before, patch);
-    const operations = patch.edits.map(({ path, edit }): Operation => {
-      const pointer = path.map((key) => `/${key.replaceAll("~", "~0").replaceAll("/", "~1")}`).join("");
-      return edit.operation === "remove" ? { op: "remove", path: pointer } : { op: edit.operation === "set" ? "replace" : "add", path: pointer, value: edit.value };
-    });
+    const operations: Operation[] = patch.operation === "remove" ? [{ op: "remove", path: patch.path }]
+      : patch.operation === "move" ? [{ op: "move", from: patch.from, path: patch.path }]
+      : patch.operation === "rename" ? [{ op: "move", from: patch.path, path: `${patch.path.slice(0, patch.path.lastIndexOf("/"))}/${patch.key}` }]
+      : [{ op: patch.operation === "set" ? "replace" : "add", path: patch.path, value: patch.value }];
     const oracle = applyPatch(structuredClone(fixture.payload.before), operations, true, true, false).newDocument;
     expect(validate(patch)).toBe(true);
     expect(result).toEqual(row.expected);
@@ -116,6 +159,8 @@ describe("compact snapshot patches", () => {
     expect(applySnapshotPatch(actual, inverse)).toEqual(before);
     expect(JSON.stringify(applySnapshotPatch(actual, inverse))).toBe(JSON.stringify(before));
     expect(before).toEqual(fixture.base);
+    expect(patch).toEqual(fixture.patches[row.id]!.patch);
+    expect(inverse).toEqual(fixture.patches[row.id]!.inverse);
   });
 
   for (const row of fixture.rejected) test(row.id, () => {
@@ -139,12 +184,52 @@ describe("compact snapshot patches", () => {
     expect(reopened.title).toBe(before.title);
   });
 
-  test("failed compound edits leave the original untouched", () => {
+  test("failed path operations leave the original untouched", () => {
     const before = structuredClone(fixture.base);
-    expect(() => applySnapshotPatch(before, { edits: [
-      { path: ["title"], edit: { operation: "set", value: "Changed" } },
-      { path: ["missing"], edit: { operation: "remove" } },
-    ] })).toThrow();
-    expect(before).toEqual(fixture.base);
+    for (const patch of [{ operation: "remove", path: "/missing" }, { operation: "move", from: "/list/0", path: "/missing/0" }, { operation: "rename", path: "/list/0", key: "first" }] as SnapshotPatch[]) {
+      expect(() => applySnapshotPatch(before, patch)).toThrow();
+      expect(before).toEqual(fixture.base);
+    }
+  });
+
+  test("every canonical patch and inverse meets the registry SnapshotPatch schema", () => {
+    for (const [id, row] of Object.entries(fixture.patches)) {
+      expect(validate(row.patch), id).toBe(true);
+      expect(validate(row.inverse), id).toBe(true);
+    }
+  });
+
+  test("the wire reader admits exactly what the registry SnapshotPatch schema admits (ajv oracle)", () => {
+    for (const [id, row] of Object.entries(fixture.patches)) {
+      expect(parseSnapshotPatch(JSON.parse(JSON.stringify(row.patch))), id).toEqual(row.patch);
+      expect(parseSnapshotPatch(JSON.parse(JSON.stringify(row.inverse))), id).toEqual(row.inverse);
+    }
+    const refused: unknown[] = [null, [], { operation: "replace", path: "/a", value: 1 }, { operation: "set", path: "/a" }, { operation: "remove", path: "/a", value: 1 }, { operation: "rename", path: "/a", key: 7 }, { operation: "insert", path: "/a", value: 1, index: -1 }, { operation: "move", from: "/a", path: "/b", index: 1.5 },
+      { operation: "splice", path: "/a", offset: 0, value: [] }, { operation: "splice", path: "/a", offset: -1, remove: 0, value: [] }, { operation: "splice", path: "/a", offset: 0, remove: 0, value: [], continued: "yes" }, { operation: "splice", path: "/a", offset: 0, remove: 0, value: 1 }, { operation: "set", path: "/a", value: 1, continued: true }];
+    for (const value of refused) {
+      expect(validate(value), JSON.stringify(value)).toBe(false);
+      expect(() => parseSnapshotPatch(value), JSON.stringify(value)).toThrow();
+    }
+  });
+
+  test("snapshot schema locations type exactly the values the whole-document schema admits there (ajv oracle)", () => {
+    const { snapshot, documents, instance, cases } = fixture.locations;
+    const resolve = (id: string) => documents.find((document) => document.$id === id);
+    const ajv = semioSchemaAjvV1({ strict: true });
+    for (const document of documents) ajv.addSchema(document);
+    const whole = ajv.getSchema(snapshot)!;
+    expect(whole(instance), JSON.stringify(whole.errors)).toBe(true);
+    for (const row of cases) {
+      const location = snapshotSchemaLocation(snapshot, row.path === "" ? [] : row.path.slice(1).split("/"), resolve);
+      const reference = location === undefined ? null : location.pointer === "" ? location.document : `${location.document}#${location.pointer}`;
+      expect(reference, row.id).toBe(row.expected);
+      if (row.expected === null) continue;
+      const part = ajv.compile({ $ref: row.expected });
+      expect(part(row.valid), row.id).toBe(true);
+      expect(part(row.invalid), row.id).toBe(false);
+      const place = (value: SnapshotValue) => row.path === "" ? value : applyPatch(structuredClone(instance), [{ op: row.insert ? "add" : "replace", path: row.path, value }], true, false, false).newDocument;
+      expect(whole(place(row.valid!)), row.id).toBe(true);
+      expect(whole(place(row.invalid!)), row.id).toBe(false);
+    }
   });
 });

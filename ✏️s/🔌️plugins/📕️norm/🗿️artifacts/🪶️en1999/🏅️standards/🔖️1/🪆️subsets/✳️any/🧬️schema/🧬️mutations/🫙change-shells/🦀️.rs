@@ -26,9 +26,12 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeShells {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &En1999Snapshot) -> Vec<En1999Mutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &En1999Snapshot) -> Result<Vec<En1999Mutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Change shell structures", "Schalentragwerke ändern")

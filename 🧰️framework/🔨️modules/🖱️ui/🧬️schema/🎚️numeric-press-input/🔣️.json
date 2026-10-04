@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.ui.numeric-press-input-fixture.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["cases", "lifecycle"],
+  "properties": {
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["offeredCommit", "releasedCommit", "releasedActions", "sequenceStep"],
+      "properties": {
+        "offeredCommit": { "const": false },
+        "releasedCommit": { "const": true },
+        "releasedActions": { "const": 1 },
+        "sequenceStep": { "const": 1 }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "input", "accepted"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "input": {},
+          "accepted": { "type": "boolean" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "gesture", "commit"],
+      "properties": {
+        "value": { "type": "number" },
+        "gesture": { "type": "string", "pattern": "^.+:[0-9]+:[1-9][0-9]*$" },
+        "commit": { "type": "boolean" }
+      }
+    }
+  }
+}

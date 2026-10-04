@@ -1,0 +1,29 @@
+{
+  "contractId": "retained-child-capture",
+  "slot": "workingGraph",
+  "childId": "working !@/\u0000引用😀",
+  "dialect": {
+    "artifactKind": "s.stdio.semio",
+    "standard": "v1",
+    "subset": "graph"
+  },
+  "ownerSchema": "s.stdio.semio.graph",
+  "owners": [
+    {
+      "label": "old !@/\u0000引用😀"
+    },
+    {
+      "label": "new !@/\u0000引用😀"
+    }
+  ],
+  "retainedTailBytes": 65536,
+  "blockedCaptureCount": 1,
+  "releasedCaptureCount": 0,
+  "refusals": [
+    "missingSlot",
+    "missingChild",
+    "wrongDialect",
+    "wrongType"
+  ],
+  "refusalKind": "invalidValue"
+}

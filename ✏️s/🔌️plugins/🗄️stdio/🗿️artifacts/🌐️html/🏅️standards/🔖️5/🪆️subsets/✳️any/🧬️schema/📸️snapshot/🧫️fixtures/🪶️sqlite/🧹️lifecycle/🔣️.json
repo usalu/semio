@@ -1,0 +1,21 @@
+{
+  "retirementDepth": 8192,
+  "lateSqlDepth": 8192,
+  "wide": 4096,
+  "stackBytes": 65536,
+  "oracleDepth": 64,
+  "lateTextUnit": "界",
+  "lateTextRepeat": 32768,
+  "cancelAfterBytes": 65536,
+  "cancelUtf8ByteBoundary": 65535,
+  "schema": "literal HTML lifecycle schema 世界\u0000",
+  "doctype": "literal DOCTYPE 世界\u0000",
+  "elementName": "literal element 世界\u0000",
+  "attributes": [{"name":"literal duplicate","value":""},{"name":"literal duplicate"}],
+  "leaves": [
+    {"kind":"text","text":"literal text 世界\u0000"},
+    {"kind":"comment","text":"literal comment 世界\u0000"},
+    {"kind":"rawText","parentKind":"script","text":"literal script 世界\u0000"},
+    {"kind":"rawText","parentKind":"style","text":"literal style 世界\u0000"}
+  ]
+}

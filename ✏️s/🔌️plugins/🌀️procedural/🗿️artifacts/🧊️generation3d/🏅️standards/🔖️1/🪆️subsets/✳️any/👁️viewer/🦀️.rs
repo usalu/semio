@@ -410,7 +410,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewComm
         generation3d_view_bounded_extent(command, snapshot, interaction)
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>) -> Result<ArtifactCommandWorkStep<ViewerApp<Generation3dViewer>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<ViewerApp<Generation3dViewer>>, Fault> {
         if self.closing || self.complete {
             return Err(Fault::from("generation3d-view-work-is-terminal"));
         }
@@ -544,7 +544,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewFlow
         .then_some(1)
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>) -> Result<ArtifactCommandWorkStep<ViewerApp<Generation3dViewer>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<ViewerApp<Generation3dViewer>>, Fault> {
         if self.complete || self.closing {
             return Err(Fault::from("generation3d-view-flow-eval-window-work-terminal"));
         }
@@ -632,7 +632,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewFlow
         generation3d_view_bounded_extent(command, snapshot, interaction)
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>) -> Result<ArtifactCommandWorkStep<ViewerApp<Generation3dViewer>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<ViewerApp<Generation3dViewer>>, Fault> {
         if self.consumed {
             return Err(Fault::from("generation3d-view-flow-resolve-work-repeated"));
         }
@@ -641,8 +641,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewFlow
             owner.with_session_waking(|session| match input.command {
                 Generation3dViewCommand::FlowEvalRelease(payload) => Ok(preview_eval::release_invocations(payload)),
                 Generation3dViewCommand::FlowTessellateCancelResolve(payload) => {
-                    preview_eval::resolve_tessellate_cancel(payload, session);
-                    Ok(Vec::new())
+                    Ok(preview_eval::resolve_tessellate_cancel(payload, session))
                 }
                 _ => Err(Fault::from("generation3d-view-flow-resolve-route-rejected")),
             })?
@@ -764,7 +763,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewCont
         generation3d_view_bounded_extent(command, snapshot, interaction)
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>) -> Result<ArtifactCommandWorkStep<ViewerApp<Generation3dViewer>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<ViewerApp<Generation3dViewer>>, Fault> {
         if self.consumed {
             return Err(Fault::from("generation3d-view-contributions-work-repeated"));
         }
@@ -1079,7 +1078,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewDocu
         generation3d_view_bounded_extent(command, snapshot, interaction)
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>) -> Result<ArtifactCommandWorkStep<ViewerApp<Generation3dViewer>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<ViewerApp<Generation3dViewer>>, Fault> {
         if self.consumed {
             return Err(Fault::from("generation3d-view-document-io-work-repeated"));
         }
@@ -1097,9 +1096,9 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewDocu
         let cfg = ConfigView { snapshot: input.config, window: None };
         let emitted = {
             let doc = ArtifactView::with_operation(viewed.snapshot(), input.history, input.operation.clone());
-            self.instance_owner
-                .with_mut::<Generation3dViewInstanceOperationOwner, _>(|owner| owner.with_session(|session| export_document::retained_preview(&doc, &cfg, session)))
-                .and_then(|preview| export_document::emit(payload, &doc, preview.as_ref()))
+            if payload.format == "txt" { export_document::emit(payload, &doc, None) } else { self.instance_owner
+                .with_mut::<Generation3dViewInstanceOperationOwner, _>(|owner| owner.with_session(|session| export_document::retained_meshes(&doc, &cfg, session)))
+                .and_then(|meshes| meshes.and_then(|meshes| export_document::emit(payload, &doc, meshes.as_deref()))) }
         };
         viewed.retire();
         let view_emit = emitted?;
@@ -1195,12 +1194,17 @@ fn generation3d_view_port_ids_by_node(host_snapshot: &semio_framework_artifact_f
 pub struct Generation3dViewer;
 
 impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
+    /// 📣️ The localized notices of the viewer's refusal codes (design §20.12): the document-level ones.
+    fn fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
+        crate::generation3d_document_fault_notices()
+    }
+
     /// 🧩️ The loaded-parent child projection every archive load and maintenance swap asks for before a
     /// decoded document may replace the store. `Generation3dSnapshot` declares no child slot, so the
     /// projection is honestly empty; without it every replacement faulted with `viewer did not declare
     /// a loaded-parent child projection`.
     fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
-        store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("generation3d.child-projection"), error.to_string()))
+        store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(crate::GENERATION3D_CHILD_PROJECTION), error.to_string()))
     }
 
     type Snapshot = Generation3dSnapshot;
@@ -1353,7 +1357,7 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
             return Ok(None);
         }
         if request.command.command_id() != request.tool_id {
-            return Err(Fault::from("generation3d-view-command-tool-mismatch"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "the generation 3d view command does not match its exact registered tool"));
         }
         let tool_id = request.command.command_id();
         let contributions = GENERATION3D_VIEW_CONTRIBUTIONS_TOOL_IDS.contains(&tool_id);
@@ -1425,10 +1429,10 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
     /// (`plugin_handle_command` → `A::command_from_action`). Without it the shell's own
     /// `setContributions` push, and every chrome measure's `on_change`, fail closed with
     /// `app.command.unsupported` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
-        let args = args.cloned().unwrap_or_else(dsl::DslValue::null);
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
+        let args = args.cloned().unwrap_or_else(semio_framework_value::DslValue::null);
         let str_arg = |keys: &[&str]| -> Option<String> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_str()).map(str::to_string)) };
-        let f64_arg = |keys: &[&str]| -> Option<f64> { keys.iter().find_map(|key| args.get(key).and_then(dsl::DslValue::as_f64)) };
+        let f64_arg = |keys: &[&str]| -> Option<f64> { keys.iter().find_map(|key| args.get(key).and_then(semio_framework_value::DslValue::as_f64)) };
         let u64_arg = |keys: &[&str]| -> Option<u64> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_u64().or_else(|| value.as_f64().map(|number| number as u64)))) };
         match action {
             "setShowMode" => Ok(Generation3dViewCommand::SetShowMode(set_show_mode::SetShowMode { value: str_arg(&["value", "showMode", "show_mode"]).unwrap_or_default() })),
@@ -1436,7 +1440,7 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
             "setCamera" => Ok(Generation3dViewCommand::SetCamera(set_camera::SetCamera {
                 camera: args
                     .get("camera")
-                    .and_then(|camera| <crate::viewer::generation3d::config::Generation3dViewCamera as dsl::FromValue>::from_value(camera.clone()).ok())
+                    .and_then(|camera| <crate::viewer::generation3d::config::Generation3dViewCamera as semio_framework_value::FromValue>::from_value(camera.clone()).ok())
                     .unwrap_or_default(),
             })),
             "toggleSun" => Ok(Generation3dViewCommand::ToggleSun(toggle_sun::ToggleSun {})),
@@ -1464,7 +1468,7 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
                 node_hash: u64_arg(&["nodeHash", "node_hash"]).unwrap_or_default(),
                 output_json: str_arg(&["outputJson", "output_json"]).unwrap_or_default(),
                 extension_id: str_arg(&["extensionId", "extension_id"]).unwrap_or_default(),
-                ok: args.get("ok").and_then(dsl::DslValue::as_bool).unwrap_or(false),
+                ok: args.get("ok").and_then(semio_framework_value::DslValue::as_bool).unwrap_or(false),
                 fault_code: str_arg(&["faultCode", "fault_code"]).unwrap_or_default(),
                 fault_message: str_arg(&["faultMessage", "fault_message"]).unwrap_or_default(),
             })),
@@ -1483,7 +1487,7 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
                 window_id: str_arg(&["windowId", "window_id"]).unwrap_or_default(),
                 window_kind_id: str_arg(&["windowKindId", "window_kind_id"]).unwrap_or_default(),
                 output_json: str_arg(&["outputJson", "output_json"]).unwrap_or_default(),
-                ok: args.get("ok").and_then(dsl::DslValue::as_bool).unwrap_or(false),
+                ok: args.get("ok").and_then(semio_framework_value::DslValue::as_bool).unwrap_or(false),
             })),
             "exportDocument" => Ok(Generation3dViewCommand::ExportDocument(export_document::ExportDocument { format: str_arg(&["format", "value"]).unwrap_or_else(|| "stl".into()) })),
             other => Err(Fault::from(format!("action '{other}' is not declared by the generation3d viewer"))),
@@ -1518,7 +1522,8 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
     /// `node`, each of its visible ports a `handle` parented to it, each synapse an `edge`, and each
     /// `Cluster`'s nested neurons `node`s parented to their cluster (the transitive-hover source).
     /// Without this a world pick would be pruned by `validate_state` and nothing would ever light up.
-    fn interaction_topology(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> InteractionTopology {
+    fn interaction_topology(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> Result<InteractionTopology, semio_framework_value::ValueError> {
+ Ok((||{
         fn walk_neuron(neuron: &semio_framework_artifact_flow_flow::neural::Neuron, parent: String, ordered: &mut Vec<TopologyNode>) {
             ordered.push(TopologyNode { id: neuron.id.clone(), granularity: "node".into(), parent: Some(parent) });
             if let Some(tree) = &neuron.tree {
@@ -1550,7 +1555,9 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
         domains.insert("graph".to_string(), DomainTopology { ordered });
         viewed.retire();
         InteractionTopology { domains }
-    }
+    
+})())
+}
 
     /// 🕹️ The marks-free entry point the framework still offers (no owner, no transient, no
     /// interaction) — every live window goes through `render_with_request_context` instead.

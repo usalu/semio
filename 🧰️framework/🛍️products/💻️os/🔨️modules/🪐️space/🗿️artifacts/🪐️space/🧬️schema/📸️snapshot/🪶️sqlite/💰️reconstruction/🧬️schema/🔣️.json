@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "owner",
+    "authority",
+    "admission",
+    "retainAdmission",
+    "table",
+    "column",
+    "textUnit",
+    "repeat",
+    "utf8Bytes",
+    "cancelAt",
+    "rows",
+    "budgetCases",
+    "refusalKinds"
+  ],
+  "properties": {
+    "owner": {
+      "const": "os.space"
+    },
+    "authority": {
+      "const": "system-request-layouts"
+    },
+    "admission": {
+      "const": "callerAllocationLedger"
+    },
+    "retainAdmission": {
+      "const": true
+    },
+    "table": {
+      "const": "space_document"
+    },
+    "column": {
+      "const": "name"
+    },
+    "textUnit": {
+      "type": "string",
+      "minLength": 1
+    },
+    "repeat": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "utf8Bytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "cancelAt": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "rows": {
+      "const": 10
+    },
+    "budgetCases": {
+      "const": [
+        "exact",
+        "oneLess",
+        "zero",
+        "cumulative"
+      ]
+    },
+    "refusalKinds": {
+      "const": [
+        "ownershipLimit",
+        "canceled"
+      ]
+    }
+  }
+}

@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/mutation/rotate-selection/schema.json",
   "title": "RotateSelection",
+  "x-semio-inverse-rows": { "bounded": 4096 },
   "description": "The `rotate-selection` mutation record — a relative turn of objects and target volumes, each about its own origin, that re-solves the attraction graph (attracted objects are re-placed from their turned parents, every other attraction touching a turned object is re-derived); internally tagged `\"mutation\": \"rotateSelection\"`, the one branch the aggregate `../🔣️.json` union carries for this kind.",
   "type": "object",
   "additionalProperties": false,

@@ -6,7 +6,7 @@ use semio_s_artifact_stdio_csv::{CsvField, CsvRecord, CsvSnapshot, STDIO_CSV_DOC
 pub const RESPONSE_COLUMNS: [&str; 7] = ["responseId", "submittedAt", "definitionVersion", "questionId", "label", "kind", "valueJson"];
 
 pub fn response_row(response: &FormsResponse, answer: &FormsAnswer) -> Vec<String> {
-    vec![response.id.clone(), response.submitted_at.to_string(), response.definition_version.clone(), answer.question_id.clone(), answer.label.clone(), answer.kind.clone(), dsl::os_pack::json::to_json_string(&answer.value)]
+    vec![response.id.clone(), response.submitted_at.to_string(), response.definition_version.clone(), answer.question_id.clone(), answer.label.clone(), answer.kind.clone(), semio_framework_pack_json::to_json_string(&answer.value)]
 }
 
 /// 📊️ A normalized answer grid supports submissions made against different definitions.
@@ -54,7 +54,7 @@ impl ResponseExport {
         let Some(index) = self.answer else {
             if !self.csv {
                 if self.response > 0 { self.output.push(','); }
-                self.output.push_str(&format!("{{\"id\":{},\"submittedAt\":{},\"definitionVersion\":{},\"answers\":[", dsl::json::to_json_string(&response.id), response.submitted_at, dsl::json::to_json_string(&response.definition_version)));
+                self.output.push_str(&format!("{{\"id\":{},\"submittedAt\":{},\"definitionVersion\":{},\"answers\":[", semio_framework_pack_json::to_json_string(&response.id), response.submitted_at, semio_framework_pack_json::to_json_string(&response.definition_version)));
             }
             self.answer = Some(0);
             return None;
@@ -63,7 +63,7 @@ impl ResponseExport {
             if self.csv { self.output.push_str(&csv_record(response_row(response, answer))); }
             else {
                 if index > 0 { self.output.push(','); }
-                self.output.push_str(&dsl::json::to_json_string(answer));
+                self.output.push_str(&semio_framework_pack_json::to_json_string(answer));
             }
             self.answer = Some(index + 1);
             return None;

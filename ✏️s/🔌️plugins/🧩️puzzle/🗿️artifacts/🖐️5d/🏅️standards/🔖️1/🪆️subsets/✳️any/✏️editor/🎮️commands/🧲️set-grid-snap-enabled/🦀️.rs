@@ -1,7 +1,7 @@
 //! 🧲️ `set-grid-snap-enabled` command.
 
 use crate::editor::puzzle5d::Puzzle5dActionCtx;
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 
 /// 🧲️ A `WindowMeasure::Toggle` dispatches its next state as `pressed`; an argument-less invocation
 /// (keybinding, context menu) flips the current state. Reading an absent argument as `false` — what

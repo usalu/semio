@@ -990,6 +990,22 @@ pub fn resolve_anchored_placement(anchor: Rect, content_size: (f32, f32), viewpo
 //#endregion 🔖️Overlay
 
 //#region 🔖️Tooltip
+/// 💬️ A disabled row action's reason hint (audit W1E-1, `💬️row-semantics` `revealReason`): shown on hover, keyboard focus and a
+/// press of the action, hidden on leave, blur and Escape; `hovered` marks a hint the pointer revealed, which only leaving hides.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) struct RowReasonHint {
+    pub(crate) row: NodeId,
+    pub(crate) index: usize,
+    pub(crate) hovered: bool,
+}
+
+/// 💬️ The reason of `row`'s `index`-th action while that action is disabled and names one — the contract's `RowAction.reason`,
+/// the text every renderer announces as its description and shows as its hint.
+pub(crate) fn disabled_row_action_reason(tree: &UiTree, row: NodeId, index: usize) -> Option<&str> {
+    let action = tree.authored_tree_item(row)?.actions.as_deref()?.get(index)?;
+    action.reason.as_ref().map(|reason| reason.as_str()).filter(|reason| action.disabled && !reason.is_empty())
+}
+
 // 💡️ React gets hover reveal from the DOM: `ChromeControlHint` arms a `setTimeout` on
 // `onPointerEnter`/`onFocusCapture` and opens a portalled `role="tooltip"` after
 // `CHROME_CONTROL_TOOLTIP_DELAY_MS`. An immediate-mode canvas has no such affordance, so the dwell
@@ -1287,6 +1303,8 @@ pub(crate) struct EventRouter {
     /// tooltip opens exactly once per hover, not every frame after the deadline.
     hover_since: Option<(NodeId, f64)>,
     hover_revealed: Option<NodeId>,
+    /// 💬️ The disabled row action whose reason hint is shown ([`RowReasonHint`], audit W1E-1).
+    row_reason: Option<RowReasonHint>,
     /// 🚪️ Deadline armed by `maybe_dismiss_tooltip_on_hover_out` once the pointer leaves an open
     /// tooltip's anchor and bounds — see `DismissPolicy::hover_out_delay_seconds`.
     tooltip_dismiss_at: Option<f64>,
@@ -1337,6 +1355,7 @@ impl EventRouter {
             clock_seconds: 0.0,
             hover_since: None,
             hover_revealed: None,
+            row_reason: None,
             tooltip_dismiss_at: None,
             select_typeahead: None,
             stepper_repeat: None,
@@ -1382,6 +1401,7 @@ impl EventRouter {
         self.clock_seconds = presented.clock_seconds;
         self.hover_since = presented.hover_since.and_then(|(node, at)| remap(node).map(|node| (node, at)));
         self.hover_revealed = presented.hover_revealed.and_then(remap);
+        self.row_reason = presented.row_reason.and_then(|hint| remap(hint.row).map(|row| RowReasonHint { row, ..hint }));
         self.tooltip_dismiss_at = presented.tooltip_dismiss_at;
         self.select_typeahead = presented.select_typeahead.clone();
         self.stepper_repeat = presented.stepper_repeat.and_then(|repeat| remap(repeat.node).map(|node| StepperRepeat { node, ..repeat }));
@@ -1401,6 +1421,7 @@ impl EventRouter {
             || self.thumb_start.take().is_some()
             || self.hover_since.take().is_some()
             || self.hover_revealed.take().is_some()
+            || self.row_reason.take().is_some()
             || self.tooltip_dismiss_at.take().is_some()
             || self.stepper_repeat.take().is_some()
             || self.caret.take().is_some()
@@ -1816,6 +1837,43 @@ impl EventRouter {
 
     pub(crate) fn revealed_tooltip_node(&self) -> Option<NodeId> {
         self.hover_revealed
+    }
+
+    /// 💬️ The row and action index whose reason hint is shown, if any.
+    pub(crate) fn revealed_row_reason(&self) -> Option<(NodeId, usize)> {
+        self.row_reason.map(|hint| (hint.row, hint.index))
+    }
+
+    /// 💬️ Shows `next`'s reason hint (or none), repainting the rows it leaves and enters; `true` when it changed.
+    fn set_row_reason(&mut self, tree: &mut UiTree, next: Option<RowReasonHint>) -> bool {
+        let changed = self.revealed_row_reason() != next.map(|hint| (hint.row, hint.index));
+        if changed {
+            for row in [self.row_reason.map(|hint| hint.row), next.map(|hint| hint.row)].into_iter().flatten() {
+                tree.mark_dirty(row, NodeFlags::DIRTY_PAINT);
+            }
+        }
+        self.row_reason = next;
+        changed
+    }
+
+    /// 💬️ The hint of `row`'s `index`-th action when it is a disabled action naming its reason, else `None`.
+    fn row_reason_hint(tree: &UiTree, row: NodeId, index: usize, hovered: bool) -> Option<RowReasonHint> {
+        disabled_row_action_reason(tree, row, index).map(|_| RowReasonHint { row, index, hovered })
+    }
+
+    /// 💬️ The pointer at `(x, y)` over `target`: entering a disabled action's icon shows its reason, leaving the icon hides a hint
+    /// the pointer revealed (a hint focus or a press revealed stays until blur or Escape).
+    fn hover_row_reason(&mut self, tree: &mut UiTree, target: Option<NodeId>, x: f32, y: f32) {
+        let over = target.and_then(|row| self.pointer_row_action(tree, row, x, y).and_then(|index| Self::row_reason_hint(tree, row, index, true)));
+        match over {
+            Some(hint) => {
+                let _ = self.set_row_reason(tree, Some(hint));
+            }
+            None if self.row_reason.is_some_and(|hint| hint.hovered) => {
+                let _ = self.set_row_reason(tree, None);
+            }
+            None => {}
+        }
     }
 
     pub(crate) fn advance_clock(&mut self, tree: &mut UiTree, seconds: f64) -> RouterClockStep {
@@ -2623,12 +2681,36 @@ impl EventRouter {
 
     /// ♿️ The accessibility mirror's activation of a row's `index`-th action (`accessibility::row_accessibility_action`), fired
     /// exactly as a pointer on its trailing icon fires it.
+    /// A disabled action's reason hint shows on its focus and on its activation (which dispatches nothing) and hides on its blur.
     pub(crate) fn dispatch_accessibility_row_action(&mut self, tree: &mut UiTree, target: NodeId, index: usize, event: &AccessibilityUiEvent) -> Vec<UiCommand> {
+        match event {
+            AccessibilityUiEvent::Focus | AccessibilityUiEvent::Activate if disabled_row_action_reason(tree, target, index).is_some() => {
+                let _ = self.set_row_reason(tree, Self::row_reason_hint(tree, target, index, false));
+                return Vec::new();
+            }
+            AccessibilityUiEvent::Blur if self.revealed_row_reason() == Some((target, index)) => {
+                let _ = self.set_row_reason(tree, None);
+                return Vec::new();
+            }
+            _ => {}
+        }
         let enabled = tree.node(target).is_some_and(|node| node.spec.0.presence().state != UiState::Disabled);
         if !enabled || !matches!(event, AccessibilityUiEvent::Activate) {
             return Vec::new();
         }
         self.row_action_command(tree, target, index).into_iter().collect()
+    }
+
+    /// 💬️ The absolute rect of `row`'s `index`-th action icon — the slot `paint` draws it in and [`Self::pointer_row_action`] hits —
+    /// where its reason hint anchors.
+    pub(crate) fn row_action_icon_rect(&self, tree: &UiTree, row: NodeId, index: usize) -> Option<Rect> {
+        let item = tree.authored_tree_item(row)?;
+        let slot = item.actions.as_deref()?.len().checked_sub(index)?;
+        let metrics = crate::wgpu::mounted_layout::retained_tree_row_metrics(tree, row, &self.tree_drag_metrics);
+        let band = tree_section_header_band(tree.absolute_rect(row)?, metrics.row_height, self.flow.block.is_reversed());
+        let trailing = if self.tree_drag_driver == UiDriverDrag::Handle && tree_drag_role(item).is_some() { tree_drag_handle_reservation(&metrics) } else { 0.0 };
+        let icon = crate::wgpu::layout::tree_row_action_rect(band.w, band.h, slot, trailing, &metrics);
+        Some(Rect::new(band.x + icon.x, band.y + icon.y, icon.w, icon.h))
     }
 
     pub(crate) fn dispatch_accessibility_slider_editor(&mut self, tree: &mut UiTree, target: NodeId, event: &AccessibilityUiEvent) -> Vec<UiCommand> {
@@ -2691,6 +2773,7 @@ impl EventRouter {
                 self.tree_drag_handle_press = None;
                 self.update_stepper_hover_segment(tree, None, 0.0, 0.0);
                 commands.extend(self.update_hover(tree, None));
+                let _ = self.set_row_reason(tree, None);
             }
             UiEvent::PointerMove { x, y, .. } => {
                 if self.stepper_repeat.is_some_and(|repeat| absolute_rect(tree, repeat.node).is_none_or(|bounds| number_stepper_sign_at(bounds, *x, *y, self.flow.inline, self.control_border) != Some(repeat.sign))) {
@@ -2717,6 +2800,7 @@ impl EventRouter {
                 }
                 self.update_stepper_hover_segment(tree, target, *x, *y);
                 commands.extend(self.update_hover(tree, target));
+                self.hover_row_reason(tree, target, *x, *y);
                 commands.extend(self.maybe_dismiss_tooltip_on_hover_out(tree, *x, *y));
             }
             UiEvent::PointerDown { x, y, button, .. } => {
@@ -2734,6 +2818,9 @@ impl EventRouter {
                 let target = scroll_target.or_else(|| self.overlays.topmost().and_then(|overlay| self.hit_test_subtree(tree, overlay.root, *x, *y))).or_else(|| self.hit_test(tree, root, *x, *y));
                 self.update_stepper_hover_segment(tree, target, *x, *y);
                 commands.extend(self.update_hover(tree, target));
+                if let Some(hint) = target.and_then(|row| self.pointer_row_action(tree, row, *x, *y).and_then(|index| Self::row_reason_hint(tree, row, index, true))) {
+                    let _ = self.set_row_reason(tree, Some(hint));
+                }
                 if let Some(id) = target {
                     if let Some(cmd) = self.scene_command(tree, id, event) {
                         commands.push(cmd);
@@ -2897,7 +2984,8 @@ impl EventRouter {
             UiEvent::KeyDown { key, modifiers } => {
                 self.focus_visible = true;
                 let select_consumed = key != "Escape" && self.route_select_key(tree, key, *modifiers, &mut commands);
-                if key == "Escape" {
+                if key == "Escape" && self.set_row_reason(tree, None) {
+                } else if key == "Escape" {
                     // ⎋️ React's `Search` closes its possibles popover first and only aborts the
                     // engagement when there is none open (`onKeyDown`'s Escape arm, `🖱️ui/🎯️targets/
                     // ⚛️react/🟦️.tsx:10869`), so an overlay swallows this key exactly as it does there.

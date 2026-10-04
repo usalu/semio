@@ -73,6 +73,7 @@
       ],
       "kinds": [
         "set-snapshot",
+        "patch-snapshot",
         "set-version-info"
       ]
     }
@@ -99,6 +100,27 @@
             "operation": "set-snapshot",
             "bridgeVersion": 1,
             "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dwg-ac1024-mutate",
+              "qualifyingKind": "third-party-cli",
+              "oracle": "libredwg-dwg-preamble-cli"
+            }
+          ]
+        },
+        {
+          "id": "patch-snapshot",
+          "capability": "dwg-ac1024-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "patch-snapshot",
+            "bridgeVersion": 1,
+            "variant": "PatchSnapshot"
           },
           "oracleRequirements": [
             {

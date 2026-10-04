@@ -37,7 +37,7 @@ fn sample_drawing() -> SemioDrawingSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn real_text_round_trip_through_dxf_codec() {
     let drawing = sample_drawing();
-    let dxf = semio_framework_plugin::resolve_ready(SemioDrawingToDxf::serialize(&drawing)).expect("serialize");
+    let dxf = ::semio_framework_async::poll::resolve_ready(SemioDrawingToDxf::serialize(&drawing)).expect("serialize");
     assert_eq!(dxf.entities.len(), 3);
     assert!(matches!(dxf.entities[0], DxfEntity::Circle { .. }));
     assert!(matches!(dxf.entities[1], DxfEntity::Polyline { .. }));

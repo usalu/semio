@@ -14,7 +14,7 @@ fn sample_dxf() -> DxfSnapshot {
 
 #[semio_framework_async_macros::async_test]
 async fn buckets_entities_by_layer_and_drops_unmodeled() {
-    let drawing = semio_framework_plugin::resolve_ready(SemioDrawingFromDxf::deserialize(&sample_dxf())).expect("deserialize");
+    let drawing = ::semio_framework_async::poll::resolve_ready(SemioDrawingFromDxf::deserialize(&sample_dxf())).expect("deserialize");
     assert_eq!(drawing.layers.len(), 2);
     assert_eq!(drawing.layers[0].id, "0");
     assert_eq!(drawing.layers[1].id, "walls");

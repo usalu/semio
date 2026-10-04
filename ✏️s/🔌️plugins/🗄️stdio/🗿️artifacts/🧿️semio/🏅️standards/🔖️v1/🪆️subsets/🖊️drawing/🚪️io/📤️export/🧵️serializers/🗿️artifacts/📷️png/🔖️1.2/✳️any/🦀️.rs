@@ -19,8 +19,7 @@
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
 use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
-use semio_s_artifact_stdio_png::schema::snapshot::{PngChunkMarker, PngColorType};
-use semio_s_artifact_stdio_png::PngSnapshot;
+use semio_s_artifact_stdio_png::{io::PngProjection, schema::snapshot::{PngChunkMarker, PngColorType}, PngSnapshot};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("drawing") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId::ANY };
@@ -165,7 +164,7 @@ impl Canvas {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn blit(&mut self, inverse: &Affine, source: &PngSnapshot, size: [f64; 2], alpha: f32) {
+    fn blit(&mut self, inverse: &Affine, source: &PngProjection, size: [f64; 2], alpha: f32) {
         for row in 0..self.height {
             for column in 0..self.width {
                 let local = apply(inverse, [column as f64 + 0.5, row as f64 + 0.5]);
@@ -556,10 +555,9 @@ fn paint_node(canvas: &mut Canvas, node: &DrawNode, styles: &[DrawStyle], matrix
             if mime != "image/png" || *width <= 0.0 || *height <= 0.0 {
                 return;
             }
-            let Ok(source) = semio_s_artifact_stdio_png::io::decode_png(bytes) else { return };
-            if source.width == 0 || source.height == 0 {
-                return;
-            }
+            let Ok(snapshot) = semio_s_artifact_stdio_png::io::decode_png(bytes) else { return };
+            let Ok(source) = semio_s_artifact_stdio_png::io::project_png(&snapshot.bytes) else { return };
+            if source.width == 0 || source.height == 0 { return; }
             let placed = compose(matrix, &[1.0, 0.0, 0.0, 1.0, at.x, at.y]);
             let determinant = placed[0] * placed[3] - placed[1] * placed[2];
             if determinant.abs() < 1e-12 {
@@ -600,18 +598,15 @@ impl ArtifactSerializer for SemioDrawingToPng {
     const INTO: Dialect = INTO_DIALECT;
 
     async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        let raster = rasterize_drawing(from).map_err(store::PackError::Schema)?;
-        Ok(PngSnapshot {
-            schema: semio_s_artifact_stdio_png::STDIO_PNG_DOCUMENT_SCHEMA.into(),
-            width: raster.width,
-            height: raster.height,
-            bit_depth: 8,
-            color_type: PngColorType::Rgba,
-            interlace: false,
-            pixels: raster.rgba8,
-            chunk_order: vec![PngChunkMarker::Ihdr, PngChunkMarker::Idat, PngChunkMarker::Iend],
-            ..PngSnapshot::default()
-        })
+        let raster = rasterize_drawing(from).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))?;
+        let projection = PngProjection {
+            width: raster.width, height: raster.height, bit_depth: 8, color_type: PngColorType::Rgba, interlace: false,
+            plte: None, trns: None, gama: None, chrm: None, srgb: None, phys: None, time: None, bkgd: None,
+            text_chunks: Vec::new(), pixels: raster.rgba8,
+            chunk_order: vec![PngChunkMarker::Ihdr, PngChunkMarker::Idat, PngChunkMarker::Iend], unknown_chunks: Vec::new(),
+        };
+        let bytes = semio_s_artifact_stdio_png::io::author_png_projection(&projection).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))?;
+        semio_s_artifact_stdio_png::io::decode_png(&bytes).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))
     }
 }
 //#endregion 🔖️Serializer

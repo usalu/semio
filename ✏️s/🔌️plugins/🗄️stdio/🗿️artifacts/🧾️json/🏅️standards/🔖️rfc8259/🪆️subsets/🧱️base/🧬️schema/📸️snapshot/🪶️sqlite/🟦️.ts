@@ -85,7 +85,7 @@ export async function jsonSnapshotToSqliteDatabase(snapshot: JsonSnapshot, optio
     }
     if (values.length % 256 === 0) await artifactSqliteCheckpoint(options, "projectSnapshot", 1 + values.length + members.length + elements.length, total);
   }
-  const database = artifactSqliteDatabase(JSON_SQLITE_SCHEMA, [[{ rowid: 1n, values: [1n, snapshot.schema, 1n] }], values, members, elements], options);
+  const database = await artifactSqliteDatabase(JSON_SQLITE_SCHEMA, [[{ rowid: 1n, values: [1n, snapshot.schema, 1n] }], values, members, elements], options);
   await artifactSqliteCheckpoint(options, "projectSnapshot", total, total);
   return database;
 }

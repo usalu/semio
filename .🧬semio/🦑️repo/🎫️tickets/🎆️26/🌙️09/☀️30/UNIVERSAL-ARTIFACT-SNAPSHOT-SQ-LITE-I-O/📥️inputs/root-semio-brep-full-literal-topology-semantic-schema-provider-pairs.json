@@ -1,0 +1,502 @@
+{
+  "state": "mounted",
+  "before": "Source seven selected:four passed/three actual distinct semantic owner failures,42 expectations,Bun581ms",
+  "pairs": [
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🗄️.sql",
+      "before": "CREATE TABLE semio_brep_edge (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_brep_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL, start_vertex_id INTEGER NOT NULL REFERENCES semio_brep_vertex(id), end_vertex_id INTEGER NOT NULL REFERENCES semio_brep_vertex(id), curve_id INTEGER NOT NULL REFERENCES semio_brep_curve3(id), tolerance REAL, tolerance_ieee754_bits INTEGER, tolerance_numeric_class TEXT);",
+      "after": "CREATE TABLE semio_brep_edge (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_brep_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL, start_vertex_native_id TEXT NOT NULL, end_vertex_native_id TEXT NOT NULL, curve_id INTEGER NOT NULL REFERENCES semio_brep_curve3(id), tolerance REAL, tolerance_ieee754_bits INTEGER, tolerance_numeric_class TEXT);"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🗄️.sql",
+      "before": "CREATE TABLE semio_brep_loop_edge (id INTEGER PRIMARY KEY, loop_id INTEGER NOT NULL REFERENCES semio_brep_loop(id), ordinal INTEGER NOT NULL, edge_id INTEGER NOT NULL REFERENCES semio_brep_edge(id), orientation INTEGER NOT NULL);",
+      "after": "CREATE TABLE semio_brep_loop_edge (id INTEGER PRIMARY KEY, loop_id INTEGER NOT NULL REFERENCES semio_brep_loop(id), ordinal INTEGER NOT NULL, edge_native_id TEXT NOT NULL, orientation INTEGER NOT NULL);"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🗄️.sql",
+      "before": "CREATE TABLE semio_brep_coedge (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_brep_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL, edge_id INTEGER NOT NULL REFERENCES semio_brep_edge(id), forward INTEGER NOT NULL, curve_id INTEGER REFERENCES semio_brep_curve2(id), parameter_start REAL, parameter_end REAL, loop_id INTEGER NOT NULL REFERENCES semio_brep_loop(id), next_id INTEGER NOT NULL REFERENCES semio_brep_coedge(id), previous_id INTEGER NOT NULL REFERENCES semio_brep_coedge(id), parameter_start_ieee754_bits INTEGER, parameter_start_numeric_class TEXT, parameter_end_ieee754_bits INTEGER, parameter_end_numeric_class TEXT);",
+      "after": "CREATE TABLE semio_brep_coedge (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_brep_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL, edge_native_id TEXT NOT NULL, forward INTEGER NOT NULL, curve_id INTEGER REFERENCES semio_brep_curve2(id), parameter_start REAL, parameter_end REAL, loop_native_id TEXT NOT NULL, next_native_id TEXT NOT NULL, previous_native_id TEXT NOT NULL, parameter_start_ieee754_bits INTEGER, parameter_start_numeric_class TEXT, parameter_end_ieee754_bits INTEGER, parameter_end_numeric_class TEXT);"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🗄️.sql",
+      "before": "CREATE TABLE semio_brep_face (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_brep_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL, outer_loop_id INTEGER NOT NULL REFERENCES semio_brep_loop(id), surface_id INTEGER NOT NULL REFERENCES semio_brep_surface(id), orientation INTEGER NOT NULL, tolerance REAL, tolerance_ieee754_bits INTEGER, tolerance_numeric_class TEXT);",
+      "after": "CREATE TABLE semio_brep_face (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_brep_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL, outer_loop_native_id TEXT NOT NULL, surface_id INTEGER NOT NULL REFERENCES semio_brep_surface(id), orientation INTEGER NOT NULL, tolerance REAL, tolerance_ieee754_bits INTEGER, tolerance_numeric_class TEXT);"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🗄️.sql",
+      "before": "CREATE TABLE semio_brep_inner_loop (id INTEGER PRIMARY KEY, face_id INTEGER NOT NULL REFERENCES semio_brep_face(id), ordinal INTEGER NOT NULL, loop_id INTEGER NOT NULL REFERENCES semio_brep_loop(id));",
+      "after": "CREATE TABLE semio_brep_inner_loop (id INTEGER PRIMARY KEY, face_id INTEGER NOT NULL REFERENCES semio_brep_face(id), ordinal INTEGER NOT NULL, loop_native_id TEXT NOT NULL);"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🗄️.sql",
+      "before": "CREATE TABLE semio_brep_shell_face (id INTEGER PRIMARY KEY, shell_id INTEGER NOT NULL REFERENCES semio_brep_shell(id), ordinal INTEGER NOT NULL, face_id INTEGER NOT NULL REFERENCES semio_brep_face(id), orientation INTEGER NOT NULL);",
+      "after": "CREATE TABLE semio_brep_shell_face (id INTEGER PRIMARY KEY, shell_id INTEGER NOT NULL REFERENCES semio_brep_shell(id), ordinal INTEGER NOT NULL, face_native_id TEXT NOT NULL, orientation INTEGER NOT NULL);"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🗄️.sql",
+      "before": "CREATE TABLE semio_brep_solid_shell (id INTEGER PRIMARY KEY, solid_id INTEGER NOT NULL REFERENCES semio_brep_solid(id), ordinal INTEGER NOT NULL, shell_id INTEGER NOT NULL REFERENCES semio_brep_shell(id), is_void INTEGER NOT NULL);",
+      "after": "CREATE TABLE semio_brep_solid_shell (id INTEGER PRIMARY KEY, solid_id INTEGER NOT NULL REFERENCES semio_brep_solid(id), ordinal INTEGER NOT NULL, shell_native_id TEXT NOT NULL, is_void INTEGER NOT NULL);"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "CREATE TABLE semio_brep_edge (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_brep_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL, start_vertex_id INTEGER NOT NULL REFERENCES semio_brep_vertex(id), end_vertex_id INTEGER NOT NULL REFERENCES semio_brep_vertex(id), curve_id INTEGER NOT NULL REFERENCES semio_brep_curve3(id), tolerance REAL, tolerance_ieee754_bits INTEGER, tolerance_numeric_class TEXT);",
+      "after": "CREATE TABLE semio_brep_edge (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_brep_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL, start_vertex_native_id TEXT NOT NULL, end_vertex_native_id TEXT NOT NULL, curve_id INTEGER NOT NULL REFERENCES semio_brep_curve3(id), tolerance REAL, tolerance_ieee754_bits INTEGER, tolerance_numeric_class TEXT);"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "CREATE TABLE semio_brep_loop_edge (id INTEGER PRIMARY KEY, loop_id INTEGER NOT NULL REFERENCES semio_brep_loop(id), ordinal INTEGER NOT NULL, edge_id INTEGER NOT NULL REFERENCES semio_brep_edge(id), orientation INTEGER NOT NULL);",
+      "after": "CREATE TABLE semio_brep_loop_edge (id INTEGER PRIMARY KEY, loop_id INTEGER NOT NULL REFERENCES semio_brep_loop(id), ordinal INTEGER NOT NULL, edge_native_id TEXT NOT NULL, orientation INTEGER NOT NULL);"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "CREATE TABLE semio_brep_coedge (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_brep_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL, edge_id INTEGER NOT NULL REFERENCES semio_brep_edge(id), forward INTEGER NOT NULL, curve_id INTEGER REFERENCES semio_brep_curve2(id), parameter_start REAL, parameter_end REAL, loop_id INTEGER NOT NULL REFERENCES semio_brep_loop(id), next_id INTEGER NOT NULL REFERENCES semio_brep_coedge(id), previous_id INTEGER NOT NULL REFERENCES semio_brep_coedge(id), parameter_start_ieee754_bits INTEGER, parameter_start_numeric_class TEXT, parameter_end_ieee754_bits INTEGER, parameter_end_numeric_class TEXT);",
+      "after": "CREATE TABLE semio_brep_coedge (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_brep_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL, edge_native_id TEXT NOT NULL, forward INTEGER NOT NULL, curve_id INTEGER REFERENCES semio_brep_curve2(id), parameter_start REAL, parameter_end REAL, loop_native_id TEXT NOT NULL, next_native_id TEXT NOT NULL, previous_native_id TEXT NOT NULL, parameter_start_ieee754_bits INTEGER, parameter_start_numeric_class TEXT, parameter_end_ieee754_bits INTEGER, parameter_end_numeric_class TEXT);"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "CREATE TABLE semio_brep_face (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_brep_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL, outer_loop_id INTEGER NOT NULL REFERENCES semio_brep_loop(id), surface_id INTEGER NOT NULL REFERENCES semio_brep_surface(id), orientation INTEGER NOT NULL, tolerance REAL, tolerance_ieee754_bits INTEGER, tolerance_numeric_class TEXT);",
+      "after": "CREATE TABLE semio_brep_face (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_brep_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL, outer_loop_native_id TEXT NOT NULL, surface_id INTEGER NOT NULL REFERENCES semio_brep_surface(id), orientation INTEGER NOT NULL, tolerance REAL, tolerance_ieee754_bits INTEGER, tolerance_numeric_class TEXT);"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "CREATE TABLE semio_brep_inner_loop (id INTEGER PRIMARY KEY, face_id INTEGER NOT NULL REFERENCES semio_brep_face(id), ordinal INTEGER NOT NULL, loop_id INTEGER NOT NULL REFERENCES semio_brep_loop(id));",
+      "after": "CREATE TABLE semio_brep_inner_loop (id INTEGER PRIMARY KEY, face_id INTEGER NOT NULL REFERENCES semio_brep_face(id), ordinal INTEGER NOT NULL, loop_native_id TEXT NOT NULL);"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "CREATE TABLE semio_brep_shell_face (id INTEGER PRIMARY KEY, shell_id INTEGER NOT NULL REFERENCES semio_brep_shell(id), ordinal INTEGER NOT NULL, face_id INTEGER NOT NULL REFERENCES semio_brep_face(id), orientation INTEGER NOT NULL);",
+      "after": "CREATE TABLE semio_brep_shell_face (id INTEGER PRIMARY KEY, shell_id INTEGER NOT NULL REFERENCES semio_brep_shell(id), ordinal INTEGER NOT NULL, face_native_id TEXT NOT NULL, orientation INTEGER NOT NULL);"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "CREATE TABLE semio_brep_solid_shell (id INTEGER PRIMARY KEY, solid_id INTEGER NOT NULL REFERENCES semio_brep_solid(id), ordinal INTEGER NOT NULL, shell_id INTEGER NOT NULL REFERENCES semio_brep_shell(id), is_void INTEGER NOT NULL);",
+      "after": "CREATE TABLE semio_brep_solid_shell (id INTEGER PRIMARY KEY, solid_id INTEGER NOT NULL REFERENCES semio_brep_solid(id), ordinal INTEGER NOT NULL, shell_native_id TEXT NOT NULL, is_void INTEGER NOT NULL);"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "import type {SqliteDatabase,SqliteRow} from ",
+      "after": "import {sqliteOperation,type SqliteDatabase,type SqliteRow} from "
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "  const p=await ArtifactSqliteProjection.create(SEMIO_BREP_SQLITE_SCHEMA,o);",
+      "after": "  o=sqliteOperation(o);const p=await ArtifactSqliteProjection.create(SEMIO_BREP_SQLITE_SCHEMA,o);"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "ids=async(items:readonly {id:string}[])=>{const m=new Map<string,bigint>();for(let i=0;i<items.length;i++){const id=items[i]!.id;if(m.has(id))throw Error(\"duplicate BRep native identity\");m.set(id,BigInt(i+1));await tick();}return m;},",
+      "after": ""
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "  const vertices=await ids(s.vertices),edges=await ids(s.edges),loops=await ids(s.loops),faces=await ids(s.faces),shells=await ids(s.shells),solids=await ids(s.solids),coedges=await ids(s.coedges);\n",
+      "after": ""
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "required(vertices,v.id)",
+      "after": "BigInt(i+1)"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "required(edges,e.id)",
+      "after": "BigInt(i+1)"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "required(loops,l.id)",
+      "after": "BigInt(i+1)"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "required(faces,f.id)",
+      "after": "BigInt(i+1)"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "required(shells,s2.id)",
+      "after": "BigInt(i+1)"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "required(solids,s2.id)",
+      "after": "BigInt(i+1)"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "required(coedges,e.id)",
+      "after": "BigInt(i+1)"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "required(vertices,e.startVertex)",
+      "after": "e.startVertex"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "required(vertices,e.endVertex)",
+      "after": "e.endVertex"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "  for(let i=0;i<s.loops.length;i++){const l=s.loops[i]!,id=BigInt(i+1);await p.insert(\"semio_brep_loop\",[1n,BigInt(i),l.id],id);p.checkRowsAdditional(l.edges.length);for(let j=0;j<l.edges.length;j++){const e=l.edges[j]!;await p.insert(\"semio_brep_loop_edge\",[id,BigInt(j),required(edges,e.edge),boolean(e.orientation)]);}}",
+      "after": "  for(let i=0;i<s.loops.length;i++){const l=s.loops[i]!,id=BigInt(i+1);await p.insert(\"semio_brep_loop\",[1n,BigInt(i),l.id],id);p.checkRowsAdditional(l.edges.length);for(let j=0;j<l.edges.length;j++){const e=l.edges[j]!;await p.insert(\"semio_brep_loop_edge\",[id,BigInt(j),e.edge,boolean(e.orientation)]);}}"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "  for(let i=0;i<s.coedges.length;i++){const e=s.coedges[i]!;if(e.prange.length!==2)throw Error(\"BRep parameter range needs two words\");await insert(\"semio_brep_coedge\",[1n,BigInt(i),e.id,required(edges,e.edge),boolean(e.forward),e.pcurve===null?null:await curve2(e.pcurve),e.prange[0],e.prange[1],required(loops,e.loopId),required(coedges,e.next),required(coedges,e.prev)],COEDGE,BigInt(i+1));}await p.insert(\"semio_brep_document\",[s.schema,label(s.nextLabel)],1n);const db=await p.finish(),rings=db.tables.find(t=>t.name===\"semio_brep_coedge\")!;await ring(new Map(rings.rows.map(r=>[r.rowid,r])),o,\"projectSnapshot\");return db;",
+      "after": "  for(let i=0;i<s.coedges.length;i++){const e=s.coedges[i]!;if(e.prange.length!==2)throw Error(\"BRep parameter range needs two words\");await insert(\"semio_brep_coedge\",[1n,BigInt(i),e.id,e.edge,boolean(e.forward),e.pcurve===null?null:await curve2(e.pcurve),e.prange[0],e.prange[1],required(loops,e.loopId),required(coedges,e.next),required(coedges,e.prev)],COEDGE,BigInt(i+1));}await p.insert(\"semio_brep_document\",[s.schema,label(s.nextLabel)],1n);const db=await p.finish(),rings=db.tables.find(t=>t.name===\"semio_brep_coedge\")!;await ring(new Map(rings.rows.map(r=>[r.rowid,r])),o,\"projectSnapshot\");return db;"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "required(loops,f.outerLoop)",
+      "after": "f.outerLoop"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "required(loops,f.innerLoops[j]!)",
+      "after": "f.innerLoops[j]!"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "required(faces,f.face)",
+      "after": "f.face"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "required(shells,shell.shell)",
+      "after": "shell.shell"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "required(loops,e.loopId)",
+      "after": "e.loopId"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "required(coedges,e.next)",
+      "after": "e.next"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "required(coedges,e.prev)",
+      "after": "e.prev"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "const db=await p.finish(),rings=db.tables.find(t=>t.name===\"semio_brep_coedge\")!;await ring(new Map(rings.rows.map(r=>[r.rowid,r])),o,\"projectSnapshot\");return db;",
+      "after": "return p.finish();"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "async function ring(rows:ReadonlyMap<bigint,SqliteRow>,o:ArtifactSqliteOptions,phase:\"projectSnapshot\"|\"reconstructSnapshot\"):Promise<void>{let i=0;for(const r of rows.values()){const next=required(rows,artifactSqliteInteger(r,10)),prev=required(rows,artifactSqliteInteger(r,11)),loop=artifactSqliteInteger(r,9);if(artifactSqliteInteger(next,11)!==r.rowid||artifactSqliteInteger(prev,10)!==r.rowid||artifactSqliteInteger(next,9)!==loop||artifactSqliteInteger(prev,9)!==loop)throw Error(\"nonreciprocal or cross-loop BRep ring\");if(++i%256===0)await artifactSqliteCheckpoint(o,phase,i,rows.size);}}\n",
+      "after": ""
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "const result=new Map<bigint,string>(),seen=new Set<string>();",
+      "after": "const result=new Map<bigint,string>();"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "if(seen.has(name))throw Error(\"duplicate BRep native identity\");seen.add(name);",
+      "after": ""
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "await ring(coedgeRows,o,\"reconstructSnapshot\");",
+      "after": ""
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "  await artifactSqliteCheckpoint(o,\"reconstructSnapshot\",0,0);",
+      "after": "  o=sqliteOperation(o);await artifactSqliteCheckpoint(o,\"reconstructSnapshot\",0,0);"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "required(vertices,artifactSqliteInteger(r,4))",
+      "after": "artifactSqliteText(r,4)"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "required(vertices,artifactSqliteInteger(r,5))",
+      "after": "artifactSqliteText(r,5)"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "required(edges,artifactSqliteInteger(e,3))",
+      "after": "artifactSqliteText(e,3)"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "required(loops,artifactSqliteInteger(l,3))",
+      "after": "artifactSqliteText(l,3)"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "required(loops,artifactSqliteInteger(r,4))",
+      "after": "artifactSqliteText(r,4)"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "required(faces,artifactSqliteInteger(f,3))",
+      "after": "artifactSqliteText(f,3)"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "required(shells,artifactSqliteInteger(sh2,3))",
+      "after": "artifactSqliteText(sh2,3)"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "required(edges,artifactSqliteInteger(r,4))",
+      "after": "artifactSqliteText(r,4)"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "required(loops,artifactSqliteInteger(r,9))",
+      "after": "artifactSqliteText(r,9)"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "required(coedges,artifactSqliteInteger(r,10))",
+      "after": "artifactSqliteText(r,10)"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "required(coedges,artifactSqliteInteger(r,11))",
+      "after": "artifactSqliteText(r,11)"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "/** 📥️ Reconstruct separately owned geometry and enforce reciprocal topology and complete shapes. */",
+      "after": "/** 📥️ Reconstruct complete owned geometry and retain exact literal topology relationships. */"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "use std::collections::{BTreeMap,BTreeSet};",
+      "after": "use std::collections::BTreeMap;\nuse semio_framework_os_kernel::sqlite_snapshot::transfer;"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "fn ids<'a>(names:impl Iterator<Item=&'a str>,p:&mut Projection<'_,'_>)->Result<BTreeMap<&'a str,i64>,ValueError>{let mut result=BTreeMap::new();for(ordinal,name)in names.enumerate(){p.check_rows(ordinal+1)?;if result.insert(name,number(ordinal+1)?).is_some(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,\"duplicate BRep native entity identity\"));}if ordinal%256==0{p.checkpoint()?;}}Ok(result)}\nfn fk(names:&BTreeMap<&str,i64>,id:&str)->Result<i64,ValueError>{names.get(id).copied().ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,\"dangling BRep topology reference\"))}\nfn ring(rows:&BTreeMap<i64,SqliteRow<'_>>,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{for(n,row)in rows.values().enumerate(){let next=rows.get(&row.integer(10)?).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,\"dangling next coedge\"))?;let prev=rows.get(&row.integer(11)?).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,\"dangling previous coedge\"))?;if next.integer(11)?!=row.rowid||prev.integer(10)?!=row.rowid||next.integer(9)?!=row.integer(9)?||prev.integer(9)?!=row.integer(9)?{return Err(ValueError::new(ValueRefusalKind::InvalidValue,\"nonreciprocal or cross-loop BRep coedge ring\"));}if n%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,n,0)?;}}Ok(())}\n",
+      "after": ""
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "fn native_names<'a>(rows:&[SqliteRow<'a>],columns:usize)->Result<BTreeMap<i64,&'a str>,ValueError>{let mut names=BTreeSet::new();let mut result=BTreeMap::new();for row in rows{identity(row,columns)?;if row.integer(1)?!=1||!names.insert(row.text(3)?)||result.insert(row.rowid,row.text(3)?).is_some(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,\"invalid BRep native identity or document owner\"));}}Ok(result)}\nfn named(names:&BTreeMap<i64,&str>,id:i64,r:&mut Reconstruction<'_,'_>)->Result<String,ValueError>{r.text(names.get(&id).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,\"dangling BRep native reference\"))?)}\n",
+      "after": "fn native_rows(rows:&[SqliteRow<'_>],columns:usize,c:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{let mut ids=transfer::reserve(rows.len(),c)?;for(at,row)in rows.iter().enumerate(){identity(row,columns)?;if row.integer(1)?!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,\"invalid BRep document parent\"));}row.text(3)?;ids.push(row.rowid);if(at+1)%256==0{c.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,at+1,rows.len())?;}}transfer::heap_sort(&mut ids,SqliteSnapshotPhase::ReconstructSnapshot,c,|a,b,_|Ok(a.cmp(b)))?;for(at,id)in ids.iter().enumerate(){if at>0&&ids[at-1]==*id{return Err(ValueError::new(ValueRefusalKind::InvalidValue,\"duplicate BRep row identity\"));}if(at+1)%256==0{c.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,at+1,rows.len())?;}}Ok(())}\n"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "let vertex_names=native_names(&vertex_rows,8)?;let edge_names=native_names(&edge_rows,8)?;let loop_names=native_names(&loop_rows,4)?;let face_names=native_names(&face_rows,8)?;let shell_names=native_names(&shell_rows,4)?;native_names(&solid_rows,4)?;let coedge_names=native_names(&coedge_rows,12)?;",
+      "after": "native_rows(&vertex_rows,8,c)?;native_rows(&edge_rows,8,c)?;native_rows(&loop_rows,4,c)?;native_rows(&face_rows,8,c)?;native_rows(&shell_rows,4,c)?;native_rows(&solid_rows,4,c)?;native_rows(&coedge_rows,12,c)?;"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "let raw_coedges=details(db,\"semio_brep_coedge\",12,c)?;ring(&raw_coedges,c)?;",
+      "after": ""
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "named(&vertex_names,row.integer(4)?,&mut r)?",
+      "after": "r.text(row.text(4)?)?"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "named(&vertex_names,row.integer(5)?,&mut r)?",
+      "after": "r.text(row.text(5)?)?"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "named(&edge_names,edge.integer(3)?,&mut r)?",
+      "after": "r.text(edge.text(3)?)?"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "named(&loop_names,l.integer(3)?,&mut r)?",
+      "after": "r.text(l.text(3)?)?"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "named(&loop_names,row.integer(4)?,&mut r)?",
+      "after": "r.text(row.text(4)?)?"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "named(&face_names,f.integer(3)?,&mut r)?",
+      "after": "r.text(f.text(3)?)?"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "named(&shell_names,s.integer(3)?,&mut r)?",
+      "after": "r.text(s.text(3)?)?"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "named(&edge_names,row.integer(4)?,&mut r)?",
+      "after": "r.text(row.text(4)?)?"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "named(&loop_names,row.integer(9)?,&mut r)?",
+      "after": "r.text(row.text(9)?)?"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "named(&coedge_names,row.integer(10)?,&mut r)?",
+      "after": "r.text(row.text(10)?)?"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "named(&coedge_names,row.integer(11)?,&mut r)?",
+      "after": "r.text(row.text(11)?)?"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "let vertices=ids(self.vertices.iter().map(|v|v.id.as_str()),&mut p)?;let edges=ids(self.edges.iter().map(|v|v.id.as_str()),&mut p)?;let loops=ids(self.loops.iter().map(|v|v.id.as_str()),&mut p)?;let faces=ids(self.faces.iter().map(|v|v.id.as_str()),&mut p)?;let shells=ids(self.shells.iter().map(|v|v.id.as_str()),&mut p)?;let solids=ids(self.solids.iter().map(|v|v.id.as_str()),&mut p)?;let coedges=ids(self.coedges.iter().map(|v|v.id.as_str()),&mut p)?;",
+      "after": ""
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "vertices[v.id.as_str()]",
+      "after": "number(ordinal+1)?"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "\"semio_brep_edge\",edges[e.id.as_str()]",
+      "after": "\"semio_brep_edge\",number(ordinal+1)?"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "loops[l.id.as_str()]",
+      "after": "number(ordinal+1)?"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "faces[f.id.as_str()]",
+      "after": "number(ordinal+1)?"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "shells[s.id.as_str()]",
+      "after": "number(ordinal+1)?"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "solids[s.id.as_str()]",
+      "after": "number(ordinal+1)?"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "coedges[e.id.as_str()]",
+      "after": "number(ordinal+1)?"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "Cell::Integer(fk(&vertices,&e.start_vertex)?)",
+      "after": "Cell::Text(&e.start_vertex)"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "Cell::Integer(fk(&vertices,&e.end_vertex)?)",
+      "after": "Cell::Text(&e.end_vertex)"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "Cell::Integer(fk(&loops,&f.outer_loop)?)",
+      "after": "Cell::Text(&f.outer_loop)"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "Cell::Integer(fk(&loops,l)?)",
+      "after": "Cell::Text(l)"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "Cell::Integer(fk(&faces,&f.face)?)",
+      "after": "Cell::Text(&f.face)"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "Cell::Integer(fk(&shells,&l.shell)?)",
+      "after": "Cell::Text(&l.shell)"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "Cell::Integer(fk(&loops,&e.loop_id)?)",
+      "after": "Cell::Text(&e.loop_id)"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "Cell::Integer(fk(&coedges,&e.next)?)",
+      "after": "Cell::Text(&e.next)"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "Cell::Integer(fk(&coedges,&e.prev)?)",
+      "after": "Cell::Text(&e.prev)"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "for(ordinal,l)in self.loops.iter().enumerate(){let id=number(ordinal+1)?;p.insert_key_float(\"semio_brep_loop\",id,&[Cell::Integer(1),Cell::Integer(number(ordinal)?),Cell::Text(&l.id)])?;for(ordinal,e)in l.edges.iter().enumerate(){p.insert_float(\"semio_brep_loop_edge\",&[Cell::Integer(id),Cell::Integer(number(ordinal)?),Cell::Integer(fk(&edges,&e.edge)?),Cell::Integer(i64::from(e.orientation))])?;}}",
+      "after": "for(ordinal,l)in self.loops.iter().enumerate(){let id=number(ordinal+1)?;p.insert_key_float(\"semio_brep_loop\",id,&[Cell::Integer(1),Cell::Integer(number(ordinal)?),Cell::Text(&l.id)])?;for(ordinal,e)in l.edges.iter().enumerate(){p.insert_float(\"semio_brep_loop_edge\",&[Cell::Integer(id),Cell::Integer(number(ordinal)?),Cell::Text(&e.edge),Cell::Integer(i64::from(e.orientation))])?;}}"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "for(ordinal,e)in self.coedges.iter().enumerate(){let curve=e.pcurve.as_ref().map(|v|project_curve2(v,&mut p)).transpose()?;p.insert_key_float(\"semio_brep_coedge\",number(ordinal+1)?,&[Cell::Integer(1),Cell::Integer(number(ordinal)?),Cell::Text(&e.id),Cell::Integer(fk(&edges,&e.edge)?),Cell::Integer(i64::from(e.forward)),curve.map(Cell::Integer).unwrap_or(Cell::Null),Cell::Real(e.prange.0),Cell::Real(e.prange.1),Cell::Text(&e.loop_id),Cell::Text(&e.next),Cell::Text(&e.prev)])?;}let db=p.finish()?;let rings=details(&db,\"semio_brep_coedge\",12,c)?;ring(&rings,c)?;Ok(db)}",
+      "after": "for(ordinal,e)in self.coedges.iter().enumerate(){let curve=e.pcurve.as_ref().map(|v|project_curve2(v,&mut p)).transpose()?;p.insert_key_float(\"semio_brep_coedge\",number(ordinal+1)?,&[Cell::Integer(1),Cell::Integer(number(ordinal)?),Cell::Text(&e.id),Cell::Text(&e.edge),Cell::Integer(i64::from(e.forward)),curve.map(Cell::Integer).unwrap_or(Cell::Null),Cell::Real(e.prange.0),Cell::Real(e.prange.1),Cell::Text(&e.loop_id),Cell::Text(&e.next),Cell::Text(&e.prev)])?;}let db=p.finish()?;let rings=details(&db,\"semio_brep_coedge\",12,c)?;ring(&rings,c)?;Ok(db)}"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "let db=p.finish()?;let rings=details(&db,\"semio_brep_coedge\",12,c)?;ring(&rings,c)?;Ok(db)",
+      "after": "p.finish()"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,0,table_rows.rows.len())?;let mut result=Vec::new();",
+      "after": "control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,0,table_rows.rows.len())?;let mut result=transfer::reserve(table_rows.rows.len(),control)?;"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "let mut result=Vec::new();for(count,row)in semio_framework_os_kernel::sqlite_snapshot::artifact::ordered_row_refs",
+      "after": "let mut result=transfer::reserve(db.table(table)?.rows.len(),control)?;for(count,row)in semio_framework_os_kernel::sqlite_snapshot::artifact::ordered_row_refs"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json",
+      "before": "\"SELECT start.native_id AS start,end.native_id AS end,kind FROM semio_brep_edge JOIN semio_brep_vertex AS start ON start_vertex_id=start.id JOIN semio_brep_vertex AS end ON end_vertex_id=end.id JOIN semio_brep_curve3 ON curve_id=semio_brep_curve3.id ORDER BY semio_brep_edge.ordinal\"",
+      "after": "\"SELECT start.native_id AS start,end.native_id AS end,kind FROM semio_brep_edge JOIN semio_brep_vertex AS start ON start_vertex_native_id=start.id JOIN semio_brep_vertex AS end ON end_vertex_native_id=end.id JOIN semio_brep_curve3 ON curve_id=semio_brep_curve3.id ORDER BY semio_brep_edge.ordinal\""
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts",
+      "before": "topology reciprocity, geometry shape and resource controls",
+      "after": "literal topology storage, geometry shape and resource controls"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts",
+      "before": "expect(semioBrepSnapshotFromSqliteDatabase(x)).rejects.toThrow();",
+      "after": "await expect(semioBrepSnapshotFromSqliteDatabase(x)).rejects.toThrow();"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts",
+      "before": "expect(semioBrepSnapshotToSqliteDatabase(input,{maxRows:1})).rejects.toThrow();",
+      "after": "await expect(semioBrepSnapshotToSqliteDatabase(input,{maxRows:1})).rejects.toThrow();"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts",
+      "before": "expect(semioBrepSnapshotFromSqliteDatabase(d,{maxValueBytes:1})).rejects.toThrow();",
+      "after": "await expect(semioBrepSnapshotFromSqliteDatabase(d,{maxValueBytes:1})).rejects.toThrow();"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts",
+      "before": "expect(semioBrepSnapshotFromSqliteDatabase(d,{signal:c.signal})).rejects.toThrow();",
+      "after": "await expect(semioBrepSnapshotFromSqliteDatabase(d,{signal:c.signal})).rejects.toThrow();"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "before": "semio_brep_coedge.next_id=next.id WHERE next.previous_id=semio_brep_coedge.id",
+      "after": "semio_brep_coedge.next_native_id=next.native_id WHERE next.previous_native_id=semio_brep_coedge.native_id"
+    }
+  ],
+  "qualification": "Native parser only through current foreign OS compiler; geometry maps/arrays and whole cumulative/capture obligations remain open."
+}

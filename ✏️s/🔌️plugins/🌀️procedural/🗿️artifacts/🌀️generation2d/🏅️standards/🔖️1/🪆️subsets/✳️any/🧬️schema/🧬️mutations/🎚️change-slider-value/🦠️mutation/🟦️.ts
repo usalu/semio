@@ -1,7 +1,8 @@
+import{binary64,type Binary64}from"../../../🟦️.ts";
 /** 🎚️ generation2d direct `change-slider-value` payload mirror of `ChangeSliderValue`, with its closed-schema parser. */
 export interface ChangeSliderValue {
   id: string;
-  value: number;
+  value: Binary64;
 }
 
 /** 🚪️ Parses one `change-slider-value` payload the way its JSON Schema admits it, or throws. */
@@ -12,5 +13,5 @@ export function parseChangeSliderValue(value: unknown): ChangeSliderValue {
   if (unknownKey !== undefined) throw new TypeError(`change-slider-value: unknown field ${unknownKey}`);
   if (typeof row.id !== "string" || row.id.length === 0) throw new TypeError("change-slider-value: id must be a nonempty string");
   if (typeof row.value !== "number" || !Number.isFinite(row.value)) throw new TypeError("change-slider-value: value must be a finite number");
-  return { id: row.id as string, value: row.value as number };
+  return { id: row.id as string, value: binary64(row.value) };
 }

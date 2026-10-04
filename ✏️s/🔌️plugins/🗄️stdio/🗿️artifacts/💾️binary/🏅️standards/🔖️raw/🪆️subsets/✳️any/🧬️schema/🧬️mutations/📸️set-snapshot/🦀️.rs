@@ -2,9 +2,9 @@
 //! `inverse` bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its
 //! aggregate value and delegates, so the semantics are preserved by construction rather than
 //! re-derived.
-//! `#[derive(dsl::DslRecord)]` gives this leaf its own `DslField` impl with the SAME field spec
+//! `#[derive(semio_framework_dsl_record_derive::DslRecord)]` gives this leaf its own `DslField` impl with the SAME field spec
 //! `record_codegen` built when this field lived inline in the enum variant — the aggregate's
-//! tuple variant is a single-field newtype, so `#[derive(dsl::DslOps)]`'s `DslVariants` derive
+//! tuple variant is a single-field newtype, so `#[derive(semio_framework_dsl_record_derive::DslEnum)]`'s `DslVariants` derive
 //! delegates straight through to this leaf's own record, keeping the committed mutations
 //! grammar/protocol facets byte-identical to before this leaf existed.
 
@@ -17,7 +17,7 @@ pub mod diff;
 pub mod inverse;
 //#endregion 🔖️Facets
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_dsl_record_derive::DslRecord)]
 #[mutation_leaf(contract = ::protocol)]
 #[dsl(keyword = "set-snapshot")]
 pub struct SetSnapshot {
@@ -31,9 +31,12 @@ impl protocol::MutationKind<BinarySnapshot, BinaryMutation> for SetSnapshot {
     fn diff(&self, base: &BinarySnapshot) -> protocol::MutationOutcome<<BinaryMutation as Mutation<BinarySnapshot>>::Diff> {
         agg_diff(&BinaryMutation::SetSnapshot(self.clone()), base)
     }
-    fn inverse(&self, base: &BinarySnapshot) -> Vec<BinaryMutation> {
-        agg_inverse(&BinaryMutation::SetSnapshot(self.clone()), base)
-    }
+    fn inverse(&self, base: &BinarySnapshot) -> Result<Vec<BinaryMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&BinaryMutation::SetSnapshot(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set snapshot", "Momentaufnahme setzen")
     }

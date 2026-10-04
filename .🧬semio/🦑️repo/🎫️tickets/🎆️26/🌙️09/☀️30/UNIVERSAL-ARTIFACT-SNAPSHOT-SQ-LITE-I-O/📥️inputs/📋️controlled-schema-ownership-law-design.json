@@ -1,0 +1,12 @@
+{
+  "state": "designAwaitingAuthenticOwningNativeRed",
+  "owner": "actualKernelPackValueSchemaHashControlled",
+  "reuseSemanticCorpus": "semio.pack.schema-hash/v1",
+  "preserveExistingCases": true,
+  "additionalSpecimens": ["all27Shapes", "mutualRecursion", "broadRepeatedEdgesAndRefinement"],
+  "controls": ["NativeEncodeControl", "NativeDecodeControl"],
+  "assertions": ["ordinaryAndControlledAndIndependentHashEqual", "actualSystemRequestEqualsCumulativeDebit", "zeroRefusesBeforeRequest", "observedExactSucceeds", "observedOneByteShortRefusesWithoutUnadmittedRequest", "sameCallerTwoCallsAccumulate", "cancellationPreservesTypedCauseAndNoPublication"],
+  "allowanceAuthority": "perLanguageObservedRequests",
+  "forbiddenNumericAuthorities": ["stdHashMapAbiEstimate", "inlineHasherStackSizeAsHeapCharge"],
+  "runtimeQualification": "No law mounted or executed by this design"
+}

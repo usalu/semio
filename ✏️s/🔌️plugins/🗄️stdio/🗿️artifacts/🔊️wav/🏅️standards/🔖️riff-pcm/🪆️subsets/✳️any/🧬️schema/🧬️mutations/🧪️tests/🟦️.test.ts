@@ -31,11 +31,11 @@ const snapshot: WavSnapshot = {
 };
 const operations = [
   { mutation: "setSnapshot", snapshot },
-  { mutation: "patchSnapshot", patch: { edits: [{ path: ["fmt", "sampleRate"], edit: { operation: "set", value: 22_050 } }] } },
+  { mutation: "patchSnapshot", patch: { operation: "set", path: "/fmt/sampleRate", value: 22_050 } },
   { mutation: "setFmt", fmt },
   { mutation: "setData", data },
   { mutation: "patchData", index: 1, removeCount: 2, data: { kind: "pcm16", value: [3_000] }, moveTo: 0 },
-  { mutation: "setOtherChunks", chunks: [{ fourcc: "LIST", data: [1, 2, 3, 4] }] },
+  { mutation: "setOtherChunks", chunks: [{ fourcc: "LIST", data: [1, 2, 3, 4], padByte: 0 }] },
 ] satisfies readonly WavMutation[];
 const tags = ["setSnapshot", "patchSnapshot", "setFmt", "setData", "patchData", "setOtherChunks"] as const satisfies readonly WavMutation["mutation"][];
 const fields: Readonly<Record<WavMutation["mutation"], readonly string[]>> = {

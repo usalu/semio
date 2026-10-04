@@ -11,7 +11,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 ///
 /// 🎁️ `new_load` is boxed for the same reason `add-load`'s and `replace-element`'s payloads are:
 /// the value codec implements `DslField` for `Box<T>`, not for a bare `DslEnum` field.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "replace-load")]
@@ -28,9 +28,12 @@ impl MutationKind<Fem3dSnapshot, Fem3dMutation> for ReplaceLoad {
     fn diff(&self, base: &Fem3dSnapshot) -> protocol::MutationOutcome<crate::standards::v1::subsets::any::schema::diff::Fem3dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &Fem3dSnapshot) -> Result<Vec<Fem3dMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace load \"{}\" in case \"{}\"", self.load_id, self.case_id), &format!("Last \"{}\" in Lastfall \"{}\" ersetzen", self.load_id, self.case_id))
     }

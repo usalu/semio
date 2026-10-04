@@ -24,7 +24,8 @@ pub struct BmpDimensions {
 /// 📐️ Computes [`BmpDimensions`] from a snapshot's header fields — pure, total, O(1).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn compute_bmp_dimensions(snapshot: &BmpSnapshot) -> BmpDimensions {
-    BmpDimensions { width: snapshot.width, height: snapshot.height, bit_depth: snapshot.bits_per_pixel, has_alpha: snapshot.bits_per_pixel == 32, pixel_count: snapshot.width as u64 * snapshot.height as u64 }
+    let Ok(layout) = crate::io::bmp_layout(snapshot) else { return BmpDimensions::default() };
+    BmpDimensions { width: layout.width, height: layout.height, bit_depth: layout.bits_per_pixel, has_alpha: layout.masks[3] != 0, pixel_count: u64::from(layout.width) * u64::from(layout.height) }
 }
 //#endregion 🔖️Dimensions
 

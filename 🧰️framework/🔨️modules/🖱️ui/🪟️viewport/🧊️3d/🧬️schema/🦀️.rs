@@ -1,4 +1,4 @@
-use protocol::value::{DslValue, FromValue, ToValue, ValueError};
+use semio_framework_value::{DslValue, FromValue, ToValue, ValueError};
 
 /// 🌐️ Orbit navigation pose; projection and authored scene cameras have separate owners.
 #[derive(Clone, Copy, Debug, PartialEq, serde::Serialize)]
@@ -113,7 +113,7 @@ macro_rules! projection_string_enum {
             fn from_value(value: DslValue) -> Result<Self, ValueError> {
                 match String::from_value(value)?.as_str() {
                     $($value => Ok($variant),)+
-                    _ => Err(ValueError::new("unknown viewport projection value")),
+                    _ => Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "unknown viewport projection value")),
                 }
             }
         }
@@ -558,7 +558,7 @@ impl FromValue for Viewport3dProjectionOrientation {
                 Self::Corner { quadrant, hemisphere }
             }
             "free" => Self::Free {},
-            _ => return Err(ValueError::new("unknown viewport projection orientation").under("type")),
+            _ => return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "unknown viewport projection orientation").under("type")),
         };
         crate::finish(entries)?;
         Ok(orientation)
@@ -663,10 +663,10 @@ pub fn derive_active_projection(preferences: &Viewport3dProjectionPreferences) -
 }
 
 fn projection_range(value: f64, minimum: f64, maximum: f64, name: &str) -> Result<(), ValueError> {
-    if value.is_finite() && value >= minimum && value <= maximum { Ok(()) } else { Err(ValueError::new("viewport projection value is outside its declared range").under(name)) }
+    if value.is_finite() && value >= minimum && value <= maximum { Ok(()) } else { Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "viewport projection value is outside its declared range").under(name)) }
 }
 
 fn validate_axonometric_corner(angle_a: f64, angle_b: f64) -> Result<(), ValueError> {
     let product = angle_a.to_radians().tan() * angle_b.to_radians().tan();
-    if product.is_finite() && product <= 1.0 { Ok(()) } else { Err(ValueError::new("axonometric corner angles do not define a real camera elevation").under("mode")) }
+    if product.is_finite() && product <= 1.0 { Ok(()) } else { Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "axonometric corner angles do not define a real camera elevation").under("mode")) }
 }

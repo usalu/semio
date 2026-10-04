@@ -34,7 +34,7 @@ pub const SOURCING_DIALECT: Dialect = Dialect { artifact_kind: "s.sourcing.curat
 
 //#region 🔖️Geometry
 /// 📦️ A parametric geometry recipe an object kind is composed of — data describing shape, not a subclass.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslEnum)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 #[value(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
 pub enum GeometryRecipe {
     Box {
@@ -82,7 +82,7 @@ pub enum GeometryRecipe {
 /// `geometry` is `Box<GeometryRecipe>` (not a bare `GeometryRecipe`) because `#[dsl(statements)]`'s
 /// `RequiredStatements` shape — the "exactly one required tagged value" slot a `DslEnum` sum type
 /// needs to occupy a plain (non-`Option`, non-`Vec`) field — only recognizes a `Box<T>` inner type.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ObjectKind {
     #[dsl(defines = "object")]
@@ -97,14 +97,14 @@ pub struct ObjectKind {
 //#endregion 🔖️ObjectKind
 
 //#region 🔖️Document
-#[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::ToValue, dsl::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum SortDirection {
     Asc,
     Desc,
 }
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct TableSort {
     pub column_id: String,
@@ -112,7 +112,7 @@ pub struct TableSort {
 }
 
 /// 🔍️ The pool table's active filter set — narrows `CurationSnapshot::stock` down to `filtered_stock()`.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Filters {
     #[value(default)]
@@ -129,7 +129,7 @@ pub struct Filters {
 }
 
 /// 🧺️ One curated object kind and how many units of it have been picked.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CuratedItem {
     #[dsl(refs = "object")]
@@ -146,7 +146,7 @@ pub struct CuratedItem {
 /// `CurationSnapshot::catalog` child by `id` (see `stock_of`/`object_kind_from_parts`). Ticket
 /// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM: replaces the former inline `stock: Vec<ObjectKind>`
 /// field, which duplicated the `kit.catalog`/type-registry vocabulary this ticket composes instead.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ObjectKindExtra {
     #[dsl(defines = "object")]
@@ -203,7 +203,7 @@ pub fn stock_from_catalog_and_extra(catalog: &SemioKitSnapshot, extra: &[ObjectK
 /// `child_id` (never a random/incrementing id), mirroring `lowpoly`'s `mesh_child_handle`.
 pub fn catalog_child_handle(stock: &[ObjectKind]) -> store::ArtifactChild<SemioKitSnapshot> {
     let catalog = catalog_snapshot_from_stock(stock);
-    let canonical = dsl::json::to_json_string(&catalog.types);
+    let canonical = semio_framework_pack_json::to_json_string(&catalog.types);
     let child_id = store::content_id("catalog", canonical.as_bytes());
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "kit".into() };
     let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
@@ -357,60 +357,60 @@ impl<A> SourcingApplication for A where
 /// `🚪️io/🦀️.rs`'s `io()` (via `language_spec`) to populate `NativeCodecs`'s
 /// `LanguagePair`s — the new declaration tree's home for what the OLD `declaration()`'s
 /// `.languages(...)` call used to register.
-pub(crate) fn pilot_languages() -> &'static [dsl::LanguageSpec] {
-    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+pub(crate) fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
             vec![
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "sourcing.curation",
                     extension: Some("curation"),
-                    role: dsl::LanguageRole::Document,
+                    role: semio_framework_dsl::LanguageRole::Document,
                     grammar: Some(document_dsl::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(document_dsl::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("sourcing.curation"),
+                    hooks: semio_framework_dsl::passthrough_hooks("sourcing.curation"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "sourcing.curation.op",
                     extension: None,
-                    role: dsl::LanguageRole::Ops,
+                    role: semio_framework_dsl::LanguageRole::Ops,
                     grammar: Some(op::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(op::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("sourcing.curation.op"),
+                    hooks: semio_framework_dsl::passthrough_hooks("sourcing.curation.op"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "sourcing.curation.diff",
                     extension: None,
-                    role: dsl::LanguageRole::Diff,
+                    role: semio_framework_dsl::LanguageRole::Diff,
                     grammar: Some(diff::text::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(diff::text::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
-                    hooks: dsl::passthrough_hooks("sourcing.curation.diff"),
+                    hooks: semio_framework_dsl::passthrough_hooks("sourcing.curation.diff"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "curation.pack",
                     extension: None,
-                    role: dsl::LanguageRole::Pack,
+                    role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("curation.pack"),
+                    hooks: semio_framework_dsl::passthrough_hooks("curation.pack"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "curation.spr",
                     extension: None,
-                    role: dsl::LanguageRole::Spr,
+                    role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("curation.spr"),
+                    hooks: semio_framework_dsl::passthrough_hooks("curation.spr"),
                 },
             ]
         })
@@ -419,7 +419,7 @@ pub(crate) fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 
 /// 🔎️ Finds `pilot_languages()`'s entry for one `dsl::LanguageRole` — the lookup `io()` uses to
 /// populate each `NativeCodecs` facet's `LanguagePair`.
-pub(crate) fn language_spec(role: dsl::LanguageRole) -> Option<&'static dsl::LanguageSpec> {
+pub(crate) fn language_spec(role: semio_framework_dsl::LanguageRole) -> Option<&'static semio_framework_dsl::LanguageSpec> {
     pilot_languages().iter().find(|spec| spec.role == role)
 }
 //#endregion 🔖️Register

@@ -2,7 +2,7 @@
 
 use crate::editor::dag::terminology::DagPlayLabels;
 use crate::editor::dag::{pick_item, DAG_PLAY_APP_ID, DAG_PLAY_INTERACTION_DOMAIN};
-use crate::DagSnapshot;
+use crate::DagScene;
 use semio_framework_artifact_infinite_dag::dag_node_kind_tag;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::PanelGroup;
@@ -38,8 +38,7 @@ pub fn definition() -> PanelTabDefinition {
 ///
 /// 🪟️ Both sections are windowed — the crate is literally the "infinite DAG", so neither node nor
 /// edge count is bounded; the host's `TreeWindows` decide the slice and every section stamps `total`.
-pub fn render(document: &DagSnapshot, labels: &DagPlayLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let scene = crate::dag_working_scene(document);
+pub fn render(scene: &DagScene, labels: &DagPlayLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     PanelTreeBuilder::new("dag-play-document")?
         .window_section_or_placeholder(
             windows,

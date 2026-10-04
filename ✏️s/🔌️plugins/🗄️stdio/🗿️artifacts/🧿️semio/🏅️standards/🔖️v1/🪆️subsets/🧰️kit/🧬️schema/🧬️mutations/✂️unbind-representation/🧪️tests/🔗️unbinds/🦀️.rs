@@ -17,13 +17,13 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️unbind-representation/🔗️unbinds/🎯️outcome/🔣️.json");
 
 fn before() -> SemioKitSnapshot {
-    dsl::json::from_json_str(BEFORE).expect("unbind-representation before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("unbind-representation before snapshot decodes")
 }
 fn expected_after() -> SemioKitSnapshot {
-    dsl::json::from_json_str(AFTER).expect("unbind-representation after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("unbind-representation after snapshot decodes")
 }
 fn mutation() -> SemioKitMutation {
-    dsl::json::from_json_str(MUTATION).expect("unbind-representation mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("unbind-representation mutation decodes")
 }
 
 /// ▶️ The leading link goes; the trailing one slides down to index 0.
@@ -49,7 +49,7 @@ async fn unbinds_the_link_at_index_zero() {
 fn the_undo_restores_the_captured_link_at_its_own_index() {
     let base = before();
     let mutation = mutation();
-    let undo = mutation.inverse(&base);
+    let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     let tail = base.representations.len();
     assert_eq!(undo.len(), 2 * tail - 1, "undoing an unbind at index 0 lifts off the whole tail and re-declares it: {} unbind(s) then {} bind(s)", tail - 1, tail);
     assert!(matches!(undo[0], SemioKitMutation::UnbindRepresentation(_)), "the tail is lifted off first");
@@ -68,12 +68,12 @@ fn the_undo_restores_the_captured_link_at_its_own_index() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioKitSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: SemioKitSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "unbind-representation/unbinds-the-leading-representation-and-keeps-the-trailing-one: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("unbind-representation mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(mutation()))).expect("unbind-representation mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("unbind-representation mutation reparses");
     assert_eq!(reencoded, original, "unbind-representation/unbinds-the-leading-representation-and-keeps-the-trailing-one: committed mutation JSON is not canonical");
 }
@@ -92,7 +92,7 @@ async fn declared_outcome_holds_as_committed() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioKitMutation as Mutation<SemioKitSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "unbind-representation/unbinds-the-leading-representation-and-keeps-the-trailing-one: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -101,10 +101,10 @@ async fn produces_committed_diff() {
 /// allowed to touch appears in it at all.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
-    let decoded: SemioKitDiff = dsl::json::from_json_str(DIFF).expect("committed unbind-representation diff decodes");
+    let decoded: SemioKitDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed unbind-representation diff decodes");
     assert_eq!(decoded.representations.as_ref().map(|list| list.values.len()), Some(1), "the diff carries the shortened link list, not a removal marker");
     assert!(decoded.types.is_none() && decoded.designs.is_none() && decoded.objects.is_none() && decoded.models.is_none() && decoded.properties.is_none(), "no other kit slot may appear in the diff");
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "unbind-representation/unbinds-the-leading-representation-and-keeps-the-trailing-one: committed diff JSON is not canonical");
 }
@@ -112,7 +112,7 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioKitDiff = dsl::json::from_json_str(DIFF).expect("committed unbind-representation diff decodes");
+    let decoded: SemioKitDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed unbind-representation diff decodes");
     let produced = decoded.apply(&before()).expect("committed unbind-representation diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "unbind-representation/unbinds-the-leading-representation-and-keeps-the-trailing-one: committed diff did not carry before to after");
 }

@@ -6,7 +6,7 @@ fn demo() -> Fem3dSnapshot {
 
 fn instances(doc: &Fem3dSnapshot) -> Vec<Value> {
     let (_, instances_json) = fem3d_scene_parts(doc, None, doc.analysis.deformation_scale, None);
-    dsl::json::parse(&instances_json).expect("instances json").as_array().cloned().expect("array")
+    semio_framework_pack_json::parse(&instances_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("instances json").as_array().cloned().expect("array")
 }
 
 fn find<'a>(instances: &'a [Value], id: &str) -> &'a Value {
@@ -75,7 +75,7 @@ fn displacements_move_nodes_members_supports_and_load_glyphs_together() {
     let mut displacements = HashMap::new();
     displacements.insert("n20_l1".to_string(), [0.0, 0.0, -0.01, 0.0, 0.0, 0.0]);
     let (_, json) = fem3d_scene_parts(&doc, Some(&displacements), 100.0, None);
-    let all: Vec<Value> = dsl::json::parse(&json).expect("json").as_array().cloned().expect("array");
+    let all: Vec<Value> = semio_framework_pack_json::parse(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("json").as_array().cloned().expect("array");
     let z = |id: &str| find(&all, id).get("position").and_then(Value::as_array).expect("position")[2].as_f64().expect("z");
     assert!((z("n20_l1") - 1.8).abs() < 1e-9, "the node dropped by one metre at scale 100");
     assert!((z("l2:head") - (1.8 + LOAD_ARROW_HEAD_3D)).abs() < 1e-9, "the load arrow rides its node");

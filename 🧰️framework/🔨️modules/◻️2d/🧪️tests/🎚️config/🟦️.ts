@@ -19,7 +19,7 @@ export default {
     name: "@semio-tech/s-2d-js",
     environment: "node",
     // 🧪️ The scene suite is in-source; line-layout fixtures have a dedicated test module.
-    include: ["../../📝️text/🧪️tests/🔬️unit/🟦️.ts", "../../📝️text/🧪️tests/⚓️alignment/🟦️.ts"],
+    include: ["../../📝️text/🧪️tests/🔬️unit/🟦️.ts", "../../📝️text/🧪️tests/⚓️alignment/🟦️.ts", "../../🛤️path/📏️flatten/🧪️tests/🟦️.ts", "../../🛤️path/🖊️stroke/🧪️tests/🟦️.ts", "../../🔍️trace/🧪️tests/🟦️.ts", "../../🔀️booleans/🧪️tests/🟦️.ts", "../../🔀️booleans/🛤️paths/🧪️tests/🟦️.ts"],
     includeSource: ["../../🟦️.ts"],
     coverage: { include: ["../../🟦️.ts"] },
     passWithNoTests: false,

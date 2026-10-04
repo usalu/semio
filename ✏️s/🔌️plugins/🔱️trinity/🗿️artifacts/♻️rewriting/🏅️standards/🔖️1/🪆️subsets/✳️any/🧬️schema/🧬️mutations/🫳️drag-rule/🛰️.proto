@@ -1,4 +1,7 @@
 syntax = "proto3";
 package semio.s.trinity.rewriting.mutation.drag_rule_nodes;
-// drag-rule-nodes / DragRuleNodes
-message DragRuleNodes { repeated string targets = 1; double dx = 2; double dy = 3; }
+import "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
+import "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🛰️.proto";
+import "🧰️framework/🔨️modules/🌱️value/🧬️schema/🛰️.proto";
+import "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🌱️value/🧬️schema/🛰️.proto";
+message DragRuleNodes { repeated string targets = 1; semio.framework.value.Binary64Word dx = 2; semio.framework.value.Binary64Word dy = 3; }

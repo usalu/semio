@@ -32,12 +32,13 @@ struct PendingProjection {
     depth: usize,
     origin: (f32, f32),
     field_label: Option<ui_contract::Label>,
+    row_description: Option<String>,
 }
 
 const SELECT_LISTBOX_KEY_SUFFIX: &str = "::listbox";
 const SELECT_OPTION_KEY_INFIX: &str = "::option::";
 const SLIDER_EDITOR_KEY_SUFFIX: &str = "::editor";
-const ROW_ACTION_KEY_INFIX: &str = "::row-action::";
+pub(crate) const ROW_ACTION_KEY_INFIX: &str = "::row-action::";
 
 pub(crate) fn select_accessibility_option_value(record: &ui_contract::UiNodeRecord, key: &str) -> Option<String> {
     let ui_contract::Component::Select(select) = &record.component else { return None };
@@ -81,12 +82,12 @@ fn row_action_accessibility_nodes(record: &ui_contract::UiNodeRecord, depth: usi
         button.role = "button".to_string();
         button.depth = depth.saturating_add(1);
         button.label = Some(action.label.as_ref().map_or_else(|| name.to_string(), |label| format!("{}: {name}", label.0.as_str())));
-        button.description = None;
-        button.shortcut = None;
         let disabled = record.disabled || action.disabled;
+        button.description = action.reason.as_ref().filter(|reason| disabled && !reason.0.as_str().is_empty()).map(|reason| reason.0.as_str().to_string());
+        button.shortcut = None;
         button.disabled = disabled;
-        button.focusable = !disabled;
-        button.tabbable = !disabled;
+        button.focusable = !disabled || button.description.is_some();
+        button.tabbable = button.focusable;
         button.actionable = !disabled;
         button.focused = false;
         button.checked = None;
@@ -156,17 +157,26 @@ fn select_accessibility_nodes(record: &ui_contract::UiNodeRecord, depth: usize, 
 pub fn accessibility_projection(tree: &UiTree) -> Vec<AccessibilityProjectionNode> {
     let Some(document) = tree.document() else { return Vec::new() };
     let mut projection = Vec::new();
-    let mut stack = vec![PendingProjection { id: document.root_id(), depth: 0, origin: (0.0, 0.0), field_label: None }];
+    let mut stack = vec![PendingProjection { id: document.root_id(), depth: 0, origin: (0.0, 0.0), field_label: None, row_description: None }];
     while let Some(pending) = stack.pop() {
         if projection.len() >= UI_DOCUMENT_NODES || pending.depth >= UI_ACCESSIBILITY_PROJECTION_DEPTH {
             continue;
         }
         let Some(record) = document.record(pending.id) else { continue };
         let mut node = accessibility_projection_node(record, pending.depth);
+        if let ui_contract::Component::TreeItem(props) = &record.component {
+            node.selected = props.selected;
+        }
         if let Some(note) = tree.presence_note(record.key.as_str()) {
             node.description = Some(match node.description.take() {
                 Some(description) => format!("{description} · {note}"),
                 None => note.to_string(),
+            });
+        }
+        if let Some(row) = pending.row_description.as_deref().filter(|_| node.focusable || node.actionable) {
+            node.description = Some(match node.description.take() {
+                Some(own) => format!("{own} · {row}"),
+                None => row.to_string(),
             });
         }
         let mut slider_editor_text = None;
@@ -190,7 +200,7 @@ pub fn accessibility_projection(tree: &UiTree) -> Vec<AccessibilityProjectionNod
             if let Some(arena_node) = tree.node(mounted) {
                 node.focused = arena_node.flags.contains(NodeFlags::FOCUSED);
                 if node.role == "treeitem" {
-                    node.selected = Some(arena_node.spec.0.presence().selected);
+                    node.selected = node.selected.or(Some(arena_node.spec.0.presence().selected));
                 }
                 match &arena_node.spec.0 {
                     crate::wgpu::UiNode::ExternalSlot(slot) if slot.body_key == crate::wgpu::reconcile::MEDIA_TRANSPORT_EXTENSION_ID => {
@@ -277,7 +287,12 @@ pub fn accessibility_projection(tree: &UiTree) -> Vec<AccessibilityProjectionNod
                         }
                         _ => None,
                     };
-                    stack.push(PendingProjection { id: *child, depth: pending.depth + 1, origin, field_label });
+                    let row_description = match &record.component {
+                        ui_contract::Component::TreeItem(item) => item.description.as_ref().filter(|_| Some(*child) != item.inline_toolbar && Some(*child) != item.detail).map(|description| description.as_str().to_string()),
+                        _ => pending.row_description.clone(),
+                    }
+                    .filter(|_| document.record(*child).is_some_and(|child| !matches!(child.component, ui_contract::Component::TreeItem(_))));
+                    stack.push(PendingProjection { id: *child, depth: pending.depth + 1, origin, field_label, row_description });
                 }
             }
         }

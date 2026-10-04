@@ -1,0 +1,30 @@
+{
+  "schema": "plugin.sqlite.refusal/v1",
+  "kinds": [
+    "invalidValue",
+    "canceled",
+    "ownershipLimit",
+    "allocationFailed",
+    "workLimit",
+    "depthLimit",
+    "unsupportedOwner",
+    "invariantViolated"
+  ],
+  "directions": [
+    "export",
+    "import"
+  ],
+  "encodings": [
+    "binary",
+    "text"
+  ],
+  "message": "same literal limit canceled unsupported \u0000語",
+  "diagnostic": {
+    "code": "fixture.sqlite.typed-cause",
+    "message": "diagnostic remains independent \u0000語",
+    "line": 2,
+    "column": 3
+  },
+  "vmCancellation": "turnFaultCancelled",
+  "providerCancellation": "canceled"
+}

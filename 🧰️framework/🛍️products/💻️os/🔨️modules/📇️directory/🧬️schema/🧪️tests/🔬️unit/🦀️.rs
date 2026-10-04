@@ -104,7 +104,7 @@ struct DirectoryCommandReceiptFixture {
 
 #[semio_framework_async_macros::async_test]
 async fn directory_command_receipt_v1_matches_language_neutral_vectors_and_rejects_hostiles() {
-    let fixture: DirectoryCommandReceiptFixture = crate::os_pack::json::from_json_str(include_str!("../../../../../🧫️fixtures/📇️directory/🧾️command-receipt-v1.json")).expect("command-receipt fixture decodes");
+    let fixture: DirectoryCommandReceiptFixture = semio_framework_pack_json::from_json_str(include_str!("../../../../../🧫️fixtures/📇️directory/🧾️command-receipt-v1.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("command-receipt fixture decodes");
     let request_of = |name: &str| -> DirectoryCommandRequestV1 {
         let vector = fixture.requests.iter().find(|request| request.name == name).expect("request vector");
         DirectoryCommandRequestV1::new(vector.request_id.clone(), vector.command.clone())
@@ -159,11 +159,11 @@ async fn directory_command_receipt_v1_matches_language_neutral_vectors_and_rejec
 
 #[semio_framework_async_macros::async_test]
 async fn directory_event_page_v1_matches_language_neutral_receipt_and_rejects_hostiles() {
-    let fixture: DirectoryEventPageFixture = crate::os_pack::json::from_json_str(include_str!("../../../../../🧫️fixtures/📇️directory/📃️event-page-v1.json")).expect("event-page fixture decodes");
+    let fixture: DirectoryEventPageFixture = semio_framework_pack_json::from_json_str(include_str!("../../../../../🧫️fixtures/📇️directory/📃️event-page-v1.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("event-page fixture decodes");
     assert_eq!(fixture.valid.canonical_unsigned_json(), fixture.canonical_unsigned);
     assert_eq!(semio_framework_hash::sha256_hex(fixture.canonical_unsigned.as_bytes()), fixture.expected_receipt_sha256);
     assert_eq!(fixture.valid.validate(), Ok(()));
-    let canonical = crate::os_pack::json::to_json_string(&fixture.valid);
+    let canonical = semio_framework_pack_json::to_json_string(&fixture.valid);
     assert_eq!(DirectoryEventPageV1::parse_canonical_json(&canonical), Ok(fixture.valid.clone()));
 
     let mut hostile = fixture.valid.clone();
@@ -191,11 +191,11 @@ async fn directory_event_page_v1_matches_language_neutral_receipt_and_rejects_ho
     if let DirectoryEventBody::SpaceRenamed { name, .. } = &mut boundary.body {
         name.clear();
     }
-    let base = crate::os_pack::json::to_json_string(&boundary).len();
+    let base = semio_framework_pack_json::to_json_string(&boundary).len();
     if let DirectoryEventBody::SpaceRenamed { name, .. } = &mut boundary.body {
         *name = "x".repeat(DIRECTORY_EVENT_PAGE_MAX_EVENT_BYTES - base);
     }
-    assert_eq!(crate::os_pack::json::to_json_string(&boundary).len(), DIRECTORY_EVENT_PAGE_MAX_EVENT_BYTES);
+    assert_eq!(semio_framework_pack_json::to_json_string(&boundary).len(), DIRECTORY_EVENT_PAGE_MAX_EVENT_BYTES);
     assert_eq!(validate_directory_event_page_event(&boundary), Ok(()));
     if let DirectoryEventBody::SpaceRenamed { name, .. } = &mut boundary.body {
         name.push('x');
@@ -210,18 +210,18 @@ async fn directory_event_page_v1_matches_language_neutral_receipt_and_rejects_ho
 #[semio_framework_async_macros::async_test]
 async fn event_body_kind_is_the_dotted_wire_string() {
     let body = DirectoryEventBody::SpaceCreated { space_id: "sp-1".into(), name: "Studio".into(), space_kind: DirectorySpaceKind::Studio, visibility: DirectorySpaceVisibility::Private, owner_user_id: "u-1".into() };
-    let json = crate::os_pack::json::to_json_string(&body);
+    let json = semio_framework_pack_json::to_json_string(&body);
     assert!(json.contains("\"kind\":\"space.created\""), "got {json}");
     assert!(json.contains("\"spaceKind\":\"studio\""), "got {json}");
     assert!(json.contains("\"visibility\":\"private\""), "got {json}");
-    let round: DirectoryEventBody = crate::os_pack::json::from_json_str(&json).expect("deserialize");
+    let round: DirectoryEventBody = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("deserialize");
     assert_eq!(round, body);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn command_kind_is_kebab_case() {
     let command = DirectoryCommand::CreateSpace { name: "Atelier".into(), space_kind: DirectorySpaceKind::Atelier, visibility: DirectorySpaceVisibility::Private };
-    let json = crate::os_pack::json::to_json_string(&command);
+    let json = semio_framework_pack_json::to_json_string(&command);
     assert!(json.contains("\"kind\":\"create-space\""), "got {json}");
     assert!(json.contains("\"spaceKind\":\"atelier\""), "got {json}");
 }
@@ -229,10 +229,10 @@ async fn command_kind_is_kebab_case() {
 #[semio_framework_async_macros::async_test]
 async fn stream_message_kinds_round_trip() {
     let heartbeat = DirectoryStreamMessage::Heartbeat { head_seq: 42 };
-    let json = crate::os_pack::json::to_json_string(&heartbeat);
+    let json = semio_framework_pack_json::to_json_string(&heartbeat);
     assert!(json.contains("\"kind\":\"heartbeat\""), "got {json}");
     assert!(json.contains("\"headSeq\":42"), "got {json} (must be a bare integer, not 42.0)");
-    let round: DirectoryStreamMessage = crate::os_pack::json::from_json_str(&json).expect("deserialize");
+    let round: DirectoryStreamMessage = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("deserialize");
     assert_eq!(round, heartbeat);
 }
 
@@ -242,10 +242,10 @@ async fn stream_message_kinds_round_trip() {
 #[semio_framework_async_macros::async_test]
 async fn create_invite_ttl_secs_is_a_bare_integer_on_the_wire() {
     let command = DirectoryCommand::CreateInvite { space_id: "sp-1".into(), role: DirectorySpaceRole::Author, ttl_secs: 3600 };
-    let json = crate::os_pack::json::to_json_string(&command);
+    let json = semio_framework_pack_json::to_json_string(&command);
     assert!(json.contains("\"ttlSecs\":3600"), "got {json}");
     assert!(!json.contains("3600.0"), "got {json} — ttl_secs must not collapse to a float");
-    let round: DirectoryCommand = crate::os_pack::json::from_json_str(&json).expect("deserialize");
+    let round: DirectoryCommand = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("deserialize");
     assert_eq!(round, command);
 }
 
@@ -258,8 +258,8 @@ struct DescriptorFixture {
 
 #[semio_framework_async_macros::async_test]
 async fn document_descriptor_matches_the_language_neutral_fixture() {
-    let fixture: DescriptorFixture = crate::os_pack::json::from_json_str(include_str!("../../../../../🧫️fixtures/📇️directory/🪪️document-descriptor.json")).expect("descriptor fixture decodes");
-    assert_eq!(crate::os_pack::json::to_json_string(&fixture.valid), fixture.canonical);
+    let fixture: DescriptorFixture = semio_framework_pack_json::from_json_str(include_str!("../../../../../🧫️fixtures/📇️directory/🪪️document-descriptor.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("descriptor fixture decodes");
+    assert_eq!(semio_framework_pack_json::to_json_string(&fixture.valid), fixture.canonical);
 }
 
 #[derive(FromValue)]
@@ -272,7 +272,7 @@ struct ArtifactAuthorityFixture {
 
 #[semio_framework_async_macros::async_test]
 async fn document_descriptor_digest_v1_matches_the_language_neutral_binary_vector() {
-    let fixture: ArtifactAuthorityFixture = crate::os_pack::json::from_json_str(include_str!("../../../../../🧫️fixtures/📇️directory/🛡️artifact-authority.json")).expect("artifact authority fixture decodes");
+    let fixture: ArtifactAuthorityFixture = semio_framework_pack_json::from_json_str(include_str!("../../../../../🧫️fixtures/📇️directory/🛡️artifact-authority.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("artifact authority fixture decodes");
     assert_eq!(hex_lower(&descriptor_digest_encoding_v1(&fixture.descriptor).expect("descriptor encodes")), fixture.descriptor_encoding_hex);
     assert_eq!(descriptor_digest_v1(&fixture.descriptor).expect("descriptor hashes"), fixture.descriptor_digest_v1);
 }
@@ -291,15 +291,15 @@ struct DocumentOpenPlanFixture {
 #[test]
 fn document_authority_json_integer_tokens_never_coerce() {
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🌱️value/🔁️codec/🧫️fixtures/🔣️.json")).expect("neutral exact integer corpus");
-    let fixture: DocumentOpenPlanFixture = crate::os_pack::json::from_json_str(include_str!("../../../../../🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json")).unwrap();
-    let intent_json = crate::os_pack::json::to_json_string(&fixture.intent);
+    let fixture: DocumentOpenPlanFixture = semio_framework_pack_json::from_json_str(include_str!("../../../../../🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let intent_json = semio_framework_pack_json::to_json_string(&fixture.intent);
     assert!(intent_json.contains("\"version\":1"));
     for row in corpus["raw"].as_array().unwrap() {
         let raw = row.as_str().unwrap();
         macro_rules! check {
                 ($($ty:ty),+ $(,)?) => { $(
                     let reference = serde_json::from_str::<$ty>(raw);
-                    let ours = crate::os_pack::json::from_json_str::<$ty>(raw);
+                    let ours = semio_framework_pack_json::from_json_str::<$ty>(raw, semio_framework_pack_json::JsonMemberPolicy::Reject);
                     assert_eq!(ours.is_ok(), reference.is_ok(), "JSON admission {} {raw}", stringify!($ty));
                     if let (Ok(ours), Ok(reference)) = (ours, reference) {
                         assert_eq!(ours, reference, "JSON exact {} {raw}", stringify!($ty));
@@ -308,7 +308,7 @@ fn document_authority_json_integer_tokens_never_coerce() {
             }
         check!(u8, i8, u16, i16, u32, i32, u64, i64, usize, isize);
         let version = serde_json::from_str::<u32>(raw);
-        let intent = crate::os_pack::json::from_json_str::<DocumentOpenIntentV1>(&intent_json.replace("\"version\":1", &format!("\"version\":{raw}")));
+        let intent = semio_framework_pack_json::from_json_str::<DocumentOpenIntentV1>(&intent_json.replace("\"version\":1", &format!("\"version\":{raw}")), semio_framework_pack_json::JsonMemberPolicy::Reject);
         assert_eq!(intent.is_ok(), version.is_ok(), "intent integer {raw}");
         if let (Ok(intent), Ok(version)) = (intent, version) {
             assert_eq!(intent.version, version);
@@ -316,19 +316,19 @@ fn document_authority_json_integer_tokens_never_coerce() {
         }
         let expiry = serde_json::from_str::<i64>(raw);
         let grant_json = format!(r#"{{"schema":"fixture","protocol":"fixture","grant":"fixture","actorId":"fixture","expiresAtMs":{raw}}}"#);
-        let grant = crate::os_pack::json::from_json_str::<crate::os_directory::client::SocketGrantReceiptV1>(&grant_json);
+        let grant = semio_framework_pack_json::from_json_str::<crate::os_directory::client::SocketGrantReceiptV1>(&grant_json, semio_framework_pack_json::JsonMemberPolicy::Reject);
         assert_eq!(grant.is_ok(), expiry.is_ok(), "socket expiry integer {raw}");
         if let (Ok(grant), Ok(expiry)) = (grant, expiry) {
             assert_eq!(grant.expires_at_ms, expiry, "socket expiry exact {raw}");
         }
-        let document_grant = crate::os_pack::json::from_json_str::<crate::os_directory::client::DocumentSocketGrantReceiptV1>(&format!(r#"{{"schema":"fixture","protocol":"fixture","actorId":"fixture","expiresAtMs":{raw}}}"#));
+        let document_grant = semio_framework_pack_json::from_json_str::<crate::os_directory::client::DocumentSocketGrantReceiptV1>(&format!(r#"{{"schema":"fixture","protocol":"fixture","actorId":"fixture","expiresAtMs":{raw}}}"#), semio_framework_pack_json::JsonMemberPolicy::Reject);
         assert_eq!(document_grant.as_ref().map(|grant| grant.expires_at_ms).ok(), serde_json::from_str::<i64>(raw).ok(), "document socket expiry exact {raw}");
     }
 }
 
 #[semio_framework_async_macros::async_test]
 async fn document_open_plan_v1_matches_language_neutral_fixture() {
-    let fixture: DocumentOpenPlanFixture = crate::os_pack::json::from_json_str(include_str!("../../../../../🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json")).expect("document open plan fixture decodes");
+    let fixture: DocumentOpenPlanFixture = semio_framework_pack_json::from_json_str(include_str!("../../../../../🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("document open plan fixture decodes");
     assert_eq!(hex_lower(&descriptor_digest_v1(&fixture.descriptor).expect("descriptor hashes").0), fixture.descriptor_digest_v1);
     assert_eq!(fixture.intent.validate(), Ok(()));
     assert_eq!(fixture.valid_plan.validate(fixture.now_ms), Ok(()));
@@ -345,13 +345,13 @@ async fn document_open_plan_v1_matches_language_neutral_fixture() {
     overlong.expires_at_unix_ms = fixture.now_ms + DOCUMENT_OPEN_PLAN_MAX_TTL_MS + 1;
     assert_eq!(overlong.validate(fixture.now_ms), Err(DocumentOpenPlanErrorCodeV1::Denied));
 
-    let encoded = crate::os_pack::json::to_json_string(&fixture.valid_plan);
+    let encoded = semio_framework_pack_json::to_json_string(&fixture.valid_plan);
     let forged = format!("{},\"actor\":\"caller-selected\"}}", encoded.strip_suffix('}').expect("object"));
-    assert!(crate::os_pack::json::from_json_str::<DocumentOpenPlanV1>(&forged).is_err());
+    assert!(semio_framework_pack_json::from_json_str::<DocumentOpenPlanV1>(&forged, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
     let nested_scope = encoded.replace("\"documentId\":\"plan:\u{6771}\u{4eac}\"", "\"documentId\":\"plan:\u{6771}\u{4eac}\",\"actor\":\"caller-selected\"");
-    assert!(crate::os_pack::json::from_json_str::<DocumentOpenPlanV1>(&nested_scope).is_err());
+    assert!(semio_framework_pack_json::from_json_str::<DocumentOpenPlanV1>(&nested_scope, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
     let nested_frontier = encoded.replace("\"headEditOrdinal\":2", "\"headEditOrdinal\":2,\"storageKey\":\"private\"");
-    assert!(crate::os_pack::json::from_json_str::<DocumentOpenPlanV1>(&nested_frontier).is_err());
+    assert!(semio_framework_pack_json::from_json_str::<DocumentOpenPlanV1>(&nested_frontier, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
 
     let mut unicode_control = fixture.valid_plan.clone();
     unicode_control.surface.app_id = "app.\u{85}hidden".into();

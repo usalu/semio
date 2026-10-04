@@ -17,7 +17,7 @@ use crate::editor::space_index::config::{SpaceIndexConfig, SpaceIndexConfigMutat
 use semio_framework_os_kernel::os_directory::{fold_all, DirectoryEvent, DirectoryReadModel, DirectorySpaceRole, DirectorySpaceVisibility};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "fold-directory-events")]
 pub struct FoldDirectoryEvents {
     pub events_json: String,
@@ -38,8 +38,8 @@ fn visibility_str(visibility: DirectorySpaceVisibility) -> &'static str {
 }
 
 pub fn handle(payload: &FoldDirectoryEvents, doc: &ArtifactView<'_, SSpaceSnapshot>, cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
-    let events: Vec<DirectoryEvent> = pack::from_json_str(&payload.events_json).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("s.space.directory.decode"), error.to_string()))?;
-    let model = semio_framework_plugin::resolve_ready(fold_all(DirectoryReadModel::default(), &events));
+    let events: Vec<DirectoryEvent> = semio_framework_pack_json::from_json_str(&payload.events_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("s.space.directory.decode"), error.to_string()))?;
+    let model = ::semio_framework_async::poll::resolve_ready(fold_all(DirectoryReadModel::default(), &events));
     let selected = match doc.snapshot.space_id.as_str() {
         "" if model.spaces.len() == 1 => model.spaces.values().next(),
         "" => None,

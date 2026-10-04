@@ -16,7 +16,7 @@ mod tests {
         opc.content_types.set_default("xml", "application/xml");
         opc.set_part("ppt/presentation.xml", "application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml", STRICT_PRESENTATION_XML.as_bytes().to_vec());
         opc.add_relationship("", "rId1", "http://purl.oclc.org/ooxml/officeDocument/relationships/officeDocument", "ppt/presentation.xml");
-        PptxSnapshot { opc, ..PptxSnapshot::default() }
+        crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx(&semio_s_artifact_stdio_zip::opc::encode_opc(&opc).expect("valid OPC package")).expect("valid presentation")
     }
 
     #[semio_framework_async_macros::async_test]
@@ -28,13 +28,17 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn conforming_strict_snapshot_builds_clean() {
         let snapshot = PptxStrictBuilderConstruction::from_snapshot(strict_snapshot()).build().expect("conforming Strict snapshot must build");
-        assert!(snapshot.opc.part_bytes("ppt/presentation.xml").is_some());
+        assert!(snapshot.xml_parts.iter().any(|part| part.path == "ppt/presentation.xml"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
         let mut violating = strict_snapshot();
-        violating.opc.set_part("ppt/slides/slide1.xml", "application/vnd.openxmlformats-officedocument.presentationml.slide+xml", b"<v:shape xmlns:v=\"urn:schemas-microsoft-com:vml\"/>".to_vec());
+        violating.xml_parts.push(crate::schema::snapshot::PptxXmlPart {
+            path: "ppt/slides/slide1.xml".into(),
+            content_type: "application/vnd.openxmlformats-officedocument.presentationml.slide+xml".into(),
+            document: semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text(r#"<v:shape xmlns:v="urn:schemas-microsoft-com:vml"/>"#).expect("valid XML"),
+        });
         let (mutated, _diff) = PptxStrictBuilderConstruction::from_snapshot(PptxSnapshot::default()).mutate(PptxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: violating }));
         let err = mutated.build().expect_err("VML markup must fail build()");
         assert!(err.iter().any(|d| d.code.0 == crate::standards::v_ecma_376::subsets::strict::schema::CODE_VML_PRESENT));

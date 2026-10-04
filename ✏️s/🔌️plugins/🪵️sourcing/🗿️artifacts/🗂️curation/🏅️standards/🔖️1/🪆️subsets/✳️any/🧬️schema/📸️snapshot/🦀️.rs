@@ -6,7 +6,7 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot:
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted Kit catalog child, sourcing geometry and availability, and ordered selection.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::DslRecord, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[dsl(id = "curation.curation", layout = "lines")]
 #[artifact_schema(id = "s.sourcing.curation")]
@@ -30,21 +30,21 @@ impl Default for CurationSnapshot {
     }
 }
 
-impl dsl::FromValue for CurationSnapshot {
-    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+impl semio_framework_value::FromValue for CurationSnapshot {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         let mut catalog = None;
         let mut stock_extra = None;
         let mut curated = None;
-        for (key, value) in dsl::DslValue::into_object(value)? {
+        for (key, value) in semio_framework_value::DslValue::into_object(value)? {
             match key.as_str() {
-                "catalog" if catalog.is_none() => catalog = Some(dsl::FromValue::from_value(value)?),
-                "stockExtra" if stock_extra.is_none() => stock_extra = Some(dsl::FromValue::from_value(value)?),
-                "curated" if curated.is_none() => curated = Some(dsl::FromValue::from_value(value)?),
-                _ => return Err(dsl::ValueError::new(format!("unknown or duplicate Curation field {key}"))),
+                "catalog" if catalog.is_none() => catalog = Some(semio_framework_value::FromValue::from_value(value)?),
+                "stockExtra" if stock_extra.is_none() => stock_extra = Some(semio_framework_value::FromValue::from_value(value)?),
+                "curated" if curated.is_none() => curated = Some(semio_framework_value::FromValue::from_value(value)?),
+                _ => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown or duplicate Curation field {key}"))),
             }
         }
-        let result = Self { catalog: catalog.ok_or_else(|| dsl::ValueError::new("missing catalog"))?, stock_extra: stock_extra.ok_or_else(|| dsl::ValueError::new("missing stockExtra"))?, curated: curated.ok_or_else(|| dsl::ValueError::new("missing curated"))? };
-        result.validate().map_err(dsl::ValueError::new)?;
+        let result = Self { catalog: catalog.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "missing catalog"))?, stock_extra: stock_extra.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "missing stockExtra"))?, curated: curated.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "missing curated"))? };
+        result.validate().map_err(|message| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message))?;
         Ok(result)
     }
 }

@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeFenestrationFinDepth, base: &EnergyModelSnaps
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Fenestration {} needs a non-negative finite fin depth, got {}.", payload.id.0, payload.new_fin_depth_m), [payload.id.0.to_string()]);
     }
     if existing.fin_depth_m == payload.new_fin_depth_m {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Fenestration {} already has this fin depth.", payload.id.0));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Fenestration {} already has this fin depth.", payload.id.0));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.fenestrations.iter_mut().find(|item| item.id == payload.id) {

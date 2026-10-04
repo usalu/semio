@@ -15,6 +15,6 @@ pub fn measure(definition: &Block3dSnapshot, config: &Block3dConfig, window_id: 
         label: Some(labels.representation.as_str().to_string()),
         value: quick_value,
         items: quick_items,
-        on_change: crate::editor::block3d::block3d_window_action("setWindowRepresentations", Some(dsl::DslValue::object([("windowId".to_string(), dsl::DslValue::String(window_id.to_string()))]))),
+        on_change: crate::editor::block3d::block3d_window_action("setWindowRepresentations", Some(semio_framework_value::DslValue::object([("windowId".to_string(), semio_framework_value::DslValue::String(window_id.to_string()))]))),
     }
 }

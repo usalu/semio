@@ -13,7 +13,7 @@ pub fn diff(payload: &ReplaceInfrastructureRequirement, base: &ProgramSnapshot) 
         return protocol::MutationOutcome::error("mutation.target-missing", "No infrastructure requirement exists with this id.", [payload.infrastructure_requirement.header.id.0.clone()]);
     };
     if existing == &payload.infrastructure_requirement {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This infrastructure requirement already matches the requested value.").at([existing.header.id.0.clone()])]);
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This infrastructure requirement already matches the requested value.").at([existing.header.id.0.clone()])]);
     }
     let patch = existing.diff_patch(&payload.infrastructure_requirement).expect("diff_patch always produces a full patch");
     protocol::MutationOutcome::new(ProgramDiff {

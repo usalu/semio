@@ -35,12 +35,15 @@ impl MutationKind<PdfSnapshot, PdfA1Mutation> for SetPageText {
         MutationOutcome::new(PdfDiff { pages: Some(PdfPagesDiff { modified: vec![PdfPageModified { index: 0, diff: PdfPageDiff { text: Some(self.text.clone()), ..Default::default() } }], ..Default::default() }) })
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfA1Mutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfA1Mutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         if !self.valid(base) {
             return Vec::new();
         }
         vec![PdfA1Mutation::SetPageText(SetPageText { text: base.pages[0].text.clone() })]
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set page text", "Seitentext setzen")

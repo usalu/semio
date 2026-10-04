@@ -40,21 +40,21 @@ pub fn definition() -> WindowKindDefinition {
 pub fn render(spec: &FormsSnapshot, config: &FormsConfig, view: &semio_framework_plugin::ViewModel, selected: Option<&str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let contributions = crate::editor::forms::parse_contributions(config);
     let palette = crate::editor::forms::catalogue_kinds(&contributions, view).into_iter()
-        .map(|(kind, label, icon)| dsl::json!({ "blockKind": kind, "label": label, "iconId": icon.as_str() })).collect();
+        .map(|(kind, label, icon)| semio_framework_pack_json::json!({ "blockKind": kind, "label": label, "iconId": icon.as_str() })).collect();
     let steps = spec.definition.steps.iter().map(|step| {
-        let blocks = step.blocks.iter().map(|question| dsl::json!({
+        let blocks = step.blocks.iter().map(|question| semio_framework_pack_json::json!({
             "id": question.id, "label": question.label, "kind": question.kind,
             "target": { "granularity": crate::editor::forms::FORMS_INTERACTION_GRANULARITY_FIELD, "id": question.id }
         })).collect();
-        dsl::json!({
+        semio_framework_pack_json::json!({
             "id": step.id, "title": step.title, "description": step.description,
             "target": { "granularity": crate::editor::forms::FORMS_INTERACTION_GRANULARITY_SECTION, "id": crate::schema::forms_play_step_tree_id(&step.id) },
-            "blocks": dsl::json::Value::Array(blocks)
+            "blocks": semio_framework_pack_json::Value::Array(blocks)
         })
     }).collect();
     let scene = semio_framework_plugin::BlockListScene {
-        steps_json: dsl::json::to_string(&dsl::json::Value::Array(steps)),
-        palette_json: dsl::json::to_string(&dsl::json::Value::Array(palette)),
+        steps_json: semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(steps)),
+        palette_json: semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(palette)),
         selected_id: selected.map(|id| id.strip_prefix("step:").unwrap_or(id).into()),
         dragging_id: None,
         domain_id: Some(crate::editor::forms::FORMS_INTERACTION_FIELDS.into()),

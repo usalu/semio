@@ -54,14 +54,17 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindPrimitive
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         let outcome = <Self as protocol::MutationKind<GltfSnapshot, super::GltfMutation>>::diff(self, base);
         if !outcome.messages().is_empty() || outcome.diff().is_empty_diff() {
             return Vec::new();
         }
         let inverse = <crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::inverse(outcome.diff(), base);
         vec![super::GltfMutation::BindPrimitiveIndices(Self::Restore(Box::new(inverse)))]
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Bind Primitive Indices", "Primitivindizes binden")

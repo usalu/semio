@@ -12,7 +12,7 @@ use crate::catalog::CapabilityDefinition;
 use crate::errors::{GatewayError, GatewayErrorCode};
 use crate::handles::{Attachment, HandleKind, HandleTable, SessionHandle};
 use semio_framework::manifest::{kernel, ApprovalMode};
-use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
+use semio_framework_value::{DslValue, FromValue, ToValue, ValueError};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 

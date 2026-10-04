@@ -29,10 +29,14 @@ pub use native_decoding::NativeDecodeControl;
 pub mod native_encoding;
 pub use native_encoding::NativeEncodeControl;
 
+#[path = "⚠️refusal/🦀️.rs"]
+pub mod refusal;
+pub use refusal::{ValueError, ValueRefusalKind};
+
 //#region 🔁️Codec
 #[path = "🔁️codec/🦀️.rs"]
 mod codec;
-pub use codec::{edit_through_value, ControlledValueHasher, DecodedValue, FromValue, ToValue, ValueEdit, ValueError, ValueShape};
+pub use codec::{edit_through_value, ControlledValueHasher, DecodedValue, IntrinsicRetirement, FromValue, ToValue, ValueEdit, ValueShape};
 //#endregion 🔁️Codec
 
 //#region 🔖️Number
@@ -426,3 +430,10 @@ macro_rules! dsl_value {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "⚠️refusal/🧪️tests/🦀️.rs"]
+mod refusal_tests;
+
+#[path="🧬️schema/🌳️intrinsic/🔣️json/🦀️.rs"]
+pub mod intrinsic_json;

@@ -176,7 +176,7 @@ fn one_declared_capacity_answers_rows_ceiling_and_admission() {
 fn a_route_footprint_of_n_rows_admits_an_extent_of_n() {
     for invertible_items in [1_usize, 2, 32, 4_096] {
         let capacity = ArtifactRetainedWorkCapacity::for_invertible_items(invertible_items);
-        let footprint = capacity.one_item_footprint(0);
+        let footprint = store::ArtifactStoreOneItemFootprint { work_items: store::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS, retained_bytes: 0 };
         assert!(footprint.is_admissible(), "the store admits its own one-item footprint");
         assert_eq!(footprint.work_items, capacity.rows(1), "the footprint's rows ARE the capacity's rows for one item");
         assert!(capacity.admits(footprint.work_items), "a route whose footprint is {} rows must admit an extent of {}", footprint.work_items, footprint.work_items);
@@ -191,7 +191,7 @@ fn a_route_footprint_of_n_rows_admits_an_extent_of_n() {
 fn an_item_counted_extent_cannot_stand_in_for_a_row_counted_footprint() {
     let capacity = ArtifactRetainedWorkCapacity::for_invertible_items(32);
     assert_ne!(capacity.rows(1), 1, "one point-invertible item never costs one row");
-    assert_eq!(capacity.rows(1), capacity.one_item_footprint(0).work_items);
+    assert_eq!(capacity.rows(1), store::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS);
     let empty = ArtifactRetainedWorkCapacity::for_invertible_items(0);
     assert_eq!(empty.work_items(), 0);
     assert!(!empty.admits(1), "a route that declares no items admits no extent");
@@ -205,11 +205,13 @@ fn an_item_counted_extent_cannot_stand_in_for_a_row_counted_footprint() {
 /// broken export took a browser probe to diagnose (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[test]
 fn a_refused_reducer_step_reports_the_apps_own_fault_code_and_message() {
-    let fault = semio_framework::Fault::new(semio_framework::FaultOrigin::App, semio_framework::FaultCode::new("generation3d.io.export"), "format `dwg` has no readable descriptor set");
+    let mut fault = semio_framework::Fault::new(semio_framework::FaultOrigin::App, semio_framework::FaultCode::new("generation3d.io.export"), "format `dwg` has no readable descriptor set").with_param("path", "/format");
+    fault.span = Some(semio_framework::TextSpan::with_length(3, 8, 3));
     let detail = super::reducer_fault_detail(&fault);
-    assert!(detail.starts_with("retained command reducer rejected operation: "), "the prefix every reader keys on must survive: {detail}");
-    assert!(detail.contains("generation3d.io.export"), "the app's own code must reach the reader: {detail}");
-    assert!(detail.contains("format `dwg` has no readable descriptor set"), "the app's own message must reach the reader: {detail}");
+    let oracle: serde_json::Value = serde_json::from_slice(&detail).expect("the independent JSON oracle accepts the canonical fault wire");
+    assert_eq!(oracle["code"], "generation3d.io.export");
+    let back = super::reducer_fault_of_detail(&detail).expect("the canonical reducer fault reads back");
+    assert_eq!(back, fault);
 }
 
 /// 🧯️ A runaway message narrows the report rather than losing it, and never truncates mid-codepoint.
@@ -218,8 +220,9 @@ fn an_oversized_reducer_fault_detail_is_clipped_on_a_char_boundary() {
     let fault = semio_framework::Fault::new(semio_framework::FaultOrigin::App, semio_framework::FaultCode::new("x"), "ü".repeat(4096));
     let detail = super::reducer_fault_detail(&fault);
     assert!(detail.len() <= super::ARTIFACT_COMMAND_FAULT_DETAIL_MAXIMUM_BYTES);
-    assert!(detail.starts_with("retained command reducer rejected operation: x "));
-    assert_eq!(detail, String::from_utf8(detail.clone().into_bytes()).expect("a clipped detail stays valid utf-8"));
+    assert!(serde_json::from_slice::<serde_json::Value>(&detail).is_ok());
+    let back = super::reducer_fault_of_detail(&detail).expect("a narrowed detail remains a typed fault");
+    assert!(back.message.is_char_boundary(back.message.len()));
 }
 
 /// 🔎️ LAW: the reducer's own code and message come back out of the detail the job fault carried, exactly — the agent
@@ -229,7 +232,7 @@ fn a_reducer_fault_detail_reads_back_as_the_reducers_own_code_and_message() {
     let fault = semio_framework::Fault::new(semio_framework::FaultOrigin::App, semio_framework::FaultCode::new("app.command.targets-required"), "patchNodes needs node ids or a node selection");
     let back = super::reducer_fault_of_detail(&super::reducer_fault_detail(&fault)).expect("a reducer detail reads back");
     assert_eq!((back.code.0.as_str(), back.message.as_str()), ("app.command.targets-required", "patchNodes needs node ids or a node selection"));
-    for foreign in ["puzzle command reducer rejected the admitted operation", "retained command reducer rejected operation: ", ""] {
+    for foreign in [b"puzzle command reducer rejected the admitted operation".as_slice(), b"retained command reducer rejected operation: ".as_slice(), b"".as_slice()] {
         assert!(super::reducer_fault_of_detail(foreign).is_none(), "{foreign:?} is not a reducer detail");
     }
 }

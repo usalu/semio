@@ -59,22 +59,22 @@ Feature: Apply every typed s.energy.model mutation against an independent Python
       | change-site-time-zone-refuses | 🕰️change-site-time-zone | ⛔️refuses |
       | change-site-north-axis-sets | 🔝️change-site-north-axis | ✅️sets |
       | change-site-north-axis-same | 🔝️change-site-north-axis | 🟰️same |
-      | change-ground-temperature-building-surface-sets | 🌡️change-ground-temperature | ✅️sets |
-      | change-ground-temperature-building-surface-refuses | 🌡️change-ground-temperature | ⛔️refuses |
-      | change-ground-temperature-shallow-sets | 🌱️change-ground-temperature | ✅️sets |
-      | change-ground-temperature-shallow-refuses | 🌱️change-ground-temperature | ⛔️refuses |
-      | change-ground-temperature-deep-sets | ⛏️change-ground-temperature | ✅️sets |
-      | change-ground-temperature-deep-refuses | ⛏️change-ground-temperature | ⛔️refuses |
-      | change-run-period-start-month-sets | 🛫️change-run-period-start | ✅️sets |
-      | change-run-period-start-month-refuses | 🛫️change-run-period-start | ⛔️refuses |
-      | change-run-period-start-day-sets | ▶️change-run-period-start | ✅️sets |
-      | change-run-period-start-day-refuses | ▶️change-run-period-start | ⛔️refuses |
-      | change-run-period-end-month-sets | 🛬️change-run-period-end | ✅️sets |
-      | change-run-period-end-month-refuses | 🛬️change-run-period-end | ⛔️refuses |
-      | change-run-period-end-day-sets | ⏹️change-run-period-end | ✅️sets |
-      | change-run-period-end-day-refuses | ⏹️change-run-period-end | ⛔️refuses |
-      | change-run-period-year-sets | 📅️change-run-period-year | ✅️sets |
-      | change-run-period-year-refuses | 📅️change-run-period-year | ⛔️refuses |
+      | change-ground-building-sets | 🌡️change-ground-building | ✅️sets |
+      | change-ground-building-refuses | 🌡️change-ground-building | ⛔️refuses |
+      | change-ground-shallow-sets | 🌱️change-ground-shallow | ✅️sets |
+      | change-ground-shallow-refuses | 🌱️change-ground-shallow | ⛔️refuses |
+      | change-ground-deep-sets | ⛏️change-ground-deep | ✅️sets |
+      | change-ground-deep-refuses | ⛏️change-ground-deep | ⛔️refuses |
+      | change-run-start-month-sets | 🛫️change-run-start-month | ✅️sets |
+      | change-run-start-month-refuses | 🛫️change-run-start-month | ⛔️refuses |
+      | change-run-start-day-sets | ▶️change-run-start-day | ✅️sets |
+      | change-run-start-day-refuses | ▶️change-run-start-day | ⛔️refuses |
+      | change-run-end-month-sets | 🛬️change-run-end-month | ✅️sets |
+      | change-run-end-month-refuses | 🛬️change-run-end-month | ⛔️refuses |
+      | change-run-end-day-sets | ⏹️change-run-end-day | ✅️sets |
+      | change-run-end-day-refuses | ⏹️change-run-end-day | ⛔️refuses |
+      | change-run-year-sets | 📅️change-run-year | ✅️sets |
+      | change-run-year-refuses | 📅️change-run-year | ⛔️refuses |
       | replace-airflow-network-attaches-a-network | 🫧️replace-airflow-network | ✅️attaches |
       | replace-airflow-network-refuses-unpaired-nodes | 🫧️replace-airflow-network | ⛔️refuses |
       | add-output-variable-adds-zone-air-temp | 📊️add-output-variable | ✅️adds |
@@ -666,22 +666,22 @@ Feature: Apply every typed s.energy.model mutation against an independent Python
       | change-site-time-zone-refuses | 🕰️change-site-time-zone | ⛔️refuses |
       | change-site-north-axis-sets | 🔝️change-site-north-axis | ✅️sets |
       | change-site-north-axis-same | 🔝️change-site-north-axis | 🟰️same |
-      | change-ground-temperature-building-surface-sets | 🌡️change-ground-temperature | ✅️sets |
-      | change-ground-temperature-building-surface-refuses | 🌡️change-ground-temperature | ⛔️refuses |
-      | change-ground-temperature-shallow-sets | 🌱️change-ground-temperature | ✅️sets |
-      | change-ground-temperature-shallow-refuses | 🌱️change-ground-temperature | ⛔️refuses |
-      | change-ground-temperature-deep-sets | ⛏️change-ground-temperature | ✅️sets |
-      | change-ground-temperature-deep-refuses | ⛏️change-ground-temperature | ⛔️refuses |
-      | change-run-period-start-month-sets | 🛫️change-run-period-start | ✅️sets |
-      | change-run-period-start-month-refuses | 🛫️change-run-period-start | ⛔️refuses |
-      | change-run-period-start-day-sets | ▶️change-run-period-start | ✅️sets |
-      | change-run-period-start-day-refuses | ▶️change-run-period-start | ⛔️refuses |
-      | change-run-period-end-month-sets | 🛬️change-run-period-end | ✅️sets |
-      | change-run-period-end-month-refuses | 🛬️change-run-period-end | ⛔️refuses |
-      | change-run-period-end-day-sets | ⏹️change-run-period-end | ✅️sets |
-      | change-run-period-end-day-refuses | ⏹️change-run-period-end | ⛔️refuses |
-      | change-run-period-year-sets | 📅️change-run-period-year | ✅️sets |
-      | change-run-period-year-refuses | 📅️change-run-period-year | ⛔️refuses |
+      | change-ground-building-sets | 🌡️change-ground-building | ✅️sets |
+      | change-ground-building-refuses | 🌡️change-ground-building | ⛔️refuses |
+      | change-ground-shallow-sets | 🌱️change-ground-shallow | ✅️sets |
+      | change-ground-shallow-refuses | 🌱️change-ground-shallow | ⛔️refuses |
+      | change-ground-deep-sets | ⛏️change-ground-deep | ✅️sets |
+      | change-ground-deep-refuses | ⛏️change-ground-deep | ⛔️refuses |
+      | change-run-start-month-sets | 🛫️change-run-start-month | ✅️sets |
+      | change-run-start-month-refuses | 🛫️change-run-start-month | ⛔️refuses |
+      | change-run-start-day-sets | ▶️change-run-start-day | ✅️sets |
+      | change-run-start-day-refuses | ▶️change-run-start-day | ⛔️refuses |
+      | change-run-end-month-sets | 🛬️change-run-end-month | ✅️sets |
+      | change-run-end-month-refuses | 🛬️change-run-end-month | ⛔️refuses |
+      | change-run-end-day-sets | ⏹️change-run-end-day | ✅️sets |
+      | change-run-end-day-refuses | ⏹️change-run-end-day | ⛔️refuses |
+      | change-run-year-sets | 📅️change-run-year | ✅️sets |
+      | change-run-year-refuses | 📅️change-run-year | ⛔️refuses |
       | replace-airflow-network-attaches-a-network | 🫧️replace-airflow-network | ✅️attaches |
       | replace-airflow-network-refuses-unpaired-nodes | 🫧️replace-airflow-network | ⛔️refuses |
       | add-output-variable-adds-zone-air-temp | 📊️add-output-variable | ✅️adds |

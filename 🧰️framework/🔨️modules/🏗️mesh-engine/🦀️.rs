@@ -10,13 +10,390 @@
 // silenced here rather than resolved by its own suggestion.
 #![allow(async_fn_in_trait)]
 
-use pack::json;
+use semio_framework_pack_json as json;
+use std::collections::BTreeMap;
 // 🔬️ `serde`/`serde_json` survive ONLY as a `#[cfg(test)]` differential oracle (see
 // `mesh_data_json_oracle_tests`/`mesh_data_from_value_oracle_tests` below) now that `MeshData` has
 // its own first-party `ToValue`/`FromValue` codec — never a production dependency of this crate.
 // Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
+
+/// 🎨️ Attribute identities share the existing mesh value and its topology domains.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize), serde(rename_all = "camelCase"))]
+#[value(crate = "::pack::value", rename_all = "camelCase")]
+pub enum MeshAttributeDomain { Vertex, Corner, Face, Edge }
+
+/// 🧭️ Authored channel meaning controls transforms and preview expansion.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize), serde(rename_all = "camelCase"))]
+#[value(crate = "::pack::value", rename_all = "camelCase")]
+pub enum MeshAttributeSemantic { Normal, Uv, Color, Material, Custom }
+
+/// 🧵️ New topology declares how source values combine rather than silently discarding them.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize), serde(rename_all = "camelCase"))]
+#[value(crate = "::pack::value", rename_all = "camelCase")]
+pub enum MeshAttributeInterpolation { Linear, Nearest, Constant }
+
+/// 📦️ First-party owned values permit numeric channels and structured custom metadata.
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[value(crate = "::pack::value")]
+pub struct MeshAttribute {
+    pub domain: MeshAttributeDomain,
+    pub semantic: MeshAttributeSemantic,
+    pub interpolation: MeshAttributeInterpolation,
+    pub values: Vec<pack::value::DslValue>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    pub indices: Option<Vec<u32>>,
+}
+
+impl MeshAttribute {
+    /// 🔎️ Resolves the owned sample for one domain element.
+    pub fn value_at(&self, index: usize) -> Option<&pack::value::DslValue> {
+        let sample = match &self.indices { Some(indices) => *indices.get(index)? as usize, None => index };
+        self.values.get(sample)
+    }
+    /// 📏️ Counts domain elements independently of shared sample storage.
+    pub fn domain_len(&self) -> usize { self.indices.as_ref().map_or(self.values.len(), Vec::len) }
+}
+
+/// 🖼️ Texture bytes are owned by the same mesh payload as their material references.
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[value(crate = "::pack::value")]
+pub struct MeshTexture { pub mime: String, pub bytes: Vec<u8> }
+
+/// 🥽️ Canonical indexed polygon source shared by artifact edits and inference.
+#[derive(Clone,Debug,PartialEq,semio_framework_value_derive::ToValue,semio_framework_value_derive::FromValue)]
+#[value(crate = "::pack::value")]
+pub struct PolygonMeshSource {
+    pub vertices:Vec<[f32;3]>,
+    pub faces:Vec<Vec<u32>>,
+    #[value(default,skip_serializing_if="BTreeMap::is_empty")]
+    pub attributes:BTreeMap<String,MeshAttribute>,
+    #[value(default,skip_serializing_if="BTreeMap::is_empty")]
+    pub materials:BTreeMap<String,pack::value::DslValue>,
+    #[value(default,skip_serializing_if="BTreeMap::is_empty")]
+    pub textures:BTreeMap<String,MeshTexture>,
+}
+
+impl PolygonMeshSource {
+    /// 🎒️ Serializes the same source shape consumed by the named geometry inference.
+    pub fn encode(&self)->String {json::from_dsl_value(&pack::value::ToValue::to_value(self)).to_string()}
+}
+
+/// 🔎️ Parses bounded indexed polygon source without reconstructing geometry.
+pub fn parse_polygon_mesh_source(text:&str)->Result<PolygonMeshSource,String> {
+    let mut preparation=PolygonSourcePreparation::new();
+    loop {if let Some(source)=preparation.step(text,4096,4096)? {return Ok(source);}}
+}
+
+/// 🧵️ Captures, projects, and admits the existing polygon payload under retained work grants.
+pub struct PolygonSourcePreparation {
+    parser:Option<json::JsonParseCursor>,projection:Option<json::JsonValueProjection>,decoding:Option<pack::value::native_decoding::NativeDecodeContinuation>,stage:u8,
+    raw:Option<pack::value::DslValue>,vertices:std::vec::IntoIter<pack::value::DslValue>,faces:std::vec::IntoIter<pack::value::DslValue>,
+    attributes:std::vec::IntoIter<(String,pack::value::DslValue)>,materials:std::vec::IntoIter<(String,pack::value::DslValue)>,textures:std::vec::IntoIter<(String,pack::value::DslValue)>,
+    source:PolygonMeshSource,face:Vec<u32>,indices:std::vec::IntoIter<pack::value::DslValue>,seen:std::collections::HashSet<u32>,corners:usize,
+    current:Option<(String,pack::value::DslValue)>,attribute:Option<(String,MeshAttribute)>,texture:Option<(String,MeshTexture)>,
+    garbage:Vec<pack::value::DslValue>,retirement:Option<Box<dyn pack::value::ErasedSnapshotRetirement>>,name:Option<String>,index:usize,field:usize,texture_bytes:usize,
+}
+impl PolygonSourcePreparation {
+    /// 🌱️ Starts without reading or cloning source text.
+    pub fn new()->Self {Self {parser:Some(json::JsonParseCursor::new(json::JsonMemberPolicy::Reject)),projection:None,decoding:None,stage:0,raw:None,vertices:Vec::new().into_iter(),faces:Vec::new().into_iter(),attributes:Vec::new().into_iter(),materials:Vec::new().into_iter(),textures:Vec::new().into_iter(),source:PolygonMeshSource {vertices:Vec::new(),faces:Vec::new(),attributes:BTreeMap::new(),materials:BTreeMap::new(),textures:BTreeMap::new()},face:Vec::new(),indices:Vec::new().into_iter(),seen:Default::default(),corners:0,current:None,attribute:None,texture:None,garbage:Vec::new(),retirement:None,name:None,index:0,field:0,texture_bytes:0}}
+    /// 📍️ Exposes the current existing source preparation phase.
+    pub fn phase(&self)->&'static str {match self.stage {0=>"mesh-source-parse",1..=7=>"mesh-source-project",_=>"mesh-source-admit"}}
+    /// ⏱️ Advances at most the granted candidate transitions using borrowed source text.
+    pub fn step(&mut self,text:&str,maximum_units:usize,maximum_bytes:usize)->Result<Option<PolygonMeshSource>,String> {
+        if text.len()>16_000_000 {return Err("mesh input exceeds 16 MB".into());}
+        if maximum_bytes==0 {return Ok(None);}
+        for _ in 0..maximum_units {
+            if let Some(retirement)=&mut self.retirement {retirement.close_step(1,maximum_bytes).map_err(|error|error.to_string())?;if retirement.terminal_is_empty() {self.retirement=None;}continue;}
+            match self.stage {
+                0=>{let mut accepted=|_|true;let mut control=match self.decoding.take(){Some(receipt)=>pack::value::NativeDecodeControl::resume(receipt,&mut accepted),None=>Ok(pack::value::NativeDecodeControl::new(256*1024*1024,&mut accepted))}.map_err(|error|error.to_string())?;let parsed=self.parser.as_mut().unwrap().step(text,1,&mut control);self.decoding=Some(control.pause().map_err(|error|error.to_string())?);if let Some(value)=parsed.map_err(|error|error.to_string())? {self.projection=Some(json::JsonValueProjection::new(value));self.retirement=Some(pack::value::retirement::owned_retirement(self.parser.take().unwrap()));self.stage=1;}},
+                1=>{let mut accepted=|_|true;let mut control=pack::value::NativeDecodeControl::resume(self.decoding.take().unwrap(),&mut accepted).map_err(|error|error.to_string())?;let projected=self.projection.as_mut().unwrap().step(1,maximum_bytes,&mut control);self.decoding=Some(control.pause().map_err(|error|error.to_string())?);if let Some(value)=projected.map_err(|error|error.to_string())? {self.raw=Some(value);self.retirement=Some(pack::value::retirement::owned_retirement(self.projection.take().unwrap()));self.stage=2;}},
+                2=>self.admit_root()?,
+                3=>{if let Some(value)=self.vertices.next() {self.raw=Some(value);let values=self.raw.as_ref().unwrap().as_array().filter(|values|values.len()==3).ok_or("vertex must have three coordinates")?;let mut point=[0.0;3];for axis in 0..3 {point[axis]=values[axis].as_f64().filter(|number|number.is_finite() && number.abs()<=f32::MAX as f64).ok_or("coordinate must be finite")? as f32;}self.source.vertices.push(point);self.garbage.push(self.raw.take().unwrap());}else {self.stage=4;}},
+                4=>self.project_face()?,
+                5=>self.project_attribute()?,
+                6=>{if let Some((name,value))=self.materials.next() {self.current=Some((name,value));let (name,value)=self.current.as_ref().unwrap();if !mesh_name_valid(name) || value.as_object().is_none() {return Err("invalid owned mesh material".into());}let (name,value)=self.current.take().unwrap();self.source.materials.insert(name,value);}else {self.stage=7;}},
+                7=>self.project_texture()?,
+                8=>self.admit_attribute()?,
+                9=>self.admit_material()?,
+                10=>{if !self.garbage.is_empty() {self.retirement=Some(pack::value::retirement::owned_retirement(std::mem::take(&mut self.garbage)));}else {self.stage=11;}},
+                _=>return Ok(Some(std::mem::replace(&mut self.source,PolygonMeshSource {vertices:Vec::new(),faces:Vec::new(),attributes:BTreeMap::new(),materials:BTreeMap::new(),textures:BTreeMap::new()}))),
+            }
+        }
+        Ok(None)
+    }
+    fn admit_root(&mut self)->Result<(),String> {
+        let fields=self.raw.as_ref().unwrap().as_object().filter(|fields|fields.len()<=5 && fields.iter().all(|(name,_)|["vertices","faces","attributes","materials","textures"].contains(&name.as_str()))).ok_or("unknown mesh field")?;
+        for (field,minimum,maximum) in [("vertices",3,100_000),("faces",1,100_000)] {let values=fields.iter().find(|(name,_)|name==field).and_then(|(_,value)|value.as_array()).ok_or_else(||format!("{field} must be an array"))?;if !(minimum..=maximum).contains(&values.len()) {return Err("mesh requires 3..100000 vertices and 1..100000 faces".into());}}
+        for (field,maximum) in [("attributes",64),("materials",10_000),("textures",256)] {if let Some((_,value))=fields.iter().find(|(name,_)|name==field) {if value.as_object().is_none_or(|fields|fields.len()>maximum) {return Err("mesh asset declaration limit exceeded".into());}}}
+        let Some(pack::value::DslValue::Object(fields))=self.raw.take() else {unreachable!()};
+        for (name,value) in fields {match (name.as_str(),value) {("vertices",pack::value::DslValue::Array(values))=>self.vertices=values.into_iter(),("faces",pack::value::DslValue::Array(values))=>self.faces=values.into_iter(),("attributes",pack::value::DslValue::Object(values))=>self.attributes=values.into_iter(),("materials",pack::value::DslValue::Object(values))=>self.materials=values.into_iter(),("textures",pack::value::DslValue::Object(values))=>self.textures=values.into_iter(),_=>unreachable!()}}
+        self.stage=3;Ok(())
+    }
+    fn project_face(&mut self)->Result<(),String> {
+        if let Some(value)=self.indices.next() {self.raw=Some(value);let id=self.raw.as_ref().unwrap().as_u64().filter(|id|*id<self.source.vertices.len() as u64).ok_or("face index out of range")? as u32;if !self.seen.insert(id) {return Err("face contains a repeated vertex".into());}self.face.push(id);self.garbage.push(self.raw.take().unwrap());return Ok(());}
+        if !self.face.is_empty() {self.source.faces.push(std::mem::take(&mut self.face));self.retirement=Some(pack::value::retirement::owned_retirement(std::mem::take(&mut self.seen)));return Ok(());}
+        if let Some(value)=self.faces.next() {self.raw=Some(value);let values=self.raw.as_ref().unwrap().as_array().filter(|values|values.len()>=3).ok_or("face requires at least three indices")?;self.corners=self.corners.saturating_add(values.len());if self.corners>600_000 {return Err("mesh exceeds 600000 polygon corners".into());}let Some(pack::value::DslValue::Array(values))=self.raw.take() else {unreachable!()};self.indices=values.into_iter();}else {self.stage=5;}Ok(())
+    }
+    fn project_attribute(&mut self)->Result<(),String> {
+        if let Some((_,attribute))=&mut self.attribute {if let Some(value)=self.indices.next() {self.raw=Some(value);attribute.indices.as_mut().unwrap().push(u32::try_from(self.raw.as_ref().unwrap().as_u64().ok_or("invalid mesh attribute index")?).map_err(|_|"invalid mesh attribute index")?);self.garbage.push(self.raw.take().unwrap());return Ok(());}let (name,attribute)=self.attribute.take().unwrap();self.source.attributes.insert(name,attribute);return Ok(());}
+        let Some(value)=self.attributes.next() else {self.stage=6;return Ok(())};self.current=Some(value);
+        let (name,value)=self.current.as_ref().unwrap();if !mesh_name_valid(name) {return Err("mesh attribute declaration limit exceeded".into());}
+        let fields=value.as_object().filter(|fields|fields.len()<=5 && fields.iter().all(|(name,_)|["domain","semantic","interpolation","values","indices"].contains(&name.as_str()))).ok_or("invalid mesh attribute declaration")?;
+        let get=|key:&str|fields.iter().find(|(name,_)|name==key).map(|(_,value)|value);
+        let domain=match get("domain").and_then(|value|value.as_str()) {Some("vertex")=>MeshAttributeDomain::Vertex,Some("corner")=>MeshAttributeDomain::Corner,Some("face")=>MeshAttributeDomain::Face,Some("edge")=>MeshAttributeDomain::Edge,_=>return Err("invalid mesh attribute domain".into())};
+        let semantic=match get("semantic").and_then(|value|value.as_str()) {Some("normal")=>MeshAttributeSemantic::Normal,Some("uv")=>MeshAttributeSemantic::Uv,Some("color")=>MeshAttributeSemantic::Color,Some("material")=>MeshAttributeSemantic::Material,Some("custom")=>MeshAttributeSemantic::Custom,_=>return Err("invalid mesh attribute semantic".into())};
+        let interpolation=match get("interpolation").and_then(|value|value.as_str()) {Some("linear")=>MeshAttributeInterpolation::Linear,Some("nearest")=>MeshAttributeInterpolation::Nearest,Some("constant")=>MeshAttributeInterpolation::Constant,_=>return Err("invalid mesh attribute interpolation".into())};
+        if get("values").and_then(|value|value.as_array()).is_none_or(|values|values.len()>600_000) {return Err("invalid mesh attribute values".into());}
+        if get("indices").is_some_and(|value|!matches!(value,pack::value::DslValue::Null) && value.as_array().is_none_or(|values|values.len()>600_000)) {return Err("invalid mesh attribute indices".into());}
+        let (name,pack::value::DslValue::Object(fields))=self.current.take().unwrap() else {unreachable!()};let mut attribute=MeshAttribute {domain,semantic,interpolation,values:Vec::new(),indices:None};
+        for (key,value) in fields {match (key.as_str(),value) {("values",pack::value::DslValue::Array(values))=>attribute.values=values,("indices",pack::value::DslValue::Array(values))=>{self.indices=values.into_iter();attribute.indices=Some(Vec::new());},(_,value)=>self.garbage.push(value)}}
+        self.attribute=Some((name,attribute));Ok(())
+    }
+    fn project_texture(&mut self)->Result<(),String> {
+        if let Some((_,texture))=&mut self.texture {if let Some(value)=self.indices.next() {self.raw=Some(value);texture.bytes.push(u8::try_from(self.raw.as_ref().unwrap().as_u64().ok_or("invalid mesh texture byte")?).map_err(|_|"invalid mesh texture byte")?);self.garbage.push(self.raw.take().unwrap());return Ok(());}let (name,texture)=self.texture.take().unwrap();self.source.textures.insert(name,texture);return Ok(());}
+        let Some(value)=self.textures.next() else {self.stage=8;self.name=None;return Ok(())};self.current=Some(value);let (name,value)=self.current.as_ref().unwrap();if !mesh_name_valid(name) {return Err("mesh asset declaration limit exceeded".into());}
+        let fields=value.as_object().filter(|fields|fields.len()==2 && fields.iter().all(|(name,_)|["mime","bytes"].contains(&name.as_str()))).ok_or("invalid owned mesh texture")?;
+        let mime=fields.iter().find(|(name,_)|name=="mime").and_then(|(_,value)|value.as_str()).filter(|mime|mesh_name_valid(mime)).ok_or("invalid owned mesh texture")?;
+        let _=mime;let bytes=fields.iter().find(|(name,_)|name=="bytes").and_then(|(_,value)|value.as_array()).ok_or("invalid owned mesh texture")?;self.texture_bytes=self.texture_bytes.saturating_add(bytes.len());if self.texture_bytes>16_000_000 {return Err("invalid owned mesh texture".into());}
+        let (name,pack::value::DslValue::Object(fields))=self.current.take().unwrap() else {unreachable!()};let mut texture=MeshTexture {mime:String::new(),bytes:Vec::new()};for (key,value) in fields {match (key.as_str(),value) {("mime",pack::value::DslValue::String(value))=>texture.mime=value,("bytes",pack::value::DslValue::Array(values))=>self.indices=values.into_iter(),_=>unreachable!()}}self.texture=Some((name,texture));Ok(())
+    }
+    fn admit_attribute(&mut self)->Result<(),String> {
+        use std::ops::Bound::{Excluded,Unbounded};
+        if self.index==0 {let bounds=self.name.as_ref().map_or((Unbounded,Unbounded),|name|(Excluded(name.clone()),Unbounded));let Some((name,_))=self.source.attributes.range(bounds).next() else {self.stage=9;self.name=None;return Ok(())};self.name=Some(name.clone());self.index=1;}
+        let name=self.name.as_ref().unwrap();let attribute=&self.source.attributes[name];let count=match attribute.domain {MeshAttributeDomain::Vertex=>self.source.vertices.len(),MeshAttributeDomain::Face=>self.source.faces.len(),_=>self.corners};
+        if attribute.domain_len()!=count {return Err(format!("mesh attribute '{name}' cardinality does not match its domain"));}
+        let position=self.index-1;
+        if let Some(value)=attribute.indices.as_ref().and_then(|values|values.get(position)) {if *value as usize>=attribute.values.len() {return Err(format!("mesh attribute '{name}' cardinality does not match its domain"));}}
+        if let Some(value)=attribute.values.get(position) {validate_mesh_attribute_sample(name,attribute,value,&self.source.materials)?;}
+        if position+1>=attribute.values.len().max(attribute.indices.as_ref().map_or(0,Vec::len)) {self.index=0;}else {self.index+=1;}Ok(())
+    }
+    fn admit_material(&mut self)->Result<(),String> {
+        use std::ops::Bound::{Excluded,Unbounded};
+        if self.field==0 {let bounds=self.name.as_ref().map_or((Unbounded,Unbounded),|name|(Excluded(name.clone()),Unbounded));let Some((name,_))=self.source.materials.range(bounds).next() else {self.stage=10;return Ok(())};self.name=Some(name.clone());self.field=1;}
+        let name=self.name.as_ref().unwrap();let fields=self.source.materials[name].as_object().unwrap();if let Some((key,value))=fields.get(self.field-1) {validate_mesh_material_field(name,key,value,&self.source.textures)?;self.field+=1;}else {self.field=0;}Ok(())
+    }
+}
+impl pack::value::retirement::RetireOwned for PolygonSourcePreparation {fn retirement(self)->Box<dyn pack::value::retirement::RetirementCursor>{let fields=pack::value::artifact_retirement_sequence!(self.parser,self.projection,self.raw,self.vertices,self.faces,self.attributes,self.materials,self.textures,self.source,self.face,self.indices,self.seen,self.current,self.attribute,self.texture,self.garbage,self.name);if let Some(retirement)=self.retirement {pack::value::retirement::sequence(vec![pack::value::retirement::erased_cursor(retirement),fields])}else {fields}}}
+
+/// ✅️ Validates owned polygon channels independently of geometry evaluation.
+pub fn validate_polygon_mesh_attributes(vertex_count:usize,face_count:usize,halfedge_count:usize,attributes:&BTreeMap<String,MeshAttribute>,materials:&BTreeMap<String,pack::value::DslValue>,textures:&BTreeMap<String,MeshTexture>)->Result<(),String> {
+    if vertex_count>100_000 || face_count>100_000 || halfedge_count>600_000 || attributes.len()>64 {return Err("mesh declaration capacity exceeded".into());}
+    validate_mesh_surface_assets(materials,textures)?;
+    for (name,attribute) in attributes {validate_mesh_attribute(name,attribute,vertex_count,face_count,halfedge_count,materials)?;}
+    Ok(())
+}
+
+/// 🎨️ Validates material references and owned texture payload limits.
+pub fn validate_mesh_surface_assets(materials:&BTreeMap<String,pack::value::DslValue>,textures:&BTreeMap<String,MeshTexture>)->Result<(),String> {
+    if materials.len()>10_000 || textures.len()>256 || materials.keys().chain(textures.keys()).any(|name|!mesh_name_valid(name)) {return Err("mesh asset declaration limit exceeded".into());}
+    let mut bytes=0usize;
+    for texture in textures.values() {bytes=bytes.saturating_add(texture.bytes.len());if !mesh_name_valid(&texture.mime) || bytes>16_000_000 {return Err("invalid owned mesh texture".into());}}
+    for (id,material) in materials {
+        let fields=material.as_object().ok_or_else(||format!("mesh material '{id}' must be an owned object"))?;
+        for (name,value) in fields {validate_mesh_material_field(id,name,value,textures)?;}
+    }
+    Ok(())
+}
+
+fn validate_mesh_material_field(id:&str,name:&str,value:&pack::value::DslValue,textures:&BTreeMap<String,MeshTexture>)->Result<(),String> {
+            if name.ends_with("Texture") && value.as_str().is_none_or(|name|!textures.contains_key(name)) {return Err(format!("mesh material '{id}' references an undefined texture"));}
+            let range=|value:&pack::value::DslValue|value.as_f64().is_some_and(|number|number.is_finite() && (0.0..=1.0).contains(&number));
+            let valid=match name {
+                "baseColor"=>value.as_array().is_some_and(|values|values.len()==4 && values.iter().all(range)),
+                "metallic"|"roughness"|"occlusionStrength"=>range(value),
+                "alphaCutoff"=>value.as_f64().is_some_and(|number|number.is_finite() && number>=0.0 && number<=f32::MAX as f64),
+                "normalScale"=>value.as_f64().is_some_and(|number|number.is_finite() && number.abs()<=f32::MAX as f64) || value.as_array().is_some_and(|values|values.len()==2 && values.iter().all(|value|value.as_f64().is_some_and(|number|number.is_finite() && number.abs()<=f32::MAX as f64))),
+                "textureCoordinates"=>value.as_object().is_some_and(|fields|fields.iter().all(|(key,value)|["baseColorTexture","metallicRoughnessTexture","normalTexture","occlusionTexture","emissiveTexture"].contains(&key.as_str()) && value.as_u64().is_some_and(|set|set<64))),
+                "textureSamplers"=>value.as_object().is_some_and(|fields|fields.iter().all(|(key,value)|["baseColorTexture","metallicRoughnessTexture","normalTexture","occlusionTexture","emissiveTexture"].contains(&key.as_str()) && value.as_object().is_some_and(|fields|fields.iter().all(|(key,value)|value.as_u64().is_some_and(|value|match key.as_str(){"wrapS"|"wrapT"=>matches!(value,33071|33648|10497),"magFilter"=>matches!(value,9728|9729),"minFilter"=>matches!(value,9728|9729|9984|9985|9986|9987),_=>false}))))),
+                "emissive"=>value.as_array().is_some_and(|values|values.len()==3 && values.iter().all(|value|value.as_f64().is_some_and(|number|number.is_finite() && (0.0..=f32::MAX as f64).contains(&number)))),
+                "alphaMode"=>value.as_str().is_some_and(|mode|matches!(mode,"OPAQUE"|"MASK"|"BLEND")),
+                "doubleSided"=>value.as_bool().is_some(),
+                _=>true,
+            };
+            if !valid {return Err(format!("mesh material '{id}' has an invalid '{name}' field"));}
+        
+    Ok(())
+}
+
+/// 🧭️ Validates one indexed channel using its declared domain and interpolation rule.
+pub fn validate_mesh_attribute(name:&str,attribute:&MeshAttribute,vertex_count:usize,face_count:usize,halfedge_count:usize,materials:&BTreeMap<String,pack::value::DslValue>)->Result<(),String> {
+    if !mesh_name_valid(name) {return Err("mesh attribute declaration limit exceeded".into());}
+    let count=match attribute.domain {MeshAttributeDomain::Vertex=>vertex_count,MeshAttributeDomain::Face=>face_count,_=>halfedge_count};
+    if attribute.values.len()>600_000 || attribute.domain_len()!=count || attribute.indices.as_ref().is_some_and(|indices|indices.iter().any(|index|*index as usize>=attribute.values.len())) {return Err(format!("mesh attribute '{name}' cardinality does not match its domain"));}
+    if attribute.values.is_empty() && attribute.interpolation==MeshAttributeInterpolation::Linear {return Err(format!("linear mesh attribute '{name}' requires finite numeric values"));}
+    for value in &attribute.values {validate_mesh_attribute_sample(name,attribute,value,materials)?;}
+    Ok(())
+}
+
+fn mesh_name_valid(name:&str)->bool {!name.is_empty() && name.chars().take(129).count()<=128}
+
+fn mesh_attribute_numeric(value:&pack::value::DslValue)->Option<usize> {
+    if value.as_f64().is_some_and(|number|number.is_finite() && number.abs()<=f32::MAX as f64) {return Some(0);}
+    let tuple=value.as_array()?;(!tuple.is_empty() && tuple.len()<=16 && tuple.iter().all(|value|value.as_f64().is_some_and(|number|number.is_finite() && number.abs()<=f32::MAX as f64))).then_some(tuple.len())
+}
+fn validate_mesh_attribute_sample(name:&str,attribute:&MeshAttribute,value:&pack::value::DslValue,materials:&BTreeMap<String,pack::value::DslValue>)->Result<(),String> {
+    let numeric=mesh_attribute_numeric;
+    if attribute.interpolation==MeshAttributeInterpolation::Linear {let width=attribute.values.first().and_then(numeric).ok_or_else(||format!("linear mesh attribute '{name}' requires finite numeric values"))?;if numeric(value)!=Some(width) {return Err(format!("linear mesh attribute '{name}' requires compatible numeric dimensions"));}}
+    let width=match attribute.semantic {MeshAttributeSemantic::Normal=>3,MeshAttributeSemantic::Uv=>2,MeshAttributeSemantic::Color=>4,_=>0};
+    if width>0 && (!matches!(attribute.domain,MeshAttributeDomain::Vertex|MeshAttributeDomain::Corner|MeshAttributeDomain::Face) || numeric(value)!=Some(width)) {return Err(format!("mesh attribute '{name}' has an invalid semantic domain or dimensions"));}
+    if name=="tangent" && (attribute.semantic!=MeshAttributeSemantic::Custom || !matches!(attribute.domain,MeshAttributeDomain::Vertex|MeshAttributeDomain::Corner|MeshAttributeDomain::Face) || numeric(value)!=Some(4) || value.as_array().is_none_or(|values|values[..3].iter().all(|value|value.as_f64()==Some(0.0)) || values[3].as_f64().is_none_or(|value|value!=1.0 && value!= -1.0))) {return Err("canonical tangent requires a nonzero finite four-component direction and handedness +/-1".into());}
+    if attribute.semantic==MeshAttributeSemantic::Normal && value.as_array().unwrap().iter().all(|value|value.as_f64()==Some(0.0)) {return Err(format!("mesh normal '{name}' cannot be zero"));}
+    if attribute.semantic==MeshAttributeSemantic::Material && (attribute.domain!=MeshAttributeDomain::Face || attribute.interpolation==MeshAttributeInterpolation::Linear || value.as_str().is_none_or(|name|!materials.contains_key(name))) {return Err(format!("mesh attribute '{name}' references an undefined face material"));}
+    Ok(())
+}
+
+/// 🎒️ Retained metadata cursor shared by mesh JSON and preview packing.
+#[derive(Default)]
+pub struct MeshMetadataCursor {
+    metadata_section:u8,metadata_stage:u8,metadata_name:Option<String>,metadata_records:usize,metadata_value:usize,metadata_stack:Vec<MeshJsonTask>,
+}
+impl MeshMetadataCursor {
+    /// 🧵️ Appends one bounded metadata transition using borrowed canonical values.
+    pub fn step(&mut self, attributes:&BTreeMap<String,MeshAttribute>,materials:&BTreeMap<String,pack::value::DslValue>,textures:&BTreeMap<String,MeshTexture>,references:Option<&BTreeMap<String,Vec<String>>>,corners:Option<&[u32]>,edges:Option<&[u32]>,output:&mut String)->Result<bool,String> {
+        use std::ops::Bound::{Excluded,Unbounded};
+        if attributes.len()>64 || materials.len()>10_000 || textures.len()>256 {return Err("mesh metadata declaration limit exceeded".into());}
+        if references.is_some_and(|values|values.len()>3) {return Err("mesh component reference domain limit exceeded".into());}
+        if self.metadata_section==4 {return Ok(true); }
+        if self.metadata_stage==0 {
+            let (field,empty)=match self.metadata_section {0=>("attributes",attributes.is_empty()),1=>("materials",materials.is_empty()),2=>("textures",textures.is_empty()),_=>("componentReferences",references.is_none_or(BTreeMap::is_empty))};
+            if empty {self.metadata_section+=1;return Ok(false);}
+            output.push_str(&format!("{}\"{field}\":{{",if output.ends_with('{') {""}else {","}));self.metadata_stage=1;self.metadata_name=None;self.metadata_records=0;
+            return Ok(false);
+        }
+        if self.metadata_stage==1 {
+            let bounds=self.metadata_name.as_ref().map_or((Unbounded,Unbounded),|name|(Excluded(name.clone()),Unbounded));
+            let name=match self.metadata_section {0=>attributes.range(bounds).next().map(|(name,_)|name.clone()),1=>materials.range(bounds).next().map(|(name,_)|name.clone()),2=>textures.range(bounds).next().map(|(name,_)|name.clone()),_=>references.and_then(|values|values.range(bounds).next().map(|(name,_)|name.clone()))};
+            let Some(name)=name else {output.push('}');self.metadata_section+=1;self.metadata_stage=0;return Ok(false);};
+            if name.is_empty() || name.chars().take(129).count()>128 {return Err("mesh metadata name limit exceeded".into());}
+            if self.metadata_records>0 {output.push(',');}self.metadata_records+=1;
+            output.push_str(&json::Value::from(name.as_str()).to_string());output.push(':');
+            self.metadata_value=0;
+            match self.metadata_section {
+                0=>{
+                    let attribute=attributes.get(&name).unwrap();
+                    if attribute.values.len()>600_000 || attribute.domain_len()>600_000 {return Err("mesh metadata attribute capacity exceeded".into());}
+                    let domain=match attribute.domain {MeshAttributeDomain::Vertex=>"vertex",MeshAttributeDomain::Corner=>"corner",MeshAttributeDomain::Face=>"face",MeshAttributeDomain::Edge=>"edge"};
+                    let semantic=match attribute.semantic {MeshAttributeSemantic::Normal=>"normal",MeshAttributeSemantic::Uv=>"uv",MeshAttributeSemantic::Color=>"color",MeshAttributeSemantic::Material=>"material",MeshAttributeSemantic::Custom=>"custom"};
+                    let interpolation=match attribute.interpolation {MeshAttributeInterpolation::Linear=>"linear",MeshAttributeInterpolation::Nearest=>"nearest",MeshAttributeInterpolation::Constant=>"constant"};
+                    output.push_str(&format!("{{\"domain\":\"{domain}\",\"semantic\":\"{semantic}\",\"interpolation\":\"{interpolation}\",\"values\":["));
+                },
+                1=>self.metadata_stack.push(MeshJsonTask::Node(Vec::new())),
+                2=>{
+                    let texture=textures.get(&name).unwrap();
+                    if texture.mime.is_empty() || texture.mime.chars().take(129).count()>128 || texture.bytes.len()>16_000_000 {return Err("mesh metadata texture capacity exceeded".into());}
+                    output.push_str(&format!("{{\"mime\":{},\"bytes\":[",json::Value::from(texture.mime.as_str())));
+                },
+                _=>{
+                    if !["face","edge","vertex"].contains(&name.as_str()) || references.unwrap().get(&name).unwrap().len()>600_000 {return Err("mesh component reference domain or capacity is invalid".into());}
+                    output.push('[');
+                },
+            }
+            self.metadata_name=Some(name);self.metadata_stage=2;return Ok(false);
+        }
+        let name=self.metadata_name.as_ref().unwrap();
+        if self.metadata_section==3 {
+            let labels=references.unwrap().get(name).unwrap();
+            if let Some(label)=labels.get(self.metadata_value) {
+                if !mesh_name_valid(label) {return Err("mesh component label limit exceeded".into());}
+                if self.metadata_value>0 {output.push(',');}output.push_str(&json::Value::from(label.as_str()).to_string());self.metadata_value+=1;
+            }else {output.push(']');self.metadata_stage=1;}
+            return Ok(false);
+        }
+        if self.metadata_section==2 {
+            let texture=textures.get(name).unwrap();
+            if self.metadata_value<texture.bytes.len() {
+                if self.metadata_value>0 {output.push(',');}output.push_str(&texture.bytes[self.metadata_value].to_string());self.metadata_value+=1;
+            } else {output.push_str("]}");self.metadata_stage=1;}
+            return Ok(false);
+        }
+        if self.metadata_section==0 {
+            let attribute=attributes.get(name).unwrap();
+            let remap=match attribute.domain {MeshAttributeDomain::Corner=>corners,MeshAttributeDomain::Edge=>edges,_=>None};
+            if self.metadata_stage==2 {
+                if self.metadata_value==attribute.values.len() {
+                    output.push(']');self.metadata_value=0;
+                    if attribute.indices.is_some() || match attribute.domain {MeshAttributeDomain::Corner=>corners.is_some(),MeshAttributeDomain::Edge=>edges.is_some(),_=>false} {output.push_str(",\"indices\":[");self.metadata_stage=3;}else {output.push('}');self.metadata_stage=1;}
+                    return Ok(false);
+                }
+                if self.metadata_stack.is_empty() {if self.metadata_value>0 {output.push(',');}self.metadata_stack.push(MeshJsonTask::Node(Vec::new()));}
+                mesh_json_step(&attribute.values[self.metadata_value],&mut self.metadata_stack,output)?;
+                if self.metadata_stack.is_empty() {self.metadata_value+=1;}
+            }else {
+                if self.metadata_value==attribute.domain_len() {output.push_str("]}");self.metadata_stage=1;return Ok(false);}
+                let source=match remap {Some(ids)=>*ids.get(self.metadata_value).ok_or("mesh metadata remap cardinality mismatch")? as usize,None=>self.metadata_value};
+                let index=match &attribute.indices {Some(indices)=>*indices.get(source).ok_or("mesh metadata index cardinality mismatch")?,None=>source as u32};
+                if index as usize>=attribute.values.len() {return Err("mesh metadata sample index out of range".into());}
+                if self.metadata_value>0 {output.push(',');}output.push_str(&index.to_string());self.metadata_value+=1;
+            }
+        } else {
+            mesh_json_step(materials.get(name).unwrap(),&mut self.metadata_stack,output)?;
+            if self.metadata_stack.is_empty() {self.metadata_stage=1;}
+        }
+        Ok(false)
+    }
+}
+enum MeshJsonTask { Node(Vec<usize>),Array(Vec<usize>,usize),Object(Vec<usize>,usize),Text(Vec<usize>,usize,Option<usize>) }
+
+fn mesh_json_node<'a>(root:&'a pack::value::DslValue,path:&[usize])->Result<&'a pack::value::DslValue,String> {
+    let mut value=root;
+    for index in path {value=match value {pack::value::DslValue::Array(values)=>values.get(*index),pack::value::DslValue::Object(values)=>values.get(*index).map(|(_,value)|value),_=>None}.ok_or_else(||String::from("mesh metadata cursor is invalid"))?;}
+    Ok(value)
+}
+
+fn mesh_json_step(root:&pack::value::DslValue,stack:&mut Vec<MeshJsonTask>,output:&mut String)->Result<(),String> {
+    use pack::value::DslValue;
+    if stack.len()>256 {return Err(String::from("mesh metadata exceeds nesting limit"));}
+    let task=stack.pop().ok_or_else(||String::from("mesh metadata cursor is retired"))?;
+    match task {
+        MeshJsonTask::Node(path)=>{
+            if path.len()>64 {return Err(String::from("mesh metadata exceeds nesting limit"));}
+            let value=mesh_json_node(root,&path)?;
+            match value {
+                DslValue::String(_)=>{output.push('"');stack.push(MeshJsonTask::Text(path,0,None));},
+                DslValue::Array(_)|DslValue::Bytes(_)=>{output.push('[');stack.push(MeshJsonTask::Array(path,0));},
+                DslValue::Object(_)=>{output.push('{');stack.push(MeshJsonTask::Object(path,0));},
+                _=>{if value.as_f64().is_some_and(|value|!value.is_finite()) {return Err(String::from("mesh metadata number must be finite"));}output.push_str(&semio_framework_pack_json::from_dsl_value(value).to_string());},
+            }
+        },
+        MeshJsonTask::Array(path,index)=>{
+            let value=mesh_json_node(root,&path)?;
+            let length=match value {DslValue::Array(values)=>values.len(),DslValue::Bytes(values)=>values.len(),_=>return Err(String::from("mesh metadata array cursor is invalid"))};
+            if index==length {output.push(']');}
+            else {
+                if index>0 {output.push(',');}stack.push(MeshJsonTask::Array(path.clone(),index+1));
+                if let DslValue::Bytes(values)=value {output.push_str(&values[index].to_string());}
+                else {let mut child=path;child.push(index);stack.push(MeshJsonTask::Node(child));}
+            }
+        },
+        MeshJsonTask::Object(path,index)=>{
+            let values=mesh_json_node(root,&path)?.as_object().ok_or_else(||String::from("mesh metadata object cursor is invalid"))?;
+            if index==values.len() {output.push('}');}
+            else {
+                if index>0 {output.push(',');}stack.push(MeshJsonTask::Object(path.clone(),index+1));
+                let mut child=path.clone();child.push(index);stack.push(MeshJsonTask::Node(child));
+                output.push('"');stack.push(MeshJsonTask::Text(path,0,Some(index)));
+            }
+        },
+        MeshJsonTask::Text(path,offset,key)=>{
+            let value=mesh_json_node(root,&path)?;
+            let text=match key {Some(index)=>value.as_object().unwrap()[index].0.as_str(),None=>value.as_str().unwrap()};
+            if offset==text.len() {output.push('"');if key.is_some() {output.push(':');}}
+            else {
+                let character=text[offset..].chars().next().unwrap();let encoded=semio_framework_pack_json::Value::from(character.to_string()).to_string();
+                output.push_str(&encoded[1..encoded.len()-1]);stack.push(MeshJsonTask::Text(path,offset+character.len_utf8(),key));
+            }
+        },
+    }
+    Ok(())
+}
 
 //#region MeshData
 #[derive(Clone, Debug, PartialEq, Default)]
@@ -47,6 +424,26 @@ pub struct MeshData {
     pub edge_is_seam: Vec<u8>,
     #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
     pub paint_texture_base64: Option<String>,
+    #[cfg_attr(test, serde(default, skip_serializing_if = "BTreeMap::is_empty"))]
+    pub attributes: BTreeMap<String, MeshAttribute>,
+    #[cfg_attr(test, serde(default, skip_serializing_if = "BTreeMap::is_empty"))]
+    pub materials: BTreeMap<String, pack::value::DslValue>,
+    #[cfg_attr(test, serde(default, skip_serializing_if = "BTreeMap::is_empty"))]
+    pub textures: BTreeMap<String, MeshTexture>,
+    #[cfg_attr(test, serde(default, skip_serializing_if = "BTreeMap::is_empty"))]
+    pub component_references: BTreeMap<String, Vec<String>>,
+}
+
+impl pack::value::retirement::RetireOwned for MeshData {
+    fn retirement(self) -> Box<dyn pack::value::retirement::RetirementCursor> {
+        pack::value::artifact_retirement_sequence![self.positions,self.normals,self.colors,self.indices,self.uvs,self.face_ids,self.vertex_ids,self.edge_positions,self.edge_ids,self.edge_uvs,self.edge_is_seam,self.paint_texture_base64,self.attributes,self.materials,self.textures,self.component_references]
+    }
+}
+impl pack::value::retirement::RetireOwned for MeshAttribute {
+    fn retirement(self) -> Box<dyn pack::value::retirement::RetirementCursor> {pack::value::artifact_retirement_sequence![self.values,self.indices]}
+}
+impl pack::value::retirement::RetireOwned for MeshTexture {
+    fn retirement(self) -> Box<dyn pack::value::retirement::RetirementCursor> {pack::value::artifact_retirement_sequence![self.mime,self.bytes]}
 }
 
 /// 🌉️ `pack::json!` leaf conversion, mirroring this type's own serde attributes exactly: keys are
@@ -79,6 +476,11 @@ impl From<MeshData> for json::Value {
         if !mesh.edge_uvs.is_empty() { object.insert("edgeUvs", floats(mesh.edge_uvs)); }
         if !mesh.edge_is_seam.is_empty() { object.insert("edgeIsSeam", bytes(mesh.edge_is_seam)); }
         if let Some(texture) = mesh.paint_texture_base64 { object.insert("paintTextureBase64", json::Value::from(texture)); }
+        use pack::value::ToValue;
+        if !mesh.attributes.is_empty() { object.insert("attributes", json::from_dsl_value(&mesh.attributes.to_value())); }
+        if !mesh.materials.is_empty() { object.insert("materials", json::from_dsl_value(&mesh.materials.to_value())); }
+        if !mesh.textures.is_empty() { object.insert("textures", json::from_dsl_value(&mesh.textures.to_value())); }
+        if !mesh.component_references.is_empty() { object.insert("componentReferences", json::from_dsl_value(&mesh.component_references.to_value())); }
         json::Value::Object(object)
     }
 }
@@ -115,7 +517,7 @@ impl pack::value::FromValue for MeshData {
                 None => Ok(Vec::new()),
             }
         }
-        Ok(MeshData {
+        let mesh=MeshData {
             positions: decode_vec(field("positions"), "positions")?,
             normals: decode_vec(field("normals"), "normals")?,
             colors: decode_vec(field("colors"), "colors")?,
@@ -127,15 +529,30 @@ impl pack::value::FromValue for MeshData {
             edge_ids: decode_vec(field("edgeIds"), "edgeIds")?,
             edge_uvs: decode_vec(field("edgeUvs"), "edgeUvs")?,
             edge_is_seam: decode_vec(field("edgeIsSeam"), "edgeIsSeam")?,
+            attributes: field("attributes").map(BTreeMap::<String, MeshAttribute>::from_value).transpose()?.unwrap_or_default(),
+            materials: field("materials").map(BTreeMap::<String, pack::value::DslValue>::from_value).transpose()?.unwrap_or_default(),
+            textures: field("textures").map(BTreeMap::<String, MeshTexture>::from_value).transpose()?.unwrap_or_default(),
+            component_references: field("componentReferences").map(BTreeMap::<String, Vec<String>>::from_value).transpose()?.unwrap_or_default(),
             paint_texture_base64: match field("paintTextureBase64") {
                 None | Some(pack::value::DslValue::Null) => None,
                 Some(value) => Some(String::from_value(value).map_err(|error| error.under("paintTextureBase64"))?),
             },
-        })
+        };
+        mesh.validate_component_references().map_err(|message|pack::value::ValueError::new(pack::value::ValueRefusalKind::InvalidValue,message))?;
+        Ok(mesh)
     }
 }
 
 impl MeshData {
+    /// 🎯️ Validates lossless component labels against their numeric picking buffers.
+    pub fn validate_component_references(&self)->Result<(),String> {
+        for(domain,labels)in &self.component_references {
+            let(ids,count)=match domain.as_str() {"face"=>(&self.face_ids,self.indices.len()/3),"edge"=>(&self.edge_ids,self.edge_positions.len()/6),"vertex"=>(&self.vertex_ids,self.positions.len()/3),_=>return Err("analytic component references contain an unknown domain".into())};
+            if labels.len()>600_000 || labels.len()>count || ids.len()!=count || ids.iter().any(|id|*id as usize>=labels.len() && !(domain=="vertex" && *id==u32::MAX)) || labels.iter().any(|label|!mesh_name_valid(label)) {return Err("analytic component references require complete picking buffers and bounded full labels".into());}
+        }
+        Ok(())
+    }
+
     pub fn vertex_count(&self) -> usize {
         self.positions.len() / 3
     }
@@ -972,7 +1389,7 @@ fn gltf_append_node(mesh: &mut MeshData, document: &json::Value, node_index: usi
 pub fn mesh_from_glb(bytes: &[u8]) -> Result<MeshData, String> {
     let (json_bytes, bin) = gltf_split_container(bytes)?;
     let text = std::str::from_utf8(&json_bytes).map_err(|error| format!("gltf json is not valid utf-8: {error}"))?;
-    let document = json::parse(text).map_err(|error| format!("gltf json parse error: {error}"))?;
+    let document = json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("gltf json parse error: {error}"))?;
     let buffers = gltf_resolve_buffers(&document, bin.as_deref());
     let mut mesh = MeshData::default();
 
@@ -1253,3 +1670,16 @@ mod mesh_data_json_oracle_tests;
 #[path = "🧪️tests/🔬️mesh-data-from-value-round-trip/🦀️.rs"]
 mod mesh_data_from_value_round_trip;
 //#endregion 🧪️MeshDataFromValueRoundTrip
+
+impl pack::value::retirement::RetireOwned for PolygonMeshSource {
+    fn retirement(self)->Box<dyn pack::value::retirement::RetirementCursor> {pack::value::artifact_retirement_sequence![self.vertices,self.faces,self.attributes,self.materials,self.textures]}
+}
+impl pack::value::retirement::RetireOwned for MeshMetadataCursor {
+    fn retirement(self)->Box<dyn pack::value::retirement::RetirementCursor> {pack::value::artifact_retirement_sequence![self.metadata_name,self.metadata_stack]}
+}
+impl pack::value::retirement::RetireOwned for MeshJsonTask {
+    fn retirement(self)->Box<dyn pack::value::retirement::RetirementCursor> {let (Self::Node(path)|Self::Array(path,..)|Self::Object(path,..)|Self::Text(path,..))=self;pack::value::retirement::RetireOwned::retirement(path)}
+}
+
+#[path="🪆️binding/🦀️.rs"]
+mod native_binding;

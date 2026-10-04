@@ -9,7 +9,7 @@ pub fn diff(payload: &super::RenameArtifact, base: &SSpaceSnapshot) -> protocol:
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Artifact \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if existing.name == payload.new_name {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Artifact \"{}\" already has that name.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Artifact \"{}\" already has that name.", payload.id));
     }
     if base.artifacts.iter().any(|row| row.id != payload.id && row.name == payload.new_name) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("An artifact named \"{}\" already exists.", payload.new_name), [payload.new_name.clone()]);

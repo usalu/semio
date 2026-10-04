@@ -10,5 +10,5 @@ fn changes_the_owned_catalog_axis_and_plans_its_inverse() {
     let outcome = <RemoveMarkInfo as MutationKind<PdfSnapshot, PdfUaMutation>>::diff(&mutation, &base);
     let next = outcome.diff().apply(&base).unwrap();
     assert!(support::catalog_entry(&next, "MarkInfo").is_none());
-    assert_eq!(<RemoveMarkInfo as MutationKind<PdfSnapshot, PdfUaMutation>>::inverse(&mutation, &base), vec![PdfUaMutation::SetMarkInfo(SetMarkInfo { marked: true })]);
+    assert_eq!(<RemoveMarkInfo as MutationKind<PdfSnapshot, PdfUaMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture"), vec![PdfUaMutation::SetMarkInfo(SetMarkInfo { marked: true })]);
 }

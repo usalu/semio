@@ -371,6 +371,7 @@ fn limits_match_the_fixture() {
     assert_eq!(limits["stepArgsMax"], TOOL_RUN_STEP_ARGS_MAX);
     assert_eq!(limits["countersMax"], TOOL_RUN_COUNTERS_MAX);
     assert_eq!(limits["provisionalOpsMax"], TOOL_RUN_PROVISIONAL_OPS_MAX);
+    assert_eq!(limits["memberOpsMax"], TOOL_RUN_MEMBER_OPS_MAX);
     assert_eq!(limits["traceResidentRecords"], TOOL_RUN_TRACE_RESIDENT_RECORDS);
     assert_eq!(limits["tracePageOpsMax"], TOOL_RUN_TRACE_PAGE_OPS_MAX);
     assert_eq!(limits["tracePageBytesMax"], TOOL_RUN_TRACE_PAGE_BYTES_MAX);
@@ -415,6 +416,14 @@ fn definition_round_trips_through_serde_and_value_and_validates() {
     let undeclared: ToolRunDefinition = serde_json::from_value(undeclared).expect("a definition without settings deserializes");
     assert!(undeclared.settings.is_empty(), "an absent settings declaration reads no settings");
     assert!(serde_json::to_value(&undeclared).expect("serializes").get("settings").is_none(), "an empty declaration stays off the wire");
+    let mut member = law["definition"].clone();
+    member["member"] = json!("content");
+    let member: ToolRunDefinition = serde_json::from_value(member).expect("a member-target definition deserializes");
+    assert_eq!((member.member.as_deref(), member.validate()), (Some("content"), Ok(())));
+    assert_eq!(ToolRunDefinition::from_value(member.to_value()).expect("member value round trip"), member);
+    assert!(serde_json::to_value(&definition).expect("serializes").get("member").is_none(), "a document-target run carries no member on the wire");
+    assert_eq!(ToolRunDefinition { member: Some(String::new()), ..member.clone() }.validate(), Err(ToolRunDefinitionError::EmptyMember));
+    assert_eq!(ToolRunDefinition { mutating: false, ..member }.validate(), Err(ToolRunDefinitionError::ReadOnlyMember));
     let mut invalid = definition;
     invalid.stages.clear();
     assert_eq!(invalid.validate(), Err(ToolRunDefinitionError::NoStages));
@@ -426,12 +435,12 @@ fn definition_round_trips_through_serde_and_value_and_validates() {
 fn settings_pointers_resolve_like_the_rfc_6901_oracle() {
     let law = fixture(LIFECYCLE);
     let cases = &law["settingsPointers"];
-    let document = dsl::DslValue::from(cases["artifact"].clone());
+    let document = semio_framework_value::DslValue::from(cases["artifact"].clone());
     for row in cases["rows"].as_array().expect("rows") {
         let pointer = text(&row["pointer"]);
-        let expected = (!row["resolves"].is_null()).then(|| dsl::DslValue::from(row["resolves"].clone()));
+        let expected = (!row["resolves"].is_null()).then(|| semio_framework_value::DslValue::from(row["resolves"].clone()));
         assert_eq!(tool_run_pointer_value(&document, pointer).cloned(), expected, "{pointer}");
-        assert_eq!(cases["artifact"].pointer(pointer).cloned().map(dsl::DslValue::from), expected, "{pointer}: the oracle agrees");
+        assert_eq!(cases["artifact"].pointer(pointer).cloned().map(semio_framework_value::DslValue::from), expected, "{pointer}: the oracle agrees");
     }
     for pointer in cases["malformed"].as_array().expect("malformed").iter().map(text) {
         assert_eq!(tool_run_pointer_tokens(pointer), None, "{pointer}");

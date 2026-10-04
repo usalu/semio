@@ -28,17 +28,17 @@ async fn every_demo_diff_round_trips_without_semantic_shadow_state() {
 #[test]
 fn canonical_fixture_clears_only_the_main_xml_declaration() {
     use protocol::command::DiffAlgebra;
-    use semio_s_artifact_stdio_xml::schema::snapshot::XmlDeclaration;
+    use semio_s_artifact_stdio_xml::schema::snapshot::{XmlQuote,retained::{RetainedXmlDeclaration,RetainedXmlText}};
     use std::io::Read;
 
     let fixture_text = include_str!("../../🧫️fixtures/🧹️clear-main-declaration/🔣️.json");
     let fixture: serde_json::Value = serde_json::from_str(fixture_text).expect("third-party JSON parser accepts the neutral fixture");
     let fixture_diff = serde_json::to_string(&fixture["diff"]).expect("fixture diff serializes");
-    let diff: DocxDiff = dsl::os_pack::json::from_json_str(&fixture_diff).expect("canonical DOCX diff decodes");
+    let diff: DocxDiff = semio_framework_pack_json::from_json_str(&fixture_diff, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("canonical DOCX diff decodes");
 
     let mut before = DocxSnapshot::default();
     let main_path = fixture["mainPart"].as_str().unwrap();
-    before.xml_parts.iter_mut().find(|part| part.path == main_path).unwrap().document.declaration = Some(XmlDeclaration::new("1.0", Some("UTF-8".into()), Some(true)));
+    before.xml_parts.iter_mut().find(|part| part.path == main_path).unwrap().document.declaration = Some(RetainedXmlDeclaration{version:RetainedXmlText::try_from_str("1.0").unwrap(),encoding:Some(RetainedXmlText::try_from_str("UTF-8").unwrap()),standalone:Some(true),quote:XmlQuote::Double});
     before.validate_authority().expect("authored base is valid");
     let source = before.clone();
 
@@ -67,12 +67,13 @@ fn canonical_fixture_clears_only_the_main_xml_declaration() {
 #[test]
 fn archive_comment_only_diff_and_snapshot_replay_preserve_exact_text() {
     use crate::schema::mutations::{set_snapshot, DocxMutation};
-    use protocol::{MutationDiff, OpBinary, OpText, ToValue};
+    use protocol::{MutationDiff, OpBinary, OpText};
+use semio_framework_value::ToValue;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🎒️zip/📦️opc/🧫️fixtures/💬️archive-comment/🔣️.json")).unwrap();
     let mut before = DocxSnapshot::default();
-    before.opc.comment = fixture["before"].as_str().unwrap().into();
+    before.opc.comment = semio_s_artifact_stdio_zip::opc::retained::RetainedOpcText::try_from_str(fixture["before"].as_str().unwrap()).unwrap();
     let mut after = before.clone();
-    after.opc.comment = fixture["after"].as_str().unwrap().into();
+    after.opc.comment = semio_s_artifact_stdio_zip::opc::retained::RetainedOpcText::try_from_str(fixture["after"].as_str().unwrap()).unwrap();
     let diff = DocxDiff::between(&before, &after);
     assert!(!diff.is_empty());
     for replay in [DocxDiff::parse_diff(&diff.print_diff()).unwrap(), DocxDiff::decode_diff(&diff.encode_diff().unwrap()).unwrap()] {
@@ -80,13 +81,13 @@ fn archive_comment_only_diff_and_snapshot_replay_preserve_exact_text() {
         assert_eq!(replay.inverse(&before).apply(&after).unwrap(), before);
     }
     let mut cleared = after.clone();
-    cleared.opc.comment = fixture["cleared"].as_str().unwrap().into();
+    cleared.opc.comment = semio_s_artifact_stdio_zip::opc::retained::RetainedOpcText::try_from_str(fixture["cleared"].as_str().unwrap()).unwrap();
     let mut combined = diff;
     combined.absorb(DocxDiff::between(&after, &cleared));
     assert_eq!(combined.apply(&before).unwrap(), cleared);
     let mutation = DocxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: after.clone() });
     assert_eq!(DocxMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
     assert_eq!(DocxMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
-    let oracle: serde_json::Value = serde_json::from_str(&protocol::os_pack::json::to_json_string(&after.to_value())).unwrap();
+    let oracle: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&after.to_value())).unwrap();
     assert_eq!(oracle["opc"]["comment"], fixture["after"]);
 }

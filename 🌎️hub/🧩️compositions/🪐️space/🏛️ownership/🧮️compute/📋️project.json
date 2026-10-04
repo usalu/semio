@@ -1,0 +1,24 @@
+{
+  "name": "@semio-tech/space-plugin-compute-ownership",
+  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "sharedGlobals",
+        "{projectRoot}/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️testing/📍️consumer/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/🧮️compute/🧬️schema/📍️consumer/🔣️.json",
+        "{workspaceRoot}/🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/🦀️.rs",
+        "{workspaceRoot}/🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🪐️space/🏛️ownership/🧮️compute",
+        "command": "bun ./📜️script.ts test"
+      }
+    }
+  }
+}

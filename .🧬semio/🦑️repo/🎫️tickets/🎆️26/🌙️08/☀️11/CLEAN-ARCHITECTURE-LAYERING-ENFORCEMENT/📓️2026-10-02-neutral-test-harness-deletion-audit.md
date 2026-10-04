@@ -1,0 +1,27 @@
+# Neutral Test Harness Deletion Audit
+
+Read-only current source and bounded existing receipt inspection; no Cargo/Nx runs, source edits or private captures.
+
+## Actual Cargo Check Scope
+
+Repo library `🕸️dependencies/🧭️direction/🦀️cargo/🟦️.ts:31–65` independently inventories normal, dev and build declarations, including every target table, optional edges and inherited workspace path authority. It recursively follows every declared local provider. This is deliberately stronger than default-feature runtime closure; optional/dev/platform declarations are not omitted because default compilation would skip them. Metadata parity is checked against the declaration inventory. Canonical routes are library package script `lint cargo-dependency-direction` (line80) and `test cargo-dependency-direction` (lines214–217), backed by authored schema/fixtures/tests. A zero-edge default runtime graph cannot substitute for this declaration result.
+
+Source participation is a distinct obligation: a test physically under a neutral owner can be mounted only by a higher package, without any dev dependency in the neutral manifest. The Cargo declaration check cannot alone establish that the neutral native target discovers every physically neutral law.
+
+## Concrete Lost Harness Ownership
+
+Value's manifest has no OS kernel dependency and no integration-test registration for `🛬️decode/🧪️tests/🦀️.rs` or its binding suite. Its package glue mounts its value owner and retirement/type owners. Its normal test route runs only package `semio-framework-value` (package script lines17–18); portable route selects controlled construction tests (line14).
+
+Actual canonical registration lives instead in OS kernel `Cargo.toml:26–28`: integration target `sqlite_snapshot_native_admission` mounts store snapshot public harness. That harness lines1–9 imports/reexports the kernel and mounts the two neutral-directory decode suites at lines4–7. OS package script lines2132–2138 owns their portable and native execution. Thus deleting products can leave these laws physically copied but undiscovered by the neutral value build.
+
+The neutral decode-control file has two original laws: `sqlite_snapshot_nested_native_stages_preserve_parent_and_cumulative_ownership` and `sqlite_snapshot_native_materialization_preserves_caller_budget_and_cancellation`. Its only package import is kernel native decoding (line1), whose actual type implementation is already neutral Value. Required correction: direct neutral import and registration under neutral Value, with its original fixture/schema/third-party assertions preserved, portable file added to the neutral registered route, and original test names admitted into neutral native roster. Remove only the duplicate higher mount after the lower law is independently discovered and executed; retain the higher snapshot integration target and its original product scenarios.
+
+Binding suite has nine laws. Eight concern generic typed binding, record/Pack/text behavior; one at line119 explicitly tests `ArtifactChild` identity via kernel artifact types (lines120–123). Generic record binding depends on the neutral DSL/schema and Pack record extraction currently underway; register those laws under their actual lower DSL/record owner using direct lower imports and preserve derivation, cumulative allocation, cancellation, variants, chunk verification and retirement assertions. The artifact-child law belongs under the OS artifact contract owner and must remain executed by the higher integration target, rather than being removed or replaced with a generic stand-in. Shared fixture paths must retain authored contents and explicit owner bindings.
+
+## What Existing Absence Receipts Prove
+
+`🗑️generated/goal-stdio/deletion-projection-current-source-plan.json` explicitly ends with `materialized:false,nativeExecuted:false`. Its PNG/PDF, IFC/STEP and stdio/all-artifacts plan is admission evidence only. The materializer report explicitly records no positive whole materialization or native launch. This bounded review found no terminal native receipt for those three authored projections; it does not claim a complete filesystem-wide absence of receipts.
+
+A separate real narrow absent-directory run exists: `current-neutral-date-owner-syntax-native-2.log` terminates with Nx success for `@semio-tech/framework-value:test-neutral-owner`, uncached,32.4s, and actual Cargo test-result rows. Current harness `🌱️value/🧪️tests/🧩️neutral-owner/🟦️.ts:50–65` copies only Value/Base64, authors workspace members, asserts products/S absent, cleans selected Value/derive units and executes them. This is genuine narrow absence execution, distinct from pending whole-framework deletion projections. Hub is excluded by the copy scope but is not separately asserted. Retained caller compiler storage is allowed; source admission must therefore accompany any current-snapshot claim. Earlier native-1 provenance concerns are documented separately and must not be silently generalized to native-2.
+
+Crucially this real narrow run still does not discover the original decode files mounted only by OS kernel. Passing its current roster cannot prove preservation of those two decode laws or the nine binding laws. Required terminal proof is full original-law roster accounting by actual owner, exact current registration/source/fixture hashes and successful lower plus higher executions after the ownership split. Whole framework/products/S/Hub removal remains unproved by this narrow Value receipt.

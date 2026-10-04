@@ -1,0 +1,61 @@
+{
+  "retainedBinding": {
+    "maximumUnits": 1,
+    "grantBytes": 3,
+    "keyUnit": "鍵😀",
+    "keyRepeats": 64,
+    "textUnit": "Mesh 😀 Label ",
+    "textRepeats": 256,
+    "cancelUnits": [
+      0,
+      1,
+      8,
+      64
+    ],
+    "phases": [
+      "input-bind-value",
+      "input-bind-update",
+      "input-bind-retire"
+    ]
+  },
+  "schema": "neural.owned-controls/v1",
+  "writerSourceRetirement": {"maximumUnits":1,"grantBytes":3},
+  "dictionaryText": "{\"z\":{\"first\":null,\"second\":true,\"integer\":-42,\"decimal\":1.25,\"text\":\"owned_日本_β\"},\"a\":{\"minimum\":-9223372036854775808,\"maximum\":9223372036854775807,\"zero\":-0.0}}",
+  "acceptedIntegerTexts": [
+    "-9223372036854775808",
+    "-42",
+    "0",
+    "42",
+    "9223372036854775807"
+  ],
+  "refusedIntegerTexts": [
+    "9223372036854775808",
+    "18446744073709551615"
+  ],
+  "invalidDictionaryText": "{\"accepted\":{\"nested\":\"owned before malformed frontier\"},\"refused\":[1]}",
+  "textUnit": "文",
+  "textRepeats": 40000,
+  "allocationCeilings": [
+    1,
+    32,
+    128,
+    256,
+    512,
+    1024,
+    4096
+  ],
+  "callbackCutoffs": [
+    1,
+    5,
+    10,
+    20,
+    40
+  ],
+  "compactPending": {
+    "textUnit": "Label 😀 日本 ",
+    "textRepeats": 2048,
+    "initialOwnsInput": true,
+    "resumeOwnsInput": false,
+    "changedOwnsInput": true
+  }
+}

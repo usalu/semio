@@ -23,3 +23,5 @@ record rename-entry tag=4
 field payload bytes
 record set-entry-data tag=5
 field payload bytes
+record patch-snapshot tag=6
+field payload bytes

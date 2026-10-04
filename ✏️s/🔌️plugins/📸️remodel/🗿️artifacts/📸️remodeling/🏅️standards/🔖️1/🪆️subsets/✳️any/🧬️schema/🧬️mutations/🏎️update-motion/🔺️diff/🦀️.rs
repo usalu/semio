@@ -11,7 +11,7 @@ pub fn diff(payload: &super::UpdateMotionParams, base: &RemodelingSnapshot) -> p
         return protocol::MutationOutcome::fatal("mutation.invariant", "Motion params have a non-finite minimum track quality.".to_string(), [base.id.clone()]);
     }
     if payload.params == base.params.motion {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Motion params are already up to date.".to_string());
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Motion params are already up to date.".to_string());
     }
     let mut params = base.params.clone();
     params.motion = payload.params.clone();

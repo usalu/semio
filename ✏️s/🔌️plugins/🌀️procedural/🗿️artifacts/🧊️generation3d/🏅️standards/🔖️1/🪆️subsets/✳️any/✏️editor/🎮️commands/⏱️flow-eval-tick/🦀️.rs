@@ -45,7 +45,7 @@ pub fn may_rearm(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSna
 }
 
 /// 🪟️ The one `windowId`/`windowKindId` argument object every hop of the chain carries.
-pub fn window_args(window_id: &str, window_kind_id: &str) -> dsl::DslValue {
+pub fn window_args(window_id: &str, window_kind_id: &str) -> semio_framework_value::DslValue {
     preview_eval::window_args(window_id, window_kind_id)
 }
 

@@ -18,13 +18,13 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️rename-step/🔤️accepts/🎯️outcome/🔣️.json");
 
 fn before() -> Process3dSnapshot {
-    semio_framework_os_kernel::json::from_json_str(BEFORE).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> Process3dSnapshot {
-    semio_framework_os_kernel::json::from_json_str(AFTER).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> Process3dMutation {
-    semio_framework_os_kernel::json::from_json_str(MUTATION).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 
 /// ▶️ The mutation carries `before` to exactly the committed `after`.
@@ -39,7 +39,7 @@ async fn applies_to_committed_after() {
 async fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::inverse(&mutation, &base);
+    let inverse = <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     let (mut snapshot, _) = protocol::apply_mutation(&base, &mutation).expect("forward applies");
     for step in &inverse {
         snapshot = protocol::apply_mutation(&snapshot, step).expect("inverse step applies").0;
@@ -51,28 +51,28 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: Process3dSnapshot = semio_framework_os_kernel::json::from_json_str(text).expect("snapshot decodes");
-        let reencoded = semio_framework_os_kernel::json::from_dsl_value(&semio_framework_os_kernel::ToValue::to_value(&decoded));
-        let original = semio_framework_os_kernel::json::parse(text).expect("snapshot reparses");
-        assert!(semio_framework_os_kernel::json::value_eq_ignoring_object_order(&reencoded, &original), "rename-step/accepts-a-new-label-and-applies-it: committed {side} JSON is not canonical");
+        let decoded: Process3dSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&decoded));
+        let original = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot reparses");
+        assert!(semio_framework_pack_json::value_eq_ignoring_object_order(&reencoded, &original), "rename-step/accepts-a-new-label-and-applies-it: committed {side} JSON is not canonical");
     }
-    let reencoded = semio_framework_os_kernel::json::from_dsl_value(&semio_framework_os_kernel::ToValue::to_value(&mutation()));
-    let original = semio_framework_os_kernel::json::parse(MUTATION).expect("mutation reparses");
-    assert!(semio_framework_os_kernel::json::value_eq_ignoring_object_order(&reencoded, &original), "rename-step/accepts-a-new-label-and-applies-it: committed mutation JSON is not canonical");
+    let reencoded = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&mutation()));
+    let original = semio_framework_pack_json::parse(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation reparses");
+    assert!(semio_framework_pack_json::value_eq_ignoring_object_order(&reencoded, &original), "rename-step/accepts-a-new-label-and-applies-it: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ The declared outcome — status AND every diagnostic this mutation's own diff builder raises —
 /// matches what the mutation actually produces.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
-    let outcome = semio_framework_os_kernel::json::parse(OUTCOME).expect("outcome decodes");
-    let status = outcome.get("status").and_then(semio_framework_os_kernel::json::Value::as_str).expect("outcome carries a status");
+    let outcome = semio_framework_pack_json::parse(OUTCOME, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
+    let status = outcome.get("status").and_then(semio_framework_pack_json::Value::as_str).expect("outcome carries a status");
     let declared: Vec<(String, String)> = outcome
         .get("messages")
-        .and_then(semio_framework_os_kernel::json::Value::as_array)
+        .and_then(semio_framework_pack_json::Value::as_array)
         .map(|rows| {
             rows.iter()
-                .map(|row| (row.get("level").and_then(semio_framework_os_kernel::json::Value::as_str).unwrap_or_default().to_string(), row.get("code").and_then(semio_framework_os_kernel::json::Value::as_str).unwrap_or_default().to_string()))
+                .map(|row| (row.get("level").and_then(semio_framework_pack_json::Value::as_str).unwrap_or_default().to_string(), row.get("code").and_then(semio_framework_pack_json::Value::as_str).unwrap_or_default().to_string()))
                 .collect()
         })
         .unwrap_or_default();
@@ -81,7 +81,7 @@ async fn declared_outcome_holds() {
         .messages()
         .iter()
         .map(|message| {
-            let level = semio_framework_os_kernel::ToValue::to_value(&message.level);
+            let level = semio_framework_value::ToValue::to_value(&message.level);
             (level.as_str().unwrap_or_default().to_string(), message.code.0.clone())
         })
         .collect();
@@ -112,25 +112,25 @@ async fn declared_outcome_holds() {
 async fn produces_committed_diff() {
     let base = before();
     let raised = <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::diff(&mutation(), &base);
-    let produced = semio_framework_os_kernel::json::from_dsl_value(&semio_framework_os_kernel::ToValue::to_value(raised.diff()));
-    let committed = semio_framework_os_kernel::json::parse(DIFF).expect("committed diff decodes");
-    assert!(semio_framework_os_kernel::json::value_eq_ignoring_object_order(&produced, &committed), "rename-step/accepts-a-new-label-and-applies-it: produced diff differs from the committed 🔺️diff/🔣️.json");
+    let produced = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(raised.diff()));
+    let committed = semio_framework_pack_json::parse(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    assert!(semio_framework_pack_json::value_eq_ignoring_object_order(&produced, &committed), "rename-step/accepts-a-new-label-and-applies-it: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: Process3dDiff = semio_framework_os_kernel::json::from_json_str(DIFF).expect("committed diff decodes");
-    let reencoded = semio_framework_os_kernel::json::from_dsl_value(&semio_framework_os_kernel::ToValue::to_value(&decoded));
-    let original = semio_framework_os_kernel::json::parse(DIFF).expect("committed diff reparses");
-    assert!(semio_framework_os_kernel::json::value_eq_ignoring_object_order(&reencoded, &original), "rename-step/accepts-a-new-label-and-applies-it: committed diff JSON is not canonical");
+    let decoded: Process3dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let reencoded = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&decoded));
+    let original = semio_framework_pack_json::parse(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff reparses");
+    assert!(semio_framework_pack_json::value_eq_ignoring_object_order(&reencoded, &original), "rename-step/accepts-a-new-label-and-applies-it: committed diff JSON is not canonical");
 }
 
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after` — the diff is a
 /// complete description of what `rename-step` changed, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: Process3dDiff = semio_framework_os_kernel::json::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: Process3dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let produced = <Process3dDiff as protocol::MutationDiff<Process3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "rename-step/accepts-a-new-label-and-applies-it: committed diff did not carry before to after");
 }

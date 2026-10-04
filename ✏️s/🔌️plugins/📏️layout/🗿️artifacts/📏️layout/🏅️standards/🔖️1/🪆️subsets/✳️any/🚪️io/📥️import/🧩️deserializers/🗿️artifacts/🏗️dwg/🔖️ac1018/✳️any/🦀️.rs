@@ -10,14 +10,14 @@ pub fn register() {}
 /// drift as the sibling export serializer in this directory's `📤️export` counterpart. `encode_dwg`
 /// re-materializes real DWG bytes from the structured snapshot so the existing byte-oriented
 /// `deserialize_bytes`/`dwg_from_bytes` structural-codec path below needs no change.
-pub fn deserialize(from: &DwgSnapshot) -> Result<LayoutSnapshot, store::TextError> {
-    let bytes = encode_dwg(from).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
+pub fn deserialize(from: &DwgSnapshot) -> Result<LayoutSnapshot, semio_framework_diagnostic::TextError> {
+    let bytes = encode_dwg(from).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,e.to_string(), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
     deserialize_bytes(&bytes)
 }
 
-pub fn deserialize_bytes(bytes: &[u8]) -> Result<LayoutSnapshot, store::TextError> {
-    let _meta = decode_dwg(bytes).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))?;
-    let drawing: DwgDrawing = dwg_from_bytes(bytes).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))?;
-    let value = crate::io::layout_document_json_from_dwg(&drawing).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))?;
-    <LayoutSnapshot as dsl::FromValue>::from_value(value).map_err(|e| store::TextError::new(format!("layout<-dwg: {e}"), dsl::TextSpan::at(1, 1)))
+pub fn deserialize_bytes(bytes: &[u8]) -> Result<LayoutSnapshot, semio_framework_diagnostic::TextError> {
+    let _meta = decode_dwg(bytes).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,e, semio_framework_diagnostic::TextSpan::at(1, 1)))?;
+    let drawing: DwgDrawing = dwg_from_bytes(bytes).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,e, semio_framework_diagnostic::TextSpan::at(1, 1)))?;
+    let value = crate::io::layout_document_json_from_dwg(&drawing).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,e, semio_framework_diagnostic::TextSpan::at(1, 1)))?;
+    <LayoutSnapshot as semio_framework_value::FromValue>::from_value(value).map_err(|e| semio_framework_diagnostic::TextError::from_value_error(e,semio_framework_diagnostic::TextSpan::at(1,1)))
 }

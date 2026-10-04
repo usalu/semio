@@ -22,7 +22,10 @@ pub struct CreateLayer {
 impl MutationKind<LayoutSnapshot, LayoutMutation> for CreateLayer {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "layer", kind: "create-layer", record: "CreatedLayer" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> { diff_create_layer(self, base) }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> { inverse_create_layer(self, base) }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok({ inverse_create_layer(self, base)? 
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         if self.remove {
             semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete layer \"{}\"", self.name), &format!("Ebene \"{}\" löschen", self.name))
@@ -53,13 +56,16 @@ pub fn diff_create_layer(payload: &CreateLayer, base: &LayoutSnapshot) -> protoc
     protocol::MutationOutcome::new(LayoutDiff { pages: Some(LayoutPagesDelta { patched: vec![LayoutPagePatchEntry { id: payload.page_id.clone(), patch: PagePatch { layer_added: Some(layer), ..Default::default() } }], ..Default::default() }), ..Default::default() })
 }
 
-pub fn inverse_create_layer(payload: &CreateLayer, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_create_layer(payload: &CreateLayer, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     if payload.remove {
         let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else { return Vec::new() };
         let Some(layer) = page.layers.iter().find(|layer| layer.id == payload.id) else { return Vec::new() };
         return vec![LayoutMutation::CreateLayer(CreateLayer { page_id: payload.page_id.clone(), id: layer.id.clone(), name: layer.name.clone(), remove: false })];
     }
     vec![LayoutMutation::CreateLayer(CreateLayer { page_id: payload.page_id.clone(), id: payload.id.clone(), name: payload.name.clone(), remove: true })]
+
+    })())
 }
 
 #[cfg(test)]

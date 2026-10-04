@@ -254,6 +254,95 @@ pub fn wire_operation<M>(kind: &str, params: &Json, decode: impl FnOnce(&str, &s
 }
 //#endregion 🔖️Wire
 
+//#region 🩹️SnapshotPatch
+/// 🩹️ What a `patch-snapshot` row means to a reference: its ONE pointer operation (`set`, `insert` with an optional object
+/// member `index`, `remove`, `move`, `rename`, `splice` over array items / UTF-8 bytes of text / object members) applied
+/// to the reference's OWN reading of the snapshot, so the reference re-encodes the patched snapshot with its own library.
+/// Written from RFC 6901 alone, independent of any subject's patch code; a pointer the reading lacks is an error.
+pub fn patched_snapshot(snapshot: &Json, patch: &Json) -> Result<Json, String> {
+    let pointer = |key: &str| -> Result<Vec<String>, String> {
+        let text = patch.str(key);
+        if text.is_empty() {
+            return Ok(Vec::new());
+        }
+        let rest = text.strip_prefix('/').ok_or_else(|| format!("patch {key} {text:?} is not an RFC 6901 pointer"))?;
+        Ok(rest.split('/').map(|segment| segment.replace("~1", "/").replace("~0", "~")).collect())
+    };
+    let count = |key: &str| match patch.get(key) {
+        Some(Json::Number(number)) if *number >= 0.0 && number.fract() == 0.0 => Ok(*number as usize),
+        _ => Err(format!("patch {key} is not a non-negative integer")),
+    };
+    let value = patch.get("value").cloned().unwrap_or(Json::Null);
+    let mut document = snapshot.clone();
+    match patch.str("operation").as_str() {
+        "set" => *node(&mut document, &pointer("path")?)? = value,
+        "insert" => insert(&mut document, &pointer("path")?, value, patch.get("index").map(|_| count("index")).transpose()?)?,
+        "remove" => drop(take(&mut document, &pointer("path")?)?),
+        "move" => {
+            let moved = take(&mut document, &pointer("from")?)?;
+            insert(&mut document, &pointer("path")?, moved, patch.get("index").map(|_| count("index")).transpose()?)?;
+        }
+        "rename" => {
+            let path = pointer("path")?;
+            let (key, parent) = path.split_last().ok_or("rename addresses the document root")?;
+            let Json::Object(members) = node(&mut document, parent)? else { return Err("rename addresses no object member".into()) };
+            let renamed = patch.str("key");
+            if key != &renamed && members.iter().any(|(name, _)| *name == renamed) {
+                return Err(format!("rename target {renamed:?} already exists"));
+            }
+            members.iter_mut().find(|(name, _)| name == key).ok_or_else(|| format!("rename source {key:?} is absent"))?.0 = renamed;
+        }
+        "splice" => {
+            let (offset, remove) = (count("offset")?, count("remove")?);
+            let target = node(&mut document, &pointer("path")?)?;
+            let end = offset + remove;
+            match (target, value) {
+                (Json::Array(items), Json::Array(inserted)) if end <= items.len() => drop(items.splice(offset..end, inserted)),
+                (Json::Object(members), Json::Object(inserted)) if end <= members.len() => drop(members.splice(offset..end, inserted)),
+                (Json::String(text), Json::String(inserted)) if end <= text.len() && text.is_char_boundary(offset) && text.is_char_boundary(end) => text.replace_range(offset..end, &inserted),
+                _ => return Err("splice range or value does not fit the addressed container".into()),
+            }
+        }
+        other => return Err(format!("unknown snapshot patch operation {other:?}")),
+    }
+    Ok(document)
+}
+
+fn node<'d>(document: &'d mut Json, path: &[String]) -> Result<&'d mut Json, String> {
+    path.iter().try_fold(document, |current, segment| match current {
+        Json::Object(members) => members.iter_mut().find(|(name, _)| name == segment).map(|(_, value)| value).ok_or_else(|| format!("pointer member {segment:?} is absent")),
+        Json::Array(items) => segment.parse::<usize>().ok().and_then(|index| items.get_mut(index)).ok_or_else(|| format!("pointer index {segment:?} is out of range")),
+        _ => Err(format!("pointer segment {segment:?} addresses a scalar")),
+    })
+}
+
+fn take(document: &mut Json, path: &[String]) -> Result<Json, String> {
+    let (key, parent) = path.split_last().ok_or("a removal addresses the document root")?;
+    match node(document, parent)? {
+        Json::Object(members) => members.iter().position(|(name, _)| name == key).map(|position| members.remove(position).1).ok_or_else(|| format!("member {key:?} is absent")),
+        Json::Array(items) => key.parse::<usize>().ok().filter(|index| *index < items.len()).map(|index| items.remove(index)).ok_or_else(|| format!("index {key:?} is out of range")),
+        _ => Err("a removal addresses a scalar parent".into()),
+    }
+}
+
+fn insert(document: &mut Json, path: &[String], value: Json, index: Option<usize>) -> Result<(), String> {
+    let (key, parent) = path.split_last().ok_or("an insertion addresses the document root")?;
+    match node(document, parent)? {
+        Json::Object(members) if members.iter().all(|(name, _)| name != key) => {
+            let position = index.unwrap_or(members.len()).min(members.len());
+            members.insert(position, (key.clone(), value));
+            Ok(())
+        }
+        Json::Array(items) => {
+            let position = if key == "-" { items.len() } else { key.parse::<usize>().ok().filter(|index| *index <= items.len()).ok_or_else(|| format!("index {key:?} is out of range"))? };
+            items.insert(position, value);
+            Ok(())
+        }
+        _ => Err(format!("insertion at {key:?} needs an absent object member or an array index")),
+    }
+}
+//#endregion 🩹️SnapshotPatch
+
 //#region 🔖️Vector
 #[path = "🧬️vector/🦀️.rs"]
 pub mod vector;

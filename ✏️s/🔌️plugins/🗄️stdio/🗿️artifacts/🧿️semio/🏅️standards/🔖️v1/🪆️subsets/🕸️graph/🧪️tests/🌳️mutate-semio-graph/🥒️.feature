@@ -86,17 +86,25 @@ Feature: Apply every typed semio GRAPH mutation to the Nakagin Capsule Tower's p
     Then the independent implementation and the subject agree on the resulting snapshot
     Examples:
       | id                   | mutation |
-      | create-node          | {"prepare":[],"mutation":{"CreateNode":{"id":{"value":"1RSTKAPSEL0000000000AA"},"kind":"IfcBuildingElementProxy","label":"Kapsel A1101","position":{"x":-15850.0,"y":-8100.0},"ports":[{"name":"b6b3121a-252b-4ba7-ac8d-152c1d0fece6","kind":"in"},{"name":"48558771-3860-4918-ba95-f8b4069326c2","kind":"out"},{"name":"bus","kind":"inOut"}],"properties":[{"key":"ComposeConnectionParams.rotation","value":{"kind":"float","lexeme":"90"}}]}}} |
+      | create-node          | {"prepare":[],"mutation":{"CreateNode":{"id":{"value":"1RSTKAPSEL0000000000AA"},"kind":"IfcBuildingElementProxy","label":"Kapsel A1101","position":{"x":-15850.0,"y":-8100.0},"width":0.0,"height":0.0,"ports":[{"name":"b6b3121a-252b-4ba7-ac8d-152c1d0fece6","kind":"in","category":"","properties":[]},{"name":"48558771-3860-4918-ba95-f8b4069326c2","kind":"out","category":"","properties":[]},{"name":"bus","kind":"inOut","category":"","properties":[]}],"properties":[{"key":"ComposeConnectionParams.rotation","value":{"kind":"float","lexeme":"90"}}]}}} |
       | delete-node          | {"prepare":[],"mutation":{"DeleteNode":{"id":{"value":"1tZkmTaMP4R8yLkBdfebfl"}}}} |
       | change-node-kind     | {"prepare":[],"mutation":{"ChangeNodeKind":{"id":{"value":"1o$D5QcDP68vy1YIk$DDV$"},"new_kind":"IfcBuilding"}}} |
       | change-node-label    | {"prepare":[],"mutation":{"ChangeNodeLabel":{"id":{"value":"1o$D5QcDP68vy1YIk$DDV$"},"new_label":"Nakagin Capsule Tower, Ginza"}}} |
       | move-node            | {"prepare":[],"mutation":{"MoveNode":{"id":{"value":"0POPlhUSnC1REPvcqnensi"},"new_position":{"x":-15850.0,"y":-8100.0}}}} |
-      | add-node-port        | {"prepare":[],"mutation":{"AddNodePort":{"node_id":{"value":"0POPlhUSnC1REPvcqnensi"},"index":0,"port":{"name":"reset","kind":"inOut"}}}} |
+      | add-node-port        | {"prepare":[],"mutation":{"AddNodePort":{"node_id":{"value":"0POPlhUSnC1REPvcqnensi"},"index":0,"port":{"name":"reset","kind":"inOut","category":"","properties":[]}}}} |
       | remove-node-port     | {"prepare":[],"mutation":{"RemoveNodePort":{"node_id":{"value":"1tZkmTaMP4R8yLkBdfebfl"},"index":0}}} |
       | add-node-property    | {"prepare":[],"mutation":{"AddNodeProperty":{"node_id":{"value":"0POPlhUSnC1REPvcqnensi"},"index":0,"property":{"key":"extent","value":{"kind":"list","items":[{"kind":"int","lexeme":"3"},{"kind":"map","entries":[{"key":"unit","value":{"kind":"str","value":"mm"}}]}]}}}}} |
-      | remove-node-property | {"prepare":[],"mutation":{"RemoveNodeProperty":{"node_id":{"value":"0POPlhUSnC1REPvcqnensi"},"index":0}}} |
-      | create-edge          | {"prepare":[],"mutation":{"CreateEdge":{"id":{"value":"1RSTKANTE00000000000AA"},"source":{"value":"1tZkmTaMP4R8yLkBdfebfl"},"target":{"value":"0POPlhUSnC1REPvcqnensi"},"kind":"IfcRelConnectsElements","label":"Kapsel an Schacht"}}} |
+      | remove-node-property | {"prepare":[],"mutation":{"RemoveNodeProperty":{"node_id":{"value":"0POPlhUSnC1REPvcqnensi"},"key":"ComposePieceAttributes.name"}}} |
+      | create-edge          | {"prepare":[],"mutation":{"CreateEdge":{"id":{"value":"1RSTKANTE00000000000AA"},"source":{"value":"1tZkmTaMP4R8yLkBdfebfl"},"target":{"value":"0POPlhUSnC1REPvcqnensi"},"kind":"IfcRelConnectsElements","label":"Kapsel an Schacht","source_port":null,"target_port":null,"properties":[]}}} |
       | delete-edge          | {"prepare":[],"mutation":{"DeleteEdge":{"id":{"value":"3NLh69tTrEpfV9iDbwoXYL"}}}} |
+      | drag-nodes           | {"prepare":[],"mutation":{"DragNodes":{"targets":[{"value":"0POPlhUSnC1REPvcqnensi"},{"value":"1tZkmTaMP4R8yLkBdfebfl"}],"dx":250.0,"dy":-125.0}}} |
+      | set-node-property    | {"prepare":[],"mutation":{"SetNodeProperty":{"node_id":{"value":"0POPlhUSnC1REPvcqnensi"},"key":"ComposePieceAttributes.name","value":{"kind":"str","value":"Kapsel B"}}}} |
+      | resize-node          | {"prepare":[],"mutation":{"ResizeNode":{"id":{"value":"0POPlhUSnC1REPvcqnensi"},"width":2300.0,"height":4000.0}}} |
+      | rename-node          | {"prepare":[],"mutation":{"RenameNode":{"id":{"value":"1tZkmTaMP4R8yLkBdfebfl"},"new_id":{"value":"1RSTKAPSEL0000000000BB"}}}} |
+      | set-edge-property    | {"prepare":[{"AddEdgeProperty":{"edge_id":{"value":"3NLh69tTrEpfV9iDbwoXYL"},"index":0,"property":{"key":"ConnectionKind","value":{"kind":"str","value":"pipe"}}}}],"mutation":{"SetEdgeProperty":{"edge_id":{"value":"3NLh69tTrEpfV9iDbwoXYL"},"key":"ConnectionKind","value":{"kind":"str","value":"duct"}}}} |
+      | add-edge-property    | {"prepare":[],"mutation":{"AddEdgeProperty":{"edge_id":{"value":"3NLh69tTrEpfV9iDbwoXYL"},"index":0,"property":{"key":"ConnectionKind","value":{"kind":"str","value":"pipe"}}}}} |
+      | remove-edge-property | {"prepare":[{"AddEdgeProperty":{"edge_id":{"value":"3NLh69tTrEpfV9iDbwoXYL"},"index":0,"property":{"key":"ConnectionKind","value":{"kind":"str","value":"pipe"}}}}],"mutation":{"RemoveEdgeProperty":{"edge_id":{"value":"3NLh69tTrEpfV9iDbwoXYL"},"key":"ConnectionKind"}}} |
+      | patch-snapshot | {"prepare": [], "mutation": {"PatchSnapshot": {"patch": {"operation": "set", "path": "/nodes/0/label", "value": "Kapsel, gepatcht"}}}} |
 
   @id-inverse
   @level-exhaustive
@@ -110,17 +118,25 @@ Feature: Apply every typed semio GRAPH mutation to the Nakagin Capsule Tower's p
     Then both sides restore the graph and agree on the mutated and the restored snapshot
     Examples:
       | id                   | mutation |
-      | create-node          | {"prepare":[],"mutation":{"CreateNode":{"id":{"value":"1RSTKAPSEL0000000000AA"},"kind":"IfcBuildingElementProxy","label":"Kapsel A1101","position":{"x":-15850.0,"y":-8100.0},"ports":[{"name":"b6b3121a-252b-4ba7-ac8d-152c1d0fece6","kind":"in"},{"name":"48558771-3860-4918-ba95-f8b4069326c2","kind":"out"},{"name":"bus","kind":"inOut"}],"properties":[{"key":"ComposeConnectionParams.rotation","value":{"kind":"float","lexeme":"90"}}]}}} |
+      | create-node          | {"prepare":[],"mutation":{"CreateNode":{"id":{"value":"1RSTKAPSEL0000000000AA"},"kind":"IfcBuildingElementProxy","label":"Kapsel A1101","position":{"x":-15850.0,"y":-8100.0},"width":0.0,"height":0.0,"ports":[{"name":"b6b3121a-252b-4ba7-ac8d-152c1d0fece6","kind":"in","category":"","properties":[]},{"name":"48558771-3860-4918-ba95-f8b4069326c2","kind":"out","category":"","properties":[]},{"name":"bus","kind":"inOut","category":"","properties":[]}],"properties":[{"key":"ComposeConnectionParams.rotation","value":{"kind":"float","lexeme":"90"}}]}}} |
       | delete-node          | {"prepare":[],"mutation":{"DeleteNode":{"id":{"value":"1tZkmTaMP4R8yLkBdfebfl"}}}} |
       | change-node-kind     | {"prepare":[],"mutation":{"ChangeNodeKind":{"id":{"value":"1o$D5QcDP68vy1YIk$DDV$"},"new_kind":"IfcBuilding"}}} |
       | change-node-label    | {"prepare":[],"mutation":{"ChangeNodeLabel":{"id":{"value":"1o$D5QcDP68vy1YIk$DDV$"},"new_label":"Nakagin Capsule Tower, Ginza"}}} |
       | move-node            | {"prepare":[],"mutation":{"MoveNode":{"id":{"value":"0POPlhUSnC1REPvcqnensi"},"new_position":{"x":-15850.0,"y":-8100.0}}}} |
-      | add-node-port        | {"prepare":[],"mutation":{"AddNodePort":{"node_id":{"value":"0POPlhUSnC1REPvcqnensi"},"index":0,"port":{"name":"reset","kind":"inOut"}}}} |
+      | add-node-port        | {"prepare":[],"mutation":{"AddNodePort":{"node_id":{"value":"0POPlhUSnC1REPvcqnensi"},"index":0,"port":{"name":"reset","kind":"inOut","category":"","properties":[]}}}} |
       | remove-node-port     | {"prepare":[],"mutation":{"RemoveNodePort":{"node_id":{"value":"1tZkmTaMP4R8yLkBdfebfl"},"index":0}}} |
       | add-node-property    | {"prepare":[],"mutation":{"AddNodeProperty":{"node_id":{"value":"0POPlhUSnC1REPvcqnensi"},"index":0,"property":{"key":"extent","value":{"kind":"list","items":[{"kind":"int","lexeme":"3"},{"kind":"map","entries":[{"key":"unit","value":{"kind":"str","value":"mm"}}]}]}}}}} |
-      | remove-node-property | {"prepare":[],"mutation":{"RemoveNodeProperty":{"node_id":{"value":"0POPlhUSnC1REPvcqnensi"},"index":0}}} |
-      | create-edge          | {"prepare":[],"mutation":{"CreateEdge":{"id":{"value":"1RSTKANTE00000000000AA"},"source":{"value":"1tZkmTaMP4R8yLkBdfebfl"},"target":{"value":"0POPlhUSnC1REPvcqnensi"},"kind":"IfcRelConnectsElements","label":"Kapsel an Schacht"}}} |
+      | remove-node-property | {"prepare":[],"mutation":{"RemoveNodeProperty":{"node_id":{"value":"0POPlhUSnC1REPvcqnensi"},"key":"ComposePieceAttributes.name"}}} |
+      | create-edge          | {"prepare":[],"mutation":{"CreateEdge":{"id":{"value":"1RSTKANTE00000000000AA"},"source":{"value":"1tZkmTaMP4R8yLkBdfebfl"},"target":{"value":"0POPlhUSnC1REPvcqnensi"},"kind":"IfcRelConnectsElements","label":"Kapsel an Schacht","source_port":null,"target_port":null,"properties":[]}}} |
       | delete-edge          | {"prepare":[],"mutation":{"DeleteEdge":{"id":{"value":"3NLh69tTrEpfV9iDbwoXYL"}}}} |
+      | drag-nodes           | {"prepare":[],"mutation":{"DragNodes":{"targets":[{"value":"0POPlhUSnC1REPvcqnensi"},{"value":"1tZkmTaMP4R8yLkBdfebfl"}],"dx":250.0,"dy":-125.0}}} |
+      | set-node-property    | {"prepare":[],"mutation":{"SetNodeProperty":{"node_id":{"value":"0POPlhUSnC1REPvcqnensi"},"key":"ComposePieceAttributes.name","value":{"kind":"str","value":"Kapsel B"}}}} |
+      | resize-node          | {"prepare":[],"mutation":{"ResizeNode":{"id":{"value":"0POPlhUSnC1REPvcqnensi"},"width":2300.0,"height":4000.0}}} |
+      | rename-node          | {"prepare":[],"mutation":{"RenameNode":{"id":{"value":"1tZkmTaMP4R8yLkBdfebfl"},"new_id":{"value":"1RSTKAPSEL0000000000BB"}}}} |
+      | set-edge-property    | {"prepare":[{"AddEdgeProperty":{"edge_id":{"value":"3NLh69tTrEpfV9iDbwoXYL"},"index":0,"property":{"key":"ConnectionKind","value":{"kind":"str","value":"pipe"}}}}],"mutation":{"SetEdgeProperty":{"edge_id":{"value":"3NLh69tTrEpfV9iDbwoXYL"},"key":"ConnectionKind","value":{"kind":"str","value":"duct"}}}} |
+      | add-edge-property    | {"prepare":[],"mutation":{"AddEdgeProperty":{"edge_id":{"value":"3NLh69tTrEpfV9iDbwoXYL"},"index":0,"property":{"key":"ConnectionKind","value":{"kind":"str","value":"pipe"}}}}} |
+      | remove-edge-property | {"prepare":[{"AddEdgeProperty":{"edge_id":{"value":"3NLh69tTrEpfV9iDbwoXYL"},"index":0,"property":{"key":"ConnectionKind","value":{"kind":"str","value":"pipe"}}}}],"mutation":{"RemoveEdgeProperty":{"edge_id":{"value":"3NLh69tTrEpfV9iDbwoXYL"},"key":"ConnectionKind"}}} |
+      | patch-snapshot | {"prepare": [], "mutation": {"PatchSnapshot": {"patch": {"operation": "set", "path": "/nodes/0/label", "value": "Kapsel, gepatcht"}}}} |
 
   @id-spec-vector
   @level-exhaustive
@@ -144,6 +160,13 @@ Feature: Apply every typed semio GRAPH mutation to the Nakagin Capsule Tower's p
       | remove-node-property | ➖remove-node-property | ➖️detaches |
       | create-edge          | 🌉️create-edge          | 🌉️connects                  |
       | delete-edge          | ✂️delete-edge         | ✂️removes         |
+      | drag-nodes           | ✋️drag-nodes           | ✋️drags             |
+      | set-node-property    | 🎛️set-node-property    | 🎛️sets              |
+      | resize-node          | 📐resize-node          | 📐️resizes           |
+      | rename-node          | 🏷️rename-node          | 🏷️renames           |
+      | set-edge-property    | 🎚️set-edge-property    | 🎚️sets              |
+      | add-edge-property    | ➕add-edge-property    | ⚖️inserts          |
+      | remove-edge-property | ➖remove-edge-property | ➖️detaches        |
 
   @id-identity-round-trip
   @level-long

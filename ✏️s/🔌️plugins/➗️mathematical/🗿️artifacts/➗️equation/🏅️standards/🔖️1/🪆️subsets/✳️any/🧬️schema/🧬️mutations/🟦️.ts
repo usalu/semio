@@ -1,38 +1,11 @@
 /** ➗️ EquationMutation — closed semantic mutation vocabulary for the equation document,
- *  mirrors `🧬️mutations/🦀️.rs`'s `EquationMutation` enum and its 15 per-verb leaf structs. The enum
+ *  mirrors `🧬️mutations/🦀️.rs`'s `EquationMutation` enum and its 18 per-verb leaf structs. The enum
  *  carries no `#[value(tag)]`, so it wires EXTERNALLY TAGGED: `{ "<PascalCaseVariantName>": { ...leaf
  *  fields } }`. Every leaf struct carries `#[value(rename_all = "camelCase")]`, so its fields wire
  *  camelCase (`{"ChangeNodeLabel":{"id":"n-alpha","newLabel":"Alpha"}}`), like the referenced
  *  `EquationGraph`/`EquationPoint` records (`ReplaceGraph.graph.algorithmSeed`). */
-/** 🔵️ One graph-playground node — mirrors the artifact's `EquationNode` record (`rename_all = "camelCase"`). */
-export interface EquationNode {
-  id: string;
-  label: string;
-  x: number;
-  y: number;
-}
-
-/** 🔌️ One graph-playground edge — mirrors `EquationEdge`. */
-export interface EquationEdge {
-  id: string;
-  source: string;
-  target: string;
-}
-
-/** 🕸️ The graph playground — mirrors `EquationGraph`; `algorithmSeed` wires `null` when unset. */
-export interface EquationGraph {
-  directed: boolean;
-  nodes: EquationNode[];
-  edges: EquationEdge[];
-  algorithm: string;
-  algorithmSeed: string | null;
-}
-
-/** 📍️ One geometry-playground point — mirrors `EquationPoint`. */
-export interface EquationPoint {
-  x: number;
-  y: number;
-}
+import type {EquationGraph,EquationPoint} from "../🟦️.ts";
+export type {EquationGraph,EquationGraphNode as EquationNode,EquationEdge,EquationPoint} from "../🟦️.ts";
 
 /** 🔢️ Addresses one numeric leaf in the equation tree — a `u64` newtype, wire-plain as a number. */
 export type EquationNodeLabel = number;
@@ -115,11 +88,23 @@ export interface RemovePoint {
   index: number;
 }
 
-/** 🎯️ `move-point` payload. */
-export interface MovePoint {
+/** 🎯️ `move-points` payload — one point-cloud drag as intent: every addressed point moves by `(dx, dy)` from its base position. */
+export interface MovePoints {
+  indices: number[];
+  dx: number;
+  dy: number;
+}
+
+/** 📍️ One point's absolute canvas position, addressed by its base index. */
+export interface EquationPointPosition {
   index: number;
   x: number;
   y: number;
+}
+
+/** 📌️ `set-point-positions` payload — absolute positions of a set of points, the exact undo of a point drag. */
+export interface SetPointPositions {
+  positions: EquationPointPosition[];
 }
 
 /** 🚚️ `move-nodes` payload — one node-graph drag as intent: every addressed node moves by `(dx, dy)` from its base position. */
@@ -170,6 +155,35 @@ export function parseSetNodePositions(value: unknown): SetNodePositions {
   return { positions };
 }
 
+/** 🚪️ Parses one `move-points` payload the way its JSON Schema admits it, or throws. */
+export function parseMovePoints(value: unknown): MovePoints {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) throw new TypeError("move-points: payload is not an object");
+  const row = value as Record<string, unknown>;
+  const unknownKey = Object.keys(row).find((key) => !["indices", "dx", "dy"].includes(key));
+  if (unknownKey !== undefined) throw new TypeError(`move-points: unknown field ${unknownKey}`);
+  if (!Array.isArray(row.indices) || row.indices.length === 0 || row.indices.some((entry) => !Number.isSafeInteger(entry) || (entry as number) < 0) || new Set(row.indices).size !== row.indices.length) throw new TypeError("move-points: indices must be a nonempty list of unique point indices");
+  if (typeof row.dx !== "number" || !Number.isFinite(row.dx) || typeof row.dy !== "number" || !Number.isFinite(row.dy)) throw new TypeError("move-points: dx and dy must be finite numbers");
+  return { indices: row.indices as number[], dx: row.dx, dy: row.dy };
+}
+
+/** 🚪️ Parses one `set-point-positions` payload the way its JSON Schema (and its `unique-point-indices` invariant) admits it, or throws. */
+export function parseSetPointPositions(value: unknown): SetPointPositions {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) throw new TypeError("set-point-positions: payload is not an object");
+  const row = value as Record<string, unknown>;
+  if (Object.keys(row).some((key) => key !== "positions")) throw new TypeError("set-point-positions: unknown field");
+  if (!Array.isArray(row.positions) || row.positions.length === 0) throw new TypeError("set-point-positions: positions must be a nonempty list");
+  const positions = row.positions.map((entry): EquationPointPosition => {
+    if (entry === null || typeof entry !== "object" || Array.isArray(entry)) throw new TypeError("set-point-positions: a position is not an object");
+    const position = entry as Record<string, unknown>;
+    if (Object.keys(position).some((key) => !["index", "x", "y"].includes(key))) throw new TypeError("set-point-positions: unknown position field");
+    if (!Number.isSafeInteger(position.index) || (position.index as number) < 0) throw new TypeError("set-point-positions: a position names a point index");
+    if (typeof position.x !== "number" || !Number.isFinite(position.x) || typeof position.y !== "number" || !Number.isFinite(position.y)) throw new TypeError("set-point-positions: a position is two finite numbers");
+    return { index: position.index as number, x: position.x, y: position.y };
+  });
+  if (new Set(positions.map((position) => position.index)).size !== positions.length) throw new TypeError("set-point-positions: each point at most once");
+  return { positions };
+}
+
 /** 🔄️ `change-coefficient` payload — sets a numeric leaf's value in the equation tree. */
 export interface ChangeCoefficient {
   label: EquationNodeLabel;
@@ -191,7 +205,8 @@ export type EquationMutation =
   | { ReplacePoints: ReplacePoints }
   | { InsertPoint: InsertPoint }
   | { RemovePoint: RemovePoint }
-  | { MovePoint: MovePoint }
+  | { MovePoints: MovePoints }
   | { ChangeCoefficient: ChangeCoefficient }
   | { MoveNodes: MoveNodes }
-  | { SetNodePositions: SetNodePositions };
+  | { SetNodePositions: SetNodePositions }
+  | { SetPointPositions: SetPointPositions };

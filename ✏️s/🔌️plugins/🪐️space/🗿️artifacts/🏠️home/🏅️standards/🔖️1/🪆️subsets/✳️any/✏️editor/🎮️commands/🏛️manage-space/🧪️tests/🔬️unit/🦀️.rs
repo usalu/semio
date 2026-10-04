@@ -22,7 +22,7 @@ async fn a_space_id_relays_the_shell_administration_effect_without_a_local_mutat
         })
         .expect("a ReplayShellCommand effect");
     assert_eq!(action_id, "os.directory.open-administration");
-    let args_value: pack::JsonValue = pack::json_from_dsl_value(&args.expect("args"));
+    let args_value: semio_framework_pack_json::Value = semio_framework_pack_json::from_dsl_value(&args.expect("args"));
     assert_eq!(args_value["spaceId"], "space-a");
 }
 

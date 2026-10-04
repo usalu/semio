@@ -15,9 +15,12 @@ impl protocol::MutationKind<XlsxSnapshot, XlsxStrictMutation> for RemoveConforma
     fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<<XlsxStrictMutation as Mutation<XlsxSnapshot>>::Diff> {
         agg_diff(&XlsxStrictMutation::RemoveConformanceAttribute(self.clone()), base)
     }
-    fn inverse(&self, base: &XlsxSnapshot) -> Vec<XlsxStrictMutation> {
-        agg_inverse(&XlsxStrictMutation::RemoveConformanceAttribute(self.clone()), base)
-    }
+    fn inverse(&self, base: &XlsxSnapshot) -> Result<Vec<XlsxStrictMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&XlsxStrictMutation::RemoveConformanceAttribute(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove conformance attribute", "Konformitätsattribut entfernen")
     }

@@ -586,56 +586,25 @@ pub async fn home_space_rows<'a>(hub_spaces: impl IntoIterator<Item = &'a store:
 //#endregion 🔖️HomeSpaceRows
 
 //#region 🧵️RetainedStore
-/// 🧬️ Builds the single `protocol::Edit<M>` one retained publication step commits. Home, the space
-/// index and the studio differ only in `M`, the edit-id prefix and the byte ceiling, so one authority
-/// serves every lane of all three apps.
-fn space_retained_edit<M>(prefix: &'static str, forward: M, inverse: Vec<M>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<M> {
-    let id = format!("{prefix}-{}", authority.next_sequence_number());
-    protocol::Edit { line: authority.line_id().map(str::to_owned),
-        id: id.clone(),
-        actor: Some(authority.actor().to_string()),
-        forwards: vec![forward],
-        inverse,
-        mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(MutationId(format!("{id}#0"))),
-            dependencies: Vec::new(),
-            base_version: authority.base_applied_edit_count() as u64,
-            author_id: Some(ActorId(authority.actor().to_string())),
-            timestamp: authority.next_clock(),
-            undo_policy: UndoPolicy::ExactBaseOnly,
-            payload_hash: None,
-            semantic_kind: None,
-            label: None,
-            group_id: None,
-            origin: Default::default(),
-            transaction: None,
-        }],
-        description, verb: None,
-        coalesce_key: None,
-        sequence_number: authority.next_sequence_number(),
-        started_at: String::new(),
-        finished_at: None,
-    }
-}
 
 fn space_retained_mutation_bytes<M: ::protocol::OpBinary>(mutation: &M) -> Result<usize, String> {
     ::protocol::OpBinary::encode_op(mutation).map(|bytes| bytes.len()).map_err(|_| "s.space.retained.mutation-encode".to_string())
 }
 
-fn admit_space_retained_mutation<M: ::protocol::OpBinary>(mutation: &M, maximum_bytes: usize) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+fn admit_space_retained_mutation<P, M: ::protocol::OpBinary + ::protocol::Mutation<P>>(mutation: &M, maximum_bytes: usize) -> Result<store::ArtifactStoreOneItemFootprint, String> {
     let retained_bytes = space_retained_mutation_bytes(mutation)?;
     if retained_bytes > maximum_bytes {
         return Err("s.space.retained.mutation-envelope".into());
     }
-    Ok(store::ArtifactStoreOneItemFootprint::for_one_invertible_item(retained_bytes))
+    Ok(store::ArtifactStoreOneItemFootprint::for_leaf::<P, M>(mutation, retained_bytes))
 }
 
 fn prepare_space_retained_one_item<P, M>(base: &P, mutation: M, maximum_bytes: usize) -> Result<(P, Vec<M>, M), String>
 where
     M: ::protocol::Mutation<P> + ::protocol::OpBinary,
 {
-    admit_space_retained_mutation(&mutation, maximum_bytes)?;
-    let inverse = ::protocol::Mutation::inverse(&mutation, base);
+    admit_space_retained_mutation::<P, M>(&mutation, maximum_bytes)?;
+    let inverse = ::protocol::Mutation::inverse(&mutation, base).map_err(semio_framework_value::ValueError::into_message)?;
     let diff = ::protocol::Mutation::diff(&mutation, base).into_parts().0;
     let post = ::protocol::MutationDiff::apply(&diff, base).map_err(|_| "s.space.retained.diff-apply".to_string())?;
     Ok((post, inverse, mutation))
@@ -679,7 +648,7 @@ where
         if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
             return Err("s.space.retained.lane-or-description-envelope".into());
         }
-        admit_space_retained_mutation(mutation, self.maximum_bytes)
+        admit_space_retained_mutation::<P, M>(mutation, self.maximum_bytes)
     }
 
     fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<P, M>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, store::ArtifactStoreOneItemPreparationRequest<P, M>> {
@@ -728,7 +697,7 @@ where
         let mutation = self.mutation.take().ok_or_else(|| "s.space.retained.mutation-owner-missing".to_string())?;
         let (post, inverse, forward) = prepare_space_retained_one_item(base.get(), mutation, self.maximum_bytes)?;
         let authority = self.authority.as_ref().ok_or_else(|| "s.space.retained.authority-missing".to_string())?;
-        let edit = space_retained_edit(self.prefix, forward, inverse, self.description.take(), authority);
+        let edit = authority.next_edit(forward, inverse);
         let prepared = authority.prepare_one_item(edit, Arc::new(post))?;
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
         self.prepared = Some(prepared);
@@ -755,7 +724,7 @@ where
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Blocked);
         }
@@ -767,7 +736,7 @@ where
         }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
-                return Err("s.space.retained.base-retirement-rejected".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "s.space.retained.base-retirement-rejected"));
             }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }

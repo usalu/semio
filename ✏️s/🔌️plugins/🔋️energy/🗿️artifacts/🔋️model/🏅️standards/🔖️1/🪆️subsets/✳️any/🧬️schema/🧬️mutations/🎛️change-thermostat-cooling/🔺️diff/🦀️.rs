@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeThermostatCoolingThrottleRange, base: &Energy
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("A cooling throttle range must be a positive finite number, got {}.", payload.new_cooling_throttle_range_k), [payload.id.0.to_string()]);
     }
     if existing.cooling_throttle_range_k == payload.new_cooling_throttle_range_k {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Thermostat {} already has that cooling throttle range.", payload.id.0));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Thermostat {} already has that cooling throttle range.", payload.id.0));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.thermostats.iter_mut().find(|item| item.id == payload.id) {

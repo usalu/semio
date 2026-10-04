@@ -6,24 +6,24 @@ use std::collections::BTreeMap;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted rewrite-rule document snapshot (persistent fields of the artifact).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[dsl(extension = "rewriting", layout = "lines")]
 #[artifact_schema(id = "s.trinity.rewriting")]
 pub struct RewritingSnapshot {
     #[state(artifact)]
-    pub before_fixture_json: String,
+    #[child(kind="s.stdio.semio")]
+    pub working_graph: semio_s_artifact_trinity_jack::JackSnapshot,
     #[state(artifact)]
-    pub lhs_json: String,
+    pub lhs: crate::standards::v1::subsets::any::schema::Lhs,
     #[state(artifact)]
-    #[dsl(lang = "json")]
-    pub rhs_json: String,
-    #[state(artifact)]
-    #[value(default)]
-    pub parameter_bindings: BTreeMap<String, PropertyValue>,
+    pub rhs: crate::standards::v1::subsets::any::schema::Rhs,
     #[state(artifact)]
     #[value(default)]
-    pub rule_layout: BTreeMap<String, LayoutPoint>,
+    pub parameter_bindings: semio_framework_graph::manifest::PropertyBag,
+    #[state(artifact)]
+    #[value(default)]
+    pub rule_layout: crate::standards::v1::subsets::any::schema::RuleLayout,
 }
 //#region 🔖️HandcraftedArtifactCodecs
 /// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack (derive no longer emits these traits).
@@ -32,16 +32,16 @@ impl store::ArtifactDsl for RewritingSnapshot {
     fn envelope_id() -> &'static str {
         "trinity.rewriting"
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -50,43 +50,42 @@ impl store::ArtifactDsl for RewritingSnapshot {
 impl store::ArtifactPack for RewritingSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
+    }
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 //#endregion 🔖️Snapshot
 
-//#region 🌉️ExternalCodecBridge
-/// 📤️ Renders a [`RewritingSnapshot`] as this facet's own camelCase JSON projection — the comparison
-/// surface `mutate-rewriting-1`'s scenarios are measured through, and the shape the committed
-/// `../🧫️fixtures/🧬️mutations/<slug>/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️.json`
-/// specification vectors are written in. The three authored bodies travel as opaque JSON STRINGS,
-/// so the projection is JSON containing JSON — which is exactly the shape a transcribed Rust
-/// literal gets wrong silently.
-///
-/// A thin wrapper over the framework's own `pack` JSON codec (no external library at runtime).
-pub fn encode_rewriting_snapshot_json(snapshot: &RewritingSnapshot) -> String {
-    pack::to_json_string(snapshot)
+//#region 🔣️DeclaredJsonCodec
+/// 📤️ Renders the declared typed rule, Jack child handle, exact words and keyed maps as JSON.
+pub fn encode_rewriting_snapshot_json(snapshot: &RewritingSnapshot) -> Result<String, semio_framework_value::ValueError> {
+    let value = json::convert(semio_framework_value::ToValue::to_value(snapshot), false)?;
+    Ok(semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&value)))
 }
 
 /// 📥️ The inverse of [`encode_rewriting_snapshot_json`] — decodes those committed specification
 /// vectors into real [`RewritingSnapshot`] values, so `mutate-rewriting-1`'s adapter reads the committed
 /// fixture rather than re-declaring it as a Rust literal beside it. Reaching a JSON library from that
 /// adapter is impossible: the generated test host links only this crate and `semio-repo-test-host`.
-pub fn decode_rewriting_snapshot_json(text: &str) -> Result<RewritingSnapshot, String> {
-    pack::from_json_str(text).map_err(|error| error.to_string())
+pub fn decode_rewriting_snapshot_json(text: &str) -> Result<RewritingSnapshot, semio_framework_value::ValueError> {
+    let value = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()))?;
+    let value = json::convert(semio_framework_pack_json::to_dsl_value(&value), true)?;
+    <RewritingSnapshot as semio_framework_value::FromValue>::from_value(value)
 }
 
 /// 📝️ Parses `.rewriting.dsl.semio` text into a [`RewritingSnapshot`] — a named, non-async pass-through
@@ -98,24 +97,14 @@ pub fn parse_rewriting_dsl(text: &str) -> Result<RewritingSnapshot, String> {
     <RewritingSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
 }
 
-/// 📝️ Renders a [`RewritingSnapshot`] back as `.rewriting.dsl.semio` text — the inverse of
-/// [`parse_rewriting_dsl`], preamble, quoted body strings and fenced `rhs-json` block included.
+/// 📝️ Renders the declared typed Rewriting document through its owned DSL facet.
 pub fn print_rewriting_dsl(snapshot: &RewritingSnapshot) -> String {
     store::ArtifactDsl::print_dsl(snapshot)
 }
 
-/// 🔎️ The rule's two keyed maps as sorted key lists plus the byte lengths of its three authored
-/// bodies — the readable half of a divergence message, so a failing scenario names WHICH axis moved
-/// rather than only that two long JSON-in-JSON documents differ.
+/// 🔎️ Lists typed rule cardinalities, retained child identity and literal sorted map keys.
 pub fn rewrite_rule_summary(snapshot: &RewritingSnapshot) -> String {
-    format!(
-        "bindings[{}] layout[{}] before={}B lhs={}B rhs={}B",
-        snapshot.parameter_bindings.keys().cloned().collect::<Vec<_>>().join(" "),
-        snapshot.rule_layout.keys().cloned().collect::<Vec<_>>().join(" "),
-        snapshot.before_fixture_json.len(),
-        snapshot.lhs_json.len(),
-        snapshot.rhs_json.len()
-    )
+    format!("bindings[{}] layout[{}] graph={} lhs={}:{} rhs={}/{}/{}/{}/{}",snapshot.parameter_bindings.keys().cloned().collect::<Vec<_>>().join(" "),snapshot.rule_layout.keys().cloned().collect::<Vec<_>>().join(" "),snapshot.working_graph.content.child_id,snapshot.lhs.pattern.left_var,snapshot.lhs.pattern.left_kind,snapshot.rhs.create.len(),snapshot.rhs.delete.len(),snapshot.rhs.set.len(),snapshot.rhs.merge.len(),snapshot.rhs.parameters.len())
 }
 //#endregion 🌉️ExternalCodecBridge
 
@@ -123,3 +112,13 @@ pub fn rewrite_rule_summary(snapshot: &RewritingSnapshot) -> String {
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 pub use semio_framework_graph::manifest::PropertyValue;
 //#endregion 🔁️Re-exports
+
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_snapshot_tests;
+
+#[path="🔣️json/🦀️.rs"]
+pub mod json;
+
+#[path="🪶️sqlite/🦀️.rs"]
+mod sqlite;

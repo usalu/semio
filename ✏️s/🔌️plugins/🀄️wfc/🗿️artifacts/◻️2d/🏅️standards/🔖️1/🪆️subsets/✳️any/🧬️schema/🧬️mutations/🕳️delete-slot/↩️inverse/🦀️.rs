@@ -4,7 +4,8 @@
 use crate::mutations::{connect_slots, create_slot, Wfc2dMutation};
 use crate::schema::snapshot::Wfc2dSnapshot;
 
-pub fn inverse(payload: &super::DeleteSlot, base: &Wfc2dSnapshot) -> Vec<Wfc2dMutation> {
+pub fn inverse(payload: &super::DeleteSlot, base: &Wfc2dSnapshot) -> Result<Vec<Wfc2dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(slot) = base.slots.iter().find(|slot| slot.id == payload.id) else {
         return Vec::new();
     };
@@ -15,4 +16,6 @@ pub fn inverse(payload: &super::DeleteSlot, base: &Wfc2dSnapshot) -> Vec<Wfc2dMu
         }
     }
     restore
+
+    })())
 }

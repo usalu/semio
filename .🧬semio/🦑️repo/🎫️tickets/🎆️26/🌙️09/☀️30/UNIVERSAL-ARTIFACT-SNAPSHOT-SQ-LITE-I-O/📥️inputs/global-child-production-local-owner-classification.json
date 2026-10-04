@@ -1,0 +1,191 @@
+{
+  "state": "SourceReadbackClassificationNotMountRoster",
+  "candidatePaths": 23,
+  "candidateLines": 51,
+  "rows": [
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs",
+      "family": "CAD",
+      "declared": "SemioModelSnapshot (model pane) / SemioDrawingSnapshot (drawing)",
+      "current": "CadWorkingScene and bundled example fallback",
+      "required": "Actual model schema must retain all pane raw geometry before checked projection. Catalogue-by-child-id fallback cannot be global typed capture authority.",
+      "matchedLines": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🦀️.rs",
+      "family": "CAD",
+      "declared": "SemioModelSnapshot (model pane) / SemioDrawingSnapshot (drawing)",
+      "current": "CadWorkingScene and bundled example fallback",
+      "required": "Actual model schema must retain all pane raw geometry before checked projection. Catalogue-by-child-id fallback cannot be global typed capture authority.",
+      "matchedLines": 3
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/♻️retirement/🦀️.rs",
+      "family": "Block3d",
+      "declared": "SemioKitSnapshot catalog (Block) or SemioMeshSnapshot (WFC)",
+      "current": "Correct S requested through arbitrary local Any",
+      "required": "Actual typed read can select S; no scene bridge. Return through real retained registry/member disposal, not Arc try_unwrap ownership inference.",
+      "matchedLines": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🦀️.rs",
+      "family": "Writer",
+      "declared": "SemioDocumentSnapshot",
+      "current": "Arc<str> and separate persisted text",
+      "required": "Full document blocks/styles/images owner is sole child. Code-body projection must be checked domain projection; empty unresolved text cannot stand for full owner.",
+      "matchedLines": 2
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🦀️.rs",
+      "family": "Sequence",
+      "declared": "SemioFlowSnapshot",
+      "current": "SequenceWorkingScene",
+      "required": "Use complete Semio Flow node/edge owner; projected Sequence fields are checked editing view, preserve unedited raw node labels/ports/params and relationships.",
+      "matchedLines": 3
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "family": "Sequence",
+      "declared": "SemioFlowSnapshot",
+      "current": "SequenceWorkingScene",
+      "required": "Use complete Semio Flow node/edge owner; projected Sequence fields are checked editing view, preserve unedited raw node labels/ports/params and relationships.",
+      "matchedLines": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/♻️retirement/📸️snapshot/🦀️.rs",
+      "family": "Flow",
+      "declared": "SemioFlowSnapshot",
+      "current": "FlowWorkingScene",
+      "required": "Actual retained child is full Semio Flow; bounded preparation/hash and mutation diff/inverse must use that owner with explicit projection, no empty unresolved scene.",
+      "matchedLines": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "family": "Flow",
+      "declared": "SemioFlowSnapshot",
+      "current": "FlowWorkingScene",
+      "required": "Actual retained child is full Semio Flow; bounded preparation/hash and mutation diff/inverse must use that owner with explicit projection, no empty unresolved scene.",
+      "matchedLines": 4
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/🗿️artifact/📬️preparation/🦀️.rs",
+      "family": "Flow",
+      "declared": "SemioFlowSnapshot",
+      "current": "FlowWorkingScene",
+      "required": "Actual retained child is full Semio Flow; bounded preparation/hash and mutation diff/inverse must use that owner with explicit projection, no empty unresolved scene.",
+      "matchedLines": 2
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🦀️.rs",
+      "family": "Flow",
+      "declared": "SemioFlowSnapshot",
+      "current": "FlowWorkingScene",
+      "required": "Actual retained child is full Semio Flow; bounded preparation/hash and mutation diff/inverse must use that owner with explicit projection, no empty unresolved scene.",
+      "matchedLines": 6
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎯️selection/🦀️.rs",
+      "family": "Raster",
+      "declared": "SemioImageSnapshot",
+      "current": "Correct S requested through arbitrary local Any; per-command derived image copies",
+      "required": "Bind actual typed image lease. Distinguish derived composite buffers from child owner, preserve frames/media state, propagate read refusal at checked consumer boundary.",
+      "matchedLines": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎭️mask-from-selection/🦀️.rs",
+      "family": "Raster",
+      "declared": "SemioImageSnapshot",
+      "current": "Correct S requested through arbitrary local Any; per-command derived image copies",
+      "required": "Bind actual typed image lease. Distinguish derived composite buffers from child owner, preserve frames/media state, propagate read refusal at checked consumer boundary.",
+      "matchedLines": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️.rs",
+      "family": "Raster",
+      "declared": "SemioImageSnapshot",
+      "current": "Correct S requested through arbitrary local Any; per-command derived image copies",
+      "required": "Bind actual typed image lease. Distinguish derived composite buffers from child owner, preserve frames/media state, propagate read refusal at checked consumer boundary.",
+      "matchedLines": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️paint-stroke/🦀️.rs",
+      "family": "Raster",
+      "declared": "SemioImageSnapshot",
+      "current": "Correct S requested through arbitrary local Any; per-command derived image copies",
+      "required": "Bind actual typed image lease. Distinguish derived composite buffers from child owner, preserve frames/media state, propagate read refusal at checked consumer boundary.",
+      "matchedLines": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+      "family": "Raster",
+      "declared": "SemioImageSnapshot",
+      "current": "Correct S requested through arbitrary local Any; per-command derived image copies",
+      "required": "Bind actual typed image lease. Distinguish derived composite buffers from child owner, preserve frames/media state, propagate read refusal at checked consumer boundary.",
+      "matchedLines": 2
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🦀️.rs",
+      "family": "Raster",
+      "declared": "SemioImageSnapshot",
+      "current": "Correct S requested through arbitrary local Any; per-command derived image copies",
+      "required": "Bind actual typed image lease. Distinguish derived composite buffers from child owner, preserve frames/media state, propagate read refusal at checked consumer boundary.",
+      "matchedLines": 4
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛜️wire-runtime/🦀️.rs",
+      "family": "Jack",
+      "declared": "SemioGraphSnapshot",
+      "current": "JackContentOwner for content helpers, incompatible JackWorkingScene in clone/retirement/executor",
+      "required": "Complete nine-case raw graph owner sole child, exact geometry words/all node+edge state. Queries may project checked Node/Edge views; retained clone, close and mutation must use exact S.",
+      "matchedLines": 3
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️executor/🪜️execution/🦀️.rs",
+      "family": "Jack",
+      "declared": "SemioGraphSnapshot",
+      "current": "JackContentOwner for content helpers, incompatible JackWorkingScene in clone/retirement/executor",
+      "required": "Complete nine-case raw graph owner sole child, exact geometry words/all node+edge state. Queries may project checked Node/Edge views; retained clone, close and mutation must use exact S.",
+      "matchedLines": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🪆️content/🦀️.rs",
+      "family": "Jack",
+      "declared": "SemioGraphSnapshot",
+      "current": "JackContentOwner for content helpers, incompatible JackWorkingScene in clone/retirement/executor",
+      "required": "Complete nine-case raw graph owner sole child, exact geometry words/all node+edge state. Queries may project checked Node/Edge views; retained clone, close and mutation must use exact S.",
+      "matchedLines": 3
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🦀️.rs",
+      "family": "Shooting",
+      "declared": "SemioImageSnapshot",
+      "current": "Correct S but accessor deep-clones snapshot",
+      "required": "Retained typed read, full frames and typed media; checked derived byte representation separate from lease, admission when owned output requested.",
+      "matchedLines": 2
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🦀️.rs",
+      "family": "Architect",
+      "declared": "SemioTableSnapshot for benchmarks/knowledge",
+      "current": "Program*WorkingTable plus parent payload and JSON table-cell bridge",
+      "required": "Actual declared rich record schema-first cell/relationship representation needed; JSON string payload and duplicate parent table cannot be full interpreted child authority.",
+      "matchedLines": 2
+    },
+    {
+      "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🦀️.rs",
+      "family": "Equation",
+      "declared": "SemioTextSnapshot / SemioTableSnapshot / SemioValueSnapshot",
+      "current": "One EquationWorkingScene Any Arc shared across all three incompatible S",
+      "required": "Publish and retain three exact typed owners, all field/word semantics. Equation scene becomes checked derived view rather than ownership source.",
+      "matchedLines": 5
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️preview/🦀️.rs",
+      "family": "Block3d",
+      "declared": "SemioKitSnapshot catalog (Block) or SemioMeshSnapshot (WFC)",
+      "current": "Correct S requested through arbitrary local Any",
+      "required": "Actual typed read can select S; no scene bridge. Return through real retained registry/member disposal, not Arc try_unwrap ownership inference.",
+      "matchedLines": 1
+    }
+  ]
+}

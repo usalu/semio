@@ -4,6 +4,7 @@ import { parseArtifactRef, type ArtifactRef } from "../../../../../../../../../.
 import { parseLinkPin, type LinkPin } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🟦️.ts";
 import { parseSemioChild } from "../../../✉️base/🧬️schema/🪆️child/🟦️.ts";
 import { parseSemioKitConnection, parseSemioKitPiece, parseSemioKitSnapshot, type SemioKitConnection, type SemioKitPiece } from "../📸️snapshot/🟦️.ts";
+import type { SnapshotPatch } from '../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts';
 
 export interface CreateObject { child_id: string; target: ArtifactRef }
 export interface DeleteObject { child_id: string }
@@ -38,6 +39,7 @@ export type SemioKitMutation =
   | { RemoveDesign: RemoveDesign }
   | { EditDesign: EditDesign }
   | { SetSnapshot: SetSnapshot };
+  | { readonly PatchSnapshot: { readonly patch: SnapshotPatch } }
 
 function stringField(row: Record<string, unknown>, field: string, at: string): string {
   if (typeof row[field] !== "string") throw new Error(`${at}.${field}: string required`);

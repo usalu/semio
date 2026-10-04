@@ -2,9 +2,36 @@ syntax = "proto3";
 package semio.s.mathematical.equation.artifact;
 import "🧰️framework/🔨️modules/🌱️value/🧬️schema/🛰️.proto";
 import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
+message EquationNode {
+  string id = 1;
+  string label = 2;
+  double x = 3;
+  double y = 4;
+}
+message EquationEdge {
+  string id = 1;
+  string source = 2;
+  string target = 3;
+}
+message EquationGraph {
+  bool directed = 1;
+  repeated EquationNode nodes = 2;
+  repeated EquationEdge edges = 3;
+  string algorithm = 4;
+  optional string algorithm_seed = 5;
+}
+message EquationPoint {
+  double x = 1;
+  double y = 2;
+}
+message EquationGeometry {
+  repeated EquationPoint points = 1;
+}
 message EquationArtifact {
-  semio.os.store.ArtifactChild notation = 1;
-  semio.os.store.ArtifactChild results = 2;
-  semio.os.store.ArtifactChild computed = 3;
-  semio.framework.value.DslValue equation = 4;
+  EquationGraph graph = 1;
+  EquationGeometry geometry = 2;
+  semio.os.store.ArtifactChild notation = 3;
+  semio.os.store.ArtifactChild results = 4;
+  semio.os.store.ArtifactChild computed = 5;
+  semio.framework.value.DslValue equation = 6;
 }

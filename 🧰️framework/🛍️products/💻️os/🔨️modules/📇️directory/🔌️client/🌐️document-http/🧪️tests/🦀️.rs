@@ -22,7 +22,7 @@ impl DirectoryTransport for TestTransport {
     fn open_ws(&self, _: &OperationContext, _: &str, _: &[String], _: u64) -> Result<Self::Ws, TransportError> { unreachable!() }
 }
 fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap() }
-fn declaration(value: &serde_json::Value) -> DocumentHttpPortDeclarationV1 { DocumentHttpPortDeclarationV1::from_value(pack::json::from_json_str(&value.to_string()).unwrap()).unwrap() }
+fn declaration(value: &serde_json::Value) -> DocumentHttpPortDeclarationV1 { DocumentHttpPortDeclarationV1::from_value(semio_framework_pack_json::from_json_str(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()).unwrap() }
 fn context() -> OperationContext { OperationContext { actor: 0, generation: 0, trace: semio_framework_async::TraceId(0), lane: 0, deadline_ms: None, cancel: semio_framework_async::CancelToken::root_now(), capability: None } }
 
 #[semio_framework_async_macros::async_test]
@@ -31,7 +31,7 @@ async fn owner_removal_preserves_neutral_document_transport() {
     let transport = TestTransport { response: fixture["reply"].to_string().into_bytes(), calls: Arc::new(Mutex::new(Vec::new())) };
     let client = DirectoryClient::new(transport.clone(), "http://neutral.test");
     let scope = DocumentScope::new("space", "document");
-    let payload = pack::json::from_json_str(&fixture["request"].to_string()).unwrap();
+    let payload = semio_framework_pack_json::from_json_str(&fixture["request"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut installed = std::collections::BTreeMap::new();
     for event in fixture["lifecycle"].as_array().unwrap() {
         match event.as_str().unwrap() {
@@ -41,7 +41,7 @@ async fn owner_removal_preserves_neutral_document_transport() {
             _ => unreachable!(),
         }
         let reply = installed["neutral"].call(&client, &context(), &scope, "run", &payload).await.unwrap();
-        let oracle: serde_json::Value = serde_json::from_str(&pack::json::to_json_string(&reply)).unwrap();
+        let oracle: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&reply)).unwrap();
         assert_eq!(oracle, fixture["reply"]);
     }
     assert_eq!(transport.calls.lock().unwrap().len(), 5);
@@ -81,6 +81,6 @@ fn decoded_replies_obey_the_same_node_bounds_as_owner_inputs() {
     for vector in fixture["replyNodeBounds"]["vectors"].as_array().unwrap() {
         let input=serde_json::Value::Array(vec![serde_json::Value::Null;vector["items"].as_u64().unwrap() as usize]);
         let bytes=serde_json::to_vec(&input).unwrap();let reply=port.decode("run",&bytes);
-        if vector["valid"]==true {assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::json::to_json_string(&reply.unwrap())).unwrap(),input)} else {assert_eq!(reply,Err(DocumentHttpPortCodeV1::Bounds));}
+        if vector["valid"]==true {assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&reply.unwrap())).unwrap(),input)} else {assert_eq!(reply,Err(DocumentHttpPortCodeV1::Bounds));}
     }
 }

@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Apply Filter",
+  "description": "One menu filter: the layer, the filter and its amount (0 for a filter without one). Target and selection are the session's; a flip mirrors the whole image.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "layerId",
+    "filter",
+    "amount"
+  ],
+  "properties": {
+    "layerId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "filter": {
+      "type": "string",
+      "enum": [
+        "invert",
+        "grayscale",
+        "clear",
+        "flipHorizontal",
+        "flipVertical",
+        "brightness",
+        "contrast",
+        "saturation",
+        "gamma",
+        "threshold",
+        "posterize",
+        "blur",
+        "sharpen"
+      ]
+    },
+    "amount": {
+      "type": "number",
+      "minimum": -1,
+      "maximum": 256
+    }
+  }
+}

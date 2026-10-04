@@ -60,7 +60,7 @@ pub fn render<'a>(hub_spaces: impl IntoIterator<Item = &'a store::os_directory::
     // reasoning. A signed-out human owns no spaces, so this publishes the same table empty instead of
     // declining to render the product's landing window.
     let rows = match crate::home_session_identity(view_state) {
-        Some(identity) => semio_framework_plugin::resolve_ready(crate::home_space_rows(hub_spaces, &identity.user_id, retired_local_studio_ids)),
+        Some(identity) => ::semio_framework_async::poll::resolve_ready(crate::home_space_rows(hub_spaces, &identity.user_id, retired_local_studio_ids)),
         None => Vec::new(),
     };
     render_rows(&rows, labels, &TreeWindows::for_body(view_state, S_HOME_VIEW_BODY))

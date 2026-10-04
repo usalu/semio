@@ -1,0 +1,65 @@
+{
+  "status": "test-only-mounted-runtime-unexecuted",
+  "prospectiveSelected": 1,
+  "law": "tests::count_lease_tests::real_count_component_lease_uses_authenticated_hub_authority_and_erased_sqlite_io",
+  "productionChanges": [],
+  "existingPrerequisite": "bun nx run @semio-tech/framework-plugin-host-fixture:component-dev",
+  "cwd": "/Users/ueli/Documents/semio",
+  "env": {
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-count-authenticated-lease-artifacts",
+    "CARGO_TARGET_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned",
+    "CARGO_BUILD_BUILD_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned",
+    "NX_DAEMON": "false",
+    "NX_ISOLATE_PLUGINS": "false",
+    "NX_CACHE_PROJECT_GRAPH": "false",
+    "NX_WORKSPACE_DATA_DIRECTORY": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-count-authenticated-lease-nx-data",
+    "NX_CACHE_DIRECTORY": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-count-authenticated-lease-nx-cache",
+    "SEMIO_TEST_LEVEL": "exhaustive"
+  },
+  "command": "bun nx run os-hub:test --skip-nx-cache --args='quick --features integration-fixtures --bin os-hub real_count_component_lease_ --no-fail-fast'",
+  "shellCommand": "env SEMIO_TEST_ARTIFACT_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-count-authenticated-lease-artifacts' CARGO_TARGET_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned' CARGO_BUILD_BUILD_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned' NX_DAEMON='false' NX_ISOLATE_PLUGINS='false' NX_CACHE_PROJECT_GRAPH='false' NX_WORKSPACE_DATA_DIRECTORY='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-count-authenticated-lease-nx-data' NX_CACHE_DIRECTORY='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-count-authenticated-lease-nx-cache' SEMIO_TEST_LEVEL='exhaustive' bun nx run os-hub:test --skip-nx-cache --args='quick --features integration-fixtures --bin os-hub real_count_component_lease_ --no-fail-fast' > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-authentic-count-real-hub-lease-first-baseline.log' 2>&1",
+  "joins": [
+    {
+      "path": "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs",
+      "beforeSha256": "6785a0c64d56ea683a755dcbbd13e1a95f6e39c40e01f36b3e75598a6303cb0f",
+      "anchor": "pub mod trusted_catalog_fixture;",
+      "after": "\n#[cfg(all(feature = \"integration-fixtures\", feature = \"native-artifact-execution\"))]\n#[path = \"../../🧪️tests/🔏️trusted-catalog-profile/🪶️count/🦀️.rs\"]\npub mod count_trusted_catalog_fixture;\n",
+      "mountedSha256": "68f8bbb50c83eb1a217c0f2eb7d2cb77aeb66a36f27eaf40818909f953b9b605"
+    },
+    {
+      "path": "🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs",
+      "beforeSha256": "7f2c87a1bb9ce11ad8dca97966c940ae79990a97b18d46903549111bc82b5827",
+      "anchor": "use super::*;\nuse directory::os_directory",
+      "after": "\n#[cfg(all(feature = \"integration-fixtures\", feature = \"native-artifact-execution\"))]\n#[path = \"🪶️count-lease/🦀️.rs\"]\nmod count_lease_tests;\n",
+      "mountedSha256": "ba1e8e7c07f0dd8ded4ed1cac3a5c8dbdf926615fa5610825e3da0a02c095f48"
+    }
+  ],
+  "facets": [
+    {
+      "path": "🌎️hub/🧪️tests/🔏️trusted-catalog-profile/🪶️count/🦀️.rs",
+      "sha256": "4f611381db1e75503c8d6e74a748d9208e60e3b3967614f5f53ade84de2b03ba"
+    },
+    {
+      "path": "🌎️hub/🧪️tests/🔬️bin-unit/🪶️count-lease/🦀️.rs",
+      "sha256": "d3e988e8c36f01d677aa01dc4117e3fdec83e287127d33e780265362d2e163af"
+    }
+  ],
+  "launch": {
+    "name": "⚖️check🪶️hub-count-authenticated-lease🦀️",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun nx run os-hub:test --skip-nx-cache --args='quick --features integration-fixtures --bin os-hub real_count_component_lease_ --no-fail-fast'",
+    "cwd": "${workspaceFolder}",
+    "env": {
+      "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/🗑️generated/hub-count-authenticated-lease",
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_CACHE_PROJECT_GRAPH": "false"
+    },
+    "presentation": {
+      "group": "4_build",
+      "order": 206.1615
+    }
+  },
+  "qualification": "Root explicitly authorized test-only mounts. Existing Hub route and both launch catalogs mounted. No Cargo/runtime evidence. Production fault contributions held."
+}

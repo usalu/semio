@@ -29,7 +29,7 @@ fn fixture() -> serde_json::Value {
 }
 
 fn snapshot_json<S: ToValue>(snapshot: &S) -> serde_json::Value {
-    serde_json::from_str(&pack::json::to_json_string(&snapshot.to_value())).expect("independent snapshot oracle")
+    serde_json::from_str(&semio_framework_pack_json::to_json_string(&snapshot.to_value())).expect("independent snapshot oracle")
 }
 
 fn assert_detail_routes(root: &serde_json::Value, app_id: &str) {
@@ -59,8 +59,8 @@ async fn assert_editor<E: ArtifactEditor + SnapshotEditingEditor>(definition: Ap
         assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "{} {id}", definition.id);
         assert!(E::Command::TOOL_JOB_IDS.contains(&id), "{} has no retained {id}", definition.id);
         let source = serde_json::to_string(&row["arguments"]).unwrap();
-        let args: DslValue = pack::json::from_json_str(&source).expect("native action argument decoder");
-        let native_json = pack::json::to_json_string(&args);
+        let args: DslValue = semio_framework_pack_json::from_json_str(&source, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("native action argument decoder");
+        let native_json = semio_framework_pack_json::to_json_string(&args);
         assert_eq!(serde_json::from_str::<serde_json::Value>(&native_json).unwrap(), row["arguments"], "independent argument codec oracle {id}");
         let command = E::command_from_action(id, Some(&args)).unwrap_or_else(|error| panic!("{} cannot parse {id}: {error:?}", definition.id));
         assert_eq!(E::command_id(&command), id);
@@ -79,7 +79,7 @@ async fn assert_editor<E: ArtifactEditor + SnapshotEditingEditor>(definition: Ap
     let schema_identity = |schema: &str| schema.trim_start_matches("s.").to_string();
     assert_eq!(before["schema"].as_str().map(schema_identity), Some(schema_identity(E::DOCUMENT_SCHEMA)), "{} edits the document schema of its own snapshot model", definition.id);
     for row in fixture["rejectedActions"].as_array().unwrap() {
-        let arguments: DslValue = pack::json::from_json_str(&row["arguments"].to_string()).unwrap();
+        let arguments: DslValue = semio_framework_pack_json::from_json_str(&row["arguments"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let command = E::command_from_action(row["id"].as_str().unwrap(), Some(&arguments)).expect("invalid detail is still a well-formed command");
         assert!(artifact_app_laws::reduce_editor_command::<E>(&command, &base).is_err(), "{} direct command must protect schema identity", definition.id);
         assert_eq!(snapshot_json(&base), before, "{} refused direct command preserves its snapshot", definition.id);
@@ -87,7 +87,7 @@ async fn assert_editor<E: ArtifactEditor + SnapshotEditingEditor>(definition: Ap
     let mut after = before.clone();
     let path = case["path"].as_str().unwrap();
     let unchanged_arguments = serde_json::json!({ "path": path, "value": before.pointer(path).expect("no-op fixture path") });
-    let unchanged_arguments: DslValue = pack::json::from_json_str(&unchanged_arguments.to_string()).unwrap();
+    let unchanged_arguments: DslValue = semio_framework_pack_json::from_json_str(&unchanged_arguments.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let unchanged_command = E::command_from_action("setSnapshotValue", Some(&unchanged_arguments)).unwrap();
     let unchanged_event = E::snapshot_edit_event(&unchanged_command).unwrap();
     assert!(E::snapshot_edit_is_admitted(unchanged_event, &base), "{} must admit unchanged field values", definition.id);
@@ -96,7 +96,7 @@ async fn assert_editor<E: ArtifactEditor + SnapshotEditingEditor>(definition: Ap
     *after.pointer_mut(path).unwrap_or_else(|| panic!("{} has no editable fixture path {path}", definition.id)) = case["value"].clone();
     assert_ne!(before, after, "{} fixture must change a real detail", definition.id);
     let arguments = serde_json::json!({ "path": path, "value": case["value"] });
-    let arguments: DslValue = pack::json::from_json_str(&arguments.to_string()).unwrap();
+    let arguments: DslValue = semio_framework_pack_json::from_json_str(&arguments.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let command = E::command_from_action("setSnapshotValue", Some(&arguments)).expect("typed detail command");
     let event = E::snapshot_edit_event(&command).expect("detail event is routed");
     assert!(E::snapshot_edit_is_admitted(event, &base), "{} initial document must admit a detail edit", definition.id);

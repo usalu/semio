@@ -1,0 +1,209 @@
+{
+  "csv": {
+    "contract": "completeCsvLogicalOwner",
+    "encodings": [
+      "binary",
+      "text"
+    ],
+    "snapshots": [
+      {
+        "schema": "csv.owner.雪\u0000",
+        "hasHeader": false,
+        "records": [
+          {
+            "fields": []
+          },
+          {
+            "fields": [
+              {
+                "value": "Grüße,\n\"雪\"\u0000",
+                "quoted": false
+              },
+              {
+                "value": "",
+                "quoted": true
+              }
+            ]
+          },
+          {
+            "fields": [
+              {
+                "value": "",
+                "quoted": false
+              }
+            ]
+          },
+          {
+            "fields": []
+          }
+        ]
+      },
+      {
+        "schema": "",
+        "hasHeader": true,
+        "records": []
+      }
+    ],
+    "policy": {
+      "preserveSchema": true,
+      "preserveHasHeader": true,
+      "preserveQuoted": true,
+      "preserveEmptyRecord": true,
+      "nativeOwner": "declaredLogicalRecord",
+      "naturalFile": "rfc4180"
+    },
+    "edit": {
+      "query": "UPDATE csv_document SET has_header=1",
+      "snapshotIndex": 0
+    }
+  },
+  "tsv": {
+    "contract": "completeTsvLogicalOwner",
+    "encodings": [
+      "binary",
+      "text"
+    ],
+    "snapshots": [
+      {
+        "schema": "tsv.owner.雪\u0000",
+        "records": [],
+        "trailingNewline": false,
+        "lineEnding": "crlf"
+      },
+      {
+        "schema": "stdio.tsv",
+        "records": [
+          [],
+          [
+            ""
+          ],
+          []
+        ],
+        "trailingNewline": true,
+        "lineEnding": "lf"
+      },
+      {
+        "schema": "",
+        "records": [
+          [
+            "Grüße\u0000雪",
+            "literal\tfield",
+            "literal\r\nfield"
+          ],
+          []
+        ],
+        "trailingNewline": false,
+        "lineEnding": "crlf"
+      },
+      {
+        "schema": "",
+        "records": [],
+        "trailingNewline": true,
+        "lineEnding": "crlf"
+      }
+    ],
+    "policy": {
+      "preserveSchema": true,
+      "preserveTrailingNewline": true,
+      "preserveLineEnding": true,
+      "preserveEmptyRecord": true,
+      "nativeOwner": "declaredLogicalRecord",
+      "naturalFile": "ianaTsv"
+    },
+    "edit": {
+      "query": "UPDATE tsv_document SET line_ending='lf',trailing_newline=0",
+      "snapshotIndex": 3
+    }
+  },
+  "csvDemo": {
+    "schema": "stdio.csv",
+    "hasHeader": true,
+    "records": [
+      {
+        "fields": [
+          {
+            "value": "name",
+            "quoted": false
+          },
+          {
+            "value": "note",
+            "quoted": false
+          }
+        ]
+      },
+      {
+        "fields": [
+          {
+            "value": "alpha",
+            "quoted": false
+          },
+          {
+            "value": "plain",
+            "quoted": false
+          }
+        ]
+      },
+      {
+        "fields": [
+          {
+            "value": "Doe, John",
+            "quoted": true
+          },
+          {
+            "value": "He said \"hi\"",
+            "quoted": true
+          }
+        ]
+      }
+    ]
+  },
+  "tsvDemo": {
+    "schema": "stdio.tsv",
+    "records": [
+      [
+        "id",
+        "name",
+        "qty",
+        "unit_price",
+        "note"
+      ],
+      [
+        "1",
+        "Oak Panel",
+        "12",
+        "18.50",
+        "in stock"
+      ],
+      [
+        "2",
+        "Steel Bracket L-90",
+        "48",
+        "2.05",
+        "backordered"
+      ],
+      [
+        "3",
+        "Glass Pane 4mm",
+        "6",
+        "44.99",
+        "fragile;handle with care"
+      ],
+      [
+        "4",
+        "Cable Tie 200mm",
+        "500",
+        "0.03",
+        "bag of 100 -> qty is bags"
+      ],
+      [
+        "5",
+        "Weathering Test\\tSample",
+        "1",
+        "0.00",
+        "literal backslash-t, NOT a real tab -- see NOTES.md"
+      ]
+    ],
+    "trailingNewline": true,
+    "lineEnding": "lf"
+  }
+}

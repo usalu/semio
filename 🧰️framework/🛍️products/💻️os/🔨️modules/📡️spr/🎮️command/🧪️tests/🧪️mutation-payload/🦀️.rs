@@ -71,9 +71,12 @@ impl Mutation<Counter> for Unpublished {
     fn diff(&self, base: &Counter) -> crate::os_spr::MutationOutcome<Self::Diff> {
         self.op.diff(base)
     }
-    fn inverse(&self, base: &Counter) -> Vec<Self> {
-        self.op.inverse(base).into_iter().map(|op| Self { op }).collect()
-    }
+    fn inverse(&self, base: &Counter) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+    Ok({
+        self.op.inverse(base)?.into_iter().map(|op| Self { op }).collect()
+    
+    })
+}
 }
 
 impl SemanticMutation<Counter> for Unpublished {
@@ -93,7 +96,7 @@ impl SemanticMutation<Counter> for Unpublished {
 
 fn witnesses() -> Vec<CounterMutation> {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️mutation-editability/🔣️.json")).expect("editability fixture");
-    fixture["cases"].as_array().expect("cases").iter().map(|case| crate::os_pack::json::from_json_str(&case["wire"].to_string()).expect("a counter witness")).collect()
+    fixture["cases"].as_array().expect("cases").iter().map(|case| semio_framework_pack_json::from_json_str(&case["wire"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("a counter witness")).collect()
 }
 
 /// ⚖️ LAW: every runtime operation reaches the language-agnostic fixture's editability verdict — editable exactly when it has an

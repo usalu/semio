@@ -1,0 +1,10 @@
+{
+  "port": "params:in",
+  "schema": "params",
+  "initialValue": 3,
+  "cases": [
+    { "id": "matching-numeric-with-unmatched-and-text", "input": { "slider": 42, "unmatched": 3, "text": "skip" }, "expected": 42 },
+    { "id": "negative-decimal", "input": { "slider": -2.5 }, "expected": -2.5 },
+    { "id": "empty-record", "input": {}, "expected": 3 }
+  ]
+}

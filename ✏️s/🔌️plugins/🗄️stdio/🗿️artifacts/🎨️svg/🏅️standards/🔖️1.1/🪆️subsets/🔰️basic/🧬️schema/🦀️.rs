@@ -22,7 +22,7 @@ pub mod derived_construction {
     use crate::standards::v1_1::subsets::basic::schema::check_svg_basic_conformance;
     use crate::standards::v1_1::subsets::basic::schema::mutations::{apply_svg_basic_mutation, SvgBasicMutation};
     use crate::{SvgDiff, SvgSnapshot};
-    use dsl::Diagnostic;
+    use semio_framework_diagnostic::Diagnostic;
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
@@ -44,7 +44,7 @@ pub mod derived_construction {
             Self { snapshot }
         }
 
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(Self::from_snapshot(<SvgSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
 
@@ -70,7 +70,7 @@ pub mod derived_construction {
                 set_element_attr(root, "baseProfile", Some("basic".into()));
                 set_element_attr(root, "version", Some("1.1".into()));
             }
-            let hard: Vec<Diagnostic> = check_svg_basic_conformance(&self.snapshot).into_iter().filter(|d| matches!(d.severity, dsl::Severity::Error | dsl::Severity::Fatal)).collect();
+            let hard: Vec<Diagnostic> = check_svg_basic_conformance(&self.snapshot).into_iter().filter(|d| matches!(d.severity, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)).collect();
             if hard.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -91,7 +91,10 @@ pub mod derived_analysis {
     use crate::standards::v1_1::subsets::base::schema::snapshot::SvgSnapshot;
     use crate::standards::v1_1::subsets::base::schema::SvgAnalyzer as SvgAnyAnalyzer;
     pub use crate::standards::v1_1::subsets::base::schema::SvgParts;
-    use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
+    use semio_framework_diagnostic::Diagnostic;
+use semio_framework_diagnostic::FaultCode;
+use semio_framework_diagnostic::Severity;
+use semio_framework_diagnostic::TextSpan;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
     use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
     use std::collections::HashMap;
@@ -134,12 +137,12 @@ pub mod derived_analysis {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn hard(code: &'static str, message: String) -> Diagnostic {
-        Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: dsl::FaultScope::default() }
+        Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: semio_framework_diagnostic::FaultScope::default() }
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn soft(code: &'static str, message: String) -> Diagnostic {
-        Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: dsl::FaultScope::default() }
+        Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: semio_framework_diagnostic::FaultScope::default() }
     }
 
     /// 🌳 Recursively collects every element node's `(name, attrs, children)` triple, depth-first.
@@ -189,9 +192,9 @@ pub mod derived_analysis {
     /// the D5 validate-on-build hook.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     /// 🛡️ Checks SVG Basic's actual referenced clip paths with bounded borrowed traversal.
-    pub fn check_svg_basic_conformance_controlled(snapshot:&SvgSnapshot,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,String>{
-        use semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase;
-        fn tick(control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>,count:&mut usize)->Result<(),String>{*count=count.checked_add(1).ok_or("SVG Basic validation unit overflow")?;if *count%256==0{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,*count,0)?;}Ok(())}
+    pub fn check_svg_basic_conformance_controlled(snapshot:&SvgSnapshot,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,semio_framework_os_kernel::sqlite_snapshot::ValueError>{
+        use semio_framework_os_kernel::sqlite_snapshot::{SqliteSnapshotPhase, ValueError, ValueRefusalKind};
+        fn tick(control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>,count:&mut usize)->Result<(),ValueError>{*count=count.checked_add(1).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"SVG Basic validation unit overflow"))?;if *count%256==0{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,*count,0)?;}Ok(())}
         let mut out=Vec::new();let mut count=0usize;control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;let Some(root)=&snapshot.doc.root else{return Ok(out)};let mut elements=Vec::new();let mut pending=vec![std::slice::from_ref(root).iter()];while let Some(nodes)=pending.last_mut(){let Some(node)=nodes.next()else{pending.pop();continue;};tick(control,&mut count)?;if let XmlNode::Element{name,attrs,children}=node{for _ in attrs{tick(control,&mut count)?;}elements.push((name.as_str(),attrs.as_slice(),children.as_slice()));pending.push(children.iter());}}
         let clip_paths=clip_path_children_by_id(&elements);
         for(name,attrs,_children)in &elements{tick(control,&mut count)?;if BLOCKED_FILTER_PRIMITIVES.contains(&local_name(name)){out.push(hard(CODE_FILTER_PRIMITIVE,format!("element <{name}> is an expensive raster filter primitive not supported by SVG Basic 1.1")));}if let Some(cp)=attr_val(attrs,"clip-path"){if let Some(id)=clip_path_ref_id(cp){if let Some(children)=clip_paths.get(id){let mut contains_text=false;let mut pending=vec![children.iter()];while let Some(nodes)=pending.last_mut(){let Some(node)=nodes.next()else{pending.pop();continue;};tick(control,&mut count)?;if let XmlNode::Element{name,children,..}=node{if TEXT_ELEMENTS.contains(&local_name(name)){contains_text=true;break;}pending.push(children.iter());}}if contains_text{out.push(hard(CODE_CLIP_PATH_TEXT,format!("<{name}> clip-path=\"{cp}\" references clipPath #{id}, which contains a text descendant -- SVG Basic 1.1 forbids clipping to text")));}}}}}

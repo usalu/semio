@@ -12,5 +12,5 @@ fn removes_the_catalog_output_intent() {
     let outcome = <RemoveOutputIntent as MutationKind<PdfSnapshot, PdfVtMutation>>::diff(&mutation, &base);
     let next = outcome.diff().apply(&base).unwrap();
     assert!(support::output_intent_identifier(&next).is_none());
-    assert_eq!(<RemoveOutputIntent as MutationKind<PdfSnapshot, PdfVtMutation>>::inverse(&mutation, &base).len(), 1);
+    assert_eq!(<RemoveOutputIntent as MutationKind<PdfSnapshot, PdfVtMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").len(), 1);
 }

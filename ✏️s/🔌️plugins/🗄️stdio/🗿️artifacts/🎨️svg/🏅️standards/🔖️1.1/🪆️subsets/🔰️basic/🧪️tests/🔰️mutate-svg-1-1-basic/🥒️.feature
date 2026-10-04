@@ -86,6 +86,7 @@ Feature: Apply every typed SVG Basic 1.1 mutation to a real 138 KB clipped drawi
       | set-text                | {"path": [1, 0], "text": "wave8 basic mutation marker"}                                                                                                                                      |
       | set-view-box            | {"path": [], "viewBox": {"minX": 0, "minY": 0, "width": 96, "height": 144}} |
       | set-transform           | {"path": [53], "transform": [{"op": "translate", "x": 4, "y": 4}, {"op": "scale", "x": 2}]} |
+      | patch-snapshot | {"patch": {"operation": "set", "path": "/doc/root/attrs/0/value", "value": "0 0 420 150"}} |
 
   @id-inverse
   @level-exhaustive
@@ -109,6 +110,7 @@ Feature: Apply every typed SVG Basic 1.1 mutation to a real 138 KB clipped drawi
       | set-text                | {"path": [1, 0], "text": "wave8 basic mutation marker"}                                                                                                                                      |
       | set-view-box            | {"path": [], "viewBox": {"minX": 0, "minY": 0, "width": 96, "height": 144}} |
       | set-transform           | {"path": [53], "transform": [{"op": "translate", "x": 4, "y": 4}, {"op": "scale", "x": 2}]} |
+      | patch-snapshot | {"patch": {"operation": "set", "path": "/doc/root/attrs/0/value", "value": "0 0 420 150"}} |
 
   @id-identity-round-trip
   @level-long

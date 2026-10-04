@@ -3,8 +3,8 @@
 use crate::editor::puzzle5d::config::{Puzzle5dCamera2d, Puzzle5dCamera3d};
 use crate::editor::puzzle5d::modes::edit::windows::{board2d, world3d};
 use crate::editor::puzzle5d::Puzzle5dActionCtx;
-use dsl::os_pack::json::{to_dsl_value, Value};
-use dsl::FromValue;
+use semio_framework_pack_json::{to_dsl_value, Value};
+use semio_framework_value::FromValue;
 
 /// 📷️ The surface-agnostic setter. An explicit `surfaceId` wins; otherwise the ADDRESSED WINDOW
 /// decides, because each pane persists only its own camera (`Puzzle5dBoardWindowConfig` carries

@@ -6,6 +6,7 @@ export const CHANNEL_VERSION_PIN_PATH = "🧰️framework/🛍️products/💻�
 /** 🔎️ Every shape a channel version literal takes in Rust, TypeScript and JSON; group 1 is the number. */
 export const CHANNEL_VERSION_LITERAL_PATTERNS: readonly RegExp[] = [
   /appChannelVersion"?\s*:\s*(?:\{\s*"const"\s*:\s*)?(\d+)/gu,
+  /"channelVersion"\s*:\s*(?:\{\s*"const"\s*:\s*)?(\d+)/gu,
   /appChannelVersion\s*===\s*(\d+)/gu,
   /APP_CHANNEL_VERSION\w*\s*=\s*(\d+)/gu,
   /CHANNEL_VERSION: u32 = (\d+)/gu,

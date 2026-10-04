@@ -34,7 +34,14 @@
       }
     },
     "source": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/VideoSource",
+      "anyOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/VideoSource"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-ui": {
         "role": "value",
         "label": {
@@ -42,8 +49,8 @@
           "de": "Videoquelle"
         },
         "description": {
-          "en": "Provenance of a stream imported from a video file; empty for image sequences.",
-          "de": "Herkunft eines aus einer Videodatei importierten Streams; leer bei Bildsequenzen."
+          "en": "Provenance of a stream imported from a video file; empty clears it (image sequences have none).",
+          "de": "Herkunft eines aus einer Videodatei importierten Streams; leer entfernt sie (Bildsequenzen haben keine)."
         },
         "group": "media",
         "order": 20

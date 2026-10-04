@@ -18,18 +18,18 @@ fn snapshot_with_grips(grips: Vec<Block5dGripTemplate>) -> Block5dSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
     let snapshot = snapshot_with_grips(vec![grip("g0", [1.0, 2.0, 3.0], 0.5), grip("g1", [-1.0, 0.0, 4.0], 0.25)]);
-    assert_eq!(Block5dInference::infer(&snapshot), Block5dInference::infer(&snapshot));
+    assert_eq!(Block5dInference::infer(&snapshot).expect("valid materialized inference fixture"), Block5dInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
-    assert_eq!(Block5dInference::infer(&Block5dSnapshot::default()), Block5dInference::default());
+    assert_eq!(Block5dInference::infer(&Block5dSnapshot::default()).expect("valid materialized inference fixture"), Block5dInference::default());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn bounds_match_grip_positions_inflated_by_radius_3d() {
     let snapshot = snapshot_with_grips(vec![grip("g0", [1.0, 2.0, 3.0], 0.5), grip("g1", [-1.0, 0.0, 4.0], 0.25)]);
-    let inferred = Block5dInference::infer(&snapshot);
+    let inferred = Block5dInference::infer(&snapshot).expect("valid materialized inference fixture");
     let bounds = inferred.bounds.bounding_box.expect("non-empty grips produce a bounding box");
     assert_eq!(bounds.min, [-1.25, -0.25, 2.5]);
     assert_eq!(bounds.max, [1.5, 2.5, 4.25]);

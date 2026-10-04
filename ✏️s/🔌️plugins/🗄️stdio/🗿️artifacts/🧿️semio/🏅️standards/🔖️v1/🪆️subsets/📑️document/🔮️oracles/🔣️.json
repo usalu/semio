@@ -162,6 +162,7 @@
       ],
       "kinds": [
         "set-snapshot",
+        "patch-snapshot",
         "insert-block",
         "remove-block",
         "set-block-content",
@@ -485,6 +486,45 @@
             "operation": "set-snapshot",
             "bridgeVersion": 1,
             "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-document-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-xmldom-docx-carrier"
+            },
+            {
+              "capability": "semio-v1-document-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "mdast-to-markdown-md-carrier"
+            }
+          ],
+          "carriers": [
+            "docx",
+            "md"
+          ],
+          "invariants": {
+            "local": [
+              "block-text-is-read-back-from-the-carrier"
+            ],
+            "enclosing": [
+              "document-text-agrees-across-every-carrier"
+            ]
+          },
+          "notes": "The one generic entry point production dispatches today. Its leaf diff warns `mutation.no-op` when the new snapshot equals the current one, which is where the no-op outcome comes from."
+        },
+        {
+          "id": "patch-snapshot",
+          "capability": "semio-v1-document-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#PatchSnapshot",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "patch-snapshot",
+            "bridgeVersion": 1,
+            "variant": "PatchSnapshot"
           },
           "oracleRequirements": [
             {

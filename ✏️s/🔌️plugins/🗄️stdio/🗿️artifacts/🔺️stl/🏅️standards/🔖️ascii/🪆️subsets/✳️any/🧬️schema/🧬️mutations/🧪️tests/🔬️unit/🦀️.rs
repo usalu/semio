@@ -51,7 +51,7 @@ async fn inverse_law() {
         // Mutation-level round trip.
         let mut snap = base.clone();
         apply_stl_mutation(&mut snap, &m);
-        for inv in m.inverse(&base) {
+        for inv in m.inverse(&base).expect("valid retained mutation inverse fixture") {
             apply_stl_mutation(&mut snap, &inv);
         }
         assert_eq!(snap, base, "mutation-level inverse must restore base for {m:?}");
@@ -365,6 +365,7 @@ async fn kinds_match_enum_and_catalog() {
     fn kind_of(mutation: &StlMutation) -> &'static str {
         match mutation {
             StlMutation::SetSnapshot(_) => "set-snapshot",
+            StlMutation::PatchSnapshot(_) => "patch-snapshot",
             StlMutation::SetSolidName(_) => "set-solid-name",
             StlMutation::InsertTriangle(_) => "insert-triangle",
             StlMutation::RemoveTriangle(_) => "remove-triangle",
@@ -374,6 +375,7 @@ async fn kinds_match_enum_and_catalog() {
     }
     let samples = [
         StlMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: StlSnapshot::default() }),
+        StlMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         StlMutation::SetSolidName(set_solid_name::SetSolidName { name: String::new() }),
         StlMutation::InsertTriangle(insert_triangle::InsertTriangle { index: 0, triangle: StlTriangle::default() }),
         StlMutation::RemoveTriangle(remove_triangle::RemoveTriangle { index: 0 }),

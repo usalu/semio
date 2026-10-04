@@ -1,0 +1,21 @@
+# WFC Bitmap Current Literal Domain and Pixel Contract
+
+Read-only actual producer/consumer review; no execution. Both schema JSONs declare pixels:string format:base64. Rust Snapshot enum field is an ordinary String and current native/SQL constructors copy that exact String without decoding or validating bitmap extent. Public schema admission and direct typed Rust/native owner acceptance must be qualified separately; presence of format does not prove every dispatcher rejects all noncanonical text.
+
+## Current authorities differ
+
+Wfc2d schema:78–95 defines row-major base64 one byte per pixel. Actual natural raster `🚪️io/📸️snapshot/💾️binary/🦀️.rs:110–129` uses canonical firstparty base64_standard_decode, rejects zero width/height/empty palette/decoded length != checked width*height by returning None (outline fallback). It does not reject unknown palette index: palette.get(index).copied().unwrap_or_default supplies default colour. The firstparty decoder `framework/io/🔤️base64/🦀️.rs:136–141` strictly rejects whitespace/misplaced padding/noncanonical unused bits. Canonical producer examples construct ordinary padded encoding.
+
+Grid2d actual encode_palette_indices:267–284 emits padded canonical standard alphabet. Its decode_palette_indices:287–314 is deliberately tolerant media: strips every equals and ASCII whitespace, reads chunks and returns the prior decoded prefix when a chunk contains unknown bytes. A one-sextet remainder also emits a byte in this actual implementation; do not substitute RFC strict behavior for its current renderer. Editor preview:141–162 decodes with that helper; missing bytes default index0, extra decoded bytes are ignored beyond width*height, and index wraps modulo palette.len. Zero extent/empty palette renders a placeholder. Viewer duplicates this actual tolerant consumer. These are genuinely different current rendering contracts.
+
+Current SQL Wfc2d:27/Grid2d:28 retains exact pixels text. No relational decoder/extent/unknown-index guard is inserted there. Native/typed direct owner code likewise retains String; a valid JSON-schema bound may be narrower. Whole owner fidelity therefore cannot be replaced by strict bytes-only acceptance or width*height/palette FK refusal without genuine domain authority/TDD.
+
+## Narrow schema-first cutover plan
+
+Use semantic byte-index rows for canonical standard base64 streams, with contiguous zero-based ordinal and INTEGER index0..255. Preserve width/height independently and preserve the full decoded byte count: do not require count==width*height or palette FK as a new Snapshot invariant. Unknown indices and malformed extent must retain the original owning state and actual renderer's fallback behavior. Empty canonical text is an empty stream, not absence.
+
+For noncanonical/invalid/intermediate literal String states admitted by the actual typed owner, use an explicit literal-state branch with ordered Unicode scalar text rows (one scalar per row, exact NUL/Unicode), rather than a whole payload String/JSON/BLOB carrier. Canonical mode reconstructs the original canonical string exactly and makes SQL-only pixel edits emit canonical base64. Literal mode reconstructs exact original text; it must not silently normalize padding/whitespace or decode-prefix loss. This is an authored current-state representation, not a legacy adapter. Public schema-route refusal remains at its actual boundary.
+
+Neutral independent laws must hand-author canonical empty, 1/2/3-byte padding, full0..255, no-padding/noncanonical trailing bits/extra or misplaced equals/ASCII whitespace/foreignUnicode/NUL/invalid alphabet/interrupted prefix. Include zero dimensions, short/long canonical byte stream and unknown palette indices. Thirdparty strict RFC decoder only answers canonical branch; independently authored tolerant prefix oracle answers Grid renderer behavior separately. Both preserve full Snapshot after exact SQL roundtrip, independently mutate a canonical pixel row, require correct regenerated native pixels and unchanged palette/width/height, and refuse orphan/duplicate ordinal/branch-conflicting rows. Actual caller cumulative/control/cancellation/allocation semantics remain owning numerical gates.
+
+No proposed production model or String blanket is mounted by this audit. Global Wfc2d nested Image hydration is separate and was sent to High Shared.

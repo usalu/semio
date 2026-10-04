@@ -7,7 +7,6 @@
 use crate::JsonSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::Inference;
-use semio_framework_plugin::ArtifactInferrer;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a json snapshot. One field per named inference under
@@ -21,8 +20,11 @@ pub struct JsonInference {
 }
 
 impl Inference<JsonSnapshot> for JsonInference {
-    fn infer(snapshot: &JsonSnapshot) -> Self {
+    fn infer(snapshot: &JsonSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { outline: JsonOutline::compute(snapshot) }
+    
+        })
     }
 }
 
@@ -32,7 +34,9 @@ impl Inference<JsonSnapshot> for JsonInference {
 /// makes the two definitionally equal.
 impl Default for JsonInference {
     fn default() -> Self {
-        Self::infer(&JsonSnapshot::default())
+        let snapshot = &JsonSnapshot::default();
+
+        Self { outline: JsonOutline::compute(snapshot) }
     }
 }
 
@@ -48,13 +52,6 @@ impl protocol::InferenceSpec<JsonSnapshot> for JsonInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::standards::v_rfc8259::subsets::base::schema::JsonBuilder {
-    type Snapshot = JsonSnapshot;
-    type Inference = JsonInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.json.inference`'s facet leaves into the OS-wide inference catalog —

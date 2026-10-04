@@ -78,7 +78,7 @@ fn gumball_emit(verb: &str, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &Confi
 pub mod translate_selection {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "translate-selection")]
     pub struct TranslateSelection {
         pub dx: f32,
@@ -96,7 +96,7 @@ pub mod translate_selection {
 pub mod rotate_selection {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "rotate-selection")]
     pub struct RotateSelection {
         pub ax: f32,
@@ -115,7 +115,7 @@ pub mod rotate_selection {
 pub mod scale_selection {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[dsl(keyword = "scale-selection")]
     pub struct ScaleSelection {
         pub sx: f32,

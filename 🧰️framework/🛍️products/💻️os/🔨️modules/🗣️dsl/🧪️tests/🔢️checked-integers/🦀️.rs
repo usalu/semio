@@ -40,7 +40,7 @@ struct IndexRecord {
     index: u32,
 }
 
-#[derive(Clone, Debug, PartialEq, DslOps)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
 enum IndexOperation {
     SetIndex(IndexRecord),
 }

@@ -7,8 +7,8 @@ const fn choice(value: &'static str, label_en: &'static str, label_de: &'static 
 }
 
 const ANNEX: &[NormFieldChoice] = &[
-    choice("en", "EN (CEN)", "EN (CEN)"),
-    choice("de", "Germany (DIN)", "Deutschland (DIN)"),
+    choice("En", "EN (CEN)", "EN (CEN)"),
+    choice("De", "Germany (DIN)", "Deutschland (DIN)"),
 ];
 const ACTION_KIND: &[NormFieldChoice] = &[
     choice("permanent", "Permanent G", "Ständig G"),

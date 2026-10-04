@@ -1,7 +1,7 @@
 //! 🧬️ Din18599 artifact schema — every field of the artifact with its state class.
 
 use crate::{
-    Adjacency, Attachment, AutomationClass, BuildingCategory, CalculationMethod, CoolingSystem, DhwSystem, Din18599ClimateChild, EnvelopeElement, HeatingSystem, LightingSystem, Renewables, ThermalZone, UsageProfile, UseClass, VentilationSystem,
+    Adjacency, Attachment, AutomationClass, BuildingCategory, CalculationMethod, CoolingSystem, DhwSystem, Din18599ClimateChild, EnvelopeElement, HeatingSystem, LightingSystem, MonthlyClimate, Renewables, ThermalZone, UsageProfile, UseClass, VentilationSystem,
 };
 use framework_schema::ArtifactSchema;
 
@@ -48,9 +48,11 @@ pub struct Din18599Artifact {
     #[state(artifact)]
     pub renewables: Renewables,
     #[state(artifact)]
+    pub climate: MonthlyClimate,
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
     #[cfg_attr(test, serde(with = "crate::document::child_identity_oracle"))]
-    pub climate: Din18599ClimateChild,
+    pub climate_table: Din18599ClimateChild,
 }
 //#endregion 🔖️Artifact
 
@@ -77,6 +79,7 @@ impl Din18599Artifact {
             lighting: self.lighting.clone(),
             renewables: self.renewables.clone(),
             climate: self.climate.clone(),
+            climate_table: self.climate_table.clone(),
         }
     }
 
@@ -101,6 +104,7 @@ impl Din18599Artifact {
             lighting: snapshot.lighting,
             renewables: snapshot.renewables,
             climate: snapshot.climate,
+            climate_table: snapshot.climate_table,
         }
     }
 
@@ -149,7 +153,7 @@ pub mod derived_construction {
     #[derive(Clone, Debug, Default)]
     pub struct Din18599BuilderConstruction {
         snapshot: Din18599Snapshot,
-        diagnostics: Vec<dsl::Diagnostic>,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
     }
 
     impl ArtifactBuilder for Din18599BuilderConstruction {
@@ -162,7 +166,7 @@ pub mod derived_construction {
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(Self::from_snapshot(<Din18599Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
@@ -172,7 +176,7 @@ pub mod derived_construction {
             let outcome = <Din18599Mutation as protocol::Mutation<Din18599Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("build.apply", dsl::TextSpan::at(1, 1), error.to_string())),
+                Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
@@ -181,7 +185,7 @@ pub mod derived_construction {
             self.snapshot = snapshot;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -223,14 +227,14 @@ pub mod derived_analysis {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <Din18599Snapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }
@@ -258,7 +262,7 @@ semio_framework_plugin::derive_artifact_facets!(
 
 //#region 🔖️ComplianceHelpers
 use crate::document::{AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef};
-use crate::{Din18599Snapshot, ElementKind, MonthlyClimate};
+use crate::{Din18599Snapshot, ElementKind};
 
 const HOURS_PER_MONTH: f64 = DIN_V_18599_1_HOURS_PER_MONTH;
 const RHO_CA: f64 = DIN_V_18599_1_RHO_CA;
@@ -429,7 +433,7 @@ fn zone_ventilation_hv(zone: &ThermalZone, doc: &Din18599Snapshot, volume_share:
 
 /// 🧮 Zone-level balances; building totals aggregate these.
 pub fn zone_balances(doc: &Din18599Snapshot, elements: &[EnvelopeElement], delta_u: f64) -> Vec<ZoneBalance> {
-    let climate = crate::din18599_climate(doc);
+    let climate = &doc.climate;
     let a_env_total: f64 = elements.iter().map(|e| e.area_m2).sum::<f64>().max(1e-9);
     let v_net: f64 = doc.zones.iter().map(|z| z.volume_m3).sum::<f64>().max(1e-9);
     let mut out = Vec::with_capacity(doc.zones.len());
@@ -749,7 +753,7 @@ fn fan_operating_hours_weighted(doc: &Din18599Snapshot) -> f64 {
 }
 
 fn balance_for(doc: &Din18599Snapshot, elements: &[EnvelopeElement], delta_u: f64, heat_eff: f64, carrier: &str, pv_area: f64) -> BalanceDerived {
-    let climate = crate::din18599_climate(doc);
+    let climate = &doc.climate;
     let zones = zone_balances(doc, elements, delta_u);
     let h_t: f64 = zones.iter().map(|z| z.h_t).sum();
     let h_v: f64 = zones.iter().map(|z| z.h_v).sum();
@@ -990,31 +994,23 @@ pub fn evaluate_document(doc: &Din18599Snapshot) -> CheckReport {
         report.push(b.build());
     }
 
-    // --- Climate composition handle (DIN V 18599-10 TRY / reference climate child) ---
+    // --- Derived climate table handle (DIN V 18599-10 climate composed as s.stdio.semio@v1/table) ---
     {
-        let child_id = doc.climate.child_id.as_str();
-        let target = &doc.climate.target;
-        let dialect_ok = target.dialect.artifact_kind == "s.stdio.semio"
-            && target.dialect.standard == "v1"
-            && target.dialect.subset == "table";
-        let id_ok = !child_id.is_empty() && child_id == target.artifact_id.as_str();
-        let potsdam = crate::din18599_climate_child_from_data(&crate::MonthlyClimate::potsdam_reference());
-        let mut valid_handles = vec![potsdam.child_id.clone()];
-        if id_ok && dialect_ok && !valid_handles.iter().any(|h| h == child_id) {
-            valid_handles.push(child_id.to_string());
-        }
-        let ok = id_ok && dialect_ok;
+        let child_id = doc.climate_table.child_id.as_str();
+        let target = &doc.climate_table.target;
+        let derived = crate::din18599_climate_table_child(&doc.climate);
+        let ok = doc.climate_table == derived;
         let mut b = CheckResult::assess(
             "din18599.1.climate-composition",
             "DIN V 18599-10",
             ClauseId::new("DIN V 18599", "10", "climate"),
-            SubjectRef::new("", "climate.childId", copy("Climate composition", "Klimakomposition")),
-            copy("Climate child handle integrity", "Integrität des Klima-Child-Handles"),
+            SubjectRef::new("", "climateTable.childId", copy("Climate table", "Klimatabelle")),
+            copy("Climate table derived from the monthly climate", "Klimatabelle aus dem Monatsklima abgeleitet"),
         )
         .annex(annex)
         .explanation(copy(
-            &format!("Climate child '{child_id}' → {}@{}/{}.", target.dialect.artifact_kind, target.dialect.standard, target.dialect.subset),
-            &format!("Klima-Child '{child_id}' → {}@{}/{}.", target.dialect.artifact_kind, target.dialect.standard, target.dialect.subset),
+            &format!("Climate table '{child_id}' → {}@{}/{}.", target.dialect.artifact_kind, target.dialect.standard, target.dialect.subset),
+            &format!("Klimatabelle '{child_id}' → {}@{}/{}.", target.dialect.artifact_kind, target.dialect.standard, target.dialect.subset),
         ));
         if ok {
             b = b.utilization(dimensionless(1.0), dimensionless(1.0));
@@ -1022,11 +1018,11 @@ pub fn evaluate_document(doc: &Din18599Snapshot) -> CheckReport {
             b = b
                 .utilization(dimensionless(0.0), dimensionless(1.0))
                 .remedy(Remedy::one_of(
-                    SubjectRef::new("", "climate.childId", copy("Climate child id", "Klima-Child-ID")),
-                    valid_handles,
+                    SubjectRef::new("", "climateTable.childId", copy("Climate table id", "Klimatabellen-ID")),
+                    vec![derived.child_id.clone()],
                     copy(
-                        "Restore a valid s.stdio.semio@v1/table climate handle (reference TRY / Potsdam).",
-                        "Gültigen s.stdio.semio@v1/table-Klima-Handle wiederherstellen (Referenz-TRY / Potsdam).",
+                        "Restore the s.stdio.semio@v1/table handle derived from the monthly climate.",
+                        "Den aus dem Monatsklima abgeleiteten s.stdio.semio@v1/table-Handle wiederherstellen.",
                     ),
                 ));
         }
@@ -1560,10 +1556,7 @@ pub fn evaluate_document(doc: &Din18599Snapshot) -> CheckReport {
         if q_p > limit {
             let deficit = q_p - limit;
             let fp_el = primary_energy_factor("electricity");
-            let annual_g = {
-                let climate = crate::din18599_climate(doc);
-                climate.g_h_w_m2.iter().sum::<f64>() / 12.0 * 8760.0 / 1000.0
-            };
+            let annual_g = doc.climate.g_h_w_m2.iter().sum::<f64>() / 12.0 * 8760.0 / 1000.0;
             let pv_extra = if doc.renewables.pv_efficiency * annual_g * fp_el <= 1e-9 {
                 50.0
             } else {

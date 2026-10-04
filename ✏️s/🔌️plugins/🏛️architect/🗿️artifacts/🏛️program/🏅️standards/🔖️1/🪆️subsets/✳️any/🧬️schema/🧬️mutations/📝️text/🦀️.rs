@@ -12,12 +12,12 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 //#region 🔖️HandcraftedOpCodecs
 /// 📝️ Compact JSON-line OpText for `ProgramMutation` (collection wrappers block DslEnum).
 impl protocol::OpText for ProgramMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        dsl::json::from_json_str(line.trim()).map_err(|e| store::TextError::new(format!("invalid program mutation: {e}"), store::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        semio_framework_pack_json::from_json_str(line.trim(), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| semio_framework_diagnostic::TextError::new(e.kind, format!("invalid program mutation: {e}"), semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 
     fn print_op(&self) -> String {
-        dsl::json::to_json_string(self)
+        semio_framework_pack_json::to_json_string(self)
     }
 }
 

@@ -10,7 +10,7 @@ use semio_framework_plugin::{PluginApp, INTERACTION_HOVER_ACTION_ID, INTERACTION
 /// exact wire payload `TiledMapHost` sends (`emitFeatureSelection`/the hover effect), then settles
 /// the reserved job it spawns so the next render reads the published interaction state.
 async fn interact(app: &mut Gis2dApp, action: &str, args: serde_json::Value) {
-    let admitted = app.handle_action(action, Some(&dsl::DslValue::from(&args)), &meta("local")).await.unwrap_or_else(|error| panic!("{action} admission: {error:?}"));
+    let admitted = app.handle_action(action, Some(&semio_framework_value::DslValue::from(&args)), &meta("local")).await.unwrap_or_else(|error| panic!("{action} admission: {error:?}"));
     semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted).await.unwrap_or_else(|error| panic!("{action} settles its reserved job: {error:?}"));
 }
 

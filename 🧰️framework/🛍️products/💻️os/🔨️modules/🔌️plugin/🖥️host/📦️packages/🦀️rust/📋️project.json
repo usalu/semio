@@ -104,6 +104,15 @@
       ],
       "cache": false
     },
+    "count-component-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts count-component-check",
+        "cwd": "{projectRoot}"
+      },
+      "dependsOn": [{"projects": ["@semio-tech/framework-plugin-host-fixture"], "target": "component-dev"}],
+      "cache": false
+    },
     "sqlite-observation-check": {
       "executor": "nx:run-commands",
       "options": {

@@ -1,34 +1,8 @@
-/** 🔺️ Rewriting's document delta uses shared map algebra for both keyed fields. */
-import { parseMapDelta, type MapDelta } from "../../../../../../../../../../../🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧬️schema/🟦️.ts";
-import { parseDslValue } from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🟦️.ts";
-import { parseLayoutPoint, type LayoutPoint, type PropertyValue } from "../🟦️.ts";
-export type { MapDelta } from "../../../../../../../../../../../🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧬️schema/🟦️.ts";
-export type { LayoutPoint, PropertyValue } from "../🟦️.ts";
-
-export interface RewritingDiff {
-  /** @state artifact */
-  beforeFixtureJson?: string | null;
-  /** @state artifact */
-  lhsJson?: string | null;
-  /** @state artifact */
-  rhsJson?: string | null;
-  /** @state artifact */
-  parameterBindings?: MapDelta<PropertyValue> | null;
-  /** @state artifact */
-  ruleLayout?: MapDelta<LayoutPoint> | null;
-}
-
-/** 🪪️ Validates shared map structure and each field's domain payload. */
-export function parseRewritingDiff(value: unknown): RewritingDiff {
-  const row = parseDslValue(value);
-  const keys = ["beforeFixtureJson", "lhsJson", "rhsJson", "parameterBindings", "ruleLayout"];
-  if (row === null || typeof row !== "object" || Array.isArray(row) || Object.keys(row).some((key) => !keys.includes(key))) throw new Error("rewriting diff has incorrect fields");
-  for (const key of keys.slice(0, 3)) if (row[key] != null && typeof row[key] !== "string") throw new Error("rewriting source change must be text");
-  return {
-    beforeFixtureJson: row.beforeFixtureJson as string | null ?? null,
-    lhsJson: row.lhsJson as string | null ?? null,
-    rhsJson: row.rhsJson as string | null ?? null,
-    parameterBindings: row.parameterBindings == null ? null : parseMapDelta(row.parameterBindings),
-    ruleLayout: row.ruleLayout == null ? null : parseMapDelta(row.ruleLayout, parseLayoutPoint),
-  };
-}
+/** 🔺️ Typed document replacement and shared map algebra preserve the complete rule domain. */
+import {parseMapDelta,type MapDelta} from "./../../../../../../../../../../../🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧬️schema/🟦️.ts";
+import {parseLhs,parseRhs,parseLayoutPoint,parsePropertyValue,type Lhs,type Rhs,type JackSnapshot,type LayoutPoint,type PropertyValue} from "../🟦️.ts";
+import {parseJackSnapshot} from "./../../../../../../../🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts";
+export type{MapDelta,LayoutPoint,PropertyValue,Lhs,Rhs,JackSnapshot};
+export interface RewritingDiff{workingGraph?:JackSnapshot|null;lhs?:Lhs|null;rhs?:Rhs|null;parameterBindings?:MapDelta<PropertyValue>|null;ruleLayout?:MapDelta<LayoutPoint>|null}
+/** 🪪️ Each sparse replacement delegates to its actual domain owner. */
+export function parseRewritingDiff(value:unknown):RewritingDiff{if(!value||typeof value!=="object"||Array.isArray(value))throw Error("rewriting diff object required");const row=value as Record<string,unknown>;if(Object.keys(row).some(key=>!["workingGraph","lhs","rhs","parameterBindings","ruleLayout"].includes(key)))throw Error("rewriting diff has incorrect fields");return{workingGraph:row.workingGraph==null?null:parseJackSnapshot(row.workingGraph),lhs:row.lhs==null?null:parseLhs(row.lhs),rhs:row.rhs==null?null:parseRhs(row.rhs),parameterBindings:row.parameterBindings==null?null:parseMapDelta(row.parameterBindings,parsePropertyValue),ruleLayout:row.ruleLayout==null?null:parseMapDelta(row.ruleLayout,parseLayoutPoint)};}

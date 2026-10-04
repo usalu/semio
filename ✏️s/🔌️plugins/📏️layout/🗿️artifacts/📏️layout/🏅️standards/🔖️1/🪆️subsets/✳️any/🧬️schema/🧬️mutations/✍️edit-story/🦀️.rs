@@ -22,9 +22,12 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for EditStory {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_edit_story(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
-        inverse_edit_story(self, base)
-    }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok({
+        inverse_edit_story(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Edit story \"{}\"", self.id), &format!("Textfluss \"{}\" bearbeiten", self.id))
     }
@@ -40,7 +43,7 @@ pub fn diff_edit_story(payload: &EditStory, base: &LayoutSnapshot) -> protocol::
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Story \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if story.content == payload.new_content {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Story \"{}\" content is unchanged.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Story \"{}\" content is unchanged.", payload.id));
     }
     protocol::MutationOutcome::new(LayoutDiff {
         stories: Some(LayoutStoriesDelta { patched: vec![LayoutStoryPatchEntry { id: payload.id.clone(), patch: TextStoryPatch { content: Some(payload.new_content.clone()), style_runs: None } }], ..Default::default() }),
@@ -50,10 +53,13 @@ pub fn diff_edit_story(payload: &EditStory, base: &LayoutSnapshot) -> protocol::
 //#endregion 📝EditStory
 
 //#region 📝EditStory
-pub fn inverse_edit_story(payload: &EditStory, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_edit_story(payload: &EditStory, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.stories.iter().find(|story| story.id == payload.id) {
         Some(story) => vec![LayoutMutation::EditStory(EditStory { id: payload.id.clone(), new_content: story.content.clone() })],
         None => Vec::new(),
     }
+
+    })())
 }
 //#endregion 📝EditStory

@@ -5,7 +5,7 @@
 //! (`📓️w4-sequence-report.md`). JSON's own native form is text, never a raw-bytes wrapper.
 
 use crate::NoteSnapshot;
-use semio_framework::io::io_mechanism::Serializer;
+use semio_framework::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{Dialect, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
 
@@ -16,7 +16,7 @@ pub struct NoteIntoJson;
 impl Serializer<NoteSnapshot> for NoteIntoJson {
     const INTO: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn serialize(from: &NoteSnapshot) -> IoResult<IoPayload> {
-        Ok(IoOutcome::clean(IoPayload::Text(dsl::os_pack::json::to_string_pretty(&dsl::os_pack::json_from_dsl_value(&dsl::ToValue::to_value(from))))))
+    async fn serialize(from: &NoteSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+        Ok(IoOutcome::clean(IoPayload::Text(semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(from))))))
     }
 }

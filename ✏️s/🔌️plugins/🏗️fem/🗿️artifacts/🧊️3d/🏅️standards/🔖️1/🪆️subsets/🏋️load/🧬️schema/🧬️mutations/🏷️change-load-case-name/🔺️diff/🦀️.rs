@@ -12,7 +12,7 @@ pub fn diff(payload: &ChangeLoadCaseName, base: &Fem3dSnapshot) -> protocol::Mut
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Load case \"{}\" does not exist.", payload.case_id), [payload.case_id.clone()]);
     };
     if existing.name == payload.new_name {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Load case \"{}\" is already named \"{}\".", payload.case_id, payload.new_name));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Load case \"{}\" is already named \"{}\".", payload.case_id, payload.new_name));
     }
     let mut item = existing.clone();
     item.name.clone_from(&payload.new_name);

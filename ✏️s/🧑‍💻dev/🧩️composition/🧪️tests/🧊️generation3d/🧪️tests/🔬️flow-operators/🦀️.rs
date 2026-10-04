@@ -80,6 +80,7 @@ pub(crate) fn install(registry: &mut Registry) {
 pub fn installed() {
     static ONCE: std::sync::Once = std::sync::Once::new();
     ONCE.call_once(|| {
+        semio_framework_plugin::register_artifact_inference_service(semio_s_plugin_flow_extension_brep::geometry_inference::geometry_inference_service()).expect("packaged geometry inference admission");
         register_linked_flow_extension_installer(BREP_EXTENSION_FLOW_ID, install_brep);
         register_linked_flow_extension_installer(MATH_EXTENSION_FLOW_ID, install_math);
         install_flow_extension_manifest(BREP_EXTENSION_PLUGIN_ID, &resolve_ready(semio_s_plugin_flow_extension_brep::extension_manifest_json())).expect("contributed brep extension admission");
@@ -102,10 +103,10 @@ pub fn staged_flow_extension_contributions_json(extra: &[(&str, String)]) -> Str
     .chain(extra.iter().map(|(plugin_id, manifest_json)| (*plugin_id, manifest_json.clone())))
     .map(|(plugin_id, manifest_json)| semio_framework::manifest::ProgramContributionEntry {
         plugin_id: plugin_id.to_string(),
-        topic_contribution: Some(semio_framework::manifest::TopicContribution::new("flow.extension", dsl::DslValue::object([("manifestJson".to_string(), dsl::DslValue::String(manifest_json))]))),
+        topic_contribution: Some(semio_framework::manifest::TopicContribution::new("flow.extension", semio_framework_value::DslValue::object([("manifestJson".to_string(), semio_framework_value::DslValue::String(manifest_json))]))),
     })
     .collect();
-    protocol::json::to_json_string(&entries)
+    semio_framework_pack_json::to_json_string(&entries)
 }
 
 /// 🔗 Retires both linked extension installers for the length of a law and puts them back
@@ -119,6 +120,13 @@ pub struct UnlinkedFlowExtensions {
 }
 
 impl UnlinkedFlowExtensions {
+    pub fn contributed() -> Self {
+        let guard = Self::take();
+        semio_framework_os_flow::sync_host_flow_extension_contributions("[]".to_string()).expect("empty contributed registry admission");
+        semio_framework_os_flow::sync_host_flow_extension_contributions(staged_flow_extension_contributions_json(&[])).expect("packaged contributed registry admission");
+        guard
+    }
+
     pub fn take() -> Self {
         let taken = [BREP_EXTENSION_FLOW_ID, MATH_EXTENSION_FLOW_ID]
             .into_iter()
@@ -131,6 +139,7 @@ impl UnlinkedFlowExtensions {
 
 impl Drop for UnlinkedFlowExtensions {
     fn drop(&mut self) {
+        crate::brep_extension::retire_execution_owners();
         for (extension_id, install) in self.taken.drain(..) {
             register_linked_flow_extension_installer(extension_id, install);
         }
@@ -180,7 +189,7 @@ pub(crate) fn geometry_session() -> &'static semio_s_spatial_kernel_semio_sessio
 /// 🚚️ Delivers every painted handle through the concrete Session's bounded broker envelopes.
 pub(crate) fn resolve_preview_geometry(eval_json: &str, graph: &semio_framework_artifact_flow_flow::FlowHostSnapshot, lod_mode: &str, session: &mut semio_framework_os_flow::FlowEvalSession) {
     use semio_s_artifact_procedural_generation3d::preview_eval::{pending_preview_tessellate_handles, preview_tolerance, PREVIEW_TESSELLATE_STEP_BUDGET, PREVIEW_TESSELLATE_STEP_WALL_MICROS};
-    let eval = semio_framework_os_flow::os_pack::json::parse(eval_json).expect("preview evaluation parses");
+    let eval = semio_framework_pack_json::parse(eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("preview evaluation parses");
     let tolerance = preview_tolerance(lod_mode);
     for handle in pending_preview_tessellate_handles(&eval, graph, session) {
         let hash = semio_framework_os_flow::preview_tessellate_node_hash(&handle, tolerance.to_bits());

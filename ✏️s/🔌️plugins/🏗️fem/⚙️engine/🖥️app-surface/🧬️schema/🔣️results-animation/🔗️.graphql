@@ -1,0 +1,12 @@
+enum FemLoopMode { loop pingPong once }
+
+enum FemWaveform { ramp sine }
+
+type FemResultsAnimation {
+  phase: Float!
+  playing: Boolean!
+  speed: Float!
+  loopMode: FemLoopMode!
+  waveform: FemWaveform!
+  reverse: Boolean!
+}

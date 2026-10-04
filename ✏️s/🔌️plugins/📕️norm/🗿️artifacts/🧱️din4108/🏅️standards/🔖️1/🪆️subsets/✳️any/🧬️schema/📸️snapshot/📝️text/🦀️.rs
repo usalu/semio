@@ -12,7 +12,7 @@ use crate::Din4108Snapshot;
 pub const DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
 /// 📖️ Parses DIN 4108 DSL text into a `Document`.
-pub fn parse_dsl(text: &str) -> Result<Din4108Snapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<Din4108Snapshot, semio_framework_diagnostic::TextError> {
     <Din4108Snapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 

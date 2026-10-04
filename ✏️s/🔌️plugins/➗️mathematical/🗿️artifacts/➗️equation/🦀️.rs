@@ -40,13 +40,12 @@ pub mod cas;
 pub mod polynomial;
 
 #[cfg(test)]
-use semio_framework_os_kernel::{FromValue, ToValue};
+use semio_framework_value::{FromValue, ToValue};
 use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::snapshot::{SemioTextRun, SemioTextSnapshot, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueSnapshot, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
-use std::sync::Arc;
 
 //#region 🔖️Constants
 /// 🗂️ The store envelope schema AND the plugin's registered document codec key — see
@@ -66,7 +65,7 @@ pub const EQUATION_DIALECT: Dialect = Dialect { artifact_kind: "s.mathematical.e
 //#endregion 🔖️Constants
 
 //#region 🔖️Document
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct EquationNode {
     pub id: String,
@@ -76,7 +75,7 @@ pub struct EquationNode {
 }
 
 /// 🔌️ JSON-facing edge — plain `source`/`target` id strings for the JS frontend's node-graph payloads.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct EquationEdge {
     pub id: String,
@@ -85,7 +84,7 @@ pub struct EquationEdge {
 }
 
 /// 🕸️ Graph playground state: quadrant toggle, retained layout, and the active algorithm overlay.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct EquationGraph {
     pub directed: bool,
@@ -118,7 +117,7 @@ impl Default for EquationGraph {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord)]
 pub struct EquationPoint {
     pub x: f64,
     pub y: f64,
@@ -137,7 +136,7 @@ impl From<EquationPoint> for (f64, f64) {
 }
 
 /// 📐️ Geometry playground state: a point cloud for convex-hull/centroid demonstration.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct EquationGeometry {
     pub points: Vec<EquationPoint>,
@@ -154,17 +153,13 @@ pub use crate::snapshot::schema::{EquationExprSnapshot, EquationFixture};
 //#endregion 🔖️Document
 
 //#region 🔖️Composition
-/// 🧩️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (`equation→C:text,table,value`): the
-/// graph playground's node labels, its node table (id/x/y), and everything else (direction,
-/// algorithm+seed, edges, the geometry point cloud) are no longer inline `EquationSnapshot`
-/// fields — they compose stdio's `s.stdio.semio.text`/`table`/`value` subsets as three fixed CHILD
-/// slots (`notation`/`results`/`computed` on `EquationSnapshot`). The three converters below are
-/// real and bidirectional: `equation_notation_from_graph`'s runs and
-/// `equation_results_from_graph`'s rows are positionally aligned with `graph.nodes` (both are
-/// always regenerated together from the SAME node order), so `equation_graph_geometry_from_children`
-/// zips them back losslessly; `equation_computed_from_state` is a genuinely derived/computed
-/// structure (never independently authored), documented honestly rather than pretending it is
-/// user-editable prose.
+/// 🧩️ Model (a) of `📓️s3-math-report.md` §1 (design §20.15): the graph and the point cloud are PARENT-owned persisted state
+/// (`EquationSnapshot::graph`/`geometry`); the three composed children — `notation` (node labels as `s.stdio.semio` text
+/// runs), `results` (the node table) and `computed` (direction, algorithm, edges and points as one value map) — are DERIVED
+/// outputs of that state, addressed by their own content. Every parent leaf decides from `base.graph`/`base.geometry` and
+/// re-mints the handles of the outputs it changes ([`equation_state_diff`]); the runtime then opens the newly addressed child
+/// from the parent's own state (`follow_derivable_children` → [`genesis_equation_child_pack`]) and retires the old one. A
+/// derived child is never edited and no parent leaf ever reads it. The converters below are the one-way derivation.
 //#region 🔖️ChildTypes
 pub type EquationNotationChild = store::ArtifactChild<SemioTextSnapshot>;
 pub type EquationResultsChild = store::ArtifactChild<SemioTableSnapshot>;
@@ -172,15 +167,13 @@ pub type EquationComputedChild = store::ArtifactChild<SemioValueSnapshot>;
 //#endregion 🔖️ChildTypes
 
 //#region 🔖️Converters
-/// 🌉 REAL bidirectional converter: node labels (prose/notation) <-> `text` runs, one run per node
-/// in `graph.nodes` order.
+/// 🌉 Derives the notation child: one `text` run per node label, in `graph.nodes` order.
 pub fn equation_notation_from_graph(graph: &EquationGraph) -> SemioTextSnapshot {
     SemioTextSnapshot { schema: STDIO_SEMIOTEXT_DOCUMENT_SCHEMA.into(), runs: graph.nodes.iter().map(|node| SemioTextRun { language: String::new(), content: node.label.clone(), marks: Vec::new() }).collect() }
 }
 
-/// 🌉 REAL bidirectional converter: node `id`/`x`/`y` (tabulated results) <-> `table` rows, one row
-/// per node in `graph.nodes` order — positionally aligned with `equation_notation_from_graph`'s
-/// runs (see this region's own doc comment).
+/// 📊️ Derives the results child: one `table` row of node `id`/`x`/`y` per node, in `graph.nodes` order (positionally aligned
+/// with [`equation_notation_from_graph`]'s runs).
 pub fn equation_results_from_graph(graph: &EquationGraph) -> SemioTableSnapshot {
     SemioTableSnapshot {
         schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(),
@@ -189,9 +182,7 @@ pub fn equation_results_from_graph(graph: &EquationGraph) -> SemioTableSnapshot 
     }
 }
 
-/// 🌉 REAL bidirectional converter: graph direction/algorithm/seed, edges, and the geometry point
-/// cloud <-> one structured `value` Map — "scalar/structured computed values" per the migration
-/// brief. Honestly a derived/computed structure, not independently-authored prose or a table.
+/// 🧮️ Derives the computed child: graph direction/algorithm/seed, edges and the point cloud as one structured `value` map.
 pub fn equation_computed_from_state(graph: &EquationGraph, geometry: &EquationGeometry) -> SemioValueSnapshot {
     let edges = SemioValue::List {
         items: graph
@@ -236,187 +227,76 @@ pub fn equation_computed_from_state(graph: &EquationGraph, geometry: &EquationGe
     }
 }
 
-/// 🌉 Inverse of the three converters above — real reconstruction, not a stub. `notation`/`results`
-/// are expected to have the same length/order (always true for any triple this plugin itself
-/// minted); a short/missing row or run degrades honestly (empty id/label, `0.0` coordinate) rather
-/// than panicking, since an externally-composed mismatch is possible in principle.
-pub fn equation_graph_geometry_from_children(notation: &SemioTextSnapshot, results: &SemioTableSnapshot, computed: &SemioValueSnapshot) -> (EquationGraph, EquationGeometry) {
-    fn cell_str(row: &SemioTableRow, index: usize) -> String {
-        match row.cells.get(index) {
-            Some(SemioValue::Str { value }) => value.clone(),
-            _ => String::new(),
-        }
-    }
-    fn cell_f64(row: &SemioTableRow, index: usize) -> f64 {
-        match row.cells.get(index) {
-            Some(SemioValue::Float { lexeme }) | Some(SemioValue::Int { lexeme }) => lexeme.parse().unwrap_or(0.0),
-            _ => 0.0,
-        }
-    }
-    let nodes: Vec<EquationNode> =
-        results.rows.iter().enumerate().map(|(i, row)| EquationNode { id: cell_str(row, 0), label: notation.runs.get(i).map(|run| run.content.clone()).unwrap_or_default(), x: cell_f64(row, 1), y: cell_f64(row, 2) }).collect();
-
-    fn map_entries(value: &SemioValue) -> &[SemioValueEntry] {
-        match value {
-            SemioValue::Map { entries } => entries.as_slice(),
-            _ => &[],
-        }
-    }
-    fn find_entry<'v>(entries: &'v [SemioValueEntry], key: &str) -> Option<&'v SemioValue> {
-        entries.iter().find(|entry| entry.key == key).map(|entry| &entry.value)
-    }
-    fn value_f64(value: Option<&SemioValue>) -> f64 {
-        match value {
-            Some(SemioValue::Float { lexeme }) | Some(SemioValue::Int { lexeme }) => lexeme.parse().unwrap_or(0.0),
-            _ => 0.0,
-        }
-    }
-    let root_entries = map_entries(&computed.root);
-    let directed = matches!(find_entry(root_entries, "directed"), Some(SemioValue::Bool { value: true }));
-    let algorithm = match find_entry(root_entries, "algorithm") {
-        Some(SemioValue::Str { value }) => value.clone(),
-        _ => String::new(),
-    };
-    let algorithm_seed = match find_entry(root_entries, "algorithmSeed") {
-        Some(SemioValue::Str { value }) => Some(value.clone()),
-        _ => None,
-    };
-    let edges: Vec<EquationEdge> = match find_entry(root_entries, "edges") {
-        Some(SemioValue::List { items }) => items
-            .iter()
-            .map(|item| {
-                let entries = map_entries(item);
-                EquationEdge {
-                    id: match find_entry(entries, "id") {
-                        Some(SemioValue::Str { value }) => value.clone(),
-                        _ => String::new(),
-                    },
-                    source: match find_entry(entries, "source") {
-                        Some(SemioValue::Str { value }) => value.clone(),
-                        _ => String::new(),
-                    },
-                    target: match find_entry(entries, "target") {
-                        Some(SemioValue::Str { value }) => value.clone(),
-                        _ => String::new(),
-                    },
-                }
-            })
-            .collect(),
-        _ => Vec::new(),
-    };
-    let points: Vec<EquationPoint> = match find_entry(root_entries, "points") {
-        Some(SemioValue::List { items }) => items
-            .iter()
-            .map(|item| {
-                let entries = map_entries(item);
-                EquationPoint { x: value_f64(find_entry(entries, "x")), y: value_f64(find_entry(entries, "y")) }
-            })
-            .collect(),
-        _ => Vec::new(),
-    };
-    (EquationGraph { directed, nodes, edges, algorithm, algorithm_seed }, EquationGeometry { points })
-}
 //#endregion 🔖️Converters
 
-//#region 🔖️WorkingScene
-/// 🌱 Ephemeral artifact-instance owner of the live `(graph, geometry)` materialization behind
-/// one composed-child triple. All three handles minted for a snapshot retain the same immutable
-/// owner; other snapshots and hostile identity reuse cannot observe or replace it. Wire and DSL
-/// codecs omit the owner, so unresolved decoded handles fail soft until materialized.
-#[derive(Clone)]
-pub struct EquationWorkingScene {
-    pub graph: EquationGraph,
-    pub geometry: EquationGeometry,
+//#region 🔖️DerivedChildren
+/// 🧮️ The content-addressed handle of one derived child: its id is `content_id(prefix, pack)` of the derived content, the same
+/// as its target `artifact_id` (what `ChildRestoreProjection::child` demands), so equal state addresses equal children.
+fn equation_derived_child<S>(prefix: &str, subset: &str, pack: &[u8]) -> store::ArtifactChild<S> {
+    let child_id = store::content_id(prefix, pack);
+    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() };
+    store::ArtifactChild::new(child_id.clone(), store::os_io::ArtifactRef { artifact_id: child_id, dialect })
 }
 
-/// 🏗️ Mints all three composed-child handles for a `(graph, geometry)` pair and attaches one
-/// shared immutable artifact-instance owner. Each handle's `child_id` is its own target
-/// `artifact_id`, which is what `ChildRestoreProjection::child` demands of every member of a
-/// `genesis_child_pack`: a differing id fails `InvalidReference`, and one id shared by the three
-/// slots fails `DuplicateChild`, both of them aborting the guest before the first window renders.
-/// The live `(graph, geometry)` identity therefore rides on the attached owner alone.
-pub fn equation_children_from_state(graph: &EquationGraph, geometry: &EquationGeometry) -> (EquationNotationChild, EquationResultsChild, EquationComputedChild) {
-    let owner = Arc::new(EquationWorkingScene { graph: graph.clone(), geometry: geometry.clone() });
-    let target_for = |subset: &str| store::os_io::ArtifactRef { artifact_id: format!("equation-{subset}"), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() } };
-    let (notation_target, results_target, computed_target) = (target_for("text"), target_for("table"), target_for("value"));
-    (
-        store::ArtifactChild::new(notation_target.artifact_id.clone(), notation_target).with_local_owner(owner.clone()),
-        store::ArtifactChild::new(results_target.artifact_id.clone(), results_target).with_local_owner(owner.clone()),
-        store::ArtifactChild::new(computed_target.artifact_id.clone(), computed_target).with_local_owner(owner),
-    )
-}
-
-/// 🌱️ `ArtifactApp::genesis_child_pack` for the three composed members every equation document
-/// declares — `notation` (the node labels as `text` runs), `results` (the node table) and
-/// `computed` (direction/algorithm/edges/points as one `value` map) — all pure functions of the
-/// snapshot's own scene through the three converters in `🔖️Converters`, so a fresh boot and a
-/// whole-document load (`Effect::LoadDocument`, whose archive the react shell sends MEMBER-LESS)
-/// materialise exactly the children `equation_children_from_state` minted handles for. A decoded
-/// snapshot carries no local owner, so `equation_scene` answers the empty scene there — which is
-/// precisely the document `EquationSnapshot::default()` and the committed `🎬️demo` asset describe.
-/// Without this the archive closure reports `Incomplete` and every `setActiveExample` fails with
-/// `document archive replacement failed its closure leg` (measured live 2026-09-20, slice F3).
-pub fn genesis_equation_child_pack(snapshot: &EquationSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+/// 📦️ The derived pack of composed slot `slot` from `(graph, geometry)`, with the address prefix and subset it is minted
+/// under; `None` for a slot this artifact does not derive.
+fn equation_derived_pack(slot: &str, graph: &EquationGraph, geometry: &EquationGeometry) -> Option<(&'static str, &'static str, Vec<u8>)> {
     use store::ArtifactPack;
-    let scene = equation_scene(snapshot);
     match slot {
-        "notation" if child_id == snapshot.notation.child_id => Some(<SemioTextSnapshot as ArtifactPack>::encode_pack(&equation_notation_from_graph(&scene.graph))),
-        "results" if child_id == snapshot.results.child_id => Some(<SemioTableSnapshot as ArtifactPack>::encode_pack(&equation_results_from_graph(&scene.graph))),
-        "computed" if child_id == snapshot.computed.child_id => Some(<SemioValueSnapshot as ArtifactPack>::encode_pack(&equation_computed_from_state(&scene.graph, &scene.geometry))),
+        "notation" => Some(("equation-notation", "text", <SemioTextSnapshot as ArtifactPack>::encode_pack(&equation_notation_from_graph(graph)))),
+        "results" => Some(("equation-results", "table", <SemioTableSnapshot as ArtifactPack>::encode_pack(&equation_results_from_graph(graph)))),
+        "computed" => Some(("equation-computed", "value", <SemioValueSnapshot as ArtifactPack>::encode_pack(&equation_computed_from_state(graph, geometry)))),
         _ => None,
     }
 }
 
-/// 🔎 Reads the exact artifact-instance scene behind a snapshot's composed children.
-pub fn equation_scene(snapshot: &EquationSnapshot) -> EquationWorkingScene {
-    equation_scene_owner(snapshot).map_or_else(
-        || EquationWorkingScene { graph: EquationGraph { directed: true, nodes: Vec::new(), edges: Vec::new(), algorithm: String::new(), algorithm_seed: None }, geometry: EquationGeometry { points: Vec::new() } },
-        |scene| (*scene).clone(),
-    )
+/// 🏗️ The three derived-child handles of `(graph, geometry)`.
+pub fn equation_children(graph: &EquationGraph, geometry: &EquationGeometry) -> (EquationNotationChild, EquationResultsChild, EquationComputedChild) {
+    let handle = |slot: &str| equation_derived_pack(slot, graph, geometry).expect("a derived slot");
+    let ((notation_prefix, notation_subset, notation), (results_prefix, results_subset, results), (computed_prefix, computed_subset, computed)) = (handle("notation"), handle("results"), handle("computed"));
+    (equation_derived_child(notation_prefix, notation_subset, &notation), equation_derived_child(results_prefix, results_subset, &results), equation_derived_child(computed_prefix, computed_subset, &computed))
 }
 
-/// 🧵 Retains the exact immutable scene owner for a resumable app operation.
-pub fn equation_scene_owner(snapshot: &EquationSnapshot) -> Option<Arc<EquationWorkingScene>> {
-    snapshot.results.local_owner::<EquationWorkingScene>()
+/// 🔺️ The diff a parent leaf yields for its next state: the new `graph`/`geometry` and the re-minted derived handles (a handle
+/// whose derived content did not change keeps its address).
+pub fn equation_state_diff(graph: EquationGraph, geometry: EquationGeometry) -> EquationDiff {
+    let (notation, results, computed) = equation_children(&graph, &geometry);
+    EquationDiff { graph: Some(graph), geometry: Some(geometry), notation: Some(notation), results: Some(results), computed: Some(computed), ..Default::default() }
 }
 
-/// 📤️ Requires the materialized scene for an export or another content-reading boundary.
-pub fn require_equation_scene(snapshot: &EquationSnapshot) -> Result<Arc<EquationWorkingScene>, store::ArtifactChildMaterializationError> {
-    snapshot.results.require_local_owner::<EquationWorkingScene>()
+/// 🌱️ `ArtifactApp::genesis_child_pack`: the derived content of the composed member `slot` a document names, minted from the
+/// parent's own `graph`/`geometry` — the boot store, every whole-document load (`Effect::LoadDocument` ships no member) and
+/// every derived child the runtime follows after a parent edit. A coordinate that is not the content address of the parent's
+/// own derivation is no child this document derives.
+pub fn genesis_equation_child_pack(snapshot: &EquationSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    let declared = match slot {
+        "notation" => &snapshot.notation.child_id,
+        "results" => &snapshot.results.child_id,
+        "computed" => &snapshot.computed.child_id,
+        _ => return None,
+    };
+    let (prefix, _, pack) = equation_derived_pack(slot, &snapshot.graph, &snapshot.geometry)?;
+    (child_id == declared && store::content_id(prefix, &pack) == child_id).then_some(pack)
 }
 
-/// 📤️ Projects every equation field for a foreign carrier when the composed scene is present.
-pub fn equation_fixture(snapshot: &EquationSnapshot) -> Result<EquationFixture, store::ArtifactChildMaterializationError> {
-    let scene = require_equation_scene(snapshot)?;
-    Ok(EquationFixture { graph: scene.graph.clone(), geometry: scene.geometry.clone(), equation: snapshot.equation.clone() })
+/// 📤️ Every equation field for a foreign carrier.
+pub fn equation_fixture(snapshot: &EquationSnapshot) -> EquationFixture {
+    EquationFixture { graph: snapshot.graph.clone(), geometry: snapshot.geometry.clone(), equation: snapshot.equation.clone() }
 }
 
-/// 🔎 The live graph behind a snapshot's composed children — the single read call site every
-/// render/inference/export/command path in this plugin now uses instead of the old `.graph` field.
-pub fn equation_graph(snapshot: &EquationSnapshot) -> EquationGraph {
-    equation_scene(snapshot).graph
-}
-
-/// 🔎 The live geometry behind a snapshot's composed children — twin of [`equation_graph`].
-pub fn equation_geometry(snapshot: &EquationSnapshot) -> EquationGeometry {
-    equation_scene(snapshot).geometry
-}
-
-/// 🏗️ Builds a full `EquationSnapshot` from a literal `(graph, geometry)` pair — the standard
-/// fixture/import constructor replacing the old 2-field struct literal now that `notation`/
-/// `results`/`computed` are composed child handles, not plain fields.
+/// 🏗️ A full `EquationSnapshot` from a `(graph, geometry)` pair with its derived handles and the default equation.
 pub fn equation_snapshot_with_state(graph: &EquationGraph, geometry: &EquationGeometry) -> EquationSnapshot {
-    let (notation, results, computed) = equation_children_from_state(graph, geometry);
-    EquationSnapshot { notation, results, computed, equation: EquationExprSnapshot::default() }
+    let (notation, results, computed) = equation_children(graph, geometry);
+    EquationSnapshot { graph: graph.clone(), geometry: geometry.clone(), notation, results, computed, equation: EquationExprSnapshot::default() }
 }
 
-/// 📥️ Rebuilds composed child handles and their exact local owner from a complete carrier fixture.
+/// 📥️ A full `EquationSnapshot` from a complete carrier fixture.
 pub fn equation_snapshot_from_host_snapshot(fixture: EquationFixture) -> EquationSnapshot {
     let mut snapshot = equation_snapshot_with_state(&fixture.graph, &fixture.geometry);
     snapshot.equation = fixture.equation;
     snapshot
 }
-//#endregion 🔖️WorkingScene
+//#endregion 🔖️DerivedChildren
 //#endregion 🔖️Composition
 
 //#region 🔖️ArtifactKind
@@ -451,60 +331,60 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// execution — built once and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't
 /// `const fn`, mirroring note's `pilot_languages()` convention.
 #[allow(dead_code)]
-fn pilot_languages() -> &'static [dsl::LanguageSpec] {
-    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
             vec![
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "equation.document",
                     extension: Some("equation"),
-                    role: dsl::LanguageRole::Document,
+                    role: semio_framework_dsl::LanguageRole::Document,
                     grammar: Some(document_dsl::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(document_dsl::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("equation.document"),
+                    hooks: semio_framework_dsl::passthrough_hooks("equation.document"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "equation.op",
                     extension: None,
-                    role: dsl::LanguageRole::Ops,
+                    role: semio_framework_dsl::LanguageRole::Ops,
                     grammar: Some(op::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(op::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("equation.op"),
+                    hooks: semio_framework_dsl::passthrough_hooks("equation.op"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "equation.diff",
                     extension: None,
-                    role: dsl::LanguageRole::Diff,
+                    role: semio_framework_dsl::LanguageRole::Diff,
                     grammar: Some(io::diff::text::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(io::diff::text::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
-                    hooks: dsl::passthrough_hooks("equation.diff"),
+                    hooks: semio_framework_dsl::passthrough_hooks("equation.diff"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "equation.pack",
                     extension: None,
-                    role: dsl::LanguageRole::Pack,
+                    role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("equation.pack"),
+                    hooks: semio_framework_dsl::passthrough_hooks("equation.pack"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "equation.spr",
                     extension: None,
-                    role: dsl::LanguageRole::Spr,
+                    role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("equation.spr"),
+                    hooks: semio_framework_dsl::passthrough_hooks("equation.spr"),
                 },
             ]
         })
@@ -1022,17 +902,30 @@ pub mod standards {
                             mod tests_rejects_removing_a_point_from_an_empty_cloud;
                         }
                         #[path = "."]
-                        pub mod move_point {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/🎯️move-point/🦀️.rs"]
+                        pub mod move_points {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/🎯️move-points/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/🎯️move-point/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/🎯️move-points/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/🎯️move-point/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/🎯️move-points/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/🎯️move-point/🧪️tests/🧪️rejects/🦀️.rs"]
-                            mod tests_rejects_moving_a_point_that_is_not_in_the_cloud;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/🎯️move-points/🧪️tests/🧪️translates/🦀️.rs"]
+                            mod tests_translates_two_points_by_the_drag_offset;
+                        }
+                        #[path = "."]
+                        pub mod set_point_positions {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/📌️set-point-positions/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/📌️set-point-positions/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/📌️set-point-positions/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/📌️set-point-positions/🧪️tests/🧪️restores/🦀️.rs"]
+                            mod tests_restores_two_points_to_their_base_positions;
                         }
                     }
                 }

@@ -6,7 +6,7 @@ use crate::mutations::{change_layer_adjustment_kind, change_layer_blend_mode, ch
 use crate::op::RasterMutation;
 use crate::standards::v1::subsets::any::schema::{find_layer, layer_opacity, layer_transform, layer_visible};
 use crate::{RasterLayerMask, RasterLayerNode, RasterSnapshot, RasterTransform};
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -109,10 +109,10 @@ pub(super) fn raster_patch_layer_operations(document: &RasterSnapshot, layer_ids
         else if field!="visible" {crate::standards::v1::subsets::any::schema::require_layer_edit(&document.layers,id,matches!(field,"transformX"|"transformY"|"transformScaleX"|"transformScaleY"|"transformRotation"|"transformShearX"|"width"|"height")).map_err(Fault::from)?;}
         if matches!(field, "width" | "height") && !matches!(layer, RasterLayerNode::Pixel { .. }) { return Err(Fault::from("raster-layer-dimensions-require-pixels")); }
         let mutation = raster_mutation_for_field(id, field, value, layer).ok_or_else(|| Fault::from("raster-layer-property-unsupported"))?;
-        if let RasterMutation::ChangeLayerAdjustmentParameter(payload)=&mutation {crate::mutations::change_layer_adjustment_parameter::validate(payload,document).map_err(Fault::from)?;}
-        if let RasterMutation::ChangeLayerTransform(payload)=&mutation {crate::mutations::change_layer_transform::validate(payload,document).map_err(Fault::from)?;}
+        if let RasterMutation::ChangeLayerAdjustmentParameter(payload)=&mutation {crate::mutations::change_layer_adjustment_parameter::validate(payload,document).map_err(|code| Fault::from(code.as_str()))?;}
+        if let RasterMutation::ChangeLayerTransform(payload)=&mutation {crate::mutations::change_layer_transform::validate(payload,document).map_err(|code| Fault::from(code.as_str()))?;}
         if let RasterMutation::ChangeLayerMask(payload) = &mutation {
-            crate::mutations::change_layer_mask::validate(payload, document).map_err(Fault::from)?;
+            crate::mutations::change_layer_mask::validate(payload, document).map_err(|code| Fault::from(code.as_str()))?;
         }
         Ok(mutation)
     }).collect()
@@ -121,11 +121,11 @@ pub(super) fn raster_patch_layer_operations(document: &RasterSnapshot, layer_ids
 /// 🩹️ Parses a `patchLayer`/`patchLayers` wire `value` as JSON text (falling back to a plain JSON string
 /// when it isn't valid JSON) — mirrors `draw_ui::patch_value_json`.
 pub(super) fn patch_value_json(field: &str, value: &str) -> Value {
-    if matches!(field, "name" | "blendMode" | "adjustmentKind") { Value::String(value.to_string()) } else { dsl::os_pack::json::parse(value).unwrap_or_else(|_| Value::String(value.to_string())) }
+    if matches!(field, "name" | "blendMode" | "adjustmentKind") { Value::String(value.to_string()) } else { semio_framework_pack_json::parse(value, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| Value::String(value.to_string())) }
 }
 //#endregion 🔖️Shared
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "patch-layer")]
 pub struct PatchLayer {
     pub layer_id: String,

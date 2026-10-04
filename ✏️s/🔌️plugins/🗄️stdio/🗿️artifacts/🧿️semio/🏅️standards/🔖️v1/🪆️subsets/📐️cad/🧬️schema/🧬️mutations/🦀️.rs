@@ -47,6 +47,8 @@ pub mod set_layer;
 /// exactly one leaf payload and a unit variant wraps none (same consequence tiff's baseline
 /// migration reached — see `🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/🧬️schema/🧬️mutations/🦀️.rs`).
 //#region 🔖️Leaves
+#[path = "🩹️patch-snapshot/🦀️.rs"]
+pub mod patch_snapshot;
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 //#endregion 🔖️Leaves
@@ -56,6 +58,7 @@ pub mod set_snapshot;
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioCadMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
+    PatchSnapshot(patch_snapshot::PatchSnapshot),
     AddLayer(add_layer::AddLayer),
     RemoveLayer(remove_layer::RemoveLayer),
     SetLayer(set_layer::SetLayer),
@@ -78,8 +81,7 @@ pub enum SemioCadMutation {
 /// `semio-v1-cad` catalog in `../../🔣️oracle.json`. The framework never parses Rust, so
 /// `kinds_match_the_enum_and_the_catalog` below is what keeps all three honest.
 pub const KINDS: &[&str] = &[
-    "set-snapshot",
-    "add-layer",
+    "set-snapshot", "add-layer",
     "remove-layer",
     "set-layer",
     "add-block",
@@ -92,7 +94,7 @@ pub const KINDS: &[&str] = &[
     "add-block-entity",
     "remove-block-entity",
     "set-block-entity-layer",
-    "set-block-entity-geometry",
+    "set-block-entity-geometry", "patch-snapshot",
 ];
 //#endregion 🔖️Mutations
 
@@ -111,8 +113,11 @@ pub fn apply_semio_cad_mutation(snapshot: &mut SemioCadSnapshot, mutation: &Semi
 /// scenarios need a mutation's own computed inverse) can still reach the inverse law that
 /// [`apply_semio_cad_mutation`] alone cannot. Same shape as `🧰️kit`'s `inverse_semio_kit_mutation`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse_semio_cad_mutation(mutation: &SemioCadMutation, base: &SemioCadSnapshot) -> Vec<SemioCadMutation> {
-    <SemioCadMutation as Mutation<SemioCadSnapshot>>::inverse(mutation, base)
+pub fn inverse_semio_cad_mutation(mutation: &SemioCadMutation, base: &SemioCadSnapshot) -> Result<Vec<SemioCadMutation>, semio_framework_value::ValueError> {
+    Ok({
+    <SemioCadMutation as Mutation<SemioCadSnapshot>>::inverse(mutation, base)?
+
+    })
 }
 
 /// 📥️ Decodes this facet's own internally-tagged (`{"mutation": "<camelCaseVariant>", ...}`) JSON
@@ -122,7 +127,7 @@ pub fn inverse_semio_cad_mutation(mutation: &SemioCadMutation, base: &SemioCadSn
 /// the committed vector instead of re-declaring it as a Rust literal beside it.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_cad_mutation_json(text: &str) -> Result<SemioCadMutation, String> {
-    pack::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Apply
 
@@ -131,6 +136,7 @@ pub fn decode_semio_cad_mutation_json(text: &str) -> Result<SemioCadMutation, St
 pub(crate) fn agg_diff(this: &SemioCadMutation, base: &SemioCadSnapshot) -> protocol::MutationOutcome<SemioCadDiff> {
     protocol::MutationOutcome::new(match this {
         SemioCadMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff_set_snapshot(base, snapshot),
+        SemioCadMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<SemioCadSnapshot, SemioCadMutation>>::diff(patch, base),
         SemioCadMutation::AddLayer(add_layer::AddLayer { layer }) => SemioCadDiff { layers: Some(NamedTripleDiff { removed: Vec::new(), modified: Vec::new(), added: vec![layer.clone()] }), blocks: None, entities: None },
         SemioCadMutation::RemoveLayer(remove_layer::RemoveLayer { name }) => SemioCadDiff { layers: Some(NamedTripleDiff { removed: vec![name.clone()], modified: Vec::new(), added: Vec::new() }), blocks: None, entities: None },
         SemioCadMutation::SetLayer(set_layer::SetLayer { name, color_index, line_type, visible }) => wrap_layer_diff(name, CadLayerDiff { color_index: *color_index, line_type: line_type.clone(), visible: *visible }),
@@ -153,9 +159,11 @@ pub(crate) fn agg_diff(this: &SemioCadMutation, base: &SemioCadSnapshot) -> prot
 }
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &SemioCadMutation, base: &SemioCadSnapshot) -> Vec<SemioCadMutation> {
+pub(crate) fn agg_inverse(this: &SemioCadMutation, base: &SemioCadSnapshot) -> Result<Vec<SemioCadMutation>, semio_framework_value::ValueError> {
+    Ok({
     match this {
         SemioCadMutation::SetSnapshot(_) => vec![SemioCadMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
+        SemioCadMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<SemioCadSnapshot, SemioCadMutation>>::inverse(patch, base)?),
         SemioCadMutation::AddLayer(add_layer::AddLayer { layer }) => vec![SemioCadMutation::RemoveLayer(remove_layer::RemoveLayer { name: layer.name.clone() })],
         SemioCadMutation::RemoveLayer(remove_layer::RemoveLayer { name }) => match find_layer(base, name) {
             Some(l) => vec![SemioCadMutation::AddLayer(add_layer::AddLayer { layer: l.clone() })],
@@ -206,6 +214,8 @@ pub(crate) fn agg_inverse(this: &SemioCadMutation, base: &SemioCadSnapshot) -> V
             None => Vec::new(),
         },
     }
+
+    })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -246,6 +256,7 @@ fn dec_cad_snapshot(s: &str) -> Result<SemioCadSnapshot, String> {
 fn print_cad_mutation(m: &SemioCadMutation) -> String {
     match m {
         SemioCadMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", enc_cad_snapshot(snapshot)),
+        SemioCadMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(patch),
         SemioCadMutation::AddLayer(add_layer::AddLayer { layer }) => format!("add-layer layer={}", enc_layer(layer)),
         SemioCadMutation::RemoveLayer(remove_layer::RemoveLayer { name }) => format!("remove-layer name={}", enc_str(name)),
         SemioCadMutation::SetLayer(set_layer::SetLayer { name, color_index, line_type, visible }) => format!(
@@ -273,6 +284,10 @@ fn print_cad_mutation(m: &SemioCadMutation) -> String {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_cad_mutation(line: &str) -> Result<SemioCadMutation, String> {
+    if let Some(source) = line.strip_prefix("patch-snapshot patch=") {
+        let patch = semio_s_artifact_stdio_contract::editing::snapshot_patch_from_hex(source)?;
+        return Ok(SemioCadMutation::PatchSnapshot(crate::standards::v1::subsets::cad::schema::mutations::patch_snapshot::PatchSnapshot { patch }));
+    }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
     let args: std::collections::BTreeMap<&str, &str> = rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("cad mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("cad mutation: missing arg '{k}' for '{keyword}'"));
@@ -307,8 +322,8 @@ impl OpText for SemioCadMutation {
     fn print_op(&self) -> String {
         print_cad_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_cad_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_cad_mutation(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 }
 
@@ -316,6 +331,7 @@ impl OpText for SemioCadMutation {
 /// 🏷️ Op tags of `SemioCadMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
 const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
 const TAG_ADD_LAYER: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "add-layer");
 const TAG_REMOVE_LAYER: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-layer");
 const TAG_SET_LAYER: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-layer");
@@ -336,6 +352,7 @@ const TAG_SET_BLOCK_ENTITY_GEOMETRY: u8 = dsl::protocol_record::tag_u8(WIRE_PROT
 fn wire_tag(m: &SemioCadMutation) -> u8 {
     match m {
         SemioCadMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
+        SemioCadMutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
         SemioCadMutation::AddLayer(_) => TAG_ADD_LAYER,
         SemioCadMutation::RemoveLayer(_) => TAG_REMOVE_LAYER,
         SemioCadMutation::SetLayer(_) => TAG_SET_LAYER,
@@ -370,6 +387,11 @@ fn print_cad_mutation_args(m: &SemioCadMutation) -> String {
 /// independent encoding.
 impl OpBinary for SemioCadMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        if let Self::PatchSnapshot(payload) = self {
+            let mut out = vec![1, TAG_PATCH_SNAPSHOT];
+            out.extend(protocol::OpBinary::encode_op(&payload.patch)?);
+            return Ok(out);
+        }
         const OP_BINARY_FORMAT: u8 = 1;
         let mut out = vec![OP_BINARY_FORMAT, wire_tag(self)];
         out.extend_from_slice(print_cad_mutation_args(self).as_bytes());
@@ -382,6 +404,9 @@ impl OpBinary for SemioCadMutation {
         }
         if bytes[0] != OP_BINARY_FORMAT {
             return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {}", bytes[0]) });
+        }
+        if bytes[1] == TAG_PATCH_SNAPSHOT {
+            return Ok(Self::PatchSnapshot(crate::standards::v1::subsets::cad::schema::mutations::patch_snapshot::PatchSnapshot { patch: protocol::OpBinary::decode_op(&bytes[2..])? }));
         }
         let tag = bytes[1];
         let keyword = dsl::protocol_record::kind(WIRE_PROTOCOL, u64::from(tag)).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} names no record of 📡️.protocol.semio") })?;
@@ -417,6 +442,7 @@ fn fixture() -> SemioCadSnapshot {
 pub(crate) fn demo_mutation_cases() -> Vec<SemioCadMutation> {
     let base = fixture();
     vec![
+        SemioCadMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         SemioCadMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
         SemioCadMutation::AddLayer(add_layer::AddLayer { layer: CadLayer { name: "fresh".into(), color_index: 3, line_type: "CONTINUOUS".into(), visible: true } }),
         SemioCadMutation::RemoveLayer(remove_layer::RemoveLayer { name: "dim".into() }),

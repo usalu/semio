@@ -2,9 +2,7 @@
 
 use super::GenerationPlayState;
 use crate::os_store as store;
-use dsl::{DslValue, FromValue, ToValue};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use std::collections::LinkedList;
+use semio_framework_value::{DslValue, FromValue, ToValue};
 use std::mem::ManuallyDrop;
 use std::sync::Arc;
 
@@ -28,28 +26,14 @@ impl std::ops::Deref for GenerationPlayRoot {
         self.as_state()
     }
 }
-impl Serialize for GenerationPlayRoot {
-    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        self.as_state().serialize(serializer)
-    }
-}
-impl<'de> Deserialize<'de> for GenerationPlayRoot {
-    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        GenerationPlayState::deserialize(deserializer).map(Self::from)
-    }
-}
-/// 🌉️ Hand-written, mirroring the `Serialize`/`Deserialize` impls just above — `GenerationPlayRoot`
-/// itself is a `ManuallyDrop<Option<Arc<GenerationPlayState>>>` newtype, not a wire shape in its own
-/// right, so `#[derive(ToValue, FromValue)]` is not applicable here (there is no sensible field to
-/// forward to but `as_state()`, which is a method, not a field). Delegates straight to the inner
-/// `GenerationPlayState`'s own derived `ToValue`/`FromValue`.
+/// 🧬️ The shared owner delegates its declared value fields to GenerationPlayState.
 impl ToValue for GenerationPlayRoot {
     fn to_value(&self) -> DslValue {
         self.as_state().to_value()
     }
 }
 impl FromValue for GenerationPlayRoot {
-    fn from_value(value: DslValue) -> Result<Self, ::semio_framework_os_kernel::ValueError> {
+    fn from_value(value: DslValue) -> Result<Self, ::semio_framework_value::ValueError> {
         GenerationPlayState::from_value(value).map(Self::from)
     }
 }
@@ -64,7 +48,7 @@ impl GenerationPlayRoot {
         Arc::get_mut(self.0.as_mut().expect("generation root transferred")).ok_or("playbook.generation-root-shared")
     }
     pub fn into_retirement(mut self) -> GenerationRootRetirement {
-        GenerationRootRetirement { owned: ManuallyDrop::new(GenerationRetirementState { root: self.0.take(), state: None, owners: LinkedList::new(), bytes: None }) }
+        GenerationRootRetirement { owned: ManuallyDrop::new(GenerationRetirementState { root: self.0.take(), state: None, values: None, value: None, bytes: None }) }
     }
     pub fn retire_cold(self) {
         use store::ErasedSnapshotRetirement;
@@ -88,16 +72,11 @@ impl Drop for GenerationPlayRoot {
 //#endregion 🪪️ImmutableRoot
 
 //#region 🧹️FinalOwnerRetirement
-enum JsonOwner {
-    Value(DslValue),
-    Array(std::vec::IntoIter<DslValue>),
-    Object(std::vec::IntoIter<(String, DslValue)>),
-}
-
 struct GenerationRetirementState {
     root: Option<Arc<GenerationPlayState>>,
     state: Option<GenerationPlayState>,
-    owners: LinkedList<JsonOwner>,
+    values: Option<semio_framework_value::ordered::Retirement<DslValue>>,
+    value: Option<Box<dyn store::ErasedSnapshotRetirement>>,
     bytes: Option<Vec<u8>>,
 }
 
@@ -119,32 +98,25 @@ impl GenerationRetirementState {
             }
             return Step::Pending { released_items: 0, released_bytes };
         }
-        if let Some(owner) = self.owners.pop_front() {
-            match owner {
-                JsonOwner::Value(DslValue::String(value)) => self.bytes = Some(value.into_bytes()),
-                JsonOwner::Value(DslValue::Array(value)) => self.owners.push_front(JsonOwner::Array(value.into_iter())),
-                JsonOwner::Value(DslValue::Object(value)) => self.owners.push_front(JsonOwner::Object(value.into_iter())),
-                JsonOwner::Value(_) => {}
-                JsonOwner::Array(mut values) => {
-                    if let Some(value) = values.next() {
-                        self.owners.push_front(JsonOwner::Array(values));
-                        self.owners.push_front(JsonOwner::Value(value));
-                    }
-                }
-                JsonOwner::Object(mut values) => {
-                    if let Some((key, value)) = values.next() {
-                        self.owners.push_front(JsonOwner::Object(values));
-                        self.owners.push_front(JsonOwner::Value(value));
-                        self.bytes = Some(key.into_bytes());
-                    }
-                }
+        if let Some(value) = self.value.as_mut() {
+            let step = value.close_step(1, bytes).expect("generation value retirement");
+            if matches!(step, Step::Complete) { self.value = None; return Step::Pending { released_items: 1, released_bytes: 0 }; }
+            return step;
+        }
+        if let Some(values) = self.values.as_mut() {
+            use semio_framework_value::ordered::{Grant, RetirementStep};
+            match values.advance(Grant { maximum_items: 1, maximum_bytes: bytes }) {
+                RetirementStep::Blocked => return Step::Blocked,
+                RetirementStep::Progress { released_items, released_bytes } => return Step::Pending { released_items, released_bytes },
+                RetirementStep::OwnedValue(value) => self.value = Some(semio_framework_value::retirement::owned_retirement(value)),
+                RetirementStep::Complete => self.values = None,
             }
             return Step::Pending { released_items: 1, released_bytes: 0 };
         }
         if let Some(state) = self.state.as_mut() {
             if let Some(generation) = state.generations.pop() {
-                self.owners.push_front(JsonOwner::Object(generation.values.into_iter().collect::<Vec<_>>().into_iter()));
-                self.owners.push_front(JsonOwner::Value(DslValue::String(generation.name)));
+                self.values = Some(generation.values.retire());
+                self.value = Some(semio_framework_value::retirement::owned_retirement(generation.name));
                 self.bytes = Some(generation.id.into_bytes());
             } else if let Some(value) = state.selected_generation_id.take().or_else(|| state.preview_text.take()) {
                 self.bytes = Some(value.into_bytes());
@@ -160,12 +132,12 @@ impl GenerationRetirementState {
         Step::Complete
     }
     fn terminal_is_empty(&self) -> bool {
-        self.root.is_none() && self.state.is_none() && self.owners.is_empty() && self.bytes.is_none()
+        self.root.is_none() && self.state.is_none() && self.values.is_none() && self.value.is_none() && self.bytes.is_none()
     }
 }
 
 impl store::ErasedSnapshotRetirement for GenerationRootRetirement {
-    fn close_step(&mut self, items: usize, bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, items: usize, bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         Ok(self.owned.close_step(items, bytes))
     }
     fn terminal_is_empty(&self) -> bool {

@@ -7,7 +7,7 @@ pub fn diff(payload: &ChangeColumnKind, base: &En1994Snapshot) -> protocol::Muta
         return protocol::MutationOutcome::error("mutation.target-missing", "column missing", [payload.index.to_string()]);
     };
     if col.kind == payload.new_kind {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "unchanged");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "unchanged");
     }
     let mut columns = base.columns.clone();
     columns[payload.index].kind = payload.new_kind.clone();

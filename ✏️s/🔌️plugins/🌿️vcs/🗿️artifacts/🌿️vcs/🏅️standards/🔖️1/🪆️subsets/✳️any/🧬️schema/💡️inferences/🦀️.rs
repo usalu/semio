@@ -11,14 +11,13 @@
 
 use crate::VcsSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::summary::compute_vcs_summary;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a VCS snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `summary`, backed by the `📊summary/` slug dir).
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -29,8 +28,11 @@ pub struct VcsInference {
 }
 
 impl protocol::Inference<VcsSnapshot> for VcsInference {
-    fn infer(snapshot: &VcsSnapshot) -> Self {
+    fn infer(snapshot: &VcsSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { summary: compute_vcs_summary(snapshot) }
+    
+        })
     }
 }
 
@@ -39,7 +41,9 @@ impl protocol::Inference<VcsSnapshot> for VcsInference {
 /// default, don't derive structurally" trick `AddInference` uses in `📡️spr/🎮️command/🦀️.rs`.
 impl Default for VcsInference {
     fn default() -> Self {
-        <Self as protocol::Inference<VcsSnapshot>>::infer(&VcsSnapshot::default())
+        let snapshot = &VcsSnapshot::default();
+
+        Self { summary: compute_vcs_summary(snapshot) }
     }
 }
 
@@ -55,24 +59,6 @@ impl protocol::InferenceSpec<VcsSnapshot> for VcsInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 🌳️ Retargeted (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM) — the old
-/// `derive_artifact_facets!`-generated `VcsBuilder` this impl targeted is deleted along with the
-/// rest of the hand-rolled `ArtifactComposition`/`ArtifactAnalyzer` cluster (design.md §5 step 3).
-/// The recipe's suggested replacement (`semio_framework_plugin::app::SnapshotBuilder<S, M>`) does
-/// NOT work here: `SnapshotBuilder` is a foreign (non-`#[fundamental]`) generic struct, so `impl
-/// ArtifactInferrer for SnapshotBuilder<VcsSnapshot, VcsDemoMutation>` is a genuine orphan-rule
-/// violation (E0117) regardless of the type PARAMETERS being local (see `📓️w4-sequence-report.md`
-/// `## recipeGaps` — confirmed by the sequence pilot actually compiling it). `ArtifactInferrer::infer`
-/// takes `&Self::Snapshot`, never `&self` — the impl target is a pure type-level anchor with zero
-/// live callers repo-wide (grepped), so a trivial local zero-sized marker is the correct, minimal fix.
-pub struct VcsInferrer;
-impl ArtifactInferrer for VcsInferrer {
-    type Snapshot = VcsSnapshot;
-    type Inference = VcsInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.vcs.vcs.inference`'s facet leaves into the OS-wide inference catalog — call

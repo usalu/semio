@@ -27,9 +27,12 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for UpdateTextFrame {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_update_text_frame(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
-        inverse_update_text_frame(self, base)
-    }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok({
+        inverse_update_text_frame(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Update text frame \"{}\"", self.frame_id), &format!("Textrahmen \"{}\" aktualisieren", self.frame_id))
     }
@@ -60,7 +63,7 @@ pub fn diff_update_text_frame(payload: &UpdateTextFrame, base: &LayoutSnapshot) 
         return protocol::MutationOutcome::fatal("mutation.invariant", "Text inset origin must be finite and the inset size must be finite and non-negative.", std::iter::empty::<String>());
     }
     if story_id == &payload.story_id && thread_next == &payload.thread_next && inset.x == payload.inset_x && inset.y == payload.inset_y && inset.width == payload.inset_width && inset.height == payload.inset_height {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Text frame is already set to that value.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Text frame is already set to that value.");
     }
     protocol::MutationOutcome::new(LayoutDiff {
         pages: Some(LayoutPagesDelta {
@@ -88,7 +91,8 @@ pub fn diff_update_text_frame(payload: &UpdateTextFrame, base: &LayoutSnapshot) 
     })
 }
 
-pub fn inverse_update_text_frame(payload: &UpdateTextFrame, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_update_text_frame(payload: &UpdateTextFrame, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else { return Vec::new() };
     let Some(Frame::Text { story_id, thread_next, inset, .. }) = page.frames.iter().find(|frame| frame.id() == payload.frame_id) else { return Vec::new() };
     vec![LayoutMutation::UpdateTextFrame(UpdateTextFrame {
@@ -101,6 +105,8 @@ pub fn inverse_update_text_frame(payload: &UpdateTextFrame, base: &LayoutSnapsho
         inset_width: inset.width,
         inset_height: inset.height,
     })]
+
+    })())
 }
 
 #[cfg(test)]

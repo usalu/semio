@@ -3,11 +3,12 @@
 use crate::editor::note::NOTE_PLAY_WINDOW_COMPOSITE;
 use crate::NoteCamera;
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, Default, dsl::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, Default, semio_framework_os_kernel::DslArtifact)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
-#[dsl(id = "s.note.note.compositewindowconfig", extension = "notecompositewindowcfg", layout = "lines")]
+#[dsl(layout = "lines")]
+#[artifact(id = "s.note.note.compositewindowconfig", extension = "notecompositewindowcfg")]
 pub struct NoteCompositeWindowConfig {
     #[dsl(block)]
     pub camera: NoteCamera,
@@ -59,7 +60,10 @@ impl protocol::Mutation<NoteCompositeWindowConfig> for NoteCompositeWindowConfig
     fn diff(&self, _base: &NoteCompositeWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
         match self { Self::Snapshot { config } => protocol::MutationOutcome::new(config.clone()) }
     }
-    fn inverse(&self, base: &NoteCompositeWindowConfig) -> Vec<Self> { vec![Self::Snapshot { config: base.clone() }] }
+    fn inverse(&self, base: &NoteCompositeWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+    Ok((|| { vec![Self::Snapshot { config: base.clone() }] 
+    })())
+}
 }
 
 impl protocol::Mutation<NoteCompositeWindowTransient> for NoteCompositeWindowTransientMutation {
@@ -84,7 +88,10 @@ impl protocol::Mutation<NoteCompositeWindowTransient> for NoteCompositeWindowTra
     fn diff(&self, _base: &NoteCompositeWindowTransient) -> protocol::MutationOutcome<Self::Diff> {
         match self { Self::Snapshot { transient } => protocol::MutationOutcome::new(transient.clone()) }
     }
-    fn inverse(&self, base: &NoteCompositeWindowTransient) -> Vec<Self> { vec![Self::Snapshot { transient: base.clone() }] }
+    fn inverse(&self, base: &NoteCompositeWindowTransient) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+    Ok((|| { vec![Self::Snapshot { transient: base.clone() }] 
+    })())
+}
 }
 
 macro_rules! json_store {
@@ -92,12 +99,12 @@ macro_rules! json_store {
         impl store::ArtifactDsl for $state {
             const EXTENSION: &'static str = $extension;
             fn envelope_id() -> &'static str { $envelope }
-            fn parse_dsl(text: &str) -> Result<Self, store::TextError> { dsl::json::from_json_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1))) }
-            fn print_dsl(&self) -> String { dsl::json::to_json_string(self) }
+            fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> { semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1))) }
+            fn print_dsl(&self) -> String { semio_framework_pack_json::to_json_string(self) }
         }
         impl store::ArtifactPack for $state {
             fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> { semio_framework_value::ToValue::to_value(self).encode_pack_with(options) }
-            fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> { let value = dsl::DslValue::decode_pack_with(bytes, options)?; semio_framework_value::FromValue::from_value(value).map_err(|error| store::PackError::Schema(error.to_string())) }
+            fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> { let value = semio_framework_value::DslValue::decode_pack_with(bytes, options)?; semio_framework_value::FromValue::from_value(value).map_err(|error| store::PackError::from(error)) }
         }
     };
 }
@@ -109,13 +116,13 @@ impl store::ArtifactDsl for NoteCompositeWindowConfig {
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = store::semio_format::split_text_preamble(text).map_or(text, |(_, body)| body);
-        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid Note composite window envelope");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -127,18 +134,18 @@ impl store::ArtifactDsl for NoteCompositeWindowConfig {
 impl store::ArtifactPack for NoteCompositeWindowConfig {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let body = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::from(error.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &body))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, body) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        let (envelope, body) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::from(error.into_value_error()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _) = store::pack_rt::decode_document(&body, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -148,14 +155,14 @@ json_store!(NoteCompositeWindowTransient, "notecompositewindowtransient", "s.not
 macro_rules! mutation_wire {
     ($mutation:ty) => {
         impl protocol::OpText for $mutation {
-            fn print_op(&self) -> String { dsl::json::to_json_string(self) }
-            fn parse_op(line: &str) -> Result<Self, store::TextError> { dsl::json::from_json_str(line).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1))) }
+            fn print_op(&self) -> String { semio_framework_pack_json::to_json_string(self) }
+            fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> { semio_framework_pack_json::from_json_str(line, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1))) }
         }
         impl protocol::OpBinary for $mutation {
             fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> { Ok(protocol::OpText::print_op(self).into_bytes()) }
             fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-                let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))?;
-                dsl::json::from_json_str(text).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
+                let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(semio_framework_value::ValueError::from(error))))?;
+                semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(error)))
             }
         }
     };
@@ -181,9 +188,9 @@ impl semio_framework_value::retirement::RetireOwned for NoteCompositeWindowTrans
 
 fn note_composite_window_transient_preflight(mutation: &NoteCompositeWindowTransientMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
     let NoteCompositeWindowTransientMutation::Snapshot { transient } = mutation;
-    let ink_tool = transient.ink_tool.as_ref().map_or(0, |state| dsl::json::to_json_string(state).len());
+    let ink_tool = transient.ink_tool.as_ref().map_or(0, |state| semio_framework_pack_json::to_json_string(state).len());
     let retained_bytes = size_of::<NoteCompositeWindowTransient>().checked_add(transient.engagement_input.capacity()).and_then(|bytes| bytes.checked_add(ink_tool)).ok_or_else(|| "Note composite window transient footprint overflowed".to_string())?;
-    Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes })
+    Ok(store::ArtifactStoreOneItemFootprint::for_ephemeral_item(retained_bytes))
 }
 
 fn note_composite_window_transient_transfer(mutation: NoteCompositeWindowTransientMutation) -> NoteCompositeWindowTransient {

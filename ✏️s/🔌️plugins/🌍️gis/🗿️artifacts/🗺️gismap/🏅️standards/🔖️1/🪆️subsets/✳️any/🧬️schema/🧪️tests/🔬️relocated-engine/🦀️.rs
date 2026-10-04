@@ -39,7 +39,7 @@ async fn gis_map_snapshot_to_drawing_builds_markers_and_polylines() {
 async fn svg_export_renders_real_svg_text_through_the_stdio_drawing_bridge() {
     ensure_stdio_semio_registered_for_tests();
     let document = default_document();
-    let value = serde_json::from_str::<Value>(&dsl::json::to_json_string(&document)).expect("document json");
+    let value = serde_json::from_str::<Value>(&semio_framework_pack_json::to_json_string(&document)).expect("document json");
     let (svg, width, height) = gis2d_document_json_to_svg(&value).expect("svg export");
     assert!(svg.contains("<svg"), "real svg text: {svg}");
     assert!(svg.contains("<path"), "at least one path node rendered: {svg}");
@@ -49,7 +49,7 @@ async fn svg_export_renders_real_svg_text_through_the_stdio_drawing_bridge() {
 #[semio_framework_async_macros::async_test]
 async fn svg_export_of_an_empty_document_still_renders_a_bare_canvas() {
     ensure_stdio_semio_registered_for_tests();
-    let value = serde_json::from_str::<Value>(&dsl::json::to_json_string(&GisMapSnapshot::default())).expect("empty document json");
+    let value = serde_json::from_str::<Value>(&semio_framework_pack_json::to_json_string(&GisMapSnapshot::default())).expect("empty document json");
     let (svg, width, height) = gis2d_document_json_to_svg(&value).expect("svg export");
     assert!(svg.contains("<svg"), "{svg}");
     assert_eq!(width, 256);

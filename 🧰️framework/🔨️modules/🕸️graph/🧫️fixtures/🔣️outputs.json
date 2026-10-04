@@ -1,5 +1,6 @@
 {
   "catalog": {
+    "contractId": "fixture-graph-catalog",
     "version": 1,
     "shared": {
       "rustRegistry": "📇️registry/🦀️.rs",
@@ -44,6 +45,24 @@
     "🌡️sensor/🟦️.ts"
   ],
   "invalid": [
+    {
+      "name": "empty-contract-identity",
+      "path": ["contractId"],
+      "value": "",
+      "schemaInvalid": true
+    },
+    {
+      "name": "uppercase-contract-identity",
+      "path": ["contractId"],
+      "value": "Catalog",
+      "schemaInvalid": true
+    },
+    {
+      "name": "spaced-contract-identity",
+      "path": ["contractId"],
+      "value": "catalog identity",
+      "schemaInvalid": true
+    },
     {
       "name": "traversal",
       "path": [
@@ -173,6 +192,7 @@
     }
   ],
   "empty": {
+    "contractId": "empty-graph-catalog",
     "version": 1,
     "inputAreas": [],
     "shared": {
@@ -190,6 +210,10 @@
       ]
     }
   },
+  "previewCases": [
+    { "contractId": "chronology-catalog", "expectedContractId": "chronology-catalog" },
+    { "contractId": "measurement-catalog", "expectedContractId": "measurement-catalog" }
+  ],
   "emission": [
     {
       "schema": "manifest",

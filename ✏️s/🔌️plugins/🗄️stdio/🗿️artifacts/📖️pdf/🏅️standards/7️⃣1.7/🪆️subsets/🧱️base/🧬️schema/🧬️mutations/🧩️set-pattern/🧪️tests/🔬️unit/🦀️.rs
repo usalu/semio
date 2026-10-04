@@ -1,6 +1,6 @@
 use super::super::apply_pdf_mutation;
 use super::*;
-use protocol::Severity;
+use semio_framework_diagnostic::Severity;
 
 #[test]
 fn semantic_identity_is_owned_by_this_leaf() {

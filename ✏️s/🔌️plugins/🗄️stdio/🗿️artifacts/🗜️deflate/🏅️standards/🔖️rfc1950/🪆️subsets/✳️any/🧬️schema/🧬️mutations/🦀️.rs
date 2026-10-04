@@ -30,7 +30,7 @@ pub mod set_snapshot;
 /// SAME `record_codegen` output the fields produced when they lived inline in the enum, so the
 /// committed `mutations::text::COMPONENT_GRAMMAR_SEMIO`/`mutations::binary::COMPONENT_PROTOCOL_SEMIO`
 /// facets and this `OpText`/`OpBinary` pair are unaffected by the leaf split.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = DeflateSnapshot, diff = DeflateDiff, schema = "DeflateMutation")]
 pub enum DeflateMutation {
@@ -81,7 +81,8 @@ pub(crate) fn agg_diff(this: &DeflateMutation, base: &DeflateSnapshot) -> protoc
 }
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &DeflateMutation, base: &DeflateSnapshot) -> Vec<DeflateMutation> {
+pub(crate) fn agg_inverse(this: &DeflateMutation, base: &DeflateSnapshot) -> Result<Vec<DeflateMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match this {
         DeflateMutation::SetSnapshot(_) => vec![DeflateMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
         DeflateMutation::SetCompressionParams(_) => vec![DeflateMutation::SetCompressionParams(set_compression_params::SetCompressionParams { method: base.compression_method, window_bits: base.window_bits, level_hint: base.compression_level_hint })],
@@ -90,6 +91,8 @@ pub(crate) fn agg_inverse(this: &DeflateMutation, base: &DeflateSnapshot) -> Vec
         }
         DeflateMutation::SetPayload(_) => vec![DeflateMutation::SetPayload(set_payload::SetPayload { payload: base.payload.clone() })],
     }
+
+    })())
 }
 //#endregion 🔖️MutationTrait
 
@@ -98,22 +101,22 @@ pub(crate) fn agg_inverse(this: &DeflateMutation, base: &DeflateSnapshot) -> Vec
 /// `OpBinary` themselves) — the same ~15-line body every `DslOps`-derived enum's `OpText` impl
 /// uses (`GifMutation`, `FlowMutationDsl`, `SpaceMutation` precedent).
 impl OpText for DeflateMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = semio_framework_dsl_record::parse(line, &(spec_fn.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?;
+                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown operation line '{line}'"), semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
     fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &(spec_fn.ordinary)(), dsl::JoinMode::Inline)
+        semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline)
     }
 }
 

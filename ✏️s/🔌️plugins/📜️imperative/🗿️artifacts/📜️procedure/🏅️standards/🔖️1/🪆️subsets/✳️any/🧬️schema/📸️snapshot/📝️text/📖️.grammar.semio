@@ -5,11 +5,11 @@ use family-scene
 start document
 
 # Real grammar for `ProcedureSnapshot::print_dsl`/`parse_dsl`: the derived spec-driven text of
-# `ProcedurePackRecord` (📸️snapshot/🦀️.rs), the same record the pack encodes: both composed child
-# handles plus the content their local owners hold — the flow child's `path` program and the text
-# child's `seed` dictionary — each as a dynamic value literal (`{ key=value … }`, `[ … ]`).
+# `ProcedurePackRecord` (📸️snapshot/🦀️.rs), the same record the pack encodes: the schema and the two
+# composed child handles. The program lives in the `flow` child and the seed in the `text` child
+# (design §20.15), so the parent text never carries either.
 # Fields are space-separated `key=value` tokens in any order; an absent optional field is omitted.
 artifact-mark = "semio imperative.imperative.dsl v1"
 document = artifact-mark field*
-field = {"schema" "=" TEXT} | {"flow" "=" child-handle} | {"text" "=" child-handle} | {"path" "=" VALUE} | {"seed" "=" VALUE}
+field = {"schema" "=" TEXT} | {"flow" "=" child-handle} | {"text" "=" child-handle}
 child-handle = {"child_id" "=" TEXT} {"target" "=" TEXT}

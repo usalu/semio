@@ -90,6 +90,7 @@
       ],
       "kinds": [
         "set-snapshot",
+        "patch-snapshot",
         "insert-slide",
         "remove-slide",
         "move-slide",
@@ -277,6 +278,27 @@
             "operation": "set-snapshot",
             "bridgeVersion": 1,
             "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pptx-ecma-376-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "python-pptx-pptx-ecma-376-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "patch-snapshot",
+          "capability": "pptx-ecma-376-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "patch-snapshot",
+            "bridgeVersion": 1,
+            "variant": "PatchSnapshot"
           },
           "oracleRequirements": [
             {

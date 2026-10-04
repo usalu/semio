@@ -18,9 +18,12 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for SetRunText {
     fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<<DocxMutation as Mutation<DocxSnapshot>>::Diff> {
         agg_diff(&DocxMutation::SetRunText(self.clone()), base)
     }
-    fn inverse(&self, base: &DocxSnapshot) -> Vec<DocxMutation> {
-        agg_inverse(&DocxMutation::SetRunText(self.clone()), base)
-    }
+    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&DocxMutation::SetRunText(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set run text", "Text des Textlaufs setzen")
     }

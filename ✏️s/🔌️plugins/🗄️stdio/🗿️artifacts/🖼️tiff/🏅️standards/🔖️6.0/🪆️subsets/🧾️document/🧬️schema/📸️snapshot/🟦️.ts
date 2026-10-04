@@ -2,9 +2,10 @@
  * semantic model: `byteOrder` + index-keyed `ifds`, each holding tag-id-keyed typed tag/type/
  * value entries — TIFF's own generic model ("unknown tags" are just tags this codec doesn't
  * specially interpret, but whose typed value is still stored losslessly via this same
- * triple), plus decoded `pixels`. */
+ * triple), plus canonical authored strip or tile chunks per directory. */
 
 import { parseBinary32, parseBinary64, type Binary32, type Binary64 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+export {tiffSnapshotToSqliteDatabase,tiffSnapshotFromSqliteDatabase,tiffSnapshotToSqliteFile,tiffSnapshotFromSqliteFile} from "./🪶️sqlite/🟦️.ts";
 export type { Binary32, Binary64 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 export type TiffByteOrder = 'littleEndian' | 'bigEndian';
 
@@ -17,7 +18,7 @@ export type TiffFieldType =
  * (`kind`/`value`), mirroring the Rust enum's `#[serde(tag = "kind", content = "value")]`. */
 export type TiffValues =
   | { kind: 'byte'; value: number[] }
-  | { kind: 'ascii'; value: string }
+  | { kind: 'ascii'; value: number[] }
   | { kind: 'short'; value: number[] }
   | { kind: 'long'; value: number[] }
   | { kind: 'rational'; value: [number, number][] }
@@ -33,26 +34,30 @@ export type TiffValues =
  * together atomically). */
 export interface TiffTag {
   tag: number;
-  kind: TiffFieldType;
   values: TiffValues;
+}
+
+export type TiffStorageKind = 'none' | 'strips' | 'tiles';
+
+export interface TiffStorage {
+  kind: TiffStorageKind;
+  offsetsKind: TiffFieldType;
+  byteCountsKind: TiffFieldType;
+  chunks: number[][];
 }
 
 /** 🗂️ One Image File Directory — tag-id-keyed `entries` (TIFF requires ascending-tag-order). */
 export interface TiffIfd {
   entries: TiffTag[];
-  /** This directory's own raster as RAW STRIP BYTES; empty for IFD 0 (whose raster is the
-   * snapshot's own canonical RGBA `pixels`) and for a metadata-only directory. */
-  pixels: number[];
+  storage: TiffStorage;
 }
 
 /** 📸️ Complete `stdio.tiff` 6.0 semantic snapshot. `schema` is an identity field, never
- * diffed. `pixels` is the decoded raster payload (canonical 8-bit RGBA, decoded from IFD 0
- * only — see the Rust engine's doc for the full completeness accounting). */
+ * diffed. Display pixels are ephemeral projections from each IFD's canonical storage. */
 export interface TiffSnapshot {
   schema: string;
   byteOrder: TiffByteOrder;
   ifds: TiffIfd[];
-  pixels: number[];
 }
 
 //#region 🚪️Parsers
@@ -108,7 +113,6 @@ export function parseTiffSnapshot(value: unknown, at = "$"): TiffSnapshot {
     schema: stdioTiff60DocumentSnapshotGuardString(row["schema"], `${at}.schema`),
     byteOrder: parseTiffByteOrder(row["byteOrder"], `${at}.byteOrder`),
     ifds: stdioTiff60DocumentSnapshotGuardArray(row["ifds"], `${at}.ifds`).map((item, index) => parseTiffIfd(item, `${at}.ifds[${index}]`)),
-    pixels: stdioTiff60DocumentSnapshotGuardArray(row["pixels"], `${at}.pixels`).map((item, index) => stdioTiff60DocumentSnapshotGuardInteger(item, `${at}.pixels[${index}]`, {"minimum": 0, "maximum": 255})),
   };
 }
 
@@ -124,7 +128,6 @@ export function parseTiffTag(value: unknown, at = "$"): TiffTag {
   const row = stdioTiff60DocumentSnapshotGuardObject(value, at);
   return {
     tag: stdioTiff60DocumentSnapshotGuardInteger(row["tag"], `${at}.tag`, {"minimum": 0, "maximum": 65535}),
-    kind: parseTiffFieldType(row["kind"], `${at}.kind`),
     values: parseTiffValues(row["values"], `${at}.values`),
   };
 }
@@ -133,19 +136,34 @@ export function parseTiffIfd(value: unknown, at = "$"): TiffIfd {
   const row = stdioTiff60DocumentSnapshotGuardObject(value, at);
   return {
     entries: stdioTiff60DocumentSnapshotGuardArray(row["entries"], `${at}.entries`).map((item, index) => parseTiffTag(item, `${at}.entries[${index}]`)),
-    pixels: stdioTiff60DocumentSnapshotGuardArray(row["pixels"], `${at}.pixels`).map((item, index) => stdioTiff60DocumentSnapshotGuardInteger(item, `${at}.pixels[${index}]`, {"minimum": 0, "maximum": 255})),
+    storage: parseTiffStorage(row["storage"], `${at}.storage`),
   };
+}
+
+export function parseTiffStorage(value: unknown, at = "$"): TiffStorage {
+  const row = stdioTiff60DocumentSnapshotGuardObject(value, at);
+  const kind = stdioTiff60DocumentSnapshotGuardMember(row["kind"], `${at}.kind`, ["none", "strips", "tiles"] as const);
+  const chunks = stdioTiff60DocumentSnapshotGuardArray(row["chunks"], `${at}.chunks`).map((chunk, chunkIndex) =>
+    stdioTiff60DocumentSnapshotGuardArray(chunk, `${at}.chunks[${chunkIndex}]`).map((item, index) => stdioTiff60DocumentSnapshotGuardInteger(item, `${at}.chunks[${chunkIndex}][${index}]`, {minimum: 0, maximum: 255}))
+  );
+  if (kind === "none" && chunks.length !== 0) stdioTiff60DocumentSnapshotGuardReject(`${at}.chunks`, "none storage cannot own chunks");
+  if (kind !== "none" && chunks.length === 0) stdioTiff60DocumentSnapshotGuardReject(`${at}.chunks`, "image storage requires chunks");
+  const offsetsKind = parseTiffFieldType(row["offsetsKind"], `${at}.offsetsKind`);
+  const byteCountsKind = parseTiffFieldType(row["byteCountsKind"], `${at}.byteCountsKind`);
+  if (offsetsKind !== "short" && offsetsKind !== "long") stdioTiff60DocumentSnapshotGuardReject(`${at}.offsetsKind`, "offset words must be SHORT or LONG");
+  if (byteCountsKind !== "short" && byteCountsKind !== "long") stdioTiff60DocumentSnapshotGuardReject(`${at}.byteCountsKind`, "byte-count words must be SHORT or LONG");
+  return {kind, offsetsKind, byteCountsKind, chunks};
 }
 
 /** 🛂️ Parse each owned TIFF value domain at its actual scalar width. */
 export function parseTiffValues(value: unknown, at = "$"): TiffValues {
   const row=stdioTiff60DocumentSnapshotGuardObject(value,at);const kind=parseTiffFieldType(row.kind,`${at}.kind`);
-  if(kind==="ascii") return {kind,value:stdioTiff60DocumentSnapshotGuardString(row.value,`${at}.value`)};
   const values=stdioTiff60DocumentSnapshotGuardArray(row.value,`${at}.value`);
   const integers=(minimum:number,maximum:number):number[]=>values.map((value,index)=>stdioTiff60DocumentSnapshotGuardInteger(value,`${at}.value[${index}]`,{minimum,maximum}));
   const rationals=(minimum:number,maximum:number):[number,number][]=>values.map((value,index)=>{const pair=stdioTiff60DocumentSnapshotGuardArray(value,`${at}.value[${index}]`,{minItems:2,maxItems:2});return [stdioTiff60DocumentSnapshotGuardInteger(pair[0],`${at}.value[${index}][0]`,{minimum,maximum}),stdioTiff60DocumentSnapshotGuardInteger(pair[1],`${at}.value[${index}][1]`,{minimum,maximum})];});
   switch(kind){
     case "byte":return {kind,value:integers(0,255)};
+    case "ascii":return {kind,value:integers(0,255)};
     case "short":return {kind,value:integers(0,65535)};
     case "long":return {kind,value:integers(0,4294967295)};
     case "rational":return {kind,value:rationals(0,4294967295)};

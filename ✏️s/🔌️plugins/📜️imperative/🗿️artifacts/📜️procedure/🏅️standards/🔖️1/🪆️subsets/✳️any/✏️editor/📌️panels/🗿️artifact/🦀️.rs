@@ -2,7 +2,7 @@
 
 use crate::editor::procedure::terminology::ImperativeLabels;
 use crate::editor::procedure::{IMPERATIVE_INTERACTION_GRANULARITY, IMPERATIVE_INTERACTION_STEPS, IMPERATIVE_PLAY_APP_ID};
-use crate::ProcedureSnapshot;
+use crate::ProcedureScene;
 use semio_framework_plugin::tree_item_desc;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -53,8 +53,8 @@ pub fn definition() -> PanelTabDefinition {
 ///
 /// 🪟️ A procedure with more steps than one node's fixed child capacity used to fail the whole render
 /// with `ui.fixed-capacity`; the section is windowed now and always stamps the real step `total`.
-pub fn render(document: &ProcedureSnapshot, labels: &ImperativeLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let path = crate::procedure_working_scene(document).path;
+pub fn render(scene: &ProcedureScene, labels: &ImperativeLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let path = &scene.path;
     let indexed: Vec<_> = path.steps.iter().enumerate().collect();
     PanelTreeBuilder::new(IMPERATIVE_PLAY_DOCUMENT_NAMESPACE)?
         .window_section_or_placeholder(

@@ -972,8 +972,8 @@ impl protocol::DiffCodec for SemioBrepDiff {
     fn print_diff(&self) -> String {
         print_brep_diff(self)
     }
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_brep_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_diff(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_brep_diff(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
     /// ⚡️ Real binary diff frame, replacing the old `print_diff().into_bytes()` text-as-binary
     /// shortcut. `format u8` + `presence u8` (bit0=`vertices`, bit1=`edges`, bit2=`loops`,
@@ -1070,7 +1070,7 @@ impl protocol::DiffCodec for SemioBrepDiff {
 /// `🧬️mutations/🦀️.rs`'s `decode_semio_brep_mutation_json` so no fixture test needs `serde_json`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_brep_diff_json(text: &str) -> Result<SemioBrepDiff, String> {
-    pack::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 //#endregion 🌉️ExternalCodecBridge
 

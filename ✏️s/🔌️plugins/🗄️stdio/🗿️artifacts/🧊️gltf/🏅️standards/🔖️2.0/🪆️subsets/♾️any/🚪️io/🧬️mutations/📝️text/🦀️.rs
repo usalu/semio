@@ -40,19 +40,19 @@ fn decode_hex(value: &str) -> Result<Vec<u8>, String> {
         .collect()
 }
 
-fn text_error(detail: impl Into<String>) -> store::TextError {
-    store::TextError::new(detail.into(), dsl::TextSpan::at(1, 1))
+fn text_error(detail: impl Into<String>) -> semio_framework_diagnostic::TextError {
+    semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail.into(), semio_framework_diagnostic::TextSpan::at(1, 1))
 }
 
 impl protocol::OpText for GltfMutation {
     fn print_op(&self) -> String {
-        format!("gltf-mutation payload={}", encode_hex(pack::to_json_string(self).as_bytes()))
+        format!("gltf-mutation payload={}", encode_hex(semio_framework_pack_json::to_json_string(self).as_bytes()))
     }
 
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let payload = line.strip_prefix("gltf-mutation payload=").ok_or_else(|| text_error("expected canonical GLTF mutation aggregate"))?;
         let bytes = decode_hex(payload).map_err(text_error)?;
         let text = std::str::from_utf8(&bytes).map_err(|error| text_error(error.to_string()))?;
-        pack::from_json_str(text).map_err(|error| text_error(error.to_string()))
+        semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|cause| semio_framework_diagnostic::TextError::from_value_error(cause, semio_framework_diagnostic::TextSpan::at(1,1)))
     }
 }

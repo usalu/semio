@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "owner",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "owner": {
+      "const": "os"
+    },
+    "cases": {
+      "const": [
+        {
+          "kind": "retired-public",
+          "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🦀️.rs",
+          "names": [
+            "FixedCommandPage",
+            "CommandPageSet",
+            "PagedCommand",
+            "PagedCommandReader",
+            "CommandEnvelope",
+            "CommandBatch",
+            "CommandEnvelopeSet",
+            "RejectedCommandBuild",
+            "RejectedCommandBuildRegistry",
+            "CommandBatchProgress",
+            "CommandBatchDriver",
+            "CommandDriverRegistry",
+            "CommandPageCursor",
+            "CommandIngressStatus",
+            "COMMAND_PAGE_MAXIMUM_BYTES",
+            "COMMAND_MAXIMUM_BYTES",
+            "COMMAND_MAXIMUM_PAGES",
+            "COMMAND_BATCH_MAXIMUM_ITEMS",
+            "INVOCATION_RESULT_PACK_MAXIMUM_BYTES"
+          ]
+        },
+        {
+          "kind": "retired-reexport",
+          "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🦀️.rs",
+          "names": [
+            "INVOCATION_RESULT_PACK_MAXIMUM_BYTES"
+          ]
+        },
+        {
+          "kind": "private-import",
+          "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🦀️.rs",
+          "names": [
+            "FixedCommandPage",
+            "CommandPageSet",
+            "PagedCommand",
+            "PagedCommandReader",
+            "COMMAND_PAGE_MAXIMUM_BYTES",
+            "COMMAND_MAXIMUM_BYTES",
+            "COMMAND_MAXIMUM_PAGES",
+            "INVOCATION_RESULT_PACK_MAXIMUM_BYTES"
+          ],
+          "namespace": "::protocol::wire::command_ingress"
+        },
+        {
+          "kind": "retired-laws",
+          "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🧪️tests/🔬️unit/🦀️.rs",
+          "names": [
+            "retained_batch_descriptor_has_no_destructor",
+            "the_command_ingress_authorities_are_derived_from_the_guest_memory_budget",
+            "every_command_ingress_row_reassembles_to_the_exact_bytes_it_was_cut_from",
+            "every_command_ingress_refusal_answers_a_fault_and_keeps_its_page"
+          ]
+        }
+      ]
+    }
+  }
+}

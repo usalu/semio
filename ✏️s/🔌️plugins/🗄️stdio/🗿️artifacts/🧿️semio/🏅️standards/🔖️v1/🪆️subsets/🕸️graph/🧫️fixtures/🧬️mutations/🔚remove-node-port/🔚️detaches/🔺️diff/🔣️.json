@@ -14,10 +14,14 @@
         "ports": [
           {
             "name": "reset",
-            "kind": "in"
+            "kind": "in",
+            "category": "",
+            "properties": []
           }
         ],
-        "properties": []
+        "properties": [],
+        "width": 0.0,
+        "height": 0.0
       },
       {
         "id": {
@@ -30,7 +34,9 @@
           "y": 0.0
         },
         "ports": [],
-        "properties": []
+        "properties": [],
+        "width": 0.0,
+        "height": 0.0
       }
     ]
   }

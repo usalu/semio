@@ -1,0 +1,117 @@
+{
+  "cases": [
+    {
+      "id": "short-table",
+      "bodyTop": 76,
+      "surfaceTop": 76,
+      "chromeBottom": 123,
+      "edgeless": false,
+      "overlay": true,
+      "scrollTop": 0,
+      "inset": 47
+    },
+    {
+      "id": "scrolled-table",
+      "bodyTop": 76,
+      "surfaceTop": 76,
+      "chromeBottom": 123,
+      "edgeless": false,
+      "overlay": true,
+      "scrollTop": 180,
+      "inset": 47
+    },
+    {
+      "id": "nested-cleared",
+      "bodyTop": 76,
+      "surfaceTop": 123,
+      "chromeBottom": 123,
+      "edgeless": false,
+      "overlay": true,
+      "scrollTop": 20,
+      "inset": 0
+    },
+    {
+      "id": "partially-cleared",
+      "bodyTop": 76,
+      "surfaceTop": 90,
+      "chromeBottom": 123,
+      "edgeless": false,
+      "overlay": true,
+      "scrollTop": 0,
+      "inset": 33
+    },
+    {
+      "id": "explicit-edgeless",
+      "bodyTop": 76,
+      "surfaceTop": 76,
+      "chromeBottom": 123,
+      "edgeless": true,
+      "overlay": true,
+      "scrollTop": 0,
+      "inset": 0
+    },
+    {
+      "id": "no-chrome",
+      "bodyTop": 76,
+      "surfaceTop": 76,
+      "chromeBottom": 123,
+      "edgeless": false,
+      "overlay": false,
+      "scrollTop": 0,
+      "inset": 0
+    },
+    {
+      "id": "offscreen-edgeless",
+      "bodyTop": -76,
+      "surfaceTop": -76,
+      "chromeBottom": -29,
+      "edgeless": true,
+      "overlay": true,
+      "scrollTop": 10,
+      "inset": 0
+    },
+    {
+      "id": "offscreen-without-chrome",
+      "bodyTop": -76,
+      "surfaceTop": -76,
+      "chromeBottom": -29,
+      "edgeless": false,
+      "overlay": false,
+      "scrollTop": 10,
+      "inset": 0
+    },
+    {
+      "id": "nested-edgeless-content",
+      "bodyTop": 76,
+      "surfaceTop": 76,
+      "chromeBottom": 123,
+      "edgeless": false,
+      "nestedEdgeless": true,
+      "overlay": true,
+      "scrollTop": 0,
+      "inset": 47
+    },
+    {
+      "id": "nested-window-chrome",
+      "bodyTop": 76,
+      "surfaceTop": 76,
+      "chromeBottom": 123,
+      "nestedChromeBottom": 400,
+      "edgeless": false,
+      "overlay": true,
+      "scrollTop": 0,
+      "inset": 47
+    },
+    {
+      "id": "nested-scroller-keeps-first-content",
+      "bodyTop": 76,
+      "surfaceTop": 76,
+      "chromeBottom": 123,
+      "nestedScroller": true,
+      "edgeless": false,
+      "overlay": true,
+      "scrollTop": 0,
+      "inset": 47
+    }
+  ]
+}

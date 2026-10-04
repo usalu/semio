@@ -1,9 +1,11 @@
 /** 🧬️ SemioCadMutation schema — real facet mirror of `🦀️.rs` (source of truth).
  * Named-variant enum, imperative verbs, discriminated on the `mutation` tag. */
 import type { CadBlock, CadEntity, CadEntityRecord, CadLayer, SemioCadSnapshot, SemioPoint2 } from "../📸️snapshot/🟦️";
+import type { SnapshotPatch } from '../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts';
 
 export type SemioCadMutation =
   | { mutation: "setSnapshot"; snapshot: SemioCadSnapshot }
+  | { readonly mutation: 'patchSnapshot'; readonly patch: SnapshotPatch }
   | { mutation: "addLayer"; layer: CadLayer }
   | { mutation: "removeLayer"; name: string }
   | { mutation: "setLayer"; name: string; colorIndex?: number; lineType?: string; visible?: boolean }

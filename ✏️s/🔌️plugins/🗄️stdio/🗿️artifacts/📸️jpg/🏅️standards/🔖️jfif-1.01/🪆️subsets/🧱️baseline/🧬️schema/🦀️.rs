@@ -41,7 +41,7 @@ pub mod derived_construction {
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self(JpgAnyBuilder::from_snapshot(snapshot))
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(Self(JpgAnyBuilder::from_text(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
@@ -59,9 +59,9 @@ pub mod derived_construction {
         /// violation fails `build()` -- soft diagnostics are not surfaced here (`ArtifactBuilder`'s
         /// `build` has no diagnostics-on-success channel), matching `JpgAnyBuilder::build`'s existing
         /// contract of "diagnostics accumulated during mutation, not from validation".
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
             let snapshot = self.0.build()?;
-            let hard: Vec<dsl::Diagnostic> = check_baseline_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, dsl::Severity::Error | dsl::Severity::Fatal)).collect();
+            let hard: Vec<semio_framework_diagnostic::Diagnostic> = check_baseline_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)).collect();
             if hard.is_empty() {
                 Ok(snapshot)
             } else {
@@ -83,8 +83,13 @@ pub mod derived_analysis {
     use crate::standards::v_jfif_1_01::subsets::document::schema::JpgAnalyzer as JpgAnyAnalyzer;
     pub use crate::standards::v_jfif_1_01::subsets::document::schema::JpgParts;
     use crate::JpgSnapshot;
-    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
+    use semio_framework_diagnostic::Diagnostic;
+use semio_framework_diagnostic::FaultCode;
+use semio_framework_diagnostic::FaultScope;
+use semio_framework_diagnostic::Severity;
+    use semio_framework_diagnostic::TextSpan;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+    use semio_framework_value::ValueError;
 
     /// 🎯️ This subset's dialect coordinate.
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.jpg", standard: StandardId("jfif-1.01"), subset: SubsetId("baseline") };
@@ -121,7 +126,7 @@ pub mod derived_analysis {
     }
 
     /// ⏱️ Applies the baseline rules with bounded traversal checkpoints.
-    pub fn check_baseline_conformance_with(snapshot: &JpgSnapshot, checkpoint: &mut dyn FnMut(usize, usize) -> Result<(), String>) -> Result<Vec<Diagnostic>, String> {
+    pub fn check_baseline_conformance_with(snapshot: &JpgSnapshot, checkpoint: &mut dyn FnMut(usize, usize) -> Result<(), ValueError>) -> Result<Vec<Diagnostic>, ValueError> {
         checkpoint(0, snapshot.huffman_tables.len() + snapshot.frame.as_ref().map_or(0, |frame| frame.components.len()))?;
         let mut out = Vec::new();
 

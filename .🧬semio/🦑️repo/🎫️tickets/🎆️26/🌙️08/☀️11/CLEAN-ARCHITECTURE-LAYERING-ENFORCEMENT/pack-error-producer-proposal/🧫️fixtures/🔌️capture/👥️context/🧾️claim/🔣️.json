@@ -1,0 +1,52 @@
+{
+  "cases": [
+    {
+      "scenario": "pending",
+      "ownedBefore": 16,
+      "contextBytes": 32,
+      "errorBytes": 64,
+      "maximumBytes": 112,
+      "expected": {
+        "kind": "ownershipLimit",
+        "afterAttempt": 48,
+        "afterSuccess": 112,
+        "afterUnused": 48,
+        "afterFinal": 48,
+        "allocatorCalls": 2,
+        "errorFrees": 2
+      }
+    },
+    {
+      "scenario": "after",
+      "ownedBefore": 16,
+      "contextBytes": 32,
+      "errorBytes": 64,
+      "maximumBytes": 256,
+      "expected": {
+        "kind": "panic",
+        "afterAttempt": 112,
+        "afterSuccess": 176,
+        "afterUnused": 112,
+        "afterFinal": 112,
+        "allocatorCalls": 3,
+        "errorFrees": 3
+      }
+    },
+    {
+      "scenario": "reserved",
+      "ownedBefore": 16,
+      "contextBytes": 32,
+      "errorBytes": 64,
+      "maximumBytes": 256,
+      "expected": {
+        "kind": "panic",
+        "afterAttempt": 112,
+        "afterSuccess": 176,
+        "afterUnused": 112,
+        "afterFinal": 112,
+        "allocatorCalls": 3,
+        "errorFrees": 3
+      }
+    }
+  ]
+}

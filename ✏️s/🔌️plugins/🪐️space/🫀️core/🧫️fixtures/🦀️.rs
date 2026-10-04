@@ -55,7 +55,7 @@ pub fn prepare_space_fixture_sources(sources: &[SpaceFixtureSource], codecs: &[S
         }
         let codec = codecs.iter().find(|codec| codec.id == source.codec).ok_or_else(|| "fixture codec is missing".to_string())?;
         let document = (codec.decode)(source.format, &source.text)?;
-        let value: store::DslValue = store::os_pack::json::from_json_str(&document).map_err(|error| format!("fixture document is invalid: {error}"))?;
+        let value: store::DslValue = semio_framework_pack_json::from_json_str(&document, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("fixture document is invalid: {error}"))?;
         if !matches!(value, store::DslValue::Object(ref entries) if !entries.is_empty()) {
             return Err("fixture document is empty or is not an object".into());
         }

@@ -4,10 +4,13 @@ use super::RotateObject;
 use crate::{LowpolyMutation, LowpolySnapshot};
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &RotateObject, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {
+pub fn inverse(payload: &RotateObject, base: &LowpolySnapshot) -> Result<Vec<LowpolyMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(object) = base.objects.iter().find(|object| object.id == payload.id) else {
         return Vec::new();
     };
     vec![LowpolyMutation::RotateObject(RotateObject { id: payload.id.clone(), new_rotation: object.transform.rotation })]
+
+    })())
 }
 //#endregion 🔖️Inverse

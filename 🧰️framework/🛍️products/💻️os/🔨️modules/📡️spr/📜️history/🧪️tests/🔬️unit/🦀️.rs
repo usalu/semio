@@ -40,7 +40,6 @@ async fn sample_log() -> HistoryLog {
                 actor: Some("alice".to_string()),
                 started_at: "2024-01-15T10:30:00Z".to_string(),
                 finished_at: Some("2024-01-15T10:30:05Z".to_string()),
-                coalesce_key: Some("typing".to_string()),
                 description: Some("first edit".to_string()), verb: Some("typeText".to_string()),
                 ops: vec![OpPayload { text: Some("set foo=1".to_string()), binary: None }, OpPayload { text: Some("set bar=2".to_string()), binary: None }],
                 inverse: Vec::new(),
@@ -51,7 +50,6 @@ async fn sample_log() -> HistoryLog {
                 actor: None,
                 started_at: "not-a-canonical-timestamp".to_string(),
                 finished_at: None,
-                coalesce_key: None,
                 description: None, verb: None,
                 ops: vec![OpPayload { text: Some("set baz=3".to_string()), binary: None }],
                 inverse: Vec::new(),
@@ -317,7 +315,6 @@ async fn op_meta_messages_round_trip_every_severity_and_target_shape() {
         actor: None,
         started_at: "2024-01-01T00:00:00Z".to_string(),
         finished_at: None,
-        coalesce_key: None,
         description: None, verb: None,
         ops: vec![OpPayload { text: Some("noop".to_string()), binary: None }],
         inverse: Vec::new(),
@@ -362,11 +359,11 @@ async fn mutation_origin_canonical_json_is_byte_identical_between_serde_json_and
     let origin = crate::os_spr::MutationOrigin::Contributed { plugin_id: "s.stdio.mesh".to_string(), mutation_id: crate::os_spr::SchemaId("mesh/v1".to_string()), payload_hash: crate::os_spr::PayloadHash(core::array::from_fn(|index| index as u8)) };
     let oracle = ContributedOriginOracle { kind: "contributed".to_string(), plugin_id: "s.stdio.mesh".to_string(), mutation_id: "mesh/v1".to_string(), payload_hash: core::array::from_fn(|index| index as u8) };
     let via_serde = serde_json::to_string(&oracle).expect("serde_json encodes independent origin oracle");
-    let via_pack = crate::os_pack::json::to_json_string(&origin);
+    let via_pack = semio_framework_pack_json::to_json_string(&origin);
     assert_eq!(via_serde, via_pack, "canonical origin bytes must match the independent oracle");
     assert!(via_pack.contains("\"payloadHash\":[0,1,2,"), "got {via_pack} — payload_hash bytes must stay bare integers, never x.0");
     let round_trip_serde: ContributedOriginOracle = serde_json::from_str(&via_pack).expect("serde_json decodes first-party origin bytes");
-    let round_trip_pack: crate::os_spr::MutationOrigin = crate::os_pack::json::from_json_str(&via_serde).expect("pack::json decodes independent origin bytes");
+    let round_trip_pack: crate::os_spr::MutationOrigin = semio_framework_pack_json::from_json_str(&via_serde, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("pack::json decodes independent origin bytes");
     assert_eq!(round_trip_serde, oracle);
     assert_eq!(round_trip_pack, origin);
 }
@@ -468,24 +465,20 @@ async fn ops_text_round_trips_every_transition_field() {
     assert_eq!(parse_ops_text(&text).unwrap(), log);
 }
 
-/// 👁 LAW: the `.ops` text carries this replica's head exactly like `.spr`'s `REC_VIEWER` — no `viewer` line on the
-/// canonical trunk tip, one line naming the alternative and/or the explicit checkpoint otherwise — and refuses a repeat.
+/// 👁 LAW: the `.ops` text is the shared log — a replica viewing an alternative or an explicit checkpoint prints exactly the
+/// text the canonical trunk tip prints, and its text parses back to the trunk tip; the head stays `.spr`-local.
 #[semio_framework_async_macros::async_test]
-async fn ops_text_round_trips_the_viewer_head() {
+async fn ops_text_is_the_shared_log_without_the_viewer_head() {
     let mut log = sample_log().await;
     for edit in &mut log.edits {
         edit.meta = None;
     }
-    assert!(!print_ops_text(&log).unwrap().lines().any(|line| line.starts_with("viewer")), "the trunk tip prints no viewer line");
+    let shared = print_ops_text(&log).unwrap();
     for (line, checkpoint) in [(Some("alt-1"), None), (None, Some("ck-1")), (Some("alt-1"), Some("ck-1"))] {
         let viewed = HistoryLog { viewer_line: line.map(str::to_string), viewer_checkpoint: checkpoint.map(str::to_string), ..log.clone() };
-        let text = print_ops_text(&viewed).unwrap();
-        assert_eq!(text.lines().filter(|line| line.starts_with("viewer")).count(), 1, "{text}");
-        let parsed = parse_ops_text(&text).unwrap();
-        assert_eq!(parsed, viewed);
-        assert_eq!(parsed.fold().unwrap().alternative.as_deref(), line);
+        assert_eq!(print_ops_text(&viewed).unwrap(), shared, "the viewer head never reaches the text");
+        assert_eq!(parse_ops_text(&shared).unwrap(), log, "the text parses back to the trunk tip");
     }
-    assert!(parse_ops_text("doc d schema=s\nviewer line=a\nviewer checkpoint=c\n").is_err(), "one head per replica");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -524,7 +517,7 @@ async fn edit_payload_round_trips_with_all_optionals_and_meta() {
 
 #[semio_framework_async_macros::async_test]
 async fn edit_payload_round_trips_minimal_edit() {
-    let edit = HistoryEdit { line: None, id: "edit-x".to_string(), actor: None, started_at: "2024-01-01T00:00:00Z".to_string(), finished_at: None, coalesce_key: None, description: None, verb: None, ops: Vec::new(), inverse: Vec::new(), meta: None, lane: None };
+    let edit = HistoryEdit { line: None, id: "edit-x".to_string(), actor: None, started_at: "2024-01-01T00:00:00Z".to_string(), finished_at: None, description: None, verb: None, ops: Vec::new(), inverse: Vec::new(), meta: None, lane: None };
     let mut dict = DictBuilder::new();
     let payload = encode_edit(&edit, &mut dict, |_| None).await.unwrap();
     let mut reader = DictReader::new();
@@ -604,7 +597,6 @@ async fn edit_payload_round_trips_a_backwards_section_mixing_text_and_binary_pay
         actor: Some("bob".to_string()),
         started_at: "2024-02-01T00:00:00Z".to_string(),
         finished_at: Some("2024-02-01T00:00:01Z".to_string()),
-        coalesce_key: None,
         description: None, verb: None,
         ops: vec![OpPayload { text: Some("set n=1".to_string()), binary: Some(vec![1, 2, 3]) }, OpPayload { text: Some("set n=2".to_string()), binary: None }],
         inverse: vec![OpPayload { text: Some("set n=0".to_string()), binary: Some(vec![0]) }, OpPayload { text: Some("set n=1".to_string()), binary: None }],
@@ -627,7 +619,6 @@ async fn edit_payload_with_empty_backwards_omits_the_section_and_decodes_empty()
         actor: None,
         started_at: "2024-02-01T00:00:00Z".to_string(),
         finished_at: None,
-        coalesce_key: None,
         description: None, verb: None,
         ops: vec![OpPayload { text: Some("noop".to_string()), binary: None }],
         inverse: Vec::new(),
@@ -777,7 +768,6 @@ fn fold_edit(id: &str, op_id: &str, physical_ms: i64) -> HistoryEdit {
         actor: Some("alice".to_string()),
         started_at: "2024-01-15T10:30:00Z".to_string(),
         finished_at: None,
-        coalesce_key: None,
         description: None, verb: None,
         ops: vec![OpPayload { text: Some(format!("set {id}=1")), binary: None }],
         inverse: Vec::new(),

@@ -13,12 +13,12 @@ use semio_framework_plugin::{artifact_app_laws::meta, InteractionTarget, PluginA
 async fn delete_selection_refuses_an_empty_selection_by_name() {
     let mut app = new_app().await;
     dispatch(&mut app, WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() })).await;
-    let snapshot = app.snapshot().expect("snapshot");
-    assert_eq!(fixture_nodes(&crate::wires_working_board(&snapshot)).len(), 1);
-    let fault = delete_selected(&snapshot, &[]).err().expect("an empty selection is refused");
-    assert_eq!(fault.code.0, "wires.delete-selection-empty");
-    let unknown = delete_selected(&snapshot, &["node-9".to_string()]).err().expect("a selection naming no live node is refused");
-    assert_eq!(unknown.code.0, "wires.delete-selection-empty");
+    let board = crate::editor::wires::unit_tests::context::board(&app);
+    assert_eq!(fixture_nodes(&board).len(), 1);
+    let fault = semio_framework_plugin::artifact_app_laws::with_document_view(&mut *app, |view| delete_selected(view, &[])).await.expect("real registered parent view").err().expect("an empty selection is refused");
+    assert_eq!(fault.code.0, "wires.selection.empty");
+    let unknown = semio_framework_plugin::artifact_app_laws::with_document_view(&mut *app, |view| delete_selected(view, &["node-9".to_string()])).await.expect("real registered parent view").err().expect("a selection naming no live node is refused");
+    assert_eq!(unknown.code.0, "wires.selection.empty");
 }
 
 /// 🕹️ End-to-end proof the "graph" domain's live selection actually drives `deleteSelection` —
@@ -34,5 +34,5 @@ async fn delete_selection_removes_the_live_selected_node() {
         .await
         .expect("interactionSelect");
     dispatch(&mut app, WiresCommand::DeleteSelection(DeleteSelection {})).await;
-    assert!(fixture_nodes(&crate::wires_working_board(&app.snapshot().expect("snapshot"))).is_empty());
+    assert!(fixture_nodes(&crate::editor::wires::unit_tests::context::board(&app)).is_empty());
 }

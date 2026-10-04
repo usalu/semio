@@ -6,7 +6,10 @@
 //! (`[Content_Types].xml` and every `*.rels` file) plus the verbatim byte payload of every other
 //! part. Metadata XML extension nodes and archive headers need their own retained representation.
 
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{HashMap, HashSet};
+#[path = "🔗️relationships/🗂️owners/🦀️.rs"]
+mod relationship_owners;
+pub use relationship_owners::OpcRelationshipOwners;
 
 use crate::schema::snapshot::ZipEntry;
 use crate::{ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
@@ -17,7 +20,7 @@ use semio_s_artifact_stdio_xml::schema::snapshot::{validate_xml_document_boundar
 /// decodes into a partial/fabricated package.
 #[derive(Clone, Debug, PartialEq)]
 pub enum OpcError {
-    Zip(String),
+    Zip(crate::standards::v2_0::subsets::base::io::ZipError),
     Xml { part: String, detail: String },
     MissingContentTypes,
     MalformedContentTypes(String),
@@ -39,6 +42,31 @@ impl std::fmt::Display for OpcError {
 }
 
 impl std::error::Error for OpcError {}
+impl OpcError {
+    /// 🪢️ The zip layer keeps its own kind; every package-structure refusal is invalid input.
+    pub const fn refusal_kind(&self) -> semio_framework_value::ValueRefusalKind {
+        match self {
+            Self::Zip(error) => error.refusal_kind(),
+            _ => semio_framework_value::ValueRefusalKind::InvalidValue,
+        }
+    }
+}
+/// 🎐️ Moves the package refusal into the canonical Value refusal with its own kind.
+impl From<OpcError> for semio_framework_value::ValueError {
+    fn from(error: OpcError) -> Self {
+        Self::new(error.refusal_kind(), error.to_string())
+    }
+}
+
+impl OpcError {
+    /// 🧭️ Carries intrinsic package and ZIP refusal kinds into typed owner operations.
+    pub fn into_value_error(self) -> semio_framework_value::ValueError {
+        match self {
+            Self::Zip(error) => error.into_value_error(),
+            error @ (Self::Xml { .. } | Self::MissingContentTypes | Self::MalformedContentTypes(_) | Self::MalformedRelationships { .. } | Self::Malformed(_)) => semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error.to_string()),
+        }
+    }
+}
 //#endregion 🔖️Error
 
 //#region 🔖️Constants
@@ -467,7 +495,7 @@ pub struct OpcPackage {
     /// 🗺️ Owner part path (`""` = package root) -> that owner's relationships, in owner order — one document has one
     /// encoding (a hash map's per-instance order encoded the same package differently in two copies).
     #[value(default)]
-    pub relationships: BTreeMap<String, Vec<OpcRelationship>>,
+    pub relationships: OpcRelationshipOwners,
     #[value(default)]
     pub comment: String,
 }
@@ -507,13 +535,15 @@ impl OpcPackage {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn relationships_for(&self, owner: &str) -> &[OpcRelationship] {
-        self.relationships.get(owner).map_or(&[][..], |v| v.as_slice())
+        self.relationships.relationships(owner).map_or(&[][..], |v| v.as_slice())
     }
 
     /// ✍️ Appends one internal relationship under `owner` (`""` = package root).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn add_relationship(&mut self, owner: &str, id: &str, rel_type: &str, target: &str) {
-        self.relationships.entry(owner.to_string()).or_default().push(OpcRelationship { id: id.into(), rel_type: rel_type.into(), target: target.into(), target_mode: OpcTargetMode::Internal });
+        let relationship = OpcRelationship { id: id.into(), rel_type: rel_type.into(), target: target.into(), target_mode: OpcTargetMode::Internal };
+        if let Some(values) = self.relationships.relationships_mut(owner) { values.push(relationship); }
+        else { self.relationships.replace_owner(owner.to_string(), vec![relationship]); }
     }
 
     /// 🧷️ Adds a relationship without overwriting any owner-local identity.
@@ -538,7 +568,7 @@ impl OpcPackage {
 /// relationship list, or a verbatim content `OpcPart`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_opc(data: &[u8]) -> Result<OpcPackage, OpcError> {
-    let zip = crate::standards::v2_0::subsets::base::io::decode_zip(data).map_err(|e| OpcError::Zip(e.to_string()))?;
+    let zip = crate::standards::v2_0::subsets::base::io::decode_zip(data).map_err(OpcError::Zip)?;
     let mut paths = HashSet::with_capacity(zip.entries.len());
     for entry in &zip.entries {
         if !paths.insert(entry.name.as_str()) {
@@ -552,7 +582,7 @@ pub fn decode_opc(data: &[u8]) -> Result<OpcPackage, OpcError> {
     let content_types = OpcContentTypes::from_xml(&ct_doc)?;
 
     let mut parts = Vec::new();
-    let mut relationships: BTreeMap<String, Vec<OpcRelationship>> = BTreeMap::new();
+    let mut relationships = OpcRelationshipOwners::new();
 
     for entry in &zip.entries {
         if entry.name == CONTENT_TYPES_PART {
@@ -563,7 +593,7 @@ pub fn decode_opc(data: &[u8]) -> Result<OpcPackage, OpcError> {
             let doc = xml_document_from_text(&text).map_err(|e| OpcError::Xml { part: entry.name.clone(), detail: e })?;
             let rels = relationships_from_xml(&doc, &entry.name)?;
             let owner = owner_for_rels_path(&entry.name).ok_or_else(|| OpcError::Malformed(format!("relationship part at unexpected path: {}", entry.name)))?;
-            relationships.insert(owner, rels);
+            relationships.replace_owner(owner, rels);
             continue;
         }
         let content_type = content_types.resolve(&entry.name).ok_or_else(|| OpcError::Malformed(format!("part {} has no resolvable content type", entry.name)))?.to_string();
@@ -596,12 +626,12 @@ pub fn encode_opc_with_package_order(pkg: &OpcPackage) -> Result<Vec<u8>, OpcErr
             }
         };
         take(CONTENT_TYPES_PART.into());
-        if pkg.relationships.contains_key("") {
+        if pkg.relationships.relationships("").is_some() {
             take("_rels/.rels".into());
         }
         for part in &pkg.parts {
             let rels_path = if let Some((directory, file)) = part.path.rsplit_once('/') { format!("{directory}/_rels/{file}.rels") } else { format!("_rels/{}.rels", part.path) };
-            if pkg.relationships.contains_key(&part.path) {
+            if pkg.relationships.relationships(&part.path).is_some() {
                 take(rels_path);
             }
         }
@@ -620,7 +650,7 @@ pub fn encode_opc_with_package_order(pkg: &OpcPackage) -> Result<Vec<u8>, OpcErr
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_opc_with_path_order(pkg: &OpcPackage, order: impl FnOnce(&mut Vec<String>)) -> Result<Vec<u8>, OpcError> {
     pkg.content_types.validate_identities()?;
-    for (owner, relationships) in &pkg.relationships {
+    for (owner, relationships) in pkg.relationships.groups() {
         validate_relationship_identities(relationships, &rels_part_path_for(owner))?;
     }
     for part in &pkg.parts {
@@ -632,10 +662,7 @@ pub fn encode_opc_with_path_order(pkg: &OpcPackage, order: impl FnOnce(&mut Vec<
     let ct_text = xml_document_to_opc_text_checked(&pkg.content_types.to_xml()).map_err(|detail| OpcError::Xml { part: CONTENT_TYPES_PART.into(), detail })?;
     payloads.insert(CONTENT_TYPES_PART.into(), ct_text.into_bytes());
 
-    let mut owners: Vec<&String> = pkg.relationships.keys().collect();
-    owners.sort();
-    for owner in owners {
-        let rels = &pkg.relationships[owner];
+    for (owner, rels) in pkg.relationships.groups() {
         let path = rels_part_path_for(owner);
         if owner_for_rels_path(&path).as_ref() != Some(owner) {
             return Err(OpcError::Malformed(format!("invalid relationship owner: {owner}")));
@@ -665,7 +692,7 @@ pub fn encode_opc_with_path_order(pkg: &OpcPackage, order: impl FnOnce(&mut Vec<
     }
 
     let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries, comment: pkg.comment.clone(), ..Default::default() };
-    crate::standards::v2_0::subsets::base::io::encode_zip_with_entry_names(&snap, &new_paths).map_err(|e| OpcError::Zip(e.to_string()))
+    crate::standards::v2_0::subsets::base::io::encode_zip_with_entry_names(&snap, &new_paths).map_err(OpcError::Zip)
 }
 
 /// 🕵️ Structural sniff of OOXML-shaped bytes: recognizes the zip magic *and* the presence of a
@@ -689,3 +716,6 @@ pub mod sqlite;
 
 #[path="🧩️native/🦀️.rs"]
 pub mod native;
+
+#[path="🧬️retained/🦀️.rs"]
+pub mod retained;

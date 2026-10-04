@@ -87,7 +87,7 @@ pub mod derived_construction {
     #[derive(Clone, Debug, Default)]
     pub struct Generation2dBuilderConstruction {
         snapshot: Generation2dSnapshot,
-        diagnostics: Vec<dsl::Diagnostic>,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
     }
 
     impl ArtifactBuilder for Generation2dBuilderConstruction {
@@ -100,7 +100,7 @@ pub mod derived_construction {
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(Self::from_snapshot(<Generation2dSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
@@ -110,7 +110,7 @@ pub mod derived_construction {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("build.apply", dsl::TextSpan::at(1, 1), error.to_string())),
+                Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
@@ -119,7 +119,7 @@ pub mod derived_construction {
             self.snapshot = snapshot;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -161,14 +161,14 @@ pub mod derived_analysis {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <Generation2dSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }
@@ -270,9 +270,9 @@ pub fn dag_host_snapshot_to_workflow(host_snapshot: &DagHostSnapshot) -> (Vec<No
 }
 
 #[cfg(feature = "component-app-assembly")]
-pub fn collect_drawing_handles_from_eval(value: &dsl::json::Value, handles: &mut Vec<String>) {
+pub fn collect_drawing_handles_from_eval(value: &semio_framework_pack_json::Value, handles: &mut Vec<String>) {
     match value {
-        dsl::json::Value::Object(map) => {
+        semio_framework_pack_json::Value::Object(map) => {
             if map.get("$schema").and_then(|entry| entry.as_str()) == Some("draw.drawing") {
                 if let Some(handle) = map.get("handle").and_then(|entry| entry.as_str()) {
                     handles.push(handle.into());
@@ -282,7 +282,7 @@ pub fn collect_drawing_handles_from_eval(value: &dsl::json::Value, handles: &mut
                 collect_drawing_handles_from_eval(entry, handles);
             }
         }
-        dsl::json::Value::Array(items) => {
+        semio_framework_pack_json::Value::Array(items) => {
             for item in items {
                 collect_drawing_handles_from_eval(item, handles);
             }
@@ -292,7 +292,7 @@ pub fn collect_drawing_handles_from_eval(value: &dsl::json::Value, handles: &mut
 }
 
 #[cfg(feature = "component-app-assembly")]
-pub fn affine_transform_array(value: &dsl::json::Value) -> [f64; 6] {
+pub fn affine_transform_array(value: &semio_framework_pack_json::Value) -> [f64; 6] {
     if let Some(matrix) = value.as_array() {
         let mut out = [0.0, 0.0, 0.0, 0.0, 0.0, 1.0];
         for (index, entry) in matrix.iter().take(6).enumerate() {
@@ -301,14 +301,14 @@ pub fn affine_transform_array(value: &dsl::json::Value) -> [f64; 6] {
         return out;
     }
     if let Some(matrix) = value.get("0").and_then(|entry| entry.as_array()) {
-        let wrapped = dsl::json::Value::Array(matrix.clone());
+        let wrapped = semio_framework_pack_json::Value::Array(matrix.clone());
         return affine_transform_array(&wrapped);
     }
     [1.0, 0.0, 0.0, 1.0, 0.0, 0.0]
 }
 
 #[cfg(feature = "component-app-assembly")]
-pub fn path_segments_from_node(node: &dsl::json::Value) -> Vec<dsl::json::Value> {
+pub fn path_segments_from_node(node: &semio_framework_pack_json::Value) -> Vec<semio_framework_pack_json::Value> {
     if let Some(segments) = node.get("segments").and_then(|entry| entry.as_array()) {
         return segments.clone();
     }
@@ -323,9 +323,9 @@ pub fn path_segments_from_node(node: &dsl::json::Value) -> Vec<dsl::json::Value>
 }
 
 #[cfg(feature = "component-app-assembly")]
-pub fn scene_layers_from_drawing_handle(handle: &str, prefix: &str) -> Vec<dsl::json::Value> {
+pub fn scene_layers_from_drawing_handle(handle: &str, prefix: &str) -> Vec<semio_framework_pack_json::Value> {
     let scene_json = render_scene_json(handle);
-    let Ok(scene) = dsl::json::parse(&scene_json) else {
+    let Ok(scene) = semio_framework_pack_json::parse(&scene_json, semio_framework_pack_json::JsonMemberPolicy::Reject) else {
         return Vec::new();
     };
     if scene.get("error").is_some() {
@@ -339,26 +339,26 @@ pub fn scene_layers_from_drawing_handle(handle: &str, prefix: &str) -> Vec<dsl::
         .enumerate()
         .map(|(index, node)| {
             let node_body = node.get("node").unwrap_or(node);
-            let transform: Vec<dsl::json::Value> = affine_transform_array(node.get("transform").unwrap_or(&dsl::json::Value::Null)).into_iter().map(dsl::json::Value::from).collect();
-            let mut object = dsl::json::Object::new();
-            object.insert("id", dsl::json::Value::from(format!("{prefix}-{handle}-{index}")));
-            object.insert("transform", dsl::json::Value::from(transform));
-            object.insert("segments", dsl::json::Value::from(path_segments_from_node(node_body)));
-            object.insert("fill", node.get("fill").cloned().unwrap_or(dsl::json::Value::Null));
-            object.insert("stroke", node.get("stroke").cloned().unwrap_or(dsl::json::Value::Null));
-            object.insert("opacity", dsl::json::Value::from(node.get("opacity").and_then(|entry| entry.as_f64()).unwrap_or(1.0)));
-            object.insert("blendMode", dsl::json::Value::from("normal"));
-            object.insert("visible", dsl::json::Value::from(true));
-            object.insert("needsKernel", dsl::json::Value::from(false));
-            dsl::json::Value::Object(object)
+            let transform: Vec<semio_framework_pack_json::Value> = affine_transform_array(node.get("transform").unwrap_or(&semio_framework_pack_json::Value::Null)).into_iter().map(semio_framework_pack_json::Value::from).collect();
+            let mut object = semio_framework_pack_json::Object::new();
+            object.insert("id", semio_framework_pack_json::Value::from(format!("{prefix}-{handle}-{index}")));
+            object.insert("transform", semio_framework_pack_json::Value::from(transform));
+            object.insert("segments", semio_framework_pack_json::Value::from(path_segments_from_node(node_body)));
+            object.insert("fill", node.get("fill").cloned().unwrap_or(semio_framework_pack_json::Value::Null));
+            object.insert("stroke", node.get("stroke").cloned().unwrap_or(semio_framework_pack_json::Value::Null));
+            object.insert("opacity", semio_framework_pack_json::Value::from(node.get("opacity").and_then(|entry| entry.as_f64()).unwrap_or(1.0)));
+            object.insert("blendMode", semio_framework_pack_json::Value::from("normal"));
+            object.insert("visible", semio_framework_pack_json::Value::from(true));
+            object.insert("needsKernel", semio_framework_pack_json::Value::from(false));
+            semio_framework_pack_json::Value::Object(object)
         })
         .collect()
 }
 
 #[cfg(feature = "component-app-assembly")]
 pub fn generation_preview_host(host_snapshot: &FlowHostSnapshot, values: &semio_framework_artifact_playbook_playbook::PlaybookValues) -> FlowHost {
-    let fixture_json = dsl::json::to_json_string(host_snapshot);
-    let object: dsl::json::Object = values.iter().map(|(key, value)| (key.clone(), dsl::json::from_dsl_value(value))).collect();
+    let fixture_json = semio_framework_pack_json::to_json_string(host_snapshot);
+    let object: semio_framework_pack_json::Object = values.iter().map(|(key, value)| (key.clone(), semio_framework_pack_json::from_dsl_value(value))).collect();
     let patched = apply_generation_values_to_host_snapshot(&fixture_json, &object);
     let patched_fixture = FlowHost::parse_host_snapshot_json(&patched).unwrap_or_else(|_| host_snapshot.clone());
     FlowHost::from_host_snapshot(patched_fixture)
@@ -376,7 +376,7 @@ pub fn evaluate_generation_preview(host_snapshot: &FlowHostSnapshot, values: &se
 /// (`output-preview`, `output-export`), read off the evaluation at the synapse's source port, in
 /// synapse order without repeats. Intermediate drawings (a shape before its style) are not outputs.
 #[cfg(feature = "component-app-assembly")]
-pub fn output_drawing_handles(host_snapshot: &FlowHostSnapshot, outputs: &dsl::json::Value) -> Vec<String> {
+pub fn output_drawing_handles(host_snapshot: &FlowHostSnapshot, outputs: &semio_framework_pack_json::Value) -> Vec<String> {
     use semio_framework_artifact_flow_flow::Widget;
     let is_output = |id: &str| host_snapshot.widgets.iter().any(|widget| matches!(widget, Widget::OutputPreview { id: output, .. } | Widget::OutputExport { id: output, .. } if output == id));
     let mut handles = Vec::new();
@@ -399,15 +399,15 @@ pub fn output_drawing_handles(host_snapshot: &FlowHostSnapshot, outputs: &dsl::j
 /// 🖼️ [`output_drawing_handles`] as the scene layers the `drawing:out` port publishes.
 #[cfg(feature = "component-app-assembly")]
 pub fn generation_output_layers(host_snapshot: &FlowHostSnapshot, eval_json: &str) -> String {
-    let layers: Vec<dsl::json::Value> = dsl::json::parse(eval_json).map(|outputs| output_drawing_handles(host_snapshot, &outputs).iter().flat_map(|handle| scene_layers_from_drawing_handle(handle, "generation2d-drawing-out")).collect()).unwrap_or_default();
-    dsl::json::to_string(&dsl::json::Value::from(layers))
+    let layers: Vec<semio_framework_pack_json::Value> = semio_framework_pack_json::parse(eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|outputs| output_drawing_handles(host_snapshot, &outputs).iter().flat_map(|handle| scene_layers_from_drawing_handle(handle, "generation2d-drawing-out")).collect()).unwrap_or_default();
+    semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::from(layers))
 }
 
 #[cfg(feature = "component-app-assembly")]
 pub fn generation_preview_layers(eval_json: &str) -> String {
     let prefix = "generation2d-generate-preview";
     let mut layers = Vec::new();
-    if let Ok(outputs) = dsl::json::parse(eval_json) {
+    if let Ok(outputs) = semio_framework_pack_json::parse(eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject) {
         let mut handles = Vec::new();
         collect_drawing_handles_from_eval(&outputs, &mut handles);
         handles.sort();
@@ -416,7 +416,7 @@ pub fn generation_preview_layers(eval_json: &str) -> String {
             layers.extend(scene_layers_from_drawing_handle(&handle, prefix));
         }
     }
-    dsl::json::to_string(&dsl::json::Value::from(layers))
+    semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::from(layers))
 }
 
 /// 📄️ The `procedural2d-play` "default" document — parsed from the bundled `.generation2d` example

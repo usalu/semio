@@ -1,0 +1,5 @@
+{
+  "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🧪️tests/🔬️semio-grammar-conformance/🦀️.rs",
+  "before": "use super::*;\n\n#[semio_framework_async_macros::async_test]\nasync fn component_grammar_semio_is_grammar_dialect() {\n    let g = ::dsl::parse_grammar(COMPONENT_GRAMMAR_SEMIO).expect(\"parse grammar.semio\");\n    assert_eq!(g.dialect, ::dsl::SemioDialect::Grammar);\n    assert!(!COMPONENT_GRAMMAR_SEMIO.is_empty());\n    let _ = COMPONENT_GRAMMAR_PATH;\n}\n",
+  "after": "use super::*;\n\n#[semio_framework_async_macros::async_test]\nasync fn component_grammar_semio_is_grammar_dialect() {\n    let g = semio_framework_dsl::parse_grammar(COMPONENT_GRAMMAR_SEMIO).expect(\"parse grammar.semio\");\n    assert_eq!(g.dialect, semio_framework_dsl::SemioDialect::Grammar);\n    assert!(!COMPONENT_GRAMMAR_SEMIO.is_empty());\n    let _ = COMPONENT_GRAMMAR_PATH;\n}\n"
+}

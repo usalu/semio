@@ -15,7 +15,7 @@ fn base() -> BitmapSnapshot {
 
 fn codes(mutation: &BitmapMutation, snapshot: &BitmapSnapshot) -> Vec<(String, String)> {
     let outcome = <BitmapMutation as protocol::Mutation<BitmapSnapshot>>::diff(mutation, snapshot);
-    outcome.messages().iter().map(|message| (dsl::json::to_json_string(&message.level).trim_matches('"').to_string(), message.code.0.clone())).collect()
+    outcome.messages().iter().map(|message| (semio_framework_pack_json::to_json_string(&message.level).trim_matches('"').to_string(), message.code.0.clone())).collect()
 }
 
 #[test]
@@ -49,7 +49,7 @@ fn an_unknown_palette_index_is_a_missing_target() {
 #[test]
 fn a_stroke_with_no_cell_inside_the_sample_is_a_missing_target() {
     assert_eq!(codes(&paint_input_stroke(vec![point(9, 9), point(12, 9)], 0), &base()), vec![("error".to_string(), "mutation.target-missing".to_string())]);
-    assert!(<BitmapMutation as protocol::Mutation<BitmapSnapshot>>::inverse(&paint_input_stroke(vec![point(9, 9)], 0), &base()).is_empty(), "nothing to undo");
+    assert!(<BitmapMutation as protocol::Mutation<BitmapSnapshot>>::inverse(&paint_input_stroke(vec![point(9, 9)], 0), &base()).expect("valid retained mutation inverse fixture").is_empty(), "nothing to undo");
 }
 
 #[test]
@@ -78,7 +78,7 @@ fn an_empty_or_oversized_stroke_breaks_the_invariant() {
 fn the_inverse_restores_the_stroke_region() {
     let before = base();
     let mutation = paint_input_stroke(vec![point(0, 2), point(3, 0)], 1);
-    let inverse = <BitmapMutation as protocol::Mutation<BitmapSnapshot>>::inverse(&mutation, &before);
+    let inverse = <BitmapMutation as protocol::Mutation<BitmapSnapshot>>::inverse(&mutation, &before).expect("valid retained mutation inverse fixture");
     let mut snapshot = before.clone();
     apply_bitmap_mutation(&mut snapshot, &mutation).expect("forward applies");
     assert_ne!(snapshot, before);
@@ -110,7 +110,7 @@ fn the_stroke_round_trips_its_text_and_binary_spelling() {
 #[test]
 fn the_stroke_is_editable_through_its_payload_value() {
     let mutation = paint_input_stroke(vec![point(0, 0), point(3, 2)], 1);
-    let edited = protocol::Mutation::<BitmapSnapshot>::with_payload_value(&mutation, dsl::DslValue::from(&serde_json::json!({ "points": [{ "x": 0, "y": 0 }, { "x": 3, "y": 2 }], "color": 0 }))).expect("an edited payload decodes");
+    let edited = protocol::Mutation::<BitmapSnapshot>::with_payload_value(&mutation, semio_framework_value::DslValue::from(&serde_json::json!({ "points": [{ "x": 0, "y": 0 }, { "x": 3, "y": 2 }], "color": 0 }))).expect("an edited payload decodes");
     assert_eq!(edited, paint_input_stroke(vec![point(0, 0), point(3, 2)], 0));
     assert!(protocol::Mutation::<BitmapSnapshot>::input_schema(&mutation).is_some_and(|schema| schema.contains("\"points\"") && schema.contains("\"color\"")));
 }

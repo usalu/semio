@@ -22,7 +22,8 @@
     "cooling",
     "lighting",
     "renewables",
-    "climate"
+    "climate",
+    "climateTable"
   ],
   "properties": {
     "buildingCategory": {
@@ -303,6 +304,60 @@
       }
     },
     "climate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "thetaEC",
+        "gHWM2"
+      ],
+      "properties": {
+        "thetaEC": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 12,
+          "maxItems": 12,
+          "x-semio-ui": {
+            "label": {
+              "en": "Monthly mean outdoor temperature θ_e",
+              "de": "Monatsmittelwert der Außentemperatur θ_e"
+            },
+            "description": {
+              "en": "Twelve values, January to December.",
+              "de": "Zwölf Werte, Januar bis Dezember."
+            },
+            "unit": "°C",
+            "step": 0.1
+          }
+        },
+        "gHWM2": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "minimum": 0
+          },
+          "minItems": 12,
+          "maxItems": 12,
+          "x-semio-ui": {
+            "label": {
+              "en": "Monthly mean global irradiance on the horizontal",
+              "de": "Monatsmittelwert der Globalstrahlung auf die Horizontale"
+            },
+            "description": {
+              "en": "Twelve values, January to December.",
+              "de": "Zwölf Werte, Januar bis Dezember."
+            },
+            "unit": "W/m²",
+            "step": 1
+          }
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
+    },
+    "climateTable": {
       "type": "object",
       "additionalProperties": false,
       "required": [

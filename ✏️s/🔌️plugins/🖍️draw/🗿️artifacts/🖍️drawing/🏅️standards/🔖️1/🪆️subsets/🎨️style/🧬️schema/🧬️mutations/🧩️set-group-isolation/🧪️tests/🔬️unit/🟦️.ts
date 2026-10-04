@@ -1,4 +1,5 @@
 /** 🧩️ Shared isolation mutation contract checked against Immer and Ajv. */
+import {binary64} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 import {expect,test} from "bun:test";
 import {produce} from "immer";
 import {semioSchemaAjvV1} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
@@ -29,7 +30,8 @@ test("isolation snapshot and diff guards agree with the shared schema",()=>{
   const validate=ajv.compile({$ref:`${documentSchema.$id}#/$defs/DrawingLayerNode`});
   for(const isolation of [false,true]){
     const layer={kind:"group",isolation,children:[]};
-    expect(validate(layer)).toBe(true);expect(parseDrawingLayerNode(layer).isolation).toBe(isolation);
+    const owned={...layer,id:"group",name:"Group",visible:true,locked:false,opacity:binary64(1),blendMode:"normal",transform:{x:binary64(0),y:binary64(0),scaleX:binary64(1),scaleY:binary64(1),shear:binary64(0),rotation:binary64(0)},attributes:{fillRule:"evenodd"}};
+    expect(validate(layer)).toBe(true);const parsed=parseDrawingLayerNode(owned);expect(parsed.kind).toBe("group");if(parsed.kind!=="group")throw new Error("group required");expect(parsed.isolation).toBe(isolation);
     expect(parseDrawingLayerPatch({isolation}).isolation).toBe(isolation);
   }
   for(const isolation of ["true",1,null]){

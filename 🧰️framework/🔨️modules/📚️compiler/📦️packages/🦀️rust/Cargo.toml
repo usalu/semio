@@ -18,8 +18,9 @@ name = "compiler"
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-diagnostic = { path = "../../../⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-dsl = { path = "../../../🗣️dsl/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
-dsl_core = { package = "semio-framework-os-kernel", path = "../../../../🛍️products/💻️os/📦️packages/🦀️rust" }
 
 # 🔤️ `rustybuzz` (HarfBuzz-class shaping, `🔤️text`) and `base64` (embedded PNG glyph encoding,
 # `📤️svg`) back the crate's real glyph-shaping/outline/raster/math-table engine (`🔤️text`,

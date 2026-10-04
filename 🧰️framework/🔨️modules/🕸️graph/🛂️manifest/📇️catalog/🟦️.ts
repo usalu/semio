@@ -5,6 +5,7 @@ import { pathEmojiStatuteFindings } from "../../../🪪️identity/🛣️path/�
 
 export interface GraphOutputCatalog {
   readonly $schema?: string;
+  readonly contractId: string;
   readonly version: 1;
   readonly inputAreas: readonly string[];
   readonly policy: Readonly<{ excludedInputPaths: readonly string[]; genericEmojiIdentities: readonly string[] }>;
@@ -20,7 +21,8 @@ export function parseGraphOutputCatalog(input: unknown, manifestIds: readonly st
     if (required.some((key) => !(key in row)) || Object.keys(row).some((key) => !required.includes(key) && !optional.includes(key))) throw new Error("graph output catalog has missing or unknown fields");
     return row;
   }
-  const root = record(input, ["version", "inputAreas", "policy", "shared", "manifests"], ["$schema"]);
+  const root = record(input, ["contractId", "version", "inputAreas", "policy", "shared", "manifests"], ["$schema"]);
+  if (typeof root.contractId !== "string" || !/^[a-z][a-z0-9-]*$/u.test(root.contractId)) throw new Error("graph output catalog requires an explicit canonical contract identity");
   if (root.version !== 1 || root.$schema !== undefined && typeof root.$schema !== "string") throw new Error("graph output catalog version/schema is invalid");
   function relativePaths(value: unknown): readonly string[] {
     if (!Array.isArray(value) || value.some((area) => typeof area !== "string" || area !== area.normalize("NFC") || !area || /[\\%?#\u0000-\u001f]/u.test(area) || area.startsWith("/") || /^[A-Za-z]:/u.test(area) || area.split("/").some((segment) => !segment || segment === "." || segment === "..")) || new Set(value).size !== value.length) throw new Error("graph input paths must be exact unique root-relative owners");
@@ -67,7 +69,7 @@ export function parseGraphOutputCatalog(input: unknown, manifestIds: readonly st
   if (manifestIds.length !== ids.size || new Set(manifestIds).size !== manifestIds.length || manifestIds.some((id) => !ids.has(id))) throw new Error("graph output catalog and admitted manifest identities differ");
   const findings = pathEmojiStatuteFindings(entries, policy.genericEmojiIdentities);
   if (findings.length > 0) throw new Error(`graph output identities breach path statutes: ${JSON.stringify(findings)}`);
-  return Object.freeze({ ...(root.$schema === undefined ? {} : { $schema: root.$schema as string }), version: 1, inputAreas, policy, shared: outputShared, manifests: Object.freeze(manifests) });
+  return Object.freeze({ ...(root.$schema === undefined ? {} : { $schema: root.$schema as string }), contractId: root.contractId, version: 1, inputAreas, policy, shared: outputShared, manifests: Object.freeze(manifests) });
 }
 
 export function readGraphOutputCatalog(path:string): GraphOutputCatalog {

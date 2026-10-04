@@ -104,16 +104,16 @@ async fn default_scene_has_placeholder_mesh() {
 #[semio_framework_async_macros::async_test]
 async fn scene_roundtrips_through_json() {
     let scene = default_remodeling_scene();
-    let json = pack::to_json_string(&scene);
-    let parsed: RemodelingSnapshot = pack::from_json_str(&json).expect("deserialize");
+    let json = semio_framework_pack_json::to_json_string(&scene);
+    let parsed: RemodelingSnapshot = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("deserialize");
     assert_eq!(parsed, scene);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn populated_scene_roundtrips_through_json() {
     let scene = populated_scene_fixture();
-    let json = pack::to_json_string(&scene);
-    let parsed: RemodelingSnapshot = pack::from_json_str(&json).expect("deserialize");
+    let json = semio_framework_pack_json::to_json_string(&scene);
+    let parsed: RemodelingSnapshot = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("deserialize");
     assert_eq!(parsed, scene);
 }
 

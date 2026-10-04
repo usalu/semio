@@ -1,0 +1,766 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/framework/world3d-inline-surface-v1.json",
+  "type": "object",
+  "required": [
+    "schema",
+    "mesh",
+    "expected",
+    "contract",
+    "pixelCases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "framework.world3d.inline-surface/v1"
+    },
+    "mesh": {
+      "type": "object",
+      "required": [
+        "positions",
+        "normals",
+        "indices",
+        "attributes",
+        "materials",
+        "textures"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "positions": {
+          "type": "array",
+          "minItems": 12,
+          "items": {
+            "type": "number"
+          }
+        },
+        "normals": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "indices": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "attributes": {
+          "type": "object",
+          "maxProperties": 64,
+          "additionalProperties": {
+            "$ref": "#/$defs/attribute"
+          }
+        },
+        "materials": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object"
+          }
+        },
+        "textures": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "mime",
+              "bytes"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "mime": {
+                "enum": [
+                  "image/png",
+                  "image/jpeg"
+                ]
+              },
+              "bytes": {
+                "type": "array",
+                "maxItems": 16000000,
+                "items": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 255
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "expected": {
+      "const": {
+        "drawVertexCount": 6,
+        "groups": [
+          {
+            "start": 0,
+            "count": 3,
+            "materialIndex": 0
+          },
+          {
+            "start": 3,
+            "count": 3,
+            "materialIndex": 1
+          }
+        ],
+        "normal": [
+          0,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0
+        ],
+        "uv": [
+          0,
+          0,
+          1,
+          0,
+          1,
+          1,
+          0.25,
+          0,
+          1,
+          1,
+          0,
+          1
+        ],
+        "color": [
+          1,
+          0.5,
+          0.25,
+          0.2,
+          1,
+          0.5,
+          0.25,
+          0.2,
+          1,
+          0.5,
+          0.25,
+          0.2,
+          0.2,
+          0.4,
+          1,
+          0.8,
+          0.2,
+          0.4,
+          1,
+          0.8,
+          0.2,
+          0.4,
+          1,
+          0.8
+        ],
+        "materialOrder": [
+          "opaque",
+          "blend"
+        ],
+        "textureRoles": [
+          "map",
+          "metalnessMap",
+          "roughnessMap",
+          "normalMap",
+          "aoMap",
+          "emissiveMap"
+        ]
+      }
+    },
+    "contract": {
+      "const": {
+        "ownership": "existingMeshVisuals",
+        "selection": "restoreAuthoredOnNeutral",
+        "cancellation": "retireOwnedAssetsWithoutStalePublication",
+        "pick": "sameTriangleOrder",
+        "uvOrientation": "gltf"
+      }
+    },
+    "pixelCases": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "baseColor",
+          "vertexColor",
+          "metallic",
+          "roughness",
+          "emissive",
+          "alphaMode",
+          "alphaCutoff",
+          "doubleSided",
+          "reverse",
+          "maps",
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "baseColor": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          },
+          "vertexColor": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          },
+          "metallic": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "roughness": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "emissive": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          },
+          "alphaMode": {
+            "enum": [
+              "OPAQUE",
+              "MASK",
+              "BLEND"
+            ]
+          },
+          "alphaCutoff": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 3.4028234663852886e+38
+          },
+          "doubleSided": {
+            "type": "boolean"
+          },
+          "reverse": {
+            "type": "boolean"
+          },
+          "maps": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "baseColor": {
+                "type": "array",
+                "minItems": 4,
+                "maxItems": 16000000,
+                "items": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 255
+                }
+              },
+              "metallicRoughness": {
+                "type": "array",
+                "minItems": 4,
+                "maxItems": 16000000,
+                "items": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 255
+                }
+              },
+              "normal": {
+                "type": "array",
+                "minItems": 4,
+                "maxItems": 16000000,
+                "items": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 255
+                }
+              },
+              "occlusion": {
+                "type": "array",
+                "minItems": 4,
+                "maxItems": 16000000,
+                "items": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 255
+                }
+              },
+              "emissive": {
+                "type": "array",
+                "minItems": 4,
+                "maxItems": 16000000,
+                "items": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 255
+                }
+              }
+            }
+          },
+          "normalScale": {
+            "oneOf": [
+              {
+                "type": "number",
+                "minimum": -3.4028234663852886e+38,
+                "maximum": 3.4028234663852886e+38
+              },
+              {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "number",
+                  "minimum": -3.4028234663852886e+38,
+                  "maximum": 3.4028234663852886e+38
+                }
+              }
+            ]
+          },
+          "occlusionStrength": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "textureCoordinates": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "baseColorTexture": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 63
+              },
+              "metallicRoughnessTexture": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 63
+              },
+              "normalTexture": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 63
+              },
+              "occlusionTexture": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 63
+              },
+              "emissiveTexture": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 63
+              }
+            }
+          },
+          "uvSets": {
+            "type": "object",
+            "maxProperties": 64,
+            "patternProperties": {
+              "^(?:[0-9]|[1-5][0-9]|6[0-3])$": {
+                "type": "array",
+                "minItems": 6,
+                "maxItems": 6,
+                "items": {
+                  "type": "number"
+                }
+              }
+            },
+            "additionalProperties": false
+          },
+          "tangents": {
+            "type": "array",
+            "minItems": 12,
+            "maxItems": 12,
+            "items": {
+              "type": "number"
+            }
+          },
+          "mapSizes": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 4096
+              }
+            }
+          },
+          "textureSamplers": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "baseColorTexture": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "wrapS": {
+                    "enum": [
+                      33071,
+                      33648,
+                      10497
+                    ]
+                  },
+                  "wrapT": {
+                    "enum": [
+                      33071,
+                      33648,
+                      10497
+                    ]
+                  },
+                  "magFilter": {
+                    "enum": [
+                      9728,
+                      9729
+                    ]
+                  },
+                  "minFilter": {
+                    "enum": [
+                      9728,
+                      9729,
+                      9984,
+                      9985,
+                      9986,
+                      9987
+                    ]
+                  }
+                }
+              },
+              "metallicRoughnessTexture": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "wrapS": {
+                    "enum": [
+                      33071,
+                      33648,
+                      10497
+                    ]
+                  },
+                  "wrapT": {
+                    "enum": [
+                      33071,
+                      33648,
+                      10497
+                    ]
+                  },
+                  "magFilter": {
+                    "enum": [
+                      9728,
+                      9729
+                    ]
+                  },
+                  "minFilter": {
+                    "enum": [
+                      9728,
+                      9729,
+                      9984,
+                      9985,
+                      9986,
+                      9987
+                    ]
+                  }
+                }
+              },
+              "normalTexture": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "wrapS": {
+                    "enum": [
+                      33071,
+                      33648,
+                      10497
+                    ]
+                  },
+                  "wrapT": {
+                    "enum": [
+                      33071,
+                      33648,
+                      10497
+                    ]
+                  },
+                  "magFilter": {
+                    "enum": [
+                      9728,
+                      9729
+                    ]
+                  },
+                  "minFilter": {
+                    "enum": [
+                      9728,
+                      9729,
+                      9984,
+                      9985,
+                      9986,
+                      9987
+                    ]
+                  }
+                }
+              },
+              "occlusionTexture": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "wrapS": {
+                    "enum": [
+                      33071,
+                      33648,
+                      10497
+                    ]
+                  },
+                  "wrapT": {
+                    "enum": [
+                      33071,
+                      33648,
+                      10497
+                    ]
+                  },
+                  "magFilter": {
+                    "enum": [
+                      9728,
+                      9729
+                    ]
+                  },
+                  "minFilter": {
+                    "enum": [
+                      9728,
+                      9729,
+                      9984,
+                      9985,
+                      9986,
+                      9987
+                    ]
+                  }
+                }
+              },
+              "emissiveTexture": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "wrapS": {
+                    "enum": [
+                      33071,
+                      33648,
+                      10497
+                    ]
+                  },
+                  "wrapT": {
+                    "enum": [
+                      33071,
+                      33648,
+                      10497
+                    ]
+                  },
+                  "magFilter": {
+                    "enum": [
+                      9728,
+                      9729
+                    ]
+                  },
+                  "minFilter": {
+                    "enum": [
+                      9728,
+                      9729,
+                      9984,
+                      9985,
+                      9986,
+                      9987
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "statusCases": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "required": [
+          "locale",
+          "loading",
+          "cancel",
+          "cancelled",
+          "failed"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "locale": {
+            "enum": [
+              "en",
+              "de"
+            ]
+          },
+          "loading": {
+            "type": "string"
+          },
+          "cancel": {
+            "type": "string"
+          },
+          "cancelled": {
+            "type": "string"
+          },
+          "failed": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "jpegPublication": {
+      "type": "object",
+      "required": [
+        "mime",
+        "bytes",
+        "width",
+        "height",
+        "sourceRgb",
+        "decodedRgba"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "mime": {
+          "const": "image/jpeg"
+        },
+        "bytes": {
+          "type": "array",
+          "maxItems": 16000000,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "sourceRgb": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        },
+        "decodedRgba": {
+          "type": "array",
+          "minItems": 8,
+          "maxItems": 8,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    },
+    "alphaCutoffCase": {
+      "type": "object",
+      "required": [
+        "value",
+        "visibility"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "type": "number",
+          "minimum": 0
+        },
+        "visibility": {
+          "const": "discard"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "attribute": {
+      "type": "object",
+      "required": [
+        "domain",
+        "semantic",
+        "interpolation",
+        "values"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "domain": {
+          "enum": [
+            "vertex",
+            "corner",
+            "face",
+            "edge"
+          ]
+        },
+        "semantic": {
+          "enum": [
+            "normal",
+            "uv",
+            "color",
+            "material",
+            "custom"
+          ]
+        },
+        "interpolation": {
+          "enum": [
+            "linear",
+            "nearest",
+            "constant"
+          ]
+        },
+        "values": {
+          "type": "array",
+          "maxItems": 600000
+        },
+        "indices": {
+          "type": "array",
+          "maxItems": 600000,
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    }
+  }
+}

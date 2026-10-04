@@ -9,7 +9,7 @@ pub fn diff(payload: &ChangeLoadCaseSelfWeight, base: &Fem3dSnapshot) -> protoco
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Load case \"{}\" does not exist.", payload.case_id), [payload.case_id.clone()]);
     };
     if existing.self_weight == payload.new_self_weight {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Load case \"{}\" already has self-weight {}.", payload.case_id, payload.new_self_weight));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Load case \"{}\" already has self-weight {}.", payload.case_id, payload.new_self_weight));
     }
     let mut item = existing.clone();
     item.self_weight = payload.new_self_weight;

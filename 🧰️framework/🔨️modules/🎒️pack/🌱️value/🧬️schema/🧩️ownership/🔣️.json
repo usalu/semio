@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "package",
+    "module",
+    "manifest",
+    "library",
+    "mount",
+    "dependencies",
+    "publicEntries",
+    "forbiddenProviders"
+  ],
+  "properties": {
+    "format": {
+      "const": 1
+    },
+    "package": {
+      "const": "semio-framework-pack"
+    },
+    "module": {
+      "const": "record"
+    },
+    "manifest": {
+      "const": "../📦️packages/🦀️rust/Cargo.toml"
+    },
+    "library": {
+      "const": {
+        "name": "pack",
+        "path": "🦀️.rs"
+      }
+    },
+    "mount": {
+      "const": "../../🌱️value/🦀️.rs"
+    },
+    "dependencies": {
+      "const": [
+        "semio-framework-async",
+        "semio-framework-diagnostic",
+        "semio-framework-dsl-record",
+        "semio-framework-hash",
+        "semio-framework-pack-error",
+        "semio-framework-pack-json",
+        "semio-framework-replication",
+        "semio-framework-value",
+        "ureq"
+      ]
+    },
+    "publicEntries": {
+      "const": [
+        "encode_document",
+        "decode_document",
+        "encode_record_body",
+        "decode_record_body_exact",
+        "schema_hash"
+      ]
+    },
+    "forbiddenProviders": {
+      "const": [
+        "semio-framework-os-kernel",
+        "semio-framework-plugin"
+      ]
+    }
+  }
+}

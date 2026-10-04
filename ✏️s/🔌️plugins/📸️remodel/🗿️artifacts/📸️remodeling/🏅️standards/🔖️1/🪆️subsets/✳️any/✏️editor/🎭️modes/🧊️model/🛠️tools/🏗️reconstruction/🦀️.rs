@@ -15,7 +15,7 @@ pub const TOOL_ID: &str = "reconstruction";
 /// 🧱️ Stitched into the app manifest by `crate::editor::remodeling::create_remodeling_app` and listed by
 /// every remodeling mode, so a run can start wherever the user is.
 pub fn definition() -> ToolDefinition {
-    ToolDefinition { run: Some(reconstruction_run_definition()), ..semio_framework_plugin::resolve_ready(ToolDefinition::new(TOOL_ID, LocalizedLabel::native("Reconstruction", "Rekonstruktion"), "remodeling-app")) }
+    ToolDefinition { run: Some(reconstruction_run_definition()), ..::semio_framework_async::poll::resolve_ready(ToolDefinition::new(TOOL_ID, LocalizedLabel::native("Reconstruction", "Rekonstruktion"), "remodeling-app")) }
 }
 //#endregion 🔖️Definition
 

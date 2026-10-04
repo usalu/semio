@@ -1,0 +1,117 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "envelopeId",
+    "literal",
+    "maximumAllocationBytes",
+    "tinyAllocationBytes",
+    "semanticBytes",
+    "refusalMessage",
+    "ledgerCases",
+    "cancellation"
+  ],
+  "properties": {
+    "cancellation": {
+      "const": {
+        "priorAdmissionBytes": 8,
+        "stages": [
+          { "phase": "DecodeNative", "scope": "borrowed-validation", "ownedLiteralBytes": 0 },
+          { "phase": "DecodeNative", "scope": "owned-binding", "ownedLiteralBytes": 140000 },
+          { "phase": "EncodeNative", "scope": "owned-projection", "ownedLiteralBytes": 140000 }
+        ]
+      }
+    },
+    "envelopeId": {
+      "const": "fixture.allocation"
+    },
+    "literal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "unit",
+        "repeat",
+        "utf8Bytes",
+        "cancelAfterBytes"
+      ],
+      "properties": {
+        "unit": {
+          "const": "文🌠"
+        },
+        "repeat": {
+          "const": 20000
+        },
+        "utf8Bytes": {
+          "const": 140000
+        },
+        "cancelAfterBytes": {
+          "const": 65530
+        }
+      }
+    },
+    "maximumAllocationBytes": {
+      "const": 16777216
+    },
+    "tinyAllocationBytes": {
+      "const": 1
+    },
+    "semanticBytes": {
+      "const": 1
+    },
+    "refusalMessage": {
+      "const": "allocation fixture typed refusal"
+    },
+    "ledgerCases": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "maximum",
+          "stages",
+          "remaining"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "maximum": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "remaining": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "stages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "owned",
+                "outcome"
+              ],
+              "properties": {
+                "owned": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "outcome": {
+                  "enum": [
+                    "success",
+                    "refusal",
+                    "canceled"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

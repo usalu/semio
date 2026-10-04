@@ -396,7 +396,7 @@ mod ui_node_wire_format_tests {
         }
     }
 
-    const GOLDEN_SCENES_JSON: &str = "[{\"cameraX\":1.0,\"cameraY\":2.0,\"zoom\":1.5,\"layersJson\":\"[]\"},{\"columnsJson\":\"[]\",\"rowsJson\":\"[]\"},{\"documentSyncJson\":\"{}\",\"assetsJson\":\"[]\",\"cameraJson\":\"{}\",\"selectionJson\":\"[]\",\"hoveredId\":\"h1\",\"activeUtility\":\"brush\",\"brushSize\":4.0,\"brushOpacity\":1.0,\"brushColor\":\"#2878dc\",\"brushHardness\":1.0,\"paintTarget\":\"pixels\",\"maskValue\":255,\"viewMode\":\"composite\"},{\"requestJson\":\"{}\"},{\"schemaJson\":\"{}\",\"rowsJson\":\"[]\",\"emptyMessage\":\"Empty\",\"dragDropEnabled\":true},{\"mapFixtureJson\":\"{}\",\"cameraJson\":\"{}\",\"renderMode\":\"combined\",\"vectorStyle\":\"colored\",\"lodMode\":\"automatic\",\"tileUrlTemplate\":\"/osm/{z}/{x}/{y}.png\",\"vectorTileUrlTemplate\":\"/vt/{z}/{x}/{y}.pbf\",\"layerVisibilityJson\":\"{}\",\"layerStrokeScaleJson\":\"{}\",\"selectionJson\":\"{}\",\"hoverJson\":\"null\",\"selectionMethod\":\"rectangle\",\"selectionMode\":\"default\"},{\"fixtureJson\":\"{}\",\"cameraJson\":\"{}\",\"glyphCatalogsJson\":\"{}\",\"selectionJson\":\"[]\",\"interactive\":true,\"selectionMethod\":\"rectangle\",\"gridVisible\":true,\"gridSnapEnabled\":false,\"gridFactor\":1.0,\"selectableNodes\":true,\"selectableEdges\":true,\"selectableHandles\":true,\"suggestionOffset\":0.0,\"brushWeightsJson\":\"{}\",\"placementCompatibilityJson\":\"[]\",\"lodMode\":\"automatic\"},{\"documentJson\":\"{}\",\"selectionJson\":\"[]\",\"activeUtility\":\"select\",\"viewMode\":\"edit\",\"interactive\":true},{\"columnsJson\":\"[]\"},{\"nodes\":[],\"edges\":[],\"viewport\":{\"x\":0.0,\"y\":0.0,\"zoom\":1.0}},{\"buffer\":\"buf\",\"language\":\"rust\"},{\"stepsJson\":\"[]\",\"paletteJson\":\"[]\"}]";
+    const GOLDEN_SCENES_JSON: &str = "[{\"cameraX\":1.0,\"cameraY\":2.0,\"zoom\":1.5,\"layersJson\":\"[]\"},{\"columnsJson\":\"[]\",\"rowsJson\":\"[]\"},{\"documentSyncJson\":\"{}\",\"assetsJson\":\"[]\",\"cameraJson\":\"{}\",\"selectionJson\":\"[]\",\"hoveredId\":\"h1\",\"activeUtility\":\"brush\",\"brushSize\":4.0,\"brushOpacity\":1.0,\"brushColor\":\"#2878dc\",\"brushHardness\":1.0,\"paintTarget\":\"pixels\",\"maskValue\":255,\"fillTolerance\":24,\"viewMode\":\"composite\"},{\"requestJson\":\"{}\"},{\"schemaJson\":\"{}\",\"rowsJson\":\"[]\",\"emptyMessage\":\"Empty\",\"dragDropEnabled\":true},{\"mapFixtureJson\":\"{}\",\"cameraJson\":\"{}\",\"renderMode\":\"combined\",\"vectorStyle\":\"colored\",\"lodMode\":\"automatic\",\"tileUrlTemplate\":\"/osm/{z}/{x}/{y}.png\",\"vectorTileUrlTemplate\":\"/vt/{z}/{x}/{y}.pbf\",\"layerVisibilityJson\":\"{}\",\"layerStrokeScaleJson\":\"{}\",\"selectionJson\":\"{}\",\"hoverJson\":\"null\",\"selectionMethod\":\"rectangle\",\"selectionMode\":\"default\"},{\"fixtureJson\":\"{}\",\"cameraJson\":\"{}\",\"glyphCatalogsJson\":\"{}\",\"selectionJson\":\"[]\",\"interactive\":true,\"selectionMethod\":\"rectangle\",\"gridVisible\":true,\"gridSnapEnabled\":false,\"gridFactor\":1.0,\"selectableNodes\":true,\"selectableEdges\":true,\"selectableHandles\":true,\"suggestionOffset\":0.0,\"brushWeightsJson\":\"{}\",\"placementCompatibilityJson\":\"[]\",\"lodMode\":\"automatic\"},{\"documentJson\":\"{}\",\"selectionJson\":\"[]\",\"activeUtility\":\"select\",\"viewMode\":\"edit\",\"interactive\":true},{\"columnsJson\":\"[]\"},{\"nodes\":[],\"edges\":[],\"viewport\":{\"x\":0.0,\"y\":0.0,\"zoom\":1.0}},{\"buffer\":\"buf\",\"language\":\"rust\"},{\"stepsJson\":\"[]\",\"paletteJson\":\"[]\"}]";
 
     #[semio_framework_async_macros::async_test]
     async fn scene_records_serialize_to_golden_json() {
@@ -416,6 +416,7 @@ mod ui_node_wire_format_tests {
                 brush_hardness: 1.0,
                 paint_target: "pixels".into(),
                 mask_value: 255,
+                fill_tolerance: 24,
                 pixel_selection_json:None,
                 view_mode: "composite".into(),
                 composite_viewport_json: None,
@@ -471,6 +472,7 @@ mod ui_node_wire_format_tests {
             color: None,
             shortcut: Some("Del".into()),
             disabled: Some(false),
+            reason: None,
             separator: None,
             checked: None,
             destructive: Some(true),
@@ -486,6 +488,11 @@ mod ui_node_wire_format_tests {
         assert!(!json.contains("\"color\""), "None fields must be omitted: {json}");
         let roundtripped: ContextMenuItemSpec = serde_json::from_str(&json).unwrap();
         assert_eq!(roundtripped, item);
+        assert!(!json.contains("\"reason\""), "an enabled row carries no reason: {json}");
+        let refused = ContextMenuItemSpec { id: "delete".into(), label: Some("Delete".into()), ..Default::default() }.disabled_because("Nothing selected".into());
+        let json = serde_json::to_string(&refused).unwrap();
+        assert!(json.contains("\"disabled\":true") && json.contains("\"reason\":\"Nothing selected\""), "a disabled row names its reason: {json}");
+        assert_eq!(serde_json::from_str::<ContextMenuItemSpec>(&json).unwrap(), refused);
     }
 
     /// 🖱️ Every `UiNode` variant's `menu` ref actually serializes when set, and is omitted by default

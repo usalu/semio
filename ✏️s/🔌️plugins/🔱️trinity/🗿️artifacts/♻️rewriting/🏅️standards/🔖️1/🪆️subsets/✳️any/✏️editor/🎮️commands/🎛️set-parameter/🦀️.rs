@@ -15,10 +15,7 @@ pub(crate) fn set_parameter(state: &RewritingSnapshot, name: &str, value: &str) 
     if name.is_empty() {
         return Emit::default();
     }
-    let Ok(rhs) = pack::from_json_str::<Rhs>(&state.rhs_json) else {
-        return Emit::default();
-    };
-    let kind = rhs.parameters.iter().find(|param| param.name == name).map(|param| param.kind.clone());
+    let kind = state.rhs.parameters.iter().find(|param| param.name == name).map(|param| param.kind.clone());
     let parsed = match kind {
         Some(ParameterKind::Number) => value.parse::<f64>().ok().map(PropertyValue::Number),
         Some(ParameterKind::Boolean) => Some(PropertyValue::Bool(value.eq_ignore_ascii_case("true"))),

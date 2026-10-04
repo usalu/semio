@@ -25,12 +25,20 @@ class MediaTransportTestScript extends BundleScript {
   }
 }
 
-/** 🏪️ Runs the store's language-neutral history oracles (supersede replay, tool transaction) under `bun:test`. */
+/** 🏪️ Runs the store's language-neutral history oracles (supersede replay, tool transaction, deferred reprojection) under `bun:test`. */
 class StoreOraclesTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("test-store-oracles accepts no arguments");
-    const oracles = ["🧪️supersede-replay", "🧪️tool-transaction"].map((oracle) => join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests", oracle, "🟦️.ts"));
+    const oracles = ["🧪️supersede-replay", "🧪️tool-transaction", "🧪️deferred-reprojection"].map((oracle) => join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests", oracle, "🟦️.ts"));
     await runOwnedCommand(process.execPath, ["test", ...oracles], this.repoRoot, "os-store-oracles", TEST_LEVEL_BUDGET_MS.fundamental);
+  }
+}
+
+/** 🗃️ Runs the archive-load host twin against the channel's language-neutral corpus under `bun:test`. */
+class ChannelOraclesTestScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("test-channel-oracles accepts no arguments");
+    await runOwnedCommand(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️document-archive-load-host/🟦️.ts")], this.repoRoot, "os-channel-oracles", TEST_LEVEL_BUDGET_MS.fundamental);
   }
 }
 
@@ -188,6 +196,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("test", TestScript)
   .register("test-media-transport", MediaTransportTestScript)
   .register("test-store-oracles", StoreOraclesTestScript)
+  .register("test-channel-oracles", ChannelOraclesTestScript)
   .register("typecheck", TypecheckScript)
   .register("mutation-verb-vocabulary-check", MutationVerbVocabularyCheckScript)
   .register("installed-service-check", InstalledServiceCheckScript)

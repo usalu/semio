@@ -1,3 +1,5 @@
+import refusalCorpus from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧫️fixtures/🔣️.json";
+const canceledKind=refusalCorpus.cases.find(c=>c.id==="canceled-projection")!.expectedKind;
 import { binary64,binary32,binary64Value,binary32Value,type Binary64 } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 /** 🧫️ Shared PLY generic typed-property corpus with independent scalar and list SQL edits. */
 import { Database } from "bun:sqlite";
@@ -73,10 +75,10 @@ test("PLY large list counting and reconstruction observe cancellation", async ()
   const many: PlySnapshot = { schema: "large.ply", format: "ascii", comments: [], elements: [{ name: "face", count: 1n, properties: [{ form: "list", name: "indices", countKind: "uShort", valueKind: "int" }], rows: [{ values: [{ kind: "list", value: Array.from({ length: 1000 }, () => ({ kind: "int", value: 1 })) }] }] }] };
   const controller = new AbortController();
   let events = 0;
-  await expect(plySnapshotToSqliteDatabase(many, { signal: controller.signal, onProgress: () => { if (++events === 2) controller.abort(); } })).rejects.toMatchObject({ name: "AbortError" });
+  await expect(plySnapshotToSqliteDatabase(many, { signal: controller.signal, onProgress: () => { if (++events === 2) controller.abort(); } })).rejects.toMatchObject({ kind: canceledKind });
   const database = await plySnapshotToSqliteDatabase(input);
   const reconstruct = new AbortController();
-  await expect(plySnapshotFromSqliteDatabase(database, { signal: reconstruct.signal, onProgress: () => reconstruct.abort() })).rejects.toMatchObject({ name: "AbortError" });
+  await expect(plySnapshotFromSqliteDatabase(database, { signal: reconstruct.signal, onProgress: () => reconstruct.abort() })).rejects.toMatchObject({ kind: canceledKind });
 });
 test("PLY exact scalar words survive independent SQLite affinity, edits and malformed companions", async () => {
   for(const [index,hex] of ieee.binary64Bits.entries()){
@@ -105,7 +107,7 @@ test("PLY exact owned dialect, document identity and cancellation laws", async()
   for(const dialect of ieee.invalidSqliteDialects)await expect(plySnapshotValidateSqliteSubset(input,dialect,database)).rejects.toThrow("dialect");
   await expect(plySnapshotValidateSqliteSubset({...input,schema:"different"},ieee.sqliteDialect,database)).rejects.toThrow("identity");
   const controller=new AbortController();controller.abort();
-  await expect(plySnapshotValidateSqliteSubset(input,ieee.sqliteDialect,database,{signal:controller.signal})).rejects.toMatchObject({name:"AbortError"});
+  await expect(plySnapshotValidateSqliteSubset(input,ieee.sqliteDialect,database,{signal:controller.signal})).rejects.toMatchObject({kind:canceledKind});
 });
 
 import declarations from "../../🧫️fixtures/🪶️sqlite/📋️declaration-state.json";
@@ -133,10 +135,27 @@ test("PLY deep typed lists use exact bounded reconstruction and independent stru
  const parsed=parsePlySnapshot(snapshot);const database=await plySnapshotToSqliteDatabase(parsed);const db=Database.deserialize(await exportSqliteDatabase(database));
  try{expect(db.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);expect(db.query("SELECT COUNT(*) AS count FROM ply_value WHERE kind='list'").get()).toEqual({count:topology.depth});db.run("UPDATE ply_document SET id=-17");db.run("UPDATE ply_element SET document_id=-17");db.run("UPDATE ply_value SET id=id+1000");db.run("UPDATE ply_cell SET value_id=value_id+1000");db.run("UPDATE ply_list_item SET list_id=list_id+1000,value_id=value_id+1000");expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);const altered=await importSqliteDatabase(db.serialize());await plySnapshotValidateSqliteSubset(snapshot,ieee.sqliteDialect,altered);let restored=(await plySnapshotFromSqliteDatabase(altered)).elements[0]!.rows[0]!.values[0]!;let depth=0;while(restored.kind==="list"){depth++;restored=restored.value[0]!;}expect(depth).toBe(topology.depth);expect(restored).toEqual({kind:"double",value:{bits:BigInt("0x"+topology.binary64Bits)}});db.run("UPDATE ply_element SET name='different'");await expect(plySnapshotValidateSqliteSubset(snapshot,ieee.sqliteDialect,await importSqliteDatabase(db.serialize()))).rejects.toThrow("identity");}finally{db.close();}
  for(const options of[{maxRows:topology.maxRows},{maxValueBytes:topology.maxValueBytes}]){await expect(plySnapshotToSqliteDatabase(snapshot,options)).rejects.toThrow("limit");await expect(plySnapshotFromSqliteDatabase(database,options)).rejects.toThrow("limit");}
- const controller=new AbortController();let interior=false;await expect(plySnapshotFromSqliteDatabase(database,{signal:controller.signal,onProgress:progress=>{if(progress.completed>=topology.cancelAfter&&progress.completed<progress.total){interior=true;controller.abort();}}})).rejects.toMatchObject({name:"AbortError"});expect(interior).toBe(true);
+ const controller=new AbortController();let interior=false;await expect(plySnapshotFromSqliteDatabase(database,{signal:controller.signal,onProgress:progress=>{if(progress.completed>=topology.cancelAfter&&progress.completed<progress.total){interior=true;controller.abort();}}})).rejects.toMatchObject({kind:canceledKind});expect(interior).toBe(true);
 });
 
 test("PLY independent unreachable ownership cycle cannot disappear on import",async()=>{
  const snapshot:PlySnapshot={schema:"cycle",format:"ascii",comments:[],elements:[]};const db=Database.deserialize(await exportSqliteDatabase(await plySnapshotToSqliteDatabase(snapshot)));
  try{const[a,b]=topology.unreachableCycle;db.run("INSERT INTO ply_value(id,kind) VALUES (?, 'list'), (?, 'list')",[a!,b!]);db.run("INSERT INTO ply_list_item(id,list_id,ordinal,value_id) VALUES (1,?,0,?),(2,?,0,?)",[a!,b!,b!,a!]);expect(db.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);await expect(plySnapshotFromSqliteDatabase(await importSqliteDatabase(db.serialize()))).rejects.toThrow("unreachable");}finally{db.close();}
+});
+
+import topologySchema from "../../🧫️fixtures/🪶️sqlite/🧱️topology-laws/🧬️schema/🔣️.json";
+import AjvTopology from "ajv/dist/2020.js";
+import {createToken as locationToken,Lexer as LocationLexer} from "chevrotain";
+test("PLY neutral native Text source retains independently observed lexical location",()=>{
+ const validate=new AjvTopology({strict:true}).compile(topologySchema);
+ expect(validate(topology)).toBe(true);
+ expect(validate({...topology,unknown:0})).toBe(false);
+ expect(validate({...topology,controlledTextSource:{...topology.controlledTextSource,unknown:0}})).toBe(false);
+ expect(validate({...topology,controlledTextSource:{...topology.controlledTextSource,span:{...topology.controlledTextSource.span,length:1}}})).toBe(false);
+ const accepted=locationToken({name:"NativeWord",pattern:/[a-zA-Z_][a-zA-Z_0-9]*/});
+ const result=new LocationLexer([accepted]).tokenize(topology.controlledTextSource.source);
+ expect(result.tokens).toEqual([]);expect(result.errors).toHaveLength(1);
+ const actual=result.errors[0]!;
+ expect({line:actual.line,column:actual.column,length:actual.length}).toEqual({...topology.controlledTextSource.span,length:1});
+ const db=new Database(":memory:");try{db.run("CREATE TABLE authored_source(source TEXT,line INTEGER,column INTEGER,length INTEGER)");const row=topology.controlledTextSource;db.run("INSERT INTO authored_source VALUES(?,?,?,?)",row.source,row.span.line,row.span.column,row.span.length);expect(db.query("SELECT source,line,column,length FROM authored_source").get()).toEqual({source:row.source,...row.span});}finally{db.close();}
 });

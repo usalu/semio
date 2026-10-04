@@ -4,13 +4,13 @@ use protocol::Inference;
 //#region 🧪️InferenceLaws
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
-    let snapshot = GisTerrainSnapshot { exaggeration: 1.5, imported_features_json: serde_json::json!({ "positions": [{ "id": "p1", "lon": 5.58, "lat": 50.60 }] }).to_string(), ..Default::default() };
-    assert_eq!(GisTerrainInference::infer(&snapshot), GisTerrainInference::infer(&snapshot));
+    let snapshot = GisTerrainSnapshot { exaggeration: 1.5, imported_map: Some(crate::schema::ImportedMap::from_json(&serde_json::json!({ "positions": [{ "id": "p1", "lon": 5.58, "lat": 50.60 }] }).to_string()).unwrap()), ..Default::default() };
+    assert_eq!(GisTerrainInference::infer(&snapshot).expect("valid materialized inference fixture"), GisTerrainInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
-    assert_eq!(GisTerrainInference::infer(&GisTerrainSnapshot::default()), GisTerrainInference::default());
+    assert_eq!(GisTerrainInference::infer(&GisTerrainSnapshot::default()).expect("valid materialized inference fixture"), GisTerrainInference::default());
 }
 //#endregion 🧪️InferenceLaws
 
@@ -24,7 +24,7 @@ async fn inference_default_law() {
 /// after the document-only conversion — i.e. converting the fixture to the DSL didn't lose data.
 #[semio_framework_async_macros::async_test]
 async fn terrain_fixture_text_recovers_bundled_scenery_data() {
-    let descriptor = parse_descriptor(&GisTerrainSnapshot { exaggeration: 1.5, imported_features_json: String::new(), ..Default::default() });
+    let descriptor = parse_descriptor(&GisTerrainSnapshot { exaggeration: 1.5, imported_map: None, ..Default::default() });
     assert_eq!(descriptor.project_origin.lon, 5.5818);
     assert_eq!(descriptor.project_origin.lat, 50.603);
     assert_eq!(descriptor.positions.len(), 2);
@@ -34,7 +34,7 @@ async fn terrain_fixture_text_recovers_bundled_scenery_data() {
 /// 🔌️ `map:in`'s overlay layer renders as extra pins alongside the fixture's own two.
 #[semio_framework_async_macros::async_test]
 async fn imported_map_features_render_as_extra_pins() {
-    let document = GisTerrainSnapshot { exaggeration: 1.5, imported_features_json: serde_json::json!({ "positions": [{ "id": "imported-1", "lon": 5.58, "lat": 50.60 }] }).to_string(), ..Default::default() };
+    let document = GisTerrainSnapshot { exaggeration: 1.5, imported_map: Some(crate::schema::ImportedMap::from_json(&serde_json::json!({ "positions": [{ "id": "imported-1", "lon": 5.58, "lat": 50.60 }] }).to_string()).unwrap()), ..Default::default() };
     let descriptor = parse_descriptor(&document);
     assert_eq!(descriptor.positions.len(), 3, "2 fixture pins + 1 imported pin");
     assert!(descriptor.positions.iter().any(|position| position.id == "imported-1"));

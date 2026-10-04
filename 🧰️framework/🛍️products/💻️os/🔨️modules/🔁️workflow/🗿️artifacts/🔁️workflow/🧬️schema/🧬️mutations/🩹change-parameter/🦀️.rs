@@ -2,7 +2,7 @@ use super::super::{workflow_parameter_entity_id, WorkflowDiff, WorkflowMutation,
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "change-parameter")]
@@ -20,12 +20,15 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for ChangeParame
     fn diff(&self, _base: &WorkflowSnapshot) -> protocol::MutationOutcome<WorkflowDiff> {
         protocol::MutationOutcome::new(WorkflowDiff::PatchParameter { parameter_id: self.parameter_id.clone(), parameter: (*self.parameter).clone() })
     }
-    fn inverse(&self, base: &WorkflowSnapshot) -> Vec<WorkflowMutation> {
+    fn inverse(&self, base: &WorkflowSnapshot) -> Result<Vec<WorkflowMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         base.parameters.iter().find(|entry| workflow_parameter_entity_id(entry) == self.parameter_id).map_or_else(
             || vec![WorkflowMutation::ChangeParameter(ChangeParameter { parameter_id: self.parameter_id.clone(), parameter: self.parameter.clone() })],
             |current| vec![WorkflowMutation::ChangeParameter(ChangeParameter { parameter_id: self.parameter_id.clone(), parameter: Box::new(current.clone()) })],
         )
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change workflow parameter {}", self.parameter_id), &format!("Arbeitsablaufparameter {} ändern", self.parameter_id))
     }

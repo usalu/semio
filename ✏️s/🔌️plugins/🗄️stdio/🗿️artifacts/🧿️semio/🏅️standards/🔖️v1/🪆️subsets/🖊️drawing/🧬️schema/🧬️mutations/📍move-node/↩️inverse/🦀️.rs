@@ -6,10 +6,13 @@ use crate::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapsh
 
 //#region 🔖️Inverse
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(payload: &super::MoveNode, base: &SemioDrawingSnapshot) -> Vec<SemioDrawingMutation> {
+pub fn inverse(payload: &super::MoveNode, base: &SemioDrawingSnapshot) -> Result<Vec<SemioDrawingMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match node_origin(base, &payload.at) {
         Some(old_origin) => vec![SemioDrawingMutation::MoveNode(super::MoveNode { at: payload.at.clone(), new_origin: old_origin })],
         None => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

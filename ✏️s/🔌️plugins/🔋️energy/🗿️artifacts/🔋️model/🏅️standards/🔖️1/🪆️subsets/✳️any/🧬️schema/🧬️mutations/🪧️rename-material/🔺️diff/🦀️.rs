@@ -16,7 +16,7 @@ pub fn diff(payload: &super::RenameMaterial, base: &EnergyModelSnapshot) -> prot
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Another material is already named \"{}\".", payload.new_name), [payload.id.0.to_string()]);
     }
     if existing.name == payload.new_name {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Material {} already carries this name: {}.", payload.id.0, payload.new_name));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Material {} already carries this name: {}.", payload.id.0, payload.new_name));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.materials.iter_mut().find(|item| item.id == payload.id) {

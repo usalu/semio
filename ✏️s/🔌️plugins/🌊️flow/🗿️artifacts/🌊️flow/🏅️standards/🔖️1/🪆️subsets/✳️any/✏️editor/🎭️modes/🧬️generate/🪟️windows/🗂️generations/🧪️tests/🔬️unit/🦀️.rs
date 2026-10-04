@@ -20,7 +20,7 @@ const OVERSIZED: usize = 200;
 fn oversized_generations(count: usize) -> FlowWindowTransient {
     let generations = (0..count).map(|index| crate::playbook::FormGeneration { id: format!("gen-{index:03}"), name: format!("Generation {index}"), values: Default::default() }).collect();
     let state = crate::playbook::GenerationPlayState { generations, selected_generation_id: None, preview_text: None };
-    FlowWindowTransient { generation_json: serde_json::to_string(&state).expect("the generation state serialises"), duplicate_widget_progress_json: String::new() }
+    FlowWindowTransient { generation_json: semio_framework_pack_json::to_json_string(&state), duplicate_widget_progress_json: String::new() }
 }
 
 fn generations_extent(node: &BuiltNode) -> (u32, u32) {

@@ -1,0 +1,18 @@
+{
+  "color": [
+    0.25,
+    0.25,
+    0.25,
+    0.5
+  ],
+  "layerId": "paint",
+  "mutation": "fillSelection",
+  "selection": [
+    {
+      "coverage": 255,
+      "length": 3,
+      "start": 0
+    }
+  ],
+  "target": "mask"
+}

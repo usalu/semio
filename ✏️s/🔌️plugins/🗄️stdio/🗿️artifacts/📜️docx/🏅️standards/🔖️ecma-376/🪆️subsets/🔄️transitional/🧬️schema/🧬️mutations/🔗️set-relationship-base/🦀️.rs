@@ -17,9 +17,12 @@ impl protocol::MutationKind<DocxSnapshot, DocxTransitionalMutation> for SetRelat
     fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<<DocxTransitionalMutation as Mutation<DocxSnapshot>>::Diff> {
         agg_diff(&DocxTransitionalMutation::SetRelationshipBase(self.clone()), base)
     }
-    fn inverse(&self, base: &DocxSnapshot) -> Vec<DocxTransitionalMutation> {
-        agg_inverse(&DocxTransitionalMutation::SetRelationshipBase(self.clone()), base)
-    }
+    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxTransitionalMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&DocxTransitionalMutation::SetRelationshipBase(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set relationship base", "Beziehungsbasis setzen")
     }

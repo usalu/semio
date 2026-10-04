@@ -1,0 +1,8 @@
+{
+  "cases": [
+    { "name": "complete owned suite", "source": true, "tests": true, "admit": true },
+    { "name": "missing owned source", "source": false, "tests": true, "admit": false },
+    { "name": "missing owned tests", "source": true, "tests": false, "admit": false },
+    { "name": "missing whole owner", "source": false, "tests": false, "admit": false }
+  ]
+}

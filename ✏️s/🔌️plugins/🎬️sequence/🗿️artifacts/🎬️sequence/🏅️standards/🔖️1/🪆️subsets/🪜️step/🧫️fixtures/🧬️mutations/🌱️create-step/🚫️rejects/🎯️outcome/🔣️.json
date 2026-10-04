@@ -1,7 +1,0 @@
-{
-  "status": "rejected",
-  "code": "mutation.duplicate-id",
-  "path": [
-    "step-log"
-  ]
-}

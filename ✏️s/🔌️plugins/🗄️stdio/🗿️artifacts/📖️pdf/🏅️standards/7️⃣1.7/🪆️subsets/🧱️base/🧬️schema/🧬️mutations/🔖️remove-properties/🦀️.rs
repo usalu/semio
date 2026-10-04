@@ -23,10 +23,13 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveProperties {
         MutationOutcome::new(diff::diff_remove_properties(base, &self.name))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         let _ = base;
         base.properties.iter().find(|item| item.name == self.name).map(|item| PdfMutation::SetProperties(super::set_properties::SetProperties { properties: item.clone() })).into_iter().collect()
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove properties {}", self.name), &format!("Eigenschaften {} entfernen", self.name))

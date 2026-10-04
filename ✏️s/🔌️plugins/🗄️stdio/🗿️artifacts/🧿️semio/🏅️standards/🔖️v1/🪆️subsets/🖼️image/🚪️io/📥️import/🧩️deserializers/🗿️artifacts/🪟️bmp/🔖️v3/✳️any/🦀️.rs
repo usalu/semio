@@ -1,35 +1,18 @@
-//! 📥️ `bmp` (v3) → `s.stdio.semio/v1/image` — `decode_bmp` already canonicalizes `pixels` to
-//! row-major top-down RGBA8 (regardless of the source `row_order`), so this leaf is a pure
-//! struct remap.
-//!
-//! Honest lossy points (documented):
-//! - `colorspace` is inferred from `bits_per_pixel` (`<= 8` → `Indexed` via the on-disk palette;
-//!   `24` → `Rgb`; `32` → `Rgba`; anything else defaults to `Rgb`) — informational only, since
-//!   `pixels` is always already-decoded canonical RGBA8 regardless.
-//! - `bit_depth` carries the source `bits_per_pixel` (a whole-pixel bit count, e.g. 24), not a
-//!   per-channel depth like PNG's — a real, documented unit difference between these two formats.
-//! - `icc`: BMP v3 (`BITMAPINFOHEADER`) has no ICC profile field at all — always `None`.
-//! - `metadata`: `x_pixels_per_meter`/`y_pixels_per_meter` (the only descriptive scalars BMP
-//!   carries) become `xPixelsPerMeter`/`yPixelsPerMeter` entries; the palette itself has no
-//!   textual home and is dropped (pixels are already palette-resolved).
+//! 📥️ Projects checked BMP v3 source bytes into a resolved Semio RGBA8 image while recording
+//! the source profile. Palette identity, packed sample precision, padding, gaps, and trailers remain
+//! BMP-only authority and cannot be reconstructed from this neutral image projection.
 
 use crate::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
-#[cfg(test)]
 use semio_s_artifact_stdio_bmp::schema::snapshot::BmpRowOrder;
+use semio_s_artifact_stdio_bmp::standards::v_v3::subsets::any::io::{bmp_layout, bmp_rgba8_preview, BmpProfile};
 use semio_s_artifact_stdio_bmp::BmpSnapshot;
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.bmp", standard: StandardId("v3"), subset: SubsetId::ANY };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("image") };
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn colorspace_from_bpp(bpp: u16) -> SemioColorspace {
-    match bpp {
-        0..=8 => SemioColorspace::Indexed,
-        24 => SemioColorspace::Rgb,
-        32 => SemioColorspace::Rgba,
-        _ => SemioColorspace::Rgb,
-    }
+fn colorspace_from_profile(profile: BmpProfile) -> SemioColorspace {
+    if profile.is_indexed() { SemioColorspace::Indexed } else { SemioColorspace::Rgb }
 }
 
 //#region 🔖️Deserializer
@@ -42,23 +25,32 @@ impl ArtifactDeserializer for SemioImageFromBmp {
     const INTO: Dialect = INTO_DIALECT;
 
     async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        if from.pixels.len() != (from.width as usize) * (from.height as usize) * 4 {
-            return Err(store::PackError::Schema("bmp→semio/image: pixels length does not match width*height*4".into()));
+        let layout = bmp_layout(from).map_err(|failure| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("bmp→semio/image: {failure}"))))?;
+        let rgba8 = bmp_rgba8_preview(from).map_err(|failure| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("bmp→semio/image: {failure}"))))?;
+        let mut metadata = vec![
+            SemioImageMetadataEntry { key: "bmp.profile".into(), value: layout.profile.id().into() },
+            SemioImageMetadataEntry { key: "bmp.bitsPerPixel".into(), value: layout.bits_per_pixel.to_string() },
+            SemioImageMetadataEntry {
+                key: "bmp.rowOrder".into(),
+                value: match layout.row_order {
+                    BmpRowOrder::TopDown => "topDown".into(),
+                    BmpRowOrder::BottomUp => "bottomUp".into(),
+                },
+            },
+        ];
+        if layout.x_pixels_per_meter != 0 {
+            metadata.push(SemioImageMetadataEntry { key: "xPixelsPerMeter".into(), value: layout.x_pixels_per_meter.to_string() });
         }
-        let mut metadata = Vec::new();
-        if from.x_pixels_per_meter != 0 {
-            metadata.push(SemioImageMetadataEntry { key: "xPixelsPerMeter".into(), value: from.x_pixels_per_meter.to_string() });
-        }
-        if from.y_pixels_per_meter != 0 {
-            metadata.push(SemioImageMetadataEntry { key: "yPixelsPerMeter".into(), value: from.y_pixels_per_meter.to_string() });
+        if layout.y_pixels_per_meter != 0 {
+            metadata.push(SemioImageMetadataEntry { key: "yPixelsPerMeter".into(), value: layout.y_pixels_per_meter.to_string() });
         }
         Ok(SemioImageSnapshot {
             schema: STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(),
-            width: from.width,
-            height: from.height,
-            colorspace: colorspace_from_bpp(from.bits_per_pixel),
-            bit_depth: from.bits_per_pixel.min(u8::MAX as u16) as u8,
-            frames: vec![SemioImageFrame { delay_ms: 0, rgba8: from.pixels.clone() }],
+            width: layout.width,
+            height: layout.height,
+            colorspace: colorspace_from_profile(layout.profile),
+            bit_depth: 8,
+            frames: vec![SemioImageFrame { delay_ms: 0, rgba8 }],
             icc: None,
             metadata,
         })

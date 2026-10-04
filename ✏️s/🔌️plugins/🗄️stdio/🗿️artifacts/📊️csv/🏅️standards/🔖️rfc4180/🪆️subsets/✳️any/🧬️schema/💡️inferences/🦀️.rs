@@ -6,7 +6,6 @@
 
 use crate::CsvSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a csv snapshot. One field per named inference under
@@ -20,8 +19,11 @@ pub struct CsvInference {
 }
 
 impl protocol::Inference<CsvSnapshot> for CsvInference {
-    fn infer(snapshot: &CsvSnapshot) -> Self {
+    fn infer(snapshot: &CsvSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { outline: CsvOutline::compute(snapshot) }
+    
+        })
     }
 }
 
@@ -37,13 +39,6 @@ impl protocol::InferenceSpec<CsvSnapshot> for CsvInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::standards::v_rfc4180::subsets::any::schema::CsvBuilder {
-    type Snapshot = CsvSnapshot;
-    type Inference = CsvInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.csv.inference`'s facet leaves into the OS-wide inference catalog — call

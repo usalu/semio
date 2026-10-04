@@ -1,8 +1,18 @@
 //! 🗂️ Composable persisted collection artifact.
 
+#[cfg(test)]
+#[path="../../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/🦀️.rs"]
+pub(crate) mod test_allocation;
+#[cfg(test)]
+#[global_allocator]
+static TEST_ALLOCATION_OBSERVER:test_allocation::RequestedAllocator=test_allocation::RequestedAllocator;
+
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
+#[path = "🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"]
+mod snapshot_sqlite;
+pub use snapshot_sqlite::{register_sqlite_snapshot,SQLITE_SNAPSHOT_DIALECT};
 extern crate semio_framework_value_derive as value_derive;
 
 #[path = "♻️retirement/🦀️.rs"]
@@ -15,7 +25,7 @@ use std::collections::{HashMap, HashSet};
 pub const S_COLLECTION_SCHEMA: &str = "os.collection";
 
 /// 📁️ One parent-linked folder in a collection's flat tree. `parent_id: None` means root.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct CollectionFolder {
     pub id: String,
     pub parent_id: Option<String>,
@@ -40,54 +50,73 @@ pub enum ArtifactBody {
     Blob { blob: store::BlobRef },
 }
 
-fn artifact_body_document_spec() -> dsl::RecordSpec {
-    dsl::RecordSpec::new(Some("document"), dsl::RecordLayout::Inline, vec![dsl::FieldSpec::new(0, "schema", dsl::Shape::Text), dsl::FieldSpec::new(1, "document-id", dsl::Shape::Text)])
+fn artifact_body_document_spec() -> semio_framework_dsl_record::RecordSpec {
+    semio_framework_dsl_record::RecordSpec::new(Some("document"), semio_framework_dsl_record::RecordLayout::Inline, vec![semio_framework_dsl_record::FieldSpec::new(0, "schema", semio_framework_dsl_record::Shape::Text), semio_framework_dsl_record::FieldSpec::new(1, "document-id", semio_framework_dsl_record::Shape::Text)])
 }
 
-fn artifact_body_blob_spec() -> dsl::RecordSpec {
-    dsl::RecordSpec::new(Some("blob"), dsl::RecordLayout::Inline, vec![dsl::FieldSpec::new(0, "hash", dsl::Shape::Text), dsl::FieldSpec::new(1, "size", dsl::Shape::UInt), dsl::FieldSpec::new(2, "media-type", dsl::Shape::Text)])
+fn artifact_body_blob_spec() -> semio_framework_dsl_record::RecordSpec {
+    semio_framework_dsl_record::RecordSpec::new(Some("blob"), semio_framework_dsl_record::RecordLayout::Inline, vec![semio_framework_dsl_record::FieldSpec::new(0, "hash", semio_framework_dsl_record::Shape::Text), semio_framework_dsl_record::FieldSpec::new(1, "size", semio_framework_dsl_record::Shape::UInt), semio_framework_dsl_record::FieldSpec::new(2, "media-type", semio_framework_dsl_record::Shape::Text)])
 }
 
-fn artifact_body_document_spec_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::RecordSpec,String>{
+fn artifact_body_document_spec_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::RecordSpec,semio_framework_value::ValueError>{
     control.scoped_stage(|control|{
         control.begin_stage(2)?;
         let mut fields=control.allocate_vec(2)?;
-        fields.push(dsl::schema::producer::field(0,"schema",dsl::Shape::Text,control)?);
+        fields.push(semio_framework_dsl_record::producer::field(0,"schema",semio_framework_dsl_record::Shape::Text,control)?);
         control.step()?;
-        fields.push(dsl::schema::producer::field(1,"document-id",dsl::Shape::Text,control)?);
+        fields.push(semio_framework_dsl_record::producer::field(1,"document-id",semio_framework_dsl_record::Shape::Text,control)?);
         control.step()?;
-        dsl::schema::producer::record(Some("document"),dsl::RecordLayout::Inline,fields,control)
+        semio_framework_dsl_record::producer::record(Some("document"),semio_framework_dsl_record::RecordLayout::Inline,fields,control)
     })
 }
 
-fn artifact_body_blob_spec_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::RecordSpec,String>{
+fn artifact_body_blob_spec_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::RecordSpec,semio_framework_value::ValueError>{
     control.scoped_stage(|control|{
         control.begin_stage(3)?;
         let mut fields=control.allocate_vec(3)?;
-        fields.push(dsl::schema::producer::field(0,"hash",dsl::Shape::Text,control)?);
+        fields.push(semio_framework_dsl_record::producer::field(0,"hash",semio_framework_dsl_record::Shape::Text,control)?);
         control.step()?;
-        fields.push(dsl::schema::producer::field(1,"size",dsl::Shape::UInt,control)?);
+        fields.push(semio_framework_dsl_record::producer::field(1,"size",semio_framework_dsl_record::Shape::UInt,control)?);
         control.step()?;
-        fields.push(dsl::schema::producer::field(2,"media-type",dsl::Shape::Text,control)?);
+        fields.push(semio_framework_dsl_record::producer::field(2,"media-type",semio_framework_dsl_record::Shape::Text,control)?);
         control.step()?;
-        dsl::schema::producer::record(Some("blob"),dsl::RecordLayout::Inline,fields,control)
+        semio_framework_dsl_record::producer::record(Some("blob"),semio_framework_dsl_record::RecordLayout::Inline,fields,control)
     })
 }
 
-fn artifact_body_document_producer()->dsl::RecordSpecProducer{
-    dsl::RecordSpecProducer{ordinary:artifact_body_document_spec,decoding:|control|artifact_body_document_spec_controlled(control),encoding:|control|artifact_body_document_spec_controlled(control)}
+fn artifact_body_document_producer()->semio_framework_dsl_record::RecordSpecProducer{
+    semio_framework_dsl_record::RecordSpecProducer{ordinary:artifact_body_document_spec,decoding:|control|artifact_body_document_spec_controlled(control),encoding:|control|artifact_body_document_spec_controlled(control)}
 }
 
-fn artifact_body_blob_producer()->dsl::RecordSpecProducer{
-    dsl::RecordSpecProducer{ordinary:artifact_body_blob_spec,decoding:|control|artifact_body_blob_spec_controlled(control),encoding:|control|artifact_body_blob_spec_controlled(control)}
+fn artifact_body_blob_producer()->semio_framework_dsl_record::RecordSpecProducer{
+    semio_framework_dsl_record::RecordSpecProducer{ordinary:artifact_body_blob_spec,decoding:|control|artifact_body_blob_spec_controlled(control),encoding:|control|artifact_body_blob_spec_controlled(control)}
 }
 
-impl dsl::DslVariants for ArtifactBody {
-    fn variants() -> Vec<(String, dsl::RecordSpecProducer)> {
+impl semio_framework_dsl_record::DslVariants for ArtifactBody {
+    fn to_named_record_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(String,semio_framework_dsl_record::RecordValue),semio_framework_value::ValueError>{
+        control.scoped_stage(|control|{
+            let count=match self{Self::Document{..}=>2,Self::Blob{..}=>3};control.begin_stage(count)?;let mut record=semio_framework_dsl_record::native_encoding::EncodedRecord::new(count,control)?;
+            let keyword=match self{
+                Self::Document{schema,document_id}=>{record.insert(0,semio_framework_dsl_record::FieldValue::Text(control.copy_text(schema)?))?;control.step()?;record.insert(1,semio_framework_dsl_record::FieldValue::Text(control.copy_text(document_id)?))?;control.step()?;"document"},
+                Self::Blob{blob}=>{record.insert(0,semio_framework_dsl_record::FieldValue::Text(control.copy_text(&blob.hash)?))?;control.step()?;record.insert(1,semio_framework_dsl_record::FieldValue::UInt(blob.size))?;control.step()?;record.insert(2,semio_framework_dsl_record::FieldValue::Text(control.copy_text(&blob.media_type)?))?;control.step()?;"blob"}
+            };Ok((control.copy_text(keyword)?,record.take()))
+        })
+    }
+    fn from_named_record_controlled(keyword:&str,record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{
+        fn text(record:&semio_framework_dsl_record::RecordValue,id:u16,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<String,semio_framework_value::ValueError>{control.scoped_stage(|control|{control.begin_stage(0)?;<String as semio_framework_dsl_record::DslField>::from_value_controlled(record.get(id).ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"collection body text is absent"))?,control)})}
+        let result:Result<Self,semio_framework_value::ValueError>=control.scoped_stage(|control|{
+            match keyword{
+                "document"=>{control.begin_stage(2)?;let schema=text(record,0,control)?;control.step()?;let document_id=text(record,1,control)?;control.step()?;Ok(Self::Document{schema,document_id})},
+                "blob"=>{control.begin_stage(3)?;let hash=text(record,0,control)?;control.step()?;let size=control.scoped_stage(|control|{control.begin_stage(0)?;<u64 as semio_framework_dsl_record::DslField>::from_value_controlled(record.get(1).ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"collection blob size is absent"))?,control)})?;control.step()?;let media_type=text(record,2,control)?;control.step()?;Ok(Self::Blob{blob:store::BlobRef{hash,size,media_type}})},
+                _=>Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"collection body keyword is not declared"))
+            }
+        });result
+    }
+    fn variants() -> Vec<(String, semio_framework_dsl_record::RecordSpecProducer)> {
         vec![("document".to_string(), artifact_body_document_producer()), ("blob".to_string(), artifact_body_blob_producer())]
     }
 
-    fn variants_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<Vec<(String,dsl::RecordSpecProducer)>,String>{
+    fn variants_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<Vec<(String,semio_framework_dsl_record::RecordSpecProducer)>,semio_framework_value::ValueError>{
         control.scoped_stage(|control|{
             control.begin_stage(2)?;
             let mut variants=control.allocate_vec(2)?;
@@ -99,60 +128,60 @@ impl dsl::DslVariants for ArtifactBody {
         })
     }
 
-    fn to_named_record(&self) -> (String, dsl::RecordValue) {
+    fn to_named_record(&self) -> (String, semio_framework_dsl_record::RecordValue) {
         match self {
             ArtifactBody::Document { schema, document_id } => {
-                let mut record = dsl::RecordValue::default();
-                record.fields.insert(0, dsl::FieldValue::Text(schema.clone()));
-                record.fields.insert(1, dsl::FieldValue::Text(document_id.clone()));
+                let mut record = semio_framework_dsl_record::RecordValue::default();
+                record.fields.insert(0, semio_framework_dsl_record::FieldValue::Text(schema.clone()));
+                record.fields.insert(1, semio_framework_dsl_record::FieldValue::Text(document_id.clone()));
                 ("document".to_string(), record)
             }
             ArtifactBody::Blob { blob } => {
-                let mut record = dsl::RecordValue::default();
-                record.fields.insert(0, dsl::FieldValue::Text(blob.hash.clone()));
-                record.fields.insert(1, dsl::FieldValue::UInt(blob.size));
-                record.fields.insert(2, dsl::FieldValue::Text(blob.media_type.clone()));
+                let mut record = semio_framework_dsl_record::RecordValue::default();
+                record.fields.insert(0, semio_framework_dsl_record::FieldValue::Text(blob.hash.clone()));
+                record.fields.insert(1, semio_framework_dsl_record::FieldValue::UInt(blob.size));
+                record.fields.insert(2, semio_framework_dsl_record::FieldValue::Text(blob.media_type.clone()));
                 ("blob".to_string(), record)
             }
         }
     }
 
-    fn from_named_record(keyword: &str, record: &dsl::RecordValue) -> Result<Self, dsl::TextError> {
+    fn from_named_record(keyword: &str, record: &semio_framework_dsl_record::RecordValue) -> Result<Self, semio_framework_diagnostic::TextError> {
         match keyword {
             "document" => {
                 let schema = match record.get(0) {
-                    Some(dsl::FieldValue::Text(s)) => s.clone(),
-                    other => return Err(dsl::__rt::field_error(format!("expected schema, found {other:?}"))),
+                    Some(semio_framework_dsl_record::FieldValue::Text(s)) => s.clone(),
+                    other => return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("expected schema, found {other:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1))),
                 };
                 let document_id = match record.get(1) {
-                    Some(dsl::FieldValue::Text(s)) => s.clone(),
-                    other => return Err(dsl::__rt::field_error(format!("expected document-id, found {other:?}"))),
+                    Some(semio_framework_dsl_record::FieldValue::Text(s)) => s.clone(),
+                    other => return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("expected document-id, found {other:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1))),
                 };
                 Ok(ArtifactBody::Document { schema, document_id })
             }
             "blob" => {
                 let hash = match record.get(0) {
-                    Some(dsl::FieldValue::Text(s)) => s.clone(),
-                    other => return Err(dsl::__rt::field_error(format!("expected hash, found {other:?}"))),
+                    Some(semio_framework_dsl_record::FieldValue::Text(s)) => s.clone(),
+                    other => return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("expected hash, found {other:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1))),
                 };
                 let size = match record.get(1) {
-                    Some(dsl::FieldValue::UInt(v)) => *v,
-                    other => return Err(dsl::__rt::field_error(format!("expected size, found {other:?}"))),
+                    Some(semio_framework_dsl_record::FieldValue::UInt(v)) => *v,
+                    other => return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("expected size, found {other:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1))),
                 };
                 let media_type = match record.get(2) {
-                    Some(dsl::FieldValue::Text(s)) => s.clone(),
-                    other => return Err(dsl::__rt::field_error(format!("expected media-type, found {other:?}"))),
+                    Some(semio_framework_dsl_record::FieldValue::Text(s)) => s.clone(),
+                    other => return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("expected media-type, found {other:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1))),
                 };
                 Ok(ArtifactBody::Blob { blob: store::BlobRef { hash, size, media_type } })
             }
-            other => Err(dsl::__rt::field_error(format!("unknown ArtifactBody keyword '{other}'"))),
+            other => Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown ArtifactBody keyword '{other}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1))),
         }
     }
 }
 
 /// 🧾️ One addressable artifact placed in a collection folder tree. `id == artifact id ==
 /// ArtifactEnvelope.id` for document bodies (see `🔖️Addressing`). `folder_id: None` means root-level.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct CollectionEntry {
     pub id: String,
     pub folder_id: Option<String>,
@@ -163,8 +192,8 @@ pub struct CollectionEntry {
 }
 
 /// 🗂️ A collection's flat parent-linked folder tree plus its artifact entries.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslArtifact)]
-#[dsl(id = "os.collection")]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact)]
+#[artifact(id = "os.collection")]
 pub struct CollectionSnapshot {
     pub schema: String,
     pub name: String,
@@ -186,16 +215,16 @@ impl store::ArtifactDsl for CollectionSnapshot {
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -203,20 +232,24 @@ impl store::ArtifactDsl for CollectionSnapshot {
 
 /// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
 impl store::ArtifactPack for CollectionSnapshot {
+    fn native_snapshot_registration() -> Option<(store::os_io::Dialect, store::ArtifactCodec)> {
+        Some((SQLITE_SNAPSHOT_DIALECT, store::ArtifactCodec::bare::<Self, CollectionMutation>(S_COLLECTION_SCHEMA)))
+    }
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> { Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec()) }
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -225,14 +258,14 @@ impl store::ArtifactPack for CollectionSnapshot {
 /// its new container link. Named for derivation rule 5 (`move-to-<container>{id, new_parent}`), which
 /// is why `MoveToCollection`/`MoveToFolder` below both carry this same shape despite addressing
 /// different collections (`CollectionFolder.parent_id` vs `CollectionEntry.folder_id`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct MovedToContainer {
     pub id: String,
     pub new_parent: Option<String>,
 }
 
 /// ✏️ Sparse per-field delta for a rename — the item's id plus its new name.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct RenamedItem {
     pub id: String,
     pub new_name: String,
@@ -240,7 +273,7 @@ pub struct RenamedItem {
 
 /// 📦️ Sparse per-field delta for `ReplaceEntryBody` — the entry id plus its new body. Mirrors
 /// `CollectionEntry.body`'s own `#[dsl(statements)]` handling of the foreign-shaped `ArtifactBody`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 pub struct ReplacedEntryBody {
     pub entry_id: String,
     #[dsl(statements)]
@@ -251,7 +284,7 @@ pub struct ReplacedEntryBody {
 /// re-parenting is derivation rule 5's hierarchy verb (`move-to-<container>`, not `change-*` — SMO
 /// corrected DKM's first `ChangeFolderParent`/`ChangeEntryFolder` proposal on exactly this point), and
 /// `RenameCollection` replaces `SetName` since the target is the document root's identity field.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 pub enum CollectionMutation {
     RenameCollection {
         new_name: String,
@@ -297,22 +330,22 @@ pub enum CollectionMutation {
 
 //#region 🔖️HandcraftedOpCodecs
 impl protocol::OpText for CollectionMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = semio_framework_dsl_record::parse(line, &(spec_fn.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?;
+                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
+        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown mutation line '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
     }
     fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec");
-        dsl::print(&record, &(spec_fn.ordinary)(), dsl::JoinMode::Inline)
+        semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline)
     }
 }
 
@@ -375,7 +408,7 @@ fn folder_depth(folders: &[CollectionFolder], folder_id: &str) -> usize {
 /// merge."* `deleted_folder_ids`/`deleted_entry_ids` are id lists (never full records) so a cascade
 /// delete's diff stays a set of removed ids — the removed folders'/entries' full payload lives only in
 /// `CollectionMutation::inverse`'s own reconstruction from `base`, never duplicated into the diff.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, dsl::DslDiff)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslDiff)]
 pub struct CollectionDiff {
     pub renamed_collection: Option<String>,
 
@@ -773,7 +806,8 @@ impl protocol::Mutation<CollectionSnapshot> for CollectionMutation {
         protocol::MutationOutcome::new(diff)
     }
 
-    fn inverse(&self, base: &CollectionSnapshot) -> Vec<Self> {
+    fn inverse(&self, base: &CollectionSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+    Ok((|| {
         match self {
             CollectionMutation::RenameCollection { .. } => vec![CollectionMutation::RenameCollection { new_name: base.name.clone() }],
             CollectionMutation::CreateFolder { folder, .. } => vec![CollectionMutation::DeleteFolder { folder_id: folder.id.clone() }],
@@ -821,7 +855,9 @@ impl protocol::Mutation<CollectionSnapshot> for CollectionMutation {
                 base.entries.iter().find(|entry| &entry.id == entry_id).map(|entry| vec![CollectionMutation::ReplaceEntryBody { entry_id: entry_id.clone(), new_body: entry.body.clone() }]).unwrap_or_default()
             }
         }
-    }
+    
+    })())
+}
 }
 //#endregion 🔖️CollectionMutation
 //#endregion 🔖️Collection
@@ -904,7 +940,7 @@ pub fn reconcile_collection_integrity(mut snapshot: CollectionSnapshot) -> (Coll
     for folder in &mut snapshot.folders {
         if let Some(parent_id) = &folder.parent_id {
             if !folder_ids.contains(parent_id) {
-                messages.push(protocol::MutationMessage::warn("mutation.clamped", format!("folder {} referenced missing parent {parent_id}; reparented to root", folder.id)).at(vec!["collection/folder-orphaned".to_string(), folder.id.clone()]));
+                messages.push(protocol::MutationMessage::warning("mutation.clamped", format!("folder {} referenced missing parent {parent_id}; reparented to root", folder.id)).at(vec!["collection/folder-orphaned".to_string(), folder.id.clone()]));
                 folder.parent_id = None;
             }
         }
@@ -915,7 +951,7 @@ pub fn reconcile_collection_integrity(mut snapshot: CollectionSnapshot) -> (Coll
     let cyclic = folders_in_cycle(&snapshot.folders);
     for folder in &mut snapshot.folders {
         if cyclic.contains(&folder.id) {
-            messages.push(protocol::MutationMessage::warn("mutation.clamped", format!("folder {} participates in a parent cycle; cut to root", folder.id)).at(vec!["collection/folder-cycle".to_string(), folder.id.clone()]));
+            messages.push(protocol::MutationMessage::warning("mutation.clamped", format!("folder {} participates in a parent cycle; cut to root", folder.id)).at(vec!["collection/folder-cycle".to_string(), folder.id.clone()]));
             folder.parent_id = None;
         }
     }
@@ -931,7 +967,7 @@ pub fn reconcile_collection_integrity(mut snapshot: CollectionSnapshot) -> (Coll
     for entry in &mut snapshot.entries {
         if let Some(folder_id) = &entry.folder_id {
             if !folder_ids.contains(folder_id) {
-                messages.push(protocol::MutationMessage::warn("mutation.clamped", format!("entry {} referenced missing folder {folder_id}; moved to root", entry.id)).at(vec!["collection/entry-folder-missing".to_string(), entry.id.clone()]));
+                messages.push(protocol::MutationMessage::warning("mutation.clamped", format!("entry {} referenced missing folder {folder_id}; moved to root", entry.id)).at(vec!["collection/entry-folder-missing".to_string(), entry.id.clone()]));
                 entry.folder_id = None;
             }
         }
@@ -1031,7 +1067,7 @@ pub const COLLECTION_ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("🧬️sch
 
 /// 📦️ Parses and validates the builtin collection package declaration.
 pub fn collection_package_from_schema(source: &str) -> Result<CollectionArtifactPackage, CollectionPackageSchemaError> {
-    let parsed = store::os_pack::json::from_json_str::<CollectionPackageSource>(source).map_err(|error| CollectionPackageSchemaError(error.to_string()))?;
+    let parsed = semio_framework_pack_json::from_json_str::<CollectionPackageSource>(source, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| CollectionPackageSchemaError(error.to_string()))?;
     if parsed.definition_version != 1 || parsed.id != "os.collection" || parsed.artifact != "collection" || parsed.directory != "🗂️collection" || parsed.rust_package != "semio-framework-artifact-space-collection" || parsed.nx_project != "@semio-tech/framework-space-collection-rs" || !parsed.dependencies.is_empty() {
         return Err(CollectionPackageSchemaError("builtin collection package identity does not match its canonical declaration".into()));
     }
@@ -1053,3 +1089,7 @@ pub fn package_descriptor() -> Result<CollectionArtifactPackage, CollectionPacka
 #[cfg(test)]
 #[path = "🧪️tests/🗂️collection/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path="🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_snapshot_baseline;

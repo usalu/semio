@@ -151,8 +151,8 @@ async fn json_round_trips_a_whole_body() {
     let surface = body.surfaces.insert(Surface::Plane { frame });
     let face = insert_face(&mut body, surface);
     make_triangle_loop(&mut body, face, [Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(0.0, 1.0, 0.0)]);
-    let json = pack::to_json_string(&body);
-    let back: Body = pack::from_json_str(&json).unwrap();
+    let json = semio_framework_pack_json::to_json_string(&body);
+    let back: Body = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(back.vertices.len(), body.vertices.len());
     assert_eq!(back.edges.len(), body.edges.len());
     assert_eq!(back.faces.len(), body.faces.len());

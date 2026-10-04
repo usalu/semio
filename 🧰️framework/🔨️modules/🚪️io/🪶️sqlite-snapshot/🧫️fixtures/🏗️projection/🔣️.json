@@ -12,6 +12,14 @@
     255,
     17
   ],
+  "ownershipCopy": {
+    "octetBytes": 200000,
+    "cancelAfterBytes": 65536,
+    "textToken": "😀x",
+    "textRepeats": 70000,
+    "textCodeUnits": 210000,
+    "textUtf8Bytes": 350000
+  },
   "keyedOrder": {
     "input": [
       "3",

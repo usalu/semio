@@ -6,7 +6,10 @@ use crate::Process3dSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ Undoing a create is deleting the same machine back out, by its own id.
-pub fn inverse(payload: &super::CreateMachine, _base: &Process3dSnapshot) -> Vec<Process3dMutation> {
+pub fn inverse(payload: &super::CreateMachine, _base: &Process3dSnapshot) -> Result<Vec<Process3dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![Process3dMutation::DeleteMachine(DeleteMachine { id: payload.machine.id.clone() })]
+
+    })())
 }
 //#endregion 🔖️Inverse

@@ -12,7 +12,7 @@ static MESH_IMPORT_GUARD: std::sync::Mutex<()> = std::sync::Mutex::new(());
 async fn host_media_kind() -> semio_framework::ArtifactKindSpec {
     semio_framework::ArtifactKindSpec {
         id: "3d.builder-test".into(),
-        label: crate::LocalizedLabel::native("Builder Test 3D", "Builder-Test 3D"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Builder Test 3D", "Builder-Test 3D"),
         source_format: "semio.builder-test.mesh/v1".into(),
         component_kind: "builder-test".into(),
         dimension: "3d".into(),
@@ -26,14 +26,14 @@ async fn host_media_kind() -> semio_framework::ArtifactKindSpec {
     }
 }
 
-fn counting_mesh_importer(_mesh: &semio_framework::MeshData) -> Result<dsl::os_pack::json::Value, String> {
+fn counting_mesh_importer(_mesh: &semio_framework::MeshData) -> Result<semio_framework_pack_json::Value, String> {
     MESH_IMPORT_EXECUTIONS.fetch_add(1, Ordering::SeqCst);
-    Ok(dsl::json!({ "bridge": "counting" }))
+    Ok(semio_framework_pack_json::json!({ "bridge": "counting" }))
 }
 
-fn alternate_mesh_importer(_mesh: &semio_framework::MeshData) -> Result<dsl::os_pack::json::Value, String> {
+fn alternate_mesh_importer(_mesh: &semio_framework::MeshData) -> Result<semio_framework_pack_json::Value, String> {
     MESH_IMPORT_EXECUTIONS.fetch_add(100, Ordering::SeqCst);
-    Ok(dsl::json!({ "bridge": "alternate" }))
+    Ok(semio_framework_pack_json::json!({ "bridge": "alternate" }))
 }
 
 use super::dependency_fixture::{AddValue, DependencyTestOp, DependencyTestSnapshot};
@@ -91,7 +91,7 @@ async fn host_media_contributions_are_idempotent_and_execute_only_at_runtime() {
     assert_eq!(MESH_IMPORT_EXECUTIONS.load(Ordering::SeqCst), 0, "assembly must never execute a media converter");
     assert_eq!(plugin.host_media_handlers().len(), 1);
     let result = plugin.import_mesh(&crate::MeshImportRequest { artifact_kind: kind.id.clone(), artifact_schema: kind.schema.clone(), mesh: semio_framework::MeshData::default() }).expect("runtime bridge execution");
-    assert_eq!(result.document, dsl::json!({ "bridge": "counting" }));
+    assert_eq!(result.document, semio_framework_pack_json::json!({ "bridge": "counting" }));
     assert_eq!(MESH_IMPORT_EXECUTIONS.load(Ordering::SeqCst), 1);
 }
 

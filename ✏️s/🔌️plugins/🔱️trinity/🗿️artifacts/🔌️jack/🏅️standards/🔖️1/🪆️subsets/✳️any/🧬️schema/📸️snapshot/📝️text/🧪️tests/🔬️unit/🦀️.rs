@@ -1,6 +1,6 @@
-use crate::JackWorkingScene;
 use super::*;
 use crate::empty_trinity_graph_fixture;
+use crate::JackWorkingScene;
 
 #[semio_framework_async_macros::async_test]
 async fn nakagin_example_dsl_round_trips() {
@@ -34,49 +34,60 @@ async fn dsl_round_trip_mini_fixture() {
     use crate::{Camera, Edge, JackSnapshot, Manifest, Node, Port, PortDirection, PropertyBag, PropertyValue};
     use std::collections::BTreeMap;
 
-    let fixture = JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "mini".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes: vec![
-            Node {
-                id: "root".into(),
-                kind: "Piece".into(),
-                name: "core".into(),
-                x: 0.0,
-                y: 0.0,
-                width: 80.0,
-                height: 40.0,
+    let fixture = JackSnapshot::with_content(
+        JackSnapshot::SCHEMA.into(),
+        "mini".into(),
+        Some("nakagin".into()),
+        Manifest::nakagin_default(),
+        Camera::default(),
+        JackWorkingScene {
+            nodes: vec![
+                Node {
+                    id: "root".into(),
+                    kind: "Piece".into(),
+                    name: "core".into(),
+                    x: 0.0,
+                    y: 0.0,
+                    width: 80.0,
+                    height: 40.0,
+                    properties: {
+                        let mut p = PropertyBag::new();
+                        let mut pos = PropertyBag::new();
+                        pos.insert("x".into(), PropertyValue::Number(0.0));
+                        pos.insert("y".into(), PropertyValue::Number(0.0));
+                        pos.insert("z".into(), PropertyValue::Number(0.0));
+                        p.insert("position".into(), PropertyValue::Object(pos));
+                        p
+                    },
+                    ports: vec![Port { id: "out-a".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() }],
+                },
+                Node {
+                    id: "child".into(),
+                    kind: "Piece".into(),
+                    name: "capsule".into(),
+                    x: 120.0,
+                    y: 0.0,
+                    width: 80.0,
+                    height: 40.0,
+                    properties: PropertyBag::new(),
+                    ports: vec![Port { id: "in-a".into(), kind: "Connector".into(), direction: PortDirection::In, properties: PropertyBag::new() }],
+                },
+            ],
+            edges: vec![Edge {
+                id: "e1".into(),
+                kind: "Connection".into(),
+                source: "root@out-a".into(),
+                target: "child@in-a".into(),
                 properties: {
                     let mut p = PropertyBag::new();
-                    let mut pos = BTreeMap::new();
-                    pos.insert("x".into(), PropertyValue::Number(0.0));
-                    pos.insert("y".into(), PropertyValue::Number(0.0));
-                    pos.insert("z".into(), PropertyValue::Number(0.0));
-                    p.insert("position".into(), PropertyValue::Object(pos));
+                    p.insert("u".into(), PropertyValue::Number(1.2));
+                    p.insert("v".into(), PropertyValue::Number(-0.6));
                     p
                 },
-                ports: vec![Port { id: "out-a".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() }],
-            },
-            Node {
-                id: "child".into(),
-                kind: "Piece".into(),
-                name: "capsule".into(),
-                x: 120.0,
-                y: 0.0,
-                width: 80.0,
-                height: 40.0,
-                properties: PropertyBag::new(),
-                ports: vec![Port { id: "in-a".into(), kind: "Connector".into(), direction: PortDirection::In, properties: PropertyBag::new() }],
-            },
-        ], edges: vec![Edge {
-            id: "e1".into(),
-            kind: "Connection".into(),
-            source: "root@out-a".into(),
-            target: "child@in-a".into(),
-            properties: {
-                let mut p = PropertyBag::new();
-                p.insert("u".into(), PropertyValue::Number(1.2));
-                p.insert("v".into(), PropertyValue::Number(-0.6));
-                p
-            },
-        }] }, Some("root".into()));
+            }],
+        },
+        Some("root".into()),
+    );
     ::store::os_store::test_support::assert_dsl_round_trip(&fixture);
     ::store::os_store::test_support::assert_dsl_pack_equivalence(&fixture);
 }

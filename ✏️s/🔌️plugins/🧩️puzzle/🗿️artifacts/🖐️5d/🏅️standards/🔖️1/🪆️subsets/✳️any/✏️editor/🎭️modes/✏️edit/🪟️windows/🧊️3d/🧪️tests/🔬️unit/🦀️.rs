@@ -15,7 +15,7 @@ fn document_with_one_gripped_part() -> Puzzle5dDocument {
         "parts": [{ "id": "teil-ä", "partKind": "Part", "2d": { "x": 1.0, "y": 2.0 }, "3d": { "origin": [0.0, 0.0, 0.0] }, "grips": [{ "id": "g1", "gripKind": "griff-ü", "2d": {}, "3d": { "position": [1.0, 0.0, 0.0] } }] }],
         "fasteners": []
     });
-    <Puzzle5dDocument as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(&dsl::os_pack::json::parse(&projection.to_string()).expect("projection"))).expect("document")
+    <Puzzle5dDocument as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(&projection.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("projection"))).expect("document")
 }
 
 fn scene_with(interaction: Puzzle5dInteractionSnapshot, runtime: Puzzle5dRuntime, active_utility: &str) -> Puzzle5dScene {
@@ -118,7 +118,7 @@ fn the_transform_utility_arms_the_host_gumball() {
 fn the_world_window_binds_one_transform_utility_with_one_flag_group() {
     let labels = &Puzzle5dLabels::NATIVE_EN;
     let envelope = scene_with(Puzzle5dInteractionSnapshot::default(), Puzzle5dRuntime::default(), "select");
-    let definition = definition(&envelope, labels);
+    let definition = definition();
     assert!(definition.utilities.iter().any(|id| id.as_str() == utilities::transform::UTILITY_ID));
     for retired in ["move", "rotate", "scale"] {
         assert!(!definition.utilities.iter().any(|id| id.as_str() == retired), "{retired} must not be a utility of its own");
@@ -198,7 +198,7 @@ fn camera_json_follows_the_projection() {
 #[test]
 fn every_world_instance_names_a_mesh_this_scene_publishes() {
     let mut app = app();
-    dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": crate::editor::puzzle5d::PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin");
+    dispatch(&mut app, "setActiveExample", Some(&semio_framework_pack_json::json!({ "exampleId": crate::editor::puzzle5d::PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin");
     let rendered = render_body(&mut app, BODY_KEY);
     close_app(&mut app);
     let scene: serde_json::Value = serde_json::from_str(&rendered).expect("world scene json");
@@ -281,7 +281,7 @@ fn world_markers_declare_this_domains_granularities() {
         ] }],
         "fasteners": [{ "id": "f1", "source": "teil-ä:g1", "target": "teil-ä:g2" }]
     });
-    let document = <Puzzle5dDocument as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(&dsl::os_pack::json::parse(&projection.to_string()).expect("projection"))).expect("document");
+    let document = <Puzzle5dDocument as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(&projection.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("projection"))).expect("document");
     let grips: Vec<Value> = serde_json::from_str(&world_grips_json(&document, &Puzzle5dRuntime::default(), &part_selection(), "select")).expect("vorticesJson");
     assert_eq!(grips[0]["interactionGranularityId"], serde_json::json!(PUZZLE5D_GRANULARITY_GRIP));
     let fasteners: Vec<Value> = serde_json::from_str(&world_fasteners_json(&document)).expect("attractionsJson");

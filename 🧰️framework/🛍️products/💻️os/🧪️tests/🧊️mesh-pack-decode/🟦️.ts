@@ -15,6 +15,34 @@ export async function registerTests5(vitest: NonNullable<ImportMeta["vitest"]>, 
   const bytes = Uint8Array.from(Buffer.from(fixture.packBodyBase64, "base64"));
 
   describe("mesh pack decode", () => {
+    it("refuses malformed analytic references and missing component pick buffers", () => {
+      const fixture=JSON.parse(readFileSync(new URL("../../🔨️modules/🧊️3d/📐️brep/⚙️engine/🧫️fixtures/🎯️component-picking/🔣️.json",source.url),"utf8"));
+      for(const row of fixture.referenceRefusals) {
+        const payload=new TextEncoder().encode(JSON.stringify({componentReferences:row.references}));
+        const header=[0,1,13,8];let size=payload.length;
+        while(size>=128){header.push((size&127)|128);size=Math.floor(size/128);}header.push(size);
+        expect(()=>decodeMeshPackBody(Uint8Array.from([...header,...payload]))).toThrow(/component references/);
+      }
+    });
+    it("preserves lossless analytic component references in the shared preview record", () => {
+      const fixture = JSON.parse(readFileSync(new URL("../../🔨️modules/🧊️3d/📐️brep/⚙️engine/🧫️fixtures/🎯️component-picking/🔣️.json", source.url), "utf8"));
+      const mesh = decodeMeshPackBody(Uint8Array.from(Buffer.from(fixture.meshPack.bodyBase64, "base64")));
+      expect(Array.from(mesh.faceIds)).toEqual(fixture.expected.faceIds);
+      expect(Array.from(mesh.edgeIds)).toEqual(fixture.expected.edgeIds);
+      expect((mesh as unknown as { componentReferences: unknown }).componentReferences).toEqual(fixture.expected.componentReferences);
+      console.log("[DEBUG] Shared preview record retains four full analytic labels and segment pick ranges");
+    });
+    it("decodes owned indexed channels, seam values and texture bytes from the portable record", () => {
+      const fixture = JSON.parse(readFileSync(new URL("🧫️fixtures/🧊️mesh/mesh-pack-attributes.json", source.url), "utf8"));
+      const mesh = decodeMeshPackBody(Uint8Array.from(Buffer.from(fixture.packBodyBase64, "base64")));
+      expect(mesh.attributes).toEqual(fixture.mesh.attributes);
+      expect(mesh.materials).toEqual(fixture.mesh.materials);
+      expect(mesh.textures).toEqual(fixture.mesh.textures);
+      expect(Array.from(mesh.uvs)).toEqual(fixture.mesh.uvs);
+      expect(mesh.attributes!.normal.values.length).toBe(1);
+      expect(mesh.attributes!.labels.values.length).toBe(1);
+      expect(mesh.attributes!.normal.indices!.length).toBe(mesh.positions.length / 3);
+    });
     it("decodes the shared golden vector into typed arrays that match the fixture's mesh", () => {
       expect(bytes.length).toBe(fixture.packBodyBytes);
       const mesh = decodeMeshPackBody(bytes);

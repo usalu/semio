@@ -9,7 +9,7 @@ pub fn diff(payload: &UpdateThroughThicknessInputs, base: &En1993Snapshot) -> pr
     let mut values = base.sections.clone();
     if let Some(idx) = values.iter().position(|x| x.id == payload.section.id) {
         if values[idx] == payload.section {
-            return protocol::MutationOutcome::empty().warn("mutation.no-op", "Entity already has this value.");
+            return protocol::MutationOutcome::empty().warning("mutation.no-op", "Entity already has this value.");
         }
         values[idx] = payload.section.clone();
     } else {

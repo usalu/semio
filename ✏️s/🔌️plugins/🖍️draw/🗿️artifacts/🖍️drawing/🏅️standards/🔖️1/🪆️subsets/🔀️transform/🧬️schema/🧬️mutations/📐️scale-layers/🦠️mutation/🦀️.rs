@@ -5,7 +5,7 @@ use crate::DrawingSnapshot;
 
 //#region 🔖️Mutation
 /// 📐️ `scale-layers` payload — the scaled layer ids, the world-space pivot that stays in place and the axis factors.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
@@ -30,9 +30,12 @@ impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for ScaleLayers {
     fn diff(&self, base: &DrawingSnapshot) -> protocol::MutationOutcome<crate::diff::DrawingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &DrawingSnapshot) -> Vec<DrawingMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let ((x_en, x_de), (y_en, y_de)) = (drawing_label_number(self.scale_x), drawing_label_number(self.scale_y));
         let (en, de) = drawing_label_layers(self.targets.len());

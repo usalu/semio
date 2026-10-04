@@ -1,0 +1,7 @@
+# Row Action Follow-Up Audit — October 4, 2026
+
+The executed admission gates passed 6 focused and 188 Interpreter tests. Root read-only review subsequently found two untested authority edges in `currentRowAction`: it does not check the current record's disabled flag, and it selects the current action solely by the rendered action's array index. A publication that reorders/replaces actions before React commits can make a click on the old displayed verb dispatch a different current verb. A changed target can likewise redirect the old callback.
+
+The Media lane added precise mounted witnesses for a disabled-record publication and action-slot replacement/reordering. Dispatch now retains the rendered semantic target and verb while rebuilding guards from the current matching action. Cosmetic label/reason changes do not create a new command identity or unlock an in-flight action. Root reread the repaired dispatch and identity functions: current disabled records refuse, and the authored target/verb must match before the current binding is rebuilt.
+
+The focused gate passed 8/8 (`row-action-admission-green-4.log`), and aggregate renderer typecheck passed (`row-action-admission-typecheck-3.log`). Root then reran the complete Interpreter suite against the follow-up: 188/188 passed (`row-action-interpreter-regression-3.log`, cache disabled). Current browser acceptance remains pending the coherent preview build.

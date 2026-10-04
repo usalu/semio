@@ -18,7 +18,7 @@ fn language_neutral_settings_mutations_match_the_serde_oracle_and_restore_the_ba
         assert_eq!(EnergyModelConfigMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
         assert_eq!(EnergyModelConfigMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
         let mut restored = next;
-        for inverse in mutation.inverse(&base) {
+        for inverse in mutation.inverse(&base).expect("valid retained mutation inverse fixture") {
             restored = inverse.diff(&restored).diff().apply(&restored).unwrap();
         }
         assert_eq!(restored, base);
@@ -75,7 +75,7 @@ fn changing_the_result_field_leaves_the_run_settings_and_the_run_pointers_alone(
         "resultField must stay out of the run's settings reads or recolouring restarts the run"
     );
     let mut restored = next;
-    for inverse in mutation.inverse(&base) {
+    for inverse in mutation.inverse(&base).expect("valid retained mutation inverse fixture") {
         restored = inverse.diff(&restored).diff().apply(&restored).unwrap();
     }
     assert_eq!(restored, base);

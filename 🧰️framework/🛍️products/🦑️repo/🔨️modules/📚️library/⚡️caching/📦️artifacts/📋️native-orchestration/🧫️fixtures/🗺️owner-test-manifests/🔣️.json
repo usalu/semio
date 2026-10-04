@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "cases": [
+    {"id": "one-owner", "args": ["--manifest", "owner/Cargo.toml", "--cwd", "owner", "--", "bun", "📜️script.ts", "test"], "valid": true, "testManifests": []},
+    {"id": "exact-neutral-roster", "args": ["--manifest", "general/Cargo.toml", "--cwd", "general", "--test-manifest", "hash/Cargo.toml", "--test-manifest", "pixels/Cargo.toml", "--", "bun", "📜️script.ts", "test-core-modules"], "valid": true, "testManifests": ["hash/Cargo.toml", "pixels/Cargo.toml"]},
+    {"id": "duplicate-refused", "args": ["--manifest", "owner/Cargo.toml", "--cwd", "owner", "--test-manifest", "a/Cargo.toml", "--test-manifest", "a/Cargo.toml", "--", "bun"], "valid": false},
+    {"id": "missing-selection-refused", "args": ["--manifest", "owner/Cargo.toml", "--cwd", "owner", "--test-manifest", "--", "bun"], "valid": false},
+    {"id": "unknown-option-refused", "args": ["--manifest", "owner/Cargo.toml", "--cwd", "owner", "--packages", "a", "--", "bun"], "valid": false},
+    {"id": "missing-command-refused", "args": ["--manifest", "owner/Cargo.toml", "--cwd", "owner", "--"], "valid": false},
+    {"id": "empty-owner-refused", "args": ["--manifest", "", "--cwd", "owner", "--", "bun"], "valid": false}
+  ]
+}

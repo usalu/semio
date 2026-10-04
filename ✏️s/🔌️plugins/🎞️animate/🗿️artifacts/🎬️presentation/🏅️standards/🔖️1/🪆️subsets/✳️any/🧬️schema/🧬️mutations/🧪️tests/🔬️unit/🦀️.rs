@@ -9,7 +9,7 @@ fn tile(id: &str) -> FigureTileDraft {
 
 async fn round_trip(base: &PresentationSnapshot, mutation: &PresentationMutation) -> PresentationSnapshot {
     let (forward, _messages) = vcs::apply_mutation(base, mutation).expect("valid mutation");
-    let mut backward = mutation.inverse(base);
+    let mut backward = mutation.inverse(base).expect("valid retained mutation inverse fixture");
     backward.reverse();
     let mut restored = forward.clone();
     for undo in &backward {
@@ -65,11 +65,11 @@ async fn replace_tiles_and_replace_source_and_resize_source_frame_round_trip() {
 #[semio_framework_async_macros::async_test]
 async fn missing_targets_invert_to_nothing() {
     let base = default_presentation_snapshot();
-    assert!(PresentationMutation::DeleteTile(delete_tile::DeleteTile { id: "gone".into() }).inverse(&base).is_empty());
-    assert!(PresentationMutation::RenameTile(rename_tile::RenameTile { id: "gone".into(), new_name: "x".into() }).inverse(&base).is_empty());
-    assert!(PresentationMutation::ResizeTileCrop(resize_tile_crop::ResizeTileCrop { id: "gone".into(), new_crop: FigureTileFrame { x: 0.0, y: 0.0, width: 0.1, height: 0.1 } }).inverse(&base).is_empty());
-    assert!(PresentationMutation::ReorderTiles(reorder_tiles::ReorderTiles { id: "gone".into(), to_index: 0 }).inverse(&base).is_empty());
-    assert!(PresentationMutation::DeleteTiles(delete_tiles::DeleteTiles { ids: vec!["gone".into()] }).inverse(&base).is_empty());
+    assert!(PresentationMutation::DeleteTile(delete_tile::DeleteTile { id: "gone".into() }).inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
+    assert!(PresentationMutation::RenameTile(rename_tile::RenameTile { id: "gone".into(), new_name: "x".into() }).inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
+    assert!(PresentationMutation::ResizeTileCrop(resize_tile_crop::ResizeTileCrop { id: "gone".into(), new_crop: FigureTileFrame { x: 0.0, y: 0.0, width: 0.1, height: 0.1 } }).inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
+    assert!(PresentationMutation::ReorderTiles(reorder_tiles::ReorderTiles { id: "gone".into(), to_index: 0 }).inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
+    assert!(PresentationMutation::DeleteTiles(delete_tiles::DeleteTiles { ids: vec!["gone".into()] }).inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -126,7 +126,7 @@ async fn semantic_kinds_cover_every_variant() {
 async fn create_family_fatal_never_applies() {
     let base = presentation_snapshot_with_tiles(&presentation_working_scene(&default_presentation_snapshot()).0, &[tile("t1")]);
     let outcome = PresentationMutation::CreateTile(create_tile::CreateTile { index: 0, tile: tile("t1") }).diff(&base);
-    assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+    assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal));
     assert_fatal_never_applies(&outcome).await;
 }
 
@@ -153,7 +153,7 @@ async fn resize_family_missing_target_is_error() {
 async fn resize_family_fatal_never_applies() {
     let base = default_presentation_snapshot();
     let outcome = PresentationMutation::ResizeSourceFrame(resize_source_frame::ResizeSourceFrame { new_frame: FigureTileFrame { x: 0.0, y: 0.0, width: -1.0, height: 1.0 } }).diff(&base);
-    assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+    assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal));
     assert_fatal_never_applies(&outcome).await;
 }
 

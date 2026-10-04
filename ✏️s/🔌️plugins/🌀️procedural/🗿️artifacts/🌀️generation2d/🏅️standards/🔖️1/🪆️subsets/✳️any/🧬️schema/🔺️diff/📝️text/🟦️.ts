@@ -49,5 +49,5 @@ export const proceduralGeneration2dDiffTextGuardConstant = <T extends string | n
 //#endregion 🚪️Parsers
 
 export function parseGeneration2dDiffText(value: unknown, at = "$"): Generation2dDiffText {
-  return proceduralGeneration2dDiffTextGuardObject(value, `${at}`);
+  return proceduralGeneration2dDiffTextGuardString(value, `${at}`);
 }

@@ -110,7 +110,7 @@ async fn destroying_a_converged_instance_retires_every_ordered_root() {
     let body = context::render_with_view(&mut app, preview::BODY_KEY, &view).await;
     let meshes = context::preview_mesh_count(&body);
     assert!(meshes >= 1, "the chain must actually converge onto painted geometry, got {meshes}");
-    let retired = semio_framework_os_flow::cancel_all_evaluations();
+    let retired = crate::brep_extension::with_geometry_context(|owner| semio_framework_os_flow::cancel_all_evaluations(owner.registry()));
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
     drop(app);
 }

@@ -5,7 +5,10 @@ use crate::mutations::CadMutation;
 use crate::CadSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &CreateNode, _base: &CadSnapshot) -> Vec<CadMutation> {
+pub fn inverse(payload: &CreateNode, _base: &CadSnapshot) -> Result<Vec<CadMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![CadMutation::DeleteNode(delete_node::DeleteNode { node_id: payload.node.id.clone() })]
+
+    })())
 }
 //#endregion 🔖️Inverse

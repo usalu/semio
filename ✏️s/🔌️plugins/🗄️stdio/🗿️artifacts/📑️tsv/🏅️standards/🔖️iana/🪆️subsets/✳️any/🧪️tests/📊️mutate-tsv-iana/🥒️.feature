@@ -60,6 +60,7 @@ Feature: Apply every typed IANA TSV mutation to a real-world table
       | insert-row           | {"index": 5, "row": ["BB-99", "Marktplätze", "Baustoffbörse Hannover", "Deutschland", "Angebotsübersicht, Detailseite", "öffentlich", "Website", "—", "Beschreibung, Bilder, Preis, Menge, Materialstandort", "Kategorien, Suche, Filter", "Anfrage, Reservierung", "Abholung, Lieferung"]} |
       | remove-row           | {"index": 25} |
       | set-cell             | {"rowIndex": 1, "fieldIndex": 8, "value": "Beschreibung, Bilder, Preis"} |
+      | patch-snapshot | {"patch": {"operation": "set", "path": "/records/1/8", "value": "Beschreibung, Bilder, Preis"}} |
 
   @id-inverse
   @level-exhaustive
@@ -80,6 +81,7 @@ Feature: Apply every typed IANA TSV mutation to a real-world table
       | insert-row           | {"index": 5, "row": ["BB-99", "Marktplätze", "Baustoffbörse Hannover", "Deutschland", "Angebotsübersicht, Detailseite", "öffentlich", "Website", "—", "Beschreibung, Bilder, Preis, Menge, Materialstandort", "Kategorien, Suche, Filter", "Anfrage, Reservierung", "Abholung, Lieferung"]} |
       | remove-row           | {"index": 25} |
       | set-cell             | {"rowIndex": 1, "fieldIndex": 8, "value": "Beschreibung, Bilder, Preis"} |
+      | patch-snapshot | {"patch": {"operation": "set", "path": "/records/1/8", "value": "Beschreibung, Bilder, Preis"}} |
 
   @id-identity-round-trip
   @level-long

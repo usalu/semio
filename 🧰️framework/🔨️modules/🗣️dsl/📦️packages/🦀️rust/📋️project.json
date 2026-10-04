@@ -5,21 +5,43 @@
   "namedInputs": {
     "default": [
       "{workspaceRoot}/🧰️framework/🔨️modules/🗣️dsl/**/*",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/**/*",
-      "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/**/*",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/**/*",
-      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
-      "{workspaceRoot}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🔬️lexical-grammar-contract/**/*"
+      "{workspaceRoot}/🧰️framework/🔨️modules/⚠️diagnostic/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/✅️validator/**/*"
     ]
   },
   "targets": {
     "test-ownership": {
       "executor": "nx:run-commands",
       "cache": false,
-      "inputs": ["default"],
+      "inputs": [
+        "default"
+      ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-ownership"
+      }
+    },
+    "test-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "default"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-native"
+      }
+    },
+    "test-reference": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "default"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-reference"
       }
     }
   }

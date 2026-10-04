@@ -14,12 +14,12 @@ const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutat
 const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🕒touch-artifact/🧪️stamps/🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🕒touch-artifact/🧪️stamps/🎯️outcome/🔣️.json");
 
-fn decode_value<T: dsl::FromValue>(text: &str) -> T {
-    let json = pack::parse_json(text).expect("fixture JSON decodes");
-    semio_framework_value::FromValue::from_value(pack::json_to_dsl_value(&json)).expect("fixture value decodes")
+fn decode_value<T: semio_framework_value::FromValue>(text: &str) -> T {
+    let json = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture JSON decodes");
+    semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&json)).expect("fixture value decodes")
 }
-fn encode_value<T: dsl::ToValue>(value: &T) -> pack::JsonValue {
-    pack::json_from_dsl_value(&dsl::ToValue::to_value(value))
+fn encode_value<T: semio_framework_value::ToValue>(value: &T) -> semio_framework_pack_json::Value {
+    semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(value))
 }
 fn before() -> SSpaceSnapshot {
     decode_value(BEFORE)
@@ -51,7 +51,7 @@ async fn restamping_the_old_pair_restores_before() {
     let base = before();
     let forward = <SSpaceMutation as protocol::Mutation<SSpaceSnapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("forward touch-artifact applies");
-    let inverse = <SSpaceMutation as protocol::Mutation<SSpaceSnapshot>>::inverse(&mutation(), &base);
+    let inverse = <SSpaceMutation as protocol::Mutation<SSpaceSnapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "touch-artifact/stamps-artifact-1-with-a-new-editor: the inverse of one touch is exactly one touch back");
     for step in &inverse {
         let undo = <SSpaceMutation as protocol::Mutation<SSpaceSnapshot>>::diff(step, &snapshot);
@@ -66,11 +66,11 @@ async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded = decode_value::<SSpaceSnapshot>(text);
         let reencoded = encode_value(&decoded);
-        let original = pack::parse_json(text).expect("space index snapshot reparses");
+        let original = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("space index snapshot reparses");
         assert_eq!(reencoded, original, "touch-artifact/stamps-artifact-1-with-a-new-editor: committed {label} index JSON is not canonical");
     }
     let reencoded = encode_value(&mutation());
-    let original = pack::parse_json(MUTATION).expect("mutation fixture reparses");
+    let original = semio_framework_pack_json::parse(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation fixture reparses");
     assert_eq!(reencoded, original, "touch-artifact/stamps-artifact-1-with-a-new-editor: committed touchArtifact JSON is not canonical");
 }
 
@@ -78,8 +78,8 @@ async fn committed_json_is_canonical() {
 /// could raise here is `mutation.target-missing`, and `artifact-1` exists.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
-    let declared = pack::parse_json(OUTCOME).expect("outcome decodes");
-    assert_eq!(declared.get("status").and_then(pack::JsonValue::as_str), Some("applied"), "touch-artifact/stamps-artifact-1-with-a-new-editor: this fixture declares an applied outcome");
+    let declared = semio_framework_pack_json::parse(OUTCOME, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
+    assert_eq!(declared.get("status").and_then(semio_framework_pack_json::Value::as_str), Some("applied"), "touch-artifact/stamps-artifact-1-with-a-new-editor: this fixture declares an applied outcome");
     let produced = built_outcome();
     assert_eq!(produced.worst_level(), None, "touch-artifact/stamps-artifact-1-with-a-new-editor: touching a present id must raise no mutation.target-missing fault");
     assert!(produced.messages().is_empty(), "touch-artifact/stamps-artifact-1-with-a-new-editor: an accepted touch emits no diagnostics");
@@ -90,7 +90,7 @@ async fn declared_outcome_holds() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let produced = encode_value(built_outcome().diff());
-    let committed = pack::parse_json(DIFF).expect("committed diff decodes");
+    let committed = semio_framework_pack_json::parse(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert_eq!(produced, committed, "touch-artifact/stamps-artifact-1-with-a-new-editor: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
@@ -101,7 +101,7 @@ async fn committed_diff_is_canonical() {
     let rows = decoded.artifacts.as_ref().expect("the committed touch diff carries the row vector");
     assert_eq!((rows[1].updated_at_ms, rows[1].updated_by.as_str()), (2500, "user:grace"), "touch-artifact/stamps-artifact-1-with-a-new-editor: the untouched sibling keeps its own stamp inside the diff");
     let reencoded = encode_value(&decoded);
-    let original = pack::parse_json(DIFF).expect("committed diff reparses");
+    let original = semio_framework_pack_json::parse(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff reparses");
     assert_eq!(reencoded, original, "touch-artifact/stamps-artifact-1-with-a-new-editor: committed diff JSON is not canonical");
 }
 

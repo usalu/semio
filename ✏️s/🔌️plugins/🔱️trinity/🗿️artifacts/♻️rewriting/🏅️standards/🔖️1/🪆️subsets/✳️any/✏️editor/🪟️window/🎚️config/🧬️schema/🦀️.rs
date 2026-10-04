@@ -2,9 +2,9 @@
 
 use semio_s_artifact_trinity_jack::Camera;
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact)]
 #[value(rename_all = "camelCase", default)]
-#[dsl(extension = "trinity.rewritingwindowcfg")]
+#[artifact(extension = "trinity.rewritingwindowcfg")]
 #[dsl(layout = "lines")]
 pub struct RewritingWindowConfig {
     #[dsl(block)]

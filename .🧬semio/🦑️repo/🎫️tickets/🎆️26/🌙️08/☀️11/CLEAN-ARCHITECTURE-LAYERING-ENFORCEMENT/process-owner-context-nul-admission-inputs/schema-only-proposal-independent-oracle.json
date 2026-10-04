@@ -1,0 +1,69 @@
+{
+  "at": "2026-10-03T21:14:30.185Z",
+  "schema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "version",
+      "cwd",
+      "cacheRoot",
+      "leaseDirectory"
+    ],
+    "properties": {
+      "version": {
+        "const": 1
+      },
+      "cwd": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^[^\u0000]*$"
+      },
+      "cacheRoot": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^[^\u0000]*$"
+      },
+      "leaseDirectory": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^[^\u0000]*$"
+      }
+    }
+  },
+  "positive": {
+    "version": 1,
+    "cwd": "/owner",
+    "cacheRoot": "/cache",
+    "leaseDirectory": "/leases"
+  },
+  "observations": [
+    {
+      "id": "cwd-nul",
+      "ajvRefused": true,
+      "generalValidatorRefused": true,
+      "errors": [
+        "/cwd must match ^[^\u0000]*$"
+      ]
+    },
+    {
+      "id": "cacheRoot-nul",
+      "ajvRefused": true,
+      "generalValidatorRefused": true,
+      "errors": [
+        "/cacheRoot must match ^[^\u0000]*$"
+      ]
+    },
+    {
+      "id": "leaseDirectory-nul",
+      "ajvRefused": true,
+      "generalValidatorRefused": true,
+      "errors": [
+        "/leaseDirectory must match ^[^\u0000]*$"
+      ]
+    }
+  ],
+  "sourceWrites": 0,
+  "nativeExecuted": 0,
+  "scope": "In-memory schema proposal only; original API source/schema files unchanged by this audit"
+}

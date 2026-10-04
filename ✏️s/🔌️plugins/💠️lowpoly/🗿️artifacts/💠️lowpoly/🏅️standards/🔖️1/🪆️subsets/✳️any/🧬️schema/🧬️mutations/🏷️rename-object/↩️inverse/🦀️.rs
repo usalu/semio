@@ -4,10 +4,13 @@ use super::RenameObject;
 use crate::{LowpolyMutation, LowpolySnapshot};
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &RenameObject, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {
+pub fn inverse(payload: &RenameObject, base: &LowpolySnapshot) -> Result<Vec<LowpolyMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(object) = base.objects.iter().find(|object| object.id == payload.id) else {
         return Vec::new();
     };
     vec![LowpolyMutation::RenameObject(RenameObject { id: payload.id.clone(), new_name: object.name.clone() })]
+
+    })())
 }
 //#endregion 🔖️Inverse

@@ -3,7 +3,7 @@ use super::*;
 
 const PROTOCOL: &str = "dialect protocol\nprotocol test.mutations\nversion 1\nschema test.op\nstart record\nframing record\n\n# a comment naming record ghost tag=9 is not a record\nheader fixed 2\nfield format u8\nfield tag u8\nrecord set-category tag=7\nfield payload bytes\n  record set-airtightness tag=300\nfield payload bytes\nrecord reset tag=0\nfield payload bytes\n";
 
-#[derive(Clone, Debug, PartialEq, DslOps)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
 enum TaggedMutation {
     SetCategory { category: String },
     SetAirtightness { n50: f64 },

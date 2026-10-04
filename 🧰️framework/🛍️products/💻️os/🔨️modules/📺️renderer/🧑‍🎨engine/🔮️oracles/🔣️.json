@@ -1,0 +1,32 @@
+{
+  "$schema": "../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🔮️ This owner's contribution to the repository test platform: the third-party references its own laws judge against.",
+  "oracles": [
+    {
+      "id": "engine-history-dom-accessibility-api",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "dom-accessibility-api",
+      "version": "0.5.16",
+      "engine": {
+        "family": "dom-accessibility-api",
+        "implementation": "dom-accessibility-api computeAccessibleName()",
+        "version": "0.5.16"
+      },
+      "capabilities": [
+        "engine.history.accessibility"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://github.com/eps1lon/dom-accessibility-api",
+      "rationale": "Computes accessible names and descriptions in the React history and staged-argument laws (`🧱️elements/🛠️ShellHelpers/⏪️time-travel/🧪️tests/🧩️component`, `🧱️elements/🛠️ShellHelpers/🧪️tests/🧪️staged-arg-controls`, `🧱️elements/🏛️ShellHost/📎️local-folders/🧪️tests/🧩️component`): rows, disabled actions and their reasons must be named as the contract declares."
+    }
+  ],
+  "noOracleDecisions": []
+}

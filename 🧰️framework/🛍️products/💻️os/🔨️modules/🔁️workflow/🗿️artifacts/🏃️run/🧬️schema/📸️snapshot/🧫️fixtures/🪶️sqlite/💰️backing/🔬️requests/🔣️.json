@@ -1,0 +1,30 @@
+{
+  "schema": "semio.workflow.run.sqlite.owned-requests.v1",
+  "phases": [
+    "projectSnapshot",
+    "reconstructSnapshot"
+  ],
+  "tableCount": 7,
+  "fieldOrder": [
+    "schema",
+    "workflowRef",
+    "workflowCheckpointId",
+    "inputCollectionRef",
+    "inputSnapshotId",
+    "parameterValues",
+    "outputCollectionRef",
+    "status",
+    "trigger",
+    "nodeRecords",
+    "logs",
+    "startedAt",
+    "finishedAt",
+    "sealed"
+  ],
+  "fullConcreteRequests": true,
+  "fullReplacementRequests": true,
+  "exactReplay": true,
+  "refuseZero": true,
+  "refuseOneBelow": true,
+  "retirementRefundsAdmission": false
+}

@@ -1,0 +1,14 @@
+# Independent Child Emission Held Owned Capsule Guard Audit
+
+Read-only current High input audit: `📥️inputs/child-emission-owned-capsule/{🦀️.rs,emit-prepare.rs,prefix-close.rs,cause-close.rs}`. Held/source only; no compilation, mount or runtime credit.
+
+The candidate retains actual current and remaining typed operations and the original ProtocolError. Successful encoding enters typed retirement before publishing the wire prefix. Refusal leaves current+remaining+accepted prefix accessible; opaque transport causes remain nonterminal AwaitingInput rather than silently dropping the genuine source. Prefix closer releases full existing Vec/String capacities under full grants, preserves borrowed Cow labels without materialization, and retains backing until paid. These are meaningful ownership improvements, distinct from caller/worker integration.
+
+Concrete remaining guards:
+
+1. `retire_one` can detach `current.take()` and invoke `factory.retire_owned`, or move `remaining.next()` into current, without checking `size_of::<M>()` against maximum_bytes. Encoding step checks this size, but close_step only checks zero then calls retire_one. After begin_close a one-byte grant can move a larger typed owner even though next_close_byte_demand says size_ofM. Require the same full-grant guard at the actual detach seam and an unchanged-pointer/count refusal law.
+2. When an erased retirement becomes terminal, retirement.take immediately drops its heap Box without a separate measured cell release/demand. Likewise factory.take can release the last Arc allocation. The fixed preparation Box guard in emit-prepare does not cover these independent allocations. Require actual provider allocation/cell authority or explicit retained release steps; do not infer zero bytes from semantic terminal emptiness.
+3. Successful worker handoff calls child_emits.push(child); actual Vec growth and wire-prefix owner transfer require existing worker admission/retirement authority. The held queue-only preparation code does not establish that path. It also takes the ready prefix before checking terminal emptiness; any invariant failure would drop the taken prefix on returning Err, so perform the check before destructive handoff or retain the prefix in the worker failure lane.
+4. `OpBinary` and retirement factory creation remain opaque work/allocation seams; size_ofM only authorizes the move, not encoder CPU/copies or custom factory allocation. Actual measured caller control cannot be claimed from the current scalar guard.
+
+The intentional AwaitingInput transport case must remain retained and visible until a genuine Core provider retirement handoff exists. It must not be converted to Ready, string classification or fabricated admission. No complete production emission family is mounted; original owning Plugin emission RED remains the finite actual failure authority.

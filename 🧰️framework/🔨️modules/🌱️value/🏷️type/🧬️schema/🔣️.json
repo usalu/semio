@@ -79,84 +79,29 @@
       "type": "array",
       "minItems": 10
     },
-    "ownership": {
+    "nativeControls": {
       "type": "object",
       "properties": {
-        "originalInputs": {
-          "type": "array",
-          "minItems": 15,
-          "maxItems": 15,
-          "items": {
-            "type": "object",
-            "properties": {
-              "path": {
-                "type": "string"
-              },
-              "sha256": {
-                "type": "string",
-                "pattern": "^[0-9a-f]{64}$"
-              }
-            },
-            "required": [
-              "path",
-              "sha256"
-            ],
-            "additionalProperties": false
-          }
+        "depth": {
+          "const": 300
         },
-        "originalTypeBlockSha": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{64}$"
+        "longSchema": {
+          "const": "引用😀"
         },
-        "neuralRemainderSha": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{64}$"
+        "repeat": {
+          "const": 20000
+        },
+        "cancelAt": {
+          "const": 256
         }
       },
       "required": [
-        "originalInputs",
-        "originalTypeBlockSha",
-        "neuralRemainderSha"
+        "depth",
+        "longSchema",
+        "repeat",
+        "cancelAt"
       ],
       "additionalProperties": false
-    },
-    "graphValues": {
-      "type": "array",
-      "minItems": 9,
-      "maxItems": 9
-    },
-    "graphCases": {
-      "type": "array",
-      "minItems": 63,
-      "maxItems": 63,
-      "items": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "type": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 6
-          },
-          "value": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 8
-          },
-          "accepted": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "name",
-          "type",
-          "value",
-          "accepted"
-        ],
-        "additionalProperties": false
-      }
     }
   },
   "required": [
@@ -166,9 +111,7 @@
     "cases",
     "wire",
     "refused",
-    "ownership",
-    "graphValues",
-    "graphCases"
+    "nativeControls"
   ],
   "additionalProperties": false,
   "$defs": {

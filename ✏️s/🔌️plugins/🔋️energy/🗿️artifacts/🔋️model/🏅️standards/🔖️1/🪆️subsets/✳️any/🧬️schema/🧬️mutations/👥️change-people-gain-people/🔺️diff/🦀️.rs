@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangePeopleGainPeoplePerArea, base: &EnergyModelSn
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("People Gain {}: occupant density (people/m²) must be a finite non-negative value, got {}.", payload.id.0, payload.new_people_per_area), [payload.id.0.to_string()]);
     }
     if existing.people_per_area == payload.new_people_per_area {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("People Gain {} already carries this occupant density (people/m²): {}.", payload.id.0, payload.new_people_per_area));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("People Gain {} already carries this occupant density (people/m²): {}.", payload.id.0, payload.new_people_per_area));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.people.iter_mut().find(|item| item.id == payload.id) {

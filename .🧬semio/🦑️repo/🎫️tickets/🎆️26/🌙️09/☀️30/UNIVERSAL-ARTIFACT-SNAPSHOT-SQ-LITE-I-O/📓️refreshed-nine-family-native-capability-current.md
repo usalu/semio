@@ -1,0 +1,11 @@
+# Refreshed Nine Family Native Capability Current
+
+Read-only current source refresh of process3d, STEP ap214, IFC4/2x3, glTF, Binary, BMP, Deflate, LAS and SVG. Machine input `📥️inputs/current-nine-family-native-capability-census.json` retains exact provider/source route paths. No execution or runtime credit.
+
+All ten concrete snapshots now have actual ArtifactSqliteSnapshot decode and encode overrides plus ArtifactPack sqlite_snapshot_codec route. The historical missing/default-refusing rows for these selected owners are stale: Process3dSnapshot now has separate capability module; STEP now has both controlled hooks; both IFC parents have hooks; glTF output override exists; Binary/BMP/Deflate/LAS/SVG all have explicit native hooks. No still-default-refusing concrete owner is identified in this finite selection.
+
+Actual I/O factories: glTF root71 bare; LAS root41 bare; STEP root43 bare; IFC4 schema273 bare; IFC2x3 schema307 bare; Binary wildcard IO77/201 of; BMP wildcard IO502 of; Deflate root43 and SVG root45 of. These factories take their actual snapshot opt-in through Store constructor, so source readiness is materially beyond old report. Named alias subset admission is separate and not inferred from parent hooks.
+
+Process3d's parent composition supplies its declaration to the normal Plugin builder; the declaration owns `document_codec::<EditorApp<Process3dPlayApp>>()`. The generic concrete factory calls `ArtifactCodec::bare` with its actual Snapshot/Mutation and `process.3d` schema, and assembly commits its explicit relational capability into the native snapshot registry. The earlier artifact-local search gap is corrected; no missing registration is identified by this finite source chain. Exact locators and runtime limits are retained in `📓️process3d-parent-composition-native-registration-readback.md`.
+
+Old copy proposal sources under 🚦️sqlite/🪶️copy contain extra trait implementations but are not the actual mounted relational module authority; excluded from provider census. JSON/native output adapters are not generic whole-snapshot SQLite fallback by name alone. Current hooks require owning Native selection and actual subset I/O lookup before universal readiness claims.

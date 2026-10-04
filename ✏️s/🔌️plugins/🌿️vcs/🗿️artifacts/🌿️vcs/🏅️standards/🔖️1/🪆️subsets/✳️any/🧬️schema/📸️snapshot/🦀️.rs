@@ -12,7 +12,7 @@ mod sqlite_tests;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted VCS demo document snapshot (persistent fields of the artifact).
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -55,7 +55,7 @@ impl Default for VcsSnapshot {
 /// A thin `dsl::json` wrapper (this facet's own first-party `DslValue` JSON codec, used behind
 /// this interface per CLAUDE.md's "external libraries behind an interface" rule).
 pub fn encode_vcs_snapshot_json(snapshot: &VcsSnapshot) -> String {
-    dsl::json::to_json_string(snapshot)
+    semio_framework_pack_json::to_json_string(snapshot)
 }
 
 /// 📥️ The inverse of [`encode_vcs_snapshot_json`] — decodes those committed specification vectors
@@ -63,7 +63,7 @@ pub fn encode_vcs_snapshot_json(snapshot: &VcsSnapshot) -> String {
 /// than re-declaring it as a Rust literal beside it. Reaching `serde_json` from that adapter is
 /// impossible: the generated test host links only this crate and `semio-repo-test-host`.
 pub fn decode_vcs_snapshot_json(text: &str) -> Result<VcsSnapshot, String> {
-    dsl::json::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 
 /// 📝️ Parses `.vcs.dsl.semio` text into a [`VcsSnapshot`] — a named, non-async pass-through of this

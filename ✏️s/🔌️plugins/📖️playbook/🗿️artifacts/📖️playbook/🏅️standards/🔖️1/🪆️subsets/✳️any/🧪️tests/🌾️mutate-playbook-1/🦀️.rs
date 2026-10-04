@@ -1,49 +1,24 @@
 //! 🦀️ Playbook document exhaustive mutation case — Rust adapter. Ticket `26/08/23/END-TO-END-TESTING-REFACTOR`.
 //!
-//! Recorded no-oracle decision `playbook-document-mutation-semantics`
-//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🔣️oracle.json`): `s.playbook.playbook` is a
-//! semio-NATIVE artifact with no third-party reader or writer, so this case registers SUBJECT
-//! handlers only. That is not an omission — the runner resolves an oracle implementation from the
-//! feature's `@oracle-` tag, this feature carries `@no-oracle-` instead, and the oracle role is
-//! therefore never dispatched for it. Registering an oracle handler here would be dead code that
-//! reads as coverage in every listing, so there is none; every law this case claims is asserted
-//! inside the subject handlers, through the shared
+//! The reference is the Python second implementation `🐍️.py` beside this file (oracle `playbook-python-independent`); this
+//! adapter registers SUBJECT handlers only and asserts every claimed law through the shared
 //! `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/⚖️law/🦀️.rs` module.
 //!
-//! ⚠️ Eight of the nine committed vectors pin a rejection or a no-op branch, because
-//! `PlaybookSnapshot` keeps its step flow behind a content-addressed `s.stdio.semio.flow` child
-//! handle whose successful re-mint cannot be hand-authored. So the forward assertion here is the
-//! committed `🎯️outcome`'s status AND code, not a moved projection, and `GUARD_VECTORS` names all
-//! eight. The inverse law is unexempted for all nine.
-//!
-//! This subset shares `PlaybookStep`/`PlaybookBlock` with `📋️forms`, which aliases them as
-//! `FormStep`/`FormQuestion` — the RECORD types are one definition in
-//! `🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🦀️.rs`. The VOCABULARIES are not:
-//! playbook has `update-step` where forms has `change-step-description`, and playbook's
-//! `move-block` carries both a source and a target step. That is why these are two catalogs and two
-//! cases rather than one shared module, and why neither case's `Examples` table is a copy of the
-//! other's.
+//! `PlaybookSnapshot`'s steps and blocks are composed content of its `flow` child and are edited only on that child's lane
+//! (design §20.15 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING), so the parent vocabulary is the one `change-title` leaf;
+//! the child-leaf builders are pinned by `🗿️artifacts/📖️playbook/🧫️fixtures/🧫️child-leaves/🔣️.json` and their Rust law.
 
 use semio_repo_test_host::Adapter;
 
 //#region 🔖️Kinds
 #[cfg(feature = "sut")]
-/// 🏷️ Mirrors `PlaybookMutation::KINDS`
-/// (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`) — duplicated, not
-/// imported, because the oracle-only build must not link the subject crate. The production module's
-/// own `kinds_match_the_enum_and_the_catalog` keeps that list honest against the enum and the
-/// catalog; the contract gate keeps this case honest against the catalog.
-const KINDS: &[&str] = &["add-step", "remove-step", "move-step", "add-block", "remove-block", "move-block", "replace-block", "update-step", "change-title"];
+/// 🏷️ Mirrors `PlaybookMutation::KINDS` (`../../🧬️schema/🧬️mutations/🦀️.rs`) — duplicated, not imported, because the
+/// oracle-only build must not link the subject crate; the contract gate keeps this case honest against the catalog.
+const KINDS: &[&str] = &["change-title"];
 
 #[cfg(feature = "sut")]
-/// 👁️ The eight kinds whose committed vector pins a REJECTION or NO-OP branch rather than
-/// an effect, so `before` and `after` are the same document and the observability law cannot hold.
-/// `PlaybookSnapshot` keeps its step flow behind a content-addressed `s.stdio.semio.flow` child
-/// handle that a successful mutation re-mints, so an effect vector's `➡️after` cannot be
-/// hand-authored. Naming them here is a claim the reader can check against the vectors, and the
-/// feature description states the same. Only `change-title`, the one kind that touches a persisted
-/// scalar, carries an effect vector.
-const GUARD_VECTORS: &[&str] = &["add-step", "remove-step", "move-step", "add-block", "remove-block", "move-block", "replace-block", "update-step"];
+/// 👁️ No committed vector pins a rejection or no-op branch: `change-title`'s vector moves the title.
+const GUARD_VECTORS: &[&str] = &[];
 
 #[cfg(feature = "sut")]
 /// 🧫️ Where a `<vector>` cell from the feature's `Examples` tables is rooted, relative to this
@@ -60,7 +35,7 @@ const EXAMPLE_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_s_artifact_playbook_playbook::standards::v1::subsets::any::schema::mutations::{
-        apply_playbook_mutation_outcome, decode_playbook_mutation_json, decode_playbook_snapshot_json, encode_playbook_snapshot_json, inverse_playbook_mutation_steps, seed_playbook_scene_json, PlaybookMutation,
+        apply_playbook_mutation_outcome, decode_playbook_mutation_json, decode_playbook_snapshot_json, encode_playbook_snapshot_json, inverse_playbook_mutation_steps, PlaybookMutation,
     };
     use semio_s_artifact_playbook_playbook::standards::v1::subsets::any::schema::snapshot::{parse_playbook_dsl, print_playbook_dsl};
     use semio_s_artifact_playbook_playbook::PlaybookSnapshot;
@@ -70,13 +45,13 @@ mod subject {
     /// 🧫️ The scenario's own doc string, which carries the kind and the committed vector directory
     /// the row addresses. The mapping from kind to vector is DATA in the feature's `Examples` table,
     /// so this adapter holds no table of its own that could drift from it.
-    fn addressed(ctx: &Context) -> Result<(String, String, Json), String> {
+    fn addressed(ctx: &Context) -> Result<(String, String), String> {
         let spec = ctx.doc_json()?;
         let (kind, vector) = (spec.str("kind"), spec.str("vector"));
         if kind.is_empty() || vector.is_empty() {
             return Err(format!("the scenario doc string must carry both a \"kind\" and a \"vector\", got {}", spec.to_string()));
         }
-        Ok((kind, vector, spec))
+        Ok((kind, vector))
     }
 
     fn text_at(ctx: &Context, vector: &str, leaf: &str) -> Result<String, String> {
@@ -111,34 +86,17 @@ mod subject {
     }
     //#endregion 🔖️VectorReading
 
-    //#region 🔖️WorkingScene
-    /// 🌱 Seeds the composed child's working scene from the row's own `scene` cell before the
-    /// mutation runs. The persisted `⬅️before` vector carries only the child HANDLE, so without this
-    /// half the scene is empty, every addressed id is absent, and every kind would collapse onto the
-    /// same `mutation.target-missing` branch — which would make the case look green while testing
-    /// one code path nine times. The cell is DATA in the feature's `Examples` table, quoted there
-    /// with the leaf test it was read from, rather than a per-kind `match` hidden in this file.
-    fn seed(snapshot: &mut PlaybookSnapshot, spec: &Json) -> Result<(), String> {
-        let scene = match spec.get("scene") {
-            Some(value) => value.to_string(),
-            None => return Err("the scenario doc string must carry a \"scene\" array for this subset".to_string()),
-        };
-        seed_playbook_scene_json(snapshot, &scene).map(|_| ())
-    }
-    //#endregion 🔖️WorkingScene
-
     //#region 🔖️Handlers
     /// 🎯️ Applies the kind to its committed before-snapshot and asserts three things in role: the
     /// result IS the committed after-snapshot, the raised diagnostic codes ARE the ones the
     /// committed `🎯️outcome` vector declares, and — for every kind not named in `GUARD_VECTORS` —
     /// the mutation actually moved the compared projection.
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
-        let (kind, vector, spec) = addressed(ctx)?;
-        let mut base = snapshot_at(ctx, &vector, "📸️snapshot/⬅️before/🔣️.json", &kind)?;
+        let (kind, vector) = addressed(ctx)?;
+        let base = snapshot_at(ctx, &vector, "📸️snapshot/⬅️before/🔣️.json", &kind)?;
         let expected = snapshot_at(ctx, &vector, "📸️snapshot/➡️after/🔣️.json", &kind)?;
         let mutation = mutation_at(ctx, &vector, &kind)?;
         let declared = parse_json(&text_at(ctx, &vector, "🎯️outcome/🔣️.json")?)?;
-        seed(&mut base, &spec)?;
         let mut current = base.clone();
         let outcome = apply_playbook_mutation_outcome(&mut current, &mutation);
         let raised: Vec<String> = outcome.messages().iter().map(|message| message.code.0.clone()).collect();
@@ -157,14 +115,13 @@ mod subject {
     /// must land back on the committed before-snapshot's projection, field for field, with no
     /// tolerance and no ignored key.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
-        let (kind, vector, spec) = addressed(ctx)?;
-        let mut base = snapshot_at(ctx, &vector, "📸️snapshot/⬅️before/🔣️.json", &kind)?;
+        let (kind, vector) = addressed(ctx)?;
+        let base = snapshot_at(ctx, &vector, "📸️snapshot/⬅️before/🔣️.json", &kind)?;
         let mutation = mutation_at(ctx, &vector, &kind)?;
-        seed(&mut base, &spec)?;
         let original = projection(&base)?;
         let mut current = base.clone();
         apply_playbook_mutation_outcome(&mut current, &mutation);
-        for step in inverse_playbook_mutation_steps(&mutation, &base) {
+        for step in inverse_playbook_mutation_steps(&mutation, &base).expect("valid retained mutation inverse fixture") {
             apply_playbook_mutation_outcome(&mut current, &step);
         }
         let restored = projection(&current)?;

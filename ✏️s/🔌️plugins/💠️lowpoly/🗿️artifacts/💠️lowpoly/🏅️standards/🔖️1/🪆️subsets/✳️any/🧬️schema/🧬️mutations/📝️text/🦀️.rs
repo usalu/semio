@@ -9,7 +9,7 @@
 //! cannot derive `Serialize`/`Deserialize` outside `#[cfg(test)]` either, and this file's encoding
 //! can no longer route `serde_json` directly over `Self` the way the sibling `shooting`/`playground`
 //! facets do (their mutation enums never carry an `ArtifactChild` field). Instead this bridges
-//! through the always-available `dsl::ToValue`/`FromValue` derive (which `ArtifactChild<S>` also
+//! through the always-available `semio_framework_value::ToValue`/`FromValue` derive (which `ArtifactChild<S>` also
 //! implements unconditionally, hand-written, in `store::🦀️.rs`) and the framework's own
 //! `DslValue`↔`serde_json::Value` conversion (`🌱️value/🦀️.rs`): `print_op`/`encode_op` still emit
 //! compact, declaration-order JSON text/bytes (`serde_json::Value` itself is always `Serialize`),
@@ -26,13 +26,13 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 //#region 🔖️OpText
 impl protocol::OpText for LowpolyMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let json_value: serde_json::Value = serde_json::from_str(line).map_err(|e| store::__rt::field_error(format!("invalid lowpoly mutation line: {e}")))?;
-        let value: dsl::DslValue = json_value.into();
-        dsl::FromValue::from_value(value).map_err(|e: dsl::ValueError| store::__rt::field_error(format!("invalid lowpoly mutation line: {e}")))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        let json_value: serde_json::Value = serde_json::from_str(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("invalid lowpoly mutation line: {e}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))?;
+        let value: semio_framework_value::DslValue = json_value.into();
+        semio_framework_value::FromValue::from_value(value).map_err(|e: semio_framework_value::ValueError| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("invalid lowpoly mutation line: {e}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
     }
     fn print_op(&self) -> String {
-        let value: serde_json::Value = dsl::ToValue::to_value(self).into();
+        let value: serde_json::Value = semio_framework_value::ToValue::to_value(self).into();
         value.to_string()
     }
 }
@@ -41,13 +41,13 @@ impl protocol::OpText for LowpolyMutation {
 //#region 🔖️OpBinary
 impl protocol::OpBinary for LowpolyMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let value: serde_json::Value = dsl::ToValue::to_value(self).into();
+        let value: serde_json::Value = semio_framework_value::ToValue::to_value(self).into();
         Ok(serde_json::to_vec(&value).expect("LowpolyMutation always serializes"))
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let json_value: serde_json::Value = serde_json::from_slice(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "lowpoly-mutation", offset: 0, detail: e.to_string() })?;
-        let value: dsl::DslValue = json_value.into();
-        dsl::FromValue::from_value(value).map_err(|e: dsl::ValueError| protocol::ProtocolError::Malformed { what: "lowpoly-mutation", offset: 0, detail: e.to_string() })
+        let value: semio_framework_value::DslValue = json_value.into();
+        semio_framework_value::FromValue::from_value(value).map_err(|e: semio_framework_value::ValueError| protocol::ProtocolError::Malformed { what: "lowpoly-mutation", offset: 0, detail: e.to_string() })
     }
 }
 //#endregion 🔖️OpBinary

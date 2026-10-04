@@ -8,6 +8,20 @@
     "stringByteLength": 8192,
     "expectedCode": "retained-clone.step-grant-too-small"
   },
+  "handoff": {
+    "sourceEntries": 33,
+    "copiedEntriesBeforeLoss": 3,
+    "closeGrant": {
+      "maximumItems": 1,
+      "maximumBytes": 4096
+    },
+    "expected": {
+      "driverOwnsCursor": true,
+      "sourcePreserved": true,
+      "closeRequiresMultipleTurns": true,
+      "terminalEmpty": true
+    }
+  },
   "cases": [
     {
       "id": "success",

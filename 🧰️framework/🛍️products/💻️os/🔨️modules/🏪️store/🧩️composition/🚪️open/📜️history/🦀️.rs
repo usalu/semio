@@ -190,7 +190,7 @@ fn diagnostic(error: RetainedSprDiagnostic) -> MemberOpenDiagnostic {
     }
 }
 
-fn close_request(request: &mut ManuallyDrop<Option<MemberOpenRequest>>, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, String> {
+fn close_request(request: &mut ManuallyDrop<Option<MemberOpenRequest>>, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
     let Some(retained) = request.as_mut() else {
         return Ok(SnapshotRetirementStep::Complete);
     };
@@ -199,13 +199,13 @@ fn close_request(request: &mut ManuallyDrop<Option<MemberOpenRequest>>, items: u
             request.take();
             Ok(SnapshotRetirementStep::Complete)
         }
-        SnapshotRetirementStep::Complete => Err("member history request returned false terminal".into()),
+        SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "member history request returned false terminal")),
         step => Ok(step),
     }
 }
 
 impl ErasedSnapshotRetirement for MemberHistoryVerification {
-    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if self.terminal_is_empty() {
             return Ok(SnapshotRetirementStep::Complete);
         }
@@ -224,7 +224,7 @@ impl ErasedSnapshotRetirement for MemberHistoryVerification {
 }
 
 impl ErasedSnapshotRetirement for VerifiedMemberHistoryInput {
-    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if self.terminal_is_empty() {
             return Ok(SnapshotRetirementStep::Complete);
         }

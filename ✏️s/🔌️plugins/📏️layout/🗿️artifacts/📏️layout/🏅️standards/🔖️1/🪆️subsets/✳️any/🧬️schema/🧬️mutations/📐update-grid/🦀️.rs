@@ -21,9 +21,12 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for UpdateGrid {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_update_grid(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
-        inverse_update_grid(self, base)
-    }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok({
+        inverse_update_grid(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Update baseline grid", "Grundlinienraster aktualisieren")
     }
@@ -35,13 +38,16 @@ pub fn diff_update_grid(payload: &UpdateGrid, base: &LayoutSnapshot) -> protocol
     }
     let next = GridSettings { baseline_grid: payload.baseline_grid, baseline_offset: payload.baseline_offset, snap_to_baseline: payload.snap_to_baseline };
     if base.grid == next {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Baseline grid is already set to that value.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Baseline grid is already set to that value.");
     }
     protocol::MutationOutcome::new(LayoutDiff { grid: Some(next), ..Default::default() })
 }
 
-pub fn inverse_update_grid(_payload: &UpdateGrid, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_update_grid(_payload: &UpdateGrid, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![LayoutMutation::UpdateGrid(UpdateGrid { baseline_grid: base.grid.baseline_grid, baseline_offset: base.grid.baseline_offset, snap_to_baseline: base.grid.snap_to_baseline })]
+
+    })())
 }
 
 #[cfg(test)]

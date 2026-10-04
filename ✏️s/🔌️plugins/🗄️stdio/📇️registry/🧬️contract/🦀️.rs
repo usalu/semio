@@ -2,6 +2,9 @@
 
 pub use pack;
 pub use semio_framework_os_kernel as kernel;
+pub use semio_framework_value as value;
+pub use semio_framework_diagnostic as diagnostic;
+pub use semio_framework_ui_locale as locale;
 
 use semio_framework_plugin::io::FormatDescriptor;
 use semio_framework_plugin::{
@@ -20,6 +23,9 @@ pub mod registry;
 
 #[path = "✏️editing/🦀️.rs"]
 pub mod editing;
+/// 🎬️ Bounded live-media exporters shared by retained Stdio artifact apps.
+#[path = "🎬️media-export/🦀️.rs"]
+pub mod media_export;
 /// 📐️ The canonical ISO 10303-21 codec every STEP-family artifact shares.
 #[path = "📐️part21/🦀️.rs"]
 pub mod part21;
@@ -30,14 +36,14 @@ pub mod part21;
 /// row goes through, so no case adapter maps parameters onto an operation by hand. An artifact crate re-exports it for the
 /// adapters that link only that crate.
 pub fn mutation_from_payload_json<P, M: kernel::Mutation<P>>(kind: &str, payload: &str) -> Result<M, String> {
-    let value = pack::parse_json(payload).map_err(|error| format!("{kind} payload is not JSON: {error}"))?;
-    M::from_payload_value(kind, pack::json_to_dsl_value(&value)).map_err(|error| format!("{kind} payload does not decode: {error}"))
+    let value = semio_framework_pack_json::parse(payload, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("{kind} payload is not JSON: {error}"))?;
+    M::from_payload_value(kind, semio_framework_pack_json::to_dsl_value(&value)).map_err(|error| format!("{kind} payload does not decode: {error}"))
 }
 
 /// 🧾️ The leaf wire payload of `operation` as JSON text — the derive-generated [`kernel::Mutation::payload_value`] the
 /// decoder above reads back, so a case adapter can hold a row's `params` against what the subject itself would emit.
 pub fn mutation_payload_json<P, M: kernel::Mutation<P>>(operation: &M) -> String {
-    kernel::os_pack::json::to_json_string(&operation.payload_value())
+    semio_framework_pack_json::to_json_string(&operation.payload_value())
 }
 
 /// 🚫️ An operation dispatch refused: the outcome's first message, by its frozen `mutation.*` code and its sentence.
@@ -72,8 +78,8 @@ pub fn apply_mutation_checked<P, M: kernel::Mutation<P>>(snapshot: &mut P, opera
 
 /// ↩️ [`kernel::Mutation::inverse`] against `base`, reachable from a crate that cannot name the kernel trait — the
 /// production inverse itself, never a copy of its rules.
-pub fn mutation_inverse<P, M: kernel::Mutation<P>>(operation: &M, base: &P) -> Vec<M> {
-    operation.inverse(base)
+pub fn mutation_inverse<P, M: kernel::Mutation<P>>(operation: &M, base: &P) -> Result<Vec<M>, semio_framework_value::ValueError> {
+    Ok({ operation.inverse(base)? })
 }
 //#endregion 🧾️PayloadWire
 
@@ -83,8 +89,8 @@ pub fn mutation_inverse<P, M: kernel::Mutation<P>>(operation: &M, base: &P) -> V
 /// blanket `Option<T>` impl reads `Null` as absence at any depth and would collapse both. Paired with
 /// `skip_serializing_if = "Option::is_none"`, `payload_value()` and `with_payload_value()` round-trip — the
 /// `deserialize_double_option` shape the value derive's own docs name (`🧰️framework/🔨️modules/🌱️value/✨️derive`).
-pub fn deserialize_double_option<T: kernel::FromValue>(value: kernel::DslValue) -> Result<Option<Option<T>>, kernel::ValueError> {
-    <Option<T> as kernel::FromValue>::from_value(value).map(Some)
+pub fn deserialize_double_option<T: semio_framework_value::FromValue>(value: semio_framework_value::DslValue) -> Result<Option<Option<T>>, semio_framework_value::ValueError> {
+    <Option<T> as semio_framework_value::FromValue>::from_value(value).map(Some)
 }
 //#endregion 🪆️DoubleOption
 
@@ -412,7 +418,7 @@ fn source(schema: &'static str) -> Result<Source, PluginAssemblyError> {
     if schema.len() > 2 * 1024 * 1024 {
         return Err(failure("artifact definition exceeds 2 MiB"));
     }
-    pack::from_json_str(schema).map_err(|error| failure(format!("cannot parse artifact definition: {error}")))
+    semio_framework_pack_json::from_json_str(schema, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| failure(format!("cannot parse artifact definition: {error}")))
 }
 
 /// 📏️ Counts the owned schema documents this process has parsed and validated.
@@ -450,8 +456,8 @@ fn validated_source(schema: &'static str) -> Result<&'static Source, PluginAssem
     Ok(parsed)
 }
 
-fn descriptor<T: kernel::ToValue>(value: &T) -> Vec<u8> {
-    pack::to_json_string(value).into_bytes()
+fn descriptor<T: semio_framework_value::ToValue>(value: &T) -> Vec<u8> {
+    semio_framework_pack_json::to_json_string(value).into_bytes()
 }
 
 fn id(value: &str) -> Result<(), PluginAssemblyError> {
@@ -701,7 +707,7 @@ fn executable_mappings(executables: impl IntoIterator<Item = ArtifactExecutable>
     Ok(mappings)
 }
 
-fn declared_capability<T: kernel::ToValue>(mappings: &BTreeMap<String, ArtifactExecutableIdentity>, identity: &str, kind: ArtifactCapabilityKind, value: &T) -> Result<ArtifactCapability, PluginAssemblyError> {
+fn declared_capability<T: semio_framework_value::ToValue>(mappings: &BTreeMap<String, ArtifactExecutableIdentity>, identity: &str, kind: ArtifactCapabilityKind, value: &T) -> Result<ArtifactCapability, PluginAssemblyError> {
     let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(identity).map_err(PluginAssemblyError::definition)?, kind).descriptor(descriptor(value)).map_err(PluginAssemblyError::definition)?;
     if capability.kind() == &ArtifactCapabilityKind::inference() {
         capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), identity).map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
@@ -1024,8 +1030,8 @@ fn hash_hex_bytes(hash: &str) -> Vec<u8> {
 }
 
 /// 🪪 Computes the stable BLAKE3 identity of a semantic projection.
-pub fn semantic_fingerprint<T: kernel::ToValue>(projection: &T) -> Result<Vec<u8>, String> {
-    let encoded = pack::json_to_string(&pack::json_from_dsl_value(&kernel::ToValue::to_value(projection))).into_bytes();
+pub fn semantic_fingerprint<T: semio_framework_value::ToValue>(projection: &T) -> Result<Vec<u8>, String> {
+    let encoded = semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(projection))).into_bytes();
     Ok(hash_hex_bytes(&semio_framework_hash::hash_bytes(&encoded)))
 }
 
@@ -1036,12 +1042,12 @@ macro_rules! impl_serde_op_codec {
     ($mutation:ty, $what:literal, protocol = $protocol:expr) => {
         impl $crate::kernel::OpText for $mutation {
             fn print_op(&self) -> String {
-                $crate::pack::json_to_string(&$crate::pack::json_from_dsl_value(&$crate::kernel::ToValue::to_value(self)))
+                ::semio_framework_pack_json::to_string(&::semio_framework_pack_json::from_dsl_value(&$crate::value::ToValue::to_value(self)))
             }
 
-            fn parse_op(line: &str) -> Result<Self, $crate::kernel::TextError> {
-                let parsed = $crate::pack::parse_json(line).map_err(|error| $crate::kernel::TextError::new(error.to_string(), $crate::kernel::TextSpan::at(1, 1)))?;
-                <Self as $crate::kernel::FromValue>::from_value($crate::pack::json_to_dsl_value(&parsed)).map_err(|error| $crate::kernel::TextError::new(error.to_string(), $crate::kernel::TextSpan::at(1, 1)))
+            fn parse_op(line: &str) -> Result<Self, $crate::diagnostic::TextError> {
+                let parsed = ::semio_framework_pack_json::parse(line, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| $crate::diagnostic::TextError::from_value_error(error.into_value_error(), $crate::diagnostic::TextSpan::at(1, 1)))?;
+                <Self as $crate::value::FromValue>::from_value(::semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|error| $crate::diagnostic::TextError::from_value_error(error, $crate::diagnostic::TextSpan::at(1, 1)))
             }
         }
 
@@ -1058,23 +1064,23 @@ macro_rules! impl_serde_op_codec {
     ($mutation:ty, $what:literal) => {
         impl $crate::kernel::OpText for $mutation {
             fn print_op(&self) -> String {
-                $crate::pack::json_to_string(&$crate::pack::json_from_dsl_value(&$crate::kernel::ToValue::to_value(self)))
+                ::semio_framework_pack_json::to_string(&::semio_framework_pack_json::from_dsl_value(&$crate::value::ToValue::to_value(self)))
             }
 
-            fn parse_op(line: &str) -> Result<Self, $crate::kernel::TextError> {
-                let parsed = $crate::pack::parse_json(line).map_err(|error| $crate::kernel::TextError::new(error.to_string(), $crate::kernel::TextSpan::at(1, 1)))?;
-                <Self as $crate::kernel::FromValue>::from_value($crate::pack::json_to_dsl_value(&parsed)).map_err(|error| $crate::kernel::TextError::new(error.to_string(), $crate::kernel::TextSpan::at(1, 1)))
+            fn parse_op(line: &str) -> Result<Self, $crate::diagnostic::TextError> {
+                let parsed = ::semio_framework_pack_json::parse(line, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| $crate::diagnostic::TextError::from_value_error(error.into_value_error(), $crate::diagnostic::TextSpan::at(1, 1)))?;
+                <Self as $crate::value::FromValue>::from_value(::semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|error| $crate::diagnostic::TextError::from_value_error(error, $crate::diagnostic::TextSpan::at(1, 1)))
             }
         }
 
         impl $crate::kernel::OpBinary for $mutation {
             fn encode_op(&self) -> Result<Vec<u8>, $crate::kernel::ProtocolError> {
-                Ok($crate::pack::json_to_string(&$crate::pack::json_from_dsl_value(&$crate::kernel::ToValue::to_value(self))).into_bytes())
+                Ok(::semio_framework_pack_json::to_string(&::semio_framework_pack_json::from_dsl_value(&$crate::value::ToValue::to_value(self))).into_bytes())
             }
 
             fn decode_op(bytes: &[u8]) -> Result<Self, $crate::kernel::ProtocolError> {
-                let parsed = $crate::pack::parse_json_bytes(bytes).map_err(|error| $crate::kernel::ProtocolError::Malformed { what: $what, offset: 0, detail: error.to_string() })?;
-                <Self as $crate::kernel::FromValue>::from_value($crate::pack::json_to_dsl_value(&parsed)).map_err(|error| $crate::kernel::ProtocolError::Malformed { what: $what, offset: 0, detail: error.to_string() })
+                let parsed = ::semio_framework_pack_json::parse_bytes(bytes, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| $crate::kernel::ProtocolError::Malformed { what: $what, offset: 0, detail: error.to_string() })?;
+                <Self as $crate::value::FromValue>::from_value(::semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|error| $crate::kernel::ProtocolError::Malformed { what: $what, offset: 0, detail: error.to_string() })
             }
         }
     };
@@ -1090,13 +1096,13 @@ pub const SET_ACTIVE_EXAMPLE_ACTION_ID: &str = semio_framework_plugin::app::CATA
 /// 📚️ Reads the example id out of a shell `{action, args}` pair. The shells spell it `exampleId`;
 /// the palette, a context menu and a replayed shell command may spell it `id` or `value`, and an
 /// EMPTY id means "the app's own default document", which is exactly what `fallback` of `""` says.
-pub fn example_id_argument(args: Option<&kernel::DslValue>, fallback: &str) -> String {
-    let entries: &[(String, kernel::DslValue)] = match args {
-        Some(kernel::DslValue::Object(object)) => object.as_slice(),
+pub fn example_id_argument(args: Option<&semio_framework_value::DslValue>, fallback: &str) -> String {
+    let entries: &[(String, semio_framework_value::DslValue)] = match args {
+        Some(semio_framework_value::DslValue::Object(object)) => object.as_slice(),
         _ => &[],
     };
     for key in ["exampleId", "example_id", "id", "value"] {
-        if let Some(kernel::DslValue::String(raw)) = entries.iter().find(|(name, _)| name == key).map(|(_, value)| value) {
+        if let Some(semio_framework_value::DslValue::String(raw)) = entries.iter().find(|(name, _)| name == key).map(|(_, value)| value) {
             if !raw.is_empty() {
                 return raw.clone();
             }
@@ -1113,16 +1119,16 @@ pub fn example_id_argument(args: Option<&kernel::DslValue>, fallback: &str) -> S
 /// as a `Number` and a text control as a `String`, so one reader admits both spellings; the first
 /// key that carries a non-empty value wins, which is what lets a wire written before the argument
 /// names were declared (`node_id`, `id`) still decode.
-pub fn window_kit_text_argument(args: Option<&kernel::DslValue>, keys: &[&str], fallback: &str) -> String {
-    let entries: &[(String, kernel::DslValue)] = match args {
-        Some(kernel::DslValue::Object(object)) => object.as_slice(),
+pub fn window_kit_text_argument(args: Option<&semio_framework_value::DslValue>, keys: &[&str], fallback: &str) -> String {
+    let entries: &[(String, semio_framework_value::DslValue)] = match args {
+        Some(semio_framework_value::DslValue::Object(object)) => object.as_slice(),
         _ => &[],
     };
     for key in keys {
         match entries.iter().find(|(name, _)| name == key).map(|(_, value)| value) {
-            Some(kernel::DslValue::String(raw)) if !raw.is_empty() => return raw.clone(),
-            Some(kernel::DslValue::Number(number)) => return number.as_u64().map(|reading| reading.to_string()).or_else(|| number.as_i64().map(|reading| reading.to_string())).unwrap_or_else(|| number.as_f64().to_string()),
-            Some(kernel::DslValue::Bool(flag)) => return flag.to_string(),
+            Some(semio_framework_value::DslValue::String(raw)) if !raw.is_empty() => return raw.clone(),
+            Some(semio_framework_value::DslValue::Number(number)) => return number.as_u64().map(|reading| reading.to_string()).or_else(|| number.as_i64().map(|reading| reading.to_string())).unwrap_or_else(|| number.as_f64().to_string()),
+            Some(semio_framework_value::DslValue::Bool(flag)) => return flag.to_string(),
             _ => {}
         }
     }
@@ -1132,14 +1138,14 @@ pub fn window_kit_text_argument(args: Option<&kernel::DslValue>, keys: &[&str], 
 /// 🔢️ The same reader as [`window_kit_text_argument`], parsed as a grid index. A control that
 /// carries no reading at all answers `fallback` rather than refusing: `set-cell`'s own handler is
 /// the one place that knows whether an index addresses a live row.
-pub fn window_kit_index_argument(args: Option<&kernel::DslValue>, keys: &[&str], fallback: u32) -> u32 {
+pub fn window_kit_index_argument(args: Option<&semio_framework_value::DslValue>, keys: &[&str], fallback: u32) -> u32 {
     let raw = window_kit_text_argument(args, keys, "");
     raw.trim().parse::<f64>().ok().filter(|reading| reading.is_finite() && *reading >= 0.0).map_or(fallback, |reading| reading as u32)
 }
 
-fn required_window_kit_argument<'a>(args: Option<&'a kernel::DslValue>, key: &str) -> Result<&'a kernel::DslValue, semio_framework_plugin::Fault> {
+fn required_window_kit_argument<'a>(args: Option<&'a semio_framework_value::DslValue>, key: &str) -> Result<&'a semio_framework_value::DslValue, semio_framework_plugin::Fault> {
     let entries = match args {
-        Some(kernel::DslValue::Object(entries)) => entries,
+        Some(semio_framework_value::DslValue::Object(entries)) => entries,
         _ => {
             return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.window-kit.arguments-required"), "the action requires an argument object"));
         }
@@ -1155,18 +1161,18 @@ fn required_window_kit_argument<'a>(args: Option<&'a kernel::DslValue>, key: &st
 }
 
 /// 📝️ Reads one required canonical text argument without aliases, coercion, or fallback.
-pub fn window_kit_required_text_argument(args: Option<&kernel::DslValue>, key: &str) -> Result<String, semio_framework_plugin::Fault> {
+pub fn window_kit_required_text_argument(args: Option<&semio_framework_value::DslValue>, key: &str) -> Result<String, semio_framework_plugin::Fault> {
     match required_window_kit_argument(args, key)? {
-        kernel::DslValue::String(value) => Ok(value.clone()),
+        semio_framework_value::DslValue::String(value) => Ok(value.clone()),
         _ => Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.window-kit.argument-type"), format!("the action argument '{key}' must be text"))),
     }
 }
 
 /// 🔢️ Reads one required canonical non-negative `u32` index without truncation or fallback.
-pub fn window_kit_required_index_argument(args: Option<&kernel::DslValue>, key: &str) -> Result<u32, semio_framework_plugin::Fault> {
+pub fn window_kit_required_index_argument(args: Option<&semio_framework_value::DslValue>, key: &str) -> Result<u32, semio_framework_plugin::Fault> {
     let value = required_window_kit_argument(args, key)?;
     let integer = match value {
-        kernel::DslValue::Number(number) => number.as_u64().or_else(|| number.as_i64().and_then(|value| u64::try_from(value).ok())).or_else(|| {
+        semio_framework_value::DslValue::Number(number) => number.as_u64().or_else(|| number.as_i64().and_then(|value| u64::try_from(value).ok())).or_else(|| {
             let value = number.as_f64();
             (value.is_finite() && value >= 0.0 && value.fract() == 0.0 && value <= u32::MAX as f64).then_some(value as u64)
         }),
@@ -1260,7 +1266,7 @@ pub struct WindowKitRevisionedCellEdit {
 }
 
 /// 🎯️ Parses a revision-guarded table cell edit without destructive defaults.
-pub fn window_kit_revisioned_cell_edit(args: Option<&kernel::DslValue>) -> Result<WindowKitRevisionedCellEdit, semio_framework_plugin::Fault> {
+pub fn window_kit_revisioned_cell_edit(args: Option<&semio_framework_value::DslValue>) -> Result<WindowKitRevisionedCellEdit, semio_framework_plugin::Fault> {
     Ok(WindowKitRevisionedCellEdit {
         row: window_kit_required_index_argument(args, "row")?,
         column: window_kit_required_index_argument(args, "column")?,
@@ -1270,7 +1276,7 @@ pub fn window_kit_revisioned_cell_edit(args: Option<&kernel::DslValue>) -> Resul
 }
 
 /// 🔐️ Computes the optimistic revision for one table projection from the typed snapshot.
-pub fn window_kit_snapshot_revision<S: kernel::ToValue>(snapshot: &S) -> String {
+pub fn window_kit_snapshot_revision<S: semio_framework_value::ToValue>(snapshot: &S) -> String {
     semio_framework_plugin::app::DocumentWindowKit::text_revision(&editing::snapshot_edit_source(snapshot))
 }
 
@@ -1283,6 +1289,32 @@ pub fn window_kit_canonical_revision(revision: [u8; 32]) -> String {
         encoded.push(HEX[usize::from(byte & 0x0f)] as char);
     }
     encoded
+}
+
+/// 🧾️ Projects a canonical 32-byte hex revision onto the exact decimal u64 lane carried by
+/// `AppFrame::OperationCompleted`, rejecting every malformed or non-canonical input.
+pub fn window_kit_publication_revision(revision: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiPublicationRevision> {
+    use semio_framework_plugin::PluginAssemblyError;
+    if revision.len() != 64 || !revision.bytes().all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase()) {
+        return Err(PluginAssemblyError::new("stdio.table.publication-revision", "table publication revision must be 32 canonical lowercase hex bytes"));
+    }
+    let prefix = u64::from_str_radix(&revision[..16], 16).map_err(|_| PluginAssemblyError::new("stdio.table.publication-revision", "table publication revision prefix is invalid"))?;
+    Ok(semio_framework_plugin::UiPublicationRevision(prefix))
+}
+
+/// 🎨️ Projects the exact store revision captured for a render pass onto the completion lane.
+pub fn window_kit_artifact_publication_revision<S: semio_framework_value::ToValue>(doc: &semio_framework_plugin::ArtifactView<'_, S>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiPublicationRevision> {
+    semio_framework_plugin::app::artifact_render_publication_revision(doc)
+}
+
+/// 🎨️ Projects one renderer-captured store authority without materializing or renumbering it.
+pub fn window_kit_render_publication_revision<S: semio_framework_value::ToValue>(
+    _snapshot: &S,
+    render_operation: Option<semio_framework_plugin::AppRenderOperationContext>,
+) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiPublicationRevision> {
+    render_operation
+        .map(semio_framework_plugin::app::render_operation_publication_revision)
+        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("stdio.render.publication-revision", "editable rendering requires a render-pinned document revision"))
 }
 
 /// 🎟️ A refusal of the process-wide `UiValue` arena is the framework's capacity refusal: the row window building this
@@ -1333,6 +1365,7 @@ pub fn render_structural_table(
     editable_headers: bool,
     controller_id: &str,
     revision: &str,
+    publication_revision: semio_framework_plugin::UiPublicationRevision,
     locale: semio_framework_ui_locale::Locale,
     windows: &semio_framework_plugin::TreeWindows<'_>,
     table: impl FnOnce() -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>,
@@ -1371,7 +1404,11 @@ pub fn render_structural_table(
         let remove = row_action("trash-2", labels.5, REMOVE_TABLE_COLUMN_ACTION_ID, RowActionPlacement::Row)?;
         let target = row_target(controller_id, Some(window_kit_indexed_revision_arguments("column", column, revision)?), None)?;
         let value = header(column);
-        let cell = if editable_headers { WindowedEditableTableCell::new(value, labels.3, SET_TABLE_HEADER_ACTION_ID, window_kit_indexed_revision_arguments("column", column, revision)?) } else { WindowedEditableTableCell::read_only(value, labels.3) };
+        let cell = if editable_headers {
+            WindowedEditableTableCell::new(value, labels.3, SET_TABLE_HEADER_ACTION_ID, window_kit_indexed_revision_arguments("column", column, revision)?).publication_revision(publication_revision)
+        } else {
+            WindowedEditableTableCell::read_only(value, labels.3)
+        };
         editable_table_window_row(&format!("header-{column}"), controller_id, locale, [cell], [remove], Some(target))
     })?);
     children.push(table()?);
@@ -1421,7 +1458,7 @@ pub struct WindowKitStableCellEdit {
 }
 
 /// 🎯️ Parses a spreadsheet cell edit without ordinal aliases or destructive defaults.
-pub fn window_kit_stable_cell_edit(args: Option<&kernel::DslValue>) -> Result<WindowKitStableCellEdit, semio_framework_plugin::Fault> {
+pub fn window_kit_stable_cell_edit(args: Option<&semio_framework_value::DslValue>) -> Result<WindowKitStableCellEdit, semio_framework_plugin::Fault> {
     Ok(WindowKitStableCellEdit {
         sheet_name: window_kit_required_text_argument(args, "sheetName")?,
         row: window_kit_required_index_argument(args, "row")?,
@@ -1441,7 +1478,7 @@ pub struct WindowKitDocumentTextEdit {
 }
 
 /// 📄️ Parses a document draft payload without aliases, coercion, or destructive defaults.
-pub fn window_kit_document_text_edit(args: Option<&kernel::DslValue>) -> Result<WindowKitDocumentTextEdit, semio_framework_plugin::Fault> {
+pub fn window_kit_document_text_edit(args: Option<&semio_framework_value::DslValue>) -> Result<WindowKitDocumentTextEdit, semio_framework_plugin::Fault> {
     Ok(WindowKitDocumentTextEdit {
         page: window_kit_required_index_argument(args, "page")?,
         item: window_kit_required_index_argument(args, "item")?,
@@ -1484,7 +1521,7 @@ pub fn media_duration_ms(duration_seconds: f64) -> Option<u64> {
 /// `dag`/`reasoning.wires` already use, and the reason the route publishes on the HostOnly lane.
 pub fn load_example_effect<P: kernel::ArtifactPack>(document: &P, schema: &'static str) -> semio_framework_plugin::Effect {
     let pack = document.encode_pack();
-    let spr = semio_framework_plugin::resolve_ready(kernel::empty_document_spr(schema, schema));
+    let spr = ::semio_framework_async::poll::resolve_ready(kernel::empty_document_spr(schema, schema));
     semio_framework_plugin::Effect::LoadDocument { pack, spr }
 }
 
@@ -1511,8 +1548,12 @@ pub fn set_active_example_description() -> semio_framework_ui_locale::LocalizedL
 /// 📝️ The picker's typed argument: one option per example this editor's subset publishes, defaulting
 /// to the one the pane boots.
 pub fn set_active_example_args(options: &[(&str, semio_framework_ui_locale::LocalizedLabel)], default_example_id: &str) -> Vec<semio_framework_plugin::ActionArgDef> {
-    vec![semio_framework_plugin::ActionArgDef::select("exampleId", semio_framework_ui_locale::LocalizedLabel::native("Example", "Beispiel"), options.iter().map(|(id, label)| semio_framework_plugin::ActionArgOption::new(*id, label.clone())).collect())
-        .default_value(&default_example_id.to_string())]
+    vec![semio_framework_plugin::ActionArgDef::select(
+        "exampleId",
+        semio_framework_ui_locale::LocalizedLabel::native("Example", "Beispiel"),
+        options.iter().map(|(id, label)| semio_framework_plugin::ActionArgOption::new(*id, label.clone())).collect(),
+    )
+    .default_value(&default_example_id.to_string())]
 }
 //#endregion 🎬️ExampleSwitch
 

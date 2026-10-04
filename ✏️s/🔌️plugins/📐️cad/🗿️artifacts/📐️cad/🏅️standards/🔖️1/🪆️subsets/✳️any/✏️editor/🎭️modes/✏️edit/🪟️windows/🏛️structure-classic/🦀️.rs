@@ -17,8 +17,6 @@ use ui_wgpu::wgpu::SurfaceKind;
 
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;
-#[path = "🫧️transient/🦀️.rs"]
-pub mod transient;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "cad-play-structure-classic";

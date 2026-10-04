@@ -316,6 +316,7 @@ class CanonicalArchitectureScript extends BundleScript {
         package: "semio-framework-plugin",
         target: { kind: "lib" },
         laws: [
+          "artifact_inference_context_preserves_execution_and_registry_identity",
           "media_export_request_context_preserves_exact_supplied_owner",
           "declared_bridge_required_arguments_match_neutral_schemas",
           "language_neutral_action_collections_agree_with_json_pointer_oracle",
@@ -341,7 +342,40 @@ class CanonicalArchitectureScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir)
+/** 🧩️ Proves this owner's complete canonical command ingress consumer contract. */
+class CommandIngressConsumerScript extends BundleScript {
+ async run(segments:string[]):Promise<void>{
+  if(segments.length)throw Error("test-command-ingress-consumer accepts no arguments");
+  const {runBudgetedTestCommand}=await import("../../../../../../🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts"),{testLevelBudgetMs}=await import("../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts"),source=resolve(this.root,"../../🏛️ownership/📥️command-ingress/🧪️tests/🟦️.ts");
+  await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs(),throwOnFailure:true});
+  await runBudgetedTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs(),throwOnFailure:true});
+ }
+}
+
+/** 🪶️ Verifies the plugin-owned native SQLite snapshot laws. */
+class SnapshotSqliteAdmissionScript extends BundleScript {
+ async run(segments:string[]):Promise<void>{
+ if(segments.length)throw Error("test-snapshot-sqlite-admission accepts no arguments");
+ await runRepositoryCargoTests(["semio-framework-plugin"],this.repoRoot,["--lib","sqlite_snapshot_"]);
+ }
+}
+
+/** ⚠️ Preserves intrinsic SQLite provider refusals across the guest codec boundary. */
+class SnapshotSqliteRefusalScript extends BundleScript {
+ async run(segments:string[]):Promise<void>{
+  const [mode,...rest]=segments;
+  if(rest.length || !["source","native","host-native"].includes(mode))throw Error("test-snapshot-sqlite-refusal requires source, native or host-native");
+  if(mode!=="source"){
+   await runRepositoryCargoTests([mode==="native"?"semio-framework-plugin":"semio-framework-plugin-host"],this.repoRoot,["--lib","sqlite_snapshot_guest_refusal_"]);
+   return;
+  }
+  const {runBudgetedTestCommand}=await import("../../../../../../🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts");
+  const {testLevelBudgetMs}=await import("../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts");
+  await runBudgetedTestCommand(process.execPath,["test",resolve(this.root,"../../🧬️schema/🪶️sqlite/⚠️refusal/🧪️tests/🟦️.ts")],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs(),throwOnFailure:true});
+ }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("test-snapshot-sqlite-refusal",SnapshotSqliteRefusalScript).register("test-snapshot-sqlite-admission",SnapshotSqliteAdmissionScript).register("test-command-ingress-consumer",CommandIngressConsumerScript)
   .register("canonical-architecture", CanonicalArchitectureScript)
   .register("cooperative-host-check", CooperativeHostCheckScript)
   .register("document-backbone-binding-check", DocumentBackboneBindingCheckScript)

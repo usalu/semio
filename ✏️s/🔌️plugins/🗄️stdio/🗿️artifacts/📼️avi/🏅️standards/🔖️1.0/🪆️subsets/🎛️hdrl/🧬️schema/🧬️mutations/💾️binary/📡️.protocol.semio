@@ -35,3 +35,5 @@ record add-unknown-chunk tag=10
 field payload bytes
 record remove-unknown-chunk tag=11
 field payload bytes
+record patch-snapshot tag=12
+field payload bytes

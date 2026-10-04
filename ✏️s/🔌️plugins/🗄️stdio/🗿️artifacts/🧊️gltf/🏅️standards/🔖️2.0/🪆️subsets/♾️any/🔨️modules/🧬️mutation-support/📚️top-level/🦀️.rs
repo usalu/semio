@@ -14,13 +14,13 @@ pub fn reject(code: impl Into<String>, path: impl Into<String>, detail: impl Int
 /// ⚖️ The frozen mutation outcome code a glTF rejection reports as: an address the document lacks is `target-missing`, an
 /// identity it already holds `duplicate-id`, an edit the document's current shape contradicts `target-mismatch`, a payload
 /// malformed on its own `invariant` (`📡️replication/🎮️mutation/🧫️fixtures/🧫️outcome-code`).
-pub(crate) fn rejection_outcome_code(code: &str) -> &'static str {
+pub(crate) fn rejection_outcome_code(code: &str) -> protocol::OutcomeCode {
     match code.strip_prefix("gltf.mutation.").unwrap_or(code) {
-        "no-observable-change" => "mutation.no-op",
-        "duplicate-id" | "duplicate-extension" | "duplicate-scene-root" => "mutation.duplicate-id",
-        "index-out-of-range" | "insert-out-of-range" | "position-out-of-range" | "reference-out-of-range" | "relation-absent" | "extension-absent" | "missing" | "missing-mesh" | "not-found" | "invalid-reference" => "mutation.target-missing",
-        "stale-diff" | "stale-inverse" | "node-cycle" | "invalid-permutation" | "invalid-child-link" | "invalid-index-accessor" | "morph-target-arity" | "morph-weight-arity" | "collection-overflow" | "reference-overflow" | "buffer-alignment" | "extension-required" | "required-extension-not-used" => "mutation.target-mismatch",
-        _ => "mutation.invariant",
+        "no-observable-change" => protocol::OutcomeCode::NoOp,
+        "duplicate-id" | "duplicate-extension" | "duplicate-scene-root" => protocol::OutcomeCode::DuplicateId,
+        "index-out-of-range" | "insert-out-of-range" | "position-out-of-range" | "reference-out-of-range" | "relation-absent" | "extension-absent" | "missing" | "missing-mesh" | "not-found" | "invalid-reference" => protocol::OutcomeCode::TargetMissing,
+        "stale-diff" | "stale-inverse" | "node-cycle" | "invalid-permutation" | "invalid-child-link" | "invalid-index-accessor" | "morph-target-arity" | "morph-weight-arity" | "collection-overflow" | "reference-overflow" | "buffer-alignment" | "extension-required" | "required-extension-not-used" => protocol::OutcomeCode::TargetMismatch,
+        _ => protocol::OutcomeCode::Invariant,
     }
 }
 
@@ -30,8 +30,8 @@ pub(crate) fn rejection_outcome_code(code: &str) -> &'static str {
 pub(crate) fn rejection_outcome(code: &str, path: &str, detail: String) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
     let target = path.split('/').filter(|part| !part.is_empty()).map(str::to_string).collect::<Vec<_>>();
     match rejection_outcome_code(code) {
-        "mutation.no-op" => protocol::MutationOutcome::new(Default::default()).warn("mutation.no-op", detail),
-        outcome_code @ ("mutation.target-mismatch" | "mutation.invariant") => protocol::MutationOutcome::refuse(outcome_code, format!("{code}: {detail}"), target),
+        protocol::OutcomeCode::NoOp => protocol::MutationOutcome::new(Default::default()).warning("mutation.no-op", detail),
+        outcome_code @ (protocol::OutcomeCode::TargetMismatch | protocol::OutcomeCode::Invariant) => protocol::MutationOutcome::refuse(outcome_code, format!("{code}: {detail}"), target),
         outcome_code => protocol::MutationOutcome::refuse(outcome_code, detail, target),
     }
 }

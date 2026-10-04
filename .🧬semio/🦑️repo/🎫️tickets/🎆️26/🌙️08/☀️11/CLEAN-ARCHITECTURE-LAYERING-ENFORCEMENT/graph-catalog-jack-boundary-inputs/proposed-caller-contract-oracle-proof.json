@@ -1,0 +1,490 @@
+{
+  "at": "2026-10-03T20:54:26.842Z",
+  "results": [
+    {
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🛂️manifest/📇️outputs.json",
+      "before": {
+        "$schema": "../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
+        "version": 1,
+        "inputAreas": [
+          "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer"
+        ],
+        "policy": {
+          "excludedInputPaths": [],
+          "genericEmojiIdentities": [
+            "📁️",
+            "📂️",
+            "📄️"
+          ]
+        },
+        "shared": {
+          "rustRegistry": "📇️registry/🦀️.rs",
+          "typescriptIndex": "🟦️.ts",
+          "typescriptTypes": "🔠️types/🟦️.ts"
+        },
+        "manifests": [
+          {
+            "id": "writer-languages",
+            "rust": "🗣️writer-languages/🦀️.rs",
+            "typescript": "🗣️writer-languages/🟦️.ts"
+          }
+        ]
+      },
+      "authored": {
+        "$schema": "../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
+        "version": 1,
+        "inputAreas": [
+          "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer"
+        ],
+        "policy": {
+          "excludedInputPaths": [],
+          "genericEmojiIdentities": [
+            "📁️",
+            "📂️",
+            "📄️"
+          ]
+        },
+        "shared": {
+          "rustRegistry": "📇️registry/🦀️.rs",
+          "typescriptIndex": "🟦️.ts",
+          "typescriptTypes": "🔠️types/🟦️.ts"
+        },
+        "manifests": [
+          {
+            "id": "writer-languages",
+            "rust": "🗣️writer-languages/🦀️.rs",
+            "typescript": "🗣️writer-languages/🟦️.ts"
+          }
+        ],
+        "contractId": "semio-s-artifact-writer-writer-graph-catalog"
+      },
+      "addedFields": [
+        "contractId"
+      ],
+      "runtimeAccepted": true,
+      "independentAjvAccepted": true,
+      "unknownFieldRefused": true,
+      "existingBodyPreserved": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🛂️manifest/📇️outputs.json",
+      "before": {
+        "$schema": "../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
+        "version": 1,
+        "inputAreas": [
+          "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires"
+        ],
+        "shared": {
+          "rustRegistry": "📇️registry/🦀️.rs",
+          "typescriptIndex": "🟦️.ts",
+          "typescriptTypes": "🔠️types/🟦️.ts"
+        },
+        "manifests": [
+          {
+            "id": "wires",
+            "rust": "🧠️wires/🦀️.rs",
+            "typescript": "🧠️wires/🟦️.ts"
+          }
+        ]
+      },
+      "authored": {
+        "$schema": "../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
+        "version": 1,
+        "inputAreas": [
+          "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires"
+        ],
+        "shared": {
+          "rustRegistry": "📇️registry/🦀️.rs",
+          "typescriptIndex": "🟦️.ts",
+          "typescriptTypes": "🔠️types/🟦️.ts"
+        },
+        "manifests": [
+          {
+            "id": "wires",
+            "rust": "🧠️wires/🦀️.rs",
+            "typescript": "🧠️wires/🟦️.ts"
+          }
+        ],
+        "contractId": "semio-s-artifact-reasoning-wires-graph-catalog",
+        "policy": {
+          "excludedInputPaths": [],
+          "genericEmojiIdentities": []
+        }
+      },
+      "addedFields": [
+        "contractId",
+        "policy"
+      ],
+      "runtimeAccepted": true,
+      "independentAjvAccepted": true,
+      "unknownFieldRefused": true,
+      "existingBodyPreserved": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🛂️manifest/📇️outputs.json",
+      "before": {
+        "$schema": "../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
+        "contractId": "rewriting-graph-catalog",
+        "version": 1,
+        "inputAreas": [
+          "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting"
+        ],
+        "policy": {
+          "excludedInputPaths": [],
+          "genericEmojiIdentities": []
+        },
+        "shared": {
+          "rustRegistry": "📇️registry/🦀️.rs",
+          "typescriptIndex": "🟦️.ts",
+          "typescriptTypes": "🔠️types/🟦️.ts"
+        },
+        "manifests": [
+          {
+            "id": "rewrite-lhs",
+            "rust": "🫲️rewrite-lhs/🦀️.rs",
+            "typescript": "🫲️rewrite-lhs/🟦️.ts"
+          }
+        ]
+      },
+      "authored": {
+        "$schema": "../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
+        "contractId": "rewriting-graph-catalog",
+        "version": 1,
+        "inputAreas": [
+          "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting"
+        ],
+        "policy": {
+          "excludedInputPaths": [],
+          "genericEmojiIdentities": []
+        },
+        "shared": {
+          "rustRegistry": "📇️registry/🦀️.rs",
+          "typescriptIndex": "🟦️.ts",
+          "typescriptTypes": "🔠️types/🟦️.ts"
+        },
+        "manifests": [
+          {
+            "id": "rewrite-lhs",
+            "rust": "🫲️rewrite-lhs/🦀️.rs",
+            "typescript": "🫲️rewrite-lhs/🟦️.ts"
+          }
+        ]
+      },
+      "addedFields": [],
+      "runtimeAccepted": true,
+      "independentAjvAccepted": true,
+      "unknownFieldRefused": true,
+      "existingBodyPreserved": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🛂️manifest/📇️outputs.json",
+      "before": {
+        "$schema": "../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
+        "version": 1,
+        "inputAreas": [
+          "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack"
+        ],
+        "shared": {
+          "rustRegistry": "📇️registry/🦀️.rs",
+          "typescriptIndex": "🟦️.ts",
+          "typescriptTypes": "🔠️types/🟦️.ts"
+        },
+        "manifests": [
+          {
+            "id": "nakagin",
+            "rust": "🏢️nakagin/🦀️.rs",
+            "typescript": "🏢️nakagin/🟦️.ts"
+          }
+        ]
+      },
+      "authored": {
+        "$schema": "../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
+        "version": 1,
+        "inputAreas": [
+          "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack"
+        ],
+        "shared": {
+          "rustRegistry": "📇️registry/🦀️.rs",
+          "typescriptIndex": "🟦️.ts",
+          "typescriptTypes": "🔠️types/🟦️.ts"
+        },
+        "manifests": [
+          {
+            "id": "nakagin",
+            "rust": "🏢️nakagin/🦀️.rs",
+            "typescript": "🏢️nakagin/🟦️.ts"
+          }
+        ],
+        "contractId": "semio-s-artifact-trinity-jack-graph-catalog",
+        "policy": {
+          "excludedInputPaths": [],
+          "genericEmojiIdentities": []
+        }
+      },
+      "addedFields": [
+        "contractId",
+        "policy"
+      ],
+      "runtimeAccepted": true,
+      "independentAjvAccepted": true,
+      "unknownFieldRefused": true,
+      "existingBodyPreserved": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🛂️manifest/📇️outputs.json",
+      "before": {
+        "$schema": "../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
+        "version": 1,
+        "inputAreas": [
+          "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d"
+        ],
+        "policy": {
+          "excludedInputPaths": [],
+          "genericEmojiIdentities": [
+            "📁️",
+            "📂️",
+            "📄️"
+          ]
+        },
+        "shared": {
+          "rustRegistry": "📇️registry/🦀️.rs",
+          "typescriptIndex": "🟦️.ts",
+          "typescriptTypes": "🔠️types/🟦️.ts"
+        },
+        "manifests": [
+          {
+            "id": "nakagin",
+            "rust": "🏢️nakagin/🦀️.rs",
+            "typescript": "🏢️nakagin/🟦️.ts"
+          },
+          {
+            "id": "puzzle2d-default",
+            "rust": "◻️puzzle2d-default/🦀️.rs",
+            "typescript": "◻️puzzle2d-default/🟦️.ts"
+          }
+        ]
+      },
+      "authored": {
+        "$schema": "../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
+        "version": 1,
+        "inputAreas": [
+          "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d"
+        ],
+        "policy": {
+          "excludedInputPaths": [],
+          "genericEmojiIdentities": [
+            "📁️",
+            "📂️",
+            "📄️"
+          ]
+        },
+        "shared": {
+          "rustRegistry": "📇️registry/🦀️.rs",
+          "typescriptIndex": "🟦️.ts",
+          "typescriptTypes": "🔠️types/🟦️.ts"
+        },
+        "manifests": [
+          {
+            "id": "nakagin",
+            "rust": "🏢️nakagin/🦀️.rs",
+            "typescript": "🏢️nakagin/🟦️.ts"
+          },
+          {
+            "id": "puzzle2d-default",
+            "rust": "◻️puzzle2d-default/🦀️.rs",
+            "typescript": "◻️puzzle2d-default/🟦️.ts"
+          }
+        ],
+        "contractId": "semio-s-artifact-puzzle-2d-graph-catalog"
+      },
+      "addedFields": [
+        "contractId"
+      ],
+      "runtimeAccepted": true,
+      "independentAjvAccepted": true,
+      "unknownFieldRefused": true,
+      "existingBodyPreserved": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🛂️manifest/📇️outputs.json",
+      "before": {
+        "$schema": "../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
+        "version": 1,
+        "inputAreas": [
+          "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing"
+        ],
+        "shared": {
+          "rustRegistry": "📇️registry/🦀️.rs",
+          "typescriptIndex": "🟦️.ts",
+          "typescriptTypes": "🔠️types/🟦️.ts"
+        },
+        "manifests": [
+          {
+            "id": "drawing-layers",
+            "rust": "🖌️drawing-layers/🦀️.rs",
+            "typescript": "🖌️drawing-layers/🟦️.ts"
+          }
+        ],
+        "policy": {
+          "excludedInputPaths": [],
+          "genericEmojiIdentities": [
+            "📁️",
+            "📂️",
+            "📄️"
+          ]
+        },
+        "contractId": "draw-drawing-graph"
+      },
+      "authored": {
+        "$schema": "../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
+        "version": 1,
+        "inputAreas": [
+          "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing"
+        ],
+        "shared": {
+          "rustRegistry": "📇️registry/🦀️.rs",
+          "typescriptIndex": "🟦️.ts",
+          "typescriptTypes": "🔠️types/🟦️.ts"
+        },
+        "manifests": [
+          {
+            "id": "drawing-layers",
+            "rust": "🖌️drawing-layers/🦀️.rs",
+            "typescript": "🖌️drawing-layers/🟦️.ts"
+          }
+        ],
+        "policy": {
+          "excludedInputPaths": [],
+          "genericEmojiIdentities": [
+            "📁️",
+            "📂️",
+            "📄️"
+          ]
+        },
+        "contractId": "draw-drawing-graph"
+      },
+      "addedFields": [],
+      "runtimeAccepted": true,
+      "independentAjvAccepted": true,
+      "unknownFieldRefused": true,
+      "existingBodyPreserved": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🛂️manifest/📇️outputs.json",
+      "before": {
+        "$schema": "../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
+        "version": 1,
+        "inputAreas": [
+          "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d"
+        ],
+        "policy": {
+          "excludedInputPaths": [],
+          "genericEmojiIdentities": []
+        },
+        "shared": {
+          "rustRegistry": "📇️registry/🦀️.rs",
+          "typescriptIndex": "🟦️.ts",
+          "typescriptTypes": "🔠️types/🟦️.ts"
+        },
+        "manifests": [
+          {
+            "id": "puzzle5d-default",
+            "rust": "🖐️puzzle5d-default/🦀️.rs",
+            "typescript": "🖐️puzzle5d-default/🟦️.ts"
+          }
+        ]
+      },
+      "authored": {
+        "$schema": "../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
+        "version": 1,
+        "inputAreas": [
+          "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d"
+        ],
+        "policy": {
+          "excludedInputPaths": [],
+          "genericEmojiIdentities": []
+        },
+        "shared": {
+          "rustRegistry": "📇️registry/🦀️.rs",
+          "typescriptIndex": "🟦️.ts",
+          "typescriptTypes": "🔠️types/🟦️.ts"
+        },
+        "manifests": [
+          {
+            "id": "puzzle5d-default",
+            "rust": "🖐️puzzle5d-default/🦀️.rs",
+            "typescript": "🖐️puzzle5d-default/🟦️.ts"
+          }
+        ],
+        "contractId": "semio-s-artifact-puzzle-5d-graph-catalog"
+      },
+      "addedFields": [
+        "contractId"
+      ],
+      "runtimeAccepted": true,
+      "independentAjvAccepted": true,
+      "unknownFieldRefused": true,
+      "existingBodyPreserved": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🛂️manifest/📇️outputs.json",
+      "before": {
+        "$schema": "../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
+        "version": 1,
+        "inputAreas": [
+          "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d"
+        ],
+        "policy": {
+          "excludedInputPaths": [],
+          "genericEmojiIdentities": []
+        },
+        "shared": {
+          "rustRegistry": "📇️registry/🦀️.rs",
+          "typescriptIndex": "🟦️.ts",
+          "typescriptTypes": "🔠️types/🟦️.ts"
+        },
+        "manifests": [
+          {
+            "id": "puzzle3d-default",
+            "rust": "🧊️puzzle3d-default/🦀️.rs",
+            "typescript": "🧊️puzzle3d-default/🟦️.ts"
+          }
+        ]
+      },
+      "authored": {
+        "$schema": "../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
+        "version": 1,
+        "inputAreas": [
+          "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d"
+        ],
+        "policy": {
+          "excludedInputPaths": [],
+          "genericEmojiIdentities": []
+        },
+        "shared": {
+          "rustRegistry": "📇️registry/🦀️.rs",
+          "typescriptIndex": "🟦️.ts",
+          "typescriptTypes": "🔠️types/🟦️.ts"
+        },
+        "manifests": [
+          {
+            "id": "puzzle3d-default",
+            "rust": "🧊️puzzle3d-default/🦀️.rs",
+            "typescript": "🧊️puzzle3d-default/🟦️.ts"
+          }
+        ],
+        "contractId": "semio-s-artifact-puzzle-3d-graph-catalog"
+      },
+      "addedFields": [
+        "contractId"
+      ],
+      "runtimeAccepted": true,
+      "independentAjvAccepted": true,
+      "unknownFieldRefused": true,
+      "existingBodyPreserved": true
+    }
+  ],
+  "sourceWrites": 0,
+  "nativeExecuted": 0,
+  "scope": "In-memory missing-field-only caller asset proposal; strongest explicit empty exclusions/generic permissions; actual byte publication must preserve old fields"
+}

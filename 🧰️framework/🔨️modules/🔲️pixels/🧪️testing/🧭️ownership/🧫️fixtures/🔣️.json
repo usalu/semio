@@ -1,0 +1,52 @@
+{
+  "cases": [
+    {
+      "name": "neutral retained workload",
+      "field": null,
+      "value": null,
+      "admit": true
+    },
+    {
+      "name": "product strict root",
+      "field": "strictRoots",
+      "value": "🧰️framework/🛍️products/💻️os/source.ts",
+      "admit": false
+    },
+    {
+      "name": "product runtime root",
+      "field": "testRoots",
+      "value": "🧰️framework/🛍️products/💻️os/test.ts",
+      "admit": false
+    },
+    {
+      "name": "product input",
+      "field": "inputs",
+      "value": "{workspaceRoot}/🧰️framework/🛍️products/💻️os/**/*",
+      "admit": false
+    },
+    {
+      "name": "escaping neutral root",
+      "field": "strictRoots",
+      "value": "🧰️framework/🔨️modules/🔲️pixels/../🛍️products/💻️os/source.ts",
+      "admit": false
+    },
+    {
+      "name": "empty neutral module path",
+      "field": "strictRoots",
+      "value": "🧰️framework/🔨️modules/",
+      "admit": false
+    },
+    {
+      "name": "parent final segment",
+      "field": "testRoots",
+      "value": "🧰️framework/🔨️modules/🔲️pixels/..",
+      "admit": false
+    },
+    {
+      "name": "product segment at module root",
+      "field": "inputs",
+      "value": "{workspaceRoot}/🧰️framework/🔨️modules/🛍️products/source.ts",
+      "admit": false
+    }
+  ]
+}

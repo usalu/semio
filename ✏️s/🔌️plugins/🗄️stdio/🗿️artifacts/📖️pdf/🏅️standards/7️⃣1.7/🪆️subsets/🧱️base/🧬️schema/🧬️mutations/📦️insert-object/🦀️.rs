@@ -24,13 +24,16 @@ impl MutationKind<PdfSnapshot, PdfMutation> for InsertObject {
         MutationOutcome::new(diff::diff_graph_edit(base, diff::diff_insert_object(self.id, base.objects.len(), self.value.clone())))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         if base.objects.iter().any(|object| object.id == self.id) {
             Vec::new()
         } else {
             vec![PdfMutation::RemoveObject(RemoveObject { id: self.id })]
         }
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert object {} {}", self.id.num, self.id.gen), &format!("Objekt {} {} einfügen", self.id.num, self.id.gen))

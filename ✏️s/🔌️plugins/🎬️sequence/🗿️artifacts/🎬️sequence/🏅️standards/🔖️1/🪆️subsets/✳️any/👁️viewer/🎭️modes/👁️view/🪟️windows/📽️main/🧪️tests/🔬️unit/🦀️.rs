@@ -9,8 +9,8 @@ async fn definition_declares_the_node_graph_surface_and_body_key() {
 
 #[semio_framework_async_macros::async_test]
 async fn render_produces_a_read_only_scene_for_the_default_document() {
-    let document = neural_engine::ColdOwner::new(crate::default_snapshot());
-    let scene = crate::sequence_working_scene(&document);
+    let document = crate::snapshot::schema::default_persisted_snapshot();
+    let scene = crate::sequence_derivable_scene(&document).expect("the genesis content is derivable");
     let node = render(&scene).expect("viewer graph");
     let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("semantic graph") };
     let scene: NodeGraphScene = semio_framework_ui_scene::decode(props).expect("packed viewer scene");

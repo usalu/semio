@@ -19,7 +19,10 @@ pub struct SetDrawingText {
 impl MutationKind<LayoutSnapshot, LayoutMutation> for SetDrawingText {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "drawing-text", kind: "set-drawing-text", record: "SetDrawingText" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> { diff_set_drawing_text(self, base) }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> { inverse_set_drawing_text(self, base) }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok({ inverse_set_drawing_text(self, base)? 
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Set drawing text to \"{}\"", self.text), &format!("Zeichnungstext auf \"{}\" setzen", self.text)) }
     fn target(&self) -> Vec<String> { vec!["background-drawing".into()] }
 }
@@ -98,18 +101,21 @@ pub fn diff_set_drawing_text(payload: &SetDrawingText, base: &LayoutSnapshot) ->
         return protocol::MutationOutcome::error("mutation.target-missing", "The imported plan has no text at that index.", std::iter::empty::<String>());
     };
     if previous == payload.text {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "The drawing text is already that value.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "The drawing text is already that value.");
     }
     let minted = crate::background_drawing_child_handle("edit", &content);
     protocol::MutationOutcome::new(LayoutDiff { background_drawing: Some(Some(minted)), ..Default::default() })
 }
 
-pub fn inverse_set_drawing_text(payload: &SetDrawingText, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_set_drawing_text(payload: &SetDrawingText, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(previous) = drawing_labels(base).get(payload.index as usize).cloned() else { return Vec::new() };
     if previous == payload.text {
         return Vec::new();
     }
     vec![LayoutMutation::SetDrawingText(SetDrawingText { index: payload.index, text: previous })]
+
+    })())
 }
 
 #[cfg(test)]

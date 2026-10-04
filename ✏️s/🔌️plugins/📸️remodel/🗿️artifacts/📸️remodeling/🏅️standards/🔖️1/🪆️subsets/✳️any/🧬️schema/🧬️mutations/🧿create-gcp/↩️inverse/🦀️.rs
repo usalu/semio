@@ -4,10 +4,13 @@ use crate::mutations::RemodelingMutation;
 use crate::RemodelingSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::CreateGcp, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
+pub fn inverse(payload: &super::CreateGcp, base: &RemodelingSnapshot) -> Result<Vec<RemodelingMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     if base.gcps.iter().any(|gcp| gcp.id == payload.gcp.id) {
         return Vec::new();
     }
     vec![crate::mutations::delete_gcp::delete_gcp(payload.gcp.id.clone())]
+
+    })())
 }
 //#endregion 🔖️Inverse

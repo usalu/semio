@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeSurfaceClass, base: &EnergyModelSnapshot) -> 
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Surface {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if existing.class == payload.new_class {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Surface {} already has this class.", payload.id.0));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Surface {} already has this class.", payload.id.0));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.surfaces.iter_mut().find(|item| item.id == payload.id) {

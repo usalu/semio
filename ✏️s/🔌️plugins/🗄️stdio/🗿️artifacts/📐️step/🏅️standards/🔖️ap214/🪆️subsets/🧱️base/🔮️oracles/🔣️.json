@@ -75,6 +75,7 @@
       ],
       "kinds": [
         "set-snapshot",
+        "patch-snapshot",
         "set-file-description",
         "set-file-name",
         "set-file-schema",
@@ -91,7 +92,7 @@
     {
       "id": "semantic-step-v1",
       "description": "STEP (ISO 10303-21) exchange structures compared by declared FILE_SCHEMA and the full id-keyed entity graph (name plus positional argument values, reals tolerant). Header timestamp, preprocessor/originating-system strings, comment placement and line-wrapping are writer freedom -- the same normative surface `StepDiff`/`StepMutation` themselves operate over.",
-      "tolerance": 0.000001,
+      "tolerance": 1e-06,
       "ignoreKeys": [
         "timestamp",
         "preprocessorVersion",
@@ -311,6 +312,27 @@
             "operation": "set-snapshot",
             "bridgeVersion": 1,
             "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "step-ap214-base-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "steputils-step-ap214-base-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "patch-snapshot",
+          "capability": "step-ap214-base-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "patch-snapshot",
+            "bridgeVersion": 1,
+            "variant": "PatchSnapshot"
           },
           "oracleRequirements": [
             {

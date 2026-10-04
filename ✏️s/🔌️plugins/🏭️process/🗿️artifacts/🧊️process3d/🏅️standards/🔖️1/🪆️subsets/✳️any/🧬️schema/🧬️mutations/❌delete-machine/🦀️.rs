@@ -21,9 +21,12 @@ impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for DeleteMach
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Process3dSnapshot) -> Vec<Process3dMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &Process3dSnapshot) -> Result<Vec<Process3dMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete machine \"{}\"", self.id), &format!("Maschine \"{}\" löschen", self.id))

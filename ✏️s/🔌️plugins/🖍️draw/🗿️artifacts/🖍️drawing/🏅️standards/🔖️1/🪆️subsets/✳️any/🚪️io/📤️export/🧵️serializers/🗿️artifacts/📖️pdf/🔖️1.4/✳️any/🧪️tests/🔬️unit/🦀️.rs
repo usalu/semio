@@ -178,7 +178,7 @@ fn text_export_preserves_lines_origin_and_paint_modes() {
 fn pdf_isolates_the_shared_compositing_fixtures() {
     let cases:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../🧬️schema/🎬️scene/🧩️compositing/🧫️fixtures/🔣️.json")).unwrap();
     for case in cases.as_array().unwrap() {
-        let nodes:Vec<DrawingSceneNode>=dsl::json::from_json_str(&case["nodes"].to_string()).unwrap();
+        let nodes:Vec<DrawingSceneNode>=semio_framework_pack_json::from_json_str(&case["nodes"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let pdf=drawing_scene_to_pdf(&DrawingSnapshot::default(),&nodes,24.0,16.0).unwrap();
         let object_text=String::from_utf8_lossy(&pdf);
         let groups=nodes.iter().flat_map(|node|node.groups.iter().map(|group|group.id.as_str())).collect::<std::collections::BTreeSet<_>>();
@@ -198,7 +198,7 @@ fn pdf_isolates_the_shared_compositing_fixtures() {
 #[test]
 fn pdf_rejects_invalid_and_reopened_compositing_scopes() {
     let cases:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../🧬️schema/🎬️scene/🧩️compositing/🧫️fixtures/🔣️.json")).unwrap();
-    let nodes:Vec<DrawingSceneNode>=dsl::json::from_json_str(&cases[0]["nodes"].to_string()).unwrap();
+    let nodes:Vec<DrawingSceneNode>=semio_framework_pack_json::from_json_str(&cases[0]["nodes"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut reopened=nodes.clone();
     let mut plain=nodes[0].clone();plain.groups.clear();
     reopened.insert(1,plain);

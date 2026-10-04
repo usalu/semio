@@ -9,7 +9,7 @@
 //!
 //! 🩹️ Ticket `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`: no longer
 //! routes through `serde_json::to_value` — `Puzzle2dSnapshot` only derives `Serialize` under
-//! `#[cfg(test)]` now. `dsl::ToValue::to_value` (first-party) -> `dsl::json::from_dsl_value`
+//! `#[cfg(test)]` now. `dsl::ToValue::to_value` (first-party) -> `semio_framework_pack_json::from_dsl_value`
 //! (`DslValue` -> stdio's own `JsonValue`) instead, same shape the sibling `block2d` leaf already
 //! uses.
 use crate::Puzzle2dSnapshot;
@@ -18,12 +18,12 @@ use semio_s_artifact_stdio_json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 
 pub fn register() {}
 
-pub fn serialize(snapshot: &Puzzle2dSnapshot) -> Result<JsonSnapshot, store::TextError> {
+pub fn serialize(snapshot: &Puzzle2dSnapshot) -> Result<JsonSnapshot, semio_framework_diagnostic::TextError> {
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-    let raw = dsl::ToValue::to_value(snapshot);
-    Ok(JsonSnapshot::from_value(dsl::json::from_dsl_value(&raw)))
+    let raw = semio_framework_value::ToValue::to_value(snapshot);
+    Ok(JsonSnapshot::from_value(semio_framework_pack_json::from_dsl_value(&raw)))
 }
 
-pub fn serialize_bytes(snapshot: &Puzzle2dSnapshot) -> Result<Vec<u8>, store::TextError> {
+pub fn serialize_bytes(snapshot: &Puzzle2dSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
     Ok(write_json_pretty(&serialize(snapshot)?.value).into_bytes())
 }

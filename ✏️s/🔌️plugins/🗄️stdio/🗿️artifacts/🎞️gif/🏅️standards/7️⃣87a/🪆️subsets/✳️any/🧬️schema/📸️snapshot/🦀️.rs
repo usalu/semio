@@ -11,7 +11,7 @@ use framework_schema::ArtifactSchema;
 //#region ColorTable
 /// 🎨️ One color table entry (GCT/LCT), stored exactly as read from disk — including any
 /// power-of-two padding entries past the meaningful palette, since those are real on-disk bytes.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default, dsl::DslRecord)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct GifRgb {
     pub r: u8,
@@ -22,7 +22,7 @@ pub struct GifRgb {
 /// 🎨️ A Global or Local Color Table. `colors.len()` must be a power of two in `2..=256` on encode
 /// (the on-disk "size" field is `log2(len)-1`). `sorted` mirrors the packed byte's sort flag
 /// (decreasing importance ordering — rarely used in practice, but real on-disk state).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct GifColorTable {
     #[value(default)]
@@ -35,7 +35,7 @@ pub struct GifColorTable {
 //#region ImageModel
 /// 🖼️ One Table-Based Image (GIF87a §20-22): its own screen sub-rectangle, optional Local Color
 /// Table, interlace flag, and losslessly-retained palette indices (NOT decoded RGBA).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct GifImage {
     pub left: u32,
@@ -72,7 +72,7 @@ impl GifImage {
 //#endregion ImageModel
 
 //#region Snapshot
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.gif")]
 pub struct GifSnapshot {
@@ -111,31 +111,31 @@ impl store::ArtifactDsl for GifSnapshot {
         "stdio.gif"
     }
 
-    fn parse_dsl(text:&str)->Result<Self,store::TextError>{
-        let(envelope,body)=store::semio_format::split_text_preamble(text).map_err(|error|store::TextError::new(error.to_string(),dsl::TextSpan::at(1,1)))?;
-        if !envelope.matches_identity(Self::envelope_id(),store::semio_format::Component::Dsl,1){return Err(store::TextError::new("GIF owned Text envelope mismatch",dsl::TextSpan::at(1,1)));}
-        Self::__dsl_from_record(&dsl::schema::parse_exact(body,&Self::__dsl_spec(),&dsl::ParseOptions::default())?)
+    fn parse_dsl(text:&str)->Result<Self,semio_framework_diagnostic::TextError>{
+        let(envelope,body)=store::semio_format::split_text_preamble(text).map_err(|error|semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))?;
+        if !envelope.matches_identity(Self::envelope_id(),store::semio_format::Component::Dsl,1){return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "GIF owned Text envelope mismatch",semio_framework_diagnostic::TextSpan::at(1,1)));}
+        Self::__dsl_from_record(&semio_framework_dsl_record::parse_exact(body,&Self::__dsl_spec(),&semio_framework_dsl_record::ParseOptions::default())?)
     }
     fn print_dsl(&self)->String{
-        let body=dsl::schema::print(&self.__dsl_to_record(),&Self::__dsl_spec(),dsl::JoinMode::Document);
+        let body=semio_framework_dsl_record::print(&self.__dsl_to_record(),&Self::__dsl_spec(),semio_framework_dsl_record::JoinMode::Document);
         let envelope=store::semio_format::SemioEnvelope::from_envelope_id(Self::envelope_id(),store::semio_format::Component::Dsl,1).expect("declared GIF envelope");store::semio_format::wrap_text(&envelope,&body)
     }
 }
 
 impl store::ArtifactPack for GifSnapshot {
-    fn record_spec()->Option<dsl::RecordSpec>{Some(Self::__dsl_spec())}
+    fn record_spec()->Option<semio_framework_dsl_record::RecordSpec>{Some(Self::__dsl_spec())}
     fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
         Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
     }
 
     fn encode_pack_with(&self,options:&store::PackEncodeOptions)->Result<Vec<u8>,store::PackError>{
         let body=store::pack_rt::encode_document(&Self::__dsl_spec(),&self.__dsl_to_record(),options)?;
-        let envelope=store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1).map_err(|error|store::PackError::Schema(error.to_string()))?;Ok(store::semio_format::wrap_binary(&envelope,&body))
+        let envelope=store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1).map_err(|error|store::PackError::from(error.into_value_error()))?;Ok(store::semio_format::wrap_binary(&envelope,&body))
     }
     fn decode_pack_with(bytes:&[u8],options:&store::PackDecodeOptions)->Result<Self,store::PackError>{
-        let(envelope,body)=store::semio_format::unwrap_binary(bytes).map_err(|error|store::PackError::Schema(error.to_string()))?;
-        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1){return Err(store::PackError::Schema("GIF owned Pack envelope mismatch".into()));}
-        Self::__dsl_from_record(&store::pack_rt::decode_document(&body,&Self::__dsl_spec(),options)?.0).map_err(|error|store::PackError::Schema(error.to_string()))
+        let(envelope,body)=store::semio_format::unwrap_binary(bytes).map_err(|error|store::PackError::from(error.into_value_error()))?;
+        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1){return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "GIF owned Pack envelope mismatch")));}
+        Self::__dsl_from_record(&store::pack_rt::decode_document(&body,&Self::__dsl_spec(),options)?.0).map_err(|error|store::PackError::from(error))
     }
 }
 //#endregion HandcraftedArtifactCodecs

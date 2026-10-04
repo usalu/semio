@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeLightingGainReturnAirFraction, base: &EnergyM
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Lighting Gain {}: return-air fraction must be a fraction in [0, 1], got {}.", payload.id.0, payload.new_return_air_fraction), [payload.id.0.to_string()]);
     }
     if existing.return_air_fraction == payload.new_return_air_fraction {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Lighting Gain {} already carries this return-air fraction: {}.", payload.id.0, payload.new_return_air_fraction));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Lighting Gain {} already carries this return-air fraction: {}.", payload.id.0, payload.new_return_air_fraction));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.lighting.iter_mut().find(|item| item.id == payload.id) {

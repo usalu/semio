@@ -10,7 +10,7 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 /// dialog; the dialog's own submit re-dispatches THIS command, worker-brief task 2). Kept as its own
 /// undecorated command so a caller that already confirmed out-of-band (tests, scripted flows) is
 /// never forced through the dialog.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "delete-artifact")]
 pub struct DeleteArtifact {
     pub id: String,

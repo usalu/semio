@@ -1,0 +1,10 @@
+{
+  "name": "@semio-tech/framework-rs",
+  "private": true,
+  "nx": {
+    "includedScripts": []
+  },
+  "scripts": {
+    "test-command-ingress-consumer": "nx run @semio-tech/framework-rs:test-command-ingress-consumer"
+  }
+}

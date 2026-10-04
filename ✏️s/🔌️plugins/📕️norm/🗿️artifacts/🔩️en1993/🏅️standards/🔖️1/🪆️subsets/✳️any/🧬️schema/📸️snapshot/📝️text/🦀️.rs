@@ -17,7 +17,7 @@ use crate::En1993Snapshot;
 pub const EN1993_HIGH_STRENGTH_CONNECTION_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🔩️high-strength-connection/🔩️high-strength-connection/🗣️.dsl.semio");
 
 /// 📖️ Parses `.en1993` DSL text into a `Document`.
-pub fn parse_dsl(text: &str) -> Result<En1993Snapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<En1993Snapshot, semio_framework_diagnostic::TextError> {
     <En1993Snapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 

@@ -15,7 +15,7 @@
     "spreads": [],
     "pages": [],
     "printTarget": null,
-    "dataFieldsJson": "{\"project\":\"sprachneutral\"}",
+    "dataFields": {"entries":[{"questionId":"project","value":{"kind":"text","value":"sprachneutral"}}]},
     "backgroundDrawing": {
       "handle": {
         "childId": "background-drawing-canonical-fixture",
@@ -94,7 +94,7 @@
     "spreads": null,
     "pages": null,
     "printTarget": null,
-    "dataFieldsJson": null,
+    "dataFields": null,
     "backgroundDrawing": {
       "handle": {
         "childId": "background-drawing-canonical-fixture",

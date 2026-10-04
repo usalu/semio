@@ -18,14 +18,22 @@ mod native {
     use std::sync::Mutex;
 
     use crate::format::{Manifest, PackWriter, RecoveryReport, WriteOptions};
-    use crate::{PackError, PackLimits, PackSink, PackSource};
+    use crate::{PackLimits, PackSink, PackSource};
+    use semio_framework_pack_error::{PackError,PackTransportContext,PackTransportPhase,PackTransportCategory,PackRetryDisposition};
+    use semio_framework_value::ValueRefusalKind;
 
-    /// 🚨️ Wraps a `std::io::Error` into the crate-wide `PackError::Io` variant — the only
-    /// place `std::io::Error` is allowed to appear, per the contract's no-`std::io::Error`-in-
-    /// public-signatures rule.
-    #[allow(clippy::needless_pass_by_value)] // used as a `map_err` callback, which passes the error by value
-    fn io_err(err: std::io::Error) -> PackError {
-        PackError::Io(err.to_string())
+    /// 🔌️ Native operations require an admitted concrete error cell before touching the filesystem.
+    fn io_operation<T>(context:&PackTransportContext,bytes:usize,operation:impl FnOnce()->std::io::Result<(T,usize)>)->Result<T,PackError>{context.operation(PackTransportCategory::NativeIo,PackRetryDisposition::Never,bytes,operation)}
+
+    /// 📤️ One pre-reserved source cell covers bounded writes and every policy checkpoint.
+    fn write_bounded(file:&mut std::fs::File,bytes:&[u8],context:&PackTransportContext)->Result<(),PackError>{
+        let source=context.reserve::<std::io::Error>(PackTransportCategory::NativeIo,PackRetryDisposition::Never)?;
+        for page in bytes.chunks(4096){
+            context.checkpoint(PackTransportPhase::BeforeOperation,PackTransportCategory::NativeIo,page.len())?;
+            if let Err(error)=file.write_all(page){return Err(PackError::TransportFailure(source.publish(error)));}
+            context.checkpoint(PackTransportPhase::AfterOperation,PackTransportCategory::NativeIo,page.len())?;
+        }
+        Ok(())
     }
 
     //#region 🔖️File
@@ -36,14 +44,15 @@ mod native {
     pub struct FilePackSource {
         file: Mutex<std::fs::File>,
         len: u64,
+        context:PackTransportContext,
     }
 
     impl FilePackSource {
         /// 📖️ Opens `path` for reading and stat's its length up front.
-        pub fn open(path: &Path) -> Result<Self, PackError> {
-            let file = std::fs::File::open(path).map_err(io_err)?;
-            let len = file.metadata().map_err(io_err)?.len();
-            Ok(Self { file: Mutex::new(file), len })
+        pub fn open(path: &Path,context:PackTransportContext) -> Result<Self, PackError> {
+            let file = io_operation(&context,0,||std::fs::File::open(path).map(|file|(file,0)))?;
+            let len = io_operation(&context,0,||file.metadata().map(|metadata|(metadata,0)))?.len();
+            Ok(Self { file: Mutex::new(file), len, context })
         }
     }
 
@@ -53,31 +62,30 @@ mod native {
     // I/O in an `async fn` body (no `.await` inside): that mirrors the crate's existing idiom of
     // spawning a dedicated thread for blocking work rather than pretending file I/O suspends.
     impl PackSource for FilePackSource {
+        type Error = PackError;
         async fn len(&self) -> u64 {
             self.len
         }
 
         async fn read_at(&self, offset: u64, buf: &mut [u8]) -> Result<usize, PackError> {
             if offset > self.len {
-                return Err(PackError::Truncated(offset));
+                return Err(PackError::Refusal(semio_framework_pack_error::PackRefusal::Truncated(offset)));
             }
-            let guard = self.file.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            let maximum=buf.len().min(4096);let buf=&mut buf[..maximum];
             #[cfg(unix)]
             {
                 use std::os::unix::fs::FileExt;
-                guard.read_at(buf, offset).map_err(io_err)
+                io_operation(&self.context,buf.len(),||{let guard=self.file.lock().unwrap_or_else(std::sync::PoisonError::into_inner);guard.read_at(buf,offset).map(|bytes|(bytes,bytes))})
             }
             #[cfg(windows)]
             {
                 use std::os::windows::fs::FileExt;
-                guard.seek_read(buf, offset).map_err(io_err)
+                io_operation(&self.context,buf.len(),||{let guard=self.file.lock().unwrap_or_else(std::sync::PoisonError::into_inner);guard.seek_read(buf,offset).map(|bytes|(bytes,bytes))})
             }
             #[cfg(not(any(unix, windows)))]
             {
                 use std::io::{Read, Seek, SeekFrom};
-                let mut guard = guard;
-                guard.seek(SeekFrom::Start(offset)).map_err(io_err)?;
-                guard.read(buf).map_err(io_err)
+                io_operation(&self.context,buf.len(),||{let mut guard=self.file.lock().unwrap_or_else(std::sync::PoisonError::into_inner);guard.seek(SeekFrom::Start(offset))?;guard.read(buf).map(|bytes|(bytes,bytes))})
             }
         }
     }
@@ -87,19 +95,21 @@ mod native {
     pub struct FilePackSink {
         file: std::fs::File,
         position: u64,
+        context:PackTransportContext,
     }
 
     impl FilePackSink {
         /// 🆕️ Creates (truncating any existing file) `path` for writing.
-        pub fn create(path: &Path) -> Result<Self, PackError> {
-            let file = std::fs::OpenOptions::new().write(true).create(true).truncate(true).open(path).map_err(io_err)?;
-            Ok(Self { file, position: 0 })
+        pub fn create(path: &Path,context:PackTransportContext) -> Result<Self, PackError> {
+            let file = io_operation(&context,0,||std::fs::OpenOptions::new().write(true).create(true).truncate(true).open(path).map(|file|(file,0)))?;
+            Ok(Self { file, position: 0,context })
         }
     }
 
     impl PackSink for FilePackSink {
+        type Error = PackError;
         async fn write_all(&mut self, bytes: &[u8]) -> Result<(), PackError> {
-            self.file.write_all(bytes).map_err(io_err)?;
+            write_bounded(&mut self.file,bytes,&self.context)?;
             self.position += bytes.len() as u64;
             Ok(())
         }
@@ -109,8 +119,8 @@ mod native {
         }
 
         async fn flush(&mut self) -> Result<(), PackError> {
-            self.file.flush().map_err(io_err)?;
-            self.file.sync_all().map_err(io_err)
+            io_operation(&self.context,0,||self.file.flush().map(|value|(value,0)))?;
+            io_operation(&self.context,0,||self.file.sync_all().map(|value|(value,0)))
         }
     }
     //#endregion 🔖️File
@@ -124,18 +134,18 @@ mod native {
     /// then `rename`s it into place. `rename` is atomic on every platform this targets, so a
     /// reader can never observe a partially-written `path` — it sees either the old content or
     /// the fully-written new content, never a torn write.
-    pub fn write_atomic(path: &Path, bytes: &[u8]) -> Result<(), PackError> {
-        let file_name = path.file_name().ok_or_else(|| PackError::Io("write_atomic: path has no file name".to_string()))?;
+    pub fn write_atomic(path: &Path, bytes: &[u8],context:&PackTransportContext) -> Result<(), PackError> {
+        let file_name = path.file_name().ok_or_else(||PackError::Refusal(semio_framework_pack_error::PackRefusal::from(semio_framework_value::ValueError::new(ValueRefusalKind::InvalidValue,"write_atomic: path has no file name"))))?;
         let pid = std::process::id();
         let counter = TMP_COUNTER.fetch_add(1, Ordering::Relaxed);
         let tmp_name = format!("{}.tmp-{pid}-{counter}", file_name.to_string_lossy());
         let tmp_path = path.with_file_name(tmp_name);
         {
-            let mut tmp_file = std::fs::File::create(&tmp_path).map_err(io_err)?;
-            tmp_file.write_all(bytes).map_err(io_err)?;
-            tmp_file.sync_all().map_err(io_err)?;
+            let mut tmp_file = io_operation(context,0,||std::fs::File::create(&tmp_path).map(|file|(file,0)))?;
+            write_bounded(&mut tmp_file,bytes,context)?;
+            io_operation(context,0,||tmp_file.sync_all().map(|value|(value,0)))?;
         }
-        std::fs::rename(&tmp_path, path).map_err(io_err)?;
+        io_operation(context,0,||std::fs::rename(&tmp_path,path).map(|value|(value,0)))?;
         Ok(())
     }
     //#endregion 🔖️Atomic
@@ -150,8 +160,8 @@ mod native {
 
     impl StreamingPackWriter {
         /// 🚀️ Creates `path` and writes the 32-byte header.
-        pub async fn create(path: &Path, options: &WriteOptions) -> Result<Self, PackError> {
-            let sink = FilePackSink::create(path)?;
+        pub async fn create(path: &Path, options: &WriteOptions,context:PackTransportContext) -> Result<Self, PackError> {
+            let sink = FilePackSink::create(path,context)?;
             let inner = PackWriter::begin(sink, options).await?;
             Ok(Self { inner })
         }
@@ -178,8 +188,8 @@ mod native {
     /// 🩺️ Opens `path` and forward-scans it via `crate::format::recover` — for use when a
     /// file's footer fails to parse/validate and the caller wants to salvage whatever valid
     /// segments precede the corruption.
-    pub async fn recover_file(path: &Path, limits: &PackLimits) -> Result<RecoveryReport, PackError> {
-        let source = FilePackSource::open(path)?;
+    pub async fn recover_file(path: &Path, limits: &PackLimits,context:PackTransportContext) -> Result<RecoveryReport, PackError> {
+        let source = FilePackSource::open(path,context)?;
         crate::format::recover(&source, limits).await
     }
     //#endregion 🔖️Recover
@@ -192,3 +202,25 @@ mod native {
 
 #[cfg(not(target_arch = "wasm32"))]
 pub use native::*;
+
+#[cfg(all(test,not(target_arch="wasm32")))]
+#[path = "🧪️tests/🧭️producer-authority/🦀️.rs"]
+mod producer_authority_tests;
+
+#[cfg(all(test,not(target_arch="wasm32")))]
+mod caller_test_policy {
+    use semio_framework_pack_error::{PackTransportContext,PackTransportPolicy,PackTransportProgress,TransportAdmission};
+    use semio_framework_value::{ValueError,ValueRefusalKind};
+    use std::sync::Arc;
+    use std::sync::atomic::{AtomicBool,AtomicUsize,Ordering};
+    struct Policy { cancellation: Arc<AtomicBool>, progress: Arc<AtomicUsize> }
+    impl PackTransportPolicy for Policy {
+        fn checkpoint(&self,_event:PackTransportProgress)->Result<(),ValueError>{if self.cancellation.load(Ordering::SeqCst){Err(ValueError::new(ValueRefusalKind::Canceled,"test caller canceled"))}else{Ok(())}}
+        fn progress(&self,_event:PackTransportProgress){self.progress.fetch_add(1,Ordering::SeqCst);}
+    }
+    pub(super) fn context()->(PackTransportContext,Arc<AtomicBool>,Arc<AtomicUsize>){
+        let cancellation=Arc::new(AtomicBool::new(false));let progress=Arc::new(AtomicUsize::new(0));
+        let context=PackTransportContext::try_new(TransportAdmission::new(1048576,0),Policy{cancellation:cancellation.clone(),progress:progress.clone()}).ok().unwrap();
+        (context,cancellation,progress)
+    }
+}

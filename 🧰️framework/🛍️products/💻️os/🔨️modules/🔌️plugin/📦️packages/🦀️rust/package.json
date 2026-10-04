@@ -1,0 +1,12 @@
+{
+  "name": "@semio-tech/framework-plugin",
+  "private": true,
+  "nx": {
+    "includedScripts": []
+  },
+  "scripts": {
+    
+    "test-command-ingress-consumer": "nx run @semio-tech/framework-plugin:test-command-ingress-consumer",
+    "test-snapshot-sqlite-admission": "nx run @semio-tech/framework-plugin:test-snapshot-sqlite-admission"
+  }
+}

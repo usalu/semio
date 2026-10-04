@@ -5,7 +5,8 @@ use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::DeletePart, base: &Puzzle5dSnapshot) -> Vec<Puzzle5dMutation> {
+pub fn inverse(payload: &super::DeletePart, base: &Puzzle5dSnapshot) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(part) = base.parts.iter().find(|entry| entry.id == payload.id) else {
         return Vec::new();
     };
@@ -29,5 +30,7 @@ pub fn inverse(payload: &super::DeletePart, base: &Puzzle5dSnapshot) -> Vec<Puzz
         ));
     }
     mutations
+
+    })())
 }
 //#endregion 🔖️Inverse

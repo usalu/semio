@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeSolarThermalSystemStorageVolume, base: &Energ
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Solar thermal system {}: buffer volume (m³) must be a positive finite value, got {}.", payload.id.0, payload.new_storage_volume_m3), [payload.id.0.to_string()]);
     }
     if existing.storage_volume_m3 == payload.new_storage_volume_m3 {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Solar thermal system {} already carries this buffer volume (m³): {}.", payload.id.0, payload.new_storage_volume_m3));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Solar thermal system {} already carries this buffer volume (m³): {}.", payload.id.0, payload.new_storage_volume_m3));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.solar_thermal_systems.iter_mut().find(|item| item.id == payload.id) {

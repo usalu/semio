@@ -15,3 +15,5 @@ record set-snapshot tag=0
 field payload bytes
 record set-version-info tag=1
 field payload bytes
+record patch-snapshot tag=2
+field payload bytes

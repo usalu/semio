@@ -15,5 +15,5 @@ pub fn diff(payload: &InsertEffect, base: &En1990Snapshot) -> MutationOutcome<En
     if index == payload.index {
         return outcome;
     }
-    outcome.warn("mutation.clamped", format!("Position {} is past the end of the member effect list; inserted at {index}.", payload.index))
+    outcome.warning("mutation.clamped", format!("Position {} is past the end of the member effect list; inserted at {index}.", payload.index))
 }

@@ -1,0 +1,11 @@
+message PaintDirectRegion {
+  string revision = 1;
+  uint32 x = 2;
+  uint32 y = 3;
+  uint32 width = 4;
+  uint32 height = 5;
+  uint32 red = 6;
+  uint32 green = 7;
+  uint32 blue = 8;
+  uint32 alpha = 9;
+}

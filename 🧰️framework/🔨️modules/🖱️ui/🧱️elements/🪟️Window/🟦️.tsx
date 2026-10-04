@@ -233,7 +233,7 @@ const Window: React.FC<WindowProps> = ({
       if (event.defaultPrevented || event.isComposing) return;
       if (event.key.length !== 1 || event.key === " " || event.ctrlKey || event.metaKey || event.altKey) return;
       if (!shouldRouteKeysToWindowSearch(event.target)) return;
-      setActionsFolded(false);
+      setSearchFolded(false);
     },
     [active, search, searchExpanded],
   );

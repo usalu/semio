@@ -11,7 +11,6 @@
 use semio_framework_plugin::app::{editable_table_window_row_at, row_action, row_target, TableWindowKit, WindowKit, WindowedEditableTableCell};
 use semio_framework_plugin::BuiltNode;
 use semio_framework_plugin::Component;
-use semio_framework_ui_locale::Locale;
 use semio_framework_plugin::PluginAssemblyError;
 use semio_framework_plugin::RowActionPlacement;
 use semio_framework_plugin::TreeWindows;
@@ -19,9 +18,20 @@ use semio_framework_plugin::UiAssemblyResult;
 use semio_framework_plugin::UiMapBuilder;
 use semio_framework_plugin::UiValue;
 use semio_framework_ui_contract as ui;
-use semio_s_artifact_stdio_contract::{render_structural_table, window_kit_indexed_revision_arguments, window_kit_revision_arguments, window_kit_revisioned_cell_arguments, REMOVE_TABLE_ROW_ACTION_ID};
+use semio_framework_ui_locale::Locale;
+use semio_s_artifact_stdio_contract::{render_structural_table, window_kit_indexed_revision_arguments, window_kit_render_publication_revision, window_kit_revision_arguments, window_kit_revisioned_cell_arguments, REMOVE_TABLE_ROW_ACTION_ID};
 
 const CONTROLLER: &str = "s.stdio.csv@rfc4180/*#editor";
+
+#[test]
+fn renderer_store_revision_projects_to_the_exact_completion_lane() {
+    let mut canonical = [0_u8; 32];
+    canonical[..8].copy_from_slice(&0xfedc_ba98_7654_3210_u64.to_be_bytes());
+    let operation = semio_framework_plugin::AppRenderOperationContext { app_instance_id: 7, base_revision: semio_framework_job::RevisionId(0xfedc_ba98_7654_3210), generation: semio_framework_job::Generation(11), canonical_base_revision: canonical };
+    let revision = window_kit_render_publication_revision(&semio_framework_value::DslValue::Null, Some(operation)).expect("store publication revision");
+    assert_eq!(revision, ui::UiPublicationRevision(0xfedc_ba98_7654_3210));
+    assert_eq!(serde_json::to_value(revision).expect("third-party decimal oracle"), serde_json::Value::String("18364758544493064720".into()));
+}
 
 /// 🧹️ Returns every handed-back value and queued built page to the arena, as the reactor's retirement pump does.
 fn drain() {
@@ -64,7 +74,10 @@ fn structural_table(rows: usize, width: usize, editable_headers: bool, revision:
             |row, columns| {
                 let column_offset = columns.start;
                 let cells = columns
-                    .map(|column| window_kit_revisioned_cell_arguments(row, column, revision).map(|arguments| WindowedEditableTableCell::new(format!("r{row}c{column}"), header(column), "set-cell", arguments)))
+                    .map(|column| {
+                        window_kit_revisioned_cell_arguments(row, column, revision)
+                            .map(|arguments| WindowedEditableTableCell::new(format!("r{row}c{column}"), header(column), "set-cell", arguments).publication_revision(semio_framework_plugin::UiPublicationRevision(13)))
+                    })
                     .collect::<UiAssemblyResult<Vec<_>>>()?;
                 let remove = row_action("trash-2", "Remove row", REMOVE_TABLE_ROW_ACTION_ID, RowActionPlacement::Row)?;
                 let target = row_target(CONTROLLER, Some(window_kit_indexed_revision_arguments("row", row, revision)?), None)?;
@@ -72,7 +85,7 @@ fn structural_table(rows: usize, width: usize, editable_headers: bool, revision:
             },
         )
     };
-    render_structural_table(width, header, editable_headers, CONTROLLER, revision, locale, windows, table)
+    render_structural_table(width, header, editable_headers, CONTROLLER, revision, semio_framework_plugin::UiPublicationRevision(13), locale, windows, table)
 }
 
 fn find<'a>(node: &'a BuiltNode, key: &str) -> Option<&'a BuiltNode> {

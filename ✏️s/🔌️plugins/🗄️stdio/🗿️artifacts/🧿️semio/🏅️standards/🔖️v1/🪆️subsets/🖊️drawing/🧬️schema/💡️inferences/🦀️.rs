@@ -15,7 +15,6 @@
 
 use crate::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 use std::collections::BTreeMap;
 
 use super::flattened_scene::DrawFlattenedScene;
@@ -31,8 +30,11 @@ pub struct SemioDrawingInference {
 }
 
 impl protocol::Inference<SemioDrawingSnapshot> for SemioDrawingInference {
-    fn infer(snapshot: &SemioDrawingSnapshot) -> Self {
+    fn infer(snapshot: &SemioDrawingSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { flattened_scene: store::infer_field::<SemioDrawingSnapshot, DrawFlattenedScene>(snapshot, None).into_iter().collect() }
+    
+        })
     }
 }
 
@@ -48,19 +50,6 @@ impl protocol::InferenceSpec<SemioDrawingSnapshot> for SemioDrawingInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::standards::v1::subsets::drawing::schema::SemioDrawingBuilder {
-    type Snapshot = SemioDrawingSnapshot;
-    type Inference = SemioDrawingInference;
-
-    async fn infer_cached(snapshot: &Self::Snapshot, cache: &mut store::InferenceCache, session: &mut store::InferenceSession) -> Self::Inference {
-        let _ = session;
-        let flattened_scene = store::infer_field::<SemioDrawingSnapshot, DrawFlattenedScene>(snapshot, Some(cache)).into_iter().collect();
-        SemioDrawingInference { flattened_scene }
-    }
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.semio.drawing.inference`'s facet leaves into the OS-wide inference

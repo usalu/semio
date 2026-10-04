@@ -75,7 +75,7 @@ fn paint2d_scene(surface_id: &str, active_utility: &str, selection: &[&str]) -> 
         brush_opacity: 0.8,
         brush_color: "#e07020".into(),
         brush_hardness: 0.25,
-        paint_target:"pixels".into(),mask_value:255,pixel_selection_json:None,
+        paint_target:"pixels".into(),mask_value:255,fill_tolerance:24,pixel_selection_json:None,
         view_mode: "composite".into(),
         composite_viewport_json: None,
         lanes: Vec::new(),
@@ -216,7 +216,7 @@ fn paint2d_wheel_republishes_the_host_camera_as_set_camera() {
     let actions = drain(&mut input);
 
     let camera = actions.iter().find(|action| action.action == "setCamera").expect("a wheel notch republishes the host camera");
-    let args = camera.args.as_ref().and_then(dsl::DslValue::as_object).expect("setCamera args are an object");
+    let args = camera.args.as_ref().and_then(semio_framework_value::DslValue::as_object).expect("setCamera args are an object");
     assert!(args.iter().any(|(key, _)| key == "surfaceId"), "the dispatch helper merges surfaceId into every paint-2d action");
     let nested = args.iter().find(|(key, _)| key == "camera").map(|(_, value)| value.clone()).expect("setCamera carries a nested camera object, matching dispatch(\"setCamera\", { camera: next })");
     let camera_fields = nested.as_object().expect("camera is an object");
@@ -833,7 +833,7 @@ fn paint2d_navigator_middle_drag_pans_the_content_camera() {
     assert!(paint2d_pointer_move_into(&scene, bounds, 120.0, 90.0, &mut input).expect("bounded"), "the armed pan consumes the move");
     let actions = drain(&mut input);
     let camera = actions.iter().find(|action| action.action == "setCamera").expect("a navigator pan publishes setCamera");
-    let args = camera.args.as_ref().and_then(dsl::DslValue::as_object).expect("setCamera args are an object");
+    let args = camera.args.as_ref().and_then(semio_framework_value::DslValue::as_object).expect("setCamera args are an object");
     let nested = args.iter().find(|(key, _)| key == "camera").map(|(_, value)| value.clone()).expect("setCamera carries a nested camera object");
     let camera_fields = nested.as_object().expect("camera is an object");
     let read = |key: &str| camera_fields.iter().find(|(name, _)| name == key).and_then(|(_, value)| value.as_f64()).unwrap_or_else(|| panic!("camera.{key}"));
@@ -872,7 +872,7 @@ fn paint2d_navigator_wheel_matches_the_mounted_react_camera_contract() {
         let action = &actions[0];
         assert_eq!(action.action, "setCamera");
         assert_eq!(action.controller_id, "raster");
-        let args = action.args.as_ref().and_then(dsl::DslValue::as_object).expect("camera action arguments");
+        let args = action.args.as_ref().and_then(semio_framework_value::DslValue::as_object).expect("camera action arguments");
         let camera = args.iter().find(|(key, _)| key == "camera").and_then(|(_, value)| value.as_object()).expect("nested camera");
         for key in ["x", "y", "zoom"] {
             let actual = camera.iter().find(|(name, _)| name == key).and_then(|(_, value)| value.as_f64()).expect("camera coordinate");
@@ -918,6 +918,62 @@ fn text_editor_phase_four_binding_retires_the_closed_host_and_preserves_its_sibl
     close_retained_surface_fixture(window_b);
 }
 
+/// 🪣️ The wgpu bucket is React's: the press publishes ONE `fillRegion { surfaceId, layerId, x, y }` in the layer image's
+/// pixels (no host flood, no stroke), and a press off the layer's pixel grid publishes nothing.
+#[test]
+fn paint2d_bucket_press_publishes_one_fill_region_click_in_layer_pixels() {
+    let _serialized = engine_surface_law_guard();
+    let surface_id = "paint2d-bucket";
+    drop_engine_surface(surface_id);
+    let scene = paint2d_scene(surface_id, "paintBucket", &["base"]);
+    let bounds = Rect { x: 0.0, y: 0.0, w: 640.0, h: 480.0 };
+    assert!(sync_engine_scene(&scene, "law-window", bounds, &Theme::default()), "attach");
+    let (x, y) = with_raster_host_mut(surface_id, |host| host.world_to_screen_point(0.0, 0.0)).unwrap();
+    let mut input = InputState::<ActionDescriptor>::default();
+    assert!(paint2d_pointer_button_into(&scene, bounds, x as f32, y as f32, true, 0, false, false, &mut input).unwrap());
+    let actions = drain(&mut input);
+    assert_eq!(actions.len(), 1);
+    assert_eq!(actions[0].action, "fillRegion");
+    let args: Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(actions[0].args.as_ref().expect("the click carries arguments"))).unwrap();
+    assert_eq!(args.as_object().map(|object| object.len()), Some(4), "exactly surfaceId, layerId, x and y: {args}");
+    assert_eq!((args["surfaceId"].as_str(), args["layerId"].as_str(), args["x"].as_f64(), args["y"].as_f64()), (Some(surface_id), Some("base"), Some(32.0), Some(32.0)));
+    assert!(with_raster_host_mut(surface_id, |host| host.paint_edit().is_none()).unwrap());
+    assert!(drain(&mut input).is_empty());
+    let (x, y) = with_raster_host_mut(surface_id, |host| host.world_to_screen_point(40.0, 0.0)).unwrap();
+    assert!(paint2d_pointer_button_into(&scene, bounds, x as f32, y as f32, true, 0, false, false, &mut input).unwrap());
+    assert!(drain(&mut input).iter().all(|action| action.action != "fillRegion"), "a press off the pixel grid fills nothing");
+    drop_engine_surface(surface_id);
+}
+
+/// 🌊️ A long wgpu stroke streams like React's: `paintStroke{phase: stream, gesture}` ticks while the pointer moves, then
+/// ONE `paintStroke{phase: commit, gesture}` with the rest on release — one press id, every sample once, in order.
+#[test]
+fn paint2d_long_stroke_streams_ticks_then_commits_under_one_press() {
+    let _serialized = engine_surface_law_guard();
+    let surface_id = "paint2d-stream";
+    drop_engine_surface(surface_id);
+    let scene = paint2d_scene(surface_id, "paintBrush", &["base"]);
+    let bounds = Rect { x: 0.0, y: 0.0, w: 640.0, h: 480.0 };
+    assert!(sync_engine_scene(&scene, "law-window", bounds, &Theme::default()), "attach");
+    let (x, y) = with_raster_host_mut(surface_id, |host| host.world_to_screen_point(-20.0, 0.0)).unwrap();
+    let mut input = InputState::<ActionDescriptor>::default();
+    assert!(paint2d_pointer_button_into(&scene, bounds, x as f32, y as f32, true, 0, false, false, &mut input).unwrap());
+    let mut actions = drain(&mut input);
+    for step in 1..=40 {
+        paint2d_pointer_move_into(&scene, bounds, x as f32 + step as f32, y as f32, &mut input).unwrap();
+        actions.extend(drain(&mut input));
+    }
+    assert!(paint2d_pointer_button_into(&scene, bounds, x as f32 + 41.0, y as f32, false, 0, false, false, &mut input).unwrap());
+    actions.extend(drain(&mut input));
+    let strokes: Vec<Value> = actions.iter().filter(|action| action.action == "paintStroke").map(|action| serde_json::from_str(&semio_framework_pack_json::to_json_string(action.args.as_ref().expect("a stroke carries arguments"))).unwrap()).collect();
+    assert_eq!(strokes.iter().map(|args| args["phase"].as_str()).collect::<Vec<_>>(), [Some("stream"), Some("stream"), Some("commit")]);
+    assert!(strokes.iter().all(|args| args["gesture"].is_string() && args["gesture"] == strokes[0]["gesture"] && args["layerId"] == "base" && args["tool"] == "brush"));
+    let xs: Vec<f64> = strokes.iter().flat_map(|args| args["xs"].as_array().unwrap().iter().map(|x| x.as_f64().unwrap()).collect::<Vec<_>>()).collect();
+    assert_eq!(xs.len(), 42, "every sample once");
+    assert!(xs.windows(2).all(|pair| pair[1] > pair[0]), "in drawing order");
+    drop_engine_surface(surface_id);
+}
+
 #[test]
 fn paint2d_mask_stroke_publishes_one_paint_stroke_at_the_shared_target(){
     let _serialized=engine_surface_law_guard();
@@ -929,7 +985,7 @@ fn paint2d_mask_stroke_publishes_one_paint_stroke_at_the_shared_target(){
         let (x,y)=with_raster_host_mut(&surface_id,|host|host.world_to_screen_point(case["worldPoint"][0].as_f64().unwrap(),case["worldPoint"][1].as_f64().unwrap())).unwrap();
         let mut input=InputState::<ActionDescriptor>::default();assert!(paint2d_pointer_button_into(&scene,bounds,x as f32,y as f32,true,0,false,false,&mut input).unwrap());assert!(paint2d_pointer_button_into(&scene,bounds,x as f32,y as f32,false,0,false,false,&mut input).unwrap());
         let actions=drain(&mut input);assert_eq!(actions.len(),1);assert_eq!(actions[0].action,"paintStroke");
-        let args:Value=serde_json::from_str(&dsl::json::to_json_string(actions[0].args.as_ref().expect("the stroke carries arguments"))).unwrap();
+        let args:Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(actions[0].args.as_ref().expect("the stroke carries arguments"))).unwrap();
         assert_eq!(args["layerId"],"p");assert_eq!(args["tool"],"brush");assert!(args.get("operation").is_none()&&args.get("expectedMask").is_none());
         for (index,axis) in ["xs","ys"].into_iter().enumerate(){assert_eq!(args[axis][0].as_f64(),case["pixelPoint"][index].as_f64());}assert!(with_raster_host_mut(&surface_id,|host|host.paint_edit().is_none()).unwrap());drop_engine_surface(&surface_id);
     }

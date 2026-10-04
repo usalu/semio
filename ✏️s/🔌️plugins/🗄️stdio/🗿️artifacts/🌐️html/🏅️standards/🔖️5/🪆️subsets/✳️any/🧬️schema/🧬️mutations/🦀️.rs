@@ -150,7 +150,8 @@ pub(crate) fn agg_diff(this: &HtmlMutation, base: &HtmlSnapshot) -> protocol::Mu
 }
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &HtmlMutation, base: &HtmlSnapshot) -> Vec<HtmlMutation> {
+pub(crate) fn agg_inverse(this: &HtmlMutation, base: &HtmlSnapshot) -> Result<Vec<HtmlMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match this {
         HtmlMutation::SetSnapshot(_) => vec![HtmlMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
         HtmlMutation::SetDoctype(_) => vec![HtmlMutation::SetDoctype(set_doctype::SetDoctype { doctype: base.doctype.clone() })],
@@ -194,6 +195,8 @@ pub(crate) fn agg_inverse(this: &HtmlMutation, base: &HtmlSnapshot) -> Vec<HtmlM
             vec![HtmlMutation::SetRawText(set_raw_text::SetRawText { path: path.clone(), text: old })]
         }
     }
+
+    })())
 }
 //#endregion 🔖️MutationTrait
 
@@ -268,8 +271,8 @@ impl OpText for HtmlMutation {
     fn print_op(&self) -> String {
         print_html_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_html_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_html_mutation(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 }
 

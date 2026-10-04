@@ -42,7 +42,7 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 pub fn render(history: &HistoryView) -> UiAssemblyResult<BuiltNode> {
-    let scene = GraphTimelineScene { columns_json: dsl::json::to_json_string(&history.columns) };
+    let scene = GraphTimelineScene { columns_json: semio_framework_pack_json::to_json_string(&history.columns) };
     scene_surface(VCS_PLAY_SURFACE_HISTORY, semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::GraphTimeline, &scene)
 }
 //#endregion 🔖️Render

@@ -21,9 +21,12 @@ impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangePileCount 
     fn diff(&self, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &En1997Snapshot) -> Vec<En1997Mutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &En1997Snapshot) -> Result<Vec<En1997Mutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Change number of piles", "Pfahlanzahl ändern")
     }

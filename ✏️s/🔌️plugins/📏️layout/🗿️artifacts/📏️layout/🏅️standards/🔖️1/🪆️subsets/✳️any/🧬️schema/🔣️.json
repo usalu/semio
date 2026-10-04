@@ -90,8 +90,8 @@
       ],
       "x-semio-state": "artifact"
     },
-    "dataFieldsJson": {
-      "type": "string",
+    "dataFields": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/dictionary.json",
       "x-semio-state": "artifact"
     },
     "backgroundDrawing": {
@@ -278,11 +278,13 @@
       "properties": {
         "start": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 18446744073709551615
         },
         "end": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 18446744073709551615
         },
         "paragraphStyleId": {
           "anyOf": [

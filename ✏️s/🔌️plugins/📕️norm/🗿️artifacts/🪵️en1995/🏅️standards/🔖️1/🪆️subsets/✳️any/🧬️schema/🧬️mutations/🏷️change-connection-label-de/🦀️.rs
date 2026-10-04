@@ -9,7 +9,10 @@ pub struct ChangeConnectionLabelDe { pub connection_id: String, pub new_value: S
 impl protocol::MutationKind<En1995Snapshot, En1995Mutation> for ChangeConnectionLabelDe {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "connection-labelDe", kind: "change-connection-label-de", record: "ChangedConnectionLabelDe" };
     fn diff(&self, base: &En1995Snapshot) -> protocol::MutationOutcome<<En1995Mutation as protocol::Mutation<En1995Snapshot>>::Diff> { super::diff::diff(self, base) }
-    fn inverse(&self, base: &En1995Snapshot) -> Vec<En1995Mutation> { super::inverse::inverse(self, base) }
+    fn inverse(&self, base: &En1995Snapshot) -> Result<Vec<En1995Mutation>, semio_framework_value::ValueError> {
+    Ok({ super::inverse::inverse(self, base)? 
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Label (DE) of connection {}", self.connection_id), &format!("Bezeichnung (DE) von Verbindung {} ändern", self.connection_id)) }
     fn target(&self) -> Vec<String> { vec![self.connection_id.clone()] }
 }

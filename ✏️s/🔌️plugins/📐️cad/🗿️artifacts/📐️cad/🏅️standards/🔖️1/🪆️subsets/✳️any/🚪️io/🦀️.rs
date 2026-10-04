@@ -138,7 +138,7 @@ pub mod io_registry {
 // 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) -- native-geometry solid export bridging
 // to stdio's real semio/mesh + semio/brep codecs is io by definition (rule 5), not artifact-engine
 // compute.
-use protocol::DslValue;
+use semio_framework_value::DslValue;
 use semio_framework::MeshImporter;
 use semio_framework_plugin::{ArtifactDeserializer, ArtifactSerializer};
 use semio_s_artifact_stdio_obj::standards::v3_0::engine::encode_obj;
@@ -262,13 +262,13 @@ fn semio_brep_snapshot_from_step_text(text: &str) -> Option<SemioBrepSnapshot> {
     let repaired = repair_step_trailing_comma_before_close_paren(text);
     let document = parse_part21(&repaired).ok()?;
     let step_snapshot = StepSnapshot::from_part21_document(&document);
-    semio_framework_plugin::resolve_ready(SemioBrepFromStep::deserialize(&step_snapshot)).ok()
+    ::semio_framework_async::poll::resolve_ready(SemioBrepFromStep::deserialize(&step_snapshot)).ok()
 }
 
 /// 🌉️ Inverse of `semio_brep_snapshot_from_step_text` — real `SemioBrepToStep` serialize +
 /// stdio's own Part-21 writer.
 fn step_text_from_semio_brep_snapshot(brep: &SemioBrepSnapshot) -> Option<String> {
-    let step_snapshot = semio_framework_plugin::resolve_ready(SemioBrepToStep::serialize(brep)).ok()?;
+    let step_snapshot = ::semio_framework_async::poll::resolve_ready(SemioBrepToStep::serialize(brep)).ok()?;
     Some(write_part21(&step_snapshot.to_part21_document()))
 }
 
@@ -290,13 +290,13 @@ pub fn export_solids_as(kernel: &mut Brep, solids: &[GeometryHandle], format: &s
     match format {
         CAD_SOLID_EXPORT_DIALECT_OBJ => {
             let mesh_snapshot = semio_mesh_snapshot_from_solids(kernel, solids, 0.1)?;
-            let obj_snapshot = semio_framework_plugin::resolve_ready(SemioMeshToObj::serialize(&mesh_snapshot)).ok()?;
+            let obj_snapshot = ::semio_framework_async::poll::resolve_ready(SemioMeshToObj::serialize(&mesh_snapshot)).ok()?;
             let text = encode_obj(&obj_snapshot);
             Some(CadSolidExport { filename, data: DslValue::String(text), mime_type, encoding: None })
         }
         CAD_SOLID_EXPORT_DIALECT_STL => {
             let mesh_snapshot = semio_mesh_snapshot_from_solids(kernel, solids, 0.1)?;
-            let stl_snapshot = semio_framework_plugin::resolve_ready(SemioMeshToStl::serialize(&mesh_snapshot)).ok()?;
+            let stl_snapshot = ::semio_framework_async::poll::resolve_ready(SemioMeshToStl::serialize(&mesh_snapshot)).ok()?;
             let bytes = encode_stl_binary(&stl_snapshot);
             let encoded = base64_codec::base64_standard_encode(bytes);
             Some(CadSolidExport { filename, data: DslValue::String(encoded), mime_type, encoding: Some("base64".into()) })
@@ -318,19 +318,25 @@ pub fn export_solids_as(kernel: &mut Brep, solids: &[GeometryHandle], format: &s
 // (rule 5), not artifact-engine compute.
 /// 📦️ Decodes a `requestFileOpen` payload (a `data:` URL when `readAs: "dataUrl"` was
 /// requested, otherwise a raw string) into bytes.
-pub fn cad_file_bytes_from_payload(payload: &DslValue) -> Option<Vec<u8>> {
+pub fn cad_file_bytes_from_payload(payload: &DslValue) -> Option<std::borrow::Cow<'_, [u8]>> {
+    if let Some(bytes) = payload.as_bytes() {
+        return Some(std::borrow::Cow::Borrowed(bytes));
+    }
     let raw = payload.as_str()?;
     if raw.starts_with("data:") {
         let (_, encoded) = raw.split_once(',')?;
-        base64_codec::base64_standard_decode(encoded).ok()
+        base64_codec::base64_standard_decode(encoded).ok().map(std::borrow::Cow::Owned)
     } else {
-        Some(raw.as_bytes().to_vec())
+        Some(std::borrow::Cow::Borrowed(raw.as_bytes()))
     }
 }
 
-/// 📦️ Decodes a `requestFileOpen` payload into UTF-8 text; see `cad_file_bytes_from_payload`.
-pub fn cad_file_text_from_payload(payload: &DslValue) -> Option<String> {
-    String::from_utf8(cad_file_bytes_from_payload(payload)?).ok()
+/// 📦️ Borrows intrinsic UTF-8 text or decodes an explicitly encoded file payload.
+pub fn cad_file_text_from_payload(payload: &DslValue) -> Option<std::borrow::Cow<'_, str>> {
+    match cad_file_bytes_from_payload(payload)? {
+        std::borrow::Cow::Borrowed(bytes) => std::str::from_utf8(bytes).ok().map(std::borrow::Cow::Borrowed),
+        std::borrow::Cow::Owned(bytes) => String::from_utf8(bytes).ok().map(std::borrow::Cow::Owned),
+    }
 }
 
 /// 🧊️ Imports a STEP payload into the shared kernel, wrapping the first solid it contains
@@ -383,7 +389,7 @@ fn model_element_from_solid_handle(id: String, handle: GeometryHandle) -> semio_
 /// through the geometry-import module's now-`pub(crate)`-only `CadObject`.
 fn mesh_to_obj_text_for_import(mesh: &semio_framework_plugin::MeshData) -> Option<String> {
     let snapshot = semio_mesh_snapshot_from_solids_placeholder(mesh)?;
-    let obj_snapshot = semio_framework_plugin::resolve_ready(SemioMeshToObj::serialize(&snapshot)).ok()?;
+    let obj_snapshot = ::semio_framework_async::poll::resolve_ready(SemioMeshToObj::serialize(&snapshot)).ok()?;
     Some(encode_obj(&obj_snapshot))
 }
 
@@ -487,7 +493,7 @@ pub fn scene_from_spatial_payload(payload: &DslValue) -> Option<crate::CadSnapsh
             continue;
         }
         let model = semio_model_snapshot_from_objects(&objects);
-        let content_json = protocol::json::to_json_string(&model);
+        let content_json = semio_framework_pack_json::to_json_string(&model);
         let handle = Some(cad_model_child_handle(pane, &content_json));
         match pane {
             CadPaneId::Shape => document.shape_model = handle,
@@ -500,7 +506,7 @@ pub fn scene_from_spatial_payload(payload: &DslValue) -> Option<crate::CadSnapsh
 }
 
 pub fn cad_mesh_from_document(doc: &DslValue) -> Result<semio_framework_plugin::MeshData, String> {
-    let scene: crate::CadSnapshot = protocol::FromValue::from_value(doc.clone()).map_err(|err: protocol::ValueError| err.to_string())?;
+    let scene: crate::CadSnapshot = semio_framework_value::FromValue::from_value(doc.clone()).map_err(|err: semio_framework_value::ValueError| err.to_string())?;
     Ok(crate::standards::v1::subsets::any::schema::inferences::export_mesh_from_scene(&scene))
 }
 
@@ -549,10 +555,10 @@ pub fn cad_document_from_dwg(drawing: &semio_s_artifact_stdio_dwg::DwgDrawing) -
     let mut document = default_document();
     if !working.objects.is_empty() {
         let model = semio_model_snapshot_from_objects(&working.objects);
-        let content_json = protocol::json::to_json_string(&model);
+        let content_json = semio_framework_pack_json::to_json_string(&model);
         document.shape_model = Some(cad_model_child_handle(CadPaneId::Shape, &content_json));
     }
-    Ok(protocol::ToValue::to_value(&document))
+    Ok(semio_framework_value::ToValue::to_value(&document))
 }
 
 /// ⚠️ See `scene_from_spatial_payload`'s doc comment — same documented gap for a `MeshImporter`
@@ -564,9 +570,9 @@ pub fn cad_document_from_dwg(drawing: &semio_s_artifact_stdio_dwg::DwgDrawing) -
 // (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`), a genuine framework-owned boundary
 // type out of this plugin's write scope. Bridged once, at this exact boundary, from a `DslValue`
 // built the normal way via `protocol::json::from_dsl_value`.
-pub fn cad_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<protocol::json::Value, String> {
+pub fn cad_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<semio_framework_pack_json::Value, String> {
     use crate::standards::v1::subsets::any::schema::inferences::default_document;
-    Ok(protocol::json::from_dsl_value(&protocol::ToValue::to_value(&default_document())))
+    Ok(semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&default_document())))
 }
 //#endregion 🌉️GeometryBridges
 

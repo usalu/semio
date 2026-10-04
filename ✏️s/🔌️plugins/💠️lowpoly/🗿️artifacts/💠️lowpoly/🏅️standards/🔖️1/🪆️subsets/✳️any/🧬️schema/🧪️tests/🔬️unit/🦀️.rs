@@ -16,7 +16,7 @@ async fn default_concrete_forest_mesh_parses_and_has_faces() {
     let projection = default_snapshot();
     let workspace = default_mesh_workspace();
     let mesh_json = workspace.get(&projection.objects[0].id).expect("workspace entry for default object");
-    let mesh = HalfedgeMesh::from_json(mesh_json).expect("default mesh");
+    let mesh = mesh_json.clone().into_mesh().expect("default mesh");
     assert!(mesh.face_count() > 6, "concrete forest should expose more than a unit box");
     assert!(mesh.vertex_count() > 8, "concrete forest should expose more than eight vertices");
 }
@@ -27,8 +27,8 @@ async fn projection_round_trips_paint_pixels_through_base64_json() {
     projection.objects[0].paint_layers[0].pixels = empty_paint_pixels();
     projection.objects[0].paint_layers[0].pixels[0] = 7;
     projection.objects[0].paint_layers[0].pixels[1] = 9;
-    let json = serde_json::to_string(&Into::<serde_json::Value>::into(dsl::ToValue::to_value(&projection))).unwrap();
-    let restored: crate::LowpolySnapshot = dsl::FromValue::from_value(dsl::DslValue::from(serde_json::from_str::<serde_json::Value>(&json).unwrap())).unwrap();
+    let json = serde_json::to_string(&Into::<serde_json::Value>::into(semio_framework_value::ToValue::to_value(&projection))).unwrap();
+    let restored: crate::LowpolySnapshot = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(serde_json::from_str::<serde_json::Value>(&json).unwrap())).unwrap();
     assert_eq!(restored, projection);
 }
 
@@ -47,7 +47,7 @@ async fn artifact_engine_apply_and_inverse_round_trip() {
     let mutation = LowpolyMutation::RenameObject(rename_object::RenameObject { id: object_id, new_name: "Renamed".into() });
     let after = mutation.diff(&base).diff().apply(&base).expect("valid mutation diff");
     assert_eq!(after.objects[0].name, "Renamed");
-    let inverse = mutation.inverse(&base);
+    let inverse = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     let mut state = after;
     for step in &inverse {
         state = step.diff(&state).diff().apply(&state).expect("valid mutation diff");

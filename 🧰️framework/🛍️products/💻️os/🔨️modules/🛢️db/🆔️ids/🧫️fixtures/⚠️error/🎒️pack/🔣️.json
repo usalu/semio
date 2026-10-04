@@ -1,0 +1,156 @@
+{
+  "schemaVersion": 1,
+  "owner": "semio-framework-os-kernel-db",
+  "definingErrorOwner": "semio-framework-pack-error",
+  "rule": {
+    "invalidValue": "InvalidArgument",
+    "otherValueKinds": "Corrupt",
+    "messageClassification": false
+  },
+  "cases": [
+    {
+      "id": "invalid-value",
+      "source": "ValueRefusal",
+      "kind": "InvalidValue",
+      "message": "refusal-0",
+      "path": [
+        "scope",
+        "items"
+      ],
+      "offset": null,
+      "category": "InvalidArgument",
+      "output": "items.scope.refusal-0"
+    },
+    {
+      "id": "canceled",
+      "source": "ValueRefusal",
+      "kind": "Canceled",
+      "message": "refusal-1",
+      "path": [
+        "scope",
+        "items"
+      ],
+      "offset": null,
+      "category": "Corrupt",
+      "output": "schema error: items.scope.refusal-1"
+    },
+    {
+      "id": "ownership-limit",
+      "source": "ValueRefusal",
+      "kind": "OwnershipLimit",
+      "message": "refusal-2",
+      "path": [
+        "scope",
+        "items"
+      ],
+      "offset": null,
+      "category": "Corrupt",
+      "output": "schema error: items.scope.refusal-2"
+    },
+    {
+      "id": "allocation-failed",
+      "source": "ValueRefusal",
+      "kind": "AllocationFailed",
+      "message": "refusal-3",
+      "path": [
+        "scope",
+        "items"
+      ],
+      "offset": null,
+      "category": "Corrupt",
+      "output": "schema error: items.scope.refusal-3"
+    },
+    {
+      "id": "work-limit",
+      "source": "ValueRefusal",
+      "kind": "WorkLimit",
+      "message": "refusal-4",
+      "path": [
+        "scope",
+        "items"
+      ],
+      "offset": null,
+      "category": "Corrupt",
+      "output": "schema error: items.scope.refusal-4"
+    },
+    {
+      "id": "depth-limit",
+      "source": "ValueRefusal",
+      "kind": "DepthLimit",
+      "message": "refusal-5",
+      "path": [
+        "scope",
+        "items"
+      ],
+      "offset": null,
+      "category": "Corrupt",
+      "output": "schema error: items.scope.refusal-5"
+    },
+    {
+      "id": "unsupported-owner",
+      "source": "ValueRefusal",
+      "kind": "UnsupportedOwner",
+      "message": "refusal-6",
+      "path": [
+        "scope",
+        "items"
+      ],
+      "offset": null,
+      "category": "Corrupt",
+      "output": "schema error: items.scope.refusal-6"
+    },
+    {
+      "id": "invariant-violated",
+      "source": "ValueRefusal",
+      "kind": "InvariantViolated",
+      "message": "refusal-7",
+      "path": [
+        "scope",
+        "items"
+      ],
+      "offset": null,
+      "category": "Corrupt",
+      "output": "schema error: items.scope.refusal-7"
+    },
+    {
+      "id": "io",
+      "source": "Io",
+      "kind": null,
+      "message": "disk full",
+      "path": [],
+      "offset": null,
+      "category": "Io",
+      "output": "disk full"
+    },
+    {
+      "id": "container-limit",
+      "source": "LimitExceeded",
+      "kind": null,
+      "message": "too big",
+      "path": [],
+      "offset": null,
+      "category": "LimitExceeded",
+      "output": "too big"
+    },
+    {
+      "id": "bad-magic",
+      "source": "BadMagic",
+      "kind": null,
+      "message": "",
+      "path": [],
+      "offset": null,
+      "category": "Corrupt",
+      "output": "bad magic"
+    },
+    {
+      "id": "truncated",
+      "source": "Truncated",
+      "kind": null,
+      "message": "",
+      "path": [],
+      "offset": 17,
+      "category": "Corrupt",
+      "output": "truncated at offset 17"
+    }
+  ]
+}

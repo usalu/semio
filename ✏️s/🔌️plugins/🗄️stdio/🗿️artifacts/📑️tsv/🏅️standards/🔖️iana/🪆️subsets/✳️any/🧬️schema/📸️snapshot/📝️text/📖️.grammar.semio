@@ -1,13 +1,11 @@
-dialect grammar stdio.tsv.snapshot
-root = file
-; envelope preamble line + its trailing newline are stripped before this grammar runs
-; (store::semio_format::split_text_preamble). Real IANA text/tab-separated-values grammar:
-; https://www.iana.org/assignments/media-types/text/tab-separated-values
-; NO quoting/escaping mechanism exists — a field can never legally contain a literal TAB, CR
-; or LF byte; there is no way to escape one (contrast with csv's optional DQUOTE wrapping).
-file = [record *(line-ending record)] [line-ending]
-record = field *(TAB field)
-field = *TEXTDATA
-TAB = %x09
-line-ending = "\r\n" / "\n"                     ; whichever convention THIS file uses, uniformly
-TEXTDATA = %x00-08 / %x0B-0C / %x0E-FF           ; any byte except TAB (0x09), CR (0x0D), LF (0x0A)
+dialect grammar
+grammar stdio.tsv.snapshot
+extension tsv
+start snapshot
+comment none
+
+snapshot = "schema" "=" text "trailing-newline" "=" boolean "line-ending" "=" ending "records" "=" "[" row* "]"
+row = "[" text* "]"
+text = STRING / IDENT / INT / FLOAT
+boolean = "true" / "false"
+ending = "lf" / "crlf"

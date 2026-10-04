@@ -10,7 +10,7 @@ use std::collections::BTreeMap;
 fn round_trip(base: &Vdi3805Snapshot, operation: &Vdi3805Mutation) -> Vdi3805Snapshot {
     let (forward, _messages) = protocol::apply_mutation(base, operation).expect("valid mutation");
     let mut restored = forward.clone();
-    for back in operation.inverse(base) {
+    for back in operation.inverse(base).expect("valid retained mutation inverse fixture") {
         let (next, _messages) = protocol::apply_mutation(&restored, &back).expect("valid inverse mutation");
         restored = next;
     }
@@ -57,7 +57,7 @@ async fn change_and_remove_edition_profile_round_trip() {
 async fn change_edition_profile_undo_of_a_fresh_sheet_is_remove() {
     let base = Vdi3805Snapshot::default();
     let change = Vdi3805Mutation::ChangeEditionProfile(change_edition_profile::ChangeEditionProfile { sheet: "fresh".into(), new_choice: crate::EditionProfileChoice::Current });
-    let undo = change.inverse(&base);
+    let undo = change.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![Vdi3805Mutation::RemoveEditionProfile(remove_edition_profile::RemoveEditionProfile { sheet: "fresh".into() })]);
 }
 
@@ -80,7 +80,7 @@ async fn create_rename_replace_configuration_remove_product_round_trip() {
     assert!(after_create.catalog.products.iter().any(|p| p.identity.article_number == "VLV-NEW"));
     assert!(after_create.index.entries.iter().any(|e| e.product_id == "VLV-NEW"));
 
-    let undo = create.inverse(&base);
+    let undo = create.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![Vdi3805Mutation::RemoveProduct(remove_product::RemoveProduct { id: "VLV-NEW".into() })]);
 
     let rename = Vdi3805Mutation::RenameProduct(rename_product::RenameProduct { id: "VLV-NEW".into(), new_title: crate::bilingual("Umbenannt", "Renamed") });
@@ -110,7 +110,7 @@ async fn create_rename_replace_configuration_remove_product_round_trip() {
 async fn remove_product_of_a_missing_id_has_an_empty_inverse() {
     let base = Vdi3805Snapshot::default();
     let delete = Vdi3805Mutation::RemoveProduct(remove_product::RemoveProduct { id: "nope".into() });
-    assert!(delete.inverse(&base).is_empty(), "deleting an absent id has nothing to undo");
+    assert!(delete.inverse(&base).expect("valid retained mutation inverse fixture").is_empty(), "deleting an absent id has nothing to undo");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -143,7 +143,7 @@ async fn geometry_lifecycle_round_trips() {
     let delete = Vdi3805Mutation::RemoveGeometry(remove_geometry::RemoveGeometry { id: "geom-valve-50".into() });
     let after_delete = round_trip(&base, &delete);
     assert!(!after_delete.geometry.contains_key("geom-valve-50"));
-    let undo = delete.inverse(&base);
+    let undo = delete.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1);
 }
 

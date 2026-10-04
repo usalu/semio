@@ -8,7 +8,7 @@ use crate::CadSnapshot;
 //#region 🔖️Diff
 pub fn diff(_payload: &DeleteEnergyModel, base: &CadSnapshot) -> protocol::MutationOutcome<CadDiff> {
     if base.energy_model.is_none() {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Energy-model child is already empty.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Energy-model child is already empty.");
     }
     protocol::MutationOutcome::new(CadDiff { energy_model: Some(None), ..Default::default() })
 }

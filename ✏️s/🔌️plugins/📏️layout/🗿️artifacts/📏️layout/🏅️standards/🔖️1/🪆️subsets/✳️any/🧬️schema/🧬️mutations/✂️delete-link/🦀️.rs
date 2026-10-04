@@ -21,9 +21,12 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for DeleteLink {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_delete_link(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
-        inverse_delete_link(self, base)
-    }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok({
+        inverse_delete_link(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete link \"{}\"", self.id), &format!("Verknüpfung \"{}\" löschen", self.id))
     }
@@ -43,10 +46,13 @@ pub fn diff_delete_link(payload: &DeleteLink, base: &LayoutSnapshot) -> protocol
 //#endregion 🗑️DeleteLink
 
 //#region 🗑️DeleteLink
-pub fn inverse_delete_link(payload: &DeleteLink, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_delete_link(payload: &DeleteLink, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.links.iter().position(|link| link.id == payload.id) {
         Some(index) => vec![LayoutMutation::CreateLink(create_link::CreateLink { link: base.links[index].clone(), index: Some(index) })],
         None => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🗑️DeleteLink

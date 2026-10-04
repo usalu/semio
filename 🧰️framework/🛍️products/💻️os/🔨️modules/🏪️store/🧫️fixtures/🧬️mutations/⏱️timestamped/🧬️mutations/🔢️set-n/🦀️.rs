@@ -2,7 +2,7 @@ use super::{DemoDiff, DemoSnapshot, RestoreN, TimestampedMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -17,9 +17,12 @@ impl crate::os_spr::MutationKind<DemoSnapshot, TimestampedMutation> for SetN {
     fn diff(&self, _base: &DemoSnapshot) -> crate::os_spr::MutationOutcome<DemoDiff> {
         crate::os_spr::MutationOutcome::new(DemoDiff::value(Some(self.n)))
     }
-    fn inverse(&self, base: &DemoSnapshot) -> Vec<TimestampedMutation> {
+    fn inverse(&self, base: &DemoSnapshot) -> Result<Vec<TimestampedMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![TimestampedMutation::RestoreN(RestoreN { n: base.n, physical_ms: 0 })]
-    }
+    
+    })())
+}
     fn label(&self) -> crate::LocalizedLabel {
         crate::LocalizedLabel::native("Set N", "N setzen")
     }

@@ -1,0 +1,14 @@
+{
+  "sources": [
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "source": "[package]\nworkspace = \"../../../../../..\"\nname = \"semio-framework-io-schema\"\nversion = \"0.1.0\"\nedition = \"2021\"\nrust-version.workspace = true\ndescription = \"Product-neutral artifact identities, payloads and I/O outcomes\"\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"io-schema\"\n\n[lints]\nworkspace = true\n\n[lib]\nname = \"semio_framework_io_schema\"\npath = \"🦀️.rs\"\n\n[dependencies]\nsemio-framework-value = { path = \"../../../../🌱️value/📦️packages/🦀️rust\" }\nsemio-framework-value-derive = { path = \"../../../../🌱️value/✨️derive/📦️packages/🦀️rust\" }\nsemio-framework-diagnostic = { path = \"../../../../⚠️diagnostic/📦️packages/🦀️rust\" }\nsemio-framework-schema-registry = { path = \"../../../../🧬️schema/📇️registry/📦️packages/🦀️rust\" }\n\n[dev-dependencies]\nserde_json = \"1.0.140\"\n",
+      "before": null
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust/🦀️.rs",
+      "source": "//! 🚪️ Product-neutral I/O vocabulary with one definition owner.\n#[path = \"../../🦀️.rs\"]\nmod vocabulary;\npub use vocabulary::{\n    StandardId,\n    SubsetId,\n    Dialect,\n    ArtifactDialect,\n    ArtifactKindId,\n    ArtifactRef,\n    is_canonical_artifact_kind,\n    IoPayload,\n    CARRIER_BINARY,\n    CARRIER_TEXT,\n    SQLITE_SNAPSHOT,\n    Confidence,\n    IoFidelity,\n    IoError,\n    IoOutcome,\n    IoResult,\n    IoEntryDescriptor,\n    IoRoute,\n    register_io_schema_exports,\n};\n",
+      "before": null
+    }
+  ]
+}

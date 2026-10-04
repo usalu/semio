@@ -44,6 +44,8 @@ pub mod set_frame_pixels;
 pub mod set_icc;
 #[path = "🏷️set-metadata-entry/🦀️.rs"]
 pub mod set_metadata_entry;
+#[path = "🩹️patch-snapshot/🦀️.rs"]
+pub mod patch_snapshot;
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 //#endregion 🔖️Leaves
@@ -53,6 +55,7 @@ pub mod set_snapshot;
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioImageMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
+    PatchSnapshot(patch_snapshot::PatchSnapshot),
     SetDimensions(set_dimensions::SetDimensions),
     SetColorspace(set_colorspace::SetColorspace),
     SetBitDepth(set_bit_depth::SetBitDepth),
@@ -71,7 +74,7 @@ pub enum SemioImageMutation {
 /// 🏷️ Kebab-case spelling of every `SemioImageMutation` variant, in declaration order — the
 /// vocabulary the `semio-v1-image` mutation catalog (`../../🔣️oracle.json`) declares and
 /// `🖼️mutate-semio-image`'s exhaustive test case measures itself against.
-pub const KINDS: &[&str] = &["set-snapshot", "set-dimensions", "set-colorspace", "set-bit-depth", "set-icc", "insert-frame", "remove-frame", "move-frame", "set-frame-delay", "set-frame-pixels", "set-metadata-entry", "remove-metadata-entry"];
+pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "set-dimensions", "set-colorspace", "set-bit-depth", "set-icc", "insert-frame", "remove-frame", "move-frame", "set-frame-delay", "set-frame-pixels", "set-metadata-entry", "remove-metadata-entry"];
 
 /// ▶️ Applies a mutation to `snapshot` in place, returning the diff (mirrors gif's
 /// `apply_gif_mutation` convention — used by the builder's `mutate()` and every triad leaf).
@@ -88,8 +91,11 @@ pub fn apply_semio_image_mutation(snapshot: &mut SemioImageSnapshot, mutation: &
 /// `kit`/`object`/`text`/`table`, and the same thin-wrapper remedy `kit` adopted. Used by
 /// `🖼️mutate-semio-image`'s `inverse-*` scenarios.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse_semio_image_mutation(mutation: &SemioImageMutation, base: &SemioImageSnapshot) -> Vec<SemioImageMutation> {
-    <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(mutation, base)
+pub fn inverse_semio_image_mutation(mutation: &SemioImageMutation, base: &SemioImageSnapshot) -> Result<Vec<SemioImageMutation>, semio_framework_value::ValueError> {
+    Ok({
+    <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(mutation, base)?
+
+    })
 }
 //#endregion 🔖️Mutation
 
@@ -101,6 +107,7 @@ pub fn inverse_semio_image_mutation(mutation: &SemioImageMutation, base: &SemioI
 pub(crate) fn agg_diff(this: &SemioImageMutation, base: &SemioImageSnapshot) -> protocol::MutationOutcome<SemioImageDiff> {
     protocol::MutationOutcome::new(match this {
         SemioImageMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff_set_snapshot(base, snapshot),
+        SemioImageMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<SemioImageSnapshot, SemioImageMutation>>::diff(patch, base),
         SemioImageMutation::SetDimensions(set_dimensions::SetDimensions { width, height }) => SemioImageDiff { width: (base.width != *width).then_some(*width), height: (base.height != *height).then_some(*height), ..Default::default() },
         SemioImageMutation::SetColorspace(set_colorspace::SetColorspace { colorspace }) => SemioImageDiff { colorspace: (base.colorspace != *colorspace).then_some(*colorspace), ..Default::default() },
         SemioImageMutation::SetBitDepth(set_bit_depth::SetBitDepth { bit_depth }) => SemioImageDiff { bit_depth: (base.bit_depth != *bit_depth).then_some(*bit_depth), ..Default::default() },
@@ -132,9 +139,11 @@ pub(crate) fn agg_diff(this: &SemioImageMutation, base: &SemioImageSnapshot) -> 
 }
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &SemioImageMutation, base: &SemioImageSnapshot) -> Vec<SemioImageMutation> {
+pub(crate) fn agg_inverse(this: &SemioImageMutation, base: &SemioImageSnapshot) -> Result<Vec<SemioImageMutation>, semio_framework_value::ValueError> {
+    Ok({
     vec![match this {
         SemioImageMutation::SetSnapshot(_) => SemioImageMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
+        SemioImageMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<SemioImageSnapshot, SemioImageMutation>>::inverse(patch, base)?),
         SemioImageMutation::SetDimensions(_) => SemioImageMutation::SetDimensions(set_dimensions::SetDimensions { width: base.width, height: base.height }),
         SemioImageMutation::SetColorspace(_) => SemioImageMutation::SetColorspace(set_colorspace::SetColorspace { colorspace: base.colorspace }),
         SemioImageMutation::SetBitDepth(_) => SemioImageMutation::SetBitDepth(set_bit_depth::SetBitDepth { bit_depth: base.bit_depth }),
@@ -142,16 +151,16 @@ pub(crate) fn agg_inverse(this: &SemioImageMutation, base: &SemioImageSnapshot) 
         SemioImageMutation::InsertFrame(insert_frame::InsertFrame { index, .. }) => SemioImageMutation::RemoveFrame(remove_frame::RemoveFrame { index: *index }),
         SemioImageMutation::RemoveFrame(remove_frame::RemoveFrame { index }) => match base.frames.get(*index) {
             Some(frame) => SemioImageMutation::InsertFrame(insert_frame::InsertFrame { index: *index, frame: frame.clone() }),
-            None => return Vec::new(),
+            None => return Ok(Vec::new()),
         },
         SemioImageMutation::MoveFrame(move_frame::MoveFrame { from, to }) => SemioImageMutation::MoveFrame(move_frame::MoveFrame { from: *to, to: *from }),
         SemioImageMutation::SetFrameDelay(set_frame_delay::SetFrameDelay { index, .. }) => match base.frames.get(*index) {
             Some(frame) => SemioImageMutation::SetFrameDelay(set_frame_delay::SetFrameDelay { index: *index, delay_ms: frame.delay_ms }),
-            None => return Vec::new(),
+            None => return Ok(Vec::new()),
         },
         SemioImageMutation::SetFramePixels(set_frame_pixels::SetFramePixels { index, .. }) => match base.frames.get(*index) {
             Some(frame) => SemioImageMutation::SetFramePixels(set_frame_pixels::SetFramePixels { index: *index, rgba8: frame.rgba8.clone() }),
-            None => return Vec::new(),
+            None => return Ok(Vec::new()),
         },
         SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key, .. }) => match base.metadata.iter().find(|e| &e.key == key) {
             Some(entry) => SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key: key.clone(), value: entry.value.clone() }),
@@ -159,9 +168,11 @@ pub(crate) fn agg_inverse(this: &SemioImageMutation, base: &SemioImageSnapshot) 
         },
         SemioImageMutation::RemoveMetadataEntry(remove_metadata_entry::RemoveMetadataEntry { key }) => match base.metadata.iter().find(|e| &e.key == key) {
             Some(entry) => SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key: key.clone(), value: entry.value.clone() }),
-            None => return Vec::new(),
+            None => return Ok(Vec::new()),
         },
     }]
+
+    })
 }
 //#endregion 🔖️MutationTrait
 
@@ -222,6 +233,7 @@ fn dec_str(s: &str) -> Result<String, String> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn print_image_mutation(m: &SemioImageMutation) -> String {
     match m {
+        SemioImageMutation::PatchSnapshot(payload) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(&payload.patch),
         SemioImageMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("setSnapshot:{}", enc_snapshot(snapshot)),
         SemioImageMutation::SetDimensions(set_dimensions::SetDimensions { width, height }) => format!("setDimensions:{width},{height}"),
         SemioImageMutation::SetColorspace(set_colorspace::SetColorspace { colorspace }) => format!("setColorspace:{}", enc_colorspace(*colorspace)),
@@ -239,6 +251,10 @@ fn print_image_mutation(m: &SemioImageMutation) -> String {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_image_mutation(line: &str) -> Result<SemioImageMutation, String> {
+    if let Some(source) = line.strip_prefix("patch-snapshot patch=") {
+        let patch = semio_s_artifact_stdio_contract::editing::snapshot_patch_from_hex(source)?;
+        return Ok(SemioImageMutation::PatchSnapshot(crate::standards::v1::subsets::image::schema::mutations::patch_snapshot::PatchSnapshot { patch }));
+    }
     let (tag, rest) = line.split_once(':').ok_or_else(|| format!("mutation: missing tag separator in {line:?}"))?;
     match tag {
         "setSnapshot" => Ok(SemioImageMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_snapshot(rest)? })),
@@ -280,8 +296,8 @@ fn parse_image_mutation(line: &str) -> Result<SemioImageMutation, String> {
 }
 
 impl OpText for SemioImageMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_image_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_image_mutation(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
     fn print_op(&self) -> String {
         print_image_mutation(self)
@@ -307,6 +323,7 @@ const TEXT_KEYWORDS: [(&str, &str); 12] = [
 /// 🏷️ Op tags of `SemioImageMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
 const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
 const TAG_SET_DIMENSIONS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-dimensions");
 const TAG_SET_COLORSPACE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-colorspace");
 const TAG_SET_BIT_DEPTH: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-bit-depth");
@@ -324,6 +341,7 @@ const TAG_REMOVE_METADATA_ENTRY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL
 fn wire_tag(m: &SemioImageMutation) -> u8 {
     match m {
         SemioImageMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
+        SemioImageMutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
         SemioImageMutation::SetDimensions(_) => TAG_SET_DIMENSIONS,
         SemioImageMutation::SetColorspace(_) => TAG_SET_COLORSPACE,
         SemioImageMutation::SetBitDepth(_) => TAG_SET_BIT_DEPTH,
@@ -354,6 +372,11 @@ fn print_image_mutation_args(m: &SemioImageMutation) -> String {
 /// `parse_image_mutation` text codec rather than re-deriving a second independent encoding.
 impl protocol::OpBinary for SemioImageMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        if let Self::PatchSnapshot(payload) = self {
+            let mut out = vec![1, TAG_PATCH_SNAPSHOT];
+            out.extend(protocol::OpBinary::encode_op(&payload.patch)?);
+            return Ok(out);
+        }
         const OP_BINARY_FORMAT: u8 = 1;
         let mut out = vec![OP_BINARY_FORMAT, wire_tag(self)];
         out.extend_from_slice(print_image_mutation_args(self).as_bytes());
@@ -366,6 +389,9 @@ impl protocol::OpBinary for SemioImageMutation {
         }
         if bytes[0] != OP_BINARY_FORMAT {
             return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {}", bytes[0]) });
+        }
+        if bytes[1] == TAG_PATCH_SNAPSHOT {
+            return Ok(Self::PatchSnapshot(crate::standards::v1::subsets::image::schema::mutations::patch_snapshot::PatchSnapshot { patch: protocol::OpBinary::decode_op(&bytes[2..])? }));
         }
         let tag = bytes[1];
         let kind = dsl::protocol_record::kind(WIRE_PROTOCOL, u64::from(tag)).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} names no record of 📡️.protocol.semio") })?;
@@ -402,6 +428,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioImageMutation> {
         }
     }
     vec![
+        SemioImageMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         SemioImageMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: fixture() }),
         SemioImageMutation::SetDimensions(set_dimensions::SetDimensions { width: 8, height: 8 }),
         SemioImageMutation::SetColorspace(set_colorspace::SetColorspace { colorspace: SemioColorspace::Grayscale }),

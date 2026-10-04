@@ -38,26 +38,26 @@ pub mod json_presence {
     use super::GltfJson;
 
     // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-    pub fn to_value(value: &Option<Option<GltfJson>>) -> dsl::DslValue {
+    pub fn to_value(value: &Option<Option<GltfJson>>) -> semio_framework_value::DslValue {
         match value {
-            None => dsl::DslValue::Null,
-            Some(None) => dsl::DslValue::object([("state".to_string(), dsl::DslValue::String("absent".to_string()))]),
-            Some(Some(inner)) => dsl::DslValue::object([("state".to_string(), dsl::DslValue::String("present".to_string())), ("value".to_string(), dsl::ToValue::to_value(inner))]),
+            None => semio_framework_value::DslValue::Null,
+            Some(None) => semio_framework_value::DslValue::object([("state".to_string(), semio_framework_value::DslValue::String("absent".to_string()))]),
+            Some(Some(inner)) => semio_framework_value::DslValue::object([("state".to_string(), semio_framework_value::DslValue::String("present".to_string())), ("value".to_string(), semio_framework_value::ToValue::to_value(inner))]),
         }
     }
 
     // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-    pub fn from_value(value: dsl::DslValue) -> Result<Option<Option<GltfJson>>, dsl::ValueError> {
-        let dsl::DslValue::Object(entries) = &value else {
-            return Err(dsl::ValueError::new("expected a presence object {state,value}"));
+    pub fn from_value(value: semio_framework_value::DslValue) -> Result<Option<Option<GltfJson>>, semio_framework_value::ValueError> {
+        let semio_framework_value::DslValue::Object(entries) = &value else {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected a presence object {state,value}"));
         };
         match entries.iter().find(|(key, _)| key == "state").map(|(_, state)| state) {
-            Some(dsl::DslValue::String(state)) if state == "absent" => Ok(Some(None)),
-            Some(dsl::DslValue::String(state)) if state == "present" => {
-                let inner = entries.iter().find(|(key, _)| key == "value").map(|(_, inner)| inner.clone()).unwrap_or(dsl::DslValue::Null);
-                Ok(Some(Some(<GltfJson as dsl::FromValue>::from_value(inner)?)))
+            Some(semio_framework_value::DslValue::String(state)) if state == "absent" => Ok(Some(None)),
+            Some(semio_framework_value::DslValue::String(state)) if state == "present" => {
+                let inner = entries.iter().find(|(key, _)| key == "value").map(|(_, inner)| inner.clone()).unwrap_or(semio_framework_value::DslValue::Null);
+                Ok(Some(Some(<GltfJson as semio_framework_value::FromValue>::from_value(inner)?)))
             }
-            _ => Err(dsl::ValueError::new("presence object needs state = \"absent\" | \"present\"")),
+            _ => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "presence object needs state = \"absent\" | \"present\"")),
         }
     }
 }
@@ -69,8 +69,8 @@ pub mod json_presence {
 /// clears `scale`/`mesh`/`name` survives every wire round trip. JSON slots use [`json_presence`] instead, since a
 /// glTF JSON value may itself be `null`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn deserialize_double_option<T: dsl::FromValue>(value: dsl::DslValue) -> Result<Option<Option<T>>, dsl::ValueError> {
-    <Option<T> as dsl::FromValue>::from_value(value).map(Some)
+fn deserialize_double_option<T: semio_framework_value::FromValue>(value: semio_framework_value::DslValue) -> Result<Option<Option<T>>, semio_framework_value::ValueError> {
+    <Option<T> as semio_framework_value::FromValue>::from_value(value).map(Some)
 }
 
 // 🧬️ `GltfDocument` is only reached through `mod tests`' `use super::*;` glob (its non-test uses
@@ -2757,7 +2757,7 @@ pub(crate) fn write_bin_blob(w: &mut dsl::ByteWriter, bytes: &[u8]) {
     w.write_bytes(bytes);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_blob(r: &mut dsl::ByteReader<'_>) -> Result<Vec<u8>, dsl::PackError> {
+pub(crate) fn read_bin_blob(r: &mut dsl::ByteReader<'_>) -> Result<Vec<u8>, dsl::PackRefusal> {
     let len = r.read_varint_u64()? as usize;
     Ok(r.read_bytes(len)?.to_vec())
 }
@@ -2766,9 +2766,9 @@ pub(crate) fn write_bin_str(w: &mut dsl::ByteWriter, s: &str) {
     write_bin_blob(w, s.as_bytes());
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_str(r: &mut dsl::ByteReader<'_>) -> Result<String, dsl::PackError> {
+pub(crate) fn read_bin_str(r: &mut dsl::ByteReader<'_>) -> Result<String, dsl::PackRefusal> {
     let bytes = read_bin_blob(r)?;
-    String::from_utf8(bytes).map_err(|e| dsl::PackError::Malformed { what: "gltf binary utf8 string", offset: 0, detail: e.to_string() })
+    String::from_utf8(bytes).map_err(|e| dsl::PackRefusal::Malformed { kind: semio_framework_value::ValueRefusalKind::InvalidValue, what: "gltf binary utf8 string", offset: 0, detail: e.to_string() })
 }
 /// 🧩 2-way presence flag (`0`=None, `1`=Some) — shared by every plain `Option<T>` field.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -2782,11 +2782,11 @@ pub(crate) fn write_bin_option<T>(w: &mut dsl::ByteWriter, v: &Option<T>, write_
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_option<T>(r: &mut dsl::ByteReader<'_>, read_value: impl FnOnce(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Option<T>, dsl::PackError> {
+pub(crate) fn read_bin_option<T>(r: &mut dsl::ByteReader<'_>, read_value: impl FnOnce(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackRefusal>) -> Result<Option<T>, dsl::PackRefusal> {
     match r.read_u8()? {
         0 => Ok(None),
         1 => Ok(Some(read_value(r)?)),
-        other => Err(dsl::PackError::Malformed { what: "gltf binary option tag", offset: 0, detail: format!("unknown tag {other}") }),
+        other => Err(dsl::PackRefusal::Malformed { kind: semio_framework_value::ValueRefusalKind::InvalidValue, what: "gltf binary option tag", offset: 0, detail: format!("unknown tag {other}") }),
     }
 }
 /// 🧩 3-way flag (`0`=unchanged/absent, `1`=cleared-to-`None`, `2`=set-to-`Some(value)`) for every
@@ -2806,12 +2806,12 @@ pub(crate) fn write_bin_tri<T>(w: &mut dsl::ByteWriter, v: &Option<Option<T>>, w
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_tri<T>(r: &mut dsl::ByteReader<'_>, read_value: impl FnOnce(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Option<Option<T>>, dsl::PackError> {
+pub(crate) fn read_bin_tri<T>(r: &mut dsl::ByteReader<'_>, read_value: impl FnOnce(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackRefusal>) -> Result<Option<Option<T>>, dsl::PackRefusal> {
     match r.read_u8()? {
         0 => Ok(None),
         1 => Ok(Some(None)),
         2 => Ok(Some(Some(read_value(r)?))),
-        other => Err(dsl::PackError::Malformed { what: "gltf binary tri-flag", offset: 0, detail: format!("unknown flag {other}") }),
+        other => Err(dsl::PackRefusal::Malformed { kind: semio_framework_value::ValueRefusalKind::InvalidValue, what: "gltf binary tri-flag", offset: 0, detail: format!("unknown flag {other}") }),
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -2822,7 +2822,7 @@ pub(crate) fn write_bin_vec<T>(w: &mut dsl::ByteWriter, items: &[T], write_item:
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_vec<T>(r: &mut dsl::ByteReader<'_>, mut read_item: impl FnMut(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Vec<T>, dsl::PackError> {
+pub(crate) fn read_bin_vec<T>(r: &mut dsl::ByteReader<'_>, mut read_item: impl FnMut(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackRefusal>) -> Result<Vec<T>, dsl::PackRefusal> {
     let n = r.read_varint_u64()? as usize;
     let mut out = Vec::with_capacity(n.min(1 << 20));
     for _ in 0..n {
@@ -2837,7 +2837,7 @@ pub(crate) fn write_bin_f64_array<const N: usize>(w: &mut dsl::ByteWriter, v: &[
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_f64_array<const N: usize>(r: &mut dsl::ByteReader<'_>) -> Result<[f64; N], dsl::PackError> {
+pub(crate) fn read_bin_f64_array<const N: usize>(r: &mut dsl::ByteReader<'_>) -> Result<[f64; N], dsl::PackRefusal> {
     let mut out = [0.0f64; N];
     for slot in out.iter_mut() {
         *slot = r.read_f64_le()?;
@@ -2849,7 +2849,7 @@ pub(crate) fn write_bin_f64_vec(w: &mut dsl::ByteWriter, v: &[f64]) {
     write_bin_vec(w, v, |w, x| w.write_f64_le(*x));
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_f64_vec(r: &mut dsl::ByteReader<'_>) -> Result<Vec<f64>, dsl::PackError> {
+pub(crate) fn read_bin_f64_vec(r: &mut dsl::ByteReader<'_>) -> Result<Vec<f64>, dsl::PackRefusal> {
     read_bin_vec(r, |r| r.read_f64_le())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -2857,7 +2857,7 @@ pub(crate) fn write_bin_usize_vec(w: &mut dsl::ByteWriter, v: &[usize]) {
     write_bin_vec(w, v, |w, x: &usize| w.write_varint_u64(*x as u64));
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_usize_vec(r: &mut dsl::ByteReader<'_>) -> Result<Vec<usize>, dsl::PackError> {
+pub(crate) fn read_bin_usize_vec(r: &mut dsl::ByteReader<'_>) -> Result<Vec<usize>, dsl::PackRefusal> {
     read_bin_vec(r, |r| Ok(r.read_varint_u64()? as usize))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -2865,7 +2865,7 @@ pub(crate) fn write_bin_string_vec(w: &mut dsl::ByteWriter, v: &[String]) {
     write_bin_vec(w, v, |w, s: &String| write_bin_str(w, s));
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_string_vec(r: &mut dsl::ByteReader<'_>) -> Result<Vec<String>, dsl::PackError> {
+pub(crate) fn read_bin_string_vec(r: &mut dsl::ByteReader<'_>) -> Result<Vec<String>, dsl::PackRefusal> {
     read_bin_vec(r, read_bin_str)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -2876,11 +2876,11 @@ pub(crate) fn write_bin_attr_pairs(w: &mut dsl::ByteWriter, v: &[(String, usize)
     });
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_attr_pairs(r: &mut dsl::ByteReader<'_>) -> Result<Vec<(String, usize)>, dsl::PackError> {
+pub(crate) fn read_bin_attr_pairs(r: &mut dsl::ByteReader<'_>) -> Result<Vec<(String, usize)>, dsl::PackRefusal> {
     read_bin_vec(r, |r| Ok((read_bin_str(r)?, r.read_varint_u64()? as usize)))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn gltf_bin_err(e: &dsl::PackError) -> protocol::ProtocolError {
+pub(crate) fn gltf_bin_err(e: &dsl::PackRefusal) -> protocol::ProtocolError {
     protocol::ProtocolError::Malformed { what: "gltf binary", offset: 0, detail: e.to_string() }
 }
 //#endregion 🔖️RealBinaryPrimitives
@@ -2918,7 +2918,7 @@ pub(crate) fn write_bin_json(w: &mut dsl::ByteWriter, v: &GltfJson) {
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_json(r: &mut dsl::ByteReader<'_>) -> Result<GltfJson, dsl::PackError> {
+pub(crate) fn read_bin_json(r: &mut dsl::ByteReader<'_>) -> Result<GltfJson, dsl::PackRefusal> {
     match r.read_u8()? {
         0 => Ok(GltfJson::Null),
         1 => Ok(GltfJson::Bool(r.read_u8()? != 0)),
@@ -2926,7 +2926,7 @@ pub(crate) fn read_bin_json(r: &mut dsl::ByteReader<'_>) -> Result<GltfJson, dsl
         3 => Ok(GltfJson::String(read_bin_str(r)?)),
         4 => Ok(GltfJson::Array(read_bin_vec(r, read_bin_json)?)),
         5 => Ok(GltfJson::Object(read_bin_vec(r, |r| Ok((read_bin_str(r)?, read_bin_json(r)?)))?)),
-        other => Err(dsl::PackError::Malformed { what: "gltf json binary tag", offset: 0, detail: format!("unknown tag {other}") }),
+        other => Err(dsl::PackRefusal::Malformed { kind: semio_framework_value::ValueRefusalKind::InvalidValue, what: "gltf json binary tag", offset: 0, detail: format!("unknown tag {other}") }),
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -2934,7 +2934,7 @@ pub(crate) fn write_bin_json_opt(w: &mut dsl::ByteWriter, v: &Option<GltfJson>) 
     write_bin_option(w, v, write_bin_json);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_json_opt(r: &mut dsl::ByteReader<'_>) -> Result<Option<GltfJson>, dsl::PackError> {
+pub(crate) fn read_bin_json_opt(r: &mut dsl::ByteReader<'_>) -> Result<Option<GltfJson>, dsl::PackRefusal> {
     read_bin_option(r, read_bin_json)
 }
 //#endregion 🔖️RealBinaryJsonCodec
@@ -2948,8 +2948,8 @@ pub(crate) fn write_bin_component_type(w: &mut dsl::ByteWriter, t: GltfComponent
     w.write_u32_le(t.code() as u32);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_component_type(r: &mut dsl::ByteReader<'_>) -> Result<GltfComponentType, dsl::PackError> {
-    GltfComponentType::from_code(r.read_u32_le()? as u64).map_err(|e| dsl::PackError::Malformed { what: "gltf component_type", offset: 0, detail: e })
+pub(crate) fn read_bin_component_type(r: &mut dsl::ByteReader<'_>) -> Result<GltfComponentType, dsl::PackRefusal> {
+    GltfComponentType::from_code(r.read_u32_le()? as u64).map_err(|e| dsl::PackRefusal::Malformed { kind: semio_framework_value::ValueRefusalKind::InvalidValue, what: "gltf component_type", offset: 0, detail: e })
 }
 /// 🔢️ Compact `u8` discriminants for the remaining small unit-variant enums (real spec strings
 /// only exist on the TEXT side; the binary frame is free to use its own dense encoding since
@@ -2967,7 +2967,7 @@ pub(crate) fn write_bin_accessor_type(w: &mut dsl::ByteWriter, t: GltfAccessorTy
     });
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_accessor_type(r: &mut dsl::ByteReader<'_>) -> Result<GltfAccessorType, dsl::PackError> {
+pub(crate) fn read_bin_accessor_type(r: &mut dsl::ByteReader<'_>) -> Result<GltfAccessorType, dsl::PackRefusal> {
     Ok(match r.read_u8()? {
         0 => GltfAccessorType::Scalar,
         1 => GltfAccessorType::Vec2,
@@ -2976,7 +2976,7 @@ pub(crate) fn read_bin_accessor_type(r: &mut dsl::ByteReader<'_>) -> Result<Gltf
         4 => GltfAccessorType::Mat2,
         5 => GltfAccessorType::Mat3,
         6 => GltfAccessorType::Mat4,
-        other => return Err(dsl::PackError::Malformed { what: "gltf accessor_type", offset: 0, detail: format!("unknown tag {other}") }),
+        other => return Err(dsl::PackRefusal::Malformed { kind: semio_framework_value::ValueRefusalKind::InvalidValue, what: "gltf accessor_type", offset: 0, detail: format!("unknown tag {other}") }),
     })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -2988,12 +2988,12 @@ pub(crate) fn write_bin_alpha_mode(w: &mut dsl::ByteWriter, m: GltfAlphaMode) {
     });
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_alpha_mode(r: &mut dsl::ByteReader<'_>) -> Result<GltfAlphaMode, dsl::PackError> {
+pub(crate) fn read_bin_alpha_mode(r: &mut dsl::ByteReader<'_>) -> Result<GltfAlphaMode, dsl::PackRefusal> {
     Ok(match r.read_u8()? {
         0 => GltfAlphaMode::Opaque,
         1 => GltfAlphaMode::Mask,
         2 => GltfAlphaMode::Blend,
-        other => return Err(dsl::PackError::Malformed { what: "gltf alpha_mode", offset: 0, detail: format!("unknown tag {other}") }),
+        other => return Err(dsl::PackRefusal::Malformed { kind: semio_framework_value::ValueRefusalKind::InvalidValue, what: "gltf alpha_mode", offset: 0, detail: format!("unknown tag {other}") }),
     })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -3005,12 +3005,12 @@ pub(crate) fn write_bin_interpolation(w: &mut dsl::ByteWriter, i: GltfInterpolat
     });
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_interpolation(r: &mut dsl::ByteReader<'_>) -> Result<GltfInterpolation, dsl::PackError> {
+pub(crate) fn read_bin_interpolation(r: &mut dsl::ByteReader<'_>) -> Result<GltfInterpolation, dsl::PackRefusal> {
     Ok(match r.read_u8()? {
         0 => GltfInterpolation::Linear,
         1 => GltfInterpolation::Step,
         2 => GltfInterpolation::CubicSpline,
-        other => return Err(dsl::PackError::Malformed { what: "gltf interpolation", offset: 0, detail: format!("unknown tag {other}") }),
+        other => return Err(dsl::PackRefusal::Malformed { kind: semio_framework_value::ValueRefusalKind::InvalidValue, what: "gltf interpolation", offset: 0, detail: format!("unknown tag {other}") }),
     })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -3023,13 +3023,13 @@ pub(crate) fn write_bin_animation_path(w: &mut dsl::ByteWriter, p: GltfAnimation
     });
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_animation_path(r: &mut dsl::ByteReader<'_>) -> Result<GltfAnimationPath, dsl::PackError> {
+pub(crate) fn read_bin_animation_path(r: &mut dsl::ByteReader<'_>) -> Result<GltfAnimationPath, dsl::PackRefusal> {
     Ok(match r.read_u8()? {
         0 => GltfAnimationPath::Translation,
         1 => GltfAnimationPath::Rotation,
         2 => GltfAnimationPath::Scale,
         3 => GltfAnimationPath::Weights,
-        other => return Err(dsl::PackError::Malformed { what: "gltf animation_path", offset: 0, detail: format!("unknown tag {other}") }),
+        other => return Err(dsl::PackRefusal::Malformed { kind: semio_framework_value::ValueRefusalKind::InvalidValue, what: "gltf animation_path", offset: 0, detail: format!("unknown tag {other}") }),
     })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -3040,11 +3040,11 @@ pub(crate) fn write_bin_source_form(w: &mut dsl::ByteWriter, f: GltfSourceForm) 
     });
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_source_form(r: &mut dsl::ByteReader<'_>) -> Result<GltfSourceForm, dsl::PackError> {
+pub(crate) fn read_bin_source_form(r: &mut dsl::ByteReader<'_>) -> Result<GltfSourceForm, dsl::PackRefusal> {
     Ok(match r.read_u8()? {
         0 => GltfSourceForm::Json,
         1 => GltfSourceForm::Glb,
-        other => return Err(dsl::PackError::Malformed { what: "gltf source_form", offset: 0, detail: format!("unknown tag {other}") }),
+        other => return Err(dsl::PackRefusal::Malformed { kind: semio_framework_value::ValueRefusalKind::InvalidValue, what: "gltf source_form", offset: 0, detail: format!("unknown tag {other}") }),
     })
 }
 //#endregion 🔖️RealBinaryUnitEnumCodecs
@@ -3060,7 +3060,7 @@ pub(crate) fn write_bin_asset_diff(w: &mut dsl::ByteWriter, d: &GltfAssetDiff) {
     write_bin_tri(w, &d.extras, write_bin_json);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_asset_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfAssetDiff, dsl::PackError> {
+pub(crate) fn read_bin_asset_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfAssetDiff, dsl::PackRefusal> {
     Ok(GltfAssetDiff {
         version: read_bin_option(r, read_bin_str)?,
         generator: read_bin_tri(r, read_bin_str)?,
@@ -3078,7 +3078,7 @@ pub(crate) fn write_bin_scene(w: &mut dsl::ByteWriter, sc: &GltfScene) {
     write_bin_json_opt(w, &sc.extras);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_scene(r: &mut dsl::ByteReader<'_>) -> Result<GltfScene, dsl::PackError> {
+pub(crate) fn read_bin_scene(r: &mut dsl::ByteReader<'_>) -> Result<GltfScene, dsl::PackRefusal> {
     Ok(GltfScene { nodes: read_bin_usize_vec(r)?, name: read_bin_option(r, read_bin_str)?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -3089,7 +3089,7 @@ pub(crate) fn write_bin_scene_diff(w: &mut dsl::ByteWriter, d: &GltfSceneDiff) {
     write_bin_tri(w, &d.extras, write_bin_json);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_scene_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfSceneDiff, dsl::PackError> {
+pub(crate) fn read_bin_scene_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfSceneDiff, dsl::PackRefusal> {
     Ok(GltfSceneDiff { nodes: read_bin_option(r, read_bin_usize_vec)?, name: read_bin_tri(r, read_bin_str)?, extensions: read_bin_tri(r, read_bin_json)?, extras: read_bin_tri(r, read_bin_json)? })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -3108,7 +3108,7 @@ pub(crate) fn write_bin_node(w: &mut dsl::ByteWriter, n: &GltfNode) {
     write_bin_json_opt(w, &n.extras);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_node(r: &mut dsl::ByteReader<'_>) -> Result<GltfNode, dsl::PackError> {
+pub(crate) fn read_bin_node(r: &mut dsl::ByteReader<'_>) -> Result<GltfNode, dsl::PackRefusal> {
     Ok(GltfNode {
         children: read_bin_usize_vec(r)?,
         mesh: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
@@ -3140,7 +3140,7 @@ pub(crate) fn write_bin_node_diff(w: &mut dsl::ByteWriter, d: &GltfNodeDiff) {
     write_bin_tri(w, &d.extras, write_bin_json);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_node_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfNodeDiff, dsl::PackError> {
+pub(crate) fn read_bin_node_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfNodeDiff, dsl::PackRefusal> {
     Ok(GltfNodeDiff {
         children: read_bin_option(r, read_bin_usize_vec)?,
         mesh: read_bin_tri(r, |r| Ok(r.read_varint_u64()? as usize))?,
@@ -3170,7 +3170,7 @@ pub(crate) fn write_bin_primitive(w: &mut dsl::ByteWriter, p: &GltfPrimitive) {
     write_bin_json_opt(w, &p.extras);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_primitive(r: &mut dsl::ByteReader<'_>) -> Result<GltfPrimitive, dsl::PackError> {
+pub(crate) fn read_bin_primitive(r: &mut dsl::ByteReader<'_>) -> Result<GltfPrimitive, dsl::PackRefusal> {
     Ok(GltfPrimitive {
         attributes: read_bin_attr_pairs(r)?,
         indices: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
@@ -3186,7 +3186,7 @@ pub(crate) fn write_bin_primitive_vec(w: &mut dsl::ByteWriter, v: &[GltfPrimitiv
     write_bin_vec(w, v, write_bin_primitive);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_primitive_vec(r: &mut dsl::ByteReader<'_>) -> Result<Vec<GltfPrimitive>, dsl::PackError> {
+pub(crate) fn read_bin_primitive_vec(r: &mut dsl::ByteReader<'_>) -> Result<Vec<GltfPrimitive>, dsl::PackRefusal> {
     read_bin_vec(r, read_bin_primitive)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -3198,7 +3198,7 @@ pub(crate) fn write_bin_mesh(w: &mut dsl::ByteWriter, m: &GltfMesh) {
     write_bin_json_opt(w, &m.extras);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_mesh(r: &mut dsl::ByteReader<'_>) -> Result<GltfMesh, dsl::PackError> {
+pub(crate) fn read_bin_mesh(r: &mut dsl::ByteReader<'_>) -> Result<GltfMesh, dsl::PackRefusal> {
     Ok(GltfMesh { primitives: read_bin_primitive_vec(r)?, weights: read_bin_f64_vec(r)?, name: read_bin_option(r, read_bin_str)?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -3210,7 +3210,7 @@ pub(crate) fn write_bin_mesh_diff(w: &mut dsl::ByteWriter, d: &GltfMeshDiff) {
     write_bin_tri(w, &d.extras, write_bin_json);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_mesh_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfMeshDiff, dsl::PackError> {
+pub(crate) fn read_bin_mesh_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfMeshDiff, dsl::PackRefusal> {
     Ok(GltfMeshDiff {
         primitives: read_bin_option(r, read_bin_primitive_vec)?,
         weights: read_bin_option(r, read_bin_f64_vec)?,
@@ -3226,7 +3226,7 @@ pub(crate) fn write_bin_sparse_indices(w: &mut dsl::ByteWriter, v: &GltfSparseIn
     write_bin_component_type(w, v.component_type);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_sparse_indices(r: &mut dsl::ByteReader<'_>) -> Result<GltfSparseIndices, dsl::PackError> {
+pub(crate) fn read_bin_sparse_indices(r: &mut dsl::ByteReader<'_>) -> Result<GltfSparseIndices, dsl::PackRefusal> {
     Ok(GltfSparseIndices { buffer_view: r.read_varint_u64()? as usize, byte_offset: r.read_varint_u64()? as usize, component_type: read_bin_component_type(r)? })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -3235,7 +3235,7 @@ pub(crate) fn write_bin_sparse_values(w: &mut dsl::ByteWriter, v: &GltfSparseVal
     w.write_varint_u64(v.byte_offset as u64);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_sparse_values(r: &mut dsl::ByteReader<'_>) -> Result<GltfSparseValues, dsl::PackError> {
+pub(crate) fn read_bin_sparse_values(r: &mut dsl::ByteReader<'_>) -> Result<GltfSparseValues, dsl::PackRefusal> {
     Ok(GltfSparseValues { buffer_view: r.read_varint_u64()? as usize, byte_offset: r.read_varint_u64()? as usize })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -3245,7 +3245,7 @@ pub(crate) fn write_bin_sparse_accessor(w: &mut dsl::ByteWriter, v: &GltfSparseA
     write_bin_sparse_values(w, &v.values);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_sparse_accessor(r: &mut dsl::ByteReader<'_>) -> Result<GltfSparseAccessor, dsl::PackError> {
+pub(crate) fn read_bin_sparse_accessor(r: &mut dsl::ByteReader<'_>) -> Result<GltfSparseAccessor, dsl::PackRefusal> {
     Ok(GltfSparseAccessor { count: r.read_varint_u64()? as usize, indices: read_bin_sparse_indices(r)?, values: read_bin_sparse_values(r)? })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -3264,7 +3264,7 @@ pub(crate) fn write_bin_accessor(w: &mut dsl::ByteWriter, a: &GltfAccessor) {
     write_bin_json_opt(w, &a.extras);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_accessor(r: &mut dsl::ByteReader<'_>) -> Result<GltfAccessor, dsl::PackError> {
+pub(crate) fn read_bin_accessor(r: &mut dsl::ByteReader<'_>) -> Result<GltfAccessor, dsl::PackRefusal> {
     Ok(GltfAccessor {
         buffer_view: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
         byte_offset: r.read_varint_u64()? as usize,
@@ -3296,7 +3296,7 @@ pub(crate) fn write_bin_accessor_diff(w: &mut dsl::ByteWriter, d: &GltfAccessorD
     write_bin_tri(w, &d.extras, write_bin_json);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_accessor_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfAccessorDiff, dsl::PackError> {
+pub(crate) fn read_bin_accessor_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfAccessorDiff, dsl::PackRefusal> {
     Ok(GltfAccessorDiff {
         buffer_view: read_bin_tri(r, |r| Ok(r.read_varint_u64()? as usize))?,
         byte_offset: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
@@ -3320,7 +3320,7 @@ pub(crate) fn write_bin_texture_info(w: &mut dsl::ByteWriter, v: &GltfTextureInf
     write_bin_json_opt(w, &v.extras);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_texture_info(r: &mut dsl::ByteReader<'_>) -> Result<GltfTextureInfo, dsl::PackError> {
+pub(crate) fn read_bin_texture_info(r: &mut dsl::ByteReader<'_>) -> Result<GltfTextureInfo, dsl::PackRefusal> {
     Ok(GltfTextureInfo { index: r.read_varint_u64()? as usize, tex_coord: r.read_varint_u64()?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -3332,7 +3332,7 @@ pub(crate) fn write_bin_normal_texture_info(w: &mut dsl::ByteWriter, v: &GltfNor
     write_bin_json_opt(w, &v.extras);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_normal_texture_info(r: &mut dsl::ByteReader<'_>) -> Result<GltfNormalTextureInfo, dsl::PackError> {
+pub(crate) fn read_bin_normal_texture_info(r: &mut dsl::ByteReader<'_>) -> Result<GltfNormalTextureInfo, dsl::PackRefusal> {
     Ok(GltfNormalTextureInfo { index: r.read_varint_u64()? as usize, tex_coord: r.read_varint_u64()?, scale: r.read_f64_le()?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -3344,7 +3344,7 @@ pub(crate) fn write_bin_occlusion_texture_info(w: &mut dsl::ByteWriter, v: &Gltf
     write_bin_json_opt(w, &v.extras);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_occlusion_texture_info(r: &mut dsl::ByteReader<'_>) -> Result<GltfOcclusionTextureInfo, dsl::PackError> {
+pub(crate) fn read_bin_occlusion_texture_info(r: &mut dsl::ByteReader<'_>) -> Result<GltfOcclusionTextureInfo, dsl::PackRefusal> {
     Ok(GltfOcclusionTextureInfo { index: r.read_varint_u64()? as usize, tex_coord: r.read_varint_u64()?, strength: r.read_f64_le()?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -3358,7 +3358,7 @@ pub(crate) fn write_bin_pbr(w: &mut dsl::ByteWriter, v: &GltfPbrMetallicRoughnes
     write_bin_json_opt(w, &v.extras);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_pbr(r: &mut dsl::ByteReader<'_>) -> Result<GltfPbrMetallicRoughness, dsl::PackError> {
+pub(crate) fn read_bin_pbr(r: &mut dsl::ByteReader<'_>) -> Result<GltfPbrMetallicRoughness, dsl::PackRefusal> {
     Ok(GltfPbrMetallicRoughness {
         base_color_factor: read_bin_f64_array::<4>(r)?,
         base_color_texture: read_bin_option(r, read_bin_texture_info)?,
@@ -3384,7 +3384,7 @@ pub(crate) fn write_bin_material(w: &mut dsl::ByteWriter, m: &GltfMaterial) {
     write_bin_json_opt(w, &m.extras);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_material(r: &mut dsl::ByteReader<'_>) -> Result<GltfMaterial, dsl::PackError> {
+pub(crate) fn read_bin_material(r: &mut dsl::ByteReader<'_>) -> Result<GltfMaterial, dsl::PackRefusal> {
     Ok(GltfMaterial {
         name: read_bin_option(r, read_bin_str)?,
         pbr_metallic_roughness: read_bin_option(r, read_bin_pbr)?,
@@ -3414,7 +3414,7 @@ pub(crate) fn write_bin_material_diff(w: &mut dsl::ByteWriter, d: &GltfMaterialD
     write_bin_tri(w, &d.extras, write_bin_json);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_material_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfMaterialDiff, dsl::PackError> {
+pub(crate) fn read_bin_material_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfMaterialDiff, dsl::PackRefusal> {
     Ok(GltfMaterialDiff {
         name: read_bin_tri(r, read_bin_str)?,
         pbr_metallic_roughness: read_bin_tri(r, read_bin_pbr)?,
@@ -3441,7 +3441,7 @@ pub(crate) fn write_bin_buffer(w: &mut dsl::ByteWriter, b: &GltfBuffer) {
     write_bin_json_opt(w, &b.extras);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_buffer(r: &mut dsl::ByteReader<'_>) -> Result<GltfBuffer, dsl::PackError> {
+pub(crate) fn read_bin_buffer(r: &mut dsl::ByteReader<'_>) -> Result<GltfBuffer, dsl::PackRefusal> {
     Ok(GltfBuffer { byte_length: r.read_varint_u64()? as usize, uri: read_bin_option(r, read_bin_str)?, name: read_bin_option(r, read_bin_str)?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -3453,7 +3453,7 @@ pub(crate) fn write_bin_buffer_diff(w: &mut dsl::ByteWriter, d: &GltfBufferDiff)
     write_bin_tri(w, &d.extras, write_bin_json);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_buffer_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfBufferDiff, dsl::PackError> {
+pub(crate) fn read_bin_buffer_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfBufferDiff, dsl::PackRefusal> {
     Ok(GltfBufferDiff {
         byte_length: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
         uri: read_bin_tri(r, read_bin_str)?,
@@ -3474,7 +3474,7 @@ pub(crate) fn write_bin_buffer_view(w: &mut dsl::ByteWriter, v: &GltfBufferView)
     write_bin_json_opt(w, &v.extras);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_buffer_view(r: &mut dsl::ByteReader<'_>) -> Result<GltfBufferView, dsl::PackError> {
+pub(crate) fn read_bin_buffer_view(r: &mut dsl::ByteReader<'_>) -> Result<GltfBufferView, dsl::PackRefusal> {
     Ok(GltfBufferView {
         buffer: r.read_varint_u64()? as usize,
         byte_offset: r.read_varint_u64()? as usize,
@@ -3498,7 +3498,7 @@ pub(crate) fn write_bin_texture(w: &mut dsl::ByteWriter, t: &GltfTexture) {
     write_bin_json_opt(w, &t.extras);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_texture(r: &mut dsl::ByteReader<'_>) -> Result<GltfTexture, dsl::PackError> {
+pub(crate) fn read_bin_texture(r: &mut dsl::ByteReader<'_>) -> Result<GltfTexture, dsl::PackRefusal> {
     Ok(GltfTexture {
         sampler: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
         source: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
@@ -3517,7 +3517,7 @@ pub(crate) fn write_bin_image(w: &mut dsl::ByteWriter, i: &GltfImage) {
     write_bin_json_opt(w, &i.extras);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_image(r: &mut dsl::ByteReader<'_>) -> Result<GltfImage, dsl::PackError> {
+pub(crate) fn read_bin_image(r: &mut dsl::ByteReader<'_>) -> Result<GltfImage, dsl::PackRefusal> {
     Ok(GltfImage {
         uri: read_bin_option(r, read_bin_str)?,
         mime_type: read_bin_option(r, read_bin_str)?,
@@ -3538,7 +3538,7 @@ pub(crate) fn write_bin_sampler(w: &mut dsl::ByteWriter, s: &GltfSampler) {
     write_bin_json_opt(w, &s.extras);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_sampler(r: &mut dsl::ByteReader<'_>) -> Result<GltfSampler, dsl::PackError> {
+pub(crate) fn read_bin_sampler(r: &mut dsl::ByteReader<'_>) -> Result<GltfSampler, dsl::PackRefusal> {
     Ok(GltfSampler {
         mag_filter: read_bin_option(r, |r| r.read_varint_u64())?,
         min_filter: read_bin_option(r, |r| r.read_varint_u64())?,
@@ -3559,7 +3559,7 @@ pub(crate) fn write_bin_skin(w: &mut dsl::ByteWriter, v: &GltfSkin) {
     write_bin_json_opt(w, &v.extras);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_skin(r: &mut dsl::ByteReader<'_>) -> Result<GltfSkin, dsl::PackError> {
+pub(crate) fn read_bin_skin(r: &mut dsl::ByteReader<'_>) -> Result<GltfSkin, dsl::PackRefusal> {
     Ok(GltfSkin {
         inverse_bind_matrices: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
         skeleton: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
@@ -3580,7 +3580,7 @@ pub(crate) fn write_bin_animation_channel_target(w: &mut dsl::ByteWriter, t: &Gl
     write_bin_json_opt(w, &t.extras);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_animation_channel_target(r: &mut dsl::ByteReader<'_>) -> Result<GltfAnimationChannelTarget, dsl::PackError> {
+pub(crate) fn read_bin_animation_channel_target(r: &mut dsl::ByteReader<'_>) -> Result<GltfAnimationChannelTarget, dsl::PackRefusal> {
     Ok(GltfAnimationChannelTarget { node: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?, path: read_bin_animation_path(r)?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -3591,7 +3591,7 @@ pub(crate) fn write_bin_animation_channel(w: &mut dsl::ByteWriter, c: &GltfAnima
     write_bin_json_opt(w, &c.extras);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_animation_channel(r: &mut dsl::ByteReader<'_>) -> Result<GltfAnimationChannel, dsl::PackError> {
+pub(crate) fn read_bin_animation_channel(r: &mut dsl::ByteReader<'_>) -> Result<GltfAnimationChannel, dsl::PackRefusal> {
     Ok(GltfAnimationChannel { sampler: r.read_varint_u64()? as usize, target: read_bin_animation_channel_target(r)?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -3603,7 +3603,7 @@ pub(crate) fn write_bin_animation_sampler(w: &mut dsl::ByteWriter, s: &GltfAnima
     write_bin_json_opt(w, &s.extras);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_animation_sampler(r: &mut dsl::ByteReader<'_>) -> Result<GltfAnimationSampler, dsl::PackError> {
+pub(crate) fn read_bin_animation_sampler(r: &mut dsl::ByteReader<'_>) -> Result<GltfAnimationSampler, dsl::PackRefusal> {
     Ok(GltfAnimationSampler { input: r.read_varint_u64()? as usize, interpolation: read_bin_interpolation(r)?, output: r.read_varint_u64()? as usize, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -3615,7 +3615,7 @@ pub(crate) fn write_bin_animation(w: &mut dsl::ByteWriter, a: &GltfAnimation) {
     write_bin_json_opt(w, &a.extras);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_animation(r: &mut dsl::ByteReader<'_>) -> Result<GltfAnimation, dsl::PackError> {
+pub(crate) fn read_bin_animation(r: &mut dsl::ByteReader<'_>) -> Result<GltfAnimation, dsl::PackRefusal> {
     Ok(GltfAnimation { channels: read_bin_vec(r, read_bin_animation_channel)?, samplers: read_bin_vec(r, read_bin_animation_sampler)?, name: read_bin_option(r, read_bin_str)?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
 }
 //#endregion 🔖️RealBinaryAnimationGroupCodecs
@@ -3631,7 +3631,7 @@ pub(crate) fn write_bin_perspective(w: &mut dsl::ByteWriter, p: &GltfPerspective
     write_bin_json_opt(w, &p.extras);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_perspective(r: &mut dsl::ByteReader<'_>) -> Result<GltfPerspective, dsl::PackError> {
+pub(crate) fn read_bin_perspective(r: &mut dsl::ByteReader<'_>) -> Result<GltfPerspective, dsl::PackRefusal> {
     Ok(GltfPerspective { aspect_ratio: read_bin_option(r, |r| r.read_f64_le())?, yfov: r.read_f64_le()?, zfar: read_bin_option(r, |r| r.read_f64_le())?, znear: r.read_f64_le()?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -3644,7 +3644,7 @@ pub(crate) fn write_bin_orthographic(w: &mut dsl::ByteWriter, o: &GltfOrthograph
     write_bin_json_opt(w, &o.extras);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_orthographic(r: &mut dsl::ByteReader<'_>) -> Result<GltfOrthographic, dsl::PackError> {
+pub(crate) fn read_bin_orthographic(r: &mut dsl::ByteReader<'_>) -> Result<GltfOrthographic, dsl::PackRefusal> {
     Ok(GltfOrthographic { xmag: r.read_f64_le()?, ymag: r.read_f64_le()?, zfar: r.read_f64_le()?, znear: r.read_f64_le()?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
 }
 /// 🔀️ `GltfCameraProjection` real data-carrying enum -- tag `u8` (0=Perspective, 1=Orthographic).
@@ -3662,11 +3662,11 @@ pub(crate) fn write_bin_camera_projection(w: &mut dsl::ByteWriter, p: &GltfCamer
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_camera_projection(r: &mut dsl::ByteReader<'_>) -> Result<GltfCameraProjection, dsl::PackError> {
+pub(crate) fn read_bin_camera_projection(r: &mut dsl::ByteReader<'_>) -> Result<GltfCameraProjection, dsl::PackRefusal> {
     match r.read_u8()? {
         0 => Ok(GltfCameraProjection::Perspective(read_bin_perspective(r)?)),
         1 => Ok(GltfCameraProjection::Orthographic(read_bin_orthographic(r)?)),
-        other => Err(dsl::PackError::Malformed { what: "gltf camera_projection", offset: 0, detail: format!("unknown tag {other}") }),
+        other => Err(dsl::PackRefusal::Malformed { kind: semio_framework_value::ValueRefusalKind::InvalidValue, what: "gltf camera_projection", offset: 0, detail: format!("unknown tag {other}") }),
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -3677,7 +3677,7 @@ pub(crate) fn write_bin_camera(w: &mut dsl::ByteWriter, c: &GltfCamera) {
     write_bin_json_opt(w, &c.extras);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_camera(r: &mut dsl::ByteReader<'_>) -> Result<GltfCamera, dsl::PackError> {
+pub(crate) fn read_bin_camera(r: &mut dsl::ByteReader<'_>) -> Result<GltfCamera, dsl::PackRefusal> {
     Ok(GltfCamera { projection: read_bin_camera_projection(r)?, name: read_bin_option(r, read_bin_str)?, extensions: read_bin_json_opt(r)?, extras: read_bin_json_opt(r)? })
 }
 //#endregion 🔖️RealBinaryCameraGroupCodecs
@@ -3701,9 +3701,9 @@ pub(crate) fn write_bin_collection<T, D>(w: &mut dsl::ByteWriter, c: &GltfCollec
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_bin_collection<T, D>(
     r: &mut dsl::ByteReader<'_>,
-    read_item: impl Fn(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>,
-    read_diff: impl Fn(&mut dsl::ByteReader<'_>) -> Result<D, dsl::PackError>,
-) -> Result<GltfCollectionDiff<T, D>, dsl::PackError> {
+    read_item: impl Fn(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackRefusal>,
+    read_diff: impl Fn(&mut dsl::ByteReader<'_>) -> Result<D, dsl::PackRefusal>,
+) -> Result<GltfCollectionDiff<T, D>, dsl::PackRefusal> {
     let removed = read_bin_usize_vec(r)?;
     let modified = read_bin_vec(r, |r| {
         let index = r.read_varint_u64()? as usize;
@@ -3731,9 +3731,9 @@ pub(crate) fn write_bin_collection_blob<T, D>(c: &GltfCollectionDiff<T, D>, writ
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_bin_collection_blob<T, D>(
     bytes: &[u8],
-    read_item: impl Fn(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>,
-    read_diff: impl Fn(&mut dsl::ByteReader<'_>) -> Result<D, dsl::PackError>,
-) -> Result<GltfCollectionDiff<T, D>, dsl::PackError> {
+    read_item: impl Fn(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackRefusal>,
+    read_diff: impl Fn(&mut dsl::ByteReader<'_>) -> Result<D, dsl::PackRefusal>,
+) -> Result<GltfCollectionDiff<T, D>, dsl::PackRefusal> {
     let mut inner = dsl::ByteReader::new(bytes);
     read_bin_collection(&mut inner, read_item, read_diff)
 }
@@ -3868,8 +3868,8 @@ impl protocol::DiffCodec for GltfDiff {
     fn print_diff(&self) -> String {
         print_gltf_diff(self)
     }
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_gltf_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_diff(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_gltf_diff(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
     /// ⚡️ P2-FG3: real binary diff-frame — upgraded from the F6-era `print_diff().into_bytes()`
     /// text-as-binary shortcut (100% of stdio's `DiffCodec` impls were still on that shortcut per

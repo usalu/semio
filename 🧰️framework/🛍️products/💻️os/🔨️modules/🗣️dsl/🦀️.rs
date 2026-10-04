@@ -1,8 +1,13 @@
-//! 🧬️ `dsl` — facade for the token-native declarative DSL engine. Technologies depend on this one
-//! crate (plus `vcs` for the `ArtifactDsl`/`OpText` trait definitions themselves) to get the
-//! derive macros, the `DslField` binding trait primitive Rust types implement, and the `__rt`
-//! runtime the generated code calls into.
+//! 🧩️ OS product grammars and binary mutation dispatch over canonical Record and Value owners.
 
+use semio_framework_dsl::LanguageRole;
+use semio_framework_dsl::LanguageSpec;
+use semio_framework_dsl::language;
+use semio_framework_dsl::language_for_extension;
+use semio_framework_dsl::language_for_role_extension;
+use semio_framework_diagnostic::TextSpan;
+use semio_framework_dsl::UnitSpec;
+use semio_framework_dsl::unit_by_symbol;
 // The derive macros emit `::crate::os_dsl::...` paths so generated code reads identically regardless of
 // which technology crate invokes them. That only resolves for the crates that depend on `dsl` as
 // an external crate — which is every real consumer, but NOT this crate's own tests (a crate is
@@ -12,514 +17,26 @@
 // in ordinary (non-test) builds, where every real consumer already has `dsl` as a true dependency.
 // extern crate self removed after merge
 
-use std::collections::HashMap;
-use std::sync::{Mutex, OnceLock};
+use semio_framework_dsl::*;
 
-#[path = "🪟️viewport/🦀️.rs"]
-mod viewport;
 
-pub use crate::os_dsl::schema::*;
-pub use crate::os_dsl::{diagnostic::*, lexer::*, span::*, token::*, trust::*};
-pub use dsl_derive::{DslArtifact, DslDiff, DslEnum, DslOps, DslRecord, DslScalar, MutationLeaf, Mutations};
 
-pub use crate::os_dsl::grammar::{
-    parse_grammar, parse_protocol, print_grammar, print_protocol, verify_protocol_bytes, verify_protocol_source, walk_protocol, Block, Count, Field, FragmentRegistry, Framing, GrammarFile, Prim, ProtocolFile, ProtocolMismatch, ProtocolTrace,
-    Recognizer, SemioDialect,
-};
 
-pub use protocol::value::native_decoding::NativeDecodeControl;
-pub use protocol::value::native_encoding::NativeEncodeControl;
-#[path = "🛫️encode/🦀️.rs"]
-pub mod native_encoding;
 
-//#region 🔖️Field
-/// 🔗️ Bridges a concrete Rust field type to the engine's `Shape`/`FieldValue` — every
-/// primitive implements it directly; `#[derive(DslRecord)]`/`#[derive(DslScalar)]` implement it
-/// for technology-declared nested types, so composition (a record field whose type is another
-/// derived record or enum) works transparently through the same trait.
-pub trait DslField: Sized {
-    // 🚫️async: E4 fn-pointer transitivity — `Shape::Record`/`Table`/`Statements` hold
-    // `fn() -> RecordSpec`; every `shape()` implementation ultimately feeds one, directly or
-    // through a derived `__dsl_spec` — see R9.
-    fn shape() -> Shape;
-    /// 🏭️ Constructs only the explicitly declared shape metadata under caller admission.
-    fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,String>{control.checkpoint()?;Err("field owner has no controlled native schema implementation".into())}
-    fn to_value(&self) -> FieldValue;
-    /// 🛫️ Projects explicitly owned fields under cumulative output admission and cancellation.
-    fn to_value_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,String>{control.checkpoint()?;Err("field owner has no controlled native projection implementation".into())}
-    /// 📑️ Projects a record without an intermediate boxed field carrier.
-    fn to_record_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<RecordValue,String>{control.checkpoint()?;Err("field owner has no controlled record projection implementation".into())}
-    fn from_value(value: &FieldValue) -> Result<Self, String>;
-    /// 🧹️ Retires a completed field according to its owner after partial reconstruction fails.
-    fn retire_decoded(self) { drop(self); }
-    /// 🛬️ Constructs an owned field under the caller's cumulative allocation and work control.
-    fn from_value_controlled(_value: &FieldValue, control: &mut NativeDecodeControl<'_>) -> Result<Self, String> {
-        control.checkpoint()?;
-        Err("field owner has no controlled native construction implementation".into())
-    }
-    /// 📑️ Binds a record view without cloning a temporary FieldValue carrier.
-    fn from_record_controlled(_record:&RecordValue,control:&mut NativeDecodeControl<'_>)->Result<Self,String>{
-        control.checkpoint()?;
-        Err("field owner has no controlled record construction implementation".into())
-    }
-}
+use semio_framework_dsl_record::*;
+use semio_framework_value::{DslValue,FromValue,ToValue,Number,ValueError,NativeDecodeControl,NativeEncodeControl};
+#[cfg(test)]
+use semio_framework_dsl_record_derive::{DslRecord,DslScalar,DslEnum};
+#[cfg(test)]
+use semio_framework_ui_viewport::{Viewport2d,Viewport3dOrbit};
+pub use dsl_derive::{DslArtifact,DslDiff,MutationLeaf,Mutations};
 
-/// 📦️ Boxed ownership preserves the inner field's schema, value, and decoding errors.
-impl<T: DslField> DslField for Box<T> {
-    fn to_value_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,String>{T::to_value_controlled(self.as_ref(),control)}
-    fn to_record_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<RecordValue,String>{T::to_record_controlled(self.as_ref(),control)}
 
-    fn retire_decoded(self) { T::retire_decoded(*self); }
-    fn shape() -> Shape {
-        T::shape()
-    }
-    fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,String>{T::shape_controlled(control)}
-    fn to_value(&self) -> FieldValue {
-        T::to_value(self.as_ref())
-    }
-    fn from_value(value: &FieldValue) -> Result<Self, String> {
-        T::from_value(value).map(Box::new)
-    }
-    fn from_value_controlled(value: &FieldValue, control: &mut NativeDecodeControl<'_>) -> Result<Self, String> {
-        control.charge(std::mem::size_of::<T>())?;
-        control.scoped_stage(|control|T::from_value_controlled(value, control)).map(Box::new)
-    }
-    fn from_record_controlled(record:&RecordValue,control:&mut NativeDecodeControl<'_>)->Result<Self,String>{control.charge(std::mem::size_of::<T>())?;control.scoped_stage(|control|T::from_record_controlled(record,control)).map(Box::new)}
-}
 
-macro_rules! impl_dsl_field_int {
-    ($ty:ty, $shape:expr, $variant:ident, $as_ty:ty) => {
-        impl DslField for $ty {
-            // 🚫️async: E4 — see `DslField::shape`'s tag above.
-            fn shape() -> Shape {
-                $shape
-            }
-            fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,String>{control.checkpoint()?;Ok($shape)}
-            fn to_value(&self) -> FieldValue {
-                FieldValue::$variant(*self as $as_ty)
-            }
-            fn to_value_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,String>{control.step()?;Ok(FieldValue::$variant(*self as $as_ty))}
-            fn from_value(value: &FieldValue) -> Result<Self, String> {
-                match value {
-                    FieldValue::$variant(v) => <$ty>::try_from(*v).map_err(|_| format!("integer {v} out of range for {}", stringify!($ty))),
-                    other => Err(format!("expected {}, found {other:?}", stringify!($variant))),
-                }
-            }
-            fn from_value_controlled(value: &FieldValue, control: &mut NativeDecodeControl<'_>) -> Result<Self, String> {
-                control.step()?;
-                if matches!(value,FieldValue::$variant(_)){<Self as DslField>::from_value(value)}else{Err(concat!("expected ",stringify!($variant)).into())}
-            }
-        }
-    };
-}
 
-impl_dsl_field_int!(i8, Shape::Int, Int, i64);
-impl_dsl_field_int!(i16, Shape::Int, Int, i64);
-impl_dsl_field_int!(i32, Shape::Int, Int, i64);
-impl_dsl_field_int!(i64, Shape::Int, Int, i64);
-impl_dsl_field_int!(isize, Shape::Int, Int, i64);
-impl_dsl_field_int!(u8, Shape::UInt, UInt, u64);
-impl_dsl_field_int!(u16, Shape::UInt, UInt, u64);
-impl_dsl_field_int!(u32, Shape::UInt, UInt, u64);
-impl_dsl_field_int!(u64, Shape::UInt, UInt, u64);
-impl_dsl_field_int!(usize, Shape::UInt, UInt, u64);
+use semio_framework_value::ValueRefusalKind;
 
-impl DslField for bool {
-    // 🚫️async: E4 — see `DslField::shape`'s tag above.
-    fn shape() -> Shape {
-        Shape::Bool
-    }
-    fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,String>{control.checkpoint()?;Ok(Shape::Bool)}
-    fn to_value(&self) -> FieldValue {
-        FieldValue::Bool(*self)
-    }
-    fn to_value_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,String>{control.step()?;Ok(FieldValue::Bool(*self))}
-    fn from_value(value: &FieldValue) -> Result<Self, String> {
-        match value {
-            FieldValue::Bool(b) => Ok(*b),
-            other => Err(format!("expected Bool, found {other:?}")),
-        }
-    }
-    fn from_value_controlled(value: &FieldValue, control: &mut NativeDecodeControl<'_>) -> Result<Self, String> { control.step()?;if matches!(value,FieldValue::Bool(_)){<Self as DslField>::from_value(value)}else{Err("expected Bool".into())} }
-}
 
-impl DslField for f32 {
-    // 🚫️async: E4 — see `DslField::shape`'s tag above.
-    fn shape() -> Shape {
-        Shape::Float
-    }
-    fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,String>{control.checkpoint()?;Ok(Shape::Float)}
-    fn to_value(&self) -> FieldValue {
-        let bits=self.to_bits();let value=if bits&0x7f800000==0x7f800000&&bits&0x7fffff!=0{f64::from_bits(((bits as u64&0x80000000)<<32)|0x7ff0000000000000|((bits as u64&0x7fffff)<<29))}else{*self as f64};FieldValue::Float(value)
-    }
-    fn to_value_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,String>{control.step()?;Ok(<Self as DslField>::to_value(self))}
-    fn from_value(value: &FieldValue) -> Result<Self, String> {
-        match value {
-            FieldValue::Float(f)=>{let bits=f.to_bits();if bits&0x7ff0000000000000==0x7ff0000000000000&&bits&0xfffffffffffff!=0{if bits&0x1fffffff!=0{return Err("NaN word is not exactly representable at binary32 width".into());}Ok(f32::from_bits(((bits>>32)as u32&0x80000000)|0x7f800000|((bits>>29)as u32&0x7fffff)))}else{Ok(*f as f32)}},
-            other => Err(format!("expected Float, found {other:?}")),
-        }
-    }
-    fn from_value_controlled(value: &FieldValue, control: &mut NativeDecodeControl<'_>) -> Result<Self, String> { control.step()?;if matches!(value,FieldValue::Float(_)){<Self as DslField>::from_value(value)}else{Err("expected Float".into())} }
-}
-
-impl DslField for f64 {
-    // 🚫️async: E4 — see `DslField::shape`'s tag above.
-    fn shape() -> Shape {
-        Shape::Float
-    }
-    fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,String>{control.checkpoint()?;Ok(Shape::Float)}
-    fn to_value(&self) -> FieldValue {
-        FieldValue::Float(*self)
-    }
-    fn to_value_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,String>{control.step()?;Ok(FieldValue::Float(*self))}
-    fn from_value(value: &FieldValue) -> Result<Self, String> {
-        match value {
-            FieldValue::Float(f) => Ok(*f),
-            other => Err(format!("expected Float, found {other:?}")),
-        }
-    }
-    fn from_value_controlled(value: &FieldValue, control: &mut NativeDecodeControl<'_>) -> Result<Self, String> { control.step()?;if matches!(value,FieldValue::Float(_)){<Self as DslField>::from_value(value)}else{Err("expected Float".into())} }
-}
-
-/// 🔤️ `String` binds as `Shape::Text` — the one string shape. The parser accepts either a
-/// bare `Ident` token or a quoted `Text` token wherever `Text` is expected; the printer emits bare
-/// (unquoted) whenever `crate::os_dsl::is_bare_ident` holds for the value, quoted+escaped otherwise —
-/// so bare-vs-quoted is entirely a printing decision now, not a separate shape a field opts into.
-impl DslField for String {
-    // 🚫️async: E4 — see `DslField::shape`'s tag above.
-    fn shape() -> Shape {
-        Shape::Text
-    }
-    fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,String>{control.checkpoint()?;Ok(Shape::Text)}
-    fn to_value(&self) -> FieldValue {
-        FieldValue::Text(self.clone())
-    }
-    fn to_value_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,String>{control.step()?;Ok(FieldValue::Text(control.copy_text(self)?))}
-    fn from_value(value: &FieldValue) -> Result<Self, String> {
-        match value {
-            FieldValue::Text(s) => Ok(s.clone()),
-            other => Err(format!("expected Text, found {other:?}")),
-        }
-    }
-    fn from_value_controlled(value: &FieldValue, control: &mut NativeDecodeControl<'_>) -> Result<Self, String> {
-        control.step()?;
-        match value { FieldValue::Text(text)=>control.copy_text(text),_=>Err("expected Text".into()) }
-    }
-}
-
-/// 🔌️ A wire literal as a plain struct field (or inside a `#[dsl(table)]` `Vec` as a
-/// `WIRE`-typed column) — thin `DslField` wrapper around `crate::os_dsl::schema::WireValue` so adopter
-/// technologies never need to hand-roll their own `Shape::Wire` binding.
-#[derive(Clone, Debug, PartialEq)]
-pub struct Wire(pub WireValue);
-
-impl DslField for Wire {
-    // 🚫️async: E4 — see `DslField::shape`'s tag above.
-    fn shape() -> Shape {
-        Shape::Wire
-    }
-    fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,String>{control.checkpoint()?;Ok(Shape::Wire)}
-    fn to_value(&self) -> FieldValue {
-        FieldValue::Wire(self.0.clone())
-    }
-    fn from_value(value: &FieldValue) -> Result<Self, String> {
-        match value {
-            FieldValue::Wire(w) => Ok(Wire(w.clone())),
-            other => Err(format!("expected Wire, found {other:?}")),
-        }
-    }
-}
-/// 📚️ General recursion seam: `#[derive(DslRecord)]`/`#[derive(DslScalar)]` fields classify
-/// `Vec<T>`/`[T; N]` directly (so their own printed shape stays field-specific), but a NESTED
-/// collection — `Vec<Vec<T>>`, a fixed-size array field, ... — needs its inner element type to
-/// satisfy `DslField` itself. These two blanket impls close that gap generically instead of adding
-/// a special-cased `FieldKind` for every depth of nesting.
-impl<T: DslField> DslField for Vec<T> {
-    fn to_value_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,String>{native_encoding::project_list(self,control).map(FieldValue::List)}
-
-    fn retire_decoded(self) { for value in self { T::retire_decoded(value); } }
-    // 🚫️async: E4 — see `DslField::shape`'s tag above.
-    fn shape() -> Shape {
-        Shape::List(Box::new(T::shape()))
-    }
-    fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,String>{control.scoped_depth(64,|control|Ok(Shape::List(crate::os_dsl::schema::producer::boxed(T::shape_controlled(control)?,control)?)))}
-    // 🔁 `Iterator::map` cannot await per-element (residue shape 1) and `T::to_value`/`from_value`
-    // are AFIT over an arbitrary implementor, so — unlike a known-pure leaf fn — R9 does not apply;
-    // the fix is a plain sequential loop that awaits each element in turn.
-    fn to_value(&self) -> FieldValue {
-        let mut items = Vec::with_capacity(self.len());
-        for item in self {
-            items.push(item.to_value());
-        }
-        FieldValue::List(items)
-    }
-    fn from_value(value: &FieldValue) -> Result<Self, String> {
-        match value {
-            FieldValue::List(items) => {
-                let mut out = Vec::with_capacity(items.len());
-                for item in items {
-                    out.push(T::from_value(item)?);
-                }
-                Ok(out)
-            }
-            other => Err(format!("expected List, found {other:?}")),
-        }
-    }
-    fn from_value_controlled(value: &FieldValue, control: &mut NativeDecodeControl<'_>) -> Result<Self, String> {
-        control.step()?;
-        match value {
-            FieldValue::List(items)=>__rt::decode_list_controlled(items,control),
-            _=>Err("expected List".into()),
-        }
-    }
-}
-
-/// 🗺️ Same recursion seam as `Vec<T>`, for a `BTreeMap<String, T>` that's itself nested
-/// (e.g. `Option<BTreeMap<String, T>>`) rather than a bare top-level field — `#[derive(DslRecord)]`
-/// classifies a *bare* `BTreeMap<String, T>` field directly via its own dedicated `FieldKind`
-/// (same `Shape::Map` this produces), so the two never conflict.
-impl<T: DslField> DslField for std::collections::BTreeMap<String, T> {
-    fn to_value_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,String>{native_encoding::project_map(self,control)}
-
-    fn retire_decoded(self) { for (_,value) in self { T::retire_decoded(value); } }
-    // 🚫️async: E4 — see `DslField::shape`'s tag above.
-    fn shape() -> Shape {
-        Shape::Map(Box::new(T::shape()))
-    }
-    fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,String>{control.scoped_depth(64,|control|Ok(Shape::Map(crate::os_dsl::schema::producer::boxed(T::shape_controlled(control)?,control)?)))}
-    // 🔁 Same R9-doesn't-apply reasoning as `Vec<T>` above: sequential loop, not `.map().collect()`.
-    fn to_value(&self) -> FieldValue {
-        let mut entries = Vec::with_capacity(self.len());
-        for (k, v) in self {
-            entries.push((k.clone(), v.to_value()));
-        }
-        FieldValue::Map(entries)
-    }
-    fn from_value(value: &FieldValue) -> Result<Self, String> {
-        match value {
-            FieldValue::Map(entries) => {
-                let mut out = Self::new();
-                for (k, v) in entries {
-                    out.insert(k.clone(), T::from_value(v)?);
-                }
-                Ok(out)
-            }
-            other => Err(format!("expected Map, found {other:?}")),
-        }
-    }
-    fn from_value_controlled(value: &FieldValue, control: &mut NativeDecodeControl<'_>) -> Result<Self, String> {
-        control.step()?;
-        match value {
-            FieldValue::Map(entries)=>{
-                let slot=std::mem::size_of::<(String,T)>().checked_add(128).ok_or("map slot size overflow")?;
-                control.charge(entries.len().checked_mul(slot).ok_or("map ownership size overflow")?)?;
-                let mut output=__rt::DecodedFieldOwner::new(Self::new(),Self::retire_decoded);
-                for (key,value) in entries {if let Some(previous)=output.as_mut().insert(control.copy_text(key)?,control.scoped_stage(|control|T::from_value_controlled(value,control))?){T::retire_decoded(previous);}}
-                Ok(output.take())
-            },
-            _=>Err("expected Map".into()),
-        }
-    }
-}
-
-/// 📐️ Fixed-arity `Shape::Tuple(_, Some(N))` — a packed `x,y,z`-style literal for any `N`.
-impl<T: DslField, const N: usize> DslField for [T; N] {
-    fn to_value_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,String>{native_encoding::project_list(self,control).map(FieldValue::Tuple)}
-
-    fn retire_decoded(self) { for value in self { T::retire_decoded(value); } }
-    // 🚫️async: E4 — see `DslField::shape`'s tag above.
-    fn shape() -> Shape {
-        Shape::Tuple(Box::new(T::shape()), Some(N))
-    }
-    fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,String>{control.scoped_depth(64,|control|Ok(Shape::Tuple(crate::os_dsl::schema::producer::boxed(T::shape_controlled(control)?,control)?,Some(N))))}
-    // 🔁 Same R9-doesn't-apply reasoning as `Vec<T>` above: sequential loop, not `.map().collect()`.
-    fn to_value(&self) -> FieldValue {
-        let mut items = Vec::with_capacity(N);
-        for item in self {
-            items.push(item.to_value());
-        }
-        FieldValue::Tuple(items)
-    }
-    fn from_value(value: &FieldValue) -> Result<Self, String> {
-        match value {
-            FieldValue::Tuple(items) if items.len() == N => {
-                let mut converted: Vec<T> = Vec::with_capacity(N);
-                for item in items {
-                    converted.push(T::from_value(item)?);
-                }
-                converted.try_into().map_err(|_| format!("expected {N} items, got a length mismatch"))
-            }
-            other => Err(format!("expected a {N}-item Tuple, found {other:?}")),
-        }
-    }
-    fn from_value_controlled(value: &FieldValue, control: &mut NativeDecodeControl<'_>) -> Result<Self, String> {
-        control.step()?;
-        match value {
-            FieldValue::Tuple(items) if items.len()==N=>{let mut output=__rt::DecodedFieldOwner::new(control.allocate_vec::<T>(N)?,<Vec<T> as DslField>::retire_decoded);for item in items {output.as_mut().push(control.scoped_stage(|control|T::from_value_controlled(item,control))?);}output.take().try_into().map_err(|values:Vec<T>|{<Vec<T> as DslField>::retire_decoded(values);"tuple arity mismatch".into()})},
-            _=>Err(format!("expected a {N}-item Tuple")),
-        }
-    }
-}
-
-/// 🌱️ Schema-less dynamic literal — binds as `Shape::Value`.
-impl DslField for DslValue {
-    // 🚫️async: E4 — see `DslField::shape`'s tag above.
-    fn shape() -> Shape {
-        Shape::Value
-    }
-    fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,String>{control.checkpoint()?;Ok(Shape::Value)}
-    fn to_value(&self) -> FieldValue {
-        FieldValue::Value(self.clone())
-    }
-    fn to_value_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,String>{<Self as protocol::value::ToValue>::to_value_controlled(self,control).map(FieldValue::Value).map_err(|error|error.to_string())}
-    fn from_value_controlled(value:&FieldValue,control:&mut NativeDecodeControl<'_>)->Result<Self,String>{match value{FieldValue::Value(value)=><Self as protocol::value::FromValue>::from_value_controlled(value,control).map_err(|error|error.to_string()),_=>Err("expected an intrinsic Value field".into())}}
-    fn retire_decoded(self){<Self as protocol::value::FromValue>::retire_decoded(self)}
-    fn from_value(value: &FieldValue) -> Result<Self, String> {
-        match value {
-            FieldValue::Value(dsl_value) => Ok(dsl_value.clone()),
-            other => Err(format!("expected Value, found {other:?}")),
-        }
-    }
-}
-//#endregion 🔖️Field
-
-//#region 🔖️Variants
-/// 🌿️ Bridges an enum whose variants are each their own keyword-tagged record — the type
-/// bound for `#[dsl(statements)] Vec<T>` collection fields and for `#[derive(DslOps)]` operation
-/// enums. `#[derive(DslEnum)]`-with-struct-variants and `#[derive(DslOps)]` both implement this.
-pub trait DslVariants: Sized {
-    /// 🐌️ Lazy: each entry is a zero-capture `fn` pointer, not an eagerly-built `RecordSpec`
-    /// — a self-referential grammar's own `variants()` would otherwise need to recurse infinitely
-    /// just to construct this list. See [`Shape::Statements`]'s doc comment for the full rationale.
-    // 🚫️async: E4 — the returned `Vec<(String, fn() -> RecordSpec)>` IS a fn-pointer table, and
-    // `Shape::Statements(<T>::variants())` is itself called from inside a sync `__dsl_spec` — see R9.
-    fn variants() -> Vec<(String, RecordSpecProducer)>;
-    /// 🌿️ Owns literal variant labels and their lazy controlled schema producers.
-    fn variants_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Vec<(String,RecordSpecProducer)>,String>{control.checkpoint()?;Err("variant owner has no controlled native schema implementation".into())}
-    fn to_named_record(&self) -> (String, RecordValue);
-    /// 🌿️ Projects a declared tagged variant under the same cumulative output control.
-    fn to_named_record_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<(String,RecordValue),String>{control.checkpoint()?;Err("variant owner has no controlled native projection implementation".into())}
-    /// ⚠️ Returns `TextError` (not `String`, unlike [`DslField::from_value`]) so
-    /// generated bodies can `?`-propagate it directly — this is the same error type
-    /// `crate::os_spr::OpText::parse_op`/`crate::os_store::ArtifactDsl::parse_dsl` already return, and the derive's
-    /// `#[dsl(statements)]` field codegen composes it without any conversion at every nesting depth.
-    fn from_named_record(keyword: &str, record: &RecordValue) -> Result<Self, TextError>;
-    /// 🌲️ Retires a completed tagged value through its domain owner.
-    fn retire_decoded_variant(self) { drop(self); }
-    /// 🌿️ Constructs a declared variant without invoking an unchecked owner binding.
-    fn from_named_record_controlled(_keyword:&str,_record:&RecordValue,control:&mut NativeDecodeControl<'_>)->Result<Self,TextError>{
-        control.checkpoint().map_err(__rt::field_error)?;
-        Err(__rt::field_error("variant owner has no controlled native construction implementation"))
-    }
-}
-//#endregion 🔖️Variants
-
-//#region 🔖️Runtime
-/// ⚙️ Helpers remaining after P6 flag day — DslField/DslVariants derive bodies only (codec paths deleted).
-pub mod __rt {
-    use super::*;
-
-    /// 🧹️ Holds a completed typed field until construction commits or invokes its actual owner retirement.
-    pub struct DecodedFieldOwner<T> { value:Option<T>, retire:fn(T) }
-    impl<T> DecodedFieldOwner<T> {
-        /// 📥️ Adopts one owned field with its declared retirement function.
-        pub fn new(value:T,retire:fn(T))->Self { Self{value:Some(value),retire} }
-        /// 🌿️ Allows bounded construction inside the guarded owned collection.
-        pub fn as_mut(&mut self)->&mut T { self.value.as_mut().expect("decoded owner already transferred") }
-        /// 📤️ Transfers ownership only after every required constructor succeeds.
-        pub fn take(mut self)->T { self.value.take().expect("decoded owner already transferred") }
-    }
-    impl<T> Drop for DecodedFieldOwner<T> { fn drop(&mut self){if let Some(value)=self.value.take(){(self.retire)(value);}} }
-
-    /// 📋️ Binds declared list elements with one known collection workload and cumulative ownership.
-    pub fn decode_list_controlled<T:DslField>(items:&[FieldValue],control:&mut NativeDecodeControl<'_>)->Result<Vec<T>,String>{
-        control.scoped_stage(|control|{control.begin_stage(items.len())?;let mut output=DecodedFieldOwner::new(control.allocate_vec::<T>(items.len())?,<Vec<T> as DslField>::retire_decoded);for item in items{output.as_mut().push(control.scoped_stage(|control|{control.begin_stage(0)?;T::from_value_controlled(item,control)})?);control.step()?;}Ok(output.take())})
-    }
-    /// 🌿️ Binds tagged variants with exact collection progress and declared variant retirement.
-    pub fn decode_statements_controlled<T:DslVariants>(items:&[(String,RecordValue)],control:&mut NativeDecodeControl<'_>)->Result<Vec<T>,TextError>{
-        control.scoped_stage(|control|{control.begin_stage(items.len()).map_err(field_error)?;let mut output=DecodedFieldOwner::new(control.allocate_vec::<T>(items.len()).map_err(field_error)?,|values:Vec<T>|{for value in values{T::retire_decoded_variant(value);}});for(keyword,record)in items{output.as_mut().push(control.scoped_stage(|control|{control.begin_stage(0).map_err(field_error)?;T::from_named_record_controlled(keyword,record,control)})?);control.step().map_err(field_error)?;}Ok(output.take())})
-    }
-
-    // 🚫️async: E1 pure error constructor, consumed by `Option::ok_or_else` sync closures in every
-    // `#[derive(DslRecord)]`-generated body (`✨️derive/🦀️.rs`'s `quote!{}` templates) — see R9
-    pub fn field_error(message: impl Into<String>) -> TextError {
-        TextError::new(message, TextSpan::at(1, 1))
-    }
-
-    /// 📐️ Resolves a `#[dsl(unit = "...")]`/`#[dsl(angle = "...")]` symbol at spec-build
-    /// time. An unknown symbol is a derive-time misuse (a typo'd unit string, caught the first time
-    /// the generated `__dsl_spec` runs — every RecordSpec-law test exercises this), so it panics
-    /// rather than threading a `Result` through the whole spec-building call chain, matching
-    /// `newtype_variant_spec`'s convention above.
-    pub fn unit_for_derive(symbol: &'static str) -> &'static UnitSpec {
-        unit_by_symbol(symbol).unwrap_or_else(|| panic!("dsl: unknown unit symbol '{symbol}' in #[dsl(unit = ...)]/#[dsl(angle = ...)]"))
-    }
-
-    /// 📦️ Single-field tuple ("newtype") enum variant support — `Variant(Body)` delegates its
-    /// whole `RecordSpec`/value to `Body`'s own `DslField` impl rather than wrapping it in one
-    /// positional field, so `Body` prints/parses identically whether reached through the enum or on
-    /// its own. `Body` must have `Shape::Record` (i.e. itself come from `#[derive(DslRecord)]` or
-    /// `#[derive(DslArtifact)]`) — anything else is a derive-time misuse, hence the panic rather than
-    /// a `Result` (there is no sensible recoverable path for a grammar that's wrong at compile time).
-    // 🚫️async: E4 — this fn's VALUE is cast `as fn() -> RecordSpec` at every newtype-variant call
-    // site (`✨️derive/🦀️.rs`'s `dsl_variants_codegen`), and it calls the now-sync `DslField::shape`.
-    pub fn newtype_variant_spec<T: DslField>() -> RecordSpec {
-        match T::shape() {
-            Shape::Record(spec_fn) => (spec_fn.ordinary)(),
-            other => panic!("newtype variant's inner type must have Record shape, found {other:?}"),
-        }
-    }
-
-    /// 🪆️ Delegates a declared record variant through its explicit lazy schema producer.
-    pub fn newtype_variant_producer<T:DslField>()->RecordSpecProducer{
-        RecordSpecProducer{ordinary:newtype_variant_spec::<T>,decoding:|control|{match T::shape_controlled(control)?{Shape::Record(producer)=>producer.decode(control),_=>Err("newtype variant requires a controlled Record schema".into())}},encoding:|control|{match T::shape_controlled(control)?{Shape::Record(producer)=>producer.encode(control),_=>Err("newtype variant requires a controlled Record schema".into())}}}
-    }
-
-    pub fn newtype_variant_to_record<T: DslField>(inner: &T) -> RecordValue {
-        match inner.to_value() {
-            FieldValue::Record(record) => record,
-            other => panic!("newtype variant's inner type must produce a Record value, found {other:?}"),
-        }
-    }
-
-    pub fn newtype_variant_from_record<T: DslField>(record: &RecordValue) -> Result<T, TextError> {
-        T::from_value(&FieldValue::Record(record.clone())).map_err(field_error)
-    }
-}
-
-//#endregion 🔖️Runtime
-
-//#region 🔖️OpTextRt
-/// 🔤️ Handcrafted `OpText` helper — the text twin of [`variants_binary`].
-///
-/// An operation line is ONE terminal keyword-tagged record, so it parses through
-/// [`parse_exact`], which rejects every token outside the variant's own schema body: a trailing
-/// `unknown-field 1` is not a second statement, it is garbage the line must refuse. Plain
-/// [`parse`] stops at the end of the record it recognises and silently drops the rest, which is
-/// the document-mode contract, not the op-line one.
-pub mod variants_text {
-    use super::__rt::field_error;
-    use super::{print, DslVariants, JoinMode, Limits, ParseOptions, SourceMode, TextError};
-
-    pub fn parse_op<T: DslVariants>(line: &str) -> Result<T, TextError> {
-        let variants = T::variants();
-        for (keyword, spec_fn) in &variants {
-            if line == keyword.as_str() || line.starts_with(&format!("{keyword} ")) {
-                let record = super::parse_exact(line, &(spec_fn.ordinary)(), &ParseOptions { limits: Limits::default(), mode: SourceMode::Inline })?;
-                return T::from_named_record(keyword, &record);
-            }
-        }
-        Err(field_error(format!("unknown operation line '{line}'")))
-    }
-
-    pub fn print_op<T: DslVariants>(op: &T) -> String {
-        let (keyword, record) = op.to_named_record();
-        let variants = T::variants();
-        let spec_fn = variants.iter().find(|(key, _)| key == &keyword).map(|(_, spec)| *spec).expect("variant spec must exist for its own keyword");
-        print(&record, &(spec_fn.ordinary)(), JoinMode::Inline)
-    }
-}
-//#endregion 🔖️OpTextRt
 
 //#region 🏷️ProtocolRecord
 /// 🏷️ The one source of a mutation vocabulary's op tags: the `record <kind> tag=<n>` lines of its
@@ -749,7 +266,9 @@ pub mod variants_binary {
 /// so the wire never spells the variant name and the protocol file is the only source of tags.
 pub mod tagged_value_binary {
     use super::protocol_record;
-    use crate::os_dsl::schema::{DslValue, FromValue, ToValue};
+    use semio_framework_value::DslValue;
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
     use crate::os_pack::{write_varint_u64, ByteReader};
     use crate::os_spr::ProtocolError;
     use crate::os_store::pack_rt::{decode_wire_value, encode_wire_value};
@@ -802,13 +321,13 @@ pub mod tagged_value_binary {
 
     /// 🏷️ Encodes `op` under its kind's record tag.
     pub fn encode_op<T: ToValue>(protocol: &str, tagging: VariantTag, op: &T) -> Result<Vec<u8>, ProtocolError> {
-        let DslValue::Object(mut entries) = op.to_value() else { return Err(malformed("op value", 0, "a mutation aggregate's value must be an object".into())) };
+        let semio_framework_value::DslValue::Object(mut entries) = op.to_value() else { return Err(malformed("op value", 0, "a mutation aggregate's value must be an object".into())) };
         let (variant, payload) = match tagging {
             VariantTag::Field(key) => {
                 let position = entries.iter().position(|(name, _)| name == key).ok_or_else(|| malformed("op value", 0, format!("value carries no `{key}` variant field")))?;
                 let (_, variant) = entries.remove(position);
-                let DslValue::String(variant) = variant else { return Err(malformed("op value", 0, format!("`{key}` is not a string"))) };
-                (variant, DslValue::Object(entries))
+                let semio_framework_value::DslValue::String(variant) = variant else { return Err(malformed("op value", 0, format!("`{key}` is not a string"))) };
+                (variant, semio_framework_value::DslValue::Object(entries))
             }
             VariantTag::Key => {
                 let mut entries = entries.into_iter();
@@ -839,11 +358,11 @@ pub mod tagged_value_binary {
         let payload = decode_wire_value(&bytes[offset..]).map_err(|error| malformed("op payload", offset as u64, error.to_string()))?;
         let value = match tagging {
             VariantTag::Field(key) => {
-                let DslValue::Object(mut entries) = payload else { return Err(malformed("op payload", offset as u64, "payload must be an object".into())) };
-                entries.insert(0, (key.to_string(), DslValue::String(cased(kind, false))));
-                DslValue::Object(entries)
+                let semio_framework_value::DslValue::Object(mut entries) = payload else { return Err(malformed("op payload", offset as u64, "payload must be an object".into())) };
+                entries.insert(0, (key.to_string(), semio_framework_value::DslValue::String(cased(kind, false))));
+                semio_framework_value::DslValue::Object(entries)
             }
-            VariantTag::Key => DslValue::Object(vec![(cased(kind, true), payload)]),
+            VariantTag::Key => semio_framework_value::DslValue::Object(vec![(cased(kind, true), payload)]),
         };
         T::from_value(value).map_err(|error| malformed("op value", offset as u64, error.to_string()))
     }
@@ -888,283 +407,6 @@ pub mod tagged_text_binary {
 }
 //#endregion 🏷️TaggedTextRt
 
-//#region 🔖️Idiom
-/// 🗣️ A custom front-end language layered on this engine: its own lexer/parser/printer/AST,
-/// sharing only the laws (round-trip, canonicalize idempotence) and — via `register_idiom` — the
-/// editor plumbing (`LanguageService` fence delegation, semantic tokens). Formalizes the technique
-/// Jack (`math_graph_dsl`) already used by hand: pre-scan tokens `crate::os_dsl::lex`'s fixed alphabet
-/// can't express, delegate every remaining run to `crate::os_dsl::lex`, reuse `escape_text`/`Writer`/
-/// `parse_wire_text` for anything already shared. Two integration routes:
-/// - **Route A — whole-surface idiom** (a document/op language in its own right, e.g. CAD's
-///   Construct): the crate hand-implements `crate::os_store::ArtifactDsl`/`crate::os_spr::OpText` by lowering its
-///   own `Ast` to a `#[derive(DslRecord)]` semantic model, so `ArtifactPack`/pack≡dsl hold through
-///   that model without this trait needing to know about packing at all.
-/// - **Route B — embedded idiom** (a `Shape::Embed(lang)` host field, e.g. a Jack query living
-///   inside a `writer` document): `register_idiom` lets canonicalization normalize the embedded
-///   text through the idiom's own canonical printer, so idempotence composes across the boundary.
-pub trait DslIdiom {
-    /// Stable registry id — the `lang` string a `#[dsl(lang = "...")]` field names.
-    const LANG: &'static str;
-    type Ast: Clone + PartialEq + Send + Sync;
-
-    // 🚫️async: E4 fn-pointer slot — every method here is coerced into `IdiomHooks`'s plain `fn`
-    // fields (`canonicalize`/`classify`/`complete`) in `hooks_for` below; an `fn` item's
-    // pointer type is unnameable, so this whole trait must stay sync. See R2 E4.
-    fn parse(text: &str) -> Result<Self::Ast, TextError>;
-    /// LAW: `Self::parse(&Self::print(ast)) == Ok(ast)` for every `ast` the idiom can produce —
-    /// the idiom's own round-trip law, the direct analogue of this engine's `parse ∘ print = id`
-    /// for `RecordSpec` grammars.
-    // 🚫️async: E4 fn-pointer slot — see `parse` above
-    fn print(ast: &Self::Ast) -> String;
-    // 🚫️async: E4 fn-pointer slot — see `parse` above
-    fn classify(text: &str) -> Vec<(TokenClass, TextSpan)>;
-    // 🚫️async: E4 fn-pointer slot — see `parse` above
-    fn complete(_text: &str, _offset: usize) -> Vec<CompletionItem> {
-        Vec::new()
-    }
-}
-
-/// 🧩️ Placeholder until `crate::os_dsl::schema::LanguageService` grows a real completion type — kept
-/// as a named type now so `DslIdiom::complete`'s signature doesn't need to change when it does.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct CompletionItem {
-    pub label: String,
-    pub detail: Option<String>,
-}
-
-/// 📇️ Type-erased vtable for one registered idiom — what `Shape::Embed` canonicalization
-/// and `LanguageService` fence delegation call through, without depending on the idiom's own crate
-/// (which would be a dependency cycle: the idiom depends on `dsl`, not the reverse).
-#[derive(Clone, Copy)]
-pub struct IdiomHooks {
-    pub lang: &'static str,
-    /// `print ∘ parse` — `Err` propagates the idiom's own parse diagnostic unchanged.
-    pub canonicalize: fn(&str) -> Result<String, TextError>,
-    pub classify: fn(&str) -> Vec<(TokenClass, TextSpan)>,
-    pub complete: fn(&str, usize) -> Vec<CompletionItem>,
-}
-
-/// 🏗️ Derives an `IdiomHooks` vtable from a `DslIdiom` impl — the one place `Self::Ast`
-/// needs to be named, so every other caller works with the type-erased `IdiomHooks` instead.
-// 🚫️async: E4 fn-pointer slot — builds an `IdiomHooks` whose fields are plain `fn` pointers; an
-// `fn`'s captured closure cannot coerce to `fn`, so this stays sync. See R2 E4.
-pub fn hooks_for<I: DslIdiom>() -> IdiomHooks {
-    IdiomHooks { lang: I::LANG, canonicalize: |text| I::parse(text).map(|ast| I::print(&ast)), classify: I::classify, complete: I::complete }
-}
-
-/// 🪞 Minimal hooks for binary/text facets that register a [`LanguageSpec`] without a custom
-/// [`DslIdiom`] front-end — canonicalize is identity; classify/complete are empty.
-// 🚫️async: E4 fn-pointer slot — see `hooks_for` above
-pub fn passthrough_hooks(lang: &'static str) -> IdiomHooks {
-    IdiomHooks { lang, canonicalize: |text| Ok(text.to_string()), classify: |_| Vec::new(), complete: |_, _| Vec::new() }
-}
-
-static IDIOM_REGISTRY: OnceLock<Mutex<HashMap<&'static str, IdiomHooks>>> = OnceLock::new();
-
-// 🚫️async: E1 pure accessor consumed by the E4 `IdiomHooks` cluster — see R9
-fn idiom_registry() -> &'static Mutex<HashMap<&'static str, IdiomHooks>> {
-    IDIOM_REGISTRY.get_or_init(|| Mutex::new(HashMap::new()))
-}
-
-/// 📌️ Registers an idiom's hooks under its `LANG` id — called once at host/plugin init.
-/// Re-registering the same `lang` overwrites the previous hooks rather than erroring, so a
-/// hot-reloaded dev build never deadlocks on itself.
-// 🚫️async: E1 pure accessor consumed by the E4 `IdiomHooks` cluster — see R9
-pub fn register_idiom(hooks: IdiomHooks) {
-    let mut registry = idiom_registry().lock().unwrap_or_else(|poison| poison.into_inner());
-    registry.insert(hooks.lang, hooks);
-}
-
-/// 🔍️ Looks up a previously-registered idiom's hooks by `lang` id. `None` for an
-/// unregistered (or not-yet-registered) lang — callers must treat that as "pass through verbatim",
-/// never as an error, since `Shape::Embed` text must remain parseable before any plugin has run
-/// its own registration.
-// 🚫️async: E1 pure accessor consumed by the E4 `IdiomHooks` cluster — see R9
-pub fn idiom(lang: &str) -> Option<IdiomHooks> {
-    let registry = idiom_registry().lock().unwrap_or_else(|poison| poison.into_inner());
-    registry.get(lang).copied()
-}
-
-/// 🎭️ Which surface a registered [`LanguageSpec`] describes for the
-/// `handcrafted-grammar-for-every-artifact` program.
-///
-/// Text roles carry a `.grammar.semio` (`grammar` / `grammar_path`): `Document` (`🗣️dsl`),
-/// `Config`, `Ops` (`🔧️op`), `Embedded` (`Shape::Embed` idiom), and `Diff` (`🔺️diff`).
-/// Binary roles carry a `.protocol.semio` (`protocol` / `protocol_path`): `Pack` (`🎒️pack`)
-/// and `Spr` (`📡️spr`). Never put grammar files on pack/spr or protocol files on dsl/op/diff.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum LanguageRole {
-    Document,
-    Config,
-    Ops,
-    Embedded,
-    Diff,
-    Pack,
-    Spr,
-}
-
-/// 📖️ One artifact facet language, registered once at plugin init: identity, the extension
-/// it opens (documents/configs only), optional hand-authored **grammar** text for text surfaces
-/// (`🗣️dsl` / `🔧️op` / `🔺️diff`, `dialect grammar`), optional hand-authored **protocol** text for
-/// binary surfaces (`🎒️pack` / `📡️spr`, `dialect protocol`), and the [`IdiomHooks`] vtable used by
-/// text hosts (`LanguageSession`, writer). Additive alongside `IdiomHooks`/`register_idiom`.
-#[derive(Clone, Copy)]
-pub struct LanguageSpec {
-    pub id: &'static str,
-    pub extension: Option<&'static str>,
-    pub role: LanguageRole,
-    pub grammar: Option<&'static str>,
-    pub grammar_path: Option<&'static str>,
-    pub protocol: Option<&'static str>,
-    pub protocol_path: Option<&'static str>,
-    pub hooks: IdiomHooks,
-}
-
-impl LanguageSpec {
-    /// 📝 Whether this role is a text grammar surface (dsl/op/diff/config/embed).
-    // 🚫️async: E1 pure accessor — trivial enum match, no suspension point — see R9
-    pub fn is_text_role(self) -> bool {
-        matches!(self.role, LanguageRole::Document | LanguageRole::Config | LanguageRole::Ops | LanguageRole::Embedded | LanguageRole::Diff)
-    }
-
-    /// 📡️ Whether this role is a binary protocol surface (pack/spr).
-    // 🚫️async: E1 pure accessor — trivial enum match, no suspension point — see R9
-    pub fn is_binary_role(self) -> bool {
-        matches!(self.role, LanguageRole::Pack | LanguageRole::Spr)
-    }
-
-    /// 📖️ Parses `grammar` via [`parse_grammar`], requiring [`SemioDialect::Grammar`].
-    pub fn parsed_grammar(&self) -> Result<Option<GrammarFile>, TextError> {
-        let Some(text) = self.grammar else {
-            return Ok(None);
-        };
-        let file = parse_grammar(text)?;
-        if file.dialect != SemioDialect::Grammar {
-            return Err(TextError::new("LanguageSpec.grammar requires dialect grammar", TextSpan::at(1, 1)));
-        }
-        Ok(Some(file))
-    }
-
-    /// 📡️ Parses `protocol` via [`parse_protocol`].
-    pub fn parsed_protocol(&self) -> Result<Option<ProtocolFile>, TextError> {
-        let Some(text) = self.protocol else {
-            return Ok(None);
-        };
-        Ok(Some(parse_protocol(text)?))
-    }
-
-    /// ✅ Verifies encoded bytes against this language's protocol when protocol text is present.
-    pub fn verify_protocol(&self, bytes: &[u8]) -> Result<(), String> {
-        let Some(text) = self.protocol else {
-            return Ok(());
-        };
-        verify_protocol_source(text, bytes)
-    }
-}
-
-/// 🪪 Pass-through [`IdiomHooks`] for binary facets (pack/spr) and text facets without a
-/// dedicated `DslIdiom` yet — canonicalize is identity; classify/complete are empty.
-
-static LANGUAGE_REGISTRY: OnceLock<Mutex<HashMap<&'static str, LanguageSpec>>> = OnceLock::new();
-
-// 🚫️async: E1 pure accessor — plain `OnceLock`/`Mutex` init, no suspension point — see R9. Its two
-// PUBLIC callers that cross into `🔌️plugin/🦀️.rs` (a live ATOMIC packet's file, not mine to
-// touch) stay `fn` themselves — see `preflight_languages`/`register_languages` below — so that
-// external `` call shape needs no change; only this private accessor and the purely-local
-// lookups (`language`/`language_for_extension`/…) revert to sync.
-fn language_registry() -> &'static Mutex<HashMap<&'static str, LanguageSpec>> {
-    LANGUAGE_REGISTRY.get_or_init(|| Mutex::new(HashMap::new()))
-}
-
-/// ⚠️ Language registration rejects a distinct owner for an established language id.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct LanguageRegistryError {
-    pub id: String,
-}
-
-impl std::fmt::Display for LanguageRegistryError {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(formatter, "language registration conflicts for {}", self.id)
-    }
-}
-
-impl std::error::Error for LanguageRegistryError {}
-
-fn same_language(left: LanguageSpec, right: LanguageSpec) -> bool {
-    left.id == right.id
-        && left.extension == right.extension
-        && left.role == right.role
-        && left.grammar == right.grammar
-        && left.grammar_path == right.grammar_path
-        && left.protocol == right.protocol
-        && left.protocol_path == right.protocol_path
-        && left.hooks.lang == right.hooks.lang
-        && std::ptr::fn_addr_eq(left.hooks.canonicalize, right.hooks.canonicalize)
-        && std::ptr::fn_addr_eq(left.hooks.classify, right.hooks.classify)
-        && std::ptr::fn_addr_eq(left.hooks.complete, right.hooks.complete)
-}
-
-/// 🔬️ Verifies language specifications against established and intra-batch identities without mutation.
-/// Stays `fn` — no internal suspension point (`language_registry` is sync, R9), but
-/// `🔌️plugin/🦀️.rs` (a live ATOMIC packet's file, not mine to touch) already awaits this,
-/// so per R9 rule 3 the external `` call shape wins over reverting it to match a leaf helper.
-#[must_use]
-pub fn preflight_languages(specs: &[LanguageSpec]) -> Result<(), LanguageRegistryError> {
-    let mut proposed = HashMap::new();
-    for spec in specs {
-        match proposed.insert(spec.id, *spec) {
-            Some(existing) if same_language(existing, *spec) => {}
-            Some(_) => return Err(LanguageRegistryError { id: spec.id.to_string() }),
-            None => {}
-        }
-    }
-    let registry = language_registry().lock().unwrap_or_else(|poison| poison.into_inner());
-    for spec in specs {
-        if let Some(existing) = registry.get(spec.id) {
-            if !same_language(*existing, *spec) {
-                return Err(LanguageRegistryError { id: spec.id.to_string() });
-            }
-        }
-    }
-    Ok(())
-}
-
-/// 📌️ Registers language specifications only after the whole candidate set is conflict-free.
-/// Stays `fn` — see `preflight_languages` above, same external-caller reason.
-#[must_use]
-pub fn register_languages(specs: Vec<LanguageSpec>) -> Result<(), LanguageRegistryError> {
-    preflight_languages(&specs)?;
-    let mut registry = language_registry().lock().unwrap_or_else(|poison| poison.into_inner());
-    for spec in specs {
-        registry.entry(spec.id).or_insert(spec);
-    }
-    Ok(())
-}
-
-/// 📌️ Registers one grammar under its `id` — called once per grammar at plugin init,
-/// alongside (not instead of) `register_document_codec_for_app`. Overwrites on re-registration,
-/// matching `register_idiom`'s hot-reload-safe behavior.
-// 🚫️async: E1 pure accessor — see `language_registry` above
-pub fn register_language(spec: LanguageSpec) {
-    let mut registry = language_registry().lock().unwrap_or_else(|poison| poison.into_inner());
-    registry.insert(spec.id, spec);
-}
-
-/// 🔍️ Looks up a registered grammar by its `id` (e.g. `"fem2d"`, `"fem2dcfg"`, `"jack"`).
-// 🚫️async: E1 pure accessor — see `language_registry` above
-pub fn language(id: &str) -> Option<LanguageSpec> {
-    let registry = language_registry().lock().unwrap_or_else(|poison| poison.into_inner());
-    registry.get(id).copied()
-}
-
-/// 🔍️ Looks up a registered grammar by legacy file-extension suffix (e.g. `"note"`, `"jack"`).
-// 🚫️async: E1 pure accessor — see `language_registry` above
-pub fn language_for_extension(extension: &str) -> Option<LanguageSpec> {
-    let suffix = extension.strip_prefix('.').unwrap_or(extension);
-    let registry = language_registry().lock().unwrap_or_else(|poison| poison.into_inner());
-    registry.values().find(|spec| spec.extension == Some(suffix)).copied()
-}
-
 /// 🔍️ Resolves a registered language from `.semio` file bytes (content-derived envelope).
 /// Text components (`dsl`/`op`) prefer grammar registrations; binary components (`pack`/`spr`)
 /// prefer protocol registrations.
@@ -1177,8 +419,7 @@ pub fn language_for_semio_content(bytes: &[u8]) -> Option<LanguageSpec> {
     match envelope.component {
         semio_format::Component::Dsl => language(&base).or_else(|| language_for_extension(artifact)).or_else(|| language_for_extension(plugin)),
         semio_format::Component::Op => language_for_suffix_candidates(&base, plugin, artifact, "op").or_else(|| {
-            let registry = language_registry().lock().unwrap_or_else(|poison| poison.into_inner());
-            registry.values().find(|s| s.role == LanguageRole::Ops && s.extension == Some(artifact)).copied()
+            language_for_role_extension(LanguageRole::Ops, artifact)
         }),
         semio_format::Component::Pack => language_for_suffix_candidates(&base, plugin, artifact, "pack").or_else(|| language(&base).filter(|s| s.protocol.is_some())),
         semio_format::Component::Spr => language_for_suffix_candidates(&base, plugin, artifact, "spr"),
@@ -1192,39 +433,7 @@ fn language_for_suffix_candidates(base: &str, plugin: &str, artifact: &str, suff
 }
 //#endregion 🔖️Idiom
 
-//#region 🔖️TestSupport
-/// 🧪️ Round-trip/property helpers every derived (or hand-declared) grammar's own tests
-/// call — the facade-level analogue of `crate::os_store::test_support`, scoped to the engine's own laws
-/// rather than the VCS store's.
-pub mod test_support {
-    use super::*;
 
-    /// 🔁️ `parse(print(value)) == value` for a `RecordSpec` and an already-built `RecordValue`.
-    pub fn assert_schema_round_trip(value: &RecordValue, spec: &RecordSpec) {
-        let printed = print(value, spec, JoinMode::Document);
-        let opts = ParseOptions::default();
-        let reparsed = parse(&printed, spec, &opts).unwrap_or_else(|e| panic!("reparse failed: {e}\nprinted:\n{printed}"));
-        assert_eq!(value, &reparsed, "schema round trip diverged;\nprinted:\n{printed}");
-    }
-
-    /// ♻️ `canonicalize(canonicalize(x)) == canonicalize(x)`.
-    pub fn assert_idempotent(text: &str, spec: &RecordSpec) {
-        let once = canonicalize(text, spec, &ParseOptions::default()).unwrap_or_else(|e| panic!("canonicalize failed: {e}"));
-        let twice = canonicalize(&once, spec, &ParseOptions::default()).unwrap_or_else(|e| panic!("second canonicalize failed: {e}"));
-        assert_eq!(once, twice, "canonicalization must be idempotent");
-    }
-
-    /// 📏️ Document and Inline renders of the same value must parse back to equal values,
-    /// and the Inline render must be exactly one line — the newline law, checked generically.
-    pub fn assert_document_inline_agree(value: &RecordValue, spec: &RecordSpec) {
-        let inline_text = print(value, spec, JoinMode::Inline);
-        assert!(!inline_text.contains('\n'), "inline render must be one line: {inline_text:?}");
-        let inline_opts = ParseOptions { limits: Limits::default(), mode: SourceMode::Inline };
-        let reparsed = parse(&inline_text, spec, &inline_opts).unwrap_or_else(|e| panic!("inline reparse failed: {e}\ninline:\n{inline_text}"));
-        assert_eq!(value, &reparsed, "Document and Inline renders must parse to the same value");
-    }
-}
-//#endregion 🔖️TestSupport
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -1247,11 +456,30 @@ mod protocol_record_tests;
 #[path = "🧪️tests/🧪️hygienic-bindings/🦀️.rs"]
 mod hygienic_binding_tests;
 
-#[cfg(test)]
-#[path = "🧪️tests/🧪️carrier-record-lists/🦀️.rs"]
-mod carrier_record_list_tests;
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+
+
+
+
+
+
+#[cfg(test)]
+#[path = "🧬️schema/🧪️tests/🧬️intrinsic-bytes/🦀️.rs"]
+mod canonical_record_intrinsic_consumers;
+
+#[cfg(test)]
+#[path = "🧬️schema/🧪️tests/🧾️record-list/🦀️.rs"]
+mod canonical_record_list_consumers;
+
+#[cfg(test)]
+#[path = "🧬️schema/🏭️producer/🧪️tests/🦀️.rs"]
+mod canonical_record_producer_consumers;
+
+#[cfg(test)]
+#[path = "🪟️viewport/🧪️tests/🪟️poses/🦀️.rs"]
+mod canonical_viewport_pack_consumers;

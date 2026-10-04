@@ -1,6 +1,7 @@
 syntax = "proto3";
 // 🧬️ SemioGraphSnapshot schema — real facet mirror of the Rust `🦀️.rs` sibling.
 package semio.s_stdio_semio_graph.snapshot;
+import "../../../🔢️value/🧬️schema/📸️snapshot/🛰️.proto";
 
 enum SemioGraphPortKind {
   IN = 0;
@@ -14,11 +15,13 @@ message GraphEdgeId { string value = 1; }
 message SemioGraphPort {
   string name = 1;
   SemioGraphPortKind kind = 2;
+  string category = 3;
+  repeated semio.s_stdio_semio_value.snapshot.SemioValueEntry properties = 4;
 }
 
 message SemioPoint2 {
-  double x = 1;
-  double y = 2;
+  fixed64 x_ieee754_bits = 1;
+  fixed64 y_ieee754_bits = 2;
 }
 
 message SemioGraphNode {
@@ -27,7 +30,9 @@ message SemioGraphNode {
   string label = 3;
   SemioPoint2 position = 4;
   repeated SemioGraphPort ports = 5;
-  repeated bytes properties = 6; // SemioValueEntry, opaque — see 🔢️value's own proto facet
+  repeated semio.s_stdio_semio_value.snapshot.SemioValueEntry properties = 6;
+  fixed64 width_ieee754_bits = 7;
+  fixed64 height_ieee754_bits = 8;
 }
 
 // edges are id-keyed ENTITIES; source/target are ordinary data fields, not an attach handle
@@ -37,6 +42,9 @@ message SemioGraphEdge {
   GraphNodeId target = 3;
   string kind = 4;
   string label = 5;
+  optional string source_port = 6;
+  optional string target_port = 7;
+  repeated semio.s_stdio_semio_value.snapshot.SemioValueEntry properties = 8;
 }
 
 message SemioGraphSnapshot {

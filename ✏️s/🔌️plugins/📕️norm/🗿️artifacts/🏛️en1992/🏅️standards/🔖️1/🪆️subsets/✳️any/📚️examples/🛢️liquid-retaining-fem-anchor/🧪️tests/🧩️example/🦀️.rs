@@ -21,7 +21,7 @@ async fn inference_determinism_law() {
     use crate::En1992Snapshot;
     use protocol::Inference;
     let snapshot = En1992Snapshot::default();
-    assert_eq!(En1992Inference::infer(&snapshot), En1992Inference::infer(&snapshot));
+    assert_eq!(En1992Inference::infer(&snapshot).expect("valid materialized inference fixture"), En1992Inference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -29,5 +29,5 @@ async fn inference_default_law() {
     use crate::artifact_schema::inferences::En1992Inference;
     use crate::En1992Snapshot;
     use protocol::Inference;
-    assert_eq!(En1992Inference::infer(&En1992Snapshot::default()), En1992Inference::default());
+    assert_eq!(En1992Inference::infer(&En1992Snapshot::default()).expect("valid materialized inference fixture"), En1992Inference::default());
 }

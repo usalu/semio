@@ -954,7 +954,7 @@ impl StagedEngineScenes {
     }
 }
 
-static STAGED_ENGINE_SCENES: WorkerCell<StagedEngineScenes> = WorkerCell::new();
+static STAGED_ENGINE_SCENES: WorkerCell<StagedEngineScenes> = WorkerCell::new(Default::default);
 
 /// 📦️ One turn of the staged-paint → frame-packet transfer, driven from the frame build's own
 /// `EngineTransfer` phase. Returns `true` when nothing is left staged.
@@ -1430,7 +1430,7 @@ impl EngineCanvasPresenter {
                     if gpu.raster_content_is_reusable(key, identity, candidate_generation, expected)? {
                         build.phase = EngineGpuBuildPhase::Publish;
                     } else {
-                        build.admission = Some(gpu.reserve_engine_texture(key, build.width, build.height, identity, candidate_generation, expected)?);
+                        build.admission = Some(gpu.reserve_engine_texture(key, build.width, build.height,1, identity, candidate_generation, expected)?);
                         build.phase = EngineGpuBuildPhase::Texture;
                     }
                     Ok(())
@@ -1985,9 +1985,9 @@ fn board_sync_terminal(cache: &BoardSyncCache) -> bool {
         && cache.tool_run_trace_window_id.is_none()
 }
 
-static MAP_TILE_ASSET_FAULT: WorkerCell<Option<WorldAssetFault>> = WorkerCell::new();
+static MAP_TILE_ASSET_FAULT: WorkerCell<Option<WorldAssetFault>> = WorkerCell::new(Default::default);
 
-static ENGINE_SURFACES: WorkerCell<EngineSurfaceRegistry> = WorkerCell::new();
+static ENGINE_SURFACES: WorkerCell<EngineSurfaceRegistry> = WorkerCell::new(Default::default);
 
 #[derive(Clone, Debug, Default, PartialEq)]
 struct TutorialSurfaceGeometry {
@@ -2409,7 +2409,7 @@ impl AttachedSurfaceRegistry {
     }
 }
 
-static ATTACHED_SURFACES: WorkerCell<AttachedSurfaceRegistry> = WorkerCell::new();
+static ATTACHED_SURFACES: WorkerCell<AttachedSurfaceRegistry> = WorkerCell::new(Default::default);
 
 /// 🧩️ Drains the surfaces attached since the last drain, for the shell to mirror into its bespoke
 /// pointer state maps. Taking rather than reading keeps the drain a record of what this frame
@@ -3857,9 +3857,6 @@ fn node_graph_bounded_publish(surface_id: &str, controller_id: &str, plan: NodeG
     let mut reservation = input.reserve_actions(items, items * ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY)?;
     write_graph_interaction_actions(&mut reservation, wire_surface_id.as_str(), controller_id, &dispatch)?;
     write_graph_edit_action(&mut reservation, controller_id, &edits)?;
-    if !edits.is_empty() {
-        engine_canvas_debug_log(&format!("[TRACE] wgpu node-graph bounded gesture surface={surface_id} edits={edits:?}"));
-    }
     reservation.publish_with_checked(|| commit_node_graph_pointer(surface_id, plan))?;
     record_graph_interaction(surface_id, dispatch.digest);
     Ok(true)
@@ -4090,15 +4087,17 @@ fn apply_node_graph_screen_pointer(surface_id: &str, intent: flow::dag::DagPoint
             NodeGraphEngine::Flow(host) => match intent.phase {
                 flow::dag::DagPointerPhase::Down => host.pointer_down_screen(intent.x, intent.y, intent.button, intent.shift, intent.ctrl_or_meta, intent.alt, intent.pan),
                 flow::dag::DagPointerPhase::Move => host.pointer_move_screen(intent.x, intent.y, intent.shift, intent.ctrl_or_meta, intent.alt),
-                flow::dag::DagPointerPhase::Up | flow::dag::DagPointerPhase::Leave => host.pointer_up_screen(intent.x, intent.y, intent.shift, intent.ctrl_or_meta, intent.alt),
+                flow::dag::DagPointerPhase::Up => host.pointer_up_screen(intent.x, intent.y, intent.shift, intent.ctrl_or_meta, intent.alt),
+                flow::dag::DagPointerPhase::Leave => host.pointer_cancel_screen(),
             },
             NodeGraphEngine::Dag(host) => match intent.phase {
                 flow::dag::DagPointerPhase::Down => host.pointer_down_screen([intent.x, intent.y], intent.button, intent.shift, intent.ctrl_or_meta, intent.alt, intent.pan),
                 flow::dag::DagPointerPhase::Move => host.pointer_move_screen(intent.x, intent.y, intent.shift, intent.ctrl_or_meta, intent.alt),
-                flow::dag::DagPointerPhase::Up | flow::dag::DagPointerPhase::Leave => {
+                flow::dag::DagPointerPhase::Up => {
                     host.pointer_up_screen(intent.x, intent.y, intent.shift, intent.ctrl_or_meta, intent.alt);
                     let _ = host.take_selection_gather();
                 }
+                flow::dag::DagPointerPhase::Leave => host.pointer_cancel_screen(),
             },
         }
         let hovered_handle = graph_hovered_handle(engine, intent.x, intent.y);
@@ -4106,12 +4105,14 @@ fn apply_node_graph_screen_pointer(surface_id: &str, intent: flow::dag::DagPoint
             NodeGraphEngine::Flow(host) => {
                 host.resync_interaction_projection();
                 let edits = host.dag.take_graph_edits();
+                let _ = host.dag.take_journal_refusal();
                 let camera = &host.dag.host_snapshot.camera;
                 (edits, host.dag.selected_node_ids(), host.dag.hovered_node_id_ref().map(str::to_owned), [camera.x, camera.y, camera.zoom])
             }
             NodeGraphEngine::Dag(host) => {
                 host.resync_interaction_projection();
                 let edits = host.dag.take_graph_edits();
+                let _ = host.dag.take_journal_refusal();
                 let camera = &host.dag.host_snapshot.camera;
                 (edits, host.dag.selected_node_ids(), host.dag.hovered_node_id_ref().map(str::to_owned), [camera.x, camera.y, camera.zoom])
             }
@@ -4121,70 +4122,50 @@ fn apply_node_graph_screen_pointer(surface_id: &str, intent: flow::dag::DagPoint
     })
 }
 
-/// 🔗️ Writes the `nodeGraphEdit` one gesture's graph edits ask for, in the guest's own row vocabulary — byte for byte
-/// the rows React dispatches from the same journal (`flow::dag::dag_graph_edit_rows_json`, design §13.3): `connect`,
-/// `disconnect`, `move {gestureId, nodeIds, dx, dy}`, `setSlider {widgetId, value}`, `insertPort {nodeId, side, index}`.
+/// ✍️ The bounded action builder as a sink of the ONE node-graph row encoder (`flow::dag::write_dag_graph_edit_rows`), so the
+/// rows wgpu dispatches are the rows React dispatches from the same journal, written by the same function (design §13.3).
+struct BoundedGraphEditRows<'b>(&'b mut ui_wgpu::wgpu::BoundedActionBuilder);
+
+impl<'a> flow::dag::DagGraphEditRowSink<'a> for BoundedGraphEditRows<'_> {
+    type Error = ui_wgpu::wgpu::BoundedActionFault;
+    fn begin_row(&mut self) -> Result<(), Self::Error> {
+        self.0.begin_object(None)
+    }
+    fn text(&mut self, field: &'static str, value: &'a str) -> Result<(), Self::Error> {
+        self.0.string(Some(field), value)
+    }
+    fn number(&mut self, field: &'static str, value: f64) -> Result<(), Self::Error> {
+        self.0.number(Some(field), value)
+    }
+    fn integer(&mut self, field: &'static str, value: u64) -> Result<(), Self::Error> {
+        self.0.integer(Some(field), i64::try_from(value).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::Structure)?)
+    }
+    fn texts(&mut self, field: &'static str, values: &'a [String]) -> Result<(), Self::Error> {
+        self.0.begin_array(Some(field))?;
+        for value in values {
+            self.0.string(None, value)?;
+        }
+        self.0.end_container()
+    }
+    fn end_row(&mut self) -> Result<(), Self::Error> {
+        self.0.end_container()
+    }
+}
+
+/// 🔗️ Writes the `nodeGraphEdit` one gesture's graph edits ask for — `{operations: [...]}` through the shared row encoder,
+/// its string credits priced from the encoder's own string census.
 fn write_graph_edit_action(batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservation<'_>, controller_id: &str, edits: &[flow::dag::DagGraphEdit]) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
     if edits.is_empty() {
         return Ok(());
     }
     let edit_action = "nodeGraphEdit";
-    let mut parts: Vec<&str> = vec![controller_id, edit_action, "operations", "operation", "connect", "disconnect", "move", "setSlider", "insertPort", "sourceNodeId", "sourcePortId", "targetNodeId", "targetPortId", "synapseId", "gestureId", "nodeIds", "dx", "dy", "widgetId", "value", "nodeId", "side", "index"];
-    for edit in edits {
-        match edit {
-            flow::dag::DagGraphEdit::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => parts.extend([source_node_id.as_str(), source_port_id.as_str(), target_node_id.as_str(), target_port_id.as_str()]),
-            flow::dag::DagGraphEdit::Disconnect { synapse_id } => parts.push(synapse_id.as_str()),
-            flow::dag::DagGraphEdit::Move { gesture_id, node_ids, .. } => {
-                parts.push(gesture_id.as_str());
-                parts.extend(node_ids.iter().map(String::as_str));
-            }
-            flow::dag::DagGraphEdit::SetSlider { node_id, .. } => parts.push(node_id.as_str()),
-            flow::dag::DagGraphEdit::InsertPort { node_id, side, .. } => parts.extend([node_id.as_str(), side.as_str()]),
-        }
-    }
+    let mut parts: Vec<&str> = vec![controller_id, edit_action, "operations"];
+    parts.extend(flow::dag::dag_graph_edit_row_strings(edits));
     let edit_bytes = ui_wgpu::wgpu::checked_action_string_bytes(&parts)?;
     batch.action(controller_id, edit_action, edit_bytes, |builder| {
         builder.begin_object(None)?;
         builder.begin_array(Some("operations"))?;
-        for edit in edits {
-            builder.begin_object(None)?;
-            match edit {
-                flow::dag::DagGraphEdit::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => {
-                    builder.string(Some("operation"), "connect")?;
-                    builder.string(Some("sourceNodeId"), source_node_id)?;
-                    builder.string(Some("sourcePortId"), source_port_id)?;
-                    builder.string(Some("targetNodeId"), target_node_id)?;
-                    builder.string(Some("targetPortId"), target_port_id)?;
-                }
-                flow::dag::DagGraphEdit::Disconnect { synapse_id } => {
-                    builder.string(Some("operation"), "disconnect")?;
-                    builder.string(Some("synapseId"), synapse_id)?;
-                }
-                flow::dag::DagGraphEdit::Move { gesture_id, node_ids, dx, dy } => {
-                    builder.string(Some("operation"), "move")?;
-                    builder.string(Some("gestureId"), gesture_id)?;
-                    builder.begin_array(Some("nodeIds"))?;
-                    for node_id in node_ids {
-                        builder.string(None, node_id)?;
-                    }
-                    builder.end_container()?;
-                    builder.number(Some("dx"), *dx)?;
-                    builder.number(Some("dy"), *dy)?;
-                }
-                flow::dag::DagGraphEdit::SetSlider { node_id: widget_id, value } => {
-                    builder.string(Some("operation"), "setSlider")?;
-                    builder.string(Some("widgetId"), widget_id)?;
-                    builder.number(Some("value"), *value)?;
-                }
-                flow::dag::DagGraphEdit::InsertPort { node_id, side, index } => {
-                    builder.string(Some("operation"), "insertPort")?;
-                    builder.string(Some("nodeId"), node_id)?;
-                    builder.string(Some("side"), side.as_str())?;
-                    builder.number(Some("index"), *index as f64)?;
-                }
-            }
-            builder.end_container()?;
-        }
+        flow::dag::write_dag_graph_edit_rows(edits, &mut BoundedGraphEditRows(builder))?;
         builder.end_container()?;
         builder.end_container()
     })
@@ -4208,9 +4189,6 @@ fn node_graph_screen_pointer_into(surface_id: &str, controller_id: &str, intent:
             return Ok(false);
         };
         let dispatch = graph_interaction_dispatch(published_graph_interaction(surface_id), outcome.snapshot, node_graph_interaction_domain(surface_id).as_deref())?;
-        if !outcome.edits.is_empty() {
-            engine_canvas_debug_log(&format!("[TRACE] wgpu node-graph screen gesture surface={surface_id} edits={:?}", outcome.edits));
-        }
         write_graph_interaction_actions(&mut reservation, wire_surface_id.as_str(), controller_id, &dispatch)?;
         write_graph_edit_action(&mut reservation, controller_id, &outcome.edits)?;
         reservation.publish_partial()?;
@@ -5517,6 +5495,42 @@ fn puzzle_board_flush_events_into(surface_id: &str, controller_id: &str, input: 
     Ok(true)
 }
 
+/// 🎛️ Drives one move or release of a lane the retained plan does not model (`BoardHost::pointer_lane_is_direct`: the rotate
+/// ring, a target-region drag, the area brush) the way React's Board2dHost drives every pointer: the engine's direct handler,
+/// then EVERY queued event into the buffer, coalesced by the shared corpus rules into at most ONE `applyBoardEvents` — the
+/// transient previews dropped, a gesture's `select` riding with its record — and the buffer retired either way.
+fn puzzle_board_direct_pointer_into(surface_id: &str, controller_id: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, drive: impl FnOnce(&mut infinite_canvas::BoardHost)) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    with_board_host_mut(surface_id, drive).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+    for _ in 0..2 * infinite_canvas::BOARD_EVENT_ITEM_CAPACITY + 2 {
+        if !board_drain_into_buffer(surface_id) {
+            break;
+        }
+    }
+    if let Some(events_json) = board_peek_buffer_coalesced(surface_id) {
+        let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, "applyBoardEvents", "eventsJson", &events_json])?;
+        let mut reservation = input.reserve_actions(1, bytes)?;
+        write_board_events_flat(&mut reservation, controller_id, &events_json)?;
+        reservation.publish_with_checked(|| board_retire_pending_events(surface_id))?;
+        return Ok(true);
+    }
+    board_retire_pending_events(surface_id);
+    Ok(false)
+}
+
+/// 🧹️ Hands the surface's pending board events to the bounded retirement; false while a previous batch still retires.
+fn board_retire_pending_events(surface_id: &str) -> bool {
+    ENGINE_SURFACES.with(|cell| {
+        let mut map = cell.borrow_mut();
+        let Some(entry) = map.get_mut(surface_id) else { return false };
+        if entry.board_retiring_events.is_some() || entry.board_pending_events.is_empty() {
+            return entry.board_retiring_events.is_none();
+        }
+        let pending = std::mem::take(&mut entry.board_pending_events);
+        entry.board_retiring_events = Some(pending);
+        true
+    })
+}
+
 /// 🐁️ Publishes the board's live hover on the framework's own `interactionHover` lane, scoped to the
 /// `Board2dScene.domain_id` the app declared — the wgpu twin of React's `dispatchBoardHover`
 /// (`🖥️Board2dHost/🟦️.tsx:774-781`), including its two refusals: an app that declares NO domain
@@ -5619,6 +5633,10 @@ pub fn puzzle_board_pointer_move_into(
     input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
 ) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     let (sx, sy) = board_local_pointer(inner, x, y);
+    if with_board_host(surface_id, infinite_canvas::BoardHost::pointer_lane_is_direct).unwrap_or(false) {
+        board_set_pointer_inside(surface_id, true);
+        return puzzle_board_direct_pointer_into(surface_id, controller_id, input, |host| host.pointer_move_screen(sx, sy, shift, ctrl_or_meta, alt));
+    }
     let plan = plan_board_pointer(surface_id, infinite_canvas::BoardPointerIntent { phase: infinite_canvas::BoardPointerPhase::Move, x: sx, y: sy, shift, ctrl_or_meta, alt })?;
     let Some(plan) = plan else {
         return Ok(false);
@@ -5655,6 +5673,9 @@ pub fn puzzle_board_pointer_up_into(
     input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
 ) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     let (sx, sy) = board_local_pointer(inner, x, y);
+    if with_board_host(surface_id, infinite_canvas::BoardHost::pointer_lane_is_direct).unwrap_or(false) {
+        return puzzle_board_direct_pointer_into(surface_id, controller_id, input, |host| host.pointer_up_screen(sx, sy, shift, ctrl_or_meta, alt));
+    }
     let plan = plan_board_pointer(surface_id, infinite_canvas::BoardPointerIntent { phase: infinite_canvas::BoardPointerPhase::Up, x: sx, y: sy, shift, ctrl_or_meta, alt })?;
     let Some(plan) = plan else {
         return Ok(false);
@@ -6003,7 +6024,7 @@ struct Paint2dMarquee {
 
 /// 🧮️ Marquee gestures are per SURFACE and never outlive one press/release pair, so a plain map
 /// keyed by surface id is the whole bound — the same shape `scenes`' own `map_marquee_points` uses.
-static PAINT2D_MARQUEES: WorkerCell<HashMap<String, Paint2dMarquee>> = WorkerCell::new();
+static PAINT2D_MARQUEES: WorkerCell<HashMap<String, Paint2dMarquee>> = WorkerCell::new(Default::default);
 
 fn with_paint2d_marquee<R>(surface_id: &str, f: impl FnOnce(&mut Paint2dMarquee) -> R) -> R {
     PAINT2D_MARQUEES.with(|cell| {
@@ -6149,6 +6170,7 @@ pub fn paint2d_pointer_button_into(
         batch.publish()?;
         return Ok(true);
     }
+    let flushed = flush_paint2d_edit(scene, input)?;
     let Some(camera) = with_raster_host_mut(&scene.host_id, |host| {
         if down {
             host.pointer_down_screen(sx, sy, button.max(0) as u8);
@@ -6158,30 +6180,9 @@ pub fn paint2d_pointer_button_into(
         engine_camera_from_json(&host.camera_json())
     })
     .flatten() else {
-        return Ok(false);
+        return Ok(flushed);
     };
-    if down {
-        return Ok(true);
-    }
-    if let Some(edit) = with_raster_host_mut(&scene.host_id, |host| host.paint_edit().cloned()).flatten() {
-        let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, edit.action(), "surfaceId", &scene.surface_id, "layerId", &edit.layer_id, "tool", edit.tool, "xs", "ys"])?;
-        let mut batch = input.reserve_actions(1, bytes)?;
-        batch.action(&scene.controller_id, edit.action(), bytes, |builder| {
-            builder.begin_object(None)?;
-            builder.string(Some("surfaceId"), &scene.surface_id)?;
-            builder.string(Some("layerId"), &edit.layer_id)?;
-            builder.string(Some("tool"), edit.tool)?;
-            for (key, axis) in [("xs", 0), ("ys", 1)] {
-                builder.begin_array(Some(key))?;
-                for point in &edit.points {
-                    builder.number(None, point[axis])?;
-                }
-                builder.end_container()?;
-            }
-            builder.end_container()
-        })?;
-        batch.publish()?;
-        with_raster_host_mut(&scene.host_id, |host| host.take_paint_edit());
+    if flush_paint2d_edit(scene, input)? || down {
         return Ok(true);
     }
     let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, "setCamera", "surfaceId", &scene.surface_id, "camera", "x", "y", "zoom"])?;
@@ -6189,6 +6190,65 @@ pub fn paint2d_pointer_button_into(
     write_surface_camera(&mut batch, scene, camera)?;
     batch.publish()?;
     Ok(true)
+}
+
+/** 🖌️ Publishes the raster host's pending paint-2d edit, if any, and takes it: `true` when one was published.
+ *
+ * @see [`write_paint2d_edit`] */
+fn flush_paint2d_edit(scene: &UiComponentSceneNode, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    let Some(edit) = with_raster_host_mut(&scene.host_id, |host| host.paint_edit().cloned()).flatten() else {
+        return Ok(false);
+    };
+    write_paint2d_edit(scene, &edit, input)?;
+    with_raster_host_mut(&scene.host_id, |host| host.take_paint_edit());
+    Ok(true)
+}
+
+/** 🖌️ Publishes one paint-2d edit intent exactly as React's `Paint2dHost` dispatches it: a stroke as `paintStroke`
+ * `{ surfaceId, layerId, tool, xs, ys }` — with `phase` (`stream` | `commit` | `abort` and its `reason`) and `gesture` when
+ * it streams — and a bucket click as `fillRegion` `{ surfaceId, layerId, x, y }`, in the layer image's pixels; the editor
+ * reads brush, colour, tolerance, target and selection from its session.
+ *
+ * @see `🧱️elements/🖌️Paint2dHost/✍️editing/🟦️.tsx` — `pick`/`up`/`move` */
+fn write_paint2d_edit(scene: &UiComponentSceneNode, edit: &framework_surface_node_graph::paint::PaintEditCommand, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    let fill = edit.action() == "fillRegion";
+    let (click, stroke) = (["x", "y"], ["tool", edit.tool, "xs", "ys"]);
+    let mut fields = vec![scene.controller_id.as_str(), edit.action(), "surfaceId", scene.surface_id.as_str(), "layerId", edit.layer_id.as_str()];
+    fields.extend(if fill { click.as_slice() } else { stroke.as_slice() });
+    fields.extend(edit.phase.into_iter().flat_map(|phase| ["phase", phase]));
+    fields.extend(edit.reason.into_iter().flat_map(|reason| ["reason", reason]));
+    fields.extend(edit.gesture.iter().flat_map(|gesture| ["gesture", gesture.as_str()]));
+    let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&fields)?;
+    let mut batch = input.reserve_actions(1, bytes)?;
+    batch.action(&scene.controller_id, edit.action(), bytes, |builder| {
+        builder.begin_object(None)?;
+        builder.string(Some("surfaceId"), &scene.surface_id)?;
+        builder.string(Some("layerId"), &edit.layer_id)?;
+        match edit.points.first() {
+            Some(point) if fill => {
+                builder.number(Some("x"), point[0])?;
+                builder.number(Some("y"), point[1])?;
+            }
+            _ => {
+                builder.string(Some("tool"), edit.tool)?;
+                for (key, axis) in [("xs", 0), ("ys", 1)] {
+                    builder.begin_array(Some(key))?;
+                    for point in &edit.points {
+                        builder.number(None, point[axis])?;
+                    }
+                    builder.end_container()?;
+                }
+                for (key, value) in [("phase", edit.phase), ("reason", edit.reason), ("gesture", edit.gesture.as_deref())] {
+                    if let Some(value) = value {
+                        builder.string(Some(key), value)?;
+                    }
+                }
+            }
+        }
+        builder.end_container()
+    })?;
+    batch.publish()?;
+    Ok(())
 }
 
 /** 🖱️ One paint-2d pointer move: a hover pick under a selection utility, a live brush stroke plus
@@ -6260,8 +6320,9 @@ pub fn paint2d_pointer_move_into(scene: &UiComponentSceneNode, inner: Rect, x: f
     .flatten() else {
         return Ok(false);
     };
+    let streamed = flush_paint2d_edit(scene, input)?;
     if engine_camera_from_json(&paint.camera_json) == Some(camera) {
-        return Ok(false);
+        return Ok(streamed);
     }
     let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, "setCamera", "surfaceId", &scene.surface_id, "camera", "x", "y", "zoom"])?;
     let mut batch = input.reserve_actions(1, bytes)?;

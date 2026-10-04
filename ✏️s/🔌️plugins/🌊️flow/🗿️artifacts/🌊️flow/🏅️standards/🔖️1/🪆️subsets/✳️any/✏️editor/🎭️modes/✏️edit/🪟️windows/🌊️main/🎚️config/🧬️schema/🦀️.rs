@@ -4,9 +4,10 @@ use crate::schema::{FLOW_DEFAULT_GRID_FACTOR, FLOW_DEFAULT_PROXIMITY_DISTANCE};
 use flow::FLOW_LOD_MODE_AUTOMATIC;
 use semio_framework_artifact_flow_flow::CameraJson;
 
-#[derive(Clone, Debug, PartialEq, dsl::DslArtifact, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_os_kernel::DslArtifact, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
-#[dsl(id = "s.flow.flow.mainwindowconfig", extension = "flowmainwindowcfg", layout = "lines")]
+#[dsl(layout = "lines")]
+#[artifact(id = "s.flow.flow.mainwindowconfig", extension = "flowmainwindowcfg")]
 pub struct FlowMainWindowConfig {
     pub preview_off_node_ids: Vec<String>,
     #[dsl(block)]

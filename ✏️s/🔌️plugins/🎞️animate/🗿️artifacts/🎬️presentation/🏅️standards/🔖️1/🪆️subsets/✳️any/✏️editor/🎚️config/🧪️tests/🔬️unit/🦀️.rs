@@ -25,7 +25,7 @@ fn presentation_config_pack_round_trips() {
 //#region 🔖️ConfigMutationTests
 fn round_trip_config(config: &PresentationConfig, operation: &PresentationConfigMutation) -> PresentationConfig {
     let forward = operation.diff(config).diff().clone();
-    let backwards = operation.inverse(config);
+    let backwards = operation.inverse(config).expect("valid retained mutation inverse fixture");
     assert_eq!(backwards.len(), 1);
     let restored = backwards[0].diff(&forward).diff().clone();
     assert_eq!(&restored, config, "backwards() must exactly restore the pre-operation config");

@@ -69,7 +69,7 @@ async fn live_visual_language_distinguishes_every_progress_state() {
             converged: quality == RegionVisualQuality::Final,
             validated_final: quality == RegionVisualQuality::Final,
         };
-        let encoded = dsl::json::to_string(&dsl::json::Value::Array(fem2d_live_visual_layers(&doc, &visual)));
+        let encoded = semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(fem2d_live_visual_layers(&doc, &visual)));
         assert!(encoded.contains(&format!("region-quality-{}", quality.id())));
         assert!(encoded.contains("assembling-"));
         assert!(encoded.contains("displacement-field-"));
@@ -82,7 +82,7 @@ async fn live_visual_language_distinguishes_every_progress_state() {
 async fn model_visual_language_includes_load_and_support_glyphs() {
     use store::ArtifactDsl;
     let doc = Fem2dSnapshot::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::FEM2D_EXAMPLE_TEXT).expect("parse example");
-    let encoded = dsl::json::to_string(&dsl::json::Value::Array(fem2d_structure_layers(&doc, "#38bdf8", "#94a3b8", "#f97316")));
+    let encoded = semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(fem2d_structure_layers(&doc, "#38bdf8", "#94a3b8", "#f97316")));
     assert!(encoded.contains("support-"));
     assert!(encoded.contains("load-"));
 }

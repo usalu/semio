@@ -1,7 +1,8 @@
 use super::ChangeGKSlab;
 use crate::mutations::En1996Mutation;
 use crate::En1996Snapshot;
-pub fn inverse(payload: &ChangeGKSlab, base: &En1996Snapshot) -> Vec<En1996Mutation> {
+pub fn inverse(payload: &ChangeGKSlab, base: &En1996Snapshot) -> Result<Vec<En1996Mutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     if payload.wall_index >= base.walls.len() || payload.index >= base.walls[payload.wall_index].load_cases.len() {
         Vec::new()
     } else {
@@ -11,4 +12,6 @@ pub fn inverse(payload: &ChangeGKSlab, base: &En1996Snapshot) -> Vec<En1996Mutat
             new_g_k_slab_n: base.walls[payload.wall_index].load_cases[payload.index].g_k_slab_n,
         })]
     }
+
+    })())
 }

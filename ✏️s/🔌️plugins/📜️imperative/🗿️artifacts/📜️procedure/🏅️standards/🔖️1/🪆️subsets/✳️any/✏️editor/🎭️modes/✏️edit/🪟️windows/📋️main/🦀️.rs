@@ -2,8 +2,8 @@
 //! has been dispatched, the resulting scope.
 
 use crate::editor::procedure::terminology::ImperativeLabels;
-use crate::{ProcedureSnapshot, Step};
-use dsl::os_pack::json::Value;
+use crate::{ProcedureScene, Step};
+use semio_framework_pack_json::Value;
 use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -57,17 +57,17 @@ fn table_rows(steps: &[Step]) -> Vec<TableRow> {
 /// 📤️ One table row per scope key so the full run output is legible instead of an 80-char
 /// truncated blob; falls back to the raw JSON when it isn't a plain object.
 fn run_output_rows(run_output_json: &str, offset: usize) -> Vec<TableRow> {
-    let parsed = dsl::os_pack::json::from_json_str::<Value>(run_output_json).ok();
+    let parsed = semio_framework_pack_json::from_json_str::<Value>(run_output_json, semio_framework_pack_json::JsonMemberPolicy::Reject).ok();
     match parsed.as_ref().and_then(|value| value.as_object()) {
         Some(scope) if !scope.is_empty() => {
-            scope.iter().enumerate().map(|(index, (key, value))| TableRow { index: offset + index + 1, id: format!("run-output.{key}"), kind: format!("{key} = {}", dsl::os_pack::json::to_json_string(value)) }).collect()
+            scope.iter().enumerate().map(|(index, (key, value))| TableRow { index: offset + index + 1, id: format!("run-output.{key}"), kind: format!("{key} = {}", semio_framework_pack_json::to_json_string(value)) }).collect()
         }
         _ => vec![TableRow { index: offset + 1, id: "run-output".into(), kind: run_output_json.to_string() }],
     }
 }
 
-pub fn render(document: &ProcedureSnapshot, run_output_json: &str, labels: &ImperativeLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let path = crate::procedure_working_scene(document).path;
+pub fn render(scene: &ProcedureScene, run_output_json: &str, labels: &ImperativeLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let path = &scene.path;
     let mut rows = table_rows(&path.steps);
     if !run_output_json.is_empty() {
         rows.extend(run_output_rows(run_output_json, rows.len()));

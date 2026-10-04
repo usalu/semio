@@ -5,7 +5,8 @@ use crate::schema::mutations::NoteMutation;
 use crate::NoteSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &DeleteBlocks, base: &NoteSnapshot) -> Vec<NoteMutation> {
+pub fn inverse(payload: &DeleteBlocks, base: &NoteSnapshot) -> Result<Vec<NoteMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     // 🩹 Pre-existing bug fixed here (confirmed via `git log --date=iso`: this file was authored
     // 2026-08-12 15:50:51 by an unrelated wave, unrelated to composition — never touched `content`/
     // `paragraphs`). Every `MutationKind::inverse` caller (`protocol::os_spr::protocol_laws::assert_mutation_inverse_law`
@@ -25,5 +26,7 @@ pub fn inverse(payload: &DeleteBlocks, base: &NoteSnapshot) -> Vec<NoteMutation>
         .collect();
     entries.sort_by(|a, b| b.0.cmp(&a.0).then(b.1.cmp(&a.1)));
     entries.into_iter().map(|(parent_id, index, block)| NoteMutation::CreateBlock(CreateBlock { block: Box::new(block), parent_id, index: Some(index) })).collect()
+
+    })())
 }
 //#endregion 🔖️Inverse

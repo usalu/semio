@@ -1,0 +1,79 @@
+{
+  "schema": "dag.owned-snapshot-sqlite.v1",
+  "documentSchema": "dag.dag",
+  "nativeCases": [
+    {
+      "name": "empty-address",
+      "schema": "dag.dag",
+      "content": {
+        "childId": "",
+        "target": {
+          "artifactId": "",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "graph"
+          }
+        }
+      }
+    },
+    {
+      "name": "independent-unresolved-alias",
+      "schema": "dag.dag",
+      "content": {
+        "childId": "local-alias",
+        "target": {
+          "artifactId": "target\u0000!@/独立🌍",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "graph"
+          }
+        }
+      }
+    },
+    {
+      "name": "unrestricted-literal",
+      "schema": "dag.dag",
+      "content": {
+        "childId": "\u0000!@/引用🌍",
+        "target": {
+          "artifactId": "distinct\u0000!@/😀",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "graph"
+          }
+        }
+      }
+    }
+  ],
+  "tableWidths": {
+    "dag_document": 2,
+    "dag_content_child": 7
+  },
+  "tableRowCounts": {
+    "dag_document": 1,
+    "dag_content_child": 1
+  },
+  "invalidCoordinates": [
+    {
+      "artifactKind": "s.other.graph",
+      "standard": "v1",
+      "subset": "graph"
+    },
+    {
+      "artifactKind": "s.stdio.semio",
+      "standard": "1",
+      "subset": "graph"
+    },
+    {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "flow"
+    }
+  ]
+,
+  "inferenceDepthCases": [{"__proto__":0,"alias!@/":3,"未解決":1},{}],
+  "invalidInferenceDepthValues": [-1,0.5,"1",null,true]
+}

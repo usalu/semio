@@ -2,7 +2,7 @@ syntax = "proto3";
 package semio.s.gis.gisterrain.inference;
 
 // 💡️ GIS terrain inference schema — geographic bounding box + position count of the `map:in`
-// overlay decoded from `importedFeaturesJson`.
+// overlay decoded from `importedMap`.
 
 message GisTerrainInference {
   // @derived

@@ -1,0 +1,16 @@
+{
+  "type": "object",
+  "required": ["schemaVersion", "cause", "condition", "kind", "projection", "message", "payload", "ownedErrorPolicy", "messageClassification"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "cause": { "const": "std::str::Utf8Error" },
+    "condition": { "const": "Rejected UTF-8 Byte Sequence" },
+    "kind": { "const": "InvalidValue" },
+    "projection": { "const": "PackRefusal From ValueError" },
+    "message": { "const": "Original Decoder Display" },
+    "payload": { "const": "Caller Owned" },
+    "ownedErrorPolicy": { "const": "Separate Contract" },
+    "messageClassification": { "const": false }
+  }
+}

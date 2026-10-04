@@ -2,7 +2,6 @@
 
 use crate::Din4108Snapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a din4108 snapshot.
@@ -17,8 +16,11 @@ pub struct Din4108Inference {
 }
 
 impl protocol::Inference<Din4108Snapshot> for Din4108Inference {
-    fn infer(snapshot: &Din4108Snapshot) -> Self {
+    fn infer(snapshot: &Din4108Snapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { outline: Din4108Outline::compute(snapshot) }
+    
+        })
     }
 }
 
@@ -48,13 +50,6 @@ impl protocol::InferenceSpec<Din4108Snapshot> for Din4108Inference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::Din4108Builder {
-    type Snapshot = Din4108Snapshot;
-    type Inference = Din4108Inference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.norm.din4108.inference` facet leaves.

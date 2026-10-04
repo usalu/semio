@@ -19,7 +19,7 @@ test("scalar snapshot metadata agrees with the independent SQLite field roster",
  }finally{db.close();}
  const source=await Bun.file(new URL("../../🦀️.rs",import.meta.url)).text();
  expect(source).toContain("fn spec_producer()");
- const rows=[...source.matchAll(/\((\d+),"([^"]+)",dsl::Shape::(\w+),(true|false)\)/g)].map(([,id,key,shape,optional])=>({id:Number(id),key,shape,optional:optional==="true"}));
+ const rows=[...source.matchAll(/\((\d+),"([^"]+)",semio_framework_dsl_record::Shape::(\w+),(true|false)\)/g)].map(([,id,key,shape,optional])=>({id:Number(id),key,shape,optional:optional==="true"}));
  expect(rows).toEqual(fixture.fields);
  console.log(`scalar-schema-producer fields=${rows.length} independent-sqlite=${fixture.fields.length}`);
 });

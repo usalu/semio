@@ -40,6 +40,16 @@
         "forwardAllArgs": true
       }
     },
+    "verify-generation3d-widget-inputs": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify generation3d-widget-inputs",
+        "forwardAllArgs": true
+      },
+      "metadata": {"semio": {"workspaceCommand": ["verify", "generation3d-widget-inputs"]}}
+    },
     "canonical-architecture": {
       "executor": "nx:run-commands",
       "cache": false,

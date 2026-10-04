@@ -18,7 +18,7 @@ pub fn diff(payload: &super::ChangeModel, base: &BitmapSnapshot) -> protocol::Mu
     }
     let model = BitmapOverlappingModel { pattern_size: payload.pattern_size, symmetry: payload.symmetry, periodic_input: payload.periodic_input, ground: payload.ground };
     if base.model == model {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "The model already holds those parameters.".to_string());
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "The model already holds those parameters.".to_string());
     }
     protocol::MutationOutcome::new(BitmapDiff { model: Some(model), ..Default::default() })
 }

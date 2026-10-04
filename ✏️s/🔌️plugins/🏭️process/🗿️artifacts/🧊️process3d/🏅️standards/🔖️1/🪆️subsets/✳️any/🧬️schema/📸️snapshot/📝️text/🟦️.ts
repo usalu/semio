@@ -49,5 +49,5 @@ export const processProcess3dSnapshotTextGuardConstant = <T extends string | num
 //#endregion 🚪️Parsers
 
 export function parseProcess3dSnapshotText(value: unknown, at = "$"): Process3dSnapshotText {
-  return processProcess3dSnapshotTextGuardObject(value, `${at}`);
+  return processProcess3dSnapshotTextGuardString(value, `${at}`);
 }

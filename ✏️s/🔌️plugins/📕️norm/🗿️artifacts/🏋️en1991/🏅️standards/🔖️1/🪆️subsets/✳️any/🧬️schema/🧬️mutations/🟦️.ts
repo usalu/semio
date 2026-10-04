@@ -5,13 +5,13 @@ import { normWireExternal, type NormWireReader } from "../../../../../../../../�
 import { type ChangeAssumedCraneHorizontal, parseChangeAssumedCraneHorizontal } from "./↔️change-assumed-crane-horizontal/🧬️schema/🟦️.ts";
 import { type ChangeBridgeLaneWidth, parseChangeBridgeLaneWidth } from "./↔️change-bridge-lane-width/🧬️schema/🟦️.ts";
 import { type ChangeHoistingSpeed, parseChangeHoistingSpeed } from "./⏫change-hoisting-speed/🧬️schema/🟦️.ts";
-import { type ChangeFireDuration, parseChangeFireDuration } from "./⏱change-fire-duration/🧬️schema/🟦️.ts";
-import { type ChangeAssumedGasTemperature, parseChangeAssumedGasTemperature } from "./♨change-assumed-gas-temperature/🧬️schema/🟦️.ts";
-import { type ChangeSiloKind, parseChangeSiloKind } from "./⚖change-silo-kind/🧬️schema/🟦️.ts";
-import { type ChangeAssumedConstructionQk, parseChangeAssumedConstructionQk } from "./⚙change-assumed-construction-qk/🧬️schema/🟦️.ts";
+import { type ChangeFireDuration, parseChangeFireDuration } from "./⏱️change-fire-duration/🧬️schema/🟦️.ts";
+import { type ChangeAssumedGasTemperature, parseChangeAssumedGasTemperature } from "./♨️change-assumed-gas-temperature/🧬️schema/🟦️.ts";
+import { type ChangeSiloKind, parseChangeSiloKind } from "./⚖️change-silo-kind/🧬️schema/🟦️.ts";
+import { type ChangeAssumedConstructionQk, parseChangeAssumedConstructionQk } from "./⚙️change-assumed-construction-qk/🧬️schema/🟦️.ts";
 import { type ChangeSiloK, parseChangeSiloK } from "./⚙️change-silo-k/🧬️schema/🟦️.ts";
 import { type ChangeFireLoadDensityQf, parseChangeFireLoadDensityQf } from "./⛽change-fire-load-density-qf/🧬️schema/🟦️.ts";
-import { type ChangeAltitude, parseChangeAltitude } from "./❄change-altitude/🧬️schema/🟦️.ts";
+import { type ChangeAltitude, parseChangeAltitude } from "./❄️change-altitude/🧬️schema/🟦️.ts";
 import { type ChangeEnSk, parseChangeEnSk } from "./❄️change-en-sk/🧬️schema/🟦️.ts";
 import { type ChangeHoistClass, parseChangeHoistClass } from "./➕change-hoist-class/🧬️schema/🟦️.ts";
 import { type InsertAccidentalCases, parseInsertAccidentalCases } from "./➕️insert-accidental-cases/🧬️schema/🟦️.ts";
@@ -31,17 +31,17 @@ import { type ChangeBridgeLane, parseChangeBridgeLane } from "./🌉change-bridg
 import { type ChangeStructureKind, parseChangeStructureKind } from "./🌉change-structure-kind/🧬️schema/🟦️.ts";
 import { type ChangeThermalBridgeType, parseChangeThermalBridgeType } from "./🌉change-thermal-bridge-type/🧬️schema/🟦️.ts";
 import { type ChangeAnnex, parseChangeAnnex } from "./🌍change-annex/🧬️schema/🟦️.ts";
-import { type ChangeAssumedDeltaT, parseChangeAssumedDeltaT } from "./🌡change-assumed-delta-t/🧬️schema/🟦️.ts";
-import { type ChangeTMax, parseChangeTMax } from "./🌡change-t-max/🧬️schema/🟦️.ts";
+import { type ChangeAssumedDeltaT, parseChangeAssumedDeltaT } from "./🌡️change-assumed-delta-t/🧬️schema/🟦️.ts";
+import { type ChangeTMax, parseChangeTMax } from "./🌡️change-t-max/🧬️schema/🟦️.ts";
 import { type ChangeRoofAssumedSk, parseChangeRoofAssumedSk } from "./🌨️change-roof-assumed-sk/🧬️schema/🟦️.ts";
-import { type ChangeEnVb, parseChangeEnVb } from "./🌬change-en-vb/🧬️schema/🟦️.ts";
+import { type ChangeEnVb, parseChangeEnVb } from "./🌬️change-en-vb/🧬️schema/🟦️.ts";
 import { type ChangeAssumedBridgeTandem, parseChangeAssumedBridgeTandem } from "./🌾change-assumed-bridge-tandem/🧬️schema/🟦️.ts";
 import { type ChangeSiloBulkDensity, parseChangeSiloBulkDensity } from "./🌾change-silo-bulk-density/🧬️schema/🟦️.ts";
-import { type ChangeNorthGermanLowlandSnow, parseChangeNorthGermanLowlandSnow } from "./🏔change-north-german-lowland-snow/🧬️schema/🟦️.ts";
-import { type ChangeBridgeSpan, parseChangeBridgeSpan } from "./🏗change-bridge-span/🧬️schema/🟦️.ts";
+import { type ChangeNorthGermanLowlandSnow, parseChangeNorthGermanLowlandSnow } from "./🏔️change-north-german-lowland-snow/🧬️schema/🟦️.ts";
+import { type ChangeBridgeSpan, parseChangeBridgeSpan } from "./🏗️change-bridge-span/🧬️schema/🟦️.ts";
 import { type ChangeCraneClaimed, parseChangeCraneClaimed } from "./🏗️change-crane-claimed/🧬️schema/🟦️.ts";
-import { type ChangeThermalElementType, parseChangeThermalElementType } from "./🏗change-thermal-element-type/🧬️schema/🟦️.ts";
-import { type ChangeStoreyCount, parseChangeStoreyCount } from "./🏙change-storey-count/🧬️schema/🟦️.ts";
+import { type ChangeThermalElementType, parseChangeThermalElementType } from "./🏗️change-thermal-element-type/🧬️schema/🟦️.ts";
+import { type ChangeStoreyCount, parseChangeStoreyCount } from "./🏙️change-storey-count/🧬️schema/🟦️.ts";
 import { type ChangeCoastOrIsland, parseChangeCoastOrIsland } from "./🏝️change-coast-or-island/🧬️schema/🟦️.ts";
 import { type ChangeTerrainCategory, parseChangeTerrainCategory } from "./🏞️change-terrain-category/🧬️schema/🟦️.ts";
 import { type ChangeWidth, parseChangeWidth } from "./🏠change-width/🧬️schema/🟦️.ts";
@@ -49,7 +49,7 @@ import { type ChangeAirDensity, parseChangeAirDensity } from "./🏢change-air-d
 import { type ChangeFireOccupancy, parseChangeFireOccupancy } from "./🏢change-fire-occupancy/🧬️schema/🟦️.ts";
 import { type ChangeFloorAssumedQk, parseChangeFloorAssumedQk } from "./🏢change-floor-assumed-qk/🧬️schema/🟦️.ts";
 import { type ChangeSiloClaimed, parseChangeSiloClaimed } from "./🏭change-silo-claimed/🧬️schema/🟦️.ts";
-import { type ChangeSiloHeight, parseChangeSiloHeight } from "./🏷change-silo-height/🧬️schema/🟦️.ts";
+import { type ChangeSiloHeight, parseChangeSiloHeight } from "./🏷️change-silo-height/🧬️schema/🟦️.ts";
 import { type ChangeAssumedBridgeLm4, parseChangeAssumedBridgeLm4 } from "./👥change-assumed-bridge-lm4/🧬️schema/🟦️.ts";
 import { type ChangeCraneClass, parseChangeCraneClass } from "./💥change-crane-class/🧬️schema/🟦️.ts";
 import { type ChangeDepth, parseChangeDepth } from "./💨change-depth/🧬️schema/🟦️.ts";
@@ -65,8 +65,8 @@ import { type ChangeAssumedQfD, parseChangeAssumedQfD } from "./🔋change-assum
 import { type ChangeSiloMu, parseChangeSiloMu } from "./🔎change-silo-mu/🧬️schema/🟦️.ts";
 import { type ChangeConstructionActivity, parseChangeConstructionActivity } from "./🔥change-construction-activity/🧬️schema/🟦️.ts";
 import { type ChangeFireMode, parseChangeFireMode } from "./🔥change-fire-mode/🧬️schema/🟦️.ts";
-import { type ChangeInitialTemperature, parseChangeInitialTemperature } from "./🕰change-initial-temperature/🧬️schema/🟦️.ts";
-import { type ChangeFireCompartmentArea, parseChangeFireCompartmentArea } from "./🗺change-fire-compartment-area/🧬️schema/🟦️.ts";
+import { type ChangeInitialTemperature, parseChangeInitialTemperature } from "./🕰️change-initial-temperature/🧬️schema/🟦️.ts";
+import { type ChangeFireCompartmentArea, parseChangeFireCompartmentArea } from "./🗺️change-fire-compartment-area/🧬️schema/🟦️.ts";
 import { type ChangeSnowZone, parseChangeSnowZone } from "./🗺️change-snow-zone/🧬️schema/🟦️.ts";
 import { type ChangeTMin, parseChangeTMin } from "./🧊change-t-min/🧬️schema/🟦️.ts";
 import { type ChangeMixedTerrainUpwind, parseChangeMixedTerrainUpwind } from "./🧭change-mixed-terrain-upwind/🧬️schema/🟦️.ts";
@@ -80,8 +80,8 @@ import { type ChangeAssumedBridgeLm2, parseChangeAssumedBridgeLm2 } from "./🚛
 import { type ChangeAssumedBridgeLm3, parseChangeAssumedBridgeLm3 } from "./🚛change-assumed-bridge-lm3/🧬️schema/🟦️.ts";
 import { type ChangeSelfWeightAssumedGk, parseChangeSelfWeightAssumedGk } from "./🚧change-self-weight-assumed-gk/🧬️schema/🟦️.ts";
 import { type ChangeAssumedBridgeFootway, parseChangeAssumedBridgeFootway } from "./🚶change-assumed-bridge-footway/🧬️schema/🟦️.ts";
-import { type ChangeWindFaceAssumedWp, parseChangeWindFaceAssumedWp } from "./🛡change-wind-face-assumed-wp/🧬️schema/🟦️.ts";
-import { type ChangeAssumedBridgeUdl, parseChangeAssumedBridgeUdl } from "./🛣change-assumed-bridge-udl/🧬️schema/🟦️.ts";
+import { type ChangeWindFaceAssumedWp, parseChangeWindFaceAssumedWp } from "./🛡️change-wind-face-assumed-wp/🧬️schema/🟦️.ts";
+import { type ChangeAssumedBridgeUdl, parseChangeAssumedBridgeUdl } from "./🛣️change-assumed-bridge-udl/🧬️schema/🟦️.ts";
 
 export type En1991Mutation =
   | { ChangeAnnex: ChangeAnnex }

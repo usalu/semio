@@ -1,0 +1,8 @@
+[
+ {"source":"opaque solid rectangle","coverage":["fill"]},
+ {"source":"fill then stroke source over","coverage":["fill","stroke"]},
+ {"source":"dashed stroke","coverage":["stroke"]},
+ {"source":"even odd duplicated ring","coverage":["fill"]},
+ {"source":"no appearance","coverage":[]},
+ {"source":"singular affine","coverage":[]}
+]

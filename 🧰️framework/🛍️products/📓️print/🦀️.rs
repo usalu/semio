@@ -45,8 +45,10 @@ pub fn chart_artifact_declaration()->Result<semio_framework_plugin::app::Artifac
     let capability=|id,kind,claim,descriptor:&str|ArtifactCapability::new(ArtifactIdentity::parse(id)?,kind).descriptor(descriptor.as_bytes().to_vec())?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(),claim)?);
     let definition=ArtifactDefinition::new(ArtifactIdentity::parse(CHART_ARTIFACT_KIND)?)
         .capability(capability("s.print.chart.schema",ArtifactCapabilityKind::schema(),"framework.print.chart",include_str!("🧬️schema/📸️snapshot/🔣️.json"))?)?
-        .capability(capability("s.print.chart.inference",ArtifactCapabilityKind::inference(),"framework.print.chart.inference",include_str!("🧬️schema/💡️inferences/🔣️.json"))?)?;
-    ArtifactDeclaration::builder(definition).schema(chart_artifact_schema_descriptor()).inferences([chart_artifact_inference_descriptor()]).inference_services([chart_inference_service()]).try_build()
+        .capability(capability("s.print.chart.inference",ArtifactCapabilityKind::inference(),"framework.print.chart.inference",include_str!("🧬️schema/💡️inferences/🔣️.json"))?)?
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.print.chart.codec")?,ArtifactCapabilityKind::codec()).descriptor(include_str!("🧬️schema/📸️snapshot/🔣️.json").as_bytes().to_vec())?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(),"print.chart")?).claim(ArtifactIdentityClaim::codec_extension("print.chart","chart")?))?;
+    let dialect=protocol::io_schema::Dialect{artifact_kind:CHART_ARTIFACT_KIND,standard:protocol::io_schema::StandardId("v1"),subset:protocol::io_schema::SubsetId("any")};
+    ArtifactDeclaration::builder(definition).schema(chart_artifact_schema_descriptor()).inferences([chart_artifact_inference_descriptor()]).inference_services([chart_inference_service()]).document_codec_bare::<ChartSnapshot,ChangeChartValue>("print.chart",dialect).try_build()
 }
 
 /// 🚀️ The print domain boots through the existing transactional plugin assembly.

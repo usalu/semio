@@ -117,7 +117,6 @@ async fn a_two_member_transaction_commits_and_group_undo_restores_both() {
             },
             TransactionMember { plugin_id: "s.a".into(), instance_id: 1 },
             vec![vec![1, 2, 3]],
-            "propose annotate".into(),
             foreign,
         )
         .await
@@ -161,7 +160,6 @@ async fn an_unknown_target_is_rejected_before_any_prepare_is_sent() {
             |_, _, _, _, _| unreachable!("no contributed step to plan"),
             TransactionMember { plugin_id: "s.a".into(), instance_id: 1 },
             vec![vec![1]],
-            "x".into(),
             foreign,
         )
         .await
@@ -191,7 +189,6 @@ async fn an_unknown_mutation_is_rejected() {
             |_, _, _, _, _| unreachable!("owner route, never contributed"),
             TransactionMember { plugin_id: "s.a".into(), instance_id: 1 },
             vec![vec![1]],
-            "x".into(),
             foreign,
         )
         .await
@@ -254,7 +251,6 @@ async fn a_cycle_is_rejected() {
             },
             TransactionMember { plugin_id: "s.a".into(), instance_id: 1 },
             vec![vec![1]],
-            "x".into(),
             vec![step],
         )
         .await
@@ -312,7 +308,6 @@ async fn a_member_rejection_rolls_back_every_already_prepared_member() {
             },
             TransactionMember { plugin_id: "s.a".into(), instance_id: 1 },
             vec![vec![1]],
-            "x".into(),
             foreign,
         )
         .await
@@ -383,7 +378,6 @@ async fn a_chain_deeper_than_max_plan_depth_is_rejected() {
             },
             TransactionMember { plugin_id: "s.a".into(), instance_id: 1 },
             vec![vec![1]],
-            "x".into(),
             foreign,
         )
         .await

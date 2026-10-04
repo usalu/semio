@@ -1,0 +1,11 @@
+{
+  "build_target": "@semio-tech/framework-plugin-host-fixture:component-dev",
+  "launch_line": 1874,
+  "canonical_replacements": [],
+  "fixture_sqlite_provider_mounted": false,
+  "required_unexecuted_gates": [
+    "wasm32-wasip2 component-dev build",
+    "compiled Owned and Wasmtime typed refusal transport",
+    "actual lease registration and workspace Snapshot SQLite IO"
+  ]
+}

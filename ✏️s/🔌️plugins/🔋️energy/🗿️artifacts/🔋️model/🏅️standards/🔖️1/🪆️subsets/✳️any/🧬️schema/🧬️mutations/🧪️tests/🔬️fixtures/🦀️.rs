@@ -2,7 +2,7 @@ use super::EnergyModelMutation;
 use crate::diff::EnergyModelDiff;
 use crate::EnergyModelSnapshot;
 use protocol::{Mutation, MutationDiff, SemanticMutation};
-use semio_framework_os_kernel::ToValue;
+use semio_framework_value::ToValue;
 
 /// 🧫️ One committed specification vector and the typed scenario it was generated from.
 pub struct Case {
@@ -127,49 +127,49 @@ pub fn shading(id: u32, name: &str) -> crate::model::ShadingSurface {
 }
 //#endregion 🧰️G1Constructors
 
-fn committed(case: &Case, label: &str, text: &str) -> pack::json::Value {
-    pack::json::parse(text).unwrap_or_else(|error| panic!("{}/{}: committed {label} is not valid JSON: {error}", case.kind, case.directory))
+fn committed(case: &Case, label: &str, text: &str) -> semio_framework_pack_json::Value {
+    semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|error| panic!("{}/{}: committed {label} is not valid JSON: {error}", case.kind, case.directory))
 }
 
 fn decode(case: &Case, label: &str, text: &str) -> EnergyModelSnapshot {
-    pack::json::from_json_str(text).unwrap_or_else(|error| panic!("{}/{}: committed {label} does not decode: {error}", case.kind, case.directory))
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|error| panic!("{}/{}: committed {label} does not decode: {error}", case.kind, case.directory))
 }
 
 fn built(case: &Case) -> protocol::MutationOutcome<EnergyModelDiff> {
     let base = decode(case, "before-snapshot", case.before);
-    let mutation: EnergyModelMutation = pack::json::from_json_str(case.mutation).expect("committed mutation payload decodes");
+    let mutation: EnergyModelMutation = semio_framework_pack_json::from_json_str(case.mutation, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed mutation payload decodes");
     <EnergyModelMutation as Mutation<EnergyModelSnapshot>>::diff(&mutation, &base)
 }
 
-fn level_name(level: protocol::Severity) -> &'static str {
+fn level_name(level: semio_framework_diagnostic::Severity) -> &'static str {
     match level {
-        protocol::Severity::Info => "info",
-        protocol::Severity::Warning => "warning",
-        protocol::Severity::Error => "error",
-        protocol::Severity::Fatal => "fatal",
+        semio_framework_diagnostic::Severity::Info => "info",
+        semio_framework_diagnostic::Severity::Warning => "warning",
+        semio_framework_diagnostic::Severity::Error => "error",
+        semio_framework_diagnostic::Severity::Fatal => "fatal",
     }
 }
 
 /// 🎯️ The declared outcome document a produced `MutationOutcome` corresponds to, in the outcome-class vocabulary
 /// `applied | no-op | rejected`: a refusal names one fault code and the offending address, an application or a no-op
 /// (the `mutation.no-op` warning) names its ordered message list.
-fn outcome_document(outcome: &protocol::MutationOutcome<EnergyModelDiff>) -> pack::json::Value {
-    let rejected = outcome.worst_level().is_some_and(|level| level >= protocol::Severity::Error);
+fn outcome_document(outcome: &protocol::MutationOutcome<EnergyModelDiff>) -> semio_framework_pack_json::Value {
+    let rejected = outcome.worst_level().is_some_and(|level| level >= semio_framework_diagnostic::Severity::Error);
     if rejected {
-        let first = outcome.messages().iter().find(|message| message.level >= protocol::Severity::Error).expect("a refusal carries its own message");
-        return pack::json::object([
-            ("status".to_string(), pack::json::Value::String("rejected".to_string())),
-            ("code".to_string(), pack::json::Value::String(first.code.0.clone())),
-            ("path".to_string(), pack::json::Value::Array(first.target.iter().map(|entry| pack::json::Value::String(entry.clone())).collect())),
+        let first = outcome.messages().iter().find(|message| message.level >= semio_framework_diagnostic::Severity::Error).expect("a refusal carries its own message");
+        return semio_framework_pack_json::object([
+            ("status".to_string(), semio_framework_pack_json::Value::String("rejected".to_string())),
+            ("code".to_string(), semio_framework_pack_json::Value::String(first.code.0.clone())),
+            ("path".to_string(), semio_framework_pack_json::Value::Array(first.target.iter().map(|entry| semio_framework_pack_json::Value::String(entry.clone())).collect())),
         ]);
     }
     let no_op = outcome.messages().iter().any(|message| message.code.0 == "mutation.no-op");
-    pack::json::object([
-        ("status".to_string(), pack::json::Value::String(if no_op { "no-op" } else { "applied" }.to_string())),
+    semio_framework_pack_json::object([
+        ("status".to_string(), semio_framework_pack_json::Value::String(if no_op { "no-op" } else { "applied" }.to_string())),
         (
             "messages".to_string(),
-            pack::json::Value::Array(
-                outcome.messages().iter().map(|message| pack::json::object([("level".to_string(), pack::json::Value::String(level_name(message.level).to_string())), ("code".to_string(), pack::json::Value::String(message.code.0.clone()))])).collect(),
+            semio_framework_pack_json::Value::Array(
+                outcome.messages().iter().map(|message| semio_framework_pack_json::object([("level".to_string(), semio_framework_pack_json::Value::String(level_name(message.level).to_string())), ("code".to_string(), semio_framework_pack_json::Value::String(message.code.0.clone()))])).collect(),
             ),
         ),
     ])
@@ -193,14 +193,14 @@ pub fn write_when_requested(case: &Case) {
     let outcome = <EnergyModelMutation as Mutation<EnergyModelSnapshot>>::diff(&mutation, &before);
     let after = MutationDiff::apply(outcome.diff(), &before).expect("the scenario's forward diff applies");
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations").join(case.directory);
-    let json = |value: pack::json::Value| pack::json::to_string_pretty(&value);
-    write_file(root.join("📸️snapshot/⬅️before/🔣️.json"), &json(pack::json::from_dsl_value(&before.to_value())));
-    write_file(root.join("📸️snapshot/➡️after/🔣️.json"), &json(pack::json::from_dsl_value(&after.to_value())));
-    write_file(root.join("🦠️mutation/🔣️.json"), &json(pack::json::from_dsl_value(&mutation.to_value())));
-    write_file(root.join("🔺️diff/🔣️.json"), &json(pack::json::from_dsl_value(&outcome.diff().to_value())));
+    let json = |value: semio_framework_pack_json::Value| semio_framework_pack_json::to_string_pretty(&value);
+    write_file(root.join("📸️snapshot/⬅️before/🔣️.json"), &json(semio_framework_pack_json::from_dsl_value(&before.to_value())));
+    write_file(root.join("📸️snapshot/➡️after/🔣️.json"), &json(semio_framework_pack_json::from_dsl_value(&after.to_value())));
+    write_file(root.join("🦠️mutation/🔣️.json"), &json(semio_framework_pack_json::from_dsl_value(&mutation.to_value())));
+    write_file(root.join("🔺️diff/🔣️.json"), &json(semio_framework_pack_json::from_dsl_value(&outcome.diff().to_value())));
     let mut document = outcome_document(&outcome);
     if let (Some(invariant), Some(object)) = (committed_outcome(case).1, document.as_object_mut()) {
-        object.insert("invariant", pack::json::Value::String(invariant));
+        object.insert("invariant", semio_framework_pack_json::Value::String(invariant));
     }
     write_file(root.join("🎯️outcome/🔣️.json"), &json(document));
 }
@@ -221,11 +221,11 @@ pub fn assert_forward(case: &Case) {
 /// that only works forwards (parent re-created first) is caught here, not in the shell's undo.
 pub fn assert_inverse(case: &Case) {
     let base = decode(case, "before-snapshot", case.before);
-    let mutation: EnergyModelMutation = pack::json::from_json_str(case.mutation).expect("committed mutation payload decodes");
+    let mutation: EnergyModelMutation = semio_framework_pack_json::from_json_str(case.mutation, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed mutation payload decodes");
     let mut snapshot = MutationDiff::apply(built(case).diff(), &base).expect("committed mutation applies");
-    for step in <EnergyModelMutation as Mutation<EnergyModelSnapshot>>::inverse(&mutation, &base).into_iter().rev() {
+    for step in <EnergyModelMutation as Mutation<EnergyModelSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
         let outcome = <EnergyModelMutation as Mutation<EnergyModelSnapshot>>::diff(&step, &snapshot);
-        assert!(!outcome.worst_level().is_some_and(|level| level >= protocol::Severity::Error), "{}/{}: an inverse step was itself refused", case.kind, case.directory);
+        assert!(!outcome.worst_level().is_some_and(|level| level >= semio_framework_diagnostic::Severity::Error), "{}/{}: an inverse step was itself refused", case.kind, case.directory);
         snapshot = MutationDiff::apply(outcome.diff(), &snapshot).expect("the inverse step applies");
     }
     assert_eq!(snapshot, base, "{}/{}: undoing did not land back on the committed before-snapshot", case.kind, case.directory);
@@ -235,25 +235,25 @@ pub fn assert_inverse(case: &Case) {
 pub fn assert_canonical(case: &Case) {
     for (label, text) in [("before", case.before), ("after", case.after)] {
         let decoded = decode(case, label, text);
-        let reencoded = pack::json::from_dsl_value(&decoded.to_value());
-        assert!(pack::json::value_eq_ignoring_object_order(&reencoded, &committed(case, label, text)), "{}/{}: committed {label} snapshot is not canonical", case.kind, case.directory);
+        let reencoded = semio_framework_pack_json::from_dsl_value(&decoded.to_value());
+        assert!(semio_framework_pack_json::value_eq_ignoring_object_order(&reencoded, &committed(case, label, text)), "{}/{}: committed {label} snapshot is not canonical", case.kind, case.directory);
     }
-    let mutation: EnergyModelMutation = pack::json::from_json_str(case.mutation).expect("committed mutation payload decodes");
-    let reencoded = pack::json::from_dsl_value(&mutation.to_value());
-    assert!(pack::json::value_eq_ignoring_object_order(&reencoded, &committed(case, "mutation", case.mutation)), "{}/{}: committed mutation payload is not canonical", case.kind, case.directory);
+    let mutation: EnergyModelMutation = semio_framework_pack_json::from_json_str(case.mutation, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed mutation payload decodes");
+    let reencoded = semio_framework_pack_json::from_dsl_value(&mutation.to_value());
+    assert!(semio_framework_pack_json::value_eq_ignoring_object_order(&reencoded, &committed(case, "mutation", case.mutation)), "{}/{}: committed mutation payload is not canonical", case.kind, case.directory);
 }
 
 /// 🧷️ The payload-intrinsic invariant ids the committed mutation's own leaf payload schema declares in `x-semio-invariant`.
 fn declared_invariants(case: &Case) -> Vec<String> {
-    let mutation: EnergyModelMutation = pack::json::from_json_str(case.mutation).expect("committed mutation payload decodes");
+    let mutation: EnergyModelMutation = semio_framework_pack_json::from_json_str(case.mutation, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed mutation payload decodes");
     let schema = <EnergyModelMutation as Mutation<EnergyModelSnapshot>>::input_schema(&mutation).expect("every energy leaf publishes its payload schema");
-    let document = pack::json::parse(schema).expect("leaf payload schema is valid JSON");
-    document.get("x-semio-invariant").and_then(pack::json::Value::as_array).map(|rows| rows.iter().filter_map(|row| row.get("id").and_then(pack::json::Value::as_str).map(str::to_string)).collect()).unwrap_or_default()
+    let document = semio_framework_pack_json::parse(schema, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("leaf payload schema is valid JSON");
+    document.get("x-semio-invariant").and_then(semio_framework_pack_json::Value::as_array).map(|rows| rows.iter().filter_map(|row| row.get("id").and_then(semio_framework_pack_json::Value::as_str).map(str::to_string)).collect()).unwrap_or_default()
 }
 
 /// 🧷️ The committed outcome split into the part the implementation produces and the `invariant` id a payload-intrinsic
 /// refusal names — a rule the produced message cannot carry, which the leaf schema declares in `x-semio-invariant`.
-fn committed_outcome(case: &Case) -> (pack::json::Value, Option<String>) {
+fn committed_outcome(case: &Case) -> (semio_framework_pack_json::Value, Option<String>) {
     let mut declared = committed(case, "outcome", case.outcome);
     let invariant = declared.as_object_mut().and_then(|object| object.remove("invariant")).map(|value| value.as_str().expect("an outcome's invariant is an id").to_string());
     (declared, invariant)
@@ -264,7 +264,7 @@ fn committed_outcome(case: &Case) -> (pack::json::Value, Option<String>) {
 pub fn assert_outcome(case: &Case) {
     let produced = outcome_document(&built(case));
     let (declared, invariant) = committed_outcome(case);
-    assert!(pack::json::value_eq_ignoring_object_order(&produced, &declared), "{}/{}: produced outcome {produced:?} differs from the committed one {declared:?}", case.kind, case.directory);
+    assert!(semio_framework_pack_json::value_eq_ignoring_object_order(&produced, &declared), "{}/{}: produced outcome {produced:?} differs from the committed one {declared:?}", case.kind, case.directory);
     if let Some(invariant) = invariant {
         assert_eq!(produced["code"].as_str(), Some("mutation.invariant"), "{}/{}: only a mutation.invariant refusal names an invariant", case.kind, case.directory);
         assert!(declared_invariants(case).contains(&invariant), "{}/{}: the leaf payload schema declares no x-semio-invariant {invariant:?}", case.kind, case.directory);
@@ -274,21 +274,21 @@ pub fn assert_outcome(case: &Case) {
 /// 🔺️ The produced delta is the committed delta — which pins WHICH fields the kind may touch,
 /// not merely where the document ended up.
 pub fn assert_diff(case: &Case) {
-    let produced = pack::json::from_dsl_value(&built(case).diff().to_value());
+    let produced = semio_framework_pack_json::from_dsl_value(&built(case).diff().to_value());
     let declared = committed(case, "diff", case.diff);
-    assert!(pack::json::value_eq_ignoring_object_order(&produced, &declared), "{}/{}: produced diff {produced:?} differs from the committed 🔺️diff/🔣️.json {declared:?}", case.kind, case.directory);
+    assert!(semio_framework_pack_json::value_eq_ignoring_object_order(&produced, &declared), "{}/{}: produced diff {produced:?} differs from the committed 🔺️diff/🔣️.json {declared:?}", case.kind, case.directory);
 }
 
 /// 🔣️ The committed delta decodes to the real `EnergyModelDiff` and re-encodes unchanged.
 pub fn assert_diff_canonical(case: &Case) {
-    let decoded: EnergyModelDiff = pack::json::from_json_str(case.diff).expect("committed diff decodes");
-    let reencoded = pack::json::from_dsl_value(&decoded.to_value());
-    assert!(pack::json::value_eq_ignoring_object_order(&reencoded, &committed(case, "diff", case.diff)), "{}/{}: committed diff is not canonical", case.kind, case.directory);
+    let decoded: EnergyModelDiff = semio_framework_pack_json::from_json_str(case.diff, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let reencoded = semio_framework_pack_json::from_dsl_value(&decoded.to_value());
+    assert!(semio_framework_pack_json::value_eq_ignoring_object_order(&reencoded, &committed(case, "diff", case.diff)), "{}/{}: committed diff is not canonical", case.kind, case.directory);
 }
 
 /// 🩹 The committed delta ALONE carries the before-document to the after-document.
 pub fn assert_diff_applies(case: &Case) {
-    let decoded: EnergyModelDiff = pack::json::from_json_str(case.diff).expect("committed diff decodes");
+    let decoded: EnergyModelDiff = semio_framework_pack_json::from_json_str(case.diff, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let produced = MutationDiff::apply(&decoded, &decode(case, "before-snapshot", case.before)).expect("committed diff applies to the before-document");
     assert_eq!(produced, decode(case, "after-snapshot", case.after), "{}/{}: the committed diff did not carry before to after", case.kind, case.directory);
 }
@@ -296,7 +296,7 @@ pub fn assert_diff_applies(case: &Case) {
 /// 🧭️ The kind's semantic descriptor uses an approved verb and its inverse closes the loop.
 pub async fn assert_semantics(case: &Case) {
     let base = decode(case, "before-snapshot", case.before);
-    let mutation: EnergyModelMutation = pack::json::from_json_str(case.mutation).expect("committed mutation payload decodes");
+    let mutation: EnergyModelMutation = semio_framework_pack_json::from_json_str(case.mutation, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed mutation payload decodes");
     let descriptor = SemanticMutation::semantics(&mutation);
     assert!(protocol::is_approved_verb(descriptor.verb), "{}: {:?} is not an approved verb", case.kind, descriptor.verb);
     assert_eq!(descriptor.kind, case.kind);
@@ -307,7 +307,7 @@ pub async fn assert_semantics(case: &Case) {
 
 /// 🎯️ Whether the committed outcome declares this vector a refusal (`{"status":"rejected",…}`).
 fn committed_is_rejected(case: &Case) -> bool {
-    matches!(committed(case, "outcome", case.outcome).get("status"), Some(pack::json::Value::String(status)) if status == "rejected")
+    matches!(committed(case, "outcome", case.outcome).get("status"), Some(semio_framework_pack_json::Value::String(status)) if status == "rejected")
 }
 
 /// ⚖️ The framework's own inverse and diff-absorb laws, run in role against this vector. A vector
@@ -317,9 +317,9 @@ fn committed_is_rejected(case: &Case) -> bool {
 /// by `assert_outcome`/`assert_diff`/`assert_forward`. The absorb law still holds for it.
 pub async fn assert_laws(case: &Case) {
     let base = decode(case, "before-snapshot", case.before);
-    let mutation: EnergyModelMutation = pack::json::from_json_str(case.mutation).expect("committed mutation payload decodes");
+    let mutation: EnergyModelMutation = semio_framework_pack_json::from_json_str(case.mutation, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed mutation payload decodes");
     if committed_is_rejected(case) {
-        assert!(built(case).worst_level().is_some_and(|level| level >= protocol::Severity::Error), "{}/{}: the committed outcome is a refusal but the implementation applied the mutation", case.kind, case.directory);
+        assert!(built(case).worst_level().is_some_and(|level| level >= semio_framework_diagnostic::Severity::Error), "{}/{}: the committed outcome is a refusal but the implementation applied the mutation", case.kind, case.directory);
         assert_eq!(decode(case, "after-snapshot", case.after), base, "{}/{}: a refused vector must leave the document untouched", case.kind, case.directory);
     } else {
         protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;

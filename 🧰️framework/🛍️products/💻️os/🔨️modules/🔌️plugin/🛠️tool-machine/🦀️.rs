@@ -9,9 +9,10 @@
 //!   a caret jump, blur, page hide, Enter, an explicit apply or any other verb, and aborts only on a conflicting base or a
 //!   frozen document.
 //!
-//! - 🎛️ the config lanes of a press (§20.1): a tick's app-config and window-config mutations are held as the press's
-//!   provisional config (rendered over the committed config, never published), the release publishes its own config
-//!   lanes as ONE config edit, a host abort drops them with zero trace; config edits are never history rows.
+//! - 🎛️ the config lanes of a press (§20.1): a tick's app-config and window-config mutations ride the same press as its
+//!   document leaves ([`PressLeaf`]), rendered over the committed config and never published; the release publishes them
+//!   as ONE config edit in the very ledger step that commits the document leaves, a host abort drops them with zero
+//!   trace; config edits are never history rows.
 //!
 //! Every render seam reads the committed document (and config) overlaid with every open press's and run's provisional
 //! leaves; every committed transaction is published stamped with its `TransactionRef`. Domain-neutral machines:
@@ -94,30 +95,53 @@ pub(super) enum ToolDispatch {
 //#endregion 🔖️Tag
 
 //#region 🔖️Runtime
-/// 🎛️ The config lanes one open press holds (design §20.1): its last tick's app-config and window-config mutations — absolute
-/// like its document leaves, so each tick replaces the previous one.
-struct ConfigPress<CM> {
-    gesture: String,
-    config: Vec<CM>,
-    window_config: Vec<WindowConfigMutation>,
+/// 🎚️ One leaf of a press — every lane of its emit (design §13.1, §12, §20.1): an absolute document leaf, an owned child's
+/// share, an app-config or a window-config mutation. Every lane rides the window's ONE scrub, so ONE ledger step decides
+/// them all: a tick holds them as the press's provisional overlay, the release commits them as ONE transaction, a late input
+/// of a closed press and a refused input leave every lane as it was, a host abort drops them all with zero trace.
+#[derive(Clone)]
+enum PressLeaf<M, CM> {
+    Member(M),
+    Child(ChildEmit),
+    Config(CM),
+    WindowConfig(WindowConfigMutation),
 }
 
-/// 🗂️ The instance's continuous-tool runtime: the per-window [`ScrubLedger`] and [`TypingLedger`], the committed ⊕
-/// provisional overlay every render seam reads while a press or run is open, every press's held config lanes with their
-/// app-config and per-window window-config overlays, the tag of the dispatch being admitted, the tags of admitted operations
-/// until their completion publishes, and the logical tick that makes every typing clock unique.
+impl<M, CM> PressLeaf<M, CM> {
+    fn member(&self) -> Option<&M> {
+        match self {
+            Self::Member(leaf) => Some(leaf),
+            _ => None,
+        }
+    }
+
+    fn config(&self) -> Option<&CM> {
+        match self {
+            Self::Config(leaf) => Some(leaf),
+            _ => None,
+        }
+    }
+
+    fn window_config(&self) -> Option<&WindowConfigMutation> {
+        match self {
+            Self::WindowConfig(leaf) => Some(leaf),
+            _ => None,
+        }
+    }
+}
+
+/// 🗂️ The instance's continuous-tool runtime: the per-window press ledger (every lane of a press as [`PressLeaf`]s) and
+/// [`TypingLedger`], the committed ⊕ provisional overlays every render seam reads while a press or run is open — the
+/// document, the app config and each window's config —, the tag of the dispatch being admitted, the tags of admitted
+/// operations until their completion publishes, and the logical tick that makes every typing clock unique.
 pub struct ToolMachineRuntime<P, M, C = NoConfig, CM = NoConfigMutation> {
-    scrubs: ScrubLedger<M>,
-    child_scrubs: ScrubLedger<ChildEmit>,
+    presses: ScrubLedger<PressLeaf<M, CM>>,
     typing: TypingLedger<M>,
     overlay: Option<Arc<P>>,
     overlay_generation: u64,
     provisional_generation: u64,
-    config_presses: BTreeMap<String, ConfigPress<CM>>,
-    config_closed: BTreeMap<String, String>,
     config_overlay: Option<Arc<C>>,
     config_overlay_generation: u64,
-    config_changed: bool,
     window_overlays: BTreeMap<String, WindowConfigSnapshot>,
     pub(super) ingress: Option<ToolTag>,
     operations: Vec<(u64, ToolTag)>,
@@ -129,17 +153,13 @@ pub struct ToolMachineRuntime<P, M, C = NoConfig, CM = NoConfigMutation> {
 impl<P, M, C, CM> Default for ToolMachineRuntime<P, M, C, CM> {
     fn default() -> Self {
         Self {
-            scrubs: ScrubLedger::default(),
-            child_scrubs: ScrubLedger::default(),
+            presses: ScrubLedger::default(),
             typing: TypingLedger::default(),
             overlay: None,
             overlay_generation: 0,
             provisional_generation: 0,
-            config_presses: BTreeMap::new(),
-            config_closed: BTreeMap::new(),
             config_overlay: None,
             config_overlay_generation: 0,
-            config_changed: false,
             window_overlays: BTreeMap::new(),
             ingress: None,
             operations: Vec::new(),
@@ -150,18 +170,7 @@ impl<P, M, C, CM> Default for ToolMachineRuntime<P, M, C, CM> {
     }
 }
 
-impl<P, M: Mutation<P> + 'static, C, CM> ToolMachineRuntime<P, M, C, CM> {
-    /// 🔎️ The open presses.
-    pub fn scrubs(&self) -> &ScrubLedger<M> {
-        &self.scrubs
-    }
-
-    /// 🪆️ The open presses' owned-child shares (design §12): absolute child leaves the release publishes with the press's
-    /// own leaves in ONE transaction; they are never overlaid on the parent document.
-    pub fn child_scrubs(&self) -> &ScrubLedger<ChildEmit> {
-        &self.child_scrubs
-    }
-
+impl<P, M: Mutation<P> + 'static, C, CM: Mutation<C> + 'static> ToolMachineRuntime<P, M, C, CM> {
     /// 🔎️ The open typing runs.
     pub fn typing(&self) -> &TypingLedger<M> {
         &self.typing
@@ -177,7 +186,7 @@ impl<P, M: Mutation<P> + 'static, C, CM> ToolMachineRuntime<P, M, C, CM> {
     /// (a preview evaluated by a retained job) folds onto the committed document it reads; empty while nothing is open.
     pub fn provisional_values(&self) -> Vec<DslValue> {
         let typing = self.typing.windows().filter_map(|window| self.typing.open(window)).flat_map(|state| state.entries.iter().map(|(_, leaf)| leaf));
-        self.scrubs.provisional().chain(typing).map(protocol::ToValue::to_value).collect()
+        self.presses.provisional().filter_map(PressLeaf::member).chain(typing).map(semio_framework_value::ToValue::to_value).collect()
     }
 
     /// 🔢️ Bumped whenever the overlay is refolded or dropped (a tick, a release, a host abort, a moved base), so a derived
@@ -194,7 +203,7 @@ impl<P, M: Mutation<P> + 'static, C, CM> ToolMachineRuntime<P, M, C, CM> {
         if let Some(physical_ms) = self.now_ms {
             return HybridLogicalTimestamp { actor: 0, physical_ms, logical: self.tick };
         }
-        HybridLogicalTimestamp { actor: 0, physical_ms: semio_framework_job::default_now_ms().unwrap_or(0), logical: self.tick }
+        semio_framework_tool_machine::authoring_clock(self.tick)
     }
 
     /// 🏷️ Keeps `tag` for the admitted `operation` until its completion publishes; the oldest tag of an operation that
@@ -216,7 +225,7 @@ impl<P, M: Mutation<P> + 'static, C, CM> ToolMachineRuntime<P, M, C, CM> {
     /// whose leaves the moved base refuses is a conflict and aborts with zero trace (`baseMoved`). Answers every snapshot
     /// alias the refold displaced (the caller retires them through the store, never plainly) and every aborted run.
     fn follow(&mut self, committed: &Arc<P>, generation: u64, changed: bool) -> (Vec<Arc<P>>, Vec<ToolStep<M>>) {
-        if self.scrubs.is_empty() && self.typing.is_empty() {
+        if self.presses.provisional().all(|leaf| leaf.member().is_none()) && self.typing.is_empty() {
             let dropped: Vec<Arc<P>> = self.overlay.take().into_iter().collect();
             self.provisional_generation = self.provisional_generation.wrapping_add(u64::from(!dropped.is_empty()));
             return (dropped, Vec::new());
@@ -226,7 +235,7 @@ impl<P, M: Mutation<P> + 'static, C, CM> ToolMachineRuntime<P, M, C, CM> {
         }
         let mut displaced = Vec::new();
         let mut running: Option<Arc<P>> = None;
-        for leaf in self.scrubs.provisional() {
+        for leaf in self.presses.provisional().filter_map(PressLeaf::member) {
             fold_leaf(committed, &mut running, &mut displaced, leaf);
         }
         let mut conflicts = Vec::new();
@@ -244,51 +253,6 @@ impl<P, M: Mutation<P> + 'static, C, CM> ToolMachineRuntime<P, M, C, CM> {
         self.provisional_generation = self.provisional_generation.wrapping_add(1);
         (displaced, aborted)
     }
-}
-
-impl<P, M, C, CM: Mutation<C>> ToolMachineRuntime<P, M, C, CM> {
-    /// 🎛️ Holds a tick's config lanes as the window's press: they replace the press's previous tick, a new gesture replaces
-    /// another press of the window (`captureLost`), and a late tick of the press the window last closed stays silent.
-    fn hold_config(&mut self, window: &str, gesture: &str, config: Vec<CM>, window_config: Vec<WindowConfigMutation>) {
-        if self.config_closed.get(window).is_some_and(|closed| closed == gesture) {
-            return;
-        }
-        self.config_closed.remove(window);
-        self.config_presses.insert(window.to_string(), ConfigPress { gesture: gesture.to_string(), config, window_config });
-        self.config_changed = true;
-    }
-
-    /// 🏁️ The release of `gesture`: the window's held press (or a press the release displaces) leaves the overlay and the
-    /// release publishes its own config lanes; answers `false` for a late release of the press the window already closed,
-    /// whose lanes stay silent.
-    fn release_config(&mut self, window: &str, gesture: &str) -> bool {
-        if self.config_closed.get(window).is_some_and(|closed| closed == gesture) {
-            return false;
-        }
-        self.config_changed |= self.config_presses.remove(window).is_some();
-        self.config_closed.insert(window.to_string(), gesture.to_string());
-        true
-    }
-
-    /// 🧯️ A host abort of `gesture` (`None`: whatever press is open): the window's held press leaves with zero trace.
-    fn abort_config(&mut self, window: &str, gesture: Option<&str>) {
-        let open = self.config_presses.get(window).map(|press| press.gesture.clone());
-        if open.is_some() && (gesture.is_none() || open.as_deref() == gesture) {
-            self.config_presses.remove(window);
-            self.config_changed = true;
-        }
-        if let Some(closed) = gesture.map(str::to_string).or(open) {
-            self.config_closed.insert(window.to_string(), closed);
-        }
-    }
-
-    /// 🧊️ Drops every held press whose window `keep` refuses (all of them for `|_| false`) with zero trace.
-    fn retain_config_windows(&mut self, keep: impl Fn(&str) -> bool) {
-        let dropped: Vec<String> = self.config_presses.keys().filter(|window| !keep(window)).cloned().collect();
-        for window in dropped {
-            self.abort_config(&window, None);
-        }
-    }
 
     /// 🪞️ The app config every render seam reads: committed with every held press's config mutations, else `committed`.
     pub fn config_overlay_or<'a>(&'a self, committed: &'a Arc<C>) -> &'a Arc<C> {
@@ -304,14 +268,14 @@ impl<P, M, C, CM: Mutation<C>> ToolMachineRuntime<P, M, C, CM> {
     /// 🪞️ Refolds the app-config overlay on `committed` (config generation `generation`) when a held press changed or the
     /// config moved under one; answers the displaced aliases (retired by the caller through the config store).
     fn follow_config(&mut self, committed: &Arc<C>, generation: u64, changed: bool) -> Vec<Arc<C>> {
-        if self.config_presses.values().all(|press| press.config.is_empty()) {
+        if self.presses.provisional().all(|leaf| leaf.config().is_none()) {
             return self.config_overlay.take().into_iter().collect();
         }
         if !changed && self.config_overlay.is_some() && self.config_overlay_generation == generation {
             return Vec::new();
         }
         let (mut running, mut displaced) = (None, Vec::new());
-        for leaf in self.config_presses.values().flat_map(|press| press.config.iter()) {
+        for leaf in self.presses.provisional().filter_map(PressLeaf::config) {
             fold_leaf(committed, &mut running, &mut displaced, leaf);
         }
         displaced.extend(self.config_overlay.replace(running.unwrap_or_else(|| Arc::clone(committed))));
@@ -404,9 +368,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
                 return ToolDispatch::Tagged(ToolTag::Scrub(ScrubTag { window, tool, phase }));
             }
         };
-        self.tool_machines.scrubs.abort(&window, Some(phase.gesture()), reason);
-        self.tool_machines.child_scrubs.abort(&window, Some(phase.gesture()), reason);
-        self.tool_machines.abort_config(&window, Some(phase.gesture()));
+        self.tool_machines.presses.abort(&window, Some(phase.gesture()), reason);
         self.follow_tool_machines(true);
         ToolDispatch::Settled(match fault {
             Some(fault) => Err(fault),
@@ -433,7 +395,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         Box::pin(self.publish_typing_commits(steps, meta)).await
     }
 
-    /// 💾️ Publishes every committed run as ONE document edit stamped with its `TransactionRef` (no coalesce key, no
+    /// 💾️ Publishes every committed run as ONE document edit stamped with its `TransactionRef` (no
     /// description: the history row is labelled from the run's net leaves), through the verb that typed it.
     async fn publish_typing_commits(&mut self, steps: Vec<ToolStep<A::Mutation>>, meta: &ActionMeta) -> Result<(), Fault> {
         let mut published = false;
@@ -455,9 +417,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     async fn retire_tool_windows(&mut self, meta: &ActionMeta) -> Result<(), Fault> {
         let Some(view) = meta.view_state.as_ref().filter(|view| !view.window_instances.is_empty()) else { return Ok(()) };
         let keep = |window: &str| window.is_empty() || view.window_instances.iter().any(|instance| instance.id == window);
-        let retired = !self.tool_machines.scrubs.retain_windows(keep).is_empty() | self.tool_machines.config_presses.keys().any(|window| !keep(window));
-        self.tool_machines.child_scrubs.retain_windows(keep);
-        self.tool_machines.retain_config_windows(keep);
+        let retired = !self.tool_machines.presses.retain_windows(keep).is_empty();
         let clock = self.tool_machines.clock();
         let committed = self.tool_machines.typing.retain_windows(keep, clock).into_iter().filter_map(|(_, step)| step.ok()).collect::<Vec<_>>();
         if retired {
@@ -469,12 +429,9 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// 🧊️ `frozen`: a history edit opens, so every open press and every run still open leaves zero trace (a run normally
     /// commits before the history verb reaches here).
     pub(super) fn freeze_tool_machines(&mut self) {
-        let presses = self.tool_machines.scrubs.abort_all(ToolAbortReason::Frozen);
-        self.tool_machines.child_scrubs.abort_all(ToolAbortReason::Frozen);
+        let presses = self.tool_machines.presses.abort_all(ToolAbortReason::Frozen);
         let runs = self.tool_machines.typing.abort_all(ToolAbortReason::Frozen);
-        let held = !self.tool_machines.config_presses.is_empty();
-        self.tool_machines.retain_config_windows(|_| false);
-        if !presses.is_empty() || !runs.is_empty() || held {
+        if !presses.is_empty() || !runs.is_empty() {
             self.follow_tool_machines(true);
         }
     }
@@ -484,7 +441,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// retire-owned roots panics on a plain drop of its last owner), and drops every run the moved head conflicts with.
     pub(super) fn follow_tool_machines(&mut self, changed: bool) {
         let machines = &self.tool_machines;
-        if machines.scrubs.is_empty() && machines.typing.is_empty() && machines.overlay.is_none() && machines.config_presses.is_empty() && machines.config_overlay.is_none() && machines.window_overlays.is_empty() {
+        if machines.presses.is_empty() && machines.typing.is_empty() && machines.overlay.is_none() && machines.config_overlay.is_none() && machines.window_overlays.is_empty() {
             return;
         }
         let committed = self.store.snapshot_owner();
@@ -493,13 +450,12 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         for alias in displaced {
             retire_overlay_alias(self.store.retire_snapshot_alias(alias));
         }
-        let config_changed = std::mem::take(&mut self.tool_machines.config_changed);
         let committed_config = self.config_store.snapshot_owner();
-        for alias in self.tool_machines.follow_config(&committed_config, self.config_store.generation(), config_changed) {
+        for alias in self.tool_machines.follow_config(&committed_config, self.config_store.generation(), changed) {
             retire_overlay_alias(self.config_store.retire_snapshot_alias(alias));
         }
         let mut targets: BTreeMap<String, (String, Vec<&WindowConfigMutation>)> = BTreeMap::new();
-        for mutation in self.tool_machines.config_presses.values().flat_map(|press| press.window_config.iter()) {
+        for mutation in self.tool_machines.presses.provisional().filter_map(PressLeaf::window_config) {
             targets.entry(mutation.window_id().to_string()).or_insert_with(|| (mutation.window_kind_id().to_string(), Vec::new())).1.push(mutation);
         }
         let stale: Vec<String> = self.tool_machines.window_overlays.keys().filter(|window| !targets.contains_key(*window)).cloned().collect();
@@ -511,7 +467,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         for (window, (kind, mutations)) in targets {
             let committed_generation = self.window_config_store.snapshot(&kind, &window).map(|snapshot| snapshot.generation());
             let current = self.tool_machines.window_overlays.get(&window).map(|overlay| overlay.generation());
-            if !config_changed && current.is_some() && current == committed_generation {
+            if !changed && current.is_some() && current == committed_generation {
                 continue;
             }
             let preview = self.window_config_store.preview(&kind, &window, &mutations);
@@ -525,73 +481,72 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         }
     }
 
-    /// 🎛️ A press's config lanes at their publication (design §20.1): a tick's leave `emit` and are held as the window's
-    /// provisional config; a release keeps its own as ONE config edit (no coalesce key) unless it is the late release of the
-    /// press the window already closed, whose lanes stay silent. Answers whether `emit` still publishes config lanes.
-    pub(super) fn settle_press_config<Op, D>(&mut self, tag: &ScrubTag, emit: &mut Emit<Op, A::ConfigMutation, D>) -> bool {
-        match &tag.phase {
-            ScrubPhase::Tick { gesture } => {
-                let (config, window_config) = (std::mem::take(&mut emit.config_mutations), std::mem::take(&mut emit.window_config_mutations));
-                self.tool_machines.hold_config(&tag.window, gesture, config, window_config);
-                false
-            }
-            ScrubPhase::Commit { gesture } if !self.tool_machines.release_config(&tag.window, gesture) => {
-                emit.config_mutations.clear();
-                emit.window_config_mutations.clear();
-                false
-            }
-            ScrubPhase::Commit { .. } | ScrubPhase::Abort { .. } => {
-                emit.coalesce_key = None;
-                true
+    /// 🎚️ Rides every lane of `emit` — its artifact leaves, its owned children's shares (design §12), its app-config and
+    /// window-config mutations (§20.1) — on `tag`'s press as ONE scrub opened on the document revision `base` by `actor`. A
+    /// tick holds them as the press's provisional overlay and publishes nothing; the release commits them as ONE transaction
+    /// and hands every lane back to `emit` — the document lanes stamped with the press's `TransactionRef` (a ref the verb
+    /// minted itself never outlives the press), the config lanes as ONE config edit that is never a history row; a late input
+    /// of the press the window already closed stays silent on every lane. One ledger step decides every lane, so a refused
+    /// input leaves the press, its overlays and its held config exactly as they were until a retry or a host abort decides.
+    /// Answers whether `emit` publishes the press.
+    pub(super) fn settle_press<D>(&mut self, tag: &ScrubTag, base: &[u8], actor: &str, emit: &mut Emit<A::Mutation, A::ConfigMutation, D>) -> Result<bool, Fault> {
+        let base: String = base.iter().map(|byte| format!("{byte:02x}")).collect();
+        let leaves = std::mem::take(&mut emit.artifact_mutations)
+            .into_iter()
+            .map(PressLeaf::Member)
+            .chain(std::mem::take(&mut emit.child_emits).into_iter().map(PressLeaf::Child))
+            .chain(std::mem::take(&mut emit.config_mutations).into_iter().map(PressLeaf::Config))
+            .chain(std::mem::take(&mut emit.window_config_mutations).into_iter().map(PressLeaf::WindowConfig))
+            .collect();
+        emit.transaction = None;
+        let step = self
+            .tool_machines
+            .presses
+            .send(&tag.window, &tag.tool, &ActorId(actor.to_string()), &base, tag.phase.clone().input(leaves), semio_framework_tool_machine::authoring_clock(0))
+            .map_err(|refusal| Fault::new(FaultOrigin::Framework, FaultCode::new(refusal.code()), format!("continuous control {:?} refused its press", tag.tool)))?;
+        let ToolStep::Committed(transaction, leaves) = step else { return Ok(false) };
+        for leaf in leaves {
+            match leaf {
+                PressLeaf::Member(leaf) => emit.artifact_mutations.push(leaf),
+                PressLeaf::Child(child) => emit.child_emits.push(child),
+                PressLeaf::Config(config) => emit.config_mutations.push(config),
+                PressLeaf::WindowConfig(window_config) => emit.window_config_mutations.push(window_config),
             }
         }
+        if !emit.artifact_mutations.is_empty() || !emit.child_emits.is_empty() {
+            emit.transaction = Some(transaction);
+        }
+        Ok(true)
     }
 
-    /// 🛠️ The ONE point a tagged operation's completion becomes its publication. A press: the emit's artifact leaves and its
-    /// owned-child leaves ride the window's press on the operation's document revision; a tick or a press that settles empty
-    /// publishes no edit and logs no history row, the release publishes its committed leaves as ONE edit per touched member,
-    /// every one stamped with the press's `TransactionRef` (design §12) — a ref the verb minted itself never outlives the press
-    /// that owns the transaction. A typed edit: its leaves fold into the window's run; nothing publishes while the run is open, and a
-    /// run the edit ended (idle lapse, caret jump, another buffer) publishes in this emit as ONE edit stamped with its own
-    /// `TransactionRef`. Every other lane of the emit (config, effects, events, UI scope) publishes as usual.
+    /// 🛠️ The ONE point a tagged operation's completion becomes its publication. A press settles every lane of its emit on
+    /// the window's press ([`Self::settle_press`]) on the operation's document revision. A typed edit: its leaves fold into
+    /// the window's run; nothing publishes while the run is open, and a run the edit ended (idle lapse, caret jump, another
+    /// buffer) publishes in this emit as ONE edit stamped with its own `TransactionRef`. An emit that carries no transaction
+    /// logs no history row; every other lane of the emit (effects, events, UI scope) publishes as usual.
     pub(super) fn settle_tool_operation(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>, publication: &mut ArtifactToolCompletionValue<A>) -> Result<(), Fault> {
         let Some(tag) = self.tool_machines.take_operation(mounted.operation.operation.0) else { return Ok(()) };
         let ArtifactToolCompletionValue::Emit(Ok(emit), _) = publication else { return Ok(()) };
-        let leaves = std::mem::take(&mut emit.artifact_mutations);
-        let actor = ActorId(mounted.meta.actor.clone());
-        let committed = match tag {
+        match tag {
             ToolTag::Scrub(tag) => {
-                let base: String = mounted.canonical_revision.iter().map(|byte| format!("{byte:02x}")).collect();
-                let clock = HybridLogicalTimestamp { actor: 0, physical_ms: semio_framework_job::default_now_ms().unwrap_or(0), logical: 0 };
-                let refused = |refusal: semio_framework_tool_machine::ToolRefusal| Fault::new(FaultOrigin::Framework, FaultCode::new(refusal.code()), format!("continuous control {:?} refused its press", tag.tool));
-                let children = std::mem::take(&mut emit.child_emits);
-                emit.transaction = None;
-                self.settle_press_config(&tag, emit);
-                let step = self.tool_machines.scrubs.send(&tag.window, &tag.tool, &actor, &base, tag.phase.clone().input(leaves), clock).map_err(refused)?;
-                let child_step = self.tool_machines.child_scrubs.send(&tag.window, &tag.tool, &actor, &base, tag.phase.clone().input(children), clock).map_err(refused)?;
-                if let ToolStep::Committed(transaction, children) = child_step {
-                    emit.child_emits = children;
-                    emit.transaction = Some(transaction);
-                    emit.description = None;
-                }
-                vec![step]
+                self.settle_press(&tag, &mounted.canonical_revision, &mounted.meta.actor, emit)?;
             }
             ToolTag::Typing(tag) => {
+                let leaves = std::mem::take(&mut emit.artifact_mutations);
                 let clock = self.tool_machines.clock();
-                self.tool_machines
+                let steps = self
+                    .tool_machines
                     .typing
-                    .send(&tag.window, &tag.tool, &actor, TypingInput::Edit { buffer: tag.buffer, leaves }, A::typing_fold, clock)
-                    .map_err(|refusal| Fault::new(FaultOrigin::Framework, FaultCode::new(refusal.code()), format!("typing run {:?} refused its edit", tag.tool)))?
+                    .send(&tag.window, &tag.tool, &ActorId(mounted.meta.actor.clone()), TypingInput::Edit { buffer: tag.buffer, leaves }, A::typing_fold, clock)
+                    .map_err(|refusal| Fault::new(FaultOrigin::Framework, FaultCode::new(refusal.code()), format!("typing run {:?} refused its edit", tag.tool)))?;
+                if let Some((transaction, mutations)) = steps.into_iter().find_map(|step| if let ToolStep::Committed(transaction, mutations) = step { Some((transaction, mutations)) } else { None }) {
+                    emit.artifact_mutations = mutations;
+                    emit.transaction = Some(transaction);
+                }
             }
-        };
-        match committed.into_iter().find_map(|step| if let ToolStep::Committed(transaction, mutations) = step { Some((transaction, mutations)) } else { None }) {
-            Some((transaction, mutations)) => {
-                emit.artifact_mutations = mutations;
-                emit.transaction = Some(transaction);
-                emit.description = None;
-            }
-            None if emit.transaction.is_none() => mounted.command_logged = true,
-            None => {}
+        }
+        if emit.transaction.is_none() {
+            mounted.command_logged = true;
         }
         self.follow_tool_machines(true);
         Ok(())

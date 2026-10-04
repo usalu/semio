@@ -67,7 +67,7 @@ pub fn text_from_document_snapshot(snapshot: &SemioDocumentSnapshot) -> String {
 /// comparing embedded content, mirroring lowpoly's `mesh_child_handle`/cad's `cad_model_child_handle`.
 pub fn document_child_handle(_id: &str, text: &str, language_id: &str) -> WriterDocumentChild {
     let snapshot = document_snapshot_from_text(text, language_id);
-    let content_json = dsl::os_pack::json::to_json_string(&snapshot);
+    let content_json = semio_framework_pack_json::to_json_string(&snapshot);
     let child_id = store::content_id("document", content_json.as_bytes());
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "document".into() };
     let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };

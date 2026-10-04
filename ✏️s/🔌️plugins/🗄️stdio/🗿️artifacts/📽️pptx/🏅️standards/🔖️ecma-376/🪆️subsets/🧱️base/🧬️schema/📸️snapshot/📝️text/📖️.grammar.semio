@@ -7,22 +7,7 @@ string double raw
 string single raw
 
 document = "stdio.pptx" snapshot;
-snapshot = "[" octets "," package "," xml-parts "," presentation "]";
-presentation = "[" slides "]";
-slides = "[" (slide ("," slide)*)? "]";
-slide = "[" shapes "]";
-shapes = "[" (shape ("," shape)*)? "]";
-shape = text-box | picture | placeholder | other;
-text-box = "[" "0" "," paragraphs "," transform "]";
-picture = "[" "1" "," octets "," transform "]";
-placeholder = "[" "2" "," octets "," paragraphs "," transform "]";
-other = "[" "3" "," node "]";
-transform = "[" signed "," signed "," signed "," signed "]";
-paragraphs = "[" (paragraph ("," paragraph)*)? "]";
-paragraph = "[" runs "]";
-runs = "[" (run ("," run)*)? "]";
-run = "[" octets "," flag "," flag "," optional-font-size "]";
-optional-font-size = "[" ("0" | "1" "," font-size) "]";
+snapshot = "[" octets "," package "," xml-parts "]";
 package = "[" binary-parts "," pairs "," pairs "," relationship-owners "," octets "]";
 binary-parts = "[" (binary-part ("," binary-part)*)? "]";
 binary-part = "[" octets "," octets "," octets "]";
@@ -55,6 +40,4 @@ entities = "[" (entity ("," entity)*)? "]";
 entity = "E" "[" flag "," octets "," octets "]";
 flag = "0" | "1";
 unsigned = U64;
-signed = I64;
-font-size = U32;
 octets = HEX_BYTES?;

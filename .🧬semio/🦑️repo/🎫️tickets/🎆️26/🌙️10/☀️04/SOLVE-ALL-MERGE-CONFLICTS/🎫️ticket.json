@@ -1,0 +1,14 @@
+{
+  "title": "Solve All Merge Conflicts",
+  "emoji": "🔀",
+  "status": "closed",
+  "description": "Resolve every unmerged path by keeping valuable changes from both sides. Unmerged files: .claude/launch.json, .vscode/launch.json, .vscode/🧰launch.seed.jsonc, Cargo.lock, bun.lock, framework rust script.ts, 2d test config, ui oracle json, and repo library mjs. Do not discard unique configurations, dependencies, or code from either side.",
+  "summary": "Resolved all nine stash-pop conflicts by keeping both sides: launch configurations, oracle ids, Cargo packages, and bun workspaces are unions. Two shared launch commands now use the stashed targets because the upstream targets are not on this tree. Code keeps the stashed Cargo helpers and moduleSourceImports together with upstream seeding and the command-input hash gate.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2766"
+  },
+  "goal": "🎯consistentrepohistory",
+  "sessions": [
+    "⚪6be5f84b0acd4c409a8573a0468cd41c"
+  ]
+}

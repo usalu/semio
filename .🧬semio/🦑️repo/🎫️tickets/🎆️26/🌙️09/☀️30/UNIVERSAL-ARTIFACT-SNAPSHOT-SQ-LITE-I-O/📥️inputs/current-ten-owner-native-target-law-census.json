@@ -1,0 +1,527 @@
+{
+  "sourceOnly": true,
+  "sharedNativeSelector": "--lib sqlite_snapshot_ --no-fail-fast",
+  "owners": [
+    {
+      "root": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d",
+      "target": "@semio-tech/process-process3d-rs:test-snapshot-sqlite-native",
+      "command": "bun ./📜️script.ts test-snapshot-sqlite native",
+      "laws": [
+        {
+          "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "names": [
+            "sqlite_snapshot_process3d_actual_parent_bare_capability_is_present",
+            "sqlite_snapshot_process3d_complete_parent_native_formats_preserve_all_fields_and_words",
+            "sqlite_snapshot_process3d_parent_child_addresses_are_independent_literals",
+            "sqlite_snapshot_process3d_genuine_controlled_metadata_and_typed_construction_cover_every_variant",
+            "sqlite_snapshot_process3d_actual_erased_parent_both_encodings_have_queryable_domain_fields",
+            "sqlite_snapshot_process3d_independent_sqlite_knows_every_handwritten_table_and_scalar_width",
+            "sqlite_snapshot_process3d_actual_document_declaration_exposes_parent_capability",
+            "sqlite_snapshot_process3d_owned_native_large_fields_have_real_interior_controls"
+          ],
+          "independentBunSqlite": true,
+          "independentSerde": true
+        },
+        {
+          "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🚦️public/🦀️.rs",
+          "names": [
+            "sqlite_snapshot_process3d_public_declared_export_reaches_full_native_and_independent_physical_fields",
+            "sqlite_snapshot_process3d_public_declared_import_binds_independent_semantic_rows_and_exact_native_words"
+          ],
+          "independentBunSqlite": true,
+          "independentSerde": true
+        },
+        {
+          "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🧮️census/🦀️.rs",
+          "names": [
+            "sqlite_snapshot_process3d_native_exact_semantic_cells_both_directions"
+          ],
+          "independentBunSqlite": false,
+          "independentSerde": true
+        }
+      ],
+      "receiptStatus": "requires retained receipt comparison; source presence is not execution"
+    },
+    {
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc",
+      "target": "@semio-tech/stdio-ifc-rs:test-snapshot-sqlite-native",
+      "command": "bun ./📜️script.ts test-snapshot-sqlite native",
+      "laws": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "names": [
+            "sqlite_snapshot_ifc2x3_all_four_actual_declaration_routes_preserve_decimals_and_warnings",
+            "sqlite_snapshot_ifc2x3_native_literal_decimal_preflight_and_erased_encodings",
+            "sqlite_snapshot_ifc2x3_exact_owned_mvd_diagnostics_and_coordinates",
+            "sqlite_snapshot_ifc2x3_owned_view_preflight_budgets_and_cancellation",
+            "sqlite_snapshot_ifc2x3_refuses_corrupt_decimal_optional_owner_forests_and_limits",
+            "sqlite_snapshot_ifc2x3_exact_decimal_components_optional_edm_and_header_graph",
+            "sqlite_snapshot_ifc2x3_independent_sqlite_decimal_and_edm_field_edit",
+            "sqlite_snapshot_ifc2x3_cohort_controlled_input_preserves_actual_carrier_and_cancels_inside_copy",
+            "sqlite_snapshot_ifc2x3_cohort_controlled_output_preserves_actual_carrier_and_cancels_inside_copy",
+            "sqlite_snapshot_ifc2x3_owned_decimal_coefficients_survive_semantic_files_without_display",
+            "sqlite_snapshot_ifc2x3_surrogate_root_header_ids_are_relationships_not_fixed_ones",
+            "sqlite_snapshot_ifc2x3_controlled_native_owned_frame_preserves_literal_schema_and_all_variants",
+            "sqlite_snapshot_ifc2x3_owned_decimal_coefficient_is_literal_state_not_exchange_validation",
+            "sqlite_snapshot_ifc2x3_actual_removal_keeps_literal_references_through_erased_native_and_sqlite_file"
+          ],
+          "independentBunSqlite": true,
+          "independentSerde": true
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "names": [
+            "sqlite_snapshot_ifc4_actual_declaration_preserves_every_ieee_word_in_owned_encodings",
+            "sqlite_snapshot_ifc4_native_preflight_and_erased_binary_text",
+            "sqlite_snapshot_ifc4_rejects_corrupt_ownership_reference_words_ieee_and_controls",
+            "sqlite_snapshot_ifc4_every_header_value_variant_full_width_and_ieee_word",
+            "sqlite_snapshot_ifc4_independent_sqlite_full_value_query_and_edit",
+            "sqlite_snapshot_ifc4_cohort_controlled_input_preserves_actual_carrier_and_cancels_inside_copy",
+            "sqlite_snapshot_ifc4_cohort_controlled_output_preserves_actual_carrier_and_cancels_inside_copy",
+            "sqlite_snapshot_ifc4_cohort_semantic_words_match_independent_sqlite_dataview",
+            "sqlite_snapshot_ifc4_surrogate_root_header_ids_are_relationships_not_fixed_ones",
+            "sqlite_snapshot_ifc4_controlled_native_owned_frame_preserves_literal_schema_and_all_variants",
+            "sqlite_snapshot_ifc4_actual_removal_keeps_literal_references_through_erased_native_and_sqlite_file"
+          ],
+          "independentBunSqlite": true,
+          "independentSerde": true
+        }
+      ],
+      "receiptStatus": "requires retained receipt comparison; source presence is not execution"
+    },
+    {
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step",
+      "target": "@semio-tech/stdio-step-rs:test-snapshot-sqlite-native",
+      "command": "bun ./📜️script.ts test-snapshot-sqlite native",
+      "laws": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "names": [
+            "sqlite_snapshot_step_native_preflight_and_bare_binary_text_admission",
+            "sqlite_snapshot_step_all_seven_actual_declaration_owned_routes_preserve_words_and_warnings",
+            "sqlite_snapshot_step_large_scalar_before_copy_controls_and_borrowed_profile_budgets",
+            "sqlite_snapshot_step_full_model_all_ieee_words_and_native_state",
+            "sqlite_snapshot_step_rejects_structural_reference_scalar_corruption_and_controls",
+            "sqlite_snapshot_step_independent_sqlite_joins_and_header_edit",
+            "sqlite_snapshot_step_exact_typed_profiles_refuse_wrong_coordinates_and_preserve_diagnostics",
+            "sqlite_snapshot_step_cohort_controlled_input_preserves_actual_carrier_and_cancels_inside_copy",
+            "sqlite_snapshot_step_cohort_controlled_output_preserves_actual_carrier_and_cancels_inside_copy",
+            "sqlite_snapshot_step_cohort_semantic_words_match_independent_sqlite_dataview",
+            "sqlite_snapshot_step_surrogate_root_header_ids_are_relationships_not_fixed_ones",
+            "sqlite_snapshot_step_controlled_native_owned_frame_preserves_literal_schema_and_all_variants"
+          ],
+          "independentBunSqlite": true,
+          "independentSerde": true
+        }
+      ],
+      "receiptStatus": "requires retained receipt comparison; source presence is not execution"
+    },
+    {
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf",
+      "target": "@semio-tech/stdio-gltf-rs:test-snapshot-sqlite-native",
+      "command": "bun ./📜️script.ts test-snapshot-sqlite native",
+      "laws": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "names": [
+            "sqlite_snapshot_gltf_independent_sql_reserialization_preserves_ieee_words_unsigned_and_duplicate_extras",
+            "sqlite_snapshot_gltf_erased_binary_and_text_preserve_every_owned_field",
+            "sqlite_snapshot_gltf_rejects_independently_edited_ieee_conflict_and_unowned_relationship",
+            "sqlite_snapshot_gltf_exact_typed_guard_budget_and_cancellation",
+            "sqlite_snapshot_gltf_full_typed_document_and_independent_buffers_reconstruct",
+            "sqlite_snapshot_gltf_independent_sql_mesh_accessor_material_and_buffer_edits",
+            "sqlite_snapshot_gltf_actual_factory_exposes_owned_provider_and_structural_hash",
+            "sqlite_snapshot_gltf_empty_domain_tables_preserve_absence_and_present_empty_lists",
+            "sqlite_snapshot_gltf_deep_owned_extras_erased_payloads_have_bounded_wire_depth",
+            "sqlite_snapshot_gltf_logical_text_rejects_foreign_envelope_and_unowned_suffix",
+            "sqlite_snapshot_gltf_flat_primitive_extras_keep_deep_ordered_members_and_ieee_words",
+            "sqlite_snapshot_gltf_empty_image_and_texture_entities_survive_logical_native_lists",
+            "sqlite_snapshot_gltf_authored_grammar_recognizes_each_owned_named_domain",
+            "sqlite_snapshot_gltf_controlled_binding_retires_deep_completed_fields_after_failure_and_cancellation",
+            "sqlite_snapshot_gltf_independent_bad_later_json_owner_retires_deep_completed_sibling",
+            "sqlite_snapshot_gltf_independent_later_root_owner_failure_retires_completed_extensions",
+            "sqlite_snapshot_gltf_curated_demo_uses_actual_owned_flat_native_records",
+            "sqlite_snapshot_gltf_curated_metabolism_pack_is_current_owned_logical_state",
+            "sqlite_snapshot_gltf_typed_guard_rejects_independently_changed_owned_state",
+            "sqlite_snapshot_gltf_typed_guard_accepts_independently_renumbered_surrogate",
+            "sqlite_snapshot_gltf_native_owned_decode_controls_physical_and_typed_materialization",
+            "sqlite_snapshot_gltf_genuine_native_output_preserves_paid_full_word_state",
+            "sqlite_snapshot_gltf_genuine_native_output_rejects_limits_and_cancels_during_paid_copy"
+          ],
+          "independentBunSqlite": true,
+          "independentSerde": true
+        }
+      ],
+      "receiptStatus": "requires retained receipt comparison; source presence is not execution"
+    },
+    {
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary",
+      "target": "@semio-tech/stdio-binary-rs:test-snapshot-sqlite-native",
+      "command": "bun ./📜️script.ts test-snapshot-sqlite native",
+      "laws": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "names": [
+            "sqlite_snapshot_binary_reconstruction_respects_value_budget",
+            "sqlite_snapshot_binary_borrowed_native_preflight_is_exact_cancellable_and_unowned",
+            "sqlite_snapshot_binary_bytes_are_queryable_ordered_integers",
+            "sqlite_snapshot_binary_actual_factory_canonical_external_carrier",
+            "sqlite_snapshot_binary_native_input_interior_and_caller_ceilings",
+            "sqlite_snapshot_binary_long_schema_projection_and_reconstruction_are_interior_controlled",
+            "sqlite_snapshot_binary_native_output_interior_and_caller_ceilings",
+            "sqlite_snapshot_binary_actual_typed_file_preserves_complete_literal_owned_fields",
+            "sqlite_snapshot_binary_external_carrier_normalizes_unrepresented_schema"
+          ],
+          "independentBunSqlite": false,
+          "independentSerde": true
+        }
+      ],
+      "receiptStatus": "requires retained receipt comparison; source presence is not execution"
+    },
+    {
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp",
+      "target": "@semio-tech/stdio-bmp-rs:test-snapshot-sqlite-native",
+      "command": "bun ./📜️script.ts test-snapshot-sqlite native",
+      "laws": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "names": [
+            "sqlite_snapshot_exposes_complete_semantic_layout_without_a_native_carrier",
+            "sqlite_snapshot_typed_file_round_trip_preserves_gap_padding_and_trailer",
+            "sqlite_snapshot_reconstruction_refuses_incomplete_semantic_grid_atomically",
+            "sqlite_snapshot_projection_and_reconstruction_obey_cancellation_and_ownership_limits",
+            "sqlite_snapshot_independent_client_edits_one_sample_without_rebuilding_other_native_bytes"
+          ],
+          "independentBunSqlite": true,
+          "independentSerde": false
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🧬️semantic/🦀️.rs",
+          "names": [
+            "sqlite_snapshot_semantic_every_supported_profile_preserves_each_declared_native_octet",
+            "sqlite_snapshot_semantic_literal_occurrences_preserve_empty_truncated_and_refused_native_owners"
+          ],
+          "independentBunSqlite": false,
+          "independentSerde": true
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🧬️semantic/⏱️row-tail/🦀️.rs",
+          "names": [
+            "sqlite_snapshot_semantic_row_tail_processing_cancels_inside_owned_frontier"
+          ],
+          "independentBunSqlite": false,
+          "independentSerde": true
+        }
+      ],
+      "receiptStatus": "requires retained receipt comparison; source presence is not execution"
+    },
+    {
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate",
+      "target": "@semio-tech/stdio-deflate-rs:test-snapshot-sqlite-native",
+      "command": "bun ./📜️script.ts test-snapshot-sqlite native",
+      "laws": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "names": [
+            "sqlite_snapshot_deflate_header_dictionary_and_decoded_payload_roundtrip",
+            "sqlite_snapshot_deflate_borrowed_native_preflight_is_bounded_cancellable_and_unowned",
+            "sqlite_snapshot_deflate_independent_decoded_payload_edit",
+            "sqlite_snapshot_deflate_actual_factory_canonical_external_carrier",
+            "sqlite_snapshot_deflate_native_input_interior_and_caller_ceilings",
+            "sqlite_snapshot_deflate_long_schema_projection_and_reconstruction_are_interior_controlled",
+            "sqlite_snapshot_deflate_native_output_interior_and_caller_ceilings",
+            "sqlite_snapshot_deflate_actual_typed_file_preserves_complete_literal_owned_fields",
+            "sqlite_snapshot_deflate_external_carrier_normalizes_unrepresented_schema"
+          ],
+          "independentBunSqlite": true,
+          "independentSerde": true
+        }
+      ],
+      "receiptStatus": "requires retained receipt comparison; source presence is not execution"
+    },
+    {
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las",
+      "target": "@semio-tech/stdio-las-rs:test-snapshot-sqlite-native",
+      "command": "bun ./📜️script.ts test-snapshot-sqlite native",
+      "laws": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "names": [
+            "sqlite_snapshot_full_header_vlr_points_ieee_and_edited_sqlite",
+            "sqlite_snapshot_refuses_valid_sqlite_incoherent_identity_and_child_order",
+            "sqlite_snapshot_owned_coordinates_controls_and_actual_declarations",
+            "sqlite_snapshot_complete_typescript_native_relational_interoperability",
+            "sqlite_snapshot_large_semantic_loops_cancel_before_completion",
+            "sqlite_snapshot_erased_binary_and_text_capabilities_preserve_every_native_field",
+            "sqlite_snapshot_las_native_encoding_preflight_admits_owned_model_and_refuses_budget_or_cancellation",
+            "sqlite_snapshot_las_native_encoding_preflight_bounds_escaped_text_and_cancels_borrowed_members"
+          ],
+          "independentBunSqlite": true,
+          "independentSerde": true
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🚦️cohort/🦀️.rs",
+          "names": [
+            "sqlite_snapshot_las_cohort_actual_declaration_erased_full_words_and_literals",
+            "sqlite_snapshot_las_cohort_actual_typed_files_preserve_full_domain",
+            "sqlite_snapshot_las_cohort_native_input_interior_and_ceilings",
+            "sqlite_snapshot_las_cohort_native_output_interior_and_ceilings",
+            "sqlite_snapshot_las_cohort_long_unicode_owned_copies_are_interior_controlled",
+            "sqlite_snapshot_las_cohort_native_late_malformed_and_foreign_identity_refuse"
+          ],
+          "independentBunSqlite": false,
+          "independentSerde": true
+        }
+      ],
+      "receiptStatus": "requires retained receipt comparison; source presence is not execution"
+    },
+    {
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg",
+      "target": "@semio-tech/stdio-svg-rs:test-snapshot-sqlite-native",
+      "command": "bun ./📜️script.ts test-snapshot-sqlite native",
+      "laws": [
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "names": [
+            "sqlite_snapshot_svg_literal_metadata_native_state_is_distinct_from_external_wire",
+            "sqlite_snapshot_svg_native_long_unicode_carriers_and_interior_cancellation",
+            "sqlite_snapshot_svg_native_limits_and_literal_typed_file_io",
+            "sqlite_snapshot_svg_exact_declared_tiny_basic_owned_io",
+            "sqlite_snapshot_svg_domain_names_and_all_native_document_fields_roundtrip",
+            "sqlite_snapshot_svg_rejects_foreign_roots_shapes_graphs_and_budgets",
+            "sqlite_snapshot_svg_independent_geometry_queries_and_edits_preserve_native_state",
+            "sqlite_snapshot_svg_tiny_and_basic_io_validators_recheck_reconstructed_entities",
+            "sqlite_snapshot_svg_owned_tiny_basic_guard_matches_all_existing_conformance_rules",
+            "sqlite_snapshot_svg_erased_native_preflight_admission_and_limits"
+          ],
+          "independentBunSqlite": true,
+          "independentSerde": true
+        }
+      ],
+      "receiptStatus": "requires retained receipt comparison; source presence is not execution"
+    }
+  ],
+  "receipts": [
+    {
+      "path": "🗑️generated/root-bmp-current-byte-fully-semantic-paid-owner-native-replay.log",
+      "summaries": [
+        "Summary [   0.127s] 7 tests run: 7 passed, 38 skipped"
+      ]
+    },
+    {
+      "path": "🗑️generated/root-authentic-las14-final-header-array-six-unit-decode-replay.log",
+      "summaries": [
+        "Summary [   0.222s] 14 tests run: 13 passed, 1 failed, 46 skipped"
+      ]
+    },
+    {
+      "path": "🗑️generated/root-bmp-eight-row-tail-before-native.log",
+      "summaries": [
+        "Summary [   0.174s] 8 tests run: 7 passed, 1 failed, 38 skipped"
+      ]
+    },
+    {
+      "path": "🗑️generated/root-authentic-las-whole60-paid-literal-native-and-final-input-role.log",
+      "summaries": [
+        "Summary [   0.349s] 60 tests run: 60 passed, 0 skipped"
+      ]
+    },
+    {
+      "path": "🗑️generated/root-authentic-step-whole167-native-authored-assets-and-declared-pack-hash-paired.log",
+      "summaries": [
+        "Summary [   0.709s] 167 tests run: 167 passed, 0 skipped"
+      ]
+    },
+    {
+      "path": "🗑️generated/root-authentic-step-whole168-inline-root-and-owned-concrete-backing.log",
+      "summaries": [
+        "Summary [   0.533s] 168 tests run: 168 passed, 0 skipped"
+      ]
+    },
+    {
+      "path": "🗑️generated/root-authentic-process3d10-paid-provider-optional-ownership-pair-current.log",
+      "summaries": [
+        "Summary [   1.416s] 10 tests run: 9 passed, 1 failed, 364 skipped"
+      ]
+    },
+    {
+      "path": "🗑️generated/root-authentic-ifc-full-app-assembly-authored-ifc4-owned-example-consumers.log",
+      "summaries": [
+        "Summary [   2.059s] 222 tests run: 219 passed, 3 failed, 0 skipped"
+      ]
+    },
+    {
+      "path": "🗑️generated/root-authentic-step-whole-current-complete-native-and-paid-relational-before-authored-assets-pairing.log",
+      "summaries": [
+        "Summary [   0.427s] 167 tests run: 165 passed, 2 failed, 0 skipped"
+      ]
+    },
+    {
+      "path": "🗑️generated/root-authentic-ifc-whole162-two-owned-providers-and-authored-fixture-baseline.log",
+      "summaries": [
+        "Summary [   3.399s] 160 tests run: 155 passed, 5 failed, 1 skipped"
+      ]
+    },
+    {
+      "path": "🗑️generated/root-authentic-ifc23-after-twenty-seven-measured-fixture-and-current-kernel-reconciliation-prerequisites-genuine-baseline.log",
+      "summaries": [
+        "Summary [   1.289s] 23 tests run: 11 passed, 12 failed, 137 skipped"
+      ]
+    },
+    {
+      "path": "🗑️generated/root-authentic-ifc25-after-canonical-map-target-and-final-two-paid-owner-cutovers.log",
+      "summaries": [
+        "Summary [   0.723s] 25 tests run: 25 passed, 137 skipped"
+      ]
+    },
+    {
+      "path": "🗑️generated/root-authentic-svg10-after-four-measured-test-typed-prerequisites-genuine-baseline.log",
+      "summaries": [
+        "Summary [   0.193s] 10 tests run: 6 passed, 4 failed, 95 skipped"
+      ]
+    },
+    {
+      "path": "🗑️generated/root-authentic-gltf23-after-measured-fifteen-json-fixture-prerequisites-baseline.log",
+      "summaries": [
+        "Summary [   0.982s] 23 tests run: 18 passed, 5 failed, 268 skipped"
+      ]
+    },
+    {
+      "path": "🗑️generated/root-authentic-part21-shared13-current-typed-deflate-prerequisites.log",
+      "summaries": [
+        "Summary [   0.031s] 10/13 tests run: 0 passed, 10 failed, 75 skipped"
+      ]
+    },
+    {
+      "path": "🗑️generated/root-authentic-kernel61-controlled-family-and-deflate-origin-regression.log",
+      "summaries": [
+        "Summary [   4.336s] 61 tests run: 61 passed, 0 skipped"
+      ]
+    },
+    {
+      "path": "🗑️generated/root-authentic-svg-whole104-literal-owned-and-external-boundary-paired-runtime.log",
+      "summaries": [
+        "Summary [   0.251s] 104 tests run: 104 passed, 1 skipped"
+      ]
+    },
+    {
+      "path": "🗑️generated/root-authentic-las14-after-two-measured-fixture-json-and-progress-prerequisites-genuine-baseline.log",
+      "summaries": [
+        "Summary [   0.592s] 14 tests run: 9 passed, 5 failed, 46 skipped"
+      ]
+    },
+    {
+      "path": "🗑️generated/root-authentic-small-five-fifty-after-actual-supported-deflate-input-contract-current.log",
+      "summaries": [
+        "Summary [   0.036s] 9 tests run: 9 passed, 43 skipped",
+        "Summary [   0.036s] 9 tests run: 9 passed, 51 skipped",
+        "Summary [   0.039s] 11 tests run: 11 passed, 42 skipped",
+        "Summary [   0.062s] 10 tests run: 10 passed, 76 skipped",
+        "Summary [   0.047s] 11 tests run: 11 passed, 29 skipped"
+      ]
+    },
+    {
+      "path": "🗑️generated/root-authentic-step13-inline-root-concrete-backing-paired.log",
+      "summaries": [
+        "Summary [   0.460s] 13 tests run: 13 passed, 155 skipped"
+      ]
+    },
+    {
+      "path": "🗑️generated/root-authentic-step-whole167-native-authored-grammar-text-and-protocol-paired-before-pack-fixture.log",
+      "summaries": [
+        "Summary [   0.369s] 167 tests run: 164 passed, 3 failed, 0 skipped"
+      ]
+    },
+    {
+      "path": "🗑️generated/root-authentic-ifc-app-assembly-authored-subset-history.log",
+      "summaries": [
+        "Summary [   2.392s] 222 tests run: 222 passed, 0 skipped"
+      ]
+    },
+    {
+      "path": "🗑️generated/root-authentic-ifc-current-mounted-literal-ifc4-before-paid-reader-and-inline-root-genuine-red.log",
+      "summaries": [
+        "Summary [   0.438s] 24 tests run: 18 passed, 6 failed, 137 skipped"
+      ]
+    },
+    {
+      "path": "🗑️generated/root-bmp-seven-current-byte-semantic-baseline-after-complete-download-pair.log",
+      "summaries": [
+        "Summary [   0.050s] 6 tests run: 0 passed, 6 failed, 39 skipped"
+      ]
+    },
+    {
+      "path": "🗑️generated/root-bmp-eight-row-tail-repaired-native.log",
+      "summaries": [
+        "Summary [   0.673s] 8 tests run: 8 passed, 38 skipped"
+      ]
+    },
+    {
+      "path": "🗑️generated/root-authentic-las14-final-owned-input-allocation-role-and-unchanged-semantic-ceilings.log",
+      "summaries": [
+        "Summary [   0.280s] 14 tests run: 14 passed, 46 skipped"
+      ]
+    },
+    {
+      "path": "🗑️generated/root-authentic-process3d10-physical-oracle-and-plugin-record-fields-pair-current.log",
+      "summaries": [
+        "Summary [   1.249s] 10 tests run: 10 passed, 364 skipped"
+      ]
+    },
+    {
+      "path": "🗑️generated/root-authentic-process3d10-after-actual-flow-provider-compiles.log",
+      "summaries": [
+        "Summary [   0.122s] 10 tests run: 3 passed, 7 failed, 364 skipped"
+      ]
+    },
+    {
+      "path": "🗑️generated/root-authentic-las14-after-two-measured-current-typed-guard-apis-owned-provider-replay.log",
+      "summaries": [
+        "Summary [   0.223s] 14 tests run: 12 passed, 2 failed, 46 skipped"
+      ]
+    },
+    {
+      "path": "🗑️generated/root-authentic-svg10-mounted-actual-literal-native-and-paid-xml-provider-replay.log",
+      "summaries": [
+        "Summary [   0.067s] 10 tests run: 10 passed, 95 skipped"
+      ]
+    },
+    {
+      "path": "🗑️generated/root-authentic-svg-whole105-complete-paid-owner-and-shared-xml-boundaries.log",
+      "summaries": [
+        "Summary [   0.657s] 104 tests run: 101 passed, 3 failed, 1 skipped"
+      ]
+    },
+    {
+      "path": "🗑️generated/root-authentic-step13-direct-inline-root-phantom-admission-genuine-baseline.log",
+      "summaries": [
+        "Summary [   0.327s] 13 tests run: 12 passed, 1 failed, 155 skipped"
+      ]
+    },
+    {
+      "path": "🗑️generated/root-authentic-step12-after-three-local-optional-inner-binders-paid-native-and-relational-reader.log",
+      "summaries": [
+        "Summary [   0.253s] 12 tests run: 11 passed, 1 failed, 155 skipped"
+      ]
+    },
+    {
+      "path": "🗑️generated/root-authentic-gltf23-after-eleven-local-guard-and-paid-index-prerequisites-current.log",
+      "summaries": [
+        "Summary [   2.665s] 23 tests run: 23 passed, 268 skipped"
+      ]
+    },
+    {
+      "path": "🗑️generated/root-authentic-step-ap214-twelve-after-eleven-single-fixture-canonical-api-prerequisites-baseline.log",
+      "summaries": [
+        "Summary [   0.171s] 12 tests run: 7 passed, 5 failed, 155 skipped"
+      ]
+    },
+    {
+      "path": "🗑️generated/root-authentic-ifc-whole-authored-independent-two-owner-assets-and-native-word-grammar.log",
+      "summaries": [
+        "Summary [   4.492s] 162 tests run: 162 passed, 0 skipped"
+      ]
+    }
+  ],
+  "nameCensusQualification": "Function names include helpers; selected tests require receipt names, not function count."
+}

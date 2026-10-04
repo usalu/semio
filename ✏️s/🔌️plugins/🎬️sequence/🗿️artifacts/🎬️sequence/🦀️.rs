@@ -19,7 +19,7 @@ pub use crate::schema::mutations::SequenceMutation;
 pub use crate::schema::diff::SequenceDiff;
 
 pub const SEQUENCE_DOCUMENT_SCHEMA: &str = "sequence.sequence";
-pub use crate::snapshot::schema::{default_snapshot, SequenceHostSnapshot, SequenceSnapshot};
+pub use crate::snapshot::schema::{default_host_snapshot, default_snapshot, SequenceHostSnapshot, SequenceSnapshot};
 
 //#region 🔖️Constants
 /// 🪪️ The canonical dialect for this artifact's one subset (`✳️any`) — lives at the ARTIFACT level
@@ -47,7 +47,7 @@ pub const SEQUENCE_DIALECT: semio_framework_plugin::Dialect = semio_framework_pl
 /// producing a fence the lexer can't close and a confirmed parse failure ("unterminated fenced
 /// block"). Genuine ENGINE GAP (`Shape::Embed` inside a `Shape::Table` column), out of scope here —
 /// verified empirically, not worked around.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(transparent, retire_with="std::mem::drop")]
 pub struct StepParams(pub Dictionary);
 
@@ -102,16 +102,16 @@ impl std::ops::Deref for StepParams {
     }
 }
 
-impl dsl::DslField for StepParams {
-    fn shape() -> dsl::Shape {
-        dsl::Shape::Text
+impl semio_framework_dsl_record::DslField for StepParams {
+    fn shape() -> semio_framework_dsl_record::Shape {
+        semio_framework_dsl_record::Shape::Text
     }
-    fn to_value(&self) -> dsl::FieldValue {
-        dsl::FieldValue::Text(dsl::os_pack::json::to_json_string(&self.0))
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
+        semio_framework_dsl_record::FieldValue::Text(semio_framework_pack_json::to_json_string(&self.0))
     }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
         match value {
-            dsl::FieldValue::Text(text) => dsl::os_pack::json::from_json_str(text).map(Self).map_err(|err| err.to_string()),
+            semio_framework_dsl_record::FieldValue::Text(text) => semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map(Self).map_err(|err| err.to_string()),
             other => Err(format!("expected Text, found {other:?}")),
         }
     }
@@ -122,7 +122,7 @@ impl dsl::DslField for StepParams {
 /// would require this file to depend on the DAG layout kernel just to move a camera in and out,
 /// which would pull graph-layout machinery into the plain entity component for no reason a data
 /// schema needs — an artifact must never depend on an app either way.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -141,7 +141,7 @@ impl Default for SequenceCamera {
 /// 🎯️ Only ever embedded `#[dsl(block)]`-wrapped (on `SequenceStep::slot`), so it carries no
 /// `#[dsl(keyword = "...")]` of its own — the embedding field already supplies the bare `slot`
 /// leading keyword.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -151,7 +151,7 @@ pub struct SlotRef {
     pub name: String,
 }
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct SequenceStep {
     #[dsl(defines = "step")]
@@ -175,7 +175,7 @@ pub struct SequenceStep {
 /// `🗣️dsl`) instead of deriving `dsl::DslRecord` here directly, so this struct (and every consumer
 /// matching on `.from`/`.to` — `connect_steps`, `sync_edges_from_dag`, ...) stays untouched by the
 /// unified `dsl::Wire` connection syntax.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -218,7 +218,7 @@ fn sequence_step_params(step: &SequenceStep) -> Vec<SemioFlowParam> {
     fn p(key: &str, value: String) -> SemioFlowParam {
         SemioFlowParam { key: key.into(), value }
     }
-    vec![p("params", dsl::os_pack::json::to_json_string(&step.params.0)), p("slot", dsl::os_pack::json::to_json_string(&step.slot)), p("collapsed", step.collapsed.to_string())]
+    vec![p("params", semio_framework_pack_json::to_json_string(&step.params.0)), p("slot", semio_framework_pack_json::to_json_string(&step.slot)), p("collapsed", step.collapsed.to_string())]
 }
 
 /// 🌉 Inverse of [`sequence_step_params`] — reconstructs a `SequenceStep` from a `FlowNode`'s `id`/
@@ -229,10 +229,10 @@ fn sequence_step_from_node(node: &SemioFlowNode) -> SequenceStep {
     SequenceStep {
         id: node.id.clone(),
         kind: node.kind.clone(),
-        params: StepParams(dsl::os_pack::json::from_json_str(get("params")).unwrap_or_default()),
+        params: StepParams(semio_framework_pack_json::from_json_str(get("params"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_default()),
         x: node.position.x,
         y: node.position.y,
-        slot: dsl::os_pack::json::from_json_str::<Option<SlotRef>>(get("slot")).unwrap_or(None),
+        slot: semio_framework_pack_json::from_json_str::<Option<SlotRef>>(get("slot"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or(None),
         collapsed: get("collapsed").parse().unwrap_or(false),
     }
 }
@@ -265,7 +265,7 @@ pub fn working_from_sequence_content_snapshot(content: &SemioFlowSnapshot) -> (V
 /// first window renders.
 pub fn sequence_content_child_handle(steps: &[SequenceStep], edges: &[SequenceEdge]) -> SequenceContentChild {
     let snapshot = sequence_content_snapshot_from_working(steps, edges);
-    let content_json = dsl::os_pack::json::to_json_string(&snapshot);
+    let content_json = semio_framework_pack_json::to_json_string(&snapshot);
     let child_id = store::content_id("sequence-content", content_json.as_bytes());
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() };
     let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
@@ -293,11 +293,12 @@ pub fn require_sequence_working_scene(handle: &SequenceContentChild) -> Result<S
     handle.require_local_owner::<SequenceWorkingScene>().map(|scene| scene.as_ref().clone())
 }
 
-/// 🔎 Reads the current document's live steps/edges off its `content` child handle — the single
-/// read call site every mutation diff/inverse and app-layer host in this plugin uses instead of the
-/// old `snapshot.steps`/`.edges` field access.
-pub fn sequence_working_scene(snapshot: &SequenceSnapshot) -> SequenceWorkingScene {
-    sequence_working_scene_for_handle(&snapshot.content).expect("sequence child scene must be materialized before use")
+/// 🌱️ The scene a document's `content` child derives without a member store — the bundled genesis document's. A decoded,
+/// reloaded or remote parent carries no scene of its own (design §20.15), so readers without a child view (the `topology`
+/// inference) read this and answer the empty scene for any other child, never a materialization fault.
+pub fn sequence_derivable_scene(snapshot: &SequenceSnapshot) -> Option<neural_engine::ColdOwner<SequenceWorkingScene>> {
+    let genesis = neural_engine::ColdOwner::new(crate::snapshot::schema::default_host_snapshot());
+    (sequence_content_child_handle(&genesis.steps, &genesis.edges).child_id == snapshot.content.child_id).then(|| neural_engine::ColdOwner::new(SequenceWorkingScene { steps: genesis.steps.clone(), edges: genesis.edges.clone() }))
 }
 
 /// 🏗️ Mints one content-addressed child and transfers its immutable working scene into that
@@ -317,23 +318,10 @@ pub fn genesis_sequence_child_pack(document: &SequenceSnapshot, slot: &str, chil
     if slot != "content" || child_id != document.content.child_id {
         return None;
     }
-    let genesis = neural_engine::ColdOwner::new(crate::snapshot::schema::default_snapshot());
-    if genesis.content.child_id != child_id {
-        return None;
-    }
-    let scene = neural_engine::ColdOwner::new(sequence_working_scene_for_handle(&genesis.content)?);
-    Some(<SemioFlowSnapshot as ArtifactPack>::encode_pack(&sequence_content_snapshot_from_working(&scene.steps, &scene.edges)))
+    let genesis = sequence_derivable_scene(document)?;
+    Some(<SemioFlowSnapshot as ArtifactPack>::encode_pack(&sequence_content_snapshot_from_working(&genesis.steps, &genesis.edges)))
 }
 
-/// 🔺️ Shared diff builder every mutation triad's `🔺️diff` leaf calls after computing its own new
-/// steps/edges against the working scene — mints+caches a whole new content handle (the
-/// "mint+cache whole handle, never apply-then-capture" pattern flow's `diff_replace_content`/
-/// writer's `diff_set_text` established), never a structured steps/edges delta (the composed child
-/// is opaque — a parent's diff never embeds a child diff, `📓️design-full-plan.md` §1's CHILD/LINK
-/// split).
-pub fn diff_replace_content(steps: Vec<SequenceStep>, edges: Vec<SequenceEdge>) -> SequenceDiff {
-    SequenceDiff { content: Some(sequence_content_child_with_owner(steps, edges)), ..Default::default() }
-}
 //#endregion 🔖️WorkingScene
 
 //#region 🔖️ArtifactKind
@@ -519,13 +507,6 @@ pub mod standards {
                         pub mod text;
                     }
                     #[path = "."]
-                    pub mod mutations {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/📝️text/🦀️.rs"]
-                        pub mod text;
-                    }
-                    #[path = "."]
                     pub mod inferences {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💡️inferences/💾️binary/🦀️.rs"]
                         pub mod binary;
@@ -648,128 +629,6 @@ pub mod standards {
                     }
                 }
             }
-            #[path = "."]
-            pub mod step {
-                #[path = "."]
-                pub mod schema {
-                    #[path = "."]
-                    pub mod mutations {
-                        #[path = "."]
-                        pub mod create_step {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🌱️create-step/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🌱️create-step/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🌱️create-step/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🌱️create-step/🧪️tests/🚫️rejects/🦀️.rs"]
-                            mod tests_rejects_a_duplicate_step_id;
-                        }
-                        #[path = "."]
-                        pub mod delete_step {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🗑️delete-step/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🗑️delete-step/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🗑️delete-step/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🗑️delete-step/🧪️tests/🚫️rejects/🦀️.rs"]
-                            mod tests_rejects_deleting_a_missing_step;
-                        }
-                        #[path = "."]
-                        pub mod move_step {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/📍️move-step/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/📍️move-step/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/📍️move-step/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/📍️move-step/🧪️tests/🟰️no/🦀️.rs"]
-                            mod tests_no_ops_when_the_step_is_already_at_that_position;
-                        }
-                        #[path = "."]
-                        pub mod edit_step_params {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🔧️edit-step-params/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🔧️edit-step-params/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🔧️edit-step-params/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🔧️edit-step-params/🧪️tests/🟰️no/🦀️.rs"]
-                            mod tests_no_ops_when_the_params_are_already_identical;
-                        }
-                        #[path = "."]
-                        pub mod change_step_collapsed {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🗂️change-step-collapsed/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🗂️change-step-collapsed/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🗂️change-step-collapsed/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🗂️change-step-collapsed/🧪️tests/🟰️no/🦀️.rs"]
-                            mod tests_no_ops_when_the_step_is_already_collapsed;
-                        }
-                        #[path = "."]
-                        pub mod duplicate_step {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🧬️duplicate-step/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🧬️duplicate-step/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🧬️duplicate-step/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations/🧬️duplicate-step/🧪️tests/🚫️rejects/🦀️.rs"]
-                            mod tests_rejects_when_the_new_id_already_exists;
-                        }
-                    }
-                }
-            }
-            #[path = "."]
-            pub mod dependency {
-                #[path = "."]
-                pub mod schema {
-                    #[path = "."]
-                    pub mod mutations {
-                        #[path = "."]
-                        pub mod connect_steps {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔗️dependency/🧬️schema/🧬️mutations/🔗️connect/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔗️dependency/🧬️schema/🧬️mutations/🔗️connect/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔗️dependency/🧬️schema/🧬️mutations/🔗️connect/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔗️dependency/🧬️schema/🧬️mutations/🔗️connect/🧪️tests/🚫️rejects/🦀️.rs"]
-                            mod tests_rejects_connecting_a_step_to_itself;
-                        }
-                        #[path = "."]
-                        pub mod disconnect_steps {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔗️dependency/🧬️schema/🧬️mutations/✂️disconnect/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔗️dependency/🧬️schema/🧬️mutations/✂️disconnect/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔗️dependency/🧬️schema/🧬️mutations/✂️disconnect/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔗️dependency/🧬️schema/🧬️mutations/✂️disconnect/🧪️tests/🚫️rejects/🦀️.rs"]
-                            mod tests_rejects_disconnecting_a_missing_edge;
-                        }
-                    }
-                }
-            }
         }
     }
 }
@@ -781,14 +640,8 @@ pub mod schema {
 pub mod io {
     pub use super::standards::v1::subsets::any::io::*;
 }
-pub mod op {
-    pub use crate::standards::v1::subsets::any::io::mutations::text::*;
-}
 pub mod document_dsl {
     pub use crate::standards::v1::subsets::any::io::snapshot::text::*;
-}
-pub mod spr {
-    pub use crate::standards::v1::subsets::any::io::mutations::binary::*;
 }
 pub mod diff {
     pub use crate::standards::v1::subsets::any::schema::diff::*;

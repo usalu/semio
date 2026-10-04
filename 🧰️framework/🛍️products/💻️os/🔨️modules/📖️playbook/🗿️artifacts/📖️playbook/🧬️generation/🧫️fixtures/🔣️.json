@@ -35,5 +35,89 @@
     "liveDropRejected": true,
     "unwindDoesNotRecurse": true,
     "zeroGrantPreservesOwner": true
+  },
+  "rankedValues": {
+    "grants": [
+      0,
+      1,
+      3,
+      256
+    ],
+    "entries": [
+      [
+        "shared-é-🧊-7",
+        {
+          "payload": [
+            "é🧊é🧊é🧊é🧊é🧊é🧊é🧊é🧊é🧊é🧊é🧊é🧊é🧊é🧊é🧊é🧊",
+            7
+          ]
+        }
+      ],
+      [
+        "shared-é-🧊-0",
+        {
+          "payload": [
+            "é🧊é🧊é🧊é🧊é🧊é🧊é🧊é🧊é🧊é🧊é🧊é🧊é🧊é🧊é🧊é🧊",
+            0
+          ]
+        }
+      ],
+      [
+        "shared-é-🧊-3",
+        {
+          "payload": [
+            "é🧊é🧊é🧊é🧊é🧊é🧊é🧊é🧊é🧊é🧊é🧊é🧊é🧊é🧊é🧊é🧊",
+            3
+          ]
+        }
+      ],
+      [
+        "shared-é-🧊-1",
+        {
+          "payload": [
+            "é🧊é🧊é🧊é🧊é🧊é🧊é🧊é🧊é🧊é🧊é🧊é🧊é🧊é🧊é🧊é🧊",
+            1
+          ]
+        }
+      ]
+    ],
+    "expectedKeys": [
+      "shared-é-🧊-0",
+      "shared-é-🧊-1",
+      "shared-é-🧊-3",
+      "shared-é-🧊-7"
+    ],
+    "aliasReleaseOrders": [
+      [
+        0,
+        1,
+        2
+      ],
+      [
+        0,
+        2,
+        1
+      ],
+      [
+        1,
+        0,
+        2
+      ],
+      [
+        1,
+        2,
+        0
+      ],
+      [
+        2,
+        0,
+        1
+      ],
+      [
+        2,
+        1,
+        0
+      ]
+    ]
   }
 }

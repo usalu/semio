@@ -19,9 +19,12 @@ impl protocol::MutationKind<MdSnapshot, MdMutation> for InsertBlock {
     fn diff(&self, base: &MdSnapshot) -> protocol::MutationOutcome<<MdMutation as Mutation<MdSnapshot>>::Diff> {
         agg_diff(&MdMutation::InsertBlock(self.clone()), base)
     }
-    fn inverse(&self, base: &MdSnapshot) -> Vec<MdMutation> {
-        agg_inverse(&MdMutation::InsertBlock(self.clone()), base)
-    }
+    fn inverse(&self, base: &MdSnapshot) -> Result<Vec<MdMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&MdMutation::InsertBlock(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert block", "Block einfügen")
     }

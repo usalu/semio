@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeFenestrationFrameConductance, base: &EnergyMo
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Fenestration {} needs a non-negative finite frame conductance, got {}.", payload.id.0, payload.new_frame_conductance_w_k), [payload.id.0.to_string()]);
     }
     if existing.frame_conductance_w_k == payload.new_frame_conductance_w_k {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Fenestration {} already has this frame conductance.", payload.id.0));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Fenestration {} already has this frame conductance.", payload.id.0));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.fenestrations.iter_mut().find(|item| item.id == payload.id) {

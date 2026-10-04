@@ -3,11 +3,8 @@
 //! Source of truth is the committed JSON beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The derived encodings come from `fixtures generate`.
 //!
-//! ✏️ `change-title` is the ONE playbook verb whose diff never touches the composed children: it
-//! sets the document's own root `title` scalar and nothing else. That makes it the one case in this
-//! tree that pins a real, non-empty `🔺️diff` and a genuinely different `➡️after` — every
-//! step/block verb routes through `diff_replace_content`, which mints `DefaultHasher`-digest child
-//! handles no fixture can hand-author.
+//! ✏️ `change-title` is the playbook's ONE parent-lane leaf: steps and blocks are edited on the `flow` child's own lane (design
+//! §20.15), so this leaf sets the document's own root `title` scalar and never the child coordinate.
 //!
 //! ⚠️ `title` is `Option<Option<String>>` on `PlaybookDiff`: the outer layer is "did this diff touch
 //! the title", the inner is "is the new title present". The committed diff sets it to a real string;
@@ -23,34 +20,32 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️change-title/🧪️changes/🎯️outcome/🔣️.json");
 
 fn mutation() -> PlaybookMutation {
-    dsl::os_pack::from_json_str(MUTATION).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 fn before() -> PlaybookSnapshot {
-    dsl::os_pack::from_json_str(BEFORE).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> PlaybookSnapshot {
-    dsl::os_pack::from_json_str(AFTER).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 
 /// ▶️ The mutation carries `before` to exactly the committed `after`: the title becomes the payload's
-/// own string, and BOTH composed child handles survive untouched — a title edit is not a content
-/// edit, even though the narrative `document` projection happens to render the title too.
+/// own string, and the composed `flow` handle survives untouched — a title edit is not a content edit.
 #[semio_framework_async_macros::async_test]
 async fn applies_to_committed_after() {
     let base = before();
     let snapshot = apply_playbook_mutation(&base, &mutation()).expect("change-title applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "change-title/changes-the-playbook-title: applied state differs from committed after-snapshot");
     assert_eq!(snapshot.title.as_deref(), Some("Onboarding Playbook"), "the root title scalar takes the payload's value");
-    assert_eq!((&snapshot.document.child_id, &snapshot.flow.child_id), (&base.document.child_id, &base.flow.child_id), "a title change must not re-mint either composed child handle");
+    assert_eq!(snapshot.flow, base.flow, "a title change never touches the composed flow handle");
 }
 
 /// 🔺️ The sparse delta is exactly the committed diff — the single most load-bearing assertion here:
-/// it pins that `title` is the ONLY field `change-title` is allowed to write, with `document`,
-/// `flow` and every other slot left null.
+/// it pins that `title` is the ONLY field `change-title` is allowed to write, with `flow` and every other slot left null.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = <PlaybookMutation as protocol::Mutation<PlaybookSnapshot>>::diff(&mutation(), &before());
-    let produced = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-title/changes-the-playbook-title: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert!(outcome.messages().is_empty(), "a real title change raises no diagnostic at all");
@@ -60,9 +55,9 @@ async fn produces_committed_diff() {
 /// double-`Option` title surviving the round trip as a present value.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: PlaybookDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: PlaybookDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert_eq!(decoded.title, Some(Some("Onboarding Playbook".to_string())), "the committed diff sets a present title, not a cleared one");
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-title/changes-the-playbook-title: committed diff JSON is not canonical");
 }
@@ -71,7 +66,7 @@ async fn committed_diff_is_canonical() {
 /// complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: PlaybookDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: PlaybookDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let produced = <PlaybookDiff as protocol::MutationDiff<PlaybookSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-title/changes-the-playbook-title: committed diff did not carry before to after");
 }
@@ -82,19 +77,18 @@ async fn committed_diff_applies_to_after() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: PlaybookSnapshot = dsl::os_pack::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: PlaybookSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "change-title/changes-the-playbook-title: committed {label} JSON is not canonical");
     }
     assert!(before().title.is_none(), "the before-snapshot is an untitled playbook, so this case really adds a title");
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&mutation())).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "change-title/changes-the-playbook-title: committed mutation JSON is not canonical");
 }
 
-/// 🎯️ The declared outcome holds: a clean `applied` with no diagnostics — this is the only playbook
-/// case in the tree that reaches neither a warning nor an error.
+/// 🎯️ The declared outcome holds: a clean `applied` with no diagnostics.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
@@ -110,7 +104,7 @@ async fn declared_outcome_holds() {
 #[semio_framework_async_macros::async_test]
 async fn inverse_restores_the_base_title() {
     let base = before();
-    let inverse = inverse_playbook_mutation(&base, &mutation());
+    let inverse = inverse_playbook_mutation(&base, &mutation()).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "change-title always undoes with exactly one step, got {inverse:?}");
     let PlaybookMutation::ChangeTitle(undo) = &inverse[0] else {
         panic!("change-title's inverse must be a change-title, got {:?}", inverse[0]);

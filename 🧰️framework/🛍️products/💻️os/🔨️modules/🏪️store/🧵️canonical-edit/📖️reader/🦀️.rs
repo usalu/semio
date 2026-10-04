@@ -52,7 +52,7 @@ impl<T> ReaderState<T> {
         self.closing && self.encoder.terminal_is_empty() && self.root.is_none() && self.retirement.is_none() && self.active.is_none()
     }
 
-    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || !grant.permits_one() {
             return Ok(SnapshotRetirementStep::Blocked);
         }
@@ -63,13 +63,13 @@ impl<T> ReaderState<T> {
             return match active.close_step(1, grant.maximum_bytes)? {
                 SnapshotRetirementStep::Complete => {
                     if !active.terminal_is_empty() {
-                        return Err("canonical-reader.retirement-witness".into());
+                        return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "canonical-reader.retirement-witness"));
                     }
                     self.active = None;
                     Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
                 SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes <= grant.maximum_bytes => Ok(SnapshotRetirementStep::Pending { released_items, released_bytes }),
-                SnapshotRetirementStep::Pending { .. } => Err("canonical-reader.retirement-grant".into()),
+                SnapshotRetirementStep::Pending { .. } => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "canonical-reader.retirement-grant")),
                 SnapshotRetirementStep::Blocked => Ok(SnapshotRetirementStep::Blocked),
             };
         }
@@ -130,7 +130,7 @@ impl<T> ArtifactCanonicalJsonReader<T> {
     pub fn terminal_is_empty(&self) -> bool {
         self.owned.terminal_is_empty()
     }
-    pub fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String> {
+    pub fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         self.owned.close_step(grant)
     }
 }

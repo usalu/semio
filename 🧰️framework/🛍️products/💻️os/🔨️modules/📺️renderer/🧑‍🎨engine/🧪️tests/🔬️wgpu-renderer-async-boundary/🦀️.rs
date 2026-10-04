@@ -123,7 +123,7 @@ fn retained_raster_contract(draw: &str, gpu: &str, glue: &str, engine: &str) -> 
     let present_step = gpu.find("pub fn prepared_present_step").unwrap_or(0);
     let presenter_close = glue.find("self.gpu.close_raster_table_step()").unwrap_or(usize::MAX);
     let world_terminal = glue.find("self.gpu.raster_table_terminal_is_empty()").unwrap_or(0);
-    let engine_reservation = "gpu.reserve_engine_texture(key, build.width, build.height, identity, candidate_generation, expected)";
+    let engine_reservation = "gpu.reserve_engine_texture(key, build.width, build.height,1, identity, candidate_generation, expected)";
     let engine_reservation_index = engine.find(engine_reservation).unwrap_or(usize::MAX);
     let first_engine_allocation = ["create_target_texture", ".create_view", "Renderer::new"].iter().filter_map(|marker| engine.find(marker)).min().unwrap_or(0);
     let upload_stage = &draw[draw.find("pub(crate) fn ensure_raster_step").unwrap_or(draw.len())..draw.find("pub fn get(&self, key: &str) -> Option<&RasterTexture>").unwrap_or(draw.len())];
@@ -390,7 +390,7 @@ fn raster_upload_cache_is_fixed_generation_witnessed_and_mutation_complete() {
     for (draw, gpu, glue, engine) in mutations {
         assert!(!retained_raster_contract(&draw, &gpu, &glue, &engine));
     }
-    let reservation = "build.admission = Some(gpu.reserve_engine_texture(key, build.width, build.height, identity, candidate_generation, expected)?);";
+    let reservation = "build.admission = Some(gpu.reserve_engine_texture(key, build.width, build.height,1, identity, candidate_generation, expected)?);";
     let first_allocation = "build.texture = Some(create_target_texture(gpu.device(), build.width, build.height));";
     let reservation_after_first_allocation = ENGINE_CANVAS_SOURCE.replacen(reservation, "", 1).replacen(first_allocation, &format!("{first_allocation}\n            {reservation}"), 1);
     assert!(!retained_raster_contract(DRAW_SOURCE, GPU_SOURCE, LIBRARY_SOURCE, &reservation_after_first_allocation));
@@ -569,7 +569,7 @@ fn embedded_glb_materials_publish_with_their_primitive_ranges_texture_and_vertex
     let mesh = materialize.lease.expect("sealed material mesh");
     assert_eq!(mesh.schema().unwrap().colors, 6, "a mixed primitive bank expands missing COLOR_0 values to neutral white");
     let appearance = materialize.appearance.as_ref().expect("geometry and material appearance seal together");
-    assert_eq!(appearance.texture_count(), 1);
+    assert_eq!(appearance.texture_count(), 2);
     assert_eq!(appearance.primitives().len(), law["cases"].as_array().unwrap().len());
     let blend = &appearance.primitives()[0];
     assert_eq!((blend.first_index, blend.index_count), (0, 3));
@@ -582,7 +582,16 @@ fn embedded_glb_materials_publish_with_their_primitive_ranges_texture_and_vertex
     assert_eq!((mask.first_index, mask.index_count), (3, 3));
     assert_eq!(mask.material.alpha, ui_wgpu::wgpu::SceneMaterialAlpha3d::Mask);
     assert_eq!(mask.material.alpha_cutoff, 0.37);
-    assert!(mask.material.base_color_texture.as_deref().is_some_and(|key| key.ends_with(":texture:0")));
+    assert_eq!(blend.material.normal_scale,[1.0,-1.0]);assert_eq!(mask.material.normal_scale,[0.5,0.5]);assert_eq!(mask.material.occlusion_strength,0.25);
+    for item in 0..3 {assert_eq!(mesh.vec4(Mesh3dField::Tangents,item).unwrap(),[0.0;4]);assert_eq!(mesh.vec4(Mesh3dField::Tangents,item+3).unwrap(),[0.0,0.0,1.0,-1.0]);let uv1=[[0.1,0.2],[0.9,0.2],[0.5,0.8]][item as usize];let uv4=[[0.2,0.3],[0.8,0.3],[0.5,0.7]][item as usize];assert_eq!(mesh.vec2(Mesh3dField::UvsNormal,item+3).unwrap(),uv1);assert_eq!(mesh.vec2(Mesh3dField::UvsOcclusion,item+3).unwrap(),uv1);assert_eq!(mesh.vec2(Mesh3dField::UvsMetallicRoughness,item+3).unwrap(),uv4);}
+
+    assert!(mask.material.base_color_texture.as_deref().is_some_and(|key| key.ends_with(":texture:0:srgb")));
+    assert!(mask.material.metallic_roughness_texture.as_deref().unwrap().ends_with(":texture:1:linear"));
+    assert_eq!(mask.material.normal_texture,mask.material.metallic_roughness_texture);
+    assert_eq!(mask.material.occlusion_texture,mask.material.metallic_roughness_texture);
+    assert_eq!(mask.material.emissive_texture,mask.material.base_color_texture);
+    assert_eq!(mask.material.additional_texture_samplers,[mask.material.texture_sampler;4]);
+    eprintln!("[DEBUG] GLB authored five maps: 2 role leases, five sampler descriptors, mask/blend publication");
     assert_eq!(
         mask.material.texture_sampler,
         ui_wgpu::wgpu::SceneTextureSampler3d {

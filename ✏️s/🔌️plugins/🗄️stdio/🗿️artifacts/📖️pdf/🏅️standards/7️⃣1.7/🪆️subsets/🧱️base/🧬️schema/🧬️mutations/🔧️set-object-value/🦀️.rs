@@ -24,12 +24,15 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetObjectValue {
         MutationOutcome::new(diff::diff_graph_edit(base, diff::diff_set_object_value(base, self.id, self.value.clone())))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         match base.objects.iter().find(|object| object.id == self.id) {
             Some(object) => vec![PdfMutation::SetObjectValue(SetObjectValue { id: self.id, value: object.value.clone() })],
             None => vec![PdfMutation::RemoveObject(RemoveObject { id: self.id })],
         }
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set object {} {} value", self.id.num, self.id.gen), &format!("Wert von Objekt {} {} setzen", self.id.num, self.id.gen))

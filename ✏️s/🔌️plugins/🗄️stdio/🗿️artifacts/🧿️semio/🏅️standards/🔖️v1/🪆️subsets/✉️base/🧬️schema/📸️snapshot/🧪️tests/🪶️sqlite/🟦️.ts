@@ -6,7 +6,7 @@ import {SEMIO_SQLITE_SCHEMA,semioSnapshotToSqliteDatabase,semioSnapshotFromSqlit
 import {binary64} from "@semio-tech/framework";
 import {subsets} from "./🧫️branches/🟦️.ts";
 test("Semio base eighteen handwritten branch and schema authorities",async()=>{expect(subsets.map(s=>String(s.subset))).toEqual(f.subsets);expect(SEMIO_SQLITE_SCHEMA.startsWith(await Bun.file(new URL("../../🪶️sqlite/🗄️.sql",import.meta.url)).text())).toBe(true);});
-test("quick::Semio base single selected owner and aggregate header budget",async()=>{const input:SemioSnapshot={schema:f.schema,subset:subsets[13]!},d=await semioSnapshotToSqliteDatabase(input);for(const mutate of[(x:any)=>x.tables[0].rows[0].values[16]=null,(x:any)=>x.tables[0].rows[0].values[3]=1n,(x:any)=>x.tables[0].rows[0].values[2]="unknown",(x:any)=>x.tables.find((t:any)=>t.name==="semio_audio_document").rows.push({rowid:1n,values:[1n,"stdio.semio.audio",0n,"f32"]})]){const x=structuredClone(d);mutate(x);expect(semioSnapshotFromSqliteDatabase(x)).rejects.toThrow();}expect(semioSnapshotToSqliteDatabase(input,{maxRows:2})).rejects.toThrow();expect(semioSnapshotFromSqliteDatabase(d,{maxValueBytes:1})).rejects.toThrow();const c=new AbortController();c.abort();expect(semioSnapshotToSqliteDatabase(input,{signal:c.signal})).rejects.toThrow();},30000);
+test("quick::Semio base single selected owner and aggregate header budget",async()=>{const input:SemioSnapshot={schema:f.schema,subset:subsets[13]!},d=await semioSnapshotToSqliteDatabase(input);for(const mutate of[(x:any)=>x.tables[0].rows[0].values[16]=null,(x:any)=>x.tables[0].rows[0].values[3]=1n,(x:any)=>x.tables[0].rows[0].values[2]="unknown",(x:any)=>x.tables.find((t:any)=>t.name==="semio_audio_document").rows.push({rowid:1n,values:[1n,"stdio.semio.audio",0n,"f32"]})]){const x=structuredClone(d);mutate(x);await expect(semioSnapshotFromSqliteDatabase(x)).rejects.toThrow();}await expect(semioSnapshotToSqliteDatabase(input,{maxRows:2})).rejects.toThrow();await expect(semioSnapshotFromSqliteDatabase(d,{maxValueBytes:1})).rejects.toThrow();const c=new AbortController();c.abort();await expect(semioSnapshotToSqliteDatabase(input,{signal:c.signal})).rejects.toThrow();},30000);
 
 import type {SemioArtifact} from "../../../🟦️.ts";
 import type {SemioBrepArtifact} from "../../../../../🧊️brep/🧬️schema/🟦️.ts";
@@ -74,3 +74,21 @@ test("Semio owned diff and mutation consumers retain IEEE words and unsigned64",
   const audio=parseSemioAudioDiff({channels:{removed:[],modified:[{index:0,diff:{samples:[{bits:f.ownedScalarWords.binary32}]}}],added:[]}});
   expect(key.t!.bits).toBe(word.bits);expect(keyMutation.t.bits).toBe(word.bits);expect(frame.origin!.x.bits).toBe(word.bits);expect(frame.width!.bits).toBe(word.bits);expect(run.size!.bits).toBe(word.bits);expect(block.width!.bits).toBe(word.bits);expect(image.width!.bits).toBe(word.bits);expect(sample.pts).toBe(pts);expect(sampleMutation.pts).toBe(pts);expect(audio.channels!.modified[0]!.diff.samples![0]!.bits).toBe(f.ownedScalarWords.binary32);
 });
+
+
+import {Database} from "bun:sqlite";
+import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework";
+test("quick::Semio native admission corpus preserves every full union schema through an independent engine",async()=>{
+ for(const subset of subsets){
+  const expected:SemioSnapshot={schema:f.nativeAdmission.schema,subset};
+  const logical=await semioSnapshotToSqliteDatabase(expected);
+  const bytes=await exportSqliteDatabase(logical);
+  const independent=Database.deserialize(bytes);
+  expect(independent.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});
+  expect(independent.query("PRAGMA foreign_key_check").all()).toEqual([]);
+  expect(independent.query("SELECT schema,subset FROM semio_base_document").get()).toEqual({schema:f.nativeAdmission.schema,subset:subset.subset});
+  const actual=await semioSnapshotFromSqliteDatabase(await importSqliteDatabase(independent.serialize()));
+  independent.close();expect(actual).toEqual(expected);
+ }
+ console.log("[DEBUG] Semio admission corpus independently retained all eighteen complete union owners");
+},30000);

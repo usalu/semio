@@ -80,7 +80,7 @@ function paint2dNode(brushSize: number): UiComponentSceneNode {
   return {
     controllerId: "controller",
     surfaceId: "surface",
-    paint2d: { documentSyncJson: JSON.stringify({ layers: [] }), assetsJson: "{}", cameraJson: CAMERA_JSON, selectionJson: "[]", activeUtility: "select", brushSize, brushOpacity: 1, brushColor: "#2878dc", brushHardness: 1,paintTarget:"pixels" as const,maskValue:255, viewMode: "composite" },
+    paint2d: { documentSyncJson: JSON.stringify({ layers: [] }), assetsJson: "{}", cameraJson: CAMERA_JSON, selectionJson: "[]", activeUtility: "select", brushSize, brushOpacity: 1, brushColor: "#2878dc", brushHardness: 1,paintTarget:"pixels" as const,maskValue:255,fillTolerance:24, viewMode: "composite" },
   } as unknown as UiComponentSceneNode;
 }
 
@@ -157,7 +157,7 @@ it("paint host preserves the edit completion promise",async()=>{
   vi.spyOn(sessionLoader,"createRasterSession").mockResolvedValue(session);
   let settle!:(value:unknown)=>void;
   const completion=new Promise(resolve=>{settle=resolve;});
-  const onEdit=vi.fn((action:ActionDescriptor)=>action.action==="editPixels"?completion:undefined);
+  const onEdit=vi.fn((action:ActionDescriptor)=>action.action==="applyFilter"?completion:undefined);
   const node=paint2dNode(12);
   const paint=node.paint2d!;
   const edited={...node,paint2d:{...paint,documentSyncJson:'{"layers":[{"kind":"pixel","id":"p","width":2,"height":2}]}',selectionJson:'["p"]'}};
@@ -166,7 +166,7 @@ it("paint host preserves the edit completion promise",async()=>{
   view.container.querySelector("details")!.open=true;
   const apply=view.getByRole("button",{name:"Apply",exact:true}) as HTMLButtonElement;
   await act(async()=>{fireEvent.click(apply);});
-  expect(onEdit.mock.calls.filter(([action])=>action.action==="editPixels")).toHaveLength(1);
+  expect(onEdit.mock.calls.filter(([action])=>action.action==="applyFilter")).toHaveLength(1);
   expect(apply.disabled).toBe(true);
   await act(async()=>{settle({kind:"applied",inputSeq:1});await completion;});
   expect(apply.disabled).toBe(false);

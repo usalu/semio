@@ -6,7 +6,7 @@ use crate::schema::snapshot::*;
 
 pub fn diff(payload: &super::ChangeSeed, base: &Grid3dSnapshot) -> protocol::MutationOutcome<Grid3dDiff> {
     if base.seed == payload.seed {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Seed is already {}.", payload.seed));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Seed is already {}.", payload.seed));
     }
     protocol::MutationOutcome::new(Grid3dDiff { seed: Some(payload.seed), ..Default::default() })
 }

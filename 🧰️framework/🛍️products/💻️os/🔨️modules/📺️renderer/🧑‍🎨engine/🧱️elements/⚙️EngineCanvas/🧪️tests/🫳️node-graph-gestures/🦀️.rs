@@ -90,7 +90,7 @@ fn edit_operations(actions: &[ActionDescriptor]) -> Vec<Value> {
         .iter()
         .filter(|action| action.action == "nodeGraphEdit")
         .flat_map(|action| {
-            let json = Value::from(action.args.clone().unwrap_or(dsl::DslValue::Null));
+            let json = Value::from(action.args.clone().unwrap_or(semio_framework_value::DslValue::Null));
             json.get("operations").and_then(Value::as_array).cloned().unwrap_or_default()
         })
         .collect()

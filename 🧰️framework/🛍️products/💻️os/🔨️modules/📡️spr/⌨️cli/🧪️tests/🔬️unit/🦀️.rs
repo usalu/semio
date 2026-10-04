@@ -1,3 +1,4 @@
+fn test_command_context()->crate::os_pack::control::CommandContext{let token=semio_framework_async::CancelToken::root_now();let transport=crate::os_pack::control::admit_command_transport(1048576,token.clone(),|_|{}).unwrap();crate::os_pack::control::CommandContext::try_new(transport,1048576,token,|_|{}).unwrap()}
 use super::*;
 use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -9,13 +10,12 @@ async fn temp_path(name: &str) -> PathBuf {
     std::env::temp_dir().join(format!("protocol_cli_test_{}_{counter}_{name}", std::process::id()))
 }
 
-async fn sample_edit(id: &str, actor: Option<&str>, description: Option<&str>, coalesce_key: Option<&str>) -> crate::os_spr::HistoryEdit {
+async fn sample_edit(id: &str, actor: Option<&str>, description: Option<&str>) -> crate::os_spr::HistoryEdit {
     crate::os_spr::HistoryEdit { line: None,
         id: id.to_string(),
         actor: actor.map(str::to_string),
         started_at: format!("2026-07-27T00:00:{id}Z", id = &id[id.len().saturating_sub(2)..]),
         finished_at: None,
-        coalesce_key: coalesce_key.map(str::to_string),
         description: description.map(str::to_string), verb: None,
         ops: vec![crate::os_spr::OpPayload { text: Some(format!("set {id} = 1")), binary: None }],
         inverse: Vec::new(),
@@ -33,7 +33,7 @@ async fn build_history_file(name: &str, edit_count: usize, with_checkpoint_and_a
     for i in 0..edit_count {
         let id = format!("e{i:02}");
         let actor = if i % 2 == 0 { Some("actor-a") } else { Some("actor-b") };
-        appender.append_edit(&sample_edit(&id, actor, Some("an edit"), None).await).await.unwrap();
+        appender.append_edit(&sample_edit(&id, actor, Some("an edit")).await).await.unwrap();
         appender.commit().await.unwrap();
         edit_ids.push(id);
     }
@@ -68,7 +68,7 @@ async fn build_history_file(name: &str, edit_count: usize, with_checkpoint_and_a
 /// why `parse_ops_text`/`print_ops_text` are not directly reachable from this crate).
 async fn sample_ops_text() -> String {
     let mut appender = crate::os_spr::HistoryAppender::begin(Vec::new(), "doc-1", "schema-1", &crate::os_spr::WriteOptions::default()).await.unwrap();
-    appender.append_edit(&sample_edit("e00", Some("actor-a"), Some("first edit"), None).await).await.unwrap();
+    appender.append_edit(&sample_edit("e00", Some("actor-a"), Some("first edit")).await).await.unwrap();
     appender.commit().await.unwrap();
     let bytes = appender.into_sink();
     crate::os_spr::decompile_ops(&bytes.await, &crate::os_spr::DecodeOptions::default()).await.unwrap()
@@ -173,14 +173,14 @@ async fn parse_commit_fields_rejects_wrong_length_payload() {
 #[semio_framework_async_macros::async_test]
 async fn cli_inspect_reports_header_kinds_and_commit_chain() {
     let (path, _bytes) = build_history_file("inspect", 3, true).await;
-    assert_eq!(main_impl(&[String::from("inspect"), path.to_string_lossy().to_string()]).await, 0);
+    assert_eq!(main_impl(&[String::from("inspect"), path.to_string_lossy().to_string()], &test_command_context()).await, 0);
     std::fs::remove_file(&path).ok();
 }
 
 #[semio_framework_async_macros::async_test]
 async fn cli_inspect_reports_error_on_missing_file() {
     let missing = temp_path("missing.spr").await.to_string_lossy().to_string();
-    assert_eq!(main_impl(&[String::from("inspect"), missing]).await, 1);
+    assert_eq!(main_impl(&[String::from("inspect"), missing], &test_command_context()).await, 1);
 }
 //#endregion 🔖️Inspect
 
@@ -190,7 +190,7 @@ async fn cli_verify_ok_at_every_level_on_a_clean_file() {
     let (path, _bytes) = build_history_file("verify_ok", 4, false).await;
     let path_str = path.to_string_lossy().to_string();
     for level in ["trusted", "standard", "full"] {
-        assert_eq!(main_impl(&[String::from("verify"), path_str.clone(), format!("--level={level}")]).await, 0, "level {level}");
+        assert_eq!(main_impl(&[String::from("verify"), path_str.clone(), format!("--level={level}")], &test_command_context()).await, 0, "level {level}");
     }
     std::fs::remove_file(&path).ok();
 }
@@ -210,7 +210,7 @@ async fn cli_verify_rejects_file_with_corrupted_header() {
     std::fs::write(&path, &bytes).unwrap();
     let path_str = path.to_string_lossy().to_string();
     for level in ["trusted", "standard", "full"] {
-        assert_ne!(main_impl(&[String::from("verify"), path_str.clone(), format!("--level={level}")]).await, 0, "level {level}");
+        assert_ne!(main_impl(&[String::from("verify"), path_str.clone(), format!("--level={level}")], &test_command_context()).await, 0, "level {level}");
     }
     std::fs::remove_file(&path).ok();
 }
@@ -219,7 +219,7 @@ async fn cli_verify_rejects_file_with_corrupted_header() {
 async fn cli_verify_rejects_unknown_level() {
     let (path, _bytes) = build_history_file("verify_bad_level", 1, false).await;
     let path_str = path.to_string_lossy().to_string();
-    assert_eq!(main_impl(&[String::from("verify"), path_str, String::from("--level=bogus")]).await, 2);
+    assert_eq!(main_impl(&[String::from("verify"), path_str, String::from("--level=bogus")], &test_command_context()).await, 2);
     std::fs::remove_file(&path).ok();
 }
 //#endregion 🔖️Verify
@@ -228,7 +228,7 @@ async fn cli_verify_rejects_unknown_level() {
 #[semio_framework_async_macros::async_test]
 async fn cli_hash_prints_commit_seq_and_chain_hash() {
     let (path, _bytes) = build_history_file("hash", 2, false).await;
-    assert_eq!(main_impl(&[String::from("hash"), path.to_string_lossy().to_string()]).await, 0);
+    assert_eq!(main_impl(&[String::from("hash"), path.to_string_lossy().to_string()], &test_command_context()).await, 0);
     std::fs::remove_file(&path).ok();
 }
 //#endregion 🔖️Hash
@@ -238,12 +238,12 @@ async fn cli_hash_prints_commit_seq_and_chain_hash() {
 async fn cli_log_filters_by_actor_and_alternative_and_respects_limit_reverse() {
     let (path, _bytes) = build_history_file("log", 4, true).await;
     let path_str = path.to_string_lossy().to_string();
-    assert_eq!(main_impl(&[String::from("log"), path_str.clone()]).await, 0);
-    assert_eq!(main_impl(&[String::from("log"), path_str.clone(), String::from("--actor"), String::from("actor-a")]).await, 0);
-    assert_eq!(main_impl(&[String::from("log"), path_str.clone(), String::from("--alternative"), String::from("alt-main")]).await, 0);
-    assert_eq!(main_impl(&[String::from("log"), path_str.clone(), String::from("--limit"), String::from("1")]).await, 0);
-    assert_eq!(main_impl(&[String::from("log"), path_str.clone(), String::from("--reverse")]).await, 0);
-    assert_eq!(main_impl(&[String::from("log"), path_str, String::from("--alternative"), String::from("bogus")]).await, 2);
+    assert_eq!(main_impl(&[String::from("log"), path_str.clone()], &test_command_context()).await, 0);
+    assert_eq!(main_impl(&[String::from("log"), path_str.clone(), String::from("--actor"), String::from("actor-a")], &test_command_context()).await, 0);
+    assert_eq!(main_impl(&[String::from("log"), path_str.clone(), String::from("--alternative"), String::from("alt-main")], &test_command_context()).await, 0);
+    assert_eq!(main_impl(&[String::from("log"), path_str.clone(), String::from("--limit"), String::from("1")], &test_command_context()).await, 0);
+    assert_eq!(main_impl(&[String::from("log"), path_str.clone(), String::from("--reverse")], &test_command_context()).await, 0);
+    assert_eq!(main_impl(&[String::from("log"), path_str, String::from("--alternative"), String::from("bogus")], &test_command_context()).await, 2);
     std::fs::remove_file(&path).ok();
 }
 //#endregion 🔖️Log
@@ -258,13 +258,13 @@ async fn cli_compile_and_decompile_round_trip_via_files() {
 
     let spr_path = temp_path("roundtrip.spr").await;
     let spr_path_str = spr_path.to_string_lossy().to_string();
-    assert_eq!(main_impl(&[String::from("compile"), ops_path_str, String::from("--out"), spr_path_str.clone()]).await, 0);
+    assert_eq!(main_impl(&[String::from("compile"), ops_path_str, String::from("--out"), spr_path_str.clone()], &test_command_context()).await, 0);
     assert!(spr_path.exists());
-    assert_eq!(main_impl(&[String::from("verify"), spr_path_str.clone()]).await, 0);
+    assert_eq!(main_impl(&[String::from("verify"), spr_path_str.clone()], &test_command_context()).await, 0);
 
     let decompiled_path = temp_path("roundtrip.decompiled.ops").await;
     let decompiled_path_str = decompiled_path.to_string_lossy().to_string();
-    assert_eq!(main_impl(&[String::from("decompile"), spr_path_str, String::from("--out"), decompiled_path_str]).await, 0);
+    assert_eq!(main_impl(&[String::from("decompile"), spr_path_str, String::from("--out"), decompiled_path_str], &test_command_context()).await, 0);
     let decompiled_text = std::fs::read_to_string(&decompiled_path).unwrap();
     assert_eq!(decompiled_text, ops_text);
 
@@ -277,7 +277,7 @@ async fn cli_compile_and_decompile_round_trip_via_files() {
 async fn cli_compile_rejects_malformed_ops_text() {
     let ops_path = temp_path("bad.ops").await;
     std::fs::write(&ops_path, "not a valid ops line\n").unwrap();
-    assert_eq!(main_impl(&[String::from("compile"), ops_path.to_string_lossy().to_string()]).await, 1);
+    assert_eq!(main_impl(&[String::from("compile"), ops_path.to_string_lossy().to_string()], &test_command_context()).await, 1);
     std::fs::remove_file(&ops_path).ok();
 }
 //#endregion 🔖️Compile
@@ -291,8 +291,8 @@ async fn cli_diff_reports_identical_and_divergent_files() {
     let (path_b, _) = build_history_file("diff_b", 2, false).await;
     let path_a_str = path_a.to_string_lossy().to_string();
     let path_b_str = path_b.to_string_lossy().to_string();
-    assert_eq!(main_impl(&[String::from("diff"), path_a_str.clone(), path_a_str.clone()]).await, 0);
-    assert_eq!(main_impl(&[String::from("diff"), path_a_str, path_b_str]).await, 1);
+    assert_eq!(main_impl(&[String::from("diff"), path_a_str.clone(), path_a_str.clone()], &test_command_context()).await, 0);
+    assert_eq!(main_impl(&[String::from("diff"), path_a_str, path_b_str], &test_command_context()).await, 1);
     std::fs::remove_file(&path_a).ok();
     std::fs::remove_file(&path_b).ok();
 }
@@ -300,13 +300,13 @@ async fn cli_diff_reports_identical_and_divergent_files() {
 #[semio_framework_async_macros::async_test]
 async fn cli_diff_reports_only_in_a_when_b_is_a_shorter_prefix() {
     let mut appender_a = crate::os_spr::HistoryAppender::begin(Vec::new(), "doc-1", "schema-1", &crate::os_spr::WriteOptions::default()).await.unwrap();
-    appender_a.append_edit(&sample_edit("e00", Some("actor-a"), None, None).await).await.unwrap();
-    appender_a.append_edit(&sample_edit("e01", Some("actor-a"), None, None).await).await.unwrap();
+    appender_a.append_edit(&sample_edit("e00", Some("actor-a"), None).await).await.unwrap();
+    appender_a.append_edit(&sample_edit("e01", Some("actor-a"), None).await).await.unwrap();
     appender_a.commit().await.unwrap();
     let bytes_a = appender_a.into_sink();
 
     let mut appender_b = crate::os_spr::HistoryAppender::begin(Vec::new(), "doc-1", "schema-1", &crate::os_spr::WriteOptions::default()).await.unwrap();
-    appender_b.append_edit(&sample_edit("e00", Some("actor-a"), None, None).await).await.unwrap();
+    appender_b.append_edit(&sample_edit("e00", Some("actor-a"), None).await).await.unwrap();
     appender_b.commit().await.unwrap();
     let bytes_b = appender_b.into_sink();
 
@@ -315,7 +315,7 @@ async fn cli_diff_reports_only_in_a_when_b_is_a_shorter_prefix() {
     std::fs::write(&path_a, &bytes_a.await).unwrap();
     std::fs::write(&path_b, &bytes_b.await).unwrap();
 
-    assert_eq!(main_impl(&[String::from("diff"), path_a.to_string_lossy().to_string(), path_b.to_string_lossy().to_string()]).await, 1);
+    assert_eq!(main_impl(&[String::from("diff"), path_a.to_string_lossy().to_string(), path_b.to_string_lossy().to_string()], &test_command_context()).await, 1);
 
     std::fs::remove_file(&path_a).ok();
     std::fs::remove_file(&path_b).ok();
@@ -327,14 +327,14 @@ async fn cli_diff_reports_only_in_a_when_b_is_a_shorter_prefix() {
 async fn cli_compact_in_place_and_via_out_both_leave_a_verifiable_file() {
     let (path, _bytes) = build_history_file("compact", 3, false).await;
     let path_str = path.to_string_lossy().to_string();
-    assert_eq!(main_impl(&[String::from("compact"), path_str.clone()]).await, 0);
-    assert_eq!(main_impl(&[String::from("verify"), path_str.clone()]).await, 0);
+    assert_eq!(main_impl(&[String::from("compact"), path_str.clone()], &test_command_context()).await, 0);
+    assert_eq!(main_impl(&[String::from("verify"), path_str.clone()], &test_command_context()).await, 0);
 
     let out_path = temp_path("compact_out.spr").await;
     let out_path_str = out_path.to_string_lossy().to_string();
-    assert_eq!(main_impl(&[String::from("compact"), path_str, String::from("--out"), out_path_str.clone()]).await, 0);
+    assert_eq!(main_impl(&[String::from("compact"), path_str, String::from("--out"), out_path_str.clone()], &test_command_context()).await, 0);
     assert!(out_path.exists());
-    assert_eq!(main_impl(&[String::from("verify"), out_path_str]).await, 0);
+    assert_eq!(main_impl(&[String::from("verify"), out_path_str], &test_command_context()).await, 0);
 
     std::fs::remove_file(&path).ok();
     std::fs::remove_file(&out_path).ok();
@@ -346,16 +346,16 @@ async fn cli_compact_in_place_and_via_out_both_leave_a_verifiable_file() {
 async fn cli_repair_reports_clean_file_and_truncates_a_torn_tail() {
     let (path, bytes) = build_history_file("repair", 2, false).await;
     let path_str = path.to_string_lossy().to_string();
-    assert_eq!(main_impl(&[String::from("repair"), path_str.clone()]).await, 0);
+    assert_eq!(main_impl(&[String::from("repair"), path_str.clone()], &test_command_context()).await, 0);
 
     let mut torn = bytes;
     let commit_frame_len = 75u64;
     torn.truncate(torn.len() - commit_frame_len as usize + 3);
     std::fs::write(&path, &torn).unwrap();
-    assert_eq!(main_impl(&[String::from("repair"), path_str.clone(), String::from("--truncate-torn-tail"), String::from("--rebuild-indexes")]).await, 0);
+    assert_eq!(main_impl(&[String::from("repair"), path_str.clone(), String::from("--truncate-torn-tail"), String::from("--rebuild-indexes")], &test_command_context()).await, 0);
     let repaired = std::fs::read(&path).unwrap();
     assert!(repaired.len() < torn.len());
-    assert_eq!(main_impl(&[String::from("verify"), path_str]).await, 0);
+    assert_eq!(main_impl(&[String::from("verify"), path_str], &test_command_context()).await, 0);
 
     std::fs::remove_file(&path).ok();
 }
@@ -363,7 +363,7 @@ async fn cli_repair_reports_clean_file_and_truncates_a_torn_tail() {
 #[semio_framework_async_macros::async_test]
 async fn cli_repair_reports_error_on_missing_file() {
     let missing = temp_path("missing_repair.spr").await.to_string_lossy().to_string();
-    assert_eq!(main_impl(&[String::from("repair"), missing]).await, 1);
+    assert_eq!(main_impl(&[String::from("repair"), missing], &test_command_context()).await, 1);
 }
 //#endregion 🔖️Repair
 
@@ -371,7 +371,7 @@ async fn cli_repair_reports_error_on_missing_file() {
 #[semio_framework_async_macros::async_test]
 async fn cli_upgrade_passes_through_a_valid_file() {
     let (path, _bytes) = build_history_file("upgrade", 1, false).await;
-    assert_eq!(main_impl(&[String::from("upgrade"), path.to_string_lossy().to_string()]).await, 0);
+    assert_eq!(main_impl(&[String::from("upgrade"), path.to_string_lossy().to_string()], &test_command_context()).await, 0);
     std::fs::remove_file(&path).ok();
 }
 
@@ -381,7 +381,7 @@ async fn cli_upgrade_fails_on_corrupt_file() {
     let mid = bytes.len() / 2;
     bytes[mid] ^= 0xFF;
     std::fs::write(&path, &bytes).unwrap();
-    assert_ne!(main_impl(&[String::from("upgrade"), path.to_string_lossy().to_string()]).await, 0);
+    assert_ne!(main_impl(&[String::from("upgrade"), path.to_string_lossy().to_string()], &test_command_context()).await, 0);
     std::fs::remove_file(&path).ok();
 }
 //#endregion 🔖️Upgrade
@@ -389,9 +389,9 @@ async fn cli_upgrade_fails_on_corrupt_file() {
 //#region 🔖️Cli
 #[semio_framework_async_macros::async_test]
 async fn cli_help_and_unknown_subcommand() {
-    assert_eq!(main_impl(&[]).await, 2);
-    assert_eq!(main_impl(&[String::from("help")]).await, 0);
-    assert_eq!(main_impl(&[String::from("--help")]).await, 0);
-    assert_eq!(main_impl(&[String::from("bogus-subcommand")]).await, 2);
+    assert_eq!(main_impl(&[], &test_command_context()).await, 2);
+    assert_eq!(main_impl(&[String::from("help")], &test_command_context()).await, 0);
+    assert_eq!(main_impl(&[String::from("--help")], &test_command_context()).await, 0);
+    assert_eq!(main_impl(&[String::from("bogus-subcommand")], &test_command_context()).await, 2);
 }
 //#endregion 🔖️Cli

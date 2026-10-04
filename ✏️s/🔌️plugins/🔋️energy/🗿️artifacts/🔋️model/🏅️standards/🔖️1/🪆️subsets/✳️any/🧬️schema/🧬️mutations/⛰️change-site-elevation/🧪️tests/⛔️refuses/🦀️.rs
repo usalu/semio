@@ -17,7 +17,7 @@ const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutati
 
 #[allow(unused_variables, unused_mut)]
 fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
-    let mut model = crate::model::Model { name: "BESTEST 600".into(), ..crate::model::Model::default() };
+    let mut model = crate::model::Model { name: "BESTEST 600".into(), version: "1".into(), ..crate::model::Model::default() };
     (snapshot(model), super::change_site_elevation(9000.0))
 }
 

@@ -6,7 +6,7 @@ mod plugin_builder_contract_tests {
     //! (history/clipboard/revert/filter/noteShellCommand) still dispatch by string via `handle_action`/
     //! `handle_command` — everything app-specific dispatches via `dispatch_typed`.
     use crate::__semio_dispatch_PluginApp;
-    use dsl::DslValue;
+    use semio_framework_value::DslValue;
     use semio_framework_value_derive::{FromValue, ToValue};
     use semio_framework_ui_locale::Locale;
     use semio_framework_ui_locale::LocalizedLabel;
@@ -24,7 +24,7 @@ mod plugin_builder_contract_tests {
     /// boundary — the fixtures below stay readable as JSON literals without keeping a
     /// `serde_json::Value` alive past this one conversion.
     fn dv(value: Value) -> DslValue {
-        DslValue::from(&value)
+        semio_framework_value::DslValue::from(&value)
     }
 
     use super::{ContextMenuWireRequest, media_export_complete_status};
@@ -32,9 +32,9 @@ mod plugin_builder_contract_tests {
         ActionMeta, App, AppActionRegistry, ArtifactApp, ArtifactDownloadOutput, ArtifactMediaExportHandle, ArtifactOutputChunks, ArtifactView, AsyncTask, ChildEmit, CommandView, ConfigView, DraftView, Emit, EphemeralSnapshot, HistoryCommandFilter, HistoryView, InteractionHoverState, InteractionView, Menu, NoDraft,
         NoDraftMutation, NoPresence, NoPresenceMutation, PeerPresence, PluginApp, TaskCtx, TaskResolution, VcsArtifactApp, ui_history_panel,
     };
-    use crate::app::{ArtifactDeserializer, ArtifactSerializer, Dialect, ErasedComposeSource, IoPayload, StandardId, SubsetId, deserializer_entry_of, resolve_ready, serializer_entry_of};
+    use crate::app::{ArtifactDeserializer, ArtifactSerializer, Dialect, ErasedComposeSource, IoPayload, StandardId, SubsetId, deserializer_entry_of,  serializer_entry_of};
     use crate::publication_fixture::{ChangePublicationPresence, ChangePublicationTransient, PublicationPresence, PublicationPresenceMutation, PublicationTransient, PublicationTransientMutation};
-    use crate::store::FaultFrom;
+    use semio_framework_diagnostic::FaultFrom;
     use crate::{IconName, MediaClass, MediaType, ViewModel, selection_count_phrase};
     use protocol::Mutation;
     use semio_framework::Fault;
@@ -116,6 +116,7 @@ mod plugin_builder_contract_tests {
 
     //#region 🧬️TestDocumentMutationFixture
     use crate::test_app_mutation_fixture::TestSnapshot;
+    mod child_emission_refusal { include!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs")); }
     use crate::test_app_mutation_fixture::document::{MAXIMUM_CHILD_CLONES, MAXIMUM_CHILD_ENCODINGS, MAXIMUM_CHILD_PROBE_BYTES};
 
     /// 🧪️ Trivial dummy `ArtifactSerializer`/`ArtifactDeserializer` pair, round-tripping
@@ -153,20 +154,20 @@ mod plugin_builder_contract_tests {
 
         let seed = TestSnapshot { count: 7, label: "x".into(), slot: Vec::new() };
         let bytes = ArtifactPack::encode_pack(&seed);
-        let composed = resolve_ready((ser.compose)(&[ErasedComposeSource { dialect: DummySerializer::FROM, payload: IoPayload::Binary(bytes) }])).expect("serializer_entry_of erased compose should succeed with exactly 1 source");
+        let composed = ::semio_framework_async::poll::resolve_ready((ser.compose)(&[ErasedComposeSource { dialect: DummySerializer::FROM, payload: IoPayload::Binary(bytes) }])).expect("serializer_entry_of erased compose should succeed with exactly 1 source");
         assert_eq!(composed.dialect, DummySerializer::INTO);
         match composed.payload {
             IoPayload::Binary(out) => assert_eq!(<TestSnapshot as ArtifactPack>::decode_pack(&out).unwrap(), seed),
             IoPayload::Text(_) => panic!("expected Binary payload"),
         }
 
-        let zero_sources_err = match resolve_ready((de.compose)(&[])) {
+        let zero_sources_err = match ::semio_framework_async::poll::resolve_ready((de.compose)(&[])) {
             Err(err) => err,
             Ok(_) => panic!("deserializer_entry_of erased compose should reject 0 sources"),
         };
         assert!(zero_sources_err.message.contains("needs exactly 1 source"), "{}", zero_sources_err.message);
         let two_sources = [ErasedComposeSource { dialect: DummyDeserializer::FROM, payload: IoPayload::Binary(Vec::new()) }, ErasedComposeSource { dialect: DummyDeserializer::FROM, payload: IoPayload::Binary(Vec::new()) }];
-        let two_sources_err = match resolve_ready((de.compose)(&two_sources)) {
+        let two_sources_err = match ::semio_framework_async::poll::resolve_ready((de.compose)(&two_sources)) {
             Err(err) => err,
             Ok(_) => panic!("deserializer_entry_of erased compose should reject 2 sources"),
         };
@@ -192,7 +193,7 @@ mod plugin_builder_contract_tests {
             if !matches!(mutation, TestMutation::SetCount(SetCount { .. })) || lane != store::HistoryLane::Document {
                 return Err("test count accepts exactly one scalar mutation".into());
             }
-            Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: 1_024 })
+            Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, 1_024))
         }
 
         fn begin(
@@ -221,31 +222,7 @@ mod plugin_builder_contract_tests {
                     return Err("test count requires scalar mutation".into());
                 };
                 let authority = &request.authority;
-                let edit = store::Edit { line: authority.line_id().map(str::to_owned),
-                    id: format!("fixture-count-{}", authority.next_sequence_number()),
-                    actor: Some(authority.actor().into()),
-                    forwards: vec![TestMutation::SetCount(SetCount { value: *value })],
-                    inverse: vec![TestMutation::SetCount(SetCount { value: request.base.get().count })],
-                    mutation_meta: vec![protocol::MutationMeta {
-                        mutation_id: None,
-                        dependencies: Vec::new(),
-                        base_version: 0,
-                        author_id: Some(ActorId(authority.actor().into())),
-                        timestamp: authority.next_clock(),
-                        undo_policy: UndoPolicy::ExactBaseOnly,
-                        payload_hash: None,
-                        semantic_kind: None,
-                        label: None,
-                        group_id: None,
-                        origin: Default::default(),
-                        transaction: None,
-                    }],
-                    description: request.description.clone(), verb: None,
-                    coalesce_key: None,
-                    sequence_number: authority.next_sequence_number(),
-                    started_at: String::new(),
-                    finished_at: None,
-                };
+                let edit = authority.next_edit(TestMutation::SetCount(SetCount { value: *value }), vec![TestMutation::SetCount(SetCount { value: request.base.get().count })]);
                 self.prepared = Some(authority.prepare_one_item(edit, std::sync::Arc::new(TestSnapshot { count: *value, label: String::new(), slot: Vec::new() }))?);
                 self.turn = 2;
             }
@@ -274,7 +251,7 @@ mod plugin_builder_contract_tests {
             self.closing = true;
         }
 
-        fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
             if !self.closing || !grant.permits_one() || grant.maximum_bytes < 1_024 {
                 return Ok(store::SnapshotRetirementStep::Blocked);
             }
@@ -306,7 +283,7 @@ mod plugin_builder_contract_tests {
     use crate::test_app_mutation_fixture::{ChangeTestConfigSelection, TestConfig, TestConfigMutation};
 
     /// 🧪️ B1: `TestApp`'s typed command enum — the sole dispatch surface for its own behavior.
-    #[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, dsl::DslOps)]
+    #[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_dsl_record_derive::DslEnum)]
     enum TestCommand {
         #[dsl(key = "increment")]
         Increment,
@@ -314,8 +291,6 @@ mod plugin_builder_contract_tests {
         SetLabel { value: String },
         #[dsl(key = "stream-label")]
         StreamLabel { value: String, commit: bool },
-        #[dsl(key = "commit-label")]
-        CommitLabel { value: String },
         #[dsl(key = "bad-view")]
         BadView,
         #[dsl(key = "select")]
@@ -377,23 +352,23 @@ mod plugin_builder_contract_tests {
     }
 
     impl ::protocol::OpText for TestCommand {
-        fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
-            let variants = <Self as ::dsl::DslVariants>::variants();
+        fn parse_op(line: &str) -> Result<Self, ::semio_framework_diagnostic::TextError> {
+            let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
             for (keyword, spec_fn) in &variants {
                 let probe = format!("{keyword} ");
                 if line == keyword.as_str() || line.starts_with(&probe) {
                     let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                    let record = ::dsl::parse(body, &(spec_fn.ordinary)(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline })?;
-                    return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
+                    let record = semio_framework_dsl_record::parse(body, &(spec_fn.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: ::semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?;
+                    return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
                 }
             }
-            Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+            Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown operation line '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
         }
         fn print_op(&self) -> String {
-            let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
-            let variants = <Self as ::dsl::DslVariants>::variants();
+            let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+            let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
             let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-            let body = ::dsl::print(&record, &(spec_fn.ordinary)(), ::dsl::JoinMode::Inline);
+            let body = semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline);
             if body.is_empty() { keyword } else { format!("{keyword} {body}") }
         }
     }
@@ -460,7 +435,7 @@ mod plugin_builder_contract_tests {
             Some(1)
         }
 
-        fn step(&mut self, input: &crate::retained_command::ArtifactCommandInputs<'_, TestApp>) -> Result<crate::retained_command::ArtifactCommandWorkStep<TestApp>, Fault> {
+        fn step(&mut self, input: &crate::retained_command::ArtifactCommandInputs<'_, TestApp>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<crate::retained_command::ArtifactCommandWorkStep<TestApp>, Fault> {
             let crate::retained_command::ArtifactCommandInputs { command: _command, snapshot: _snapshot, config: _config, history: _history, interaction: _interaction, hover: _hover, context: _context, operation: _operation } = *input;
             self.emit.take().map(crate::retained_command::ArtifactCommandWorkStep::Complete).ok_or_else(|| Fault::from("test-retained-child-work-repeated"))
         }
@@ -475,7 +450,7 @@ mod plugin_builder_contract_tests {
             Some(3)
         }
 
-        fn step(&mut self, input: &crate::retained_command::ArtifactCommandInputs<'_, TestApp>) -> Result<crate::retained_command::ArtifactCommandWorkStep<TestApp>, Fault> {
+        fn step(&mut self, input: &crate::retained_command::ArtifactCommandInputs<'_, TestApp>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<crate::retained_command::ArtifactCommandWorkStep<TestApp>, Fault> {
             let crate::retained_command::ArtifactCommandInputs { command: _command, snapshot: _snapshot, config: _config, history: _history, interaction: _interaction, hover: _hover, context: _context, operation: _operation } = *input;
             TEST_RETAINED_COMMAND_STEP_CALLS.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
             if self.cursor < 2 {
@@ -765,7 +740,7 @@ mod plugin_builder_contract_tests {
     }
 
     impl store::ErasedSnapshotRetirement for PublicationPresenceRetirement {
-        fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+        fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
             if maximum_items == 0 {
                 return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
             }
@@ -797,7 +772,7 @@ mod plugin_builder_contract_tests {
                 return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
             }
             if let Some(active) = self.0.as_mut() {
-                return active.close_step(1, maximum_bytes).map_err(Fault::from).map(|step| match step {
+                return active.close_step(1, maximum_bytes).map_err(|error| Fault::new(semio_framework::FaultOrigin::Framework, error.kind.as_str(), error.into_message())).map(|step| match step {
                     store::SnapshotRetirementStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
                     store::SnapshotRetirementStep::Blocked => PluginCloseStep::Blocked { reason: "presence fixture retains captured readers" },
                     store::SnapshotRetirementStep::Complete => PluginCloseStep::Complete,
@@ -842,7 +817,6 @@ mod plugin_builder_contract_tests {
             TestCommand::Increment => "increment",
             TestCommand::SetLabel { .. } => "setLabel",
             TestCommand::StreamLabel { .. } => "streamLabel",
-            TestCommand::CommitLabel { .. } => "commitLabel",
             TestCommand::BadView => "badView",
             TestCommand::Select { .. } => "select",
             TestCommand::Navigate => "navigate",
@@ -873,8 +847,8 @@ mod plugin_builder_contract_tests {
     /// document, on a LATER dispatch (see `ApplyCountFromTask` below).
     fn test_app_reduce(command: &TestCommand, doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>) -> Result<Emit<TestMutation, TestConfigMutation, NoDraftMutation>, Fault> {
         match command {
-            TestCommand::Increment | TestCommand::IncrementViaCommand | TestCommand::ModeIncrement => Ok(Emit { artifact_mutations: vec![TestMutation::SetCount(SetCount { value: doc.snapshot.count + 1 })], description: Some("increment".into()), ..Default::default() }),
-            TestCommand::TargetWindow { window_id } => Ok(Emit { artifact_mutations: vec![TestMutation::SetLabel(SetLabel { value: window_id.clone() })], description: Some("targetWindow".into()), ..Default::default() }),
+            TestCommand::Increment | TestCommand::IncrementViaCommand | TestCommand::ModeIncrement => Ok(Emit { artifact_mutations: vec![TestMutation::SetCount(SetCount { value: doc.snapshot.count + 1 })], ..Default::default() }),
+            TestCommand::TargetWindow { window_id } => Ok(Emit { artifact_mutations: vec![TestMutation::SetLabel(SetLabel { value: window_id.clone() })], ..Default::default() }),
             TestCommand::WatchdogOverrun => {
                 let started = std::time::Instant::now();
                 while started.elapsed() < std::time::Duration::from_millis(10) {
@@ -889,7 +863,6 @@ mod plugin_builder_contract_tests {
                 let mutations = vec![TestMutation::SetLabel(SetLabel { value: value.clone() })];
                 Ok(if *commit { Emit::commit_transaction(transaction, mutations) } else { Emit::stream_transaction(transaction, mutations) })
             }
-            TestCommand::CommitLabel { value } => Ok(Emit::commit(vec![TestMutation::SetLabel(SetLabel { value: value.clone() })], "commit label")),
             TestCommand::BadView => Ok(Emit::mutations(vec![TestMutation::SetCount(SetCount { value: 99 })])),
             TestCommand::SetActiveUtility { utility_id } => Ok(Emit::event(AppEvent { kind: "active-utility".into(), payload: json!({ "utilityId": utility_id.clone() }).into() })),
             TestCommand::Select { id } => Ok(Emit::config(vec![ChangeTestConfigSelection { selected: id.clone() }.into()])),
@@ -919,7 +892,7 @@ mod plugin_builder_contract_tests {
             )),
             TestCommand::ApplyCountFromTask { value } => Ok(Emit::mutations(vec![TestMutation::SetCount(SetCount { value: *value })])),
             TestCommand::PickItem { id } => Ok(keyed_pick_emit(id)),
-            TestCommand::BulkEdit { rows } => Ok(Emit { artifact_mutations: (1..=*rows).map(|row| TestMutation::SetCount(SetCount { value: row })).collect(), description: Some("bulk edit".into()), ..Default::default() }),
+            TestCommand::BulkEdit { rows } => Ok(Emit { artifact_mutations: (1..=*rows).map(|row| TestMutation::SetCount(SetCount { value: row })).collect(), ..Default::default() }),
         }
     }
 
@@ -1082,11 +1055,11 @@ mod plugin_builder_contract_tests {
             match action {
                 "incrementViaCommand" => Ok(TestCommand::IncrementViaCommand),
                 "mode.increment" => Ok(TestCommand::ModeIncrement),
-                "setLabelViaCommand" => Ok(TestCommand::SetLabelViaCommand { value: args.and_then(|value| value.get("value")).and_then(DslValue::as_str).unwrap_or_default().to_string() }),
-                "targetWindow" => Ok(TestCommand::TargetWindow { window_id: args.and_then(|value| value.get("windowId")).and_then(DslValue::as_str).unwrap_or_default().to_string() }),
+                "setLabelViaCommand" => Ok(TestCommand::SetLabelViaCommand { value: args.and_then(|value| value.get("value")).and_then(semio_framework_value::DslValue::as_str).unwrap_or_default().to_string() }),
+                "targetWindow" => Ok(TestCommand::TargetWindow { window_id: args.and_then(|value| value.get("windowId")).and_then(semio_framework_value::DslValue::as_str).unwrap_or_default().to_string() }),
                 "probeChild" => Ok(TestCommand::ProbeChild {
-                    slot: args.and_then(|value| value.get("slot")).and_then(DslValue::as_str).unwrap_or_default().to_string(),
-                    child_id: args.and_then(|value| value.get("childId")).and_then(DslValue::as_str).unwrap_or_default().to_string(),
+                    slot: args.and_then(|value| value.get("slot")).and_then(semio_framework_value::DslValue::as_str).unwrap_or_default().to_string(),
+                    child_id: args.and_then(|value| value.get("childId")).and_then(semio_framework_value::DslValue::as_str).unwrap_or_default().to_string(),
                 }),
                 "badView" => Ok(TestCommand::BadView),
                 _ => Err(Fault::from(format!("unknown test command: {action}"))),
@@ -1109,7 +1082,7 @@ mod plugin_builder_contract_tests {
             if matches!(body_key, "graph" | "properties") {
                 let item = TreeNode::try_new("item-1", Component::TreeItem(TreeItemProps {
                     label: Label(UiText::try_from_str("Item 1").expect("bounded fixture")), description: None, icon: None, default_open: None,
-                    draggable: None, drag_data: None, dimmed: None, window: None, granularity: None, inline_toolbar: None, detail: None, row_actions: UiFixedList::default(), target: None,
+                    draggable: None, drag_data: None, dimmed: None, selected: None, window: None, granularity: None, inline_toolbar: None, detail: None, row_actions: UiFixedList::default(), target: None,
                 })).expect("bounded fixture");
                 let root = TreeNode::try_new("root", Component::Tree(TreeProps { presentation: Default::default(), interaction_domain: Some(UiText::try_from_str("items").expect("bounded fixture")) }))
                     .expect("bounded fixture").try_with_children([item]).unwrap_or_else(|_| panic!("bounded fixture"));
@@ -1174,8 +1147,8 @@ mod plugin_builder_contract_tests {
         /// async closure can't satisfy a sync `FnOnce`, so this fixture inlines the two guarded
         /// branches as explicit `if`s instead of touching `when`'s public signature. See R10 residue
         /// class 1 (`` inside a sync closure).
-        async fn context_menu(_request: &ContextMenuRequest, doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, _view_state: &ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
-            let mut menu = Menu::of(registry).action("setLabelRequired");
+        async fn context_menu(_request: &ContextMenuRequest, doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, view_state: &ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+            let mut menu = Menu::of(registry, view_state).action("setLabelRequired");
             if !doc.snapshot.label.is_empty() && doc.snapshot.label != "flat-menu-test" {
                 menu = menu.command("incrementViaCommand");
             }
@@ -1192,11 +1165,36 @@ mod plugin_builder_contract_tests {
         /// them) is `HierarchyProvider::Topology`-backed by a single synthetic id, "item-1", present
         /// exactly when `doc.snapshot.label` is non-empty — lets a test simulate "delete the selected
         /// node" by setting the label back to empty and observing `validate_state` prune it.
-        async fn interaction_topology(doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>) -> InteractionTopology {
+        async fn interaction_topology(doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>) -> Result<InteractionTopology, semio_framework_value::ValueError> {
             let mut domains = BTreeMap::new();
             let ordered = if doc.snapshot.label.is_empty() { Vec::new() } else { vec![TopologyNode { id: "item-1".into(), granularity: "item".into(), parent: None }] };
             domains.insert("items".to_string(), DomainTopology { ordered });
-            InteractionTopology { domains }
+            Ok(InteractionTopology { domains })
+        }
+    }
+
+    #[test]
+    fn declared_child_projection_default_preserves_empty_and_full_literal_references() {
+        let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧩️composition/🔎️projection/🧫️fixtures/🔣️.json"))).expect("closed projection fixture");
+        for case in fixture["cases"].as_array().expect("projection cases") {
+            let rows = case["rows"].as_array().expect("declared rows");
+            let text = |row: &Value, name: &str| row[name].as_str().expect("literal child field").to_string();
+            let snapshot = TestSnapshot { count: i32::MIN, label: "parent\0引用😀".into(), slot: rows.iter().map(|row| store::ArtifactChild::new(text(row, "childId"), ArtifactRef { artifact_id: text(row, "artifactId"), dialect: ArtifactDialect { artifact_kind: text(row, "kind"), standard: text(row, "standard"), subset: text(row, "subset") } })).collect() };
+            let projected = <KeyedTestApp as ArtifactApp>::child_restore_projection(&snapshot).expect("default projects the actual declared snapshot");
+            assert_eq!(projected.len(), rows.len());
+            assert_eq!(projected.is_empty(), rows.is_empty());
+            for (index, row) in rows.iter().enumerate() {
+                let (slot, actual) = projected.get(index).expect("full child occurrence");
+                assert_eq!(slot, row["slot"].as_str().expect("slot"));
+                assert_eq!(actual.child_id, row["childId"].as_str().expect("logical"));
+                assert_eq!(actual.artifact_id, row["artifactId"].as_str().expect("addressed"));
+                assert_eq!(actual.artifact_kind, row["kind"].as_str().expect("kind"));
+                assert_eq!(actual.standard, row["standard"].as_str().expect("standard"));
+                assert_eq!(actual.subset, row["subset"].as_str().expect("subset"));
+            }
+            let structural = store::ChildRestoreProjection::from_snapshot(&snapshot).expect("independent declared structural projection");
+            projected.admit_complete((0..structural.len()).map(|index| structural.get(index).expect("declared row"))).expect("complete declared set");
+            if !rows.is_empty() { assert!(projected.admit_complete(std::iter::empty()).is_err()); }
         }
     }
 
@@ -1317,10 +1315,10 @@ mod plugin_builder_contract_tests {
             let emit = match self.command.as_deref().unwrap() {
                 TestCommand::CompositeEdit { slot, child_id, child_value } => {
                     let child_emits = (!slot.is_empty()).then(|| ChildEmit::of::<TestSnapshot, _>(slot.clone(), child_id.clone(), &[TestMutation::SetCount(SetCount { value: *child_value })])).into_iter().collect();
-                    Emit { artifact_mutations: vec![TestMutation::SetCount(SetCount { value: self.base_count + child_value })], child_emits, description: Some("retained composite edit".into()), ..Default::default() }
+                    Emit { artifact_mutations: vec![TestMutation::SetCount(SetCount { value: self.base_count + child_value })], child_emits, ..Default::default() }
                 }
                 TestCommand::PickItem { id } => keyed_pick_emit(id),
-                TestCommand::BulkEdit { rows } => Emit { artifact_mutations: (1..=*rows).map(|row| TestMutation::SetCount(SetCount { value: self.base_count + row })).collect(), description: Some("retained bulk edit".into()), ..Default::default() },
+                TestCommand::BulkEdit { rows } => Emit { artifact_mutations: (1..=*rows).map(|row| TestMutation::SetCount(SetCount { value: self.base_count + row })).collect(), ..Default::default() },
                 _ => panic!("exact keyed fixture command"),
             };
             self.completion.as_ref().unwrap().complete(Ok(emit), EphemeralEmit::default()).expect("one exact keyed completion");
@@ -2227,18 +2225,17 @@ mod plugin_builder_contract_tests {
     /// `one_framework_reserved_route_fits_a_bounded_thread_stack` pins. One `resolve_ready` per
     /// statement drops each temporary at its own semicolon instead.
     fn declare_test_app_verbs(builder: crate::app::AppBuilder) -> crate::app::AppBuilder {
-        let builder = resolve_ready(builder.mutation("increment", LocalizedLabel::data("Increment")));
-        let builder = resolve_ready(builder.mutation("setLabel", LocalizedLabel::data("Set Label")));
-        let builder = resolve_ready(builder.mutation("streamLabel", LocalizedLabel::data("Stream Label")));
-        let builder = resolve_ready(builder.mutation("commitLabel", LocalizedLabel::data("Commit Label")));
-        let builder = resolve_ready(builder.mutation("compositeEdit", LocalizedLabel::data("Composite Edit")));
-        let builder = resolve_ready(builder.mutation("probeChild", LocalizedLabel::data("Probe Child")));
-        let builder = resolve_ready(builder.mutation("spawnCountTask", LocalizedLabel::data("Spawn Count Task")));
-        let builder = resolve_ready(builder.mutation("applyCountFromTask", LocalizedLabel::data("Apply Count From Task")));
-        let builder = resolve_ready(builder.view_action("select", LocalizedLabel::data("Select")));
-        let builder = resolve_ready(builder.view_action("viewNoScope", LocalizedLabel::data("View No Scope")));
-        let builder = resolve_ready(builder.view_action("viewPartialScope", LocalizedLabel::data("View Partial Scope")));
-        let builder = resolve_ready(builder.shell_action("navigate", LocalizedLabel::data("Navigate")));
+        let builder = ::semio_framework_async::poll::resolve_ready(builder.mutation("increment", LocalizedLabel::data("Increment")));
+        let builder = ::semio_framework_async::poll::resolve_ready(builder.mutation("setLabel", LocalizedLabel::data("Set Label")));
+        let builder = ::semio_framework_async::poll::resolve_ready(builder.mutation("streamLabel", LocalizedLabel::data("Stream Label")));
+        let builder = ::semio_framework_async::poll::resolve_ready(builder.mutation("compositeEdit", LocalizedLabel::data("Composite Edit")));
+        let builder = ::semio_framework_async::poll::resolve_ready(builder.mutation("probeChild", LocalizedLabel::data("Probe Child")));
+        let builder = ::semio_framework_async::poll::resolve_ready(builder.mutation("spawnCountTask", LocalizedLabel::data("Spawn Count Task")));
+        let builder = ::semio_framework_async::poll::resolve_ready(builder.mutation("applyCountFromTask", LocalizedLabel::data("Apply Count From Task")));
+        let builder = ::semio_framework_async::poll::resolve_ready(builder.view_action("select", LocalizedLabel::data("Select")));
+        let builder = ::semio_framework_async::poll::resolve_ready(builder.view_action("viewNoScope", LocalizedLabel::data("View No Scope")));
+        let builder = ::semio_framework_async::poll::resolve_ready(builder.view_action("viewPartialScope", LocalizedLabel::data("View Partial Scope")));
+        let builder = ::semio_framework_async::poll::resolve_ready(builder.shell_action("navigate", LocalizedLabel::data("Navigate")));
         builder
     }
 
@@ -2515,7 +2512,7 @@ mod plugin_builder_contract_tests {
                 admitted.mutations = composed.mutations;
                 admitted.inverse_group = composed.inverse_group;
             }
-            admitted.output = DslValue::Object(vec![("composedResults".into(), DslValue::String(composed_results.to_string()))]);
+            admitted.output = semio_framework_value::DslValue::Object(vec![("composedResults".into(), semio_framework_value::DslValue::String(composed_results.to_string()))]);
             let after_edit_id = self.0.test_last_edit_id();
             if after_edit_id.is_some() {
                 let tail_offset = if after_edit_id == before_edit_id { before_tail } else { (0, 0) };
@@ -3041,7 +3038,7 @@ mod plugin_builder_contract_tests {
                 false
             }
 
-            fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+            fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
                 if maximum_items == 0 {
                     return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
                 }
@@ -3175,6 +3172,35 @@ mod plugin_builder_contract_tests {
         assert_eq!(plus_one.close_step(1, ARTIFACT_OUTPUT_CHUNK_BYTES), PluginCloseStep::Pending { released_items: 0, released_bytes: 1 });
         assert_eq!(plus_one.close_step(1, ARTIFACT_OUTPUT_CHUNK_BYTES), PluginCloseStep::Complete, "repeated close is idempotent after interruption and resume");
         assert!(plus_one.terminal_is_empty());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn retained_command_download_seam_keeps_original_chunks_and_bounded_cancel_owner(){
+        use semio_framework_job::{InteractiveJob,InteractiveJobCloseStep,StepOutcome};
+        use crate::retained_command::{ArtifactCommandWork,ArtifactCommandWorkStep,ArtifactCommandInputs,ArtifactRetainedCommandJob};
+        let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧵️retained-command/🔄️full-operation/🧫️fixtures/🔣️.json")).unwrap();let law=&fixture["download"];
+        struct DownloadWork{output:Option<ArtifactDownloadOutput>,first:bool,closing:bool,retirement:Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>}
+        impl ArtifactCommandWork<TestApp> for DownloadWork{
+            fn tool_id(&self)->&'static str{TEST_RETAINED_COMMAND_TOOL}
+            fn extent(&self,_:&TestCommand,_:&TestSnapshot,_:&InteractionState,_:Option<&ArtifactOwnedToolJobContext<TestApp>>)->Option<usize>{Some(1)}
+            fn step(&mut self,_:&ArtifactCommandInputs<'_,TestApp>,_:&mut semio_framework_job::StepContext<'_>)->Result<ArtifactCommandWorkStep<TestApp>,Fault>{if self.first{self.first=false;return Ok(ArtifactCommandWorkStep::Progress{stage:"download-source",preview:b"{}"})}Ok(ArtifactCommandWorkStep::CompleteDownload{download:self.output.take().unwrap(),ephemeral:EphemeralEmit::default()})}
+            fn begin_close(&mut self){self.closing=true;}
+            fn close_step(&mut self,items:usize,bytes:usize)->InteractiveJobCloseStep{if items==0||bytes==0{return InteractiveJobCloseStep::Blocked}if self.retirement.is_none(){self.retirement=self.output.take().map(semio_framework_value::retirement::owned_retirement)}if let Some(close)=self.retirement.as_mut(){return match close.close_step(items,bytes).unwrap(){semio_framework_value::SnapshotRetirementStep::Complete=>{self.retirement.take();InteractiveJobCloseStep::Pending{released_items:1,released_bytes:0}},semio_framework_value::SnapshotRetirementStep::Pending{released_items,released_bytes}=>InteractiveJobCloseStep::Pending{released_items,released_bytes},semio_framework_value::SnapshotRetirementStep::Blocked=>InteractiveJobCloseStep::Blocked}}InteractiveJobCloseStep::Complete}
+            fn terminal_is_empty(&self)->bool{self.closing&&self.output.is_none()&&self.retirement.is_none()}
+        }
+        let make=||{let length=law["payloadBytes"].as_u64().unwrap()as usize;assert!(length>law["wireBytes"].as_u64().unwrap()as usize);let chunks=ArtifactOutputChunks::new(length);for index in 0..length.div_ceil(ArtifactOutputChunks::CHUNK_BYTES){let start=index*ArtifactOutputChunks::CHUNK_BYTES;let end=(start+ArtifactOutputChunks::CHUNK_BYTES).min(length);chunks.push((start..end).map(|index|(index%251)as u8).collect()).unwrap();}chunks.seal().unwrap();ArtifactDownloadOutput::new("original.txt","text/plain",None,chunks).unwrap()};
+        for (busy,cancel) in [(false,false),(true,false),(false,true)]{
+            let completion=ArtifactToolCompletion::<TestApp>::new();let consumer=completion.clone();let mut payload=test_retained_command_payload(completion.clone()).await;payload.work=Box::new(DownloadWork{output:Some(make()),first:true,closing:false,retirement:None});let mut job=ArtifactRetainedCommandJob::new(payload);let mut sequence=0;let mut yielded=false;let token=semio_framework_job::root_cancel_token();
+            for _ in 0..128{let mut cx=semio_framework_job::StepContext::new(semio_framework_job::OperationId(41),semio_framework_job::Generation(3),semio_framework_job::StepBudget::new(1,u64::MAX),token.clone(),||Some(0),&mut sequence);let result=if busy{completion.with_busy_test_lock(||job.step(&mut cx))}else{job.step(&mut cx)};match result{StepOutcome::PreviewReady(mut reply)=>{yielded=true;test_close_retained_payload(&mut reply);if cancel{token.cancel_now()}},StepOutcome::CheckpointReady(mut reply)=>test_close_retained_payload(&mut reply.state),StepOutcome::Complete(mut commit)=>{test_close_retained_payload(&mut commit.state);test_close_retained_payload(&mut commit.output);break},StepOutcome::Fault(mut fault)=>{test_close_retained_payload(&mut fault.detail);break},StepOutcome::Cancelled=>{assert!(cancel);break},_=>{}}}
+            assert!(yielded);job.begin_close();for _ in 0..100000{if job.terminal_is_empty(){break}let before=job.close_step(0,0);assert!(matches!(before,InteractiveJobCloseStep::Pending{released_items:0,released_bytes:0}|InteractiveJobCloseStep::Blocked));if let InteractiveJobCloseStep::Pending{released_bytes,..}=job.close_step(1,law["retirementBytes"].as_u64().unwrap()as usize){assert!(released_bytes<=3)}}assert!(job.terminal_is_empty());
+            if busy||cancel{assert!(consumer.test_take_download().unwrap().is_none())}else{let (Ok(output),_)=consumer.test_take_download().unwrap().unwrap()else{panic!("original download completion")};let mut actual=Vec::new();while let Some(chunk)=output.chunks.take_chunk().unwrap(){assert!(chunk.len()<=law["chunkBytes"].as_u64().unwrap()as usize);actual.extend(chunk)}let expected:Vec<u8>=serde_json::from_value(serde_json::json!((0..law["payloadBytes"].as_u64().unwrap()).map(|index|(index%251)as u8).collect::<Vec<_>>())).unwrap();assert_eq!(actual,expected);}
+            eprintln!("[DEBUG] original Work download busy={busy} canceled={cancel} yields; source chunks preserved;3byte retirement");
+        }
+        let mut original=std::collections::VecDeque::with_capacity(law["queueSlots"].as_u64().unwrap()as usize);original.push_back("Mesh 😀".to_string());
+        let payload_bytes=original[0].len();let backing_bytes=original.capacity()*std::mem::size_of::<String>();assert_eq!(std::mem::size_of::<String>(),law["vectorMetadataWords"].as_u64().unwrap()as usize*std::mem::size_of::<usize>());
+        let mut retirement=semio_framework_value::retirement::owned_retirement(original);let mut released=0;for _ in 0..100000{if retirement.terminal_is_empty(){break}assert!(matches!(retirement.close_step(0,0).unwrap(),semio_framework_value::SnapshotRetirementStep::Pending{released_items:0,released_bytes:0}));if let semio_framework_value::SnapshotRetirementStep::Pending{released_bytes,..}=retirement.close_step(1,3).unwrap(){assert!(released_bytes<=3);released+=released_bytes;}}
+        assert!(retirement.terminal_is_empty());assert_eq!(released,payload_bytes+backing_bytes,"original queue backing allocation remains owned until its exact byte credits drain");
+
     }
 
     #[semio_framework_async_macros::async_test]
@@ -3468,19 +3494,19 @@ mod plugin_builder_contract_tests {
     /// `interaction_action_definitions`'s declaration), not a nested JSON array.
     fn interaction_target_args(extra: Value, id: &str) -> DslValue {
         let targets = serde_json::to_string(&vec![InteractionTarget { granularity: "item".into(), id: id.into() }]).expect("targets serialize");
-        let mut object = DslValue::from(&extra);
-        if let DslValue::Object(entries) = &mut object {
+        let mut object = semio_framework_value::DslValue::from(&extra);
+        if let semio_framework_value::DslValue::Object(entries) = &mut object {
             entries.retain(|(key, _)| key != "targets");
-            entries.push(("targets".to_string(), DslValue::String(targets)));
+            entries.push(("targets".to_string(), semio_framework_value::DslValue::String(targets)));
         }
         object
     }
 
     fn interaction_empty_target_args(extra: Value) -> DslValue {
-        let mut object = DslValue::from(&extra);
-        if let DslValue::Object(entries) = &mut object {
+        let mut object = semio_framework_value::DslValue::from(&extra);
+        if let semio_framework_value::DslValue::Object(entries) = &mut object {
             entries.retain(|(key, _)| key != "targets");
-            entries.push(("targets".to_string(), DslValue::String("[]".into())));
+            entries.push(("targets".to_string(), semio_framework_value::DslValue::String("[]".into())));
         }
         object
     }
@@ -3489,10 +3515,10 @@ mod plugin_builder_contract_tests {
     /// marquee release (or a pick that resolved several rendered instances) carries.
     fn interaction_targets_args(extra: Value, granularity: &str, ids: &[String]) -> DslValue {
         let targets = serde_json::to_string(&ids.iter().map(|id| InteractionTarget { granularity: granularity.into(), id: id.clone() }).collect::<Vec<_>>()).expect("targets serialize");
-        let mut object = DslValue::from(&extra);
-        if let DslValue::Object(entries) = &mut object {
+        let mut object = semio_framework_value::DslValue::from(&extra);
+        if let semio_framework_value::DslValue::Object(entries) = &mut object {
             entries.retain(|(key, _)| key != "targets");
-            entries.push(("targets".to_string(), DslValue::String(targets)));
+            entries.push(("targets".to_string(), semio_framework_value::DslValue::String(targets)));
         }
         object
     }
@@ -3720,7 +3746,7 @@ mod plugin_builder_contract_tests {
             assert!(released <= semio_framework::kernel::COMMAND_MAXIMUM_PAGES, "closing a saturated authority must terminate");
         }
         assert!(saturated.is_empty());
-        let wire = dsl::decode_fault_bytes(&dsl::encode_fault_bytes(&fault));
+        let wire = semio_framework_diagnostic::decode_fault_bytes(&semio_framework_diagnostic::encode_fault_bytes(&fault));
         assert_eq!(wire.code.0, fault.code.0, "the refusal survives the exact wire the ingress status carries it on");
         assert_eq!(wire.message, fault.message);
         assert!(!wire.retryable, "a refusal the guest cannot serve is not something the host should retry");
@@ -3784,7 +3810,7 @@ mod plugin_builder_contract_tests {
     #[semio_framework_async_macros::async_test]
     async fn a_command_page_that_is_not_the_next_one_is_refused_by_its_order() {
         let fixture: CommandIngressDisorderFixture =
-            serde_json::from_str(include_str!("../../../../../../🔨️modules/🎭️actor/🧫️fixtures/📥️command-ingress-pages/🔣️.json")).expect("📥️command-ingress-pages fixture parses");
+            serde_json::from_str(include_str!("../../../../../../🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🧫️fixtures/📄️pages/🔣️.json")).expect("📥️command-ingress-pages fixture parses");
         let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
         crate::plugin_runtime::install_plugin_bundle(&runtime, __semio_plugin_bundle().await.unwrap());
         let instance = 4_031;
@@ -3995,7 +4021,7 @@ mod plugin_builder_contract_tests {
             id: conflict_id.clone(),
             kind,
             status: protocol::ConflictStatus::Open,
-            messages: vec![protocol::MutationMessage::warn("mutation.partial", "test conflict").at_op(0)],
+            messages: vec![protocol::MutationMessage::warning("mutation.partial", "test conflict").at_op(0)],
             actors: vec![ActorId("local".into())],
             timestamp,
         });
@@ -4159,7 +4185,7 @@ mod plugin_builder_contract_tests {
     }
 
     async fn publish_presence_roster(app: &mut VcsArtifactApp<TestApp>, seq: u64, own_color: Option<u8>, peers: &[PresencePeer], now_ms: i64) -> PresenceRosterOutcome {
-        let roster = peers.iter().map(|peer| resolve_ready(encode_presence_peer(peer))).collect::<Vec<_>>();
+        let roster = peers.iter().map(|peer| ::semio_framework_async::poll::resolve_ready(encode_presence_peer(peer))).collect::<Vec<_>>();
         let admission = app.reserve_presence_ingress(seq).expect("reserve roster before decode");
         let first = roster.iter().next().map(|bytes| bytes.to_vec()).unwrap_or_default();
         let cursor = protocol::PresenceCommandCursor::admit_page(seq, own_color, roster.len() as u32, FixedCommandPage::try_copy_from(&first).expect("test peer page is fixed-authority")).map_err(|(error, _)| error).expect("admit first roster page");
@@ -4411,7 +4437,7 @@ mod plugin_builder_contract_tests {
         /// without a terminal-empty witness is caught by name; a retirement that lied for
         /// ever could never then be disposed, and the fixture app it lives in could not be
         /// closed through the same honest ladder every other member uses.
-        fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+        fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
             if maximum_items == 0 {
                 return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
             }
@@ -4462,7 +4488,7 @@ mod plugin_builder_contract_tests {
     struct TestOwnedValueRetirement<T: Send + 'static>(Option<T>);
 
     impl<T: Send + 'static> store::ErasedSnapshotRetirement for TestOwnedValueRetirement<T> {
-        fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+        fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
             if maximum_items == 0 {
                 return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
             }
@@ -4658,7 +4684,7 @@ mod plugin_builder_contract_tests {
     ///
     /// The child store actually applied its own op.
     ///
-    /// And the command log recorded the child's edit id under the `config_edit_ids` precedent.
+    /// And the command log recorded the child's edit id in `child_edit_ids`.
     ///
     /// 🧾️ The migrated route logs the admission row (no edit of its own) before the composed
     /// publication logs the real one, so the subject is the row that CARRIES the gesture: exactly
@@ -4715,7 +4741,7 @@ mod plugin_builder_contract_tests {
         assert_eq!(ChildEmit::decode_groups(&[7, 7, 7]).expect_err("rubbish is refused").code.0, "transaction.child-groups-malformed");
 
         let parent_op = <TestMutation as ::protocol::OpBinary>::encode_op(&TestMutation::SetLabel(SetLabel { value: "agent".into() })).expect("encode parent op");
-        let outcome = app.transaction_prepare("txn-agent-1", "", &[], &[parent_op], &wire, "agent composite", Some(protocol::MutationOrigin::Owner)).await;
+        let outcome = app.transaction_prepare("txn-agent-1", "", &[], &[parent_op], &wire, Some(protocol::MutationOrigin::Owner)).await;
         assert!(outcome.rejection.is_none(), "prepare admits a held child: {:?}", outcome.rejection.as_ref().map(|fault| &fault.message));
         let edit_id = app.transaction_commit("txn-agent-1", &meta()).await.expect("commit the composite transaction");
         assert!(!edit_id.is_empty());
@@ -4738,7 +4764,7 @@ mod plugin_builder_contract_tests {
         assert!(app.transaction_undo("txn-someone-else").await.is_err(), "a group no member carries is refused by name");
 
         let only_child = ChildEmit::encode_groups(&[ChildEmit::of::<TestSnapshot, _>("slot", "child-1", &[TestMutation::SetCount(SetCount { value: 8 })])]);
-        let outcome = app.transaction_prepare("txn-agent-2", "", &[], &[], &only_child, "", Some(protocol::MutationOrigin::Owner)).await;
+        let outcome = app.transaction_prepare("txn-agent-2", "", &[], &[], &only_child, Some(protocol::MutationOrigin::Owner)).await;
         assert!(outcome.rejection.is_none(), "a children-only transaction is a pre-planned transaction");
         app.transaction_commit("txn-agent-2", &meta()).await.expect("commit the children-only transaction");
         assert_eq!(child_count!(app), 8);
@@ -4746,7 +4772,7 @@ mod plugin_builder_contract_tests {
         assert_eq!(child_count!(app), 5);
 
         let stray = ChildEmit::encode_groups(&[ChildEmit::of::<TestSnapshot, _>("slot", "ghost", &[TestMutation::SetCount(SetCount { value: 1 })])]);
-        let refused = app.transaction_prepare("txn-agent-3", "", &[], &[], &stray, "", Some(protocol::MutationOrigin::Owner)).await;
+        let refused = app.transaction_prepare("txn-agent-3", "", &[], &[], &stray, Some(protocol::MutationOrigin::Owner)).await;
         assert_eq!(refused.rejection.expect("a child this instance does not hold is refused").code.0, "transaction.member-rejected");
     }
 
@@ -4759,7 +4785,7 @@ mod plugin_builder_contract_tests {
     /// 📤️ Persist exactly what the host would: the parent's document pack plus one
     /// `ChildPackEntry` per live child.
     ///
-    /// 📥️ Reload into a FRESH app, the way `LoadDocument` + `LoadChildren` would. Explicit
+    /// 📥️ Reload into a FRESH app, the way the host's document load + `LoadChildren` would. Explicit
     /// `TestMembers`: nothing else in this branch constructs one directly to pin `M` for
     /// inference — `open_child`'s `M::open` dispatch is compile-time generic, not a value.
     ///
@@ -4792,7 +4818,7 @@ mod plugin_builder_contract_tests {
         assert_eq!(entries[0].dialect, test_child_dialect().await.to_coordinate());
 
         let mut reloaded = contract_composed_app_raw().await;
-        PluginApp::load_document_pack(&mut reloaded, &parent_pack).await.expect("load parent document pack");
+        artifact_app_laws::load_document(&mut reloaded, &parent_pack).await.expect("load parent document pack");
         assert_eq!(reloaded.test_snapshot().await.slot.len(), 1, "the reloaded parent carries its own declaration through the pack");
         for entry in &entries {
             let dialect = ArtifactDialect::parse_coordinate(&entry.dialect).expect("dialect round trips");
@@ -4804,6 +4830,138 @@ mod plugin_builder_contract_tests {
         assert_eq!(restored.count, 7, "the reloaded child lost its own edit history");
         drain_and_close_composed_fixture(&mut reloaded);
         drain_and_close_composed_fixture(&mut app);
+    }
+
+    /// 🪆️ LAW (design §20.15, W-b): `child_head_packs` — what `AppCommand::ReadChildHeads` answers and the MCP gateway injects as
+    /// the `child:<slot>/<childId>` dependencies of an inference request — is every owned child's CURRENT head snapshot pack with
+    /// its slot, id and dialect: a reader that composes on read decodes the child's live value from it, no history fold.
+    #[semio_framework_async_macros::async_test]
+    async fn a_composed_documents_child_heads_answer_each_owned_childs_current_head_snapshot() {
+        let mut app = contract_composed_app_raw().await;
+        app.register_child("slot", "child-1", test_child_dialect().await, new_test_child("child-1").await.expect("construct child")).await.expect("register child");
+        app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta()).await.expect("composite edit");
+        artifact_app_laws::settle_registered_typed_operation(&mut app, meta().instance_id).await.expect("the composite gesture settles");
+
+        let heads = PluginApp::child_head_packs(&app).await.expect("child heads");
+        assert_eq!(heads.iter().map(|entry| (entry.slot.as_str(), entry.child_id.as_str(), entry.dialect.clone())).collect::<Vec<_>>(), vec![("slot", "child-1", test_child_dialect().await.to_coordinate())]);
+        let head: TestSnapshot = <TestSnapshot as ArtifactPack>::decode_pack(&heads[0].head_pack).expect("the head pack is the child's snapshot pack");
+        assert_eq!(head.count, 7, "the head pack carries the child's current value");
+        assert_eq!(crate::inference_child_dependency(&heads[0].slot, &heads[0].child_id), "child:slot/child-1");
+        drain_and_close_composed_fixture(&mut app);
+    }
+
+    /// 🪆️ LAW (design §20.15, W-b): the framework's `artifact:out` export of a composed document is the composed carrier — a document
+    /// archive whose parent is the HEAD snapshot pack with an empty `.spr` and whose members are the owned children's envelopes — while a
+    /// document without children keeps the plain head pack.
+    #[semio_framework_async_macros::async_test]
+    async fn the_artifact_out_export_of_a_composed_document_is_the_composed_carrier() {
+        let mut app = contract_composed_app_raw().await;
+        let plain = match PluginApp::export_media(&mut app, "artifact:out").await.expect("plain export").payload {
+            crate::MediaPayload::Structured { json, .. } => store::pack_rt::pack_value_from_base64(&json).expect("base64 head pack"),
+            other => panic!("artifact:out answers a structured payload, got {other:?}"),
+        };
+        assert_eq!(<TestSnapshot as ArtifactPack>::decode_pack(&plain).expect("a document without children exports its head pack"), app.test_snapshot().await);
+
+        app.register_child("slot", "child-1", test_child_dialect().await, new_test_child("child-1").await.expect("construct child")).await.expect("register child");
+        app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta()).await.expect("composite edit");
+        artifact_app_laws::settle_registered_typed_operation(&mut app, meta().instance_id).await.expect("the composite gesture settles");
+        let media = PluginApp::export_media(&mut app, "artifact:out").await.expect("composed export");
+        let crate::MediaPayload::Structured { schema, json } = media.payload else { panic!("artifact:out answers a structured payload") };
+        assert_eq!(schema, <TestApp as ArtifactApp>::DOCUMENT_SCHEMA);
+        let carrier = store::pack_rt::pack_value_from_base64(&json).expect("base64 carrier");
+        let archive = protocol::decode_document_archive_bytes(&carrier).await.expect("the carrier is a document archive");
+        assert!(archive.parent_spr.is_empty(), "the head carrier holds no parent history");
+        assert_eq!(<TestSnapshot as ArtifactPack>::decode_pack(&archive.parent_pack).expect("parent head pack"), app.test_snapshot().await);
+        assert_eq!(archive.members.iter().map(|entry| (entry.ordinal, entry.owner.slot.as_str(), entry.owner.child_id.as_str())).collect::<Vec<_>>(), vec![(0, "slot", "child-1")]);
+        assert!(!archive.members[0].envelope_pack.is_empty(), "each member carries its persisted envelope");
+        drain_and_close_composed_fixture(&mut app);
+    }
+
+    /// 🎞️ LAW (W2A-6 P5, `📓️api-stepped-document-load.md` §4/§9): consuming a whole document of the app's own schema never folds
+    /// inside the call — `consume_media` answers the carrier's archive (the source document verbatim) and leaves the document untouched;
+    /// only the stepped archive load (admit → polls → acknowledge) makes it the consumer's document. The carrier is `pk:` base64 text, so
+    /// a text-only host edge carries it losslessly. A foreign document schema is refused under the localized framework code.
+    #[semio_framework_async_macros::async_test]
+    async fn a_whole_document_media_import_is_a_stepped_archive_load_and_never_folds_inside_the_call() {
+        let mut source = contract_composed_app_raw().await;
+        source
+            .test_store_mut()
+            .await
+            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 41 })], description: None, transaction: None })
+            .await
+            .expect("the source edits its document");
+        let artifact = PluginApp::produce_media(&mut source, "artifact:out").await.expect("the source hands out its whole document");
+        let mut consumer = contract_composed_app_raw().await;
+        let before = consumer.test_snapshot().await;
+        let source_id = PluginApp::document_identity(&source).expect("the source's identity");
+        assert!(std::str::from_utf8(&artifact.data).is_ok_and(|text| text.starts_with("pk:")), "the whole-document carrier is pk: base64 text");
+
+        let crate::app::MediaConsumption::DocumentLoad(archive) = PluginApp::consume_media(&mut consumer, "artifact:in", artifact.clone()).await.expect("a whole document of the own schema is consumed") else {
+            panic!("a whole document is answered as a document archive load");
+        };
+        assert_eq!(consumer.test_snapshot().await, before, "consuming folded nothing: the document is unchanged until the load runs");
+        assert!(archive.members.is_empty() && !archive.parent_pack.is_empty() && !archive.parent_spr.is_empty());
+        PluginApp::begin_document_archive_load(&mut consumer, 7, archive).expect("the runtime admits the archive");
+        let status = loop {
+            let status = PluginApp::poll_document_archive_load(&mut consumer, 7).await.expect("poll");
+            if !matches!(status.state, protocol::DocumentArchiveLoadState::Pending | protocol::DocumentArchiveLoadState::Running) {
+                break status;
+            }
+        };
+        PluginApp::acknowledge_document_archive_load(&mut consumer, 7).expect("acknowledge");
+        assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready);
+        assert_eq!(consumer.test_snapshot().await, source.test_snapshot().await, "the stepped load lands the source's head");
+        assert_eq!(PluginApp::document_identity(&consumer).as_deref(), Some(source_id.as_str()), "a whole-document transfer loads the source document verbatim");
+
+        let mut foreign = artifact;
+        foreign.descriptor.wire = crate::app::MediaWireFormat::Document { schema: "foreign.document".into() };
+        let refusal = PluginApp::consume_media(&mut consumer, "artifact:in", foreign).await.expect_err("a foreign document schema is refused");
+        let fault = crate::app::media_artifact_fault(refusal);
+        assert_eq!(fault.code.0, crate::app::MEDIA_SCHEMA_MISMATCH_CODE);
+        let notice = semio_framework::kernel::fault_notice(&fault, &[], semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De).expect("the refusal earns its localized notice");
+        assert!(notice.text.contains("foreign.document") && notice.text.contains(<TestApp as ArtifactApp>::DOCUMENT_SCHEMA), "{}", notice.text);
+        drain_and_close_composed_fixture(&mut consumer);
+        drain_and_close_composed_fixture(&mut source);
+    }
+
+    /// 🪆️ LAW (design §20.15, S4-LOAD wave 4): a COMPOSED document crosses a media edge whole — `produce_media("artifact:out")` carries the
+    /// recursive archive (parent pack + `.spr` + members) as text that survives a UTF-8 host round trip, and the consumer's stepped load
+    /// adopts the members: the child comes back as its own live store at the value its history ended on.
+    #[semio_framework_async_macros::async_test]
+    async fn a_composed_document_crosses_a_media_edge_with_its_children() {
+        let mut source = contract_composed_app_raw().await;
+        source.register_child("slot", "child-1", test_child_dialect().await, new_test_child("child-1").await.expect("construct child")).await.expect("register child");
+        source.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta()).await.expect("composite edit");
+        artifact_app_laws::settle_registered_typed_operation(&mut source, meta().instance_id).await.expect("the composite gesture settles");
+        let declared = ArtifactRef { artifact_id: "child-1".into(), dialect: test_child_dialect().await }.to_uri();
+        source
+            .test_store_mut()
+            .await
+            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetSlotChildren(SetSlotChildren { children: vec![declared] })], description: None, transaction: None })
+            .await
+            .expect("the parent declares the member it owns");
+        let mut artifact = PluginApp::produce_media(&mut source, "artifact:out").await.expect("the composed source hands out its whole document");
+        artifact.data = String::from_utf8(artifact.data).expect("a text-only host edge carries the carrier").into_bytes();
+
+        let mut consumer = contract_composed_app_raw().await;
+        let crate::app::MediaConsumption::DocumentLoad(archive) = PluginApp::consume_media(&mut consumer, "artifact:in", artifact).await.expect("consumed") else {
+            panic!("a whole document is answered as a document archive load");
+        };
+        assert_eq!(archive.members.iter().map(|entry| (entry.owner.slot.as_str(), entry.owner.child_id.as_str())).collect::<Vec<_>>(), vec![("slot", "child-1")]);
+        PluginApp::begin_document_archive_load(&mut consumer, 9, archive).expect("admit");
+        let status = loop {
+            let status = PluginApp::poll_document_archive_load(&mut consumer, 9).await.expect("poll");
+            if !matches!(status.state, protocol::DocumentArchiveLoadState::Pending | protocol::DocumentArchiveLoadState::Running) {
+                break status;
+            }
+        };
+        PluginApp::acknowledge_document_archive_load(&mut consumer, 9).expect("acknowledge");
+        assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "{:?}", semio_framework_diagnostic::decode_fault_bytes(&status.fault));
+        let child = consumer.child_store("slot", "child-1").await.expect("the member came along");
+        let restored: TestSnapshot = <TestSnapshot as ArtifactPack>::decode_pack(&child.document_pack_bytes().await.expect("child pack")).expect("decode child");
+        assert_eq!(restored.count, 7, "the child arrives at the value its own history ended on");
+        drain_and_close_composed_fixture(&mut consumer);
+        drain_and_close_composed_fixture(&mut source);
     }
 
     /// 🧪️ Runs the reserved spawn-job the host would for `admitted` and answers the bytes its
@@ -5194,78 +5352,56 @@ mod plugin_builder_contract_tests {
         assert_eq!(app.test_snapshot().await, TestSnapshot::default());
     }
 
-    /// ⏪️ The MULTI-lane half of the same law, and the regression guard S10 §4.2's `||` needed.
-    ///
-    /// Measured inside the running `s` host at three machine loads (40, 61, 82) on 2026-09-22:
-    /// 💠️lowpoly `addPrimitive` (`Artifact` + `Config` + `Transient`) and 🎥️shooting `addShot`
-    /// (`Artifact` + `Config`) read `edits [0,1,1,1]` — the uncommitted count went up on the verb and
-    /// never came back down on the undo, because the row's CONFIG edit is still applied after
-    /// `undo` retracted its DOCUMENT edit, and `document || config || child` therefore answered
-    /// `true` for ever. All eight lane combinations are pinned here, so neither half can be
-    /// reintroduced without this law going red (ticket 26/09/18 S11 §3.4b, S12 §4).
+    /// ⏪️ A row follows its parent document lane, else its children (design §20.13, L4: a config-lane edit is never part
+    /// of a row). 💠️lowpoly `addPrimitive` and 🎥️shooting `addShot` once read applied for ever after an undo because a
+    /// config lane answered for them (ticket 26/09/18 S11 §3.4b, S12 §4); no lane but the document and its children can.
     #[test]
-    fn a_multi_lane_row_follows_its_parent_document_lane_after_an_undo() {
-        use crate::app::history_row_applied_v1 as applied;
-        assert!(!applied(true, false, true, false), "a row that published a parent edit is UNDONE once that edit is retracted, however live its config edit still is");
-        assert!(!applied(true, false, true, true), "the same with a live child edit — undo dispatches against the document store alone");
-        assert!(!applied(true, false, false, false), "a parent-lane row with nothing applied anywhere is undone");
-        assert!(applied(true, true, false, false), "a parent-lane row whose document edit is applied is applied");
-        assert!(applied(true, true, true, true), "a multi-lane row is applied while its parent edit is");
-        assert!(applied(false, false, true, false), "a CONFIG-only row has no parent edit to ask — S10 §4.2's cure, kept intact");
-        assert!(applied(false, false, false, true), "a CHILD-only row, likewise — 🌊️flow's addWidget and 🎬️sequence's addStep");
-        assert!(!applied(false, false, false, false), "a row applied nowhere is not applied");
+    fn a_row_follows_its_parent_document_lane_and_else_its_children() {
+        use crate::app::history_row_applied as applied;
+        assert!(!applied(true, false, true), "a row that published a parent edit is UNDONE once that edit is retracted, however live its child edit is");
+        assert!(!applied(true, false, false), "a parent-lane row with nothing applied anywhere is undone");
+        assert!(applied(true, true, false), "a parent-lane row whose document edit is applied is applied");
+        assert!(applied(true, true, true), "a multi-lane row is applied while its parent edit is");
+        assert!(applied(false, false, true), "a CHILD-only row answers with its children — 🌊️flow's addWidget and 🎬️sequence's addStep");
+        assert!(!applied(false, false, false), "a row applied nowhere is not applied");
     }
 
-    /// ✅️ A row's `applied` must ask every lane the row can publish into, not only the parent
-    /// document store. `build_history_view` asked `applied_edit_ids` alone, so a `Config`- or
-    /// `Child`-lane row reported `applied: false` — which the host reads as UNDONE: the History panel
-    /// dims the row and `uncommittedEditCount` (the `#s-checkin` badge) never counts it. Three kinds
-    /// rode on that one defect inside the `s` host (🌊️flow `addWidget` and 🎬️sequence `addStep` on
-    /// `Child`, 🌀️procedural `generate` on `Config`), each of which moved its document and still read
-    /// `edits 0` (ticket 26/09/18 S10 §4; PB3 §3.6 named the child half). `revertible` already asked
-    /// all three lanes, which is why the same rows were revertible while claiming to be unapplied.
+    /// ⚖️ LAW (design §20.13, L4): a config-lane edit is never a history row and undo never steps over it — the history
+    /// lists the document row alone (every row, no `edit_id` filter), and `undo` retracts the newest DOCUMENT edit while the
+    /// config the select wrote stays.
     #[semio_framework_async_macros::async_test]
-    async fn config_lane_row_reports_itself_applied_so_the_host_can_count_it() {
+    async fn a_config_lane_edit_is_never_a_history_row_and_undo_never_steps_over_it() {
         let mut app = contract_app().await;
+        app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("increment");
         app.dispatch_typed(TestCommand::Select { id: Some("node-1".into()) }, &meta()).await.expect("select");
+        assert_eq!(app.test_config().await.selected, Some("node-1".to_string()), "the select wrote the config lane");
         let history = app.test_history().await;
-        let select = history.commands.iter().find(|entry| entry.action_id == "select").expect("the config-lane select row");
-        assert!(select.config_edit_id.is_some(), "the select row is config edit-linked, so this law measures the Config lane");
-        assert!(select.edit_id.is_none(), "the select row publishes NO parent document edit — that is exactly why the old one-lane predicate read it as unapplied");
-        assert!(select.applied, "a config edit-linked row is applied; reporting false makes the host dim it and drop it from the uncommitted-edit count");
-        assert!(select.revertible, "and it stays revertible, the clause that already consulted all three lanes");
+        assert_eq!(history.commands.iter().map(|entry| entry.action_id.as_str()).collect::<Vec<_>>(), vec!["increment"], "only the document row is listed");
+        reserved_action(&mut app, "undo", None).await;
+        assert_eq!(app.test_snapshot().await.count, 0, "undo retracts the document edit, never the config one");
+        assert_eq!(app.test_config().await.selected, Some("node-1".to_string()), "undo never steps over the config lane");
         close_reserved_app(&mut app);
     }
 
 
-    /// 🔄️ Keep the two selects from folding into one row by dispatching an unrelated Mutation between them.
-    ///
-    /// 🧾️ Revert-to-command semantics are VCS-consistent (same as the document side): "leave the
-    /// TARGET row applied, undo everything after it" — so to land back on `selected == "a"`, target
-    /// the "select a" row itself (the one with the SMALLEST seq — `history.commands` is newest-first).
-    ///
-    /// 🧾️ Unlike the pre-B1 memory-replay (which redispatched "select" and folded a new row), a
-    /// config-store undo-to-position is pure cursor motion on the config store — it appends its own
-    /// "revertToCommand" row, exactly like the document-edit branch above it.
+    /// ⏪️ Revert-to-command walks the DOCUMENT lane alone (design §20.13, L4): "leave the TARGET row applied, undo everything
+    /// after it" — reverting to the first increment undoes the second and leaves the config the interleaved selects wrote.
     #[semio_framework_async_macros::async_test]
-    async fn view_action_with_inverse_is_revertible_and_backwards_restores_app_runtime_state() {
+    async fn revert_to_command_walks_the_document_lane_and_leaves_config_alone() {
         let mut app = contract_app().await;
         app.dispatch_typed(TestCommand::Select { id: Some("a".into()) }, &meta()).await.expect("select a");
         app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("increment");
         app.dispatch_typed(TestCommand::Select { id: Some("b".into()) }, &meta()).await.expect("select b");
-        assert_eq!(app.test_config().await.selected, Some("b".to_string()));
-
+        app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("increment again");
         let history = app.test_history().await;
-        let select_a = history.commands.iter().filter(|entry| entry.action_id == "select").min_by_key(|entry| entry.seq).expect("select-a row carrying a config edit id");
-        assert!(select_a.revertible, "a config edit-linked row must be revertible");
-        let seq = select_a.seq;
-        let log_len_before = history.commands.len();
-
-        reserved_action(&mut app, REVERT_TO_COMMAND_ACTION_ID, Some(&dv(json!({ "entrySeq": seq })))).await;
-
-        assert_eq!(app.test_config().await.selected, Some("a".to_string()), "reverting to the select-a row must leave it applied and undo select-b");
+        assert_eq!(history.commands.len(), 2, "two document rows and no config row");
+        let first = history.commands.iter().min_by_key(|entry| entry.seq).expect("the first increment row");
+        assert!(first.revertible, "a document row is revertible");
+        reserved_action(&mut app, REVERT_TO_COMMAND_ACTION_ID, Some(&dv(json!({ "entrySeq": first.seq })))).await;
+        assert_eq!(app.test_snapshot().await.count, 1, "reverting to the first increment undoes the second");
+        assert_eq!(app.test_config().await.selected, Some("b".to_string()), "the config lane is never walked");
         let after = app.test_history().await;
-        assert_eq!(after.commands.len(), log_len_before + 1, "the revert appends one History-kind row");
+        assert_eq!(after.commands.len(), 3, "the revert appends one History-kind row");
         assert_eq!(after.commands.first().map(|entry| entry.action_id.as_str()), Some(REVERT_TO_COMMAND_ACTION_ID));
     }
 
@@ -5725,7 +5861,7 @@ mod plugin_builder_contract_tests {
             "export first turn must admit Isolated framework.reserved.tool, got {:?}",
             admitted.requested_effects,
         );
-        assert!(admitted.output.get("operationId").and_then(DslValue::as_str).is_some(), "first-turn output names the spawn-job");
+        assert!(admitted.output.get("operationId").and_then(semio_framework_value::DslValue::as_str).is_some(), "first-turn output names the spawn-job");
         let cell = runtime.instances.borrow().get(1).cloned().expect("live export instance");
         let mut instance = cell.instance.lock().expect("export instance");
         for _ in 0..100_000 {
@@ -5824,14 +5960,14 @@ mod plugin_builder_contract_tests {
         let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/reserved-undo-browser-note.json")).expect("browser-note fixture");
         let wire = &fixture["wire"];
         let effect = Effect::ReplayShellCommand { action_id: wire["actionId"].as_str().expect("actionId").into(), args: Some(dv(wire["args"].clone())) };
-        let packed = store::pack_rt::encode_wire_value(&protocol::ToValue::to_value(&effect));
+        let packed = store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&effect));
         let value = store::pack_rt::decode_wire_value(&packed).expect("leftover pack decode");
         let decoded = match <Effect as semio_framework_value::FromValue>::from_value(value.clone()) {
             Ok(decoded) => decoded,
             Err(_) => {
                 let replay = value.get("replayShellCommand").or_else(|| value.get("ReplayShellCommand")).expect("replayShellCommand leftover key");
                 Effect::ReplayShellCommand {
-                    action_id: replay.get("actionId").or_else(|| replay.get("action_id")).and_then(DslValue::as_str).expect("actionId").into(),
+                    action_id: replay.get("actionId").or_else(|| replay.get("action_id")).and_then(semio_framework_value::DslValue::as_str).expect("actionId").into(),
                     args: replay.get("args").cloned(),
                 }
             }
@@ -5978,7 +6114,6 @@ mod plugin_builder_contract_tests {
                     kind: ActionKind::Mutation,
                     timestamp: "0".into(),
                     edit_id: Some("e1".into()),
-                    config_edit_id: None,
                     child_edit_ids: Vec::new(),
                     transition_id: None,
                     author: None,
@@ -5998,7 +6133,6 @@ mod plugin_builder_contract_tests {
                     kind: ActionKind::History,
                     timestamp: "1".into(),
                     edit_id: None,
-                    config_edit_id: None,
                     child_edit_ids: Vec::new(),
                     transition_id: None,
                     author: None,
@@ -6014,13 +6148,13 @@ mod plugin_builder_contract_tests {
             ],
             command_filter: HistoryCommandFilter::All,
         };
-        let all_panel = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, false, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("bounded history panel");
+        let all_panel = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, false, false, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("bounded history panel");
         assert_eq!(all_panel.children.len(), 2, "Actions + Commands sections");
         let Component::TreeSection(actions_props) = &all_panel.children[0].component else { panic!("expected a TreeSection") };
         assert_eq!(actions_props.label.as_ref().map(|label| label.0.as_str()), Some("Actions"));
         assert_eq!(all_panel.children[0].children.len(), 6, "undo/redo/commit/checkin/alternative/filter");
         assert_eq!(all_panel.children[0].children[3].key.as_str(), "framework.history.checkin", "the check-in row follows Commit Checkpoint");
-        let viewer_panel = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, true, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("viewer history panel");
+        let viewer_panel = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, true, false, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("viewer history panel");
         assert_eq!(viewer_panel.children[0].children.len(), 5, "a viewer never gets the check-in row at all \u{2014} React's `canCheckIn` gate removes it rather than disabling it");
         assert!(all_panel.children[0].children.iter().all(|item| !item.children.is_empty()), "Actions rows carry their control as a child node");
         let Component::TreeSection(commands_props) = &all_panel.children[1].component else { panic!("expected a TreeSection") };
@@ -6032,12 +6166,12 @@ mod plugin_builder_contract_tests {
         assert!(non_revertible_props.row_actions.is_empty(), "the non-revertible entry must not offer inverse");
 
         let only_ops = HistoryView { command_filter: HistoryCommandFilter::OnlyMutations, ..history.clone() };
-        let ops_panel = ui_history_panel(&only_ops, None, None, &Default::default(), "ctrl", Locale::En, false, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("bounded history panel");
+        let ops_panel = ui_history_panel(&only_ops, None, None, &Default::default(), "ctrl", Locale::En, false, false, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("bounded history panel");
         assert_eq!(ops_panel.children[1].children.len(), 1);
         assert_eq!(ops_panel.children[1].children[0].key.as_str(), "framework.history.entry.1");
 
         let without_ops = HistoryView { command_filter: HistoryCommandFilter::WithoutMutations, ..history };
-        let no_ops_panel = ui_history_panel(&without_ops, None, None, &Default::default(), "ctrl", Locale::En, false, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("bounded history panel");
+        let no_ops_panel = ui_history_panel(&without_ops, None, None, &Default::default(), "ctrl", Locale::En, false, false, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("bounded history panel");
         assert_eq!(no_ops_panel.children[1].children.len(), 1);
         assert_eq!(no_ops_panel.children[1].children[0].key.as_str(), "framework.history.entry.2");
     }
@@ -6057,7 +6191,6 @@ mod plugin_builder_contract_tests {
                 kind: ActionKind::Mutation,
                 timestamp: "0".into(),
                 edit_id: Some("e1".into()),
-                config_edit_id: None,
                 child_edit_ids: Vec::new(),
                 transition_id: None,
                 author: None,
@@ -6072,7 +6205,7 @@ mod plugin_builder_contract_tests {
             }],
             command_filter: HistoryCommandFilter::All,
         };
-        let panel = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, false, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("an oversized operation line must not fail admission");
+        let panel = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, false, false, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("an oversized operation line must not fail admission");
         let Component::TreeItem(props) = &panel.children[1].children[0].component else { panic!("expected a TreeItem") };
         let description = props.description.as_ref().expect("clipped description").as_str();
         assert!(description.starts_with("register-mesh vertices=[1.0 "));
@@ -6093,7 +6226,6 @@ mod plugin_builder_contract_tests {
             kind: ActionKind::Mutation,
             timestamp: "0".into(),
             edit_id: Some("e1".into()),
-            config_edit_id: None,
             child_edit_ids: Vec::new(),
             transition_id: None,
             author: None,
@@ -6107,7 +6239,7 @@ mod plugin_builder_contract_tests {
             mutations: Vec::new(),
         };
         let history = HistoryView { columns: Vec::new(), can_undo: true, can_redo: false, active_alternative_id: None, alternatives: Vec::new(), current_checkpoint_id: None, commands: vec![entry(1, 1), entry(2, 3)], command_filter: HistoryCommandFilter::All };
-        let panel = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, false, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("an oversized command label must not fail admission");
+        let panel = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, false, false, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("an oversized command label must not fail admission");
         for (index, expected_tail) in [(0, UI_TEXT_CLIP_MARK), (1, UI_TEXT_CLIP_MARK)] {
             let Component::TreeItem(props) = &panel.children[1].children[index].component else { panic!("expected a TreeItem") };
             let label = props.label.0.as_str();
@@ -6132,7 +6264,6 @@ mod plugin_builder_contract_tests {
             kind: ActionKind::Mutation,
             timestamp: "0".into(),
             edit_id: Some(format!("edit-{seq}")),
-            config_edit_id: None,
             child_edit_ids: Vec::new(),
             transition_id: None,
             author: None,
@@ -6178,7 +6309,7 @@ mod plugin_builder_contract_tests {
         let prefix = fixture["entryKeyPrefix"].as_str().unwrap();
         let history = history_window_log(rows, false);
 
-        let cold = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, false, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("a log of any length must assemble");
+        let cold = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, false, false, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("a log of any length must assemble");
         assert_eq!(cold.children[1].children.len(), default_rows.min(UI_BUILT_CHILDREN_MAX), "a cold paint materialises one viewport, clamped by the built-children ceiling");
         assert!(cold.children[1].children.iter().all(|row| row.key.as_str().starts_with(prefix)), "rows are the entries themselves, never page columns");
         assert_eq!(history_commands_window(&cold), Some(TreeWindow { row_extent: Default::default(), total: rows as u32, offset: 0 }), "the host sees the whole extent");
@@ -6196,7 +6327,7 @@ mod plugin_builder_contract_tests {
             }],
             ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
         };
-        let scrolled = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, false, &view).await.expect("a scrolled window must assemble");
+        let scrolled = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, false, false, &view).await.expect("a scrolled window must assemble");
         assert_eq!(scrolled.children[1].children.len(), requested as usize);
         assert_eq!(scrolled.children[1].children[0].key.as_str(), format!("{prefix}{}", offset + 1), "the slice starts where the host scrolled to");
         assert_eq!(history_commands_window(&scrolled), Some(TreeWindow { row_extent: Default::default(), total: rows as u32, offset }));
@@ -6216,7 +6347,7 @@ mod plugin_builder_contract_tests {
     async fn ui_history_panel_keeps_every_materialised_revert_inside_the_arena_page() {
         let entries = 20usize;
         let history = history_window_log(entries, true);
-        let panel = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, false, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("revertible entries must assemble without an alias refusal");
+        let panel = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, false, false, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("revertible entries must assemble without an alias refusal");
         fn census(node: &BuiltNode, rows: &mut usize, actions: &mut usize) {
             if node.key.as_str().starts_with("framework.history.entry.") {
                 *rows += 1;
@@ -6237,41 +6368,32 @@ mod plugin_builder_contract_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn an_op_less_view_action_is_logged_with_edit_id_none_and_count_one() {
+    async fn a_config_only_view_action_is_not_a_history_row() {
         let mut app = contract_app().await;
         app.dispatch_typed(TestCommand::Select { id: Some("node-1".into()) }, &meta()).await.expect("select");
-        let history = app.test_history().await;
-        assert_eq!(history.commands.len(), 1);
-        let entry = &history.commands[0];
-        assert_eq!(entry.action_id, "select");
-        assert_eq!(entry.kind, ActionKind::View);
-        assert!(entry.edit_id.is_none());
-        assert!(entry.config_edit_id.is_some(), "select is a config-op emission");
-        assert_eq!(entry.count, 1);
+        assert!(app.test_history().await.commands.is_empty(), "a config-only View is never a row (design §20.13, L4)");
+        assert_eq!(app.test_config().await.selected, Some("node-1".to_string()), "while the config lane holds its edit");
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn consecutive_identical_view_dispatches_are_distinct_history_entries() {
+    async fn consecutive_config_only_view_dispatches_add_no_history_rows() {
         let mut app = contract_app().await;
         for id in ["node-1", "node-2", "node-3"] {
             app.dispatch_typed(TestCommand::Select { id: Some(id.into()) }, &meta()).await.expect("select");
         }
-        let history = app.test_history().await;
-        assert_eq!(history.commands.len(), 3);
-        assert!(history.commands.iter().all(|entry| entry.count == 1));
+        assert!(app.test_history().await.commands.is_empty(), "three config-only Views add no row");
+        assert_eq!(app.test_config().await.selected, Some("node-3".to_string()));
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn view_dispatches_remain_distinct_across_interleaved_entries() {
+    async fn interleaved_config_only_views_leave_only_the_document_row() {
         let mut app = contract_app().await;
         app.dispatch_typed(TestCommand::Select { id: Some("a".into()) }, &meta()).await.expect("select a");
         app.dispatch_typed(TestCommand::Select { id: Some("b".into()) }, &meta()).await.expect("select b");
         app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("increment");
         app.dispatch_typed(TestCommand::Select { id: Some("c".into()) }, &meta()).await.expect("select c");
         let history = app.test_history().await;
-        assert_eq!(history.commands.len(), 4);
-        let select_counts: Vec<u32> = history.commands.iter().filter(|entry| entry.action_id == "select").map(|entry| entry.count).collect();
-        assert_eq!(select_counts, vec![1, 1, 1]);
+        assert_eq!(history.commands.iter().map(|entry| (entry.action_id.as_str(), entry.count)).collect::<Vec<_>>(), vec![("increment", 1)]);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -6425,7 +6547,7 @@ mod plugin_builder_contract_tests {
     async fn rendering_the_history_body_reflects_a_log_only_change_with_no_store_generation_bump() {
         let mut app = contract_app().await;
         app.render(FRAMEWORK_HISTORY_BODY_KEY, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render before");
-        app.dispatch_typed(TestCommand::Select { id: Some("x".into()) }, &meta()).await.expect("select");
+        reserved_action(&mut app, NOTE_SHELL_COMMAND_ACTION_ID, Some(&dv(json!({ "commandId": "os.setThemeId", "label": "Set Theme" })))).await;
         let rendered = app.render(FRAMEWORK_HISTORY_BODY_KEY, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render after");
         assert_eq!(rendered.root.children.len(), 2, "Actions + Commands");
         assert_eq!(rendered.root.children[1].children.len(), 1, "a log-only cache key change (no store generation bump) must still refresh the rendered panel");
@@ -6462,7 +6584,7 @@ mod plugin_builder_contract_tests {
         let files = app.document_pack().await.expect("document pack");
 
         let mut restored = contract_app().await;
-        restored.load_document_pack(&files).await.expect("load document pack");
+        artifact_app_laws::load_document(&mut restored, &files).await.expect("load document pack");
         assert_eq!(restored.test_snapshot().await, TestSnapshot { count: 1, label: "hi".into(), slot: Vec::new() });
     }
 
@@ -6514,9 +6636,9 @@ mod plugin_builder_contract_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn selection_count_phrase_formats_mixed_selection() {
-        assert_eq!(selection_count_phrase(false, &[(8, "node", "nodes"), (13, "edge", "edges")]), "8 nodes and 13 edges");
-        assert_eq!(selection_count_phrase(false, &[(1, "node", "nodes")]), "1 node");
-        assert_eq!(selection_count_phrase(true, &[(8, "Knoten", "Knoten"), (13, "Kante", "Kanten")]), "8 Knoten und 13 Kanten");
+        assert_eq!(selection_count_phrase(semio_framework_ui_locale::Locale::En, &[(8, SelectionKind::Node), (13, SelectionKind::Edge)]).as_deref(), Some("8 nodes and 13 edges"));
+        assert_eq!(selection_count_phrase(semio_framework_ui_locale::Locale::En, &[(1, SelectionKind::Node)]).as_deref(), Some("1 node"));
+        assert_eq!(selection_count_phrase(semio_framework_ui_locale::Locale::De, &[(8, SelectionKind::Node), (13, SelectionKind::Edge)]).as_deref(), Some("8 Knoten und 13 Kanten"));
     }
 
     /// 🖱️ `PluginApp::context_menu` end-to-end through `VcsArtifactApp`: with an empty label the
@@ -6552,7 +6674,7 @@ mod plugin_builder_contract_tests {
     #[semio_framework_async_macros::async_test]
     async fn menu_group_produces_a_group_row_keyed_by_category() {
         let registry = contract_registry().await;
-        let items = Menu::of(&registry).action("setLabelRequired").group("export", |m| m.command("incrementViaCommand")).build();
+        let items = Menu::of(&registry, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).action("setLabelRequired").group("export", |m| m.command("incrementViaCommand")).build();
         assert_eq!(items.len(), 2);
         assert_eq!(items[1].id, "menu.group.export");
         assert_eq!(items[1].label, None, "group rows travel with no label — the host resolves it via `ribbon_parent_label`");
@@ -7053,11 +7175,11 @@ mod plugin_builder_contract_tests {
         let result = app.dispatch_typed(TestCommand::SetActiveUtility { utility_id: "brush".into() }, &meta()).await.expect("setActiveUtility is a valid View command");
         assert!(result.mutations.is_empty(), "utility switching must not create history");
         let event = result.events.iter().find(|event| event.kind == "active-utility").expect("echoed active utility");
-        assert_eq!(event.payload, dsl::DslValue::from(json!({ "utilityId": "brush" })));
+        assert_eq!(event.payload, semio_framework_value::DslValue::from(json!({ "utilityId": "brush" })));
     }
 
-    /// 🧷️ A streamed gesture is one undo step on the typed route too, while each committed label is its own edit: one undo
-    /// only reverts the last commit.
+    /// 🧷️ A streamed gesture is one undo step on the typed route too, while each plain label edit is its own edit: one undo
+    /// only reverts the last one.
     #[semio_framework_async_macros::async_test]
     async fn a_streamed_gesture_is_one_undo_step_while_each_commit_is_its_own() {
         let mut app = contract_app_under_test().await;
@@ -7069,7 +7191,7 @@ mod plugin_builder_contract_tests {
         assert_eq!(app.test_snapshot().await.label, "");
 
         for value in ["x", "xy"] {
-            app.dispatch_typed(TestCommand::CommitLabel { value: value.into() }, &meta()).await.expect("commitLabel");
+            app.dispatch_typed(TestCommand::SetLabel { value: value.into() }, &meta()).await.expect("setLabel");
         }
         assert_eq!(app.test_snapshot().await.label, "xy");
         reserved_action(&mut app, "undo", None).await;
@@ -7197,7 +7319,7 @@ mod plugin_builder_contract_tests {
             Box::new(move |_, meta| {
                 handler_calls.fetch_add(meta.instance_id as usize, Ordering::SeqCst);
                 Ok(InvocationResult {
-                    output: dsl::DslValue::Null,
+                    output: semio_framework_value::DslValue::Null,
                     mutations: Vec::new(),
                     inverse_group: UndoGroup { invocation_id: InvocationId(String::new()), mutations: Vec::new(), inverse_mutations: Vec::new(), member_edits: Vec::new() },
                     diagnostics: Vec::new(),
@@ -7343,7 +7465,7 @@ mod plugin_builder_contract_tests {
             .window_kind("main", LocalizedLabel::data("Main"), "bad.main", SurfaceKind::Canvas2d, IconName::AppWindow)
             .await;
         let outcome = std::panic::catch_unwind(move || {
-            let builder = resolve_ready(__base.interaction(InteractionDefinition {
+            let builder = ::semio_framework_async::poll::resolve_ready(__base.interaction(InteractionDefinition {
                 id: "items".into(),
                 label: LocalizedLabel::data("Items"),
                 granularities: vec![GranularityDefinition { id: "item".into(), label: LocalizedLabel::data("Item"), icon_id: IconName::AppWindow }],
@@ -7351,7 +7473,7 @@ mod plugin_builder_contract_tests {
                 hover: HoverSpec { transitive: true, ..HoverSpec::default() },
                 selection: SelectionSpec { modes: vec![SelectionMode::Single], methods: vec![SelectionMethod::Pick], merges: vec![MergeMode::Replace], transitive: false, broadcast: true },
             }));
-            resolve_ready(App::from_builder(builder))
+            ::semio_framework_async::poll::resolve_ready(App::from_builder(builder))
         });
         assert!(outcome.is_err(), "build_definition must reject transitive hover paired with HierarchyProvider::Flat");
     }
@@ -7403,6 +7525,7 @@ mod plugin_builder_contract_tests {
                 draggable: None,
                 drag_data: None,
                 dimmed: None,
+                selected: None,
                 window: None,
                 granularity: None,
                 inline_toolbar: None,
@@ -7456,6 +7579,7 @@ mod plugin_builder_contract_tests {
                     draggable: None,
                     drag_data: None,
                     dimmed: None,
+                    selected: None,
                     window: None,
                     granularity: None,
                     inline_toolbar: None,
@@ -7505,13 +7629,13 @@ mod plugin_builder_contract_tests {
         let mut app = interaction_app_under_test().await;
         let settled = reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))).await;
         let view = settled.output.get("interactionView").expect("leftover InteractionView");
-        let ids = view.get("selectedIds").and_then(DslValue::as_array).expect("selectedIds");
+        let ids = view.get("selectedIds").and_then(semio_framework_value::DslValue::as_array).expect("selectedIds");
         assert!(ids.iter().any(|id| id.as_str() == Some("item-1")), "leftover selected ids {ids:?}");
         let locked = view.get("locked").expect("lock state included on leftover InteractionView");
-        assert_eq!(locked.get("item-1").and_then(DslValue::as_bool), Some(false));
+        assert_eq!(locked.get("item-1").and_then(semio_framework_value::DslValue::as_bool), Some(false));
         let gumball = view.get("gumball").expect("gumball leftover");
-        assert_eq!(gumball.get("active").and_then(DslValue::as_bool), Some(false), "leftover selection must not arm the world gumball — the guest selectionJson lane owns utility-aware gumballActive");
-        assert_eq!(gumball.get("anchorId").and_then(DslValue::as_str), Some("item-1"));
+        assert_eq!(gumball.get("active").and_then(semio_framework_value::DslValue::as_bool), Some(false), "leftover selection must not arm the world gumball — the guest selectionJson lane owns utility-aware gumballActive");
+        assert_eq!(gumball.get("anchorId").and_then(semio_framework_value::DslValue::as_str), Some("item-1"));
         close_reserved_app(&mut app);
     }
 
@@ -7526,7 +7650,7 @@ mod plugin_builder_contract_tests {
         )
         .await;
         let view = settled.output.get("interactionView").expect("leftover InteractionView");
-        let ids = view.get("selectedIds").and_then(DslValue::as_array).expect("selectedIds");
+        let ids = view.get("selectedIds").and_then(semio_framework_value::DslValue::as_array).expect("selectedIds");
         assert!(ids.iter().any(|id| id.as_str() == Some("seed-left-001")), "leftover selected ids {ids:?}");
         close_reserved_app(&mut app);
     }
@@ -7538,8 +7662,8 @@ mod plugin_builder_contract_tests {
         let settled = reserved_action(&mut app, INTERACTION_HOVER_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "channel": "pointer" }), "item-1"))).await;
         let view = settled.output.get("interactionView").expect("leftover InteractionView");
         let hover = view.get("hoverTarget").expect("hover target");
-        assert_eq!(hover.get("id").and_then(DslValue::as_str), Some("item-1"));
-        assert_eq!(hover.get("domain").and_then(DslValue::as_str), Some("items"));
+        assert_eq!(hover.get("id").and_then(semio_framework_value::DslValue::as_str), Some("item-1"));
+        assert_eq!(hover.get("domain").and_then(semio_framework_value::DslValue::as_str), Some("items"));
         close_reserved_app(&mut app);
     }
 
@@ -7633,16 +7757,30 @@ mod plugin_builder_contract_tests {
 
     /// 🧪 Empty-target `interactionSelect` with `replace` clears the domain (background deselect) even when an object is hovered.
     #[semio_framework_async_macros::async_test]
+    async fn emitted_empty_replace_write_clears_selection_while_hover_remains() {
+        let mut app = interaction_app_under_test().await;
+        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))).await;
+        reserved_action(&mut app, INTERACTION_HOVER_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "channel": "pointer" }), "item-1"))).await;
+        let clear = Emit { interaction_writes: vec![InteractionWrite::replace("items", "object", std::iter::empty::<String>())], ..Default::default() };
+        app.test_dispatch_emit("canvasPointerDown", clear, &meta()).await.expect("explicit selection clear lands");
+        let snapshot = app.test_interaction_selection_snapshot();
+        assert!(snapshot.selection.get("items").is_none_or(|selection| selection.ids.is_empty()));
+        assert!(snapshot.selection.get("items").is_none_or(|selection| selection.anchor_id.is_none()));
+        assert_eq!(app.interaction_state().await.hover.get("items").map(|hover| hover.ids.as_slice()), Some(["item-1".to_string()].as_slice()));
+        close_reserved_app(&mut app);
+    }
+
+    #[semio_framework_async_macros::async_test]
     async fn empty_target_interaction_select_clears_selection_while_hover_remains() {
         let mut app = interaction_app_under_test().await;
         reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))).await;
         reserved_action(&mut app, INTERACTION_HOVER_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "channel": "pointer" }), "item-1"))).await;
         let settled = reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_empty_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" })))).await;
         let view = settled.output.get("interactionView").expect("leftover InteractionView");
-        let ids = view.get("selectedIds").and_then(DslValue::as_array).expect("selectedIds");
+        let ids = view.get("selectedIds").and_then(semio_framework_value::DslValue::as_array).expect("selectedIds");
         assert!(ids.is_empty(), "empty-target replace interactionSelect must clear selectedIds, got {ids:?}");
         let hover = view.get("hoverTarget").expect("hoverTarget");
-        assert_eq!(hover.get("id").and_then(DslValue::as_str), Some("item-1"));
+        assert_eq!(hover.get("id").and_then(semio_framework_value::DslValue::as_str), Some("item-1"));
         close_reserved_app(&mut app);
     }
 
@@ -7675,7 +7813,7 @@ mod plugin_builder_contract_tests {
         let declared = <TestApp<false> as ArtifactApp>::interaction_scope(InteractionVerb::Select, &["items"]).expect("the fixture declares its select scope");
         assert_eq!(result.ui_scope, declared, "a `None` carrier scope widens to exactly the verb's declared interaction refresh scope");
         let view = result.output.get("interactionView").expect("the leftover InteractionView rides the carrier's output");
-        let ids = view.get("selectedIds").and_then(DslValue::as_array).expect("selectedIds");
+        let ids = view.get("selectedIds").and_then(semio_framework_value::DslValue::as_array).expect("selectedIds");
         assert!(ids.iter().any(|id| id.as_str() == Some("item-1")), "leftover selected ids {ids:?}");
         let history = app.test_history().await;
         assert!(!history.commands.iter().any(|entry| entry.action_id == INTERACTION_SELECT_ACTION_ID || entry.kind == ActionKind::Interaction), "the folded verb is never a history row");
@@ -7733,7 +7871,7 @@ mod plugin_builder_contract_tests {
     #[semio_framework_async_macros::async_test]
     async fn non_interaction_replay_shell_commands_still_reach_the_host() {
         let mut app = interaction_app_under_test().await;
-        let relay = Effect::ReplayShellCommand { action_id: "os.setThemeId".into(), args: Some(DslValue::from(&json!({ "themeId": "light" }))) };
+        let relay = Effect::ReplayShellCommand { action_id: "os.setThemeId".into(), args: Some(semio_framework_value::DslValue::from(&json!({ "themeId": "light" }))) };
         let result = app.test_dispatch_emit("relayTheme", Emit { effects: vec![relay.clone()], ui_scope: UiDirtyScope::None, ..Default::default() }, &meta()).await.expect("relay lands");
         assert_eq!(result.requested_effects, vec![relay]);
         assert_eq!(result.ui_scope, UiDirtyScope::None, "no verb was folded, so no scope was widened");
@@ -7761,7 +7899,7 @@ mod plugin_builder_contract_tests {
         let declared = <TestApp<false> as ArtifactApp>::interaction_scope(InteractionVerb::Select, &["items"]).expect("the fixture declares its select scope");
         assert_eq!(result.ui_scope, declared, "a `None` carrier scope widens to exactly the verb's declared interaction refresh scope");
         let view = result.output.get("interactionView").expect("the leftover InteractionView rides the carrier's output");
-        let ids = view.get("selectedIds").and_then(DslValue::as_array).expect("selectedIds");
+        let ids = view.get("selectedIds").and_then(semio_framework_value::DslValue::as_array).expect("selectedIds");
         assert!(ids.iter().any(|id| id.as_str() == Some("item-1")), "leftover selected ids {ids:?}");
         let history = app.test_history().await;
         assert!(!history.commands.iter().any(|entry| entry.action_id == INTERACTION_SELECT_ACTION_ID || entry.kind == ActionKind::Interaction), "the folded verb is never a history row");
@@ -7775,7 +7913,7 @@ mod plugin_builder_contract_tests {
     #[semio_framework_async_macros::async_test]
     async fn non_interaction_dispatch_actions_still_reach_the_host() {
         let mut app = interaction_app_under_test().await;
-        let chain = Effect::DispatchAction { req: RequestId(91_002), action: "probeChildContinuation".into(), args: Some(DslValue::from(&json!({ "pass": 2 }))), delay_ms: 16 };
+        let chain = Effect::DispatchAction { req: RequestId(91_002), action: "probeChildContinuation".into(), args: Some(semio_framework_value::DslValue::from(&json!({ "pass": 2 }))), delay_ms: 16 };
         let result = app.test_dispatch_emit("stagedPass", Emit { effects: vec![chain.clone()], ui_scope: UiDirtyScope::None, ..Default::default() }, &meta()).await.expect("chain lands");
         assert_eq!(result.requested_effects, vec![chain]);
         assert_eq!(result.ui_scope, UiDirtyScope::None, "no verb was folded, so no scope was widened");
@@ -7882,10 +8020,10 @@ mod plugin_builder_contract_tests {
                 other => return Err(format!("the carrier's own window body survives the merge: {other:?}")),
             }
             let Some(leftover) = progress.leftover.as_ref() else { return Err("the folded verb's leftover InteractionView rides the Ui progress unit".into()) };
-            if leftover.operation != admitted.output.get("operationId").and_then(DslValue::as_str).and_then(|id| id.parse::<u64>().ok()).unwrap_or(u64::MAX) {
+            if leftover.operation != admitted.output.get("operationId").and_then(semio_framework_value::DslValue::as_str).and_then(|id| id.parse::<u64>().ok()).unwrap_or(u64::MAX) {
                 return Err(format!("the leftover is tagged with the operation that folded it: {} vs {:?}", leftover.operation, admitted.output));
             }
-            let ids = leftover.view.get("interactionView").and_then(|view| view.get("selectedIds")).and_then(DslValue::as_array).ok_or_else(|| format!("leftover shape: {leftover:?}"))?;
+            let ids = leftover.view.get("interactionView").and_then(|view| view.get("selectedIds")).and_then(semio_framework_value::DslValue::as_array).ok_or_else(|| format!("leftover shape: {leftover:?}"))?;
             if !ids.iter().any(|id| id.as_str() == Some("item-1")) {
                 return Err(format!("leftover selected ids {ids:?}"));
             }
@@ -7910,22 +8048,22 @@ mod plugin_builder_contract_tests {
     /// host's leftover overlay / Inspection tab never moved for a folded pick.
     #[test]
     fn typed_operation_leftover_merges_into_exactly_the_carrying_reply() {
-        let started = |operation: &str| store::pack_rt::encode_wire_value(&DslValue::Object(vec![("operationId".into(), DslValue::String(operation.into())), ("generation".into(), DslValue::String("7".into()))]));
+        let started = |operation: &str| store::pack_rt::encode_wire_value(&semio_framework_value::DslValue::Object(vec![("operationId".into(), semio_framework_value::DslValue::String(operation.into())), ("generation".into(), semio_framework_value::DslValue::String("7".into()))]));
         let invocation = |in_reply_to: u64, output: Vec<u8>| protocol::AppFrame::Invocation { in_reply_to, output, diagnostics: Vec::new(), ui_scope: Vec::new(), history_patch: Vec::new(), messages: Vec::new(), mutations: Vec::new(), inverse_group: Vec::new() };
-        let view = DslValue::Object(vec![("interactionView".into(), DslValue::Object(vec![("selectedIds".into(), DslValue::Array(vec![DslValue::String("item-1".into())]))]))]);
+        let view = semio_framework_value::DslValue::Object(vec![("interactionView".into(), semio_framework_value::DslValue::Object(vec![("selectedIds".into(), semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::String("item-1".into())]))]))]);
         let leftover = crate::app::TypedOperationLeftover { operation: 42, view };
         let mut frames = vec![protocol::AppFrame::Done { in_reply_to: 1 }, invocation(2, started("41")), invocation(0, started("42")), invocation(3, started("42"))];
-        let untouched: Vec<Vec<u8>> = frames.iter().take(3).map(|frame| crate::app::resolve_ready(protocol::encode_app_frame(frame))).collect();
+        let untouched: Vec<Vec<u8>> = frames.iter().take(3).map(|frame| ::semio_framework_async::poll::resolve_ready(protocol::encode_app_frame(frame))).collect();
         assert!(super::merge_typed_operation_leftover_into_reply(&mut frames, &leftover), "the reply that started operation 42 receives the leftover");
         for (index, before) in untouched.iter().enumerate() {
-            assert_eq!(&crate::app::resolve_ready(protocol::encode_app_frame(&frames[index])), before, "frame {index} answers no fold and stays byte-identical");
+            assert_eq!(&::semio_framework_async::poll::resolve_ready(protocol::encode_app_frame(&frames[index])), before, "frame {index} answers no fold and stays byte-identical");
         }
         let protocol::AppFrame::Invocation { in_reply_to: 3, output, .. } = &frames[3] else { panic!("the carrying reply keeps its sequence") };
         let merged = store::pack_rt::decode_wire_value(output).expect("merged output decodes");
-        assert_eq!(merged.get("operationId").and_then(DslValue::as_str), Some("42"), "the operation witness the host awaits survives: {merged:?}");
-        assert_eq!(merged.get("generation").and_then(DslValue::as_str), Some("7"));
-        let ids = merged.get("interactionView").and_then(|view| view.get("selectedIds")).and_then(DslValue::as_array).expect("interactionView joins the witness");
-        assert_eq!(ids.iter().filter_map(DslValue::as_str).collect::<Vec<_>>(), vec!["item-1"]);
+        assert_eq!(merged.get("operationId").and_then(semio_framework_value::DslValue::as_str), Some("42"), "the operation witness the host awaits survives: {merged:?}");
+        assert_eq!(merged.get("generation").and_then(semio_framework_value::DslValue::as_str), Some("7"));
+        let ids = merged.get("interactionView").and_then(|view| view.get("selectedIds")).and_then(semio_framework_value::DslValue::as_array).expect("interactionView joins the witness");
+        assert_eq!(ids.iter().filter_map(semio_framework_value::DslValue::as_str).collect::<Vec<_>>(), vec!["item-1"]);
         let mut none = vec![invocation(4, started("40"))];
         assert!(!super::merge_typed_operation_leftover_into_reply(&mut none, &leftover), "no reply of this exchange started the folding operation");
     }
@@ -7954,16 +8092,16 @@ mod plugin_builder_contract_tests {
             }
             let settled = reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_targets_args(json!({ "domainId": domain, "merge": case["merge"].as_str().expect("case merge"), "method": "pick" }), granularity, &targets))).await;
             let view = settled.output.get("interactionView").expect("leftover InteractionView");
-            let published: Vec<String> = view.get("selectedIds").and_then(DslValue::as_array).expect("selectedIds").iter().map(|id| id.as_str().expect("selected id").to_string()).collect();
+            let published: Vec<String> = view.get("selectedIds").and_then(semio_framework_value::DslValue::as_array).expect("selectedIds").iter().map(|id| id.as_str().expect("selected id").to_string()).collect();
             assert_eq!(published, expected, "{case_id}: {}", case["why"].as_str().unwrap_or_default());
             let mut distinct = published.clone();
             distinct.sort();
             distinct.dedup();
             assert_eq!(distinct.len(), published.len(), "{case_id}: selectedIds must name every id at most once, got {published:?}");
-            let DslValue::Object(locked) = view.get("locked").expect("lock state") else { panic!("{case_id}: locked must be an object") };
+            let semio_framework_value::DslValue::Object(locked) = view.get("locked").expect("lock state") else { panic!("{case_id}: locked must be an object") };
             assert_eq!(locked.len(), published.len(), "{case_id}: locked has exactly one key per published id, got {locked:?}");
             let gumball = view.get("gumball").expect("gumball leftover");
-            assert_eq!(gumball.get("anchorId").and_then(DslValue::as_str), published.first().map(String::as_str), "{case_id}: the gumball anchor is the first published id");
+            assert_eq!(gumball.get("anchorId").and_then(semio_framework_value::DslValue::as_str), published.first().map(String::as_str), "{case_id}: the gumball anchor is the first published id");
             close_reserved_app(&mut app);
         }
     }

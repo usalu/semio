@@ -11,7 +11,7 @@ pub fn diff(payload: &super::ChangeRepresentationLod, base: &Block5dSnapshot) ->
     };
     let replacement = BlockRepresentation { lod: payload.new_lod.clone(), ..existing.clone() };
     if replacement == *existing {
-        return protocol::MutationOutcome::new(Block5dDiff::default()).absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "no changes to apply").at(vec![payload.id.clone()])]);
+        return protocol::MutationOutcome::new(Block5dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(vec![payload.id.clone()])]);
     }
     protocol::MutationOutcome::new(Block5dDiff {
         representations: Some(Block5dRepresentationsDelta { patched: vec![Block5dRepresentationsPatchEntry { id: payload.id.clone(), patch: Block5dRepresentationsPatch { replacement: Some(replacement) } }], ..Default::default() }),

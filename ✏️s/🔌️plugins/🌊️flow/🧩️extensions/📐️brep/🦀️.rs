@@ -21,7 +21,6 @@ fn q(method: &str, summary: &str) -> String {
 /// reflectively derived (mirrors W1-A's `OPERATION_QUALITY` table's own documented rationale):
 /// whoever adds a node must add its row here, or `operation_quality_tags_match_the_kernel_contract`
 /// fails.
-#[cfg(test)]
 const NODE_KERNEL_METHOD: &[(&str, &str)] = &[
     ("brep.brep", "deconstruct"),
     ("brep.prim3d.box", "box_prim"),
@@ -815,8 +814,7 @@ impl Operator for Explode {
     }
 }
 
-/// 🏷️ The handle's persistent label (stable across deconstruct/reconstruct) as a diagnostic
-/// number — explicit `EvalError`, never a silent `0`/`-1` placeholder, when the handle carries none.
+/// 🏷️ The handle's persistent label as exact decimal text across the native and browser boundary.
 struct GeometryLabel(SessionCapture);
 impl Operator for GeometryLabel {
             retire_geometry_capture!(0);
@@ -824,7 +822,7 @@ impl Operator for GeometryLabel {
         self.0.with_kernel_read(|kernel| {
             let handle = read_geometry(input, "geometry")?;
             let label = kernel.label(&handle).ok_or_else(|| EvalError::InvalidInput(format!("geometry {} carries no persistent label", handle.as_str())))?;
-            Ok(channel_output("label", number_dictionary(label as f64)))
+            Ok(channel_output("label", text_dictionary(label.to_string())))
         })
     }
 }
@@ -998,6 +996,7 @@ pub fn register(registry: &mut Registry, session: &Session) {
     registry.register_schema(topology_element_schema("vertex", "Vertex", "emoji:📍️"));
     registry.register_schema(topology_element_schema("edge", "Edge", "emoji:〰"));
     registry.register_schema(topology_element_schema("face", "Face", "emoji:⬜️"));
+    registry.register_schema(topology_element_schema("shell", "Shell", "emoji:🐚️"));
     registry.register_schema(brep_schema());
     registry.register_schema(text_schema());
     registry.register_operator(
@@ -1007,19 +1006,23 @@ pub fn register(registry: &mut Registry, session: &Session) {
             name: "Brep".into(),
             abbreviation: "Brep".into(),
             icon: "emoji:🧊️".into(),
-            summary: q("deconstruct", "Deconstructs B-Rep geometry into vertices, edges, and faces"),
-            inputs: vec![geometry_channel("brep", "brep.brep")],
+            summary: q("deconstruct", "Deconstructs B-Rep geometry into vertices, edges, faces, and shells"),
+            inputs: vec![geometry_channel("brep", "brep.brep").with_value_types(&["geometry", "list"]), ChannelSpec::text_default("edgeLabels", "[]", &["brep.brep"]), ChannelSpec::text_default("faceLabels", "[]", &["brep.brep"]), ChannelSpec::text_default("sourceHandle", "", &["brep.brep"])],
             outputs: vec![
                 ChannelSpec::named("B", "Brep", neural_engine::produced_channel_id("brep"), "BrepGeometry").with_operators(vec!["brep.brep".into()]).with_value_types(&["geometry"]),
                 topology_output("V", "Vtx", "vertex", "vertex"),
                 topology_output("E", "Edg", "edge", "edge"),
                 topology_output("F", "Fce", "face", "face"),
+                topology_output("S", "Shl", "shell", "shell"),
+                topology_output("SE", "SelE", "selectedEdges", "edge"),
+                topology_output("SF", "SelF", "selectedFaces", "face"),
+                ChannelSpec::named("SI", "SrcI", "sourceIndex", "SourceIndex").with_value_types(&["number"]),
                 ChannelSpec::list_output("errors", vec![]),
             ],
             group: vec!["Schemas".into()],
             ..Default::default()
         },
-        vec![OperatorImpl { schemas: vec!["geometry".into()], operator: Box::new(BrepDeconstruct(session.capture())) }],
+        ["geometry", "list"].into_iter().map(|schema| OperatorImpl { schemas: vec![schema.into(), "text".into(), "text".into(), "text".into()], operator: Box::new(BrepDeconstruct(session.capture())) as Box<dyn Operator> }).collect(),
         &["geometry", "list"],
     );
 
@@ -1079,7 +1082,7 @@ pub fn register(registry: &mut Registry, session: &Session) {
         "Hull",
         "emoji:📦️",
         &q("convex_hull", "Convex hull from points"),
-        vec![list_channel("points", "brep.prim3d.convexHull")],
+        vec![list_channel("points", "brep.prim3d.convexHull").with_item_types(&["point", "vector"])],
         out_solid("ConvexHullSolid"),
         &["Primitives 3D"],
         Box::new(ConvexHullPrim(session.capture())),
@@ -1128,7 +1131,7 @@ pub fn register(registry: &mut Registry, session: &Session) {
         &["Curves"],
         Box::new(EllipseCurve(session.capture())),
     );
-    reg_geo(registry, "brep.curve.polyline", "Polyline", "Poly", "emoji:📏️", &q("polyline_wire", "Polyline wire"), vec![list_channel("points", "brep.curve.polyline")], out_wire("PolylineWire"), &["Curves"], Box::new(PolylineWire(session.capture())));
+    reg_geo(registry, "brep.curve.polyline", "Polyline", "Poly", "emoji:📏️", &q("polyline_wire", "Polyline wire"), vec![list_channel("points", "brep.curve.polyline").with_item_types(&["point", "vector"])], out_wire("PolylineWire"), &["Curves"], Box::new(PolylineWire(session.capture())));
     reg_geo(
         registry,
         "brep.curve.rectangle",
@@ -1160,7 +1163,7 @@ pub fn register(registry: &mut Registry, session: &Session) {
         "Intp",
         "emoji:〰",
         &q("interpolate_curve", "Interpolated curve"),
-        vec![list_channel("points", "brep.curve.interpolate"), number_channel("degree", "brep.curve.interpolate", 3.0)],
+        vec![list_channel("points", "brep.curve.interpolate").with_item_types(&["point", "vector"]), number_channel("degree", "brep.curve.interpolate", 3.0)],
         out_curve("InterpolatedCurve"),
         &["Curves"],
         Box::new(InterpolateCurve(session.capture())),
@@ -1172,7 +1175,7 @@ pub fn register(registry: &mut Registry, session: &Session) {
         "Appr",
         "emoji:〰",
         &q("approximate_curve", "Approximated curve"),
-        vec![list_channel("points", "brep.curve.approximate"), number_channel("degree", "brep.curve.approximate", 3.0), number_channel("controlPoints", "brep.curve.approximate", 4.0)],
+        vec![list_channel("points", "brep.curve.approximate").with_item_types(&["point", "vector"]), number_channel("degree", "brep.curve.approximate", 3.0), number_channel("controlPoints", "brep.curve.approximate", 4.0)],
         out_curve("ApproximatedCurve"),
         &["Curves"],
         Box::new(ApproximateCurve(session.capture())),
@@ -1215,7 +1218,7 @@ pub fn register(registry: &mut Registry, session: &Session) {
         "PFace",
         "emoji:⬜️",
         &q("planar_face_from_points", "Planar face from points"),
-        vec![list_channel("points", "brep.surf.planarFace")],
+        vec![list_channel("points", "brep.surf.planarFace").with_item_types(&["point", "vector"])],
         out_face("PlanarFace"),
         &["Surfaces"],
         Box::new(PlanarFacePoints(session.capture())),
@@ -1239,7 +1242,7 @@ pub fn register(registry: &mut Registry, session: &Session) {
         "Grid",
         "emoji:🧮️",
         &q("nurbs_surface_from_grid", "Nurbs surface from point grid"),
-        vec![list_channel("points", "brep.surf.nurbsGrid"), number_channel("rows", "brep.surf.nurbsGrid", 2.0), number_channel("degreeU", "brep.surf.nurbsGrid", 3.0), number_channel("degreeV", "brep.surf.nurbsGrid", 3.0)],
+        vec![list_channel("points", "brep.surf.nurbsGrid").with_item_types(&["point", "vector"]), number_channel("rows", "brep.surf.nurbsGrid", 2.0), number_channel("degreeU", "brep.surf.nurbsGrid", 3.0), number_channel("degreeV", "brep.surf.nurbsGrid", 3.0)],
         out_surface("NurbsSurface"),
         &["Surfaces"],
         Box::new(NurbsGridSurface(session.capture())),
@@ -1811,19 +1814,19 @@ pub fn register(registry: &mut Registry, session: &Session) {
 
     register_typed(
         registry,
-        operator_info_with_outputs("brep.measure.volume", "Volume", "Vol", "emoji:📐️", &q("volume", "Solid volume"), vec![geometry_channel("geometry", "brep.measure.volume")], vec![out_volume()], &["Measure"]),
+        operator_info_with_outputs("brep.measure.volume", "Volume", "Vol", "emoji:📐️", &q("volume", "Volume of distinct solids"), vec![geometry_channel("geometry", "brep.measure.volume")], vec![out_volume()], &["Measure"]),
         Box::new(Volume(session.capture())),
         &["number"],
     );
     register_typed(
         registry,
-        operator_info_with_outputs("brep.measure.area", "Area", "Area", "emoji:📐️", &q("area", "Surface area"), vec![geometry_channel("geometry", "brep.measure.area")], vec![out_area()], &["Measure"]),
+        operator_info_with_outputs("brep.measure.area", "Area", "Area", "emoji:📐️", &q("area", "Area of distinct topological faces"), vec![geometry_channel("geometry", "brep.measure.area")], vec![out_area()], &["Measure"]),
         Box::new(Area(session.capture())),
         &["number"],
     );
     register_typed(
         registry,
-        operator_info_with_outputs("brep.measure.length", "Length", "Len", "emoji:📐️", &q("length", "Curve length"), vec![geometry_channel("geometry", "brep.measure.length")], vec![out_length()], &["Measure"]),
+        operator_info_with_outputs("brep.measure.length", "Length", "Len", "emoji:📐️", &q("length", "Length of a bounded curve or distinct boundary edges"), vec![geometry_channel("geometry", "brep.measure.length")], vec![out_length()], &["Measure"]),
         Box::new(Length(session.capture())),
         &["number"],
     );
@@ -1976,11 +1979,11 @@ pub fn register(registry: &mut Registry, session: &Session) {
             "emoji:🏷️",
             &q("label", "Handle's persistent label"),
             vec![geometry_channel("geometry", "brep.topology.label")],
-            vec![ChannelSpec::named("L", "Lbl", "label", "PersistentLabel").with_value_types(&["number"])],
+            vec![ChannelSpec::named("L", "Lbl", "label", "PersistentLabel").with_value_types(&["text"])],
             &["Topology"],
         ),
         Box::new(GeometryLabel(session.capture())),
-        &["number"],
+        &["text"],
     );
 
     register_typed(
@@ -2099,11 +2102,14 @@ mod tests;
 
 // #endregion 🔖️Tests
 
+#[cfg(feature = "component-guest")]
+#[path = "💡️inferences/📐️geometry/🦀️.rs"]
+pub mod geometry_inference;
+
 // #region 🔖️ExtensionGuest
 #[cfg(feature = "component-guest")]
 mod extension_guest {
-    use super::module_registry;
-    use flow_extension_sdk::{evaluate_invoke_json, flow_extension_topic_contribution};
+    use flow_extension_sdk::flow_extension_topic_contribution;
     use semio_framework::{Fault, FaultCode, FaultOrigin};
     use semio_framework_plugin::{ExecutionMode, ExtensionBundle, ExtensionResourceOwner, PluginCloseStep};
 
@@ -2118,66 +2124,81 @@ mod extension_guest {
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     const TESSELLATE_STEP_BUDGET: usize = 24;
 
-    fn bundle() -> ExtensionBundle {
-        let session = super::Session::new().capture();
-        let manifest_json = semio_framework::io::resolve_ready(super::extension_manifest_json());
+    pub(crate) fn bundle() -> ExtensionBundle {
+        owned_bundle(super::geometry_inference::GeometryInferenceContext::new(super::Session::new().capture()))
+    }
+
+    fn owned_bundle(context:super::geometry_inference::GeometryInferenceContext)->ExtensionBundle {
+        let manifest_json = ::semio_framework_async::poll::resolve_ready(super::extension_manifest_json());
         let flow_topic = flow_extension_topic_contribution(FLOW_APP_ID, EXTENSION_ID, EXTENSION_LABEL, "brep", &manifest_json);
         let procedural3d_topic = flow_extension_topic_contribution(PROCEDURAL3D_APP_ID, EXTENSION_ID, EXTENSION_LABEL, "brep", &manifest_json);
         let bundle = ExtensionBundle::new("flow-extension-brep", "Brep", env!("CARGO_PKG_VERSION")).extends("flow").depends_on("flow", semio_framework::tree_pin!());
         let bundle = bundle.mode(ExecutionMode::Linked);
+        let bundle = ::semio_framework_async::poll::resolve_ready(async {
+            bundle.contributes(semio_framework_plugin::app::ArtifactContribution::builder(super::geometry_inference::GEOMETRY_ARTIFACT_KIND).await
+                .inference_service(super::geometry_inference::geometry_inference_service()).await).await
+        });
         let bundle = bundle.contributes_topic(flow_topic.topic, flow_topic.payload);
         let bundle = bundle.contributes_topic(procedural3d_topic.topic, procedural3d_topic.payload);
-        bundle.resource_owner(BrepExtensionResources { session }).owned_handler("evaluate").owned_handler("tessellate").owned_handler("evaluateCancel").owned_handler("tessellateCancel")
+        bundle.resource_owner(BrepExtensionResources { context }).owned_handler("evaluate").owned_handler("tessellate").owned_handler("evaluateCancel").owned_handler("tessellateCancel")
     }
 
-    struct BrepExtensionResources { session: super::SessionCapture }
+    #[cfg(test)]
+    fn scoped_bundle()->(ExtensionBundle,neural_engine::SharedRegistry) {let context=super::geometry_inference::GeometryInferenceContext::new(super::Session::new().capture());let scope=context.registry().clone();(owned_bundle(context),scope)}
+
+    struct BrepExtensionResources { context:super::geometry_inference::GeometryInferenceContext }
 
     impl ExtensionResourceOwner for BrepExtensionResources {
         fn invoke(&self, capability: &str, req: &[u8]) -> Result<Vec<u8>, Fault> {
             match capability {
                 "evaluate" => {
-                    evaluate_invoke_json(&neural_engine::ColdOwner::new(module_registry(&self.session)), req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err))
+                    let service = semio_framework_plugin::artifact_inference_service(super::geometry_inference::GEOMETRY_ARTIFACT_KIND, super::geometry_inference::GEOMETRY_INFERENCE_SCHEMA)
+                        .map_err(|error| Fault::new(FaultOrigin::Plugin, FaultCode::new(error.code), error.message))?
+                        .ok_or_else(|| Fault::new(FaultOrigin::Plugin, FaultCode::new("geometry-inference.not-registered"), "geometry inference is not registered"))?;
+                    let payload: flow_extension_sdk::EvaluateRequest = semio_framework_pack_json::from_json_str(std::str::from_utf8(req).map_err(|error| Fault::new(FaultOrigin::Plugin, FaultCode::new("geometry-inference.request"), error.to_string()))?, semio_framework_pack_json::JsonMemberPolicy::Reject)
+                        .map_err(|error| Fault::new(FaultOrigin::Plugin, FaultCode::new("geometry-inference.request"), error.to_string()))?;
+                    let budget = semio_framework_plugin::WireArtifactInferenceBudget { allocation_bytes: 64 * 1024 * 1024, work_units: if payload.round_units!=0 {payload.round_units}else if payload.budget == 0 { flow_extension_sdk::EVALUATE_STEP_BUDGET as u64 } else { payload.budget }, recursion_depth: 64 };
+                    let request = semio_framework_plugin::ArtifactInferenceExecutionRequest { policy: &[], budgets: &budget, cancellation_id: if payload.cancellation_id.is_empty(){"previewEval"}else{&payload.cancellation_id}, previous_state: None, requested_cache_mode: semio_framework_plugin::WireArtifactInferenceCacheMode::Incremental, canonical_payload: req, dependencies: &[] };
+                    service.infer_with_context(&request, &self.context).map(|execution| execution.canonical_payload).map_err(|error| Fault::new(FaultOrigin::Plugin, FaultCode::new(error.code), error.message))
                 },
                 "tessellate" => {
-                    let request = pack::json::parse_bytes(req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.tessellate.bad-request"), err.to_string()))?;
-                    let handle = request.get("handle").and_then(pack::json::Value::as_str).ok_or_else(|| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.tessellate.bad-request"), "missing field `handle`".to_string()))?;
-                    let tolerance = request.get("tolerance").and_then(pack::json::Value::as_f64).unwrap_or(0.05);
-                    let budget = request.get("budget").and_then(pack::json::Value::as_f64).map_or(TESSELLATE_STEP_BUDGET, |value| (value as usize).max(1));
-                    let wall_micros = request.get("wallMicros").and_then(pack::json::Value::as_f64).map_or(flow_extension_sdk::mesh::TESSELLATE_STEP_WALL_MICROS, |value| value.max(0.0) as u64);
-                    let chunk = request.get("chunk").and_then(pack::json::Value::as_f64).map_or(0, |value| value.max(0.0) as usize);
-                    Ok(self.session.tessellate_step_envelope_json(handle, tolerance, budget, wall_micros, chunk).into_bytes())
+                    let request = semio_framework_pack_json::parse_bytes(req, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.tessellate.bad-request"), err.to_string()))?;
+                    let handle = request.get("handle").and_then(semio_framework_pack_json::Value::as_str).ok_or_else(|| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.tessellate.bad-request"), "missing field `handle`".to_string()))?;
+                    let tolerance = request.get("tolerance").and_then(semio_framework_pack_json::Value::as_f64).unwrap_or(0.05);
+                    let budget = request.get("budget").and_then(semio_framework_pack_json::Value::as_f64).map_or(TESSELLATE_STEP_BUDGET, |value| (value as usize).max(1));
+                    let wall_micros = request.get("wallMicros").and_then(semio_framework_pack_json::Value::as_f64).map_or(flow_extension_sdk::mesh::TESSELLATE_STEP_WALL_MICROS, |value| value.max(0.0) as u64);
+                    let chunk = request.get("chunk").and_then(semio_framework_pack_json::Value::as_f64).map_or(0, |value| value.max(0.0) as usize);
+                    Ok(self.context.session().tessellate_step_envelope_json(handle, tolerance, budget, wall_micros, chunk).into_bytes())
                 },
                 "evaluateCancel" => {
-                    let request = pack::json::parse_bytes(req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate-cancel.bad-request"), err.to_string()))?;
-                    let retired = match (request.get("operatorId").and_then(pack::json::Value::as_str), request.get("nodeHash").and_then(pack::json::Value::as_f64)) {
-                        (Some(operator_id), Some(node_hash)) => usize::from(flow_extension_sdk::cancel_evaluation(operator_id, node_hash.max(0.0) as u64)),
-                        _ => flow_extension_sdk::cancel_all_evaluations(),
+                    let request = semio_framework_pack_json::parse_bytes(req, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate-cancel.bad-request"), err.to_string()))?;
+                    let retired = match (request.get("operatorId").and_then(semio_framework_pack_json::Value::as_str), request.get("nodeHash").and_then(semio_framework_pack_json::Value::as_f64)) {
+                        (Some(operator_id), Some(node_hash)) => usize::from(flow_extension_sdk::cancel_evaluation(self.context.registry(),operator_id, node_hash.max(0.0) as u64)),
+                        _ => flow_extension_sdk::cancel_all_evaluations(self.context.registry()),
                     };
-                    Ok(pack::json::to_string(&pack::json::object([("ok".to_string(), pack::json::Value::Bool(true)), ("retired".to_string(), pack::json::Value::from(retired as u64))])).into_bytes())
+                    Ok(semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("ok".to_string(), semio_framework_pack_json::Value::Bool(true)), ("retired".to_string(), semio_framework_pack_json::Value::from(retired as u64)), ("pending".into(),semio_framework_pack_json::Value::Bool(flow_extension_sdk::evaluation_retirement_pending(self.context.registry())))])).into_bytes())
                 },
                 "tessellateCancel" => {
-                    let request = pack::json::parse_bytes(req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.tessellate-cancel.bad-request"), err.to_string()))?;
-                    let retired = match (request.get("handle").and_then(pack::json::Value::as_str), request.get("tolerance").and_then(pack::json::Value::as_f64)) {
-                        (Some(handle), Some(tolerance)) => usize::from(self.session.cancel_tessellation(handle, tolerance)),
-                        _ => self.session.cancel_all_tessellations(),
+                    let request = semio_framework_pack_json::parse_bytes(req, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.tessellate-cancel.bad-request"), err.to_string()))?;
+                    let retired = match (request.get("handle").and_then(semio_framework_pack_json::Value::as_str), request.get("tolerance").and_then(semio_framework_pack_json::Value::as_f64)) {
+                        (Some(handle), Some(tolerance)) => usize::from(self.context.session().cancel_tessellation(handle, tolerance)),
+                        _ => self.context.session().cancel_all_tessellations(),
                     };
-                    Ok(pack::json::to_string(&pack::json::object([("ok".to_string(), pack::json::Value::Bool(true)), ("retired".to_string(), pack::json::Value::from(retired as u64))])).into_bytes())
+                    Ok(semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("ok".to_string(), semio_framework_pack_json::Value::Bool(true)), ("retired".to_string(), semio_framework_pack_json::Value::from(retired as u64))])).into_bytes())
                 },
                 _ => Err(Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.unknown-capability"), "unknown BREP capability")),
             }
         }
-        fn begin_close(&mut self) { if !self.session.terminal_is_empty() { self.session.begin_close(); } }
+        fn inference_context(&self) -> Option<&dyn std::any::Any> { Some(&self.context) }
+        fn cancel_inference(&self, cancellation_id: &str) -> bool { flow_extension_sdk::cancel_inference_evaluation(self.context.registry(),cancellation_id) }
+        fn begin_close(&mut self) { self.context.begin_close(); }
         fn close_step(&mut self, items: usize, bytes: usize) -> Result<PluginCloseStep, Fault> {
-            match self.session.close_step(items, bytes).map_err(|message| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.brep-close"), message))? {
-                neural_engine::ValueRetirementStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
-                neural_engine::ValueRetirementStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "BREP resource family is paused" }),
-                neural_engine::ValueRetirementStep::Complete => Ok(PluginCloseStep::Complete),
-            }
+            self.context.close_step(items,bytes)
         }
-        fn terminal_is_empty(&self) -> bool { self.session.terminal_is_empty() }
-        fn next_close_byte_demand(&self) -> usize { self.session.shell_byte_requirement().max(1) }
-        fn cancel_close(&mut self) { if !self.session.terminal_is_empty() { self.session.cancel_close(); } }
-        fn resume_close(&mut self) { if !self.session.terminal_is_empty() { self.session.resume_close(); } }
+        fn terminal_is_empty(&self) -> bool { self.context.terminal_is_empty() }
+        fn next_close_byte_demand(&self) -> usize { self.context.next_close_byte_demand() }
+        fn cancel_close(&mut self) { if !self.context.session().terminal_is_empty() { self.context.session().cancel_close(); } }
+        fn resume_close(&mut self) { if !self.context.session().terminal_is_empty() { self.context.session().resume_close(); } }
     }
 
     #[cfg(test)]

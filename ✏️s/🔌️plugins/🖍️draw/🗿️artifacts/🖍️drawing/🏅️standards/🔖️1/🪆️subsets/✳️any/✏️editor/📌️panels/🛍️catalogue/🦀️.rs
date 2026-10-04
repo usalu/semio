@@ -71,7 +71,7 @@ fn catalogue_rows(labels: &DrawingPlayLabels) -> Vec<CatalogueRow> {
 fn kind_row(kind: &str, label: LabelText, icon: &str) -> UiAssemblyResult<BuiltNode> {
     let mut drag_data = UiFixedMap::default();
     let key = UiText::try_from_str(crate::editor::drawing::panels::layers::DRAWING_LAYER_KIND_DRAG_MIME).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "drawing drag mime admission failed"))?;
-    let value = UiText::try_from_string(dsl::json::to_json_string(&dsl::DslValue::object([("kind".to_string(), dsl::DslValue::String(kind.to_string()))])))
+    let value = UiText::try_from_string(semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::object([("kind".to_string(), semio_framework_value::DslValue::String(kind.to_string()))])))
         .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "drawing drag payload admission failed"))?;
     drag_data.try_push(key, value).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "drawing drag map admission failed"))?;
     let label = ui::Label::try_from(label.as_str()).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "drawing catalogue label admission failed"))?;

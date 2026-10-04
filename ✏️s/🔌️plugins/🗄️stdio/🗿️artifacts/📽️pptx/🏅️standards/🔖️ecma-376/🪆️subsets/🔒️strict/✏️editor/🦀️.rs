@@ -5,8 +5,7 @@
 
 use crate::editor::pptx::standards::v_ecma_376::subsets::strict::modes::edit;
 use crate::editor::pptx::standards::v_ecma_376::subsets::strict::modes::edit::windows::main;
-use crate::schema::mutations::{set_shape_text, set_snapshot};
-use crate::schema::snapshot::{PptxParagraph, PptxShape};
+use crate::schema::mutations::{patch_snapshot, set_shape_text, set_snapshot};
 use crate::{PptxMutation, PptxSnapshot, STDIO_PPTX_DOCUMENT_SCHEMA};
 use semio_framework_plugin::ArtifactEditor;
 use semio_framework_plugin::ArtifactView;
@@ -16,7 +15,6 @@ use semio_framework_plugin::DraftView;
 use semio_framework_plugin::Editor;
 use semio_framework_plugin::Emit;
 use semio_framework_plugin::Fault;
-use semio_framework_ui_locale::Label;
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
 use semio_framework_plugin::NoDraft;
@@ -27,6 +25,7 @@ use semio_framework_plugin::NoTransient;
 use semio_framework_plugin::NoTransientMutation;
 use semio_framework_plugin::StandardId;
 use semio_framework_plugin::SubsetId;
+use semio_framework_ui_locale::Label;
 
 //#region 🔖️Dialect
 /// 🪪️ Artifact coordinate — `s.stdio.pptx@ecma-376/strict`. Duplicated (not imported) in the
@@ -49,50 +48,17 @@ semio_s_artifact_stdio_contract::snapshot_editing_command_roster!(PptxStrictEdit
 //#endregion 🔖️Command
 
 //#region 🔖️Helpers
-fn shape_text(shape: &PptxShape) -> Option<String> {
-    match shape {
-        PptxShape::TextBox { text_frame, .. } | PptxShape::Placeholder { text_frame, .. } => Some(text_frame.iter().map(|paragraph| paragraph.runs.iter().map(|run| run.text.as_str()).collect::<String>()).collect::<Vec<_>>().join("\n")),
-        PptxShape::Picture { .. } | PptxShape::Other { .. } => None,
-    }
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn replacement_text_frame(shape: &PptxShape, text: &str) -> Option<Vec<PptxParagraph>> {
-    let current = match shape {
-        PptxShape::TextBox { text_frame, .. } | PptxShape::Placeholder { text_frame, .. } => text_frame,
-        PptxShape::Picture { .. } | PptxShape::Other { .. } => return None,
-    };
-    let mut current = current.iter().cloned();
-    Some(
-        text.split('\n')
-            .map(|line| {
-                let mut paragraph = current.next().unwrap_or_default();
-                if paragraph.runs.is_empty() {
-                    paragraph = PptxParagraph::text(line);
-                } else {
-                    paragraph.runs[0].text = line.to_string();
-                    for run in &mut paragraph.runs[1..] {
-                        run.text.clear();
-                    }
-                }
-                paragraph
-            })
-            .collect(),
-    )
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn build_set_page_mutation(snapshot: &PptxSnapshot, page: usize, item: usize, revision: &str, text: &str) -> Result<Option<PptxMutation>, Fault> {
-    let slide = snapshot.presentation.slides.get(page).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.pptx.set-page.stale-slide"), format!("PPTX slide {page} no longer exists")))?;
+    let slides = crate::schema::mutations::xml_address::pptx_slides(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.pptx.set-page.projection"), error))?;
+    let slide = slides.get(page).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.pptx.set-page.stale-slide"), format!("PPTX slide {page} no longer exists")))?;
     let shape = slide.shapes.get(item).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.pptx.set-page.stale-shape"), format!("PPTX shape {page}/{item} no longer exists")))?;
     let current =
-        shape_text(shape).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.pptx.set-page.unsupported-target"), format!("PPTX shape {page}/{item} has no editable text frame")))?;
-    semio_s_artifact_stdio_contract::require_window_kit_document_revision(&current, revision, "stdio.pptx.set-page.conflict")?;
+        shape.text.as_ref().ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.pptx.set-page.unsupported-target"), format!("PPTX shape {page}/{item} has no editable text frame")))?;
+    semio_s_artifact_stdio_contract::require_window_kit_document_revision(current, revision, "stdio.pptx.set-page.conflict")?;
     if current == text {
         return Ok(None);
     }
-    let text_frame = replacement_text_frame(shape, text).expect("a text-bearing shape has a text frame");
-    Ok(Some(PptxMutation::SetShapeText(set_shape_text::SetShapeText { slide_index: page, shape_index: item, text_frame })))
+    Ok(Some(PptxMutation::SetShapeText(set_shape_text::SetShapeText { address: shape.address.clone(), text: text.into() })))
 }
 //#endregion 🔖️Helpers
 
@@ -116,6 +82,29 @@ impl ArtifactEditor for PptxStrictEditor {
     const DIALECT: Dialect = PPTX_STRICT_EDITOR_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_PPTX_DOCUMENT_SCHEMA;
 
+    fn natural_file_codec() -> Option<semio_framework_plugin::NaturalFileCodec> {
+        Some(semio_framework_plugin::NaturalFileCodec {
+            format_kind: "s.stdio.pptx@ecma-376",
+            extension: ".pptx",
+            media_type: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            binary: true,
+        })
+    }
+
+    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
+        crate::standards::v_ecma_376::subsets::base::io::export::serializers::encode_pptx(snapshot)
+            .map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
+    }
+
+    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
+        crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx(bytes)
+            .map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
+    }
+
+    fn whole_document_operation(snapshot: Self::Snapshot) -> Option<Self::Mutation> {
+        Some(PptxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
+    }
+
     semio_s_artifact_stdio_contract::snapshot_details_editor_support! {
         owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/✏️editor/🦀️.rs",
         controller: "s.stdio.pptx@ecma-376/strict#editor",
@@ -128,7 +117,7 @@ impl ArtifactEditor for PptxStrictEditor {
         semio_s_artifact_stdio_contract::editing::snapshot_editing_command_id(command, |_| "set-page")
     }
 
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
         semio_s_artifact_stdio_contract::editing::snapshot_editing_command_from_action(action, args, |action, args| match action {
             "set-page" => {
                 let edit = semio_s_artifact_stdio_contract::window_kit_document_text_edit(args)?;
@@ -165,9 +154,12 @@ impl ArtifactEditor for PptxStrictEditor {
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render_windowed(doc.snapshot, &semio_framework_plugin::TreeWindows::for_body(view_state, main::BODY_KEY), view_state.locale).map(semio_framework_plugin::built_to_component_tree),
+            main::BODY_KEY => {
+                let publication_revision = semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?;
+                main::render_windowed(doc.snapshot, &semio_framework_plugin::TreeWindows::for_body(view_state, main::BODY_KEY), view_state.locale, publication_revision).map(semio_framework_plugin::built_to_component_tree)
+            }
             semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY => semio_s_artifact_stdio_contract::editing::render_snapshot_details(
-                doc.snapshot,
+                doc,
                 view_state.locale,
                 "s.stdio.pptx@ecma-376/strict#editor",
                 &semio_framework_plugin::TreeWindows::for_body(view_state, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY),
@@ -187,7 +179,7 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for PptxStr
     }
 
     fn snapshot_edit_mutations(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| PptxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_patch(event, snapshot, |patch| PptxMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| PptxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot })))
     }
 }
 

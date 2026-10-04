@@ -10,7 +10,7 @@ use std::collections::BTreeMap;
 /// caching: a `Path`/`Step` document is a tree, not a general graph, so a single depth-first walk
 /// on every read is both cheap at pilot scale and already total/deterministic; there is no
 /// per-entity dependency-hash boundary the way puzzle3d's flatten chain has).
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct ProcedureTopology {
     pub topo_order: Vec<String>,

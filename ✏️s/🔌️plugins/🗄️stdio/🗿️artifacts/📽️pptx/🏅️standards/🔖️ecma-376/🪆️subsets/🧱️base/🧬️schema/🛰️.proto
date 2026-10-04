@@ -4,5 +4,4 @@ message PptxArtifact {
   string schema = 1;
   semio.s_stdio_pptx.snapshot.OpcPackage opc = 2;
   repeated semio.s_stdio_pptx.snapshot.PptxXmlPart xml_parts = 3;
-  semio.s_stdio_pptx.snapshot.PptxPresentation presentation = 4;
 }

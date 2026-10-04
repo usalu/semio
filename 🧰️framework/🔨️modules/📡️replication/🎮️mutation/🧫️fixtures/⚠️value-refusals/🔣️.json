@@ -1,0 +1,9 @@
+{
+  "cases": [
+    {"owner":"payloadHash","input":[],"kind":"invalidValue","messageContains":"expected exactly 32 bytes"},
+    {"owner":"timestamp","input":{},"kind":"invalidValue","messageContains":"missing actor"},
+    {"owner":"mutationMessage","input":{},"kind":"invalidValue","messageContains":"missing level"},
+    {"owner":"mutationOrigin","input":{"kind":"alien"},"kind":"invalidValue","messageContains":"unknown"}
+  ],
+  "controlledKinds":["canceled","ownershipLimit"]
+}

@@ -17,19 +17,19 @@ const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutati
 const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧷create-asset/♻️overwrites/🔺️diff/🔣️.json");
 
 fn before() -> RemodelingSnapshot {
-    pack::from_json_str(BEFORE).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> RemodelingSnapshot {
-    pack::from_json_str(AFTER).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> RemodelingMutation {
-    pack::from_json_str(MUTATION).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 fn produced() -> protocol::MutationOutcome<RemodelingDiff> {
     <RemodelingMutation as protocol::Mutation<RemodelingSnapshot>>::diff(&mutation(), &before())
 }
-fn json_of<T: dsl::ToValue>(value: &T) -> pack::JsonValue {
-    pack::json_from_dsl_value(&dsl::ToValue::to_value(value))
+fn json_of<T: semio_framework_value::ToValue>(value: &T) -> semio_framework_pack_json::Value {
+    semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(value))
 }
 
 /// ▶️ The verb reaches its committed after-document, and moved it.
@@ -45,9 +45,9 @@ async fn reaches_the_committed_after_document() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = produced();
-    let committed = pack::parse_json(DIFF).expect("committed diff decodes");
+    let committed = semio_framework_pack_json::parse(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert_eq!(json_of(outcome.diff()), committed, "create-asset/overwrites-an-a34b9d: produced diff differs from the committed 🔺️diff/🔣️.json");
-    let decoded: RemodelingDiff = pack::from_json_str(DIFF).expect("committed diff decodes into the diff type");
+    let decoded: RemodelingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the diff type");
     assert_eq!(json_of(&decoded), committed, "create-asset/overwrites-an-a34b9d: committed diff JSON is not canonical");
 }
 
@@ -55,7 +55,7 @@ async fn produces_committed_diff() {
 /// description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_carries_before_to_after() {
-    let decoded: RemodelingDiff = pack::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: RemodelingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let applied = <RemodelingDiff as protocol::MutationDiff<RemodelingSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(applied, expected_after(), "create-asset/overwrites-an-a34b9d: committed diff did not carry before to after");
 }
@@ -63,11 +63,11 @@ async fn committed_diff_carries_before_to_after() {
 /// 🎯️ The declared outcome — its status and every diagnostic it names — is what this leaf emits.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
-    let declared = pack::parse_json(OUTCOME).expect("outcome decodes");
+    let declared = semio_framework_pack_json::parse(OUTCOME, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
     assert_eq!(declared.get("status").and_then(|status| status.as_str()), Some("applied"), "create-asset/overwrites-an-a34b9d declares an applied outcome");
     let produced = produced();
     let declared_codes: Vec<String> = match declared.get("messages") {
-        Some(pack::JsonValue::Array(entries)) => entries.iter().filter_map(|entry| entry.get("code").and_then(|code| code.as_str()).map(str::to_string)).collect(),
+        Some(semio_framework_pack_json::Value::Array(entries)) => entries.iter().filter_map(|entry| entry.get("code").and_then(|code| code.as_str()).map(str::to_string)).collect(),
         _ => Vec::new(),
     };
     let emitted: Vec<String> = produced.messages().iter().map(|message| message.code.0.clone()).collect();
@@ -80,7 +80,7 @@ async fn declared_outcome_holds() {
 async fn inverse_restores_the_before_document() {
     let base = before();
     let mut snapshot = apply_remodeling_mutation(&base, &mutation()).expect("forward applies");
-    for step in &inverse_remodeling_mutation(&base, &mutation()) {
+    for step in &inverse_remodeling_mutation(&base, &mutation()).expect("valid retained mutation inverse fixture") {
         snapshot = apply_remodeling_mutation(&snapshot, step).expect("inverse step applies");
     }
     assert_eq!(snapshot, base, "create-asset/overwrites-an-a34b9d: inverse did not restore the before-snapshot");
@@ -91,10 +91,10 @@ async fn inverse_restores_the_before_document() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: RemodelingSnapshot = pack::from_json_str(text).expect("snapshot decodes");
-        let original = pack::parse_json(text).expect("snapshot reparses");
+        let decoded: RemodelingSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let original = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot reparses");
         assert_eq!(json_of(&decoded), original, "create-asset/overwrites-an-a34b9d: committed {label} JSON is not canonical");
     }
-    let original = pack::parse_json(MUTATION).expect("mutation reparses");
+    let original = semio_framework_pack_json::parse(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation reparses");
     assert_eq!(json_of(&mutation()), original, "create-asset/overwrites-an-a34b9d: committed mutation JSON is not canonical");
 }

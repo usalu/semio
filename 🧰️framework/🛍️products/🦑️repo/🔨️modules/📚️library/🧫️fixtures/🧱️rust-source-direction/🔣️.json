@@ -675,7 +675,7 @@
       ],
       "violations": [
         {
-          "rule": "framework-modules-no-products",
+          "rule": "framework-no-products",
           "from": "🧰️framework/🔨️modules/🧪️probe/🦀️.rs",
           "to": "🧰️framework/🛍️products/💻️os/🧪️probe/fixture.txt",
           "kind": "include_str",

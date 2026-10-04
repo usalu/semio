@@ -33,7 +33,6 @@ fn the_unmounted_route_commits_one_relative_leaf_and_refuses_a_stream() {
     let view = ArtifactView::new(&doc, &history);
     let cfg = ConfigView { snapshot: &NoConfig::default(), window: None };
     let emit = handle(&TranslateSelection { ids: vec!["n1".into()], dx: 0.5, dy: -0.25, dz: 0.0, phase: None, reason: None }, &view, &cfg).expect("emit");
-    assert!(emit.coalesce_key.is_none(), "a gumball gesture never amends");
     let [Fem2dMutation::MoveSelection(leaf)] = emit.artifact_mutations.as_slice() else { panic!("one relative leaf: {:?}", emit.artifact_mutations) };
     assert_eq!((leaf.node_ids.clone(), leaf.dx, leaf.dy), (vec!["n1".to_string()], 0.5, -0.25));
     assert!(handle(&TranslateSelection { ids: vec!["n1".into()], dx: 0.5, dy: 0.0, dz: 0.0, phase: Some("stream".into()), reason: None }, &view, &cfg).is_err());

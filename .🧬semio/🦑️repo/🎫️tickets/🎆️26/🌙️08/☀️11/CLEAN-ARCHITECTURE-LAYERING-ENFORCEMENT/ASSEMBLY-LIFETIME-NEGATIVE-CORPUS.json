@@ -1,0 +1,22 @@
+{
+  "schema": "semio.framework.io.assembly-lifetime-negatives/v1",
+  "status": "source-inputs-native-result-pending",
+  "scenarios": [
+    {
+      "id": "implicit-scope",
+      "client": "🧫️assembly-lifetime-native-inputs/🧫️implicit-scope-client.rs",
+      "clientSha256": "8f8c361207b25a7f6c62b50fb6c2e45ae765c90f644e8b75cf887b585fda7885",
+      "originalCompile": "accepted",
+      "borrowedCompile": "rejected",
+      "expectedCode": "E0597"
+    },
+    {
+      "id": "escaping-return",
+      "client": "🧫️assembly-lifetime-native-inputs/🧫️escaping-return-client.rs",
+      "clientSha256": "145dda95aa70748da48447dd06bb9570068f5e8d684294ca2fdd6e7ee4bc7d5a",
+      "originalCompile": "accepted",
+      "borrowedCompile": "rejected",
+      "expectedCode": "E0515"
+    }
+  ]
+}

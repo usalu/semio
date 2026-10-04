@@ -2,9 +2,12 @@ syntax = "proto3";
 package semio.s.mathematical.equation.diff;
 import "🧰️framework/🔨️modules/🌱️value/🧬️schema/🛰️.proto";
 import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
+import "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
 message EquationDiff {
-  optional semio.os.store.ArtifactChild notation = 1;
-  optional semio.os.store.ArtifactChild results = 2;
-  optional semio.os.store.ArtifactChild computed = 3;
-  optional semio.framework.value.DslValue equation = 4;
+  optional semio.s.mathematical.equation.artifact.EquationGraph graph = 1;
+  optional semio.s.mathematical.equation.artifact.EquationGeometry geometry = 2;
+  optional semio.os.store.ArtifactChild notation = 3;
+  optional semio.os.store.ArtifactChild results = 4;
+  optional semio.os.store.ArtifactChild computed = 5;
+  optional semio.framework.value.DslValue equation = 6;
 }

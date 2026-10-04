@@ -6,9 +6,12 @@ use crate::ProgramMutation;
 use crate::ProgramSnapshot;
 
 /// ↩️ Undo a delete by recreating the captured row. Missing target ⇒ nothing to undo.
-pub fn inverse(payload: &super::DeleteOptionEvaluation, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+pub fn inverse(payload: &super::DeleteOptionEvaluation, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.options.iter().find(|row| row.header.id == payload.id) {
         Some(existing) => vec![ProgramMutation::CreateOptionEvaluation(super::super::create_option_evaluation::CreateOptionEvaluation { option_evaluation: existing.clone() })],
         None => Vec::new(),
     }
+
+    })())
 }

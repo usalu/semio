@@ -10,57 +10,7 @@ use crate::artifact::*;
 use crate::host::*;
 use crate::registry::*;
 
-// #region 🔖️Catalogue
-/// 🌿️ Nested catalogue group authored by neuron-kind module authors.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
-pub struct CatalogueGroup {
-    pub id: String,
-    pub title: String,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[value(default, skip_serializing_if = "Vec::is_empty")]
-    pub items: Vec<CatalogueItem>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[value(default, skip_serializing_if = "Vec::is_empty")]
-    pub groups: Vec<CatalogueGroup>,
-}
-
-/// 📚️ Catalogue section for drag-and-drop palette.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
-pub struct CatalogueSection {
-    pub id: String,
-    pub title: String,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[value(default, skip_serializing_if = "Vec::is_empty")]
-    pub items: Vec<CatalogueItem>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[value(default, skip_serializing_if = "Vec::is_empty")]
-    pub groups: Vec<CatalogueGroup>,
-}
-
-/// 🧷️ Draggable catalogue entry.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
-pub struct CatalogueItem {
-    pub kind: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[value(skip_serializing_if = "Option::is_none")]
-    pub neuron_kind: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[value(skip_serializing_if = "Option::is_none")]
-    pub action: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[value(skip_serializing_if = "Option::is_none")]
-    pub format: Option<String>,
-    pub name: String,
-    pub abbreviation: String,
-    pub icon: String,
-    pub summary: String,
-}
+pub use semio_framework_artifact_flow_flow::catalogue::*;
 
 /// 📚️ Extension plus static widget sections for side palettes (spotlight merges static in the host).
 pub fn flow_palette_catalogue_sections() -> Vec<CatalogueSection> {
@@ -148,22 +98,14 @@ fn static_catalogue_sections() -> Vec<CatalogueSection> {
 }
 
 pub(crate) fn merge_catalogue_sections(host_json: &str) -> Result<Vec<CatalogueSection>, FlowCoreError> {
-    let mut sections: Vec<CatalogueSection> = if host_json.trim().is_empty() { vec![] } else { crate::os_pack::json::from_json_str(host_json)? };
+    let mut sections: Vec<CatalogueSection> = if host_json.trim().is_empty() { vec![] } else { semio_framework_pack_json::from_json_str(host_json, semio_framework_pack_json::JsonMemberPolicy::Reject)? };
     sections.extend(static_catalogue_sections());
     Ok(sections)
 }
 
-pub(crate) fn titleize_module(module: &str) -> String {
-    let mut chars = module.chars();
-    match chars.next() {
-        None => String::new(),
-        Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
-    }
-}
-
 /// 📚️ Serializes module-grouped operator catalogue sections for host catalogue seeding.
 pub fn flow_operator_catalogue_json() -> String {
-    crate::os_pack::json::to_json_string(&flow_catalogue_sections())
+    semio_framework_pack_json::to_json_string(&flow_catalogue_sections())
 }
 
 /// 🛍️ The APP-STATIC catalogue payload: every registered operator's wire record plus the palette
@@ -211,7 +153,7 @@ pub fn flow_app_catalogue_json_shared() -> std::sync::Arc<str> {
             return std::sync::Arc::clone(json);
         }
     }
-    let json: std::sync::Arc<str> = std::sync::Arc::from(crate::os_pack::json::to_json_string(&flow_app_catalogue()).into_boxed_str());
+    let json: std::sync::Arc<str> = std::sync::Arc::from(semio_framework_pack_json::to_json_string(&flow_app_catalogue()).into_boxed_str());
     *cache = Some((generation, std::sync::Arc::clone(&json)));
     json
 }
@@ -220,35 +162,6 @@ pub fn flow_app_catalogue_json_shared() -> std::sync::Arc<str> {
 /// signature returns — ONE copy of the shared text per instance, never a rebuild.
 pub fn flow_app_catalogue_json() -> String {
     flow_app_catalogue_json_shared().to_string()
-}
-
-/// 🧠️ Serializes operator catalogue entries for neuron port layout seeding — the WIRE form, for a
-/// consumer that lives across a boundary (the browser's node-graph surface). An in-process caller
-/// takes [`flow_neuron_kind_info_map`] instead: this catalogue is ~108 kB of JSON, and serializing
-/// it here only to parse it back one call later cost 11-26 ms of every single evaluation tick
-/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-pub fn flow_neuron_kind_infos_json() -> String {
-    let registry = flow_extension_registry();
-    crate::os_pack::json::to_json_string(&registry.operator_infos().cloned().collect::<Vec<_>>())
-}
-
-/// 🧠️ The same operator catalogue as the id-keyed map a `FlowHost` actually indexes, built straight
-/// off the registry with no JSON in between, and SHARED: the map is a pure projection of the
-/// registry, so it is rebuilt exactly once per [`flow_extension_registry_generation`] and every host
-/// after that clones an `Arc`, not 108 kB of operator records.
-pub fn flow_neuron_kind_info_map() -> std::sync::Arc<std::collections::HashMap<String, OperatorInfo>> {
-    static CACHE: std::sync::LazyLock<std::sync::Mutex<Option<(u64, std::sync::Arc<std::collections::HashMap<String, OperatorInfo>>)>>> = std::sync::LazyLock::new(|| std::sync::Mutex::new(None));
-    let generation = flow_extension_registry_generation();
-    let mut cache = CACHE.lock().expect("flow neuron kind info cache");
-    if let Some((cached_generation, infos)) = cache.as_ref() {
-        if *cached_generation == generation {
-            return infos.clone();
-        }
-    }
-    let registry = flow_extension_registry();
-    let infos = std::sync::Arc::new(registry.operator_infos().map(|info| (info.id.clone(), info.clone())).collect());
-    *cache = Some((generation, std::sync::Arc::clone(&infos)));
-    infos
 }
 
 /// 🌊️ Default LOD mode id for automatic camera-driven detail.
@@ -284,7 +197,8 @@ fn channel_spec_to_node_graph_record(spec: &ChannelSpec) -> ui_wgpu::wgpu::NodeG
         full_name: spec.full_name.clone(),
         operators: spec.operators.clone(),
         value_types: spec.value_types.clone(),
-        default_json: spec.default.as_ref().map(crate::os_pack::json::to_json_string),
+        item_types: spec.item_types.clone(),
+        default_json: spec.default.as_ref().map(semio_framework_pack_json::to_json_string),
         label: spec.label.clone(),
         cardinality: spec.cardinality.symbol(),
     }
@@ -326,7 +240,8 @@ fn node_graph_record_to_channel_spec(record: &ui_wgpu::wgpu::NodeGraphOperatorCh
         full_name: record.full_name.clone(),
         operators: record.operators.clone(),
         value_types: record.value_types.clone(),
-        default: record.default_json.as_ref().and_then(|value| crate::os_pack::json::from_json_str(value).ok()),
+        item_types: record.item_types.clone(),
+        default: record.default_json.as_ref().and_then(|value| semio_framework_pack_json::from_json_str(value, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()),
         label: record.label.clone(),
         cardinality: neural::Cardinality::from_symbol(&record.cardinality).unwrap_or_default(),
     }
@@ -364,15 +279,15 @@ pub fn flow_backed_node_graph_extras(host_snapshot: &FlowHostSnapshot, lod_mode:
         status
     });
     FlowBackedNodeGraphExtras {
-        host_snapshot_json: Some(crate::os_pack::json::to_json_string(host_snapshot)),
+        host_snapshot_json: Some(semio_framework_pack_json::to_json_string(host_snapshot)),
         capabilities_json: Some(r#"{"engine":"flow","spotlight":true,"noteEdit":true,"clusters":true,"previewToggle":true}"#.into()),
-        lod_json: Some(crate::os_pack::json::to_string(&crate::os_pack::json::object([
-            ("automatic".to_string(), crate::os_pack::json::Value::Bool(automatic)),
-            ("forcedLabel".to_string(), if automatic { crate::os_pack::json::Value::Null } else { crate::os_pack::json::Value::String(lod_mode.to_string()) }),
-            ("proximityDistance".to_string(), crate::os_pack::json::Value::Number(proximity_distance.into())),
-            ("gridVisible".to_string(), crate::os_pack::json::Value::Bool(grid_visible)),
-            ("gridSnapEnabled".to_string(), crate::os_pack::json::Value::Bool(grid_snap_enabled)),
-            ("gridFactor".to_string(), crate::os_pack::json::Value::Number(grid_factor.into())),
+        lod_json: Some(semio_framework_pack_json::to_string(&semio_framework_pack_json::object([
+            ("automatic".to_string(), semio_framework_pack_json::Value::Bool(automatic)),
+            ("forcedLabel".to_string(), if automatic { semio_framework_pack_json::Value::Null } else { semio_framework_pack_json::Value::String(lod_mode.to_string()) }),
+            ("proximityDistance".to_string(), semio_framework_pack_json::Value::Number(proximity_distance.into())),
+            ("gridVisible".to_string(), semio_framework_pack_json::Value::Bool(grid_visible)),
+            ("gridSnapEnabled".to_string(), semio_framework_pack_json::Value::Bool(grid_snap_enabled)),
+            ("gridFactor".to_string(), semio_framework_pack_json::Value::Number(grid_factor.into())),
         ]))),
         eval_json: session.map(|session| session.eval_json().to_string()),
         computing_json: None,

@@ -187,7 +187,7 @@ impl ArtifactSerializer for SemioDrawingToPdf {
     const INTO: Dialect = INTO_DIALECT;
 
     async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        drawing_to_pdf(from).map_err(store::PackError::Schema)
+        drawing_to_pdf(from).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))
     }
 }
 //#endregion 🔖️Serializer

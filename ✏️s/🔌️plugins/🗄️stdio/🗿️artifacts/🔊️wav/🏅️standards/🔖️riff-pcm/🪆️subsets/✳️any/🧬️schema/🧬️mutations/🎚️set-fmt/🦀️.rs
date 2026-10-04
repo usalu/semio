@@ -17,9 +17,12 @@ impl protocol::MutationKind<WavSnapshot, WavMutation> for SetFmt {
     fn diff(&self, base: &WavSnapshot) -> protocol::MutationOutcome<<WavMutation as Mutation<WavSnapshot>>::Diff> {
         agg_diff(&WavMutation::SetFmt(self.clone()), base)
     }
-    fn inverse(&self, base: &WavSnapshot) -> Vec<WavMutation> {
-        agg_inverse(&WavMutation::SetFmt(self.clone()), base)
-    }
+    fn inverse(&self, base: &WavSnapshot) -> Result<Vec<WavMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&WavMutation::SetFmt(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set fmt", "fmt-Chunk setzen")
     }

@@ -12,10 +12,16 @@
         "commit": "explicit",
         "applyLabel": "Apply",
         "discardLabel": "Discard",
-        "conflictLabel": "The document changed."
-        ,"applyingLabel": "Preparing draft"
-        ,"cancelLabel": "Cancel"
-        ,"failedLabel": "The draft could not be applied"
+        "conflictLabel": "The document changed.",
+        "applyingLabel": "Preparing draft",
+        "cancelLabel": "Cancel",
+        "failedLabel": "The draft could not be applied",
+        "syntaxErrorLabel": "The source contains invalid syntax.",
+        "validationErrorLabel": "The draft does not match the document format.",
+        "pathLabel": "Path",
+        "lineLabel": "Line",
+        "columnLabel": "Column",
+        "publicationRevision": "18446744073709551610"
       },
       "expected": {
         "action": "replaceSnapshotSource",
@@ -38,10 +44,16 @@
         "commit": "explicit",
         "applyLabel": "Anwenden",
         "discardLabel": "Verwerfen",
-        "conflictLabel": "Das Dokument wurde geändert."
-        ,"applyingLabel": "Entwurf wird vorbereitet"
-        ,"cancelLabel": "Abbrechen"
-        ,"failedLabel": "Entwurf konnte nicht angewendet werden"
+        "conflictLabel": "Das Dokument wurde geändert.",
+        "applyingLabel": "Entwurf wird vorbereitet",
+        "cancelLabel": "Abbrechen",
+        "failedLabel": "Entwurf konnte nicht angewendet werden",
+        "syntaxErrorLabel": "Der Quelltext enthält ungültige Syntax.",
+        "validationErrorLabel": "Der Entwurf entspricht nicht dem Dokumentformat.",
+        "pathLabel": "Pfad",
+        "lineLabel": "Zeile",
+        "columnLabel": "Spalte",
+        "publicationRevision": "18446744073709551610"
       },
       "expected": {
         "action": "setSnapshotValue",

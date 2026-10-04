@@ -2,21 +2,13 @@ use super::*;
 use crate::LayoutPoint;
 use ::store::os_store::test_support::assert_dsl_pack_equivalence;
 use semio_framework_graph::manifest::PropertyValue;
-use std::collections::BTreeMap;
 
 fn sample_rule_state() -> RewritingSnapshot {
-    let mut parameter_bindings = BTreeMap::new();
-    parameter_bindings.insert("label".to_string(), PropertyValue::String("nakagin-core".into()));
-    parameter_bindings.insert("count".to_string(), PropertyValue::Number(3.0));
-    let mut rule_layout = BTreeMap::new();
-    rule_layout.insert("a".to_string(), LayoutPoint::from((10.5, -20.25)));
-    RewritingSnapshot {
-        before_fixture_json: "{\"schema\":\"trinity.graph\",\"name\":\"x \\\"quoted\\\"\\nline\"}".to_string(),
-        lhs_json: r#"{"pattern":{"leftVar":"a","leftKind":"Piece"}}"#.to_string(),
-        rhs_json: r#"{"set":[{"var":"a","prop":"label","value":"$label"}]}"#.to_string(),
-        parameter_bindings,
-        rule_layout,
-    }
+    let mut state = crate::editor::rewriting::default_rule_state();
+    state.working_graph.name = "x \"quoted\"\nline".into();
+    state.parameter_bindings.insert("count".into(), PropertyValue::Number(3.0));
+    state.rule_layout.insert("a".into(), LayoutPoint::from((10.5, -20.25)));
+    state
 }
 
 #[semio_framework_async_macros::async_test]

@@ -4,7 +4,7 @@ use crate::os_spr::{MutationKind, MutationOutcome, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🧬️Payload
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, crate::os_dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, crate::os_dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "change-layout")]
@@ -18,7 +18,8 @@ impl MutationKind<FlowHostSnapshot, FlowMutation> for ChangeLayout {
     fn diff(&self, _base: &FlowHostSnapshot) -> MutationOutcome<FlowDiff> {
         MutationOutcome::new(FlowDiff::from(FlowDelta::Layout(self.entries.clone())))
     }
-    fn inverse(&self, base: &FlowHostSnapshot) -> Vec<FlowMutation> {
+    fn inverse(&self, base: &FlowHostSnapshot) -> Result<Vec<FlowMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         let mut layout: std::collections::BTreeMap<String, WidgetLayout> = base.layout.iter().map(|(id, layout)| (id.clone(), layout.clone())).collect();
         let mut inverse = Vec::with_capacity(self.entries.len());
         for entry in &self.entries {
@@ -30,7 +31,9 @@ impl MutationKind<FlowHostSnapshot, FlowMutation> for ChangeLayout {
             }
         }
         inverse
-    }
+    
+    })())
+}
     fn label(&self) -> crate::LocalizedLabel {
         crate::LocalizedLabel::native("Change layout", "Layout ändern")
     }

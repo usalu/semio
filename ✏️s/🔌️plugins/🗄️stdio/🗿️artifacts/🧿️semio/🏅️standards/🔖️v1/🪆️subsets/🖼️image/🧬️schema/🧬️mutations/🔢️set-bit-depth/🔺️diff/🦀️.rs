@@ -11,7 +11,7 @@ use protocol::Mutation;
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff(base: &SemioImageSnapshot, bit_depth: u8) -> protocol::MutationOutcome<SemioImageDiff> {
     if base.bit_depth == bit_depth {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Bit depth is already this value.".to_string());
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Bit depth is already this value.".to_string());
     }
     Mutation::diff(&SemioImageMutation::SetBitDepth(set_bit_depth::SetBitDepth { bit_depth }), base)
 }

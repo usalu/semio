@@ -1,13 +1,14 @@
+import { inspectRustCompileReferences, type RustCompileReference } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 import { expect, test } from "bun:test";
 import { lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import Ajv from "ajv/dist/2020.js";
 import { normalize } from "pathe";
 import {inspectRustModuleGraph,inspectRustModuleGraphFacts,rustModuleScopeProof} from "../../../🔍️discovery/🟦️.ts";
-import { rustSourceReferences, rustSourceTargets, type RustSourceReference } from "../../../🕸️dependencies/🧭️direction/🦀️source/🟦️.ts";
+import { rustSourceTargets } from "../../../🕸️dependencies/🧭️direction/🦀️source/🟦️.ts";
 import { inspectRustSourceInputs } from "../../../🕸️dependencies/🧭️direction/🦀️source/🏃️execution/🟦️.ts";
 
-type Case = Readonly<{ id: string; source: string; files: Readonly<Record<string, string>>; nativeInputs: readonly string[]; result: Readonly<{ state: "resolved"; references: readonly RustSourceReference[] } | { state: "unsupported-expression" }>; removal: Readonly<{ paths: readonly string[]; native: boolean }> | null }>;
+type Case = Readonly<{ id: string; source: string; files: Readonly<Record<string, string>>; nativeInputs: readonly string[]; result: Readonly<{ state: "resolved"; references: readonly RustCompileReference[] } | { state: "unsupported-expression" }>; removal: Readonly<{ paths: readonly string[]; native: boolean }> | null }>;
 const library = resolve(import.meta.dir, "../../.."), read = (path: string): unknown => JSON.parse(readFileSync(join(library, path), "utf8"));
 const corpus = read("🧫️fixtures/🧱️rust-source-direction/🧾️attributes/🔣️.json") as { readonly schemaVersion: 1; readonly featureCases:readonly Readonly<{id:string;source:string;modulePath:readonly string[];resolved:boolean;files:Readonly<Record<string,string>>;mountPath:readonly string[];mountResolved:boolean;native:boolean;diagnostic:string}>[]; readonly cases: readonly Case[] };
 
@@ -55,9 +56,9 @@ for (const row of corpus.cases) test(row.id, async () => {
     expect(runtimeStatus, runtimeErr).toBe(0);
     expect(runtimeOut.replaceAll("\r\n", "\n")).toBe("[DEBUG] attribute oracle\n");
     if (row.result.state === "unsupported-expression") {
-      expect(() => rustSourceReferences(row.source), row.id).toThrow("Unsupported Rust compile attribute expression");
+      expect(() => inspectRustCompileReferences(row.source), row.id).toThrow("Unsupported Rust compile attribute expression");
     } else {
-      const references = rustSourceReferences(row.source), targets = rustSourceTargets("source.rs", references), sources = new Set(["source.rs"]);
+      const references = inspectRustCompileReferences(row.source), targets = rustSourceTargets("source.rs", references), sources = new Set(["source.rs"]);
       expect(references, row.id).toEqual(row.result.references);
       expect(await inspectRustSourceInputs(root, targets, sources), row.id).toEqual([]);
       if (row.removal) {
@@ -66,7 +67,7 @@ for (const row of corpus.cases) test(row.id, async () => {
         expect(after.status === 0, row.id + ": " + after.stdout + after.stderr).toBe(row.removal.native);
         if (!row.removal.native) expect(after.stderr).toContain("couldn't read");
         expect(readFileSync(join(root, "source.rs"), "utf8"), row.id).toBe(row.source);
-        expect(rustSourceReferences(row.source), row.id).toEqual(row.result.references);
+        expect(inspectRustCompileReferences(row.source), row.id).toEqual(row.result.references);
         expect(await inspectRustSourceInputs(root, targets, sources), row.id).toEqual(row.result.references.filter((reference) => row.removal!.paths.includes(reference.path)).map((reference) => ({ code: "missing-input", to: reference.path, kind: reference.kind, line: reference.line })));
       }
     }

@@ -12,8 +12,7 @@ seq:
     size-eos: true
 enums:
   mutation_kind:
-    2: change_header_fields
-    3: insert_palette_entry
-    4: remove_palette_entry
-    5: replace_palette_entry
-    6: replace_pixel_data
+    7: set_snapshot
+    8: patch_snapshot
+    9: paint_indexed_region
+    10: paint_direct_region

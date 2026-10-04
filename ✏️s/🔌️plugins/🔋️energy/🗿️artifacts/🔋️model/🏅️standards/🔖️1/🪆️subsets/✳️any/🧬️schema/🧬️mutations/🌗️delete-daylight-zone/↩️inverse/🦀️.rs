@@ -6,10 +6,13 @@ use crate::EnergyModelSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ A refused or no-op forward step has nothing to undo, so it answers with no steps at all.
-pub fn inverse(payload: &super::DeleteDaylightZone, base: &EnergyModelSnapshot) -> Vec<EnergyModelMutation> {
+pub fn inverse(payload: &super::DeleteDaylightZone, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.model.daylight_zones.iter().find(|item| item.id == payload.id) {
         Some(item) => vec![vocabulary::create_daylight_zone(item.id, item.zone_id, item.illuminance_target_lux, item.glare_limit, item.window_transmittance)],
         _ => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

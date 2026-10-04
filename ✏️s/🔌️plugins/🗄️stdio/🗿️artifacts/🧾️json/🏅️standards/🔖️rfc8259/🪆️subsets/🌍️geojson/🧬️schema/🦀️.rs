@@ -404,14 +404,14 @@ pub const CODE_LEGACY_CRS: &str = "stdio.json.geojson.legacy-crs";
 pub const CODE_LEFT_HANDED_RING: &str = "stdio.json.geojson.left-handed-ring";
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diagnostic(code: &'static str, severity: dsl::Severity, message: String) -> dsl::Diagnostic {
-    dsl::Diagnostic { code: dsl::FaultCode::new(code), severity, span: dsl::TextSpan::at(1, 1), message, expected: None, scope: dsl::FaultScope::default() }
+fn diagnostic(code: &'static str, severity: semio_framework_diagnostic::Severity, message: String) -> semio_framework_diagnostic::Diagnostic {
+    semio_framework_diagnostic::Diagnostic { code: semio_framework_diagnostic::FaultCode::new(code), severity, span: semio_framework_diagnostic::TextSpan::at(1, 1), message, expected: None, scope: semio_framework_diagnostic::FaultScope::default() }
 }
 
 /// 🛡️ RFC 7946 conformance of one decoded `JsonSnapshot`: an unreadable document is a hard error; a
 /// GJ2008 `crs` member (removed by §4) and rings against the right-hand rule (a §3.1.6 SHOULD) are soft.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn check_geojson_conformance(snapshot: &JsonSnapshot) -> Vec<dsl::Diagnostic> {
+pub fn check_geojson_conformance(snapshot: &JsonSnapshot) -> Vec<semio_framework_diagnostic::Diagnostic> {
     let mut proceed=|_|true;
     let mut control=semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(&mut proceed,semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits{max_rows:usize::MAX,..semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits::default()});
     check_geojson_conformance_controlled(snapshot,&mut control).expect("borrowed GeoJSON conformance without cancellation")
@@ -446,7 +446,7 @@ pub mod derived_construction {
             Self { snapshot }
         }
 
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(Self { snapshot: <JsonSnapshot as store::ArtifactDsl>::parse_dsl(text)? })
         }
 
@@ -464,8 +464,8 @@ pub mod derived_construction {
             Ok(self)
         }
 
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            let hard: Vec<dsl::Diagnostic> = check_geojson_conformance(&self.snapshot).into_iter().filter(|d| matches!(d.severity, dsl::Severity::Error | dsl::Severity::Fatal)).collect();
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
+            let hard: Vec<semio_framework_diagnostic::Diagnostic> = check_geojson_conformance(&self.snapshot).into_iter().filter(|d| matches!(d.severity, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)).collect();
             if hard.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -504,7 +504,7 @@ pub mod derived_analysis {
             let mut confidence = inner.confidence;
             if let Some(snapshot) = &inner.parts.snapshot {
                 let checks = check_geojson_conformance(snapshot);
-                if checks.iter().any(|d| matches!(d.severity, dsl::Severity::Error | dsl::Severity::Fatal)) {
+                if checks.iter().any(|d| matches!(d.severity, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)) {
                     confidence = IoConfidence::Low;
                 }
                 diagnostics.extend(checks);

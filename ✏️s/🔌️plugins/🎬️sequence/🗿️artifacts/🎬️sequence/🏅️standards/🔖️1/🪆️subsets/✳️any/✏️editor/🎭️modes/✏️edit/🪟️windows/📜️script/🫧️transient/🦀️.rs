@@ -36,9 +36,12 @@ impl protocol::Mutation<SequenceScriptWindowTransient> for SequenceScriptWindowT
     fn diff(&self, _base: &SequenceScriptWindowTransient) -> protocol::MutationOutcome<Self::Diff> {
         match self { Self::Snapshot { transient } => protocol::MutationOutcome::new(transient.clone()) }
     }
-    fn inverse(&self, base: &SequenceScriptWindowTransient) -> Vec<Self> {
+    fn inverse(&self, base: &SequenceScriptWindowTransient) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![Self::Snapshot { transient: base.clone() }]
-    }
+    
+    })())
+}
 }
 
 impl protocol::MutationDiff<SequenceScriptWindowTransient> for SequenceScriptWindowTransient {
@@ -49,13 +52,13 @@ impl protocol::MutationDiff<SequenceScriptWindowTransient> for SequenceScriptWin
 impl store::ArtifactDsl for SequenceScriptWindowTransient {
     const EXTENSION: &'static str = "sequencescriptwindowtransient";
     fn envelope_id() -> &'static str { "s.sequence.sequence.scriptwindowtransient" }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = store::semio_format::split_text_preamble(text).map_or(text, |(_, body)| body);
-        let json = dsl::os_pack::json::parse(body).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))?;
-        dsl::FromValue::from_value(dsl::os_pack::json::to_dsl_value(&json)).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+        let json = semio_framework_pack_json::parse(body, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error.into_value_error(), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
+        semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&json)).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
-        let body = dsl::os_pack::json::to_string_pretty(&dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(self)));
+        let body = semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(self)));
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid Sequence transient envelope");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -63,30 +66,30 @@ impl store::ArtifactDsl for SequenceScriptWindowTransient {
 
 impl store::ArtifactPack for SequenceScriptWindowTransient {
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let body = dsl::os_pack::json::to_string(&dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(self))).into_bytes();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        let body = semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(self))).into_bytes();
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::from(error.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &body))
     }
     fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, body) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::Schema(error.to_string()))?;
-        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) { return Err(store::PackError::Schema("Sequence transient pack envelope mismatch".into())); }
-        let json = dsl::os_pack::json::parse_bytes(&body).map_err(|error| store::PackError::Schema(error.to_string()))?;
-        dsl::FromValue::from_value(dsl::os_pack::json::to_dsl_value(&json)).map_err(|error| store::PackError::Schema(error.to_string()))
+        let (envelope, body) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::from(error.into_value_error()))?;
+        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) { return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "Sequence transient pack envelope mismatch"))); }
+        let json = semio_framework_pack_json::parse_bytes(&body, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| store::PackError::from(error.into_value_error()))?;
+        semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&json)).map_err(|error| store::PackError::from(error))
     }
-    fn record_spec() -> Option<dsl::RecordSpec> { None }
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> { None }
 }
 
 impl protocol::OpText for SequenceScriptWindowTransientMutation {
-    fn print_op(&self) -> String { dsl::json::to_json_string(self) }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        dsl::json::from_json_str(line).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+    fn print_op(&self) -> String { semio_framework_pack_json::to_json_string(self) }
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        semio_framework_pack_json::from_json_str(line, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 }
 impl protocol::OpBinary for SequenceScriptWindowTransientMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> { Ok(protocol::OpText::print_op(self).into_bytes()) }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))?;
-        dsl::json::from_json_str(text).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
+        let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(semio_framework_value::ValueError::from(error))))?;
+        semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(error)))
     }
 }
 
@@ -101,7 +104,7 @@ impl semio_framework_value::retirement::RetireOwned for SequenceScriptWindowTran
 
 fn preflight(mutation: &SequenceScriptWindowTransientMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
     let SequenceScriptWindowTransientMutation::Snapshot { transient } = mutation;
-    let footprint = store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: transient.last_run_json.len() };
+    let footprint = store::ArtifactStoreOneItemFootprint::for_ephemeral_item(transient.last_run_json.len());
     footprint.is_admissible().then_some(footprint).ok_or_else(|| "Sequence script transient exceeds its retained publication envelope".into())
 }
 

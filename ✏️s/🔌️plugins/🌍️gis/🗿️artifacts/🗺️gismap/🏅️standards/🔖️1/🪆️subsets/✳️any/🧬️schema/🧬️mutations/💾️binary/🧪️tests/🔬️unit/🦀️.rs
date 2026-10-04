@@ -4,8 +4,8 @@ use crate::schema::{default_document, empty_gis_map_snapshot};
 use crate::GIS_MAP_SCHEMA;
 use serde_json::json;
 
-fn dsl_of(value: &serde_json::Value) -> dsl::DslValue {
-    dsl::DslValue::from(value)
+fn dsl_of(value: &serde_json::Value) -> semio_framework_value::DslValue {
+    semio_framework_value::DslValue::from(value)
 }
 
 fn sample_feature(id: &str) -> MapFeature {
@@ -168,27 +168,27 @@ fn gis_map_nested_value_mutation_and_all_child_handles_retire_one_owner_per_gran
 
     let mutation = GisMapMutation::ReplacePositionData(replace_position_data::ReplacePositionData {
         id: "position".repeat(32),
-        new_data: dsl::DslValue::Object(vec![("nested".repeat(32), dsl::DslValue::Array(vec![dsl::DslValue::String("payload".repeat(128)), dsl::DslValue::Bytes(vec![7; 1024]), dsl::DslValue::String("tail".into())]))]),
+        new_data: semio_framework_value::DslValue::Object(vec![("nested".repeat(32), semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::String("payload".repeat(128)), semio_framework_value::DslValue::Bytes(vec![7; 1024]), semio_framework_value::DslValue::String("tail".into())]))]),
     });
     drain(store::ArtifactOwnedValueRetirementFactory::retire_owned(&GisMapMutationRetirementFactory, mutation));
 }
 
 #[test]
 fn gis_map_all_twelve_mutation_variants_preserve_catalog_order_and_zero_grant_ownership() {
-    let feature = |id: &str| MapFeature { id: id.into(), data: dsl::DslValue::Null };
+    let feature = |id: &str| MapFeature { id: id.into(), data: semio_framework_value::DslValue::Null };
     let mutations = vec![
         GisMapMutation::CreatePosition(create_position::CreatePosition { index: 0, item: feature("position") }),
         GisMapMutation::DeletePosition(delete_position::DeletePosition { id: "position".into() }),
         GisMapMutation::ReorderPositions(reorder_positions::ReorderPositions { id: "position".into(), to_index: 1 }),
-        GisMapMutation::ReplacePositionData(replace_position_data::ReplacePositionData { id: "position".into(), new_data: dsl::DslValue::Null }),
+        GisMapMutation::ReplacePositionData(replace_position_data::ReplacePositionData { id: "position".into(), new_data: semio_framework_value::DslValue::Null }),
         GisMapMutation::CreateRoute(create_route::CreateRoute { index: 0, item: feature("route") }),
         GisMapMutation::DeleteRoute(delete_route::DeleteRoute { id: "route".into() }),
         GisMapMutation::ReorderRoutes(reorder_routes::ReorderRoutes { id: "route".into(), to_index: 1 }),
-        GisMapMutation::ReplaceRouteData(replace_route_data::ReplaceRouteData { id: "route".into(), new_data: dsl::DslValue::Null }),
+        GisMapMutation::ReplaceRouteData(replace_route_data::ReplaceRouteData { id: "route".into(), new_data: semio_framework_value::DslValue::Null }),
         GisMapMutation::CreateRegion(create_region::CreateRegion { index: 0, item: feature("region") }),
         GisMapMutation::DeleteRegion(delete_region::DeleteRegion { id: "region".into() }),
         GisMapMutation::ReorderRegions(reorder_regions::ReorderRegions { id: "region".into(), to_index: 1 }),
-        GisMapMutation::ReplaceRegionData(replace_region_data::ReplaceRegionData { id: "region".into(), new_data: dsl::DslValue::Null }),
+        GisMapMutation::ReplaceRegionData(replace_region_data::ReplaceRegionData { id: "region".into(), new_data: semio_framework_value::DslValue::Null }),
     ];
     for mutation in mutations {
         let mut retirement = store::ArtifactOwnedValueRetirementFactory::retire_owned(&GisMapMutationRetirementFactory, mutation);

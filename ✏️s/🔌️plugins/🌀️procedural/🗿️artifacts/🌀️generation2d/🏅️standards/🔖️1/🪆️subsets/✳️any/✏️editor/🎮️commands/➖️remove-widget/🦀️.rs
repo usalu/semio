@@ -9,7 +9,7 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use crate::standards::v1::subsets::any::schema::host_operations;
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "remove-widget")]
 pub struct RemoveWidget {
     pub widget_id: String,

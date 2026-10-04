@@ -6,7 +6,7 @@ use framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
 
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -214,12 +214,12 @@ impl Din4108Snapshot {
 //#region 🌉️ExternalCodecBridge
 /// 📤️ Canonical JSON projection of a [`Din4108Snapshot`].
 pub fn encode_din4108_snapshot_json(snapshot: &Din4108Snapshot) -> String {
-    pack::json::to_json_string(snapshot)
+    semio_framework_pack_json::to_json_string(snapshot)
 }
 
 /// 📥️ Inverse of [`encode_din4108_snapshot_json`].
 pub fn decode_din4108_snapshot_json(text: &str) -> Result<Din4108Snapshot, String> {
-    pack::json::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 
 /// 📖️ Parses a committed `.dsl.semio` artifact into a [`Din4108Snapshot`].

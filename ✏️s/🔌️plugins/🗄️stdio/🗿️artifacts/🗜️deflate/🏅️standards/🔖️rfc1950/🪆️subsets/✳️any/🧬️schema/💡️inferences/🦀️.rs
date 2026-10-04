@@ -10,7 +10,6 @@
 
 use crate::standards::v_rfc1950::subsets::any::schema::snapshot::DeflateSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::window::compute_deflate_window;
 //#region 🔖️Inference
@@ -25,8 +24,11 @@ pub struct DeflateInference {
 }
 
 impl protocol::Inference<DeflateSnapshot> for DeflateInference {
-    fn infer(snapshot: &DeflateSnapshot) -> Self {
+    fn infer(snapshot: &DeflateSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { window: compute_deflate_window(snapshot) }
+    
+        })
     }
 }
 
@@ -35,7 +37,9 @@ impl protocol::Inference<DeflateSnapshot> for DeflateInference {
 /// all-zero `Default` would disagree with the honest compute and break the law.
 impl Default for DeflateInference {
     fn default() -> Self {
-        <Self as protocol::Inference<DeflateSnapshot>>::infer(&DeflateSnapshot::default())
+        let snapshot = &DeflateSnapshot::default();
+
+        Self { window: compute_deflate_window(snapshot) }
     }
 }
 
@@ -51,17 +55,6 @@ impl protocol::InferenceSpec<DeflateSnapshot> for DeflateInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 💡️ No `InferredField`s here — `window` is a fixed-field header read plus a single fold over
-/// `payload`, already O(n) in payload size with no honest per-entity incremental decomposition (a
-/// merkle dep-chain over one flat `Vec<u8>` payload costs more than the fold it would cache) —
-/// the default `infer_cached` passthrough is exact.
-impl ArtifactInferrer for crate::standards::v_rfc1950::subsets::any::schema::DeflateBuilder {
-    type Snapshot = DeflateSnapshot;
-    type Inference = DeflateInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.deflate.inference`'s facet leaves into the OS-wide inference catalog —

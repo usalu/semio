@@ -1,0 +1,48 @@
+{
+  "state": "MountedTestOnlyPortable",
+  "pairs": [
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "beforeRegion": "{\n  \"version\": \"0.2.0\",\n  \"configurations\": [\n",
+      "afterRegion": "{\n  \"version\": \"0.2.0\",\n  \"configurations\": [\n{\"name\":\"⚖️owned-child-emission-refusal🦀️native\",\"type\":\"node-terminal\",\"request\":\"launch\",\"command\":\"bun nx run @semio-tech/framework-plugin:test --skip-nx-cache --args=\\\"quick child_emission_encoder_refusal_preserves_prior_complete_owned_operations --no-fail-fast\\\"\",\"cwd\":\"${workspaceFolder}\",\"env\":{\"NX_DAEMON\":\"false\",\"NX_CACHE_PROJECT_GRAPH\":\"false\",\"SEMIO_TEST_LEVEL\":\"quick\"},\"presentation\":{\"group\":\"4_gate\",\"order\":900.01251}},\n{\"name\":\"⚖️owned-child-emission-neutral🟦️source\",\"type\":\"node-terminal\",\"request\":\"launch\",\"command\":\"bun nx run workspace:test-retained-window-input-oracle --skip-nx-cache\",\"cwd\":\"${workspaceFolder}\",\"env\":{\"NX_DAEMON\":\"false\",\"NX_CACHE_PROJECT_GRAPH\":\"false\"},\"presentation\":{\"group\":\"4_gate\",\"order\":900.01252}},\n"
+    },
+    {
+      "path": ".vscode/launch.json",
+      "beforeRegion": "{\n  \"version\": \"0.2.0\",\n  \"configurations\": [\n",
+      "afterRegion": "{\n  \"version\": \"0.2.0\",\n  \"configurations\": [\n{\"name\":\"⚖️owned-child-emission-refusal🦀️native\",\"type\":\"node-terminal\",\"request\":\"launch\",\"command\":\"bun nx run @semio-tech/framework-plugin:test --skip-nx-cache --args=\\\"quick child_emission_encoder_refusal_preserves_prior_complete_owned_operations --no-fail-fast\\\"\",\"cwd\":\"${workspaceFolder}\",\"env\":{\"NX_DAEMON\":\"false\",\"NX_CACHE_PROJECT_GRAPH\":\"false\",\"SEMIO_TEST_LEVEL\":\"quick\"},\"presentation\":{\"group\":\"4_gate\",\"order\":900.01251}},\n{\"name\":\"⚖️owned-child-emission-neutral🟦️source\",\"type\":\"node-terminal\",\"request\":\"launch\",\"command\":\"bun nx run workspace:test-retained-window-input-oracle --skip-nx-cache\",\"cwd\":\"${workspaceFolder}\",\"env\":{\"NX_DAEMON\":\"false\",\"NX_CACHE_PROJECT_GRAPH\":\"false\"},\"presentation\":{\"group\":\"4_gate\",\"order\":900.01252}},\n"
+    }
+  ],
+  "entries": [
+    {
+      "name": "⚖️owned-child-emission-refusal🦀️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-plugin:test --skip-nx-cache --args=\"quick child_emission_encoder_refusal_preserves_prior_complete_owned_operations --no-fail-fast\"",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_CACHE_PROJECT_GRAPH": "false",
+        "SEMIO_TEST_LEVEL": "quick"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.01251
+      }
+    },
+    {
+      "name": "⚖️owned-child-emission-neutral🟦️source",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:test-retained-window-input-oracle --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_CACHE_PROJECT_GRAPH": "false"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.01252
+      }
+    }
+  ]
+}

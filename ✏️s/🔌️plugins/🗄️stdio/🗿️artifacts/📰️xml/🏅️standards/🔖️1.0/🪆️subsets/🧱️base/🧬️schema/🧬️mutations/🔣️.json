@@ -115,6 +115,22 @@
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/base/mutation/set-snapshot/schema.json"
         }
       }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "patchSnapshot"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/base/mutation/patch-snapshot/schema.json"
+        }
+      }
     }
   ]
 }

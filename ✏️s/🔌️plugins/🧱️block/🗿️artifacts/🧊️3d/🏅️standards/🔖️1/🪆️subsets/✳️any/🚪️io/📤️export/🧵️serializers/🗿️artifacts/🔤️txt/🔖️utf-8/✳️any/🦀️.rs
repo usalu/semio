@@ -2,7 +2,7 @@
 
 use store::ArtifactDsl;
 use crate::Block3dSnapshot;
-use semio_framework::io::io_mechanism::{serialize_dsl_txt, Serializer};
+use semio_framework::io::io_mechanism::{serialize_dsl_txt, ArchiveChildren, Serializer};
 use semio_framework::io_schema::{Dialect, IoFidelity, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
 
@@ -18,7 +18,7 @@ pub fn dsl_text(from: &Block3dSnapshot) -> String {
 impl Serializer<Block3dSnapshot> for Block3dIntoTxt {
     const INTO: Dialect = TXT_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn serialize(from: &Block3dSnapshot) -> IoResult<IoPayload> {
+    async fn serialize(from: &Block3dSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
         serialize_dsl_txt(from)
     }
 }

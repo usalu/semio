@@ -4,12 +4,12 @@ use protocol::Inference;
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
     let snapshot = CsvSnapshot::default();
-    assert_eq!(CsvInference::infer(&snapshot), CsvInference::infer(&snapshot));
+    assert_eq!(CsvInference::infer(&snapshot).expect("valid materialized inference fixture"), CsvInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
-    assert_eq!(CsvInference::infer(&CsvSnapshot::default()), CsvInference::default());
+    assert_eq!(CsvInference::infer(&CsvSnapshot::default()).expect("valid materialized inference fixture"), CsvInference::default());
 }
 
 //#region 🔖️ConformanceLaws
@@ -24,20 +24,16 @@ mod conformance_laws {
     use protocol::{DiffCodec, OpBinary};
 
     /// 🧪️ P2-P1: `dsl::parse_grammar` + `dsl::Recognizer::compile` + `.recognize` against the
-    /// REAL fixture body — the snapshot text facet's own real RFC 4180 grammar recognizes the
-    /// genuine `print_dsl` output (envelope-id-normalized, matching how
-    /// `dsl::fixture_sweep::m5_handcrafted_grammar_conformance::dsl_body_from_host_snapshot` feeds the
-    /// Recognizer, mirrored here so this law does not depend on the framework's own harness).
+    /// real declared Record body after its independently checked envelope preamble.
     #[semio_framework_async_macros::async_test]
     async fn grammar_conformance_law() {
         let grammar_text = snapshot::text::COMPONENT_GRAMMAR_SEMIO;
-        let grammar = dsl::parse_grammar(grammar_text).expect("parse snapshot grammar");
-        assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar);
-        let recognizer = dsl::Recognizer::compile(&grammar);
+        let grammar = semio_framework_dsl::parse_grammar(grammar_text).expect("parse snapshot grammar");
+        assert_eq!(grammar.dialect, semio_framework_dsl::SemioDialect::Grammar);
+        let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
         let fixture = crate::examples::demo::PRIMARY_TEXT;
-        let (envelope, body) = store::semio_format::split_text_preamble(fixture).expect("real preamble");
-        let normalized = format!("{}\n{body}", envelope.envelope_id());
-        let ok = recognizer.recognize(&normalized).expect("recognize should not error");
+        let (_, body) = store::semio_format::split_text_preamble(fixture).expect("real preamble");
+        let ok = recognizer.recognize(body).expect("recognize should not error");
         assert!(ok, "snapshot grammar must recognize the real demo fixture body");
     }
 
@@ -52,23 +48,23 @@ mod conformance_laws {
         let snap = snapshot::demo_csv_snapshot();
         let pack_bytes = <snapshot::CsvSnapshot as store::ArtifactPack>::encode_pack(&snap);
         let (_, payload) = store::semio_format::unwrap_binary(&pack_bytes).expect("unwrap_binary");
-        let pack_protocol = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
-        let trace = dsl::walk_protocol(&pack_protocol, &payload).expect("walk snapshot protocol");
+        let pack_protocol = semio_framework_dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
+        let trace = semio_framework_dsl::walk_protocol(&pack_protocol, &payload).expect("walk snapshot protocol");
         assert_eq!(trace.consumed, payload.len(), "snapshot protocol must consume the whole post-envelope payload");
 
         // Spr (mutations binary facet) — a real, non-trivial mutation.
         let mutation = CsvMutation::InsertRecord(crate::schema::mutations::insert_record::InsertRecord { index: 1, record: CsvRecord { fields: vec![CsvField { value: "brand-new".into(), quoted: true }] } });
         let op_bytes = <CsvMutation as OpBinary>::encode_op(&mutation).expect("encode_op");
-        let spr_protocol = dsl::parse_protocol(crate::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
-        let trace = dsl::walk_protocol(&spr_protocol, &op_bytes).expect("walk mutations protocol");
+        let spr_protocol = semio_framework_dsl::parse_protocol(crate::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
+        let trace = semio_framework_dsl::walk_protocol(&spr_protocol, &op_bytes).expect("walk mutations protocol");
         assert_eq!(trace.consumed, op_bytes.len(), "mutations protocol must consume the whole op frame");
 
         // Diff binary facet.
         let mut before = snap.clone();
         let diff = crate::schema::mutations::apply_csv_mutation(&mut before, &mutation);
         let diff_bytes = <CsvDiff as DiffCodec>::encode_diff(diff.diff()).expect("encode_diff");
-        let diff_protocol = dsl::parse_protocol(crate::schema::diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
-        let trace = dsl::walk_protocol(&diff_protocol, &diff_bytes).expect("walk diff protocol");
+        let diff_protocol = semio_framework_dsl::parse_protocol(crate::schema::diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
+        let trace = semio_framework_dsl::walk_protocol(&diff_protocol, &diff_bytes).expect("walk diff protocol");
         assert_eq!(trace.consumed, diff_bytes.len(), "diff protocol must consume the whole diff frame");
     }
 
@@ -90,17 +86,17 @@ mod conformance_laws {
     /// warning, independent of the eventual repo-wide policy gate.
     #[semio_framework_async_macros::async_test]
     async fn committed_grammar_and_protocol_files_parse() {
-        let g1 = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO);
+        let g1 = semio_framework_dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO);
         assert!(g1.is_ok(), "snapshot grammar must parse: {g1:?}");
-        let g2 = dsl::parse_grammar(crate::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO);
+        let g2 = semio_framework_dsl::parse_grammar(crate::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO);
         assert!(g2.is_ok(), "mutations grammar must parse: {g2:?}");
-        let g3 = dsl::parse_grammar(crate::schema::diff::text::COMPONENT_GRAMMAR_SEMIO);
+        let g3 = semio_framework_dsl::parse_grammar(crate::schema::diff::text::COMPONENT_GRAMMAR_SEMIO);
         assert!(g3.is_ok(), "diff grammar must parse: {g3:?}");
-        let p1 = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO);
+        let p1 = semio_framework_dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO);
         assert!(p1.is_ok(), "snapshot protocol must parse: {p1:?}");
-        let p2 = dsl::parse_protocol(crate::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO);
+        let p2 = semio_framework_dsl::parse_protocol(crate::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO);
         assert!(p2.is_ok(), "mutations protocol must parse: {p2:?}");
-        let p3 = dsl::parse_protocol(crate::schema::diff::binary::COMPONENT_PROTOCOL_SEMIO);
+        let p3 = semio_framework_dsl::parse_protocol(crate::schema::diff::binary::COMPONENT_PROTOCOL_SEMIO);
         assert!(p3.is_ok(), "diff protocol must parse: {p3:?}");
     }
 }

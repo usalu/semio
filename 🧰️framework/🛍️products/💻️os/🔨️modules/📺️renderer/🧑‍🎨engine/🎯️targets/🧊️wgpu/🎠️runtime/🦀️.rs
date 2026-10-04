@@ -72,9 +72,9 @@ impl ParallelRuntime {
         compiled: &CompiledHandle,
         caps: &[BrokerCapabilityGrant],
         instantiate_budget: &TurnBudget,
-    ) -> Result<ActorId, String> {
+    ) -> Result<ActorId, semio_framework_plugin_host::activation::ActivationRefusal> {
         let request = semio_framework_actor::activation::KernelActivationRequest { package, plugin_ordinal, kind, lane, window, event };
-        let reservation = self.kernel.reserve_activation(request).await.map_err(|refused| format!("Kernel activation refused: {:?}", refused.reason))?;
+        let reservation = self.kernel.reserve_activation(request).await.map_err(|refused| semio_framework_plugin_host::activation::ActivationRefusal::host(format!("Kernel activation refused: {:?}", refused.reason)))?;
         semio_framework_plugin_host::activation::install_actor(&mut self.kernel, &self.guest_runtime, &self.shards, reservation, compiled, caps, instantiate_budget).await
     }
 

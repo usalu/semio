@@ -20,7 +20,7 @@ pub const REGISTRY: &[Entry] = &[
     crate::schema::mutations::remove_ifd::binary::CODEC,
     crate::schema::mutations::replace_tag::binary::CODEC,
     crate::schema::mutations::remove_tag::binary::CODEC,
-    crate::schema::mutations::replace_pixels::binary::CODEC,
+    crate::schema::mutations::paint_region::binary::CODEC,
 ];
 //#endregion Registry
 

@@ -6,10 +6,13 @@ use crate::mutations::add_product;
 use crate::{Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &RemoveProduct, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
+pub fn inverse(payload: &RemoveProduct, base: &Vdi3805Snapshot) -> Result<Vec<Vdi3805Mutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(position) = base.catalog.products.iter().position(|p| p.identity.article_number == payload.id) else {
         return Vec::new();
     };
     vec![Vdi3805Mutation::AddProduct(add_product::AddProduct { product: base.catalog.products[position].clone(), index: Some(position) })]
+
+    })())
 }
 //#endregion 🔖️Inverse

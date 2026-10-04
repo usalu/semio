@@ -12,11 +12,11 @@ pub fn register() {}
 /// what `parse_gltf_document` (glTF's own real `.gltf` JSON text codec) expects — no
 /// `serde_json::Value` anywhere on this transfer path anymore.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn deserialize(from: &JsonSnapshot) -> Result<GltfSnapshot, store::TextError> {
+pub fn deserialize(from: &JsonSnapshot) -> Result<GltfSnapshot, semio_framework_diagnostic::TextError> {
     let text = semio_s_artifact_stdio_json::schema::snapshot::write_json_text(&from.value);
-    crate::engine::parse_gltf_document(text.as_bytes()).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    crate::engine::parse_gltf_document(text.as_bytes()).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,e, semio_framework_diagnostic::TextSpan::at(1, 1)))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn deserialize_text(text: &str) -> Result<GltfSnapshot, store::TextError> {
+pub fn deserialize_text(text: &str) -> Result<GltfSnapshot, semio_framework_diagnostic::TextError> {
     deserialize(&<JsonSnapshot as store::ArtifactDsl>::parse_dsl(text)?)
 }

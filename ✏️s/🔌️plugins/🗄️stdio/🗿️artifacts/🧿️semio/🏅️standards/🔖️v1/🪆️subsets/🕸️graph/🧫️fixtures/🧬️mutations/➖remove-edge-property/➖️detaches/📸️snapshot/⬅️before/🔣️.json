@@ -1,0 +1,82 @@
+{
+  "schema": "s.stdio.semio.graph",
+  "nodes": [
+    {
+      "id": {
+        "value": "a"
+      },
+      "kind": "source",
+      "label": "Source",
+      "position": {
+        "x": {
+          "bits": "0000000000000000"
+        },
+        "y": {
+          "bits": "0000000000000000"
+        }
+      },
+      "ports": [],
+      "properties": [],
+      "width": {
+        "bits": "0000000000000000"
+      },
+      "height": {
+        "bits": "0000000000000000"
+      }
+    },
+    {
+      "id": {
+        "value": "b"
+      },
+      "kind": "sink",
+      "label": "Sink",
+      "position": {
+        "x": {
+          "bits": "4010000000000000"
+        },
+        "y": {
+          "bits": "0000000000000000"
+        }
+      },
+      "ports": [],
+      "properties": [],
+      "width": {
+        "bits": "0000000000000000"
+      },
+      "height": {
+        "bits": "0000000000000000"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": {
+        "value": "e1"
+      },
+      "source": {
+        "value": "a"
+      },
+      "target": {
+        "value": "b"
+      },
+      "kind": "data",
+      "label": "A to B",
+      "properties": [
+        {
+          "key": "colour",
+          "value": {
+            "kind": "str",
+            "value": "red"
+          }
+        },
+        {
+          "key": "weight",
+          "value": {
+            "kind": "int",
+            "lexeme": "7"
+          }
+        }
+      ]
+    }
+  ]
+}

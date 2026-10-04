@@ -14,7 +14,7 @@ async fn drawing_document_to_svg_preserves_shape_text_image_and_gradient_nodes()
     }
     let mut gradient_rect = create_drawing_shape_layer_rect("Gradient");
     if let DrawingLayerNode::Shape(shape) = &mut gradient_rect {
-        shape.base.attributes.fill = Some(FillStyle::LinearGradient { x1: 0.0, y1: 0.0, x2: 1.0, y2: 1.0, stops: Vec::new() });
+        shape.base.attributes.fill = Some(FillStyle::LinearGradient { x1: 0.0, y1: 0.0, x2: 1.0, y2: 1.0, stops: vec![crate::GradientStop {offset:0.0,color:[1.0,0.0,0.0,1.0]},crate::GradientStop {offset:1.0,color:[0.0,0.0,1.0,0.5]}] });
     }
     let text = DrawingLayerNode::Text(DrawingTextBody { base: default_layer_base("T"), x: 0.0, y: 0.0, content: "<a & b>".into(), size: 12.0 });
     let mut assets = std::collections::BTreeMap::new();
@@ -65,7 +65,7 @@ async fn drawing_document_to_svg_preserves_shape_text_image_and_gradient_nodes()
         other => panic!("expected image node, got {other:?}"),
     }
 
-    let json_error = drawing_document_json_to_svg(&dsl::DslValue::object([("bad".to_string(), dsl::DslValue::Bool(true))]));
+    let json_error = drawing_document_json_to_svg(&semio_framework_value::DslValue::object([("bad".to_string(), semio_framework_value::DslValue::Bool(true))]));
     assert!(json_error.is_err());
 }
 

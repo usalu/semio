@@ -8,7 +8,7 @@ pub fn diff(payload: &ChangeMemberEffectiveDepth, base: &En1992Snapshot) -> prot
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Member {} not found.", payload.member_id), Vec::<String>::new());
     };
     if (m.effective_depth - payload.new_value).abs() < f64::EPSILON {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Value unchanged.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Value unchanged.");
     }
     m.effective_depth = payload.new_value;
     protocol::MutationOutcome::new(En1992Diff { members: Some(En1992MemberList { values: members }), ..Default::default() })

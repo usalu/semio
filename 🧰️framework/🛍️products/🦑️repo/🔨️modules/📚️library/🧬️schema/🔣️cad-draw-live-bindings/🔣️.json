@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CadDrawLiveBindings",
+  "description": "The CAD example-model carriers that currently hold each authored source of the sealed CAD/Draw projection golden (`cad-draw-projection-vectors-v1`). Unsealed on purpose: the golden freezes the authored source and destination coordinates, these rows follow the live tree (repository paths, rewritten by moves like any reference). Row `mapping` is the index of the golden mapping the carrier holds; every mapping has exactly one row and every carrier one mapping.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "contract",
+    "sealedContractId",
+    "projection",
+    "bindings"
+  ],
+  "additionalProperties": false,
+  "definitions": {
+    "repositoryPath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[^/\\\\:]+(?:/[^/\\\\:]+)*$",
+      "not": {
+        "pattern": "(?:^|/)\\.{1,2}(?:/|$)"
+      }
+    }
+  },
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "contract": {
+      "const": "cad-draw-live-bindings-v1"
+    },
+    "sealedContractId": {
+      "const": "cad-draw-projection-vectors-v1"
+    },
+    "projection": {
+      "const": "artifact-example-model-catalog-v1"
+    },
+    "bindings": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "mapping",
+          "live"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "mapping": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "live": {
+            "$ref": "#/definitions/repositoryPath"
+          }
+        }
+      }
+    }
+  }
+}

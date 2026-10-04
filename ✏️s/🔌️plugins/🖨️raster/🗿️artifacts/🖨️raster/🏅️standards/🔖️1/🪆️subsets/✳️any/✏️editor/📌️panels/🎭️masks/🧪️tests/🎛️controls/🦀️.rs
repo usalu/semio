@@ -4,7 +4,7 @@ use super::*;
 #[test]
 fn mask_panel_keeps_disabled_masks_and_authors_semantic_controls() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎛️controls/🔣️.json")).unwrap();
-    let document: RasterDocument = dsl::json::from_json_str(&fixture["document"].to_string()).unwrap();
+    let document: RasterDocument = semio_framework_pack_json::from_json_str(&fixture["document"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for labels in [&RasterPlayLabels::NATIVE_EN, &RasterPlayLabels::NATIVE_DE] {
         let view = semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
         let windows = TreeWindows::for_body(&view, RASTER_PLAY_BODY_MASKS);

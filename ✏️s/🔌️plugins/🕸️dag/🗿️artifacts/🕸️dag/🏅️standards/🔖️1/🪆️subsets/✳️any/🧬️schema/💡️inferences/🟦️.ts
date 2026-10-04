@@ -70,7 +70,7 @@ export function parseDagTopology(value: unknown, at = "$"): DagTopology {
   const row = dagDagInferenceGuardObject(value, at);
   return {
     topoOrder: dagDagInferenceGuardArray(row["topoOrder"], `${at}.topoOrder`).map((item, index) => dagDagInferenceGuardString(item, `${at}.topoOrder[${index}]`)),
-    depth: dagDagInferenceGuardObject(row["depth"], `${at}.depth`),
+    depth: Object.fromEntries(Object.entries(dagDagInferenceGuardObject(row["depth"], `${at}.depth`)).map(([key, item]) => [key, dagDagInferenceGuardInteger(item, `${at}.depth[${JSON.stringify(key)}]`, { minimum: 0 })])),
     cycleFree: dagDagInferenceGuardBoolean(row["cycleFree"], `${at}.cycleFree`),
     nodeCount: dagDagInferenceGuardInteger(row["nodeCount"], `${at}.nodeCount`, {"minimum": 0}),
   };

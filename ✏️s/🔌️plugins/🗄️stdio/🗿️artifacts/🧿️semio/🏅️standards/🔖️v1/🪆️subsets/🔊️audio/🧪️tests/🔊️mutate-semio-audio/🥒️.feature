@@ -87,6 +87,7 @@ Feature: Apply every typed semio AUDIO mutation to a real recording, against an 
       | insert-tag          | {"mutation":"insertTag","index":0,"tag":{"key":"TALB","value":"33. Projektetage"}}                                                                                                                         |
       | remove-tag          | {"mutation":"removeTag","index":0}                                                                                                                                                                         |
       | set-tag-value       | {"mutation":"setTagValue","index":1,"value":"Bauen mit Bestand, Ausschnitt 1"}                                                                                                                             |
+      | patch-snapshot | {"mutation": "patchSnapshot", "patch": {"operation": "set", "path": "/sampleRate", "value": 22050}} |
 
   @id-no-mutation-baseline-mutate
   @level-exhaustive
@@ -120,6 +121,7 @@ Feature: Apply every typed semio AUDIO mutation to a real recording, against an 
       | insert-tag          | {"mutation":"insertTag","index":0,"tag":{"key":"TALB","value":"33. Projektetage"}}                                                                                                                         |
       | remove-tag          | {"mutation":"removeTag","index":0}                                                                                                                                                                         |
       | set-tag-value       | {"mutation":"setTagValue","index":1,"value":"Bauen mit Bestand, Ausschnitt 1"}                                                                                                                             |
+      | patch-snapshot | {"mutation": "patchSnapshot", "patch": {"operation": "set", "path": "/sampleRate", "value": 22050}} |
 
   @id-no-mutation-baseline-inverse
   @level-exhaustive

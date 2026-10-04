@@ -177,18 +177,18 @@ fn note_gesture_yields(gesture_json: &str) -> Result<Vec<ToolYield<NoteMutation>
 /// note events — a malformed batch is a fault, never a silently empty gesture.
 fn decode_canvas_events(events_json: &str) -> Result<Vec<NoteCanvasEvent>, Fault> {
     let invalid = |detail: String| Fault::new(FaultOrigin::App, FaultCode::new("note.ink-events.invalid"), detail);
-    let parsed = dsl::os_pack::json::parse(events_json).map_err(|error| invalid(format!("ink events are not JSON: {error:?}")))?;
-    let mut value = dsl::os_pack::json_to_dsl_value(&parsed);
-    if let dsl::DslValue::Array(events) = &mut value {
+    let parsed = semio_framework_pack_json::parse(events_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| invalid(format!("ink events are not JSON: {error:?}")))?;
+    let mut value = semio_framework_pack_json::to_dsl_value(&parsed);
+    if let semio_framework_value::DslValue::Array(events) = &mut value {
         for event in events {
-            if let dsl::DslValue::Object(entries) = event {
+            if let semio_framework_value::DslValue::Object(entries) = event {
                 if let Some((_, block)) = entries.iter_mut().find(|(name, _)| name == "block") {
                     crate::note_block_value_from_ink_wire(block).map_err(invalid)?;
                 }
             }
         }
     }
-    <Vec<NoteCanvasEvent> as dsl::FromValue>::from_value(value).map_err(|error| invalid(format!("ink events do not decode: {error}")))
+    <Vec<NoteCanvasEvent> as semio_framework_value::FromValue>::from_value(value).map_err(|error| invalid(format!("ink events do not decode: {error}")))
 }
 //#endregion 🔖️CanvasEvents
 
@@ -278,7 +278,7 @@ static NOTE_INK_TOOL_TICK: AtomicU64 = AtomicU64::new(0);
 /// ⏰️ The host clock an ink tool event runs on: wall time and a process-monotone tick, so a transaction id minted at an
 /// upsert is unique per author, moment and event even when two gestures share a millisecond.
 pub fn note_ink_tool_clock() -> protocol::HybridLogicalTimestamp {
-    protocol::HybridLogicalTimestamp { actor: 0, physical_ms: semio_framework_job::default_now_ms().unwrap_or(0), logical: NOTE_INK_TOOL_TICK.fetch_add(1, Ordering::Relaxed) }
+    semio_framework_tool_machine::authoring_clock(NOTE_INK_TOOL_TICK.fetch_add(1, Ordering::Relaxed))
 }
 
 /// 🧷️ One provisional entry of a persisted ink tool transaction, its mutation in value form so the window transient
@@ -287,7 +287,7 @@ pub fn note_ink_tool_clock() -> protocol::HybridLogicalTimestamp {
 #[value(rename_all = "camelCase")]
 pub struct NoteInkToolEntry {
     pub key: String,
-    pub mutation: dsl::DslValue,
+    pub mutation: semio_framework_value::DslValue,
 }
 
 /// 💾️ A composite window's in-flight ink gesture, persisted in its window transient between dispatches — ephemeral
@@ -357,7 +357,7 @@ impl NoteInkTool {
     pub fn resume(state: &NoteInkToolState) -> Result<Self, ToolRefusal> {
         let definition = <ink_tool::InkTool as machine::Machine>::definition();
         let persisted = machine::PersistedSnapshot { version: 1, fingerprint: definition.fingerprint, states: state.states.clone(), history: Vec::new(), done: false };
-        let entries = state.entries.iter().map(|entry| Ok((entry.key.clone(), dsl::FromValue::from_value(entry.mutation.clone()).map_err(|_| ToolRefusal::Closed)?))).collect::<Result<Vec<(String, NoteMutation)>, ToolRefusal>>()?;
+        let entries = state.entries.iter().map(|entry| Ok((entry.key.clone(), semio_framework_value::FromValue::from_value(entry.mutation.clone()).map_err(|_| ToolRefusal::Closed)?))).collect::<Result<Vec<(String, NoteMutation)>, ToolRefusal>>()?;
         let snapshot = machine::restore::<ink_tool::InkTool, machine::NoMigrations>(&persisted, NoteInkToolContext, &[]).map_err(|_| ToolRefusal::Closed)?;
         let runner = ToolMachineRunner::resume(format!("{}#{}", crate::editor::note::NOTE_PLAY_CONTROLLER_ID, state.verb), protocol::ActorId(state.authoring_seed.clone()), (), snapshot, Some(ToolTransaction::resume(state.transaction.clone(), entries)), NoteInkToolHost)?;
         Ok(Self { runner, verb: state.verb.clone(), authoring_seed: state.authoring_seed.clone(), base_revision: state.base_revision.clone() })
@@ -393,7 +393,7 @@ impl NoteInkTool {
             authoring_seed: self.authoring_seed,
             base_revision: self.base_revision,
             transaction: transaction.reference().clone(),
-            entries: transaction.entries().iter().map(|(key, mutation)| NoteInkToolEntry { key: key.clone(), mutation: dsl::ToValue::to_value(mutation) }).collect(),
+            entries: transaction.entries().iter().map(|(key, mutation)| NoteInkToolEntry { key: key.clone(), mutation: semio_framework_value::ToValue::to_value(mutation) }).collect(),
         })
     }
 }
@@ -460,11 +460,11 @@ pub fn note_ink_dispatch(
 /// 👁️ The document a composite window paints while its ink tool holds an open transaction: the provisional entries
 /// applied to `document` — a preview only this window sees, never history.
 pub fn note_ink_tool_preview(document: &NoteSnapshot, state: &NoteInkToolState) -> NoteSnapshot {
-    state.entries.iter().filter_map(|entry| dsl::FromValue::from_value(entry.mutation.clone()).ok()).fold(document.clone(), |preview, mutation: NoteMutation| apply_note_mutation(&preview, &mutation).unwrap_or(preview))
+    state.entries.iter().filter_map(|entry| semio_framework_value::FromValue::from_value(entry.mutation.clone()).ok()).fold(document.clone(), |preview, mutation: NoteMutation| apply_note_mutation(&preview, &mutation).unwrap_or(preview))
 }
 //#endregion 🛠️InkTool
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "ink-apply-events")]
 pub struct InkApplyEvents {
     #[value(default)]

@@ -8,11 +8,14 @@ use crate::PresentationSnapshot;
 /// ↩️ Undo re-creates the tile at its pre-deletion index, captured from `base` — missing target
 /// (already absent) returns `Vec::new()` — the taxonomy's rule for a mutation with nothing to
 /// undo, replacing any sentinel no-op variant.
-pub fn inverse(payload: &DeleteTile, base: &PresentationSnapshot) -> Vec<PresentationMutation> {
+pub fn inverse(payload: &DeleteTile, base: &PresentationSnapshot) -> Result<Vec<PresentationMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let (_, tiles) = crate::presentation_working_scene(base);
     let Some(index) = tiles.iter().position(|tile| tile.id == payload.id) else {
         return Vec::new();
     };
     vec![PresentationMutation::CreateTile(CreateTile { index, tile: tiles[index].clone() })]
+
+    })())
 }
 //#endregion 🔹Inverse

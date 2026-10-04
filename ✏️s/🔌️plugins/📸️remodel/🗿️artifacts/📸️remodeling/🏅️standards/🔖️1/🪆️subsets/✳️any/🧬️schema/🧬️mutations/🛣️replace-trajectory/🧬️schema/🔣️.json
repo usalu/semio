@@ -15,7 +15,7 @@
     "trajectory": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/Trajectory"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/CameraTrajectory"
         },
         {
           "type": "null"
@@ -32,7 +32,8 @@
           "de": "Rekonstruierte Kameraposen; leer entfernt die Trajektorie."
         },
         "group": "result",
-        "order": 10
+        "order": 10,
+        "widget": "hidden"
       }
     }
   }

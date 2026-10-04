@@ -1,0 +1,341 @@
+{
+  "$schema": "../../🧬️schema/🔣️fault-notices-gate/🔣️.json",
+  "description": "📢️ The schema-fault-notice gate (design §20.12): Rust snippets with the fault code sites the token gate and the tree-sitter-rust oracle both read, and one planted plugin whose sources, committed descriptor and framework table yield exactly the listed findings in order, and exactly `scoped.findings` under `--scope history-editing` (the refusals of the history-editing and tool flows); the planted tool editor names its codes through `const`s and a refusal helper and chains a second notice table; the planted editor and plugin SDK exercise every `history-editing` rule: a tool-flow `fn` with a fixed-code helper called inside it, a `ChildEmit` source, a tool-flow text, a trait's default method, `#[cfg(test)]` items, the SDK's catch-all helper, its load and time-travel refusals and a framework code outside every flow.",
+  "cases": [
+    {
+      "id": "named code constructors",
+      "rust": "fn refuse() -> Fault { Fault::new(FaultOrigin::App, FaultCode::new(\"demo.widget.missing\"), \"gone\") }\nfn other() -> Fault { semio_framework::Fault::new(FaultOrigin::App, \"demo.widget.locked\", \"locked\") }\nfn third() -> FaultCode { FaultCode::from(\"demo.widget.busy\") }",
+      "sites": [
+        {
+          "code": "demo.widget.missing",
+          "via": "faultCode"
+        },
+        {
+          "code": "demo.widget.locked",
+          "via": "faultNew"
+        },
+        {
+          "code": "demo.widget.busy",
+          "via": "faultCode"
+        }
+      ]
+    },
+    {
+      "id": "refusal enum code fn",
+      "rust": "pub enum DemoRefusal { Missing, Kind(String) }\nimpl DemoRefusal {\n    pub fn code(&self) -> &'static str {\n        match self {\n            Self::Missing => \"demo.gumball.missing\",\n            Self::Kind(_) => \"demo.gumball.kind-unavailable\",\n        }\n    }\n}",
+      "sites": [
+        {
+          "code": "demo.gumball.missing",
+          "via": "codeFn"
+        },
+        {
+          "code": "demo.gumball.kind-unavailable",
+          "via": "codeFn"
+        }
+      ]
+    },
+    {
+      "id": "anonymous text faults",
+      "rust": "fn a() -> Fault { Fault::from(\"select a shape\") }\nfn b(kind: &str) -> Fault { Fault::from(format!(\"kind {kind} missing\")) }\nfn c(error: Error) -> Fault { Fault::from(error.to_string()) }\nfn d(refusal: DemoRefusal) -> Fault { Fault::from(refusal) }",
+      "sites": [
+        {
+          "code": null,
+          "via": "faultFrom"
+        },
+        {
+          "code": null,
+          "via": "faultFrom"
+        },
+        {
+          "code": null,
+          "via": "faultFrom"
+        }
+      ]
+    },
+    {
+      "id": "dynamic codes are not sites",
+      "rust": "fn a(refusal: &DemoRefusal) -> Fault { Fault::new(FaultOrigin::App, FaultCode::new(refusal.code()), refusal.detail()) }\nfn b(code: &str) -> FaultCode { FaultCode::new(code) }",
+      "sites": []
+    },
+    {
+      "id": "macro prefix",
+      "rust": "fault_from_error!(DemoError, FaultOrigin::App, \"demo.io.read\");",
+      "sites": [
+        {
+          "code": "demo.io.read",
+          "via": "faultMacro"
+        }
+      ]
+    },
+    {
+      "id": "named consts and refusal helpers",
+      "rust": "pub const DEMO_TOOL_STALLED: &str = \"demo.tool.stalled\";\nconst DROPPED: &'static str = \"demo.tool.dropped\";\nfn tool_refusal(detail: String, code: &'static str) -> Fault { Fault::new(FaultOrigin::App, code, detail) }\nfn stall() -> Fault { tool_refusal(String::new(), DEMO_TOOL_STALLED) }\nfn drop_tool() -> Fault { tool_refusal(String::new(), self::DROPPED) }\nfn plain() -> FaultCode { FaultCode::new(DEMO_TOOL_STALLED) }\nfn named() -> Fault { Fault::from(DROPPED) }\nimpl DemoRefusal { pub fn code(&self) -> &'static str { match self { Self::Dropped => DROPPED } } }",
+      "sites": [
+        {
+          "code": "demo.tool.stalled",
+          "via": "faultHelper"
+        },
+        {
+          "code": "demo.tool.dropped",
+          "via": "faultHelper"
+        },
+        {
+          "code": "demo.tool.stalled",
+          "via": "faultCode"
+        },
+        {
+          "code": null,
+          "via": "faultFrom"
+        },
+        {
+          "code": "demo.tool.dropped",
+          "via": "codeFn"
+        }
+      ]
+    },
+    {
+      "id": "test-only items are not sites",
+      "rust": "#[cfg(test)]\nmod tests {\n    fn t() -> Fault { Fault::from(\"test only\") }\n}\n#[cfg(any(test, feature = \"laws\"))]\npub mod laws { fn law() -> Fault { Fault::new(FaultOrigin::App, FaultCode::new(\"demo.law.only\"), \"law\") } }\n#[cfg(not(test))]\nfn live() -> Fault { Fault::from(\"live\") }",
+      "sites": [
+        {
+          "code": null,
+          "via": "faultFrom"
+        }
+      ]
+    },
+    {
+      "id": "trait defaults and their overrides",
+      "rust": "pub trait DemoCapability {\n    fn drag_tool(&self) -> Result<(), Fault> { Err(Fault::from(\"demo-drag-unavailable\")) }\n    fn required(&self) -> Fault;\n}\nimpl DemoCapability for Demo {\n    fn drag_tool(&self) -> Result<(), Fault> {\n        fn nested() -> Fault { Fault::new(FaultOrigin::App, FaultCode::new(\"demo.drag.nested\"), \"nested\") }\n        Err(nested())\n    }\n    fn required(&self) -> Fault { Fault::from(\"required\") }\n}",
+      "sites": [
+        {
+          "code": null,
+          "via": "faultFrom"
+        },
+        {
+          "code": "demo.drag.nested",
+          "via": "faultCode"
+        },
+        {
+          "code": "demo.drag.nested",
+          "via": "faultHelper"
+        },
+        {
+          "code": null,
+          "via": "faultFrom"
+        }
+      ]
+    }
+  ],
+  "plugin": {
+    "files": {
+      "✏️s/🔌️plugins/🧪️demo/🗿️artifacts/🧪️demo/✏️editor/🦀️.rs": "impl ArtifactEditor for DemoEditor {\n    fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {\n        refusal_notices()\n    }\n}\nimpl ArtifactViewer for DemoViewer {\n    fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {\n        &[]\n    }\n}\nimpl ArtifactApp for DemoBroken {\n    fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {\n        build_notices(Locale::En)\n    }\n}\nimpl DemoEditor {\n    fn build_tool_job(request: Request) -> Result<(), Fault> {\n        if request.stale() {\n            return Err(Fault::from(\"demo-route-stale\"));\n        }\n        Err(refuse_extent())\n    }\n}\nfn refuse_extent() -> Fault { Fault::new(FaultOrigin::App, FaultCode::new(\"demo.retained.extent\"), \"extent\") }\nfn route() -> Fault { Fault::new(FaultOrigin::App, FaultCode::new(\"demo.route.mismatch\"), \"route\") }\nfn describe() -> Fault { Fault::from(\"outside every flow\") }\nfn check() -> Fault { Fault::from(\"demo-command-tool-mismatch\") }\npub trait DemoCapability {\n    fn drag_tool(&self) -> Result<(), Fault> { Err(Fault::from(\"demo-drag-unavailable\")) }\n}\n#[cfg(test)]\nmod inline_tests {\n    fn t() -> Fault { Fault::from(\"test only\") }\n}\n",
+      "✏️s/🔌️plugins/🧪️demo/🗿️artifacts/🧪️demo/✏️editor/🌳️children/🦀️.rs": "fn child_groups(groups: Vec<ChildEmit>) -> Result<(), Fault> { Err(Fault::from(\"demo-child-route\")) }\n",
+      "✏️s/🔌️plugins/🧪️demo/🗿️artifacts/🧪️demo/✏️editor/🎮️commands/🦀️.rs": "pub fn refusal_notices() -> &'static [(&'static str, LocalizedLabel)] {\n    static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 4]> = std::sync::LazyLock::new(|| [\n        (\"demo.gumball.missing\", LocalizedLabel::native(\"The mesh is gone.\", \"Das Netz ist weg.\")),\n        (\"demo.gumball.kind-unavailable\", LocalizedLabel::native(\"Kind {kind} is unavailable.\", \"Art ist nicht verfügbar.\")),\n        (\"demo.gumball.stale\", LocalizedLabel::native(\"Stale.\", \"Veraltet.\")),\n        (\"demo.gumball.missing\", LocalizedLabel::native(\"Again.\", \"Nochmals.\")),\n    ]);\n    &*NOTICES\n}\npub enum DemoRefusal { Missing, Kind(String) }\nimpl DemoRefusal {\n    pub fn code(&self) -> &'static str {\n        match self {\n            Self::Missing => \"demo.gumball.missing\",\n            Self::Kind(_) => \"demo.gumball.kind-unavailable\",\n        }\n    }\n}\nfn refuse() -> Fault { Fault::new(FaultOrigin::App, FaultCode::new(\"demo.widget.locked\"), \"locked\") }\nfn short() -> Fault { Fault::new(FaultOrigin::App, FaultCode::new(\"demo.locked\"), \"locked\") }\nfn framework() -> Fault { Fault::new(FaultOrigin::App, FaultCode::new(\"app.command.invalid\"), \"invalid\") }\nfn lane() -> Fault { Fault::new(FaultOrigin::Module, FaultCode::new(\"history.full\"), \"full\") }\nfn text() -> Fault { Fault::from(\"plain English\") }\n",
+      "✏️s/🔌️plugins/🧪️demo/🗿️artifacts/🧪️demo/✏️editor/🛠️tools/🦀️.rs": "fn drag() -> Fault { Fault::new(FaultOrigin::App, FaultCode::new(\"demo.gesture.owner\"), \"owner\") }\nfn pinch() -> Fault { Fault::from(\"pinch refused\") }\n",
+      "✏️s/🔌️plugins/🧪️demo/🗿️artifacts/🧰️tool/✏️editor/🦀️.rs": "pub const DEMO_TOOL_STALLED: &str = \"demo.tool.stalled\";\nfn tool_refusal(code: &'static str, detail: String) -> Fault { Fault::new(FaultOrigin::App, FaultCode::new(code), detail) }\nfn stall() -> Fault { tool_refusal(DEMO_TOOL_STALLED, String::new()) }\nfn drop_tool() -> Fault { tool_refusal(\"demo.tool.dropped\", String::new()) }\npub fn tool_fault_notices() -> &'static [(&'static str, LocalizedLabel)] {\n    static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 2]> = std::sync::LazyLock::new(|| [(DEMO_TOOL_STALLED, LocalizedLabel::native(\"The tool stalled.\", \"Das Werkzeug ist blockiert.\")), (\"demo.tool.dropped\", LocalizedLabel::native(\"The tool was dropped.\", \"Das Werkzeug wurde verworfen.\"))]);\n    &*NOTICES\n}\npub fn extra_fault_notices() -> &'static [(&'static str, LocalizedLabel)] {\n    static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 1]> = std::sync::LazyLock::new(|| [(\"demo.tool.extra\", LocalizedLabel::native(\"Extra.\", \"Zusatz.\"))]);\n    &*NOTICES\n}\nimpl ArtifactEditor for DemoToolEditor {\n    fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {\n        static ALL: std::sync::LazyLock<Vec<(&'static str, LocalizedLabel)>> = std::sync::LazyLock::new(|| tool_fault_notices().iter().chain(crate::extra_fault_notices()).cloned().collect());\n        ALL.as_slice()\n    }\n}\n",
+      "✏️s/🔌️plugins/🧪️demo/🗿️artifacts/🧪️demo/✏️editor/🧪️tests/🦀️.rs": "fn ignored() -> Fault { Fault::new(FaultOrigin::App, FaultCode::new(\"demo.test.only\"), \"x\") }\n",
+      "🌎️hub/🧩️compositions/🧪️demo/🔣️.json": "{\"manifest\": {\"apps\": [{\"id\": \"demo#editor\", \"faultNotices\": [{\"code\": \"demo.gumball.missing\", \"label\": {\"native\": {\"en\": \"The mesh is gone.\", \"de\": \"Das Netz ist weg.\"}, \"reuse\": {\"en\": \"The mesh is gone.\", \"de\": \"\"}}}]}]}}",
+      "🧰️framework/🔨️modules/🎠️kernel/🧫️fixtures/🧫️history-notices/🔣️.json": "{\"notices\": [{\"code\": \"history.full\", \"en\": \"Full ({n}).\", \"de\": \"Voll ({n}).\"}]}",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs": "fn plugin_sdk_fault(message: impl Into<String>) -> Fault { Fault::new(FaultOrigin::Plugin, FaultCode::new(\"plugin.internal\"), message) }\npub trait PluginApp {\n    fn begin_document_archive_load(&mut self, _operation: u64) -> Result<(), Fault> { Err(plugin_sdk_fault(\"recursive document archive loading is unavailable for this app\")) }\n}\nimpl PluginApp for VcsArtifactApp {\n    fn begin_document_archive_load(&mut self, operation: u64) -> Result<(), Fault> { Err(plugin_sdk_fault(\"document archive exceeds its fixed member authority\")) }\n}\nimpl<E: ArtifactEditor> ArtifactApp for EditorApp<E> {\n    fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] { E::fault_notices() }\n}\nfn apply_time_travel_action(action: &str) -> Result<(), Fault> { Err(Fault::new(FaultOrigin::Framework, FaultCode::new(\"timeTravel.unknown-action\"), \"not a history-edit verb\")) }\nfn spawn_task() -> Fault { Fault::new(FaultOrigin::Plugin, FaultCode::new(\"plugin.task.quota-exceeded\"), \"quota\") }\nfn blob_load() -> Fault { plugin_sdk_fault(\"blob unavailable\") }\n#[cfg(any(test, feature = \"artifact-app-testing\"))]\npub mod artifact_app_laws {\n    fn law_load_running() -> Fault { super::plugin_sdk_fault(\"never terminal\") }\n}\n"
+    },
+    "findings": [
+      [
+        "faultNoticeInvalid",
+        "placeholder demo.gumball.kind-unavailable (native/de) in DemoEditor"
+      ],
+      [
+        "faultNoticeInvalid",
+        "placeholder demo.gumball.kind-unavailable (reuse/de) in DemoEditor"
+      ],
+      [
+        "faultNoticeInvalid",
+        "duplicate demo.gumball.missing in DemoEditor"
+      ],
+      [
+        "faultNoticeUnresolved",
+        "fn fault_notices of DemoBroken is not a table of (code, LocalizedLabel::native(en, de)) rows"
+      ],
+      [
+        "faultAnonymous",
+        "Fault::from(\"demo-child-route\") carries no code — name the refusal and declare its notice"
+      ],
+      [
+        "faultNoticeMissing",
+        "demo.widget.locked (faultCode)"
+      ],
+      [
+        "faultNoticeSyntax",
+        "demo.locked (faultCode)"
+      ],
+      [
+        "faultNoticeFramework",
+        "app.command.invalid (faultCode)"
+      ],
+      [
+        "faultAnonymous",
+        "Fault::from(\"plain English\") carries no code — name the refusal and declare its notice"
+      ],
+      [
+        "faultAnonymous",
+        "Fault::from(\"demo-route-stale\") carries no code — name the refusal and declare its notice"
+      ],
+      [
+        "faultNoticeMissing",
+        "demo.retained.extent (faultHelper)"
+      ],
+      [
+        "faultNoticeMissing",
+        "demo.route.mismatch (faultCode)"
+      ],
+      [
+        "faultAnonymous",
+        "Fault::from(\"outside every flow\") carries no code — name the refusal and declare its notice"
+      ],
+      [
+        "faultAnonymous",
+        "Fault::from(\"demo-command-tool-mismatch\") carries no code — name the refusal and declare its notice"
+      ],
+      [
+        "faultAnonymous",
+        "Fault::from(\"demo-drag-unavailable\") carries no code — name the refusal and declare its notice"
+      ],
+      [
+        "faultNoticeMissing",
+        "demo.gesture.owner (faultCode)"
+      ],
+      [
+        "faultAnonymous",
+        "Fault::from(\"pinch refused\") carries no code — name the refusal and declare its notice"
+      ],
+      [
+        "faultAnonymous",
+        "plugin.internal (faultHelper) names no refusal — name it and declare its notice"
+      ],
+      [
+        "faultAnonymous",
+        "plugin.internal (faultHelper) names no refusal — name it and declare its notice"
+      ],
+      [
+        "faultNoticeFramework",
+        "timeTravel.unknown-action (faultCode)"
+      ],
+      [
+        "faultNoticeFramework",
+        "plugin.task.quota-exceeded (faultCode)"
+      ],
+      [
+        "faultAnonymous",
+        "plugin.internal (faultHelper) names no refusal — name it and declare its notice"
+      ],
+      [
+        "faultNoticeStale",
+        "demo.gumball.stale is declared but no guest source of 🧪️demo emits it"
+      ],
+      [
+        "faultNoticeStale",
+        "demo.tool.extra is declared but no guest source of 🧪️demo emits it"
+      ],
+      [
+        "faultNoticeInvalid",
+        "emptyText demo.gumball.missing (reuse/de) in published app demo#editor"
+      ],
+      [
+        "faultNoticeDescriptor",
+        "describe owed — unpublished [\"demo.gumball.kind-unavailable\",\"demo.gumball.stale\",\"demo.tool.dropped\",\"demo.tool.extra\",\"demo.tool.stalled\"], no longer declared []"
+      ]
+    ],
+    "census": [
+      {
+        "owner": "🧪️demo",
+        "codes": 11,
+        "labelled": 5,
+        "declared": 7,
+        "anonymous": 7,
+        "findings": 21,
+        "scoped": 15
+      },
+      {
+        "owner": "🔌️plugin",
+        "codes": 2,
+        "labelled": 0,
+        "declared": 0,
+        "anonymous": 3,
+        "findings": 5,
+        "scoped": 2
+      }
+    ],
+    "scoped": {
+      "scope": "history-editing",
+      "findings": [
+        [
+          "faultNoticeInvalid",
+          "placeholder demo.gumball.kind-unavailable (native/de) in DemoEditor"
+        ],
+        [
+          "faultNoticeInvalid",
+          "placeholder demo.gumball.kind-unavailable (reuse/de) in DemoEditor"
+        ],
+        [
+          "faultNoticeInvalid",
+          "duplicate demo.gumball.missing in DemoEditor"
+        ],
+        [
+          "faultNoticeUnresolved",
+          "fn fault_notices of DemoBroken is not a table of (code, LocalizedLabel::native(en, de)) rows"
+        ],
+        [
+          "faultAnonymous",
+          "Fault::from(\"demo-child-route\") carries no code — name the refusal and declare its notice"
+        ],
+        [
+          "faultNoticeFramework",
+          "app.command.invalid (faultCode)"
+        ],
+        [
+          "faultAnonymous",
+          "Fault::from(\"demo-route-stale\") carries no code — name the refusal and declare its notice"
+        ],
+        [
+          "faultNoticeMissing",
+          "demo.retained.extent (faultHelper)"
+        ],
+        [
+          "faultAnonymous",
+          "Fault::from(\"demo-command-tool-mismatch\") carries no code — name the refusal and declare its notice"
+        ],
+        [
+          "faultNoticeMissing",
+          "demo.gesture.owner (faultCode)"
+        ],
+        [
+          "faultAnonymous",
+          "Fault::from(\"pinch refused\") carries no code — name the refusal and declare its notice"
+        ],
+        [
+          "faultAnonymous",
+          "plugin.internal (faultHelper) names no refusal — name it and declare its notice"
+        ],
+        [
+          "faultNoticeFramework",
+          "timeTravel.unknown-action (faultCode)"
+        ],
+        [
+          "faultNoticeStale",
+          "demo.gumball.stale is declared but no guest source of 🧪️demo emits it"
+        ],
+        [
+          "faultNoticeStale",
+          "demo.tool.extra is declared but no guest source of 🧪️demo emits it"
+        ],
+        [
+          "faultNoticeInvalid",
+          "emptyText demo.gumball.missing (reuse/de) in published app demo#editor"
+        ],
+        [
+          "faultNoticeDescriptor",
+          "describe owed — unpublished [\"demo.gumball.kind-unavailable\",\"demo.gumball.stale\",\"demo.tool.dropped\",\"demo.tool.extra\",\"demo.tool.stalled\"], no longer declared []"
+        ]
+      ]
+    }
+  }
+}

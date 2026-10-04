@@ -3,9 +3,12 @@
 use crate::mutations::{change_tile_media, Wfc3dMutation};
 use crate::schema::snapshot::Wfc3dSnapshot;
 
-pub fn inverse(payload: &super::ChangeTileMedia, base: &Wfc3dSnapshot) -> Vec<Wfc3dMutation> {
+pub fn inverse(payload: &super::ChangeTileMedia, base: &Wfc3dSnapshot) -> Result<Vec<Wfc3dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(tile) = base.tiles.iter().find(|tile| tile.id == payload.id) else {
         return Vec::new();
     };
     vec![change_tile_media(tile.id.clone(), tile.media.clone())]
+
+    })())
 }

@@ -13,7 +13,7 @@ pub fn diff(payload: &ReplaceTemplateRecord, base: &ProgramSnapshot) -> protocol
         return protocol::MutationOutcome::error("mutation.target-missing", "No template record exists with this id.", [payload.template_record.header.id.0.clone()]);
     };
     if existing == &payload.template_record {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This template record already matches the requested value.").at([existing.header.id.0.clone()])]);
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This template record already matches the requested value.").at([existing.header.id.0.clone()])]);
     }
     let patch = existing.diff_patch(&payload.template_record).expect("diff_patch always produces a full patch");
     protocol::MutationOutcome::new(ProgramDiff { templates: Some(ProgramTemplatesDelta { patched: vec![ProgramTemplatesPatchEntry { id: payload.template_record.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })

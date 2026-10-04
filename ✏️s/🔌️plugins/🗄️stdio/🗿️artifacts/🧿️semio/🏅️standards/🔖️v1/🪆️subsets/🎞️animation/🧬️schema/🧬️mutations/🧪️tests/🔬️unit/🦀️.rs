@@ -44,7 +44,7 @@ async fn inverse_law_covers_every_variant() {
     for m in demo_mutation_cases() {
         let mut mutated = base.clone();
         let _ = apply_semio_animation_mutation(&mut mutated, &m);
-        let inv = <SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::inverse(&m, &base);
+        let inv = <SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
         let mut restored = mutated.clone();
         for step in &inv {
             let _ = apply_semio_animation_mutation(&mut restored, step);

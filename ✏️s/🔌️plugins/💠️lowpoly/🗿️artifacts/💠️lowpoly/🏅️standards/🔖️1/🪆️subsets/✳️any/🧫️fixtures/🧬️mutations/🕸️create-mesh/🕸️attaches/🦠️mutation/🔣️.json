@@ -10,6 +10,7 @@
         "standard": "v1",
         "subset": "mesh"
       }
-    }
+    },
+    "meshState": null
   }
 }

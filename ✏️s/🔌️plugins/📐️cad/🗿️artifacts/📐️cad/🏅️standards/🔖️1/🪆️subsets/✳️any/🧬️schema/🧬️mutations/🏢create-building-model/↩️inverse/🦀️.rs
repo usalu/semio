@@ -7,10 +7,13 @@ use crate::mutations::{delete_building_model, CadMutation};
 use crate::CadSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &CreateBuildingModel, base: &CadSnapshot) -> Vec<CadMutation> {
+pub fn inverse(_payload: &CreateBuildingModel, base: &CadSnapshot) -> Result<Vec<CadMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match &base.building_model {
         Some(existing) => vec![CadMutation::CreateBuildingModel(CreateBuildingModel { child_id: existing.child_id.clone(), target: existing.target.to_uri() })],
         None => vec![CadMutation::DeleteBuildingModel(delete_building_model::DeleteBuildingModel {})],
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

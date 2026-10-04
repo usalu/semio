@@ -4,11 +4,165 @@
   "title": "EquationArtifact",
   "type": "object",
   "additionalProperties": false,
-  "required": ["notation", "results", "computed", "equation"],
+  "required": [
+    "graph",
+    "geometry",
+    "notation",
+    "results",
+    "computed",
+    "equation"
+  ],
   "properties": {
-    "notation": { "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json", "x-semio-state": "artifact" },
-    "results": { "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json", "x-semio-state": "artifact" },
-    "computed": { "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json", "x-semio-state": "artifact" },
-    "equation": { "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json", "x-semio-state": "artifact" }
+    "graph": {
+      "$ref": "#/$defs/graph",
+      "x-semio-state": "artifact"
+    },
+    "geometry": {
+      "$ref": "#/$defs/geometry",
+      "x-semio-state": "artifact"
+    },
+    "notation": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json",
+      "x-semio-state": "artifact",
+      "description": "🧾️ Content-addressed handle of the s.stdio.semio text child derived from `graph`."
+    },
+    "results": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json",
+      "x-semio-state": "artifact",
+      "description": "🧾️ Content-addressed handle of the s.stdio.semio table child derived from `graph`."
+    },
+    "computed": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json",
+      "x-semio-state": "artifact",
+      "description": "🧾️ Content-addressed handle of the s.stdio.semio value child derived from `graph` and `geometry`."
+    },
+    "equation": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json",
+      "x-semio-state": "artifact"
+    }
+  },
+  "$defs": {
+    "node": {
+      "title": "EquationNode",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label",
+        "x",
+        "y"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      }
+    },
+    "edge": {
+      "title": "EquationEdge",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "source",
+        "target"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "graph": {
+      "title": "EquationGraph",
+      "description": "🕸️ The parent-owned graph playground every graph leaf reads and writes.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "directed",
+        "nodes",
+        "edges",
+        "algorithm"
+      ],
+      "properties": {
+        "directed": {
+          "type": "boolean"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/node"
+          }
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/edge"
+          }
+        },
+        "algorithm": {
+          "type": "string"
+        },
+        "algorithmSeed": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "point": {
+      "title": "EquationPoint",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      }
+    },
+    "geometry": {
+      "title": "EquationGeometry",
+      "description": "📐️ The parent-owned point cloud every geometry leaf reads and writes.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "points"
+      ],
+      "properties": {
+        "points": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/point"
+          }
+        }
+      }
+    }
   }
 }

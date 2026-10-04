@@ -49,7 +49,12 @@
             "a": 1.0
           },
           "metallic": 0.0,
-          "roughness": 0.5
+          "roughness": 0.5,
+          "baseColorTexture": null,
+          "metallicRoughnessTexture": null,
+          "normalTexture": null,
+          "occlusionTexture": null,
+          "emissiveTexture": null
         }
       ],
       "textures": [

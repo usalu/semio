@@ -80,7 +80,7 @@ fn install_catalogue_fixture_extension() {
                 settings: vec![],
             },
         };
-        let manifest_json = semio_framework_os_flow::os_pack::json::to_json_string(&manifest);
+        let manifest_json = semio_framework_pack_json::to_json_string(&manifest);
         semio_framework_os_flow::install_flow_extension_manifest("generation2d-catalogue-test-fixture", &manifest_json).expect("fixture extension admission");
     });
 }

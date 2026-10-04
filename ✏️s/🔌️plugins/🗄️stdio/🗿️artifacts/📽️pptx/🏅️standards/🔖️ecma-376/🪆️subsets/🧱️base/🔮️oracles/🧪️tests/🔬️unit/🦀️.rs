@@ -17,8 +17,8 @@ fn spec(kind: &str, params: &Json) -> Json {
 /// ⚖️ The two laws `🧱️mutate-pptx-ecma-376`'s adapter asserts in role, proven here against the real
 /// deck without the runner: every declared kind moves the ordered slide/shape projection, and
 /// every declared kind's own computed inverse lands back on the untouched deck's projection.
-/// Nothing is exempt from either — every one of the eight kinds is defined on the slide list or
-/// on a shape inside it, which is precisely what the projection reports.
+/// Nothing is exempt from either — every one of the nine kinds edits the slide list or a shape inside
+/// it, which is precisely what the projection reports.
 #[test]
 fn every_declared_kind_is_observable_and_its_inverse_restores_the_presentation() {
     let base = project_pptx_mutation(FIXTURE).expect("the independent reader projects the real deck");
@@ -35,9 +35,8 @@ fn every_declared_kind_is_observable_and_its_inverse_restores_the_presentation()
     }
 }
 
-/// 🔒️ Both halves of the identity law, on the real deck. `oracle_round_trip` is the same rebuild
-/// path every kind takes: unzip, parse each slide, regenerate every slide-related OPC part from
-/// the typed slide/shape list, rezip.
+/// 🔒️ Both halves of the identity law, on the real deck: `oracle_round_trip` unzips, parses each slide,
+/// regenerates every slide-related OPC part from the typed slide/shape list and rezips.
 #[test]
 fn the_round_trip_is_projection_stable_and_not_a_byte_passthrough() {
     let rebuilt = oracle_round_trip(FIXTURE).expect("the reference re-serializes the deck");
@@ -60,5 +59,5 @@ fn kinds_matches_the_catalog() {
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "the pptx-ecma-376-base catalog is missing {kind:?}");
     }
-    assert_eq!(KINDS.len(), 8, "PptxMutation declares eight kinds");
+    assert_eq!(KINDS.len(), 9, "PptxMutation declares nine kinds");
 }

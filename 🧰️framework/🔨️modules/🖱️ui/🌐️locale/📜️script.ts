@@ -9,15 +9,15 @@ import { cmdBudgetMs } from "../../🏃️process/⏱️budget/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (segments.length !== 1 || segments[0] !== "contract") throw Error("Expected test contract");
-    if (!process.env.SEMIO_TEST_ARTIFACT_DIR) throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
+    if (segments.length !== 1 || segments[0] !== "contract") throw new Error("Expected test contract");
+    if (!process.env.SEMIO_TEST_ARTIFACT_DIR) throw new Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
     await runBudgetedTestCommand(process.execPath, ["test", resolve(this.root, "🧪️tests/🟦️.ts")], { cwd: this.root, budgetMs: testLevelBudgetMs(), env: process.env, throwOnFailure: true });
   }
 }
 
 class CheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (segments.length !== 1 || segments[0] !== "types") throw Error("Expected check types");
+    if (segments.length !== 1 || segments[0] !== "types") throw new Error("Expected check types");
     await runOwnedCommand(process.execPath, ["x", "tsc", "--noEmit", "--incremental", "false", "-p", resolve(this.root, "tsconfig.json")], this.root, "ui-locale-contract-types", cmdBudgetMs(), { env: process.env });
   }
 }

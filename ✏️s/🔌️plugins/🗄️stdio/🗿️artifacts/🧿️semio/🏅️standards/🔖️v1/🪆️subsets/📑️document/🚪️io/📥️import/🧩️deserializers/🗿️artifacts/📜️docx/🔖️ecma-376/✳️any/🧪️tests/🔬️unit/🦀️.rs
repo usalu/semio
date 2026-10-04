@@ -29,7 +29,7 @@ pub(crate) fn sample_docx() -> DocxSnapshot {
 
 #[semio_framework_async_macros::async_test]
 async fn maps_styles_paragraphs_and_tables() {
-    let semio = semio_framework_plugin::resolve_ready(SemioDocumentFromDocx::deserialize(&sample_docx())).expect("deserialize");
+    let semio = ::semio_framework_async::poll::resolve_ready(SemioDocumentFromDocx::deserialize(&sample_docx())).expect("deserialize");
     assert_eq!(semio.styles.len(), 2);
     assert_eq!(semio.styles[1].based_on.as_deref(), Some("Heading1"));
     assert_eq!(semio.blocks.len(), 3);

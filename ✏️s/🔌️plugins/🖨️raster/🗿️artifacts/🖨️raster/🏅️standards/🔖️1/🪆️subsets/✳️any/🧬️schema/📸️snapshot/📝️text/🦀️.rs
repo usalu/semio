@@ -12,7 +12,7 @@ use crate::RasterSnapshot;
 pub const SEMIO_RASTER_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
 /// 📖️ Parses `.raster` DSL text into a `RasterSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<RasterSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<RasterSnapshot, semio_framework_diagnostic::TextError> {
     <RasterSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 

@@ -182,7 +182,12 @@ own convention. It blocked every build of `semio-framework-os-kernel` with its l
 
 ## Session 3 — 2026-10-02 (S3-TEXT, coordinator `⚪b7db773a…`)
 
-Status: **IN PROGRESS** (updated at every milestone). Scratch output: `T/🗑️generated/s3-text/`.
+Status (10-03 11:05): **SOURCE-COMPLETE** (incl. audit T1–T4 and the P1 `Binary64Transport` fix) for N7 (root cause fixed), N8, N10 +
+the shared node-graph rows, closure §20.3 (stdio text); TS/schema/lint/Python verification green; the Rust runs (writer, rewriting,
+stdio md/html/binary/deflate, plugin, renderer wgpu tests) are **owed** until the coordinator's TREE GREEN (11:04: `semio-framework`
+red from the diagnostic `FaultParams` move; stdio-dependent crates wait on a peer migration); the renderer wgpu check is GREEN. A
+peer is migrating the trinity rewriting document to a typed `workingGraph` (S3.5) — the TEXT working-graph leaves must move with it.
+Scratch output: `T/🗑️generated/s3-text/`.
 
 ### S3.1 Repair-first diff (fleet rule 28)
 
@@ -204,8 +209,45 @@ edit found; `🛠️tool-machine`, the plugin runtime tool-machine glue, the typ
 | `node node_modules/typescript/bin/tsc -p T/🧪️w3-t2-text-typecheck.tsconfig.json` | **0 errors in TEXT scope**; 4 peer errors (`🏪️store/👷️worker/🟦️.ts:3776,3842` + `🔄️sync/🧪️tests/🔬️backbone-parity/🟦️.ts:77` TS2741 `line`; `🐚️Shell/🟦️.tsx:1112` TS2304 `idleInstalledServiceStatusV1`) |
 | `bun ./📜️script.ts schema mutation-payloads --under <scope>` (cwd `…/🔨️modules/🧪️test`), 9 scopes | **0 findings** each: rewriting 14/14 (14 leaves witnessed), writer 10/10, vcs 6/6, jack 14/14 (13), md 11/11, html 19/19, txt 10/10, binary 18/18, deflate 9/9 |
 | `bun ./📜️script.ts schema mutation-inputs --under <scope>`, 9 scopes | **0 findings** for writer, vcs, jack, md, html, txt, binary, deflate; rewriting 21/21 inputs described, **1** `leafUncatalogued` (`delete-working-nodes`, awaits the central `schema generate`) |
+| `bun test ./🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/✂️text-splice/🟦️.test.ts` (after N8: `hostSignals` law) | **69 pass / 0 fail** |
+| `node node_modules/typescript/bin/tsc -p T/🧪️w3-t2-text-typecheck.tsconfig.json` (after N8 + the two trinity wire leaves' TS mirrors) | **0 errors in TEXT scope**; the same 4 peer errors |
+| `bun test ./T/🗑️generated/s2-text/retire-oracle.test.ts` (TS retirement oracle, 14-row corpus) | **1 pass / 0 fail** (new rows 11 and 3 bytes confirmed independently) |
+| Python second implementation (`♻️mutate-rewrite-1/🐍️.py`, stubbed `semio_repo_test`) on the `🔌️connects`, `🪚️cuts`, `✂️deletes` quintets + the Nakagin connect/disconnect rows | all land on the committed after-state, touch only `beforeFixtureJson`, invert exactly; Nakagin 179 → 180 / 177 edges |
+| `SEMIO_TEST_LEVEL=long node node_modules/vitest/vitest.mjs run --config …/⚛️react/🧪️tests/🎚️config/🟦️.ts browser-frame-transport text-carets echo-pack` (18:57, after N8: transport `host-page-hidden` law, React TextEditor on `TEXT_EDITOR_TYPING_HOST_SIGNALS`) | **3 files, 71 passed** |
+| `bun ./📜️script.ts schema mutation-payloads --under ✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting` (19:00, 16 leaves) | **0 findings**: 16/16 payloads and feature rows meet their leaf schema, 16/16 leaves witnessed |
+| `bun ./📜️script.ts schema mutation-inputs --under …/♻️rewriting` (19:01) | all inputs described; **3** `leafUncatalogued` (`delete-working-nodes`, `connect-working-ports`, `disconnect-working-edges` — central `schema generate`) |
+| `CARGO_INCREMENTAL=0 CARGO_TARGET_DIR=…/target-nde-s3-text cargo test -p semio-framework-tool-machine --lib` (19:05; typing machine + ledger + scrub laws, Rust side of the TS twin) | **31 passed / 0 failed** |
+| `… cargo test -p semio-framework-ui-scene --lib -- text_splice` (19:21; incl. new `every_host_signal_commits_with_a_tool_machine_reason`) | **10 passed / 0 failed** |
+| `node node_modules/typescript/bin/tsc -p T/🧪️w3-t2-text-typecheck.tsconfig.json` (10-03 06:00, + `➕️add-working` mirrors) | **0 errors in TEXT scope**; 1 peer error (`🌐️World3dHost/🟦️.tsx:2225` TS2345) |
+| `bun test ./T/🗑️generated/s2-text/retire-oracle.test.ts` (15-row corpus) + Python second implementation on `➕️adds`/`🔌️connects`/`🪚️cuts` + Nakagin add | **1 pass**; all land and invert; Nakagin 180 → 181 nodes |
+| `bun ./📜️script.ts schema mutation-payloads --under …/♻️rewriting` (06:01) | **0 findings**, 17/17 leaves witnessed |
+| writer lib tests, 10-03 05:51 and 05:58 | stopped upstream: 1st at a peer caller-before-callee (`🔌️plugin/⏪️time-travel/🦀️.rs:2311` `TimeTravelLabel::MemberEdited`, callee landed 05:55); 2nd at `semio-s-artifact-stdio-zip` (52× E0277 `ValueError`→`String`) + `-svg` (6) — **owed** |
+| stdio md/html/binary/deflate/txt `--lib -- editor` (06:05) | stopped in `semio-framework-os-kernel` (`🏪️store/♻️retirement/🦀️.rs:4-5` E0117, io types moved crate) — **owed** |
+| `cargo check -p semio-framework-os-kernel --lib` (10-03 06:47, the 20-min cheap check) | **red, 21 errors** (peer io extraction) — every owed TEXT run waits for TREE GREEN |
+| `cargo check -p semio-framework-os-renderer-wgpu --lib --tests` (12:24, 12:35, 12:55) | 1st SIGKILLed (exit 137, swap); 2nd stopped upstream (peer schema-registry split, S3.5); 3rd cut by the 13:05 usage limit — **owed** |
+| writer `cargo test … -p semio-s-artifact-writer-writer --lib` (11:54, 12:22, 18:47, 19:01, 19:15) | 1st stopped at a peer caller-before-callee in `🔌️plugin/⏪️time-travel/🦀️.rs:463` (`begin_refusal`, fixed 11:55); 2nd SIGKILLed with replication red; 3rd + 4th killed by the coordinator in the ✏️s `prebuild_lock_exclusive` flock cycles; 5th stopped in `semio-framework-os-kernel` (peer, 295 errors: `🚪️io/🦀️.rs:7` E0432 `dsl::Diagnostic`, `📡️spr/🧵️channel/🦀️.rs:216+` E0425/E0433 `crate::Fault`/`FaultOrigin`/`FaultCode` — kernel-root exports moved by the schema-split sweep) — **owed** |
+| `bun ./📜️script.ts schema mutation-payloads --under …/♻️rewriting` (10-03 07:00, after `Binary64Transport`) | **0 findings**: 17/17 fixture payloads and wire-form feature rows meet their leaf schema, 17/17 leaves witnessed |
+| `bun ./📜️script.ts schema mutation-inputs --under …/♻️rewriting` (07:00) | 20/21 inputs described; the 27 `{bits}` findings of 06:12 are **gone**; left: **1** `refUnresolved` (`change-parameter-binding /newValue` → `framework/graph/manifest/property-value.json` not in the catalog documents) + **4** `leafUncatalogued` (the four new leaves) — both central `schema generate` |
+| `schema mutation-inputs` over jack, writer, vcs (07:03) | **0 findings** (21/21, 14/14, 6/6); stdio: 1661/1661 described, 40 `leafUncatalogued` all `patch-snapshot` leaves of OTHER formats (docx, dwg, dxf, epw, gif, ifc, mp3, pptx, semio/v1/*, step, stl, tsv, xlsx — peer closure; md/html/txt/binary/deflate clean) |
+| `node node_modules/typescript/bin/tsc -p T/🧪️w3-t2-text-typecheck.tsconfig.json` (10:45, + `➕️add-working` mirror on `Binary64`) | **0 errors in TEXT scope**; 2 peer errors (`🏪️store/👷️worker/🟦️.ts:7179` TS2353 `retryColdPairBackpressure`, `🌐️World3dHost/🟦️.tsx:2226` TS2345) |
+| `bun test` the 8 rewriting `🧪️tests/**/🟦️.ts` files (10:46) | **48 pass / 1 fail** — the fail is a peer's in-flight typed snapshot (10:36–10:38, untracked `📸️snapshot/🌳️typed/` + `🧫️fixtures/🪶️sqlite/🌳️typed/🔣️.json` reshaped to `workingGraph/lhs/rhs`, while `parseRewritingArtifact` still reads `beforeFixtureJson`): `Rewriting published JSON boundary owns normalized rule and working graph fields` (`📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts:58`) |
+| `cargo check -p semio-framework-os-renderer-wgpu --lib --tests` (10:49–10:54, shared target, gated) | **GREEN** — 0 errors, 854 warnings (proof of type-check): N8 (typing end, `blur_text_editor`, winit `Focused(false)`, the wasm door) and its law compile natively |
+| `… cargo test -p semio-framework-os-renderer-wgpu --lib -- text_editor` (10:54–11:04, private target) | stopped upstream in `semio-framework` lib: a NEW peer break mid-flight — `🧰️framework/📦️packages/🦀️rust/🦀️.rs:63-64` E0432 `semio_framework_diagnostic::{FaultParams, is_fault_param_name}`, `🛂️manifest/🦀️.rs:5656,5696,5702`, `🎠️kernel/🦀️.rs:2172` E0609 `Fault.params` (diagnostic-crate fault-params move, owner: the DSL/diagnostic extraction peer) — **owed** on TREE GREEN |
+| `bun test ./…/♻️rewriting/…/🧬️mutations/🧪️tests/🔢️binary64-transport/🟦️.ts` (11:08, new P1 law) | **2 pass / 0 fail** (79 expects) |
+| `node node_modules/typescript/bin/tsc -p T/🧪️w3-t2-text-typecheck.tsconfig.json` (11:09, + the P1 law) | the law and every TEXT file I own typecheck; **6 TS2353** in rewriting `↩️inverse/🟦️.ts` mirrors (`newBeforeFixtureJson` no longer on `EditBeforeFixture`, peer migration 11:04, S3.5) + 1 peer (`🌐️World3dHost/🟦️.tsx:2226`) |
 
 ### S3.3 Changes
+
+**N7 (gap audit P1) — root cause of the six red writer typing laws found and fixed (source; run owed).** A committed run publishes
+through `publish_typing_commits` → `dispatch_emit` → `dispatch_emit_inner`, which dispatched the edit, then REVALIDATED the
+interaction state, then logged the row. The writer declares a `Topology` interaction domain, so the revalidation calls
+`app_interaction_topology` → `refresh_cache` → `backfill_command_log`, which filed the brand-new edit as a backfilled row; the
+dispatch then logged it a second time — two rows of ONE edit (the laws saw `rows_before + 2` with `edits_before + 1`). Fix in
+`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs` `dispatch_emit_inner` (region `🔖️Emit`, compile-atomic): the row is logged
+before `revalidate_interaction_state_after_document_change` / `apply_interaction_writes` (the abort path keeps its order), and the
+config-only branch logs before `apply_interaction_writes` (same race for a config edit); the doc names the invariant. Every app with
+a `Topology` domain on the `dispatch_emit` route had the duplicate row; the migrated route already guarded it
+(`record_typed_operation_lane` checks `logged_seq`).
 
 **N8 (gap audit P2): the wgpu text host ends a typing run on blur and on a hidden page, like React.**
 - Shared corpus: `🖱️ui/🎬️scene/🧫️fixtures/✂️text-splice/🔣️.json` gains `hostSignals` (idle → `idle`, caretMove → `selectionJump`, blur →
@@ -222,6 +264,8 @@ edit found; `🛠️tool-machine`, the plugin runtime tool-machine glue, the typ
 - Blur: the interpreter's focus-loss helper `clear_text_editor_caret` became `blur_text_editor` (ends the run + clears the caret) at all
   four focus-loss sites (pointer press elsewhere, accessibility blur, clipboard/text on a gone editor, key route on a gone editor)
   (`🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs`).
+- Native desktop (`🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs`): `WindowEvent::Focused(false)` ends every open run (`blur`); the open run's
+  pending outbox (`has_pending_text_work`) keeps the frame loop driving the commit.
 - Hidden: the browser host posts `host-page-hidden` on `visibilitychange` → hidden (`🌐️browser-host/🟦️.ts` `wireInput`); the transport
   (`🚚️browser-frame-transport/🟦️.ts`) posts it at once outside any batch (`setHostPageHidden`, type `BrowserFrameHostPageHidden`; a
   hidden page gets no rAF, so batching would stall it); the frame Worker (`🎞️frame-worker/🟦️.ts`) calls `semioWgpuHostPageHidden` and
@@ -270,14 +314,355 @@ edit found; `🛠️tool-machine`, the plugin runtime tool-machine glue, the typ
   rule-side wires refused), `a_deleted_working_graph_selection_is_relative_leaves`; `add_and_delete_rhs_set_clause` now sends a
   `delete` row.
 
+**Audit `📓️audit-s3-tools.md` S3-TEXT (T1–T4), 10-03 05:50–06:30.**
+- T1 (major) — trinity's add-node gesture restored as an intent leaf: new relative leaf `➕️add-working` `add-working-node {id, kind,
+  name, x, y}` (tag 14; `duplicate-id` Fatal / `target-mismatch`; hard bounds id/name ≤ 512, kind ≤ 256; label "Add node “…”" /
+  "Knoten „…“ hinzufügen"; quintet `➕️adds`, 6 laws, every registry, harness + Nakagin rows) written by
+  `T/🧪️s3-text-trinity-add-node.py`, and the guest's own verb `addWorkingNode {kind?, name?, x, y}` (`✏️editor/🎮️commands/➕️add-working-node`:
+  first free `n<k>` id, kind = given / the resolved manifest's first node kind / the first node's, name = given / id) declared with
+  staged args (Actions pane on both hosts), a context-menu `create` group entry, Migrated, Artifact lane, described en/de. Law
+  `the_add_node_verb_is_one_relative_leaf_and_canonical_graphs_undo_relatively`.
+- T2 — `connect-working-ports` and `add-working-node` undo with ONE exact RELATIVE row (`disconnect-working-edges` of the drawn wire,
+  `delete-working-nodes` of the added node) whenever the base graph string is already canonical (`working_graph_is_canonical`: the
+  sorted-key compact form every working-graph leaf writes), else with ONE `edit-before-fixture` (the only exact undo of a
+  non-canonical string; this is also why the committed quintets on the hand-written chain fixture still invert by edit-before-fixture).
+  `connect-working-ports` / `disconnect-working-edges` gained `maxLength` (ids 512, kind 256) in schema AND `holds_invariants`.
+  `disconnect-working-edges` keeps the whole-graph inverse: a cut wire's original id, properties and array position cannot be
+  re-drawn by `connect-working-ports`; an exact relative undo needs a `restore-working-edges {edges: [{at, edge}]}` leaf (open, S3.4).
+- T3 — analysed, no defect: the composed-child route logs its row INSIDE `dispatch_emit_group` (after `dispatch_group`, before
+  any revalidation) and only then runs `apply_interaction_writes`; the migrated route is guarded by `record_typed_operation_lane`'s
+  `logged_seq`. The group-branch law over a `Topology` app is routed to S3-W2A (toy app `plugin-runtime-plugin-builder-contract`).
+- T4 — laws that ONLY the named replace intents emit `set-snapshot`: md `only_another_document_schema_is_a_whole_document_set_snapshot`
+  (whole corpus none + another schema = exactly one), html `only_the_named_replace_intents_are_a_whole_document_set_snapshot` (corpus
+  none + another schema + a root of another kind), binary and deflate `only_another_document_schema_is_a_whole_document_set_snapshot`.
+- Peer churn absorbed: the pack-JSON extraction (`pack::*` → `semio_framework_pack_json::*`) reached the rewriting tree at 22:01; the
+  generator was ported before its real run.
+
+**P1 (coordinator, 10-03): trinity f64 leaf inputs are `Binary64Transport`, so a history edit of them validates.** The four layout/drag
+leaves referenced `s/trinity/rewriting/artifact.json#/$defs/Binary64` — the exact `{bits}` word ONLY — while `payload_value` and the
+history editor's validator projection (`time_travel_json`) carry plain numbers, so every history edit of them failed validation (and the
+input census described them as `{bits}` objects: the 27 findings of 06:12, S3.5).
+- Schema-first: the 8 refs in `📐️change-rule-layout` (`newPoint.x/y`), `🫳️drag-rule` (`dx`, `dy`), `✋️drag-working` (`dx`, `dy`),
+  `📍️set-rule-layout` (`x`, `y`) and the `➕️add-working` `x`/`y` (was `"type": "number"`) now reference the canonical
+  `https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport` (word | number); x-semio-ui
+  unchanged. Rust stays `f64`; GraphQL `Float!` / protobuf `double` unchanged.
+- TS: the `➕️add-working` payload/diff mirrors now carry the exact `Binary64` domain word like their siblings (were `number`).
+- Grep of the other TEXT trees: jack/writer/vcs/stdio md/html/txt/binary/deflate leaves hold no word-only `Binary64` input (jack's
+  `$defs/Binary64` refs are document state in its artifact schema, not leaf inputs; its `move-node`/`create-node` inputs are numbers).
+- Language-agnostic law (TS + ajv, runs now): `🧬️mutations/🧪️tests/🔢️binary64-transport/🟦️.ts` — (1) no rewriting leaf input refs the
+  word-only `$defs/Binary64`, and the `Binary64Transport` census is exactly the 10 inputs above; (2) for every committed fixture
+  payload of the 5 leaves, every transport site accepts a plain number (`50`, `-0.125`) and the exact word, and rejects `"50"`,
+  `{bits: "50"}` and a word with an extra member (mutation-checked: the old word-only ref rejects `50`, the original bug).
+- Law `a_history_edit_of_a_binary64_offset_validates_and_replays` (`✏️editor/🧪️tests/🔬️unit/🦀️.rs`, region `🕹️NodeDragLaws`): a working
+  drag through `nodeGraphEdit` → `historyEditBegin` on its `drag-working-nodes` leaf → `historyEditInput {path: "/dx", value: 50}` →
+  Accept → replay to `Reviewing` → Finalize + Commit overwrite → the dragged node sits at the edited offset (same shape as S3-GRAPHS'
+  dag law). Run owed (S3.4).
+
 ### S3.4 Open items
 
-1. N7 writer typing laws (6/23 red since session 1: one extra edit row per committed run) — every session-2/3 build was stopped
-   upstream before the writer tests ran; root cause still undiagnosed (needs the `describe` output of a run). See S3.2 for the runs.
-2. trinity rewriting: adding a node on the working graph has no gesture path any more (the shared rows carry no add-node record;
-   `addWidget` is a flow verb) — a product decision, not a residual whole-graph write.
-3. The session-2 trinity, stdio md/html/txt/binary/deflate and writer Rust laws are WRITTEN BUT UNVERIFIED until a cargo run reaches them.
+1. N7 writer typing laws: root cause fixed in source (S3.3); the writer lib run that proves it is owed (blocked upstream, S3.2).
+2. trinity rewriting: `disconnect-working-edges` (and `delete-working-nodes`) still undo with the whole base graph — exact relative undo
+   needs a `restore-working-edges` leaf (T2 rest). Add-node is restored (T1).
+3. WRITTEN BUT UNVERIFIED (framework red, peer DSL extraction) — the owed runs after TREE GREEN, one at a time, gated, private target
+   `…/target-nde-s3-text` for tests:
+   `cargo test --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-writer-writer --lib` (N7: the six `typing_runs_tests` + `text_edit`);
+   `cargo test -p semio-framework-plugin --lib -- typing tool_machine` (the `dispatch_emit_inner` reorder);
+   (`cargo check -p semio-framework-os-renderer-wgpu --lib --tests` is GREEN since 10:54) `cargo test -p semio-framework-os-renderer-wgpu --lib -- text_editor`
+   (N8 law) + `cargo check -p semio-framework-os-renderer-wgpu --lib --target wasm32-unknown-unknown` (the wasm door);
+   `cargo test --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-trinity-rewriting --features component-app-assembly --lib` (three new
+   leaves' quintet laws, structural correspondence, retirement, node-graph laws, add-node law, the P1 binary64 history-edit law, harness);
+   `cargo test --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-stdio-md -p semio-s-artifact-stdio-html -p semio-s-artifact-stdio-binary
+   -p semio-s-artifact-stdio-deflate -p semio-s-artifact-stdio-txt --features <each>/component-app-assembly --lib` (the editor modules,
+   hence every details-edit / net-leaf / T4 law, compile only with `component-app-assembly`; without it the 06:31 run reached 72 + 66 + 64
+   schema tests and 0 editor tests).
 4. Writer `setSnapshot` / `setSnapshotJson` / `setFixtureJson` / `openDocument` load a whole document through the `LoadDocument`
    effect — genuine whole-document replacement intents (agent / dev-chrome load), not mutation leaves; named, kept.
+5. After the peer's typed-`workingGraph` migration lands: re-run the rewriting P1 law, payload/input lints and `tsc`, and confirm the
+   TEXT working-graph leaves (`connect/disconnect/add-working`, their relative inverses, the add-node verb, the node-graph row map)
+   were carried; port whatever was not (S3.5).
 
 ### S3.5 Coordinator actions and peer breaks
+
+- Central `schema generate`: `delete-working-nodes`, `connect-working-ports`, `disconnect-working-edges`, `add-working-node` (rewriting `leafUncatalogued`
+  until it runs); then `describe` for writer, trinity rewriting (new leaves + node-graph rows), stdio md/html/binary/deflate (no verb
+  change), and the wgpu renderer's `generate-frame-worker` (new `host-page-hidden` message + `semioWgpuHostPageHidden` door).
+- Re-activation of the wgpu lane to observe N8 live (blur by pressing outside the editor, hidden by switching tabs) — I never start
+  serves (fleet rule 15).
+- S3-CLOSURE (wave 5a, 19:19) deleted `Emit.coalesce_key` and swept the TEXT residues with it (the `🗒️note` accumulator guard, the
+  trinity drag law's `coalesce_key.is_none()` line) — re-grepped 19:30: 0 `coalesce_key` in writer, trinity, vcs, note `🧵️retained`,
+  stdio md/html/contract. Still open for the contract owner: `snapshot_edit_patch` / `snapshot_edit_set_snapshot` stamp the literal
+  description `"Edit document details"` (G7).
+- `schema mutation-inputs` over `♻️rewriting` (10-03 06:12) showed 27 findings where every `f64` input resolved to a `{bits}` object —
+  cause: the leaf schemas' word-only `artifact.json#/$defs/Binary64` refs (my 06:12 note blamed the catalog; wrong). Fixed by the P1
+  `Binary64Transport` refs (S3.3); 0 such findings at 07:00.
+- Central `schema generate` must also publish `framework/graph/manifest/property-value.json` into the catalog documents:
+  `change-parameter-binding /newValue` is `refUnresolved` until it does (the leaf schema is right; the document is missing).
+- Central `schema generate` also catalogs the 40 stdio `patch-snapshot` leaves of other formats (peer closure work, not TEXT).
+- **Peer migration in flight (10:36 → 11:04+): the rewriting DOCUMENT is moving off `beforeFixtureJson` to a typed `workingGraph`**
+  (`📸️snapshot/🌳️typed/`, sqlite DDL, artifact schema `workingGraph`, `🖼️edit-before-fixture` now `{newWorkingGraph: JackSnapshot}`
+  in schema + TS at 11:04; edits across `✂️delete-working`, `✋️drag-working`, `👈️edit-lhs`, retirement). I did NOT touch these files
+  while it runs. State at 11:10: the TS boundary test `📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts:58` is red (parser still reads
+  `beforeFixtureJson`), and `tsc` shows 6 TS2353 `newBeforeFixtureJson` in the `↩️inverse/🟦️.ts` mirrors of `✂️delete-working`,
+  `✋️drag-working`, `➕️add-working`, `🔌️connect-working`, `🩹️patch-working`, `🪚️disconnect-working` — the migrating peer must carry
+  them (and the Rust leaves, `working_graph_is_canonical` / canonical-JSON relative inverses, the generators' Python second
+  implementation, the editor's `working_graph_*` test helpers) along. **Risk of the same P1 class there:** `newWorkingGraph` →
+  jack `snapshot.json`, whose floats (camera x/y/zoom, node positions) are word-only `#/$defs/Binary64`; a history edit of an
+  `edit-before-fixture` row that projects plain numbers would fail validation exactly as the trinity leaves did — the typed
+  working graph should reference `Binary64Transport` on edited inputs too (owner: the migrating peer + S3-GRAPHS for jack).
+- Remodel's `change-stream-sync` refs its OWN `remodeling/artifact.json#/$defs/Binary64Transport` (not the canonical framework def) —
+  S3-STROKES' tree, noted only.
+- Peer breaks seen this session (not TEXT files): `📡️replication/🎮️mutation/🦀️.rs:218` E0433 `semio_framework_schema_state` (12:24,
+  fixed by 12:33); `🧬️schema/📇️registry/🦀️.rs:349/:511` duplicate `ArtifactSchemaRegistry` / `SchemaDescriptorRegistryError` mid-split
+  (12:20, single definition again by 12:55); TS: `🏪️store/👷️worker/🟦️.ts:3776,3842`, `🔄️sync/🧪️tests/🔬️backbone-parity/🟦️.ts:77`
+  (TS2741 `line`), `🐚️Shell/🟦️.tsx:1112` (TS2304 `idleInstalledServiceStatusV1`).
+
+## Session 4 — 2026-10-04 (S4-TEXT, coordinator `⚪487b04ad…`)
+
+Status (02:12): STARTED. Scratch output: `T/🗑️generated/s4-text/`.
+
+### S4.1 Repair-first diff (fleet rule 34)
+
+`git diff HEAD --stat` over the TEXT trees (changes are staged): writer 106 files, trinity 538 (jack 169), vcs 59, stdio md 36 / html 39 /
+txt 69 / binary 31 / deflate 29, `🛠️tool-machine` 8, `🎬️scene` 17. Files newer than the S3 report end (10-03 11:10): every one is a peer edit
+(value/DSL/pack sweeps 00:00–01:27 in writer/vcs/stdio; ui-scene `📐️math`, `scenes-value-round-trip`, `component-source` 23:29–00:13);
+`🛠️tool-machine` last touched 10-03 11:10–11:29 (S3 TEXT/GRAPHS, complete). **Trinity is under active peer work**: rewriting last edit
+02:06 (`📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts`), jack 02:01 (`🛜️wire-runtime` close-refusal); the peer gave jack a retained Semio-graph
+`content` child (`🔌️jack/🪆️content/🦀️.rs`, `🧪️tests/🪆️record-owner`, 22:12–23:25) and rewriting a `🪆️content` child (`👁️read`, `🧵️capture`,
+`🧫️fixtures/🪆️child`). Not quiet: no trinity edit by me until it is quiet >= 30 min (S4.3). No half-finished TEXT edit found.
+
+### S4.2 Verification (commands from the repo root unless noted; cargo gated, private `target-nde-s4-text` for tests)
+
+| Command | Result |
+|---|---|
+| `bun test ./🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🧪️conformance/🟦️.ts` | **34 pass / 0 fail** (25 318 expects) |
+| `bun test ./🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/✂️text-splice/🟦️.test.ts` | **69 pass / 0 fail** (38 206 expects) |
+| `bun test ./…/👕️canvas-presence/🧪️tests/🔬️unit/🟦️.ts ./🧰️framework/🔨️modules/📡️replication/👕️peer-overlay/🧪️tests/🔬️unit/🟦️.ts` | **9 pass / 0 fail** |
+| `bun ./🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts presence-peer-codec-check --oracle-only` | **41 neutral Rust/TS vectors, 32 hostile inputs rejected** |
+| `node node_modules/typescript/bin/tsc -p T/🧪️w3-t2-text-typecheck.tsconfig.json` | the 6 S3 TS2353 `newBeforeFixtureJson` are GONE (peer carried the inverse mirrors); **9 errors**, all in the peer's in-flight rewriting `♻️retirement/🧪️tests/🔬️document-retirement/🟦️.ts:13-22` (TS2698 / TS18046 `fixture` unknown, rewritten by the peer 10-04 00:09) — not TEXT |
+| `cargo test -p semio-framework-ui-scene --lib -- text_splice` | **10 passed / 0 failed** |
+| `cargo test -p semio-framework-tool-machine --lib` | **33 passed / 0 failed** |
+| `cargo test --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-writer-writer --lib` (02:34) | SIGKILLed (exit 137) at 02:50 after a silent flock wait (deadlock breaker, rule 33); re-run once (gated) |
+| same, re-run 02:54 | stopped upstream in `semio-framework-plugin` (peer, mid-edit 03:02–03:07): `🔌️plugin/🦀️.rs:32203` E0599 `ArtifactStoreOneItemFootprint::for_gesture` (callee landed in `🏪️store/🦀️.rs:16307` later), `⏪️time-travel/🦀️.rs:3901` E0277 `Label: From<&String>` |
+| same, re-run 03:13 | stopped upstream in `semio-framework-os-kernel` (peer): `🚪️io/🦀️.rs:2089,2095,2719,2736` E0308 `IoOutcome<(Cow<[u8]>, ArchiveChildren)>` vs tuple (W-a serializer seam mid-flight), `📡️spr/🎮️command/🦀️.rs:1133` E0507 — owed on TREE GREEN |
+| `bun ./📜️script.ts schema mutation-inputs --json --under ✏️s/🔌️plugins/🔱️trinity` (03:1x) | **66 findings** (S3: jack 0, rewriting 5): `wordOnlyFloat` 8 (jack `move-node` `/x`,`/y` NEW; `replace-query-result` `/result/graphFixture/camera/{x,y,zoom}`; `edit-before-fixture` `/newWorkingGraph/camera/{x,y,zoom}`), `labelMissing` 43 + `optionLabelMissing` 5 + `refUnresolved` 5 (peer's typed `newWorkingGraph`/`newLhs`/`newRhs` carry no `x-semio-ui`; `valueType` refs), `refUnresolved` 1 (`change-parameter-binding /newValue`, central generate), `leafUncatalogued` 4 (central generate) — peer regressions in the TEXT tree, fixed after its quiet |
+| `bun ./📜️script.ts schema mutation-editability --json --under ✏️s/🔌️plugins/🔱️trinity` (cwd `…/🧪️test`) | 30 leaves, 30 editable, **14 `parentLeafReadsChild`**: jack 8 (`create-node`/`create-edge`/`delete-edge` via `jack_working_scene`, `delete-node`/`rename-node` via `nodes`, `move-node` via `jack_content_for_handle`, `change-`/`remove-data-property` via `base_property_value`) + rewriting 6 NEW (`drag-`/`patch-`/`delete-`/`connect-`/`disconnect-`/`add-working` via `jack_content_for_handle`: the peer moved `workingGraph` onto a content-addressed `s.stdio.semio@v1/graph` child) |
+
+### S4.3 Trinity — decisions and the peer
+
+- Coordinator (02:5x, approved): jack + rewriting content edits route through the shared `s.stdio.semio@v1/graph` child vocabulary (create/delete-node,
+  create/delete-edge, `drag-nodes`, S4-GRAPHS' `set-node-property` / `resize-node` / `rename-node`); no trinity-local duplicates; wait for the
+  peer's >= 30-min quiet; never revert its direction.
+- D15 check (read-only): graph `delete-node` inverse = `create-node` (full ports/properties) + `create-edge` per incident edge; `delete-edge` inverse =
+  `create-edge` (full edge; ports live on nodes and are untouched) — content-exact, but `create-node`/`create-edge` `push` to the tail, so undo is not
+  byte-exact (Vec order, no canonical sort; the trinity children are content-addressed by those bytes). Routed by the coordinator to S4-GRAPHS:
+  optional `at` insert index on `create-node`/`create-edge`, filled by the `delete-*` inverses (law: byte-identical bytes + content address after
+  delete → undo). D15 (`restore-working-edges`) is moot once that lands; no trinity leaf is added for it.
+- The graph `♻️restore-node`/`🔁️restore-edge` half-leaves that broke `semio-s-artifact-stdio-semio` at 03:0x are NOT S4-TEXT's (no source edit by me).
+- Second graph gap (approved, routed to S4-GRAPHS 03:2x): jack queries change EDGE properties (`EntityRef::Edge`), the graph vocabulary has only
+  node property leaves → `set-/add-/remove-edge-property` (exact inverses) mirroring the node trio.
+- Jack mapping (approved): `create-node` → graph `create-node` (name → label, x/y → position, ports direction → kind / kind → category),
+  `delete-node` → `delete-node`, `create-edge` → `create-edge` (`node@port` → source/target + ports), `delete-edge` → `delete-edge`,
+  `rename-node` (name) → `change-node-label`, `move-node` → `move-node`, node SET → `set-node-property` (existing key) / `add-node-property`
+  (sorted index), node REMOVE → `remove-node-property`, edge SET/REMOVE → the new edge trio. Parent vocabulary keeps `set-query` only.
+- Conversion plan (jack, then rewriting; sequence is the template): the executor yields `SemioGraphMutation` (its in-memory `Graph` applies the
+  graph variants), the run-query job publishes `set-query` (parent) + ONE `ChildEmit::of::<SemioGraphSnapshot, _>("content", child_id, …)`;
+  reorganize → graph `move-node`; patch-nodes / delete-selection → graph leaves; every reader (viewer, panels, inferences, operations,
+  run-query preparation) reads the child through `ChildContentView` (`context.children` / `doc.children`, never the parent's local owner,
+  which goes stale after a child-lane edit); the 8 jack leaf trees (Rust/TS/schema/graphql/proto/grammars/quintets/oracle rows/wire-runtime
+  DSL/retirement/structural correspondence/`mutate-jack-1` rows) are deleted; `composed_reload_law!("trinity", …)` for jack. Rewriting: the six
+  working leaves → graph `drag-nodes` / `change-node-label`·`change-node-kind` / `delete-node` / `create-edge` / `delete-edge` / `create-node`
+  child-lane leaves on the `workingGraph.content` child; `edit-before-fixture` stays the genuine whole-graph replacement.
+- `wordOnlyFloat` (8 at 03:1x): jack artifact `Camera {x,y,zoom}` refs the word-only `#/$defs/Binary64` and is reached by `replace-query-result`
+  (`/result/graphFixture/camera`) and rewriting `edit-before-fixture` (`/newWorkingGraph/camera`) → `Binary64Transport`; jack `move-node /x,/y`
+  disappears with the leaf.
+
+### S4.4 Writer peer-fallout repair (04:20–06:50; cut 04:15–06:45)
+
+- Writer was red in its own (non-sqlite) files after the peer value/DSL/io extraction (105 errors at 04:11). Script
+  `T/🧪️s4-text-writer-value-sweep.py` (anchored, every replacement count-asserted, staged then written atomically; `--check` dry run) moved
+  18 files: 6 io (de)serializers `IoError { message }` → `IoError::from_value_error(ValueError::new(InvalidValue, …))`; 5 serializer tests pass
+  `&ArchiveChildren::empty()` (W-a seam); retirement `close_step` ×5 + store-initializer `pump_active`/`pump_terminal_retirement` → `ValueError`
+  (`InvariantViolated` for the false-terminal/handback refusals, fault bytes via `into_message()`); `dsl::JsonValue` → `semio_framework_pack_json::Value`;
+  `TextError::new(InvalidValue, …)`; `dsl::DslValue` → `semio_framework_value::DslValue`; the generated `🗣️writer-languages` codec onto the generator's
+  current `semio_framework_value` template (`🕸️graph/🛂️manifest/📽️projection/🟦️.ts:84-89`). Plus one Edit (`💾️binary/🦀️.rs` RetireFault arm).
+- `cargo check --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-writer-writer --lib --tests` (04:25): 10 errors left — 9 in S4-INFRA's half-migrated
+  `📸️snapshot/🪶️sqlite/🛂️native/🦀️.rs` (still `Result<_, String>`; root sqlite file moved 04:16) + the binary arm fixed afterwards. Routed to `main`.
+- Coordinator 06:5x "TEXT take it": `🪶️sqlite/🛂️native/🦀️.rs` ported to `ValueError` (admit → `OwnershipLimit`; the native record helpers' constructors).
+  `cargo check --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-writer-writer --lib --tests` (08:37–08:45, rule-42 gate): **exit 0** — lib 3 warnings,
+  lib test 61 warnings (proof of type-check). Two earlier attempts (07:12, 07:47) were killed by the deadlock breaker / my 30-min background cap.
+  The native file was later extended by another agent (`admit_values`, semantic identity bytes) — not reverted.
+- Jack outcome law (S4-GATES routing 07:2x): the 8 jack `🔺️diff` leaves' `mutation.child-refused` (fatal, outside the frozen vocabulary) →
+  `MutationOutcome::error("mutation.target-missing", …)`; `bun ./📜️script.ts verify mutation-outcome-law`: jack 0 breaches; 3 left, all stdio
+  (png/bmp `*.diff.invalid-bytes`, pptx `stdio.pptx.canonical-address`) → S4-STDIO.
+- Rule 43 (CHECKS ONLY, disk 7.5 GiB at 11:35): every owed `cargo test` is **OWED (rule 43)**.
+
+### S4.5 vcs + jack (11:35–, rule 43/44: checks then CARGO FREEZE)
+
+- vcs (INFRA census 16 red, mine): script `T/🧪️s4-text-vcs-value-sweep.py` (count-asserted, staged, `--check`): 7 io `IoError { message }` →
+  `IoError::from_value_error(…)`; the vcs crate `Cargo.toml` gains `semio-framework-pack-json` (the 11:14 peer sweep moved `dsl::json` →
+  `semio_framework_pack_json` without the dependency); `preflight` back to the trait's `Result<_, String>` (the sweep had made it `ValueError`);
+  test retirement `close_step` → `ValueError`; 4 serializer tests pass `ArchiveChildren::empty()`; sqlite test `semio_framework_value::NativeDecodeControl`.
+  `cargo check … -p semio-s-artifact-vcs-vcs --lib --tests`: 11:44 run listed 13 lib + 14 test errors (all addressed above); the 12:11 re-check was
+  killed by the < 3 GiB unit prune → **WRITTEN BUT UNVERIFIED (rule 44 cargo freeze)**.
+- wordOnlyFloat: jack artifact `$defs/Camera {x,y,zoom}` → `framework/value/schema.json#/$defs/Binary64Transport` (reached by `replace-query-result`
+  `/result/graphFixture/camera` and rewriting `edit-before-fixture` `/newWorkingGraph/camera`, 6 of the 8 findings; jack `move-node /x,/y` go with the leaf).
+- `verify taxonomy report --scope ✏️s/🔌️plugins/🔱️trinity` (12:2x) crashed: "Nested Cargo catalog digest drift" (catalog regenerated 12:39 by a peer,
+  digest matches now) — §14 path renames re-run after the jack conversion (which deletes most jack fixture dirs).
+- Jack §20.15 conversion started in place (coordinator OK 12:3x; trinity excluded from the dev registry until "COMPOSITION GREEN trinity"). Plan:
+  executor effects (`GraphEffect`) instead of parent leaves → `graph_leaves(base content, effects)` → ONE child edit; parent vocabulary `set-query` only;
+  readers through `ChildContentView`; reorganize = child-target layout run (`member: content`, graph `move-node`); 8 leaf trees + registries deleted.
+
+### S4.6 Jack §20.15 conversion — source (13:00–14:00, WRITTEN BUT UNVERIFIED: rule 44 cargo freeze)
+
+- Parent vocabulary: `TrinityGraphMutation { SetQuery }` only (protocol tag 0). Deleted (rule 32, script `T/🧪️s4-text-jack-child-lane.py`): the 8 leaf trees
+  `🧬️mutations/{➕️create-node,🗑️delete-node,🌉️create-edge,✂️delete-edge,✏️rename-node,📍️move-node,🔧️change-data-property,🧹️remove-data-property}` and their
+  `🧫️fixtures/🧬️mutations/*` (incl. the create-edge wire witness), their mod blocks in the jack root, every registry row (binary tag + text opcode
+  registries, protocol, grammar/EBNF/ANTLR, aggregate JSON schema, GraphQL, protobuf, TS union, oracle catalog vectors/kinds/manifest), the dead
+  `PortDsl`/`PortDirectionDsl` twin, `diff_replace_content`, the stale `🧬️schema/🧫️fixtures/🪪️document-contract` duplicate, `🫙️empty.scene.json`.
+- Engine: `executor::GraphEffect` (create/delete node+edge, rename, move, set/remove property) replaces the parent leaves inside the query engine
+  (sync `execute`/`run` apply effects to the in-memory `Graph` through `apply_graph_effects` = `validate_graph_effect` (manifest + references) + apply;
+  the stepped `QueryExecution` and its retirement use `JackEffectRetirementFactory`, new in `🛜️wire-runtime`); `QueryExecutionPreparation::step` takes
+  the content child the job read.
+- Child lane (`🪆️content`): `jack_content_from_children` / `jack_scene_from_children` (the member store is the single truth), `jack_child_emit`
+  (ONE `content` edit), `graph_leaves(base, effects)` (effects → shared `s.stdio.semio@v1/graph` leaves against the evolving child: delete-node cuts
+  incident edges first so every row stays point-invertible; property set = `set-*-property` on an existing key, `add-*-property` at the sorted
+  index otherwise; rename → `change-node-label`), `jack_fault_notices` (4 named, en/de: `trinity.jack.content-missing|content-dialect|
+  content-unreadable|layout-run.start`) wired as `ArtifactEditor::fault_notices`.
+- Editor: run-query publishes `set-query` (parent, when adopted) + ONE content edit (`Child` lane added to the query contract); `patchNodes` →
+  `change-node-label` leaves, `deleteSelection` → `delete-edge`s then `delete-node`s, both on the `Child` lane; every reader (graph/editor/panel
+  windows, viewer, `interaction_topology`, query extent/preparation) reads `doc.children` / `context.children`; reorganize is a child-target run
+  (`member: content`, graph `move-node` encoder, `member_ops` overlay — dag template); `content_to_workflow`; `graph_from_document_or_default`.
+- Rewriting: `apply_rule` applies effects via `apply_graph_effects`; the dead `✏️editor/🌍️world` module (`TrinityBridge`, a standalone jack store; zero
+  references outside its own tests) deleted with its mod block.
+- Tests moved onto the new surface: jack root (graph effects + leaf undo), operations (effect validation, set-query store laws), wire-runtime (set-query
+  codecs, effect retirement), executor (content-passing preparation), editor (live member-store reads `live_scene`/`node_names`, child-lane receipts,
+  refusals through the app), reorganize (content child, graph move ops, member positions), panel/viewer render; `mutate-jack-1` feature/Rust/Python
+  trimmed to `set-query` + identity; `composed_reload_law!("trinity", …)` + `composed_child_history_law!("trinity", …, [patchNodes …])` added.
+- OWED (rule 44): `cargo check --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-trinity-jack -p semio-s-artifact-trinity-rewriting -p
+  semio-s-artifact-writer-writer --features semio-s-artifact-trinity-jack/component-app-assembly,semio-s-artifact-trinity-rewriting/component-app-assembly --lib --tests`,
+  then the lib tests; TS `bun test` of the jack contract/sqlite tests; `bun ./📜️script.ts schema mutation-editability|mutation-inputs --under ✏️s/🔌️plugins/🔱️trinity`.
+
+### S4.7 PARKED (coordinator, ~14:00) — exact state and next steps
+
+State: every file I touched is internally consistent (no half-edit); nothing compiled since the 08:45 writer check (rule 44 freeze, disk 2–3 GiB).
+- writer: check-green 08:45 (lib 3 / lib-test 61 warnings); later peer edits to its sqlite native file not re-checked.
+- vcs: fixes WRITTEN, check OWED (`cargo check --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-vcs-vcs --lib --tests`).
+- jack + rewriting (§20.15, S4.6): source WRITTEN, all checks OWED; trinity is NOT composition-green (do not describe it).
+
+Next steps, in order (resume here):
+1. CARGO OPEN → `cargo check --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-trinity-jack -p semio-s-artifact-trinity-rewriting -p semio-s-artifact-writer-writer -p semio-s-artifact-vcs-vcs --features semio-s-artifact-trinity-jack/component-app-assembly,semio-s-artifact-trinity-rewriting/component-app-assembly --lib --tests`; fix compile errors (expect: import tidy-ups, `SnapshotReadRef` deref sites, closure inference in `graph_leaves`/`content_to_workflow`, `JackSnapshot` imports in tests).
+2. Lib tests of the four crates (writer typing laws, jack incl. `documents_reload_identically` / `child_history_edits_end_to_end` / `history_edits_end_to_end`, rewriting, vcs); `bun test` jack contract + sqlite TS tests; `schema mutation-editability|mutation-inputs --under ✏️s/🔌️plugins/🔱️trinity` (expect jack 0, rewriting 6 left).
+3. Rewriting §20.15 (AUDIT-TOOLS F1): the six working leaves (`drag-/patch-/delete-/connect-/disconnect-/add-working`) → child-lane graph leaves on the `workingGraph.content` child (`drag-nodes`, `change-node-label`/`change-node-kind`, `delete-node`, `create-edge`, `delete-edge`, `create-node`), delete the six trinity duplicates, `composed_reload_law!` + `composed_child_history_law!` for rewriting; `edit-before-fixture` stays the whole-graph replacement.
+4. F9: `FaultCode::new("app.command.tool-mismatch")` at writer `✏️editor/🦀️.rs:1280`, vcs `:915`, jack `:827`/`:860` (split the capacity case into its own named + localized code, add to `jack_fault_notices`).
+5. F21 (vcs): delete the legacy one-per-event pointer-wire law at vcs `:535`; make `samples`/`cancelled` required.
+6. §14 path renames in trinity (re-run `verify taxonomy report --scope ✏️s/🔌️plugins/🔱️trinity` first; most jack hits vanished with the deleted fixtures).
+7. Remaining owed TEXT runs: stdio md/html/txt/binary/deflate `--features <each>/component-app-assembly --lib`; plugin `-- typing tool_machine`; renderer-wgpu `-- text_editor` (`RUST_MIN_STACK=67108864`) + wasm32 check.
+
+Coordinator actions (unchanged + new): central `schema generate` (jack: 8 leaves removed, set-query tag 0; rewriting leafUncatalogued 4; `property-value.json` catalog document); `describe` writer, trinity (only after "COMPOSITION GREEN trinity"), vcs, stdio md/html/binary/deflate; wgpu `generate-frame-worker`; re-activation for N8 live.
+Files created this session (ticket inputs, kept): `T/🧪️s4-text-writer-value-sweep.py`, `T/🧪️s4-text-vcs-value-sweep.py`, `T/🧪️s4-text-jack-child-lane.py`. Scratch: `T/🗑️generated/s4-text/` (delete at close).
+
+### S4.8 RESUME — CARGO OPEN (plugin-local, checks only; 20:5x) and the pack-error fallout
+
+- Coordinator: kernel green on `semio-framework-pack-error` (`PackError{Refusal(PackRefusal),TransportFailure}`); run the gated `--lib --tests`
+  checks for writer/vcs/jack/rewriting, then the trinity hub wasip2 check; then S4.7 items 3–5 + vcs `ledger-not-replayable` →
+  `history.ledger-not-replayable`. No `cargo test` (rule 43); no shared-crate edits until ACTIVATION DONE.
+- `cargo check … -p trinity-jack -p trinity-rewriting -p writer -p vcs --features …component-app-assembly --lib --tests` (20:55–20:59): exit 101,
+  stopped UPSTREAM in `PackError::Schema` fallout: stdio-semio 77, stdio-xml 8, stdio-deflate 6 (mine). Repo-wide ~900 handwritten
+  `PackError::Schema` sites; coordinator: S4-PACKFIX owns the sweep for every stdio crate except mine; ONE mapping repo-wide =
+  `T/📓️s4-packfix-report.md` § Schema Decisions; my crates are checked after PACKFIX's "STDIO GREEN".
+- Script `T/🧪️s4-text-pack-error-sweep.py` (rule-count-asserted per root, staged, `--check`), mapping diffed against the PACKFIX table:
+  envelope build/unwrap `Schema(e.to_string())` → `PackError::from(e.into_value_error())` (27); `Err(Schema(…mismatch/identity differs/presence
+  must be empty…))` → `PackError::from(ValueError::new(InvalidValue, …))` (15); bare `map_err(PackError::Schema)` over `String` codec errors
+  (deflate zlib/decode, md `TryFrom`) → `InvalidValue` (4); jack `map_err(PackError::ValueRefusal)` → `map_err(PackError::from)`; rewriting sqlite
+  `decode_document_controlled(…).map_err(PackError::into_value_error)` → `PackRefusal::into_value_error` (controlled codecs return `PackRefusal`);
+  html `PackError::ValueRefusal(x)` → `PackError::from(x)`, `TextRefusal` → `PackError::from`, UTF-8 → `ValueError::from(e)`. 18 files, 0 retired
+  forms left in the 8 roots.
+- Peer fallout in my stdio tests: `Emit.description` removed (§20.6, history rows read leaf labels) → the `description.is_none()` asserts in
+  deflate (3) and binary (2) editor unit tests dropped (structurally guaranteed now).
+- `cargo check -p stdio-deflate -p stdio-md -p stdio-html -p stdio-binary --features <each>/component-app-assembly --lib --tests`: 21:07 lib green,
+  5 test errors (`description`); 21:11 **exit 0** (lib warnings deflate 10 / md 28 / html 18 / binary 7, lib-test 22/35/21/15 — type-check proof).
+- `ledger-not-replayable` rename: no vcs-plugin site. Two vocabularies were reported to `main`: (a) the guest fault code at
+  `🔌️plugin/🦀️.rs:38373` (`replay_envelopes_fault`) plus its `🧪️time-travel/🦀️.rs:1253–1262` test; (b) the directory wire enum
+  `DocumentCheckInRefusalV1::LedgerNotReplayable`, whose hub bootstrap sites are `🌎️hub/🏗️bootstrap/🦀️.rs:4552` (db Conflict →
+  LedgerNotReplayable) and `:4766` (span refusal string). Coordinator decision: only (a) is renamed, by S4-GATES in its stage-r45 framework-table
+  wave after ACTIVATION DONE; (b) stays wire vocabulary. Nothing more is owed from S4-TEXT on this.
+- F9 (script `T/🧪️s4-text-f9-codes.py`):
+  - writer `✏️editor/🦀️.rs:1280` and vcs `:915` now use `app.command.tool-mismatch`.
+  - Jack: the transient site and the document and config sites now use `app.command.tool-mismatch`. The capacity case is split out
+    as the named `trinity.jack.retained-capacity`, added to `jack_fault_notices` (5 codes, en/de).
+  - vcs: the 4 raw `vcs-command-payload-too-large` sites become `vcs.command.payload-too-large`, localized in a new vcs `fault_notices`.
+  - Rewriting (missed by the audit, same pattern): the document and window `*-mismatch-or-capacity` and `*-route-mismatch` sites are
+    split the same way, into `app.command.tool-mismatch` and `trinity.rewriting.retained-capacity`.
+- F21 (script `T/🧪️s4-text-f21-vcs-pointer.py`): vcs `samples` and `cancelled` are required on the wire, with no `{x, y}` fold, no
+  `false` default and no silently filtered pair. Both hosts (Canvas2dHost and the wgpu canvas wire) always send them. Malformed input
+  is `app.command.invalid-args`, and an unknown action is `app.command.unsupported`. The legacy one-per-event law is replaced by
+  `canvas_pointer_wire_requires_samples_and_cancelled`.
+- Rewriting §20.15 (AUDIT-TOOLS F1), script `T/🧪️s4-text-rewriting-child-lane.py`, with follow-ups noted below:
+  - The six parent leaves that read the composed `workingGraph` child are deleted, together with every registry naming them:
+    `drag-working-nodes`, `patch-working-nodes`, `delete-working-nodes`, `connect-working-ports`, `disconnect-working-edges` and
+    `add-working-node`. That covers 6 leaf trees and 6 fixture trees, plus `🕸️working`, the node-drag-history test, the aggregate and
+    its Rust/TS/GraphQL/proto/JSON forms, the binary and text registries, the g4/grammar/EBNF, retirement plus its fixture and
+    schema, the snapshot JSON roles, the oracle catalog, the structural-correspondence blocks, the binary64 census, the
+    `mutate-rewrite-1` Rust/Python/feature cases with their publication machinery, the sqlite TS laws, and the
+    `🪆️publication` contract.
+  - The parent keeps 9 leaves, densely renumbered: `drag-rule-nodes` is now 7 and `set-rule-layout-points` 8 (protocol, proto,
+    descriptor `binaryTag`, structural correspondence).
+  - Working-canvas `nodeGraphEdit` rows become child leaves in the shared vocabulary:
+    - drag → `drag-nodes`
+    - connect → `create-edge`, id `source->target`, kind from the manifest
+    - disconnect → `delete-edge`
+    - delete → the incident `delete-edge`s, then `delete-node`, then the edges named apart
+    - Each leaf is admitted against the running child, and a refused leaf is dropped.
+    - A released drag is ONE child tool transaction (`Emit::node_drag_child`).
+  - `patchNodes` → `change-node-label` / `change-node-kind` per node. A kind is validated against the resolved manifest.
+  - `addWorkingNode` → `create-node`.
+  - All of these commands read the member store (`crate::content::read`). Their publication contracts are `Child`, and
+    `[Artifact, Child]` for `nodeGraphEdit`.
+  - New `🪆️content/🦀️.rs` (crate-mounted): `composed` is the reader view of parent plus member-store child, so render, topology
+    and `graph:out` all compose on read, and a root the child no longer holds reads as none. It also has
+    `genesis_working_child_pack`, `working_child_emit`, `admit` and `rewriting_fault_notices` (8 codes, en/de).
+  - `👁️read` now keys `typed_read` by `child_id`, as membership identity requires, instead of `target.artifact_id`.
+  - Editor and viewer both declare `type Members = SemioMembers` and `genesis_child_pack`.
+  - Laws: `composed_reload_law!` and `composed_child_history_law!` (seed `patchNodes`). The editor laws that called commands directly
+    are now driven through the app, reading the live member (`live_working`, `composed_state`, `graph_edit`). The binary64
+    history-edit twin now targets `drag-rule-nodes /dx`.
+  - Follow-up fixes: an over-greedy TS cut was repaired; the retirement fixture schema's min/maxItems went 15 → 9; scenario pairs
+    went 64 → 40 and children 33 → 21 (exactly the 6 removed kinds); and the rewriting-side Jack `move-node` inverse law and its two
+    contract files were deleted (the leaf went with the jack conversion).
+  - Jack TS: `artifact.json` now refs `framework/value#/$defs/Binary64Transport`, so the sqlite schema test registers the framework
+    value schema.
+- TS runs:
+  - all 9 rewriting TS test files: 72 pass / 0 fail
+  - jack TS: 40 pass / 2 fail. Both fixed: the missing value schema, and a 6.0 s wire-types test over the 5 s default under load,
+    which passes with `--timeout 60000`.
+  - re-run of those 2 files: 40 pass / 0 fail.
+- Waiting for PACKFIX "STDIO GREEN": the upstream stdio crates show 0 `PackError::Schema` left. After it: the writer/vcs/jack/rewriting
+  `--lib --tests` check, then the trinity hub wasip2 check.
+
+### S4.9 STDIO GREEN (21:52) → COMPOSITION GREEN trinity (22:06)
+
+| Command (gated, `CARGO_TARGET_DIR=…/target-nde-s4-text`) | Result |
+|---|---|
+| `cargo check --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-trinity-jack -p semio-s-artifact-trinity-rewriting -p semio-s-artifact-writer-writer -p semio-s-artifact-vcs-vcs --features semio-s-artifact-trinity-jack/component-app-assembly,semio-s-artifact-trinity-rewriting/component-app-assembly --lib --tests --keep-going` (21:54–22:01) | exit 101. vcs green (lib 10 / test 27 warnings). jack: 5 lib errors and 15 lib-test errors. writer and rewriting were not reached. |
+| same (22:02–22:03) | rewriting: 1 parse error (orphan `#[path = "."]` lines left by the mod-block cut) |
+| same (22:03) | rewriting: 3 errors (a `&*` on the `?` read; the `ArtifactApps` bounds) |
+| same (22:04:42–22:04:58) | **exit 0**. Warnings: jack lib 34 / test 74, rewriting 67/97, writer 4/62, vcs 10/27. |
+| `cargo check --manifest-path 🌎️hub/Cargo.toml -p semio-hub-trinity --target wasm32-wasip2 --lib --keep-going` (22:05–22:06) | **exit 0** |
+| `cargo check --manifest-path 🌎️hub/Cargo.toml -p semio-hub-trinity --lib --tests` (22:07–22:13) | lib green; lib test 2 errors in `plugin_exports!` under cfg(test): `crate::semio_framework_async` is missing from the hub's dependencies (hub-macro gap, not TEXT). Routed to `main`. |
+| `bun 📜️script.ts schema mutation-editability --json --under ✏️s/🔌️plugins/🔱️trinity` (cwd `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test`) | **16 leaves, 16 editable, 0 findings** (it was 30 leaves with 14 `parentLeafReadsChild`) |
+| `bun 📜️script.ts schema mutation-inputs --json --under ✏️s/🔌️plugins/🔱️trinity` (same cwd) | 67 findings. 13 are "malformed" rows for the deleted leaves, read from the stale generated catalog (central `schema generate`). 54 are the peer's typed-input label/ref findings on edit-before-fixture, lhs and rhs. `wordOnlyFloat` is **0** (was 8). |
+
+Fixes made during these checks:
+- jack `▶️run-query/🧵️job` `&*jack_content_from_children(…)?`; the F9 capacity code is fully qualified (the `🧪️s4-text-f9-codes.py` record updated); `JackSnapshot` imports added in the panel and executor tests.
+- rewriting: the orphan path attributes; the `SemioGraphSnapshot::clone(&*read(…)?)`; and the rewriting `ArtifactApps` `From<VcsArtifactApp<…, SemioMembers>>` bounds. The hub `🌎️hub/🧩️compositions/🔱️trinity/🦀️.rs` `RewritingEditor`/`RewritingViewer` variants now carry `SemioMembers` (the jack variants already did).
+"COMPOSITION GREEN trinity" was sent to `main` at 22:06.
+
+Still OWED:
+- lib tests (rule 43): jack incl. `documents_reload_identically` / `child_history_edits_end_to_end` / `history_edits_end_to_end`; rewriting incl. both new laws and the app-driven node-graph laws; writer typing laws; vcs incl. `canvas_pointer_wire_requires_samples_and_cancelled`.
+- stdio lib tests (deflate/md/html/binary/txt); plugin `-- typing tool_machine`; renderer-wgpu `-- text_editor` and its wasm32 check; the §14 trinity path renames (the taxonomy report crashed earlier on catalog drift).
+
+Coordinator actions:
+- central `schema generate` (jack: 8 leaves removed, set-query is tag 0; rewriting: 6 leaves removed, drag-rule-nodes 7, set-rule-layout-points 8)
+- `describe` trinity, writer, vcs, stdio md/html/binary/deflate
+- wgpu `generate-frame-worker`
+- the S4-GATES stage-r45 rename of the guest `ledger-not-replayable` fault code

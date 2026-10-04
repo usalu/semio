@@ -119,12 +119,12 @@ impl Drop for WindowConfigPackLoad {
 
 #[derive(Clone)]
 struct ExpectedValue {
-    shape: Option<store::mounted_pack_rt::Shape>,
+    shape: Option<semio_framework_dsl_record::Shape>,
     dsl: bool,
 }
 
 impl ExpectedValue {
-    fn field(shape: Option<store::mounted_pack_rt::Shape>) -> Self {
+    fn field(shape: Option<semio_framework_dsl_record::Shape>) -> Self {
         Self { shape, dsl: false }
     }
 
@@ -134,15 +134,15 @@ impl ExpectedValue {
 }
 
 enum BuiltValue {
-    Field(store::mounted_pack_rt::FieldValue),
-    Dsl(store::mounted_pack_rt::DslValue),
+    Field(semio_framework_dsl_record::FieldValue),
+    Dsl(semio_framework_value::DslValue),
 }
 
 enum ValueFrame {
-    Record { kind: store::mounted_pack_rt::RetainedValueContainer, spec: Option<store::mounted_pack_rt::RecordSpec>, fields: HashMap<u16, store::mounted_pack_rt::FieldValue>, field: Option<u16> },
+    Record { kind: store::mounted_pack_rt::RetainedValueContainer, spec: Option<semio_framework_dsl_record::RecordSpec>, fields: semio_framework_dsl_record::RecordFields, field: Option<u16> },
     Sequence { kind: store::mounted_pack_rt::RetainedValueContainer, element: ExpectedValue, values: Vec<BuiltValue> },
     Map { dsl: bool, element: ExpectedValue, values: Vec<(String, BuiltValue)>, key: Option<String> },
-    Statements { variants: Vec<(String, store::mounted_pack_rt::RecordSpecProducer)>, values: Vec<(String, store::mounted_pack_rt::RecordValue)>, keyword: Option<String> },
+    Statements { variants: Vec<(String, semio_framework_dsl_record::RecordSpecProducer)>, values: Vec<(String, semio_framework_dsl_record::RecordValue)>, keyword: Option<String> },
     Bytes { values: Vec<u8>, remaining: usize },
 }
 
@@ -166,7 +166,7 @@ struct RetainedString {
 }
 
 struct RetainedWindowConfigTypedState<O: WindowConfigOwner> {
-    spec: store::mounted_pack_rt::RecordSpec,
+    spec: semio_framework_dsl_record::RecordSpec,
     stack: Vec<ValueFrame>,
     wrappers: Vec<(ValueWrapper, usize)>,
     string: Option<RetainedString>,
@@ -196,7 +196,7 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
         self.pending_wrappers().iter().try_fold(self.parent_expected()?, |expected, (wrapper, _)| {
             Ok(match wrapper {
                 ValueWrapper::Block => match expected.shape {
-                    Some(store::mounted_pack_rt::Shape::Block(inner)) => ExpectedValue::field(Some(*inner)),
+                    Some(semio_framework_dsl_record::Shape::Block(inner)) => ExpectedValue::field(Some(*inner)),
                     _ => ExpectedValue::field(None),
                 },
                 ValueWrapper::Dynamic => ExpectedValue::dsl(),
@@ -206,29 +206,35 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
 
     fn parent_expected(&self) -> Result<ExpectedValue, WindowConfigPackLoadDiagnostic> {
         match self.stack.last() {
-            None if self.root.is_none() => Ok(ExpectedValue::field(Some(store::mounted_pack_rt::Shape::Record(Self::root_spec_producer())))),
+            None if self.root.is_none() => Ok(ExpectedValue::field(Some(semio_framework_dsl_record::Shape::Record(Self::root_spec_producer())))),
             Some(ValueFrame::Record { spec, field: Some(field), .. }) => Ok(ExpectedValue::field(spec.as_ref().and_then(|spec| spec.fields.iter().find(|candidate| candidate.id == *field)).map(|field| field.shape.clone()))),
             Some(ValueFrame::Sequence { element, .. }) => Ok(element.clone()),
             Some(ValueFrame::Map { element, key: Some(_), .. }) => Ok(element.clone()),
-            Some(ValueFrame::Statements { variants, keyword: Some(keyword), .. }) => Ok(ExpectedValue::field(variants.iter().find(|(candidate, _)| candidate == keyword).map(|(_, spec)| store::mounted_pack_rt::Shape::Record(*spec)))),
+            Some(ValueFrame::Statements { variants, keyword: Some(keyword), .. }) => Ok(ExpectedValue::field(variants.iter().find(|(candidate, _)| candidate == keyword).map(|(_, spec)| semio_framework_dsl_record::Shape::Record(*spec)))),
             _ => Err(WindowConfigPackLoadDiagnostic::TypedState),
         }
     }
 
-    fn root_spec() -> store::mounted_pack_rt::RecordSpec {
+    fn root_spec() -> semio_framework_dsl_record::RecordSpec {
         <O::State as store::ArtifactPack>::record_spec().expect("retained window config owner was preflighted with a record spec")
     }
 
-    fn root_spec_producer()->store::mounted_pack_rt::RecordSpecProducer{store::mounted_pack_rt::RecordSpecProducer{ordinary:Self::root_spec,decoding:|_|Err("window config owner has no controlled root metadata producer".into()),encoding:|_|Err("window config owner has no controlled root metadata producer".into())}}
+    fn root_spec_producer() -> semio_framework_dsl_record::RecordSpecProducer {
+        semio_framework_dsl_record::RecordSpecProducer {
+            ordinary: Self::root_spec,
+            decoding: |_| Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "window config owner has no controlled root metadata producer")),
+            encoding: |_| Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "window config owner has no controlled root metadata producer")),
+        }
+    }
 
-    fn child_record_spec(expected: &ExpectedValue) -> Option<store::mounted_pack_rt::RecordSpec> {
+    fn child_record_spec(expected: &ExpectedValue) -> Option<semio_framework_dsl_record::RecordSpec> {
         match expected.shape.as_ref() {
-            Some(store::mounted_pack_rt::Shape::Record(spec)) | Some(store::mounted_pack_rt::Shape::Table(spec)) => Some((spec.ordinary)()),
+            Some(semio_framework_dsl_record::Shape::Record(spec)) | Some(semio_framework_dsl_record::Shape::Table(spec)) => Some((spec.ordinary)()),
             _ => None,
         }
     }
 
-    /// 🎯️ The DSL shapes whose VALUE is a [`store::mounted_pack_rt::FieldValue::Tuple`] even though the
+    /// 🎯️ The DSL shapes whose VALUE is a [`semio_framework_dsl_record::FieldValue::Tuple`] even though the
     /// pack's packed-numeric wire form (`TAG_PACKED_F64`/`TAG_PACKED_VARINT`, `🎒️pack/🌱️value/🦀️.rs`
     /// `encode_seq`) carries no tuple-vs-list marker of its own: a coordinate (`@x,y,z`), a direction,
     /// a dimension triple and a range are each a small tuple of floats. The whole-pack decoder spells
@@ -237,10 +243,10 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
     /// `DslField::from_value` rejected it — `WindowConfigPackLoadDiagnostic::TypedState`, surfaced as
     /// `window-config.typed-state`. Every CAD world window config reload died on `CadCamera::position`
     /// (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP, cad-content).
-    fn shape_is_tuple_valued(shape: Option<&store::mounted_pack_rt::Shape>) -> bool {
+    fn shape_is_tuple_valued(shape: Option<&semio_framework_dsl_record::Shape>) -> bool {
         matches!(
             shape,
-            Some(store::mounted_pack_rt::Shape::Tuple(_, _)) | Some(store::mounted_pack_rt::Shape::Coord(_)) | Some(store::mounted_pack_rt::Shape::Dir) | Some(store::mounted_pack_rt::Shape::Dim(_)) | Some(store::mounted_pack_rt::Shape::Range)
+            Some(semio_framework_dsl_record::Shape::Tuple(_, _)) | Some(semio_framework_dsl_record::Shape::Coord(_)) | Some(semio_framework_dsl_record::Shape::Dir) | Some(semio_framework_dsl_record::Shape::Dim(_)) | Some(semio_framework_dsl_record::Shape::Range)
         )
     }
 
@@ -249,9 +255,9 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
     /// component shapeless.
     fn child_element(expected: &ExpectedValue) -> ExpectedValue {
         let shape = match expected.shape.as_ref() {
-            Some(store::mounted_pack_rt::Shape::Tuple(inner, _)) | Some(store::mounted_pack_rt::Shape::List(inner)) | Some(store::mounted_pack_rt::Shape::Map(inner)) => Some(inner.as_ref().clone()),
-            Some(store::mounted_pack_rt::Shape::Table(spec)) => Some(store::mounted_pack_rt::Shape::Record(*spec)),
-            Some(store::mounted_pack_rt::Shape::Coord(_)) | Some(store::mounted_pack_rt::Shape::Dir) | Some(store::mounted_pack_rt::Shape::Dim(_)) | Some(store::mounted_pack_rt::Shape::Range) => Some(store::mounted_pack_rt::Shape::Float),
+            Some(semio_framework_dsl_record::Shape::Tuple(inner, _)) | Some(semio_framework_dsl_record::Shape::List(inner)) | Some(semio_framework_dsl_record::Shape::Map(inner)) => Some(inner.as_ref().clone()),
+            Some(semio_framework_dsl_record::Shape::Table(spec)) => Some(semio_framework_dsl_record::Shape::Record(*spec)),
+            Some(semio_framework_dsl_record::Shape::Coord(_)) | Some(semio_framework_dsl_record::Shape::Dir) | Some(semio_framework_dsl_record::Shape::Dim(_)) | Some(semio_framework_dsl_record::Shape::Range) => Some(semio_framework_dsl_record::Shape::Float),
             _ => None,
         };
         ExpectedValue { shape, dsl: expected.dsl }
@@ -310,21 +316,21 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
                 _ => return Err(WindowConfigPackLoadDiagnostic::TypedState),
             },
             StringTarget::Value(expected) => {
-                let value = if expected.dsl { BuiltValue::Dsl(store::mounted_pack_rt::DslValue::String(owner.value)) } else { BuiltValue::Field(store::mounted_pack_rt::FieldValue::Text(owner.value)) };
+                let value = if expected.dsl { BuiltValue::Dsl(semio_framework_value::DslValue::String(owner.value)) } else { BuiltValue::Field(semio_framework_dsl_record::FieldValue::Text(owner.value)) };
                 self.emit(value)?;
             }
         }
         Ok(())
     }
 
-    fn into_dsl(value: BuiltValue) -> Result<store::mounted_pack_rt::DslValue, WindowConfigPackLoadDiagnostic> {
+    fn into_dsl(value: BuiltValue) -> Result<semio_framework_value::DslValue, WindowConfigPackLoadDiagnostic> {
         match value {
             BuiltValue::Dsl(value) => Ok(value),
             _ => Err(WindowConfigPackLoadDiagnostic::TypedState),
         }
     }
 
-    fn into_field(value: BuiltValue) -> Result<store::mounted_pack_rt::FieldValue, WindowConfigPackLoadDiagnostic> {
+    fn into_field(value: BuiltValue) -> Result<semio_framework_dsl_record::FieldValue, WindowConfigPackLoadDiagnostic> {
         match value {
             BuiltValue::Field(value) => Ok(value),
             _ => Err(WindowConfigPackLoadDiagnostic::TypedState),
@@ -338,8 +344,8 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
             }
             self.wrappers.pop();
             value = match wrapper {
-                ValueWrapper::Block => BuiltValue::Field(store::mounted_pack_rt::FieldValue::Block(Box::new(Self::into_field(value)?))),
-                ValueWrapper::Dynamic => BuiltValue::Field(store::mounted_pack_rt::FieldValue::Value(Self::into_dsl(value)?)),
+                ValueWrapper::Block => BuiltValue::Field(semio_framework_dsl_record::FieldValue::Block(Box::new(Self::into_field(value)?))),
+                ValueWrapper::Dynamic => BuiltValue::Field(semio_framework_dsl_record::FieldValue::Value(Self::into_dsl(value)?)),
             };
         }
         match self.stack.last_mut() {
@@ -354,7 +360,7 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
             Some(ValueFrame::Statements { values, keyword, .. }) => {
                 let keyword = keyword.take().ok_or(WindowConfigPackLoadDiagnostic::TypedState)?;
                 let record = match Self::into_field(value)? {
-                    store::mounted_pack_rt::FieldValue::Record(record) => record,
+                    semio_framework_dsl_record::FieldValue::Record(record) => record,
                     _ => return Err(WindowConfigPackLoadDiagnostic::TypedState),
                 };
                 values.push((keyword, record));
@@ -362,7 +368,7 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
             Some(ValueFrame::Bytes { .. }) => return Err(WindowConfigPackLoadDiagnostic::TypedState),
             None => {
                 let field = Self::into_field(value)?;
-                let state = <O::State as store::mounted_pack_rt::DslField>::from_value(&field).map_err(|_| WindowConfigPackLoadDiagnostic::TypedState)?;
+                let state = <O::State as semio_framework_dsl_record::DslField>::from_value(&field).map_err(|_| WindowConfigPackLoadDiagnostic::TypedState)?;
                 if self.root.replace(state).is_some() {
                     return Err(WindowConfigPackLoadDiagnostic::TypedState);
                 }
@@ -377,8 +383,9 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
         match kind {
             store::mounted_pack_rt::RetainedValueContainer::Record => {
                 let spec = if self.stack.is_empty() && self.root.is_none() { Some(self.spec.clone()) } else { Self::child_record_spec(&expected) };
-                let mut fields = HashMap::new();
-                fields.try_reserve(count).map_err(|_| WindowConfigPackLoadDiagnostic::Capacity)?;
+                let mut entries = Vec::new();
+                entries.try_reserve_exact(count.max(spec.as_ref().map_or(0, |spec| spec.fields.len()))).map_err(|_| WindowConfigPackLoadDiagnostic::Capacity)?;
+                let fields = semio_framework_dsl_record::RecordFields::from_empty_slots(entries);
                 self.stack.push(ValueFrame::Record { kind, spec, fields, field: None });
             }
             store::mounted_pack_rt::RetainedValueContainer::Tuple | store::mounted_pack_rt::RetainedValueContainer::List | store::mounted_pack_rt::RetainedValueContainer::PackedF64 | store::mounted_pack_rt::RetainedValueContainer::PackedVarint => {
@@ -393,7 +400,7 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
             }
             store::mounted_pack_rt::RetainedValueContainer::Statements => {
                 let variants = match expected.shape {
-                    Some(store::mounted_pack_rt::Shape::Statements(variants)) => variants,
+                    Some(semio_framework_dsl_record::Shape::Statements(variants)) => variants,
                     _ => Vec::new(),
                 };
                 let mut values = Vec::new();
@@ -414,23 +421,25 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
             ValueFrame::Record { kind: expected, spec, mut fields, field: None } if expected == kind => {
                 if let Some(spec) = spec {
                     for field in spec.fields {
-                        fields.entry(field.id).or_insert(store::mounted_pack_rt::FieldValue::Absent);
+                        if !fields.contains_key(&field.id) {
+                            fields.insert(field.id, semio_framework_dsl_record::FieldValue::Absent);
+                        }
                     }
                 }
-                BuiltValue::Field(store::mounted_pack_rt::FieldValue::Record(store::mounted_pack_rt::RecordValue { fields }))
+                BuiltValue::Field(semio_framework_dsl_record::FieldValue::Record(semio_framework_dsl_record::RecordValue { fields }))
             }
             ValueFrame::Sequence { kind: expected, values, .. } if expected == kind => {
                 let values = values.into_iter().map(Self::into_field).collect::<Result<Vec<_>, _>>()?;
                 let tuple = matches!(kind, store::mounted_pack_rt::RetainedValueContainer::Tuple) || Self::shape_is_tuple_valued(self.expected()?.shape.as_ref());
-                BuiltValue::Field(if tuple { store::mounted_pack_rt::FieldValue::Tuple(values) } else { store::mounted_pack_rt::FieldValue::List(values) })
+                BuiltValue::Field(if tuple { semio_framework_dsl_record::FieldValue::Tuple(values) } else { semio_framework_dsl_record::FieldValue::List(values) })
             }
             ValueFrame::Map { dsl: true, values, key: None, .. } if kind == store::mounted_pack_rt::RetainedValueContainer::Map => {
-                BuiltValue::Dsl(store::mounted_pack_rt::DslValue::Object(values.into_iter().map(|(key, value)| Self::into_dsl(value).map(|value| (key, value))).collect::<Result<Vec<_>, _>>()?))
+                BuiltValue::Dsl(semio_framework_value::DslValue::Object(values.into_iter().map(|(key, value)| Self::into_dsl(value).map(|value| (key, value))).collect::<Result<Vec<_>, _>>()?))
             }
             ValueFrame::Map { dsl: false, values, key: None, .. } if kind == store::mounted_pack_rt::RetainedValueContainer::Map => {
-                BuiltValue::Field(store::mounted_pack_rt::FieldValue::Map(values.into_iter().map(|(key, value)| Self::into_field(value).map(|value| (key, value))).collect::<Result<Vec<_>, _>>()?))
+                BuiltValue::Field(semio_framework_dsl_record::FieldValue::Map(values.into_iter().map(|(key, value)| Self::into_field(value).map(|value| (key, value))).collect::<Result<Vec<_>, _>>()?))
             }
-            ValueFrame::Statements { values, keyword: None, .. } if kind == store::mounted_pack_rt::RetainedValueContainer::Statements => BuiltValue::Field(store::mounted_pack_rt::FieldValue::Statements(values)),
+            ValueFrame::Statements { values, keyword: None, .. } if kind == store::mounted_pack_rt::RetainedValueContainer::Statements => BuiltValue::Field(semio_framework_dsl_record::FieldValue::Statements(values)),
             _ => return Err(WindowConfigPackLoadDiagnostic::TypedState),
         };
         self.emit(value)
@@ -439,13 +448,13 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
     fn scalar_signed(&self, value: i64) -> BuiltValue {
         let expected = self.expected().ok();
         if expected.as_ref().is_some_and(|expected| expected.dsl) {
-            BuiltValue::Dsl(store::mounted_pack_rt::DslValue::int(value))
-        } else if expected.as_ref().and_then(|expected| expected.shape.as_ref()).is_some_and(|shape| matches!(shape, store::mounted_pack_rt::Shape::UInt | store::mounted_pack_rt::Shape::Count)) && value >= 0 {
-            BuiltValue::Field(store::mounted_pack_rt::FieldValue::UInt(value as u64))
-        } else if let Some(store::mounted_pack_rt::Shape::Enum(_)) = expected.as_ref().and_then(|expected| expected.shape.as_ref()) {
-            BuiltValue::Field(store::mounted_pack_rt::FieldValue::Enum(value as u32))
+            BuiltValue::Dsl(semio_framework_value::DslValue::int(value))
+        } else if expected.as_ref().and_then(|expected| expected.shape.as_ref()).is_some_and(|shape| matches!(shape, semio_framework_dsl_record::Shape::UInt | semio_framework_dsl_record::Shape::Count)) && value >= 0 {
+            BuiltValue::Field(semio_framework_dsl_record::FieldValue::UInt(value as u64))
+        } else if let Some(semio_framework_dsl_record::Shape::Enum(_)) = expected.as_ref().and_then(|expected| expected.shape.as_ref()) {
+            BuiltValue::Field(semio_framework_dsl_record::FieldValue::Enum(value as u32))
         } else {
-            BuiltValue::Field(store::mounted_pack_rt::FieldValue::Int(value))
+            BuiltValue::Field(semio_framework_dsl_record::FieldValue::Int(value))
         }
     }
 
@@ -455,16 +464,16 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
             Token::Tag { value: tag @ (0x00..=0x02), .. } => {
                 let expected = self.expected()?;
                 let value = match (tag, expected.dsl) {
-                    (0x00, false) => BuiltValue::Field(store::mounted_pack_rt::FieldValue::Absent),
-                    (0x01, false) => BuiltValue::Field(store::mounted_pack_rt::FieldValue::Bool(false)),
-                    (0x02, false) => BuiltValue::Field(store::mounted_pack_rt::FieldValue::Bool(true)),
-                    (0x01, true) => BuiltValue::Dsl(store::mounted_pack_rt::DslValue::Bool(false)),
-                    (0x02, true) => BuiltValue::Dsl(store::mounted_pack_rt::DslValue::Bool(true)),
+                    (0x00, false) => BuiltValue::Field(semio_framework_dsl_record::FieldValue::Absent),
+                    (0x01, false) => BuiltValue::Field(semio_framework_dsl_record::FieldValue::Bool(false)),
+                    (0x02, false) => BuiltValue::Field(semio_framework_dsl_record::FieldValue::Bool(true)),
+                    (0x01, true) => BuiltValue::Dsl(semio_framework_value::DslValue::Bool(false)),
+                    (0x02, true) => BuiltValue::Dsl(semio_framework_value::DslValue::Bool(true)),
                     _ => return Err(WindowConfigPackLoadDiagnostic::TypedState),
                 };
                 self.emit(value)?;
             }
-            Token::Tag { value: 0x12, .. } if self.expected()?.dsl => self.emit(BuiltValue::Dsl(store::mounted_pack_rt::DslValue::Null))?,
+            Token::Tag { value: 0x12, .. } if self.expected()?.dsl => self.emit(BuiltValue::Dsl(semio_framework_value::DslValue::Null))?,
             Token::Tag { value: 0x0e, .. } => self.wrappers.push((ValueWrapper::Block, self.stack.len())),
             Token::Tag { value: 0x11, .. } => self.wrappers.push((ValueWrapper::Dynamic, self.stack.len())),
             Token::Tag { value, .. } if matches!(value, 0x03..=0x0d | 0x0f..=0x10 | 0x15..=0x17) => self.tag = Some(value),
@@ -495,7 +504,7 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
                 let mut bytes = Vec::new();
                 bytes.try_reserve_exact(usize::try_from(value).map_err(|_| WindowConfigPackLoadDiagnostic::Capacity)?).map_err(|_| WindowConfigPackLoadDiagnostic::Capacity)?;
                 if value == 0 {
-                    self.emit(BuiltValue::Field(store::mounted_pack_rt::FieldValue::Bytes64(bytes)))?;
+                    self.emit(BuiltValue::Field(semio_framework_dsl_record::FieldValue::Bytes64(bytes)))?;
                 } else {
                     self.stack.push(ValueFrame::Bytes { values: bytes, remaining: usize::try_from(value).map_err(|_| WindowConfigPackLoadDiagnostic::Capacity)? });
                 }
@@ -515,7 +524,7 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
                     *remaining = remaining.checked_sub(1).ok_or(WindowConfigPackLoadDiagnostic::TypedState)?;
                     if *remaining == 0 {
                         let ValueFrame::Bytes { values, remaining: 0 } = self.stack.pop().expect("retained byte owner remains topmost") else { unreachable!() };
-                        self.emit(BuiltValue::Field(store::mounted_pack_rt::FieldValue::Bytes64(values)))?;
+                        self.emit(BuiltValue::Field(semio_framework_dsl_record::FieldValue::Bytes64(values)))?;
                     }
                 }
                 _ => return Err(WindowConfigPackLoadDiagnostic::TypedState),
@@ -528,11 +537,11 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
             Token::Unsigned { role: Role::Unsigned | Role::Integer | Role::Enum, value } => {
                 let expected = self.expected()?;
                 let built = if expected.dsl {
-                    BuiltValue::Dsl(store::mounted_pack_rt::DslValue::uint(value))
-                } else if matches!(expected.shape, Some(store::mounted_pack_rt::Shape::Enum(_))) || self.tag == Some(0x0a) {
-                    BuiltValue::Field(store::mounted_pack_rt::FieldValue::Enum(u32::try_from(value).map_err(|_| WindowConfigPackLoadDiagnostic::TypedState)?))
+                    BuiltValue::Dsl(semio_framework_value::DslValue::uint(value))
+                } else if matches!(expected.shape, Some(semio_framework_dsl_record::Shape::Enum(_))) || self.tag == Some(0x0a) {
+                    BuiltValue::Field(semio_framework_dsl_record::FieldValue::Enum(u32::try_from(value).map_err(|_| WindowConfigPackLoadDiagnostic::TypedState)?))
                 } else {
-                    BuiltValue::Field(store::mounted_pack_rt::FieldValue::UInt(value))
+                    BuiltValue::Field(semio_framework_dsl_record::FieldValue::UInt(value))
                 };
                 self.tag.take();
                 self.emit(built)?;
@@ -540,7 +549,7 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
             Token::F64(bits) => {
                 self.tag.take();
                 let expected = self.expected()?;
-                let built = if expected.dsl { BuiltValue::Dsl(store::mounted_pack_rt::DslValue::float(f64::from_bits(bits))) } else { BuiltValue::Field(store::mounted_pack_rt::FieldValue::Float(f64::from_bits(bits))) };
+                let built = if expected.dsl { BuiltValue::Dsl(semio_framework_value::DslValue::float(f64::from_bits(bits))) } else { BuiltValue::Field(semio_framework_dsl_record::FieldValue::Float(f64::from_bits(bits))) };
                 self.emit(built)?;
             }
             Token::End(kind) => self.end_container(kind)?,
@@ -931,7 +940,7 @@ impl<O: WindowConfigOwner> RetainedWindowConfigStateDecode<O> {
             };
         }
         if let Some(catalog) = self.catalog.as_mut() {
-            return match catalog.close_step(1, grant.maximum_bytes).map_err(str::to_string)? {
+            return match catalog.close_step(1, grant.maximum_bytes).map_err(|error| error.reason.to_string())? {
                 store::mounted_pack_rt::RetainedPackCloseStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
                 store::mounted_pack_rt::RetainedPackCloseStep::Complete if catalog.terminal_is_empty() => {
                     self.catalog.take();
@@ -1361,7 +1370,7 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
             return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(hydration) = self.hydration.as_mut() {
-            return match store::ErasedSnapshotRetirement::close_step(hydration, grant.maximum_items.min(1), grant.maximum_bytes)? {
+            return match store::ErasedSnapshotRetirement::close_step(hydration, grant.maximum_items.min(1), grant.maximum_bytes).map_err(semio_framework_value::ValueError::into_message)? {
                 store::SnapshotRetirementStep::Complete if store::ErasedSnapshotRetirement::terminal_is_empty(hydration) => {
                     self.hydration.take();
                     Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
@@ -1415,7 +1424,7 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
             return Ok(PluginCloseStep::Pending { released_items, released_bytes });
         }
         if let Some(owners) = self.owners.as_mut() {
-            return match owners.close_uninstalled_owners_step(grant.maximum_items.min(1))? {
+            return match owners.close_uninstalled_owners_step(grant.maximum_items.min(1)).map_err(semio_framework_value::ValueError::into_message)? {
                 store::SnapshotRetirementStep::Complete if owners.uninstalled_owners_terminal_is_empty() => {
                     self.owners.take();
                     Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })

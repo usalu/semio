@@ -20,7 +20,7 @@ fn sample_semio() -> SemioDocumentSnapshot {
 
 #[semio_framework_async_macros::async_test]
 async fn maps_headings_lists_code_quotes_and_flattens_tables() {
-    let md = semio_framework_plugin::resolve_ready(SemioDocumentToMd::serialize(&sample_semio())).expect("serialize");
+    let md = ::semio_framework_async::poll::resolve_ready(SemioDocumentToMd::serialize(&sample_semio())).expect("serialize");
     assert!(matches!(&md.blocks[0], MdBlock::Heading { level: 2, inlines } if matches!(&inlines[0], MdInline::Strong { .. })));
     assert!(matches!(&md.blocks[1], MdBlock::Paragraph { .. }));
     assert!(matches!(&md.blocks[2], MdBlock::List { ordered: false, items, .. } if items.len() == 1));

@@ -2362,7 +2362,7 @@ impl SurfaceReconcileCursor {
 
 pub const SURFACE_RECONCILE_ADMISSION_SLOTS: usize = ui_contract::UI_RESIDENT_SLOTS;
 pub const SURFACE_RECONCILE_PAGE_BYTES: usize = 32 * 1_024;
-const SURFACE_COMPONENT_COPY_WORK_BYTES: usize = 4096;
+const SURFACE_COMPONENT_COPY_WORK_BYTES: usize = if size_of::<ui_contract::Component>() > 4096 { size_of::<ui_contract::Component>() } else { 4096 };
 const _: () = assert!(size_of::<ui_contract::Component>() <= SURFACE_COMPONENT_COPY_WORK_BYTES);
 const _: () = assert!(size_of::<ui_contract::UiComponentCopy>() <= SURFACE_RECONCILE_PAGE_BYTES);
 const _: () = assert!(2 * size_of::<ui_contract::Component>() + SURFACE_COMPONENT_COPY_WORK_BYTES <= SURFACE_RECONCILE_PAGE_BYTES);

@@ -72,7 +72,7 @@ pub(crate) mod context {
         for effect in &result.requested_effects {
             if let Effect::LoadDocument { pack, spr } = effect {
                 let files = store::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
-                app.load_document_pack(&files).await.expect("test host applies load-document effect");
+                semio_framework_plugin::artifact_app_laws::load_document(app, &files).await.expect("test host applies load-document effect");
             }
         }
         Dispatched { result, lanes: settled.lanes }
@@ -328,7 +328,7 @@ pub(super) fn every_command() -> Vec<ShootingCommand> {
 
 //#region 🔖️ActionBridge
 fn action_args(value: &Value) -> DslValue {
-    dsl::os_pack::json_to_dsl_value(&dsl::os_pack::json::parse(&value.to_string()).expect("fixture JSON"))
+    semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture JSON"))
 }
 
 /// 🐫️ The shell's spelling of the payload keys.
@@ -359,7 +359,7 @@ fn camel_case_keys(value: &DslValue) -> DslValue {
 fn command_from_action_round_trips_every_command_id() {
     for command in every_command() {
         let id = command.command_id();
-        let args = dsl::ToValue::to_value(&command);
+        let args = semio_framework_value::ToValue::to_value(&command);
         let payload = match &args {
             DslValue::Object(entries) if entries.len() == 1 => entries[0].1.clone(),
             other => other.clone(),
@@ -444,7 +444,7 @@ async fn interaction_select_is_reachable_as_a_framework_injected_action_under_re
     let mut app = shooting_app_with_registry().await;
     let asset_id = app.snapshot().expect("snapshot").assets[0].id.clone();
     let targets = serde_json::to_string(&serde_json::json!([{ "granularity": "asset", "id": asset_id }])).unwrap();
-    app.handle_action("interactionSelect", Some(&dsl::os_pack::json::to_dsl_value(&dsl::json!({ "domainId": SHOOTING_INTERACTION_DOMAIN, "targets": targets.as_str(), "merge": "replace" }))), &artifact_app_laws::meta("local")).await.expect("interactionSelect");
+    app.handle_action("interactionSelect", Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "domainId": SHOOTING_INTERACTION_DOMAIN, "targets": targets.as_str(), "merge": "replace" }))), &artifact_app_laws::meta("local")).await.expect("interactionSelect");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -592,7 +592,7 @@ async fn shooting_photo_media_exports_a_raster_2d_image() {
             assert_eq!(schema, "2d.image");
             assert!(!json.is_empty());
         }
-        MediaPayload::Binary { .. } => panic!("expected a Structured payload"),
+        MediaPayload::Binary { .. } | MediaPayload::Intrinsic { .. } => panic!("expected a Structured payload"),
     }
 }
 //#endregion 🔖️Io
@@ -605,7 +605,7 @@ async fn export_import_and_download_operations() {
     match &result.requested_effects[0] {
         Effect::DownloadMediaExport { filename, data, .. } => {
             assert_eq!(filename, "shooting.shooting.ops");
-            let round_trip: ShootingSnapshot = dsl::os_pack::from_json_str(data).unwrap();
+            let round_trip: ShootingSnapshot = semio_framework_pack_json::from_json_str(data, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
             assert_eq!(round_trip.schema, SHOOTING_DOCUMENT_SCHEMA);
         }
         other => panic!("expected DownloadMediaExport, got {other:?}"),

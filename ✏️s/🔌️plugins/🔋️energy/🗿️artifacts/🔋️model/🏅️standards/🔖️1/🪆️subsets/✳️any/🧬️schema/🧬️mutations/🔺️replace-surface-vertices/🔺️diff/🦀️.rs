@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ReplaceSurfaceVertices, base: &EnergyModelSnapshot)
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("A surface polygon needs at least three vertices, got {}.", payload.new_vertices_m.len()), [payload.id.0.to_string()]);
     }
     if existing.vertices_m == payload.new_vertices_m {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Surface {} already has this polygon.", payload.id.0));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Surface {} already has this polygon.", payload.id.0));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.surfaces.iter_mut().find(|item| item.id == payload.id) {

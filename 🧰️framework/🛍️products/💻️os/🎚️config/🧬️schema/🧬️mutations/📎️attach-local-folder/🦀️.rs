@@ -4,12 +4,13 @@
 use super::detach_local_folder::DetachLocalFolder;
 use super::LocalFoldersConfigMutation;
 use protocol::{MutationDiff, MutationKind, MutationOutcome, SemanticDescriptor};
-use semio_framework_os_kernel::{FromValue, ToValue};
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Schema
 /// 📁️ Where a document's folder is on this device: an absolute path the host opens.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum LocalFolderRef {
@@ -18,7 +19,7 @@ pub enum LocalFolderRef {
 
 /// 📎️ One document this device attached to a local folder: the document's own identity, the program that holds it and the
 /// folder its archive persists in.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct LocalFolderBinding {
@@ -30,7 +31,7 @@ pub struct LocalFolderBinding {
 
 /// 📁️ `os.config.local-folders` — every folder binding of this device (persisted local-only: never shared, never in a URL),
 /// one per document, ordered by document id.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase", default)]
 pub struct LocalFolderBindings {
@@ -53,7 +54,7 @@ impl MutationDiff<LocalFolderBindings> for LocalFolderBindings {
 
 //#region 🔖️Mutation
 /// 📎️ Remembers one document's folder, replacing any binding of the same document.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
@@ -87,7 +88,7 @@ impl MutationKind<LocalFolderBindings, LocalFoldersConfigMutation> for AttachLoc
     fn diff(&self, base: &LocalFolderBindings) -> MutationOutcome<LocalFolderBindings> {
         let attached = LocalFolderBinding::from(self);
         if base.bindings.iter().any(|entry| *entry == attached) {
-            return MutationOutcome::new(base.clone()).warn("mutation.no-op", format!("\"{}\" is already attached to this folder.", self.document_id));
+            return MutationOutcome::new(base.clone()).warning("mutation.no-op", format!("\"{}\" is already attached to this folder.", self.document_id));
         }
         let mut bindings: Vec<LocalFolderBinding> = base.bindings.iter().filter(|entry| entry.document_id != self.document_id).cloned().collect();
         bindings.push(attached);
@@ -95,12 +96,15 @@ impl MutationKind<LocalFolderBindings, LocalFoldersConfigMutation> for AttachLoc
         MutationOutcome::new(LocalFolderBindings { bindings })
     }
 
-    fn inverse(&self, base: &LocalFolderBindings) -> Vec<LocalFoldersConfigMutation> {
+    fn inverse(&self, base: &LocalFolderBindings) -> Result<Vec<LocalFoldersConfigMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         match base.bindings.iter().find(|entry| entry.document_id == self.document_id) {
             Some(prior) => vec![attach_local_folder(prior.clone())],
             None => vec![LocalFoldersConfigMutation::DetachLocalFolder(DetachLocalFolder { document_id: self.document_id.clone() })],
         }
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Attach \"{}\" to a folder on this device", self.document_id), &format!("\"{}\" mit einem Ordner auf diesem Gerät verbinden", self.document_id))
@@ -121,9 +125,12 @@ pub fn apply_local_folders_config_mutation(snapshot: &mut LocalFolderBindings, m
 }
 
 /// ↩️ Computes the mutation's inverse steps from the pre-mutation bindings.
-pub fn inverse_local_folders_config_mutation(snapshot: &LocalFolderBindings, mutation: &LocalFoldersConfigMutation) -> Vec<LocalFoldersConfigMutation> {
+pub fn inverse_local_folders_config_mutation(snapshot: &LocalFolderBindings, mutation: &LocalFoldersConfigMutation) -> Result<Vec<LocalFoldersConfigMutation>, semio_framework_value::ValueError> {
+    Ok({
     use protocol::Mutation as _;
-    mutation.inverse(snapshot)
+    mutation.inverse(snapshot)?
+
+    })
 }
 
 /// 📥️ Decodes the internally tagged local-folders mutation JSON projection.
@@ -149,9 +156,12 @@ pub fn apply_local_folders_config_mutation_reporting(snapshot: &mut LocalFolderB
 }
 
 /// ↩️ Returns the mutation's own inverse steps for an external fixture adapter.
-pub fn inverse_local_folders_config_mutation_steps(mutation: &LocalFoldersConfigMutation, base: &LocalFolderBindings) -> Vec<LocalFoldersConfigMutation> {
+pub fn inverse_local_folders_config_mutation_steps(mutation: &LocalFoldersConfigMutation, base: &LocalFolderBindings) -> Result<Vec<LocalFoldersConfigMutation>, semio_framework_value::ValueError> {
+    Ok({
     use protocol::Mutation as _;
-    mutation.inverse(base)
+    mutation.inverse(base)?
+
+    })
 }
 //#endregion 🌉️MutationCodecBridge
 

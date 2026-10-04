@@ -18,7 +18,7 @@ impl Deserializer<NoteSnapshot> for SvgIntoNote {
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
     async fn deserialize(payload: &IoPayload) -> IoResult<NoteSnapshot> {
         let IoPayload::Text(xml) = payload else {
-            return Err(IoError { message: "SvgIntoNote: expected a text svg payload".to_string(), diagnostics: Vec::new() });
+            return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "SvgIntoNote: expected a text svg payload".to_string())));
         };
         let mut ids = NoteIdOwner::new(format!("svg-import:{}", xml.len()), 0);
         let mut snap = empty_note_snapshot();

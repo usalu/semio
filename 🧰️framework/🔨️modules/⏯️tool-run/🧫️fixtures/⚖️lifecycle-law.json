@@ -2100,6 +2100,7 @@
     "stepArgsMax": 4,
     "countersMax": 8,
     "provisionalOpsMax": 65536,
+    "memberOpsMax": 4096,
     "traceResidentRecords": 1048576,
     "tracePageOpsMax": 4096,
     "tracePageBytesMax": 262144,

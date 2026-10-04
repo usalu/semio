@@ -9,21 +9,21 @@ use super::*;
 /// are all actually exercised, not just compiled).
 #[test]
 fn value_round_trip_matches_serde_shape() {
-    fn check<T: dsl_core::ToValue + dsl_core::FromValue + std::fmt::Debug + PartialEq>(value: T) {
-        let round_tripped = <T as dsl_core::FromValue>::from_value(dsl_core::ToValue::to_value(&value)).expect("round-trip decode");
+    fn check<T: semio_framework_value::ToValue + semio_framework_value::FromValue + std::fmt::Debug + PartialEq>(value: T) {
+        let round_tripped = <T as semio_framework_value::FromValue>::from_value(semio_framework_value::ToValue::to_value(&value)).expect("round-trip decode");
         assert_eq!(round_tripped, value);
     }
 
     // Zero-field marker types have no `PartialEq` (pre-existing), so their round-trip is just
     // "decodes without error and re-encodes identically" rather than `check`'s equality form.
-    for encoded in [dsl_core::ToValue::to_value(&Directed), dsl_core::ToValue::to_value(&Undirected), dsl_core::ToValue::to_value(&Normal), dsl_core::ToValue::to_value(&Ported), dsl_core::ToValue::to_value(&UnitWeight)] {
-        assert_eq!(encoded, dsl_core::DslValue::Null);
+    for encoded in [semio_framework_value::ToValue::to_value(&Directed), semio_framework_value::ToValue::to_value(&Undirected), semio_framework_value::ToValue::to_value(&Normal), semio_framework_value::ToValue::to_value(&Ported), semio_framework_value::ToValue::to_value(&UnitWeight)] {
+        assert_eq!(encoded, semio_framework_value::DslValue::Null);
     }
-    <Directed as dsl_core::FromValue>::from_value(dsl_core::DslValue::Null).expect("decode");
-    <Undirected as dsl_core::FromValue>::from_value(dsl_core::DslValue::Null).expect("decode");
-    <Normal as dsl_core::FromValue>::from_value(dsl_core::DslValue::Null).expect("decode");
-    <Ported as dsl_core::FromValue>::from_value(dsl_core::DslValue::Null).expect("decode");
-    <UnitWeight as dsl_core::FromValue>::from_value(dsl_core::DslValue::Null).expect("decode");
+    <Directed as semio_framework_value::FromValue>::from_value(semio_framework_value::DslValue::Null).expect("decode");
+    <Undirected as semio_framework_value::FromValue>::from_value(semio_framework_value::DslValue::Null).expect("decode");
+    <Normal as semio_framework_value::FromValue>::from_value(semio_framework_value::DslValue::Null).expect("decode");
+    <Ported as semio_framework_value::FromValue>::from_value(semio_framework_value::DslValue::Null).expect("decode");
+    <UnitWeight as semio_framework_value::FromValue>::from_value(semio_framework_value::DslValue::Null).expect("decode");
 
     check(EdgeRef { id: 3, u: 1, v: 2 });
     check(GraphError::NodeNotFound(7));
@@ -41,14 +41,14 @@ fn value_round_trip_matches_serde_shape() {
     let h1 = storage.add_handle(n1).expect("handle");
     let h0 = storage.add_handle(n0).expect("handle");
     storage.add_edge(h0, h1);
-    let encoded = dsl_core::ToValue::to_value(&storage);
-    let decoded = <Storage<Ported, Directed> as dsl_core::FromValue>::from_value(encoded.clone()).expect("round-trip decode");
-    assert_eq!(dsl_core::ToValue::to_value(&decoded), encoded);
+    let encoded = semio_framework_value::ToValue::to_value(&storage);
+    let decoded = <Storage<Ported, Directed> as semio_framework_value::FromValue>::from_value(encoded.clone()).expect("round-trip decode");
+    assert_eq!(semio_framework_value::ToValue::to_value(&decoded), encoded);
 
     let csr = Csr::from_view(&storage);
-    let csr_encoded = dsl_core::ToValue::to_value(&csr);
-    let csr_decoded = <Csr as dsl_core::FromValue>::from_value(csr_encoded.clone()).expect("round-trip decode");
-    assert_eq!(dsl_core::ToValue::to_value(&csr_decoded), csr_encoded);
+    let csr_encoded = semio_framework_value::ToValue::to_value(&csr);
+    let csr_decoded = <Csr as semio_framework_value::FromValue>::from_value(csr_encoded.clone()).expect("round-trip decode");
+    assert_eq!(semio_framework_value::ToValue::to_value(&csr_decoded), csr_encoded);
 }
 
 // 🚫️async: E5-class executor bridge, sanctioned per R4 clause 5 — `#[test]` cannot run
@@ -957,7 +957,7 @@ fn property_bag_value_round_trips_and_empty_bag_serializes_to_none() {
 #[test]
 fn property_bag_from_value_falls_back_to_default_on_unparsable_shape() {
     block_on_test(async {
-        let value = dsl_core::DslValue::String("not-an-object-map".to_string());
+        let value = semio_framework_value::DslValue::String("not-an-object-map".to_string());
         let bag = property_bag_from_value(&value);
         assert!(bag.is_empty(), "a value that can't deserialize into a PropertyBag falls back to empty");
     });

@@ -44,15 +44,20 @@
         "kind": {
           "const": "change-data-fields"
         },
-        "newJson": {
-          "type": [
-            "string",
-            "null"
+        "newFields": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/dictionary.json"
+            },
+            {
+              "type": "null"
+            }
           ]
         }
       },
       "required": [
-        "kind"
+        "kind",
+        "newFields"
       ]
     },
     {

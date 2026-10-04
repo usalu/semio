@@ -37,7 +37,7 @@ const GIS_MAP_VIEW_WORK_ITEMS: usize = 1;
 /// declare and reduce it drops every gesture (`dropped action "setCamera" … no window kind declares it`).
 ///
 /// 🔒️ Row order is the binary variant ordinal: appending is safe, reordering is a wire break.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 pub enum GisMapViewCommand {
     /// 🧭️ The camera as the canonical `{x,y,zoom}` JSON the host sends. One text field because a
     /// `dsl::DslOps` variant binds scalars only — and because that string IS what
@@ -90,8 +90,8 @@ fn camera_emit(command: &GisMapViewCommand, view_state: Option<&semio_framework_
     if camera.is_empty() {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), "setCamera carries no {x,y,zoom} camera"));
     }
-    let value = dsl::json::from_json_str::<dsl::DslValue>(camera).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), format!("the camera is not a value: {error}")))?;
-    let camera = <map::config::GisMapViewerCamera as dsl::FromValue>::from_value(value).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), format!("the camera is malformed: {error}")))?;
+    let value = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(camera, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), format!("the camera is not a value: {error}")))?;
+    let camera = <map::config::GisMapViewerCamera as semio_framework_value::FromValue>::from_value(value).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), format!("the camera is malformed: {error}")))?;
     if !camera.is_valid() {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), "the camera is not finite, or its zoom is not positive"));
     }
@@ -106,7 +106,7 @@ fn camera_emit(command: &GisMapViewCommand, view_state: Option<&semio_framework_
 /// 🪪️ The bridge from a dispatched action's args to the typed command. The host's `camera` object is
 /// validated and canonicalized to the exact JSON string `TiledMapScene::camera_json` consumes, so a
 /// malformed gesture is refused at `camera_emit` rather than silently ignored.
-fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<GisMapViewCommand, Fault> {
+fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<GisMapViewCommand, Fault> {
     if action != map::SET_CAMERA_ACTION_ID {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.unsupported"), format!("the gis map viewer has no command for action '{action}'")));
     }
@@ -114,10 +114,10 @@ fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Gis
         .and_then(|args| args.get("camera"))
         .and_then(|value| {
             let value = match value {
-                dsl::DslValue::String(text) => dsl::json::from_json_str::<dsl::DslValue>(text).ok()?,
+                semio_framework_value::DslValue::String(text) => semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(text, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()?,
                 other => other.clone(),
             };
-            let camera = <map::config::GisMapViewerCamera as dsl::FromValue>::from_value(value).ok()?;
+            let camera = <map::config::GisMapViewerCamera as semio_framework_value::FromValue>::from_value(value).ok()?;
             camera.is_valid().then(|| camera.scene_camera_json())
         })
         .unwrap_or_default();
@@ -274,15 +274,18 @@ impl ArtifactViewer for GisMapViewer {
         store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::from(format!("gis map child projection failed: {error}")))
     }
 
-    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {
+ Ok((||{
         crate::genesis_gis_map_child_pack(snapshot, slot, child_id)
-    }
+    
+})())
+}
 
     fn command_id(command: &Self::Command) -> &'static str {
         command.action_id()
     }
 
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
         command_from_action(action, args)
     }
 
@@ -318,7 +321,7 @@ impl ArtifactViewer for GisMapViewer {
             return Ok(None);
         }
         if request.command.action_id() != request.tool_id {
-            return Err(Fault::new(FaultOrigin::App, FaultCode::new("gis.map.viewer.retained.tool-mismatch"), "the gis map view command does not match its exact registered tool"));
+            return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.tool-mismatch"), "the gis map view command does not match its exact registered tool"));
         }
         let tool_id = request.command.action_id();
         let work = Box::new(BoundedArtifactCommandWork::new(tool_id, gis_map_view_reduce, gis_map_view_extent));

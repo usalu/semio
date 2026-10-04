@@ -1,2 +1,0 @@
-# ✂️ Direct delete-edge / DeleteEdge payload.
-input DeleteEdgeInput { id: String! }

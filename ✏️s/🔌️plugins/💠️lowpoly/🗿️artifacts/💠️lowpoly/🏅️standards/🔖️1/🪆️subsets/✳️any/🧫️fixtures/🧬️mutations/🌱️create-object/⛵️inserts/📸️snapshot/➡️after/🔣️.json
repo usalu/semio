@@ -41,7 +41,8 @@
           1.0,
           1.0
         ]
-      }
+      },
+      "meshState": null
     },
     {
       "id": "obj-mast",
@@ -66,7 +67,8 @@
           1.0,
           1.0
         ]
-      }
+      },
+      "meshState": null
     },
     {
       "id": "obj-fin",
@@ -91,7 +93,8 @@
           1.0,
           1.0
         ]
-      }
+      },
+      "meshState": null
     }
   ],
   "schema": "lowpoly.document"

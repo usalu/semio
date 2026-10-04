@@ -112,21 +112,21 @@ fn the_banner_never_overflows_a_narrow_viewport() {
 #[test]
 fn dispatch_faults_are_classified_the_way_reacts_three_call_sites_classify_them() {
     use semio_framework::Severity;
-    let (message, severity, code) = classify_dispatch_fault_notice("guest refused: viewer.read-only", Locale::En);
+    let (message, severity, code) = classify_dispatch_fault_notice("guest refused: viewer.read-only", None, Terminology::Native, Locale::En);
     assert_eq!(severity, Severity::Info);
-    assert_eq!(code, Some(VIEWER_READ_ONLY_FAULT_CODE));
+    assert_eq!(code.as_deref(), Some(VIEWER_READ_ONLY_FAULT_CODE));
     assert!(message.contains("read-only viewer"));
 
-    let (_, severity, code) = classify_dispatch_fault_notice("app.command.rejected: conflicting edit", Locale::En);
+    let (_, severity, code) = classify_dispatch_fault_notice("app.command.rejected: conflicting edit", None, Terminology::Native, Locale::En);
     assert_eq!(severity, Severity::Error);
-    assert_eq!(code, Some(COMMAND_REJECTED_FAULT_CODE));
+    assert_eq!(code.as_deref(), Some(COMMAND_REJECTED_FAULT_CODE));
 
-    let (message, severity, code) = classify_dispatch_fault_notice("surface render failed", Locale::En);
+    let (message, severity, code) = classify_dispatch_fault_notice("surface render failed", None, Terminology::Native, Locale::En);
     assert_eq!(severity, Severity::Error);
     assert_eq!(code, None);
     assert_eq!(message, "surface render failed");
 
-    let (message, _, _) = classify_dispatch_fault_notice("viewer.read-only", Locale::De);
+    let (message, _, _) = classify_dispatch_fault_notice("viewer.read-only", None, Terminology::Native, Locale::De);
     assert!(message.contains("schreibgeschützter"), "no default language — the German copy is real");
 }
 

@@ -17,7 +17,7 @@ fn admit_serializes_like_the_typescript_projection() {
 #[test]
 fn admitting_a_new_document_inverts_to_its_retirement() {
     let base = LocalCatalog::default();
-    assert_eq!(admit_local_document(document("studio-a", "A")).inverse(&base), vec![super::super::retire_local_document("studio-a")]);
+    assert_eq!(admit_local_document(document("studio-a", "A")).inverse(&base).expect("valid retained mutation inverse fixture"), vec![super::super::retire_local_document("studio-a")]);
 }
 
 #[test]
@@ -27,7 +27,7 @@ fn readmitting_a_listed_document_replaces_it_in_place_and_inverts_to_the_prior_e
     let mut snapshot = base.clone();
     apply_local_catalog_config_mutation(&mut snapshot, &renamed).expect("admit applies");
     assert_eq!(snapshot.documents.iter().map(|entry| entry.name.as_str()).collect::<Vec<_>>(), vec!["A renamed", "B"], "one entry per id, ordered by id");
-    assert_eq!(renamed.inverse(&base), vec![admit_local_document(document("studio-a", "A"))]);
+    assert_eq!(renamed.inverse(&base).expect("valid retained mutation inverse fixture"), vec![admit_local_document(document("studio-a", "A"))]);
 }
 
 #[test]

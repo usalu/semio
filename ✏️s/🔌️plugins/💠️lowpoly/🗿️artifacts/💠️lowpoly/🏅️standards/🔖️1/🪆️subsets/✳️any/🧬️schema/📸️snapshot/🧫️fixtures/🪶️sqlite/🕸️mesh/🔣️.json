@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "source": "independent source 世界\u0000",
+  "binary32Words": ["00000000", "80000000", "00000001", "3f800000", "7f800000", "ff800000", "7f800123", "ffc01234"],
+  "mesh": {
+    "vertices": [
+      {"position": ["00000000", "80000000", "3f800000"], "normal": null, "halfedge": 0},
+      {"position": ["00000001", "7f800000", "ff800000"], "normal": ["3f800000", "7f800123", "ffc01234"], "halfedge": 1},
+      {"position": ["3f800000", "00000000", "00000000"], "normal": null, "halfedge": 2},
+      {"position": ["00000000", "3f800000", "00000000"], "normal": null, "halfedge": null}
+    ],
+    "halfedges": [
+      {"vertex": 0, "twin": 3, "next": 1, "face": 0, "uv": ["80000000", "3f800000"]},
+      {"vertex": 1, "twin": null, "next": 2, "face": 0, "uv": ["00000001", "7f800123"]},
+      {"vertex": 2, "twin": null, "next": 0, "face": 0, "uv": ["ffc01234", "00000000"]},
+      {"vertex": 1, "twin": 0, "next": 3, "face": null, "uv": ["00000000", "00000000"]}
+    ],
+    "faces": [{"halfedge": 0, "smooth": true, "flipped": true}],
+    "uvSeams": [0, 2],
+    "attributes": [
+      {"name": "uv\u0000世界", "domain": "corner", "semantic": "uv", "interpolation": "linear", "values": [{"kind": "array", "items": [{"kind": "float", "value": "8000000000000000"}, {"kind": "float", "value": "7ff0000000000001"}]}], "indices": [0, 0, 0]},
+      {"name": "normal", "domain": "vertex", "semantic": "normal", "interpolation": "nearest", "values": [], "indices": null},
+      {"name": "custom", "domain": "edge", "semantic": "custom", "interpolation": "constant", "values": [{"kind": "null"}], "indices": []},
+      {"name": "color", "domain": "vertex", "semantic": "color", "interpolation": "linear", "values": [{"kind": "array", "items": [{"kind": "float", "value": "3ff0000000000000"}, {"kind": "float", "value": "0000000000000000"}, {"kind": "float", "value": "0000000000000000"}, {"kind": "float", "value": "3ff0000000000000"}]}], "indices": [0, 0, 0, 0]},
+      {"name": "material", "domain": "face", "semantic": "material", "interpolation": "nearest", "values": [{"kind": "text", "value": "object"}], "indices": null}
+    ],
+    "materials": [
+      {"name": "null", "value": {"kind": "null"}},
+      {"name": "boolean", "value": {"kind": "boolean", "value": true}},
+      {"name": "unsigned", "value": {"kind": "unsigned", "value": "18446744073709551615"}},
+      {"name": "signed", "value": {"kind": "signed", "value": "-9223372036854775808"}},
+      {"name": "float", "value": {"kind": "float", "value": "fff8000000000042"}},
+      {"name": "text", "value": {"kind": "text", "value": "世界\u0000🧱"}},
+      {"name": "bytes", "value": {"kind": "bytes", "value": [0, 1, 127, 128, 255]}},
+      {"name": "array", "value": {"kind": "array", "items": [{"kind": "null"}, {"kind": "array", "items": []}]}},
+      {"name": "object", "value": {"kind": "object", "members": [{"name": "same", "value": {"kind": "null"}}, {"name": "same", "value": {"kind": "text", "value": "second"}}, {"name": "", "value": {"kind": "object", "members": []}}]}}
+    ],
+    "textures": [{"name": "albedo\u0000", "mime": "image/custom 世界", "bytes": [0, 1, 127, 128, 255]}, {"name": "empty", "mime": "", "bytes": []}]
+  }
+}

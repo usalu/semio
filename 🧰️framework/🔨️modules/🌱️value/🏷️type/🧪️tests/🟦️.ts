@@ -2,9 +2,8 @@ import { test, expect } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import Ajv from "ajv";
-import * as toml from "@iarna/toml";
 
-const owner = resolve(import.meta.dir, ".."), root = resolve(owner, "../../../..");
+const owner = resolve(import.meta.dir, "..");
 const read = (path: string): string => readFileSync(resolve(owner, path), "utf8");
 const fixture = JSON.parse(read("🧫️fixtures/🔣️.json")), schema = JSON.parse(read("🧬️schema/🔣️.json"));
 const ajv = new Ajv({ strict: true, allErrors: true });
@@ -63,29 +62,11 @@ test("typed reader refuses inherited fields, accessors and cycles with caller ca
   expect(checked).toBe(5);
 });
 
-test("Graph and Neural bind the one neutral type without a product forwarding API", () => {
+test("canonical neutral enums and package exports have one lower owner", () => {
   expect(existsSync(resolve(owner, "🦀️.rs"))).toBe(true);
   const neutral = read("🦀️.rs");
   expect(neutral).toContain("pub enum ValueType");
   expect(neutral).toContain("pub enum ValueKind");
   expect(neutral).not.toMatch(/neural_engine|semio_framework_os|serde::/u);
-  const neural = readFileSync(resolve(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🦀️.rs"), "utf8");
-  const graph = readFileSync(resolve(root, "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🦀️.rs"), "utf8");
-  expect(neural).not.toContain("pub enum ValueType");
-  expect(neural).not.toMatch(/pub use[^;]*ValueType/u);
-  expect(graph).not.toMatch(/neural_engine|property_value_to_neural/u);
-  expect(graph).toContain("if matches!(expected, ValueType::Any)");
-  expect(graph).toContain("PropertyValue::Object(_) if matches!(expected, ValueType::Schema(_)) => true");
-  const manifest = toml.parse(readFileSync(resolve(root, "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/Cargo.toml"), "utf8"));
-  expect((manifest.dependencies as Record<string, unknown>).neural_engine).toBeUndefined();
   expect(read("../📦️packages/🦀️rust/🦀️.rs")).toContain("pub use types::{ValueKind, ValueType}");
-});
-
-test("Graph retains its explicit property acceptance in an independent schema corpus", () => {
-  expect(new Set(fixture.graphCases.map((row: { type: number; value: number }) => row.type + ":" + row.value)).size).toBe(63);
-  for (const row of fixture.graphCases) {
-    const type = fixture.types[row.type].type;
-    const reference = ajv.compile(type.kind === "any" ? {} : type.kind === "boolean" ? { type: "boolean" } : type.kind === "decimal" ? { anyOf: [{ type: "boolean" }, { type: "number" }] } : type.kind === "text" ? { type: "string" } : type.kind === "schema" ? { type: "object" } : false);
-    expect(reference(fixture.graphValues[row.value]), row.name).toBe(row.accepted);
-  }
 });

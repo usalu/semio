@@ -22,9 +22,12 @@ impl MutationKind<PdfSnapshot, PdfUaMutation> for RemoveDisplayDocTitle {
         MutationOutcome::new(support::graph_edit_diff(base, next))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfUaMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfUaMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         support::catalog_flag(base, "ViewerPreferences", "DisplayDocTitle").map(|display| PdfUaMutation::SetDisplayDocTitle(SetDisplayDocTitle { display })).into_iter().collect()
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove PDF/UA title display preference", "PDF/UA-Anzeigeeinstellung für den Titel entfernen")

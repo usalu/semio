@@ -1,6 +1,6 @@
 //! 👁️ Shared analysis display vocabulary for FEM result windows.
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, dsl::DslScalar, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub enum ResultMode {
     #[default]

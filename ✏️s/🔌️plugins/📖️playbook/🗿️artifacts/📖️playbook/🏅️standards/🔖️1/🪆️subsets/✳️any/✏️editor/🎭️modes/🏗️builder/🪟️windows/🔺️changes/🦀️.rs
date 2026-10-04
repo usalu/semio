@@ -1,6 +1,6 @@
 //! 🔺️ Playbook changes window — a real DiffView surface comparing the empty authored baseline with the live playbook.
 
-use crate::PlaybookSnapshot;
+use crate::PlaybookSpec;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::SurfaceKind;
 use semio_framework_plugin::WindowKindDefinition;
@@ -30,17 +30,17 @@ pub fn definition() -> WindowKindDefinition {
     }
 }
 
-pub fn scene(spec: &PlaybookSnapshot) -> DiffViewScene {
+pub fn scene(spec: &PlaybookSpec) -> DiffViewScene {
     DiffViewScene {
-        before: protocol::json::to_json_string(&PlaybookSnapshot::default()),
-        after: protocol::json::to_json_string(spec),
+        before: semio_framework_pack_json::to_json_string(&crate::playbook::empty_playbook_snapshot()),
+        after: semio_framework_pack_json::to_json_string(spec),
         language: Some("json".into()),
         mode: Some("unified".into()),
         domain_id: None,
     }
 }
 
-pub fn render(spec: &PlaybookSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(spec: &PlaybookSpec) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     semio_framework_plugin::scene_surface(PLAYBOOK_PLAY_SURFACE_CHANGES, semio_framework_ui_contract::SurfaceKind::DiffView, &scene(spec))
 }
 

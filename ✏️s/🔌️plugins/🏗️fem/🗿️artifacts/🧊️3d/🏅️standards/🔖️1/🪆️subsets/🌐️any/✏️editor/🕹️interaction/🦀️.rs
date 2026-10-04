@@ -166,8 +166,8 @@ pub fn fem3d_entity_point(doc: &Fem3dSnapshot, id: &str) -> Option<[f64; 3]> {
 
 //#region 🔖️Effects
 fn targets_json<G: AsRef<str>, I: AsRef<str>>(targets: &[(G, I)]) -> String {
-    let items: Vec<dsl::json::Value> = targets.iter().map(|(granularity, id)| dsl::json!({ "granularity": granularity.as_ref(), "id": id.as_ref() })).collect();
-    dsl::json::to_string(&dsl::json::Value::Array(items))
+    let items: Vec<semio_framework_pack_json::Value> = targets.iter().map(|(granularity, id)| semio_framework_pack_json::json!({ "granularity": granularity.as_ref(), "id": id.as_ref() })).collect();
+    semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(items))
 }
 
 /// 🕹️ Asks the shell to redispatch `interactionSelect` for these targets — selection is
@@ -175,11 +175,11 @@ fn targets_json<G: AsRef<str>, I: AsRef<str>>(targets: &[(G, I)]) -> String {
 pub fn interaction_select_effect<G: AsRef<str>, I: AsRef<str>>(targets: &[(G, I)], merge: &str, method: &str) -> Effect {
     Effect::ReplayShellCommand {
         action_id: semio_framework::INTERACTION_SELECT_ACTION_ID.into(),
-        args: Some(dsl::DslValue::object([
-            ("domainId".to_string(), dsl::DslValue::String(FEM3D_INTERACTION_DOMAIN.to_string())),
-            ("targets".to_string(), dsl::DslValue::String(targets_json(targets))),
-            ("merge".to_string(), dsl::DslValue::String(merge.to_string())),
-            ("method".to_string(), dsl::DslValue::String(method.to_string())),
+        args: Some(semio_framework_value::DslValue::object([
+            ("domainId".to_string(), semio_framework_value::DslValue::String(FEM3D_INTERACTION_DOMAIN.to_string())),
+            ("targets".to_string(), semio_framework_value::DslValue::String(targets_json(targets))),
+            ("merge".to_string(), semio_framework_value::DslValue::String(merge.to_string())),
+            ("method".to_string(), semio_framework_value::DslValue::String(method.to_string())),
         ])),
     }
 }

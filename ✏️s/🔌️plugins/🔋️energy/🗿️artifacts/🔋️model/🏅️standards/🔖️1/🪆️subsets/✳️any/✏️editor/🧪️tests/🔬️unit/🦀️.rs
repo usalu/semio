@@ -374,6 +374,14 @@ fn press(value: f64, gesture: &str, commit: bool) -> Vec<(&'static str, semio_fr
     vec![("value", DslValue::float(value)), ("gesture", DslValue::String(gesture.into())), ("commit", DslValue::Bool(commit))]
 }
 
+/// 📜️ Every history row and every mutation row the projection lists, with no lane or edit filter — what L4 observes
+/// (design §20.13): a config-lane edit may appear in neither.
+async fn history_rows_and_mutations(app: &mut EnergyEditorApp) -> (usize, usize) {
+    use semio_framework_plugin::PluginApp as _;
+    let upserts = app.history_snapshot().await.expect("history").upserts;
+    (upserts.len(), upserts.iter().map(|entry| entry.mutations.len()).sum())
+}
+
 async fn transaction_rows(app: &mut EnergyEditorApp) -> Vec<semio_framework::kernel::HistoryEntry> {
     use semio_framework_plugin::PluginApp as _;
     app.history_snapshot().await.expect("history").upserts.into_iter().filter(|entry| entry.edit_id.is_some()).collect()
@@ -518,12 +526,13 @@ fn gesture_args(gesture: &str, commit: Option<bool>) -> Vec<(&'static str, semio
 
 /// ⚖️ LAW (design §20.1): a config control is a press on the config lanes too — its ticks are held as the provisional
 /// config (rendered, never published), the release publishes ONE config edit, a cancelled press publishes nothing, and
-/// no config edit is ever a history row; the same holds for a window-config press (the 3d window's camera).
+/// no config edit is ever a history row or a mutation row — observed over ALL rows, never an edit-linked subset (design
+/// §20.13); the same holds for a window-config press (the 3d window's camera).
 #[semio_framework_async_macros::async_test]
 async fn a_config_press_is_one_config_edit_a_cancel_is_none_and_neither_is_a_history_row() {
     use semio_framework_plugin::DslValue;
     let mut app = dispatchable_app().await;
-    let rows = transaction_rows(&mut app).await.len();
+    let rows = history_rows_and_mutations(&mut app).await;
     let settings = |warmup: u32| vec![("zoneTimestepMinutes", DslValue::float(60.0)), ("systemTimestepMinutes", DslValue::float(60.0)), ("warmupDays", DslValue::float(f64::from(warmup)))];
     let (generation, _) = app.config_generations(model_window::WINDOW_KIND_ID, "window-1");
     for (warmup, commit) in [(10, false), (12, false)] {
@@ -550,7 +559,7 @@ async fn a_config_press_is_one_config_edit_a_cancel_is_none_and_neither_is_a_his
     press_in_window(&mut app, model_window::SET_CAMERA_ACTION_ID, [camera(5.0), gesture_args("camera:2", Some(false))].concat()).await;
     press_in_window(&mut app, model_window::SET_CAMERA_ACTION_ID, gesture_args("camera:2", None)).await;
     assert_eq!(app.config_generations(model_window::WINDOW_KIND_ID, "window-1").1, Some(window + 1), "a cancelled window-config press publishes nothing");
-    assert_eq!(transaction_rows(&mut app).await.len(), rows, "config edits are never history rows");
+    assert_eq!(history_rows_and_mutations(&mut app).await, rows, "config edits are never history rows nor mutation rows");
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
 }
 //#endregion 🎚️ScrubLaws
@@ -583,7 +592,7 @@ async fn simulation_app() -> EnergyEditorApp {
     let envelope = store::create_document_envelope::<EnergyModelSnapshot, EnergyModelMutation>(ENERGY_MODEL_DOCUMENT_SCHEMA, "model", snapshot, None).into_owners();
     let spr = store::print_document_spr(&envelope).await.expect("fixture spr");
     let mut app = dispatchable_app().await;
-    app.load_document_pack(&store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.expect("fixture document loads");
+    semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.expect("fixture document loads");
     let settings = &scenario["settings"];
     let args = semio_framework_plugin::DslValue::Object(["zoneTimestepMinutes", "systemTimestepMinutes", "warmupDays"].iter().map(|key| (key.to_string(), semio_framework_plugin::DslValue::String(settings[key].to_string()))).collect());
     app.handle_action(simulation::SET_SETTINGS_ACTION_ID, Some(&args), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("settings dispatch");
@@ -999,8 +1008,8 @@ async fn a_zone_property_verb_refuses_the_three_bad_payloads() {
 /// has to read that spelling back, not just the palette's `{property, <entity>}` one.
 #[semio_framework_async_macros::async_test]
 async fn the_action_bridge_accepts_the_inspector_field_id_value_payload() {
-    let text = |value: &str| dsl::DslValue::String(value.to_string());
-    let args = dsl::DslValue::Object(vec![("field".to_string(), text("uValueWM2K")), ("id".to_string(), text("50")), ("value".to_string(), text("1.4"))]);
+    let text = |value: &str| semio_framework_value::DslValue::String(value.to_string());
+    let args = semio_framework_value::DslValue::Object(vec![("field".to_string(), text("uValueWM2K")), ("id".to_string(), text("50")), ("value".to_string(), text("1.4"))]);
     let command = <EnergyModelEditor as ArtifactEditor>::command_from_action(SET_FENESTRATION_PROPERTY_ACTION_ID, Some(&args)).expect("the inspector payload resolves");
     assert_eq!(command, fenestration_property(50, "uValueWM2K", "1.4"));
 }
@@ -1243,11 +1252,11 @@ fn model_edit_kinds(base: &crate::model::Model, edited: &crate::model::Model) ->
 /// 🌉️ Exactly what the react host dispatches for a `Trigger::Change` control: the descriptor's own
 /// authored args with the control's value merged in under the literal key `value`
 /// (`🗣️Interpreter/🟦️.tsx` `dispatchDeclarativeControlAction`).
-fn host_merged(authored: &[(&str, &str)], value: &str) -> dsl::DslValue {
-    let mut entries: Vec<(String, dsl::DslValue)> = authored.iter().map(|(key, value)| ((*key).to_string(), dsl::DslValue::String((*value).to_string()))).collect();
+fn host_merged(authored: &[(&str, &str)], value: &str) -> semio_framework_value::DslValue {
+    let mut entries: Vec<(String, semio_framework_value::DslValue)> = authored.iter().map(|(key, value)| ((*key).to_string(), semio_framework_value::DslValue::String((*value).to_string()))).collect();
     entries.retain(|(key, _)| key != "value");
-    entries.push(("value".to_string(), dsl::DslValue::String(value.to_string())));
-    dsl::DslValue::Object(entries)
+    entries.push(("value".to_string(), semio_framework_value::DslValue::String(value.to_string())));
+    semio_framework_value::DslValue::Object(entries)
 }
 
 /// 📍️ THE blocker the review found: the host merges the typed number under `value` and the bridge has to route it into

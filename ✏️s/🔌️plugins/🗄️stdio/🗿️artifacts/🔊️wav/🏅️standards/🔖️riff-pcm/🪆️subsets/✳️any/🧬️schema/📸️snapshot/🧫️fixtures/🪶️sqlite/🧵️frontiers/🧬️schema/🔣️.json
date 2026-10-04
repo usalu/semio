@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Owned WAV Ordinal Placement Group And Chunk Census Frontiers",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "entities",
+    "frontier",
+    "precedingPasses",
+    "sampleBase",
+    "octetCycle",
+    "chunkWidth",
+    "chunkGroup",
+    "schema",
+    "order",
+    "priorDebt",
+    "capturedRows",
+    "refusalKind",
+    "allocationRefusalKind"
+  ],
+  "properties": {
+    "entities": {
+      "const": 769
+    },
+    "frontier": {
+      "const": 256
+    },
+    "precedingPasses": {
+      "const": 2
+    },
+    "sampleBase": {
+      "const": -384
+    },
+    "octetCycle": {
+      "const": 256
+    },
+    "chunkWidth": {
+      "const": 4
+    },
+    "chunkGroup": {
+      "const": "JUNK"
+    },
+    "schema": {
+      "const": "owned WAV frontiers 世界"
+    },
+    "order": {
+      "const": "reverse"
+    },
+    "priorDebt": {
+      "const": 7
+    },
+    "capturedRows": {
+      "const": 4096
+    },
+    "refusalKind": {
+      "const": "canceled"
+    },
+    "allocationRefusalKind": {
+      "const": "ownershipLimit"
+    }
+  }
+}

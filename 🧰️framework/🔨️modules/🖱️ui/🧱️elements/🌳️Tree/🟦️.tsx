@@ -52,6 +52,7 @@ import { useLabel, Label, resolveTranslationLabel, useIdLabel, useUiTranslation,
 import { useFlow, FlowProvider, type FlowBlock, type FlowInline } from "../../🔨️modules/🧭️flow-direction-context/🟦️.tsx";
 import { type ElementProps } from "../../🔨️modules/🆔️element-identity/🟦️.ts";
 import { useShellFloatingSurfaceHost, useShellScopeOptional } from "../🐚️ShellScope/🟦️.tsx";
+import { DisabledReasonHint } from "../💡️ChromeControlHint/🟦️.tsx";
 import { usePanelGhost, useUiDriverDragSurface, TREE_SECTION_REORDER_MIME, interactionMergeFromModifiers } from "../../🎯️targets/⚛️react/🟦️";
 import { Icon, renderControlIcon, type ControlIcon, CheckIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, CloseIcon, DocumentIcon, FolderIcon } from "../🔣️Icons/🟦️.tsx";
 import { DragHandle } from "../🧱️DragHandle/🟦️.tsx";
@@ -506,7 +507,11 @@ export interface TreeSectionAction {
   title?: UiLabel;
   text?: string;
   id?: string;
+  /** 🚫️ A disabled action never runs; its explicit reason keeps it focusable for discovery. */
   disabled?: boolean;
+  busy?: boolean;
+  /** 💬️ Why a disabled action cannot run: its description (`aria-describedby`) and part of its tooltip. */
+  reason?: string;
   /** 📍️ Row actions paint on the header; menu actions appear in the row context menu. */
   placement?: TreeActionPlacement;
 }
@@ -562,7 +567,7 @@ function menuTreeHeaderActionsToContextItems(actions: readonly TreeHeaderAction[
       id: action.id ?? `tree-row-action-${index}`,
       label: action.text !== undefined ? uiDataLabel(action.text) : (action.title ?? uiDataLabel("")),
       icon: action.icon,
-      disabled: action.disabled,
+      disabled: action.disabled || action.busy,
       onSelect: () => action.onClick(),
     }));
 }
@@ -665,23 +670,72 @@ export const TreeCheckbox: React.FC<TreeCheckboxProps> = ({ id, checked, onCheck
   </label>
 );
 
+/** 🎯️ What a row's control exposes to `aria-describedby`: every focusable element and widget role inside it. */
+const TREE_ROW_DESCRIBED_CONTROLS = 'input, select, textarea, button, [tabindex], [role="slider"], [role="spinbutton"], [role="combobox"], [role="switch"], [role="checkbox"]';
+
+/** 💬️ Names `descriptionId` in the `aria-describedby` of every focusable control inside `slot` — kept there across the
+ * control's own re-renders (a refusal that sets or clears its own `aria-describedby`), so a property row's description is
+ * always announced with its control, whatever element the control renders. */
+export function useTreeRowDescribedControls(slot: React.RefObject<HTMLElement | null>, descriptionId: string | undefined): void {
+  reactHostPort.useLayoutEffect(() => {
+    const root = slot.current;
+    if (!root || !descriptionId) return;
+    const describe = () => {
+      for (const element of root.querySelectorAll<HTMLElement>(TREE_ROW_DESCRIBED_CONTROLS)) {
+        const ids = (element.getAttribute("aria-describedby") ?? "").split(/\s+/u).filter(Boolean);
+        if (!ids.includes(descriptionId)) element.setAttribute("aria-describedby", [...ids, descriptionId].join(" "));
+      }
+    };
+    describe();
+    const observer = new MutationObserver(describe);
+    observer.observe(root, { subtree: true, childList: true, attributes: true, attributeFilter: ["aria-describedby"] });
+    return () => observer.disconnect();
+  }, [descriptionId, slot]);
+}
+
+/** 🎬️ A row action with an explicit disabled reason stays focusable, names that reason through `aria-describedby` and shows
+ * it as visible text while hovered, focused or pressed ({@link DisabledReasonHint}); a disabled action without a reason is
+ * unreachable. The wgpu renderer paints and mirrors the same semantics (conformance case `💬️row-semantics`). */
+function TreeRowActionButton({ action }: { readonly action: TreeSectionAction }): React.ReactElement {
+  const reasonId = `${reactHostPort.useId()}-reason`;
+  const reason = action.disabled ? action.reason : undefined;
+  const disabled = action.disabled || action.busy;
+  const button = (
+    <Action
+      onClick={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (!disabled) action.onClick();
+      }}
+      id={action.id}
+      icon={action.icon}
+      text={action.text ?? action.title}
+      aria-disabled={disabled ? true : undefined}
+      aria-busy={action.busy || undefined}
+      disabled={action.busy || (action.disabled && !reason)}
+      aria-describedby={reason ? reasonId : undefined}
+      {...(reason ? { title: undefined } : {})}
+      className={disabled ? "cursor-not-allowed opacity-50" : undefined}
+    />
+  );
+  return (
+    <span>
+      {reason ? (
+        <DisabledReasonHint id={reasonId} reason={reason}>
+          {button}
+        </DisabledReasonHint>
+      ) : (
+        button
+      )}
+    </span>
+  );
+}
+
 const renderTreeHeaderAction = (action: TreeHeaderAction, key: React.Key) =>
   action.kind === "checkbox" ? (
     <TreeCheckbox key={key} id={action.id} checked={action.checked} onCheckedChange={action.onCheckedChange} title={action.title} disabled={action.disabled} ariaLabel={action.ariaLabel} />
   ) : (
-    <span key={key}>
-      <Action
-        onClick={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          action.onClick();
-        }}
-        id={action.id}
-        icon={action.icon}
-        text={action.text ?? action.title}
-        disabled={action.disabled}
-      />
-    </span>
+    <TreeRowActionButton key={key} action={action} />
   );
 
 const renderTreeHeaderActions = (actions: TreeHeaderAction[]) => {
@@ -1579,6 +1633,9 @@ interface TreeItemProps {
   contextMenu?: ContextMenuItem[];
   /** 🎚️ Control rendered on the header row of expandable property groups (label left, control right). */
   headerControl?: React.ReactNode;
+  /** 💬️ A property row's description (a refused value's reason, the unit, an item count): always shown beside the label and
+   * named by the row's control through `aria-describedby` ({@link useTreeRowDescribedControls}). */
+  description?: React.ReactNode;
   /** 🫳️ `"handle"` restricts native drag start to the trailing grip (arms `draggable` only while the grip is pressed); `"surface"` keeps the whole row draggable. */
   dragInitiation?: "handle" | "surface";
   /** 🫳️ Explicit drag handles for sort vs palette transfer; overrides {@link dragInitiation} when set. */
@@ -2555,9 +2612,13 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   windowAttributes,
   windowRowIndex,
   windowRowExtent,
+  description,
 }) => {
   const generatedLabelId = reactHostPort.useId();
   const disclosureLabelId = id !== undefined && isElementId(id) ? childElementId(id, "disclosureLabel") : childElementId("ui.tree.disclosureLabel", elementIdSegment(generatedLabelId));
+  const descriptionId = description ? (id !== undefined && isElementId(id) ? childElementId(id, "description") : childElementId("ui.tree.description", elementIdSegment(generatedLabelId))) : undefined;
+  const valueSlotRef = reactHostPort.useRef<HTMLDivElement | null>(null);
+  useTreeRowDescribedControls(valueSlotRef, descriptionId);
   const localizedLabel = useIdLabel(id);
   const resolvedLabel = label !== undefined ? label : localizedLabel;
   const controlHint = useControlAccessibleLabel(id);
@@ -2744,13 +2805,20 @@ export const TreeItem: React.FC<TreeItemProps> = ({
               >
                 {resolvedLabel as React.ReactNode}
               </LeafLabel>
+              {description ? (
+                <span id={descriptionId} data-slot="tree-description" className={cn(treeItemSecondaryTextClassName, "min-w-0 truncate")}>
+                  {description}
+                </span>
+              ) : null}
             </div>
             <div data-slot="tree-item-control" className={cn(treeItemControlClassName, "gap-double")} onClick={(event) => event.stopPropagation()}>
-              {!isExpandable ? (
-                <PropertyValueColumnContext.Provider value={true}>{children}</PropertyValueColumnContext.Provider>
-              ) : headerControl ? (
-                <PropertyValueColumnContext.Provider value={true}>{headerControl}</PropertyValueColumnContext.Provider>
-              ) : null}
+              <div ref={valueSlotRef} data-slot="tree-item-value" className="contents">
+                {!isExpandable ? (
+                  <PropertyValueColumnContext.Provider value={true}>{children}</PropertyValueColumnContext.Provider>
+                ) : headerControl ? (
+                  <PropertyValueColumnContext.Provider value={true}>{headerControl}</PropertyValueColumnContext.Provider>
+                ) : null}
+              </div>
               {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
               {renderTreeDragHandles(dragHandleProps)}
             </div>
@@ -3450,6 +3518,7 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { r
       id={item.id}
       focusPath={path}
       label={hasControl ? item.label : getTreeItemLabel(item)}
+      description={hasControl ? item.description : undefined}
       icon={item.icon}
       className={cn(item.className, palettePointerClassName)}
       isSelected={isRowSelected}

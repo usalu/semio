@@ -3,7 +3,8 @@
 use crate::schema::diff::GltfDiff;
 use crate::schema::mutations::GltfMutation;
 use crate::GltfSnapshot;
-use protocol::{FromValue, Mutation, MutationDiff, MutationKind, ToValue};
+use protocol::{Mutation, MutationDiff, MutationKind};
+use semio_framework_value::{FromValue, ToValue};
 use serde_json::Value;
 
 fn assert_projection(expected: &Value, actual: &Value) {
@@ -26,8 +27,8 @@ fn assert_projection(expected: &Value, actual: &Value) {
 }
 
 pub(crate) fn decode<T: FromValue + ToValue>(value: &Value) -> T {
-    let decoded = pack::from_json_str(&value.to_string()).expect("owned codec decodes fixture");
-    let encoded: Value = serde_json::from_str(&pack::to_json_string(&decoded)).expect("independent JSON parser accepts owned encoding");
+    let decoded = semio_framework_pack_json::from_json_str(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("owned codec decodes fixture");
+    let encoded: Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&decoded)).expect("independent JSON parser accepts owned encoding");
     assert_projection(value, &encoded);
     decoded
 }
@@ -42,15 +43,15 @@ pub(crate) fn scene_snapshot(value: &Value) -> GltfSnapshot {
 pub(crate) fn assert_laws<K: MutationKind<GltfSnapshot, GltfMutation>>(mutation: &K, base: &GltfSnapshot, expected: &GltfSnapshot) {
     let outcome = mutation.diff(base);
     assert!(outcome.messages().is_empty(), "{:?}", outcome.messages());
-    let wire: Value = serde_json::from_str(&pack::to_json_string(outcome.diff())).unwrap();
+    let wire: Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(outcome.diff())).unwrap();
     let diff: GltfDiff = decode(&wire);
     assert_eq!(&diff, outcome.diff());
     let after = diff.apply(base).expect("typed diff applies");
     assert_eq!(&after, expected);
     assert_eq!(diff.apply(base).unwrap(), after);
-    let inverse = mutation.inverse(base);
+    let inverse = mutation.inverse(base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1);
-    let wire: Value = serde_json::from_str(&pack::to_json_string(&inverse)).unwrap();
+    let wire: Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&inverse)).unwrap();
     let inverse: Vec<GltfMutation> = decode(&wire);
     let mut restored = after;
     for mutation in inverse {

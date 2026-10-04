@@ -64,7 +64,7 @@ const ENERGY_MODEL_VIEW_WORK_ITEMS: usize = 1;
 /// every gesture (`dropped action "setCamera" … no window kind declares it`).
 ///
 /// 🔒️ Row order is the binary variant ordinal: appending is safe, reordering is a wire break.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslEnum)]
 pub enum EnergyModelViewCommand {
     /// 🎥️ The orbit pose as the canonical `{position,target,zoom,up?}` JSON the host sends. One text
     /// field because a `dsl::DslOps` variant binds scalars only — and because that string IS what
@@ -99,8 +99,8 @@ impl protocol::OpBinary for EnergyModelViewCommand {
 
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
         let spec = (variants[ordinal].1.ordinary)();
         let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
@@ -119,12 +119,12 @@ impl protocol::OpBinary for EnergyModelViewCommand {
             return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
         }
         let ordinal = reader.read_varint_u64()?;
-        let variants = <Self as dsl::DslVariants>::variants();
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
         let spec = (spec_fn.ordinary)();
         let body = &bytes[reader.position()..];
         let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
+        <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
     }
 }
 //#endregion 🔖️OpCodec
@@ -144,8 +144,8 @@ fn camera_emit(command: &EnergyModelViewCommand, view_state: Option<&semio_frame
     if camera.is_empty() {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), "setCamera carries no {position,target,zoom} pose"));
     }
-    let value = dsl::json::from_json_str::<dsl::DslValue>(camera).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), format!("the camera pose is not a value: {error}")))?;
-    let pose = <model_window::config::EnergyModelViewerCameraPose as dsl::FromValue>::from_value(value).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), format!("the camera pose is malformed: {error}")))?;
+    let value = dsl::json::from_json_str::<semio_framework_value::DslValue>(camera).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), format!("the camera pose is not a value: {error}")))?;
+    let pose = <model_window::config::EnergyModelViewerCameraPose as semio_framework_value::FromValue>::from_value(value).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), format!("the camera pose is malformed: {error}")))?;
     if !pose.is_valid() {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), "the camera pose is not finite, or its zoom is not positive"));
     }
@@ -161,16 +161,16 @@ fn camera_emit(command: &EnergyModelViewCommand, view_state: Option<&semio_frame
 /// 🪪️ The bridge from a dispatched action's args to the typed command. The pose is validated and
 /// canonicalized to the exact JSON string `World3dScene::camera_json` consumes, so a malformed
 /// gesture is refused here rather than silently ignored.
-fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<EnergyModelViewCommand, Fault> {
+fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<EnergyModelViewCommand, Fault> {
     if action != model_window::SET_CAMERA_ACTION_ID {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.unsupported"), format!("the energy model viewer has no command for action '{action}'")));
     }
     let camera = args
         .and_then(|args| args.get("camera"))
         .and_then(|value| {
-            let pose = <store::Viewport3dOrbit as dsl::FromValue>::from_value(value.clone()).ok()?;
+            let pose = <store::Viewport3dOrbit as semio_framework_value::FromValue>::from_value(value.clone()).ok()?;
             pose.validate().ok()?;
-            Some(dsl::json::to_json_string(&dsl::ToValue::to_value(&pose)))
+            Some(dsl::json::to_json_string(&semio_framework_value::ToValue::to_value(&pose)))
         })
         .unwrap_or_default();
     Ok(EnergyModelViewCommand::SetCamera { camera })
@@ -289,9 +289,12 @@ impl ArtifactViewer for EnergyModelViewer {
     }
 
     /// 🌱️ Both composed children derive from the model — see `crate::energy_genesis_child_pack`.
-    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {
+ Ok((||{
         crate::energy_genesis_child_pack(snapshot, slot, child_id)
-    }
+    
+})())
+}
 
     fn initial_snapshot() -> EnergyModelSnapshot {
         EnergyModelSnapshot::default()
@@ -341,7 +344,7 @@ impl ArtifactViewer for EnergyModelViewer {
         command.action_id()
     }
 
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
         command_from_action(action, args)
     }
 
@@ -382,7 +385,7 @@ impl ArtifactViewer for EnergyModelViewer {
             return Ok(None);
         }
         if request.command.action_id() != request.tool_id {
-            return Err(Fault::new(FaultOrigin::App, FaultCode::new("energy.model.viewer.retained.tool-mismatch"), "the energy model view command does not match its exact registered tool"));
+            return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.tool-mismatch"), "the energy model view command does not match its exact registered tool"));
         }
         let tool_id = request.command.action_id();
         let work = Box::new(BoundedArtifactCommandWork::new(tool_id, energy_model_view_reduce, energy_model_view_extent));

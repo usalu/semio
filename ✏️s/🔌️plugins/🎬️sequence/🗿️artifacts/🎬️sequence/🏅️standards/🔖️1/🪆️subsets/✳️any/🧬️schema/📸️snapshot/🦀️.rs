@@ -9,7 +9,7 @@ use framework_schema::ArtifactSchema;
 /// fields are replaced by a fixed composed `s.stdio.semio.flow` CHILD slot — the sequence plugin no
 /// longer defines its own step-DAG content model, it composes stdio's `flow` subset instead.
 /// `#[child(...)]` drives `#[derive(ArtifactSchema)]`'s slot-table emission; never hand-written.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 #[dsl(extension = "sequence")]
 #[artifact_schema(id = "s.sequence.sequence")]
@@ -29,7 +29,12 @@ impl Default for SequenceSnapshot {
 
 /// 🌱 Canonical default document used by the play app and examples.
 pub fn default_snapshot() -> SequenceSnapshot {
-    SequenceSnapshot::from_host_snapshot(SequenceHostSnapshot {
+    SequenceSnapshot::from_host_snapshot(default_host_snapshot())
+}
+
+/// 🌿️ The canonical default document's plain content (its `content` child's steps and edges).
+pub fn default_host_snapshot() -> SequenceHostSnapshot {
+    SequenceHostSnapshot {
         schema: SEQUENCE_DOCUMENT_SCHEMA.into(),
         steps: vec![
             SequenceStep {
@@ -52,7 +57,7 @@ pub fn default_snapshot() -> SequenceSnapshot {
             },
         ],
         edges: vec![SequenceEdge { id: "edge-1".into(), from: "step-1".into(), to: "step-2".into() }],
-    })
+    }
 }
 
 /// 📦️ Canonical parent snapshot for the concrete app; content lives only in the registered child member.
@@ -70,7 +75,7 @@ pub fn default_persisted_snapshot() -> SequenceSnapshot {
 /// analog of `semio_framework_artifact_flow_flow::FlowHostSnapshot`: the live editing representation `SequenceHost` and the WASM
 /// bridge operate on, and the JSON wire contract `SequenceHost::to_json`/`load_json` still speak.
 /// Bridges to/from the composed-child `SequenceSnapshot` via `to_host_snapshot`/`from_host_snapshot` below.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct SequenceHostSnapshot {
     pub schema: String,
@@ -86,7 +91,7 @@ impl neural_engine::ColdRetire for SequenceHostSnapshot {
 
 impl neural_engine::ColdRetire for SequenceSnapshot {
     fn retire_cold(mut self) {
-        if let Some(owner) = self.content.take_local_owner::<crate::SequenceWorkingScene>().expect("exact sequence scene owner") {
+        if let Ok(Some(owner)) = self.content.take_local_owner::<crate::SequenceWorkingScene>() {
             if let Ok(scene) = std::sync::Arc::try_unwrap(owner) {
                 scene.retire_cold();
             }
@@ -107,7 +112,8 @@ impl SequenceSnapshot {
         Ok(SequenceHostSnapshot { schema: self.schema.clone(), steps: scene.steps, edges: scene.edges })
     }
 
-    /// 🌱 Converts a snapshot known to be materialized into its fixture shape.
+    /// 🌱 Converts a snapshot a test minted with its scene into its fixture shape.
+    #[cfg(test)]
     pub fn to_host_snapshot(&self) -> SequenceHostSnapshot {
         self.try_to_host_snapshot().expect("sequence child scene must be materialized before fixture projection")
     }

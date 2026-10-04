@@ -4,6 +4,9 @@
 use crate::standards::v1::subsets::any::schema::mutations::{delete_widget, Generation2dMutation};
 use crate::{widget_id, Generation2dSnapshot};
 
-pub fn inverse(payload: &super::CreateWidget, _base: &Generation2dSnapshot) -> Vec<Generation2dMutation> {
+pub fn inverse(payload: &super::CreateWidget, _base: &Generation2dSnapshot) -> Result<Vec<Generation2dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![delete_widget(widget_id(&payload.widget).to_string())]
+
+    })())
 }

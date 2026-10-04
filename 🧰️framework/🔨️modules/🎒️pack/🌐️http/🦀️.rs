@@ -10,7 +10,8 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use crate::async_::{AsyncPackSource, CancellationToken, LoadPriority, ReadRequest as SchedulerRead, ReadScheduler};
-use crate::{ByteRange, PackError};
+use crate::ByteRange;
+use semio_framework_pack_error::{PackError,PackRetryDisposition};
 use semio_framework_async::WorkerPool;
 
 /// 📨️ One range-request against `url`, optionally revalidated against a previously seen
@@ -136,14 +137,12 @@ struct InnerSource<T: RangeTransport> {
 }
 
 impl<T: RangeTransport> InnerSource<T> {
-    /// 🔁️ True iff `error` represents a transient condition worth retrying (currently:
-    /// any `PackError::Io`, which is how transport failures are surfaced across the trait
-    /// boundary).
+    /// 🔁️ Only the provider's explicit transient disposition authorizes a retry.
     // 🚫️async: the only call site is the `match` guard in `fetch_with_retry` below
     // (`Err(error) if Self::is_transient(&error) && ...`) — `.await` is not permitted inside a
     // `match` guard, a hard syntactic restriction independent of this fn's own design.
     fn is_transient(error: &PackError) -> bool {
-        matches!(error, PackError::Io(_))
+        match error{PackError::Refusal(semio_framework_pack_error::PackRefusal::Io{retry,..})=>*retry==PackRetryDisposition::Transient,PackError::TransportFailure(error)=>error.retry()==PackRetryDisposition::Transient,_=>false}
     }
 
     /// ⏱️ The backoff delay before retry attempt `attempt` (0-indexed), doubling from
@@ -197,7 +196,7 @@ impl<T: RangeTransport> AsyncPackSource for InnerSource<T> {
         let range = ByteRange { offset, len: len as u64 };
         let response = self.fetch_with_retry(range).await?;
         if response.bytes.len() < len {
-            return Err(PackError::Truncated(offset + len as u64));
+            return Err(PackError::Refusal(semio_framework_pack_error::PackRefusal::Truncated(offset + len as u64)));
         }
         Ok(response.bytes[..len].to_vec())
     }
@@ -384,3 +383,7 @@ pub use ureq_transport::UreqRangeTransport;
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+#[path = "🧪️tests/🧭️producer-authority/🦀️.rs"]
+mod producer_authority_tests;

@@ -10,13 +10,13 @@ macro_rules! ui_typed_field_catalog {
         $visitor!(DropOverlaySpec { 0 => title: Label, 1 => hint: Label, 2 => accept: Option<UiText> });
         $visitor!(SelectItem { 0 => value: UiText, 1 => label: Label });
         $visitor!(KeyValueEntry { 0 => label: Label, 1 => value: UiText });
-        $visitor!(RowAction { 0 => icon: UiText, 1 => label: Option<Label>, 2 => verb: UiText, 3 => placement: RowActionPlacement, 4 => disabled: bool });
+        $visitor!(RowAction { 0 => icon: UiText, 1 => label: Option<Label>, 2 => verb: UiText, 3 => placement: RowActionPlacement, 4 => disabled: bool, 5 => reason: Option<Label> });
         $visitor!(RowTarget { 0 => scope: UiText, 1 => version: u16, 2 => args: Option<UiMap>, 3 => activation: Option<UiText> });
         $visitor!(ContainerProps { 0 => role: ContainerRole, 1 => label: Option<Label>, 2 => description: Option<UiText>, 3 => required: Option<bool>, 4 => error: Option<UiText>, 5 => default_open: Option<bool>, 6 => drop_overlay: Option<DropOverlaySpec> });
         $visitor!(TextProps { 0 => value: Label, 1 => emphasize: Option<bool>, 2 => data_attributes: Option<UiFixedMap<UiText>> });
         $visitor!(ButtonProps { 0 => icon: UiText, 1 => label: Label });
         $visitor!(SeparatorProps {});
-        $visitor!(InputProps { 0 => kind: InputKind, 1 => value: UiText, 2 => placeholder: Option<Label>, 3 => commit: Option<UiText>, 4 => min: Option<f64>, 5 => max: Option<f64>, 6 => step: Option<f64>, 7 => accept: Option<UiText>, 8 => precision: Option<u16>, 9 => snaps: UiFixedList<f64>, 10 => display_factor: Option<f64>, 11 => limits: Option<UiNumberLimits> });
+        $visitor!(InputProps { 0 => kind: InputKind, 1 => value: UiText, 2 => placeholder: Option<Label>, 3 => commit: Option<UiText>, 4 => min: Option<f64>, 5 => max: Option<f64>, 6 => step: Option<f64>, 7 => accept: Option<UiText>, 8 => precision: Option<u16>, 9 => snaps: UiFixedList<f64>, 10 => display_factor: Option<f64>, 11 => limits: Option<UiNumberLimits>, 12 => draft_target: Option<UiText>, 13 => publication_revision: Option<UiPublicationRevision> });
         $visitor!(SelectProps { 0 => value: UiText, 1 => items: UiFixedList<SelectItem>, 2 => placeholder: Option<Label> });
         $visitor!(ToggleProps { 0 => on: bool, 1 => icon: UiText, 2 => text: Option<Label>, 3 => appearance: ToggleAppearance });
         $visitor!(KeyValueListProps { 0 => entries: UiFixedList<KeyValueEntry> });
@@ -30,7 +30,7 @@ macro_rules! ui_typed_field_catalog {
         $visitor!(TreeWindow { 0 => total: u32, 1 => offset: u32, 2 => row_extent: TreeWindowRowExtent });
         $visitor!(TreeProps { 0 => interaction_domain: Option<UiText>, 1 => presentation: TreePresentation });
         $visitor!(TreeSectionProps { 0 => label: Option<Label>, 1 => default_open: Option<bool>, 2 => header_toolbar: Option<UiNodeId>, 3 => window: Option<TreeWindow> });
-        $visitor!(TreeItemProps { 0 => label: Label, 1 => description: Option<UiText>, 2 => icon: Option<UiText>, 3 => default_open: Option<bool>, 4 => draggable: Option<bool>, 5 => drag_data: Option<UiFixedMap<UiText>>, 6 => dimmed: Option<bool>, 7 => window: Option<TreeWindow>, 8 => granularity: Option<UiText>, 9 => inline_toolbar: Option<UiNodeId>, 10 => row_actions: UiFixedList<RowAction>, 11 => detail: Option<UiNodeId>, 12 => target: Option<RowTarget> });
+        $visitor!(TreeItemProps { 0 => label: Label, 1 => description: Option<UiText>, 2 => icon: Option<UiText>, 3 => default_open: Option<bool>, 4 => draggable: Option<bool>, 5 => drag_data: Option<UiFixedMap<UiText>>, 6 => dimmed: Option<bool>, 7 => window: Option<TreeWindow>, 8 => granularity: Option<UiText>, 9 => inline_toolbar: Option<UiNodeId>, 10 => row_actions: UiFixedList<RowAction>, 11 => detail: Option<UiNodeId>, 12 => target: Option<RowTarget>, 13 => selected: Option<bool> });
         $visitor!(TableProps { 0 => label: Label, 1 => columns: UiFixedList<Label>, 2 => actions_label: Option<Label>, 3 => window: Option<TreeWindow>, 4 => row_label: Option<Label>, 5 => column_label: Option<Label>, 6 => column_window: Option<TreeWindow> });
         $visitor!(TableRowProps { 0 => cells: UiFixedList<UiText>, 1 => row_actions: UiFixedList<RowAction>, 2 => target: Option<RowTarget> });
         $visitor!(ImageProps { 0 => src: UiText, 1 => alt: Option<Label> });
@@ -46,5 +46,19 @@ macro_rules! ui_typed_field_catalog {
         $visitor!(UiNodeRecord { 0 => id: UiNodeId, 1 => key: UiText, 2 => component: Component, 3 => layout: LayoutSpec, 4 => style: StyleSpec, 5 => activity: Activity, 6 => disabled: bool, 7 => transition: Option<TransitionHint>, 8 => accessibility: AccessibilitySpec, 9 => bindings: UiNodeBindings, 10 => menu: Option<MenuRef>, 11 => children: UiNodeChildren });
         $visitor!(UiSnapshot { 0 => surface: SurfaceId, 1 => revision: UiRevision, 2 => root: UiNodeId, 3 => nodes: UiSnapshotNodes, 4 => layout_epoch: u64 });
     };
+}
+
+#[cfg(test)]
+macro_rules! assert_input_props_publication_revision_ordinal {
+    (InputProps { $($ordinal:literal => $field:ident: $field_type:ty),* $(,)? }) => {{
+        let roster = [$(($ordinal, stringify!($field))),*];
+        assert_eq!(roster.last(), Some(&(13, "publication_revision")));
+    }};
+    ($name:ident { $($fields:tt)* }) => {};
+}
+
+#[test]
+fn publication_revision_is_typed_input_field_ordinal_thirteen() {
+    ui_typed_field_catalog!(assert_input_props_publication_revision_ordinal);
 }
 //#endregion 🧬️FieldRoster

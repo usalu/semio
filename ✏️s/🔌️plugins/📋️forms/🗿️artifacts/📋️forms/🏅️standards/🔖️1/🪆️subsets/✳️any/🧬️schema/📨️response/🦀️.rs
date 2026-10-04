@@ -3,16 +3,16 @@
 #[path = "📤️export/🦀️.rs"]
 pub mod export;
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct FormsAnswer {
     pub question_id: String,
     pub label: String,
     pub kind: String,
-    pub value: dsl::DslValue,
+    pub value: semio_framework_value::DslValue,
 }
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct FormsResponse {
     pub id: String,
@@ -35,7 +35,7 @@ impl FormsResponse {
 /// ✅️ Validates all visible answers before atomically admitting an immutable response.
 pub fn prepare_response(
     definition: &super::definition::FormsDefinition,
-    values: &std::collections::HashMap<String, dsl::DslValue>,
+    values: &crate::playbook::PlaybookValues,
     id: String,
     submitted_at: u64,
     definition_version: String,
@@ -46,7 +46,7 @@ pub fn prepare_response(
         question_id: question.id.clone(),
         label: question.label.clone(),
         kind: question.kind.clone(),
-        value: values.get(&question.id).cloned().unwrap_or(dsl::DslValue::Null),
+        value: values.get(&question.id).cloned().unwrap_or(semio_framework_value::DslValue::Null),
     }).collect();
     Ok(FormsResponse { id, submitted_at, definition_version, answers })
 }

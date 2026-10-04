@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "cases": [
+    { "id": "folded", "clicks": [], "actions": false, "search": false },
+    { "id": "actions-only", "clicks": ["engagement"], "actions": true, "search": false },
+    { "id": "search-only", "clicks": ["search"], "actions": false, "search": true },
+    { "id": "both", "clicks": ["engagement", "search"], "actions": true, "search": true },
+    { "id": "close-actions", "clicks": ["engagement", "search", "engagement"], "actions": false, "search": true },
+    { "id": "close-search", "clicks": ["engagement", "search", "search"], "actions": true, "search": false }
+  ]
+}

@@ -12,7 +12,7 @@
 //! compiles the local implementation — see §5.3 of the fleet brief.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_artifact_stdio_json_test_oracle::standards::v_rfc8259::subsets::base::{oracle_apply_mutation, project_json_value, read_at, round_trip, PathSeg};
+use semio_s_artifact_stdio_json_test_oracle::standards::v_rfc8259::subsets::base::{oracle_apply_mutation, project_json_value, read_at, round_trip, snapshot_wire, PathSeg};
 use semio_repo_test_host::law::{inverse_restores, mutation_is_observable, reparsed_not_copied, round_trip_preserves};
 
 
@@ -100,6 +100,7 @@ fn inverse_spec(original: &[u8], forward: &Json) -> Result<Json, String> {
             let old = read_at(original, &path, &[])?.ok_or("set-scalar inverse: path does not resolve")?;
             Ok(kind_spec("set-scalar", json_object(vec![("path", path), ("value", wire_value(&old))])))
         }
+        "patch-snapshot" => Ok(kind_spec("restore-snapshot", json_object(vec![("snapshot", snapshot_wire(original)?)]))),
         other => Err(format!("no inverse rule for kind {other:?}")),
     }
 }

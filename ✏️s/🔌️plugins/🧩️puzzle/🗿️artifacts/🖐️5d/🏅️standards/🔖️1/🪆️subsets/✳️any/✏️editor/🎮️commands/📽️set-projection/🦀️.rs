@@ -4,7 +4,7 @@
 
 use crate::editor::puzzle5d::config::puzzle5d_camera3d_distance;
 use crate::editor::puzzle5d::Puzzle5dActionCtx;
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 use semio_framework_plugin::{apply_world3d_projection_action, world3d_projection_action_moves_pose, world3d_projection_pose};
 
 pub fn set_projection(ctx: &mut Puzzle5dActionCtx<'_>, action: &str, args: Option<&Value>) {

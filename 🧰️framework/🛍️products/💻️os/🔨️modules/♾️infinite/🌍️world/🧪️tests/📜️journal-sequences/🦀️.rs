@@ -47,7 +47,7 @@ fn journey_state() -> World3dState {
     let data = mesh_oracle_from_buffers(vec![-0.5, -0.5, 0.0, 0.5, -0.5, 0.0, 0.5, 0.5, 0.0, -0.5, 0.5, 0.0], vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0], vec![0, 1, 2, 0, 2, 3]);
     store_mesh(&mut state, "mesh".into(), publish_oracle_mesh(data));
     let mesh_version = *state.mesh_versions.get("mesh").expect("mesh version");
-    state.draws.push(SceneDraw3d { mesh_key: "mesh".into(), mesh_version, instances: vec![Instance3d { id: "object".into(), model: Mat4::identity(), color: [1.0; 4], selected: false, hovered: false, material: Default::default() }], shadow_role: Default::default() });
+    state.draws.push(SceneDraw3d { mesh_key: "mesh".into(), mesh_version, instances: vec![Instance3d { component_source: None, id: "object".into(), model: Mat4::identity(), color: [1.0; 4], selected: false, hovered: false, material: Default::default() }], shadow_role: Default::default() });
     state
 }
 
@@ -383,7 +383,7 @@ fn a_leave_from_outside_the_pick_rect_clears_the_hover_without_faulting() {
 fn a_draw_whose_mesh_has_not_landed_is_skipped_by_every_interaction_cursor() {
     let mut state = journey_state();
     let resident = journal_of_a_click(&mut journey_state());
-    state.draws.push(SceneDraw3d { mesh_key: "mesh:🧊️still-loading".into(), mesh_version: 7, instances: vec![Instance3d { id: "unlanded".into(), model: Mat4::identity(), color: [1.0; 4], selected: false, hovered: false, material: Default::default() }], shadow_role: Default::default() });
+    state.draws.push(SceneDraw3d { mesh_key: "mesh:🧊️still-loading".into(), mesh_version: 7, instances: vec![Instance3d { component_source: None, id: "unlanded".into(), model: Mat4::identity(), color: [1.0; 4], selected: false, hovered: false, material: Default::default() }], shadow_role: Default::default() });
     state.interaction_revision = state.interaction_revision.wrapping_add(1);
 
     assert_eq!(journal_of_a_click(&mut state), resident, "🫥️ the unpublished draw changes nothing the pane journals");

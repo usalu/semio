@@ -18,7 +18,7 @@ pub fn diff(payload: &super::ChangePeopleGainSchedule, base: &EnergyModelSnapsho
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Schedule {} does not exist.", payload.new_schedule_id.0), [payload.new_schedule_id.0.to_string()]);
     }
     if existing.schedule_id == payload.new_schedule_id {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("People Gain {} already carries this schedule reference: {}.", payload.id.0, payload.new_schedule_id.0));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("People Gain {} already carries this schedule reference: {}.", payload.id.0, payload.new_schedule_id.0));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.people.iter_mut().find(|item| item.id == payload.id) {

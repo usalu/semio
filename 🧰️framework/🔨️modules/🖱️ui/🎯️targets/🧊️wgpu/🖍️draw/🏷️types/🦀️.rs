@@ -315,8 +315,7 @@ impl DrawList {
                     cursor.middle = 0;
                     return RasterKeepStepV1::Pending;
                 };
-                cursor.middle += 1;
-                draw.material.texture_key().map_or(RasterKeepStepV1::Pending,RasterKeepStepV1::Key)
+                if let Some(key)=draw.material.texture_keys().nth(cursor.inner) {cursor.inner+=1;RasterKeepStepV1::Key(key)} else {cursor.middle+=1;cursor.inner=0;RasterKeepStepV1::Pending}
             }
             2 | 3 => {
                 let Some(layer) = self.layers.get(cursor.outer) else {

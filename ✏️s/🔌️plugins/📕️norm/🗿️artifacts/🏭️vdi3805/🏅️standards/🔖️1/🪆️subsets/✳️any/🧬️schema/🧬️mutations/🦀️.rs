@@ -191,7 +191,7 @@ mod tests;
 /// from that adapter and the bridge belongs here rather than there.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_vdi3805_mutation_json(text: &str) -> Result<Vdi3805Mutation, String> {
-    pack::json::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 
 /// ▶️ Applies one mutation to `base`, returning the resulting document together with every
@@ -210,8 +210,11 @@ pub fn apply_vdi3805_mutation(base: &Vdi3805Snapshot, mutation: &Vdi3805Mutation
 /// `🏭️mutate-vdi3805-1`'s `inverse-<kind>` scenarios assert, exposed under a name the test adapter can
 /// reach without naming `protocol::Mutation`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse_vdi3805_mutation(mutation: &Vdi3805Mutation, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
-    <Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::inverse(mutation, base)
+pub fn inverse_vdi3805_mutation(mutation: &Vdi3805Mutation, base: &Vdi3805Snapshot) -> Result<Vec<Vdi3805Mutation>, semio_framework_value::ValueError> {
+    Ok({
+    <Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::inverse(mutation, base)?
+
+    })
 }
 //#endregion 🌉️ExternalCodecBridge
 

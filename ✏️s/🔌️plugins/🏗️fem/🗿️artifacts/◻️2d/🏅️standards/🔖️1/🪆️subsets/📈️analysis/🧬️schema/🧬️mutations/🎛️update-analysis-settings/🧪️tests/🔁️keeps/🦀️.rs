@@ -23,13 +23,13 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🔁️keeps/🎯️outcome/🔣️.json");
 
 fn before() -> Fem2dSnapshot {
-    dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> Fem2dSnapshot {
-    dsl::json::from_json_str(AFTER).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> Fem2dMutation {
-    dsl::json::from_json_str(MUTATION).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 
 /// ▶️ A no-op `update-analysis-settings` is a NO-OP, not rejected — it simply changes nothing, so the document comes
@@ -52,7 +52,7 @@ fn the_no_op_is_a_warning_not_a_rejection() {
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.no-op", "update-analysis-settings/keeps-the-analysis-196e4a: an unchanged value is reported as no-op");
-    assert_eq!(messages[0].level, protocol::Severity::Warning, "a no-op is a Warning — the mutation still APPLIES, it simply changes nothing");
+    assert_eq!(messages[0].level, semio_framework_diagnostic::Severity::Warning, "a no-op is a Warning — the mutation still APPLIES, it simply changes nothing");
     assert!(messages[0].target.is_empty(), "update-analysis-settings raises its no-op through the 2-arg `warn` builder, which attaches no target address");
 }
 
@@ -61,7 +61,7 @@ fn the_no_op_is_a_warning_not_a_rejection() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_fem2d_mutation(&base, &mutation);
+    let inverse = inverse_fem2d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "update-analysis-settings/keeps-the-analysis-196e4a: update-analysis-settings always emits exactly one inverse step, even for a no-op, got {inverse:?}");
     let mut snapshot = base.clone();
     apply_fem2d_mutation(&mut snapshot, &mutation).expect("forward applies");
@@ -75,28 +75,28 @@ fn inverse_restores_before() {
 /// kind really emits here.
 #[test]
 fn declared_outcome_holds() {
-    let outcome: dsl::DslValue = dsl::json::from_json_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(dsl::DslValue::as_str), Some("no-op"), "update-analysis-settings/keeps-the-analysis-196e4a declares a no-op outcome");
+    let outcome: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(OUTCOME, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
+    assert_eq!(outcome.get("status").and_then(semio_framework_value::DslValue::as_str), Some("no-op"), "update-analysis-settings/keeps-the-analysis-196e4a declares a no-op outcome");
     let produced = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &before());
-    let declared = outcome.get("messages").and_then(dsl::DslValue::as_array).expect("a no-op outcome declares its diagnostics");
+    let declared = outcome.get("messages").and_then(semio_framework_value::DslValue::as_array).expect("a no-op outcome declares its diagnostics");
     assert_eq!(declared.len(), produced.messages().len(), "the declared diagnostic count must match the emitted one");
-    assert_eq!(declared[0].get("level").and_then(dsl::DslValue::as_str), Some("warning"), "update-analysis-settings's no-op is declared at warn level");
-    assert_eq!(declared[0].get("code").and_then(dsl::DslValue::as_str), Some(produced.messages()[0].code.0.as_str()), "the declared code must match the emitted one");
+    assert_eq!(declared[0].get("level").and_then(semio_framework_value::DslValue::as_str), Some("warning"), "update-analysis-settings's no-op is declared at warn level");
+    assert_eq!(declared[0].get("code").and_then(semio_framework_value::DslValue::as_str), Some(produced.messages()[0].code.0.as_str()), "the declared code must match the emitted one");
 }
 
 /// 🔣️ Both committed snapshots are already canonical: decode→encode is a fixed point.
 #[test]
 fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: Fem2dSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
-        let reencoded = dsl::ToValue::to_value(&decoded);
-        let original: dsl::DslValue = dsl::json::from_json_str(text).expect("snapshot reparses");
+        let decoded: Fem2dSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = semio_framework_value::ToValue::to_value(&decoded);
+        let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot reparses");
         assert_eq!(reencoded, original, "update-analysis-settings/keeps-the-analysis-196e4a: committed {label} JSON is not canonical");
     }
     assert_eq!(BEFORE, AFTER, "update-analysis-settings/keeps-the-analysis-196e4a changes nothing: the two committed snapshots must be byte-identical");
     let decoded_mutation = mutation();
-    let reencoded = dsl::ToValue::to_value(&decoded_mutation);
-    let original: dsl::DslValue = dsl::json::from_json_str(MUTATION).expect("mutation reparses");
+    let reencoded = semio_framework_value::ToValue::to_value(&decoded_mutation);
+    let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation reparses");
     assert_eq!(reencoded, original, "update-analysis-settings/keeps-the-analysis-196e4a: committed mutation JSON is not canonical");
 }
 
@@ -105,10 +105,10 @@ fn committed_json_is_canonical() {
 fn produces_committed_diff() {
     let base = before();
     let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &base);
-    let produced = dsl::ToValue::to_value(outcome.diff());
-    let committed: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let produced = semio_framework_value::ToValue::to_value(outcome.diff());
+    let committed: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert_eq!(produced, committed, "update-analysis-settings/keeps-the-analysis-196e4a: produced diff differs from the committed 🔺️diff/🔣️.json");
-    let typed: crate::standards::v1::subsets::any::schema::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes into Fem2dDiff");
+    let typed: crate::standards::v1::subsets::any::schema::diff::Fem2dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into Fem2dDiff");
     assert_eq!(typed, crate::standards::v1::subsets::any::schema::diff::Fem2dDiff::default(), "update-analysis-settings/keeps-the-analysis-196e4a: a no-op delta is the artifact's Default diff");
 }
 
@@ -116,9 +116,9 @@ fn produces_committed_diff() {
 /// per-field skip, so all ten sparse slots must be present as `null`.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: crate::standards::v1::subsets::any::schema::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    let reencoded = dsl::ToValue::to_value(&decoded);
-    let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
+    let decoded: crate::standards::v1::subsets::any::schema::diff::Fem2dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let reencoded = semio_framework_value::ToValue::to_value(&decoded);
+    let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff reparses");
     assert_eq!(reencoded, original, "update-analysis-settings/keeps-the-analysis-196e4a: committed diff JSON is not canonical");
     let slots = original.as_object().expect("the committed diff is a JSON object");
     assert_eq!(slots.len(), 10, "Fem2dDiff emits all ten sparse slots, got {slots:?}");
@@ -128,7 +128,7 @@ fn committed_diff_is_canonical() {
 /// is the identity — and still a real assertion: `apply` must leave every other member alone too.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: crate::standards::v1::subsets::any::schema::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: crate::standards::v1::subsets::any::schema::diff::Fem2dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let produced = <crate::standards::v1::subsets::any::schema::diff::Fem2dDiff as protocol::MutationDiff<Fem2dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "update-analysis-settings/keeps-the-analysis-196e4a: committed diff did not carry before to after");
 }

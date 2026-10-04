@@ -268,10 +268,10 @@ fn retained_config_preparation_matches_the_json_oracle_and_rejects_maximum_plus_
     let (post, inverse, _) = prepare_sourcing_curation_config(&base, SourcingCurationConfigMutation::SetFilterQuery { value: "timber".into() }).expect("bounded config candidate");
     assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&post)).expect("JSON oracle post"), expected);
     assert!(matches!(&inverse[0], SourcingCurationConfigMutation::SetFilterQuery { value } if value == &base.filters.query));
-    assert!(sourcing_curation_config_mutation_footprint(&SourcingCurationConfigMutation::SetFilterQuery { value: "x".repeat(SOURCING_CURATION_CONFIG_TEXT_BYTES) }).is_ok());
-    assert!(sourcing_curation_config_mutation_footprint(&SourcingCurationConfigMutation::SetFilterQuery { value: "x".repeat(SOURCING_CURATION_CONFIG_TEXT_BYTES + 1) }).is_err());
-    assert!(sourcing_curation_config_mutation_footprint(&SourcingCurationConfigMutation::SetFilterModules { module_ids: Vec::new() }).is_ok(), "clearing the module filter is a retained edit");
-    assert!(sourcing_curation_config_mutation_footprint(&SourcingCurationConfigMutation::SetFilterModules { module_ids: vec!["m".into(); SOURCING_CURATION_CONFIG_STORE_MAXIMUM_ITEMS + 1] }).is_err());
+    assert!(sourcing_curation_config_mutation_retained_bytes(&SourcingCurationConfigMutation::SetFilterQuery { value: "x".repeat(SOURCING_CURATION_CONFIG_TEXT_BYTES) }).is_ok());
+    assert!(sourcing_curation_config_mutation_retained_bytes(&SourcingCurationConfigMutation::SetFilterQuery { value: "x".repeat(SOURCING_CURATION_CONFIG_TEXT_BYTES + 1) }).is_err());
+    assert!(sourcing_curation_config_mutation_retained_bytes(&SourcingCurationConfigMutation::SetFilterModules { module_ids: Vec::new() }).is_ok(), "clearing the module filter is a retained edit");
+    assert!(sourcing_curation_config_mutation_retained_bytes(&SourcingCurationConfigMutation::SetFilterModules { module_ids: vec!["m".into(); SOURCING_CURATION_CONFIG_STORE_MAXIMUM_ITEMS + 1] }).is_err());
     assert_eq!(SOURCING_CURATION_CONFIG_STORE_MAXIMUM_BYTES, 768 + SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES, "the retained config store is the filter envelope plus its own contributions lane");
     assert_eq!(SOURCING_CURATION_CONFIG_GRANT_BYTES, 4_096, "one config turn must still fit the host's fixed 4 KiB typed-operation page grant");
 }
@@ -284,9 +284,9 @@ fn retained_config_preparation_matches_the_json_oracle_and_rejects_maximum_plus_
 fn the_contributions_lane_is_priced_apart_from_the_filter_text_envelope() {
     assert!(SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES > SOURCING_CURATION_CONFIG_TEXT_BYTES);
     let inside = SourcingCurationConfigMutation::SetContributions { json: "x".repeat(SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES) };
-    assert!(sourcing_curation_config_mutation_footprint(&inside).is_ok(), "a pack at the lane ceiling is admitted");
+    assert!(sourcing_curation_config_mutation_retained_bytes(&inside).is_ok(), "a pack at the lane ceiling is admitted");
     let over = SourcingCurationConfigMutation::SetContributions { json: "x".repeat(SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES + 1) };
-    assert!(sourcing_curation_config_mutation_footprint(&over).is_err(), "one byte past the lane is refused, never truncated");
+    assert!(sourcing_curation_config_mutation_retained_bytes(&over).is_err(), "one byte past the lane is refused, never truncated");
     let base = SourcingCurationConfig { contributions_json: "x".repeat(SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES), ..Default::default() };
     let (post, inverse, _) = prepare_sourcing_curation_config(&base, SourcingCurationConfigMutation::SetFilterQuery { value: "timber".into() }).expect("a filter edit over a full contributions lane stays bounded");
     assert_eq!(post.contributions_json.len(), SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES, "a filter edit never disturbs the retained pack");
@@ -340,7 +340,7 @@ fn the_real_demonstrator_pack_is_admitted_by_the_registered_contributions_wire()
     assert!(wire.len() <= semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES, "the real pack's command wire ({} B) must fit the registered admission", wire.len());
     let distilled = crate::schema::installable_contributions(&pack, SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES);
     assert!(distilled.len() <= SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES, "what is RETAINED is the distilled roster, never the pack");
-    assert!(sourcing_curation_config_mutation_footprint(&SourcingCurationConfigMutation::SetContributions { json: distilled }).is_ok());
+    assert!(sourcing_curation_config_mutation_retained_bytes(&SourcingCurationConfigMutation::SetContributions { json: distilled }).is_ok());
 }
 //#endregion 🧪️RetainedConfigOracle
 use crate::editor::sourcing::unit_tests::context::{dispatch, new_app, sourcing_manifest_for_tests};
@@ -593,7 +593,7 @@ async fn sourcing_curation_io_declares_the_catalog_out_port_alongside_the_implic
 #[semio_framework_async_macros::async_test]
 async fn sourcing_curation_io_and_catalog_export_round_trip() {
     let mut app = new_app().await;
-    let media = semio_framework_plugin::resolve_ready(app.export_media("catalog:out")).expect("catalog export");
+    let media = ::semio_framework_async::poll::resolve_ready(app.export_media("catalog:out")).expect("catalog export");
     assert_eq!(media.media_type.class, MediaClass::Kit);
     assert_eq!(media.media_type.form, MediaForm::Type);
     match media.payload {

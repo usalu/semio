@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeCuratedItemCount, base: &CurationSnapshot) ->
         return protocol::MutationOutcome::error("mutation.target-missing", format!("\"{}\" is not curated.", payload.object_id), [payload.object_id.clone()]);
     };
     if existing.count == payload.new_count {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("\"{}\" count is already {}.", payload.object_id, payload.new_count));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("\"{}\" count is already {}.", payload.object_id, payload.new_count));
     }
     protocol::MutationOutcome::new(CurationDiff { curated: Some(CurationCuratedDelta { patched: vec![CurationCuratedPatchEntry { object_id: payload.object_id.clone(), count: Some(payload.new_count) }], ..Default::default() }), ..Default::default() })
 }

@@ -1,0 +1,23 @@
+{
+  "referenceEntries": 768,
+  "referenceFrontier": 256,
+  "referenceTypes": [
+    "integer",
+    "double precision"
+  ],
+  "referenceParities": [
+    1,
+    0
+  ],
+  "nameUnit": "A",
+  "nameLength": 70000,
+  "nameFrontier": 16384,
+  "nameSuffixes": [
+    "ΣZ",
+    "σZ"
+  ],
+  "tableCount": 257,
+  "tableFrontier": 256,
+  "indexPhase": "indexTables",
+  "refusal": "canceled"
+}

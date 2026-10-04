@@ -1,7 +1,7 @@
 //! 🎛️ `set-transform-gumball-flag` command — which handle families the transform gumball exposes.
 
 use crate::editor::puzzle5d::Puzzle5dActionCtx;
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 
 pub fn set_transform_gumball_flag(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
     let flag = args.and_then(|value| value.get("flag")).and_then(Value::as_str).unwrap_or("");

@@ -10,18 +10,18 @@
 use super::{apply_puzzle5d_mutation, Puzzle5dMutation};
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::Puzzle5dSnapshot;
-use semio_framework_os_kernel::ToValue;
+use semio_framework_value::ToValue;
 
 const FIXTURE_ROOT: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations");
 
 fn canonical<T: ToValue>(value: &T) -> String {
-    format!("{}\n", pack::json::to_string_pretty(&pack::json::from_dsl_value(&value.to_value())))
+    format!("{}\n", semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&value.to_value())))
 }
 
 fn regenerated(scenario: &std::path::Path) -> Vec<(std::path::PathBuf, String)> {
     let read = |relative: &str| std::fs::read_to_string(scenario.join(relative)).unwrap_or_else(|error| panic!("{}/{relative}: {error}", scenario.display()));
-    let before: Puzzle5dSnapshot = dsl::json::from_json_str(&read("📸️snapshot/⬅️before/🔣️.json")).expect("before snapshot decodes");
-    let mutation: Puzzle5dMutation = dsl::json::from_json_str(&read("🦠️mutation/🔣️.json")).expect("mutation decodes");
+    let before: Puzzle5dSnapshot = semio_framework_pack_json::from_json_str(&read("📸️snapshot/⬅️before/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes");
+    let mutation: Puzzle5dMutation = semio_framework_pack_json::from_json_str(&read("🦠️mutation/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes");
     let status = serde_json::from_str::<serde_json::Value>(&read("🎯️outcome/🔣️.json")).expect("outcome decodes")["status"].as_str().map(str::to_string);
     if status.as_deref() == Some("rejected") {
         let mut after = before.clone();

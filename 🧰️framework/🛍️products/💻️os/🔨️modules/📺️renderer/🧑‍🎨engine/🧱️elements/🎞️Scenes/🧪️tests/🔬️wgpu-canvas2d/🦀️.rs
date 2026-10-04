@@ -578,3 +578,54 @@ fn gumball_pivot_and_boundary_read_the_explicit_appearance_roles() {
     }
 }
 //#endregion 🧭️Gumball
+
+//#region 🖊️ScenePath
+fn rect_segments(x: f64, y: f64, width: f64, height: f64) -> Value {
+    json!([{ "kind": "move", "to": [x, y] }, { "kind": "line", "to": [x + width, y] }, { "kind": "line", "to": [x + width, y + height] }, { "kind": "line", "to": [x, y + height] }, { "kind": "close" }])
+}
+
+fn covers(triangle: &[ui_wgpu::wgpu::draw_types::VectorVertex], point: [f32; 2]) -> bool {
+    let side = |a: [f32; 2], b: [f32; 2]| (b[0] - a[0]) * (point[1] - a[1]) - (b[1] - a[1]) * (point[0] - a[0]);
+    let (a, b, c) = (triangle[0].position, triangle[1].position, triangle[2].position);
+    let (s1, s2, s3) = (side(a, b), side(b, c), side(c, a));
+    (s1 >= 0.0 && s2 >= 0.0 && s3 >= 0.0) || (s1 <= 0.0 && s2 <= 0.0 && s3 <= 0.0)
+}
+
+/// 🖊️ Layout's Blueprint records as `ED/🖼️canvas` emits them (`segments` + solid fill + stroke, no `x`/`y`; a text run)
+/// paint through the scene-node twin of `drawSceneNode`: the frame's fill triangles cover its screen centre, its stroke
+/// colour reaches the vector paint, nothing falls back to the 8 px bounds box at the origin, the text run's glyphs land in
+/// a later draw layer than the paper fill under them (record order across buckets) and every painted layer is clipped.
+#[test]
+fn layout_path_records_paint_their_geometry_in_record_order() {
+    let paper = [0.97, 0.97, 0.98, 1.0];
+    let fill = [0.85, 0.2, 0.1, 1.0];
+    let stroke = [0.1, 0.45, 0.95, 1.0];
+    let layers = json!([
+        { "id": "layout.page-bg", "segments": rect_segments(0.0, 0.0, 200.0, 150.0), "fill": { "color": paper } },
+        { "id": "frame-rect", "segments": rect_segments(20.0, 20.0, 100.0, 60.0), "fill": { "color": fill }, "stroke": { "color": stroke, "width": 2.5 } },
+        { "id": "frame-text.text", "kind": "text", "x": 30.0, "y": 90.0, "width": 30.0, "height": 12.0, "text": { "content": "Hello", "size": 12.0 }, "fill": { "color": [0.0, 0.0, 0.0, 1.0] } }
+    ]);
+    let node = canvas_scene("canvas2d-scene-path", layers.to_string());
+    mutate_scene_state("canvas2d-scene-path", |state| state.viewport = Viewport { x: 100.0, y: 75.0, zoom: 2.0 });
+    let mut draw = ui_wgpu::wgpu::DrawList::default();
+    let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let theme = Theme::default();
+    let (mut scroll, mut collapsed, mut selects) = (HashMap::new(), HashMap::new(), HashMap::new());
+    {
+        let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
+        render_canvas_2d(&node, Rect::new(0.0, 0.0, 400.0, 300.0), &mut ctx);
+    }
+    let triangles = |color: [f64; 4]| -> Vec<(usize, Vec<ui_wgpu::wgpu::draw_types::VectorVertex>)> {
+        let color = color.map(|channel| channel as f32);
+        draw.layers.iter().enumerate().flat_map(|(index, layer)| layer.vector_vertices.chunks(3).filter(move |triangle| triangle[0].color == color).map(move |triangle| (index, triangle.to_vec()))).collect()
+    };
+    assert!(triangles(fill).iter().any(|(_, triangle)| covers(triangle, [140.0, 100.0])), "the frame's fill covers its screen centre (world (70, 50) at zoom 2 about (100, 75))");
+    assert!(!triangles(fill).iter().any(|(_, triangle)| covers(triangle, [30.0, 30.0])), "nothing of the frame paints outside it");
+    assert!(!triangles(stroke).is_empty(), "the frame's stroke reaches the vector paint");
+    let paper_layer = triangles(paper).iter().map(|(index, _)| *index).max().expect("the paper paints");
+    let glyph_layer = draw.layers.iter().position(|layer| layer.ui_instances.iter().any(|instance| instance.params[2] == ui_wgpu::wgpu::draw_types::KIND_GLYPH)).expect("the text run paints glyphs");
+    assert!(glyph_layer > paper_layer, "the text run's glyphs follow the paper in a later draw layer ({glyph_layer} > {paper_layer})");
+    assert!(draw.layers.iter().filter(|layer| !layer.vector_vertices.is_empty() || !layer.ui_instances.is_empty()).all(|layer| layer.scissor.is_some()), "every painted layer sits under the canvas scissor");
+}
+//#endregion 🖊️ScenePath

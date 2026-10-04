@@ -1,0 +1,36 @@
+{
+  "at": "2026-10-03T06:13:23.203Z",
+  "graphGenerate": {
+    "inputs": [
+      "nativeSources",
+      "^nativeSources",
+      "commandSources0",
+      "{workspaceRoot}/.config/nextest.toml"
+    ],
+    "outputs": [],
+    "cache": true,
+    "executor": "nx:run-commands",
+    "options": {
+      "cwd": ".",
+      "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts\" native owner-command --manifest \"./Cargo.toml\" --cwd \".\" -- bun \"/Users/ueli/Documents/semio/📜️script.ts\" generate",
+      "forwardAllArgs": true
+    },
+    "configurations": {},
+    "parallelism": true
+  },
+  "authoredGenerate": null,
+  "guiGenerator": {
+    "name": "🏭️generate",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun nx run workspace:generate",
+    "cwd": "${workspaceFolder}",
+    "presentation": {
+      "group": "3_dev",
+      "order": -49.8
+    }
+  },
+  "generateScript": "export class GenerateScript extends Script {\n  run(segments: string[]): void {\n    if (segments[0] === \"taxonomy\") {\n      this.generateTaxonomy(segments.slice(1));\n      return;\n    }\n    if (segments[0] === \"plugin-glue\") {\n      this.generatePluginGlue(segments.slice(1));\n      return;\n    }\n    if (segments[0] === \"scale-fixture\") {\n      runCmd(\"bun\", [\"nx\", \"run\", \"@semio-tech/framework-os-dev:generate-scale-fixture\", ...segments.slice(1)], { cwd: this.root });\n      return;\n    }\n    console.error(\"[generate] usage: bun ./📜️script.ts generate <taxonomy|plugin-glue|scale-fixture>\");\n    process.exit(1);\n  }\n\n  /** 🧩️ Writes deterministic census or duplicate evidence with its Markdown companion. */\n  private generateTaxonomy(args: string[]): void {\n    const operation = args[0];\n    if (operation === \"package-adapter\") {\n      runNestedCargoPackageAdapter(this.root, args[1] ?? \"preview\");\n      return;\n    }\n    if (operation !== \"census\" && operation !== \"duplicates\") throw new Error(`[generate taxonomy] expected census or duplicates, got ${JSON.stringify(operation)}.`);\n    const ticketId = taxonomyOption(args, \"--ticket\");\n    if (!ticketId) throw new Error(`[generate taxonomy ${operation}] --ticket <ticket-id> is required.`);\n    const ticketDir = taxonomyTicketDirectory(this.root, ticketId);\n    const census = buildSemanticCensus(this.root);\n    if (operation === \"census\") {\n      writeFileSync(join(ticketDir, \"📊️semantic-census.json\"), renderSemanticCensusJson(census));\n      writeFileSync(join(ticketDir, \"📓️semantic-census.md\"), renderSemanticCensusMarkdown(census));\n    } else {\n      writeFileSync(join(ticketDir, \"📊️semantic-duplicates.json\"), renderSemanticDuplicatesJson(census));\n      writeFileSync(join(ticketDir, \"📓️semantic-duplicates.md\"), renderSemanticDuplicatesMarkdown(census));\n    }\n    console.log(`[generate taxonomy ${operation}] ${census.records.length} components, ${census.problems.length} findings -> ${ticketDir}`);\n  }\n\n  /** 🧬️ Emit deterministic #[path] wiring comments for subset/example modules (dry by default). */\n  private generatePluginGlue(args: string[]): void {\n    const dry = args.includes(\"--dry\") || args.includes(\"--dry-run\") || args.length === 0;\n    const pluginFilter = args.find((a) => !a.startsWith(\"--\"));\n    const pluginsRoot = join(this.root, \"✏️s/🔌️plugins\");\n    const plugins = readdirSync(pluginsRoot, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name);\n    let emitted = 0;\n    for (const plugin of plugins) {\n      if (pluginFilter && plugin !== pluginFilter && !plugin.includes(pluginFilter)) continue;\n      const owned = policyListTopLevelSubsetDirs(this.root).filter((s) => s.split(\"/\")[2] === plugin);\n      const lines: string[] = [\n        `// GENERATED-BY: bun ./📜️script.ts generate plugin-glue ${plugin}`,\n        `// subsets=${owned.length} (registration body still hand-authored until serializer wave; this command validates discoverability)`,\n      ];\n      for (const sub of owned) {\n        lines.push(`// subset: ${sub}`);\n        emitted += 1;\n      }\n      const glue = join(pluginsRoot, plugin, \"📦️packages/🦀️rust/🦀️.rs\");\n      if (!existsSync(glue)) {\n        console.warn(`[generate plugin-glue] skip ${plugin}: missing glue.rs`);\n        continue;\n      }\n      if (dry) {\n        console.log(`[generate plugin-glue] dry ${plugin}: ${owned.length} subsets`);\n      } else {\n        const inv = join(pluginsRoot, plugin, \"📦️packages/🦀️rust/🤖️generated-subset-inventory.txt\");\n        writeFileSync(inv, lines.join(\"\\n\") + \"\\n\");\n        console.log(`[generate plugin-glue] wrote ${inv}`);\n      }\n    }\n    console.log(`[generate plugin-glue] ${dry ? \"dry-run\" : \"wrote\"} inventory for ${emitted} subset refs`);\n  }\n}",
+  "productionChanged": false,
+  "syntaxOracle": "installed TypeScript class AST"
+}

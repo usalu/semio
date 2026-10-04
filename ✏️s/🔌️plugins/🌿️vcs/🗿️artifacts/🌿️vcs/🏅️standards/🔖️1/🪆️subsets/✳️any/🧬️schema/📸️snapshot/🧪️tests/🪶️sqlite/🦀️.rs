@@ -11,7 +11,7 @@ semio_framework_dispatch_macros::dyn_enum_close!{
  }
 }
 fn laws()->serde_json::Value{serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap()}
-fn fixture()->VcsSnapshot{store::json::from_json_str(&laws()["snapshot"].to_string()).unwrap()}
+fn fixture()->VcsSnapshot{semio_framework_pack_json::from_json_str(&laws()["snapshot"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
 fn database(snapshot:&VcsSnapshot)->SqliteDatabase{snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap()}
 fn restore(database:&SqliteDatabase)->VcsSnapshot{VcsSnapshot::from_sqlite_database(database,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap()}
 fn file(snapshot:&VcsSnapshot)->Vec<u8>{export_sqlite_database(&database(snapshot),SqliteDatabaseLimits::default(),&mut |_|true).unwrap()}
@@ -49,7 +49,7 @@ fn sqlite_snapshot_vcs_independent_malformed_sql_refuses_exact_shape_parents_ord
  let bytes=file(&fixture());let script=r#"import{Database}from'bun:sqlite';const input=JSON.parse(await Bun.stdin.text());const db=Database.deserialize(new Uint8Array(input.bytes));db.run('PRAGMA ignore_check_constraints=ON');db.run(input.sql);await Bun.write(Bun.stdout,db.serialize());db.close();"#;
  for sql in laws()["malformedSql"].as_array().unwrap(){
   let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();let input=serde_json::json!({"bytes":bytes,"sql":sql});child.stdin.take().unwrap().write_all(input.to_string().as_bytes()).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{sql}: {}",String::from_utf8_lossy(&output.stderr));
-  assert!(import_sqlite_database(&output.stdout,SqliteDatabaseLimits::default(),&mut |_|true).map_err(|e|e.to_string()).and_then(|d|VcsSnapshot::from_sqlite_database(&d,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()))).is_err(),"{sql}");
+  assert!(import_sqlite_database(&output.stdout,SqliteDatabaseLimits::default(),&mut |_|true).and_then(|d|VcsSnapshot::from_sqlite_database(&d,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()))).is_err(),"{sql}");
  }
  let mut wrong=database(&fixture());wrong.table_mut("vcs_document").unwrap().rows[0].values.push(SqliteValue::Integer(1));assert!(VcsSnapshot::from_sqlite_database(&wrong,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).is_err());
 }
@@ -84,7 +84,7 @@ fn sqlite_snapshot_vcs_large_text_ownership_has_real_interior_copy_cancellation(
 fn sqlite_snapshot_vcs_typed_tag_collection_declares_its_own_interior_workload(){
  let mut snapshot=fixture();let count=laws()["control"]["tagCount"].as_u64().unwrap()as usize;snapshot.tags=vec![String::new();count];let record=snapshot.__dsl_to_record();let mut reached=false;
  let mut progress=|event:semio_framework_value::native_decoding::NativeDecodeProgress|{if event.total==count&&event.completed>=256{reached=true;false}else{true}};
- assert!(VcsSnapshot::__dsl_from_record_controlled(&record,&mut dsl::NativeDecodeControl::new(256*1024*1024,&mut progress)).is_err());assert!(reached);
+ assert!(VcsSnapshot::__dsl_from_record_controlled(&record,&mut semio_framework_value::NativeDecodeControl::new(256*1024*1024,&mut progress)).is_err());assert!(reached);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -104,10 +104,10 @@ fn sqlite_snapshot_vcs_actual_native_declaration_exposes_relational_capability()
 #[test]
 fn sqlite_snapshot_vcs_neutral_native_fields_agree_with_independent_serde(){
  let laws:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap();
- let text=laws["snapshot"].to_string();let snapshot:VcsSnapshot=store::json::from_json_str(&text).unwrap();
+ let text=laws["snapshot"].to_string();let snapshot:VcsSnapshot=semio_framework_pack_json::from_json_str(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
  assert_eq!(serde_json::from_str::<VcsSnapshot>(&text).unwrap(),snapshot);
- for word in laws["signed64"].as_array().unwrap(){let word=word.as_str().unwrap();let text=format!("{{\"schema\":\"vcs.vcs\",\"title\":\"\",\"counter\":{word},\"notes\":\"\",\"status\":\"\",\"tags\":[]}}");assert_eq!(store::json::from_json_str::<VcsSnapshot>(&text).unwrap(),serde_json::from_str::<VcsSnapshot>(&text).unwrap());}
- for word in laws["invalidSigned64"].as_array().unwrap(){let word=word.as_str().unwrap();let text=format!("{{\"schema\":\"vcs.vcs\",\"title\":\"\",\"counter\":{word},\"notes\":\"\",\"status\":\"\",\"tags\":[]}}");assert!(store::json::from_json_str::<VcsSnapshot>(&text).is_err());assert!(serde_json::from_str::<VcsSnapshot>(&text).is_err());}
+ for word in laws["signed64"].as_array().unwrap(){let word=word.as_str().unwrap();let text=format!("{{\"schema\":\"vcs.vcs\",\"title\":\"\",\"counter\":{word},\"notes\":\"\",\"status\":\"\",\"tags\":[]}}");assert_eq!(semio_framework_pack_json::from_json_str::<VcsSnapshot>(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(),serde_json::from_str::<VcsSnapshot>(&text).unwrap());}
+ for word in laws["invalidSigned64"].as_array().unwrap(){let word=word.as_str().unwrap();let text=format!("{{\"schema\":\"vcs.vcs\",\"title\":\"\",\"counter\":{word},\"notes\":\"\",\"status\":\"\",\"tags\":[]}}");assert!(semio_framework_pack_json::from_json_str::<VcsSnapshot>(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());assert!(serde_json::from_str::<VcsSnapshot>(&text).is_err());}
 }
 
 #[test]

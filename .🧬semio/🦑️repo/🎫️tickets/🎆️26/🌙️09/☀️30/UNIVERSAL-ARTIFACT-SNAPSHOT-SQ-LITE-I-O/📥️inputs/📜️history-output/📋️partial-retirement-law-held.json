@@ -1,0 +1,168 @@
+{
+  "state": "mountedTestOnlyAfterSource14MissingFacetRed",
+  "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🧬️schema/📸️snapshot/🪶️sqlite/🚦️native/🦀️.rs",
+  "nativeLaw": "#[test]\nfn sqlite_snapshot_framework_space_history_native_temporary_retirement_partial_grants_and_drop_release_every_owned_capacity() {\n    fn literal(value: &serde_json::Value) -> DslValue {\n        match value[\"kind\"].as_str().unwrap() {\n            \"null\" => DslValue::Null,\n            \"bool\" => DslValue::Bool(value[\"value\"].as_bool().unwrap()),\n            \"uint\" => DslValue::uint(value[\"value\"].as_str().unwrap().parse().unwrap()),\n            \"int\" => DslValue::int(value[\"value\"].as_str().unwrap().parse().unwrap()),\n            \"float\" => DslValue::float(f64::from_bits(u64::from_str_radix(value[\"value\"].as_str().unwrap(), 16).unwrap())),\n            \"string\" => DslValue::String(value[\"value\"].as_str().unwrap().into()),\n            \"bytes\" => { let text = value[\"value\"].as_str().unwrap(); DslValue::Bytes((0..text.len()).step_by(2).map(|index| u8::from_str_radix(&text[index..index + 2], 16).unwrap()).collect()) },\n            \"array\" => DslValue::Array(value[\"value\"].as_array().unwrap().iter().map(literal).collect()),\n            \"object\" => DslValue::Object(value[\"value\"].as_array().unwrap().iter().map(|member| (member[\"key\"].as_str().unwrap().into(), literal(&member[\"value\"]))).collect()),\n            _ => panic!(\"closed intrinsic fixture kind\"),\n        }\n    }\n    let contract: serde_json::Value = serde_json::from_str(include_str!(\"../../🧫️fixtures/🪶️sqlite/🧮️ownership/🔣️.json\")).unwrap();\n    let contract = &contract[\"output\"][\"retirement\"];\n    assert_eq!(contract[\"releasedBytes\"], \"completeBorrowedCapacityCensus\");\n    let partial = &contract[\"partial\"];\n    assert_eq!(partial[\"schema\"], \"history.native.partial-retirement/v1\");\n    assert_eq!(partial[\"drop\"], \"mandatoryCompleteReleaseAfterCancellation\");\n    let corpus: serde_json::Value = serde_json::from_str(include_str!(\"../../../../../../../../../🔨️modules/🎒️pack/🌱️value/🧫️fixtures/🎞️intrinsic-media/🔣️.json\")).unwrap();\n    assert_eq!(corpus[\"contract\"], contract[\"sourceCorpus\"]);\n    let long = contract[\"longBranch\"][\"unit\"].as_str().unwrap().repeat(usize::try_from(contract[\"longBranch\"][\"repeat\"].as_u64().unwrap()).unwrap());\n    assert_eq!(long.len(), usize::try_from(contract[\"longBranch\"][\"utf8Bytes\"].as_u64().unwrap()).unwrap());\n    let mut cases = vec![\n        (\"null\", DslValue::Null), (\"bool\", DslValue::Bool(true)), (\"uint\", DslValue::uint(u64::MAX)),\n        (\"int\", DslValue::int(i64::MIN)), (\"float\", DslValue::float(f64::from_bits(0xfff800000000002a))),\n        (\"string\", DslValue::String(\"\\0literal 語\".into())), (\"bytes\", DslValue::Bytes(vec![0, 255, 128, 127])),\n        (\"empty array\", DslValue::Array(Vec::new())), (\"empty object\", DslValue::Object(Vec::new())),\n        (\"complete ordered intrinsic owner\", literal(&corpus[\"value\"])),\n    ];\n    let depth = usize::try_from(contract[\"depth\"].as_u64().unwrap()).unwrap();\n    let mut array = DslValue::String(long.clone());\n    let mut object = DslValue::String(long.clone());\n    for _ in 0..depth { array = DslValue::Array(vec![array]); object = DslValue::Object(vec![(\"duplicate\\0語\".into(), object)]); }\n    cases.push((\"deep array\", array)); cases.push((\"deep object\", object));\n    cases.push((\"long ordered duplicate branches\", DslValue::Object(vec![(\"same\".into(), DslValue::String(long)), (\"same\".into(), literal(&corpus[\"value\"]))])));\n    for (label, owner) in cases {\n        let mut reject = |_| false;\n        let mut canceled = NativeEncodeControl::new(0, &mut reject);\n        assert_eq!(canceled.begin_stage(1).unwrap_err().kind, ValueRefusalKind::Canceled);\n        let mut source = vec![&owner];\n        let mut expected_release = 0usize;\n        let mut expected_transitions = 0usize;\n        while let Some(value) = source.pop() {\n            expected_transitions += 1;\n            match value {\n                DslValue::String(value) => expected_release += value.capacity(),\n                DslValue::Bytes(value) => expected_release += value.capacity(),\n                DslValue::Array(values) => { expected_transitions += values.len(); expected_release += values.capacity() * std::mem::size_of::<DslValue>(); source.extend(values.iter()); },\n                DslValue::Object(values) => { expected_transitions += values.len(); expected_release += values.capacity() * std::mem::size_of::<(String, DslValue)>(); for (key, value) in values { expected_release += key.capacity(); source.push(value); } },\n                DslValue::Null | DslValue::Bool(_) | DslValue::Number(_) => {},\n            }\n        }\n        drop(source);\n        for grant in partial[\"grants\"].as_array().unwrap() {\n            let grant = if grant.as_str() == Some(\"complete\") { usize::MAX } else { usize::try_from(grant.as_u64().unwrap()).unwrap() };\n            let owner = owner.clone();\n            let mut expected_release = 0usize;\n            let mut source = vec![&owner];\n            while let Some(value) = source.pop() {\n                match value {\n                    DslValue::String(value) => expected_release += value.capacity(),\n                    DslValue::Bytes(value) => expected_release += value.capacity(),\n                    DslValue::Array(values) => { expected_release += values.capacity() * std::mem::size_of::<DslValue>(); source.extend(values.iter()); },\n                    DslValue::Object(values) => { expected_release += values.capacity() * std::mem::size_of::<(String, DslValue)>(); for (key, value) in values { expected_release += key.capacity(); source.push(value); } },\n                    DslValue::Null | DslValue::Bool(_) | DslValue::Number(_) => {},\n                }\n            }\n            drop(source);\n            let ((steps, pending, step_requests, step_released), requests, released) = crate::test_allocation::observe_backing(|| {\n                let mut retirement = ProjectionRetirement::new(owner);\n                let (steps, step_requests, step_released) = crate::test_allocation::observe_backing(|| retirement.close_step(grant));\n                let pending = retirement.current.is_some();\n                drop(retirement);\n                (steps, pending, step_requests, step_released)\n            });\n            assert_eq!(steps, grant.min(expected_transitions), \"{label} explicit transition grant\");\n            assert_eq!(pending, grant < expected_transitions, \"{label} retained ownership before mandatory Drop\");\n            assert_eq!(step_requests, 0, \"{label} partial close requests backing\");\n            assert!(step_released <= expected_release, \"{label} partial close releases only actual owned backing\");\n            if grant == 0 { assert_eq!(step_released, 0, \"{label} zero grant releases nothing\"); }\n            assert_eq!(requests, 0, \"{label} close and mandatory Drop request no backing\");\n            assert_eq!(released, expected_release, \"{label} partial close plus Drop releases complete source capacity\");\n        }\n        retire_projection(owner);\n    }\n}\n",
+  "neutralFacet": {
+    "schema": "history.native.partial-retirement/v1",
+    "grants": [
+      0,
+      1,
+      3,
+      255,
+      256,
+      "complete"
+    ],
+    "work": "oneDestructiveTransitionPerUnit",
+    "requests": 0,
+    "released": "completeBorrowedCapacityCensus",
+    "zeroGrant": "retainsEveryOwnedCapacity",
+    "drop": "mandatoryCompleteReleaseAfterCancellation",
+    "nativeLaw": "sqlite_snapshot_framework_space_history_native_temporary_retirement_partial_grants_and_drop_release_every_owned_capacity"
+  },
+  "note": "Uncompiled runtime capsule; not mounted in Native selection. Source facet and actual fifteen-law baseline remain required.",
+  "schemaFacet": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "schema",
+      "grants",
+      "work",
+      "requests",
+      "released",
+      "zeroGrant",
+      "drop",
+      "nativeLaw"
+    ],
+    "properties": {
+      "schema": {
+        "const": "history.native.partial-retirement/v1"
+      },
+      "grants": {
+        "const": [
+          0,
+          1,
+          3,
+          255,
+          256,
+          "complete"
+        ]
+      },
+      "work": {
+        "const": "oneDestructiveTransitionPerUnit"
+      },
+      "requests": {
+        "const": 0
+      },
+      "released": {
+        "const": "completeBorrowedCapacityCensus"
+      },
+      "zeroGrant": {
+        "const": "retainsEveryOwnedCapacity"
+      },
+      "drop": {
+        "const": "mandatoryCompleteReleaseAfterCancellation"
+      },
+      "nativeLaw": {
+        "const": "sqlite_snapshot_framework_space_history_native_temporary_retirement_partial_grants_and_drop_release_every_owned_capacity"
+      }
+    }
+  },
+  "fixtureLocation": "output.retirement.partial",
+  "scope": "held neutral/schema/Native partial cleanup facet; no production/source/native-selection mutation",
+  "sourceAppend": "test(\"History partial cleanup grants retain owners and mandate complete backing release\",async()=>{\n const corpus=JSON.parse(readFileSync(join(snapshot,\"🧫️fixtures/🪶️sqlite/🧮️ownership/🔣️.json\"),\"utf8\"));\n const expected={\"schema\":\"history.native.partial-retirement/v1\",\"grants\":[0,1,3,255,256,\"complete\"],\"work\":\"oneDestructiveTransitionPerUnit\",\"requests\":0,\"released\":\"completeBorrowedCapacityCensus\",\"zeroGrant\":\"retainsEveryOwnedCapacity\",\"drop\":\"mandatoryCompleteReleaseAfterCancellation\",\"nativeLaw\":\"sqlite_snapshot_framework_space_history_native_temporary_retirement_partial_grants_and_drop_release_every_owned_capacity\"};\n expect(corpus.output.retirement.partial).toEqual(expected);\n const validate=new Ajv({strict:true}).compile({type:\"object\",additionalProperties:false,required:Object.keys(expected),properties:Object.fromEntries(Object.entries(expected).map(([key,value])=>[key,{const:value}]))});\n expect(validate(corpus.output.retirement.partial)).toBe(true);\n for(const change of [(value:any)=>value.grants[0]=1,(value:any)=>value.requests=1,(value:any)=>value.released=\"remainingOnly\",(value:any)=>value.drop=\"skipAfterCancellation\"]){const wrong=structuredClone(expected);change(wrong);expect(validate(wrong)).toBe(false);}\n const oracle=new HistoryOutputDatabase(\":memory:\");\n try{oracle.exec(\"CREATE TABLE cleanup_grants(ordinal INTEGER PRIMARY KEY,items INTEGER,completion TEXT)\");\n expected.grants.forEach((grant,ordinal)=>oracle.run(\"INSERT INTO cleanup_grants VALUES(?,?,?)\",[ordinal,typeof grant===\"number\"?grant:null,typeof grant===\"string\"?grant:null]));\n expect(oracle.query(\"SELECT items,completion FROM cleanup_grants ORDER BY ordinal\").all()).toEqual([{items:0,completion:null},{items:1,completion:null},{items:3,completion:null},{items:255,completion:null},{items:256,completion:null},{items:null,completion:\"complete\"}]);\n }finally{oracle.close();}\n const law=await sourceTokens(join(snapshot,\"🪶️sqlite/🚦️native/🦀️.rs\"),expected.nativeLaw);\n for(const tokens of [[\"retirement\",\".\",\"close_step\",\"(\",\"grant\",\")\"],[\"drop\",\"(\",\"retirement\",\")\"],[\"assert_eq\",\"!\",\"(\",\"released\",\",\",\"expected_release\"]])expect(containsTokens(law,tokens)).toBe(true);\n});\n",
+  "sourceExpectedPairs": [
+    {
+      "before": "\"recursiveDropFallback\":false}};",
+      "after": "\"recursiveDropFallback\":false,\"partial\":{\"schema\":\"history.native.partial-retirement/v1\",\"grants\":[0,1,3,255,256,\"complete\"],\"work\":\"oneDestructiveTransitionPerUnit\",\"requests\":0,\"released\":\"completeBorrowedCapacityCensus\",\"zeroGrant\":\"retainsEveryOwnedCapacity\",\"drop\":\"mandatoryCompleteReleaseAfterCancellation\",\"nativeLaw\":\"sqlite_snapshot_framework_space_history_native_temporary_retirement_partial_grants_and_drop_release_every_owned_capacity\"}}};"
+    },
+    {
+      "before": "recursiveDropFallback:false};",
+      "after": "recursiveDropFallback:false,partial:{\"schema\":\"history.native.partial-retirement/v1\",\"grants\":[0,1,3,255,256,\"complete\"],\"work\":\"oneDestructiveTransitionPerUnit\",\"requests\":0,\"released\":\"completeBorrowedCapacityCensus\",\"zeroGrant\":\"retainsEveryOwnedCapacity\",\"drop\":\"mandatoryCompleteReleaseAfterCancellation\",\"nativeLaw\":\"sqlite_snapshot_framework_space_history_native_temporary_retirement_partial_grants_and_drop_release_every_owned_capacity\"}};"
+    }
+  ],
+  "fixtureCurrentRetirement": {
+    "schema": "history.native.temporary-retirement/v1",
+    "sourceCorpus": "intrinsic-media-wire-v1",
+    "nativeLaw": "sqlite_snapshot_framework_space_history_native_temporary_retirement_requests_no_backing_for_every_intrinsic_kind",
+    "kinds": [
+      "null",
+      "bool",
+      "uint",
+      "int",
+      "float",
+      "string",
+      "bytes",
+      "array",
+      "object"
+    ],
+    "containers": [
+      "empty",
+      "orderedDuplicateMembers",
+      "deepArray",
+      "deepObject",
+      "longBranch"
+    ],
+    "depth": 256,
+    "longBranch": {
+      "unit": "é語🧾",
+      "repeat": 14564,
+      "utf8Bytes": 131076
+    },
+    "requestBytes": 0,
+    "releasedBytes": "completeBorrowedCapacityCensus",
+    "cleanup": "mandatoryAfterCancellation",
+    "temporaryLinks": "reuseVacatedOwnedSlots",
+    "recursiveDropFallback": false
+  },
+  "fixtureAfterRetirement": {
+    "schema": "history.native.temporary-retirement/v1",
+    "sourceCorpus": "intrinsic-media-wire-v1",
+    "nativeLaw": "sqlite_snapshot_framework_space_history_native_temporary_retirement_requests_no_backing_for_every_intrinsic_kind",
+    "kinds": [
+      "null",
+      "bool",
+      "uint",
+      "int",
+      "float",
+      "string",
+      "bytes",
+      "array",
+      "object"
+    ],
+    "containers": [
+      "empty",
+      "orderedDuplicateMembers",
+      "deepArray",
+      "deepObject",
+      "longBranch"
+    ],
+    "depth": 256,
+    "longBranch": {
+      "unit": "é語🧾",
+      "repeat": 14564,
+      "utf8Bytes": 131076
+    },
+    "requestBytes": 0,
+    "releasedBytes": "completeBorrowedCapacityCensus",
+    "cleanup": "mandatoryAfterCancellation",
+    "temporaryLinks": "reuseVacatedOwnedSlots",
+    "recursiveDropFallback": false,
+    "partial": {
+      "schema": "history.native.partial-retirement/v1",
+      "grants": [
+        0,
+        1,
+        3,
+        255,
+        256,
+        "complete"
+      ],
+      "work": "oneDestructiveTransitionPerUnit",
+      "requests": 0,
+      "released": "completeBorrowedCapacityCensus",
+      "zeroGrant": "retainsEveryOwnedCapacity",
+      "drop": "mandatoryCompleteReleaseAfterCancellation",
+      "nativeLaw": "sqlite_snapshot_framework_space_history_native_temporary_retirement_partial_grants_and_drop_release_every_owned_capacity"
+    }
+  }
+}

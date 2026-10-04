@@ -1,0 +1,13 @@
+{
+  "state": "AuthoredF32FixtureSpellingRepairAfterGenuineNativeAssertion",
+  "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🧫️fixtures/🪆️mesh-child/🔣️.json",
+  "before": "{\n  \"slot\": \"tiles\",\n  \"kind\": \"s.stdio.semio\",\n  \"many\": true,\n  \"tiles\": [\n    {\n      \"id\": \"inline\\u0000引用😀\",\n      \"media\": {\n        \"kind\": \"mesh\",\n        \"positions\": [\n          0,\n          0,\n          0,\n          1,\n          0,\n          0,\n          0,\n          1,\n          0\n        ],\n        \"indices\": [\n          0,\n          1,\n          2\n        ]\n      }\n    },\n    {\n      \"id\": \"child引用😀\",\n      \"media\": {\n        \"kind\": \"meshChild\",\n        \"childId\": \"mesh-child\\u0000引用😀\",\n        \"artifactId\": \"mesh-artifact引用😀\",\n        \"artifactKind\": \"s.stdio.semio\",\n        \"standard\": \"v1\",\n        \"subset\": \"mesh\"\n      }\n    }\n  ],\n  \"expected\": [\n    [\n      \"tiles\",\n      \"mesh-child\\u0000引用😀\",\n      \"mesh-artifact引用😀\",\n      \"s.stdio.semio\",\n      \"v1\",\n      \"mesh\"\n    ]\n  ]\n}\n",
+  "after": "{\n  \"slot\": \"tiles\",\n  \"kind\": \"s.stdio.semio\",\n  \"many\": true,\n  \"tiles\": [\n    {\n      \"id\": \"inline\\u0000引用😀\",\n      \"media\": {\n        \"kind\": \"mesh\",\n        \"positions\": [\n          0.0,\n          0.0,\n          0.0,\n          1.0,\n          0.0,\n          0.0,\n          0.0,\n          1.0,\n          0.0\n        ],\n        \"indices\": [\n          0,\n          1,\n          2\n        ]\n      }\n    },\n    {\n      \"id\": \"child引用😀\",\n      \"media\": {\n        \"kind\": \"meshChild\",\n        \"childId\": \"mesh-child\\u0000引用😀\",\n        \"artifactId\": \"mesh-artifact引用😀\",\n        \"artifactKind\": \"s.stdio.semio\",\n        \"standard\": \"v1\",\n        \"subset\": \"mesh\"\n      }\n    }\n  ],\n  \"expected\": [\n    [\n      \"tiles\",\n      \"mesh-child\\u0000引用😀\",\n      \"mesh-artifact引用😀\",\n      \"s.stdio.semio\",\n      \"v1\",\n      \"mesh\"\n    ]\n  ]\n}\n",
+  "regions": [
+    {
+      "name": "inline-mesh-f32-json-numeric-spelling",
+      "before": "\"positions\": [\n          0,\n          0,\n          0,\n          1,\n          0,\n          0,\n          0,\n          1,\n          0\n        ]",
+      "after": "\"positions\": [\n          0.0,\n          0.0,\n          0.0,\n          1.0,\n          0.0,\n          0.0,\n          0.0,\n          1.0,\n          0.0\n        ]"
+    }
+  ]
+}

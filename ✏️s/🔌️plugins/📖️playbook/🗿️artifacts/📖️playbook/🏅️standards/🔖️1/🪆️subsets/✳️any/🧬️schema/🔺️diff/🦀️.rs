@@ -1,13 +1,10 @@
 //! 🧬️ Playbook diff schema — sparse field delta over the artifact.
 //!
-//! Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (`playbook→C:document,flow`): the identified-
-//! collection `steps: Option<PlaybookStepsDelta>` (and its nested `PlaybookBlocksDelta`/
-//! `PlaybookStepPatch`/`PlaybookBlockPatch`) is replaced by single-Option whole-handle-replace
-//! `document`/`flow` fields — the slots are never absent, only ever replaced, matching writer's
-//! `document`/flow's `content` fields exactly (not `Option<Option<…>>` — that shape is for a slot
-//! whose PRESENCE itself can change, e.g. lowpoly's `mesh`, which does not apply here).
+//! The steps are edited on the `flow` child's own lane (design §20.15 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING), so this
+//! delta carries the parent's scalars and the single-Option whole-handle-replace `flow` coordinate — the slot is never absent,
+//! only ever replaced (not `Option<Option<…>>`, the shape for a slot whose PRESENCE itself can change, e.g. lowpoly's `mesh`).
 
-use crate::{PlaybookDocumentChild, PlaybookFlowChild};
+use crate::PlaybookFlowChild;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
@@ -26,8 +23,6 @@ pub struct PlaybookDiff {
     #[state(artifact)]
     pub title: Option<Option<String>>,
     #[state(artifact)]
-    pub document: Option<PlaybookDocumentChild>,
-    #[state(artifact)]
     pub flow: Option<PlaybookFlowChild>,
 }
 //#endregion 🔖️Diff
@@ -42,47 +37,39 @@ pub struct PlaybookStringList {
 //#endregion 🔖️DeltaHelpers
 
 //#region 🔖️ValueCodec
-/// 🔀️ Hand-written, not derived: `document`/`flow` are `store::ArtifactChild<S>` composed-artifact
-/// handles bridged through `to_dsl_value`/`from_dsl_value` (see the sibling `🧬️schema/🦀️component.rs`
+/// 🔀️ Hand-written, not derived: `flow` is a `store::ArtifactChild<S>` composed-artifact
+/// handle bridged through `to_dsl_value`/`from_dsl_value` (see the sibling `🧬️schema/🦀️component.rs`
 /// impl for [`crate::schema::PlaybookArtifact`] — same trap, same fix). This is
 /// [`crate::mutation::MutationDiff::Diff`]'s own wire shape, so it must implement `ToValue`/
 /// `FromValue`, not just the domain types it composes.
-impl ::semio_framework_os_kernel::ToValue for PlaybookDiff {
-    fn to_value(&self) -> ::semio_framework_os_kernel::DslValue {
-        ::semio_framework_os_kernel::DslValue::object([
-            ("artifact".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.artifact)),
-            ("schema".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.schema)),
-            ("id".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.id)),
-            ("version".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.version)),
-            ("title".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.title)),
-            ("document".to_string(), self.document.as_ref().map_or(::semio_framework_os_kernel::DslValue::Null, |document| semio_framework_value::ToValue::to_value(document))),
-            ("flow".to_string(), self.flow.as_ref().map_or(::semio_framework_os_kernel::DslValue::Null, |flow| semio_framework_value::ToValue::to_value(flow))),
+impl semio_framework_value::ToValue for PlaybookDiff {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::object([
+            ("artifact".to_string(), semio_framework_value::ToValue::to_value(&self.artifact)),
+            ("schema".to_string(), semio_framework_value::ToValue::to_value(&self.schema)),
+            ("id".to_string(), semio_framework_value::ToValue::to_value(&self.id)),
+            ("version".to_string(), semio_framework_value::ToValue::to_value(&self.version)),
+            ("title".to_string(), semio_framework_value::ToValue::to_value(&self.title)),
+            ("flow".to_string(), self.flow.as_ref().map_or(semio_framework_value::DslValue::Null, |flow| semio_framework_value::ToValue::to_value(flow))),
         ])
     }
 }
-impl ::semio_framework_os_kernel::FromValue for PlaybookDiff {
-    fn from_value(value: ::semio_framework_os_kernel::DslValue) -> Result<Self, ::semio_framework_os_kernel::ValueError> {
+impl semio_framework_value::FromValue for PlaybookDiff {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         let entries = value.into_object()?;
         let get = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
-        let child = |key: &str| -> Result<Option<PlaybookDocumentChild>, ::semio_framework_os_kernel::ValueError> {
+        let flow_child = |key: &str| -> Result<Option<PlaybookFlowChild>, semio_framework_value::ValueError> {
             match get(key) {
-                None | Some(::semio_framework_os_kernel::DslValue::Null) => Ok(None),
-                Some(value) => semio_framework_value::FromValue::from_value(value).map(Some),
-            }
-        };
-        let flow_child = |key: &str| -> Result<Option<PlaybookFlowChild>, ::semio_framework_os_kernel::ValueError> {
-            match get(key) {
-                None | Some(::semio_framework_os_kernel::DslValue::Null) => Ok(None),
+                None | Some(semio_framework_value::DslValue::Null) => Ok(None),
                 Some(value) => semio_framework_value::FromValue::from_value(value).map(Some),
             }
         };
         Ok(Self {
-            artifact: get("artifact").map_or(Ok(None), ::semio_framework_os_kernel::FromValue::from_value)?,
-            schema: get("schema").map_or(Ok(None), ::semio_framework_os_kernel::FromValue::from_value)?,
-            id: get("id").map_or(Ok(None), ::semio_framework_os_kernel::FromValue::from_value)?,
-            version: get("version").map_or(Ok(None), ::semio_framework_os_kernel::FromValue::from_value)?,
-            title: get("title").map_or(Ok(None), ::semio_framework_os_kernel::FromValue::from_value)?,
-            document: child("document")?,
+            artifact: get("artifact").map_or(Ok(None), semio_framework_value::FromValue::from_value)?,
+            schema: get("schema").map_or(Ok(None), semio_framework_value::FromValue::from_value)?,
+            id: get("id").map_or(Ok(None), semio_framework_value::FromValue::from_value)?,
+            version: get("version").map_or(Ok(None), semio_framework_value::FromValue::from_value)?,
+            title: get("title").map_or(Ok(None), semio_framework_value::FromValue::from_value)?,
             flow: flow_child("flow")?,
         })
     }
